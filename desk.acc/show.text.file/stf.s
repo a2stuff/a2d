@@ -1,87 +1,17 @@
         .setcpu "65C02"
         .org $800
 
+        .include "prodos.inc"
+        .include "auxmem.inc"
+        .include "a2d.inc"
+
 NULL            := 0
 
 ;;; TODO: Figure this one out
 L0020           := $0020
 
-;;; ------------------------------
-;;; Aux Memory
 
-;;; Softswitches
-RAMRDOFF        := $C002
-RAMRDON         := $C003
-RAMWRTOFF       := $C004
-RAMWRTON        := $C005
-ALTZPOFF        := $C008
-ALTZPON         := $C009
-LCBANK1         := $C08B
 
-;;; Routines
-AUXMOVE         := $C311
-
-;;; ------------------------------
-;;; ProDOS MLI
-MLI             := $BF00
-
-;;; Housekeeping Calls
-CREATE          := $C0
-DESTROY         := $C1
-RENAME          := $C2
-SET_FILE_INFO   := $C3
-GET_FILE_INFO   := $C4
-ON_LINE         := $C5
-SET_PREFIX      := $C6
-GET_PREFIX      := $C7
-;;; Filing Calls
-OPEN            := $C8
-NEWLINE         := $C9
-READ            := $CA
-WRITE           := $CB
-CLOSE           := $CC
-FLUSH           := $CD
-SET_MARK        := $CE
-GET_MARK        := $CF
-SET_EOF         := $D0
-GET_EOF         := $D1
-SET_BUF         := $D2
-GET_BUF         := $D3
-;;; System Calls
-GET_TIME        := $82
-ALLOC_INTERRUPT := $40
-DEALLOC_INTERRUPT       := $41
-;;; Direct Disk Access Commands
-READ_BLOCK      := $80
-WRITE_BLOCK     := $71
-
-;;; Macros
-.macro  MLI_CALL    op, addr
-        jsr MLI
-        .byte op
-        .addr addr
-.endmacro
-
-;;; ------------------------------
-;;; A2Desktop Entry Points
-A2D             := $4000
-UNKNOWN_CALL    := $8E00
-
-A2D_TEXT        := $19
-
-;;; Macros
-.macro  A2D_CALL    op, addr
-        jsr A2D
-        .byte op
-        .addr addr
-.endmacro
-
-.macro A2D_DEFSTRING str        ; String definition, for use with A2D_TEXT
-        .local  data
-        .addr   data
-        .byte   .strlen(str)
-data:   .byte   str
-.endmacro
 
 
 start:  jmp     copy2aux

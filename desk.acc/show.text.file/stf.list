@@ -5,87 +5,101 @@ Current file: stf.s
 000000r 1                       .setcpu "65C02"
 000000r 1                       .org $800
 000800  1               
+000800  1                       .include "prodos.inc"
+000800  2               ;;; ------------------------------
+000800  2               ;;; ProDOS MLI
+000800  2               ;;; ------------------------------
+000800  2               
+000800  2               ;;; Entry point
+000800  2               MLI             := $BF00
+000800  2               
+000800  2               ;;; Housekeeping Calls
+000800  2               CREATE          := $C0
+000800  2               DESTROY         := $C1
+000800  2               RENAME          := $C2
+000800  2               SET_FILE_INFO   := $C3
+000800  2               GET_FILE_INFO   := $C4
+000800  2               ON_LINE         := $C5
+000800  2               SET_PREFIX      := $C6
+000800  2               GET_PREFIX      := $C7
+000800  2               ;;; Filing Calls
+000800  2               OPEN            := $C8
+000800  2               NEWLINE         := $C9
+000800  2               READ            := $CA
+000800  2               WRITE           := $CB
+000800  2               CLOSE           := $CC
+000800  2               FLUSH           := $CD
+000800  2               SET_MARK        := $CE
+000800  2               GET_MARK        := $CF
+000800  2               SET_EOF         := $D0
+000800  2               GET_EOF         := $D1
+000800  2               SET_BUF         := $D2
+000800  2               GET_BUF         := $D3
+000800  2               ;;; System Calls
+000800  2               GET_TIME        := $82
+000800  2               ALLOC_INTERRUPT := $40
+000800  2               DEALLOC_INTERRUPT       := $41
+000800  2               ;;; Direct Disk Access Commands
+000800  2               READ_BLOCK      := $80
+000800  2               WRITE_BLOCK     := $71
+000800  2               
+000800  2               ;;; Macros
+000800  2               .macro  MLI_CALL    op, addr
+000800  2                       jsr MLI
+000800  2                       .byte op
+000800  2                       .addr addr
+000800  2               .endmacro
+000800  2               
+000800  1                       .include "auxmem.inc"
+000800  2               ;;; ------------------------------
+000800  2               ;;; Aux Memory
+000800  2               ;;; ------------------------------
+000800  2               
+000800  2               ;;; Softswitches
+000800  2               RAMRDOFF        := $C002
+000800  2               RAMRDON         := $C003
+000800  2               RAMWRTOFF       := $C004
+000800  2               RAMWRTON        := $C005
+000800  2               ALTZPOFF        := $C008
+000800  2               ALTZPON         := $C009
+000800  2               LCBANK1         := $C08B
+000800  2               
+000800  2               ;;; Routines
+000800  2               AUXMOVE         := $C311
+000800  2               
+000800  1                       .include "a2d.inc"
+000800  2               ;;; ------------------------------
+000800  2               ;;; A2Desktop
+000800  2               ;;; ------------------------------
+000800  2               
+000800  2               ;;; Entry Points
+000800  2               A2D             := $4000
+000800  2               UNKNOWN_CALL    := $8E00
+000800  2               
+000800  2               A2D_TEXT        := $19
+000800  2               
+000800  2               ;;; Macros
+000800  2               .macro  A2D_CALL    op, addr
+000800  2                       jsr A2D
+000800  2                       .byte op
+000800  2                       .addr addr
+000800  2               .endmacro
+000800  2               
+000800  2               .macro A2D_DEFSTRING str        ; String definition, for use with A2D_TEXT
+000800  2                       .local  data
+000800  2                       .addr   data
+000800  2                       .byte   .strlen(str)
+000800  2               data:   .byte   str
+000800  2               .endmacro
+000800  2               
+000800  1               
 000800  1               NULL            := 0
 000800  1               
 000800  1               ;;; TODO: Figure this one out
 000800  1               L0020           := $0020
 000800  1               
-000800  1               ;;; ------------------------------
-000800  1               ;;; Aux Memory
 000800  1               
-000800  1               ;;; Softswitches
-000800  1               RAMRDOFF        := $C002
-000800  1               RAMRDON         := $C003
-000800  1               RAMWRTOFF       := $C004
-000800  1               RAMWRTON        := $C005
-000800  1               ALTZPOFF        := $C008
-000800  1               ALTZPON         := $C009
-000800  1               LCBANK1         := $C08B
 000800  1               
-000800  1               ;;; Routines
-000800  1               AUXMOVE         := $C311
-000800  1               
-000800  1               ;;; ------------------------------
-000800  1               ;;; ProDOS MLI
-000800  1               MLI             := $BF00
-000800  1               
-000800  1               ;;; Housekeeping Calls
-000800  1               CREATE          := $C0
-000800  1               DESTROY         := $C1
-000800  1               RENAME          := $C2
-000800  1               SET_FILE_INFO   := $C3
-000800  1               GET_FILE_INFO   := $C4
-000800  1               ON_LINE         := $C5
-000800  1               SET_PREFIX      := $C6
-000800  1               GET_PREFIX      := $C7
-000800  1               ;;; Filing Calls
-000800  1               OPEN            := $C8
-000800  1               NEWLINE         := $C9
-000800  1               READ            := $CA
-000800  1               WRITE           := $CB
-000800  1               CLOSE           := $CC
-000800  1               FLUSH           := $CD
-000800  1               SET_MARK        := $CE
-000800  1               GET_MARK        := $CF
-000800  1               SET_EOF         := $D0
-000800  1               GET_EOF         := $D1
-000800  1               SET_BUF         := $D2
-000800  1               GET_BUF         := $D3
-000800  1               ;;; System Calls
-000800  1               GET_TIME        := $82
-000800  1               ALLOC_INTERRUPT := $40
-000800  1               DEALLOC_INTERRUPT       := $41
-000800  1               ;;; Direct Disk Access Commands
-000800  1               READ_BLOCK      := $80
-000800  1               WRITE_BLOCK     := $71
-000800  1               
-000800  1               ;;; Macros
-000800  1               .macro  MLI_CALL    op, addr
-000800  1                       jsr MLI
-000800  1                       .byte op
-000800  1                       .addr addr
-000800  1               .endmacro
-000800  1               
-000800  1               ;;; ------------------------------
-000800  1               ;;; A2Desktop Entry Points
-000800  1               A2D             := $4000
-000800  1               UNKNOWN_CALL    := $8E00
-000800  1               
-000800  1               A2D_TEXT        := $19
-000800  1               
-000800  1               ;;; Macros
-000800  1               .macro  A2D_CALL    op, addr
-000800  1                       jsr A2D
-000800  1                       .byte op
-000800  1                       .addr addr
-000800  1               .endmacro
-000800  1               
-000800  1               .macro A2D_DEFSTRING str        ; String definition, for use with A2D_TEXT
-000800  1                       .local  data
-000800  1                       .addr   data
-000800  1                       .byte   .strlen(str)
-000800  1               data:   .byte   str
-000800  1               .endmacro
 000800  1               
 000800  1               
 000800  1  4C 04 08     start:  jmp     copy2aux
