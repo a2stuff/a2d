@@ -167,7 +167,7 @@ Current file: stf.s
 000889  1               
 000889  1  20 C2 08     L0889:  jsr     L08C2
 00088C  1  8D 08 C0             sta     ALTZPOFF
-00088F  1  20 00 BF D1          MLI_CALL GET_EOF, L08F8
+00088F  1  20 00 BF D1          MLI_CALL GET_EOF, get_eof_params
 000893  1  F8 08        
 000895  1  8D 09 C0             sta     ALTZPON
 000898  1  20 D4 08             jsr     L08D4
@@ -183,7 +183,7 @@ Current file: stf.s
 0008AF  1               
 0008AF  1  20 C2 08     L08AF:  jsr     L08C2
 0008B2  1  8D 08 C0             sta     ALTZPOFF
-0008B5  1  20 00 BF CC          MLI_CALL CLOSE, L0902
+0008B5  1  20 00 BF CC          MLI_CALL CLOSE, close_params
 0008B9  1  02 09        
 0008BB  1  8D 09 C0             sta     ALTZPON
 0008BE  1  20 D4 08             jsr     L08D4
@@ -213,27 +213,34 @@ Current file: stf.s
 0008EA  1               
 0008EA  1               
 0008EA  1               open_params:
-0008EA  1  03                   .byte   3               ; param_count = 3
+0008EA  1  03                   .byte   3               ; param_count
 0008EB  1  04 09                .addr   L0904           ; pathname
 0008ED  1  00 0C                .addr   $0C00           ; io_buffer
 0008EF  1  00           open_ref_num:.byte   0          ; ref_num
 0008F0  1               
 0008F0  1               
 0008F0  1               read_params:
-0008F0  1  04                   .byte   4               ; param_count = 4
+0008F0  1  04                   .byte   4               ; param_count
 0008F1  1               read_ref_num:
 0008F1  1  00                   .byte   0               ; ref_num
 0008F2  1  00 12        read_db:.addr   $1200           ; data_buffer
 0008F4  1  00 01                .word   $100            ; request_count
 0008F6  1  00 00                .word   0               ; trans_count
 0008F8  1               
-0008F8  1               
-0008F8  1  02           L08F8:  .byte   $02
-0008F9  1  00 00 00 00  L08F9:  .byte   $00,$00,$00,$00
+0008F8  1               get_eof_params:
+0008F8  1  02                   .byte   2               ; param_count
+0008F9  1               get_eof_ref_num:
+0008F9  1  00                   .byte   0               ; ref_num
+0008FA  1  00 00 00             .byte   0,0,0           ; EOF (low, mid, high)
+0008FD  1               
 0008FD  1  02           L08FD:  .byte   $02
 0008FE  1  00 00 00 00  L08FE:  .byte   $00,$00,$00,$00
-000902  1  01           L0902:  .byte   $01
-000903  1  00           L0903:  .byte   $00
+000902  1               
+000902  1               close_params:
+000902  1  01                   .byte   1               ; param_count
+000903  1               close_ref_num:
+000903  1  00                   .byte   0               ; ref_num
+000904  1               
 000904  1  00 00 00 00  L0904:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 000908  1  00 00 00 00  
 00090C  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -442,8 +449,8 @@ Current file: stf.s
 000AA4  1  AD EF 08             lda     open_ref_num
 000AA7  1  8D F1 08             sta     read_ref_num
 000AAA  1  8D FE 08             sta     L08FE
-000AAD  1  8D F9 08             sta     L08F9
-000AB0  1  8D 03 09             sta     L0903
+000AAD  1  8D F9 08             sta     get_eof_ref_num
+000AB0  1  8D 03 09             sta     close_ref_num
 000AB3  1  20 89 08             jsr     L0889
 000AB6  1  20 00 40 38          A2D_CALL $38, L0994
 000ABA  1  94 09        

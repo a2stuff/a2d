@@ -77,7 +77,7 @@ L0876:  jsr     L08C2
 
 L0889:  jsr     L08C2
         sta     ALTZPOFF
-        MLI_CALL GET_EOF, L08F8
+        MLI_CALL GET_EOF, get_eof_params
         sta     ALTZPON
         jsr     L08D4
         rts
@@ -91,7 +91,7 @@ L089C:  jsr     L08C2
 
 L08AF:  jsr     L08C2
         sta     ALTZPOFF
-        MLI_CALL CLOSE, L0902
+        MLI_CALL CLOSE, close_params
         sta     ALTZPON
         jsr     L08D4
         rts
@@ -120,27 +120,34 @@ L08E9:  rts
 
 
 open_params:
-        .byte   3               ; param_count = 3
+        .byte   3               ; param_count
         .addr   L0904           ; pathname
         .addr   $0C00           ; io_buffer
 open_ref_num:.byte   0          ; ref_num
 
 
 read_params:
-        .byte   4               ; param_count = 4
+        .byte   4               ; param_count
 read_ref_num:
         .byte   0               ; ref_num
 read_db:.addr   $1200           ; data_buffer
         .word   $100            ; request_count
         .word   0               ; trans_count
 
+get_eof_params:
+        .byte   2               ; param_count
+get_eof_ref_num:
+        .byte   0               ; ref_num
+        .byte   0,0,0           ; EOF (low, mid, high)
 
-L08F8:  .byte   $02
-L08F9:  .byte   $00,$00,$00,$00
 L08FD:  .byte   $02
 L08FE:  .byte   $00,$00,$00,$00
-L0902:  .byte   $01
-L0903:  .byte   $00
+
+close_params:
+        .byte   1               ; param_count
+close_ref_num:
+        .byte   0               ; ref_num
+
 L0904:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -332,8 +339,8 @@ L0A95:  lda     $8802,x
         lda     open_ref_num
         sta     read_ref_num
         sta     L08FE
-        sta     L08F9
-        sta     L0903
+        sta     get_eof_ref_num
+        sta     close_ref_num
         jsr     L0889
         A2D_CALL $38, L0994
         A2D_CALL $04, L09A8
