@@ -1,0 +1,1249 @@
+ca65 V2.16 - Git f5e9b401
+Main file   : stf.s
+Current file: stf.s
+
+000000r 1                       .setcpu "65C02"
+000000r 1                       .org $800
+000800  1               
+000800  1               NULL            := 0
+000800  1               
+000800  1               ;;; TODO: Figure this one out
+000800  1               L0020           := $0020
+000800  1               
+000800  1               ;;; ------------------------------
+000800  1               ;;; Aux Memory
+000800  1               
+000800  1               ;;; Softswitches
+000800  1               RAMRDOFF        := $C002
+000800  1               RAMRDON         := $C003
+000800  1               RAMWRTOFF       := $C004
+000800  1               RAMWRTON        := $C005
+000800  1               ALTZPOFF        := $C008
+000800  1               ALTZPON         := $C009
+000800  1               LCBANK1         := $C08B
+000800  1               
+000800  1               ;;; Routines
+000800  1               AUXMOVE         := $C311
+000800  1               
+000800  1               ;;; ------------------------------
+000800  1               ;;; ProDOS MLI
+000800  1               MLI             := $BF00
+000800  1               
+000800  1               ;;; Housekeeping Calls
+000800  1               CREATE          := $C0
+000800  1               DESTROY         := $C1
+000800  1               RENAME          := $C2
+000800  1               SET_FILE_INFO   := $C3
+000800  1               GET_FILE_INFO   := $C4
+000800  1               ON_LINE         := $C5
+000800  1               SET_PREFIX      := $C6
+000800  1               GET_PREFIX      := $C7
+000800  1               ;;; Filing Calls
+000800  1               OPEN            := $C8
+000800  1               NEWLINE         := $C9
+000800  1               READ            := $CA
+000800  1               WRITE           := $CB
+000800  1               CLOSE           := $CC
+000800  1               FLUSH           := $CD
+000800  1               SET_MARK        := $CE
+000800  1               GET_MARK        := $CF
+000800  1               SET_EOF         := $D0
+000800  1               GET_EOF         := $D1
+000800  1               SET_BUF         := $D2
+000800  1               GET_BUF         := $D3
+000800  1               ;;; System Calls
+000800  1               GET_TIME        := $82
+000800  1               ALLOC_INTERRUPT := $40
+000800  1               DEALLOC_INTERRUPT       := $41
+000800  1               ;;; Direct Disk Access Commands
+000800  1               READ_BLOCK      := $80
+000800  1               WRITE_BLOCK     := $71
+000800  1               
+000800  1               ;;; Macros
+000800  1               .macro  MLI_CALL    op, addr
+000800  1                       jsr MLI
+000800  1                       .byte op
+000800  1                       .addr addr
+000800  1               .endmacro
+000800  1               
+000800  1               ;;; ------------------------------
+000800  1               ;;; A2Desktop Entry Points
+000800  1               A2D             := $4000
+000800  1               UNKNOWN_CALL    := $8E00
+000800  1               
+000800  1               A2D_TEXT        := $19
+000800  1               
+000800  1               ;;; Macros
+000800  1               .macro  A2D_CALL    op, addr
+000800  1                       jsr A2D
+000800  1                       .byte op
+000800  1                       .addr addr
+000800  1               .endmacro
+000800  1               
+000800  1               .macro A2D_DEFSTRING str        ; String definition, for use with A2D_TEXT
+000800  1                       .local  data
+000800  1                       .addr   data
+000800  1                       .byte   .strlen(str)
+000800  1               data:   .byte   str
+000800  1               .endmacro
+000800  1               
+000800  1               
+000800  1  4C 04 08     start:  jmp     copy2aux
+000803  1               
+000803  1  00           stash_x:.byte   $00
+000804  1               copy2aux:
+000804  1  BA                   tsx
+000805  1  8E 03 08             stx     stash_x
+000808  1  8D 05 C0             sta     RAMWRTON
+00080B  1  A0 00                ldy     #$00
+00080D  1               copy_src:
+00080D  1  B9 00 08             lda     start,y
+000810  1               copy_dst:
+000810  1  99 00 08             sta     start,y
+000813  1  88                   dey
+000814  1  D0 F7                bne     copy_src
+000816  1  8D 04 C0             sta     RAMWRTOFF
+000819  1  EE 0F 08             inc     copy_src+2
+00081C  1  EE 12 08             inc     copy_dst+2
+00081F  1  8D 05 C0             sta     RAMWRTON
+000822  1  AD 12 08             lda     copy_dst+2
+000825  1  C9 14                cmp     #$14
+000827  1  D0 E4                bne     copy_src
+000829  1  8D 05 C0             sta     RAMWRTON
+00082C  1  8D 03 C0             sta     RAMRDON
+00082F  1  A2 10                ldx     #$10
+000831  1  BD 3C 08     L0831:  lda     L083C,x
+000834  1  95 20                sta     L0020,x
+000836  1  CA                   dex
+000837  1  10 F8                bpl     L0831
+000839  1  4C 4C 08             jmp     L084C
+00083C  1               
+00083C  1  8D 02 C0     L083C:  sta     RAMRDOFF
+00083F  1  8D 04 C0             sta     RAMWRTOFF
+000842  1  20 00 10             jsr     L1000
+000845  1  8D 03 C0             sta     RAMRDON
+000848  1  8D 05 C0             sta     RAMWRTON
+00084B  1  60                   rts
+00084C  1               
+00084C  1  20 DE 09     L084C:  jsr     L09DE
+00084F  1  8D 09 C0             sta     ALTZPON
+000852  1  AD 8B C0             lda     LCBANK1
+000855  1  AD 8B C0             lda     LCBANK1
+000858  1  8D 02 C0             sta     RAMRDOFF
+00085B  1  8D 04 C0             sta     RAMWRTOFF
+00085E  1  AE 03 08             ldx     stash_x
+000861  1  9A                   txs
+000862  1  60                   rts
+000863  1               
+000863  1  20 C2 08     L0863:  jsr     L08C2
+000866  1  8D 08 C0             sta     ALTZPOFF
+000869  1  20 00 BF C8          MLI_CALL OPEN, L08EA
+00086D  1  EA 08        
+00086F  1  8D 09 C0             sta     ALTZPON
+000872  1  20 D4 08             jsr     L08D4
+000875  1  60                   rts
+000876  1               
+000876  1  20 C2 08     L0876:  jsr     L08C2
+000879  1  8D 08 C0             sta     ALTZPOFF
+00087C  1  20 00 BF CA          MLI_CALL READ, L08F0
+000880  1  F0 08        
+000882  1  8D 09 C0             sta     ALTZPON
+000885  1  20 D4 08             jsr     L08D4
+000888  1  60                   rts
+000889  1               
+000889  1  20 C2 08     L0889:  jsr     L08C2
+00088C  1  8D 08 C0             sta     ALTZPOFF
+00088F  1  20 00 BF D1          MLI_CALL GET_EOF, L08F8
+000893  1  F8 08        
+000895  1  8D 09 C0             sta     ALTZPON
+000898  1  20 D4 08             jsr     L08D4
+00089B  1  60                   rts
+00089C  1               
+00089C  1  20 C2 08     L089C:  jsr     L08C2
+00089F  1  8D 08 C0             sta     ALTZPOFF
+0008A2  1  20 00 BF CE          MLI_CALL SET_MARK, L08FD
+0008A6  1  FD 08        
+0008A8  1  8D 09 C0             sta     ALTZPON
+0008AB  1  20 D4 08             jsr     L08D4
+0008AE  1  60                   rts
+0008AF  1               
+0008AF  1  20 C2 08     L08AF:  jsr     L08C2
+0008B2  1  8D 08 C0             sta     ALTZPOFF
+0008B5  1  20 00 BF CC          MLI_CALL CLOSE, L0902
+0008B9  1  02 09        
+0008BB  1  8D 09 C0             sta     ALTZPON
+0008BE  1  20 D4 08             jsr     L08D4
+0008C1  1  60                   rts
+0008C2  1               
+0008C2  1  A0 65        L08C2:  ldy     #$65
+0008C4  1  8D 04 C0             sta     RAMWRTOFF
+0008C7  1  B9 E9 08     L08C7:  lda     L08E9,y
+0008CA  1  99 E9 08             sta     L08E9,y
+0008CD  1  88                   dey
+0008CE  1  D0 F7                bne     L08C7
+0008D0  1  8D 02 C0             sta     RAMRDOFF
+0008D3  1  60                   rts
+0008D4  1               
+0008D4  1  48           L08D4:  pha
+0008D5  1  08                   php
+0008D6  1  8D 05 C0             sta     RAMWRTON
+0008D9  1  A0 65                ldy     #$65
+0008DB  1  B9 E9 08     L08DB:  lda     L08E9,y
+0008DE  1  99 E9 08             sta     L08E9,y
+0008E1  1  88                   dey
+0008E2  1  D0 F7                bne     L08DB
+0008E4  1  8D 03 C0             sta     RAMRDON
+0008E7  1  28                   plp
+0008E8  1  68                   pla
+0008E9  1  60           L08E9:  rts
+0008EA  1               
+0008EA  1  03 04 09 00  L08EA:  .byte   $03,$04,$09,$00,$0C
+0008EE  1  0C           
+0008EF  1  00           L08EF:  .byte   $00
+0008F0  1  04           L08F0:  .byte   $04
+0008F1  1  00           L08F1:  .byte   $00
+0008F2  1  00           L08F2:  .byte   $00
+0008F3  1  12 00 01 00  L08F3:  .byte   $12,$00,$01,$00,$00
+0008F7  1  00           
+0008F8  1  02           L08F8:  .byte   $02
+0008F9  1  00 00 00 00  L08F9:  .byte   $00,$00,$00,$00
+0008FD  1  02           L08FD:  .byte   $02
+0008FE  1  00 00 00 00  L08FE:  .byte   $00,$00,$00,$00
+000902  1  01           L0902:  .byte   $01
+000903  1  00           L0903:  .byte   $00
+000904  1  00 00 00 00  L0904:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+000908  1  00 00 00 00  
+00090C  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00,$00
+000910  1  00 00 00 00  
+000914  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00,$00
+000918  1  00 00 00 00  
+00091C  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00,$00
+000920  1  00 00 00 00  
+000924  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00,$00
+000928  1  00 00 00 00  
+00092C  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00,$00
+000930  1  00 00 00 00  
+000934  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00,$00
+000938  1  00 00 00 00  
+00093C  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00,$00
+000940  1  00 00 00 00  
+000944  1  00                   .byte   $00
+000945  1  00           L0945:  .byte   $00
+000946  1  00           L0946:  .byte   $00
+000947  1  00           L0947:  .byte   $00
+000948  1  00           L0948:  .byte   $00
+000949  1  00           L0949:  .byte   $00
+00094A  1  00 00 00 00  L094A:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+00094E  1  00 00 00 00  
+000952  1  FF FF FF FF  L0952:  .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+000956  1  FF FF FF FF  
+00095A  1  00           L095A:  .byte   $00
+00095B  1  FA           L095B:  .byte   $FA
+00095C  1  01           L095C:  .byte   $01
+00095D  1  00           L095D:  .byte   $00
+00095E  1  00           L095E:  .byte   $00
+00095F  1  00           L095F:  .byte   $00
+000960  1  00           L0960:  .byte   $00
+000961  1  00           L0961:  .byte   $00
+000962  1  00           L0962:  .byte   $00
+000963  1  00           L0963:  .byte   $00
+000964  1  00           L0964:  .byte   $00
+000965  1  00           L0965:  .byte   $00
+000966  1  00 00        L0966:  .byte   $00,$00
+000968  1  00           L0968:  .byte   $00
+000969  1  00           L0969:  .byte   $00
+00096A  1  00           L096A:  .byte   $00
+00096B  1  00           L096B:  .byte   $00
+00096C  1  00           L096C:  .byte   $00
+00096D  1  00           L096D:  .byte   $00
+00096E  1  00           L096E:  .byte   $00
+00096F  1  00           L096F:  .byte   $00
+000970  1  00           L0970:  .byte   $00
+000971  1  00           L0971:  .byte   $00
+000972  1  00           L0972:  .byte   $00
+000973  1  00 00        L0973:  .byte   $00,$00
+000975  1  00           L0975:  .byte   $00
+000976  1  00           L0976:  .byte   $00
+000977  1  64           L0977:  .byte   $64
+000978  1  00           L0978:  .byte   $00
+000979  1  00           L0979:  .byte   $00
+00097A  1  00 00 00     L097A:  .byte   $00,$00,$00
+00097D  1  00 00 00     L097D:  .byte   $00,$00,$00
+000980  1  00           L0980:  .byte   $00
+000981  1  00           L0981:  .byte   $00
+000982  1  00 00        L0982:  .byte   $00,$00
+000984  1  00           L0984:  .byte   $00
+000985  1  00           L0985:  .byte   $00
+000986  1  00           L0986:  .byte   $00
+000987  1  00           L0987:  .byte   $00
+000988  1  00           L0988:  .byte   $00
+000989  1  00           L0989:  .byte   $00
+00098A  1  00           L098A:  .byte   $00
+00098B  1  00           L098B:  .byte   $00
+00098C  1  00           L098C:  .byte   $00
+00098D  1  00 00        L098D:  .byte   $00,$00
+00098F  1  00           L098F:  .byte   $00
+000990  1  00           L0990:  .byte   $00
+000991  1  00           L0991:  .byte   $00
+000992  1  00           L0992:  .byte   $00
+000993  1  00           L0993:  .byte   $00
+000994  1  64 02        L0994:  .byte   $64,$02
+000996  1  00           L0996:  .byte   $00
+000997  1  10           L0997:  .byte   $10
+000998  1  00 C1        L0998:  .byte   $00,$C1
+00099A  1  20           L099A:  .byte   $20
+00099B  1  00 FF        L099B:  .byte   $00,$FF
+00099D  1  00 00 00 C8  L099D:  .byte   $00,$00,$00,$C8,$00,$33,$00,$00
+0009A1  1  00 33 00 00  
+0009A5  1  02 96 00             .byte   $02,$96,$00
+0009A8  1  0A           L09A8:  .byte   $0A
+0009A9  1  00           L09A9:  .byte   $00
+0009AA  1  1C 00 00 20  L09AA:  .byte   $1C,$00,$00,$20,$80,$00
+0009AE  1  80 00        
+0009B0  1  00           L09B0:  .byte   $00
+0009B1  1  00           L09B1:  .byte   $00
+0009B2  1  00           L09B2:  .byte   $00
+0009B3  1  00           L09B3:  .byte   $00
+0009B4  1  00           L09B4:  .byte   $00
+0009B5  1  02           L09B5:  .byte   $02
+0009B6  1  96           L09B6:  .byte   $96
+0009B7  1  00 00 00 00  L09B7:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+0009BB  1  00 00 00 00  
+0009BF  1  00 FF 00 00          .byte   $00,$FF,$00,$00,$00,$00,$00,$01
+0009C3  1  00 00 00 01  
+0009C7  1  01 00 7F 00          .byte   $01,$00,$7F,$00,$88,$00,$00
+0009CB  1  88 00 00     
+0009CE  1  0A 00 1C 00  L09CE:  .byte   $0A,$00,$1C,$00,$00,$20,$80,$00
+0009D2  1  00 20 80 00  
+0009D6  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$02,$96,$00
+0009DA  1  00 02 96 00  
+0009DE  1  8D 09 C0     L09DE:  sta     ALTZPON
+0009E1  1  AD 8B C0             lda     LCBANK1
+0009E4  1  AD 8B C0             lda     LCBANK1
+0009E7  1  A9 00                lda     #$00
+0009E9  1  8D 04 09             sta     L0904
+0009EC  1  AD 21 DF             lda     $DF21
+0009EF  1  F0 05                beq     L09F6
+0009F1  1  AD 20 DF             lda     $DF20
+0009F4  1  D0 01                bne     L09F7
+0009F6  1  60           L09F6:  rts
+0009F7  1               
+0009F7  1  0A           L09F7:  asl     a
+0009F8  1  AA                   tax
+0009F9  1  BD B3 DF             lda     $DFB3,x
+0009FC  1  85 06                sta     $06
+0009FE  1  BD B4 DF             lda     $DFB4,x
+000A01  1  85 07                sta     $07
+000A03  1  A0 00                ldy     #$00
+000A05  1  B1 06                lda     ($06),y
+000A07  1  AA                   tax
+000A08  1  E6 06                inc     $06
+000A0A  1  D0 02                bne     L0A0E
+000A0C  1  E6 07                inc     $07
+000A0E  1  A9 05        L0A0E:  lda     #$05
+000A10  1  85 08                sta     $08
+000A12  1  A9 09                lda     #$09
+000A14  1  85 09                sta     $09
+000A16  1  20 72 0A             jsr     L0A72
+000A19  1  A9 2F                lda     #$2F
+000A1B  1  A0 00                ldy     #$00
+000A1D  1  91 08                sta     ($08),y
+000A1F  1  EE 04 09             inc     L0904
+000A22  1  E6 08                inc     $08
+000A24  1  D0 02                bne     L0A28
+000A26  1  E6 09                inc     $09
+000A28  1  AD 22 DF     L0A28:  lda     $DF22
+000A2B  1  0A                   asl     a
+000A2C  1  AA                   tax
+000A2D  1  BD 9F DD             lda     $DD9F,x
+000A30  1  85 06                sta     $06
+000A32  1  BD A0 DD             lda     $DDA0,x
+000A35  1  85 07                sta     $07
+000A37  1  A0 02                ldy     #$02
+000A39  1  B1 06                lda     ($06),y
+000A3B  1  29 70                and     #$70
+000A3D  1  D0 01                bne     L0A40
+000A3F  1  60                   rts
+000A40  1               
+000A40  1  18           L0A40:  clc
+000A41  1  A5 06                lda     $06
+000A43  1  69 09                adc     #$09
+000A45  1  8D 96 09             sta     L0996
+000A48  1  A5 07                lda     $07
+000A4A  1  69 00                adc     #$00
+000A4C  1  8D 97 09             sta     L0997
+000A4F  1  A0 09                ldy     #$09
+000A51  1  B1 06                lda     ($06),y
+000A53  1  AA                   tax
+000A54  1  CA                   dex
+000A55  1  CA                   dex
+000A56  1  18                   clc
+000A57  1  A5 06                lda     $06
+000A59  1  69 0B                adc     #$0B
+000A5B  1  85 06                sta     $06
+000A5D  1  90 02                bcc     L0A61
+000A5F  1  E6 07                inc     $07
+000A61  1  20 72 0A     L0A61:  jsr     L0A72
+000A64  1  A9 1E                lda     #$1E
+000A66  1  85 27                sta     $27
+000A68  1  A9 40                lda     #$40
+000A6A  1  85 28                sta     $28
+000A6C  1  20 20 00             jsr     L0020
+000A6F  1  4C 8A 0A             jmp     L0A8A
+000A72  1               
+000A72  1  A0 00        L0A72:  ldy     #$00
+000A74  1  B1 06        L0A74:  lda     ($06),y
+000A76  1  91 08                sta     ($08),y
+000A78  1  C8                   iny
+000A79  1  EE 04 09             inc     L0904
+000A7C  1  CA                   dex
+000A7D  1  D0 F5                bne     L0A74
+000A7F  1  98                   tya
+000A80  1  18                   clc
+000A81  1  65 08                adc     $08
+000A83  1  85 08                sta     $08
+000A85  1  90 02                bcc     L0A89
+000A87  1  E6 09                inc     $09
+000A89  1  60           L0A89:  rts
+000A8A  1               
+000A8A  1  A9 00        L0A8A:  lda     #$00
+000A8C  1  8D 6F 09             sta     L096F
+000A8F  1  AE 01 88             ldx     $8801
+000A92  1  8D 04 C0             sta     RAMWRTOFF
+000A95  1  BD 02 88     L0A95:  lda     $8802,x
+000A98  1  9D FF 10             sta     L10FF,x
+000A9B  1  CA                   dex
+000A9C  1  D0 F7                bne     L0A95
+000A9E  1  8D 05 C0             sta     RAMWRTON
+000AA1  1  20 63 08             jsr     L0863
+000AA4  1  AD EF 08             lda     L08EF
+000AA7  1  8D F1 08             sta     L08F1
+000AAA  1  8D FE 08             sta     L08FE
+000AAD  1  8D F9 08             sta     L08F9
+000AB0  1  8D 03 09             sta     L0903
+000AB3  1  20 89 08             jsr     L0889
+000AB6  1  20 00 40 38          A2D_CALL $38, L0994
+000ABA  1  94 09        
+000ABC  1  20 00 40 04          A2D_CALL $04, L09A8
+000AC0  1  A8 09        
+000AC2  1  20 88 10             jsr     L1088
+000AC5  1  20 98 11             jsr     L1198
+000AC8  1  20 30 0E             jsr     L0E30
+000ACB  1  20 00 40 2B          A2D_CALL $2B, NULL
+000ACF  1  00 00        
+000AD1  1  20 00 40 2A  L0AD1:  A2D_CALL $2A, L0970
+000AD5  1  70 09        
+000AD7  1  AD 70 09             lda     L0970
+000ADA  1  C9 01                cmp     #$01
+000ADC  1  D0 F3                bne     L0AD1
+000ADE  1  20 00 40 40          A2D_CALL $40, L0971
+000AE2  1  71 09        
+000AE4  1  AD 76 09             lda     L0976
+000AE7  1  C9 64                cmp     #$64
+000AE9  1  D0 E6                bne     L0AD1
+000AEB  1  AD 75 09             lda     L0975
+000AEE  1  C9 05                cmp     #$05
+000AF0  1  F0 2F                beq     L0B21
+000AF2  1  AE 71 09             ldx     L0971
+000AF5  1  8E 78 09             stx     L0978
+000AF8  1  8E 80 09             stx     L0980
+000AFB  1  AE 72 09             ldx     L0972
+000AFE  1  8E 79 09             stx     L0979
+000B01  1  8E 81 09             stx     L0981
+000B04  1  AE 73 09             ldx     L0973
+000B07  1  8E 7A 09             stx     L097A
+000B0A  1  8E 82 09             stx     L0982
+000B0D  1  C9 03                cmp     #$03
+000B0F  1  F0 0A                beq     L0B1B
+000B11  1  C9 04                cmp     #$04
+000B13  1  F0 BC                beq     L0AD1
+000B15  1  20 B4 0B             jsr     L0BB4
+000B18  1  4C D1 0A             jmp     L0AD1
+000B1B  1               
+000B1B  1  20 3A 11     L0B1B:  jsr     L113A
+000B1E  1  4C D1 0A             jmp     L0AD1
+000B21  1               
+000B21  1  20 00 40 43  L0B21:  A2D_CALL $43, L097D
+000B25  1  7D 09        
+000B27  1  AD 7D 09             lda     L097D
+000B2A  1  F0 A5                beq     L0AD1
+000B2C  1  20 AF 08             jsr     L08AF
+000B2F  1  20 00 40 39          A2D_CALL $39, L0994
+000B33  1  94 09        
+000B35  1  20 00 8E             jsr     UNKNOWN_CALL
+000B38  1  0C                   .byte   $0C
+000B39  1  00 00                .addr   NULL
+000B3B  1  60                   rts
+000B3C  1               
+000B3C  1  20 00 40 45          A2D_CALL $45, L0977
+000B40  1  77 09        
+000B42  1  20 FD 10             jsr     L10FD
+000B45  1  20 88 10             jsr     L1088
+000B48  1  A9 02                lda     #$02
+000B4A  1  CD B5 09             cmp     L09B5
+000B4D  1  D0 05                bne     L0B54
+000B4F  1  A9 00                lda     #$00
+000B51  1  CD B4 09             cmp     L09B4
+000B54  1  B0 1D        L0B54:  bcs     L0B73
+000B56  1  A9 00                lda     #$00
+000B58  1  8D B4 09             sta     L09B4
+000B5B  1  A9 02                lda     #$02
+000B5D  1  8D B5 09             sta     L09B5
+000B60  1  38                   sec
+000B61  1  AD B4 09             lda     L09B4
+000B64  1  ED 61 09             sbc     L0961
+000B67  1  8D B0 09             sta     L09B0
+000B6A  1  AD B5 09             lda     L09B5
+000B6D  1  ED 62 09             sbc     L0962
+000B70  1  8D B1 09             sta     L09B1
+000B73  1  AD 98 09     L0B73:  lda     L0998
+000B76  1  AE 61 09             ldx     L0961
+000B79  1  E0 00                cpx     #$00
+000B7B  1  D0 0C                bne     L0B89
+000B7D  1  AE 62 09             ldx     L0962
+000B80  1  E0 02                cpx     #$02
+000B82  1  D0 05                bne     L0B89
+000B84  1  29 FE                and     #$FE
+000B86  1  4C 8B 0B             jmp     L0B8B
+000B89  1               
+000B89  1  09 01        L0B89:  ora     #$01
+000B8B  1  8D 98 09     L0B8B:  sta     L0998
+000B8E  1  38                   sec
+000B8F  1  A9 00                lda     #$00
+000B91  1  ED 61 09             sbc     L0961
+000B94  1  85 06                sta     $06
+000B96  1  A9 02                lda     #$02
+000B98  1  ED 62 09             sbc     L0962
+000B9B  1  85 07                sta     $07
+000B9D  1  20 DF 10             jsr     L10DF
+000BA0  1  8D 87 09             sta     L0987
+000BA3  1  A9 02                lda     #$02
+000BA5  1  8D 86 09             sta     L0986
+000BA8  1  20 00 40 49          A2D_CALL $49, L0986
+000BAC  1  86 09        
+000BAE  1  20 98 11             jsr     L1198
+000BB1  1  4C F9 0D             jmp     L0DF9
+000BB4  1               
+000BB4  1  20 00 40 48  L0BB4:  A2D_CALL $48, L0980
+000BB8  1  80 09        
+000BBA  1  AD 84 09             lda     L0984
+000BBD  1  C9 01                cmp     #$01
+000BBF  1  F0 08                beq     L0BC9
+000BC1  1  C9 02                cmp     #$02
+000BC3  1  D0 03                bne     L0BC8
+000BC5  1  4C 95 0C             jmp     L0C95
+000BC8  1               
+000BC8  1  60           L0BC8:  rts
+000BC9  1               
+000BC9  1  A9 01        L0BC9:  lda     #$01
+000BCB  1  8D 8A 09             sta     L098A
+000BCE  1  8D 88 09             sta     L0988
+000BD1  1  AD 85 09             lda     L0985
+000BD4  1  C9 05                cmp     #$05
+000BD6  1  F0 14                beq     L0BEC
+000BD8  1  C9 04                cmp     #$04
+000BDA  1  F0 62                beq     L0C3E
+000BDC  1  C9 03                cmp     #$03
+000BDE  1  F0 31                beq     L0C11
+000BE0  1  C9 01                cmp     #$01
+000BE2  1  F0 49                beq     L0C2D
+000BE4  1  C9 02                cmp     #$02
+000BE6  1  D0 03                bne     L0BEB
+000BE8  1  4C 60 0C             jmp     L0C60
+000BEB  1               
+000BEB  1  60           L0BEB:  rts
+000BEC  1               
+000BEC  1  20 39 0D     L0BEC:  jsr     L0D39
+000BEF  1  AD 90 09             lda     L0990
+000BF2  1  F0 1C                beq     L0C10
+000BF4  1  AD 8F 09             lda     L098F
+000BF7  1  8D 89 09             sta     L0989
+000BFA  1  20 7C 0D             jsr     L0D7C
+000BFD  1  20 ED 0D             jsr     L0DED
+000C00  1  20 30 0E             jsr     L0E30
+000C03  1  AD 47 09             lda     L0947
+000C06  1  F0 08                beq     L0C10
+000C08  1  AD 49 09             lda     L0949
+000C0B  1  D0 03                bne     L0C10
+000C0D  1  20 1D 0E             jsr     L0E1D
+000C10  1  60           L0C10:  rts
+000C11  1               
+000C11  1  AD 9D 09     L0C11:  lda     L099D
+000C14  1  F0 16                beq     L0C2C
+000C16  1  20 84 0C             jsr     L0C84
+000C19  1  38                   sec
+000C1A  1  AD 9D 09             lda     L099D
+000C1D  1  ED 6E 09             sbc     L096E
+000C20  1  B0 02                bcs     L0C24
+000C22  1  A9 00                lda     #$00
+000C24  1  8D 89 09     L0C24:  sta     L0989
+000C27  1  20 73 0C             jsr     L0C73
+000C2A  1  90 E5                bcc     L0C11
+000C2C  1  60           L0C2C:  rts
+000C2D  1               
+000C2D  1  AD 9D 09     L0C2D:  lda     L099D
+000C30  1  F0 0B                beq     L0C3D
+000C32  1  38                   sec
+000C33  1  E9 01                sbc     #$01
+000C35  1  8D 89 09             sta     L0989
+000C38  1  20 73 0C             jsr     L0C73
+000C3B  1  90 F0                bcc     L0C2D
+000C3D  1  60           L0C3D:  rts
+000C3E  1               
+000C3E  1  AD 9D 09     L0C3E:  lda     L099D
+000C41  1  C9 FA                cmp     #$FA
+000C43  1  F0 1A                beq     L0C5F
+000C45  1  20 84 0C             jsr     L0C84
+000C48  1  18                   clc
+000C49  1  AD 9D 09             lda     L099D
+000C4C  1  6D 6E 09             adc     L096E
+000C4F  1  B0 04                bcs     L0C55
+000C51  1  C9 FB                cmp     #$FB
+000C53  1  90 02                bcc     L0C57
+000C55  1  A9 FA        L0C55:  lda     #$FA
+000C57  1  8D 89 09     L0C57:  sta     L0989
+000C5A  1  20 73 0C             jsr     L0C73
+000C5D  1  90 DF                bcc     L0C3E
+000C5F  1  60           L0C5F:  rts
+000C60  1               
+000C60  1  AD 9D 09     L0C60:  lda     L099D
+000C63  1  C9 FA                cmp     #$FA
+000C65  1  F0 0B                beq     L0C72
+000C67  1  18                   clc
+000C68  1  69 01                adc     #$01
+000C6A  1  8D 89 09             sta     L0989
+000C6D  1  20 73 0C             jsr     L0C73
+000C70  1  90 EE                bcc     L0C60
+000C72  1  60           L0C72:  rts
+000C73  1               
+000C73  1  20 7C 0D     L0C73:  jsr     L0D7C
+000C76  1  20 ED 0D             jsr     L0DED
+000C79  1  20 30 0E             jsr     L0E30
+000C7C  1  20 52 0D             jsr     L0D52
+000C7F  1  18                   clc
+000C80  1  D0 01                bne     L0C83
+000C82  1  38                   sec
+000C83  1  60           L0C83:  rts
+000C84  1               
+000C84  1  AD 63 09     L0C84:  lda     L0963
+000C87  1  A2 00                ldx     #$00
+000C89  1  E8           L0C89:  inx
+000C8A  1  38                   sec
+000C8B  1  E9 32                sbc     #$32
+000C8D  1  C9 32                cmp     #$32
+000C8F  1  B0 F8                bcs     L0C89
+000C91  1  8E 6E 09             stx     L096E
+000C94  1  60                   rts
+000C95  1               
+000C95  1  A9 02        L0C95:  lda     #$02
+000C97  1  8D 8A 09             sta     L098A
+000C9A  1  8D 88 09             sta     L0988
+000C9D  1  AD 85 09             lda     L0985
+000CA0  1  C9 05                cmp     #$05
+000CA2  1  F0 11                beq     L0CB5
+000CA4  1  C9 04                cmp     #$04
+000CA6  1  F0 3F                beq     L0CE7
+000CA8  1  C9 03                cmp     #$03
+000CAA  1  F0 43                beq     L0CEF
+000CAC  1  C9 01                cmp     #$01
+000CAE  1  F0 4E                beq     L0CFE
+000CB0  1  C9 02                cmp     #$02
+000CB2  1  F0 42                beq     L0CF6
+000CB4  1  60                   rts
+000CB5  1               
+000CB5  1  20 39 0D     L0CB5:  jsr     L0D39
+000CB8  1  AD 90 09             lda     L0990
+000CBB  1  F0 29                beq     L0CE6
+000CBD  1  AD 8F 09             lda     L098F
+000CC0  1  20 EC 10             jsr     L10EC
+000CC3  1  A5 06                lda     $06
+000CC5  1  8D B0 09             sta     L09B0
+000CC8  1  A5 07                lda     $07
+000CCA  1  8D B1 09             sta     L09B1
+000CCD  1  18                   clc
+000CCE  1  AD B0 09             lda     L09B0
+000CD1  1  6D 61 09             adc     L0961
+000CD4  1  8D B4 09             sta     L09B4
+000CD7  1  AD B1 09             lda     L09B1
+000CDA  1  6D 62 09             adc     L0962
+000CDD  1  8D B5 09             sta     L09B5
+000CE0  1  20 D1 0D             jsr     L0DD1
+000CE3  1  20 30 0E             jsr     L0E30
+000CE6  1  60           L0CE6:  rts
+000CE7  1               
+000CE7  1  A2 02        L0CE7:  ldx     #$02
+000CE9  1  AD 9A 09             lda     L099A
+000CEC  1  4C 02 0D             jmp     L0D02
+000CEF  1               
+000CEF  1  A2 FE        L0CEF:  ldx     #$FE
+000CF1  1  A9 00                lda     #$00
+000CF3  1  4C 02 0D             jmp     L0D02
+000CF6  1               
+000CF6  1  A2 01        L0CF6:  ldx     #$01
+000CF8  1  AD 9A 09             lda     L099A
+000CFB  1  4C 02 0D             jmp     L0D02
+000CFE  1               
+000CFE  1  A2 FF        L0CFE:  ldx     #$FF
+000D00  1  A9 00                lda     #$00
+000D02  1  8D 0C 0D     L0D02:  sta     L0D0C
+000D05  1  8E 15 0D             stx     L0D15
+000D08  1  AD 9B 09     L0D08:  lda     L099B
+000D0B  1               L0D0C           := * + 1
+000D0B  1  C9 0A                cmp     #$0A
+000D0D  1  D0 01                bne     L0D10
+000D0F  1  60                   rts
+000D10  1               
+000D10  1  18           L0D10:  clc
+000D11  1  AD 9B 09             lda     L099B
+000D14  1               L0D15           := * + 1
+000D14  1  69 01                adc     #$01
+000D16  1  30 0D                bmi     L0D25
+000D18  1  CD 9A 09             cmp     L099A
+000D1B  1  F0 0A                beq     L0D27
+000D1D  1  90 08                bcc     L0D27
+000D1F  1  AD 9A 09             lda     L099A
+000D22  1  4C 27 0D             jmp     L0D27
+000D25  1               
+000D25  1  A9 00        L0D25:  lda     #$00
+000D27  1  8D 9B 09     L0D27:  sta     L099B
+000D2A  1  20 5E 0D             jsr     L0D5E
+000D2D  1  20 D1 0D             jsr     L0DD1
+000D30  1  20 30 0E             jsr     L0E30
+000D33  1  20 52 0D             jsr     L0D52
+000D36  1  D0 D0                bne     L0D08
+000D38  1  60                   rts
+000D39  1               
+000D39  1  AD 71 09     L0D39:  lda     L0971
+000D3C  1  8D 8B 09             sta     L098B
+000D3F  1  AD 72 09             lda     L0972
+000D42  1  8D 8C 09             sta     L098C
+000D45  1  AD 73 09             lda     L0973
+000D48  1  8D 8D 09             sta     L098D
+000D4B  1  20 00 40 4A          A2D_CALL $4A, L098A
+000D4F  1  8A 09        
+000D51  1  60                   rts
+000D52  1               
+000D52  1  20 00 40 2A  L0D52:  A2D_CALL $2A, L0970
+000D56  1  70 09        
+000D58  1  AD 70 09             lda     L0970
+000D5B  1  C9 02                cmp     #$02
+000D5D  1  60                   rts
+000D5E  1               
+000D5E  1  AD 9B 09     L0D5E:  lda     L099B
+000D61  1  20 EC 10             jsr     L10EC
+000D64  1  18                   clc
+000D65  1  A5 06                lda     $06
+000D67  1  8D B0 09             sta     L09B0
+000D6A  1  6D 61 09             adc     L0961
+000D6D  1  8D B4 09             sta     L09B4
+000D70  1  A5 07                lda     $07
+000D72  1  8D B1 09             sta     L09B1
+000D75  1  6D 62 09             adc     L0962
+000D78  1  8D B5 09             sta     L09B5
+000D7B  1  60                   rts
+000D7C  1               
+000D7C  1  A9 00        L0D7C:  lda     #$00
+000D7E  1  8D B2 09             sta     L09B2
+000D81  1  8D B3 09             sta     L09B3
+000D84  1  AE 89 09             ldx     L0989
+000D87  1  F0 12        L0D87:  beq     L0D9B
+000D89  1  18                   clc
+000D8A  1  AD B2 09             lda     L09B2
+000D8D  1  69 32                adc     #$32
+000D8F  1  8D B2 09             sta     L09B2
+000D92  1  90 03                bcc     L0D97
+000D94  1  EE B3 09             inc     L09B3
+000D97  1  CA           L0D97:  dex
+000D98  1  4C 87 0D             jmp     L0D87
+000D9B  1               
+000D9B  1  18           L0D9B:  clc
+000D9C  1  AD B2 09             lda     L09B2
+000D9F  1  6D 63 09             adc     L0963
+000DA2  1  8D B6 09             sta     L09B6
+000DA5  1  AD B3 09             lda     L09B3
+000DA8  1  6D 64 09             adc     L0964
+000DAB  1  8D B7 09             sta     L09B7
+000DAE  1  20 A5 10             jsr     L10A5
+000DB1  1  A9 00                lda     #$00
+000DB3  1  8D 6A 09             sta     L096A
+000DB6  1  8D 6B 09             sta     L096B
+000DB9  1  AE 89 09             ldx     L0989
+000DBC  1  F0 12        L0DBC:  beq     L0DD0
+000DBE  1  18                   clc
+000DBF  1  AD 6A 09             lda     L096A
+000DC2  1  69 05                adc     #$05
+000DC4  1  8D 6A 09             sta     L096A
+000DC7  1  90 03                bcc     L0DCC
+000DC9  1  EE 6B 09             inc     L096B
+000DCC  1  CA           L0DCC:  dex
+000DCD  1  4C BC 0D             jmp     L0DBC
+000DD0  1               
+000DD0  1  60           L0DD0:  rts
+000DD1  1               
+000DD1  1  A9 02        L0DD1:  lda     #$02
+000DD3  1  8D 88 09             sta     L0988
+000DD6  1  AD B0 09             lda     L09B0
+000DD9  1  85 06                sta     $06
+000DDB  1  AD B1 09             lda     L09B1
+000DDE  1  85 07                sta     $07
+000DE0  1  20 DF 10             jsr     L10DF
+000DE3  1  8D 89 09             sta     L0989
+000DE6  1  20 00 40 4B          A2D_CALL $4B, L0988
+000DEA  1  88 09        
+000DEC  1  60                   rts
+000DED  1               
+000DED  1  A9 01        L0DED:  lda     #$01
+000DEF  1  8D 88 09             sta     L0988
+000DF2  1  20 00 40 4B          A2D_CALL $4B, L0988
+000DF6  1  88 09        
+000DF8  1  60                   rts
+000DF9  1               
+000DF9  1  20 00 8E     L0DF9:  jsr     UNKNOWN_CALL
+000DFC  1  0C 00 00             tsb     a:NULL
+000DFF  1  20 00 40 04          A2D_CALL $04, L09A8
+000E03  1  A8 09        
+000E05  1  AD 98 09             lda     L0998
+000E08  1  6A                   ror     a
+000E09  1  90 03                bcc     L0E0E
+000E0B  1  20 D1 0D             jsr     L0DD1
+000E0E  1  AD 9D 09     L0E0E:  lda     L099D
+000E11  1  8D 89 09             sta     L0989
+000E14  1  20 ED 0D             jsr     L0DED
+000E17  1  20 30 0E             jsr     L0E30
+000E1A  1  4C D1 0A             jmp     L0AD1
+000E1D  1               
+000E1D  1  20 00 40 08  L0E1D:  A2D_CALL $08, L0952
+000E21  1  52 09        
+000E23  1  20 00 40 11          A2D_CALL $11, L09B0
+000E27  1  B0 09        
+000E29  1  20 00 40 08          A2D_CALL $08, L094A
+000E2D  1  4A 09        
+000E2F  1  60                   rts
+000E30  1               
+000E30  1  A9 00        L0E30:  lda     #$00
+000E32  1  8D 49 09             sta     L0949
+000E35  1  20 29 11             jsr     L1129
+000E38  1  20 9C 08             jsr     L089C
+000E3B  1  A9 00                lda     #$00
+000E3D  1  8D F2 08             sta     L08F2
+000E40  1  85 06                sta     $06
+000E42  1  A9 12                lda     #$12
+000E44  1  8D F3 08             sta     L08F3
+000E47  1  85 07                sta     $07
+000E49  1  A9 00                lda     #$00
+000E4B  1  8D 45 09             sta     L0945
+000E4E  1  8D 46 09             sta     L0946
+000E51  1  8D 47 09             sta     L0947
+000E54  1  8D 60 09             sta     L0960
+000E57  1  8D 6C 09             sta     L096C
+000E5A  1  8D 6D 09             sta     L096D
+000E5D  1  8D 48 09             sta     L0948
+000E60  1  A9 0A                lda     #$0A
+000E62  1  8D 5F 09             sta     L095F
+000E65  1  20 DB 0E             jsr     L0EDB
+000E68  1  AD 6D 09     L0E68:  lda     L096D
+000E6B  1  CD 6B 09             cmp     L096B
+000E6E  1  D0 0E                bne     L0E7E
+000E70  1  AD 6C 09             lda     L096C
+000E73  1  CD 6A 09             cmp     L096A
+000E76  1  D0 06                bne     L0E7E
+000E78  1  20 1D 0E             jsr     L0E1D
+000E7B  1  EE 48 09             inc     L0948
+000E7E  1  20 00 40 0E  L0E7E:  A2D_CALL $0E, L095D
+000E82  1  5D 09        
+000E84  1  38                   sec
+000E85  1  A9 FA                lda     #$FA
+000E87  1  ED 5D 09             sbc     L095D
+000E8A  1  8D 5B 09             sta     L095B
+000E8D  1  A9 01                lda     #$01
+000E8F  1  ED 5E 09             sbc     L095E
+000E92  1  8D 5C 09             sta     L095C
+000E95  1  20 F3 0E             jsr     L0EF3
+000E98  1  B0 3D                bcs     L0ED7
+000E9A  1  18                   clc
+000E9B  1  AD 93 09             lda     L0993
+000E9E  1  65 06                adc     $06
+000EA0  1  85 06                sta     $06
+000EA2  1  90 02                bcc     L0EA6
+000EA4  1  E6 07                inc     $07
+000EA6  1  AD 5A 09     L0EA6:  lda     L095A
+000EA9  1  D0 BD                bne     L0E68
+000EAB  1  18                   clc
+000EAC  1  AD 5F 09             lda     L095F
+000EAF  1  69 0A                adc     #$0A
+000EB1  1  8D 5F 09             sta     L095F
+000EB4  1  90 03                bcc     L0EB9
+000EB6  1  EE 60 09             inc     L0960
+000EB9  1  20 DB 0E     L0EB9:  jsr     L0EDB
+000EBC  1  AD 6C 09             lda     L096C
+000EBF  1  CD 68 09             cmp     L0968
+000EC2  1  D0 08                bne     L0ECC
+000EC4  1  AD 6D 09             lda     L096D
+000EC7  1  CD 69 09             cmp     L0969
+000ECA  1  F0 0B                beq     L0ED7
+000ECC  1  EE 6C 09     L0ECC:  inc     L096C
+000ECF  1  D0 03                bne     L0ED4
+000ED1  1  EE 6D 09             inc     L096D
+000ED4  1  4C 68 0E     L0ED4:  jmp     L0E68
+000ED7  1               
+000ED7  1  20 09 11     L0ED7:  jsr     L1109
+000EDA  1  60                   rts
+000EDB  1               
+000EDB  1  A9 FA        L0EDB:  lda     #$FA
+000EDD  1  8D 5B 09             sta     L095B
+000EE0  1  A9 01                lda     #$01
+000EE2  1  8D 5C 09             sta     L095C
+000EE5  1  A9 03                lda     #$03
+000EE7  1  8D 5D 09             sta     L095D
+000EEA  1  A9 00                lda     #$00
+000EEC  1  8D 5E 09             sta     L095E
+000EEF  1  8D 5A 09             sta     L095A
+000EF2  1  60                   rts
+000EF3  1               
+000EF3  1  A9 FF        L0EF3:  lda     #$FF
+000EF5  1  8D 9B 0F             sta     L0F9B
+000EF8  1  A9 00                lda     #$00
+000EFA  1  8D 9C 0F             sta     L0F9C
+000EFD  1  8D 9D 0F             sta     L0F9D
+000F00  1  8D 5A 09             sta     L095A
+000F03  1  8D 93 09             sta     L0993
+000F06  1  A5 06                lda     $06
+000F08  1  8D 91 09             sta     L0991
+000F0B  1  A5 07                lda     $07
+000F0D  1  8D 92 09             sta     L0992
+000F10  1  AD 45 09     L0F10:  lda     L0945
+000F13  1  D0 0D                bne     L0F22
+000F15  1  AD 47 09             lda     L0947
+000F18  1  F0 05                beq     L0F1F
+000F1A  1  20 F6 0F             jsr     L0FF6
+000F1D  1  38                   sec
+000F1E  1  60                   rts
+000F1F  1               
+000F1F  1  20 0C 10     L0F1F:  jsr     L100C
+000F22  1  AC 93 09     L0F22:  ldy     L0993
+000F25  1  B1 06                lda     ($06),y
+000F27  1  29 7F                and     #$7F
+000F29  1  91 06                sta     ($06),y
+000F2B  1  EE 45 09             inc     L0945
+000F2E  1  C9 0D                cmp     #$0D
+000F30  1  F0 54                beq     L0F86
+000F32  1  C9 20                cmp     #$20
+000F34  1  D0 0B                bne     L0F41
+000F36  1  8C 9B 0F             sty     L0F9B
+000F39  1  48                   pha
+000F3A  1  AD 45 09             lda     L0945
+000F3D  1  8D 46 09             sta     L0946
+000F40  1  68                   pla
+000F41  1  C9 09        L0F41:  cmp     #$09
+000F43  1  D0 03                bne     L0F48
+000F45  1  4C 9E 0F             jmp     L0F9E
+000F48  1               
+000F48  1  A8           L0F48:  tay
+000F49  1  B9 03 88             lda     $8803,y
+000F4C  1  18                   clc
+000F4D  1  6D 9C 0F             adc     L0F9C
+000F50  1  8D 9C 0F             sta     L0F9C
+000F53  1  90 03                bcc     L0F58
+000F55  1  EE 9D 0F             inc     L0F9D
+000F58  1  AD 5C 09     L0F58:  lda     L095C
+000F5B  1  CD 9D 0F             cmp     L0F9D
+000F5E  1  D0 06                bne     L0F66
+000F60  1  AD 5B 09             lda     L095B
+000F63  1  CD 9C 0F             cmp     L0F9C
+000F66  1  90 06        L0F66:  bcc     L0F6E
+000F68  1  EE 93 09             inc     L0993
+000F6B  1  4C 10 0F             jmp     L0F10
+000F6E  1               
+000F6E  1  A9 00        L0F6E:  lda     #$00
+000F70  1  8D 5A 09             sta     L095A
+000F73  1  AD 9B 0F             lda     L0F9B
+000F76  1  C9 FF                cmp     #$FF
+000F78  1  F0 09                beq     L0F83
+000F7A  1  8D 93 09             sta     L0993
+000F7D  1  AD 46 09             lda     L0946
+000F80  1  8D 45 09             sta     L0945
+000F83  1  EE 93 09     L0F83:  inc     L0993
+000F86  1  20 F6 0F     L0F86:  jsr     L0FF6
+000F89  1  AC 93 09             ldy     L0993
+000F8C  1  B1 06                lda     ($06),y
+000F8E  1  C9 09                cmp     #$09
+000F90  1  F0 04                beq     L0F96
+000F92  1  C9 0D                cmp     #$0D
+000F94  1  D0 03                bne     L0F99
+000F96  1  EE 93 09     L0F96:  inc     L0993
+000F99  1  18           L0F99:  clc
+000F9A  1  60                   rts
+000F9B  1               
+000F9B  1  00           L0F9B:  brk
+000F9C  1  00           L0F9C:  brk
+000F9D  1  00           L0F9D:  brk
+000F9E  1  A9 01        L0F9E:  lda     #$01
+000FA0  1  8D 5A 09             sta     L095A
+000FA3  1  18                   clc
+000FA4  1  AD 9C 0F             lda     L0F9C
+000FA7  1  6D 5D 09             adc     L095D
+000FAA  1  8D 5D 09             sta     L095D
+000FAD  1  AD 9D 0F             lda     L0F9D
+000FB0  1  6D 5E 09             adc     L095E
+000FB3  1  8D 5E 09             sta     L095E
+000FB6  1  A2 00                ldx     #$00
+000FB8  1  BD E9 0F     L0FB8:  lda     L0FE9,x
+000FBB  1  CD 5E 09             cmp     L095E
+000FBE  1  D0 06                bne     L0FC6
+000FC0  1  BD E8 0F             lda     L0FE8,x
+000FC3  1  CD 5D 09             cmp     L095D
+000FC6  1  B0 09        L0FC6:  bcs     L0FD1
+000FC8  1  E8                   inx
+000FC9  1  E8                   inx
+000FCA  1  E0 0E                cpx     #$0E
+000FCC  1  F0 12                beq     L0FE0
+000FCE  1  4C B8 0F             jmp     L0FB8
+000FD1  1               
+000FD1  1  BD E8 0F     L0FD1:  lda     L0FE8,x
+000FD4  1  8D 5D 09             sta     L095D
+000FD7  1  BD E9 0F             lda     L0FE9,x
+000FDA  1  8D 5E 09             sta     L095E
+000FDD  1  4C 86 0F             jmp     L0F86
+000FE0  1               
+000FE0  1  A9 00        L0FE0:  lda     #$00
+000FE2  1  8D 5A 09             sta     L095A
+000FE5  1  4C 86 0F             jmp     L0F86
+000FE8  1               
+000FE8  1  46           L0FE8:  .byte   $46
+000FE9  1  00 8C 00 D2  L0FE9:  .byte   $00,$8C,$00,$D2,$00,$18,$01,$5E
+000FED  1  00 18 01 5E  
+000FF1  1  01 A4 01 EA          .byte   $01,$A4,$01,$EA,$01
+000FF5  1  01           
+000FF6  1  AD 48 09     L0FF6:  lda     L0948
+000FF9  1  F0 10                beq     L100B
+000FFB  1  AD 93 09             lda     L0993
+000FFE  1  F0 0B                beq     L100B
+001000  1  20 00 40 19  L1000:  A2D_CALL $19, L0991
+001004  1  91 09        
+001006  1  A9 01                lda     #$01
+001008  1  8D 49 09             sta     L0949
+00100B  1  60           L100B:  rts
+00100C  1               
+00100C  1  AD 92 09     L100C:  lda     L0992
+00100F  1  C9 12                cmp     #$12
+001011  1  F0 18                beq     L102B
+001013  1  A0 00                ldy     #$00
+001015  1  B9 00 13     L1015:  lda     $1300,y
+001018  1  99 00 12             sta     $1200,y
+00101B  1  C8                   iny
+00101C  1  D0 F7                bne     L1015
+00101E  1  CE 92 09             dec     L0992
+001021  1  AD 91 09             lda     L0991
+001024  1  85 06                sta     $06
+001026  1  AD 92 09             lda     L0992
+001029  1  85 07                sta     $07
+00102B  1  A9 00        L102B:  lda     #$00
+00102D  1  8D 45 09             sta     L0945
+001030  1  20 3E 10             jsr     L103E
+001033  1  AD F3 08             lda     L08F3
+001036  1  C9 12                cmp     #$12
+001038  1  D0 03                bne     L103D
+00103A  1  EE F3 08             inc     L08F3
+00103D  1  60           L103D:  rts
+00103E  1               
+00103E  1  AD F2 08     L103E:  lda     L08F2
+001041  1  8D 52 10             sta     L1052
+001044  1  AD F3 08             lda     L08F3
+001047  1  8D 53 10             sta     L1053
+00104A  1  A9 20                lda     #$20
+00104C  1  A2 00                ldx     #$00
+00104E  1  8D 04 C0             sta     RAMWRTOFF
+001051  1               L1051:
+001051  1               L1052           := * + 1
+001051  1               L1053           := * + 2
+001051  1  9D 00 12             sta     $1200,x
+001054  1  E8                   inx
+001055  1  D0 FA                bne     L1051
+001057  1  8D 05 C0             sta     RAMWRTON
+00105A  1  A9 00                lda     #$00
+00105C  1  8D 47 09             sta     L0947
+00105F  1  20 76 08             jsr     L0876
+001062  1  48                   pha
+001063  1  A9 00                lda     #$00
+001065  1  85 3C                sta     $3C
+001067  1  85 42                sta     $42
+001069  1  A9 FF                lda     #$FF
+00106B  1  85 3E                sta     $3E
+00106D  1  AD F3 08             lda     L08F3
+001070  1  85 43                sta     $43
+001072  1  85 3D                sta     $3D
+001074  1  85 3F                sta     $3F
+001076  1  38                   sec
+001077  1  20 11 C3             jsr     AUXMOVE
+00107A  1  68                   pla
+00107B  1  F0 0A                beq     L1087
+00107D  1  C9 4C                cmp     #$4C
+00107F  1  F0 01                beq     L1082
+001081  1  00                   brk
+001082  1  A9 01        L1082:  lda     #$01
+001084  1  8D 47 09             sta     L0947
+001087  1  60           L1087:  rts
+001088  1               
+001088  1  38           L1088:  sec
+001089  1  AD B4 09             lda     L09B4
+00108C  1  ED B0 09             sbc     L09B0
+00108F  1  8D 61 09             sta     L0961
+001092  1  AD B5 09             lda     L09B5
+001095  1  ED B1 09             sbc     L09B1
+001098  1  8D 62 09             sta     L0962
+00109B  1  38                   sec
+00109C  1  AD B6 09             lda     L09B6
+00109F  1  ED B2 09             sbc     L09B2
+0010A2  1  8D 63 09             sta     L0963
+0010A5  1  AD B6 09     L10A5:  lda     L09B6
+0010A8  1  8D 65 09             sta     L0965
+0010AB  1  AD B7 09             lda     L09B7
+0010AE  1  8D 66 09             sta     L0966
+0010B1  1  A9 00                lda     #$00
+0010B3  1  8D 68 09             sta     L0968
+0010B6  1  8D 69 09             sta     L0969
+0010B9  1  AD 66 09     L10B9:  lda     L0966
+0010BC  1  D0 07                bne     L10C5
+0010BE  1  AD 65 09             lda     L0965
+0010C1  1  C9 0A                cmp     #$0A
+0010C3  1  90 19                bcc     L10DE
+0010C5  1  38           L10C5:  sec
+0010C6  1  AD 65 09             lda     L0965
+0010C9  1  E9 0A                sbc     #$0A
+0010CB  1  8D 65 09             sta     L0965
+0010CE  1  B0 03                bcs     L10D3
+0010D0  1  CE 66 09             dec     L0966
+0010D3  1  EE 68 09     L10D3:  inc     L0968
+0010D6  1  D0 E1                bne     L10B9
+0010D8  1  EE 69 09             inc     L0969
+0010DB  1  4C B9 10             jmp     L10B9
+0010DE  1               
+0010DE  1  60           L10DE:  rts
+0010DF  1               
+0010DF  1  A2 04        L10DF:  ldx     #$04
+0010E1  1  18           L10E1:  clc
+0010E2  1  66 07                ror     $07
+0010E4  1  66 06                ror     $06
+0010E6  1  CA                   dex
+0010E7  1  D0 F8                bne     L10E1
+0010E9  1  A5 06                lda     $06
+0010EB  1  60                   rts
+0010EC  1               
+0010EC  1  85 06        L10EC:  sta     $06
+0010EE  1  A9 00                lda     #$00
+0010F0  1  85 07                sta     $07
+0010F2  1  A2 04                ldx     #$04
+0010F4  1  18           L10F4:  clc
+0010F5  1  26 06                rol     $06
+0010F7  1  26 07                rol     $07
+0010F9  1  CA                   dex
+0010FA  1  D0 F8                bne     L10F4
+0010FC  1  60                   rts
+0010FD  1               
+0010FD  1  A9 15        L10FD:  lda     #$15
+0010FF  1  85 27        L10FF:  sta     $27
+001101  1  A9 40                lda     #$40
+001103  1  85 28                sta     $28
+001105  1  20 20 00             jsr     L0020
+001108  1  60                   rts
+001109  1               
+001109  1  AD 6F 09     L1109:  lda     L096F
+00110C  1  F0 1A                beq     L1128
+00110E  1  A9 00                lda     #$00
+001110  1  85 3C                sta     $3C
+001112  1  A9 7E                lda     #$7E
+001114  1  85 3E                sta     $3E
+001116  1  A9 11                lda     #$11
+001118  1  85 3D                sta     $3D
+00111A  1  85 3F                sta     $3F
+00111C  1  A9 88                lda     #$88
+00111E  1  85 43                sta     $43
+001120  1  A9 03                lda     #$03
+001122  1  85 42                sta     $42
+001124  1  38                   sec
+001125  1  20 11 C3             jsr     AUXMOVE
+001128  1  60           L1128:  rts
+001129  1               
+001129  1  AD 6F 09     L1129:  lda     L096F
+00112C  1  F0 0B                beq     L1139
+00112E  1  AE 01 88             ldx     $8801
+001131  1  A9 07                lda     #$07
+001133  1  9D 02 88     L1133:  sta     $8802,x
+001136  1  CA                   dex
+001137  1  D0 FA                bne     L1133
+001139  1  60           L1139:  rts
+00113A  1               
+00113A  1  AD 72 09     L113A:  lda     L0972
+00113D  1  CD 85 11             cmp     L1185
+001140  1  D0 06                bne     L1148
+001142  1  AD 71 09             lda     L0971
+001145  1  CD 84 11             cmp     L1184
+001148  1  90 19        L1148:  bcc     L1163
+00114A  1  AD 6F 09             lda     L096F
+00114D  1  F0 09                beq     L1158
+00114F  1  CE 6F 09             dec     L096F
+001152  1  20 09 11             jsr     L1109
+001155  1  4C 5B 11             jmp     L115B
+001158  1               
+001158  1  EE 6F 09     L1158:  inc     L096F
+00115B  1  20 BD 11     L115B:  jsr     L11BD
+00115E  1  20 30 0E             jsr     L0E30
+001161  1  38                   sec
+001162  1  60                   rts
+001163  1               
+001163  1  18           L1163:  clc
+001164  1  60                   rts
+001165  1               
+001165  1  68 11 0D 46  fixed_str:      A2D_DEFSTRING "Fixed        "
+001169  1  69 78 65 64  
+00116D  1  20 20 20 20  
+001175  1  78 11 0C 50  prop_str:       A2D_DEFSTRING "Proportional"
+001179  1  72 6F 70 6F  
+00117D  1  72 74 69 6F  
+001184  1               
+001184  1  00           L1184:  .byte   $00
+001185  1  00           L1185:  .byte   $00
+001186  1  00 00 00 20  L1186:  .byte   $00,$00,$00,$20,$80,$00,$00,$00
+00118A  1  80 00 00 00  
+00118E  1  00 00 50 00          .byte   $00,$00,$50,$00,$0A,$00
+001192  1  0A 00        
+001194  1  00 00 0A 00  L1194:  .byte   $00,$00,$0A,$00
+001198  1  38           L1198:  sec
+001199  1  AD AA 09             lda     L09AA
+00119C  1  E9 0C                sbc     #$0C
+00119E  1  8D 86 11             sta     L1186
+0011A1  1  18                   clc
+0011A2  1  AD A8 09             lda     L09A8
+0011A5  1  6D 61 09             adc     L0961
+0011A8  1  48                   pha
+0011A9  1  AD A9 09             lda     L09A9
+0011AC  1  6D 62 09             adc     L0962
+0011AF  1  AA                   tax
+0011B0  1  38                   sec
+0011B1  1  68                   pla
+0011B2  1  E9 32                sbc     #$32
+0011B4  1  8D 84 11             sta     L1184
+0011B7  1  8A                   txa
+0011B8  1  E9 00                sbc     #$00
+0011BA  1  8D 85 11             sta     L1185
+0011BD  1  20 00 40 06  L11BD:  A2D_CALL $06, L1184
+0011C1  1  84 11        
+0011C3  1  20 00 40 0E          A2D_CALL $0E, L1194
+0011C7  1  94 11        
+0011C9  1  AD 6F 09             lda     L096F
+0011CC  1  F0 09                beq     L11D7
+0011CE  1  20 00 40 19          A2D_CALL A2D_TEXT, fixed_str
+0011D2  1  65 11        
+0011D4  1  4C DD 11             jmp     L11DD
+0011D7  1               
+0011D7  1  20 00 40 19  L11D7:  A2D_CALL A2D_TEXT, prop_str
+0011DB  1  75 11        
+0011DD  1  A2 0F        L11DD:  ldx     #$0F
+0011DF  1  BD CE 09     L11DF:  lda     L09CE,x
+0011E2  1  9D A8 09             sta     L09A8,x
+0011E5  1  CA                   dex
+0011E6  1  10 F7                bpl     L11DF
+0011E8  1  20 00 40 06          A2D_CALL $06, L09A8
+0011EC  1  A8 09        
+0011EE  1  60                   rts
+0011EE  1               

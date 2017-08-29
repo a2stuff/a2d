@@ -1,0 +1,185 @@
+GLOBAL {
+  STARTADDR       $0800;
+  PAGELENGTH      0;                  # No paging
+  CPU             "65C02";
+};
+
+# Aux Memory Soft Switches
+LABEL { NAME "RAMRDOFF"; ADDR $C002; };
+LABEL { NAME "RAMRDON"; ADDR $C003; };
+LABEL { NAME "RAMWRTOFF"; ADDR $C004; };
+LABEL { NAME "RAMWRTON"; ADDR $C005; };
+LABEL { NAME "ALTZPOFF"; ADDR $C008; };
+LABEL { NAME "ALTZPON"; ADDR $C009; };
+
+# Language Card Soft Switches
+LABEL { NAME "LCBANK1"; ADDR $C08B; };
+
+LABEL { NAME "AUXMOVE"; ADDR $C311; };
+
+LABEL { NAME "NULL"; ADDR $0000; };
+
+######################################3
+# Code
+
+# Start of code
+LABEL { NAME "start";    ADDR $0800; };
+
+# Copies $800-$14ff Main to Aux
+RANGE { START $0803; END $0803; TYPE ByteTable; NAME "stash_x"; };
+LABEL { NAME "copy2aux"; ADDR $0804; };
+LABEL { NAME "copy_src"; ADDR $080D; SIZE 3; };
+LABEL { NAME "copy_dst"; ADDR $0810; SIZE 3; };
+# Self-modifying - force as code
+RANGE { START $0804; END $0812; TYPE Code; };
+
+
+# $0862 RTS - exit from DA
+
+
+# ??? Long data range
+RANGE { START $08EA; END $09DD; TYPE ByteTable; };
+
+
+
+# Self-modifying - force as code
+RANGE { START $0BC9; END $0D38; TYPE Code; };
+RANGE { START $103E; END $1087; TYPE Code; };
+
+RANGE { START $0FE8; END $0FF5; TYPE ByteTable; };
+
+####
+
+
+# Strings
+RANGE { START $1165; END $1166; TYPE AddrTable; NAME "fixed_str"; };
+RANGE { START $1167; END $1167; TYPE ByteTable; NAME "fixed_len"; };
+RANGE { START $1168; END $1174; TYPE TextTable; NAME "fixed_data"; };
+
+RANGE { START $1175; END $1176; TYPE AddrTable; NAME "prop_str"; };
+RANGE { START $1177; END $1177; TYPE ByteTable; NAME "prop_len"; };
+RANGE { START $1178; END $1183; TYPE TextTable; NAME "prop_data"; };
+
+# ???
+RANGE { START $1184; END $1197; TYPE ByteTable; };
+
+
+
+
+######################################3
+# Apple II Desktop Entry Points
+
+LABEL { NAME "A2D_CALL"; ADDR $4000; };
+# next 3 bytes are operation and address of data (op, lo, hi)
+# (ProDOS MLI calling convention)
+
+# A2D call arguments
+RANGE { START $0AB9; END $0AB9; TYPE ByteTable; };
+RANGE { START $0ABA; END $0ABB; TYPE AddrTable; };
+
+RANGE { START $0ABF; END $0ABF; TYPE ByteTable; };
+RANGE { START $0AC0; END $0AC1; TYPE AddrTable; };
+
+RANGE { START $0ACE; END $0ACE; TYPE ByteTable; };
+RANGE { START $0ACF; END $0AD0; TYPE AddrTable; };
+
+RANGE { START $0AD4; END $0AD4; TYPE ByteTable; };
+RANGE { START $0AD5; END $0AD6; TYPE AddrTable; };
+
+RANGE { START $0AE1; END $0AE1; TYPE ByteTable; };
+RANGE { START $0AE2; END $0AE3; TYPE AddrTable; };
+
+RANGE { START $0B24; END $0B24; TYPE ByteTable; };
+RANGE { START $0B25; END $0B26; TYPE AddrTable; };
+
+RANGE { START $0B32; END $0B32; TYPE ByteTable; };
+RANGE { START $0B33; END $0B34; TYPE AddrTable; };
+
+RANGE { START $0B3F; END $0B3F; TYPE ByteTable; };
+RANGE { START $0B40; END $0B41; TYPE AddrTable; };
+
+RANGE { START $0BAB; END $0BAB; TYPE ByteTable; };
+RANGE { START $0BAC; END $0BAD; TYPE AddrTable; };
+
+RANGE { START $0BB7; END $0BB7; TYPE ByteTable; };
+RANGE { START $0BB8; END $0BB9; TYPE AddrTable; };
+
+RANGE { START $0D4E; END $0D4E; TYPE ByteTable; };
+RANGE { START $0D4F; END $0D50; TYPE AddrTable; };
+
+RANGE { START $0D55; END $0D55; TYPE ByteTable; };
+RANGE { START $0D56; END $0D57; TYPE AddrTable; };
+
+RANGE { START $0DE9; END $0DE9; TYPE ByteTable; };
+RANGE { START $0DEA; END $0DEB; TYPE AddrTable; };
+
+RANGE { START $0DF5; END $0DF5; TYPE ByteTable; };
+RANGE { START $0DF6; END $0DF7; TYPE AddrTable; };
+
+RANGE { START $0E02; END $0E02; TYPE ByteTable; };
+RANGE { START $0E03; END $0E04; TYPE AddrTable; };
+
+RANGE { START $0E20; END $0E20; TYPE ByteTable; };
+RANGE { START $0E21; END $0E22; TYPE AddrTable; };
+
+RANGE { START $0E26; END $0E26; TYPE ByteTable; };
+RANGE { START $0E27; END $0E28; TYPE AddrTable; };
+
+RANGE { START $0E2C; END $0E2C; TYPE ByteTable; };
+RANGE { START $0E2D; END $0E2E; TYPE AddrTable; };
+
+RANGE { START $0E81; END $0E81; TYPE ByteTable; };
+RANGE { START $0E82; END $0E83; TYPE AddrTable; };
+
+RANGE { START $1003; END $1003; TYPE ByteTable; };
+RANGE { START $1004; END $1005; TYPE AddrTable; };
+
+RANGE { START $11C0; END $11C0; TYPE ByteTable; };
+RANGE { START $11C1; END $11C2; TYPE AddrTable; };
+
+RANGE { START $11C6; END $11C6; TYPE ByteTable; };
+RANGE { START $11C7; END $11C8; TYPE AddrTable; };
+
+RANGE { START $11D1; END $11D1; TYPE ByteTable; };
+RANGE { START $11D2; END $11D3; TYPE AddrTable; };
+
+RANGE { START $11DA; END $11DA; TYPE ByteTable; };
+RANGE { START $11DB; END $11DC; TYPE AddrTable; };
+
+RANGE { START $11EB; END $11EB; TYPE ByteTable; };
+RANGE { START $11EC; END $11ED; TYPE AddrTable; };
+
+######################################3
+# ProDOS MLI
+
+LABEL { NAME "MLI"; ADDR $BF00; };
+# next 3 bytes are operation and address of data (op, lo, hi)
+# (ProDOS MLI calling convention)
+
+# MLI call arguments
+RANGE { START $086C; END $086C; TYPE ByteTable; };
+RANGE { START $086D; END $086E; TYPE AddrTable; };
+
+RANGE { START $087F; END $087F; TYPE ByteTable; };
+RANGE { START $0880; END $0881; TYPE AddrTable; };
+
+RANGE { START $0892; END $0892; TYPE ByteTable; };
+RANGE { START $0893; END $0894; TYPE AddrTable; };
+
+RANGE { START $08A5; END $08A5; TYPE ByteTable; };
+RANGE { START $08A6; END $08A7; TYPE AddrTable; };
+
+RANGE { START $08B8; END $08B8; TYPE ByteTable; };
+RANGE { START $08B9; END $08BA; TYPE AddrTable; };
+
+
+######################################3
+# ????????
+
+# Called during exit
+LABEL { NAME "UNKNOWN_CALL"; ADDR $8E00; };
+# next 3 bytes are operation and address of data (op, lo, hi)
+# (ProDOS MLI calling convention)
+
+RANGE { START $0B38; END $0B38; TYPE ByteTable; };
+RANGE { START $0B39; END $0B3A; TYPE AddrTable; };
