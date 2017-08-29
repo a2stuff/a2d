@@ -63,14 +63,14 @@ L084C:  jsr     L09DE
 
 L0863:  jsr     L08C2
         sta     ALTZPOFF
-        MLI_CALL OPEN, L08EA
+        MLI_CALL OPEN, open_params
         sta     ALTZPON
         jsr     L08D4
         rts
 
 L0876:  jsr     L08C2
         sta     ALTZPOFF
-        MLI_CALL READ, L08F0
+        MLI_CALL READ, read_params
         sta     ALTZPON
         jsr     L08D4
         rts
@@ -118,12 +118,23 @@ L08DB:  lda     L08E9,y
         pla
 L08E9:  rts
 
-L08EA:  .byte   $03,$04,$09,$00,$0C
-L08EF:  .byte   $00
-L08F0:  .byte   $04
-L08F1:  .byte   $00
-L08F2:  .byte   $00
-L08F3:  .byte   $12,$00,$01,$00,$00
+
+open_params:
+        .byte   3               ; param_count = 3
+        .addr   L0904           ; pathname
+        .addr   $0C00           ; io_buffer
+open_ref_num:.byte   0          ; ref_num
+
+
+read_params:
+        .byte   4               ; param_count = 4
+read_ref_num:
+        .byte   0               ; ref_num
+read_db:.addr   $1200           ; data_buffer
+        .word   $100            ; request_count
+        .word   0               ; trans_count
+
+
 L08F8:  .byte   $02
 L08F9:  .byte   $00,$00,$00,$00
 L08FD:  .byte   $02
@@ -318,8 +329,8 @@ L0A95:  lda     $8802,x
         bne     L0A95
         sta     RAMWRTON
         jsr     L0863
-        lda     L08EF
-        sta     L08F1
+        lda     open_ref_num
+        sta     read_ref_num
         sta     L08FE
         sta     L08F9
         sta     L0903
@@ -709,10 +720,10 @@ L0E30:  lda     #$00
         jsr     L1129
         jsr     L089C
         lda     #$00
-        sta     L08F2
+        sta     read_db
         sta     $06
         lda     #$12
-        sta     L08F3
+        sta     read_db+1
         sta     $07
         lda     #$00
         sta     L0945
@@ -920,15 +931,15 @@ L1015:  lda     $1300,y
 L102B:  lda     #$00
         sta     L0945
         jsr     L103E
-        lda     L08F3
+        lda     read_db+1
         cmp     #$12
         bne     L103D
-        inc     L08F3
+        inc     read_db+1
 L103D:  rts
 
-L103E:  lda     L08F2
+L103E:  lda     read_db
         sta     L1052
-        lda     L08F3
+        lda     read_db+1
         sta     L1053
         lda     #$20
         ldx     #$00
@@ -949,7 +960,7 @@ L1053           := * + 2
         sta     $42
         lda     #$FF
         sta     $3E
-        lda     L08F3
+        lda     read_db+1
         sta     $43
         sta     $3D
         sta     $3F

@@ -151,7 +151,7 @@ Current file: stf.s
 000863  1               
 000863  1  20 C2 08     L0863:  jsr     L08C2
 000866  1  8D 08 C0             sta     ALTZPOFF
-000869  1  20 00 BF C8          MLI_CALL OPEN, L08EA
+000869  1  20 00 BF C8          MLI_CALL OPEN, open_params
 00086D  1  EA 08        
 00086F  1  8D 09 C0             sta     ALTZPON
 000872  1  20 D4 08             jsr     L08D4
@@ -159,7 +159,7 @@ Current file: stf.s
 000876  1               
 000876  1  20 C2 08     L0876:  jsr     L08C2
 000879  1  8D 08 C0             sta     ALTZPOFF
-00087C  1  20 00 BF CA          MLI_CALL READ, L08F0
+00087C  1  20 00 BF CA          MLI_CALL READ, read_params
 000880  1  F0 08        
 000882  1  8D 09 C0             sta     ALTZPON
 000885  1  20 D4 08             jsr     L08D4
@@ -211,14 +211,23 @@ Current file: stf.s
 0008E8  1  68                   pla
 0008E9  1  60           L08E9:  rts
 0008EA  1               
-0008EA  1  03 04 09 00  L08EA:  .byte   $03,$04,$09,$00,$0C
-0008EE  1  0C           
-0008EF  1  00           L08EF:  .byte   $00
-0008F0  1  04           L08F0:  .byte   $04
-0008F1  1  00           L08F1:  .byte   $00
-0008F2  1  00           L08F2:  .byte   $00
-0008F3  1  12 00 01 00  L08F3:  .byte   $12,$00,$01,$00,$00
-0008F7  1  00           
+0008EA  1               
+0008EA  1               open_params:
+0008EA  1  03                   .byte   3               ; param_count = 3
+0008EB  1  04 09                .addr   L0904           ; pathname
+0008ED  1  00 0C                .addr   $0C00           ; io_buffer
+0008EF  1  00           open_ref_num:.byte   0          ; ref_num
+0008F0  1               
+0008F0  1               
+0008F0  1               read_params:
+0008F0  1  04                   .byte   4               ; param_count = 4
+0008F1  1               read_ref_num:
+0008F1  1  00                   .byte   0               ; ref_num
+0008F2  1  00 12        read_db:.addr   $1200           ; data_buffer
+0008F4  1  00 01                .word   $100            ; request_count
+0008F6  1  00 00                .word   0               ; trans_count
+0008F8  1               
+0008F8  1               
 0008F8  1  02           L08F8:  .byte   $02
 0008F9  1  00 00 00 00  L08F9:  .byte   $00,$00,$00,$00
 0008FD  1  02           L08FD:  .byte   $02
@@ -430,8 +439,8 @@ Current file: stf.s
 000A9C  1  D0 F7                bne     L0A95
 000A9E  1  8D 05 C0             sta     RAMWRTON
 000AA1  1  20 63 08             jsr     L0863
-000AA4  1  AD EF 08             lda     L08EF
-000AA7  1  8D F1 08             sta     L08F1
+000AA4  1  AD EF 08             lda     open_ref_num
+000AA7  1  8D F1 08             sta     read_ref_num
 000AAA  1  8D FE 08             sta     L08FE
 000AAD  1  8D F9 08             sta     L08F9
 000AB0  1  8D 03 09             sta     L0903
@@ -839,10 +848,10 @@ Current file: stf.s
 000E35  1  20 29 11             jsr     L1129
 000E38  1  20 9C 08             jsr     L089C
 000E3B  1  A9 00                lda     #$00
-000E3D  1  8D F2 08             sta     L08F2
+000E3D  1  8D F2 08             sta     read_db
 000E40  1  85 06                sta     $06
 000E42  1  A9 12                lda     #$12
-000E44  1  8D F3 08             sta     L08F3
+000E44  1  8D F3 08             sta     read_db+1
 000E47  1  85 07                sta     $07
 000E49  1  A9 00                lda     #$00
 000E4B  1  8D 45 09             sta     L0945
@@ -1054,15 +1063,15 @@ Current file: stf.s
 00102B  1  A9 00        L102B:  lda     #$00
 00102D  1  8D 45 09             sta     L0945
 001030  1  20 3E 10             jsr     L103E
-001033  1  AD F3 08             lda     L08F3
+001033  1  AD F3 08             lda     read_db+1
 001036  1  C9 12                cmp     #$12
 001038  1  D0 03                bne     L103D
-00103A  1  EE F3 08             inc     L08F3
+00103A  1  EE F3 08             inc     read_db+1
 00103D  1  60           L103D:  rts
 00103E  1               
-00103E  1  AD F2 08     L103E:  lda     L08F2
+00103E  1  AD F2 08     L103E:  lda     read_db
 001041  1  8D 52 10             sta     L1052
-001044  1  AD F3 08             lda     L08F3
+001044  1  AD F3 08             lda     read_db+1
 001047  1  8D 53 10             sta     L1053
 00104A  1  A9 20                lda     #$20
 00104C  1  A2 00                ldx     #$00
@@ -1083,7 +1092,7 @@ Current file: stf.s
 001067  1  85 42                sta     $42
 001069  1  A9 FF                lda     #$FF
 00106B  1  85 3E                sta     $3E
-00106D  1  AD F3 08             lda     L08F3
+00106D  1  AD F3 08             lda     read_db+1
 001070  1  85 43                sta     $43
 001072  1  85 3D                sta     $3D
 001074  1  85 3F                sta     $3F
