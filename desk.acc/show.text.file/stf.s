@@ -84,7 +84,7 @@ L0889:  jsr     L08C2
 
 L089C:  jsr     L08C2
         sta     ALTZPOFF
-        MLI_CALL SET_MARK, L08FD
+        MLI_CALL SET_MARK, set_mark_params
         sta     ALTZPON
         jsr     L08D4
         rts
@@ -138,10 +138,13 @@ get_eof_params:
         .byte   2               ; param_count
 get_eof_ref_num:
         .byte   0               ; ref_num
-        .byte   0,0,0           ; EOF (low, mid, high)
+        .byte   0,0,0           ; EOF (lo, mid, hi)
 
-L08FD:  .byte   $02
-L08FE:  .byte   $00,$00,$00,$00
+set_mark_params:
+        .byte   2               ; param_count
+set_mark_ref_num:
+        .byte   0               ; ref_num
+        .byte   0,0,0           ; position (lo, mid, hi)
 
 close_params:
         .byte   1               ; param_count
@@ -338,7 +341,7 @@ L0A95:  lda     $8802,x
         jsr     L0863
         lda     open_ref_num
         sta     read_ref_num
-        sta     L08FE
+        sta     set_mark_ref_num
         sta     get_eof_ref_num
         sta     close_ref_num
         jsr     L0889

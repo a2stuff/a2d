@@ -175,7 +175,7 @@ Current file: stf.s
 00089C  1               
 00089C  1  20 C2 08     L089C:  jsr     L08C2
 00089F  1  8D 08 C0             sta     ALTZPOFF
-0008A2  1  20 00 BF CE          MLI_CALL SET_MARK, L08FD
+0008A2  1  20 00 BF CE          MLI_CALL SET_MARK, set_mark_params
 0008A6  1  FD 08        
 0008A8  1  8D 09 C0             sta     ALTZPON
 0008AB  1  20 D4 08             jsr     L08D4
@@ -231,10 +231,13 @@ Current file: stf.s
 0008F8  1  02                   .byte   2               ; param_count
 0008F9  1               get_eof_ref_num:
 0008F9  1  00                   .byte   0               ; ref_num
-0008FA  1  00 00 00             .byte   0,0,0           ; EOF (low, mid, high)
+0008FA  1  00 00 00             .byte   0,0,0           ; EOF (lo, mid, hi)
 0008FD  1               
-0008FD  1  02           L08FD:  .byte   $02
-0008FE  1  00 00 00 00  L08FE:  .byte   $00,$00,$00,$00
+0008FD  1               set_mark_params:
+0008FD  1  02                   .byte   2               ; param_count
+0008FE  1               set_mark_ref_num:
+0008FE  1  00                   .byte   0               ; ref_num
+0008FF  1  00 00 00             .byte   0,0,0           ; position (lo, mid, hi)
 000902  1               
 000902  1               close_params:
 000902  1  01                   .byte   1               ; param_count
@@ -448,7 +451,7 @@ Current file: stf.s
 000AA1  1  20 63 08             jsr     L0863
 000AA4  1  AD EF 08             lda     open_ref_num
 000AA7  1  8D F1 08             sta     read_ref_num
-000AAA  1  8D FE 08             sta     L08FE
+000AAA  1  8D FE 08             sta     set_mark_ref_num
 000AAD  1  8D F9 08             sta     get_eof_ref_num
 000AB0  1  8D 03 09             sta     close_ref_num
 000AB3  1  20 89 08             jsr     L0889
