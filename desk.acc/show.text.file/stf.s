@@ -61,63 +61,73 @@ L084C:  jsr     L09DE
         txs
         rts
 
-L0863:  jsr     L08C2
+L0863:  jsr     copy_params_aux_to_main
         sta     ALTZPOFF
         MLI_CALL OPEN, open_params
         sta     ALTZPON
-        jsr     L08D4
+        jsr     copy_params_main_to_aux
         rts
 
-L0876:  jsr     L08C2
+L0876:  jsr     copy_params_aux_to_main
         sta     ALTZPOFF
         MLI_CALL READ, read_params
         sta     ALTZPON
-        jsr     L08D4
+        jsr     copy_params_main_to_aux
         rts
 
-L0889:  jsr     L08C2
+L0889:  jsr     copy_params_aux_to_main
         sta     ALTZPOFF
         MLI_CALL GET_EOF, get_eof_params
         sta     ALTZPON
-        jsr     L08D4
+        jsr     copy_params_main_to_aux
         rts
 
-L089C:  jsr     L08C2
+L089C:  jsr     copy_params_aux_to_main
         sta     ALTZPOFF
         MLI_CALL SET_MARK, set_mark_params
         sta     ALTZPON
-        jsr     L08D4
+        jsr     copy_params_main_to_aux
         rts
 
-L08AF:  jsr     L08C2
+L08AF:  jsr     copy_params_aux_to_main
         sta     ALTZPOFF
         MLI_CALL CLOSE, close_params
         sta     ALTZPON
-        jsr     L08D4
+        jsr     copy_params_main_to_aux
         rts
 
-L08C2:  ldy     #$65
+;;; Copies param blocks from Aux to Main
+.proc   copy_params_aux_to_main
+        ldy     #(params_end - params_start + 1)
         sta     RAMWRTOFF
-L08C7:  lda     L08E9,y
-        sta     L08E9,y
+loop:   lda     params_start - 1,y
+        sta     params_start - 1,y
         dey
-        bne     L08C7
+        bne     loop
         sta     RAMRDOFF
         rts
+.endproc
 
-L08D4:  pha
+;;; Copies param blocks from Main to Aux
+.proc   copy_params_main_to_aux
+        pha
         php
         sta     RAMWRTON
-        ldy     #$65
-L08DB:  lda     L08E9,y
-        sta     L08E9,y
+        ldy     #(params_end - params_start + 1)
+loop:   lda     params_start - 1,y
+        sta     params_start - 1,y
         dey
-        bne     L08DB
+        bne     loop
         sta     RAMRDON
         plp
         pla
-L08E9:  rts
+        rts
+.endproc
 
+;;; ----------------------------------------
+
+params_start:
+;;; This block gets copied between main/aux
 
 open_params:
         .byte   3               ; param_count
@@ -151,6 +161,7 @@ close_params:
 close_ref_num:
         .byte   0               ; ref_num
 
+
 L0904:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -165,7 +176,12 @@ L0946:  .byte   $00
 L0947:  .byte   $00
 L0948:  .byte   $00
 L0949:  .byte   $00
-L094A:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+L094A:  .byte   $00,$00,$00,$00
+
+params_end:
+;;; ----------------------------------------
+
+        .byte   $00,$00,$00,$00
 L0952:  .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
 L095A:  .byte   $00
 L095B:  .byte   $FA
@@ -240,6 +256,7 @@ L09B7:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $01,$00,$7F,$00,$88,$00,$00
 L09CE:  .byte   $0A,$00,$1C,$00,$00,$20,$80,$00
         .byte   $00,$00,$00,$00,$00,$02,$96,$00
+
 L09DE:  sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
@@ -878,9 +895,9 @@ L0F96:  inc     L0993
 L0F99:  clc
         rts
 
-L0F9B:  brk
-L0F9C:  brk
-L0F9D:  brk
+L0F9B:  .byte   0
+L0F9C:  .byte   0
+L0F9D:  .byte   0
 L0F9E:  lda     #$01
         sta     L095A
         clc

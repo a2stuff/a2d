@@ -149,68 +149,78 @@ Current file: stf.s
 000861  1  9A                   txs
 000862  1  60                   rts
 000863  1               
-000863  1  20 C2 08     L0863:  jsr     L08C2
+000863  1  20 C2 08     L0863:  jsr     copy_params_aux_to_main
 000866  1  8D 08 C0             sta     ALTZPOFF
 000869  1  20 00 BF C8          MLI_CALL OPEN, open_params
 00086D  1  EA 08        
 00086F  1  8D 09 C0             sta     ALTZPON
-000872  1  20 D4 08             jsr     L08D4
+000872  1  20 D4 08             jsr     copy_params_main_to_aux
 000875  1  60                   rts
 000876  1               
-000876  1  20 C2 08     L0876:  jsr     L08C2
+000876  1  20 C2 08     L0876:  jsr     copy_params_aux_to_main
 000879  1  8D 08 C0             sta     ALTZPOFF
 00087C  1  20 00 BF CA          MLI_CALL READ, read_params
 000880  1  F0 08        
 000882  1  8D 09 C0             sta     ALTZPON
-000885  1  20 D4 08             jsr     L08D4
+000885  1  20 D4 08             jsr     copy_params_main_to_aux
 000888  1  60                   rts
 000889  1               
-000889  1  20 C2 08     L0889:  jsr     L08C2
+000889  1  20 C2 08     L0889:  jsr     copy_params_aux_to_main
 00088C  1  8D 08 C0             sta     ALTZPOFF
 00088F  1  20 00 BF D1          MLI_CALL GET_EOF, get_eof_params
 000893  1  F8 08        
 000895  1  8D 09 C0             sta     ALTZPON
-000898  1  20 D4 08             jsr     L08D4
+000898  1  20 D4 08             jsr     copy_params_main_to_aux
 00089B  1  60                   rts
 00089C  1               
-00089C  1  20 C2 08     L089C:  jsr     L08C2
+00089C  1  20 C2 08     L089C:  jsr     copy_params_aux_to_main
 00089F  1  8D 08 C0             sta     ALTZPOFF
 0008A2  1  20 00 BF CE          MLI_CALL SET_MARK, set_mark_params
 0008A6  1  FD 08        
 0008A8  1  8D 09 C0             sta     ALTZPON
-0008AB  1  20 D4 08             jsr     L08D4
+0008AB  1  20 D4 08             jsr     copy_params_main_to_aux
 0008AE  1  60                   rts
 0008AF  1               
-0008AF  1  20 C2 08     L08AF:  jsr     L08C2
+0008AF  1  20 C2 08     L08AF:  jsr     copy_params_aux_to_main
 0008B2  1  8D 08 C0             sta     ALTZPOFF
 0008B5  1  20 00 BF CC          MLI_CALL CLOSE, close_params
 0008B9  1  02 09        
 0008BB  1  8D 09 C0             sta     ALTZPON
-0008BE  1  20 D4 08             jsr     L08D4
+0008BE  1  20 D4 08             jsr     copy_params_main_to_aux
 0008C1  1  60                   rts
 0008C2  1               
-0008C2  1  A0 65        L08C2:  ldy     #$65
+0008C2  1               ;;; Copies param blocks from Aux to Main
+0008C2  1               .proc   copy_params_aux_to_main
+0008C2  1  A0 65                ldy     #(params_end - params_start + 1)
 0008C4  1  8D 04 C0             sta     RAMWRTOFF
-0008C7  1  B9 E9 08     L08C7:  lda     L08E9,y
-0008CA  1  99 E9 08             sta     L08E9,y
+0008C7  1  B9 E9 08     loop:   lda     params_start - 1,y
+0008CA  1  99 E9 08             sta     params_start - 1,y
 0008CD  1  88                   dey
-0008CE  1  D0 F7                bne     L08C7
+0008CE  1  D0 F7                bne     loop
 0008D0  1  8D 02 C0             sta     RAMRDOFF
 0008D3  1  60                   rts
+0008D4  1               .endproc
 0008D4  1               
-0008D4  1  48           L08D4:  pha
+0008D4  1               ;;; Copies param blocks from Main to Aux
+0008D4  1               .proc   copy_params_main_to_aux
+0008D4  1  48                   pha
 0008D5  1  08                   php
 0008D6  1  8D 05 C0             sta     RAMWRTON
-0008D9  1  A0 65                ldy     #$65
-0008DB  1  B9 E9 08     L08DB:  lda     L08E9,y
-0008DE  1  99 E9 08             sta     L08E9,y
+0008D9  1  A0 65                ldy     #(params_end - params_start + 1)
+0008DB  1  B9 E9 08     loop:   lda     params_start - 1,y
+0008DE  1  99 E9 08             sta     params_start - 1,y
 0008E1  1  88                   dey
-0008E2  1  D0 F7                bne     L08DB
+0008E2  1  D0 F7                bne     loop
 0008E4  1  8D 03 C0             sta     RAMRDON
 0008E7  1  28                   plp
 0008E8  1  68                   pla
-0008E9  1  60           L08E9:  rts
+0008E9  1  60                   rts
+0008EA  1               .endproc
 0008EA  1               
+0008EA  1               ;;; ----------------------------------------
+0008EA  1               
+0008EA  1               params_start:
+0008EA  1               ;;; This block gets copied between main/aux
 0008EA  1               
 0008EA  1               open_params:
 0008EA  1  03                   .byte   3               ; param_count
@@ -244,6 +254,7 @@ Current file: stf.s
 000903  1               close_ref_num:
 000903  1  00                   .byte   0               ; ref_num
 000904  1               
+000904  1               
 000904  1  00 00 00 00  L0904:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 000908  1  00 00 00 00  
 00090C  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -266,8 +277,12 @@ Current file: stf.s
 000947  1  00           L0947:  .byte   $00
 000948  1  00           L0948:  .byte   $00
 000949  1  00           L0949:  .byte   $00
-00094A  1  00 00 00 00  L094A:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-00094E  1  00 00 00 00  
+00094A  1  00 00 00 00  L094A:  .byte   $00,$00,$00,$00
+00094E  1               
+00094E  1               params_end:
+00094E  1               ;;; ----------------------------------------
+00094E  1               
+00094E  1  00 00 00 00          .byte   $00,$00,$00,$00
 000952  1  FF FF FF FF  L0952:  .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
 000956  1  FF FF FF FF  
 00095A  1  00           L095A:  .byte   $00
@@ -350,6 +365,7 @@ Current file: stf.s
 0009D2  1  00 20 80 00  
 0009D6  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$02,$96,$00
 0009DA  1  00 02 96 00  
+0009DE  1               
 0009DE  1  8D 09 C0     L09DE:  sta     ALTZPON
 0009E1  1  AD 8B C0             lda     LCBANK1
 0009E4  1  AD 8B C0             lda     LCBANK1
@@ -1007,9 +1023,9 @@ Current file: stf.s
 000F99  1  18           L0F99:  clc
 000F9A  1  60                   rts
 000F9B  1               
-000F9B  1  00           L0F9B:  brk
-000F9C  1  00           L0F9C:  brk
-000F9D  1  00           L0F9D:  brk
+000F9B  1  00           L0F9B:  .byte   0
+000F9C  1  00           L0F9C:  .byte   0
+000F9D  1  00           L0F9D:  .byte   0
 000F9E  1  A9 01        L0F9E:  lda     #$01
 000FA0  1  8D 5A 09             sta     L095A
 000FA3  1  18                   clc
