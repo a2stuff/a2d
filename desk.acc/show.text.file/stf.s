@@ -17,7 +17,7 @@ L0020           := $0020
 start:  jmp     copy2aux
 
 stash_x:.byte   $00
-copy2aux:
+.proc copy2aux
         tsx
         stx     stash_x
         sta     RAMWRTON
@@ -35,21 +35,27 @@ copy_dst:
         lda     copy_dst+2
         cmp     #$14
         bne     copy_src
+.endproc
+
+;;; Copy "call_1000_main" routine to $20
         sta     RAMWRTON
         sta     RAMRDON
-        ldx     #$10
-L0831:  lda     L083C,x
+        ldx     #(call_1000_main_end - call_1000_main)
+L0831:  lda     call_1000_main,x
         sta     L0020,x
         dex
         bpl     L0831
         jmp     L084C
 
-L083C:  sta     RAMRDOFF
+.proc   call_1000_main
+        sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     L1000
         sta     RAMRDON
         sta     RAMWRTON
         rts
+.endproc
+call_1000_main_end:
 
 L084C:  jsr     L09DE
         sta     ALTZPON
@@ -59,7 +65,7 @@ L084C:  jsr     L09DE
         sta     RAMWRTOFF
         ldx     stash_x
         txs
-        rts
+        rts                     ; DA exit
 
 .proc   open_file
         jsr     copy_params_aux_to_main
@@ -739,7 +745,8 @@ L0DED:  lda     #$01
         rts
 
 L0DF9:  jsr     UNKNOWN_CALL
-        tsb     a:NULL
+        .byte   $0C
+        .addr   NULL
         A2D_CALL $04, L09A8
         lda     L0998
         ror     a
@@ -857,12 +864,12 @@ L0F10:  lda     L0945
 L0F1F:  jsr     L100C
 L0F22:  ldy     text_string_len
         lda     ($06),y
-        and     #$7F
+        and     #$7F            ; clear high bit
         sta     ($06),y
         inc     L0945
-        cmp     #$0D
+        cmp     #$0D            ; return character
         beq     L0F86
-        cmp     #$20
+        cmp     #$20            ; space character
         bne     L0F41
         sty     L0F9B
         pha
@@ -978,19 +985,18 @@ L102B:  lda     #$00
         inc     read_db+1
 L103D:  rts
 
-L103E:  lda     read_db
-        sta     L1052
+L103E:
+.scope
+        lda     read_db
+        sta     store+1
         lda     read_db+1
-        sta     L1053
+        sta     store+2
         lda     #$20
         ldx     #$00
         sta     RAMWRTOFF
-L1051:
-L1052           := * + 1
-L1053           := * + 2
-        sta     $1200,x
+store:  sta     $1200,x         ; self-modified
         inx
-        bne     L1051
+        bne     store
         sta     RAMWRTON
         lda     #$00
         sta     L0947
@@ -1008,13 +1014,14 @@ L1053           := * + 2
         sec
         jsr     AUXMOVE
         pla
-        beq     L1087
+        beq     end
         cmp     #$4C
-        beq     L1082
-        brk
-L1082:  lda     #$01
+        beq     done
+        brk                     ; ????
+done:   lda     #$01
         sta     L0947
-L1087:  rts
+end:    rts
+.endscope
 
 L1088:  sec
         lda     L09B4

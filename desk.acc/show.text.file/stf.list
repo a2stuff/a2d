@@ -105,7 +105,7 @@ Current file: stf.s
 000800  1  4C 04 08     start:  jmp     copy2aux
 000803  1               
 000803  1  00           stash_x:.byte   $00
-000804  1               copy2aux:
+000804  1               .proc copy2aux
 000804  1  BA                   tsx
 000805  1  8E 03 08             stx     stash_x
 000808  1  8D 05 C0             sta     RAMWRTON
@@ -123,21 +123,27 @@ Current file: stf.s
 000822  1  AD 12 08             lda     copy_dst+2
 000825  1  C9 14                cmp     #$14
 000827  1  D0 E4                bne     copy_src
+000829  1               .endproc
+000829  1               
+000829  1               ;;; Copy "call_1000_main" routine to $20
 000829  1  8D 05 C0             sta     RAMWRTON
 00082C  1  8D 03 C0             sta     RAMRDON
-00082F  1  A2 10                ldx     #$10
-000831  1  BD 3C 08     L0831:  lda     L083C,x
+00082F  1  A2 10                ldx     #(call_1000_main_end - call_1000_main)
+000831  1  BD 3C 08     L0831:  lda     call_1000_main,x
 000834  1  95 20                sta     L0020,x
 000836  1  CA                   dex
 000837  1  10 F8                bpl     L0831
 000839  1  4C 4C 08             jmp     L084C
 00083C  1               
-00083C  1  8D 02 C0     L083C:  sta     RAMRDOFF
+00083C  1               .proc   call_1000_main
+00083C  1  8D 02 C0             sta     RAMRDOFF
 00083F  1  8D 04 C0             sta     RAMWRTOFF
 000842  1  20 00 10             jsr     L1000
 000845  1  8D 03 C0             sta     RAMRDON
 000848  1  8D 05 C0             sta     RAMWRTON
 00084B  1  60                   rts
+00084C  1               .endproc
+00084C  1               call_1000_main_end:
 00084C  1               
 00084C  1  20 DE 09     L084C:  jsr     L09DE
 00084F  1  8D 09 C0             sta     ALTZPON
@@ -147,7 +153,7 @@ Current file: stf.s
 00085B  1  8D 04 C0             sta     RAMWRTOFF
 00085E  1  AE 03 08             ldx     stash_x
 000861  1  9A                   txs
-000862  1  60                   rts
+000862  1  60                   rts                     ; DA exit
 000863  1               
 000863  1               .proc   open_file
 000863  1  20 C2 08             jsr     copy_params_aux_to_main
@@ -862,7 +868,8 @@ Current file: stf.s
 000DF8  1  60                   rts
 000DF9  1               
 000DF9  1  20 00 8E     L0DF9:  jsr     UNKNOWN_CALL
-000DFC  1  0C 00 00             tsb     a:NULL
+000DFC  1  0C                   .byte   $0C
+000DFD  1  00 00                .addr   NULL
 000DFF  1  20 00 40 04          A2D_CALL $04, L09A8
 000E03  1  A8 09        
 000E05  1  AD 98 09             lda     L0998
@@ -985,12 +992,12 @@ Current file: stf.s
 000F1F  1  20 0C 10     L0F1F:  jsr     L100C
 000F22  1  AC 93 09     L0F22:  ldy     text_string_len
 000F25  1  B1 06                lda     ($06),y
-000F27  1  29 7F                and     #$7F
+000F27  1  29 7F                and     #$7F            ; clear high bit
 000F29  1  91 06                sta     ($06),y
 000F2B  1  EE 45 09             inc     L0945
-000F2E  1  C9 0D                cmp     #$0D
+000F2E  1  C9 0D                cmp     #$0D            ; return character
 000F30  1  F0 54                beq     L0F86
-000F32  1  C9 20                cmp     #$20
+000F32  1  C9 20                cmp     #$20            ; space character
 000F34  1  D0 0B                bne     L0F41
 000F36  1  8C 9B 0F             sty     L0F9B
 000F39  1  48                   pha
@@ -1109,19 +1116,18 @@ Current file: stf.s
 00103A  1  EE F3 08             inc     read_db+1
 00103D  1  60           L103D:  rts
 00103E  1               
-00103E  1  AD F2 08     L103E:  lda     read_db
-001041  1  8D 52 10             sta     L1052
+00103E  1               L103E:
+00103E  1               .scope
+00103E  1  AD F2 08             lda     read_db
+001041  1  8D 52 10             sta     store+1
 001044  1  AD F3 08             lda     read_db+1
-001047  1  8D 53 10             sta     L1053
+001047  1  8D 53 10             sta     store+2
 00104A  1  A9 20                lda     #$20
 00104C  1  A2 00                ldx     #$00
 00104E  1  8D 04 C0             sta     RAMWRTOFF
-001051  1               L1051:
-001051  1               L1052           := * + 1
-001051  1               L1053           := * + 2
-001051  1  9D 00 12             sta     $1200,x
+001051  1  9D 00 12     store:  sta     $1200,x         ; self-modified
 001054  1  E8                   inx
-001055  1  D0 FA                bne     L1051
+001055  1  D0 FA                bne     store
 001057  1  8D 05 C0             sta     RAMWRTON
 00105A  1  A9 00                lda     #$00
 00105C  1  8D 47 09             sta     L0947
@@ -1139,13 +1145,14 @@ Current file: stf.s
 001076  1  38                   sec
 001077  1  20 11 C3             jsr     AUXMOVE
 00107A  1  68                   pla
-00107B  1  F0 0A                beq     L1087
+00107B  1  F0 0A                beq     end
 00107D  1  C9 4C                cmp     #$4C
-00107F  1  F0 01                beq     L1082
-001081  1  00                   brk
-001082  1  A9 01        L1082:  lda     #$01
+00107F  1  F0 01                beq     done
+001081  1  00                   brk                     ; ????
+001082  1  A9 01        done:   lda     #$01
 001084  1  8D 47 09             sta     L0947
-001087  1  60           L1087:  rts
+001087  1  60           end:    rts
+001088  1               .endscope
 001088  1               
 001088  1  38           L1088:  sec
 001089  1  AD B4 09             lda     L09B4
