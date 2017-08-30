@@ -219,13 +219,20 @@ L096B:  .byte   $00
 L096C:  .byte   $00
 L096D:  .byte   $00
 L096E:  .byte   $00
-L096F:  .byte   $00
-L0970:  .byte   $00
-L0971:  .byte   $00
-L0972:  .byte   $00
-L0973:  .byte   $00,$00
+
+fixed_mode_flag:
+        .byte   $00   ; 0 = proportional, otherwise = fixed
+
+button_state:
+        .byte   $00
+
+mouse_data:
+mouse_x:.word   0       ; lo/hi of mouse x position
+mouse_y:.word   0       ; lo of mouse y position (hi = unused?) ?????
 L0975:  .byte   $00
 L0976:  .byte   $00
+
+
 L0977:  .byte   $64
 L0978:  .byte   $00
 L0979:  .byte   $00
@@ -367,7 +374,7 @@ L0A74:  lda     ($06),y
 L0A89:  rts
 
 L0A8A:  lda     #$00
-        sta     L096F
+        sta     fixed_mode_flag
         ldx     $8801
         sta     RAMWRTOFF
 L0A95:  lda     $8802,x
@@ -385,42 +392,46 @@ L0A95:  lda     $8802,x
         A2D_CALL $38, L0994
         A2D_CALL $04, L09A8
         jsr     L1088
-        jsr     L1198
+        jsr     draw_mode
         jsr     L0E30
         A2D_CALL $2B, NULL
-L0AD1:  A2D_CALL $2A, L0970
-        lda     L0970
-        cmp     #$01
-        bne     L0AD1
-        A2D_CALL $40, L0971
-        lda     L0976
+
+input_loop:
+        A2D_CALL A2D_GET_BUTTON, button_state
+        lda     button_state
+        cmp     #$01            ; was clicked?
+        bne     input_loop      ; nope, keep waiting
+
+        A2D_CALL A2D_GET_MOUSE, mouse_data
+        lda     L0976           ; ??? UI element type ???
         cmp     #$64
-        bne     L0AD1
+        bne     input_loop
         lda     L0975
         cmp     #$05
         beq     L0B21
-        ldx     L0971
+        ldx     mouse_x
         stx     L0978
         stx     L0980
-        ldx     L0972
+        ldx     mouse_x+1
         stx     L0979
         stx     L0981
-        ldx     L0973
+        ldx     mouse_y
         stx     L097A
         stx     L0982
         cmp     #$03
         beq     L0B1B
         cmp     #$04
-        beq     L0AD1
+        beq     input_loop
         jsr     L0BB4
-        jmp     L0AD1
+        jmp     input_loop
 
-L0B1B:  jsr     L113A
-        jmp     L0AD1
+L0B1B:  jsr     on_title_bar_click
+        jmp     input_loop
 
+;;; Close box clicked?
 L0B21:  A2D_CALL $43, L097D
         lda     L097D
-        beq     L0AD1
+        beq     input_loop
         jsr     close_file
         A2D_CALL $39, L0994
         jsr     UNKNOWN_CALL
@@ -472,7 +483,7 @@ L0B8B:  sta     L0998
         lda     #$02
         sta     L0986
         A2D_CALL $49, L0986
-        jsr     L1198
+        jsr     draw_mode
         jmp     L0DF9
 
 L0BB4:  A2D_CALL $48, L0980
@@ -663,18 +674,18 @@ L0D27:  sta     L099B
         bne     L0D08
         rts
 
-L0D39:  lda     L0971
+L0D39:  lda     mouse_x
         sta     L098B
-        lda     L0972
+        lda     mouse_x+1
         sta     L098C
-        lda     L0973
+        lda     mouse_y
         sta     L098D
         A2D_CALL $4A, L098A
         rts
 
-L0D52:  A2D_CALL $2A, L0970
-        lda     L0970
-        cmp     #$02
+L0D52:  A2D_CALL A2D_GET_BUTTON, button_state
+        lda     button_state
+        cmp     #$02            ; was down, now up???
         rts
 
 L0D5E:  lda     L099B
@@ -756,7 +767,7 @@ L0E0E:  lda     L099D
         sta     L0989
         jsr     L0DED
         jsr     L0E30
-        jmp     L0AD1
+        jmp     input_loop
 
 L0E1D:  A2D_CALL $08, L0952
         A2D_CALL $11, L09B0
@@ -1086,7 +1097,7 @@ L10FF:  sta     $27
         jsr     L0020
         rts
 
-L1109:  lda     L096F
+L1109:  lda     fixed_mode_flag
         beq     L1128
         lda     #$00
         sta     $3C
@@ -1103,7 +1114,7 @@ L1109:  lda     L096F
         jsr     AUXMOVE
 L1128:  rts
 
-L1129:  lda     L096F
+L1129:  lda     fixed_mode_flag
         beq     L1139
         ldx     $8801
         lda     #$07
@@ -1112,36 +1123,42 @@ L1133:  sta     $8802,x
         bne     L1133
 L1139:  rts
 
-L113A:  lda     L0972
-        cmp     L1185
-        bne     L1148
-        lda     L0971
-        cmp     L1184
-L1148:  bcc     L1163
-        lda     L096F
-        beq     L1158
-        dec     L096F
+;;; On Title Bar Click - is it on the Fixed/Proportional label?
+.proc   on_title_bar_click
+        lda     mouse_x+1           ; mouse x high byte?
+        cmp     label_left+1
+        bne     :+
+        lda     mouse_x
+        cmp     label_left
+:       bcc     ignore
+        lda     fixed_mode_flag
+        beq     set_flag
+        dec     fixed_mode_flag ; clear flag (mode = proportional)
         jsr     L1109
-        jmp     L115B
+        jmp     redraw
 
-L1158:  inc     L096F
-L115B:  jsr     L11BD
+set_flag:
+        inc     fixed_mode_flag ; set flag (mode = fixed)
+redraw: jsr     draw_mode2
         jsr     L0E30
-        sec
+        sec                     ; Click consumed
         rts
 
-L1163:  clc
+ignore: clc                     ; Click ignored
         rts
+.endproc
 
 fixed_str:      A2D_DEFSTRING "Fixed        "
 prop_str:       A2D_DEFSTRING "Proportional"
 
-L1184:  .byte   $00
-L1185:  .byte   $00
+;;; Scratch space for Fixed/Proportional drawing code
+label_left:     .word   0       ; left edge of label
 L1186:  .byte   $00,$00,$00,$20,$80,$00,$00,$00
         .byte   $00,$00,$50,$00,$0A,$00
 L1194:  .byte   $00,$00,$0A,$00
-L1198:  sec
+
+.proc   draw_mode               ; guess: this is computing draw location
+        sec
         lda     L09AA
         sbc     #$0C
         sta     L1186
@@ -1155,22 +1172,25 @@ L1198:  sec
         sec
         pla
         sbc     #$32
-        sta     L1184
+        sta     label_left
         txa
         sbc     #$00
-        sta     L1185
-L11BD:  A2D_CALL $06, L1184
+        sta     label_left+1
+.endproc
+.proc   draw_mode2
+        A2D_CALL $06, label_left ; guess: setting up draw location
         A2D_CALL $0E, L1194
-        lda     L096F
-        beq     L11D7
+        lda     fixed_mode_flag
+        beq     else            ; is proportional?
         A2D_CALL A2D_TEXT, fixed_str
-        jmp     L11DD
-
-L11D7:  A2D_CALL A2D_TEXT, prop_str
-L11DD:  ldx     #$0F
-L11DF:  lda     L09CE,x
+        jmp     endif
+else:   A2D_CALL A2D_TEXT, prop_str
+endif:
+        ldx     #$0F
+loop:   lda     L09CE,x
         sta     L09A8,x
         dex
-        bpl     L11DF
+        bpl     loop
         A2D_CALL $06, L09A8
         rts
+.endproc
