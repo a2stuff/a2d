@@ -149,45 +149,55 @@ Current file: stf.s
 000861  1  9A                   txs
 000862  1  60                   rts
 000863  1               
-000863  1  20 C2 08     L0863:  jsr     copy_params_aux_to_main
+000863  1               .proc   open_file
+000863  1  20 C2 08             jsr     copy_params_aux_to_main
 000866  1  8D 08 C0             sta     ALTZPOFF
 000869  1  20 00 BF C8          MLI_CALL OPEN, open_params
 00086D  1  EA 08        
 00086F  1  8D 09 C0             sta     ALTZPON
 000872  1  20 D4 08             jsr     copy_params_main_to_aux
 000875  1  60                   rts
+000876  1               .endproc
 000876  1               
-000876  1  20 C2 08     L0876:  jsr     copy_params_aux_to_main
+000876  1               .proc   read_file
+000876  1  20 C2 08             jsr     copy_params_aux_to_main
 000879  1  8D 08 C0             sta     ALTZPOFF
 00087C  1  20 00 BF CA          MLI_CALL READ, read_params
 000880  1  F0 08        
 000882  1  8D 09 C0             sta     ALTZPON
 000885  1  20 D4 08             jsr     copy_params_main_to_aux
 000888  1  60                   rts
+000889  1               .endproc
 000889  1               
-000889  1  20 C2 08     L0889:  jsr     copy_params_aux_to_main
+000889  1               .proc   get_file_eof
+000889  1  20 C2 08             jsr     copy_params_aux_to_main
 00088C  1  8D 08 C0             sta     ALTZPOFF
 00088F  1  20 00 BF D1          MLI_CALL GET_EOF, get_eof_params
 000893  1  F8 08        
 000895  1  8D 09 C0             sta     ALTZPON
 000898  1  20 D4 08             jsr     copy_params_main_to_aux
 00089B  1  60                   rts
+00089C  1               .endproc
 00089C  1               
-00089C  1  20 C2 08     L089C:  jsr     copy_params_aux_to_main
+00089C  1               .proc set_file_mark
+00089C  1  20 C2 08             jsr     copy_params_aux_to_main
 00089F  1  8D 08 C0             sta     ALTZPOFF
 0008A2  1  20 00 BF CE          MLI_CALL SET_MARK, set_mark_params
 0008A6  1  FD 08        
 0008A8  1  8D 09 C0             sta     ALTZPON
 0008AB  1  20 D4 08             jsr     copy_params_main_to_aux
 0008AE  1  60                   rts
+0008AF  1               .endproc
 0008AF  1               
-0008AF  1  20 C2 08     L08AF:  jsr     copy_params_aux_to_main
+0008AF  1               .proc close_file
+0008AF  1  20 C2 08             jsr     copy_params_aux_to_main
 0008B2  1  8D 08 C0             sta     ALTZPOFF
 0008B5  1  20 00 BF CC          MLI_CALL CLOSE, close_params
 0008B9  1  02 09        
 0008BB  1  8D 09 C0             sta     ALTZPON
 0008BE  1  20 D4 08             jsr     copy_params_main_to_aux
 0008C1  1  60                   rts
+0008C2  1               .endproc
 0008C2  1               
 0008C2  1               ;;; Copies param blocks from Aux to Main
 0008C2  1               .proc   copy_params_aux_to_main
@@ -464,13 +474,13 @@ Current file: stf.s
 000A9B  1  CA                   dex
 000A9C  1  D0 F7                bne     L0A95
 000A9E  1  8D 05 C0             sta     RAMWRTON
-000AA1  1  20 63 08             jsr     L0863
+000AA1  1  20 63 08             jsr     open_file
 000AA4  1  AD EF 08             lda     open_ref_num
 000AA7  1  8D F1 08             sta     read_ref_num
 000AAA  1  8D FE 08             sta     set_mark_ref_num
 000AAD  1  8D F9 08             sta     get_eof_ref_num
 000AB0  1  8D 03 09             sta     close_ref_num
-000AB3  1  20 89 08             jsr     L0889
+000AB3  1  20 89 08             jsr     get_file_eof
 000AB6  1  20 00 40 38          A2D_CALL $38, L0994
 000ABA  1  94 09        
 000ABC  1  20 00 40 04          A2D_CALL $04, L09A8
@@ -516,7 +526,7 @@ Current file: stf.s
 000B25  1  7D 09        
 000B27  1  AD 7D 09             lda     L097D
 000B2A  1  F0 A5                beq     L0AD1
-000B2C  1  20 AF 08             jsr     L08AF
+000B2C  1  20 AF 08             jsr     close_file
 000B2F  1  20 00 40 39          A2D_CALL $39, L0994
 000B33  1  94 09        
 000B35  1  20 00 8E             jsr     UNKNOWN_CALL
@@ -872,7 +882,7 @@ Current file: stf.s
 000E30  1  A9 00        L0E30:  lda     #$00
 000E32  1  8D 49 09             sta     L0949
 000E35  1  20 29 11             jsr     L1129
-000E38  1  20 9C 08             jsr     L089C
+000E38  1  20 9C 08             jsr     set_file_mark
 000E3B  1  A9 00                lda     #$00
 000E3D  1  8D F2 08             sta     read_db
 000E40  1  85 06                sta     $06
@@ -1111,7 +1121,7 @@ Current file: stf.s
 001057  1  8D 05 C0             sta     RAMWRTON
 00105A  1  A9 00                lda     #$00
 00105C  1  8D 47 09             sta     L0947
-00105F  1  20 76 08             jsr     L0876
+00105F  1  20 76 08             jsr     read_file
 001062  1  48                   pha
 001063  1  A9 00                lda     #$00
 001065  1  85 3C                sta     $3C

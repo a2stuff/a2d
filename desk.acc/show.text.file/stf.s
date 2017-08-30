@@ -61,40 +61,50 @@ L084C:  jsr     L09DE
         txs
         rts
 
-L0863:  jsr     copy_params_aux_to_main
+.proc   open_file
+        jsr     copy_params_aux_to_main
         sta     ALTZPOFF
         MLI_CALL OPEN, open_params
         sta     ALTZPON
         jsr     copy_params_main_to_aux
         rts
+.endproc
 
-L0876:  jsr     copy_params_aux_to_main
+.proc   read_file
+        jsr     copy_params_aux_to_main
         sta     ALTZPOFF
         MLI_CALL READ, read_params
         sta     ALTZPON
         jsr     copy_params_main_to_aux
         rts
+.endproc
 
-L0889:  jsr     copy_params_aux_to_main
+.proc   get_file_eof
+        jsr     copy_params_aux_to_main
         sta     ALTZPOFF
         MLI_CALL GET_EOF, get_eof_params
         sta     ALTZPON
         jsr     copy_params_main_to_aux
         rts
+.endproc
 
-L089C:  jsr     copy_params_aux_to_main
+.proc set_file_mark
+        jsr     copy_params_aux_to_main
         sta     ALTZPOFF
         MLI_CALL SET_MARK, set_mark_params
         sta     ALTZPON
         jsr     copy_params_main_to_aux
         rts
+.endproc
 
-L08AF:  jsr     copy_params_aux_to_main
+.proc close_file
+        jsr     copy_params_aux_to_main
         sta     ALTZPOFF
         MLI_CALL CLOSE, close_params
         sta     ALTZPON
         jsr     copy_params_main_to_aux
         rts
+.endproc
 
 ;;; Copies param blocks from Aux to Main
 .proc   copy_params_aux_to_main
@@ -355,13 +365,13 @@ L0A95:  lda     $8802,x
         dex
         bne     L0A95
         sta     RAMWRTON
-        jsr     L0863
+        jsr     open_file
         lda     open_ref_num
         sta     read_ref_num
         sta     set_mark_ref_num
         sta     get_eof_ref_num
         sta     close_ref_num
-        jsr     L0889
+        jsr     get_file_eof
         A2D_CALL $38, L0994
         A2D_CALL $04, L09A8
         jsr     L1088
@@ -401,7 +411,7 @@ L0B1B:  jsr     L113A
 L0B21:  A2D_CALL $43, L097D
         lda     L097D
         beq     L0AD1
-        jsr     L08AF
+        jsr     close_file
         A2D_CALL $39, L0994
         jsr     UNKNOWN_CALL
         .byte   $0C
@@ -745,7 +755,7 @@ L0E1D:  A2D_CALL $08, L0952
 L0E30:  lda     #$00
         sta     L0949
         jsr     L1129
-        jsr     L089C
+        jsr     set_file_mark
         lda     #$00
         sta     read_db
         sta     $06
@@ -980,7 +990,7 @@ L1053           := * + 2
         sta     RAMWRTON
         lda     #$00
         sta     L0947
-        jsr     L0876
+        jsr     read_file
         pha
         lda     #$00
         sta     $3C
