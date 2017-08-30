@@ -342,9 +342,13 @@ Current file: stf.s
 00098D  1  00 00        L098D:  .byte   $00,$00
 00098F  1  00           L098F:  .byte   $00
 000990  1  00           L0990:  .byte   $00
-000991  1  00           L0991:  .byte   $00
-000992  1  00           L0992:  .byte   $00
-000993  1  00           L0993:  .byte   $00
+000991  1               
+000991  1               text_string:
+000991  1               text_string_addr:
+000991  1  00 00                .addr   0               ; address
+000993  1               text_string_len:
+000993  1  00                   .byte   0               ; length
+000994  1               
 000994  1  64 02        L0994:  .byte   $64,$02
 000996  1  00           L0996:  .byte   $00
 000997  1  10           L0997:  .byte   $10
@@ -920,7 +924,7 @@ Current file: stf.s
 000E95  1  20 F3 0E             jsr     L0EF3
 000E98  1  B0 3D                bcs     L0ED7
 000E9A  1  18                   clc
-000E9B  1  AD 93 09             lda     L0993
+000E9B  1  AD 93 09             lda     text_string_len
 000E9E  1  65 06                adc     $06
 000EA0  1  85 06                sta     $06
 000EA2  1  90 02                bcc     L0EA6
@@ -965,11 +969,11 @@ Current file: stf.s
 000EFA  1  8D 9C 0F             sta     L0F9C
 000EFD  1  8D 9D 0F             sta     L0F9D
 000F00  1  8D 5A 09             sta     L095A
-000F03  1  8D 93 09             sta     L0993
+000F03  1  8D 93 09             sta     text_string_len
 000F06  1  A5 06                lda     $06
-000F08  1  8D 91 09             sta     L0991
+000F08  1  8D 91 09             sta     text_string_addr
 000F0B  1  A5 07                lda     $07
-000F0D  1  8D 92 09             sta     L0992
+000F0D  1  8D 92 09             sta     text_string_addr+1
 000F10  1  AD 45 09     L0F10:  lda     L0945
 000F13  1  D0 0D                bne     L0F22
 000F15  1  AD 47 09             lda     L0947
@@ -979,7 +983,7 @@ Current file: stf.s
 000F1E  1  60                   rts
 000F1F  1               
 000F1F  1  20 0C 10     L0F1F:  jsr     L100C
-000F22  1  AC 93 09     L0F22:  ldy     L0993
+000F22  1  AC 93 09     L0F22:  ldy     text_string_len
 000F25  1  B1 06                lda     ($06),y
 000F27  1  29 7F                and     #$7F
 000F29  1  91 06                sta     ($06),y
@@ -1010,7 +1014,7 @@ Current file: stf.s
 000F60  1  AD 5B 09             lda     L095B
 000F63  1  CD 9C 0F             cmp     L0F9C
 000F66  1  90 06        L0F66:  bcc     L0F6E
-000F68  1  EE 93 09             inc     L0993
+000F68  1  EE 93 09             inc     text_string_len
 000F6B  1  4C 10 0F             jmp     L0F10
 000F6E  1               
 000F6E  1  A9 00        L0F6E:  lda     #$00
@@ -1018,18 +1022,18 @@ Current file: stf.s
 000F73  1  AD 9B 0F             lda     L0F9B
 000F76  1  C9 FF                cmp     #$FF
 000F78  1  F0 09                beq     L0F83
-000F7A  1  8D 93 09             sta     L0993
+000F7A  1  8D 93 09             sta     text_string_len
 000F7D  1  AD 46 09             lda     L0946
 000F80  1  8D 45 09             sta     L0945
-000F83  1  EE 93 09     L0F83:  inc     L0993
+000F83  1  EE 93 09     L0F83:  inc     text_string_len
 000F86  1  20 F6 0F     L0F86:  jsr     L0FF6
-000F89  1  AC 93 09             ldy     L0993
+000F89  1  AC 93 09             ldy     text_string_len
 000F8C  1  B1 06                lda     ($06),y
 000F8E  1  C9 09                cmp     #$09
 000F90  1  F0 04                beq     L0F96
 000F92  1  C9 0D                cmp     #$0D
 000F94  1  D0 03                bne     L0F99
-000F96  1  EE 93 09     L0F96:  inc     L0993
+000F96  1  EE 93 09     L0F96:  inc     text_string_len
 000F99  1  18           L0F99:  clc
 000F9A  1  60                   rts
 000F9B  1               
@@ -1075,15 +1079,15 @@ Current file: stf.s
 000FF5  1  01           
 000FF6  1  AD 48 09     L0FF6:  lda     L0948
 000FF9  1  F0 10                beq     L100B
-000FFB  1  AD 93 09             lda     L0993
+000FFB  1  AD 93 09             lda     text_string_len
 000FFE  1  F0 0B                beq     L100B
-001000  1  20 00 40 19  L1000:  A2D_CALL $19, L0991
+001000  1  20 00 40 19  L1000:  A2D_CALL A2D_TEXT, text_string
 001004  1  91 09        
 001006  1  A9 01                lda     #$01
 001008  1  8D 49 09             sta     L0949
 00100B  1  60           L100B:  rts
 00100C  1               
-00100C  1  AD 92 09     L100C:  lda     L0992
+00100C  1  AD 92 09     L100C:  lda     text_string_addr+1
 00100F  1  C9 12                cmp     #$12
 001011  1  F0 18                beq     L102B
 001013  1  A0 00                ldy     #$00
@@ -1091,10 +1095,10 @@ Current file: stf.s
 001018  1  99 00 12             sta     $1200,y
 00101B  1  C8                   iny
 00101C  1  D0 F7                bne     L1015
-00101E  1  CE 92 09             dec     L0992
-001021  1  AD 91 09             lda     L0991
+00101E  1  CE 92 09             dec     text_string_addr+1
+001021  1  AD 91 09             lda     text_string_addr
 001024  1  85 06                sta     $06
-001026  1  AD 92 09             lda     L0992
+001026  1  AD 92 09             lda     text_string_addr+1
 001029  1  85 07                sta     $07
 00102B  1  A9 00        L102B:  lda     #$00
 00102D  1  8D 45 09             sta     L0945

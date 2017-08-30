@@ -240,9 +240,13 @@ L098C:  .byte   $00
 L098D:  .byte   $00,$00
 L098F:  .byte   $00
 L0990:  .byte   $00
-L0991:  .byte   $00
-L0992:  .byte   $00
-L0993:  .byte   $00
+
+text_string:
+text_string_addr:
+        .addr   0               ; address
+text_string_len:
+        .byte   0               ; length
+
 L0994:  .byte   $64,$02
 L0996:  .byte   $00
 L0997:  .byte   $10
@@ -792,7 +796,7 @@ L0E7E:  A2D_CALL $0E, L095D
         jsr     L0EF3
         bcs     L0ED7
         clc
-        lda     L0993
+        lda     text_string_len
         adc     $06
         sta     $06
         bcc     L0EA6
@@ -837,11 +841,11 @@ L0EF3:  lda     #$FF
         sta     L0F9C
         sta     L0F9D
         sta     L095A
-        sta     L0993
+        sta     text_string_len
         lda     $06
-        sta     L0991
+        sta     text_string_addr
         lda     $07
-        sta     L0992
+        sta     text_string_addr+1
 L0F10:  lda     L0945
         bne     L0F22
         lda     L0947
@@ -851,7 +855,7 @@ L0F10:  lda     L0945
         rts
 
 L0F1F:  jsr     L100C
-L0F22:  ldy     L0993
+L0F22:  ldy     text_string_len
         lda     ($06),y
         and     #$7F
         sta     ($06),y
@@ -882,7 +886,7 @@ L0F58:  lda     L095C
         lda     L095B
         cmp     L0F9C
 L0F66:  bcc     L0F6E
-        inc     L0993
+        inc     text_string_len
         jmp     L0F10
 
 L0F6E:  lda     #$00
@@ -890,18 +894,18 @@ L0F6E:  lda     #$00
         lda     L0F9B
         cmp     #$FF
         beq     L0F83
-        sta     L0993
+        sta     text_string_len
         lda     L0946
         sta     L0945
-L0F83:  inc     L0993
+L0F83:  inc     text_string_len
 L0F86:  jsr     L0FF6
-        ldy     L0993
+        ldy     text_string_len
         lda     ($06),y
         cmp     #$09
         beq     L0F96
         cmp     #$0D
         bne     L0F99
-L0F96:  inc     L0993
+L0F96:  inc     text_string_len
 L0F99:  clc
         rts
 
@@ -945,14 +949,14 @@ L0FE9:  .byte   $00,$8C,$00,$D2,$00,$18,$01,$5E
         .byte   $01,$A4,$01,$EA,$01
 L0FF6:  lda     L0948
         beq     L100B
-        lda     L0993
+        lda     text_string_len
         beq     L100B
-L1000:  A2D_CALL $19, L0991
+L1000:  A2D_CALL A2D_TEXT, text_string
         lda     #$01
         sta     L0949
 L100B:  rts
 
-L100C:  lda     L0992
+L100C:  lda     text_string_addr+1
         cmp     #$12
         beq     L102B
         ldy     #$00
@@ -960,10 +964,10 @@ L1015:  lda     $1300,y
         sta     $1200,y
         iny
         bne     L1015
-        dec     L0992
-        lda     L0991
+        dec     text_string_addr+1
+        lda     text_string_addr
         sta     $06
-        lda     L0992
+        lda     text_string_addr+1
         sta     $07
 L102B:  lda     #$00
         sta     L0945
