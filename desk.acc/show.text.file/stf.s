@@ -229,8 +229,8 @@ button_state:
 mouse_data:
 mouse_x:.word   0       ; lo/hi of mouse x position
 mouse_y:.word   0       ; lo of mouse y position (hi = unused?) ?????
-L0975:  .byte   $00
-L0976:  .byte   $00
+mouse_elem:     .byte   $00     ; 3 = title, 4 = ???, 5 = close
+mouse_win:      .byte   $00     ; $64 = mouse in window
 
 
 L0977:  .byte   $64
@@ -406,13 +406,13 @@ input_loop:
         bne     input_loop      ; nope, keep waiting
 
         A2D_CALL A2D_GET_MOUSE, mouse_data
-        lda     L0976           ; ??? UI element type ???
-        cmp     #$64
+        lda     mouse_win       ; click target??
+        cmp     #$64            ; is in window??
         bne     input_loop
-        lda     L0975
-        cmp     #$05
-        beq     close_btn
-        ldx     mouse_x
+        lda     mouse_elem      ; which UI element?
+        cmp     #$05            ; 5 = close btn
+        beq     on_close_btn_down
+        ldx     mouse_x         ; stash mouse location
         stx     L0978
         stx     L0980
         ldx     mouse_x+1
@@ -421,9 +421,9 @@ input_loop:
         ldx     mouse_y
         stx     L097A
         stx     L0982
-        cmp     #$03
+        cmp     #$03            ; 3 = title bar
         beq     L0B1B
-        cmp     #$04
+        cmp     #$04            ; 4 = ??? scroll track maybe??
         beq     input_loop
         jsr     L0BB4
         jmp     input_loop
@@ -431,9 +431,8 @@ input_loop:
 L0B1B:  jsr     on_title_bar_click
         jmp     input_loop
 
-;;; Close box clicked?
-.proc close_btn
-        A2D_CALL A2D_CLOSE_BTN, close_btn_state     ; wait to see if the click completes
+.proc on_close_btn_down
+        A2D_CALL A2D_BTN_CLICK, close_btn_state     ; wait to see if the click completes
         lda     close_btn_state ; all the way?
         beq     input_loop      ; nope
         jsr     close_file

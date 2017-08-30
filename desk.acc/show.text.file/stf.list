@@ -79,7 +79,7 @@ Current file: stf.s
 000800  2               A2D_TEXT        := $19          ; { .addr data, .byte len }
 000800  2               A2D_GET_BUTTON  := $2A          ; { .byte state (0=up, 1=down?, 2=released?) }
 000800  2               A2D_GET_MOUSE   := $40          ; { .word x, .word y, ????...}
-000800  2               A2D_CLOSE_BTN   := $43          ; { .byte closed, .byte ??, byte ?? } - enter loop
+000800  2               A2D_BTN_CLICK   := $43          ; { .byte clicked (0=cancelled, 1=clicked), .byte ??, byte ?? }
 000800  2               
 000800  2               ;;; Macros
 000800  2               .macro  A2D_CALL    op, addr
@@ -334,8 +334,8 @@ Current file: stf.s
 000971  1               mouse_data:
 000971  1  00 00        mouse_x:.word   0       ; lo/hi of mouse x position
 000973  1  00 00        mouse_y:.word   0       ; lo of mouse y position (hi = unused?) ?????
-000975  1  00           L0975:  .byte   $00
-000976  1  00           L0976:  .byte   $00
+000975  1  00           mouse_elem:     .byte   $00     ; 3 = title, 4 = ???, 5 = close
+000976  1  00           mouse_win:      .byte   $00     ; $64 = mouse in window
 000977  1               
 000977  1               
 000977  1  64           L0977:  .byte   $64
@@ -523,13 +523,13 @@ Current file: stf.s
 000ADE  1               
 000ADE  1  20 00 40 40          A2D_CALL A2D_GET_MOUSE, mouse_data
 000AE2  1  71 09        
-000AE4  1  AD 76 09             lda     L0976           ; ??? UI element type ???
-000AE7  1  C9 64                cmp     #$64
+000AE4  1  AD 76 09             lda     mouse_win       ; click target??
+000AE7  1  C9 64                cmp     #$64            ; is in window??
 000AE9  1  D0 E6                bne     input_loop
-000AEB  1  AD 75 09             lda     L0975
-000AEE  1  C9 05                cmp     #$05
-000AF0  1  F0 2F                beq     close_btn
-000AF2  1  AE 71 09             ldx     mouse_x
+000AEB  1  AD 75 09             lda     mouse_elem      ; which UI element?
+000AEE  1  C9 05                cmp     #$05            ; 5 = close btn
+000AF0  1  F0 2F                beq     on_close_btn_down
+000AF2  1  AE 71 09             ldx     mouse_x         ; stash mouse location
 000AF5  1  8E 78 09             stx     L0978
 000AF8  1  8E 80 09             stx     L0980
 000AFB  1  AE 72 09             ldx     mouse_x+1
@@ -538,9 +538,9 @@ Current file: stf.s
 000B04  1  AE 73 09             ldx     mouse_y
 000B07  1  8E 7A 09             stx     L097A
 000B0A  1  8E 82 09             stx     L0982
-000B0D  1  C9 03                cmp     #$03
+000B0D  1  C9 03                cmp     #$03            ; 3 = title bar
 000B0F  1  F0 0A                beq     L0B1B
-000B11  1  C9 04                cmp     #$04
+000B11  1  C9 04                cmp     #$04            ; 4 = ??? scroll track maybe??
 000B13  1  F0 BC                beq     input_loop
 000B15  1  20 B4 0B             jsr     L0BB4
 000B18  1  4C D1 0A             jmp     input_loop
@@ -548,9 +548,8 @@ Current file: stf.s
 000B1B  1  20 3A 11     L0B1B:  jsr     on_title_bar_click
 000B1E  1  4C D1 0A             jmp     input_loop
 000B21  1               
-000B21  1               ;;; Close box clicked?
-000B21  1               .proc close_btn
-000B21  1  20 00 40 43          A2D_CALL A2D_CLOSE_BTN, close_btn_state     ; wait to see if the click completes
+000B21  1               .proc on_close_btn_down
+000B21  1  20 00 40 43          A2D_CALL A2D_BTN_CLICK, close_btn_state     ; wait to see if the click completes
 000B25  1  7D 09        
 000B27  1  AD 7D 09             lda     close_btn_state ; all the way?
 000B2A  1  F0 A5                beq     input_loop      ; nope
