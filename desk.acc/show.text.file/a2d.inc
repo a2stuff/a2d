@@ -8,7 +8,8 @@ UNKNOWN_CALL    := $8E00
 
 A2D_TEXT        := $19          ; { .addr data, .byte len }
 A2D_GET_BUTTON  := $2A          ; { .byte state (0=up, 1=down?, 2=released?) }
-A2D_GET_MOUSE   := $40          ; { .word x, .word y, ????}
+A2D_GET_MOUSE   := $40          ; { .word x, .word y, ????...}
+A2D_CLOSE_BTN   := $43          ; { .byte closed, .byte ??, byte ?? } - enter loop
 
 ;;; Macros
 .macro  A2D_CALL    op, addr

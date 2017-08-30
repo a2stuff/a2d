@@ -237,7 +237,10 @@ L0977:  .byte   $64
 L0978:  .byte   $00
 L0979:  .byte   $00
 L097A:  .byte   $00,$00,$00
-L097D:  .byte   $00,$00,$00
+
+close_btn_state:
+        .byte   $00,$00,$00
+
 L0980:  .byte   $00
 L0981:  .byte   $00
 L0982:  .byte   $00,$00
@@ -408,7 +411,7 @@ input_loop:
         bne     input_loop
         lda     L0975
         cmp     #$05
-        beq     L0B21
+        beq     close_btn
         ldx     mouse_x
         stx     L0978
         stx     L0980
@@ -429,15 +432,18 @@ L0B1B:  jsr     on_title_bar_click
         jmp     input_loop
 
 ;;; Close box clicked?
-L0B21:  A2D_CALL $43, L097D
-        lda     L097D
-        beq     input_loop
+.proc close_btn
+        A2D_CALL A2D_CLOSE_BTN, close_btn_state     ; wait to see if the click completes
+        lda     close_btn_state ; all the way?
+        beq     input_loop      ; nope
         jsr     close_file
         A2D_CALL $39, L0994
-        jsr     UNKNOWN_CALL
+        ;; window is gone by this point - is previous a redraw/destroy?
+        jsr     UNKNOWN_CALL    ; hides the cursor?
         .byte   $0C
         .addr   NULL
-        rts
+        rts                     ; exits input loop
+.endproc
 
         A2D_CALL $45, L0977
         jsr     L10FD

@@ -78,7 +78,8 @@ Current file: stf.s
 000800  2               
 000800  2               A2D_TEXT        := $19          ; { .addr data, .byte len }
 000800  2               A2D_GET_BUTTON  := $2A          ; { .byte state (0=up, 1=down?, 2=released?) }
-000800  2               A2D_GET_MOUSE   := $40          ; { .word x, .word y, ????}
+000800  2               A2D_GET_MOUSE   := $40          ; { .word x, .word y, ????...}
+000800  2               A2D_CLOSE_BTN   := $43          ; { .byte closed, .byte ??, byte ?? } - enter loop
 000800  2               
 000800  2               ;;; Macros
 000800  2               .macro  A2D_CALL    op, addr
@@ -341,7 +342,10 @@ Current file: stf.s
 000978  1  00           L0978:  .byte   $00
 000979  1  00           L0979:  .byte   $00
 00097A  1  00 00 00     L097A:  .byte   $00,$00,$00
-00097D  1  00 00 00     L097D:  .byte   $00,$00,$00
+00097D  1               
+00097D  1               close_btn_state:
+00097D  1  00 00 00             .byte   $00,$00,$00
+000980  1               
 000980  1  00           L0980:  .byte   $00
 000981  1  00           L0981:  .byte   $00
 000982  1  00 00        L0982:  .byte   $00,$00
@@ -524,7 +528,7 @@ Current file: stf.s
 000AE9  1  D0 E6                bne     input_loop
 000AEB  1  AD 75 09             lda     L0975
 000AEE  1  C9 05                cmp     #$05
-000AF0  1  F0 2F                beq     L0B21
+000AF0  1  F0 2F                beq     close_btn
 000AF2  1  AE 71 09             ldx     mouse_x
 000AF5  1  8E 78 09             stx     L0978
 000AF8  1  8E 80 09             stx     L0980
@@ -544,17 +548,21 @@ Current file: stf.s
 000B1B  1  20 3A 11     L0B1B:  jsr     on_title_bar_click
 000B1E  1  4C D1 0A             jmp     input_loop
 000B21  1               
-000B21  1  20 00 40 43  L0B21:  A2D_CALL $43, L097D
+000B21  1               ;;; Close box clicked?
+000B21  1               .proc close_btn
+000B21  1  20 00 40 43          A2D_CALL A2D_CLOSE_BTN, close_btn_state     ; wait to see if the click completes
 000B25  1  7D 09        
-000B27  1  AD 7D 09             lda     L097D
-000B2A  1  F0 A5                beq     input_loop
+000B27  1  AD 7D 09             lda     close_btn_state ; all the way?
+000B2A  1  F0 A5                beq     input_loop      ; nope
 000B2C  1  20 AF 08             jsr     close_file
 000B2F  1  20 00 40 39          A2D_CALL $39, L0994
 000B33  1  94 09        
-000B35  1  20 00 8E             jsr     UNKNOWN_CALL
+000B35  1                       ;; window is gone by this point - is previous a redraw/destroy?
+000B35  1  20 00 8E             jsr     UNKNOWN_CALL    ; hides the cursor?
 000B38  1  0C                   .byte   $0C
 000B39  1  00 00                .addr   NULL
-000B3B  1  60                   rts
+000B3B  1  60                   rts                     ; exits input loop
+000B3C  1               .endproc
 000B3C  1               
 000B3C  1  20 00 40 45          A2D_CALL $45, L0977
 000B40  1  77 09        
