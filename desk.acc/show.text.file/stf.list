@@ -81,7 +81,7 @@ Current file: stf.s
 000800  2                       ;; .byte length
 000800  2               
 000800  2               A2D_GET_BUTTON  := $2A
-000800  2                       ;; .byte state (0=up, 1=down?, 2=released?)
+000800  2                       ;; .byte state (0=up, 1=down, 2=released)
 000800  2               
 000800  2               A2D_GET_MOUSE   := $40
 000800  2                       ;; .word x
@@ -351,24 +351,25 @@ Current file: stf.s
 000970  1               button_state:
 000970  1  00                   .byte   $00
 000971  1               
-000971  1               .proc mouse_data
+000971  1               .proc mouse_data                ; queried by main input loop
 000971  1  00 00        xcoord: .word   0
 000973  1  00 00        ycoord: .word   0
-000975  1  00           elem:   .byte   $00
-000976  1  00           win:    .byte   $00
+000975  1  00           elem:   .byte   0
+000976  1  00           win:    .byte   0
 000977  1               .endproc
 000977  1               
+000977  1               ;;; Possibly unused
 000977  1  64           L0977:  .byte   $64
 000978  1  00 00        xcoord1:.word   0               ; ???
 00097A  1  00 00        ycoord1:.word   0               ; ???
 00097C  1  00                   .byte   0               ; ???
 00097D  1               
-00097D  1               .proc close_btn
-00097D  1  00           state:  .byte   0
+00097D  1               .proc close_btn                 ; queried after close clicked to see if aborted/finished
+00097D  1  00           state:  .byte   0               ; 0 = aborted, 1 = clicked
 00097E  1  00 00                .byte   0,0
 000980  1               .endproc
 000980  1               
-000980  1               .proc query_client_params
+000980  1               .proc query_client_params       ; queried after a click to identify target
 000980  1  00 00        xcoord: .word   0
 000982  1  00 00        ycoord: .word   0
 000984  1  00           part:   .byte   0               ; 0 = client, 1 = scroll bar, 2 = ?????
@@ -643,6 +644,7 @@ Current file: stf.s
 000BB1  1  4C F9 0D             jmp     L0DF9
 000BB4  1               .endproc
 000BB4  1               
+000BB4  1               ;;; Non-title (client) area clicked
 000BB4  1               .proc on_client_click
 000BB4  1  20 00 40 48          A2D_CALL A2D_QUERY_CLIENT, query_client_params
 000BB8  1  80 09        
@@ -701,8 +703,8 @@ Current file: stf.s
 000C20  1  B0 02                bcs     :+
 000C22  1  A9 00                lda     #$00
 000C24  1  8D 89 09     :       sta     L0989
-000C27  1  20 73 0C             jsr     L0C73
-000C2A  1  90 E5                bcc     loop
+000C27  1  20 73 0C             jsr     update_scroll_pos
+000C2A  1  90 E5                bcc     loop            ; repeat while button down
 000C2C  1  60           end:    rts
 000C2D  1               .endproc
 000C2D  1               
@@ -710,51 +712,57 @@ Current file: stf.s
 000C2D  1  AD 9D 09     loop :  lda     vscroll_pos
 000C30  1  F0 0B                beq     end
 000C32  1  38                   sec
-000C33  1  E9 01                sbc     #$01
+000C33  1  E9 01                sbc     #1
 000C35  1  8D 89 09             sta     L0989
-000C38  1  20 73 0C             jsr     L0C73
-000C3B  1  90 F0                bcc     loop
+000C38  1  20 73 0C             jsr     update_scroll_pos
+000C3B  1  90 F0                bcc     loop            ; repeat while button down
 000C3D  1  60           end:    rts
 000C3E  1               .endproc
 000C3E  1               
+000C3E  1               vscroll_max := $FA
+000C3E  1               
 000C3E  1               .proc on_vscroll_below_click
 000C3E  1  AD 9D 09     loop:   lda     vscroll_pos
-000C41  1  C9 FA                cmp     #$FA
+000C41  1  C9 FA                cmp     #vscroll_max    ; pos == max ?
 000C43  1  F0 1A                beq     end
 000C45  1  20 84 0C             jsr     L0C84
 000C48  1  18                   clc
 000C49  1  AD 9D 09             lda     vscroll_pos
-000C4C  1  6D 6E 09             adc     L096E
-000C4F  1  B0 04                bcs     L0C55
-000C51  1  C9 FB                cmp     #$FB
-000C53  1  90 02                bcc     L0C57
-000C55  1  A9 FA        L0C55:  lda     #$FA
-000C57  1  8D 89 09     L0C57:  sta     L0989
-000C5A  1  20 73 0C             jsr     L0C73
-000C5D  1  90 DF                bcc     loop
+000C4C  1  6D 6E 09             adc     L096E           ; pos + delta
+000C4F  1  B0 04                bcs     overflow
+000C51  1  C9 FB                cmp     #vscroll_max+1  ; > max ?
+000C53  1  90 02                bcc     store           ; nope, it's good
+000C55  1               overflow:
+000C55  1  A9 FA                lda     #vscroll_max    ; set to max
+000C57  1  8D 89 09     store:  sta     L0989
+000C5A  1  20 73 0C             jsr     update_scroll_pos
+000C5D  1  90 DF                bcc     loop            ; repeat while button down
 000C5F  1  60           end:    rts
 000C60  1               .endproc
 000C60  1               
 000C60  1               .proc on_vscroll_down_click
 000C60  1  AD 9D 09     loop:   lda     vscroll_pos
-000C63  1  C9 FA                cmp     #$FA
+000C63  1  C9 FA                cmp     #vscroll_max
 000C65  1  F0 0B                beq     end
 000C67  1  18                   clc
-000C68  1  69 01                adc     #$01
+000C68  1  69 01                adc     #1
 000C6A  1  8D 89 09             sta     L0989
-000C6D  1  20 73 0C             jsr     L0C73
-000C70  1  90 EE                bcc     loop
+000C6D  1  20 73 0C             jsr     update_scroll_pos
+000C70  1  90 EE                bcc     loop            ; repeat while button down
 000C72  1  60           end:    rts
 000C73  1               .endproc
 000C73  1               
-000C73  1  20 7C 0D     L0C73:  jsr     L0D7C
+000C73  1               ;;; Returns with carry set if mouse released
+000C73  1               .proc update_scroll_pos
+000C73  1  20 7C 0D             jsr     L0D7C
 000C76  1  20 ED 0D             jsr     L0DED
 000C79  1  20 30 0E             jsr     L0E30
-000C7C  1  20 52 0D             jsr     L0D52
+000C7C  1  20 52 0D             jsr     was_button_released
 000C7F  1  18                   clc
-000C80  1  D0 01                bne     L0C83
+000C80  1  D0 01                bne     end
 000C82  1  38                   sec
-000C83  1  60           L0C83:  rts
+000C83  1  60           end:    rts
+000C84  1               .endproc
 000C84  1               
 000C84  1  AD 63 09     L0C84:  lda     L0963
 000C87  1  A2 00                ldx     #$00
@@ -842,7 +850,7 @@ Current file: stf.s
 000D2A  1  20 5E 0D             jsr     L0D5E
 000D2D  1  20 D1 0D             jsr     L0DD1
 000D30  1  20 30 0E             jsr     L0E30
-000D33  1  20 52 0D             jsr     L0D52
+000D33  1  20 52 0D             jsr     was_button_released
 000D36  1  D0 D0                bne     L0D08
 000D38  1  60                   rts
 000D39  1               
@@ -856,11 +864,13 @@ Current file: stf.s
 000D4F  1  8A 09        
 000D51  1  60                   rts
 000D52  1               
-000D52  1  20 00 40 2A  L0D52:  A2D_CALL A2D_GET_BUTTON, button_state
+000D52  1               .proc was_button_released
+000D52  1  20 00 40 2A          A2D_CALL A2D_GET_BUTTON, button_state
 000D56  1  70 09        
 000D58  1  AD 70 09             lda     button_state
-000D5B  1  C9 02                cmp     #$02            ; was down, now up???
+000D5B  1  C9 02                cmp     #2
 000D5D  1  60                   rts
+000D5E  1               .endproc
 000D5E  1               
 000D5E  1  AD 9B 09     L0D5E:  lda     L099B
 000D61  1  20 EC 10             jsr     L10EC

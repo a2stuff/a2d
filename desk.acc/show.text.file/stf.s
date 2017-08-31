@@ -218,24 +218,25 @@ fixed_mode_flag:
 button_state:
         .byte   $00
 
-.proc mouse_data
+.proc mouse_data                ; queried by main input loop
 xcoord: .word   0
 ycoord: .word   0
-elem:   .byte   $00
-win:    .byte   $00
+elem:   .byte   0
+win:    .byte   0
 .endproc
 
+;;; Possibly unused
 L0977:  .byte   $64
 xcoord1:.word   0               ; ???
 ycoord1:.word   0               ; ???
         .byte   0               ; ???
 
-.proc close_btn
-state:  .byte   0
+.proc close_btn                 ; queried after close clicked to see if aborted/finished
+state:  .byte   0               ; 0 = aborted, 1 = clicked
         .byte   0,0
 .endproc
 
-.proc query_client_params
+.proc query_client_params       ; queried after a click to identify target
 xcoord: .word   0
 ycoord: .word   0
 part:   .byte   0               ; 0 = client, 1 = scroll bar, 2 = ?????
@@ -494,6 +495,7 @@ L0B8B:  sta     L0998
         jmp     L0DF9
 .endproc
 
+;;; Non-title (client) area clicked
 .proc on_client_click
         A2D_CALL A2D_QUERY_CLIENT, query_client_params
         lda     query_client_params::part
@@ -551,8 +553,8 @@ loop:   lda     vscroll_pos
         bcs     :+
         lda     #$00
 :       sta     L0989
-        jsr     L0C73
-        bcc     loop
+        jsr     update_scroll_pos
+        bcc     loop            ; repeat while button down
 end:    rts
 .endproc
 
@@ -560,51 +562,57 @@ end:    rts
 loop :  lda     vscroll_pos
         beq     end
         sec
-        sbc     #$01
+        sbc     #1
         sta     L0989
-        jsr     L0C73
-        bcc     loop
+        jsr     update_scroll_pos
+        bcc     loop            ; repeat while button down
 end:    rts
 .endproc
 
+vscroll_max := $FA
+
 .proc on_vscroll_below_click
 loop:   lda     vscroll_pos
-        cmp     #$FA
+        cmp     #vscroll_max    ; pos == max ?
         beq     end
         jsr     L0C84
         clc
         lda     vscroll_pos
-        adc     L096E
-        bcs     L0C55
-        cmp     #$FB
-        bcc     L0C57
-L0C55:  lda     #$FA
-L0C57:  sta     L0989
-        jsr     L0C73
-        bcc     loop
+        adc     L096E           ; pos + delta
+        bcs     overflow
+        cmp     #vscroll_max+1  ; > max ?
+        bcc     store           ; nope, it's good
+overflow:
+        lda     #vscroll_max    ; set to max
+store:  sta     L0989
+        jsr     update_scroll_pos
+        bcc     loop            ; repeat while button down
 end:    rts
 .endproc
 
 .proc on_vscroll_down_click
 loop:   lda     vscroll_pos
-        cmp     #$FA
+        cmp     #vscroll_max
         beq     end
         clc
-        adc     #$01
+        adc     #1
         sta     L0989
-        jsr     L0C73
-        bcc     loop
+        jsr     update_scroll_pos
+        bcc     loop            ; repeat while button down
 end:    rts
 .endproc
 
-L0C73:  jsr     L0D7C
+;;; Returns with carry set if mouse released
+.proc update_scroll_pos
+        jsr     L0D7C
         jsr     L0DED
         jsr     L0E30
-        jsr     L0D52
+        jsr     was_button_released
         clc
-        bne     L0C83
+        bne     end
         sec
-L0C83:  rts
+end:    rts
+.endproc
 
 L0C84:  lda     L0963
         ldx     #$00
@@ -692,7 +700,7 @@ L0D27:  sta     L099B
         jsr     L0D5E
         jsr     L0DD1
         jsr     L0E30
-        jsr     L0D52
+        jsr     was_button_released
         bne     L0D08
         rts
 
@@ -705,10 +713,12 @@ L0D39:  lda     mouse_data::xcoord
         A2D_CALL $4A, L098A
         rts
 
-L0D52:  A2D_CALL A2D_GET_BUTTON, button_state
+.proc was_button_released
+        A2D_CALL A2D_GET_BUTTON, button_state
         lda     button_state
-        cmp     #$02            ; was down, now up???
+        cmp     #2
         rts
+.endproc
 
 L0D5E:  lda     L099B
         jsr     L10EC
