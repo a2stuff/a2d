@@ -509,14 +509,14 @@ L0B8B:  sta     L0998
         lda     query_client_params::part
         cmp     #1              ; 1 = vertical scroll bar
         beq     on_vscroll_click
-        cmp     #2              ; 2 = ???
+        cmp     #2              ; 2 = horizontal scroll bar ???
         bne     end             ; 0 = client area
         jmp     L0C95
 end:    rts
 .endproc
 
 .proc on_vscroll_click
-L0BC9:  lda     #1              ; 1 = vertical ?
+L0BC9:  lda     #1              ; 1 = vertical
         sta     thumb_drag_params::type
         sta     update_scroll_params::type
         lda     query_client_params::scroll
@@ -541,7 +541,7 @@ end:    rts
         lda     thumb_drag_params::unk1
         sta     update_scroll_params::pos
         jsr     L0D7C
-        jsr     L0DED
+        jsr     update_vscroll
         jsr     L0E30
         lda     L0947
         beq     end
@@ -558,9 +558,9 @@ loop:   lda     vscroll_pos
         sec
         lda     vscroll_pos
         sbc     track_scroll_delta
-        bcs     :+
-        lda     #$00
-:       sta     update_scroll_params::pos
+        bcs     store
+        lda     #$00            ; underflow
+store:  sta     update_scroll_params::pos
         jsr     update_scroll_pos
         bcc     loop            ; repeat while button down
 end:    rts
@@ -612,7 +612,7 @@ end:    rts
 
 .proc update_scroll_pos         ; Returns with carry set if mouse released
         jsr     L0D7C
-        jsr     L0DED
+        jsr     update_vscroll
         jsr     L0E30
         jsr     was_button_released
         clc
@@ -745,14 +745,14 @@ L0D5E:  lda     L099B
         sta     L09B5
         rts
 
-L0D7C:  lda     #$00
+L0D7C:  lda     #0
         sta     L09B2
         sta     L09B3
         ldx     update_scroll_params::pos
 L0D87:  beq     L0D9B
         clc
         lda     L09B2
-        adc     #$32
+        adc     #50
         sta     L09B2
         bcc     L0D97
         inc     L09B3
@@ -767,14 +767,14 @@ L0D9B:  clc
         adc     L0964
         sta     L09B7
         jsr     L10A5
-        lda     #$00
+        lda     #0
         sta     L096A
         sta     L096B
         ldx     update_scroll_params::pos
 L0DBC:  beq     L0DD0
         clc
         lda     L096A
-        adc     #$05
+        adc     #5
         sta     L096A
         bcc     L0DCC
         inc     L096B
@@ -794,10 +794,12 @@ L0DD1:  lda     #2
         A2D_CALL A2D_UPDATE_SCROLL, update_scroll_params
         rts
 
-L0DED:  lda     #1
+.proc update_vscroll            ; update_scroll_params::pos set by caller
+        lda     #1
         sta     update_scroll_params::type
         A2D_CALL A2D_UPDATE_SCROLL, update_scroll_params
         rts
+.endproc
 
 L0DF9:  jsr     UNKNOWN_CALL
         .byte   $0C
@@ -809,7 +811,7 @@ L0DF9:  jsr     UNKNOWN_CALL
         jsr     L0DD1
 L0E0E:  lda     vscroll_pos
         sta     update_scroll_params::pos
-        jsr     L0DED
+        jsr     update_vscroll
         jsr     L0E30
         jmp     input_loop
 
