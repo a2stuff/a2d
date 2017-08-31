@@ -272,7 +272,11 @@ L0997:  .byte   $10
 L0998:  .byte   $00,$C1
 L099A:  .byte   $20
 L099B:  .byte   $00,$FF
-L099D:  .byte   $00,$00,$00,$C8,$00,$33,$00,$00
+
+vscroll_pos:
+        .byte   0
+
+        .byte   $00,$00,$C8,$00,$33,$00,$00
         .byte   $02,$96,$00
 L09A8:  .byte   $0A
 L09A9:  .byte   $00
@@ -501,76 +505,82 @@ L0B8B:  sta     L0998
         A2D_CALL A2D_QUERY_CLIENT, query_client_params
         lda     query_client_params::part
         cmp     #1              ; 1 = vertical scroll bar
-        beq     on_vertical_scroll_bar_click
+        beq     on_vscroll_click
         cmp     #2              ; 2 = ???
-        bne     L0BC8           ; 0 = client area
+        bne     end             ; 0 = client area
         jmp     L0C95
+end:    rts
 .endproc
-L0BC8:  rts
 
-;;; Handle scroll bar click
-.proc on_vertical_scroll_bar_click
-L0BC9:  lda     #$01
+.proc on_vscroll_click
+L0BC9:  lda     #$01            ; ??
         sta     L098A
         sta     L0988
         lda     query_client_params::scroll
         cmp     #5
-        beq     L0BEC
+        beq     on_vscroll_thumb_click
         cmp     #4
-        beq     L0C3E
+        beq     on_vscroll_below_click
         cmp     #3
-        beq     L0C11
+        beq     on_vscroll_above_click
         cmp     #1
-        beq     L0C2D
+        beq     on_vscroll_up_click
         cmp     #2
         bne     end
-        jmp     L0C60
-end:  rts
+        jmp     on_vscroll_down_click
+end:    rts
 .endproc
 
-L0BEC:  jsr     L0D39
+.proc on_vscroll_thumb_click
+        jsr     L0D39
         lda     L0990
-        beq     L0C10
+        beq     end
         lda     L098F
         sta     L0989
         jsr     L0D7C
         jsr     L0DED
         jsr     L0E30
         lda     L0947
-        beq     L0C10
+        beq     end
         lda     L0949
-        bne     L0C10
+        bne     end
         jsr     L0E1D
-L0C10:  rts
+end:    rts
+.endproc
 
-L0C11:  lda     L099D
-        beq     L0C2C
+.proc on_vscroll_above_click
+loop:   lda     vscroll_pos
+        beq     end
         jsr     L0C84
         sec
-        lda     L099D
+        lda     vscroll_pos
         sbc     L096E
-        bcs     L0C24
+        bcs     :+
         lda     #$00
-L0C24:  sta     L0989
+:       sta     L0989
         jsr     L0C73
-        bcc     L0C11
-L0C2C:  rts
+        bcc     loop
+end:    rts
+.endproc
 
-L0C2D:  lda     L099D
-        beq     L0C3D
+.proc on_vscroll_up_click
+loop :  lda     vscroll_pos
+        beq     end
         sec
         sbc     #$01
         sta     L0989
         jsr     L0C73
-        bcc     L0C2D
-L0C3D:  rts
+        bcc     loop
+end:    rts
+.endproc
 
-L0C3E:  lda     L099D
+.proc on_vscroll_below_click
+loop:   lda     vscroll_pos
         cmp     #$FA
-        beq     L0C5F
+        beq     end
         jsr     L0C84
         clc
-        lda     L099D
+        lda     vscroll_pos
         adc     L096E
         bcs     L0C55
         cmp     #$FB
@@ -578,18 +588,21 @@ L0C3E:  lda     L099D
 L0C55:  lda     #$FA
 L0C57:  sta     L0989
         jsr     L0C73
-        bcc     L0C3E
-L0C5F:  rts
+        bcc     loop
+end:    rts
+.endproc
 
-L0C60:  lda     L099D
+.proc on_vscroll_down_click
+loop:   lda     vscroll_pos
         cmp     #$FA
-        beq     L0C72
+        beq     end
         clc
         adc     #$01
         sta     L0989
         jsr     L0C73
-        bcc     L0C60
-L0C72:  rts
+        bcc     loop
+end:    rts
+.endproc
 
 L0C73:  jsr     L0D7C
         jsr     L0DED
@@ -779,7 +792,7 @@ L0DF9:  jsr     UNKNOWN_CALL
         ror     a
         bcc     L0E0E
         jsr     L0DD1
-L0E0E:  lda     L099D
+L0E0E:  lda     vscroll_pos
         sta     L0989
         jsr     L0DED
         jsr     L0E30

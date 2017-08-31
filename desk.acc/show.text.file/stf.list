@@ -405,8 +405,12 @@ Current file: stf.s
 000998  1  00 C1        L0998:  .byte   $00,$C1
 00099A  1  20           L099A:  .byte   $20
 00099B  1  00 FF        L099B:  .byte   $00,$FF
-00099D  1  00 00 00 C8  L099D:  .byte   $00,$00,$00,$C8,$00,$33,$00,$00
-0009A1  1  00 33 00 00  
+00099D  1               
+00099D  1               vscroll_pos:
+00099D  1  00                   .byte   0
+00099E  1               
+00099E  1  00 00 C8 00          .byte   $00,$00,$C8,$00,$33,$00,$00
+0009A2  1  33 00 00     
 0009A5  1  02 96 00             .byte   $02,$96,$00
 0009A8  1  0A           L09A8:  .byte   $0A
 0009A9  1  00           L09A9:  .byte   $00
@@ -651,76 +655,82 @@ Current file: stf.s
 000BB8  1  80 09        
 000BBA  1  AD 84 09             lda     query_client_params::part
 000BBD  1  C9 01                cmp     #1              ; 1 = vertical scroll bar
-000BBF  1  F0 08                beq     on_vertical_scroll_bar_click
+000BBF  1  F0 08                beq     on_vscroll_click
 000BC1  1  C9 02                cmp     #2              ; 2 = ???
-000BC3  1  D0 03                bne     L0BC8           ; 0 = client area
+000BC3  1  D0 03                bne     end             ; 0 = client area
 000BC5  1  4C 95 0C             jmp     L0C95
-000BC8  1               .endproc
-000BC8  1  60           L0BC8:  rts
+000BC8  1  60           end:    rts
+000BC9  1               .endproc
 000BC9  1               
-000BC9  1               ;;; Handle scroll bar click
-000BC9  1               .proc on_vertical_scroll_bar_click
-000BC9  1  A9 01        L0BC9:  lda     #$01
+000BC9  1               .proc on_vscroll_click
+000BC9  1  A9 01        L0BC9:  lda     #$01            ; ??
 000BCB  1  8D 8A 09             sta     L098A
 000BCE  1  8D 88 09             sta     L0988
 000BD1  1  AD 85 09             lda     query_client_params::scroll
 000BD4  1  C9 05                cmp     #5
-000BD6  1  F0 14                beq     L0BEC
+000BD6  1  F0 14                beq     on_vscroll_thumb_click
 000BD8  1  C9 04                cmp     #4
-000BDA  1  F0 62                beq     L0C3E
+000BDA  1  F0 62                beq     on_vscroll_below_click
 000BDC  1  C9 03                cmp     #3
-000BDE  1  F0 31                beq     L0C11
+000BDE  1  F0 31                beq     on_vscroll_above_click
 000BE0  1  C9 01                cmp     #1
-000BE2  1  F0 49                beq     L0C2D
+000BE2  1  F0 49                beq     on_vscroll_up_click
 000BE4  1  C9 02                cmp     #2
 000BE6  1  D0 03                bne     end
-000BE8  1  4C 60 0C             jmp     L0C60
-000BEB  1  60           end:  rts
+000BE8  1  4C 60 0C             jmp     on_vscroll_down_click
+000BEB  1  60           end:    rts
 000BEC  1               .endproc
 000BEC  1               
-000BEC  1  20 39 0D     L0BEC:  jsr     L0D39
+000BEC  1               .proc on_vscroll_thumb_click
+000BEC  1  20 39 0D             jsr     L0D39
 000BEF  1  AD 90 09             lda     L0990
-000BF2  1  F0 1C                beq     L0C10
+000BF2  1  F0 1C                beq     end
 000BF4  1  AD 8F 09             lda     L098F
 000BF7  1  8D 89 09             sta     L0989
 000BFA  1  20 7C 0D             jsr     L0D7C
 000BFD  1  20 ED 0D             jsr     L0DED
 000C00  1  20 30 0E             jsr     L0E30
 000C03  1  AD 47 09             lda     L0947
-000C06  1  F0 08                beq     L0C10
+000C06  1  F0 08                beq     end
 000C08  1  AD 49 09             lda     L0949
-000C0B  1  D0 03                bne     L0C10
+000C0B  1  D0 03                bne     end
 000C0D  1  20 1D 0E             jsr     L0E1D
-000C10  1  60           L0C10:  rts
+000C10  1  60           end:    rts
+000C11  1               .endproc
 000C11  1               
-000C11  1  AD 9D 09     L0C11:  lda     L099D
-000C14  1  F0 16                beq     L0C2C
+000C11  1               .proc on_vscroll_above_click
+000C11  1  AD 9D 09     loop:   lda     vscroll_pos
+000C14  1  F0 16                beq     end
 000C16  1  20 84 0C             jsr     L0C84
 000C19  1  38                   sec
-000C1A  1  AD 9D 09             lda     L099D
+000C1A  1  AD 9D 09             lda     vscroll_pos
 000C1D  1  ED 6E 09             sbc     L096E
-000C20  1  B0 02                bcs     L0C24
+000C20  1  B0 02                bcs     :+
 000C22  1  A9 00                lda     #$00
-000C24  1  8D 89 09     L0C24:  sta     L0989
+000C24  1  8D 89 09     :       sta     L0989
 000C27  1  20 73 0C             jsr     L0C73
-000C2A  1  90 E5                bcc     L0C11
-000C2C  1  60           L0C2C:  rts
+000C2A  1  90 E5                bcc     loop
+000C2C  1  60           end:    rts
+000C2D  1               .endproc
 000C2D  1               
-000C2D  1  AD 9D 09     L0C2D:  lda     L099D
-000C30  1  F0 0B                beq     L0C3D
+000C2D  1               .proc on_vscroll_up_click
+000C2D  1  AD 9D 09     loop :  lda     vscroll_pos
+000C30  1  F0 0B                beq     end
 000C32  1  38                   sec
 000C33  1  E9 01                sbc     #$01
 000C35  1  8D 89 09             sta     L0989
 000C38  1  20 73 0C             jsr     L0C73
-000C3B  1  90 F0                bcc     L0C2D
-000C3D  1  60           L0C3D:  rts
+000C3B  1  90 F0                bcc     loop
+000C3D  1  60           end:    rts
+000C3E  1               .endproc
 000C3E  1               
-000C3E  1  AD 9D 09     L0C3E:  lda     L099D
+000C3E  1               .proc on_vscroll_below_click
+000C3E  1  AD 9D 09     loop:   lda     vscroll_pos
 000C41  1  C9 FA                cmp     #$FA
-000C43  1  F0 1A                beq     L0C5F
+000C43  1  F0 1A                beq     end
 000C45  1  20 84 0C             jsr     L0C84
 000C48  1  18                   clc
-000C49  1  AD 9D 09             lda     L099D
+000C49  1  AD 9D 09             lda     vscroll_pos
 000C4C  1  6D 6E 09             adc     L096E
 000C4F  1  B0 04                bcs     L0C55
 000C51  1  C9 FB                cmp     #$FB
@@ -728,18 +738,21 @@ Current file: stf.s
 000C55  1  A9 FA        L0C55:  lda     #$FA
 000C57  1  8D 89 09     L0C57:  sta     L0989
 000C5A  1  20 73 0C             jsr     L0C73
-000C5D  1  90 DF                bcc     L0C3E
-000C5F  1  60           L0C5F:  rts
+000C5D  1  90 DF                bcc     loop
+000C5F  1  60           end:    rts
+000C60  1               .endproc
 000C60  1               
-000C60  1  AD 9D 09     L0C60:  lda     L099D
+000C60  1               .proc on_vscroll_down_click
+000C60  1  AD 9D 09     loop:   lda     vscroll_pos
 000C63  1  C9 FA                cmp     #$FA
-000C65  1  F0 0B                beq     L0C72
+000C65  1  F0 0B                beq     end
 000C67  1  18                   clc
 000C68  1  69 01                adc     #$01
 000C6A  1  8D 89 09             sta     L0989
 000C6D  1  20 73 0C             jsr     L0C73
-000C70  1  90 EE                bcc     L0C60
-000C72  1  60           L0C72:  rts
+000C70  1  90 EE                bcc     loop
+000C72  1  60           end:    rts
+000C73  1               .endproc
 000C73  1               
 000C73  1  20 7C 0D     L0C73:  jsr     L0D7C
 000C76  1  20 ED 0D             jsr     L0DED
@@ -934,7 +947,7 @@ Current file: stf.s
 000E08  1  6A                   ror     a
 000E09  1  90 03                bcc     L0E0E
 000E0B  1  20 D1 0D             jsr     L0DD1
-000E0E  1  AD 9D 09     L0E0E:  lda     L099D
+000E0E  1  AD 9D 09     L0E0E:  lda     vscroll_pos
 000E11  1  8D 89 09             sta     L0989
 000E14  1  20 ED 0D             jsr     L0DED
 000E17  1  20 30 0E             jsr     L0E30
