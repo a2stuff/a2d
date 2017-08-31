@@ -210,7 +210,9 @@ L096A:  .byte   $00
 L096B:  .byte   $00
 L096C:  .byte   $00
 L096D:  .byte   $00
-L096E:  .byte   $00
+
+track_scroll_delta:
+        .byte   $00
 
 fixed_mode_flag:
         .byte   $00   ; 0 = proportional, otherwise = fixed
@@ -546,10 +548,10 @@ end:    rts
 .proc on_vscroll_above_click
 loop:   lda     vscroll_pos
         beq     end
-        jsr     L0C84
+        jsr     calc_track_scroll_delta
         sec
         lda     vscroll_pos
-        sbc     L096E
+        sbc     track_scroll_delta
         bcs     :+
         lda     #$00
 :       sta     L0989
@@ -575,10 +577,10 @@ vscroll_max := $FA
 loop:   lda     vscroll_pos
         cmp     #vscroll_max    ; pos == max ?
         beq     end
-        jsr     L0C84
+        jsr     calc_track_scroll_delta
         clc
         lda     vscroll_pos
-        adc     L096E           ; pos + delta
+        adc     track_scroll_delta ; pos + delta
         bcs     overflow
         cmp     #vscroll_max+1  ; > max ?
         bcc     store           ; nope, it's good
@@ -602,8 +604,7 @@ loop:   lda     vscroll_pos
 end:    rts
 .endproc
 
-;;; Returns with carry set if mouse released
-.proc update_scroll_pos
+.proc update_scroll_pos         ; Returns with carry set if mouse released
         jsr     L0D7C
         jsr     L0DED
         jsr     L0E30
@@ -614,15 +615,17 @@ end:    rts
 end:    rts
 .endproc
 
-L0C84:  lda     L0963
-        ldx     #$00
-L0C89:  inx
+.proc calc_track_scroll_delta
+        lda     L0963           ; ceil(??? / 50)
+        ldx     #0
+loop:   inx
         sec
-        sbc     #$32
-        cmp     #$32
-        bcs     L0C89
-        stx     L096E
+        sbc     #50
+        cmp     #50
+        bcs     loop
+        stx     track_scroll_delta
         rts
+.endproc
 
 ;;; Haven't been able to trigger this yet - click on ???
 ;;; Possibly horizontal scroll bar? (unused in this DA - generic code?)

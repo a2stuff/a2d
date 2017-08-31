@@ -343,7 +343,9 @@ Current file: stf.s
 00096B  1  00           L096B:  .byte   $00
 00096C  1  00           L096C:  .byte   $00
 00096D  1  00           L096D:  .byte   $00
-00096E  1  00           L096E:  .byte   $00
+00096E  1               
+00096E  1               track_scroll_delta:
+00096E  1  00                   .byte   $00
 00096F  1               
 00096F  1               fixed_mode_flag:
 00096F  1  00                   .byte   $00   ; 0 = proportional, otherwise = fixed
@@ -696,10 +698,10 @@ Current file: stf.s
 000C11  1               .proc on_vscroll_above_click
 000C11  1  AD 9D 09     loop:   lda     vscroll_pos
 000C14  1  F0 16                beq     end
-000C16  1  20 84 0C             jsr     L0C84
+000C16  1  20 84 0C             jsr     calc_track_scroll_delta
 000C19  1  38                   sec
 000C1A  1  AD 9D 09             lda     vscroll_pos
-000C1D  1  ED 6E 09             sbc     L096E
+000C1D  1  ED 6E 09             sbc     track_scroll_delta
 000C20  1  B0 02                bcs     :+
 000C22  1  A9 00                lda     #$00
 000C24  1  8D 89 09     :       sta     L0989
@@ -725,10 +727,10 @@ Current file: stf.s
 000C3E  1  AD 9D 09     loop:   lda     vscroll_pos
 000C41  1  C9 FA                cmp     #vscroll_max    ; pos == max ?
 000C43  1  F0 1A                beq     end
-000C45  1  20 84 0C             jsr     L0C84
+000C45  1  20 84 0C             jsr     calc_track_scroll_delta
 000C48  1  18                   clc
 000C49  1  AD 9D 09             lda     vscroll_pos
-000C4C  1  6D 6E 09             adc     L096E           ; pos + delta
+000C4C  1  6D 6E 09             adc     track_scroll_delta ; pos + delta
 000C4F  1  B0 04                bcs     overflow
 000C51  1  C9 FB                cmp     #vscroll_max+1  ; > max ?
 000C53  1  90 02                bcc     store           ; nope, it's good
@@ -752,8 +754,7 @@ Current file: stf.s
 000C72  1  60           end:    rts
 000C73  1               .endproc
 000C73  1               
-000C73  1               ;;; Returns with carry set if mouse released
-000C73  1               .proc update_scroll_pos
+000C73  1               .proc update_scroll_pos         ; Returns with carry set if mouse released
 000C73  1  20 7C 0D             jsr     L0D7C
 000C76  1  20 ED 0D             jsr     L0DED
 000C79  1  20 30 0E             jsr     L0E30
@@ -764,15 +765,17 @@ Current file: stf.s
 000C83  1  60           end:    rts
 000C84  1               .endproc
 000C84  1               
-000C84  1  AD 63 09     L0C84:  lda     L0963
+000C84  1               .proc calc_track_scroll_delta
+000C84  1  AD 63 09             lda     L0963
 000C87  1  A2 00                ldx     #$00
-000C89  1  E8           L0C89:  inx
+000C89  1  E8           loop:   inx
 000C8A  1  38                   sec
-000C8B  1  E9 32                sbc     #$32
-000C8D  1  C9 32                cmp     #$32
-000C8F  1  B0 F8                bcs     L0C89
-000C91  1  8E 6E 09             stx     L096E
+000C8B  1  E9 32                sbc     #50
+000C8D  1  C9 32                cmp     #50
+000C8F  1  B0 F8                bcs     loop
+000C91  1  8E 6E 09             stx     track_scroll_delta
 000C94  1  60                   rts
+000C95  1               .endproc
 000C95  1               
 000C95  1               ;;; Haven't been able to trigger this yet - click on ???
 000C95  1               ;;; Possibly horizontal scroll bar? (unused in this DA - generic code?)
