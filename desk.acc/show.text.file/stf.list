@@ -124,14 +124,7 @@ Current file: stf.s
 000800  2               .endmacro
 000800  2               
 000800  1               
-000800  1               NULL            := 0
-000800  1               
-000800  1               ;;; TODO: Figure this one out
-000800  1               L0020           := $0020
-000800  1               
-000800  1               
-000800  1               
-000800  1               
+000800  1               zp_code_stash   := $0020        ; Scratch space used for "call 100 main" trampoline
 000800  1               
 000800  1  4C 04 08     start:  jmp     copy2aux
 000803  1               
@@ -161,7 +154,7 @@ Current file: stf.s
 00082C  1  8D 03 C0             sta     RAMRDON
 00082F  1  A2 10                ldx     #(call_1000_main_end - call_1000_main)
 000831  1  BD 3C 08     L0831:  lda     call_1000_main,x
-000834  1  95 20                sta     L0020,x
+000834  1  95 20                sta     zp_code_stash,x
 000836  1  CA                   dex
 000837  1  10 F8                bpl     L0831
 000839  1  4C 4C 08             jmp     L084C
@@ -505,7 +498,7 @@ Current file: stf.s
 000A66  1  85 27                sta     $27
 000A68  1  A9 40                lda     #$40
 000A6A  1  85 28                sta     $28
-000A6C  1  20 20 00             jsr     L0020
+000A6C  1  20 20 00             jsr     zp_code_stash
 000A6F  1  4C 8A 0A             jmp     L0A8A
 000A72  1               
 000A72  1  A0 00        L0A72:  ldy     #$00
@@ -546,7 +539,7 @@ Current file: stf.s
 000AC2  1  20 88 10             jsr     L1088
 000AC5  1  20 98 11             jsr     calc_and_draw_mode
 000AC8  1  20 30 0E             jsr     L0E30
-000ACB  1  20 00 40 2B          A2D_CALL $2B, NULL
+000ACB  1  20 00 40 2B          A2D_CALL $2B, 0
 000ACF  1  00 00        
 000AD1  1               
 000AD1  1               input_loop:
@@ -594,7 +587,7 @@ Current file: stf.s
 000B35  1                       ;; window is gone by this point - is previous a redraw/destroy?
 000B35  1  20 00 8E             jsr     UNKNOWN_CALL    ; hides the cursor?
 000B38  1  0C                   .byte   $0C
-000B39  1  00 00                .addr   NULL
+000B39  1  00 00                .addr   0
 000B3B  1  60                   rts                     ; exits input loop
 000B3C  1               .endproc
 000B3C  1               
@@ -940,7 +933,7 @@ Current file: stf.s
 000DF9  1               
 000DF9  1  20 00 8E     L0DF9:  jsr     UNKNOWN_CALL
 000DFC  1  0C                   .byte   $0C
-000DFD  1  00 00                .addr   NULL
+000DFD  1  00 00                .addr   0
 000DFF  1  20 00 40 04          A2D_CALL $04, L09A8
 000E03  1  A8 09        
 000E05  1  AD 98 09             lda     L0998
@@ -1285,7 +1278,7 @@ Current file: stf.s
 0010FF  1  85 27        L10FF:  sta     $27
 001101  1  A9 40                lda     #$40
 001103  1  85 28                sta     $28
-001105  1  20 20 00             jsr     L0020
+001105  1  20 20 00             jsr     zp_code_stash
 001108  1  60                   rts
 001109  1               
 001109  1  AD 6F 09     L1109:  lda     fixed_mode_flag

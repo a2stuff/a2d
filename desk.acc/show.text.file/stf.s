@@ -5,14 +5,7 @@
         .include "auxmem.inc"
         .include "a2d.inc"
 
-NULL            := 0
-
-;;; TODO: Figure this one out
-L0020           := $0020
-
-
-
-
+zp_code_stash   := $0020        ; Scratch space used for "call 100 main" trampoline
 
 start:  jmp     copy2aux
 
@@ -42,7 +35,7 @@ copy_dst:
         sta     RAMRDON
         ldx     #(call_1000_main_end - call_1000_main)
 L0831:  lda     call_1000_main,x
-        sta     L0020,x
+        sta     zp_code_stash,x
         dex
         bpl     L0831
         jmp     L084C
@@ -365,7 +358,7 @@ L0A61:  jsr     L0A72
         sta     $27
         lda     #$40
         sta     $28
-        jsr     L0020
+        jsr     zp_code_stash
         jmp     L0A8A
 
 L0A72:  ldy     #$00
@@ -404,7 +397,7 @@ L0A95:  lda     $8802,x
         jsr     L1088
         jsr     calc_and_draw_mode
         jsr     L0E30
-        A2D_CALL $2B, NULL
+        A2D_CALL $2B, 0
 
 input_loop:
         A2D_CALL A2D_GET_BUTTON, button_state
@@ -447,7 +440,7 @@ input_loop:
         ;; window is gone by this point - is previous a redraw/destroy?
         jsr     UNKNOWN_CALL    ; hides the cursor?
         .byte   $0C
-        .addr   NULL
+        .addr   0
         rts                     ; exits input loop
 .endproc
 
@@ -786,7 +779,7 @@ L0DED:  lda     #$01
 
 L0DF9:  jsr     UNKNOWN_CALL
         .byte   $0C
-        .addr   NULL
+        .addr   0
         A2D_CALL $04, L09A8
         lda     L0998
         ror     a
@@ -1123,7 +1116,7 @@ L10FD:  lda     #$15
 L10FF:  sta     $27
         lda     #$40
         sta     $28
-        jsr     L0020
+        jsr     zp_code_stash
         rts
 
 L1109:  lda     fixed_mode_flag
