@@ -108,6 +108,9 @@ Current file: stf.s
 000800  2                       ;; .byte part (0 = client, 1 = vertical scroll bar, 2 = ???)
 000800  2                       ;; .byte scroll (1 = up, 2 = down, 3 = above, 4 = below, 5 = thumb)
 000800  2               
+000800  2               A2D_UPDATE_SCROLL:= $4B
+000800  2                       ;; .byte type (1 = vertical, 2 = horizontal)
+000800  2                       ;; .byte pos (new position 0...250)
 000800  2               
 000800  2               ;;; Macros
 000800  2               .macro  A2D_CALL    op, addr
@@ -371,7 +374,7 @@ Current file: stf.s
 00097E  1  00 00                .byte   0,0
 000980  1               .endproc
 000980  1               
-000980  1               .proc query_client_params       ; queried after a click to identify target
+000980  1               .proc query_client_params       ; queried after a client click to identify target
 000980  1  00 00        xcoord: .word   0
 000982  1  00 00        ycoord: .word   0
 000984  1  00           part:   .byte   0               ; 0 = client, 1 = scroll bar, 2 = ?????
@@ -380,8 +383,11 @@ Current file: stf.s
 000986  1               
 000986  1  00           L0986:  .byte   $00
 000987  1  00           L0987:  .byte   $00
-000988  1  00           L0988:  .byte   $00
-000989  1  00           L0989:  .byte   $00
+000988  1               
+000988  1               .proc update_scroll_params      ; called to update scroll bar position
+000988  1  00           type:   .byte   $00             ; 1 = vertical, 2 = horizontal ?
+000989  1  00           pos:    .byte   $00             ; new position (0...250)
+00098A  1               .endproc
 00098A  1               
 00098A  1               ;;; Used when dragging vscroll thumb
 00098A  1               .proc thumb_drag_params
@@ -398,7 +404,7 @@ Current file: stf.s
 000993  1               text_string_len:
 000993  1  00                   .byte   0               ; length
 000994  1               
-000994  1  64 02        L0994:  .byte   $64,$02         ; window params???
+000994  1  64 02        L0994:  .byte   $64,$02         ; window params??? $64 = window id?
 000996  1  00           L0996:  .byte   $00
 000997  1  10           L0997:  .byte   $10
 000998  1  00 C1        L0998:  .byte   $00,$C1
@@ -663,9 +669,9 @@ Current file: stf.s
 000BC9  1               .endproc
 000BC9  1               
 000BC9  1               .proc on_vscroll_click
-000BC9  1  A9 01        L0BC9:  lda     #$01            ; ??
+000BC9  1  A9 01        L0BC9:  lda     #1              ; 1 = vertical ?
 000BCB  1  8D 8A 09             sta     thumb_drag_params::type
-000BCE  1  8D 88 09             sta     L0988
+000BCE  1  8D 88 09             sta     update_scroll_params::type
 000BD1  1  AD 85 09             lda     query_client_params::scroll
 000BD4  1  C9 05                cmp     #5
 000BD6  1  F0 14                beq     on_vscroll_thumb_click
@@ -686,7 +692,7 @@ Current file: stf.s
 000BEF  1  AD 90 09             lda     thumb_drag_params::unk2
 000BF2  1  F0 1C                beq     end
 000BF4  1  AD 8F 09             lda     thumb_drag_params::unk1
-000BF7  1  8D 89 09             sta     L0989
+000BF7  1  8D 89 09             sta     update_scroll_params::pos
 000BFA  1  20 7C 0D             jsr     L0D7C
 000BFD  1  20 ED 0D             jsr     L0DED
 000C00  1  20 30 0E             jsr     L0E30
@@ -707,7 +713,7 @@ Current file: stf.s
 000C1D  1  ED 6E 09             sbc     track_scroll_delta
 000C20  1  B0 02                bcs     :+
 000C22  1  A9 00                lda     #$00
-000C24  1  8D 89 09     :       sta     L0989
+000C24  1  8D 89 09     :       sta     update_scroll_params::pos
 000C27  1  20 73 0C             jsr     update_scroll_pos
 000C2A  1  90 E5                bcc     loop            ; repeat while button down
 000C2C  1  60           end:    rts
@@ -718,7 +724,7 @@ Current file: stf.s
 000C30  1  F0 0B                beq     end
 000C32  1  38                   sec
 000C33  1  E9 01                sbc     #1
-000C35  1  8D 89 09             sta     L0989
+000C35  1  8D 89 09             sta     update_scroll_params::pos
 000C38  1  20 73 0C             jsr     update_scroll_pos
 000C3B  1  90 F0                bcc     loop            ; repeat while button down
 000C3D  1  60           end:    rts
@@ -739,7 +745,7 @@ Current file: stf.s
 000C53  1  90 02                bcc     store           ; nope, it's good
 000C55  1               overflow:
 000C55  1  A9 FA                lda     #vscroll_max    ; set to max
-000C57  1  8D 89 09     store:  sta     L0989
+000C57  1  8D 89 09     store:  sta     update_scroll_params::pos
 000C5A  1  20 73 0C             jsr     update_scroll_pos
 000C5D  1  90 DF                bcc     loop            ; repeat while button down
 000C5F  1  60           end:    rts
@@ -751,7 +757,7 @@ Current file: stf.s
 000C65  1  F0 0B                beq     end
 000C67  1  18                   clc
 000C68  1  69 01                adc     #1
-000C6A  1  8D 89 09             sta     L0989
+000C6A  1  8D 89 09             sta     update_scroll_params::pos
 000C6D  1  20 73 0C             jsr     update_scroll_pos
 000C70  1  90 EE                bcc     loop            ; repeat while button down
 000C72  1  60           end:    rts
@@ -782,9 +788,9 @@ Current file: stf.s
 000C95  1               
 000C95  1               ;;; Haven't been able to trigger this yet - click on ???
 000C95  1               ;;; Possibly horizontal scroll bar? (unused in this DA - generic code?)
-000C95  1  A9 02        L0C95:  lda     #$02
+000C95  1  A9 02        L0C95:  lda     #2
 000C97  1  8D 8A 09             sta     thumb_drag_params::type
-000C9A  1  8D 88 09             sta     L0988
+000C9A  1  8D 88 09             sta     update_scroll_params::type
 000C9D  1  AD 85 09             lda     query_client_params::scroll
 000CA0  1  C9 05                cmp     #5
 000CA2  1  F0 11                beq     L0CB5
@@ -897,7 +903,7 @@ Current file: stf.s
 000D7C  1  A9 00        L0D7C:  lda     #$00
 000D7E  1  8D B2 09             sta     L09B2
 000D81  1  8D B3 09             sta     L09B3
-000D84  1  AE 89 09             ldx     L0989
+000D84  1  AE 89 09             ldx     update_scroll_params::pos
 000D87  1  F0 12        L0D87:  beq     L0D9B
 000D89  1  18                   clc
 000D8A  1  AD B2 09             lda     L09B2
@@ -919,7 +925,7 @@ Current file: stf.s
 000DB1  1  A9 00                lda     #$00
 000DB3  1  8D 6A 09             sta     L096A
 000DB6  1  8D 6B 09             sta     L096B
-000DB9  1  AE 89 09             ldx     L0989
+000DB9  1  AE 89 09             ldx     update_scroll_params::pos
 000DBC  1  F0 12        L0DBC:  beq     L0DD0
 000DBE  1  18                   clc
 000DBF  1  AD 6A 09             lda     L096A
@@ -932,21 +938,21 @@ Current file: stf.s
 000DD0  1               
 000DD0  1  60           L0DD0:  rts
 000DD1  1               
-000DD1  1  A9 02        L0DD1:  lda     #$02
-000DD3  1  8D 88 09             sta     L0988
+000DD1  1  A9 02        L0DD1:  lda     #2
+000DD3  1  8D 88 09             sta     update_scroll_params::type
 000DD6  1  AD B0 09             lda     L09B0
 000DD9  1  85 06                sta     $06
 000DDB  1  AD B1 09             lda     L09B1
 000DDE  1  85 07                sta     $07
 000DE0  1  20 DF 10             jsr     L10DF
-000DE3  1  8D 89 09             sta     L0989
-000DE6  1  20 00 40 4B          A2D_CALL $4B, L0988
+000DE3  1  8D 89 09             sta     update_scroll_params::pos
+000DE6  1  20 00 40 4B          A2D_CALL A2D_UPDATE_SCROLL, update_scroll_params
 000DEA  1  88 09        
 000DEC  1  60                   rts
 000DED  1               
-000DED  1  A9 01        L0DED:  lda     #$01
-000DEF  1  8D 88 09             sta     L0988
-000DF2  1  20 00 40 4B          A2D_CALL $4B, L0988
+000DED  1  A9 01        L0DED:  lda     #1
+000DEF  1  8D 88 09             sta     update_scroll_params::type
+000DF2  1  20 00 40 4B          A2D_CALL A2D_UPDATE_SCROLL, update_scroll_params
 000DF6  1  88 09        
 000DF8  1  60                   rts
 000DF9  1               
@@ -960,7 +966,7 @@ Current file: stf.s
 000E09  1  90 03                bcc     L0E0E
 000E0B  1  20 D1 0D             jsr     L0DD1
 000E0E  1  AD 9D 09     L0E0E:  lda     vscroll_pos
-000E11  1  8D 89 09             sta     L0989
+000E11  1  8D 89 09             sta     update_scroll_params::pos
 000E14  1  20 ED 0D             jsr     L0DED
 000E17  1  20 30 0E             jsr     L0E30
 000E1A  1  4C D1 0A             jmp     input_loop
@@ -1387,7 +1393,7 @@ Current file: stf.s
 0011BA  1  8D 85 11             sta     label_left+1
 0011BD  1               .endproc
 0011BD  1               .proc draw_mode
-0011BD  1  20 00 40 06          A2D_CALL $06, label_left ; guess: setting up draw location
+0011BD  1  20 00 40 06          A2D_CALL $06, label_left ; guess: setting up draw location ???
 0011C1  1  84 11        
 0011C3  1  20 00 40 0E          A2D_CALL $0E, L1194
 0011C7  1  94 11        
@@ -1398,8 +1404,7 @@ Current file: stf.s
 0011D4  1  4C DD 11             jmp     endif
 0011D7  1  20 00 40 19  else:   A2D_CALL A2D_DRAW_TEXT, prop_str
 0011DB  1  75 11        
-0011DD  1               endif:
-0011DD  1  A2 0F                ldx     #$0F
+0011DD  1  A2 0F        endif:  ldx     #$0F
 0011DF  1  BD CE 09     loop:   lda     L09CE,x
 0011E2  1  9D A8 09             sta     L09A8,x
 0011E5  1  CA                   dex

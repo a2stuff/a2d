@@ -38,6 +38,9 @@ A2D_QUERY_CLIENT:= $48
         ;; .byte part (0 = client, 1 = vertical scroll bar, 2 = ???)
         ;; .byte scroll (1 = up, 2 = down, 3 = above, 4 = below, 5 = thumb)
 
+A2D_UPDATE_SCROLL:= $4B
+        ;; .byte type (1 = vertical, 2 = horizontal)
+        ;; .byte pos (new position 0...250)
 
 ;;; Macros
 .macro  A2D_CALL    op, addr

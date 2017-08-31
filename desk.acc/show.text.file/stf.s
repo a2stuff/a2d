@@ -238,7 +238,7 @@ state:  .byte   0               ; 0 = aborted, 1 = clicked
         .byte   0,0
 .endproc
 
-.proc query_client_params       ; queried after a click to identify target
+.proc query_client_params       ; queried after a client click to identify target
 xcoord: .word   0
 ycoord: .word   0
 part:   .byte   0               ; 0 = client, 1 = scroll bar, 2 = ?????
@@ -247,8 +247,11 @@ scroll: .byte   0               ; 1 = up, 2 = down, 3 = above, 4 = below, 5 = th
 
 L0986:  .byte   $00
 L0987:  .byte   $00
-L0988:  .byte   $00
-L0989:  .byte   $00
+
+.proc update_scroll_params      ; called to update scroll bar position
+type:   .byte   $00             ; 1 = vertical, 2 = horizontal ?
+pos:    .byte   $00             ; new position (0...250)
+.endproc
 
 ;;; Used when dragging vscroll thumb
 .proc thumb_drag_params
@@ -265,7 +268,7 @@ text_string_addr:
 text_string_len:
         .byte   0               ; length
 
-L0994:  .byte   $64,$02         ; window params???
+L0994:  .byte   $64,$02         ; window params??? $64 = window id?
 L0996:  .byte   $00
 L0997:  .byte   $10
 L0998:  .byte   $00,$C1
@@ -513,9 +516,9 @@ end:    rts
 .endproc
 
 .proc on_vscroll_click
-L0BC9:  lda     #$01            ; ??
+L0BC9:  lda     #1              ; 1 = vertical ?
         sta     thumb_drag_params::type
-        sta     L0988
+        sta     update_scroll_params::type
         lda     query_client_params::scroll
         cmp     #5
         beq     on_vscroll_thumb_click
@@ -536,7 +539,7 @@ end:    rts
         lda     thumb_drag_params::unk2
         beq     end
         lda     thumb_drag_params::unk1
-        sta     L0989
+        sta     update_scroll_params::pos
         jsr     L0D7C
         jsr     L0DED
         jsr     L0E30
@@ -557,7 +560,7 @@ loop:   lda     vscroll_pos
         sbc     track_scroll_delta
         bcs     :+
         lda     #$00
-:       sta     L0989
+:       sta     update_scroll_params::pos
         jsr     update_scroll_pos
         bcc     loop            ; repeat while button down
 end:    rts
@@ -568,7 +571,7 @@ loop :  lda     vscroll_pos
         beq     end
         sec
         sbc     #1
-        sta     L0989
+        sta     update_scroll_params::pos
         jsr     update_scroll_pos
         bcc     loop            ; repeat while button down
 end:    rts
@@ -589,7 +592,7 @@ loop:   lda     vscroll_pos
         bcc     store           ; nope, it's good
 overflow:
         lda     #vscroll_max    ; set to max
-store:  sta     L0989
+store:  sta     update_scroll_params::pos
         jsr     update_scroll_pos
         bcc     loop            ; repeat while button down
 end:    rts
@@ -601,7 +604,7 @@ loop:   lda     vscroll_pos
         beq     end
         clc
         adc     #1
-        sta     L0989
+        sta     update_scroll_params::pos
         jsr     update_scroll_pos
         bcc     loop            ; repeat while button down
 end:    rts
@@ -632,9 +635,9 @@ loop:   inx
 
 ;;; Haven't been able to trigger this yet - click on ???
 ;;; Possibly horizontal scroll bar? (unused in this DA - generic code?)
-L0C95:  lda     #$02
+L0C95:  lda     #2
         sta     thumb_drag_params::type
-        sta     L0988
+        sta     update_scroll_params::type
         lda     query_client_params::scroll
         cmp     #5
         beq     L0CB5
@@ -745,7 +748,7 @@ L0D5E:  lda     L099B
 L0D7C:  lda     #$00
         sta     L09B2
         sta     L09B3
-        ldx     L0989
+        ldx     update_scroll_params::pos
 L0D87:  beq     L0D9B
         clc
         lda     L09B2
@@ -767,7 +770,7 @@ L0D9B:  clc
         lda     #$00
         sta     L096A
         sta     L096B
-        ldx     L0989
+        ldx     update_scroll_params::pos
 L0DBC:  beq     L0DD0
         clc
         lda     L096A
@@ -780,20 +783,20 @@ L0DCC:  dex
 
 L0DD0:  rts
 
-L0DD1:  lda     #$02
-        sta     L0988
+L0DD1:  lda     #2
+        sta     update_scroll_params::type
         lda     L09B0
         sta     $06
         lda     L09B1
         sta     $07
         jsr     L10DF
-        sta     L0989
-        A2D_CALL $4B, L0988
+        sta     update_scroll_params::pos
+        A2D_CALL A2D_UPDATE_SCROLL, update_scroll_params
         rts
 
-L0DED:  lda     #$01
-        sta     L0988
-        A2D_CALL $4B, L0988
+L0DED:  lda     #1
+        sta     update_scroll_params::type
+        A2D_CALL A2D_UPDATE_SCROLL, update_scroll_params
         rts
 
 L0DF9:  jsr     UNKNOWN_CALL
@@ -805,7 +808,7 @@ L0DF9:  jsr     UNKNOWN_CALL
         bcc     L0E0E
         jsr     L0DD1
 L0E0E:  lda     vscroll_pos
-        sta     L0989
+        sta     update_scroll_params::pos
         jsr     L0DED
         jsr     L0E30
         jmp     input_loop
@@ -1219,15 +1222,14 @@ L1194:  .byte   $00,$00,$0A,$00
         sta     label_left+1
 .endproc
 .proc draw_mode
-        A2D_CALL $06, label_left ; guess: setting up draw location
+        A2D_CALL $06, label_left ; guess: setting up draw location ???
         A2D_CALL $0E, L1194
         lda     fixed_mode_flag
         beq     else            ; is proportional?
         A2D_CALL A2D_DRAW_TEXT, fixed_str
         jmp     endif
 else:   A2D_CALL A2D_DRAW_TEXT, prop_str
-endif:
-        ldx     #$0F
+endif:  ldx     #$0F
 loop:   lda     L09CE,x
         sta     L09A8,x
         dex
