@@ -384,13 +384,13 @@ Current file: stf.s
 000989  1  00           L0989:  .byte   $00
 00098A  1               
 00098A  1               ;;; Used when dragging vscroll thumb
-00098A  1               .proc thumb_scroll_params
+00098A  1               .proc thumb_drag_params
 00098A  1  00           type:   .byte   0               ; vscroll = 1, hscroll = 2 ??
 00098B  1  00 00        xcoord: .word   0
 00098D  1  00 00        ycoord: .word   0
-00098F  1               .endproc
-00098F  1  00           L098F:  .byte   $00
-000990  1  00           L0990:  .byte   $00
+00098F  1  00           unk1:   .byte   $00             ; ??
+000990  1  00           unk2:   .byte   $00             ; ??
+000991  1               .endproc
 000991  1               
 000991  1               text_string:
 000991  1               text_string_addr:
@@ -664,7 +664,7 @@ Current file: stf.s
 000BC9  1               
 000BC9  1               .proc on_vscroll_click
 000BC9  1  A9 01        L0BC9:  lda     #$01            ; ??
-000BCB  1  8D 8A 09             sta     thumb_scroll_params::type
+000BCB  1  8D 8A 09             sta     thumb_drag_params::type
 000BCE  1  8D 88 09             sta     L0988
 000BD1  1  AD 85 09             lda     query_client_params::scroll
 000BD4  1  C9 05                cmp     #5
@@ -682,10 +682,10 @@ Current file: stf.s
 000BEC  1               .endproc
 000BEC  1               
 000BEC  1               .proc on_vscroll_thumb_click
-000BEC  1  20 39 0D             jsr     L0D39
-000BEF  1  AD 90 09             lda     L0990
+000BEC  1  20 39 0D             jsr     start_thumb_drag
+000BEF  1  AD 90 09             lda     thumb_drag_params::unk2
 000BF2  1  F0 1C                beq     end
-000BF4  1  AD 8F 09             lda     L098F
+000BF4  1  AD 8F 09             lda     thumb_drag_params::unk1
 000BF7  1  8D 89 09             sta     L0989
 000BFA  1  20 7C 0D             jsr     L0D7C
 000BFD  1  20 ED 0D             jsr     L0DED
@@ -783,7 +783,7 @@ Current file: stf.s
 000C95  1               ;;; Haven't been able to trigger this yet - click on ???
 000C95  1               ;;; Possibly horizontal scroll bar? (unused in this DA - generic code?)
 000C95  1  A9 02        L0C95:  lda     #$02
-000C97  1  8D 8A 09             sta     thumb_scroll_params::type
+000C97  1  8D 8A 09             sta     thumb_drag_params::type
 000C9A  1  8D 88 09             sta     L0988
 000C9D  1  AD 85 09             lda     query_client_params::scroll
 000CA0  1  C9 05                cmp     #5
@@ -798,10 +798,10 @@ Current file: stf.s
 000CB2  1  F0 42                beq     L0CF6
 000CB4  1  60                   rts
 000CB5  1               
-000CB5  1  20 39 0D     L0CB5:  jsr     L0D39
-000CB8  1  AD 90 09             lda     L0990
+000CB5  1  20 39 0D     L0CB5:  jsr     start_thumb_drag
+000CB8  1  AD 90 09             lda     thumb_drag_params::unk2
 000CBB  1  F0 29                beq     L0CE6
-000CBD  1  AD 8F 09             lda     L098F
+000CBD  1  AD 8F 09             lda     thumb_drag_params::unk1
 000CC0  1  20 EC 10             jsr     L10EC
 000CC3  1  A5 06                lda     $06
 000CC5  1  8D B0 09             sta     L09B0
@@ -861,15 +861,17 @@ Current file: stf.s
 000D38  1  60                   rts
 000D39  1               
 000D39  1                       ;; Used at start of thumb drag
-000D39  1  AD 71 09     L0D39:  lda     mouse_data::xcoord
-000D3C  1  8D 8B 09             sta     thumb_scroll_params::xcoord
+000D39  1               .proc start_thumb_drag
+000D39  1  AD 71 09             lda     mouse_data::xcoord
+000D3C  1  8D 8B 09             sta     thumb_drag_params::xcoord
 000D3F  1  AD 72 09             lda     mouse_data::xcoord+1
-000D42  1  8D 8C 09             sta     thumb_scroll_params::xcoord+1
+000D42  1  8D 8C 09             sta     thumb_drag_params::xcoord+1
 000D45  1  AD 73 09             lda     mouse_data::ycoord
-000D48  1  8D 8D 09             sta     thumb_scroll_params::ycoord
-000D4B  1  20 00 40 4A          A2D_CALL $4A, thumb_scroll_params
+000D48  1  8D 8D 09             sta     thumb_drag_params::ycoord
+000D4B  1  20 00 40 4A          A2D_CALL $4A, thumb_drag_params
 000D4F  1  8A 09        
 000D51  1  60                   rts
+000D52  1               .endproc
 000D52  1               
 000D52  1               .proc was_button_released
 000D52  1  20 00 40 2A          A2D_CALL A2D_GET_BUTTON, button_state

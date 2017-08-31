@@ -251,13 +251,13 @@ L0988:  .byte   $00
 L0989:  .byte   $00
 
 ;;; Used when dragging vscroll thumb
-.proc thumb_scroll_params
+.proc thumb_drag_params
 type:   .byte   0               ; vscroll = 1, hscroll = 2 ??
 xcoord: .word   0
 ycoord: .word   0
+unk1:   .byte   $00             ; ??
+unk2:   .byte   $00             ; ??
 .endproc
-L098F:  .byte   $00
-L0990:  .byte   $00
 
 text_string:
 text_string_addr:
@@ -514,7 +514,7 @@ end:    rts
 
 .proc on_vscroll_click
 L0BC9:  lda     #$01            ; ??
-        sta     thumb_scroll_params::type
+        sta     thumb_drag_params::type
         sta     L0988
         lda     query_client_params::scroll
         cmp     #5
@@ -532,10 +532,10 @@ end:    rts
 .endproc
 
 .proc on_vscroll_thumb_click
-        jsr     L0D39
-        lda     L0990
+        jsr     start_thumb_drag
+        lda     thumb_drag_params::unk2
         beq     end
-        lda     L098F
+        lda     thumb_drag_params::unk1
         sta     L0989
         jsr     L0D7C
         jsr     L0DED
@@ -633,7 +633,7 @@ loop:   inx
 ;;; Haven't been able to trigger this yet - click on ???
 ;;; Possibly horizontal scroll bar? (unused in this DA - generic code?)
 L0C95:  lda     #$02
-        sta     thumb_scroll_params::type
+        sta     thumb_drag_params::type
         sta     L0988
         lda     query_client_params::scroll
         cmp     #5
@@ -648,10 +648,10 @@ L0C95:  lda     #$02
         beq     L0CF6
         rts
 
-L0CB5:  jsr     L0D39
-        lda     L0990
+L0CB5:  jsr     start_thumb_drag
+        lda     thumb_drag_params::unk2
         beq     L0CE6
-        lda     L098F
+        lda     thumb_drag_params::unk1
         jsr     L10EC
         lda     $06
         sta     L09B0
@@ -711,14 +711,16 @@ L0D27:  sta     L099B
         rts
 
         ;; Used at start of thumb drag
-L0D39:  lda     mouse_data::xcoord
-        sta     thumb_scroll_params::xcoord
+.proc start_thumb_drag
+        lda     mouse_data::xcoord
+        sta     thumb_drag_params::xcoord
         lda     mouse_data::xcoord+1
-        sta     thumb_scroll_params::xcoord+1
+        sta     thumb_drag_params::xcoord+1
         lda     mouse_data::ycoord
-        sta     thumb_scroll_params::ycoord
-        A2D_CALL $4A, thumb_scroll_params
+        sta     thumb_drag_params::ycoord
+        A2D_CALL $4A, thumb_drag_params
         rts
+.endproc
 
 .proc was_button_released
         A2D_CALL A2D_GET_BUTTON, button_state
