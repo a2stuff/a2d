@@ -138,7 +138,7 @@ Current file: stf.s
 000837  1  10 F8                bpl     L0831
 000839  1  4C 4C 08             jmp     L084C
 00083C  1               
-00083C  1               .proc   call_1000_main
+00083C  1               .proc call_1000_main
 00083C  1  8D 02 C0             sta     RAMRDOFF
 00083F  1  8D 04 C0             sta     RAMWRTOFF
 000842  1  20 00 10             jsr     L1000
@@ -158,7 +158,7 @@ Current file: stf.s
 000861  1  9A                   txs
 000862  1  60                   rts                     ; DA exit
 000863  1               
-000863  1               .proc   open_file
+000863  1               .proc open_file
 000863  1  20 C2 08             jsr     copy_params_aux_to_main
 000866  1  8D 08 C0             sta     ALTZPOFF
 000869  1  20 00 BF C8          MLI_CALL OPEN, open_params
@@ -168,7 +168,7 @@ Current file: stf.s
 000875  1  60                   rts
 000876  1               .endproc
 000876  1               
-000876  1               .proc   read_file
+000876  1               .proc read_file
 000876  1  20 C2 08             jsr     copy_params_aux_to_main
 000879  1  8D 08 C0             sta     ALTZPOFF
 00087C  1  20 00 BF CA          MLI_CALL READ, read_params
@@ -178,7 +178,7 @@ Current file: stf.s
 000888  1  60                   rts
 000889  1               .endproc
 000889  1               
-000889  1               .proc   get_file_eof
+000889  1               .proc get_file_eof
 000889  1  20 C2 08             jsr     copy_params_aux_to_main
 00088C  1  8D 08 C0             sta     ALTZPOFF
 00088F  1  20 00 BF D1          MLI_CALL GET_EOF, get_eof_params
@@ -209,7 +209,7 @@ Current file: stf.s
 0008C2  1               .endproc
 0008C2  1               
 0008C2  1               ;;; Copies param blocks from Aux to Main
-0008C2  1               .proc   copy_params_aux_to_main
+0008C2  1               .proc copy_params_aux_to_main
 0008C2  1  A0 65                ldy     #(params_end - params_start + 1)
 0008C4  1  8D 04 C0             sta     RAMWRTOFF
 0008C7  1  B9 E9 08     loop:   lda     params_start - 1,y
@@ -221,7 +221,7 @@ Current file: stf.s
 0008D4  1               .endproc
 0008D4  1               
 0008D4  1               ;;; Copies param blocks from Main to Aux
-0008D4  1               .proc   copy_params_main_to_aux
+0008D4  1               .proc copy_params_main_to_aux
 0008D4  1  48                   pha
 0008D5  1  08                   php
 0008D6  1  8D 05 C0             sta     RAMWRTON
@@ -241,38 +241,37 @@ Current file: stf.s
 0008EA  1               params_start:
 0008EA  1               ;;; This block gets copied between main/aux
 0008EA  1               
-0008EA  1               open_params:
+0008EA  1               .proc open_params
 0008EA  1  03                   .byte   3               ; param_count
 0008EB  1  04 09                .addr   L0904           ; pathname
 0008ED  1  00 0C                .addr   $0C00           ; io_buffer
-0008EF  1  00           open_ref_num:.byte   0          ; ref_num
+0008EF  1  00           ref_num:.byte   0               ; ref_num
+0008F0  1               .endproc
 0008F0  1               
-0008F0  1               
-0008F0  1               read_params:
+0008F0  1               .proc read_params
 0008F0  1  04                   .byte   4               ; param_count
-0008F1  1               read_ref_num:
-0008F1  1  00                   .byte   0               ; ref_num
-0008F2  1  00 12        read_db:.addr   $1200           ; data_buffer
+0008F1  1  00           ref_num:.byte   0               ; ref_num
+0008F2  1  00 12        db:     .addr   $1200           ; data_buffer
 0008F4  1  00 01                .word   $100            ; request_count
 0008F6  1  00 00                .word   0               ; trans_count
+0008F8  1               .endproc
 0008F8  1               
-0008F8  1               get_eof_params:
+0008F8  1               .proc get_eof_params
 0008F8  1  02                   .byte   2               ; param_count
-0008F9  1               get_eof_ref_num:
-0008F9  1  00                   .byte   0               ; ref_num
+0008F9  1  00           ref_num:.byte   0               ; ref_num
 0008FA  1  00 00 00             .byte   0,0,0           ; EOF (lo, mid, hi)
+0008FD  1               .endproc
 0008FD  1               
-0008FD  1               set_mark_params:
+0008FD  1               .proc set_mark_params
 0008FD  1  02                   .byte   2               ; param_count
-0008FE  1               set_mark_ref_num:
-0008FE  1  00                   .byte   0               ; ref_num
+0008FE  1  00           ref_num:.byte   0               ; ref_num
 0008FF  1  00 00 00             .byte   0,0,0           ; position (lo, mid, hi)
+000902  1               .endproc
 000902  1               
-000902  1               close_params:
+000902  1               .proc close_params
 000902  1  01                   .byte   1               ; param_count
-000903  1               close_ref_num:
-000903  1  00                   .byte   0               ; ref_num
-000904  1               
+000903  1  00           ref_num:.byte   0               ; ref_num
+000904  1               .endproc
 000904  1               
 000904  1  00 00 00 00  L0904:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 000908  1  00 00 00 00  
@@ -331,12 +330,12 @@ Current file: stf.s
 000970  1               button_state:
 000970  1  00                   .byte   $00
 000971  1               
-000971  1               mouse_data:
-000971  1  00 00        mouse_x:.word   0       ; lo/hi of mouse x position
-000973  1  00 00        mouse_y:.word   0       ; lo of mouse y position (hi = unused?) ?????
-000975  1  00           mouse_elem:     .byte   $00     ; 3 = title, 4 = ???, 5 = close
-000976  1  00           mouse_win:      .byte   $00     ; $64 = mouse in window
-000977  1               
+000971  1               .proc mouse_data
+000971  1  00 00        xcoord: .word   0       ; lo/hi of mouse x position
+000973  1  00 00        ycoord: .word   0       ; lo of mouse y position (hi = unused?) ?????
+000975  1  00           elem:   .byte   $00     ; 3 = title, 4 = ???, 5 = close
+000976  1  00           win:    .byte   $00     ; $64 = mouse in window
+000977  1               .endproc
 000977  1               
 000977  1  64           L0977:  .byte   $64
 000978  1  00           L0978:  .byte   $00
@@ -498,18 +497,18 @@ Current file: stf.s
 000A9C  1  D0 F7                bne     L0A95
 000A9E  1  8D 05 C0             sta     RAMWRTON
 000AA1  1  20 63 08             jsr     open_file
-000AA4  1  AD EF 08             lda     open_ref_num
-000AA7  1  8D F1 08             sta     read_ref_num
-000AAA  1  8D FE 08             sta     set_mark_ref_num
-000AAD  1  8D F9 08             sta     get_eof_ref_num
-000AB0  1  8D 03 09             sta     close_ref_num
+000AA4  1  AD EF 08             lda     open_params::ref_num
+000AA7  1  8D F1 08             sta     read_params::ref_num
+000AAA  1  8D FE 08             sta     set_mark_params::ref_num
+000AAD  1  8D F9 08             sta     get_eof_params::ref_num
+000AB0  1  8D 03 09             sta     close_params::ref_num
 000AB3  1  20 89 08             jsr     get_file_eof
 000AB6  1  20 00 40 38          A2D_CALL $38, L0994
 000ABA  1  94 09        
 000ABC  1  20 00 40 04          A2D_CALL $04, L09A8
 000AC0  1  A8 09        
 000AC2  1  20 88 10             jsr     L1088
-000AC5  1  20 98 11             jsr     draw_mode
+000AC5  1  20 98 11             jsr     calc_and_draw_mode
 000AC8  1  20 30 0E             jsr     L0E30
 000ACB  1  20 00 40 2B          A2D_CALL $2B, NULL
 000ACF  1  00 00        
@@ -523,19 +522,19 @@ Current file: stf.s
 000ADE  1               
 000ADE  1  20 00 40 40          A2D_CALL A2D_GET_MOUSE, mouse_data
 000AE2  1  71 09        
-000AE4  1  AD 76 09             lda     mouse_win       ; click target??
+000AE4  1  AD 76 09             lda     mouse_data::win       ; click target??
 000AE7  1  C9 64                cmp     #$64            ; is in window??
 000AE9  1  D0 E6                bne     input_loop
-000AEB  1  AD 75 09             lda     mouse_elem      ; which UI element?
+000AEB  1  AD 75 09             lda     mouse_data::elem      ; which UI element?
 000AEE  1  C9 05                cmp     #$05            ; 5 = close btn
 000AF0  1  F0 2F                beq     on_close_btn_down
-000AF2  1  AE 71 09             ldx     mouse_x         ; stash mouse location
+000AF2  1  AE 71 09             ldx     mouse_data::xcoord         ; stash mouse location
 000AF5  1  8E 78 09             stx     L0978
 000AF8  1  8E 80 09             stx     L0980
-000AFB  1  AE 72 09             ldx     mouse_x+1
+000AFB  1  AE 72 09             ldx     mouse_data::xcoord+1
 000AFE  1  8E 79 09             stx     L0979
 000B01  1  8E 81 09             stx     L0981
-000B04  1  AE 73 09             ldx     mouse_y
+000B04  1  AE 73 09             ldx     mouse_data::ycoord
 000B07  1  8E 7A 09             stx     L097A
 000B0A  1  8E 82 09             stx     L0982
 000B0D  1  C9 03                cmp     #$03            ; 3 = title bar
@@ -609,7 +608,7 @@ Current file: stf.s
 000BA5  1  8D 86 09             sta     L0986
 000BA8  1  20 00 40 49          A2D_CALL $49, L0986
 000BAC  1  86 09        
-000BAE  1  20 98 11             jsr     draw_mode
+000BAE  1  20 98 11             jsr     calc_and_draw_mode
 000BB1  1  4C F9 0D             jmp     L0DF9
 000BB4  1               
 000BB4  1  20 00 40 48  L0BB4:  A2D_CALL $48, L0980
@@ -801,11 +800,11 @@ Current file: stf.s
 000D36  1  D0 D0                bne     L0D08
 000D38  1  60                   rts
 000D39  1               
-000D39  1  AD 71 09     L0D39:  lda     mouse_x
+000D39  1  AD 71 09     L0D39:  lda     mouse_data::xcoord
 000D3C  1  8D 8B 09             sta     L098B
-000D3F  1  AD 72 09             lda     mouse_x+1
+000D3F  1  AD 72 09             lda     mouse_data::xcoord+1
 000D42  1  8D 8C 09             sta     L098C
-000D45  1  AD 73 09             lda     mouse_y
+000D45  1  AD 73 09             lda     mouse_data::ycoord
 000D48  1  8D 8D 09             sta     L098D
 000D4B  1  20 00 40 4A          A2D_CALL $4A, L098A
 000D4F  1  8A 09        
@@ -914,10 +913,10 @@ Current file: stf.s
 000E35  1  20 29 11             jsr     L1129
 000E38  1  20 9C 08             jsr     set_file_mark
 000E3B  1  A9 00                lda     #$00
-000E3D  1  8D F2 08             sta     read_db
+000E3D  1  8D F2 08             sta     read_params::db
 000E40  1  85 06                sta     $06
 000E42  1  A9 12                lda     #$12
-000E44  1  8D F3 08             sta     read_db+1
+000E44  1  8D F3 08             sta     read_params::db+1
 000E47  1  85 07                sta     $07
 000E49  1  A9 00                lda     #$00
 000E4B  1  8D 45 09             sta     L0945
@@ -1129,17 +1128,17 @@ Current file: stf.s
 00102B  1  A9 00        L102B:  lda     #$00
 00102D  1  8D 45 09             sta     L0945
 001030  1  20 3E 10             jsr     L103E
-001033  1  AD F3 08             lda     read_db+1
+001033  1  AD F3 08             lda     read_params::db+1
 001036  1  C9 12                cmp     #$12
 001038  1  D0 03                bne     L103D
-00103A  1  EE F3 08             inc     read_db+1
+00103A  1  EE F3 08             inc     read_params::db+1
 00103D  1  60           L103D:  rts
 00103E  1               
 00103E  1               L103E:
 00103E  1               .scope
-00103E  1  AD F2 08             lda     read_db
+00103E  1  AD F2 08             lda     read_params::db
 001041  1  8D 52 10             sta     store+1
-001044  1  AD F3 08             lda     read_db+1
+001044  1  AD F3 08             lda     read_params::db+1
 001047  1  8D 53 10             sta     store+2
 00104A  1  A9 20                lda     #$20
 00104C  1  A2 00                ldx     #$00
@@ -1157,7 +1156,7 @@ Current file: stf.s
 001067  1  85 42                sta     $42
 001069  1  A9 FF                lda     #$FF
 00106B  1  85 3E                sta     $3E
-00106D  1  AD F3 08             lda     read_db+1
+00106D  1  AD F3 08             lda     read_params::db+1
 001070  1  85 43                sta     $43
 001072  1  85 3D                sta     $3D
 001074  1  85 3F                sta     $3F
@@ -1263,11 +1262,11 @@ Current file: stf.s
 001139  1  60           L1139:  rts
 00113A  1               
 00113A  1               ;;; On Title Bar Click - is it on the Fixed/Proportional label?
-00113A  1               .proc   on_title_bar_click
-00113A  1  AD 72 09             lda     mouse_x+1           ; mouse x high byte?
+00113A  1               .proc on_title_bar_click
+00113A  1  AD 72 09             lda     mouse_data::xcoord+1           ; mouse x high byte?
 00113D  1  CD 85 11             cmp     label_left+1
 001140  1  D0 06                bne     :+
-001142  1  AD 71 09             lda     mouse_x
+001142  1  AD 71 09             lda     mouse_data::xcoord
 001145  1  CD 84 11             cmp     label_left
 001148  1  90 19        :       bcc     ignore
 00114A  1  AD 6F 09             lda     fixed_mode_flag
@@ -1278,7 +1277,7 @@ Current file: stf.s
 001158  1               
 001158  1               set_flag:
 001158  1  EE 6F 09             inc     fixed_mode_flag ; set flag (mode = fixed)
-00115B  1  20 BD 11     redraw: jsr     draw_mode2
+00115B  1  20 BD 11     redraw: jsr     draw_mode
 00115E  1  20 30 0E             jsr     L0E30
 001161  1  38                   sec                     ; Click consumed
 001162  1  60                   rts
@@ -1302,7 +1301,7 @@ Current file: stf.s
 001192  1  0A 00        
 001194  1  00 00 0A 00  L1194:  .byte   $00,$00,$0A,$00
 001198  1               
-001198  1               .proc   draw_mode               ; guess: this is computing draw location
+001198  1               .proc calc_and_draw_mode
 001198  1  38                   sec
 001199  1  AD AA 09             lda     L09AA
 00119C  1  E9 0C                sbc     #$0C
@@ -1322,7 +1321,7 @@ Current file: stf.s
 0011B8  1  E9 00                sbc     #$00
 0011BA  1  8D 85 11             sta     label_left+1
 0011BD  1               .endproc
-0011BD  1               .proc   draw_mode2
+0011BD  1               .proc draw_mode
 0011BD  1  20 00 40 06          A2D_CALL $06, label_left ; guess: setting up draw location
 0011C1  1  84 11        
 0011C3  1  20 00 40 0E          A2D_CALL $0E, L1194

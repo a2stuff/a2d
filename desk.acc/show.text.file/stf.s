@@ -47,7 +47,7 @@ L0831:  lda     call_1000_main,x
         bpl     L0831
         jmp     L084C
 
-.proc   call_1000_main
+.proc call_1000_main
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     L1000
@@ -67,7 +67,7 @@ L084C:  jsr     L09DE
         txs
         rts                     ; DA exit
 
-.proc   open_file
+.proc open_file
         jsr     copy_params_aux_to_main
         sta     ALTZPOFF
         MLI_CALL OPEN, open_params
@@ -76,7 +76,7 @@ L084C:  jsr     L09DE
         rts
 .endproc
 
-.proc   read_file
+.proc read_file
         jsr     copy_params_aux_to_main
         sta     ALTZPOFF
         MLI_CALL READ, read_params
@@ -85,7 +85,7 @@ L084C:  jsr     L09DE
         rts
 .endproc
 
-.proc   get_file_eof
+.proc get_file_eof
         jsr     copy_params_aux_to_main
         sta     ALTZPOFF
         MLI_CALL GET_EOF, get_eof_params
@@ -113,7 +113,7 @@ L084C:  jsr     L09DE
 .endproc
 
 ;;; Copies param blocks from Aux to Main
-.proc   copy_params_aux_to_main
+.proc copy_params_aux_to_main
         ldy     #(params_end - params_start + 1)
         sta     RAMWRTOFF
 loop:   lda     params_start - 1,y
@@ -125,7 +125,7 @@ loop:   lda     params_start - 1,y
 .endproc
 
 ;;; Copies param blocks from Main to Aux
-.proc   copy_params_main_to_aux
+.proc copy_params_main_to_aux
         pha
         php
         sta     RAMWRTON
@@ -145,38 +145,37 @@ loop:   lda     params_start - 1,y
 params_start:
 ;;; This block gets copied between main/aux
 
-open_params:
+.proc open_params
         .byte   3               ; param_count
         .addr   L0904           ; pathname
         .addr   $0C00           ; io_buffer
-open_ref_num:.byte   0          ; ref_num
+ref_num:.byte   0               ; ref_num
+.endproc
 
-
-read_params:
+.proc read_params
         .byte   4               ; param_count
-read_ref_num:
-        .byte   0               ; ref_num
-read_db:.addr   $1200           ; data_buffer
+ref_num:.byte   0               ; ref_num
+db:     .addr   $1200           ; data_buffer
         .word   $100            ; request_count
         .word   0               ; trans_count
+.endproc
 
-get_eof_params:
+.proc get_eof_params
         .byte   2               ; param_count
-get_eof_ref_num:
-        .byte   0               ; ref_num
+ref_num:.byte   0               ; ref_num
         .byte   0,0,0           ; EOF (lo, mid, hi)
+.endproc
 
-set_mark_params:
+.proc set_mark_params
         .byte   2               ; param_count
-set_mark_ref_num:
-        .byte   0               ; ref_num
+ref_num:.byte   0               ; ref_num
         .byte   0,0,0           ; position (lo, mid, hi)
+.endproc
 
-close_params:
+.proc close_params
         .byte   1               ; param_count
-close_ref_num:
-        .byte   0               ; ref_num
-
+ref_num:.byte   0               ; ref_num
+.endproc
 
 L0904:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -226,12 +225,12 @@ fixed_mode_flag:
 button_state:
         .byte   $00
 
-mouse_data:
-mouse_x:.word   0       ; lo/hi of mouse x position
-mouse_y:.word   0       ; lo of mouse y position (hi = unused?) ?????
-mouse_elem:     .byte   $00     ; 3 = title, 4 = ???, 5 = close
-mouse_win:      .byte   $00     ; $64 = mouse in window
-
+.proc mouse_data
+xcoord: .word   0       ; lo/hi of mouse x position
+ycoord: .word   0       ; lo of mouse y position (hi = unused?) ?????
+elem:   .byte   $00     ; 3 = title, 4 = ???, 5 = close
+win:    .byte   $00     ; $64 = mouse in window
+.endproc
 
 L0977:  .byte   $64
 L0978:  .byte   $00
@@ -386,16 +385,16 @@ L0A95:  lda     $8802,x
         bne     L0A95
         sta     RAMWRTON
         jsr     open_file
-        lda     open_ref_num
-        sta     read_ref_num
-        sta     set_mark_ref_num
-        sta     get_eof_ref_num
-        sta     close_ref_num
+        lda     open_params::ref_num
+        sta     read_params::ref_num
+        sta     set_mark_params::ref_num
+        sta     get_eof_params::ref_num
+        sta     close_params::ref_num
         jsr     get_file_eof
         A2D_CALL $38, L0994
         A2D_CALL $04, L09A8
         jsr     L1088
-        jsr     draw_mode
+        jsr     calc_and_draw_mode
         jsr     L0E30
         A2D_CALL $2B, NULL
 
@@ -406,19 +405,19 @@ input_loop:
         bne     input_loop      ; nope, keep waiting
 
         A2D_CALL A2D_GET_MOUSE, mouse_data
-        lda     mouse_win       ; click target??
+        lda     mouse_data::win       ; click target??
         cmp     #$64            ; is in window??
         bne     input_loop
-        lda     mouse_elem      ; which UI element?
+        lda     mouse_data::elem      ; which UI element?
         cmp     #$05            ; 5 = close btn
         beq     on_close_btn_down
-        ldx     mouse_x         ; stash mouse location
+        ldx     mouse_data::xcoord         ; stash mouse location
         stx     L0978
         stx     L0980
-        ldx     mouse_x+1
+        ldx     mouse_data::xcoord+1
         stx     L0979
         stx     L0981
-        ldx     mouse_y
+        ldx     mouse_data::ycoord
         stx     L097A
         stx     L0982
         cmp     #$03            ; 3 = title bar
@@ -488,7 +487,7 @@ L0B8B:  sta     L0998
         lda     #$02
         sta     L0986
         A2D_CALL $49, L0986
-        jsr     draw_mode
+        jsr     calc_and_draw_mode
         jmp     L0DF9
 
 L0BB4:  A2D_CALL $48, L0980
@@ -679,11 +678,11 @@ L0D27:  sta     L099B
         bne     L0D08
         rts
 
-L0D39:  lda     mouse_x
+L0D39:  lda     mouse_data::xcoord
         sta     L098B
-        lda     mouse_x+1
+        lda     mouse_data::xcoord+1
         sta     L098C
-        lda     mouse_y
+        lda     mouse_data::ycoord
         sta     L098D
         A2D_CALL $4A, L098A
         rts
@@ -784,10 +783,10 @@ L0E30:  lda     #$00
         jsr     L1129
         jsr     set_file_mark
         lda     #$00
-        sta     read_db
+        sta     read_params::db
         sta     $06
         lda     #$12
-        sta     read_db+1
+        sta     read_params::db+1
         sta     $07
         lda     #$00
         sta     L0945
@@ -995,17 +994,17 @@ L1015:  lda     $1300,y
 L102B:  lda     #$00
         sta     L0945
         jsr     L103E
-        lda     read_db+1
+        lda     read_params::db+1
         cmp     #$12
         bne     L103D
-        inc     read_db+1
+        inc     read_params::db+1
 L103D:  rts
 
 L103E:
 .scope
-        lda     read_db
+        lda     read_params::db
         sta     store+1
-        lda     read_db+1
+        lda     read_params::db+1
         sta     store+2
         lda     #$20
         ldx     #$00
@@ -1023,7 +1022,7 @@ store:  sta     $1200,x         ; self-modified
         sta     $42
         lda     #$FF
         sta     $3E
-        lda     read_db+1
+        lda     read_params::db+1
         sta     $43
         sta     $3D
         sta     $3F
@@ -1129,11 +1128,11 @@ L1133:  sta     $8802,x
 L1139:  rts
 
 ;;; On Title Bar Click - is it on the Fixed/Proportional label?
-.proc   on_title_bar_click
-        lda     mouse_x+1           ; mouse x high byte?
+.proc on_title_bar_click
+        lda     mouse_data::xcoord+1           ; mouse x high byte?
         cmp     label_left+1
         bne     :+
-        lda     mouse_x
+        lda     mouse_data::xcoord
         cmp     label_left
 :       bcc     ignore
         lda     fixed_mode_flag
@@ -1144,7 +1143,7 @@ L1139:  rts
 
 set_flag:
         inc     fixed_mode_flag ; set flag (mode = fixed)
-redraw: jsr     draw_mode2
+redraw: jsr     draw_mode
         jsr     L0E30
         sec                     ; Click consumed
         rts
@@ -1162,7 +1161,7 @@ L1186:  .byte   $00,$00,$00,$20,$80,$00,$00,$00
         .byte   $00,$00,$50,$00,$0A,$00
 L1194:  .byte   $00,$00,$0A,$00
 
-.proc   draw_mode               ; guess: this is computing draw location
+.proc calc_and_draw_mode
         sec
         lda     L09AA
         sbc     #$0C
@@ -1182,7 +1181,7 @@ L1194:  .byte   $00,$00,$0A,$00
         sbc     #$00
         sta     label_left+1
 .endproc
-.proc   draw_mode2
+.proc draw_mode
         A2D_CALL $06, label_left ; guess: setting up draw location
         A2D_CALL $0E, L1194
         lda     fixed_mode_flag
