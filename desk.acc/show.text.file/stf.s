@@ -226,25 +226,29 @@ button_state:
         .byte   $00
 
 .proc mouse_data
-xcoord: .word   0       ; lo/hi of mouse x position
-ycoord: .word   0       ; lo of mouse y position (hi = unused?) ?????
-elem:   .byte   $00     ; 3 = title, 4 = ???, 5 = close
-win:    .byte   $00     ; $64 = mouse in window
+xcoord: .word   0
+ycoord: .word   0
+elem:   .byte   $00
+win:    .byte   $00
 .endproc
 
 L0977:  .byte   $64
-L0978:  .byte   $00
-L0979:  .byte   $00
-L097A:  .byte   $00,$00,$00
+xcoord1:.word   0               ; ???
+ycoord1:.word   0               ; ???
+        .byte   0               ; ???
 
-close_btn_state:
-        .byte   $00,$00,$00
+.proc close_btn
+state:  .byte   0
+        .byte   0,0
+.endproc
 
-L0980:  .byte   $00
-L0981:  .byte   $00
-L0982:  .byte   $00,$00
-L0984:  .byte   $00
-L0985:  .byte   $00
+.proc query_client_params
+xcoord: .word   0
+ycoord: .word   0
+part:   .byte   0               ; 0 = client, 1 = scroll bar, 2 = ?????
+scroll: .byte   0               ; 1 = up, 2 = down, 3 = above, 4 = below, 5 = thumb
+.endproc
+
 L0986:  .byte   $00
 L0987:  .byte   $00
 L0988:  .byte   $00
@@ -405,34 +409,34 @@ input_loop:
         bne     input_loop      ; nope, keep waiting
 
         A2D_CALL A2D_GET_MOUSE, mouse_data
-        lda     mouse_data::win       ; click target??
-        cmp     #$64            ; is in window??
+        lda     mouse_data::win         ; click target??
+        cmp     #$64                    ; is in window??
         bne     input_loop
-        lda     mouse_data::elem      ; which UI element?
-        cmp     #$05            ; 5 = close btn
+        lda     mouse_data::elem        ; which UI element?
+        cmp     #$05                    ; 5 = close btn
         beq     on_close_btn_down
-        ldx     mouse_data::xcoord         ; stash mouse location
-        stx     L0978
-        stx     L0980
+        ldx     mouse_data::xcoord      ; stash mouse location
+        stx     xcoord1
+        stx     query_client_params::xcoord
         ldx     mouse_data::xcoord+1
-        stx     L0979
-        stx     L0981
+        stx     xcoord1+1
+        stx     query_client_params::xcoord+1
         ldx     mouse_data::ycoord
-        stx     L097A
-        stx     L0982
-        cmp     #$03            ; 3 = title bar
-        beq     L0B1B
-        cmp     #$04            ; 4 = ??? scroll track maybe??
+        stx     ycoord1
+        stx     query_client_params::ycoord
+        cmp     #$03                    ; 3 = title bar
+        beq     :+
+        cmp     #$04                    ; 4 = ???
         beq     input_loop
-        jsr     L0BB4
+        jsr     on_client_click
         jmp     input_loop
 
-L0B1B:  jsr     on_title_bar_click
+:       jsr     on_title_bar_click
         jmp     input_loop
 
 .proc on_close_btn_down
-        A2D_CALL A2D_BTN_CLICK, close_btn_state     ; wait to see if the click completes
-        lda     close_btn_state ; all the way?
+        A2D_CALL A2D_BTN_CLICK, close_btn     ; wait to see if the click completes
+        lda     close_btn::state ; did click complete?
         beq     input_loop      ; nope
         jsr     close_file
         A2D_CALL $39, L0994
@@ -443,6 +447,8 @@ L0B1B:  jsr     on_title_bar_click
         rts                     ; exits input loop
 .endproc
 
+;;; How would control get here???? Dead code???
+.proc maybe_dead_code
         A2D_CALL $45, L0977
         jsr     L10FD
         jsr     L1088
@@ -489,34 +495,38 @@ L0B8B:  sta     L0998
         A2D_CALL $49, L0986
         jsr     calc_and_draw_mode
         jmp     L0DF9
+.endproc
 
-L0BB4:  A2D_CALL $48, L0980
-        lda     L0984
-        cmp     #$01
-        beq     L0BC9
-        cmp     #$02
-        bne     L0BC8
+.proc on_client_click
+        A2D_CALL A2D_QUERY_CLIENT, query_client_params
+        lda     query_client_params::part
+        cmp     #1              ; 1 = vertical scroll bar
+        beq     on_vertical_scroll_bar_click
+        cmp     #2              ; 2 = ???
+        bne     L0BC8           ; 0 = client area
         jmp     L0C95
-
+.endproc
 L0BC8:  rts
 
+;;; Handle scroll bar click
+.proc on_vertical_scroll_bar_click
 L0BC9:  lda     #$01
         sta     L098A
         sta     L0988
-        lda     L0985
-        cmp     #$05
+        lda     query_client_params::scroll
+        cmp     #5
         beq     L0BEC
-        cmp     #$04
+        cmp     #4
         beq     L0C3E
-        cmp     #$03
+        cmp     #3
         beq     L0C11
-        cmp     #$01
+        cmp     #1
         beq     L0C2D
-        cmp     #$02
-        bne     L0BEB
+        cmp     #2
+        bne     end
         jmp     L0C60
-
-L0BEB:  rts
+end:  rts
+.endproc
 
 L0BEC:  jsr     L0D39
         lda     L0990
@@ -600,19 +610,21 @@ L0C89:  inx
         stx     L096E
         rts
 
+;;; Haven't been able to trigger this yet - click on ???
+;;; Possibly horizontal scroll bar? (unused in this DA - generic code?)
 L0C95:  lda     #$02
         sta     L098A
         sta     L0988
-        lda     L0985
-        cmp     #$05
+        lda     query_client_params::scroll
+        cmp     #5
         beq     L0CB5
-        cmp     #$04
+        cmp     #4
         beq     L0CE7
-        cmp     #$03
+        cmp     #3
         beq     L0CEF
-        cmp     #$01
+        cmp     #1
         beq     L0CFE
-        cmp     #$02
+        cmp     #2
         beq     L0CF6
         rts
 
@@ -973,7 +985,7 @@ L0FF6:  lda     L0948
         beq     L100B
         lda     text_string_len
         beq     L100B
-L1000:  A2D_CALL A2D_TEXT, text_string
+L1000:  A2D_CALL A2D_DRAW_TEXT, text_string
         lda     #$01
         sta     L0949
 L100B:  rts
@@ -1186,9 +1198,9 @@ L1194:  .byte   $00,$00,$0A,$00
         A2D_CALL $0E, L1194
         lda     fixed_mode_flag
         beq     else            ; is proportional?
-        A2D_CALL A2D_TEXT, fixed_str
+        A2D_CALL A2D_DRAW_TEXT, fixed_str
         jmp     endif
-else:   A2D_CALL A2D_TEXT, prop_str
+else:   A2D_CALL A2D_DRAW_TEXT, prop_str
 endif:
         ldx     #$0F
 loop:   lda     L09CE,x
