@@ -92,6 +92,9 @@ Current file: stf.s
 000800  2               
 000800  2               A2D_CREATE_WINDOW := $38
 000800  2                       ;; .byte id
+000800  2                       ;;      0 = desktop
+000800  2                       ;;      1, 2, ... = file windows
+000800  2                       ;;      100 = DA (for example)
 000800  2                       ;; .byte ???
 000800  2               
 000800  2               A2D_DESTROY_WINDOW := $39
@@ -120,8 +123,15 @@ Current file: stf.s
 000800  2               A2D_QUERY_CLIENT:= $48
 000800  2                       ;; .word xcoord of query
 000800  2                       ;; .word ycoord of query
-000800  2                       ;; .byte part (0 = client, 1 = vertical scroll bar, 2 = ???)
-000800  2                       ;; .byte scroll (1 = up, 2 = down, 3 = above, 4 = below, 5 = thumb)
+000800  2                       ;; .byte part (0 = client, 1 = vscroll bar, 2 = hscroll bar)
+000800  2                       ;; .byte scroll (1 = up/left, 2 = down/right, 3 = above/before, 4 = below/after, 5 = thumb)
+000800  2               
+000800  2               A2D_SCROLL_THUMB_DRAG:= $4A
+000800  2                       ;; .byte type (1 = vertical, 2 = horizontal)
+000800  2                       ;; .word xcoord of mouse
+000800  2                       ;; .word ycoord of mouse
+000800  2                       ;; .byte position (0...255)
+000800  2                       ;; .byte moved (0 = no change, 1 = moved)
 000800  2               
 000800  2               A2D_UPDATE_SCROLL:= $4B
 000800  2                       ;; .byte type (1 = vertical, 2 = horizontal)
@@ -312,7 +322,7 @@ Current file: stf.s
 000903  1  00           ref_num:.byte   0               ; ref_num
 000904  1               .endproc
 000904  1               
-000904  1               pathname:
+000904  1               pathname:                       ; 1st byte is length, rest is full path
 000904  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00,$00
 000908  1  00 00 00 00  
 00090C  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -411,15 +421,14 @@ Current file: stf.s
 00098A  1  00           type:   .byte   0               ; vscroll = 1, hscroll = 2 ??
 00098B  1  00 00        xcoord: .word   0
 00098D  1  00 00        ycoord: .word   0
-00098F  1  00           unk1:   .byte   $00             ; ??
-000990  1  00           unk2:   .byte   $00             ; ??
+00098F  1  00           pos:    .byte   0               ; position (0...255)
+000990  1  00           moved:  .byte   0               ; 0 if not moved, 1 if moved
 000991  1               .endproc
 000991  1               
-000991  1               text_string:
-000991  1               text_string_addr:
-000991  1  00 00                .addr   0               ; address
-000993  1               text_string_len:
-000993  1  00                   .byte   0               ; length
+000991  1               .proc text_string
+000991  1  00 00        addr:   .addr   0               ; address
+000993  1  00           len:    .byte   0               ; length
+000994  1               .endproc
 000994  1               
 000994  1                       window_id := $64
 000994  1               .proc window_params
@@ -436,10 +445,11 @@ Current file: stf.s
 00099D  1               vscroll_pos:
 00099D  1  00                   .byte   0
 00099E  1               
-00099E  1  00 00 C8 00          .byte   $00,$00,$C8,$00,$33,$00,$00
+00099E  1  00 00 C8 00          .byte   $00,$00,$C8,$00,$33,$00,$00 ; ???
 0009A2  1  33 00 00     
-0009A5  1  02 96 00             .byte   $02,$96,$00
-0009A8  1  0A           L09A8:  .byte   $0A
+0009A5  1  02 96 00             .byte   $02,$96,$00                 ; ???
+0009A8  1               
+0009A8  1  0A           L09A8:  .byte   $0A             ; start of block for an A2D call ($04, $06)
 0009A9  1  00           L09A9:  .byte   $00
 0009AA  1  1C 00 00 20  L09AA:  .byte   $1C,$00,$00,$20,$80,$00
 0009AE  1  80 00        
@@ -492,7 +502,7 @@ Current file: stf.s
 000A19  1  A9 2F                lda     #$2F
 000A1B  1  A0 00                ldy     #$00
 000A1D  1  91 08                sta     ($08),y
-000A1F  1  EE 04 09             inc     pathname
+000A1F  1  EE 04 09             inc     pathname        ; ???
 000A22  1  E6 08                inc     $08
 000A24  1  D0 02                bne     L0A28
 000A26  1  E6 09                inc     $09
@@ -533,32 +543,39 @@ Current file: stf.s
 000A68  1  A9 40                lda     #$40
 000A6A  1  85 28                sta     $28
 000A6C  1  20 20 00             jsr     zp_code_stash
-000A6F  1  4C 8A 0A             jmp     L0A8A
+000A6F  1  4C 8A 0A             jmp     open_file_and_init_window
 000A72  1               
-000A72  1  A0 00        L0A72:  ldy     #$00
-000A74  1  B1 06        L0A74:  lda     ($06),y
+000A72  1               .proc L0A72                     ; ???
+000A72  1  A0 00                ldy     #$00
+000A74  1  B1 06        loop:   lda     ($06),y
 000A76  1  91 08                sta     ($08),y
 000A78  1  C8                   iny
-000A79  1  EE 04 09             inc     pathname
+000A79  1  EE 04 09             inc     pathname        ; ???
 000A7C  1  CA                   dex
-000A7D  1  D0 F5                bne     L0A74
+000A7D  1  D0 F5                bne     loop
 000A7F  1  98                   tya
 000A80  1  18                   clc
 000A81  1  65 08                adc     $08
 000A83  1  85 08                sta     $08
-000A85  1  90 02                bcc     L0A89
+000A85  1  90 02                bcc     end
 000A87  1  E6 09                inc     $09
-000A89  1  60           L0A89:  rts
+000A89  1  60           end:    rts
+000A8A  1               .endproc
 000A8A  1               
-000A8A  1  A9 00        L0A8A:  lda     #0
+000A8A  1               .proc open_file_and_init_window
+000A8A  1  A9 00                lda     #0
 000A8C  1  8D 6F 09             sta     fixed_mode_flag
+000A8F  1               
+000A8F  1                       ;; copy bytes (length at $8801) from $8802 to $10FF ???
 000A8F  1  AE 01 88             ldx     $8801
 000A92  1  8D 04 C0             sta     RAMWRTOFF
-000A95  1  BD 02 88     L0A95:  lda     $8802,x
+000A95  1  BD 02 88     loop:   lda     $8802,x
 000A98  1  9D FF 10             sta     L10FF,x
 000A9B  1  CA                   dex
-000A9C  1  D0 F7                bne     L0A95
+000A9C  1  D0 F7                bne     loop
 000A9E  1  8D 05 C0             sta     RAMWRTON
+000AA1  1               
+000AA1  1                       ;; open file, get length
 000AA1  1  20 63 08             jsr     open_file
 000AA4  1  AD EF 08             lda     open_params::ref_num
 000AA7  1  8D F1 08             sta     read_params::ref_num
@@ -566,15 +583,18 @@ Current file: stf.s
 000AAD  1  8D F9 08             sta     get_eof_params::ref_num
 000AB0  1  8D 03 09             sta     close_params::ref_num
 000AB3  1  20 89 08             jsr     get_file_eof
+000AB6  1               
+000AB6  1                       ;; create window
 000AB6  1  20 00 40 38          A2D_CALL A2D_CREATE_WINDOW, window_params
 000ABA  1  94 09        
-000ABC  1  20 00 40 04          A2D_CALL $04, L09A8
+000ABC  1  20 00 40 04          A2D_CALL $04, L09A8     ; ???
 000AC0  1  A8 09        
 000AC2  1  20 88 10             jsr     L1088
 000AC5  1  20 98 11             jsr     calc_and_draw_mode
 000AC8  1  20 30 0E             jsr     draw_content
 000ACB  1  20 00 40 2B          A2D_CALL $2B, 0
 000ACF  1  00 00        
+000AD1  1               .endproc
 000AD1  1               
 000AD1  1               input_loop:
 000AD1  1  20 00 40 2A          A2D_CALL A2D_GET_BUTTON, button_state
@@ -685,7 +705,7 @@ Current file: stf.s
 000BBF  1  F0 08                beq     on_vscroll_click
 000BC1  1  C9 02                cmp     #2              ; 2 = horizontal scroll bar ???
 000BC3  1  D0 03                bne     end             ; 0 = client area
-000BC5  1  4C 95 0C             jmp     L0C95
+000BC5  1  4C 95 0C             jmp     on_hscroll_click
 000BC8  1  60           end:    rts
 000BC9  1               .endproc
 000BC9  1               
@@ -710,9 +730,9 @@ Current file: stf.s
 000BEC  1               
 000BEC  1               .proc on_vscroll_thumb_click
 000BEC  1  20 39 0D             jsr     start_thumb_drag
-000BEF  1  AD 90 09             lda     thumb_drag_params::unk2
+000BEF  1  AD 90 09             lda     thumb_drag_params::moved
 000BF2  1  F0 1C                beq     end
-000BF4  1  AD 8F 09             lda     thumb_drag_params::unk1
+000BF4  1  AD 8F 09             lda     thumb_drag_params::pos
 000BF7  1  8D 89 09             sta     update_scroll_params::pos
 000BFA  1  20 7C 0D             jsr     L0D7C
 000BFD  1  20 ED 0D             jsr     update_vscroll
@@ -807,28 +827,30 @@ Current file: stf.s
 000C94  1  60                   rts
 000C95  1               .endproc
 000C95  1               
-000C95  1               ;;; Haven't been able to trigger this yet - click on ???
-000C95  1               ;;; Possibly horizontal scroll bar? (unused in this DA - generic code?)
-000C95  1  A9 02        L0C95:  lda     #2
+000C95  1               ;;; Unused in STF DA, so most of this is speculation
+000C95  1               .proc on_hscroll_click
+000C95  1  A9 02                lda     #2
 000C97  1  8D 8A 09             sta     thumb_drag_params::type
 000C9A  1  8D 88 09             sta     update_scroll_params::type
 000C9D  1  AD 85 09             lda     query_client_params::scroll
 000CA0  1  C9 05                cmp     #5
-000CA2  1  F0 11                beq     L0CB5
+000CA2  1  F0 11                beq     on_hscroll_thumb_click
 000CA4  1  C9 04                cmp     #4
-000CA6  1  F0 3F                beq     L0CE7
+000CA6  1  F0 3F                beq     on_hscroll_after_click
 000CA8  1  C9 03                cmp     #3
-000CAA  1  F0 43                beq     L0CEF
+000CAA  1  F0 43                beq     on_hscroll_before_click
 000CAC  1  C9 01                cmp     #1
-000CAE  1  F0 4E                beq     L0CFE
+000CAE  1  F0 4E                beq     on_hscroll_left_click
 000CB0  1  C9 02                cmp     #2
-000CB2  1  F0 42                beq     L0CF6
+000CB2  1  F0 42                beq     on_hscroll_right_click
 000CB4  1  60                   rts
+000CB5  1               .endproc
 000CB5  1               
-000CB5  1  20 39 0D     L0CB5:  jsr     start_thumb_drag
-000CB8  1  AD 90 09             lda     thumb_drag_params::unk2
-000CBB  1  F0 29                beq     L0CE6
-000CBD  1  AD 8F 09             lda     thumb_drag_params::unk1
+000CB5  1               .proc on_hscroll_thumb_click
+000CB5  1  20 39 0D             jsr     start_thumb_drag
+000CB8  1  AD 90 09             lda     thumb_drag_params::moved
+000CBB  1  F0 29                beq     end
+000CBD  1  AD 8F 09             lda     thumb_drag_params::pos
 000CC0  1  20 EC 10             jsr     L10EC
 000CC3  1  A5 06                lda     $06
 000CC5  1  8D B0 09             sta     L09B0
@@ -843,49 +865,63 @@ Current file: stf.s
 000CDD  1  8D B5 09             sta     L09B5
 000CE0  1  20 D1 0D             jsr     L0DD1
 000CE3  1  20 30 0E             jsr     draw_content
-000CE6  1  60           L0CE6:  rts
+000CE6  1  60           end:    rts
+000CE7  1               .endproc
 000CE7  1               
-000CE7  1  A2 02        L0CE7:  ldx     #$02
+000CE7  1               .proc on_hscroll_after_click
+000CE7  1  A2 02                ldx     #2
 000CE9  1  AD 9A 09             lda     L099A
-000CEC  1  4C 02 0D             jmp     L0D02
+000CEC  1  4C 02 0D             jmp     hscroll_common
+000CEF  1               .endproc
 000CEF  1               
-000CEF  1  A2 FE        L0CEF:  ldx     #$FE
-000CF1  1  A9 00                lda     #$00
-000CF3  1  4C 02 0D             jmp     L0D02
+000CEF  1               .proc on_hscroll_before_click
+000CEF  1  A2 FE                ldx     #254
+000CF1  1  A9 00                lda     #0
+000CF3  1  4C 02 0D             jmp     hscroll_common
+000CF6  1               .endproc
 000CF6  1               
-000CF6  1  A2 01        L0CF6:  ldx     #$01
+000CF6  1               .proc on_hscroll_right_click
+000CF6  1  A2 01                ldx     #1
 000CF8  1  AD 9A 09             lda     L099A
-000CFB  1  4C 02 0D             jmp     L0D02
+000CFB  1  4C 02 0D             jmp     hscroll_common
+000CFE  1               .endproc
 000CFE  1               
-000CFE  1  A2 FF        L0CFE:  ldx     #$FF
-000D00  1  A9 00                lda     #$00
-000D02  1  8D 0C 0D     L0D02:  sta     L0D0C
-000D05  1  8E 15 0D             stx     L0D15
-000D08  1  AD 9B 09     L0D08:  lda     L099B
-000D0B  1               L0D0C           := * + 1
-000D0B  1  C9 0A                cmp     #$0A
-000D0D  1  D0 01                bne     L0D10
+000CFE  1               .proc on_hscroll_left_click
+000CFE  1  A2 FF                ldx     #255
+000D00  1  A9 00                lda     #0
+000D02  1                       ;; fall through
+000D02  1               .endproc
+000D02  1               
+000D02  1               .proc hscroll_common
+000D02  1  8D 0C 0D             sta     compare+1
+000D05  1  8E 15 0D             stx     delta+1
+000D08  1  AD 9B 09     loop:   lda     L099B
+000D0B  1  C9 0A        compare:cmp     #$0A            ; self-modified
+000D0D  1  D0 01                bne     continue
 000D0F  1  60                   rts
 000D10  1               
-000D10  1  18           L0D10:  clc
+000D10  1               continue:
+000D10  1  18                   clc
 000D11  1  AD 9B 09             lda     L099B
-000D14  1               L0D15           := * + 1
-000D14  1  69 01                adc     #$01
-000D16  1  30 0D                bmi     L0D25
+000D14  1  69 01        delta:  adc     #1              ; self-modified
+000D16  1  30 0D                bmi     overflow
 000D18  1  CD 9A 09             cmp     L099A
-000D1B  1  F0 0A                beq     L0D27
-000D1D  1  90 08                bcc     L0D27
+000D1B  1  F0 0A                beq     store
+000D1D  1  90 08                bcc     store
 000D1F  1  AD 9A 09             lda     L099A
-000D22  1  4C 27 0D             jmp     L0D27
+000D22  1  4C 27 0D             jmp     store
 000D25  1               
-000D25  1  A9 00        L0D25:  lda     #$00
-000D27  1  8D 9B 09     L0D27:  sta     L099B
+000D25  1               overflow:
+000D25  1  A9 00                lda     #0
+000D27  1               
+000D27  1  8D 9B 09     store:  sta     L099B
 000D2A  1  20 5E 0D             jsr     L0D5E
 000D2D  1  20 D1 0D             jsr     L0DD1
 000D30  1  20 30 0E             jsr     draw_content
 000D33  1  20 52 0D             jsr     was_button_released
-000D36  1  D0 D0                bne     L0D08
+000D36  1  D0 D0                bne     loop
 000D38  1  60                   rts
+000D39  1               .endproc
 000D39  1               
 000D39  1                       ;; Used at start of thumb drag
 000D39  1               .proc start_thumb_drag
@@ -895,7 +931,7 @@ Current file: stf.s
 000D42  1  8D 8C 09             sta     thumb_drag_params::xcoord+1
 000D45  1  AD 73 09             lda     mouse_data::ycoord
 000D48  1  8D 8D 09             sta     thumb_drag_params::ycoord
-000D4B  1  20 00 40 4A          A2D_CALL $4A, thumb_drag_params
+000D4B  1  20 00 40 4A          A2D_CALL A2D_SCROLL_THUMB_DRAG, thumb_drag_params
 000D4F  1  8A 09        
 000D51  1  60                   rts
 000D52  1               .endproc
@@ -909,7 +945,9 @@ Current file: stf.s
 000D5D  1  60                   rts
 000D5E  1               .endproc
 000D5E  1               
-000D5E  1  AD 9B 09     L0D5E:  lda     L099B
+000D5E  1               ;;; only used from hscroll code?
+000D5E  1               .proc L0D5E
+000D5E  1  AD 9B 09             lda     L099B
 000D61  1  20 EC 10             jsr     L10EC
 000D64  1  18                   clc
 000D65  1  A5 06                lda     $06
@@ -921,6 +959,7 @@ Current file: stf.s
 000D75  1  6D 62 09             adc     L0962
 000D78  1  8D B5 09             sta     L09B5
 000D7B  1  60                   rts
+000D7C  1               .endproc
 000D7C  1               
 000D7C  1  A9 00        L0D7C:  lda     #0
 000D7E  1  8D B2 09             sta     L09B2
@@ -1046,7 +1085,7 @@ Current file: stf.s
 000E95  1  20 F3 0E             jsr     L0EF3
 000E98  1  B0 3D                bcs     L0ED7
 000E9A  1  18                   clc
-000E9B  1  AD 93 09             lda     text_string_len
+000E9B  1  AD 93 09             lda     text_string::len
 000E9E  1  65 06                adc     $06
 000EA0  1  85 06                sta     $06
 000EA2  1  90 02                bcc     L0EA6
@@ -1094,11 +1133,11 @@ Current file: stf.s
 000EFA  1  8D 9C 0F             sta     L0F9C
 000EFD  1  8D 9D 0F             sta     L0F9D
 000F00  1  8D 5A 09             sta     L095A
-000F03  1  8D 93 09             sta     text_string_len
+000F03  1  8D 93 09             sta     text_string::len
 000F06  1  A5 06                lda     $06
-000F08  1  8D 91 09             sta     text_string_addr
+000F08  1  8D 91 09             sta     text_string::addr
 000F0B  1  A5 07                lda     $07
-000F0D  1  8D 92 09             sta     text_string_addr+1
+000F0D  1  8D 92 09             sta     text_string::addr+1
 000F10  1  AD 45 09     L0F10:  lda     L0945
 000F13  1  D0 0D                bne     L0F22
 000F15  1  AD 47 09             lda     L0947
@@ -1108,7 +1147,7 @@ Current file: stf.s
 000F1E  1  60                   rts
 000F1F  1               
 000F1F  1  20 0C 10     L0F1F:  jsr     L100C
-000F22  1  AC 93 09     L0F22:  ldy     text_string_len
+000F22  1  AC 93 09     L0F22:  ldy     text_string::len
 000F25  1  B1 06                lda     ($06),y
 000F27  1  29 7F                and     #$7F            ; clear high bit
 000F29  1  91 06                sta     ($06),y
@@ -1139,7 +1178,7 @@ Current file: stf.s
 000F60  1  AD 5B 09             lda     L095B
 000F63  1  CD 9C 0F             cmp     L0F9C
 000F66  1  90 06        L0F66:  bcc     L0F6E
-000F68  1  EE 93 09             inc     text_string_len
+000F68  1  EE 93 09             inc     text_string::len
 000F6B  1  4C 10 0F             jmp     L0F10
 000F6E  1               
 000F6E  1  A9 00        L0F6E:  lda     #$00
@@ -1147,18 +1186,18 @@ Current file: stf.s
 000F73  1  AD 9B 0F             lda     L0F9B
 000F76  1  C9 FF                cmp     #$FF
 000F78  1  F0 09                beq     L0F83
-000F7A  1  8D 93 09             sta     text_string_len
+000F7A  1  8D 93 09             sta     text_string::len
 000F7D  1  AD 46 09             lda     L0946
 000F80  1  8D 45 09             sta     L0945
-000F83  1  EE 93 09     L0F83:  inc     text_string_len
+000F83  1  EE 93 09     L0F83:  inc     text_string::len
 000F86  1  20 F6 0F     L0F86:  jsr     L0FF6
-000F89  1  AC 93 09             ldy     text_string_len
+000F89  1  AC 93 09             ldy     text_string::len
 000F8C  1  B1 06                lda     ($06),y
 000F8E  1  C9 09                cmp     #$09
 000F90  1  F0 04                beq     L0F96
 000F92  1  C9 0D                cmp     #$0D
 000F94  1  D0 03                bne     L0F99
-000F96  1  EE 93 09     L0F96:  inc     text_string_len
+000F96  1  EE 93 09     L0F96:  inc     text_string::len
 000F99  1  18           L0F99:  clc
 000F9A  1  60                   rts
 000F9B  1               
@@ -1205,9 +1244,10 @@ Current file: stf.s
 000FF4  1  EA 01                .word   490
 000FF6  1               .endproc
 000FF6  1               
+000FF6  1               ;;; Draws a line of content
 000FF6  1  AD 48 09     L0FF6:  lda     L0948
 000FF9  1  F0 10                beq     L100B
-000FFB  1  AD 93 09             lda     text_string_len
+000FFB  1  AD 93 09             lda     text_string::len
 000FFE  1  F0 0B                beq     L100B
 001000  1  20 00 40 19  L1000:  A2D_CALL A2D_DRAW_TEXT, text_string
 001004  1  91 09        
@@ -1215,7 +1255,7 @@ Current file: stf.s
 001008  1  8D 49 09             sta     L0949
 00100B  1  60           L100B:  rts
 00100C  1               
-00100C  1  AD 92 09     L100C:  lda     text_string_addr+1
+00100C  1  AD 92 09     L100C:  lda     text_string::addr+1
 00100F  1  C9 12                cmp     #$12
 001011  1  F0 18                beq     L102B
 001013  1  A0 00                ldy     #$00
@@ -1223,10 +1263,10 @@ Current file: stf.s
 001018  1  99 00 12             sta     $1200,y
 00101B  1  C8                   iny
 00101C  1  D0 F7                bne     L1015
-00101E  1  CE 92 09             dec     text_string_addr+1
-001021  1  AD 91 09             lda     text_string_addr
+00101E  1  CE 92 09             dec     text_string::addr+1
+001021  1  AD 91 09             lda     text_string::addr
 001024  1  85 06                sta     $06
-001026  1  AD 92 09             lda     text_string_addr+1
+001026  1  AD 92 09             lda     text_string::addr+1
 001029  1  85 07                sta     $07
 00102B  1  A9 00        L102B:  lda     #$00
 00102D  1  8D 45 09             sta     L0945

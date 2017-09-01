@@ -170,7 +170,7 @@ ref_num:.byte   0               ; ref_num
 ref_num:.byte   0               ; ref_num
 .endproc
 
-pathname:
+pathname:                       ; 1st byte is length, rest is full path
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -260,15 +260,14 @@ pos:    .byte   $00             ; new position (0...250)
 type:   .byte   0               ; vscroll = 1, hscroll = 2 ??
 xcoord: .word   0
 ycoord: .word   0
-unk1:   .byte   $00             ; ??
-unk2:   .byte   $00             ; ??
+pos:    .byte   0               ; position (0...255)
+moved:  .byte   0               ; 0 if not moved, 1 if moved
 .endproc
 
-text_string:
-text_string_addr:
-        .addr   0               ; address
-text_string_len:
-        .byte   0               ; length
+.proc text_string
+addr:   .addr   0               ; address
+len:    .byte   0               ; length
+.endproc
 
         window_id := $64
 .proc window_params
@@ -285,9 +284,10 @@ L099B:  .byte   $00,$FF
 vscroll_pos:
         .byte   0
 
-        .byte   $00,$00,$C8,$00,$33,$00,$00
-        .byte   $02,$96,$00
-L09A8:  .byte   $0A
+        .byte   $00,$00,$C8,$00,$33,$00,$00 ; ???
+        .byte   $02,$96,$00                 ; ???
+
+L09A8:  .byte   $0A             ; start of block for an A2D call ($04, $06)
 L09A9:  .byte   $00
 L09AA:  .byte   $1C,$00,$00,$20,$80,$00
 L09B0:  .byte   $00
@@ -334,7 +334,7 @@ L0A0E:  lda     #$05
         lda     #$2F
         ldy     #$00
         sta     ($08),y
-        inc     pathname
+        inc     pathname        ; ???
         inc     $08
         bne     L0A28
         inc     $09
@@ -375,32 +375,39 @@ L0A61:  jsr     L0A72
         lda     #$40
         sta     $28
         jsr     zp_code_stash
-        jmp     L0A8A
+        jmp     open_file_and_init_window
 
-L0A72:  ldy     #$00
-L0A74:  lda     ($06),y
+.proc L0A72                     ; ???
+        ldy     #$00
+loop:   lda     ($06),y
         sta     ($08),y
         iny
-        inc     pathname
+        inc     pathname        ; ???
         dex
-        bne     L0A74
+        bne     loop
         tya
         clc
         adc     $08
         sta     $08
-        bcc     L0A89
+        bcc     end
         inc     $09
-L0A89:  rts
+end:    rts
+.endproc
 
-L0A8A:  lda     #0
+.proc open_file_and_init_window
+        lda     #0
         sta     fixed_mode_flag
+
+        ;; copy bytes (length at $8801) from $8802 to $10FF ???
         ldx     $8801
         sta     RAMWRTOFF
-L0A95:  lda     $8802,x
+loop:   lda     $8802,x
         sta     L10FF,x
         dex
-        bne     L0A95
+        bne     loop
         sta     RAMWRTON
+
+        ;; open file, get length
         jsr     open_file
         lda     open_params::ref_num
         sta     read_params::ref_num
@@ -408,12 +415,15 @@ L0A95:  lda     $8802,x
         sta     get_eof_params::ref_num
         sta     close_params::ref_num
         jsr     get_file_eof
+
+        ;; create window
         A2D_CALL A2D_CREATE_WINDOW, window_params
-        A2D_CALL $04, L09A8
+        A2D_CALL $04, L09A8     ; ???
         jsr     L1088
         jsr     calc_and_draw_mode
         jsr     draw_content
         A2D_CALL $2B, 0
+.endproc
 
 input_loop:
         A2D_CALL A2D_GET_BUTTON, button_state
@@ -517,7 +527,7 @@ L0B8B:  sta     L0998
         beq     on_vscroll_click
         cmp     #2              ; 2 = horizontal scroll bar ???
         bne     end             ; 0 = client area
-        jmp     L0C95
+        jmp     on_hscroll_click
 end:    rts
 .endproc
 
@@ -542,9 +552,9 @@ end:    rts
 
 .proc on_vscroll_thumb_click
         jsr     start_thumb_drag
-        lda     thumb_drag_params::unk2
+        lda     thumb_drag_params::moved
         beq     end
-        lda     thumb_drag_params::unk1
+        lda     thumb_drag_params::pos
         sta     update_scroll_params::pos
         jsr     L0D7C
         jsr     update_vscroll
@@ -639,28 +649,30 @@ loop:   inx
         rts
 .endproc
 
-;;; Haven't been able to trigger this yet - click on ???
-;;; Possibly horizontal scroll bar? (unused in this DA - generic code?)
-L0C95:  lda     #2
+;;; Unused in STF DA, so most of this is speculation
+.proc on_hscroll_click
+        lda     #2
         sta     thumb_drag_params::type
         sta     update_scroll_params::type
         lda     query_client_params::scroll
         cmp     #5
-        beq     L0CB5
+        beq     on_hscroll_thumb_click
         cmp     #4
-        beq     L0CE7
+        beq     on_hscroll_after_click
         cmp     #3
-        beq     L0CEF
+        beq     on_hscroll_before_click
         cmp     #1
-        beq     L0CFE
+        beq     on_hscroll_left_click
         cmp     #2
-        beq     L0CF6
+        beq     on_hscroll_right_click
         rts
+.endproc
 
-L0CB5:  jsr     start_thumb_drag
-        lda     thumb_drag_params::unk2
-        beq     L0CE6
-        lda     thumb_drag_params::unk1
+.proc on_hscroll_thumb_click
+        jsr     start_thumb_drag
+        lda     thumb_drag_params::moved
+        beq     end
+        lda     thumb_drag_params::pos
         jsr     L10EC
         lda     $06
         sta     L09B0
@@ -675,49 +687,63 @@ L0CB5:  jsr     start_thumb_drag
         sta     L09B5
         jsr     L0DD1
         jsr     draw_content
-L0CE6:  rts
+end:    rts
+.endproc
 
-L0CE7:  ldx     #$02
+.proc on_hscroll_after_click
+        ldx     #2
         lda     L099A
-        jmp     L0D02
+        jmp     hscroll_common
+.endproc
 
-L0CEF:  ldx     #$FE
-        lda     #$00
-        jmp     L0D02
+.proc on_hscroll_before_click
+        ldx     #254
+        lda     #0
+        jmp     hscroll_common
+.endproc
 
-L0CF6:  ldx     #$01
+.proc on_hscroll_right_click
+        ldx     #1
         lda     L099A
-        jmp     L0D02
+        jmp     hscroll_common
+.endproc
 
-L0CFE:  ldx     #$FF
-        lda     #$00
-L0D02:  sta     L0D0C
-        stx     L0D15
-L0D08:  lda     L099B
-L0D0C           := * + 1
-        cmp     #$0A
-        bne     L0D10
+.proc on_hscroll_left_click
+        ldx     #255
+        lda     #0
+        ;; fall through
+.endproc
+
+.proc hscroll_common
+        sta     compare+1
+        stx     delta+1
+loop:   lda     L099B
+compare:cmp     #$0A            ; self-modified
+        bne     continue
         rts
 
-L0D10:  clc
+continue:
+        clc
         lda     L099B
-L0D15           := * + 1
-        adc     #$01
-        bmi     L0D25
+delta:  adc     #1              ; self-modified
+        bmi     overflow
         cmp     L099A
-        beq     L0D27
-        bcc     L0D27
+        beq     store
+        bcc     store
         lda     L099A
-        jmp     L0D27
+        jmp     store
 
-L0D25:  lda     #$00
-L0D27:  sta     L099B
+overflow:
+        lda     #0
+
+store:  sta     L099B
         jsr     L0D5E
         jsr     L0DD1
         jsr     draw_content
         jsr     was_button_released
-        bne     L0D08
+        bne     loop
         rts
+.endproc
 
         ;; Used at start of thumb drag
 .proc start_thumb_drag
@@ -727,7 +753,7 @@ L0D27:  sta     L099B
         sta     thumb_drag_params::xcoord+1
         lda     mouse_data::ycoord
         sta     thumb_drag_params::ycoord
-        A2D_CALL $4A, thumb_drag_params
+        A2D_CALL A2D_SCROLL_THUMB_DRAG, thumb_drag_params
         rts
 .endproc
 
@@ -739,7 +765,9 @@ L0D27:  sta     L099B
         rts
 .endproc
 
-L0D5E:  lda     L099B
+;;; only used from hscroll code?
+.proc L0D5E
+        lda     L099B
         jsr     L10EC
         clc
         lda     $06
@@ -751,6 +779,7 @@ L0D5E:  lda     L099B
         adc     L0962
         sta     L09B5
         rts
+.endproc
 
 L0D7C:  lda     #0
         sta     L09B2
@@ -869,7 +898,7 @@ L0E7E:  A2D_CALL $0E, L095D
         jsr     L0EF3
         bcs     L0ED7
         clc
-        lda     text_string_len
+        lda     text_string::len
         adc     $06
         sta     $06
         bcc     L0EA6
@@ -917,11 +946,11 @@ L0EF3:  lda     #$FF
         sta     L0F9C
         sta     L0F9D
         sta     L095A
-        sta     text_string_len
+        sta     text_string::len
         lda     $06
-        sta     text_string_addr
+        sta     text_string::addr
         lda     $07
-        sta     text_string_addr+1
+        sta     text_string::addr+1
 L0F10:  lda     L0945
         bne     L0F22
         lda     L0947
@@ -931,7 +960,7 @@ L0F10:  lda     L0945
         rts
 
 L0F1F:  jsr     L100C
-L0F22:  ldy     text_string_len
+L0F22:  ldy     text_string::len
         lda     ($06),y
         and     #$7F            ; clear high bit
         sta     ($06),y
@@ -962,7 +991,7 @@ L0F58:  lda     L095C
         lda     L095B
         cmp     L0F9C
 L0F66:  bcc     L0F6E
-        inc     text_string_len
+        inc     text_string::len
         jmp     L0F10
 
 L0F6E:  lda     #$00
@@ -970,18 +999,18 @@ L0F6E:  lda     #$00
         lda     L0F9B
         cmp     #$FF
         beq     L0F83
-        sta     text_string_len
+        sta     text_string::len
         lda     L0946
         sta     L0945
-L0F83:  inc     text_string_len
+L0F83:  inc     text_string::len
 L0F86:  jsr     L0FF6
-        ldy     text_string_len
+        ldy     text_string::len
         lda     ($06),y
         cmp     #$09
         beq     L0F96
         cmp     #$0D
         bne     L0F99
-L0F96:  inc     text_string_len
+L0F96:  inc     text_string::len
 L0F99:  clc
         rts
 
@@ -1028,16 +1057,17 @@ times70:.word   70
         .word   490
 .endproc
 
+;;; Draws a line of content
 L0FF6:  lda     L0948
         beq     L100B
-        lda     text_string_len
+        lda     text_string::len
         beq     L100B
 L1000:  A2D_CALL A2D_DRAW_TEXT, text_string
         lda     #$01
         sta     L0949
 L100B:  rts
 
-L100C:  lda     text_string_addr+1
+L100C:  lda     text_string::addr+1
         cmp     #$12
         beq     L102B
         ldy     #$00
@@ -1045,10 +1075,10 @@ L1015:  lda     $1300,y
         sta     $1200,y
         iny
         bne     L1015
-        dec     text_string_addr+1
-        lda     text_string_addr
+        dec     text_string::addr+1
+        lda     text_string::addr
         sta     $06
-        lda     text_string_addr+1
+        lda     text_string::addr+1
         sta     $07
 L102B:  lda     #$00
         sta     L0945

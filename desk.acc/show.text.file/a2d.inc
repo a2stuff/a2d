@@ -15,6 +15,9 @@ A2D_GET_BUTTON  := $2A
 
 A2D_CREATE_WINDOW := $38
         ;; .byte id
+        ;;      0 = desktop
+        ;;      1, 2, ... = file windows
+        ;;      100 = DA (for example)
         ;; .byte ???
 
 A2D_DESTROY_WINDOW := $39
@@ -43,8 +46,15 @@ A2D_BTN_CLICK   := $43
 A2D_QUERY_CLIENT:= $48
         ;; .word xcoord of query
         ;; .word ycoord of query
-        ;; .byte part (0 = client, 1 = vertical scroll bar, 2 = ???)
-        ;; .byte scroll (1 = up, 2 = down, 3 = above, 4 = below, 5 = thumb)
+        ;; .byte part (0 = client, 1 = vscroll bar, 2 = hscroll bar)
+        ;; .byte scroll (1 = up/left, 2 = down/right, 3 = above/before, 4 = below/after, 5 = thumb)
+
+A2D_SCROLL_THUMB_DRAG:= $4A
+        ;; .byte type (1 = vertical, 2 = horizontal)
+        ;; .word xcoord of mouse
+        ;; .word ycoord of mouse
+        ;; .byte position (0...255)
+        ;; .byte moved (0 = no change, 1 = moved)
 
 A2D_UPDATE_SCROLL:= $4B
         ;; .byte type (1 = vertical, 2 = horizontal)
