@@ -22,7 +22,10 @@ A2D_CREATE_WINDOW := $38
         ;;      0 = desktop
         ;;      1, 2, ... = file windows
         ;;      100 = DA (for example)
-        ;; .byte ???
+        ;; .byte flags
+        ;;      bit 0: remove title bar
+        ;;      bit 1: add close box
+        ;;      bit 2: add resize box
 
 A2D_DESTROY_WINDOW := $39
         ;; .byte id

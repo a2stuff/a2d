@@ -290,21 +290,21 @@ len:    .byte   0               ; length
         window_id := $64
 .proc window_params
 id:     .byte   window_id       ; window identifier
-unk:    .byte   2               ; unknown - window flags?
-.endproc
+flags:  .byte   2               ; window flags (2=include close box)
 
-        ;; possibly additional window params - size?
 L0996:  .word   $1000           ; ???
-L0998:  .byte   $00,$C1
-L099A:  .byte   $20
-L099B:  .byte   $00,$FF
+L0998:  .byte   $00,$C1         ; ???
+
+L099A:  .byte   $20             ; hscroll?
+L099B:  .byte   $00,$FF         ; more hscroll?
 
 vscroll_pos:
         .byte   0
 
-        ;; unused?
+        ;; unreferenced
         .byte   $00,$00,$C8,$00,$33,$00,$00 ; ???
         .byte   $02,$96,$00                 ; ???
+.endproc
 
 .proc text_box                  ; or whole window ??
 left:   .word   10
@@ -386,10 +386,10 @@ L0A28:  lda     $DF22
 L0A40:  clc
         lda     $06
         adc     #$09
-        sta     L0996
+        sta     window_params::L0996
         lda     $07
         adc     #$00
-        sta     L0996+1
+        sta     window_params::L0996+1
         ldy     #$09
         lda     ($06),y
         tax
@@ -528,7 +528,7 @@ L0B54:  bcs     L0B73
         lda     text_box::width+1
         sbc     window_width+1
         sta     text_box::unk1+1
-L0B73:  lda     L0998
+L0B73:  lda     window_params::L0998
         ldx     window_width
         cpx     #$00
         bne     L0B89
@@ -539,7 +539,7 @@ L0B73:  lda     L0998
         jmp     L0B8B
 
 L0B89:  ora     #$01
-L0B8B:  sta     L0998
+L0B8B:  sta     window_params::L0998
         sec
         lda     #$00
         sbc     window_width
@@ -605,11 +605,11 @@ end:    rts
 .endproc
 
 .proc on_vscroll_above_click
-loop:   lda     vscroll_pos
+loop:   lda     window_params::vscroll_pos
         beq     end
         jsr     calc_track_scroll_delta
         sec
-        lda     vscroll_pos
+        lda     window_params::vscroll_pos
         sbc     track_scroll_delta
         bcs     store
         lda     #$00            ; underflow
@@ -620,7 +620,7 @@ end:    rts
 .endproc
 
 .proc on_vscroll_up_click
-loop :  lda     vscroll_pos
+loop :  lda     window_params::vscroll_pos
         beq     end
         sec
         sbc     #1
@@ -633,12 +633,12 @@ end:    rts
 vscroll_max := $FA
 
 .proc on_vscroll_below_click
-loop:   lda     vscroll_pos
+loop:   lda     window_params::vscroll_pos
         cmp     #vscroll_max    ; pos == max ?
         beq     end
         jsr     calc_track_scroll_delta
         clc
-        lda     vscroll_pos
+        lda     window_params::vscroll_pos
         adc     track_scroll_delta ; pos + delta
         bcs     overflow
         cmp     #vscroll_max+1  ; > max ?
@@ -652,7 +652,7 @@ end:    rts
 .endproc
 
 .proc on_vscroll_down_click
-loop:   lda     vscroll_pos
+loop:   lda     window_params::vscroll_pos
         cmp     #vscroll_max
         beq     end
         clc
@@ -729,7 +729,7 @@ end:    rts
 
 .proc on_hscroll_after_click
         ldx     #2
-        lda     L099A
+        lda     window_params::L099A
         jmp     hscroll_common
 .endproc
 
@@ -741,7 +741,7 @@ end:    rts
 
 .proc on_hscroll_right_click
         ldx     #1
-        lda     L099A
+        lda     window_params::L099A
         jmp     hscroll_common
 .endproc
 
@@ -754,26 +754,26 @@ end:    rts
 .proc hscroll_common
         sta     compare+1
         stx     delta+1
-loop:   lda     L099B
+loop:   lda     window_params::L099B
 compare:cmp     #$0A            ; self-modified
         bne     continue
         rts
 
 continue:
         clc
-        lda     L099B
+        lda     window_params::L099B
 delta:  adc     #1              ; self-modified
         bmi     overflow
-        cmp     L099A
+        cmp     window_params::L099A
         beq     store
         bcc     store
-        lda     L099A
+        lda     window_params::L099A
         jmp     store
 
 overflow:
         lda     #0
 
-store:  sta     L099B
+store:  sta     window_params::L099B
         jsr     L0D5E
         jsr     L0DD1
         jsr     draw_content
@@ -804,7 +804,7 @@ store:  sta     L099B
 
 ;;; only used from hscroll code?
 .proc L0D5E
-        lda     L099B
+        lda     window_params::L099B
         jsr     L10EC
         clc
         lda     $06
@@ -882,11 +882,11 @@ L0DD1:  lda     #2
         .byte   $0C
         .addr   0
         A2D_CALL $04, text_box
-        lda     L0998
+        lda     window_params::L0998
         ror     a
         bcc     skip
         jsr     L0DD1
-skip:   lda     vscroll_pos
+skip:   lda     window_params::vscroll_pos
         sta     update_scroll_params::pos
         jsr     update_vscroll
         jsr     draw_content
