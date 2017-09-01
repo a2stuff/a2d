@@ -140,7 +140,7 @@ params_start:
 
 .proc open_params
         .byte   3               ; param_count
-        .addr   L0904           ; pathname
+        .addr   pathname        ; pathname
         .addr   $0C00           ; io_buffer
 ref_num:.byte   0               ; ref_num
 .endproc
@@ -148,7 +148,7 @@ ref_num:.byte   0               ; ref_num
 .proc read_params
         .byte   4               ; param_count
 ref_num:.byte   0               ; ref_num
-db:     .addr   $1200           ; data_buffer
+buffer: .addr   $1200           ; data_buffer
         .word   $100            ; request_count
         .word   0               ; trans_count
 .endproc
@@ -170,7 +170,8 @@ ref_num:.byte   0               ; ref_num
 ref_num:.byte   0               ; ref_num
 .endproc
 
-L0904:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+pathname:
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -179,6 +180,7 @@ L0904:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00
+
 L0945:  .byte   $00
 L0946:  .byte   $00
 L0947:  .byte   $00
@@ -300,7 +302,7 @@ L09DE:  sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         lda     #$00
-        sta     L0904
+        sta     pathname
         lda     $DF21
         beq     L09F6
         lda     $DF20
@@ -327,7 +329,7 @@ L0A0E:  lda     #$05
         lda     #$2F
         ldy     #$00
         sta     ($08),y
-        inc     L0904
+        inc     pathname
         inc     $08
         bne     L0A28
         inc     $09
@@ -374,7 +376,7 @@ L0A72:  ldy     #$00
 L0A74:  lda     ($06),y
         sta     ($08),y
         iny
-        inc     L0904
+        inc     pathname
         dex
         bne     L0A74
         tya
@@ -405,7 +407,7 @@ L0A95:  lda     $8802,x
         A2D_CALL $04, L09A8
         jsr     L1088
         jsr     calc_and_draw_mode
-        jsr     L0E30
+        jsr     draw_content
         A2D_CALL $2B, 0
 
 input_loop:
@@ -542,7 +544,7 @@ end:    rts
         sta     update_scroll_params::pos
         jsr     L0D7C
         jsr     update_vscroll
-        jsr     L0E30
+        jsr     draw_content
         lda     L0947
         beq     end
         lda     L0949
@@ -613,7 +615,7 @@ end:    rts
 .proc update_scroll_pos         ; Returns with carry set if mouse released
         jsr     L0D7C
         jsr     update_vscroll
-        jsr     L0E30
+        jsr     draw_content
         jsr     was_button_released
         clc
         bne     end
@@ -668,7 +670,7 @@ L0CB5:  jsr     start_thumb_drag
         adc     L0962
         sta     L09B5
         jsr     L0DD1
-        jsr     L0E30
+        jsr     draw_content
 L0CE6:  rts
 
 L0CE7:  ldx     #$02
@@ -708,7 +710,7 @@ L0D25:  lda     #$00
 L0D27:  sta     L099B
         jsr     L0D5E
         jsr     L0DD1
-        jsr     L0E30
+        jsr     draw_content
         jsr     was_button_released
         bne     L0D08
         rts
@@ -812,7 +814,7 @@ L0DF9:  jsr     UNKNOWN_CALL
 L0E0E:  lda     vscroll_pos
         sta     update_scroll_params::pos
         jsr     update_vscroll
-        jsr     L0E30
+        jsr     draw_content
         jmp     input_loop
 
 L0E1D:  A2D_CALL $08, L0952
@@ -820,15 +822,17 @@ L0E1D:  A2D_CALL $08, L0952
         A2D_CALL $08, L094A
         rts
 
-L0E30:  lda     #$00
+;;; Draw content ???
+.proc draw_content
+        lda     #$00
         sta     L0949
         jsr     L1129
         jsr     set_file_mark
         lda     #$00
-        sta     read_params::db
+        sta     read_params::buffer
         sta     $06
         lda     #$12
-        sta     read_params::db+1
+        sta     read_params::buffer+1
         sta     $07
         lda     #$00
         sta     L0945
@@ -887,8 +891,10 @@ L0ED4:  jmp     L0E68
 
 L0ED7:  jsr     L1109
         rts
+.endproc
 
-L0EDB:  lda     #$FA
+.proc L0EDB                     ; ???
+        lda     #$FA
         sta     L095B
         lda     #$01
         sta     L095C
@@ -898,6 +904,7 @@ L0EDB:  lda     #$FA
         sta     L095E
         sta     L095A
         rts
+.endproc
 
 L0EF3:  lda     #$FF
         sta     L0F9B
@@ -1036,17 +1043,17 @@ L1015:  lda     $1300,y
 L102B:  lda     #$00
         sta     L0945
         jsr     L103E
-        lda     read_params::db+1
+        lda     read_params::buffer+1
         cmp     #$12
         bne     L103D
-        inc     read_params::db+1
+        inc     read_params::buffer+1
 L103D:  rts
 
 L103E:
 .scope
-        lda     read_params::db
+        lda     read_params::buffer
         sta     store+1
-        lda     read_params::db+1
+        lda     read_params::buffer+1
         sta     store+2
         lda     #$20
         ldx     #$00
@@ -1064,7 +1071,7 @@ store:  sta     $1200,x         ; self-modified
         sta     DESTINATIONLO
         lda     #$FF
         sta     ENDLO
-        lda     read_params::db+1
+        lda     read_params::buffer+1
         sta     DESTINATIONHI
         sta     STARTHI
         sta     ENDHI
@@ -1143,33 +1150,42 @@ L10FF:  sta     $27
         jsr     zp_code_stash
         rts
 
-L1109:  lda     fixed_mode_flag
-        beq     L1128
-        lda     #$00
+;;; if fixed mode, do a main->aux mem copy
+.proc L1109
+        lda     fixed_mode_flag ; if not fixed (i.e. proportional)
+        beq     exit            ; then exit
+
+        lda     #$00            ; start := $1100
         sta     STARTLO
         lda     #$7E
-        sta     ENDLO
+        sta     ENDLO           ; end := $117E
         lda     #$11
         sta     STARTHI
         sta     ENDHI
-        lda     #$88
+
+        dest := $8803
+        lda     #>dest
         sta     DESTINATIONHI
-        lda     #$03
+        lda     #<dest
         sta     DESTINATIONLO
         sec                     ; main>aux
         jsr     AUXMOVE
-L1128:  rts
+exit:    rts
+.endproc
 
-L1129:  lda     fixed_mode_flag
-        beq     L1139
+.proc L1129                     ; ???
+        lda     fixed_mode_flag
+        beq     exit
         ldx     $8801
         lda     #$07
-L1133:  sta     $8802,x
+loop:   sta     $8802,x
         dex
-        bne     L1133
-L1139:  rts
+        bne     loop
+exit:   rts
+.endproc
 
-;;; On Title Bar Click - is it on the Fixed/Proportional label?
+;;; On Title Bar Click - if it's on the Fixed/Proportional label,
+;;; toggle it and update.
 .proc on_title_bar_click
         lda     mouse_data::xcoord+1           ; mouse x high byte?
         cmp     label_left+1
@@ -1186,7 +1202,7 @@ L1139:  rts
 set_flag:
         inc     fixed_mode_flag ; set flag (mode = fixed)
 redraw: jsr     draw_mode
-        jsr     L0E30
+        jsr     draw_content
         sec                     ; Click consumed
         rts
 
