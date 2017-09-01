@@ -5,40 +5,42 @@
         .include "auxmem.inc"
         .include "a2d.inc"
 
-zp_code_stash   := $0020        ; Scratch space used for "call 100 main" trampoline
+zp_code_stash   := $0020        ; Scratch space used for "call 1000 main" trampoline
 
 start:  jmp     copy2aux
 
-stash_x:.byte   $00
+save_stack:.byte   0
+
+;;; Copy $800 through $13FF (the DA) to aux
 .proc copy2aux
         tsx
-        stx     stash_x
+        stx     save_stack
         sta     RAMWRTON
-        ldy     #$00
-copy_src:
-        lda     start,y
-copy_dst:
-        sta     start,y
+        ldy     #0
+src:    lda     start,y         ; self-modified
+dst:    sta     start,y         ; self-modified
         dey
-        bne     copy_src
+        bne     src
         sta     RAMWRTOFF
-        inc     copy_src+2
-        inc     copy_dst+2
+        inc     src+2
+        inc     dst+2
         sta     RAMWRTON
-        lda     copy_dst+2
+        lda     dst+2
         cmp     #$14
-        bne     copy_src
+        bne     src
 .endproc
 
-;;; Copy "call_1000_main" routine to $20
+;;; Copy the following "call_1000_main" routine to $20
+.scope
         sta     RAMWRTON
         sta     RAMRDON
         ldx     #(call_1000_main_end - call_1000_main)
-L0831:  lda     call_1000_main,x
+loop:   lda     call_1000_main,x
         sta     zp_code_stash,x
         dex
-        bpl     L0831
-        jmp     L084C
+        bpl     loop
+        jmp     call_init
+.endscope
 
 .proc call_1000_main
         sta     RAMRDOFF
@@ -50,15 +52,23 @@ L0831:  lda     call_1000_main,x
 .endproc
 call_1000_main_end:
 
-L084C:  jsr     L09DE
+.proc call_init
+        ;; run the DA
+        jsr     init
+
+        ;; tear down/exit
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         sta     RAMRDOFF
         sta     RAMWRTOFF
-        ldx     stash_x
+        ldx     save_stack
         txs
-        rts                     ; DA exit
+        rts
+.endproc
+
+;;; ==================================================
+;;; ProDOS MLI calls
 
 .proc open_file
         jsr     copy_params_aux_to_main
@@ -105,6 +115,8 @@ L084C:  jsr     L09DE
         rts
 .endproc
 
+;;; ==================================================
+
 ;;; Copies param blocks from Aux to Main
 .proc copy_params_aux_to_main
         ldy     #(params_end - params_start + 1)
@@ -137,6 +149,8 @@ loop:   lda     params_start - 1,y
 
 params_start:
 ;;; This block gets copied between main/aux
+
+;;; ProDOS MLI param blocks
 
 .proc open_params
         .byte   3               ; param_count
@@ -305,6 +319,7 @@ L09B7:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 L09CE:  .byte   $0A,$00,$1C,$00,$00,$20,$80,$00
         .byte   $00,$00,$00,$00,$00,$02,$96,$00
 
+.proc init
 L09DE:  sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
@@ -378,6 +393,7 @@ L0A61:  jsr     L0A72
         sta     $28
         jsr     zp_code_stash
         jmp     open_file_and_init_window
+.endproc
 
 .proc L0A72                     ; ???
         ldy     #$00
@@ -1074,7 +1090,7 @@ L0FF6:  lda     L0948
         lda     text_string::len
         beq     L100B
 L1000:  A2D_CALL A2D_DRAW_TEXT, text_string
-        lda     #$01
+        lda     #1
         sta     L0949
 L100B:  rts
 

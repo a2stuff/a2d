@@ -175,40 +175,42 @@ Current file: stf.s
 000800  2               .endmacro
 000800  2               
 000800  1               
-000800  1               zp_code_stash   := $0020        ; Scratch space used for "call 100 main" trampoline
+000800  1               zp_code_stash   := $0020        ; Scratch space used for "call 1000 main" trampoline
 000800  1               
 000800  1  4C 04 08     start:  jmp     copy2aux
 000803  1               
-000803  1  00           stash_x:.byte   $00
+000803  1  00           save_stack:.byte   0
+000804  1               
+000804  1               ;;; Copy $800 through $13FF (the DA) to aux
 000804  1               .proc copy2aux
 000804  1  BA                   tsx
-000805  1  8E 03 08             stx     stash_x
+000805  1  8E 03 08             stx     save_stack
 000808  1  8D 05 C0             sta     RAMWRTON
-00080B  1  A0 00                ldy     #$00
-00080D  1               copy_src:
-00080D  1  B9 00 08             lda     start,y
-000810  1               copy_dst:
-000810  1  99 00 08             sta     start,y
+00080B  1  A0 00                ldy     #0
+00080D  1  B9 00 08     src:    lda     start,y         ; self-modified
+000810  1  99 00 08     dst:    sta     start,y         ; self-modified
 000813  1  88                   dey
-000814  1  D0 F7                bne     copy_src
+000814  1  D0 F7                bne     src
 000816  1  8D 04 C0             sta     RAMWRTOFF
-000819  1  EE 0F 08             inc     copy_src+2
-00081C  1  EE 12 08             inc     copy_dst+2
+000819  1  EE 0F 08             inc     src+2
+00081C  1  EE 12 08             inc     dst+2
 00081F  1  8D 05 C0             sta     RAMWRTON
-000822  1  AD 12 08             lda     copy_dst+2
+000822  1  AD 12 08             lda     dst+2
 000825  1  C9 14                cmp     #$14
-000827  1  D0 E4                bne     copy_src
+000827  1  D0 E4                bne     src
 000829  1               .endproc
 000829  1               
-000829  1               ;;; Copy "call_1000_main" routine to $20
+000829  1               ;;; Copy the following "call_1000_main" routine to $20
+000829  1               .scope
 000829  1  8D 05 C0             sta     RAMWRTON
 00082C  1  8D 03 C0             sta     RAMRDON
 00082F  1  A2 10                ldx     #(call_1000_main_end - call_1000_main)
-000831  1  BD 3C 08     L0831:  lda     call_1000_main,x
+000831  1  BD 3C 08     loop:   lda     call_1000_main,x
 000834  1  95 20                sta     zp_code_stash,x
 000836  1  CA                   dex
-000837  1  10 F8                bpl     L0831
-000839  1  4C 4C 08             jmp     L084C
+000837  1  10 F8                bpl     loop
+000839  1  4C 4C 08             jmp     call_init
+00083C  1               .endscope
 00083C  1               
 00083C  1               .proc call_1000_main
 00083C  1  8D 02 C0             sta     RAMRDOFF
@@ -220,15 +222,23 @@ Current file: stf.s
 00084C  1               .endproc
 00084C  1               call_1000_main_end:
 00084C  1               
-00084C  1  20 DE 09     L084C:  jsr     L09DE
+00084C  1               .proc call_init
+00084C  1                       ;; run the DA
+00084C  1  20 DE 09             jsr     init
+00084F  1               
+00084F  1                       ;; tear down/exit
 00084F  1  8D 09 C0             sta     ALTZPON
 000852  1  AD 8B C0             lda     LCBANK1
 000855  1  AD 8B C0             lda     LCBANK1
 000858  1  8D 02 C0             sta     RAMRDOFF
 00085B  1  8D 04 C0             sta     RAMWRTOFF
-00085E  1  AE 03 08             ldx     stash_x
+00085E  1  AE 03 08             ldx     save_stack
 000861  1  9A                   txs
-000862  1  60                   rts                     ; DA exit
+000862  1  60                   rts
+000863  1               .endproc
+000863  1               
+000863  1               ;;; ==================================================
+000863  1               ;;; ProDOS MLI calls
 000863  1               
 000863  1               .proc open_file
 000863  1  20 C2 08             jsr     copy_params_aux_to_main
@@ -280,6 +290,8 @@ Current file: stf.s
 0008C1  1  60                   rts
 0008C2  1               .endproc
 0008C2  1               
+0008C2  1               ;;; ==================================================
+0008C2  1               
 0008C2  1               ;;; Copies param blocks from Aux to Main
 0008C2  1               .proc copy_params_aux_to_main
 0008C2  1  A0 65                ldy     #(params_end - params_start + 1)
@@ -312,6 +324,8 @@ Current file: stf.s
 0008EA  1               
 0008EA  1               params_start:
 0008EA  1               ;;; This block gets copied between main/aux
+0008EA  1               
+0008EA  1               ;;; ProDOS MLI param blocks
 0008EA  1               
 0008EA  1               .proc open_params
 0008EA  1  03                   .byte   3               ; param_count
@@ -496,6 +510,7 @@ Current file: stf.s
 0009D6  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$02,$96,$00
 0009DA  1  00 02 96 00  
 0009DE  1               
+0009DE  1               .proc init
 0009DE  1  8D 09 C0     L09DE:  sta     ALTZPON
 0009E1  1  AD 8B C0             lda     LCBANK1
 0009E4  1  AD 8B C0             lda     LCBANK1
@@ -569,6 +584,7 @@ Current file: stf.s
 000A6A  1  85 28                sta     $28
 000A6C  1  20 20 00             jsr     zp_code_stash
 000A6F  1  4C 8A 0A             jmp     open_file_and_init_window
+000A72  1               .endproc
 000A72  1               
 000A72  1               .proc L0A72                     ; ???
 000A72  1  A0 00                ldy     #$00
@@ -1285,7 +1301,7 @@ Current file: stf.s
 000FFE  1  F0 0B                beq     L100B
 001000  1  20 00 40 19  L1000:  A2D_CALL A2D_DRAW_TEXT, text_string
 001004  1  91 09        
-001006  1  A9 01                lda     #$01
+001006  1  A9 01                lda     #1
 001008  1  8D 49 09             sta     L0949
 00100B  1  60           L100B:  rts
 00100C  1               
