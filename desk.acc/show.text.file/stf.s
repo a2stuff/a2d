@@ -230,7 +230,7 @@ win:    .byte   0
 .endproc
 
 ;;; Possibly unused
-L0977:  .byte   $64
+L0977:  .byte   $64             ; ??? window id again?
 xcoord1:.word   0               ; ???
 ycoord1:.word   0               ; ???
         .byte   0               ; ???
@@ -270,7 +270,12 @@ text_string_addr:
 text_string_len:
         .byte   0               ; length
 
-L0994:  .byte   $64,$02         ; window params??? $64 = window id?
+        window_id := $64
+.proc window_params
+id:     .byte   window_id       ; window identifier
+unk:    .byte   2               ; unknown - window flags?
+.endproc
+
 L0996:  .byte   $00
 L0997:  .byte   $10
 L0998:  .byte   $00,$C1
@@ -403,7 +408,7 @@ L0A95:  lda     $8802,x
         sta     get_eof_params::ref_num
         sta     close_params::ref_num
         jsr     get_file_eof
-        A2D_CALL $38, L0994     ; creates/draws window???
+        A2D_CALL A2D_CREATE_WINDOW, window_params
         A2D_CALL $04, L09A8
         jsr     L1088
         jsr     calc_and_draw_mode
@@ -413,12 +418,12 @@ L0A95:  lda     $8802,x
 input_loop:
         A2D_CALL A2D_GET_BUTTON, button_state
         lda     button_state
-        cmp     #$01            ; was clicked?
+        cmp     #1              ; was clicked?
         bne     input_loop      ; nope, keep waiting
 
         A2D_CALL A2D_GET_MOUSE, mouse_data
         lda     mouse_data::win         ; click target??
-        cmp     #$64                    ; is in window??
+        cmp     #window_id              ; is in window??
         bne     input_loop
         lda     mouse_data::elem        ; which UI element?
         cmp     #$05                    ; 5 = close btn
@@ -447,8 +452,7 @@ input_loop:
         lda     close_btn::state ; did click complete?
         beq     input_loop      ; nope
         jsr     close_file
-        A2D_CALL $39, L0994
-        ;; window is gone by this point - is previous a redraw/destroy?
+        A2D_CALL A2D_DESTROY_WINDOW, window_params
         jsr     UNKNOWN_CALL    ; hides the cursor?
         .byte   $0C
         .addr   0
@@ -727,6 +731,7 @@ L0D27:  sta     L099B
         rts
 .endproc
 
+;;; Checks button state; z clear if button was released, set otherwise
 .proc was_button_released
         A2D_CALL A2D_GET_BUTTON, button_state
         lda     button_state
@@ -983,7 +988,8 @@ L0F99:  clc
 L0F9B:  .byte   0
 L0F9C:  .byte   0
 L0F9D:  .byte   0
-L0F9E:  lda     #$01
+.proc L0F9E                     ; ???
+        lda     #1
         sta     L095A
         clc
         lda     L0F9C
@@ -992,32 +998,36 @@ L0F9E:  lda     #$01
         lda     L0F9D
         adc     L095E
         sta     L095E
-        ldx     #$00
-L0FB8:  lda     L0FE9,x
+        ldx     #0
+loop:   lda     times70+1,x
         cmp     L095E
         bne     L0FC6
-        lda     L0FE8,x
+        lda     times70,x
         cmp     L095D
 L0FC6:  bcs     L0FD1
         inx
         inx
-        cpx     #$0E
-        beq     L0FE0
-        jmp     L0FB8
-
-L0FD1:  lda     L0FE8,x
+        cpx     #14
+        beq     done
+        jmp     loop
+L0FD1:  lda     times70,x
         sta     L095D
-        lda     L0FE9,x
+        lda     times70+1,x
         sta     L095E
         jmp     L0F86
-
-L0FE0:  lda     #$00
+done:   lda     #0
         sta     L095A
         jmp     L0F86
 
-L0FE8:  .byte   $46
-L0FE9:  .byte   $00,$8C,$00,$D2,$00,$18,$01,$5E
-        .byte   $01,$A4,$01,$EA,$01
+times70:.word   70
+        .word   140
+        .word   210
+        .word   280
+        .word   350
+        .word   420
+        .word   490
+.endproc
+
 L0FF6:  lda     L0948
         beq     L100B
         lda     text_string_len
@@ -1150,10 +1160,10 @@ L10FF:  sta     $27
         jsr     zp_code_stash
         rts
 
-;;; if fixed mode, do a main->aux mem copy
+;;; if fixed mode, do a main->aux copy of a code block ???
 .proc L1109
         lda     fixed_mode_flag ; if not fixed (i.e. proportional)
-        beq     exit            ; then exit
+        beq     end             ; then exit
 
         lda     #$00            ; start := $1100
         sta     STARTLO
@@ -1170,18 +1180,18 @@ L10FF:  sta     $27
         sta     DESTINATIONLO
         sec                     ; main>aux
         jsr     AUXMOVE
-exit:    rts
+end:    rts
 .endproc
 
 .proc L1129                     ; ???
-        lda     fixed_mode_flag
-        beq     exit
+        lda     fixed_mode_flag ; if not fixed (i.e. proportional)
+        beq     end             ; then exit
         ldx     $8801
         lda     #$07
 loop:   sta     $8802,x
         dex
         bne     loop
-exit:   rts
+end:    rts
 .endproc
 
 ;;; On Title Bar Click - if it's on the Fixed/Proportional label,
@@ -1238,7 +1248,9 @@ L1194:  .byte   $00,$00,$0A,$00
         txa
         sbc     #$00
         sta     label_left+1
+        ;; fall through...
 .endproc
+
 .proc draw_mode
         A2D_CALL $06, label_left ; guess: setting up draw location ???
         A2D_CALL $0E, L1194

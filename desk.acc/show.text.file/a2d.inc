@@ -11,7 +11,15 @@ A2D_DRAW_TEXT   := $19
         ;; .byte length
 
 A2D_GET_BUTTON  := $2A
-        ;; .byte state (0=up, 1=down, 2=released)
+        ;; .byte state (0=up, 1=pressed, 2=held???)
+
+A2D_CREATE_WINDOW := $38
+        ;; .byte id
+        ;; .byte ???
+
+A2D_DESTROY_WINDOW := $39
+        ;; .byte id
+        ;; .byte ???
 
 A2D_GET_MOUSE   := $40
         ;; .word x

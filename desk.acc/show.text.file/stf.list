@@ -88,7 +88,15 @@ Current file: stf.s
 000800  2                       ;; .byte length
 000800  2               
 000800  2               A2D_GET_BUTTON  := $2A
-000800  2                       ;; .byte state (0=up, 1=down, 2=released)
+000800  2                       ;; .byte state (0=up, 1=pressed, 2=held???)
+000800  2               
+000800  2               A2D_CREATE_WINDOW := $38
+000800  2                       ;; .byte id
+000800  2                       ;; .byte ???
+000800  2               
+000800  2               A2D_DESTROY_WINDOW := $39
+000800  2                       ;; .byte id
+000800  2                       ;; .byte ???
 000800  2               
 000800  2               A2D_GET_MOUSE   := $40
 000800  2                       ;; .word x
@@ -373,7 +381,7 @@ Current file: stf.s
 000977  1               .endproc
 000977  1               
 000977  1               ;;; Possibly unused
-000977  1  64           L0977:  .byte   $64
+000977  1  64           L0977:  .byte   $64             ; ??? window id again?
 000978  1  00 00        xcoord1:.word   0               ; ???
 00097A  1  00 00        ycoord1:.word   0               ; ???
 00097C  1  00                   .byte   0               ; ???
@@ -413,7 +421,12 @@ Current file: stf.s
 000993  1               text_string_len:
 000993  1  00                   .byte   0               ; length
 000994  1               
-000994  1  64 02        L0994:  .byte   $64,$02         ; window params??? $64 = window id?
+000994  1                       window_id := $64
+000994  1               .proc window_params
+000994  1  64           id:     .byte   window_id       ; window identifier
+000995  1  02           unk:    .byte   2               ; unknown - window flags?
+000996  1               .endproc
+000996  1               
 000996  1  00           L0996:  .byte   $00
 000997  1  10           L0997:  .byte   $10
 000998  1  00 C1        L0998:  .byte   $00,$C1
@@ -553,7 +566,7 @@ Current file: stf.s
 000AAD  1  8D F9 08             sta     get_eof_params::ref_num
 000AB0  1  8D 03 09             sta     close_params::ref_num
 000AB3  1  20 89 08             jsr     get_file_eof
-000AB6  1  20 00 40 38          A2D_CALL $38, L0994     ; creates/draws window???
+000AB6  1  20 00 40 38          A2D_CALL A2D_CREATE_WINDOW, window_params
 000ABA  1  94 09        
 000ABC  1  20 00 40 04          A2D_CALL $04, L09A8
 000AC0  1  A8 09        
@@ -567,13 +580,13 @@ Current file: stf.s
 000AD1  1  20 00 40 2A          A2D_CALL A2D_GET_BUTTON, button_state
 000AD5  1  70 09        
 000AD7  1  AD 70 09             lda     button_state
-000ADA  1  C9 01                cmp     #$01            ; was clicked?
+000ADA  1  C9 01                cmp     #1              ; was clicked?
 000ADC  1  D0 F3                bne     input_loop      ; nope, keep waiting
 000ADE  1               
 000ADE  1  20 00 40 40          A2D_CALL A2D_GET_MOUSE, mouse_data
 000AE2  1  71 09        
 000AE4  1  AD 76 09             lda     mouse_data::win         ; click target??
-000AE7  1  C9 64                cmp     #$64                    ; is in window??
+000AE7  1  C9 64                cmp     #window_id              ; is in window??
 000AE9  1  D0 E6                bne     input_loop
 000AEB  1  AD 75 09             lda     mouse_data::elem        ; which UI element?
 000AEE  1  C9 05                cmp     #$05                    ; 5 = close btn
@@ -603,9 +616,8 @@ Current file: stf.s
 000B27  1  AD 7D 09             lda     close_btn::state ; did click complete?
 000B2A  1  F0 A5                beq     input_loop      ; nope
 000B2C  1  20 AF 08             jsr     close_file
-000B2F  1  20 00 40 39          A2D_CALL $39, L0994
+000B2F  1  20 00 40 39          A2D_CALL A2D_DESTROY_WINDOW, window_params
 000B33  1  94 09        
-000B35  1                       ;; window is gone by this point - is previous a redraw/destroy?
 000B35  1  20 00 8E             jsr     UNKNOWN_CALL    ; hides the cursor?
 000B38  1  0C                   .byte   $0C
 000B39  1  00 00                .addr   0
@@ -888,6 +900,7 @@ Current file: stf.s
 000D51  1  60                   rts
 000D52  1               .endproc
 000D52  1               
+000D52  1               ;;; Checks button state; z clear if button was released, set otherwise
 000D52  1               .proc was_button_released
 000D52  1  20 00 40 2A          A2D_CALL A2D_GET_BUTTON, button_state
 000D56  1  70 09        
@@ -1152,7 +1165,8 @@ Current file: stf.s
 000F9B  1  00           L0F9B:  .byte   0
 000F9C  1  00           L0F9C:  .byte   0
 000F9D  1  00           L0F9D:  .byte   0
-000F9E  1  A9 01        L0F9E:  lda     #$01
+000F9E  1               .proc L0F9E                     ; ???
+000F9E  1  A9 01                lda     #1
 000FA0  1  8D 5A 09             sta     L095A
 000FA3  1  18                   clc
 000FA4  1  AD 9C 0F             lda     L0F9C
@@ -1161,34 +1175,36 @@ Current file: stf.s
 000FAD  1  AD 9D 0F             lda     L0F9D
 000FB0  1  6D 5E 09             adc     L095E
 000FB3  1  8D 5E 09             sta     L095E
-000FB6  1  A2 00                ldx     #$00
-000FB8  1  BD E9 0F     L0FB8:  lda     L0FE9,x
+000FB6  1  A2 00                ldx     #0
+000FB8  1  BD E9 0F     loop:   lda     times70+1,x
 000FBB  1  CD 5E 09             cmp     L095E
 000FBE  1  D0 06                bne     L0FC6
-000FC0  1  BD E8 0F             lda     L0FE8,x
+000FC0  1  BD E8 0F             lda     times70,x
 000FC3  1  CD 5D 09             cmp     L095D
 000FC6  1  B0 09        L0FC6:  bcs     L0FD1
 000FC8  1  E8                   inx
 000FC9  1  E8                   inx
-000FCA  1  E0 0E                cpx     #$0E
-000FCC  1  F0 12                beq     L0FE0
-000FCE  1  4C B8 0F             jmp     L0FB8
-000FD1  1               
-000FD1  1  BD E8 0F     L0FD1:  lda     L0FE8,x
+000FCA  1  E0 0E                cpx     #14
+000FCC  1  F0 12                beq     done
+000FCE  1  4C B8 0F             jmp     loop
+000FD1  1  BD E8 0F     L0FD1:  lda     times70,x
 000FD4  1  8D 5D 09             sta     L095D
-000FD7  1  BD E9 0F             lda     L0FE9,x
+000FD7  1  BD E9 0F             lda     times70+1,x
 000FDA  1  8D 5E 09             sta     L095E
 000FDD  1  4C 86 0F             jmp     L0F86
-000FE0  1               
-000FE0  1  A9 00        L0FE0:  lda     #$00
+000FE0  1  A9 00        done:   lda     #0
 000FE2  1  8D 5A 09             sta     L095A
 000FE5  1  4C 86 0F             jmp     L0F86
 000FE8  1               
-000FE8  1  46           L0FE8:  .byte   $46
-000FE9  1  00 8C 00 D2  L0FE9:  .byte   $00,$8C,$00,$D2,$00,$18,$01,$5E
-000FED  1  00 18 01 5E  
-000FF1  1  01 A4 01 EA          .byte   $01,$A4,$01,$EA,$01
-000FF5  1  01           
+000FE8  1  46 00        times70:.word   70
+000FEA  1  8C 00                .word   140
+000FEC  1  D2 00                .word   210
+000FEE  1  18 01                .word   280
+000FF0  1  5E 01                .word   350
+000FF2  1  A4 01                .word   420
+000FF4  1  EA 01                .word   490
+000FF6  1               .endproc
+000FF6  1               
 000FF6  1  AD 48 09     L0FF6:  lda     L0948
 000FF9  1  F0 10                beq     L100B
 000FFB  1  AD 93 09             lda     text_string_len
@@ -1322,10 +1338,10 @@ Current file: stf.s
 001105  1  20 20 00             jsr     zp_code_stash
 001108  1  60                   rts
 001109  1               
-001109  1               ;;; if fixed mode, do a main->aux mem copy
+001109  1               ;;; if fixed mode, do a main->aux copy of a code block ???
 001109  1               .proc L1109
 001109  1  AD 6F 09             lda     fixed_mode_flag ; if not fixed (i.e. proportional)
-00110C  1  F0 1A                beq     exit            ; then exit
+00110C  1  F0 1A                beq     end             ; then exit
 00110E  1               
 00110E  1  A9 00                lda     #$00            ; start := $1100
 001110  1  85 3C                sta     STARTLO
@@ -1342,18 +1358,18 @@ Current file: stf.s
 001122  1  85 42                sta     DESTINATIONLO
 001124  1  38                   sec                     ; main>aux
 001125  1  20 11 C3             jsr     AUXMOVE
-001128  1  60           exit:    rts
+001128  1  60           end:    rts
 001129  1               .endproc
 001129  1               
 001129  1               .proc L1129                     ; ???
-001129  1  AD 6F 09             lda     fixed_mode_flag
-00112C  1  F0 0B                beq     exit
+001129  1  AD 6F 09             lda     fixed_mode_flag ; if not fixed (i.e. proportional)
+00112C  1  F0 0B                beq     end             ; then exit
 00112E  1  AE 01 88             ldx     $8801
 001131  1  A9 07                lda     #$07
 001133  1  9D 02 88     loop:   sta     $8802,x
 001136  1  CA                   dex
 001137  1  D0 FA                bne     loop
-001139  1  60           exit:   rts
+001139  1  60           end:    rts
 00113A  1               .endproc
 00113A  1               
 00113A  1               ;;; On Title Bar Click - if it's on the Fixed/Proportional label,
@@ -1416,7 +1432,9 @@ Current file: stf.s
 0011B7  1  8A                   txa
 0011B8  1  E9 00                sbc     #$00
 0011BA  1  8D 85 11             sta     label_left+1
+0011BD  1                       ;; fall through...
 0011BD  1               .endproc
+0011BD  1               
 0011BD  1               .proc draw_mode
 0011BD  1  20 00 40 06          A2D_CALL $06, label_left ; guess: setting up draw location ???
 0011C1  1  84 11        
