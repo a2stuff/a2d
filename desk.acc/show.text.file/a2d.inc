@@ -27,16 +27,14 @@ A2D_DESTROY_WINDOW := $39
 A2D_GET_MOUSE   := $40
         ;; .word x
         ;; .word y
-        ;; .word element
-        ;;      0 = ??
-        ;;      1 = ??
-        ;;      2 = client area/scroll bar
+        ;; .byte element
+        ;;      0 = desktop
+        ;;      1 = menu
+        ;;      2 = client area (including scroll bars/resize box)
         ;;      3 = title bar
         ;;      4 = ??? (but tested for?)
         ;;      5 = close box
-        ;; .word window
-        ;;      $0 = outside window
-        ;;      $64 = in window
+        ;; .byte id of window
 
 A2D_BTN_CLICK   := $43
         ;; .byte clicked (0 = cancelled, 1 = clicked)
@@ -61,6 +59,8 @@ A2D_UPDATE_SCROLL:= $4B
         ;; .byte pos (new position 0...250)
 
 ;;; Used in A2D_GET_MOUSE
+A2D_ELEM_DESKTOP:= 0
+A2D_ELEM_MENU   := 1
 A2D_ELEM_CLIENT := 2
 A2D_ELEM_TITLE  := 3
 A2D_ELEM_TBD    := 4            ; ???
