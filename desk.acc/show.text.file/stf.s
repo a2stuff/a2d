@@ -303,26 +303,37 @@ L099B:  .byte   $00,$FF
 vscroll_pos:
         .byte   0
 
+        ;; unused?
         .byte   $00,$00,$C8,$00,$33,$00,$00 ; ???
         .byte   $02,$96,$00                 ; ???
 
-L09A8:  .byte   $0A             ; start of block for an A2D call ($04, $06)
-L09A9:  .byte   $00
-L09AA:  .byte   $1C,$00,$00,$20,$80,$00
-L09B0:  .byte   $00
-L09B1:  .byte   $00
-L09B2:  .byte   $00
-L09B3:  .byte   $00
-L09B4:  .byte   $00
-L09B5:  .byte   $02
-L09B6:  .byte   $96
-L09B7:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+.proc text_box                  ; or whole window ??
+left:   .word   10
+top:    .word   28
+        .word   $2000           ; ??? never changed
+        .word   $80             ; ??? never changed
+unk1:   .word   0               ; ???
+unk2:   .word   0               ; ???
+width:  .word   $200
+height: .word   $96
+.endproc
+
+        ;; unused?
+        .byte   $00,$00,$00,$00,$00,$00,$00
         .byte   $00,$FF,$00,$00,$00,$00,$00,$01
         .byte   $01,$00,$7F,$00,$88,$00,$00
 
-        ;; these 16 bytes get copied over L09A8 after mode is drawn
-L09CE:  .byte   $0A,$00,$1C,$00,$00,$20,$80,$00
-        .byte   $00,$00,$00,$00,$00,$02,$96,$00
+        ;; gets copied over text_box after mode is drawn
+.proc default_box
+left:   .word   10
+top:    .word   28
+        .word   $2000
+        .word   $80
+unk1:   .word   0
+unk2:   .word   0
+width:  .word   $200
+height: .word   $96
+.endproc
 
 .proc init
 L09DE:  sta     ALTZPON
@@ -441,7 +452,7 @@ loop:   lda     $8802,x
 
         ;; create window
         A2D_CALL A2D_CREATE_WINDOW, window_params
-        A2D_CALL $04, L09A8     ; ???
+        A2D_CALL $04, text_box
         jsr     L1088
         jsr     calc_and_draw_mode
         jsr     draw_content
@@ -502,22 +513,22 @@ title:  jsr     on_title_bar_click
         jsr     L10FD
         jsr     L1088
         lda     #$02
-        cmp     L09B5
+        cmp     text_box::width+1
         bne     L0B54
         lda     #$00
-        cmp     L09B4
+        cmp     text_box::width
 L0B54:  bcs     L0B73
         lda     #$00
-        sta     L09B4
+        sta     text_box::width
         lda     #$02
-        sta     L09B5
+        sta     text_box::width+1
         sec
-        lda     L09B4
+        lda     text_box::width
         sbc     L0961
-        sta     L09B0
-        lda     L09B5
+        sta     text_box::unk1
+        lda     text_box::width+1
         sbc     L0962
-        sta     L09B1
+        sta     text_box::unk1+1
 L0B73:  lda     L0998
         ldx     L0961
         cpx     #$00
@@ -702,16 +713,16 @@ loop:   inx
         lda     thumb_drag_params::pos
         jsr     L10EC
         lda     $06
-        sta     L09B0
+        sta     text_box::unk1
         lda     $07
-        sta     L09B1
+        sta     text_box::unk1+1
         clc
-        lda     L09B0
+        lda     text_box::unk1
         adc     L0961
-        sta     L09B4
-        lda     L09B1
+        sta     text_box::width
+        lda     text_box::unk1+1
         adc     L0962
-        sta     L09B5
+        sta     text_box::width+1
         jsr     L0DD1
         jsr     draw_content
 end:    rts
@@ -798,40 +809,40 @@ store:  sta     L099B
         jsr     L10EC
         clc
         lda     $06
-        sta     L09B0
+        sta     text_box::unk1
         adc     L0961
-        sta     L09B4
+        sta     text_box::width
         lda     $07
-        sta     L09B1
+        sta     text_box::unk1+1
         adc     L0962
-        sta     L09B5
+        sta     text_box::width+1
         rts
 .endproc
 
 .proc L0D7C                     ; ?? part of vscroll
         lda     #0
-        sta     L09B2
-        sta     L09B3
+        sta     text_box::unk2
+        sta     text_box::unk2+1
         ldx     update_scroll_params::pos
 loop:   beq     L0D9B
         clc
-        lda     L09B2
+        lda     text_box::unk2
         adc     #50
-        sta     L09B2
+        sta     text_box::unk2
         bcc     skip
-        inc     L09B3
+        inc     text_box::unk2+1
 skip:   dex
         jmp     loop
 .endproc
 
 .proc L0D9B                     ; ?? part of vscroll
         clc
-        lda     L09B2
+        lda     text_box::unk2
         adc     L0963
-        sta     L09B6
-        lda     L09B3
+        sta     text_box::height
+        lda     text_box::unk2+1
         adc     L0964
-        sta     L09B7
+        sta     text_box::height+1
         jsr     L10A5
         lda     #0
         sta     L096A
@@ -851,9 +862,9 @@ end:    rts
 
 L0DD1:  lda     #2
         sta     update_scroll_params::type
-        lda     L09B0
+        lda     text_box::unk1
         sta     $06
-        lda     L09B1
+        lda     text_box::unk1+1
         sta     $07
         jsr     L10DF
         sta     update_scroll_params::pos
@@ -871,7 +882,7 @@ L0DD1:  lda     #2
         jsr     UNKNOWN_CALL
         .byte   $0C
         .addr   0
-        A2D_CALL $04, L09A8
+        A2D_CALL $04, text_box
         lda     L0998
         ror     a
         bcc     skip
@@ -884,7 +895,7 @@ skip:   lda     vscroll_pos
 .endproc
 
 L0E1D:  A2D_CALL $08, L0952
-        A2D_CALL $11, L09B0
+        A2D_CALL $11, text_box::unk1
         A2D_CALL $08, L094A
         rts
 
@@ -1160,19 +1171,19 @@ end:    rts
 .endscope
 
 L1088:  sec
-        lda     L09B4
-        sbc     L09B0
+        lda     text_box::width
+        sbc     text_box::unk1
         sta     L0961
-        lda     L09B5
-        sbc     L09B1
+        lda     text_box::width+1
+        sbc     text_box::unk1+1
         sta     L0962
         sec
-        lda     L09B6
-        sbc     L09B2
+        lda     text_box::height
+        sbc     text_box::unk2
         sta     L0963
-L10A5:  lda     L09B6
+L10A5:  lda     text_box::height
         sta     L0965
-        lda     L09B7
+        lda     text_box::height+1
         sta     L0966
         lda     #$00
         sta     L0968
@@ -1288,8 +1299,10 @@ prop_str:       A2D_DEFSTRING "Proportional"
 .proc mode_box                  ; bounding box for mode label
 left:   .word   0
 top:    .word   0
-        .byte   $00,$20,$80,$00,$00,$00 ; ???
-        .byte   $00,$00
+        .word   $2000           ; ??
+        .word   $80             ; ??
+        .word   0               ; ??
+        .word   0               ; ??
 width:  .word   80
 height: .word   10
 .endproc
@@ -1303,14 +1316,14 @@ base:   .word   10              ; vertical text offset (to baseline)
 
 .proc calc_and_draw_mode
         sec
-        lda     L09AA           ; maybe top of window ??
+        lda     text_box::top   ; maybe top of window ??
         sbc     #12             ; height of title bar ??
         sta     mode_box::top   ; label top ??
         clc
-        lda     L09A8
+        lda     text_box::left
         adc     L0961
         pha
-        lda     L09A9
+        lda     text_box::left+1
         adc     L0962
         tax
         sec
@@ -1333,10 +1346,10 @@ base:   .word   10              ; vertical text offset (to baseline)
 else:   A2D_CALL A2D_DRAW_TEXT, prop_str
 
 endif:  ldx     #$0F
-loop:   lda     L09CE,x
-        sta     L09A8,x
+loop:   lda     default_box,x
+        sta     text_box,x
         dex
         bpl     loop
-        A2D_CALL $06, L09A8
+        A2D_CALL $06, text_box
         rts
 .endproc

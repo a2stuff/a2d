@@ -395,6 +395,7 @@ Current file: stf.s
 00094E  1               ;;; ----------------------------------------
 00094E  1               
 00094E  1  00 00 00 00          .byte   $00,$00,$00,$00
+000952  1               
 000952  1  FF FF FF FF  L0952:  .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
 000956  1  FF FF FF FF  
 00095A  1  00           L095A:  .byte   $00
@@ -490,33 +491,41 @@ Current file: stf.s
 00099D  1               vscroll_pos:
 00099D  1  00                   .byte   0
 00099E  1               
+00099E  1                       ;; unused?
 00099E  1  00 00 C8 00          .byte   $00,$00,$C8,$00,$33,$00,$00 ; ???
 0009A2  1  33 00 00     
 0009A5  1  02 96 00             .byte   $02,$96,$00                 ; ???
 0009A8  1               
-0009A8  1  0A           L09A8:  .byte   $0A             ; start of block for an A2D call ($04, $06)
-0009A9  1  00           L09A9:  .byte   $00
-0009AA  1  1C 00 00 20  L09AA:  .byte   $1C,$00,$00,$20,$80,$00
-0009AE  1  80 00        
-0009B0  1  00           L09B0:  .byte   $00
-0009B1  1  00           L09B1:  .byte   $00
-0009B2  1  00           L09B2:  .byte   $00
-0009B3  1  00           L09B3:  .byte   $00
-0009B4  1  00           L09B4:  .byte   $00
-0009B5  1  02           L09B5:  .byte   $02
-0009B6  1  96           L09B6:  .byte   $96
-0009B7  1  00 00 00 00  L09B7:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-0009BB  1  00 00 00 00  
+0009A8  1               .proc text_box                  ; or whole window ??
+0009A8  1  0A 00        left:   .word   10
+0009AA  1  1C 00        top:    .word   28
+0009AC  1  00 20                .word   $2000           ; ??? never changed
+0009AE  1  80 00                .word   $80             ; ??? never changed
+0009B0  1  00 00        unk1:   .word   0               ; ???
+0009B2  1  00 00        unk2:   .word   0               ; ???
+0009B4  1  00 02        width:  .word   $200
+0009B6  1  96 00        height: .word   $96
+0009B8  1               .endproc
+0009B8  1               
+0009B8  1                       ;; unused?
+0009B8  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00
+0009BC  1  00 00 00     
 0009BF  1  00 FF 00 00          .byte   $00,$FF,$00,$00,$00,$00,$00,$01
 0009C3  1  00 00 00 01  
 0009C7  1  01 00 7F 00          .byte   $01,$00,$7F,$00,$88,$00,$00
 0009CB  1  88 00 00     
 0009CE  1               
-0009CE  1                       ;; these 16 bytes get copied over L09A8 after mode is drawn
-0009CE  1  0A 00 1C 00  L09CE:  .byte   $0A,$00,$1C,$00,$00,$20,$80,$00
-0009D2  1  00 20 80 00  
-0009D6  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$02,$96,$00
-0009DA  1  00 02 96 00  
+0009CE  1                       ;; gets copied over text_box after mode is drawn
+0009CE  1               .proc default_box
+0009CE  1  0A 00        left:   .word   10
+0009D0  1  1C 00        top:    .word   28
+0009D2  1  00 20                .word   $2000
+0009D4  1  80 00                .word   $80
+0009D6  1  00 00        unk1:   .word   0
+0009D8  1  00 00        unk2:   .word   0
+0009DA  1  00 02        width:  .word   $200
+0009DC  1  96 00        height: .word   $96
+0009DE  1               .endproc
 0009DE  1               
 0009DE  1               .proc init
 0009DE  1  8D 09 C0     L09DE:  sta     ALTZPON
@@ -636,7 +645,7 @@ Current file: stf.s
 000AB6  1                       ;; create window
 000AB6  1  20 00 40 38          A2D_CALL A2D_CREATE_WINDOW, window_params
 000ABA  1  94 09        
-000ABC  1  20 00 40 04          A2D_CALL $04, L09A8     ; ???
+000ABC  1  20 00 40 04          A2D_CALL $04, text_box
 000AC0  1  A8 09        
 000AC2  1  20 88 10             jsr     L1088
 000AC5  1  20 98 11             jsr     calc_and_draw_mode
@@ -704,22 +713,22 @@ Current file: stf.s
 000B42  1  20 FD 10             jsr     L10FD
 000B45  1  20 88 10             jsr     L1088
 000B48  1  A9 02                lda     #$02
-000B4A  1  CD B5 09             cmp     L09B5
+000B4A  1  CD B5 09             cmp     text_box::width+1
 000B4D  1  D0 05                bne     L0B54
 000B4F  1  A9 00                lda     #$00
-000B51  1  CD B4 09             cmp     L09B4
+000B51  1  CD B4 09             cmp     text_box::width
 000B54  1  B0 1D        L0B54:  bcs     L0B73
 000B56  1  A9 00                lda     #$00
-000B58  1  8D B4 09             sta     L09B4
+000B58  1  8D B4 09             sta     text_box::width
 000B5B  1  A9 02                lda     #$02
-000B5D  1  8D B5 09             sta     L09B5
+000B5D  1  8D B5 09             sta     text_box::width+1
 000B60  1  38                   sec
-000B61  1  AD B4 09             lda     L09B4
+000B61  1  AD B4 09             lda     text_box::width
 000B64  1  ED 61 09             sbc     L0961
-000B67  1  8D B0 09             sta     L09B0
-000B6A  1  AD B5 09             lda     L09B5
+000B67  1  8D B0 09             sta     text_box::unk1
+000B6A  1  AD B5 09             lda     text_box::width+1
 000B6D  1  ED 62 09             sbc     L0962
-000B70  1  8D B1 09             sta     L09B1
+000B70  1  8D B1 09             sta     text_box::unk1+1
 000B73  1  AD 98 09     L0B73:  lda     L0998
 000B76  1  AE 61 09             ldx     L0961
 000B79  1  E0 00                cpx     #$00
@@ -906,16 +915,16 @@ Current file: stf.s
 000CBD  1  AD 8F 09             lda     thumb_drag_params::pos
 000CC0  1  20 EC 10             jsr     L10EC
 000CC3  1  A5 06                lda     $06
-000CC5  1  8D B0 09             sta     L09B0
+000CC5  1  8D B0 09             sta     text_box::unk1
 000CC8  1  A5 07                lda     $07
-000CCA  1  8D B1 09             sta     L09B1
+000CCA  1  8D B1 09             sta     text_box::unk1+1
 000CCD  1  18                   clc
-000CCE  1  AD B0 09             lda     L09B0
+000CCE  1  AD B0 09             lda     text_box::unk1
 000CD1  1  6D 61 09             adc     L0961
-000CD4  1  8D B4 09             sta     L09B4
-000CD7  1  AD B1 09             lda     L09B1
+000CD4  1  8D B4 09             sta     text_box::width
+000CD7  1  AD B1 09             lda     text_box::unk1+1
 000CDA  1  6D 62 09             adc     L0962
-000CDD  1  8D B5 09             sta     L09B5
+000CDD  1  8D B5 09             sta     text_box::width+1
 000CE0  1  20 D1 0D             jsr     L0DD1
 000CE3  1  20 30 0E             jsr     draw_content
 000CE6  1  60           end:    rts
@@ -1004,40 +1013,40 @@ Current file: stf.s
 000D61  1  20 EC 10             jsr     L10EC
 000D64  1  18                   clc
 000D65  1  A5 06                lda     $06
-000D67  1  8D B0 09             sta     L09B0
+000D67  1  8D B0 09             sta     text_box::unk1
 000D6A  1  6D 61 09             adc     L0961
-000D6D  1  8D B4 09             sta     L09B4
+000D6D  1  8D B4 09             sta     text_box::width
 000D70  1  A5 07                lda     $07
-000D72  1  8D B1 09             sta     L09B1
+000D72  1  8D B1 09             sta     text_box::unk1+1
 000D75  1  6D 62 09             adc     L0962
-000D78  1  8D B5 09             sta     L09B5
+000D78  1  8D B5 09             sta     text_box::width+1
 000D7B  1  60                   rts
 000D7C  1               .endproc
 000D7C  1               
 000D7C  1               .proc L0D7C                     ; ?? part of vscroll
 000D7C  1  A9 00                lda     #0
-000D7E  1  8D B2 09             sta     L09B2
-000D81  1  8D B3 09             sta     L09B3
+000D7E  1  8D B2 09             sta     text_box::unk2
+000D81  1  8D B3 09             sta     text_box::unk2+1
 000D84  1  AE 89 09             ldx     update_scroll_params::pos
 000D87  1  F0 12        loop:   beq     L0D9B
 000D89  1  18                   clc
-000D8A  1  AD B2 09             lda     L09B2
+000D8A  1  AD B2 09             lda     text_box::unk2
 000D8D  1  69 32                adc     #50
-000D8F  1  8D B2 09             sta     L09B2
+000D8F  1  8D B2 09             sta     text_box::unk2
 000D92  1  90 03                bcc     skip
-000D94  1  EE B3 09             inc     L09B3
+000D94  1  EE B3 09             inc     text_box::unk2+1
 000D97  1  CA           skip:   dex
 000D98  1  4C 87 0D             jmp     loop
 000D9B  1               .endproc
 000D9B  1               
 000D9B  1               .proc L0D9B                     ; ?? part of vscroll
 000D9B  1  18                   clc
-000D9C  1  AD B2 09             lda     L09B2
+000D9C  1  AD B2 09             lda     text_box::unk2
 000D9F  1  6D 63 09             adc     L0963
-000DA2  1  8D B6 09             sta     L09B6
-000DA5  1  AD B3 09             lda     L09B3
+000DA2  1  8D B6 09             sta     text_box::height
+000DA5  1  AD B3 09             lda     text_box::unk2+1
 000DA8  1  6D 64 09             adc     L0964
-000DAB  1  8D B7 09             sta     L09B7
+000DAB  1  8D B7 09             sta     text_box::height+1
 000DAE  1  20 A5 10             jsr     L10A5
 000DB1  1  A9 00                lda     #0
 000DB3  1  8D 6A 09             sta     L096A
@@ -1057,9 +1066,9 @@ Current file: stf.s
 000DD1  1               
 000DD1  1  A9 02        L0DD1:  lda     #2
 000DD3  1  8D 88 09             sta     update_scroll_params::type
-000DD6  1  AD B0 09             lda     L09B0
+000DD6  1  AD B0 09             lda     text_box::unk1
 000DD9  1  85 06                sta     $06
-000DDB  1  AD B1 09             lda     L09B1
+000DDB  1  AD B1 09             lda     text_box::unk1+1
 000DDE  1  85 07                sta     $07
 000DE0  1  20 DF 10             jsr     L10DF
 000DE3  1  8D 89 09             sta     update_scroll_params::pos
@@ -1079,7 +1088,7 @@ Current file: stf.s
 000DF9  1  20 00 8E             jsr     UNKNOWN_CALL
 000DFC  1  0C                   .byte   $0C
 000DFD  1  00 00                .addr   0
-000DFF  1  20 00 40 04          A2D_CALL $04, L09A8
+000DFF  1  20 00 40 04          A2D_CALL $04, text_box
 000E03  1  A8 09        
 000E05  1  AD 98 09             lda     L0998
 000E08  1  6A                   ror     a
@@ -1094,7 +1103,7 @@ Current file: stf.s
 000E1D  1               
 000E1D  1  20 00 40 08  L0E1D:  A2D_CALL $08, L0952
 000E21  1  52 09        
-000E23  1  20 00 40 11          A2D_CALL $11, L09B0
+000E23  1  20 00 40 11          A2D_CALL $11, text_box::unk1
 000E27  1  B0 09        
 000E29  1  20 00 40 08          A2D_CALL $08, L094A
 000E2D  1  4A 09        
@@ -1374,19 +1383,19 @@ Current file: stf.s
 001088  1               .endscope
 001088  1               
 001088  1  38           L1088:  sec
-001089  1  AD B4 09             lda     L09B4
-00108C  1  ED B0 09             sbc     L09B0
+001089  1  AD B4 09             lda     text_box::width
+00108C  1  ED B0 09             sbc     text_box::unk1
 00108F  1  8D 61 09             sta     L0961
-001092  1  AD B5 09             lda     L09B5
-001095  1  ED B1 09             sbc     L09B1
+001092  1  AD B5 09             lda     text_box::width+1
+001095  1  ED B1 09             sbc     text_box::unk1+1
 001098  1  8D 62 09             sta     L0962
 00109B  1  38                   sec
-00109C  1  AD B6 09             lda     L09B6
-00109F  1  ED B2 09             sbc     L09B2
+00109C  1  AD B6 09             lda     text_box::height
+00109F  1  ED B2 09             sbc     text_box::unk2
 0010A2  1  8D 63 09             sta     L0963
-0010A5  1  AD B6 09     L10A5:  lda     L09B6
+0010A5  1  AD B6 09     L10A5:  lda     text_box::height
 0010A8  1  8D 65 09             sta     L0965
-0010AB  1  AD B7 09             lda     L09B7
+0010AB  1  AD B7 09             lda     text_box::height+1
 0010AE  1  8D 66 09             sta     L0966
 0010B1  1  A9 00                lda     #$00
 0010B3  1  8D 68 09             sta     L0968
@@ -1506,9 +1515,10 @@ Current file: stf.s
 001184  1               .proc mode_box                  ; bounding box for mode label
 001184  1  00 00        left:   .word   0
 001186  1  00 00        top:    .word   0
-001188  1  00 20 80 00          .byte   $00,$20,$80,$00,$00,$00 ; ???
-00118C  1  00 00        
-00118E  1  00 00                .byte   $00,$00
+001188  1  00 20                .word   $2000           ; ??
+00118A  1  80 00                .word   $80             ; ??
+00118C  1  00 00                .word   0               ; ??
+00118E  1  00 00                .word   0               ; ??
 001190  1  50 00        width:  .word   80
 001192  1  0A 00        height: .word   10
 001194  1               .endproc
@@ -1522,14 +1532,14 @@ Current file: stf.s
 001198  1               
 001198  1               .proc calc_and_draw_mode
 001198  1  38                   sec
-001199  1  AD AA 09             lda     L09AA           ; maybe top of window ??
+001199  1  AD AA 09             lda     text_box::top   ; maybe top of window ??
 00119C  1  E9 0C                sbc     #12             ; height of title bar ??
 00119E  1  8D 86 11             sta     mode_box::top   ; label top ??
 0011A1  1  18                   clc
-0011A2  1  AD A8 09             lda     L09A8
+0011A2  1  AD A8 09             lda     text_box::left
 0011A5  1  6D 61 09             adc     L0961
 0011A8  1  48                   pha
-0011A9  1  AD A9 09             lda     L09A9
+0011A9  1  AD A9 09             lda     text_box::left+1
 0011AC  1  6D 62 09             adc     L0962
 0011AF  1  AA                   tax
 0011B0  1  38                   sec
@@ -1556,11 +1566,11 @@ Current file: stf.s
 0011DB  1  75 11        
 0011DD  1               
 0011DD  1  A2 0F        endif:  ldx     #$0F
-0011DF  1  BD CE 09     loop:   lda     L09CE,x
-0011E2  1  9D A8 09             sta     L09A8,x
+0011DF  1  BD CE 09     loop:   lda     default_box,x
+0011E2  1  9D A8 09             sta     text_box,x
 0011E5  1  CA                   dex
 0011E6  1  10 F7                bpl     loop
-0011E8  1  20 00 40 06          A2D_CALL $06, L09A8
+0011E8  1  20 00 40 06          A2D_CALL $06, text_box
 0011EC  1  A8 09        
 0011EE  1  60                   rts
 0011EF  1               .endproc
