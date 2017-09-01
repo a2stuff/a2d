@@ -39,7 +39,7 @@ A2D_GET_MOUSE   := $40
         ;;      1 = menu
         ;;      2 = client area (including scroll bars/resize box)
         ;;      3 = title bar
-        ;;      4 = ??? (but tested for?)
+        ;;      4 = resize box
         ;;      5 = close box
         ;; .byte id of window
 
@@ -70,7 +70,7 @@ A2D_ELEM_DESKTOP:= 0
 A2D_ELEM_MENU   := 1
 A2D_ELEM_CLIENT := 2
 A2D_ELEM_TITLE  := 3
-A2D_ELEM_TBD    := 4            ; ???
+A2D_ELEM_RESIZE := 4
 A2D_ELEM_CLOSE  := 5
 
 ;;; Used in A2D_QUERY_CLIENT, A2D_DRAG_SCROLL, A2D_UPDATE_SCROLL

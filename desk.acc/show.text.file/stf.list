@@ -116,7 +116,7 @@ Current file: stf.s
 000800  2                       ;;      1 = menu
 000800  2                       ;;      2 = client area (including scroll bars/resize box)
 000800  2                       ;;      3 = title bar
-000800  2                       ;;      4 = ??? (but tested for?)
+000800  2                       ;;      4 = resize box
 000800  2                       ;;      5 = close box
 000800  2                       ;; .byte id of window
 000800  2               
@@ -147,7 +147,7 @@ Current file: stf.s
 000800  2               A2D_ELEM_MENU   := 1
 000800  2               A2D_ELEM_CLIENT := 2
 000800  2               A2D_ELEM_TITLE  := 3
-000800  2               A2D_ELEM_TBD    := 4            ; ???
+000800  2               A2D_ELEM_RESIZE := 4
 000800  2               A2D_ELEM_CLOSE  := 5
 000800  2               
 000800  2               ;;; Used in A2D_QUERY_CLIENT, A2D_DRAG_SCROLL, A2D_UPDATE_SCROLL
@@ -438,7 +438,7 @@ Current file: stf.s
 000976  1  00           win:    .byte   0
 000977  1               .endproc
 000977  1               
-000977  1               ;;; Possibly unused
+000977  1               ;;; Possibly unused - window move routine maybe?
 000977  1  64           L0977:  .byte   $64             ; ??? window id again?
 000978  1  00 00        xcoord1:.word   0               ; ???
 00097A  1  00 00        ycoord1:.word   0               ; ???
@@ -483,17 +483,16 @@ Current file: stf.s
 000994  1  64           id:     .byte   window_id       ; window identifier
 000995  1  02           flags:  .byte   2               ; window flags (2=include close box)
 000996  1               
-000996  1                       ;; possibly additional window params - size?
 000996  1  00 10        L0996:  .word   $1000           ; ???
-000998  1  00 C1        L0998:  .byte   $00,$C1
-00099A  1  20           L099A:  .byte   $20
-00099B  1  00 FF        L099B:  .byte   $00,$FF
+000998  1  00 C1        L0998:  .byte   $00,$C1         ; ???
+00099A  1               
+00099A  1  20           L099A:  .byte   $20             ; hscroll?
+00099B  1  00 FF        L099B:  .byte   $00,$FF         ; more hscroll?
 00099D  1               
-00099D  1                       ;; part of window params
 00099D  1               vscroll_pos:
 00099D  1  00                   .byte   0
 00099E  1               
-00099E  1                       ;; more window params (unreferenced)
+00099E  1                       ;; unreferenced
 00099E  1  00 00 C8 00          .byte   $00,$00,$C8,$00,$33,$00,$00 ; ???
 0009A2  1  33 00 00     
 0009A5  1  02 96 00             .byte   $02,$96,$00                 ; ???
@@ -687,7 +686,7 @@ Current file: stf.s
 000B0D  1               
 000B0D  1  C9 03                cmp     #A2D_ELEM_TITLE
 000B0F  1  F0 0A                beq     title
-000B11  1  C9 04                cmp     #A2D_ELEM_TBD           ; ???
+000B11  1  C9 04                cmp     #A2D_ELEM_RESIZE
 000B13  1  F0 BC                beq     input_loop
 000B15  1  20 B4 0B             jsr     on_client_click
 000B18  1  4C D1 0A             jmp     input_loop
@@ -710,7 +709,7 @@ Current file: stf.s
 000B3C  1               .endproc
 000B3C  1               
 000B3C  1               ;;; How would control get here???? Dead code???
-000B3C  1               .proc maybe_dead_code
+000B3C  1               .proc maybe_dead_code           ; window move routine, maybe?
 000B3C  1  20 00 40 45          A2D_CALL $45, L0977
 000B40  1  77 09        
 000B42  1  20 FD 10             jsr     L10FD

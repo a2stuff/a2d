@@ -247,7 +247,7 @@ elem:   .byte   0
 win:    .byte   0
 .endproc
 
-;;; Possibly unused
+;;; Possibly unused - window move routine maybe?
 L0977:  .byte   $64             ; ??? window id again?
 xcoord1:.word   0               ; ???
 ycoord1:.word   0               ; ???
@@ -486,7 +486,7 @@ input_loop:
 
         cmp     #A2D_ELEM_TITLE
         beq     title
-        cmp     #A2D_ELEM_TBD           ; ???
+        cmp     #A2D_ELEM_RESIZE
         beq     input_loop
         jsr     on_client_click
         jmp     input_loop
@@ -507,7 +507,7 @@ title:  jsr     on_title_bar_click
 .endproc
 
 ;;; How would control get here???? Dead code???
-.proc maybe_dead_code
+.proc maybe_dead_code           ; window move routine, maybe?
         A2D_CALL $45, L0977
         jsr     L10FD
         jsr     L1088
