@@ -83,6 +83,10 @@ Current file: stf.s
 000800  2               A2D             := $4000
 000800  2               UNKNOWN_CALL    := $8E00
 000800  2               
+000800  2               A2D_SET_TEXT_POS:= $0E
+000800  2                       ;; .word left
+000800  2                       ;; .word base
+000800  2               
 000800  2               A2D_DRAW_TEXT   := $19
 000800  2                       ;; .addr data
 000800  2                       ;; .byte length
@@ -104,16 +108,14 @@ Current file: stf.s
 000800  2               A2D_GET_MOUSE   := $40
 000800  2                       ;; .word x
 000800  2                       ;; .word y
-000800  2                       ;; .word element
-000800  2                       ;;      0 = ??
-000800  2                       ;;      1 = ??
-000800  2                       ;;      2 = client area/scroll bar
+000800  2                       ;; .byte element
+000800  2                       ;;      0 = desktop
+000800  2                       ;;      1 = menu
+000800  2                       ;;      2 = client area (including scroll bars/resize box)
 000800  2                       ;;      3 = title bar
 000800  2                       ;;      4 = ??? (but tested for?)
 000800  2                       ;;      5 = close box
-000800  2                       ;; .word window
-000800  2                       ;;      $0 = outside window
-000800  2                       ;;      $64 = in window
+000800  2                       ;; .byte id of window
 000800  2               
 000800  2               A2D_BTN_CLICK   := $43
 000800  2                       ;; .byte clicked (0 = cancelled, 1 = clicked)
@@ -138,6 +140,8 @@ Current file: stf.s
 000800  2                       ;; .byte pos (new position 0...250)
 000800  2               
 000800  2               ;;; Used in A2D_GET_MOUSE
+000800  2               A2D_ELEM_DESKTOP:= 0
+000800  2               A2D_ELEM_MENU   := 1
 000800  2               A2D_ELEM_CLIENT := 2
 000800  2               A2D_ELEM_TITLE  := 3
 000800  2               A2D_ELEM_TBD    := 4            ; ???
@@ -396,10 +400,12 @@ Current file: stf.s
 00095A  1  00           L095A:  .byte   $00
 00095B  1  FA           L095B:  .byte   $FA
 00095C  1  01           L095C:  .byte   $01
-00095D  1  00           L095D:  .byte   $00
-00095E  1  00           L095E:  .byte   $00
-00095F  1  00           L095F:  .byte   $00
-000960  1  00           L0960:  .byte   $00
+00095D  1               
+00095D  1               .proc line_pos
+00095D  1  00 00        left:   .word   0
+00095F  1  00 00        base:   .word   0
+000961  1               .endproc
+000961  1               
 000961  1  00           L0961:  .byte   $00
 000962  1  00           L0962:  .byte   $00
 000963  1  00           L0963:  .byte   $00
@@ -505,6 +511,8 @@ Current file: stf.s
 0009C3  1  00 00 00 01  
 0009C7  1  01 00 7F 00          .byte   $01,$00,$7F,$00,$88,$00,$00
 0009CB  1  88 00 00     
+0009CE  1               
+0009CE  1                       ;; these 16 bytes get copied over L09A8 after mode is drawn
 0009CE  1  0A 00 1C 00  L09CE:  .byte   $0A,$00,$1C,$00,$00,$20,$80,$00
 0009D2  1  00 20 80 00  
 0009D6  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$02,$96,$00
@@ -1108,12 +1116,12 @@ Current file: stf.s
 000E4B  1  8D 45 09             sta     L0945
 000E4E  1  8D 46 09             sta     L0946
 000E51  1  8D 47 09             sta     L0947
-000E54  1  8D 60 09             sta     L0960
+000E54  1  8D 60 09             sta     line_pos::base+1
 000E57  1  8D 6C 09             sta     L096C
 000E5A  1  8D 6D 09             sta     L096D
 000E5D  1  8D 48 09             sta     L0948
 000E60  1  A9 0A                lda     #$0A
-000E62  1  8D 5F 09             sta     L095F
+000E62  1  8D 5F 09             sta     line_pos::base
 000E65  1  20 DB 0E             jsr     L0EDB
 000E68  1  AD 6D 09     L0E68:  lda     L096D
 000E6B  1  CD 6B 09             cmp     L096B
@@ -1123,14 +1131,14 @@ Current file: stf.s
 000E76  1  D0 06                bne     L0E7E
 000E78  1  20 1D 0E             jsr     L0E1D
 000E7B  1  EE 48 09             inc     L0948
-000E7E  1  20 00 40 0E  L0E7E:  A2D_CALL $0E, L095D
+000E7E  1  20 00 40 0E  L0E7E:  A2D_CALL A2D_SET_TEXT_POS, line_pos
 000E82  1  5D 09        
 000E84  1  38                   sec
 000E85  1  A9 FA                lda     #$FA
-000E87  1  ED 5D 09             sbc     L095D
+000E87  1  ED 5D 09             sbc     line_pos::left
 000E8A  1  8D 5B 09             sta     L095B
 000E8D  1  A9 01                lda     #$01
-000E8F  1  ED 5E 09             sbc     L095E
+000E8F  1  ED 5E 09             sbc     line_pos::left+1
 000E92  1  8D 5C 09             sta     L095C
 000E95  1  20 F3 0E             jsr     L0EF3
 000E98  1  B0 3D                bcs     L0ED7
@@ -1143,11 +1151,11 @@ Current file: stf.s
 000EA6  1  AD 5A 09     L0EA6:  lda     L095A
 000EA9  1  D0 BD                bne     L0E68
 000EAB  1  18                   clc
-000EAC  1  AD 5F 09             lda     L095F
+000EAC  1  AD 5F 09             lda     line_pos::base
 000EAF  1  69 0A                adc     #$0A
-000EB1  1  8D 5F 09             sta     L095F
+000EB1  1  8D 5F 09             sta     line_pos::base
 000EB4  1  90 03                bcc     L0EB9
-000EB6  1  EE 60 09             inc     L0960
+000EB6  1  EE 60 09             inc     line_pos::base+1
 000EB9  1  20 DB 0E     L0EB9:  jsr     L0EDB
 000EBC  1  AD 6C 09             lda     L096C
 000EBF  1  CD 68 09             cmp     L0968
@@ -1170,9 +1178,9 @@ Current file: stf.s
 000EE0  1  A9 01                lda     #$01
 000EE2  1  8D 5C 09             sta     L095C
 000EE5  1  A9 03                lda     #$03
-000EE7  1  8D 5D 09             sta     L095D
+000EE7  1  8D 5D 09             sta     line_pos::left
 000EEA  1  A9 00                lda     #$00
-000EEC  1  8D 5E 09             sta     L095E
+000EEC  1  8D 5E 09             sta     line_pos::left+1
 000EEF  1  8D 5A 09             sta     L095A
 000EF2  1  60                   rts
 000EF3  1               .endproc
@@ -1259,17 +1267,17 @@ Current file: stf.s
 000FA0  1  8D 5A 09             sta     L095A
 000FA3  1  18                   clc
 000FA4  1  AD 9C 0F             lda     L0F9C
-000FA7  1  6D 5D 09             adc     L095D
-000FAA  1  8D 5D 09             sta     L095D
+000FA7  1  6D 5D 09             adc     line_pos::left
+000FAA  1  8D 5D 09             sta     line_pos::left
 000FAD  1  AD 9D 0F             lda     L0F9D
-000FB0  1  6D 5E 09             adc     L095E
-000FB3  1  8D 5E 09             sta     L095E
+000FB0  1  6D 5E 09             adc     line_pos::left+1
+000FB3  1  8D 5E 09             sta     line_pos::left+1
 000FB6  1  A2 00                ldx     #0
 000FB8  1  BD E9 0F     loop:   lda     times70+1,x
-000FBB  1  CD 5E 09             cmp     L095E
+000FBB  1  CD 5E 09             cmp     line_pos::left+1
 000FBE  1  D0 06                bne     L0FC6
 000FC0  1  BD E8 0F             lda     times70,x
-000FC3  1  CD 5D 09             cmp     L095D
+000FC3  1  CD 5D 09             cmp     line_pos::left
 000FC6  1  B0 09        L0FC6:  bcs     L0FD1
 000FC8  1  E8                   inx
 000FC9  1  E8                   inx
@@ -1277,9 +1285,9 @@ Current file: stf.s
 000FCC  1  F0 12                beq     done
 000FCE  1  4C B8 0F             jmp     loop
 000FD1  1  BD E8 0F     L0FD1:  lda     times70,x
-000FD4  1  8D 5D 09             sta     L095D
+000FD4  1  8D 5D 09             sta     line_pos::left
 000FD7  1  BD E9 0F             lda     times70+1,x
-000FDA  1  8D 5E 09             sta     L095E
+000FDA  1  8D 5E 09             sta     line_pos::left+1
 000FDD  1  4C 86 0F             jmp     L0F86
 000FE0  1  A9 00        done:   lda     #0
 000FE2  1  8D 5A 09             sta     L095A
@@ -1466,10 +1474,10 @@ Current file: stf.s
 00113A  1               ;;; toggle it and update.
 00113A  1               .proc on_title_bar_click
 00113A  1  AD 72 09             lda     mouse_data::xcoord+1           ; mouse x high byte?
-00113D  1  CD 85 11             cmp     label_left+1
+00113D  1  CD 85 11             cmp     mode_box_left+1
 001140  1  D0 06                bne     :+
 001142  1  AD 71 09             lda     mouse_data::xcoord
-001145  1  CD 84 11             cmp     label_left
+001145  1  CD 84 11             cmp     mode_box_left
 001148  1  90 19        :       bcc     ignore
 00114A  1  AD 6F 09             lda     fixed_mode_flag
 00114D  1  F0 09                beq     set_flag
@@ -1495,19 +1503,28 @@ Current file: stf.s
 001179  1  72 6F 70 6F  
 00117D  1  72 74 69 6F  
 001184  1               
-001184  1               ;;; Scratch space for Fixed/Proportional drawing code
-001184  1  00 00        label_left:     .word   0       ; left edge of label
-001186  1  00 00 00 20  L1186:  .byte   $00,$00,$00,$20,$80,$00,$00,$00
-00118A  1  80 00 00 00  
-00118E  1  00 00 50 00          .byte   $00,$00,$50,$00,$0A,$00
-001192  1  0A 00        
-001194  1  00 00 0A 00  L1194:  .byte   $00,$00,$0A,$00
+001184  1               .proc mode_box                  ; bounding box for mode label
+001184  1  00 00        left:   .word   0
+001186  1  00 00        top:    .word   0
+001188  1  00 20 80 00          .byte   $00,$20,$80,$00,$00,$00 ; ???
+00118C  1  00 00        
+00118E  1  00 00                .byte   $00,$00
+001190  1  50 00        width:  .word   80
+001192  1  0A 00        height: .word   10
+001194  1               .endproc
+001194  1               mode_box_left := mode_box::left ; forward refs to mode_box::left don't work?
+001194  1               
+001194  1               .proc mode_pos
+001194  1  00 00        left:   .word   0               ; horizontal text offset
+001196  1  0A 00        base:   .word   10              ; vertical text offset (to baseline)
+001198  1               .endproc
+001198  1               
 001198  1               
 001198  1               .proc calc_and_draw_mode
 001198  1  38                   sec
-001199  1  AD AA 09             lda     L09AA
-00119C  1  E9 0C                sbc     #$0C
-00119E  1  8D 86 11             sta     L1186
+001199  1  AD AA 09             lda     L09AA           ; maybe top of window ??
+00119C  1  E9 0C                sbc     #12             ; height of title bar ??
+00119E  1  8D 86 11             sta     mode_box::top   ; label top ??
 0011A1  1  18                   clc
 0011A2  1  AD A8 09             lda     L09A8
 0011A5  1  6D 61 09             adc     L0961
@@ -1517,18 +1534,18 @@ Current file: stf.s
 0011AF  1  AA                   tax
 0011B0  1  38                   sec
 0011B1  1  68                   pla
-0011B2  1  E9 32                sbc     #$32
-0011B4  1  8D 84 11             sta     label_left
+0011B2  1  E9 32                sbc     #50
+0011B4  1  8D 84 11             sta     mode_box::left
 0011B7  1  8A                   txa
-0011B8  1  E9 00                sbc     #$00
-0011BA  1  8D 85 11             sta     label_left+1
+0011B8  1  E9 00                sbc     #0
+0011BA  1  8D 85 11             sta     mode_box::left+1
 0011BD  1                       ;; fall through...
 0011BD  1               .endproc
 0011BD  1               
 0011BD  1               .proc draw_mode
-0011BD  1  20 00 40 06          A2D_CALL $06, label_left ; guess: setting up draw location ???
+0011BD  1  20 00 40 06          A2D_CALL $06, mode_box  ; guess: setting up draw location ???
 0011C1  1  84 11        
-0011C3  1  20 00 40 0E          A2D_CALL $0E, L1194
+0011C3  1  20 00 40 0E          A2D_CALL A2D_SET_TEXT_POS, mode_pos
 0011C7  1  94 11        
 0011C9  1  AD 6F 09             lda     fixed_mode_flag
 0011CC  1  F0 09                beq     else            ; is proportional?
@@ -1537,6 +1554,7 @@ Current file: stf.s
 0011D4  1  4C DD 11             jmp     endif
 0011D7  1  20 00 40 19  else:   A2D_CALL A2D_DRAW_TEXT, prop_str
 0011DB  1  75 11        
+0011DD  1               
 0011DD  1  A2 0F        endif:  ldx     #$0F
 0011DF  1  BD CE 09     loop:   lda     L09CE,x
 0011E2  1  9D A8 09             sta     L09A8,x

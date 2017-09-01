@@ -208,14 +208,17 @@ params_end:
 ;;; ----------------------------------------
 
         .byte   $00,$00,$00,$00
+
 L0952:  .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
 L095A:  .byte   $00
 L095B:  .byte   $FA
 L095C:  .byte   $01
-L095D:  .byte   $00
-L095E:  .byte   $00
-L095F:  .byte   $00
-L0960:  .byte   $00
+
+.proc line_pos
+left:   .word   0
+base:   .word   0
+.endproc
+
 L0961:  .byte   $00
 L0962:  .byte   $00
 L0963:  .byte   $00
@@ -316,6 +319,8 @@ L09B6:  .byte   $96
 L09B7:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$FF,$00,$00,$00,$00,$00,$01
         .byte   $01,$00,$7F,$00,$88,$00,$00
+
+        ;; these 16 bytes get copied over L09A8 after mode is drawn
 L09CE:  .byte   $0A,$00,$1C,$00,$00,$20,$80,$00
         .byte   $00,$00,$00,$00,$00,$02,$96,$00
 
@@ -899,12 +904,12 @@ L0E1D:  A2D_CALL $08, L0952
         sta     L0945
         sta     L0946
         sta     L0947
-        sta     L0960
+        sta     line_pos::base+1
         sta     L096C
         sta     L096D
         sta     L0948
         lda     #$0A
-        sta     L095F
+        sta     line_pos::base
         jsr     L0EDB
 L0E68:  lda     L096D
         cmp     L096B
@@ -914,13 +919,13 @@ L0E68:  lda     L096D
         bne     L0E7E
         jsr     L0E1D
         inc     L0948
-L0E7E:  A2D_CALL $0E, L095D
+L0E7E:  A2D_CALL A2D_SET_TEXT_POS, line_pos
         sec
         lda     #$FA
-        sbc     L095D
+        sbc     line_pos::left
         sta     L095B
         lda     #$01
-        sbc     L095E
+        sbc     line_pos::left+1
         sta     L095C
         jsr     L0EF3
         bcs     L0ED7
@@ -933,11 +938,11 @@ L0E7E:  A2D_CALL $0E, L095D
 L0EA6:  lda     L095A
         bne     L0E68
         clc
-        lda     L095F
+        lda     line_pos::base
         adc     #$0A
-        sta     L095F
+        sta     line_pos::base
         bcc     L0EB9
-        inc     L0960
+        inc     line_pos::base+1
 L0EB9:  jsr     L0EDB
         lda     L096C
         cmp     L0968
@@ -960,9 +965,9 @@ L0ED7:  jsr     L1109
         lda     #$01
         sta     L095C
         lda     #$03
-        sta     L095D
+        sta     line_pos::left
         lda     #$00
-        sta     L095E
+        sta     line_pos::left+1
         sta     L095A
         rts
 .endproc
@@ -1049,17 +1054,17 @@ L0F9D:  .byte   0
         sta     L095A
         clc
         lda     L0F9C
-        adc     L095D
-        sta     L095D
+        adc     line_pos::left
+        sta     line_pos::left
         lda     L0F9D
-        adc     L095E
-        sta     L095E
+        adc     line_pos::left+1
+        sta     line_pos::left+1
         ldx     #0
 loop:   lda     times70+1,x
-        cmp     L095E
+        cmp     line_pos::left+1
         bne     L0FC6
         lda     times70,x
-        cmp     L095D
+        cmp     line_pos::left
 L0FC6:  bcs     L0FD1
         inx
         inx
@@ -1067,9 +1072,9 @@ L0FC6:  bcs     L0FD1
         beq     done
         jmp     loop
 L0FD1:  lda     times70,x
-        sta     L095D
+        sta     line_pos::left
         lda     times70+1,x
-        sta     L095E
+        sta     line_pos::left+1
         jmp     L0F86
 done:   lda     #0
         sta     L095A
@@ -1255,10 +1260,10 @@ end:    rts
 ;;; toggle it and update.
 .proc on_title_bar_click
         lda     mouse_data::xcoord+1           ; mouse x high byte?
-        cmp     label_left+1
+        cmp     mode_box_left+1
         bne     :+
         lda     mouse_data::xcoord
-        cmp     label_left
+        cmp     mode_box_left
 :       bcc     ignore
         lda     fixed_mode_flag
         beq     set_flag
@@ -1280,17 +1285,27 @@ ignore: clc                     ; Click ignored
 fixed_str:      A2D_DEFSTRING "Fixed        "
 prop_str:       A2D_DEFSTRING "Proportional"
 
-;;; Scratch space for Fixed/Proportional drawing code
-label_left:     .word   0       ; left edge of label
-L1186:  .byte   $00,$00,$00,$20,$80,$00,$00,$00
-        .byte   $00,$00,$50,$00,$0A,$00
-L1194:  .byte   $00,$00,$0A,$00
+.proc mode_box                  ; bounding box for mode label
+left:   .word   0
+top:    .word   0
+        .byte   $00,$20,$80,$00,$00,$00 ; ???
+        .byte   $00,$00
+width:  .word   80
+height: .word   10
+.endproc
+mode_box_left := mode_box::left ; forward refs to mode_box::left don't work?
+
+.proc mode_pos
+left:   .word   0               ; horizontal text offset
+base:   .word   10              ; vertical text offset (to baseline)
+.endproc
+
 
 .proc calc_and_draw_mode
         sec
-        lda     L09AA
-        sbc     #$0C
-        sta     L1186
+        lda     L09AA           ; maybe top of window ??
+        sbc     #12             ; height of title bar ??
+        sta     mode_box::top   ; label top ??
         clc
         lda     L09A8
         adc     L0961
@@ -1300,22 +1315,23 @@ L1194:  .byte   $00,$00,$0A,$00
         tax
         sec
         pla
-        sbc     #$32
-        sta     label_left
+        sbc     #50
+        sta     mode_box::left
         txa
-        sbc     #$00
-        sta     label_left+1
+        sbc     #0
+        sta     mode_box::left+1
         ;; fall through...
 .endproc
 
 .proc draw_mode
-        A2D_CALL $06, label_left ; guess: setting up draw location ???
-        A2D_CALL $0E, L1194
+        A2D_CALL $06, mode_box  ; guess: setting up draw location ???
+        A2D_CALL A2D_SET_TEXT_POS, mode_pos
         lda     fixed_mode_flag
         beq     else            ; is proportional?
         A2D_CALL A2D_DRAW_TEXT, fixed_str
         jmp     endif
 else:   A2D_CALL A2D_DRAW_TEXT, prop_str
+
 endif:  ldx     #$0F
 loop:   lda     L09CE,x
         sta     L09A8,x

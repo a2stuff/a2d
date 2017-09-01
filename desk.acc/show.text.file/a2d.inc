@@ -6,6 +6,10 @@
 A2D             := $4000
 UNKNOWN_CALL    := $8E00
 
+A2D_SET_TEXT_POS:= $0E
+        ;; .word left
+        ;; .word base
+
 A2D_DRAW_TEXT   := $19
         ;; .addr data
         ;; .byte length
