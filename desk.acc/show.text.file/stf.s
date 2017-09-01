@@ -247,7 +247,7 @@ elem:   .byte   0
 win:    .byte   0
 .endproc
 
-;;; Possibly unused - window move routine maybe?
+        ;; param block used in dead code (resize button handler?)
 L0977:  .byte   $64             ; ??? window id again?
 xcoord1:.word   0               ; ???
 ycoord1:.word   0               ; ???
@@ -265,6 +265,7 @@ part:   .byte   0               ; 0 = client, 1 = scroll bar, 2 = ?????
 scroll: .byte   0               ; 1 = up, 2 = down, 3 = above, 4 = below, 5 = thumb
 .endproc
 
+        ;; param block used in dead code (resize?)
 L0986:  .byte   $00
 L0987:  .byte   $00
 
@@ -508,18 +509,21 @@ title:  jsr     on_title_bar_click
 
 ;;; How would control get here???? Dead code???
 .proc maybe_dead_code           ; window move routine, maybe?
-        A2D_CALL $45, L0977
+        A2D_CALL $45, L0977     ; run resize loop?
         jsr     L10FD
         jsr     L1088
-        lda     #$02
+
+        max_width := 512
+        lda     #>max_width
         cmp     text_box::width+1
-        bne     L0B54
-        lda     #$00
+        bne     skip
+        lda     #<max_width
         cmp     text_box::width
-L0B54:  bcs     L0B73
-        lda     #$00
+skip:   bcs     wider
+
+        lda     #<max_width
         sta     text_box::width
-        lda     #$02
+        lda     #>max_width
         sta     text_box::width+1
         sec
         lda     text_box::width
@@ -528,12 +532,12 @@ L0B54:  bcs     L0B73
         lda     text_box::width+1
         sbc     window_width+1
         sta     text_box::unk1+1
-L0B73:  lda     window_params::L0998
+wider:  lda     window_params::L0998
         ldx     window_width
-        cpx     #$00
+        cpx     #<max_width
         bne     L0B89
         ldx     window_width+1
-        cpx     #$02
+        cpx     #>max_width
         bne     L0B89
         and     #$FE
         jmp     L0B8B
@@ -541,17 +545,17 @@ L0B73:  lda     window_params::L0998
 L0B89:  ora     #$01
 L0B8B:  sta     window_params::L0998
         sec
-        lda     #$00
+        lda     #<max_width
         sbc     window_width
         sta     $06
-        lda     #$02
+        lda     #>max_width
         sbc     window_width+1
         sta     $07
         jsr     L10DF
         sta     L0987
         lda     #$02
         sta     L0986
-        A2D_CALL $49, L0986
+        A2D_CALL $49, L0986     ; change to clamped size ???
         jsr     calc_and_draw_mode
         jmp     L0DF9
 .endproc

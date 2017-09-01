@@ -438,7 +438,7 @@ Current file: stf.s
 000976  1  00           win:    .byte   0
 000977  1               .endproc
 000977  1               
-000977  1               ;;; Possibly unused - window move routine maybe?
+000977  1                       ;; param block used in dead code (resize button handler?)
 000977  1  64           L0977:  .byte   $64             ; ??? window id again?
 000978  1  00 00        xcoord1:.word   0               ; ???
 00097A  1  00 00        ycoord1:.word   0               ; ???
@@ -456,6 +456,7 @@ Current file: stf.s
 000985  1  00           scroll: .byte   0               ; 1 = up, 2 = down, 3 = above, 4 = below, 5 = thumb
 000986  1               .endproc
 000986  1               
+000986  1                       ;; param block used in dead code (resize?)
 000986  1  00           L0986:  .byte   $00
 000987  1  00           L0987:  .byte   $00
 000988  1               
@@ -714,15 +715,18 @@ Current file: stf.s
 000B40  1  77 09        
 000B42  1  20 FD 10             jsr     L10FD
 000B45  1  20 88 10             jsr     L1088
-000B48  1  A9 02                lda     #$02
+000B48  1               
+000B48  1                       max_width := 512
+000B48  1  A9 02                lda     #>max_width
 000B4A  1  CD B5 09             cmp     text_box::width+1
-000B4D  1  D0 05                bne     L0B54
-000B4F  1  A9 00                lda     #$00
+000B4D  1  D0 05                bne     skip
+000B4F  1  A9 00                lda     #<max_width
 000B51  1  CD B4 09             cmp     text_box::width
-000B54  1  B0 1D        L0B54:  bcs     L0B73
-000B56  1  A9 00                lda     #$00
+000B54  1  B0 1D        skip:   bcs     wider
+000B56  1               
+000B56  1  A9 00                lda     #<max_width
 000B58  1  8D B4 09             sta     text_box::width
-000B5B  1  A9 02                lda     #$02
+000B5B  1  A9 02                lda     #>max_width
 000B5D  1  8D B5 09             sta     text_box::width+1
 000B60  1  38                   sec
 000B61  1  AD B4 09             lda     text_box::width
@@ -731,12 +735,12 @@ Current file: stf.s
 000B6A  1  AD B5 09             lda     text_box::width+1
 000B6D  1  ED 62 09             sbc     window_width+1
 000B70  1  8D B1 09             sta     text_box::unk1+1
-000B73  1  AD 98 09     L0B73:  lda     window_params::L0998
+000B73  1  AD 98 09     wider:  lda     window_params::L0998
 000B76  1  AE 61 09             ldx     window_width
-000B79  1  E0 00                cpx     #$00
+000B79  1  E0 00                cpx     #<max_width
 000B7B  1  D0 0C                bne     L0B89
 000B7D  1  AE 62 09             ldx     window_width+1
-000B80  1  E0 02                cpx     #$02
+000B80  1  E0 02                cpx     #>max_width
 000B82  1  D0 05                bne     L0B89
 000B84  1  29 FE                and     #$FE
 000B86  1  4C 8B 0B             jmp     L0B8B
