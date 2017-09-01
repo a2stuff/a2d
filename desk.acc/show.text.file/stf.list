@@ -407,10 +407,9 @@ Current file: stf.s
 00095F  1  00 00        base:   .word   0
 000961  1               .endproc
 000961  1               
-000961  1  00           L0961:  .byte   $00
-000962  1  00           L0962:  .byte   $00
-000963  1  00           L0963:  .byte   $00
-000964  1  00           L0964:  .byte   $00
+000961  1  00 00        window_width:  .word   0
+000963  1  00 00        window_height: .word   0
+000965  1               
 000965  1  00           L0965:  .byte   $00
 000966  1  00 00        L0966:  .byte   $00,$00
 000968  1  00           L0968:  .byte   $00
@@ -482,8 +481,8 @@ Current file: stf.s
 000995  1  02           unk:    .byte   2               ; unknown - window flags?
 000996  1               .endproc
 000996  1               
-000996  1  00           L0996:  .byte   $00
-000997  1  10           L0997:  .byte   $10
+000996  1                       ;; possibly additional window params - size?
+000996  1  00 10        L0996:  .word   $1000           ; ???
 000998  1  00 C1        L0998:  .byte   $00,$C1
 00099A  1  20           L099A:  .byte   $20
 00099B  1  00 FF        L099B:  .byte   $00,$FF
@@ -582,7 +581,7 @@ Current file: stf.s
 000A45  1  8D 96 09             sta     L0996
 000A48  1  A5 07                lda     $07
 000A4A  1  69 00                adc     #$00
-000A4C  1  8D 97 09             sta     L0997
+000A4C  1  8D 97 09             sta     L0996+1
 000A4F  1  A0 09                ldy     #$09
 000A51  1  B1 06                lda     ($06),y
 000A53  1  AA                   tax
@@ -724,16 +723,16 @@ Current file: stf.s
 000B5D  1  8D B5 09             sta     text_box::width+1
 000B60  1  38                   sec
 000B61  1  AD B4 09             lda     text_box::width
-000B64  1  ED 61 09             sbc     L0961
+000B64  1  ED 61 09             sbc     window_width
 000B67  1  8D B0 09             sta     text_box::unk1
 000B6A  1  AD B5 09             lda     text_box::width+1
-000B6D  1  ED 62 09             sbc     L0962
+000B6D  1  ED 62 09             sbc     window_width+1
 000B70  1  8D B1 09             sta     text_box::unk1+1
 000B73  1  AD 98 09     L0B73:  lda     L0998
-000B76  1  AE 61 09             ldx     L0961
+000B76  1  AE 61 09             ldx     window_width
 000B79  1  E0 00                cpx     #$00
 000B7B  1  D0 0C                bne     L0B89
-000B7D  1  AE 62 09             ldx     L0962
+000B7D  1  AE 62 09             ldx     window_width+1
 000B80  1  E0 02                cpx     #$02
 000B82  1  D0 05                bne     L0B89
 000B84  1  29 FE                and     #$FE
@@ -743,10 +742,10 @@ Current file: stf.s
 000B8B  1  8D 98 09     L0B8B:  sta     L0998
 000B8E  1  38                   sec
 000B8F  1  A9 00                lda     #$00
-000B91  1  ED 61 09             sbc     L0961
+000B91  1  ED 61 09             sbc     window_width
 000B94  1  85 06                sta     $06
 000B96  1  A9 02                lda     #$02
-000B98  1  ED 62 09             sbc     L0962
+000B98  1  ED 62 09             sbc     window_width+1
 000B9B  1  85 07                sta     $07
 000B9D  1  20 DF 10             jsr     L10DF
 000BA0  1  8D 87 09             sta     L0987
@@ -878,7 +877,7 @@ Current file: stf.s
 000C84  1               .endproc
 000C84  1               
 000C84  1               .proc calc_track_scroll_delta
-000C84  1  AD 63 09             lda     L0963           ; ceil(??? / 50)
+000C84  1  AD 63 09             lda     window_height           ; ceil(??? / 50)
 000C87  1  A2 00                ldx     #0
 000C89  1  E8           loop:   inx
 000C8A  1  38                   sec
@@ -920,10 +919,10 @@ Current file: stf.s
 000CCA  1  8D B1 09             sta     text_box::unk1+1
 000CCD  1  18                   clc
 000CCE  1  AD B0 09             lda     text_box::unk1
-000CD1  1  6D 61 09             adc     L0961
+000CD1  1  6D 61 09             adc     window_width
 000CD4  1  8D B4 09             sta     text_box::width
 000CD7  1  AD B1 09             lda     text_box::unk1+1
-000CDA  1  6D 62 09             adc     L0962
+000CDA  1  6D 62 09             adc     window_width+1
 000CDD  1  8D B5 09             sta     text_box::width+1
 000CE0  1  20 D1 0D             jsr     L0DD1
 000CE3  1  20 30 0E             jsr     draw_content
@@ -1014,11 +1013,11 @@ Current file: stf.s
 000D64  1  18                   clc
 000D65  1  A5 06                lda     $06
 000D67  1  8D B0 09             sta     text_box::unk1
-000D6A  1  6D 61 09             adc     L0961
+000D6A  1  6D 61 09             adc     window_width
 000D6D  1  8D B4 09             sta     text_box::width
 000D70  1  A5 07                lda     $07
 000D72  1  8D B1 09             sta     text_box::unk1+1
-000D75  1  6D 62 09             adc     L0962
+000D75  1  6D 62 09             adc     window_width+1
 000D78  1  8D B5 09             sta     text_box::width+1
 000D7B  1  60                   rts
 000D7C  1               .endproc
@@ -1042,10 +1041,10 @@ Current file: stf.s
 000D9B  1               .proc L0D9B                     ; ?? part of vscroll
 000D9B  1  18                   clc
 000D9C  1  AD B2 09             lda     text_box::unk2
-000D9F  1  6D 63 09             adc     L0963
+000D9F  1  6D 63 09             adc     window_height
 000DA2  1  8D B6 09             sta     text_box::height
 000DA5  1  AD B3 09             lda     text_box::unk2+1
-000DA8  1  6D 64 09             adc     L0964
+000DA8  1  6D 64 09             adc     window_height+1
 000DAB  1  8D B7 09             sta     text_box::height+1
 000DAE  1  20 A5 10             jsr     L10A5
 000DB1  1  A9 00                lda     #0
@@ -1385,14 +1384,14 @@ Current file: stf.s
 001088  1  38           L1088:  sec
 001089  1  AD B4 09             lda     text_box::width
 00108C  1  ED B0 09             sbc     text_box::unk1
-00108F  1  8D 61 09             sta     L0961
+00108F  1  8D 61 09             sta     window_width
 001092  1  AD B5 09             lda     text_box::width+1
 001095  1  ED B1 09             sbc     text_box::unk1+1
-001098  1  8D 62 09             sta     L0962
+001098  1  8D 62 09             sta     window_width+1
 00109B  1  38                   sec
 00109C  1  AD B6 09             lda     text_box::height
 00109F  1  ED B2 09             sbc     text_box::unk2
-0010A2  1  8D 63 09             sta     L0963
+0010A2  1  8D 63 09             sta     window_height
 0010A5  1  AD B6 09     L10A5:  lda     text_box::height
 0010A8  1  8D 65 09             sta     L0965
 0010AB  1  AD B7 09             lda     text_box::height+1
@@ -1511,7 +1510,8 @@ Current file: stf.s
 001175  1  78 11 0C 50  prop_str:       A2D_DEFSTRING "Proportional"
 001179  1  72 6F 70 6F  
 00117D  1  72 74 69 6F  
-001184  1               
+001184  1                       label_width := 50
+001184  1                       title_bar_height := 12
 001184  1               .proc mode_box                  ; bounding box for mode label
 001184  1  00 00        left:   .word   0
 001186  1  00 00        top:    .word   0
@@ -1529,25 +1529,24 @@ Current file: stf.s
 001196  1  0A 00        base:   .word   10              ; vertical text offset (to baseline)
 001198  1               .endproc
 001198  1               
-001198  1               
 001198  1               .proc calc_and_draw_mode
 001198  1  38                   sec
-001199  1  AD AA 09             lda     text_box::top   ; maybe top of window ??
-00119C  1  E9 0C                sbc     #12             ; height of title bar ??
-00119E  1  8D 86 11             sta     mode_box::top   ; label top ??
+001199  1  AD AA 09             lda     text_box::top
+00119C  1  E9 0C                sbc     #title_bar_height
+00119E  1  8D 86 11             sta     mode_box::top
 0011A1  1  18                   clc
 0011A2  1  AD A8 09             lda     text_box::left
-0011A5  1  6D 61 09             adc     L0961
+0011A5  1  6D 61 09             adc     window_width
 0011A8  1  48                   pha
 0011A9  1  AD A9 09             lda     text_box::left+1
-0011AC  1  6D 62 09             adc     L0962
+0011AC  1  6D 62 09             adc     window_width+1
 0011AF  1  AA                   tax
 0011B0  1  38                   sec
 0011B1  1  68                   pla
-0011B2  1  E9 32                sbc     #50
+0011B2  1  E9 32                sbc     #<label_width
 0011B4  1  8D 84 11             sta     mode_box::left
 0011B7  1  8A                   txa
-0011B8  1  E9 00                sbc     #0
+0011B8  1  E9 00                sbc     #>label_width
 0011BA  1  8D 85 11             sta     mode_box::left+1
 0011BD  1                       ;; fall through...
 0011BD  1               .endproc

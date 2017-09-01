@@ -219,10 +219,9 @@ left:   .word   0
 base:   .word   0
 .endproc
 
-L0961:  .byte   $00
-L0962:  .byte   $00
-L0963:  .byte   $00
-L0964:  .byte   $00
+window_width:  .word   0
+window_height: .word   0
+
 L0965:  .byte   $00
 L0966:  .byte   $00,$00
 L0968:  .byte   $00
@@ -294,8 +293,8 @@ id:     .byte   window_id       ; window identifier
 unk:    .byte   2               ; unknown - window flags?
 .endproc
 
-L0996:  .byte   $00
-L0997:  .byte   $10
+        ;; possibly additional window params - size?
+L0996:  .word   $1000           ; ???
 L0998:  .byte   $00,$C1
 L099A:  .byte   $20
 L099B:  .byte   $00,$FF
@@ -390,7 +389,7 @@ L0A40:  clc
         sta     L0996
         lda     $07
         adc     #$00
-        sta     L0997
+        sta     L0996+1
         ldy     #$09
         lda     ($06),y
         tax
@@ -524,16 +523,16 @@ L0B54:  bcs     L0B73
         sta     text_box::width+1
         sec
         lda     text_box::width
-        sbc     L0961
+        sbc     window_width
         sta     text_box::unk1
         lda     text_box::width+1
-        sbc     L0962
+        sbc     window_width+1
         sta     text_box::unk1+1
 L0B73:  lda     L0998
-        ldx     L0961
+        ldx     window_width
         cpx     #$00
         bne     L0B89
-        ldx     L0962
+        ldx     window_width+1
         cpx     #$02
         bne     L0B89
         and     #$FE
@@ -543,10 +542,10 @@ L0B89:  ora     #$01
 L0B8B:  sta     L0998
         sec
         lda     #$00
-        sbc     L0961
+        sbc     window_width
         sta     $06
         lda     #$02
-        sbc     L0962
+        sbc     window_width+1
         sta     $07
         jsr     L10DF
         sta     L0987
@@ -676,7 +675,7 @@ end:    rts
 .endproc
 
 .proc calc_track_scroll_delta
-        lda     L0963           ; ceil(??? / 50)
+        lda     window_height           ; ceil(??? / 50)
         ldx     #0
 loop:   inx
         sec
@@ -718,10 +717,10 @@ loop:   inx
         sta     text_box::unk1+1
         clc
         lda     text_box::unk1
-        adc     L0961
+        adc     window_width
         sta     text_box::width
         lda     text_box::unk1+1
-        adc     L0962
+        adc     window_width+1
         sta     text_box::width+1
         jsr     L0DD1
         jsr     draw_content
@@ -810,11 +809,11 @@ store:  sta     L099B
         clc
         lda     $06
         sta     text_box::unk1
-        adc     L0961
+        adc     window_width
         sta     text_box::width
         lda     $07
         sta     text_box::unk1+1
-        adc     L0962
+        adc     window_width+1
         sta     text_box::width+1
         rts
 .endproc
@@ -838,10 +837,10 @@ skip:   dex
 .proc L0D9B                     ; ?? part of vscroll
         clc
         lda     text_box::unk2
-        adc     L0963
+        adc     window_height
         sta     text_box::height
         lda     text_box::unk2+1
-        adc     L0964
+        adc     window_height+1
         sta     text_box::height+1
         jsr     L10A5
         lda     #0
@@ -1173,14 +1172,14 @@ end:    rts
 L1088:  sec
         lda     text_box::width
         sbc     text_box::unk1
-        sta     L0961
+        sta     window_width
         lda     text_box::width+1
         sbc     text_box::unk1+1
-        sta     L0962
+        sta     window_width+1
         sec
         lda     text_box::height
         sbc     text_box::unk2
-        sta     L0963
+        sta     window_height
 L10A5:  lda     text_box::height
         sta     L0965
         lda     text_box::height+1
@@ -1295,7 +1294,8 @@ ignore: clc                     ; Click ignored
 
 fixed_str:      A2D_DEFSTRING "Fixed        "
 prop_str:       A2D_DEFSTRING "Proportional"
-
+        label_width := 50
+        title_bar_height := 12
 .proc mode_box                  ; bounding box for mode label
 left:   .word   0
 top:    .word   0
@@ -1313,25 +1313,24 @@ left:   .word   0               ; horizontal text offset
 base:   .word   10              ; vertical text offset (to baseline)
 .endproc
 
-
 .proc calc_and_draw_mode
         sec
-        lda     text_box::top   ; maybe top of window ??
-        sbc     #12             ; height of title bar ??
-        sta     mode_box::top   ; label top ??
+        lda     text_box::top
+        sbc     #title_bar_height
+        sta     mode_box::top
         clc
         lda     text_box::left
-        adc     L0961
+        adc     window_width
         pha
         lda     text_box::left+1
-        adc     L0962
+        adc     window_width+1
         tax
         sec
         pla
-        sbc     #50
+        sbc     #<label_width
         sta     mode_box::left
         txa
-        sbc     #0
+        sbc     #>label_width
         sta     mode_box::left+1
         ;; fall through...
 .endproc
