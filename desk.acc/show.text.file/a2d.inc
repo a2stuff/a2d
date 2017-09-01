@@ -46,11 +46,11 @@ A2D_BTN_CLICK   := $43
 A2D_QUERY_CLIENT:= $48
         ;; .word xcoord of query
         ;; .word ycoord of query
-        ;; .byte part (0 = client, 1 = vscroll bar, 2 = hscroll bar)
+        ;; .byte part (0 = client, 1 = vscroll, 2 = hscroll)
         ;; .byte scroll (1 = up/left, 2 = down/right, 3 = above/before, 4 = below/after, 5 = thumb)
 
-A2D_SCROLL_THUMB_DRAG:= $4A
-        ;; .byte type (1 = vertical, 2 = horizontal)
+A2D_DRAG_SCROLL:= $4A
+        ;; .byte type (1 = vscroll, 2 = hscroll)
         ;; .word xcoord of mouse
         ;; .word ycoord of mouse
         ;; .byte position (0...255)
@@ -59,6 +59,29 @@ A2D_SCROLL_THUMB_DRAG:= $4A
 A2D_UPDATE_SCROLL:= $4B
         ;; .byte type (1 = vertical, 2 = horizontal)
         ;; .byte pos (new position 0...250)
+
+;;; Used in A2D_GET_MOUSE
+A2D_ELEM_CLIENT := 2
+A2D_ELEM_TITLE  := 3
+A2D_ELEM_TBD    := 4            ; ???
+A2D_ELEM_CLOSE  := 5
+
+;;; Used in A2D_QUERY_CLIENT, A2D_DRAG_SCROLL, A2D_UPDATE_SCROLL
+A2D_CLIENT      := 0
+A2D_VSCROLL     := 1
+A2D_HSCROLL     := 2
+
+;;; Used in A2D_QUERY_CLIENT
+A2D_SCROLL_PART_UP      := 1
+A2D_SCROLL_PART_LEFT    := 1
+A2D_SCROLL_PART_DOWN    := 2
+A2D_SCROLL_PART_RIGHT   := 2
+A2D_SCROLL_PART_ABOVE   := 3
+A2D_SCROLL_PART_BEFORE  := 3
+A2D_SCROLL_PART_BELOW   := 4
+A2D_SCROLL_PART_AFTER   := 4
+A2D_SCROLL_PART_THUMB   := 5
+
 
 ;;; Macros
 .macro  A2D_CALL    op, addr

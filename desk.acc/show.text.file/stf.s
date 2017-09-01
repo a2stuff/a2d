@@ -145,10 +145,12 @@ params_start:
 ref_num:.byte   0               ; ref_num
 .endproc
 
+default_buffer := $1200
+
 .proc read_params
         .byte   4               ; param_count
 ref_num:.byte   0               ; ref_num
-buffer: .addr   $1200           ; data_buffer
+buffer: .addr   default_buffer  ; data_buffer
         .word   $100            ; request_count
         .word   0               ; trans_count
 .endproc
@@ -432,12 +434,15 @@ input_loop:
         bne     input_loop      ; nope, keep waiting
 
         A2D_CALL A2D_GET_MOUSE, mouse_data
-        lda     mouse_data::win         ; click target??
-        cmp     #window_id              ; is in window??
+        lda     mouse_data::win ; in our window?
+        cmp     #window_id
         bne     input_loop
-        lda     mouse_data::elem        ; which UI element?
-        cmp     #$05                    ; 5 = close btn
+
+        ;; which part of the window?
+        lda     mouse_data::elem
+        cmp     #A2D_ELEM_CLOSE
         beq     on_close_btn_down
+
         ldx     mouse_data::xcoord      ; stash mouse location
         stx     xcoord1
         stx     query_client_params::xcoord
@@ -447,14 +452,15 @@ input_loop:
         ldx     mouse_data::ycoord
         stx     ycoord1
         stx     query_client_params::ycoord
-        cmp     #$03                    ; 3 = title bar
-        beq     :+
-        cmp     #$04                    ; 4 = ???
+
+        cmp     #A2D_ELEM_TITLE
+        beq     title
+        cmp     #A2D_ELEM_TBD           ; ???
         beq     input_loop
         jsr     on_client_click
         jmp     input_loop
 
-:       jsr     on_title_bar_click
+title:  jsr     on_title_bar_click
         jmp     input_loop
 
 .proc on_close_btn_down
@@ -523,35 +529,35 @@ L0B8B:  sta     L0998
 .proc on_client_click
         A2D_CALL A2D_QUERY_CLIENT, query_client_params
         lda     query_client_params::part
-        cmp     #1              ; 1 = vertical scroll bar
+        cmp     #A2D_VSCROLL
         beq     on_vscroll_click
-        cmp     #2              ; 2 = horizontal scroll bar ???
-        bne     end             ; 0 = client area
+        cmp     #A2D_HSCROLL
+        bne     end
         jmp     on_hscroll_click
 end:    rts
 .endproc
 
 .proc on_vscroll_click
-L0BC9:  lda     #1              ; 1 = vertical
+L0BC9:  lda     #A2D_VSCROLL
         sta     thumb_drag_params::type
         sta     update_scroll_params::type
         lda     query_client_params::scroll
-        cmp     #5
+        cmp     #A2D_SCROLL_PART_THUMB
         beq     on_vscroll_thumb_click
-        cmp     #4
+        cmp     #A2D_SCROLL_PART_BELOW
         beq     on_vscroll_below_click
-        cmp     #3
+        cmp     #A2D_SCROLL_PART_ABOVE
         beq     on_vscroll_above_click
-        cmp     #1
+        cmp     #A2D_SCROLL_PART_UP
         beq     on_vscroll_up_click
-        cmp     #2
+        cmp     #A2D_SCROLL_PART_DOWN
         bne     end
         jmp     on_vscroll_down_click
 end:    rts
 .endproc
 
 .proc on_vscroll_thumb_click
-        jsr     start_thumb_drag
+        jsr     do_thumb_drag
         lda     thumb_drag_params::moved
         beq     end
         lda     thumb_drag_params::pos
@@ -651,25 +657,25 @@ loop:   inx
 
 ;;; Unused in STF DA, so most of this is speculation
 .proc on_hscroll_click
-        lda     #2
+        lda     #A2D_HSCROLL
         sta     thumb_drag_params::type
         sta     update_scroll_params::type
         lda     query_client_params::scroll
-        cmp     #5
+        cmp     #A2D_SCROLL_PART_THUMB
         beq     on_hscroll_thumb_click
-        cmp     #4
+        cmp     #A2D_SCROLL_PART_AFTER
         beq     on_hscroll_after_click
-        cmp     #3
+        cmp     #A2D_SCROLL_PART_BEFORE
         beq     on_hscroll_before_click
-        cmp     #1
+        cmp     #A2D_SCROLL_PART_LEFT
         beq     on_hscroll_left_click
-        cmp     #2
+        cmp     #A2D_SCROLL_PART_RIGHT
         beq     on_hscroll_right_click
         rts
 .endproc
 
 .proc on_hscroll_thumb_click
-        jsr     start_thumb_drag
+        jsr     do_thumb_drag
         lda     thumb_drag_params::moved
         beq     end
         lda     thumb_drag_params::pos
@@ -746,14 +752,14 @@ store:  sta     L099B
 .endproc
 
         ;; Used at start of thumb drag
-.proc start_thumb_drag
+.proc do_thumb_drag
         lda     mouse_data::xcoord
         sta     thumb_drag_params::xcoord
         lda     mouse_data::xcoord+1
         sta     thumb_drag_params::xcoord+1
         lda     mouse_data::ycoord
         sta     thumb_drag_params::ycoord
-        A2D_CALL A2D_SCROLL_THUMB_DRAG, thumb_drag_params
+        A2D_CALL A2D_DRAG_SCROLL, thumb_drag_params
         rts
 .endproc
 
@@ -781,21 +787,24 @@ store:  sta     L099B
         rts
 .endproc
 
-L0D7C:  lda     #0
+.proc L0D7C                     ; ?? part of vscroll
+        lda     #0
         sta     L09B2
         sta     L09B3
         ldx     update_scroll_params::pos
-L0D87:  beq     L0D9B
+loop:   beq     L0D9B
         clc
         lda     L09B2
         adc     #50
         sta     L09B2
-        bcc     L0D97
+        bcc     skip
         inc     L09B3
-L0D97:  dex
-        jmp     L0D87
+skip:   dex
+        jmp     loop
+.endproc
 
-L0D9B:  clc
+.proc L0D9B                     ; ?? part of vscroll
+        clc
         lda     L09B2
         adc     L0963
         sta     L09B6
@@ -807,17 +816,17 @@ L0D9B:  clc
         sta     L096A
         sta     L096B
         ldx     update_scroll_params::pos
-L0DBC:  beq     L0DD0
+loop:   beq     end
         clc
         lda     L096A
         adc     #5
         sta     L096A
-        bcc     L0DCC
+        bcc     skip
         inc     L096B
-L0DCC:  dex
-        jmp     L0DBC
-
-L0DD0:  rts
+skip:   dex
+        jmp     loop
+end:    rts
+.endproc
 
 L0DD1:  lda     #2
         sta     update_scroll_params::type
@@ -837,19 +846,21 @@ L0DD1:  lda     #2
         rts
 .endproc
 
-L0DF9:  jsr     UNKNOWN_CALL
+.proc L0DF9                     ; only called from dead code
+        jsr     UNKNOWN_CALL
         .byte   $0C
         .addr   0
         A2D_CALL $04, L09A8
         lda     L0998
         ror     a
-        bcc     L0E0E
+        bcc     skip
         jsr     L0DD1
-L0E0E:  lda     vscroll_pos
+skip:   lda     vscroll_pos
         sta     update_scroll_params::pos
         jsr     update_vscroll
         jsr     draw_content
         jmp     input_loop
+.endproc
 
 L0E1D:  A2D_CALL $08, L0952
         A2D_CALL $11, L09B0
@@ -858,14 +869,14 @@ L0E1D:  A2D_CALL $08, L0952
 
 ;;; Draw content ???
 .proc draw_content
-        lda     #$00
+        lda     #0
         sta     L0949
         jsr     L1129
         jsr     set_file_mark
-        lda     #$00
+        lda     #<default_buffer
         sta     read_params::buffer
         sta     $06
-        lda     #$12
+        lda     #>default_buffer
         sta     read_params::buffer+1
         sta     $07
         lda     #$00
@@ -1068,11 +1079,11 @@ L1000:  A2D_CALL A2D_DRAW_TEXT, text_string
 L100B:  rts
 
 L100C:  lda     text_string::addr+1
-        cmp     #$12
+        cmp     #$12            ; #>default_buffer?
         beq     L102B
         ldy     #$00
 L1015:  lda     $1300,y
-        sta     $1200,y
+        sta     default_buffer,y
         iny
         bne     L1015
         dec     text_string::addr+1
@@ -1084,7 +1095,7 @@ L102B:  lda     #$00
         sta     L0945
         jsr     L103E
         lda     read_params::buffer+1
-        cmp     #$12
+        cmp     #$12            ; #>default_buffer?
         bne     L103D
         inc     read_params::buffer+1
 L103D:  rts
@@ -1098,7 +1109,7 @@ L103E:
         lda     #$20
         ldx     #$00
         sta     RAMWRTOFF
-store:  sta     $1200,x         ; self-modified
+store:  sta     default_buffer,x         ; self-modified
         inx
         bne     store
         sta     RAMWRTON
