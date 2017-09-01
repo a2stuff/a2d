@@ -65,7 +65,14 @@ Current file: stf.s
 000800  2               LCBANK1         := $C08B
 000800  2               
 000800  2               ;;; Routines
-000800  2               AUXMOVE         := $C311
+000800  2               AUXMOVE         := $C311        ; carry set main>aux, carry clear aux>main
+000800  2               
+000800  2               STARTLO         := $3C
+000800  2               STARTHI         := $3D
+000800  2               ENDLO           := $3E
+000800  2               ENDHI           := $3F
+000800  2               DESTINATIONLO   := $42
+000800  2               DESTINATIONHI   := $43
 000800  2               
 000800  1                       .include "a2d.inc"
 000800  2               ;;; ------------------------------
@@ -1225,14 +1232,14 @@ Current file: stf.s
 00105F  1  20 76 08             jsr     read_file
 001062  1  48                   pha
 001063  1  A9 00                lda     #$00
-001065  1  85 3C                sta     $3C
-001067  1  85 42                sta     $42
+001065  1  85 3C                sta     STARTLO
+001067  1  85 42                sta     DESTINATIONLO
 001069  1  A9 FF                lda     #$FF
-00106B  1  85 3E                sta     $3E
+00106B  1  85 3E                sta     ENDLO
 00106D  1  AD F3 08             lda     read_params::db+1
-001070  1  85 43                sta     $43
-001072  1  85 3D                sta     $3D
-001074  1  85 3F                sta     $3F
+001070  1  85 43                sta     DESTINATIONHI
+001072  1  85 3D                sta     STARTHI
+001074  1  85 3F                sta     ENDHI
 001076  1  38                   sec
 001077  1  20 11 C3             jsr     AUXMOVE
 00107A  1  68                   pla
@@ -1311,16 +1318,16 @@ Current file: stf.s
 001109  1  AD 6F 09     L1109:  lda     fixed_mode_flag
 00110C  1  F0 1A                beq     L1128
 00110E  1  A9 00                lda     #$00
-001110  1  85 3C                sta     $3C
+001110  1  85 3C                sta     STARTLO
 001112  1  A9 7E                lda     #$7E
-001114  1  85 3E                sta     $3E
+001114  1  85 3E                sta     ENDLO
 001116  1  A9 11                lda     #$11
-001118  1  85 3D                sta     $3D
-00111A  1  85 3F                sta     $3F
+001118  1  85 3D                sta     STARTHI
+00111A  1  85 3F                sta     ENDHI
 00111C  1  A9 88                lda     #$88
-00111E  1  85 43                sta     $43
+00111E  1  85 43                sta     DESTINATIONHI
 001120  1  A9 03                lda     #$03
-001122  1  85 42                sta     $42
+001122  1  85 42                sta     DESTINATIONLO
 001124  1  38                   sec
 001125  1  20 11 C3             jsr     AUXMOVE
 001128  1  60           L1128:  rts

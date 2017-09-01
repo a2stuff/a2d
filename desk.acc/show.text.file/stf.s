@@ -1060,15 +1060,15 @@ store:  sta     $1200,x         ; self-modified
         jsr     read_file
         pha
         lda     #$00
-        sta     $3C
-        sta     $42
+        sta     STARTLO
+        sta     DESTINATIONLO
         lda     #$FF
-        sta     $3E
+        sta     ENDLO
         lda     read_params::db+1
-        sta     $43
-        sta     $3D
-        sta     $3F
-        sec
+        sta     DESTINATIONHI
+        sta     STARTHI
+        sta     ENDHI
+        sec                     ; main>aux
         jsr     AUXMOVE
         pla
         beq     end
@@ -1146,17 +1146,17 @@ L10FF:  sta     $27
 L1109:  lda     fixed_mode_flag
         beq     L1128
         lda     #$00
-        sta     $3C
+        sta     STARTLO
         lda     #$7E
-        sta     $3E
+        sta     ENDLO
         lda     #$11
-        sta     $3D
-        sta     $3F
+        sta     STARTHI
+        sta     ENDHI
         lda     #$88
-        sta     $43
+        sta     DESTINATIONHI
         lda     #$03
-        sta     $42
-        sec
+        sta     DESTINATIONLO
+        sec                     ; main>aux
         jsr     AUXMOVE
 L1128:  rts
 
