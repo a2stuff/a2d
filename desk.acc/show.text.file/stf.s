@@ -243,18 +243,19 @@ fixed_mode_flag:
 button_state:
         .byte   $00
 
-.proc mouse_data                ; queried by main input loop
+.proc mouse_params                ; queried by main input loop
 xcoord: .word   0
 ycoord: .word   0
 elem:   .byte   0
 win:    .byte   0
 .endproc
 
-        ;; param block used in dead code (resize button handler?)
-L0977:  .byte   $64             ; ??? window id again?
-xcoord1:.word   0               ; ???
-ycoord1:.word   0               ; ???
+.proc resize_drag_params
+id:     .byte   window_id
+xcoord: .word   0
+ycoord: .word   0
         .byte   0               ; ???
+.endproc
 
 .proc close_btn                 ; queried after close clicked to see if aborted/finished
 state:  .byte   0               ; 0 = aborted, 1 = clicked
@@ -269,8 +270,10 @@ scroll: .byte   0               ; 1 = up, 2 = down, 3 = above, 4 = below, 5 = th
 .endproc
 
         ;; param block used in dead code (resize?)
+.proc resize_window_params
 L0986:  .byte   $00
 L0987:  .byte   $00
+.endproc
 
 .proc update_scroll_params      ; called to update scroll bar position
 type:   .byte   $00             ; 1 = vertical, 2 = horizontal ?
@@ -489,24 +492,24 @@ input_loop:
         cmp     #1              ; was clicked?
         bne     input_loop      ; nope, keep waiting
 
-        A2D_CALL A2D_GET_MOUSE, mouse_data
-        lda     mouse_data::win ; in our window?
+        A2D_CALL A2D_GET_MOUSE, mouse_params
+        lda     mouse_params::win ; in our window?
         cmp     #window_id
         bne     input_loop
 
         ;; which part of the window?
-        lda     mouse_data::elem
+        lda     mouse_params::elem
         cmp     #A2D_ELEM_CLOSE
         beq     on_close_btn_down
 
-        ldx     mouse_data::xcoord      ; stash mouse location
-        stx     xcoord1
+        ldx     mouse_params::xcoord      ; stash mouse location
+        stx     resize_drag_params::xcoord
         stx     query_client_params::xcoord
-        ldx     mouse_data::xcoord+1
-        stx     xcoord1+1
+        ldx     mouse_params::xcoord+1
+        stx     resize_drag_params::xcoord+1
         stx     query_client_params::xcoord+1
-        ldx     mouse_data::ycoord
-        stx     ycoord1
+        ldx     mouse_params::ycoord
+        stx     resize_drag_params::ycoord
         stx     query_client_params::ycoord
 
         cmp     #A2D_ELEM_TITLE
@@ -531,9 +534,9 @@ title:  jsr     on_title_bar_click
         rts                     ; exits input loop
 .endproc
 
-;;; How would control get here???? Dead code???
-.proc maybe_dead_code           ; window move routine, maybe?
-        A2D_CALL $45, L0977     ; run resize loop?
+;;; This is dead code (no resize handle!) and may be buggy
+.proc on_resize_click
+        A2D_CALL A2D_DRAG_RESIZE, resize_drag_params
         jsr     L10FD           ; call $4015 on main
         jsr     L1088
 
@@ -576,10 +579,10 @@ L0B8B:  sta     window_params::L0998
         sbc     window_width+1
         sta     $07
         jsr     L10DF
-        sta     L0987
+        sta     resize_window_params::L0987
         lda     #$02
-        sta     L0986
-        A2D_CALL $49, L0986     ; change to clamped size ???
+        sta     resize_window_params::L0986
+        A2D_CALL A2D_RESIZE_WINDOW, resize_window_params ; change to clamped size ???
         jsr     calc_and_draw_mode
         jmp     L0DF9
 .endproc
@@ -640,7 +643,7 @@ loop:   lda     window_params::vscroll_pos
         lda     window_params::vscroll_pos
         sbc     track_scroll_delta
         bcs     store
-        lda     #$00            ; underflow
+        lda     #0              ; underflow
 store:  sta     update_scroll_params::pos
         jsr     update_scroll_pos
         bcc     loop            ; repeat while button down
@@ -812,11 +815,11 @@ store:  sta     window_params::L099B
 
         ;; Used at start of thumb drag
 .proc do_thumb_drag
-        lda     mouse_data::xcoord
+        lda     mouse_params::xcoord
         sta     thumb_drag_params::xcoord
-        lda     mouse_data::xcoord+1
+        lda     mouse_params::xcoord+1
         sta     thumb_drag_params::xcoord+1
-        lda     mouse_data::ycoord
+        lda     mouse_params::ycoord
         sta     thumb_drag_params::ycoord
         A2D_CALL A2D_DRAG_SCROLL, thumb_drag_params
         rts
@@ -1300,10 +1303,10 @@ end:    rts
 ;;; On Title Bar Click - if it's on the Fixed/Proportional label,
 ;;; toggle it and update.
 .proc on_title_bar_click
-        lda     mouse_data::xcoord+1           ; mouse x high byte?
+        lda     mouse_params::xcoord+1           ; mouse x high byte?
         cmp     mode_box_left+1
         bne     :+
-        lda     mouse_data::xcoord
+        lda     mouse_params::xcoord
         cmp     mode_box_left
 :       bcc     ignore
         lda     fixed_mode_flag

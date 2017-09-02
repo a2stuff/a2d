@@ -127,11 +127,16 @@ Current file: stf.s
 000800  2                       ;; .byte ??
 000800  2                       ;; .byte ??
 000800  2               
+000800  2               A2D_DRAG_RESIZE := $45
+000800  2               
 000800  2               A2D_QUERY_CLIENT:= $48
 000800  2                       ;; .word xcoord of query
 000800  2                       ;; .word ycoord of query
 000800  2                       ;; .byte part (0 = client, 1 = vscroll, 2 = hscroll)
 000800  2                       ;; .byte scroll (1 = up/left, 2 = down/right, 3 = above/before, 4 = below/after, 5 = thumb)
+000800  2               
+000800  2               A2D_RESIZE_WINDOW := $49
+000800  2               
 000800  2               
 000800  2               A2D_DRAG_SCROLL:= $4A
 000800  2                       ;; .byte type (1 = vscroll, 2 = hscroll)
@@ -143,6 +148,8 @@ Current file: stf.s
 000800  2               A2D_UPDATE_SCROLL:= $4B
 000800  2                       ;; .byte type (1 = vertical, 2 = horizontal)
 000800  2                       ;; .byte pos (new position 0...250)
+000800  2               
+000800  2               
 000800  2               
 000800  2               ;;; Used in A2D_GET_MOUSE
 000800  2               A2D_ELEM_DESKTOP:= 0
@@ -436,18 +443,19 @@ Current file: stf.s
 000970  1               button_state:
 000970  1  00                   .byte   $00
 000971  1               
-000971  1               .proc mouse_data                ; queried by main input loop
+000971  1               .proc mouse_params                ; queried by main input loop
 000971  1  00 00        xcoord: .word   0
 000973  1  00 00        ycoord: .word   0
 000975  1  00           elem:   .byte   0
 000976  1  00           win:    .byte   0
 000977  1               .endproc
 000977  1               
-000977  1                       ;; param block used in dead code (resize button handler?)
-000977  1  64           L0977:  .byte   $64             ; ??? window id again?
-000978  1  00 00        xcoord1:.word   0               ; ???
-00097A  1  00 00        ycoord1:.word   0               ; ???
+000977  1               .proc resize_drag_params
+000977  1  64           id:     .byte   window_id
+000978  1  00 00        xcoord: .word   0
+00097A  1  00 00        ycoord: .word   0
 00097C  1  00                   .byte   0               ; ???
+00097D  1               .endproc
 00097D  1               
 00097D  1               .proc close_btn                 ; queried after close clicked to see if aborted/finished
 00097D  1  00           state:  .byte   0               ; 0 = aborted, 1 = clicked
@@ -462,8 +470,10 @@ Current file: stf.s
 000986  1               .endproc
 000986  1               
 000986  1                       ;; param block used in dead code (resize?)
+000986  1               .proc resize_window_params
 000986  1  00           L0986:  .byte   $00
 000987  1  00           L0987:  .byte   $00
+000988  1               .endproc
 000988  1               
 000988  1               .proc update_scroll_params      ; called to update scroll bar position
 000988  1  00           type:   .byte   $00             ; 1 = vertical, 2 = horizontal ?
@@ -690,25 +700,25 @@ Current file: stf.s
 000ADA  1  C9 01                cmp     #1              ; was clicked?
 000ADC  1  D0 F3                bne     input_loop      ; nope, keep waiting
 000ADE  1               
-000ADE  1  20 00 40 40          A2D_CALL A2D_GET_MOUSE, mouse_data
+000ADE  1  20 00 40 40          A2D_CALL A2D_GET_MOUSE, mouse_params
 000AE2  1  71 09        
-000AE4  1  AD 76 09             lda     mouse_data::win ; in our window?
+000AE4  1  AD 76 09             lda     mouse_params::win ; in our window?
 000AE7  1  C9 64                cmp     #window_id
 000AE9  1  D0 E6                bne     input_loop
 000AEB  1               
 000AEB  1                       ;; which part of the window?
-000AEB  1  AD 75 09             lda     mouse_data::elem
+000AEB  1  AD 75 09             lda     mouse_params::elem
 000AEE  1  C9 05                cmp     #A2D_ELEM_CLOSE
 000AF0  1  F0 2F                beq     on_close_btn_down
 000AF2  1               
-000AF2  1  AE 71 09             ldx     mouse_data::xcoord      ; stash mouse location
-000AF5  1  8E 78 09             stx     xcoord1
+000AF2  1  AE 71 09             ldx     mouse_params::xcoord      ; stash mouse location
+000AF5  1  8E 78 09             stx     resize_drag_params::xcoord
 000AF8  1  8E 80 09             stx     query_client_params::xcoord
-000AFB  1  AE 72 09             ldx     mouse_data::xcoord+1
-000AFE  1  8E 79 09             stx     xcoord1+1
+000AFB  1  AE 72 09             ldx     mouse_params::xcoord+1
+000AFE  1  8E 79 09             stx     resize_drag_params::xcoord+1
 000B01  1  8E 81 09             stx     query_client_params::xcoord+1
-000B04  1  AE 73 09             ldx     mouse_data::ycoord
-000B07  1  8E 7A 09             stx     ycoord1
+000B04  1  AE 73 09             ldx     mouse_params::ycoord
+000B07  1  8E 7A 09             stx     resize_drag_params::ycoord
 000B0A  1  8E 82 09             stx     query_client_params::ycoord
 000B0D  1               
 000B0D  1  C9 03                cmp     #A2D_ELEM_TITLE
@@ -735,9 +745,9 @@ Current file: stf.s
 000B3B  1  60                   rts                     ; exits input loop
 000B3C  1               .endproc
 000B3C  1               
-000B3C  1               ;;; How would control get here???? Dead code???
-000B3C  1               .proc maybe_dead_code           ; window move routine, maybe?
-000B3C  1  20 00 40 45          A2D_CALL $45, L0977     ; run resize loop?
+000B3C  1               ;;; This is dead code (no resize handle!) and may be buggy
+000B3C  1               .proc on_resize_click
+000B3C  1  20 00 40 45          A2D_CALL A2D_DRAG_RESIZE, resize_drag_params
 000B40  1  77 09        
 000B42  1  20 FD 10             jsr     L10FD           ; call $4015 on main
 000B45  1  20 88 10             jsr     L1088
@@ -781,10 +791,10 @@ Current file: stf.s
 000B98  1  ED 62 09             sbc     window_width+1
 000B9B  1  85 07                sta     $07
 000B9D  1  20 DF 10             jsr     L10DF
-000BA0  1  8D 87 09             sta     L0987
+000BA0  1  8D 87 09             sta     resize_window_params::L0987
 000BA3  1  A9 02                lda     #$02
-000BA5  1  8D 86 09             sta     L0986
-000BA8  1  20 00 40 49          A2D_CALL $49, L0986     ; change to clamped size ???
+000BA5  1  8D 86 09             sta     resize_window_params::L0986
+000BA8  1  20 00 40 49          A2D_CALL A2D_RESIZE_WINDOW, resize_window_params ; change to clamped size ???
 000BAC  1  86 09        
 000BAE  1  20 98 11             jsr     calc_and_draw_mode
 000BB1  1  4C F9 0D             jmp     L0DF9
@@ -847,7 +857,7 @@ Current file: stf.s
 000C1A  1  AD 9D 09             lda     window_params::vscroll_pos
 000C1D  1  ED 6E 09             sbc     track_scroll_delta
 000C20  1  B0 02                bcs     store
-000C22  1  A9 00                lda     #$00            ; underflow
+000C22  1  A9 00                lda     #0              ; underflow
 000C24  1  8D 89 09     store:  sta     update_scroll_params::pos
 000C27  1  20 73 0C             jsr     update_scroll_pos
 000C2A  1  90 E5                bcc     loop            ; repeat while button down
@@ -1019,11 +1029,11 @@ Current file: stf.s
 000D39  1               
 000D39  1                       ;; Used at start of thumb drag
 000D39  1               .proc do_thumb_drag
-000D39  1  AD 71 09             lda     mouse_data::xcoord
+000D39  1  AD 71 09             lda     mouse_params::xcoord
 000D3C  1  8D 8B 09             sta     thumb_drag_params::xcoord
-000D3F  1  AD 72 09             lda     mouse_data::xcoord+1
+000D3F  1  AD 72 09             lda     mouse_params::xcoord+1
 000D42  1  8D 8C 09             sta     thumb_drag_params::xcoord+1
-000D45  1  AD 73 09             lda     mouse_data::ycoord
+000D45  1  AD 73 09             lda     mouse_params::ycoord
 000D48  1  8D 8D 09             sta     thumb_drag_params::ycoord
 000D4B  1  20 00 40 4A          A2D_CALL A2D_DRAG_SCROLL, thumb_drag_params
 000D4F  1  8A 09        
@@ -1517,10 +1527,10 @@ Current file: stf.s
 00113A  1               ;;; On Title Bar Click - if it's on the Fixed/Proportional label,
 00113A  1               ;;; toggle it and update.
 00113A  1               .proc on_title_bar_click
-00113A  1  AD 72 09             lda     mouse_data::xcoord+1           ; mouse x high byte?
+00113A  1  AD 72 09             lda     mouse_params::xcoord+1           ; mouse x high byte?
 00113D  1  CD 85 11             cmp     mode_box_left+1
 001140  1  D0 06                bne     :+
-001142  1  AD 71 09             lda     mouse_data::xcoord
+001142  1  AD 71 09             lda     mouse_params::xcoord
 001145  1  CD 84 11             cmp     mode_box_left
 001148  1  90 19        :       bcc     ignore
 00114A  1  AD 6F 09             lda     fixed_mode_flag
