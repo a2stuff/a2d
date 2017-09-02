@@ -350,12 +350,11 @@ L09DE:  sta     ALTZPON
         lda     $DF21           ; ???
         beq     abort           ; some file properties?
         lda     path_index      ; prefix index in table
-        bne     continue
+        bne     :+
 abort:  rts
-continue:
 
         ;; Copy path (prefix) into pathname buffer.
-        src := $06
+:       src := $06
         dst := $08
 
         asl     a               ; (since address table is 2 bytes wide)
@@ -541,10 +540,10 @@ title:  jsr     on_title_bar_click
         max_width := 512
         lda     #>max_width
         cmp     text_box::width+1
-        bne     skip
+        bne     :+
         lda     #<max_width
         cmp     text_box::width
-skip:   bcs     wider
+:       bcs     wider
 
         lda     #<max_width
         sta     text_box::width
@@ -857,9 +856,9 @@ loop:   beq     L0D9B
         lda     text_box::unk2
         adc     #50
         sta     text_box::unk2
-        bcc     skip
+        bcc     :+
         inc     text_box::unk2+1
-skip:   dex
+:       dex
         jmp     loop
 .endproc
 
@@ -881,9 +880,9 @@ loop:   beq     end
         lda     L096A
         adc     #5
         sta     L096A
-        bcc     skip
+        bcc     :+
         inc     L096B
-skip:   dex
+:       dex
         jmp     loop
 end:    rts
 .endproc
@@ -913,9 +912,9 @@ L0DD1:  lda     #2
         A2D_CALL $04, text_box
         lda     window_params::L0998
         ror     a
-        bcc     skip
+        bcc     :+
         jsr     L0DD1
-skip:   lda     window_params::vscroll_pos
+:       lda     window_params::vscroll_pos
         sta     update_scroll_params::pos
         jsr     update_vscroll
         jsr     draw_content

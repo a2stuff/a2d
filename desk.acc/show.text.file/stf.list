@@ -547,12 +547,11 @@ Current file: stf.s
 0009EC  1  AD 21 DF             lda     $DF21           ; ???
 0009EF  1  F0 05                beq     abort           ; some file properties?
 0009F1  1  AD 20 DF             lda     path_index      ; prefix index in table
-0009F4  1  D0 01                bne     continue
+0009F4  1  D0 01                bne     :+
 0009F6  1  60           abort:  rts
-0009F7  1               continue:
 0009F7  1               
 0009F7  1                       ;; Copy path (prefix) into pathname buffer.
-0009F7  1                       src := $06
+0009F7  1               :       src := $06
 0009F7  1                       dst := $08
 0009F7  1               
 0009F7  1  0A                   asl     a               ; (since address table is 2 bytes wide)
@@ -746,10 +745,10 @@ Current file: stf.s
 000B48  1                       max_width := 512
 000B48  1  A9 02                lda     #>max_width
 000B4A  1  CD B5 09             cmp     text_box::width+1
-000B4D  1  D0 05                bne     skip
+000B4D  1  D0 05                bne     :+
 000B4F  1  A9 00                lda     #<max_width
 000B51  1  CD B4 09             cmp     text_box::width
-000B54  1  B0 1D        skip:   bcs     wider
+000B54  1  B0 1D        :       bcs     wider
 000B56  1               
 000B56  1  A9 00                lda     #<max_width
 000B58  1  8D B4 09             sta     text_box::width
@@ -1066,9 +1065,9 @@ Current file: stf.s
 000D8A  1  AD B2 09             lda     text_box::unk2
 000D8D  1  69 32                adc     #50
 000D8F  1  8D B2 09             sta     text_box::unk2
-000D92  1  90 03                bcc     skip
+000D92  1  90 03                bcc     :+
 000D94  1  EE B3 09             inc     text_box::unk2+1
-000D97  1  CA           skip:   dex
+000D97  1  CA           :       dex
 000D98  1  4C 87 0D             jmp     loop
 000D9B  1               .endproc
 000D9B  1               
@@ -1090,9 +1089,9 @@ Current file: stf.s
 000DBF  1  AD 6A 09             lda     L096A
 000DC2  1  69 05                adc     #5
 000DC4  1  8D 6A 09             sta     L096A
-000DC7  1  90 03                bcc     skip
+000DC7  1  90 03                bcc     :+
 000DC9  1  EE 6B 09             inc     L096B
-000DCC  1  CA           skip:   dex
+000DCC  1  CA           :       dex
 000DCD  1  4C BC 0D             jmp     loop
 000DD0  1  60           end:    rts
 000DD1  1               .endproc
@@ -1125,9 +1124,9 @@ Current file: stf.s
 000E03  1  A8 09        
 000E05  1  AD 98 09             lda     window_params::L0998
 000E08  1  6A                   ror     a
-000E09  1  90 03                bcc     skip
+000E09  1  90 03                bcc     :+
 000E0B  1  20 D1 0D             jsr     L0DD1
-000E0E  1  AD 9D 09     skip:   lda     window_params::vscroll_pos
+000E0E  1  AD 9D 09     :       lda     window_params::vscroll_pos
 000E11  1  8D 89 09             sta     update_scroll_params::pos
 000E14  1  20 ED 0D             jsr     update_vscroll
 000E17  1  20 30 0E             jsr     draw_content
