@@ -367,7 +367,7 @@ continue:
         sta     dst
         lda     #>(pathname::data)
         sta     dst+1
-        jsr     copy_pathname
+        jsr     copy_pathname   ; copy x bytes (src) to (dst)
 
         lda     #'/'
         ldy     #0
@@ -396,7 +396,7 @@ continue:
         adc     #$00
         sta     window_params::title+1
         ldy     #$09
-        lda     ($06),y
+        lda     (src),y
         tax
         dex
         dex
@@ -406,7 +406,7 @@ continue:
         sta     src
         bcc     L0A61
         inc     src+1
-L0A61:  jsr     copy_pathname
+L0A61:  jsr     copy_pathname   ; copy x bytes (src) to (dst)
         lda     #$1E
         sta     $27
         lda     #$40
