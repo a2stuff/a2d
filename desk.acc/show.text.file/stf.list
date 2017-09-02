@@ -185,6 +185,7 @@ Current file: stf.s
 000800  2               
 000800  1               
 000800  1               zp_code_stash   := $0020        ; Scratch space used for "call 1000 main" trampoline
+000800  1               zp_code_mod     := $0027        ; self-modified address in stash
 000800  1               
 000800  1  4C 04 08     start:  jmp     copy2aux
 000803  1               
@@ -540,8 +541,6 @@ Current file: stf.s
 0009E7  1                       path_index := $DF20
 0009E7  1                       path_table := $DFB3           ; prefix address table
 0009E7  1               
-0009E7  1               
-0009E7  1               
 0009E7  1  A9 00                lda     #0
 0009E9  1  8D 04 09             sta     pathname::length
 0009EC  1  AD 21 DF             lda     $DF21           ; ???
@@ -551,7 +550,7 @@ Current file: stf.s
 0009F6  1  60           abort:  rts
 0009F7  1               continue:
 0009F7  1               
-0009F7  1               
+0009F7  1                       ;; Copy path (prefix) into pathname buffer.
 0009F7  1                       src := $06
 0009F7  1                       dst := $08
 0009F7  1               
@@ -573,7 +572,8 @@ Current file: stf.s
 000A14  1  85 09                sta     dst+1
 000A16  1  20 72 0A             jsr     copy_pathname   ; copy x bytes (src) to (dst)
 000A19  1               
-000A19  1  A9 2F                lda     #'/'            ; append separator to path
+000A19  1                       ;; Append separator.
+000A19  1  A9 2F                lda     #'/'
 000A1B  1  A0 00                ldy     #0
 000A1D  1  91 08                sta     (dst),y
 000A1F  1  EE 04 09             inc     pathname::length
@@ -581,45 +581,53 @@ Current file: stf.s
 000A24  1  D0 02                bne     :+
 000A26  1  E6 09                inc     dst+1
 000A28  1               
-000A28  1                       filename_index := $DF22
-000A28  1                       filename_table := $DD9F
+000A28  1                       file_index := $DF22
+000A28  1                       file_table := $DD9F
 000A28  1               
-000A28  1  AD 22 DF     :       lda     filename_index  ; file index in table
+000A28  1                       ;; Check file properties.
+000A28  1  AD 22 DF     :       lda     file_index      ; file index in table
 000A2B  1  0A                   asl     a               ; (since table is 2 bytes wide)
 000A2C  1  AA                   tax
-000A2D  1  BD 9F DD             lda     filename_table,x
+000A2D  1  BD 9F DD             lda     file_table,x
 000A30  1  85 06                sta     src
-000A32  1  BD A0 DD             lda     filename_table+1,x
+000A32  1  BD A0 DD             lda     file_table+1,x
 000A35  1  85 07                sta     src+1
-000A37  1  A0 02                ldy     #$02
+000A37  1               
+000A37  1  A0 02                ldy     #2              ; 2nd byte in entry ???
 000A39  1  B1 06                lda     (src),y
-000A3B  1  29 70                and     #$70
+000A3B  1  29 70                and     #$70            ; check that one of bits 4,5,6 is set ???
 000A3D  1  D0 01                bne     :+
 000A3F  1  60                   rts                     ; abort ???
+000A40  1               
+000A40  1                       ;; Set window title.
 000A40  1  18           :       clc
-000A41  1  A5 06                lda     src
-000A43  1  69 09                adc     #$09
+000A41  1  A5 06                lda     src             ; name is 11 bytes into entry (2 + 9)
+000A43  1  69 09                adc     #9
 000A45  1  8D 96 09             sta     window_params::title
 000A48  1  A5 07                lda     src+1
-000A4A  1  69 00                adc     #$00
+000A4A  1  69 00                adc     #0
 000A4C  1  8D 97 09             sta     window_params::title+1
-000A4F  1  A0 09                ldy     #$09
+000A4F  1               
+000A4F  1  A0 09                ldy     #9
 000A51  1  B1 06                lda     (src),y
 000A53  1  AA                   tax
 000A54  1  CA                   dex
 000A55  1  CA                   dex
 000A56  1  18                   clc
 000A57  1  A5 06                lda     src
-000A59  1  69 0B                adc     #$0B
+000A59  1  69 0B                adc     #11             ; name is 11 bytes into entry
 000A5B  1  85 06                sta     src
-000A5D  1  90 02                bcc     L0A61
+000A5D  1  90 02                bcc     :+
 000A5F  1  E6 07                inc     src+1
-000A61  1  20 72 0A     L0A61:  jsr     copy_pathname   ; copy x bytes (src) to (dst)
-000A64  1  A9 1E                lda     #$1E
-000A66  1  85 27                sta     $27
-000A68  1  A9 40                lda     #$40
-000A6A  1  85 28                sta     $28
+000A61  1  20 72 0A     :       jsr     copy_pathname   ; copy x bytes (src) to (dst)
+000A64  1               
+000A64  1                       addr := $401E
+000A64  1  A9 1E                lda     #<addr
+000A66  1  85 27                sta     zp_code_mod
+000A68  1  A9 40                lda     #>addr
+000A6A  1  85 28                sta     zp_code_mod+1
 000A6C  1  20 20 00             jsr     zp_code_stash
+000A6F  1               
 000A6F  1  4C 8A 0A             jmp     open_file_and_init_window
 000A72  1               
 000A72  1               .proc copy_pathname             ; copy x bytes from src to dst

@@ -6,6 +6,7 @@
         .include "a2d.inc"
 
 zp_code_stash   := $0020        ; Scratch space used for "call 1000 main" trampoline
+zp_code_mod     := $0027        ; self-modified address in stash
 
 start:  jmp     copy2aux
 
@@ -343,8 +344,6 @@ L09DE:  sta     ALTZPON
         path_index := $DF20
         path_table := $DFB3           ; prefix address table
 
-
-
         lda     #0
         sta     pathname::length
         lda     $DF21           ; ???
@@ -354,7 +353,7 @@ L09DE:  sta     ALTZPON
 abort:  rts
 continue:
 
-
+        ;; Copy path (prefix) into pathname buffer.
         src := $06
         dst := $08
 
@@ -376,7 +375,8 @@ continue:
         sta     dst+1
         jsr     copy_pathname   ; copy x bytes (src) to (dst)
 
-        lda     #'/'            ; append separator to path
+        ;; Append separator.
+        lda     #'/'
         ldy     #0
         sta     (dst),y
         inc     pathname::length
@@ -384,45 +384,53 @@ continue:
         bne     :+
         inc     dst+1
 
-        filename_index := $DF22
-        filename_table := $DD9F
+        file_index := $DF22
+        file_table := $DD9F
 
-:       lda     filename_index  ; file index in table
+        ;; Check file properties.
+:       lda     file_index      ; file index in table
         asl     a               ; (since table is 2 bytes wide)
         tax
-        lda     filename_table,x
+        lda     file_table,x
         sta     src
-        lda     filename_table+1,x
+        lda     file_table+1,x
         sta     src+1
-        ldy     #$02
+
+        ldy     #2              ; 2nd byte in entry ???
         lda     (src),y
-        and     #$70
+        and     #$70            ; check that one of bits 4,5,6 is set ???
         bne     :+
         rts                     ; abort ???
+
+        ;; Set window title.
 :       clc
-        lda     src
-        adc     #$09
+        lda     src             ; name is 11 bytes into entry (2 + 9)
+        adc     #9
         sta     window_params::title
         lda     src+1
-        adc     #$00
+        adc     #0
         sta     window_params::title+1
-        ldy     #$09
+
+        ldy     #9
         lda     (src),y
         tax
         dex
         dex
         clc
         lda     src
-        adc     #$0B
+        adc     #11             ; name is 11 bytes into entry
         sta     src
-        bcc     L0A61
+        bcc     :+
         inc     src+1
-L0A61:  jsr     copy_pathname   ; copy x bytes (src) to (dst)
-        lda     #$1E
-        sta     $27
-        lda     #$40
-        sta     $28
+:       jsr     copy_pathname   ; copy x bytes (src) to (dst)
+
+        addr := $401E
+        lda     #<addr
+        sta     zp_code_mod
+        lda     #>addr
+        sta     zp_code_mod+1
         jsr     zp_code_stash
+
         jmp     open_file_and_init_window
 
 .proc copy_pathname             ; copy x bytes from src to dst
