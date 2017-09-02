@@ -264,13 +264,13 @@ ycoord: .word   0
 
 .proc close_btn                 ; queried after close clicked to see if aborted/finished
 state:  .byte   0               ; 0 = aborted, 1 = clicked
-        .byte   0,0
+        .byte   0,0             ; ???
 .endproc
 
 .proc query_client_params       ; queried after a client click to identify target
 xcoord: .word   0
 ycoord: .word   0
-part:   .byte   0               ; 0 = client, 1 = scroll bar, 2 = ?????
+part:   .byte   0               ; 0 = client, 1 = vscroll, 2 = hscroll
 scroll: .byte   0               ; 1 = up, 2 = down, 3 = above, 4 = below, 5 = thumb
 .endproc
 

@@ -505,13 +505,13 @@ Current file: stf.s
 00097D  1               
 00097D  1               .proc close_btn                 ; queried after close clicked to see if aborted/finished
 00097D  1  00           state:  .byte   0               ; 0 = aborted, 1 = clicked
-00097E  1  00 00                .byte   0,0
+00097E  1  00 00                .byte   0,0             ; ???
 000980  1               .endproc
 000980  1               
 000980  1               .proc query_client_params       ; queried after a client click to identify target
 000980  1  00 00        xcoord: .word   0
 000982  1  00 00        ycoord: .word   0
-000984  1  00           part:   .byte   0               ; 0 = client, 1 = scroll bar, 2 = ?????
+000984  1  00           part:   .byte   0               ; 0 = client, 1 = vscroll, 2 = hscroll
 000985  1  00           scroll: .byte   0               ; 1 = up, 2 = down, 3 = above, 4 = below, 5 = thumb
 000986  1               .endproc
 000986  1               
