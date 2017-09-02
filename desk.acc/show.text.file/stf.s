@@ -241,12 +241,12 @@ track_scroll_delta:
         .byte   $00
 
 fixed_mode_flag:
-        .byte   $00   ; 0 = proportional, otherwise = fixed
+        .byte   $00             ; 0 = proportional, otherwise = fixed
 
 button_state:
         .byte   $00
 
-.proc mouse_params                ; queried by main input loop
+.proc mouse_params              ; queried by main input loop
 xcoord: .word   0
 ycoord: .word   0
 elem:   .byte   0
@@ -274,13 +274,13 @@ scroll: .byte   0               ; 1 = up, 2 = down, 3 = above, 4 = below, 5 = th
 
         ;; param block used in dead code (resize?)
 .proc resize_window_params
-L0986:  .byte   $00
-L0987:  .byte   $00
+L0986:  .byte   0
+L0987:  .byte   0
 .endproc
 
 .proc update_scroll_params      ; called to update scroll bar position
-type:   .byte   $00             ; 1 = vertical, 2 = horizontal ?
-pos:    .byte   $00             ; new position (0...250)
+type:   .byte   0               ; 1 = vertical, 2 = horizontal ?
+pos:    .byte   0               ; new position (0...250)
 .endproc
 
 ;;; Used when dragging vscroll thumb
@@ -310,7 +310,7 @@ L099B:  .byte   $00,$FF         ; more hscroll?
 vscroll_pos:
         .byte   0
 
-        ;; unreferenced
+        ;; unreferenced ?
         .byte   $00,$00,$C8,$00,$33,$00,$00 ; ???
         .byte   $02,$96,$00                 ; ???
 .endproc
@@ -344,7 +344,7 @@ height: .word   $96
 .endproc
 
 .proc init
-L09DE:  sta     ALTZPON
+        sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
 
@@ -430,7 +430,7 @@ abort:  rts
         inc     src+1
 :       jsr     copy_pathname   ; copy x bytes (src) to (dst)
 
-        addr := $401E
+        addr := $401E           ; ???
         lda     #<addr
         sta     call_main_addr
         lda     #>addr
@@ -532,9 +532,11 @@ title:  jsr     on_title_bar_click
         beq     input_loop      ; nope
         jsr     close_file
         A2D_CALL A2D_DESTROY_WINDOW, window_params
+
         jsr     UNKNOWN_CALL    ; hides the cursor?
         .byte   $0C
         .addr   0
+
         rts                     ; exits input loop
 .endproc
 
@@ -588,7 +590,7 @@ L0B8B:  sta     window_params::L0998
         sta     resize_window_params::L0986
         A2D_CALL A2D_RESIZE_WINDOW, resize_window_params ; change to clamped size ???
         jsr     calc_and_draw_mode
-        jmp     L0DF9
+        jmp     finish_resize
 .endproc
 
 ;;; Non-title (client) area clicked
@@ -604,7 +606,7 @@ end:    rts
 .endproc
 
 .proc on_vscroll_click
-L0BC9:  lda     #A2D_VSCROLL
+        lda     #A2D_VSCROLL
         sta     thumb_drag_params::type
         sta     update_scroll_params::type
         lda     query_client_params::scroll
@@ -758,7 +760,7 @@ loop:   inx
         lda     text_box::unk1+1
         adc     window_width+1
         sta     text_box::width+1
-        jsr     L0DD1
+        jsr     update_hscroll
         jsr     draw_content
 end:    rts
 .endproc
@@ -813,7 +815,7 @@ overflow:
         lda     #0
 store:  sta     window_params::L099B
         jsr     L0D5E
-        jsr     L0DD1
+        jsr     update_hscroll
         jsr     draw_content
         jsr     was_button_released
         bne     loop
@@ -897,7 +899,8 @@ loop:   beq     end
 end:    rts
 .endproc
 
-L0DD1:  lda     #2
+.proc update_hscroll
+        lda     #2
         sta     update_scroll_params::type
         lda     text_box::unk1
         sta     $06
@@ -907,6 +910,7 @@ L0DD1:  lda     #2
         sta     update_scroll_params::pos
         A2D_CALL A2D_UPDATE_SCROLL, update_scroll_params
         rts
+.endproc
 
 .proc update_vscroll            ; update_scroll_params::pos set by caller
         lda     #1
@@ -915,7 +919,7 @@ L0DD1:  lda     #2
         rts
 .endproc
 
-.proc L0DF9                     ; only called from dead code
+.proc finish_resize             ; only called from dead code
         jsr     UNKNOWN_CALL
         .byte   $0C
         .addr   0
@@ -923,7 +927,7 @@ L0DD1:  lda     #2
         lda     window_params::L0998
         ror     a
         bcc     :+
-        jsr     L0DD1
+        jsr     update_hscroll
 :       lda     window_params::vscroll_pos
         sta     update_scroll_params::pos
         jsr     update_vscroll

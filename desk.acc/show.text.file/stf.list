@@ -441,12 +441,12 @@ Current file: stf.s
 00096E  1  00                   .byte   $00
 00096F  1               
 00096F  1               fixed_mode_flag:
-00096F  1  00                   .byte   $00   ; 0 = proportional, otherwise = fixed
+00096F  1  00                   .byte   $00             ; 0 = proportional, otherwise = fixed
 000970  1               
 000970  1               button_state:
 000970  1  00                   .byte   $00
 000971  1               
-000971  1               .proc mouse_params                ; queried by main input loop
+000971  1               .proc mouse_params              ; queried by main input loop
 000971  1  00 00        xcoord: .word   0
 000973  1  00 00        ycoord: .word   0
 000975  1  00           elem:   .byte   0
@@ -474,13 +474,13 @@ Current file: stf.s
 000986  1               
 000986  1                       ;; param block used in dead code (resize?)
 000986  1               .proc resize_window_params
-000986  1  00           L0986:  .byte   $00
-000987  1  00           L0987:  .byte   $00
+000986  1  00           L0986:  .byte   0
+000987  1  00           L0987:  .byte   0
 000988  1               .endproc
 000988  1               
 000988  1               .proc update_scroll_params      ; called to update scroll bar position
-000988  1  00           type:   .byte   $00             ; 1 = vertical, 2 = horizontal ?
-000989  1  00           pos:    .byte   $00             ; new position (0...250)
+000988  1  00           type:   .byte   0               ; 1 = vertical, 2 = horizontal ?
+000989  1  00           pos:    .byte   0               ; new position (0...250)
 00098A  1               .endproc
 00098A  1               
 00098A  1               ;;; Used when dragging vscroll thumb
@@ -510,7 +510,7 @@ Current file: stf.s
 00099D  1               vscroll_pos:
 00099D  1  00                   .byte   0
 00099E  1               
-00099E  1                       ;; unreferenced
+00099E  1                       ;; unreferenced ?
 00099E  1  00 00 C8 00          .byte   $00,$00,$C8,$00,$33,$00,$00 ; ???
 0009A2  1  33 00 00     
 0009A5  1  02 96 00             .byte   $02,$96,$00                 ; ???
@@ -548,7 +548,7 @@ Current file: stf.s
 0009DE  1               .endproc
 0009DE  1               
 0009DE  1               .proc init
-0009DE  1  8D 09 C0     L09DE:  sta     ALTZPON
+0009DE  1  8D 09 C0             sta     ALTZPON
 0009E1  1  AD 8B C0             lda     LCBANK1
 0009E4  1  AD 8B C0             lda     LCBANK1
 0009E7  1               
@@ -634,7 +634,7 @@ Current file: stf.s
 000A5F  1  E6 07                inc     src+1
 000A61  1  20 72 0A     :       jsr     copy_pathname   ; copy x bytes (src) to (dst)
 000A64  1               
-000A64  1                       addr := $401E
+000A64  1                       addr := $401E           ; ???
 000A64  1  A9 1E                lda     #<addr
 000A66  1  85 27                sta     call_main_addr
 000A68  1  A9 40                lda     #>addr
@@ -801,7 +801,7 @@ Current file: stf.s
 000BA8  1  20 00 40 49          A2D_CALL A2D_RESIZE_WINDOW, resize_window_params ; change to clamped size ???
 000BAC  1  86 09        
 000BAE  1  20 98 11             jsr     calc_and_draw_mode
-000BB1  1  4C F9 0D             jmp     L0DF9
+000BB1  1  4C F9 0D             jmp     finish_resize
 000BB4  1               .endproc
 000BB4  1               
 000BB4  1               ;;; Non-title (client) area clicked
@@ -818,7 +818,7 @@ Current file: stf.s
 000BC9  1               .endproc
 000BC9  1               
 000BC9  1               .proc on_vscroll_click
-000BC9  1  A9 01        L0BC9:  lda     #A2D_VSCROLL
+000BC9  1  A9 01                lda     #A2D_VSCROLL
 000BCB  1  8D 8A 09             sta     thumb_drag_params::type
 000BCE  1  8D 88 09             sta     update_scroll_params::type
 000BD1  1  AD 85 09             lda     query_client_params::scroll
@@ -972,7 +972,7 @@ Current file: stf.s
 000CD7  1  AD B1 09             lda     text_box::unk1+1
 000CDA  1  6D 62 09             adc     window_width+1
 000CDD  1  8D B5 09             sta     text_box::width+1
-000CE0  1  20 D1 0D             jsr     L0DD1
+000CE0  1  20 D1 0D             jsr     update_hscroll
 000CE3  1  20 30 0E             jsr     draw_content
 000CE6  1  60           end:    rts
 000CE7  1               .endproc
@@ -1027,7 +1027,7 @@ Current file: stf.s
 000D25  1  A9 00                lda     #0
 000D27  1  8D 9B 09     store:  sta     window_params::L099B
 000D2A  1  20 5E 0D             jsr     L0D5E
-000D2D  1  20 D1 0D             jsr     L0DD1
+000D2D  1  20 D1 0D             jsr     update_hscroll
 000D30  1  20 30 0E             jsr     draw_content
 000D33  1  20 52 0D             jsr     was_button_released
 000D36  1  D0 D0                bne     loop
@@ -1113,7 +1113,8 @@ Current file: stf.s
 000DD0  1  60           end:    rts
 000DD1  1               .endproc
 000DD1  1               
-000DD1  1  A9 02        L0DD1:  lda     #2
+000DD1  1               .proc update_hscroll
+000DD1  1  A9 02                lda     #2
 000DD3  1  8D 88 09             sta     update_scroll_params::type
 000DD6  1  AD B0 09             lda     text_box::unk1
 000DD9  1  85 06                sta     $06
@@ -1124,6 +1125,7 @@ Current file: stf.s
 000DE6  1  20 00 40 4B          A2D_CALL A2D_UPDATE_SCROLL, update_scroll_params
 000DEA  1  88 09        
 000DEC  1  60                   rts
+000DED  1               .endproc
 000DED  1               
 000DED  1               .proc update_vscroll            ; update_scroll_params::pos set by caller
 000DED  1  A9 01                lda     #1
@@ -1133,7 +1135,7 @@ Current file: stf.s
 000DF8  1  60                   rts
 000DF9  1               .endproc
 000DF9  1               
-000DF9  1               .proc L0DF9                     ; only called from dead code
+000DF9  1               .proc finish_resize             ; only called from dead code
 000DF9  1  20 00 8E             jsr     UNKNOWN_CALL
 000DFC  1  0C                   .byte   $0C
 000DFD  1  00 00                .addr   0
@@ -1142,7 +1144,7 @@ Current file: stf.s
 000E05  1  AD 98 09             lda     window_params::L0998
 000E08  1  6A                   ror     a
 000E09  1  90 03                bcc     :+
-000E0B  1  20 D1 0D             jsr     L0DD1
+000E0B  1  20 D1 0D             jsr     update_hscroll
 000E0E  1  AD 9D 09     :       lda     window_params::vscroll_pos
 000E11  1  8D 89 09             sta     update_scroll_params::pos
 000E14  1  20 ED 0D             jsr     update_vscroll
