@@ -205,6 +205,8 @@ L0946:  .byte   $00
 L0947:  .byte   $00
 L0948:  .byte   $00
 L0949:  .byte   $00
+
+        ;; params of a $08 call
 L094A:  .byte   $00,$00,$00,$00
 
 params_end:
@@ -212,6 +214,7 @@ params_end:
 
         .byte   $00,$00,$00,$00
 
+        ;; start of a $08 call
 L0952:  .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
 L095A:  .byte   $00
 L095B:  .byte   $FA
@@ -483,7 +486,8 @@ loop:   lda     $8802,x
         jsr     L1088
         jsr     calc_and_draw_mode
         jsr     draw_content
-        A2D_CALL $2B, 0
+        A2D_CALL $2B, 0         ; ???
+        ;; fall through
 .endproc
 
 input_loop:
@@ -736,6 +740,7 @@ loop:   inx
         rts
 .endproc
 
+;;; Unused in STF DA, so most of this is speculation
 .proc on_hscroll_thumb_click
         jsr     do_thumb_drag
         lda     thumb_drag_params::moved
@@ -758,30 +763,35 @@ loop:   inx
 end:    rts
 .endproc
 
+;;; Unused in STF DA, so most of this is speculation
 .proc on_hscroll_after_click
         ldx     #2
         lda     window_params::L099A
         jmp     hscroll_common
 .endproc
 
+;;; Unused in STF DA, so most of this is speculation
 .proc on_hscroll_before_click
         ldx     #254
         lda     #0
         jmp     hscroll_common
 .endproc
 
+;;; Unused in STF DA, so most of this is speculation
 .proc on_hscroll_right_click
         ldx     #1
         lda     window_params::L099A
         jmp     hscroll_common
 .endproc
 
+;;; Unused in STF DA, so most of this is speculation
 .proc on_hscroll_left_click
         ldx     #255
         lda     #0
         ;; fall through
 .endproc
 
+;;; Unused in STF DA, so most of this is speculation
 .proc hscroll_common
         sta     compare+1
         stx     delta+1
@@ -789,7 +799,6 @@ loop:   lda     window_params::L099B
 compare:cmp     #$0A            ; self-modified
         bne     continue
         rts
-
 continue:
         clc
         lda     window_params::L099B
@@ -800,10 +809,8 @@ delta:  adc     #1              ; self-modified
         bcc     store
         lda     window_params::L099A
         jmp     store
-
 overflow:
         lda     #0
-
 store:  sta     window_params::L099B
         jsr     L0D5E
         jsr     L0DD1
@@ -925,7 +932,7 @@ L0DD1:  lda     #2
 .endproc
 
 L0E1D:  A2D_CALL $08, L0952
-        A2D_CALL $11, text_box::unk1
+        A2D_CALL $11, text_box::unk1 ; ?? params are in middle of block?
         A2D_CALL $08, L094A
         rts
 
@@ -962,10 +969,10 @@ L0E68:  lda     L096D
         inc     L0948
 L0E7E:  A2D_CALL A2D_SET_TEXT_POS, line_pos
         sec
-        lda     #$FA
+        lda     #250
         sbc     line_pos::left
         sta     L095B
-        lda     #$01
+        lda     #1
         sbc     line_pos::left+1
         sta     L095C
         jsr     L0EF3
@@ -1001,13 +1008,13 @@ L0ED7:  jsr     L1109
 .endproc
 
 .proc L0EDB                     ; ???
-        lda     #$FA
+        lda     #250
         sta     L095B
-        lda     #$01
+        lda     #1
         sta     L095C
-        lda     #$03
+        lda     #3
         sta     line_pos::left
-        lda     #$00
+        lda     #0
         sta     line_pos::left+1
         sta     L095A
         rts
@@ -1040,7 +1047,7 @@ L0F22:  ldy     text_string::len
         inc     L0945
         cmp     #$0D            ; return character
         beq     L0F86
-        cmp     #$20            ; space character
+        cmp     #' '            ; space character
         bne     L0F41
         sty     L0F9B
         pha
@@ -1067,7 +1074,7 @@ L0F66:  bcc     L0F6E
         inc     text_string::len
         jmp     L0F10
 
-L0F6E:  lda     #$00
+L0F6E:  lda     #0
         sta     L095A
         lda     L0F9B
         cmp     #$FF
@@ -1079,9 +1086,9 @@ L0F83:  inc     text_string::len
 L0F86:  jsr     L0FF6
         ldy     text_string::len
         lda     ($06),y
-        cmp     #$09
+        cmp     #$09            ; tab character?
         beq     L0F96
-        cmp     #$0D
+        cmp     #$0D            ; return character
         bne     L0F99
 L0F96:  inc     text_string::len
 L0F99:  clc
@@ -1143,17 +1150,20 @@ L100B:  rts
 L100C:  lda     text_string::addr+1
         cmp     #$12            ; #>default_buffer?
         beq     L102B
-        ldy     #$00
-L1015:  lda     $1300,y
+
+        ;; copy a page of characters from $1300 to the buffer
+        ldy     #0
+loop:   lda     $1300,y
         sta     default_buffer,y
         iny
-        bne     L1015
+        bne     loop
+
         dec     text_string::addr+1
         lda     text_string::addr
         sta     $06
         lda     text_string::addr+1
         sta     $07
-L102B:  lda     #$00
+L102B:  lda     #0
         sta     L0945
         jsr     L103E
         lda     read_params::buffer+1
@@ -1162,8 +1172,7 @@ L102B:  lda     #$00
         inc     read_params::buffer+1
 L103D:  rts
 
-L103E:
-.scope
+.proc L103E
         lda     read_params::buffer
         sta     store+1
         lda     read_params::buffer+1
@@ -1198,7 +1207,7 @@ store:  sta     default_buffer,x         ; self-modified
 done:   lda     #$01
         sta     L0947
 end:    rts
-.endscope
+.endproc
 
 L1088:  sec
         lda     text_box::width
@@ -1236,25 +1245,29 @@ L10D3:  inc     L0968
 
 L10DE:  rts
 
-L10DF:  ldx     #$04
-L10E1:  clc
+.proc L10DF                     ; ???
+        ldx     #$04
+loop:   clc
         ror     $07
         ror     $06
         dex
-        bne     L10E1
+        bne     loop
         lda     $06
         rts
+.endproc
 
-L10EC:  sta     $06
+.proc L10EC                     ; ???
+        sta     $06
         lda     #$00
         sta     $07
         ldx     #$04
-L10F4:  clc
+loop:   clc
         rol     $06
         rol     $07
         dex
-        bne     L10F4
+        bne     loop
         rts
+.endproc
 
 .proc L10FD
         addr := $4015
