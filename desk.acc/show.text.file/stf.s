@@ -320,8 +320,8 @@ left:   .word   10
 top:    .word   28
         .word   $2000           ; ??? never changed
         .word   $80             ; ??? never changed
-unk1:   .word   0               ; ???
-unk2:   .word   0               ; ???
+hoffset:.word   0
+voffset:.word   0
 width:  .word   512
 height: .word   150
 .endproc
@@ -337,8 +337,8 @@ left:   .word   10
 top:    .word   28
         .word   $2000
         .word   $80
-unk1:   .word   0
-unk2:   .word   0
+hoffset:.word   0
+voffset:.word   0
 width:  .word   512
 height: .word   150
 .endproc
@@ -483,7 +483,7 @@ loop:   lda     $8802,x
 
         ;; create window
         A2D_CALL A2D_CREATE_WINDOW, window_params
-        A2D_CALL $04, text_box
+        A2D_CALL A2D_TEXT_BOX1, text_box
         jsr     L1088
         jsr     calc_and_draw_mode
         jsr     draw_content
@@ -562,10 +562,10 @@ title:  jsr     on_title_bar_click
         sec
         lda     text_box::width
         sbc     window_width
-        sta     text_box::unk1
+        sta     text_box::hoffset
         lda     text_box::width+1
         sbc     window_width+1
-        sta     text_box::unk1+1
+        sta     text_box::hoffset+1
 wider:  lda     window_params::L0998
         ldx     window_width
         cpx     #<max_width
@@ -751,14 +751,14 @@ loop:   inx
         lda     thumb_drag_params::pos
         jsr     L10EC
         lda     $06
-        sta     text_box::unk1
+        sta     text_box::hoffset
         lda     $07
-        sta     text_box::unk1+1
+        sta     text_box::hoffset+1
         clc
-        lda     text_box::unk1
+        lda     text_box::hoffset
         adc     window_width
         sta     text_box::width
-        lda     text_box::unk1+1
+        lda     text_box::hoffset+1
         adc     window_width+1
         sta     text_box::width+1
         jsr     update_hscroll
@@ -849,11 +849,11 @@ store:  sta     window_params::L099B
         jsr     L10EC
         clc
         lda     $06
-        sta     text_box::unk1
+        sta     text_box::hoffset
         adc     window_width
         sta     text_box::width
         lda     $07
-        sta     text_box::unk1+1
+        sta     text_box::hoffset+1
         adc     window_width+1
         sta     text_box::width+1
         rts
@@ -861,26 +861,26 @@ store:  sta     window_params::L099B
 
 .proc L0D7C                     ; ?? part of vscroll
         lda     #0
-        sta     text_box::unk2
-        sta     text_box::unk2+1
+        sta     text_box::voffset
+        sta     text_box::voffset+1
         ldx     update_scroll_params::pos
 loop:   beq     L0D9B
         clc
-        lda     text_box::unk2
+        lda     text_box::voffset
         adc     #50
-        sta     text_box::unk2
+        sta     text_box::voffset
         bcc     :+
-        inc     text_box::unk2+1
+        inc     text_box::voffset+1
 :       dex
         jmp     loop
 .endproc
 
 .proc L0D9B                     ; ?? part of vscroll
         clc
-        lda     text_box::unk2
+        lda     text_box::voffset
         adc     window_height
         sta     text_box::height
-        lda     text_box::unk2+1
+        lda     text_box::voffset+1
         adc     window_height+1
         sta     text_box::height+1
         jsr     L10A5
@@ -903,9 +903,9 @@ end:    rts
 .proc update_hscroll
         lda     #2
         sta     update_scroll_params::type
-        lda     text_box::unk1
+        lda     text_box::hoffset
         sta     $06
-        lda     text_box::unk1+1
+        lda     text_box::hoffset+1
         sta     $07
         jsr     L10DF
         sta     update_scroll_params::pos
@@ -924,7 +924,7 @@ end:    rts
         jsr     UNKNOWN_CALL
         .byte   $0C
         .addr   0
-        A2D_CALL $04, text_box
+        A2D_CALL A2D_TEXT_BOX1, text_box
         lda     window_params::L0998
         ror     a
         bcc     :+
@@ -937,7 +937,7 @@ end:    rts
 .endproc
 
 L0E1D:  A2D_CALL $08, L0952
-        A2D_CALL $11, text_box::unk1 ; ?? params are in middle of block?
+        A2D_CALL $11, text_box::hoffset ; ?? params are in middle of block?
         A2D_CALL $08, L094A
         rts
 
@@ -961,7 +961,7 @@ L0E1D:  A2D_CALL $08, L0952
         sta     L096C
         sta     L096D
         sta     L0948
-        lda     #$0A
+        lda     #$0A            ; line spacing = 10
         sta     line_pos::base
         jsr     L0EDB
 L0E68:  lda     L096D
@@ -992,7 +992,7 @@ L0EA6:  lda     L095A
         bne     L0E68
         clc
         lda     line_pos::base
-        adc     #$0A
+        adc     #$0A            ; line spacing = 10
         sta     line_pos::base
         bcc     L0EB9
         inc     line_pos::base+1
@@ -1216,14 +1216,14 @@ end:    rts
 
 L1088:  sec
         lda     text_box::width
-        sbc     text_box::unk1
+        sbc     text_box::hoffset
         sta     window_width
         lda     text_box::width+1
-        sbc     text_box::unk1+1
+        sbc     text_box::hoffset+1
         sta     window_width+1
         sec
         lda     text_box::height
-        sbc     text_box::unk2
+        sbc     text_box::voffset
         sta     window_height
 L10A5:  lda     text_box::height
         sta     L0965
@@ -1352,8 +1352,8 @@ left:   .word   0
 top:    .word   0
         .word   $2000           ; ??
         .word   $80             ; ??
-        .word   0               ; ??
-        .word   0               ; ??
+hoffset:.word   0
+voffset:.word   0
 width:  .word   80
 height: .word   10
 .endproc
@@ -1388,7 +1388,7 @@ base:   .word   10              ; vertical text offset (to baseline)
 .endproc
 
 .proc draw_mode
-        A2D_CALL $06, mode_box  ; guess: setting up draw location ???
+        A2D_CALL A2D_TEXT_BOX2, mode_box  ; guess: setting up draw location ???
         A2D_CALL A2D_SET_TEXT_POS, mode_pos
         lda     fixed_mode_flag
         beq     else            ; is proportional?
@@ -1401,6 +1401,6 @@ loop:   lda     default_box,x
         sta     text_box,x
         dex
         bpl     loop
-        A2D_CALL $06, text_box
+        A2D_CALL A2D_TEXT_BOX2, text_box
         rts
 .endproc

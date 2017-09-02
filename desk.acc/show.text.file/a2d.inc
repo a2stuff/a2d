@@ -24,6 +24,17 @@ JUMP_TABLE_14   := $403C
 JUMP_TABLE_15   := $403F
 
 
+A2D_TEXT_BOX1   := $04          ; Not sure what BOX1 vs. BOX2 is for
+A2D_TEXT_BOX2   := $06          ; Not sure what BOX1 vs. BOX2 is for
+        ;; .word left           pixels from screen edge
+        ;; .word top
+        ;; .word $2000          ???
+        ;; .word $80            ???
+        ;; .word hoffset        pixels scrolled
+        ;; .word voffset
+        ;; .word width          pixels
+        ;; .word height
+
 A2D_SET_TEXT_POS:= $0E
         ;; .word left
         ;; .word base
