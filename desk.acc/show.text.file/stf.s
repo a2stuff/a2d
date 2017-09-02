@@ -321,7 +321,7 @@ left:   .word   10
 top:    .word   28
         .word   $2000           ; ??? never changed
         .word   $80             ; ??? never changed
-hoffset:.word   0
+hoffset:.word   0               ; Also used for A2D_CLEAR_BOX
 voffset:.word   0
 width:  .word   512
 height: .word   150
@@ -495,7 +495,7 @@ loop:   lda     $8802,x
         ;; create window
         A2D_CALL A2D_CREATE_WINDOW, window_params
         A2D_CALL A2D_TEXT_BOX1, text_box
-        jsr     L1088
+        jsr     calc_window_size
         jsr     calc_and_draw_mode
         jsr     draw_content
         A2D_CALL $2B, 0         ; ???
@@ -552,7 +552,7 @@ title:  jsr     on_title_bar_click
         jsr     close_file
         A2D_CALL A2D_DESTROY_WINDOW, window_params
 
-        jsr     UNKNOWN_CALL    ; hides the cursor?
+        jsr     UNKNOWN_CALL    ; ???
         .byte   $0C
         .addr   0
 
@@ -566,7 +566,7 @@ title:  jsr     on_title_bar_click
 .proc on_resize_click
         A2D_CALL A2D_DRAG_RESIZE, resize_drag_params
         jsr     L10FD           ; call $4015 on main
-        jsr     L1088
+        jsr     calc_window_size
 
         max_width := 512
         lda     #>max_width
@@ -659,7 +659,7 @@ end:    rts
         beq     end
         lda     thumb_drag_params::pos
         sta     update_scroll_params::pos
-        jsr     L0D7C
+        jsr     update_voffset
         jsr     update_vscroll
         jsr     draw_content
         lda     L0947
@@ -730,7 +730,7 @@ end:    rts
 .endproc
 
 .proc update_scroll_pos         ; Returns with carry set if mouse released
-        jsr     L0D7C
+        jsr     update_voffset
         jsr     update_vscroll
         jsr     draw_content
         jsr     was_button_released
@@ -741,7 +741,7 @@ end:    rts
 .endproc
 
 .proc calc_track_scroll_delta
-        lda     window_height           ; ceil(??? / 50)
+        lda     window_height   ; ceil(??? / 50)
         ldx     #0
 loop:   inx
         sec
@@ -887,7 +887,7 @@ store:  sta     window_params::L099B
         rts
 .endproc
 
-.proc L0D7C                     ; ?? part of vscroll
+.proc update_voffset
         lda     #0
         sta     text_box::voffset
         sta     text_box::voffset+1
@@ -904,6 +904,7 @@ loop:   beq     L0D9B
 .endproc
 
 .proc L0D9B                     ; ?? part of vscroll
+        ;; increase text_box height to cover full window (offset + height)
         clc
         lda     text_box::voffset
         adc     window_height
@@ -964,9 +965,10 @@ end:    rts
         jmp     input_loop
 .endproc
 
+        ;; called on scroll
 L0E1D:  A2D_CALL $08, L0952
-        A2D_CALL $11, text_box::hoffset ; ?? params are in middle of block?
-        A2D_CALL $08, L094A
+        A2D_CALL A2D_CLEAR_BOX, text_box::hoffset
+        A2D_CALL $08, L094A     ; possibly hides cursor?
         rts
 
 ;;; ==================================================
@@ -1244,7 +1246,8 @@ done:   lda     #$01
 end:    rts
 .endproc
 
-L1088:  sec
+.proc calc_window_size
+        sec
         lda     text_box::width
         sbc     text_box::hoffset
         sta     window_width
@@ -1256,31 +1259,36 @@ L1088:  sec
         lda     text_box::height
         sbc     text_box::voffset
         sta     window_height
-L10A5:  lda     text_box::height
+        ;; fall through
+.endproc
+
+        ;; calculate line offset ?
+.proc L10A5
+        lda     text_box::height
         sta     L0965
         lda     text_box::height+1
         sta     L0966
 
-        lda     #$00
+        lda     #0
         sta     L0968
         sta     L0969
-L10B9:  lda     L0966
-        bne     L10C5
+loop:   lda     L0966
+        bne     :+
         lda     L0965
         cmp     #$0A            ; line spacing = 10
-        bcc     L10DE
-L10C5:  sec
+        bcc     end
+:       sec
         lda     L0965
         sbc     #$0A            ; line spacing = 10
         sta     L0965
-        bcs     L10D3
+        bcs     :+
         dec     L0966
-L10D3:  inc     L0968
-        bne     L10B9
+:       inc     L0968
+        bne     loop
         inc     L0969
-        jmp     L10B9
-
-L10DE:  rts
+        jmp     loop
+end:    rts
+.endproc
 
 .proc L10DF                     ; ???
         ldx     #$04

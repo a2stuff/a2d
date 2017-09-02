@@ -39,6 +39,13 @@ A2D_SET_TEXT_POS:= $0E
         ;; .word left
         ;; .word base
 
+A2D_CLEAR_BOX   := $11
+        ;; .word hoffset        (includes scroll pos)
+        ;; .word voffset
+        ;; .word width          pixels
+        ;; .word height
+
+
 A2D_DRAW_TEXT   := $19
         ;; .addr data
         ;; .byte length

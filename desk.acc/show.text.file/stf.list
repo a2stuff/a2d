@@ -116,6 +116,13 @@ Current file: stf.s
 000800  2                       ;; .word left
 000800  2                       ;; .word base
 000800  2               
+000800  2               A2D_CLEAR_BOX   := $11
+000800  2                       ;; .word hoffset        (includes scroll pos)
+000800  2                       ;; .word voffset
+000800  2                       ;; .word width          pixels
+000800  2                       ;; .word height
+000800  2               
+000800  2               
 000800  2               A2D_DRAW_TEXT   := $19
 000800  2                       ;; .addr data
 000800  2                       ;; .byte length
@@ -556,7 +563,7 @@ Current file: stf.s
 0009AA  1  1C 00        top:    .word   28
 0009AC  1  00 20                .word   $2000           ; ??? never changed
 0009AE  1  80 00                .word   $80             ; ??? never changed
-0009B0  1  00 00        hoffset:.word   0
+0009B0  1  00 00        hoffset:.word   0               ; Also used for A2D_CLEAR_BOX
 0009B2  1  00 00        voffset:.word   0
 0009B4  1  00 02        width:  .word   512
 0009B6  1  96 00        height: .word   150
@@ -595,7 +602,7 @@ Current file: stf.s
 0009E7  1                       file_table := $DD9F     ; file address table
 0009E7  1                       ;; each entry is
 0009E7  1                       ;; ... byte 2 = type (bits 4,5,6 clear = directory)
-0009E7  1                       ;; ... byte 9 = start of length-prefixed filename
+0009E7  1                       ;; ... byte 9 = start of length-prefixed filename with spaces before/after
 0009E7  1               
 0009E7  1  A9 00                lda     #0
 0009E9  1  8D 04 09             sta     pathname::length
@@ -656,6 +663,7 @@ Current file: stf.s
 000A3F  1  60                   rts                     ; abort ???
 000A40  1               
 000A40  1                       ;; Set window title to point at filename (9th byte of entry)
+000A40  1                       ;; (title includes the spaces before/after from the icon)
 000A40  1  18           :       clc
 000A41  1  A5 06                lda     src             ; name is 9 bytes into entry
 000A43  1  69 09                adc     #9
@@ -667,12 +675,12 @@ Current file: stf.s
 000A4F  1                       ;; Append filename to path.
 000A4F  1  A0 09                ldy     #9
 000A51  1  B1 06                lda     (src),y         ; grab length
-000A53  1  AA                   tax                     ; this is... confusing
-000A54  1  CA                   dex                     ; sets x to length - 2 ???
+000A53  1  AA                   tax                     ; name has spaces before/after
+000A54  1  CA                   dex                     ; so subtract 2 to get actual length
 000A55  1  CA                   dex
 000A56  1  18                   clc
 000A57  1  A5 06                lda     src
-000A59  1  69 0B                adc     #11             ; jumps to 11th byte in entry (1 past name???)
+000A59  1  69 0B                adc     #11             ; 9 = length, 10 = space, 11 = name
 000A5B  1  85 06                sta     src
 000A5D  1  90 02                bcc     :+
 000A5F  1  E6 07                inc     src+1
@@ -734,7 +742,7 @@ Current file: stf.s
 000ABA  1  94 09        
 000ABC  1  20 00 40 04          A2D_CALL A2D_TEXT_BOX1, text_box
 000AC0  1  A8 09        
-000AC2  1  20 88 10             jsr     L1088
+000AC2  1  20 88 10             jsr     calc_window_size
 000AC5  1  20 98 11             jsr     calc_and_draw_mode
 000AC8  1  20 30 0E             jsr     draw_content
 000ACB  1  20 00 40 2B          A2D_CALL $2B, 0         ; ???
@@ -796,7 +804,7 @@ Current file: stf.s
 000B2F  1  20 00 40 39          A2D_CALL A2D_DESTROY_WINDOW, window_params
 000B33  1  94 09        
 000B35  1               
-000B35  1  20 00 8E             jsr     UNKNOWN_CALL    ; hides the cursor?
+000B35  1  20 00 8E             jsr     UNKNOWN_CALL    ; ???
 000B38  1  0C                   .byte   $0C
 000B39  1  00 00                .addr   0
 000B3B  1               
@@ -811,7 +819,7 @@ Current file: stf.s
 000B3C  1  20 00 40 45          A2D_CALL A2D_DRAG_RESIZE, resize_drag_params
 000B40  1  77 09        
 000B42  1  20 FD 10             jsr     L10FD           ; call $4015 on main
-000B45  1  20 88 10             jsr     L1088
+000B45  1  20 88 10             jsr     calc_window_size
 000B48  1               
 000B48  1                       max_width := 512
 000B48  1  A9 02                lda     #>max_width
@@ -906,7 +914,7 @@ Current file: stf.s
 000BF2  1  F0 1C                beq     end
 000BF4  1  AD 8F 09             lda     thumb_drag_params::pos
 000BF7  1  8D 89 09             sta     update_scroll_params::pos
-000BFA  1  20 7C 0D             jsr     L0D7C
+000BFA  1  20 7C 0D             jsr     update_voffset
 000BFD  1  20 ED 0D             jsr     update_vscroll
 000C00  1  20 30 0E             jsr     draw_content
 000C03  1  AD 47 09             lda     L0947
@@ -977,7 +985,7 @@ Current file: stf.s
 000C73  1               .endproc
 000C73  1               
 000C73  1               .proc update_scroll_pos         ; Returns with carry set if mouse released
-000C73  1  20 7C 0D             jsr     L0D7C
+000C73  1  20 7C 0D             jsr     update_voffset
 000C76  1  20 ED 0D             jsr     update_vscroll
 000C79  1  20 30 0E             jsr     draw_content
 000C7C  1  20 52 0D             jsr     was_button_released
@@ -988,7 +996,7 @@ Current file: stf.s
 000C84  1               .endproc
 000C84  1               
 000C84  1               .proc calc_track_scroll_delta
-000C84  1  AD 63 09             lda     window_height           ; ceil(??? / 50)
+000C84  1  AD 63 09             lda     window_height   ; ceil(??? / 50)
 000C87  1  A2 00                ldx     #0
 000C89  1  E8           loop:   inx
 000C8A  1  38                   sec
@@ -1136,7 +1144,7 @@ Current file: stf.s
 000D7B  1  60                   rts
 000D7C  1               .endproc
 000D7C  1               
-000D7C  1               .proc L0D7C                     ; ?? part of vscroll
+000D7C  1               .proc update_voffset
 000D7C  1  A9 00                lda     #0
 000D7E  1  8D B2 09             sta     text_box::voffset
 000D81  1  8D B3 09             sta     text_box::voffset+1
@@ -1153,6 +1161,7 @@ Current file: stf.s
 000D9B  1               .endproc
 000D9B  1               
 000D9B  1               .proc L0D9B                     ; ?? part of vscroll
+000D9B  1                       ;; increase text_box height to cover full window (offset + height)
 000D9B  1  18                   clc
 000D9C  1  AD B2 09             lda     text_box::voffset
 000D9F  1  6D 63 09             adc     window_height
@@ -1216,11 +1225,12 @@ Current file: stf.s
 000E1A  1  4C D1 0A             jmp     input_loop
 000E1D  1               .endproc
 000E1D  1               
+000E1D  1                       ;; called on scroll
 000E1D  1  20 00 40 08  L0E1D:  A2D_CALL $08, L0952
 000E21  1  52 09        
-000E23  1  20 00 40 11          A2D_CALL $11, text_box::hoffset ; ?? params are in middle of block?
+000E23  1  20 00 40 11          A2D_CALL A2D_CLEAR_BOX, text_box::hoffset
 000E27  1  B0 09        
-000E29  1  20 00 40 08          A2D_CALL $08, L094A
+000E29  1  20 00 40 08          A2D_CALL $08, L094A     ; possibly hides cursor?
 000E2D  1  4A 09        
 000E2F  1  60                   rts
 000E30  1               
@@ -1501,7 +1511,8 @@ Current file: stf.s
 001087  1  60           end:    rts
 001088  1               .endproc
 001088  1               
-001088  1  38           L1088:  sec
+001088  1               .proc calc_window_size
+001088  1  38                   sec
 001089  1  AD B4 09             lda     text_box::width
 00108C  1  ED B0 09             sbc     text_box::hoffset
 00108F  1  8D 61 09             sta     window_width
@@ -1513,31 +1524,36 @@ Current file: stf.s
 00109C  1  AD B6 09             lda     text_box::height
 00109F  1  ED B2 09             sbc     text_box::voffset
 0010A2  1  8D 63 09             sta     window_height
-0010A5  1  AD B6 09     L10A5:  lda     text_box::height
+0010A5  1                       ;; fall through
+0010A5  1               .endproc
+0010A5  1               
+0010A5  1                       ;; calculate line offset ?
+0010A5  1               .proc L10A5
+0010A5  1  AD B6 09             lda     text_box::height
 0010A8  1  8D 65 09             sta     L0965
 0010AB  1  AD B7 09             lda     text_box::height+1
 0010AE  1  8D 66 09             sta     L0966
 0010B1  1               
-0010B1  1  A9 00                lda     #$00
+0010B1  1  A9 00                lda     #0
 0010B3  1  8D 68 09             sta     L0968
 0010B6  1  8D 69 09             sta     L0969
-0010B9  1  AD 66 09     L10B9:  lda     L0966
-0010BC  1  D0 07                bne     L10C5
+0010B9  1  AD 66 09     loop:   lda     L0966
+0010BC  1  D0 07                bne     :+
 0010BE  1  AD 65 09             lda     L0965
 0010C1  1  C9 0A                cmp     #$0A            ; line spacing = 10
-0010C3  1  90 19                bcc     L10DE
-0010C5  1  38           L10C5:  sec
+0010C3  1  90 19                bcc     end
+0010C5  1  38           :       sec
 0010C6  1  AD 65 09             lda     L0965
 0010C9  1  E9 0A                sbc     #$0A            ; line spacing = 10
 0010CB  1  8D 65 09             sta     L0965
-0010CE  1  B0 03                bcs     L10D3
+0010CE  1  B0 03                bcs     :+
 0010D0  1  CE 66 09             dec     L0966
-0010D3  1  EE 68 09     L10D3:  inc     L0968
-0010D6  1  D0 E1                bne     L10B9
+0010D3  1  EE 68 09     :       inc     L0968
+0010D6  1  D0 E1                bne     loop
 0010D8  1  EE 69 09             inc     L0969
-0010DB  1  4C B9 10             jmp     L10B9
-0010DE  1               
-0010DE  1  60           L10DE:  rts
+0010DB  1  4C B9 10             jmp     loop
+0010DE  1  60           end:    rts
+0010DF  1               .endproc
 0010DF  1               
 0010DF  1               .proc L10DF                     ; ???
 0010DF  1  A2 04                ldx     #$04
