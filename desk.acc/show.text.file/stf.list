@@ -81,7 +81,25 @@ Current file: stf.s
 000800  2               
 000800  2               ;;; Entry Points
 000800  2               A2D             := $4000
+000800  2               
 000800  2               UNKNOWN_CALL    := $8E00
+000800  2               
+000800  2               JUMP_TABLE_01   := $4015        ; ???
+000800  2               JUMP_TABLE_02   := $4018
+000800  2               JUMP_TABLE_03   := $401E
+000800  2               JUMP_TABLE_04   := $4021
+000800  2               JUMP_TABLE_05   := $4021
+000800  2               JUMP_TABLE_06   := $4024
+000800  2               JUMP_TABLE_07   := $4027
+000800  2               JUMP_TABLE_08   := $402A
+000800  2               JUMP_TABLE_09   := $402D
+000800  2               JUMP_TABLE_10   := $4030
+000800  2               JUMP_TABLE_11   := $4033
+000800  2               JUMP_TABLE_12   := $4036
+000800  2               JUMP_TABLE_13   := $4039
+000800  2               JUMP_TABLE_14   := $403C
+000800  2               JUMP_TABLE_15   := $403F
+000800  2               
 000800  2               
 000800  2               A2D_SET_TEXT_POS:= $0E
 000800  2                       ;; .word left
@@ -523,8 +541,8 @@ Current file: stf.s
 0009AE  1  80 00                .word   $80             ; ??? never changed
 0009B0  1  00 00        unk1:   .word   0               ; ???
 0009B2  1  00 00        unk2:   .word   0               ; ???
-0009B4  1  00 02        width:  .word   $200
-0009B6  1  96 00        height: .word   $96
+0009B4  1  00 02        width:  .word   512
+0009B6  1  96 00        height: .word   150
 0009B8  1               .endproc
 0009B8  1               
 0009B8  1                       ;; unused?
@@ -543,8 +561,8 @@ Current file: stf.s
 0009D4  1  80 00                .word   $80
 0009D6  1  00 00        unk1:   .word   0
 0009D8  1  00 00        unk2:   .word   0
-0009DA  1  00 02        width:  .word   $200
-0009DC  1  96 00        height: .word   $96
+0009DA  1  00 02        width:  .word   512
+0009DC  1  96 00        height: .word   150
 0009DE  1               .endproc
 0009DE  1               
 0009DE  1               .proc init
@@ -634,10 +652,10 @@ Current file: stf.s
 000A5F  1  E6 07                inc     src+1
 000A61  1  20 72 0A     :       jsr     copy_pathname   ; copy x bytes (src) to (dst)
 000A64  1               
-000A64  1                       addr := $401E           ; ???
-000A64  1  A9 1E                lda     #<addr
+000A64  1                       ;; ???
+000A64  1  A9 1E                lda     #<JUMP_TABLE_03
 000A66  1  85 27                sta     call_main_addr
-000A68  1  A9 40                lda     #>addr
+000A68  1  A9 40                lda     #>JUMP_TABLE_03
 000A6A  1  85 28                sta     call_main_addr+1
 000A6C  1  20 20 00             jsr     call_main_trampoline
 000A6F  1               
@@ -667,6 +685,7 @@ Current file: stf.s
 000A8C  1  8D 6F 09             sta     fixed_mode_flag
 000A8F  1               
 000A8F  1                       ;; copy bytes (length at $8801) from $8802 to $10FF ???
+000A8F  1                       ;; length is $7f in tests
 000A8F  1  AE 01 88             ldx     $8801
 000A92  1  8D 04 C0             sta     RAMWRTOFF
 000A95  1  BD 02 88     loop:   lda     $8802,x
@@ -743,9 +762,11 @@ Current file: stf.s
 000B2C  1  20 AF 08             jsr     close_file
 000B2F  1  20 00 40 39          A2D_CALL A2D_DESTROY_WINDOW, window_params
 000B33  1  94 09        
+000B35  1               
 000B35  1  20 00 8E             jsr     UNKNOWN_CALL    ; hides the cursor?
 000B38  1  0C                   .byte   $0C
 000B39  1  00 00                .addr   0
+000B3B  1               
 000B3B  1  60                   rts                     ; exits input loop
 000B3C  1               .endproc
 000B3C  1               
@@ -1496,10 +1517,9 @@ Current file: stf.s
 0010FD  1               .endproc
 0010FD  1               
 0010FD  1               .proc L10FD
-0010FD  1                       addr := $4015
-0010FD  1  A9 15                lda     #<addr
+0010FD  1  A9 15                lda     #<JUMP_TABLE_01
 0010FF  1  85 27                sta     call_main_addr     ; self-modified
-001101  1  A9 40                lda     #>addr
+001101  1  A9 40                lda     #>JUMP_TABLE_01
 001103  1  85 28                sta     call_main_addr+1
 001105  1  20 20 00             jsr     call_main_trampoline
 001108  1  60                   rts

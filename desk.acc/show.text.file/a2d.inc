@@ -7,6 +7,23 @@ A2D             := $4000
 
 UNKNOWN_CALL    := $8E00
 
+JUMP_TABLE_01   := $4015        ; ???
+JUMP_TABLE_02   := $4018
+JUMP_TABLE_03   := $401E
+JUMP_TABLE_04   := $4021
+JUMP_TABLE_05   := $4021
+JUMP_TABLE_06   := $4024
+JUMP_TABLE_07   := $4027
+JUMP_TABLE_08   := $402A
+JUMP_TABLE_09   := $402D
+JUMP_TABLE_10   := $4030
+JUMP_TABLE_11   := $4033
+JUMP_TABLE_12   := $4036
+JUMP_TABLE_13   := $4039
+JUMP_TABLE_14   := $403C
+JUMP_TABLE_15   := $403F
+
+
 A2D_SET_TEXT_POS:= $0E
         ;; .word left
         ;; .word base

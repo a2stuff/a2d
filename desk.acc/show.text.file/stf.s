@@ -322,8 +322,8 @@ top:    .word   28
         .word   $80             ; ??? never changed
 unk1:   .word   0               ; ???
 unk2:   .word   0               ; ???
-width:  .word   $200
-height: .word   $96
+width:  .word   512
+height: .word   150
 .endproc
 
         ;; unused?
@@ -339,8 +339,8 @@ top:    .word   28
         .word   $80
 unk1:   .word   0
 unk2:   .word   0
-width:  .word   $200
-height: .word   $96
+width:  .word   512
+height: .word   150
 .endproc
 
 .proc init
@@ -430,10 +430,10 @@ abort:  rts
         inc     src+1
 :       jsr     copy_pathname   ; copy x bytes (src) to (dst)
 
-        addr := $401E           ; ???
-        lda     #<addr
+        ;; ???
+        lda     #<JUMP_TABLE_03
         sta     call_main_addr
-        lda     #>addr
+        lda     #>JUMP_TABLE_03
         sta     call_main_addr+1
         jsr     call_main_trampoline
 
@@ -463,6 +463,7 @@ end:    rts
         sta     fixed_mode_flag
 
         ;; copy bytes (length at $8801) from $8802 to $10FF ???
+        ;; length is $7f in tests
         ldx     $8801
         sta     RAMWRTOFF
 loop:   lda     $8802,x
@@ -1274,10 +1275,9 @@ loop:   clc
 .endproc
 
 .proc L10FD
-        addr := $4015
-        lda     #<addr
+        lda     #<JUMP_TABLE_01
         sta     call_main_addr     ; self-modified
-        lda     #>addr
+        lda     #>JUMP_TABLE_01
         sta     call_main_addr+1
         jsr     call_main_trampoline
         rts
