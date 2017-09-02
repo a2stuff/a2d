@@ -103,6 +103,8 @@ Current file: stf.s
 000800  2                       ;;      bit 0: remove title bar
 000800  2                       ;;      bit 1: add close box
 000800  2                       ;;      bit 2: add resize box
+000800  2                       ;; .addr title
+000800  2                       ;; ...
 000800  2               
 000800  2               A2D_DESTROY_WINDOW := $39
 000800  2                       ;; .byte id
@@ -368,24 +370,25 @@ Current file: stf.s
 000903  1  00           ref_num:.byte   0               ; ref_num
 000904  1               .endproc
 000904  1               
-000904  1               pathname:                       ; 1st byte is length, rest is full path
-000904  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00,$00
-000908  1  00 00 00 00  
-00090C  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00,$00
-000910  1  00 00 00 00  
-000914  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00,$00
-000918  1  00 00 00 00  
-00091C  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00,$00
-000920  1  00 00 00 00  
-000924  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00,$00
-000928  1  00 00 00 00  
-00092C  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00,$00
-000930  1  00 00 00 00  
-000934  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00,$00
-000938  1  00 00 00 00  
-00093C  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00,$00
-000940  1  00 00 00 00  
-000944  1  00                   .byte   $00
+000904  1               .proc pathname                 ; 1st byte is length, rest is full path
+000904  1  00           length: .byte   $00
+000905  1  00 00 00 00  data:   .byte   $00,$00,$00,$00,$00,$00,$00,$00
+000909  1  00 00 00 00  
+00090D  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00,$00
+000911  1  00 00 00 00  
+000915  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00,$00
+000919  1  00 00 00 00  
+00091D  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00,$00
+000921  1  00 00 00 00  
+000925  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00,$00
+000929  1  00 00 00 00  
+00092D  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00,$00
+000931  1  00 00 00 00  
+000935  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00,$00
+000939  1  00 00 00 00  
+00093D  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00,$00
+000941  1  00 00 00 00  
+000945  1               .endproc
 000945  1               
 000945  1  00           L0945:  .byte   $00
 000946  1  00           L0946:  .byte   $00
@@ -483,8 +486,7 @@ Current file: stf.s
 000994  1               .proc window_params
 000994  1  64           id:     .byte   window_id       ; window identifier
 000995  1  02           flags:  .byte   2               ; window flags (2=include close box)
-000996  1               
-000996  1  00 10        L0996:  .word   $1000           ; ???
+000996  1  00 10        title:  .addr   $1000
 000998  1  00 C1        L0998:  .byte   $00,$C1         ; ???
 00099A  1               
 00099A  1  20           L099A:  .byte   $20             ; hscroll?
@@ -534,93 +536,98 @@ Current file: stf.s
 0009DE  1  8D 09 C0     L09DE:  sta     ALTZPON
 0009E1  1  AD 8B C0             lda     LCBANK1
 0009E4  1  AD 8B C0             lda     LCBANK1
-0009E7  1  A9 00                lda     #$00
-0009E9  1  8D 04 09             sta     pathname
-0009EC  1  AD 21 DF             lda     $DF21
-0009EF  1  F0 05                beq     L09F6
-0009F1  1  AD 20 DF             lda     $DF20
-0009F4  1  D0 01                bne     L09F7
-0009F6  1  60           L09F6:  rts
+0009E7  1  A9 00                lda     #0
+0009E9  1  8D 04 09             sta     pathname::length
+0009EC  1  AD 21 DF             lda     $DF21           ; ???
+0009EF  1  F0 05                beq     abort           ; some file properties?
+0009F1  1  AD 20 DF             lda     $DF20           ; ???
+0009F4  1  D0 01                bne     continue
+0009F6  1  60           abort:  rts
+0009F7  1               continue:
 0009F7  1               
-0009F7  1  0A           L09F7:  asl     a
+0009F7  1                       path := $DFB3
+0009F7  1                       src := $06
+0009F7  1                       dst := $08
+0009F7  1  0A                   asl     a
 0009F8  1  AA                   tax
-0009F9  1  BD B3 DF             lda     $DFB3,x
-0009FC  1  85 06                sta     $06
-0009FE  1  BD B4 DF             lda     $DFB4,x
-000A01  1  85 07                sta     $07
-000A03  1  A0 00                ldy     #$00
-000A05  1  B1 06                lda     ($06),y
+0009F9  1  BD B3 DF             lda     path,x         ; pointer to pathname?
+0009FC  1  85 06                sta     src
+0009FE  1  BD B4 DF             lda     path+1,x
+000A01  1  85 07                sta     src+1
+000A03  1  A0 00                ldy     #0
+000A05  1  B1 06                lda     (src),y
 000A07  1  AA                   tax
-000A08  1  E6 06                inc     $06
-000A0A  1  D0 02                bne     L0A0E
-000A0C  1  E6 07                inc     $07
-000A0E  1  A9 05        L0A0E:  lda     #$05
-000A10  1  85 08                sta     $08
-000A12  1  A9 09                lda     #$09
-000A14  1  85 09                sta     $09
-000A16  1  20 72 0A             jsr     L0A72
-000A19  1  A9 2F                lda     #$2F
-000A1B  1  A0 00                ldy     #$00
-000A1D  1  91 08                sta     ($08),y
-000A1F  1  EE 04 09             inc     pathname        ; ???
-000A22  1  E6 08                inc     $08
-000A24  1  D0 02                bne     L0A28
-000A26  1  E6 09                inc     $09
-000A28  1  AD 22 DF     L0A28:  lda     $DF22
+000A08  1  E6 06                inc     src
+000A0A  1  D0 02                bne     :+
+000A0C  1  E6 07                inc     src+1
+000A0E  1  A9 05        :       lda     #<(pathname::data)
+000A10  1  85 08                sta     dst
+000A12  1  A9 09                lda     #>(pathname::data)
+000A14  1  85 09                sta     dst+1
+000A16  1  20 72 0A             jsr     copy_pathname
+000A19  1               
+000A19  1  A9 2F                lda     #'/'
+000A1B  1  A0 00                ldy     #0
+000A1D  1  91 08                sta     (dst),y
+000A1F  1  EE 04 09             inc     pathname::length
+000A22  1  E6 08                inc     dst
+000A24  1  D0 02                bne     :+
+000A26  1  E6 09                inc     dst+1
+000A28  1  AD 22 DF     :       lda     $DF22
 000A2B  1  0A                   asl     a
 000A2C  1  AA                   tax
 000A2D  1  BD 9F DD             lda     $DD9F,x
-000A30  1  85 06                sta     $06
+000A30  1  85 06                sta     src
 000A32  1  BD A0 DD             lda     $DDA0,x
-000A35  1  85 07                sta     $07
+000A35  1  85 07                sta     src+1
 000A37  1  A0 02                ldy     #$02
-000A39  1  B1 06                lda     ($06),y
+000A39  1  B1 06                lda     (src),y
 000A3B  1  29 70                and     #$70
-000A3D  1  D0 01                bne     L0A40
-000A3F  1  60                   rts
-000A40  1               
-000A40  1  18           L0A40:  clc
-000A41  1  A5 06                lda     $06
+000A3D  1  D0 01                bne     :+
+000A3F  1  60                   rts                     ; abort ???
+000A40  1  18           :       clc
+000A41  1  A5 06                lda     src
 000A43  1  69 09                adc     #$09
-000A45  1  8D 96 09             sta     window_params::L0996
-000A48  1  A5 07                lda     $07
+000A45  1  8D 96 09             sta     window_params::title
+000A48  1  A5 07                lda     src+1
 000A4A  1  69 00                adc     #$00
-000A4C  1  8D 97 09             sta     window_params::L0996+1
+000A4C  1  8D 97 09             sta     window_params::title+1
 000A4F  1  A0 09                ldy     #$09
 000A51  1  B1 06                lda     ($06),y
 000A53  1  AA                   tax
 000A54  1  CA                   dex
 000A55  1  CA                   dex
 000A56  1  18                   clc
-000A57  1  A5 06                lda     $06
+000A57  1  A5 06                lda     src
 000A59  1  69 0B                adc     #$0B
-000A5B  1  85 06                sta     $06
+000A5B  1  85 06                sta     src
 000A5D  1  90 02                bcc     L0A61
-000A5F  1  E6 07                inc     $07
-000A61  1  20 72 0A     L0A61:  jsr     L0A72
+000A5F  1  E6 07                inc     src+1
+000A61  1  20 72 0A     L0A61:  jsr     copy_pathname
 000A64  1  A9 1E                lda     #$1E
 000A66  1  85 27                sta     $27
 000A68  1  A9 40                lda     #$40
 000A6A  1  85 28                sta     $28
 000A6C  1  20 20 00             jsr     zp_code_stash
 000A6F  1  4C 8A 0A             jmp     open_file_and_init_window
-000A72  1               .endproc
 000A72  1               
-000A72  1               .proc L0A72                     ; ???
-000A72  1  A0 00                ldy     #$00
-000A74  1  B1 06        loop:   lda     ($06),y
-000A76  1  91 08                sta     ($08),y
+000A72  1               .proc copy_pathname             ; copy x bytes from src to dst
+000A72  1  A0 00                ldy     #0              ; incrementing path length and dst
+000A74  1  B1 06        loop:   lda     (src),y
+000A76  1  91 08                sta     (dst),y
 000A78  1  C8                   iny
-000A79  1  EE 04 09             inc     pathname        ; ???
+000A79  1  EE 04 09             inc     pathname::length
 000A7C  1  CA                   dex
 000A7D  1  D0 F5                bne     loop
 000A7F  1  98                   tya
 000A80  1  18                   clc
-000A81  1  65 08                adc     $08
-000A83  1  85 08                sta     $08
+000A81  1  65 08                adc     dst
+000A83  1  85 08                sta     dst
 000A85  1  90 02                bcc     end
-000A87  1  E6 09                inc     $09
+000A87  1  E6 09                inc     dst+1
 000A89  1  60           end:    rts
+000A8A  1               .endproc
+000A8A  1               
 000A8A  1               .endproc
 000A8A  1               
 000A8A  1               .proc open_file_and_init_window
@@ -711,7 +718,7 @@ Current file: stf.s
 000B3C  1               
 000B3C  1               ;;; How would control get here???? Dead code???
 000B3C  1               .proc maybe_dead_code           ; window move routine, maybe?
-000B3C  1  20 00 40 45          A2D_CALL $45, L0977
+000B3C  1  20 00 40 45          A2D_CALL $45, L0977     ; run resize loop?
 000B40  1  77 09        
 000B42  1  20 FD 10             jsr     L10FD
 000B45  1  20 88 10             jsr     L1088
@@ -748,17 +755,17 @@ Current file: stf.s
 000B89  1  09 01        L0B89:  ora     #$01
 000B8B  1  8D 98 09     L0B8B:  sta     window_params::L0998
 000B8E  1  38                   sec
-000B8F  1  A9 00                lda     #$00
+000B8F  1  A9 00                lda     #<max_width
 000B91  1  ED 61 09             sbc     window_width
 000B94  1  85 06                sta     $06
-000B96  1  A9 02                lda     #$02
+000B96  1  A9 02                lda     #>max_width
 000B98  1  ED 62 09             sbc     window_width+1
 000B9B  1  85 07                sta     $07
 000B9D  1  20 DF 10             jsr     L10DF
 000BA0  1  8D 87 09             sta     L0987
 000BA3  1  A9 02                lda     #$02
 000BA5  1  8D 86 09             sta     L0986
-000BA8  1  20 00 40 49          A2D_CALL $49, L0986
+000BA8  1  20 00 40 49          A2D_CALL $49, L0986     ; change to clamped size ???
 000BAC  1  86 09        
 000BAE  1  20 98 11             jsr     calc_and_draw_mode
 000BB1  1  4C F9 0D             jmp     L0DF9

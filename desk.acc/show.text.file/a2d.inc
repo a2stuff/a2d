@@ -26,6 +26,8 @@ A2D_CREATE_WINDOW := $38
         ;;      bit 0: remove title bar
         ;;      bit 1: add close box
         ;;      bit 2: add resize box
+        ;; .addr title
+        ;; ...
 
 A2D_DESTROY_WINDOW := $39
         ;; .byte id

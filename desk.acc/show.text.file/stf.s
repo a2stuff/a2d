@@ -186,7 +186,9 @@ ref_num:.byte   0               ; ref_num
 ref_num:.byte   0               ; ref_num
 .endproc
 
-pathname:                       ; 1st byte is length, rest is full path
+.proc pathname                 ; 1st byte is length, rest is full path
+length: .byte   $00
+data:   .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -194,8 +196,7 @@ pathname:                       ; 1st byte is length, rest is full path
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00
+.endproc
 
 L0945:  .byte   $00
 L0946:  .byte   $00
@@ -292,8 +293,7 @@ len:    .byte   0               ; length
 .proc window_params
 id:     .byte   window_id       ; window identifier
 flags:  .byte   2               ; window flags (2=include close box)
-
-L0996:  .word   $1000           ; ???
+title:  .addr   $1000
 L0998:  .byte   $00,$C1         ; ???
 
 L099A:  .byte   $20             ; hscroll?
@@ -339,93 +339,98 @@ height: .word   $96
 L09DE:  sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
-        lda     #$00
-        sta     pathname
-        lda     $DF21
-        beq     L09F6
-        lda     $DF20
-        bne     L09F7
-L09F6:  rts
+        lda     #0
+        sta     pathname::length
+        lda     $DF21           ; ???
+        beq     abort           ; some file properties?
+        lda     $DF20           ; ???
+        bne     continue
+abort:  rts
+continue:
 
-L09F7:  asl     a
+        path := $DFB3
+        src := $06
+        dst := $08
+        asl     a
         tax
-        lda     $DFB3,x
-        sta     $06
-        lda     $DFB4,x
-        sta     $07
-        ldy     #$00
-        lda     ($06),y
+        lda     path,x         ; pointer to pathname?
+        sta     src
+        lda     path+1,x
+        sta     src+1
+        ldy     #0
+        lda     (src),y
         tax
-        inc     $06
-        bne     L0A0E
-        inc     $07
-L0A0E:  lda     #$05
-        sta     $08
-        lda     #$09
-        sta     $09
-        jsr     L0A72
-        lda     #$2F
-        ldy     #$00
-        sta     ($08),y
-        inc     pathname        ; ???
-        inc     $08
-        bne     L0A28
-        inc     $09
-L0A28:  lda     $DF22
+        inc     src
+        bne     :+
+        inc     src+1
+:       lda     #<(pathname::data)
+        sta     dst
+        lda     #>(pathname::data)
+        sta     dst+1
+        jsr     copy_pathname
+
+        lda     #'/'
+        ldy     #0
+        sta     (dst),y
+        inc     pathname::length
+        inc     dst
+        bne     :+
+        inc     dst+1
+:       lda     $DF22
         asl     a
         tax
         lda     $DD9F,x
-        sta     $06
+        sta     src
         lda     $DDA0,x
-        sta     $07
+        sta     src+1
         ldy     #$02
-        lda     ($06),y
+        lda     (src),y
         and     #$70
-        bne     L0A40
-        rts
-
-L0A40:  clc
-        lda     $06
+        bne     :+
+        rts                     ; abort ???
+:       clc
+        lda     src
         adc     #$09
-        sta     window_params::L0996
-        lda     $07
+        sta     window_params::title
+        lda     src+1
         adc     #$00
-        sta     window_params::L0996+1
+        sta     window_params::title+1
         ldy     #$09
         lda     ($06),y
         tax
         dex
         dex
         clc
-        lda     $06
+        lda     src
         adc     #$0B
-        sta     $06
+        sta     src
         bcc     L0A61
-        inc     $07
-L0A61:  jsr     L0A72
+        inc     src+1
+L0A61:  jsr     copy_pathname
         lda     #$1E
         sta     $27
         lda     #$40
         sta     $28
         jsr     zp_code_stash
         jmp     open_file_and_init_window
-.endproc
 
-.proc L0A72                     ; ???
-        ldy     #$00
-loop:   lda     ($06),y
-        sta     ($08),y
+.proc copy_pathname             ; copy x bytes from src to dst
+        ldy     #0              ; incrementing path length and dst
+loop:   lda     (src),y
+        sta     (dst),y
         iny
-        inc     pathname        ; ???
+        inc     pathname::length
         dex
         bne     loop
         tya
         clc
-        adc     $08
-        sta     $08
+        adc     dst
+        sta     dst
         bcc     end
-        inc     $09
+        inc     dst+1
 end:    rts
+.endproc
+
 .endproc
 
 .proc open_file_and_init_window
