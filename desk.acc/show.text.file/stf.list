@@ -184,8 +184,8 @@ Current file: stf.s
 000800  2               .endmacro
 000800  2               
 000800  1               
-000800  1               zp_code_stash   := $0020        ; Scratch space used for "call 1000 main" trampoline
-000800  1               zp_code_mod     := $0027        ; self-modified address in stash
+000800  1               call_main_trampoline   := $0020        ; installed on ZP, turns off auxmem and calls...
+000800  1               call_main_addr         := $0027        ; address patched in here
 000800  1               
 000800  1  4C 04 08     start:  jmp     copy2aux
 000803  1               
@@ -210,27 +210,27 @@ Current file: stf.s
 000827  1  D0 E4                bne     src
 000829  1               .endproc
 000829  1               
-000829  1               ;;; Copy the following "call_1000_main" routine to $20
+000829  1               ;;; Copy the following "call_main_template" routine to $20
 000829  1               .scope
 000829  1  8D 05 C0             sta     RAMWRTON
 00082C  1  8D 03 C0             sta     RAMRDON
-00082F  1  A2 10                ldx     #(call_1000_main_end - call_1000_main)
-000831  1  BD 3C 08     loop:   lda     call_1000_main,x
-000834  1  95 20                sta     zp_code_stash,x
+00082F  1  A2 10                ldx     #(call_main_template_end - call_main_template)
+000831  1  BD 3C 08     loop:   lda     call_main_template,x
+000834  1  95 20                sta     call_main_trampoline,x
 000836  1  CA                   dex
 000837  1  10 F8                bpl     loop
 000839  1  4C 4C 08             jmp     call_init
 00083C  1               .endscope
 00083C  1               
-00083C  1               .proc call_1000_main
+00083C  1               .proc call_main_template
 00083C  1  8D 02 C0             sta     RAMRDOFF
 00083F  1  8D 04 C0             sta     RAMWRTOFF
-000842  1  20 00 10             jsr     L1000
+000842  1  20 00 10             jsr     $1000           ; overwritten (in zp version)
 000845  1  8D 03 C0             sta     RAMRDON
 000848  1  8D 05 C0             sta     RAMWRTON
 00084B  1  60                   rts
 00084C  1               .endproc
-00084C  1               call_1000_main_end:
+00084C  1               call_main_template_end:
 00084C  1               
 00084C  1               .proc call_init
 00084C  1                       ;; run the DA
@@ -623,10 +623,10 @@ Current file: stf.s
 000A64  1               
 000A64  1                       addr := $401E
 000A64  1  A9 1E                lda     #<addr
-000A66  1  85 27                sta     zp_code_mod
+000A66  1  85 27                sta     call_main_addr
 000A68  1  A9 40                lda     #>addr
-000A6A  1  85 28                sta     zp_code_mod+1
-000A6C  1  20 20 00             jsr     zp_code_stash
+000A6A  1  85 28                sta     call_main_addr+1
+000A6C  1  20 20 00             jsr     call_main_trampoline
 000A6F  1               
 000A6F  1  4C 8A 0A             jmp     open_file_and_init_window
 000A72  1               
@@ -657,7 +657,7 @@ Current file: stf.s
 000A8F  1  AE 01 88             ldx     $8801
 000A92  1  8D 04 C0             sta     RAMWRTOFF
 000A95  1  BD 02 88     loop:   lda     $8802,x
-000A98  1  9D FF 10             sta     L10FF,x
+000A98  1  9D FF 10             sta     L10FD+2,x
 000A9B  1  CA                   dex
 000A9C  1  D0 F7                bne     loop
 000A9E  1  8D 05 C0             sta     RAMWRTON
@@ -739,7 +739,7 @@ Current file: stf.s
 000B3C  1               .proc maybe_dead_code           ; window move routine, maybe?
 000B3C  1  20 00 40 45          A2D_CALL $45, L0977     ; run resize loop?
 000B40  1  77 09        
-000B42  1  20 FD 10             jsr     L10FD
+000B42  1  20 FD 10             jsr     L10FD           ; call $4015 on main
 000B45  1  20 88 10             jsr     L1088
 000B48  1               
 000B48  1                       max_width := 512
@@ -1348,7 +1348,7 @@ Current file: stf.s
 000FF9  1  F0 10                beq     L100B
 000FFB  1  AD 93 09             lda     text_string::len
 000FFE  1  F0 0B                beq     L100B
-001000  1  20 00 40 19  L1000:  A2D_CALL A2D_DRAW_TEXT, text_string
+001000  1  20 00 40 19          A2D_CALL A2D_DRAW_TEXT, text_string
 001004  1  91 09        
 001006  1  A9 01                lda     #1
 001008  1  8D 49 09             sta     L0949
@@ -1470,12 +1470,15 @@ Current file: stf.s
 0010FA  1  D0 F8                bne     L10F4
 0010FC  1  60                   rts
 0010FD  1               
-0010FD  1  A9 15        L10FD:  lda     #$15
-0010FF  1  85 27        L10FF:  sta     $27
-001101  1  A9 40                lda     #$40
-001103  1  85 28                sta     $28
-001105  1  20 20 00             jsr     zp_code_stash
+0010FD  1               .proc L10FD
+0010FD  1                       addr := $4015
+0010FD  1  A9 15                lda     #<addr
+0010FF  1  85 27                sta     call_main_addr     ; self-modified
+001101  1  A9 40                lda     #>addr
+001103  1  85 28                sta     call_main_addr+1
+001105  1  20 20 00             jsr     call_main_trampoline
 001108  1  60                   rts
+001109  1               .endproc
 001109  1               
 001109  1               ;;; if fixed mode, do a main->aux copy of a code block ???
 001109  1               .proc L1109

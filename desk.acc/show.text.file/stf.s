@@ -5,8 +5,8 @@
         .include "auxmem.inc"
         .include "a2d.inc"
 
-zp_code_stash   := $0020        ; Scratch space used for "call 1000 main" trampoline
-zp_code_mod     := $0027        ; self-modified address in stash
+call_main_trampoline   := $0020        ; installed on ZP, turns off auxmem and calls...
+call_main_addr         := $0027        ; address patched in here
 
 start:  jmp     copy2aux
 
@@ -31,27 +31,27 @@ dst:    sta     start,y         ; self-modified
         bne     src
 .endproc
 
-;;; Copy the following "call_1000_main" routine to $20
+;;; Copy the following "call_main_template" routine to $20
 .scope
         sta     RAMWRTON
         sta     RAMRDON
-        ldx     #(call_1000_main_end - call_1000_main)
-loop:   lda     call_1000_main,x
-        sta     zp_code_stash,x
+        ldx     #(call_main_template_end - call_main_template)
+loop:   lda     call_main_template,x
+        sta     call_main_trampoline,x
         dex
         bpl     loop
         jmp     call_init
 .endscope
 
-.proc call_1000_main
+.proc call_main_template
         sta     RAMRDOFF
         sta     RAMWRTOFF
-        jsr     L1000
+        jsr     $1000           ; overwritten (in zp version)
         sta     RAMRDON
         sta     RAMWRTON
         rts
 .endproc
-call_1000_main_end:
+call_main_template_end:
 
 .proc call_init
         ;; run the DA
@@ -426,10 +426,10 @@ continue:
 
         addr := $401E
         lda     #<addr
-        sta     zp_code_mod
+        sta     call_main_addr
         lda     #>addr
-        sta     zp_code_mod+1
-        jsr     zp_code_stash
+        sta     call_main_addr+1
+        jsr     call_main_trampoline
 
         jmp     open_file_and_init_window
 
@@ -460,7 +460,7 @@ end:    rts
         ldx     $8801
         sta     RAMWRTOFF
 loop:   lda     $8802,x
-        sta     L10FF,x
+        sta     L10FD+2,x
         dex
         bne     loop
         sta     RAMWRTON
@@ -534,7 +534,7 @@ title:  jsr     on_title_bar_click
 ;;; How would control get here???? Dead code???
 .proc maybe_dead_code           ; window move routine, maybe?
         A2D_CALL $45, L0977     ; run resize loop?
-        jsr     L10FD
+        jsr     L10FD           ; call $4015 on main
         jsr     L1088
 
         max_width := 512
@@ -1132,7 +1132,7 @@ L0FF6:  lda     L0948
         beq     L100B
         lda     text_string::len
         beq     L100B
-L1000:  A2D_CALL A2D_DRAW_TEXT, text_string
+        A2D_CALL A2D_DRAW_TEXT, text_string
         lda     #1
         sta     L0949
 L100B:  rts
@@ -1253,12 +1253,15 @@ L10F4:  clc
         bne     L10F4
         rts
 
-L10FD:  lda     #$15
-L10FF:  sta     $27
-        lda     #$40
-        sta     $28
-        jsr     zp_code_stash
+.proc L10FD
+        addr := $4015
+        lda     #<addr
+        sta     call_main_addr     ; self-modified
+        lda     #>addr
+        sta     call_main_addr+1
+        jsr     call_main_trampoline
         rts
+.endproc
 
 ;;; if fixed mode, do a main->aux copy of a code block ???
 .proc L1109
