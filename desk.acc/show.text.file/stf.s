@@ -302,7 +302,7 @@ len:    .byte   0               ; length
 .proc window_params
 id:     .byte   window_id       ; window identifier
 flags:  .byte   2               ; window flags (2=include close box)
-title:  .addr   $1000
+title:  .addr   $1000           ; overwritten to point at filename
 L0998:  .byte   $00,$C1         ; ???
 
 L099A:  .byte   $20             ; hscroll?
@@ -349,12 +349,19 @@ height: .word   150
         lda     LCBANK1
         lda     LCBANK1
 
-        path_index := $DF20
-        path_table := $DFB3           ; prefix address table
+        file_selected := $DF21  ; 0 if no selection, 1 otherwise
+        path_index := $DF20     ; index of selected window (used to get prefix)
+        path_table := $DFB3     ; window address table
+        ;; each entry is length-prefixed path string (no trailing /)
+        file_index := $DF22     ; index of selected file (global, not w/in window)
+        file_table := $DD9F     ; file address table
+        ;; each entry is
+        ;; ... byte 2 = type (bits 4,5,6 clear = directory)
+        ;; ... byte 9 = start of length-prefixed filename with spaces before/after
 
         lda     #0
         sta     pathname::length
-        lda     $DF21           ; ???
+        lda     file_selected
         beq     abort           ; some file properties?
         lda     path_index      ; prefix index in table
         bne     :+
@@ -391,10 +398,7 @@ abort:  rts
         bne     :+
         inc     dst+1
 
-        file_index := $DF22
-        file_table := $DD9F
-
-        ;; Check file properties.
+        ;; Get file entry.
 :       lda     file_index      ; file index in table
         asl     a               ; (since table is 2 bytes wide)
         tax
@@ -403,29 +407,35 @@ abort:  rts
         lda     file_table+1,x
         sta     src+1
 
-        ldy     #2              ; 2nd byte in entry ???
+        ;; Exit if a directory.
+        ldy     #2              ; 2nd byte of entry
         lda     (src),y
         and     #$70            ; check that one of bits 4,5,6 is set ???
+        ;; some vague patterns, but unclear
+        ;; basic = $32,$33, text = $52, sys = $11,$14,??, bin = $23,$24,$33
+        ;; dir = $01 (so not shown)
         bne     :+
         rts                     ; abort ???
 
-        ;; Set window title.
+        ;; Set window title to point at filename (9th byte of entry)
+        ;; (title includes the spaces before/after from the icon)
 :       clc
-        lda     src             ; name is 11 bytes into entry (2 + 9)
+        lda     src             ; name is 9 bytes into entry
         adc     #9
         sta     window_params::title
         lda     src+1
         adc     #0
         sta     window_params::title+1
 
+        ;; Append filename to path.
         ldy     #9
-        lda     (src),y
-        tax
-        dex
+        lda     (src),y         ; grab length
+        tax                     ; name has spaces before/after
+        dex                     ; so subtract 2 to get actual length
         dex
         clc
         lda     src
-        adc     #11             ; name is 11 bytes into entry
+        adc     #11             ; 9 = length, 10 = space, 11 = name
         sta     src
         bcc     :+
         inc     src+1

@@ -536,7 +536,7 @@ Current file: stf.s
 000994  1               .proc window_params
 000994  1  64           id:     .byte   window_id       ; window identifier
 000995  1  02           flags:  .byte   2               ; window flags (2=include close box)
-000996  1  00 10        title:  .addr   $1000
+000996  1  00 10        title:  .addr   $1000           ; overwritten to point at filename
 000998  1  00 C1        L0998:  .byte   $00,$C1         ; ???
 00099A  1               
 00099A  1  20           L099A:  .byte   $20             ; hscroll?
@@ -587,12 +587,19 @@ Current file: stf.s
 0009E1  1  AD 8B C0             lda     LCBANK1
 0009E4  1  AD 8B C0             lda     LCBANK1
 0009E7  1               
-0009E7  1                       path_index := $DF20
-0009E7  1                       path_table := $DFB3           ; prefix address table
+0009E7  1                       file_selected := $DF21  ; 0 if no selection, 1 otherwise
+0009E7  1                       path_index := $DF20     ; index of selected window (used to get prefix)
+0009E7  1                       path_table := $DFB3     ; window address table
+0009E7  1                       ;; each entry is length-prefixed path string (no trailing /)
+0009E7  1                       file_index := $DF22     ; index of selected file (global, not w/in window)
+0009E7  1                       file_table := $DD9F     ; file address table
+0009E7  1                       ;; each entry is
+0009E7  1                       ;; ... byte 2 = type (bits 4,5,6 clear = directory)
+0009E7  1                       ;; ... byte 9 = start of length-prefixed filename
 0009E7  1               
 0009E7  1  A9 00                lda     #0
 0009E9  1  8D 04 09             sta     pathname::length
-0009EC  1  AD 21 DF             lda     $DF21           ; ???
+0009EC  1  AD 21 DF             lda     file_selected
 0009EF  1  F0 05                beq     abort           ; some file properties?
 0009F1  1  AD 20 DF             lda     path_index      ; prefix index in table
 0009F4  1  D0 01                bne     :+
@@ -629,10 +636,7 @@ Current file: stf.s
 000A24  1  D0 02                bne     :+
 000A26  1  E6 09                inc     dst+1
 000A28  1               
-000A28  1                       file_index := $DF22
-000A28  1                       file_table := $DD9F
-000A28  1               
-000A28  1                       ;; Check file properties.
+000A28  1                       ;; Get file entry.
 000A28  1  AD 22 DF     :       lda     file_index      ; file index in table
 000A2B  1  0A                   asl     a               ; (since table is 2 bytes wide)
 000A2C  1  AA                   tax
@@ -641,29 +645,34 @@ Current file: stf.s
 000A32  1  BD A0 DD             lda     file_table+1,x
 000A35  1  85 07                sta     src+1
 000A37  1               
-000A37  1  A0 02                ldy     #2              ; 2nd byte in entry ???
+000A37  1                       ;; Exit if a directory.
+000A37  1  A0 02                ldy     #2              ; 2nd byte of entry
 000A39  1  B1 06                lda     (src),y
 000A3B  1  29 70                and     #$70            ; check that one of bits 4,5,6 is set ???
+000A3D  1                       ;; some vague patterns, but unclear
+000A3D  1                       ;; basic = $32,$33, text = $52, sys = $11,$14,??, bin = $23,$24,$33
+000A3D  1                       ;; dir = $01 (so not shown)
 000A3D  1  D0 01                bne     :+
 000A3F  1  60                   rts                     ; abort ???
 000A40  1               
-000A40  1                       ;; Set window title.
+000A40  1                       ;; Set window title to point at filename (9th byte of entry)
 000A40  1  18           :       clc
-000A41  1  A5 06                lda     src             ; name is 11 bytes into entry (2 + 9)
+000A41  1  A5 06                lda     src             ; name is 9 bytes into entry
 000A43  1  69 09                adc     #9
 000A45  1  8D 96 09             sta     window_params::title
 000A48  1  A5 07                lda     src+1
 000A4A  1  69 00                adc     #0
 000A4C  1  8D 97 09             sta     window_params::title+1
 000A4F  1               
+000A4F  1                       ;; Append filename to path.
 000A4F  1  A0 09                ldy     #9
-000A51  1  B1 06                lda     (src),y
-000A53  1  AA                   tax
-000A54  1  CA                   dex
+000A51  1  B1 06                lda     (src),y         ; grab length
+000A53  1  AA                   tax                     ; this is... confusing
+000A54  1  CA                   dex                     ; sets x to length - 2 ???
 000A55  1  CA                   dex
 000A56  1  18                   clc
 000A57  1  A5 06                lda     src
-000A59  1  69 0B                adc     #11             ; name is 11 bytes into entry
+000A59  1  69 0B                adc     #11             ; jumps to 11th byte in entry (1 past name???)
 000A5B  1  85 06                sta     src
 000A5D  1  90 02                bcc     :+
 000A5F  1  E6 07                inc     src+1
