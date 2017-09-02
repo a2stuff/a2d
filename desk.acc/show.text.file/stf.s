@@ -5,9 +5,6 @@
         .include "auxmem.inc"
         .include "a2d.inc"
 
-call_main_trampoline   := $0020        ; installed on ZP, turns off auxmem and calls...
-call_main_addr         := $0027        ; address patched in here
-
 start:  jmp     copy2aux
 
 save_stack:.byte   0
@@ -31,6 +28,9 @@ dst:    sta     start,y         ; self-modified
         bne     src
 .endproc
 
+call_main_trampoline   := $20 ; installed on ZP, turns off auxmem and calls...
+call_main_addr         := call_main_trampoline+7        ; address patched in here
+
 ;;; Copy the following "call_main_template" routine to $20
 .scope
         sta     RAMWRTON
@@ -51,7 +51,8 @@ loop:   lda     call_main_template,x
         sta     RAMWRTON
         rts
 .endproc
-call_main_template_end:
+call_main_template_end:         ; can't .sizeof(proc) before declaration
+        ;; https://github.com/cc65/cc65/issues/478
 
 .proc call_init
         ;; run the DA
@@ -1290,7 +1291,7 @@ end:    rts
         lda     fixed_mode_flag ; if not fixed (i.e. proportional)
         beq     end             ; then exit
         ldx     $8801
-        lda     #$07
+        lda     #7              ; 7 pixels/character
 loop:   sta     $8802,x
         dex
         bne     loop
@@ -1338,6 +1339,7 @@ width:  .word   80
 height: .word   10
 .endproc
 mode_box_left := mode_box::left ; forward refs to mode_box::left don't work?
+        ;; https://github.com/cc65/cc65/issues/479
 
 .proc mode_pos
 left:   .word   0               ; horizontal text offset

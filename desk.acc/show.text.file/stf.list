@@ -185,7 +185,7 @@ Current file: stf.s
 000800  2               
 000800  1               
 000800  1               call_main_trampoline   := $0020        ; installed on ZP, turns off auxmem and calls...
-000800  1               call_main_addr         := $0027        ; address patched in here
+000800  1               call_main_addr         := call_main_trampoline+7        ; address patched in here
 000800  1               
 000800  1  4C 04 08     start:  jmp     copy2aux
 000803  1               
@@ -1507,7 +1507,7 @@ Current file: stf.s
 001129  1  AD 6F 09             lda     fixed_mode_flag ; if not fixed (i.e. proportional)
 00112C  1  F0 0B                beq     end             ; then exit
 00112E  1  AE 01 88             ldx     $8801
-001131  1  A9 07                lda     #$07
+001131  1  A9 07                lda     #7              ; 7 pixels/character
 001133  1  9D 02 88     loop:   sta     $8802,x
 001136  1  CA                   dex
 001137  1  D0 FA                bne     loop
