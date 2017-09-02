@@ -80,6 +80,10 @@ A2D_BTN_CLICK   := $43
         ;; .byte ??
 
 A2D_DRAG_RESIZE := $45
+        ;; .byte id of window
+        ;; .word xcoord of mouse
+        ;; .word ycoord of mouse
+        ;; .byte ??     (likely: moved? 0 = no change, 1 = moved)
 
 A2D_QUERY_CLIENT:= $48
         ;; .word xcoord of query
@@ -88,7 +92,8 @@ A2D_QUERY_CLIENT:= $48
         ;; .byte scroll (1 = up/left, 2 = down/right, 3 = above/before, 4 = below/after, 5 = thumb)
 
 A2D_RESIZE_WINDOW := $49
-
+        ;; .byte ??     (unused, so incomplete)
+        ;; .byte ??
 
 A2D_DRAG_SCROLL:= $4A
         ;; .byte type (1 = vscroll, 2 = hscroll)

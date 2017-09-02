@@ -157,6 +157,10 @@ Current file: stf.s
 000800  2                       ;; .byte ??
 000800  2               
 000800  2               A2D_DRAG_RESIZE := $45
+000800  2                       ;; .byte id of window
+000800  2                       ;; .word xcoord of mouse
+000800  2                       ;; .word ycoord of mouse
+000800  2                       ;; .byte ??     (likely: moved? 0 = no change, 1 = moved)
 000800  2               
 000800  2               A2D_QUERY_CLIENT:= $48
 000800  2                       ;; .word xcoord of query
@@ -165,7 +169,8 @@ Current file: stf.s
 000800  2                       ;; .byte scroll (1 = up/left, 2 = down/right, 3 = above/before, 4 = below/after, 5 = thumb)
 000800  2               
 000800  2               A2D_RESIZE_WINDOW := $49
-000800  2               
+000800  2                       ;; .byte ??     (unused, so incomplete)
+000800  2                       ;; .byte ??
 000800  2               
 000800  2               A2D_DRAG_SCROLL:= $4A
 000800  2                       ;; .byte type (1 = vscroll, 2 = hscroll)
@@ -440,6 +445,8 @@ Current file: stf.s
 00094E  1               params_end:
 00094E  1               ;;; ----------------------------------------
 00094E  1               
+00094E  1                       window_id := $64
+00094E  1               
 00094E  1  00 00 00 00          .byte   $00,$00,$00,$00
 000952  1               
 000952  1                       ;; start of a $08 call
@@ -526,7 +533,6 @@ Current file: stf.s
 000993  1  00           len:    .byte   0               ; length
 000994  1               .endproc
 000994  1               
-000994  1                       window_id := $64
 000994  1               .proc window_params
 000994  1  64           id:     .byte   window_id       ; window identifier
 000995  1  02           flags:  .byte   2               ; window flags (2=include close box)
@@ -727,6 +733,9 @@ Current file: stf.s
 000AD1  1                       ;; fall through
 000AD1  1               .endproc
 000AD1  1               
+000AD1  1               ;;; ==================================================
+000AD1  1               ;;; Main Input Loop
+000AD1  1               
 000AD1  1               input_loop:
 000AD1  1  20 00 40 2A          A2D_CALL A2D_GET_BUTTON, button_state
 000AD5  1  70 09        
@@ -743,9 +752,10 @@ Current file: stf.s
 000AEB  1                       ;; which part of the window?
 000AEB  1  AD 75 09             lda     mouse_params::elem
 000AEE  1  C9 05                cmp     #A2D_ELEM_CLOSE
-000AF0  1  F0 2F                beq     on_close_btn_down
+000AF0  1  F0 2F                beq     on_close_click
 000AF2  1               
-000AF2  1  AE 71 09             ldx     mouse_params::xcoord      ; stash mouse location
+000AF2  1                       ;; title and resize clicks need mouse location
+000AF2  1  AE 71 09             ldx     mouse_params::xcoord
 000AF5  1  8E 78 09             stx     resize_drag_params::xcoord
 000AF8  1  8E 80 09             stx     query_client_params::xcoord
 000AFB  1  AE 72 09             ldx     mouse_params::xcoord+1
@@ -757,7 +767,7 @@ Current file: stf.s
 000B0D  1               
 000B0D  1  C9 03                cmp     #A2D_ELEM_TITLE
 000B0F  1  F0 0A                beq     title
-000B11  1  C9 04                cmp     #A2D_ELEM_RESIZE
+000B11  1  C9 04                cmp     #A2D_ELEM_RESIZE ; not enabled, so this will never match
 000B13  1  F0 BC                beq     input_loop
 000B15  1  20 B4 0B             jsr     on_client_click
 000B18  1  4C D1 0A             jmp     input_loop
@@ -765,7 +775,10 @@ Current file: stf.s
 000B1B  1  20 3A 11     title:  jsr     on_title_bar_click
 000B1E  1  4C D1 0A             jmp     input_loop
 000B21  1               
-000B21  1               .proc on_close_btn_down
+000B21  1               ;;; ==================================================
+000B21  1               ;;; Close Button
+000B21  1               
+000B21  1               .proc on_close_click
 000B21  1  20 00 40 43          A2D_CALL A2D_BTN_CLICK, close_btn     ; wait to see if the click completes
 000B25  1  7D 09        
 000B27  1  AD 7D 09             lda     close_btn::state ; did click complete?
@@ -780,6 +793,9 @@ Current file: stf.s
 000B3B  1               
 000B3B  1  60                   rts                     ; exits input loop
 000B3C  1               .endproc
+000B3C  1               
+000B3C  1               ;;; ==================================================
+000B3C  1               ;;; Resize Handle
 000B3C  1               
 000B3C  1               ;;; This is dead code (no resize handle!) and may be buggy
 000B3C  1               .proc on_resize_click
@@ -836,8 +852,12 @@ Current file: stf.s
 000BB1  1  4C F9 0D             jmp     finish_resize
 000BB4  1               .endproc
 000BB4  1               
+000BB4  1               ;;; ==================================================
+000BB4  1               ;;; Client Area
+000BB4  1               
 000BB4  1               ;;; Non-title (client) area clicked
 000BB4  1               .proc on_client_click
+000BB4  1                       ;; On one of the scroll bars?
 000BB4  1  20 00 40 48          A2D_CALL A2D_QUERY_CLIENT, query_client_params
 000BB8  1  80 09        
 000BBA  1  AD 84 09             lda     query_client_params::part
@@ -848,6 +868,9 @@ Current file: stf.s
 000BC5  1  4C 95 0C             jmp     on_hscroll_click
 000BC8  1  60           end:    rts
 000BC9  1               .endproc
+000BC9  1               
+000BC9  1               ;;; ==================================================
+000BC9  1               ;;; Vertical Scroll Bar
 000BC9  1               
 000BC9  1               .proc on_vscroll_click
 000BC9  1  A9 01                lda     #A2D_VSCROLL
@@ -967,7 +990,10 @@ Current file: stf.s
 000C94  1  60                   rts
 000C95  1               .endproc
 000C95  1               
-000C95  1               ;;; Unused in STF DA, so most of this is speculation
+000C95  1               ;;; ==================================================
+000C95  1               ;;; Horizontal Scroll Bar
+000C95  1               ;;; (Unused in STF DA, so most of this is speculation)
+000C95  1               
 000C95  1               .proc on_hscroll_click
 000C95  1  A9 02                lda     #A2D_HSCROLL
 000C97  1  8D 8A 09             sta     thumb_drag_params::type
@@ -986,7 +1012,6 @@ Current file: stf.s
 000CB4  1  60                   rts
 000CB5  1               .endproc
 000CB5  1               
-000CB5  1               ;;; Unused in STF DA, so most of this is speculation
 000CB5  1               .proc on_hscroll_thumb_click
 000CB5  1  20 39 0D             jsr     do_thumb_drag
 000CB8  1  AD 90 09             lda     thumb_drag_params::moved
@@ -1009,35 +1034,30 @@ Current file: stf.s
 000CE6  1  60           end:    rts
 000CE7  1               .endproc
 000CE7  1               
-000CE7  1               ;;; Unused in STF DA, so most of this is speculation
 000CE7  1               .proc on_hscroll_after_click
 000CE7  1  A2 02                ldx     #2
 000CE9  1  AD 9A 09             lda     window_params::L099A
 000CEC  1  4C 02 0D             jmp     hscroll_common
 000CEF  1               .endproc
 000CEF  1               
-000CEF  1               ;;; Unused in STF DA, so most of this is speculation
 000CEF  1               .proc on_hscroll_before_click
 000CEF  1  A2 FE                ldx     #254
 000CF1  1  A9 00                lda     #0
 000CF3  1  4C 02 0D             jmp     hscroll_common
 000CF6  1               .endproc
 000CF6  1               
-000CF6  1               ;;; Unused in STF DA, so most of this is speculation
 000CF6  1               .proc on_hscroll_right_click
 000CF6  1  A2 01                ldx     #1
 000CF8  1  AD 9A 09             lda     window_params::L099A
 000CFB  1  4C 02 0D             jmp     hscroll_common
 000CFE  1               .endproc
 000CFE  1               
-000CFE  1               ;;; Unused in STF DA, so most of this is speculation
 000CFE  1               .proc on_hscroll_left_click
 000CFE  1  A2 FF                ldx     #255
 000D00  1  A9 00                lda     #0
 000D02  1                       ;; fall through
 000D02  1               .endproc
 000D02  1               
-000D02  1               ;;; Unused in STF DA, so most of this is speculation
 000D02  1               .proc hscroll_common
 000D02  1  8D 0C 0D             sta     compare+1
 000D05  1  8E 15 0D             stx     delta+1
@@ -1065,6 +1085,9 @@ Current file: stf.s
 000D36  1  D0 D0                bne     loop
 000D38  1  60                   rts
 000D39  1               .endproc
+000D39  1               
+000D39  1               ;;; ==================================================
+000D39  1               ;;; UI Helpers
 000D39  1               
 000D39  1                       ;; Used at start of thumb drag
 000D39  1               .proc do_thumb_drag
@@ -1192,7 +1215,9 @@ Current file: stf.s
 000E2D  1  4A 09        
 000E2F  1  60                   rts
 000E30  1               
-000E30  1               ;;; Draw content ???
+000E30  1               ;;; ==================================================
+000E30  1               ;;; Content Rendering
+000E30  1               
 000E30  1               .proc draw_content
 000E30  1  A9 00                lda     #0
 000E32  1  8D 49 09             sta     L0949
@@ -1474,6 +1499,7 @@ Current file: stf.s
 001092  1  AD B5 09             lda     text_box::width+1
 001095  1  ED B1 09             sbc     text_box::hoffset+1
 001098  1  8D 62 09             sta     window_width+1
+00109B  1               
 00109B  1  38                   sec
 00109C  1  AD B6 09             lda     text_box::height
 00109F  1  ED B2 09             sbc     text_box::voffset
@@ -1482,17 +1508,18 @@ Current file: stf.s
 0010A8  1  8D 65 09             sta     L0965
 0010AB  1  AD B7 09             lda     text_box::height+1
 0010AE  1  8D 66 09             sta     L0966
+0010B1  1               
 0010B1  1  A9 00                lda     #$00
 0010B3  1  8D 68 09             sta     L0968
 0010B6  1  8D 69 09             sta     L0969
 0010B9  1  AD 66 09     L10B9:  lda     L0966
 0010BC  1  D0 07                bne     L10C5
 0010BE  1  AD 65 09             lda     L0965
-0010C1  1  C9 0A                cmp     #$0A
+0010C1  1  C9 0A                cmp     #$0A            ; line spacing = 10
 0010C3  1  90 19                bcc     L10DE
 0010C5  1  38           L10C5:  sec
 0010C6  1  AD 65 09             lda     L0965
-0010C9  1  E9 0A                sbc     #$0A
+0010C9  1  E9 0A                sbc     #$0A            ; line spacing = 10
 0010CB  1  8D 65 09             sta     L0965
 0010CE  1  B0 03                bcs     L10D3
 0010D0  1  CE 66 09             dec     L0966
@@ -1570,8 +1597,9 @@ Current file: stf.s
 001139  1  60           end:    rts
 00113A  1               .endproc
 00113A  1               
-00113A  1               ;;; On Title Bar Click - if it's on the Fixed/Proportional label,
-00113A  1               ;;; toggle it and update.
+00113A  1               ;;; ==================================================
+00113A  1               ;;; Title Bar (Proportional/Fixed mode button)
+00113A  1               
 00113A  1               .proc on_title_bar_click
 00113A  1  AD 72 09             lda     mouse_params::xcoord+1           ; mouse x high byte?
 00113D  1  CD 85 11             cmp     mode_box_left+1
@@ -1579,6 +1607,8 @@ Current file: stf.s
 001142  1  AD 71 09             lda     mouse_params::xcoord
 001145  1  CD 84 11             cmp     mode_box_left
 001148  1  90 19        :       bcc     ignore
+00114A  1               
+00114A  1                       ;; Toggle the state and redraw
 00114A  1  AD 6F 09             lda     fixed_mode_flag
 00114D  1  F0 09                beq     set_flag
 00114F  1  CE 6F 09             dec     fixed_mode_flag ; clear flag (mode = proportional)

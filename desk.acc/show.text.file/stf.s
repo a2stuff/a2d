@@ -212,6 +212,8 @@ L094A:  .byte   $00,$00,$00,$00
 params_end:
 ;;; ----------------------------------------
 
+        window_id := $64
+
         .byte   $00,$00,$00,$00
 
         ;; start of a $08 call
@@ -297,7 +299,6 @@ addr:   .addr   0               ; address
 len:    .byte   0               ; length
 .endproc
 
-        window_id := $64
 .proc window_params
 id:     .byte   window_id       ; window identifier
 flags:  .byte   2               ; window flags (2=include close box)
@@ -491,6 +492,9 @@ loop:   lda     $8802,x
         ;; fall through
 .endproc
 
+;;; ==================================================
+;;; Main Input Loop
+
 input_loop:
         A2D_CALL A2D_GET_BUTTON, button_state
         lda     button_state
@@ -505,9 +509,10 @@ input_loop:
         ;; which part of the window?
         lda     mouse_params::elem
         cmp     #A2D_ELEM_CLOSE
-        beq     on_close_btn_down
+        beq     on_close_click
 
-        ldx     mouse_params::xcoord      ; stash mouse location
+        ;; title and resize clicks need mouse location
+        ldx     mouse_params::xcoord
         stx     resize_drag_params::xcoord
         stx     query_client_params::xcoord
         ldx     mouse_params::xcoord+1
@@ -519,7 +524,7 @@ input_loop:
 
         cmp     #A2D_ELEM_TITLE
         beq     title
-        cmp     #A2D_ELEM_RESIZE
+        cmp     #A2D_ELEM_RESIZE ; not enabled, so this will never match
         beq     input_loop
         jsr     on_client_click
         jmp     input_loop
@@ -527,7 +532,10 @@ input_loop:
 title:  jsr     on_title_bar_click
         jmp     input_loop
 
-.proc on_close_btn_down
+;;; ==================================================
+;;; Close Button
+
+.proc on_close_click
         A2D_CALL A2D_BTN_CLICK, close_btn     ; wait to see if the click completes
         lda     close_btn::state ; did click complete?
         beq     input_loop      ; nope
@@ -540,6 +548,9 @@ title:  jsr     on_title_bar_click
 
         rts                     ; exits input loop
 .endproc
+
+;;; ==================================================
+;;; Resize Handle
 
 ;;; This is dead code (no resize handle!) and may be buggy
 .proc on_resize_click
@@ -594,8 +605,12 @@ L0B8B:  sta     window_params::L0998
         jmp     finish_resize
 .endproc
 
+;;; ==================================================
+;;; Client Area
+
 ;;; Non-title (client) area clicked
 .proc on_client_click
+        ;; On one of the scroll bars?
         A2D_CALL A2D_QUERY_CLIENT, query_client_params
         lda     query_client_params::part
         cmp     #A2D_VSCROLL
@@ -605,6 +620,9 @@ L0B8B:  sta     window_params::L0998
         jmp     on_hscroll_click
 end:    rts
 .endproc
+
+;;; ==================================================
+;;; Vertical Scroll Bar
 
 .proc on_vscroll_click
         lda     #A2D_VSCROLL
@@ -724,7 +742,10 @@ loop:   inx
         rts
 .endproc
 
-;;; Unused in STF DA, so most of this is speculation
+;;; ==================================================
+;;; Horizontal Scroll Bar
+;;; (Unused in STF DA, so most of this is speculation)
+
 .proc on_hscroll_click
         lda     #A2D_HSCROLL
         sta     thumb_drag_params::type
@@ -743,7 +764,6 @@ loop:   inx
         rts
 .endproc
 
-;;; Unused in STF DA, so most of this is speculation
 .proc on_hscroll_thumb_click
         jsr     do_thumb_drag
         lda     thumb_drag_params::moved
@@ -766,35 +786,30 @@ loop:   inx
 end:    rts
 .endproc
 
-;;; Unused in STF DA, so most of this is speculation
 .proc on_hscroll_after_click
         ldx     #2
         lda     window_params::L099A
         jmp     hscroll_common
 .endproc
 
-;;; Unused in STF DA, so most of this is speculation
 .proc on_hscroll_before_click
         ldx     #254
         lda     #0
         jmp     hscroll_common
 .endproc
 
-;;; Unused in STF DA, so most of this is speculation
 .proc on_hscroll_right_click
         ldx     #1
         lda     window_params::L099A
         jmp     hscroll_common
 .endproc
 
-;;; Unused in STF DA, so most of this is speculation
 .proc on_hscroll_left_click
         ldx     #255
         lda     #0
         ;; fall through
 .endproc
 
-;;; Unused in STF DA, so most of this is speculation
 .proc hscroll_common
         sta     compare+1
         stx     delta+1
@@ -822,6 +837,9 @@ store:  sta     window_params::L099B
         bne     loop
         rts
 .endproc
+
+;;; ==================================================
+;;; UI Helpers
 
         ;; Used at start of thumb drag
 .proc do_thumb_drag
@@ -941,7 +959,9 @@ L0E1D:  A2D_CALL $08, L0952
         A2D_CALL $08, L094A
         rts
 
-;;; Draw content ???
+;;; ==================================================
+;;; Content Rendering
+
 .proc draw_content
         lda     #0
         sta     L0949
@@ -1221,6 +1241,7 @@ L1088:  sec
         lda     text_box::width+1
         sbc     text_box::hoffset+1
         sta     window_width+1
+
         sec
         lda     text_box::height
         sbc     text_box::voffset
@@ -1229,17 +1250,18 @@ L10A5:  lda     text_box::height
         sta     L0965
         lda     text_box::height+1
         sta     L0966
+
         lda     #$00
         sta     L0968
         sta     L0969
 L10B9:  lda     L0966
         bne     L10C5
         lda     L0965
-        cmp     #$0A
+        cmp     #$0A            ; line spacing = 10
         bcc     L10DE
 L10C5:  sec
         lda     L0965
-        sbc     #$0A
+        sbc     #$0A            ; line spacing = 10
         sta     L0965
         bcs     L10D3
         dec     L0966
@@ -1317,8 +1339,9 @@ loop:   sta     $8802,x
 end:    rts
 .endproc
 
-;;; On Title Bar Click - if it's on the Fixed/Proportional label,
-;;; toggle it and update.
+;;; ==================================================
+;;; Title Bar (Proportional/Fixed mode button)
+
 .proc on_title_bar_click
         lda     mouse_params::xcoord+1           ; mouse x high byte?
         cmp     mode_box_left+1
@@ -1326,6 +1349,8 @@ end:    rts
         lda     mouse_params::xcoord
         cmp     mode_box_left
 :       bcc     ignore
+
+        ;; Toggle the state and redraw
         lda     fixed_mode_flag
         beq     set_flag
         dec     fixed_mode_flag ; clear flag (mode = proportional)
