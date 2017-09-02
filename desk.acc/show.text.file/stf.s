@@ -339,23 +339,30 @@ height: .word   $96
 L09DE:  sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
+
+        path_index := $DF20
+        path_table := $DFB3           ; prefix address table
+
+
+
         lda     #0
         sta     pathname::length
         lda     $DF21           ; ???
         beq     abort           ; some file properties?
-        lda     $DF20           ; ???
+        lda     path_index      ; prefix index in table
         bne     continue
 abort:  rts
 continue:
 
-        path := $DFB3
+
         src := $06
         dst := $08
-        asl     a
+
+        asl     a               ; (since address table is 2 bytes wide)
         tax
-        lda     path,x         ; pointer to pathname?
+        lda     path_table,x          ; pathname ???
         sta     src
-        lda     path+1,x
+        lda     path_table+1,x
         sta     src+1
         ldy     #0
         lda     (src),y
@@ -369,19 +376,23 @@ continue:
         sta     dst+1
         jsr     copy_pathname   ; copy x bytes (src) to (dst)
 
-        lda     #'/'
+        lda     #'/'            ; append separator to path
         ldy     #0
         sta     (dst),y
         inc     pathname::length
         inc     dst
         bne     :+
         inc     dst+1
-:       lda     $DF22
-        asl     a
+
+        filename_index := $DF22
+        filename_table := $DD9F
+
+:       lda     filename_index  ; file index in table
+        asl     a               ; (since table is 2 bytes wide)
         tax
-        lda     $DD9F,x
+        lda     filename_table,x
         sta     src
-        lda     $DDA0,x
+        lda     filename_table+1,x
         sta     src+1
         ldy     #$02
         lda     (src),y

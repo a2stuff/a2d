@@ -536,23 +536,30 @@ Current file: stf.s
 0009DE  1  8D 09 C0     L09DE:  sta     ALTZPON
 0009E1  1  AD 8B C0             lda     LCBANK1
 0009E4  1  AD 8B C0             lda     LCBANK1
+0009E7  1               
+0009E7  1                       path_index := $DF20
+0009E7  1                       path_table := $DFB3           ; prefix address table
+0009E7  1               
+0009E7  1               
+0009E7  1               
 0009E7  1  A9 00                lda     #0
 0009E9  1  8D 04 09             sta     pathname::length
 0009EC  1  AD 21 DF             lda     $DF21           ; ???
 0009EF  1  F0 05                beq     abort           ; some file properties?
-0009F1  1  AD 20 DF             lda     $DF20           ; ???
+0009F1  1  AD 20 DF             lda     path_index      ; prefix index in table
 0009F4  1  D0 01                bne     continue
 0009F6  1  60           abort:  rts
 0009F7  1               continue:
 0009F7  1               
-0009F7  1                       path := $DFB3
+0009F7  1               
 0009F7  1                       src := $06
 0009F7  1                       dst := $08
-0009F7  1  0A                   asl     a
+0009F7  1               
+0009F7  1  0A                   asl     a               ; (since address table is 2 bytes wide)
 0009F8  1  AA                   tax
-0009F9  1  BD B3 DF             lda     path,x         ; pointer to pathname?
+0009F9  1  BD B3 DF             lda     path_table,x          ; pathname ???
 0009FC  1  85 06                sta     src
-0009FE  1  BD B4 DF             lda     path+1,x
+0009FE  1  BD B4 DF             lda     path_table+1,x
 000A01  1  85 07                sta     src+1
 000A03  1  A0 00                ldy     #0
 000A05  1  B1 06                lda     (src),y
@@ -564,21 +571,25 @@ Current file: stf.s
 000A10  1  85 08                sta     dst
 000A12  1  A9 09                lda     #>(pathname::data)
 000A14  1  85 09                sta     dst+1
-000A16  1  20 72 0A             jsr     copy_pathname
+000A16  1  20 72 0A             jsr     copy_pathname   ; copy x bytes (src) to (dst)
 000A19  1               
-000A19  1  A9 2F                lda     #'/'
+000A19  1  A9 2F                lda     #'/'            ; append separator to path
 000A1B  1  A0 00                ldy     #0
 000A1D  1  91 08                sta     (dst),y
 000A1F  1  EE 04 09             inc     pathname::length
 000A22  1  E6 08                inc     dst
 000A24  1  D0 02                bne     :+
 000A26  1  E6 09                inc     dst+1
-000A28  1  AD 22 DF     :       lda     $DF22
-000A2B  1  0A                   asl     a
+000A28  1               
+000A28  1                       filename_index := $DF22
+000A28  1                       filename_table := $DD9F
+000A28  1               
+000A28  1  AD 22 DF     :       lda     filename_index  ; file index in table
+000A2B  1  0A                   asl     a               ; (since table is 2 bytes wide)
 000A2C  1  AA                   tax
-000A2D  1  BD 9F DD             lda     $DD9F,x
+000A2D  1  BD 9F DD             lda     filename_table,x
 000A30  1  85 06                sta     src
-000A32  1  BD A0 DD             lda     $DDA0,x
+000A32  1  BD A0 DD             lda     filename_table+1,x
 000A35  1  85 07                sta     src+1
 000A37  1  A0 02                ldy     #$02
 000A39  1  B1 06                lda     (src),y
@@ -593,7 +604,7 @@ Current file: stf.s
 000A4A  1  69 00                adc     #$00
 000A4C  1  8D 97 09             sta     window_params::title+1
 000A4F  1  A0 09                ldy     #$09
-000A51  1  B1 06                lda     ($06),y
+000A51  1  B1 06                lda     (src),y
 000A53  1  AA                   tax
 000A54  1  CA                   dex
 000A55  1  CA                   dex
@@ -603,7 +614,7 @@ Current file: stf.s
 000A5B  1  85 06                sta     src
 000A5D  1  90 02                bcc     L0A61
 000A5F  1  E6 07                inc     src+1
-000A61  1  20 72 0A     L0A61:  jsr     copy_pathname
+000A61  1  20 72 0A     L0A61:  jsr     copy_pathname   ; copy x bytes (src) to (dst)
 000A64  1  A9 1E                lda     #$1E
 000A66  1  85 27                sta     $27
 000A68  1  A9 40                lda     #$40
