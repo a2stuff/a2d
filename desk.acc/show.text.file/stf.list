@@ -5,7 +5,7 @@ Current file: stf.s
 000000r 1                       .setcpu "65C02"
 000000r 1                       .org $800
 000800  1               
-000800  1                       .include "prodos.inc"
+000800  1                       .include "../../inc/prodos.inc"
 000800  2               ;;; ------------------------------
 000800  2               ;;; ProDOS MLI
 000800  2               ;;; ------------------------------
@@ -50,7 +50,7 @@ Current file: stf.s
 000800  2                       .addr addr
 000800  2               .endmacro
 000800  2               
-000800  1                       .include "auxmem.inc"
+000800  1                       .include "../../inc/auxmem.inc"
 000800  2               ;;; ------------------------------
 000800  2               ;;; Aux Memory
 000800  2               ;;; ------------------------------
@@ -184,9 +184,6 @@ Current file: stf.s
 000800  2               .endmacro
 000800  2               
 000800  1               
-000800  1               call_main_trampoline   := $0020        ; installed on ZP, turns off auxmem and calls...
-000800  1               call_main_addr         := call_main_trampoline+7        ; address patched in here
-000800  1               
 000800  1  4C 04 08     start:  jmp     copy2aux
 000803  1               
 000803  1  00           save_stack:.byte   0
@@ -210,6 +207,9 @@ Current file: stf.s
 000827  1  D0 E4                bne     src
 000829  1               .endproc
 000829  1               
+000829  1               call_main_trampoline   := $20 ; installed on ZP, turns off auxmem and calls...
+000829  1               call_main_addr         := call_main_trampoline+7        ; address patched in here
+000829  1               
 000829  1               ;;; Copy the following "call_main_template" routine to $20
 000829  1               .scope
 000829  1  8D 05 C0             sta     RAMWRTON
@@ -230,7 +230,8 @@ Current file: stf.s
 000848  1  8D 05 C0             sta     RAMWRTON
 00084B  1  60                   rts
 00084C  1               .endproc
-00084C  1               call_main_template_end:
+00084C  1               call_main_template_end:         ; can't .sizeof(proc) before declaration
+00084C  1                       ;; https://github.com/cc65/cc65/issues/478
 00084C  1               
 00084C  1               .proc call_init
 00084C  1                       ;; run the DA
@@ -1559,6 +1560,7 @@ Current file: stf.s
 001192  1  0A 00        height: .word   10
 001194  1               .endproc
 001194  1               mode_box_left := mode_box::left ; forward refs to mode_box::left don't work?
+001194  1                       ;; https://github.com/cc65/cc65/issues/479
 001194  1               
 001194  1               .proc mode_pos
 001194  1  00 00        left:   .word   0               ; horizontal text offset
