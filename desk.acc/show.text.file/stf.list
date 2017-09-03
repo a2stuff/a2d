@@ -619,15 +619,24 @@ Current file: stf.s
 0009E1  1  AD 8B C0             lda     LCBANK1
 0009E4  1  AD 8B C0             lda     LCBANK1
 0009E7  1               
+0009E7  1                       ;; These are DeskTop internals, but it appears there is no
+0009E7  1                       ;; API for getting the selected file.
 0009E7  1                       file_selected := $DF21  ; 0 if no selection, 1 otherwise
 0009E7  1                       path_index := $DF20     ; index of selected window (used to get prefix)
 0009E7  1                       path_table := $DFB3     ; window address table
+0009E7  1                       ;; each entry is 65 bytes long
 0009E7  1                       ;; each entry is length-prefixed path string (no trailing /)
 0009E7  1                       file_index := $DF22     ; index of selected file (global, not w/in window)
 0009E7  1                       file_table := $DD9F     ; file address table
-0009E7  1                       ;; each entry is
-0009E7  1                       ;; ... byte 2 = type (bits 4,5,6 clear = directory)
-0009E7  1                       ;; ... byte 9 = start of length-prefixed filename with spaces before/after
+0009E7  1                       ;; each entry is 27 bytes long
+0009E7  1                       ;;      .byte ??
+0009E7  1                       ;;      .byte ??
+0009E7  1                       ;;      .byte type/icon (bits 4,5,6 clear = directory)
+0009E7  1                       ;;      .word iconx     (pixels)
+0009E7  1                       ;;      .word icony     (pixels)
+0009E7  1                       ;;      .byte ??
+0009E7  1                       ;;      .byte ??
+0009E7  1                       ;;      .byte len, name (length-prefixed, spaces before/after; 17 byte buffer)
 0009E7  1               
 0009E7  1  A9 00                lda     #0
 0009E9  1  8D 04 09             sta     pathname::length

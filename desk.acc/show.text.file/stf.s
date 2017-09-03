@@ -359,12 +359,19 @@ height: .word   default_height
         file_selected := $DF21  ; 0 if no selection, 1 otherwise
         path_index := $DF20     ; index of selected window (used to get prefix)
         path_table := $DFB3     ; window address table
+        ;; each entry is 65 bytes long
         ;; each entry is length-prefixed path string (no trailing /)
         file_index := $DF22     ; index of selected file (global, not w/in window)
         file_table := $DD9F     ; file address table
-        ;; each entry is
-        ;; ... byte 2 = type (bits 4,5,6 clear = directory)
-        ;; ... byte 9 = start of length-prefixed filename with spaces before/after
+        ;; each entry is 27 bytes long
+        ;;      .byte ??
+        ;;      .byte ??
+        ;;      .byte type/icon (bits 4,5,6 clear = directory)
+        ;;      .word iconx     (pixels)
+        ;;      .word icony     (pixels)
+        ;;      .byte ??
+        ;;      .byte ??
+        ;;      .byte len, name (length-prefixed, spaces before/after; 17 byte buffer)
 
         lda     #0
         sta     pathname::length
