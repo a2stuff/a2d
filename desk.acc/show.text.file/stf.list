@@ -100,6 +100,7 @@ Current file: stf.s
 000800  2               JUMP_TABLE_14   := $403C
 000800  2               JUMP_TABLE_15   := $403F
 000800  2               
+000800  2               A2D_UNK_03      := $03          ; Unknown - used in calculator after frame is drawn
 000800  2               
 000800  2               A2D_TEXT_BOX1   := $04          ; Not sure what BOX1 vs. BOX2 is for
 000800  2               A2D_TEXT_BOX2   := $06          ; Not sure what BOX1 vs. BOX2 is for
@@ -112,16 +113,22 @@ Current file: stf.s
 000800  2                       ;; .word width          pixels
 000800  2                       ;; .word height
 000800  2               
+000800  2               A2D_UNK_08      := $08          ; Unknown - used frequently
+000800  2               
+000800  2               A2D_UNK_0C      := $0C          ; Unknown - used in calculator
+000800  2               
 000800  2               A2D_SET_TEXT_POS:= $0E
 000800  2                       ;; .word left
 000800  2                       ;; .word base
 000800  2               
-000800  2               A2D_CLEAR_BOX   := $11
+000800  2               A2D_CLEAR_BOX   := $11   ; To window background pattern
 000800  2                       ;; .word hoffset        (includes scroll pos)
 000800  2                       ;; .word voffset
 000800  2                       ;; .word width          pixels
 000800  2                       ;; .word height
 000800  2               
+000800  2               A2D_UNK_14      := $14          ; Unknown - draws push button (calculator)
+000800  2               A2D_UNK_19      := $19          ; Unknown - draws button label (calculator)
 000800  2               
 000800  2               A2D_DRAW_TEXT   := $19
 000800  2                       ;; .addr data
@@ -140,7 +147,20 @@ Current file: stf.s
 000800  2                       ;;      bit 1: add close box
 000800  2                       ;;      bit 2: add resize box
 000800  2                       ;; .addr title
-000800  2                       ;; ...
+000800  2                       ;; .byte ???
+000800  2                       ;; .byte ???
+000800  2                       ;; .byte ???
+000800  2                       ;; .byte ???
+000800  2                       ;; .byte ???
+000800  2                       ;; .byte vscroll_pos
+000800  2                       ;; .byte ???
+000800  2                       ;; .byte ???
+000800  2                       ;; .byte ???
+000800  2                       ;; .byte ???
+000800  2                       ;; .byte ???
+000800  2                       ;; .byte ???
+000800  2                       ;; .word width
+000800  2                       ;; .word height
 000800  2               
 000800  2               A2D_DESTROY_WINDOW := $39
 000800  2                       ;; .byte id
@@ -540,6 +560,9 @@ Current file: stf.s
 000993  1  00           len:    .byte   0               ; length
 000994  1               .endproc
 000994  1               
+000994  1                       default_width := 512
+000994  1                       default_height := 150
+000994  1               
 000994  1               .proc window_params
 000994  1  64           id:     .byte   window_id       ; window identifier
 000995  1  02           flags:  .byte   2               ; window flags (2=include close box)
@@ -553,9 +576,11 @@ Current file: stf.s
 00099D  1  00                   .byte   0
 00099E  1               
 00099E  1                       ;; unreferenced ?
-00099E  1  00 00 C8 00          .byte   $00,$00,$C8,$00,$33,$00,$00 ; ???
-0009A2  1  33 00 00     
-0009A5  1  02 96 00             .byte   $02,$96,$00                 ; ???
+00099E  1  00 00 C8 00          .byte   $00,$00,$C8,$00,$33,$00
+0009A2  1  33 00        
+0009A4  1               
+0009A4  1  00 02        width:  .word   default_width
+0009A6  1  96 00        height: .word   default_height
 0009A8  1               .endproc
 0009A8  1               
 0009A8  1               .proc text_box                  ; or whole window ??
@@ -565,8 +590,8 @@ Current file: stf.s
 0009AE  1  80 00                .word   $80             ; ??? never changed
 0009B0  1  00 00        hoffset:.word   0               ; Also used for A2D_CLEAR_BOX
 0009B2  1  00 00        voffset:.word   0
-0009B4  1  00 02        width:  .word   512
-0009B6  1  96 00        height: .word   150
+0009B4  1  00 02        width:  .word   default_width
+0009B6  1  96 00        height: .word   default_height
 0009B8  1               .endproc
 0009B8  1               
 0009B8  1                       ;; unused?
@@ -585,8 +610,8 @@ Current file: stf.s
 0009D4  1  80 00                .word   $80
 0009D6  1  00 00        hoffset:.word   0
 0009D8  1  00 00        voffset:.word   0
-0009DA  1  00 02        width:  .word   512
-0009DC  1  96 00        height: .word   150
+0009DA  1  00 02        width:  .word   default_width
+0009DC  1  96 00        height: .word   default_height
 0009DE  1               .endproc
 0009DE  1               
 0009DE  1               .proc init
@@ -821,7 +846,7 @@ Current file: stf.s
 000B42  1  20 FD 10             jsr     L10FD           ; call $4015 on main
 000B45  1  20 88 10             jsr     calc_window_size
 000B48  1               
-000B48  1                       max_width := 512
+000B48  1                       max_width := default_width
 000B48  1  A9 02                lda     #>max_width
 000B4A  1  CD B5 09             cmp     text_box::width+1
 000B4D  1  D0 05                bne     :+

@@ -23,6 +23,7 @@ JUMP_TABLE_13   := $4039
 JUMP_TABLE_14   := $403C
 JUMP_TABLE_15   := $403F
 
+A2D_UNK_03      := $03          ; Unknown - used in calculator after frame is drawn
 
 A2D_TEXT_BOX1   := $04          ; Not sure what BOX1 vs. BOX2 is for
 A2D_TEXT_BOX2   := $06          ; Not sure what BOX1 vs. BOX2 is for
@@ -35,16 +36,22 @@ A2D_TEXT_BOX2   := $06          ; Not sure what BOX1 vs. BOX2 is for
         ;; .word width          pixels
         ;; .word height
 
+A2D_UNK_08      := $08          ; Unknown - used frequently
+
+A2D_UNK_0C      := $0C          ; Unknown - used in calculator
+
 A2D_SET_TEXT_POS:= $0E
         ;; .word left
         ;; .word base
 
-A2D_CLEAR_BOX   := $11
+A2D_CLEAR_BOX   := $11   ; To window background pattern
         ;; .word hoffset        (includes scroll pos)
         ;; .word voffset
         ;; .word width          pixels
         ;; .word height
 
+A2D_UNK_14      := $14          ; Unknown - draws push button (calculator)
+A2D_UNK_19      := $19          ; Unknown - draws button label (calculator)
 
 A2D_DRAW_TEXT   := $19
         ;; .addr data
@@ -63,7 +70,20 @@ A2D_CREATE_WINDOW := $38
         ;;      bit 1: add close box
         ;;      bit 2: add resize box
         ;; .addr title
-        ;; ...
+        ;; .byte ???
+        ;; .byte ???
+        ;; .byte ???
+        ;; .byte ???
+        ;; .byte ???
+        ;; .byte vscroll_pos
+        ;; .byte ???
+        ;; .byte ???
+        ;; .byte ???
+        ;; .byte ???
+        ;; .byte ???
+        ;; .byte ???
+        ;; .word width
+        ;; .word height
 
 A2D_DESTROY_WINDOW := $39
         ;; .byte id

@@ -299,6 +299,9 @@ addr:   .addr   0               ; address
 len:    .byte   0               ; length
 .endproc
 
+        default_width := 512
+        default_height := 150
+
 .proc window_params
 id:     .byte   window_id       ; window identifier
 flags:  .byte   2               ; window flags (2=include close box)
@@ -312,8 +315,10 @@ vscroll_pos:
         .byte   0
 
         ;; unreferenced ?
-        .byte   $00,$00,$C8,$00,$33,$00,$00 ; ???
-        .byte   $02,$96,$00                 ; ???
+        .byte   $00,$00,$C8,$00,$33,$00
+
+width:  .word   default_width
+height: .word   default_height
 .endproc
 
 .proc text_box                  ; or whole window ??
@@ -323,8 +328,8 @@ top:    .word   28
         .word   $80             ; ??? never changed
 hoffset:.word   0               ; Also used for A2D_CLEAR_BOX
 voffset:.word   0
-width:  .word   512
-height: .word   150
+width:  .word   default_width
+height: .word   default_height
 .endproc
 
         ;; unused?
@@ -340,8 +345,8 @@ top:    .word   28
         .word   $80
 hoffset:.word   0
 voffset:.word   0
-width:  .word   512
-height: .word   150
+width:  .word   default_width
+height: .word   default_height
 .endproc
 
 .proc init
@@ -349,6 +354,8 @@ height: .word   150
         lda     LCBANK1
         lda     LCBANK1
 
+        ;; These are DeskTop internals, but it appears there is no
+        ;; API for getting the selected file.
         file_selected := $DF21  ; 0 if no selection, 1 otherwise
         path_index := $DF20     ; index of selected window (used to get prefix)
         path_table := $DFB3     ; window address table
@@ -568,7 +575,7 @@ title:  jsr     on_title_bar_click
         jsr     L10FD           ; call $4015 on main
         jsr     calc_window_size
 
-        max_width := 512
+        max_width := default_width
         lda     #>max_width
         cmp     text_box::width+1
         bne     :+
