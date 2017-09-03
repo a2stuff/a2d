@@ -143,7 +143,7 @@ Current file: stf.s
 000800  2                       ;;      0 = desktop
 000800  2                       ;;      1, 2, ... = file windows
 000800  2                       ;;      100 = DA (for example)
-000800  2                       ;; .byte flags
+000800  2                       ;; .byte flags          (A2D_CW_*)
 000800  2                       ;;      bit 0: remove title bar
 000800  2                       ;;      bit 1: add close box
 000800  2                       ;;      bit 2: add resize box
@@ -170,7 +170,7 @@ Current file: stf.s
 000800  2               A2D_GET_MOUSE   := $40
 000800  2                       ;; .word x
 000800  2                       ;; .word y
-000800  2                       ;; .byte element
+000800  2                       ;; .byte element        (A2D_ELEM_*)
 000800  2                       ;;      0 = desktop
 000800  2                       ;;      1 = menu
 000800  2                       ;;      2 = client area (including scroll bars/resize box)
@@ -212,7 +212,6 @@ Current file: stf.s
 000800  2                       ;; .byte pos (new position 0...250)
 000800  2               
 000800  2               
-000800  2               
 000800  2               ;;; Used in A2D_GET_MOUSE
 000800  2               A2D_ELEM_DESKTOP:= 0
 000800  2               A2D_ELEM_MENU   := 1
@@ -237,6 +236,10 @@ Current file: stf.s
 000800  2               A2D_SCROLL_PART_AFTER   := 4
 000800  2               A2D_SCROLL_PART_THUMB   := 5
 000800  2               
+000800  2               ;;; Used in A2D_CREATE_WINDOW
+000800  2               A2D_CW_NOTITLE  := 1 << 0
+000800  2               A2D_CW_ADDCLOSE := 1 << 1
+000800  2               A2D_CW_ADDRESIZE:= 1 << 2
 000800  2               
 000800  2               ;;; Macros
 000800  2               .macro  A2D_CALL    op, addr
@@ -566,7 +569,7 @@ Current file: stf.s
 000994  1               
 000994  1               .proc window_params
 000994  1  64           id:     .byte   window_id       ; window identifier
-000995  1  02           flags:  .byte   2               ; window flags (2=include close box)
+000995  1  02           flags:  .byte   A2D_CW_ADDCLOSE ; window flags (2=include close box)
 000996  1  00 10        title:  .addr   $1000           ; overwritten to point at filename
 000998  1  00 C1        L0998:  .byte   $00,$C1         ; ???
 00099A  1               

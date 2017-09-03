@@ -303,7 +303,7 @@ len:    .byte   0               ; length
 
 .proc window_params
 id:     .byte   window_id       ; window identifier
-flags:  .byte   2               ; window flags (2=include close box)
+flags:  .byte   A2D_CW_ADDCLOSE ; window flags (2=include close box)
 title:  .addr   $1000           ; overwritten to point at filename
 L0998:  .byte   $00,$C1         ; ???
 

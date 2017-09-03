@@ -66,7 +66,7 @@ A2D_CREATE_WINDOW := $38
         ;;      0 = desktop
         ;;      1, 2, ... = file windows
         ;;      100 = DA (for example)
-        ;; .byte flags
+        ;; .byte flags          (A2D_CW_*)
         ;;      bit 0: remove title bar
         ;;      bit 1: add close box
         ;;      bit 2: add resize box
@@ -93,7 +93,7 @@ A2D_DESTROY_WINDOW := $39
 A2D_GET_MOUSE   := $40
         ;; .word x
         ;; .word y
-        ;; .byte element
+        ;; .byte element        (A2D_ELEM_*)
         ;;      0 = desktop
         ;;      1 = menu
         ;;      2 = client area (including scroll bars/resize box)
@@ -135,7 +135,6 @@ A2D_UPDATE_SCROLL:= $4B
         ;; .byte pos (new position 0...250)
 
 
-
 ;;; Used in A2D_GET_MOUSE
 A2D_ELEM_DESKTOP:= 0
 A2D_ELEM_MENU   := 1
@@ -160,6 +159,10 @@ A2D_SCROLL_PART_BELOW   := 4
 A2D_SCROLL_PART_AFTER   := 4
 A2D_SCROLL_PART_THUMB   := 5
 
+;;; Used in A2D_CREATE_WINDOW
+A2D_CW_NOTITLE  := 1 << 0
+A2D_CW_ADDCLOSE := 1 << 1
+A2D_CW_ADDRESIZE:= 1 << 2
 
 ;;; Macros
 .macro  A2D_CALL    op, addr
