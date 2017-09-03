@@ -113,7 +113,8 @@ Current file: stf.s
 000800  2                       ;; .word width          pixels
 000800  2                       ;; .word height
 000800  2               
-000800  2               A2D_UNK_08      := $08          ; Unknown - used frequently
+000800  2               A2D_SET_PATTERN := $08
+000800  2                       ;; .byte r0...r7        8x8 pixel pattern for A2D_CLEAR_BOX calls
 000800  2               
 000800  2               A2D_UNK_0C      := $0C          ; Unknown - used in calculator
 000800  2               
@@ -466,19 +467,19 @@ Current file: stf.s
 000948  1  00           L0948:  .byte   $00
 000949  1  00           L0949:  .byte   $00
 00094A  1               
-00094A  1                       ;; params of a $08 call
-00094A  1  00 00 00 00  L094A:  .byte   $00,$00,$00,$00
-00094E  1               
-00094E  1               params_end:
-00094E  1               ;;; ----------------------------------------
-00094E  1               
-00094E  1                       window_id := $64
-00094E  1               
-00094E  1  00 00 00 00          .byte   $00,$00,$00,$00
+00094A  1               params_end := * + 4       ; bug in original? (harmless as this is static)
+00094A  1               ;;; ----------------------------------------
+00094A  1               
+00094A  1               black_pattern:
+00094A  1  00 00 00 00          .byte   $00,$00,$00,$00,$00,$00,$00,$00
+00094E  1  00 00 00 00  
 000952  1               
-000952  1                       ;; start of a $08 call
-000952  1  FF FF FF FF  L0952:  .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+000952  1               white_pattern:
+000952  1  FF FF FF FF          .byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
 000956  1  FF FF FF FF  
+00095A  1               
+00095A  1                       window_id := $64
+00095A  1               
 00095A  1  00           L095A:  .byte   $00
 00095B  1  FA           L095B:  .byte   $FA
 00095C  1  01           L095C:  .byte   $01
@@ -1260,11 +1261,11 @@ Current file: stf.s
 000E1D  1               .endproc
 000E1D  1               
 000E1D  1                       ;; called on scroll
-000E1D  1  20 00 40 08  L0E1D:  A2D_CALL $08, L0952
+000E1D  1  20 00 40 08  L0E1D:  A2D_CALL A2D_SET_PATTERN, white_pattern
 000E21  1  52 09        
 000E23  1  20 00 40 11          A2D_CALL A2D_CLEAR_BOX, text_box::hoffset
 000E27  1  B0 09        
-000E29  1  20 00 40 08          A2D_CALL $08, L094A     ; possibly hides cursor?
+000E29  1  20 00 40 08          A2D_CALL A2D_SET_PATTERN, black_pattern
 000E2D  1  4A 09        
 000E2F  1  60                   rts
 000E30  1               

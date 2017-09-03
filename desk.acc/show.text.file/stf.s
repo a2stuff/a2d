@@ -206,18 +206,17 @@ L0947:  .byte   $00
 L0948:  .byte   $00
 L0949:  .byte   $00
 
-        ;; params of a $08 call
-L094A:  .byte   $00,$00,$00,$00
-
-params_end:
+params_end := * + 4       ; bug in original? (harmless as this is static)
 ;;; ----------------------------------------
+
+black_pattern:
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+
+white_pattern:
+        .byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
 
         window_id := $64
 
-        .byte   $00,$00,$00,$00
-
-        ;; start of a $08 call
-L0952:  .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
 L095A:  .byte   $00
 L095B:  .byte   $FA
 L095C:  .byte   $01
@@ -980,9 +979,9 @@ end:    rts
 .endproc
 
         ;; called on scroll
-L0E1D:  A2D_CALL $08, L0952
+L0E1D:  A2D_CALL A2D_SET_PATTERN, white_pattern
         A2D_CALL A2D_CLEAR_BOX, text_box::hoffset
-        A2D_CALL $08, L094A     ; possibly hides cursor?
+        A2D_CALL A2D_SET_PATTERN, black_pattern
         rts
 
 ;;; ==================================================

@@ -36,7 +36,8 @@ A2D_TEXT_BOX2   := $06          ; Not sure what BOX1 vs. BOX2 is for
         ;; .word width          pixels
         ;; .word height
 
-A2D_UNK_08      := $08          ; Unknown - used frequently
+A2D_SET_PATTERN := $08
+        ;; .byte r0...r7        8x8 pixel pattern for A2D_CLEAR_BOX calls
 
 A2D_UNK_0C      := $0C          ; Unknown - used in calculator
 
