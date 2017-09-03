@@ -280,16 +280,16 @@ L0987:  .byte   0
 .endproc
 
 .proc update_scroll_params      ; called to update scroll bar position
-type:   .byte   0               ; 1 = vertical, 2 = horizontal ?
-pos:    .byte   0               ; new position (0...250)
+type:   .byte   0               ; 1 = vscroll, 2 = hscroll
+pos:    .byte   0               ; new position
 .endproc
 
 ;;; Used when dragging vscroll thumb
 .proc thumb_drag_params
-type:   .byte   0               ; vscroll = 1, hscroll = 2 ??
+type:   .byte   0               ; 1 = vscroll, 2 = hscroll
 xcoord: .word   0
 ycoord: .word   0
-pos:    .byte   0               ; position (0...255)
+pos:    .byte   0               ; position
 moved:  .byte   0               ; 0 if not moved, 1 if moved
 .endproc
 
@@ -623,7 +623,7 @@ L0B8B:  sta     window_params::hscroll
         lda     #>max_width
         sbc     window_width+1
         sta     $07
-        jsr     L10DF
+        jsr     div_by_16
         sta     resize_window_params::L0987
         lda     #$02
         sta     resize_window_params::L0986
@@ -796,7 +796,7 @@ loop:   inx
         lda     thumb_drag_params::moved
         beq     end
         lda     thumb_drag_params::pos
-        jsr     L10EC
+        jsr     mul_by_16
         lda     $06
         sta     text_box::hoffset
         lda     $07
@@ -891,7 +891,7 @@ store:  sta     window_params::hscroll_pos
 ;;; only used from hscroll code?
 .proc L0D5E
         lda     window_params::hscroll_pos
-        jsr     L10EC
+        jsr     mul_by_16
         clc
         lda     $06
         sta     text_box::hoffset
@@ -953,7 +953,7 @@ end:    rts
         sta     $06
         lda     text_box::hoffset+1
         sta     $07
-        jsr     L10DF
+        jsr     div_by_16
         sta     update_scroll_params::pos
         A2D_CALL A2D_UPDATE_SCROLL, update_scroll_params
         rts
@@ -1307,8 +1307,8 @@ loop:   lda     L0966
 end:    rts
 .endproc
 
-.proc L10DF                     ; ???
-        ldx     #$04
+.proc div_by_16                 ; input in $06/$07, output in a
+        ldx     #4
 loop:   clc
         ror     $07
         ror     $06
@@ -1318,11 +1318,11 @@ loop:   clc
         rts
 .endproc
 
-.proc L10EC                     ; ???
+.proc mul_by_16                 ; input in a, output in $06/$07
         sta     $06
-        lda     #$00
+        lda     #0
         sta     $07
-        ldx     #$04
+        ldx     #4
 loop:   clc
         rol     $06
         rol     $07

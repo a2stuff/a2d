@@ -552,16 +552,16 @@ Current file: stf.s
 000988  1               .endproc
 000988  1               
 000988  1               .proc update_scroll_params      ; called to update scroll bar position
-000988  1  00           type:   .byte   0               ; 1 = vertical, 2 = horizontal ?
-000989  1  00           pos:    .byte   0               ; new position (0...250)
+000988  1  00           type:   .byte   0               ; 1 = vscroll, 2 = hscroll
+000989  1  00           pos:    .byte   0               ; new position
 00098A  1               .endproc
 00098A  1               
 00098A  1               ;;; Used when dragging vscroll thumb
 00098A  1               .proc thumb_drag_params
-00098A  1  00           type:   .byte   0               ; vscroll = 1, hscroll = 2 ??
+00098A  1  00           type:   .byte   0               ; 1 = vscroll, 2 = hscroll
 00098B  1  00 00        xcoord: .word   0
 00098D  1  00 00        ycoord: .word   0
-00098F  1  00           pos:    .byte   0               ; position (0...255)
+00098F  1  00           pos:    .byte   0               ; position
 000990  1  00           moved:  .byte   0               ; 0 if not moved, 1 if moved
 000991  1               .endproc
 000991  1               
@@ -907,7 +907,7 @@ Current file: stf.s
 000B96  1  A9 02                lda     #>max_width
 000B98  1  ED 62 09             sbc     window_width+1
 000B9B  1  85 07                sta     $07
-000B9D  1  20 DF 10             jsr     L10DF
+000B9D  1  20 DF 10             jsr     div_by_16
 000BA0  1  8D 87 09             sta     resize_window_params::L0987
 000BA3  1  A9 02                lda     #$02
 000BA5  1  8D 86 09             sta     resize_window_params::L0986
@@ -1082,7 +1082,7 @@ Current file: stf.s
 000CB8  1  AD 90 09             lda     thumb_drag_params::moved
 000CBB  1  F0 29                beq     end
 000CBD  1  AD 8F 09             lda     thumb_drag_params::pos
-000CC0  1  20 EC 10             jsr     L10EC
+000CC0  1  20 EC 10             jsr     mul_by_16
 000CC3  1  A5 06                lda     $06
 000CC5  1  8D B0 09             sta     text_box::hoffset
 000CC8  1  A5 07                lda     $07
@@ -1179,7 +1179,7 @@ Current file: stf.s
 000D5E  1               ;;; only used from hscroll code?
 000D5E  1               .proc L0D5E
 000D5E  1  AD 9B 09             lda     window_params::hscroll_pos
-000D61  1  20 EC 10             jsr     L10EC
+000D61  1  20 EC 10             jsr     mul_by_16
 000D64  1  18                   clc
 000D65  1  A5 06                lda     $06
 000D67  1  8D B0 09             sta     text_box::hoffset
@@ -1241,7 +1241,7 @@ Current file: stf.s
 000DD9  1  85 06                sta     $06
 000DDB  1  AD B1 09             lda     text_box::hoffset+1
 000DDE  1  85 07                sta     $07
-000DE0  1  20 DF 10             jsr     L10DF
+000DE0  1  20 DF 10             jsr     div_by_16
 000DE3  1  8D 89 09             sta     update_scroll_params::pos
 000DE6  1  20 00 40 4B          A2D_CALL A2D_UPDATE_SCROLL, update_scroll_params
 000DEA  1  88 09        
@@ -1603,8 +1603,8 @@ Current file: stf.s
 0010DE  1  60           end:    rts
 0010DF  1               .endproc
 0010DF  1               
-0010DF  1               .proc L10DF                     ; ???
-0010DF  1  A2 04                ldx     #$04
+0010DF  1               .proc div_by_16                 ; input in $06/$07, output in a
+0010DF  1  A2 04                ldx     #4
 0010E1  1  18           loop:   clc
 0010E2  1  66 07                ror     $07
 0010E4  1  66 06                ror     $06
@@ -1614,11 +1614,11 @@ Current file: stf.s
 0010EB  1  60                   rts
 0010EC  1               .endproc
 0010EC  1               
-0010EC  1               .proc L10EC                     ; ???
+0010EC  1               .proc mul_by_16                 ; input in a, output in $06/$07
 0010EC  1  85 06                sta     $06
-0010EE  1  A9 00                lda     #$00
+0010EE  1  A9 00                lda     #0
 0010F0  1  85 07                sta     $07
-0010F2  1  A2 04                ldx     #$04
+0010F2  1  A2 04                ldx     #4
 0010F4  1  18           loop:   clc
 0010F5  1  26 06                rol     $06
 0010F7  1  26 07                rol     $07
