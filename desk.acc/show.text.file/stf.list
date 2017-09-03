@@ -484,7 +484,7 @@ Current file: stf.s
 00094E  1  00 00 00 00  
 000952  1               
 000952  1               white_pattern:
-000952  1  FF FF FF FF          .byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+000952  1  FF FF FF FF          .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
 000956  1  FF FF FF FF  
 00095A  1               
 00095A  1                       window_id := $64
@@ -533,7 +533,7 @@ Current file: stf.s
 00097C  1  00                   .byte   0               ; ???
 00097D  1               .endproc
 00097D  1               
-00097D  1               .proc close_btn                 ; queried after close clicked to see if aborted/finished
+00097D  1               .proc close_btn_params          ; queried after close clicked to see if aborted/finished
 00097D  1  00           state:  .byte   0               ; 0 = aborted, 1 = clicked
 00097E  1  00 00                .byte   0,0             ; ???
 000980  1               .endproc
@@ -844,9 +844,9 @@ Current file: stf.s
 000B21  1               ;;; Close Button
 000B21  1               
 000B21  1               .proc on_close_click
-000B21  1  20 00 40 43          A2D_CALL A2D_BTN_CLICK, close_btn     ; wait to see if the click completes
+000B21  1  20 00 40 43          A2D_CALL A2D_BTN_CLICK, close_btn_params     ; wait to see if the click completes
 000B25  1  7D 09        
-000B27  1  AD 7D 09             lda     close_btn::state ; did click complete?
+000B27  1  AD 7D 09             lda     close_btn_params::state ; did click complete?
 000B2A  1  F0 A5                beq     input_loop      ; nope
 000B2C  1  20 AF 08             jsr     close_file
 000B2F  1  20 00 40 39          A2D_CALL A2D_DESTROY_WINDOW, window_params

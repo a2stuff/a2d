@@ -5,6 +5,11 @@
         .include "../../inc/auxmem.inc"
         .include "a2d.inc"
 
+        ;; Big questions:
+        ;; * How is initial window position specified?
+        ;; * How can we hide/show the cursor on demand?
+        ;; * Can we trigger menu redraw?
+
 start:  jmp     copy2aux
 
 save_stack:.byte   0
@@ -213,7 +218,7 @@ black_pattern:
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
 white_pattern:
-        .byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
 
         window_id := $64
 
@@ -261,7 +266,7 @@ ycoord: .word   0
         .byte   0               ; ???
 .endproc
 
-.proc close_btn                 ; queried after close clicked to see if aborted/finished
+.proc close_btn_params          ; queried after close clicked to see if aborted/finished
 state:  .byte   0               ; 0 = aborted, 1 = clicked
         .byte   0,0             ; ???
 .endproc
@@ -563,8 +568,8 @@ title:  jsr     on_title_bar_click
 ;;; Close Button
 
 .proc on_close_click
-        A2D_CALL A2D_BTN_CLICK, close_btn     ; wait to see if the click completes
-        lda     close_btn::state ; did click complete?
+        A2D_CALL A2D_BTN_CLICK, close_btn_params     ; wait to see if the click completes
+        lda     close_btn_params::state ; did click complete?
         beq     input_loop      ; nope
         jsr     close_file
         A2D_CALL A2D_DESTROY_WINDOW, window_params
