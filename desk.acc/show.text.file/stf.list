@@ -113,6 +113,8 @@ Current file: stf.s
 000800  2                       ;; .word width          pixels
 000800  2                       ;; .word height
 000800  2               
+000800  2               A2D_UNK_07      := $07          ; Unknown - used in calculator
+000800  2               
 000800  2               A2D_SET_PATTERN := $08
 000800  2                       ;; .byte r0...r7        8x8 pixel pattern for A2D_CLEAR_BOX calls
 000800  2               
@@ -129,14 +131,22 @@ Current file: stf.s
 000800  2                       ;; .word height
 000800  2               
 000800  2               A2D_UNK_14      := $14          ; Unknown - draws push button (calculator)
-000800  2               A2D_UNK_19      := $19          ; Unknown - draws button label (calculator)
 000800  2               
 000800  2               A2D_DRAW_TEXT   := $19
 000800  2                       ;; .addr data
 000800  2                       ;; .byte length
 000800  2               
+000800  2               A2D_UNK_1A      := $1A          ; Unknown - used in calculator before window creation
+000800  2               
+000800  2               A2D_UNK_24      := $24          ; Unknown - used in calculator
+000800  2               
 000800  2               A2D_GET_BUTTON  := $2A
 000800  2                       ;; .byte state (0=up, 1=pressed, 2=held???)
+000800  2               
+000800  2               A2D_UNK_2B      := $2B          ; Unknown
+000800  2                       ;; no parameters (pass $0000 as address)
+000800  2               
+000800  2               A2D_UNK_2D      := $2D          ; Unknown - used in calculator
 000800  2               
 000800  2               A2D_CREATE_WINDOW := $38
 000800  2                       ;; .byte id
@@ -156,15 +166,26 @@ Current file: stf.s
 000800  2                       ;; .byte vscroll_pos
 000800  2                       ;; .byte ???
 000800  2                       ;; .byte ???
-000800  2                       ;; .byte ???
-000800  2                       ;; .byte ???
-000800  2                       ;; .byte ???
-000800  2                       ;; .byte ???
-000800  2                       ;; .word width
+000800  2                       ;; .word width_a        ???
+000800  2                       ;; .word height_a       ???
+000800  2                       ;; .word width_b        (of scroll area?)
+000800  2                       ;; .word height_b       (of scroll area?)
+000800  2                       ;;  - next section is identical to that for TEXT_BOX
+000800  2                       ;; .word left           pixels from screen edge
+000800  2                       ;; .word top
+000800  2                       ;; .word $2000          ???
+000800  2                       ;; .word $80            ???
+000800  2                       ;; .word hoffset        pixels scrolled
+000800  2                       ;; .word voffset
+000800  2                       ;; .word width          pixels
 000800  2                       ;; .word height
+000800  2               
+000800  2               
 000800  2               
 000800  2               A2D_DESTROY_WINDOW := $39
 000800  2                       ;; pass the same block as passed to A2D_CREATE_WINDOW
+000800  2               
+000800  2               A2D_UNK_3C      := $3C          ; Unknown, used in calculator
 000800  2               
 000800  2               A2D_GET_MOUSE   := $40
 000800  2                       ;; .word x
@@ -188,6 +209,10 @@ Current file: stf.s
 000800  2                       ;; .word xcoord of mouse
 000800  2                       ;; .word ycoord of mouse
 000800  2                       ;; .byte ??     (likely: moved? 0 = no change, 1 = moved)
+000800  2               
+000800  2               A2D_UNK_44      := $44          ; Unknown - used in calculator
+000800  2               
+000800  2               A2D_UNK_46      := $46          ; Unknown - used in calculator
 000800  2               
 000800  2               A2D_QUERY_CLIENT:= $48
 000800  2                       ;; .word xcoord of query
@@ -261,6 +286,10 @@ Current file: stf.s
 000800  2               data:   .byte   str
 000800  2               .endmacro
 000800  2               
+000800  1               
+000800  1                       ;; Big questions:
+000800  1                       ;; * How can we hide/show the cursor on demand?
+000800  1                       ;; * Can we trigger menu redraw? (if not, need to preserve for fullscreen)
 000800  1               
 000800  1  4C 04 08     start:  jmp     copy2aux
 000803  1               
@@ -596,7 +625,7 @@ Current file: stf.s
 0009A4  1  00 02        width:  .word   default_width
 0009A6  1  96 00        height: .word   default_height
 0009A8  1               .endproc
-0009A8  1               
+0009A8  1                       ;; window_params continues into text_box
 0009A8  1               .proc text_box                  ; or whole window ??
 0009A8  1  0A 00        left:   .word   10
 0009AA  1  1C 00        top:    .word   28

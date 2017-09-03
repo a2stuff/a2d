@@ -6,9 +6,8 @@
         .include "a2d.inc"
 
         ;; Big questions:
-        ;; * How is initial window position specified?
         ;; * How can we hide/show the cursor on demand?
-        ;; * Can we trigger menu redraw?
+        ;; * Can we trigger menu redraw? (if not, need to preserve for fullscreen)
 
 start:  jmp     copy2aux
 
@@ -328,7 +327,7 @@ vscroll_pos:
 width:  .word   default_width
 height: .word   default_height
 .endproc
-
+        ;; window_params continues into text_box
 .proc text_box                  ; or whole window ??
 left:   .word   10
 top:    .word   28

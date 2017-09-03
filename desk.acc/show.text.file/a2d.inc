@@ -36,6 +36,8 @@ A2D_TEXT_BOX2   := $06          ; Not sure what BOX1 vs. BOX2 is for
         ;; .word width          pixels
         ;; .word height
 
+A2D_UNK_07      := $07          ; Unknown - used in calculator
+
 A2D_SET_PATTERN := $08
         ;; .byte r0...r7        8x8 pixel pattern for A2D_CLEAR_BOX calls
 
@@ -52,14 +54,22 @@ A2D_CLEAR_BOX   := $11   ; To window background pattern
         ;; .word height
 
 A2D_UNK_14      := $14          ; Unknown - draws push button (calculator)
-A2D_UNK_19      := $19          ; Unknown - draws button label (calculator)
 
 A2D_DRAW_TEXT   := $19
         ;; .addr data
         ;; .byte length
 
+A2D_UNK_1A      := $1A          ; Unknown - used in calculator before window creation
+
+A2D_UNK_24      := $24          ; Unknown - used in calculator
+
 A2D_GET_BUTTON  := $2A
         ;; .byte state (0=up, 1=pressed, 2=held???)
+
+A2D_UNK_2B      := $2B          ; Unknown
+        ;; no parameters (pass $0000 as address)
+
+A2D_UNK_2D      := $2D          ; Unknown - used in calculator
 
 A2D_CREATE_WINDOW := $38
         ;; .byte id
@@ -79,15 +89,26 @@ A2D_CREATE_WINDOW := $38
         ;; .byte vscroll_pos
         ;; .byte ???
         ;; .byte ???
-        ;; .byte ???
-        ;; .byte ???
-        ;; .byte ???
-        ;; .byte ???
-        ;; .word width
+        ;; .word width_a        ???
+        ;; .word height_a       ???
+        ;; .word width_b        (of scroll area?)
+        ;; .word height_b       (of scroll area?)
+        ;;  - next section is identical to that for TEXT_BOX
+        ;; .word left           pixels from screen edge
+        ;; .word top
+        ;; .word $2000          ???
+        ;; .word $80            ???
+        ;; .word hoffset        pixels scrolled
+        ;; .word voffset
+        ;; .word width          pixels
         ;; .word height
+
+
 
 A2D_DESTROY_WINDOW := $39
         ;; pass the same block as passed to A2D_CREATE_WINDOW
+
+A2D_UNK_3C      := $3C          ; Unknown, used in calculator
 
 A2D_GET_MOUSE   := $40
         ;; .word x
@@ -111,6 +132,10 @@ A2D_DRAG_RESIZE := $45
         ;; .word xcoord of mouse
         ;; .word ycoord of mouse
         ;; .byte ??     (likely: moved? 0 = no change, 1 = moved)
+
+A2D_UNK_44      := $44          ; Unknown - used in calculator
+
+A2D_UNK_46      := $46          ; Unknown - used in calculator
 
 A2D_QUERY_CLIENT:= $48
         ;; .word xcoord of query
