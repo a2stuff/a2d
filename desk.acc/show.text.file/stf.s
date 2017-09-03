@@ -303,9 +303,10 @@ len:    .byte   0               ; length
 
 .proc window_params
 id:     .byte   window_id       ; window identifier
-flags:  .byte   A2D_CW_ADDCLOSE ; window flags (2=include close box)
+flags:  .byte   A2D_CWF_ADDCLOSE; window flags (2=include close box)
 title:  .addr   $1000           ; overwritten to point at filename
-L0998:  .byte   $00,$C1         ; ???
+hscroll:.byte   A2D_CWS_NOSCROLL
+vscroll:.byte   A2D_CWS_SCROLL_NORMAL
 
 L099A:  .byte   $20             ; hscroll?
 L099B:  .byte   $00,$FF         ; more hscroll?
@@ -600,18 +601,18 @@ title:  jsr     on_title_bar_click
         lda     text_box::width+1
         sbc     window_width+1
         sta     text_box::hoffset+1
-wider:  lda     window_params::L0998
+wider:  lda     window_params::hscroll
         ldx     window_width
         cpx     #<max_width
         bne     L0B89
         ldx     window_width+1
         cpx     #>max_width
         bne     L0B89
-        and     #$FE
+        and     #(A2D_CWS_SCROLL_TRACK ^ $FF)
         jmp     L0B8B
 
-L0B89:  ora     #$01
-L0B8B:  sta     window_params::L0998
+L0B89:  ora     #A2D_CWS_SCROLL_TRACK
+L0B8B:  sta     window_params::hscroll
         sec
         lda     #<max_width
         sbc     window_width
@@ -967,8 +968,8 @@ end:    rts
         .byte   $0C
         .addr   0
         A2D_CALL A2D_TEXT_BOX1, text_box
-        lda     window_params::L0998
-        ror     a
+        lda     window_params::hscroll
+        ror     a               ; check if low bit (track enabled) is set
         bcc     :+
         jsr     update_hscroll
 :       lda     window_params::vscroll_pos

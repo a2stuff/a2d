@@ -66,13 +66,13 @@ A2D_CREATE_WINDOW := $38
         ;;      0 = desktop
         ;;      1, 2, ... = file windows
         ;;      100 = DA (for example)
-        ;; .byte flags          (A2D_CW_*)
+        ;; .byte flags          (A2D_CWF_*)
         ;;      bit 0: remove title bar
         ;;      bit 1: add close box
         ;;      bit 2: add resize box
         ;; .addr title
-        ;; .byte ???
-        ;; .byte ???
+        ;; .byte hscroll        bits: 7 = enable, 6 = show thumb, 0 = show track
+        ;; .byte vscroll
         ;; .byte ???
         ;; .byte ???
         ;; .byte ???
@@ -160,9 +160,16 @@ A2D_SCROLL_PART_AFTER   := 4
 A2D_SCROLL_PART_THUMB   := 5
 
 ;;; Used in A2D_CREATE_WINDOW
-A2D_CW_NOTITLE  := 1 << 0
-A2D_CW_ADDCLOSE := 1 << 1
-A2D_CW_ADDRESIZE:= 1 << 2
+A2D_CWF_NOTITLE  := 1 << 0
+A2D_CWF_ADDCLOSE := 1 << 1
+A2D_CWF_ADDRESIZE:= 1 << 2
+
+A2D_CWS_NOSCROLL := 0
+A2D_CWS_SCROLL_ENABLED := 1 << 7
+A2D_CWS_SCROLL_THUMB   := 1 << 6
+A2D_CWS_SCROLL_TRACK   := 1 << 0
+A2D_CWS_SCROLL_NORMAL  := A2D_CWS_SCROLL_ENABLED | A2D_CWS_SCROLL_THUMB | A2D_CWS_SCROLL_TRACK
+
 
 ;;; Macros
 .macro  A2D_CALL    op, addr

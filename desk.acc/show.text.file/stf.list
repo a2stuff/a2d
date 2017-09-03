@@ -143,13 +143,13 @@ Current file: stf.s
 000800  2                       ;;      0 = desktop
 000800  2                       ;;      1, 2, ... = file windows
 000800  2                       ;;      100 = DA (for example)
-000800  2                       ;; .byte flags          (A2D_CW_*)
+000800  2                       ;; .byte flags          (A2D_CWF_*)
 000800  2                       ;;      bit 0: remove title bar
 000800  2                       ;;      bit 1: add close box
 000800  2                       ;;      bit 2: add resize box
 000800  2                       ;; .addr title
-000800  2                       ;; .byte ???
-000800  2                       ;; .byte ???
+000800  2                       ;; .byte hscroll        bits: 7 = enable, 6 = show thumb, 0 = show track
+000800  2                       ;; .byte vscroll
 000800  2                       ;; .byte ???
 000800  2                       ;; .byte ???
 000800  2                       ;; .byte ???
@@ -237,9 +237,16 @@ Current file: stf.s
 000800  2               A2D_SCROLL_PART_THUMB   := 5
 000800  2               
 000800  2               ;;; Used in A2D_CREATE_WINDOW
-000800  2               A2D_CW_NOTITLE  := 1 << 0
-000800  2               A2D_CW_ADDCLOSE := 1 << 1
-000800  2               A2D_CW_ADDRESIZE:= 1 << 2
+000800  2               A2D_CWF_NOTITLE  := 1 << 0
+000800  2               A2D_CWF_ADDCLOSE := 1 << 1
+000800  2               A2D_CWF_ADDRESIZE:= 1 << 2
+000800  2               
+000800  2               A2D_CWS_NOSCROLL := 0
+000800  2               A2D_CWS_SCROLL_ENABLED := 1 << 7
+000800  2               A2D_CWS_SCROLL_THUMB   := 1 << 6
+000800  2               A2D_CWS_SCROLL_TRACK   := 1 << 0
+000800  2               A2D_CWS_SCROLL_NORMAL  := A2D_CWS_SCROLL_ENABLED | A2D_CWS_SCROLL_THUMB | A2D_CWS_SCROLL_TRACK
+000800  2               
 000800  2               
 000800  2               ;;; Macros
 000800  2               .macro  A2D_CALL    op, addr
@@ -569,9 +576,10 @@ Current file: stf.s
 000994  1               
 000994  1               .proc window_params
 000994  1  64           id:     .byte   window_id       ; window identifier
-000995  1  02           flags:  .byte   A2D_CW_ADDCLOSE ; window flags (2=include close box)
+000995  1  02           flags:  .byte   A2D_CWF_ADDCLOSE; window flags (2=include close box)
 000996  1  00 10        title:  .addr   $1000           ; overwritten to point at filename
-000998  1  00 C1        L0998:  .byte   $00,$C1         ; ???
+000998  1  00           hscroll:.byte   A2D_CWS_NOSCROLL
+000999  1  C1           vscroll:.byte   A2D_CWS_SCROLL_NORMAL
 00099A  1               
 00099A  1  20           L099A:  .byte   $20             ; hscroll?
 00099B  1  00 FF        L099B:  .byte   $00,$FF         ; more hscroll?
@@ -878,18 +886,18 @@ Current file: stf.s
 000B6A  1  AD B5 09             lda     text_box::width+1
 000B6D  1  ED 62 09             sbc     window_width+1
 000B70  1  8D B1 09             sta     text_box::hoffset+1
-000B73  1  AD 98 09     wider:  lda     window_params::L0998
+000B73  1  AD 98 09     wider:  lda     window_params::hscroll
 000B76  1  AE 61 09             ldx     window_width
 000B79  1  E0 00                cpx     #<max_width
 000B7B  1  D0 0C                bne     L0B89
 000B7D  1  AE 62 09             ldx     window_width+1
 000B80  1  E0 02                cpx     #>max_width
 000B82  1  D0 05                bne     L0B89
-000B84  1  29 FE                and     #$FE
+000B84  1  29 FE                and     #(A2D_CWS_SCROLL_TRACK ^ $FF)
 000B86  1  4C 8B 0B             jmp     L0B8B
 000B89  1               
-000B89  1  09 01        L0B89:  ora     #$01
-000B8B  1  8D 98 09     L0B8B:  sta     window_params::L0998
+000B89  1  09 01        L0B89:  ora     #A2D_CWS_SCROLL_TRACK
+000B8B  1  8D 98 09     L0B8B:  sta     window_params::hscroll
 000B8E  1  38                   sec
 000B8F  1  A9 00                lda     #<max_width
 000B91  1  ED 61 09             sbc     window_width
@@ -1252,8 +1260,8 @@ Current file: stf.s
 000DFD  1  00 00                .addr   0
 000DFF  1  20 00 40 04          A2D_CALL A2D_TEXT_BOX1, text_box
 000E03  1  A8 09        
-000E05  1  AD 98 09             lda     window_params::L0998
-000E08  1  6A                   ror     a
+000E05  1  AD 98 09             lda     window_params::hscroll
+000E08  1  6A                   ror     a               ; check if low bit (track enabled) is set
 000E09  1  90 03                bcc     :+
 000E0B  1  20 D1 0D             jsr     update_hscroll
 000E0E  1  AD 9D 09     :       lda     window_params::vscroll_pos
