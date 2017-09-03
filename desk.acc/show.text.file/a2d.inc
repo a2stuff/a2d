@@ -73,9 +73,9 @@ A2D_CREATE_WINDOW := $38
         ;; .addr title
         ;; .byte hscroll        bits: 7 = enable, 6 = show thumb, 0 = show track
         ;; .byte vscroll
-        ;; .byte ???
-        ;; .byte ???
-        ;; .byte ???
+        ;; .byte hscroll_max
+        ;; .byte hscroll_pos
+        ;; .byte vscroll_max
         ;; .byte vscroll_pos
         ;; .byte ???
         ;; .byte ???
@@ -87,8 +87,7 @@ A2D_CREATE_WINDOW := $38
         ;; .word height
 
 A2D_DESTROY_WINDOW := $39
-        ;; .byte id
-        ;; .byte ???
+        ;; pass the same block as passed to A2D_CREATE_WINDOW
 
 A2D_GET_MOUSE   := $40
         ;; .word x

@@ -305,16 +305,19 @@ len:    .byte   0               ; length
 id:     .byte   window_id       ; window identifier
 flags:  .byte   A2D_CWF_ADDCLOSE; window flags (2=include close box)
 title:  .addr   $1000           ; overwritten to point at filename
+
 hscroll:.byte   A2D_CWS_NOSCROLL
 vscroll:.byte   A2D_CWS_SCROLL_NORMAL
-
-L099A:  .byte   $20             ; hscroll?
-L099B:  .byte   $00,$FF         ; more hscroll?
-
+hscroll_max:
+        .byte   32
+hscroll_pos:
+        .byte   0
+vscroll_max:
+        .byte   255
 vscroll_pos:
         .byte   0
 
-        ;; unreferenced ?
+        ;; ???
         .byte   $00,$00,$C8,$00,$33,$00
 
 width:  .word   default_width
@@ -812,7 +815,7 @@ end:    rts
 
 .proc on_hscroll_after_click
         ldx     #2
-        lda     window_params::L099A
+        lda     window_params::hscroll_max
         jmp     hscroll_common
 .endproc
 
@@ -824,7 +827,7 @@ end:    rts
 
 .proc on_hscroll_right_click
         ldx     #1
-        lda     window_params::L099A
+        lda     window_params::hscroll_max
         jmp     hscroll_common
 .endproc
 
@@ -837,23 +840,23 @@ end:    rts
 .proc hscroll_common
         sta     compare+1
         stx     delta+1
-loop:   lda     window_params::L099B
+loop:   lda     window_params::hscroll_pos
 compare:cmp     #$0A            ; self-modified
         bne     continue
         rts
 continue:
         clc
-        lda     window_params::L099B
+        lda     window_params::hscroll_pos
 delta:  adc     #1              ; self-modified
         bmi     overflow
-        cmp     window_params::L099A
+        cmp     window_params::hscroll_max
         beq     store
         bcc     store
-        lda     window_params::L099A
+        lda     window_params::hscroll_max
         jmp     store
 overflow:
         lda     #0
-store:  sta     window_params::L099B
+store:  sta     window_params::hscroll_pos
         jsr     L0D5E
         jsr     update_hscroll
         jsr     draw_content
@@ -887,7 +890,7 @@ store:  sta     window_params::L099B
 
 ;;; only used from hscroll code?
 .proc L0D5E
-        lda     window_params::L099B
+        lda     window_params::hscroll_pos
         jsr     L10EC
         clc
         lda     $06

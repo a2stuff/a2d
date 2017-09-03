@@ -150,9 +150,9 @@ Current file: stf.s
 000800  2                       ;; .addr title
 000800  2                       ;; .byte hscroll        bits: 7 = enable, 6 = show thumb, 0 = show track
 000800  2                       ;; .byte vscroll
-000800  2                       ;; .byte ???
-000800  2                       ;; .byte ???
-000800  2                       ;; .byte ???
+000800  2                       ;; .byte hscroll_max
+000800  2                       ;; .byte hscroll_pos
+000800  2                       ;; .byte vscroll_max
 000800  2                       ;; .byte vscroll_pos
 000800  2                       ;; .byte ???
 000800  2                       ;; .byte ???
@@ -164,8 +164,7 @@ Current file: stf.s
 000800  2                       ;; .word height
 000800  2               
 000800  2               A2D_DESTROY_WINDOW := $39
-000800  2                       ;; .byte id
-000800  2                       ;; .byte ???
+000800  2                       ;; pass the same block as passed to A2D_CREATE_WINDOW
 000800  2               
 000800  2               A2D_GET_MOUSE   := $40
 000800  2                       ;; .word x
@@ -578,16 +577,19 @@ Current file: stf.s
 000994  1  64           id:     .byte   window_id       ; window identifier
 000995  1  02           flags:  .byte   A2D_CWF_ADDCLOSE; window flags (2=include close box)
 000996  1  00 10        title:  .addr   $1000           ; overwritten to point at filename
+000998  1               
 000998  1  00           hscroll:.byte   A2D_CWS_NOSCROLL
 000999  1  C1           vscroll:.byte   A2D_CWS_SCROLL_NORMAL
-00099A  1               
-00099A  1  20           L099A:  .byte   $20             ; hscroll?
-00099B  1  00 FF        L099B:  .byte   $00,$FF         ; more hscroll?
-00099D  1               
+00099A  1               hscroll_max:
+00099A  1  20                   .byte   32
+00099B  1               hscroll_pos:
+00099B  1  00                   .byte   0
+00099C  1               vscroll_max:
+00099C  1  FF                   .byte   255
 00099D  1               vscroll_pos:
 00099D  1  00                   .byte   0
 00099E  1               
-00099E  1                       ;; unreferenced ?
+00099E  1                       ;; ???
 00099E  1  00 00 C8 00          .byte   $00,$00,$C8,$00,$33,$00
 0009A2  1  33 00        
 0009A4  1               
@@ -1099,7 +1101,7 @@ Current file: stf.s
 000CE7  1               
 000CE7  1               .proc on_hscroll_after_click
 000CE7  1  A2 02                ldx     #2
-000CE9  1  AD 9A 09             lda     window_params::L099A
+000CE9  1  AD 9A 09             lda     window_params::hscroll_max
 000CEC  1  4C 02 0D             jmp     hscroll_common
 000CEF  1               .endproc
 000CEF  1               
@@ -1111,7 +1113,7 @@ Current file: stf.s
 000CF6  1               
 000CF6  1               .proc on_hscroll_right_click
 000CF6  1  A2 01                ldx     #1
-000CF8  1  AD 9A 09             lda     window_params::L099A
+000CF8  1  AD 9A 09             lda     window_params::hscroll_max
 000CFB  1  4C 02 0D             jmp     hscroll_common
 000CFE  1               .endproc
 000CFE  1               
@@ -1124,23 +1126,23 @@ Current file: stf.s
 000D02  1               .proc hscroll_common
 000D02  1  8D 0C 0D             sta     compare+1
 000D05  1  8E 15 0D             stx     delta+1
-000D08  1  AD 9B 09     loop:   lda     window_params::L099B
+000D08  1  AD 9B 09     loop:   lda     window_params::hscroll_pos
 000D0B  1  C9 0A        compare:cmp     #$0A            ; self-modified
 000D0D  1  D0 01                bne     continue
 000D0F  1  60                   rts
 000D10  1               continue:
 000D10  1  18                   clc
-000D11  1  AD 9B 09             lda     window_params::L099B
+000D11  1  AD 9B 09             lda     window_params::hscroll_pos
 000D14  1  69 01        delta:  adc     #1              ; self-modified
 000D16  1  30 0D                bmi     overflow
-000D18  1  CD 9A 09             cmp     window_params::L099A
+000D18  1  CD 9A 09             cmp     window_params::hscroll_max
 000D1B  1  F0 0A                beq     store
 000D1D  1  90 08                bcc     store
-000D1F  1  AD 9A 09             lda     window_params::L099A
+000D1F  1  AD 9A 09             lda     window_params::hscroll_max
 000D22  1  4C 27 0D             jmp     store
 000D25  1               overflow:
 000D25  1  A9 00                lda     #0
-000D27  1  8D 9B 09     store:  sta     window_params::L099B
+000D27  1  8D 9B 09     store:  sta     window_params::hscroll_pos
 000D2A  1  20 5E 0D             jsr     L0D5E
 000D2D  1  20 D1 0D             jsr     update_hscroll
 000D30  1  20 30 0E             jsr     draw_content
@@ -1176,7 +1178,7 @@ Current file: stf.s
 000D5E  1               
 000D5E  1               ;;; only used from hscroll code?
 000D5E  1               .proc L0D5E
-000D5E  1  AD 9B 09             lda     window_params::L099B
+000D5E  1  AD 9B 09             lda     window_params::hscroll_pos
 000D61  1  20 EC 10             jsr     L10EC
 000D64  1  18                   clc
 000D65  1  A5 06                lda     $06
