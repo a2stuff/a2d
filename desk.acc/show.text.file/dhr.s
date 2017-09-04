@@ -177,54 +177,21 @@ data:   .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
 .endproc
 
-L0945:  .byte   $00
-L0946:  .byte   $00
-L0947:  .byte   $00
-L0948:  .byte   $00
-L0949:  .byte   $00
 
 params_end:
 ;;; ----------------------------------------
 
-black_pattern:
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-
-white_pattern:
-        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-
         window_id := $64
-
-L095A:  .byte   $00
-L095B:  .byte   $FA
-L095C:  .byte   $01
 
 .proc line_pos
 left:   .word   0
 base:   .word   0
 .endproc
 
-window_width:  .word   0
-window_height: .word   0
 
-L0965:  .byte   $00
-L0966:  .byte   $00,$00
-L0968:  .byte   $00
-L0969:  .byte   $00
-L096A:  .byte   $00
-L096B:  .byte   $00
-L096C:  .byte   $00
-L096D:  .byte   $00
-
-button_state:                   ; queried to track mouse-up
-        .byte   $00
-
-.proc mouse_params              ; queried by main input loop
-xcoord: .word   0
-ycoord: .word   0
-elem:   .byte   0
-win:    .byte   0
+.proc button_params             ; queried to track mouse-up
+state:  .byte   $00
 .endproc
-
 
         default_width := 560
         default_height := 192
@@ -256,9 +223,8 @@ vscroll_pos:
 
 width:  .word   default_width
 height: .word   default_height
-.endproc
-        ;; window_params continues into text_box
-.proc text_box                  ; or whole window ??
+
+.proc text_box
 left:   .word   default_left
 top:    .word   default_top
         .word   $2000           ; ??? never changed
@@ -267,6 +233,7 @@ hoffset:.word   0               ; Also used for A2D_CLEAR_BOX
 voffset:.word   0
 width:  .word   default_width
 height: .word   default_height
+.endproc
 .endproc
 
         ;; unused?
@@ -386,7 +353,7 @@ end:    rts
 
         ;; create window
         A2D_CALL A2D_CREATE_WINDOW, window_params
-        A2D_CALL A2D_TEXT_BOX1, text_box
+        A2D_CALL A2D_TEXT_BOX1, window_params::text_box
 
         jsr     show_file
 
@@ -398,8 +365,8 @@ end:    rts
 ;;; Main Input Loop
 
 .proc input_loop
-        A2D_CALL A2D_GET_BUTTON, button_state
-        lda     button_state
+        A2D_CALL A2D_GET_BUTTON, button_params
+        lda     button_params::state
         cmp     #1              ; was clicked?
         bne     input_loop      ; nope, keep waiting
 
