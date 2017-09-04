@@ -2,36 +2,16 @@
 
 set -e
 
-CC65=~/dev/cc65/bin
-
-original=show_text_file.bin
-disasm=show_text_file.d
-
-src=show_text_file.s
-obj=show_text_file.o
-list=show_text_file.list
-out=show_text_file
-
-# Origin of STF
-#echo '        .org $800' > $disasm
-
-# Disassemble original source
-#$CC65/da65 $original --info show_text_file.info >> $disasm
-
-#cp $disasm $src
-
-# Assemble
-$CC65/ca65 --target apple2enh --listing $list --list-bytes 0 -o $obj $src
-
-# Link
-$CC65/ld65 --config apple2-asm.cfg -o $out $obj
+make clean
+make all
 
 # Verify original and output match
-diff $original $out
+diff show_text_file.bin show_text_file.F1 \
+    && echo "Files match"
 
-$CC65/ca65 --target apple2enh --listing dhr.list --list-bytes 0 -o dhr.o dhr.s
-$CC65/ld65 --config apple2-asm.cfg -o dhr dhr.o
+cat show_dhr_file.F1 > mount/SHOW.DHR.FILE.\$F1 \
+    && echo "Updated mounted file"
 
 # Show output for review
 #less $list
-less dhr.list
+#less dhr.list

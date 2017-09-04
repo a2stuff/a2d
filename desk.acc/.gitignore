@@ -1,2 +1,12 @@
+
+# Object files (assembler output, pre-linking)
 *.o
+
+# Listing files (to review offsets)
 *.list
+
+# Output files (ProDOS file type F1)
+*.F1
+
+# Directory mounted in Virtual ][ as a ProDOS volume
+mount
