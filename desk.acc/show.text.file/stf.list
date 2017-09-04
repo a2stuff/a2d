@@ -292,6 +292,28 @@ Current file: stf.s
 000800  2               data:   .byte   str
 000800  2               .endmacro
 000800  2               
+000800  2               
+000800  2               ;;; DeskTop Internals
+000800  2               
+000800  2                       ;; These are DeskTop internals, but it appears there is no
+000800  2                       ;; API for getting the selected file.
+000800  2                       file_selected := $DF21  ; 0 if no selection, 1 otherwise
+000800  2                       path_index := $DF20     ; index of selected window (used to get prefix)
+000800  2                       path_table := $DFB3     ; window address table
+000800  2                       ;; each entry is 65 bytes long
+000800  2                       ;; each entry is length-prefixed path string (no trailing /)
+000800  2                       file_index := $DF22     ; index of selected file (global, not w/in window)
+000800  2                       file_table := $DD9F     ; file address table
+000800  2                       ;; each entry is 27 bytes long
+000800  2                       ;;      .byte ??
+000800  2                       ;;      .byte ??
+000800  2                       ;;      .byte type/icon (bits 4,5,6 clear = directory)
+000800  2                       ;;      .word iconx     (pixels)
+000800  2                       ;;      .word icony     (pixels)
+000800  2                       ;;      .byte ??
+000800  2                       ;;      .byte ??
+000800  2                       ;;      .byte len, name (length-prefixed, spaces before/after; 17 byte buffer)
+000800  2               
 000800  1               
 000800  1                       ;; Big questions:
 000800  1                       ;; * How can we hide/show the cursor on demand?
@@ -551,7 +573,7 @@ Current file: stf.s
 00096F  1               fixed_mode_flag:
 00096F  1  00                   .byte   $00             ; 0 = proportional, otherwise = fixed
 000970  1               
-000970  1               button_state:
+000970  1               button_state:                   ; queried to track mouse-up
 000970  1  00                   .byte   $00
 000971  1               
 000971  1               .proc mouse_params              ; queried by main input loop
@@ -607,6 +629,8 @@ Current file: stf.s
 000994  1               
 000994  1                       default_width := 512
 000994  1                       default_height := 150
+000994  1                       default_left := 10
+000994  1                       default_top := 28
 000994  1               
 000994  1               .proc window_params
 000994  1  64           id:     .byte   window_id       ; window identifier
@@ -633,8 +657,8 @@ Current file: stf.s
 0009A8  1               .endproc
 0009A8  1                       ;; window_params continues into text_box
 0009A8  1               .proc text_box                  ; or whole window ??
-0009A8  1  0A 00        left:   .word   10
-0009AA  1  1C 00        top:    .word   28
+0009A8  1  0A 00        left:   .word   default_left
+0009AA  1  1C 00        top:    .word   default_top
 0009AC  1  00 20                .word   $2000           ; ??? never changed
 0009AE  1  80 00                .word   $80             ; ??? never changed
 0009B0  1  00 00        hoffset:.word   0               ; Also used for A2D_CLEAR_BOX
@@ -653,8 +677,8 @@ Current file: stf.s
 0009CE  1               
 0009CE  1                       ;; gets copied over text_box after mode is drawn
 0009CE  1               .proc default_box
-0009CE  1  0A 00        left:   .word   10
-0009D0  1  1C 00        top:    .word   28
+0009CE  1  0A 00        left:   .word   default_left
+0009D0  1  1C 00        top:    .word   default_top
 0009D2  1  00 20                .word   $2000
 0009D4  1  80 00                .word   $80
 0009D6  1  00 00        hoffset:.word   0
@@ -668,25 +692,9 @@ Current file: stf.s
 0009E1  1  AD 8B C0             lda     LCBANK1
 0009E4  1  AD 8B C0             lda     LCBANK1
 0009E7  1               
-0009E7  1                       ;; These are DeskTop internals, but it appears there is no
-0009E7  1                       ;; API for getting the selected file.
-0009E7  1                       file_selected := $DF21  ; 0 if no selection, 1 otherwise
-0009E7  1                       path_index := $DF20     ; index of selected window (used to get prefix)
-0009E7  1                       path_table := $DFB3     ; window address table
-0009E7  1                       ;; each entry is 65 bytes long
-0009E7  1                       ;; each entry is length-prefixed path string (no trailing /)
-0009E7  1                       file_index := $DF22     ; index of selected file (global, not w/in window)
-0009E7  1                       file_table := $DD9F     ; file address table
-0009E7  1                       ;; each entry is 27 bytes long
-0009E7  1                       ;;      .byte ??
-0009E7  1                       ;;      .byte ??
-0009E7  1                       ;;      .byte type/icon (bits 4,5,6 clear = directory)
-0009E7  1                       ;;      .word iconx     (pixels)
-0009E7  1                       ;;      .word icony     (pixels)
-0009E7  1                       ;;      .byte ??
-0009E7  1                       ;;      .byte ??
-0009E7  1                       ;;      .byte len, name (length-prefixed, spaces before/after; 17 byte buffer)
+0009E7  1                       ;; Get filename by checking DeskTop selected window/icon
 0009E7  1               
+0009E7  1                       ;; Check that an icon is selected
 0009E7  1  A9 00                lda     #0
 0009E9  1  8D 04 09             sta     pathname::length
 0009EC  1  AD 21 DF             lda     file_selected
@@ -1737,9 +1745,11 @@ Current file: stf.s
 001165  1  68 11 0D 46  fixed_str:      A2D_DEFSTRING "Fixed        "
 001169  1  69 78 65 64  
 00116D  1  20 20 20 20  
+001171  1  20 20 20 20  
 001175  1  78 11 0C 50  prop_str:       A2D_DEFSTRING "Proportional"
 001179  1  72 6F 70 6F  
 00117D  1  72 74 69 6F  
+001181  1  6E 61 6C     
 001184  1                       label_width := 50
 001184  1                       title_bar_height := 12
 001184  1               .proc mode_box                  ; bounding box for mode label

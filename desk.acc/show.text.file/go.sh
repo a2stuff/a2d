@@ -21,7 +21,7 @@ out=stf
 #cp $disasm $src
 
 # Assemble
-$CC65/ca65 --target apple2enh --listing $list -o $obj $src
+$CC65/ca65 --target apple2enh --listing $list --list-bytes 0 -o $obj $src
 
 # Link
 $CC65/ld65 --config apple2-asm.cfg -o $out $obj
@@ -29,5 +29,9 @@ $CC65/ld65 --config apple2-asm.cfg -o $out $obj
 # Verify original and output match
 diff $original $out
 
+$CC65/ca65 --target apple2enh --listing dhr.list --list-bytes 0 -o dhr.o dhr.s
+$CC65/ld65 --config apple2-asm.cfg -o dhr dhr.o
+
 # Show output for review
-less $list
+#less $list
+less dhr.list

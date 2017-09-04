@@ -248,7 +248,7 @@ track_scroll_delta:
 fixed_mode_flag:
         .byte   $00             ; 0 = proportional, otherwise = fixed
 
-button_state:
+button_state:                   ; queried to track mouse-up
         .byte   $00
 
 .proc mouse_params              ; queried by main input loop
@@ -304,6 +304,8 @@ len:    .byte   0               ; length
 
         default_width := 512
         default_height := 150
+        default_left := 10
+        default_top := 28
 
 .proc window_params
 id:     .byte   window_id       ; window identifier
@@ -329,8 +331,8 @@ height: .word   default_height
 .endproc
         ;; window_params continues into text_box
 .proc text_box                  ; or whole window ??
-left:   .word   10
-top:    .word   28
+left:   .word   default_left
+top:    .word   default_top
         .word   $2000           ; ??? never changed
         .word   $80             ; ??? never changed
 hoffset:.word   0               ; Also used for A2D_CLEAR_BOX
@@ -346,8 +348,8 @@ height: .word   default_height
 
         ;; gets copied over text_box after mode is drawn
 .proc default_box
-left:   .word   10
-top:    .word   28
+left:   .word   default_left
+top:    .word   default_top
         .word   $2000
         .word   $80
 hoffset:.word   0
@@ -361,25 +363,9 @@ height: .word   default_height
         lda     LCBANK1
         lda     LCBANK1
 
-        ;; These are DeskTop internals, but it appears there is no
-        ;; API for getting the selected file.
-        file_selected := $DF21  ; 0 if no selection, 1 otherwise
-        path_index := $DF20     ; index of selected window (used to get prefix)
-        path_table := $DFB3     ; window address table
-        ;; each entry is 65 bytes long
-        ;; each entry is length-prefixed path string (no trailing /)
-        file_index := $DF22     ; index of selected file (global, not w/in window)
-        file_table := $DD9F     ; file address table
-        ;; each entry is 27 bytes long
-        ;;      .byte ??
-        ;;      .byte ??
-        ;;      .byte type/icon (bits 4,5,6 clear = directory)
-        ;;      .word iconx     (pixels)
-        ;;      .word icony     (pixels)
-        ;;      .byte ??
-        ;;      .byte ??
-        ;;      .byte len, name (length-prefixed, spaces before/after; 17 byte buffer)
+        ;; Get filename by checking DeskTop selected window/icon
 
+        ;; Check that an icon is selected
         lda     #0
         sta     pathname::length
         lda     file_selected
