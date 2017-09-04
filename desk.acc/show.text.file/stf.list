@@ -84,21 +84,27 @@ Current file: stf.s
 000800  2               
 000800  2               UNKNOWN_CALL    := $8E00
 000800  2               
-000800  2               JUMP_TABLE_01   := $4015        ; ???
-000800  2               JUMP_TABLE_02   := $4018
-000800  2               JUMP_TABLE_03   := $401E
-000800  2               JUMP_TABLE_04   := $4021
-000800  2               JUMP_TABLE_05   := $4021
-000800  2               JUMP_TABLE_06   := $4024
-000800  2               JUMP_TABLE_07   := $4027
-000800  2               JUMP_TABLE_08   := $402A
-000800  2               JUMP_TABLE_09   := $402D
-000800  2               JUMP_TABLE_10   := $4030
-000800  2               JUMP_TABLE_11   := $4033
-000800  2               JUMP_TABLE_12   := $4036
-000800  2               JUMP_TABLE_13   := $4039
-000800  2               JUMP_TABLE_14   := $403C
-000800  2               JUMP_TABLE_15   := $403F
+000800  2                       ;; These must be called from main memory (RAMRDON/RAMWRTON)
+000800  2               JUMP_TABLE_03   := $4003        ; ???
+000800  2               JUMP_TABLE_06   := $4006        ; ???
+000800  2               JUMP_TABLE_09   := $4009        ; ???
+000800  2               JUMP_TABLE_0C   := $400C        ; ??? (made "items/in disk/..." redraw oddly)
+000800  2               JUMP_TABLE_0F   := $400F        ; ???
+000800  2               JUMP_TABLE_12   := $4012        ; ???
+000800  2               JUMP_TABLE_15   := $4015        ; ???
+000800  2               JUMP_TABLE_18   := $4018        ; ???
+000800  2               JUMP_TABLE_CLEAR_SEL   := $401E ; Clear DeskTop selection
+000800  2               JUMP_TABLE_21   := $4021        ; ???
+000800  2               JUMP_TABLE_24   := $4024        ; ???
+000800  2               JUMP_TABLE_27   := $4027        ; ???
+000800  2               JUMP_TABLE_2A   := $402A        ; ???
+000800  2               JUMP_TABLE_2D   := $402D        ; ???
+000800  2               JUMP_TABLE_30   := $4030        ; ???
+000800  2               JUMP_TABLE_33   := $4033        ; Shows "The syntax of the pathname is invalid.", hangs
+000800  2               JUMP_TABLE_36   := $4036        ; ditto
+000800  2               JUMP_TABLE_CUR_POINTER  := $4039 ; Changes mouse cursor to pointer
+000800  2               JUMP_TABLE_CUR_WATCH    := $403C ; Changes mouse cursor to watch
+000800  2               JUMP_TABLE_3F   := $403F        ; ???
 000800  2               
 000800  2               A2D_UNK_03      := $03          ; Unknown - used in calculator after frame is drawn
 000800  2               
@@ -763,10 +769,10 @@ Current file: stf.s
 000A5F  1  E6 07                inc     src+1
 000A61  1  20 72 0A     :       jsr     copy_pathname   ; copy x bytes (src) to (dst)
 000A64  1               
-000A64  1                       ;; ???
-000A64  1  A9 1E                lda     #<JUMP_TABLE_03
+000A64  1                       ;; Clear selection (why???)
+000A64  1  A9 1E                lda     #<JUMP_TABLE_CLEAR_SEL
 000A66  1  85 27                sta     call_main_addr
-000A68  1  A9 40                lda     #>JUMP_TABLE_03
+000A68  1  A9 40                lda     #>JUMP_TABLE_CLEAR_SEL
 000A6A  1  85 28                sta     call_main_addr+1
 000A6C  1  20 20 00             jsr     call_main_trampoline
 000A6F  1               
@@ -920,15 +926,15 @@ Current file: stf.s
 000B73  1  AD 98 09     wider:  lda     window_params::hscroll
 000B76  1  AE 61 09             ldx     window_width
 000B79  1  E0 00                cpx     #<max_width
-000B7B  1  D0 0C                bne     L0B89
+000B7B  1  D0 0C                bne     enable
 000B7D  1  AE 62 09             ldx     window_width+1
 000B80  1  E0 02                cpx     #>max_width
-000B82  1  D0 05                bne     L0B89
-000B84  1  29 FE                and     #(A2D_CWS_SCROLL_TRACK ^ $FF)
-000B86  1  4C 8B 0B             jmp     L0B8B
+000B82  1  D0 05                bne     enable
+000B84  1  29 FE                and     #(A2D_CWS_SCROLL_TRACK ^ $FF)   ; disable scroll
+000B86  1  4C 8B 0B             jmp     skip
 000B89  1               
-000B89  1  09 01        L0B89:  ora     #A2D_CWS_SCROLL_TRACK
-000B8B  1  8D 98 09     L0B8B:  sta     window_params::hscroll
+000B89  1  09 01        enable: ora     #A2D_CWS_SCROLL_TRACK           ; enable scroll
+000B8B  1  8D 98 09     skip:   sta     window_params::hscroll
 000B8E  1  38                   sec
 000B8F  1  A9 00                lda     #<max_width
 000B91  1  ED 61 09             sbc     window_width
@@ -1657,9 +1663,9 @@ Current file: stf.s
 0010FD  1               .endproc
 0010FD  1               
 0010FD  1               .proc L10FD
-0010FD  1  A9 15                lda     #<JUMP_TABLE_01
+0010FD  1  A9 15                lda     #<JUMP_TABLE_15
 0010FF  1  85 27                sta     call_main_addr     ; self-modified
-001101  1  A9 40                lda     #>JUMP_TABLE_01
+001101  1  A9 40                lda     #>JUMP_TABLE_15
 001103  1  85 28                sta     call_main_addr+1
 001105  1  20 20 00             jsr     call_main_trampoline
 001108  1  60                   rts

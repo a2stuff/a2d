@@ -462,10 +462,10 @@ abort:  rts
         inc     src+1
 :       jsr     copy_pathname   ; copy x bytes (src) to (dst)
 
-        ;; ???
-        lda     #<JUMP_TABLE_03
+        ;; Clear selection (why???)
+        lda     #<JUMP_TABLE_CLEAR_SEL
         sta     call_main_addr
-        lda     #>JUMP_TABLE_03
+        lda     #>JUMP_TABLE_CLEAR_SEL
         sta     call_main_addr+1
         jsr     call_main_trampoline
 
@@ -611,15 +611,15 @@ title:  jsr     on_title_bar_click
 wider:  lda     window_params::hscroll
         ldx     window_width
         cpx     #<max_width
-        bne     L0B89
+        bne     enable
         ldx     window_width+1
         cpx     #>max_width
-        bne     L0B89
-        and     #(A2D_CWS_SCROLL_TRACK ^ $FF)
-        jmp     L0B8B
+        bne     enable
+        and     #(A2D_CWS_SCROLL_TRACK ^ $FF)   ; disable scroll
+        jmp     skip
 
-L0B89:  ora     #A2D_CWS_SCROLL_TRACK
-L0B8B:  sta     window_params::hscroll
+enable: ora     #A2D_CWS_SCROLL_TRACK           ; enable scroll
+skip:   sta     window_params::hscroll
         sec
         lda     #<max_width
         sbc     window_width
@@ -1336,9 +1336,9 @@ loop:   clc
 .endproc
 
 .proc L10FD
-        lda     #<JUMP_TABLE_01
+        lda     #<JUMP_TABLE_15
         sta     call_main_addr     ; self-modified
-        lda     #>JUMP_TABLE_01
+        lda     #>JUMP_TABLE_15
         sta     call_main_addr+1
         jsr     call_main_trampoline
         rts
