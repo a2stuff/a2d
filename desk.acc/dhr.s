@@ -1,8 +1,8 @@
         .setcpu "65C02"
         .org $800
 
-        .include "../../inc/prodos.inc"
-        .include "../../inc/auxmem.inc"
+        .include "../inc/prodos.inc"
+        .include "../inc/auxmem.inc"
         .include "a2d.inc"
 
         ;; Big questions:

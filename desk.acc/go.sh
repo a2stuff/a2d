@@ -5,12 +5,12 @@ set -e
 CC65=~/dev/cc65/bin
 
 original=show_text_file.bin
-disasm=stf.d
+disasm=show_text_file.d
 
-src=stf.s
-obj=stf.o
-list=stf.list
-out=stf
+src=show_text_file.s
+obj=show_text_file.o
+list=show_text_file.list
+out=show_text_file
 
 # Origin of STF
 #echo '        .org $800' > $disasm
