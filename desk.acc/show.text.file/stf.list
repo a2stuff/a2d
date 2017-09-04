@@ -62,10 +62,17 @@ Current file: stf.s
 000800  2               RAMWRTON        := $C005
 000800  2               ALTZPOFF        := $C008
 000800  2               ALTZPON         := $C009
+000800  2               
+000800  2               PAGE2OFF        := $C054
+000800  2               PAGE2ON         := $C055
+000800  2               HIRESON         := $C056
+000800  2               HIRESOFF        := $C057
+000800  2               
 000800  2               LCBANK1         := $C08B
 000800  2               
 000800  2               ;;; Routines
 000800  2               AUXMOVE         := $C311        ; carry set main>aux, carry clear aux>main
+000800  2               XFER            := $C314
 000800  2               
 000800  2               STARTLO         := $3C
 000800  2               STARTHI         := $3D

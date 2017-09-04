@@ -149,14 +149,14 @@ params_start:
 ref_num:.byte   0               ; ref_num
 .endproc
 
-default_buffer := $1200
-chunk_size := $800      ; fits in $1200...$2000, divides $2000 evenly
+        hires   := $2000
+        hires_size := $2000
 
 .proc read_params
         .byte   4               ; param_count
 ref_num:.byte   0               ; ref_num
-buffer: .addr   default_buffer  ; data_buffer
-request:.word   chunk_size      ; request_count
+buffer: .addr   hires           ; data_buffer
+request:.word   hires_size      ; request_count
         .word   0               ; trans_count
 .endproc
 
@@ -377,16 +377,19 @@ end:    rts
 .endproc
 
 .proc open_file_and_init_window
-        ;; open file
         jsr     open_file
         lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
 
+        jsr     stash_menu
+
         ;; create window
         A2D_CALL A2D_CREATE_WINDOW, window_params
         A2D_CALL A2D_TEXT_BOX1, text_box
+
         jsr     show_file
+
         A2D_CALL $2B, 0         ; ???
         ;; fall through
 .endproc
@@ -402,6 +405,8 @@ end:    rts
 
         A2D_CALL A2D_DESTROY_WINDOW, window_params
 
+        jsr     unstash_menu
+
         jsr     UNKNOWN_CALL    ; ???
         .byte   $0C
         .addr   0
@@ -410,30 +415,143 @@ end:    rts
 .endproc
 
 .proc show_file
-        hgr   := $2000
-
-        ;; AUX memory half - 4 chunks
-        lda #<hgr
-        sta read_params::buffer
-        sta read_params::request
-        lda #>hgr
-        sta read_params::buffer+1
-        sta read_params::request+1
-        sta PAGE2ON
+        ;; AUX memory half
+        sta     PAGE2ON
         jsr     read_file
 
         ;; MAIN memory half
-        lda #<hgr
-        sta read_params::buffer
-        sta read_params::request
-        lda #>hgr
-        sta read_params::buffer+1
-        sta read_params::request+1
-        sta PAGE2OFF
+        sta     PAGE2OFF
         jsr     read_file
 
         ;; TODO: Restore PAGE2 state?
 
         jsr     close_file
+        rts
+.endproc
+
+        ;; TODO: Stash menu bar pixels - 13 rows * 2 banks * 40 bytes
+
+hires_table:
+        .addr   $2000           ; row 0
+        .addr   $2400           ; 1
+        .addr   $2800           ; 2
+        .addr   $2c00           ; 3
+        .addr   $3000           ; 4
+        .addr   $3400           ; 5
+        .addr   $3800           ; 6
+        .addr   $3c00           ; 7
+        .addr   $2080           ; 8
+        .addr   $2480           ; 9
+        .addr   $2880           ; 10
+        .addr   $2c80           ; 11
+        .addr   $3080           ; 12
+        .addr   $3480           ; 13
+        .addr   $3880           ; just in case
+        .addr   $3c80
+
+
+        stash := $1200          ; Past DA code
+        rows = 13
+        cols = 40
+
+.proc stash_menu
+        src := $08
+        dst := $06
+        lda     #<stash
+        sta     dst
+        lda     #>stash
+        sta     dst+1
+
+        sta     PAGE2ON
+        jsr     inner
+        sta     PAGE2OFF
+
+inner:
+
+        lda     #0              ; row #
+rloop:  pha
+        asl     a
+        tax
+        lda     hires_table,x
+        sta     src
+        lda     hires_table+1,x
+        sta     src+1
+        ldy     #cols-1
+cloop:  lda     (src),y
+        sta     (dst),y
+        dey
+        bpl     cloop
+
+        clc                     ; src += cols
+        lda     src
+        adc     #<cols
+        sta     src
+        lda     src+1
+        adc     #>cols
+        sta     src+1
+
+        clc                     ; dst += cols
+        lda     dst
+        adc     #<cols
+        sta     dst
+        lda     dst+1
+        adc     #>cols
+        sta     dst+1
+
+        pla
+        inc
+        cmp     #rows
+        bcc     rloop
+        rts
+.endproc
+
+.proc unstash_menu
+        src := $08
+        dst := $06
+        lda     #<stash
+        sta     src
+        lda     #>stash
+        sta     src+1
+
+        sta     PAGE2ON
+        jsr     inner
+        sta     PAGE2OFF
+
+inner:
+
+        lda     #0              ; row #
+rloop:  pha
+        asl     a
+        tax
+        lda     hires_table,x
+        sta     dst
+        lda     hires_table+1,x
+        sta     dst+1
+        ldy     #cols-1
+cloop:  lda     (src),y
+        sta     (dst),y
+        dey
+        bpl     cloop
+
+        clc                     ; src += cols
+        lda     src
+        adc     #<cols
+        sta     src
+        lda     src+1
+        adc     #>cols
+        sta     src+1
+
+        clc                     ; dst += cols
+        lda     dst
+        adc     #<cols
+        sta     dst
+        lda     dst+1
+        adc     #>cols
+        sta     dst+1
+
+        pla
+        inc
+        cmp     #rows
+        bcc     rloop
         rts
 .endproc
