@@ -85,6 +85,14 @@ call_main_template_end:         ; can't .sizeof(proc) before declaration
         rts
 .endproc
 
+.proc get_file_eof
+        jsr     copy_params_aux_to_main
+        sta     ALTZPOFF
+        MLI_CALL GET_EOF, get_eof_params
+        sta     ALTZPON
+        jsr     copy_params_main_to_aux
+        rts
+.endproc
 
 .proc read_file
         jsr     copy_params_aux_to_main
@@ -94,7 +102,6 @@ call_main_template_end:         ; can't .sizeof(proc) before declaration
         jsr     copy_params_main_to_aux
         rts
 .endproc
-
 
 .proc close_file
         jsr     copy_params_aux_to_main
@@ -147,6 +154,12 @@ params_start:
         .addr   pathname        ; pathname
         .addr   $0C00           ; io_buffer
 ref_num:.byte   0               ; ref_num
+.endproc
+
+.proc get_eof_params
+        .byte   2               ; param_count
+ref_num:.byte   0               ; ref_num
+length: .byte   0,0,0           ; EOF (lo, mid, hi)
 .endproc
 
         hires   := $2000
@@ -346,6 +359,7 @@ end:    rts
 .proc open_file_and_init_window
         jsr     open_file
         lda     open_params::ref_num
+        sta     get_eof_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
 
@@ -382,6 +396,28 @@ end:    rts
 .endproc
 
 .proc show_file
+        jsr     get_file_eof
+
+        ;; If bigger than $2000, assume DHR
+
+        lda     get_eof_params::length ; fancy 3-byte unsigned compare
+        cmp     #<hires_size+1
+        lda     get_eof_params::length+1
+        sbc     #>hires_size+1
+        lda     get_eof_params::length+2
+        sbc     #0
+        bcs     dhr
+
+        jsr     show_shr_file
+        jmp     close
+
+dhr:    jsr     show_dhr_file
+
+close:  jsr     close_file
+        rts
+.endproc
+
+.proc show_shr_file
         sta     PAGE2OFF
         jsr     read_file
         jsr     close_file
@@ -390,6 +426,25 @@ end:    rts
         rts
 .endproc
 
+.proc show_dhr_file
+        ;; AUX memory half
+        sta     PAGE2ON
+        jsr     read_file
+
+        ;; MAIN memory half
+        sta     PAGE2OFF
+        jsr     read_file
+
+        ;; TODO: Restore PAGE2 state?
+
+        rts
+.endproc
+
+;;; ==================================================
+;;; Convert single hires to double hires
+
+;;; Assumes the image is loaded to MAIN $2000 and
+;;; relies on the hgr_to_dhr.inc table.
 
 .proc hgr_to_dhr
         ptr     := $06
@@ -456,6 +511,13 @@ done:   sta     PAGE2OFF
         rts
 .endproc
 
+;;; ==================================================
+;;; Stash/Unstash Menu Bar
+
+;;; Have not yet figured out how to force the menu to
+;;; redraw, so instead we save the top 13 rows of the
+;;; screen to a scratch buffer and restore after
+;;; destroying the window.
 
         stash := $1200          ; Past DA code
         rows = 13
@@ -560,6 +622,7 @@ cloop:  lda     (src),y
         bcc     rloop
         rts
 .endproc
+
 
         .include "hires_table.inc"
         .include "hgr_to_dhr.inc"

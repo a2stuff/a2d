@@ -4,7 +4,7 @@ CAFLAGS = --target apple2enh --list-bytes 0
 CCFLAGS = --config apple2-asm.cfg
 
 # ProDOS file type is $F1 ($ is pesky)
-TARGETS = show_text_file.F1 show_dhr_file.F1 show_hgr_file.F1
+TARGETS = show_text_file.F1 show_image_file.F1
 
 .PHONY: clean all
 all: $(TARGETS)
