@@ -9,7 +9,7 @@ TARGETS = show_text_file.F1 show_dhr_file.F1 show_hgr_file.F1
 .PHONY: clean all
 all: $(TARGETS)
 
-HEADERS = $(wildcard ../*.h)
+HEADERS = $(wildcard ../*.inc) $(wildcard *.inc)
 
 clean:
 	rm -f *.o
