@@ -271,29 +271,36 @@ width:  .word   119
 height: .word   16
 .endproc
 
-L0C00:  .byte   $03,$0C,$01
-L0C03:  .byte   $00
+        ;; For drawing 1-character strings (button labels)
+.proc draw_text_params_label
+        .addr   label
+        .byte   1
+.endproc
+label:  .byte   0               ; modified with char to draw
 
 .proc draw_text_params1
-addr:   .addr   $0C07
+addr:   .addr   text_buffer1
 length: .byte   15
 .endproc
 
 text_buffer1:
-        .byte   $00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00
-L0C15:  .byte   $00,$00
+        .byte   0,0,0,0,0,0,0,0,0,0,0,0,0,0
+L0C15:  .byte   0,0
 
-L0C17:  .byte   $1A,$0C
-L0C19:  .byte   $0F
-L0C1A:  .byte   $00
-L0C1B:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00
-L0C28:  .byte   $00,$00
-L0C2A:  A2D_DEFSTRING "          "
-L0C37:  .byte   $3A,$0C,$06,$45,$72,$72,$6F,$72
-        .byte   $20
+.proc draw_text_params2
+addr:   .addr   text_buffer2
+length: .byte   15
+.endproc
+
+text_buffer2:
+        .byte   0,0,0,0,0,0,0,0,0,0,0,0,0,0
+L0C28:  .byte   0,0
+
+spaces_string:
+        A2D_DEFSTRING "          "
+error_string:
+        A2D_DEFSTRING "Error "
+
 L0C40:  .byte   $07
 L0C41:  .byte   $0C,$0F
 L0C43:  .byte   $00,$00
@@ -648,10 +655,10 @@ L0F9C:  cmp     #'E'
         ldy     L0BCB
         bne     L0FBE
         inc     L0BCB
-        lda     #$31
+        lda     #'1'
         sta     L0C15
         sta     L0C28
-L0FBE:  lda     #$45
+L0FBE:  lda     #'E'
         sta     L0BC8
         jmp     L1107
 
@@ -688,14 +695,14 @@ L0FFA:  lda     #$2E
 
 L1002:  rts
 
-L1003:  cmp     #$2B
+L1003:  cmp     #'+'
         bne     L100F
         pha
         ldx     #$D8
         ldy     #$0A
         jmp     L114C
 
-L100F:  cmp     #$2D
+L100F:  cmp     #'-'
         bne     L1030
         pha
         ldx     #$2A
@@ -714,77 +721,77 @@ L102B:  pla
         pha
         jmp     L114C
 
-L1030:  cmp     #$2F
+L1030:  cmp     #'/'
         bne     L103C
         pha
         ldx     #$B6
         ldy     #$09
         jmp     L114C
 
-L103C:  cmp     #$30
+L103C:  cmp     #'0'
         bne     L1048
         pha
         ldx     #$9E
         ldy     #$0A
         jmp     L10FF
 
-L1048:  cmp     #$31
+L1048:  cmp     #'1'
         bne     L1054
         pha
         ldx     #$47
         ldy     #$0A
         jmp     L10FF
 
-L1054:  cmp     #$32
+L1054:  cmp     #'2'
         bne     L1060
         pha
         ldx     #$64
         ldy     #$0A
         jmp     L10FF
 
-L1060:  cmp     #$33
+L1060:  cmp     #'3'
         bne     L106C
         pha
         ldx     #$81
         ldy     #$0A
         jmp     L10FF
 
-L106C:  cmp     #$34
+L106C:  cmp     #'4'
         bne     L1078
         pha
         ldx     #$D3
         ldy     #$09
         jmp     L10FF
 
-L1078:  cmp     #$35
+L1078:  cmp     #'5'
         bne     L1084
         pha
         ldx     #$F0
         ldy     #$09
         jmp     L10FF
 
-L1084:  cmp     #$36
+L1084:  cmp     #'6'
         bne     L1090
         pha
         ldx     #$0D
         ldy     #$0A
         jmp     L10FF
 
-L1090:  cmp     #$37
+L1090:  cmp     #'7'
         bne     L109C
         pha
         ldx     #$5F
         ldy     #$09
         jmp     L10FF
 
-L109C:  cmp     #$38
+L109C:  cmp     #'8'
         bne     L10A8
         pha
         ldx     #$7C
         ldy     #$09
         jmp     L10FF
 
-L10A8:  cmp     #$39
+L10A8:  cmp     #'9'
         bne     L10B4
         pha
         ldx     #$99
@@ -815,13 +822,13 @@ L10DD:  cmp     #'-'
 L10E4:  ldx     #$0D
 L10E6:  lda     text_buffer1,x
         sta     text_buffer1+1,x
-        sta     L0C1B,x
+        sta     text_buffer2+1,x
         dex
         dey
         bne     L10E6
         lda     #$20
         sta     text_buffer1+1,x
-        sta     L0C1B,x
+        sta     text_buffer2+1,x
         jmp     L12A4
 
 L10FE:  rts
@@ -856,7 +863,7 @@ L111C:  sec
         tax
 L1131:  lda     text_buffer1,x
         sta     text_buffer1-1,x
-        sta     L0C19,x
+        sta     text_buffer2-1,x
         inx
         dey
         bne     L1131
@@ -938,7 +945,7 @@ L11CC:  lda     $0100,y
 L11D4:  ldx     #$0E
 L11D6:  lda     $FF,y
         sta     text_buffer1,x
-        sta     L0C1A,x
+        sta     text_buffer2,x
         dex
         dey
         bne     L11D6
@@ -946,7 +953,7 @@ L11D6:  lda     $FF,y
         bmi     L11F2
 L11E7:  lda     #$20
         sta     text_buffer1,x
-        sta     L0C1A,x
+        sta     text_buffer2,x
         dex
         bpl     L11E7
 L11F2:  jsr     L12A4
@@ -1012,7 +1019,7 @@ L1280:  lda     #$20
 
 L128E:  ldy     #$0E
 L1290:  lda     #$20
-        sta     L0C19,y
+        sta     text_buffer2-1,y
         dey
         bne     L1290
         lda     #$30
@@ -1030,7 +1037,7 @@ L12A4:  ldx     #$07
 L12B2:  ldx     #$1A
         ldy     #$0C
         jsr     L12C0
-        A2D_CALL A2D_DRAW_TEXT, L0C17
+        A2D_CALL A2D_DRAW_TEXT, draw_text_params2
         rts
 
 L12C0:  stx     L0C40
@@ -1041,7 +1048,7 @@ L12C0:  stx     L0C40
         sbc     L0C43
         sta     text_pos_params3::left
         A2D_CALL A2D_SET_TEXT_POS, text_pos_params2
-        A2D_CALL A2D_DRAW_TEXT, L0C2A
+        A2D_CALL A2D_DRAW_TEXT, spaces_string
         A2D_CALL A2D_SET_TEXT_POS, text_pos_params3
         rts
 
@@ -1072,12 +1079,12 @@ L1320:  ldy     #0
 L1339:  sty     L134D+1
         ldy     #$10
         lda     ($FA),y
-        sta     L0C03
+        sta     label
 L1347   := *+4
         A2D_CALL $14, 0
 L134D   := *+4
         A2D_CALL A2D_SET_TEXT_POS, 0
-        A2D_CALL A2D_DRAW_TEXT, L0C00
+        A2D_CALL A2D_DRAW_TEXT, draw_text_params_label
         lda     $FA
         clc
         adc     #$1D
@@ -1114,7 +1121,7 @@ L1384:  stx     L0C5B
 
         jsr     L129E
         A2D_CALL A2D_SET_TEXT_POS, L0C4E
-        A2D_CALL A2D_DRAW_TEXT, L0C37
+        A2D_CALL A2D_DRAW_TEXT, error_string
         jsr     L11F5
         lda     #$3D
         sta     L0BC6
