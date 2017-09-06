@@ -112,7 +112,7 @@ A2D_CREATE_WINDOW := $38
 
 
 A2D_DESTROY_WINDOW := $39
-        ;; pass the same block as passed to A2D_CREATE_WINDOW
+        ;; .byte id
 
 A2D_UNK_3C      := $3C          ; Unknown, used in calculator
 
@@ -213,6 +213,11 @@ A2D_CWS_SCROLL_NORMAL  := A2D_CWS_SCROLL_ENABLED | A2D_CWS_SCROLL_THUMB | A2D_CW
         .addr   data
         .byte   .strlen(str)
 data:   .byte   str
+.endmacro
+
+.macro PASCAL_STRING str        ; Length-prefixed string
+        .byte   .strlen(str)
+        .byte   str
 .endmacro
 
 

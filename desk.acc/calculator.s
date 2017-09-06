@@ -118,8 +118,9 @@ L08AE:  A2D_CALL $3C, L08D1
 
 L08C4:  rts
 
-button_state:
-        .byte   $00
+.proc button_state_params
+state:  .byte   $00
+.endproc
 
 L08C6:  .byte   $00
 L08C7:  .byte   $00,$00,$00
@@ -130,7 +131,11 @@ base:   .word   0
 .endproc
 
         .byte $00,$00
-L08D0:  .byte   $00
+
+.proc button_click_params
+state:  .byte   $00
+.endproc
+
 L08D1:  .byte   $00,$6E,$0C
 L08D4:  .byte   $80
 L08D5:  .byte   $00,$0C,$00,$15,$00,$E1,$0A,$03
@@ -268,26 +273,34 @@ height: .word   16
 
 L0C00:  .byte   $03,$0C,$01
 L0C03:  .byte   $00
-L0C04:  .byte   $07,$0C
-L0C06:  .byte   $0F
-L0C07:  .byte   $00
-L0C08:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+
+.proc draw_text_params1
+addr:   .addr   $0C07
+length: .byte   15
+.endproc
+
+text_buffer1:
+        .byte   $00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00
 L0C15:  .byte   $00,$00
+
 L0C17:  .byte   $1A,$0C
 L0C19:  .byte   $0F
 L0C1A:  .byte   $00
 L0C1B:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00
 L0C28:  .byte   $00,$00
-L0C2A:  .byte   $2D,$0C,$0A,$20,$20,$20,$20,$20
-        .byte   $20,$20,$20,$20,$20
+L0C2A:  A2D_DEFSTRING "          "
 L0C37:  .byte   $3A,$0C,$06,$45,$72,$72,$6F,$72
         .byte   $20
 L0C40:  .byte   $07
 L0C41:  .byte   $0C,$0F
 L0C43:  .byte   $00,$00
-L0C45:  .byte   $34
+
+.proc destroy_window_params
+id:     .byte   $34
+.endproc
 
 .proc text_pos_params3
 left:   .word   0
@@ -318,7 +331,10 @@ L0CA3:  .byte   $00,$01,$02
 L0CA6:  .byte   $06
 
 create_window_params:
-        .byte   $34,$02,$E1,$0C,$00,$00,$00,$00
+        .byte   $34             ; id
+        .byte   $02             ; flags
+        .addr   title
+        .byte   $00,$00,$00,$00
         .byte   $00,$00,$00,$00,$82,$00,$60,$00
         .byte   $82,$00,$60,$00
 L0CBB:  .byte   $D2
@@ -328,7 +344,9 @@ L0CBE:  .byte   $00,$00,$20,$80,$00,$00,$00,$00
         .byte   $00,$82,$00,$60,$00,$FF,$FF,$FF
         .byte   $FF,$FF,$FF,$FF,$FF,$FF,$00,$00
         .byte   $00,$00,$00,$01,$01,$00,$7F,$00
-        .byte   $88,$00,$00,$04,$43,$61,$6C,$63
+        .byte   $88,$00,$00
+
+title:  PASCAL_STRING "Calc"
 L0CE6:  .byte   $00,$00,$02,$00,$06,$00,$0E,$00
         .byte   $1E,$00,$3E,$00,$7E,$00,$1A,$00
         .byte   $30,$00,$30,$00,$60,$00,$00,$00
@@ -346,9 +364,9 @@ L0D18:  sta     ALTZPON
         A2D_CALL A2D_TEXT_BOX1, L0C6E
         A2D_CALL $2B, 0
         lda     #$01
-        sta     button_state
-        A2D_CALL $2D, button_state
-        A2D_CALL A2D_GET_BUTTON, button_state
+        sta     button_state_params::state
+        A2D_CALL $2D, button_state_params
+        A2D_CALL A2D_GET_BUTTON, button_state_params
         lda     ROMIN2
         jsr     L128E
         lda     #$34
@@ -397,8 +415,8 @@ L0D79:  lda     L13CB,x
         lda     #$43
         jsr     L0F6A
         A2D_CALL $24, L0CE6
-L0DC9:  A2D_CALL $2A, button_state
-        lda     button_state
+L0DC9:  A2D_CALL $2A, button_state_params
+        lda     button_state_params::state
         cmp     #$01
         bne     L0DDC
         jsr     L0DE6
@@ -430,12 +448,12 @@ L0E04:  lda     text_pos_params1::left
 
 L0E13:  cmp     #$05
         bne     L0E53
-        A2D_CALL A2D_BTN_CLICK, L08D0
-        lda     L08D0
+        A2D_CALL A2D_BTN_CLICK, button_click_params
+        lda     button_click_params::state
         beq     L0E03
 L0E22:  lda     LCBANK1
         lda     LCBANK1
-        A2D_CALL A2D_DESTROY_WINDOW, L0C45
+        A2D_CALL A2D_DESTROY_WINDOW, destroy_window_params
         jsr     UNKNOWN_CALL
         .byte   $0C
         .addr   0
@@ -455,10 +473,10 @@ L0E4A:  sta     RAMRDOFF
 L0E53:  cmp     #$03
         bne     L0E03
         lda     #$34
-        sta     button_state
+        sta     button_state_params::state
         lda     LCBANK1
         lda     LCBANK1
-        A2D_CALL $44, button_state
+        A2D_CALL $44, button_state_params
         lda     ROMIN2
         jsr     L084C
         rts
@@ -483,8 +501,8 @@ L0E91:  jmp     L0F6A
 L0E94:  rts
 
 L0E95:  lda     #$34
-        sta     button_state
-        A2D_CALL $46, button_state
+        sta     button_state_params::state
+        A2D_CALL $46, button_state_params
         lda     text_pos_params1::left+1
         ora     text_pos_params1::base+1
         bne     L0E94
@@ -795,14 +813,14 @@ L10DD:  cmp     #'-'
         bne     L10E4
         stx     L0BC9
 L10E4:  ldx     #$0D
-L10E6:  lda     L0C07,x
-        sta     L0C08,x
+L10E6:  lda     text_buffer1,x
+        sta     text_buffer1+1,x
         sta     L0C1B,x
         dex
         dey
         bne     L10E6
         lda     #$20
-        sta     L0C08,x
+        sta     text_buffer1+1,x
         sta     L0C1B,x
         jmp     L12A4
 
@@ -836,8 +854,8 @@ L111C:  sec
         sec
         sbc     L0BCB
         tax
-L1131:  lda     L0C07,x
-        sta     L0C06,x
+L1131:  lda     text_buffer1,x
+        sta     text_buffer1-1,x
         sta     L0C19,x
         inx
         dey
@@ -919,7 +937,7 @@ L11CC:  lda     $0100,y
         bne     L11CC
 L11D4:  ldx     #$0E
 L11D6:  lda     $FF,y
-        sta     L0C07,x
+        sta     text_buffer1,x
         sta     L0C1A,x
         dex
         dey
@@ -927,7 +945,7 @@ L11D6:  lda     $FF,y
         cpx     #0
         bmi     L11F2
 L11E7:  lda     #$20
-        sta     L0C07,x
+        sta     text_buffer1,x
         sta     L0C1A,x
         dex
         bpl     L11E7
@@ -953,13 +971,13 @@ L120A:  stx     L122F
         ror     $FC
 L122F   := *+4
 L122B:  A2D_CALL A2D_CLEAR_BOX, 0
-L1231:  A2D_CALL A2D_GET_BUTTON, button_state
-        lda     button_state
+L1231:  A2D_CALL A2D_GET_BUTTON, button_state_params
+        lda     button_state_params::state
         cmp     #$04
         bne     L126B
         lda     #$34
-        sta     button_state
-        A2D_CALL $46, button_state
+        sta     button_state_params::state
+        A2D_CALL $46, button_state_params
         A2D_CALL A2D_SET_TEXT_POS, text_pos_params1
 L1253   := *+4
         A2D_CALL $13, 0
@@ -985,7 +1003,7 @@ L1275:  A2D_CALL $07, L0CA3
 
 L127E:  ldy     #$0E
 L1280:  lda     #$20
-        sta     L0C06,y
+        sta     text_buffer1-1,y
         dey
         bne     L1280
         lda     #$30
@@ -1006,7 +1024,7 @@ L129E:  jsr     L127E
 L12A4:  ldx     #$07
         ldy     #$0C
         jsr     L12C0
-        A2D_CALL A2D_DRAW_TEXT, L0C04
+        A2D_CALL A2D_DRAW_TEXT, draw_text_params1
         rts
 
 L12B2:  ldx     #$1A
