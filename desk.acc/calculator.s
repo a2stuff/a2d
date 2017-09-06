@@ -138,73 +138,144 @@ state:  .byte   $00
 
 L08D1:  .byte   $00,$6E,$0C
 L08D4:  .byte   $80
-        ;; table of floating point constants ???
+        ;; button definitions
 L08D5:  .byte   $00,$0C,$00,$15,$00,$E1,$0A,$03
         .byte   $00,$00,$00,$00,$00,$14,$00,$0C
-        .byte   $00,$63,$13,$00,$1F,$00,$0D,$00
-        .byte   $16,$00,$1E,$00,$1F,$00,$29,$00
+        .byte   $00,$63,$13,$00,$1F,$00
+
+btnc_box:
+        .word $0D,$16,$1E,$1F
+
+        .byte $29,$00
         .byte   $15,$00,$E1,$0A,$03,$00,$00,$00
         .byte   $00,$00,$14,$00,$0C,$00,$65,$30
-        .byte   $00,$1F,$00,$2A,$00,$16,$00,$3B
-        .byte   $00,$1F,$00,$45,$00,$15,$00,$E1
+        .byte   $00,$1F,$00
+
+btne_box:
+        .word $2A,$16,$3B,$1F
+
+        .byte   $45,$00,$15,$00,$E1
         .byte   $0A,$03,$00,$00,$00,$00,$00,$14
         .byte   $00,$0C,$00,$3D,$4C,$00,$1F,$00
-        .byte   $46,$00,$16,$00,$57,$00,$1F,$00
+
+btneq_box:
+        .word   $46,$16,$57,$1F
+
         .byte   $61,$00,$15,$00,$E1,$0A,$03,$00
         .byte   $00,$00,$00,$00,$14,$00,$0C,$00
-        .byte   $2A,$68,$00,$1F,$00,$62,$00,$16
-        .byte   $00,$73,$00,$1F,$00,$0C,$00,$25
+        .byte   $2A,$68,$00,$1F,$00
+
+btnmul_box:
+        .word   $62,$16,$73,$1F
+
+        .byte   $0C,$00,$25
         .byte   $00,$E1,$0A,$03,$00,$00,$00,$00
         .byte   $00,$14,$00,$0C,$00,$37,$13,$00
-        .byte   $2F,$00,$0D,$00,$26,$00,$1E,$00
-        .byte   $2F,$00,$29,$00,$25,$00,$E1,$0A
+        .byte   $2F,$00
+
+btn7_box:
+        .word   $0D,$26,$1E,$2F
+
+        .word   $29
+        .byte   $25,$00,$E1,$0A
         .byte   $03,$00,$00,$00,$00,$00,$14,$00
-        .byte   $0C,$00,$38,$30,$00,$2F,$00,$2A
-        .byte   $00,$26,$00,$3B,$00,$2F,$00,$45
+        .byte   $0C,$00,$38,$30,$00,$2F,$00
+
+btn8_box:
+        .word   $2A,$26,$3B,$2F
+
+        .byte   $45
         .byte   $00,$25,$00,$E1,$0A,$03,$00,$00
         .byte   $00,$00,$00,$14,$00,$0C,$00,$39
-        .byte   $4C,$00,$2F,$00,$46,$00,$26,$00
-        .byte   $57,$00,$2F,$00,$61,$00,$25,$00
+        .byte   $4C,$00,$2F,$00
+
+btn9_box:
+        .word   $46,$26,$57,$2F
+
+        .byte   $61,$00,$25,$00
         .byte   $E1,$0A,$03,$00,$00,$00,$00,$00
         .byte   $14,$00,$0C,$00,$2F,$68,$00,$2F
-        .byte   $00,$62,$00,$26,$00,$73,$00,$2F
-        .byte   $00,$0C,$00,$34,$00,$E1,$0A,$03
+        .byte   $00
+
+btndiv_box:
+        .word   $62,$26,$73,$2F
+
+        .byte   $0C,$00,$34,$00,$E1,$0A,$03
         .byte   $00,$00,$00,$00,$00,$14,$00,$0C
-        .byte   $00,$34,$13,$00,$3E,$00,$0D,$00
-        .byte   $35,$00,$1E,$00,$3E,$00,$29,$00
+        .byte   $00,$34,$13,$00,$3E,$00
+
+btn4_box:
+        .word   $0D,$35,$1E,$3E
+
+        .byte   $29,$00
         .byte   $34,$00,$E1,$0A,$03,$00,$00,$00
         .byte   $00,$00,$14,$00,$0C,$00,$35,$30
-        .byte   $00,$3E,$00,$2A,$00,$35,$00,$3B
-        .byte   $00,$3E,$00,$45,$00,$34,$00,$E1
+        .byte   $00,$3E,$00
+
+btn5_box:
+        .word   $2A,$35,$3B,$3E
+
+        .byte   $45,$00,$34,$00,$E1
         .byte   $0A,$03,$00,$00,$00,$00,$00,$14
         .byte   $00,$0C,$00,$36,$4C,$00,$3E,$00
-        .byte   $46,$00,$35,$00,$57,$00,$3E,$00
+
+
+btn6_box:
+        .word   $46,$35,$57,$3E
+
         .byte   $61,$00,$34,$00,$E1,$0A,$03,$00
         .byte   $00,$00,$00,$00,$14,$00,$0C,$00
-        .byte   $2D,$68,$00,$3E,$00,$62,$00,$35
-        .byte   $00,$73,$00,$3E,$00,$0C,$00,$43
+        .byte   $2D,$68,$00,$3E,$00
+
+btnsub_box:
+        .word   $62,$35,$73,$3E
+
+        .byte   $0C,$00,$43
         .byte   $00,$E1,$0A,$03,$00,$00,$00,$00
         .byte   $00,$14,$00,$0C,$00,$31,$13,$00
-        .byte   $4D,$00,$0D,$00,$44,$00,$1E,$00
-        .byte   $4D,$00,$29,$00,$43,$00,$E1,$0A
+        .byte   $4D,$00
+
+btn1_box:
+        .word   $0D,$44,$1E,$4D
+
+        .byte   $29,$00,$43,$00,$E1,$0A
         .byte   $03,$00,$00,$00,$00,$00,$14,$00
-        .byte   $0C,$00,$32,$30,$00,$4D,$00,$2A
-        .byte   $00,$44,$00,$3B,$00,$4D,$00,$45
+        .byte   $0C,$00,$32,$30,$00,$4D,$00
+
+btn2_box:
+        .word   $2A,$44,$3B,$4D
+
+        .byte   $45
         .byte   $00,$43,$00,$E1,$0A,$03,$00,$00
         .byte   $00,$00,$00,$14,$00,$0C,$00,$33
-        .byte   $4C,$00,$4D,$00,$46,$00,$44,$00
-        .byte   $57,$00,$4D,$00,$0C,$00,$52,$00
+        .byte   $4C,$00,$4D,$00
+
+btn3_box:
+        .word   $46,$44,$57,$4D
+
+        .byte   $0C,$00,$52,$00
         .byte   $08,$0B,$08,$00,$00,$00,$00,$00
         .byte   $31,$00,$0C,$00,$30,$13,$00,$5C
-        .byte   $00,$0D,$00,$53,$00,$3B,$00,$5C
-        .byte   $00,$45,$00,$52,$00,$E1,$0A,$03
+        .byte   $00
+
+btn0_box:
+        .word   $0D,$53,$3B,$5C
+        .byte   $45,$00,$52,$00,$E1,$0A,$03
         .byte   $00,$00,$00,$00,$00,$14,$00,$0C
-        .byte   $00,$2E,$4E,$00,$5C,$00,$46,$00
-        .byte   $53,$00,$57,$00,$5C,$00,$61,$00
+        .byte   $00,$2E,$4E,$00,$5C,$00
+
+btndec_box:
+        .word   $46,$53,$57,$5C
+
+        .byte   $61,$00
         .byte   $43,$00,$70,$0B,$03,$00,$00,$00
         .byte   $00,$00,$14,$00,$1B,$00,$2B,$68
-        .byte   $00,$5C,$00,$62,$00,$44,$00,$73
-        .byte   $00,$5C,$00,$00,$00,$00,$40,$7E
+        .byte   $00,$5C,$00
+
+btnadd_box:
+        .word   $62,$44,$73,$5C
+
+        .byte   $00,$00,$00,$40,$7E
         .byte   $7F,$1F,$7E,$7F,$1F,$7E,$7F,$1F
         .byte   $7E,$7F,$1F,$7E,$7F,$1F,$7E,$7F
         .byte   $1F,$7E,$7F,$1F,$7E,$7F,$1F,$7E
@@ -627,8 +698,8 @@ L0F68:  clc
 
 L0F6A:  cmp     #'C'
         bne     :+
-        ldx     #$EB
-        ldy     #$08
+        ldx     #<btnc_box
+        ldy     #>btnc_box
         lda     #$63
         jsr     L120A
         lda     #$00
@@ -648,8 +719,8 @@ L0F6A:  cmp     #'C'
 
 :       cmp     #'E'
         bne     L0FC7
-        ldx     #$08
-        ldy     #$09
+        ldx     #<btne_box
+        ldy     #>btne_box
         lda     #$65
         jsr     L120A
         ldy     L0BC8
@@ -669,21 +740,21 @@ L0FC6:  rts
 L0FC7:  cmp     #'='
         bne     :+
         pha
-        ldx     #$25
-        ldy     #$09
+        ldx     #<btneq_box
+        ldy     #>btneq_box
         jmp     L114C
 
 :       cmp     #'*'
         bne     :+
         pha
-        ldx     #$42
-        ldy     #$09
+        ldx     #<btnmul_box
+        ldy     #>btnmul_box
         jmp     L114C
 
 :       cmp     #'.'
         bne     L1003
-        ldx     #$BB
-        ldy     #$0A
+        ldx     #<btndec_box
+        ldy     #>btndec_box
         jsr     L120A
         lda     L0BC7
         ora     L0BC8
@@ -700,15 +771,15 @@ L1002:  rts
 L1003:  cmp     #'+'
         bne     :+
         pha
-        ldx     #$D8
-        ldy     #$0A
+        ldx     #<btnadd_box
+        ldy     #>btnadd_box
         jmp     L114C
 
 :       cmp     #'-'
         bne     L1030
         pha
-        ldx     #$2A
-        ldy     #$0A
+        ldx     #<btnsub_box
+        ldy     #>btnsub_box
         lda     L0BC8
         beq     L102B
         lda     L0BC9
@@ -726,78 +797,78 @@ L102B:  pla
 L1030:  cmp     #'/'
         bne     :+
         pha
-        ldx     #$B6
-        ldy     #$09
+        ldx     #<btndiv_box
+        ldy     #>btndiv_box
         jmp     L114C
 
 :       cmp     #'0'
         bne     :+
         pha
-        ldx     #$9E
-        ldy     #$0A
+        ldx     #<btn0_box
+        ldy     #>btn0_box
         jmp     L10FF
 
 :       cmp     #'1'
         bne     :+
         pha
-        ldx     #$47
-        ldy     #$0A
+        ldx     #<btn1_box
+        ldy     #>btn1_box
         jmp     L10FF
 
 :       cmp     #'2'
         bne     :+
         pha
-        ldx     #$64
-        ldy     #$0A
+        ldx     #<btn2_box
+        ldy     #>btn2_box
         jmp     L10FF
 
 :       cmp     #'3'
         bne     :+
         pha
-        ldx     #$81
-        ldy     #$0A
+        ldx     #<btn3_box
+        ldy     #>btn3_box
         jmp     L10FF
 
 :       cmp     #'4'
         bne     :+
         pha
-        ldx     #$D3
-        ldy     #$09
+        ldx     #<btn4_box
+        ldy     #>btn4_box
         jmp     L10FF
 
 :       cmp     #'5'
         bne     :+
         pha
-        ldx     #$F0
-        ldy     #$09
+        ldx     #<btn5_box
+        ldy     #>btn5_box
         jmp     L10FF
 
 :       cmp     #'6'
         bne     :+
         pha
-        ldx     #$0D
-        ldy     #$0A
+        ldx     #<btn6_box
+        ldy     #>btn6_box
         jmp     L10FF
 
 :       cmp     #'7'
         bne     :+
         pha
-        ldx     #$5F
-        ldy     #$09
+        ldx     #<btn7_box
+        ldy     #>btn7_box
         jmp     L10FF
 
 :       cmp     #'8'
         bne     :+
         pha
-        ldx     #$7C
-        ldy     #$09
+        ldx     #<btn8_box
+        ldy     #>btn8_box
         jmp     L10FF
 
 :       cmp     #'9'
         bne     :+
         pha
-        ldx     #$99
-        ldy     #$09
+        ldx     #<btn9_box
+        ldy     #>btn9_box
         jmp     L10FF
 
 :       cmp     #$7F
