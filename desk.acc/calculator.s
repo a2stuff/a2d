@@ -139,141 +139,181 @@ state:  .byte   $00
 L08D1:  .byte   $00,$6E,$0C
 L08D4:  .byte   $80
         ;; button definitions
+
+        button_width := 17
+        button_height := 9
+
+        col1_left := 13
+        col1_right := col1_left+button_width
+        col2_left := 42
+        col2_right := col2_left+button_width
+        col3_left := 70
+        col3_right := col3_left+button_width
+        col4_left := 98
+        col4_right := col4_left+button_width
+
+        row1_top := 22
+        row1_bot := row1_top+button_height
+        row2_top := 38
+        row2_bot := row2_top+button_height
+        row3_top := 53
+        row3_bot := row3_top+button_height
+        row4_top := 68
+        row4_bot := row4_top+button_height
+        row5_top := 83
+        row5_bot := row5_top+button_height
+
+
 L08D5:  .byte   $00,$0C,$00,$15,$00,$E1,$0A,$03
         .byte   $00,$00,$00,$00,$00,$14,$00,$0C
-        .byte   $00,$63,$13,$00,$1F,$00
+        .byte   $00,$63,$13,$00
+        .word   row1_bot
 
 btnc_box:
-        .word $0D,$16,$1E,$1F
+        .word   col1_left,row1_top,col1_right,row1_bot
 
-        .byte $29,$00
+        .byte   $29,$00
         .byte   $15,$00,$E1,$0A,$03,$00,$00,$00
         .byte   $00,$00,$14,$00,$0C,$00,$65,$30
-        .byte   $00,$1F,$00
+        .byte   $00
+        .word   row1_bot
 
 btne_box:
-        .word $2A,$16,$3B,$1F
+        .word   col2_left,row1_top,col2_right,row1_bot
 
         .byte   $45,$00,$15,$00,$E1
         .byte   $0A,$03,$00,$00,$00,$00,$00,$14
-        .byte   $00,$0C,$00,$3D,$4C,$00,$1F,$00
+        .byte   $00,$0C,$00,$3D,$4C,$00
+        .word   row1_bot
 
 btneq_box:
-        .word   $46,$16,$57,$1F
+        .word   col3_left,row1_top,col3_right,row1_bot
 
         .byte   $61,$00,$15,$00,$E1,$0A,$03,$00
         .byte   $00,$00,$00,$00,$14,$00,$0C,$00
-        .byte   $2A,$68,$00,$1F,$00
+        .byte   $2A,$68,$00
+        .word   row1_bot
 
 btnmul_box:
-        .word   $62,$16,$73,$1F
+        .word   col4_left,row1_top,col4_right,row1_bot
 
         .byte   $0C,$00,$25
         .byte   $00,$E1,$0A,$03,$00,$00,$00,$00
         .byte   $00,$14,$00,$0C,$00,$37,$13,$00
-        .byte   $2F,$00
+        .word   row2_bot
 
 btn7_box:
-        .word   $0D,$26,$1E,$2F
+        .word   col1_left,row2_top,col1_right,row2_bot
 
         .word   $29
         .byte   $25,$00,$E1,$0A
         .byte   $03,$00,$00,$00,$00,$00,$14,$00
-        .byte   $0C,$00,$38,$30,$00,$2F,$00
+        .byte   $0C,$00,$38,$30,$00
+        .word   row2_bot
 
 btn8_box:
-        .word   $2A,$26,$3B,$2F
+        .word   col2_left,row2_top,col2_right,row2_bot
 
         .byte   $45
         .byte   $00,$25,$00,$E1,$0A,$03,$00,$00
         .byte   $00,$00,$00,$14,$00,$0C,$00,$39
-        .byte   $4C,$00,$2F,$00
+        .byte   $4C,$00
+        .word   row2_bot
 
 btn9_box:
-        .word   $46,$26,$57,$2F
+        .word   col3_left,row2_top,col3_right,row2_bot
 
         .byte   $61,$00,$25,$00
         .byte   $E1,$0A,$03,$00,$00,$00,$00,$00
-        .byte   $14,$00,$0C,$00,$2F,$68,$00,$2F
-        .byte   $00
+        .byte   $14,$00,$0C,$00,$2F,$68,$00
+        .word   row2_bot
 
 btndiv_box:
-        .word   $62,$26,$73,$2F
+        .word   col4_left,row2_top,col4_right,row2_bot
 
         .byte   $0C,$00,$34,$00,$E1,$0A,$03
         .byte   $00,$00,$00,$00,$00,$14,$00,$0C
-        .byte   $00,$34,$13,$00,$3E,$00
+        .byte   $00,$34,$13,$00
+        .word   row3_bot
 
 btn4_box:
-        .word   $0D,$35,$1E,$3E
+        .word   col1_left,row3_top,col1_right,row3_bot
 
         .byte   $29,$00
         .byte   $34,$00,$E1,$0A,$03,$00,$00,$00
         .byte   $00,$00,$14,$00,$0C,$00,$35,$30
-        .byte   $00,$3E,$00
+        .byte   $00
+        .word   row3_bot
 
 btn5_box:
-        .word   $2A,$35,$3B,$3E
+        .word   col2_left,row3_top,col2_right,row3_bot
 
         .byte   $45,$00,$34,$00,$E1
         .byte   $0A,$03,$00,$00,$00,$00,$00,$14
-        .byte   $00,$0C,$00,$36,$4C,$00,$3E,$00
+        .byte   $00,$0C,$00,$36,$4C,$00
+        .word   row3_bot
 
 
 btn6_box:
-        .word   $46,$35,$57,$3E
+        .word   col3_left,row3_top,col3_right,row3_bot
 
         .byte   $61,$00,$34,$00,$E1,$0A,$03,$00
         .byte   $00,$00,$00,$00,$14,$00,$0C,$00
-        .byte   $2D,$68,$00,$3E,$00
+        .byte   $2D,$68,$00
+        .word   row3_bot
 
 btnsub_box:
-        .word   $62,$35,$73,$3E
+        .word   col4_left,row3_top,col4_right,row3_bot
 
         .byte   $0C,$00,$43
         .byte   $00,$E1,$0A,$03,$00,$00,$00,$00
         .byte   $00,$14,$00,$0C,$00,$31,$13,$00
-        .byte   $4D,$00
+        .word   row4_bot
 
 btn1_box:
-        .word   $0D,$44,$1E,$4D
+        .word   col1_left,row4_top,col1_right,row4_bot
 
         .byte   $29,$00,$43,$00,$E1,$0A
         .byte   $03,$00,$00,$00,$00,$00,$14,$00
-        .byte   $0C,$00,$32,$30,$00,$4D,$00
+        .byte   $0C,$00,$32,$30,$00
+        .word   row4_bot
 
 btn2_box:
-        .word   $2A,$44,$3B,$4D
+        .word   col2_left,row4_top,col2_right,row4_bot
 
         .byte   $45
         .byte   $00,$43,$00,$E1,$0A,$03,$00,$00
         .byte   $00,$00,$00,$14,$00,$0C,$00,$33
-        .byte   $4C,$00,$4D,$00
+        .byte   $4C,$00
+        .word   row4_bot
 
 btn3_box:
-        .word   $46,$44,$57,$4D
+        .word   col3_left,row4_top,col3_right,row4_bot
 
         .byte   $0C,$00,$52,$00
         .byte   $08,$0B,$08,$00,$00,$00,$00,$00
-        .byte   $31,$00,$0C,$00,$30,$13,$00,$5C
-        .byte   $00
+        .byte   $31,$00,$0C,$00,$30,$13,$00
+        .word   row5_bot
 
 btn0_box:
-        .word   $0D,$53,$3B,$5C
+        .word   col1_left,row5_top,col2_right,row5_bot
+
         .byte   $45,$00,$52,$00,$E1,$0A,$03
         .byte   $00,$00,$00,$00,$00,$14,$00,$0C
-        .byte   $00,$2E,$4E,$00,$5C,$00
+        .byte   $00,$2E,$4E,$00
+        .word   row5_bot
 
 btndec_box:
-        .word   $46,$53,$57,$5C
+        .word   col3_left,row5_top,col3_right,row5_bot
 
         .byte   $61,$00
         .byte   $43,$00,$70,$0B,$03,$00,$00,$00
         .byte   $00,$00,$14,$00,$1B,$00,$2B,$68
-        .byte   $00,$5C,$00
+        .byte   $00
+        .word   row5_bot
 
 btnadd_box:
-        .word   $62,$44,$73,$5C
+        .word   col4_left,row4_top,col4_right,row5_bot
 
         .byte   $00,$00,$00,$40,$7E
         .byte   $7F,$1F,$7E,$7F,$1F,$7E,$7F,$1F
