@@ -138,6 +138,7 @@ state:  .byte   $00
 
 L08D1:  .byte   $00,$6E,$0C
 L08D4:  .byte   $80
+        ;; table of floating point constants ???
 L08D5:  .byte   $00,$0C,$00,$15,$00,$E1,$0A,$03
         .byte   $00,$00,$00,$00,$00,$14,$00,$0C
         .byte   $00,$63,$13,$00,$1F,$00,$0D,$00
@@ -282,6 +283,8 @@ label:  .byte   0               ; modified with char to draw
 addr:   .addr   text_buffer1
 length: .byte   15
 .endproc
+
+text_buffer_size := 14
 
 text_buffer1:
         .byte   0,0,0,0,0,0,0,0,0,0,0,0,0,0
@@ -491,7 +494,7 @@ L0E53:  cmp     #$03
 L0E6F:  lda     L08C7
         bne     L0E94
         lda     L08C6
-        cmp     #$1B
+        cmp     #$1B            ; Escape
         bne     L0E87
         lda     L0BC5
         bne     L0E85
@@ -518,42 +521,42 @@ L0E95:  lda     #$34
         cmp     #$16
         bcc     L0F22
         cmp     #$22
-        bcs     L0EBF
+        bcs     :+
         jsr     L0F38
         bcc     L0F22
         lda     L0F23,x
         rts
 
-L0EBF:  cmp     #$25
+:       cmp     #$25
         bcc     L0F22
         cmp     #$31
-        bcs     L0ED0
+        bcs     :+
         jsr     L0F38
         bcc     L0F22
         lda     L0F27,x
         rts
 
-L0ED0:  cmp     #$34
+:       cmp     #$34
         bcc     L0F22
         cmp     #$40
-        bcs     L0EE1
+        bcs     :+
         jsr     L0F38
         bcc     L0F22
         lda     L0F2B,x
         rts
 
-L0EE1:  cmp     #$43
+:       cmp     #$43
         bcc     L0F22
         cmp     #$4F
-        bcs     L0EF3
+        bcs     :+
         jsr     L0F38
         bcc     L0F22
         sec
         lda     L0F2F,x
         rts
 
-L0EF3:  cmp     #$52
-        bcs     L0F06
+:       cmp     #$52
+        bcs     :+
         lda     text_pos_params1::left
         cmp     #$61
         bcc     L0F22
@@ -563,17 +566,17 @@ L0EF3:  cmp     #$52
         sec
         rts
 
-L0F06:  cmp     #$5E
+:       cmp     #$5E
         bcs     L0F22
         jsr     L0F38
-        bcc     L0F13
+        bcc     :+
         lda     L0F33,x
         rts
 
-L0F13:  lda     text_pos_params1::left
+:       lda     text_pos_params1::left
         cmp     #$0C
         bcc     L0F22
-        cmp     #$3D
+        cmp     #'='
         bcs     L0F22
         lda     #$30
         sec
@@ -591,28 +594,28 @@ L0F33:  .byte   $2B,$30,$30,$2E,$2B
 L0F38:  cpx     #$0C
         bcc     L0F68
         cpx     #$20
-        bcs     L0F44
+        bcs     :+
         ldx     #$01
         sec
         rts
 
-L0F44:  cpx     #$29
+:       cpx     #$29
         bcc     L0F68
         cpx     #$3D
-        bcs     L0F50
+        bcs     :+
         ldx     #$02
         sec
         rts
 
-L0F50:  cpx     #$45
+:       cpx     #$45
         bcc     L0F68
         cpx     #$59
-        bcs     L0F5C
+        bcs     :+
         ldx     #$03
         sec
         rts
 
-L0F5C:  cpx     #$61
+:       cpx     #$61
         bcc     L0F68
         cpx     #$74
         bcs     L0F68
@@ -624,7 +627,7 @@ L0F68:  clc
         rts
 
 L0F6A:  cmp     #'C'
-        bne     L0F9C
+        bne     :+
         ldx     #$EB
         ldy     #$08
         lda     #$63
@@ -644,7 +647,7 @@ L0F6A:  cmp     #'C'
         sta     L0BC9
         jmp     L129E
 
-L0F9C:  cmp     #'E'
+:       cmp     #'E'
         bne     L0FC7
         ldx     #$08
         ldy     #$09
@@ -653,32 +656,32 @@ L0F9C:  cmp     #'E'
         ldy     L0BC8
         bne     L0FC6
         ldy     L0BCB
-        bne     L0FBE
+        bne     :+
         inc     L0BCB
         lda     #'1'
         sta     L0C15
         sta     L0C28
-L0FBE:  lda     #'E'
+:       lda     #'E'
         sta     L0BC8
         jmp     L1107
 
 L0FC6:  rts
 
 L0FC7:  cmp     #'='
-        bne     L0FD3
+        bne     :+
         pha
         ldx     #$25
         ldy     #$09
         jmp     L114C
 
-L0FD3:  cmp     #'*'
-        bne     L0FDF
+:       cmp     #'*'
+        bne     :+
         pha
         ldx     #$42
         ldy     #$09
         jmp     L114C
 
-L0FDF:  cmp     #'.'
+:       cmp     #'.'
         bne     L1003
         ldx     #$BB
         ldy     #$0A
@@ -687,22 +690,22 @@ L0FDF:  cmp     #'.'
         ora     L0BC8
         bne     L1002
         lda     L0BCB
-        bne     L0FFA
+        bne     :+
         inc     L0BCB
-L0FFA:  lda     #$2E
+:       lda     #$2E
         sta     L0BC7
         jmp     L1107
 
 L1002:  rts
 
 L1003:  cmp     #'+'
-        bne     L100F
+        bne     :+
         pha
         ldx     #$D8
         ldy     #$0A
         jmp     L114C
 
-L100F:  cmp     #'-'
+:       cmp     #'-'
         bne     L1030
         pha
         ldx     #$2A
@@ -722,111 +725,111 @@ L102B:  pla
         jmp     L114C
 
 L1030:  cmp     #'/'
-        bne     L103C
+        bne     :+
         pha
         ldx     #$B6
         ldy     #$09
         jmp     L114C
 
-L103C:  cmp     #'0'
-        bne     L1048
+:       cmp     #'0'
+        bne     :+
         pha
         ldx     #$9E
         ldy     #$0A
         jmp     L10FF
 
-L1048:  cmp     #'1'
-        bne     L1054
+:       cmp     #'1'
+        bne     :+
         pha
         ldx     #$47
         ldy     #$0A
         jmp     L10FF
 
-L1054:  cmp     #'2'
-        bne     L1060
+:       cmp     #'2'
+        bne     :+
         pha
         ldx     #$64
         ldy     #$0A
         jmp     L10FF
 
-L1060:  cmp     #'3'
-        bne     L106C
+:       cmp     #'3'
+        bne     :+
         pha
         ldx     #$81
         ldy     #$0A
         jmp     L10FF
 
-L106C:  cmp     #'4'
-        bne     L1078
+:       cmp     #'4'
+        bne     :+
         pha
         ldx     #$D3
         ldy     #$09
         jmp     L10FF
 
-L1078:  cmp     #'5'
-        bne     L1084
+:       cmp     #'5'
+        bne     :+
         pha
         ldx     #$F0
         ldy     #$09
         jmp     L10FF
 
-L1084:  cmp     #'6'
-        bne     L1090
+:       cmp     #'6'
+        bne     :+
         pha
         ldx     #$0D
         ldy     #$0A
         jmp     L10FF
 
-L1090:  cmp     #'7'
-        bne     L109C
+:       cmp     #'7'
+        bne     :+
         pha
         ldx     #$5F
         ldy     #$09
         jmp     L10FF
 
-L109C:  cmp     #'8'
-        bne     L10A8
+:       cmp     #'8'
+        bne     :+
         pha
         ldx     #$7C
         ldy     #$09
         jmp     L10FF
 
-L10A8:  cmp     #'9'
-        bne     L10B4
+:       cmp     #'9'
+        bne     :+
         pha
         ldx     #$99
         ldy     #$09
         jmp     L10FF
 
-L10B4:  cmp     #$7F
+:       cmp     #$7F
         bne     L10FE
         ldy     L0BCB
         beq     L10FE
         cpy     #$01
-        bne     L10C7
+        bne     :+
         jsr     L11F5
         jmp     L12A4
 
-L10C7:  dec     L0BCB
+:       dec     L0BCB
         ldx     #0
         lda     L0C15
         cmp     #'.'
         bne     L10D6
         stx     L0BC7
 L10D6:  cmp     #'E'
-        bne     L10DD
+        bne     :+
         stx     L0BC8
-L10DD:  cmp     #'-'
-        bne     L10E4
+:       cmp     #'-'
+        bne     :+
         stx     L0BC9
-L10E4:  ldx     #$0D
+:       ldx     #$0D
 L10E6:  lda     text_buffer1,x
         sta     text_buffer1+1,x
         sta     text_buffer2+1,x
         dex
         dey
         bne     L10E6
-        lda     #$20
+        lda     #' '
         sta     text_buffer1+1,x
         sta     text_buffer2+1,x
         jmp     L12A4
@@ -882,14 +885,14 @@ L114C:  jsr     L120A
 
 L1153:  lda     L0BC6
         cmp     #'='
-        bne     L1167
+        bne     :+
         lda     L0BCA
         bne     L1173
         lda     #$00
         jsr     FLOAT
         jmp     L1181
 
-L1167:  lda     L0BCA
+:       lda     L0BCA
         bne     L1173
         pla
         sta     L0BC6
@@ -908,26 +911,26 @@ L1181:  pla
         ldy     #$0C
 
         cpx     #'+'
-        bne     L1196
+        bne     :+
         jsr     FADD
         jmp     L11C0
 
-L1196:  cpx     #'-'
-        bne     L11A0
+:       cpx     #'-'
+        bne     :+
         jsr     FSUB
         jmp     L11C0
 
-L11A0:  cpx     #'*'
-        bne     L11AA
+:       cpx     #'*'
+        bne     :+
         jsr     FMULT
         jmp     L11C0
 
-L11AA:  cpx     #'/'
-        bne     L11B4
+:       cpx     #'/'
+        bne     :+
         jsr     FDIV
         jmp     L11C0
 
-L11B4:  cpx     #'='
+:       cpx     #'='
         bne     L11C0
         ldy     L0BCA
         bne     L11C0
@@ -937,12 +940,12 @@ L11C0:  ldx     #$52
         ldy     #$0C
         jsr     ROUND
         jsr     FOUT
-        ldy     #$00
+        ldy     #0
 L11CC:  lda     $0100,y
         beq     L11D4
         iny
         bne     L11CC
-L11D4:  ldx     #$0E
+L11D4:  ldx     #text_buffer_size
 L11D6:  lda     $FF,y
         sta     text_buffer1,x
         sta     text_buffer2,x
@@ -951,14 +954,14 @@ L11D6:  lda     $FF,y
         bne     L11D6
         cpx     #0
         bmi     L11F2
-L11E7:  lda     #$20
+L11E7:  lda     #' '
         sta     text_buffer1,x
         sta     text_buffer2,x
         dex
         bpl     L11E7
 L11F2:  jsr     L12A4
 L11F5:  jsr     L127E
-        lda     #$00
+        lda     #0
         sta     L0BCB
         sta     L0BC7
         sta     L0BC8
@@ -1008,8 +1011,8 @@ L1275:  A2D_CALL $07, L0CA3
         lda     $FC
         rts
 
-L127E:  ldy     #$0E
-L1280:  lda     #$20
+L127E:  ldy     #text_buffer_size
+L1280:  lda     #' '
         sta     text_buffer1-1,y
         dey
         bne     L1280
@@ -1017,8 +1020,8 @@ L1280:  lda     #$20
         sta     L0C15
         rts
 
-L128E:  ldy     #$0E
-L1290:  lda     #$20
+L128E:  ldy     #text_buffer_size
+L1290:  lda     #' '
         sta     text_buffer2-1,y
         dey
         bne     L1290
@@ -1136,10 +1139,10 @@ L13CC:  inc     $B8
 L13D2:  lda     $EA60
         cmp     #$3A
         bcs     L13E3
-        cmp     #$20
+        cmp     #' '
         beq     L13CC
         sec
-        sbc     #$30
+        sbc     #'0'
         sec
         sbc     #$D0
 L13E3:  rts
