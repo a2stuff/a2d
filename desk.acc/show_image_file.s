@@ -1,6 +1,7 @@
         .setcpu "65C02"
         .org $800
 
+        .include "apple2.inc"
         .include "../inc/prodos.inc"
         .include "../inc/auxmem.inc"
         .include "a2d.inc"

@@ -1,58 +1,70 @@
         .setcpu "65C02"
         .org $800
 
+        .include "apple2.inc"
         .include "../inc/prodos.inc"
         .include "../inc/auxmem.inc"
         .include "../inc/applesoft.inc"
+
         .include "a2d.inc"
 
 L0020           := $0020
 L00B1           := $00B1
-L4015           := $4015
 
-ROMIN           := $C082
+ROMIN2          := $C082
 
-        jmp     L0804
 
-L0803:  .byte   0
+start:  jmp     copy2aux
 
-L0804:  tsx
-        stx     L0803
-        lda     ROMIN
-        lda     #$46
-        sta     $3C
-        lda     #$08
-        sta     $3D
-        lda     #$E4
-        sta     $3E
-        lda     #$13
-        sta     $3F
-        lda     #$46
-        sta     $42
-        lda     #$08
-        sta     $43
-        sec
+save_stack:  .byte   0
+
+.proc copy2aux
+        tsx
+        stx     save_stack
+
+        start   := call_init
+        end     := da_end
+        dest    := start
+
+        lda     ROMIN2
+        lda     #<start
+        sta     STARTLO
+        lda     #>start
+        sta     STARTHI
+        lda     #<end
+        sta     ENDLO
+        lda     #>end
+        sta     ENDHI
+        lda     #<dest
+        sta     DESTINATIONLO
+        lda     #>dest
+        sta     DESTINATIONHI
+        sec                     ; main>aux
         jsr     AUXMOVE
 
-        lda     #$46
-        sta     $03ED
-        lda     #$08
-        sta     $03EE
+        lda     #<start
+        sta     XFERSTARTLO
+        lda     #>start
+        sta     XFERSTARTHI
         php
         pla
-        ora     #$40
+        ora     #$40            ; set overflow: use aux zp/stack
         pha
         plp
-        sec
+        sec                     ; control main>aux
         jmp     XFER
+.endproc
 
-L083B:  lda     LCBANK1
+.proc  exit_da
         lda     LCBANK1
-        ldx     L0803
+        lda     LCBANK1
+        ldx     save_stack
         txs
         rts
+.endproc
 
-        lda     ROMIN
+call_init:
+        lda     ROMIN2
         jmp     L0D18
 
 L084C:  lda     LCBANK1
@@ -63,7 +75,7 @@ L0854:  lda     L088D,x
         dex
         bpl     L0854
         jsr     L0020
-        lda     ROMIN
+        lda     ROMIN2
         lda     #$34
         jsr     L089E
         lda     LCBANK1
@@ -73,16 +85,17 @@ L0854:  lda     L088D,x
         jsr     UNKNOWN_CALL
         .byte   $0C
         .addr   0
+
 L0878:  lda     #$00
         sta     L089D
-        lda     ROMIN
+        lda     ROMIN2
         A2D_CALL $3C, L08D1
         A2D_CALL A2D_TEXT_BOX1, L0C6E
         rts
 
 L088D:  sta     RAMRDOFF
         sta     RAMWRTOFF
-        jsr     L4015
+        jsr     JUMP_TABLE_15
         sta     RAMRDON
         sta     RAMWRTON
         rts
@@ -218,12 +231,19 @@ L0BC9:  .byte   $00
 L0BCA:  .byte   $00
 L0BCB:  .byte   $00
 L0BCC:  .byte   $01,$00,$00,$00,$81,$00,$60,$00
-L0BD4:  .byte   $77,$DD,$77,$DD,$77,$DD,$77,$DD
+
+background_pattern:
+        .byte   $77,$DD,$77,$DD,$77,$DD,$77,$DD
         .byte   $00
-L0BDD:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+
+black_pattern:
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00
-L0BE6:  .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+
+white_pattern:
+        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
         .byte   $00
+
 L0BEF:  .byte   $7F
 L0BF0:  .byte   $0A,$00,$05,$00,$78,$00,$11,$00
 L0BF8:  .byte   $0B,$00,$06,$00,$77,$00,$10,$00
@@ -286,6 +306,7 @@ L0CE6:  .byte   $00,$00,$02,$00,$06,$00,$0E,$00
         .byte   $3F,$00,$7F,$00,$7F,$01,$7F,$00
         .byte   $78,$00,$78,$00,$70,$01,$70,$01
         .byte   $01,$01
+
 L0D18:  sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
@@ -298,7 +319,7 @@ L0D18:  sta     ALTZPON
         sta     L08C5
         A2D_CALL $2D, L08C5
         A2D_CALL A2D_GET_BUTTON, L08C5
-        lda     ROMIN
+        lda     ROMIN2
         jsr     L128E
         lda     #$34
         jsr     L089E
@@ -361,7 +382,7 @@ L0DDC:  cmp     #$03
 L0DE6:  lda     LCBANK1
         lda     LCBANK1
         A2D_CALL A2D_GET_MOUSE, L08C6
-        lda     ROMIN
+        lda     ROMIN2
         lda     L08CA
         cmp     #$02
         bcc     L0E03
@@ -388,7 +409,7 @@ L0E22:  lda     LCBANK1
         jsr     UNKNOWN_CALL
         .byte   $0C
         .addr   0
-        lda     ROMIN
+        lda     ROMIN2
         A2D_CALL $1A, L08D5
         ldx     #$09
 L0E3F:  lda     L0E4A,x
@@ -399,7 +420,7 @@ L0E3F:  lda     L0E4A,x
 
 L0E4A:  sta     RAMRDOFF
         sta     RAMWRTOFF
-        jmp     L083B
+        jmp     exit_da
 
 L0E53:  cmp     #$03
         bne     L0E03
@@ -408,7 +429,7 @@ L0E53:  cmp     #$03
         lda     LCBANK1
         lda     LCBANK1
         A2D_CALL $44, L08C5
-        lda     ROMIN
+        lda     ROMIN2
         jsr     L084C
         rts
 
@@ -895,7 +916,7 @@ L120A:  stx     L122F
         sty     L122F+1
         sty     L1253+1
         sty     L1273+1
-        A2D_CALL A2D_SET_PATTERN, L0BDD
+        A2D_CALL A2D_SET_PATTERN, black_pattern
         A2D_CALL $07, L0CA6
         sec
         ror     $FC
@@ -976,11 +997,11 @@ L12C0:  stx     L0C40
         rts
 
 L12E8:  A2D_CALL $26, 0
-        A2D_CALL A2D_SET_PATTERN, L0BD4
+        A2D_CALL A2D_SET_PATTERN, background_pattern
         A2D_CALL A2D_CLEAR_BOX, L0BCC
-        A2D_CALL A2D_SET_PATTERN, L0BDD
+        A2D_CALL A2D_SET_PATTERN, black_pattern
         A2D_CALL $12, L0BF0
-        A2D_CALL A2D_SET_PATTERN, L0BE6
+        A2D_CALL A2D_SET_PATTERN, white_pattern
         A2D_CALL A2D_CLEAR_BOX, L0BF8
         A2D_CALL $0C, L0BEF
         lda     #$D6
@@ -1066,3 +1087,5 @@ L13D2:  lda     $EA60
         sec
         sbc     #$D0
 L13E3:  rts
+
+da_end := *
