@@ -287,8 +287,8 @@ length: .byte   15
 text_buffer_size := 14
 
 text_buffer1:
-        .byte   0,0,0,0,0,0,0,0,0,0,0,0,0,0
-L0C15:  .byte   0,0
+        .byte   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+
 
 .proc draw_text_params2
 addr:   .addr   text_buffer2
@@ -296,8 +296,7 @@ length: .byte   15
 .endproc
 
 text_buffer2:
-        .byte   0,0,0,0,0,0,0,0,0,0,0,0,0,0
-L0C28:  .byte   0,0
+        .byte   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 
 spaces_string:
         A2D_DEFSTRING "          "
@@ -659,8 +658,8 @@ L0F6A:  cmp     #'C'
         bne     :+
         inc     L0BCB
         lda     #'1'
-        sta     L0C15
-        sta     L0C28
+        sta     text_buffer1 + text_buffer_size
+        sta     text_buffer2 + text_buffer_size
 :       lda     #'E'
         sta     L0BC8
         jmp     L1107
@@ -812,7 +811,7 @@ L1030:  cmp     #'/'
 
 :       dec     L0BCB
         ldx     #0
-        lda     L0C15
+        lda     text_buffer1 + text_buffer_size
         cmp     #'.'
         bne     L10D6
         stx     L0BC7
@@ -872,8 +871,8 @@ L1131:  lda     text_buffer1,x
         bne     L1131
 L113E:  inc     L0BCB
         pla
-        sta     L0C15
-        sta     L0C28
+        sta     text_buffer1 + text_buffer_size
+        sta     text_buffer2 + text_buffer_size
         jmp     L12A4
 
 L114B:  rts
@@ -1017,7 +1016,7 @@ L1280:  lda     #' '
         dey
         bne     L1280
         lda     #$30
-        sta     L0C15
+        sta     text_buffer1 + text_buffer_size
         rts
 
 L128E:  ldy     #text_buffer_size
@@ -1025,8 +1024,8 @@ L1290:  lda     #' '
         sta     text_buffer2-1,y
         dey
         bne     L1290
-        lda     #$30
-        sta     L0C28
+        lda     #'0'
+        sta     text_buffer2 + text_buffer_size
         rts
 
 L129E:  jsr     L127E
