@@ -5,10 +5,6 @@
         .include "../inc/auxmem.inc"
         .include "a2d.inc"
 
-        ;; Big questions:
-        ;; * How can we hide/show the cursor on demand?
-        ;; * Can we trigger menu redraw? (if not, need to preserve for fullscreen)
-
 start:  jmp     copy2aux
 
 save_stack:.byte   0
