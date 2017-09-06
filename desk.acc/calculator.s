@@ -118,13 +118,18 @@ L08AE:  A2D_CALL $3C, L08D1
 
 L08C4:  rts
 
-L08C5:  .byte   $00
+button_state:
+        .byte   $00
+
 L08C6:  .byte   $00
 L08C7:  .byte   $00,$00,$00
-L08CA:  .byte   $00
-L08CB:  .byte   $00
-L08CC:  .byte   $00
-L08CD:  .byte   $00,$00,$00
+
+.proc text_pos_params1
+left:   .word   0
+base:   .word   0
+.endproc
+
+        .byte $00,$00
 L08D0:  .byte   $00
 L08D1:  .byte   $00,$6E,$0C
 L08D4:  .byte   $80
@@ -230,7 +235,14 @@ L0BC8:  .byte   $00
 L0BC9:  .byte   $00
 L0BCA:  .byte   $00
 L0BCB:  .byte   $00
-L0BCC:  .byte   $01,$00,$00,$00,$81,$00,$60,$00
+
+.proc clear_box_params1
+hoffset:.word   1
+voffset:.word   0
+width:  .word   129
+height: .word   96
+.endproc
+
 
 background_pattern:
         .byte   $77,$DD,$77,$DD,$77,$DD,$77,$DD
@@ -246,7 +258,14 @@ white_pattern:
 
 L0BEF:  .byte   $7F
 L0BF0:  .byte   $0A,$00,$05,$00,$78,$00,$11,$00
-L0BF8:  .byte   $0B,$00,$06,$00,$77,$00,$10,$00
+
+.proc clear_box_params2
+hoffset:.word   11
+voffset:.word   6
+width:  .word   119
+height: .word   16
+.endproc
+
 L0C00:  .byte   $03,$0C,$01
 L0C03:  .byte   $00
 L0C04:  .byte   $07,$0C
@@ -269,8 +288,17 @@ L0C40:  .byte   $07
 L0C41:  .byte   $0C,$0F
 L0C43:  .byte   $00,$00
 L0C45:  .byte   $34
-L0C46:  .byte   $00,$00,$10,$00
-L0C4A:  .byte   $0F,$00,$10,$00
+
+.proc text_pos_params3
+left:   .word   0
+base:   .word   16
+.endproc
+
+.proc text_pos_params2
+left:   .word   15
+base:   .word   16
+.endproc
+
 L0C4E:  .byte   $45,$00,$10,$00,$00,$00,$00,$00
         .byte   $00,$00
 L0C58:  .byte   $73
@@ -288,7 +316,9 @@ L0C93:  .byte   $00,$00,$0D,$00,$00,$20,$80,$00
         .byte   $00,$00,$00,$00,$2F,$02,$B1,$00
 L0CA3:  .byte   $00,$01,$02
 L0CA6:  .byte   $06
-L0CA7:  .byte   $34,$02,$E1,$0C,$00,$00,$00,$00
+
+create_window_params:
+        .byte   $34,$02,$E1,$0C,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$82,$00,$60,$00
         .byte   $82,$00,$60,$00
 L0CBB:  .byte   $D2
@@ -311,14 +341,14 @@ L0D18:  sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         A2D_CALL $1A, L08D4
-        A2D_CALL A2D_CREATE_WINDOW, L0CA7
+        A2D_CALL A2D_CREATE_WINDOW, create_window_params
         A2D_CALL $03, L0C6E
         A2D_CALL A2D_TEXT_BOX1, L0C6E
         A2D_CALL $2B, 0
         lda     #$01
-        sta     L08C5
-        A2D_CALL $2D, L08C5
-        A2D_CALL A2D_GET_BUTTON, L08C5
+        sta     button_state
+        A2D_CALL $2D, button_state
+        A2D_CALL A2D_GET_BUTTON, button_state
         lda     ROMIN2
         jsr     L128E
         lda     #$34
@@ -367,8 +397,8 @@ L0D79:  lda     L13CB,x
         lda     #$43
         jsr     L0F6A
         A2D_CALL $24, L0CE6
-L0DC9:  A2D_CALL $2A, L08C5
-        lda     L08C5
+L0DC9:  A2D_CALL $2A, button_state
+        lda     button_state
         cmp     #$01
         bne     L0DDC
         jsr     L0DE6
@@ -383,15 +413,15 @@ L0DE6:  lda     LCBANK1
         lda     LCBANK1
         A2D_CALL A2D_GET_MOUSE, L08C6
         lda     ROMIN2
-        lda     L08CA
+        lda     text_pos_params1::left
         cmp     #$02
         bcc     L0E03
-        lda     L08CB
+        lda     text_pos_params1::left+1
         cmp     #$34
         beq     L0E04
 L0E03:  rts
 
-L0E04:  lda     L08CA
+L0E04:  lda     text_pos_params1::left
         cmp     #$02
         bne     L0E13
         jsr     L0E95
@@ -425,10 +455,10 @@ L0E4A:  sta     RAMRDOFF
 L0E53:  cmp     #$03
         bne     L0E03
         lda     #$34
-        sta     L08C5
+        sta     button_state
         lda     LCBANK1
         lda     LCBANK1
-        A2D_CALL $44, L08C5
+        A2D_CALL $44, button_state
         lda     ROMIN2
         jsr     L084C
         rts
@@ -453,13 +483,13 @@ L0E91:  jmp     L0F6A
 L0E94:  rts
 
 L0E95:  lda     #$34
-        sta     L08C5
-        A2D_CALL $46, L08C5
-        lda     L08CB
-        ora     L08CD
+        sta     button_state
+        A2D_CALL $46, button_state
+        lda     text_pos_params1::left+1
+        ora     text_pos_params1::base+1
         bne     L0E94
-        lda     L08CC
-        ldx     L08CA
+        lda     text_pos_params1::base
+        ldx     text_pos_params1::left
         cmp     #$16
         bcc     L0F22
         cmp     #$22
@@ -499,7 +529,7 @@ L0EE1:  cmp     #$43
 
 L0EF3:  cmp     #$52
         bcs     L0F06
-        lda     L08CA
+        lda     text_pos_params1::left
         cmp     #$61
         bcc     L0F22
         cmp     #$74
@@ -515,7 +545,7 @@ L0F06:  cmp     #$5E
         lda     L0F33,x
         rts
 
-L0F13:  lda     L08CA
+L0F13:  lda     text_pos_params1::left
         cmp     #$0C
         bcc     L0F22
         cmp     #$3D
@@ -568,7 +598,7 @@ L0F5C:  cpx     #$61
 L0F68:  clc
         rts
 
-L0F6A:  cmp     #$43
+L0F6A:  cmp     #'C'
         bne     L0F9C
         ldx     #$EB
         ldy     #$08
@@ -589,7 +619,7 @@ L0F6A:  cmp     #$43
         sta     L0BC9
         jmp     L129E
 
-L0F9C:  cmp     #$45
+L0F9C:  cmp     #'E'
         bne     L0FC7
         ldx     #$08
         ldy     #$09
@@ -609,21 +639,21 @@ L0FBE:  lda     #$45
 
 L0FC6:  rts
 
-L0FC7:  cmp     #$3D
+L0FC7:  cmp     #'='
         bne     L0FD3
         pha
         ldx     #$25
         ldy     #$09
         jmp     L114C
 
-L0FD3:  cmp     #$2A
+L0FD3:  cmp     #'*'
         bne     L0FDF
         pha
         ldx     #$42
         ldy     #$09
         jmp     L114C
 
-L0FDF:  cmp     #$2E
+L0FDF:  cmp     #'.'
         bne     L1003
         ldx     #$BB
         ldy     #$0A
@@ -753,15 +783,15 @@ L10B4:  cmp     #$7F
         jmp     L12A4
 
 L10C7:  dec     L0BCB
-        ldx     #$00
+        ldx     #0
         lda     L0C15
-        cmp     #$2E
+        cmp     #'.'
         bne     L10D6
         stx     L0BC7
-L10D6:  cmp     #$45
+L10D6:  cmp     #'E'
         bne     L10DD
         stx     L0BC8
-L10DD:  cmp     #$2D
+L10DD:  cmp     #'-'
         bne     L10E4
         stx     L0BC9
 L10E4:  ldx     #$0D
@@ -826,7 +856,7 @@ L114C:  jsr     L120A
         rts
 
 L1153:  lda     L0BC6
-        cmp     #$3D
+        cmp     #'='
         bne     L1167
         lda     L0BCA
         bne     L1173
@@ -851,27 +881,28 @@ L1181:  pla
         sta     L0BC6
         lda     #$52
         ldy     #$0C
-        cpx     #$2B
+
+        cpx     #'+'
         bne     L1196
         jsr     FADD
         jmp     L11C0
 
-L1196:  cpx     #$2D
+L1196:  cpx     #'-'
         bne     L11A0
         jsr     FSUB
         jmp     L11C0
 
-L11A0:  cpx     #$2A
+L11A0:  cpx     #'*'
         bne     L11AA
         jsr     FMULT
         jmp     L11C0
 
-L11AA:  cpx     #$2F
+L11AA:  cpx     #'/'
         bne     L11B4
         jsr     FDIV
         jmp     L11C0
 
-L11B4:  cpx     #$3D
+L11B4:  cpx     #'='
         bne     L11C0
         ldy     L0BCA
         bne     L11C0
@@ -893,7 +924,7 @@ L11D6:  lda     $FF,y
         dex
         dey
         bne     L11D6
-        cpx     #$00
+        cpx     #0
         bmi     L11F2
 L11E7:  lda     #$20
         sta     L0C07,x
@@ -922,14 +953,14 @@ L120A:  stx     L122F
         ror     $FC
 L122F   := *+4
 L122B:  A2D_CALL A2D_CLEAR_BOX, 0
-L1231:  A2D_CALL A2D_GET_BUTTON, L08C5
-        lda     L08C5
+L1231:  A2D_CALL A2D_GET_BUTTON, button_state
+        lda     button_state
         cmp     #$04
         bne     L126B
         lda     #$34
-        sta     L08C5
-        A2D_CALL $46, L08C5
-        A2D_CALL A2D_SET_TEXT_POS, L08CA
+        sta     button_state
+        A2D_CALL $46, button_state
+        A2D_CALL A2D_SET_TEXT_POS, text_pos_params1
 L1253   := *+4
         A2D_CALL $13, 0
         bne     L1261
@@ -990,25 +1021,25 @@ L12C0:  stx     L0C40
         lda     #$69
         sec
         sbc     L0C43
-        sta     L0C46
-        A2D_CALL A2D_SET_TEXT_POS, L0C4A
+        sta     text_pos_params3::left
+        A2D_CALL A2D_SET_TEXT_POS, text_pos_params2
         A2D_CALL A2D_DRAW_TEXT, L0C2A
-        A2D_CALL A2D_SET_TEXT_POS, L0C46
+        A2D_CALL A2D_SET_TEXT_POS, text_pos_params3
         rts
 
 L12E8:  A2D_CALL $26, 0
         A2D_CALL A2D_SET_PATTERN, background_pattern
-        A2D_CALL A2D_CLEAR_BOX, L0BCC
+        A2D_CALL A2D_CLEAR_BOX, clear_box_params1
         A2D_CALL A2D_SET_PATTERN, black_pattern
         A2D_CALL $12, L0BF0
         A2D_CALL A2D_SET_PATTERN, white_pattern
-        A2D_CALL A2D_CLEAR_BOX, L0BF8
+        A2D_CALL A2D_CLEAR_BOX, clear_box_params2
         A2D_CALL $0C, L0BEF
         lda     #$D6
         sta     $FA
         lda     #$08
         sta     $FB
-L1320:  ldy     #$00
+L1320:  ldy     #0
         lda     ($FA),y
         beq     L1363
         lda     $FA
