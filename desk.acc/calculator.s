@@ -344,6 +344,7 @@ btnadd_box:
         .byte   $7F,$1F,$7E,$7F,$1F,$7E,$7F,$1F
         .byte   $7E,$7F,$1F,$7E,$7F,$1F,$7E,$7F
         .byte   $1F,$00,$00,$00,$01,$00,$00
+
 L0BC4:  .byte   $00
 L0BC5:  .byte   $00
 L0BC6:  .byte   $00
@@ -611,7 +612,7 @@ L0E6F:  lda     L08C7
         lda     L0BCB
         beq     L0E22
 L0E85:  lda     #$43
-L0E87:  cmp     #$7F
+L0E87:  cmp     #$7F            ; Delete
         beq     L0E91
         cmp     #$60
         bcc     L0E91
@@ -709,15 +710,15 @@ L0F38:  cpx     #$0C
         sec
         rts
 
-:       cpx     #$29
+:       cpx     #'*'-1          ; Start of: *+,-./0123456789:;<=
         bcc     L0F68
-        cpx     #$3D
+        cpx     #'='            ; End of range
         bcs     :+
         ldx     #$02
         sec
         rts
 
-:       cpx     #$45
+:       cpx     #'E'
         bcc     L0F68
         cpx     #$59
         bcs     :+
@@ -802,7 +803,7 @@ L0FC7:  cmp     #'='
         lda     L0BCB
         bne     :+
         inc     L0BCB
-:       lda     #$2E
+:       lda     #'.'
         sta     L0BC7
         jmp     L1107
 
@@ -911,11 +912,11 @@ L1030:  cmp     #'/'
         ldy     #>btn9_box
         jmp     L10FF
 
-:       cmp     #$7F
+:       cmp     #$7F            ; Delete
         bne     L10FE
         ldy     L0BCB
         beq     L10FE
-        cpy     #$01
+        cpy     #1
         bne     :+
         jsr     L11F5
         jmp     L12A4
