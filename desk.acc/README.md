@@ -34,6 +34,15 @@ For the original DAs, the `.f1` and `.bin` files can be compared
 using `diff` to ensure that no changes have been introduced by the
 disassembly process.
 
+Tips:
+
+* While I'm disassembling (i.e. guessing what entry points do
+   and what parameters are, converting .word to .byte, etc) I
+   leave this running in another window:
+
+   `while true; do clear; ./go.sh; sleep 1; done`
+
+
 ## Install Instructions
 
 Transfer the `.f1` files to your Apple (real or virtual) ensuring you:
@@ -58,7 +67,7 @@ Finally:
 Tips:
 
 * You can use the Sort Directory DA to order the files, which controls
-the menu order:
+    the menu order:
   * Open the `A2.DESKTOP\DESK.ACC` folder
   * Press Open-Apple and click on the each file in the desired order
   * Select Sort Directory from the Apple menu, and verify the order
