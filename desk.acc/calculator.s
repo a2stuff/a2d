@@ -144,24 +144,24 @@ L08D4:  .byte   $80
         button_height := 9
 
         col1_left := 13
-        col1_right := col1_left+button_width
+        col1_right := col1_left+button_width ; 30
         col2_left := 42
-        col2_right := col2_left+button_width
+        col2_right := col2_left+button_width ; 59
         col3_left := 70
-        col3_right := col3_left+button_width
+        col3_right := col3_left+button_width ; 87
         col4_left := 98
-        col4_right := col4_left+button_width
+        col4_right := col4_left+button_width ; 115
 
         row1_top := 22
-        row1_bot := row1_top+button_height
+        row1_bot := row1_top+button_height ; 31
         row2_top := 38
-        row2_bot := row2_top+button_height
+        row2_bot := row2_top+button_height ; 47
         row3_top := 53
-        row3_bot := row3_top+button_height
+        row3_bot := row3_top+button_height ; 62
         row4_top := 68
-        row4_bot := row4_top+button_height
+        row4_bot := row4_top+button_height ; 77
         row5_top := 83
-        row5_bot := row5_top+button_height
+        row5_bot := row5_top+button_height ; 92
 
 
 L08D5:  .byte   $00,$0C,$00,$15,$00,$E1,$0A,$03
@@ -627,110 +627,119 @@ L0E95:  lda     #$34
         lda     text_pos_params1::left+1
         ora     text_pos_params1::base+1
         bne     L0E94
-        lda     text_pos_params1::base
-        ldx     text_pos_params1::left
-        cmp     #$16
-        bcc     L0F22
-        cmp     #$22
+        lda     text_pos_params1::base ; click y
+        ldx     text_pos_params1::left ; click x
+
+.proc find_button_row
+        cmp     #22
+        bcc     miss
+        cmp     #34
         bcs     :+
-        jsr     L0F38
-        bcc     L0F22
-        lda     L0F23,x
+        jsr     find_button_col
+        bcc     miss
+        lda     row1_lookup,x
         rts
 
-:       cmp     #$25
-        bcc     L0F22
-        cmp     #$31
+:       cmp     #37
+        bcc     miss
+        cmp     #49
         bcs     :+
-        jsr     L0F38
-        bcc     L0F22
-        lda     L0F27,x
+        jsr     find_button_col
+        bcc     miss
+        lda     row2_lookup,x
         rts
 
-:       cmp     #$34
-        bcc     L0F22
-        cmp     #$40
+:       cmp     #52
+        bcc     miss
+        cmp     #64
         bcs     :+
-        jsr     L0F38
-        bcc     L0F22
-        lda     L0F2B,x
+        jsr     find_button_col
+        bcc     miss
+        lda     row3_lookup,x
         rts
 
-:       cmp     #$43
-        bcc     L0F22
-        cmp     #$4F
+:       cmp     #67
+        bcc     miss
+        cmp     #79
         bcs     :+
-        jsr     L0F38
-        bcc     L0F22
+        jsr     find_button_col
+        bcc     miss
         sec
-        lda     L0F2F,x
+        lda     row4_lookup,x
         rts
 
-:       cmp     #$52
+:       cmp     #82
         bcs     :+
         lda     text_pos_params1::left
-        cmp     #$61
-        bcc     L0F22
-        cmp     #$74
-        bcs     L0F22
-        lda     #$2B
+        cmp     #97
+        bcc     miss
+        cmp     #116
+        bcs     miss
+        lda     #'+'
         sec
         rts
 
-:       cmp     #$5E
-        bcs     L0F22
-        jsr     L0F38
+:       cmp     #94
+        bcs     miss
+        jsr     find_button_col
         bcc     :+
-        lda     L0F33,x
+        lda     row5_lookup,x
         rts
 
 :       lda     text_pos_params1::left
-        cmp     #$0C
-        bcc     L0F22
+        cmp     #12
+        bcc     miss
         cmp     #'='
-        bcs     L0F22
-        lda     #$30
+        bcs     miss
+        lda     #'0'
         sec
         rts
 
-L0F22:  clc
-L0F23:  rts
+miss:   clc
+        rts
+.endproc
 
-        .byte   $43,$45,$3D
-L0F27:  .byte   $2A,$37,$38,$39
-L0F2B:  .byte   $2F,$34,$35,$36
-L0F2F:  .byte   $2D,$31,$32,$33
-L0F33:  .byte   $2B,$30,$30,$2E,$2B
+        row1_lookup := *-1
+        .byte   'C', 'E', '=', '*'
+        row2_lookup := *-1
+        .byte   '7', '8', '9', '/'
+        row3_lookup := *-1
+        .byte   '4', '5', '6', '-'
+        row4_lookup := *-1
+        .byte   '1', '2', '3', '+'
+        row5_lookup := *-1
+        .byte   '0', '0', '.', '+'
 
-L0F38:  cpx     #$0C
+find_button_col:
+        cpx     #12             ; col 1?
         bcc     L0F68
-        cpx     #$20
+        cpx     #32
         bcs     :+
-        ldx     #$01
+        ldx     #1
         sec
         rts
 
-:       cpx     #'*'-1          ; Start of: *+,-./0123456789:;<=
+:       cpx     #41             ; col 2?
         bcc     L0F68
-        cpx     #'='            ; End of range
+        cpx     #61
         bcs     :+
-        ldx     #$02
+        ldx     #2
         sec
         rts
 
-:       cpx     #'E'
+:       cpx     #69             ; col 3?
         bcc     L0F68
-        cpx     #$59
+        cpx     #89
         bcs     :+
-        ldx     #$03
+        ldx     #3
         sec
         rts
 
-:       cpx     #$61
+:       cpx     #97             ; col 4?
         bcc     L0F68
-        cpx     #$74
+        cpx     #116
         bcs     L0F68
-        ldx     #$04
+        ldx     #4
         sec
         rts
 
