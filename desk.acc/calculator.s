@@ -435,8 +435,10 @@ left:   .word   15
 base:   .word   16
 .endproc
 
-L0C4E:  .byte   $45,$00,$10,$00,$00,$00,$00,$00
-        .byte   $00,$00
+L0C4E:  .byte   $45,$00,$10,$00
+
+farg:
+        .byte   $00,$00,$00,$00,$00,$00
 L0C58:  .byte   $73
 L0C59:  .byte   $00
 L0C5A:  .byte   $F7
@@ -517,8 +519,8 @@ L0D79:  lda     L13CB,x
         sta     $37
         lda     #$01
         jsr     FLOAT
-        ldx     #$52
-        ldy     #$0C
+        ldx     #<farg
+        ldy     #>farg
         jsr     ROUND
         lda     #$00
         jsr     FLOAT
@@ -528,15 +530,15 @@ L0D79:  lda     L13CB,x
         jsr     FMULT
         lda     #$00
         jsr     FLOAT
-        ldx     #$52
-        ldy     #$0C
+        ldx     #<farg
+        ldy     #>farg
         jsr     ROUND
         tsx
         stx     L0BC4
-        lda     #$3D
-        jsr     L0F6A
-        lda     #$43
-        jsr     L0F6A
+        lda     #'='
+        jsr     process_key
+        lda     #'C'
+        jsr     process_key
         A2D_CALL $24, L0CE6
 L0DC9:  A2D_CALL $2A, button_state_params
         lda     button_state_params::state
@@ -567,7 +569,7 @@ L0E04:  lda     text_pos_params1::left
         bne     L0E13
         jsr     L0E95
         bcc     L0E03
-        jmp     L0F6A
+        jmp     process_key
 
 L0E13:  cmp     #$05
         bne     L0E53
@@ -604,24 +606,26 @@ L0E53:  cmp     #$03
         jsr     L084C
         rts
 
-L0E6F:  lda     L08C7
-        bne     L0E94
-        lda     L08C6
-        cmp     #$1B            ; Escape
-        bne     L0E87
-        lda     L0BC5
-        bne     L0E85
+.proc L0E6F
+        lda     L08C7
+        bne     bail
+        lda     L08C6           ; Check key
+        cmp     #$1B            ; Escape?
+        bne     trydel
+        lda     L0BC5           ; ??? (esc behavior variable?
+        bne     clear
         lda     L0BCB
         beq     L0E22
-L0E85:  lda     #$43
-L0E87:  cmp     #$7F            ; Delete
-        beq     L0E91
-        cmp     #$60
-        bcc     L0E91
-        and     #$5F
-L0E91:  jmp     L0F6A
-
-L0E94:  rts
+clear:  lda     #'C'            ; turn Escape into Clear
+trydel: cmp     #$7F            ; Delete?
+        beq     :+
+        cmp     #$60            ; lowercase range?
+        bcc     :+
+        and     #$5F            ; convert to uppercase
+:       jmp     process_key
+bail:
+.endproc
+L0E94:  rts                     ; used by prev/next proc
 
 L0E95:  lda     #window_id
         sta     button_state_params::state
@@ -715,9 +719,9 @@ miss:   clc
         row5_lookup := *-1
         .byte   '0', '0', '.', '+'
 
-find_button_col:
+.proc find_button_col
         cpx     #col1_left-border_lt             ; col 1?
-        bcc     L0F68
+        bcc     miss
         cpx     #col1_right+border_br
         bcs     :+
         ldx     #1
@@ -725,7 +729,7 @@ find_button_col:
         rts
 
 :       cpx     #col2_left-border_lt             ; col 2?
-        bcc     L0F68
+        bcc     miss
         cpx     #col2_right+border_br
         bcs     :+
         ldx     #2
@@ -733,7 +737,7 @@ find_button_col:
         rts
 
 :       cpx     #col3_left-border_lt             ; col 3?
-        bcc     L0F68
+        bcc     miss
         cpx     #col3_right+border_br
         bcs     :+
         ldx     #3
@@ -741,17 +745,19 @@ find_button_col:
         rts
 
 :       cpx     #col4_left-border_lt             ; col 4?
-        bcc     L0F68
+        bcc     miss
         cpx     #col4_right+border_br - 1       ; bug in original?
-        bcs     L0F68
+        bcs     miss
         ldx     #4
         sec
         rts
 
-L0F68:  clc
+miss:   clc
         rts
+.endproc
 
-L0F6A:  cmp     #'C'
+.proc process_key
+        cmp     #'C'            ; Clear?
         bne     :+
         ldx     #<btnc_box
         ldy     #>btnc_box
@@ -759,12 +765,12 @@ L0F6A:  cmp     #'C'
         jsr     L120A
         lda     #$00
         jsr     FLOAT
-        ldx     #$52
-        ldy     #$0C
+        ldx     #<farg
+        ldy     #>farg
         jsr     ROUND
-        lda     #$3D
+        lda     #'='
         sta     L0BC6
-        lda     #$00
+        lda     #0
         sta     L0BC5
         sta     L0BCB
         sta     L0BC7
@@ -772,7 +778,7 @@ L0F6A:  cmp     #'C'
         sta     L0BC9
         jmp     L129E
 
-:       cmp     #'E'
+:       cmp     #'E'            ; Exponential?
         bne     L0FC7
         ldx     #<btne_box
         ldy     #>btne_box
@@ -792,21 +798,21 @@ L0F6A:  cmp     #'C'
 
 L0FC6:  rts
 
-L0FC7:  cmp     #'='
+L0FC7:  cmp     #'='            ; Equals?
         bne     :+
         pha
         ldx     #<btneq_box
         ldy     #>btneq_box
         jmp     L114C
 
-:       cmp     #'*'
+:       cmp     #'*'            ; Multiply?
         bne     :+
         pha
         ldx     #<btnmul_box
         ldy     #>btnmul_box
         jmp     L114C
 
-:       cmp     #'.'
+:       cmp     #'.'            ; Decimal?
         bne     L1003
         ldx     #<btndec_box
         ldy     #>btndec_box
@@ -823,113 +829,113 @@ L0FC7:  cmp     #'='
 
 L1002:  rts
 
-L1003:  cmp     #'+'
+L1003:  cmp     #'+'            ; Add?
         bne     :+
         pha
         ldx     #<btnadd_box
         ldy     #>btnadd_box
         jmp     L114C
 
-:       cmp     #'-'
-        bne     L1030
+:       cmp     #'-'            ; Subtract?
+        bne     trydiv
         pha
         ldx     #<btnsub_box
         ldy     #>btnsub_box
         lda     L0BC8
-        beq     L102B
+        beq     :+
         lda     L0BC9
-        bne     L102B
+        bne     :+
         sec
         ror     L0BC9
         pla
         pha
         jmp     L10FF
 
-L102B:  pla
+:       pla
         pha
         jmp     L114C
 
-L1030:  cmp     #'/'
+trydiv: cmp     #'/'            ; Divide?
         bne     :+
         pha
         ldx     #<btndiv_box
         ldy     #>btndiv_box
         jmp     L114C
 
-:       cmp     #'0'
+:       cmp     #'0'            ; Digit 0?
         bne     :+
         pha
         ldx     #<btn0_box
         ldy     #>btn0_box
         jmp     L10FF
 
-:       cmp     #'1'
+:       cmp     #'1'            ; Digit 1?
         bne     :+
         pha
         ldx     #<btn1_box
         ldy     #>btn1_box
         jmp     L10FF
 
-:       cmp     #'2'
+:       cmp     #'2'            ; Digit 2?
         bne     :+
         pha
         ldx     #<btn2_box
         ldy     #>btn2_box
         jmp     L10FF
 
-:       cmp     #'3'
+:       cmp     #'3'            ; Digit 3?
         bne     :+
         pha
         ldx     #<btn3_box
         ldy     #>btn3_box
         jmp     L10FF
 
-:       cmp     #'4'
+:       cmp     #'4'            ; Digit 4?
         bne     :+
         pha
         ldx     #<btn4_box
         ldy     #>btn4_box
         jmp     L10FF
 
-:       cmp     #'5'
+:       cmp     #'5'            ; Digit 5?
         bne     :+
         pha
         ldx     #<btn5_box
         ldy     #>btn5_box
         jmp     L10FF
 
-:       cmp     #'6'
+:       cmp     #'6'            ; Digit 6?
         bne     :+
         pha
         ldx     #<btn6_box
         ldy     #>btn6_box
         jmp     L10FF
 
-:       cmp     #'7'
+:       cmp     #'7'            ; Digit 7?
         bne     :+
         pha
         ldx     #<btn7_box
         ldy     #>btn7_box
         jmp     L10FF
 
-:       cmp     #'8'
+:       cmp     #'8'            ; Digit 8?
         bne     :+
         pha
         ldx     #<btn8_box
         ldy     #>btn8_box
         jmp     L10FF
 
-:       cmp     #'9'
+:       cmp     #'9'            ; Digit 9?
         bne     :+
         pha
         ldx     #<btn9_box
         ldy     #>btn9_box
         jmp     L10FF
 
-:       cmp     #$7F            ; Delete
-        bne     L10FE
+:       cmp     #$7F            ; Delete?
+        bne     end
         ldy     L0BCB
-        beq     L10FE
+        beq     end
         cpy     #1
         bne     :+
         jsr     L11F5
@@ -959,7 +965,8 @@ L10E6:  lda     text_buffer1,x
         sta     text_buffer2+1,x
         jmp     L12A4
 
-L10FE:  rts
+end:    rts
+.endproc
 
 L10FF:  jsr     L120A
         bne     L1106
@@ -1031,38 +1038,38 @@ L1173:  lda     #$07
         jsr     FIN
 L1181:  pla
         ldx     L0BC6
-        sta     L0BC6
-        lda     #$52
-        ldy     #$0C
+        sta     L0BC6           ; Operation
+        lda     #<farg
+        ldy     #>farg
 
         cpx     #'+'
         bne     :+
         jsr     FADD
-        jmp     L11C0
+        jmp     post
 
 :       cpx     #'-'
         bne     :+
         jsr     FSUB
-        jmp     L11C0
+        jmp     post
 
 :       cpx     #'*'
         bne     :+
         jsr     FMULT
-        jmp     L11C0
+        jmp     post
 
 :       cpx     #'/'
         bne     :+
         jsr     FDIV
-        jmp     L11C0
+        jmp     post
 
 :       cpx     #'='
-        bne     L11C0
+        bne     post
         ldy     L0BCA
-        bne     L11C0
+        bne     post
         jmp     L11F5
 
-L11C0:  ldx     #$52
-        ldy     #$0C
+post:   ldx     #<farg          ; after the FP operation is done
+        ldy     #>farg
         jsr     ROUND
         jsr     FOUT
         ldy     #0
