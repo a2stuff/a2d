@@ -419,8 +419,10 @@ L0C40:  .byte   $07
 L0C41:  .byte   $0C,$0F
 L0C43:  .byte   $00,$00
 
+        window_id = $34
+
 .proc destroy_window_params
-id:     .byte   $34
+id:     .byte   window_id
 .endproc
 
 .proc text_pos_params3
@@ -452,7 +454,7 @@ L0CA3:  .byte   $00,$01,$02
 L0CA6:  .byte   $06
 
 create_window_params:
-        .byte   $34             ; id
+        .byte   window_id       ; id
         .byte   $02             ; flags
         .addr   title
         .byte   $00,$00,$00,$00
@@ -490,7 +492,7 @@ L0D18:  sta     ALTZPON
         A2D_CALL A2D_GET_BUTTON, button_state_params
         lda     ROMIN2
         jsr     L128E
-        lda     #$34
+        lda     #window_id
         jsr     L089E
         jsr     L129E
         lda     #$3D
@@ -556,7 +558,7 @@ L0DE6:  lda     LCBANK1
         cmp     #$02
         bcc     L0E03
         lda     text_pos_params1::left+1
-        cmp     #$34
+        cmp     #window_id
         beq     L0E04
 L0E03:  rts
 
@@ -593,7 +595,7 @@ L0E4A:  sta     RAMRDOFF
 
 L0E53:  cmp     #$03
         bne     L0E03
-        lda     #$34
+        lda     #window_id
         sta     button_state_params::state
         lda     LCBANK1
         lda     LCBANK1
@@ -621,7 +623,7 @@ L0E91:  jmp     L0F6A
 
 L0E94:  rts
 
-L0E95:  lda     #$34
+L0E95:  lda     #window_id
         sta     button_state_params::state
         A2D_CALL $46, button_state_params
         lda     text_pos_params1::left+1
@@ -630,37 +632,40 @@ L0E95:  lda     #$34
         lda     text_pos_params1::base ; click y
         ldx     text_pos_params1::left ; click x
 
+        border_lt := 1          ; border width pixels (left/top)
+        border_br := 2          ; (bottom/right)
+
 .proc find_button_row
-        cmp     #22
+        cmp     #row1_top+border_lt - 1 ; row 1 ? (- 1 is bug in original?)
         bcc     miss
-        cmp     #34
+        cmp     #row1_bot+border_br + 1 ; (+ 1 is bug in original?)
         bcs     :+
         jsr     find_button_col
         bcc     miss
         lda     row1_lookup,x
         rts
 
-:       cmp     #37
+:       cmp     #row2_top-border_lt             ; row 2?
         bcc     miss
-        cmp     #49
+        cmp     #row2_bot+border_br
         bcs     :+
         jsr     find_button_col
         bcc     miss
         lda     row2_lookup,x
         rts
 
-:       cmp     #52
+:       cmp     #row3_top-border_lt             ; row 3?
         bcc     miss
-        cmp     #64
+        cmp     #row3_bot+border_br
         bcs     :+
         jsr     find_button_col
         bcc     miss
         lda     row3_lookup,x
         rts
 
-:       cmp     #67
+:       cmp     #row4_top-border_lt             ; row 4?
         bcc     miss
-        cmp     #79
+        cmp     #row4_bot+border_br
         bcs     :+
         jsr     find_button_col
         bcc     miss
@@ -668,7 +673,7 @@ L0E95:  lda     #$34
         lda     row4_lookup,x
         rts
 
-:       cmp     #82
+:       cmp     #82             ; special case for tall + button
         bcs     :+
         lda     text_pos_params1::left
         cmp     #97
@@ -679,14 +684,14 @@ L0E95:  lda     #$34
         sec
         rts
 
-:       cmp     #94
+:       cmp     #row5_bot+border_br             ; row 5?
         bcs     miss
         jsr     find_button_col
         bcc     :+
         lda     row5_lookup,x
         rts
 
-:       lda     text_pos_params1::left
+:       lda     text_pos_params1::left ; special case for wide 0 button
         cmp     #12
         bcc     miss
         cmp     #'='
@@ -711,33 +716,33 @@ miss:   clc
         .byte   '0', '0', '.', '+'
 
 find_button_col:
-        cpx     #12             ; col 1?
+        cpx     #col1_left-border_lt             ; col 1?
         bcc     L0F68
-        cpx     #32
+        cpx     #col1_right+border_br
         bcs     :+
         ldx     #1
         sec
         rts
 
-:       cpx     #41             ; col 2?
+:       cpx     #col2_left-border_lt             ; col 2?
         bcc     L0F68
-        cpx     #61
+        cpx     #col2_right+border_br
         bcs     :+
         ldx     #2
         sec
         rts
 
-:       cpx     #69             ; col 3?
+:       cpx     #col3_left-border_lt             ; col 3?
         bcc     L0F68
-        cpx     #89
+        cpx     #col3_right+border_br
         bcs     :+
         ldx     #3
         sec
         rts
 
-:       cpx     #97             ; col 4?
+:       cpx     #col4_left-border_lt             ; col 4?
         bcc     L0F68
-        cpx     #116
+        cpx     #col4_right+border_br - 1       ; bug in original?
         bcs     L0F68
         ldx     #4
         sec
@@ -1105,7 +1110,7 @@ L1231:  A2D_CALL A2D_GET_BUTTON, button_state_params
         lda     button_state_params::state
         cmp     #$04
         bne     L126B
-        lda     #$34
+        lda     #window_id
         sta     button_state_params::state
         A2D_CALL $46, button_state_params
         A2D_CALL A2D_SET_TEXT_POS, text_pos_params1
@@ -1234,7 +1239,7 @@ L1372:  stx     L0C59
 L1384:  stx     L0C5B
         A2D_CALL A2D_TEXT_BOX2, L0C93
         A2D_CALL $14, L0C58
-        lda     #$34
+        lda     #window_id
         sta     L08D1
         A2D_CALL $3C, L08D1
         A2D_CALL A2D_TEXT_BOX1, L0C6E
