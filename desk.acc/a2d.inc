@@ -53,11 +53,17 @@ A2D_SET_TEXT_POS:= $0E
         ;; .word left
         ;; .word base
 
-A2D_CLEAR_BOX   := $11   ; To window background pattern
-        ;; .word hoffset        (includes scroll pos)
-        ;; .word voffset
-        ;; .word width          pixels
-        ;; .word height
+A2D_FILL_RECT   := $11          ; With selected pattern
+        ;; .word left           (includes scroll pos)
+        ;; .word top
+        ;; .word right          pixels
+        ;; .word bottom
+
+A2D_DRAW_RECT   := $12          ; With selected pattern
+        ;; .word left           (includes scroll pos)
+        ;; .word top
+        ;; .word right          pixels
+        ;; .word bottom
 
 A2D_UNK_14      := $14          ; Unknown - draws push button (calculator)
 
@@ -68,6 +74,12 @@ A2D_DRAW_TEXT   := $19
 A2D_UNK_1A      := $1A          ; Unknown - used in calculator before window creation
 
 A2D_UNK_24      := $24          ; Unknown - used in calculator
+
+A2D_SHOW_CURSOR := $25
+        ;; no parameters (pass $0000 as address)
+
+A2D_HIDE_CURSOR := $26
+        ;; no parameters (pass $0000 as address)
 
 A2D_GET_BUTTON  := $2A
         ;; .byte state (0=up, 1=pressed, 2=held???)
@@ -210,7 +222,11 @@ A2D_CWS_SCROLL_NORMAL  := A2D_CWS_SCROLL_ENABLED | A2D_CWS_SCROLL_THUMB | A2D_CW
         label := *
 .endif
 
+.if .paramcount > 1
         .addr addr
+.else
+        .addr 0
+.endif
 .endmacro
 
 .macro A2D_DEFSTRING str        ; String definition, for use with A2D_TEXT

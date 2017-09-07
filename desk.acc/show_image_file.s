@@ -397,6 +397,7 @@ end:    rts
 .endproc
 
 .proc show_file
+        A2D_CALL A2D_HIDE_CURSOR
         jsr     get_file_eof
 
         ;; If bigger than $2000, assume DHR
@@ -415,6 +416,7 @@ end:    rts
 dhr:    jsr     show_dhr_file
 
 close:  jsr     close_file
+        A2D_CALL A2D_SHOW_CURSOR
         rts
 .endproc
 

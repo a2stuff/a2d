@@ -114,7 +114,7 @@ L08AE:  A2D_CALL $3C, L08D1
         lda     L08D1
         cmp     #$34
         bne     L08C4
-        jmp     L12E8
+        jmp     draw_window
 
 L08C4:  rts
 
@@ -164,7 +164,8 @@ L08D4:  .byte   $80
         row5_bot := row5_top+button_height ; 92
 
 
-L08D5:  .byte   $00,$0C,$00,$15,$00,$E1,$0A,$03
+L08D5:  .byte   $00
+L08D6:  .byte   $0C,$00,$15,$00,$E1,$0A,$03
         .byte   $00,$00,$00,$00,$00,$14,$00,$0C
         .byte   $00,$63,$13,$00
         .word   row1_bot
@@ -354,13 +355,12 @@ L0BC9:  .byte   $00
 L0BCA:  .byte   $00
 L0BCB:  .byte   $00
 
-.proc clear_box_params1
-hoffset:.word   1
-voffset:.word   0
-width:  .word   129
-height: .word   96
+.proc background_box_params
+left:   .word   1
+top:    .word   0
+right:  .word   129
+bottom: .word   96
 .endproc
-
 
 background_pattern:
         .byte   $77,$DD,$77,$DD,$77,$DD,$77,$DD
@@ -375,13 +375,19 @@ white_pattern:
         .byte   $00
 
 L0BEF:  .byte   $7F
-L0BF0:  .byte   $0A,$00,$05,$00,$78,$00,$11,$00
 
-.proc clear_box_params2
-hoffset:.word   11
-voffset:.word   6
-width:  .word   119
-height: .word   16
+.proc frame_display_params
+left:   .word   10
+top:    .word   5
+right:  .word   120
+bottom: .word   17
+.endproc
+
+.proc clear_display_params
+left:   .word   11
+top:    .word   6
+right:  .word   119
+bottom: .word   16
 .endproc
 
         ;; For drawing 1-character strings (button labels)
@@ -452,8 +458,9 @@ L0C6E:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00
 L0C93:  .byte   $00,$00,$0D,$00,$00,$20,$80,$00
         .byte   $00,$00,$00,$00,$2F,$02,$B1,$00
-L0CA3:  .byte   $00,$01,$02
-L0CA6:  .byte   $06
+L0CA3:  .byte   $00             ; arg for fill mode?
+        .byte   $01,$02
+L0CA6:  .byte   $06             ; arg for fill mode?
 
 create_window_params:
         .byte   window_id       ; id
@@ -576,7 +583,7 @@ L0E13:  cmp     #$05
         A2D_CALL A2D_BTN_CLICK, button_click_params
         lda     button_click_params::state
         beq     L0E03
-L0E22:  lda     LCBANK1
+exit:   lda     LCBANK1
         lda     LCBANK1
         A2D_CALL A2D_DESTROY_WINDOW, destroy_window_params
         jsr     UNKNOWN_CALL
@@ -609,14 +616,15 @@ L0E53:  cmp     #$03
 .proc L0E6F
         lda     L08C7
         bne     bail
-        lda     L08C6           ; Check key
+        lda     L08C6           ; check key
         cmp     #$1B            ; Escape?
         bne     trydel
-        lda     L0BC5           ; ??? (esc behavior variable?
-        bne     clear
+        lda     L0BC5
+        bne     clear           ; empty state?
         lda     L0BCB
-        beq     L0E22
-clear:  lda     #'C'            ; turn Escape into Clear
+        beq     exit            ; if so, exit DA
+clear:  lda     #'C'            ; otherwise turn Escape into Clear
+
 trydel: cmp     #$7F            ; Delete?
         beq     :+
         cmp     #$60            ; lowercase range?
@@ -630,7 +638,7 @@ L0E94:  rts                     ; used by prev/next proc
 L0E95:  lda     #window_id
         sta     button_state_params::state
         A2D_CALL $46, button_state_params
-        lda     text_pos_params1::left+1
+        lda     text_pos_params1::left+1 ; must have alternate meaning here
         ora     text_pos_params1::base+1
         bne     L0E94
         lda     text_pos_params1::base ; click y
@@ -762,7 +770,7 @@ miss:   clc
         ldx     #<btnc_box
         ldy     #>btnc_box
         lda     #$63
-        jsr     L120A
+        jsr     depress_button
         lda     #$00
         jsr     FLOAT
         ldx     #<farg
@@ -783,7 +791,7 @@ miss:   clc
         ldx     #<btne_box
         ldy     #>btne_box
         lda     #$65
-        jsr     L120A
+        jsr     depress_button
         ldy     L0BC8
         bne     L0FC6
         ldy     L0BCB
@@ -816,7 +824,7 @@ L0FC7:  cmp     #'='            ; Equals?
         bne     L1003
         ldx     #<btndec_box
         ldy     #>btndec_box
-        jsr     L120A
+        jsr     depress_button
         lda     L0BC7
         ora     L0BC8
         bne     L1002
@@ -968,7 +976,7 @@ loop:   lda     text_buffer1,x
 end:    rts
 .endproc
 
-L10FF:  jsr     L120A
+L10FF:  jsr     depress_button
         bne     L1106
         pla
         rts
@@ -1010,7 +1018,7 @@ L113E:  inc     L0BCB
 
 L114B:  rts
 
-L114C:  jsr     L120A
+L114C:  jsr     depress_button
         bne     L1153
         pla
         rts
@@ -1101,18 +1109,18 @@ L11F5:  jsr     L127E
         sta     L0BCA
         rts
 
-.proc L120A
-        stx     clear_addr
+.proc depress_button
+        stx     invert_addr
         stx     c13_addr
-        stx     clear2_addr
-        sty     clear_addr+1
+        stx     restore_addr
+        sty     invert_addr+1
         sty     c13_addr+1
-        sty     clear2_addr+1
+        sty     restore_addr+1
         A2D_CALL A2D_SET_PATTERN, black_pattern
-        A2D_CALL $07, L0CA6
+        A2D_CALL $07, L0CA6     ; set mode XOR ?
         sec
         ror     $FC
-clear:  A2D_CALL A2D_CLEAR_BOX, 0, clear_addr ; Inverts box
+clear:  A2D_CALL A2D_FILL_RECT, 0, invert_addr ; Inverts box
 check_button:
         A2D_CALL A2D_GET_BUTTON, button_state_params
         lda     button_state_params::state
@@ -1123,22 +1131,22 @@ check_button:
         A2D_CALL $46, button_state_params
         A2D_CALL A2D_SET_TEXT_POS, text_pos_params1
         A2D_CALL $13, 0, c13_addr
-        bne     L1261
+        bne     :+
         lda     $FC
         beq     check_button
         lda     #$00
         sta     $FC
         beq     clear
-L1261:  lda     $FC
+:       lda     $FC
         bne     check_button
         sec
         ror     $FC
         jmp     clear
 
-done:   lda     $FC
-        beq     L1275
-        A2D_CALL A2D_CLEAR_BOX, 0, clear2_addr ; Inverts back to normal
-L1275:  A2D_CALL $07, L0CA3
+done:   lda     $FC             ; high bit set if button down
+        beq     :+
+        A2D_CALL A2D_FILL_RECT, 0, restore_addr ; Inverts back to normal
+:       A2D_CALL $07, L0CA3                     ; Normal draw mode??
         lda     $FC
         rts
 .endproc
@@ -1187,46 +1195,50 @@ L12C0:  stx     L0C40
         A2D_CALL A2D_SET_TEXT_POS, text_pos_params3
         rts
 
-L12E8:  A2D_CALL $26, 0
+.proc draw_window
+        ;; Frame
+        A2D_CALL A2D_HIDE_CURSOR
         A2D_CALL A2D_SET_PATTERN, background_pattern
-        A2D_CALL A2D_CLEAR_BOX, clear_box_params1
+        A2D_CALL A2D_FILL_RECT, background_box_params
         A2D_CALL A2D_SET_PATTERN, black_pattern
-        A2D_CALL $12, L0BF0
+        A2D_CALL A2D_DRAW_RECT, frame_display_params
         A2D_CALL A2D_SET_PATTERN, white_pattern
-        A2D_CALL A2D_CLEAR_BOX, clear_box_params2
-        A2D_CALL $0C, L0BEF
-        lda     #$D6
-        sta     $FA
-        lda     #$08
-        sta     $FB
-L1320:  ldy     #0
-        lda     ($FA),y
-        beq     L1363
-        lda     $FA
-        sta     L1347
-        ldy     $FB
-        sty     L1347+1
+        A2D_CALL A2D_FILL_RECT, clear_display_params
+        A2D_CALL $0C, L0BEF     ; ???
+
+        ;; Buttons
+        ptr := $FA
+        lda     #<L08D6
+        sta     ptr
+        lda     #>L08D6
+        sta     ptr+1
+loop:   ldy     #0
+        lda     (ptr),y
+        beq     L1363           ; done!
+        lda     ptr
+        sta     c14_addr
+        ldy     ptr+1
+        sty     c14_addr+1
         clc
-        adc     #$11
-        sta     L134D
-        bcc     L1339
+        adc     #$11            ; byte offset
+        sta     text_addr
+        bcc     :+
         iny
-L1339:  sty     L134D+1
+:       sty     text_addr+1
         ldy     #$10
         lda     ($FA),y
         sta     label
-L1347   := *+4
-        A2D_CALL $14, 0
-L134D   := *+4
-        A2D_CALL A2D_SET_TEXT_POS, 0
-        A2D_CALL A2D_DRAW_TEXT, draw_text_params_label
+        A2D_CALL $14, 0, c14_addr                       ; draw shadowed rect
+        A2D_CALL A2D_SET_TEXT_POS, 0, text_addr         ; button label pos
+        A2D_CALL A2D_DRAW_TEXT, draw_text_params_label  ; button label text
         lda     $FA
         clc
         adc     #$1D
         sta     $FA
-        bcc     L1320
+        bcc     loop
         inc     $FB
-        jmp     L1320
+        jmp     loop
+.endproc
 
 L1363:  ldx     L0CBC
         lda     L0CBB
@@ -1245,12 +1257,12 @@ L1372:  stx     L0C59
         dex
 L1384:  stx     L0C5B
         A2D_CALL A2D_TEXT_BOX2, L0C93
-        A2D_CALL $14, L0C58
+        A2D_CALL $14, L0C58     ; Draws decoration in title bar
         lda     #window_id
         sta     L08D1
         A2D_CALL $3C, L08D1
         A2D_CALL A2D_TEXT_BOX1, L0C6E
-        A2D_CALL $25, 0
+        A2D_CALL A2D_SHOW_CURSOR
         jsr     L12B2
         rts
 

@@ -332,7 +332,7 @@ left:   .word   default_left
 top:    .word   default_top
         .word   $2000           ; ??? never changed
         .word   $80             ; ??? never changed
-hoffset:.word   0               ; Also used for A2D_CLEAR_BOX
+hoffset:.word   0               ; Also used for A2D_FILL_RECT
 voffset:.word   0
 width:  .word   default_width
 height: .word   default_height
@@ -971,7 +971,7 @@ end:    rts
 
         ;; called on scroll
 L0E1D:  A2D_CALL A2D_SET_PATTERN, white_pattern
-        A2D_CALL A2D_CLEAR_BOX, text_box::hoffset
+        A2D_CALL A2D_FILL_RECT, text_box::hoffset
         A2D_CALL A2D_SET_PATTERN, black_pattern
         rts
 
