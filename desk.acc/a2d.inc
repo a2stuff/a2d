@@ -202,9 +202,14 @@ A2D_CWS_SCROLL_NORMAL  := A2D_CWS_SCROLL_ENABLED | A2D_CWS_SCROLL_THUMB | A2D_CW
 
 
 ;;; Macros
-.macro  A2D_CALL    op, addr
+.macro  A2D_CALL    op, addr, label
         jsr A2D
         .byte op
+
+.if .paramcount > 2
+        label := *
+.endif
+
         .addr addr
 .endmacro
 

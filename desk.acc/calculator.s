@@ -945,21 +945,21 @@ trydiv: cmp     #'/'            ; Divide?
         ldx     #0
         lda     text_buffer1 + text_buffer_size
         cmp     #'.'
-        bne     L10D6
+        bne     :+
         stx     L0BC7
-L10D6:  cmp     #'E'
+:       cmp     #'E'
         bne     :+
         stx     L0BC8
 :       cmp     #'-'
         bne     :+
         stx     L0BC9
-:       ldx     #$0D
-L10E6:  lda     text_buffer1,x
+:       ldx     #text_buffer_size-1
+loop:   lda     text_buffer1,x
         sta     text_buffer1+1,x
         sta     text_buffer2+1,x
         dex
         dey
-        bne     L10E6
+        bne     loop
         lda     #' '
         sta     text_buffer1+1,x
         sta     text_buffer2+1,x
@@ -1073,12 +1073,12 @@ post:   ldx     #<farg          ; after the FP operation is done
         jsr     ROUND
         jsr     FOUT
         ldy     #0
-L11CC:  lda     $0100,y
+L11CC:  lda     $0100,y         ; stack ?
         beq     L11D4
         iny
         bne     L11CC
 L11D4:  ldx     #text_buffer_size
-L11D6:  lda     $FF,y
+L11D6:  lda     $FF,y           ; stack-1 ?
         sta     text_buffer1,x
         sta     text_buffer2,x
         dex
@@ -1086,11 +1086,11 @@ L11D6:  lda     $FF,y
         bne     L11D6
         cpx     #0
         bmi     L11F2
-L11E7:  lda     #' '
+loop:   lda     #' '
         sta     text_buffer1,x
         sta     text_buffer2,x
         dex
-        bpl     L11E7
+        bpl     loop
 L11F2:  jsr     L12A4
 L11F5:  jsr     L127E
         lda     #0
@@ -1101,47 +1101,47 @@ L11F5:  jsr     L127E
         sta     L0BCA
         rts
 
-L120A:  stx     L122F
-        stx     L1253
-        stx     L1273
-        sty     L122F+1
-        sty     L1253+1
-        sty     L1273+1
+.proc L120A
+        stx     clear_addr
+        stx     c13_addr
+        stx     clear2_addr
+        sty     clear_addr+1
+        sty     c13_addr+1
+        sty     clear2_addr+1
         A2D_CALL A2D_SET_PATTERN, black_pattern
         A2D_CALL $07, L0CA6
         sec
         ror     $FC
-L122F   := *+4
-L122B:  A2D_CALL A2D_CLEAR_BOX, 0
-L1231:  A2D_CALL A2D_GET_BUTTON, button_state_params
+clear:  A2D_CALL A2D_CLEAR_BOX, 0, clear_addr ; Inverts box
+check_button:
+        A2D_CALL A2D_GET_BUTTON, button_state_params
         lda     button_state_params::state
-        cmp     #$04
-        bne     L126B
+        cmp     #$04            ; Button down?
+        bne     done            ; Nope, done immediately
         lda     #window_id
         sta     button_state_params::state
         A2D_CALL $46, button_state_params
         A2D_CALL A2D_SET_TEXT_POS, text_pos_params1
-L1253   := *+4
-        A2D_CALL $13, 0
+        A2D_CALL $13, 0, c13_addr
         bne     L1261
         lda     $FC
-        beq     L1231
+        beq     check_button
         lda     #$00
         sta     $FC
-        beq     L122B
+        beq     clear
 L1261:  lda     $FC
-        bne     L1231
+        bne     check_button
         sec
         ror     $FC
-        jmp     L122B
+        jmp     clear
 
-L126B:  lda     $FC
+done:   lda     $FC
         beq     L1275
-L1273   := *+4
-        A2D_CALL A2D_CLEAR_BOX, 0
+        A2D_CALL A2D_CLEAR_BOX, 0, clear2_addr ; Inverts back to normal
 L1275:  A2D_CALL $07, L0CA3
         lda     $FC
         rts
+.endproc
 
 L127E:  ldy     #text_buffer_size
 L1280:  lda     #' '
