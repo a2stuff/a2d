@@ -188,7 +188,7 @@ box:    .word   col1_left,row1_top,col1_right,row1_bot
 .proc btn_e
         .byte   $29,$00
         .byte   $15,$00,$E1,$0A,$03,$00,$00,$00
-        .byte   $00,$00,$14,$00,$0C,$00,$65,$30
+        .byte   $00,$00,$14,$00,$0C,$00,'e',$30
         .byte   $00
         .word   row1_bot
 box:    .word   col2_left,row1_top,col2_right,row1_bot
@@ -197,7 +197,7 @@ box:    .word   col2_left,row1_top,col2_right,row1_bot
 .proc btn_eq
         .byte   $45,$00,$15,$00,$E1
         .byte   $0A,$03,$00,$00,$00,$00,$00,$14
-        .byte   $00,$0C,$00,$3D,$4C,$00
+        .byte   $00,$0C,$00,'=',$4C,$00
         .word   row1_bot
 box:    .word   col3_left,row1_top,col3_right,row1_bot
 .endproc
@@ -205,7 +205,7 @@ box:    .word   col3_left,row1_top,col3_right,row1_bot
 .proc btn_mul
         .byte   $61,$00,$15,$00,$E1,$0A,$03,$00
         .byte   $00,$00,$00,$00,$14,$00,$0C,$00
-        .byte   $2A,$68,$00
+        .byte   '*',$68,$00
         .word   row1_bot
 box:    .word   col4_left,row1_top,col4_right,row1_bot
 .endproc
@@ -213,7 +213,7 @@ box:    .word   col4_left,row1_top,col4_right,row1_bot
 .proc btn_7
         .byte   $0C,$00,$25
         .byte   $00,$E1,$0A,$03,$00,$00,$00,$00
-        .byte   $00,$14,$00,$0C,$00,$37,$13,$00
+        .byte   $00,$14,$00,$0C,$00,'7',$13,$00
         .word   row2_bot
 box:    .word   col1_left,row2_top,col1_right,row2_bot
 .endproc
@@ -222,7 +222,7 @@ box:    .word   col1_left,row2_top,col1_right,row2_bot
         .word   $29
         .byte   $25,$00,$E1,$0A
         .byte   $03,$00,$00,$00,$00,$00,$14,$00
-        .byte   $0C,$00,$38,$30,$00
+        .byte   $0C,$00,'8',$30,$00
         .word   row2_bot
 box:    .word   col2_left,row2_top,col2_right,row2_bot
 .endproc
@@ -230,7 +230,7 @@ box:    .word   col2_left,row2_top,col2_right,row2_bot
 .proc btn_9
         .byte   $45
         .byte   $00,$25,$00,$E1,$0A,$03,$00,$00
-        .byte   $00,$00,$00,$14,$00,$0C,$00,$39
+        .byte   $00,$00,$00,$14,$00,$0C,$00,'9'
         .byte   $4C,$00
         .word   row2_bot
 box:    .word   col3_left,row2_top,col3_right,row2_bot
@@ -239,7 +239,7 @@ box:    .word   col3_left,row2_top,col3_right,row2_bot
 .proc btn_div
         .byte   $61,$00,$25,$00
         .byte   $E1,$0A,$03,$00,$00,$00,$00,$00
-        .byte   $14,$00,$0C,$00,$2F,$68,$00
+        .byte   $14,$00,$0C,$00,'/',$68,$00
         .word   row2_bot
 box:    .word   col4_left,row2_top,col4_right,row2_bot
 .endproc
@@ -247,7 +247,7 @@ box:    .word   col4_left,row2_top,col4_right,row2_bot
 .proc btn_4
         .byte   $0C,$00,$34,$00,$E1,$0A,$03
         .byte   $00,$00,$00,$00,$00,$14,$00,$0C
-        .byte   $00,$34,$13,$00
+        .byte   $00,'4',$13,$00
         .word   row3_bot
 box:    .word   col1_left,row3_top,col1_right,row3_bot
 .endproc
@@ -255,7 +255,7 @@ box:    .word   col1_left,row3_top,col1_right,row3_bot
 .proc btn_5
         .byte   $29,$00
         .byte   $34,$00,$E1,$0A,$03,$00,$00,$00
-        .byte   $00,$00,$14,$00,$0C,$00,$35,$30
+        .byte   $00,$00,$14,$00,$0C,$00,'5',$30
         .byte   $00
         .word   row3_bot
 box:    .word   col2_left,row3_top,col2_right,row3_bot
@@ -264,7 +264,7 @@ box:    .word   col2_left,row3_top,col2_right,row3_bot
 .proc btn_6
         .byte   $45,$00,$34,$00,$E1
         .byte   $0A,$03,$00,$00,$00,$00,$00,$14
-        .byte   $00,$0C,$00,$36,$4C,$00
+        .byte   $00,$0C,$00,'6',$4C,$00
         .word   row3_bot
 box:    .word   col3_left,row3_top,col3_right,row3_bot
 .endproc
@@ -272,7 +272,7 @@ box:    .word   col3_left,row3_top,col3_right,row3_bot
 .proc btn_sub
         .byte   $61,$00,$34,$00,$E1,$0A,$03,$00
         .byte   $00,$00,$00,$00,$14,$00,$0C,$00
-        .byte   $2D,$68,$00
+        .byte   '-',$68,$00
         .word   row3_bot
 box:    .word   col4_left,row3_top,col4_right,row3_bot
 .endproc
@@ -280,7 +280,7 @@ box:    .word   col4_left,row3_top,col4_right,row3_bot
 .proc btn_1
         .byte   $0C,$00,$43
         .byte   $00,$E1,$0A,$03,$00,$00,$00,$00
-        .byte   $00,$14,$00,$0C,$00,$31,$13,$00
+        .byte   $00,$14,$00,$0C,$00,'1',$13,$00
         .word   row4_bot
 box:    .word   col1_left,row4_top,col1_right,row4_bot
 .endproc
@@ -288,7 +288,7 @@ box:    .word   col1_left,row4_top,col1_right,row4_bot
 .proc btn_2
         .byte   $29,$00,$43,$00,$E1,$0A
         .byte   $03,$00,$00,$00,$00,$00,$14,$00
-        .byte   $0C,$00,$32,$30,$00
+        .byte   $0C,$00,'2',$30,$00
         .word   row4_bot
 box:    .word   col2_left,row4_top,col2_right,row4_bot
 .endproc
@@ -296,7 +296,7 @@ box:    .word   col2_left,row4_top,col2_right,row4_bot
 .proc btn_3
         .byte   $45
         .byte   $00,$43,$00,$E1,$0A,$03,$00,$00
-        .byte   $00,$00,$00,$14,$00,$0C,$00,$33
+        .byte   $00,$00,$00,$14,$00,$0C,$00,'3'
         .byte   $4C,$00
         .word   row4_bot
 box:    .word   col3_left,row4_top,col3_right,row4_bot
@@ -305,7 +305,7 @@ box:    .word   col3_left,row4_top,col3_right,row4_bot
 .proc btn_0
         .byte   $0C,$00,$52,$00
         .byte   $08,$0B,$08,$00,$00,$00,$00,$00
-        .byte   $31,$00,$0C,$00,$30,$13,$00
+        .byte   $31,$00,$0C,$00,'0',$13,$00
         .word   row5_bot
 box:    .word   col1_left,row5_top,col2_right,row5_bot
 .endproc
@@ -313,7 +313,7 @@ box:    .word   col1_left,row5_top,col2_right,row5_bot
 .proc btn_dec
         .byte   $45,$00,$52,$00,$E1,$0A,$03
         .byte   $00,$00,$00,$00,$00,$14,$00,$0C
-        .byte   $00,$2E,$4E,$00
+        .byte   $00,'.',$4E,$00
         .word   row5_bot
 box:    .word   col3_left,row5_top,col3_right,row5_bot
 .endproc
@@ -321,13 +321,16 @@ box:    .word   col3_left,row5_top,col3_right,row5_bot
 .proc btn_add
         .byte   $61,$00
         .byte   $43,$00,$70,$0B,$03,$00,$00,$00
-        .byte   $00,$00,$14,$00,$1B,$00,$2B,$68
+        .byte   $00,$00,$14,$00,$1B,$00,'+',$68
         .byte   $00
         .word   row5_bot
 box:    .word   col4_left,row4_top,col4_right,row5_bot
 .endproc
+        .byte   0               ; sentinel
 
-        .byte   $00,$00,$00,$40,$7E
+
+
+        .byte   $00,$00,$40,$7E
         .byte   $7F,$1F,$7E,$7F,$1F,$7E,$7F,$1F
         .byte   $7E,$7F,$1F,$7E,$7F,$1F,$7E,$7F
         .byte   $1F,$7E,$7F,$1F,$7E,$7F,$1F,$7E
@@ -1248,7 +1251,7 @@ loop:   ldy     #0
         ldy     ptr+1
         sty     c14_addr+1
         clc
-        adc     #17             ; byte offset
+        adc     #(btn_c::label - btn_c + 1)
         sta     text_addr
         bcc     :+
         iny
