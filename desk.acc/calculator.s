@@ -176,19 +176,25 @@ L08D4:  .byte   $80
 L08D5:  .byte   $00
 
 .proc btn_c
-        .byte   $0C,$00,$15,$00,$E1,$0A,$03
-        .byte   $00,$00,$00,$00,$00,$14,$00,$0C
-        .byte   $00
+        .word   col1_left - border_lt
+        .word   row1_top - border_lt
+        .addr   L0AE1
+        .byte   $03,$00,$00,$00,$00,$00
+        .word   button_width + border_lt + border_br
+        .word   button_height + border_lt + border_br
 label:  .byte   'c'
-        .byte   $13,$00
+        .word   col1_left + 6
         .word   row1_bot
 box:    .word   col1_left,row1_top,col1_right,row1_bot
 .endproc
 
 .proc btn_e
         .byte   $29,$00
-        .byte   $15,$00,$E1,$0A,$03,$00,$00,$00
-        .byte   $00,$00,$14,$00,$0C,$00,'e',$30
+        .byte   $15,$00
+        .byte   $E1,$0A
+        .byte   $03,$00,$00,$00,$00,$00
+        .byte   $14,$00
+        .byte   $0C,$00,'e',$30
         .byte   $00
         .word   row1_bot
 box:    .word   col2_left,row1_top,col2_right,row1_bot
@@ -328,7 +334,7 @@ box:    .word   col4_left,row4_top,col4_right,row5_bot
 .endproc
         .byte   0               ; sentinel
 
-
+L0AE1:
 
         .byte   $00,$00,$40,$7E
         .byte   $7F,$1F,$7E,$7F,$1F,$7E,$7F,$1F
