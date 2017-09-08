@@ -9,7 +9,8 @@
         .include "a2d.inc"
 
 L0020           := $0020
-L00B1           := $00B1
+
+adjust_txtptr := $B1
 
 ROMIN2          := $C082
 
@@ -480,18 +481,23 @@ white_pattern:
 
 L0BEF:  .byte   $7F
 
+        display_left    := 10
+        display_top     := 5
+        display_width   := 120
+        display_height  := 17
+
 .proc frame_display_params
-left:   .word   10
-top:    .word   5
-right:  .word   120
-bottom: .word   17
+left:   .word   display_left
+top:    .word   display_top
+width:  .word   display_width
+height: .word   display_height
 .endproc
 
 .proc clear_display_params
-left:   .word   11
-top:    .word   6
-right:  .word   119
-bottom: .word   16
+left:   .word   display_left+1
+top:    .word   display_top+1
+width:  .word   display_width-1
+height: .word   display_height-1
 .endproc
 
         ;; For drawing 1-character strings (button labels)
@@ -525,9 +531,12 @@ spaces_string:
 error_string:
         A2D_DEFSTRING "Error "
 
-L0C40:  .byte   $07
-L0C41:  .byte   $0C,$0F
-L0C43:  .byte   $00,$00
+        ;;  used when clearing display; params to a $18 call
+.proc measure_text_params
+addr:   .addr   text_buffer1
+len:    .byte   15              ; ???
+width:  .word   0
+.endproc
 
         window_id = $34
 
@@ -614,7 +623,7 @@ L0D18:  sta     ALTZPON
         jsr     reset_buffer2
         lda     #window_id
         jsr     L089E
-        jsr     L129E
+        jsr     reset_buffers_and_display
 
         lda     #'='            ; last operation
         sta     calc_op
@@ -627,26 +636,28 @@ L0D18:  sta     ALTZPON
         sta     L0BCA
         sta     L0BCB
 
-.proc copy_to_b0
-        ldx     #(end_copied_to_b0 - copied_to_b0 + 4) ; should be just + 1 ?
-loop:   lda     copied_to_b0-1,x
-        sta     $B0,x
+.proc copy_to_b1
+        ldx     #(end_adjust_txtptr_copied - adjust_txtptr_copied + 4) ; should be just + 1 ?
+loop:   lda     adjust_txtptr_copied-1,x
+        sta     adjust_txtptr-1,x
         dex
         bne     loop
 .endproc
 
-        lda     #$00
-        sta     $D8
-        lda     #$AE
+        lda     #0              ; Turn off errors
+        sta     ERRFLG
+
+        lda     #<hook_36
         sta     $36
-        lda     #$13
-        sta     $37
-        lda     #$01
+        lda     #>hook_36
+        sta     $36+1
+
+        lda     #1
         jsr     FLOAT
         ldx     #<farg
         ldy     #>farg
         jsr     ROUND
-        lda     #$00
+        lda     #0              ; set FAC to 0
         jsr     FLOAT
         jsr     FADD
         jsr     FOUT
@@ -936,7 +947,7 @@ miss:   clc
         sta     L0BC7
         sta     L0BC8
         sta     L0BC9
-        jmp     L129E
+        jmp     reset_buffers_and_display
 
 :       cmp     #'E'            ; Exponential?
         bne     L0FC7
@@ -1098,8 +1109,8 @@ trydiv: cmp     #'/'            ; Divide?
         beq     end
         cpy     #1
         bne     :+
-        jsr     L11F5
-        jmp     L12A4
+        jsr     reset_buffer1_and_state
+        jmp     display_buffer1
 
 :       dec     L0BCB
         ldx     #0
@@ -1123,7 +1134,7 @@ loop:   lda     text_buffer1,x
         lda     #' '
         sta     text_buffer1+1,x
         sta     text_buffer2+1,x
-        jmp     L12A4
+        jmp     display_buffer1
 
 end:    rts
 .endproc
@@ -1143,7 +1154,7 @@ L1107:  sec
         pla
         cmp     #$30
         bne     L111C
-        jmp     L12A4
+        jmp     display_buffer1
 
 L111C:  sec
         ror     L0BC5
@@ -1166,7 +1177,7 @@ L113E:  inc     L0BCB
         pla
         sta     text_buffer1 + text_buffer_size
         sta     text_buffer2 + text_buffer_size
-        jmp     L12A4
+        jmp     display_buffer1
 
 L114B:  rts
 
@@ -1188,13 +1199,13 @@ L1153:  lda     calc_op
         bne     L1173
         pla
         sta     calc_op
-        jmp     L11F5
+        jmp     reset_buffer1_and_state
 
 L1173:  lda     #<text_buffer1
-        sta     $B8
-        lda     #>text_buffer2
-        sta     $B9
-        jsr     L00B1
+        sta     TXTPTR
+        lda     #>text_buffer1
+        sta     TXTPTR+1
+        jsr     adjust_txtptr
         jsr     FIN
 L1181:  pla
         ldx     calc_op
@@ -1205,54 +1216,61 @@ L1181:  pla
         cpx     #'+'
         bne     :+
         jsr     FADD
-        jmp     post
+        jmp     post_op
 
 :       cpx     #'-'
         bne     :+
         jsr     FSUB
-        jmp     post
+        jmp     post_op
 
 :       cpx     #'*'
         bne     :+
         jsr     FMULT
-        jmp     post
+        jmp     post_op
 
 :       cpx     #'/'
         bne     :+
         jsr     FDIV
-        jmp     post
+        jmp     post_op
 
 :       cpx     #'='
-        bne     post
+        bne     post_op
         ldy     L0BCA
-        bne     post
-        jmp     L11F5
+        bne     post_op
+        jmp     reset_buffer1_and_state
 
-post:   ldx     #<farg          ; after the FP operation is done
+.proc post_op
+        ldx     #<farg          ; after the FP operation is done
         ldy     #>farg
         jsr     ROUND
-        jsr     FOUT
-        ldy     #0
-L11CC:  lda     FBUFFR,y         ; stack ?
-        beq     L11D4
+        jsr     FOUT            ; output as null-terminated string to FBUFFR
+
+        ldy     #0              ; count the eize
+sloop:  lda     FBUFFR,y
+        beq     :+
         iny
-        bne     L11CC
-L11D4:  ldx     #text_buffer_size
-L11D6:  lda     $FF,y           ; stack-1 ?
+        bne     sloop
+
+:       ldx     #text_buffer_size ; copy to text buffers
+cloop:  lda     FBUFFR-1,y
         sta     text_buffer1,x
         sta     text_buffer2,x
         dex
         dey
-        bne     L11D6
-        cpx     #0
-        bmi     L11F2
-loop:   lda     #' '
+        bne     cloop
+
+        cpx     #0              ; pad out with spaces if needed
+        bmi     end
+pad:    lda     #' '
         sta     text_buffer1,x
         sta     text_buffer2,x
         dex
-        bpl     loop
-L11F2:  jsr     L12A4
-L11F5:  jsr     reset_buffer1
+        bpl     pad
+end:    jsr     display_buffer1
+        ; fall through
+.endproc
+.proc reset_buffer1_and_state
+        jsr     reset_buffer1
         lda     #0
         sta     L0BCB
         sta     L0BC7
@@ -1260,6 +1278,7 @@ L11F5:  jsr     reset_buffer1
         sta     L0BC9
         sta     L0BCA
         rts
+.endproc
 
 .proc depress_button
         stx     invert_addr
@@ -1303,6 +1322,9 @@ done:   lda     $FC             ; high bit set if button down
         rts
 .endproc
 
+;;; ==================================================
+;;; Value Display
+
 .proc reset_buffer1
         ldy     #text_buffer_size
 loop:   lda     #' '
@@ -1325,33 +1347,38 @@ loop:   lda     #' '
         rts
 .endproc
 
-L129E:  jsr     reset_buffer1
+.proc reset_buffers_and_display
+        jsr     reset_buffer1
         jsr     reset_buffer2
-L12A4:  ldx     #<text_buffer1
+        ; fall through
+.endproc
+.proc display_buffer1
+        ldx     #<text_buffer1
         ldy     #>text_buffer1
-        jsr     L12C0
+        jsr     pre_display_buffer
         A2D_CALL A2D_DRAW_TEXT, draw_text_params1
         rts
+.endproc
 
-.proc L12B2
-        ldx     #$1A
-        ldy     #$0C
-        jsr     L12C0
+.proc display_buffer2
+        ldx     #<text_buffer2
+        ldy     #>text_buffer2
+        jsr     pre_display_buffer
         A2D_CALL A2D_DRAW_TEXT, draw_text_params2
         rts
 .endproc
 
-.proc L12C0
-        stx     L0C40
-        sty     L0C41
-        A2D_CALL $18, L0C40
-        lda     #$69
+.proc pre_display_buffer
+        stx     measure_text_params::addr ; text buffer address in x,y
+        sty     measure_text_params::addr+1
+        A2D_CALL A2D_MEASURE_TEXT, measure_text_params
+        lda     #display_width-15 ; ???
         sec
-        sbc     L0C43
+        sbc     measure_text_params::width
         sta     text_pos_params3::left
-        A2D_CALL A2D_SET_TEXT_POS, text_pos_params2
+        A2D_CALL A2D_SET_TEXT_POS, text_pos_params2 ; clear with spaces
         A2D_CALL A2D_DRAW_TEXT, spaces_string
-        A2D_CALL A2D_SET_TEXT_POS, text_pos_params3
+        A2D_CALL A2D_SET_TEXT_POS, text_pos_params3 ; set up for display
         rts
 .endproc
 
@@ -1436,35 +1463,37 @@ draw_title_bar:
         A2D_CALL $3C, L08D1
         A2D_CALL A2D_TEXT_BOX1, L0C6E
         A2D_CALL A2D_SHOW_CURSOR
-        jsr     L12B2
+        jsr     display_buffer2
         rts
 
-        jsr     L129E
+.proc hook_36
+        jsr     reset_buffers_and_display
         A2D_CALL A2D_SET_TEXT_POS, L0C4E
         A2D_CALL A2D_DRAW_TEXT, error_string
-        jsr     L11F5
+        jsr     reset_buffer1_and_state
         lda     #'='
         sta     calc_op
         ldx     L0BC4
         txs
         jmp     input_loop
+.endproc
 
-        ;; Following proc is copied to $B0
-.proc copied_to_b0
-loop:   inc     $B8
+        ;; Following proc is copied to $B1
+.proc adjust_txtptr_copied
+loop:   inc     TXTPTR
         bne     :+
-        inc     $B9
-:       lda     $EA60
-        cmp     #$3A
+        inc     TXTPTR+1
+:       lda     $EA60           ; this ends up being aligned on TXTPTR
+        cmp     #'9'+1          ; after digits?
         bcs     end
-        cmp     #' '
+        cmp     #' '            ; space? keep going
         beq     loop
         sec
-        sbc     #'0'
+        sbc     #'0'            ; convert to digit...
         sec
-        sbc     #$D0
+        sbc     #$D0            ; carry set if successful
 end:    rts
 .endproc
-        end_copied_to_b0 := *
+        end_adjust_txtptr_copied := *
 
 da_end := *

@@ -67,6 +67,11 @@ A2D_DRAW_RECT   := $12          ; With selected pattern
 
 A2D_UNK_14      := $14          ; Unknown - draws push button (calculator)
 
+A2D_MEASURE_TEXT := $18
+        ;; .addr data
+        ;; .byte length         ???
+        ;; .word width          pixels
+
 A2D_DRAW_TEXT   := $19
         ;; .addr data
         ;; .byte length
