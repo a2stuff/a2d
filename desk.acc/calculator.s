@@ -191,8 +191,7 @@ L08D5:  .byte   $00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   'c'
-        .word   col1_left + 6
-        .word   row1_bot
+pos:    .word   col1_left + 6, row1_bot
 box:    .word   col1_left,row1_top,col1_right,row1_bot
 .endproc
 
@@ -204,8 +203,7 @@ box:    .word   col1_left,row1_top,col1_right,row1_bot
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   'e'
-        .word   col2_left + 6
-        .word   row1_bot
+        .word   col2_left + 6, row1_bot
 box:    .word   col2_left,row1_top,col2_right,row1_bot
 .endproc
 
@@ -217,8 +215,7 @@ box:    .word   col2_left,row1_top,col2_right,row1_bot
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   '='
-        .word   col3_left + 6
-        .word   row1_bot
+        .word   col3_left + 6, row1_bot
 box:    .word   col3_left,row1_top,col3_right,row1_bot
 .endproc
 
@@ -230,8 +227,7 @@ box:    .word   col3_left,row1_top,col3_right,row1_bot
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   '*'
-        .word   col4_left + 6
-        .word   row1_bot
+        .word   col4_left + 6, row1_bot
 box:    .word   col4_left,row1_top,col4_right,row1_bot
 .endproc
 
@@ -243,8 +239,7 @@ box:    .word   col4_left,row1_top,col4_right,row1_bot
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   '7'
-        .word   col1_left + 6
-        .word   row2_bot
+        .word   col1_left + 6, row2_bot
 box:    .word   col1_left,row2_top,col1_right,row2_bot
 .endproc
 
@@ -256,8 +251,7 @@ box:    .word   col1_left,row2_top,col1_right,row2_bot
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   '8'
-        .word   col2_left + 6
-        .word   row2_bot
+        .word   col2_left + 6, row2_bot
 box:    .word   col2_left,row2_top,col2_right,row2_bot
 .endproc
 
@@ -269,8 +263,7 @@ box:    .word   col2_left,row2_top,col2_right,row2_bot
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   '9'
-        .word   col3_left + 6
-        .word   row2_bot
+        .word   col3_left + 6, row2_bot
 box:    .word   col3_left,row2_top,col3_right,row2_bot
 .endproc
 
@@ -282,8 +275,7 @@ box:    .word   col3_left,row2_top,col3_right,row2_bot
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   '/'
-        .word   col4_left + 6
-        .word   row2_bot
+        .word   col4_left + 6, row2_bot
 box:    .word   col4_left,row2_top,col4_right,row2_bot
 .endproc
 
@@ -295,8 +287,7 @@ box:    .word   col4_left,row2_top,col4_right,row2_bot
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   '4'
-        .word   col1_left + 6
-        .word   row3_bot
+        .word   col1_left + 6, row3_bot
 box:    .word   col1_left,row3_top,col1_right,row3_bot
 .endproc
 
@@ -308,8 +299,7 @@ box:    .word   col1_left,row3_top,col1_right,row3_bot
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   '5'
-        .word   col2_left + 6
-        .word   row3_bot
+        .word   col2_left + 6, row3_bot
 box:    .word   col2_left,row3_top,col2_right,row3_bot
 .endproc
 
@@ -321,8 +311,7 @@ box:    .word   col2_left,row3_top,col2_right,row3_bot
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   '6'
-        .word   col3_left + 6
-        .word   row3_bot
+        .word   col3_left + 6, row3_bot
 box:    .word   col3_left,row3_top,col3_right,row3_bot
 .endproc
 
@@ -334,8 +323,7 @@ box:    .word   col3_left,row3_top,col3_right,row3_bot
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   '-'
-        .word   col4_left + 6
-        .word   row3_bot
+        .word   col4_left + 6, row3_bot
 box:    .word   col4_left,row3_top,col4_right,row3_bot
 .endproc
 
@@ -347,8 +335,7 @@ box:    .word   col4_left,row3_top,col4_right,row3_bot
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   '1'
-        .word   col1_left + 6
-        .word   row4_bot
+        .word   col1_left + 6, row4_bot
 box:    .word   col1_left,row4_top,col1_right,row4_bot
 .endproc
 
@@ -360,8 +347,7 @@ box:    .word   col1_left,row4_top,col1_right,row4_bot
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   '2'
-        .word   col2_left + 6
-        .word   row4_bot
+        .word   col2_left + 6, row4_bot
 box:    .word   col2_left,row4_top,col2_right,row4_bot
 .endproc
 
@@ -373,8 +359,7 @@ box:    .word   col2_left,row4_top,col2_right,row4_bot
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   '3'
-        .word   col3_left + 6
-        .word   row4_bot
+        .word   col3_left + 6, row4_bot
 box:    .word   col3_left,row4_top,col3_right,row4_bot
 .endproc
 
@@ -386,8 +371,7 @@ box:    .word   col3_left,row4_top,col3_right,row4_bot
         .word   49                      ; 0 is extra wide
         .word   button_height + border_lt + border_br
         .byte   '0'
-        .word   col1_left + 6
-        .word   row5_bot
+        .word   col1_left + 6, row5_bot
 box:    .word   col1_left,row5_top,col2_right,row5_bot
 .endproc
 
@@ -399,8 +383,7 @@ box:    .word   col1_left,row5_top,col2_right,row5_bot
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
         .byte   '.'
-        .word   col3_left + 6 + 2 ; + 2 to center the label
-        .word   row5_bot
+        .word   col3_left + 6 + 2, row5_bot ; + 2 to center the label
 box:    .word   col3_left,row5_top,col3_right,row5_bot
 .endproc
 
@@ -412,13 +395,12 @@ box:    .word   col3_left,row5_top,col3_right,row5_bot
         .word   button_width + border_lt + border_br
         .word   27              ; + is extra tall
         .byte   '+'
-        .word   col4_left + 6
-        .word   row5_bot
+        .word   col4_left + 6, row5_bot
 box:    .word   col4_left,row4_top,col4_right,row5_bot
 .endproc
         .byte   0               ; sentinel
 
-L0AE1:
+L0AE1:                          ; pattern for normal buttons
         .byte   $00,$00,$40,$7E
         .byte   $7F,$1F,$7E,$7F,$1F,$7E,$7F,$1F
         .byte   $7E,$7F,$1F,$7E,$7F,$1F,$7E,$7F
@@ -426,7 +408,7 @@ L0AE1:
         .byte   $7F,$1F,$7E,$7F,$1F,$00,$00,$00
         .byte   $01,$00,$00
 
-L0B08:
+L0B08:                          ; pattern for '0' button
         .byte   $00,$00,$00,$00,$00
         .byte   $00,$00,$7F,$7E,$7F,$7F,$7F,$7F
         .byte   $7F,$3F,$7E,$7E,$7F,$7F,$7F,$7F
@@ -441,7 +423,8 @@ L0B08:
         .byte   $7F,$3F,$7E,$00,$00,$00,$00,$00
         .byte   $00,$00,$7E,$01,$00,$00,$00,$00
         .byte   $00,$00,$7E
-L0B70:
+
+L0B70:                          ; pattern for '+' button
         .byte   $00,$00,$40,$7E,$7F
         .byte   $1F,$7E,$7F,$1F,$7E,$7F,$1F,$7E
         .byte   $7F,$1F,$7E,$7F,$1F,$7E,$7F,$1F
@@ -454,9 +437,10 @@ L0B70:
         .byte   $7E,$7F,$1F,$7E,$7F,$1F,$7E,$7F
         .byte   $1F,$00,$00,$00,$01,$00,$00
 
+        ;; Calculation state
 L0BC4:  .byte   $00
 L0BC5:  .byte   $00
-L0BC6:  .byte   $00
+calc_op:.byte   $00
 L0BC7:  .byte   $00
 L0BC8:  .byte   $00
 L0BC9:  .byte   $00
@@ -612,24 +596,30 @@ L0D18:  sta     ALTZPON
         A2D_CALL $2D, button_state_params
         A2D_CALL A2D_GET_BUTTON, button_state_params
         lda     ROMIN2
-        jsr     L128E
+        jsr     reset_buffer2
         lda     #window_id
         jsr     L089E
         jsr     L129E
-        lda     #$3D
-        sta     L0BC6
-        lda     #$00
+
+        lda     #'='            ; last operation
+        sta     calc_op
+
+        lda     #0              ; clear registers
         sta     L0BC5
         sta     L0BC7
         sta     L0BC8
         sta     L0BC9
         sta     L0BCA
         sta     L0BCB
-        ldx     #$1C
-L0D79:  lda     L13CB,x
+
+.proc copy_to_b0
+        ldx     #(end_copied_to_b0 - copied_to_b0 + 4) ; should be just + 1 ?
+loop:   lda     copied_to_b0-1,x
         sta     $B0,x
         dex
-        bne     L0D79
+        bne     loop
+.endproc
+
         lda     #$00
         sta     $D8
         lda     #$AE
@@ -659,17 +649,19 @@ L0D79:  lda     L13CB,x
         lda     #'C'
         jsr     process_key
         A2D_CALL $24, L0CE6
-L0DC9:  A2D_CALL $2A, button_state_params
+
+input_loop:
+        A2D_CALL $2A, button_state_params
         lda     button_state_params::state
         cmp     #$01
         bne     L0DDC
         jsr     on_click
-        jmp     L0DC9
+        jmp     input_loop
 
 L0DDC:  cmp     #$03
-        bne     L0DC9
+        bne     input_loop
         jsr     L0E6F
-        jmp     L0DC9
+        jmp     input_loop
 
 on_click:
         lda     LCBANK1
@@ -901,7 +893,7 @@ miss:   clc
         ldy     #>farg
         jsr     ROUND
         lda     #'='
-        sta     L0BC6
+        sta     calc_op
         lda     #0
         sta     L0BC5
         sta     L0BCB
@@ -1111,7 +1103,7 @@ L1107:  sec
         ldy     L0BCB
         bne     L111C
         pha
-        jsr     L128E
+        jsr     reset_buffer2
         pla
         cmp     #$30
         bne     L111C
@@ -1147,7 +1139,7 @@ L114C:  jsr     depress_button
         pla
         rts
 
-L1153:  lda     L0BC6
+L1153:  lda     calc_op
         cmp     #'='
         bne     :+
         lda     L0BCA
@@ -1159,18 +1151,18 @@ L1153:  lda     L0BC6
 :       lda     L0BCA
         bne     L1173
         pla
-        sta     L0BC6
+        sta     calc_op
         jmp     L11F5
 
-L1173:  lda     #$07
+L1173:  lda     #<text_buffer1
         sta     $B8
-        lda     #$0C
+        lda     #>text_buffer2
         sta     $B9
         jsr     L00B1
         jsr     FIN
 L1181:  pla
-        ldx     L0BC6
-        sta     L0BC6           ; Operation
+        ldx     calc_op
+        sta     calc_op           ; Operation
         lda     #<farg
         ldy     #>farg
 
@@ -1224,7 +1216,7 @@ loop:   lda     #' '
         dex
         bpl     loop
 L11F2:  jsr     L12A4
-L11F5:  jsr     L127E
+L11F5:  jsr     reset_buffer1
         lda     #0
         sta     L0BCB
         sta     L0BC7
@@ -1275,39 +1267,46 @@ done:   lda     $FC             ; high bit set if button down
         rts
 .endproc
 
-L127E:  ldy     #text_buffer_size
-L1280:  lda     #' '
+.proc reset_buffer1
+        ldy     #text_buffer_size
+loop:   lda     #' '
         sta     text_buffer1-1,y
         dey
-        bne     L1280
-        lda     #$30
+        bne     loop
+        lda     #'0'
         sta     text_buffer1 + text_buffer_size
         rts
+.endproc
 
-L128E:  ldy     #text_buffer_size
-L1290:  lda     #' '
+.proc reset_buffer2
+        ldy     #text_buffer_size
+loop:   lda     #' '
         sta     text_buffer2-1,y
         dey
-        bne     L1290
+        bne     loop
         lda     #'0'
         sta     text_buffer2 + text_buffer_size
         rts
+.endproc
 
-L129E:  jsr     L127E
-        jsr     L128E
-L12A4:  ldx     #$07
-        ldy     #$0C
+L129E:  jsr     reset_buffer1
+        jsr     reset_buffer2
+L12A4:  ldx     #<text_buffer1
+        ldy     #>text_buffer1
         jsr     L12C0
         A2D_CALL A2D_DRAW_TEXT, draw_text_params1
         rts
 
-L12B2:  ldx     #$1A
+.proc L12B2
+        ldx     #$1A
         ldy     #$0C
         jsr     L12C0
         A2D_CALL A2D_DRAW_TEXT, draw_text_params2
         rts
+.endproc
 
-L12C0:  stx     L0C40
+.proc L12C0
+        stx     L0C40
         sty     L0C41
         A2D_CALL $18, L0C40
         lda     #$69
@@ -1318,6 +1317,7 @@ L12C0:  stx     L0C40
         A2D_CALL A2D_DRAW_TEXT, spaces_string
         A2D_CALL A2D_SET_TEXT_POS, text_pos_params3
         rts
+.endproc
 
 .proc draw_window
         ;; Frame
@@ -1340,23 +1340,28 @@ L12C0:  stx     L0C40
 loop:   ldy     #0
         lda     (ptr),y
         beq     draw_title_bar  ; done!
-        lda     ptr
+
+        lda     ptr             ; address for shadowed rect params
         sta     c14_addr
         ldy     ptr+1
         sty     c14_addr+1
-        clc
-        adc     #(btn_c::label - btn_c + 1)
+
+        clc                     ; address for label pos
+        adc     #(btn_c::pos - btn_c)
         sta     text_addr
         bcc     :+
         iny
 :       sty     text_addr+1
-        ldy     #$10
+
+        ldy     #(btn_c::label - btn_c) ; label
         lda     (ptr),y
         sta     label
+
         A2D_CALL $14, 0, c14_addr                       ; draw shadowed rect
         A2D_CALL A2D_SET_TEXT_POS, 0, text_addr         ; button label pos
         A2D_CALL A2D_DRAW_TEXT, draw_text_params_label  ; button label text
-        lda     ptr
+
+        lda     ptr             ; advance to next record
         clc
         adc     #.sizeof(btn_c)
         sta     ptr
@@ -1396,25 +1401,28 @@ draw_title_bar:
         A2D_CALL A2D_SET_TEXT_POS, L0C4E
         A2D_CALL A2D_DRAW_TEXT, error_string
         jsr     L11F5
-        lda     #$3D
-        sta     L0BC6
+        lda     #'='
+        sta     calc_op
         ldx     L0BC4
         txs
-L13CB           := * + 2
-        jmp     L0DC9
+        jmp     input_loop
 
-L13CC:  inc     $B8
-        bne     L13D2
+        ;; Following proc is copied to $B0
+.proc copied_to_b0
+loop:   inc     $B8
+        bne     :+
         inc     $B9
-L13D2:  lda     $EA60
+:       lda     $EA60
         cmp     #$3A
-        bcs     L13E3
+        bcs     end
         cmp     #' '
-        beq     L13CC
+        beq     loop
         sec
         sbc     #'0'
         sec
         sbc     #$D0
-L13E3:  rts
+end:    rts
+.endproc
+        end_copied_to_b0 := *
 
 da_end := *
