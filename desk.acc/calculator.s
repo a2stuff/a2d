@@ -708,7 +708,7 @@ L0E95:  lda     #window_id
         lda     tpp1l
         cmp     #col4_left-border_lt
         bcc     miss
-        cmp     #col4_right+border_br
+        cmp     #col4_right+border_br-1         ; is -1 bug in original?
         bcs     miss
         lda     #'+'
         sec
