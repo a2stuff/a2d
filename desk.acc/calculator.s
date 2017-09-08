@@ -76,26 +76,29 @@ call_init:
 
         zp_stash := $20
 
+        ;; Copy the following routine to ZP and call it
         lda     LCBANK1
         lda     LCBANK1
         ldx     #(routine_end - routine)
-L0854:  lda     routine,x
+:       lda     routine,x
         sta     zp_stash,x
         dex
-        bpl     L0854
+        bpl     :-
         jsr     zp_stash
+
         lda     ROMIN2
         lda     #window_id
         jsr     L089E
+
         lda     LCBANK1
         lda     LCBANK1
         bit     L089D
-        bmi     L0878
+        bmi     skip
         jsr     UNKNOWN_CALL
         .byte   $0C
         .addr   0
 
-L0878:  lda     #0
+skip:   lda     #0
         sta     L089D
         lda     ROMIN2
         A2D_CALL $3C, L08D1
@@ -162,7 +165,7 @@ state:  .byte   0
 .endproc
 
 L08D1:  .byte   $00
-        .addr   $0C6E
+        .addr   L0C6E
 
 L08D4:  .byte   $80
 
