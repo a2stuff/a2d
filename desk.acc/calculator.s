@@ -67,16 +67,20 @@ call_init:
         lda     ROMIN2
         jmp     L0D18
 
-L084C:  lda     LCBANK1
+.proc L084C
+
+        zp_stash := $20
+
         lda     LCBANK1
-        ldx     #$10
-L0854:  lda     L088D,x
-        sta     L0020,x
+        lda     LCBANK1
+        ldx     #(routine_end - routine)
+L0854:  lda     routine,x
+        sta     zp_stash,x
         dex
         bpl     L0854
-        jsr     L0020
+        jsr     zp_stash
         lda     ROMIN2
-        lda     #$34
+        lda     #window_id
         jsr     L089E
         lda     LCBANK1
         lda     LCBANK1
@@ -86,33 +90,37 @@ L0854:  lda     L088D,x
         .byte   $0C
         .addr   0
 
-L0878:  lda     #$00
+L0878:  lda     #0
         sta     L089D
         lda     ROMIN2
         A2D_CALL $3C, L08D1
         A2D_CALL A2D_TEXT_BOX1, L0C6E
         rts
 
-L088D:  sta     RAMRDOFF
+.proc routine
+        sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_15
         sta     RAMRDON
         sta     RAMWRTON
         rts
+.endproc
+        routine_end := *
+.endproc
 
 L089D:  .byte   0
 L089E:  sta     L08D1
         lda     L0CBD
         cmp     #$BF
-        bcc     L08AE
+        bcc     :+
         lda     #$80
         sta     L089D
         rts
 
-L08AE:  A2D_CALL $3C, L08D1
+:       A2D_CALL $3C, L08D1     ; After drag, maybe?
         A2D_CALL A2D_TEXT_BOX1, L0C6E
         lda     L08D1
-        cmp     #$34
+        cmp     #window_id
         bne     L08C4
         jmp     draw_window
 
@@ -189,146 +197,103 @@ box:    .word   col1_left,row1_top,col1_right,row1_bot
 .endproc
 
 .proc btn_e
-        .byte   $29,$00
-        .byte   $15,$00
-        .byte   $E1,$0A
-        .byte   $03,$00,$00,$00,$00,$00
-        .byte   $14,$00
-        .byte   $0C,$00,'e',$30
-        .byte   $00
+        .byte   $29,$00,$15,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'e',$30,$00
         .word   row1_bot
 box:    .word   col2_left,row1_top,col2_right,row1_bot
 .endproc
 
 .proc btn_eq
-        .byte   $45,$00,$15,$00,$E1
-        .byte   $0A,$03,$00,$00,$00,$00,$00,$14
-        .byte   $00,$0C,$00,'=',$4C,$00
+        .byte   $45,$00,$15,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'=',$4C,$00
         .word   row1_bot
 box:    .word   col3_left,row1_top,col3_right,row1_bot
 .endproc
 
 .proc btn_mul
-        .byte   $61,$00,$15,$00,$E1,$0A,$03,$00
-        .byte   $00,$00,$00,$00,$14,$00,$0C,$00
-        .byte   '*',$68,$00
+        .byte   $61,$00,$15,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'*',$68,$00
         .word   row1_bot
 box:    .word   col4_left,row1_top,col4_right,row1_bot
 .endproc
 
 .proc btn_7
-        .byte   $0C,$00,$25
-        .byte   $00,$E1,$0A,$03,$00,$00,$00,$00
-        .byte   $00,$14,$00,$0C,$00,'7',$13,$00
+        .byte   $0C,$00,$25,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'7',$13,$00
         .word   row2_bot
 box:    .word   col1_left,row2_top,col1_right,row2_bot
 .endproc
 
 .proc btn_8
-        .word   $29
-        .byte   $25,$00,$E1,$0A
-        .byte   $03,$00,$00,$00,$00,$00,$14,$00
-        .byte   $0C,$00,'8',$30,$00
+        .byte   $29,$00,$25,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'8',$30,$00
         .word   row2_bot
 box:    .word   col2_left,row2_top,col2_right,row2_bot
 .endproc
 
 .proc btn_9
-        .byte   $45
-        .byte   $00,$25,$00,$E1,$0A,$03,$00,$00
-        .byte   $00,$00,$00,$14,$00,$0C,$00,'9'
-        .byte   $4C,$00
+        .byte   $45,$00,$25,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'9',$4C,$00
         .word   row2_bot
 box:    .word   col3_left,row2_top,col3_right,row2_bot
 .endproc
 
 .proc btn_div
-        .byte   $61,$00,$25,$00
-        .byte   $E1,$0A,$03,$00,$00,$00,$00,$00
-        .byte   $14,$00,$0C,$00,'/',$68,$00
+        .byte   $61,$00,$25,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'/',$68,$00
         .word   row2_bot
 box:    .word   col4_left,row2_top,col4_right,row2_bot
 .endproc
 
 .proc btn_4
-        .byte   $0C,$00,$34,$00,$E1,$0A,$03
-        .byte   $00,$00,$00,$00,$00,$14,$00,$0C
-        .byte   $00,'4',$13,$00
+        .byte   $0C,$00,$34,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'4',$13,$00
         .word   row3_bot
 box:    .word   col1_left,row3_top,col1_right,row3_bot
 .endproc
 
 .proc btn_5
-        .byte   $29,$00
-        .byte   $34,$00,$E1,$0A,$03,$00,$00,$00
-        .byte   $00,$00,$14,$00,$0C,$00,'5',$30
-        .byte   $00
+        .byte   $29,$00,$34,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'5',$30,$00
         .word   row3_bot
 box:    .word   col2_left,row3_top,col2_right,row3_bot
 .endproc
 
 .proc btn_6
-        .byte   $45,$00,$34,$00,$E1
-        .byte   $0A,$03,$00,$00,$00,$00,$00,$14
-        .byte   $00,$0C,$00,'6',$4C,$00
+        .byte   $45,$00,$34,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'6',$4C,$00
         .word   row3_bot
 box:    .word   col3_left,row3_top,col3_right,row3_bot
 .endproc
 
 .proc btn_sub
-        .byte   $61,$00,$34,$00,$E1,$0A,$03,$00
-        .byte   $00,$00,$00,$00,$14,$00,$0C,$00
-        .byte   '-',$68,$00
+        .byte   $61,$00,$34,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'-',$68,$00
         .word   row3_bot
 box:    .word   col4_left,row3_top,col4_right,row3_bot
 .endproc
 
 .proc btn_1
-        .byte   $0C,$00,$43
-        .byte   $00,$E1,$0A,$03,$00,$00,$00,$00
-        .byte   $00,$14,$00,$0C,$00,'1',$13,$00
+        .byte   $0C,$00,$43,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'1',$13,$00
         .word   row4_bot
 box:    .word   col1_left,row4_top,col1_right,row4_bot
 .endproc
 
 .proc btn_2
-        .byte   $29,$00,$43,$00,$E1,$0A
-        .byte   $03,$00,$00,$00,$00,$00,$14,$00
-        .byte   $0C,$00,'2',$30,$00
+        .byte   $29,$00,$43,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'2',$30,$00
         .word   row4_bot
 box:    .word   col2_left,row4_top,col2_right,row4_bot
 .endproc
 
 .proc btn_3
-        .byte   $45
-        .byte   $00,$43,$00,$E1,$0A,$03,$00,$00
-        .byte   $00,$00,$00,$14,$00,$0C,$00,'3'
-        .byte   $4C,$00
+        .byte   $45,$00,$43,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'3',$4C,$00
         .word   row4_bot
 box:    .word   col3_left,row4_top,col3_right,row4_bot
 .endproc
 
 .proc btn_0
-        .byte   $0C,$00,$52,$00
-        .byte   $08,$0B,$08,$00,$00,$00,$00,$00
-        .byte   $31,$00,$0C,$00,'0',$13,$00
+        .byte   $0C,$00,$52,$00,$08,$0B,$08,$00,$00,$00,$00,$00,$31,$00,$0C,$00,'0',$13,$00
         .word   row5_bot
 box:    .word   col1_left,row5_top,col2_right,row5_bot
 .endproc
 
 .proc btn_dec
-        .byte   $45,$00,$52,$00,$E1,$0A,$03
-        .byte   $00,$00,$00,$00,$00,$14,$00,$0C
-        .byte   $00,'.',$4E,$00
+        .byte   $45,$00,$52,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'.',$4E,$00
         .word   row5_bot
 box:    .word   col3_left,row5_top,col3_right,row5_bot
 .endproc
 
 .proc btn_add
-        .byte   $61,$00
-        .byte   $43,$00,$70,$0B,$03,$00,$00,$00
-        .byte   $00,$00,$14,$00,$1B,$00,'+',$68
-        .byte   $00
+        .byte   $61,$00,$43,$00,$70,$0B,$03,$00,$00,$00,$00,$00,$14,$00,$1B,$00,'+',$68,$00
         .word   row5_bot
 box:    .word   col4_left,row4_top,col4_right,row5_bot
 .endproc
