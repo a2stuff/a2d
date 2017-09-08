@@ -122,12 +122,18 @@ L08C4:  rts
 state:  .byte   $00
 .endproc
 
-L08C6:  .byte   $00
-L08C7:  .byte   $00,$00,$00
 
-.proc text_pos_params1
-left:   .word   0
-base:   .word   0
+keychar:                        ; this params block is getting reused "creatively"
+keydown := * + 1
+tpp    := * + 4
+tpp1l  := * + 4
+tpp1b  := * + 6
+.proc get_mouse_params
+xcoord: .word   0
+ycoord: .word   0
+elem:   .byte   0
+id:     .byte   0
+        .word   0               ; ???
 .endproc
 
         .byte $00,$00
@@ -551,7 +557,7 @@ L0DC9:  A2D_CALL $2A, button_state_params
         lda     button_state_params::state
         cmp     #$01
         bne     L0DDC
-        jsr     L0DE6
+        jsr     on_click
         jmp     L0DC9
 
 L0DDC:  cmp     #$03
@@ -559,30 +565,33 @@ L0DDC:  cmp     #$03
         jsr     L0E6F
         jmp     L0DC9
 
-L0DE6:  lda     LCBANK1
+on_click:
         lda     LCBANK1
-        A2D_CALL A2D_GET_MOUSE, L08C6
+        lda     LCBANK1
+        A2D_CALL A2D_GET_MOUSE, get_mouse_params
         lda     ROMIN2
-        lda     text_pos_params1::left
-        cmp     #$02
-        bcc     L0E03
-        lda     text_pos_params1::left+1
-        cmp     #window_id
-        beq     L0E04
-L0E03:  rts
+        lda     get_mouse_params::elem
+        cmp     #A2D_ELEM_CLIENT ; Less than CLIENT is MENU or DESKTOP
+        bcc     ignore_click
+        lda     get_mouse_params::id
+        cmp     #window_id      ; This window?
+        beq     :+
 
-L0E04:  lda     text_pos_params1::left
-        cmp     #$02
-        bne     L0E13
-        jsr     L0E95
-        bcc     L0E03
+ignore_click:
+        rts
+
+:       lda     get_mouse_params::elem
+        cmp     #A2D_ELEM_CLIENT ; Client area?
+        bne     :+
+        jsr     L0E95           ; try to translate click into key
+        bcc     ignore_click
         jmp     process_key
 
-L0E13:  cmp     #$05
-        bne     L0E53
+:       cmp     #A2D_ELEM_CLOSE ; Close box?
+        bne     :+
         A2D_CALL A2D_BTN_CLICK, button_click_params
         lda     button_click_params::state
-        beq     L0E03
+        beq     ignore_click
 exit:   lda     LCBANK1
         lda     LCBANK1
         A2D_CALL A2D_DESTROY_WINDOW, destroy_window_params
@@ -591,19 +600,28 @@ exit:   lda     LCBANK1
         .addr   0
         lda     ROMIN2
         A2D_CALL $1A, L08D5
-        ldx     #$09
-L0E3F:  lda     L0E4A,x
-        sta     L0020,x
-        dex
-        bpl     L0E3F
-        jmp     L0020
 
+.proc do_close
+        ;; Copy following routine to ZP and invoke it
+        zp_stash := $20
+
+        ldx     #(routine_end - routine)
+loop:   lda     routine,x
+        sta     zp_stash,x
+        dex
+        bpl     loop
+        jmp     zp_stash
+
+.proc routine
 L0E4A:  sta     RAMRDOFF
         sta     RAMWRTOFF
         jmp     exit_da
+.endproc
+        routine_end := *        ; Can't use .sizeof before the .proc definition
+.endproc
 
-L0E53:  cmp     #$03
-        bne     L0E03
+:       cmp     #A2D_ELEM_TITLE ; Title bar?
+        bne     ignore_click
         lda     #window_id
         sta     button_state_params::state
         lda     LCBANK1
@@ -614,9 +632,9 @@ L0E53:  cmp     #$03
         rts
 
 .proc L0E6F
-        lda     L08C7
+        lda     keydown
         bne     bail
-        lda     L08C6           ; check key
+        lda     keychar         ; check key
         cmp     #$1B            ; Escape?
         bne     trydel
         lda     L0BC5
@@ -638,11 +656,11 @@ L0E94:  rts                     ; used by prev/next proc
 L0E95:  lda     #window_id
         sta     button_state_params::state
         A2D_CALL $46, button_state_params
-        lda     text_pos_params1::left+1 ; must have alternate meaning here
-        ora     text_pos_params1::base+1
+        lda     tpp1l+1 ; must have alternate meaning here
+        ora     tpp1b+1
         bne     L0E94
-        lda     text_pos_params1::base ; click y
-        ldx     text_pos_params1::left ; click x
+        lda     tpp1b ; click y
+        ldx     tpp1l ; click x
 
         border_lt := 1          ; border width pixels (left/top)
         border_br := 2          ; (bottom/right)
@@ -687,7 +705,7 @@ L0E95:  lda     #window_id
 
 :       cmp     #82             ; special case for tall + button
         bcs     :+
-        lda     text_pos_params1::left
+        lda     tpp1l
         cmp     #97
         bcc     miss
         cmp     #116
@@ -703,8 +721,8 @@ L0E95:  lda     #window_id
         lda     row5_lookup,x
         rts
 
-:       lda     text_pos_params1::left ; special case for wide 0 button
-        cmp     #12
+:       lda     tpp1l ; special case for wide 0 button
+        cmp     #col1_left-1
         bcc     miss
         cmp     #'='
         bcs     miss
@@ -1129,7 +1147,7 @@ check_button:
         lda     #window_id
         sta     button_state_params::state
         A2D_CALL $46, button_state_params
-        A2D_CALL A2D_SET_TEXT_POS, text_pos_params1
+        A2D_CALL A2D_SET_TEXT_POS, tpp
         A2D_CALL $13, 0, c13_addr
         bne     :+
         lda     $FC
