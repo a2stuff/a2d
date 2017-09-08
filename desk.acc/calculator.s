@@ -197,116 +197,237 @@ box:    .word   col1_left,row1_top,col1_right,row1_bot
 .endproc
 
 .proc btn_e
-        .byte   $29,$00,$15,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'e',$30,$00
+        .word   col2_left - border_lt
+        .word   row1_top - border_lt
+        .addr   L0AE1
+        .byte   $03,$00,$00,$00,$00,$00
+        .word   button_width + border_lt + border_br
+        .word   button_height + border_lt + border_br
+label:  .byte   'e'
+        .word   col2_left + 6
         .word   row1_bot
 box:    .word   col2_left,row1_top,col2_right,row1_bot
 .endproc
 
 .proc btn_eq
-        .byte   $45,$00,$15,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'=',$4C,$00
+        .word   col3_left - border_lt
+        .word   row1_top - border_lt
+        .addr   L0AE1
+        .byte   $03,$00,$00,$00,$00,$00
+        .word   button_width + border_lt + border_br
+        .word   button_height + border_lt + border_br
+label:  .byte   '='
+        .word   col3_left + 6
         .word   row1_bot
 box:    .word   col3_left,row1_top,col3_right,row1_bot
 .endproc
 
 .proc btn_mul
-        .byte   $61,$00,$15,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'*',$68,$00
+        .word   col4_left - border_lt
+        .word   row1_top - border_lt
+        .addr   L0AE1
+        .byte   $03,$00,$00,$00,$00,$00
+        .word   button_width + border_lt + border_br
+        .word   button_height + border_lt + border_br
+label:  .byte   '*'
+        .word   col4_left + 6
         .word   row1_bot
 box:    .word   col4_left,row1_top,col4_right,row1_bot
 .endproc
 
 .proc btn_7
-        .byte   $0C,$00,$25,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'7',$13,$00
+        .word   col1_left - border_lt
+        .word   row2_top - border_lt
+        .addr   L0AE1
+        .byte   $03,$00,$00,$00,$00,$00
+        .word   button_width + border_lt + border_br
+        .word   button_height + border_lt + border_br
+label:  .byte   '7'
+        .word   col1_left + 6
         .word   row2_bot
 box:    .word   col1_left,row2_top,col1_right,row2_bot
 .endproc
 
 .proc btn_8
-        .byte   $29,$00,$25,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'8',$30,$00
+        .word   col2_left - border_lt
+        .word   row2_top - border_lt
+        .addr   L0AE1
+        .byte   $03,$00,$00,$00,$00,$00
+        .word   button_width + border_lt + border_br
+        .word   button_height + border_lt + border_br
+label:  .byte   '8'
+        .word   col2_left + 6
         .word   row2_bot
 box:    .word   col2_left,row2_top,col2_right,row2_bot
 .endproc
 
 .proc btn_9
-        .byte   $45,$00,$25,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'9',$4C,$00
+        .word   col3_left - border_lt
+        .word   row2_top - border_lt
+        .addr   L0AE1
+        .byte   $03,$00,$00,$00,$00,$00
+        .word   button_width + border_lt + border_br
+        .word   button_height + border_lt + border_br
+label:  .byte   '9'
+        .word   col3_left + 6
         .word   row2_bot
 box:    .word   col3_left,row2_top,col3_right,row2_bot
 .endproc
 
 .proc btn_div
-        .byte   $61,$00,$25,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'/',$68,$00
+        .word   col4_left - border_lt
+        .word   row2_top - border_lt
+        .addr   L0AE1
+        .byte   $03,$00,$00,$00,$00,$00
+        .word   button_width + border_lt + border_br
+        .word   button_height + border_lt + border_br
+label:  .byte   '/'
+        .word   col4_left + 6
         .word   row2_bot
 box:    .word   col4_left,row2_top,col4_right,row2_bot
 .endproc
 
 .proc btn_4
-        .byte   $0C,$00,$34,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'4',$13,$00
+        .word   col1_left - border_lt
+        .word   row3_top - border_lt
+        .addr   L0AE1
+        .byte   $03,$00,$00,$00,$00,$00
+        .word   button_width + border_lt + border_br
+        .word   button_height + border_lt + border_br
+label:  .byte   '4'
+        .word   col1_left + 6
         .word   row3_bot
 box:    .word   col1_left,row3_top,col1_right,row3_bot
 .endproc
 
 .proc btn_5
-        .byte   $29,$00,$34,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'5',$30,$00
+        .word   col2_left - border_lt
+        .word   row3_top - border_lt
+        .addr   L0AE1
+        .byte   $03,$00,$00,$00,$00,$00
+        .word   button_width + border_lt + border_br
+        .word   button_height + border_lt + border_br
+label:  .byte   '5'
+        .word   col2_left + 6
         .word   row3_bot
 box:    .word   col2_left,row3_top,col2_right,row3_bot
 .endproc
 
 .proc btn_6
-        .byte   $45,$00,$34,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'6',$4C,$00
+        .word   col3_left - border_lt
+        .word   row3_top - border_lt
+        .addr   L0AE1
+        .byte   $03,$00,$00,$00,$00,$00
+        .word   button_width + border_lt + border_br
+        .word   button_height + border_lt + border_br
+label:  .byte   '6'
+        .word   col3_left + 6
         .word   row3_bot
 box:    .word   col3_left,row3_top,col3_right,row3_bot
 .endproc
 
 .proc btn_sub
-        .byte   $61,$00,$34,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'-',$68,$00
+        .word   col4_left - border_lt
+        .word   row3_top - border_lt
+        .addr   L0AE1
+        .byte   $03,$00,$00,$00,$00,$00
+        .word   button_width + border_lt + border_br
+        .word   button_height + border_lt + border_br
+label:  .byte   '-'
+        .word   col4_left + 6
         .word   row3_bot
 box:    .word   col4_left,row3_top,col4_right,row3_bot
 .endproc
 
 .proc btn_1
-        .byte   $0C,$00,$43,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'1',$13,$00
+        .word   col1_left - border_lt
+        .word   row4_top - border_lt
+        .addr   L0AE1
+        .byte   $03,$00,$00,$00,$00,$00
+        .word   button_width + border_lt + border_br
+        .word   button_height + border_lt + border_br
+label:  .byte   '1'
+        .word   col1_left + 6
         .word   row4_bot
 box:    .word   col1_left,row4_top,col1_right,row4_bot
 .endproc
 
 .proc btn_2
-        .byte   $29,$00,$43,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'2',$30,$00
+        .word   col2_left - border_lt
+        .word   row4_top - border_lt
+        .addr   L0AE1
+        .byte   $03,$00,$00,$00,$00,$00
+        .word   button_width + border_lt + border_br
+        .word   button_height + border_lt + border_br
+label:  .byte   '2'
+        .word   col2_left + 6
         .word   row4_bot
 box:    .word   col2_left,row4_top,col2_right,row4_bot
 .endproc
 
 .proc btn_3
-        .byte   $45,$00,$43,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'3',$4C,$00
+        .word   col3_left - border_lt
+        .word   row4_top - border_lt
+        .addr   L0AE1
+        .byte   $03,$00,$00,$00,$00,$00
+        .word   button_width + border_lt + border_br
+        .word   button_height + border_lt + border_br
+label:  .byte   '3'
+        .word   col3_left + 6
         .word   row4_bot
 box:    .word   col3_left,row4_top,col3_right,row4_bot
 .endproc
 
 .proc btn_0
-        .byte   $0C,$00,$52,$00,$08,$0B,$08,$00,$00,$00,$00,$00,$31,$00,$0C,$00,'0',$13,$00
+        .word   col1_left - border_lt
+        .word   row5_top - border_lt
+        .addr   L0B08           ; Why different ???
+        .byte   $08,$00,$00,$00,$00,$00 ; ???
+        .word   49                      ; 0 is extra wide
+        .word   button_height + border_lt + border_br
+        .byte   '0'
+        .word   col1_left + 6
         .word   row5_bot
 box:    .word   col1_left,row5_top,col2_right,row5_bot
 .endproc
 
 .proc btn_dec
-        .byte   $45,$00,$52,$00,$E1,$0A,$03,$00,$00,$00,$00,$00,$14,$00,$0C,$00,'.',$4E,$00
+        .word   col3_left - border_lt
+        .word   row5_top - border_lt
+        .addr   L0AE1
+        .byte   $03,$00,$00,$00,$00,$00
+        .word   button_width + border_lt + border_br
+        .word   button_height + border_lt + border_br
+        .byte   '.'
+        .word   col3_left + 6 + 2 ; + 2 to center the label
         .word   row5_bot
 box:    .word   col3_left,row5_top,col3_right,row5_bot
 .endproc
 
 .proc btn_add
-        .byte   $61,$00,$43,$00,$70,$0B,$03,$00,$00,$00,$00,$00,$14,$00,$1B,$00,'+',$68,$00
+        .word   col4_left - border_lt
+        .word   row4_top - border_lt
+        .addr   L0B70
+        .byte   $03,$00,$00,$00,$00,$00
+        .word   button_width + border_lt + border_br
+        .word   27              ; + is extra tall
+        .byte   '+'
+        .word   col4_left + 6
         .word   row5_bot
 box:    .word   col4_left,row4_top,col4_right,row5_bot
 .endproc
         .byte   0               ; sentinel
 
 L0AE1:
-
         .byte   $00,$00,$40,$7E
         .byte   $7F,$1F,$7E,$7F,$1F,$7E,$7F,$1F
         .byte   $7E,$7F,$1F,$7E,$7F,$1F,$7E,$7F
         .byte   $1F,$7E,$7F,$1F,$7E,$7F,$1F,$7E
         .byte   $7F,$1F,$7E,$7F,$1F,$00,$00,$00
-        .byte   $01,$00,$00,$00,$00,$00,$00,$00
+        .byte   $01,$00,$00
+
+L0B08:
+        .byte   $00,$00,$00,$00,$00
         .byte   $00,$00,$7F,$7E,$7F,$7F,$7F,$7F
         .byte   $7F,$3F,$7E,$7E,$7F,$7F,$7F,$7F
         .byte   $7F,$3F,$7E,$7E,$7F,$7F,$7F,$7F
@@ -319,7 +440,9 @@ L0AE1:
         .byte   $7F,$3F,$7E,$7E,$7F,$7F,$7F,$7F
         .byte   $7F,$3F,$7E,$00,$00,$00,$00,$00
         .byte   $00,$00,$7E,$01,$00,$00,$00,$00
-        .byte   $00,$00,$7E,$00,$00,$40,$7E,$7F
+        .byte   $00,$00,$7E
+L0B70:
+        .byte   $00,$00,$40,$7E,$7F
         .byte   $1F,$7E,$7F,$1F,$7E,$7F,$1F,$7E
         .byte   $7F,$1F,$7E,$7F,$1F,$7E,$7F,$1F
         .byte   $7E,$7F,$1F,$7E,$7F,$1F,$7E,$7F
