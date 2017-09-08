@@ -55,6 +55,8 @@ save_stack:  .byte   0
         jmp     XFER
 .endproc
 
+;;; ==================================================
+
 .proc  exit_da
         lda     LCBANK1
         lda     LCBANK1
@@ -62,6 +64,8 @@ save_stack:  .byte   0
         txs
         rts
 .endproc
+
+;;; ==================================================
 
 call_init:
         lda     ROMIN2
@@ -108,6 +112,9 @@ L0878:  lda     #0
         routine_end := *
 .endproc
 
+;;; ==================================================
+
+
 L089D:  .byte   0
 L089E:  sta     L08D1
         lda     L0CBD
@@ -125,6 +132,9 @@ L089E:  sta     L08D1
         jmp     draw_window
 
 L08C4:  rts
+
+;;; ==================================================
+;;; Call Params (and other data)
 
 .proc button_state_params
 state:  .byte   0
@@ -180,6 +190,8 @@ L08D4:  .byte   $80
         row5_top := 83
         row5_bot := row5_top+button_height ; 92
 
+        border_lt := 1          ; border width pixels (left/top)
+        border_br := 2          ; (bottom/right)
 
 L08D5:  .byte   $00
 
@@ -583,6 +595,9 @@ L0CE6:  .byte   $00,$00,$02,$00,$06,$00,$0E,$00
         .byte   $78,$00,$78,$00,$70,$01,$70,$01
         .byte   $01,$01
 
+;;; ==================================================
+;;; DA Init
+
 L0D18:  sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
@@ -649,6 +664,10 @@ loop:   lda     copied_to_b0-1,x
         lda     #'C'
         jsr     process_key
         A2D_CALL $24, L0CE6
+        ;; fall through
+
+;;; ==================================================
+;;; Input Loop
 
 input_loop:
         A2D_CALL $2A, button_state_params
@@ -660,8 +679,11 @@ input_loop:
 
 L0DDC:  cmp     #$03
         bne     input_loop
-        jsr     L0E6F
+        jsr     L0E6F           ; key
         jmp     input_loop
+
+;;; ==================================================
+;;; On Click
 
 on_click:
         lda     LCBANK1
@@ -681,7 +703,7 @@ ignore_click:
 :       lda     get_mouse_params::elem
         cmp     #A2D_ELEM_CLIENT ; Client area?
         bne     :+
-        jsr     L0E95           ; try to translate click into key
+        jsr     map_click_to_button ; try to translate click into key
         bcc     ignore_click
         jmp     process_key
 
@@ -711,7 +733,7 @@ loop:   lda     routine,x
         jmp     zp_stash
 
 .proc routine
-L0E4A:  sta     RAMRDOFF
+        sta     RAMRDOFF
         sta     RAMWRTOFF
         jmp     exit_da
 .endproc
@@ -728,6 +750,9 @@ L0E4A:  sta     RAMRDOFF
         lda     ROMIN2
         jsr     L084C
         rts
+
+;;; ==================================================
+;;; On Key Press
 
 .proc L0E6F
         lda     keydown
@@ -751,7 +776,13 @@ bail:
 .endproc
 L0E94:  rts                     ; used by prev/next proc
 
-L0E95:  lda     #window_id
+;;; ==================================================
+;;; Try to map a click to a button
+
+;;; If a button was clicked, carry is set and accum has key char
+
+.proc map_click_to_button
+        lda     #window_id
         sta     button_state_params::state
         A2D_CALL $46, button_state_params
         lda     clickx+1        ; ensure high bits of coords are 0
@@ -759,9 +790,6 @@ L0E95:  lda     #window_id
         bne     L0E94
         lda     clicky ; click y
         ldx     clickx ; click x
-
-        border_lt := 1          ; border width pixels (left/top)
-        border_br := 2          ; (bottom/right)
 
 .proc find_button_row
         cmp     #row1_top+border_lt - 1 ; row 1 ? (- 1 is bug in original?)
@@ -879,6 +907,14 @@ miss:   clc
 miss:   clc
         rts
 .endproc
+.endproc
+
+;;; ==================================================
+;;; Handle Key
+
+;;; Accumulator is set to key char. Also used by
+;;; click handlers (button is mapped to key char)
+;;; and during initialization (by sending 'C', etc)
 
 .proc process_key
         cmp     #'C'            ; Clear?
@@ -1197,7 +1233,7 @@ post:   ldx     #<farg          ; after the FP operation is done
         jsr     ROUND
         jsr     FOUT
         ldy     #0
-L11CC:  lda     $0100,y         ; stack ?
+L11CC:  lda     FBUFFR,y         ; stack ?
         beq     L11D4
         iny
         bne     L11CC
@@ -1319,6 +1355,9 @@ L12A4:  ldx     #<text_buffer1
         rts
 .endproc
 
+;;; ==================================================
+;;; Draw the window contents (background, buttons)
+
 .proc draw_window
         ;; Frame
         A2D_CALL A2D_HIDE_CURSOR
@@ -1369,6 +1408,9 @@ loop:   ldy     #0
         inc     ptr+1
         jmp     loop
 .endproc
+
+;;; ==================================================
+;;; Draw the title bar - with extra doodad (???)
 
 draw_title_bar:
         ldx     L0CBC

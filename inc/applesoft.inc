@@ -11,3 +11,5 @@ ROUND           := $EB2B
 FLOAT           := $EB93
 FIN             := $EC4A
 FOUT            := $ED34
+
+FBUFFR          := $100
