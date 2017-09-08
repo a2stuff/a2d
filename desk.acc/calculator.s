@@ -100,7 +100,7 @@ L088D:  sta     RAMRDOFF
         sta     RAMWRTON
         rts
 
-L089D:  brk
+L089D:  .byte   0
 L089E:  sta     L08D1
         lda     L0CBD
         cmp     #$BF
@@ -119,15 +119,15 @@ L08AE:  A2D_CALL $3C, L08D1
 L08C4:  rts
 
 .proc button_state_params
-state:  .byte   $00
+state:  .byte   0
 .endproc
-
+        ;;  falls through?
 
 keychar:                        ; this params block is getting reused "creatively"
 keydown := * + 1
-tpp    := * + 4
-tpp1l  := * + 4
-tpp1b  := * + 6
+tpp     := * + 4
+clickx  := * + 4
+clicky  := * + 6
 .proc get_mouse_params
 xcoord: .word   0
 ycoord: .word   0
@@ -139,11 +139,14 @@ id:     .byte   0
         .byte $00,$00
 
 .proc button_click_params
-state:  .byte   $00
+state:  .byte   0
 .endproc
 
-L08D1:  .byte   $00,$6E,$0C
+L08D1:  .byte   $00
+        .addr   $0C6E
+
 L08D4:  .byte   $80
+
         ;; button definitions
 
         button_width := 17
@@ -171,156 +174,158 @@ L08D4:  .byte   $80
 
 
 L08D5:  .byte   $00
-L08D6:  .byte   $0C,$00,$15,$00,$E1,$0A,$03
+
+.proc btn_c
+        .byte   $0C,$00,$15,$00,$E1,$0A,$03
         .byte   $00,$00,$00,$00,$00,$14,$00,$0C
-        .byte   $00,$63,$13,$00
+        .byte   $00
+label:  .byte   'c'
+        .byte   $13,$00
         .word   row1_bot
+box:    .word   col1_left,row1_top,col1_right,row1_bot
+.endproc
 
-btnc_box:
-        .word   col1_left,row1_top,col1_right,row1_bot
-
+.proc btn_e
         .byte   $29,$00
         .byte   $15,$00,$E1,$0A,$03,$00,$00,$00
         .byte   $00,$00,$14,$00,$0C,$00,$65,$30
         .byte   $00
         .word   row1_bot
+box:    .word   col2_left,row1_top,col2_right,row1_bot
+.endproc
 
-btne_box:
-        .word   col2_left,row1_top,col2_right,row1_bot
-
+.proc btn_eq
         .byte   $45,$00,$15,$00,$E1
         .byte   $0A,$03,$00,$00,$00,$00,$00,$14
         .byte   $00,$0C,$00,$3D,$4C,$00
         .word   row1_bot
+box:    .word   col3_left,row1_top,col3_right,row1_bot
+.endproc
 
-btneq_box:
-        .word   col3_left,row1_top,col3_right,row1_bot
-
+.proc btn_mul
         .byte   $61,$00,$15,$00,$E1,$0A,$03,$00
         .byte   $00,$00,$00,$00,$14,$00,$0C,$00
         .byte   $2A,$68,$00
         .word   row1_bot
+box:    .word   col4_left,row1_top,col4_right,row1_bot
+.endproc
 
-btnmul_box:
-        .word   col4_left,row1_top,col4_right,row1_bot
-
+.proc btn_7
         .byte   $0C,$00,$25
         .byte   $00,$E1,$0A,$03,$00,$00,$00,$00
         .byte   $00,$14,$00,$0C,$00,$37,$13,$00
         .word   row2_bot
+box:    .word   col1_left,row2_top,col1_right,row2_bot
+.endproc
 
-btn7_box:
-        .word   col1_left,row2_top,col1_right,row2_bot
-
+.proc btn_8
         .word   $29
         .byte   $25,$00,$E1,$0A
         .byte   $03,$00,$00,$00,$00,$00,$14,$00
         .byte   $0C,$00,$38,$30,$00
         .word   row2_bot
+box:    .word   col2_left,row2_top,col2_right,row2_bot
+.endproc
 
-btn8_box:
-        .word   col2_left,row2_top,col2_right,row2_bot
-
+.proc btn_9
         .byte   $45
         .byte   $00,$25,$00,$E1,$0A,$03,$00,$00
         .byte   $00,$00,$00,$14,$00,$0C,$00,$39
         .byte   $4C,$00
         .word   row2_bot
+box:    .word   col3_left,row2_top,col3_right,row2_bot
+.endproc
 
-btn9_box:
-        .word   col3_left,row2_top,col3_right,row2_bot
-
+.proc btn_div
         .byte   $61,$00,$25,$00
         .byte   $E1,$0A,$03,$00,$00,$00,$00,$00
         .byte   $14,$00,$0C,$00,$2F,$68,$00
         .word   row2_bot
+box:    .word   col4_left,row2_top,col4_right,row2_bot
+.endproc
 
-btndiv_box:
-        .word   col4_left,row2_top,col4_right,row2_bot
-
+.proc btn_4
         .byte   $0C,$00,$34,$00,$E1,$0A,$03
         .byte   $00,$00,$00,$00,$00,$14,$00,$0C
         .byte   $00,$34,$13,$00
         .word   row3_bot
+box:    .word   col1_left,row3_top,col1_right,row3_bot
+.endproc
 
-btn4_box:
-        .word   col1_left,row3_top,col1_right,row3_bot
-
+.proc btn_5
         .byte   $29,$00
         .byte   $34,$00,$E1,$0A,$03,$00,$00,$00
         .byte   $00,$00,$14,$00,$0C,$00,$35,$30
         .byte   $00
         .word   row3_bot
+box:    .word   col2_left,row3_top,col2_right,row3_bot
+.endproc
 
-btn5_box:
-        .word   col2_left,row3_top,col2_right,row3_bot
-
+.proc btn_6
         .byte   $45,$00,$34,$00,$E1
         .byte   $0A,$03,$00,$00,$00,$00,$00,$14
         .byte   $00,$0C,$00,$36,$4C,$00
         .word   row3_bot
+box:    .word   col3_left,row3_top,col3_right,row3_bot
+.endproc
 
-
-btn6_box:
-        .word   col3_left,row3_top,col3_right,row3_bot
-
+.proc btn_sub
         .byte   $61,$00,$34,$00,$E1,$0A,$03,$00
         .byte   $00,$00,$00,$00,$14,$00,$0C,$00
         .byte   $2D,$68,$00
         .word   row3_bot
+box:    .word   col4_left,row3_top,col4_right,row3_bot
+.endproc
 
-btnsub_box:
-        .word   col4_left,row3_top,col4_right,row3_bot
-
+.proc btn_1
         .byte   $0C,$00,$43
         .byte   $00,$E1,$0A,$03,$00,$00,$00,$00
         .byte   $00,$14,$00,$0C,$00,$31,$13,$00
         .word   row4_bot
+box:    .word   col1_left,row4_top,col1_right,row4_bot
+.endproc
 
-btn1_box:
-        .word   col1_left,row4_top,col1_right,row4_bot
-
+.proc btn_2
         .byte   $29,$00,$43,$00,$E1,$0A
         .byte   $03,$00,$00,$00,$00,$00,$14,$00
         .byte   $0C,$00,$32,$30,$00
         .word   row4_bot
+box:    .word   col2_left,row4_top,col2_right,row4_bot
+.endproc
 
-btn2_box:
-        .word   col2_left,row4_top,col2_right,row4_bot
-
+.proc btn_3
         .byte   $45
         .byte   $00,$43,$00,$E1,$0A,$03,$00,$00
         .byte   $00,$00,$00,$14,$00,$0C,$00,$33
         .byte   $4C,$00
         .word   row4_bot
+box:    .word   col3_left,row4_top,col3_right,row4_bot
+.endproc
 
-btn3_box:
-        .word   col3_left,row4_top,col3_right,row4_bot
-
+.proc btn_0
         .byte   $0C,$00,$52,$00
         .byte   $08,$0B,$08,$00,$00,$00,$00,$00
         .byte   $31,$00,$0C,$00,$30,$13,$00
         .word   row5_bot
+box:    .word   col1_left,row5_top,col2_right,row5_bot
+.endproc
 
-btn0_box:
-        .word   col1_left,row5_top,col2_right,row5_bot
-
+.proc btn_dec
         .byte   $45,$00,$52,$00,$E1,$0A,$03
         .byte   $00,$00,$00,$00,$00,$14,$00,$0C
         .byte   $00,$2E,$4E,$00
         .word   row5_bot
+box:    .word   col3_left,row5_top,col3_right,row5_bot
+.endproc
 
-btndec_box:
-        .word   col3_left,row5_top,col3_right,row5_bot
-
+.proc btn_add
         .byte   $61,$00
         .byte   $43,$00,$70,$0B,$03,$00,$00,$00
         .byte   $00,$00,$14,$00,$1B,$00,$2B,$68
         .byte   $00
         .word   row5_bot
-
-btnadd_box:
-        .word   col4_left,row4_top,col4_right,row5_bot
+box:    .word   col4_left,row4_top,col4_right,row5_bot
+.endproc
 
         .byte   $00,$00,$00,$40,$7E
         .byte   $7F,$1F,$7E,$7F,$1F,$7E,$7F,$1F
@@ -451,6 +456,8 @@ L0C4E:  .byte   $45,$00,$10,$00
 
 farg:
         .byte   $00,$00,$00,$00,$00,$00
+
+        ;; Title bar decoration?
 L0C58:  .byte   $73
 L0C59:  .byte   $00
 L0C5A:  .byte   $F7
@@ -462,8 +469,10 @@ L0C6E:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00
+
 L0C93:  .byte   $00,$00,$0D,$00,$00,$20,$80,$00
         .byte   $00,$00,$00,$00,$2F,$02,$B1,$00
+
 L0CA3:  .byte   $00             ; arg for fill mode?
         .byte   $01,$02
 L0CA6:  .byte   $06             ; arg for fill mode?
@@ -656,11 +665,11 @@ L0E94:  rts                     ; used by prev/next proc
 L0E95:  lda     #window_id
         sta     button_state_params::state
         A2D_CALL $46, button_state_params
-        lda     tpp1l+1 ; must have alternate meaning here
-        ora     tpp1b+1
+        lda     clickx+1        ; ensure high bits of coords are 0
+        ora     clicky+1
         bne     L0E94
-        lda     tpp1b ; click y
-        ldx     tpp1l ; click x
+        lda     clicky ; click y
+        ldx     clickx ; click x
 
         border_lt := 1          ; border width pixels (left/top)
         border_br := 2          ; (bottom/right)
@@ -705,7 +714,7 @@ L0E95:  lda     #window_id
 
 :       cmp     #row5_top-border_lt             ; special case for tall + button
         bcs     :+
-        lda     tpp1l
+        lda     clickx
         cmp     #col4_left-border_lt
         bcc     miss
         cmp     #col4_right+border_br-1         ; is -1 bug in original?
@@ -721,7 +730,7 @@ L0E95:  lda     #window_id
         lda     row5_lookup,x
         rts
 
-:       lda     tpp1l ; special case for wide 0 button
+:       lda     clickx ; special case for wide 0 button
         cmp     #col1_left-border_lt
         bcc     miss
         cmp     #col2_right+border_br
@@ -785,8 +794,8 @@ miss:   clc
 .proc process_key
         cmp     #'C'            ; Clear?
         bne     :+
-        ldx     #<btnc_box
-        ldy     #>btnc_box
+        ldx     #<btn_c::box
+        ldy     #>btn_c::box
         lda     #$63
         jsr     depress_button
         lda     #$00
@@ -806,8 +815,8 @@ miss:   clc
 
 :       cmp     #'E'            ; Exponential?
         bne     L0FC7
-        ldx     #<btne_box
-        ldy     #>btne_box
+        ldx     #<btn_e::box
+        ldy     #>btn_e::box
         lda     #$65
         jsr     depress_button
         ldy     L0BC8
@@ -827,21 +836,21 @@ L0FC6:  rts
 L0FC7:  cmp     #'='            ; Equals?
         bne     :+
         pha
-        ldx     #<btneq_box
-        ldy     #>btneq_box
+        ldx     #<btn_eq::box
+        ldy     #>btn_eq::box
         jmp     L114C
 
 :       cmp     #'*'            ; Multiply?
         bne     :+
         pha
-        ldx     #<btnmul_box
-        ldy     #>btnmul_box
+        ldx     #<btn_mul::box
+        ldy     #>btn_mul::box
         jmp     L114C
 
 :       cmp     #'.'            ; Decimal?
         bne     L1003
-        ldx     #<btndec_box
-        ldy     #>btndec_box
+        ldx     #<btn_dec::box
+        ldy     #>btn_dec::box
         jsr     depress_button
         lda     L0BC7
         ora     L0BC8
@@ -858,15 +867,15 @@ L1002:  rts
 L1003:  cmp     #'+'            ; Add?
         bne     :+
         pha
-        ldx     #<btnadd_box
-        ldy     #>btnadd_box
+        ldx     #<btn_add::box
+        ldy     #>btn_add::box
         jmp     L114C
 
 :       cmp     #'-'            ; Subtract?
         bne     trydiv
         pha
-        ldx     #<btnsub_box
-        ldy     #>btnsub_box
+        ldx     #<btn_sub::box
+        ldy     #>btn_sub::box
         lda     L0BC8
         beq     :+
         lda     L0BC9
@@ -884,78 +893,78 @@ L1003:  cmp     #'+'            ; Add?
 trydiv: cmp     #'/'            ; Divide?
         bne     :+
         pha
-        ldx     #<btndiv_box
-        ldy     #>btndiv_box
+        ldx     #<btn_div::box
+        ldy     #>btn_div::box
         jmp     L114C
 
 :       cmp     #'0'            ; Digit 0?
         bne     :+
         pha
-        ldx     #<btn0_box
-        ldy     #>btn0_box
+        ldx     #<btn_0::box
+        ldy     #>btn_0::box
         jmp     L10FF
 
 :       cmp     #'1'            ; Digit 1?
         bne     :+
         pha
-        ldx     #<btn1_box
-        ldy     #>btn1_box
+        ldx     #<btn_1::box
+        ldy     #>btn_1::box
         jmp     L10FF
 
 :       cmp     #'2'            ; Digit 2?
         bne     :+
         pha
-        ldx     #<btn2_box
-        ldy     #>btn2_box
+        ldx     #<btn_2::box
+        ldy     #>btn_2::box
         jmp     L10FF
 
 :       cmp     #'3'            ; Digit 3?
         bne     :+
         pha
-        ldx     #<btn3_box
-        ldy     #>btn3_box
+        ldx     #<btn_3::box
+        ldy     #>btn_3::box
         jmp     L10FF
 
 :       cmp     #'4'            ; Digit 4?
         bne     :+
         pha
-        ldx     #<btn4_box
-        ldy     #>btn4_box
+        ldx     #<btn_4::box
+        ldy     #>btn_4::box
         jmp     L10FF
 
 :       cmp     #'5'            ; Digit 5?
         bne     :+
         pha
-        ldx     #<btn5_box
-        ldy     #>btn5_box
+        ldx     #<btn_5::box
+        ldy     #>btn_5::box
         jmp     L10FF
 
 :       cmp     #'6'            ; Digit 6?
         bne     :+
         pha
-        ldx     #<btn6_box
-        ldy     #>btn6_box
+        ldx     #<btn_6::box
+        ldy     #>btn_6::box
         jmp     L10FF
 
 :       cmp     #'7'            ; Digit 7?
         bne     :+
         pha
-        ldx     #<btn7_box
-        ldy     #>btn7_box
+        ldx     #<btn_7::box
+        ldy     #>btn_7::box
         jmp     L10FF
 
 :       cmp     #'8'            ; Digit 8?
         bne     :+
         pha
-        ldx     #<btn8_box
-        ldy     #>btn8_box
+        ldx     #<btn_8::box
+        ldy     #>btn_8::box
         jmp     L10FF
 
 :       cmp     #'9'            ; Digit 9?
         bne     :+
         pha
-        ldx     #<btn9_box
-        ldy     #>btn9_box
+        ldx     #<btn_9::box
+        ldy     #>btn_9::box
         jmp     L10FF
 
 :       cmp     #$7F            ; Delete?
@@ -1226,54 +1235,56 @@ L12C0:  stx     L0C40
 
         ;; Buttons
         ptr := $FA
-        lda     #<L08D6
+
+        lda     #<btn_c
         sta     ptr
-        lda     #>L08D6
+        lda     #>btn_c
         sta     ptr+1
 loop:   ldy     #0
         lda     (ptr),y
-        beq     L1363           ; done!
+        beq     draw_title_bar  ; done!
         lda     ptr
         sta     c14_addr
         ldy     ptr+1
         sty     c14_addr+1
         clc
-        adc     #$11            ; byte offset
+        adc     #17             ; byte offset
         sta     text_addr
         bcc     :+
         iny
 :       sty     text_addr+1
         ldy     #$10
-        lda     ($FA),y
+        lda     (ptr),y
         sta     label
         A2D_CALL $14, 0, c14_addr                       ; draw shadowed rect
         A2D_CALL A2D_SET_TEXT_POS, 0, text_addr         ; button label pos
         A2D_CALL A2D_DRAW_TEXT, draw_text_params_label  ; button label text
-        lda     $FA
+        lda     ptr
         clc
-        adc     #$1D
-        sta     $FA
+        adc     #.sizeof(btn_c)
+        sta     ptr
         bcc     loop
-        inc     $FB
+        inc     ptr+1
         jmp     loop
 .endproc
 
-L1363:  ldx     L0CBC
+draw_title_bar:
+        ldx     L0CBC
         lda     L0CBB
         clc
         adc     #$73
         sta     L0C58
-        bcc     L1372
+        bcc     :+
         inx
-L1372:  stx     L0C59
+:       stx     L0C59
         ldx     L0CBE
         lda     L0CBD
         sec
         sbc     #$16
         sta     L0C5A
-        bcs     L1384
+        bcs     :+
         dex
-L1384:  stx     L0C5B
+:       stx     L0C5B
         A2D_CALL A2D_TEXT_BOX2, L0C93
         A2D_CALL $14, L0C58     ; Draws decoration in title bar
         lda     #window_id
