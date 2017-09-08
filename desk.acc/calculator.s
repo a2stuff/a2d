@@ -703,12 +703,12 @@ L0E95:  lda     #window_id
         lda     row4_lookup,x
         rts
 
-:       cmp     #82             ; special case for tall + button
+:       cmp     #row5_top-border_lt             ; special case for tall + button
         bcs     :+
         lda     tpp1l
-        cmp     #97
+        cmp     #col4_left-border_lt
         bcc     miss
-        cmp     #116
+        cmp     #col4_right+border_br
         bcs     miss
         lda     #'+'
         sec
@@ -722,9 +722,9 @@ L0E95:  lda     #window_id
         rts
 
 :       lda     tpp1l ; special case for wide 0 button
-        cmp     #col1_left-1
+        cmp     #col1_left-border_lt
         bcc     miss
-        cmp     #'='
+        cmp     #col2_right+border_br
         bcs     miss
         lda     #'0'
         sec
