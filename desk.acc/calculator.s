@@ -170,7 +170,6 @@ client  := * + 5
 clientx := * + 5
 clienty := * + 7
 .endproc
-        ;; for button "in box" test this must be followed by width/height ???
 
 .proc drag_params
 id      := *
@@ -1002,7 +1001,7 @@ miss:   clc
         bne     :+
         ldx     #<btn_c::box
         ldy     #>btn_c::box
-        lda     #$63
+        lda     #'c'
         jsr     depress_button
         lda     #$00
         jsr     FLOAT
@@ -1023,7 +1022,7 @@ miss:   clc
         bne     L0FC7
         ldx     #<btn_e::box
         ldy     #>btn_e::box
-        lda     #$65
+        lda     #'e'
         jsr     depress_button
         ldy     L0BC8
         bne     L0FC6
@@ -1375,9 +1374,9 @@ check_button:
         sta     map_coords_params::id
 
         A2D_CALL A2D_MAP_COORDS, map_coords_params
-        A2D_CALL A2D_SET_TEXT_POS, map_coords_params::client
-        A2D_CALL $13, 0, c13_addr ; probe for "in bounding box?"
-        bne     :inside
+        A2D_CALL A2D_SET_POS, map_coords_params::client
+        A2D_CALL A2D_TEST_BOX, 0, c13_addr
+        bne     inside
 
         lda     button_state    ; outside, not down
         beq     check_button    ; so keep looping
@@ -1455,9 +1454,9 @@ loop:   lda     #' '
         sec
         sbc     measure_text_params::width
         sta     text_pos_params3::left
-        A2D_CALL A2D_SET_TEXT_POS, text_pos_params2 ; clear with spaces
+        A2D_CALL A2D_SET_POS, text_pos_params2 ; clear with spaces
         A2D_CALL A2D_DRAW_TEXT, spaces_string
-        A2D_CALL A2D_SET_TEXT_POS, text_pos_params3 ; set up for display
+        A2D_CALL A2D_SET_POS, text_pos_params3 ; set up for display
         rts
 .endproc
 
@@ -1503,7 +1502,7 @@ loop:   ldy     #0
         sta     label
 
         A2D_CALL $14, 0, c14_addr                       ; draw shadowed rect
-        A2D_CALL A2D_SET_TEXT_POS, 0, text_addr         ; button label pos
+        A2D_CALL A2D_SET_POS, 0, text_addr         ; button label pos
         A2D_CALL A2D_DRAW_TEXT, draw_text_params_label  ; button label text
 
         lda     ptr             ; advance to next record
@@ -1549,7 +1548,7 @@ draw_title_bar:
         ;; and returns to the input loop.
 .proc error_hook
         jsr     reset_buffers_and_display
-        A2D_CALL A2D_SET_TEXT_POS, L0C4E
+        A2D_CALL A2D_SET_POS, L0C4E
         A2D_CALL A2D_DRAW_TEXT, error_string
         jsr     reset_buffer1_and_state
         lda     #'='

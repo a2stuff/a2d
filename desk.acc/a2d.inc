@@ -49,9 +49,9 @@ A2D_SET_PATTERN := $08
 
 A2D_UNK_0C      := $0C          ; Unknown - used in calculator
 
-A2D_SET_TEXT_POS:= $0E
-        ;; .word left
-        ;; .word base
+A2D_SET_POS     := $0E
+        ;; .word x
+        ;; .word y
 
 A2D_FILL_RECT   := $11          ; With selected pattern
         ;; .word left           (includes scroll pos)
@@ -65,6 +65,12 @@ A2D_DRAW_RECT   := $12          ; With selected pattern
         ;; .word right          pixels
         ;; .word bottom
 
+A2D_TEST_BOX    := $13          ; A false if pos (via SET_POS) outside box, true if inside
+        ;; .word left
+        ;; .word top
+        ;; .word right
+        ;; .word bottom
+
 A2D_UNK_14      := $14          ; Unknown - draws push button (calculator)
 
 A2D_MEASURE_TEXT := $18
@@ -72,7 +78,7 @@ A2D_MEASURE_TEXT := $18
         ;; .byte length         ???
         ;; .word width          pixels
 
-A2D_DRAW_TEXT   := $19
+A2D_DRAW_TEXT   := $19          ; Drawn at last SET_POS as left, baseline
         ;; .addr data
         ;; .byte length
 
@@ -87,7 +93,7 @@ A2D_SHOW_CURSOR := $25
 A2D_HIDE_CURSOR := $26
         ;; no parameters (pass $0000 as address)
 
-A2D_GET_INPUT  := $2A
+A2D_GET_INPUT   := $2A
         ;; .byte state     (0=up, 1=press, 2=release, 3=key, 4=held)
         ;; if state is not 3:
         ;;   .byte key       (ASCII code; high bit clear)

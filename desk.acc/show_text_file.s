@@ -1009,7 +1009,7 @@ L0E68:  lda     L096D
         bne     L0E7E
         jsr     L0E1D
         inc     L0948
-L0E7E:  A2D_CALL A2D_SET_TEXT_POS, line_pos
+L0E7E:  A2D_CALL A2D_SET_POS, line_pos
         sec
         lda     #250
         sbc     line_pos::left
@@ -1437,7 +1437,7 @@ base:   .word   10              ; vertical text offset (to baseline)
 
 .proc draw_mode
         A2D_CALL A2D_TEXT_BOX2, mode_box  ; guess: setting up draw location ???
-        A2D_CALL A2D_SET_TEXT_POS, mode_pos
+        A2D_CALL A2D_SET_POS, mode_pos
         lda     fixed_mode_flag
         beq     else            ; is proportional?
         A2D_CALL A2D_DRAW_TEXT, fixed_str
