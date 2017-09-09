@@ -203,7 +203,7 @@ base:   .word   0
 .endproc
 
 
-.proc button_params             ; queried to track mouse-up
+.proc input_params             ; queried to track mouse-up
 state:  .byte   $00
 .endproc
 
@@ -380,8 +380,8 @@ end:    rts
 ;;; Main Input Loop
 
 .proc input_loop
-        A2D_CALL A2D_GET_BUTTON, button_params
-        lda     button_params::state
+        A2D_CALL A2D_GET_INPUT, input_params
+        lda     input_params::state
         cmp     #1              ; was clicked?
         bne     input_loop      ; nope, keep waiting
 

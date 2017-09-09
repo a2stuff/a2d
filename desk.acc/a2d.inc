@@ -86,8 +86,10 @@ A2D_SHOW_CURSOR := $25
 A2D_HIDE_CURSOR := $26
         ;; no parameters (pass $0000 as address)
 
-A2D_GET_BUTTON  := $2A
-        ;; .byte state (0=up, 1=pressed, 2=held???)
+A2D_GET_INPUT  := $2A
+        ;; .byte state     (0=up, 1=press, 2=release, 3=key, 4=held)
+        ;; .byte key       (ASCII code; high bit clear)
+        ;; .byte modifiers (0=none, 1=open-apple, 2=closed-apple, 3=both)
 
 A2D_UNK_2B      := $2B          ; Unknown
         ;; no parameters (pass $0000 as address)
@@ -134,7 +136,7 @@ A2D_DESTROY_WINDOW := $39
 A2D_UNK_3C      := $3C          ; Unknown, used in calculator
 
 A2D_GET_MOUSE   := $40
-        ;; .word x
+        ;; .word x              (relative to screen)
         ;; .word y
         ;; .byte element        (A2D_ELEM_*)
         ;;      0 = desktop
@@ -158,7 +160,12 @@ A2D_DRAG_RESIZE := $45
 
 A2D_UNK_44      := $44          ; Unknown - used in calculator
 
-A2D_UNK_46      := $46          ; Unknown - used in calculator
+A2D_MAP_COORDS := $46           ; Map screen coords to client coords
+        ;; .byte window_id
+        ;; .word screenx
+        ;; .word screeny
+        ;; .word clientx
+        ;; .word clienty
 
 A2D_QUERY_CLIENT:= $48
         ;; .word xcoord of query
@@ -181,6 +188,12 @@ A2D_UPDATE_SCROLL:= $4B
         ;; .byte type (1 = vertical, 2 = horizontal)
         ;; .byte pos (new position 0...250)
 
+;;; Used in A2D_GET_INPUT
+A2D_INPUT_NONE  := 0            ; No mouse or keypress
+A2D_INPUT_DOWN  := 1            ; Mouse button was depressed
+A2D_INPUT_UP    := 2            ; Mouse button was released
+A2D_INPUT_KEY   := 3            ; Key was pressed
+A2D_INPUT_HELD  := 4            ; Mouse button still down
 
 ;;; Used in A2D_GET_MOUSE
 A2D_ELEM_DESKTOP:= 0

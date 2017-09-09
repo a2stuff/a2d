@@ -153,16 +153,24 @@ L08C4:  rts
 ;;; ==================================================
 ;;; Call Params (and other data)
 
-.proc button_state_params
-state:  .byte   0
-.endproc
-        ;;  falls through?
+        ;; The following 3 params blocks overlap for data re-use
 
-keychar:                        ; this params block is getting reused "creatively"
-keydown := * + 1
-tpp     := * + 4
-clickx  := * + 4
-clicky  := * + 6
+.proc map_coords_params
+id      := *
+screen  := * + 1
+screenx := * + 1 ; aligns with get_mouse_params::xcoord
+screeny := * + 3 ; aligns with get_mouse_params::ycoord
+client  := * + 5
+clientx := * + 5
+clienty := * + 7
+.endproc
+
+.proc input_state_params
+state:  .byte   0
+key     := *
+modifiers := * + 1
+.endproc
+
 .proc get_mouse_params
 xcoord: .word   0
 ycoord: .word   0
@@ -632,9 +640,9 @@ L0D18:  sta     ALTZPON
         A2D_CALL A2D_TEXT_BOX1, L0C6E
         A2D_CALL $2B, 0
         lda     #$01
-        sta     button_state_params::state
-        A2D_CALL $2D, button_state_params
-        A2D_CALL A2D_GET_BUTTON, button_state_params
+        sta     input_state_params::state
+        A2D_CALL $2D, input_state_params
+        A2D_CALL A2D_GET_INPUT, input_state_params
         lda     ROMIN2
         jsr     reset_buffer2
         lda     #window_id
@@ -697,16 +705,16 @@ loop:   lda     adjust_txtptr_copied-1,x
 ;;; Input Loop
 
 input_loop:
-        A2D_CALL $2A, button_state_params
-        lda     button_state_params::state
-        cmp     #$01
+        A2D_CALL A2D_GET_INPUT, input_state_params
+        lda     input_state_params::state
+        cmp     #A2D_INPUT_DOWN
         bne     :+
         jsr     on_click
         jmp     input_loop
 
-:       cmp     #$03
+:       cmp     #A2D_INPUT_KEY
         bne     input_loop
-        jsr     L0E6F           ; key
+        jsr     on_key_press
         jmp     input_loop
 
 ;;; ==================================================
@@ -770,10 +778,10 @@ loop:   lda     routine,x
 :       cmp     #A2D_ELEM_TITLE ; Title bar?
         bne     ignore_click
         lda     #window_id
-        sta     button_state_params::state
+        sta     map_coords_params::id
         lda     LCBANK1
         lda     LCBANK1
-        A2D_CALL $44, button_state_params
+        A2D_CALL $44, map_coords_params ; window drag?
         lda     ROMIN2
         jsr     call_4015_main
         rts
@@ -781,10 +789,10 @@ loop:   lda     routine,x
 ;;; ==================================================
 ;;; On Key Press
 
-.proc L0E6F
-        lda     keydown
+.proc on_key_press
+        lda     input_state_params::modifiers
         bne     bail
-        lda     keychar         ; check key
+        lda     input_state_params::key
         cmp     #$1B            ; Escape?
         bne     trydel
         lda     L0BC5
@@ -810,13 +818,13 @@ L0E94:  rts                     ; used by prev/next proc
 
 .proc map_click_to_button
         lda     #window_id
-        sta     button_state_params::state
-        A2D_CALL $46, button_state_params
-        lda     clickx+1        ; ensure high bits of coords are 0
-        ora     clicky+1
+        sta     map_coords_params::id
+        A2D_CALL A2D_MAP_COORDS, map_coords_params
+        lda     map_coords_params::clientx+1        ; ensure high bits of coords are 0
+        ora     map_coords_params::clienty+1
         bne     L0E94
-        lda     clicky ; click y
-        ldx     clickx ; click x
+        lda     map_coords_params::clienty
+        ldx     map_coords_params::clientx
 
 .proc find_button_row
         cmp     #row1_top+border_lt - 1 ; row 1 ? (- 1 is bug in original?)
@@ -858,7 +866,7 @@ L0E94:  rts                     ; used by prev/next proc
 
 :       cmp     #row5_top-border_lt             ; special case for tall + button
         bcs     :+
-        lda     clickx
+        lda     map_coords_params::clientx
         cmp     #col4_left-border_lt
         bcc     miss
         cmp     #col4_right+border_br-1         ; is -1 bug in original?
@@ -874,7 +882,7 @@ L0E94:  rts                     ; used by prev/next proc
         lda     row5_lookup,x
         rts
 
-:       lda     clickx ; special case for wide 0 button
+:       lda     map_coords_params::clientx ; special case for wide 0 button
         cmp     #col1_left-border_lt
         bcc     miss
         cmp     #col2_right+border_br
@@ -1309,14 +1317,14 @@ end:    jsr     display_buffer1
         ror     $FC
 clear:  A2D_CALL A2D_FILL_RECT, 0, invert_addr ; Inverts box
 check_button:
-        A2D_CALL A2D_GET_BUTTON, button_state_params
-        lda     button_state_params::state
-        cmp     #$04            ; Button down?
+        A2D_CALL A2D_GET_INPUT, input_state_params
+        lda     input_state_params::state
+        cmp     #A2D_INPUT_HELD ; Button down?
         bne     done            ; Nope, done immediately
         lda     #window_id
-        sta     button_state_params::state
-        A2D_CALL $46, button_state_params
-        A2D_CALL A2D_SET_TEXT_POS, tpp
+        sta     map_coords_params::id
+        A2D_CALL A2D_MAP_COORDS, map_coords_params
+        A2D_CALL A2D_SET_TEXT_POS, map_coords_params::client
         A2D_CALL $13, 0, c13_addr
         bne     :+
         lda     $FC

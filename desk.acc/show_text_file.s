@@ -245,7 +245,7 @@ track_scroll_delta:
 fixed_mode_flag:
         .byte   $00             ; 0 = proportional, otherwise = fixed
 
-button_state:                   ; queried to track mouse-up
+input_params:                   ; queried to track mouse-up
         .byte   $00
 
 .proc mouse_params              ; queried by main input loop
@@ -510,8 +510,8 @@ loop:   lda     $8802,x
 ;;; Main Input Loop
 
 input_loop:
-        A2D_CALL A2D_GET_BUTTON, button_state
-        lda     button_state
+        A2D_CALL A2D_GET_INPUT, input_params
+        lda     input_params
         cmp     #1              ; was clicked?
         bne     input_loop      ; nope, keep waiting
 
@@ -869,8 +869,8 @@ store:  sta     window_params::hscroll_pos
 
 ;;; Checks button state; z clear if button was released, set otherwise
 .proc was_button_released
-        A2D_CALL A2D_GET_BUTTON, button_state
-        lda     button_state
+        A2D_CALL A2D_GET_INPUT, input_params
+        lda     input_params
         cmp     #2
         rts
 .endproc
