@@ -170,6 +170,7 @@ client  := * + 5
 clientx := * + 5
 clienty := * + 7
 .endproc
+        ;; for button "in box" test this must be followed by width/height ???
 
 .proc drag_params
 id      := *
@@ -713,7 +714,7 @@ loop:   lda     adjust_txtptr_copied-1,x
         lda     #0              ; Turn off errors
         sta     ERRFLG
 
-        lda     #<error_hook
+        lda     #<error_hook    ; set up FP error handler
         sta     COUT_HOOK
         lda     #>error_hook
         sta     COUT_HOOK+1
@@ -734,12 +735,15 @@ loop:   lda     adjust_txtptr_copied-1,x
         ldx     #<farg
         ldy     #>farg
         jsr     ROUND
+
         tsx
         stx     saved_stack
+
         lda     #'='
         jsr     process_key
         lda     #'C'
         jsr     process_key
+
         A2D_CALL $24, L0CE6
         ;; fall through
 
@@ -1078,7 +1082,7 @@ L1003:  cmp     #'+'            ; Add?
         pha
         ldx     #<btn_sub::box
         ldy     #>btn_sub::box
-        lda     L0BC8
+        lda     L0BC8           ; negate vs. subtract
         beq     :+
         lda     L0BC9
         bne     :+
@@ -1347,6 +1351,8 @@ end:    jsr     display_buffer1
 .endproc
 
 .proc depress_button
+        button_state := $FC
+
         stx     invert_addr
         stx     c13_addr
         stx     restore_addr
@@ -1356,8 +1362,10 @@ end:    jsr     display_buffer1
         A2D_CALL A2D_SET_PATTERN, black_pattern
         A2D_CALL $07, L0CA6     ; set mode XOR ?
         sec
-        ror     $FC
-clear:  A2D_CALL A2D_FILL_RECT, 0, invert_addr ; Inverts box
+        ror     button_state
+
+invert:  A2D_CALL A2D_FILL_RECT, 0, invert_addr ; Inverts box
+
 check_button:
         A2D_CALL A2D_GET_INPUT, input_state_params
         lda     input_state_params::state
@@ -1365,26 +1373,31 @@ check_button:
         bne     done            ; Nope, done immediately
         lda     #window_id
         sta     map_coords_params::id
+
         A2D_CALL A2D_MAP_COORDS, map_coords_params
         A2D_CALL A2D_SET_TEXT_POS, map_coords_params::client
-        A2D_CALL $13, 0, c13_addr
-        bne     :+
-        lda     $FC
-        beq     check_button
-        lda     #$00
-        sta     $FC
-        beq     clear
-:       lda     $FC
-        bne     check_button
-        sec
-        ror     $FC
-        jmp     clear
+        A2D_CALL $13, 0, c13_addr ; probe for "in bounding box?"
+        bne     :inside
 
-done:   lda     $FC             ; high bit set if button down
+        lda     button_state    ; outside, not down
+        beq     check_button    ; so keep looping
+
+        lda     #0              ; outside, was down
+        sta     button_state    ; so set up
+        beq     invert          ; and show it
+
+inside: lda     button_state    ; inside, and down
+        bne     check_button    ; so keep looking
+
+        sec                     ; inside, was not down
+        ror     button_state    ; so set down
+        jmp     invert          ; and show it
+
+done:   lda     button_state                    ; high bit set if button down
         beq     :+
         A2D_CALL A2D_FILL_RECT, 0, restore_addr ; Inverts back to normal
 :       A2D_CALL $07, L0CA3                     ; Normal draw mode??
-        lda     $FC
+        lda     button_state
         rts
 .endproc
 
