@@ -76,7 +76,8 @@ A2D_DRAW_TEXT   := $19
         ;; .addr data
         ;; .byte length
 
-A2D_UNK_1A      := $1A          ; Unknown - used in calculator before window creation
+A2D_UNK_1A      := $1A          ; Unknown - used in calculator before window creation,
+                                ; and after destruction
 
 A2D_UNK_24      := $24          ; Unknown - used in calculator
 

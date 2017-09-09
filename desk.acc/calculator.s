@@ -13,6 +13,7 @@ L0020           := $0020
 adjust_txtptr := $B1
 
 ROMIN2          := $C082
+COUT_HOOK       := $36
 
 ;;; ==================================================
 ;;; Start of the code
@@ -139,7 +140,7 @@ L089D:  .byte   0
         ;; Called after window drag is complete
 
 L089E:  sta     L08D1
-        lda     L0CBD
+        lda     create_window_params_top
         cmp     #$BF
         bcc     :+
         lda     #$80
@@ -198,10 +199,15 @@ id:     .byte   0
 state:  .byte   0
 .endproc
 
-L08D1:  .byte   $00
+        ;; param block for a 3C call
+L08D1:  .byte   $00             ; set to window_id
         .addr   L0C6E
 
+        ;; param block for a 1A call
 L08D4:  .byte   $80
+
+        ;; param block for a 1A call
+L08D5:  .byte   $00
 
         ;; button definitions
 
@@ -230,8 +236,6 @@ L08D4:  .byte   $80
 
         border_lt := 1          ; border width pixels (left/top)
         border_br := 2          ; (bottom/right)
-
-L08D5:  .byte   $00
 
 .proc btn_c
         .word   col1_left - border_lt
@@ -488,14 +492,15 @@ L0B70:                          ; pattern for '+' button
         .byte   $1F,$00,$00,$00,$01,$00,$00
 
         ;; Calculation state
-L0BC4:  .byte   $00
-L0BC5:  .byte   $00
+saved_stack:
+        .byte   $00             ; restored after error
+L0BC5:  .byte   $00             ; high bit set if pending op?
 calc_op:.byte   $00
-L0BC7:  .byte   $00
-L0BC8:  .byte   $00
-L0BC9:  .byte   $00
-L0BCA:  .byte   $00
-L0BCB:  .byte   $00
+L0BC7:  .byte   $00             ; '.' if decimal present, 0 otherwise
+L0BC8:  .byte   $00             ; exponential?
+L0BC9:  .byte   $00             ; negative?
+L0BCA:  .byte   $00             ; related to = key
+L0BCB:  .byte   $00             ; input length
 
 .proc background_box_params
 left:   .word   1
@@ -591,6 +596,7 @@ left:   .word   15
 base:   .word   16
 .endproc
 
+        ;; ???
 L0C4E:  .byte   $45,$00,$10,$00
 
 farg:
@@ -616,23 +622,46 @@ L0CA3:  .byte   $00             ; arg for fill mode?
         .byte   $01,$02
 L0CA6:  .byte   $06             ; arg for fill mode?
 
-create_window_params:
-        .byte   window_id       ; id
-        .byte   $02             ; flags
+        window_width := 130
+        window_height := 96
+        default_left := 210
+        default_top := 60
+
+.proc create_window_params
+id:     .byte   window_id
+flags:  .byte   $02
         .addr   title
-        .byte   $00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$82,$00,$60,$00
-        .byte   $82,$00,$60,$00
-L0CBB:  .byte   $D2
-L0CBC:  .byte   $00
-L0CBD:  .byte   $3C
-L0CBE:  .byte   $00,$00,$20,$80,$00,$00,$00,$00
-        .byte   $00,$82,$00,$60,$00,$FF,$FF,$FF
+hscroll:.byte   0
+vscroll:.byte   0
+hs_max: .byte   0
+hs_pos: .byte   0
+vs_max: .byte   0
+vs_pos: .byte   0
+        .byte   0,0             ; ???
+width_a: .word  window_width
+height_a:.word  window_height
+width_b: .word  window_width
+height_b:.word  window_height
+left:   .word   default_left
+top:    .word   default_top
+        .word   $2000           ;???
+        .word   $80
+hoffset:.word   0
+voffset:.word   0
+width:  .word   window_width
+height: .word   window_height
+.endproc
+create_window_params_top := create_window_params::top
+
+        ;; ???
+        .byte   $FF,$FF,$FF
         .byte   $FF,$FF,$FF,$FF,$FF,$FF,$00,$00
         .byte   $00,$00,$00,$01,$01,$00,$7F,$00
         .byte   $88,$00,$00
 
 title:  PASCAL_STRING "Calc"
+
+        ;; param block for $24 call (just before entering input loop)
 L0CE6:  .byte   $00,$00,$02,$00,$06,$00,$0E,$00
         .byte   $1E,$00,$3E,$00,$7E,$00,$1A,$00
         .byte   $30,$00,$30,$00,$60,$00,$00,$00
@@ -684,10 +713,10 @@ loop:   lda     adjust_txtptr_copied-1,x
         lda     #0              ; Turn off errors
         sta     ERRFLG
 
-        lda     #<hook_36
-        sta     $36
-        lda     #>hook_36
-        sta     $36+1
+        lda     #<error_hook
+        sta     COUT_HOOK
+        lda     #>error_hook
+        sta     COUT_HOOK+1
 
         lda     #1
         jsr     FLOAT
@@ -706,7 +735,7 @@ loop:   lda     adjust_txtptr_copied-1,x
         ldy     #>farg
         jsr     ROUND
         tsx
-        stx     L0BC4
+        stx     saved_stack
         lda     #'='
         jsr     process_key
         lda     #'C'
@@ -1477,16 +1506,16 @@ loop:   ldy     #0
 ;;; Draw the title bar - with extra doodad (???)
 
 draw_title_bar:
-        ldx     L0CBC
-        lda     L0CBB
+        ldx     create_window_params::left+1
+        lda     create_window_params::left
         clc
         adc     #$73
         sta     L0C58
         bcc     :+
         inx
 :       stx     L0C59
-        ldx     L0CBE
-        lda     L0CBD
+        ldx     create_window_params::top+1
+        lda     create_window_params::top
         sec
         sbc     #$16
         sta     L0C5A
@@ -1503,14 +1532,16 @@ draw_title_bar:
         jsr     display_buffer2
         rts
 
-.proc hook_36
+        ;; Traps FP error via call to $36 from MON.COUT, resets stack
+        ;; and returns to the input loop.
+.proc error_hook
         jsr     reset_buffers_and_display
         A2D_CALL A2D_SET_TEXT_POS, L0C4E
         A2D_CALL A2D_DRAW_TEXT, error_string
         jsr     reset_buffer1_and_state
         lda     #'='
         sta     calc_op
-        ldx     L0BC4
+        ldx     saved_stack
         txs
         jmp     input_loop
 .endproc
