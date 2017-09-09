@@ -162,7 +162,10 @@ A2D_DRAG_RESIZE := $45
         ;; .word ycoord of mouse
         ;; .byte ??     (likely: moved? 0 = no change, 1 = moved)
 
-A2D_UNK_44      := $44          ; Unknown - used in calculator
+A2D_DRAG_WINDOW := $44
+        ;; .byte window_id
+        ;; .word xcoord         screen coordinates
+        ;; .word ycoord
 
 A2D_MAP_COORDS := $46           ; Map screen coords to client coords
         ;; .byte window_id

@@ -80,6 +80,8 @@ call_init:
         lda     ROMIN2
         jmp     L0D18
 
+        ;; Used after a drag-and-drop is completed;
+        ;; redraws the window.
 .proc call_4015_main
 
         zp_stash := $20
@@ -96,6 +98,7 @@ call_init:
         bpl     :-
         jsr     zp_stash
 
+        ;;  Redraw window after drag
         lda     ROMIN2
         lda     #window_id
         jsr     L089E
@@ -133,6 +136,8 @@ skip:   lda     #0
 
 L089D:  .byte   0
 
+        ;; Called after window drag is complete
+
 L089E:  sta     L08D1
         lda     L0CBD
         cmp     #$BF
@@ -141,7 +146,7 @@ L089E:  sta     L08D1
         sta     L089D
         rts
 
-:       A2D_CALL $3C, L08D1     ; After drag, maybe?
+:       A2D_CALL $3C, L08D1
         A2D_CALL A2D_TEXT_BOX1, L0C6E
         lda     L08D1
         cmp     #window_id
@@ -153,16 +158,22 @@ L08C4:  rts
 ;;; ==================================================
 ;;; Call Params (and other data)
 
-        ;; The following 3 params blocks overlap for data re-use
+        ;; The following params blocks overlap for data re-use
 
 .proc map_coords_params
 id      := *
 screen  := * + 1
-screenx := * + 1 ; aligns with target_params::xcoord
-screeny := * + 3 ; aligns with target_params::ycoord
+screenx := * + 1 ; aligns with input_state::xcoord
+screeny := * + 3 ; aligns with input_state::ycoord
 client  := * + 5
 clientx := * + 5
 clienty := * + 7
+.endproc
+
+.proc drag_params
+id      := *
+xcoord  := * + 1 ; aligns with input_state::xcoord
+ycoord  := * + 3 ; aligns with input_state::ycoord
 .endproc
 
 .proc input_state_params
@@ -780,12 +791,12 @@ loop:   lda     routine,x
 :       cmp     #A2D_ELEM_TITLE ; Title bar?
         bne     ignore_click
         lda     #window_id
-        sta     map_coords_params::id
+        sta     drag_params::id
         lda     LCBANK1
         lda     LCBANK1
-        A2D_CALL $44, map_coords_params ; window drag?
+        A2D_CALL A2D_DRAG_WINDOW, drag_params
         lda     ROMIN2
-        jsr     call_4015_main
+        jsr     call_4015_main  ; redraws window
         rts
 
 ;;; ==================================================
