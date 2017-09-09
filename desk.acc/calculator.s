@@ -158,8 +158,8 @@ L08C4:  rts
 .proc map_coords_params
 id      := *
 screen  := * + 1
-screenx := * + 1 ; aligns with get_mouse_params::xcoord
-screeny := * + 3 ; aligns with get_mouse_params::ycoord
+screenx := * + 1 ; aligns with target_params::xcoord
+screeny := * + 3 ; aligns with target_params::ycoord
 client  := * + 5
 clientx := * + 5
 clienty := * + 7
@@ -167,19 +167,21 @@ clienty := * + 7
 
 .proc input_state_params
 state:  .byte   0
-key     := *
-modifiers := * + 1
+xcoord    := *                  ; if state is 0,1,2,4
+ycoord    := * + 2              ; "
+key       := *                  ; if state is 3
+modifiers := * + 1              ; "
 .endproc
 
-.proc get_mouse_params
-xcoord: .word   0
-ycoord: .word   0
+.proc target_params
+queryx: .word   0               ; aligns with input_state_params::xcoord
+queryy: .word   0               ; aligns with input_state_params::ycoord
 elem:   .byte   0
 id:     .byte   0
-        .word   0               ; ???
 .endproc
 
-        .byte $00,$00
+        .byte 0, 0              ; fills out space for map_coords_params
+        .byte 0, 0              ; ???
 
 .proc button_click_params
 state:  .byte   0
@@ -723,19 +725,19 @@ input_loop:
 on_click:
         lda     LCBANK1
         lda     LCBANK1
-        A2D_CALL A2D_GET_MOUSE, get_mouse_params
+        A2D_CALL A2D_QUERY_TARGET, target_params
         lda     ROMIN2
-        lda     get_mouse_params::elem
+        lda     target_params::elem
         cmp     #A2D_ELEM_CLIENT ; Less than CLIENT is MENU or DESKTOP
         bcc     ignore_click
-        lda     get_mouse_params::id
+        lda     target_params::id
         cmp     #window_id      ; This window?
         beq     :+
 
 ignore_click:
         rts
 
-:       lda     get_mouse_params::elem
+:       lda     target_params::elem
         cmp     #A2D_ELEM_CLIENT ; Client area?
         bne     :+
         jsr     map_click_to_button ; try to translate click into key

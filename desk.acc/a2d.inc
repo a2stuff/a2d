@@ -88,8 +88,12 @@ A2D_HIDE_CURSOR := $26
 
 A2D_GET_INPUT  := $2A
         ;; .byte state     (0=up, 1=press, 2=release, 3=key, 4=held)
-        ;; .byte key       (ASCII code; high bit clear)
-        ;; .byte modifiers (0=none, 1=open-apple, 2=closed-apple, 3=both)
+        ;; if state is not 3:
+        ;;   .byte key       (ASCII code; high bit clear)
+        ;;   .byte modifiers (0=none, 1=open-apple, 2=closed-apple, 3=both)
+        ;; if state is 3:
+        ;;   .word xcoord
+        ;;   .word ycoord
 
 A2D_UNK_2B      := $2B          ; Unknown
         ;; no parameters (pass $0000 as address)
@@ -135,9 +139,9 @@ A2D_DESTROY_WINDOW := $39
 
 A2D_UNK_3C      := $3C          ; Unknown, used in calculator
 
-A2D_GET_MOUSE   := $40
-        ;; .word x              (relative to screen)
-        ;; .word y
+A2D_QUERY_TARGET   := $40
+        ;; .word queryx         (relative to screen)
+        ;; .word queryy
         ;; .byte element        (A2D_ELEM_*)
         ;;      0 = desktop
         ;;      1 = menu

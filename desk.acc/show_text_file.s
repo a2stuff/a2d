@@ -245,12 +245,13 @@ track_scroll_delta:
 fixed_mode_flag:
         .byte   $00             ; 0 = proportional, otherwise = fixed
 
-input_params:                   ; queried to track mouse-up
-        .byte   $00
-
-.proc mouse_params              ; queried by main input loop
+.proc input_params
+state:  .byte   0
+coords:                         ; spills into target query
 xcoord: .word   0
 ycoord: .word   0
+.endproc
+.proc target_params
 elem:   .byte   0
 win:    .byte   0
 .endproc
@@ -515,24 +516,24 @@ input_loop:
         cmp     #1              ; was clicked?
         bne     input_loop      ; nope, keep waiting
 
-        A2D_CALL A2D_GET_MOUSE, mouse_params
-        lda     mouse_params::win ; in our window?
+        A2D_CALL A2D_QUERY_TARGET, input_params::coords
+        lda     target_params::win ; in our window?
         cmp     #window_id
         bne     input_loop
 
         ;; which part of the window?
-        lda     mouse_params::elem
+        lda     target_params::elem
         cmp     #A2D_ELEM_CLOSE
         beq     on_close_click
 
         ;; title and resize clicks need mouse location
-        ldx     mouse_params::xcoord
+        ldx     input_params::xcoord
         stx     resize_drag_params::xcoord
         stx     query_client_params::xcoord
-        ldx     mouse_params::xcoord+1
+        ldx     input_params::xcoord+1
         stx     resize_drag_params::xcoord+1
         stx     query_client_params::xcoord+1
-        ldx     mouse_params::ycoord
+        ldx     input_params::ycoord
         stx     resize_drag_params::ycoord
         stx     query_client_params::ycoord
 
@@ -857,11 +858,11 @@ store:  sta     window_params::hscroll_pos
 
         ;; Used at start of thumb drag
 .proc do_thumb_drag
-        lda     mouse_params::xcoord
+        lda     input_params::xcoord
         sta     thumb_drag_params::xcoord
-        lda     mouse_params::xcoord+1
+        lda     input_params::xcoord+1
         sta     thumb_drag_params::xcoord+1
-        lda     mouse_params::ycoord
+        lda     input_params::ycoord
         sta     thumb_drag_params::ycoord
         A2D_CALL A2D_DRAG_SCROLL, thumb_drag_params
         rts
@@ -1365,10 +1366,10 @@ end:    rts
 ;;; Title Bar (Proportional/Fixed mode button)
 
 .proc on_title_bar_click
-        lda     mouse_params::xcoord+1           ; mouse x high byte?
+        lda     input_params::xcoord+1           ; mouse x high byte?
         cmp     mode_box_left+1
         bne     :+
-        lda     mouse_params::xcoord
+        lda     input_params::xcoord
         cmp     mode_box_left
 :       bcc     ignore
 
