@@ -14,10 +14,16 @@ adjust_txtptr := $B1
 
 ROMIN2          := $C082
 
+;;; ==================================================
+;;; Start of the code
 
 start:  jmp     copy2aux
 
 save_stack:  .byte   0
+
+;;; ==================================================
+;;; Duplicate the DA (code and data) to AUX memory,
+;;; then invoke the code in AUX.
 
 .proc copy2aux
         tsx
@@ -27,6 +33,7 @@ save_stack:  .byte   0
         end     := da_end
         dest    := start
 
+        ;; Copy the DA to AUX memory.
         lda     ROMIN2
         lda     #<start
         sta     STARTLO
@@ -43,6 +50,7 @@ save_stack:  .byte   0
         sec                     ; main>aux
         jsr     AUXMOVE
 
+        ;; Invoke it.
         lda     #<start
         sta     XFERSTARTLO
         lda     #>start
@@ -72,11 +80,13 @@ call_init:
         lda     ROMIN2
         jmp     L0D18
 
-.proc L084C
+.proc call_4015_main
 
         zp_stash := $20
 
-        ;; Copy the following routine to ZP and call it
+        ;; Call jump table entry $4015 in main memory, by
+        ;; copying a trampoline routine to the ZP.
+
         lda     LCBANK1
         lda     LCBANK1
         ldx     #(routine_end - routine)
@@ -90,6 +100,7 @@ call_init:
         lda     #window_id
         jsr     L089E
 
+        ;; ???
         lda     LCBANK1
         lda     LCBANK1
         bit     L089D
@@ -98,6 +109,7 @@ call_init:
         .byte   $0C
         .addr   0
 
+        ;; ???
 skip:   lda     #0
         sta     L089D
         lda     ROMIN2
@@ -120,6 +132,7 @@ skip:   lda     #0
 
 
 L089D:  .byte   0
+
 L089E:  sta     L08D1
         lda     L0CBD
         cmp     #$BF
@@ -687,11 +700,11 @@ input_loop:
         A2D_CALL $2A, button_state_params
         lda     button_state_params::state
         cmp     #$01
-        bne     L0DDC
+        bne     :+
         jsr     on_click
         jmp     input_loop
 
-L0DDC:  cmp     #$03
+:       cmp     #$03
         bne     input_loop
         jsr     L0E6F           ; key
         jmp     input_loop
@@ -762,7 +775,7 @@ loop:   lda     routine,x
         lda     LCBANK1
         A2D_CALL $44, button_state_params
         lda     ROMIN2
-        jsr     L084C
+        jsr     call_4015_main
         rts
 
 ;;; ==================================================
