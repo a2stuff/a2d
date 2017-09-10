@@ -714,10 +714,15 @@ height: .word   0               ; QUERY_SCREEN call sets to screen_height-1
         .word   screen_height - menu_bar_height - 2
 .endproc
 
-L0CA3:  .byte   $00             ; arg for "normal" fill mode?
+.proc fill_mode_normal
+mode:   .byte   A2D_SFM_NORMAL
+.endproc
+
         .byte   $01,$02         ; ??
 
-L0CA6:  .byte   $06             ; arg for "xor" fill mode?
+.proc fill_mode_xor
+mode:   .byte   A2D_SFM_XOR
+.endproc
 
         window_width := 130
         window_height := 96
@@ -780,7 +785,7 @@ L0D18:  sta     ALTZPON
         A2D_CALL A2D_CREATE_WINDOW, create_window_params
         A2D_CALL A2D_QUERY_SCREEN, box_params
         A2D_CALL A2D_SET_BOX1, box_params     ; set clipping bounds?
-        A2D_CALL $2B
+        A2D_CALL $2B                          ; reset drawing state?
         lda     #$01
         sta     input_state_params::state
         A2D_CALL $2D, input_state_params
@@ -899,7 +904,7 @@ exit:   lda     LCBANK1
         .byte   $0C
         .addr   0
         lda     ROMIN2
-        A2D_CALL $1A, L08D5
+        A2D_CALL $1A, L08D5     ; ??? one byte input value?
 
 .proc do_close
         ;; Copy following routine to ZP and invoke it
@@ -1459,7 +1464,7 @@ end:    jsr     display_buffer1
         sty     c13_addr+1
         sty     restore_addr+1
         A2D_CALL A2D_SET_PATTERN, black_pattern
-        A2D_CALL $07, L0CA6     ; set mode XOR ?
+        A2D_CALL A2D_SET_FILL_MODE, fill_mode_xor
         sec
         ror     button_state
 
@@ -1495,7 +1500,7 @@ inside: lda     button_state    ; inside, and down
 done:   lda     button_state                    ; high bit set if button down
         beq     :+
         A2D_CALL A2D_FILL_RECT, 0, restore_addr ; Inverts back to normal
-:       A2D_CALL $07, L0CA3                     ; Normal draw mode??
+:       A2D_CALL A2D_SET_FILL_MODE, fill_mode_normal ; Normal draw mode??
         lda     button_state
         rts
 .endproc

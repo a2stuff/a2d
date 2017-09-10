@@ -63,7 +63,8 @@ A2D_SET_BOX2   := $06           ; set vs. intersect? (not quite)
         ;; .word width          pixels
         ;; .word height
 
-A2D_UNK_07      := $07          ; Unknown - used in calculator; set fill mode?
+A2D_SET_FILL_MODE := $07
+        ;; .byte mode           0 = normal, 6 = xor     (<4, >=4)
 
 A2D_SET_PATTERN := $08
         ;; .byte r0...r7        8x8 pixel pattern for A2D_CLEAR_BOX calls
@@ -267,6 +268,10 @@ A2D_SCROLL_PART_BEFORE  := 3
 A2D_SCROLL_PART_BELOW   := 4
 A2D_SCROLL_PART_AFTER   := 4
 A2D_SCROLL_PART_THUMB   := 5
+
+;;; Used in A2D_SET_FILL_MODE
+A2D_SFM_NORMAL          := 0
+A2D_SFM_XOR             := 6
 
 ;;; Used in A2D_CREATE_WINDOW
 A2D_CWF_NOTITLE  := 1 << 0
