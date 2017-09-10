@@ -237,11 +237,14 @@ L08D5:  .byte   $00
         border_lt := 1          ; border width pixels (left/top)
         border_br := 2          ; (bottom/right)
 
+        pattern_width   := 3    ; bytes
+
 .proc btn_c
         .word   col1_left - border_lt
         .word   row1_top - border_lt
-        .addr   L0AE1
-        .byte   $03,$00,$00,$00,$00,$00
+        .addr   button_pattern
+        .byte   pattern_width
+        .byte   $00,$00,$00,$00,$00 ; ???
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   'c'
@@ -252,8 +255,9 @@ box:    .word   col1_left,row1_top,col1_right,row1_bot
 .proc btn_e
         .word   col2_left - border_lt
         .word   row1_top - border_lt
-        .addr   L0AE1
-        .byte   $03,$00,$00,$00,$00,$00
+        .addr   button_pattern
+        .byte   pattern_width
+        .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   'e'
@@ -264,8 +268,9 @@ box:    .word   col2_left,row1_top,col2_right,row1_bot
 .proc btn_eq
         .word   col3_left - border_lt
         .word   row1_top - border_lt
-        .addr   L0AE1
-        .byte   $03,$00,$00,$00,$00,$00
+        .addr   button_pattern
+        .byte   pattern_width
+        .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   '='
@@ -276,8 +281,9 @@ box:    .word   col3_left,row1_top,col3_right,row1_bot
 .proc btn_mul
         .word   col4_left - border_lt
         .word   row1_top - border_lt
-        .addr   L0AE1
-        .byte   $03,$00,$00,$00,$00,$00
+        .addr   button_pattern
+        .byte   pattern_width
+        .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   '*'
@@ -288,8 +294,9 @@ box:    .word   col4_left,row1_top,col4_right,row1_bot
 .proc btn_7
         .word   col1_left - border_lt
         .word   row2_top - border_lt
-        .addr   L0AE1
-        .byte   $03,$00,$00,$00,$00,$00
+        .addr   button_pattern
+        .byte   pattern_width
+        .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   '7'
@@ -300,8 +307,9 @@ box:    .word   col1_left,row2_top,col1_right,row2_bot
 .proc btn_8
         .word   col2_left - border_lt
         .word   row2_top - border_lt
-        .addr   L0AE1
-        .byte   $03,$00,$00,$00,$00,$00
+        .addr   button_pattern
+        .byte   pattern_width
+        .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   '8'
@@ -312,8 +320,9 @@ box:    .word   col2_left,row2_top,col2_right,row2_bot
 .proc btn_9
         .word   col3_left - border_lt
         .word   row2_top - border_lt
-        .addr   L0AE1
-        .byte   $03,$00,$00,$00,$00,$00
+        .addr   button_pattern
+        .byte   pattern_width
+        .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   '9'
@@ -324,8 +333,9 @@ box:    .word   col3_left,row2_top,col3_right,row2_bot
 .proc btn_div
         .word   col4_left - border_lt
         .word   row2_top - border_lt
-        .addr   L0AE1
-        .byte   $03,$00,$00,$00,$00,$00
+        .addr   button_pattern
+        .byte   pattern_width
+        .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   '/'
@@ -336,8 +346,9 @@ box:    .word   col4_left,row2_top,col4_right,row2_bot
 .proc btn_4
         .word   col1_left - border_lt
         .word   row3_top - border_lt
-        .addr   L0AE1
-        .byte   $03,$00,$00,$00,$00,$00
+        .addr   button_pattern
+        .byte   pattern_width
+        .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   '4'
@@ -348,8 +359,9 @@ box:    .word   col1_left,row3_top,col1_right,row3_bot
 .proc btn_5
         .word   col2_left - border_lt
         .word   row3_top - border_lt
-        .addr   L0AE1
-        .byte   $03,$00,$00,$00,$00,$00
+        .addr   button_pattern
+        .byte   pattern_width
+        .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   '5'
@@ -360,8 +372,9 @@ box:    .word   col2_left,row3_top,col2_right,row3_bot
 .proc btn_6
         .word   col3_left - border_lt
         .word   row3_top - border_lt
-        .addr   L0AE1
-        .byte   $03,$00,$00,$00,$00,$00
+        .addr   button_pattern
+        .byte   pattern_width
+        .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   '6'
@@ -372,8 +385,9 @@ box:    .word   col3_left,row3_top,col3_right,row3_bot
 .proc btn_sub
         .word   col4_left - border_lt
         .word   row3_top - border_lt
-        .addr   L0AE1
-        .byte   $03,$00,$00,$00,$00,$00
+        .addr   button_pattern
+        .byte   pattern_width
+        .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   '-'
@@ -384,8 +398,9 @@ box:    .word   col4_left,row3_top,col4_right,row3_bot
 .proc btn_1
         .word   col1_left - border_lt
         .word   row4_top - border_lt
-        .addr   L0AE1
-        .byte   $03,$00,$00,$00,$00,$00
+        .addr   button_pattern
+        .byte   pattern_width
+        .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   '1'
@@ -396,8 +411,9 @@ box:    .word   col1_left,row4_top,col1_right,row4_bot
 .proc btn_2
         .word   col2_left - border_lt
         .word   row4_top - border_lt
-        .addr   L0AE1
-        .byte   $03,$00,$00,$00,$00,$00
+        .addr   button_pattern
+        .byte   pattern_width
+        .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   '2'
@@ -408,8 +424,9 @@ box:    .word   col2_left,row4_top,col2_right,row4_bot
 .proc btn_3
         .word   col3_left - border_lt
         .word   row4_top - border_lt
-        .addr   L0AE1
-        .byte   $03,$00,$00,$00,$00,$00
+        .addr   button_pattern
+        .byte   pattern_width
+        .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
 label:  .byte   '3'
@@ -420,8 +437,9 @@ box:    .word   col3_left,row4_top,col3_right,row4_bot
 .proc btn_0
         .word   col1_left - border_lt
         .word   row5_top - border_lt
-        .addr   L0B08           ; Why different ???
-        .byte   $08,$00,$00,$00,$00,$00 ; ???
+        .addr   wide_button_pattern
+        .byte   8                   ; pattern_width (bytes)
+        .byte   $00,$00,$00,$00,$00
         .word   49                      ; 0 is extra wide
         .word   button_height + border_lt + border_br
         .byte   '0'
@@ -432,8 +450,9 @@ box:    .word   col1_left,row5_top,col2_right,row5_bot
 .proc btn_dec
         .word   col3_left - border_lt
         .word   row5_top - border_lt
-        .addr   L0AE1
-        .byte   $03,$00,$00,$00,$00,$00
+        .addr   button_pattern
+        .byte   pattern_width
+        .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
         .byte   '.'
@@ -444,8 +463,8 @@ box:    .word   col3_left,row5_top,col3_right,row5_bot
 .proc btn_add
         .word   col4_left - border_lt
         .word   row4_top - border_lt
-        .addr   L0B70
-        .byte   $03,$00,$00,$00,$00,$00
+        .addr   tall_button_pattern
+        .byte   pattern_width,$00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   27              ; + is extra tall
         .byte   '+'
@@ -454,53 +473,80 @@ box:    .word   col4_left,row4_top,col4_right,row5_bot
 .endproc
         .byte   0               ; sentinel
 
-L0AE1:                          ; pattern for normal buttons
-        .byte   $00,$00,$40,$7E
-        .byte   $7F,$1F,$7E,$7F,$1F,$7E,$7F,$1F
-        .byte   $7E,$7F,$1F,$7E,$7F,$1F,$7E,$7F
-        .byte   $1F,$7E,$7F,$1F,$7E,$7F,$1F,$7E
-        .byte   $7F,$1F,$7E,$7F,$1F,$00,$00,$00
-        .byte   $01,$00,$00
+        ;; patterns are low 7 bits, 0=black 1=white
 
-L0B08:                          ; pattern for '0' button
-        .byte   $00,$00,$00,$00,$00
-        .byte   $00,$00,$7F,$7E,$7F,$7F,$7F,$7F
-        .byte   $7F,$3F,$7E,$7E,$7F,$7F,$7F,$7F
-        .byte   $7F,$3F,$7E,$7E,$7F,$7F,$7F,$7F
-        .byte   $7F,$3F,$7E,$7E,$7F,$7F,$7F,$7F
-        .byte   $7F,$3F,$7E,$7E,$7F,$7F,$7F,$7F
-        .byte   $7F,$3F,$7E,$7E,$7F,$7F,$7F,$7F
-        .byte   $7F,$3F,$7E,$7E,$7F,$7F,$7F,$7F
-        .byte   $7F,$3F,$7E,$7E,$7F,$7F,$7F,$7F
-        .byte   $7F,$3F,$7E,$7E,$7F,$7F,$7F,$7F
-        .byte   $7F,$3F,$7E,$7E,$7F,$7F,$7F,$7F
-        .byte   $7F,$3F,$7E,$00,$00,$00,$00,$00
-        .byte   $00,$00,$7E,$01,$00,$00,$00,$00
-        .byte   $00,$00,$7E
+button_pattern:                 ; pattern for normal buttons
+        .byte   px(%0000000),px(%0000000),px(%0000001)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0000000),px(%0000000),px(%0000000)
+        .byte   px(%1000000),px(%0000000),px(%0000000)
 
-L0B70:                          ; pattern for '+' button
-        .byte   $00,$00,$40,$7E,$7F
-        .byte   $1F,$7E,$7F,$1F,$7E,$7F,$1F,$7E
-        .byte   $7F,$1F,$7E,$7F,$1F,$7E,$7F,$1F
-        .byte   $7E,$7F,$1F,$7E,$7F,$1F,$7E,$7F
-        .byte   $1F,$7E,$7F,$1F,$7E,$7F,$1F,$7E
-        .byte   $7F,$1F,$7E,$7F,$1F,$7E,$7F,$1F
-        .byte   $7E,$7F,$1F,$7E,$7F,$1F,$7E,$7F
-        .byte   $1F,$7E,$7F,$1F,$7E,$7F,$1F,$7E
-        .byte   $7F,$1F,$7E,$7F,$1F,$7E,$7F,$1F
-        .byte   $7E,$7F,$1F,$7E,$7F,$1F,$7E,$7F
-        .byte   $1F,$00,$00,$00,$01,$00,$00
+
+wide_button_pattern:            ; pattern for '0' button
+        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%1111111)
+        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111110),px(%0111111)
+        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111110),px(%0111111)
+        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111110),px(%0111111)
+        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111110),px(%0111111)
+        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111110),px(%0111111)
+        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111110),px(%0111111)
+        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111110),px(%0111111)
+        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111110),px(%0111111)
+        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111110),px(%0111111)
+        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111110),px(%0111111)
+        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0111111)
+        .byte   px(%1000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0111111)
+
+tall_button_pattern:            ; pattern for '+' button
+        .byte   px(%0000000),px(%0000000),px(%0000001)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0000000),px(%0000000),px(%0000000)
+        .byte   px(%1000000),px(%0000000),px(%0000000)
+
 
         ;; Calculation state
 saved_stack:
         .byte   $00             ; restored after error
 L0BC5:  .byte   $00             ; high bit set if pending op?
 calc_op:.byte   $00
-L0BC7:  .byte   $00             ; '.' if decimal present, 0 otherwise
-L0BC8:  .byte   $00             ; exponential?
-L0BC9:  .byte   $00             ; negative?
+calc_d: .byte   $00             ; '.' if decimal present, 0 otherwise
+calc_e: .byte   $00             ; exponential?
+calc_n: .byte   $00             ; negative?
 L0BCA:  .byte   $00             ; related to = key
-L0BCB:  .byte   $00             ; input length
+calc_l: .byte   $00             ; input length
 
 .proc background_box_params
 left:   .word   1
@@ -602,25 +648,50 @@ L0C4E:  .byte   $45,$00,$10,$00
 farg:
         .byte   $00,$00,$00,$00,$00,$00
 
-        ;; Title bar decoration?
-L0C58:  .byte   $73
-L0C59:  .byte   $00
-L0C5A:  .byte   $F7
-L0C5B:  .byte   $FF,$68,$0C,$01,$00,$00,$00,$00
-        .byte   $00,$06,$00,$05,$00,$41,$35,$47
-        .byte   $37,$36,$49
-L0C6E:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00
+.proc title_bar_decoration      ; Params for A2D_DRAW_PATTERN
+left:   .word   115             ; overwritten
+top:    .word   $FFF7           ; overwritten
+pattern:.addr   pixels
+stride: .byte   1
+        .byte   0,0,0,0,0       ; ???
+width:  .word   6
+height: .word   5
+        ;;  (not part of struct, but not referenced outside)
+pixels: .byte   px(%1000001)
+        .byte   px(%1010110)
+        .byte   px(%1110001)
+        .byte   px(%1110110)
+        .byte   px(%0110110)
+        .byte   px(%1001001)
+.endproc
+
+        ;; param block for a $03 and TEXT_BOX1 calls, and ref'd in $3C call
+.proc L0C6E
+left:   .word   0
+top:    .word   0
+        .word   0               ; ??? $03 call sets to $2000 (hires)
+        .word   0               ; ??? $03 call sets to $80
+hoffset:.word   0
+voffset:.word   0
+width:  .word   0               ; $03 call sets to 559
+height: .word   0               ; $03 call sets to 191
+
+        ;; unknown from here
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00,$00 ; filled with $FF by $03 call
+        .byte   $00,$00,$00,$00             ; left $00 by $03
+        .word   0                           ; $03 call sets to $100
+        .word   0                           ; $03 call sets to $1
+        .word   0                           ; $03 call sets to $7F (127)
+        .word   0                           ; $03 call sets to $88 (136)
+.endproc
 
 L0C93:  .byte   $00,$00,$0D,$00,$00,$20,$80,$00
         .byte   $00,$00,$00,$00,$2F,$02,$B1,$00
 
-L0CA3:  .byte   $00             ; arg for fill mode?
-        .byte   $01,$02
-L0CA6:  .byte   $06             ; arg for fill mode?
+L0CA3:  .byte   $00             ; arg for "normal" fill mode?
+        .byte   $01,$02         ; ??
+
+L0CA6:  .byte   $06             ; arg for "xor" fill mode?
 
         window_width := 130
         window_height := 96
@@ -644,7 +715,7 @@ width_b: .word  window_width
 height_b:.word  window_height
 left:   .word   default_left
 top:    .word   default_top
-        .word   $2000           ;???
+        .word   $2000           ;hires?
         .word   $80
 hoffset:.word   0
 voffset:.word   0
@@ -654,10 +725,13 @@ height: .word   window_height
 create_window_params_top := create_window_params::top
 
         ;; ???
-        .byte   $FF,$FF,$FF
-        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$00,$00
+        ;; Same as latter part of L0C6E block after $03 call fills it in
+        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+        .byte   $00,$00
         .byte   $00,$00,$00,$01,$01,$00,$7F,$00
-        .byte   $88,$00,$00
+        .byte   $88,$00
+
+        .byte   $00
 
 title:  PASCAL_STRING "Calc"
 
@@ -678,8 +752,8 @@ L0D18:  sta     ALTZPON
         lda     LCBANK1
         A2D_CALL $1A, L08D4
         A2D_CALL A2D_CREATE_WINDOW, create_window_params
-        A2D_CALL $03, L0C6E
-        A2D_CALL A2D_TEXT_BOX1, L0C6E
+        A2D_CALL $03, L0C6E             ; get display state?
+        A2D_CALL A2D_TEXT_BOX1, L0C6E   ; set clipping bounds?
         A2D_CALL $2B, 0
         lda     #$01
         sta     input_state_params::state
@@ -696,11 +770,11 @@ L0D18:  sta     ALTZPON
 
         lda     #0              ; clear registers
         sta     L0BC5
-        sta     L0BC7
-        sta     L0BC8
-        sta     L0BC9
+        sta     calc_d
+        sta     calc_e
+        sta     calc_n
         sta     L0BCA
-        sta     L0BCB
+        sta     calc_l
 
 .proc copy_to_b1
         ldx     #(end_adjust_txtptr_copied - adjust_txtptr_copied + 4) ; should be just + 1 ?
@@ -842,7 +916,7 @@ loop:   lda     routine,x
         bne     trydel
         lda     L0BC5
         bne     clear           ; empty state?
-        lda     L0BCB
+        lda     calc_l
         beq     exit            ; if so, exit DA
 clear:  lda     #'C'            ; otherwise turn Escape into Clear
 
@@ -1012,10 +1086,10 @@ miss:   clc
         sta     calc_op
         lda     #0
         sta     L0BC5
-        sta     L0BCB
-        sta     L0BC7
-        sta     L0BC8
-        sta     L0BC9
+        sta     calc_l
+        sta     calc_d
+        sta     calc_e
+        sta     calc_n
         jmp     reset_buffers_and_display
 
 :       cmp     #'E'            ; Exponential?
@@ -1024,16 +1098,16 @@ miss:   clc
         ldy     #>btn_e::box
         lda     #'e'
         jsr     depress_button
-        ldy     L0BC8
+        ldy     calc_e
         bne     L0FC6
-        ldy     L0BCB
+        ldy     calc_l
         bne     :+
-        inc     L0BCB
+        inc     calc_l
         lda     #'1'
         sta     text_buffer1 + text_buffer_size
         sta     text_buffer2 + text_buffer_size
 :       lda     #'E'
-        sta     L0BC8
+        sta     calc_e
         jmp     L1107
 
 L0FC6:  rts
@@ -1057,14 +1131,14 @@ L0FC7:  cmp     #'='            ; Equals?
         ldx     #<btn_dec::box
         ldy     #>btn_dec::box
         jsr     depress_button
-        lda     L0BC7
-        ora     L0BC8
+        lda     calc_d
+        ora     calc_e
         bne     L1002
-        lda     L0BCB
+        lda     calc_l
         bne     :+
-        inc     L0BCB
+        inc     calc_l
 :       lda     #'.'
-        sta     L0BC7
+        sta     calc_d
         jmp     L1107
 
 L1002:  rts
@@ -1081,12 +1155,12 @@ L1003:  cmp     #'+'            ; Add?
         pha
         ldx     #<btn_sub::box
         ldy     #>btn_sub::box
-        lda     L0BC8           ; negate vs. subtract
+        lda     calc_e           ; negate vs. subtract
         beq     :+
-        lda     L0BC9
+        lda     calc_n
         bne     :+
         sec
-        ror     L0BC9
+        ror     calc_n
         pla
         pha
         jmp     L10FF
@@ -1174,25 +1248,25 @@ trydiv: cmp     #'/'            ; Divide?
 
 :       cmp     #$7F            ; Delete?
         bne     end
-        ldy     L0BCB
+        ldy     calc_l
         beq     end
         cpy     #1
         bne     :+
         jsr     reset_buffer1_and_state
         jmp     display_buffer1
 
-:       dec     L0BCB
+:       dec     calc_l
         ldx     #0
         lda     text_buffer1 + text_buffer_size
         cmp     #'.'
         bne     :+
-        stx     L0BC7
+        stx     calc_d
 :       cmp     #'E'
         bne     :+
-        stx     L0BC8
+        stx     calc_e
 :       cmp     #'-'
         bne     :+
-        stx     L0BC9
+        stx     calc_n
 :       ldx     #text_buffer_size-1
 loop:   lda     text_buffer1,x
         sta     text_buffer1+1,x
@@ -1216,7 +1290,7 @@ L10FF:  jsr     depress_button
 L1106:  pla
 L1107:  sec
         ror     L0BCA
-        ldy     L0BCB
+        ldy     calc_l
         bne     L111C
         pha
         jsr     reset_buffer2
@@ -1230,11 +1304,11 @@ L111C:  sec
         cpy     #$0A
         bcs     L114B
         pha
-        ldy     L0BCB
+        ldy     calc_l
         beq     L113E
         lda     #$0F
         sec
-        sbc     L0BCB
+        sbc     calc_l
         tax
 L1131:  lda     text_buffer1,x
         sta     text_buffer1-1,x
@@ -1242,7 +1316,7 @@ L1131:  lda     text_buffer1,x
         inx
         dey
         bne     L1131
-L113E:  inc     L0BCB
+L113E:  inc     calc_l
         pla
         sta     text_buffer1 + text_buffer_size
         sta     text_buffer2 + text_buffer_size
@@ -1341,10 +1415,10 @@ end:    jsr     display_buffer1
 .proc reset_buffer1_and_state
         jsr     reset_buffer1
         lda     #0
-        sta     L0BCB
-        sta     L0BC7
-        sta     L0BC8
-        sta     L0BC9
+        sta     calc_l
+        sta     calc_d
+        sta     calc_e
+        sta     calc_n
         sta     L0BCA
         rts
 .endproc
@@ -1486,9 +1560,9 @@ loop:   ldy     #0
         beq     draw_title_bar  ; done!
 
         lda     ptr             ; address for shadowed rect params
-        sta     c14_addr
+        sta     pattern_addr
         ldy     ptr+1
-        sty     c14_addr+1
+        sty     pattern_addr+1
 
         clc                     ; address for label pos
         adc     #(btn_c::pos - btn_c)
@@ -1501,7 +1575,7 @@ loop:   ldy     #0
         lda     (ptr),y
         sta     label
 
-        A2D_CALL $14, 0, c14_addr                       ; draw shadowed rect
+        A2D_CALL A2D_DRAW_PATTERN, 0, pattern_addr ; draw shadowed rect
         A2D_CALL A2D_SET_POS, 0, text_addr         ; button label pos
         A2D_CALL A2D_DRAW_TEXT, draw_text_params_label  ; button label text
 
@@ -1515,27 +1589,29 @@ loop:   ldy     #0
 .endproc
 
 ;;; ==================================================
-;;; Draw the title bar - with extra doodad (???)
+;;; Draw the title bar decoration
 
 draw_title_bar:
+        offset_left     := 115  ; pixels from left of client area
+        offset_top      := 22   ; pixels from top of client area (up!)
         ldx     create_window_params::left+1
         lda     create_window_params::left
         clc
-        adc     #$73
-        sta     L0C58
+        adc     #offset_left
+        sta     title_bar_decoration::left
         bcc     :+
         inx
-:       stx     L0C59
+:       stx     title_bar_decoration::left+1
         ldx     create_window_params::top+1
         lda     create_window_params::top
         sec
-        sbc     #$16
-        sta     L0C5A
+        sbc     #offset_top
+        sta     title_bar_decoration::top
         bcs     :+
         dex
-:       stx     L0C5B
+:       stx     title_bar_decoration::top+1
         A2D_CALL A2D_TEXT_BOX2, L0C93
-        A2D_CALL $14, L0C58     ; Draws decoration in title bar
+        A2D_CALL A2D_DRAW_PATTERN, title_bar_decoration     ; Draws decoration in title bar
         lda     #window_id
         sta     L08D1
         A2D_CALL $3C, L08D1

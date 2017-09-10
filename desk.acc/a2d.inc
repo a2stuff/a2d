@@ -35,14 +35,14 @@ A2D_TEXT_BOX1   := $04          ; Not sure what BOX1 vs. BOX2 is for
 A2D_TEXT_BOX2   := $06          ; Not sure what BOX1 vs. BOX2 is for
         ;; .word left           pixels from screen edge
         ;; .word top
-        ;; .word $2000          ???
+        ;; .word $2000          hires?
         ;; .word $80            ???
         ;; .word hoffset        pixels scrolled
         ;; .word voffset
         ;; .word width          pixels
         ;; .word height
 
-A2D_UNK_07      := $07          ; Unknown - used in calculator
+A2D_UNK_07      := $07          ; Unknown - used in calculator; set fill mode?
 
 A2D_SET_PATTERN := $08
         ;; .byte r0...r7        8x8 pixel pattern for A2D_CLEAR_BOX calls
@@ -71,7 +71,14 @@ A2D_TEST_BOX    := $13          ; A false if pos (via SET_POS) outside box, true
         ;; .word right
         ;; .word bottom
 
-A2D_UNK_14      := $14          ; Unknown - draws push button (calculator)
+A2D_DRAW_PATTERN := $14         ; Draw pattern
+        ;; .word left
+        ;; .word top
+        ;; .addr pattern        pattern is 7 bits per byte, 0 = black, 1 = white
+        ;; .byte stride         pattern width in bytes
+        ;; .byte 0,0,0,0,0      ???
+        ;; .word width          pixels
+        ;; .word height         pixels
 
 A2D_MEASURE_TEXT := $18
         ;; .addr data
@@ -132,7 +139,7 @@ A2D_CREATE_WINDOW := $38
         ;;  - next section is identical to that for TEXT_BOX
         ;; .word left           pixels from screen edge
         ;; .word top
-        ;; .word $2000          ???
+        ;; .word $2000          hires?
         ;; .word $80            ???
         ;; .word hoffset        pixels scrolled
         ;; .word voffset
@@ -272,6 +279,9 @@ data:   .byte   str
         .byte   .strlen(str)
         .byte   str
 .endmacro
+
+        ;; Used for defining patterns for A2D_DRAW_PATTERN
+        .define px(bits) (((bits&$40)>>6)|((bits&$20)>>4)|((bits&$10)>>2)|(bits&$8)|((bits&$4)<<2)|((bits&$2)<<4)|((bits&$1)<<6))
 
 
 ;;; DeskTop Internals
