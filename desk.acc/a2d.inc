@@ -35,7 +35,22 @@ JUMP_TABLE_3F   := $403F        ; ???
 ;;; ==================================================
 ;;; A2D Calls
 
-A2D_UNK_03      := $03          ; Appears to be "query screen box"
+A2D_QUERY_SCREEN        := $03  ; Get screen info
+        ;; -- first bit is like SET_BOX/QUERY_BOX params
+        ;; .word left
+        ;; .word top
+        ;; .addr addr           A2D_SCREEN_ADDR
+        ;; .word stride         A2D_SCREEN_STRIDE
+        ;; .word hoffset
+        ;; .word voffset
+        ;; .word width          560-1
+        ;; .word height         192-1
+        ;; .byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ???
+        ;; .byte 0,0,0,0,       ???
+        ;; .word $100           ???
+        ;; .word $1             ???
+        ;; .word $7F            ???
+        ;; .word $88            ???
 
 A2D_SET_BOX1   := $04           ; Not sure what BOX1 vs. BOX2 is for
 A2D_SET_BOX2   := $06           ; set vs. intersect? (not quite)

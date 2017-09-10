@@ -102,7 +102,7 @@ call_init:
         ;;  Redraw window after drag
         lda     ROMIN2
         lda     #window_id
-        jsr     L089E
+        jsr     draw_window
 
         ;; ???
         lda     LCBANK1
@@ -139,7 +139,8 @@ L089D:  .byte   0
 
         ;; Called after window drag is complete
         ;; (called with window_id in A)
-L089E:  sta     query_box_params_id
+.proc draw_window
+        sta     query_box_params_id
         lda     create_window_params_top
         cmp     #screen_height - 1
         bcc     :+
@@ -152,8 +153,9 @@ L089E:  sta     query_box_params_id
         lda     query_box_params_id
         cmp     #window_id
         bne     :+
-        jmp     draw_window
+        jmp     draw_background
 :       rts
+.endproc
 
 ;;; ==================================================
 ;;; Call Params (and other data)
@@ -677,7 +679,7 @@ pixels: .byte   px(%1000001)
         .byte   px(%1001001)
 .endproc
 
-        ;; param block for a $03 and SET_BOX1 calls, and ref'd in A2D_QUERY_BOX call
+        ;; param block for a QUERY_SCREEN and SET_BOX1 calls, and ref'd in A2D_QUERY_BOX call
 .proc box_params
 left:   .word   0
 top:    .word   0
@@ -685,16 +687,16 @@ addr:   .word   0
 stride: .word   0
 hoffset:.word   0
 voffset:.word   0
-width:  .word   0               ; $03 call sets to screen_width-1
-height: .word   0               ; $03 call sets to screen_height-1
+width:  .word   0               ; QUERY_SCREEN call sets to screen_width-1
+height: .word   0               ; QUERY_SCREEN call sets to screen_height-1
 
         ;; unknown from here
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00,$00 ; filled with $FF by $03 call
-        .byte   $00,$00,$00,$00             ; left $00 by $03
-        .word   0                           ; $03 call sets to $100
-        .word   0                           ; $03 call sets to $1
-        .word   0                           ; $03 call sets to $7F (127)
-        .word   0                           ; $03 call sets to $88 (136)
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00,$00 ; filled with $FF by QUERY_SCREEN call
+        .byte   $00,$00,$00,$00             ; left $00 by QUERY_SCREEN
+        .word   0                           ; QUERY_SCREEN call sets to $100
+        .word   0                           ; QUERY_SCREEN call sets to $1
+        .word   0                           ; QUERY_SCREEN call sets to $7F (127)
+        .word   0                           ; QUERY_SCREEN call sets to $88 (136)
 .endproc
 
         menu_bar_height := 13
@@ -749,7 +751,7 @@ height: .word   window_height
 create_window_params_top := create_window_params::top
 
         ;; ???
-        ;; Same as latter part of box_params block after $03 call fills it in
+        ;; Same as latter part of box_params block after QUERY_SCREEN call fills it in
         .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
         .byte   $00,$00
         .byte   $00,$00,$00,$01,$01,$00,$7F,$00
@@ -776,8 +778,8 @@ L0D18:  sta     ALTZPON
         lda     LCBANK1
         A2D_CALL $1A, L08D4
         A2D_CALL A2D_CREATE_WINDOW, create_window_params
-        A2D_CALL $03, box_params             ; get display state?
-        A2D_CALL A2D_SET_BOX1, box_params   ; set clipping bounds?
+        A2D_CALL A2D_QUERY_SCREEN, box_params
+        A2D_CALL A2D_SET_BOX1, box_params     ; set clipping bounds?
         A2D_CALL $2B
         lda     #$01
         sta     input_state_params::state
@@ -786,7 +788,7 @@ L0D18:  sta     ALTZPON
         lda     ROMIN2
         jsr     reset_buffer2
         lda     #window_id
-        jsr     L089E
+        jsr     draw_window
         jsr     reset_buffers_and_display
 
         lda     #'='            ; last operation
@@ -1561,7 +1563,7 @@ loop:   lda     #' '
 ;;; ==================================================
 ;;; Draw the window contents (background, buttons)
 
-.proc draw_window
+.proc draw_background
         ;; Frame
         A2D_CALL A2D_HIDE_CURSOR
         A2D_CALL A2D_SET_PATTERN, background_pattern
@@ -1570,8 +1572,12 @@ loop:   lda     #' '
         A2D_CALL A2D_DRAW_RECT, frame_display_params
         A2D_CALL A2D_SET_PATTERN, white_pattern
         A2D_CALL A2D_FILL_RECT, clear_display_params
-        A2D_CALL $0C, L0BEF     ; ???
 
+        A2D_CALL $0C, L0BEF     ; ???
+        ;; fall through
+.endproc
+
+.proc draw_buttons
         ;; Buttons
         ptr := $FA
 
