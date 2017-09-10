@@ -374,7 +374,7 @@ end:    rts
 
         jsr     show_file
 
-        A2D_CALL $2B, 0         ; ???
+        A2D_CALL $2B            ; ???
         ;; fall through
 .endproc
 

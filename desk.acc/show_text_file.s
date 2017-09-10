@@ -503,7 +503,7 @@ loop:   lda     $8802,x
         jsr     calc_window_size
         jsr     calc_and_draw_mode
         jsr     draw_content
-        A2D_CALL $2B, 0         ; ???
+        A2D_CALL $2B            ; ???
         ;; fall through
 .endproc
 
@@ -551,7 +551,7 @@ title:  jsr     on_title_bar_click
 ;;; Close Button
 
 .proc on_close_click
-        A2D_CALL A2D_BTN_CLICK, close_btn_params     ; wait to see if the click completes
+        A2D_CALL A2D_CLOSE_CLICK, close_btn_params     ; wait to see if the click completes
         lda     close_btn_params::state ; did click complete?
         beq     input_loop      ; nope
         jsr     close_file

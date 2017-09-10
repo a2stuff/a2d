@@ -1,8 +1,10 @@
-;;; ------------------------------
+;;; ==================================================
 ;;; A2Desktop
-;;; ------------------------------
+;;; ==================================================
 
+;;; ==================================================
 ;;; Entry Points
+
 A2D             := $4000
 
 UNKNOWN_CALL    := $8E00
@@ -30,10 +32,13 @@ JUMP_TABLE_CUR_POINTER  := $4039 ; Changes mouse cursor to pointer
 JUMP_TABLE_CUR_WATCH    := $403C ; Changes mouse cursor to watch
 JUMP_TABLE_3F   := $403F        ; ???
 
-A2D_UNK_03      := $03          ; Unknown - used in calculator after frame is drawn
+;;; ==================================================
+;;; A2D Calls
 
-A2D_SET_BOX1   := $04          ; Not sure what BOX1 vs. BOX2 is for
-A2D_SET_BOX2   := $06          ; Not sure what BOX1 vs. BOX2 is for
+A2D_UNK_03      := $03          ; Appears to be "query screen box"
+
+A2D_SET_BOX1   := $04           ; Not sure what BOX1 vs. BOX2 is for
+A2D_SET_BOX2   := $06           ; set vs. intersect? (not quite)
         ;; .word left           pixels from screen edge
         ;; .word top
         ;; .word addr           A2D_SCREEN_ADDR ($2000)
@@ -66,7 +71,7 @@ A2D_DRAW_RECT   := $12          ; With selected pattern
         ;; .word right          pixels
         ;; .word bottom
 
-A2D_TEST_BOX    := $13          ; A false if pos (via SET_POS) outside box, true if inside
+A2D_TEST_BOX    := $13          ; Is pos (via SET_POS) in bounds? Returns true/false in A
         ;; .word left
         ;; .word top
         ;; .word right
@@ -83,7 +88,7 @@ A2D_DRAW_PATTERN := $14         ; Draw pattern
 
 A2D_MEASURE_TEXT := $18
         ;; .addr data
-        ;; .byte length         ???
+        ;; .byte length
         ;; .word width          pixels
 
 A2D_DRAW_TEXT   := $19          ; Drawn at last SET_POS as left, baseline
@@ -166,7 +171,7 @@ A2D_QUERY_TARGET   := $40
         ;;      5 = close box
         ;; .byte id of window
 
-A2D_BTN_CLICK   := $43
+A2D_CLOSE_CLICK := $43
         ;; .byte clicked (0 = cancelled, 1 = clicked)
         ;; .byte ??
         ;; .byte ??
@@ -182,7 +187,7 @@ A2D_DRAG_WINDOW := $44
         ;; .word xcoord         screen coordinates
         ;; .word ycoord
 
-A2D_MAP_COORDS := $46           ; Map screen coords to client coords
+A2D_MAP_COORDS  := $46           ; Map screen coords to client coords
         ;; .byte window_id
         ;; .word screenx
         ;; .word screeny
@@ -199,7 +204,7 @@ A2D_RESIZE_WINDOW := $49
         ;; .byte ??     (unused, so incomplete)
         ;; .byte ??
 
-A2D_DRAG_SCROLL:= $4A
+A2D_DRAG_SCROLL := $4A
         ;; .byte type (1 = vscroll, 2 = hscroll)
         ;; .word xcoord of mouse
         ;; .word ycoord of mouse
@@ -209,6 +214,9 @@ A2D_DRAG_SCROLL:= $4A
 A2D_UPDATE_SCROLL:= $4B
         ;; .byte type (1 = vertical, 2 = horizontal)
         ;; .byte pos (new position 0...250)
+
+;;; ==================================================
+;;; Constants
 
 ;;; Used in A2D_QUERY_BOX / A2D_SET_BOX
 A2D_SCREEN_ADDR     := $2000    ; Screen address
@@ -257,7 +265,14 @@ A2D_CWS_SCROLL_TRACK   := 1 << 0
 A2D_CWS_SCROLL_NORMAL  := A2D_CWS_SCROLL_ENABLED | A2D_CWS_SCROLL_THUMB | A2D_CWS_SCROLL_TRACK
 
 
+;;; ==================================================
 ;;; Macros
+
+;;; Call an A2D entry point:
+;;;     A2D_CALL n                      - params is $0000
+;;;     A2D_CALL n, params_addr
+;;;     A2D_CALL m, params_addr, label  - params_addr is labeled for modifying
+
 .macro  A2D_CALL    op, addr, label
         jsr A2D
         .byte op
@@ -285,10 +300,11 @@ data:   .byte   str
         .byte   str
 .endmacro
 
-        ;; Used for defining patterns for A2D_DRAW_PATTERN
-        .define px(bits) (((bits&$40)>>6)|((bits&$20)>>4)|((bits&$10)>>2)|(bits&$8)|((bits&$4)<<2)|((bits&$2)<<4)|((bits&$1)<<6))
+;;; Define pattern for A2D_DRAW_PATTERN - low 7 bits are reversed
+;;; e.g. .byte px(%1000000)
+.define px(bits) (((bits&$40)>>6)|((bits&$20)>>4)|((bits&$10)>>2)|(bits&$8)|((bits&$4)<<2)|((bits&$2)<<4)|((bits&$1)<<6))
 
-
+;;; ==================================================
 ;;; DeskTop Internals
 
         ;; These are DeskTop internals, but it appears there is no
@@ -297,7 +313,7 @@ data:   .byte   str
         path_index := $DF20     ; index of selected window (used to get prefix)
         path_table := $DFB3     ; window address table
         ;; each entry is 65 bytes long
-        ;; each entry is length-prefixed path string (no trailing /)
+        ;;      length-prefixed path string (no trailing /)
         file_index := $DF22     ; index of selected file (global, not w/in window)
         file_table := $DD9F     ; file address table
         ;; each entry is 27 bytes long

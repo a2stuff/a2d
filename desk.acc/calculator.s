@@ -194,7 +194,7 @@ id:     .byte   0
         .byte 0, 0              ; fills out space for map_coords_params
         .byte 0, 0              ; ???
 
-.proc button_click_params
+.proc close_click_params
 state:  .byte   0
 .endproc
 
@@ -768,7 +768,7 @@ L0D18:  sta     ALTZPON
         A2D_CALL A2D_CREATE_WINDOW, create_window_params
         A2D_CALL $03, box_params             ; get display state?
         A2D_CALL A2D_SET_BOX1, box_params   ; set clipping bounds?
-        A2D_CALL $2B, 0
+        A2D_CALL $2B
         lda     #$01
         sta     input_state_params::state
         A2D_CALL $2D, input_state_params
@@ -877,8 +877,8 @@ ignore_click:
 
 :       cmp     #A2D_ELEM_CLOSE ; Close box?
         bne     :+
-        A2D_CALL A2D_BTN_CLICK, button_click_params
-        lda     button_click_params::state
+        A2D_CALL A2D_CLOSE_CLICK, close_click_params
+        lda     close_click_params::state
         beq     ignore_click
 exit:   lda     LCBANK1
         lda     LCBANK1
