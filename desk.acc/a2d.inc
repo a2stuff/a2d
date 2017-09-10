@@ -146,12 +146,12 @@ A2D_CREATE_WINDOW := $38
         ;; .word width          pixels
         ;; .word height
 
-
-
 A2D_DESTROY_WINDOW := $39
         ;; .byte id
 
-A2D_UNK_3C      := $3C          ; Unknown, used in calculator
+A2D_QUERY_BOX      := $3C       ; get client "box" of window
+        ;; .byte id             window
+        ;; .addr box            box definition to populate, like A2D_TEXT_BOX1
 
 A2D_QUERY_TARGET   := $40
         ;; .word queryx         (relative to screen)

@@ -117,8 +117,8 @@ call_init:
 skip:   lda     #0
         sta     L089D
         lda     ROMIN2
-        A2D_CALL $3C, L08D1
-        A2D_CALL A2D_TEXT_BOX1, L0C6E
+        A2D_CALL A2D_QUERY_BOX, query_box_params
+        A2D_CALL A2D_TEXT_BOX1, box_params
         rts
 
 .proc routine
@@ -139,22 +139,21 @@ L089D:  .byte   0
 
         ;; Called after window drag is complete
 
-L089E:  sta     L08D1
+L089E:  sta     query_box_params_id
         lda     create_window_params_top
-        cmp     #$BF
+        cmp     #screen_height - 1
         bcc     :+
         lda     #$80
         sta     L089D
         rts
 
-:       A2D_CALL $3C, L08D1
-        A2D_CALL A2D_TEXT_BOX1, L0C6E
-        lda     L08D1
+:       A2D_CALL A2D_QUERY_BOX, query_box_params
+        A2D_CALL A2D_TEXT_BOX1, box_params
+        lda     query_box_params_id
         cmp     #window_id
-        bne     L08C4
+        bne     :+
         jmp     draw_window
-
-L08C4:  rts
+:       rts
 
 ;;; ==================================================
 ;;; Call Params (and other data)
@@ -199,9 +198,12 @@ id:     .byte   0
 state:  .byte   0
 .endproc
 
-        ;; param block for a 3C call
-L08D1:  .byte   $00             ; set to window_id
-        .addr   L0C6E
+        ;; param block for a A2D_QUERY_BOX call
+.proc query_box_params
+id:     .byte   0
+        .addr   box_params
+.endproc
+        query_box_params_id := query_box_params::id
 
         ;; param block for a 1A call
 L08D4:  .byte   $80
@@ -665,16 +667,16 @@ pixels: .byte   px(%1000001)
         .byte   px(%1001001)
 .endproc
 
-        ;; param block for a $03 and TEXT_BOX1 calls, and ref'd in $3C call
-.proc L0C6E
+        ;; param block for a $03 and TEXT_BOX1 calls, and ref'd in A2D_QUERY_BOX call
+.proc box_params
 left:   .word   0
 top:    .word   0
-        .word   0               ; ??? $03 call sets to $2000 (hires)
+        .word   0               ; $03 call sets to $2000 (hires)
         .word   0               ; ??? $03 call sets to $80
 hoffset:.word   0
 voffset:.word   0
-width:  .word   0               ; $03 call sets to 559
-height: .word   0               ; $03 call sets to 191
+width:  .word   0               ; $03 call sets to screen_width-1
+height: .word   0               ; $03 call sets to screen_height-1
 
         ;; unknown from here
         .byte   $00,$00,$00,$00,$00,$00,$00,$00,$00 ; filled with $FF by $03 call
@@ -685,8 +687,21 @@ height: .word   0               ; $03 call sets to 191
         .word   0                           ; $03 call sets to $88 (136)
 .endproc
 
-L0C93:  .byte   $00,$00,$0D,$00,$00,$20,$80,$00
-        .byte   $00,$00,$00,$00,$2F,$02,$B1,$00
+        menu_bar_height := 13
+        screen_width    := 560
+        screen_height   := 192
+        hires           := $2000
+
+        ;; params for A2D_TEXT_BOX2 when decorating title bar
+.proc screen_box
+        .word   0
+        .word   menu_bar_height
+        .word   hires
+        .word   $80             ; ??
+        .word   0, 0            ; hoffset/voffset
+        .word   screen_width - 1
+        .word   screen_height - menu_bar_height - 2
+.endproc
 
 L0CA3:  .byte   $00             ; arg for "normal" fill mode?
         .byte   $01,$02         ; ??
@@ -715,7 +730,7 @@ width_b: .word  window_width
 height_b:.word  window_height
 left:   .word   default_left
 top:    .word   default_top
-        .word   $2000           ;hires?
+        .word   hires
         .word   $80
 hoffset:.word   0
 voffset:.word   0
@@ -725,7 +740,7 @@ height: .word   window_height
 create_window_params_top := create_window_params::top
 
         ;; ???
-        ;; Same as latter part of L0C6E block after $03 call fills it in
+        ;; Same as latter part of box_params block after $03 call fills it in
         .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
         .byte   $00,$00
         .byte   $00,$00,$00,$01,$01,$00,$7F,$00
@@ -752,8 +767,8 @@ L0D18:  sta     ALTZPON
         lda     LCBANK1
         A2D_CALL $1A, L08D4
         A2D_CALL A2D_CREATE_WINDOW, create_window_params
-        A2D_CALL $03, L0C6E             ; get display state?
-        A2D_CALL A2D_TEXT_BOX1, L0C6E   ; set clipping bounds?
+        A2D_CALL $03, box_params             ; get display state?
+        A2D_CALL A2D_TEXT_BOX1, box_params   ; set clipping bounds?
         A2D_CALL $2B, 0
         lda     #$01
         sta     input_state_params::state
@@ -1610,12 +1625,12 @@ draw_title_bar:
         bcs     :+
         dex
 :       stx     title_bar_decoration::top+1
-        A2D_CALL A2D_TEXT_BOX2, L0C93
+        A2D_CALL A2D_TEXT_BOX2, screen_box ; set clipping rect to whole screen
         A2D_CALL A2D_DRAW_PATTERN, title_bar_decoration     ; Draws decoration in title bar
         lda     #window_id
-        sta     L08D1
-        A2D_CALL $3C, L08D1
-        A2D_CALL A2D_TEXT_BOX1, L0C6E
+        sta     query_box_params::id
+        A2D_CALL A2D_QUERY_BOX, query_box_params     ; get client rect
+        A2D_CALL A2D_TEXT_BOX1, box_params ; clip rect?
         A2D_CALL A2D_SHOW_CURSOR
         jsr     display_buffer2
         rts
