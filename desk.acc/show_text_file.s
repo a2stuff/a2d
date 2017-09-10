@@ -326,17 +326,17 @@ vscroll_pos:
 
 width:  .word   default_width
 height: .word   default_height
-.endproc
-        ;; window_params continues into text_box
-.proc text_box                  ; or whole window ??
+
+.proc box                       ; or whole window ??
 left:   .word   default_left
 top:    .word   default_top
-        .word   $2000           ; ??? never changed
-        .word   $80             ; ??? never changed
+addr:   .word   A2D_SCREEN_ADDR
+stride: .word   A2D_SCREEN_STRIDE
 hoffset:.word   0               ; Also used for A2D_FILL_RECT
 voffset:.word   0
 width:  .word   default_width
 height: .word   default_height
+.endproc
 .endproc
 
         ;; unused?
@@ -344,12 +344,12 @@ height: .word   default_height
         .byte   $00,$FF,$00,$00,$00,$00,$00,$01
         .byte   $01,$00,$7F,$00,$88,$00,$00
 
-        ;; gets copied over text_box after mode is drawn
+        ;; gets copied over window_params::box after mode is drawn
 .proc default_box
 left:   .word   default_left
 top:    .word   default_top
-        .word   $2000
-        .word   $80
+addr:   .word   A2D_SCREEN_ADDR
+stride: .word   A2D_SCREEN_STRIDE
 hoffset:.word   0
 voffset:.word   0
 width:  .word   default_width
@@ -499,7 +499,7 @@ loop:   lda     $8802,x
 
         ;; create window
         A2D_CALL A2D_CREATE_WINDOW, window_params
-        A2D_CALL A2D_TEXT_BOX1, text_box
+        A2D_CALL A2D_SET_BOX1, window_params::box
         jsr     calc_window_size
         jsr     calc_and_draw_mode
         jsr     draw_content
@@ -575,23 +575,23 @@ title:  jsr     on_title_bar_click
 
         max_width := default_width
         lda     #>max_width
-        cmp     text_box::width+1
+        cmp     window_params::box::width+1
         bne     :+
         lda     #<max_width
-        cmp     text_box::width
+        cmp     window_params::box::width
 :       bcs     wider
 
         lda     #<max_width
-        sta     text_box::width
+        sta     window_params::box::width
         lda     #>max_width
-        sta     text_box::width+1
+        sta     window_params::box::width+1
         sec
-        lda     text_box::width
+        lda     window_params::box::width
         sbc     window_width
-        sta     text_box::hoffset
-        lda     text_box::width+1
+        sta     window_params::box::hoffset
+        lda     window_params::box::width+1
         sbc     window_width+1
-        sta     text_box::hoffset+1
+        sta     window_params::box::hoffset+1
 wider:  lda     window_params::hscroll
         ldx     window_width
         cpx     #<max_width
@@ -786,16 +786,16 @@ loop:   inx
         lda     thumb_drag_params::pos
         jsr     mul_by_16
         lda     $06
-        sta     text_box::hoffset
+        sta     window_params::box::hoffset
         lda     $07
-        sta     text_box::hoffset+1
+        sta     window_params::box::hoffset+1
         clc
-        lda     text_box::hoffset
+        lda     window_params::box::hoffset
         adc     window_width
-        sta     text_box::width
-        lda     text_box::hoffset+1
+        sta     window_params::box::width
+        lda     window_params::box::hoffset+1
         adc     window_width+1
-        sta     text_box::width+1
+        sta     window_params::box::width+1
         jsr     update_hscroll
         jsr     draw_content
 end:    rts
@@ -882,41 +882,41 @@ store:  sta     window_params::hscroll_pos
         jsr     mul_by_16
         clc
         lda     $06
-        sta     text_box::hoffset
+        sta     window_params::box::hoffset
         adc     window_width
-        sta     text_box::width
+        sta     window_params::box::width
         lda     $07
-        sta     text_box::hoffset+1
+        sta     window_params::box::hoffset+1
         adc     window_width+1
-        sta     text_box::width+1
+        sta     window_params::box::width+1
         rts
 .endproc
 
 .proc update_voffset
         lda     #0
-        sta     text_box::voffset
-        sta     text_box::voffset+1
+        sta     window_params::box::voffset
+        sta     window_params::box::voffset+1
         ldx     update_scroll_params::pos
 loop:   beq     L0D9B
         clc
-        lda     text_box::voffset
+        lda     window_params::box::voffset
         adc     #50
-        sta     text_box::voffset
+        sta     window_params::box::voffset
         bcc     :+
-        inc     text_box::voffset+1
+        inc     window_params::box::voffset+1
 :       dex
         jmp     loop
 .endproc
 
 .proc L0D9B                     ; ?? part of vscroll
-        ;; increase text_box height to cover full window (offset + height)
+        ;; increase window_params::box height to cover full window (offset + height)
         clc
-        lda     text_box::voffset
+        lda     window_params::box::voffset
         adc     window_height
-        sta     text_box::height
-        lda     text_box::voffset+1
+        sta     window_params::box::height
+        lda     window_params::box::voffset+1
         adc     window_height+1
-        sta     text_box::height+1
+        sta     window_params::box::height+1
         jsr     L10A5
         lda     #0
         sta     L096A
@@ -937,9 +937,9 @@ end:    rts
 .proc update_hscroll
         lda     #2
         sta     update_scroll_params::type
-        lda     text_box::hoffset
+        lda     window_params::box::hoffset
         sta     $06
-        lda     text_box::hoffset+1
+        lda     window_params::box::hoffset+1
         sta     $07
         jsr     div_by_16
         sta     update_scroll_params::pos
@@ -958,7 +958,7 @@ end:    rts
         jsr     UNKNOWN_CALL
         .byte   $0C
         .addr   0
-        A2D_CALL A2D_TEXT_BOX1, text_box
+        A2D_CALL A2D_SET_BOX1, window_params::box
         lda     window_params::hscroll
         ror     a               ; check if low bit (track enabled) is set
         bcc     :+
@@ -972,7 +972,7 @@ end:    rts
 
         ;; called on scroll
 L0E1D:  A2D_CALL A2D_SET_PATTERN, white_pattern
-        A2D_CALL A2D_FILL_RECT, text_box::hoffset
+        A2D_CALL A2D_FILL_RECT, window_params::box::hoffset
         A2D_CALL A2D_SET_PATTERN, black_pattern
         rts
 
@@ -1253,25 +1253,25 @@ end:    rts
 
 .proc calc_window_size
         sec
-        lda     text_box::width
-        sbc     text_box::hoffset
+        lda     window_params::box::width
+        sbc     window_params::box::hoffset
         sta     window_width
-        lda     text_box::width+1
-        sbc     text_box::hoffset+1
+        lda     window_params::box::width+1
+        sbc     window_params::box::hoffset+1
         sta     window_width+1
 
         sec
-        lda     text_box::height
-        sbc     text_box::voffset
+        lda     window_params::box::height
+        sbc     window_params::box::voffset
         sta     window_height
         ;; fall through
 .endproc
 
         ;; calculate line offset ?
 .proc L10A5
-        lda     text_box::height
+        lda     window_params::box::height
         sta     L0965
-        lda     text_box::height+1
+        lda     window_params::box::height+1
         sta     L0966
 
         lda     #0
@@ -1398,8 +1398,8 @@ prop_str:       A2D_DEFSTRING "Proportional"
 .proc mode_box                  ; bounding box for mode label
 left:   .word   0
 top:    .word   0
-        .word   $2000           ; ??
-        .word   $80             ; ??
+addr:   .word   A2D_SCREEN_ADDR
+stride: .word   A2D_SCREEN_STRIDE
 hoffset:.word   0
 voffset:.word   0
 width:  .word   80
@@ -1415,14 +1415,14 @@ base:   .word   10              ; vertical text offset (to baseline)
 
 .proc calc_and_draw_mode
         sec
-        lda     text_box::top
+        lda     window_params::box::top
         sbc     #title_bar_height
         sta     mode_box::top
         clc
-        lda     text_box::left
+        lda     window_params::box::left
         adc     window_width
         pha
-        lda     text_box::left+1
+        lda     window_params::box::left+1
         adc     window_width+1
         tax
         sec
@@ -1436,7 +1436,7 @@ base:   .word   10              ; vertical text offset (to baseline)
 .endproc
 
 .proc draw_mode
-        A2D_CALL A2D_TEXT_BOX2, mode_box  ; guess: setting up draw location ???
+        A2D_CALL A2D_SET_BOX2, mode_box  ; guess: setting up draw location ???
         A2D_CALL A2D_SET_POS, mode_pos
         lda     fixed_mode_flag
         beq     else            ; is proportional?
@@ -1446,9 +1446,9 @@ else:   A2D_CALL A2D_DRAW_TEXT, prop_str
 
 endif:  ldx     #$0F
 loop:   lda     default_box,x
-        sta     text_box,x
+        sta     window_params::box,x
         dex
         bpl     loop
-        A2D_CALL A2D_TEXT_BOX2, text_box
+        A2D_CALL A2D_SET_BOX2, window_params::box
         rts
 .endproc

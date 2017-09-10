@@ -7,6 +7,7 @@ A2D             := $4000
 
 UNKNOWN_CALL    := $8E00
 
+
         ;; These must be called from main memory (RAMRDON/RAMWRTON)
 JUMP_TABLE_03   := $4003        ; ???
 JUMP_TABLE_06   := $4006        ; ???
@@ -31,12 +32,12 @@ JUMP_TABLE_3F   := $403F        ; ???
 
 A2D_UNK_03      := $03          ; Unknown - used in calculator after frame is drawn
 
-A2D_TEXT_BOX1   := $04          ; Not sure what BOX1 vs. BOX2 is for
-A2D_TEXT_BOX2   := $06          ; Not sure what BOX1 vs. BOX2 is for
+A2D_SET_BOX1   := $04          ; Not sure what BOX1 vs. BOX2 is for
+A2D_SET_BOX2   := $06          ; Not sure what BOX1 vs. BOX2 is for
         ;; .word left           pixels from screen edge
         ;; .word top
-        ;; .word $2000          hires?
-        ;; .word $80            ???
+        ;; .word addr           A2D_SCREEN_ADDR ($2000)
+        ;; .word stride         A2D_SCREEN_STRIDE ($80)
         ;; .word hoffset        pixels scrolled
         ;; .word voffset
         ;; .word width          pixels
@@ -136,11 +137,11 @@ A2D_CREATE_WINDOW := $38
         ;; .word height_a       ???
         ;; .word width_b        (of scroll area?)
         ;; .word height_b       (of scroll area?)
-        ;;  - next section is identical to that for TEXT_BOX
+        ;;  - next section is identical to that for A2D_SET_BOX
         ;; .word left           pixels from screen edge
         ;; .word top
-        ;; .word $2000          hires?
-        ;; .word $80            ???
+        ;; .word screen_addr
+        ;; .word screen_stride
         ;; .word hoffset        pixels scrolled
         ;; .word voffset
         ;; .word width          pixels
@@ -151,7 +152,7 @@ A2D_DESTROY_WINDOW := $39
 
 A2D_QUERY_BOX      := $3C       ; get client "box" of window
         ;; .byte id             window
-        ;; .addr box            box definition to populate, like A2D_TEXT_BOX1
+        ;; .addr box            box definition to populate, like A2D_SET_BOX1
 
 A2D_QUERY_TARGET   := $40
         ;; .word queryx         (relative to screen)
@@ -208,6 +209,10 @@ A2D_DRAG_SCROLL:= $4A
 A2D_UPDATE_SCROLL:= $4B
         ;; .byte type (1 = vertical, 2 = horizontal)
         ;; .byte pos (new position 0...250)
+
+;;; Used in A2D_QUERY_BOX / A2D_SET_BOX
+A2D_SCREEN_ADDR     := $2000    ; Screen address
+A2D_SCREEN_STRIDE   := $80      ; Stride in bytes (???)
 
 ;;; Used in A2D_GET_INPUT
 A2D_INPUT_NONE  := 0            ; No mouse or keypress

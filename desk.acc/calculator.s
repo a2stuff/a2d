@@ -118,7 +118,7 @@ skip:   lda     #0
         sta     L089D
         lda     ROMIN2
         A2D_CALL A2D_QUERY_BOX, query_box_params
-        A2D_CALL A2D_TEXT_BOX1, box_params
+        A2D_CALL A2D_SET_BOX1, box_params
         rts
 
 .proc routine
@@ -148,7 +148,7 @@ L089E:  sta     query_box_params_id
         rts
 
 :       A2D_CALL A2D_QUERY_BOX, query_box_params
-        A2D_CALL A2D_TEXT_BOX1, box_params
+        A2D_CALL A2D_SET_BOX1, box_params
         lda     query_box_params_id
         cmp     #window_id
         bne     :+
@@ -667,12 +667,12 @@ pixels: .byte   px(%1000001)
         .byte   px(%1001001)
 .endproc
 
-        ;; param block for a $03 and TEXT_BOX1 calls, and ref'd in A2D_QUERY_BOX call
+        ;; param block for a $03 and SET_BOX1 calls, and ref'd in A2D_QUERY_BOX call
 .proc box_params
 left:   .word   0
 top:    .word   0
-        .word   0               ; $03 call sets to $2000 (hires)
-        .word   0               ; ??? $03 call sets to $80
+addr:   .word   0
+stride: .word   0
 hoffset:.word   0
 voffset:.word   0
 width:  .word   0               ; $03 call sets to screen_width-1
@@ -690,14 +690,13 @@ height: .word   0               ; $03 call sets to screen_height-1
         menu_bar_height := 13
         screen_width    := 560
         screen_height   := 192
-        hires           := $2000
 
-        ;; params for A2D_TEXT_BOX2 when decorating title bar
+        ;; params for A2D_SET_BOX2 when decorating title bar
 .proc screen_box
         .word   0
         .word   menu_bar_height
-        .word   hires
-        .word   $80             ; ??
+        .word   A2D_SCREEN_ADDR
+        .word   A2D_SCREEN_STRIDE
         .word   0, 0            ; hoffset/voffset
         .word   screen_width - 1
         .word   screen_height - menu_bar_height - 2
@@ -730,8 +729,8 @@ width_b: .word  window_width
 height_b:.word  window_height
 left:   .word   default_left
 top:    .word   default_top
-        .word   hires
-        .word   $80
+        .word   A2D_SCREEN_ADDR
+        .word   A2D_SCREEN_STRIDE
 hoffset:.word   0
 voffset:.word   0
 width:  .word   window_width
@@ -768,7 +767,7 @@ L0D18:  sta     ALTZPON
         A2D_CALL $1A, L08D4
         A2D_CALL A2D_CREATE_WINDOW, create_window_params
         A2D_CALL $03, box_params             ; get display state?
-        A2D_CALL A2D_TEXT_BOX1, box_params   ; set clipping bounds?
+        A2D_CALL A2D_SET_BOX1, box_params   ; set clipping bounds?
         A2D_CALL $2B, 0
         lda     #$01
         sta     input_state_params::state
@@ -1625,12 +1624,12 @@ draw_title_bar:
         bcs     :+
         dex
 :       stx     title_bar_decoration::top+1
-        A2D_CALL A2D_TEXT_BOX2, screen_box ; set clipping rect to whole screen
+        A2D_CALL A2D_SET_BOX2, screen_box ; set clipping rect to whole screen
         A2D_CALL A2D_DRAW_PATTERN, title_bar_decoration     ; Draws decoration in title bar
         lda     #window_id
         sta     query_box_params::id
         A2D_CALL A2D_QUERY_BOX, query_box_params     ; get client rect
-        A2D_CALL A2D_TEXT_BOX1, box_params ; clip rect?
+        A2D_CALL A2D_SET_BOX1, box_params ; clip rect?
         A2D_CALL A2D_SHOW_CURSOR
         jsr     display_buffer2
         rts

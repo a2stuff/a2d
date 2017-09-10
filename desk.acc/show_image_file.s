@@ -233,16 +233,18 @@ vscroll_pos:
         .byte   0
 
         ;; ???
-        .byte   $00,$00,$C8,$00,$33,$00
+        .byte   0, 0
 
-width:  .word   default_width
-height: .word   default_height
+widtha: .word   default_width
+heighta:.word   default_height
+widthb: .word   default_width
+heightb:.word   default_height
 
-.proc text_box
+.proc box
 left:   .word   default_left
 top:    .word   default_top
-        .word   $2000           ; ??? never changed
-        .word   $80             ; ??? never changed
+addr:   .word   A2D_SCREEN_ADDR
+stride: .word   A2D_SCREEN_STRIDE
 hoffset:.word   0               ; Also used for A2D_CLEAR_BOX
 voffset:.word   0
 width:  .word   default_width
@@ -368,7 +370,7 @@ end:    rts
 
         ;; create window
         A2D_CALL A2D_CREATE_WINDOW, window_params
-        A2D_CALL A2D_TEXT_BOX1, window_params::text_box
+        A2D_CALL A2D_SET_BOX1, window_params::box
 
         jsr     show_file
 
