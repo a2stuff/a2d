@@ -8,7 +8,6 @@
         .include "a2d.inc"
 
 
-L0000           := $0000
 L0020           := $0020
 L4015           := $4015
 
@@ -77,9 +76,11 @@ L0882:  lda     L08A3,x
         jsr     L08B4
         bit     L08B3
         bmi     L089D
+
         jsr     UNKNOWN_CALL
         .byte   $0C
-        .addr   L0000
+        .addr   0
+
 L089D:  lda     #0
         sta     L08B3
         rts
@@ -470,7 +471,7 @@ L0E02:  .byte   $50,$00,$00,$20,$80,$00,$00,$00
         .byte   $00,$00,$06,$50,$75,$7A,$7A,$6C
         .byte   $65
 
-L0E53:  jsr     L10A5
+L0E53:  jsr     save_zp
         A2D_CALL A2D_CREATE_WINDOW, L0DEC
         ldy     #$0F
 L0E5E:  tya
@@ -502,7 +503,7 @@ L0E79:  lda     position_table+1,y
         A2D_CALL A2D_GET_INPUT, L08DB
         lda     L08DB
         beq     L0E70
-        jsr     L1262
+        jsr     check_victory
         bcs     L0E70
         jsr     L11BB
         jsr     L12D2
@@ -541,7 +542,7 @@ L0EF9:  A2D_CALL A2D_DESTROY_WINDOW, L0D9C
 
         jsr     UNKNOWN_CALL
         .byte   $0C
-        .addr   L0000
+        .addr   0
 
         ldx     #$09
 L0F07:  lda     L0F12,x
@@ -714,7 +715,7 @@ L104A:  lda     #$0C
 L1055:  lda     #$0C
         sta     position_table,y
         jsr     L11C8
-L105D:  jsr     L1262
+L105D:  jsr     check_victory
         bcc     L106E
         ldx     #$04
 L1064:  txa
@@ -740,21 +741,26 @@ L1072:  A2D_CALL A2D_SET_PATTERN, L0D72
         A2D_CALL A2D_SET_BOX1, L0DB3
         rts
 
-L10A5:  ldx     #$00
-L10A7:  lda     L0000,x
-        sta     L10BB,x
-        dex
-        bne     L10A7
-        rts
-
+.proc save_zp
         ldx     #$00
-L10B2:  lda     L10BB,x
-        sta     L0000,x
+loop:   lda     $00,x
+        sta     saved_zp,x
         dex
-        bne     L10B2
+        bne     loop
         rts
+.endproc
 
-L10BB:  .byte   0,0,0,0,0,0,0,0
+.proc restore_zp
+        ldx     #$00
+loop:   lda     saved_zp,x
+        sta     $00,x
+        dex
+        bne     loop
+        rts
+.endproc
+
+saved_zp:
+        .byte   0,0,0,0,0,0,0,0
         .byte   0,0,0,0,0,0,0,0
         .byte   0,0,0,0,0,0,0,0
         .byte   0,0,0,0,0,0,0,0
@@ -861,61 +867,75 @@ L1254:  dey
         bne     L124B
         rts
 
-L1262:  lda     position_table
-        beq     L126B
-        cmp     #$0C
-        bne     L12D0
-L126B:  ldy     #$01
-L126D:  tya
+        ;; Returns with carry set if puzzle complete
+.proc check_victory             ; Allows for swapped indistinct pieces, etc.
+        ;; 0/12 can be swapped
+        lda     position_table
+        beq     :+
+        cmp     #12
+        bne     nope
+
+:       ldy     #1
+c1234:  tya
         cmp     position_table,y
-        bne     L12D0
+        bne     nope
         iny
-        cpy     #$05
-        bcc     L126D
+        cpy     #5
+        bcc     c1234
+
+        ;; 5/6 are identical
         lda     position_table+5
-        cmp     #$05
-        beq     L1283
-        cmp     #$06
-        bne     L12D0
-L1283:  lda     position_table+6
-        cmp     #$05
-        beq     L128E
-        cmp     #$06
-        bne     L12D0
-L128E:  lda     position_table+7
-        cmp     #$07
-        bne     L12D0
+        cmp     #5
+        beq     :+
+        cmp     #6
+        bne     nope
+:       lda     position_table+6
+        cmp     #5
+        beq     :+
+        cmp     #6
+        bne     nope
+:       lda     position_table+7
+        cmp     #7
+        bne     nope
         lda     position_table+8
-        cmp     #$08
-        bne     L12D0
+        cmp     #8
+        bne     nope
+
+        ;; 9/10 are identical
         lda     position_table+9
-        cmp     #$09
-        beq     L12A7
-        cmp     #$0A
-        bne     L12D0
-L12A7:  lda     position_table+10
-        cmp     #$09
-        beq     L12B2
-        cmp     #$0A
-        bne     L12D0
-L12B2:  lda     position_table+11
-        cmp     #$0B
-        bne     L12D0
+        cmp     #9
+        beq     :+
+        cmp     #10
+        bne     nope
+:       lda     position_table+10
+        cmp     #9
+        beq     :+
+        cmp     #10
+        bne     nope
+
+:       lda     position_table+11
+        cmp     #11
+        bne     nope
+
+        ;; 0/12 can be swapped
         lda     position_table+12
-        beq     L12C2
-        cmp     #$0C
-        bne     L12D0
-L12C2:  ldy     #$0D
-L12C4:  tya
+        beq     :+
+        cmp     #12
+        bne     nope
+
+:       ldy     #13
+c131415:tya
         cmp     position_table,y
-        bne     L12D0
+        bne     nope
         iny
-        cpy     #$10
-        bcc     L12C4
+        cpy     #16
+        bcc     c131415
         rts
 
-L12D0:  clc
+nope:   clc
         rts
+.endproc
+
 
 L12D2:  ldy     #$0F
 L12D4:  lda     position_table,y
