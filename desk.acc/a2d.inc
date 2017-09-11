@@ -35,8 +35,17 @@ JUMP_TABLE_3F   := $403F        ; ???
 ;;; ==================================================
 ;;; A2D Calls
 
+;;; $40E5,(call*2) is the jump table used for processing these calls
+;;; $4184,(call*2) defines param blocks input length
+;;;   if >=0, is length of param block
+;;;   if <0, and with $7E to get length
+;;;   if $4185,(call*2) is non-zero, param block is copied.
+
+
 A2D_QUERY_SCREEN        := $03  ; Get screen info
-        ;; -- first bit is like SET_BOX/QUERY_BOX params
+        ;; (input length 0 bytes)
+        ;; (input length 35 bytes)
+        ;; -- first part is like SET_BOX/QUERY_BOX params
         ;; .word left
         ;; .word top
         ;; .addr addr           A2D_SCREEN_ADDR
@@ -45,15 +54,15 @@ A2D_QUERY_SCREEN        := $03  ; Get screen info
         ;; .word voffset
         ;; .word width          560-1
         ;; .word height         192-1
+        ;; -- next part is ???
         ;; .byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ???
-        ;; .byte 0,0,0,0,       ???
-        ;; .word $100           ???
-        ;; .word $1             ???
-        ;; .word $7F            ???
-        ;; .word $88            ???
+        ;; .byte 0,0,0,0        ???
+        ;; .byte 1,1,0,$7F,0,$88
 
 A2D_SET_BOX1   := $04           ; Not sure what BOX1 vs. BOX2 is for
+        ;; (input length 36 bytes)
 A2D_SET_BOX2   := $06           ; set vs. intersect? (not quite)
+        ;; (input length 16 bytes)
         ;; .word left           pixels from screen edge
         ;; .word top
         ;; .word addr           A2D_SCREEN_ADDR ($2000)
@@ -64,36 +73,44 @@ A2D_SET_BOX2   := $06           ; set vs. intersect? (not quite)
         ;; .word height
 
 A2D_SET_FILL_MODE := $07
+        ;; (input length 1 byte)
         ;; .byte mode           0 = normal, 6 = xor     (<4, >=4)
 
 A2D_SET_PATTERN := $08
-        ;; .byte r0...r7        8x8 pixel pattern for A2D_CLEAR_BOX calls
+        ;; (input length 8 bytes)
+        ;; .byte r0...r7        8x8 pixel pattern for A2D_FILL_RECT calls
 
 A2D_UNK_0C      := $0C          ; Unknown - used in calculator
+        ;; (input length 1 byte)
 
 A2D_SET_POS     := $0E
+        ;; (input length 4 bytes)
         ;; .word x
         ;; .word y
 
 A2D_FILL_RECT   := $11          ; With selected pattern
+        ;; (input length 8 bytes)
         ;; .word left           (includes scroll pos)
         ;; .word top
         ;; .word right          pixels
         ;; .word bottom
 
 A2D_DRAW_RECT   := $12          ; With selected pattern
+        ;; (input length 8 bytes)
         ;; .word left           (includes scroll pos)
         ;; .word top
         ;; .word right          pixels
         ;; .word bottom
 
 A2D_TEST_BOX    := $13          ; Is pos (via SET_POS) in bounds? Returns true/false in A
+        ;; (input length 8 bytes)
         ;; .word left
         ;; .word top
         ;; .word right
         ;; .word bottom
 
 A2D_DRAW_PATTERN := $14         ; Draw pattern
+        ;; (input length 16 bytes)
         ;; .word left
         ;; .word top
         ;; .addr pattern        pattern is 7 bits per byte, 0 = black, 1 = white
@@ -103,26 +120,32 @@ A2D_DRAW_PATTERN := $14         ; Draw pattern
         ;; .word height         pixels
 
 A2D_MEASURE_TEXT := $18
+        ;; (input length 3 bytes)
         ;; .addr data
         ;; .byte length
         ;; .word width          pixels
 
 A2D_DRAW_TEXT   := $19          ; Drawn at last SET_POS as left, baseline
+        ;; (input length 3 bytes)
         ;; .addr data
         ;; .byte length
 
 A2D_UNK_1A      := $1A          ; Unknown - used in calculator before window creation,
                                 ; and after destruction
+        ;; (input length 1 byte)
 
 A2D_UNK_24      := $24          ; Unknown - used in calculator
+        ;; (no parameters; pass $0000 as address)
 
 A2D_SHOW_CURSOR := $25
-        ;; no parameters (pass $0000 as address)
+        ;; (no parameters; pass $0000 as address)
 
 A2D_HIDE_CURSOR := $26
-        ;; no parameters (pass $0000 as address)
+        ;; (no parameters; pass $0000 as address)
 
 A2D_GET_INPUT   := $2A
+        ;; (input length 0 bytes)
+        ;; (output length 4 bytes)
         ;; .byte state     (0=up, 1=press, 2=release, 3=key, 4=held)
         ;; if state is not 3:
         ;;   .byte key       (ASCII code; high bit clear)
@@ -131,10 +154,11 @@ A2D_GET_INPUT   := $2A
         ;;   .word xcoord
         ;;   .word ycoord
 
-A2D_UNK_2B      := $2B          ; Unknown
-        ;; no parameters (pass $0000 as address)
+A2D_UNK_2B      := $2B          ; Unknown - possibly "reset drawing state"
+        ;; (no parameters; pass $0000 as address)
 
 A2D_UNK_2D      := $2D          ; Unknown - used in calculator
+        ;; (input length 5 bytes)
 
 A2D_CREATE_WINDOW := $38
         ;; .byte id
@@ -169,13 +193,16 @@ A2D_CREATE_WINDOW := $38
         ;; .word height
 
 A2D_DESTROY_WINDOW := $39
+        ;; (input length 1 byte)
         ;; .byte id
 
 A2D_QUERY_BOX      := $3C       ; get client "box" of window
+        ;; (input length 3 bytes)
         ;; .byte id             window
-        ;; .addr box            box definition to populate, like A2D_SET_BOX1
+        ;; .addr box            box definition to populate, like A2D_SET_BOX1 (or 2 ???)
 
 A2D_QUERY_TARGET   := $40
+        ;; (input length 4 bytes)
         ;; .word queryx         (relative to screen)
         ;; .word queryy
         ;; .byte element        (A2D_ELEM_*)
@@ -188,22 +215,26 @@ A2D_QUERY_TARGET   := $40
         ;; .byte id of window
 
 A2D_CLOSE_CLICK := $43
+        ;; (input length 0 bytes)
         ;; .byte clicked (0 = cancelled, 1 = clicked)
         ;; .byte ??
         ;; .byte ??
 
+A2D_DRAG_WINDOW := $44
+        ;; (input length 5 bytes)
+        ;; .byte window_id
+        ;; .word xcoord         screen coordinates
+        ;; .word ycoord
+
 A2D_DRAG_RESIZE := $45
+        ;; (input length 5 bytes)
         ;; .byte id of window
         ;; .word xcoord of mouse
         ;; .word ycoord of mouse
         ;; .byte ??     (likely: moved? 0 = no change, 1 = moved)
 
-A2D_DRAG_WINDOW := $44
-        ;; .byte window_id
-        ;; .word xcoord         screen coordinates
-        ;; .word ycoord
-
 A2D_MAP_COORDS  := $46           ; Map screen coords to client coords
+        ;; (input length 5 bytes)
         ;; .byte window_id
         ;; .word screenx
         ;; .word screeny
@@ -211,16 +242,19 @@ A2D_MAP_COORDS  := $46           ; Map screen coords to client coords
         ;; .word clienty
 
 A2D_QUERY_CLIENT:= $48
+        ;; (input length 4 bytes)
         ;; .word xcoord of query
         ;; .word ycoord of query
         ;; .byte part (0 = client, 1 = vscroll, 2 = hscroll)
         ;; .byte scroll (1 = up/left, 2 = down/right, 3 = above/before, 4 = below/after, 5 = thumb)
 
 A2D_RESIZE_WINDOW := $49
-        ;; .byte ??     (unused, so incomplete)
+        ;; (input length 3 bytes)
+        ;; .byte ??
         ;; .byte ??
 
 A2D_DRAG_SCROLL := $4A
+        ;; (input length 5 bytes)
         ;; .byte type (1 = vscroll, 2 = hscroll)
         ;; .word xcoord of mouse
         ;; .word ycoord of mouse
@@ -228,8 +262,12 @@ A2D_DRAG_SCROLL := $4A
         ;; .byte moved (0 = no change, 1 = moved)
 
 A2D_UPDATE_SCROLL:= $4B
+        ;; (input length 3 bytes)
         ;; .byte type (1 = vertical, 2 = horizontal)
         ;; .byte pos (new position 0...250)
+        ;; .byte ???
+
+;;; $4E looks like last call
 
 ;;; ==================================================
 ;;; Constants
