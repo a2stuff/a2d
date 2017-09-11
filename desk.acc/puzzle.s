@@ -7,11 +7,11 @@
 
         .include "a2d.inc"
 
-
+SPKR := $C030
 L0020           := $0020
 L4015           := $4015
 
-        jmp     L0828
+        jmp     copy2aux
 
         .byte   0,0,0,0,0,0,0,0
         .byte   0,0,0,0,0,0,0,0
@@ -19,59 +19,84 @@ L4015           := $4015
         .byte   0,0,0,0,0,0,0,0
         .byte   0,0,0,0
 
+;;; ==================================================
+;;; Copy the DA to AUX and invoke it
+
 stash_stack:  .byte   0
-L0828:  tsx
+.proc copy2aux
+        tsx
         stx     stash_stack
+
+        start := enter_da
+        end := last
+
         sta     ALTZPOFF
         lda     $C082
-        lda     #<L0870
+        lda     #<start
         sta     STARTLO
-        lda     #>L0870
+        lda     #>start
         sta     STARTHI
-        lda     #$F6
+        lda     #<end
         sta     ENDLO
-        lda     #$12
+        lda     #>end
         sta     ENDHI
-        lda     #<L0870
+        lda     #<start
         sta     DESTINATIONLO
-        lda     #>L0870
+        lda     #>start
         sta     DESTINATIONHI
-        sec
+        sec                     ; main>aux
         jsr     AUXMOVE
-        lda     #<L0870
-        sta     $03ED
-        lda     #>L0870
-        sta     $03EE
+
+        lda     #<enter_da
+        sta     XFERSTARTLO
+        lda     #>enter_da
+        sta     XFERSTARTHI
         php
         pla
-        ora     #$40
+        ora     #$40            ; set overflow: use aux zp/stack
         pha
         plp
-        sec
+        sec                     ; control main>aux
         jmp     XFER
+.endproc
 
-L0862:  sta     ALTZPON
+;;; ==================================================
+;;; Set up / tear down
+
+.proc exit_da
+        sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         ldx     stash_stack
         txs
         rts
+.endproc
 
-L0870:  sta     ALTZPON
+.proc enter_da
+        sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         lda     #0
         sta     $08
         jmp     L0E53
+.endproc
 
         window_id = $33
 
-L0880:  ldx     #$10
-L0882:  lda     L08A3,x
-        sta     L0020,x
+;;; ==================================================
+
+.proc call_4015_main
+
+        dest := $20
+
+        ;; copy following routine to $20 and call it
+        ldx     #(routine_end - routine)
+loop:   lda     routine,x
+        sta     dest,x
         dex
-        bpl     L0882
-        jsr     L0020
+        bpl     loop
+        jsr     dest
+
         lda     #window_id
         jsr     L08B4
         bit     L08B3
@@ -85,15 +110,21 @@ L089D:  lda     #0
         sta     L08B3
         rts
 
-L08A3:  sta     RAMRDOFF
+.proc routine
+        sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     L4015
         sta     RAMRDON
         sta     RAMWRTON
         rts
+.endproc
+        routine_end := *
+.endproc
 
-L08B3:  brk
-L08B4:  sta     L08E7
+;;; ==================================================
+
+L08B3:  .byte   0               ; ???
+L08B4:  sta     query_box_params_id
         lda     L0E02
         cmp     #$BF
         bcc     L08C4
@@ -101,24 +132,64 @@ L08B4:  sta     L08E7
         sta     L08B3
         rts
 
-L08C4:  A2D_CALL A2D_QUERY_BOX, L08E7
+;;; ==================================================
+
+L08C4:  A2D_CALL A2D_QUERY_BOX, query_box_params
         A2D_CALL A2D_SET_BOX1, L0DB3
-        lda     L08E7
+        lda     query_box_params_id
         cmp     #window_id
         bne     L08DA
         jmp     L1072
 
 L08DA:  rts
 
-L08DB:  .byte   0
-L08DC:  .byte   0
-L08DD:  .byte   0,0,0
+
+;;; ==================================================
+;;; Param Blocks
+
+        ;; following memory space is re-used
+.proc drag_window_params
+id := * + 0
+.endproc
+
+.proc map_coords_params
+id      := * + 0
+screenx := * + 1
+screeny := * + 3
+clientx := * + 5
+clienty := * + 7
+.endproc
+
+        query_target_params := *+1
+        query_target_params_queryx := *+1
+        query_target_params_queryy := *+3
+        query_target_params_element := *+5
+        query_target_params_id := *+6
+
+.proc get_input_params
+state:  .byte   0
+key       := *
+modifiers := *+1
+
+xcoord    := *
+ycoord    := *+2
+        .byte   0,0,0,0         ; storage for above
+.endproc
+
+
+
 L08E0:  .byte   0
 L08E1:  .byte   0
 L08E2:  .byte   0
 L08E3:  .byte   0,0,0
 L08E6:  .byte   0
-L08E7:  .byte   0,$B3,$0D
+
+.proc query_box_params
+id:     .byte   0
+addr:   .addr   $0DB3
+.endproc
+query_box_params_id := query_box_params::id
+
 L08EA:  .byte   $05
 L08EB:  .byte   0
 L08EC:  .byte   $03
@@ -429,14 +500,27 @@ piece16:
         .byte px(%0000000),px(%0000000),px(%0000000),px(%0000000)
 
 
+.proc fill_rect_params
+        .word   1, 0, $79, $44
+.endproc
 
-L0D6A:  .byte   $01,$00,$00,$00,$79,$00,$44,$00
-L0D72:  .byte   $77,$DD,$77,$DD,$77,$DD,$77,$DD
-        .byte   $00
-L0D7B:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+.proc pattern_speckles
+        .byte   $77,$DD,$77,$DD,$77,$DD,$77,$DD
+.endproc
+
+        .byte   $00             ; ???
+
+.proc pattern_black
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+.endproc
+
         .byte   $00,$FF,$FF,$FF,$FF,$FF,$FF,$FF
         .byte   $FF,$00
-L0D8D:  .byte   $05,$00,$02,$00
+
+.proc set_pos_params            ; for what ???
+        .word   5, 2
+.endproc
+
 L0D91:  .byte   $70,$00,$00,$00
 L0D95:  .byte   $00
 L0D96:  .byte   $00
@@ -448,6 +532,7 @@ L0D9B:  .byte   $00
 L0D9C:  .byte   $33,$73,$00,$F7,$FF,$AD,$0D,$01
         .byte   $00,$00,$00,$00,$00,$06,$00,$05
         .byte   $00,$41,$35,$47,$37,$36,$49
+
 L0DB3:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -470,6 +555,9 @@ L0E02:  .byte   $50,$00,$00,$20,$80,$00,$00,$00
         .byte   $00,$00,$01,$01,$00,$7F,$00,$88
         .byte   $00,$00,$06,$50,$75,$7A,$7A,$6C
         .byte   $65
+
+;;; ==================================================
+;;; Create the window
 
 L0E53:  jsr     save_zp
         A2D_CALL A2D_CREATE_WINDOW, L0DEC
@@ -500,51 +588,60 @@ L0E79:  lda     position_table+1,y
         lda     position_table+1
         sta     position_table
         stx     position_table+1
-        A2D_CALL A2D_GET_INPUT, L08DB
-        lda     L08DB
+        A2D_CALL A2D_GET_INPUT, get_input_params
+        lda     get_input_params::state
         beq     L0E70
         jsr     check_victory
         bcs     L0E70
         jsr     L11BB
         jsr     L12D2
-L0EAE:  A2D_CALL A2D_GET_INPUT, L08DB
-        lda     L08DB
-        cmp     #$01
-        bne     L0EC1
+
+;;; ==================================================
+;;; Input loop and processing
+
+input_loop:
+        A2D_CALL A2D_GET_INPUT, get_input_params
+        lda     get_input_params::state
+        cmp     #A2D_INPUT_DOWN
+        bne     :+
         jsr     L0ECB
-        jmp     L0EAE
+        jmp     input_loop
 
-L0EC1:  cmp     #$03
-        bne     L0EAE
-        jsr     L0F30
-        jmp     L0EAE
+        ;; key?
+:       cmp     #A2D_INPUT_KEY
+        bne     input_loop
+        jsr     check_key
+        jmp     input_loop
 
-L0ECB:  A2D_CALL A2D_QUERY_TARGET, L08DC
-        lda     L08E1
+        ;; click - where?
+L0ECB:  A2D_CALL A2D_QUERY_TARGET, query_target_params
+        lda     query_target_params_id
         cmp     #window_id
-        bne     L0EDD
-        lda     L08E0
-        bne     L0EDE
-L0EDD:  rts
+        bne     bail
+        lda     query_target_params_element
+        bne     :+
+bail:   rts
 
-L0EDE:  cmp     #$02
-        bne     L0EEA
-        jsr     L0F3D
-        bcc     L0EDD
+        ;; client area?
+:       cmp     #A2D_ELEM_CLIENT
+        bne     :+
+        jsr     find_click_piece
+        bcc     bail
         jmp     L0FBC
 
-L0EEA:  cmp     #$05
-        bne     L0F1B
+        ;; close box?
+:       cmp     #A2D_ELEM_CLOSE
+        bne     check_title
         A2D_CALL A2D_CLOSE_CLICK, L08E6
         lda     L08E6
-        beq     L0EDD
+        beq     bail
 L0EF9:  A2D_CALL A2D_DESTROY_WINDOW, L0D9C
 
-        jsr     UNKNOWN_CALL
+        jsr     UNKNOWN_CALL    ; ???
         .byte   $0C
         .addr   0
 
-        ldx     #$09
+        ldx     #$09            ; copy following to ZP and run it
 L0F07:  lda     L0F12,x
         sta     L0020,x
         dex
@@ -553,87 +650,105 @@ L0F07:  lda     L0F12,x
 
 L0F12:  sta     RAMRDOFF
         sta     RAMWRTOFF
-        jmp     L0862
+        jmp     exit_da
 
-L0F1B:  cmp     #$03
-        bne     L0EDD
+        ;; title bar?
+check_title:
+        cmp     #A2D_ELEM_TITLE
+        bne     bail
         lda     #window_id
-        sta     L08DB
-        A2D_CALL A2D_DRAG_WINDOW, L08DB
+        sta     drag_window_params::id
+        A2D_CALL A2D_DRAG_WINDOW, drag_window_params
         ldx     #$23
-        jsr     L0880
+        jsr     call_4015_main
         rts
 
-L0F30:  lda     L08DD
-        bne     L0F3C
-        lda     L08DC
-        cmp     #$1B
+        ;; on key press - exit if Escape
+check_key:
+        lda     get_input_params::modifiers
+        bne     :+
+        lda     get_input_params::key
+        cmp     #$1B            ; Escape
         beq     L0EF9
-L0F3C:  rts
+:       rts
 
+;;; ==================================================
+;;; Map click to piece x/y
+
+.proc find_click_piece
 L0F3D:  lda     #window_id
-        sta     L08DB
-        A2D_CALL A2D_MAP_COORDS, L08DB
-        lda     L08E1
-        ora     L08E3
-        bne     L0F91
-        lda     L08E2
-        ldx     L08E0
+        sta     map_coords_params::id
+        A2D_CALL A2D_MAP_COORDS, map_coords_params
+        lda     map_coords_params::clientx+1
+        ora     map_coords_params::clienty+1
+        bne     nope            ; ensure high bytes are 0
+
+        lda     map_coords_params::clienty
+        ldx     map_coords_params::clientx
+
         cmp     #$03
-        bcc     L0F91
+        bcc     nope
         cmp     #$14
-        bcs     L0F67
-        jsr     L0F93
-        bcc     L0F91
-        lda     #$00
-        beq     L0F8C
-L0F67:  cmp     #$24
-        bcs     L0F74
-        jsr     L0F93
-        bcc     L0F91
-        lda     #$01
-        bne     L0F8C
-L0F74:  cmp     #$34
-        bcs     L0F81
-        jsr     L0F93
-        bcc     L0F91
-        lda     #$02
-        bne     L0F8C
-L0F81:  cmp     #$44
-        bcs     L0F91
-        jsr     L0F93
-        bcc     L0F91
-        lda     #$03
-L0F8C:  sta     L0D98
+        bcs     :+
+        jsr     find_click_y
+        bcc     nope
+        lda     #0
+        beq     yep
+:       cmp     #$24
+        bcs     :+
+        jsr     find_click_y
+        bcc     nope
+        lda     #1
+        bne     yep
+:       cmp     #$34
+        bcs     :+
+        jsr     find_click_y
+        bcc     nope
+        lda     #2
+        bne     yep
+:       cmp     #$44
+        bcs     nope
+        jsr     find_click_y
+        bcc     nope
+        lda     #3
+
+yep:    sta     L0D98
         sec
         rts
 
-L0F91:  clc
+nope:   clc
         rts
+.endproc
 
-L0F93:  cpx     #$05
-        bcc     L0FBA
+.proc find_click_y
+        cpx     #$05
+        bcc     nope
         cpx     #$21
-        bcs     L0F9F
-        lda     #$00
-        beq     L0FB5
-L0F9F:  cpx     #$3E
-        bcs     L0FA7
-        lda     #$01
-        bne     L0FB5
-L0FA7:  cpx     #$5A
-        bcs     L0FAF
-        lda     #$02
-        bne     L0FB5
-L0FAF:  cpx     #$75
-        bcs     L0FBA
-        lda     #$03
-L0FB5:  sta     L0D97
+        bcs     :+
+        lda     #0
+        beq     yep
+:       cpx     #$3E
+        bcs     :+
+        lda     #1
+        bne     yep
+:       cpx     #$5A
+        bcs     :+
+        lda     #2
+        bne     yep
+:       cpx     #$75
+        bcs     nope
+        lda     #3
+
+yep:    sta     L0D97
         sec
         rts
 
-L0FBA:  clc
+nope:   clc
         rts
+.endproc
+
+;;; ==================================================
+;;; Process piece click
 
 L0FBC:  lda     #$00
         ldy     L0D96
@@ -720,7 +835,7 @@ L105D:  jsr     check_victory
         ldx     #$04
 L1064:  txa
         pha
-        jsr     L1247
+        jsr     play_sound
         pla
         tax
         dex
@@ -729,17 +844,23 @@ L106E:  jmp     L12D2
 
         rts
 
-L1072:  A2D_CALL A2D_SET_PATTERN, L0D72
-        A2D_CALL A2D_FILL_RECT, L0D6A
-        A2D_CALL A2D_SET_PATTERN, L0D7B
-        A2D_CALL A2D_SET_POS, L0D8D
-        A2D_CALL $0F, L0D91
+;;; ==================================================
+;;; Clear the background
+
+L1072:  A2D_CALL A2D_SET_PATTERN, pattern_speckles
+        A2D_CALL A2D_FILL_RECT, fill_rect_params
+        A2D_CALL A2D_SET_PATTERN, pattern_black
+        A2D_CALL A2D_SET_POS, set_pos_params
+        A2D_CALL $0F, L0D91     ; ???
         jsr     L11BB
+
         lda     #window_id
-        sta     L08E7
-        A2D_CALL A2D_QUERY_BOX, L08E7
+        sta     query_box_params::id
+        A2D_CALL A2D_QUERY_BOX, query_box_params
         A2D_CALL A2D_SET_BOX1, L0DB3
         rts
+
+;;; ==================================================
 
 .proc save_zp
         ldx     #$00
@@ -793,6 +914,9 @@ saved_zp:
         .byte   0,0,0,0,0,0,0,0
         .byte   0,0,0,0,0,0,0,0
 
+;;; ==================================================
+;;; Draw pieces
+
 L11BB:  ldy     #$01
         sty     L0D9B
         dey
@@ -816,8 +940,8 @@ L11E6:  tya
         pha
         A2D_CALL A2D_HIDE_CURSOR
         lda     #window_id
-        sta     L08E7
-        A2D_CALL A2D_QUERY_BOX, L08E7
+        sta     query_box_params::id
+        A2D_CALL A2D_QUERY_BOX, query_box_params
         A2D_CALL A2D_SET_BOX1, L0DB3
         pla
         tay
@@ -851,21 +975,29 @@ L1201:  tya
         A2D_CALL A2D_SHOW_CURSOR
         rts
 
-L1247:  ldx     #$80
+;;; ==================================================
+;;; Play sound
+
+.proc play_sound
+        ldx     #$80
 L1249:  lda     #$58
 L124B:  ldy     #$1B
 L124D:  dey
         bne     L124D
-        bit     $C030
+        bit     SPKR
         tay
-L1254:  dey
-        bne     L1254
+delay:  dey
+        bne     delay
         sbc     #$01
         beq     L1249
-        bit     $C030
+        bit     SPKR
         dex
         bne     L124B
         rts
+.endproc
+
+;;; ==================================================
+;;; Puzzle complete?
 
         ;; Returns with carry set if puzzle complete
 .proc check_victory             ; Allows for swapped indistinct pieces, etc.
@@ -954,3 +1086,5 @@ L12E7:  cmp     #4
         bne     L12E7
 L12F2:  sta     L0D95
         rts
+
+last := *

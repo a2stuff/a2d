@@ -151,7 +151,7 @@ A2D_HIDE_CURSOR := $26
 
 A2D_GET_INPUT   := $2A
         ;; (input length 0 bytes)
-        ;; (output length 4 bytes)
+        ;; (output length 5 bytes)
         ;; .byte state     (0=up, 1=press, 2=release, 3=key, 4=held)
         ;; if state is not 3:
         ;;   .byte key       (ASCII code; high bit clear)
