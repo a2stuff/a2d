@@ -1,36 +1,17 @@
-.org $800
-; da65 V2.16 - Git f5e9b401
-; Created:    2017-09-10 20:12:54
-; Input file: date.bin
-; Page:       1
-
-
+        .org $800
         .setcpu "65C02"
+
+        .include "apple2.inc"
+        .include "../inc/prodos.inc"
+        .include "../inc/auxmem.inc"
+
+        .include "a2d.inc"
 
 L0000           := $0000
 L0020           := $0020
 L1000           := $1000
-A2D             := $4000
 L4021           := $4021
-UNKNOWN_CALL    := $8E00
-MLI             := $BF00
-RAMRDOFF        := $C002
-RAMRDON         := $C003
-RAMWRTOFF       := $C004
-RAMWRTON        := $C005
-ALTZPOFF        := $C008
-ALTZPON         := $C009
-LCBANK1         := $C08B
-AUXMOVE         := $C311
-XFER            := $C314
-FSUB            := $E7A7
-FADD            := $E7BE
-FMULT           := $E97F
-FDIV            := $EA66
-ROUND           := $EB2B
-FLOAT           := $EB93
-FIN             := $EC4A
-FOUT            := $ED34
+
         jmp     L0825
 
 L0803:  .byte   $00,$09,$4D,$44,$2E,$53,$59,$53
@@ -40,7 +21,8 @@ L0815:  .byte   $00,$03,$00,$00,$04
 L081A:  .byte   $00,$23,$08,$02,$00,$00,$00,$01
 L0822:  .byte   $00
 L0823:  .byte   $00
-L0824:  .byte   $00
+
+stash_stack:  .byte   $00
 L0825:  tsx
         stx     L0803
         sta     ALTZPOFF
@@ -50,17 +32,17 @@ L0825:  tsx
         lda     $BF91
         sta     L0910
         lda     #$B8
-        sta     $3C
+        sta     STARTLO
         lda     #$08
-        sta     $3D
+        sta     STARTHI
         lda     #$2D
-        sta     $3E
+        sta     ENDLO
         lda     #$0F
-        sta     $3F
+        sta     ENDHI
         lda     #$B8
-        sta     $42
+        sta     DESTINATIONLO
         lda     #$08
-        sta     $43
+        sta     DESTINATIONHI
         sec
         jsr     AUXMOVE
         lda     #$B8
@@ -77,7 +59,7 @@ L0825:  tsx
 
 L086B:  sta     ALTZPON
         sta     L0823
-        stx     L0824
+        stx     stash_stack
         lda     LCBANK1
         lda     LCBANK1
         lda     L0823
@@ -164,6 +146,7 @@ L0960:  .byte   $B4,$00,$32,$00,$00,$20,$80,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $FF,$00,$00,$00,$00,$00,$04,$02
         .byte   $00,$7F,$00,$88,$00,$00
+
 L0986:  jsr     L0E00
         lda     L0910
         lsr     a
@@ -180,18 +163,12 @@ L0986:  jsr     L0E00
         lsr     a
         lsr     a
         sta     L0912
-        jsr     A2D
-        .byte   $38
-        .addr   L094C
+        A2D_CALL A2D_CREATE_WINDOW, L094C
         lda     #$00
         sta     L090E
         jsr     L0CF0
-        jsr     A2D
-        .byte   $2B
-        .addr   L0000
-L09BB:  jsr     A2D
-        .byte   $2A
-        .addr   L0937
+        A2D_CALL $2B
+L09BB:  A2D_CALL A2D_GET_INPUT, L0937
         lda     L0937
         cmp     #$01
         bne     L09CE
@@ -219,26 +196,18 @@ L09E8:  cmp     #$08
         beq     L0A0F
         cmp     #$0B
         bne     L09BB
-        jsr     A2D
-        .byte   $11
-        .addr   L08D4
+        A2D_CALL A2D_FILL_RECT, L08D4
         lda     #$03
         sta     L0B50
         jsr     L0B17
-        jsr     A2D
-        .byte   $11
-        .addr   L08D4
+        A2D_CALL A2D_FILL_RECT, L08D4
         jmp     L09BB
 
-L0A0F:  jsr     A2D
-        .byte   $11
-        .addr   L08DC
+L0A0F:  A2D_CALL A2D_FILL_RECT, L08DC
         lda     #$04
         sta     L0B50
         jsr     L0B17
-        jsr     A2D
-        .byte   $11
-        .addr   L08DC
+        A2D_CALL A2D_FILL_RECT, L08DC
         jmp     L09BB
 
 L0A26:  sec
@@ -257,15 +226,9 @@ L0A33:  clc
 L0A3F:  jsr     L0DB4
         jmp     L09BB
 
-L0A45:  jsr     A2D
-        .byte   $40
-        .addr   L0938
-        jsr     A2D
-        .byte   $07
-        .addr   L094A
-        jsr     A2D
-        .byte   $08
-        .addr   L0905
+L0A45:  A2D_CALL A2D_QUERY_TARGET, L0938
+        A2D_CALL A2D_SET_FILL_MODE, L094A
+        A2D_CALL A2D_SET_PATTERN, L0905
         lda     L093D
         cmp     #$64
         bne     L0A63
@@ -294,9 +257,7 @@ L0A83           := * + 2
 L0A84:  .byte   $92
 L0A85:  .byte   $0A,$BB,$0A,$C9,$0A,$D7,$0A,$E5
         .byte   $0A,$E5,$0A,$E5,$0A
-L0A92:  jsr     A2D
-        .byte   $11
-        .addr   L08C4
+L0A92:  A2D_CALL A2D_FILL_RECT, L08C4
         sta     RAMWRTOFF
         lda     L0912
         asl     a
@@ -314,18 +275,14 @@ L0A92:  jsr     A2D
         sta     L0C1A
         jmp     L0C1B
 
-L0ABB:  jsr     A2D
-        .byte   $11
-        .addr   L08CC
+L0ABB:  A2D_CALL A2D_FILL_RECT, L08CC
         lda     #$00
         sta     L0C1A
         jmp     L0C1B
 
         txa
         pha
-        jsr     A2D
-        .byte   $11
-        .addr   L08D4
+        A2D_CALL A2D_FILL_RECT, L08D4
         pla
         tax
         jsr     L0AEC
@@ -333,9 +290,7 @@ L0ABB:  jsr     A2D
 
         txa
         pha
-        jsr     A2D
-        .byte   $11
-        .addr   L08DC
+        A2D_CALL A2D_FILL_RECT, L08DC
         pla
         tax
         jsr     L0AEC
@@ -347,9 +302,7 @@ L0ABB:  jsr     A2D
         jmp     L0DB4
 
 L0AEC:  stx     L0B50
-L0AEF:  jsr     A2D
-        .byte   $2A
-        .addr   L0937
+L0AEF:  A2D_CALL A2D_GET_INPUT, L0937
         lda     L0937
         cmp     #$02
         beq     L0B02
@@ -359,14 +312,10 @@ L0AEF:  jsr     A2D
 L0B02:  lda     L0B50
         cmp     #$03
         beq     L0B10
-        jsr     A2D
-        .byte   $11
-        .addr   L08DC
+        A2D_CALL A2D_FILL_RECT, L08DC
         rts
 
-L0B10:  jsr     A2D
-        .byte   $11
-        .addr   L08D4
+L0B10:  A2D_CALL A2D_FILL_RECT, L08D4
         rts
 
 L0B17:  jsr     L0DF2
@@ -394,9 +343,7 @@ L0B34:  lda     L090E
 L0B45           := * + 1
 L0B46           := * + 2
         jsr     L1000
-        jsr     A2D
-        .byte   $0C
-        .addr   L08FC
+        A2D_CALL $0C, L08FC
         jmp     L0D73
 
 L0B50:  .byte   $00,$00,$00,$61,$0B,$73,$0B,$85
@@ -483,9 +430,7 @@ L0C0D:  lda     L0913
         rts
 
 L0C1A:  brk
-L0C1B:  jsr     A2D
-        .byte   $39
-        .addr   L0947
+L0C1B:  A2D_CALL A2D_DESTROY_WINDOW, L0947
         jsr     UNKNOWN_CALL
         .byte   $0C
         .addr   L0000
@@ -522,12 +467,8 @@ L0C54:  lda     L0938
         sta     L0941
         lda     L093B
         sta     L0942
-        jsr     A2D
-        .byte   $46
-        .addr   L093E
-        jsr     A2D
-        .byte   $0E
-        .addr   L0943
+        A2D_CALL A2D_MAP_COORDS, L093E
+        A2D_CALL A2D_SET_POS, L0943
         ldx     #$01
         lda     #$C4
         sta     L0C8A
@@ -535,9 +476,7 @@ L0C54:  lda     L0938
         sta     L0C8A+1
 L0C84:  txa
         pha
-        jsr     A2D
-        .byte   $13
-L0C8A:  .addr   L1000
+        A2D_CALL A2D_TEST_BOX, $1000, L0C8A
         bne     L0CA6
         clc
         lda     L0C8A
@@ -570,66 +509,30 @@ L0CE2:  .byte   $6E,$00,$38,$00
 L0CE6:  .byte   $AC,$00,$13,$00
 L0CEA:  .byte   $AC,$00,$27,$00
 L0CEE:  .byte   $01,$01
-L0CF0:  jsr     A2D
-        .byte   $04
-        .addr   L0960
-        jsr     A2D
-        .byte   $12
-        .addr   L0CA9
-        jsr     A2D
-        .byte   $0A
-        .addr   L0CEE
-        jsr     A2D
-        .byte   $12
-        .addr   L0CB1
-        jsr     A2D
-        .byte   $12
-        .addr   L08C4
-        jsr     A2D
-        .byte   $12
-        .addr   L08CC
-        jsr     A2D
-        .byte   $0E
-        .addr   L0CE2
-        jsr     A2D
-        .byte   $19
-        .addr   L0CB9
-        jsr     A2D
-        .byte   $0E
-        .addr   L0CDE
-        jsr     A2D
-        .byte   $19
-        .addr   L0CC8
-        jsr     A2D
-        .byte   $0E
-        .addr   L0CE6
-        jsr     A2D
-        .byte   $19
-        .addr   L0CD6
-        jsr     A2D
-        .byte   $12
-        .addr   L08D4
-        jsr     A2D
-        .byte   $0E
-        .addr   L0CEA
-        jsr     A2D
-        .byte   $19
-        .addr   L0CDA
-        jsr     A2D
-        .byte   $12
-        .addr   L08DC
+L0CF0:  A2D_CALL A2D_SET_BOX1, L0960
+        A2D_CALL A2D_DRAW_RECT, L0CA9
+        A2D_CALL $0A, L0CEE
+        A2D_CALL A2D_DRAW_RECT, L0CB1
+        A2D_CALL A2D_DRAW_RECT, L08C4
+        A2D_CALL A2D_DRAW_RECT, L08CC
+        A2D_CALL A2D_SET_POS, L0CE2
+        A2D_CALL A2D_DRAW_TEXT, L0CB9
+        A2D_CALL A2D_SET_POS, L0CDE
+        A2D_CALL A2D_DRAW_TEXT, L0CC8
+        A2D_CALL A2D_SET_POS, L0CE6
+        A2D_CALL A2D_DRAW_TEXT, L0CD6
+        A2D_CALL A2D_DRAW_RECT, L08D4
+        A2D_CALL A2D_SET_POS, L0CEA
+        A2D_CALL A2D_DRAW_TEXT, L0CDA
+        A2D_CALL A2D_DRAW_RECT, L08DC
         jsr     L0BBE
         jsr     L0BCB
         jsr     L0C0D
         jsr     L0D81
         jsr     L0D8E
         jsr     L0DA7
-        jsr     A2D
-        .byte   $07
-        .addr   L094A
-        jsr     A2D
-        .byte   $08
-        .addr   L0905
+        A2D_CALL A2D_SET_FILL_MODE, L094A
+        A2D_CALL A2D_SET_PATTERN, L0905
         lda     #$01
         jmp     L0DB4
 
@@ -640,34 +543,18 @@ L0D73:  lda     L090E
         beq     L0D8E
         jmp     L0DA7
 
-L0D81:  jsr     A2D
-        .byte   $0E
-        .addr   L091B
-        jsr     A2D
-        .byte   $19
-        .addr   L091F
+L0D81:  A2D_CALL A2D_SET_POS, L091B
+        A2D_CALL A2D_DRAW_TEXT, L091F
         rts
 
-L0D8E:  jsr     A2D
-        .byte   $0E
-        .addr   L0924
-        jsr     A2D
-        .byte   $19
-        .addr   L0914
-        jsr     A2D
-        .byte   $0E
-        .addr   L0924
-        jsr     A2D
-        .byte   $19
-        .addr   L0928
+L0D8E:  A2D_CALL A2D_SET_POS, L0924
+        A2D_CALL A2D_DRAW_TEXT, L0914
+        A2D_CALL A2D_SET_POS, L0924
+        A2D_CALL A2D_DRAW_TEXT, L0928
         rts
 
-L0DA7:  jsr     A2D
-        .byte   $0E
-        .addr   L092E
-        jsr     A2D
-        .byte   $19
-        .addr   L0932
+L0DA7:  A2D_CALL A2D_SET_POS, L092E
+        A2D_CALL A2D_DRAW_TEXT, L0932
         rts
 
 L0DB4:  pha
@@ -690,19 +577,13 @@ L0DD1:  pla
         beq     L0DE4
         cmp     #$02
         beq     L0DEB
-L0DDD:  jsr     A2D
-        .byte   $11
-        .addr   L08F4
+L0DDD:  A2D_CALL A2D_FILL_RECT, L08F4
         rts
 
-L0DE4:  jsr     A2D
-        .byte   $11
-        .addr   L08E4
+L0DE4:  A2D_CALL A2D_FILL_RECT, L08E4
         rts
 
-L0DEB:  jsr     A2D
-        .byte   $11
-        .addr   L08EC
+L0DEB:  A2D_CALL A2D_FILL_RECT, L08EC
         rts
 
 L0DF2:  lda     #$FF
@@ -761,6 +642,7 @@ L0E16:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
+
 L0F16:  ldy     #$00
 L0F18:  cmp     #$0A
         bcc     L0F23
@@ -778,4 +660,3 @@ L0F23:  clc
         rts
 
         rts
-

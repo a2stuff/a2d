@@ -80,6 +80,9 @@ A2D_SET_PATTERN := $08
         ;; (input length 8 bytes)
         ;; .byte r0...r7        8x8 pixel pattern for A2D_FILL_RECT calls
 
+        ;; $0A used in Date
+        ;; (input length 2 bytes)
+
 A2D_UNK_0C      := $0C          ; Unknown - used in calculator
         ;; (input length 1 byte)
 
@@ -88,7 +91,10 @@ A2D_SET_POS     := $0E
         ;; .word x
         ;; .word y
 
-A2D_FILL_RECT   := $11          ; With selected pattern
+        ;; $0F used in puzzle
+        ;; (input length 4 bytes)
+
+A2D_FILL_RECT   := $11          ; With selected simple pattern (SET_PATTERN)
         ;; (input length 8 bytes)
         ;; .word left           (includes scroll pos)
         ;; .word top
