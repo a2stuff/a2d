@@ -14,34 +14,34 @@ L4015           := $4015
 
         jmp     L0828
 
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0
 
-stash_stack:  .byte   $00
+stash_stack:  .byte   0
 L0828:  tsx
         stx     stash_stack
         sta     ALTZPOFF
         lda     $C082
-        lda     #$70
+        lda     #<L0870
         sta     STARTLO
-        lda     #$08
+        lda     #>L0870
         sta     STARTHI
         lda     #$F6
         sta     ENDLO
         lda     #$12
         sta     ENDHI
-        lda     #$70
+        lda     #<L0870
         sta     DESTINATIONLO
-        lda     #$08
+        lda     #>L0870
         sta     DESTINATIONHI
         sec
         jsr     AUXMOVE
-        lda     #$70
+        lda     #<L0870
         sta     $03ED
-        lda     #$08
+        lda     #>L0870
         sta     $03EE
         php
         pla
@@ -58,12 +58,14 @@ L0862:  sta     ALTZPON
         txs
         rts
 
-        sta     ALTZPON
+L0870:  sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
-        lda     #$00
+        lda     #0
         sta     $08
         jmp     L0E53
+
+        window_id = $33
 
 L0880:  ldx     #$10
 L0882:  lda     L08A3,x
@@ -71,14 +73,14 @@ L0882:  lda     L08A3,x
         dex
         bpl     L0882
         jsr     L0020
-        lda     #$33
+        lda     #window_id
         jsr     L08B4
         bit     L08B3
         bmi     L089D
         jsr     UNKNOWN_CALL
         .byte   $0C
         .addr   L0000
-L089D:  lda     #$00
+L089D:  lda     #0
         sta     L08B3
         rts
 
@@ -101,23 +103,23 @@ L08B4:  sta     L08E7
 L08C4:  A2D_CALL A2D_QUERY_BOX, L08E7
         A2D_CALL A2D_SET_BOX1, L0DB3
         lda     L08E7
-        cmp     #$33
+        cmp     #window_id
         bne     L08DA
         jmp     L1072
 
 L08DA:  rts
 
-L08DB:  .byte   $00
-L08DC:  .byte   $00
-L08DD:  .byte   $00,$00,$00
-L08E0:  .byte   $00
-L08E1:  .byte   $00
-L08E2:  .byte   $00
-L08E3:  .byte   $00,$00,$00
-L08E6:  .byte   $00
-L08E7:  .byte   $00,$B3,$0D
+L08DB:  .byte   0
+L08DC:  .byte   0
+L08DD:  .byte   0,0,0
+L08E0:  .byte   0
+L08E1:  .byte   0
+L08E2:  .byte   0
+L08E3:  .byte   0,0,0
+L08E6:  .byte   0
+L08E7:  .byte   0,$B3,$0D
 L08EA:  .byte   $05
-L08EB:  .byte   $00
+L08EB:  .byte   0
 L08EC:  .byte   $03
 L08ED:  .byte   $00,$21,$00,$03,$00,$3D,$00,$03
         .byte   $00,$59,$00,$03,$00,$05,$00,$13
@@ -135,21 +137,12 @@ p15:    .addr   piece15
 p16:    .addr   piece16
 .endproc
 
-L0946 := pattern_table::p15
-L0949 := pattern_table::p16+1   ; ???
-
-L094A:  .byte   $00
-L094B:  .byte   $00,$00,$00
-L094E:  .byte   $00
-L094F:  .byte   $00
-L0950:  .byte   $00
-L0951:  .byte   $00
-L0952:  .byte   $00
-L0953:  .byte   $00
-L0954:  .byte   $00
-L0955:  .byte   $00
-L0956:  .byte   $00,$00,$00
-L0959:  .byte   $00
+        ;; Current position table
+position_table := *
+        .byte   0,0,0,0
+        .byte   0,0,0,0
+        .byte   0,0,0,0
+        .byte   0,0,0,0
 
 .proc draw_pattern_params
 left:   .word   0
@@ -476,35 +469,36 @@ L0E02:  .byte   $50,$00,$00,$20,$80,$00,$00,$00
         .byte   $00,$00,$01,$01,$00,$7F,$00,$88
         .byte   $00,$00,$06,$50,$75,$7A,$7A,$6C
         .byte   $65
+
 L0E53:  jsr     L10A5
         A2D_CALL A2D_CREATE_WINDOW, L0DEC
         ldy     #$0F
 L0E5E:  tya
-        sta     L094A,y
+        sta     position_table,y
         dey
         bpl     L0E5E
-        lda     #$33
+        lda     #window_id
         jsr     L08B4
         A2D_CALL $2B
 L0E70:  ldy     #$03
 L0E72:  tya
         pha
-        ldx     L094A
+        ldx     position_table
         ldy     #$00
-L0E79:  lda     L094B,y
-        sta     L094A,y
+L0E79:  lda     position_table+1,y
+        sta     position_table,y
         iny
         cpy     #$0F
         bcc     L0E79
-        stx     L0959
+        stx     position_table+15
         pla
         tay
         dey
         bne     L0E72
-        ldx     L094A
-        lda     L094B
-        sta     L094A
-        stx     L094B
+        ldx     position_table
+        lda     position_table+1
+        sta     position_table
+        stx     position_table+1
         A2D_CALL A2D_GET_INPUT, L08DB
         lda     L08DB
         beq     L0E70
@@ -526,7 +520,7 @@ L0EC1:  cmp     #$03
 
 L0ECB:  A2D_CALL A2D_QUERY_TARGET, L08DC
         lda     L08E1
-        cmp     #$33
+        cmp     #window_id
         bne     L0EDD
         lda     L08E0
         bne     L0EDE
@@ -562,7 +556,7 @@ L0F12:  sta     RAMRDOFF
 
 L0F1B:  cmp     #$03
         bne     L0EDD
-        lda     #$33
+        lda     #window_id
         sta     L08DB
         A2D_CALL A2D_DRAG_WINDOW, L08DB
         ldx     #$23
@@ -576,7 +570,7 @@ L0F30:  lda     L08DD
         beq     L0EF9
 L0F3C:  rts
 
-L0F3D:  lda     #$33
+L0F3D:  lda     #window_id
         sta     L08DB
         A2D_CALL A2D_MAP_COORDS, L08DB
         lda     L08E1
@@ -667,8 +661,8 @@ L0FE2:  lda     L0D97
         sec
         sbc     L0D97
         tax
-L0FF4:  lda     L0949,y
-        sta     L094A,y
+L0FF4:  lda     position_table-1,y
+        sta     position_table,y
         dey
         dex
         bne     L0FF4
@@ -677,8 +671,8 @@ L1000:  lda     L0D97
         sec
         sbc     L0D95
         tax
-L1008:  lda     L094B,y
-        sta     L094A,y
+L1008:  lda     position_table+1,y
+        sta     position_table,y
         iny
         dex
         bne     L1008
@@ -691,8 +685,8 @@ L1014:  lda     L0D98
         sec
         sbc     L0D98
         tax
-L1026:  lda     L0946,y
-        sta     L094A,y
+L1026:  lda     position_table-4,y
+        sta     position_table,y
         dey
         dey
         dey
@@ -704,8 +698,8 @@ L1035:  lda     L0D98
         sec
         sbc     L0D96
         tax
-L103D:  lda     L094E,y
-        sta     L094A,y
+L103D:  lda     position_table+4,y
+        sta     position_table,y
         iny
         iny
         iny
@@ -713,12 +707,12 @@ L103D:  lda     L094E,y
         dex
         bne     L103D
 L104A:  lda     #$0C
-        sta     L094A,y
+        sta     position_table,y
         jsr     L11D9
         jmp     L105D
 
 L1055:  lda     #$0C
-        sta     L094A,y
+        sta     position_table,y
         jsr     L11C8
 L105D:  jsr     L1262
         bcc     L106E
@@ -740,7 +734,7 @@ L1072:  A2D_CALL A2D_SET_PATTERN, L0D72
         A2D_CALL A2D_SET_POS, L0D8D
         A2D_CALL $0F, L0D91
         jsr     L11BB
-        lda     #$33
+        lda     #window_id
         sta     L08E7
         A2D_CALL A2D_QUERY_BOX, L08E7
         A2D_CALL A2D_SET_BOX1, L0DB3
@@ -760,38 +754,38 @@ L10B2:  lda     L10BB,x
         bne     L10B2
         rts
 
-L10BB:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+L10BB:  .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
+        .byte   0,0,0,0,0,0,0,0
 
 L11BB:  ldy     #$01
         sty     L0D9B
@@ -815,7 +809,7 @@ L11D9:  lda     #$04
 L11E6:  tya
         pha
         A2D_CALL A2D_HIDE_CURSOR
-        lda     #$33
+        lda     #window_id
         sta     L08E7
         A2D_CALL A2D_QUERY_BOX, L08E7
         A2D_CALL A2D_SET_BOX1, L0DB3
@@ -834,7 +828,7 @@ L1201:  tya
         sta     draw_pattern_params::top
         lda     L08ED,x
         sta     draw_pattern_params::top+1
-        lda     L094A,y
+        lda     position_table,y
         asl     a
         tax
         lda     pattern_table,x
@@ -867,53 +861,53 @@ L1254:  dey
         bne     L124B
         rts
 
-L1262:  lda     L094A
+L1262:  lda     position_table
         beq     L126B
         cmp     #$0C
         bne     L12D0
 L126B:  ldy     #$01
 L126D:  tya
-        cmp     L094A,y
+        cmp     position_table,y
         bne     L12D0
         iny
         cpy     #$05
         bcc     L126D
-        lda     L094F
+        lda     position_table+5
         cmp     #$05
         beq     L1283
         cmp     #$06
         bne     L12D0
-L1283:  lda     L0950
+L1283:  lda     position_table+6
         cmp     #$05
         beq     L128E
         cmp     #$06
         bne     L12D0
-L128E:  lda     L0951
+L128E:  lda     position_table+7
         cmp     #$07
         bne     L12D0
-        lda     L0952
+        lda     position_table+8
         cmp     #$08
         bne     L12D0
-        lda     L0953
+        lda     position_table+9
         cmp     #$09
         beq     L12A7
         cmp     #$0A
         bne     L12D0
-L12A7:  lda     L0954
+L12A7:  lda     position_table+10
         cmp     #$09
         beq     L12B2
         cmp     #$0A
         bne     L12D0
-L12B2:  lda     L0955
+L12B2:  lda     position_table+11
         cmp     #$0B
         bne     L12D0
-        lda     L0956
+        lda     position_table+12
         beq     L12C2
         cmp     #$0C
         bne     L12D0
 L12C2:  ldy     #$0D
 L12C4:  tya
-        cmp     L094A,y
+        cmp     position_table,y
         bne     L12D0
         iny
         cpy     #$10
@@ -924,18 +918,18 @@ L12D0:  clc
         rts
 
 L12D2:  ldy     #$0F
-L12D4:  lda     L094A,y
+L12D4:  lda     position_table,y
         cmp     #$0C
         beq     L12DE
         dey
         bpl     L12D4
-L12DE:  lda     #$00
+L12DE:  lda     #0
         sta     L0D95
         sta     L0D96
         tya
-L12E7:  cmp     #$04
+L12E7:  cmp     #4
         bcc     L12F2
-        sbc     #$04
+        sbc     #4
         inc     L0D96
         bne     L12E7
 L12F2:  sta     L0D95
