@@ -9,7 +9,7 @@ function do_make {
 }
 
 function verify {
-    diff "$1.bin" "$1.F1" \
+    diff "orig/$1.bin" "$1.F1" \
         && (tput setaf 2 ; echo "diff $1 good" ; tput sgr0 ) \
         || (tput setaf 1 ; tput blink ; echo -e "DIFF $1 BAD" ; tput sgr0 ; return 1)
 }
@@ -20,6 +20,8 @@ do_make all
 # Verify original and output match
 verify "calculator"
 verify "show_text_file"
+verify "date"
+verify "puzzle"
 
 cat show_image_file.F1 > mount/SHOW.IMAGE.FILE.\$F1 \
     && echo "Updated mounted file"

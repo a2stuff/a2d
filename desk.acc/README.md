@@ -1,9 +1,9 @@
 Disassembly of the desk accessories:
 
-* [Calculator](calculator.s) - in progress!
-* Date - _not started_
-* Puzzle - _not started_
-* [Show Text File](show_text_file.s) - in progress!
+* [Show Text File](show_text_file.s) - in progress! 90% complete
+* [Calculator](calculator.s) - in progress! 90% complete
+* [Date](date.s) - in progress! 0% complete
+* [Puzzle](puzzle.s) - in progress! 0% complete
 * Sort Directory - _not started_
 
 New desk accessories:
@@ -20,17 +20,17 @@ New desk accessories:
 * `Makefile` - cleans/builds targets
 * `go.sh` - bash script to build, verify, and copy files
 
-* `*.bin` - original binary (type $F1, start $800)
-* `*.info` - da65 "info" file - used to inform disassembly
+* `orig/*.bin` - original binary (type $F1, start $800)
+* `infos/*.info` - da65 "info" file - used to inform disassembly
 * `*.s` - source (originally generated using da65, now modified)
 
 ## Build Instructions
 
 On Unix-like systems (including Mac OS X) `make all` should build
 build the desk accessory files (original and new) and output
-files with a `.f1` suffix, representing the $F1 file type required.
+files with a `.F1` suffix, representing the $F1 file type required.
 
-For the original DAs, the `.f1` and `.bin` files can be compared
+For the original DAs, the `.F1` and `.bin` files can be compared
 using `diff` to ensure that no changes have been introduced by the
 disassembly process.
 
@@ -45,7 +45,7 @@ Tips:
 
 ## Install Instructions
 
-Transfer the `.f1` files to your Apple (real or virtual) ensuring you:
+Transfer the `.F1` files to your Apple (real or virtual) ensuring you:
 
 * Drop the suffix
 * Replace `.` in the name with spaces
