@@ -78,7 +78,7 @@ stash_stack:  .byte   0
         lda     LCBANK1
         lda     #0
         sta     $08
-        jmp     L0E53
+        jmp     create_window
 .endproc
 
         window_id = $33
@@ -90,7 +90,7 @@ stash_stack:  .byte   0
         dest := $20
 
         ;; copy following routine to $20 and call it
-        ldx     #(routine_end - routine)
+        ldx     #sizeof_routine
 loop:   lda     routine,x
         sta     dest,x
         dex
@@ -118,31 +118,31 @@ L089D:  lda     #0
         sta     RAMWRTON
         rts
 .endproc
-        routine_end := *
+        sizeof_routine := * - routine
 .endproc
 
 ;;; ==================================================
+;;; ???
+
+        screen_height := 192
 
 L08B3:  .byte   0               ; ???
 L08B4:  sta     query_box_params_id
-        lda     L0E02
-        cmp     #$BF
-        bcc     L08C4
+        lda     create_window_params_L0E02
+        cmp     #screen_height-1
+        bcc     :+
         lda     #$80
         sta     L08B3
         rts
 
-;;; ==================================================
-
-L08C4:  A2D_CALL A2D_QUERY_BOX, query_box_params
+:       A2D_CALL A2D_QUERY_BOX, query_box_params
         A2D_CALL A2D_SET_BOX1, L0DB3
         lda     query_box_params_id
         cmp     #window_id
-        bne     L08DA
+        bne     :+
         jmp     L1072
 
-L08DA:  rts
-
+:       rts
 
 ;;; ==================================================
 ;;; Param Blocks
@@ -182,7 +182,10 @@ L08E0:  .byte   0
 L08E1:  .byte   0
 L08E2:  .byte   0
 L08E3:  .byte   0,0,0
-L08E6:  .byte   0
+
+.proc close_click_params
+clicked:.byte   0
+.endproc
 
 .proc query_box_params
 id:     .byte   0
@@ -190,17 +193,34 @@ addr:   .addr   $0DB3
 .endproc
 query_box_params_id := query_box_params::id
 
-L08EA:  .byte   $05
-L08EB:  .byte   0
-L08EC:  .byte   $03
-L08ED:  .byte   $00,$21,$00,$03,$00,$3D,$00,$03
-        .byte   $00,$59,$00,$03,$00,$05,$00,$13
-        .byte   $00,$21,$00,$13,$00,$3D,$00,$13
-        .byte   $00,$59,$00,$13,$00,$05,$00,$23
-        .byte   $00,$21,$00,$23,$00,$3D,$00,$23
-        .byte   $00,$59,$00,$23,$00,$05,$00,$33
-        .byte   $00,$21,$00,$33,$00,$3D,$00,$33
-        .byte   $00,$59,$00,$33,$00
+        cw := 28
+        c1 := 5
+        c2 := c1 + cw
+        c3 := c2 + cw
+        c4 := c3 + cw
+        rh := 16
+        r1 := 3
+        r2 := r1 + rh
+        r3 := r2 + rh
+        r4 := r3 + rh
+
+space_positions:                 ; left, top for all 16 holes
+        .word   c1,r1
+        .word   c2,r1
+        .word   c3,r1
+        .word   c4,r1
+        .word   c1,r2
+        .word   c2,r2
+        .word   c3,r2
+        .word   c4,r2
+        .word   c1,r3
+        .word   c2,r3
+        .word   c3,r3
+        .word   c4,r3
+        .word   c1,r4
+        .word   c2,r4
+        .word   c3,r4
+        .word   c4,r4
 
 .proc pattern_table
         .addr   piece1, piece2, piece3, piece4, piece5, piece6, piece7
@@ -430,7 +450,7 @@ piece12:
         .byte px(%0100110),px(%0110011),px(%0001111),px(%1111110)
         .byte px(%0110011),px(%0011001),px(%1011111),px(%1111110)
         .byte px(%0000000),px(%0000000),px(%0000000),px(%0000000)
-piece13:                       ; the gap
+piece13:                       ; the hole
         .byte px(%0111111),px(%1111111),px(%1111111),px(%1111110)
         .byte px(%0111011),px(%1011101),px(%1101110),px(%1110110)
         .byte px(%0111111),px(%1111111),px(%1111111),px(%1111110)
@@ -517,22 +537,34 @@ piece16:
         .byte   $00,$FF,$FF,$FF,$FF,$FF,$FF,$FF
         .byte   $FF,$00
 
-.proc set_pos_params            ; for what ???
+.proc set_pos_params            ; for what ??? (board is at 5,3)
         .word   5, 2
 .endproc
 
-L0D91:  .byte   $70,$00,$00,$00
-L0D95:  .byte   $00
-L0D96:  .byte   $00
-L0D97:  .byte   $00
-L0D98:  .byte   $00
-L0D99:  .byte   $00
-L0D9A:  .byte   $00
-L0D9B:  .byte   $00
+        ;; Param block for $0F call (4 bytes)
+L0D91:  .byte   $70,$00,$00,$00 ; ???
+
+        ;; hole position (0..3, 0..3)
+hole_x: .byte   0
+hole_y: .byte   0
+
+        ;; click location (0..3, 0..3)
+click_y:  .byte   $00
+click_x:  .byte   $00
+
+        ;; param for draw_row/draw_col
+draw_rc:  .byte   $00
+
+        ;; params for draw_selected
+draw_end:  .byte   $00
+draw_inc:  .byte   $00
+
+destroy_window_params:
 L0D9C:  .byte   $33,$73,$00,$F7,$FF,$AD,$0D,$01
         .byte   $00,$00,$00,$00,$00,$06,$00,$05
         .byte   $00,$41,$35,$47,$37,$36,$49
 
+        ;; SET_BOX1 params (filled in by QUERY_BOX)
 L0DB3:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -541,44 +573,81 @@ L0DB3:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$20,$80,$00,$00,$00,$00
         .byte   $00,$2F,$02,$B1,$00,$00,$01,$02
         .byte   $06
-L0DEC:  .byte   $33,$02,$4C,$0E,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$79,$00,$44,$00
-        .byte   $79,$00,$44,$00,$DC,$00
-L0E02:  .byte   $50,$00,$00,$20,$80,$00,$00,$00
-        .byte   $00,$00,$79,$00,$44,$00,$FF,$FF
+
+        default_width := $79
+        default_height := $44
+
+.proc create_window_params
+id:     .byte   $33
+flags:  .byte   A2D_CWF_ADDCLOSE
+title:  .addr   name
+hscroll:.byte   0
+vscroll:.byte   0
+hsmax:  .byte   0
+hspos:  .byte   0
+vsmax:  .byte   0
+vspos:  .byte   0
+        .byte   $00,$00         ; ???
+w_a:    .word   default_width
+h_a:    .word   default_height
+w_b:    .word   default_width
+h_b:    .word   default_height
+
+left:   .word   $DC
+top:    .word   $50
+saddr:  .addr   A2D_SCREEN_ADDR
+stride: .word   A2D_SCREEN_STRIDE
+hoffset:.word   0
+voffset:.word   0
+width:  .word   default_width
+height: .word   default_height
+
+        ;; This is QUERY_BOX/SET_BOX cruft
+        .byte   $FF,$FF
         .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$00
         .byte   $00,$00,$00,$00,$01,$01,$00,$7F
-        .byte   $00,$88,$00,$00,$DC,$00,$50,$00
+        .byte   $00,$88
+
+        .byte   $00,$00,$DC,$00,$50,$00
         .byte   $00,$20,$80,$00,$00,$00,$00,$00
         .byte   $79,$00,$44,$00,$FF,$FF,$FF,$FF
         .byte   $FF,$FF,$FF,$FF,$FF,$00,$00,$00
         .byte   $00,$00,$01,$01,$00,$7F,$00,$88
-        .byte   $00,$00,$06,$50,$75,$7A,$7A,$6C
-        .byte   $65
+        .byte   $00,$00
+
+.endproc
+name:   PASCAL_STRING "Puzzle"
+
+        create_window_params_L0E02 := create_window_params::top
 
 ;;; ==================================================
 ;;; Create the window
 
-L0E53:  jsr     save_zp
-        A2D_CALL A2D_CREATE_WINDOW, L0DEC
-        ldy     #$0F
-L0E5E:  tya
+.proc create_window
+        jsr     save_zp
+        A2D_CALL A2D_CREATE_WINDOW, create_window_params
+
+        ;; init pieces
+        ldy     #15
+loop:   tya
         sta     position_table,y
         dey
-        bpl     L0E5E
+        bpl     loop
+
         lda     #window_id
         jsr     L08B4
         A2D_CALL $2B
-L0E70:  ldy     #$03
+L0E70:  ldy     #3
 L0E72:  tya
         pha
         ldx     position_table
-        ldy     #$00
-L0E79:  lda     position_table+1,y
+        ldy     #0
+ploop:  lda     position_table+1,y
         sta     position_table,y
         iny
-        cpy     #$0F
-        bcc     L0E79
+        cpy     #15
+        bcc     ploop
+
         stx     position_table+15
         pla
         tay
@@ -588,23 +657,26 @@ L0E79:  lda     position_table+1,y
         lda     position_table+1
         sta     position_table
         stx     position_table+1
+
         A2D_CALL A2D_GET_INPUT, get_input_params
         lda     get_input_params::state
         beq     L0E70
         jsr     check_victory
         bcs     L0E70
-        jsr     L11BB
-        jsr     L12D2
+        jsr     draw_all
+        jsr     find_hole
+        ; fall through
+.endproc
 
 ;;; ==================================================
 ;;; Input loop and processing
 
-input_loop:
+.proc input_loop
         A2D_CALL A2D_GET_INPUT, get_input_params
         lda     get_input_params::state
         cmp     #A2D_INPUT_DOWN
         bne     :+
-        jsr     L0ECB
+        jsr     on_click
         jmp     input_loop
 
         ;; key?
@@ -614,7 +686,8 @@ input_loop:
         jmp     input_loop
 
         ;; click - where?
-L0ECB:  A2D_CALL A2D_QUERY_TARGET, query_target_params
+on_click:
+        A2D_CALL A2D_QUERY_TARGET, query_target_params
         lda     query_target_params_id
         cmp     #window_id
         bne     bail
@@ -632,25 +705,30 @@ bail:   rts
         ;; close box?
 :       cmp     #A2D_ELEM_CLOSE
         bne     check_title
-        A2D_CALL A2D_CLOSE_CLICK, L08E6
-        lda     L08E6
+        A2D_CALL A2D_CLOSE_CLICK, close_click_params
+        lda     close_click_params::clicked
         beq     bail
-L0EF9:  A2D_CALL A2D_DESTROY_WINDOW, L0D9C
+destroy:
+        A2D_CALL A2D_DESTROY_WINDOW, destroy_window_params
 
         jsr     UNKNOWN_CALL    ; ???
         .byte   $0C
         .addr   0
 
-        ldx     #$09            ; copy following to ZP and run it
-L0F07:  lda     L0F12,x
-        sta     L0020,x
+        target = $20            ; copy following to ZP and run it
+        ldx     #sizeof_routine
+loop:   lda     routine,x
+        sta     target,x
         dex
-        bpl     L0F07
-        jmp     L0020
+        bpl     loop
+        jmp     target
 
+.proc routine
 L0F12:  sta     RAMRDOFF
         sta     RAMWRTOFF
         jmp     exit_da
+.endproc
+        sizeof_routine := * - routine
 
         ;; title bar?
 check_title:
@@ -669,8 +747,9 @@ check_key:
         bne     :+
         lda     get_input_params::key
         cmp     #$1B            ; Escape
-        beq     L0EF9
+        beq     destroy
 :       rts
+.endproc
 
 ;;; ==================================================
 ;;; Map click to piece x/y
@@ -686,33 +765,33 @@ L0F3D:  lda     #window_id
         lda     map_coords_params::clienty
         ldx     map_coords_params::clientx
 
-        cmp     #$03
+        cmp     #r1
         bcc     nope
-        cmp     #$14
+        cmp     #r2+1
         bcs     :+
         jsr     find_click_y
         bcc     nope
         lda     #0
         beq     yep
-:       cmp     #$24
+:       cmp     #r3+1
         bcs     :+
         jsr     find_click_y
         bcc     nope
         lda     #1
         bne     yep
-:       cmp     #$34
+:       cmp     #r4+1
         bcs     :+
         jsr     find_click_y
         bcc     nope
         lda     #2
         bne     yep
-:       cmp     #$44
+:       cmp     #r4+rh+1
         bcs     nope
         jsr     find_click_y
         bcc     nope
         lda     #3
 
-yep:    sta     L0D98
+yep:    sta     click_x
         sec
         rts
 
@@ -721,25 +800,25 @@ nope:   clc
 .endproc
 
 .proc find_click_y
-        cpx     #$05
+        cpx     #c1
         bcc     nope
-        cpx     #$21
+        cpx     #c2
         bcs     :+
         lda     #0
         beq     yep
-:       cpx     #$3E
+:       cpx     #c3+1
         bcs     :+
         lda     #1
         bne     yep
-:       cpx     #$5A
+:       cpx     #c4+1
         bcs     :+
         lda     #2
         bne     yep
-:       cpx     #$75
+:       cpx     #c4+cw
         bcs     nope
         lda     #3
 
-yep:    sta     L0D97
+yep:    sta     click_y
         sec
         rts
 
@@ -750,32 +829,34 @@ nope:   clc
 ;;; ==================================================
 ;;; Process piece click
 
+        hole_piece := 12
+
 L0FBC:  lda     #$00
-        ldy     L0D96
+        ldy     hole_y
         beq     L0FC9
 L0FC3:  clc
         adc     #$04
         dey
         bne     L0FC3
-L0FC9:  sta     L0D99
+L0FC9:  sta     draw_rc
         clc
-        adc     L0D95
+        adc     hole_x
         tay
-        lda     L0D97
-        cmp     L0D95
+        lda     click_y
+        cmp     hole_x
         beq     L1014
-        lda     L0D98
-        cmp     L0D96
+        lda     click_x
+        cmp     hole_y
         beq     L0FE2
 L0FE1:  rts
 
-L0FE2:  lda     L0D97
-        cmp     L0D95
+L0FE2:  lda     click_y
+        cmp     hole_x
         beq     L0FE1
         bcs     L1000
-        lda     L0D95
+        lda     hole_x
         sec
-        sbc     L0D97
+        sbc     click_y
         tax
 L0FF4:  lda     position_table-1,y
         sta     position_table,y
@@ -783,9 +864,9 @@ L0FF4:  lda     position_table-1,y
         dex
         bne     L0FF4
         beq     L1055
-L1000:  lda     L0D97
+L1000:  lda     click_y
         sec
-        sbc     L0D95
+        sbc     hole_x
         tax
 L1008:  lda     position_table+1,y
         sta     position_table,y
@@ -793,13 +874,13 @@ L1008:  lda     position_table+1,y
         dex
         bne     L1008
         beq     L1055
-L1014:  lda     L0D98
-        cmp     L0D96
+L1014:  lda     click_x
+        cmp     hole_y
         beq     L0FE1
         bcs     L1035
-        lda     L0D96
+        lda     hole_y
         sec
-        sbc     L0D98
+        sbc     click_x
         tax
 L1026:  lda     position_table-4,y
         sta     position_table,y
@@ -810,9 +891,9 @@ L1026:  lda     position_table-4,y
         dex
         bne     L1026
         beq     L104A
-L1035:  lda     L0D98
+L1035:  lda     click_x
         sec
-        sbc     L0D96
+        sbc     hole_y
         tax
 L103D:  lda     position_table+4,y
         sta     position_table,y
@@ -822,17 +903,17 @@ L103D:  lda     position_table+4,y
         iny
         dex
         bne     L103D
-L104A:  lda     #$0C
+L104A:  lda     #hole_piece
         sta     position_table,y
-        jsr     L11D9
+        jsr     draw_col
         jmp     L105D
 
-L1055:  lda     #$0C
+L1055:  lda     #hole_piece
         sta     position_table,y
-        jsr     L11C8
+        jsr     draw_row
 L105D:  jsr     check_victory
         bcc     L106E
-        ldx     #$04
+        ldx     #4
 L1064:  txa
         pha
         jsr     play_sound
@@ -840,7 +921,7 @@ L1064:  txa
         tax
         dex
         bne     L1064
-L106E:  jmp     L12D2
+L106E:  jmp     find_hole
 
         rts
 
@@ -852,7 +933,7 @@ L1072:  A2D_CALL A2D_SET_PATTERN, pattern_speckles
         A2D_CALL A2D_SET_PATTERN, pattern_black
         A2D_CALL A2D_SET_POS, set_pos_params
         A2D_CALL $0F, L0D91     ; ???
-        jsr     L11BB
+        jsr     draw_all
 
         lda     #window_id
         sta     query_box_params::id
@@ -917,26 +998,38 @@ saved_zp:
 ;;; ==================================================
 ;;; Draw pieces
 
-L11BB:  ldy     #$01
-        sty     L0D9B
+.proc draw_all
+        ldy     #1
+        sty     draw_inc
         dey
-        lda     #$10
-        sta     L0D9A
-        bne     L11E6
-L11C8:  lda     #$01
-        sta     L0D9B
-        lda     L0D99
+        lda     #16
+        sta     draw_end
+        bne     draw_selected
+.endproc
+
+.proc draw_row                  ; row specified in draw_rc
+        lda     #1
+        sta     draw_inc
+        lda     draw_rc
         tay
         clc
-        adc     #$04
-        sta     L0D9A
-        bne     L11E6
-L11D9:  lda     #$04
-        sta     L0D9B
-        ldy     L0D95
-        lda     #$10
-        sta     L0D9A
-L11E6:  tya
+        adc     #4
+        sta     draw_end
+        bne     draw_selected
+.endproc
+
+.proc draw_col                  ; col specified in draw_rc
+        lda     #4
+        sta     draw_inc
+        ldy     hole_x
+        lda     #16
+        sta     draw_end
+        ;; fall through
+.endproc
+
+        ;; Draw pieces from A to draw_end, step draw_inc
+.proc draw_selected
+        tya
         pha
         A2D_CALL A2D_HIDE_CURSOR
         lda     #window_id
@@ -945,18 +1038,19 @@ L11E6:  tya
         A2D_CALL A2D_SET_BOX1, L0DB3
         pla
         tay
-L1201:  tya
+
+loop:   tya
         pha
         asl     a
         asl     a
         tax
-        lda     L08EA,x
+        lda     space_positions,x
         sta     draw_pattern_params::left
-        lda     L08EB,x
+        lda     space_positions+1,x
         sta     draw_pattern_params::left+1
-        lda     L08EC,x
+        lda     space_positions+2,x
         sta     draw_pattern_params::top
-        lda     L08ED,x
+        lda     space_positions+3,x
         sta     draw_pattern_params::top+1
         lda     position_table,y
         asl     a
@@ -968,31 +1062,32 @@ L1201:  tya
         A2D_CALL A2D_DRAW_PATTERN, draw_pattern_params
         pla
         clc
-        adc     L0D9B
+        adc     draw_inc
         tay
-        cpy     L0D9A
-        bcc     L1201
+        cpy     draw_end
+        bcc     loop
         A2D_CALL A2D_SHOW_CURSOR
         rts
+.endproc
 
 ;;; ==================================================
 ;;; Play sound
 
 .proc play_sound
         ldx     #$80
-L1249:  lda     #$58
-L124B:  ldy     #$1B
-L124D:  dey
-        bne     L124D
+loop1:  lda     #$58
+loop2:  ldy     #$1B
+delay1: dey
+        bne     delay1
         bit     SPKR
         tay
-delay:  dey
-        bne     delay
-        sbc     #$01
-        beq     L1249
+delay2: dey
+        bne     delay2
+        sbc     #1
+        beq     loop1
         bit     SPKR
         dex
-        bne     L124B
+        bne     loop2
         rts
 .endproc
 
@@ -1068,23 +1163,30 @@ nope:   clc
         rts
 .endproc
 
+;;; ==================================================
+;;; Find hole piece
 
-L12D2:  ldy     #$0F
-L12D4:  lda     position_table,y
-        cmp     #$0C
-        beq     L12DE
+.proc find_hole
+        ldy     #15
+loop:   lda     position_table,y
+        cmp     #hole_piece
+        beq     :+
         dey
-        bpl     L12D4
-L12DE:  lda     #0
-        sta     L0D95
-        sta     L0D96
+        bpl     loop
+
+:       lda     #0
+        sta     hole_x
+        sta     hole_y
+
         tya
-L12E7:  cmp     #4
-        bcc     L12F2
+again:  cmp     #4
+        bcc     done
         sbc     #4
-        inc     L0D96
-        bne     L12E7
-L12F2:  sta     L0D95
+        inc     hole_y
+        bne     again
+
+done:   sta     hole_x
         rts
+.endproc
 
 last := *

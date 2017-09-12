@@ -65,7 +65,7 @@ A2D_SET_BOX2   := $06           ; set vs. intersect? (not quite)
         ;; (input length 16 bytes)
         ;; .word left           pixels from screen edge
         ;; .word top
-        ;; .word addr           A2D_SCREEN_ADDR ($2000)
+        ;; .addr addr           A2D_SCREEN_ADDR ($2000)
         ;; .word stride         A2D_SCREEN_STRIDE ($80)
         ;; .word hoffset        pixels scrolled
         ;; .word voffset

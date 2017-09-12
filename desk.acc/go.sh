@@ -24,4 +24,4 @@ verify "date"
 verify "puzzle"
 
 cat show_image_file.F1 > mount/SHOW.IMAGE.FILE.\$F1 \
-    && echo "Updated mounted file"
+    && echo "Updated mountable file"
