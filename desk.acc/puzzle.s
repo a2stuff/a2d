@@ -716,7 +716,7 @@ bail:   rts
         bne     :+
         jsr     find_click_piece
         bcc     bail
-        jmp     L0FBC
+        jmp     process_click
 
         ;; close box?
 :       cmp     #A2D_ELEM_CLOSE
@@ -847,11 +847,13 @@ nope:   clc
 
         hole_piece := 12
 
-L0FBC:  lda     #$00
+
+.proc process_click
+        lda     #0
         ldy     hole_y
         beq     L0FC9
 L0FC3:  clc
-        adc     #$04
+        adc     #4
         dey
         bne     L0FC3
 L0FC9:  sta     draw_rc
@@ -863,10 +865,10 @@ L0FC9:  sta     draw_rc
         beq     L1014
         lda     click_x
         cmp     hole_y
-        beq     L0FE2
+        beq     :+
 L0FE1:  rts
 
-L0FE2:  lda     click_y
+:       lda     click_y
         cmp     hole_x
         beq     L0FE1
         bcs     L1000
@@ -879,7 +881,7 @@ L0FF4:  lda     position_table-1,y
         dey
         dex
         bne     L0FF4
-        beq     L1055
+        beq     row
 L1000:  lda     click_y
         sec
         sbc     hole_x
@@ -889,7 +891,7 @@ L1008:  lda     position_table+1,y
         iny
         dex
         bne     L1008
-        beq     L1055
+        beq     row
 L1014:  lda     click_x
         cmp     hole_y
         beq     L0FE1
@@ -906,7 +908,7 @@ L1026:  lda     position_table-4,y
         dey
         dex
         bne     L1026
-        beq     L104A
+        beq     col
 L1035:  lda     click_x
         sec
         sbc     hole_y
@@ -919,16 +921,20 @@ L103D:  lda     position_table+4,y
         iny
         dex
         bne     L103D
-L104A:  lda     #hole_piece
+
+col:    lda     #hole_piece
         sta     position_table,y
         jsr     draw_col
-        jmp     L105D
+        jmp     done
 
-L1055:  lda     #hole_piece
+row:    lda     #hole_piece
         sta     position_table,y
         jsr     draw_row
-L105D:  jsr     check_victory
+
+done:   jsr     check_victory
         bcc     L106E
+
+        ;; Yay! Play the sound 4 times
         ldx     #4
 L1064:  txa
         pha
@@ -939,7 +945,8 @@ L1064:  txa
         bne     L1064
 L106E:  jmp     find_hole
 
-        rts
+        rts                     ; ???
+.endproc
 
 ;;; ==================================================
 ;;; Clear the background
