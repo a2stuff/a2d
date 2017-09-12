@@ -418,11 +418,8 @@ L0BDF:  lda     L0BE9,x
         bpl     L0BDF
         rts
 
-L0BE9:  .byte   $4A,$61,$6E,$46,$65,$62,$4D,$61
-        .byte   $72,$41,$70,$72,$4D,$61,$79,$4A
-        .byte   $75,$6E,$4A,$75,$6C,$41,$75,$67
-        .byte   $53,$65,$70,$4F,$63,$74,$4E,$6F
-        .byte   $76,$44,$65,$63
+L0BE9:  .byte   "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug"
+        .byte   "Sep","Oct","Nov","Dec"
 L0C0D:  lda     L0913
         jsr     L0F16
         sta     L0935
@@ -498,10 +495,9 @@ L0CA6:  pla
 
 L0CA9:  .byte   $04,$00,$02,$00,$C0,$00,$3D,$00
 L0CB1:  .byte   $20,$00,$0F,$00,$9A,$00,$23,$00
-L0CB9:  .byte   $BC,$0C,$0C,$4F,$4B,$20,$20,$20
-        .byte   $20,$20,$20,$20,$20,$20,$0D
-L0CC8:  .byte   $CB,$0C,$0B,$43,$61,$6E,$63,$65
-        .byte   $6C,$20,$20,$45,$53,$43
+L0CB9:  .byte   $BC,$0C,$0C,"OK         "
+        .byte   $0D
+L0CC8:  .byte   $CB,$0C,$0B,"Cancel  ESC"
 L0CD6:  .byte   $D9,$0C,$01,$0B
 L0CDA:  .byte   $DD,$0C,$01,$0A
 L0CDE:  .byte   $15,$00,$38,$00
