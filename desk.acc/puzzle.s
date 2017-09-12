@@ -7,9 +7,8 @@
 
         .include "a2d.inc"
 
-SPKR := $C030
-L0020           := $0020
-L4015           := $4015
+ROMIN2          := $C082
+SPKR            := $C030
 
         jmp     copy2aux
 
@@ -31,7 +30,7 @@ stash_stack:  .byte   0
         end := last
 
         sta     ALTZPOFF
-        lda     $C082
+        lda     ROMIN2
         lda     #<start
         sta     STARTLO
         lda     #>start
@@ -99,6 +98,7 @@ loop:   lda     routine,x
 
         lda     #window_id
         jsr     L08B4
+
         bit     L08B3
         bmi     L089D
 
@@ -113,7 +113,7 @@ L089D:  lda     #0
 .proc routine
         sta     RAMRDOFF
         sta     RAMWRTOFF
-        jsr     L4015
+        jsr     JUMP_TABLE_15
         sta     RAMRDON
         sta     RAMWRTON
         rts
@@ -127,16 +127,18 @@ L089D:  lda     #0
         screen_height := 192
 
 L08B3:  .byte   0               ; ???
+
+        ;; called with window_id in A
 L08B4:  sta     query_box_params_id
-        lda     create_window_params_L0E02
+        lda     create_window_params_top ; is top on screen?
         cmp     #screen_height-1
-        bcc     :+
-        lda     #$80
+        bcc     :+              ; yes
+        lda     #$80            ; no, so ... ???
         sta     L08B3
         rts
 
 :       A2D_CALL A2D_QUERY_BOX, query_box_params
-        A2D_CALL A2D_SET_BOX1, L0DB3
+        A2D_CALL A2D_SET_BOX1, set_box_params
         lda     query_box_params_id
         cmp     #window_id
         bne     :+
@@ -147,41 +149,39 @@ L08B4:  sta     query_box_params_id
 ;;; ==================================================
 ;;; Param Blocks
 
-        ;; following memory space is re-used
+        ;; following memory space is re-used so x/y overlap
 .proc drag_window_params
 id := * + 0
 .endproc
 
 .proc map_coords_params
 id      := * + 0
-screenx := * + 1
-screeny := * + 3
+screenx := * + 1                ; x overlap
+screeny := * + 3                ; y overlap
 clientx := * + 5
 clienty := * + 7
 .endproc
-
-        query_target_params := *+1
-        query_target_params_queryx := *+1
-        query_target_params_queryy := *+3
-        query_target_params_element := *+5
-        query_target_params_id := *+6
 
 .proc get_input_params
 state:  .byte   0
 key       := *
 modifiers := *+1
 
-xcoord    := *
-ycoord    := *+2
-        .byte   0,0,0,0         ; storage for above
+xcoord    := *                  ; x overlap
+ycoord    := *+2                ; y overlap
 .endproc
 
+.proc query_target_params
+queryx  := *                    ; x overlap
+queryy  := *+2                  ; y overlap
+element := *+4
+id      := *+5
+.endproc
 
+        .byte   0,0,0,0         ; storage for above
+        .byte   0,0,0,0
 
-L08E0:  .byte   0
-L08E1:  .byte   0
-L08E2:  .byte   0
-L08E3:  .byte   0,0,0
+        .byte   0,0             ; ???
 
 .proc close_click_params
 clicked:.byte   0
@@ -189,10 +189,11 @@ clicked:.byte   0
 
 .proc query_box_params
 id:     .byte   0
-addr:   .addr   $0DB3
+addr:   .addr   set_box_params
 .endproc
 query_box_params_id := query_box_params::id
 
+        ;; Puzzle piece row/columns
         cw := 28
         c1 := 5
         c2 := c1 + cw
@@ -223,10 +224,10 @@ space_positions:                 ; left, top for all 16 holes
         .word   c4,r4
 
 .proc pattern_table
-        .addr   piece1, piece2, piece3, piece4, piece5, piece6, piece7
-        .addr   piece8, piece9, piece10, piece11, piece12, piece13, piece14
-p15:    .addr   piece15
-p16:    .addr   piece16
+        .addr   piece1, piece2, piece3, piece4
+        .addr   piece5, piece6, piece7, piece8
+        .addr   piece9, piece10, piece11, piece12
+        .addr   piece13, piece14, piece15, piece16
 .endproc
 
         ;; Current position table
@@ -241,7 +242,7 @@ left:   .word   0
 top:    .word   0
 addr:   .addr   0
 stride: .byte   4
-        .byte   0,0,0,0,0
+        .byte   0,0,0,0,0       ; ???
 width:  .word   27
 height: .word   15
 .endproc
@@ -521,7 +522,7 @@ piece16:
 
 
 .proc fill_rect_params
-        .word   1, 0, $79, $44
+        .word   1, 0, default_width, default_height
 .endproc
 
 .proc pattern_speckles
@@ -534,6 +535,7 @@ piece16:
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
 .endproc
 
+        ;; ???
         .byte   $00,$FF,$FF,$FF,$FF,$FF,$FF,$FF
         .byte   $FF,$00
 
@@ -559,13 +561,17 @@ draw_rc:  .byte   $00
 draw_end:  .byte   $00
 draw_inc:  .byte   $00
 
-destroy_window_params:
-L0D9C:  .byte   $33,$73,$00,$F7,$FF,$AD,$0D,$01
+.proc destroy_window_params
+id:     .byte   window_id
+.endproc
+
+        .byte   $73,$00,$F7,$FF,$AD,$0D,$01
         .byte   $00,$00,$00,$00,$00,$06,$00,$05
         .byte   $00,$41,$35,$47,$37,$36,$49
 
         ;; SET_BOX1 params (filled in by QUERY_BOX)
-L0DB3:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+set_box_params:
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -574,11 +580,13 @@ L0DB3:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$2F,$02,$B1,$00,$00,$01,$02
         .byte   $06
 
-        default_width := $79
-        default_height := $44
+        default_left    := 220
+        default_top     := 80
+        default_width   := $79
+        default_height  := $44
 
 .proc create_window_params
-id:     .byte   $33
+id:     .byte   window_id
 flags:  .byte   A2D_CWF_ADDCLOSE
 title:  .addr   name
 hscroll:.byte   0
@@ -593,8 +601,8 @@ h_a:    .word   default_height
 w_b:    .word   default_width
 h_b:    .word   default_height
 
-left:   .word   $DC
-top:    .word   $50
+left:   .word   default_left
+top:    .word   default_top
 saddr:  .addr   A2D_SCREEN_ADDR
 stride: .word   A2D_SCREEN_STRIDE
 hoffset:.word   0
@@ -608,9 +616,15 @@ height: .word   default_height
         .byte   $00,$00,$00,$00,$01,$01,$00,$7F
         .byte   $00,$88
 
-        .byte   $00,$00,$DC,$00,$50,$00
-        .byte   $00,$20,$80,$00,$00,$00,$00,$00
-        .byte   $79,$00,$44,$00,$FF,$FF,$FF,$FF
+        .byte   $00,$00
+        .word   default_left
+        .word   default_top
+        .addr   A2D_SCREEN_ADDR
+        .word   A2D_SCREEN_STRIDE
+        .byte   $00,$00,$00,$00
+        .word   default_width
+        .word   default_height
+        .byte   $FF,$FF,$FF,$FF
         .byte   $FF,$FF,$FF,$FF,$FF,$00,$00,$00
         .byte   $00,$00,$01,$01,$00,$7F,$00,$88
         .byte   $00,$00
@@ -618,7 +632,7 @@ height: .word   default_height
 .endproc
 name:   PASCAL_STRING "Puzzle"
 
-        create_window_params_L0E02 := create_window_params::top
+        create_window_params_top := create_window_params::top
 
 ;;; ==================================================
 ;;; Create the window
@@ -636,7 +650,9 @@ loop:   tya
 
         lda     #window_id
         jsr     L08B4
-        A2D_CALL $2B
+        A2D_CALL $2B            ; ???
+
+        ;; Scramble?
 L0E70:  ldy     #3
 L0E72:  tya
         pha
@@ -688,10 +704,10 @@ ploop:  lda     position_table+1,y
         ;; click - where?
 on_click:
         A2D_CALL A2D_QUERY_TARGET, query_target_params
-        lda     query_target_params_id
+        lda     query_target_params::id
         cmp     #window_id
         bne     bail
-        lda     query_target_params_element
+        lda     query_target_params::element
         bne     :+
 bail:   rts
 
@@ -938,7 +954,7 @@ L1072:  A2D_CALL A2D_SET_PATTERN, pattern_speckles
         lda     #window_id
         sta     query_box_params::id
         A2D_CALL A2D_QUERY_BOX, query_box_params
-        A2D_CALL A2D_SET_BOX1, L0DB3
+        A2D_CALL A2D_SET_BOX1, set_box_params
         rts
 
 ;;; ==================================================
@@ -1035,7 +1051,7 @@ saved_zp:
         lda     #window_id
         sta     query_box_params::id
         A2D_CALL A2D_QUERY_BOX, query_box_params
-        A2D_CALL A2D_SET_BOX1, L0DB3
+        A2D_CALL A2D_SET_BOX1, set_box_params
         pla
         tay
 
