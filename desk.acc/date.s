@@ -18,10 +18,8 @@ KEY_DOWN        := $0A
 KEY_UP          := $0B
 KEY_RIGHT       := $15
 
-L0000           := $0000
 L0020           := $0020
 L1000           := $1000
-L4021           := $4021
 
 ;;; ==================================================
 
@@ -93,7 +91,7 @@ L086B:  sta     ALTZPON
         ldy     #$C8
         lda     #$0E
         ldx     #$08
-        jsr     L4021
+        jsr     JUMP_TABLE_21
         bne     L08B3
         lda     L0813
         sta     L0815
@@ -102,16 +100,16 @@ L086B:  sta     ALTZPON
         ldy     #$CE
         lda     #$14
         ldx     #$08
-        jsr     L4021
+        jsr     JUMP_TABLE_21
         bne     L08AA
         ldy     #$CB
         lda     #$19
         ldx     #$08
-        jsr     L4021
+        jsr     JUMP_TABLE_21
 L08AA:  ldy     #$CC
         lda     #$21
         ldx     #$08
-        jsr     L4021
+        jsr     JUMP_TABLE_21
 L08B3:  ldx     stash_stack
         txs
         rts
@@ -122,10 +120,18 @@ start_da:
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
-        jmp     L0986
+        jmp     init_window
 
 ;;; ==================================================
 ;;; Param blocks
+
+        ;; The following 7 rects are iterated over to identify
+        ;; a hit target for a click.
+
+        num_hit_rects := 7
+        first_hit_rect := *
+        up_rect_index := 3
+        down_rect_index := 4
 
 ok_button_rect:
         .word   $6A,$2E,$B5,$39
@@ -135,13 +141,13 @@ up_arrow_rect:
         .word   $AA,$0A,$B4,$14
 down_arrow_rect:
         .word   $AA,$1E,$B4,$28
-
-fill_rect_params3:
+day_rect:
         .word   $25,$14,$3B,$1E
-fill_rect_params7:
+month_rect:
         .word   $51,$14,$6F,$1E
-fill_rect_params6:
+year_rect:
         .word   $7F,$14,$95,$1E
+
 
 L08FC:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $FF
@@ -154,8 +160,8 @@ L08FC:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 selected_field:
         .byte   0
 
-datelo:  .byte   $00
-datehi:  .byte   $00
+datelo: .byte   0
+datehi: .byte   0
 
 day:    .byte   26              ; Feb 26, 1985
 month:  .byte   2               ; The date this was written?
@@ -180,22 +186,36 @@ year_string:
         A2D_DEFSTRING "  "
 
 .proc get_input_params
-L0937:  .byte   $00
-L0938:  .byte   $00
-L0939:  .byte   $00
-L093A:  .byte   $00
-L093B:  .byte   $00
+state:  .byte   0
+
+key       := *
+modifiers := *+1
+
+xcoord    := *
+ycoord    := *+2
+        .byte   0,0,0,0
+.endproc
+        ;; xcoord/ycoord are used to query...
+.proc query_target_params
+xcoord    := *
+ycoord    := *+2
+element:.byte   0
+id:     .byte   0
 .endproc
 
-L093C:  .byte   $00
-L093D:  .byte   $00
-L093E:  .byte   $64
-L093F:  .byte   $00
-L0940:  .byte   $00
-L0941:  .byte   $00
-L0942:  .byte   $00
-L0943:  .byte   $00,$00,$00,$00
-L0947:  .byte   $64,$00,$01
+        window_id := $64
+
+.proc map_coords_params
+id:     .byte   window_id
+screen:
+screenx:.word   0
+screeny:.word   0
+client:
+clientx:.word   0
+clienty:.word   0
+.endproc
+
+L0947:  .byte   window_id,$00,$01
 
 .proc fill_mode_params
 mode:   .byte   $02
@@ -203,7 +223,7 @@ mode:   .byte   $02
         .byte   $06
 
 .proc create_window_params
-id:     .byte   $64
+id:     .byte   window_id
 flags:  .byte   $01
 title:  .addr   0
 hscroll:.byte   0
@@ -235,13 +255,22 @@ height: .word   $40
 
 ;;; ==================================================
 
-L0986:  jsr     L0E00
+init_window:
+        jsr     save_zp
+
+        ;; Crack the date bytes. Format is:
+        ;;   |    DATEHI     |    DATELO     |
+        ;;   |7 6 5 4 3 2 1 0 7 6 5 4 3 2 1 0|
+        ;;   |    year     | month |  day    |
+
         lda     datehi
         lsr     a
         sta     year
+
         lda     datelo
-        and     #$1F
+        and     #%11111
         sta     day
+
         lda     datehi
         ror     a
         lda     datelo
@@ -251,6 +280,7 @@ L0986:  jsr     L0E00
         lsr     a
         lsr     a
         sta     month
+
         A2D_CALL A2D_CREATE_WINDOW, create_window_params
         lda     #0
         sta     selected_field
@@ -262,7 +292,7 @@ L0986:  jsr     L0E00
 
 input_loop:
         A2D_CALL A2D_GET_INPUT, get_input_params
-        lda     get_input_params::L0937
+        lda     get_input_params::state
         cmp     #A2D_INPUT_DOWN
         bne     :+
         jsr     L0A45
@@ -272,12 +302,12 @@ input_loop:
         bne     input_loop
 
 on_key:
-        lda     get_input_params::L0939
+        lda     get_input_params::modifiers
         bne     input_loop
-        lda     get_input_params::L0938
+        lda     get_input_params::key
         cmp     #KEY_ENTER
         bne     :+
-        jmp     L0A92
+        jmp     on_ok
 
 :       cmp     #KEY_ESCAPE
         bne     :+
@@ -293,17 +323,17 @@ on_key:
 
 on_key_up:
         A2D_CALL A2D_FILL_RECT, up_arrow_rect
-        lda     #$03
-        sta     L0B50
-        jsr     L0B17
+        lda     #up_rect_index
+        sta     hit_rect_index
+        jsr     do_inc_or_dec
         A2D_CALL A2D_FILL_RECT, up_arrow_rect
         jmp     input_loop
 
 on_key_down:
         A2D_CALL A2D_FILL_RECT, down_arrow_rect
-        lda     #$04
-        sta     L0B50
-        jsr     L0B17
+        lda     #down_rect_index
+        sta     hit_rect_index
+        jsr     do_inc_or_dec
         A2D_CALL A2D_FILL_RECT, down_arrow_rect
         jmp     input_loop
 
@@ -327,40 +357,44 @@ L0A3F:  jsr     L0DB4
 
 ;;; ==================================================
 
-L0A45:  A2D_CALL A2D_QUERY_TARGET, get_input_params::L0938
+.proc L0A45
+        A2D_CALL A2D_QUERY_TARGET, get_input_params::xcoord
         A2D_CALL A2D_SET_FILL_MODE, fill_mode_params
         A2D_CALL A2D_SET_PATTERN, white_pattern
-        lda     L093D
-        cmp     #$64
-        bne     L0A63
-        lda     L093C
+        lda     query_target_params::id
+        cmp     #window_id
+        bne     miss
+        lda     query_target_params::element
         bne     L0A64
-L0A63:  rts
+miss:   rts
 
-L0A64:  cmp     #$02
-        bne     L0A63
-        jsr     L0C54
-        cpx     #$00
-        beq     L0A63
+L0A64:  cmp     #A2D_ELEM_CLIENT
+        bne     miss
+        jsr     find_hit_target
+        cpx     #0
+        beq     miss
         txa
         sec
-        sbc     #$01
+        sbc     #1
         asl     a
         tay
-        lda     L0A84,y
-        sta     L0A82
-        lda     L0A84+1,y
-        sta     L0A83
-L0A82           := * + 1
-L0A83           := * + 2
-        jmp     L1000
+        lda     hit_target_jump_table,y
+        sta     jump+1
+        lda     hit_target_jump_table+1,y
+        sta     jump+2
+jump:   jmp     L1000           ; self modified
 
-        ;; jump table for... ?
-L0A84:  .addr   L0A92,on_cancel,on_up,on_down
-        .addr   $0AE5,$0AE5,$0AE5
+hit_target_jump_table:
+        .addr   on_ok, on_cancel, on_up, on_down
+        .addr   on_field_click, on_field_click, on_field_click
+.endproc
 
-L0A92:
+;;; ==================================================
+
+.proc on_ok
         A2D_CALL A2D_FILL_RECT, ok_button_rect
+
+        ;; Pack the date bytes and store
         sta     RAMWRTOFF
         lda     month
         asl     a
@@ -374,17 +408,17 @@ L0A92:
         rol     a
         sta     DATEHI
         sta     RAMWRTON
-        lda     #$01
-        sta     L0C1A
-        jmp     L0C1B
 
-;;; ==================================================
+        lda     #1
+        sta     dialog_result
+        jmp     destroy
+.endproc
 
 on_cancel:
         A2D_CALL A2D_FILL_RECT, cancel_button_rect
-        lda     #$00
-        sta     L0C1A
-        jmp     L0C1B
+        lda     #0
+        sta     dialog_result
+        jmp     destroy
 
 on_up:
         txa
@@ -392,7 +426,7 @@ on_up:
         A2D_CALL A2D_FILL_RECT, up_arrow_rect
         pla
         tax
-        jsr     L0AEC
+        jsr     on_up_or_down
         rts
 
 on_down:
@@ -401,66 +435,77 @@ on_down:
         A2D_CALL A2D_FILL_RECT, down_arrow_rect
         pla
         tax
-        jsr     L0AEC
+        jsr     on_up_or_down
         rts
 
+on_field_click:
         txa
         sec
-        sbc     #$04
+        sbc     #4
         jmp     L0DB4
 
-L0AEC:  stx     L0B50
-L0AEF:  A2D_CALL A2D_GET_INPUT, get_input_params
-        lda     get_input_params::L0937
-        cmp     #$02
-        beq     L0B02
-        jsr     L0B17
-        jmp     L0AEF
+.proc on_up_or_down
+        stx     hit_rect_index
+loop:   A2D_CALL A2D_GET_INPUT, get_input_params ; Repeat while mouse is down
+        lda     get_input_params::state
+        cmp     #A2D_INPUT_UP
+        beq     :+
+        jsr     do_inc_or_dec
+        jmp     loop
 
-L0B02:  lda     L0B50
-        cmp     #$03
-        beq     L0B10
+:       lda     hit_rect_index
+        cmp     #up_rect_index
+        beq     :+
+
         A2D_CALL A2D_FILL_RECT, down_arrow_rect
         rts
 
-L0B10:  A2D_CALL A2D_FILL_RECT, up_arrow_rect
+:       A2D_CALL A2D_FILL_RECT, up_arrow_rect
         rts
+.endproc
 
-L0B17:  jsr     L0DF2
-        lda     L0B50
-        cmp     #$03
-        beq     L0B2C
-        lda     #$59
-        sta     $07
-        lda     #$0B
-        sta     $08
-        jmp     L0B34
+.proc do_inc_or_dec
+        ptr := $7
 
-L0B2C:  lda     #$51
-        sta     $07
-        lda     #$0B
-        sta     $08
-L0B34:  lda     selected_field
+        jsr     L0DF2
+        lda     hit_rect_index
+        cmp     #up_rect_index
+        beq     incr
+
+decr:   lda     #<decrement_table
+        sta     ptr
+        lda     #>decrement_table
+        sta     ptr+1
+        jmp     go
+
+incr:   lda     #<increment_table
+        sta     ptr
+        lda     #>increment_table
+        sta     ptr+1
+
+go:     lda     selected_field
         asl     a
         tay
-        lda     ($07),y
-        sta     L0B45
+        lda     (ptr),y
+        sta     gosub+1
         iny
-        lda     ($07),y
-        sta     L0B46
-L0B45           := * + 1
-L0B46           := * + 2
-        jsr     L1000
+        lda     (ptr),y
+        sta     gosub+2
+
+gosub:  jsr     L1000           ; self modified
         A2D_CALL $0C, L08FC
-        jmp     L0D73
+        jmp     draw_selected_field
+.endproc
+
+hit_rect_index:
+        .byte   0
 
 ;;; ==================================================
 
-L0B50:  .byte   $00
-        .byte   $00,$00
-        .addr   increment_day,increment_month,increment_year
-        .byte   $00,$00
-        .addr   decrement_day,decrement_month,decrement_year
+increment_table:
+        .addr   0, increment_day, increment_month, increment_year
+decrement_table:
+        .addr   0, decrement_day, decrement_month, decrement_year
 
 increment_day:
         clc
@@ -517,7 +562,7 @@ decrement_year:
 
 .proc prepare_day_string
         lda     day
-        jsr     div_by_10_then_ascii
+        jsr     number_to_ascii
         sta     day_string+3    ; first char
         stx     day_string+4    ; second char
         rts
@@ -533,13 +578,14 @@ decrement_year:
 
         ptr := $07
         str := month_string + 3
+        len := 3
 
         lda     #<str
         sta     ptr
         lda     #>str
         sta     ptr+1
 
-        ldy     #2
+        ldy     #len - 1
 loop:   lda     month_name_table,x
         sta     (ptr),y
         dex
@@ -555,25 +601,33 @@ month_name_table:
 
 prepare_year_string:
         lda     year
-        jsr     div_by_10_then_ascii
+        jsr     number_to_ascii
         sta     year_string+3
         stx     year_string+4
         rts
 
 ;;; ==================================================
 
-L0C1A:  .byte   0
-L0C1B:  A2D_CALL A2D_DESTROY_WINDOW, L0947
+dialog_result:  .byte   0
+
+.proc destroy
+        A2D_CALL A2D_DESTROY_WINDOW, L0947
         jsr     UNKNOWN_CALL
         .byte   $0C
-        .addr   L0000
-        ldx     #$09
-L0C29:  lda     L0C4B,x
-        sta     L0020,x
+        .addr   0
+
+        ;; Copy the relay routine to the zero page
+        dest := $20
+
+        ldx     #sizeof_routine
+loop:   lda     routine,x
+        sta     dest,x
         dex
-        bpl     L0C29
-        lda     L0C1A
-        beq     L0C48
+        bpl     loop
+        lda     dialog_result
+        beq     skip
+
+        ;; Pack date bytes, store in X, A
         lda     month
         asl     a
         asl     a
@@ -586,50 +640,60 @@ L0C29:  lda     L0C4B,x
         rol     a
         tax
         tya
-L0C48:  jmp     L0020
 
-L0C4B:  sta     RAMRDOFF
+skip:   jmp     dest
+
+.proc routine
+        sta     RAMRDOFF
         sta     RAMWRTOFF
         jmp     L086B
+.endproc
+        sizeof_routine := * - routine
+.endproc
 
 ;;; ==================================================
 
-L0C54:  lda     get_input_params::L0938
-        sta     L093F
-        lda     get_input_params::L0939
-        sta     L0940
-        lda     get_input_params::L093A
-        sta     L0941
-        lda     get_input_params::L093B
-        sta     L0942
-        A2D_CALL A2D_MAP_COORDS, L093E
-        A2D_CALL A2D_SET_POS, L0943
-        ldx     #$01
-        lda     #$C4
-        sta     L0C8A
-        lda     #$08
-        sta     L0C8A+1
-L0C84:  txa
+.proc find_hit_target
+        lda     get_input_params::xcoord
+        sta     map_coords_params::screenx
+        lda     get_input_params::xcoord+1
+        sta     map_coords_params::screenx+1
+        lda     get_input_params::ycoord
+        sta     map_coords_params::screeny
+        lda     get_input_params::ycoord+1
+        sta     map_coords_params::screeny+1
+        A2D_CALL A2D_MAP_COORDS, map_coords_params
+        A2D_CALL A2D_SET_POS, map_coords_params::client
+        ldx     #1
+        lda     #<first_hit_rect
+        sta     test_addr
+        lda     #>first_hit_rect
+        sta     test_addr+1
+
+loop:   txa
         pha
-        A2D_CALL A2D_TEST_BOX, $1000, L0C8A
-        bne     L0CA6
+        A2D_CALL A2D_TEST_BOX, $1000, test_addr
+        bne     done
+
         clc
-        lda     L0C8A
-        adc     #$08
-        sta     L0C8A
-        bcc     L0C9C
-        inc     L0C8A+1
-L0C9C:  pla
+        lda     test_addr
+        adc     #$08            ; byte offset
+        sta     test_addr
+        bcc     :+
+        inc     test_addr+1
+:       pla
         tax
         inx
-        cpx     #$08
-        bne     L0C84
-        ldx     #$00
+        cpx     #num_hit_rects+1
+        bne     loop
+
+        ldx     #0
         rts
 
-L0CA6:  pla
+done:   pla
         tax
         rts
+.endproc
 
 ;;; ==================================================
 ;;; Params for the display
@@ -695,7 +759,8 @@ L0CF0:  A2D_CALL A2D_SET_BOX1, create_window_params::box
         lda     #1
         jmp     L0DB4
 
-L0D73:  lda     selected_field
+draw_selected_field:
+        lda     selected_field
         cmp     #1
         beq     draw_day
         cmp     #2
@@ -741,13 +806,13 @@ L0DD1:  pla
         beq     L0DE4
         cmp     #2
         beq     L0DEB
-L0DDD:  A2D_CALL A2D_FILL_RECT, fill_rect_params6
+L0DDD:  A2D_CALL A2D_FILL_RECT, year_rect
         rts
 
-L0DE4:  A2D_CALL A2D_FILL_RECT, fill_rect_params3
+L0DE4:  A2D_CALL A2D_FILL_RECT, day_rect
         rts
 
-L0DEB:  A2D_CALL A2D_FILL_RECT, fill_rect_params7
+L0DEB:  A2D_CALL A2D_FILL_RECT, month_rect
         rts
 
 L0DF2:  lda     #$FF
@@ -761,22 +826,25 @@ L0DF6:  sbc     #$01
         rts
 
 ;;; ==================================================
+;;; Save/restore Zero Page
 
-        ;; save ZP
-L0E00:  ldx     #$00
-L0E02:  lda     L0000,x
+.proc save_zp
+        ldx     #$00
+loop:   lda     $00,x
         sta     zp_buffer,x
         dex
-        bne     L0E02
+        bne     loop
         rts
+.endproc
 
-        ;; restore ZP
+.proc restore_zp
         ldx     #$00
-L0E0D:  lda     zp_buffer,x
-        sta     L0000,x
+loop:   lda     zp_buffer,x
+        sta     $00,x
         dex
-        bne     L0E0D
+        bne     loop
         rts
+.endproc
 
 zp_buffer:
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -813,23 +881,24 @@ zp_buffer:
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
 ;;; ==================================================
+;;; Convert number to two ASCII digits (in A, X)
 
-.proc div_by_10_then_ascii      ; A = A / 10, X = remainder, results in ASCII form
+.proc number_to_ascii
         ldy     #0
-loop:   cmp     #10             ; Y = A / 10
+loop:   cmp     #10
         bcc     :+
         sec
         sbc     #10
         iny
         jmp     loop
 
-:       clc                     ; then convert to ASCII
+:       clc
         adc     #'0'
         tax
         tya
         clc
         adc     #'0'
-        rts                     ; remainder in X, result in A
+        rts
 .endproc
 
         rts                     ; ???
