@@ -7,12 +7,17 @@
 
         .include "a2d.inc"
 
+ROMIN2          := $C082
+DATELO  := $BF90
+DATEHI  := $BF91
+
+
 L0000           := $0000
 L0020           := $0020
 L1000           := $1000
 L4021           := $4021
 
-        jmp     L0825
+        jmp     copy2aux
 
 L0803:  .byte   $00,$09,$4D,$44,$2E,$53,$59,$53
         .byte   $54,$45,$4D,$03,$04,$08,$00,$09
@@ -23,39 +28,46 @@ L0822:  .byte   $00
 L0823:  .byte   $00
 
 stash_stack:  .byte   $00
-L0825:  tsx
+.proc copy2aux
+
+        start := start_da
+        end   := last
+
+        tsx
         stx     L0803
         sta     ALTZPOFF
-        lda     $C082
-        lda     $BF90
+        lda     ROMIN2
+        lda     DATELO
         sta     L090F
-        lda     $BF91
+        lda     DATEHI
         sta     L0910
-        lda     #$B8
+        lda     #<start
         sta     STARTLO
-        lda     #$08
+        lda     #>start
         sta     STARTHI
-        lda     #$2D
+        lda     #<end
         sta     ENDLO
-        lda     #$0F
+        lda     #>end
         sta     ENDHI
-        lda     #$B8
+        lda     #<start
         sta     DESTINATIONLO
-        lda     #$08
+        lda     #>start
         sta     DESTINATIONHI
         sec
         jsr     AUXMOVE
-        lda     #$B8
-        sta     $03ED
-        lda     #$08
-        sta     $03EE
+
+        lda     #<start
+        sta     XFERSTARTLO
+        lda     #>start
+        sta     XFERSTARTHI
         php
         pla
-        ora     #$40
+        ora     #$40            ; set overflow: aux zp/stack
         pha
         plp
-        sec
+        sec                     ; control main>aux
         jmp     XFER
+.endproc
 
 L086B:  sta     ALTZPON
         sta     L0823
@@ -90,6 +102,7 @@ L08B3:  ldx     L0803
         txs
         rts
 
+start_da:
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
@@ -104,7 +117,10 @@ L08EC:  .byte   $51,$00,$14,$00,$6F,$00,$1E,$00
 L08F4:  .byte   $7F,$00,$14,$00,$95,$00,$1E,$00
 L08FC:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $FF
-L0905:  .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+
+.proc white_pattern
+        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+.endproc
         .byte   $FF
 L090E:  .byte   $00
 L090F:  .byte   $00
@@ -123,11 +139,15 @@ L092E:  .byte   $85,$00,$1E,$00
 L0932:  .byte   $35,$09,$02
 L0935:  .byte   $20
 L0936:  .byte   $20
+
+.proc get_input_params
 L0937:  .byte   $00
 L0938:  .byte   $00
 L0939:  .byte   $00
 L093A:  .byte   $00
 L093B:  .byte   $00
+.endproc
+
 L093C:  .byte   $00
 L093D:  .byte   $00
 L093E:  .byte   $64
@@ -137,12 +157,39 @@ L0941:  .byte   $00
 L0942:  .byte   $00
 L0943:  .byte   $00,$00,$00,$00
 L0947:  .byte   $64,$00,$01
-L094A:  .byte   $02,$06
-L094C:  .byte   $64,$01,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$64,$00,$64,$00
-        .byte   $F4,$01,$F4,$01
-L0960:  .byte   $B4,$00,$32,$00,$00,$20,$80,$00
-        .byte   $00,$00,$00,$00,$C7,$00,$40,$00
+
+.proc fill_mode_params
+mode:   .byte   $02
+.endproc
+        .byte   $06
+
+.proc create_window_params
+id:     .byte   $64
+flags:  .byte   $01
+title:  .addr   0
+hscroll:.byte   0
+vscroll:.byte   0
+hsmax:  .byte   0
+hspos:  .byte   0
+vsmax:  .byte   0
+vspos:  .byte   0
+        .byte   0, 0            ; ???
+w1:     .word   100
+h1:     .word   100
+w2:     .word   $1F4
+h2:     .word   $1F4
+.proc box
+left:   .word   $B4
+top:    .word   $32
+saddr:  .addr   A2D_SCREEN_ADDR
+stride: .word   A2D_SCREEN_STRIDE
+hoff:   .word   0
+voff:   .word   0
+width:  .word   $C7
+height: .word   $40
+.endproc
+.endproc
+        ;; ???
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $FF,$00,$00,$00,$00,$00,$04,$02
         .byte   $00,$7F,$00,$88,$00,$00
@@ -163,13 +210,13 @@ L0986:  jsr     L0E00
         lsr     a
         lsr     a
         sta     L0912
-        A2D_CALL A2D_CREATE_WINDOW, L094C
+        A2D_CALL A2D_CREATE_WINDOW, create_window_params
         lda     #$00
         sta     L090E
         jsr     L0CF0
         A2D_CALL $2B
-L09BB:  A2D_CALL A2D_GET_INPUT, L0937
-        lda     L0937
+L09BB:  A2D_CALL A2D_GET_INPUT, get_input_params
+        lda     get_input_params::L0937
         cmp     #$01
         bne     L09CE
         jsr     L0A45
@@ -177,9 +224,9 @@ L09BB:  A2D_CALL A2D_GET_INPUT, L0937
 
 L09CE:  cmp     #$03
         bne     L09BB
-        lda     L0939
+        lda     get_input_params::L0939
         bne     L09BB
-        lda     L0938
+        lda     get_input_params::L0938
         cmp     #$0D
         bne     L09E1
         jmp     L0A92
@@ -226,9 +273,9 @@ L0A33:  clc
 L0A3F:  jsr     L0DB4
         jmp     L09BB
 
-L0A45:  A2D_CALL A2D_QUERY_TARGET, L0938
-        A2D_CALL A2D_SET_FILL_MODE, L094A
-        A2D_CALL A2D_SET_PATTERN, L0905
+L0A45:  A2D_CALL A2D_QUERY_TARGET, get_input_params::L0938
+        A2D_CALL A2D_SET_FILL_MODE, fill_mode_params
+        A2D_CALL A2D_SET_PATTERN, white_pattern
         lda     L093D
         cmp     #$64
         bne     L0A63
@@ -266,10 +313,10 @@ L0A92:  A2D_CALL A2D_FILL_RECT, L08C4
         asl     a
         asl     a
         ora     L0911
-        sta     $BF90
+        sta     DATELO
         lda     L0913
         rol     a
-        sta     $BF91
+        sta     DATEHI
         sta     RAMWRTON
         lda     #$01
         sta     L0C1A
@@ -302,8 +349,8 @@ L0ABB:  A2D_CALL A2D_FILL_RECT, L08CC
         jmp     L0DB4
 
 L0AEC:  stx     L0B50
-L0AEF:  A2D_CALL A2D_GET_INPUT, L0937
-        lda     L0937
+L0AEF:  A2D_CALL A2D_GET_INPUT, get_input_params
+        lda     get_input_params::L0937
         cmp     #$02
         beq     L0B02
         jsr     L0B17
@@ -395,7 +442,7 @@ L0BAE:  jmp     L0BCB
 L0BBB:  jmp     L0C0D
 
 L0BBE:  lda     L0911
-        jsr     L0F16
+        jsr     div_by_10_then_ascii
         sta     L0922
         stx     L0923
         rts
@@ -421,7 +468,7 @@ L0BDF:  lda     L0BE9,x
 L0BE9:  .byte   "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug"
         .byte   "Sep","Oct","Nov","Dec"
 L0C0D:  lda     L0913
-        jsr     L0F16
+        jsr     div_by_10_then_ascii
         sta     L0935
         stx     L0936
         rts
@@ -456,13 +503,13 @@ L0C4B:  sta     RAMRDOFF
         sta     RAMWRTOFF
         jmp     L086B
 
-L0C54:  lda     L0938
+L0C54:  lda     get_input_params::L0938
         sta     L093F
-        lda     L0939
+        lda     get_input_params::L0939
         sta     L0940
-        lda     L093A
+        lda     get_input_params::L093A
         sta     L0941
-        lda     L093B
+        lda     get_input_params::L093B
         sta     L0942
         A2D_CALL A2D_MAP_COORDS, L093E
         A2D_CALL A2D_SET_POS, L0943
@@ -505,7 +552,7 @@ L0CE2:  .byte   $6E,$00,$38,$00
 L0CE6:  .byte   $AC,$00,$13,$00
 L0CEA:  .byte   $AC,$00,$27,$00
 L0CEE:  .byte   $01,$01
-L0CF0:  A2D_CALL A2D_SET_BOX1, L0960
+L0CF0:  A2D_CALL A2D_SET_BOX1, create_window_params::box
         A2D_CALL A2D_DRAW_RECT, L0CA9
         A2D_CALL $0A, L0CEE
         A2D_CALL A2D_DRAW_RECT, L0CB1
@@ -527,8 +574,8 @@ L0CF0:  A2D_CALL A2D_SET_BOX1, L0960
         jsr     L0D81
         jsr     L0D8E
         jsr     L0DA7
-        A2D_CALL A2D_SET_FILL_MODE, L094A
-        A2D_CALL A2D_SET_PATTERN, L0905
+        A2D_CALL A2D_SET_FILL_MODE, fill_mode_params
+        A2D_CALL A2D_SET_PATTERN, white_pattern
         lda     #$01
         jmp     L0DB4
 
@@ -639,20 +686,24 @@ L0E16:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
-L0F16:  ldy     #$00
-L0F18:  cmp     #$0A
-        bcc     L0F23
+.proc div_by_10_then_ascii      ; A = A / 10, X = remainder, results in ASCII form
+        ldy     #$00
+loop:   cmp     #$0A            ; Y = A / 10
+        bcc     :+
         sec
         sbc     #$0A
         iny
-        jmp     L0F18
+        jmp     loop
 
-L0F23:  clc
+:       clc                     ; then convert to ASCII
         adc     #$30
         tax
         tya
         clc
         adc     #$30
-        rts
+        rts                     ; remainder in X, result in A
+.endproc
 
-        rts
+        rts                     ; ???
+
+last := *

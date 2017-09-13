@@ -184,7 +184,7 @@ A2D_CREATE_WINDOW := $38
         ;; .byte vscroll_pos
         ;; .byte ???
         ;; .byte ???
-        ;; .word width_a        ???
+        ;; .word width_a        ??? possibly size of scroll area within window of scroll area?
         ;; .word height_a       ???
         ;; .word width_b        (of scroll area?)
         ;; .word height_b       (of scroll area?)
