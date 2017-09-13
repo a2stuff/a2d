@@ -108,13 +108,20 @@ start_da:
         lda     LCBANK1
         jmp     L0986
 
-L08C4:  .byte   $6A,$00,$2E,$00,$B5,$00,$39,$00
-L08CC:  .byte   $10,$00,$2E,$00,$5A,$00,$39,$00
-L08D4:  .byte   $AA,$00,$0A,$00,$B4,$00,$14,$00
-L08DC:  .byte   $AA,$00,$1E,$00,$B4,$00,$28,$00
-L08E4:  .byte   $25,$00,$14,$00,$3B,$00,$1E,$00
-L08EC:  .byte   $51,$00,$14,$00,$6F,$00,$1E,$00
-L08F4:  .byte   $7F,$00,$14,$00,$95,$00,$1E,$00
+ok_button_rect:
+        .byte   $6A,$00,$2E,$00,$B5,$00,$39,$00
+cancel_button_rect:
+        .byte   $10,$00,$2E,$00,$5A,$00,$39,$00
+
+up_arrow_rect:
+        .word   $AA,$0A,$B4,$14
+down_arrow_rect:
+        .byte   $AA,$00,$1E,$00,$B4,$00,$28,$00
+fill_rect_params3:
+        .byte   $25,$00,$14,$00,$3B,$00,$1E,$00
+fill_rect_params7:  .byte   $51,$00,$14,$00,$6F,$00,$1E,$00
+
+fill_rect_params6:  .byte   $7F,$00,$14,$00,$95,$00,$1E,$00
 L08FC:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $FF
 
@@ -243,18 +250,18 @@ L09E8:  cmp     #$08
         beq     L0A0F
         cmp     #$0B
         bne     L09BB
-        A2D_CALL A2D_FILL_RECT, L08D4
+        A2D_CALL A2D_FILL_RECT, up_arrow_rect
         lda     #$03
         sta     L0B50
         jsr     L0B17
-        A2D_CALL A2D_FILL_RECT, L08D4
+        A2D_CALL A2D_FILL_RECT, up_arrow_rect
         jmp     L09BB
 
-L0A0F:  A2D_CALL A2D_FILL_RECT, L08DC
+L0A0F:  A2D_CALL A2D_FILL_RECT, down_arrow_rect
         lda     #$04
         sta     L0B50
         jsr     L0B17
-        A2D_CALL A2D_FILL_RECT, L08DC
+        A2D_CALL A2D_FILL_RECT, down_arrow_rect
         jmp     L09BB
 
 L0A26:  sec
@@ -304,7 +311,7 @@ L0A83           := * + 2
 L0A84:  .byte   $92
 L0A85:  .byte   $0A,$BB,$0A,$C9,$0A,$D7,$0A,$E5
         .byte   $0A,$E5,$0A,$E5,$0A
-L0A92:  A2D_CALL A2D_FILL_RECT, L08C4
+L0A92:  A2D_CALL A2D_FILL_RECT, ok_button_rect
         sta     RAMWRTOFF
         lda     L0912
         asl     a
@@ -322,14 +329,14 @@ L0A92:  A2D_CALL A2D_FILL_RECT, L08C4
         sta     L0C1A
         jmp     L0C1B
 
-L0ABB:  A2D_CALL A2D_FILL_RECT, L08CC
+L0ABB:  A2D_CALL A2D_FILL_RECT, cancel_button_rect
         lda     #$00
         sta     L0C1A
         jmp     L0C1B
 
         txa
         pha
-        A2D_CALL A2D_FILL_RECT, L08D4
+        A2D_CALL A2D_FILL_RECT, up_arrow_rect
         pla
         tax
         jsr     L0AEC
@@ -337,7 +344,7 @@ L0ABB:  A2D_CALL A2D_FILL_RECT, L08CC
 
         txa
         pha
-        A2D_CALL A2D_FILL_RECT, L08DC
+        A2D_CALL A2D_FILL_RECT, down_arrow_rect
         pla
         tax
         jsr     L0AEC
@@ -359,10 +366,10 @@ L0AEF:  A2D_CALL A2D_GET_INPUT, get_input_params
 L0B02:  lda     L0B50
         cmp     #$03
         beq     L0B10
-        A2D_CALL A2D_FILL_RECT, L08DC
+        A2D_CALL A2D_FILL_RECT, down_arrow_rect
         rts
 
-L0B10:  A2D_CALL A2D_FILL_RECT, L08D4
+L0B10:  A2D_CALL A2D_FILL_RECT, up_arrow_rect
         rts
 
 L0B17:  jsr     L0DF2
@@ -540,34 +547,52 @@ L0CA6:  pla
         tax
         rts
 
-L0CA9:  .byte   $04,$00,$02,$00,$C0,$00,$3D,$00
-L0CB1:  .byte   $20,$00,$0F,$00,$9A,$00,$23,$00
-L0CB9:  .byte   $BC,$0C,$0C,"OK         "
-        .byte   $0D
-L0CC8:  .byte   $CB,$0C,$0B,"Cancel  ESC"
-L0CD6:  .byte   $D9,$0C,$01,$0B
-L0CDA:  .byte   $DD,$0C,$01,$0A
-L0CDE:  .byte   $15,$00,$38,$00
-L0CE2:  .byte   $6E,$00,$38,$00
-L0CE6:  .byte   $AC,$00,$13,$00
-L0CEA:  .byte   $AC,$00,$27,$00
+border_rect:  .byte   $04,$00,$02,$00,$C0,$00,$3D,$00
+date_rect:  .byte   $20,$00,$0F,$00,$9A,$00,$23,$00
+
+label_ok:
+        A2D_DEFSTRING {"OK         ",$0D} ; ends with newline
+label_cancel:
+        A2D_DEFSTRING "Cancel  ESC"
+label_uparrow:
+        A2D_DEFSTRING $0B ; up arrow
+label_downarrow:
+        A2D_DEFSTRING $0A ; down arrow
+
+label_cancel_pos:
+        .word   $15,$38
+label_ok_pos:
+        .word   $6E,$38
+
+label_uparrow_pos:
+        .word   $AC,$13
+label_downarrow_pos:
+        .word   $AC,$27
+
+        ;; Params for $0A call
 L0CEE:  .byte   $01,$01
+
 L0CF0:  A2D_CALL A2D_SET_BOX1, create_window_params::box
-        A2D_CALL A2D_DRAW_RECT, L0CA9
-        A2D_CALL $0A, L0CEE
-        A2D_CALL A2D_DRAW_RECT, L0CB1
-        A2D_CALL A2D_DRAW_RECT, L08C4
-        A2D_CALL A2D_DRAW_RECT, L08CC
-        A2D_CALL A2D_SET_POS, L0CE2
-        A2D_CALL A2D_DRAW_TEXT, L0CB9
-        A2D_CALL A2D_SET_POS, L0CDE
-        A2D_CALL A2D_DRAW_TEXT, L0CC8
-        A2D_CALL A2D_SET_POS, L0CE6
-        A2D_CALL A2D_DRAW_TEXT, L0CD6
-        A2D_CALL A2D_DRAW_RECT, L08D4
-        A2D_CALL A2D_SET_POS, L0CEA
-        A2D_CALL A2D_DRAW_TEXT, L0CDA
-        A2D_CALL A2D_DRAW_RECT, L08DC
+        A2D_CALL A2D_DRAW_RECT, border_rect
+        A2D_CALL $0A, L0CEE     ; ????
+        A2D_CALL A2D_DRAW_RECT, date_rect
+        A2D_CALL A2D_DRAW_RECT, ok_button_rect
+        A2D_CALL A2D_DRAW_RECT, cancel_button_rect
+
+        A2D_CALL A2D_SET_POS, label_ok_pos
+        A2D_CALL A2D_DRAW_TEXT, label_ok
+
+        A2D_CALL A2D_SET_POS, label_cancel_pos
+        A2D_CALL A2D_DRAW_TEXT, label_cancel
+
+        A2D_CALL A2D_SET_POS, label_uparrow_pos
+        A2D_CALL A2D_DRAW_TEXT, label_uparrow
+        A2D_CALL A2D_DRAW_RECT, up_arrow_rect
+
+        A2D_CALL A2D_SET_POS, label_downarrow_pos
+        A2D_CALL A2D_DRAW_TEXT, label_downarrow
+        A2D_CALL A2D_DRAW_RECT, down_arrow_rect
+
         jsr     L0BBE
         jsr     L0BCB
         jsr     L0C0D
@@ -620,13 +645,13 @@ L0DD1:  pla
         beq     L0DE4
         cmp     #$02
         beq     L0DEB
-L0DDD:  A2D_CALL A2D_FILL_RECT, L08F4
+L0DDD:  A2D_CALL A2D_FILL_RECT, fill_rect_params6
         rts
 
-L0DE4:  A2D_CALL A2D_FILL_RECT, L08E4
+L0DE4:  A2D_CALL A2D_FILL_RECT, fill_rect_params3
         rts
 
-L0DEB:  A2D_CALL A2D_FILL_RECT, L08EC
+L0DEB:  A2D_CALL A2D_FILL_RECT, fill_rect_params7
         rts
 
 L0DF2:  lda     #$FF
@@ -696,11 +721,11 @@ loop:   cmp     #$0A            ; Y = A / 10
         jmp     loop
 
 :       clc                     ; then convert to ASCII
-        adc     #$30
+        adc     #'0'
         tax
         tya
         clc
-        adc     #$30
+        adc     #'0'
         rts                     ; remainder in X, result in A
 .endproc
 

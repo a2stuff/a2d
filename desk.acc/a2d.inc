@@ -353,10 +353,12 @@ A2D_CWS_SCROLL_NORMAL  := A2D_CWS_SCROLL_ENABLED | A2D_CWS_SCROLL_THUMB | A2D_CW
 .endmacro
 
 .macro A2D_DEFSTRING str        ; String definition, for use with A2D_TEXT
-        .local  data
-        .addr   data
-        .byte   .strlen(str)
+        .local  data            ; Call as A2D_DEFSTRING "abc"
+        .local  end             ; Can include control chars by using:
+        .addr   data            ; A2D_DEFSTRING {"abc",$0D,"def"}
+        .byte   end - data
 data:   .byte   str
+end:
 .endmacro
 
 .macro PASCAL_STRING str        ; Length-prefixed string
