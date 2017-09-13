@@ -744,11 +744,11 @@ L0E16:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
 .proc div_by_10_then_ascii      ; A = A / 10, X = remainder, results in ASCII form
-        ldy     #$00
-loop:   cmp     #$0A            ; Y = A / 10
+        ldy     #0
+loop:   cmp     #10             ; Y = A / 10
         bcc     :+
         sec
-        sbc     #$0A
+        sbc     #10
         iny
         jmp     loop
 
