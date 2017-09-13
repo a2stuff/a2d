@@ -8,8 +8,6 @@
         .include "a2d.inc"
 
 ROMIN2          := $C082
-DATELO  := $BF90
-DATEHI  := $BF91
 
 KEY_ENTER       := $0D
 KEY_ESCAPE      := $1B
@@ -17,9 +15,6 @@ KEY_LEFT        := $08
 KEY_DOWN        := $0A
 KEY_UP          := $0B
 KEY_RIGHT       := $15
-
-L0020           := $0020
-L1000           := $1000
 
 ;;; ==================================================
 
@@ -81,6 +76,7 @@ L0824:  .byte   $00
 
 ;;; ==================================================
 
+        ;; ???
 L086B:  sta     ALTZPON
         sta     L0823
         stx     L0824
@@ -148,16 +144,16 @@ month_rect:
 year_rect:
         .word   $7F,$14,$95,$1E
 
-
+        ;; Params for $0C call (1 byte?)
 L08FC:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $FF
 
 .proc white_pattern
         .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
 .endproc
-        .byte   $FF
+        .byte   $FF             ; ??
 
-selected_field:
+selected_field:                 ; 1 = day, 2 = month, 3 = year, 0 = none (init)
         .byte   0
 
 datelo: .byte   0
@@ -215,12 +211,15 @@ clientx:.word   0
 clienty:.word   0
 .endproc
 
-L0947:  .byte   window_id,$00,$01
+.proc destroy_window_params
+id:     .byte   window_id
+.endproc
+        .byte $00,$01           ; ???
 
 .proc fill_mode_params
-mode:   .byte   $02
+mode:   .byte   $02             ; this should be normal, but we do inverts ???
 .endproc
-        .byte   $06
+        .byte   $06             ; ???
 
 .proc create_window_params
 id:     .byte   window_id
@@ -254,6 +253,7 @@ height: .word   $40
         .byte   $00,$7F,$00,$88,$00,$00
 
 ;;; ==================================================
+;;; Initialize window, unpack the date.
 
 init_window:
         jsr     save_zp
@@ -286,11 +286,12 @@ init_window:
         sta     selected_field
         jsr     L0CF0
         A2D_CALL $2B
+        ;; fall through
 
 ;;; ==================================================
 ;;; Input loop
 
-input_loop:
+.proc input_loop
         A2D_CALL A2D_GET_INPUT, get_input_params
         lda     get_input_params::state
         cmp     #A2D_INPUT_DOWN
@@ -300,8 +301,9 @@ input_loop:
 
 :       cmp     #A2D_INPUT_KEY
         bne     input_loop
+.endproc
 
-on_key:
+.proc on_key
         lda     get_input_params::modifiers
         bne     input_loop
         lda     get_input_params::key
@@ -341,19 +343,22 @@ on_key_left:
         sec
         lda     selected_field
         sbc     #1
-        bne     L0A3F
+        bne     update_selection
         lda     #3
-        jmp     L0A3F
+        jmp     update_selection
 
 on_key_right:
         clc
         lda     selected_field
         adc     #1
         cmp     #4
-        bne     L0A3F
+        bne     update_selection
         lda     #1
-L0A3F:  jsr     L0DB4
+
+update_selection:
+        jsr     highlight_selected_field
         jmp     input_loop
+.endproc
 
 ;;; ==================================================
 
@@ -382,7 +387,7 @@ L0A64:  cmp     #A2D_ELEM_CLIENT
         sta     jump+1
         lda     hit_target_jump_table+1,y
         sta     jump+2
-jump:   jmp     L1000           ; self modified
+jump:   jmp     $1000           ; self modified
 
 hit_target_jump_table:
         .addr   on_ok, on_cancel, on_up, on_down
@@ -442,7 +447,7 @@ on_field_click:
         txa
         sec
         sbc     #4
-        jmp     L0DB4
+        jmp     highlight_selected_field
 
 .proc on_up_or_down
         stx     hit_rect_index
@@ -467,7 +472,7 @@ loop:   A2D_CALL A2D_GET_INPUT, get_input_params ; Repeat while mouse is down
 .proc do_inc_or_dec
         ptr := $7
 
-        jsr     L0DF2
+        jsr     delay
         lda     hit_rect_index
         cmp     #up_rect_index
         beq     incr
@@ -492,7 +497,7 @@ go:     lda     selected_field
         lda     (ptr),y
         sta     gosub+2
 
-gosub:  jsr     L1000           ; self modified
+gosub:  jsr     $1000           ; self modified
         A2D_CALL $0C, L08FC
         jmp     draw_selected_field
 .endproc
@@ -507,13 +512,21 @@ increment_table:
 decrement_table:
         .addr   0, decrement_day, decrement_month, decrement_year
 
+
+        day_min := 1
+        day_max := 31
+        month_min := 1
+        month_max := 12
+        year_min := 0
+        year_max := 99
+
 increment_day:
         clc
         lda     day
         adc     #1
-        cmp     #32
+        cmp     #day_max+1
         bne     :+
-        lda     #1
+        lda     #month_min
 :       sta     day
         jmp     prepare_day_string
 
@@ -521,9 +534,9 @@ increment_month:
         clc
         lda     month
         adc     #1
-        cmp     #13
+        cmp     #month_max+1
         bne     :+
-        lda     #1
+        lda     #month_min
 :       sta     month
         jmp     prepare_month_string
 
@@ -531,30 +544,30 @@ increment_year:
         clc
         lda     year
         adc     #1
-        cmp     #100
+        cmp     #year_max+1
         bne     :+
-        lda     #0
+        lda     #year_min
 :       sta     year
         jmp     prepare_year_string
 
 decrement_day:
         dec     day
         bne     :+
-        lda     #31
+        lda     #day_max
         sta     day
 :       jmp     prepare_day_string
 
 decrement_month:
         dec     month
         bne     :+
-        lda     #12
+        lda     #month_max
         sta     month
 :       jmp     prepare_month_string
 
 decrement_year:
         dec     year
         bpl     :+
-        lda     #99
+        lda     #year_max
         sta     year
 :       jmp     prepare_year_string
 
@@ -599,19 +612,21 @@ month_name_table:
         .byte   "Jan","Feb","Mar","Apr","May","Jun"
         .byte   "Jul","Aug","Sep","Oct","Nov","Dec"
 
-prepare_year_string:
+.proc prepare_year_string
         lda     year
         jsr     number_to_ascii
         sta     year_string+3
         stx     year_string+4
         rts
+.endproc
 
 ;;; ==================================================
+;;; Tear down the window and exit
 
 dialog_result:  .byte   0
 
 .proc destroy
-        A2D_CALL A2D_DESTROY_WINDOW, L0947
+        A2D_CALL A2D_DESTROY_WINDOW, destroy_window_params
         jsr     UNKNOWN_CALL
         .byte   $0C
         .addr   0
@@ -652,6 +667,8 @@ skip:   jmp     dest
 .endproc
 
 ;;; ==================================================
+;;; Figure out which button was hit (if any).
+;;; Index returned in X.
 
 .proc find_hit_target
         lda     get_input_params::xcoord
@@ -677,7 +694,7 @@ loop:   txa
 
         clc
         lda     test_addr
-        adc     #$08            ; byte offset
+        adc     #8              ; size of 4 words
         sta     test_addr
         bcc     :+
         inc     test_addr+1
@@ -698,8 +715,11 @@ done:   pla
 ;;; ==================================================
 ;;; Params for the display
 
-border_rect:  .byte   $04,$00,$02,$00,$C0,$00,$3D,$00
-date_rect:  .byte   $20,$00,$0F,$00,$9A,$00,$23,$00
+border_rect:
+        .word   $04,$02,$C0,$3D
+
+date_rect:
+        .word   $20,$0F,$9A,$23
 
 label_ok:
         A2D_DEFSTRING {"OK         ",$0D} ; ends with newline
@@ -757,73 +777,94 @@ L0CF0:  A2D_CALL A2D_SET_BOX1, create_window_params::box
         A2D_CALL A2D_SET_FILL_MODE, fill_mode_params
         A2D_CALL A2D_SET_PATTERN, white_pattern
         lda     #1
-        jmp     L0DB4
+        jmp     highlight_selected_field
 
-draw_selected_field:
+.proc draw_selected_field
         lda     selected_field
         cmp     #1
         beq     draw_day
         cmp     #2
         beq     draw_month
         jmp     draw_year
+.endproc
 
-draw_day:
+.proc draw_day
         A2D_CALL A2D_SET_POS, day_pos
         A2D_CALL A2D_DRAW_TEXT, day_string
         rts
+.endproc
 
-draw_month:
+.proc draw_month
         A2D_CALL A2D_SET_POS, month_pos
         A2D_CALL A2D_DRAW_TEXT, spaces_string ; variable width, so clear first
         A2D_CALL A2D_SET_POS, month_pos
         A2D_CALL A2D_DRAW_TEXT, month_string
         rts
+.endproc
 
-draw_year:
+.proc draw_year
         A2D_CALL A2D_SET_POS, year_pos
         A2D_CALL A2D_DRAW_TEXT, year_string
         rts
+.endproc
 
 ;;; ==================================================
+;;; Highlight selected field
+;;; Previously selected field in A, newly selected field at top of stack.
 
-L0DB4:  pha
-        lda     selected_field
-        beq     L0DD1
-        cmp     #1
-        bne     L0DC4
-        jsr     L0DE4
-        jmp     L0DD1
+.proc highlight_selected_field
+        pha
+        lda     selected_field  ; initial state is 0, so nothing
+        beq     update          ; to invert back to normal
 
-L0DC4:  cmp     #2
-        bne     L0DCE
-        jsr     L0DEB
-        jmp     L0DD1
+        cmp     #1              ; day?
+        bne     :+
+        jsr     fill_day
+        jmp     update
 
-L0DCE:  jsr     L0DDD
-L0DD1:  pla
+:       cmp     #2              ; month?
+        bne     :+
+        jsr     fill_month
+        jmp     update
+
+:       jsr     fill_year       ; year!
+
+update: pla                     ; update selection
         sta     selected_field
         cmp     #1
-        beq     L0DE4
+        beq     fill_day
         cmp     #2
-        beq     L0DEB
-L0DDD:  A2D_CALL A2D_FILL_RECT, year_rect
+        beq     fill_month
+
+fill_year:
+        A2D_CALL A2D_FILL_RECT, year_rect
         rts
 
-L0DE4:  A2D_CALL A2D_FILL_RECT, day_rect
+fill_day:
+        A2D_CALL A2D_FILL_RECT, day_rect
         rts
 
-L0DEB:  A2D_CALL A2D_FILL_RECT, month_rect
+fill_month:
+        A2D_CALL A2D_FILL_RECT, month_rect
         rts
+.endproc
 
-L0DF2:  lda     #$FF
+;;; ==================================================
+;;; Delay
+
+.proc delay
+        lda     #255
         sec
-L0DF5:  pha
-L0DF6:  sbc     #$01
-        bne     L0DF6
+loop1:  pha
+
+loop2:  sbc     #1
+        bne     loop2
+
         pla
-        sbc     #$01
-        bne     L0DF5
+        sbc     #1
+        bne     loop1
         rts
+.endproc
 
 ;;; ==================================================
 ;;; Save/restore Zero Page

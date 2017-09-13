@@ -5,6 +5,12 @@
 ;;; Entry point
 MLI             := $BF00
 
+;;; Date/Time
+DATELO          := $BF90
+DATEHI          := $BF91
+TIMELO          := $BF92
+TIMEHI          := $BF93
+
 ;;; Housekeeping Calls
 CREATE          := $C0
 DESTROY         := $C1
