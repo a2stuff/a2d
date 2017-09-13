@@ -19,28 +19,30 @@ L4021           := $4021
 
         jmp     copy2aux
 
-L0803:  .byte   $00,$09,$4D,$44,$2E,$53,$59,$53
-        .byte   $54,$45,$4D,$03,$04,$08,$00,$09
+stash_stack:  .byte   $00
+
+        PASCAL_STRING "MD.SYSTEM" ; ??
+        .byte   $03,$04,$08,$00,$09
 L0813:  .byte   $00,$02
 L0815:  .byte   $00,$03,$00,$00,$04
 L081A:  .byte   $00,$23,$08,$02,$00,$00,$00,$01
 L0822:  .byte   $00
 L0823:  .byte   $00
+L0824:  .byte   $00
 
-stash_stack:  .byte   $00
 .proc copy2aux
 
         start := start_da
         end   := last
 
         tsx
-        stx     L0803
+        stx     stash_stack
         sta     ALTZPOFF
         lda     ROMIN2
         lda     DATELO
-        sta     L090F
+        sta     datelo
         lda     DATEHI
-        sta     L0910
+        sta     datehi
         lda     #<start
         sta     STARTLO
         lda     #>start
@@ -71,7 +73,7 @@ stash_stack:  .byte   $00
 
 L086B:  sta     ALTZPON
         sta     L0823
-        stx     stash_stack
+        stx     L0824
         lda     LCBANK1
         lda     LCBANK1
         lda     L0823
@@ -98,7 +100,7 @@ L08AA:  ldy     #$CC
         lda     #$21
         ldx     #$08
         jsr     L4021
-L08B3:  ldx     L0803
+L08B3:  ldx     stash_stack
         txs
         rts
 
@@ -109,19 +111,21 @@ start_da:
         jmp     L0986
 
 ok_button_rect:
-        .byte   $6A,$00,$2E,$00,$B5,$00,$39,$00
+        .word   $6A,$2E,$B5,$39
 cancel_button_rect:
-        .byte   $10,$00,$2E,$00,$5A,$00,$39,$00
-
+        .word   $10,$2E,$5A,$39
 up_arrow_rect:
         .word   $AA,$0A,$B4,$14
 down_arrow_rect:
-        .byte   $AA,$00,$1E,$00,$B4,$00,$28,$00
-fill_rect_params3:
-        .byte   $25,$00,$14,$00,$3B,$00,$1E,$00
-fill_rect_params7:  .byte   $51,$00,$14,$00,$6F,$00,$1E,$00
+        .word   $AA,$1E,$B4,$28
 
-fill_rect_params6:  .byte   $7F,$00,$14,$00,$95,$00,$1E,$00
+fill_rect_params3:
+        .word   $25,$14,$3B,$1E
+fill_rect_params7:
+        .word   $51,$14,$6F,$1E
+fill_rect_params6:
+        .word   $7F,$14,$95,$1E
+
 L08FC:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $FF
 
@@ -129,23 +133,34 @@ L08FC:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
 .endproc
         .byte   $FF
-L090E:  .byte   $00
-L090F:  .byte   $00
-L0910:  .byte   $00
-L0911:  .byte   $1A
-L0912:  .byte   $02
-L0913:  .byte   $55
-L0914:  .byte   $17,$09,$04,$20,$20,$20,$20
-L091B:  .byte   $2B,$00,$1E,$00
-L091F:  .byte   $22,$09,$02
-L0922:  .byte   $20
-L0923:  .byte   $20
-L0924:  .byte   $57,$00,$1E,$00
-L0928:  .byte   $2B,$09,$03,$20,$20,$20
-L092E:  .byte   $85,$00,$1E,$00
-L0932:  .byte   $35,$09,$02
-L0935:  .byte   $20
-L0936:  .byte   $20
+
+selected_field:
+        .byte   0
+
+datelo:  .byte   $00
+datehi:  .byte   $00
+
+day:    .byte   26              ; Feb 26, 1985
+month:  .byte   2               ; The date this was written?
+year:   .byte   85
+
+spaces_string:
+        A2D_DEFSTRING "    "
+
+day_pos:
+        .word   $2B,$1E
+day_string:
+        A2D_DEFSTRING "  "
+
+month_pos:
+        .word   $57,$1E
+month_string:
+        A2D_DEFSTRING "   "
+
+year_pos:
+        .word   $85,$1E
+year_string:
+        A2D_DEFSTRING "  "
 
 .proc get_input_params
 L0937:  .byte   $00
@@ -202,24 +217,24 @@ height: .word   $40
         .byte   $00,$7F,$00,$88,$00,$00
 
 L0986:  jsr     L0E00
-        lda     L0910
+        lda     datehi
         lsr     a
-        sta     L0913
-        lda     L090F
+        sta     year
+        lda     datelo
         and     #$1F
-        sta     L0911
-        lda     L0910
+        sta     day
+        lda     datehi
         ror     a
-        lda     L090F
+        lda     datelo
         ror     a
         lsr     a
         lsr     a
         lsr     a
         lsr     a
-        sta     L0912
+        sta     month
         A2D_CALL A2D_CREATE_WINDOW, create_window_params
-        lda     #$00
-        sta     L090E
+        lda     #0
+        sta     selected_field
         jsr     L0CF0
         A2D_CALL $2B
 L09BB:  A2D_CALL A2D_GET_INPUT, get_input_params
@@ -265,18 +280,18 @@ L0A0F:  A2D_CALL A2D_FILL_RECT, down_arrow_rect
         jmp     L09BB
 
 L0A26:  sec
-        lda     L090E
-        sbc     #$01
+        lda     selected_field
+        sbc     #1
         bne     L0A3F
-        lda     #$03
+        lda     #3
         jmp     L0A3F
 
 L0A33:  clc
-        lda     L090E
-        adc     #$01
-        cmp     #$04
+        lda     selected_field
+        adc     #1
+        cmp     #4
         bne     L0A3F
-        lda     #$01
+        lda     #1
 L0A3F:  jsr     L0DB4
         jmp     L09BB
 
@@ -313,15 +328,15 @@ L0A85:  .byte   $0A,$BB,$0A,$C9,$0A,$D7,$0A,$E5
         .byte   $0A,$E5,$0A,$E5,$0A
 L0A92:  A2D_CALL A2D_FILL_RECT, ok_button_rect
         sta     RAMWRTOFF
-        lda     L0912
+        lda     month
         asl     a
         asl     a
         asl     a
         asl     a
         asl     a
-        ora     L0911
+        ora     day
         sta     DATELO
-        lda     L0913
+        lda     year
         rol     a
         sta     DATEHI
         sta     RAMWRTON
@@ -386,7 +401,7 @@ L0B2C:  lda     #$51
         sta     $07
         lda     #$0B
         sta     $08
-L0B34:  lda     L090E
+L0B34:  lda     selected_field
         asl     a
         tay
         lda     ($07),y
@@ -404,80 +419,93 @@ L0B50:  .byte   $00,$00,$00,$61,$0B,$73,$0B,$85
         .byte   $0B,$00,$00,$97,$0B,$A4,$0B,$B1
         .byte   $0B
         clc
-        lda     L0911
+        lda     day
         adc     #$01
         cmp     #$20
         bne     L0B6D
         lda     #$01
-L0B6D:  sta     L0911
-        jmp     L0BBE
+L0B6D:  sta     day
+        jmp     prepare_day_string
 
         clc
-        lda     L0912
+        lda     month
         adc     #$01
         cmp     #$0D
         bne     L0B7F
         lda     #$01
-L0B7F:  sta     L0912
-        jmp     L0BCB
+L0B7F:  sta     month
+        jmp     prepare_month_string
 
         clc
-        lda     L0913
+        lda     year
         adc     #$01
         cmp     #$64
         bne     L0B91
         lda     #$00
-L0B91:  sta     L0913
-        jmp     L0C0D
+L0B91:  sta     year
+        jmp     prepare_year_string
 
-        dec     L0911
+        dec     day
         bne     L0BA1
         lda     #$1F
-        sta     L0911
-L0BA1:  jmp     L0BBE
+        sta     day
+L0BA1:  jmp     prepare_day_string
 
-        dec     L0912
+        dec     month
         bne     L0BAE
         lda     #$0C
-        sta     L0912
-L0BAE:  jmp     L0BCB
+        sta     month
+L0BAE:  jmp     prepare_month_string
 
-        dec     L0913
+        dec     year
         bpl     L0BBB
         lda     #$63
-        sta     L0913
-L0BBB:  jmp     L0C0D
+        sta     year
+L0BBB:  jmp     prepare_year_string
 
-L0BBE:  lda     L0911
+.proc prepare_day_string
+        lda     day
         jsr     div_by_10_then_ascii
-        sta     L0922
-        stx     L0923
+        sta     day_string+3    ; first char
+        stx     day_string+4    ; second char
         rts
+.endproc
 
-L0BCB:  lda     L0912
+.proc prepare_month_string
+        lda     month           ; month * 3 - 1
         asl     a
         clc
-        adc     L0912
+        adc     month
         tax
         dex
-        lda     #$2B
-        sta     $07
-        lda     #$09
-        sta     $08
-        ldy     #$02
-L0BDF:  lda     L0BE9,x
-        sta     ($07),y
+
+        ptr := $07
+        str := month_string + 3
+
+        lda     #<str
+        sta     ptr
+        lda     #>str
+        sta     ptr+1
+
+        ldy     #2
+loop:   lda     month_name_table,x
+        sta     (ptr),y
         dex
         dey
-        bpl     L0BDF
-        rts
+        bpl     loop
 
-L0BE9:  .byte   "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug"
-        .byte   "Sep","Oct","Nov","Dec"
-L0C0D:  lda     L0913
+        rts
+.endproc
+
+month_name_table:
+        .byte   "Jan","Feb","Mar","Apr","May","Jun"
+        .byte   "Jul","Aug","Sep","Oct","Nov","Dec"
+
+prepare_year_string:
+        lda     year
         jsr     div_by_10_then_ascii
-        sta     L0935
-        stx     L0936
+        sta     year_string+3
+        stx     year_string+4
         rts
 
 L0C1A:  brk
@@ -492,15 +520,15 @@ L0C29:  lda     L0C4B,x
         bpl     L0C29
         lda     L0C1A
         beq     L0C48
-        lda     L0912
+        lda     month
         asl     a
         asl     a
         asl     a
         asl     a
         asl     a
-        ora     L0911
+        ora     day
         tay
-        lda     L0913
+        lda     year
         rol     a
         tax
         tya
@@ -593,57 +621,61 @@ L0CF0:  A2D_CALL A2D_SET_BOX1, create_window_params::box
         A2D_CALL A2D_DRAW_TEXT, label_downarrow
         A2D_CALL A2D_DRAW_RECT, down_arrow_rect
 
-        jsr     L0BBE
-        jsr     L0BCB
-        jsr     L0C0D
-        jsr     L0D81
-        jsr     L0D8E
-        jsr     L0DA7
+        jsr     prepare_day_string
+        jsr     prepare_month_string
+        jsr     prepare_year_string
+
+        jsr     draw_day
+        jsr     draw_month
+        jsr     draw_year
         A2D_CALL A2D_SET_FILL_MODE, fill_mode_params
         A2D_CALL A2D_SET_PATTERN, white_pattern
-        lda     #$01
+        lda     #1
         jmp     L0DB4
 
-L0D73:  lda     L090E
-        cmp     #$01
-        beq     L0D81
-        cmp     #$02
-        beq     L0D8E
-        jmp     L0DA7
+L0D73:  lda     selected_field
+        cmp     #1
+        beq     draw_day
+        cmp     #2
+        beq     draw_month
+        jmp     draw_year
 
-L0D81:  A2D_CALL A2D_SET_POS, L091B
-        A2D_CALL A2D_DRAW_TEXT, L091F
+draw_day:
+        A2D_CALL A2D_SET_POS, day_pos
+        A2D_CALL A2D_DRAW_TEXT, day_string
         rts
 
-L0D8E:  A2D_CALL A2D_SET_POS, L0924
-        A2D_CALL A2D_DRAW_TEXT, L0914
-        A2D_CALL A2D_SET_POS, L0924
-        A2D_CALL A2D_DRAW_TEXT, L0928
+draw_month:
+        A2D_CALL A2D_SET_POS, month_pos
+        A2D_CALL A2D_DRAW_TEXT, spaces_string ; variable width, so clear first
+        A2D_CALL A2D_SET_POS, month_pos
+        A2D_CALL A2D_DRAW_TEXT, month_string
         rts
 
-L0DA7:  A2D_CALL A2D_SET_POS, L092E
-        A2D_CALL A2D_DRAW_TEXT, L0932
+draw_year:
+        A2D_CALL A2D_SET_POS, year_pos
+        A2D_CALL A2D_DRAW_TEXT, year_string
         rts
 
 L0DB4:  pha
-        lda     L090E
+        lda     selected_field
         beq     L0DD1
-        cmp     #$01
+        cmp     #1
         bne     L0DC4
         jsr     L0DE4
         jmp     L0DD1
 
-L0DC4:  cmp     #$02
+L0DC4:  cmp     #2
         bne     L0DCE
         jsr     L0DEB
         jmp     L0DD1
 
 L0DCE:  jsr     L0DDD
 L0DD1:  pla
-        sta     L090E
-        cmp     #$01
+        sta     selected_field
+        cmp     #1
         beq     L0DE4
-        cmp     #$02
+        cmp     #2
         beq     L0DEB
 L0DDD:  A2D_CALL A2D_FILL_RECT, fill_rect_params6
         rts

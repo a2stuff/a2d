@@ -352,7 +352,7 @@ A2D_CWS_SCROLL_NORMAL  := A2D_CWS_SCROLL_ENABLED | A2D_CWS_SCROLL_THUMB | A2D_CW
 .endif
 .endmacro
 
-.macro A2D_DEFSTRING str        ; String definition, for use with A2D_TEXT
+.macro A2D_DEFSTRING str, label ; String definition, for use with A2D_TEXT
         .local  data            ; Call as A2D_DEFSTRING "abc"
         .local  end             ; Can include control chars by using:
         .addr   data            ; A2D_DEFSTRING {"abc",$0D,"def"}
