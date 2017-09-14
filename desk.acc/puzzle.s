@@ -610,13 +610,17 @@ voffset:.word   0
 width:  .word   default_width
 height: .word   default_height
 
-        ;; This is QUERY_BOX/SET_BOX cruft
-        .byte   $FF,$FF
-        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$00
-        .byte   $00,$00,$00,$00,$01,$01,$00,$7F
+pattern:.byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+        .byte   $FF,$00
+        .byte   $00,$00,$00,$00
+hthick: .byte   1
+vthick: .byte   1
+        .byte   $00,$7F
         .byte   $00,$88
-
         .byte   $00,$00
+
+        ;; This is QUERY_BOX/SET_BOX cruft only below
+
         .word   default_left
         .word   default_top
         .addr   A2D_SCREEN_ADDR
@@ -624,9 +628,12 @@ height: .word   default_height
         .byte   $00,$00,$00,$00
         .word   default_width
         .word   default_height
-        .byte   $FF,$FF,$FF,$FF
-        .byte   $FF,$FF,$FF,$FF,$FF,$00,$00,$00
-        .byte   $00,$00,$01,$01,$00,$7F,$00,$88
+        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+        .byte   $FF,$00,$00,$00
+        .byte   $00,$00
+        .byte   1
+        .byte   1
+        .byte   $00,$7F,$00,$88
         .byte   $00,$00
 
 .endproc

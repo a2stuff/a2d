@@ -223,18 +223,11 @@ title:  .addr   window_title
 
 hscroll:.byte   A2D_CWS_NOSCROLL
 vscroll:.byte   A2D_CWS_NOSCROLL
-hscroll_max:
-        .byte   32
-hscroll_pos:
-        .byte   0
-vscroll_max:
-        .byte   32
-vscroll_pos:
-        .byte   0
-
-        ;; ???
-        .byte   0, 0
-
+hsmax:  .byte   32
+hspos:  .byte   0
+vsmax:  .byte   32
+vspos:  .byte   0
+        .byte   0, 0            ; ???
 widtha: .word   default_width
 heighta:.word   default_height
 widthb: .word   default_width
@@ -250,12 +243,13 @@ voffset:.word   0
 width:  .word   default_width
 height: .word   default_height
 .endproc
-.endproc
 
-        ;; unused?
-        .byte   $00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$FF,$00,$00,$00,$00,$00,$01
-        .byte   $01,$00,$7F,$00,$88,$00,$00
+pattern:.byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $FF,$00,$00,$00,$00,$00
+hthick: .byte   1
+vthick: .byte   1
+        .byte   $00,$7F,$00,$88,$00,$00
+.endproc
 
 
 .proc init

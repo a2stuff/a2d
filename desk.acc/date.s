@@ -203,17 +203,17 @@ spaces_string:
         A2D_DEFSTRING "    "
 
 day_pos:
-        .word   $2B,$1E
+        .word   43, 30
 day_string:
         A2D_DEFSTRING "  "
 
 month_pos:
-        .word   $57,$1E
+        .word   87, 30
 month_string:
         A2D_DEFSTRING "   "
 
 year_pos:
-        .word   $85,$1E
+        .word   133, 30
 year_string:
         A2D_DEFSTRING "  "
 
@@ -259,7 +259,7 @@ mode:   .byte   $02             ; this should be normal, but we do inverts ???
 
 .proc create_window_params
 id:     .byte   window_id
-flags:  .byte   $01
+flags:  .byte   A2D_CWF_NOTITLE
 title:  .addr   0
 hscroll:.byte   0
 vscroll:.byte   0
@@ -282,11 +282,12 @@ voff:   .word   0
 width:  .word   $C7
 height: .word   $40
 .endproc
-.endproc
-        ;; ???
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $FF,$00,$00,$00,$00,$00,$04,$02
+pattern:.byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $FF,$00,$00,$00,$00,$00
+hthick: .byte   4
+vthick: .byte   2
         .byte   $00,$7F,$00,$88,$00,$00
+.endproc
 
 ;;; ==================================================
 ;;; Initialize window, unpack the date.
@@ -320,7 +321,7 @@ init_window:
         A2D_CALL A2D_CREATE_WINDOW, create_window_params
         lda     #0
         sta     selected_field
-        jsr     L0CF0
+        jsr     draw_window
         A2D_CALL $2B
         ;; fall through
 
@@ -332,7 +333,7 @@ init_window:
         lda     get_input_params::state
         cmp     #A2D_INPUT_DOWN
         bne     :+
-        jsr     L0A45
+        jsr     on_click
         jmp     input_loop
 
 :       cmp     #A2D_INPUT_KEY
@@ -398,7 +399,7 @@ update_selection:
 
 ;;; ==================================================
 
-.proc L0A45
+.proc on_click
         A2D_CALL A2D_QUERY_TARGET, get_input_params::xcoord
         A2D_CALL A2D_SET_FILL_MODE, fill_mode_params
         A2D_CALL A2D_SET_PATTERN, white_pattern
@@ -406,10 +407,10 @@ update_selection:
         cmp     #window_id
         bne     miss
         lda     query_target_params::element
-        bne     L0A64
+        bne     hit
 miss:   rts
 
-L0A64:  cmp     #A2D_ELEM_CLIENT
+hit:    cmp     #A2D_ELEM_CLIENT
         bne     miss
         jsr     find_hit_target
         cpx     #0
@@ -776,15 +777,18 @@ label_uparrow_pos:
 label_downarrow_pos:
         .word   $AC,$27
 
-        ;; Params for $0A call
-L0CEE:  .byte   $01,$01
+.proc line_width_params
+hthick: .byte   1
+vthick: .byte   1
+.endproc
 
 ;;; ==================================================
 ;;; Render the window contents
 
-L0CF0:  A2D_CALL A2D_SET_BOX1, create_window_params::box
+draw_window:
+        A2D_CALL A2D_SET_BOX1, create_window_params::box
         A2D_CALL A2D_DRAW_RECT, border_rect
-        A2D_CALL $0A, L0CEE     ; ????
+        A2D_CALL A2D_SET_LINE_WIDTH, line_width_params
         A2D_CALL A2D_DRAW_RECT, date_rect
         A2D_CALL A2D_DRAW_RECT, ok_button_rect
         A2D_CALL A2D_DRAW_RECT, cancel_button_rect

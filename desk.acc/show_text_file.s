@@ -312,14 +312,10 @@ title:  .addr   $1000           ; overwritten to point at filename
 
 hscroll:.byte   A2D_CWS_NOSCROLL
 vscroll:.byte   A2D_CWS_SCROLL_NORMAL
-hscroll_max:
-        .byte   32
-hscroll_pos:
-        .byte   0
-vscroll_max:
-        .byte   255
-vscroll_pos:
-        .byte   0
+hsmax:  .byte   32
+hspos:  .byte   0
+vsmax:  .byte   255
+vspos:  .byte   0
 
         ;; ???
         .byte   $00,$00,$C8,$00,$33,$00
@@ -337,12 +333,13 @@ voffset:.word   0
 width:  .word   default_width
 height: .word   default_height
 .endproc
-.endproc
 
-        ;; unused?
-        .byte   $00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$FF,$00,$00,$00,$00,$00,$01
-        .byte   $01,$00,$7F,$00,$88,$00,$00
+pattern:.byte   $00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$FF,$00,$00,$00,$00,$00
+hthick: .byte   1
+vthick: .byte   1
+        .byte   $00,$7F,$00,$88,$00,$00
+.endproc
 
         ;; gets copied over window_params::box after mode is drawn
 .proc default_box
@@ -483,7 +480,7 @@ end:    rts
         ldx     $8801
         sta     RAMWRTOFF
 loop:   lda     $8802,x
-        sta     L10FD+2,x
+        sta     call_jt15+2,x
         dex
         bne     loop
         sta     RAMWRTON
@@ -570,7 +567,7 @@ title:  jsr     on_title_bar_click
 ;;; This is dead code (no resize handle!) and may be buggy
 .proc on_resize_click
         A2D_CALL A2D_DRAG_RESIZE, resize_drag_params
-        jsr     L10FD           ; call $4015 on main
+        jsr     call_jt15           ; call $4015 on main
         jsr     calc_window_size
 
         max_width := default_width
@@ -676,11 +673,11 @@ end:    rts
 .endproc
 
 .proc on_vscroll_above_click
-loop:   lda     window_params::vscroll_pos
+loop:   lda     window_params::vspos
         beq     end
         jsr     calc_track_scroll_delta
         sec
-        lda     window_params::vscroll_pos
+        lda     window_params::vspos
         sbc     track_scroll_delta
         bcs     store
         lda     #0              ; underflow
@@ -691,7 +688,7 @@ end:    rts
 .endproc
 
 .proc on_vscroll_up_click
-loop :  lda     window_params::vscroll_pos
+loop :  lda     window_params::vspos
         beq     end
         sec
         sbc     #1
@@ -704,12 +701,12 @@ end:    rts
 vscroll_max := $FA
 
 .proc on_vscroll_below_click
-loop:   lda     window_params::vscroll_pos
+loop:   lda     window_params::vspos
         cmp     #vscroll_max    ; pos == max ?
         beq     end
         jsr     calc_track_scroll_delta
         clc
-        lda     window_params::vscroll_pos
+        lda     window_params::vspos
         adc     track_scroll_delta ; pos + delta
         bcs     overflow
         cmp     #vscroll_max+1  ; > max ?
@@ -723,7 +720,7 @@ end:    rts
 .endproc
 
 .proc on_vscroll_down_click
-loop:   lda     window_params::vscroll_pos
+loop:   lda     window_params::vspos
         cmp     #vscroll_max
         beq     end
         clc
@@ -803,7 +800,7 @@ end:    rts
 
 .proc on_hscroll_after_click
         ldx     #2
-        lda     window_params::hscroll_max
+        lda     window_params::hsmax
         jmp     hscroll_common
 .endproc
 
@@ -815,7 +812,7 @@ end:    rts
 
 .proc on_hscroll_right_click
         ldx     #1
-        lda     window_params::hscroll_max
+        lda     window_params::hsmax
         jmp     hscroll_common
 .endproc
 
@@ -828,23 +825,23 @@ end:    rts
 .proc hscroll_common
         sta     compare+1
         stx     delta+1
-loop:   lda     window_params::hscroll_pos
+loop:   lda     window_params::hspos
 compare:cmp     #$0A            ; self-modified
         bne     continue
         rts
 continue:
         clc
-        lda     window_params::hscroll_pos
+        lda     window_params::hspos
 delta:  adc     #1              ; self-modified
         bmi     overflow
-        cmp     window_params::hscroll_max
+        cmp     window_params::hsmax
         beq     store
         bcc     store
-        lda     window_params::hscroll_max
+        lda     window_params::hsmax
         jmp     store
 overflow:
         lda     #0
-store:  sta     window_params::hscroll_pos
+store:  sta     window_params::hspos
         jsr     L0D5E
         jsr     update_hscroll
         jsr     draw_content
@@ -878,7 +875,7 @@ store:  sta     window_params::hscroll_pos
 
 ;;; only used from hscroll code?
 .proc L0D5E
-        lda     window_params::hscroll_pos
+        lda     window_params::hspos
         jsr     mul_by_16
         clc
         lda     $06
@@ -963,7 +960,7 @@ end:    rts
         ror     a               ; check if low bit (track enabled) is set
         bcc     :+
         jsr     update_hscroll
-:       lda     window_params::vscroll_pos
+:       lda     window_params::vspos
         sta     update_scroll_params::pos
         jsr     update_vscroll
         jsr     draw_content
@@ -1319,7 +1316,7 @@ loop:   clc
         rts
 .endproc
 
-.proc L10FD
+.proc call_jt15
         lda     #<JUMP_TABLE_15
         sta     call_main_addr     ; self-modified
         lda     #>JUMP_TABLE_15

@@ -8,8 +8,6 @@
 
         .include "a2d.inc"
 
-L0020           := $0020
-
 adjust_txtptr := $B1
 
 ROMIN2          := $C082
@@ -740,10 +738,10 @@ hs_pos: .byte   0
 vs_max: .byte   0
 vs_pos: .byte   0
         .byte   0,0             ; ???
-width_a: .word  window_width
-height_a:.word  window_height
-width_b: .word  window_width
-height_b:.word  window_height
+w1:     .word  window_width
+h1:     .word  window_height
+w2:     .word  window_width
+h2:     .word  window_height
 left:   .word   default_left
 top:    .word   default_top
         .word   A2D_SCREEN_ADDR
@@ -752,17 +750,21 @@ hoffset:.word   0
 voffset:.word   0
 width:  .word   window_width
 height: .word   window_height
-.endproc
-create_window_params_top := create_window_params::top
 
         ;; ???
         ;; Same as latter part of box_params block after QUERY_SCREEN call fills it in
-        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+pattern:.byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+        .byte   $FF
         .byte   $00,$00
-        .byte   $00,$00,$00,$01,$01,$00,$7F,$00
+        .byte   $00,$00,$00
+hthick: .byte   1
+vthick: .byte   1
+        .byte   $00,$7F,$00
         .byte   $88,$00
 
         .byte   $00
+.endproc
+create_window_params_top := create_window_params::top
 
 title:  PASCAL_STRING "Calc"
 

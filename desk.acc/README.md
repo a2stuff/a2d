@@ -1,8 +1,8 @@
 Disassembly of the desk accessories:
 
-* [Show Text File](show_text_file.s) - in progress! 90% complete
+* [Show Text File](show_text_file.s) - in progress! 75% complete
 * [Calculator](calculator.s) - in progress! 90% complete
-* [Date](date.s) - in progress! 50% complete
+* [Date](date.s) - in progress! 95% complete
 * [Puzzle](puzzle.s) - in progress! 75% complete
 * Sort Directory - _not started_
 
