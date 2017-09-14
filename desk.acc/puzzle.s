@@ -218,7 +218,7 @@ space_positions:                 ; left, top for all 16 holes
         .word   c3,r4
         .word   c4,r4
 
-.proc pattern_table
+.proc bitmap_table
         .addr   piece1, piece2, piece3, piece4
         .addr   piece5, piece6, piece7, piece8
         .addr   piece9, piece10, piece11, piece12
@@ -229,7 +229,7 @@ space_positions:                 ; left, top for all 16 holes
 position_table:
         .res    16, 0
 
-.proc draw_pattern_params
+.proc draw_bitmap_params
 left:   .word   0
 top:    .word   0
 addr:   .addr   0
@@ -1035,21 +1035,21 @@ loop:   tya
         asl     a
         tax
         lda     space_positions,x
-        sta     draw_pattern_params::left
+        sta     draw_bitmap_params::left
         lda     space_positions+1,x
-        sta     draw_pattern_params::left+1
+        sta     draw_bitmap_params::left+1
         lda     space_positions+2,x
-        sta     draw_pattern_params::top
+        sta     draw_bitmap_params::top
         lda     space_positions+3,x
-        sta     draw_pattern_params::top+1
+        sta     draw_bitmap_params::top+1
         lda     position_table,y
         asl     a
         tax
-        lda     pattern_table,x
-        sta     draw_pattern_params::addr
-        lda     pattern_table+1,x
-        sta     draw_pattern_params::addr+1
-        A2D_CALL A2D_DRAW_PATTERN, draw_pattern_params
+        lda     bitmap_table,x
+        sta     draw_bitmap_params::addr
+        lda     bitmap_table+1,x
+        sta     draw_bitmap_params::addr+1
+        A2D_CALL A2D_DRAW_BITMAP, draw_bitmap_params
         pla
         clc
         adc     draw_inc

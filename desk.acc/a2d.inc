@@ -134,7 +134,7 @@ A2D_TEST_BOX    := $13          ; Is pos (via SET_POS) in bounds? Returns true/f
         ;; .word right
         ;; .word bottom
 
-A2D_DRAW_PATTERN := $14         ; Draw pattern
+A2D_DRAW_BITMAP := $14         ; Draw pattern
         ;; (input length 16 bytes)
         ;; .word left
         ;; .word top
@@ -392,7 +392,7 @@ end:
         .byte   str
 .endmacro
 
-;;; Define pattern for A2D_DRAW_PATTERN - low 7 bits are reversed
+;;; Define pattern for A2D_DRAW_BITMAP - low 7 bits are reversed
 ;;; e.g. .byte px(%1000000)
 .define px(bits) (((bits&$40)>>6)|((bits&$20)>>4)|((bits&$10)>>2)|(bits&$8)|((bits&$4)<<2)|((bits&$2)<<4)|((bits&$1)<<6))
 

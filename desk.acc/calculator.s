@@ -658,7 +658,7 @@ base:   .word   16
 
 farg:   .byte   $00,$00,$00,$00,$00,$00
 
-.proc title_bar_decoration      ; Params for A2D_DRAW_PATTERN
+.proc title_bar_decoration      ; Params for A2D_DRAW_BITMAP
 left:   .word   115             ; overwritten
 top:    .word   $FFF7           ; overwritten
 pattern:.addr   pixels
@@ -1588,9 +1588,9 @@ loop:   ldy     #0
         beq     draw_title_bar  ; done!
 
         lda     ptr             ; address for shadowed rect params
-        sta     pattern_addr
+        sta     bitmap_addr
         ldy     ptr+1
-        sty     pattern_addr+1
+        sty     bitmap_addr+1
 
         clc                     ; address for label pos
         adc     #(btn_c::pos - btn_c)
@@ -1603,7 +1603,7 @@ loop:   ldy     #0
         lda     (ptr),y
         sta     label
 
-        A2D_CALL A2D_DRAW_PATTERN, 0, pattern_addr ; draw shadowed rect
+        A2D_CALL A2D_DRAW_BITMAP, 0, bitmap_addr ; draw shadowed rect
         A2D_CALL A2D_SET_POS, 0, text_addr         ; button label pos
         A2D_CALL A2D_DRAW_TEXT, draw_text_params_label  ; button label text
 
@@ -1639,7 +1639,7 @@ draw_title_bar:
         dex
 :       stx     title_bar_decoration::top+1
         A2D_CALL A2D_SET_BOX, screen_box ; set clipping rect to whole screen
-        A2D_CALL A2D_DRAW_PATTERN, title_bar_decoration     ; Draws decoration in title bar
+        A2D_CALL A2D_DRAW_BITMAP, title_bar_decoration     ; Draws decoration in title bar
         lda     #window_id
         sta     query_state_params::id
         A2D_CALL A2D_QUERY_STATE, query_state_params
