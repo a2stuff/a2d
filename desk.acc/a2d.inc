@@ -9,7 +9,6 @@ A2D             := $4000
 
 UNKNOWN_CALL    := $8E00
 
-
         ;; These must be called from main memory (RAMRDON/RAMWRTON)
 JUMP_TABLE_03   := $4003        ; ???
 JUMP_TABLE_06   := $4006        ; ???
@@ -71,8 +70,8 @@ A2D_SET_STATE   := $04          ; Set full drawing state
         ;; .word width          pixels
         ;; .word height
         ;; .res 8 pattern
-        ;; .byte and_mask       default $FF
-        ;; .byte or_mask        default $00
+        ;; .byte mskand         AND mask, default $FF
+        ;; .byte mskor          ORA mask, default $00
         ;; .byte 0,0,0          ???
         ;; .byte hthick         horizontal pen thickness
         ;; .byte vthick         vertical pen thickness
@@ -218,8 +217,8 @@ A2D_CREATE_WINDOW := $38
         ;; .word width          pixels
         ;; .word height
         ;; .res 8 pattern
-        ;; .byte and_mask       default $FF
-        ;; .byte or_mask        default $00
+        ;; .byte mskand         AND mask, default $FF
+        ;; .byte mskor          ORA mask, default $00
         ;; .byte 0,0,0          ???
         ;; .byte hthick
         ;; .byte vthick
