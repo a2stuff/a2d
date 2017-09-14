@@ -133,8 +133,8 @@ L08B4:  sta     query_box_params_id
         sta     L08B3
         rts
 
-:       A2D_CALL A2D_QUERY_BOX, query_box_params
-        A2D_CALL A2D_SET_BOX1, set_box_params
+:       A2D_CALL A2D_QUERY_STATE, query_box_params
+        A2D_CALL A2D_SET_STATE, set_box_params
         lda     query_box_params_id
         cmp     #window_id
         bne     :+
@@ -562,7 +562,7 @@ id:     .byte   window_id
         .byte   $00,$00,$00,$00,$00,$06,$00,$05
         .byte   $00,$41,$35,$47,$37,$36,$49
 
-        ;; SET_BOX1 params (filled in by QUERY_BOX)
+        ;; SET_STATE params (filled in by QUERY_STATE)
 set_box_params:
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -604,13 +604,14 @@ width:  .word   default_width
 height: .word   default_height
 
 pattern:.res    8, $FF
-        .byte   $FF,$00
+mskand: .byte   $FF
+mskor:  .byte   $00
         .byte   $00,$00,$00,$00
 hthick: .byte   1
 vthick: .byte   1
         .byte   $00,$7F,$00,$88,$00,$00
 
-        ;; This is QUERY_BOX/SET_BOX cruft only below
+        ;; This is QUERY_STATE/SET_BOX cruft only below
 
         .word   default_left
         .word   default_top
@@ -957,8 +958,8 @@ L1072:  A2D_CALL A2D_SET_PATTERN, pattern_speckles
 
         lda     #window_id
         sta     query_box_params::id
-        A2D_CALL A2D_QUERY_BOX, query_box_params
-        A2D_CALL A2D_SET_BOX1, set_box_params
+        A2D_CALL A2D_QUERY_STATE, query_box_params
+        A2D_CALL A2D_SET_STATE, set_box_params
         rts
 
 ;;; ==================================================
@@ -1023,8 +1024,8 @@ saved_zp:
         A2D_CALL A2D_HIDE_CURSOR
         lda     #window_id
         sta     query_box_params::id
-        A2D_CALL A2D_QUERY_BOX, query_box_params
-        A2D_CALL A2D_SET_BOX1, set_box_params
+        A2D_CALL A2D_QUERY_STATE, query_box_params
+        A2D_CALL A2D_SET_STATE, set_box_params
         pla
         tay
 

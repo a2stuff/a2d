@@ -41,10 +41,9 @@ JUMP_TABLE_3F   := $403F        ; ???
 ;;;   if <0, and with $7E to get length
 ;;;   if $4185,(call*2) is non-zero, param block is copied.
 
-
-A2D_QUERY_SCREEN        := $03  ; Get screen info
+A2D_QUERY_SCREEN        := $03  ; Get screen state
         ;; (input length 0 bytes)
-        ;; (output length 35 bytes)
+        ;; (output length 35 bytes - NOT 36)
         ;; .word left
         ;; .word top
         ;; .addr addr           A2D_SCREEN_ADDR
@@ -54,28 +53,32 @@ A2D_QUERY_SCREEN        := $03  ; Get screen info
         ;; .word width          560-1
         ;; .word height         192-1
         ;; .res 8 pattern
-        ;; .byte $FF,0,0,0,0    ???
-        ;; .byte 1,1,0,$7F,0,$88  line w,h, ???
+        ;; .byte mskand         AND mask, default $FF
+        ;; .byte mskor          ORA mask, default $00
+        ;; .byte 0,0,0          ???
+        ;; .byte hthick         horizontal pen thickness
+        ;; .byte vthick         vertical pen thickness
+        ;; .byte 0,$7F,0,$88    ??? (note: one byte shorter than SET_STATE)
 
-A2D_SET_BOX1   := $04           ; Not sure what BOX1 vs. BOX2 is for
+A2D_SET_STATE   := $04          ; Set full drawing state
         ;; (input length 36 bytes)
-        ;; - first part is like A2D_SET_BOX2
         ;; .word left           pixels from screen edge
         ;; .word top
-        ;; .addr addr           A2D_SCREEN_ADDR ($2000)
-        ;; .word stride         A2D_SCREEN_STRIDE ($80)
+        ;; .addr addr           A2D_SCREEN_ADDR
+        ;; .word stride         A2D_SCREEN_STRIDE
         ;; .word hoffset        pixels scrolled
         ;; .word voffset
         ;; .word width          pixels
         ;; .word height
-        ;; -- next part is full draw state ???
         ;; .res 8 pattern
-        ;; .byte $FF,0,0,0,0    ???
+        ;; .byte and_mask       default $FF
+        ;; .byte or_mask        default $00
+        ;; .byte 0,0,0          ???
         ;; .byte hthick         horizontal pen thickness
         ;; .byte vthick         vertical pen thickness
-        ;; .byte 0,$7F,0,$88
+        ;; .byte 0,$7F,0,$88,0
 
-A2D_SET_BOX2   := $06           ; set vs. intersect? (not quite)
+A2D_SET_BOX   := $06           ; Set just the drawing box, subset of full state
         ;; (input length 16 bytes)
         ;; .word left           pixels from screen edge
         ;; .word top
@@ -205,7 +208,7 @@ A2D_CREATE_WINDOW := $38
         ;; .word height_a       ???
         ;; .word width_b        (of scroll area?)
         ;; .word height_b       (of scroll area?)
-        ;;  - next section is identical to that for A2D_SET_BOX1
+        ;;  - next section is identical to that for A2D_SET_STATE
         ;; .word left           pixels from screen edge
         ;; .word top
         ;; .word screen_addr
@@ -215,7 +218,9 @@ A2D_CREATE_WINDOW := $38
         ;; .word width          pixels
         ;; .word height
         ;; .res 8 pattern
-        ;; .byte $FF,$00,$00,$00,$00,$00    ???
+        ;; .byte and_mask       default $FF
+        ;; .byte or_mask        default $00
+        ;; .byte 0,0,0          ???
         ;; .byte hthick
         ;; .byte vthick
         ;; .byte $00,$7F,$00,$88,$00,$00    ???
@@ -224,10 +229,10 @@ A2D_DESTROY_WINDOW := $39
         ;; (input length 1 byte)
         ;; .byte id
 
-A2D_QUERY_BOX      := $3C       ; get client "box" of window
+A2D_QUERY_STATE      := $3C       ; get drawing state of window
         ;; (input length 3 bytes)
         ;; .byte id             window
-        ;; .addr box            box definition to populate, like A2D_SET_BOX1
+        ;; .addr state          state definition to populate, like A2D_SET_STATE
 
 A2D_QUERY_TARGET   := $40
         ;; (input length 4 bytes)
@@ -300,7 +305,7 @@ A2D_UPDATE_SCROLL:= $4B
 ;;; ==================================================
 ;;; Constants
 
-;;; Used in A2D_QUERY_BOX / A2D_SET_BOX
+;;; Used in A2D_QUERY_STATE / A2D_SET_BOX
 A2D_SCREEN_ADDR     := $2000    ; Screen address
 A2D_SCREEN_STRIDE   := $80      ; Stride in bytes (???)
 

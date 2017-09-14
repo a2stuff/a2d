@@ -115,8 +115,8 @@ call_init:
 skip:   lda     #0
         sta     L089D
         lda     ROMIN2
-        A2D_CALL A2D_QUERY_BOX, query_box_params
-        A2D_CALL A2D_SET_BOX1, box_params
+        A2D_CALL A2D_QUERY_STATE, query_state_params
+        A2D_CALL A2D_SET_STATE, state_params
         rts
 
 .proc routine
@@ -138,7 +138,7 @@ L089D:  .byte   0
         ;; Called after window drag is complete
         ;; (called with window_id in A)
 .proc draw_window
-        sta     query_box_params_id
+        sta     query_state_params_id
         lda     create_window_params_top
         cmp     #screen_height - 1
         bcc     :+
@@ -146,9 +146,9 @@ L089D:  .byte   0
         sta     L089D
         rts
 
-:       A2D_CALL A2D_QUERY_BOX, query_box_params
-        A2D_CALL A2D_SET_BOX1, box_params
-        lda     query_box_params_id
+:       A2D_CALL A2D_QUERY_STATE, query_state_params
+        A2D_CALL A2D_SET_STATE, state_params
+        lda     query_state_params_id
         cmp     #window_id
         bne     :+
         jmp     draw_background
@@ -198,11 +198,11 @@ id:     .byte   0
 state:  .byte   0
 .endproc
 
-.proc query_box_params
+.proc query_state_params
 id:     .byte   0
-        .addr   box_params
+        .addr   state_params
 .endproc
-        query_box_params_id := query_box_params::id
+        query_state_params_id := query_state_params::id
 
         ;; param block for a 1A call
 L08D4:  .byte   $80
@@ -675,8 +675,8 @@ pixels: .byte   px(%1000001)
         .byte   px(%1001001)
 .endproc
 
-        ;; param block for a QUERY_SCREEN and SET_BOX1 calls, and ref'd in A2D_QUERY_BOX call
-.proc box_params
+        ;; param block for a QUERY_SCREEN and SET_STATE calls, and ref'd in QUERY_STATE call
+.proc state_params
 left:   .word   0
 top:    .word   0
 addr:   .word   0
@@ -686,8 +686,9 @@ voffset:.word   0
 width:  .word   0
 height: .word   0
 pattern:.res    8, 0
-        .byte   0
-        .byte   0,0,0,0,0       ; ???
+mskand: .byte   0
+mskor:  .byte   0
+        .byte   0,0,0,0       ; ???
 hthick: .byte   0
 vthick: .byte   0
         .byte   0,0,0,0,0       ; ???
@@ -697,7 +698,7 @@ vthick: .byte   0
         screen_width    := 560
         screen_height   := 192
 
-        ;; params for A2D_SET_BOX2 when decorating title bar
+        ;; params for A2D_SET_BOX when decorating title bar
 .proc screen_box
         .word   0
         .word   menu_bar_height
@@ -747,8 +748,9 @@ voffset:.word   0
 width:  .word   window_width
 height: .word   window_height
 pattern:.res    8, $FF
-        .byte   $FF             ; ???
-        .byte   0,0,0,0,0       ; ???
+mskand: .byte   $FF
+mskor:  .byte   $00
+        .byte   0,0,0,0       ; ???
 hthick: .byte   1
 vthick: .byte   1
         .byte   $00,$7F,$00,$88,$00,$00 ; ???
@@ -774,8 +776,8 @@ L0D18:  sta     ALTZPON
         lda     LCBANK1
         A2D_CALL $1A, L08D4
         A2D_CALL A2D_CREATE_WINDOW, create_window_params
-        A2D_CALL A2D_QUERY_SCREEN, box_params
-        A2D_CALL A2D_SET_BOX1, box_params     ; set clipping bounds?
+        A2D_CALL A2D_QUERY_SCREEN, state_params
+        A2D_CALL A2D_SET_STATE, state_params     ; set clipping bounds?
         A2D_CALL $2B                          ; reset drawing state?
         lda     #$01
         sta     input_state_params::state
@@ -1636,12 +1638,12 @@ draw_title_bar:
         bcs     :+
         dex
 :       stx     title_bar_decoration::top+1
-        A2D_CALL A2D_SET_BOX2, screen_box ; set clipping rect to whole screen
+        A2D_CALL A2D_SET_BOX, screen_box ; set clipping rect to whole screen
         A2D_CALL A2D_DRAW_PATTERN, title_bar_decoration     ; Draws decoration in title bar
         lda     #window_id
-        sta     query_box_params::id
-        A2D_CALL A2D_QUERY_BOX, query_box_params     ; get client rect
-        A2D_CALL A2D_SET_BOX1, box_params ; clip rect?
+        sta     query_state_params::id
+        A2D_CALL A2D_QUERY_STATE, query_state_params
+        A2D_CALL A2D_SET_STATE, state_params
         A2D_CALL A2D_SHOW_CURSOR
         jsr     display_buffer2
         rts

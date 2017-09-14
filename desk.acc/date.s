@@ -283,7 +283,9 @@ width:  .word   $C7
 height: .word   $40
 .endproc
 pattern:.res    8,$00
-        .byte   $FF,$00,$00,$00,$00,$00
+mskand: .byte   $FF
+mskor:  .byte   $00
+        .byte   $00,$00,$00,$00
 hthick: .byte   4
 vthick: .byte   2
         .byte   $00,$7F,$00,$88,$00,$00
@@ -786,7 +788,7 @@ vthick: .byte   1
 ;;; Render the window contents
 
 draw_window:
-        A2D_CALL A2D_SET_BOX1, create_window_params::box
+        A2D_CALL A2D_SET_STATE, create_window_params::box
         A2D_CALL A2D_DRAW_RECT, border_rect
         A2D_CALL A2D_SET_THICKNESS, thickness_params
         A2D_CALL A2D_DRAW_RECT, date_rect

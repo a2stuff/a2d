@@ -238,7 +238,9 @@ height: .word   default_height
 .endproc
 
 pattern:.byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $FF,$00,$00,$00,$00,$00
+mskand: .byte   $FF
+mskor:  .byte   $00
+        .byte   $00,$00,$00,$00
 hthick: .byte   1
 vthick: .byte   1
         .byte   $00,$7F,$00,$88,$00,$00
@@ -357,7 +359,7 @@ end:    rts
 
         ;; create window
         A2D_CALL A2D_CREATE_WINDOW, window_params
-        A2D_CALL A2D_SET_BOX1, window_params::box
+        A2D_CALL A2D_SET_STATE, window_params::box
 
         jsr     show_file
 

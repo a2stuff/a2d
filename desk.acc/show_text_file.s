@@ -328,7 +328,9 @@ height: .word   default_height
 .endproc
 
 pattern:.res    8, $00
-        .byte   $FF,$00,$00,$00,$00,$00
+mskand: .byte   $FF
+mskor:  .byte   $00
+        .byte   $00,$00,$00,$00
 hthick: .byte   1
 vthick: .byte   1
         .byte   $00,$7F,$00,$88,$00,$00
@@ -489,7 +491,7 @@ loop:   lda     $8802,x
 
         ;; create window
         A2D_CALL A2D_CREATE_WINDOW, window_params
-        A2D_CALL A2D_SET_BOX1, window_params::box
+        A2D_CALL A2D_SET_STATE, window_params::box
         jsr     calc_window_size
         jsr     calc_and_draw_mode
         jsr     draw_content
@@ -948,7 +950,7 @@ end:    rts
         jsr     UNKNOWN_CALL
         .byte   $0C
         .addr   0
-        A2D_CALL A2D_SET_BOX1, window_params::box
+        A2D_CALL A2D_SET_STATE, window_params::box
         lda     window_params::hscroll
         ror     a               ; check if low bit (track enabled) is set
         bcc     :+
@@ -1426,7 +1428,7 @@ base:   .word   10              ; vertical text offset (to baseline)
 .endproc
 
 .proc draw_mode
-        A2D_CALL A2D_SET_BOX2, mode_box  ; guess: setting up draw location ???
+        A2D_CALL A2D_SET_BOX, mode_box  ; guess: setting up draw location ???
         A2D_CALL A2D_SET_POS, mode_pos
         lda     fixed_mode_flag
         beq     else            ; is proportional?
@@ -1439,6 +1441,6 @@ loop:   lda     default_box,x
         sta     window_params::box,x
         dex
         bpl     loop
-        A2D_CALL A2D_SET_BOX2, window_params::box
+        A2D_CALL A2D_SET_BOX, window_params::box
         rts
 .endproc
