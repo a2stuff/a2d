@@ -20,7 +20,7 @@ JUMP_TABLE_12   := $4012        ; ???
 JUMP_TABLE_15   := $4015        ; ???
 JUMP_TABLE_18   := $4018        ; ???
 JUMP_TABLE_CLEAR_SEL   := $401E ; Clear DeskTop selection
-JUMP_TABLE_21   := $4021        ; ???
+JUMP_TABLE_MLI  := $4021        ; ProDOS MLI call (Y=call, X,A=params addr)
 JUMP_TABLE_24   := $4024        ; ???
 JUMP_TABLE_27   := $4027        ; ???
 JUMP_TABLE_2A   := $402A        ; ???

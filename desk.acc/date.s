@@ -20,16 +20,44 @@ KEY_RIGHT       := $15
 
         jmp     copy2aux
 
+
 stash_stack:  .byte   $00
 
-        PASCAL_STRING "MD.SYSTEM" ; ??
-        .byte   $03,$04,$08,$00,$09
-L0813:  .byte   $00,$02
-L0815:  .byte   $00,$03,$00,$00,$04
-L081A:  .byte   $00,$23,$08,$02,$00,$00,$00,$01
-L0822:  .byte   $00
-L0823:  .byte   $00
-L0824:  .byte   $00
+;;; ==================================================
+;;; MLI Call Param Blocks
+
+filename:
+        PASCAL_STRING "MD.SYSTEM"
+
+.proc open_params
+params: .byte   3
+name:   .addr   filename
+buffer: .addr   $0900
+ref_num:.byte   0
+.endproc
+
+.proc set_mark_params
+params: .byte   2
+ref_num:.byte   0
+pos:    .byte   $03,$00,$00
+.endproc
+
+.proc write_params
+params: .byte   4
+ref_num:.byte   0
+buffer: .addr   write_buffer
+request:.word   sizeof_write_buffer
+trans:  .word   0
+.endproc
+
+.proc close_params
+params: .byte    1
+ref_num:.byte   0
+.endproc
+
+write_buffer:
+        .byte   0,0
+        sizeof_write_buffer := * - write_buffer
 
 ;;; ==================================================
 
@@ -75,40 +103,48 @@ L0824:  .byte   $00
 .endproc
 
 ;;; ==================================================
+;;; Write date into MD.SYSTEM file and exit the DA
 
-        ;; ???
-L086B:  sta     ALTZPON
-        sta     L0823
-        stx     L0824
+.proc save_date_and_exit
+        sta     ALTZPON
+        sta     write_buffer
+        stx     write_buffer+1
         lda     LCBANK1
         lda     LCBANK1
-        lda     L0823
-        beq     L08B3
-        ldy     #$C8
-        lda     #$0E
-        ldx     #$08
-        jsr     JUMP_TABLE_21
-        bne     L08B3
-        lda     L0813
-        sta     L0815
-        sta     L081A
-        sta     L0822
-        ldy     #$CE
-        lda     #$14
-        ldx     #$08
-        jsr     JUMP_TABLE_21
-        bne     L08AA
-        ldy     #$CB
-        lda     #$19
-        ldx     #$08
-        jsr     JUMP_TABLE_21
-L08AA:  ldy     #$CC
-        lda     #$21
-        ldx     #$08
-        jsr     JUMP_TABLE_21
-L08B3:  ldx     stash_stack
+        lda     write_buffer    ; Dialog committed?
+        beq     skip
+
+        ldy     #OPEN           ; open the file
+        lda     #<open_params
+        ldx     #>open_params
+        jsr     JUMP_TABLE_MLI
+        bne     skip
+
+        lda     open_params::ref_num
+        sta     set_mark_params::ref_num
+        sta     write_params::ref_num
+        sta     close_params::ref_num
+
+        ldy     #SET_MARK       ; seek
+        lda     #<set_mark_params
+        ldx     #>set_mark_params
+        jsr     JUMP_TABLE_MLI
+        bne     close
+
+        ldy     #WRITE          ; write the date
+        lda     #<write_params
+        ldx     #>write_params
+        jsr     JUMP_TABLE_MLI
+
+close:  ldy     #CLOSE          ; close the file
+        lda     #<close_params
+        ldx     #>close_params
+        jsr     JUMP_TABLE_MLI
+
+skip:   ldx     stash_stack     ; exit the DA
         txs
         rts
+.endproc
 
 ;;; ==================================================
 
@@ -661,7 +697,7 @@ skip:   jmp     dest
 .proc routine
         sta     RAMRDOFF
         sta     RAMWRTOFF
-        jmp     L086B
+        jmp     save_date_and_exit
 .endproc
         sizeof_routine := * - routine
 .endproc
