@@ -191,14 +191,7 @@ ref_num:.byte   0               ; ref_num
 
 .proc pathname                 ; 1st byte is length, rest is full path
 length: .byte   $00
-data:   .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+data:   .res    64, $00
 .endproc
 
 L0945:  .byte   $00
@@ -211,10 +204,10 @@ params_end := * + 4       ; bug in original? (harmless as this is static)
 ;;; ----------------------------------------
 
 black_pattern:
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .res    8, $00
 
 white_pattern:
-        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+        .res    $8, $FF
 
         window_id := $64
 
@@ -334,8 +327,8 @@ width:  .word   default_width
 height: .word   default_height
 .endproc
 
-pattern:.byte   $00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$FF,$00,$00,$00,$00,$00
+pattern:.res    8, $00
+        .byte   $FF,$00,$00,$00,$00,$00
 hthick: .byte   1
 vthick: .byte   1
         .byte   $00,$7F,$00,$88,$00,$00

@@ -569,11 +569,11 @@ background_pattern:
         .byte   $00
 
 black_pattern:
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .res    8, $00
         .byte   $00
 
 white_pattern:
-        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+        .res    8, $FF
         .byte   $00
 
         ;; ???
@@ -613,8 +613,7 @@ length: .byte   15
 text_buffer_size := 14
 
 text_buffer1:
-        .byte   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-
+        .res    text_buffer_size+2, 0
 
 .proc draw_text_params2
 addr:   .addr   text_buffer2
@@ -622,7 +621,7 @@ length: .byte   15
 .endproc
 
 text_buffer2:
-        .byte   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+        .res    text_buffer_size+2, 0
 
 spaces_string:
         A2D_DEFSTRING "          "
@@ -657,8 +656,7 @@ left:   .word   69
 base:   .word   16
 .endproc
 
-farg:
-        .byte   $00,$00,$00,$00,$00,$00
+farg:   .byte   $00,$00,$00,$00,$00,$00
 
 .proc title_bar_decoration      ; Params for A2D_DRAW_PATTERN
 left:   .word   115             ; overwritten
@@ -685,16 +683,14 @@ addr:   .word   0
 stride: .word   0
 hoffset:.word   0
 voffset:.word   0
-width:  .word   0               ; QUERY_SCREEN call sets to screen_width-1
-height: .word   0               ; QUERY_SCREEN call sets to screen_height-1
-
-        ;; unknown from here
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00,$00 ; filled with $FF by QUERY_SCREEN call
-        .byte   $00,$00,$00,$00             ; left $00 by QUERY_SCREEN
-        .word   0                           ; QUERY_SCREEN call sets to $100
-        .word   0                           ; QUERY_SCREEN call sets to $1
-        .word   0                           ; QUERY_SCREEN call sets to $7F (127)
-        .word   0                           ; QUERY_SCREEN call sets to $88 (136)
+width:  .word   0
+height: .word   0
+pattern:.res    8, 0
+        .byte   0
+        .byte   0,0,0,0,0       ; ???
+hthick: .byte   0
+vthick: .byte   0
+        .byte   0,0,0,0,0       ; ???
 .endproc
 
         menu_bar_height := 13
@@ -738,10 +734,10 @@ hs_pos: .byte   0
 vs_max: .byte   0
 vs_pos: .byte   0
         .byte   0,0             ; ???
-w1:     .word  window_width
-h1:     .word  window_height
-w2:     .word  window_width
-h2:     .word  window_height
+w1:     .word   window_width
+h1:     .word   window_height
+w2:     .word   window_width
+h2:     .word   window_height
 left:   .word   default_left
 top:    .word   default_top
         .word   A2D_SCREEN_ADDR
@@ -750,19 +746,12 @@ hoffset:.word   0
 voffset:.word   0
 width:  .word   window_width
 height: .word   window_height
-
-        ;; ???
-        ;; Same as latter part of box_params block after QUERY_SCREEN call fills it in
-pattern:.byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-        .byte   $FF
-        .byte   $00,$00
-        .byte   $00,$00,$00
+pattern:.res    8, $FF
+        .byte   $FF             ; ???
+        .byte   0,0,0,0,0       ; ???
 hthick: .byte   1
 vthick: .byte   1
-        .byte   $00,$7F,$00
-        .byte   $88,$00
-
-        .byte   $00
+        .byte   $00,$7F,$00,$88,$00,$00 ; ???
 .endproc
 create_window_params_top := create_window_params::top
 

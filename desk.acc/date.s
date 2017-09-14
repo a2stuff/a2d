@@ -181,11 +181,11 @@ year_rect:
         .word   $7F,$14,$95,$1E
 
         ;; Params for $0C call (1 byte?)
-L08FC:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+L08FC:  .res    8, $00
         .byte   $FF
 
 .proc white_pattern
-        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+        .res    8, $FF
 .endproc
         .byte   $FF             ; ??
 
@@ -282,7 +282,7 @@ voff:   .word   0
 width:  .word   $C7
 height: .word   $40
 .endproc
-pattern:.byte   $00,$00,$00,$00,$00,$00,$00,$00
+pattern:.res    8,$00
         .byte   $FF,$00,$00,$00,$00,$00
 hthick: .byte   4
 vthick: .byte   2
@@ -777,7 +777,7 @@ label_uparrow_pos:
 label_downarrow_pos:
         .word   $AC,$27
 
-.proc line_width_params
+.proc thickness_params
 hthick: .byte   1
 vthick: .byte   1
 .endproc
@@ -788,7 +788,7 @@ vthick: .byte   1
 draw_window:
         A2D_CALL A2D_SET_BOX1, create_window_params::box
         A2D_CALL A2D_DRAW_RECT, border_rect
-        A2D_CALL A2D_SET_LINE_WIDTH, line_width_params
+        A2D_CALL A2D_SET_THICKNESS, thickness_params
         A2D_CALL A2D_DRAW_RECT, date_rect
         A2D_CALL A2D_DRAW_RECT, ok_button_rect
         A2D_CALL A2D_DRAW_RECT, cancel_button_rect
@@ -928,38 +928,7 @@ loop:   lda     zp_buffer,x
 .endproc
 
 zp_buffer:
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .res    256, 0
 
 ;;; ==================================================
 ;;; Convert number to two ASCII digits (in A, X)

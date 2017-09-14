@@ -12,11 +12,7 @@ SPKR            := $C030
 
         jmp     copy2aux
 
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0
+        .res    36, 0
 
 ;;; ==================================================
 ;;; Copy the DA to AUX and invoke it
@@ -178,8 +174,7 @@ element := *+4
 id      := *+5
 .endproc
 
-        .byte   0,0,0,0         ; storage for above
-        .byte   0,0,0,0
+        .res    8, 0            ; storage for above
 
         .byte   0,0             ; ???
 
@@ -231,11 +226,8 @@ space_positions:                 ; left, top for all 16 holes
 .endproc
 
         ;; Current position table
-position_table := *
-        .byte   0,0,0,0
-        .byte   0,0,0,0
-        .byte   0,0,0,0
-        .byte   0,0,0,0
+position_table:
+        .res    16, 0
 
 .proc draw_pattern_params
 left:   .word   0
@@ -532,12 +524,13 @@ piece16:
         .byte   $00             ; ???
 
 .proc pattern_black
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .res    8, 0
 .endproc
 
         ;; ???
-        .byte   $00,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-        .byte   $FF,$00
+        .byte   $00
+        .res    8, $FF
+        .byte   $00
 
 .proc set_pos_params            ; for what ??? (board is at 5,3)
         .word   5, 2
@@ -610,14 +603,12 @@ voffset:.word   0
 width:  .word   default_width
 height: .word   default_height
 
-pattern:.byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+pattern:.res    8, $FF
         .byte   $FF,$00
         .byte   $00,$00,$00,$00
 hthick: .byte   1
 vthick: .byte   1
-        .byte   $00,$7F
-        .byte   $00,$88
-        .byte   $00,$00
+        .byte   $00,$7F,$00,$88,$00,$00
 
         ;; This is QUERY_BOX/SET_BOX cruft only below
 
@@ -628,13 +619,12 @@ vthick: .byte   1
         .byte   $00,$00,$00,$00
         .word   default_width
         .word   default_height
-        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+        .res    8, $FF
         .byte   $FF,$00,$00,$00
         .byte   $00,$00
         .byte   1
         .byte   1
-        .byte   $00,$7F,$00,$88
-        .byte   $00,$00
+        .byte   $00,$7F,$00,$88,$00,$00
 
 .endproc
 name:   PASCAL_STRING "Puzzle"
@@ -992,38 +982,7 @@ loop:   lda     saved_zp,x
 .endproc
 
 saved_zp:
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
-        .byte   0,0,0,0,0,0,0,0
+        .res    256, 0
 
 ;;; ==================================================
 ;;; Draw pieces

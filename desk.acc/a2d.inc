@@ -44,8 +44,7 @@ JUMP_TABLE_3F   := $403F        ; ???
 
 A2D_QUERY_SCREEN        := $03  ; Get screen info
         ;; (input length 0 bytes)
-        ;; (input length 35 bytes)
-        ;; -- first part is like SET_BOX/QUERY_BOX params
+        ;; (output length 35 bytes)
         ;; .word left
         ;; .word top
         ;; .addr addr           A2D_SCREEN_ADDR
@@ -54,14 +53,28 @@ A2D_QUERY_SCREEN        := $03  ; Get screen info
         ;; .word voffset
         ;; .word width          560-1
         ;; .word height         192-1
-        ;; -- next part is ???
-        ;; .byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF ??? pattern + ?
-        ;; .byte 0,0,0,0        ???
+        ;; .res 8 pattern
+        ;; .byte $FF,0,0,0,0    ???
         ;; .byte 1,1,0,$7F,0,$88  line w,h, ???
 
 A2D_SET_BOX1   := $04           ; Not sure what BOX1 vs. BOX2 is for
         ;; (input length 36 bytes)
-        ;; (first bit is like SET_BOX2, think rest is full draw state)
+        ;; - first part is like A2D_SET_BOX2
+        ;; .word left           pixels from screen edge
+        ;; .word top
+        ;; .addr addr           A2D_SCREEN_ADDR ($2000)
+        ;; .word stride         A2D_SCREEN_STRIDE ($80)
+        ;; .word hoffset        pixels scrolled
+        ;; .word voffset
+        ;; .word width          pixels
+        ;; .word height
+        ;; -- next part is full draw state ???
+        ;; .res 8 pattern
+        ;; .byte $FF,0,0,0,0    ???
+        ;; .byte hthick         horizontal pen thickness
+        ;; .byte vthick         vertical pen thickness
+        ;; .byte 0,$7F,0,$88
+
 A2D_SET_BOX2   := $06           ; set vs. intersect? (not quite)
         ;; (input length 16 bytes)
         ;; .word left           pixels from screen edge
@@ -79,9 +92,10 @@ A2D_SET_FILL_MODE := $07
 
 A2D_SET_PATTERN := $08
         ;; (input length 8 bytes)
-        ;; .byte r0...r7        8x8 pixel pattern for A2D_FILL_RECT calls
+        ;; .res 8 pattern       8x8 pixel pattern for A2D_FILL_RECT calls
+        ;; (TODO: Is there an output???)
 
-A2D_SET_LINE_WIDTH := $0A
+A2D_SET_THICKNESS := $0A
         ;; (input length 2 bytes)
         ;; .byte hthick         horizontal pen thickness
         ;; .byte vthick         vertical pen thickness
@@ -200,11 +214,11 @@ A2D_CREATE_WINDOW := $38
         ;; .word voffset
         ;; .word width          pixels
         ;; .word height
-        ;; .byte pattern (8 bytes)
-        ;; .byte   $FF,$00,$00,$00,$00,$00    ???
+        ;; .res 8 pattern
+        ;; .byte $FF,$00,$00,$00,$00,$00    ???
         ;; .byte hthick
         ;; .byte vthick
-        ;; .byte   $00,$7F,$00,$88,$00,$00    ???
+        ;; .byte $00,$7F,$00,$88,$00,$00    ???
 
 A2D_DESTROY_WINDOW := $39
         ;; (input length 1 byte)
@@ -213,7 +227,7 @@ A2D_DESTROY_WINDOW := $39
 A2D_QUERY_BOX      := $3C       ; get client "box" of window
         ;; (input length 3 bytes)
         ;; .byte id             window
-        ;; .addr box            box definition to populate, like A2D_SET_BOX1 (or 2 ???)
+        ;; .addr box            box definition to populate, like A2D_SET_BOX1
 
 A2D_QUERY_TARGET   := $40
         ;; (input length 4 bytes)

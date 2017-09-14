@@ -181,14 +181,7 @@ ref_num:.byte   0               ; ref_num
 
 .proc pathname                 ; 1st byte is length, rest is full path
 length: .byte   $00
-data:   .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+data:   .res    64, 0
 .endproc
 
 
@@ -621,7 +614,6 @@ cloop:  lda     (src),y
         bcc     rloop
         rts
 .endproc
-
 
         .include "hires_table.inc"
         .include "hgr_to_dhr.inc"
