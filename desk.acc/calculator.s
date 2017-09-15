@@ -103,7 +103,7 @@ call_init:
         ;; ???
         lda     LCBANK1
         lda     LCBANK1
-        bit     L089D
+        bit     redraw_flag
 
         bmi     skip
         jsr     UNKNOWN_CALL
@@ -112,7 +112,7 @@ call_init:
 
         ;; ???
 skip:   lda     #0
-        sta     L089D
+        sta     redraw_flag
         lda     ROMIN2
         A2D_CALL A2D_QUERY_STATE, query_state_params
         A2D_CALL A2D_SET_STATE, state_params
@@ -132,7 +132,7 @@ skip:   lda     #0
 ;;; ==================================================
 
 
-L089D:  .byte   0
+redraw_flag:  .byte   0         ; ???
 
         ;; Called after window drag is complete
         ;; (called with window_id in A)
@@ -142,7 +142,7 @@ L089D:  .byte   0
         cmp     #screen_height - 1
         bcc     :+
         lda     #$80
-        sta     L089D
+        sta     redraw_flag
         rts
 
 :       A2D_CALL A2D_QUERY_STATE, query_state_params
@@ -545,12 +545,12 @@ tall_button_bitmap:            ; bitmap for '+' button
 
 saved_stack:
         .byte   $00             ; restored after error
-L0BC5:  .byte   $00             ; high bit set if pending op?
+calc_p: .byte   $00             ; high bit set if pending op?
 calc_op:.byte   $00
 calc_d: .byte   $00             ; '.' if decimal present, 0 otherwise
 calc_e: .byte   $00             ; exponential?
 calc_n: .byte   $00             ; negative?
-L0BCA:  .byte   $00             ; related to = key
+calc_g: .byte   $00             ; high bit set if last input digit
 calc_l: .byte   $00             ; input length
 
 ;;; ==================================================
@@ -575,7 +575,7 @@ white_pattern:
         .res    8, $FF
         .byte   $00
 
-        ;; ???
+        ;; arg for $0C call ???
 L0BEF:  .byte   $7F
 
         display_left    := 10
@@ -792,11 +792,11 @@ init:   sta     ALTZPON
         sta     calc_op
 
         lda     #0              ; clear registers
-        sta     L0BC5
+        sta     calc_p
         sta     calc_d
         sta     calc_e
         sta     calc_n
-        sta     L0BCA
+        sta     calc_g
         sta     calc_l
 
 .proc copy_to_b1
@@ -937,7 +937,7 @@ loop:   lda     routine,x
         lda     input_state_params::key
         cmp     #KEY_ESCAPE
         bne     trydel
-        lda     L0BC5
+        lda     calc_p
         bne     clear           ; empty state?
         lda     calc_l
         beq     exit            ; if so, exit DA
@@ -1109,7 +1109,7 @@ miss:   clc
         lda     #'='
         sta     calc_op
         lda     #0
-        sta     L0BC5
+        sta     calc_p
         sta     calc_l
         sta     calc_d
         sta     calc_e
@@ -1117,13 +1117,13 @@ miss:   clc
         jmp     reset_buffers_and_display
 
 :       cmp     #'E'            ; Exponential?
-        bne     L0FC7
+        bne     try_eq
         ldx     #<btn_e::box
         ldy     #>btn_e::box
         lda     #'e'
         jsr     depress_button
         ldy     calc_e
-        bne     L0FC6
+        bne     rts1
         ldy     calc_l
         bne     :+
         inc     calc_l
@@ -1132,11 +1132,11 @@ miss:   clc
         sta     text_buffer2 + text_buffer_size
 :       lda     #'E'
         sta     calc_e
-        jmp     L1107
+        jmp     update
 
-L0FC6:  rts
+rts1:   rts
 
-L0FC7:  cmp     #'='            ; Equals?
+try_eq: cmp     #'='            ; Equals?
         bne     :+
         pha
         ldx     #<btn_eq::box
@@ -1163,7 +1163,7 @@ L0FC7:  cmp     #'='            ; Equals?
         inc     calc_l
 :       lda     #'.'
         sta     calc_d
-        jmp     L1107
+        jmp     update
 
 rts2:   rts
 
@@ -1308,77 +1308,78 @@ end:    rts
 
 do_digit_click:
         jsr     depress_button
-        bne     L1106
+        bne     :+
         pla
         rts
 
-L1106:  pla
-L1107:  sec
-        ror     L0BCA
+:       pla
+update: sec
+        ror     calc_g
         ldy     calc_l
-        bne     L111C
+        bne     :+
         pha
         jsr     reset_buffer2
         pla
-        cmp     #$30
-        bne     L111C
+        cmp     #'0'
+        bne     :+
         jmp     display_buffer1
 
-L111C:  sec
-        ror     L0BC5
+:       sec
+        ror     calc_p
         cpy     #$0A
-        bcs     L114B
+        bcs     rts3
         pha
         ldy     calc_l
-        beq     L113E
+        beq     empty
         lda     #$0F
         sec
         sbc     calc_l
         tax
-L1131:  lda     text_buffer1,x
+:       lda     text_buffer1,x
         sta     text_buffer1-1,x
         sta     text_buffer2-1,x
         inx
         dey
-        bne     L1131
-L113E:  inc     calc_l
+        bne     :-
+empty:  inc     calc_l
         pla
         sta     text_buffer1 + text_buffer_size
         sta     text_buffer2 + text_buffer_size
         jmp     display_buffer1
 
-L114B:  rts
+rts3:   rts
 
-do_op_click:
+.proc do_op_click
         jsr     depress_button
-        bne     L1153
+        bne     :+
         pla
         rts
 
-L1153:  lda     calc_op
+:       lda     calc_op
         cmp     #'='
         bne     :+
-        lda     L0BCA
-        bne     L1173
+        lda     calc_g
+        bne     reparse
         lda     #$00
         jsr     FLOAT
-        jmp     L1181
+        jmp     do_op
 
-:       lda     L0BCA
-        bne     L1173
+:       lda     calc_g
+        bne     reparse
         pla
         sta     calc_op
         jmp     reset_buffer1_and_state
 
-L1173:  lda     #<text_buffer1
+reparse:lda     #<text_buffer1
         sta     TXTPTR
         lda     #>text_buffer1
         sta     TXTPTR+1
         jsr     adjust_txtptr
         jsr     FIN
-L1181:  pla
+
+do_op:  pla
         ldx     calc_op
-        sta     calc_op           ; Operation
+        sta     calc_op
         lda     #<farg
         ldy     #>farg
 
@@ -1404,9 +1405,10 @@ L1181:  pla
 
 :       cpx     #'='
         bne     post_op
-        ldy     L0BCA
+        ldy     calc_g
         bne     post_op
         jmp     reset_buffer1_and_state
+.endproc
 
 .proc post_op
         ldx     #<farg          ; after the FP operation is done
@@ -1445,7 +1447,7 @@ end:    jsr     display_buffer1
         sta     calc_d
         sta     calc_e
         sta     calc_n
-        sta     L0BCA
+        sta     calc_g
         rts
 .endproc
 
