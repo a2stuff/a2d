@@ -1013,24 +1013,24 @@ L0E7E:  A2D_CALL A2D_SET_POS, line_pos
         lda     text_string::len
         adc     $06
         sta     $06
-        bcc     L0EA6
+        bcc     :+
         inc     $07
-L0EA6:  lda     L095A
+:       lda     L095A
         bne     L0E68
         clc
         lda     line_pos::base
         adc     #$0A            ; line spacing = 10
         sta     line_pos::base
-        bcc     L0EB9
+        bcc     :+
         inc     line_pos::base+1
-L0EB9:  jsr     L0EDB
+:       jsr     L0EDB
         lda     L096C
         cmp     L0968
-        bne     L0ECC
+        bne     :+
         lda     L096D
         cmp     L0969
         beq     L0ED7
-L0ECC:  inc     L096C
+:       inc     L096C
         bne     L0ED4
         inc     L096D
 L0ED4:  jmp     L0E68
@@ -1080,13 +1080,13 @@ L0F22:  ldy     text_string::len
         cmp     #$0D            ; return character
         beq     L0F86
         cmp     #' '            ; space character
-        bne     L0F41
+        bne     :+
         sty     L0F9B
         pha
         lda     L0945
         sta     L0946
         pla
-L0F41:  cmp     #$09
+:       cmp     #$09
         bne     L0F48
         jmp     L0F9E
 
@@ -1095,14 +1095,14 @@ L0F48:  tay
         clc
         adc     L0F9C
         sta     L0F9C
-        bcc     L0F58
+        bcc     :+
         inc     L0F9D
-L0F58:  lda     L095C
+:       lda     L095C
         cmp     L0F9D
-        bne     L0F66
+        bne     :+
         lda     L095B
         cmp     L0F9C
-L0F66:  bcc     L0F6E
+:       bcc     L0F6E
         inc     text_string::len
         jmp     L0F10
 
@@ -1110,11 +1110,11 @@ L0F6E:  lda     #0
         sta     L095A
         lda     L0F9B
         cmp     #$FF
-        beq     L0F83
+        beq     :+
         sta     text_string::len
         lda     L0946
         sta     L0945
-L0F83:  inc     text_string::len
+:       inc     text_string::len
 L0F86:  jsr     L0FF6
         ldy     text_string::len
         lda     ($06),y
@@ -1142,16 +1142,16 @@ L0F9D:  .byte   0
         ldx     #0
 loop:   lda     times70+1,x
         cmp     line_pos::left+1
-        bne     L0FC6
+        bne     :+
         lda     times70,x
         cmp     line_pos::left
-L0FC6:  bcs     L0FD1
+:       bcs     :+
         inx
         inx
         cpx     #14
         beq     done
         jmp     loop
-L0FD1:  lda     times70,x
+:       lda     times70,x
         sta     line_pos::left
         lda     times70+1,x
         sta     line_pos::left+1
@@ -1426,7 +1426,7 @@ base:   .word   10              ; vertical text offset (to baseline)
 .endproc
 
 .proc draw_mode
-        A2D_CALL A2D_SET_BOX, mode_box  ; guess: setting up draw location ???
+        A2D_CALL A2D_SET_BOX, mode_box
         A2D_CALL A2D_SET_POS, mode_pos
         lda     fixed_mode_flag
         beq     else            ; is proportional?
