@@ -2,19 +2,11 @@
         .setcpu "65C02"
 
         .include "apple2.inc"
+        .include "../inc/apple2.inc"
         .include "../inc/prodos.inc"
         .include "../inc/auxmem.inc"
 
         .include "a2d.inc"
-
-ROMIN2          := $C082
-
-KEY_ENTER       := $0D
-KEY_ESCAPE      := $1B
-KEY_LEFT        := $08
-KEY_DOWN        := $0A
-KEY_UP          := $0B
-KEY_RIGHT       := $15
 
 ;;; ==================================================
 

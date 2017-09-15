@@ -2,13 +2,12 @@
         .setcpu "65C02"
 
         .include "apple2.inc"
+        .include "../inc/apple2.inc"
         .include "../inc/prodos.inc"
         .include "../inc/auxmem.inc"
 
         .include "a2d.inc"
 
-ROMIN2          := $C082
-SPKR            := $C030
 
         jmp     copy2aux
 
@@ -771,7 +770,7 @@ check_key:
         lda     get_input_params::modifiers
         bne     :+
         lda     get_input_params::key
-        cmp     #$1B            ; Escape
+        cmp     #KEY_ESCAPE
         beq     destroy
 :       rts
 .endproc

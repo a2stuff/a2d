@@ -2,6 +2,7 @@
         .org $800
 
         .include "apple2.inc"
+        .include "../inc/apple2.inc"
         .include "../inc/prodos.inc"
         .include "../inc/auxmem.inc"
         .include "../inc/applesoft.inc"
@@ -9,9 +10,6 @@
         .include "a2d.inc"
 
 adjust_txtptr := $B1
-
-ROMIN2          := $C082
-COUT_HOOK       := $36
 
 ;;; ==================================================
 ;;; Start of the code
@@ -936,7 +934,7 @@ loop:   lda     routine,x
         lda     input_state_params::modifiers
         bne     bail
         lda     input_state_params::key
-        cmp     #$1B            ; Escape?
+        cmp     #KEY_ESCAPE
         bne     trydel
         lda     L0BC5
         bne     clear           ; empty state?
