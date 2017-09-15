@@ -747,8 +747,8 @@ voffset:.word   0
 width:  .word   window_width
 height: .word   window_height
 pattern:.res    8, $FF
-mskand: .byte   $FF
-mskor:  .byte   $00
+mskand: .byte   A2D_DEFAULT_MSKAND
+mskor:  .byte   A2D_DEFAULT_MSKOR
         .byte   0,0,0,0       ; ???
 hthick: .byte   1
 vthick: .byte   1

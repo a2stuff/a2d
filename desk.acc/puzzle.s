@@ -609,8 +609,8 @@ width:  .word   default_width
 height: .word   default_height
 
 pattern:.res    8, $FF
-mskand: .byte   $FF
-mskor:  .byte   $00
+mskand: .byte   A2D_DEFAULT_MSKAND
+mskor:  .byte   A2D_DEFAULT_MSKOR
         .byte   0,0,0,0
 hthick: .byte   1
 vthick: .byte   1
@@ -628,8 +628,8 @@ voffset:.word   0
 width:  .word   default_width
 height: .word   default_height
 pattern:.res    8, $FF
-mskand: .byte   $FF
-mskor:  .byte   $00
+mskand: .byte   A2D_DEFAULT_MSKAND
+mskor:  .byte   A2D_DEFAULT_MSKOR
         .byte   0,0,0,0
 hthick: .byte   1
 vthick: .byte   1

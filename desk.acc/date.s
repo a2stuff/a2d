@@ -265,8 +265,8 @@ h1:     .word   100
 w2:     .word   $1F4
 h2:     .word   $1F4
 .proc box
-left:   .word   $B4
-top:    .word   $32
+left:   .word   180
+top:    .word   50
 saddr:  .addr   A2D_SCREEN_ADDR
 stride: .word   A2D_SCREEN_STRIDE
 hoff:   .word   0
@@ -275,8 +275,8 @@ width:  .word   $C7
 height: .word   $40
 .endproc
 pattern:.res    8,$00
-mskand: .byte   $FF
-mskor:  .byte   $00
+mskand: .byte   A2D_DEFAULT_MSKAND
+mskor:  .byte   A2D_DEFAULT_MSKOR
         .byte   $00,$00,$00,$00
 hthick: .byte   4
 vthick: .byte   2

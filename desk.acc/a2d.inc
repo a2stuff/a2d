@@ -354,6 +354,9 @@ A2D_CWS_SCROLL_THUMB   := 1 << 6
 A2D_CWS_SCROLL_TRACK   := 1 << 0
 A2D_CWS_SCROLL_NORMAL  := A2D_CWS_SCROLL_ENABLED | A2D_CWS_SCROLL_THUMB | A2D_CWS_SCROLL_TRACK
 
+;;; Used in various state blocks
+A2D_DEFAULT_MSKAND := $FF
+A2D_DEFAULT_MSKOR  := $00
 
 ;;; ==================================================
 ;;; Macros

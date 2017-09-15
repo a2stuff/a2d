@@ -36,7 +36,7 @@ call_main_addr         := call_main_trampoline+7        ; address patched in her
 .scope
         sta     RAMWRTON
         sta     RAMRDON
-        ldx     #(call_main_template_end - call_main_template)
+        ldx     #sizeof_call_main_template
 loop:   lda     call_main_template,x
         sta     call_main_trampoline,x
         dex
@@ -52,8 +52,7 @@ loop:   lda     call_main_template,x
         sta     RAMWRTON
         rts
 .endproc
-call_main_template_end:         ; can't .sizeof(proc) before declaration
-        ;; https://github.com/cc65/cc65/issues/478
+        sizeof_call_main_template := * - call_main_template
 
 .proc call_init
         ;; run the DA
@@ -309,14 +308,13 @@ hsmax:  .byte   32
 hspos:  .byte   0
 vsmax:  .byte   255
 vspos:  .byte   0
+        .byte   0, 0            ; ???
+w1:     .word   200
+h1:     .word   51
+w2:     .word   default_width
+h2:     .word   default_height
 
-        ;; ???
-        .byte   $00,$00,$C8,$00,$33,$00
-
-width:  .word   default_width
-height: .word   default_height
-
-.proc box                       ; or whole window ??
+.proc box
 left:   .word   default_left
 top:    .word   default_top
 addr:   .word   A2D_SCREEN_ADDR
@@ -328,8 +326,8 @@ height: .word   default_height
 .endproc
 
 pattern:.res    8, $00
-mskand: .byte   $FF
-mskor:  .byte   $00
+mskand: .byte   A2D_DEFAULT_MSKAND
+mskor:  .byte   A2D_DEFAULT_MSKOR
         .byte   $00,$00,$00,$00
 hthick: .byte   1
 vthick: .byte   1

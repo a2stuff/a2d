@@ -231,15 +231,15 @@ left:   .word   default_left
 top:    .word   default_top
 addr:   .word   A2D_SCREEN_ADDR
 stride: .word   A2D_SCREEN_STRIDE
-hoffset:.word   0               ; Also used for A2D_CLEAR_BOX
+hoffset:.word   0
 voffset:.word   0
 width:  .word   default_width
 height: .word   default_height
 .endproc
 
-pattern:.byte   $00,$00,$00,$00,$00,$00,$00,$00
-mskand: .byte   $FF
-mskor:  .byte   $00
+pattern:.res    8, 0
+mskand: .byte   A2D_DEFAULT_MSKAND
+mskor:  .byte   A2D_DEFAULT_MSKOR
         .byte   $00,$00,$00,$00
 hthick: .byte   1
 vthick: .byte   1
