@@ -75,7 +75,7 @@ save_stack:  .byte   0
 
 call_init:
         lda     ROMIN2
-        jmp     L0D18
+        jmp     init
 
         ;; Used after a drag-and-drop is completed;
         ;; redraws the window.
@@ -104,6 +104,7 @@ call_init:
         lda     LCBANK1
         lda     LCBANK1
         bit     L089D
+
         bmi     skip
         jsr     UNKNOWN_CALL
         .byte   $0C
@@ -240,8 +241,8 @@ L08D5:  .byte   $00
 .proc btn_c
         .word   col1_left - border_lt
         .word   row1_top - border_lt
-        .addr   button_pattern
-        .byte   pattern_stride
+        .addr   button_bitmap
+        .byte   bitmap_stride
         .byte   $00,$00,$00,$00,$00 ; ???
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
@@ -253,8 +254,8 @@ box:    .word   col1_left,row1_top,col1_right,row1_bot
 .proc btn_e
         .word   col2_left - border_lt
         .word   row1_top - border_lt
-        .addr   button_pattern
-        .byte   pattern_stride
+        .addr   button_bitmap
+        .byte   bitmap_stride
         .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
@@ -266,8 +267,8 @@ box:    .word   col2_left,row1_top,col2_right,row1_bot
 .proc btn_eq
         .word   col3_left - border_lt
         .word   row1_top - border_lt
-        .addr   button_pattern
-        .byte   pattern_stride
+        .addr   button_bitmap
+        .byte   bitmap_stride
         .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
@@ -279,8 +280,8 @@ box:    .word   col3_left,row1_top,col3_right,row1_bot
 .proc btn_mul
         .word   col4_left - border_lt
         .word   row1_top - border_lt
-        .addr   button_pattern
-        .byte   pattern_stride
+        .addr   button_bitmap
+        .byte   bitmap_stride
         .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
@@ -292,8 +293,8 @@ box:    .word   col4_left,row1_top,col4_right,row1_bot
 .proc btn_7
         .word   col1_left - border_lt
         .word   row2_top - border_lt
-        .addr   button_pattern
-        .byte   pattern_stride
+        .addr   button_bitmap
+        .byte   bitmap_stride
         .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
@@ -305,8 +306,8 @@ box:    .word   col1_left,row2_top,col1_right,row2_bot
 .proc btn_8
         .word   col2_left - border_lt
         .word   row2_top - border_lt
-        .addr   button_pattern
-        .byte   pattern_stride
+        .addr   button_bitmap
+        .byte   bitmap_stride
         .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
@@ -318,8 +319,8 @@ box:    .word   col2_left,row2_top,col2_right,row2_bot
 .proc btn_9
         .word   col3_left - border_lt
         .word   row2_top - border_lt
-        .addr   button_pattern
-        .byte   pattern_stride
+        .addr   button_bitmap
+        .byte   bitmap_stride
         .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
@@ -331,8 +332,8 @@ box:    .word   col3_left,row2_top,col3_right,row2_bot
 .proc btn_div
         .word   col4_left - border_lt
         .word   row2_top - border_lt
-        .addr   button_pattern
-        .byte   pattern_stride
+        .addr   button_bitmap
+        .byte   bitmap_stride
         .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
@@ -344,8 +345,8 @@ box:    .word   col4_left,row2_top,col4_right,row2_bot
 .proc btn_4
         .word   col1_left - border_lt
         .word   row3_top - border_lt
-        .addr   button_pattern
-        .byte   pattern_stride
+        .addr   button_bitmap
+        .byte   bitmap_stride
         .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
@@ -357,8 +358,8 @@ box:    .word   col1_left,row3_top,col1_right,row3_bot
 .proc btn_5
         .word   col2_left - border_lt
         .word   row3_top - border_lt
-        .addr   button_pattern
-        .byte   pattern_stride
+        .addr   button_bitmap
+        .byte   bitmap_stride
         .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
@@ -370,8 +371,8 @@ box:    .word   col2_left,row3_top,col2_right,row3_bot
 .proc btn_6
         .word   col3_left - border_lt
         .word   row3_top - border_lt
-        .addr   button_pattern
-        .byte   pattern_stride
+        .addr   button_bitmap
+        .byte   bitmap_stride
         .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
@@ -383,8 +384,8 @@ box:    .word   col3_left,row3_top,col3_right,row3_bot
 .proc btn_sub
         .word   col4_left - border_lt
         .word   row3_top - border_lt
-        .addr   button_pattern
-        .byte   pattern_stride
+        .addr   button_bitmap
+        .byte   bitmap_stride
         .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
@@ -396,8 +397,8 @@ box:    .word   col4_left,row3_top,col4_right,row3_bot
 .proc btn_1
         .word   col1_left - border_lt
         .word   row4_top - border_lt
-        .addr   button_pattern
-        .byte   pattern_stride
+        .addr   button_bitmap
+        .byte   bitmap_stride
         .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
@@ -409,8 +410,8 @@ box:    .word   col1_left,row4_top,col1_right,row4_bot
 .proc btn_2
         .word   col2_left - border_lt
         .word   row4_top - border_lt
-        .addr   button_pattern
-        .byte   pattern_stride
+        .addr   button_bitmap
+        .byte   bitmap_stride
         .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
@@ -422,8 +423,8 @@ box:    .word   col2_left,row4_top,col2_right,row4_bot
 .proc btn_3
         .word   col3_left - border_lt
         .word   row4_top - border_lt
-        .addr   button_pattern
-        .byte   pattern_stride
+        .addr   button_bitmap
+        .byte   bitmap_stride
         .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
@@ -435,8 +436,8 @@ box:    .word   col3_left,row4_top,col3_right,row4_bot
 .proc btn_0
         .word   col1_left - border_lt
         .word   row5_top - border_lt
-        .addr   wide_button_pattern
-        .byte   8                   ; pattern_stride (bytes)
+        .addr   wide_button_bitmap
+        .byte   8                   ; bitmap_stride (bytes)
         .byte   $00,$00,$00,$00,$00
         .word   49                      ; 0 is extra wide
         .word   button_height + border_lt + border_br
@@ -448,8 +449,8 @@ box:    .word   col1_left,row5_top,col2_right,row5_bot
 .proc btn_dec
         .word   col3_left - border_lt
         .word   row5_top - border_lt
-        .addr   button_pattern
-        .byte   pattern_stride
+        .addr   button_bitmap
+        .byte   bitmap_stride
         .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   button_height + border_lt + border_br
@@ -461,8 +462,8 @@ box:    .word   col3_left,row5_top,col3_right,row5_bot
 .proc btn_add
         .word   col4_left - border_lt
         .word   row4_top - border_lt
-        .addr   tall_button_pattern
-        .byte   pattern_stride
+        .addr   tall_button_bitmap
+        .byte   bitmap_stride
         .byte   $00,$00,$00,$00,$00
         .word   button_width + border_lt + border_br
         .word   27              ; + is extra tall
@@ -472,12 +473,12 @@ box:    .word   col4_left,row4_top,col4_right,row5_bot
 .endproc
         .byte   0               ; sentinel
 
-        ;; Button patterns. These are used as bitmaps for
+        ;; Button bitmaps. These are used as bitmaps for
         ;; drawing the shadowed buttons.
 
-        ;; patterns are low 7 bits, 0=black 1=white
-        pattern_stride   := 3    ; bytes
-button_pattern:                 ; pattern for normal buttons
+        ;; bitmaps are low 7 bits, 0=black 1=white
+        bitmap_stride   := 3    ; bytes
+button_bitmap:                 ; bitmap for normal buttons
         .byte   px(%0000000),px(%0000000),px(%0000001)
         .byte   px(%0111111),px(%1111111),px(%1111100)
         .byte   px(%0111111),px(%1111111),px(%1111100)
@@ -492,8 +493,8 @@ button_pattern:                 ; pattern for normal buttons
         .byte   px(%0000000),px(%0000000),px(%0000000)
         .byte   px(%1000000),px(%0000000),px(%0000000)
 
-        wide_pattern_stride := 8
-wide_button_pattern:            ; pattern for '0' button
+        wide_bitmap_stride := 8
+wide_button_bitmap:            ; bitmap for '0' button
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%1111111)
         .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111110),px(%0111111)
         .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111110),px(%0111111)
@@ -508,7 +509,7 @@ wide_button_pattern:            ; pattern for '0' button
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0111111)
         .byte   px(%1000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0111111)
 
-tall_button_pattern:            ; pattern for '+' button
+tall_button_bitmap:            ; bitmap for '+' button
         .byte   px(%0000000),px(%0000000),px(%0000001)
         .byte   px(%0111111),px(%1111111),px(%1111100)
         .byte   px(%0111111),px(%1111111),px(%1111100)
@@ -659,7 +660,7 @@ farg:   .byte   $00,$00,$00,$00,$00,$00
 .proc title_bar_decoration      ; Params for A2D_DRAW_BITMAP
 left:   .word   115             ; overwritten
 top:    .word   $FFF7           ; overwritten
-pattern:.addr   pixels
+bitmap:.addr   pixels
 stride: .byte   1
         .byte   0,0,0,0,0       ; ???
 width:  .word   6
@@ -769,7 +770,7 @@ L0CE6:  .byte   $00,$00,$02,$00,$06,$00,$0E,$00
 ;;; ==================================================
 ;;; DA Init
 
-L0D18:  sta     ALTZPON
+init:   sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         A2D_CALL $1A, L08D4
@@ -950,7 +951,8 @@ trydel: cmp     #$7F            ; Delete?
 :       jmp     process_key
 bail:
 .endproc
-L0E94:  rts                     ; used by prev/next proc
+
+rts1:  rts                     ; used by next proc
 
 ;;; ==================================================
 ;;; Try to map a click to a button
@@ -963,7 +965,7 @@ L0E94:  rts                     ; used by prev/next proc
         A2D_CALL A2D_MAP_COORDS, map_coords_params
         lda     map_coords_params::clientx+1        ; ensure high bits of coords are 0
         ora     map_coords_params::clienty+1
-        bne     L0E94
+        bne     rts1
         lda     map_coords_params::clienty
         ldx     map_coords_params::clientx
 
@@ -1139,23 +1141,23 @@ L0FC7:  cmp     #'='            ; Equals?
         pha
         ldx     #<btn_eq::box
         ldy     #>btn_eq::box
-        jmp     L114C
+        jmp     do_op_click
 
 :       cmp     #'*'            ; Multiply?
         bne     :+
         pha
         ldx     #<btn_mul::box
         ldy     #>btn_mul::box
-        jmp     L114C
+        jmp     do_op_click
 
 :       cmp     #'.'            ; Decimal?
-        bne     L1003
+        bne     try_add
         ldx     #<btn_dec::box
         ldy     #>btn_dec::box
         jsr     depress_button
         lda     calc_d
         ora     calc_e
-        bne     L1002
+        bne     rts2
         lda     calc_l
         bne     :+
         inc     calc_l
@@ -1163,14 +1165,14 @@ L0FC7:  cmp     #'='            ; Equals?
         sta     calc_d
         jmp     L1107
 
-L1002:  rts
+rts2:   rts
 
-L1003:  cmp     #'+'            ; Add?
+try_add:cmp     #'+'            ; Add?
         bne     :+
         pha
         ldx     #<btn_add::box
         ldy     #>btn_add::box
-        jmp     L114C
+        jmp     do_op_click
 
 :       cmp     #'-'            ; Subtract?
         bne     trydiv
@@ -1185,88 +1187,88 @@ L1003:  cmp     #'+'            ; Add?
         ror     calc_n
         pla
         pha
-        jmp     L10FF
+        jmp     do_digit_click
 
 :       pla
         pha
-        jmp     L114C
+        jmp     do_op_click
 
 trydiv: cmp     #'/'            ; Divide?
         bne     :+
         pha
         ldx     #<btn_div::box
         ldy     #>btn_div::box
-        jmp     L114C
+        jmp     do_op_click
 
 :       cmp     #'0'            ; Digit 0?
         bne     :+
         pha
         ldx     #<btn_0::box
         ldy     #>btn_0::box
-        jmp     L10FF
+        jmp     do_digit_click
 
 :       cmp     #'1'            ; Digit 1?
         bne     :+
         pha
         ldx     #<btn_1::box
         ldy     #>btn_1::box
-        jmp     L10FF
+        jmp     do_digit_click
 
 :       cmp     #'2'            ; Digit 2?
         bne     :+
         pha
         ldx     #<btn_2::box
         ldy     #>btn_2::box
-        jmp     L10FF
+        jmp     do_digit_click
 
 :       cmp     #'3'            ; Digit 3?
         bne     :+
         pha
         ldx     #<btn_3::box
         ldy     #>btn_3::box
-        jmp     L10FF
+        jmp     do_digit_click
 
 :       cmp     #'4'            ; Digit 4?
         bne     :+
         pha
         ldx     #<btn_4::box
         ldy     #>btn_4::box
-        jmp     L10FF
+        jmp     do_digit_click
 
 :       cmp     #'5'            ; Digit 5?
         bne     :+
         pha
         ldx     #<btn_5::box
         ldy     #>btn_5::box
-        jmp     L10FF
+        jmp     do_digit_click
 
 :       cmp     #'6'            ; Digit 6?
         bne     :+
         pha
         ldx     #<btn_6::box
         ldy     #>btn_6::box
-        jmp     L10FF
+        jmp     do_digit_click
 
 :       cmp     #'7'            ; Digit 7?
         bne     :+
         pha
         ldx     #<btn_7::box
         ldy     #>btn_7::box
-        jmp     L10FF
+        jmp     do_digit_click
 
 :       cmp     #'8'            ; Digit 8?
         bne     :+
         pha
         ldx     #<btn_8::box
         ldy     #>btn_8::box
-        jmp     L10FF
+        jmp     do_digit_click
 
 :       cmp     #'9'            ; Digit 9?
         bne     :+
         pha
         ldx     #<btn_9::box
         ldy     #>btn_9::box
-        jmp     L10FF
+        jmp     do_digit_click
 
 :       cmp     #$7F            ; Delete?
         bne     end
@@ -1304,7 +1306,8 @@ loop:   lda     text_buffer1,x
 end:    rts
 .endproc
 
-L10FF:  jsr     depress_button
+do_digit_click:
+        jsr     depress_button
         bne     L1106
         pla
         rts
@@ -1346,7 +1349,8 @@ L113E:  inc     calc_l
 
 L114B:  rts
 
-L114C:  jsr     depress_button
+do_op_click:
+        jsr     depress_button
         bne     L1153
         pla
         rts
