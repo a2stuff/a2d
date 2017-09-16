@@ -77,6 +77,9 @@ A2D_SET_STATE   := $04          ; Set full drawing state
         ;; .byte vthick         vertical pen thickness
         ;; .byte 0,$7F,0,$88,0
 
+        ;; $05 used in DeskTop but not DAs - icon click
+        ;; (input length 0 bytes)
+
 A2D_SET_BOX   := $06           ; Set just the drawing box, subset of full state
         ;; (input length 16 bytes)
         ;; .word left           pixels from screen edge
@@ -144,6 +147,15 @@ A2D_DRAW_BITMAP := $14         ; Draw pattern
         ;; .word width          pixels
         ;; .word height         pixels
 
+        ;; $15 used in DeskTop but not DAs - icon redraw
+        ;; (input length 0 bytes)
+
+        ;; $16 used in DeskTop but not DAs - desktop icon drag
+        ;; (input length 0 bytes)
+
+        ;; $17 used in DeskTop but not DAs - maybe selection drag
+        ;; (input length 0 bytes)
+
 A2D_MEASURE_TEXT := $18
         ;; (input length 3 bytes)
         ;; .addr data
@@ -181,6 +193,9 @@ A2D_GET_INPUT   := $2A
 
 A2D_UNK_2B      := $2B          ; Unknown - possibly "reset drawing state"
         ;; (no parameters; pass $0000 as address)
+
+        ;; $2C used in DeskTop but not DAs
+        ;; (input length 0 bytes)
 
 A2D_UNK_2D      := $2D          ; Unknown - used in calculator
         ;; (input length 5 bytes)
@@ -228,6 +243,9 @@ A2D_DESTROY_WINDOW := $39
         ;; (input length 1 byte)
         ;; .byte id
 
+        ;; $3B used in DeskTop but not DAs - triggered by dragging window near right edge
+        ;; (input length 1 byte)
+
 A2D_QUERY_STATE      := $3C       ; get drawing state of window
         ;; (input length 3 bytes)
         ;; .byte id             window
@@ -245,6 +263,9 @@ A2D_QUERY_TARGET   := $40
         ;;      4 = resize box
         ;;      5 = close box
         ;; .byte id of window
+
+        ;; $41 used in DeskTop but not DAs - icon in window drop
+        ;; (input length 0 bytes)
 
 A2D_CLOSE_CLICK := $43
         ;; (input length 0 bytes)
