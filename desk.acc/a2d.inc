@@ -303,10 +303,11 @@ A2D_QUERY_CLIENT:= $48
         ;; .byte part (0 = client, 1 = vscroll, 2 = hscroll)
         ;; .byte scroll (1 = up/left, 2 = down/right, 3 = above/before, 4 = below/after, 5 = thumb)
 
-A2D_RESIZE_WINDOW := $49
+A2D_RESIZE_WINDOW := $49        ; ???
         ;; (input length 3 bytes)
-        ;; .byte ??
-        ;; .byte ??
+        ;; .byte ???    maybe part (i.e. HSCROLL or VSCROLL) ???
+        ;; .byte ???    width fraction ??
+        ;; .byte ???
 
 A2D_DRAG_SCROLL := $4A
         ;; (input length 5 bytes)
@@ -475,3 +476,9 @@ end:
         ;; $0D = return       (MT:M)  $1D = check        (MT:D)
         ;; $0E = (C)                  $1E = solid apple  (MT:@)
         ;; $0F = (R)                  $1F = open apple   (MT:A)
+
+        A2D_GLYPH_LARROW := $09
+        A2D_GLYPH_RARROW := $15
+        A2D_GLYPH_UARROW := $0B
+        A2D_GLYPH_DARROW := $0A
+        A2D_GLYPH_RETURN := $0D

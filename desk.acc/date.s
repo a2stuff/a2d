@@ -753,13 +753,13 @@ date_rect:
         .word   $20,$0F,$9A,$23
 
 label_ok:
-        A2D_DEFSTRING {"OK         ",$0D} ; ends with newline
+        A2D_DEFSTRING {"OK         ",A2D_GLYPH_RETURN} ;
 label_cancel:
         A2D_DEFSTRING "Cancel  ESC"
 label_uparrow:
-        A2D_DEFSTRING $0B ; up arrow
+        A2D_DEFSTRING A2D_GLYPH_UARROW
 label_downarrow:
-        A2D_DEFSTRING $0A ; down arrow
+        A2D_DEFSTRING A2D_GLYPH_DARROW
 
 label_cancel_pos:
         .word   $15,$38

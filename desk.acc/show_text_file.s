@@ -269,8 +269,9 @@ scroll: .byte   0               ; 1 = up, 2 = down, 3 = above, 4 = below, 5 = th
 
         ;; param block used in dead code (resize?)
 .proc resize_window_params
-L0986:  .byte   0
+part:   .byte   0
 L0987:  .byte   0
+        ;; needs one more byte?
 .endproc
 
 .proc update_scroll_params      ; called to update scroll bar position
@@ -590,11 +591,12 @@ wider:  lda     window_params::hscroll
         ldx     window_width+1
         cpx     #>max_width
         bne     enable
-        and     #(A2D_CWS_SCROLL_TRACK ^ $FF)   ; disable scroll
-        jmp     skip
+        and     #(<~A2D_CWS_SCROLL_TRACK)       ; disable scroll
+        jmp     :+
 
 enable: ora     #A2D_CWS_SCROLL_TRACK           ; enable scroll
-skip:   sta     window_params::hscroll
+
+:       sta     window_params::hscroll
         sec
         lda     #<max_width
         sbc     window_width
@@ -604,8 +606,8 @@ skip:   sta     window_params::hscroll
         sta     $07
         jsr     div_by_16
         sta     resize_window_params::L0987
-        lda     #$02
-        sta     resize_window_params::L0986
+        lda     #A2D_HSCROLL
+        sta     resize_window_params::part
         A2D_CALL A2D_RESIZE_WINDOW, resize_window_params ; change to clamped size ???
         jsr     calc_and_draw_mode
         jmp     finish_resize
@@ -1010,7 +1012,7 @@ do_line:
         lda     #1
         sbc     line_pos::left+1
         sta     L095C
-        jsr     L0EF3
+        jsr     find_text_run
         bcs     L0ED7
         clc
         lda     text_string::len
@@ -1059,7 +1061,8 @@ L0ED7:  jsr     restore_proportional_font_table_if_needed
 
 ;;; ==================================================
 
-L0EF3:  lda     #$FF
+.proc find_text_run
+        lda     #$FF
         sta     L0F9B
         lda     #0
         sta     run_width
@@ -1070,24 +1073,23 @@ L0EF3:  lda     #$FF
         sta     text_string::addr
         lda     $07
         sta     text_string::addr+1
-L0F10:  lda     L0945
-        bne     L0F22
+
+loop:   lda     L0945
+        bne     more
         lda     L0947
-        beq     L0F1F
+        beq     :+
         jsr     draw_text_run
         sec
         rts
 
-;;; ==================================================
-
-L0F1F:  jsr     L100C
-L0F22:  ldy     text_string::len
+:       jsr     ensure_page_buffered
+more:   ldy     text_string::len
         lda     ($06),y
         and     #$7F            ; clear high bit
         sta     ($06),y
         inc     L0945
         cmp     #$0D            ; return character
-        beq     L0F86
+        beq     finish_text_run
         cmp     #' '            ; space character
         bne     :+
         sty     L0F9B
@@ -1113,7 +1115,7 @@ L0F22:  ldy     text_string::len
         cmp     run_width
 :       bcc     :+
         inc     text_string::len
-        jmp     L0F10
+        jmp     loop
 
 :       lda     #0
         sta     L095A
@@ -1124,8 +1126,10 @@ L0F22:  ldy     text_string::len
         lda     L0946
         sta     L0945
 :       inc     text_string::len
+        ;; fall through
+.endproc
 
-L0F86:  jsr     draw_text_run
+finish_text_run:  jsr     draw_text_run
         ldy     text_string::len
         lda     ($06),y
         cmp     #$09            ; tab character?
@@ -1167,10 +1171,10 @@ loop:   lda     times70+1,x
         sta     line_pos::left
         lda     times70+1,x
         sta     line_pos::left+1
-        jmp     L0F86
+        jmp     finish_text_run
 done:   lda     #0
         sta     L095A
-        jmp     L0F86
+        jmp     finish_text_run
 
 times70:.word   70
         .word   140
@@ -1197,7 +1201,8 @@ end:    rts
 
 ;;; ==================================================
 
-L100C:  lda     text_string::addr+1
+.proc ensure_page_buffered
+        lda     text_string::addr+1
         cmp     #$12            ; #>default_buffer?
         beq     L102B
 
@@ -1215,31 +1220,35 @@ loop:   lda     $1300,y
         sta     $07
 L102B:  lda     #0
         sta     L0945
-        jsr     L103E
+        jsr     read_file_page
         lda     read_params::buffer+1
-        cmp     #$12            ; #>default_buffer?
-        bne     L103D
+        cmp     #>default_buffer
+        bne     :+
         inc     read_params::buffer+1
-L103D:  rts
+:       rts
+.endproc
 
 ;;; ==================================================
 
-.proc L103E
+.proc read_file_page
         lda     read_params::buffer
         sta     store+1
         lda     read_params::buffer+1
         sta     store+2
-        lda     #$20
-        ldx     #$00
+
+        lda     #' '            ; fill buffer with spaces
+        ldx     #0
         sta     RAMWRTOFF
 store:  sta     default_buffer,x         ; self-modified
         inx
         bne     store
-        sta     RAMWRTON
+
+        sta     RAMWRTON        ; read file chunk
         lda     #$00
         sta     L0947
         jsr     read_file
-        pha
+
+        pha                     ; copy read buffer main>aux
         lda     #$00
         sta     STARTLO
         sta     DESTINATIONLO
@@ -1252,8 +1261,9 @@ store:  sta     default_buffer,x         ; self-modified
         sec                     ; main>aux
         jsr     AUXMOVE
         pla
+
         beq     end
-        cmp     #$4C
+        cmp     #$4C            ; ???
         beq     done
         brk                     ; ????
 done:   lda     #$01
