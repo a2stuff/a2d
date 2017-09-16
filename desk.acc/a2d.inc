@@ -445,6 +445,33 @@ end:
         ;;      .byte len, name (length-prefixed, spaces before/after; 17 byte buffer)
 
 
-        font_size_count := $8801 ; num glyphs + 1 (for height) ??
-        font_height     := $8802
+        font_size_count := $8801 ; num glyphs + 1 (for height) / max glyphs ?
+        font_height     := $8802 ; 9 pixels
         font_width_table := $8803 ; width in pixels, indexed by ASCII code
+
+        font_glyphs     := $8883 ; $80 glyphs, organized by row, 9 bytes per
+        ;; So glyph for A $41
+        ;;  width is at $8803 + $41 = $8844 which is 7
+        ;;  row0 is at $8883 + $41 + (0 * $80) = $88C4 ~ $1E = %00011110
+        ;;  row1 is at $8883 + $41 + (1 * $80) = $8944 ~ $33 = %00110011
+        ;; etc
+        ;;
+        ;; Glyphs $00-$1F are useful symbols; some overlap with MouseText
+        ;; (called out as MT:X in the table below)
+        ;;
+        ;; $00 = space                $10 = TM left
+        ;; $01 = folder left  (MT:X)  $11 = TM right
+        ;; $02 = folder right (MT:Y)  $12 = pound
+        ;; $03 = hourglass    (MT:C)  $13 = pi
+        ;; $04 = insertion pt         $14 = divide
+        ;; $05 = pointer      (MT:B)  $15 = rarrow       (MT:U)
+        ;; $06 = vbar         (MT:_)  $16 = tri
+        ;; $07 = hbar         (MT:S)  $17 = open circ
+        ;; $08 = larrow               $18 = close        (MT:])
+        ;; $09 = left box             $19 = gray odd     (MT:W)
+        ;; $0A = darrow       (MT:J)  $1A = gray even    (MT:V)
+        ;; $0B = uarrow       (MT:K)  $1B = solid circ
+        ;; $0C = right box            $1C = inv check    (MT:E)
+        ;; $0D = return       (MT:M)  $1D = check        (MT:D)
+        ;; $0E = (C)                  $1E = solid apple  (MT:@)
+        ;; $0F = (R)                  $1F = open apple   (MT:A)
