@@ -464,15 +464,16 @@ end:    rts
 
 .endproc
 
+        font_width_backup := $1100
+
 .proc open_file_and_init_window
         lda     #0
         sta     fixed_mode_flag
 
-        ;; copy bytes (length at $8801) from $8802 to $10FF ???
-        ;; length is $7f in tests
-        ldx     $8801
+        ;; make backup of font width table; overwritten if fixed
+        ldx     font_size_count
         sta     RAMWRTOFF
-loop:   lda     $8802,x
+loop:   lda     font_width_table - 1,x
         sta     call_jt15+2,x
         dex
         bne     loop
@@ -661,7 +662,7 @@ end:    rts
         beq     end
         lda     L0949
         bne     end
-        jsr     L0E1D
+        jsr     clear_window
 end:    rts
 .endproc
 
@@ -960,11 +961,12 @@ end:    rts
         jmp     input_loop
 .endproc
 
-        ;; called on scroll
-L0E1D:  A2D_CALL A2D_SET_PATTERN, white_pattern
+.proc clear_window
+        A2D_CALL A2D_SET_PATTERN, white_pattern
         A2D_CALL A2D_FILL_RECT, window_params::box::hoffset
         A2D_CALL A2D_SET_PATTERN, black_pattern
         rts
+.endproc
 
 ;;; ==================================================
 ;;; Content Rendering
@@ -972,7 +974,7 @@ L0E1D:  A2D_CALL A2D_SET_PATTERN, white_pattern
 .proc draw_content
         lda     #0
         sta     L0949
-        jsr     L1129
+        jsr     overwrite_font_width_table
         jsr     set_file_mark
         lda     #<default_buffer
         sta     read_params::buffer
@@ -997,7 +999,7 @@ L0E68:  lda     L096D
         lda     L096C
         cmp     L096A
         bne     L0E7E
-        jsr     L0E1D
+        jsr     clear_window
         inc     L0948
 L0E7E:  A2D_CALL A2D_SET_POS, line_pos
         sec
@@ -1035,7 +1037,7 @@ L0E7E:  A2D_CALL A2D_SET_POS, line_pos
         inc     L096D
 :       jmp     L0E68
 
-L0ED7:  jsr     L1109
+L0ED7:  jsr     restore_font_table
         rts
 .endproc
 
@@ -1067,7 +1069,7 @@ L0F10:  lda     L0945
         bne     L0F22
         lda     L0947
         beq     L0F1F
-        jsr     L0FF6
+        jsr     draw_text_line
         sec
         rts
 
@@ -1091,7 +1093,7 @@ L0F22:  ldy     text_string::len
         jmp     L0F9E
 
 L0F48:  tay
-        lda     $8803,y
+        lda     font_width_table,y
         clc
         adc     L0F9C
         sta     L0F9C
@@ -1115,7 +1117,7 @@ L0F6E:  lda     #0
         lda     L0946
         sta     L0945
 :       inc     text_string::len
-L0F86:  jsr     L0FF6
+L0F86:  jsr     draw_text_line
         ldy     text_string::len
         lda     ($06),y
         cmp     #$09            ; tab character?
@@ -1170,14 +1172,16 @@ times70:.word   70
 .endproc
 
 ;;; Draws a line of content
-L0FF6:  lda     L0948
-        beq     L100B
+.proc draw_text_line
+        lda     L0948
+        beq     end
         lda     text_string::len
-        beq     L100B
+        beq     end
         A2D_CALL A2D_DRAW_TEXT, text_string
         lda     #1
         sta     L0949
-L100B:  rts
+end:    rts
+.endproc
 
 L100C:  lda     text_string::addr+1
         cmp     #$12            ; #>default_buffer?
@@ -1318,14 +1322,13 @@ loop:   clc
         rts
 .endproc
 
-;;; if fixed mode, do a main->aux copy of a code block ???
-.proc L1109
+.proc restore_font_table
         lda     fixed_mode_flag ; if not fixed (i.e. proportional)
         beq     done            ; then exit
 
-        start := $1100
-        end   := $117E
-        dest  := $8803
+        start := font_width_backup
+        end   := font_width_backup + $7E
+        dest  := font_width_table
 
         lda     #<start
         sta     STARTLO
@@ -1344,12 +1347,12 @@ loop:   clc
 done:   rts
 .endproc
 
-.proc L1129                     ; ???
+.proc overwrite_font_width_table
         lda     fixed_mode_flag ; if not fixed (i.e. proportional)
         beq     end             ; then exit
-        ldx     $8801
+        ldx     font_size_count
         lda     #7              ; 7 pixels/character
-loop:   sta     $8802,x
+loop:   sta     font_width_table - 1,x
         dex
         bne     loop
 end:    rts
@@ -1370,7 +1373,7 @@ end:    rts
         lda     fixed_mode_flag
         beq     set_flag
         dec     fixed_mode_flag ; clear flag (mode = proportional)
-        jsr     L1109
+        jsr     restore_font_table
         jmp     redraw
 
 set_flag:

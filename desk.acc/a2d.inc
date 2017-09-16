@@ -59,6 +59,8 @@ A2D_QUERY_SCREEN        := $03  ; Get screen state
         ;; .byte vthick         vertical pen thickness
         ;; .byte 0,$7F,0,$88    ??? (note: one byte shorter than SET_STATE)
 
+        ;; $8800 is possibly font (glyph metrics starts thereabouts)
+
 A2D_SET_STATE   := $04          ; Set full drawing state
         ;; (input length 36 bytes)
         ;; .word left           pixels from screen edge
@@ -441,3 +443,8 @@ end:
         ;;      .byte ??
         ;;      .byte ??
         ;;      .byte len, name (length-prefixed, spaces before/after; 17 byte buffer)
+
+
+        font_size_count := $8801 ; num glyphs + 1 (for height) ??
+        font_height     := $8802
+        font_width_table := $8803 ; width in pixels, indexed by ASCII code
