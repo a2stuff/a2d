@@ -1061,9 +1061,9 @@ L0ED7:  jsr     restore_proportional_font_table_if_needed
 
 L0EF3:  lda     #$FF
         sta     L0F9B
-        lda     #$00
-        sta     L0F9C
-        sta     L0F9D
+        lda     #0
+        sta     run_width
+        sta     run_width+1
         sta     L095A
         sta     text_string::len
         lda     $06
@@ -1074,7 +1074,7 @@ L0F10:  lda     L0945
         bne     L0F22
         lda     L0947
         beq     L0F1F
-        jsr     draw_text_line
+        jsr     draw_text_run
         sec
         rts
 
@@ -1096,26 +1096,26 @@ L0F22:  ldy     text_string::len
         sta     L0946
         pla
 :       cmp     #$09
-        bne     L0F48
-        jmp     L0F9E
+        bne     :+
+        jmp     handle_tab
 
-L0F48:  tay
+:       tay
         lda     font_width_table,y
         clc
-        adc     L0F9C
-        sta     L0F9C
+        adc     run_width
+        sta     run_width
         bcc     :+
-        inc     L0F9D
+        inc     run_width+1
 :       lda     L095C
-        cmp     L0F9D
+        cmp     run_width+1
         bne     :+
         lda     L095B
-        cmp     L0F9C
-:       bcc     L0F6E
+        cmp     run_width
+:       bcc     :+
         inc     text_string::len
         jmp     L0F10
 
-L0F6E:  lda     #0
+:       lda     #0
         sta     L095A
         lda     L0F9B
         cmp     #$FF
@@ -1124,30 +1124,31 @@ L0F6E:  lda     #0
         lda     L0946
         sta     L0945
 :       inc     text_string::len
-L0F86:  jsr     draw_text_line
+
+L0F86:  jsr     draw_text_run
         ldy     text_string::len
         lda     ($06),y
         cmp     #$09            ; tab character?
-        beq     L0F96
+        beq     tab
         cmp     #$0D            ; return character
-        bne     L0F99
-L0F96:  inc     text_string::len
-L0F99:  clc
+        bne     :+
+tab:    inc     text_string::len
+:       clc
         rts
 
 ;;; ==================================================
 
 L0F9B:  .byte   0
-L0F9C:  .byte   0
-L0F9D:  .byte   0
-.proc L0F9E                     ; ???
+run_width:  .word   0
+
+.proc handle_tab
         lda     #1
         sta     L095A
         clc
-        lda     L0F9C
+        lda     run_width
         adc     line_pos::left
         sta     line_pos::left
-        lda     L0F9D
+        lda     run_width+1
         adc     line_pos::left+1
         sta     line_pos::left+1
         ldx     #0
@@ -1183,7 +1184,7 @@ times70:.word   70
 ;;; ==================================================
 ;;; Draw a line of content
 
-.proc draw_text_line
+.proc draw_text_run
         lda     L0948
         beq     end
         lda     text_string::len
