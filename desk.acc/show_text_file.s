@@ -888,7 +888,7 @@ store:  sta     window_params::hspos
         sta     window_params::box::voffset
         sta     window_params::box::voffset+1
         ldx     update_scroll_params::pos
-loop:   beq     L0D9B
+loop:   beq     adjust_box_height
         clc
         lda     window_params::box::voffset
         adc     #50
@@ -899,8 +899,7 @@ loop:   beq     L0D9B
         jmp     loop
 .endproc
 
-.proc L0D9B                     ; ?? part of vscroll
-        ;; increase window_params::box height to cover full window (offset + height)
+.proc adjust_box_height
         clc
         lda     window_params::box::voffset
         adc     window_height
@@ -974,7 +973,7 @@ end:    rts
 .proc draw_content
         lda     #0
         sta     L0949
-        jsr     overwrite_font_width_table
+        jsr     assign_fixed_font_width_table_if_needed
         jsr     set_file_mark
         lda     #<default_buffer
         sta     read_params::buffer
@@ -993,15 +992,17 @@ end:    rts
         lda     #$0A            ; line spacing = 10
         sta     line_pos::base
         jsr     L0EDB
-L0E68:  lda     L096D
+
+do_line:
+        lda     L096D
         cmp     L096B
-        bne     L0E7E
+        bne     :+
         lda     L096C
         cmp     L096A
-        bne     L0E7E
+        bne     :+
         jsr     clear_window
         inc     L0948
-L0E7E:  A2D_CALL A2D_SET_POS, line_pos
+:       A2D_CALL A2D_SET_POS, line_pos
         sec
         lda     #250
         sbc     line_pos::left
@@ -1018,7 +1019,7 @@ L0E7E:  A2D_CALL A2D_SET_POS, line_pos
         bcc     :+
         inc     $07
 :       lda     L095A
-        bne     L0E68
+        bne     do_line
         clc
         lda     line_pos::base
         adc     #$0A            ; line spacing = 10
@@ -1035,11 +1036,13 @@ L0E7E:  A2D_CALL A2D_SET_POS, line_pos
 :       inc     L096C
         bne     :+
         inc     L096D
-:       jmp     L0E68
+:       jmp     do_line
 
-L0ED7:  jsr     restore_font_table
+L0ED7:  jsr     restore_proportional_font_table_if_needed
         rts
 .endproc
+
+;;; ==================================================
 
 .proc L0EDB                     ; ???
         lda     #250
@@ -1053,6 +1056,8 @@ L0ED7:  jsr     restore_font_table
         sta     L095A
         rts
 .endproc
+
+;;; ==================================================
 
 L0EF3:  lda     #$FF
         sta     L0F9B
@@ -1072,6 +1077,8 @@ L0F10:  lda     L0945
         jsr     draw_text_line
         sec
         rts
+
+;;; ==================================================
 
 L0F1F:  jsr     L100C
 L0F22:  ldy     text_string::len
@@ -1128,6 +1135,8 @@ L0F96:  inc     text_string::len
 L0F99:  clc
         rts
 
+;;; ==================================================
+
 L0F9B:  .byte   0
 L0F9C:  .byte   0
 L0F9D:  .byte   0
@@ -1171,7 +1180,9 @@ times70:.word   70
         .word   490
 .endproc
 
-;;; Draws a line of content
+;;; ==================================================
+;;; Draw a line of content
+
 .proc draw_text_line
         lda     L0948
         beq     end
@@ -1182,6 +1193,8 @@ times70:.word   70
         sta     L0949
 end:    rts
 .endproc
+
+;;; ==================================================
 
 L100C:  lda     text_string::addr+1
         cmp     #$12            ; #>default_buffer?
@@ -1207,6 +1220,8 @@ L102B:  lda     #0
         bne     L103D
         inc     read_params::buffer+1
 L103D:  rts
+
+;;; ==================================================
 
 .proc L103E
         lda     read_params::buffer
@@ -1261,6 +1276,8 @@ end:    rts
         ;; fall through
 .endproc
 
+;;; ==================================================
+
         ;; calculate line offset ?
 .proc L10A5
         lda     window_params::box::height
@@ -1288,6 +1305,8 @@ loop:   lda     L0966
         jmp     loop
 end:    rts
 .endproc
+
+;;; ==================================================
 
 .proc div_by_16                 ; input in $06/$07, output in a
         ldx     #4
@@ -1322,7 +1341,11 @@ loop:   clc
         rts
 .endproc
 
-.proc restore_font_table
+;;; ==================================================
+;;; Restore the font glyph width table when switching
+;;; back to proportional mode.
+
+.proc restore_proportional_font_table_if_needed
         lda     fixed_mode_flag ; if not fixed (i.e. proportional)
         beq     done            ; then exit
 
@@ -1347,7 +1370,11 @@ loop:   clc
 done:   rts
 .endproc
 
-.proc overwrite_font_width_table
+;;; ==================================================
+;;; Overwrite the font glyph width table (with 7s)
+;;; when switching to fixed width mode.
+
+.proc assign_fixed_font_width_table_if_needed
         lda     fixed_mode_flag ; if not fixed (i.e. proportional)
         beq     end             ; then exit
         ldx     font_size_count
@@ -1373,7 +1400,7 @@ end:    rts
         lda     fixed_mode_flag
         beq     set_flag
         dec     fixed_mode_flag ; clear flag (mode = proportional)
-        jsr     restore_font_table
+        jsr     restore_proportional_font_table_if_needed
         jmp     redraw
 
 set_flag:
