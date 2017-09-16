@@ -2,6 +2,7 @@
         .org $800
 
         .include "apple2.inc"
+        .include "../inc/ascii.inc"
         .include "../inc/prodos.inc"
         .include "../inc/auxmem.inc"
         .include "a2d.inc"
@@ -838,7 +839,7 @@ delta:  adc     #1              ; self-modified
 overflow:
         lda     #0
 store:  sta     window_params::hspos
-        jsr     L0D5E
+        jsr     adjust_box_width
         jsr     update_hscroll
         jsr     draw_content
         jsr     was_button_released
@@ -870,7 +871,7 @@ store:  sta     window_params::hspos
 .endproc
 
 ;;; only used from hscroll code?
-.proc L0D5E
+.proc adjust_box_width
         lda     window_params::hspos
         jsr     mul_by_16
         clc
@@ -909,7 +910,7 @@ loop:   beq     adjust_box_height
         lda     window_params::box::voffset+1
         adc     window_height+1
         sta     window_params::box::height+1
-        jsr     L10A5
+        jsr     calc_line_position
         lda     #0
         sta     L096A
         sta     L096B
@@ -983,7 +984,7 @@ end:    rts
         lda     #>default_buffer
         sta     read_params::buffer+1
         sta     $07
-        lda     #$00
+        lda     #0
         sta     L0945
         sta     L0946
         sta     L0947
@@ -1088,7 +1089,7 @@ more:   ldy     text_string::len
         and     #$7F            ; clear high bit
         sta     ($06),y
         inc     L0945
-        cmp     #$0D            ; return character
+        cmp     #ASCII_RETURN
         beq     finish_text_run
         cmp     #' '            ; space character
         bne     :+
@@ -1097,7 +1098,7 @@ more:   ldy     text_string::len
         lda     L0945
         sta     L0946
         pla
-:       cmp     #$09
+:       cmp     #ASCII_TAB
         bne     :+
         jmp     handle_tab
 
@@ -1132,9 +1133,9 @@ more:   ldy     text_string::len
 finish_text_run:  jsr     draw_text_run
         ldy     text_string::len
         lda     ($06),y
-        cmp     #$09            ; tab character?
+        cmp     #ASCII_TAB
         beq     tab
-        cmp     #$0D            ; return character
+        cmp     #ASCII_RETURN
         bne     :+
 tab:    inc     text_string::len
 :       clc
@@ -1203,8 +1204,8 @@ end:    rts
 
 .proc ensure_page_buffered
         lda     text_string::addr+1
-        cmp     #$12            ; #>default_buffer?
-        beq     L102B
+        cmp     #>default_buffer
+        beq     read
 
         ;; copy a page of characters from $1300 to the buffer
         ldy     #0
@@ -1218,7 +1219,8 @@ loop:   lda     $1300,y
         sta     $06
         lda     text_string::addr+1
         sta     $07
-L102B:  lda     #0
+
+read:   lda     #0
         sta     L0945
         jsr     read_file_page
         lda     read_params::buffer+1
@@ -1289,8 +1291,7 @@ end:    rts
 
 ;;; ==================================================
 
-        ;; calculate line offset ?
-.proc L10A5
+.proc calc_line_position
         lda     window_params::box::height
         sta     L0965
         lda     window_params::box::height+1

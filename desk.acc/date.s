@@ -338,7 +338,7 @@ init_window:
         lda     get_input_params::modifiers
         bne     input_loop
         lda     get_input_params::key
-        cmp     #KEY_ENTER
+        cmp     #KEY_RETURN
         bne     :+
         jmp     on_ok
 

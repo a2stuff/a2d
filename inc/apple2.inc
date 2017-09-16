@@ -13,7 +13,7 @@ ROMIN2          := $C082
 
 ;;; Key Codes
 
-KEY_ENTER       := $0D
+KEY_RETURN      := $0D
 KEY_ESCAPE      := $1B
 KEY_LEFT        := $08
 KEY_DOWN        := $0A
