@@ -394,11 +394,11 @@ end:    rts
         ;; If bigger than $2000, assume DHR
 
         lda     get_eof_params::length ; fancy 3-byte unsigned compare
-        cmp     #<hires_size+1
+        cmp     #<(hires_size+1)
         lda     get_eof_params::length+1
-        sbc     #>hires_size+1
+        sbc     #>(hires_size+1)
         lda     get_eof_params::length+2
-        sbc     #0
+        sbc     #^(hires_size+1)
         bcs     dhr
 
         jsr     show_shr_file

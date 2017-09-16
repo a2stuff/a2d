@@ -1031,9 +1031,9 @@ L0E7E:  A2D_CALL A2D_SET_POS, line_pos
         cmp     L0969
         beq     L0ED7
 :       inc     L096C
-        bne     L0ED4
+        bne     :+
         inc     L096D
-L0ED4:  jmp     L0E68
+:       jmp     L0E68
 
 L0ED7:  jsr     L1109
         rts
@@ -1321,24 +1321,27 @@ loop:   clc
 ;;; if fixed mode, do a main->aux copy of a code block ???
 .proc L1109
         lda     fixed_mode_flag ; if not fixed (i.e. proportional)
-        beq     end             ; then exit
+        beq     done            ; then exit
 
-        lda     #$00            ; start := $1100
+        start := $1100
+        end   := $117E
+        dest  := $8803
+
+        lda     #<start
         sta     STARTLO
-        lda     #$7E
-        sta     ENDLO           ; end := $117E
-        lda     #$11
+        lda     #<end
+        sta     ENDLO
+        lda     #>start
         sta     STARTHI
         sta     ENDHI
 
-        dest := $8803
         lda     #>dest
         sta     DESTINATIONHI
         lda     #<dest
         sta     DESTINATIONLO
         sec                     ; main>aux
         jsr     AUXMOVE
-end:    rts
+done:   rts
 .endproc
 
 .proc L1129                     ; ???
