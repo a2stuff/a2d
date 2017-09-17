@@ -617,5 +617,5 @@ cloop:  lda     (src),y
         rts
 .endproc
 
-        .include "hires_table.inc"
-        .include "hgr_to_dhr.inc"
+        .include "inc/hires_table.inc"
+        .include "inc/hgr_to_dhr.inc"

@@ -1,0 +1,31 @@
+
+
+DESKTOP2.$F1
+
+            file  / memory
+MATCH    -   $580 / $4000 AUX
+THRU     -  $857F / $BFFF AUX
+
+ ... skips $C000 - $CFFF (I/O Space)
+
+MATCH    -  $8580 / $D000 AUX
+THRU     -  $A27F / $ECFF AUX
+
+ ... skips $ED00 - $FAFF (???)
+
+MATCH    -  $A280 / $FB00 AUX
+THRU     -  $A77F / $FFFF AUX
+
+MATCH    -  $A780 / $4000 MAIN
+THRU     - $1267F / $BEFF MAIN
+
+ ... skips $BF00 - $BFFF (ProDOS Buffer)
+ ... skips $C000 - $CFFF (I/O Space)
+
+ ... skips $D000 - $FFFF (ProDOS)
+
+So rest must be loaded on demand
+
+           $12680 / ???
+... (includes strings about Selector List, Disk Copy, SOS, ...)
+           $1BCDF

@@ -1,9 +1,9 @@
 Disassembly of the desk accessories:
 
-* [Show Text File](show_text_file.s) - in progress! 75% complete
-* [Calculator](calculator.s) - in progress! 90% complete
-* [Date](date.s) - in progress! 95% complete
-* [Puzzle](puzzle.s) - in progress! 75% complete
+* [Show Text File](show_text_file.s) - in progress! 95% complete
+* [Calculator](calculator.s) - in progress! 99% complete
+* [Date](date.s) - in progress! 99% complete
+* [Puzzle](puzzle.s) - in progress! 99% complete
 * Sort Directory - _not started_
 
 New desk accessories:
@@ -18,8 +18,6 @@ New desk accessories:
 ## Files
 
 * `Makefile` - cleans/builds targets
-* `go.sh` - bash script to build, verify, and copy files
-
 * `orig/*.bin` - original binary (type $F1, start $800)
 * `infos/*.info` - da65 "info" file - used to inform disassembly
 * `*.s` - source (originally generated using da65, now modified)
@@ -40,7 +38,7 @@ Tips:
    and what parameters are, converting .word to .byte, etc) I
    leave this running in another window:
 
-   `while true; do clear; ./go.sh; sleep 1; done`
+   `while true; do clear; res/go.sh; sleep 1; done`
 
 
 ## Install Instructions
