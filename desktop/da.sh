@@ -8,7 +8,7 @@ LDFLAGS="--config apple2-asm.cfg"
 
 
 function doseg {
-    ../../desk.acc/res/make_info.pl $2 < "DESKTOP2_seg_$1" > "seg_$1.info"
+    #../../desk.acc/res/make_info.pl $2 < "DESKTOP2_seg_$1" > "seg_$1.info"
     echo ".org \$$2" > "seg_$1.s"
     $CC65/da65 "DESKTOP2_seg_$1" --info "seg_$1.info" >> "seg_$1.s"
     $CC65/ca65 $CAFLAGS --listing "seg_$1.list" -o "seg_$1.o" "seg_$1.s"
@@ -16,12 +16,12 @@ function doseg {
     diff "DESKTOP2_seg_$1" "seg_$1.built"
 }
 
-# Aux Memory Segment
-#doseg 00000_0057F 2000
-#doseg 00580_0857F 4000
-#doseg 08580_0A27F D000
-#doseg 0A280_0A77F FB00
 
-#doseg 0A780_1267F 4000
+doseg s0_loader 2000
+
+doseg s1_aux1 4000
+doseg s2_aux2 D000
+doseg s3_aux3 FB00
+doseg s4_main1 4000
 
 #doseg 12680_1BCDF

@@ -2,24 +2,28 @@
 
 DESKTOP2.$F1
 
+s0_loader   file  / memory
 LOADER   -     $0 / $2000 MAIN
 THRU     -   $57F / $257F MAIN
 
 
-            file  / memory
+s1_aux1
 MATCH    -   $580 / $4000 AUX
 THRU     -  $857F / $BFFF AUX
 
  ... skips $C000 - $CFFF (I/O Space)
 
+s2_aux2
 MATCH    -  $8580 / $D000 AUX
 THRU     -  $A27F / $ECFF AUX
 
  ... skips $ED00 - $FAFF (???)
 
+s3_aux3
 MATCH    -  $A280 / $FB00 AUX
 THRU     -  $A77F / $FFFF AUX
 
+s4_main1
 MATCH    -  $A780 / $4000 MAIN
 THRU     - $1267F / $BEFF MAIN
 
