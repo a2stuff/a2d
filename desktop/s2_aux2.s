@@ -1,7 +1,7 @@
 .org $D000
 ; da65 V2.16 - Git f5e9b401
-; Created:    2017-09-17 10:54:03
-; Input file: DESKTOP2_seg_08580_0A27F
+; Created:    2017-09-17 11:30:59
+; Input file: orig/DESKTOP2_s2_aux2
 ; Page:       1
 
 
