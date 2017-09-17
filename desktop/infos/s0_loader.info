@@ -29,10 +29,6 @@ LABEL { NAME "FOUT"; ADDR $ED34; };
 
 LABEL { NAME "COUT"; ADDR $FDED; };
 
-#RANGE { START $8800; END $939E; TYPE ByteTable; };
-#RANGE { START $DA20; END $DAFF; TYPE ByteTable; };
-#RANGE { START $E690; END $E6BF; TYPE ByteTable; };
-#RANGE { START $FB00; END $FFFF; TYPE ByteTable; };
 RANGE { START $201d; END $201d; TYPE ByteTable; };
 RANGE { START $201e; END $201f; TYPE AddrTable; };
 RANGE { START $20b9; END $20b9; TYPE ByteTable; };
@@ -55,3 +51,9 @@ RANGE { START $228d; END $228d; TYPE ByteTable; };
 RANGE { START $228e; END $228f; TYPE AddrTable; };
 RANGE { START $22b8; END $22b8; TYPE ByteTable; };
 RANGE { START $22b9; END $22ba; TYPE AddrTable; };
+
+RANGE { START $2000; END $2017; TYPE Code; };
+RANGE { START $202A; END $206A; TYPE ByteTable; };
+RANGE { START $2187; END $224F; TYPE ByteTable; };
+RANGE { START $2368; END $23FF; TYPE ByteTable; };
+RANGE { START $2545; END $257F; TYPE ByteTable; };

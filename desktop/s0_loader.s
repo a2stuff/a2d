@@ -1,6 +1,6 @@
 .org $2000
 ; da65 V2.16 - Git f5e9b401
-; Created:    2017-09-17 11:30:59
+; Created:    2017-09-17 12:00:53
 ; Input file: orig/DESKTOP2_s0_loader
 ; Page:       1
 
@@ -18,7 +18,6 @@ L03B3           := $03B3
 L03C1           := $03C1
 L03E5           := $03E5
 L0800           := $0800
-L0A8D           := $0A8D
 L1031           := $1031
 L1039           := $1039
 L103B           := $103B
@@ -26,17 +25,8 @@ L1044           := $1044
 L10F4           := $10F4
 L1129           := $1129
 L118B           := $118B
-L148D           := $148D
-L3000           := $3000
 A2D             := $4000
-L616F           := $616F
-L6544           := $6544
-L6552           := $6552
-L6964           := $6964
-L6E61           := $6E61
-L7808           := $7808
 L7ECA           := $7ECA
-L8D44           := $8D44
 UNKNOWN_CALL    := $8E00
 MLI             := $BF00
 RAMRDOFF        := $C002
@@ -46,7 +36,6 @@ RAMWRTON        := $C005
 ALTZPOFF        := $C008
 ALTZPON         := $C009
 LCBANK1         := $C08B
-LC100           := $C100
 LC300           := $C300
 AUXMOVE         := $C311
 XFER            := $C314
@@ -63,19 +52,22 @@ LFC58           := $FC58
 COUT            := $FDED
 LFE89           := $FE89
 LFE93           := $FE93
-LFF69           := $FF69
 L2000:  lda     $C083
 L2003:  lda     $C083
         ldy     #$00
-L2008:  .byte   $B9
-L2009:  rmb2    $20
-L200B:  .byte   $99
-L200C:  brk
-L200D:  .byte   $D1
+L2008:
+L2009           := * + 1
+L200A           := * + 2
+        lda     L2027,y
+L200B:
+L200C           := * + 1
+L200D           := * + 2
+        sta     $D100,y
 L200E:  lda     L2127,y
-L2011:  .byte   $99
-        brk
-L2013:  cmp     ($88)
+L2011:
+L2013           := * + 2
+        sta     $D200,y
+L2014:  dey
         bne     L2008
         lda     $C082
         jsr     MLI
@@ -90,46 +82,17 @@ L2022:  brk
         brk
 L2027:  jmp     L1044
 
-        brk
-        eor     $756F
-L202E:  .byte   $73
-        adc     $20
-        .byte   $44
-        adc     $73
-        .byte   $6B
-        brk
-        clc
-        .byte   $4C
-        .byte   $6F
+        .byte   $00,$4D,$6F,$75
+L202E:  .byte   $73,$65,$20,$44,$65,$73,$6B,$00
+        .byte   $18,$4C,$6F
 L2039:  .byte   $61
-L203A:  stz     $69
-        ror     L2067
-        eor     ($70,x)
-        bvs     L20AF
-        adc     $20
-L2045:  eor     #$49
-        jsr     L6544
-        .byte   $73
-L204B:  .byte   $6B
-L204C:  .byte   $54
-        bbr6    $70,L2058
-        .byte   $44
-        adc     $73
-        .byte   $6B
-        .byte   $54
-        bbr6    $70,L208A
-L2058:  tsb     $00
-        brk
-        asl     $0400,x
-        brk
-        brk
-        ora     ($00,x)
-        ora     ($90,x)
-        ora     ($03),y
-        plp
-L2067:  bpl     L2069
-L2069:  inc     a
-        brk
+L203A:  .byte   $64,$69,$6E,$67,$20,$41,$70,$70
+        .byte   $6C,$65,$20
+L2045:  .byte   $49,$49,$20,$44,$65,$73
+L204B:  .byte   $6B,$54,$6F,$70,$08,$44,$65,$73
+        .byte   $6B,$54,$6F,$70,$32,$04,$00,$00
+        .byte   $1E,$00,$04,$00,$00,$01,$00,$01
+        .byte   $90,$11,$03,$28,$10,$00,$1A,$00
         lda     $C082
         jsr     LFE93
         jsr     LFE89
@@ -139,9 +102,9 @@ L2069:  inc     a
         jsr     LC300
 L2080:  jsr     LFC58
         lda     #$00
-L2085:  sta     $C035
+        sta     $C035
         lda     #$40
-L208A:  sta     RAMWRTON
+        sta     RAMWRTON
         sta     $0100
         sta     $0101
         sta     RAMWRTOFF
@@ -154,16 +117,15 @@ L208A:  sta     RAMWRTON
         lsr     a
         sta     $24
         ldy     #$00
-        lda     $1010,y
+L20A8:  lda     $1010,y
         ora     #$80
-        .byte   $20
-        .byte   $ED
-L20AF:  sbc     $CCC8,x
-        bbr0    $10,L2085
-        sbc     ($20)
-        brk
-        bbs3    $CC,L20F4
-        .byte   $10
+        jsr     COUT
+        iny
+        cpy     $100F
+        bne     L20A8
+        jsr     MLI
+        .byte   $CC
+        .addr   L1039
         ldx     #$17
         lda     #$01
         sta     $BF58,x
@@ -189,12 +151,9 @@ L20E1:  lda     #$FF
         sta     $1189
         lda     $03FF
         sta     $118A
-        .byte   $AD
-        .byte   $83
-L20F4:  cpy     #$AD
-        .byte   $83
-        cpy     #$A0
-        brk
+        lda     $C083
+        lda     $C083
+        ldy     #$00
 L20FA:  lda     $1000,y
         sta     $D100,y
         lda     $1100,y
@@ -264,170 +223,34 @@ L2179:  lda     $C000
         bne     L2176
         jmp     L1044
 
-        plp
-        eor     #$6E
-        .byte   $73
-        adc     $72
-        stz     $20,x
-        stz     $68,x
-        adc     $20
-        .byte   $73
-        adc     $7473,y
-        adc     $6D
-        jsr     L6964
-        .byte   $73
-        .byte   $6B
-        jsr     L6E61
-        stz     $20
-        bvc     L2217
-        adc     $73
-        .byte   $73
-        jsr     L6552
-        stz     $75,x
-        adc     ($6E)
-        rol     a:$00
-        sta     $06
-        jmp     LFF69
-
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        jmp     L204C
-
-        .byte   $03
-        clc
-        jsr     L3000
-        brk
-        tsb     $00
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        ora     ($00,x)
-        .byte   $02
-        brk
-        bra     L221C
-L2217:  brk
-        php
-        .byte   $44
-        adc     $73
-L221C:  .byte   $6B
-        .byte   $54
-        bbr6    $70,L2253
-        brk
-        bbr3    $00,L2265
-        brk
-        rti
-
-        brk
-        rti
-
-        brk
-        php
-        bcc     L222F
-        brk
-        rti
-
-L222F:  brk
-        bne     L2232
-L2232:  .byte   $FB
-        brk
-        rti
-
-        brk
-        php
-        bcc     L223B
-        brk
-        .byte   $80
-L223B:  brk
-        ora     $0500,x
-        brk
-        bbr7    $00,L224B
-        rts
-
-        ora     ($01,x)
-        .byte   $02
-        .byte   $02
-        brk
-        brk
-        brk
-L224B:  asl     $A2
-        rmb1    $A9
-        brk
+        .byte   $28,$49,$6E,$73,$65,$72,$74,$20
+        .byte   $74,$68,$65,$20,$73,$79,$73,$74
+        .byte   $65,$6D,$20,$64,$69,$73,$6B,$20
+        .byte   $61,$6E,$64,$20,$50,$72,$65,$73
+        .byte   $73,$20,$52,$65,$74,$75,$72,$6E
+        .byte   $2E,$00,$00,$85,$06,$4C,$69,$FF
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$4C,$4C,$20,$03,$18,$20,$00
+        .byte   $30,$00,$04,$00,$00,$00,$00,$00
+        .byte   $00,$00,$01,$00,$02,$00,$80,$05
+        .byte   $00,$08,$44,$65,$73,$6B,$54,$6F
+        .byte   $70,$32,$00,$3F,$00,$40,$00,$40
+        .byte   $00,$40,$00,$08,$90,$02,$00,$40
+        .byte   $00,$D0,$00,$FB,$00,$40,$00,$08
+        .byte   $90,$02,$00,$80,$00,$1D,$00,$05
+        .byte   $00,$7F,$00,$08,$60,$01,$01,$02
+        .byte   $02,$00,$00,$00,$06,$A2,$17,$A9
+        .byte   $00
 L2250:  sta     $BF59,x
-L2253:  dex
+        dex
         bpl     L2250
         php
         sei
@@ -438,11 +261,11 @@ L2253:  dex
         and     #$FF
         beq     L2264
         brk
-L2264:  .byte   $AD
-L2265:  php
-        jsr     L148D
-        jsr     L0A8D
-        jsr     L7808
+L2264:  lda     L2008
+        sta     L2014
+        sta     L200A
+        php
+        sei
         jsr     MLI
         .byte   $CE
         .addr   L2013
@@ -563,158 +386,25 @@ L2352:  lda     ($06),y
         sta     RAMWRTOFF
         rts
 
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
         pha
         lda     $C061
         and     $C062
@@ -872,50 +562,11 @@ L24E5:  jsr     L02E6
         jsr     COUT
         rts
 
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        .byte   $1B
-        adc     $1B
-        .byte   $54
-        and     ($36),y
-        ora     #$4C
-        jsr     L8D44
-        ora     #$5A
-        sta     $1B00
-        lsr     $541B
-        and     ($34)
-        brk
-        jmp     LC100
-
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$1B,$65,$1B,$54,$31,$36
+        .byte   $09,$4C,$20,$44,$8D,$09,$5A,$8D
+        .byte   $00,$1B,$4E,$1B,$54,$32,$34,$00
+        .byte   $4C,$00,$C1,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00
