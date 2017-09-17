@@ -2,6 +2,10 @@
 
 DESKTOP2.$F1
 
+LOADER   -     $0 / $2000 MAIN
+THRU     -   $57F / $257F MAIN
+
+
             file  / memory
 MATCH    -   $580 / $4000 AUX
 THRU     -  $857F / $BFFF AUX
