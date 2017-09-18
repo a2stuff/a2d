@@ -245,3 +245,9 @@ RANGE { START $a95d; END $a95d; TYPE ByteTable; };
 RANGE { START $a95e; END $a95f; TYPE AddrTable; };
 RANGE { START $bff8; END $bff8; TYPE ByteTable; };
 RANGE { START $bff9; END $bffa; TYPE AddrTable; };
+
+RANGE { START $403B; END $4041; TYPE Code; };
+RANGE { START $407F; END $40E4; TYPE Code; };
+
+RANGE { START $40E5; END $431f; TYPE ByteTable; };
+RANGE { START $44A1; END $4DAE; TYPE ByteTable; };

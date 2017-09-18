@@ -79,12 +79,11 @@ call_init:
 
         ;; Used after a drag-and-drop is completed;
         ;; redraws the window.
-.proc call_4015_main
+.proc redraw_screen_and_window
 
         zp_stash := $20
 
-        ;; Call jump table entry $4015 in main memory, by
-        ;; copying a trampoline routine to the ZP.
+        ;; Copying trampoline routine to the ZP.
 
         lda     LCBANK1
         lda     LCBANK1
@@ -121,7 +120,7 @@ skip:   lda     #0
 .proc routine
         sta     RAMRDOFF
         sta     RAMWRTOFF
-        jsr     JUMP_TABLE_15
+        jsr     JUMP_TABLE_REDRAW_ALL
         sta     RAMRDON
         sta     RAMWRTON
         rts
@@ -925,7 +924,7 @@ loop:   lda     routine,x
         lda     LCBANK1
         A2D_CALL A2D_DRAG_WINDOW, drag_params
         lda     ROMIN2
-        jsr     call_4015_main  ; redraws window
+        jsr     redraw_screen_and_window
         rts
 
 ;;; ==================================================

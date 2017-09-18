@@ -8,6 +8,10 @@
 A2D             := $4000
 
 UNKNOWN_CALL    := $8E00
+        ;; MLI-style call (call, addr)
+        ;; Bounces to $93BC
+        ;; References jump table at 939E
+
 
         ;; These must be called from main memory (RAMRDON/RAMWRTON)
 JUMP_TABLE_03   := $4003        ; ???
@@ -16,7 +20,7 @@ JUMP_TABLE_09   := $4009        ; ???
 JUMP_TABLE_0C   := $400C        ; ??? (made "items/in disk/..." redraw oddly)
 JUMP_TABLE_0F   := $400F        ; ???
 JUMP_TABLE_12   := $4012        ; ???
-JUMP_TABLE_15   := $4015        ; ???
+JUMP_TABLE_REDRAW_ALL  := $4015 ; Redraw all windows (e.g. after a drag)
 JUMP_TABLE_18   := $4018        ; ???
 JUMP_TABLE_CLEAR_SEL   := $401E ; Clear DeskTop selection
 JUMP_TABLE_MLI  := $4021        ; ProDOS MLI call (Y=call, X,A=params addr)

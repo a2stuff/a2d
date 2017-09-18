@@ -78,12 +78,13 @@ stash_stack:  .byte   0
         window_id = $33
 
 ;;; ==================================================
+;;; Redraw the screen (all windows) after a drag
 
-.proc call_4015_main
+.proc redraw_screen
 
         dest := $20
 
-        ;; copy following "call 4015" routine to $20 and call it
+        ;; copy following routine to $20 and call it
         ldx     #sizeof_routine
 loop:   lda     routine,x
         sta     dest,x
@@ -109,7 +110,7 @@ skip:   lda     #0
 .proc routine
         sta     RAMRDOFF
         sta     RAMWRTOFF
-        jsr     JUMP_TABLE_15
+        jsr     JUMP_TABLE_REDRAW_ALL
         sta     RAMRDON
         sta     RAMWRTON
         rts
@@ -762,7 +763,7 @@ check_title:
         sta     drag_window_params::id
         A2D_CALL A2D_DRAG_WINDOW, drag_window_params
         ldx     #$23
-        jsr     call_4015_main
+        jsr     redraw_screen
         rts
 
         ;; on key press - exit if Escape

@@ -476,7 +476,7 @@ end:    rts
         ldx     font_size_count
         sta     RAMWRTOFF
 loop:   lda     font_width_table - 1,x
-        sta     call_jt15+2,x
+        sta     font_width_backup - 1,x
         dex
         bne     loop
         sta     RAMWRTON
@@ -563,7 +563,7 @@ title:  jsr     on_title_bar_click
 ;;; This is dead code (no resize handle!) and may be buggy
 .proc on_resize_click
         A2D_CALL A2D_DRAG_RESIZE, resize_drag_params
-        jsr     call_jt15           ; call $4015 on main
+        jsr     redraw_screen
         jsr     calc_window_size
 
         max_width := default_width
@@ -1344,10 +1344,10 @@ loop:   clc
         rts
 .endproc
 
-.proc call_jt15
-        lda     #<JUMP_TABLE_15
-        sta     call_main_addr     ; self-modified
-        lda     #>JUMP_TABLE_15
+.proc redraw_screen
+        lda     #<JUMP_TABLE_REDRAW_ALL
+        sta     call_main_addr
+        lda     #>JUMP_TABLE_REDRAW_ALL
         sta     call_main_addr+1
         jsr     call_main_trampoline
         rts
