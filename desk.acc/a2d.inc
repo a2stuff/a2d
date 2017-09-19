@@ -113,11 +113,14 @@ A2D_UNK_0C      := $0C          ; Unknown - used in calculator
 
 A2D_SET_POS     := $0E
         ;; (input length 4 bytes)
-        ;; .word x
-        ;; .word y
+        ;; .word xcoord
+        ;; .word ycoord
 
+A2D_DRAW_LINE   := $0F          ; Draw line (from SET_POS)
         ;; $0F used in puzzle
         ;; (input length 4 bytes)
+        ;; .word xdelta         signed, delta in pixels
+        ;; .word ydelta
 
 A2D_FILL_RECT   := $11          ; With selected simple pattern (SET_PATTERN)
         ;; (input length 8 bytes)

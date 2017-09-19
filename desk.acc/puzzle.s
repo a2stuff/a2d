@@ -533,12 +533,15 @@ piece16:
         .res    8, $FF
         .byte   $00
 
-.proc set_pos_params            ; for what ??? (board is at 5,3)
-        .word   5, 2
+;; line across top of puzzle (bitmaps include bottom edges)
+.proc set_pos_params
+xcoord: .word   5
+ycoord: .word   2
 .endproc
-
-        ;; Param block for $0F call (4 bytes)
-L0D91:  .byte   $70,$00,$00,$00 ; ???
+.proc draw_line_params
+xdelta: .word   112
+ydelta: .word   0
+.endproc
 
         ;; hole position (0..3, 0..3)
 hole_x: .byte   0
@@ -974,8 +977,10 @@ draw_window:
         A2D_CALL A2D_SET_PATTERN, pattern_speckles
         A2D_CALL A2D_FILL_RECT, fill_rect_params
         A2D_CALL A2D_SET_PATTERN, pattern_black
+
         A2D_CALL A2D_SET_POS, set_pos_params
-        A2D_CALL $0F, L0D91     ; ???
+        A2D_CALL A2D_DRAW_LINE, draw_line_params
+
         jsr     draw_all
 
         lda     #window_id
