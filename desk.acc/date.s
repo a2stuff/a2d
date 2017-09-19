@@ -658,9 +658,7 @@ dialog_result:  .byte   0
 
 .proc destroy
         A2D_CALL A2D_DESTROY_WINDOW, destroy_window_params
-        jsr     UNKNOWN_CALL
-        .byte   $0C
-        .addr   0
+        DESKTOP_CALL DESKTOP_REDRAW_ICONS
 
         ;; Copy the relay routine to the zero page
         dest := $20

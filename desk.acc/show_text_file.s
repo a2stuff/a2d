@@ -549,11 +549,7 @@ title:  jsr     on_title_bar_click
         beq     input_loop      ; nope
         jsr     close_file
         A2D_CALL A2D_DESTROY_WINDOW, window_params
-
-        jsr     UNKNOWN_CALL    ; ???
-        .byte   $0C
-        .addr   0
-
+        DESKTOP_CALL DESKTOP_REDRAW_ICONS
         rts                     ; exits input loop
 .endproc
 
@@ -948,9 +944,7 @@ end:    rts
 .endproc
 
 .proc finish_resize             ; only called from dead code
-        jsr     UNKNOWN_CALL
-        .byte   $0C
-        .addr   0
+        DESKTOP_CALL DESKTOP_REDRAW_ICONS
         A2D_CALL A2D_SET_STATE, window_params::box
         lda     window_params::hscroll
         ror     a               ; check if low bit (track enabled) is set

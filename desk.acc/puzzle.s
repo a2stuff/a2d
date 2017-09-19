@@ -99,9 +99,7 @@ loop:   lda     routine,x
         bit     window_pos_flag
         bmi     skip
 
-        jsr     UNKNOWN_CALL    ; update window pos?
-        .byte   $0C
-        .addr   0
+        DESKTOP_CALL DESKTOP_REDRAW_ICONS
 
 skip:   lda     #0
         sta     window_pos_flag
@@ -735,10 +733,7 @@ bail:   rts
         beq     bail
 destroy:
         A2D_CALL A2D_DESTROY_WINDOW, destroy_window_params
-
-        jsr     UNKNOWN_CALL    ; ???
-        .byte   $0C
-        .addr   0
+        DESKTOP_CALL DESKTOP_REDRAW_ICONS
 
         target = $20            ; copy following to ZP and run it
         ldx     #sizeof_routine

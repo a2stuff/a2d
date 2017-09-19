@@ -377,12 +377,8 @@ end:    rts
         bne     input_loop      ; nope, keep waiting
 
         A2D_CALL A2D_DESTROY_WINDOW, window_params
-
+        DESKTOP_CALL DESKTOP_REDRAW_ICONS
         jsr     unstash_menu
-
-        jsr     UNKNOWN_CALL    ; ???
-        .byte   $0C
-        .addr   0
 
         rts                     ; exits input loop
 .endproc

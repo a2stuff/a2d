@@ -102,12 +102,10 @@ call_init:
         ;; ???
         lda     LCBANK1
         lda     LCBANK1
-        bit     redraw_flag
 
+        bit     redraw_flag     ; BUG: https://github.com/inexorabletash/a2d/issues/33
         bmi     skip
-        jsr     UNKNOWN_CALL
-        .byte   $0C
-        .addr   0
+        DESKTOP_CALL DESKTOP_REDRAW_ICONS
 
         ;; ???
 skip:   lda     #0
@@ -144,6 +142,8 @@ redraw_flag:  .byte   0         ; ???
         sta     redraw_flag
         rts
 
+        ;; Is skipping this responsible for display redraw bug?
+        ;; https://github.com/inexorabletash/a2d/issues/34
 :       A2D_CALL A2D_QUERY_STATE, query_state_params
         A2D_CALL A2D_SET_STATE, state_params
         lda     query_state_params_id
@@ -891,9 +891,7 @@ ignore_click:
 exit:   lda     LCBANK1
         lda     LCBANK1
         A2D_CALL A2D_DESTROY_WINDOW, destroy_window_params
-        jsr     UNKNOWN_CALL
-        .byte   $0C
-        .addr   0
+        DESKTOP_CALL DESKTOP_REDRAW_ICONS
         lda     ROMIN2
         A2D_CALL $1A, L08D5     ; ??? one byte input value?
 

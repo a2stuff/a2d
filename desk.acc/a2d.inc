@@ -3,17 +3,9 @@
 ;;; ==================================================
 
 ;;; ==================================================
-;;; Entry Points
+;;; Direct Calls
 
-A2D             := $4000
-
-UNKNOWN_CALL    := $8E00
-        ;; MLI-style call (call, addr)
-        ;; Bounces to $93BC
-        ;; References jump table at 939E
-
-
-        ;; These must be called from main memory (RAMRDON/RAMWRTON)
+        ;; These must be called from main memory (RAMRDOFF/RAMWRTOFF)
 JUMP_TABLE_03   := $4003        ; ???
 JUMP_TABLE_06   := $4006        ; ???
 JUMP_TABLE_09   := $4009        ; ???
@@ -37,6 +29,11 @@ JUMP_TABLE_3F   := $403F        ; ???
 
 ;;; ==================================================
 ;;; A2D Calls
+
+A2D             := $4000
+        ;; MLI-style call (jsr A2D ; .byte call ; .addr params)
+        ;; Call from AUX (RAMRDON/RAMWRTON)
+
 
 ;;; $40E5,(call*2) is the jump table used for processing these calls
 ;;; $4184,(call*2) defines param blocks input length
@@ -387,6 +384,18 @@ A2D_DEFAULT_MSKAND := $FF
 A2D_DEFAULT_MSKOR  := $00
 
 ;;; ==================================================
+
+DESKTOP    := $8E00
+        ;; MLI-style call (jsr A2D ; .byte call ; .addr params)
+        ;; Call from AUX (RAMRDON/RAMWRTON)
+
+        ;; Implementation bounces to $93BC, uses jump table at $939E
+
+;;; This is the only known call:
+
+DESKTOP_REDRAW_ICONS := $0C     ; Repaints desktop icons
+
+;;; ==================================================
 ;;; Macros
 
 ;;; Call an A2D entry point:
@@ -408,6 +417,26 @@ A2D_DEFAULT_MSKOR  := $00
         .addr 0
 .endif
 .endmacro
+
+;;; ------------------------------------
+;;; Same as above, but for DESKTOP
+
+.macro  DESKTOP_CALL    op, addr, label
+        jsr DESKTOP
+        .byte op
+
+.if .paramcount > 2
+        label := *
+.endif
+
+.if .paramcount > 1
+        .addr addr
+.else
+        .addr 0
+.endif
+.endmacro
+
+;;; ------------------------------------
 
 .macro A2D_DEFSTRING str, label ; String definition, for use with A2D_TEXT
         .local  data            ; Call as A2D_DEFSTRING "abc"
