@@ -757,14 +757,33 @@ create_window_params_top := create_window_params::top
 
 title:  PASCAL_STRING "Calc"
 
-        ;; param block for $24 call (just before entering input loop)
-L0CE6:  .byte   $00,$00,$02,$00,$06,$00,$0E,$00
-        .byte   $1E,$00,$3E,$00,$7E,$00,$1A,$00
-        .byte   $30,$00,$30,$00,$60,$00,$00,$00
-        .byte   $03,$00,$07,$00,$0F,$00,$1F,$00
-        .byte   $3F,$00,$7F,$00,$7F,$01,$7F,$00
-        .byte   $78,$00,$78,$00,$70,$01,$70,$01
-        .byte   $01,$01
+cursor: .byte   px(%0000000),px(%0000000) ; cursor
+        .byte   px(%0100000),px(%0000000)
+        .byte   px(%0110000),px(%0000000)
+        .byte   px(%0111000),px(%0000000)
+        .byte   px(%0111100),px(%0000000)
+        .byte   px(%0111110),px(%0000000)
+        .byte   px(%0111111),px(%0000000)
+        .byte   px(%0101100),px(%0000000)
+        .byte   px(%0000110),px(%0000000)
+        .byte   px(%0000110),px(%0000000)
+        .byte   px(%0000011),px(%0000000)
+        .byte   px(%0000000),px(%0000000)
+
+        .byte   px(%1100000),px(%0000000) ; mask
+        .byte   px(%1110000),px(%0000000)
+        .byte   px(%1111000),px(%0000000)
+        .byte   px(%1111100),px(%0000000)
+        .byte   px(%1111110),px(%0000000)
+        .byte   px(%1111111),px(%0000000)
+        .byte   px(%1111111),px(%1000000)
+        .byte   px(%1111111),px(%0000000)
+        .byte   px(%0001111),px(%0000000)
+        .byte   px(%0001111),px(%0000000)
+        .byte   px(%0000111),px(%1000000)
+        .byte   px(%0000111),px(%1000000)
+
+        .byte   1, 1            ; hotspot
 
 ;;; ==================================================
 ;;; DA Init
@@ -772,15 +791,15 @@ L0CE6:  .byte   $00,$00,$02,$00,$06,$00,$0E,$00
 init:   sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
-        A2D_CALL $1A, L08D4
+        A2D_CALL $1A, L08D4     ; if NOP'd, display renders like a bar code later
         A2D_CALL A2D_CREATE_WINDOW, create_window_params
         A2D_CALL A2D_QUERY_SCREEN, state_params
         A2D_CALL A2D_SET_STATE, state_params     ; set clipping bounds?
         A2D_CALL $2B                          ; reset drawing state?
         lda     #$01
         sta     input_state_params::state
-        A2D_CALL $2D, input_state_params
-        A2D_CALL A2D_GET_INPUT, input_state_params
+        A2D_CALL $2D, input_state_params ; ???
+        A2D_CALL A2D_GET_INPUT, input_state_params ; ???
         lda     ROMIN2
         jsr     reset_buffer2
         lda     #window_id
@@ -839,7 +858,8 @@ loop:   lda     adjust_txtptr_copied-1,x
         lda     #'C'
         jsr     process_key
 
-        A2D_CALL $24, L0CE6
+        ;; previous draws mangle the cursor (why???)
+        A2D_CALL A2D_SET_CURSOR, cursor ; Why not use JUMP_TABLE_CUR_POINTER ?
         ;; fall through
 
 ;;; ==================================================

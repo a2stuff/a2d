@@ -174,8 +174,12 @@ A2D_UNK_1A      := $1A          ; Unknown - used in calculator before window cre
                                 ; and after destruction
         ;; (input length 1 byte)
 
-A2D_UNK_24      := $24          ; Unknown - used in calculator
-        ;; (no parameters; pass $0000 as address)
+A2D_SET_CURSOR  := $24          ; Change cursor pattern
+        ;; (input not copied)
+        ;; .res 24      2x12 byte bitmap
+        ;; .res 24      2x12 byte mask
+        ;; .byte hotx   hotspot coords
+        ;; .byte hoty
 
 A2D_SHOW_CURSOR := $25
         ;; (no parameters; pass $0000 as address)
