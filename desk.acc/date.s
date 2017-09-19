@@ -172,8 +172,11 @@ month_rect:
 year_rect:
         .word   $7F,$14,$95,$1E
 
-        ;; Params for $0C call (1 byte?)
-L08FC:  .res    8, $00
+.proc text_mask_params
+mask:   .byte   0
+.endproc
+
+        .res    7, $00          ; ???
         .byte   $FF
 
 .proc white_pattern
@@ -529,7 +532,7 @@ go:     lda     selected_field
         sta     gosub+2
 
 gosub:  jsr     $1000           ; self modified
-        A2D_CALL $0C, L08FC
+        A2D_CALL A2D_SET_TEXT_MASK, text_mask_params
         jmp     draw_selected_field
 .endproc
 

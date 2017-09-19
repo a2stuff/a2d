@@ -574,8 +574,9 @@ white_pattern:
         .res    8, $FF
         .byte   $00
 
-        ;; arg for $0C call ???
-L0BEF:  .byte   $7F
+.proc text_mask_params
+mask:  .byte   $7F
+.endproc
 
         display_left    := 10
         display_top     := 5
@@ -1591,8 +1592,7 @@ loop:   lda     #' '
         A2D_CALL A2D_DRAW_RECT, frame_display_params
         A2D_CALL A2D_SET_PATTERN, white_pattern
         A2D_CALL A2D_FILL_RECT, clear_display_params
-
-        A2D_CALL $0C, L0BEF     ; ???
+        A2D_CALL A2D_SET_TEXT_MASK, text_mask_params
         ;; fall through
 .endproc
 

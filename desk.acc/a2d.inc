@@ -108,10 +108,11 @@ A2D_SET_THICKNESS := $0A
         ;; .byte hthick         horizontal pen thickness
         ;; .byte vthick         vertical pen thickness
 
-A2D_UNK_0C      := $0C          ; Unknown - used in calculator
+A2D_SET_TEXT_MASK := $0C        ; Stored to background before XORing glyph
         ;; (input length 1 byte)
+        ;; .byte mask
 
-A2D_SET_POS     := $0E
+A2D_SET_POS     := $0E          ; Start of subsequent DRAW_TEXT, DRAW_LINE
         ;; (input length 4 bytes)
         ;; .word xcoord
         ;; .word ycoord
