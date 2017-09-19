@@ -33,8 +33,8 @@ for (my $i = 0; $i < 256; ++$i) {
 }
 
 print "\n";
-print ";;; HGR to DHR - Aux Mem Bytes\n";
-print "hgr_to_dhr_aux:\n";
+print ";;; HR to DHR - Aux Mem Bytes\n";
+print "hr_to_dhr_aux:\n";
 for (my $i = 0; $i < 256; $i += 8) {
     print "        .byte   ";
     for (my $j = 0; $j < 8; ++$j) {
@@ -44,8 +44,8 @@ for (my $i = 0; $i < 256; $i += 8) {
     print "\n";
 }
 print "\n";
-print ";;; HGR to DHR - Main Mem Bytes\n";
-print "hgr_to_dhr_main:\n";
+print ";;; HR to DHR - Main Mem Bytes\n";
+print "hr_to_dhr_main:\n";
 for (my $i = 0; $i < 256; $i += 8) {
     print "        .byte   ";
     for (my $j = 0; $j < 8; ++$j) {

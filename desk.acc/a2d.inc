@@ -186,11 +186,11 @@ A2D_HIDE_CURSOR := $26
 A2D_GET_INPUT   := $2A
         ;; (input length 0 bytes)
         ;; (output length 5 bytes)
-        ;; .byte state     (0=up, 1=press, 2=release, 3=key, 4=held)
-        ;; if state is not 3:
-        ;;   .byte key       (ASCII code; high bit clear)
-        ;;   .byte modifiers (0=none, 1=open-apple, 2=closed-apple, 3=both)
-        ;; if state is 3:
+        ;; .byte state          (A2D_INPUT_*)
+        ;; if state is A2D_INPUT_KEY:
+        ;;   .byte key          (ASCII code; high bit clear)
+        ;;   .byte modifiers    (0=none, 1=open-apple, 2=closed-apple, 3=both)
+        ;; if state otherwise:
         ;;   .word xcoord
         ;;   .word ycoord
 

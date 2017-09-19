@@ -1,6 +1,6 @@
 
-;;; HGR to DHR - Aux Mem Bytes
-hgr_to_dhr_aux:
+;;; HR to DHR - Aux Mem Bytes
+hr_to_dhr_aux:
         .byte   $00, $01, $06, $07, $18, $19, $1e, $1f
         .byte   $60, $61, $66, $67, $78, $79, $7e, $7f
         .byte   $00, $01, $06, $07, $18, $19, $1e, $1f
@@ -34,8 +34,8 @@ hgr_to_dhr_aux:
         .byte   $00, $03, $0c, $0f, $30, $33, $3c, $3f
         .byte   $40, $43, $4c, $4f, $70, $73, $7c, $7f
 
-;;; HGR to DHR - Main Mem Bytes
-hgr_to_dhr_main:
+;;; HR to DHR - Main Mem Bytes
+hr_to_dhr_main:
         .byte   $00, $80, $00, $80, $00, $80, $00, $80
         .byte   $00, $80, $00, $80, $00, $80, $00, $80
         .byte   $03, $83, $03, $83, $03, $83, $03, $83

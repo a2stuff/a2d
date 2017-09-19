@@ -2,6 +2,7 @@
         .org $800
 
         .include "apple2.inc"
+        .include "../inc/apple2.inc"
         .include "../inc/prodos.inc"
         .include "../inc/auxmem.inc"
         .include "a2d.inc"
@@ -188,7 +189,7 @@ data:   .res    64, 0
 params_end:
 ;;; ----------------------------------------
 
-        window_id := $64
+        window_id := 100
 
 .proc line_pos
 left:   .word   0
@@ -198,6 +199,16 @@ base:   .word   0
 
 .proc input_params             ; queried to track mouse-up
 state:  .byte   $00
+
+;;; if state is A2D_INPUT_KEY
+key    := *
+modifiers := *+1
+
+;;; otherwise
+xcoord := *
+ycoord := *+2
+
+        .res    4               ; space for both
 .endproc
 
         default_width := 560
@@ -355,13 +366,12 @@ end:    rts
         sta     read_params::ref_num
         sta     close_params::ref_num
 
+        A2D_CALL A2D_HIDE_CURSOR
         jsr     stash_menu
-
-        ;; create window
         A2D_CALL A2D_CREATE_WINDOW, window_params
         A2D_CALL A2D_SET_STATE, window_params::box
-
         jsr     show_file
+        A2D_CALL A2D_SHOW_CURSOR
 
         A2D_CALL $2B            ; ???
         ;; fall through
@@ -373,18 +383,31 @@ end:    rts
 .proc input_loop
         A2D_CALL A2D_GET_INPUT, input_params
         lda     input_params::state
-        cmp     #1              ; was clicked?
-        bne     input_loop      ; nope, keep waiting
+        cmp     #A2D_INPUT_DOWN ; was clicked?
+        beq     exit
+        cmp     #A2D_INPUT_KEY  ; any key?
+        beq     on_key
+        bne     input_loop
 
+on_key:
+        lda     input_params::modifiers
+        bne     input_loop
+        lda     input_params::key
+        cmp     #KEY_ESCAPE
+        beq     exit
+        bne     input_loop
+
+exit:
+        A2D_CALL A2D_HIDE_CURSOR
         A2D_CALL A2D_DESTROY_WINDOW, window_params
         DESKTOP_CALL DESKTOP_REDRAW_ICONS
         jsr     unstash_menu
+        A2D_CALL A2D_SHOW_CURSOR
 
         rts                     ; exits input loop
 .endproc
 
 .proc show_file
-        A2D_CALL A2D_HIDE_CURSOR
         jsr     get_file_eof
 
         ;; If bigger than $2000, assume DHR
@@ -397,22 +420,21 @@ end:    rts
         sbc     #^(hires_size+1)
         bcs     dhr
 
-        jsr     show_shr_file
+        jsr     show_hr_file
         jmp     close
 
 dhr:    jsr     show_dhr_file
 
 close:  jsr     close_file
-        A2D_CALL A2D_SHOW_CURSOR
         rts
 .endproc
 
-.proc show_shr_file
+.proc show_hr_file
         sta     PAGE2OFF
         jsr     read_file
         jsr     close_file
 
-        jsr     hgr_to_dhr
+        jsr     hr_to_dhr
         rts
 .endproc
 
@@ -434,9 +456,9 @@ close:  jsr     close_file
 ;;; Convert single hires to double hires
 
 ;;; Assumes the image is loaded to MAIN $2000 and
-;;; relies on the hgr_to_dhr.inc table.
+;;; relies on the hr_to_dhr.inc table.
 
-.proc hgr_to_dhr
+.proc hr_to_dhr
         ptr     := $06
         rows    := 192
         cols    := 40
@@ -462,10 +484,10 @@ cloop:  lda     (ptr),y
 
         ;; complex case - need to spill in bit from prev col and store
 
-        lda     hgr_to_dhr_aux,x
+        lda     hr_to_dhr_aux,x
         sta     PAGE2ON
         sta     (ptr),y
-        lda     hgr_to_dhr_main,x
+        lda     hr_to_dhr_main,x
         ora     spill           ; apply previous spill bit (to bit 6)
         sta     PAGE2OFF
         sta     (ptr),y
@@ -478,10 +500,10 @@ cloop:  lda     (ptr),y
 
 hibitset:
         ;; simple case - no bit spillage
-        lda     hgr_to_dhr_aux,x
+        lda     hr_to_dhr_aux,x
         sta     PAGE2ON
         sta     (ptr),y
-        lda     hgr_to_dhr_main,x
+        lda     hr_to_dhr_main,x
         sta     PAGE2OFF
         sta     (ptr),y
 
@@ -614,4 +636,4 @@ cloop:  lda     (src),y
 .endproc
 
         .include "inc/hires_table.inc"
-        .include "inc/hgr_to_dhr.inc"
+        .include "inc/hr_to_dhr.inc"
