@@ -87,7 +87,7 @@ call_init:
 
         lda     LCBANK1
         lda     LCBANK1
-        ldx     #(routine_end - routine)
+        ldx     #sizeof_routine
 :       lda     routine,x
         sta     zp_stash,x
         dex
@@ -125,7 +125,7 @@ skip:   lda     #0
         sta     RAMWRTON
         rts
 .endproc
-        routine_end := *
+        sizeof_routine := * - routine
 .endproc
 
 ;;; ==================================================
@@ -901,7 +901,7 @@ exit:   lda     LCBANK1
         ;; Copy following routine to ZP and invoke it
         zp_stash := $20
 
-        ldx     #(routine_end - routine)
+        ldx     #sizeof_routine
 loop:   lda     routine,x
         sta     zp_stash,x
         dex
@@ -913,7 +913,7 @@ loop:   lda     routine,x
         sta     RAMWRTOFF
         jmp     exit_da
 .endproc
-        routine_end := *        ; Can't use .sizeof before the .proc definition
+        sizeof_routine := * - routine       ; Can't use .sizeof before the .proc definition
 .endproc
 
 :       cmp     #A2D_ELEM_TITLE ; Title bar?

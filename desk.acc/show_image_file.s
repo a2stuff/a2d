@@ -40,15 +40,15 @@ call_main_addr         := call_main_trampoline+7        ; address patched in her
 .scope
         sta     RAMWRTON
         sta     RAMRDON
-        ldx     #(call_main_template_end - call_main_template)
-loop:   lda     call_main_template,x
+        ldx     #sizeof_routine
+loop:   lda     routine,x
         sta     call_main_trampoline,x
         dex
         bpl     loop
         jmp     call_init
 .endscope
 
-.proc call_main_template
+.proc routine
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     $1000           ; overwritten (in zp version)
@@ -56,7 +56,7 @@ loop:   lda     call_main_template,x
         sta     RAMWRTON
         rts
 .endproc
-call_main_template_end:         ; can't .sizeof(proc) before declaration
+        sizeof_routine := * - routine ; can't .sizeof(proc) before declaration
         ;; https://github.com/cc65/cc65/issues/478
 
 .proc call_init
