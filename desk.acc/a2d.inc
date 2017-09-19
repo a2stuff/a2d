@@ -208,8 +208,15 @@ A2D_UNK_2B      := $2B          ; Unknown - possibly "reset drawing state"
         ;; $2C used in DeskTop but not DAs
         ;; (input length 0 bytes)
 
-A2D_UNK_2D      := $2D          ; Unknown - used in calculator
+A2D_SET_INPUT   := $2D          ; Set pending input state (mouse or keyboard)
         ;; (input length 5 bytes)
+        ;; .byte state          (A2D_INPUT_*)
+        ;; if state is A2D_INPUT_KEY:
+        ;;   .byte key          (ASCII code; high bit clear)
+        ;;   .byte modifiers    (0=none, 1=open-apple, 2=closed-apple, 3=both)
+        ;; if state otherwise:
+        ;;   .word xcoord
+        ;;   .word ycoord
 
 A2D_CREATE_WINDOW := $38
         ;; .byte id
