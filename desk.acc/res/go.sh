@@ -18,8 +18,6 @@ function stats {
     echo "$1: "$(res/stats.pl < "$1")
 }
 
-
-
 #do_make clean
 do_make all
 
@@ -37,4 +35,7 @@ stats "date.s"
 stats "puzzle.s"
 
 cat show_image_file.F1 > mount/SHOW.IMAGE.FILE.\$F1 \
-    && echo "Updated mountable file"
+    && echo "Updated mountable file (SIF)"
+
+cat calc_fixed.F1 > mount/TEST.\$F1 \
+    && echo "Updated mountable file (Test)"

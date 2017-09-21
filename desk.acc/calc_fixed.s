@@ -92,23 +92,19 @@ call_init:
         bpl     :-
         jsr     zp_stash
 
+        lda     LCBANK1
+        lda     LCBANK1
+
+        bit     offscreen_flag ; if was offscreen, don't bother redrawing
+        bmi     :+
+        DESKTOP_CALL DESKTOP_REDRAW_ICONS
+
+:       lda     ROMIN2
+
         ;;  Redraw window after drag
-        lda     ROMIN2
         lda     #window_id
         jsr     check_visibility_and_draw_window
 
-        ;; ???
-        lda     LCBANK1
-        lda     LCBANK1
-
-        bit     offscreen_flag     ; BUG: https://github.com/inexorabletash/a2d/issues/33
-        bmi     skip
-        DESKTOP_CALL DESKTOP_REDRAW_ICONS
-
-        ;; ???
-skip:   lda     #0
-        sta     offscreen_flag
-        lda     ROMIN2
         A2D_CALL A2D_QUERY_STATE, query_state_params
         A2D_CALL A2D_SET_STATE, state_params
         rts
@@ -126,7 +122,6 @@ skip:   lda     #0
 
 ;;; ==================================================
 
-
         ;; Set when the client area is offscreen and
         ;; should not be painted.
 offscreen_flag:
@@ -143,9 +138,12 @@ offscreen_flag:
         sta     offscreen_flag
         rts
 
+:       lda     #0
+        sta     offscreen_flag
+
         ;; Is skipping this responsible for display redraw bug?
         ;; https://github.com/inexorabletash/a2d/issues/34
-:       A2D_CALL A2D_QUERY_STATE, query_state_params
+        A2D_CALL A2D_QUERY_STATE, query_state_params
         A2D_CALL A2D_SET_STATE, state_params
         lda     query_state_params_id
         cmp     #window_id
@@ -804,6 +802,7 @@ init:   sta     ALTZPON
         A2D_CALL A2D_GET_INPUT, input_state_params
         lda     ROMIN2
         jsr     reset_buffer2
+
         lda     #window_id
         jsr     check_visibility_and_draw_window
         jsr     reset_buffers_and_display
@@ -1552,19 +1551,23 @@ loop:   lda     #' '
         ; fall through
 .endproc
 .proc display_buffer1
+        bit     offscreen_flag
+        bmi     end
         ldx     #<text_buffer1
         ldy     #>text_buffer1
         jsr     pre_display_buffer
         A2D_CALL A2D_DRAW_TEXT, draw_text_params1
-        rts
+end:    rts
 .endproc
 
 .proc display_buffer2
+        bit     offscreen_flag
+        bmi     end
         ldx     #<text_buffer2
         ldy     #>text_buffer2
         jsr     pre_display_buffer
         A2D_CALL A2D_DRAW_TEXT, draw_text_params2
-        rts
+end:    rts
 .endproc
 
 .proc pre_display_buffer
@@ -1674,9 +1677,11 @@ draw_title_bar:
         ;; and returns to the input loop.
 .proc error_hook
         jsr     reset_buffers_and_display
+        bit     offscreen_flag
+        bmi     :+
         A2D_CALL A2D_SET_POS, error_pos
         A2D_CALL A2D_DRAW_TEXT, error_string
-        jsr     reset_buffer1_and_state
+:       jsr     reset_buffer1_and_state
         lda     #'='
         sta     calc_op
         ldx     saved_stack
