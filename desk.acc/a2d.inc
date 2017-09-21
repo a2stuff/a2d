@@ -174,9 +174,9 @@ A2D_DRAW_TEXT   := $19          ; Drawn at last SET_POS as left, baseline
         ;; .addr data
         ;; .byte length
 
-A2D_UNK_1A      := $1A          ; Unknown - used in calculator before window creation,
-                                ; and after destruction
+A2D_CONFIGURE_ZP_USE    := $1A  ; Configure ZP usage by API (speed vs. convenience)
         ;; (input length 1 byte)
+        ;; .byte flag           (AWS_CZP_*; high bit set = preserve ZP during calls)
 
 A2D_SET_CURSOR  := $24          ; Change cursor pattern
         ;; (input not copied)
@@ -393,6 +393,10 @@ A2D_CWS_SCROLL_ENABLED := 1 << 7
 A2D_CWS_SCROLL_THUMB   := 1 << 6
 A2D_CWS_SCROLL_TRACK   := 1 << 0
 A2D_CWS_SCROLL_NORMAL  := A2D_CWS_SCROLL_ENABLED | A2D_CWS_SCROLL_THUMB | A2D_CWS_SCROLL_TRACK
+
+;;; Used in A2D_CONFIGURE_ZP_USE
+A2D_CZP_PRESERVE  := 1<<7
+A2D_CZP_OVERWRITE := 0
 
 ;;; Used in various state blocks
 A2D_DEFAULT_MSKAND := $FF

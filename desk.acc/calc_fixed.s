@@ -198,11 +198,13 @@ id:     .byte   0
 .endproc
         query_state_params_id := query_state_params::id
 
-        ;; param block for a 1A call
-L08D4:  .byte   $80
+.proc preserve_zp_params
+flag:  .byte   A2D_CZP_PRESERVE
+.endproc
 
-        ;; param block for a 1A call
-L08D5:  .byte   $00
+.proc overwrite_zp_params
+flag:  .byte   A2D_CZP_OVERWRITE
+.endproc
 
 ;;; ==================================================
 ;;; Button Definitions
@@ -760,10 +762,10 @@ title:  PASCAL_STRING "Calc"
 init:   sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
-        A2D_CALL $1A, L08D4     ; if NOP'd, display renders like a bar code later
+        A2D_CALL A2D_CONFIGURE_ZP_USE, preserve_zp_params
         A2D_CALL A2D_CREATE_WINDOW, create_window_params
         A2D_CALL A2D_QUERY_SCREEN, state_params
-        A2D_CALL A2D_SET_STATE, state_params     ; set clipping bounds?
+        A2D_CALL A2D_SET_STATE, state_params
         A2D_CALL $2B                          ; reset drawing state?
 
         jsr     reset_buffer2
@@ -870,7 +872,7 @@ ignore_click:
 exit:   A2D_CALL A2D_DESTROY_WINDOW, destroy_window_params
         DESKTOP_CALL DESKTOP_REDRAW_ICONS
         lda     ROMIN2
-        A2D_CALL $1A, L08D5     ; ??? one byte input value?
+        A2D_CALL A2D_CONFIGURE_ZP_USE, overwrite_zp_params
 
 .proc do_close
         ;; Copy following routine to ZP and invoke it
@@ -1045,7 +1047,7 @@ miss:   clc
         sec
         rts
 
-:       cpx     #col4_left-border_lt             ; col 4?
+:       cpx     #col4_left-border_lt            ; col 4?
         bcc     miss
         cpx     #col4_right+border_br - 1       ; bug in original?
         bcs     miss
