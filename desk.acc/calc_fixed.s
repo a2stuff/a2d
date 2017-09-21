@@ -797,9 +797,6 @@ init:   sta     ALTZPON
         A2D_CALL A2D_SET_STATE, state_params     ; set clipping bounds?
         A2D_CALL $2B                          ; reset drawing state?
         lda     #$01
-        sta     input_state_params::state
-        A2D_CALL A2D_SET_INPUT, input_state_params
-        A2D_CALL A2D_GET_INPUT, input_state_params
         lda     ROMIN2
         jsr     reset_buffer2
 
