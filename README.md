@@ -16,9 +16,9 @@ replaced it. The rebranded version still functions on 8-bit Apples.
 
 Overview: http://toastytech.com/guis/a2desk.html
 
-Manual: [Apple IIgs System Disk User’s Guide (1986)](ftp://ftp.apple.asimov.net/pub/apple_II/documentation/misc/Apple%20IIgs%20System%20Disk%20Users%20Guide%20(1986).pdf) - Chapter 2 “The DeskTop”
+Manual: [Apple IIgs System Disk User’s Guide (1986)](https://mirrors.apple2.org.za/ftp.apple.asimov.net/documentation/misc/Apple%20IIgs%20System%20Disk%20Users%20Guide%20%281986%29.pdf) - Chapter 2 “The DeskTop”
 
-A more thorough pieced-together history, details of versions, bug reports and feature requests: https://mirrors.apple2.org.za/ground.icaen.uiowa.edu/MiscInfo/Misc/mousedesk.info
+A pieced-together history, details of versions, bug reports and feature requests: https://mirrors.apple2.org.za/ground.icaen.uiowa.edu/MiscInfo/Misc/mousedesk.info
 
 Disks can be found at:
 ftp://ftp.apple.asimov.net/pub/apple_II/images/masters/other_os/gui/
