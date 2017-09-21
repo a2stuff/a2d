@@ -74,7 +74,6 @@ save_stack:  .byte   0
 ;;; ==================================================
 
 call_init:
-        lda     ROMIN2
         jmp     init
 
         ;; Used after a drag-and-drop is completed;
@@ -98,8 +97,6 @@ call_init:
         bit     offscreen_flag ; if was offscreen, don't bother redrawing
         bmi     :+
         DESKTOP_CALL DESKTOP_REDRAW_ICONS
-
-:       lda     ROMIN2
 
         ;;  Redraw window after drag
         lda     #window_id
@@ -757,34 +754,6 @@ create_window_params_top := create_window_params::top
 
 title:  PASCAL_STRING "Calc"
 
-cursor: .byte   px(%0000000),px(%0000000) ; cursor
-        .byte   px(%0100000),px(%0000000)
-        .byte   px(%0110000),px(%0000000)
-        .byte   px(%0111000),px(%0000000)
-        .byte   px(%0111100),px(%0000000)
-        .byte   px(%0111110),px(%0000000)
-        .byte   px(%0111111),px(%0000000)
-        .byte   px(%0101100),px(%0000000)
-        .byte   px(%0000110),px(%0000000)
-        .byte   px(%0000110),px(%0000000)
-        .byte   px(%0000011),px(%0000000)
-        .byte   px(%0000000),px(%0000000)
-
-        .byte   px(%1100000),px(%0000000) ; mask
-        .byte   px(%1110000),px(%0000000)
-        .byte   px(%1111000),px(%0000000)
-        .byte   px(%1111100),px(%0000000)
-        .byte   px(%1111110),px(%0000000)
-        .byte   px(%1111111),px(%0000000)
-        .byte   px(%1111111),px(%1000000)
-        .byte   px(%1111111),px(%0000000)
-        .byte   px(%0001111),px(%0000000)
-        .byte   px(%0001111),px(%0000000)
-        .byte   px(%0000111),px(%1000000)
-        .byte   px(%0000111),px(%1000000)
-
-        .byte   1, 1            ; hotspot
-
 ;;; ==================================================
 ;;; DA Init
 
@@ -796,8 +765,7 @@ init:   sta     ALTZPON
         A2D_CALL A2D_QUERY_SCREEN, state_params
         A2D_CALL A2D_SET_STATE, state_params     ; set clipping bounds?
         A2D_CALL $2B                          ; reset drawing state?
-        lda     #$01
-        lda     ROMIN2
+
         jsr     reset_buffer2
 
         lda     #window_id
@@ -832,21 +800,21 @@ loop:   lda     adjust_txtptr_copied-1,x
         sta     COUT_HOOK+1
 
         lda     #1
-        jsr     FLOAT
+        jsr     CALL_FLOAT
         ldx     #<farg
         ldy     #>farg
-        jsr     ROUND
+        jsr     CALL_ROUND
         lda     #0              ; set FAC to 0
-        jsr     FLOAT
-        jsr     FADD
-        jsr     FOUT
+        jsr     CALL_FLOAT
+        jsr     CALL_FADD
+        jsr     CALL_FOUT
         lda     #$07
-        jsr     FMULT
+        jsr     CALL_FMULT
         lda     #$00
-        jsr     FLOAT
+        jsr     CALL_FLOAT
         ldx     #<farg
         ldy     #>farg
-        jsr     ROUND
+        jsr     CALL_ROUND
 
         tsx
         stx     saved_stack
@@ -855,10 +823,6 @@ loop:   lda     adjust_txtptr_copied-1,x
         jsr     process_key
         lda     #'C'
         jsr     process_key
-
-        ;; previous draws mangle the cursor (why???)
-        A2D_CALL A2D_SET_CURSOR, cursor ; Why not use JUMP_TABLE_CUR_POINTER ?
-        ;; fall through
 
 ;;; ==================================================
 ;;; Input Loop
@@ -880,10 +844,7 @@ input_loop:
 ;;; On Click
 
 on_click:
-        lda     LCBANK1
-        lda     LCBANK1
         A2D_CALL A2D_QUERY_TARGET, target_params
-        lda     ROMIN2
         lda     target_params::elem
         cmp     #A2D_ELEM_CLIENT ; Less than CLIENT is MENU or DESKTOP
         bcc     ignore_click
@@ -906,9 +867,7 @@ ignore_click:
         A2D_CALL A2D_CLOSE_CLICK, close_click_params
         lda     close_click_params::state
         beq     ignore_click
-exit:   lda     LCBANK1
-        lda     LCBANK1
-        A2D_CALL A2D_DESTROY_WINDOW, destroy_window_params
+exit:   A2D_CALL A2D_DESTROY_WINDOW, destroy_window_params
         DESKTOP_CALL DESKTOP_REDRAW_ICONS
         lda     ROMIN2
         A2D_CALL $1A, L08D5     ; ??? one byte input value?
@@ -936,10 +895,7 @@ loop:   lda     routine,x
         bne     ignore_click
         lda     #window_id
         sta     drag_params::id
-        lda     LCBANK1
-        lda     LCBANK1
         A2D_CALL A2D_DRAG_WINDOW, drag_params
-        lda     ROMIN2
         jsr     redraw_screen_and_window
         rts
 
@@ -1117,10 +1073,10 @@ miss:   clc
         lda     #'c'
         jsr     depress_button
         lda     #$00
-        jsr     FLOAT
+        jsr     CALL_FLOAT
         ldx     #<farg
         ldy     #>farg
-        jsr     ROUND
+        jsr     CALL_ROUND
         lda     #'='
         sta     calc_op
         lda     #0
@@ -1376,7 +1332,7 @@ rts3:   rts
         lda     calc_g
         bne     reparse
         lda     #$00
-        jsr     FLOAT
+        jsr     CALL_FLOAT
         jmp     do_op
 
 :       lda     calc_g
@@ -1390,7 +1346,7 @@ reparse:lda     #<text_buffer1
         lda     #>text_buffer1
         sta     TXTPTR+1
         jsr     adjust_txtptr
-        jsr     FIN
+        jsr     CALL_FIN
 
 do_op:  pla
         ldx     calc_op
@@ -1400,22 +1356,22 @@ do_op:  pla
 
         cpx     #'+'
         bne     :+
-        jsr     FADD
+        jsr     CALL_FADD
         jmp     post_op
 
 :       cpx     #'-'
         bne     :+
-        jsr     FSUB
+        jsr     CALL_FSUB
         jmp     post_op
 
 :       cpx     #'*'
         bne     :+
-        jsr     FMULT
+        jsr     CALL_FMULT
         jmp     post_op
 
 :       cpx     #'/'
         bne     :+
-        jsr     FDIV
+        jsr     CALL_FDIV
         jmp     post_op
 
 :       cpx     #'='
@@ -1428,8 +1384,8 @@ do_op:  pla
 .proc post_op
         ldx     #<farg          ; after the FP operation is done
         ldy     #>farg
-        jsr     ROUND
-        jsr     FOUT            ; output as null-terminated string to FBUFFR
+        jsr     CALL_ROUND
+        jsr     CALL_FOUT            ; output as null-terminated string to FBUFFR
 
         ldy     #0              ; count the eize
 sloop:  lda     FBUFFR,y
@@ -1673,6 +1629,8 @@ draw_title_bar:
         ;; Traps FP error via call to $36 from MON.COUT, resets stack
         ;; and returns to the input loop.
 .proc error_hook
+        lda     LCBANK1
+        lda     LCBANK1
         jsr     reset_buffers_and_display
         bit     offscreen_flag
         bmi     :+
@@ -1703,5 +1661,94 @@ loop:   inc     TXTPTR
 end:    rts
 .endproc
         sizeof_adjust_txtptr_copied := * - adjust_txtptr_copied
+
+
+CALL_FLOAT:
+        pha
+        lda     ROMIN2
+        pla
+        jsr     FLOAT
+        pha
+        lda     LCBANK1
+        lda     LCBANK1
+        pla
+        rts
+
+CALL_FADD:
+        pha
+        lda     ROMIN2
+        pla
+        jsr     FADD
+        pha
+        lda     LCBANK1
+        lda     LCBANK1
+        pla
+        rts
+
+CALL_FSUB:
+        pha
+        lda     ROMIN2
+        jsr     FSUB
+        pha
+        lda     LCBANK1
+        lda     LCBANK1
+        pla
+        rts
+
+CALL_FMULT:
+        pha
+        lda     ROMIN2
+        pla
+        jsr     FMULT
+        pha
+        lda     LCBANK1
+        lda     LCBANK1
+        pla
+        rts
+
+CALL_FDIV:
+        pha
+        lda     ROMIN2
+        pla
+        jsr     FDIV
+        pha
+        lda     LCBANK1
+        lda     LCBANK1
+        pla
+        rts
+
+CALL_FIN:
+        pha
+        lda     ROMIN2
+        pla
+        jsr     FIN
+        pha
+        lda     LCBANK1
+        lda     LCBANK1
+        pla
+        rts
+
+CALL_FOUT:
+        pha
+        lda     ROMIN2
+        pla
+        jsr     FOUT
+        pha
+        lda     LCBANK1
+        lda     LCBANK1
+        pla
+        rts
+
+CALL_ROUND:
+        pha
+        lda     ROMIN2
+        pla
+        jsr     ROUND
+        pha
+        lda     LCBANK1
+        lda     LCBANK1
+        pla
+        rts
+
 
 da_end := *
