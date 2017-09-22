@@ -43,13 +43,63 @@ optional _resize box_ and optional _scroll bars_.
 
 ### Desk Accessory Lifecycle
 
+* Loaded/invoked at $800 MAIN (have through $1FFF available)
 * Save stack
-* Copy DA code from MAIN to AUX
+* Copy DA code from MAIN to AUX (e.g. using AUXMOVE)
+* Transfer control to AUX
+* Turn on ALTZP and LCBANK1
+* Create window (A2D_CREATE_WINDOW)
+* Draw everything
+* Call $2B (no idea what this does!)
+* Enter input loop (see below)
+* ...
+* Destroy window (A2D_DESTROY_WINDOW)
+* Redraw desktop icons (DESKTOP_REDRAW_ICONS)
+* Switch control back to MAIN (RAMRDOFF/RAMWRTOFF)
+* Ensure ALTZP and LCBANK1 are on
+* Restore stack
+* RTS
+
+> NOTE: Movable windows must maintain an _offscreen_flag_. If a window is moved so that the
+> client area is entirely offscreen then various operations should be skiped because
+> the window's box coordinates will not be set correctly.
+
+#### Input Loop
+
+* Call A2D_GET_INPUT.
+* If a key (A2D_INPUT_KEY), then check modifiers (Open/Closed Apple) and key code, ignore or take action.
+* If a click, call A2D_QUERY_TARGET.
+* Check target window id. If not a match, ignore.
+* Check target element.
+  * If close box (A2D_ELEM_CLOSE) then call A2D_CLOSE_CLICK; if not aborted, exit the DA, otherwise ignore.
+  * If title bar (A2D_ELEM_TITLE) then initiate window drag (see below).
+  * If resize box (A2D_ELEM_RESIZE) then initiate window resize (see below).
+  * If not client area (A2D_ELEM_CLIENT) then it's either the desktop or menu; ignore.
+* Call A2D_QUERY_CLIENT.
+  * If part is a scrollbar (A2D_VSCROLL or A2D_HSCROLL) then initiate a scroll (see below).
+* Handle a client click using custom logic.
+  
+#### Window Drag
+
+* Call A2D_DRAG_WINDOW.
+* Call JUMP_TABLE_REDRAW_ALL.
+* If _offscreen flag_ was not set, redraw desktop icons (DESKTOP_REDRAW_ICONS).
+* Set _offscreen flag_ if window's `top` is greater than or equal to the screen bottom (191), clear otherwise.
+* If _offscreen flag_ is not set, redraw window.
 
 
+#### Window Resize
 
-### Event Loop
+* Call A2D_DRAG_RESIZE.
+* Call JUMP_TABLE_REDRAW_ALL.
+* Call DESKTOP_REDRAW_ICONS.
+* Call A2D_RESIZE_WINDOW if needed to adjust scroll bar settings. (Details TBD).
+* Redraw window.
 
+#### Window Scroll
+
+
+### Drawing Operations
 
 
 
