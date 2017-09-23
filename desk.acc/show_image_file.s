@@ -194,7 +194,6 @@ ycoord := *+2
 id:     .byte   window_id       ; window identifier
 flags:  .byte   A2D_CWF_NOTITLE
 title:  .addr   window_title
-
 hscroll:.byte   A2D_CWS_NOSCROLL
 vscroll:.byte   A2D_CWS_NOSCROLL
 hsmax:  .byte   32
@@ -202,10 +201,10 @@ hspos:  .byte   0
 vsmax:  .byte   32
 vspos:  .byte   0
         .byte   0, 0            ; ???
-widtha: .word   default_width
-heighta:.word   default_height
-widthb: .word   default_width
-heightb:.word   default_height
+w1:     .word   default_width
+h1:     .word   default_height
+w2:     .word   default_width
+h2:     .word   default_height
 
 .proc box
 left:   .word   default_left
@@ -221,10 +220,12 @@ height: .word   default_height
 pattern:.res    8, 0
 mskand: .byte   A2D_DEFAULT_MSKAND
 mskor:  .byte   A2D_DEFAULT_MSKOR
-        .byte   $00,$00,$00,$00
+        .byte   0,0,0,0         ; ???
 hthick: .byte   1
 vthick: .byte   1
-        .byte   $00,$7F,$00,$88,$00,$00
+        .byte   $00,$7F         ; ???
+font:   .addr   A2D_DEFAULT_FONT
+        .byte   0,0             ; ???
 .endproc
 
 

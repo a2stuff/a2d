@@ -685,10 +685,12 @@ height: .word   0
 pattern:.res    8, 0
 mskand: .byte   0
 mskor:  .byte   0
-        .byte   0,0,0,0       ; ???
+        .byte   0,0,0,0         ; ???
 hthick: .byte   0
 vthick: .byte   0
-        .byte   0,0,0,0,0       ; ???
+        .byte   0,0             ; ???
+font:   .addr   0
+        .byte   0,0             ; ???
 .endproc
 
         menu_bar_height := 13
@@ -723,10 +725,10 @@ mode:   .byte   A2D_SFM_XOR
 
 .proc create_window_params
 id:     .byte   window_id
-flags:  .byte   $02
-        .addr   title
-hscroll:.byte   0
-vscroll:.byte   0
+flags:  .byte   A2D_CWF_ADDCLOSE
+title:  .addr   window_title
+hscroll:.byte   A2D_CWS_NOSCROLL
+vscroll:.byte   A2D_CWS_NOSCROLL
 hs_max: .byte   0
 hs_pos: .byte   0
 vs_max: .byte   0
@@ -738,8 +740,8 @@ w2:     .word   window_width
 h2:     .word   window_height
 left:   .word   default_left
 top:    .word   default_top
-        .word   A2D_SCREEN_ADDR
-        .word   A2D_SCREEN_STRIDE
+saddr:  .word   A2D_SCREEN_ADDR
+stride: .word   A2D_SCREEN_STRIDE
 hoffset:.word   0
 voffset:.word   0
 width:  .word   window_width
@@ -747,14 +749,17 @@ height: .word   window_height
 pattern:.res    8, $FF
 mskand: .byte   A2D_DEFAULT_MSKAND
 mskor:  .byte   A2D_DEFAULT_MSKOR
-        .byte   0,0,0,0       ; ???
+        .byte   0,0,0,0         ; ???
 hthick: .byte   1
 vthick: .byte   1
-        .byte   $00,$7F,$00,$88,$00,$00 ; ???
+        .byte   $00,$7F         ; ???
+font:   .addr   A2D_DEFAULT_FONT
+        .byte   $00,$00         ; ???
 .endproc
 create_window_params_top := create_window_params::top
 
-title:  PASCAL_STRING "Calc"
+window_title:
+        PASCAL_STRING "Calc"
 
 ;;; ==================================================
 ;;; DA Init
@@ -1751,6 +1756,5 @@ CALL_ROUND:
         lda     LCBANK1
         pla
         rts
-
 
 da_end := *

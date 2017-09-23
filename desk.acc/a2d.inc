@@ -55,12 +55,11 @@ A2D_QUERY_SCREEN        := $03  ; Get screen state
         ;; .res 8 pattern
         ;; .byte mskand         AND mask, default $FF
         ;; .byte mskor          ORA mask, default $00
-        ;; .byte 0,0,0          ???
+        ;; .byte 0,0,0,0        ???
         ;; .byte hthick         horizontal pen thickness
         ;; .byte vthick         vertical pen thickness
-        ;; .byte 0,$7F,0,$88    ??? (note: one byte shorter than SET_STATE)
-
-        ;; $8800 is possibly font (glyph metrics starts thereabouts)
+        ;; .byte 0,$7F          ???
+        ;; .addr font           A2D_DEFAULT_FONT
 
 A2D_SET_STATE   := $04          ; Set full drawing state
         ;; (input length 36 bytes)
@@ -75,10 +74,11 @@ A2D_SET_STATE   := $04          ; Set full drawing state
         ;; .res 8 pattern
         ;; .byte mskand         AND mask, default $FF
         ;; .byte mskor          ORA mask, default $00
-        ;; .byte 0,0,0          ???
+        ;; .byte 0,0,0,0        ???
         ;; .byte hthick         horizontal pen thickness
         ;; .byte vthick         vertical pen thickness
-        ;; .byte 0,$7F,0,$88,0
+        ;; .byte 0, $7F
+        ;; .addr font           A2D_DEFAULT_FONT
 
         ;; $05 used in DeskTop but not DAs - icon click
         ;; (input length 0 bytes)
@@ -252,10 +252,12 @@ A2D_CREATE_WINDOW := $38
         ;; .res 8 pattern
         ;; .byte mskand         AND mask, default $FF
         ;; .byte mskor          ORA mask, default $00
-        ;; .byte 0,0,0          ???
+        ;; .byte 0,0,0,0        ???
         ;; .byte hthick
         ;; .byte vthick
-        ;; .byte $00,$7F,$00,$88,$00,$00    ???
+        ;; .byte $00,$7F        ???
+        ;; .addr font           A2D_DEFAULT_FONT
+        ;; .byte 0,0            ???
 
 A2D_DESTROY_WINDOW := $39
         ;; (input length 1 byte)
@@ -497,8 +499,12 @@ end:
         ;;      .byte ??
         ;;      .byte len, name (length-prefixed, spaces before/after; 17 byte buffer)
 
+        A2D_DEFAULT_FONT := $8800
 
-        font_size_count := $8801 ; num glyphs + 1 (for height) / max glyphs ?
+        font_unk        := $8800 ; = $00
+        font_size_count := $8801 ; = $7F
+                                 ; num glyphs + 1 (for height) / max glyphs ?
+                                 ; looks like an address ($7F00) but is used as count
         font_height     := $8802 ; 9 pixels
         font_width_table := $8803 ; width in pixels, indexed by ASCII code
 

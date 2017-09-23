@@ -256,8 +256,8 @@ mode:   .byte   $02             ; this should be normal, but we do inverts ???
 id:     .byte   window_id
 flags:  .byte   A2D_CWF_NOTITLE
 title:  .addr   0
-hscroll:.byte   0
-vscroll:.byte   0
+hscroll:.byte   A2D_CWS_NOSCROLL
+vscroll:.byte   A2D_CWS_NOSCROLL
 hsmax:  .byte   0
 hspos:  .byte   0
 vsmax:  .byte   0
@@ -280,10 +280,12 @@ height: .word   $40
 pattern:.res    8,$00
 mskand: .byte   A2D_DEFAULT_MSKAND
 mskor:  .byte   A2D_DEFAULT_MSKOR
-        .byte   $00,$00,$00,$00
+        .byte   0,0,0,0         ; ???
 hthick: .byte   4
 vthick: .byte   2
-        .byte   $00,$7F,$00,$88,$00,$00
+        .byte   $00,$7F         ; ???
+font:   .addr   A2D_DEFAULT_FONT
+        .byte   0,0             ; ???
 .endproc
 
 ;;; ==================================================
