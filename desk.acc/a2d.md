@@ -69,15 +69,19 @@ optional _resize box_ and optional _scroll bars_.
 * Call A2D_GET_INPUT.
 * If a key (A2D_INPUT_KEY), then check modifiers (Open/Closed Apple) and key code, ignore or take action.
 * If a click, call A2D_QUERY_TARGET.
-* Check target window id. If not a match, ignore.
-* Check target element.
-  * If close box (A2D_ELEM_CLOSE) then call A2D_CLOSE_CLICK; if not aborted, exit the DA, otherwise ignore.
-  * If title bar (A2D_ELEM_TITLE) then initiate [window drag](#window-drag).
-  * If resize box (A2D_ELEM_RESIZE) then initiate [window resize](#window-resize).
-  * If not client area (A2D_ELEM_CLIENT) then it's either the desktop or menu; ignore.
-* Call A2D_QUERY_CLIENT.
-  * If part is a scrollbar (A2D_VSCROLL or A2D_HSCROLL) then initiate a [scroll](#window-scroll).
-* Handle a client click using custom logic.
+* If target id not the window id, ignore.
+* If target element is desktop (A2D_ELEM_DESKTOP) or menu (A2D_ELEM_MENU) then ignore.
+* If target element is close box (A2D_ELEM_CLOSE) then initiate [window close](#window-close).
+* If target element is title bar (A2D_ELEM_TITLE) then initiate [window drag](#window-drag).
+* If target element is resize box (A2D_ELEM_RESIZE) then initiate [window resize](#window-resize).
+* Otherwise, it is client area (A2D_ELEM_CLIENT); call A2D_QUERY_CLIENT.
+* If client part is a scrollbar (A2D_VSCROLL or A2D_HSCROLL) then initiate a [scroll](#window-scroll).
+* Otherwise, handle a client click using custom logic (e.g. hit testing buttons, etc)
+
+#### Window Close
+
+* Call A2D_CLOSE_CLICK, which enters a modal loop to handle the mouse moving out/in the box.
+* Result indicates clicked or canceled; if clicked, exit the DA, otherwise ignore.
 
 #### Window Drag
 
@@ -86,7 +90,6 @@ optional _resize box_ and optional _scroll bars_.
 * If _offscreen flag_ was not set, redraw desktop icons (DESKTOP_REDRAW_ICONS).
 * Set _offscreen flag_ if window's `top` is greater than or equal to the screen bottom (191), clear otherwise.
 * If _offscreen flag_ is not set, redraw window.
-
 
 #### Window Resize
 
