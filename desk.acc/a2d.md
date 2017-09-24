@@ -64,7 +64,7 @@ optional _resize box_ and optional _scroll bars_.
 > client area is entirely offscreen then various operations should be skipped because
 > the window's box coordinates will not be set correctly.
 
-#### {#input-loop} Input Loop
+#### Input Loop
 
 * Call A2D_GET_INPUT.
 * If a key (A2D_INPUT_KEY), then check modifiers (Open/Closed Apple) and key code, ignore or take action.
@@ -72,14 +72,14 @@ optional _resize box_ and optional _scroll bars_.
 * Check target window id. If not a match, ignore.
 * Check target element.
   * If close box (A2D_ELEM_CLOSE) then call A2D_CLOSE_CLICK; if not aborted, exit the DA, otherwise ignore.
-  * If title bar (A2D_ELEM_TITLE) then initiate [window drag](#drag).
-  * If resize box (A2D_ELEM_RESIZE) then initiate [window resize](#resize).
+  * If title bar (A2D_ELEM_TITLE) then initiate [window drag](#window-drag).
+  * If resize box (A2D_ELEM_RESIZE) then initiate [window resize](#window-resize).
   * If not client area (A2D_ELEM_CLIENT) then it's either the desktop or menu; ignore.
 * Call A2D_QUERY_CLIENT.
-  * If part is a scrollbar (A2D_VSCROLL or A2D_HSCROLL) then initiate a [scroll](#scroll).
+  * If part is a scrollbar (A2D_VSCROLL or A2D_HSCROLL) then initiate a [scroll](#window-scroll).
 * Handle a client click using custom logic.
 
-#### {#drag} Window Drag
+#### Window Drag
 
 * Call A2D_DRAG_WINDOW.
 * Call JUMP_TABLE_REDRAW_ALL.
@@ -88,7 +88,7 @@ optional _resize box_ and optional _scroll bars_.
 * If _offscreen flag_ is not set, redraw window.
 
 
-#### {#resize} Window Resize
+#### Window Resize
 
 * Call A2D_DRAG_RESIZE.
 * Call JUMP_TABLE_REDRAW_ALL.
@@ -96,7 +96,7 @@ optional _resize box_ and optional _scroll bars_.
 * Call A2D_RESIZE_WINDOW if needed to adjust scroll bar settings. (Details TBD).
 * Redraw window.
 
-#### {#scroll} Window Scroll
+#### Window Scroll
 
 
 ### Drawing Operations
