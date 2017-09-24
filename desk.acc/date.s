@@ -272,8 +272,8 @@ left:   .word   180
 top:    .word   50
 saddr:  .addr   A2D_SCREEN_ADDR
 stride: .word   A2D_SCREEN_STRIDE
-hoff:   .word   0
-voff:   .word   0
+hoffset:.word   0
+voffset:.word   0
 width:  .word   $C7
 height: .word   $40
 .endproc
@@ -283,7 +283,8 @@ mskor:  .byte   A2D_DEFAULT_MSKOR
         .byte   0,0,0,0         ; ???
 hthick: .byte   4
 vthick: .byte   2
-        .byte   $00,$7F         ; ???
+        .byte   0               ; ???
+tmask:  .byte   $7F
 font:   .addr   A2D_DEFAULT_FONT
         .byte   0,0             ; ???
 .endproc

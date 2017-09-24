@@ -616,7 +616,8 @@ mskor:  .byte   A2D_DEFAULT_MSKOR
         .byte   0,0,0,0         ; ???
 hthick: .byte   1
 vthick: .byte   1
-        .byte   $00,$7F         ; ???
+        .byte   0               ; ???
+tmask:  .byte   $7F
 font:   .addr   A2D_DEFAULT_FONT
         .byte   0,0             ; ???
 .endproc
@@ -637,7 +638,8 @@ mskor:  .byte   A2D_DEFAULT_MSKOR
         .byte   0,0,0,0         ; ???
 hthick: .byte   1
 vthick: .byte   1
-        .byte   $00,$7F         ; ???
+        .byte   0               ; ???
+tmask:  .byte   $7F
 font:   .addr   A2D_DEFAULT_FONT
         .byte   0,0             ; ???
 .endproc

@@ -693,7 +693,8 @@ mskor:  .byte   0
         .byte   0,0,0,0         ; ???
 hthick: .byte   0
 vthick: .byte   0
-        .byte   0,0             ; ???
+        .byte   0               ; ???
+tmask:  .byte   0
 font:   .addr   0
 .endproc
         .assert * - state_params = 36, error
@@ -747,7 +748,7 @@ w2:     .word   window_width
 h2:     .word   window_height
 left:   .word   default_left
 top:    .word   default_top
-saddr:  .word   A2D_SCREEN_ADDR
+saddr:  .addr   A2D_SCREEN_ADDR
 stride: .word   A2D_SCREEN_STRIDE
 hoffset:.word   0
 voffset:.word   0
@@ -759,7 +760,8 @@ mskor:  .byte   A2D_DEFAULT_MSKOR
         .byte   0,0,0,0         ; ???
 hthick: .byte   1
 vthick: .byte   1
-        .byte   $00,$7F         ; ???
+        .byte   0               ; ???
+tmask:  .byte   $7f
 font:   .addr   A2D_DEFAULT_FONT
         .byte   0,0             ; ???
 .endproc

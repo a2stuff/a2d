@@ -318,7 +318,7 @@ h2:     .word   default_height
 .proc box
 left:   .word   default_left
 top:    .word   default_top
-addr:   .word   A2D_SCREEN_ADDR
+saddr:  .addr   A2D_SCREEN_ADDR
 stride: .word   A2D_SCREEN_STRIDE
 hoffset:.word   0               ; Also used for A2D_FILL_RECT
 voffset:.word   0
@@ -329,12 +329,13 @@ height: .word   default_height
 pattern:.res    8, $00
 mskand: .byte   A2D_DEFAULT_MSKAND
 mskor:  .byte   A2D_DEFAULT_MSKOR
-        .byte   $00,$00,$00,$00
+        .byte   0,0,0,0         ; ???
 hthick: .byte   1
 vthick: .byte   1
-        .byte   $00,$7F
+        .byte   0               ; ???
+tmask:  .byte   $7F
 font:   .addr   A2D_DEFAULT_FONT
-        .byte   0,0
+        .byte   0,0             ; ???
 .endproc
 
         ;; gets copied over window_params::box after mode is drawn

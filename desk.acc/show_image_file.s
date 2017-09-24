@@ -209,7 +209,7 @@ h2:     .word   default_height
 .proc box
 left:   .word   default_left
 top:    .word   default_top
-addr:   .word   A2D_SCREEN_ADDR
+saddr:  .addr   A2D_SCREEN_ADDR
 stride: .word   A2D_SCREEN_STRIDE
 hoffset:.word   0
 voffset:.word   0
@@ -223,7 +223,8 @@ mskor:  .byte   A2D_DEFAULT_MSKOR
         .byte   0,0,0,0         ; ???
 hthick: .byte   1
 vthick: .byte   1
-        .byte   $00,$7F         ; ???
+        .byte   0               ; ???
+tmask:  .byte   $7F
 font:   .addr   A2D_DEFAULT_FONT
         .byte   0,0             ; ???
 .endproc
