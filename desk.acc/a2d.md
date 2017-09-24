@@ -12,20 +12,20 @@ There are three distinct API classes that need to be used:
 
 #### Box
 
-The _box_ block is reused in several places. It has the following structure
+The _box_ block is reused in several places. It has the following structure:
 
 ```
-        .word left           pixels from screen left edge
-        .word top            pixels from screen top edge
-        .addr addr           A2D_SCREEN_ADDR ($2000)
-        .word stride         A2D_SCREEN_STRIDE ($80)
-        .word hoffset        pixels scrolled left
-        .word voffset        pixels scrolled up
-        .word width          pixels wide
-        .word height         pixels tall
+  .word left           pixels from screen left edge
+  .word top            pixels from screen top edge
+  .addr addr           A2D_SCREEN_ADDR ($2000)
+  .word stride         A2D_SCREEN_STRIDE ($80)
+  .word hoffset        pixels scrolled left
+  .word voffset        pixels scrolled up
+  .word width          pixels wide
+  .word height         pixels tall
 ```
 
-Drawing state can be set to a box (A2D_SET_BOX) and then subsequent operations will occur 
+Drawing state can be set to a box (A2D_SET_BOX) and then subsequent operations will occur
 within the box: they will be clipped to the bounds and the offset will be taken into account.
 For example, if hoffset is 15 and voffset is 5 then a pixel plotted at 40, 40 will appear
 at 40 - 15 = 25 pixels from the left edge and 40 - 5 = 35 pixels from the top edge.
@@ -37,7 +37,7 @@ A simple repeating 8x8 _pattern_ is defined by 8 bytes. All bits of each byte ar
 #### Window Parts
 
 Windows have a _client area_ which has the requested dimensions. Above this is an optional
-_title bar_ which in turn has an optional _close box_. Within the client area are an 
+_title bar_ which in turn has an optional _close box_. Within the client area are an
 optional _resize box_ and optional _scroll bars_.
 
 
@@ -51,7 +51,7 @@ optional _resize box_ and optional _scroll bars_.
 * Create window (A2D_CREATE_WINDOW)
 * Draw everything
 * Call $2B (no idea what this does!)
-* Enter input loop (see below)
+* Enter [input loop](#input-loop)
 * ...
 * Destroy window (A2D_DESTROY_WINDOW)
 * Redraw desktop icons (DESKTOP_REDRAW_ICONS)
@@ -61,10 +61,10 @@ optional _resize box_ and optional _scroll bars_.
 * RTS
 
 > NOTE: Movable windows must maintain an _offscreen_flag_. If a window is moved so that the
-> client area is entirely offscreen then various operations should be skiped because
+> client area is entirely offscreen then various operations should be skipped because
 > the window's box coordinates will not be set correctly.
 
-#### Input Loop
+#### Input Loop {#input-loop}
 
 * Call A2D_GET_INPUT.
 * If a key (A2D_INPUT_KEY), then check modifiers (Open/Closed Apple) and key code, ignore or take action.
@@ -72,14 +72,14 @@ optional _resize box_ and optional _scroll bars_.
 * Check target window id. If not a match, ignore.
 * Check target element.
   * If close box (A2D_ELEM_CLOSE) then call A2D_CLOSE_CLICK; if not aborted, exit the DA, otherwise ignore.
-  * If title bar (A2D_ELEM_TITLE) then initiate window drag (see below).
-  * If resize box (A2D_ELEM_RESIZE) then initiate window resize (see below).
+  * If title bar (A2D_ELEM_TITLE) then initiate [window drag](#drag).
+  * If resize box (A2D_ELEM_RESIZE) then initiate [window resize](#resize).
   * If not client area (A2D_ELEM_CLIENT) then it's either the desktop or menu; ignore.
 * Call A2D_QUERY_CLIENT.
-  * If part is a scrollbar (A2D_VSCROLL or A2D_HSCROLL) then initiate a scroll (see below).
+  * If part is a scrollbar (A2D_VSCROLL or A2D_HSCROLL) then initiate a [scroll](#scroll).
 * Handle a client click using custom logic.
-  
-#### Window Drag
+
+#### Window Drag {#drag}
 
 * Call A2D_DRAG_WINDOW.
 * Call JUMP_TABLE_REDRAW_ALL.
@@ -88,7 +88,7 @@ optional _resize box_ and optional _scroll bars_.
 * If _offscreen flag_ is not set, redraw window.
 
 
-#### Window Resize
+#### Window Resize {#resize}
 
 * Call A2D_DRAG_RESIZE.
 * Call JUMP_TABLE_REDRAW_ALL.
@@ -96,7 +96,7 @@ optional _resize box_ and optional _scroll bars_.
 * Call A2D_RESIZE_WINDOW if needed to adjust scroll bar settings. (Details TBD).
 * Redraw window.
 
-#### Window Scroll
+#### Window Scroll {#scroll}
 
 
 ### Drawing Operations
@@ -140,7 +140,7 @@ Call from AUX (RAMRDON/RAMWRTON). Call style:
    jsr $8E00
    .byte command
    .addr params
-```   
+```
 
 > NOTE: Only a single call has been identified so far.
 
