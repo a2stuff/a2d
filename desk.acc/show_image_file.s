@@ -226,7 +226,7 @@ vthick: .byte   1
         .byte   0               ; ???
 tmask:  .byte   $7F
 font:   .addr   A2D_DEFAULT_FONT
-        .byte   0,0             ; ???
+next:   .addr   0
 .endproc
 
 

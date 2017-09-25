@@ -230,7 +230,7 @@ element:.byte   0
 id:     .byte   0
 .endproc
 
-        window_id := $64
+        window_id := 100
 
 .proc map_coords_params
 id:     .byte   window_id
@@ -286,7 +286,7 @@ vthick: .byte   2
         .byte   0               ; ???
 tmask:  .byte   $7F
 font:   .addr   A2D_DEFAULT_FONT
-        .byte   0,0             ; ???
+next:   .addr   0
 .endproc
 
 ;;; ==================================================

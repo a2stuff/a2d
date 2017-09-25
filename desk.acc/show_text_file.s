@@ -209,7 +209,7 @@ black_pattern:
 white_pattern:
         .res    $8, $FF
 
-        window_id := $64
+        window_id := 100
 
 L095A:  .byte   $00
 L095B:  .byte   $FA
@@ -335,7 +335,7 @@ vthick: .byte   1
         .byte   0               ; ???
 tmask:  .byte   $7F
 font:   .addr   A2D_DEFAULT_FONT
-        .byte   0,0             ; ???
+next:   .addr   0
 .endproc
 
         ;; gets copied over window_params::box after mode is drawn

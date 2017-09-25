@@ -85,7 +85,7 @@ A2D_SET_STATE   := $04          ; Set full drawing state
         ;; $05 used in DeskTop but not DAs - icon click
         ;; (input length 0 bytes)
 
-A2D_SET_BOX   := $06           ; Set just the drawing box, subset of full state
+A2D_SET_BOX   := $06            ; Set just the drawing box, subset of full state
         ;; (input length 16 bytes)
         ;; .word left           pixels from screen edge
         ;; .word top
@@ -125,18 +125,18 @@ A2D_DRAW_LINE   := $0F          ; Draw line (from SET_POS)
         ;; .word xdelta         signed, delta in pixels
         ;; .word ydelta
 
-A2D_FILL_RECT   := $11          ; With selected simple pattern (SET_PATTERN)
+A2D_FILL_RECT   := $11          ; Fill rectangle with selected simple pattern/thickness
         ;; (input length 8 bytes)
         ;; .word left           (includes scroll pos)
         ;; .word top
         ;; .word right          pixels
         ;; .word bottom
 
-A2D_DRAW_RECT   := $12          ; With selected pattern
+A2D_DRAW_RECT   := $12          ; Draw rectangle with selected simple pattern/thickness
         ;; (input length 8 bytes)
-        ;; .word left           (includes scroll pos)
+        ;; .word left           pixels
         ;; .word top
-        ;; .word right          pixels
+        ;; .word right
         ;; .word bottom
 
 A2D_TEST_BOX    := $13          ; Is pos (via SET_POS) in bounds? Returns true/false in A
@@ -146,7 +146,7 @@ A2D_TEST_BOX    := $13          ; Is pos (via SET_POS) in bounds? Returns true/f
         ;; .word right
         ;; .word bottom
 
-A2D_DRAW_BITMAP := $14         ; Draw pattern
+A2D_DRAW_BITMAP := $14          ; Draw pattern
         ;; (input length 16 bytes)
         ;; .word left
         ;; .word top
@@ -167,11 +167,11 @@ A2D_DRAW_BITMAP := $14         ; Draw pattern
         ;; $17 used in DeskTop but not DAs - maybe selection drag
         ;; (input length 0 bytes)
 
-A2D_MEASURE_TEXT := $18
+A2D_MEASURE_TEXT := $18         ; Measure the width of a string in pixels
         ;; (input length 3 bytes)
         ;; .addr data
         ;; .byte length
-        ;; .word width          pixels
+        ;; .word width          result in pixels
 
 A2D_DRAW_TEXT   := $19          ; Drawn at last SET_POS as left, baseline
         ;; (input length 3 bytes)
@@ -184,9 +184,9 @@ A2D_CONFIGURE_ZP_USE    := $1A  ; Configure ZP usage by API (speed vs. convenien
 
 A2D_SET_CURSOR  := $24          ; Change cursor pattern
         ;; (input not copied)
-        ;; .res 24      2x12 byte bitmap
-        ;; .res 24      2x12 byte mask
-        ;; .byte hotx   hotspot coords
+        ;; .res 24 bitmap       2x12 byte bitmap
+        ;; .res 24 mask         2x12 byte mask
+        ;; .byte hotx           hotspot coords
         ;; .byte hoty
 
 A2D_SHOW_CURSOR := $25
@@ -214,26 +214,21 @@ A2D_UNK_2B      := $2B          ; Unknown - possibly "reset drawing state"
 
 A2D_SET_INPUT   := $2D          ; Set pending input state (mouse or keyboard)
         ;; (input length 5 bytes)
-        ;; .byte state          (A2D_INPUT_*)
+        ;; .byte state          A2D_INPUT_*
         ;; if state is A2D_INPUT_KEY:
-        ;;   .byte key          (ASCII code; high bit clear)
-        ;;   .byte modifiers    (0=none, 1=open-apple, 2=closed-apple, 3=both)
+        ;;   .byte key          ASCII code; high bit clear
+        ;;   .byte modifiers    0=none, 1=open-apple, 2=closed-apple, 3=both
         ;; if state otherwise:
         ;;   .word xcoord
         ;;   .word ycoord
 
 A2D_CREATE_WINDOW := $38
-        ;; .byte id
-        ;;      0 = desktop
-        ;;      1, 2, ... = file windows
-        ;;      100 = DA (for example)
-        ;; .byte flags          (A2D_CWF_*)
-        ;;      bit 0: remove title bar
-        ;;      bit 1: add close box
-        ;;      bit 2: add resize box
+        ;; (input not copied)
+        ;; .byte id             0 = desktop, 1-...n = DeskTop windows, DAs use 51, 52, 100
+        ;; .byte flags          A2D_CWF_*
         ;; .addr title
-        ;; .byte hscroll        bits: 7 = enable, 6 = show thumb, 0 = show track
-        ;; .byte vscroll
+        ;; .byte hscroll        A2D_CWS_*
+        ;; .byte vscroll        A2D_CWS_*
         ;; .byte hsmax
         ;; .byte hspos
         ;; .byte vsmax
@@ -262,7 +257,7 @@ A2D_CREATE_WINDOW := $38
         ;; .byte 0              ??? fill mode?
         ;; .byte tmsk           AND mask for text, default $7F
         ;; .addr font           A2D_DEFAULT_FONT
-        ;; .byte 0,0            ???
+        ;; .addr next           address of next lower window in stack (filled in by call)
 
 A2D_DESTROY_WINDOW := $39
         ;; (input length 1 byte)
@@ -271,47 +266,41 @@ A2D_DESTROY_WINDOW := $39
         ;; $3B used in DeskTop but not DAs - triggered by dragging window near right edge
         ;; (input length 1 byte)
 
-A2D_QUERY_STATE      := $3C       ; get drawing state of window
+A2D_QUERY_STATE      := $3C     ; get drawing state of window
         ;; (input length 3 bytes)
         ;; .byte id             window
         ;; .addr state          state definition to populate, like A2D_SET_STATE
 
 A2D_QUERY_TARGET   := $40
         ;; (input length 4 bytes)
-        ;; .word queryx         (relative to screen)
+        ;; .word queryx         relative to screen
         ;; .word queryy
-        ;; .byte element        (A2D_ELEM_*)
-        ;;      0 = desktop
-        ;;      1 = menu
-        ;;      2 = client area (including scroll bars/resize box)
-        ;;      3 = title bar
-        ;;      4 = resize box
-        ;;      5 = close box
-        ;; .byte id of window
+        ;; .byte element        A2D_ELEM_*
+        ;; .byte id             of window
 
         ;; $41 used in DeskTop but not DAs - icon in window drop
         ;; (input length 0 bytes)
 
 A2D_CLOSE_CLICK := $43
         ;; (input length 0 bytes)
-        ;; .byte clicked (0 = cancelled, 1 = clicked)
+        ;; .byte clicked        0 = cancelled, 1 = clicked
         ;; .byte ??
         ;; .byte ??
 
 A2D_DRAG_WINDOW := $44
         ;; (input length 5 bytes)
-        ;; .byte window_id
-        ;; .word xcoord         screen coordinates
+        ;; .byte id             window
+        ;; .word xcoord         mouse coords
         ;; .word ycoord
 
 A2D_DRAG_RESIZE := $45
         ;; (input length 5 bytes)
-        ;; .byte id of window
-        ;; .word xcoord of mouse
-        ;; .word ycoord of mouse
-        ;; .byte ??     (likely: moved? 0 = no change, 1 = moved)
+        ;; .byte id             window
+        ;; .word xcoord         mouse coords
+        ;; .word ycoord
+        ;; .byte ??             likely: moved? 0 = no change, 1 = moved
 
-A2D_MAP_COORDS  := $46           ; Map screen coords to client coords
+A2D_MAP_COORDS  := $46          ; Map screen coords to client coords
         ;; (input length 5 bytes)
         ;; .byte window_id
         ;; .word screenx
@@ -321,29 +310,29 @@ A2D_MAP_COORDS  := $46           ; Map screen coords to client coords
 
 A2D_QUERY_CLIENT:= $48
         ;; (input length 4 bytes)
-        ;; .word xcoord of query
-        ;; .word ycoord of query
-        ;; .byte part (0 = client, 1 = vscroll, 2 = hscroll)
-        ;; .byte scroll (1 = up/left, 2 = down/right, 3 = above/before, 4 = below/after, 5 = thumb)
+        ;; .word xcoord
+        ;; .word ycoord
+        ;; .byte part           A2D_CLIENT, A2D_HSCROLL or A2D_VSCROLL
+        ;; .byte scroll         A2D_SCROLL_PART_*
 
 A2D_RESIZE_WINDOW := $49        ; ???
         ;; (input length 3 bytes)
-        ;; .byte ???    maybe part (i.e. HSCROLL or VSCROLL) ???
-        ;; .byte ???    width fraction ??
+        ;; .byte ???            maybe part (i.e. HSCROLL or VSCROLL) ???
+        ;; .byte ???            width fraction ??
         ;; .byte ???
 
 A2D_DRAG_SCROLL := $4A
         ;; (input length 5 bytes)
-        ;; .byte type (1 = vscroll, 2 = hscroll)
-        ;; .word xcoord of mouse
-        ;; .word ycoord of mouse
-        ;; .byte position (0...255)
-        ;; .byte moved (0 = no change, 1 = moved)
+        ;; .byte type           A2D_HSCROLL or A2D_VSCROLL
+        ;; .word mouse xcoord
+        ;; .word mouse ycoord
+        ;; .byte position       0...255
+        ;; .byte moved          0 = no change, 1 = moved
 
 A2D_UPDATE_SCROLL:= $4B
         ;; (input length 3 bytes)
-        ;; .byte type (1 = vertical, 2 = horizontal)
-        ;; .byte pos (new position 0...250)
+        ;; .byte type           A2D_HSCROLL or A2D_VSCROLL
+        ;; .byte pos            new position 0...250
         ;; .byte ???
 
 ;;; $4E looks like last call
@@ -365,7 +354,7 @@ A2D_INPUT_HELD  := 4            ; Mouse button still down
 ;;; Used in A2D_GET_MOUSE
 A2D_ELEM_DESKTOP:= 0
 A2D_ELEM_MENU   := 1
-A2D_ELEM_CLIENT := 2
+A2D_ELEM_CLIENT := 2            ; Includes scroll bars
 A2D_ELEM_TITLE  := 3
 A2D_ELEM_RESIZE := 4
 A2D_ELEM_CLOSE  := 5
@@ -391,23 +380,23 @@ A2D_SFM_NORMAL          := 0
 A2D_SFM_XOR             := 6
 
 ;;; Used in A2D_CREATE_WINDOW
-A2D_CWF_NOTITLE  := 1 << 0
-A2D_CWF_ADDCLOSE := 1 << 1
-A2D_CWF_ADDRESIZE:= 1 << 2
+A2D_CWF_NOTITLE         := 1 << 0
+A2D_CWF_ADDCLOSE        := 1 << 1
+A2D_CWF_ADDRESIZE       := 1 << 2
 
-A2D_CWS_NOSCROLL := 0
-A2D_CWS_SCROLL_ENABLED := 1 << 7
-A2D_CWS_SCROLL_THUMB   := 1 << 6
-A2D_CWS_SCROLL_TRACK   := 1 << 0
-A2D_CWS_SCROLL_NORMAL  := A2D_CWS_SCROLL_ENABLED | A2D_CWS_SCROLL_THUMB | A2D_CWS_SCROLL_TRACK
+A2D_CWS_NOSCROLL        := 0
+A2D_CWS_SCROLL_ENABLED  := 1 << 7
+A2D_CWS_SCROLL_THUMB    := 1 << 6
+A2D_CWS_SCROLL_TRACK    := 1 << 0
+A2D_CWS_SCROLL_NORMAL   := A2D_CWS_SCROLL_ENABLED | A2D_CWS_SCROLL_THUMB | A2D_CWS_SCROLL_TRACK
 
 ;;; Used in A2D_CONFIGURE_ZP_USE
-A2D_CZP_PRESERVE  := 1<<7
-A2D_CZP_OVERWRITE := 0
+A2D_CZP_PRESERVE        := 1<<7
+A2D_CZP_OVERWRITE       := 0
 
 ;;; Used in various state blocks
-A2D_DEFAULT_MSKAND := $FF
-A2D_DEFAULT_MSKOR  := $00
+A2D_DEFAULT_MSKAND      := $FF
+A2D_DEFAULT_MSKOR       := $00
 
 ;;; ==================================================
 

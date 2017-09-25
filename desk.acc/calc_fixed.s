@@ -668,7 +668,7 @@ len:    .byte   15              ; ???
 width:  .word   0
 .endproc
 
-        window_id = $34
+        window_id = 52
 
 .proc destroy_window_params
 id:     .byte   window_id
@@ -794,7 +794,7 @@ vthick: .byte   1
         .byte   0               ; ???
 tmask:  .byte   0
 font:   .addr   A2D_DEFAULT_FONT
-        .byte   0,0             ; ???
+next:   .addr   0
 .endproc
 create_window_params_top := create_window_params::top
 

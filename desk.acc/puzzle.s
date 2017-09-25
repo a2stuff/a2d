@@ -75,7 +75,7 @@ stash_stack:  .byte   0
         jmp     create_window
 .endproc
 
-        window_id = $33
+        window_id := 51
 
 ;;; ==================================================
 ;;; Redraw the screen (all windows) after a drag
@@ -621,7 +621,7 @@ vthick: .byte   1
         .byte   0               ; ???
 tmask:  .byte   $7F
 font:   .addr   A2D_DEFAULT_FONT
-        .byte   0,0             ; ???
+next:   .addr   0
 .endproc
 
         ;; This is QUERY_STATE/SET_BOX cruft only below
