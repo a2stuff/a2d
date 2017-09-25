@@ -235,7 +235,9 @@ left:   .word   0
 top:    .word   0
 addr:   .addr   0
 stride: .byte   4
-        .byte   0,0,0,0,0       ; ???
+        .byte   0               ; ???
+hoffset:.word   0
+voffset:.word   0
 width:  .word   27
 height: .word   15
 .endproc

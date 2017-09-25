@@ -236,236 +236,272 @@ flag:  .byte   A2D_CZP_OVERWRITE
         border_br := 2          ; (bottom/right)
 
 .proc btn_c
-        .word   col1_left - border_lt
-        .word   row1_top - border_lt
-        .addr   button_bitmap
-        .byte   bitmap_stride
-        .byte   $00,$00,$00,$00,$00 ; ???
-        .word   button_width + border_lt + border_br
-        .word   button_height + border_lt + border_br
+left:   .word   col1_left - border_lt
+top:    .word   row1_top - border_lt
+bitmap: .addr   button_bitmap
+stride: .byte   bitmap_stride
+        .byte   0               ; ???
+hoffset:.word   0
+voffset:.word   0
+width:  .word   button_width + border_lt + border_br
+height: .word   button_height + border_lt + border_br
 label:  .byte   'c'
 pos:    .word   col1_left + 6, row1_bot
 box:    .word   col1_left,row1_top,col1_right,row1_bot
 .endproc
 
 .proc btn_e
-        .word   col2_left - border_lt
-        .word   row1_top - border_lt
-        .addr   button_bitmap
-        .byte   bitmap_stride
-        .byte   $00,$00,$00,$00,$00
-        .word   button_width + border_lt + border_br
-        .word   button_height + border_lt + border_br
+left:   .word   col2_left - border_lt
+top:    .word   row1_top - border_lt
+bitmap: .addr   button_bitmap
+stride: .byte   bitmap_stride
+        .byte   0               ; ???
+hoffset:.word   0
+voffset:.word   0
+width:  .word   button_width + border_lt + border_br
+height: .word   button_height + border_lt + border_br
 label:  .byte   'e'
-        .word   col2_left + 6, row1_bot
+pos:    .word   col2_left + 6, row1_bot
 box:    .word   col2_left,row1_top,col2_right,row1_bot
 .endproc
 
 .proc btn_eq
-        .word   col3_left - border_lt
-        .word   row1_top - border_lt
-        .addr   button_bitmap
-        .byte   bitmap_stride
-        .byte   $00,$00,$00,$00,$00
-        .word   button_width + border_lt + border_br
-        .word   button_height + border_lt + border_br
+left:   .word   col3_left - border_lt
+top:    .word   row1_top - border_lt
+bitmap: .addr   button_bitmap
+stride: .byte   bitmap_stride
+        .byte   0               ; ???
+hoffset:.word   0
+voffset:.word   0
+width:  .word   button_width + border_lt + border_br
+height: .word   button_height + border_lt + border_br
 label:  .byte   '='
-        .word   col3_left + 6, row1_bot
+pos:    .word   col3_left + 6, row1_bot
 box:    .word   col3_left,row1_top,col3_right,row1_bot
 .endproc
 
 .proc btn_mul
-        .word   col4_left - border_lt
-        .word   row1_top - border_lt
-        .addr   button_bitmap
-        .byte   bitmap_stride
-        .byte   $00,$00,$00,$00,$00
-        .word   button_width + border_lt + border_br
-        .word   button_height + border_lt + border_br
+left:   .word   col4_left - border_lt
+top:    .word   row1_top - border_lt
+bitmap: .addr   button_bitmap
+stride: .byte   bitmap_stride
+        .byte   0               ; ???
+hoffset:.word   0
+voffset:.word   0
+width:  .word   button_width + border_lt + border_br
+height: .word   button_height + border_lt + border_br
 label:  .byte   '*'
-        .word   col4_left + 6, row1_bot
+pos:    .word   col4_left + 6, row1_bot
 box:    .word   col4_left,row1_top,col4_right,row1_bot
 .endproc
 
 .proc btn_7
-        .word   col1_left - border_lt
-        .word   row2_top - border_lt
-        .addr   button_bitmap
-        .byte   bitmap_stride
-        .byte   $00,$00,$00,$00,$00
-        .word   button_width + border_lt + border_br
-        .word   button_height + border_lt + border_br
+left:   .word   col1_left - border_lt
+top:    .word   row2_top - border_lt
+bitmap: .addr   button_bitmap
+stride: .byte   bitmap_stride
+        .byte   0               ; ???
+hoffset:.word   0
+voffset:.word   0
+width:  .word   button_width + border_lt + border_br
+height: .word   button_height + border_lt + border_br
 label:  .byte   '7'
-        .word   col1_left + 6, row2_bot
+pos:    .word   col1_left + 6, row2_bot
 box:    .word   col1_left,row2_top,col1_right,row2_bot
 .endproc
 
 .proc btn_8
-        .word   col2_left - border_lt
-        .word   row2_top - border_lt
-        .addr   button_bitmap
-        .byte   bitmap_stride
-        .byte   $00,$00,$00,$00,$00
-        .word   button_width + border_lt + border_br
-        .word   button_height + border_lt + border_br
+left:   .word   col2_left - border_lt
+top:    .word   row2_top - border_lt
+bitmap: .addr   button_bitmap
+stride: .byte   bitmap_stride
+        .byte   0               ; ???
+hoffset:.word   0
+voffset:.word   0
+width:  .word   button_width + border_lt + border_br
+height: .word   button_height + border_lt + border_br
 label:  .byte   '8'
-        .word   col2_left + 6, row2_bot
+pos:    .word   col2_left + 6, row2_bot
 box:    .word   col2_left,row2_top,col2_right,row2_bot
 .endproc
 
 .proc btn_9
-        .word   col3_left - border_lt
-        .word   row2_top - border_lt
-        .addr   button_bitmap
-        .byte   bitmap_stride
-        .byte   $00,$00,$00,$00,$00
-        .word   button_width + border_lt + border_br
-        .word   button_height + border_lt + border_br
+left:   .word   col3_left - border_lt
+top:    .word   row2_top - border_lt
+bitmap: .addr   button_bitmap
+stride: .byte   bitmap_stride
+        .byte   0               ; ???
+hoffset:.word   0
+voffset:.word   0
+width:  .word   button_width + border_lt + border_br
+height: .word   button_height + border_lt + border_br
 label:  .byte   '9'
-        .word   col3_left + 6, row2_bot
+pos:    .word   col3_left + 6, row2_bot
 box:    .word   col3_left,row2_top,col3_right,row2_bot
 .endproc
 
 .proc btn_div
-        .word   col4_left - border_lt
-        .word   row2_top - border_lt
-        .addr   button_bitmap
-        .byte   bitmap_stride
-        .byte   $00,$00,$00,$00,$00
-        .word   button_width + border_lt + border_br
-        .word   button_height + border_lt + border_br
+left:   .word   col4_left - border_lt
+top:    .word   row2_top - border_lt
+bitmap: .addr   button_bitmap
+stride: .byte   bitmap_stride
+        .byte   0               ; ???
+hoffset:.word   0
+voffset:.word   0
+width:  .word   button_width + border_lt + border_br
+height: .word   button_height + border_lt + border_br
 label:  .byte   '/'
-        .word   col4_left + 6, row2_bot
+pos:    .word   col4_left + 6, row2_bot
 box:    .word   col4_left,row2_top,col4_right,row2_bot
 .endproc
 
 .proc btn_4
-        .word   col1_left - border_lt
-        .word   row3_top - border_lt
-        .addr   button_bitmap
-        .byte   bitmap_stride
-        .byte   $00,$00,$00,$00,$00
-        .word   button_width + border_lt + border_br
-        .word   button_height + border_lt + border_br
+left:   .word   col1_left - border_lt
+top:    .word   row3_top - border_lt
+bitmap: .addr   button_bitmap
+stride: .byte   bitmap_stride
+        .byte   0               ; ???
+hoffset:.word   0
+voffset:.word   0
+width:  .word   button_width + border_lt + border_br
+height: .word   button_height + border_lt + border_br
 label:  .byte   '4'
-        .word   col1_left + 6, row3_bot
+pos:    .word   col1_left + 6, row3_bot
 box:    .word   col1_left,row3_top,col1_right,row3_bot
 .endproc
 
 .proc btn_5
-        .word   col2_left - border_lt
-        .word   row3_top - border_lt
-        .addr   button_bitmap
-        .byte   bitmap_stride
-        .byte   $00,$00,$00,$00,$00
-        .word   button_width + border_lt + border_br
-        .word   button_height + border_lt + border_br
+left:   .word   col2_left - border_lt
+top:    .word   row3_top - border_lt
+bitmap: .addr   button_bitmap
+stride: .byte   bitmap_stride
+        .byte   0               ; ???
+hoffset:.word   0
+voffset:.word   0
+width:  .word   button_width + border_lt + border_br
+height: .word   button_height + border_lt + border_br
 label:  .byte   '5'
-        .word   col2_left + 6, row3_bot
+pos:    .word   col2_left + 6, row3_bot
 box:    .word   col2_left,row3_top,col2_right,row3_bot
 .endproc
 
 .proc btn_6
-        .word   col3_left - border_lt
-        .word   row3_top - border_lt
-        .addr   button_bitmap
-        .byte   bitmap_stride
-        .byte   $00,$00,$00,$00,$00
-        .word   button_width + border_lt + border_br
-        .word   button_height + border_lt + border_br
+left:   .word   col3_left - border_lt
+top:    .word   row3_top - border_lt
+bitmap: .addr   button_bitmap
+stride: .byte   bitmap_stride
+        .byte   0               ; ???
+hoffset:.word   0
+voffset:.word   0
+width:  .word   button_width + border_lt + border_br
+height: .word   button_height + border_lt + border_br
 label:  .byte   '6'
-        .word   col3_left + 6, row3_bot
+pos:    .word   col3_left + 6, row3_bot
 box:    .word   col3_left,row3_top,col3_right,row3_bot
 .endproc
 
 .proc btn_sub
-        .word   col4_left - border_lt
-        .word   row3_top - border_lt
-        .addr   button_bitmap
-        .byte   bitmap_stride
-        .byte   $00,$00,$00,$00,$00
-        .word   button_width + border_lt + border_br
-        .word   button_height + border_lt + border_br
+left:   .word   col4_left - border_lt
+top:    .word   row3_top - border_lt
+bitmap: .addr   button_bitmap
+stride: .byte   bitmap_stride
+        .byte   0               ; ???
+hoffset:.word   0
+voffset:.word   0
+width:  .word   button_width + border_lt + border_br
+height: .word   button_height + border_lt + border_br
 label:  .byte   '-'
-        .word   col4_left + 6, row3_bot
+pos:    .word   col4_left + 6, row3_bot
 box:    .word   col4_left,row3_top,col4_right,row3_bot
 .endproc
 
 .proc btn_1
-        .word   col1_left - border_lt
-        .word   row4_top - border_lt
-        .addr   button_bitmap
-        .byte   bitmap_stride
-        .byte   $00,$00,$00,$00,$00
-        .word   button_width + border_lt + border_br
-        .word   button_height + border_lt + border_br
+left:   .word   col1_left - border_lt
+top:    .word   row4_top - border_lt
+bitmap: .addr   button_bitmap
+stride: .byte   bitmap_stride
+        .byte   0               ; ???
+hoffset:.word   0
+voffset:.word   0
+width:  .word   button_width + border_lt + border_br
+height: .word   button_height + border_lt + border_br
 label:  .byte   '1'
-        .word   col1_left + 6, row4_bot
+pos:    .word   col1_left + 6, row4_bot
 box:    .word   col1_left,row4_top,col1_right,row4_bot
 .endproc
 
 .proc btn_2
-        .word   col2_left - border_lt
-        .word   row4_top - border_lt
-        .addr   button_bitmap
-        .byte   bitmap_stride
-        .byte   $00,$00,$00,$00,$00
-        .word   button_width + border_lt + border_br
-        .word   button_height + border_lt + border_br
+left:   .word   col2_left - border_lt
+top:    .word   row4_top - border_lt
+bitmap: .addr   button_bitmap
+stride: .byte   bitmap_stride
+        .byte   0               ; ???
+hoffset:.word   0
+voffset:.word   0
+width:  .word   button_width + border_lt + border_br
+height: .word   button_height + border_lt + border_br
 label:  .byte   '2'
-        .word   col2_left + 6, row4_bot
+pos:    .word   col2_left + 6, row4_bot
 box:    .word   col2_left,row4_top,col2_right,row4_bot
 .endproc
 
 .proc btn_3
-        .word   col3_left - border_lt
-        .word   row4_top - border_lt
-        .addr   button_bitmap
-        .byte   bitmap_stride
-        .byte   $00,$00,$00,$00,$00
-        .word   button_width + border_lt + border_br
-        .word   button_height + border_lt + border_br
+left:   .word   col3_left - border_lt
+top:    .word   row4_top - border_lt
+bitmap: .addr   button_bitmap
+stride: .byte   bitmap_stride
+        .byte   0               ; ???
+hoffset:.word   0
+voffset:.word   0
+width:  .word   button_width + border_lt + border_br
+height: .word   button_height + border_lt + border_br
 label:  .byte   '3'
-        .word   col3_left + 6, row4_bot
+pos:    .word   col3_left + 6, row4_bot
 box:    .word   col3_left,row4_top,col3_right,row4_bot
 .endproc
 
 .proc btn_0
-        .word   col1_left - border_lt
-        .word   row5_top - border_lt
-        .addr   wide_button_bitmap
-        .byte   8                   ; bitmap_stride (bytes)
-        .byte   $00,$00,$00,$00,$00
-        .word   49                      ; 0 is extra wide
-        .word   button_height + border_lt + border_br
-        .byte   '0'
-        .word   col1_left + 6, row5_bot
+left:   .word   col1_left - border_lt
+top:    .word   row5_top - border_lt
+bitmap: .addr   wide_button_bitmap
+stride: .byte   8                   ; bitmap_stride (bytes)
+        .byte   0               ; ???
+hoffset:.word   0
+voffset:.word   0
+width:  .word   49                      ; 0 is extra wide
+height: .word   button_height + border_lt + border_br
+label:  .byte   '0'
+pos:    .word   col1_left + 6, row5_bot
 box:    .word   col1_left,row5_top,col2_right,row5_bot
 .endproc
 
 .proc btn_dec
-        .word   col3_left - border_lt
-        .word   row5_top - border_lt
-        .addr   button_bitmap
-        .byte   bitmap_stride
-        .byte   $00,$00,$00,$00,$00
-        .word   button_width + border_lt + border_br
-        .word   button_height + border_lt + border_br
-        .byte   '.'
-        .word   col3_left + 6 + 2, row5_bot ; + 2 to center the label
+left:   .word   col3_left - border_lt
+top:    .word   row5_top - border_lt
+bitmap: .addr   button_bitmap
+stride: .byte   bitmap_stride
+        .byte   0               ; ???
+hoffset:.word   0
+voffset:.word   0
+width:  .word   button_width + border_lt + border_br
+height: .word   button_height + border_lt + border_br
+label:  .byte   '.'
+pos:    .word   col3_left + 6 + 2, row5_bot ; + 2 to center the label
 box:    .word   col3_left,row5_top,col3_right,row5_bot
 .endproc
 
 .proc btn_add
-        .word   col4_left - border_lt
-        .word   row4_top - border_lt
-        .addr   tall_button_bitmap
-        .byte   bitmap_stride
-        .byte   $00,$00,$00,$00,$00
-        .word   button_width + border_lt + border_br
-        .word   27              ; + is extra tall
-        .byte   '+'
-        .word   col4_left + 6, row5_bot
+left:   .word   col4_left - border_lt
+top:    .word   row4_top - border_lt
+bitmap: .addr   tall_button_bitmap
+stride: .byte   bitmap_stride
+        .byte   0               ; ???
+hoffset:.word   0
+voffset:.word   0
+width:  .word   button_width + border_lt + border_br
+height: .word   27              ; + is extra tall
+label:  .byte   '+'
+pos:    .word   col4_left + 6, row5_bot
 box:    .word   col4_left,row4_top,col4_right,row5_bot
 .endproc
         .byte   0               ; sentinel
@@ -475,7 +511,7 @@ box:    .word   col4_left,row4_top,col4_right,row5_bot
 
         ;; bitmaps are low 7 bits, 0=black 1=white
         bitmap_stride   := 3    ; bytes
-button_bitmap:                 ; bitmap for normal buttons
+button_bitmap:                  ; bitmap for normal buttons
         .byte   px(%0000000),px(%0000000),px(%0000001)
         .byte   px(%0111111),px(%1111111),px(%1111100)
         .byte   px(%0111111),px(%1111111),px(%1111100)
@@ -491,7 +527,7 @@ button_bitmap:                 ; bitmap for normal buttons
         .byte   px(%1000000),px(%0000000),px(%0000000)
 
         wide_bitmap_stride := 8
-wide_button_bitmap:            ; bitmap for '0' button
+wide_button_bitmap:             ; bitmap for '0' button
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%1111111)
         .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111110),px(%0111111)
         .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111110),px(%0111111)
@@ -506,7 +542,7 @@ wide_button_bitmap:            ; bitmap for '0' button
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0111111)
         .byte   px(%1000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0111111)
 
-tall_button_bitmap:            ; bitmap for '+' button
+tall_button_bitmap:             ; bitmap for '+' button
         .byte   px(%0000000),px(%0000000),px(%0000001)
         .byte   px(%0111111),px(%1111111),px(%1111100)
         .byte   px(%0111111),px(%1111111),px(%1111100)
@@ -660,7 +696,9 @@ left:   .word   115             ; overwritten
 top:    .word   $FFF7           ; overwritten
 bitmap:.addr   pixels
 stride: .byte   1
-        .byte   0,0,0,0,0       ; ???
+        .byte   0               ; ???
+hoffset:.word   0
+voffset:.word   0
 width:  .word   6
 height: .word   5
         ;;  (not part of struct, but not referenced outside)
@@ -676,7 +714,7 @@ pixels: .byte   px(%1000001)
 .proc state_params
 left:   .word   0
 top:    .word   0
-addr:   .word   0
+saddr:  .word   0
 stride: .word   0
 hoffset:.word   0
 voffset:.word   0
