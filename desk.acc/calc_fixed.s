@@ -168,6 +168,7 @@ clienty := * + 7
 id      := *
 xcoord  := * + 1 ; aligns with input_state::xcoord
 ycoord  := * + 3 ; aligns with input_state::ycoord
+moved   := * + 5 ; ignored
 .endproc
 
 .proc input_state_params

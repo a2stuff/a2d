@@ -209,7 +209,7 @@ A2D_GET_INPUT   := $2A
 A2D_UNK_2B      := $2B          ; Unknown - possibly "reset drawing state"
         ;; (no parameters; pass $0000 as address)
 
-        ;; $2C used in DeskTop but not DAs
+        ;; $2C used in DeskTop but not DAs - icon drag
         ;; (input length 0 bytes)
 
 A2D_SET_INPUT   := $2D          ; Set pending input state (mouse or keyboard)
@@ -292,6 +292,7 @@ A2D_DRAG_WINDOW := $44
         ;; .byte id             window
         ;; .word xcoord         mouse coords
         ;; .word ycoord
+        ;; .byte moved          high bit set if moved, clear if not
 
 A2D_DRAG_RESIZE := $45
         ;; (input length 5 bytes)

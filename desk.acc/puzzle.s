@@ -148,7 +148,10 @@ check_window_pos:
 
         ;; following memory space is re-used so x/y overlap
 .proc drag_window_params
-id := * + 0
+id      := * + 0
+xcoord  := * + 1                ; x overlap
+ycoord  := * + 3                ; y overlap
+moved   := * + 5                ; ignored
 .endproc
 
 .proc map_coords_params
