@@ -150,9 +150,11 @@ A2D_DRAW_BITMAP := $14         ; Draw pattern
         ;; (input length 16 bytes)
         ;; .word left
         ;; .word top
-        ;; .addr pattern        pattern is 7 bits per byte, 0 = black, 1 = white
-        ;; .byte stride         pattern width in bytes
-        ;; .byte 0,0,0,0,0      ???
+        ;; .addr bitmap         bitmap is 7 bits per byte, 0 = black, 1 = white
+        ;; .byte stride         bitmap width in bytes
+        ;; .byte 0              ???
+        ;; .word hoffset        offset within bitmap definition
+        ;; .word voffset
         ;; .word width          pixels
         ;; .word height         pixels
 
