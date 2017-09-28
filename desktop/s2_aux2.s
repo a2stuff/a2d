@@ -660,10 +660,12 @@ LE4F2:
         .byte   $00
 
          ; Looks like a bunch of window params starting here-ish
-.proc win1
-id:     .byte   1
+
+.macro WIN_PARAMS_DEFN window_id, label, buflabel
+.proc label
+id:     .byte   window_id
 flags:  .byte   A2D_CWF_ADDCLOSE | A2D_CWF_ADDRESIZE
-title:  .addr   win1buf
+title:  .addr   buflabel
 hscroll:.byte   A2D_CWS_SCROLL_NORMAL
 vscroll:.byte   A2D_CWS_SCROLL_NORMAL
 hsmax:  .byte   3
@@ -694,44 +696,17 @@ tmsk:   .byte   $7F
 font:   .addr   $8800
 next:   .addr   0
 .endproc
+buflabel:.res    18, 0
+.endmacro
 
-win1buf:.res    18, 0
-
-.proc win2
-        .byte   $02,$06,$A9,$E7,$C1,$C1,$03,$00,$03,$00,$00,$00,$AA,$00,$32,$00,$21,$02,$AF,$00,$14,$00,$1B,$00,$00,$20,$80,$00,$00,$00,$00,$00,$B8,$01,$78,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$00,$00,$00,$00,$00,$01,$01,$00,$7F,$00,$88,$00,$00
-.endproc
-
-win2buf:.res    18, 0
-
-.proc win3
-        .byte   $03,$06,$F5,$E7,$C1,$C1,$03,$00,$03,$00,$00,$00,$AA,$00,$32,$00,$21,$02,$AF,$00,$14,$00,$1B,$00,$00,$20,$80,$00,$00,$00,$00,$00,$B8,$01,$78,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$00,$00,$00,$00,$00,$01,$01,$00,$7F,$00,$88,$00,$00
-.endproc
-
-win3buf:.res    18, 0
-
-.proc win4
-        .byte   $04,$06,$41,$E8,$C1,$C1,$03,$00,$03,$00,$00,$00,$AA,$00,$32,$00,$21,$02,$AF,$00,$14,$00,$1B,$00,$00,$20,$80,$00,$00,$00,$00,$00,$B8,$01,$78,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$00,$00,$00,$00,$00,$01,$01,$00,$7F,$00,$88,$00,$00
-.endproc
-
-win4buf:.res    18, 0
-
-.proc win5
-        .byte   $05,$06,$8D,$E8,$C1,$C1,$03,$00,$03,$00,$00,$00,$AA,$00,$32,$00,$21,$02,$AF,$00,$14,$00,$1B,$00,$00,$20,$80,$00,$00,$00,$00,$00,$B8,$01,$78,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$00,$00,$00,$00,$00,$01,$01,$00,$7F,$00,$88,$00,$00
-.endproc
-
-win5buf:.res    18, 0
-
-        .byte   $06,$06,$D9,$E8,$C1,$C1,$03,$00,$03,$00,$00,$00,$AA,$00,$32,$00,$21,$02,$AF,$00,$14,$00,$1B,$00,$00,$20,$80,$00,$00,$00,$00,$00,$B8,$01,$78,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$00,$00,$00,$00,$00,$01,$01,$00,$7F,$00,$88,$00,$00
-
-win6buf:.res    18, 0
-
-        .byte   $07,$06,$25,$E9,$C1,$C1,$03,$00,$03,$00,$00,$00,$AA,$00,$32,$00,$21,$02,$AF,$00,$14,$00,$1B,$00,$00,$20,$80,$00,$00,$00,$00,$00,$B8,$01,$78,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$00,$00,$00,$00,$00,$01,$01,$00,$7F,$00,$88,$00,$00
-
-win7buf:.res    18, 0
-
-        .byte   $08,$06,$71,$E9,$C1,$C1,$03,$00,$03,$00,$00,$00,$AA,$00,$32,$00,$21,$02,$AF,$00,$14,$00,$1B,$00,$00,$20,$80,$00,$00,$00,$00,$00,$B8,$01,$78,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$00,$00,$00,$00,$00,$01,$01,$00,$7F,$00,$88,$00,$00
-
-win8buf:.res    18, 0
+        WIN_PARAMS_DEFN 1, win1, win1buf
+        WIN_PARAMS_DEFN 2, win2, win2buf
+        WIN_PARAMS_DEFN 3, win3, win3buf
+        WIN_PARAMS_DEFN 4, win4, win4buf
+        WIN_PARAMS_DEFN 5, win5, win5buf
+        WIN_PARAMS_DEFN 6, win6, win6buf
+        WIN_PARAMS_DEFN 7, win7, win7buf
+        WIN_PARAMS_DEFN 8, win8, win8buf
 
         .res    560, 0
 
