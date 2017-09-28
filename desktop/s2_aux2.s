@@ -207,6 +207,7 @@ LD14C:  ora     ($8D)
         .byte   $FF,$FF,$FF,$FF,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$FF
 
+LD293:
         .byte   px(%1010101)
         .byte   PX(%0101010)
         .byte   px(%1010101)
@@ -224,6 +225,7 @@ LD14C:  ora     ($8D)
 
 ;;; Pointer
 
+LD2AD:
         .byte   px(%0000000),px(%0000000)
         .byte   px(%0100000),px(%0000000)
         .byte   px(%0110000),px(%0000000)
@@ -251,7 +253,7 @@ LD14C:  ora     ($8D)
         .byte   1,1
 
 ;;; Insertion Point
-
+LD2DF:
         .byte   px(%0000000),px(%0000000)
         .byte   px(%0110001),px(%1000000)
         .byte   px(%0001010),px(%0000000)
@@ -279,7 +281,7 @@ LD14C:  ora     ($8D)
         .byte   4, 5
 
 ;;; Watch
-
+LD311:
         .byte   px(%0000000),px(%0000000)
         .byte   px(%0011111),px(%1100000)
         .byte   px(%0011111),px(%1100000)
@@ -336,6 +338,7 @@ alert_bitmap:
         .byte   PX(%0111111),px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
 
+LD56D:
         .word   $28, $8         ; left, top
         .addr   alert_bitmap
         .byte   $07             ; stride
@@ -431,10 +434,12 @@ alert_bitmap:
         .byte   $00,$00,$00,$14,$00,$00,$00,$00
         .byte   $01,$06,$00,$00,$00,$00,$00,$00
         .byte   $01,$00,$02,$20,$20
+
         PASCAL_STRING "Files"
 
-        .byte   $07,$20,$20,$20,$20
-        .byte   $20,$20,$20,$00,$00,$00,$00,$0D
+        PASCAL_STRING "       "
+
+        .byte   $00,$00,$00,$00,$0D
         .byte   $00,$00,$00,$00,$00,$7D,$00,$00
         .byte   $00,$02,$00,$00,$00,$00,$00,$02
         .byte   $01,$02,$00,$00,$57,$01,$28,$00
@@ -508,10 +513,12 @@ alert_bitmap:
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$0C,$E3,$23,$E3,$3A,$E3
-        .byte   $51,$E3,$68,$E3,$7F,$E3,$96,$E3
-        .byte   $AD,$E3,$C4,$E3,$DB,$E3,$F2,$E3
-        .byte   $09,$E4,$20,$E4,$37,$E4,$F2,$E4
+        .byte   $00,$00
+
+        .addr   sd0s, sd1s, sd2s, sd3s, sd4s, sd5s, sd6s
+        .addr   sd7s, sd8s, sd9s, sd10s, sd11s, sd12s, sd13s
+
+        .addr   LE4F2
 
         .res    896, 0
 
@@ -565,20 +572,20 @@ LDFA1:  .addr   $0000,$E723,$E76F,$E7BB,$E807,$E853,$E89F,$E8EB,$E937,$0000,$E98
 
         PASCAL_STRING "All"
 
-sd0:    A2D_DEFSTRING "Slot    drive       "
-sd1:    A2D_DEFSTRING "Slot    drive       "
-sd2:    A2D_DEFSTRING "Slot    drive       "
-sd3:    A2D_DEFSTRING "Slot    drive       "
-sd4:    A2D_DEFSTRING "Slot    drive       "
-sd5:    A2D_DEFSTRING "Slot    drive       "
-sd6:    A2D_DEFSTRING "Slot    drive       "
-sd7:    A2D_DEFSTRING "Slot    drive       "
-sd8:    A2D_DEFSTRING "Slot    drive       "
-sd9:    A2D_DEFSTRING "Slot    drive       "
-sd10:   A2D_DEFSTRING "Slot    drive       "
-sd11:   A2D_DEFSTRING "Slot    drive       "
-sd12:   A2D_DEFSTRING "Slot    drive       "
-sd13:   A2D_DEFSTRING "Slot    drive       "
+sd0:    A2D_DEFSTRING "Slot    drive       ", sd0s
+sd1:    A2D_DEFSTRING "Slot    drive       ", sd1s
+sd2:    A2D_DEFSTRING "Slot    drive       ", sd2s
+sd3:    A2D_DEFSTRING "Slot    drive       ", sd3s
+sd4:    A2D_DEFSTRING "Slot    drive       ", sd4s
+sd5:    A2D_DEFSTRING "Slot    drive       ", sd5s
+sd6:    A2D_DEFSTRING "Slot    drive       ", sd6s
+sd7:    A2D_DEFSTRING "Slot    drive       ", sd7s
+sd8:    A2D_DEFSTRING "Slot    drive       ", sd8s
+sd9:    A2D_DEFSTRING "Slot    drive       ", sd9s
+sd10:   A2D_DEFSTRING "Slot    drive       ", sd10s
+sd11:   A2D_DEFSTRING "Slot    drive       ", sd11s
+sd12:   A2D_DEFSTRING "Slot    drive       ", sd12s
+sd13:   A2D_DEFSTRING "Slot    drive       ", sd13s
 
         PASCAL_STRING "Slot 0 "
         PASCAL_STRING "Slot 0 "
@@ -595,6 +602,8 @@ sd13:   A2D_DEFSTRING "Slot    drive       "
         PASCAL_STRING "UniDisk 3.5  Sx,y  "
         PASCAL_STRING "RAMCard Slot x      "
         PASCAL_STRING "Slot    drive       "
+
+LE4F2:
         .byte   $05,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$46,$E5,$00,$00,$00,$00
         .byte   $57,$E5,$00,$00,$00,$00,$69,$E5
@@ -648,86 +657,83 @@ sd13:   A2D_DEFSTRING "Slot    drive       "
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$01,$06,$5D,$E7,$C1,$C1,$03 ; Looks like a bunch of window params starting here-ish
-        .byte   $00,$03,$00,$00,$00,$AA,$00,$32
-        .byte   $00,$21,$02,$AF,$00,$14,$00,$1B
-        .byte   $00,$00,$20,$80,$00,$00,$00,$00
-        .byte   $00,$B8,$01,$78,$00,$FF,$FF,$FF
-        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$00,$00
-        .byte   $00,$00,$00,$01,$01,$00,$7F,$00
-        .byte   $88,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$02,$06,$A9
-        .byte   $E7,$C1,$C1,$03,$00,$03,$00,$00
-        .byte   $00,$AA,$00,$32,$00,$21,$02,$AF
-        .byte   $00,$14,$00,$1B,$00,$00,$20,$80
-        .byte   $00,$00,$00,$00,$00,$B8,$01,$78
-        .byte   $00,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-        .byte   $FF,$FF,$00,$00,$00,$00,$00,$01
-        .byte   $01,$00,$7F,$00,$88,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$03,$06,$F5,$E7,$C1,$C1,$03
-        .byte   $00,$03,$00,$00,$00,$AA,$00,$32
-        .byte   $00,$21,$02,$AF,$00,$14,$00,$1B
-        .byte   $00,$00,$20,$80,$00,$00,$00,$00
-        .byte   $00,$B8,$01,$78,$00,$FF,$FF,$FF
-        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$00,$00
-        .byte   $00,$00,$00,$01,$01,$00,$7F,$00
-        .byte   $88,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$04,$06,$41
-        .byte   $E8,$C1,$C1,$03,$00,$03,$00,$00
-        .byte   $00,$AA,$00,$32,$00,$21,$02,$AF
-        .byte   $00,$14,$00,$1B,$00,$00,$20,$80
-        .byte   $00,$00,$00,$00,$00,$B8,$01,$78
-        .byte   $00,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-        .byte   $FF,$FF,$00,$00,$00,$00,$00,$01
-        .byte   $01,$00,$7F,$00,$88,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$05,$06,$8D,$E8,$C1,$C1,$03
-        .byte   $00,$03,$00,$00,$00,$AA,$00,$32
-        .byte   $00,$21,$02,$AF,$00,$14,$00,$1B
-        .byte   $00,$00,$20,$80,$00,$00,$00,$00
-        .byte   $00,$B8,$01,$78,$00,$FF,$FF,$FF
-        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$00,$00
-        .byte   $00,$00,$00,$01,$01,$00,$7F,$00
-        .byte   $88,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$06,$06,$D9
-        .byte   $E8,$C1,$C1,$03,$00,$03,$00,$00
-        .byte   $00,$AA,$00,$32,$00,$21,$02,$AF
-        .byte   $00,$14,$00,$1B,$00,$00,$20,$80
-        .byte   $00,$00,$00,$00,$00,$B8,$01,$78
-        .byte   $00,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-        .byte   $FF,$FF,$00,$00,$00,$00,$00,$01
-        .byte   $01,$00,$7F,$00,$88,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$07,$06,$25,$E9,$C1,$C1,$03
-        .byte   $00,$03,$00,$00,$00,$AA,$00,$32
-        .byte   $00,$21,$02,$AF,$00,$14,$00,$1B
-        .byte   $00,$00,$20,$80,$00,$00,$00,$00
-        .byte   $00,$B8,$01,$78,$00,$FF,$FF,$FF
-        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$00,$00
-        .byte   $00,$00,$00,$01,$01,$00,$7F,$00
-        .byte   $88,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$08,$06,$71
-        .byte   $E9,$C1,$C1,$03,$00,$03,$00,$00
-        .byte   $00,$AA,$00,$32,$00,$21,$02,$AF
-        .byte   $00,$14,$00,$1B,$00,$00,$20,$80
-        .byte   $00,$00,$00,$00,$00,$B8,$01,$78
-        .byte   $00,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-        .byte   $FF,$FF,$00,$00,$00,$00,$00,$01
-        .byte   $01,$00,$7F,$00,$88,$00,$00,$00
+        .byte   $00
+
+         ; Looks like a bunch of window params starting here-ish
+.proc win1
+id:     .byte   1
+flags:  .byte   A2D_CWF_ADDCLOSE | A2D_CWF_ADDRESIZE
+title:  .addr   win1buf
+hscroll:.byte   A2D_CWS_SCROLL_NORMAL
+vscroll:.byte   A2D_CWS_SCROLL_NORMAL
+hsmax:  .byte   3
+hspos:  .byte   0
+vsmax:  .byte   3
+vspos:  .byte   0
+        .byte   0,0             ; ???
+w1:     .word   170
+h1:     .word   50
+w2:     .word   545
+h2:     .word   175
+left:   .word   20
+top:    .word   27
+saddr:  .addr   A2D_SCREEN_ADDR
+stride: .word   A2D_SCREEN_STRIDE
+hoff:   .word   0
+voff:   .word   0
+width:  .word   440
+height: .word   120
+pattern:.res    8, $FF
+mskand: .byte   $FF
+mskor:  .byte   $00
+        .byte   0,0,0,0         ; ???
+hthick: .byte   1
+vthick: .byte   1
+        .byte   0               ; ???
+tmsk:   .byte   $7F
+font:   .addr   $8800
+next:   .addr   0
+.endproc
+
+win1buf:.res    18, 0
+
+.proc win2
+        .byte   $02,$06,$A9,$E7,$C1,$C1,$03,$00,$03,$00,$00,$00,$AA,$00,$32,$00,$21,$02,$AF,$00,$14,$00,$1B,$00,$00,$20,$80,$00,$00,$00,$00,$00,$B8,$01,$78,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$00,$00,$00,$00,$00,$01,$01,$00,$7F,$00,$88,$00,$00
+.endproc
+
+win2buf:.res    18, 0
+
+.proc win3
+        .byte   $03,$06,$F5,$E7,$C1,$C1,$03,$00,$03,$00,$00,$00,$AA,$00,$32,$00,$21,$02,$AF,$00,$14,$00,$1B,$00,$00,$20,$80,$00,$00,$00,$00,$00,$B8,$01,$78,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$00,$00,$00,$00,$00,$01,$01,$00,$7F,$00,$88,$00,$00
+.endproc
+
+win3buf:.res    18, 0
+
+.proc win4
+        .byte   $04,$06,$41,$E8,$C1,$C1,$03,$00,$03,$00,$00,$00,$AA,$00,$32,$00,$21,$02,$AF,$00,$14,$00,$1B,$00,$00,$20,$80,$00,$00,$00,$00,$00,$B8,$01,$78,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$00,$00,$00,$00,$00,$01,$01,$00,$7F,$00,$88,$00,$00
+.endproc
+
+win4buf:.res    18, 0
+
+.proc win5
+        .byte   $05,$06,$8D,$E8,$C1,$C1,$03,$00,$03,$00,$00,$00,$AA,$00,$32,$00,$21,$02,$AF,$00,$14,$00,$1B,$00,$00,$20,$80,$00,$00,$00,$00,$00,$B8,$01,$78,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$00,$00,$00,$00,$00,$01,$01,$00,$7F,$00,$88,$00,$00
+.endproc
+
+win5buf:.res    18, 0
+
+        .byte   $06,$06,$D9,$E8,$C1,$C1,$03,$00,$03,$00,$00,$00,$AA,$00,$32,$00,$21,$02,$AF,$00,$14,$00,$1B,$00,$00,$20,$80,$00,$00,$00,$00,$00,$B8,$01,$78,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$00,$00,$00,$00,$00,$01,$01,$00,$7F,$00,$88,$00,$00
+
+win6buf:.res    18, 0
+
+        .byte   $07,$06,$25,$E9,$C1,$C1,$03,$00,$03,$00,$00,$00,$AA,$00,$32,$00,$21,$02,$AF,$00,$14,$00,$1B,$00,$00,$20,$80,$00,$00,$00,$00,$00,$B8,$01,$78,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$00,$00,$00,$00,$00,$01,$01,$00,$7F,$00,$88,$00,$00
+
+win7buf:.res    18, 0
+
+        .byte   $08,$06,$71,$E9,$C1,$C1,$03,$00,$03,$00,$00,$00,$AA,$00,$32,$00,$21,$02,$AF,$00,$14,$00,$1B,$00,$00,$20,$80,$00,$00,$00,$00,$00,$B8,$01,$78,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$00,$00,$00,$00,$00,$01,$01,$00,$7F,$00,$88,$00,$00
+
+win8buf:.res    18, 0
 
         .res    560, 0
-
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00
 
         PASCAL_STRING " Items"
 

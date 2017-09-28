@@ -462,6 +462,10 @@ DESKTOP_REDRAW_ICONS := $0C     ; Repaints desktop icons
         .local  data            ; Call as A2D_DEFSTRING "abc"
         .local  end             ; Can include control chars by using:
         .addr   data            ; A2D_DEFSTRING {"abc",$0D,"def"}
+
+.if .paramcount > 1
+label:
+.endif
         .byte   end - data
 data:   .byte   str
 end:
