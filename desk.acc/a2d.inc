@@ -6,7 +6,7 @@
 ;;; Direct Calls
 
         ;; These must be called from main memory (RAMRDOFF/RAMWRTOFF)
-JUMP_TABLE_03   := $4003        ; ???
+JUMP_TABLE_03   := $4003        ; Enter DeskTop input loop
 JUMP_TABLE_06   := $4006        ; ???
 JUMP_TABLE_09   := $4009        ; ???
 JUMP_TABLE_0C   := $400C        ; ??? (made "items/in disk/..." redraw oddly)
@@ -18,14 +18,16 @@ JUMP_TABLE_CLEAR_SEL   := $401E ; Clear DeskTop selection
 JUMP_TABLE_MLI  := $4021        ; ProDOS MLI call (Y=call, X,A=params addr)
 JUMP_TABLE_24   := $4024        ; ???
 JUMP_TABLE_27   := $4027        ; ???
-JUMP_TABLE_2A   := $402A        ; ???
-JUMP_TABLE_2D   := $402D        ; ???
+JUMP_TABLE_2A   := $402A        ; Just an RTS
+JUMP_TABLE_2D   := $402D        ; Draw type/size/date in non-icon views
 JUMP_TABLE_30   := $4030        ; ???
 JUMP_TABLE_33   := $4033        ; Shows "The syntax of the pathname is invalid.", hangs
 JUMP_TABLE_36   := $4036        ; ditto
 JUMP_TABLE_CUR_POINTER  := $4039 ; Changes mouse cursor to pointer
 JUMP_TABLE_CUR_WATCH    := $403C ; Changes mouse cursor to watch
 JUMP_TABLE_3F   := $403F        ; ???
+
+        ;; $D000 is relay for A2D call (Y=call, X,A=params addr)
 
 ;;; ==================================================
 ;;; A2D Calls
@@ -411,6 +413,8 @@ DESKTOP    := $8E00
 
 DESKTOP_REDRAW_ICONS := $0C     ; Repaints desktop icons
 
+        ;; $0D used at start of drag-select, $09 at end (then another $0D)
+
 ;;; ==================================================
 ;;; Macros
 
@@ -470,7 +474,9 @@ end:
 
 ;;; Define pattern for A2D_DRAW_BITMAP - low 7 bits are reversed
 ;;; e.g. .byte px(%1000000)
+;;; px() has high bit clear, PX() has high bit set
 .define px(bits) (((bits&$40)>>6)|((bits&$20)>>4)|((bits&$10)>>2)|(bits&$8)|((bits&$4)<<2)|((bits&$2)<<4)|((bits&$1)<<6))
+.define PX(bits) (((bits&$40)>>6)|((bits&$20)>>4)|((bits&$10)>>2)|(bits&$8)|((bits&$4)<<2)|((bits&$2)<<4)|((bits&$1)<<6)|$80)
 
 ;;; ==================================================
 ;;; DeskTop Internals
