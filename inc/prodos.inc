@@ -41,6 +41,18 @@ DEALLOC_INTERRUPT       := $41
 READ_BLOCK      := $80
 WRITE_BLOCK     := $71
 
+;;; File Types
+FT_TYPELESS     := $00
+FT_BAD          := $01
+FT_TEXT         := $04
+FT_BINARY       := $06
+FT_DIRECTORY    := $0F
+FT_SRC          := $B0  ; IIgs system type; re-used?
+FT_BASIC        := $FC
+FT_SYSTEM       := $FF
+
+
+
 ;;; Macros
 .macro  MLI_CALL    op, addr
         jsr MLI

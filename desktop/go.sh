@@ -15,24 +15,24 @@ function daseg {
 function asmseg {
     $CC65/ca65 $CAFLAGS --listing "$1.list" -o "$1.o" "$1.s"
     $CC65/ld65 $LDFLAGS -o "$1.built" "$1.o"
-    diff "orig/DESKTOP2_$1" "$1.built"
+    diff "orig/DESKTOP2_$1" "$1.built" && echo "$1 ok"
 }
 
 
-daseg s0_loader 2000
-asmseg s0_loader 2000
+#daseg s0_loader 2000
+#asmseg s0_loader 2000
 
-daseg s1_aux1 4000
-asmseg s1_aux1 4000
+#daseg s1_aux1 4000
+#asmseg s1_aux1 4000
 
-daseg s2_aux2 D000
+# s2 has been disassembled by hand
 asmseg s2_aux2 D000
 
 # s3 has been disassembled by hand
 asmseg s3_aux3 D000
 
-daseg s4_main1 4000
-asmseg s4_main1 4000
+#daseg s4_main1 4000
+#asmseg s4_main1 4000
 
 #daseg 12680_1BCDF
 #asmseg 12680_1BCDF

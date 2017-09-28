@@ -468,8 +468,11 @@ end:
 .endmacro
 
 .macro PASCAL_STRING str        ; Length-prefixed string
-        .byte   .strlen(str)
-        .byte   str
+        .local  data            ; Can include control chars by using:
+        .local  end             ; A2D_DEFSTRING {"abc",$0D,"def"}
+        .byte   end - data
+data:   .byte   str
+end:
 .endmacro
 
 ;;; Define pattern for A2D_DRAW_BITMAP - low 7 bits are reversed
@@ -540,3 +543,4 @@ end:
         A2D_GLYPH_UARROW := $0B
         A2D_GLYPH_DARROW := $0A
         A2D_GLYPH_RETURN := $0D
+        A2D_GLYPH_OAPPLE := $1F
