@@ -27,7 +27,9 @@ JUMP_TABLE_CUR_POINTER  := $4039 ; Changes mouse cursor to pointer
 JUMP_TABLE_CUR_WATCH    := $403C ; Changes mouse cursor to watch
 JUMP_TABLE_3F   := $403F        ; ???
 
-        ;; $D000 is relay for A2D call (Y=call, X,A=params addr)
+        ;; Relay for A2D call (Y=call, X,A=params addr)
+
+A2D_RELAY       := $D000
 
 ;;; ==================================================
 ;;; A2D Calls

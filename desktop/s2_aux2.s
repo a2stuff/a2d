@@ -9,6 +9,7 @@ L87F6           := $87F6
 L8813           := $8813
 LB600           := $B600
 
+        ;; A2D call from aux>main, call in Y, params at (X,A)
 .proc LD000
         sty     addr-1
         sta     addr
@@ -21,24 +22,27 @@ LB600           := $B600
         rts
 .endproc
 
-.scope
+
+        ;; SET_POS with params at (X,A) followed by DRAW_TEXT call
+.proc LD01C
         sta     addr
         stx     addr+1
         sta     RAMRDON
         sta     RAMWRTON
-        A2D_CALL $0E, 0, addr
-        ldy     #$19
-        lda     #$E9
-        ldx     #$E6
-        jsr     LD000
+        A2D_CALL A2D_SET_POS, 0, addr
+        ldy     #A2D_DRAW_TEXT
+        lda     #<text_buffer
+        ldx     #>text_buffer
+        jsr     A2D_RELAY
         tay
         sta     RAMRDOFF
         sta     RAMWRTOFF
         tya
         rts
-.endscope
+.endproc
 
-.scope
+        ;; DESKTOP call from aux>main, call in Y params at (X,A)
+.proc LD040
         sty     addr-1
         sta     addr
         stx     addr+1
@@ -50,28 +54,32 @@ LB600           := $B600
         sta     RAMWRTOFF
         tya
         rts
-.endscope
+.endproc
 
+        ;; Find first 0 in AUX $1F80 ... $1F7F; if present,
+        ;; mark it 1 and return index+1 in A
+.proc LD05E
         sta     RAMRDON
         sta     RAMWRTON
-        ldx     #$00
-LD066:  lda     $1F80,x
-        beq     LD071
+        ldx     #0
+loop:   lda     $1F80,x
+        beq     :+
         inx
         cpx     #$7F
-        bne     LD066
+        bne     loop
         rts
 
-LD071:  inx
+:       inx
         txa
         dex
         tay
-        lda     #$01
+        lda     #1
         sta     $1F80,x
         sta     RAMRDOFF
         sta     RAMWRTOFF
         tya
         rts
+.endproc
 
         tay
         sta     RAMRDON
@@ -189,7 +197,9 @@ LD14C:  ora     ($8D)
         .byte   0,1,2,3,4,5,6,7
 
         .byte   $00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$15,$D2,$00
+        .byte   $00,$00,$00,$00,$00
+        .addr   buffer
+buffer: .byte   $00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -347,59 +357,24 @@ LD56D:
 
         ;; Looks like window param blocks starting here
 
-        .byte   $0F
-        .byte   $01,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$96,$00,$32,$00,$F4
-        .byte   $01,$8C,$00,$4B,$00,$23,$00,$00
-        .byte   $20,$80,$00,$00,$00,$00,$00,$90
-        .byte   $01,$64,$00,$FF,$FF,$FF,$FF,$FF
-        .byte   $FF,$FF,$FF,$FF,$00,$00,$00,$00
-        .byte   $00,$01,$01,$00,$7F,$00,$88,$00
-        .byte   $00,$12,$01,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$96,$00,$32
-        .byte   $00,$F4,$01,$8C,$00,$19,$00,$14
-        .byte   $00,$00,$20,$80,$00,$00,$00,$00
-        .byte   $00,$F4,$01,$99,$00,$FF,$FF,$FF
-        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$00,$00
-        .byte   $00,$00,$00,$01,$01,$00,$7F,$00
-        .byte   $88,$00,$00,$15,$01,$00,$00,$00
-        .byte   $C1,$00,$00,$03,$00,$00,$00,$64
-        .byte   $00,$46,$00,$64,$00,$46,$00,$35
-        .byte   $00,$32,$00,$00,$20,$80,$00,$00
-        .byte   $00,$00,$00,$7D,$00,$46,$00,$FF
-        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-        .byte   $00,$00,$00,$00,$00,$01,$01,$00
-        .byte   $7F,$00,$88,$00,$00,$18,$01,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$96,$00,$32,$00,$F4,$01,$8C
-        .byte   $00,$50,$00,$28,$00,$00,$20,$80
-        .byte   $00,$00,$00,$00,$00,$90,$01,$6E
-        .byte   $00,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-        .byte   $FF,$FF,$00,$00,$00,$00,$00,$01
-        .byte   $01,$00,$7F,$00,$88,$00,$00,$1B
-        .byte   $01,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$96,$00,$32,$00,$F4
-        .byte   $01,$8C,$00,$69,$00,$19,$00,$00
-        .byte   $20,$80,$00,$00,$00,$00,$00,$5E
-        .byte   $01,$6E,$00,$FF,$FF,$FF,$FF,$FF
-        .byte   $FF,$FF,$FF,$FF,$00,$00,$00,$00
-        .byte   $00,$01,$01,$00,$7F,$00,$88,$00
-        .byte   $00,$28,$00,$25,$00,$68,$01,$2F
-        .byte   $00,$2D,$00,$2E,$00,$28,$00,$3D
-        .byte   $00,$68,$01,$47,$00,$2D,$00,$46
-        .byte   $00,$00,$00,$12,$00,$28,$00,$12
-        .byte   $00,$28,$00,$23,$00,$28,$00,$00
-        .byte   $00,$4B,$00,$23,$00,$00,$20,$80
-        .byte   $00,$00,$00,$00,$00,$66,$01,$64
-        .byte   $00,$00,$04,$00,$02,$00,$5A,$01
-        .byte   $6C,$00,$05,$00,$03,$00,$59,$01
-        .byte   $6B,$00,$06,$00,$16,$00,$58,$01
-        .byte   $16,$00,$06,$00,$59,$00,$58,$01
-        .byte   $59,$00,$D2,$00,$5C,$00,$36,$01
-        .byte   $67,$00,$28,$00,$5C,$00,$8C,$00
-        .byte   $67,$00,$D7,$00,$66,$00,$2D,$00
-        .byte   $66,$00,$82,$00,$07,$00,$DC,$00
-        .byte   $13,$00
+        .byte   $0F,$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$96,$00,$32,$00,$F4,$01,$8C,$00,$4B,$00,$23,$00,$00,$20,$80,$00,$00,$00,$00,$00,$90,$01,$64,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$00,$00,$00,$00,$00,$01,$01,$00,$7F,$00,$88,$00,$00
+
+        .byte   $12,$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$96,$00,$32,$00,$F4,$01,$8C,$00,$19,$00,$14,$00,$00,$20,$80,$00,$00,$00,$00,$00,$F4,$01,$99,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$00,$00,$00,$00,$00,$01,$01,$00,$7F,$00,$88,$00,$00
+
+        .byte   $15,$01,$00,$00,$00,$C1,$00,$00,$03,$00,$00,$00,$64,$00,$46,$00,$64,$00,$46,$00,$35,$00,$32,$00,$00,$20,$80,$00,$00,$00,$00,$00,$7D,$00,$46,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$00,$00,$00,$00,$00,$01,$01,$00,$7F,$00,$88,$00,$00
+
+        .byte   $18,$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$96,$00,$32,$00,$F4,$01,$8C,$00,$50,$00,$28,$00,$00,$20,$80,$00,$00,$00,$00,$00,$90,$01,$6E,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$00,$00,$00,$00,$00,$01,$01,$00,$7F,$00,$88,$00,$00
+
+        .byte   $1B,$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$96,$00,$32,$00,$F4,$01,$8C,$00,$69,$00,$19,$00,$00,$20,$80,$00,$00,$00,$00,$00,$5E,$01,$6E,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$00,$00,$00,$00,$00,$01,$01,$00,$7F,$00,$88,$00,$00
+
+        ;; Coordinates for labels?
+        .byte   $28,$00,$25,$00,$68,$01,$2F,$00,$2D,$00,$2E,$00,$28,$00,$3D,$00,$68,$01,$47,$00,$2D,$00,$46,$00,$00,$00,$12,$00,$28,$00,$12,$00,$28,$00,$23,$00,$28,$00,$00,$00
+
+        .word   $4B, $23        ; left, top
+        .addr   A2D_SCREEN_ADDR
+        .word   A2D_SCREEN_STRIDE
+        .word   0, 0            ; width, height
+        .byte   $66,$01,$64,$00,$00,$04,$00,$02,$00,$5A,$01,$6C,$00,$05,$00,$03,$00,$59,$01,$6B,$00,$06,$00,$16,$00,$58,$01,$16,$00,$06,$00,$59,$00,$58,$01,$59,$00,$D2,$00,$5C,$00,$36,$01,$67,$00,$28,$00,$5C,$00,$8C,$00,$67,$00,$D7,$00,$66,$00,$2D,$00,$66,$00,$82,$00,$07,$00,$DC,$00,$13,$00
 
         PASCAL_STRING "Add an Entry ..."
         PASCAL_STRING "Edit an Entry ..."
@@ -549,28 +524,58 @@ LDFA1:  .addr   $0000,$E723,$E76F,$E7BB,$E807,$E853,$E89F,$E8EB,$E937,$0000,$E98
         .byte   $00,$04,$00,$00,$00,$04,$00,$00
         .byte   $04,$00,$00,$00,$00,$00,$04,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $06,$E3,$40,$00,$13,$00,$00,$00
-        .byte   $00,$00,$00,$00,$0C,$E3,$00,$00
-        .byte   $00,$00,$23,$E3,$00,$00,$00,$00
-        .byte   $3A,$E3,$00,$00,$00,$00,$51,$E3
-        .byte   $00,$00,$00,$00,$68,$E3,$00,$00
-        .byte   $00,$00,$7F,$E3,$00,$00,$00,$00
-        .byte   $96,$E3,$00,$00,$00,$00,$AD,$E3
-        .byte   $00,$00,$00,$00,$C4,$E3,$00,$00
-        .byte   $00,$00,$DB,$E3,$00,$00,$00,$00
-        .byte   $F2,$E3,$00,$00,$00,$00,$09,$E4
-        .byte   $00,$00,$00,$00,$20,$E4,$00,$00
-        .byte   $00,$00,$37,$E4,$07,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$4C,$E4
-        .byte   $00,$00,$00,$00,$54,$E4,$00,$00
-        .byte   $00,$00,$5C,$E4,$00,$00,$00,$00
-        .byte   $64,$E4,$00,$00,$00,$00,$6C,$E4
-        .byte   $00,$00,$00,$00,$74,$E4,$00,$00
+
+        .addr   str_all
+
+        .byte   $40,$00,$13,$00,$00,$00
+        .byte   0,0,0,0
+        .addr   sd0s
+        .byte   0,0,0,0
+        .addr   sd1s
+        .byte   0,0,0,0
+        .addr   sd2s
+        .byte   0,0,0,0
+        .addr   sd3s
+        .byte   0,0,0,0
+        .addr   sd4s
+        .byte   0,0,0,0
+        .addr   sd5s
+        .byte   0,0,0,0
+        .addr   sd6s
+        .byte   0,0,0,0
+        .addr   sd7s
+        .byte   0,0,0,0
+        .addr   sd8s
+        .byte   0,0,0,0
+        .addr   sd9s
+        .byte   0,0,0,0
+        .addr   sd10s
+        .byte   0,0,0,0
+        .addr   sd11s
+        .byte   0,0,0,0
+        .addr   sd12s
+        .byte   0,0,0,0
+        .addr   sd13s
+
+        .byte   $07,$00,$00,$00
         .byte   $00,$00
+        .byte   0,0,0,0
+        .addr   s00
+        .byte   0,0,0,0
+        .addr   s01
+        .byte   0,0,0,0
+        .addr   s02
+        .byte   0,0,0,0
+        .addr   s03
+        .byte   0,0,0,0
+        .addr   s04
+        .byte   0,0,0,0
+        .addr   s05
+        .byte   0,0,0,0
 
         .addr   $E47C
 
-        PASCAL_STRING "All"
+str_all:PASCAL_STRING "All"
 
 sd0:    A2D_DEFSTRING "Slot    drive       ", sd0s
 sd1:    A2D_DEFSTRING "Slot    drive       ", sd1s
@@ -587,13 +592,13 @@ sd11:   A2D_DEFSTRING "Slot    drive       ", sd11s
 sd12:   A2D_DEFSTRING "Slot    drive       ", sd12s
 sd13:   A2D_DEFSTRING "Slot    drive       ", sd13s
 
-        PASCAL_STRING "Slot 0 "
-        PASCAL_STRING "Slot 0 "
-        PASCAL_STRING "Slot 0 "
-        PASCAL_STRING "Slot 0 "
-        PASCAL_STRING "Slot 0 "
-        PASCAL_STRING "Slot 0 "
-        PASCAL_STRING "Slot 0 "
+s00:    PASCAL_STRING "Slot 0 "
+s01:    PASCAL_STRING "Slot 0 "
+s02:    PASCAL_STRING "Slot 0 "
+s03:    PASCAL_STRING "Slot 0 "
+s04:    PASCAL_STRING "Slot 0 "
+s05:    PASCAL_STRING "Slot 0 "
+s06:    PASCAL_STRING "Slot 0 "
 
         .addr   sd0, sd1, sd2, sd3, sd4, sd5, sd6, sd7
         .addr   sd8, sd9, sd10, sd11, sd12, sd13
@@ -649,16 +654,13 @@ LE4F2:
         .byte   $E8,$D9,$E8,$25,$E9,$71,$E9,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$70,$00,$00,$00,$8C
-        .byte   $00,$00,$00,$E7,$00,$00,$00,$EC
-        .byte   $E6,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00
+        .byte   $00,$00,$00,$E7,$00,$00,$00
 
+.proc text_buffer
+        .addr   data
+        .byte   0
+data:   .res    55, 0
+.endproc
          ; Looks like a bunch of window params starting here-ish
 
 .macro WIN_PARAMS_DEFN window_id, label, buflabel
