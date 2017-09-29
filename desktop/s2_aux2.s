@@ -85,7 +85,7 @@ loop:   lda     $1F80,x
         sta     RAMRDON
         sta     RAMWRTON
         dey
-        lda     #$00
+        lda     #0
         sta     $1F80,y
         sta     RAMRDOFF
         sta     RAMWRTOFF
@@ -101,7 +101,7 @@ LD09C:  sta     LD106
         tax
         lda     LEC01,x
         sta     $06
-        lda     LEC02,x
+        lda     LEC01+1,x
         sta     $07
         sta     RAMRDON
         sta     RAMWRTON
@@ -117,11 +117,11 @@ LD0C6:  ldy     #$00
         sta     LDEA0
 LD0CD:  lda     LEC13,x
         sta     $06
-        lda     LEC14,x
+        lda     LEC13+1,x
         sta     $07
         bit     LD106
         bmi     LD0EC
-        ldy     #$00
+        ldy     #0
 LD0DE:  cpy     LDEA0
         beq     LD0FC
         lda     ($06),y
@@ -129,7 +129,7 @@ LD0DE:  cpy     LDEA0
         iny
         jmp     LD0DE
 
-LD0EC:  ldy     #$00
+LD0EC:  ldy     #0
 LD0EE:  cpy     LDEA0
         beq     LD0FC
         lda     LDEA0+1,y
@@ -142,14 +142,12 @@ LD0FC:  sta     RAMRDOFF
         jsr     L8813
         rts
 
-LD106:  brk
-        rts
+LD106:  .byte   0
+        rts                     ; ???
 
         sta     RAMRDON
         sta     RAMWRTON
-        jsr     A2D
-        .byte   $05
-        .addr   $06
+        A2D_CALL $05, $06       ; ???
         lda     LEC25
         asl     a
         tax
@@ -172,18 +170,19 @@ LD130:  lda     ($06),y
         sta     RAMWRTOFF
         rts
 
-        stx     LD14C
-        sta     LD14B
+        ;; From MAIN, load AUX (X,A) into A
+.proc LD13E
+        stx     op+2
+        sta     op+1
         sta     RAMRDON
         sta     RAMWRTON
-        .byte   $AD
-LD14B:  .byte   $34
-LD14C:  ora     ($8D)
-        .byte   $02
-        cpy     #$8D
-        tsb     $C0
+op:     lda     $1234
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
         rts
+.endproc
 
+.proc LD154
         ldx     #$00
         sta     RAMRDON
         sta     RAMWRTON
@@ -191,6 +190,7 @@ LD14C:  ora     ($8D)
         sta     RAMRDOFF
         sta     RAMWRTOFF
         rts
+.endproc
 
         .res    154, 0
 
@@ -357,15 +357,180 @@ LD56D:
 
         ;; Looks like window param blocks starting here
 
-        .byte   $0F,$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$96,$00,$32,$00,$F4,$01,$8C,$00,$4B,$00,$23,$00,$00,$20,$80,$00,$00,$00,$00,$00,$90,$01,$64,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$00,$00,$00,$00,$00,$01,$01,$00,$7F,$00,$88,$00,$00
+.proc winF
+id:     .byte   $0F
+flags:  .byte   A2D_CWF_NOTITLE
+title:  .addr   0
+hscroll:.byte   A2D_CWS_NOSCROLL
+vscroll:.byte   A2D_CWS_NOSCROLL
+hsmax:  .byte   0
+hspos:  .byte   0
+vsmax:  .byte   0
+vspos:  .byte   0
+        .byte   0,0             ; ???
+w1:     .word   $96
+h1:     .word   $32
+w2:     .word   $1F4
+h2:     .word   $8C
+left:   .word   $4B
+top:    .word   $23
+saddr:  .addr   A2D_SCREEN_ADDR
+stride: .word   A2D_SCREEN_STRIDE
+hoff:   .word   0
+voff:   .word   0
+width:  .word   $190
+height: .word   $64
+pattern:.res    8, $FF
+mskand: .byte   A2D_DEFAULT_MSKAND
+mskor:  .byte   A2D_DEFAULT_MSKOR
+        .byte   0,0,0,0         ; ???
+hthick: .byte   1
+vthick: .byte   1
+        .byte   0               ; ???
+tmsk:   .byte   A2D_DEFAULT_TMSK
+font:   .addr   A2D_DEFAULT_FONT
+next:   .addr   0
+.endproc
 
-        .byte   $12,$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$96,$00,$32,$00,$F4,$01,$8C,$00,$19,$00,$14,$00,$00,$20,$80,$00,$00,$00,$00,$00,$F4,$01,$99,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$00,$00,$00,$00,$00,$01,$01,$00,$7F,$00,$88,$00,$00
+.proc win12
+id:     .byte   $12
+flags:  .byte   A2D_CWF_NOTITLE
+title:  .addr   0
+hscroll:.byte   A2D_CWS_NOSCROLL
+vscroll:.byte   A2D_CWS_NOSCROLL
+hsmax:  .byte   0
+hspos:  .byte   0
+vsmax:  .byte   0
+vspos:  .byte   0
+        .byte   0,0             ; ???
+w1:     .word   $96
+h1:     .word   $32
+w2:     .word   $1F4
+h2:     .word   $8C
+left:   .word   $19
+top:    .word   $14
+saddr:  .addr   A2D_SCREEN_ADDR
+stride: .word   A2D_SCREEN_STRIDE
+hoff:   .word   0
+voff:   .word   0
+width:  .word   $1F4
+height: .word   $99
+pattern:.res    8, $FF
+mskand: .byte   A2D_DEFAULT_MSKAND
+mskor:  .byte   A2D_DEFAULT_MSKOR
+        .byte   0,0,0,0         ; ???
+hthick: .byte   1
+vthick: .byte   1
+        .byte   0               ; ???
+tmsk:   .byte   A2D_DEFAULT_TMSK
+font:   .addr   A2D_DEFAULT_FONT
+next:   .addr   0
+.endproc
 
-        .byte   $15,$01,$00,$00,$00,$C1,$00,$00,$03,$00,$00,$00,$64,$00,$46,$00,$64,$00,$46,$00,$35,$00,$32,$00,$00,$20,$80,$00,$00,$00,$00,$00,$7D,$00,$46,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$00,$00,$00,$00,$00,$01,$01,$00,$7F,$00,$88,$00,$00
+.proc win15
+id:     .byte   $15
+flags:  .byte   A2D_CWF_NOTITLE
+title:  .addr   0
+hscroll:.byte   A2D_CWS_NOSCROLL
+vscroll:.byte   A2D_CWS_SCROLL_NORMAL
+hsmax:  .byte   0
+hspos:  .byte   0
+vsmax:  .byte   3
+vspos:  .byte   0
+        .byte   0,0             ; ???
+w1:     .word   $64
+h1:     .word   $46
+w2:     .word   $64
+h2:     .word   $46
+left:   .word   $35
+top:    .word   $32
+saddr:  .addr   A2D_SCREEN_ADDR
+stride: .word   A2D_SCREEN_STRIDE
+hoff:   .word   0
+voff:   .word   0
+width:  .word   $7D
+height: .word   $46
+pattern:.res    8, $FF
+mskand: .byte   A2D_DEFAULT_MSKAND
+mskor:  .byte   A2D_DEFAULT_MSKOR
+        .byte   0,0,0,0         ; ???
+hthick: .byte   1
+vthick: .byte   1
+        .byte   0               ; ???
+tmsk:   .byte   A2D_DEFAULT_TMSK
+font:   .addr   A2D_DEFAULT_FONT
+next:   .addr   0
+.endproc
 
-        .byte   $18,$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$96,$00,$32,$00,$F4,$01,$8C,$00,$50,$00,$28,$00,$00,$20,$80,$00,$00,$00,$00,$00,$90,$01,$6E,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$00,$00,$00,$00,$00,$01,$01,$00,$7F,$00,$88,$00,$00
+.proc win18
+id:     .byte   $18
+flags:  .byte   A2D_CWF_NOTITLE
+title:  .addr   0
+hscroll:.byte   A2D_CWS_NOSCROLL
+vscroll:.byte   A2D_CWS_NOSCROLL
+hsmax:  .byte   0
+hspos:  .byte   0
+vsmax:  .byte   0
+vspos:  .byte   0
+        .byte   0,0             ; ???
+w1:     .word   $96
+h1:     .word   $32
+w2:     .word   $1F4
+h2:     .word   $8C
+left:   .word   $50
+top:    .word   $28
+saddr:  .addr   A2D_SCREEN_ADDR
+stride: .word   A2D_SCREEN_STRIDE
+hoff:   .word   0
+voff:   .word   0
+width:  .word   $190
+height: .word   $6E
+pattern:.res    8, $FF
+mskand: .byte   A2D_DEFAULT_MSKAND
+mskor:  .byte   A2D_DEFAULT_MSKOR
+        .byte   0,0,0,0         ; ???
+hthick: .byte   1
+vthick: .byte   1
+        .byte   0               ; ???
+tmsk:   .byte   A2D_DEFAULT_TMSK
+font:   .addr   A2D_DEFAULT_FONT
+next:   .addr   0
+.endproc
 
-        .byte   $1B,$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$96,$00,$32,$00,$F4,$01,$8C,$00,$69,$00,$19,$00,$00,$20,$80,$00,$00,$00,$00,$00,$5E,$01,$6E,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$00,$00,$00,$00,$00,$01,$01,$00,$7F,$00,$88,$00,$00
+.proc win1B
+id:     .byte   $1B
+flags:  .byte   A2D_CWF_NOTITLE
+title:  .addr   0
+hscroll:.byte   A2D_CWS_NOSCROLL
+vscroll:.byte   A2D_CWS_NOSCROLL
+hsmax:  .byte   0
+hspos:  .byte   0
+vsmax:  .byte   0
+vspos:  .byte   0
+        .byte   0,0             ; ???
+w1:     .word   $96
+h1:     .word   $32
+w2:     .word   $1F4
+h2:     .word   $8C
+left:   .word   $69
+top:    .word   $19
+saddr:  .addr   A2D_SCREEN_ADDR
+stride: .word   A2D_SCREEN_STRIDE
+hoff:   .word   0
+voff:   .word   0
+width:  .word   $15E
+height: .word   $6E
+pattern:.res    8, $FF
+mskand: .byte   A2D_DEFAULT_MSKAND
+mskor:  .byte   A2D_DEFAULT_MSKOR
+        .byte   0,0,0,0         ; ???
+hthick: .byte   1
+vthick: .byte   1
+        .byte   0               ; ???
+tmsk:   .byte   A2D_DEFAULT_TMSK
+font:   .addr   A2D_DEFAULT_FONT
+next:   .addr   0
+.endproc
 
         ;; Coordinates for labels?
         .byte   $28,$00,$25,$00,$68,$01,$2F,$00,$2D,$00,$2E,$00,$28,$00,$3D,$00,$68,$01,$47,$00,$2D,$00,$46,$00,$00,$00,$12,$00,$28,$00,$12,$00,$28,$00,$23,$00,$28,$00,$00,$00
@@ -374,6 +539,7 @@ LD56D:
         .addr   A2D_SCREEN_ADDR
         .word   A2D_SCREEN_STRIDE
         .word   0, 0            ; width, height
+
         .byte   $66,$01,$64,$00,$00,$04,$00,$02,$00,$5A,$01,$6C,$00,$05,$00,$03,$00,$59,$01,$6B,$00,$06,$00,$16,$00,$58,$01,$16,$00,$06,$00,$59,$00,$58,$01,$59,$00,$D2,$00,$5C,$00,$36,$01,$67,$00,$28,$00,$5C,$00,$8C,$00,$67,$00,$D7,$00,$66,$00,$2D,$00,$66,$00,$82,$00,$07,$00,$DC,$00,$13,$00
 
         PASCAL_STRING "Add an Entry ..."
@@ -408,7 +574,9 @@ LD56D:
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$14,$00,$00,$00,$00
         .byte   $01,$06,$00,$00,$00,$00,$00,$00
-        .byte   $01,$00,$02,$20,$20
+        .byte   $01,$00
+
+        PASCAL_STRING "  "
 
         PASCAL_STRING "Files"
 
@@ -445,25 +613,21 @@ LD56D:
         .byte   $37,$00,$C1,$00,$49,$00,$25,$01
         .byte   $54,$00,$C1,$00,$1E,$00,$25,$01
         .byte   $29,$00,$43,$01,$1E,$00,$43,$01
-        .byte   $64,$00,$81,$D3,$00,$C6,$00,$63
-        .byte   $00
+        .byte   $64,$00,$81,$D3,$00
 
+        .word   $C6,$63
         PASCAL_STRING {"OK            ",A2D_GLYPH_RETURN}
 
-        .byte   $C6,$00,$44,$00
-
+        .word   $C6,$44
         PASCAL_STRING "Close"
 
-        .byte   $C6,$00,$36,$00
-
+        .word   $C6,$36
         PASCAL_STRING "Open"
 
-        .byte   $C6,$00,$53,$00
-
+        .word   $C6,$53
         PASCAL_STRING "Cancel        Esc"
 
-        .byte   $C6,$00,$28,$00
-
+        .word   $C6,$28
         PASCAL_STRING "Change Drive"
 
         .byte   $1C,$00,$19,$00,$1C
@@ -483,12 +647,7 @@ LD56D:
         PASCAL_STRING "Delete a File ..."
         PASCAL_STRING "File to delete:"
 
-        .byte   $00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00
+        .res    40, 0
 
         .addr   sd0s, sd1s, sd2s, sd3s, sd4s, sd5s, sd6s
         .addr   sd7s, sd8s, sd9s, sd10s, sd11s, sd12s, sd13s
@@ -502,7 +661,11 @@ LDE9F:  .byte   $00
 LDEA0:  .res    256, 0
         .byte   $00
 
-LDFA1:  .addr   $0000,$E723,$E76F,$E7BB,$E807,$E853,$E89F,$E8EB,$E937,$0000,$E983,$E9C4,$EA05,$EA46,$EA87,$EAC8,$EB09,$EB4A
+LDFA1:  .addr   $0000,win1,win2,win3,win4,win5,win6,win7,win8
+        .addr   $0000
+        .repeat 8,i
+        .addr   buf2+i*$41
+        .endrepeat
 
         .byte   $00,$00,$00,$00,$00
 
@@ -609,10 +772,17 @@ s06:    PASCAL_STRING "Slot 0 "
         PASCAL_STRING "Slot    drive       "
 
 LE4F2:
-        .byte   $05,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$46,$E5,$00,$00,$00,$00
-        .byte   $57,$E5,$00,$00,$00,$00,$69,$E5
-        .byte   $01,$00,$30,$30,$83,$E5,$40,$00
+        .byte   $05,$00,$00,$00,$00,$00
+
+        .byte   $00,$00,$00,$00
+        .addr   str_add
+        .byte   $00,$00,$00,$00
+        .addr   str_edit
+        .byte   $00,$00,$00,$00
+        .addr   str_del
+        .byte   $01,$00,$30,$30
+        .addr   str_run
+        .byte   $40,$00
         .byte   $13,$00,$00,$00,$01,$00,$31,$31
         .byte   $1E,$DB,$01,$00,$32,$32,$2E,$DB
         .byte   $01,$00,$33,$33,$3E,$DB,$01,$00
@@ -621,24 +791,42 @@ LE4F2:
         .byte   $01,$00,$37,$37,$7E,$DB,$01,$00
         .byte   $38,$38,$8E,$DB
 
+str_add:
         PASCAL_STRING "Add an Entry ..."
+str_edit:
         PASCAL_STRING "Edit an Entry ..."
+str_del:
         PASCAL_STRING "Delete an Entry ...      "
+str_run:
         PASCAL_STRING "Run an Entry ..."
 
         .byte   $01,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$D6,$E5,$40,$00
-        .byte   $13,$00,$00,$00,$00,$00,$00,$00
-        .byte   $F2,$E5,$00,$00,$00,$00,$02,$E6
-        .byte   $00,$00,$00,$00,$12,$E6,$00,$00
-        .byte   $00,$00,$22,$E6,$00,$00,$00,$00
-        .byte   $32,$E6,$00,$00,$00,$00,$42,$E6
-        .byte   $00,$00,$00,$00,$52,$E6,$00,$00
-        .byte   $00,$00,$62,$E6
+        .byte   $00,$00,$00,$00
+        .addr   str_about
+        .byte   $40,$00
+        .byte   $13,$00,$00,$00
 
+        .byte   0,0,0,0
+        .addr   buf
+        .byte   0,0,0,0
+        .addr   buf + $10
+        .byte   0,0,0,0
+        .addr   buf + $20
+        .byte   0,0,0,0
+        .addr   buf + $30
+        .byte   0,0,0,0
+        .addr   buf + $40
+        .byte   0,0,0,0
+        .addr   buf + $50
+        .byte   0,0,0,0
+        .addr   buf + $60
+        .byte   0,0,0,0
+        .addr   buf + $70
+
+str_about:
         PASCAL_STRING "About Apple II DeskTop ... "
 
-        .res    128, 0
+buf:    .res    $80, 0
 
         .byte   $01,$00,$01,$00,$9A,$E6,$8E,$E6
         .byte   $00,$00,$00,$00,$00,$00,$01,$00
@@ -661,7 +849,6 @@ LE4F2:
         .byte   0
 data:   .res    55, 0
 .endproc
-         ; Looks like a bunch of window params starting here-ish
 
 .macro WIN_PARAMS_DEFN window_id, label, buflabel
 .proc label
@@ -688,14 +875,14 @@ voff:   .word   0
 width:  .word   440
 height: .word   120
 pattern:.res    8, $FF
-mskand: .byte   $FF
-mskor:  .byte   $00
+mskand: .byte   A2D_DEFAULT_MSKAND
+mskor:  .byte   A2D_DEFAULT_MSKOR
         .byte   0,0,0,0         ; ???
 hthick: .byte   1
 vthick: .byte   1
         .byte   0               ; ???
-tmsk:   .byte   $7F
-font:   .addr   $8800
+tmsk:   .byte   A2D_DEFAULT_TMSK
+font:   .addr   A2D_DEFAULT_FONT
 next:   .addr   0
 .endproc
 buflabel:.res    18, 0
@@ -710,7 +897,7 @@ buflabel:.res    18, 0
         WIN_PARAMS_DEFN 7, win7, win7buf
         WIN_PARAMS_DEFN 8, win8, win8buf
 
-        .res    560, 0
+buf2:   .res    560, 0
 
         PASCAL_STRING " Items"
 
@@ -725,14 +912,10 @@ buflabel:.res    18, 0
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00
-LEC01:  .byte   $00
-LEC02:  .byte   $1B,$80,$1B,$00,$1C,$80,$1C,$00
-        .byte   $1D,$80,$1D,$00,$1E,$80,$1E,$00
-        .byte   $1F
-LEC13:  .byte   $01
-LEC14:  .byte   $1B,$81,$1B,$01,$1C,$81,$1C,$01
-        .byte   $1D,$81,$1D,$01,$1E,$81,$1E,$01
-        .byte   $1F
+
+LEC01:  .byte   $00,$1B,$80,$1B,$00,$1C,$80,$1C,$00,$1D,$80,$1D,$00,$1E,$80,$1E,$00,$1F
+LEC13:  .byte   $01,$1B,$81,$1B,$01,$1C,$81,$1C,$01,$1D,$81,$1D,$01,$1E,$81,$1E,$01,$1F
+
 LEC25:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00

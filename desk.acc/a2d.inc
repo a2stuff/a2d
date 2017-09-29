@@ -47,7 +47,7 @@ A2D             := $4000
 
 A2D_QUERY_SCREEN        := $03  ; Get screen state
         ;; (input length 0 bytes)
-        ;; (output length 35 bytes - NOT 36)
+        ;; (output length 35 bytes - NOT 36 - TODO - where is this off???)
         ;; .word left
         ;; .word top
         ;; .addr addr           A2D_SCREEN_ADDR
@@ -402,6 +402,7 @@ A2D_CZP_OVERWRITE       := 0
 ;;; Used in various state blocks
 A2D_DEFAULT_MSKAND      := $FF
 A2D_DEFAULT_MSKOR       := $00
+A2D_DEFAULT_TMSK        := $7F
 
 ;;; ==================================================
 
@@ -480,6 +481,7 @@ end:
 data:   .byte   str
 end:
 .endmacro
+
 
 ;;; Define pattern for A2D_DRAW_BITMAP - low 7 bits are reversed
 ;;; e.g. .byte px(%1000000)
