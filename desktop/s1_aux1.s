@@ -10894,160 +10894,73 @@ LA938:  lda     L936E
         PASCAL_STRING "Click OK to delete:"
         PASCAL_STRING "Clicking OK will immediately empty the trash of:"
         PASCAL_STRING "File:"
-        PASCAL_STRING "Files meaining to be deleted:"
-        .byte   $1E,$46,$69,$6C,$65
-        .byte   $73,$20,$72,$65,$6D,$61,$69,$6E
-        .byte   $69,$6E,$67,$20,$74,$6F,$20,$62
-        .byte   $65,$20,$64,$65,$6C,$65,$74,$65
-        .byte   $64,$3A,$36,$54,$68,$69,$73,$20
-        .byte   $66,$69,$6C,$65,$20,$69,$73,$20
-        .byte   $6C,$6F,$63,$6B,$65,$64,$2C,$20
-        .byte   $64,$6F,$20,$79,$6F,$75,$20,$77
-        .byte   $61,$6E,$74,$20,$74,$6F,$20,$64
-        .byte   $65,$6C,$65,$74,$65,$20,$69,$74
-        .byte   $20,$61,$6E,$79,$77,$61,$79,$20
-        .byte   $3F,$91,$00,$3B,$00,$C8,$00,$3B
-        .byte   $00,$2C,$01,$3B,$00,$0E,$4E,$65
-        .byte   $77,$20,$46,$6F,$6C,$64,$65,$72
-        .byte   $20,$2E,$2E,$2E,$03,$69,$6E,$3A
-        .byte   $16,$45,$6E,$74,$65,$72,$20,$74
-        .byte   $68,$65,$20,$66,$6F,$6C,$64,$65
-        .byte   $72,$20,$6E,$61,$6D,$65,$3A,$12
-        .byte   $52,$65,$6E,$61,$6D,$65,$20,$61
-        .byte   $6E,$20,$49,$63,$6F,$6E,$20,$2E
-        .byte   $2E,$2E,$08,$52,$65,$6E,$61,$6D
-        .byte   $65,$3A,$20,$09,$4E,$65,$77,$20
-        .byte   $6E,$61,$6D,$65,$3A,$0C,$47,$65
-        .byte   $74,$20,$49,$6E,$66,$6F,$20,$2E
-        .byte   $2E,$2E,$04,$4E,$61,$6D,$65,$06
-        .byte   $4C,$6F,$63,$6B,$65,$64,$04,$53
-        .byte   $69,$7A,$65,$0D,$43,$72,$65,$61
-        .byte   $74,$69,$6F,$6E,$20,$64,$61,$74
-        .byte   $65,$11,$4C,$61,$73,$74,$20,$6D
-        .byte   $6F,$64,$69,$66,$69,$63,$61,$74
-        .byte   $69,$6F,$6E,$04,$54,$79,$70,$65
-        .byte   $0F,$57,$72,$69,$74,$65,$20,$70
-        .byte   $72,$6F,$74,$65,$63,$74,$65,$64
-        .byte   $10,$42,$6C,$6F,$63,$6B,$73,$20
-        .byte   $66,$72,$65,$65,$2F,$73,$69,$7A
-        .byte   $65,$02,$3A,$20,$A0,$00,$3B,$00
+        PASCAL_STRING "Files remaining to be deleted:"
+        PASCAL_STRING "This file is locked, do you want to delete it anyway ?"
+
+        .byte   $91,$00,$3B,$00,$C8,$00,$3B,$00,$2C,$01,$3B,$00
+
+        PASCAL_STRING "New Folder ..."
+        PASCAL_STRING "in:"
+        PASCAL_STRING "Enter the folder name:"
+        PASCAL_STRING "Rename an Icon ..."
+	PASCAL_STRING "Rename: "
+        PASCAL_STRING "New name:"
+        PASCAL_STRING "Get Info ..."
+        PASCAL_STRING "Name"
+        PASCAL_STRING "Locked"
+        PASCAL_STRING "Size"
+        PASCAL_STRING "Creation date"
+        PASCAL_STRING "Last modification"
+        PASCAL_STRING "Type"
+        PASCAL_STRING "Write protected"
+        PASCAL_STRING "Blocks free/size"
+        PASCAL_STRING ": "
+
+
+        .byte   $A0,$00,$3B,$00
         .byte   $91,$00,$3B,$00,$C8,$00,$3B,$00
         .byte   $B9,$00,$3B,$00,$CD,$00,$3B,$00
-        .byte   $C3,$00,$3B,$00,$11,$46,$6F,$72
-        .byte   $6D,$61,$74,$20,$61,$20,$44,$69
-        .byte   $73,$6B,$20,$2E,$2E,$2E,$35,$53
-        .byte   $65,$6C,$65,$63,$74,$20,$74,$68
-        .byte   $65,$20,$6C,$6F,$63,$61,$74,$69
-        .byte   $6F,$6E,$20,$77,$68,$65,$72,$65
-        .byte   $20,$74,$68,$65,$20,$64,$69,$73
-        .byte   $6B,$20,$69,$73,$20,$74,$6F,$20
-        .byte   $62,$65,$20,$66,$6F,$72,$6D,$61
-        .byte   $74,$74,$65,$64,$21,$45,$6E,$74
-        .byte   $65,$72,$20,$74,$68,$65,$20,$6E
-        .byte   $61,$6D,$65,$20,$6F,$66,$20,$74
-        .byte   $68,$65,$20,$6E,$65,$77,$20,$76
-        .byte   $6F,$6C,$75,$6D,$65,$3A,$16,$44
-        .byte   $6F,$20,$79,$6F,$75,$20,$77,$61
-        .byte   $6E,$74,$20,$74,$6F,$20,$66,$6F
-        .byte   $72,$6D,$61,$74,$20,$17,$46,$6F
-        .byte   $72,$6D,$61,$74,$74,$69,$6E,$67
-        .byte   $20,$74,$68,$65,$20,$64,$69,$73
-        .byte   $6B,$2E,$2E,$2E,$2E,$3A,$46,$6F
-        .byte   $72,$6D,$61,$74,$74,$69,$6E,$67
-        .byte   $20,$65,$72,$72,$6F,$72,$2E,$20
-        .byte   $43,$68,$65,$63,$6B,$20,$64,$72
-        .byte   $69,$76,$65,$2C,$20,$74,$68,$65
-        .byte   $6E,$20,$63,$6C,$69,$63,$6B,$20
-        .byte   $4F,$4B,$20,$74,$6F,$20,$74,$72
-        .byte   $79,$20,$61,$67,$61,$69,$6E,$2E
-        .byte   $10,$45,$72,$61,$73,$65,$20,$61
-        .byte   $20,$44,$69,$73,$6B,$20,$2E,$2E
-        .byte   $2E,$32,$53,$65,$6C,$65,$63,$74
-        .byte   $20,$74,$68,$65,$20,$6C,$6F,$63
-        .byte   $61,$74,$69,$6F,$6E,$20,$77,$68
-        .byte   $65,$72,$65,$20,$74,$68,$65,$20
-        .byte   $64,$69,$73,$6B,$20,$69,$73,$20
-        .byte   $74,$6F,$20,$62,$65,$20,$65,$72
-        .byte   $61,$73,$65,$64,$15,$44,$6F,$20
-        .byte   $79,$6F,$75,$20,$77,$61,$6E,$74
-        .byte   $20,$74,$6F,$20,$65,$72,$61,$73
-        .byte   $65,$20,$14,$45,$72,$61,$73,$69
-        .byte   $6E,$67,$20,$74,$68,$65,$20,$64
-        .byte   $69,$73,$6B,$2E,$2E,$2E,$2E,$37
-        .byte   $45,$72,$61,$73,$69,$6E,$67,$20
-        .byte   $65,$72,$72,$6F,$72,$2E,$20,$43
-        .byte   $68,$65,$63,$6B,$20,$64,$72,$69
-        .byte   $76,$65,$2C,$20,$74,$68,$65,$6E
-        .byte   $20,$63,$6C,$69,$63,$6B,$20,$4F
-        .byte   $4B,$20,$74,$6F,$20,$74,$72,$79
-        .byte   $20,$61,$67,$61,$69,$6E,$2E,$0A
-        .byte   $55,$6E,$6C,$6F,$63,$6B,$20,$2E
-        .byte   $2E,$2E,$13,$43,$6C,$69,$63,$6B
-        .byte   $20,$4F,$4B,$20,$74,$6F,$20,$75
-        .byte   $6E,$6C,$6F,$63,$6B,$20,$20,$46
-        .byte   $69,$6C,$65,$73,$20,$72,$65,$6D
-        .byte   $61,$69,$6E,$69,$6E,$67,$20,$74
-        .byte   $6F,$20,$62,$65,$20,$75,$6E,$6C
-        .byte   $6F,$63,$6B,$65,$64,$3A,$20,$08
-        .byte   $4C,$6F,$63,$6B,$20,$2E,$2E,$2E
-        .byte   $11,$43,$6C,$69,$63,$6B,$20,$4F
-        .byte   $4B,$20,$74,$6F,$20,$6C,$6F,$63
-        .byte   $6B,$20,$1E,$46,$69,$6C,$65,$73
-        .byte   $20,$72,$65,$6D,$61,$69,$6E,$69
-        .byte   $6E,$67,$20,$74,$6F,$20,$62,$65
-        .byte   $20,$6C,$6F,$63,$6B,$65,$64,$3A
-        .byte   $20,$0C,$47,$65,$74,$20,$53,$69
-        .byte   $7A,$65,$20,$2E,$2E,$2E,$0F,$4E
-        .byte   $75,$6D,$62,$65,$72,$20,$6F,$66
-        .byte   $20,$66,$69,$6C,$65,$73,$13,$42
-        .byte   $6C,$6F,$63,$6B,$73,$20,$75,$73
-        .byte   $65,$64,$20,$6F,$6E,$20,$64,$69
-        .byte   $73,$6B,$6E,$00,$23,$00,$6E,$00
-        .byte   $2B,$00,$0C,$44,$6F,$77,$6E,$4C
-        .byte   $6F,$61,$64,$20,$2E,$2E,$2E,$30
-        .byte   $54,$68,$65,$20,$52,$41,$4D,$43
-        .byte   $61,$72,$64,$20,$69,$73,$20,$66
-        .byte   $75,$6C,$6C,$2E,$20,$54,$68,$65
-        .byte   $20,$63,$6F,$70,$79,$20,$77,$61
-        .byte   $73,$20,$6E,$6F,$74,$20,$63,$6F
-        .byte   $6D,$70,$6C,$65,$74,$65,$64,$2E
-        .byte   $01,$20,$09,$57,$61,$72,$6E,$69
-        .byte   $6E,$67,$20,$21,$1E,$50,$6C,$65
-        .byte   $61,$73,$65,$20,$69,$6E,$73,$65
-        .byte   $72,$74,$20,$74,$68,$65,$20,$73
-        .byte   $79,$73,$74,$65,$6D,$20,$64,$69
-        .byte   $73,$6B,$2E,$33,$54,$68,$65,$20
-        .byte   $53,$65,$6C,$65,$63,$74,$6F,$72
-        .byte   $20,$6C,$69,$73,$74,$20,$69,$73
-        .byte   $20,$66,$75,$6C,$6C,$2E,$20,$59
-        .byte   $6F,$75,$20,$6D,$75,$73,$74,$20
-        .byte   $64,$65,$6C,$65,$74,$65,$20,$61
-        .byte   $6E,$20,$65,$6E,$74,$72,$79,$1F
-        .byte   $62,$65,$66,$6F,$72,$65,$20,$79
-        .byte   $6F,$75,$20,$63,$61,$6E,$20,$61
-        .byte   $64,$64,$20,$6E,$65,$77,$20,$65
-        .byte   $6E,$74,$72,$69,$65,$73,$2E,$38
-        .byte   $41,$20,$77,$69,$6E,$64,$6F,$77
-        .byte   $20,$6D,$75,$73,$74,$20,$62,$65
-        .byte   $20,$63,$6C,$6F,$73,$65,$64,$20
-        .byte   $62,$65,$66,$6F,$72,$65,$20,$6F
-        .byte   $70,$65,$6E,$69,$6E,$67,$20,$74
-        .byte   $68,$69,$73,$20,$6E,$65,$77,$20
-        .byte   $63,$61,$74,$61,$6C,$6F,$67,$2E
-        .byte   $30,$54,$68,$65,$72,$65,$20,$61
-        .byte   $72,$65,$20,$74,$6F,$6F,$20,$6D
-        .byte   $61,$6E,$79,$20,$77,$69,$6E,$64
-        .byte   $6F,$77,$73,$20,$6F,$70,$65,$6E
-        .byte   $20,$6F,$6E,$20,$74,$68,$65,$20
-        .byte   $64,$65,$73,$6B,$74,$6F,$70,$20
-        .byte   $21,$29,$44,$6F,$20,$79,$6F,$75
-        .byte   $20,$77,$61,$6E,$74,$20,$74,$6F
-        .byte   $20,$73,$61,$76,$65,$20,$74,$68
-        .byte   $65,$20,$6E,$65,$77,$20,$53,$65
-        .byte   $6C,$65,$63,$74,$6F,$72,$20,$6C
-        .byte   $69,$73,$74,$14,$6F,$6E,$20,$74
-        .byte   $68,$65,$20,$73,$79,$73,$74,$65
-        .byte   $6D,$20,$64,$69,$73,$6B,$20,$3F
+        .byte   $C3,$00,$3B,$00
+
+        PASCAL_STRING "Format a Disk ..."
+        PASCAL_STRING "Select the location where the disk is to be formatted"
+        PASCAL_STRING "Enter the name of the new volume:"
+        PASCAL_STRING "Do you want to format "
+        PASCAL_STRING "Formatting the disk...."
+        PASCAL_STRING "Formatting error. Check drive, then click OK to try again."
+        PASCAL_STRING "Erase a Disk ..."
+        PASCAL_STRING "Select the location where the disk is to be erased"
+        PASCAL_STRING "Do you want to erase "
+        PASCAL_STRING "Erasing the disk...."
+        PASCAL_STRING "Erasing error. Check drive, then click OK to try again."
+        PASCAL_STRING "Unlock ..."
+
+        PASCAL_STRING "Click OK to unlock "
+        PASCAL_STRING "Files remaining to be unlocked: "
+        PASCAL_STRING "Lock ..."
+        PASCAL_STRING "Click OK to lock "
+        PASCAL_STRING "Files remaining to be locked: "
+
+        PASCAL_STRING "Get Size ..."
+        PASCAL_STRING "Number of files"
+        PASCAL_STRING "Blocks used on disk"
+
+        .byte   $6E,$00,$23,$00,$6E,$00,$2B,$00
+
+        PASCAL_STRING "DownLoad ..."
+        PASCAL_STRING "The RAMCard is full. The copy was not completed."
+        PASCAL_STRING " "
+        PASCAL_STRING "Warning !"
+        PASCAL_STRING "Please insert the system disk."
+        PASCAL_STRING "The Selector list is full. You must delete an entry"
+        PASCAL_STRING "before you can add new entries."
+        PASCAL_STRING "A window must be closed before opening this new catalog."
+
+        PASCAL_STRING "There are too many windows open on the desktop !"
+        PASCAL_STRING "Do you want to save the new Selector list"
+        PASCAL_STRING "on the system disk ?"
+
+
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -11087,94 +11000,46 @@ LB6D6:  .byte   $00,$00,$20,$80,$00,$00,$00,$00
         .byte   $00
 LB6DF:  .byte   $A4
 LB6E0:  .byte   $01
-LB6E1:  .byte   $37,$00,$0F,$4F,$4B,$20,$20,$20
-        .byte   $20,$20,$20,$20,$20,$20,$20,$20
-        .byte   $20,$0D,$14,$00,$25,$00,$78,$00
+LB6E1:  .byte   $37,$00
+
+
+
+        PASCAL_STRING {"OK            ",A2D_GLYPH_RETURN}
+
+        .byte   $14,$00,$25,$00,$78,$00
         .byte   $30,$00,$19,$00,$2F,$00,$2C,$01
         .byte   $25,$00,$90,$01,$30,$00,$31,$01
         .byte   $2F,$00,$BE,$00,$10,$00,$4B,$00
         .byte   $1D,$00
 LB713:  .byte   $00
 LB714:  .byte   $00
-LB715:  .byte   $00,$0F,$54,$72,$79,$20,$41,$67
-        .byte   $61,$69,$6E,$20,$20,$20,$20,$20
-        .byte   $41,$0E,$43,$61,$6E,$63,$65,$6C
-        .byte   $20,$20,$20,$20,$20,$45,$73,$63
-        .byte   $0C,$53,$79,$73,$74,$65,$6D,$20
-        .byte   $45,$72,$72,$6F,$72,$09,$49,$2F
-        .byte   $4F,$20,$65,$72,$72,$6F,$72,$13
-        .byte   $4E,$6F,$20,$64,$65,$76,$69,$63
-        .byte   $65,$20,$63,$6F,$6E,$6E,$65,$63
-        .byte   $74,$65,$64,$1C,$54,$68,$65,$20
-        .byte   $64,$69,$73,$6B,$20,$69,$73,$20
-        .byte   $77,$72,$69,$74,$65,$20,$70,$72
-        .byte   $6F,$74,$65,$63,$74,$65,$64,$2E
-        .byte   $26,$54,$68,$65,$20,$73,$79,$6E
-        .byte   $74,$61,$78,$20,$6F,$66,$20,$74
-        .byte   $68,$65,$20,$70,$61,$74,$68,$6E
-        .byte   $61,$6D,$65,$20,$69,$73,$20,$69
-        .byte   $6E,$76,$61,$6C,$69,$64,$2E,$23
-        .byte   $50,$61,$72,$74,$20,$6F,$66,$20
-        .byte   $74,$68,$65,$20,$70,$61,$74,$68
-        .byte   $6E,$61,$6D,$65,$20,$64,$6F,$65
-        .byte   $73,$6E,$27,$74,$20,$65,$78,$69
-        .byte   $73,$74,$2E,$1B,$54,$68,$65,$20
-        .byte   $76,$6F,$6C,$75,$6D,$65,$20,$63
-        .byte   $61,$6E,$6E,$6F,$74,$20,$62,$65
-        .byte   $20,$66,$6F,$75,$6E,$64,$2E,$19
-        .byte   $54,$68,$65,$20,$66,$69,$6C,$65
-        .byte   $20,$63,$61,$6E,$6E,$6F,$74,$20
-        .byte   $62,$65,$20,$66,$6F,$75,$6E,$64
-        .byte   $2E,$32,$54,$68,$61,$74,$20,$6E
-        .byte   $61,$6D,$65,$20,$61,$6C,$72,$65
-        .byte   $61,$64,$79,$20,$65,$78,$69,$73
-        .byte   $74,$73,$2E,$20,$50,$6C,$65,$61
-        .byte   $73,$65,$20,$75,$73,$65,$20,$61
-        .byte   $6E,$6F,$74,$68,$65,$72,$20,$6E
-        .byte   $61,$6D,$65,$2E,$11,$54,$68,$65
-        .byte   $20,$64,$69,$73,$6B,$20,$69,$73
-        .byte   $20,$66,$75,$6C,$6C,$2E,$34,$54
-        .byte   $68,$65,$20,$76,$6F,$6C,$75,$6D
-        .byte   $65,$20,$64,$69,$72,$65,$63,$74
-        .byte   $6F,$72,$79,$20,$63,$61,$6E,$6E
-        .byte   $6F,$74,$20,$68,$6F,$6C,$64,$20
-        .byte   $6D,$6F,$72,$65,$20,$74,$68,$61
-        .byte   $6E,$20,$35,$31,$20,$66,$69,$6C
-        .byte   $65,$73,$2E,$13,$54,$68,$65,$20
-        .byte   $66,$69,$6C,$65,$20,$69,$73,$20
-        .byte   $6C,$6F,$63,$6B,$65,$64,$2E,$1A
-        .byte   $54,$68,$69,$73,$20,$69,$73,$20
-        .byte   $6E,$6F,$74,$20,$61,$20,$50,$72
-        .byte   $6F,$44,$4F,$53,$20,$64,$69,$73
-        .byte   $6B,$2E,$36,$54,$68,$65,$72,$65
-        .byte   $20,$69,$73,$20,$61,$6E,$6F,$74
-        .byte   $68,$65,$72,$20,$76,$6F,$6C,$75
-        .byte   $6D,$65,$20,$77,$69,$74,$68,$20
-        .byte   $74,$68,$61,$74,$20,$6E,$61,$6D
-        .byte   $65,$20,$6F,$6E,$20,$74,$68,$65
-        .byte   $20,$64,$65,$73,$6B,$74,$6F,$70
-        .byte   $2E,$27,$54,$68,$65,$72,$65,$20
-        .byte   $61,$72,$65,$20,$32,$20,$76,$6F
-        .byte   $6C,$75,$6D,$65,$73,$20,$77,$69
-        .byte   $74,$68,$20,$74,$68,$65,$20,$73
-        .byte   $61,$6D,$65,$20,$6E,$61,$6D,$65
-        .byte   $2E,$18,$54,$68,$69,$73,$20,$66
-        .byte   $69,$6C,$65,$20,$63,$61,$6E,$6E
-        .byte   $6F,$74,$20,$62,$65,$20,$72,$75
-        .byte   $6E,$2E,$16,$54,$68,$61,$74,$20
-        .byte   $6E,$61,$6D,$65,$20,$69,$73,$20
-        .byte   $74,$6F,$6F,$20,$6C,$6F,$6E,$67
-        .byte   $2E,$19,$50,$6C,$65,$61,$73,$65
-        .byte   $20,$69,$6E,$73,$65,$72,$74,$20
-        .byte   $73,$6F,$75,$72,$63,$65,$20,$64
-        .byte   $69,$73,$6B,$1E,$50,$6C,$65,$61
-        .byte   $73,$65,$20,$69,$6E,$73,$65,$72
-        .byte   $74,$20,$64,$65,$73,$74,$69,$6E
-        .byte   $61,$74,$69,$6F,$6E,$20,$64,$69
-        .byte   $73,$6B,$16,$42,$41,$53,$49,$43
-        .byte   $2E,$53,$59,$53,$54,$45,$4D,$20
-        .byte   $6E,$6F,$74,$20,$66,$6F,$75,$6E
-        .byte   $64
+LB715:  .byte   $00
+
+        PASCAL_STRING "Try Again     A"
+        PASCAL_STRING "Cancel     Esc"
+
+        PASCAL_STRING "System Error"
+        PASCAL_STRING "I/O error"
+        PASCAL_STRING "No device connected"
+        PASCAL_STRING "The disk is write protected."
+        PASCAL_STRING "The syntax of the pathname is invalid."
+        PASCAL_STRING "Part of the pathname doesn't exist."
+        PASCAL_STRING "The volume cannot be found."
+
+        PASCAL_STRING "The file cannot be found."
+        PASCAL_STRING "That name already exists. Please use another name."
+        PASCAL_STRING "The disk is full."
+        PASCAL_STRING "The volume directory cannot hold more than 51 files."
+        PASCAL_STRING "The file is locked."
+        PASCAL_STRING "This is not a ProDOS disk."
+        PASCAL_STRING "There is another volume with that name on the desktop."
+        PASCAL_STRING "There are 2 volumes with the same name."
+        PASCAL_STRING "This file cannot be run."
+        PASCAL_STRING "That name is too long."
+        PASCAL_STRING "Please insert source disk"
+        PASCAL_STRING "Please insert destination disk"
+        PASCAL_STRING "BASIC.SYSTEM not found"
+
 LB986:  .byte   $14
 LB987:  .byte   $00,$27,$28,$2B,$40,$44,$45,$46
         .byte   $47,$48,$49,$4E,$52,$57,$F9,$FA
