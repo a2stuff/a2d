@@ -10874,55 +10874,28 @@ LA938:  lda     L936E
         PASCAL_STRING "Copyright Version Soft, 1985 - 1986"
         PASCAL_STRING "All Rights Reserved"
         PASCAL_STRING "Authors: Stephane Cavril, Bernard Gallet, Henri Lamiraux"
-        .byte   $20,$52,$69,$63,$68,$61
-        .byte   $72,$64,$20,$44,$61,$6E,$61,$69
-        .byte   $73,$20,$61,$6E,$64,$20,$4C,$75
-        .byte   $63,$20,$42,$61,$72,$74,$68,$65
-        .byte   $6C,$65,$74,$39,$57,$69,$74,$68
-        .byte   $20,$74,$68,$61,$6E,$6B,$73,$20
-        .byte   $74,$6F,$3A,$20,$41,$2E,$20,$47
-        .byte   $65,$72,$61,$72,$64,$2C,$20,$4A
-        .byte   $2E,$20,$47,$65,$72,$62,$65,$72
-        .byte   $2C,$20,$50,$2E,$20,$50,$61,$68
-        .byte   $6C,$2C,$20,$4A,$2E,$20,$42,$65
-        .byte   $72,$6E,$61,$72,$64,$11,$4E,$6F
-        .byte   $76,$65,$6D,$62,$65,$72,$20,$32
-        .byte   $36,$2C,$20,$31,$39,$38,$36,$0B
-        .byte   $56,$65,$72,$73,$69,$6F,$6E,$20
-        .byte   $31,$2E,$31,$08,$43,$6F,$70,$79
-        .byte   $20,$2E,$2E,$2E,$0C,$4E,$6F,$77
-        .byte   $20,$43,$6F,$70,$79,$69,$6E,$67
-        .byte   $20,$05,$66,$72,$6F,$6D,$3A,$04
-        .byte   $74,$6F,$20,$3A,$19,$46,$69,$6C
-        .byte   $65,$73,$20,$72,$65,$6D,$61,$69
-        .byte   $6E,$69,$6E,$67,$20,$74,$6F,$20
-        .byte   $63,$6F,$70,$79,$3A,$20,$38,$54
-        .byte   $68,$61,$74,$20,$66,$69,$6C,$65
-        .byte   $20,$61,$6C,$72,$65,$61,$64,$79
-        .byte   $20,$65,$78,$69,$73,$74,$73,$2E
-        .byte   $20,$44,$6F,$20,$79,$6F,$75,$20
-        .byte   $77,$61,$6E,$74,$20,$74,$6F,$20
-        .byte   $77,$72,$69,$74,$65,$20,$6F,$76
-        .byte   $65,$72,$20,$69,$74,$20,$3F,$35
-        .byte   $54,$68,$69,$73,$20,$66,$69,$6C
-        .byte   $65,$20,$69,$73,$20,$74,$6F,$6F
-        .byte   $20,$6C,$61,$72,$67,$65,$20,$74
-        .byte   $6F,$20,$63,$6F,$70,$79,$2C,$20
-        .byte   $63,$6C,$69,$63,$6B,$20,$4F,$4B
-        .byte   $20,$74,$6F,$20,$63,$6F,$6E,$74
-        .byte   $69,$6E,$75,$65,$2E,$6E,$00,$23
-        .byte   $00,$AA,$00,$3B,$00,$0A,$44,$65
-        .byte   $6C,$65,$74,$65,$20,$2E,$2E,$2E
-        .byte   $13,$43,$6C,$69,$63,$6B,$20,$4F
-        .byte   $4B,$20,$74,$6F,$20,$64,$65,$6C
-        .byte   $65,$74,$65,$3A,$30,$43,$6C,$69
-        .byte   $63,$6B,$69,$6E,$67,$20,$4F,$4B
-        .byte   $20,$77,$69,$6C,$6C,$20,$69,$6D
-        .byte   $6D,$65,$64,$69,$61,$74,$65,$6C
-        .byte   $79,$20,$65,$6D,$70,$74,$79,$20
-        .byte   $74,$68,$65,$20,$74,$72,$61,$73
-        .byte   $68,$20,$6F,$66,$3A,$05,$46,$69
-        .byte   $6C,$65,$3A,$1E,$46,$69,$6C,$65
+        PASCAL_STRING "Richard Danais and Luc Barthelet"
+        PASCAL_STRING "With thanks to: A. Gerard, J. Gerber, P. Pahl, J. Bernard"
+        PASCAL_STRING "November 26, 1986"
+        PASCAL_STRING "Version 1.1"
+
+        PASCAL_STRING "Copy ..."
+        PASCAL_STRING "Now Copying "
+        PASCAL_STRING "from:"
+        PASCAL_STRING "to :"
+        PASCAL_STRING "Files remaining to copy: "
+        PASCAL_STRING "That file already exists. Do you want to write over it ?"
+        PASCAL_STRING "This file is too large to copy, click OK to continue."
+
+        .byte   $6E,$00,$23
+        .byte   $00,$AA,$00,$3B,$00
+
+        PASCAL_STRING "Delete ..."
+        PASCAL_STRING "Click OK to delete:"
+        PASCAL_STRING "Clicking OK will immediately empty the trash of:"
+        PASCAL_STRING "File:"
+        PASCAL_STRING "Files meaining to be deleted:"
+        .byte   $1E,$46,$69,$6C,$65
         .byte   $73,$20,$72,$65,$6D,$61,$69,$6E
         .byte   $69,$6E,$67,$20,$74,$6F,$20,$62
         .byte   $65,$20,$64,$65,$6C,$65,$74,$65
