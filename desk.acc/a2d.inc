@@ -552,3 +552,4 @@ end:
         A2D_GLYPH_DARROW := $0A
         A2D_GLYPH_RETURN := $0D
         A2D_GLYPH_OAPPLE := $1F
+        A2D_GLYPH_CAPPLE := $1E

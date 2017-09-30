@@ -1,40 +1,21 @@
-.org $4000
-; da65 V2.16 - Git f5e9b401
-; Created:    2017-09-29 22:14:05
-; Input file: orig/DESKTOP2_s1_aux1
-; Page:       1
-
-
+        .org $4000
         .setcpu "65C02"
+
+        .include "apple2.inc"
+        .include "../inc/auxmem.inc"
+        .include "../desk.acc/a2d.inc"
+
 
 L0000           := $0000
 L0082           := $0082
 L0083           := $0083
 L0088           := $0088
 L00C7           := $00C7
-RAMRDOFF        := $C002
-RAMRDON         := $C003
-RAMWRTOFF       := $C004
-RAMWRTON        := $C005
-ALTZPOFF        := $C008
-ALTZPON         := $C009
-LCBANK1         := $C08B
-AUXMOVE         := $C311
-XFER            := $C314
-LD000           := $D000
 LD05E           := $D05E
 LD2D0           := $D2D0
-FSUB            := $E7A7
-FADD            := $E7BE
-FMULT           := $E97F
-FDIV            := $EA66
-ROUND           := $EB2B
-FLOAT           := $EB93
-FIN             := $EC4A
-FOUT            := $ED34
-COUT            := $FDED
-LFFFF           := $FFFF
-A2D:    lda     $C054
+
+;; A2D
+        lda     $C054
         sta     $C001
         bit     L5F1B
         bpl     L4022
@@ -112,7 +93,7 @@ L4082           := * + 1
 L4087:
 L4088           := * + 1
 L4089           := * + 2
-        jsr     LFFFF
+        jsr     $FFFF
 L408A:  bit     L633F
         bpl     L4092
         jsr     L40DA
@@ -2307,37 +2288,37 @@ L5A96           := * + 2
 L5A97:
 L5A98           := * + 1
 L5A99           := * + 2
-        lda     LFFFF,x
+        lda     $FFFF,x
         sta     $0F
-        lda     LFFFF,x
+        lda     $FFFF,x
         sta     $0E
-        lda     LFFFF,x
+        lda     $FFFF,x
         sta     $0D
-        lda     LFFFF,x
+        lda     $FFFF,x
         sta     $0C
-        lda     LFFFF,x
+        lda     $FFFF,x
         sta     $0B
-        lda     LFFFF,x
+        lda     $FFFF,x
         sta     $0A
-        lda     LFFFF,x
+        lda     $FFFF,x
         sta     $09
-        lda     LFFFF,x
+        lda     $FFFF,x
         sta     $08
-        lda     LFFFF,x
+        lda     $FFFF,x
         sta     $07
-        lda     LFFFF,x
+        lda     $FFFF,x
         sta     $06
-        lda     LFFFF,x
+        lda     $FFFF,x
         sta     $05
-        lda     LFFFF,x
+        lda     $FFFF,x
         sta     $04
-        lda     LFFFF,x
+        lda     $FFFF,x
         sta     $03
-        lda     LFFFF,x
+        lda     $FFFF,x
         sta     $02
-        lda     LFFFF,x
+        lda     $FFFF,x
         sta     $01
-        lda     LFFFF,x
+        lda     $FFFF,x
         sta     L0000
 L5AE7:  jmp     L5BD4
 
@@ -2359,97 +2340,97 @@ L5B03           := * + 2
 L5B04:
 L5B05           := * + 1
 L5B06           := * + 2
-        ldy     LFFFF,x
+        ldy     $FFFF,x
         lda     ($42),y
         sta     $1F
         lda     ($40),y
         ora     $0F
         sta     $0F
-        ldy     LFFFF,x
+        ldy     $FFFF,x
         lda     ($42),y
         sta     $1E
         lda     ($40),y
         ora     $0E
         sta     $0E
-        ldy     LFFFF,x
+        ldy     $FFFF,x
         lda     ($42),y
         sta     $1D
         lda     ($40),y
         ora     $0D
         sta     $0D
-        ldy     LFFFF,x
+        ldy     $FFFF,x
         lda     ($42),y
         sta     $1C
         lda     ($40),y
         ora     $0C
         sta     $0C
-        ldy     LFFFF,x
+        ldy     $FFFF,x
         lda     ($42),y
         sta     $1B
         lda     ($40),y
         ora     $0B
         sta     $0B
-        ldy     LFFFF,x
+        ldy     $FFFF,x
         lda     ($42),y
         sta     $1A
         lda     ($40),y
         ora     $0A
         sta     $0A
-        ldy     LFFFF,x
+        ldy     $FFFF,x
         lda     ($42),y
         sta     $19
         lda     ($40),y
         ora     $09
         sta     $09
-        ldy     LFFFF,x
+        ldy     $FFFF,x
         lda     ($42),y
         sta     $18
         lda     ($40),y
         ora     $08
         sta     $08
-        ldy     LFFFF,x
+        ldy     $FFFF,x
         lda     ($42),y
         sta     $17
         lda     ($40),y
         ora     $07
         sta     $07
-        ldy     LFFFF,x
+        ldy     $FFFF,x
         lda     ($42),y
         sta     $16
         lda     ($40),y
         ora     $06
         sta     $06
-        ldy     LFFFF,x
+        ldy     $FFFF,x
         lda     ($42),y
         sta     $15
         lda     ($40),y
         ora     $05
         sta     $05
-        ldy     LFFFF,x
+        ldy     $FFFF,x
         lda     ($42),y
         sta     $14
         lda     ($40),y
         ora     $04
         sta     $04
-        ldy     LFFFF,x
+        ldy     $FFFF,x
         lda     ($42),y
         sta     $13
         lda     ($40),y
         ora     $03
         sta     $03
-        ldy     LFFFF,x
+        ldy     $FFFF,x
         lda     ($42),y
         sta     $12
         lda     ($40),y
         ora     $02
         sta     $02
-        ldy     LFFFF,x
+        ldy     $FFFF,x
         lda     ($42),y
         sta     $11
         lda     ($40),y
         ora     $01
         sta     $01
-        ldy     LFFFF,x
+        ldy     $FFFF,x
         lda     ($42),y
         sta     $10
         lda     ($40),y
@@ -2998,11 +2979,11 @@ L612D:  lda     L4A21,y
 L6141:
 L6142           := * + 1
 L6143           := * + 2
-        lda     LFFFF,y
+        lda     $FFFF,y
         sta     L6005,x
 L6148           := * + 1
 L6149           := * + 2
-        lda     LFFFF,y
+        lda     $FFFF,y
         sta     L6008,x
         dey
         dex
@@ -7394,7 +7375,7 @@ L859C:  sta     $D409,x
         ldy     #$04
         lda     #$01
         ldx     #$D4
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
         lda     #$39
@@ -7455,7 +7436,7 @@ L8616:  cmp     #$57
 L8625:  ldy     #$33
         lda     #$3F
         ldx     #$D6
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
         lda     #$9C
@@ -7466,7 +7447,7 @@ L8625:  ldy     #$33
         ldy     #$33
         lda     #$3F
         ldx     #$D6
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
         lda     #$BF
@@ -7477,7 +7458,7 @@ L8625:  ldy     #$33
         ldy     #$33
         lda     #$3F
         ldx     #$D6
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
         sta     L8737
@@ -7606,8 +7587,7 @@ L8739:  .byte   $00,$00,$00,$00,$F4,$01,$10,$00
 L8775:  .byte   $02
 L8776:  .byte   $60,$79,$87
 L8779:  .byte   $0B
-L877A:  .byte   $47,$52,$41,$50,$48,$49,$43,$53
-        .byte   $2E,$54,$4B,$00,$00,$00,$00,$00
+L877A:  .byte   "GRAPHICS.TK",$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -10766,44 +10746,43 @@ LA938:  lda     L936E
         .byte   $62,$00,$00,$23,$08,$62,$00,$00
         .byte   $43,$10,$64,$00,$00,$03,$00,$60
         .byte   $00,$00,$FF,$FF,$FF,$00,$00,$00
-        .byte   $00,$00,$00,$01,$1E,$04,$46,$69
-        .byte   $6C,$65,$04,$56,$69,$65,$77,$07
-        .byte   $53,$70,$65,$63,$69,$61,$6C,$07
-        .byte   $53,$74,$61,$72,$74,$75,$70,$08
-        .byte   $53,$65,$6C,$65,$63,$74,$6F,$72
-        .byte   $0E,$4E,$65,$77,$20,$46,$6F,$6C
-        .byte   $64,$65,$72,$20,$2E,$2E,$2E,$04
-        .byte   $4F,$70,$65,$6E,$05,$43,$6C,$6F
-        .byte   $73,$65,$09,$43,$6C,$6F,$73,$65
-        .byte   $20,$41,$6C,$6C,$0A,$53,$65,$6C
-        .byte   $65,$63,$74,$20,$41,$6C,$6C,$0F
-        .byte   $43,$6F,$70,$79,$20,$61,$20,$46
-        .byte   $69,$6C,$65,$20,$2E,$2E,$2E,$11
-        .byte   $44,$65,$6C,$65,$74,$65,$20,$61
-        .byte   $20,$46,$69,$6C,$65,$20,$2E,$2E
-        .byte   $2E,$05,$45,$6A,$65,$63,$74,$04
-        .byte   $51,$75,$69,$74,$07,$42,$79,$20
-        .byte   $49,$63,$6F,$6E,$07,$42,$79,$20
-        .byte   $4E,$61,$6D,$65,$07,$42,$79,$20
-        .byte   $44,$61,$74,$65,$07,$42,$79,$20
-        .byte   $53,$69,$7A,$65,$07,$42,$79,$20
-        .byte   $54,$79,$70,$65,$0C,$43,$68,$65
-        .byte   $63,$6B,$20,$44,$72,$69,$76,$65
-        .byte   $73,$11,$46,$6F,$72,$6D,$61,$74
-        .byte   $20,$61,$20,$44,$69,$73,$6B,$20
-        .byte   $2E,$2E,$2E,$10,$45,$72,$61,$73
-        .byte   $65,$20,$61,$20,$44,$69,$73,$6B
-        .byte   $20,$2E,$2E,$2E,$0D,$44,$69,$73
-        .byte   $6B,$20,$43,$6F,$70,$79,$20,$2E
-        .byte   $2E,$2E,$08,$4C,$6F,$63,$6B,$20
-        .byte   $2E,$2E,$2E,$0A,$55,$6E,$6C,$6F
-        .byte   $63,$6B,$20,$2E,$2E,$2E,$0C,$47
-        .byte   $65,$74,$20,$49,$6E,$66,$6F,$20
-        .byte   $2E,$2E,$2E,$0C,$47,$65,$74,$20
-        .byte   $53,$69,$7A,$65,$20,$2E,$2E,$2E
-        .byte   $12,$52,$65,$6E,$61,$6D,$65,$20
-        .byte   $61,$6E,$20,$49,$63,$6F,$6E,$20
-        .byte   $2E,$2E,$2E,$06,$00,$01,$00,$1C
+        .byte   $00,$00,$00
+
+
+        PASCAL_STRING A2D_GLYPH_CAPPLE
+        PASCAL_STRING "File"
+        PASCAL_STRING "View"
+        PASCAL_STRING "Special"
+        PASCAL_STRING "Startup"
+        PASCAL_STRING "Selector"
+
+        PASCAL_STRING "New Folder ..."
+        PASCAL_STRING "Open"
+        PASCAL_STRING "Close"
+        PASCAL_STRING "Close All"
+        PASCAL_STRING "Select All"
+        PASCAL_STRING "Copy a File ..."
+        PASCAL_STRING "Delete a File ..."
+        PASCAL_STRING "Eject"
+        PASCAL_STRING "Quit"
+
+        PASCAL_STRING "By Icon"
+        PASCAL_STRING "By Name"
+        PASCAL_STRING "By Date"
+        PASCAL_STRING "By Size"
+        PASCAL_STRING "By Type"
+
+        PASCAL_STRING "Check Drives"
+        PASCAL_STRING "Format a Disk ..."
+        PASCAL_STRING "Erase a Disk ..."
+        PASCAL_STRING "Disk Copy ..."
+        PASCAL_STRING "Lock ..."
+        PASCAL_STRING "Unlock ..."
+        PASCAL_STRING "Get Info ..."
+        PASCAL_STRING "Get Size ..."
+        PASCAL_STRING "Rename an Icon ..."
+
+        .byte   $06,$00,$01,$00,$1C
         .byte   $AB,$94,$E5,$00,$00,$00,$00,$00
         .byte   $00,$02,$00,$1E,$AB,$8E,$AC,$00
         .byte   $00,$00,$00,$00,$00,$04,$00,$23
@@ -10877,39 +10856,25 @@ LA938:  lda     L936E
         .byte   $00,$68,$01,$50,$00,$41,$00,$2B
         .byte   $00,$41,$00,$33,$00,$41,$00,$23
         .byte   $00,$8A,$01,$2A,$00,$41,$00,$2B
-        .byte   $00,$8A,$01,$32,$00,$11,$43,$61
-        .byte   $6E,$63,$65,$6C,$20,$20,$20,$20
-        .byte   $20,$20,$20,$20,$45,$73,$63,$04
-        .byte   $20,$59,$65,$73,$03,$20,$4E,$6F
-        .byte   $04,$20,$41,$6C,$6C,$10,$53,$6F
-        .byte   $75,$72,$63,$65,$20,$66,$69,$6C
-        .byte   $65,$6E,$61,$6D,$65,$3A,$15,$44
-        .byte   $65,$73,$74,$69,$6E,$61,$74,$69
-        .byte   $6F,$6E,$20,$66,$69,$6C,$65,$6E
-        .byte   $61,$6D,$65,$3A,$04,$00,$02,$00
+        .byte   $00,$8A,$01,$32,$00
+
+        PASCAL_STRING "Cancel        Esc"
+        PASCAL_STRING " Yes"
+        PASCAL_STRING " No"
+        PASCAL_STRING " All"
+        PASCAL_STRING "Source filename:"
+        PASCAL_STRING "Destination filename:"
+
+        .byte   $04,$00,$02,$00
         .byte   $8C,$01,$6C,$00,$05,$00,$03,$00
-        .byte   $8B,$01,$6B,$00,$10,$41,$70,$70
-        .byte   $6C,$65,$20,$49,$49,$20,$44,$65
-        .byte   $73,$6B,$54,$6F,$70,$23,$43,$6F
-        .byte   $70,$79,$72,$69,$67,$68,$74,$20
-        .byte   $41,$70,$70,$6C,$65,$20,$43,$6F
-        .byte   $6D,$70,$75,$74,$65,$72,$20,$49
-        .byte   $6E,$63,$2E,$2C,$20,$31,$39,$38
-        .byte   $36,$23,$43,$6F,$70,$79,$72,$69
-        .byte   $67,$68,$74,$20,$56,$65,$72,$73
-        .byte   $69,$6F,$6E,$20,$53,$6F,$66,$74
-        .byte   $2C,$20,$31,$39,$38,$35,$20,$2D
-        .byte   $20,$31,$39,$38,$36,$13,$41,$6C
-        .byte   $6C,$20,$52,$69,$67,$68,$74,$73
-        .byte   $20,$52,$65,$73,$65,$72,$76,$65
-        .byte   $64,$38,$41,$75,$74,$68,$6F,$72
-        .byte   $73,$3A,$20,$53,$74,$65,$70,$68
-        .byte   $61,$6E,$65,$20,$43,$61,$76,$72
-        .byte   $69,$6C,$2C,$20,$42,$65,$72,$6E
-        .byte   $61,$72,$64,$20,$47,$61,$6C,$6C
-        .byte   $65,$74,$2C,$20,$48,$65,$6E,$72
-        .byte   $69,$20,$4C,$61,$6D,$69,$72,$61
-        .byte   $75,$78,$20,$52,$69,$63,$68,$61
+        .byte   $8B,$01,$6B,$00
+
+        PASCAL_STRING "Apple II DeskTop"
+        PASCAL_STRING "Copyright Apple Computer Inc., 1986"
+        PASCAL_STRING "Copyright Version Soft, 1985 - 1986"
+        PASCAL_STRING "All Rights Reserved"
+        PASCAL_STRING "Authors: Stephane Cavril, Bernard Gallet, Henri Lamiraux"
+        .byte   $20,$52,$69,$63,$68,$61
         .byte   $72,$64,$20,$44,$61,$6E,$61,$69
         .byte   $73,$20,$61,$6E,$64,$20,$4C,$75
         .byte   $63,$20,$42,$61,$72,$74,$68,$65
