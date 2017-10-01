@@ -48,9 +48,9 @@ L4022:  pla
         lda     ($80),y
         asl     a
         tax
-        lda     L40E5,x
+        lda     a2d_jump_table,x
         sta     L4088
-        lda     L40E6,x
+        lda     a2d_jump_table+1,x
         sta     L4089
         iny
         lda     ($80),y
@@ -60,7 +60,7 @@ L4022:  pla
         sta     $81
         pla
         sta     $80
-        ldy     L4184,x
+        ldy     L4183+1,x
         bpl     L4076
         txa
         pha
@@ -136,7 +136,7 @@ L40CA:  lda     $D0,y
         bpl     L40CA
         rts
 
-L40D3:  brk
+L40D3:  .byte   0
 L40D4:  dec     L40D3
         jmp     L625A
 
@@ -145,29 +145,13 @@ L40DA:  bit     L40D3
         inc     L40D3
         jmp     L6233
 
-L40E5:  .byte   $B0
-L40E6:  .byte   $40,$51,$5E,$7B,$5E,$C4,$5E,$9C
-        .byte   $5E,$B4,$5E,$8E,$50,$AF,$4D,$8F
-        .byte   $4F,$B0,$40,$B0,$40,$6A,$58,$B0
-        .byte   $40,$42,$57,$B0,$40,$63,$57,$76
-        .byte   $57,$40,$50,$E5,$4F,$51,$50,$6A
-        .byte   $51,$7E,$53,$D6,$56,$7A,$53,$DC
-        .byte   $58,$38,$59,$CF,$5E,$DE,$5E,$0A
-        .byte   $5F,$41,$63,$A5,$64,$D2,$64,$B3
-        .byte   $65,$27,$84,$61,$7D,$47,$67,$7B
-        .byte   $60,$33,$62,$5A,$62,$4E,$62,$0A
-        .byte   $63,$63,$66,$D7,$65,$D8,$67,$D4
-        .byte   $65,$0F,$66,$14,$68,$CD,$6E,$26
-        .byte   $69,$DB,$6B,$60,$6B,$1D,$6B,$CB
-        .byte   $6B,$A9,$6B,$B5,$6B,$1C,$6F,$7B
-        .byte   $74,$15,$78,$36,$78,$00,$75,$9C
-        .byte   $75,$1F,$76,$32,$75,$8C,$75,$F9
-        .byte   $73,$39,$76,$AC,$74,$4A,$76,$AC
-        .byte   $76,$A8,$76,$F9,$78,$E1,$78,$C1
-        .byte   $7A,$75,$7B,$AA,$7B,$24,$7D,$65
-        .byte   $79,$B3,$51,$69,$7D
+        ;; Jump table for A2D entry point calls
+a2d_jump_table:
+        .addr   $40B0,$5E51,$5E7B,$5EC4,$5E9C,$5EB4,$508E,$4DAF,$4F8F,$40B0,$40B0,$586A,$40B0,$5742,$40B0,$5763,$5776,$5040,$4FE5,$5051,$516A,$537E,$56D6,$537A,$58DC,$5938,$5ECF,$5EDE,$5F0A,$6341,$64A5,$64D2,$65B3,$8427,$7D61,$6747,$607B,$6233,$625A,$624E,$630A,$6663,$65D7,$67D8,$65D4,$660F,$6814,$6ECD,$6926,$6BDB,$6B60,$6B1D,$6BCB,$6BA9,$6BB5,$6F1C,$747B,$7815,$7836,$7500,$759C,$761F,$7532,$758C,$73F9,$7639,$74AC,$764A,$76AC,$76A8,$78F9,$78E1,$7AC1,$7B75,$7BAA,$7D24,$7965,$51B3,$7D69
+
+        ;; Entry point param lengths
 L4183:  .byte   $00
-L4184:  .byte   $00,$00,$00,$82,$01,$00,$00,$D0
+        .byte   $00,$00,$00,$82,$01,$00,$00,$D0
         .byte   $24,$00,$00,$D0,$10,$F0,$01,$E0
         .byte   $08,$E8,$02,$EE,$02,$00,$00,$F1
         .byte   $01,$A1,$04,$EA,$04,$A1,$84,$92
@@ -904,7 +888,7 @@ L4FDD:  dex
         sta     $C054
         rts
 
-L4FE4:  brk
+L4FE4:  .byte   0
         ldy     #$03
 L4FE7:  ldx     #$07
 L4FE9:  lda     $9F,x
@@ -1116,8 +1100,8 @@ L514C:  sec
 L5163:  lda     #$81
         jmp     L40B1
 
-L5168:  brk
-L5169:  brk
+L5168:  .byte   0
+L5169:  .byte   0
         ldx     #$03
 L516C:  lda     $8A,x
         sta     $9B,x
@@ -2047,7 +2031,7 @@ L58B1:  iny
 L58B7:  lda     #$83
         jmp     L40B1
 
-L58BC:  brk
+L58BC:  .byte   0
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00
 L58CC:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -2813,7 +2797,8 @@ L5F1C:  .byte   $80
 L5F1D:  .byte   $00
 L5F1E:  .byte   $00,$00,$00,$00,$00,$20,$80,$00
         .byte   $00,$00,$00,$00,$2F,$02,$BF,$00
-L5F2E:  .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+white_pattern:
+        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
         .byte   $FF,$00,$00,$00,$00,$00,$01,$01
         .byte   $00,$00
 L5F40:  .byte   $00
@@ -2827,7 +2812,7 @@ L5F66:  .byte   $42,$5F,$00,$00,$00,$00,$00,$00
 L5F72:  .res    128, 0
 L5FF2:  .byte   $00
 L5FF3:  .byte   $FF
-L5FF4:  .byte   $00
+set_pos_params:  .byte   $00
 L5FF5:  .byte   $00
 L5FF6:  .byte   $00,$00
 L5FF8:  .byte   $00
@@ -2908,7 +2893,7 @@ L60B2:  lda     #$00
         clc
         adc     #$0C
         sta     $85
-        lda     L5FF4
+        lda     set_pos_params
         sec
         sbc     L6002
         tax
@@ -3120,7 +3105,7 @@ L625A:  php
         plp
 L6263:  rts
 
-L6264:  brk
+L6264:  .byte   0
 L6265:  bit     L6339
         bpl     L627C
         lda     L7D74
@@ -3132,7 +3117,7 @@ L6265:  bit     L6339
         sta     L6264
 L627C:  ldx     #$02
 L627E:  lda     L5FF8,x
-        cmp     L5FF4,x
+        cmp     set_pos_params,x
         bne     L628B
         dex
         bpl     L627E
@@ -3141,7 +3126,7 @@ L628B:  jsr     L61C6
         ldx     #$02
         stx     L5FF2
 L6293:  lda     L5FF8,x
-        sta     L5FF4,x
+        sta     set_pos_params,x
         dex
         bpl     L6293
         jsr     L60A8
@@ -3271,16 +3256,17 @@ L643F:  jsr     L6313
         sta     L700C
 L6454:  jsr     L653F
         jsr     L6588
-        A2D_CALL A2D_SET_PATTERN, L65AA
-        A2D_CALL A2D_FILL_RECT, L659A
+        A2D_CALL A2D_SET_PATTERN, checkerboard_pattern
+        A2D_CALL A2D_FILL_RECT, fill_rect_params
         jmp     L6556
 
 L6469:  .byte   $02
-L646A:  brk
+L646A:  .byte   0
         sed
         .byte   $66
-L646D:  .byte   $01
-L646E:  brk
+dealloc_interrupt_params:
+        .byte   1
+L646E:  .byte   0
         lda     #$00
         sta     L633A
         lda     L6339
@@ -3320,7 +3306,7 @@ L64A4:  rts
         bpl     L64C7
         lda     L646A
         sta     L646E
-        MLI_CALL DEALLOC_INTERRUPT, L646D
+        MLI_CALL DEALLOC_INTERRUPT, dealloc_interrupt_params
 L64C7:  lda     L6340
         pha
         plp
@@ -3371,8 +3357,8 @@ L651D:  rts
 
 L651E:  jmp     (L6521)
 
-L6521:  brk
-L6522:  brk
+L6521:  .byte   0
+L6522:  .byte   0
 L6523:  lda     L6538
         beq     L6533
         jsr     L653F
@@ -3427,7 +3413,7 @@ L6587           := * + 1
 L6588           := * + 2
         asl     $205F,x
         ror     $2065,x
-        brk
+        .byte   0
         rti
 
         .byte   $06
@@ -3435,9 +3421,14 @@ L6588           := * + 2
         rts
 
 L6592:  .byte   $00,$00,$0D,$00,$00,$20,$80,$00
-L659A:  .byte   $00,$00,$00,$00,$2F,$02,$BF,$00
+
+fill_rect_params:
+        .byte   $00,$00,$00,$00,$2F,$02,$BF,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
-L65AA:  .byte   $55,$AA,$55,$AA,$55,$AA,$55,$AA
+
+checkerboard_pattern:
+        .byte   $55,$AA,$55,$AA,$55,$AA,$55,$AA
+
         .byte   $00,$2C
         bbr3    $63,L65E7
         ora     $A5,x
@@ -3531,11 +3522,11 @@ L6653:  lda     L5FF3,y
         bne     L6653
         rts
 
-L665E:  brk
-L665F:  brk
-L6660:  brk
-        brk
-L6662:  brk
+L665E:  .byte   0
+L665F:  .byte   0
+L6660:  .byte   0
+        .byte   0
+L6662:  .byte   0
 L6663:  bit     L6339
         bpl     L666D
         lda     #$97
@@ -3583,7 +3574,7 @@ L66C4:  lda     #$01
 L66C8:  lda     #$02
 L66CA:  sta     L665E
         ldx     #$02
-L66CF:  lda     L5FF4,x
+L66CF:  lda     set_pos_params,x
         sta     L665F,x
         dex
         bpl     L66CF
@@ -3598,17 +3589,17 @@ L66DE:  lda     L665E,y
         bne     L66DE
 L66EA:  jmp     L6523
 
-L66ED:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-L66F6:  brk
-L66F7:  brk
+L66ED:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+L66F6:  .byte   0
+L66F7:  .byte   0
         cld
         lda     $C01C
         sta     L66F6
@@ -3701,16 +3692,19 @@ L6821:  .byte   $1E
 L6822:  .byte   $00
 L6823:  .byte   $00
 L6824:  .byte   $00
-L6825:  .byte   $FF,$FF,$FF,$FF,$30,$02,$0C,$00
-L682D:  .byte   $00,$00,$00,$00
+test_box_params:
+        .byte   $FF,$FF,$FF,$FF,$30,$02,$0C,$00
+
+fill_rect_params2:
+        .byte   $00,$00,$00,$00
 L6831:  .byte   $00,$00,$0B,$00
 L6835:  .byte   $00
 L6836:  .byte   $00
-L6837:  .byte   $00,$00
+test_box_params2:  .byte   $00,$00
 L6839:  .byte   $0C,$00
 L683B:  .byte   $00,$00
 L683D:  .byte   $00,$00
-L683F:  .byte   $00
+fill_rect_params4:  .byte   $00
 L6840:  .byte   $00
 L6841:  .byte   $0C,$00
 L6843:  .byte   $00
@@ -3841,8 +3835,8 @@ L691B:  A2D_CALL A2D_GET_INPUT, L0082
         lda     L0082
         rts
 
-L6924:  brk
-L6925:  brk
+L6924:  .byte   0
+L6925:  .byte   0
         lda     #$00
         sta     L633D
         sta     L633E
@@ -4027,7 +4021,7 @@ L6A9D:  jsr     L6878
         cmp     L00C7
         bne     L6ACF
         beq     L6AD9
-L6AAE:  lda     L5FF4
+L6AAE:  lda     set_pos_params
         ldx     L5FF5
         cpx     $B8
         bcc     L6ACF
@@ -4098,12 +4092,12 @@ L6B29:  jsr     L653C
 
 L6B35:  ldx     #$01
 L6B37:  lda     $B7,x
-        sta     L682D,x
+        sta     fill_rect_params2,x
         lda     $B9,x
         sta     L6831,x
         lda     $BB,x
-        sta     L6837,x
-        sta     L683F,x
+        sta     test_box_params2,x
+        sta     fill_rect_params4,x
         lda     $BD,x
         sta     L683B,x
         sta     L6843,x
@@ -4111,7 +4105,7 @@ L6B37:  lda     $B7,x
         bpl     L6B37
         lda     #$02
         jsr     L68F5
-        A2D_CALL A2D_FILL_RECT, L682D
+        A2D_CALL A2D_FILL_RECT, fill_rect_params2
         rts
 
         lda     $C9
@@ -4177,8 +4171,8 @@ L6BC6:  sta     $BF
         ldx     $A7
         jmp     L68A9
 
-L6BD9:  brk
-L6BDA:  brk
+L6BD9:  .byte   0
+L6BDA:  .byte   0
 L6BDB:  jsr     L7ECD
         jsr     L6867
         jsr     L653F
@@ -4197,11 +4191,11 @@ L6BFD:  bit     L7D81
         jmp     L8149
 
 L6C05:  A2D_CALL A2D_SET_POS, L0083
-        A2D_CALL A2D_TEST_BOX, L6825
+        A2D_CALL A2D_TEST_BOX, test_box_params
         bne     L6C58
         lda     L6BD9
         beq     L6C23
-        A2D_CALL A2D_TEST_BOX, L6837
+        A2D_CALL A2D_TEST_BOX, test_box_params2
         bne     L6C73
         jsr     L6EA1
 L6C23:  jsr     L691B
@@ -4367,7 +4361,7 @@ L6D55:  lda     ($84),y
         lda     L6861
         ldx     L6862
         jsr     L6A66
-        inc     L683F
+        inc     fill_rect_params4
         bne     L6D7A
         inc     L6840
 L6D7A:  lda     L6843
@@ -4473,28 +4467,34 @@ L6E36:  ldx     $A9
         lda     $BE
         sbc     #$00
         sta     L6E8F
-        A2D_CALL A2D_SET_PATTERN, L6E82
+        A2D_CALL A2D_SET_PATTERN, light_speckle_pattern
         lda     #$01
         jsr     L68F5
-        A2D_CALL A2D_FILL_RECT, L6E8A
-        A2D_CALL A2D_SET_PATTERN, L5F2E
+        A2D_CALL A2D_FILL_RECT, fill_rect_params3
+        A2D_CALL A2D_SET_PATTERN, white_pattern
         lda     #$02
         jsr     L68F5
         rts
 
-L6E82:  dey
-        eor     L0088,x
-        eor     L0088,x
-        eor     L0088,x
-        .byte   $55
-L6E8A:  brk
-L6E8B:  brk
-L6E8C:  brk
-        brk
-L6E8E:  brk
-L6E8F:  brk
-L6E90:  brk
-        brk
+light_speckle_pattern:
+        .byte   %10001000
+        .byte   %01010101
+        .byte   %10001000
+        .byte   %01010101
+        .byte   %10001000
+        .byte   %01010101
+        .byte   %10001000
+        .byte   %01010101
+
+fill_rect_params3:
+L6E8A:  .byte   0
+L6E8B:  .byte   0
+L6E8C:  .byte   0
+        .byte   0
+L6E8E:  .byte   0
+L6E8F:  .byte   0
+L6E90:  .byte   0
+        .byte   0
 L6E92:  sta     L0082
         lda     $BD
         ldx     $BE
@@ -4519,7 +4519,7 @@ L6EAA:  ldx     L6BDA
         jsr     L625A
         lda     #$02
         jsr     L68F5
-        A2D_CALL A2D_FILL_RECT, L683F
+        A2D_CALL A2D_FILL_RECT, fill_rect_params4
         jmp     L6233
 
         ldx     #$03
@@ -4859,16 +4859,17 @@ L71E3:  rts
 
         ;;  Drawing title bar, maybe?
 L71E4:  .byte   $01
-L71E5:  .byte   $FF
-L71E6:  .byte   $00,$FF,$00,$FF,$00,$FF,$00,$FF
+stripes_pattern:
+stripes_pattern_alt := *+1
+        .byte   $FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF
 L71EE:  jsr     L7157
         lda     $C9
         and     #$01
         beq     L71FE
-        A2D_CALL A2D_SET_PATTERN, L71E5
+        A2D_CALL A2D_SET_PATTERN, stripes_pattern
         rts
 
-L71FE:  A2D_CALL A2D_SET_PATTERN, L71E6
+L71FE:  A2D_CALL A2D_SET_PATTERN, stripes_pattern_alt
         rts
 
 L7205:  lda     #$01
@@ -4967,7 +4968,7 @@ L72A0:  jsr     L5040
         sbc     #$00
         sta     $97
         jsr     L5040
-        A2D_CALL A2D_SET_PATTERN, L5F2E
+        A2D_CALL A2D_SET_PATTERN, white_pattern
 L72C9:  jsr     L703E
         bit     $B0
         bpl     L7319
@@ -5120,7 +5121,7 @@ L73F0:  sta     $EC
         rts
 
         jsr     L653F
-        A2D_CALL A2D_TEST_BOX, L6825
+        A2D_CALL A2D_TEST_BOX, test_box_params
         beq     L7416
         lda     #$01
 L7406:  ldx     #$00
@@ -5177,7 +5178,7 @@ L7472:  ldx     $AB
         bne     L7408
 L7476:  lda     #$02
         bne     L7472
-L747A:  brk
+L747A:  .byte   0
         lda     $80
         sta     $A9
         lda     $81
@@ -5265,12 +5266,12 @@ L753F:  jsr     L653C
         jsr     L6588
         lda     L7871
         bne     L7550
-        A2D_CALL A2D_SET_BOX, L78D1
+        A2D_CALL A2D_SET_BOX, set_box_params
 L7550:  jsr     L718E
         jsr     L6588
         lda     L7871
         bne     L7561
-        A2D_CALL A2D_SET_BOX, L78D1
+        A2D_CALL A2D_SET_BOX, set_box_params
 L7561:  jsr     L703E
         lda     $F4
         sta     L750C
@@ -5306,7 +5307,7 @@ L758C:  jsr     L6233
         lda     $84
         sta     $81
         ldx     #$07
-L75AC:  lda     L659A,x
+L75AC:  lda     fill_rect_params,x
         sta     $D8,x
         dex
         bpl     L75AC
@@ -5393,7 +5394,7 @@ L7644:  ldy     #$00
         sta     ($80),y
         rts
 
-L7649:  brk
+L7649:  .byte   0
         jsr     L7013
         beq     L7697
         jsr     L7157
@@ -5409,7 +5410,7 @@ L765A:  sta     L7649
 L766E:  jsr     L691B
         cmp     #$02
         beq     L768B
-        A2D_CALL A2D_SET_POS, L5FF4
+        A2D_CALL A2D_SET_POS, set_pos_params
         jsr     L7086
         eor     L7649
         bpl     L766E
@@ -5456,7 +5457,7 @@ L76D1:  jsr     L653C
         jsr     L784C
         lda     #$02
         jsr     L68F5
-        A2D_CALL A2D_SET_PATTERN, L65AA
+        A2D_CALL A2D_SET_PATTERN, checkerboard_pattern
 L76E2:  jsr     L703E
         jsr     L7749
         jsr     L70B7
@@ -5642,23 +5643,23 @@ L7854:  lda     L00C7,x
         jsr     L50A9
         ldx     #$03
 L7860:  lda     $92,x
-        sta     L78D9,x
-        sta     L78D1,x
+        sta     fill_rect_params5,x
+        sta     set_box_params,x
         lda     $96,x
         sta     L78DD,x
         dex
         bpl     L7860
         rts
 
-L7871:  brk
+L7871:  .byte   0
 L7872:  sta     L7010
         lda     #$00
         sta     L7871
-        A2D_CALL A2D_SET_BOX, L78D1
+        A2D_CALL A2D_SET_BOX, set_box_params
         lda     #$00
         jsr     L68F5
-        A2D_CALL A2D_SET_PATTERN, L65AA
-        A2D_CALL A2D_FILL_RECT, L78D9
+        A2D_CALL A2D_SET_PATTERN, checkerboard_pattern
+        A2D_CALL A2D_FILL_RECT, fill_rect_params5
         jsr     L6553
         jsr     L7013
         beq     L78CA
@@ -5690,8 +5691,10 @@ L78CA:  rts
 L78CB:  .byte   $08,$00
 L78CD:  .byte   $0C,$00
 L78CF:  .byte   $0D,$00
-L78D1:  .byte   $00,$00,$0D,$00,$00,$20,$80,$00
-L78D9:  .byte   $00,$00,$00,$00
+set_box_params:
+        .byte   $00,$00,$0D,$00,$00,$20,$80,$00
+fill_rect_params5:
+        .byte   $00,$00,$00,$00
 L78DD:  .byte   $00,$00,$00,$00
         jsr     L7074
         ldx     #$02
@@ -5813,9 +5816,9 @@ L79B8:  bit     $B0
         bpl     L79B7
 L79BC:  jsr     L657E
         jsr     L79F1
-        A2D_CALL A2D_SET_PATTERN, L79E7
+        A2D_CALL A2D_SET_PATTERN, light_speckles_pattern
         A2D_CALL A2D_FILL_RECT, L00C7
-        A2D_CALL A2D_SET_PATTERN, L5F2E
+        A2D_CALL A2D_SET_PATTERN, white_pattern
         bit     $8C
         bmi     L79DD
         bit     $AF
@@ -5827,7 +5830,16 @@ L79DD:  bit     $B0
 L79E1:  jsr     L7A73
         jmp     L6A66
 
-L79E7:  .byte   $DD,$77,$DD,$77,$DD,$77,$DD,$77
+light_speckles_pattern:
+        .byte   %11011101
+        .byte   %01110111
+        .byte   %11011101
+        .byte   %01110111
+        .byte   %11011101
+        .byte   %01110111
+        .byte   %11011101
+        .byte   %01110111
+
         .byte   $00,$00
 L79F1:  bit     $8C
         bpl     L7A34
@@ -6083,7 +6095,7 @@ L7BE0:  jsr     L7A73
         jsr     L6588
         lda     #$02
         jsr     L68F5
-        A2D_CALL A2D_SET_PATTERN, L79E7
+        A2D_CALL A2D_SET_PATTERN, light_speckles_pattern
         jsr     L625A
 L7BF7:  jsr     L707F
         jsr     L6233
@@ -6175,10 +6187,10 @@ L7CB2:  dex
         bne     L7CA2
 L7CB5:  rts
 
-L7CB6:  brk
-L7CB7:  brk
-L7CB8:  brk
-L7CB9:  brk
+L7CB6:  .byte   0
+L7CB7:  .byte   0
+L7CB8:  .byte   0
+L7CB9:  .byte   0
 L7CBA:  lda     L7CB6
         sec
         sbc     L7CB8
@@ -6458,8 +6470,8 @@ L7F0F:  jsr     L7F30
         jsr     L607B
         jmp     L7F3B
 
-L7F2E:  brk
-L7F2F:  brk
+L7F2E:  .byte   0
+L7F2F:  .byte   0
 L7F30:  lda     $80
         sta     L7F46
         lda     $81
@@ -6472,8 +6484,8 @@ L7F3B:  lda     L7F46
         sta     $81
         rts
 
-L7F46:  brk
-L7F47:  brk
+L7F46:  .byte   0
+L7F47:  .byte   0
 L7F48:  jsr     L7ED6
         ror     a
         ror     a
@@ -6512,7 +6524,7 @@ L7F88:  jsr     L7ED6
         lda     #$00
         sta     L7D82
         ldx     #$02
-L7F99:  lda     L5FF4,x
+L7F99:  lda     set_pos_params,x
         sta     L7D75,x
         dex
         bpl     L7F99
@@ -6964,13 +6976,14 @@ L8333:  lda     $0600,x
 
 L8346:  rts
 
-L8347:  A2D_CALL A2D_SET_INPUT, L834E
+L8347:  A2D_CALL A2D_SET_INPUT, set_input_params
         rts
 
-L834E:  .byte   $03
-L834F:  brk
-L8350:  brk
-L8351:  brk
+set_input_params:
+        .byte   $03
+L834F:  .byte   0
+L8350:  .byte   0
+L8351:  .byte   0
 L8352:  lda     L7D74
         cmp     #$04
         beq     L8368
@@ -7059,7 +7072,7 @@ L83F0:  inc     L8351
         clc
         rts
 
-L83F5:  brk
+L83F5:  .byte   0
 L83F6:  lda     #$80
         sta     L83F5
 L83FB:  rts
@@ -7199,9 +7212,9 @@ L84F2:  ora     #$C0
 L8519:  lda     #$80
         rts
 
-L851C:  brk
-L851D:  brk
-L851E:  brk
+L851C:  .byte   0
+L851D:  .byte   0
+L851E:  .byte   0
         .byte   $03
         sbc     #$85
         php
@@ -7375,7 +7388,7 @@ L8625:  ldy     #$33
         and     #$F0
         sta     L8776
         sta     ALTZPOFF
-        MLI_CALL ON_LINE, L8775
+        MLI_CALL ON_LINE, online_params
         sta     ALTZPON
         beq     L867B
 L8672:  pha
@@ -7491,7 +7504,9 @@ L8739:  .byte   $00,$00,$00,$00,$F4,$01,$10,$00
         .byte   $B8,$01,$74,$00,$B8,$01,$8D,$00
         .byte   $90,$01,$10,$00,$90,$01,$29,$00
         .byte   $90,$01,$42,$00
-L8775:  .byte   $02
+
+online_params:
+        .byte   2
 L8776:  .byte   $60,$79,$87
 L8779:  .byte   $0B
 L877A:  .byte   "GRAPHICS.TK",$00,$00,$00,$00,$00
@@ -7752,7 +7767,7 @@ L8E21:  .byte   $00
 L8E22:  .byte   $00
 L8E23:  .byte   $00
 L8E24:  .byte   $00
-L8E25:  .byte   $00
+draw_bitmap_params2:  .byte   $00
 L8E26:  .byte   $00
 L8E27:  .byte   $00
 L8E28:  .byte   $00
@@ -7763,32 +7778,52 @@ L8E2E:  .byte   $00,$00,$00
 L8E31:  .byte   $00
 L8E32:  .byte   $00
 L8E33:  .byte   $00,$00
-L8E35:  .byte   $00,$00,$00,$00
+draw_bitmap_params:  .byte   $00,$00,$00,$00
 L8E39:  .byte   $00
 L8E3A:  .byte   $00
 L8E3B:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 L8E43:  .byte   $00,$00
-L8E45:  .byte   $00
+fill_rect_params6:  .byte   $00
 L8E46:  .byte   $00,$00,$00
 L8E49:  .byte   $00
 L8E4A:  .byte   $00
 L8E4B:  .byte   $00
 L8E4C:  .byte   $00
-L8E4D:  .byte   $55,$8E
+measure_text_params:  .byte   $55,$8E
 L8E4F:  .byte   $00
 L8E50:  .byte   $00
-L8E51:  .byte   $00
-L8E52:  .byte   $55,$8E
+set_text_mask_params:  .byte   $00
+draw_text_params:  .byte   $55,$8E
 L8E54:  .byte   $00,$00
 L8E56:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00
-L8E68:  .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+white_pattern2:
+        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
         .byte   $FF,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$FF
-L8E7A:  .byte   $55,$AA,$55,$AA,$55,$AA,$55,$AA
+checkerboard_pattern2:
+        .byte   %01010101
+        .byte   %10101010
+        .byte   %01010101
+        .byte   %10101010
+        .byte   %01010101
+        .byte   %10101010
+        .byte   %01010101
+        .byte   %10101010
+
         .byte   $FF
-L8E83:  .byte   $11,$44,$11,$44,$11,$44,$11,$44
+
+dark_pattern:
+        .byte   %00010001
+        .byte   %01000100
+        .byte   %00010001
+        .byte   %01000100
+        .byte   %00010001
+        .byte   %01000100
+        .byte   %00010001
+        .byte   %01000100
+
         .byte   $FF,$EE,$BB,$EE,$BB,$EE,$BB,$EE
         .byte   $BB
 L8E94:  .byte   $FF
@@ -7868,19 +7903,19 @@ L9098:
 
 
 L933E:  .byte   $00
-L933F:  .byte   $00
+query_target_params2:  .byte   $00
 L9340:  .byte   $00
 L9341:  .byte   $00
 L9342:  .byte   $00
 L9343:  .byte   $00
 L9344:  .byte   $00
-L9345:  .byte   $00,$00,$00,$00,$00,$20,$80,$00
+query_screen_params:  .byte   $00,$00,$00,$00,$00,$20,$80,$00
 L934D:  .byte   $00,$00,$00,$00,$2F,$02,$BF,$00
         .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
         .byte   $FF,$00,$00,$00,$00,$00,$01,$01
         .byte   $96,$00,$00,$88
-L9369:  .byte   $00,$6C,$93
-L936C:  .byte   $00
+query_state_params:  .byte   $00,$6C,$93
+set_state_params:  .byte   $00
 L936D:  .byte   $00
 L936E:  .byte   $00
 L936F:  .byte   $00,$00,$00,$00,$00
@@ -7895,11 +7930,11 @@ L937B:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$FF,$80
-L9396:  .byte   $00
-L9397:  .byte   $01
-L9398:  .byte   $02
-L9399:  .byte   $03
-L939A:  .byte   $04,$05,$06,$07
+set_fill_mode_params:  .byte   $00
+set_fill_mode_params2:  .byte   $01
+set_fill_mode_params3:  .byte   $02
+set_fill_mode_params4:  .byte   $03
+set_fill_mode_params5:  .byte   $04,$05,$06,$07
 L939E:  .byte   $00
 L939F:  .byte   $00,$19,$94,$54,$94,$C0,$94,$08
         .byte   $95,$A2,$95,$92,$96,$D2,$96,$5B
@@ -7949,8 +7984,8 @@ L93CF:  lda     $06,x
         sta     $07
         stx     $06
         .byte   $20
-L9404:  brk
-L9405:  brk
+L9404:  .byte   0
+L9405:  .byte   0
         tay
         ldx     #$03
 L9409:  pla
@@ -7961,12 +7996,12 @@ L9409:  pla
         tya
         rts
 
-L9413:  brk
-L9414:  brk
-L9415:  brk
-L9416:  brk
-L9417:  brk
-L9418:  brk
+L9413:  .byte   0
+L9414:  .byte   0
+set_pos_params2:  .byte   0
+L9416:  .byte   0
+L9417:  .byte   0
+L9418:  .byte   0
         ldy     #$00
         lda     ($06),y
         ldx     L8E95
@@ -8122,7 +8157,7 @@ L951D:  asl     a
         rts
 
 L9532:  jsr     LA18A
-        A2D_CALL A2D_SET_FILL_MODE, L9396
+        A2D_CALL A2D_SET_FILL_MODE, set_fill_mode_params
         jsr     LA39D
         ldy     #$00
         lda     ($06),y
@@ -8234,8 +8269,8 @@ L9681:  sta     L95A5
 
         jmp     L9697
 
-L9695:  brk
-L9696:  brk
+L9695:  .byte   0
+L9696:  .byte   0
 L9697:  lda     L8E95
         sta     L9696
 L969D:  ldx     L9696
@@ -8267,8 +8302,8 @@ L96CF:  lda     #$00
 
         jmp     L96D7
 
-L96D5:  brk
-L96D6:  brk
+L96D5:  .byte   0
+L96D6:  .byte   0
 L96D7:  lda     L8E95
         sta     L96D6
 L96DD:  ldx     L96D6
@@ -8351,18 +8386,18 @@ L977A:  lda     #$00
 
         jmp     L9789
 
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
 L9789:  ldy     #$03
 L978B:  lda     ($06),y
-        sta     L9415,y
+        sta     set_pos_params2,y
         dey
         bpl     L978B
         lda     $06
@@ -8372,7 +8407,7 @@ L978B:  lda     ($06),y
         ldy     #$05
         lda     ($06),y
         sta     L97F5
-        A2D_CALL A2D_SET_POS, L9415
+        A2D_CALL A2D_SET_POS, set_pos_params2
         ldx     #$00
 L97AA:  cpx     L8E95
         bne     L97B9
@@ -8414,9 +8449,9 @@ L97E6:  pla
 
         rts
 
-        brk
-L97F5:  brk
-L97F6:  brk
+        .byte   0
+L97F5:  .byte   0
+L97F6:  .byte   0
         ldy     #$00
         lda     ($06),y
         sta     L982A
@@ -8462,7 +8497,7 @@ L9845:  A2D_CALL $2C, L933E
 L9852:  lda     #$02
         jmp     L9C65
 
-L9857:  lda     L933F
+L9857:  lda     query_target_params2
         sec
         sbc     L9C8E
         sta     L982C
@@ -8520,7 +8555,7 @@ L98C8:  lda     L9017
         lda     ($06),y
         and     #$0F
         sta     L9832
-        A2D_CALL A2D_QUERY_SCREEN, L9345
+        A2D_CALL A2D_QUERY_SCREEN, query_screen_params
         ldx     #$07
 L98E3:  lda     L934D,x
         sta     L9835,x
@@ -8658,8 +8693,8 @@ L99E1:  iny
         sta     $09
         jmp     L9972
 
-L99FC:  A2D_CALL A2D_SET_PATTERN, L8E7A
-        A2D_CALL A2D_SET_FILL_MODE, L9398
+L99FC:  A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
+        A2D_CALL A2D_SET_FILL_MODE, set_fill_mode_params3
         A2D_CALL $16, L9096
 L9A0E:  A2D_CALL $2C, L933E
         lda     L933E
@@ -8668,7 +8703,7 @@ L9A0E:  A2D_CALL $2C, L933E
         jmp     L9BA5
 
 L9A1E:  ldx     #$03
-L9A20:  lda     L933F,x
+L9A20:  lda     query_target_params2,x
         cmp     L9C92,x
         bne     L9A31
         dex
@@ -8677,7 +8712,7 @@ L9A20:  lda     L933F,x
         jmp     L9A0E
 
 L9A31:  ldx     #$03
-L9A33:  lda     L933F,x
+L9A33:  lda     query_target_params2,x
         sta     L9C92,x
         dex
         bpl     L9A33
@@ -8691,18 +8726,18 @@ L9A33:  lda     L933F,x
         lda     L9343
         cmp     L9830
         beq     L9A84
-        A2D_CALL A2D_SET_PATTERN, L8E7A
-        A2D_CALL A2D_SET_FILL_MODE, L9398
+        A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
+        A2D_CALL A2D_SET_FILL_MODE, set_fill_mode_params3
         A2D_CALL $16, L9096
         jsr     L93BC
         .byte   $0B
         bmi     $9A05           ; ???
-        A2D_CALL A2D_SET_PATTERN, L8E7A
-        A2D_CALL A2D_SET_FILL_MODE, L9398
+        A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
+        A2D_CALL A2D_SET_FILL_MODE, set_fill_mode_params3
         A2D_CALL $16, L9096
         lda     #$00
         sta     L9830
-L9A84:  lda     L933F
+L9A84:  lda     query_target_params2
         sec
         sbc     L9C8E
         sta     L9C96
@@ -8835,7 +8870,7 @@ L9BA5:  A2D_CALL $16, L9096
         bmi     L9B4E
         jmp     L9C63
 
-L9BB9:  A2D_CALL A2D_QUERY_TARGET, L933F
+L9BB9:  A2D_CALL A2D_QUERY_TARGET, query_target_params2
         lda     L9344
         cmp     L9832
         beq     L9BE1
@@ -8852,8 +8887,8 @@ L9BD4:  ora     #$80
 L9BDC:  lda     L9832
         beq     L9BD1
 L9BE1:  jsr     LA365
-        A2D_CALL A2D_QUERY_SCREEN, L9345
-        A2D_CALL A2D_SET_STATE, L9345
+        A2D_CALL A2D_QUERY_SCREEN, query_screen_params
+        A2D_CALL A2D_SET_STATE, query_screen_params
         ldx     L9016
 L9BF3:  dex
         bmi     L9C18
@@ -8867,7 +8902,7 @@ L9BF3:  dex
         lda     L8F16,x
         sta     $07
         jsr     LA18A
-        A2D_CALL A2D_SET_FILL_MODE, L9396
+        A2D_CALL A2D_SET_FILL_MODE, set_fill_mode_params
         jsr     LA39D
         pla
         tax
@@ -9113,7 +9148,7 @@ L9DD9:  lda     L9C88
 
 L9DFA:  lda     L9340
         sta     L9C8F
-        lda     L933F
+        lda     query_target_params2
         sta     L9C8E
         rts
 
@@ -9128,7 +9163,7 @@ L9E14:  bit     L9833
         rts
 
 L9E1A:  jsr     LA365
-L9E1D:  A2D_CALL A2D_QUERY_TARGET, L933F
+L9E1D:  A2D_CALL A2D_QUERY_TARGET, query_target_params2
         lda     L9343
         bne     L9E2B
         sta     L9344
@@ -9163,23 +9198,23 @@ L9E3D:  cmp     L9017,x
         bne     L9E97
         lda     L9EB3
 L9E6A:  sta     L9830
-        A2D_CALL A2D_SET_PATTERN, L8E7A
-        A2D_CALL A2D_SET_FILL_MODE, L9398
+        A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
+        A2D_CALL A2D_SET_FILL_MODE, set_fill_mode_params3
         A2D_CALL $16, L9096
         jsr     L93BC
         .byte   $02
         bmi     L9E1D
-        A2D_CALL A2D_SET_PATTERN, L8E7A
-        A2D_CALL A2D_SET_FILL_MODE, L9398
+        A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
+        A2D_CALL A2D_SET_FILL_MODE, set_fill_mode_params3
         A2D_CALL $16, L9096
-L9E97:  A2D_CALL A2D_QUERY_SCREEN, L9345
-        A2D_CALL A2D_SET_STATE, L9345
-        A2D_CALL A2D_SET_PATTERN, L8E7A
-        A2D_CALL A2D_SET_FILL_MODE, L9398
+L9E97:  A2D_CALL A2D_QUERY_SCREEN, query_screen_params
+        A2D_CALL A2D_SET_STATE, query_screen_params
+        A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
+        A2D_CALL A2D_SET_FILL_MODE, set_fill_mode_params3
         jsr     LA382
         rts
 
-L9EB3:  brk
+L9EB3:  .byte   0
 L9EB4:  asl     a
         tay
         lda     L8F16,y
@@ -9189,8 +9224,8 @@ L9EB4:  asl     a
 
         jmp     L9EC3
 
-        brk
-L9EC2:  brk
+        .byte   0
+L9EC2:  .byte   0
 L9EC3:  lda     L9015
         bne     L9ECB
         lda     #$01
@@ -9221,15 +9256,15 @@ L9EEA:  ldy     #$00
 
         jmp     L9F07
 
-L9EFE:  brk
-L9EFF:  brk
-L9F00:  brk
-L9F01:  brk
-L9F02:  brk
-L9F03:  brk
-L9F04:  brk
-L9F05:  brk
-L9F06:  brk
+L9EFE:  .byte   0
+L9EFF:  .byte   0
+L9F00:  .byte   0
+L9F01:  .byte   0
+L9F02:  .byte   0
+L9F03:  .byte   0
+L9F04:  .byte   0
+L9F05:  .byte   0
+L9F06:  .byte   0
 L9F07:  ldy     #$00
         lda     ($06),y
         sta     L9EFE
@@ -9287,12 +9322,12 @@ L9F8C:  lda     #$00
 L9F8F:  lda     #$01
         rts
 
-L9F92:  brk
-L9F93:  brk
-L9F94:  brk
-        brk
-        brk
-        brk
+L9F92:  .byte   0
+L9F93:  .byte   0
+L9F94:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
 L9F98:  lda     #$00
         sta     L9F92
         beq     L9FA4
@@ -9333,7 +9368,7 @@ L9FE4:  lda     ($06),y
         bne     L9FE4
 L9FEE:  lda     L8E54
         sta     L8E4F
-        A2D_CALL A2D_MEASURE_TEXT, L8E4D
+        A2D_CALL A2D_MEASURE_TEXT, measure_text_params
         lda     L8E50
         cmp     L8E31
         bcs     LA010
@@ -9347,15 +9382,15 @@ LA010:  lsr     a
         sta     L9416
         lda     L8E31
         lsr     a
-        sta     L9415
+        sta     set_pos_params2
         lda     L9416
         sec
-        sbc     L9415
-        sta     L9415
-        lda     L8E25
+        sbc     set_pos_params2
+        sta     set_pos_params2
+        lda     draw_bitmap_params2
         sec
-        sbc     L9415
-        sta     L9415
+        sbc     set_pos_params2
+        sta     set_pos_params2
         lda     L8E26
         sbc     #$00
         sta     L9416
@@ -9381,68 +9416,68 @@ LA010:  lsr     a
         adc     #$00
         sta     L9418
         ldx     #$03
-LA06E:  lda     L9415,x
+LA06E:  lda     set_pos_params2,x
         sta     L9F94,x
         dex
         bpl     LA06E
         bit     L9F92
         bvc     LA097
-        A2D_CALL A2D_QUERY_SCREEN, L9345
+        A2D_CALL A2D_QUERY_SCREEN, query_screen_params
         jsr     LA63F
 LA085:  jsr     LA6A3
         jsr     LA097
         lda     L9F93
         bne     LA085
-        A2D_CALL A2D_SET_BOX, L9345
+        A2D_CALL A2D_SET_BOX, query_screen_params
         rts
 
-LA097:  A2D_CALL A2D_HIDE_CURSOR, L93BC
-        A2D_CALL A2D_SET_FILL_MODE, L939A
+LA097:  A2D_CALL A2D_HIDE_CURSOR, $93BC ; These params should be ignored - bogus?
+        A2D_CALL A2D_SET_FILL_MODE, set_fill_mode_params5
         bit     L9F92
         bpl     LA0C2
         bit     L9F92
         bvc     LA0B6
-        A2D_CALL A2D_SET_FILL_MODE, L9396
+        A2D_CALL A2D_SET_FILL_MODE, set_fill_mode_params
         jmp     LA0C2
 
-LA0B6:  A2D_CALL A2D_DRAW_BITMAP, L8E35
-        A2D_CALL A2D_SET_FILL_MODE, L9398
-LA0C2:  A2D_CALL A2D_DRAW_BITMAP, L8E25
+LA0B6:  A2D_CALL A2D_DRAW_BITMAP, draw_bitmap_params
+        A2D_CALL A2D_SET_FILL_MODE, set_fill_mode_params3
+LA0C2:  A2D_CALL A2D_DRAW_BITMAP, draw_bitmap_params2
         ldy     #$02
         lda     ($06),y
         and     #$80
         beq     LA0F2
         jsr     LA14D
-        A2D_CALL A2D_SET_PATTERN, L8E83
+        A2D_CALL A2D_SET_PATTERN, dark_pattern
         bit     L9F92
         bmi     LA0E6
-        A2D_CALL A2D_SET_FILL_MODE, L9399
+        A2D_CALL A2D_SET_FILL_MODE, set_fill_mode_params4
         beq     LA0EC
-LA0E6:  A2D_CALL A2D_SET_FILL_MODE, L9397
-LA0EC:  A2D_CALL A2D_FILL_RECT, L8E45
+LA0E6:  A2D_CALL A2D_SET_FILL_MODE, set_fill_mode_params2
+LA0EC:  A2D_CALL A2D_FILL_RECT, fill_rect_params6
 LA0F2:  ldx     #$03
 LA0F4:  lda     L9F94,x
-        sta     L9415,x
+        sta     set_pos_params2,x
         dex
         bpl     LA0F4
-        A2D_CALL A2D_SET_POS, L9415
+        A2D_CALL A2D_SET_POS, set_pos_params2
         bit     L9F92
         bmi     LA10C
         lda     #$7F
         bne     LA10E
 LA10C:  lda     #$00
-LA10E:  sta     L8E51
-        A2D_CALL A2D_SET_TEXT_MASK, L8E51
+LA10E:  sta     set_text_mask_params
+        A2D_CALL A2D_SET_TEXT_MASK, set_text_mask_params
         lda     L8E56
         and     #$DF
         sta     L8E56
-        A2D_CALL A2D_DRAW_TEXT, L8E52
-        A2D_CALL A2D_SHOW_CURSOR, 0
+        A2D_CALL A2D_DRAW_TEXT, draw_text_params
+        A2D_CALL A2D_SHOW_CURSOR
         rts
 
 LA12C:  ldx     #$0F
-LA12E:  lda     L8E25,x
-        sta     L8E35,x
+LA12E:  lda     draw_bitmap_params2,x
+        sta     draw_bitmap_params,x
         dex
         bpl     LA12E
         ldy     L8E43
@@ -9457,14 +9492,14 @@ LA149:  dey
         rts
 
 LA14D:  ldx     #$00
-LA14F:  lda     L8E25,x
+LA14F:  lda     draw_bitmap_params2,x
         clc
         adc     L8E2D,x
-        sta     L8E45,x
+        sta     fill_rect_params6,x
         lda     L8E26,x
         adc     L8E2E,x
         sta     L8E46,x
-        lda     L8E25,x
+        lda     draw_bitmap_params2,x
         clc
         adc     L8E31,x
         sta     L8E49,x
@@ -9556,7 +9591,7 @@ LA22A:  lda     ($06),y
         bpl     LA22A
 LA233:  lda     L8E54
         sta     L8E4F
-        A2D_CALL A2D_MEASURE_TEXT, L8E4D
+        A2D_CALL A2D_MEASURE_TEXT, measure_text_params
         ldy     #$08
         lda     L8E50
         cmp     ($08),y
@@ -9599,11 +9634,11 @@ LA256:  lsr     a
         jsr     LA382
         rts
 
-LA2A4:  brk
-LA2A5:  brk
+LA2A4:  .byte   0
+LA2A5:  .byte   0
         jmp     LA2AE
 
-LA2A9:  brk
+LA2A9:  .byte   0
 LA2AA:  jsr     LA382
         rts
 
@@ -9664,8 +9699,8 @@ LA318:  ldx     LA322
         sta     L8E95,x
         rts
 
-LA322:  brk
-LA323:  brk
+LA322:  .byte   0
+LA323:  .byte   0
 LA324:  stx     LA363
         sta     LA364
         ldx     #$00
@@ -9695,8 +9730,8 @@ LA359:  ldx     LA363
         sta     L9016,x
         rts
 
-LA363:  brk
-LA364:  brk
+LA363:  .byte   0
+LA364:  .byte   0
 LA365:  pla
         sta     LA380
         pla
@@ -9713,8 +9748,8 @@ LA36F:  lda     $06,x
         pha
         rts
 
-LA380:  brk
-LA381:  brk
+LA380:  .byte   0
+LA381:  .byte   0
 LA382:  pla
         sta     LA39B
         pla
@@ -9730,25 +9765,25 @@ LA38C:  pla
         pha
         rts
 
-LA39B:  brk
-LA39C:  brk
-LA39D:  A2D_CALL A2D_QUERY_SCREEN, L9345
-        A2D_CALL A2D_SET_STATE, L9345
+LA39B:  .byte   0
+LA39C:  .byte   0
+LA39D:  A2D_CALL A2D_QUERY_SCREEN, query_screen_params
+        A2D_CALL A2D_SET_STATE, query_screen_params
         jmp     LA3B9
 
-LA3AC:  brk
-LA3AD:  brk
-LA3AE:  brk
-LA3AF:  brk
-LA3B0:  brk
-LA3B1:  brk
-LA3B2:  brk
-LA3B3:  brk
-        brk
-        brk
-        brk
-LA3B7:  brk
-LA3B8:  brk
+LA3AC:  .byte   0
+LA3AD:  .byte   0
+LA3AE:  .byte   0
+LA3AF:  .byte   0
+LA3B0:  .byte   0
+LA3B1:  .byte   0
+LA3B2:  .byte   0
+LA3B3:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+LA3B7:  .byte   0
+LA3B8:  .byte   0
 LA3B9:  ldy     #$00
         lda     ($06),y
         sta     LA3AC
@@ -9760,28 +9795,28 @@ LA3B9:  ldy     #$00
         beq     LA3F4
         lda     #$80
         sta     LA3B7
-        A2D_CALL A2D_SET_PATTERN, L8E68
+        A2D_CALL A2D_SET_PATTERN, white_pattern2
         A2D_CALL $41, LA3B8
         lda     LA3B8
-        sta     L9369
-        A2D_CALL A2D_QUERY_STATE, L9369
+        sta     query_state_params
+        A2D_CALL A2D_QUERY_STATE, query_state_params
         jsr     LA4CC
         jsr     LA938
         jsr     LA41C
         jmp     LA446
 
-LA3F4:  A2D_CALL A2D_QUERY_SCREEN, L9345
+LA3F4:  A2D_CALL A2D_QUERY_SCREEN, query_screen_params
         jsr     LA63F
 LA3FD:  jsr     LA6A3
         jsr     LA411
         lda     L9F93
         bne     LA3FD
-        A2D_CALL A2D_SET_BOX, L9345
+        A2D_CALL A2D_SET_BOX, query_screen_params
         jmp     LA446
 
 LA411:  lda     #$00
         sta     LA3B7
-        A2D_CALL A2D_SET_PATTERN, L8E7A
+        A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
 LA41C:  lda     L8E07
         sta     LA3B1
         lda     L8E08
@@ -9805,8 +9840,8 @@ LA44D:  cpx     #$FF
         bne     LA466
         bit     LA3B7
         bpl     LA462
-        A2D_CALL A2D_QUERY_SCREEN, L9345
-        A2D_CALL A2D_SET_STATE, L936C
+        A2D_CALL A2D_QUERY_SCREEN, query_screen_params
+        A2D_CALL A2D_SET_STATE, set_state_params
 LA462:  jsr     LA382
         rts
 
@@ -9858,7 +9893,7 @@ LA4C5:  pla
         dex
         jmp     LA44D
 
-LA4CB:  brk
+LA4CB:  .byte   0
 LA4CC:  lda     #$80
         sta     LA4CB
         bmi     LA4E2
@@ -9871,13 +9906,13 @@ LA4DC:  pha
         lda     #$00
         sta     LA4CB
 LA4E2:  ldy     #$00
-LA4E4:  lda     L936C,y
+LA4E4:  lda     set_state_params,y
         sta     LA567,y
         iny
         cpy     #$04
         bne     LA4E4
         ldy     #$08
-LA4F1:  lda     L936C,y
+LA4F1:  lda     set_state_params,y
         sta     LA563,y
         iny
         cpy     #$0C
@@ -9931,14 +9966,14 @@ LA508:  lda     L8E05,x
 LA563:  jsr     LD2D0
         rts
 
-LA567:  brk
-LA568:  brk
-LA569:  brk
-LA56A:  brk
-LA56B:  brk
-LA56C:  brk
-LA56D:  brk
-LA56E:  brk
+LA567:  .byte   0
+LA568:  .byte   0
+LA569:  .byte   0
+LA56A:  .byte   0
+LA56B:  .byte   0
+LA56C:  .byte   0
+LA56D:  .byte   0
+LA56E:  .byte   0
 LA56F:  pla
         tay
         jsr     LA365
@@ -10043,7 +10078,7 @@ LA629:  .byte   $00
 LA62A:  .byte   $00
 LA62B:  .byte   $00
 LA62C:  .byte   $00,$00,$00
-LA62F:  .byte   $00
+set_box_params2:  .byte   $00
 LA630:  .byte   $00
 LA631:  .byte   $00
 LA632:  .byte   $00,$00,$20,$80,$00
@@ -10067,7 +10102,7 @@ LA63F:  jsr     LA18A
         lda     L8E19
         sta     LA627
         sta     LA637
-        sta     LA62F
+        sta     set_box_params2
         lda     L8E1A
         sta     LA628
         sta     LA638
@@ -10089,13 +10124,13 @@ LA674:  lda     L8E15,x
         lda     #$02
         sta     LA62C
         sta     LA63C
-LA69C:  A2D_CALL A2D_SET_BOX, LA62F
+LA69C:  A2D_CALL A2D_SET_BOX, set_box_params2
         rts
 
 LA6A3:  lda     #$00
         jmp     LA6C7
 
-LA6A8:  .byte   $00,$00,$00,$00
+query_target_params:  .byte   $00,$00,$00,$00
 LA6AC:  .byte   $00
 LA6AD:  .byte   $00
 LA6AE:  .byte   $00
@@ -10129,7 +10164,7 @@ LA6C7:  lda     L9F93
         clc
         adc     #$01
         sta     LA637
-        sta     LA62F
+        sta     set_box_params2
         lda     LA63C
         adc     #$00
         sta     LA638
@@ -10174,7 +10209,7 @@ LA747:  lda     LA6B0
         bne     LA775
         lda     #$00
         sta     LA6B0
-LA753:  A2D_CALL A2D_SET_BOX, LA62F
+LA753:  A2D_CALL A2D_SET_BOX, set_box_params2
         lda     LA63C
         cmp     LA62C
         bne     LA76F
@@ -10195,18 +10230,18 @@ LA775:  lda     LA6B0
         tax
         ldy     #$00
 LA77D:  lda     LA6B3,x
-        sta     LA6A8,y
+        sta     query_target_params,y
         iny
         inx
         cpy     #$04
         bne     LA77D
         inc     LA6B0
-        A2D_CALL A2D_QUERY_TARGET, LA6A8
+        A2D_CALL A2D_QUERY_TARGET, query_target_params
         lda     LA6AC
         beq     LA747
         lda     LA6AD
-        sta     L9369
-        A2D_CALL A2D_QUERY_STATE, L9369
+        sta     query_state_params
+        A2D_CALL A2D_QUERY_STATE, query_state_params
         jsr     LA365
         A2D_CALL $3B, LA6AD
         lda     LA6AE
@@ -10231,10 +10266,10 @@ LA7C8:  ldy     #$04
         lsr     a
         ora     LA6B1
         sta     LA6B1
-        lda     L936C
+        lda     set_state_params
         sec
         sbc     #$02
-        sta     L936C
+        sta     set_state_params
         lda     L936D
         sbc     #$00
         sta     L936D
@@ -10292,7 +10327,7 @@ LA846:  jsr     LA382
         sta     LA6C6
         lda     LA6C3
         clc
-        adc     L936C
+        adc     set_state_params
         sta     LA6C3
         lda     L936D
         adc     LA6C4
@@ -10318,12 +10353,12 @@ LA846:  jsr     LA382
         sta     LA63C
         jmp     LA8D4
 
-LA8B7:  lda     L936C
+LA8B7:  lda     set_state_params
         cmp     LA637
         lda     L936D
         sbc     LA638
         bmi     LA8D4
-        lda     L936C
+        lda     set_state_params
         sta     LA63B
         lda     L936D
         sta     LA63C
@@ -10362,7 +10397,7 @@ LA8F6:  lda     LA6C5
 
 LA923:  lda     LA63B
         sta     LA637
-        sta     LA62F
+        sta     set_box_params2
         lda     LA63C
         sta     LA638
         sta     LA630
@@ -10382,7 +10417,7 @@ LA938:  lda     L936E
         lda     L9377
         adc     #$00
         sta     L9377
-        A2D_CALL A2D_SET_STATE, L936C
+        A2D_CALL A2D_SET_STATE, set_state_params
         rts
 
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -11095,7 +11130,7 @@ LBCDB:  lda     LBCE8
 LBCE3:  lda     #$00
         jmp     LBC55
 
-LBCE8:  brk
+LBCE8:  .byte   0
 LBCE9:  ldy     #$07
         lda     #$02
         ldx     #$D2
@@ -11153,7 +11188,7 @@ LBD57:  lda     LBD64
 LBD5F:  lda     #$01
         jmp     LBC55
 
-LBD64:  brk
+LBD64:  .byte   0
 LBD65:  lda     #$00
         sta     LBDE0
         ldy     #$07
@@ -11211,7 +11246,7 @@ LBDD3:  lda     LBDE0
 LBDDB:  lda     #$02
         jmp     LBC55
 
-LBDE0:  brk
+LBDE0:  .byte   0
 LBDE1:  lda     $D209
         sec
         sbc     LB6D3
@@ -11266,8 +11301,8 @@ LBE4E:  jsr     LBF52
         ldx     LBE38
         rts
 
-        brk
-LBE5C:  brk
+        .byte   0
+LBE5C:  .byte   0
 LBE5D:  lda     #$00
         sta     LBEBC
         lda     #$08
@@ -11312,7 +11347,7 @@ LBEAE:  lda     LBF0B
         bcs     LBEBB
         sta     $C055
 LBEBB:  .byte   $AD
-LBEBC:  brk
+LBEBC:  .byte   0
 LBEBD:  php
         pha
         lda     LBF0B
@@ -11393,7 +11428,7 @@ LBF2C:  lda     LBFAE
         clc
         rts
 
-LBF51:  brk
+LBF51:  .byte   0
 LBF52:  lda     LBFB0
         cmp     #$07
         beq     LBF5F
@@ -11479,7 +11514,7 @@ LBFEC:  sty     LBFF9-1
         A2D_CALL 0, 0, LBFF9
         rts
 
-        brk
-        brk
-        brk
-        brk
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
