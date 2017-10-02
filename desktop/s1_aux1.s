@@ -2797,8 +2797,10 @@ L5F1C:  .byte   $80
 L5F1D:  .byte   $00
 L5F1E:  .byte   $00,$00,$00,$00,$00,$20,$80,$00
         .byte   $00,$00,$00,$00,$2F,$02,$BF,$00
+
 white_pattern:
         .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+
         .byte   $FF,$00,$00,$00,$00,$00,$01,$01
         .byte   $00,$00
 L5F40:  .byte   $00
@@ -2812,9 +2814,12 @@ L5F66:  .byte   $42,$5F,$00,$00,$00,$00,$00,$00
 L5F72:  .res    128, 0
 L5FF2:  .byte   $00
 L5FF3:  .byte   $FF
-set_pos_params:  .byte   $00
-L5FF5:  .byte   $00
-L5FF6:  .byte   $00,$00
+
+.proc set_pos_params
+xcoord: .word   0
+ycoord: .word   0
+.endproc
+
 L5FF8:  .byte   $00
 L5FF9:  .byte   $00
 L5FFA:  .byte   $00
@@ -2886,18 +2891,18 @@ L60A8:  lda     L5FF3
 L60B2:  lda     #$00
         sta     L5FF3
         sta     L5FF2
-        lda     L5FF6
+        lda     set_pos_params::ycoord
         clc
         sbc     L6003
         sta     $84
         clc
         adc     #$0C
         sta     $85
-        lda     set_pos_params
+        lda     set_pos_params::xcoord
         sec
         sbc     L6002
         tax
-        lda     L5FF5
+        lda     set_pos_params::xcoord+1
         sbc     #$00
         bpl     L60E1
         txa
@@ -3115,7 +3120,7 @@ L6265:  bit     L6339
         bpl     L6263
         lda     #$02
         sta     L6264
-L627C:  ldx     #$02
+L627C:  ldx     #2
 L627E:  lda     L5FF8,x
         cmp     set_pos_params,x
         bne     L628B
@@ -3123,7 +3128,7 @@ L627E:  lda     L5FF8,x
         bpl     L627E
         bmi     L629F
 L628B:  jsr     L61C6
-        ldx     #$02
+        ldx     #2
         stx     L5FF2
 L6293:  lda     L5FF8,x
         sta     set_pos_params,x
@@ -3264,6 +3269,7 @@ L6469:  .byte   $02
 L646A:  .byte   0
         sed
         .byte   $66
+
 dealloc_interrupt_params:
         .byte   1
 L646E:  .byte   0
@@ -3422,8 +3428,13 @@ L6588           := * + 2
 
 L6592:  .byte   $00,$00,$0D,$00,$00,$20,$80,$00
 
-fill_rect_params:
-        .byte   $00,$00,$00,$00,$2F,$02,$BF,$00
+.proc fill_rect_params
+left:   .word   0
+top:    .word   0
+right:  .word   559
+bottom: .word   191
+.endproc
+
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
 checkerboard_pattern:
@@ -3692,12 +3703,21 @@ L6821:  .byte   $1E
 L6822:  .byte   $00
 L6823:  .byte   $00
 L6824:  .byte   $00
-test_box_params:
-        .byte   $FF,$FF,$FF,$FF,$30,$02,$0C,$00
 
-fill_rect_params2:
-        .byte   $00,$00,$00,$00
-L6831:  .byte   $00,$00,$0B,$00
+.proc test_box_params
+left:   .word   $ffff
+top:    .word   $ffff
+right:  .word   $230
+bottom: .word   $C
+.endproc
+
+.proc fill_rect_params2
+left:   .word   0
+top:    .word   0
+width:  .word   0
+height: .word   11
+.endproc
+
 L6835:  .byte   $00
 L6836:  .byte   $00
 test_box_params2:  .byte   $00,$00
@@ -4021,8 +4041,8 @@ L6A9D:  jsr     L6878
         cmp     L00C7
         bne     L6ACF
         beq     L6AD9
-L6AAE:  lda     set_pos_params
-        ldx     L5FF5
+L6AAE:  lda     set_pos_params::xcoord
+        ldx     set_pos_params::xcoord+1
         cpx     $B8
         bcc     L6ACF
         bne     L6ABE
@@ -4057,7 +4077,7 @@ L6ADE:  jsr     L68BE
         bne     L6B16
         beq     L6B1C
 L6AF0:  lda     L6847,x
-        cmp     L5FF6
+        cmp     set_pos_params::ycoord
         bcs     L6B1C
         bcc     L6B16
 L6AFA:  lda     $C9
@@ -4092,9 +4112,9 @@ L6B29:  jsr     L653C
 
 L6B35:  ldx     #$01
 L6B37:  lda     $B7,x
-        sta     fill_rect_params2,x
+        sta     fill_rect_params2::left,x
         lda     $B9,x
-        sta     L6831,x
+        sta     fill_rect_params2::width,x
         lda     $BB,x
         sta     test_box_params2,x
         sta     fill_rect_params4,x
@@ -5510,7 +5530,7 @@ L774B:  lda     ($A9),y
         cpy     #$0B
         bne     L774B
         ldx     #$00
-        stx     L8351
+        stx     set_input_params_unk
         bit     L76A7
         bmi     L777D
 L775F:  lda     $B7,x
@@ -5605,7 +5625,7 @@ L77F4:  sta     L769F,x
         bpl     L77E4
         cpy     #$04
         bne     L7814
-        lda     L8351
+        lda     set_input_params_unk
 L7814:  rts
 
         jsr     L7074
@@ -5643,10 +5663,10 @@ L7854:  lda     L00C7,x
         jsr     L50A9
         ldx     #$03
 L7860:  lda     $92,x
-        sta     fill_rect_params5,x
+        sta     set_box_params_box,x
         sta     set_box_params,x
         lda     $96,x
-        sta     L78DD,x
+        sta     set_box_params_size,x
         dex
         bpl     L7860
         rts
@@ -5659,7 +5679,7 @@ L7872:  sta     L7010
         lda     #$00
         jsr     L68F5
         A2D_CALL A2D_SET_PATTERN, checkerboard_pattern
-        A2D_CALL A2D_FILL_RECT, fill_rect_params5
+        A2D_CALL A2D_FILL_RECT, set_box_params_box
         jsr     L6553
         jsr     L7013
         beq     L78CA
@@ -5691,11 +5711,20 @@ L78CA:  rts
 L78CB:  .byte   $08,$00
 L78CD:  .byte   $0C,$00
 L78CF:  .byte   $0D,$00
-set_box_params:
-        .byte   $00,$00,$0D,$00,$00,$20,$80,$00
-fill_rect_params5:
-        .byte   $00,$00,$00,$00
-L78DD:  .byte   $00,$00,$00,$00
+
+.proc set_box_params
+left:   .word   0
+top:    .word   $D
+addr:   .addr   A2D_SCREEN_ADDR
+stride: .word   A2D_SCREEN_STRIDE
+hoffset:.word   0
+voffset:.word   0
+width:  .word   0
+height: .word   0
+.endproc
+        set_box_params_size := set_box_params::width
+        set_box_params_box  := set_box_params::hoffset ; Re-used since h/voff are 0
+
         jsr     L7074
         ldx     #$02
 L78E6:  lda     L0083,x
@@ -6423,7 +6452,7 @@ L7EAD:  jsr     L7F30
 
 L7ECD:  lda     #$00
         sta     L7D81
-        sta     L8351
+        sta     set_input_params_unk
         rts
 
 L7ED6:  lda     $C062
@@ -6435,7 +6464,7 @@ L7ED6:  lda     $C062
         rts
 
 L7EE2:  jsr     L7ED6
-        sta     L8350
+        sta     set_input_params_modifiers
 L7EE8:  clc
         lda     $C000
         bpl     L7EF4
@@ -6706,7 +6735,7 @@ L8105:  jsr     L8110
 L810F:  rts
 
 L8110:  sta     $C9
-        lda     L8350
+        lda     set_input_params_modifiers
         and     #$03
         sta     $CA
         lda     L6BD9
@@ -6884,17 +6913,17 @@ L827A:  cmp     #$0D
         jmp     L7EAD
 
 L8281:  pha
-        lda     L8350
+        lda     set_input_params_modifiers
         beq     L828C
         ora     #$80
-        sta     L8350
+        sta     set_input_params_modifiers
 L828C:  pla
         ldx     #$C0
         stx     L5FFC
 L8292:  cmp     #$0B
         bne     L82A2
         lda     #$F8
-        bit     L8350
+        bit     set_input_params_modifiers
         bpl     L829F
         lda     #$D0
 L829F:  jmp     L823D
@@ -6902,7 +6931,7 @@ L829F:  jmp     L823D
 L82A2:  cmp     #$0A
         bne     L82B2
         lda     #$08
-        bit     L8350
+        bit     set_input_params_modifiers
         bpl     L82AF
         lda     #$30
 L82AF:  jmp     L823D
@@ -6913,7 +6942,7 @@ L82B2:  cmp     #$15
         bcc     L82EA
         clc
         lda     #$08
-        bit     L8350
+        bit     set_input_params_modifiers
         bpl     L82C5
         lda     #$40
 L82C5:  adc     L7D75
@@ -6938,7 +6967,7 @@ L82ED:  cmp     #$08
         jsr     L8352
         bcc     L831A
         lda     L7D75
-        bit     L8350
+        bit     set_input_params_modifiers
         bpl     L8303
         sbc     #$40
         jmp     L8305
@@ -6954,13 +6983,13 @@ L8305:  sta     L7D75
         sta     L7D76
 L831A:  jmp     L7E98
 
-L831D:  sta     L834F
+L831D:  sta     set_input_params_key
         ldx     #$23
 L8322:  lda     $A7,x
         sta     $0600,x
         dex
         bpl     L8322
-        lda     L834F
+        lda     set_input_params_key
         jsr     L8110
         php
         ldx     #$23
@@ -6979,11 +7008,17 @@ L8346:  rts
 L8347:  A2D_CALL A2D_SET_INPUT, set_input_params
         rts
 
-set_input_params:
-        .byte   $03
-L834F:  .byte   0
-L8350:  .byte   0
-L8351:  .byte   0
+.proc set_input_params          ; 1 byte shorter than normal, since KEY
+state:  .byte   A2D_INPUT_KEY
+key:    .byte   0
+modifiers:
+        .byte   0
+unk:    .byte   0
+.endproc
+        set_input_params_key := set_input_params::key
+        set_input_params_modifiers := set_input_params::modifiers
+        set_input_params_unk := set_input_params::unk
+
 L8352:  lda     L7D74
         cmp     #$04
         beq     L8368
@@ -7000,7 +7035,7 @@ L836A:  jsr     L70B7
         lda     $CC
         bne     L8380
         lda     #$09
-        bit     L8350
+        bit     set_input_params_modifiers
         bpl     L837A
         lda     #$41
 L837A:  cmp     $CB
@@ -7008,7 +7043,7 @@ L837A:  cmp     $CB
         clc
         rts
 
-L8380:  inc     L8351
+L8380:  inc     set_input_params_unk
         clc
         lda     #$08
         .byte   $2C
@@ -7046,7 +7081,7 @@ L83B5:  jsr     L70B7
         sbc     $C8
         beq     L83C6
         ldx     #$FF
-L83C6:  bit     L8350
+L83C6:  bit     set_input_params_modifiers
         bpl     L83D1
         cpx     #$64
         bcc     L83D7
@@ -7068,7 +7103,7 @@ L83E2:  sec
 L83E8:  sta     L769B
         bcs     L83F0
         dec     L769C
-L83F0:  inc     L8351
+L83F0:  inc     set_input_params_unk
         clc
         rts
 
@@ -7778,11 +7813,20 @@ L8E2E:  .byte   $00,$00,$00
 L8E31:  .byte   $00
 L8E32:  .byte   $00
 L8E33:  .byte   $00,$00
-draw_bitmap_params:  .byte   $00,$00,$00,$00
-L8E39:  .byte   $00
-L8E3A:  .byte   $00
-L8E3B:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+
+.proc draw_bitmap_params
+left:   .word   0
+top:    .word   0
+addr:   .addr   0
+stride: .byte   0
+        .byte   0               ; ???
+hoff:   .word   0
+voff:   .word   0
+.endproc
+
+        .byte   $00,$00
 L8E43:  .byte   $00,$00
+
 fill_rect_params6:  .byte   $00
 L8E46:  .byte   $00,$00,$00
 L8E49:  .byte   $00
@@ -9481,12 +9525,12 @@ LA12E:  lda     draw_bitmap_params2,x
         dex
         bpl     LA12E
         ldy     L8E43
-LA13A:  lda     L8E3B
+LA13A:  lda     draw_bitmap_params::stride
         clc
-        adc     L8E39
-        sta     L8E39
+        adc     draw_bitmap_params::addr
+        sta     draw_bitmap_params::addr
         bcc     LA149
-        inc     L8E3A
+        inc     draw_bitmap_params::addr+1
 LA149:  dey
         bpl     LA13A
         rts
