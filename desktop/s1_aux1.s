@@ -3241,6 +3241,7 @@ L6340:  .byte   $00,$08,$68,$8D,$40,$63,$A2,$04
         .byte   $91,$80,$2C,$39,$63,$10,$0B,$2C
         .byte   $37,$63,$10,$06,$20,$00,$BF,$40
         .addr   L6469
+
         lda     $FBB3
         pha
         lda     #$06
@@ -3270,9 +3271,11 @@ L646A:  .byte   0
         sed
         .byte   $66
 
-dealloc_interrupt_params:
-        .byte   1
-L646E:  .byte   0
+.proc dealloc_interrupt_params
+params: .byte   1
+int_num:.byte   0
+.endproc
+
         lda     #$00
         sta     L633A
         lda     L6339
@@ -3311,7 +3314,7 @@ L64A4:  rts
         bit     L6337
         bpl     L64C7
         lda     L646A
-        sta     L646E
+        sta     dealloc_interrupt_params::int_num
         MLI_CALL DEALLOC_INTERRUPT, dealloc_interrupt_params
 L64C7:  lda     L6340
         pha
@@ -3381,6 +3384,7 @@ L6538:  .byte   $00
 L6539:  .byte   $00
 L653A:  .byte   $00
 L653B:  .byte   $00
+
 L653C:  jsr     L625A
 L653F:  lda     $80
         sta     L6539
