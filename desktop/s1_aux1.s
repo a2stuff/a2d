@@ -147,7 +147,85 @@ L40DA:  bit     L40D3
 
         ;; Jump table for A2D entry point calls
 a2d_jump_table:
-        .addr   $40B0,$5E51,$5E7B,$5EC4,$5E9C,$5EB4,$508E,$4DAF,$4F8F,$40B0,$40B0,$586A,$40B0,$5742,$40B0,$5763,$5776,$5040,$4FE5,$5051,$516A,$537E,$56D6,$537A,$58DC,$5938,$5ECF,$5EDE,$5F0A,$6341,$64A5,$64D2,$65B3,$8427,$7D61,$6747,$607B,$6233,$625A,$624E,$630A,$6663,$65D7,$67D8,$65D4,$660F,$6814,$6ECD,$6926,$6BDB,$6B60,$6B1D,$6BCB,$6BA9,$6BB5,$6F1C,$747B,$7815,$7836,$7500,$759C,$761F,$7532,$758C,$73F9,$7639,$74AC,$764A,$76AC,$76A8,$78F9,$78E1,$7AC1,$7B75,$7BAA,$7D24,$7965,$51B3,$7D69
+        .addr   $40B0
+        .addr   $5E51
+        .addr   $5E7B
+        .addr   $5EC4
+        .addr   $5E9C
+        .addr   $5EB4
+        .addr   $508E
+        .addr   $4DAF
+        .addr   $4F8F
+        .addr   $40B0
+        .addr   $40B0
+        .addr   $586A
+        .addr   $40B0
+        .addr   $5742
+        .addr   $40B0
+        .addr   $5763
+        .addr   $5776
+        .addr   $5040
+        .addr   $4FE5
+        .addr   $5051
+        .addr   $516A
+        .addr   $537E
+        .addr   $56D6
+        .addr   $537A
+        .addr   $58DC
+        .addr   $5938
+        .addr   $5ECF
+        .addr   $5EDE
+        .addr   $5F0A
+        .addr   $6341
+        .addr   $64A5
+        .addr   $64D2
+        .addr   $65B3
+        .addr   $8427
+        .addr   $7D61
+        .addr   $6747
+        .addr   $607B
+        .addr   $6233
+        .addr   $625A
+        .addr   $624E
+        .addr   $630A
+        .addr   $6663
+        .addr   $65D7
+        .addr   $67D8
+        .addr   $65D4
+        .addr   $660F
+        .addr   $6814
+        .addr   $6ECD
+        .addr   $6926
+        .addr   $6BDB
+        .addr   $6B60
+        .addr   $6B1D
+        .addr   $6BCB
+        .addr   $6BA9
+        .addr   $6BB5
+        .addr   $6F1C
+        .addr   $747B
+        .addr   $7815
+        .addr   $7836
+        .addr   $7500
+        .addr   $759C
+        .addr   $761F
+        .addr   $7532
+        .addr   $758C
+        .addr   $73F9
+        .addr   $7639
+        .addr   $74AC
+        .addr   $764A
+        .addr   $76AC
+        .addr   $76A8
+        .addr   $78F9
+        .addr   $78E1
+        .addr   $7AC1
+        .addr   $7B75
+        .addr   $7BAA
+        .addr   $7D24
+        .addr   $7965
+        .addr   $51B3
+        .addr   $7D69
 
         ;; Entry point param lengths
 L4183:  .byte   $00
@@ -3272,7 +3350,7 @@ L646A:  .byte   0
         .byte   $66
 
 .proc dealloc_interrupt_params
-params: .byte   1
+count:  .byte   1
 int_num:.byte   0
 .endproc
 
@@ -3443,11 +3521,11 @@ bottom: .word   191
 
 checkerboard_pattern:
         .byte   $55,$AA,$55,$AA,$55,$AA,$55,$AA
+        .byte   $00
 
-        .byte   $00,$2C
-        bbr3    $63,L65E7
-        ora     $A5,x
-        .byte   $82
+        bit     $633F
+        bmi     L65CD
+        lda     $82
         sta     L6000
         lda     L0083
         sta     L6001
@@ -3456,7 +3534,7 @@ checkerboard_pattern:
         ldy     #$02
         jmp     L5EBD
 
-        lda     #$95
+L65CD:  lda     #$95
         jmp     L40B1
 
 L65D2:  sed
@@ -3724,17 +3802,22 @@ height: .word   11
 
 L6835:  .byte   $00
 L6836:  .byte   $00
-test_box_params2:  .byte   $00,$00
-L6839:  .byte   $0C,$00
-L683B:  .byte   $00,$00
-L683D:  .byte   $00,$00
-fill_rect_params4:  .byte   $00
-L6840:  .byte   $00
-L6841:  .byte   $0C,$00
-L6843:  .byte   $00
-L6844:  .byte   $00
-L6845:  .byte   $00
-L6846:  .byte   $00
+
+.proc test_box_params2
+left:   .word   0
+top:    .word   12
+right:  .word   0
+bottom: .word   0
+.endproc
+
+.proc fill_rect_params4
+left:   .word   0
+top:    .word   12
+right:  .word   0
+bottom: .word   0
+.endproc
+
+
 L6847:  .byte   $0C
 L6848:  .byte   $18,$24,$30,$3C,$48,$54,$60,$6C
         .byte   $78,$84,$90,$9C,$A8,$B4
@@ -4120,11 +4203,11 @@ L6B37:  lda     $B7,x
         lda     $B9,x
         sta     fill_rect_params2::width,x
         lda     $BB,x
-        sta     test_box_params2,x
-        sta     fill_rect_params4,x
+        sta     test_box_params2::left,x
+        sta     fill_rect_params4::left,x
         lda     $BD,x
-        sta     L683B,x
-        sta     L6843,x
+        sta     test_box_params2::right,x
+        sta     fill_rect_params4::right,x
         dex
         bpl     L6B37
         lda     #$02
@@ -4298,14 +4381,14 @@ L6C98:  lda     $BC
         ldx     L6847,y
         inx
         stx     L0083
-        stx     L6845
-        stx     L683D
+        stx     fill_rect_params4::bottom
+        stx     test_box_params2::bottom
         ldx     L6822
         inx
         inx
         inx
-        stx     L6841
-        stx     L6839
+        stx     fill_rect_params4::top
+        stx     test_box_params2::top
         rts
 
 L6CD8:  lda     hires_table_lo,x
@@ -4385,13 +4468,13 @@ L6D55:  lda     ($84),y
         lda     L6861
         ldx     L6862
         jsr     L6A66
-        inc     fill_rect_params4
+        inc     fill_rect_params4::left
         bne     L6D7A
-        inc     L6840
-L6D7A:  lda     L6843
+        inc     fill_rect_params4::left+1
+L6D7A:  lda     fill_rect_params4::right
         bne     L6D82
-        dec     L6844
-L6D82:  dec     L6843
+        dec     fill_rect_params4::right+1
+L6D82:  dec     fill_rect_params4::right
         jsr     L6A5C
         ldx     #$00
 L6D8A:  jsr     L68BE
@@ -4535,11 +4618,11 @@ L6EA9:  rts
 
 L6EAA:  ldx     L6BDA
         beq     L6EA9
-        ldy     L6846,x
+        ldy     fill_rect_params4::bottom+1,x ; ???
         iny
-        sty     L6841
+        sty     fill_rect_params4::top
         ldy     L6847,x
-        sty     L6845
+        sty     fill_rect_params4::bottom
         jsr     L625A
         lda     #$02
         jsr     L68F5
@@ -7545,7 +7628,7 @@ L8739:  .byte   $00,$00,$00,$00,$F4,$01,$10,$00
         .byte   $90,$01,$42,$00
 
 .proc online_params
-params: .byte   2
+count:  .byte   2
 unit:   .byte   $60
 buffer: .addr   online_params_buffer
 .endproc
