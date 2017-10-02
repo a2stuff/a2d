@@ -7964,12 +7964,14 @@ L9098:
 
 
 L933E:  .byte   $00
-query_target_params2:  .byte   $00
-L9340:  .byte   $00
-L9341:  .byte   $00
-L9342:  .byte   $00
-L9343:  .byte   $00
-L9344:  .byte   $00
+
+.proc query_target_params2
+queryx: .word   0
+queryy: .word   0
+element:.byte   0
+id:     .byte   0
+.endproc
+
 query_screen_params:  .byte   $00,$00,$00,$00,$00,$20,$80,$00
 L934D:  .byte   $00,$00,$00,$00,$2F,$02,$BF,$00
         .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
@@ -8558,18 +8560,18 @@ L9845:  A2D_CALL $2C, L933E
 L9852:  lda     #$02
         jmp     L9C65
 
-L9857:  lda     query_target_params2
+L9857:  lda     query_target_params2::queryx
         sec
         sbc     L9C8E
         sta     L982C
-        lda     L9340
+        lda     query_target_params2::queryx+1
         sbc     L9C8F
         sta     L982D
-        lda     L9341
+        lda     query_target_params2::queryy
         sec
         sbc     L9C90
         sta     L982E
-        lda     L9342
+        lda     query_target_params2::queryy+1
         sbc     L9C91
         sta     L982F
         lda     L982D
@@ -8780,11 +8782,11 @@ L9A33:  lda     query_target_params2,x
         lda     L9830
         beq     L9A84
         lda     L9831
-        sta     L9344
+        sta     query_target_params2::id
         jsr     L93BC
         ora     #$3F
         .byte   $93
-        lda     L9343
+        lda     query_target_params2::element
         cmp     L9830
         beq     L9A84
         A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
@@ -8798,18 +8800,18 @@ L9A33:  lda     query_target_params2,x
         A2D_CALL $16, L9096
         lda     #$00
         sta     L9830
-L9A84:  lda     query_target_params2
+L9A84:  lda     query_target_params2::queryx
         sec
         sbc     L9C8E
         sta     L9C96
-        lda     L9340
+        lda     query_target_params2::queryx+1
         sbc     L9C8F
         sta     L9C97
-        lda     L9341
+        lda     query_target_params2::queryy
         sec
         sbc     L9C90
         sta     L9C98
-        lda     L9342
+        lda     query_target_params2::queryy+1
         sbc     L9C91
         sta     L9C99
         jsr     L9C9E
@@ -8932,12 +8934,12 @@ L9BA5:  A2D_CALL $16, L9096
         jmp     L9C63
 
 L9BB9:  A2D_CALL A2D_QUERY_TARGET, query_target_params2
-        lda     L9344
+        lda     query_target_params2::id
         cmp     L9832
         beq     L9BE1
         bit     L9833
         bmi     L9BDC
-        lda     L9344
+        lda     query_target_params2::id
         bne     L9BD4
 L9BD1:  jmp     L9852
 
@@ -9207,15 +9209,15 @@ L9DD9:  lda     L9C88
         sta     L9C99
         rts
 
-L9DFA:  lda     L9340
+L9DFA:  lda     query_target_params2::queryx+1
         sta     L9C8F
-        lda     query_target_params2
+        lda     query_target_params2::queryx
         sta     L9C8E
         rts
 
-L9E07:  lda     L9342
+L9E07:  lda     query_target_params2::queryy+1
         sta     L9C91
-        lda     L9341
+        lda     query_target_params2::queryy
         sta     L9C90
         rts
 
@@ -9225,13 +9227,13 @@ L9E14:  bit     L9833
 
 L9E1A:  jsr     LA365
 L9E1D:  A2D_CALL A2D_QUERY_TARGET, query_target_params2
-        lda     L9343
+        lda     query_target_params2::element
         bne     L9E2B
-        sta     L9344
+        sta     query_target_params2::id
 L9E2B:  jsr     L93BC
         ora     #$3F
         .byte   $93
-        lda     L9343
+        lda     query_target_params2::element
         bne     L9E39
         jmp     L9E97
 
