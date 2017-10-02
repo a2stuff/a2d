@@ -7421,7 +7421,7 @@ L8625:  ldy     #$33
         sta     L8737
         sty     L8738
         and     #$F0
-        sta     L8776
+        sta     online_params_unit
         sta     ALTZPOFF
         MLI_CALL ON_LINE, online_params
         sta     ALTZPON
@@ -7432,7 +7432,7 @@ L8672:  pha
         pla
         rts
 
-L867B:  lda     L8779
+L867B:  lda     online_params_buffer
         beq     L8672
         jsr     L8388
         jsr     LD05E
@@ -7453,9 +7453,9 @@ L869E:  sta     ($06),y
         cpx     #$12
         bne     L869E
         ldy     #$09
-        lda     L8779
+        lda     online_params_buffer
         and     #$0F
-        sta     L8779
+        sta     online_params_buffer
         sta     ($06),y
         ldx     #$00
         ldy     #$0B
@@ -7469,7 +7469,7 @@ L86B6:  lda     L877A,x
 L86C4:  sta     ($06),y
         iny
         inx
-        cpx     L8779
+        cpx     online_params_buffer
         bne     L86B6
         ldy     #$09
         lda     ($06),y
@@ -7540,10 +7540,15 @@ L8739:  .byte   $00,$00,$00,$00,$F4,$01,$10,$00
         .byte   $90,$01,$10,$00,$90,$01,$29,$00
         .byte   $90,$01,$42,$00
 
-online_params:
-        .byte   2
-L8776:  .byte   $60,$79,$87
-L8779:  .byte   $0B
+.proc online_params
+params: .byte   2
+unit:   .byte   $60
+buffer: .addr   online_params_buffer
+.endproc
+        online_params_unit := online_params::unit
+
+online_params_buffer:
+        .byte   $0B
 L877A:  .byte   "GRAPHICS.TK",$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -7560,6 +7565,9 @@ L877A:  .byte   "GRAPHICS.TK",$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$C8
+
+;;; ==================================================
+;;; Font
 
 font_table:
         .byte   $00,$7F
@@ -7716,6 +7724,7 @@ glyph_bitmaps:
         .byte   $2A
         ;; end of font glyphs
 
+;;; ==================================================
 
         .byte   $00,$00,$00,$00,$77,$30,$01
         .byte   $00,$00,$7F,$00,$00,$7F,$00,$00
@@ -7833,19 +7842,27 @@ L8E49:  .byte   $00
 L8E4A:  .byte   $00
 L8E4B:  .byte   $00
 L8E4C:  .byte   $00
-measure_text_params:  .byte   $55,$8E
-L8E4F:  .byte   $00
-L8E50:  .byte   $00
-set_text_mask_params:  .byte   $00
-draw_text_params:  .byte   $55,$8E
-L8E54:  .byte   $00,$00
-L8E56:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00
+
+.proc measure_text_params
+addr:   .addr   text_buffer
+length: .byte   0
+width:  .word   0
+.endproc
+set_text_mask_params :=  measure_text_params::width + 1 ; re-used
+
+.proc draw_text_params
+addr:   .addr   text_buffer
+length: .byte   0
+.endproc
+
+text_buffer:
+        .res    19, 0
+
 white_pattern2:
         .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
         .byte   $FF,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$FF
+
 checkerboard_pattern2:
         .byte   %01010101
         .byte   %10101010
@@ -9410,16 +9427,16 @@ L9FE4:  lda     ($06),y
         iny
         cpy     #$1D
         bne     L9FE4
-L9FEE:  lda     L8E54
-        sta     L8E4F
+L9FEE:  lda     draw_text_params::length
+        sta     measure_text_params::length
         A2D_CALL A2D_MEASURE_TEXT, measure_text_params
-        lda     L8E50
+        lda     measure_text_params::width
         cmp     L8E31
         bcs     LA010
-        inc     L8E54
-        ldx     L8E54
+        inc     draw_text_params::length
+        ldx     draw_text_params::length
         lda     #$20
-        sta     L8E54,x
+        sta     text_buffer-1,x
         jmp     L9FEE
 
 LA010:  lsr     a
@@ -9512,9 +9529,9 @@ LA0F4:  lda     L9F94,x
 LA10C:  lda     #$00
 LA10E:  sta     set_text_mask_params
         A2D_CALL A2D_SET_TEXT_MASK, set_text_mask_params
-        lda     L8E56
+        lda     text_buffer+1
         and     #$DF
-        sta     L8E56
+        sta     text_buffer+1
         A2D_CALL A2D_DRAW_TEXT, draw_text_params
         A2D_CALL A2D_SHOW_CURSOR
         rts
@@ -9629,21 +9646,21 @@ LA191:  lda     ($06),y
         ldy     #$1C
         ldx     #$13
 LA22A:  lda     ($06),y
-        sta     L8E54,x
+        sta     text_buffer-1,x
         dey
         dex
         bpl     LA22A
-LA233:  lda     L8E54
-        sta     L8E4F
+LA233:  lda     draw_text_params::length
+        sta     measure_text_params::length
         A2D_CALL A2D_MEASURE_TEXT, measure_text_params
         ldy     #$08
-        lda     L8E50
+        lda     measure_text_params::width
         cmp     ($08),y
         bcs     LA256
-        inc     L8E54
-        ldx     L8E54
+        inc     draw_text_params::length
+        ldx     draw_text_params::length
         lda     #$20
-        sta     L8E54,x
+        sta     text_buffer-1,x
         jmp     LA233
 
 LA256:  lsr     a
@@ -9664,11 +9681,11 @@ LA256:  lsr     a
         sbc     #$00
         sta     L8E1E
         sta     L8E1A
-        inc     L8E50
-        inc     L8E50
+        inc     measure_text_params::width
+        inc     measure_text_params::width
         lda     L8E19
         clc
-        adc     L8E50
+        adc     measure_text_params::width
         sta     L8E11
         sta     L8E15
         lda     L8E1A
