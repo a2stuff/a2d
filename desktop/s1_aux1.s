@@ -560,85 +560,278 @@ hires_table_hi:
         .byte   $03,$07,$0B,$0F,$13,$17,$1B,$1F
         .byte   $03,$07,$0B,$0F,$13,$17,$1B,$1F
 
-        ;; TODO: This is code!
-L4BA1:
-        .byte   $B1,$84,$51,$8E,$45,$F6,$25,$89
-        .byte   $51,$84,$90,$04,$B1,$8E,$45,$F6
-        .byte   $25,$E8,$05,$E9,$91,$84,$88,$D0
-        .byte   $F3,$B1,$84,$51,$8E,$45,$F6,$25
-        .byte   $88,$51,$84,$25,$E8,$05,$E9,$91
-        .byte   $84,$60,$B1,$8E,$45,$F6,$25,$89
-        .byte   $90,$04,$B1,$8E,$45,$F6,$11,$84
-        .byte   $25,$E8,$05,$E9,$91,$84,$88,$D0
-        .byte   $F1,$B1,$8E,$45,$F6,$25,$88,$11
-        .byte   $84,$25,$E8,$05,$E9,$91,$84,$60
-        .byte   $B1,$8E,$45,$F6,$25,$89,$90,$04
-        .byte   $B1,$8E,$45,$F6,$51,$84,$25,$E8
-        .byte   $05,$E9,$91,$84,$88,$D0,$F1,$B1
-        .byte   $8E,$45,$F6,$25,$88,$51,$84,$25
-        .byte   $E8,$05,$E9,$91,$84,$60,$B1,$8E
-        .byte   $45,$F6,$25,$89,$90,$04,$B1,$8E
-        .byte   $45,$F6,$49,$FF,$31,$84,$25,$E8
-        .byte   $05,$E9,$91,$84,$88,$D0,$EF,$B1
-        .byte   $8E,$45,$F6,$25,$88,$49,$FF,$31
-        .byte   $84,$25,$E8,$05,$E9,$91,$84,$60
-        .byte   $E4,$98,$F0,$04,$E8,$4C
-L4C47:  .byte   $FB
-L4C48:  .byte   $4C,$60,$AD,$5B,$4C,$65,$90,$8D
-        .byte   $5B,$4C,$90,$03,$EE,$5C,$4C,$AC
-        .byte   $68,$51,$B9
-L4C5B:  .byte   $FF
-L4C5C:  .byte   $FF,$29,$7F,$99,$01,$06,$88,$10
-        .byte   $F5,$30,$38
-L4C67:  .byte   $A4,$8C,$E6,$8C,$B9,$E1,$4A,$05
-        .byte   $80,$85,$83,$B9,$21,$4A,$65,$8A
-        .byte   $85,$82,$86,$81,$A0,$00,$A2,$00
-        .byte   $8D,$55,$C0,$B1,$82,$29,$7F,$8D
-        .byte   $54,$C0,$9D
-L4C8A:  .byte   $01,$06,$B1,$82,$29,$7F,$9D
-L4C91:  .byte   $02,$06,$C8,$E8,$E8,$EC,$68,$51
-        .byte   $90,$E4,$F0,$E2,$A6,$81,$18,$4C
-L4CA1:  .byte   $BE
-L4CA2:  .byte   $4C,$86,$82,$AC,$68,$51,$A9,$00
-        .byte   $BE,$01,$06,$1D
-L4CAE:  .byte   $A1
-L4CAF:  .byte   $42,$99
-L4CB1:  .byte   $02,$06,$BD
-L4CB4:  .byte   $21
-L4CB5:  .byte   $42,$88,$10,$F1,$8D
-L4CBA:  .byte   $01,$06,$A6,$82,$4C
-L4CBF:  .byte   $38
-L4CC0:  .byte   $4D,$86,$82,$A2,$00,$A0,$00,$BD
-L4CC8:  .byte   $01,$06,$8D,$55,$C0,$99,$01,$06
-        .byte   $8D,$54,$C0,$BD
-L4CD4:  .byte   $02,$06,$99,$01,$06,$E8,$E8,$C8
-        .byte   $C4,$91,$90,$E7,$F0,$E5,$A6,$82
-        .byte   $4C,$38,$4D
-L4CE7:  .byte   $A6,$94,$18,$4C,$46,$4C
-L4CED:  .byte   $AE,$6A,$4D,$8E,$47,$4C,$AE,$6B
-        .byte   $4D,$8E,$48,$4C,$A6,$94,$4C
-L4CFC:  .byte   $11
-L4CFD:  .byte   $4D,$8A,$6A,$6A,$6A,$29,$C0,$05
-        .byte   $86,$85,$82,$A9,$04,$69,$00,$85
-        .byte   $83,$4C,$79,$4C
-L4D11:  .byte   $8A,$6A,$6A,$6A,$29,$C0,$05,$86
-        .byte   $85,$8E,$A9,$04,$69,$00,$85,$8F
-        .byte   $4C
-L4D22:  .byte   $38
-L4D23:  .byte   $4D
-L4D24:  .byte   $A5,$84,$18,$65,$D6,$85,$84,$90
-        .byte   $03,$E6,$85,$18,$A4,$91,$20,$67
-        .byte   $4D,$4C,$41,$4C,$BD,$E1,$4A,$05
-        .byte   $D5,$85,$85,$BD,$21,$4A,$18,$65
-        .byte   $86,$85,$84,$A0,$01,$20,$54,$4D
-        .byte   $A0,$00,$20,$54,$4D,$4C,$41,$4C
-        .byte   $99,$54,$C0,$B9,$92,$00,$09,$80
-        .byte   $85,$88,$B9,$96,$00,$09,$80,$85
-        .byte   $89,$A4,$91,$4C
-L4D68:  .byte   $A1
-L4D69:  .byte   $4B,$FB,$4C
+L4BA1:  lda     ($84),y
+        eor     ($8E),y
+        eor     $F6
+        and     $89
+        eor     ($84),y
+        bcc     L4BB1
+L4BAD:  lda     ($8E),y
+        eor     $F6
+L4BB1:  and     $E8
+        ora     $E9
+        sta     ($84),y
+        dey
+        bne     L4BAD
+        lda     ($84),y
+        eor     ($8E),y
+        eor     $F6
+        and     L0088
+        eor     ($84),y
+        and     $E8
+        ora     $E9
+        sta     ($84),y
+        rts
 
-L4D6C:  .byte   $00,$00
+
+        lda     ($8E),y
+        eor     $F6
+        and     $89
+        bcc     L4BD7
+L4BD3:  lda     ($8E),y
+        eor     $F6
+L4BD7:  ora     ($84),y
+        and     $E8
+        ora     $E9
+        sta     ($84),y
+        dey
+        bne     L4BD3
+        lda     ($8E),y
+        eor     $F6
+        and     L0088
+        ora     ($84),y
+        and     $E8
+        ora     $E9
+        sta     ($84),y
+        rts
+
+        lda     ($8E),y
+        eor     $F6
+        and     $89
+        bcc     L4BFD
+L4BF9:  lda     ($8E),y
+        eor     $F6
+L4BFD:  eor     ($84),y
+        and     $E8
+        ora     $E9
+        sta     ($84),y
+        dey
+        bne     L4BF9
+        lda     ($8E),y
+        eor     $F6
+        and     L0088
+        eor     ($84),y
+        and     $E8
+        ora     $E9
+        sta     ($84),y
+        rts
+
+        lda     ($8E),y
+        eor     $F6
+        and     $89
+        bcc     L4C23
+L4C1F:  lda     ($8E),y
+        eor     $F6
+L4C23:  eor     #$FF
+        and     ($84),y
+        and     $E8
+        ora     $E9
+        sta     ($84),y
+        dey
+        bne     L4C1F
+L4C30:  lda     ($8E),y
+        eor     $F6
+        and     L0088
+        eor     #$FF
+        and     ($84),y
+        and     $E8
+        ora     $E9
+        sta     ($84),y
+        rts
+
+L4C41:  cpx     $98
+        beq     L4C49
+        inx
+L4C46:
+L4C47           := * + 1
+L4C48           := * + 2
+        jmp     L4CFB
+
+L4C49:  rts
+
+        lda     L4C5B
+        adc     $90
+        sta     L4C5B
+        bcc     L4C57
+        inc     L4C5C
+L4C57:  ldy     L5168
+L4C5A:
+L4C5B           := * + 1
+L4C5C           := * + 2
+        lda     $FFFF,y
+        and     #$7F
+        sta     $0601,y
+        dey
+        bpl     L4C5A
+        bmi     L4C9F
+L4C67:  ldy     $8C
+        inc     $8C
+        lda     hires_table_hi,y
+        ora     $80
+        sta     L0083
+        lda     hires_table_lo,y
+        adc     $8A
+        sta     L0082
+L4C79:  stx     $81
+        ldy     #$00
+        ldx     #$00
+L4C7F:  sta     $C055
+        lda     (L0082),y
+        and     #$7F
+        sta     $C054
+L4C8A           := * + 1
+        sta     $0601,x
+        lda     (L0082),y
+        and     #$7F
+L4C91           := * + 1
+        sta     $0602,x
+        iny
+        inx
+        inx
+        cpx     L5168
+        bcc     L4C7F
+        beq     L4C7F
+        ldx     $81
+L4C9F:  clc
+L4CA1           := * + 1
+L4CA2           := * + 2
+        jmp     L4CBE
+
+        stx     L0082
+        ldy     L5168
+        lda     #$00
+L4CAA:  ldx     $0601,y
+L4CAE           := * + 1
+L4CAF           := * + 2
+        ora     $42A1,x
+L4CB1           := * + 1
+        sta     $0602,y
+L4CB4           := * + 1
+L4CB5           := * + 2
+        lda     L4221,x
+        dey
+        bpl     L4CAA
+L4CBA           := * + 1
+        sta     $0601
+        ldx     L0082
+L4CBE:
+L4CBF           := * + 1
+L4CC0           := * + 2
+        jmp     L4D38
+
+        stx     L0082
+        ldx     #$00
+        ldy     #$00
+L4CC7:
+L4CC8           := * + 1
+        lda     $0601,x
+        sta     $C055
+        sta     $0601,y
+        sta     $C054
+L4CD4           := * + 1
+        lda     $0602,x
+        sta     $0601,y
+        inx
+        inx
+        iny
+        cpy     $91
+        bcc     L4CC7
+        beq     L4CC7
+        ldx     L0082
+        jmp     L4D38
+
+L4CE7:  ldx     $94
+        clc
+        jmp     L4C46
+
+L4CED:  ldx     L4D6A
+        stx     L4C47
+        ldx     L4D6B
+        stx     L4C48
+        ldx     $94
+L4CFB:
+L4CFC           := * + 1
+L4CFD           := * + 2
+        jmp     L4D11
+
+        txa
+        ror     a
+        ror     a
+        ror     a
+        and     #$C0
+        ora     $86
+        sta     L0082
+        lda     #$04
+        adc     #$00
+        sta     L0083
+        jmp     L4C79
+
+L4D11:  txa
+        ror     a
+        ror     a
+        ror     a
+        and     #$C0
+        ora     $86
+        sta     $8E
+        lda     #$04
+        adc     #$00
+        sta     $8F
+L4D22           := * + 1
+L4D23           := * + 2
+        jmp     L4D38
+
+L4D24:  lda     $84
+        clc
+        adc     $D6
+        sta     $84
+        bcc     L4D30
+        inc     $85
+        clc
+L4D30:  ldy     $91
+        jsr     L4D67
+        jmp     L4C41
+
+L4D38:  lda     hires_table_hi,x
+        ora     $D5
+        sta     $85
+        lda     hires_table_lo,x
+        clc
+        adc     $86
+        sta     $84
+        ldy     #$01
+        jsr     L4D54
+        ldy     #$00
+        jsr     L4D54
+        jmp     L4C41
+
+L4D54:  sta     $C054,y
+        lda     $92,y
+        ora     #$80
+        sta     L0088
+        lda     $96,y
+        ora     #$80
+        sta     $89
+        ldy     $91
+L4D67:
+L4D68           := * + 1
+L4D69           := * + 2
+        jmp     L4BA1
+
+L4D6A:  .byte   $FB
+L4D6B:
+L4D6C           := * + 1
+        jmp     L0000
+
         .byte   $00,$00,$00,$00,$00
 L4D73:  .byte   $01,$03,$07,$0F,$1F,$3F,$7F
 L4D7A:  .byte   $7F,$7F,$7F,$7F,$7F,$7F,$7F

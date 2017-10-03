@@ -22,7 +22,7 @@ function asmseg {
 #daseg s0_loader 2000
 #asmseg s0_loader 2000
 
-# s1 has been disassembled by hand
+# s1 has been disassembled by hand ; daseg s1_aux1 4000
 asmseg s1_aux1 4000
 
 # s2 has been disassembled by hand
