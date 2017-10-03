@@ -3126,7 +3126,8 @@ white_pattern:
         .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
 
         .byte   $FF,$00,$00,$00,$00,$00,$01,$01
-        .byte   $00,$00
+        .byte   $00
+L5F3F:  .byte   $00
 L5F40:  .byte   $00
 L5F41:  .byte   $00,$00,$00,$00,$00,$00,$20,$80
         .byte   $00,$00,$00,$00,$00,$2F,$02,$BF
@@ -3538,8 +3539,10 @@ L6313:  bit     L851C
 
 L6332:  jmp     (L6000)
 
-        .byte   $00,$00
-L6337:  .byte   $00,$00
+L6335:  .byte   $00
+L6336:  .byte   $00
+L6337:  .byte   $00
+L6338:  .byte   $00
 L6339:  .byte   $00
 L633A:  .byte   $00
 L633B:  .byte   $00
@@ -3549,39 +3552,111 @@ L633E:  .byte   $00
 L633F:  .byte   $00
 L6340:  .byte   $00
 
-        ;; TODO: This is code!
-L6341:  .byte   $08,$68,$8D,$40,$63,$A2,$04
-        .byte   $B5,$82,$9D,$35,$63,$CA,$10,$F8
-        .byte   $A9,$7F,$8D,$3F,$5F,$A5,$87,$8D
-        .byte   $40,$5F,$A5,$88,$8D,$41,$5F,$A5
-        .byte   $89,$8D,$35,$68,$A5,$8A,$8D,$36
-        .byte   $68,$A5,$8B,$8D,$3B,$63,$A5,$8C
-        .byte   $8D,$3C,$63,$20,$6F,$64,$20,$91
-        .byte   $64,$A0,$02,$B1,$87,$AA,$8E,$22
-        .byte   $68,$CA,$8E,$CB,$78,$E8,$E8,$E8
-        .byte   $8E,$33,$68,$E8,$8E,$CD,$78,$8E
-        .byte   $2B,$68,$8E,$39,$68,$8E,$41,$68
-        .byte   $E8,$8E,$D3,$78,$8E,$CF,$78,$8E
-        .byte   $94,$65,$8E,$9C,$65,$CA,$8E,$47
-        .byte   $68,$18,$A0,$00,$8A,$79,$47,$68
-        .byte   $C8,$99,$47,$68,$C0,$0E,$90,$F4
-        .byte   $A9,$01,$8D,$FD,$5F,$A9,$00,$8D
-        .byte   $FE,$5F,$2C,$36,$63,$70,$0A,$A9
-        .byte   $02,$8D,$FD,$5F,$A9,$01,$8D,$FE
-        .byte   $5F,$AE,$38,$63,$20,$BD,$84,$2C
-        .byte   $38,$63,$10,$1A,$E0,$00,$D0,$05
-        .byte   $A9,$92,$4C,$B1,$40,$AD,$38,$63
-        .byte   $29,$7F,$F0,$0A,$EC,$38,$63,$F0
-        .byte   $05,$A9,$91,$4C,$B1,$40,$8E,$38
-        .byte   $63,$A9,$80,$8D,$3F,$63,$AD,$38
-        .byte   $63,$D0,$0A,$2C,$39,$63,$10,$05
-        .byte   $A9,$00,$8D,$39,$63,$A0,$03,$AD
-        .byte   $38,$63,$91,$80,$C8,$AD,$39,$63
-        .byte   $91,$80,$2C,$39,$63,$10,$0B,$2C
-        .byte   $37,$63,$10,$06,$20,$00,$BF,$40
-        .addr   L6469
+L6341:
+        php
+        pla
+        sta     L6340
+        ldx     #$04
+L6348:  lda     L0082,x
+        sta     L6335,x
+        dex
+        bpl     L6348
+        lda     #$7F
+        sta     L5F3F
+        lda     $87
+        sta     L5F40
+        lda     L0088
+        sta     L5F41
+        lda     $89
+        sta     L6835
+        lda     $8A
+        sta     L6836
+        lda     $8B
+        sta     L633B
+        lda     $8C
+        sta     L633C
+        jsr     L646F
+        jsr     L6491
+        ldy     #$02
+        lda     ($87),y
+        tax
+        stx     L6822
+        dex
+        stx     L78CB
+        inx
+        inx
+        inx
+        stx     fill_rect_params2_height
+        inx
+        stx     L78CD
+        stx     test_box_params_bottom
+        stx     test_box_params2_top
+        stx     fill_rect_params4_top
+        inx
+        stx     set_box_params_top
+        stx     L78CF
+        stx     L6594
+        stx     fill_rect_params_top
+        dex
+        stx     L6847
+        clc
+        ldy     #$00
+L63AC:  txa
+        adc     L6847,y
+        iny
+        sta     L6847,y
+        cpy     #$0E
+        bcc     L63AC
+        lda     #$01
+        sta     L5FFD
+        lda     #$00
+        sta     L5FFE
+        bit     L6336
+        bvs     L63D1
+        lda     #$02
+        sta     L5FFD
+        lda     #$01
+        sta     L5FFE
+L63D1:  ldx     L6338
+        jsr     L84BD
+        bit     L6338
+        bpl     L63F6
+        cpx     #$00
+        bne     L63E5
+        lda     #$92
+        jmp     L40B1
 
-        lda     $FBB3
+L63E5:  lda     L6338
+        and     #$7F
+        beq     L63F6
+        cpx     L6338
+        beq     L63F6
+        lda     #$91
+        jmp     L40B1
+
+L63F6:  stx     L6338
+        lda     #$80
+        sta     L633F
+        lda     L6338
+        bne     L640D
+        bit     L6339
+        bpl     L640D
+        lda     #$00
+        sta     L6339
+L640D:  ldy     #$03
+        lda     L6338
+        sta     ($80),y
+        iny
+        lda     L6339
+        sta     ($80),y
+        bit     L6339
+        bpl     L642A
+        bit     L6337
+        bpl     L642A
+        jsr     MLI
+        .byte   $40
+        .addr   L6469
+L642A:  lda     $FBB3
         pha
         lda     #$06
         sta     $FBB3
@@ -3615,6 +3690,7 @@ count:  .byte   1
 int_num:.byte   0
 .endproc
 
+L646F:
         lda     #$00
         sta     L633A
         lda     L6339
@@ -3632,6 +3708,7 @@ L648B:  rts
 L648C:  lda     #$93
         jmp     L40B1
 
+L6491:
         lda     L6337
         beq     L649F
         cmp     #$01
@@ -3771,7 +3848,8 @@ L6588           := * + 2
         .addr   L6592
         rts
 
-L6592:  .byte   $00,$00,$0D,$00,$00,$20,$80,$00
+L6592:  .byte   $00,$00
+L6594:  .byte   $0D,$00,$00,$20,$80,$00
 
 .proc fill_rect_params
 left:   .word   0
@@ -3779,6 +3857,7 @@ top:    .word   0
 right:  .word   559
 bottom: .word   191
 .endproc
+        fill_rect_params_top := fill_rect_params::top
 
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
@@ -4071,6 +4150,8 @@ top:    .word   $ffff
 right:  .word   $230
 bottom: .word   $C
 .endproc
+        test_box_params_top := test_box_params::top
+        test_box_params_bottom := test_box_params::bottom
 
 .proc fill_rect_params2
 left:   .word   0
@@ -4078,6 +4159,7 @@ top:    .word   0
 width:  .word   0
 height: .word   11
 .endproc
+        fill_rect_params2_height := fill_rect_params2::height
 
 L6835:  .byte   $00
 L6836:  .byte   $00
@@ -4088,6 +4170,7 @@ top:    .word   12
 right:  .word   0
 bottom: .word   0
 .endproc
+        test_box_params2_top := test_box_params2::top
 
 .proc fill_rect_params4
 left:   .word   0
@@ -4095,7 +4178,7 @@ top:    .word   12
 right:  .word   0
 bottom: .word   0
 .endproc
-
+        fill_rect_params4_top := fill_rect_params4::top
 
 L6847:  .byte   $0C
 L6848:  .byte   $18,$24,$30,$3C,$48,$54,$60,$6C
@@ -6125,6 +6208,7 @@ voffset:.word   0
 width:  .word   0
 height: .word   0
 .endproc
+        set_box_params_top  := set_box_params::top
         set_box_params_size := set_box_params::width
         set_box_params_box  := set_box_params::hoffset ; Re-used since h/voff are 0
 
@@ -7617,7 +7701,8 @@ L84AD:  .byte   $2F
 L84AE:  .byte   $02,$17,$01,$8B,$00,$45,$00
 L84B5:  .byte   $BF
 L84B6:  .byte   $00,$5F,$00,$2F,$00,$17,$00
-        txa
+
+L84BD:  txa
         and     #$7F
         beq     L84CD
         jsr     L84F2
