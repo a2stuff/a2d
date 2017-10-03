@@ -112,7 +112,7 @@ L40A6:  lda     L5F72,x
         dex
         bpl     L40A6
 L40AE:  lda     #$00
-        rts
+jt_rts: rts
 
 L40B1:  pha
         jsr     L408A
@@ -147,85 +147,85 @@ L40DA:  bit     L40D3
 
         ;; Jump table for A2D entry point calls
 a2d_jump_table:
-        .addr   $40B0
-        .addr   $5E51
-        .addr   $5E7B
-        .addr   $5EC4
-        .addr   $5E9C
-        .addr   $5EB4
-        .addr   $508E
-        .addr   $4DAF
-        .addr   $4F8F
-        .addr   $40B0
-        .addr   $40B0
-        .addr   $586A
-        .addr   $40B0
-        .addr   $5742
-        .addr   $40B0
-        .addr   $5763
-        .addr   $5776
-        .addr   $5040
-        .addr   $4FE5
-        .addr   $5051
-        .addr   $516A
-        .addr   $537E
-        .addr   $56D6
-        .addr   $537A
-        .addr   $58DC
-        .addr   $5938
-        .addr   $5ECF
-        .addr   $5EDE
-        .addr   $5F0A
-        .addr   $6341
-        .addr   $64A5
-        .addr   $64D2
-        .addr   $65B3
-        .addr   $8427
-        .addr   $7D61
-        .addr   $6747
-        .addr   $607B
-        .addr   $6233
-        .addr   $625A
-        .addr   $624E
-        .addr   $630A
-        .addr   $6663
-        .addr   $65D7
-        .addr   $67D8
-        .addr   $65D4
-        .addr   $660F
-        .addr   $6814
-        .addr   $6ECD
-        .addr   $6926
-        .addr   $6BDB
-        .addr   $6B60
-        .addr   $6B1D
-        .addr   $6BCB
-        .addr   $6BA9
-        .addr   $6BB5
-        .addr   $6F1C
-        .addr   $747B
-        .addr   $7815
-        .addr   $7836
-        .addr   $7500
-        .addr   $759C
-        .addr   $761F
-        .addr   $7532
-        .addr   $758C
-        .addr   $73F9
-        .addr   $7639
-        .addr   $74AC
-        .addr   $764A
-        .addr   $76AC
-        .addr   $76A8
-        .addr   $78F9
-        .addr   $78E1
-        .addr   $7AC1
-        .addr   $7B75
-        .addr   $7BAA
-        .addr   $7D24
-        .addr   $7965
-        .addr   $51B3
-        .addr   $7D69
+        .addr   jt_rts          ; $00
+        .addr   L5E51           ; $01
+        .addr   L5E7B           ; $02
+        .addr   L5EC4           ; $03 QUERY_SCREEN
+        .addr   L5E9C           ; $04 SET_STATE
+        .addr   L5EB4           ; $05
+        .addr   L508E           ; $06 SET_BOX
+        .addr   L4DAF           ; $07 SET_FILL_MODE
+        .addr   L4F8F           ; $08 SET_PATTERN
+        .addr   jt_rts          ; $09
+        .addr   jt_rts          ; $0A SET_THICKNESS  ???
+        .addr   L586A           ; $0B
+        .addr   jt_rts          ; $0C SET_TEXT_MASK  ???
+        .addr   L5742           ; $0D
+        .addr   jt_rts          ; $0E SET_POS        ???
+        .addr   L5763           ; $0F DRAW_LINE
+        .addr   L5776           ; $10
+        .addr   L5040           ; $11 FILL_RECT
+        .addr   L4FE5           ; $12 DRAW_RECT
+        .addr   L5051           ; $13 TEST_BOX
+        .addr   L516A           ; $14 DRAW_BITMAP
+        .addr   L537E           ; $15
+        .addr   L56D6           ; $16
+        .addr   L537A           ; $17
+        .addr   L58DC           ; $18 MEASURE_TEXT
+        .addr   L5938           ; $19 DRAW_TEXT
+        .addr   L5ECF           ; $1A CONFIGURE_ZP_USE
+        .addr   L5EDE           ; $1B
+        .addr   L5F0A           ; $1C
+        .addr   L6341           ; $1D
+        .addr   L64A5           ; $1E
+        .addr   L64D2           ; $1F
+        .addr   L65B3           ; $20
+        .addr   L8427           ; $21
+        .addr   L7D61           ; $22
+        .addr   L6747           ; $23
+        .addr   L607B           ; $24 SET_CURSOR
+        .addr   L6233           ; $25 SHOW_CURSOR
+        .addr   L625A           ; $26 HIDE_CURSOR
+        .addr   L624E           ; $27
+        .addr   L630A           ; $28
+        .addr   L6663           ; $29
+        .addr   L65D7           ; $2A GET_INPUT
+        .addr   L67D8           ; $2B
+        .addr   L65D4           ; $2C
+        .addr   L660F           ; $2D SET_INPUT
+        .addr   L6814           ; $2E
+        .addr   L6ECD           ; $2F
+        .addr   L6926           ; $30
+        .addr   L6BDB           ; $31
+        .addr   L6B60           ; $32
+        .addr   L6B1D           ; $33
+        .addr   L6BCB           ; $34
+        .addr   L6BA9           ; $35
+        .addr   L6BB5           ; $36
+        .addr   L6F1C           ; $37
+        .addr   L747B           ; $38 CREATE_WINDOW
+        .addr   L7815           ; $39 DESTROY_WINDOW
+        .addr   L7836           ; $3A
+        .addr   L7500           ; $3B
+        .addr   L759C           ; $3C QUERY_STATE
+        .addr   L761F           ; $3D
+        .addr   L7532           ; $3E
+        .addr   L758C           ; $3F
+        .addr   L73F9           ; $40 QUERY_TARGET
+        .addr   L7639           ; $41
+        .addr   L74AC           ; $42
+        .addr   L764A           ; $43 CLOSE_CLICK
+        .addr   L76AC           ; $44 DRAG_WINDOW
+        .addr   L76A8           ; $45 DRAG_RESIZE
+        .addr   L78F9           ; $46 MAP_COORDS
+        .addr   L78E1           ; $47
+        .addr   L7AC1           ; $48 QUERY_CLIENT
+        .addr   L7B75           ; $49 RESIZE_WINDOW
+        .addr   L7BAA           ; $4A DRAG_SCROLL
+        .addr   L7D24           ; $4B UPDATE_SCROLL
+        .addr   L7965           ; $4C
+        .addr   L51B3           ; $4D
+        .addr   L7D69           ; $4E
 
         ;; Entry point param lengths
 L4183:  .byte   $00
@@ -647,6 +647,7 @@ L4D90:  .byte   $4B,$CB,$4B,$F1,$4B,$17,$4C,$A1
 L4D9F:  .byte   $BA
 L4DA0:  .byte   $4B,$E2,$4B,$08,$4C,$30,$4C,$BA
         .byte   $4B,$E2,$4B,$08,$4C,$30,$4C
+
 L4DAF:  lda     $F0
         ldx     #$00
         cmp     #$04
@@ -967,6 +968,7 @@ L4FDD:  dex
         rts
 
 L4FE4:  .byte   0
+L4FE5:
         ldy     #$03
 L4FE7:  ldx     #$07
 L4FE9:  lda     $9F,x
@@ -1180,6 +1182,8 @@ L5163:  lda     #$81
 
 L5168:  .byte   0
 L5169:  .byte   0
+
+L516A:
         ldx     #$03
 L516C:  lda     $8A,x
         sta     $9B,x
@@ -1219,6 +1223,7 @@ L516C:  lda     $8A,x
         sta     $95
         adc     L0083
         sta     $99
+
 L51B3:  lda     #$00
         sta     $9B
         sta     $9C
@@ -1453,6 +1458,7 @@ L5371:  inc     $80
 L5377:  ldy     #$80
 L5379:  rts
 
+L537A:
         lda     #$80
         bne     L5380
 L537E:  lda     #$00
@@ -1860,6 +1866,7 @@ L56D2:  dey
         bne     L56B4
 L56D5:  rts
 
+L56D6:
         lda     #$00
         sta     $BA
         jsr     L5362
@@ -1916,6 +1923,7 @@ L5731:  lda     $B7,x
         bmi     L56DD
         rts
 
+L5742:
         lda     $A1
         ldx     $A2
         jsr     L5758
@@ -1937,6 +1945,7 @@ L5758:  clc
         sta     $EB
         rts
 
+L5763:
         ldx     #$02
 L5765:  lda     $A1,x
         clc
@@ -1948,6 +1957,8 @@ L5765:  lda     $A1,x
         dex
         dex
         bpl     L5765
+
+L5776:
         ldx     #$03
 L5778:  lda     $EA,x
         sta     $96,x
@@ -2061,6 +2072,8 @@ L584A:  .byte   $00,$01,$01,$01,$00,$00,$06,$00
 L5852:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
+
+L586A:
         lda     $80
         sta     $F2
         lda     $81
@@ -2114,7 +2127,8 @@ L58BC:  .byte   0
         .byte   $00,$00,$00,$00,$00,$00,$00
 L58CC:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        jsr     L58E8
+
+L58DC:  jsr     L58E8
         ldy     #$03
         sta     ($80),y
         txa
@@ -2765,6 +2779,7 @@ L5E32:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 L5E41:  .byte   $00
 L5E42:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00
+
 L5E51:  lda     #$71
         sta     L0082
         jsr     L5E7B
@@ -2775,7 +2790,7 @@ L5E5A:  lda     L5F1E,x
         dex
         bpl     L5E5A
         lda     L5E79
-        ldx     L5E7A
+        ldx     L5E79+1
         jsr     L5EA0
         lda     #$7F
         sta     $F6
@@ -2784,8 +2799,8 @@ L5E5A:  lda     L5F1E,x
         sta     $F6
         rts
 
-L5E79:  .byte   $42
-L5E7A:  .byte   $5F
+L5E79:  .addr   $5F42
+
 L5E7B:  lda     $C05E
         sta     $C00D
         ldx     #$03
@@ -2801,9 +2816,9 @@ L5E94:  dex
         bpl     L5E83
         rts
 
-L5E98:  plp
-        and     #$2A
-        .byte   $2B
+L5E98:  .byte   $28,$29,$2A,$2B
+
+L5E9C:
         lda     $80
         ldx     $81
 L5EA0:  sta     $F4
@@ -2815,6 +2830,7 @@ L5EAB:  jsr     L508E
         jsr     L4F8F
         jmp     L4DAF
 
+L5EB4:
         jsr     L40C8
         lda     $F4
         ldx     $F5
@@ -2825,6 +2841,7 @@ L5EBD:  sta     ($80),y
         sta     ($80),y
         rts
 
+L5EC4:
         ldy     #$23
 L5EC6:  lda     L5F1E,y
         sta     ($80),y
@@ -2832,6 +2849,7 @@ L5EC6:  lda     L5F1E,y
         bpl     L5EC6
 L5ECE:  rts
 
+L5ECF:
         lda     L0082
         cmp     L5F1B
         beq     L5ECE
@@ -2839,6 +2857,7 @@ L5ECE:  rts
         bcc     L5ECE
         jmp     L408A
 
+L5EDE:
         lda     L0082
         cmp     L5F1C
         beq     L5ECE
@@ -2853,6 +2872,7 @@ L5EF1:  lda     L5E01,x
         bpl     L5EF1
 L5EF9:  rts
 
+
 L5EFA:  bit     L5F1C
         bpl     L5EF9
 L5EFF:  ldx     #$43
@@ -2862,6 +2882,7 @@ L5F01:  lda     L0000,x
         bpl     L5F01
         rts
 
+L5F0A:
         ldy     #$05
 L5F0C:  lda     L5F15,y
         sta     ($80),y
@@ -2939,6 +2960,7 @@ L6067:  lda     #$FF
         sta     $80
         lda     L6066
         sta     $81
+
 L607B:  php
         sei
         lda     $80
@@ -3173,6 +3195,7 @@ L6244:  bit     L5FF2
 L624C:  plp
         rts
 
+L624E:
         php
         sei
         jsr     L61C6
@@ -3259,6 +3282,7 @@ L62FE:  bit     L5FFF
         sta     L5FFC
 L6309:  rts
 
+L630A:
         lda     L6142
         ldx     L6143
         jmp     L5EBB
@@ -3289,7 +3313,10 @@ L633C:  .byte   $00
 L633D:  .byte   $00
 L633E:  .byte   $00
 L633F:  .byte   $00
-L6340:  .byte   $00,$08,$68,$8D,$40,$63,$A2,$04
+L6340:  .byte   $00
+
+        ;; TODO: This is code!
+L6341:  .byte   $08,$68,$8D,$40,$63,$A2,$04
         .byte   $B5,$82,$9D,$35,$63,$CA,$10,$F8
         .byte   $A9,$7F,$8D,$3F,$5F,$A5,$87,$8D
         .byte   $40,$5F,$A5,$88,$8D,$41,$5F,$A5
@@ -3382,6 +3409,7 @@ L649F:  lda     #$80
         sta     L6337
 L64A4:  rts
 
+L64A5:
         ldy     #$12
         lda     #$00
         jsr     L6313
@@ -3401,6 +3429,7 @@ L64C7:  lda     L6340
         sta     L633F
         rts
 
+L64D2:
         lda     L0082
         cmp     #$01
         bne     L64E5
@@ -3523,6 +3552,7 @@ checkerboard_pattern:
         .byte   $55,$AA,$55,$AA,$55,$AA,$55,$AA
         .byte   $00
 
+L65B3:
         bit     $633F
         bmi     L65CD
         lda     $82
@@ -3537,10 +3567,15 @@ checkerboard_pattern:
 L65CD:  lda     #$95
         jmp     L40B1
 
-L65D2:  sed
-L65D3:  bbr5    $18,L6566
-        ora     ($38,x)
-        php
+L65D2:  .byte   $F8
+L65D3:  .byte   $5F
+
+L65D4:
+        clc
+        bcc     L65D8
+L65D7:
+        sec
+L65D8:  php
         bit     L6339
         bpl     L65E1
         sei
@@ -3570,6 +3605,7 @@ L6607:  plp
         cli
 L660E:  rts
 
+L660F:
         php
         sei
         lda     L0082
@@ -3620,6 +3656,7 @@ L665F:  .byte   0
 L6660:  .byte   0
         .byte   0
 L6662:  .byte   0
+
 L6663:  bit     L6339
         bpl     L666D
         lda     #$97
@@ -3728,6 +3765,7 @@ L673E:  lda     L66F7
         sta     $C001
 L6746:  rts
 
+L6747:
         lda     L6750
         ldx     L6751
         jmp     L5EBB
@@ -3739,6 +3777,7 @@ L6753:  .byte   $00
 L6754:  .byte   $00
 L6755:  .res    128, 0
         .byte   $00,$00,$00
+
 L67D8:  php
         sei
         lda     #$00
@@ -3772,6 +3811,7 @@ L6811:  clc
         rts
 
 L6813:  .byte   $80
+L6814:
         asl     L6813
         ror     L0082
         ror     L6813
@@ -3944,6 +3984,7 @@ L691B:  A2D_CALL A2D_GET_INPUT, L0082
 
 L6924:  .byte   0
 L6925:  .byte   0
+L6926:
         lda     #$00
         sta     L633D
         sta     L633E
@@ -4215,6 +4256,7 @@ L6B37:  lda     $B7,x
         A2D_CALL A2D_FILL_RECT, fill_rect_params2
         rts
 
+L6B60:
         lda     $C9
         cmp     #$1B
         bne     L6B70
@@ -4254,12 +4296,14 @@ L6B9F:  jsr     L6B96
         lda     #$9B
         jmp     L40B1
 
+L6BA9:
         jsr     L6B9F
         asl     $BF
         ror     $C9
         ror     $BF
         jmp     L68DF
 
+L6BB5:
         jsr     L6B9F
         lda     $C9
         beq     L6BC2
@@ -4271,6 +4315,7 @@ L6BC2:  lda     #$DF
 L6BC6:  sta     $BF
         jmp     L68DF
 
+L6BCB:
         jsr     L6A89
         asl     $B0
         ror     $C8
@@ -4629,6 +4674,7 @@ L6EAA:  ldx     L6BDA
         A2D_CALL A2D_FILL_RECT, fill_rect_params4
         jmp     L6233
 
+L6ECD:
         ldx     #$03
 L6ECF:  lda     L0082,x
         sta     L6856,x
@@ -4664,6 +4710,7 @@ L6F02:  lda     #$02
         sta     L6821
 L6F1B:  rts
 
+L6F1C:
         jsr     L6B9F
         lda     $C9
         beq     L6F30
@@ -5227,6 +5274,7 @@ L73F0:  sta     $EC
         ldx     L0083
         rts
 
+L73F9:
         jsr     L653F
         A2D_CALL A2D_TEST_BOX, test_box_params
         beq     L7416
@@ -5285,7 +5333,9 @@ L7472:  ldx     $AB
         bne     L7408
 L7476:  lda     #$02
         bne     L7472
+
 L747A:  .byte   0
+L747B:
         lda     $80
         sta     $A9
         lda     $81
@@ -5311,6 +5361,8 @@ L749A:  lda     $80
         ora     #$80
         sta     ($A9),y
         bmi     L74BD
+
+L74AC:
         jsr     L7074
         cmp     L700B
         bne     L74BA
@@ -5352,6 +5404,7 @@ L74F4:  ldy     #$38
         sta     ($A7),y
         rts
 
+L7500:
         jsr     L7074
         lda     $A9
         ldx     $AA
@@ -5364,6 +5417,8 @@ L750D:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00
+
+L7532:
         jsr     L7074
         lda     $AB
         cmp     L7010
@@ -5407,6 +5462,7 @@ L758C:  jsr     L6233
         stx     $F5
         jmp     L6567
 
+L759C:
         jsr     L40C8
         jsr     L7074
         lda     L0083
@@ -5476,7 +5532,7 @@ L75EA:  lda     $92,x
         bpl     L75EA
         sec
         rts
-
+L761F:
         jsr     L7074
         lda     $A9
         clc
@@ -5492,6 +5548,7 @@ L762F:  lda     (L0082),y
         bcs     L762F
         rts
 
+L7639:
         jsr     L7013
         beq     L7642
         lda     $AB
@@ -5502,6 +5559,7 @@ L7644:  ldy     #$00
         rts
 
 L7649:  .byte   0
+L764A:
         jsr     L7013
         beq     L7697
         jsr     L7157
@@ -5543,8 +5601,12 @@ L76A0:  .byte   $00,$00,$00
 L76A3:  .byte   $00
 L76A4:  .byte   $00,$00,$00
 L76A7:  .byte   $00
+
+L76A8:
         lda     #$80
         bmi     L76AE
+
+L76AC:
         lda     #$00
 L76AE:  sta     L76A7
         jsr     L7ECD
@@ -5715,6 +5777,7 @@ L77F4:  sta     L769F,x
         lda     set_input_params_unk
 L7814:  rts
 
+L7815:
         jsr     L7074
         jsr     L653C
         jsr     L784C
@@ -5812,6 +5875,7 @@ height: .word   0
         set_box_params_size := set_box_params::width
         set_box_params_box  := set_box_params::hoffset ; Re-used since h/voff are 0
 
+L78E1:
         jsr     L7074
         ldx     #$02
 L78E6:  lda     L0083,x
@@ -5825,6 +5889,7 @@ L78E6:  lda     L0083,x
         dex
         bpl     L78E6
         bmi     L790F
+L78F9:
         jsr     L7074
         ldx     #$02
 L78FE:  lda     L0083,x
@@ -5886,6 +5951,7 @@ L7954:  sta     $98
         sta     $8F
         jmp     L51B3
 
+L7965:
         lda     $8C
         cmp     #$01
         bne     L7971
@@ -6065,6 +6131,7 @@ L7AA4:  pha
         sta     $CC,x
         jmp     L70B2
 
+L7AC1:
         jsr     L653F
         jsr     L7013
         bne     L7ACE
@@ -6151,6 +6218,7 @@ L7B64:  jsr     L708D
 L7B70:  lda     #$03
 L7B72:  jmp     L7408
 
+L7B75:
         lda     L0082
         cmp     #$01
         bne     L7B81
@@ -6179,6 +6247,7 @@ L7BA2:  lda     L0083
         sta     $AB,y
         rts
 
+L7BAA:
         lda     L0082
         cmp     #$01
         bne     L7BB6
@@ -6362,6 +6431,7 @@ L7D1D:  sta     L7CB6
         sty     L7CB7
         rts
 
+L7D24:
         lda     $8C
         cmp     #$01
         bne     L7D30
@@ -6392,10 +6462,12 @@ L7D51:  lda     $8D
         jsr     L79A0
         jmp     L6553
 
+
 L7D61:  lda     #$80
         sta     L7D74
         jmp     L67D8
 
+L7D69:
         lda     L0082
         sta     L7D7A
         lda     L0083
@@ -7222,6 +7294,7 @@ L840D:  sec
         plp
         rts
 
+L8427:
         lda     L0082
         sta     L5FFD
         lda     L0083
