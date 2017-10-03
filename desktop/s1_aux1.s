@@ -49,9 +49,9 @@ L4022:  pla
         asl     a
         tax
         lda     a2d_jump_table,x
-        sta     L4088
+        sta     jump+1
         lda     a2d_jump_table+1,x
-        sta     L4089
+        sta     jump+2
         iny
         lda     ($80),y
         pha
@@ -60,7 +60,7 @@ L4022:  pla
         sta     $81
         pla
         sta     $80
-        ldy     L4183+1,x
+        ldy     param_lengths+1,x
         bpl     L4076
         txa
         pha
@@ -82,8 +82,8 @@ L406A:  pla
         tay
         pla
         tax
-L4076:  lda     L4183,x
-        beq     L4087
+L4076:  lda     param_lengths,x
+        beq     jump
         sta     L4082
         dey
 L407F:  lda     ($80),y
@@ -91,10 +91,7 @@ L4082           := * + 1
         sta     $FF,y
         dey
         bpl     L407F
-L4087:
-L4088           := * + 1
-L4089           := * + 2
-        jsr     $FFFF
+jump:   jsr     $FFFF
 L408A:  bit     L633F
         bpl     L4092
         jsr     L40DA
@@ -228,7 +225,8 @@ a2d_jump_table:
         .addr   L7D69               ; $4E
 
         ;; Entry point param lengths
-L4183:  .byte   $00
+param_lengths:
+        .byte   $00
         .byte   $00,$00,$00,$82,$01,$00,$00,$D0
         .byte   $24,$00,$00,$D0,$10,$F0,$01,$E0
         .byte   $08,$E8,$02,$EE,$02,$00,$00,$F1
@@ -249,6 +247,7 @@ L4183:  .byte   $00
         .byte   $05,$82,$05,$82,$05,$82,$05,$EA
         .byte   $04,$82,$03,$82,$05,$8C,$03,$8C
         .byte   $02,$8A,$10,$82,$02
+
 L4221:  .byte   $00,$02,$04,$06,$08,$0A,$0C,$0E
         .byte   $10,$12,$14,$16,$18,$1A,$1C,$1E
         .byte   $20,$22,$24,$26,$28,$2A,$2C,$2E
@@ -561,6 +560,8 @@ hires_table_hi:
         .byte   $03,$07,$0B,$0F,$13,$17,$1B,$1F
         .byte   $03,$07,$0B,$0F,$13,$17,$1B,$1F
 
+        ;; TODO: This is code!
+L4BA1:
         .byte   $B1,$84,$51,$8E,$45,$F6,$25,$89
         .byte   $51,$84,$90,$04,$B1,$8E,$45,$F6
         .byte   $25,$E8,$05,$E9,$91,$84,$88,$D0
@@ -636,7 +637,9 @@ L4D24:  .byte   $A5,$84,$18,$65,$D6,$85,$84,$90
         .byte   $89,$A4,$91,$4C
 L4D68:  .byte   $A1
 L4D69:  .byte   $4B,$FB,$4C
-L4D6C:  .byte   $00,$00,$00,$00,$00,$00,$00
+
+L4D6C:  .byte   $00,$00
+        .byte   $00,$00,$00,$00,$00
 L4D73:  .byte   $01,$03,$07,$0F,$1F,$3F,$7F
 L4D7A:  .byte   $7F,$7F,$7F,$7F,$7F,$7F,$7F
 L4D81:  .byte   $7F,$7E,$7C,$78,$70,$60,$40,$00
@@ -650,7 +653,8 @@ L4DA0:  .byte   $4B,$E2,$4B,$08,$4C,$30,$4C,$BA
 
 ;;; ==================================================
 
-SET_FILL_MODE_IMPL:  lda     $F0
+SET_FILL_MODE_IMPL:
+        lda     $F0
         ldx     #$00
         cmp     #$04
         bcc     L4DB9
