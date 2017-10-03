@@ -729,7 +729,7 @@ L4CBF           := * + 1
 L4CC0           := * + 2
         jmp     L4D38
 
-        stx     L0082
+L4CC1:  stx     L0082
         ldx     #$00
         ldy     #$00
 L4CC7:
@@ -764,6 +764,7 @@ L4CFC           := * + 1
 L4CFD           := * + 2
         jmp     L4D11
 
+L4CFE:
         txa
         ror     a
         ror     a
@@ -1014,7 +1015,7 @@ L4EA9:  lda     $86
         jsr     L4E34
         lda     L4F31
         sta     L4CA1
-        lda     L4F32
+        lda     L4F31+1
         sta     L4CA2
         lda     #$00
         ldx     #$00
@@ -1022,17 +1023,17 @@ L4EA9:  lda     $86
 L4EE9:  pha
         lda     L4F37,x
         sta     L4D22
-        lda     L4F38,x
+        lda     L4F37+1,x
         sta     L4D23
         pla
         tax
         lda     L4F33,x
         sta     L4CFC
-        lda     L4F34,x
+        lda     L4F33+1,x
         sta     L4CFD
         lda     L4F3B,y
         sta     L4CBF
-        lda     L4F3C,y
+        lda     L4F3B+1,y
         sta     L4CC0
         rts
 
@@ -1056,20 +1057,11 @@ L4F25:  sta     L0088
 L4F2E:  sta     $89
         rts
 
-L4F31:
-L4F32           := * + 1
-L4F33           := * + 2
-        ldx     $FE4C,y
-L4F34:  jmp     L4D11
+L4F31:  .addr   L4CBE
+L4F33:  .addr   L4CFE,L4D11
+L4F37:  .addr   L4D24,L4D38
+L4F3B:  .addr   L4D24,L4CC1
 
-L4F37:
-L4F38           := * + 1
-        bit     $4D
-        sec
-L4F3B           := * + 1
-L4F3C           := * + 2
-        eor     L4D24
-        cmp     ($4C,x)
 L4F3F:  ldx     $8C
         ldy     $90
         bmi     L4F48
@@ -1219,7 +1211,8 @@ L502F:  lda     $EF
         bcc     FILL_RECT_IMPL
         inc     $99
         ;; Fall through...
-FILL_RECT_IMPL:  jsr     L514C
+FILL_RECT_IMPL:
+        jsr     L514C
 L5043:  jsr     L50A9
         bcc     L5015
         jsr     L4DBC
@@ -1228,37 +1221,39 @@ L5043:  jsr     L50A9
 
 ;;; ==================================================
 
-TEST_BOX_IMPL:  jsr     L514C
+.proc TEST_BOX_IMPL
+        jsr     L514C
         lda     $EA
         ldx     $EB
         cpx     $93
-        bmi     L508D
-        bne     L5062
+        bmi     fail
+        bne     :+
         cmp     $92
-        bcc     L508D
-L5062:  cpx     $97
-        bmi     L506E
-        bne     L508D
+        bcc     fail
+:       cpx     $97
+        bmi     :+
+        bne     fail
         cmp     $96
-        bcc     L506E
-        bne     L508D
-L506E:  lda     $EC
+        bcc     :+
+        bne     fail
+:       lda     $EC
         ldx     $ED
         cpx     $95
-        bmi     L508D
-        bne     L507C
+        bmi     fail
+        bne     :+
         cmp     $94
-        bcc     L508D
-L507C:  cpx     $99
-        bmi     L5088
-        bne     L508D
+        bcc     fail
+:       cpx     $99
+        bmi     :+
+        bne     fail
         cmp     $98
-        bcc     L5088
-        bne     L508D
-L5088:  lda     #$80
+        bcc     :+
+        bne     fail
+:       lda     #$80            ; success!
         jmp     L40B1
 
-L508D:  rts
+fail:   rts
+.endproc
 
 ;;; ==================================================
 
