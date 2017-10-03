@@ -138,94 +138,94 @@ L40CA:  lda     $D0,y
 
 L40D3:  .byte   0
 L40D4:  dec     L40D3
-        jmp     L625A
+        jmp     HIDE_CURSOR_IMPL
 
 L40DA:  bit     L40D3
         bpl     L40BC
         inc     L40D3
-        jmp     L6233
+        jmp     SHOW_CURSOR_IMPL
 
         ;; Jump table for A2D entry point calls
 a2d_jump_table:
-        .addr   jt_rts          ; $00
-        .addr   L5E51           ; $01
-        .addr   L5E7B           ; $02
-        .addr   L5EC4           ; $03 QUERY_SCREEN
-        .addr   L5E9C           ; $04 SET_STATE
-        .addr   L5EB4           ; $05
-        .addr   L508E           ; $06 SET_BOX
-        .addr   L4DAF           ; $07 SET_FILL_MODE
-        .addr   L4F8F           ; $08 SET_PATTERN
-        .addr   jt_rts          ; $09
-        .addr   jt_rts          ; $0A SET_THICKNESS  ???
-        .addr   L586A           ; $0B
-        .addr   jt_rts          ; $0C SET_TEXT_MASK  ???
-        .addr   L5742           ; $0D
-        .addr   jt_rts          ; $0E SET_POS        ???
-        .addr   L5763           ; $0F DRAW_LINE
-        .addr   L5776           ; $10
-        .addr   L5040           ; $11 FILL_RECT
-        .addr   L4FE5           ; $12 DRAW_RECT
-        .addr   L5051           ; $13 TEST_BOX
-        .addr   L516A           ; $14 DRAW_BITMAP
-        .addr   L537E           ; $15
-        .addr   L56D6           ; $16
-        .addr   L537A           ; $17
-        .addr   L58DC           ; $18 MEASURE_TEXT
-        .addr   L5938           ; $19 DRAW_TEXT
-        .addr   L5ECF           ; $1A CONFIGURE_ZP_USE
-        .addr   L5EDE           ; $1B
-        .addr   L5F0A           ; $1C
-        .addr   L6341           ; $1D
-        .addr   L64A5           ; $1E
-        .addr   L64D2           ; $1F
-        .addr   L65B3           ; $20
-        .addr   L8427           ; $21
-        .addr   L7D61           ; $22
-        .addr   L6747           ; $23
-        .addr   L607B           ; $24 SET_CURSOR
-        .addr   L6233           ; $25 SHOW_CURSOR
-        .addr   L625A           ; $26 HIDE_CURSOR
-        .addr   L624E           ; $27
-        .addr   L630A           ; $28
-        .addr   L6663           ; $29
-        .addr   L65D7           ; $2A GET_INPUT
-        .addr   L67D8           ; $2B
-        .addr   L65D4           ; $2C
-        .addr   L660F           ; $2D SET_INPUT
-        .addr   L6814           ; $2E
-        .addr   L6ECD           ; $2F
-        .addr   L6926           ; $30
-        .addr   L6BDB           ; $31
-        .addr   L6B60           ; $32
-        .addr   L6B1D           ; $33
-        .addr   L6BCB           ; $34
-        .addr   L6BA9           ; $35
-        .addr   L6BB5           ; $36
-        .addr   L6F1C           ; $37
-        .addr   L747B           ; $38 CREATE_WINDOW
-        .addr   L7815           ; $39 DESTROY_WINDOW
-        .addr   L7836           ; $3A
-        .addr   L7500           ; $3B
-        .addr   L759C           ; $3C QUERY_STATE
-        .addr   L761F           ; $3D
-        .addr   L7532           ; $3E
-        .addr   L758C           ; $3F
-        .addr   L73F9           ; $40 QUERY_TARGET
-        .addr   L7639           ; $41
-        .addr   L74AC           ; $42
-        .addr   L764A           ; $43 CLOSE_CLICK
-        .addr   L76AC           ; $44 DRAG_WINDOW
-        .addr   L76A8           ; $45 DRAG_RESIZE
-        .addr   L78F9           ; $46 MAP_COORDS
-        .addr   L78E1           ; $47
-        .addr   L7AC1           ; $48 QUERY_CLIENT
-        .addr   L7B75           ; $49 RESIZE_WINDOW
-        .addr   L7BAA           ; $4A DRAG_SCROLL
-        .addr   L7D24           ; $4B UPDATE_SCROLL
-        .addr   L7965           ; $4C
-        .addr   L51B3           ; $4D
-        .addr   L7D69           ; $4E
+        .addr   jt_rts              ; $00
+        .addr   L5E51               ; $01
+        .addr   L5E7B               ; $02
+        .addr   QUERY_SCREEN_IMPL   ; $03 QUERY_SCREEN
+        .addr   SET_STATE_IMPL      ; $04 SET_STATE
+        .addr   L5EB4               ; $05
+        .addr   SET_BOX_IMPL        ; $06 SET_BOX
+        .addr   SET_FILL_MODE_IMPL  ; $07 SET_FILL_MODE
+        .addr   SET_PATTERN_IMPL    ; $08 SET_PATTERN
+        .addr   jt_rts              ; $09
+        .addr   jt_rts              ; $0A SET_THICKNESS  ???
+        .addr   L586A               ; $0B
+        .addr   jt_rts              ; $0C SET_TEXT_MASK  ???
+        .addr   L5742               ; $0D
+        .addr   jt_rts              ; $0E SET_POS        ???
+        .addr   DRAW_LINE_IMPL      ; $0F DRAW_LINE
+        .addr   L5776               ; $10
+        .addr   FILL_RECT_IMPL      ; $11 FILL_RECT
+        .addr   DRAW_RECT_IMPL      ; $12 DRAW_RECT
+        .addr   TEST_BOX_IMPL       ; $13 TEST_BOX
+        .addr   DRAW_BITMAP_IMPL    ; $14 DRAW_BITMAP
+        .addr   L537E               ; $15
+        .addr   L56D6               ; $16
+        .addr   L537A               ; $17
+        .addr   MEASURE_TEXT_IMPL   ; $18 MEASURE_TEXT
+        .addr   DRAW_TEXT_IMPL      ; $19 DRAW_TEXT
+        .addr   CONFIGURE_ZP_IMPL   ; $1A CONFIGURE_ZP_USE
+        .addr   L5EDE               ; $1B
+        .addr   L5F0A               ; $1C
+        .addr   L6341               ; $1D
+        .addr   L64A5               ; $1E
+        .addr   L64D2               ; $1F
+        .addr   L65B3               ; $20
+        .addr   L8427               ; $21
+        .addr   L7D61               ; $22
+        .addr   L6747               ; $23
+        .addr   SET_CURSOR_IMPL     ; $24 SET_CURSOR
+        .addr   SHOW_CURSOR_IMPL    ; $25 SHOW_CURSOR
+        .addr   HIDE_CURSOR_IMPL    ; $26 HIDE_CURSOR
+        .addr   L624E               ; $27
+        .addr   L630A               ; $28
+        .addr   L6663               ; $29
+        .addr   GET_INPUT_IMPL      ; $2A GET_INPUT
+        .addr   L67D8               ; $2B
+        .addr   L65D4               ; $2C
+        .addr   SET_INPUT_IMPL      ; $2D SET_INPUT
+        .addr   L6814               ; $2E
+        .addr   L6ECD               ; $2F
+        .addr   L6926               ; $30
+        .addr   L6BDB               ; $31
+        .addr   L6B60               ; $32
+        .addr   L6B1D               ; $33
+        .addr   L6BCB               ; $34
+        .addr   L6BA9               ; $35
+        .addr   L6BB5               ; $36
+        .addr   L6F1C               ; $37
+        .addr   CREATE_WINDOW_IMPL  ; $38 CREATE_WINDOW
+        .addr   DESTROY_WINDOW_IMPL ; $39 DESTROY_WINDOW
+        .addr   L7836               ; $3A
+        .addr   L7500               ; $3B
+        .addr   QUERY_STATE_IMPL    ; $3C QUERY_STATE
+        .addr   L761F               ; $3D
+        .addr   L7532               ; $3E
+        .addr   L758C               ; $3F
+        .addr   QUERY_TARGET_IMPL   ; $40 QUERY_TARGET
+        .addr   L7639               ; $41
+        .addr   L74AC               ; $42
+        .addr   CLOSE_CLICK_IMPL    ; $43 CLOSE_CLICK
+        .addr   DRAG_WINDOW_IMPL    ; $44 DRAG_WINDOW
+        .addr   DRAG_RESIZE_IMPL    ; $45 DRAG_RESIZE
+        .addr   MAP_COORDS_IMPL     ; $46 MAP_COORDS
+        .addr   L78E1               ; $47
+        .addr   QUERY_CLIENT_IMPL   ; $48 QUERY_CLIENT
+        .addr   RESIZE_WINDOW_IMPL  ; $49 RESIZE_WINDOW
+        .addr   DRAG_SCROLL_IMPL    ; $4A DRAG_SCROLL
+        .addr   UPDATE_SCROLL_IMPL  ; $4B UPDATE_SCROLL
+        .addr   L7965               ; $4C
+        .addr   L51B3               ; $4D
+        .addr   L7D69               ; $4E
 
         ;; Entry point param lengths
 L4183:  .byte   $00
@@ -648,7 +648,9 @@ L4D9F:  .byte   $BA
 L4DA0:  .byte   $4B,$E2,$4B,$08,$4C,$30,$4C,$BA
         .byte   $4B,$E2,$4B,$08,$4C,$30,$4C
 
-L4DAF:  lda     $F0
+;;; ==================================================
+
+SET_FILL_MODE_IMPL:  lda     $F0
         ldx     #$00
         cmp     #$04
         bcc     L4DB9
@@ -916,7 +918,9 @@ L4F7D:  ror     a
         dey
 L4F8E:  rts
 
-L4F8F:  lda     #$00
+;;; ==================================================
+
+SET_PATTERN_IMPL:  lda     #$00
         sta     $8E
         lda     $F9
         and     #$07
@@ -967,8 +971,10 @@ L4FDD:  dex
         sta     $C054
         rts
 
+;;; ==================================================
+
 L4FE4:  .byte   0
-L4FE5:
+DRAW_RECT_IMPL:
         ldy     #$03
 L4FE7:  ldx     #$07
 L4FE9:  lda     $9F,x
@@ -1013,16 +1019,19 @@ L502F:  lda     $EF
         beq     L5015
         adc     $98
         sta     $98
-        bcc     L5040
+        bcc     FILL_RECT_IMPL
         inc     $99
-L5040:  jsr     L514C
+        ;; Fall through...
+FILL_RECT_IMPL:  jsr     L514C
 L5043:  jsr     L50A9
         bcc     L5015
         jsr     L4DBC
         jsr     L4EA9
         jmp     L4CED
 
-L5051:  jsr     L514C
+;;; ==================================================
+
+TEST_BOX_IMPL:  jsr     L514C
         lda     $EA
         ldx     $EB
         cpx     $93
@@ -1054,7 +1063,10 @@ L5088:  lda     #$80
 
 L508D:  rts
 
-L508E:  lda     $D0
+;;; ==================================================
+
+SET_BOX_IMPL:
+        lda     $D0
         sec
         sbc     $D8
         sta     $F7
@@ -1180,10 +1192,12 @@ L514C:  sec
 L5163:  lda     #$81
         jmp     L40B1
 
+;;; ==================================================
+
 L5168:  .byte   0
 L5169:  .byte   0
 
-L516A:
+DRAW_BITMAP_IMPL:
         ldx     #$03
 L516C:  lda     $8A,x
         sta     $9B,x
@@ -1732,7 +1746,7 @@ L55B5:  lda     $A9
         sta     $99
         bit     $BA
         bpl     L55CB
-        jsr     L5051
+        jsr     TEST_BOX_IMPL
         jmp     L55CE
 
 L55CB:  jsr     L5043
@@ -1945,7 +1959,9 @@ L5758:  clc
         sta     $EB
         rts
 
-L5763:
+;;; ==================================================
+
+DRAW_LINE_IMPL:
         ldx     #$02
 L5765:  lda     $A1,x
         clc
@@ -2128,7 +2144,10 @@ L58BC:  .byte   0
 L58CC:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
-L58DC:  jsr     L58E8
+;;; ==================================================
+
+MEASURE_TEXT_IMPL:
+        jsr     L58E8
         ldy     #$03
         sta     ($80),y
         txa
@@ -2186,7 +2205,10 @@ L5933:  sta     $94
         stx     $95
         rts
 
-L5938:  jsr     L5EFA
+;;; ==================================================
+
+DRAW_TEXT_IMPL:
+        jsr     L5EFA
         jsr     L58E8
         sta     $A4
         stx     $A5
@@ -2794,7 +2816,7 @@ L5E5A:  lda     L5F1E,x
         jsr     L5EA0
         lda     #$7F
         sta     $F6
-        jsr     L5040
+        jsr     FILL_RECT_IMPL
         lda     #$00
         sta     $F6
         rts
@@ -2818,7 +2840,9 @@ L5E94:  dex
 
 L5E98:  .byte   $28,$29,$2A,$2B
 
-L5E9C:
+;;; ==================================================
+
+SET_STATE_IMPL:
         lda     $80
         ldx     $81
 L5EA0:  sta     $F4
@@ -2826,9 +2850,9 @@ L5EA0:  sta     $F4
 L5EA4:  lda     $F3
         beq     L5EAB
         jsr     L5872
-L5EAB:  jsr     L508E
-        jsr     L4F8F
-        jmp     L4DAF
+L5EAB:  jsr     SET_BOX_IMPL
+        jsr     SET_PATTERN_IMPL
+        jmp     SET_FILL_MODE_IMPL
 
 L5EB4:
         jsr     L40C8
@@ -2841,7 +2865,9 @@ L5EBD:  sta     ($80),y
         sta     ($80),y
         rts
 
-L5EC4:
+;;; ==================================================
+
+QUERY_SCREEN_IMPL:
         ldy     #$23
 L5EC6:  lda     L5F1E,y
         sta     ($80),y
@@ -2849,7 +2875,9 @@ L5EC6:  lda     L5F1E,y
         bpl     L5EC6
 L5ECE:  rts
 
-L5ECF:
+;;; ==================================================
+
+CONFIGURE_ZP_IMPL:
         lda     L0082
         cmp     L5F1B
         beq     L5ECE
@@ -2961,7 +2989,10 @@ L6067:  lda     #$FF
         lda     L6066
         sta     $81
 
-L607B:  php
+;;; ==================================================
+
+SET_CURSOR_IMPL:
+        php
         sei
         lda     $80
         ldx     $81
@@ -3181,7 +3212,10 @@ L622E:  bbs7    $C0,L61F1
         plp
         rts
 
-L6233:  php
+;;; ==================================================
+
+SHOW_CURSOR_IMPL:
+        php
         sei
         lda     L5FF3
         beq     L624C
@@ -3204,7 +3238,10 @@ L624E:
         plp
         rts
 
-L625A:  php
+;;; ==================================================
+
+HIDE_CURSOR_IMPL:
+        php
         sei
         jsr     L61C6
         dec     L5FF3
@@ -3492,7 +3529,7 @@ L6539:  .byte   $00
 L653A:  .byte   $00
 L653B:  .byte   $00
 
-L653C:  jsr     L625A
+L653C:  jsr     HIDE_CURSOR_IMPL
 L653F:  lda     $80
         sta     L6539
         lda     $81
@@ -3502,7 +3539,7 @@ L653F:  lda     $80
         lsr     L5F1B
         rts
 
-L6553:  jsr     L6233
+L6553:  jsr     SHOW_CURSOR_IMPL
 L6556:  asl     L5F1B
         lda     L6539
         sta     $80
@@ -3573,7 +3610,10 @@ L65D3:  .byte   $5F
 L65D4:
         clc
         bcc     L65D8
-L65D7:
+
+;;; ==================================================
+
+GET_INPUT_IMPL:
         sec
 L65D8:  php
         bit     L6339
@@ -3605,7 +3645,9 @@ L6607:  plp
         cli
 L660E:  rts
 
-L660F:
+;;; ==================================================
+
+SET_INPUT_IMPL:
         php
         sei
         lda     L0082
@@ -3957,13 +3999,13 @@ L68F0:  sta     $EA
         rts
 
 L68F5:  sta     $F0
-        jmp     L4DAF
+        jmp     SET_FILL_MODE_IMPL
 
 L68FA:  jsr     L6906
         jmp     L58E8
 
 L6900:  jsr     L6906
-        jmp     L5938
+        jmp     DRAW_TEXT_IMPL
 
 L6906:  sta     L0082
         stx     L0083
@@ -4359,7 +4401,7 @@ L6C2C:  lda     L6BDA
         jsr     L6D23
         jmp     L6C40
 
-L6C37:  jsr     L625A
+L6C37:  jsr     HIDE_CURSOR_IMPL
         jsr     L657E
         jsr     L6CF4
 L6C40:  jsr     L6556
@@ -4473,7 +4515,7 @@ L6D0E:  lda     ($8E),y
         cpx     L0083
         bcc     L6CF7
         beq     L6CF7
-        jmp     L6233
+        jmp     SHOW_CURSOR_IMPL
 
 L6D22:  rts
 
@@ -4485,7 +4527,7 @@ L6D27:  lda     L6BD9
         php
         sta     L00C7
         jsr     L6A94
-        jsr     L625A
+        jsr     HIDE_CURSOR_IMPL
         jsr     L6B35
         plp
         bcc     L6CF4
@@ -4587,7 +4629,7 @@ L6E18:  ldx     $A9
         beq     L6E22
         jmp     L6D8A
 
-L6E22:  jmp     L6233
+L6E22:  jmp     SHOW_CURSOR_IMPL
 
 L6E25:  ldx     $A9
         ldy     L6848,x
@@ -4668,11 +4710,11 @@ L6EAA:  ldx     L6BDA
         sty     fill_rect_params4::top
         ldy     L6847,x
         sty     fill_rect_params4::bottom
-        jsr     L625A
+        jsr     HIDE_CURSOR_IMPL
         lda     #$02
         jsr     L68F5
         A2D_CALL A2D_FILL_RECT, fill_rect_params4
-        jmp     L6233
+        jmp     SHOW_CURSOR_IMPL
 
 L6ECD:
         ldx     #$03
@@ -5064,7 +5106,7 @@ L723E:  sta     $96
         sta     $98
         lda     $CE
         sta     $99
-        jsr     L5040
+        jsr     FILL_RECT_IMPL
 L7255:  lda     $AC
         and     #$01
         bne     L72C9
@@ -5105,7 +5147,7 @@ L7280:  tya
         sta     $96
         bcs     L72A0
         dec     $97
-L72A0:  jsr     L5040
+L72A0:  jsr     FILL_RECT_IMPL
         lda     $CB
         clc
         adc     #$0A
@@ -5121,7 +5163,7 @@ L72A0:  jsr     L5040
         lda     $CC
         sbc     #$00
         sta     $97
-        jsr     L5040
+        jsr     FILL_RECT_IMPL
         A2D_CALL A2D_SET_PATTERN, white_pattern
 L72C9:  jsr     L703E
         bit     $B0
@@ -5274,7 +5316,9 @@ L73F0:  sta     $EC
         ldx     L0083
         rts
 
-L73F9:
+;;; ==================================================
+
+QUERY_TARGET_IMPL:
         jsr     L653F
         A2D_CALL A2D_TEST_BOX, test_box_params
         beq     L7416
@@ -5334,8 +5378,10 @@ L7472:  ldx     $AB
 L7476:  lda     #$02
         bne     L7472
 
+;;; ==================================================
+
 L747A:  .byte   0
-L747B:
+CREATE_WINDOW_IMPL:
         lda     $80
         sta     $A9
         lda     $81
@@ -5455,14 +5501,16 @@ L7585:  lda     #$A3
 
 L758A:  .byte   $0E
 L758B:  .byte   $75
-L758C:  jsr     L6233
+L758C:  jsr     SHOW_CURSOR_IMPL
         lda     L750C
         ldx     L750D
         sta     $F4
         stx     $F5
         jmp     L6567
 
-L759C:
+;;; ==================================================
+
+QUERY_STATE_IMPL:
         jsr     L40C8
         jsr     L7074
         lda     L0083
@@ -5558,8 +5606,10 @@ L7644:  ldy     #$00
         sta     ($80),y
         rts
 
+;;; ==================================================
+
 L7649:  .byte   0
-L764A:
+CLOSE_CLICK_IMPL:
         jsr     L7013
         beq     L7697
         jsr     L7157
@@ -5569,9 +5619,9 @@ L764A:
 L765A:  sta     L7649
         lda     #$02
         jsr     L68F5
-        jsr     L625A
+        jsr     HIDE_CURSOR_IMPL
         A2D_CALL A2D_FILL_RECT, L00C7
-        jsr     L6233
+        jsr     SHOW_CURSOR_IMPL
 L766E:  jsr     L691B
         cmp     #$02
         beq     L768B
@@ -5602,11 +5652,15 @@ L76A3:  .byte   $00
 L76A4:  .byte   $00,$00,$00
 L76A7:  .byte   $00
 
-L76A8:
+;;; ==================================================
+
+DRAG_RESIZE_IMPL:
         lda     #$80
         bmi     L76AE
 
-L76AC:
+;;; ==================================================
+
+DRAG_WINDOW_IMPL:
         lda     #$00
 L76AE:  sta     L76A7
         jsr     L7ECD
@@ -5631,7 +5685,7 @@ L76E2:  jsr     L703E
         jsr     L7749
         jsr     L70B7
         jsr     L707F
-        jsr     L6233
+        jsr     SHOW_CURSOR_IMPL
 L76F1:  jsr     L691B
         cmp     #$02
         bne     L773B
@@ -5655,7 +5709,7 @@ L7716:  lda     $A3,y
         iny
         cpy     #$24
         bne     L7716
-        jsr     L625A
+        jsr     HIDE_CURSOR_IMPL
         lda     $AB
         jsr     L7872
         jsr     L653C
@@ -5668,7 +5722,7 @@ L7733:  jsr     L6553
 
 L773B:  jsr     L77E0
         beq     L76F1
-        jsr     L625A
+        jsr     HIDE_CURSOR_IMPL
         jsr     L707F
         jmp     L76E2
 
@@ -5777,7 +5831,9 @@ L77F4:  sta     L769F,x
         lda     set_input_params_unk
 L7814:  rts
 
-L7815:
+;;; ==================================================
+
+DESTROY_WINDOW_IMPL:
         jsr     L7074
         jsr     L653C
         jsr     L784C
@@ -5889,7 +5945,10 @@ L78E6:  lda     L0083,x
         dex
         bpl     L78E6
         bmi     L790F
-L78F9:
+
+;;; ==================================================
+
+MAP_COORDS_IMPL:
         jsr     L7074
         ldx     #$02
 L78FE:  lda     L0083,x
@@ -6131,7 +6190,9 @@ L7AA4:  pha
         sta     $CC,x
         jmp     L70B2
 
-L7AC1:
+;;; ==================================================
+
+QUERY_CLIENT_IMPL:
         jsr     L653F
         jsr     L7013
         bne     L7ACE
@@ -6218,7 +6279,9 @@ L7B64:  jsr     L708D
 L7B70:  lda     #$03
 L7B72:  jmp     L7408
 
-L7B75:
+;;; ==================================================
+
+RESIZE_WINDOW_IMPL:
         lda     L0082
         cmp     #$01
         bne     L7B81
@@ -6247,7 +6310,9 @@ L7BA2:  lda     L0083
         sta     $AB,y
         rts
 
-L7BAA:
+;;; ==================================================
+
+DRAG_SCROLL_IMPL:
         lda     L0082
         cmp     #$01
         bne     L7BB6
@@ -6281,15 +6346,15 @@ L7BE0:  jsr     L7A73
         lda     #$02
         jsr     L68F5
         A2D_CALL A2D_SET_PATTERN, light_speckles_pattern
-        jsr     L625A
+        jsr     HIDE_CURSOR_IMPL
 L7BF7:  jsr     L707F
-        jsr     L6233
+        jsr     SHOW_CURSOR_IMPL
 L7BFD:  jsr     L691B
         cmp     #$02
         beq     L7C66
         jsr     L77E0
         beq     L7BFD
-        jsr     L625A
+        jsr     HIDE_CURSOR_IMPL
         jsr     L707F
         jsr     L7013
         jsr     L7A73
@@ -6331,7 +6396,7 @@ L7C53:  sta     $C8,x
         sta     $CC,x
         jmp     L7BF7
 
-L7C66:  jsr     L625A
+L7C66:  jsr     HIDE_CURSOR_IMPL
         jsr     L707F
         jsr     L6553
         jsr     L7CBA
@@ -6431,7 +6496,9 @@ L7D1D:  sta     L7CB6
         sty     L7CB7
         rts
 
-L7D24:
+;;; ==================================================
+
+UPDATE_SCROLL_IMPL:
         lda     $8C
         cmp     #$01
         bne     L7D30
@@ -6601,7 +6668,7 @@ L7EAD:  jsr     L7F30
         sta     $80
         lda     L7F2F
         sta     $81
-        jsr     L607B
+        jsr     SET_CURSOR_IMPL
         jsr     L7F3B
         lda     #$00
         sta     L7D74
@@ -6655,7 +6722,7 @@ L7F0F:  jsr     L7F30
         sta     $80
         lda     L6066
         sta     $81
-        jsr     L607B
+        jsr     SET_CURSOR_IMPL
         jmp     L7F3B
 
 L7F2E:  .byte   0
@@ -10103,10 +10170,11 @@ LA49D:  ldy     #$00
 LA4AC:  jsr     L93BC
         ora     LA3AE
         beq     LA4BA
+
         jsr     L93BC
         .byte   $03
-        .byte   $AE
-        .byte   $A3
+        .addr   $A3AE
+
 LA4BA:  bit     LA3B7
         bpl     LA4C5
         lda     LA3AE
@@ -10117,6 +10185,7 @@ LA4C5:  pla
         jmp     LA44D
 
 LA4CB:  .byte   0
+
 LA4CC:  lda     #$80
         sta     LA4CB
         bmi     LA4E2
@@ -10301,7 +10370,8 @@ LA629:  .byte   $00
 LA62A:  .byte   $00
 LA62B:  .byte   $00
 LA62C:  .byte   $00,$00,$00
-set_box_params2:  .byte   $00
+set_box_params2:
+        .byte   $00
 LA630:  .byte   $00
 LA631:  .byte   $00
 LA632:  .byte   $00,$00,$20,$80,$00
