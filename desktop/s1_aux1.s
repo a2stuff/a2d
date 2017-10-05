@@ -10790,40 +10790,39 @@ LA629:  .byte   $00
 LA62A:  .byte   $00
 LA62B:  .byte   $00
 LA62C:  .byte   $00,$00,$00
-set_box_params2:
-        .byte   $00
-LA630:  .byte   $00
-LA631:  .byte   $00
-LA632:  .byte   $00,$00,$20,$80,$00
-LA637:  .byte   $00
-LA638:  .byte   $00
-LA639:  .byte   $00
-LA63A:  .byte   $00
-LA63B:  .byte   $00
-LA63C:  .byte   $00
-LA63D:  .byte   $00
-LA63E:  .byte   $00
+
+.proc set_box_params2
+left:   .word   0
+top:    .word   0
+addr:   .addr   A2D_SCREEN_ADDR
+stride: .word   A2D_SCREEN_STRIDE
+hoff:   .word   0
+voff:   .word   0
+width:  .word   0
+height: .word   0
+.endproc
+
 LA63F:  jsr     LA18A
         lda     L8E07
         sta     LA629
-        sta     LA639
-        sta     LA631
+        sta     set_box_params2::voff
+        sta     set_box_params2::top
         lda     L8E08
         sta     LA62A
-        sta     LA63A
-        sta     LA632
+        sta     set_box_params2::voff+1
+        sta     set_box_params2::top+1
         lda     L8E19
         sta     LA627
-        sta     LA637
+        sta     set_box_params2::hoff
         sta     set_box_params2
         lda     L8E1A
         sta     LA628
-        sta     LA638
-        sta     LA630
+        sta     set_box_params2::hoff+1
+        sta     set_box_params2::left+1
         ldx     #$03
 LA674:  lda     L8E15,x
         sta     LA62B,x
-        sta     LA63B,x
+        sta     set_box_params2::width,x
         dex
         bpl     LA674
         lda     LA62B
@@ -10833,10 +10832,10 @@ LA674:  lda     L8E15,x
         bmi     LA69C
         lda     #$2E
         sta     LA62B
-        sta     LA63B
+        sta     set_box_params2::width
         lda     #$02
         sta     LA62C
-        sta     LA63C
+        sta     set_box_params2::width+1
 LA69C:  A2D_CALL A2D_SET_BOX, set_box_params2
         rts
 
@@ -10877,46 +10876,46 @@ LA6C5:  .byte   $00
 LA6C6:  .byte   $00
 LA6C7:  lda     L9F93
         beq     LA6FA
-        lda     LA63B
+        lda     set_box_params2::width
         clc
         adc     #$01
-        sta     LA637
+        sta     set_box_params2::hoff
         sta     set_box_params2
-        lda     LA63C
+        lda     set_box_params2::width+1
         adc     #$00
-        sta     LA638
-        sta     LA630
+        sta     set_box_params2::hoff+1
+        sta     set_box_params2::left+1
         ldx     #$05
 LA6E5:  lda     LA629,x
-        sta     LA639,x
+        sta     set_box_params2::voff,x
         dex
         bpl     LA6E5
-        lda     LA639
-        sta     LA631
-        lda     LA63A
-        sta     LA632
-LA6FA:  lda     LA637
+        lda     set_box_params2::voff
+        sta     set_box_params2::top
+        lda     set_box_params2::voff+1
+        sta     set_box_params2::top+1
+LA6FA:  lda     set_box_params2::hoff
         sta     LA6B3
         sta     LA6BF
-        lda     LA638
+        lda     set_box_params2::hoff+1
         sta     LA6B4
         sta     LA6C0
-        lda     LA639
+        lda     set_box_params2::voff
         sta     LA6B5
         sta     LA6B9
-        lda     LA63A
+        lda     set_box_params2::voff+1
         sta     LA6B6
         sta     LA6BA
-        lda     LA63B
+        lda     set_box_params2::width
         sta     LA6B7
         sta     LA6BB
-        lda     LA63C
+        lda     set_box_params2::width+1
         sta     LA6B8
         sta     LA6BC
-        lda     LA63D
+        lda     set_box_params2::height
         sta     LA6BD
         sta     LA6C1
-        lda     LA63E
+        lda     set_box_params2::height+1
         sta     LA6BE
         sta     LA6C2
         lda     #$00
@@ -10927,10 +10926,10 @@ LA747:  lda     LA6B0
         lda     #$00
         sta     LA6B0
 LA753:  A2D_CALL A2D_SET_BOX, set_box_params2
-        lda     LA63C
+        lda     set_box_params2::width+1
         cmp     LA62C
         bne     LA76F
-        lda     LA63B
+        lda     set_box_params2::width
         cmp     LA62B
         bcc     LA76F
         lda     #$00
@@ -11056,68 +11055,68 @@ LA846:  jsr     LA382
         lda     LA6C6
         adc     set_state_params::top+1
         sta     LA6C6
-        lda     LA63B
+        lda     set_box_params2::width
         cmp     LA6C3
-        lda     LA63C
+        lda     set_box_params2::width+1
         sbc     LA6C4
         bmi     LA8B7
         lda     LA6C3
         clc
         adc     #$01
-        sta     LA63B
+        sta     set_box_params2::width
         lda     LA6C4
         adc     #$00
-        sta     LA63C
+        sta     set_box_params2::width+1
         jmp     LA8D4
 
 LA8B7:  lda     set_state_params::left
-        cmp     LA637
+        cmp     set_box_params2::hoff
         lda     set_state_params::left+1
-        sbc     LA638
+        sbc     set_box_params2::hoff+1
         bmi     LA8D4
         lda     set_state_params::left
-        sta     LA63B
+        sta     set_box_params2::width
         lda     set_state_params::left+1
-        sta     LA63C
+        sta     set_box_params2::width+1
         jmp     LA6FA
 
 LA8D4:  lda     set_state_params::top
-        cmp     LA639
+        cmp     set_box_params2::voff
         lda     set_state_params::top+1
-        sbc     LA63A
+        sbc     set_box_params2::voff+1
         bmi     LA8F6
         lda     set_state_params::top
-        sta     LA63D
+        sta     set_box_params2::height
         lda     set_state_params::top+1
-        sta     LA63E
+        sta     set_box_params2::height+1
         lda     #$01
         sta     L9F93
         jmp     LA6FA
 
 LA8F6:  lda     LA6C5
-        cmp     LA63D
+        cmp     set_box_params2::height
         lda     LA6C6
-        sbc     LA63E
+        sbc     set_box_params2::height+1
         bpl     LA923
         lda     LA6C5
         clc
         adc     #$02
-        sta     LA639
-        sta     LA631
+        sta     set_box_params2::voff
+        sta     set_box_params2::top
         lda     LA6C6
         adc     #$00
-        sta     LA63A
-        sta     LA632
+        sta     set_box_params2::voff+1
+        sta     set_box_params2::top+1
         lda     #$01
         sta     L9F93
         jmp     LA6FA
 
-LA923:  lda     LA63B
-        sta     LA637
+LA923:  lda     set_box_params2::width
+        sta     set_box_params2::hoff
         sta     set_box_params2
-        lda     LA63C
-        sta     LA638
-        sta     LA630
+        lda     set_box_params2::width+1
+        sta     set_box_params2::hoff+1
+        sta     set_box_params2::left+1
         jmp     LA753
 
 LA938:  lda     set_state_params::top
