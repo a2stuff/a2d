@@ -10814,7 +10814,7 @@ LA63F:  jsr     LA18A
         lda     L8E19
         sta     LA627
         sta     set_box_params2::hoff
-        sta     set_box_params2
+        sta     set_box_params2::left
         lda     L8E1A
         sta     LA628
         sta     set_box_params2::hoff+1
@@ -10880,7 +10880,7 @@ LA6C7:  lda     L9F93
         clc
         adc     #$01
         sta     set_box_params2::hoff
-        sta     set_box_params2
+        sta     set_box_params2::left
         lda     set_box_params2::width+1
         adc     #$00
         sta     set_box_params2::hoff+1
@@ -11113,7 +11113,7 @@ LA8F6:  lda     LA6C5
 
 LA923:  lda     set_box_params2::width
         sta     set_box_params2::hoff
-        sta     set_box_params2
+        sta     set_box_params2::left
         lda     set_box_params2::width+1
         sta     set_box_params2::hoff+1
         sta     set_box_params2::left+1
