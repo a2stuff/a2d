@@ -6978,22 +6978,8 @@ L7D90:  lda     L7D99,x
         bpl     L7D90
         rts
 
-L7D99:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+L7D99:  .res    128, 0
+
 L7E19:  bit     L5FFF
         bmi     L7E49
         bit     L851C
@@ -7794,7 +7780,7 @@ L844E:  lda     L84AD,y
         bit     L5FFF
         bmi     L845C
         sta     $04F8
-L845C:  lda     L84AE,y
+L845C:  lda     L84AD+1,y
         sta     L5FFB
         bit     L5FFF
         bmi     L846A
@@ -7817,7 +7803,7 @@ L8489:  lda     L84B5,y
         bit     L5FFF
         bmi     L8497
         sta     $04F8
-L8497:  lda     L84B6,y
+L8497:  lda     L84B5+1,y
         sta     L5FFB
         bit     L5FFF
         bmi     L84A5
@@ -7827,10 +7813,8 @@ L84A5:  lda     #$01
         jsr     L6313
 L84AC:  rts
 
-L84AD:  .byte   $2F
-L84AE:  .byte   $02,$17,$01,$8B,$00,$45,$00
-L84B5:  .byte   $BF
-L84B6:  .byte   $00,$5F,$00,$2F,$00,$17,$00
+L84AD:  .word   560-1, 560/2-1, 560/4-1, 560/8-1
+L84B5:  .word   192-1, 192/2-1, 192/4-1, 192/8-1
 
 L84BD:  txa
         and     #$7F
@@ -8170,9 +8154,13 @@ L871B:  lda     L8739,x
 L8737:  rts
 
 L8738:  .byte   $04
-L8739:  .byte   $00,$00,$00,$00,$F4,$01,$10,$00
-        .byte   $F4,$01,$29,$00,$F4,$01,$42,$00
-        .byte   $F4,$01,$5B,$00,$F4,$01,$74,$00
+L8739:  .byte   $00,$00,$00,$00
+        .word   500, 16
+        .word   500, 41
+        .word   500, 66
+        .word   500, 91
+        .word   500, 116
+
         .byte   $B8,$01,$10,$00,$B8,$01,$29,$00
         .byte   $B8,$01,$42,$00,$B8,$01,$5B,$00
         .byte   $B8,$01,$74,$00,$B8,$01,$8D,$00
@@ -8416,7 +8404,7 @@ glyph_bitmaps:
         .byte   $00,$00,$00,$00,$00,$00
 
         ;; Entry point for "DESKTOP"
-        jmp     $93BC
+        jmp     L93BC
 
 L8E03:  .byte   $08,$00
 L8E05:  .byte   $00
@@ -8451,17 +8439,17 @@ L8E21:  .byte   $00
 L8E22:  .byte   $00
 L8E23:  .byte   $00
 L8E24:  .byte   $00
-draw_bitmap_params2:  .byte   $00
-L8E26:  .byte   $00
-L8E27:  .byte   $00
-L8E28:  .byte   $00
-L8E29:  .byte   $00
-L8E2A:  .byte   $00,$00,$00
-L8E2D:  .byte   $00
-L8E2E:  .byte   $00,$00,$00
-L8E31:  .byte   $00
-L8E32:  .byte   $00
-L8E33:  .byte   $00,$00
+
+.proc draw_bitmap_params2
+left:   .word   0
+top:    .word   0
+addr:   .addr   0
+stride: .word   0
+hoff:   .word   0
+voff:   .word   0
+width:  .word   0
+height: .word   0
+.endproc
 
 .proc draw_bitmap_params
 left:   .word   0
@@ -8594,32 +8582,67 @@ element:.byte   0
 id:     .byte   0
 .endproc
 
-query_screen_params:  .byte   $00,$00,$00,$00,$00,$20,$80,$00
-L934D:  .byte   $00,$00,$00,$00,$2F,$02,$BF,$00
-        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-        .byte   $FF,$00,$00,$00,$00,$00,$01,$01
-        .byte   $96,$00,$00,$88
-query_state_params:  .byte   $00,$6C,$93
-set_state_params:  .byte   $00
-L936D:  .byte   $00
-L936E:  .byte   $00
-L936F:  .byte   $00,$00,$00,$00,$00
-L9374:  .byte   $00
-L9375:  .byte   $00
-L9376:  .byte   $00
-L9377:  .byte   $00
-L9378:  .byte   $00
-L9379:  .byte   $00
-L937A:  .byte   $00
-L937B:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+.proc query_screen_params
+left:   .word   0
+top:    .word   0
+addr:   .addr   A2D_SCREEN_ADDR
+stride: .word   A2D_SCREEN_STRIDE
+L934D:
+hoff:   .word   0
+voff:   .word   0
+width:  .word   560-1
+height: .word   192-1
+pattern:.res    8, $FF
+mskand: .byte   A2D_DEFAULT_MSKAND
+mskor:  .byte   A2D_DEFAULT_MSKOR
+        .byte   0,0,0,0         ; ???
+hthick: .byte   1
+vthick: .byte   1
+        .byte   $96,$00         ; ???
+font:   .addr   A2D_DEFAULT_FONT
+.endproc
+
+.proc query_state_params
+id:     .byte   0
+addr:   .addr   set_state_params
+.endproc
+
+.proc set_state_params
+left:   .word   0
+top:    .word   0
+addr:   .addr   0
+stride: .word   0
+hoff:   .word   0
+voff:   .word   0
+width:  .word   0
+height: .word   0
+pattern:.res    8, 0
+mskand: .byte   0
+mskor:  .byte   0
+        .byte   0,0,0,0         ; ???
+hthick: .byte   0
+vthick: .byte   0
+        .byte   0               ; ???
+tmsk:   .byte   0
+font:   .addr   0
+.endproc
+
+        .byte   $00,$00,$00
         .byte   $00,$FF,$80
-set_fill_mode_params:  .byte   $00
-set_fill_mode_params2:  .byte   $01
-set_fill_mode_params3:  .byte   $02
-set_fill_mode_params4:  .byte   $03
-set_fill_mode_params5:  .byte   $04,$05,$06,$07
+
+set_fill_mode_params:
+        .byte   $00
+set_fill_mode_params2:
+        .byte   $01
+set_fill_mode_params3:
+        .byte   $02
+set_fill_mode_params4:
+        .byte   $03
+set_fill_mode_params5:
+        .byte   $04
+
+        .byte   $05,$06,$07
+
 L939E:  .byte   $00
 L939F:  .byte   $00,$19,$94,$54,$94,$C0,$94,$08
         .byte   $95,$A2,$95,$92,$96,$D2,$96,$5B
@@ -8683,10 +8706,12 @@ L9409:  pla
 
 L9413:  .byte   0
 L9414:  .byte   0
-set_pos_params2:  .byte   0
-L9416:  .byte   0
-L9417:  .byte   0
-L9418:  .byte   0
+
+.proc set_pos_params2
+xcoord: .word   0
+ycoord: .word   0
+.endproc
+
         ldy     #$00
         lda     ($06),y
         ldx     L8E95
@@ -9242,7 +9267,7 @@ L98C8:  lda     L9017
         sta     L9832
         A2D_CALL A2D_QUERY_SCREEN, query_screen_params
         ldx     #$07
-L98E3:  lda     L934D,x
+L98E3:  lda     query_screen_params::L934D,x
         sta     L9835,x
         dex
         bpl     L98E3
@@ -10032,13 +10057,13 @@ L9FB6:  lda     ($06),y
         cpy     #$09
         bne     L9FB6
         jsr     LA365
-        lda     L8E29
+        lda     draw_bitmap_params2::addr
         sta     $08
-        lda     L8E2A
+        lda     draw_bitmap_params2::addr+1
         sta     $09
         ldy     #$0B
 L9FCF:  lda     ($08),y
-        sta     L8E29,y
+        sta     draw_bitmap_params2::addr,y
         dey
         bpl     L9FCF
         bit     L9F92
@@ -10055,7 +10080,7 @@ L9FEE:  lda     draw_text_params::length
         sta     measure_text_params::length
         A2D_CALL A2D_MEASURE_TEXT, measure_text_params
         lda     measure_text_params::width
-        cmp     L8E31
+        cmp     draw_bitmap_params2::width
         bcs     LA010
         inc     draw_text_params::length
         ldx     draw_text_params::length
@@ -10064,42 +10089,42 @@ L9FEE:  lda     draw_text_params::length
         jmp     L9FEE
 
 LA010:  lsr     a
-        sta     L9416
-        lda     L8E31
+        sta     set_pos_params2::xcoord+1
+        lda     draw_bitmap_params2::width
         lsr     a
         sta     set_pos_params2
-        lda     L9416
+        lda     set_pos_params2::xcoord+1
         sec
-        sbc     set_pos_params2
-        sta     set_pos_params2
-        lda     draw_bitmap_params2
+        sbc     set_pos_params2::xcoord
+        sta     set_pos_params2::xcoord
+        lda     draw_bitmap_params2::left
         sec
-        sbc     set_pos_params2
-        sta     set_pos_params2
-        lda     L8E26
+        sbc     set_pos_params2::xcoord
+        sta     set_pos_params2::xcoord
+        lda     draw_bitmap_params2::left+1
         sbc     #$00
-        sta     L9416
-        lda     L8E27
+        sta     set_pos_params2::xcoord+1
+        lda     draw_bitmap_params2::top
         clc
-        adc     L8E33
-        sta     L9417
-        lda     L8E28
+        adc     draw_bitmap_params2::height
+        sta     set_pos_params2::ycoord
+        lda     draw_bitmap_params2::top+1
         adc     #$00
-        sta     L9418
-        lda     L9417
+        sta     set_pos_params2::ycoord+1
+        lda     set_pos_params2::ycoord
         clc
         adc     #$01
-        sta     L9417
-        lda     L9418
+        sta     set_pos_params2::ycoord
+        lda     set_pos_params2::ycoord+1
         adc     #$00
-        sta     L9418
-        lda     L9417
+        sta     set_pos_params2::ycoord+1
+        lda     set_pos_params2::ycoord
         clc
         adc     glyph_height
-        sta     L9417
-        lda     L9418
+        sta     set_pos_params2::ycoord
+        lda     set_pos_params2::ycoord+1
         adc     #$00
-        sta     L9418
+        sta     set_pos_params2::ycoord+1
         ldx     #$03
 LA06E:  lda     set_pos_params2,x
         sta     L9F94,x
@@ -10177,19 +10202,19 @@ LA149:  dey
         rts
 
 LA14D:  ldx     #$00
-LA14F:  lda     draw_bitmap_params2,x
+LA14F:  lda     draw_bitmap_params2::left,x
         clc
-        adc     L8E2D,x
+        adc     draw_bitmap_params2::hoff,x
         sta     fill_rect_params6,x
-        lda     L8E26,x
-        adc     L8E2E,x
+        lda     draw_bitmap_params2::left+1,x
+        adc     draw_bitmap_params2::hoff+1,x
         sta     L8E46,x
-        lda     draw_bitmap_params2,x
+        lda     draw_bitmap_params2::left,x
         clc
-        adc     L8E31,x
+        adc     draw_bitmap_params2::width,x
         sta     L8E49,x
-        lda     L8E26,x
-        adc     L8E32,x
+        lda     draw_bitmap_params2::left+1,x
+        adc     draw_bitmap_params2::width+1,x
         sta     L8E4A,x
         inx
         inx
@@ -10818,9 +10843,13 @@ LA69C:  A2D_CALL A2D_SET_BOX, set_box_params2
 LA6A3:  lda     #$00
         jmp     LA6C7
 
-query_target_params:  .byte   $00,$00,$00,$00
-LA6AC:  .byte   $00
-LA6AD:  .byte   $00
+.proc query_target_params
+queryx: .word   0
+queryy: .word   0
+element:.byte   0
+id:     .byte   0
+.endproc
+
 LA6AE:  .byte   $00
 LA6AF:  .byte   $00
 LA6B0:  .byte   $00
@@ -10925,13 +10954,13 @@ LA77D:  lda     LA6B3,x
         bne     LA77D
         inc     LA6B0
         A2D_CALL A2D_QUERY_TARGET, query_target_params
-        lda     LA6AC
+        lda     query_target_params::element
         beq     LA747
-        lda     LA6AD
+        lda     query_target_params::id
         sta     query_state_params
         A2D_CALL A2D_QUERY_STATE, query_state_params
         jsr     LA365
-        A2D_CALL $3B, LA6AD
+        A2D_CALL $3B, query_target_params::id
         lda     LA6AE
         sta     $06
         lda     LA6AF
@@ -10954,78 +10983,78 @@ LA7C8:  ldy     #$04
         lsr     a
         ora     LA6B1
         sta     LA6B1
-        lda     set_state_params
+        lda     set_state_params::left
         sec
-        sbc     #$02
-        sta     set_state_params
-        lda     L936D
-        sbc     #$00
-        sta     L936D
-        lda     L9374
+        sbc     #2
+        sta     set_state_params::left
+        lda     set_state_params::left+1
+        sbc     #0
+        sta     set_state_params::left+1
+        lda     set_state_params::hoff
         sec
-        sbc     #$02
-        sta     L9374
-        lda     L9375
-        sbc     #$00
-        sta     L9375
+        sbc     #2
+        sta     set_state_params::hoff
+        lda     set_state_params::hoff+1
+        sbc     #0
+        sta     set_state_params::hoff+1
         bit     LA6B2
         bmi     LA820
-        lda     L936E
+        lda     set_state_params::top
         sec
         sbc     #$0E
-        sta     L936E
+        sta     set_state_params::top
         bcs     LA812
-        dec     L936F
-LA812:  lda     L9376
+        dec     set_state_params::top+1
+LA812:  lda     set_state_params::voff
         sec
         sbc     #$0E
-        sta     L9376
+        sta     set_state_params::voff
         bcs     LA820
-        dec     L9377
+        dec     set_state_params::voff+1
 LA820:  bit     LA6B1
         bpl     LA833
-        lda     L937A
+        lda     set_state_params::height
         clc
         adc     #$0C
-        sta     L937A
+        sta     set_state_params::height
         bcc     LA833
-        inc     L937B
+        inc     set_state_params::height+1
 LA833:  bit     LA6B1
         bvc     LA846
-        lda     L9378
+        lda     set_state_params::width
         clc
         adc     #$14
-        sta     L9378
+        sta     set_state_params::width
         bcc     LA846
-        inc     L9379
+        inc     set_state_params::width+1
 LA846:  jsr     LA382
-        lda     L9378
+        lda     set_state_params::width
         sec
-        sbc     L9374
+        sbc     set_state_params::hoff
         sta     LA6C3
-        lda     L9379
-        sbc     L9375
+        lda     set_state_params::width+1
+        sbc     set_state_params::hoff+1
         sta     LA6C4
-        lda     L937A
+        lda     set_state_params::height
         sec
-        sbc     L9376
+        sbc     set_state_params::voff
         sta     LA6C5
-        lda     L937B
-        sbc     L9377
+        lda     set_state_params::height+1
+        sbc     set_state_params::voff+1
         sta     LA6C6
         lda     LA6C3
         clc
-        adc     set_state_params
+        adc     set_state_params::left
         sta     LA6C3
-        lda     L936D
+        lda     set_state_params::left+1
         adc     LA6C4
         sta     LA6C4
         lda     LA6C5
         clc
-        adc     L936E
+        adc     set_state_params::top
         sta     LA6C5
         lda     LA6C6
-        adc     L936F
+        adc     set_state_params::top+1
         sta     LA6C6
         lda     LA63B
         cmp     LA6C3
@@ -11041,25 +11070,25 @@ LA846:  jsr     LA382
         sta     LA63C
         jmp     LA8D4
 
-LA8B7:  lda     set_state_params
+LA8B7:  lda     set_state_params::left
         cmp     LA637
-        lda     L936D
+        lda     set_state_params::left+1
         sbc     LA638
         bmi     LA8D4
-        lda     set_state_params
+        lda     set_state_params::left
         sta     LA63B
-        lda     L936D
+        lda     set_state_params::left+1
         sta     LA63C
         jmp     LA6FA
 
-LA8D4:  lda     L936E
+LA8D4:  lda     set_state_params::top
         cmp     LA639
-        lda     L936F
+        lda     set_state_params::top+1
         sbc     LA63A
         bmi     LA8F6
-        lda     L936E
+        lda     set_state_params::top
         sta     LA63D
-        lda     L936F
+        lda     set_state_params::top+1
         sta     LA63E
         lda     #$01
         sta     L9F93
@@ -11091,20 +11120,20 @@ LA923:  lda     LA63B
         sta     LA630
         jmp     LA753
 
-LA938:  lda     L936E
+LA938:  lda     set_state_params::top
         clc
         adc     #$0F
-        sta     L936E
-        lda     L936F
-        adc     #$00
-        sta     L936F
-        lda     L9376
+        sta     set_state_params::top
+        lda     set_state_params::top+1
+        adc     #0
+        sta     set_state_params::top+1
+        lda     set_state_params::voff
         clc
         adc     #$0F
-        sta     L9376
-        lda     L9377
-        adc     #$00
-        sta     L9377
+        sta     set_state_params::voff
+        lda     set_state_params::voff+1
+        adc     #0
+        sta     set_state_params::voff+1
         A2D_CALL A2D_SET_STATE, set_state_params
         rts
 
