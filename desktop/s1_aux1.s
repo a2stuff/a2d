@@ -16,6 +16,8 @@ LD05E           := $D05E
 LD2D0           := $D2D0
 
 ;; A2D
+        .assert * = $4000, error, "A2D entry point must be at $4000"
+
         lda     $C054
         sta     $C001
         bit     L5F1B
@@ -4977,24 +4979,24 @@ L6E33:  jmp     L68EA
 
 L6E36:  ldx     $A9
         lda     L6847,x
-        sta     L6E8C
-        inc     L6E8C
+        sta     fill_rect_params3_top
+        inc     fill_rect_params3_top
         lda     L6848,x
-        sta     L6E90
+        sta     fill_rect_params3_bottom
         clc
         lda     $BB
         adc     #$05
-        sta     L6E8A
+        sta     fill_rect_params3_left
         lda     $BC
         adc     #$00
-        sta     L6E8B
+        sta     fill_rect_params3_left+1
         sec
         lda     $BD
         sbc     #$05
-        sta     L6E8E
+        sta     fill_rect_params3_right
         lda     $BE
         sbc     #$00
-        sta     L6E8F
+        sta     fill_rect_params3_right+1
         A2D_CALL A2D_SET_PATTERN, light_speckle_pattern
         lda     #$01
         jsr     L68F5
@@ -5014,15 +5016,17 @@ light_speckle_pattern:
         .byte   %10001000
         .byte   %01010101
 
-fill_rect_params3:
-L6E8A:  .byte   0
-L6E8B:  .byte   0
-L6E8C:  .byte   0
-        .byte   0
-L6E8E:  .byte   0
-L6E8F:  .byte   0
-L6E90:  .byte   0
-        .byte   0
+.proc fill_rect_params3
+left:   .word   0
+top:    .word   0
+right:  .word   0
+bottom: .word   0
+.endproc
+        fill_rect_params3_left := fill_rect_params3::left
+        fill_rect_params3_top := fill_rect_params3::top
+        fill_rect_params3_right := fill_rect_params3::right
+        fill_rect_params3_bottom := fill_rect_params3::bottom
+
 L6E92:  sta     L0082
         lda     $BD
         ldx     $BE
@@ -8082,7 +8086,7 @@ L869E:  sta     ($06),y
         sta     ($06),y
         ldx     #$00
         ldy     #$0B
-L86B6:  lda     L877A,x
+L86B6:  lda     online_params_buffer+1,x
         cmp     #$41
         bcc     L86C4
         cmp     #$5F
@@ -8169,14 +8173,15 @@ L8739:  .byte   $00,$00,$00,$00
 
 .proc online_params
 count:  .byte   2
-unit:   .byte   $60
+unit:   .byte   $60             ; Slot 6 Drive 1
 buffer: .addr   online_params_buffer
 .endproc
         online_params_unit := online_params::unit
 
+        ;; Per ProDOS TRM this should be 256 bytes!
 online_params_buffer:
         .byte   $0B
-L877A:  .byte   "GRAPHICS.TK",$00,$00,$00,$00,$00
+        .byte   "GRAPHICS.TK",$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -8404,7 +8409,8 @@ glyph_bitmaps:
         .byte   $00,$00,$00,$00,$00,$00
 
         ;; Entry point for "DESKTOP"
-        jmp     L93BC
+        .assert * = $8E00, error, "DESKTOP entry point must be at $8E00"
+        jmp     DESKTOP_DIRECT
 
 L8E03:  .byte   $08,$00
 L8E05:  .byte   $00
@@ -8464,12 +8470,12 @@ voff:   .word   0
         .byte   $00,$00
 L8E43:  .byte   $00,$00
 
-fill_rect_params6:  .byte   $00
-L8E46:  .byte   $00,$00,$00
-L8E49:  .byte   $00
-L8E4A:  .byte   $00
-L8E4B:  .byte   $00
-L8E4C:  .byte   $00
+.proc fill_rect_params6
+left:   .word   0
+top:    .word   0
+right:  .word   0
+bottom: .word   0
+.endproc
 
 .proc measure_text_params
 addr:   .addr   text_buffer
@@ -8630,6 +8636,8 @@ font:   .addr   0
         .byte   $00,$00,$00
         .byte   $00,$FF,$80
 
+        ;; Is this more of a generic "addr of a 0" "...of a 1" etc?
+
 set_fill_mode_params:
         .byte   $00
 set_fill_mode_params2:
@@ -8651,8 +8659,15 @@ L939F:  .byte   $00,$19,$94,$54,$94,$C0,$94,$08
         .byte   $8F
         .byte   $95
 
+.macro  DESKTOP_DIRECT_CALL    op, addr, label
+        jsr DESKTOP_DIRECT
+        .byte op
+        .addr addr
+.endmacro
+
         ;; DESKTOP entry point (after jump)
-L93BC:  pla
+DESKTOP_DIRECT:
+        pla
         sta     L9413
         clc
         adc     #$03
@@ -8691,9 +8706,9 @@ L93CF:  lda     $06,x
         lda     ($06),y
         sta     $07
         stx     $06
-        .byte   $20
-L9404:  .byte   0
-L9405:  .byte   0
+L9404   := * + 1
+L9405   := * + 2
+        jsr     $0000
         tay
         ldx     #$03
 L9409:  pla
@@ -8925,9 +8940,7 @@ L9625:  lda     L9454
         beq     L9639
         lda     L9017
         sta     L95A5
-        jsr     L93BC
-        .byte   $0B
-        lda     $95
+        DESKTOP_DIRECT_CALL $B, $95A5
         jmp     L9625
 
 L9639:  ldx     #$7E
@@ -8967,9 +8980,7 @@ L967A:  lda     L95A6,x
         rts
 
 L9681:  sta     L95A5
-        jsr     L93BC
-        .byte   $02
-        lda     $95
+        DESKTOP_DIRECT_CALL $2, $95A5
         pla
         tax
         inx
@@ -9002,11 +9013,8 @@ L969D:  ldx     L9696
         ldy     #$00
         cmp     ($06),y
         bne     L969D
-        jsr     L93BC
-        tsb     $95
-        stx     $4C,y
-        .byte   $9D
-        .byte   $96
+        DESKTOP_DIRECT_CALL $4, $9695
+        jmp     L969D
 L96CF:  lda     #$00
         rts
 
@@ -9197,6 +9205,7 @@ L9832:  .byte   $00
 L9833:  .byte   $00
 L9834:  .byte   $00
 L9835:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+
 L983D:  lda     #$00
         sta     L9830
         sta     L9833
@@ -9284,8 +9293,7 @@ L98F2:  lda     L9016,x
         ldx     #$80
         stx     L9833
 L9909:  sta     L9834
-        jsr     L93BC
-        ora     L9834
+        DESKTOP_DIRECT_CALL $D, $9834
         beq     L9954
         jsr     LA18A
         lda     L9C74
@@ -9430,18 +9438,14 @@ L9A33:  lda     query_target_params2,x
         beq     L9A84
         lda     L9831
         sta     query_target_params2::id
-        jsr     L93BC
-        ora     #$3F
-        .byte   $93
+        DESKTOP_DIRECT_CALL $9, $933F
         lda     query_target_params2::element
         cmp     L9830
         beq     L9A84
         A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
         A2D_CALL A2D_SET_FILL_MODE, set_fill_mode_params3
         A2D_CALL $16, L9096
-        jsr     L93BC
-        .byte   $0B
-        bmi     $9A05           ; ???
+        DESKTOP_DIRECT_CALL $B, $9830
         A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
         A2D_CALL A2D_SET_FILL_MODE, set_fill_mode_params3
         A2D_CALL $16, L9096
@@ -9575,9 +9579,7 @@ L9B9C:  A2D_CALL $16, L9096
 L9BA5:  A2D_CALL $16, L9096
         lda     L9830
         beq     L9BB9
-        jsr     L93BC
-        .byte   $0B
-        bmi     L9B4E
+        DESKTOP_DIRECT_CALL $B, $9830
         jmp     L9C63
 
 L9BB9:  A2D_CALL A2D_QUERY_TARGET, query_target_params2
@@ -9877,9 +9879,7 @@ L9E1D:  A2D_CALL A2D_QUERY_TARGET, query_target_params2
         lda     query_target_params2::element
         bne     L9E2B
         sta     query_target_params2::id
-L9E2B:  jsr     L93BC
-        ora     #$3F
-        .byte   $93
+L9E2B:  DESKTOP_DIRECT_CALL $9, $933F
         lda     query_target_params2::element
         bne     L9E39
         jmp     L9E97
@@ -9911,9 +9911,7 @@ L9E6A:  sta     L9830
         A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
         A2D_CALL A2D_SET_FILL_MODE, set_fill_mode_params3
         A2D_CALL $16, L9096
-        jsr     L93BC
-        .byte   $02
-        bmi     L9E1D
+        DESKTOP_DIRECT_CALL $2, $9830
         A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
         A2D_CALL A2D_SET_FILL_MODE, set_fill_mode_params3
         A2D_CALL $16, L9096
@@ -9956,10 +9954,8 @@ L9ECB:  ldx     L9016
 L9EEA:  ldy     #$00
         lda     ($06),y
         sta     L9EC2
-        jsr     L93BC
-        .byte   $03
-        .byte   $C2
-        stz     a:$A9,x
+        DESKTOP_DIRECT_CALL $3, $9EC2
+        lda     #0
         rts
 
         rts
@@ -10072,7 +10068,7 @@ L9FCF:  lda     ($08),y
 L9FDF:  jsr     LA382
         ldy     #$09
 L9FE4:  lda     ($06),y
-        sta     L8E4B,y
+        sta     fill_rect_params6::bottom,y
         iny
         cpy     #$1D
         bne     L9FE4
@@ -10141,7 +10137,7 @@ LA085:  jsr     LA6A3
         A2D_CALL A2D_SET_BOX, query_screen_params
         rts
 
-LA097:  A2D_CALL A2D_HIDE_CURSOR, $93BC ; These params should be ignored - bogus?
+LA097:  A2D_CALL A2D_HIDE_CURSOR, DESKTOP_DIRECT ; These params should be ignored - bogus?
         A2D_CALL A2D_SET_FILL_MODE, set_fill_mode_params5
         bit     L9F92
         bpl     LA0C2
@@ -10208,24 +10204,24 @@ LA14F:  lda     draw_bitmap_params2::left,x
         sta     fill_rect_params6,x
         lda     draw_bitmap_params2::left+1,x
         adc     draw_bitmap_params2::hoff+1,x
-        sta     L8E46,x
+        sta     fill_rect_params6::left+1,x
         lda     draw_bitmap_params2::left,x
         clc
         adc     draw_bitmap_params2::width,x
-        sta     L8E49,x
+        sta     fill_rect_params6::right,x
         lda     draw_bitmap_params2::left+1,x
         adc     draw_bitmap_params2::width+1,x
-        sta     L8E4A,x
+        sta     fill_rect_params6::right+1,x
         inx
         inx
         cpx     #$04
         bne     LA14F
-        lda     L8E4B
+        lda     fill_rect_params6::bottom
         sec
         sbc     #$01
-        sta     L8E4B
+        sta     fill_rect_params6::bottom
         bcs     LA189
-        dec     L8E4C
+        dec     fill_rect_params6::bottom+1
 LA189:  rts
 
 LA18A:  jsr     LA365
@@ -10372,9 +10368,7 @@ LA2B5:  bmi     LA2AA
         ldy     #$00
         lda     ($06),y
         sta     LA2A9
-        jsr     L93BC
-        .byte   $03
-        lda     #$A2
+        DESKTOP_DIRECT_CALL $3, $A2A9
 LA2DD:  pla
         tax
         dex
@@ -10587,13 +10581,10 @@ LA49D:  ldy     #$00
         bit     LA3B7
         bpl     LA4AC
         jsr     LA4D3
-LA4AC:  jsr     L93BC
-        ora     LA3AE
+LA4AC:  DESKTOP_DIRECT_CALL $D, $A3AE
         beq     LA4BA
 
-        jsr     L93BC
-        .byte   $03
-        .addr   $A3AE
+        DESKTOP_DIRECT_CALL $3, $A3AE
 
 LA4BA:  bit     LA3B7
         bpl     LA4C5
