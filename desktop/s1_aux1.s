@@ -6,6 +6,11 @@
         .include "../inc/prodos.inc"
         .include "../desk.acc/a2d.inc"
 
+DHIRESON  := $C05E
+SET80VID  := $C00D
+RD80STORE := $C018
+RDPAGE2   := $C01C
+SPKR      := $C030
 
 L0000           := $0000
 L0082           := $0082
@@ -18,8 +23,8 @@ LD2D0           := $D2D0
 ;; A2D
         .assert * = $4000, error, "A2D entry point must be at $4000"
 
-        lda     $C054
-        sta     $C001
+        lda     LOWSCR
+        sta     SET80COL
         bit     L5F1B
         bpl     L4022
         ldx     #$7F
@@ -687,10 +692,10 @@ L4C67:  ldy     $8C
 L4C79:  stx     $81
         ldy     #$00
         ldx     #$00
-L4C7F:  sta     $C055
+L4C7F:  sta     HISCR
         lda     (L0082),y
         and     #$7F
-        sta     $C054
+        sta     LOWSCR
 L4C8A           := * + 1
         sta     $0601,x
         lda     (L0082),y
@@ -737,9 +742,9 @@ L4CC1:  stx     L0082
 L4CC7:
 L4CC8           := * + 1
         lda     $0601,x
-        sta     $C055
+        sta     HISCR
         sta     $0601,y
-        sta     $C054
+        sta     LOWSCR
 L4CD4           := * + 1
         lda     $0602,x
         sta     $0601,y
@@ -817,7 +822,7 @@ L4D38:  lda     hires_table_hi,x
         jsr     L4D54
         jmp     L4C41
 
-L4D54:  sta     $C054,y
+L4D54:  sta     LOWSCR,y
         lda     $92,y
         ora     #$80
         sta     L0088
@@ -1111,7 +1116,8 @@ L4F8E:  rts
 
 ;;; ==================================================
 
-SET_PATTERN_IMPL:  lda     #$00
+SET_PATTERN_IMPL:
+        lda     #$00
         sta     $8E
         lda     $F9
         and     #$07
@@ -1134,13 +1140,13 @@ L4FAA:  dey
 L4FB2:  ldy     #$27
 L4FB4:  pha
         lsr     a
-        sta     $C054
+        sta     LOWSCR
         sta     ($8E),y
         pla
         ror     a
         pha
         lsr     a
-        sta     $C055
+        sta     HISCR
         sta     ($8E),y
         pla
         ror     a
@@ -1159,12 +1165,13 @@ L4FB4:  pha
 L4FDB:  sty     $8F
 L4FDD:  dex
         bpl     L4FA3
-        sta     $C054
+        sta     LOWSCR
         rts
 
 ;;; ==================================================
 
 L4FE4:  .byte   0
+
 DRAW_RECT_IMPL:
         ldy     #$03
 L4FE7:  ldx     #$07
@@ -1213,6 +1220,9 @@ L502F:  lda     $EF
         bcc     FILL_RECT_IMPL
         inc     $99
         ;; Fall through...
+
+;;; ==================================================
+
 FILL_RECT_IMPL:
         jsr     L514C
 L5043:  jsr     L50A9
@@ -2481,9 +2491,9 @@ L59A8:  lda     #$00
         eor     #$01
         sta     $9C
         tax
-        sta     $C054,x
+        sta     LOWSCR,x
         jsr     L59C3
-        sta     $C054
+        sta     LOWSCR
 L59B9:  jsr     L5EEA
         lda     $A4
         ldx     $A5
@@ -2850,7 +2860,7 @@ L5C84:  bit     $D6
         eor     #$01
         tax
         sta     $9C
-        sta     $C054,x
+        sta     LOWSCR,x
         beq     L5C96
 L5C94:  inc     $A0
 L5C96:  ldx     #$0F
@@ -3036,8 +3046,8 @@ L5E79:  .addr   $5F42
 
 ;;; ==================================================
 
-L5E7B:  lda     $C05E
-        sta     $C00D
+L5E7B:  lda     DHIRESON
+        sta     SET80VID
         ldx     #$03
 L5E83:  lsr     L0082
         lda     L5E98,x
@@ -3418,7 +3428,7 @@ L6215:  ldy     $85
 L6217:  dey
         cpy     $84
         bne     L61DE
-L621C:  sta     $C054
+L621C:  sta     LOWSCR
         rts
 
 L6220:  lda     L622E
@@ -3681,9 +3691,7 @@ L640D:  ldy     #$03
         bpl     L642A
         bit     L6337
         bpl     L642A
-        jsr     MLI
-        .byte   $40
-        .addr   L6469
+        MLI_CALL ALLOC_INTERRUPT, alloc_interrupt_params
 L642A:  lda     $FBB3
         pha
         lda     #$06
@@ -3708,10 +3716,11 @@ L6454:  jsr     L653F
         A2D_CALL A2D_FILL_RECT, fill_rect_params
         jmp     L6556
 
-L6469:  .byte   $02
-L646A:  .byte   0
-        sed
-        .byte   $66
+.proc alloc_interrupt_params
+count:  .byte   2
+int_num:.byte   0
+code:   .addr   interrupt_handler
+.endproc
 
 .proc dealloc_interrupt_params
 count:  .byte   1
@@ -3760,7 +3769,7 @@ L64A5:
         bpl     L64C7
         bit     L6337
         bpl     L64C7
-        lda     L646A
+        lda     alloc_interrupt_params::int_num
         sta     dealloc_interrupt_params::int_num
         MLI_CALL DEALLOC_INTERRUPT, dealloc_interrupt_params
 L64C7:  lda     L6340
@@ -4021,9 +4030,9 @@ L6663:  bit     L6339
 L666D:  sec
         jsr     L650D
         bcc     L66EA
-        lda     $C062
+        lda     BUTN1
         asl     a
-        lda     $C061
+        lda     BUTN0
         and     #$80
         rol     a
         rol     a
@@ -4040,11 +4049,11 @@ L666D:  sec
         bpl     L66B9
         lda     L7D74
         bne     L66B9
-        lda     $C000
+        lda     KBD
         bpl     L66EA
         and     #$7F
         sta     L665F
-        bit     $C010
+        bit     KBDSTRB
         lda     L6662
         sta     L6660
         lda     #$03
@@ -4075,51 +4084,59 @@ L66DE:  lda     L665E,y
         bne     L66DE
 L66EA:  jmp     L6523
 
-L66ED:  .byte   0
+
+;;; ==================================================
+;;; Interrupt Handler
+
+int_stash_zp:
+        .res    9, 0
+int_stash_rdpage2:
         .byte   0
+int_stash_rd80store:
         .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-L66F6:  .byte   0
-L66F7:  .byte   0
-        cld
-        lda     $C01C
-        sta     L66F6
-        lda     $C018
-        sta     L66F7
-        lda     $C054
-        sta     $C001
-        ldx     #$08
-L670D:  lda     L0082,x
-        sta     L66ED,x
+
+.proc interrupt_handler
+        cld                     ; required for interrupt handlers
+
+        lda     RDPAGE2         ; record softswitch state
+        sta     int_stash_rdpage2
+        lda     RD80STORE
+        sta     int_stash_rd80store
+        lda     LOWSCR
+        sta     SET80COL
+
+        ldx     #8              ; preserve 9 bytes of ZP
+sloop:  lda     L0082,x
+        sta     int_stash_zp,x
         dex
-        bpl     L670D
+        bpl     sloop
+
         ldy     #$13
         jsr     L6313
-        bcs     L6720
+        bcs     :+
         jsr     L666D
         clc
-L6720:  bit     L633A
-        bpl     L6726
-        clc
-L6726:  ldx     #$08
-L6728:  lda     L66ED,x
+:       bit     L633A
+        bpl     :+
+        clc                     ; carry clear if interrupt handled
+
+:       ldx     #8              ; restore ZP
+rloop:  lda     int_stash_zp,x
         sta     L0082,x
         dex
-        bpl     L6728
-        lda     $C054
-        sta     $C000
-        lda     L66F6
-        bpl     L673E
-        lda     $C055
-L673E:  lda     L66F7
-        bpl     L6746
-        sta     $C001
-L6746:  rts
+        bpl     rloop
+
+        lda     LOWSCR          ;  restore soft switches
+        sta     CLR80COL
+        lda     int_stash_rdpage2
+        bpl     :+
+        lda     HISCR
+:       lda     int_stash_rd80store
+        bpl     :+
+        sta     SET80COL
+
+:       rts
+.endproc
 
 ;;; ==================================================
 
@@ -4833,14 +4850,14 @@ L6CF3:  rts
 
 L6CF4:  jsr     L6C98
 L6CF7:  jsr     L6CD8
-        sta     $C055
+        sta     HISCR
         ldy     $90
 L6CFF:  lda     ($8E),y
         sta     ($84),y
         dey
         bpl     L6CFF
         jsr     L6CE8
-        sta     $C054
+        sta     LOWSCR
         ldy     $90
 L6D0E:  lda     ($8E),y
         sta     ($84),y
@@ -4869,14 +4886,14 @@ L6D27:  lda     L6BD9
         bcc     L6CF4
         jsr     L6C98
 L6D3E:  jsr     L6CD8
-        sta     $C055
+        sta     HISCR
         ldy     $90
 L6D46:  lda     ($84),y
         sta     ($8E),y
         dey
         bpl     L6D46
         jsr     L6CE8
-        sta     $C054
+        sta     LOWSCR
         ldy     $90
 L6D55:  lda     ($84),y
         sta     ($8E),y
@@ -7080,9 +7097,9 @@ L7ECD:  lda     #$00
         sta     set_input_params_unk
         rts
 
-L7ED6:  lda     $C062
+L7ED6:  lda     BUTN1
         asl     a
-        lda     $C061
+        lda     BUTN0
         and     #$80
         rol     a
         rol     a
@@ -7091,9 +7108,9 @@ L7ED6:  lda     $C062
 L7EE2:  jsr     L7ED6
         sta     set_input_params_modifiers
 L7EE8:  clc
-        lda     $C000
+        lda     KBD
         bpl     L7EF4
-        stx     $C010
+        stx     KBDSTRB
         and     #$7F
         sec
 L7EF4:  rts
@@ -7165,7 +7182,7 @@ L7F66:  pha
         lda     #$04
         sta     L7D74
         ldx     #$0A
-L7F7D:  lda     $C030
+L7F7D:  lda     SPKR
         ldy     #$00
 L7F82:  dey
         bne     L7F82
@@ -12049,9 +12066,9 @@ LBE21:  lda     LBFCA
 LBE27:  lda     LBE5C
         lsr     a
         tay
-        sta     $C054
+        sta     LOWSCR
         bcs     LBE34
-        sta     $C055
+        sta     HISCR
 LBE34:  lda     ($06),y
 LBE37           := * + 1
 LBE38           := * + 2
@@ -12113,9 +12130,9 @@ LBEA8:  lda     LBFCA
 LBEAE:  lda     LBF0B
         lsr     a
         tay
-        sta     $C054
+        sta     LOWSCR
         bcs     LBEBB
-        sta     $C055
+        sta     HISCR
 LBEBB:  .byte   $AD
 LBEBC:  .byte   0
 LBEBD:  php
