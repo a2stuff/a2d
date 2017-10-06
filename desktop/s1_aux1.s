@@ -20,38 +20,47 @@ L00C7           := $00C7
 LD05E           := $D05E
 LD2D0           := $D2D0
 
-;; A2D
+;;; ==================================================
+;;; A2D
+
         .assert * = $4000, error, "A2D entry point must be at $4000"
 
         lda     LOWSCR
         sta     SET80COL
-        bit     L5F1B
-        bpl     L4022
+
+        bit     preserve_zp_flag ; save ZP?
+        bpl     adjust_stack
+
+        ;; Save $80...$FF, swap in what A2D needs at $F4...$FF
         ldx     #$7F
-L400D:  lda     $80,x
-        sta     L5F72,x
+:       lda     $80,x
+        sta     zp_saved,x
         dex
-        bpl     L400D
+        bpl     :-
         ldx     #$0B
-L4017:  lda     L5F66,x
+:       lda     L5F66,x
         sta     $F4,x
         dex
-        bpl     L4017
-        jsr     L40BD
-L4022:  pla
+        bpl     :-
+        jsr     copy_params_to_zp
+
+adjust_stack:                   ; Adjust stack to account for params
+        pla                     ; and stash address at $80.
         sta     $80
         clc
-        adc     #$03
+        adc     #<3
         tax
         pla
-        sta     $81
-        adc     #$00
+        sta     $80+1
+        adc     #>3
         pha
         txa
         pha
+
         tsx
-        stx     L5F1D
-        ldy     #$01
+        stx     stack_ptr_stash
+
+        ldy     #1              ; Command index
         lda     ($80),y
         asl     a
         tax
@@ -59,7 +68,8 @@ L4022:  pla
         sta     jump+1
         lda     a2d_jump_table+1,x
         sta     jump+2
-        iny
+
+        iny                     ; Point $80 at params
         lda     ($80),y
         pha
         iny
@@ -67,8 +77,9 @@ L4022:  pla
         sta     $81
         pla
         sta     $80
-        ldy     param_lengths+1,x
+        ldy     param_lengths+1,x ; Check param length...
         bpl     L4076
+
         txa
         pha
         tya
@@ -79,7 +90,7 @@ L4022:  pla
         pha
         bit     L633F
         bpl     L406A
-        jsr     L40D4
+        jsr     hide_cursor
 L406A:  pla
         sta     $81
         pla
@@ -89,67 +100,97 @@ L406A:  pla
         tay
         pla
         tax
+
 L4076:  lda     param_lengths,x
         beq     jump
-        sta     L4082
+        sta     store+1
         dey
-L407F:  lda     ($80),y
-L4082           := * + 1
-        sta     $FF,y
+:       lda     ($80),y
+store:  sta     $FF,y           ; self modified
         dey
-        bpl     L407F
-jump:   jsr     $FFFF
+        bpl     :-
+
+jump:   jsr     $FFFF           ; the actual call
+
 L408A:  bit     L633F
         bpl     L4092
-        jsr     L40DA
-L4092:  bit     L5F1B
-        bpl     L40AE
-        jsr     L40C8
+        jsr     show_cursor
+
+L4092:  bit     preserve_zp_flag
+        bpl     exit_with_0
+        jsr     copy_params_from_zp
         ldx     #$0B
-L409C:  lda     $F4,x
+:       lda     $F4,x
         sta     L5F66,x
         dex
-        bpl     L409C
+        bpl     :-
         ldx     #$7F
-L40A6:  lda     L5F72,x
+:       lda     zp_saved,x
         sta     $80,x
         dex
-        bpl     L40A6
-L40AE:  lda     #$00
+        bpl     :-
+
+        ;; default is to return with A=0
+exit_with_0:
+        lda     #0
+
 jt_rts: rts
 
-L40B1:  pha
+;;; ==================================================
+;;; Routines can jmp here to exit with A set
+
+a2d_exit_with_a:
+        pha
         jsr     L408A
         pla
-        ldx     L5F1D
+        ldx     stack_ptr_stash
         txs
         ldy     #$FF
-L40BC:  rts
+rts2:   rts
 
-L40BD:  ldy     #$23
-L40BF:  lda     ($F4),y
+;;; ==================================================
+;;; Copy params (35 bytes) to/from ($F4) to $D0
+
+.proc copy_params_to_zp
+        ldy     #$23
+:       lda     ($F4),y
         sta     $D0,y
         dey
-        bpl     L40BF
+        bpl     :-
         rts
+.endproc
 
-L40C8:  ldy     #$23
-L40CA:  lda     $D0,y
+.proc copy_params_from_zp
+        ldy     #$23
+:       lda     $D0,y
         sta     ($F4),y
         dey
-        bpl     L40CA
+        bpl     :-
         rts
+.endproc
 
-L40D3:  .byte   0
-L40D4:  dec     L40D3
+;;; ==================================================
+;;; Drawing calls show/hide cursor before/after
+;;; A recursion count is kept to allow rentrancy.
+
+hide_cursor_count:
+        .byte   0
+
+.proc hide_cursor
+        dec     hide_cursor_count
         jmp     HIDE_CURSOR_IMPL
+.endproc
 
-L40DA:  bit     L40D3
-        bpl     L40BC
-        inc     L40D3
+.proc show_cursor
+        bit     hide_cursor_count
+        bpl     rts2
+        inc     hide_cursor_count
         jmp     SHOW_CURSOR_IMPL
+.endproc
 
-        ;; Jump table for A2D entry point calls
+;;; ==================================================
+;;; Jump table for A2D entry point calls
+
 a2d_jump_table:
         .addr   jt_rts              ; $00
         .addr   L5E51               ; $01
@@ -232,28 +273,87 @@ a2d_jump_table:
         .addr   L7D69               ; $4E
 
         ;; Entry point param lengths
+        ;; Byte pairs; first is length ??, second is offset ??
 param_lengths:
-        .byte   $00
-        .byte   $00,$00,$00,$82,$01,$00,$00,$D0
-        .byte   $24,$00,$00,$D0,$10,$F0,$01,$E0
-        .byte   $08,$E8,$02,$EE,$02,$00,$00,$F1
-        .byte   $01,$A1,$04,$EA,$04,$A1,$84,$92
-        .byte   $84,$92,$88,$9F,$88,$92,$08,$8A
-        .byte   $10,$00,$80,$00,$80,$00,$00,$A1
-        .byte   $03,$A1,$83,$82,$01,$82,$01,$00
-        .byte   $00,$82,$0C,$00,$00,$82,$03,$82
-        .byte   $02,$82,$02,$82,$01,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$82,$05,$82,$01,$82,$04,$00
-        .byte   $00,$00,$00,$C7,$04,$C7,$01,$C7
-        .byte   $02,$C7,$03,$C7,$03,$C7,$04,$00
-        .byte   $00,$82,$01,$00,$00,$82,$01,$82
-        .byte   $03,$82,$02,$82,$01,$82,$01,$EA
-        .byte   $04,$00,$00,$82,$01,$00,$00,$82
-        .byte   $05,$82,$05,$82,$05,$82,$05,$EA
-        .byte   $04,$82,$03,$82,$05,$8C,$03,$8C
-        .byte   $02,$8A,$10,$82,$02
+        .byte   $00,$00
+        .byte   $00,$00
+        .byte   $82,$01
+        .byte   $00,$00
+        .byte   $D0,$24
+        .byte   $00,$00
+        .byte   $D0,$10
+        .byte   $F0,$01
+        .byte   $E0,$08
+        .byte   $E8,$02
+        .byte   $EE,$02
+        .byte   $00,$00
+        .byte   $F1,$01
+        .byte   $A1,$04
+        .byte   $EA,$04
+        .byte   $A1,$84
+        .byte   $92,$84
+        .byte   $92,$88
+        .byte   $9F,$88
+        .byte   $92,$08
+        .byte   $8A,$10
+        .byte   $00,$80
+        .byte   $00,$80
+        .byte   $00,$00
+        .byte   $A1,$03
+        .byte   $A1,$83
+        .byte   $82,$01
+        .byte   $82,$01
+        .byte   $00,$00
+        .byte   $82,$0C
+        .byte   $00,$00
+        .byte   $82,$03
+        .byte   $82,$02
+        .byte   $82,$02
+        .byte   $82,$01
+        .byte   $00,$00
+        .byte   $00,$00
+        .byte   $00,$00
+        .byte   $00,$00
+        .byte   $00,$00
+        .byte   $00,$00
+        .byte   $00,$00
+        .byte   $00,$00
+        .byte   $00,$00
+        .byte   $00,$00
+        .byte   $82,$05
+        .byte   $82,$01
+        .byte   $82,$04
+        .byte   $00,$00
+        .byte   $00,$00
+        .byte   $C7,$04
+        .byte   $C7,$01
+        .byte   $C7,$02
+        .byte   $C7,$03
+        .byte   $C7,$03
+        .byte   $C7,$04
+        .byte   $00,$00
+        .byte   $82,$01
+        .byte   $00,$00
+        .byte   $82,$01
+        .byte   $82,$03
+        .byte   $82,$02
+        .byte   $82,$01
+        .byte   $82,$01
+        .byte   $EA,$04
+        .byte   $00,$00
+        .byte   $82,$01
+        .byte   $00,$00
+        .byte   $82,$05
+        .byte   $82,$05
+        .byte   $82,$05
+        .byte   $82,$05
+        .byte   $EA,$04
+        .byte   $82,$03
+        .byte   $82,$05
+        .byte   $8C,$03
+        .byte   $8C,$02
+        .byte   $8A,$10
+        .byte   $82,$02
 
 L4221:  .byte   $00,$02,$04,$06,$08,$0A,$0C,$0E
         .byte   $10,$12,$14,$16,$18,$1A,$1C,$1E
@@ -1262,7 +1362,7 @@ L5043:  jsr     L50A9
         bcc     :+
         bne     fail
 :       lda     #$80            ; success!
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 fail:   rts
 .endproc
@@ -1394,7 +1494,7 @@ L514C:  sec
         rts
 
 L5163:  lda     #$81
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 ;;; ==================================================
 
@@ -1699,7 +1799,7 @@ L5390:  jsr     L5354
         jmp     L546F
 
 L5398:  lda     #$82
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 L539D:  ldy     #$01
         sty     $AF
@@ -2355,7 +2455,7 @@ L58B1:  iny
         rts
 
 L58B7:  lda     #$83
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 L58BC:  .byte   0
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -3080,7 +3180,7 @@ L5EAB:  jsr     SET_BOX_IMPL
 ;;; ==================================================
 
 L5EB4:
-        jsr     L40C8
+        jsr     copy_params_from_zp
         lda     $F4
         ldx     $F5
 L5EBB:  ldy     #$00
@@ -3104,9 +3204,9 @@ L5ECE:  rts
 
 CONFIGURE_ZP_IMPL:
         lda     L0082
-        cmp     L5F1B
+        cmp     preserve_zp_flag
         beq     L5ECE
-        sta     L5F1B
+        sta     preserve_zp_flag
         bcc     L5ECE
         jmp     L408A
 
@@ -3148,9 +3248,9 @@ L5F0C:  lda     L5F15,y
         rts
 
 L5F15:  .byte   $01,$00,$00,$46,$01,$00
-L5F1B:  .byte   $80
+preserve_zp_flag:  .byte   $80  ; if high bit set, ZP saved during A2D calls
 L5F1C:  .byte   $80
-L5F1D:  .byte   $00
+stack_ptr_stash:  .byte   $00
 L5F1E:  .byte   $00,$00,$00,$00,$00,$20,$80,$00
         .byte   $00,$00,$00,$00,$2F,$02,$BF,$00
 
@@ -3161,14 +3261,19 @@ white_pattern:
         .byte   $00
 L5F3F:  .byte   $00
 L5F40:  .byte   $00
-L5F41:  .byte   $00,$00,$00,$00,$00,$00,$20,$80
+L5F41:  .byte   $00
+L5F42:  .byte   $00,$00,$00,$00,$00,$20,$80
         .byte   $00,$00,$00,$00,$00,$2F,$02,$BF
         .byte   $00,$FF,$FF,$FF,$FF,$FF,$FF,$FF
         .byte   $FF,$FF,$00,$00,$00,$00,$00,$01
         .byte   $01,$00,$00,$00,$00
-L5F66:  .byte   $42,$5F,$00,$00,$00,$00,$00,$00
+
+L5F66:  .addr   L5F42
+        .byte   $00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00
-L5F72:  .res    128, 0
+
+zp_saved:  .res    128, 0       ; top half of ZP for when preserve_zp_flag set
+
 L5FF2:  .byte   $00
 L5FF3:  .byte   $FF
 
@@ -3662,7 +3767,7 @@ L63D1:  ldx     L6338
         cpx     #$00
         bne     L63E5
         lda     #$92
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 L63E5:  lda     L6338
         and     #$7F
@@ -3670,7 +3775,7 @@ L63E5:  lda     L6338
         cpx     L6338
         beq     L63F6
         lda     #$91
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 L63F6:  stx     L6338
         lda     #$80
@@ -3743,7 +3848,7 @@ L6486:  lda     #$80
 L648B:  rts
 
 L648C:  lda     #$93
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 L6491:
         lda     L6337
@@ -3751,7 +3856,7 @@ L6491:
         cmp     #$01
         beq     L64A4
         lda     #$90
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 L649F:  lda     #$80
         sta     L6337
@@ -3812,7 +3917,7 @@ L64FF:  lda     #$00
         rts
 
 L6508:  lda     #$94
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 L650D:  lda     L6522
         beq     L651D
@@ -3849,13 +3954,13 @@ L653F:  lda     $80
         sta     L6539
         lda     $81
         sta     L653A
-        lda     L5F1D
+        lda     stack_ptr_stash
         sta     L653B
-        lsr     L5F1B
+        lsr     preserve_zp_flag
         rts
 
 L6553:  jsr     SHOW_CURSOR_IMPL
-L6556:  asl     L5F1B
+L6556:  asl     preserve_zp_flag
         lda     L6539
         sta     $80
         lda     L653A
@@ -3866,7 +3971,7 @@ L6566           := * + 1
 L6567:  sta     L0082
         stx     L0083
         lda     L653B
-        sta     L5F1D
+        sta     stack_ptr_stash
         ldy     #$23
 L6573:  lda     (L0082),y
         sta     $D0,y
@@ -3921,7 +4026,7 @@ L65B3:
         jmp     L5EBD
 
 L65CD:  lda     #$95
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 L65D2:  .byte   $F8
 L65D3:  .byte   $5F
@@ -3998,7 +4103,7 @@ L663B:  lda     #$98
         bmi     L6641
 L663F:  lda     #$99
 L6641:  plp
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 L6645:  lda     #$00
         bit     L5FFC
@@ -4025,7 +4130,7 @@ L6662:  .byte   0
 L6663:  bit     L6339
         bpl     L666D
         lda     #$97
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 L666D:  sec
         jsr     L650D
@@ -4519,7 +4624,7 @@ L6A3C:  lda     #$00
         sbc     L633E
         bpl     L6A5B
         lda     #$9C
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 L6A5B:  rts
 
@@ -4543,7 +4648,7 @@ L6A66:  sta     L6A7B
 L6A89:  jsr     L6A94
         bne     L6A93
         lda     #$9A
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 L6A93:  rts
 
@@ -4688,7 +4793,7 @@ L6B9E:  rts
 L6B9F:  jsr     L6B96
         bne     L6B9E
         lda     #$9B
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 ;;; ==================================================
 
@@ -5325,7 +5430,7 @@ L7074:  jsr     L7063
         rts
 
 L707A:  lda     #$9F
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 L707F:  A2D_CALL A2D_DRAW_RECT, L00C7
         rts
@@ -5855,13 +5960,13 @@ CREATE_WINDOW_IMPL:
         lda     ($A9),y
         bne     L748E
         lda     #$9E
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 L748E:  sta     L0082
         jsr     L7063
         beq     L749A
         lda     #$9D
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 L749A:  lda     $80
         sta     $A9
@@ -5961,14 +6066,14 @@ L7561:  jsr     L703E
         lda     L758A
         ldx     L758B
         jsr     L5EA0
-        asl     L5F1B
+        asl     preserve_zp_flag
         plp
         bcc     L7582
         rts
 
 L7582:  jsr     L758C
 L7585:  lda     #$A3
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 ;;; ==================================================
 
@@ -5984,7 +6089,7 @@ L758C:  jsr     SHOW_CURSOR_IMPL
 ;;; ==================================================
 
 QUERY_STATE_IMPL:
-        jsr     L40C8
+        jsr     copy_params_from_zp
         jsr     L7074
         lda     L0083
         sta     $80
@@ -6002,7 +6107,7 @@ L75BB:  lda     $D0,y
         sta     ($80),y
         dey
         bpl     L75BB
-        jmp     L40BD
+        jmp     copy_params_to_zp
 
 L75C6:  jsr     L708D
         ldx     #$07
@@ -6682,7 +6787,7 @@ QUERY_CLIENT_IMPL:
         jsr     L7013
         bne     L7ACE
         lda     #$A0
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 L7ACE:  bit     $B0
         bpl     L7B15
@@ -6779,12 +6884,12 @@ L7B81:  cmp     #$02
         sta     L0082
         beq     L7B90
 L7B8B:  lda     #$A4
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 L7B90:  jsr     L7013
         bne     L7B9A
         lda     #$A0
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 L7B9A:  ldy     #$06
         bit     L0082
@@ -6810,7 +6915,7 @@ L7BB6:  cmp     #$02
         sta     L0082
         beq     L7BC5
 L7BC0:  lda     #$A4
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 L7BC5:  lda     L0082
         sta     $8C
@@ -6823,7 +6928,7 @@ L7BCB:  lda     L0083,x
         jsr     L7013
         bne     L7BE0
         lda     #$A0
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 L7BE0:  jsr     L7A73
         jsr     L653F
@@ -6997,12 +7102,12 @@ L7D30:  cmp     #$02
         sta     $8C
         beq     L7D3F
 L7D3A:  lda     #$A4
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 L7D3F:  jsr     L7013
         bne     L7D49
         lda     #$A0
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 L7D49:  ldy     #$07
         bit     $8C
@@ -7534,7 +7639,7 @@ L81D9:  lda     #$00
         sta     L7D74
         lda     #$A2
         plp
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 L81E4:  lda     $AC
         and     #$01
@@ -7542,7 +7647,7 @@ L81E4:  lda     $AC
         lda     #$00
         sta     L7D74
         lda     #$A1
-        jmp     L40B1
+        jmp     a2d_exit_with_a
 
 L81F4:  ldx     #$00
 L81F6:  clc
