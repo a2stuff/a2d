@@ -23,6 +23,7 @@ LD2D0           := $D2D0
 ;;; ==================================================
 ;;; A2D
 
+.proc a2d_dispatch
         .assert * = $4000, error, "A2D entry point must be at $4000"
 
         lda     LOWSCR
@@ -77,32 +78,39 @@ adjust_stack:                   ; Adjust stack to account for params
         sta     $81
         pla
         sta     $80
-        ldy     param_lengths+1,x ; Check param length...
-        bpl     L4076
 
-        txa
-        pha
-        tya
+        ;; Param length format is a byte pair;
+        ;; * first byte is ZP address to copy bytes to
+        ;; * second byte's high bit is "hide cursor" flag
+        ;; * rest of second byte is # bytes to copy
+
+        ldy     param_lengths+1,x ; Check param length...
+        bpl     done_hiding
+
+        txa                     ; if high bit was set, stash
+        pha                     ; registers and $80 and then
+        tya                     ; optionally hide cursor
         pha
         lda     $80
         pha
         lda     $81
         pha
-        bit     L633F
-        bpl     L406A
+        bit     hide_cursor_flag
+        bpl     :+
         jsr     hide_cursor
-L406A:  pla
+:       pla
         sta     $81
         pla
         sta     $80
         pla
-        and     #$7F
+        and     #$7F            ; clear high bit in length count
         tay
         pla
         tax
 
-L4076:  lda     param_lengths,x
-        beq     jump
+done_hiding:
+        lda     param_lengths,x ; ZP offset for params
+        beq     jump            ; nothing to copy
         sta     store+1
         dey
 :       lda     ($80),y
@@ -112,11 +120,13 @@ store:  sta     $FF,y           ; self modified
 
 jump:   jsr     $FFFF           ; the actual call
 
-L408A:  bit     L633F
-        bpl     L4092
+        ;; Exposed for routines to call directly
+cleanup:
+        bit     hide_cursor_flag
+        bpl     :+
         jsr     show_cursor
 
-L4092:  bit     preserve_zp_flag
+:       bit     preserve_zp_flag
         bpl     exit_with_0
         jsr     copy_params_from_zp
         ldx     #$0B
@@ -134,14 +144,15 @@ L4092:  bit     preserve_zp_flag
 exit_with_0:
         lda     #0
 
-jt_rts: rts
+rts1:   rts
+.endproc
 
 ;;; ==================================================
 ;;; Routines can jmp here to exit with A set
 
 a2d_exit_with_a:
         pha
-        jsr     L408A
+        jsr     a2d_dispatch::cleanup
         pla
         ldx     stack_ptr_stash
         txs
@@ -190,6 +201,8 @@ hide_cursor_count:
 
 ;;; ==================================================
 ;;; Jump table for A2D entry point calls
+
+        jt_rts := a2d_dispatch::rts1
 
 a2d_jump_table:
         .addr   jt_rts              ; $00
@@ -273,88 +286,96 @@ a2d_jump_table:
         .addr   L7D69               ; $4E
 
         ;; Entry point param lengths
-        ;; Byte pairs; first is length ??, second is offset ??
+        ;; (length, ZP destination, hide cursor flag)
 param_lengths:
-        .byte   $00,$00
-        .byte   $00,$00
-        .byte   $82,$01
-        .byte   $00,$00
-        .byte   $D0,$24
-        .byte   $00,$00
-        .byte   $D0,$10
-        .byte   $F0,$01
-        .byte   $E0,$08
-        .byte   $E8,$02
-        .byte   $EE,$02
-        .byte   $00,$00
-        .byte   $F1,$01
-        .byte   $A1,$04
-        .byte   $EA,$04
-        .byte   $A1,$84
-        .byte   $92,$84
-        .byte   $92,$88
-        .byte   $9F,$88
-        .byte   $92,$08
-        .byte   $8A,$10
-        .byte   $00,$80
-        .byte   $00,$80
-        .byte   $00,$00
-        .byte   $A1,$03
-        .byte   $A1,$83
-        .byte   $82,$01
-        .byte   $82,$01
-        .byte   $00,$00
-        .byte   $82,$0C
-        .byte   $00,$00
-        .byte   $82,$03
-        .byte   $82,$02
-        .byte   $82,$02
-        .byte   $82,$01
-        .byte   $00,$00
-        .byte   $00,$00
-        .byte   $00,$00
-        .byte   $00,$00
-        .byte   $00,$00
-        .byte   $00,$00
-        .byte   $00,$00
-        .byte   $00,$00
-        .byte   $00,$00
-        .byte   $00,$00
-        .byte   $82,$05
-        .byte   $82,$01
-        .byte   $82,$04
-        .byte   $00,$00
-        .byte   $00,$00
-        .byte   $C7,$04
-        .byte   $C7,$01
-        .byte   $C7,$02
-        .byte   $C7,$03
-        .byte   $C7,$03
-        .byte   $C7,$04
-        .byte   $00,$00
-        .byte   $82,$01
-        .byte   $00,$00
-        .byte   $82,$01
-        .byte   $82,$03
-        .byte   $82,$02
-        .byte   $82,$01
-        .byte   $82,$01
-        .byte   $EA,$04
-        .byte   $00,$00
-        .byte   $82,$01
-        .byte   $00,$00
-        .byte   $82,$05
-        .byte   $82,$05
-        .byte   $82,$05
-        .byte   $82,$05
-        .byte   $EA,$04
-        .byte   $82,$03
-        .byte   $82,$05
-        .byte   $8C,$03
-        .byte   $8C,$02
-        .byte   $8A,$10
-        .byte   $82,$02
 
+.macro PARAM_DEFN length, zp, cursor
+        .byte zp, (length | (cursor << 7))
+.endmacro
+
+        PARAM_DEFN  0, $00, 0   ; call $00
+        PARAM_DEFN  0, $00, 0   ; call $01
+        PARAM_DEFN  1, $82, 0   ; call $02
+        PARAM_DEFN  0, $00, 0   ; call $03
+        PARAM_DEFN 36, $D0, 0   ; call $04
+        PARAM_DEFN  0, $00, 0   ; call $05
+        PARAM_DEFN 16, $D0, 0   ; call $06
+        PARAM_DEFN  1, $F0, 0   ; call $07
+        PARAM_DEFN  8, $E0, 0   ; call $08
+        PARAM_DEFN  2, $E8, 0   ; call $09
+        PARAM_DEFN  2, $EE, 0   ; call $0A
+        PARAM_DEFN  0, $00, 0   ; call $0B
+        PARAM_DEFN  1, $F1, 0   ; call $0C
+        PARAM_DEFN  4, $A1, 0   ; call $0D
+        PARAM_DEFN  4, $EA, 0   ; call $0E
+        PARAM_DEFN  4, $A1, 1   ; call $0F
+        PARAM_DEFN  4, $92, 1   ; call $10
+        PARAM_DEFN  8, $92, 1   ; call $11
+        PARAM_DEFN  8, $9F, 1   ; call $12
+        PARAM_DEFN  8, $92, 0   ; call $13
+        PARAM_DEFN 16, $8A, 0   ; call $14
+        PARAM_DEFN  0, $00, 1   ; call $15
+        PARAM_DEFN  0, $00, 1   ; call $16
+        PARAM_DEFN  0, $00, 0   ; call $17
+        PARAM_DEFN  3, $A1, 0   ; call $18
+        PARAM_DEFN  3, $A1, 1   ; call $19
+        PARAM_DEFN  1, $82, 0   ; call $1A
+        PARAM_DEFN  1, $82, 0   ; call $1B
+        PARAM_DEFN  0, $00, 0   ; call $1C
+        PARAM_DEFN 12, $82, 0   ; call $1D
+        PARAM_DEFN  0, $00, 0   ; call $1E
+        PARAM_DEFN  3, $82, 0   ; call $1F
+        PARAM_DEFN  2, $82, 0   ; call $20
+        PARAM_DEFN  2, $82, 0   ; call $21
+        PARAM_DEFN  1, $82, 0   ; call $22
+        PARAM_DEFN  0, $00, 0   ; call $23
+        PARAM_DEFN  0, $00, 0   ; call $24
+        PARAM_DEFN  0, $00, 0   ; call $25
+        PARAM_DEFN  0, $00, 0   ; call $26
+        PARAM_DEFN  0, $00, 0   ; call $27
+        PARAM_DEFN  0, $00, 0   ; call $28
+        PARAM_DEFN  0, $00, 0   ; call $29
+        PARAM_DEFN  0, $00, 0   ; call $2A
+        PARAM_DEFN  0, $00, 0   ; call $2B
+        PARAM_DEFN  0, $00, 0   ; call $2C
+        PARAM_DEFN  5, $82, 0   ; call $2D
+        PARAM_DEFN  1, $82, 0   ; call $2E
+        PARAM_DEFN  4, $82, 0   ; call $2F
+        PARAM_DEFN  0, $00, 0   ; call $30
+        PARAM_DEFN  0, $00, 0   ; call $31
+        PARAM_DEFN  4, $C7, 0   ; call $32
+        PARAM_DEFN  1, $C7, 0   ; call $33
+        PARAM_DEFN  2, $C7, 0   ; call $34
+        PARAM_DEFN  3, $C7, 0   ; call $35
+        PARAM_DEFN  3, $C7, 0   ; call $36
+        PARAM_DEFN  4, $C7, 0   ; call $37
+        PARAM_DEFN  0, $00, 0   ; call $38
+        PARAM_DEFN  1, $82, 0   ; call $39
+        PARAM_DEFN  0, $00, 0   ; call $3A
+        PARAM_DEFN  1, $82, 0   ; call $3B
+        PARAM_DEFN  3, $82, 0   ; call $3C
+        PARAM_DEFN  2, $82, 0   ; call $3D
+        PARAM_DEFN  1, $82, 0   ; call $3E
+        PARAM_DEFN  1, $82, 0   ; call $3F
+        PARAM_DEFN  4, $EA, 0   ; call $40
+        PARAM_DEFN  0, $00, 0   ; call $41
+        PARAM_DEFN  1, $82, 0   ; call $42
+        PARAM_DEFN  0, $00, 0   ; call $43
+        PARAM_DEFN  5, $82, 0   ; call $44
+        PARAM_DEFN  5, $82, 0   ; call $45
+        PARAM_DEFN  5, $82, 0   ; call $46
+        PARAM_DEFN  5, $82, 0   ; call $47
+        PARAM_DEFN  4, $EA, 0   ; call $48
+        PARAM_DEFN  3, $82, 0   ; call $49
+        PARAM_DEFN  5, $82, 0   ; call $4A
+        PARAM_DEFN  3, $8C, 0   ; call $4B
+        PARAM_DEFN  2, $8C, 0   ; call $4C
+        PARAM_DEFN 16, $8A, 0   ; call $4D
+        PARAM_DEFN  2, $82, 0   ; call $4E
+
+;;; ==================================================
+
+        ;; ???
 L4221:  .byte   $00,$02,$04,$06,$08,$0A,$0C,$0E
         .byte   $10,$12,$14,$16,$18,$1A,$1C,$1E
         .byte   $20,$22,$24,$26,$28,$2A,$2C,$2E
@@ -615,6 +636,8 @@ L499D:  .byte   $05,$06,$00,$01,$02,$03,$04,$05
         .byte   $06,$00,$01,$02,$03,$04,$05,$06
         .byte   $00,$01,$02,$03
 
+;;; ==================================================
+
 hires_table_lo:
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $80,$80,$80,$80,$80,$80,$80,$80
@@ -666,6 +689,8 @@ hires_table_hi:
         .byte   $02,$06,$0A,$0E,$12,$16,$1A,$1E
         .byte   $03,$07,$0B,$0F,$13,$17,$1B,$1F
         .byte   $03,$07,$0B,$0F,$13,$17,$1B,$1F
+
+;;; ==================================================
 
 L4BA1:  lda     ($84),y
         eor     ($8E),y
@@ -2467,7 +2492,7 @@ L58CC:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
 MEASURE_TEXT_IMPL:
         jsr     L58E8
-        ldy     #$03
+        ldy     #3              ; Store result (X,A) at params+3
         sta     ($80),y
         txa
         iny
@@ -3183,7 +3208,7 @@ L5EB4:
         jsr     copy_params_from_zp
         lda     $F4
         ldx     $F5
-L5EBB:  ldy     #$00
+L5EBB:  ldy     #0              ; Store result (X,A) at params
 L5EBD:  sta     ($80),y
         txa
         iny
@@ -3193,7 +3218,7 @@ L5EBD:  sta     ($80),y
 ;;; ==================================================
 
 QUERY_SCREEN_IMPL:
-        ldy     #$23
+        ldy     #35             ; Store 35 bytes at params
 L5EC6:  lda     L5F1E,y
         sta     ($80),y
         dey
@@ -3208,7 +3233,7 @@ CONFIGURE_ZP_IMPL:
         beq     L5ECE
         sta     preserve_zp_flag
         bcc     L5ECE
-        jmp     L408A
+        jmp     a2d_dispatch::cleanup
 
 ;;; ==================================================
 
@@ -3240,7 +3265,7 @@ L5F01:  lda     L0000,x
 ;;; ==================================================
 
 L5F0A:
-        ldy     #$05
+        ldy     #5              ; Store 5 bytes at params
 L5F0C:  lda     L5F15,y
         sta     ($80),y
         dey
@@ -3690,7 +3715,10 @@ L633B:  .byte   $00
 L633C:  .byte   $00
 L633D:  .byte   $00
 L633E:  .byte   $00
-L633F:  .byte   $00
+
+hide_cursor_flag:
+        .byte   0
+
 L6340:  .byte   $00
 
 ;;; ==================================================
@@ -3779,7 +3807,7 @@ L63E5:  lda     L6338
 
 L63F6:  stx     L6338
         lda     #$80
-        sta     L633F
+        sta     hide_cursor_flag
         lda     L6338
         bne     L640D
         bit     L6339
@@ -3881,7 +3909,7 @@ L64C7:  lda     L6340
         pha
         plp
         lda     #$00
-        sta     L633F
+        sta     hide_cursor_flag
         rts
 
 ;;; ==================================================
@@ -4054,12 +4082,12 @@ L65E7:  bcs     L6604
         bcc     L65F0
         sta     L6752
 L65F0:  tax
-        ldy     #$00
+        ldy     #0              ; Store 5 bytes at params
 L65F3:  lda     L6754,x
         sta     ($80),y
         inx
         iny
-        cpy     #$04
+        cpy     #4
         bne     L65F3
         lda     #$00
         sta     ($80),y
@@ -4109,8 +4137,8 @@ L6645:  lda     #$00
         bit     L5FFC
         bpl     L664E
         lda     #$04
-L664E:  ldy     #$00
-        sta     ($80),y
+L664E:  ldy     #0
+        sta     ($80),y         ; Store 2 bytes at params
         iny
 L6653:  lda     L5FF3,y
         sta     ($80),y

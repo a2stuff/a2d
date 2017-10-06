@@ -124,7 +124,6 @@ A2D_SET_POS     := $0E          ; Start of subsequent DRAW_TEXT, DRAW_LINE
         ;; .word ycoord
 
 A2D_DRAW_LINE   := $0F          ; Draw line (from SET_POS)
-        ;; $0F used in puzzle
         ;; (input length 4 bytes)
         ;; .word xdelta         signed, delta in pixels
         ;; .word ydelta
