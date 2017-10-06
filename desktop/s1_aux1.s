@@ -6926,6 +6926,7 @@ L7CB6:  .byte   0
 L7CB7:  .byte   0
 L7CB8:  .byte   0
 L7CB9:  .byte   0
+
 L7CBA:  lda     L7CB6
         sec
         sbc     L7CB8
@@ -7736,7 +7737,7 @@ L836A:  jsr     L70B7
         lda     $CC
         bne     L8380
         lda     #$09
-        bit     set_input_params_modifiers
+        bit     set_input_params::modifiers
         bpl     L837A
         lda     #$41
 L837A:  cmp     $CB
@@ -7744,12 +7745,11 @@ L837A:  cmp     $CB
         clc
         rts
 
-L8380:  inc     set_input_params_unk
+L8380:  inc     set_input_params::unk
         clc
         lda     #$08
-        .byte   $2C
-        .byte   $50
-L8388:  .byte   $83
+        L8388 := *+2
+        bit     set_input_params::modifiers
         bpl     L838D
         lda     #$40
 L838D:  adc     L769B
@@ -8137,7 +8137,7 @@ L8672:  pha
 
 L867B:  lda     online_params_buffer
         beq     L8672
-        jsr     L8388
+        jsr     L8388           ; ??? This is the middle of an instruction?
         jsr     LD05E
         ldy     L8738
         sta     $D464,y
@@ -8235,17 +8235,24 @@ L8737:  rts
 
 L8738:  .byte   $04
 L8739:  .byte   $00,$00,$00,$00
+
+        ;; Desktop icon placements?
         .word   500, 16
         .word   500, 41
         .word   500, 66
         .word   500, 91
         .word   500, 116
 
-        .byte   $B8,$01,$10,$00,$B8,$01,$29,$00
-        .byte   $B8,$01,$42,$00,$B8,$01,$5B,$00
-        .byte   $B8,$01,$74,$00,$B8,$01,$8D,$00
-        .byte   $90,$01,$10,$00,$90,$01,$29,$00
-        .byte   $90,$01,$42,$00
+        .word   440, 16
+        .word   440, 41
+        .word   440, 66
+        .word   440, 91
+        .word   440, 116
+        .word   440, 141
+
+        .word   400, 16
+        .word   400, 41
+        .word   400, 66
 
 .proc online_params
 count:  .byte   2
@@ -8278,7 +8285,7 @@ online_params_buffer:
 ;;; Font
 
 font_table:
-        .byte   $00,$7F
+        .byte   $00,$7F         ; ??
 
 glyph_height:
         .byte   9
@@ -8727,13 +8734,22 @@ set_fill_mode_params5:
 
         .byte   $05,$06,$07
 
-L939E:  .byte   $00
-L939F:  .byte   $00,$19,$94,$54,$94,$C0,$94,$08
-        .byte   $95,$A2,$95,$92,$96,$D2,$96,$5B
-        .byte   $97,$7D,$97,$F7,$97,$BE,$9E,$A6
-        .byte   $A2,$FB,$9E
-        .byte   $8F
-        .byte   $95
+        ;; DESKTOP command jump table
+L939E:  .addr   0
+        .addr   L9419
+        .addr   L9454
+        .addr   L94C0
+        .addr   L9508
+        .addr   L95A2
+        .addr   L9692
+        .addr   L96D2
+        .addr   L975B
+        .addr   L977D
+        .addr   L97F7
+        .addr   L9EBE
+        .addr   LA2A6
+        .addr   L9EFB
+        .addr   L958F
 
 .macro  DESKTOP_DIRECT_CALL    op, addr, label
         jsr DESKTOP_DIRECT
@@ -8743,38 +8759,46 @@ L939F:  .byte   $00,$19,$94,$54,$94,$C0,$94,$08
 
         ;; DESKTOP entry point (after jump)
 DESKTOP_DIRECT:
+
+        ;; Stash return value from stack, adjust by 3
+        ;; (command byte, params addr)
         pla
-        sta     L9413
+        sta     call_params
         clc
-        adc     #$03
+        adc     #<3
         tax
         pla
-        sta     L9414
-        adc     #$00
+        sta     call_params+1
+        adc     #>3
         pha
         txa
         pha
-        ldx     #$00
-L93CF:  lda     $06,x
+
+        ;; Save $06..$09 on the stack
+        ldx     #0
+:       lda     $06,x
         pha
         inx
-        cpx     #$04
-        bne     L93CF
-        lda     L9413
+        cpx     #4
+        bne     :-
+
+        ;; Point ($06) at call command
+        lda     call_params
         clc
-        adc     #$01
+        adc     #<1
         sta     $06
-        lda     L9414
-        adc     #$00
+        lda     call_params+1
+        adc     #>1
         sta     $07
-        ldy     #$00
+
+        ldy     #0
         lda     ($06),y
         asl     a
         tax
         lda     L939E,x
-        sta     L9404
-        lda     L939F,x
-        sta     L9405
+        sta     dispatch + 1
+        lda     L939E+1,x
+        sta     dispatch + 2
         iny
         lda     ($06),y
         tax
@@ -8782,9 +8806,10 @@ L93CF:  lda     $06,x
         lda     ($06),y
         sta     $07
         stx     $06
-L9404   := * + 1
-L9405   := * + 2
+
+dispatch:
         jsr     $0000
+
         tay
         ldx     #$03
 L9409:  pla
@@ -8795,14 +8820,16 @@ L9409:  pla
         tya
         rts
 
-L9413:  .byte   0
-L9414:  .byte   0
+call_params:  .addr     0
 
 .proc set_pos_params2
 xcoord: .word   0
 ycoord: .word   0
 .endproc
 
+;;; ==================================================
+
+L9419:
         ldy     #$00
         lda     ($06),y
         ldx     L8E95
@@ -8893,6 +8920,9 @@ L949D:  ldx     L9016
         lda     #$00
         rts
 
+;;; ==================================================
+
+L94C0:
         ldx     L8E95
         beq     L94D2
         dex
@@ -8933,6 +8963,9 @@ L9502:  jsr     L9F98
         lda     #$00
         rts
 
+;;; ==================================================
+
+L9508:
         ldy     #$00
         ldx     L8E95
         beq     L951A
@@ -8996,6 +9029,9 @@ L9584:  lda     #$00
 L958C:  lda     #$00
         rts
 
+;;; ==================================================
+
+L958F:
         ldy     #$00
         lda     ($06),y
         asl     a
@@ -9006,6 +9042,9 @@ L958C:  lda     #$00
         sta     $07
         jmp     LA39D
 
+;;; ==================================================
+
+L95A2:
         jmp     L9625
 
 L95A5:
@@ -9064,10 +9103,14 @@ L9681:  sta     L95A5
         pha
         jmp     L967A
 
+;;; ==================================================
+
+L9692:
         jmp     L9697
 
 L9695:  .byte   0
 L9696:  .byte   0
+
 L9697:  lda     L8E95
         sta     L9696
 L969D:  ldx     L9696
@@ -9094,10 +9137,14 @@ L969D:  ldx     L9696
 L96CF:  lda     #$00
         rts
 
+;;; ==================================================
+
+L96D2:
         jmp     L96D7
 
 L96D5:  .byte   0
 L96D6:  .byte   0
+
 L96D7:  lda     L8E95
         sta     L96D6
 L96DD:  ldx     L96D6
@@ -9157,6 +9204,9 @@ L9750:  lda     #$00
         sta     L9017,x
 L9758:  jmp     L96DD
 
+;;; ==================================================
+
+L975B:
         ldx     #$00
         txa
         tay
@@ -9178,6 +9228,9 @@ L976B:  lda     L9017,x
 L977A:  lda     #$00
         rts
 
+;;; ==================================================
+
+L977D:
         jmp     L9789
 
         .byte   0
@@ -9189,6 +9242,7 @@ L977A:  lda     #$00
         .byte   0
         .byte   0
         .byte   0
+
 L9789:  ldy     #$03
 L978B:  lda     ($06),y
         sta     set_pos_params2,y
@@ -9246,6 +9300,8 @@ L97E6:  pla
         .byte   0
 L97F5:  .byte   0
 L97F6:  .byte   0
+
+L97F7:
         ldy     #$00
         lda     ($06),y
         sta     L982A
@@ -10006,6 +10062,9 @@ L9EB4:  asl     a
         lda     L8F15,y
         rts
 
+;;; ==================================================
+
+L9EBE:
         jmp     L9EC3
 
         .byte   0
@@ -10036,6 +10095,9 @@ L9EEA:  ldy     #$00
 
         rts
 
+;;; ==================================================
+
+L9EFB:
         jmp     L9F07
 
 L9EFE:  .byte   0
@@ -10418,6 +10480,10 @@ LA256:  lsr     a
 
 LA2A4:  .byte   0
 LA2A5:  .byte   0
+
+;;; ==================================================
+
+LA2A6:
         jmp     LA2AE
 
 LA2A9:  .byte   0
