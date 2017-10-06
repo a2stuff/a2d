@@ -4147,6 +4147,9 @@ L6747:
 
 L6750:  .byte   $F9
 L6751:  .byte   $66
+
+;;; ==================================================
+
 L6752:  .byte   $00
 L6753:  .byte   $00
 L6754:  .byte   $00
@@ -4179,10 +4182,14 @@ L67F2:  cmp     L6752
 L67FC:  sec
         rts
 
-L67FE:  .byte   $AD,$52,$67,$CD,$53,$67,$F0,$F6
-        .byte   $C9,$80,$D0,$04,$A9,$00
+L67FE:  lda     L6752
+        cmp     L6753
+        beq     L67FC
+        cmp     #$80
+        bne     L680E
+        lda     #0
         bcs     L6811
-        clc
+L680E:  clc
         adc     #$04
 L6811:  clc
         rts
@@ -5073,19 +5080,20 @@ L6EAA:  ldx     L6BDA
 
 ;;; ==================================================
 
-L6ECD:
+.proc L6ECD
         ldx     #$03
-L6ECF:  lda     L0082,x
+loop:   lda     L0082,x
         sta     L6856,x
         dex
-        bpl     L6ECF
+        bpl     loop
         lda     L5F40
         sta     L0082
         lda     L5F41
         sta     L0083
         ldy     #$00
         lda     (L0082),y
-        bmi     L6F02
+        bmi     :+
+
         lda     #$02
         sta     L681D
         lda     #$09
@@ -5096,8 +5104,9 @@ L6ECF:  lda     L0082,x
         sta     L6820
         lda     #$1E
         sta     L6821
-        bne     L6F1B
-L6F02:  lda     #$02
+        bne     end
+
+:       lda     #$02
         sta     L681D
         lda     #$10
         sta     L681E
@@ -5107,7 +5116,8 @@ L6F02:  lda     #$02
         sta     L6820
         lda     #$33
         sta     L6821
-L6F1B:  rts
+end:    rts
+.endproc
 
 ;;; ==================================================
 
@@ -5127,18 +5137,42 @@ L6F30:  lda     #$FB
         sta     $BF
         jmp     L68DF
 
-L6F39:  .byte   $00,$00
-L6F3B:  .byte   $00,$00,$13,$0A,$61,$6F
-L6F41:  .byte   $00,$00
-L6F43:  .byte   $00
-L6F44:  .byte   $00,$13,$0A,$82,$6F
-L6F49:  .byte   $00,$00,$00,$00,$14,$09,$A3,$6F
-L6F51:  .byte   $00
-L6F52:  .byte   $00,$00,$00,$12,$09,$C1,$6F
+.proc up_scroll_params
+        .byte   $00,$00
+incr:   .byte   $00,$00
+        .byte   $13,$0A
+        .addr   up_scroll_bitmap
+.endproc
 
-L6F59:  .byte   $00,$00,$00,$00,$14,$0A,$E0,$6F
+.proc down_scroll_params
+        .byte   $00,$00
+unk1:   .byte   $00
+unk2:   .byte   $00
+        .byte   $13,$0A
+        .addr   down_scroll_bitmap
+.endproc
+
+.proc left_scroll_params
+        .byte   $00,$00,$00,$00
+        .byte   $14,$09
+        .addr   left_scroll_bitmap
+.endproc
+
+.proc right_scroll_params
+        .byte   $00
+        .byte   $00,$00,$00
+        .byte   $12,$09
+        .addr   right_scroll_bitmap
+.endproc
+
+.proc resize_box_params
+        .byte   $00,$00,$00,$00
+        .byte   $14,$0A
+        .addr   resize_box_bitmap
+.endproc
 
         ;;  Up Scroll
+up_scroll_bitmap:
         .byte   px(%0000000),px(%0000000),px(%0000000)
         .byte   px(%0000000),px(%0001100),px(%0000000)
         .byte   px(%0000000),px(%0110011),px(%0000000)
@@ -5152,6 +5186,7 @@ L6F59:  .byte   $00,$00,$00,$00,$14,$0A,$E0,$6F
         .byte   px(%0111111),px(%1111111),px(%1111111)
 
         ;; Down Scroll
+down_scroll_bitmap:
         .byte   px(%0111111),px(%1111111),px(%1111111)
         .byte   px(%0000000),px(%0000000),px(%0000000)
         .byte   px(%0000001),px(%1111111),px(%1100000)
@@ -5165,6 +5200,7 @@ L6F59:  .byte   $00,$00,$00,$00,$14,$0A,$E0,$6F
         .byte   px(%0000000),px(%0000000),px(%0000000)
 
         ;;  Left Scroll
+left_scroll_bitmap:
         .byte   px(%0000000),px(%0000000),px(%0000000)
         .byte   px(%0000000),px(%0001100),px(%0000001)
         .byte   px(%0000000),px(%0111100),px(%0000001)
@@ -5177,6 +5213,7 @@ L6F59:  .byte   $00,$00,$00,$00,$14,$0A,$E0,$6F
         .byte   px(%0000000),px(%0001100),px(%0000001)
 
         ;; Right Scroll
+right_scroll_bitmap:
         .byte   px(%0000000),px(%0000000),px(%0000000)
         .byte   px(%1000000),px(%0011000),px(%0000000)
         .byte   px(%1000000),px(%0011110),px(%0000000)
@@ -5188,9 +5225,10 @@ L6F59:  .byte   $00,$00,$00,$00,$14,$0A,$E0,$6F
         .byte   px(%1000000),px(%0011110),px(%0000000)
         .byte   px(%1000000),px(%0011000),px(%0000000)
 
-        .byte   0
+L6FDF:  .byte   0
 
         ;; Resize Box
+resize_box_bitmap:
         .byte   px(%1111111),px(%1111111),px(%1111111)
         .byte   px(%1000000),px(%0000000),px(%0000001)
         .byte   px(%1001111),px(%1111110),px(%0000001)
@@ -5203,24 +5241,36 @@ L6F59:  .byte   $00,$00,$00,$00,$14,$0A,$E0,$6F
         .byte   px(%1000000),px(%0000000),px(%0000001)
         .byte   px(%1111111),px(%1111111),px(%1111111)
 
-L7001:  .byte   $39
-L7002:  .byte   $6F
-L7003:  .byte   $41
-L7004:  .byte   $6F
-L7005:  .byte   $49
-L7006:  .byte   $6F
-L7007:  .byte   $51
-L7008:  .byte   $6F
-L7009:  .byte   $59
-L700A:  .byte   $6F
+L7001:
+L7002:=*+1
+        .addr   up_scroll_params
+
+L7003:
+L7004:=*+1
+        .addr   down_scroll_params
+
+L7005:
+L7006:=*+1
+        .addr   left_scroll_params
+
+L7007:
+L7008:=*+1
+        .addr   right_scroll_params
+
+L7009:
+L700A:=*+1
+        .addr   resize_box_params
+
 L700B:  .byte   $00
 L700C:  .byte   $00
 L700D:  .byte   $00
 L700E:  .byte   $00
 L700F:  .byte   $00
 L7010:  .byte   $00
+
 L7011:  .byte   $D3
 L7012:  .byte   $6F
+
 L7013:  lda     L7011
         sta     $A7
         lda     L7012
@@ -5463,7 +5513,16 @@ L71E3:  rts
 L71E4:  .byte   $01
 stripes_pattern:
 stripes_pattern_alt := *+1
-        .byte   $FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF
+        .byte   %11111111
+        .byte   %00000000
+        .byte   %11111111
+        .byte   %00000000
+        .byte   %11111111
+        .byte   %00000000
+        .byte   %11111111
+        .byte   %00000000
+        .byte   %11111111
+
 L71EE:  jsr     L7157
         lda     $C9
         and     #$01
@@ -5577,11 +5636,11 @@ L72C9:  jsr     L703E
         jsr     L7104
         ldx     #$03
 L72D5:  lda     L00C7,x
-        sta     L6F39,x
-        sta     L6F41,x
+        sta     up_scroll_params,x
+        sta     down_scroll_params,x
         dex
         bpl     L72D5
-        inc     L6F3B
+        inc     up_scroll_params::incr
         lda     $CD
         ldx     $CE
         sec
@@ -5601,8 +5660,8 @@ L72F8:  pla
         dex
 L72FF:  pha
 L7300:  pla
-        sta     L6F43
-        stx     L6F44
+        sta     down_scroll_params::unk1
+        stx     down_scroll_params::unk2
         lda     L7003
         ldx     L7004
         jsr     L791C
@@ -5614,8 +5673,8 @@ L7319:  bit     $AF
         jsr     L7129
         ldx     #$03
 L7322:  lda     L00C7,x
-        sta     L6F49,x
-        sta     L6F51,x
+        sta     left_scroll_params,x
+        sta     right_scroll_params,x
         dex
         bpl     L7322
         lda     $CB
@@ -5637,8 +5696,8 @@ L7342:  pla
         dex
 L7349:  pha
 L734A:  pla
-        sta     L6F51
-        stx     L6F52
+        sta     right_scroll_params
+        stx     right_scroll_params+1
         lda     L7007
         ldx     L7008
         jsr     L791C
@@ -5676,7 +5735,7 @@ L738E:  lda     $AC
 
 L73A6:  ldx     #$03
 L73A8:  lda     L00C7,x
-        sta     L6F59,x
+        sta     resize_box_params,x
         dex
         bpl     L73A8
         lda     #$04
