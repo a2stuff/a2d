@@ -59,7 +59,7 @@ A2D_QUERY_SCREEN        := $03  ; Get screen state
         ;; .res 8 pattern
         ;; .byte mskand         AND mask, default $FF
         ;; .byte mskor          ORA mask, default $00
-        ;; .byte 0,0,0,0        ???
+        ;; .byte 0,0,0,0        ??? position - (x, y)
         ;; .byte hthick         horizontal pen thickness
         ;; .byte vthick         vertical pen thickness
         ;; .byte 0              ??? fill mode?

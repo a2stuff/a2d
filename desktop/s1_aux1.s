@@ -20,11 +20,23 @@ LD2D0           := $D2D0
 
 ;;; ZP Usage
 
-        ;; $E0-$E7      - Pattern
-        ;; $E8-$E9      - ??? (set by $9 call)
-        ;; $EA-$ED      - position (x/y words)
-        ;; $EE-$EF      - thickness (h/v bytes)
-        ;; $F1          - text mask
+        ;; $D0-$F3      - Drawing state
+        ;;  $D0-$DF      - Box
+        ;;   $D0-D1       - left
+        ;;   $D2-D3       - top
+        ;;   $D4-D5       - addr
+        ;;   $D6-D7       - stride
+        ;;   $D8-D9       - hoff
+        ;;   $DA-DB       - voff
+        ;;   $DC-DD       - width
+        ;;   $DE-DF       - height
+        ;;  $E0-$E7      - Pattern
+        ;;  $E8-$E9      - ??? (set by $9 call) - therefore set mskand/mskor ???
+        ;;  $EA-$ED      - position (x/y words) - YAAAAAAS!!!!!!
+        ;;  $EE-$EF      - thickness (h/v bytes)
+        ;;  $F0          - ???
+        ;;  $F1          - text mask
+        ;;  $F2-$F3      - font
 
         PATTERN := $E0
         POS     := $EA
@@ -4358,13 +4370,13 @@ L6751:  .byte   $66
 
 ;;; ==================================================
 
+;;; $2B IMPL
+
 L6752:  .byte   $00
 L6753:  .byte   $00
 L6754:  .byte   $00
 L6755:  .res    128, 0
         .byte   $00,$00,$00
-
-;;; ==================================================
 
 L67D8:  php
         sei
@@ -4471,11 +4483,12 @@ L685E:  .byte   $1D
 L685F:  .byte   $25
 L6860:  .byte   $68
 L6861:  .byte   $37
-L6862:  pla
+L6862:  .byte   $68
 L6863:  .byte   $5D
-L6864:  pla
-L6865:  phy
-L6866:  pla
+L6864:  .byte   $68
+L6865:  .byte   $5A
+L6866:  .byte   $68
+
 L6867:  lda     L6823
         sta     L0082
         lda     L6824
@@ -4550,7 +4563,7 @@ L68E1:  lda     $BF,y
         rts
 
 L68EA:  sty     YPOS
-        ldy     #$00
+        ldy     #0
         sty     YPOS+1
 L68F0:  sta     XPOS
         stx     XPOS+1
@@ -4568,12 +4581,12 @@ L6900:  jsr     L6906
 L6906:  sta     L0082
         stx     L0083
         clc
-        adc     #$01
+        adc     #1
         bcc     L6910
         inx
 L6910:  sta     $A1
         stx     $A2
-        ldy     #$00
+        ldy     #0
         lda     (L0082),y
         sta     $A3
         rts
