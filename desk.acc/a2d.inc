@@ -134,6 +134,11 @@ A2D_DRAW_LINE   := $0F          ; Draw line (from SET_POS)
         ;; .word xdelta         signed, delta in pixels
         ;; .word ydelta
 
+A2D_DRAW_LINE_ABS := $10        ; Draw line (from SET_POS)
+        ;; (input length 4 bytes)
+        ;; .word xcoord         end coords in pixels
+        ;; .word ycoord
+
 A2D_FILL_RECT   := $11          ; Fill rectangle with selected simple pattern/thickness
         ;; (input length 8 bytes)
         ;; .word left           (includes scroll pos)

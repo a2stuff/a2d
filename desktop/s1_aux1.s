@@ -61,6 +61,7 @@ LD2D0           := $D2D0
         state_tmask     := $F1
         state_font      := $F2
 
+        sizeof_state := 36
 
 ;;; ==================================================
 ;;; A2D
@@ -202,10 +203,10 @@ a2d_exit_with_a:
 rts2:   rts
 
 ;;; ==================================================
-;;; Copy params (35 bytes) to/from ($F4) to $D0
+;;; Copy params (36 bytes) to/from ($F4) to $D0
 
 .proc copy_params_to_zp
-        ldy     #$23
+        ldy     #sizeof_state-1
 :       lda     ($F4),y
         sta     $D0,y
         dey
@@ -214,7 +215,7 @@ rts2:   rts
 .endproc
 
 .proc copy_params_from_zp
-        ldy     #$23
+        ldy     #sizeof_state-1
 :       lda     $D0,y
         sta     ($F4),y
         dey
@@ -266,7 +267,7 @@ a2d_jump_table:
         .addr   L5742               ; $0D
         .addr   jt_rts              ; $0E SET_POS
         .addr   DRAW_LINE_IMPL      ; $0F DRAW_LINE
-        .addr   L5776               ; $10
+        .addr   DRAW_LINE_ABS_IMPL  ; $10 DRAW_LINE_ABS
         .addr   FILL_RECT_IMPL      ; $11 FILL_RECT
         .addr   DRAW_RECT_IMPL      ; $12 DRAW_RECT
         .addr   TEST_BOX_IMPL       ; $13 TEST_BOX
@@ -354,7 +355,7 @@ param_lengths:
         PARAM_DEFN  4, $A1, 0           ; $0D
         PARAM_DEFN  4, state_pos, 0     ; $0E SET_POS
         PARAM_DEFN  4, $A1, 1           ; $0F DRAW_LINE
-        PARAM_DEFN  4, $92, 1           ; $10
+        PARAM_DEFN  4, $92, 1           ; $10 DRAW_LINE_ABS
         PARAM_DEFN  8, $92, 1           ; $11 FILL_RECT
         PARAM_DEFN  8, $9F, 1           ; $12 DRAW_RECT
         PARAM_DEFN  8, $92, 0           ; $13 TEST_BOX
@@ -1345,6 +1346,12 @@ L4FDD:  dex
 L4FE4:  .byte   0
 
 DRAW_RECT_IMPL:
+
+        left   := $9F
+        top    := $A1
+        right  := $A3
+        bottom := $A5
+
         ldy     #$03
 L4FE7:  ldx     #$07
 L4FE9:  lda     $9F,x
@@ -1373,18 +1380,20 @@ L5015:  rts
 
 L5016:  .byte   $00,$02,$04,$06
 L501A:  .byte   $04,$06,$00,$02
+
 L501E:  lda     state_hthick
         sec
-        sbc     #$01
+        sbc     #1
         cmp     #$FF
         beq     L5015
         adc     $96
         sta     $96
         bcc     L502F
         inc     $97
+
 L502F:  lda     state_vthick
         sec
-        sbc     #$01
+        sbc     #1
         cmp     #$FF
         beq     L5015
         adc     $98
@@ -1410,31 +1419,37 @@ L5043:  jsr     L50A9
 ;;; 4 bytes of params, copied to $92
 
 .proc TEST_BOX_IMPL
+
+        left   := $92
+        top    := $94
+        right  := $96
+        bottom := $98
+
         jsr     L514C
         lda     state_xpos
         ldx     state_xpos+1
-        cpx     $93
+        cpx     left+1
         bmi     fail
         bne     :+
-        cmp     $92
+        cmp     left
         bcc     fail
-:       cpx     $97
+:       cpx     right+1
         bmi     :+
         bne     fail
-        cmp     $96
+        cmp     right
         bcc     :+
         bne     fail
 :       lda     state_ypos
         ldx     state_ypos+1
-        cpx     $95
+        cpx     top+1
         bmi     fail
         bne     :+
-        cmp     $94
+        cmp     top
         bcc     fail
-:       cpx     $99
+:       cpx     bottom+1
         bmi     :+
         bne     fail
-        cmp     $98
+        cmp     bottom
         bcc     :+
         bne     fail
 :       lda     #$80            ; success!
@@ -1580,45 +1595,62 @@ L5168:  .byte   0
 L5169:  .byte   0
 
 DRAW_BITMAP_IMPL:
-        ldx     #$03
-L516C:  lda     $8A,x
-        sta     $9B,x
-        lda     $92,x
-        sta     $8A,x
+
+        dbi_left   := $8A
+        dbi_top    := $8C
+        dbi_bitmap := $8E
+        dbi_stride := $90
+        dbi_hoff   := $92
+        dbi_voff   := $94
+        dbi_width  := $96
+        dbi_height := $98
+
+        dbi_x      := $9B
+        dbi_y      := $9D
+
+        ldx     #3         ; copy left/top to $9B/$9D
+:       lda     dbi_left,x ; and hoff/voff to $8A/$8C (overwriting left/top)
+        sta     dbi_x,x
+        lda     dbi_hoff,x
+        sta     dbi_left,x
         dex
-        bpl     L516C
-        lda     $96
+        bpl     :-
+
+        lda     dbi_width
         sec
-        sbc     $92
+        sbc     dbi_hoff
         sta     $82
-        lda     $97
-        sbc     $93
+        lda     dbi_width+1
+        sbc     dbi_hoff+1
         sta     $83
-        lda     $9B
-        sta     $92
+        lda     dbi_x
+        sta     dbi_hoff
+
         clc
         adc     $82
-        sta     $96
-        lda     $9C
-        sta     $93
+        sta     dbi_width
+        lda     dbi_x+1
+        sta     dbi_hoff+1
         adc     $83
-        sta     $97
-        lda     $98
+        sta     dbi_width+1
+
+        lda     dbi_height
         sec
-        sbc     $94
+        sbc     dbi_voff
         sta     $82
-        lda     $99
-        sbc     $95
+        lda     dbi_height+1
+        sbc     dbi_voff+1
         sta     $83
-        lda     $9D
-        sta     $94
+        lda     dbi_y
+        sta     dbi_voff
         clc
         adc     $82
-        sta     $98
-        lda     $9E
-        sta     $95
+        sta     dbi_height
+        lda     dbi_y+1
+        sta     dbi_voff+1
         adc     $83
-        sta     $99
+        sta     dbi_height+1
+        ;; fall through
 
 ;;; ==================================================
 
@@ -2369,26 +2401,30 @@ L5758:  clc
 
 ;;; 4 bytes of params, copied to $A1
 
-DRAW_LINE_IMPL:
-        ldx     #$02
-L5765:  lda     $A1,x
+.proc DRAW_LINE_IMPL
+
+        xdelta := $A1
+        ydelta := $A2
+
+        ldx     #2              ; Convert relative x/y to absolute x/y at $92,$94
+loop:   lda     xdelta,x
         clc
         adc     state_xpos,x
         sta     $92,x
-        lda     $A2,x
+        lda     xdelta+1,x
         adc     state_xpos+1,x
         sta     $93,x
         dex
         dex
-        bpl     L5765
+        bpl     loop
+        ;; fall through
+.endproc
 
 ;;; ==================================================
 
-;;; $10 IMPL
-
 ;;; 4 bytes of params, copied to $92
 
-L5776:
+DRAW_LINE_ABS_IMPL:
         ldx     #$03
 L5778:  lda     state_pos,x
         sta     $96,x
@@ -3213,7 +3249,7 @@ L5E42:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 L5E51:  lda     #$71
         sta     $82
         jsr     L5E7B
-        ldx     #$23
+        ldx     #sizeof_state-1
 L5E5A:  lda     L5F1E,x
         sta     $8A,x
         sta     $D0,x
@@ -3285,25 +3321,29 @@ L5EBD:  sta     (params_addr),y
 
 ;;; ==================================================
 
-QUERY_SCREEN_IMPL:
-        ldy     #35             ; Store 36 bytes at params
-L5EC6:  lda     L5F1E,y
+.proc QUERY_SCREEN_IMPL
+        ldy     #sizeof_state-1 ; Store 36 bytes at params
+loop:   lda     L5F1E,y
         sta     (params_addr),y
         dey
-        bpl     L5EC6
-L5ECE:  rts
+        bpl     loop
+.endproc
+rts3:   rts
 
 ;;; ==================================================
 
 ;;; 1 byte of params, copied to $82
 
-CONFIGURE_ZP_IMPL:
-        lda     $82
+.proc CONFIGURE_ZP_IMPL
+        param := $82
+
+        lda     param
         cmp     preserve_zp_flag
-        beq     L5ECE
+        beq     rts3
         sta     preserve_zp_flag
-        bcc     L5ECE
+        bcc     rts3
         jmp     a2d_dispatch::cleanup
+.endproc
 
 ;;; ==================================================
 
@@ -3314,7 +3354,7 @@ CONFIGURE_ZP_IMPL:
 L5EDE:
         lda     $82
         cmp     L5F1C
-        beq     L5ECE
+        beq     rts3
         sta     L5F1C
         bcc     L5EFF
 L5EEA:  bit     L5F1C
@@ -3732,23 +3772,23 @@ L6293:  lda     L5FF8,x
         dex
         bpl     L6293
         jsr     L60A8
-L629F:  bit     L851C
+L629F:  bit     no_mouse_flag
         bmi     L62A7
         jsr     L62BA
-L62A7:  bit     L851C
+L62A7:  bit     no_mouse_flag
         bpl     L62B1
         lda     #$00
         sta     L5FFC
 L62B1:  lda     L7D74
-        beq     L62B9
+        beq     rts4
         jsr     L7EF5
-L62B9:  rts
+rts4:   rts
 
 L62BA:  ldy     #$14
-        jsr     L6313
+        jsr     call_mouse
         bit     L5FFF
         bmi     L62D9
-        ldx     L851D
+        ldx     mouse_firmware_hi
         lda     $03B8,x
         sta     L5FF8
         lda     $04B8,x
@@ -3787,19 +3827,22 @@ L630A:
         ldx     L6143
         jmp     L5EBB
 
-L6313:  bit     L851C
-        bmi     L62B9
+        ;; Call mouse firmware, operation in Y, param in A
+call_mouse:
+        bit     no_mouse_flag
+        bmi     rts4
+
         bit     L5FFF
         bmi     L6332
         pha
-        ldx     L851D
+        ldx     mouse_firmware_hi
         stx     $89
         lda     #$00
         sta     $88
         lda     ($88),y
         sta     $88
         pla
-        ldy     L851E
+        ldy     mouse_operand
         jmp     ($88)
 
 L6332:  jmp     (L6000)
@@ -3892,7 +3935,7 @@ L63AC:  txa
         lda     #$01
         sta     L5FFE
 L63D1:  ldx     L6338
-        jsr     L84BD
+        jsr     find_mouse
         bit     L6338
         bpl     L63F6
         cpx     #$00
@@ -3938,7 +3981,7 @@ L642A:  lda     $FBB3
         bpl     L643F
         cli
         ora     #$08
-L643F:  jsr     L6313
+L643F:  jsr     call_mouse
         pla
         sta     $FBB3
         jsr     L5E51
@@ -4000,9 +4043,9 @@ L64A4:  rts
 L64A5:
         ldy     #$12
         lda     #$00
-        jsr     L6313
+        jsr     call_mouse
         ldy     #$13
-        jsr     L6313
+        jsr     call_mouse
         bit     L6339
         bpl     L64C7
         bit     L6337
@@ -4109,7 +4152,7 @@ L6567:  sta     $82
         stx     $83
         lda     L653B
         sta     stack_ptr_stash
-        ldy     #$23
+        ldy     #sizeof_state-1
 L6573:  lda     ($82),y
         sta     $D0,y
         dey
@@ -4362,7 +4405,7 @@ sloop:  lda     $82,x
         bpl     sloop
 
         ldy     #$13
-        jsr     L6313
+        jsr     call_mouse
         bcs     :+
         jsr     L666D
         clc
@@ -5592,7 +5635,7 @@ L704A:  lda     ($A9),y
         sta     $AB,y
         dey
         bpl     L704A
-        ldy     #$23
+        ldy     #sizeof_state-1
 L7054:  lda     ($A9),y
         sta     $A3,y
         dey
@@ -6309,7 +6352,7 @@ L75AC:  lda     fill_rect_params,x
         bpl     L75AC
         jsr     L75C6
         bcc     L7585
-        ldy     #$23
+        ldy     #sizeof_state-1
 L75BB:  lda     $D0,y
         sta     (params_addr),y
         dey
@@ -6380,7 +6423,7 @@ L761F:
         sta     $A9
         bcc     L762D
         inc     $AA
-L762D:  ldy     #$23
+L762D:  ldy     #sizeof_state-1
 L762F:  lda     ($82),y
         sta     ($A9),y
         dey
@@ -6405,6 +6448,7 @@ L7644:  ldy     #$00
 ;;; ==================================================
 
 L7649:  .byte   0
+
 CLOSE_CLICK_IMPL:
         jsr     L7013
         beq     L7697
@@ -7414,13 +7458,13 @@ L7D99:  .res    128, 0
 
 L7E19:  bit     L5FFF
         bmi     L7E49
-        bit     L851C
+        bit     no_mouse_flag
         bmi     L7E49
         pha
         txa
         sec
         jsr     L7E75
-        ldx     L851D
+        ldx     mouse_firmware_hi
         sta     $03B8,x
         tya
         sta     $04B8,x
@@ -7428,12 +7472,12 @@ L7E19:  bit     L5FFF
         ldy     #$00
         clc
         jsr     L7E75
-        ldx     L851D
+        ldx     mouse_firmware_hi
         sta     $0438,x
         tya
         sta     $0538,x
         ldy     #$16
-        jmp     L6313
+        jmp     call_mouse
 
 L7E49:  stx     L5FF8
         sty     L5FF9
@@ -7441,7 +7485,7 @@ L7E49:  stx     L5FF8
         bit     L5FFF
         bpl     L7E5C
         ldy     #$16
-        jmp     L6313
+        jmp     call_mouse
 
 L7E5C:  rts
 
@@ -8040,7 +8084,7 @@ L8305:  sta     L7D75
 L831A:  jmp     L7E98
 
 L831D:  sta     set_input_params_key
-        ldx     #$23
+        ldx     #sizeof_state-1
 L8322:  lda     $A7,x
         sta     $0600,x
         dex
@@ -8048,7 +8092,7 @@ L8322:  lda     $A7,x
         lda     set_input_params_key
         jsr     L8110
         php
-        ldx     #$23
+        ldx     #sizeof_state-1
 L8333:  lda     $0600,x
         sta     $A7,x
         dex
@@ -8201,7 +8245,7 @@ L8427:
         sta     L5FFD
         lda     $83
         sta     L5FFE
-L8431:  bit     L851C
+L8431:  bit     no_mouse_flag
         bmi     L84AC
         lda     L5FFD
         asl     a
@@ -8225,7 +8269,7 @@ L845C:  lda     L84AD+1,y
         sta     $05F8
 L846A:  lda     #$00
         ldy     #$17
-        jsr     L6313
+        jsr     call_mouse
         lda     L5FFE
         asl     a
         tay
@@ -8248,69 +8292,93 @@ L8497:  lda     L84B5+1,y
         sta     $05F8
 L84A5:  lda     #$01
         ldy     #$17
-        jsr     L6313
+        jsr     call_mouse
 L84AC:  rts
 
 L84AD:  .word   560-1, 560/2-1, 560/4-1, 560/8-1
 L84B5:  .word   192-1, 192/2-1, 192/4-1, 192/8-1
 
-L84BD:  txa
+;;; ==================================================
+;;; Locate Mouse Slot
+
+
+        ;; If X's high bit is set, only slot in low bits is tested.
+        ;; Otherwise all slots are scanned.
+
+.proc find_mouse
+        txa
         and     #$7F
-        beq     L84CD
-        jsr     L84F2
-        sta     L851C
-        beq     L84DE
-        ldx     #$00
+        beq     scan
+        jsr     check_mouse_in_a
+        sta     no_mouse_flag
+        beq     found
+        ldx     #0
         rts
 
-L84CD:  ldx     #$07
-L84CF:  txa
-        jsr     L84F2
-        sta     L851C
-        beq     L84DE
+        ;; Scan for mouse starting at slot 7
+scan:   ldx     #7
+loop:   txa
+        jsr     check_mouse_in_a
+        sta     no_mouse_flag
+        beq     found
         dex
-        bpl     L84CF
-        ldx     #$00
+        bpl     loop
+        ldx     #0              ; no mouse found
         rts
 
-L84DE:  ldy     #$19
-        jsr     L6313
+found:  ldy     #$19
+        jsr     call_mouse
         jsr     L8431
         ldy     #$18
-        jsr     L6313
-        lda     L851D
+        jsr     call_mouse
+        lda     mouse_firmware_hi
         and     #$0F
-        tax
+        tax                     ; return with mouse slot in X
         rts
 
-L84F2:  ora     #$C0
-        sta     $89
-        lda     #$00
-        sta     $88
-        ldy     #$0C
-        lda     ($88),y
+        ;; Check for mouse in slot A
+.proc check_mouse_in_a
+        ptr := $88
+
+        ora     #>$C000
+        sta     ptr+1
+        lda     #<$0000
+        sta     ptr
+
+        ldy     #$0C            ; $Cn0C = $20
+        lda     (ptr),y
         cmp     #$20
-        bne     L8519
-        ldy     #$FB
-        lda     ($88),y
+        bne     nope
+
+        ldy     #$FB            ; $CnFB = $D6
+        lda     (ptr),y
         cmp     #$D6
-        bne     L8519
-        lda     $89
-        sta     L851D
+        bne     nope
+
+        lda     ptr+1           ; yay, found it!
+        sta     mouse_firmware_hi
         asl     a
         asl     a
         asl     a
         asl     a
-        sta     L851E
+        sta     mouse_operand
         lda     #$00
         rts
 
-L8519:  lda     #$80
+nope:   lda     #$80
         rts
+.endproc
+.endproc
 
-L851C:  .byte   0
-L851D:  .byte   0
-L851E:  .byte   0
+no_mouse_flag:               ; high bit set if no mouse present
+        .byte   0
+mouse_firmware_hi:           ; e.g. if mouse is in slot 4, this is $C4
+        .byte   0
+mouse_operand:               ; e.g. if mouse is in slot 4, this is $40
+        .byte   0
+
+;;; ==================================================
+
         .byte   $03
         sbc     #$85
         php
