@@ -729,7 +729,8 @@ height: .word   0
 pattern:.res    8, 0
 mskand: .byte   0
 mskor:  .byte   0
-        .byte   0,0,0,0         ; ???
+xpos:   .word   0
+ypos:   .word   0
 hthick: .byte   0
 vthick: .byte   0
         .byte   0               ; ???
@@ -796,7 +797,8 @@ height: .word   window_height
 pattern:.res    8, $FF
 mskand: .byte   A2D_DEFAULT_MSKAND
 mskor:  .byte   A2D_DEFAULT_MSKOR
-        .byte   0,0,0,0         ; ???
+xpos:   .word   0
+ypos:   .word   0
 hthick: .byte   1
 vthick: .byte   1
         .byte   0               ; ???

@@ -329,7 +329,8 @@ height: .word   default_height
 pattern:.res    8, $00
 mskand: .byte   A2D_DEFAULT_MSKAND
 mskor:  .byte   A2D_DEFAULT_MSKOR
-        .byte   0,0,0,0         ; ???
+xpos:   .word   0
+ypos:   .word   0
 hthick: .byte   1
 vthick: .byte   1
         .byte   0               ; ???

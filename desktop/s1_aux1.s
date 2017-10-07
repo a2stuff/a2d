@@ -9,10 +9,6 @@
 
 
 L0000           := $0000
-L0082           := $0082
-L0083           := $0083
-L0088           := $0088
-L00C7           := $00C7
 LD05E           := $D05E
 LD2D0           := $D2D0
 
@@ -20,32 +16,51 @@ LD2D0           := $D2D0
 
 ;;; ZP Usage
 
+        params_addr     := $80
+
         ;; $D0-$F3      - Drawing state
         ;;  $D0-$DF      - Box
         ;;   $D0-D1       - left
         ;;   $D2-D3       - top
-        ;;   $D4-D5       - addr
+        ;;   $D4-D5       - addr (low byte might be mask?)
         ;;   $D6-D7       - stride
         ;;   $D8-D9       - hoff
         ;;   $DA-DB       - voff
         ;;   $DC-DD       - width
         ;;   $DE-DF       - height
         ;;  $E0-$E7      - Pattern
-        ;;  $E8-$E9      - ??? (set by $9 call) - therefore set mskand/mskor ???
-        ;;  $EA-$ED      - position (x/y words) - YAAAAAAS!!!!!!
+        ;;  $E8-$E9      - mskand/mskor
+        ;;  $EA-$ED      - position (x/y words)
         ;;  $EE-$EF      - thickness (h/v bytes)
-        ;;  $F0          - ???
+        ;;  $F0          - fill mode (still sketchy on this???)
         ;;  $F1          - text mask
         ;;  $F2-$F3      - font
 
-        PATTERN := $E0
-        POS     := $EA
-        XPOS    := $EA
-        YPOS    := $EC
-        THICK   := $EE
-        HTHICK  := $EE
-        VTHICK  := $EF
-        TMASK   := $F1
+
+        state           := $D0
+        state_box       := $D0
+        state_left      := $D0
+        state_top       := $D2
+        state_addr      := $D4
+        state_stride    := $D6
+        state_hoff      := $D8
+        state_voff      := $DA
+        state_width     := $DC
+        state_height    := $DF
+        state_pattern   := $E0
+        state_msk       := $E8
+        state_mskand    := $E8
+        state_mskor     := $E9
+        state_pos       := $EA
+        state_xpos      := $EA
+        state_ypos      := $EC
+        state_thick     := $EE
+        state_hthick    := $EE
+        state_vthick    := $EF
+        state_fill      := $F0
+        state_tmask     := $F1
+        state_font      := $F2
+
 
 ;;; ==================================================
 ;;; A2D
@@ -73,13 +88,13 @@ LD2D0           := $D2D0
         jsr     copy_params_to_zp
 
 adjust_stack:                   ; Adjust stack to account for params
-        pla                     ; and stash address at $80.
-        sta     $80
+        pla                     ; and stash address at params_addr.
+        sta     params_addr
         clc
         adc     #<3
         tax
         pla
-        sta     $80+1
+        sta     params_addr+1
         adc     #>3
         pha
         txa
@@ -89,7 +104,7 @@ adjust_stack:                   ; Adjust stack to account for params
         stx     stack_ptr_stash
 
         ldy     #1              ; Command index
-        lda     ($80),y
+        lda     (params_addr),y
         asl     a
         tax
         lda     a2d_jump_table,x
@@ -97,14 +112,14 @@ adjust_stack:                   ; Adjust stack to account for params
         lda     a2d_jump_table+1,x
         sta     jump+2
 
-        iny                     ; Point $80 at params
-        lda     ($80),y
+        iny                     ; Point params_addr at params
+        lda     (params_addr),y
         pha
         iny
-        lda     ($80),y
-        sta     $81
+        lda     (params_addr),y
+        sta     params_addr+1
         pla
-        sta     $80
+        sta     params_addr
 
         ;; Param length format is a byte pair;
         ;; * first byte is ZP address to copy bytes to
@@ -115,20 +130,20 @@ adjust_stack:                   ; Adjust stack to account for params
         bpl     done_hiding
 
         txa                     ; if high bit was set, stash
-        pha                     ; registers and $80 and then
+        pha                     ; registers and params_addr and then
         tya                     ; optionally hide cursor
         pha
-        lda     $80
+        lda     params_addr
         pha
-        lda     $81
+        lda     params_addr+1
         pha
         bit     hide_cursor_flag
         bpl     :+
         jsr     hide_cursor
 :       pla
-        sta     $81
+        sta     params_addr+1
         pla
-        sta     $80
+        sta     params_addr
         pla
         and     #$7F            ; clear high bit in length count
         tay
@@ -140,7 +155,7 @@ done_hiding:
         beq     jump            ; nothing to copy
         sta     store+1
         dey
-:       lda     ($80),y
+:       lda     (params_addr),y
 store:  sta     $FF,y           ; self modified
         dey
         bpl     :-
@@ -231,10 +246,8 @@ hide_cursor_count:
 
         ;; jt_rts can be used if the only thing the
         ;; routine needs to do is copy params into
-        ;; the zero page.
+        ;; the zero page (state)
         jt_rts := a2d_dispatch::rts1
-
-
 
 a2d_jump_table:
         .addr   jt_rts              ; $00
@@ -246,7 +259,7 @@ a2d_jump_table:
         .addr   SET_BOX_IMPL        ; $06 SET_BOX
         .addr   SET_FILL_MODE_IMPL  ; $07 SET_FILL_MODE
         .addr   SET_PATTERN_IMPL    ; $08 SET_PATTERN
-        .addr   jt_rts              ; $09
+        .addr   jt_rts              ; $09 SET_MSK
         .addr   jt_rts              ; $0A SET_THICKNESS
         .addr   L586A               ; $0B
         .addr   jt_rts              ; $0C SET_TEXT_MASK
@@ -325,85 +338,85 @@ param_lengths:
         .byte zp, (length | (cursor << 7))
 .endmacro
 
-        PARAM_DEFN  0, $00, 0   ; $00
-        PARAM_DEFN  0, $00, 0   ; $01
-        PARAM_DEFN  1, $82, 0   ; $02
-        PARAM_DEFN  0, $00, 0   ; $03 QUERY_SCREEN
-        PARAM_DEFN 36, $D0, 0   ; $04 SET_STATE
-        PARAM_DEFN  0, $00, 0   ; $05
-        PARAM_DEFN 16, $D0, 0   ; $06 SET_BOX
-        PARAM_DEFN  1, $F0, 0   ; $07 SET_FILL_MODE
-        PARAM_DEFN  8, PATTERN, 0  ; $08 SET_PATTERN
-        PARAM_DEFN  2, $E8, 0   ; $09
-        PARAM_DEFN  2, THICK, 0 ; $0A SET_THICKNESS
-        PARAM_DEFN  0, $00, 0   ; $0B
-        PARAM_DEFN  1, TMASK, 0 ; $0C SET_TEXT_MASK
-        PARAM_DEFN  4, $A1, 0   ; $0D
-        PARAM_DEFN  4, POS, 0   ; $0E SET_POS
-        PARAM_DEFN  4, $A1, 1   ; $0F DRAW_LINE
-        PARAM_DEFN  4, $92, 1   ; $10
-        PARAM_DEFN  8, $92, 1   ; $11 FILL_RECT
-        PARAM_DEFN  8, $9F, 1   ; $12 DRAW_RECT
-        PARAM_DEFN  8, $92, 0   ; $13 TEST_BOX
-        PARAM_DEFN 16, $8A, 0   ; $14 DRAW_BITMAP
-        PARAM_DEFN  0, $00, 1   ; $15
-        PARAM_DEFN  0, $00, 1   ; $16
-        PARAM_DEFN  0, $00, 0   ; $17
-        PARAM_DEFN  3, $A1, 0   ; $18 MEASURE_TEXT
-        PARAM_DEFN  3, $A1, 1   ; $19 DRAW_TEXT
-        PARAM_DEFN  1, $82, 0   ; $1A CONFIGURE_ZP_USE
-        PARAM_DEFN  1, $82, 0   ; $1B
-        PARAM_DEFN  0, $00, 0   ; $1C
-        PARAM_DEFN 12, $82, 0   ; $1D
-        PARAM_DEFN  0, $00, 0   ; $1E
-        PARAM_DEFN  3, $82, 0   ; $1F
-        PARAM_DEFN  2, $82, 0   ; $20
-        PARAM_DEFN  2, $82, 0   ; $21
-        PARAM_DEFN  1, $82, 0   ; $22
-        PARAM_DEFN  0, $00, 0   ; $23
-        PARAM_DEFN  0, $00, 0   ; $24 SET_CURSOR
-        PARAM_DEFN  0, $00, 0   ; $25 SHOW_CURSOR
-        PARAM_DEFN  0, $00, 0   ; $26 HIDE_CURSOR
-        PARAM_DEFN  0, $00, 0   ; $27
-        PARAM_DEFN  0, $00, 0   ; $28
-        PARAM_DEFN  0, $00, 0   ; $29
-        PARAM_DEFN  0, $00, 0   ; $2A GET_INPUT
-        PARAM_DEFN  0, $00, 0   ; $2B
-        PARAM_DEFN  0, $00, 0   ; $2C
-        PARAM_DEFN  5, $82, 0   ; $2D SET_INPUT
-        PARAM_DEFN  1, $82, 0   ; $2E
-        PARAM_DEFN  4, $82, 0   ; $2F
-        PARAM_DEFN  0, $00, 0   ; $30
-        PARAM_DEFN  0, $00, 0   ; $31
-        PARAM_DEFN  4, $C7, 0   ; $32
-        PARAM_DEFN  1, $C7, 0   ; $33
-        PARAM_DEFN  2, $C7, 0   ; $34
-        PARAM_DEFN  3, $C7, 0   ; $35
-        PARAM_DEFN  3, $C7, 0   ; $36
-        PARAM_DEFN  4, $C7, 0   ; $37
-        PARAM_DEFN  0, $00, 0   ; $38 CREATE_WINDOW
-        PARAM_DEFN  1, $82, 0   ; $39 DESTROY_WINDOW
-        PARAM_DEFN  0, $00, 0   ; $3A
-        PARAM_DEFN  1, $82, 0   ; $3B
-        PARAM_DEFN  3, $82, 0   ; $3C QUERY_STATE
-        PARAM_DEFN  2, $82, 0   ; $3D
-        PARAM_DEFN  1, $82, 0   ; $3E
-        PARAM_DEFN  1, $82, 0   ; $3F
-        PARAM_DEFN  4, POS, 0   ; $40 QUERY_TARGET
-        PARAM_DEFN  0, $00, 0   ; $41
-        PARAM_DEFN  1, $82, 0   ; $42
-        PARAM_DEFN  0, $00, 0   ; $43 CLOSE_CLICK
-        PARAM_DEFN  5, $82, 0   ; $44 DRAG_WINDOW
-        PARAM_DEFN  5, $82, 0   ; $45 DRAG_RESIZE
-        PARAM_DEFN  5, $82, 0   ; $46 MAP_COORDS
-        PARAM_DEFN  5, $82, 0   ; $47
-        PARAM_DEFN  4, POS, 0   ; $48 QUERY_CLIENT
-        PARAM_DEFN  3, $82, 0   ; $49 RESIZE_WINDOW
-        PARAM_DEFN  5, $82, 0   ; $4A DRAG_SCROLL
-        PARAM_DEFN  3, $8C, 0   ; $4B UPDATE_SCROLL
-        PARAM_DEFN  2, $8C, 0   ; $4C
-        PARAM_DEFN 16, $8A, 0   ; $4D
-        PARAM_DEFN  2, $82, 0   ; $4E
+        PARAM_DEFN  0, $00, 0           ; $00
+        PARAM_DEFN  0, $00, 0           ; $01
+        PARAM_DEFN  1, $82, 0           ; $02
+        PARAM_DEFN  0, $00, 0           ; $03 QUERY_SCREEN
+        PARAM_DEFN 36, state, 0         ; $04 SET_STATE
+        PARAM_DEFN  0, $00, 0           ; $05
+        PARAM_DEFN 16, state_box, 0     ; $06 SET_BOX
+        PARAM_DEFN  1, state_fill, 0    ; $07 SET_FILL_MODE
+        PARAM_DEFN  8, state_pattern, 0 ; $08 SET_PATTERN
+        PARAM_DEFN  2, state_msk, 0     ; $09
+        PARAM_DEFN  2, state_thick, 0   ; $0A SET_THICKNESS
+        PARAM_DEFN  0, $00, 0           ; $0B
+        PARAM_DEFN  1, state_tmask, 0   ; $0C SET_TEXT_MASK
+        PARAM_DEFN  4, $A1, 0           ; $0D
+        PARAM_DEFN  4, state_pos, 0     ; $0E SET_POS
+        PARAM_DEFN  4, $A1, 1           ; $0F DRAW_LINE
+        PARAM_DEFN  4, $92, 1           ; $10
+        PARAM_DEFN  8, $92, 1           ; $11 FILL_RECT
+        PARAM_DEFN  8, $9F, 1           ; $12 DRAW_RECT
+        PARAM_DEFN  8, $92, 0           ; $13 TEST_BOX
+        PARAM_DEFN 16, $8A, 0           ; $14 DRAW_BITMAP
+        PARAM_DEFN  0, $00, 1           ; $15
+        PARAM_DEFN  0, $00, 1           ; $16
+        PARAM_DEFN  0, $00, 0           ; $17
+        PARAM_DEFN  3, $A1, 0           ; $18 MEASURE_TEXT
+        PARAM_DEFN  3, $A1, 1           ; $19 DRAW_TEXT
+        PARAM_DEFN  1, $82, 0           ; $1A CONFIGURE_ZP_USE
+        PARAM_DEFN  1, $82, 0           ; $1B
+        PARAM_DEFN  0, $00, 0           ; $1C
+        PARAM_DEFN 12, $82, 0           ; $1D
+        PARAM_DEFN  0, $00, 0           ; $1E
+        PARAM_DEFN  3, $82, 0           ; $1F
+        PARAM_DEFN  2, $82, 0           ; $20
+        PARAM_DEFN  2, $82, 0           ; $21
+        PARAM_DEFN  1, $82, 0           ; $22
+        PARAM_DEFN  0, $00, 0           ; $23
+        PARAM_DEFN  0, $00, 0           ; $24 SET_CURSOR
+        PARAM_DEFN  0, $00, 0           ; $25 SHOW_CURSOR
+        PARAM_DEFN  0, $00, 0           ; $26 HIDE_CURSOR
+        PARAM_DEFN  0, $00, 0           ; $27
+        PARAM_DEFN  0, $00, 0           ; $28
+        PARAM_DEFN  0, $00, 0           ; $29
+        PARAM_DEFN  0, $00, 0           ; $2A GET_INPUT
+        PARAM_DEFN  0, $00, 0           ; $2B
+        PARAM_DEFN  0, $00, 0           ; $2C
+        PARAM_DEFN  5, $82, 0           ; $2D SET_INPUT
+        PARAM_DEFN  1, $82, 0           ; $2E
+        PARAM_DEFN  4, $82, 0           ; $2F
+        PARAM_DEFN  0, $00, 0           ; $30
+        PARAM_DEFN  0, $00, 0           ; $31
+        PARAM_DEFN  4, $C7, 0           ; $32
+        PARAM_DEFN  1, $C7, 0           ; $33
+        PARAM_DEFN  2, $C7, 0           ; $34
+        PARAM_DEFN  3, $C7, 0           ; $35
+        PARAM_DEFN  3, $C7, 0           ; $36
+        PARAM_DEFN  4, $C7, 0           ; $37
+        PARAM_DEFN  0, $00, 0           ; $38 CREATE_WINDOW
+        PARAM_DEFN  1, $82, 0           ; $39 DESTROY_WINDOW
+        PARAM_DEFN  0, $00, 0           ; $3A
+        PARAM_DEFN  1, $82, 0           ; $3B
+        PARAM_DEFN  3, $82, 0           ; $3C QUERY_STATE
+        PARAM_DEFN  2, $82, 0           ; $3D
+        PARAM_DEFN  1, $82, 0           ; $3E
+        PARAM_DEFN  1, $82, 0           ; $3F
+        PARAM_DEFN  4, state_pos, 0     ; $40 QUERY_TARGET
+        PARAM_DEFN  0, $00, 0           ; $41
+        PARAM_DEFN  1, $82, 0           ; $42
+        PARAM_DEFN  0, $00, 0           ; $43 CLOSE_CLICK
+        PARAM_DEFN  5, $82, 0           ; $44 DRAG_WINDOW
+        PARAM_DEFN  5, $82, 0           ; $45 DRAG_RESIZE
+        PARAM_DEFN  5, $82, 0           ; $46 MAP_COORDS
+        PARAM_DEFN  5, $82, 0           ; $47
+        PARAM_DEFN  4, state_pos, 0     ; $48 QUERY_CLIENT
+        PARAM_DEFN  3, $82, 0           ; $49 RESIZE_WINDOW
+        PARAM_DEFN  5, $82, 0           ; $4A DRAG_SCROLL
+        PARAM_DEFN  3, $8C, 0           ; $4B UPDATE_SCROLL
+        PARAM_DEFN  2, $8C, 0           ; $4C
+        PARAM_DEFN 16, $8A, 0           ; $4D
+        PARAM_DEFN  2, $82, 0           ; $4E
 
 ;;; ==================================================
 
@@ -732,18 +745,18 @@ L4BA1:  lda     ($84),y
         bcc     L4BB1
 L4BAD:  lda     ($8E),y
         eor     $F6
-L4BB1:  and     $E8
-        ora     $E9
+L4BB1:  and     state_mskand
+        ora     state_mskor
         sta     ($84),y
         dey
         bne     L4BAD
         lda     ($84),y
         eor     ($8E),y
         eor     $F6
-        and     L0088
+        and     $88
         eor     ($84),y
-        and     $E8
-        ora     $E9
+        and     state_mskand
+        ora     state_mskor
         sta     ($84),y
         rts
 
@@ -755,17 +768,17 @@ L4BB1:  and     $E8
 L4BD3:  lda     ($8E),y
         eor     $F6
 L4BD7:  ora     ($84),y
-        and     $E8
-        ora     $E9
+        and     state_mskand
+        ora     state_mskor
         sta     ($84),y
         dey
         bne     L4BD3
         lda     ($8E),y
         eor     $F6
-        and     L0088
+        and     $88
         ora     ($84),y
-        and     $E8
-        ora     $E9
+        and     state_mskand
+        ora     state_mskor
         sta     ($84),y
         rts
 
@@ -776,17 +789,17 @@ L4BD7:  ora     ($84),y
 L4BF9:  lda     ($8E),y
         eor     $F6
 L4BFD:  eor     ($84),y
-        and     $E8
-        ora     $E9
+        and     state_mskand
+        ora     state_mskor
         sta     ($84),y
         dey
         bne     L4BF9
         lda     ($8E),y
         eor     $F6
-        and     L0088
+        and     $88
         eor     ($84),y
-        and     $E8
-        ora     $E9
+        and     state_mskand
+        ora     state_mskor
         sta     ($84),y
         rts
 
@@ -798,18 +811,18 @@ L4C1F:  lda     ($8E),y
         eor     $F6
 L4C23:  eor     #$FF
         and     ($84),y
-        and     $E8
-        ora     $E9
+        and     state_mskand
+        ora     state_mskor
         sta     ($84),y
         dey
         bne     L4C1F
 L4C30:  lda     ($8E),y
         eor     $F6
-        and     L0088
+        and     $88
         eor     #$FF
         and     ($84),y
-        and     $E8
-        ora     $E9
+        and     state_mskand
+        ora     state_mskor
         sta     ($84),y
         rts
 
@@ -842,20 +855,20 @@ L4C67:  ldy     $8C
         inc     $8C
         lda     hires_table_hi,y
         ora     $80
-        sta     L0083
+        sta     $83
         lda     hires_table_lo,y
         adc     $8A
-        sta     L0082
+        sta     $82
 L4C79:  stx     $81
         ldy     #$00
         ldx     #$00
 L4C7F:  sta     HISCR
-        lda     (L0082),y
+        lda     ($82),y
         and     #$7F
         sta     LOWSCR
 L4C8A           := * + 1
         sta     $0601,x
-        lda     (L0082),y
+        lda     ($82),y
         and     #$7F
 L4C91           := * + 1
         sta     $0602,x
@@ -871,7 +884,7 @@ L4CA1           := * + 1
 L4CA2           := * + 2
         jmp     L4CBE
 
-        stx     L0082
+        stx     $82
         ldy     L5168
         lda     #$00
 L4CAA:  ldx     $0601,y
@@ -887,13 +900,13 @@ L4CB5           := * + 2
         bpl     L4CAA
 L4CBA           := * + 1
         sta     $0601
-        ldx     L0082
+        ldx     $82
 L4CBE:
 L4CBF           := * + 1
 L4CC0           := * + 2
         jmp     L4D38
 
-L4CC1:  stx     L0082
+L4CC1:  stx     $82
         ldx     #$00
         ldy     #$00
 L4CC7:
@@ -911,7 +924,7 @@ L4CD4           := * + 1
         cpy     $91
         bcc     L4CC7
         beq     L4CC7
-        ldx     L0082
+        ldx     $82
         jmp     L4D38
 
 L4CE7:  ldx     $94
@@ -935,10 +948,10 @@ L4CFE:
         ror     a
         and     #$C0
         ora     $86
-        sta     L0082
+        sta     $82
         lda     #$04
         adc     #$00
-        sta     L0083
+        sta     $83
         jmp     L4C79
 
 L4D11:  txa
@@ -957,7 +970,7 @@ L4D23           := * + 2
 
 L4D24:  lda     $84
         clc
-        adc     $D6
+        adc     state_stride
         sta     $84
         bcc     L4D30
         inc     $85
@@ -967,7 +980,7 @@ L4D30:  ldy     $91
         jmp     L4C41
 
 L4D38:  lda     hires_table_hi,x
-        ora     $D5
+        ora     state_addr+1
         sta     $85
         lda     hires_table_lo,x
         clc
@@ -982,7 +995,7 @@ L4D38:  lda     hires_table_hi,x
 L4D54:  sta     LOWSCR,y
         lda     $92,y
         ora     #$80
-        sta     L0088
+        sta     $88
         lda     $96,y
         ora     #$80
         sta     $89
@@ -1012,7 +1025,7 @@ L4DA0:  .byte   $4B,$E2,$4B,$08,$4C,$30,$4C,$BA
 ;;; ==================================================
 
 SET_FILL_MODE_IMPL:
-        lda     $F0
+        lda     state_fill
         ldx     #$00
         cmp     #$04
         bcc     L4DB9
@@ -1057,7 +1070,7 @@ L4DF7:  lda     $96
         tax
         lda     L4821,x
         ldy     L4921,x
-L4E01:  sta     L0082
+L4E01:  sta     $82
         tya
         rol     a
         tay
@@ -1081,12 +1094,12 @@ L4E1E:  sta     $86
         sta     $93
         lda     L4D7A,y
         sta     $92
-        lda     L0082
+        lda     $82
         sec
         sbc     $86
 L4E34:  sta     $91
         pha
-        lda     $F0
+        lda     state_fill
         asl     a
         tax
         pla
@@ -1155,18 +1168,18 @@ L4E9A:  txa
 
 L4EA9:  lda     $86
         ldx     $94
-        ldy     $D6
+        ldy     state_stride
         jsr     L4F6D
         clc
-        adc     $D4
+        adc     state_addr
         sta     $84
         tya
-        adc     $D5
+        adc     state_addr+1
         sta     $85
         lda     #$02
         tax
         tay
-        bit     $D6
+        bit     state_stride
         bmi     L4EE9
         lda     #$01
         sta     $8E
@@ -1213,7 +1226,7 @@ L4F11:  lda     $91
         bne     L4F23
         inc     $85
 L4F23:  lda     $92
-L4F25:  sta     L0088
+L4F25:  sta     $88
         lda     $96
         bne     L4F2E
         dex
@@ -1251,22 +1264,22 @@ L4F6A:  jmp     L4C67
 
 L4F6D:  bmi     L4F8E
         asl     a
-L4F70:  stx     L0082
-        sty     L0083
+L4F70:  stx     $82
+        sty     $83
         ldx     #$08
-L4F76:  lsr     L0083
+L4F76:  lsr     $83
         bcc     L4F7D
         clc
-        adc     L0082
+        adc     $82
 L4F7D:  ror     a
         ror     $84
         dex
         bne     L4F76
-        sty     L0082
+        sty     $82
         tay
         lda     $84
         sec
-        sbc     L0082
+        sbc     $82
         bcs     L4F8E
         dey
 L4F8E:  rts
@@ -1288,7 +1301,7 @@ SET_PATTERN_IMPL:
 L4FA3:  lda     $F7
         and     #$07
         tay
-        lda     PATTERN,x
+        lda     state_pattern,x
 L4FAA:  dey
         bmi     L4FB2
         cmp     #$80
@@ -1327,6 +1340,8 @@ L4FDD:  dex
 
 ;;; ==================================================
 
+;;; 4 bytes of params, copied to $9F
+
 L4FE4:  .byte   0
 
 DRAW_RECT_IMPL:
@@ -1351,14 +1366,14 @@ L4FE9:  lda     $9F,x
         bpl     L4FE7
         ldx     #$03
 L500E:  lda     $9F,x
-        sta     POS,x
+        sta     state_pos,x
         dex
         bpl     L500E
 L5015:  rts
 
 L5016:  .byte   $00,$02,$04,$06
 L501A:  .byte   $04,$06,$00,$02
-L501E:  lda     HTHICK
+L501E:  lda     state_hthick
         sec
         sbc     #$01
         cmp     #$FF
@@ -1367,7 +1382,7 @@ L501E:  lda     HTHICK
         sta     $96
         bcc     L502F
         inc     $97
-L502F:  lda     VTHICK
+L502F:  lda     state_vthick
         sec
         sbc     #$01
         cmp     #$FF
@@ -1380,6 +1395,8 @@ L502F:  lda     VTHICK
 
 ;;; ==================================================
 
+;;; 4 bytes of params, copied to $92
+
 FILL_RECT_IMPL:
         jsr     L514C
 L5043:  jsr     L50A9
@@ -1390,10 +1407,12 @@ L5043:  jsr     L50A9
 
 ;;; ==================================================
 
+;;; 4 bytes of params, copied to $92
+
 .proc TEST_BOX_IMPL
         jsr     L514C
-        lda     XPOS
-        ldx     XPOS+1
+        lda     state_xpos
+        ldx     state_xpos+1
         cpx     $93
         bmi     fail
         bne     :+
@@ -1405,8 +1424,8 @@ L5043:  jsr     L50A9
         cmp     $96
         bcc     :+
         bne     fail
-:       lda     YPOS
-        ldx     YPOS+1
+:       lda     state_ypos
+        ldx     state_ypos+1
         cpx     $95
         bmi     fail
         bne     :+
@@ -1429,17 +1448,17 @@ fail:   rts
 SET_BOX_IMPL:
         lda     $D0
         sec
-        sbc     $D8
+        sbc     state_hoff
         sta     $F7
         lda     $D1
-        sbc     $D9
+        sbc     state_hoff+1
         sta     $F8
         lda     $D2
         sec
-        sbc     $DA
+        sbc     state_voff
         sta     $F9
         lda     $D3
-        sbc     $DB
+        sbc     state_voff+1
         sta     $FA
         rts
 
@@ -1454,11 +1473,11 @@ L50B7:  clc
 L50B8:  rts
 
 L50B9:  lda     $97
-        cmp     $D9
+        cmp     state_hoff+1
         bmi     L50B7
         bne     L50C7
         lda     $96
-        cmp     $D8
+        cmp     state_hoff
         bcc     L50B8
 L50C7:  lda     $DF
         cmp     $95
@@ -1468,25 +1487,25 @@ L50C7:  lda     $DF
         cmp     $94
         bcc     L50B8
 L50D5:  lda     $99
-        cmp     $DB
+        cmp     state_voff+1
         bmi     L50B7
         bne     L50E3
         lda     $98
-        cmp     $DA
+        cmp     state_voff
         bcc     L50B8
 L50E3:  ldy     #$00
         lda     $92
         sec
-        sbc     $D8
+        sbc     state_hoff
         tax
         lda     $93
-        sbc     $D9
+        sbc     state_hoff+1
         bpl     L50FE
         stx     $9B
         sta     $9C
-        lda     $D8
+        lda     state_hoff
         sta     $92
-        lda     $D9
+        lda     state_hoff+1
         sta     $93
         iny
 L50FE:  lda     $DC
@@ -1505,16 +1524,16 @@ L50FE:  lda     $DC
         tay
 L5116:  lda     $94
         sec
-        sbc     $DA
+        sbc     state_voff
         tax
         lda     $95
-        sbc     $DB
+        sbc     state_voff+1
         bpl     L5130
         stx     $9D
         sta     $9E
-        lda     $DA
+        lda     state_voff
         sta     $94
-        lda     $DB
+        lda     state_voff+1
         sta     $95
         iny
         iny
@@ -1555,6 +1574,8 @@ L5163:  lda     #$81
 
 ;;; ==================================================
 
+;;; 16 bytes of params, copied to $8A
+
 L5168:  .byte   0
 L5169:  .byte   0
 
@@ -1569,39 +1590,41 @@ L516C:  lda     $8A,x
         lda     $96
         sec
         sbc     $92
-        sta     L0082
+        sta     $82
         lda     $97
         sbc     $93
-        sta     L0083
+        sta     $83
         lda     $9B
         sta     $92
         clc
-        adc     L0082
+        adc     $82
         sta     $96
         lda     $9C
         sta     $93
-        adc     L0083
+        adc     $83
         sta     $97
         lda     $98
         sec
         sbc     $94
-        sta     L0082
+        sta     $82
         lda     $99
         sbc     $95
-        sta     L0083
+        sta     $83
         lda     $9D
         sta     $94
         clc
-        adc     L0082
+        adc     $82
         sta     $98
         lda     $9E
         sta     $95
-        adc     L0083
+        adc     $83
         sta     $99
 
 ;;; ==================================================
 
 ;;; $4D IMPL
+
+;;; 16 bytes of params, copied to $8A
 
 L51B3:  lda     #$00
         sta     $9B
@@ -1723,7 +1746,7 @@ L52A1:  stx     $B0
         asl     a
         sta     $B3
         ldy     #$03
-L52A9:  lda     ($80),y
+L52A9:  lda     (params_addr),y
         sta     $92,y
 L52AE:  sta     $96,y
         dey
@@ -1734,12 +1757,12 @@ L52AE:  sta     $96,y
         sta     $A8
         ldy     #$00
         stx     $AE
-L52C0:  stx     L0082
-        lda     ($80),y
+L52C0:  stx     $82
+        lda     (params_addr),y
         sta     $0700,x
         pha
         iny
-        lda     ($80),y
+        lda     (params_addr),y
         sta     $073C,x
         tax
         pla
@@ -1759,12 +1782,12 @@ L52E1:  cpx     $97
         bcc     L52EF
 L52EB:  sta     $96
         stx     $97
-L52EF:  ldx     L0082
-        lda     ($80),y
+L52EF:  ldx     $82
+        lda     (params_addr),y
         sta     $0780,x
         pha
         iny
-        lda     ($80),y
+        lda     (params_addr),y
         sta     $07BC,x
         tax
         pla
@@ -1791,10 +1814,10 @@ L531E:  cpx     $A8
         cmp     $A7
         bcc     L5330
         beq     L5330
-L532C:  ldx     L0082
+L532C:  ldx     $82
         stx     $AE
 L5330:  sta     $A7
-        ldx     L0082
+        ldx     $82
         inx
         cpx     #$3C
         beq     L5398
@@ -1818,21 +1841,21 @@ L5354:  lda     $B4
         bpl     L5379
         asl     a
         asl     a
-        adc     $80
-        sta     $80
+        adc     params_addr
+        sta     params_addr
         bcc     L5362
-        inc     $81
+        inc     params_addr+1
 L5362:  ldy     #$00
-        lda     ($80),y
+        lda     (params_addr),y
         iny
-        ora     ($80),y
+        ora     (params_addr),y
         sta     $B4
-        inc     $80
+        inc     params_addr
         bne     L5371
-        inc     $81
-L5371:  inc     $80
+        inc     params_addr+1
+L5371:  inc     params_addr
         bne     L5377
-        inc     $81
+        inc     params_addr+1
 L5377:  ldy     #$80
 L5379:  rts
 
@@ -1883,7 +1906,7 @@ L53B6:  sty     $AA
         dec     $AF
 L53BE:  lda     $0780,y
         ldx     $07BC,y
-        stx     L0083
+        stx     $83
 L53C6:  sty     $A9
         iny
         cpy     $B3
@@ -1892,12 +1915,12 @@ L53C6:  sty     $A9
 L53CF:  cmp     $0780,y
         bne     L53DB
         ldx     $07BC,y
-        cpx     L0083
+        cpx     $83
         beq     L53C6
 L53DB:  ldx     $AB
         sec
         sbc     $0780,x
-        lda     L0083
+        lda     $83
         sbc     $07BC,x
         bmi     L5448
         lda     $A9
@@ -1980,14 +2003,14 @@ L5484:  tay
         sta     $0428,x
         cpy     $B1
         beq     L549E
-        ldy     L0082
+        ldy     $82
         txa
         sta     $0428,y
         jmp     L547A
 
 L549E:  stx     $B1
         bcs     L547A
-L54A2:  sty     L0082
+L54A2:  sty     $82
         lda     $0428,y
         bpl     L5484
         sta     $0428,x
@@ -2010,7 +2033,7 @@ L54C6:  lda     $05E8,x
         cmp     $AA
         bne     L5532
         lda     $0428,x
-        sta     L0082
+        sta     $82
         jsr     L5606
         lda     $B2
         bmi     L5517
@@ -2030,7 +2053,7 @@ L54E0:  tay
         lda     L5E21,x
         cmp     L5E21,y
         bcc     L5520
-L5507:  sty     L0083
+L5507:  sty     $83
         lda     $0428,y
         bpl     L54E0
         sta     $0428,x
@@ -2048,15 +2071,15 @@ L5520:  tya
         beq     L5517
         sta     $0428,x
         txa
-        ldy     L0083
+        ldy     $83
         sta     $0428,y
-L552E:  ldx     L0082
+L552E:  ldx     $82
         bpl     L54C6
 L5532:  stx     $B1
 L5534:  lda     #$00
         sta     $AB
         lda     $B2
-        sta     L0083
+        sta     $83
         bmi     L551F
 L553E:  tax
         lda     $A9
@@ -2070,7 +2093,7 @@ L553E:  tax
         bpl     L556C
         cpx     $B2
         beq     L5564
-        ldy     L0083
+        ldy     $83
         lda     $0428,x
         sta     $0428,y
         jmp     L55F8
@@ -2261,9 +2284,9 @@ L56D6:
         lda     #$00
         sta     $BA
         jsr     L5362
-L56DD:  lda     $80
+L56DD:  lda     params_addr
         sta     $B7
-        lda     $81
+        lda     params_addr+1
         sta     $B8
         lda     $B4
         sta     $B6
@@ -2299,7 +2322,7 @@ L5715:  lda     ($B7),y
         ldy     #$03
 L5721:  lda     ($B7),y
         sta     $96,y
-        sta     POS,y
+        sta     state_pos,y
         dey
         bpl     L5721
         jsr     L5783
@@ -2318,6 +2341,8 @@ L5731:  lda     $B7,x
 
 ;;; $0D IMPL
 
+;;; 4 bytes of params, copied to $A1
+
 L5742:
         lda     $A1
         ldx     $A2
@@ -2325,31 +2350,33 @@ L5742:
         lda     $A3
         ldx     $A4
         clc
-        adc     YPOS
-        sta     YPOS
+        adc     state_ypos
+        sta     state_ypos
         txa
-        adc     YPOS+1
-        sta     YPOS+1
+        adc     state_ypos+1
+        sta     state_ypos+1
         rts
 
 L5758:  clc
-        adc     XPOS
-        sta     XPOS
+        adc     state_xpos
+        sta     state_xpos
         txa
-        adc     XPOS+1
-        sta     XPOS+1
+        adc     state_xpos+1
+        sta     state_xpos+1
         rts
 
 ;;; ==================================================
+
+;;; 4 bytes of params, copied to $A1
 
 DRAW_LINE_IMPL:
         ldx     #$02
 L5765:  lda     $A1,x
         clc
-        adc     XPOS,x
+        adc     state_xpos,x
         sta     $92,x
         lda     $A2,x
-        adc     XPOS+1,x
+        adc     state_xpos+1,x
         sta     $93,x
         dex
         dex
@@ -2359,12 +2386,14 @@ L5765:  lda     $A1,x
 
 ;;; $10 IMPL
 
+;;; 4 bytes of params, copied to $92
+
 L5776:
         ldx     #$03
-L5778:  lda     POS,x
+L5778:  lda     state_pos,x
         sta     $96,x
         lda     $92,x
-        sta     POS,x
+        sta     state_pos,x
         dex
         bpl     L5778
 L5783:  lda     $99
@@ -2399,10 +2428,10 @@ L57B2:  lda     $92,x
         sta     $96,x
         dex
         bpl     L57B2
-L57BF:  ldx     HTHICK
+L57BF:  ldx     state_hthick
         dex
         stx     $A2
-        lda     VTHICK
+        lda     state_vthick
         sta     $A4
         lda     #$00
         sta     $A1
@@ -2422,20 +2451,20 @@ L57E1:  lda     $A1
         sta     $A2
         stx     $A1
 L57E9:  ldy     #$05
-L57EB:  sty     L0082
+L57EB:  sty     $82
         ldx     L583E,y
         ldy     #$03
 L57F2:  lda     $92,x
-        sta     L0083,y
+        sta     $83,y
         dex
         dey
         bpl     L57F2
-        ldy     L0082
+        ldy     $82
         ldx     L5844,y
         lda     $A1,x
         clc
-        adc     L0083
-        sta     L0083
+        adc     $83
+        sta     $83
         bcc     L580B
         inc     $84
 L580B:  ldx     L584A,y
@@ -2450,19 +2479,19 @@ L5819:  tya
         asl     a
         tay
         ldx     #$00
-L581F:  lda     L0083,x
+L581F:  lda     $83,x
         sta     L5852,y
         iny
         inx
         cpx     #$04
         bne     L581F
-        ldy     L0082
+        ldy     $82
         dey
         bpl     L57EB
         lda     L583C
-        sta     $80
+        sta     params_addr
         lda     L583D
-        sta     $81
+        sta     params_addr+1
         jmp     L537E
 
 L583C:  .byte   $50
@@ -2479,20 +2508,20 @@ L5852:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 ;;; $0B IMPL
 
 L586A:
-        lda     $80
-        sta     $F2
-        lda     $81
-        sta     $F3
+        lda     params_addr
+        sta     state_font
+        lda     params_addr+1
+        sta     state_font+1
 L5872:  ldy     #$00
-L5874:  lda     ($F2),y
+L5874:  lda     (state_font),y
         sta     $FD,y
         iny
         cpy     #$03
         bne     L5874
         cmp     #$11
         bcs     L58B7
-        lda     $F2
-        ldx     $F3
+        lda     state_font
+        ldx     state_font+1
         clc
         adc     #$03
         bcc     L588C
@@ -2535,33 +2564,35 @@ L58CC:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
 ;;; ==================================================
 
+;;; 3 bytes of params, copied to $A1
+
 MEASURE_TEXT_IMPL:
         jsr     L58E8
         ldy     #3              ; Store result (X,A) at params+3
-        sta     ($80),y
+        sta     (params_addr),y
         txa
         iny
-        sta     ($80),y
+        sta     (params_addr),y
         rts
 
 L58E8:  ldx     #$00
         ldy     #$00
-        sty     L0082
-L58EE:  sty     L0083
+        sty     $82
+L58EE:  sty     $83
         lda     ($A1),y
         tay
         txa
         clc
         adc     ($FB),y
         bcc     L58FB
-        inc     L0082
+        inc     $82
 L58FB:  tax
-        ldy     L0083
+        ldy     $83
         iny
         cpy     $A3
         bne     L58EE
         txa
-        ldx     L0082
+        ldx     $82
         rts
 
 L5907:  sec
@@ -2569,18 +2600,18 @@ L5907:  sec
         bcs     L590D
         dex
 L590D:  clc
-        adc     XPOS
+        adc     state_xpos
         sta     $96
         txa
-        adc     XPOS+1
+        adc     state_xpos+1
         sta     $97
-        lda     XPOS
+        lda     state_xpos
         sta     $92
-        lda     XPOS+1
+        lda     state_xpos+1
         sta     $93
-        lda     YPOS
+        lda     state_ypos
         sta     $98
-        ldx     YPOS+1
+        ldx     state_ypos+1
         stx     $99
         clc
         adc     #$01
@@ -2595,6 +2626,8 @@ L5933:  sta     $94
         rts
 
 ;;; ==================================================
+
+;;; 3 bytes of params, copied to $A1
 
 DRAW_TEXT_IMPL:
         jsr     L5EFA
@@ -2639,7 +2672,7 @@ L5972:  jsr     L4DBC
 L5985:  sta     $87
         lda     $91
         inc     $91
-        ldy     $D6
+        ldy     state_stride
         bpl     L599F
         asl     a
         tax
@@ -2676,19 +2709,19 @@ L59C3:  lda     $98
         tax
         lda     L5D81,x
         sta     L5B02
-        lda     L5D82,x
+        lda     L5D81+1,x
         sta     L5B03
         lda     L5DA1,x
         sta     L5A95
-        lda     L5DA2,x
+        lda     L5DA1+1,x
         sta     L5A96
         lda     L5DC1,x
         sta     L5C22
-        lda     L5DC2,x
+        lda     L5DC1+1,x
         sta     L5C23
         lda     L5DE1,x
         sta     L5CBE
-        lda     L5DE2,x
+        lda     L5DE1+1,x
         sta     L5CBF
         txa
         lsr     a
@@ -2703,9 +2736,9 @@ L59C3:  lda     $98
         ldx     #$C3
         sec
 L5A0C:  lda     L58BC,y
-        sta     L5B05,x
+        sta     L5B04+1,x
         lda     L58CC,y
-        sta     L5B06,x
+        sta     L5B04+2,x
         txa
         sbc     #$0D
         tax
@@ -2716,9 +2749,9 @@ L5A0C:  lda     L58BC,y
         ldx     #$4B
         sec
 L5A26:  lda     L58BC,y
-        sta     L5A98,x
+        sta     L5A97+1,x
         lda     L58CC,y
-        sta     L5A99,x
+        sta     L5A97+2,x
         txa
         sbc     #$05
         tax
@@ -2727,11 +2760,11 @@ L5A26:  lda     L58BC,y
         bpl     L5A26
         ldy     $94
         ldx     #$00
-L5A3F:  bit     $D6
+L5A3F:  bit     state_stride
         bmi     L5A56
         lda     $84
         clc
-        adc     $D6
+        adc     state_stride
         sta     $84
         sta     $20,x
         lda     $85
@@ -2744,7 +2777,7 @@ L5A56:  lda     hires_table_lo,y
         adc     $86
         sta     $20,x
         lda     hires_table_hi,y
-        ora     $D5
+        ora     state_addr+1
         sta     $21,x
 L5A65:  cpy     $98
 L5A68           := * + 1
@@ -2778,40 +2811,37 @@ L5A95           := * + 1
 L5A96           := * + 2
         jmp     L5A97
 
-L5A97:
-L5A98           := * + 1
-L5A99           := * + 2
-        lda     $FFFF,x
+L5A97:  lda     $FFFF,x
         sta     $0F
-        lda     $FFFF,x
+L5A9C:  lda     $FFFF,x
         sta     $0E
-        lda     $FFFF,x
+L5AA1:  lda     $FFFF,x
         sta     $0D
-        lda     $FFFF,x
+L5AA6:  lda     $FFFF,x
         sta     $0C
-        lda     $FFFF,x
+L5AAB:  lda     $FFFF,x
         sta     $0B
-        lda     $FFFF,x
+L5AB0:  lda     $FFFF,x
         sta     $0A
-        lda     $FFFF,x
+L5AB5:  lda     $FFFF,x
         sta     $09
-        lda     $FFFF,x
+L5ABA:  lda     $FFFF,x
         sta     $08
-        lda     $FFFF,x
+L5ABF:  lda     $FFFF,x
         sta     $07
-        lda     $FFFF,x
+L5AC4:  lda     $FFFF,x
         sta     $06
-        lda     $FFFF,x
+L5AC9:  lda     $FFFF,x
         sta     $05
-        lda     $FFFF,x
+L5ACE:  lda     $FFFF,x
         sta     $04
-        lda     $FFFF,x
+L5AD3:  lda     $FFFF,x
         sta     $03
-        lda     $FFFF,x
+L5AD8:  lda     $FFFF,x
         sta     $02
-        lda     $FFFF,x
+L5ADD:  lda     $FFFF,x
         sta     $01
-        lda     $FFFF,x
+L5AE2:  lda     $FFFF,x
         sta     L0000
 L5AE7:  jmp     L5BD4
 
@@ -2830,100 +2860,97 @@ L5B02           := * + 1
 L5B03           := * + 2
         jmp     L5B04
 
-L5B04:
-L5B05           := * + 1
-L5B06           := * + 2
-        ldy     $FFFF,x
+L5B04:  ldy     $FFFF,x         ; All of these $FFFFs are modified
         lda     ($42),y
         sta     $1F
         lda     ($40),y
         ora     $0F
         sta     $0F
-        ldy     $FFFF,x
+L5B11:  ldy     $FFFF,x
         lda     ($42),y
         sta     $1E
         lda     ($40),y
         ora     $0E
         sta     $0E
-        ldy     $FFFF,x
+L5B1E:  ldy     $FFFF,x
         lda     ($42),y
         sta     $1D
         lda     ($40),y
         ora     $0D
         sta     $0D
-        ldy     $FFFF,x
+L5B2B:  ldy     $FFFF,x
         lda     ($42),y
         sta     $1C
         lda     ($40),y
         ora     $0C
         sta     $0C
-        ldy     $FFFF,x
+L5B38:  ldy     $FFFF,x
         lda     ($42),y
         sta     $1B
         lda     ($40),y
         ora     $0B
         sta     $0B
-        ldy     $FFFF,x
+L5B45:  ldy     $FFFF,x
         lda     ($42),y
         sta     $1A
         lda     ($40),y
         ora     $0A
         sta     $0A
-        ldy     $FFFF,x
+L5B52:  ldy     $FFFF,x
         lda     ($42),y
         sta     $19
         lda     ($40),y
         ora     $09
         sta     $09
-        ldy     $FFFF,x
+L5B5F:  ldy     $FFFF,x
         lda     ($42),y
         sta     $18
         lda     ($40),y
         ora     $08
         sta     $08
-        ldy     $FFFF,x
+L5B6C:  ldy     $FFFF,x
         lda     ($42),y
         sta     $17
         lda     ($40),y
         ora     $07
         sta     $07
-        ldy     $FFFF,x
+L5B79:  ldy     $FFFF,x
         lda     ($42),y
         sta     $16
         lda     ($40),y
         ora     $06
         sta     $06
-        ldy     $FFFF,x
+L5B86:  ldy     $FFFF,x
         lda     ($42),y
         sta     $15
         lda     ($40),y
         ora     $05
         sta     $05
-        ldy     $FFFF,x
+L5B93:  ldy     $FFFF,x
         lda     ($42),y
         sta     $14
         lda     ($40),y
         ora     $04
         sta     $04
-        ldy     $FFFF,x
+L5BA0:  ldy     $FFFF,x
         lda     ($42),y
         sta     $13
         lda     ($40),y
         ora     $03
         sta     $03
-        ldy     $FFFF,x
+L5BAD:  ldy     $FFFF,x
         lda     ($42),y
         sta     $12
         lda     ($40),y
         ora     $02
         sta     $02
-        ldy     $FFFF,x
+L5BBA:  ldy     $FFFF,x
         lda     ($42),y
         sta     $11
         lda     ($40),y
         ora     $01
         sta     $01
-        ldy     $FFFF,x
+L5BC7:  ldy     $FFFF,x
         lda     ($42),y
         sta     $10
         lda     ($40),y
@@ -2977,54 +3004,54 @@ L5C23           := * + 2
         jmp     L5C24
 
 L5C24:  lda     $0F
-        eor     TMASK
+        eor     state_tmask
         sta     ($3E),y
-        lda     $0E
-        eor     TMASK
+L5C2A:  lda     $0E
+        eor     state_tmask
         sta     ($3C),y
-        lda     $0D
-        eor     TMASK
+L5C30:  lda     $0D
+        eor     state_tmask
         sta     ($3A),y
-        lda     $0C
-        eor     TMASK
+L5C36:  lda     $0C
+        eor     state_tmask
         sta     ($38),y
-        lda     $0B
-        eor     TMASK
+L5C3C:  lda     $0B
+        eor     state_tmask
         sta     ($36),y
-        lda     $0A
-        eor     TMASK
+L5C42:  lda     $0A
+        eor     state_tmask
         sta     ($34),y
-        lda     $09
-        eor     TMASK
+L5C48:  lda     $09
+        eor     state_tmask
         sta     ($32),y
-        lda     $08
-        eor     TMASK
+L5C4E:  lda     $08
+        eor     state_tmask
         sta     ($30),y
-        lda     $07
-        eor     TMASK
+L5C54:  lda     $07
+        eor     state_tmask
         sta     ($2E),y
-        lda     $06
-        eor     TMASK
+L5C5A:  lda     $06
+        eor     state_tmask
         sta     ($2C),y
-        lda     $05
-        eor     TMASK
+L5C60:  lda     $05
+        eor     state_tmask
         sta     ($2A),y
-        lda     $04
-        eor     TMASK
+L5C66:  lda     $04
+        eor     state_tmask
         sta     ($28),y
-        lda     $03
-        eor     TMASK
+L5C6C:  lda     $03
+        eor     state_tmask
         sta     ($26),y
-        lda     $02
-        eor     TMASK
+L5C72:  lda     $02
+        eor     state_tmask
         sta     ($24),y
-        lda     $01
-        eor     TMASK
+L5C78:  lda     $01
+        eor     state_tmask
         sta     ($22),y
-        lda     L0000
-        eor     TMASK
+L5C7E:  lda     $00
+        eor     state_tmask
         sta     ($20),y
-L5C84:  bit     $D6
+L5C84:  bit     state_stride
         bpl     L5C94
         lda     $9C
         eor     #$01
@@ -3060,130 +3087,118 @@ L5CBF           := * + 2
         jmp     L5CC0
 
 L5CC0:  lda     $0F
-        eor     TMASK
+        eor     state_tmask
         eor     ($3E),y
         and     $80
         eor     ($3E),y
         sta     ($3E),y
-        lda     $0E
-        eor     TMASK
+L5CCC:  lda     $0E
+        eor     state_tmask
         eor     ($3C),y
         and     $80
         eor     ($3C),y
         sta     ($3C),y
-        lda     $0D
-        eor     TMASK
+L5CD8:  lda     $0D
+        eor     state_tmask
         eor     ($3A),y
         and     $80
         eor     ($3A),y
         sta     ($3A),y
-        lda     $0C
-        eor     TMASK
+L5CE4:  lda     $0C
+        eor     state_tmask
         eor     ($38),y
         and     $80
         eor     ($38),y
         sta     ($38),y
-        lda     $0B
-        eor     TMASK
+L5CF0:  lda     $0B
+        eor     state_tmask
         eor     ($36),y
         and     $80
         eor     ($36),y
         sta     ($36),y
-        lda     $0A
-        eor     TMASK
+L5CFC:  lda     $0A
+        eor     state_tmask
         eor     ($34),y
         and     $80
         eor     ($34),y
         sta     ($34),y
-        lda     $09
-        eor     TMASK
+L5D08:  lda     $09
+        eor     state_tmask
         eor     ($32),y
         and     $80
         eor     ($32),y
         sta     ($32),y
-        lda     $08
-        eor     TMASK
+L5D14:  lda     $08
+        eor     state_tmask
         eor     ($30),y
         and     $80
         eor     ($30),y
         sta     ($30),y
-        lda     $07
-        eor     TMASK
+L5D20:  lda     $07
+        eor     state_tmask
         eor     ($2E),y
         and     $80
         eor     ($2E),y
         sta     ($2E),y
-        lda     $06
-        eor     TMASK
+L5D2C:  lda     $06
+        eor     state_tmask
         eor     ($2C),y
         and     $80
         eor     ($2C),y
         sta     ($2C),y
-        lda     $05
-        eor     TMASK
+L5D38:  lda     $05
+        eor     state_tmask
         eor     ($2A),y
         and     $80
         eor     ($2A),y
         sta     ($2A),y
-        lda     $04
-        eor     TMASK
+L5D44:  lda     $04
+        eor     state_tmask
         eor     ($28),y
         and     $80
         eor     ($28),y
         sta     ($28),y
-        lda     $03
-        eor     TMASK
+L5D50:  lda     $03
+        eor     state_tmask
         eor     ($26),y
         and     $80
         eor     ($26),y
         sta     ($26),y
-        lda     $02
-        eor     TMASK
+L5D5C:  lda     $02
+        eor     state_tmask
         eor     ($24),y
         and     $80
         eor     ($24),y
         sta     ($24),y
-        lda     $01
-        eor     TMASK
+L5D68:  lda     $01
+        eor     state_tmask
         eor     ($22),y
         and     $80
         eor     ($22),y
         sta     ($22),y
-        lda     L0000
-        eor     TMASK
+L5D74:  lda     $00
+        eor     state_tmask
         eor     ($20),y
         and     $80
         eor     ($20),y
         sta     ($20),y
         rts
 
-L5D81:  .byte   $C7
-L5D82:  .byte   $5B,$BA,$5B,$AD,$5B,$A0,$5B,$93
-        .byte   $5B,$86,$5B,$79,$5B,$6C,$5B,$5F
-        .byte   $5B,$52,$5B,$45,$5B,$38,$5B,$2B
-        .byte   $5B,$1E,$5B,$11,$5B,$04,$5B
-L5DA1:  .byte   $E2
-L5DA2:  .byte   $5A,$DD,$5A,$D8,$5A,$D3,$5A,$CE
-        .byte   $5A,$C9,$5A,$C4,$5A,$BF,$5A,$BA
-        .byte   $5A,$B5,$5A,$B0,$5A,$AB,$5A,$A6
-        .byte   $5A,$A1,$5A,$9C,$5A,$97,$5A
-L5DC1:  .byte   $7E
-L5DC2:  .byte   $5C,$78,$5C,$72,$5C,$6C,$5C,$66
-        .byte   $5C,$60,$5C,$5A,$5C,$54,$5C,$4E
-        .byte   $5C,$48,$5C,$42,$5C,$3C,$5C,$36
-        .byte   $5C,$30,$5C,$2A,$5C,$24,$5C
-L5DE1:  .byte   $74
-L5DE2:  .byte   $5D,$68,$5D,$5C,$5D,$50,$5D,$44
-        .byte   $5D,$38,$5D,$2C,$5D,$20,$5D,$14
-        .byte   $5D,$08,$5D,$FC,$5C,$F0,$5C,$E4
-        .byte   $5C,$D8,$5C,$CC,$5C,$C0,$5C
+L5D81:  .addr   L5BC7,L5BBA,L5BAD,L5BA0,L5B93,L5B86,L5B79,L5B6C,L5B5F,L5B52,L5B45,L5B38,L5B2B,L5B1E,L5B11,L5B04
+L5DA1:  .addr   L5AE2,L5ADD,L5AD8,L5AD3,L5ACE,L5AC9,L5AC4,L5ABF,L5ABA,L5AB5,L5AB0,L5AAB,L5AA6,L5AA1,L5A9C,L5A97
+L5DC1:  .addr   L5C7E,L5C78,L5C72,L5C6C,L5C66,L5C60,L5C5A,L5C54,L5C4E,L5C48,L5C42,L5C3C,L5C36,L5C30,L5C2A,L5C24
+L5DE1:  .addr   L5D74,L5D68,L5D5C,L5D50,L5D44,L5D38,L5D2C,L5D20,L5D14,L5D08,L5CFC,L5CF0,L5CE4,L5CD8,L5CCC,L5CC0
+
 L5E01:  .byte   $00
 L5E02:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00
+
 L5E11:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
+
 L5E21:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
+
 L5E31:  .byte   $00
 L5E32:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00
@@ -3196,7 +3211,7 @@ L5E42:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 ;;; $01 IMPL
 
 L5E51:  lda     #$71
-        sta     L0082
+        sta     $82
         jsr     L5E7B
         ldx     #$23
 L5E5A:  lda     L5F1E,x
@@ -3220,10 +3235,12 @@ L5E79:  .addr   $5F42
 
 ;;; $02 IMPL
 
+;;; 1 byte param, copied to $82
+
 L5E7B:  lda     DHIRESON
         sta     SET80VID
         ldx     #$03
-L5E83:  lsr     L0082
+L5E83:  lsr     $82
         lda     L5E98,x
         rol     a
         tay
@@ -3240,11 +3257,11 @@ L5E98:  .byte   $28,$29,$2A,$2B
 ;;; ==================================================
 
 SET_STATE_IMPL:
-        lda     $80
-        ldx     $81
+        lda     params_addr
+        ldx     params_addr+1
 L5EA0:  sta     $F4
         stx     $F5
-L5EA4:  lda     $F3
+L5EA4:  lda     state_font+1
         beq     L5EAB
         jsr     L5872
 L5EAB:  jsr     SET_BOX_IMPL
@@ -3260,26 +3277,28 @@ L5EB4:
         lda     $F4
         ldx     $F5
 L5EBB:  ldy     #0              ; Store result (X,A) at params
-L5EBD:  sta     ($80),y
+L5EBD:  sta     (params_addr),y
         txa
         iny
-        sta     ($80),y
+        sta     (params_addr),y
         rts
 
 ;;; ==================================================
 
 QUERY_SCREEN_IMPL:
-        ldy     #35             ; Store 35 bytes at params
+        ldy     #35             ; Store 36 bytes at params
 L5EC6:  lda     L5F1E,y
-        sta     ($80),y
+        sta     (params_addr),y
         dey
         bpl     L5EC6
 L5ECE:  rts
 
 ;;; ==================================================
 
+;;; 1 byte of params, copied to $82
+
 CONFIGURE_ZP_IMPL:
-        lda     L0082
+        lda     $82
         cmp     preserve_zp_flag
         beq     L5ECE
         sta     preserve_zp_flag
@@ -3290,8 +3309,10 @@ CONFIGURE_ZP_IMPL:
 
 ;;; $1B IMPL
 
+;;; 1 byte of params, copied to $82
+
 L5EDE:
-        lda     L0082
+        lda     $82
         cmp     L5F1C
         beq     L5ECE
         sta     L5F1C
@@ -3322,7 +3343,7 @@ L5F01:  lda     L0000,x
 L5F0A:
         ldy     #5              ; Store 5 bytes at params
 L5F0C:  lda     L5F15,y
-        sta     ($80),y
+        sta     (params_addr),y
         dey
         bpl     L5F0C
         rts
@@ -3350,7 +3371,8 @@ height: .word   192-1
 pattern:.res    8, $FF
 mskand: .byte   A2D_DEFAULT_MSKAND
 mskor:  .byte   A2D_DEFAULT_MSKOR
-        .byte   0,0,0,0         ; ???
+xpos:   .word   0
+ypos:   .word   0
 hthick: .byte   1
 vthick: .byte   1
         .byte   0               ; ???
@@ -3416,17 +3438,18 @@ L6067:  lda     #$FF
         lda     #$00
         sta     L5FF2
         lda     L6065
-        sta     $80
+        sta     params_addr
         lda     L6066
-        sta     $81
+        sta     params_addr+1
+        ;; fall through
 
 ;;; ==================================================
 
 SET_CURSOR_IMPL:
         php
         sei
-        lda     $80
-        ldx     $81
+        lda     params_addr
+        ldx     params_addr+1
         sta     L6142
         stx     L6143
         clc
@@ -3436,10 +3459,10 @@ SET_CURSOR_IMPL:
 L608D:  sta     L6148
         stx     L6149
         ldy     #$30
-        lda     ($80),y
+        lda     (params_addr),y
         sta     L6002
         iny
-        lda     ($80),y
+        lda     (params_addr),y
         sta     L6003
         jsr     L61C6
         jsr     L60B2
@@ -3474,7 +3497,7 @@ L60B2:  lda     #$00
         lda     #$FF
         bmi     L60E4
 L60E1:  jsr     L4E8D
-L60E4:  sta     L0082
+L60E4:  sta     $82
         tya
         rol     a
         cmp     #$07
@@ -3484,7 +3507,7 @@ L60EE:  tay
         lda     #$2A
         rol     a
         eor     #$01
-        sta     L0083
+        sta     $83
         sty     L6004
         tya
         asl     a
@@ -3498,7 +3521,7 @@ L60EE:  tay
         lda     L5288,y
         sta     L616B
         ldx     #$03
-L6116:  lda     L0082,x
+L6116:  lda     $82,x
         sta     L602F,x
         dex
         bpl     L6116
@@ -3511,7 +3534,7 @@ L6126:  cpy     #$C0
         jmp     L61B9
 
 L612D:  lda     hires_table_lo,y
-        sta     L0088
+        sta     $88
         lda     hires_table_hi,y
         ora     #$20
         sta     $89
@@ -3549,34 +3572,34 @@ L616B           := * + 2
         bne     L6160
         sta     L6005
 L6172:  ldx     $87
-        ldy     L0082
-        lda     L0083
+        ldy     $82
+        lda     $83
         jsr     L622A
         bcs     L618D
-        lda     (L0088),y
+        lda     ($88),y
         sta     L600B,x
         lda     L6008
-        ora     (L0088),y
+        ora     ($88),y
         eor     L6005
-        sta     (L0088),y
+        sta     ($88),y
         dex
 L618D:  jsr     L6220
         bcs     L61A2
-        lda     (L0088),y
+        lda     ($88),y
         sta     L600B,x
         lda     L6009
-        ora     (L0088),y
+        ora     ($88),y
         eor     L6006
-        sta     (L0088),y
+        sta     ($88),y
         dex
 L61A2:  jsr     L6220
         bcs     L61B7
-        lda     (L0088),y
+        lda     ($88),y
         sta     L600B,x
         lda     L600A
-        ora     (L0088),y
+        ora     ($88),y
         eor     L6007
-        sta     (L0088),y
+        sta     ($88),y
         dex
 L61B7:  ldy     $85
 L61B9:  dec     $86
@@ -3594,7 +3617,7 @@ L61C6:  lda     L5FF3
         bmi     L61C5
         ldx     #$03
 L61D2:  lda     L602F,x
-        sta     L0082,x
+        sta     $82,x
         dex
         bpl     L61D2
         ldx     #$23
@@ -3602,28 +3625,28 @@ L61D2:  lda     L602F,x
 L61DE:  cpy     #$C0
         bcs     L6217
         lda     hires_table_lo,y
-        sta     L0088
+        sta     $88
         lda     hires_table_hi,y
         ora     #$20
         sta     $89
         sty     $85
 L61F1           := * + 1
-        ldy     L0082
-        lda     L0083
+        ldy     $82
+        lda     $83
         jsr     L622A
         bcs     L61FF
         lda     L600B,x
-        sta     (L0088),y
+        sta     ($88),y
         dex
 L61FF:  jsr     L6220
         bcs     L620A
         lda     L600B,x
-        sta     (L0088),y
+        sta     ($88),y
         dex
 L620A:  jsr     L6220
         bcs     L6215
         lda     L600B,x
-        sta     (L0088),y
+        sta     ($88),y
         dex
 L6215:  ldy     $85
 L6217:  dey
@@ -3645,20 +3668,21 @@ L622E:  bbs7    $C0,L61F1
 
 ;;; ==================================================
 
-SHOW_CURSOR_IMPL:
+.proc SHOW_CURSOR_IMPL
         php
         sei
         lda     L5FF3
-        beq     L624C
+        beq     done
         inc     L5FF3
-        bmi     L624C
-        beq     L6244
+        bmi     done
+        beq     :+
         dec     L5FF3
-L6244:  bit     L5FF2
-        bmi     L624C
+:       bit     L5FF2
+        bmi     done
         jsr     L60B2
-L624C:  plp
+done:   plp
         rts
+.endproc
 
 ;;; ==================================================
 
@@ -3771,12 +3795,12 @@ L6313:  bit     L851C
         ldx     L851D
         stx     $89
         lda     #$00
-        sta     L0088
-        lda     (L0088),y
-        sta     L0088
+        sta     $88
+        lda     ($88),y
+        sta     $88
         pla
         ldy     L851E
-        jmp     (L0088)
+        jmp     ($88)
 
 L6332:  jmp     (L6000)
 
@@ -3800,12 +3824,14 @@ L6340:  .byte   $00
 
 ;;; $1D IMPL
 
+;;; 12 bytes of params, copied to $82
+
 L6341:
         php
         pla
         sta     L6340
         ldx     #$04
-L6348:  lda     L0082,x
+L6348:  lda     $82,x
         sta     L6335,x
         dex
         bpl     L6348
@@ -3813,7 +3839,7 @@ L6348:  lda     L0082,x
         sta     L5F1E::tmsk
         lda     $87
         sta     L5F1E::font
-        lda     L0088
+        lda     $88
         sta     L5F1E::font+1
         lda     $89
         sta     L6835
@@ -3893,10 +3919,10 @@ L63F6:  stx     L6338
         sta     L6339
 L640D:  ldy     #$03
         lda     L6338
-        sta     ($80),y
+        sta     (params_addr),y
         iny
         lda     L6339
-        sta     ($80),y
+        sta     (params_addr),y
         bit     L6339
         bpl     L642A
         bit     L6337
@@ -3995,14 +4021,16 @@ L64C7:  lda     L6340
 
 ;;; $1F IMPL
 
+;;; 3 bytes of params, copied to $82
+
 L64D2:
-        lda     L0082
+        lda     $82
         cmp     #$01
         bne     L64E5
         lda     $84
         bne     L64F6
         sta     L6522
-        lda     L0083
+        lda     $83
         sta     L6521
         rts
 
@@ -4011,7 +4039,7 @@ L64E5:  cmp     #$02
         lda     $84
         bne     L64FF
         sta     L6538
-        lda     L0083
+        lda     $83
         sta     L6537
         rts
 
@@ -4059,9 +4087,9 @@ L653A:  .byte   $00
 L653B:  .byte   $00
 
 L653C:  jsr     HIDE_CURSOR_IMPL
-L653F:  lda     $80
+L653F:  lda     params_addr
         sta     L6539
-        lda     $81
+        lda     params_addr+1
         sta     L653A
         lda     stack_ptr_stash
         sta     L653B
@@ -4071,18 +4099,18 @@ L653F:  lda     $80
 L6553:  jsr     SHOW_CURSOR_IMPL
 L6556:  asl     preserve_zp_flag
         lda     L6539
-        sta     $80
+        sta     params_addr
         lda     L653A
-        sta     $81
+        sta     params_addr+1
         lda     $F4
 L6566           := * + 1
         ldx     $F5
-L6567:  sta     L0082
-        stx     L0083
+L6567:  sta     $82
+        stx     $83
         lda     L653B
         sta     stack_ptr_stash
         ldy     #$23
-L6573:  lda     (L0082),y
+L6573:  lda     ($82),y
         sta     $D0,y
         dey
         bpl     L6573
@@ -4124,12 +4152,14 @@ checkerboard_pattern:
 
 ;;; $20 IMPL
 
+;;; 2 bytes of params, copied to $82
+
 L65B3:
         bit     $633F
         bmi     L65CD
         lda     $82
         sta     L6000
-        lda     L0083
+        lda     $83
         sta     L6001
         lda     L65D2
         ldx     L65D3
@@ -4167,13 +4197,13 @@ L65E7:  bcs     L6604
 L65F0:  tax
         ldy     #0              ; Store 5 bytes at params
 L65F3:  lda     L6754,x
-        sta     ($80),y
+        sta     (params_addr),y
         inx
         iny
         cpy     #4
         bne     L65F3
         lda     #$00
-        sta     ($80),y
+        sta     (params_addr),y
         beq     L6607
 L6604:  jsr     L6645
 L6607:  plp
@@ -4184,16 +4214,18 @@ L660E:  rts
 
 ;;; ==================================================
 
+;;; 5 bytes of params, copied to $82
+
 SET_INPUT_IMPL:
         php
         sei
-        lda     L0082
+        lda     $82
         bmi     L6626
         cmp     #$06
         bcs     L663B
         cmp     #$03
         beq     L6626
-        ldx     L0083
+        ldx     $83
         ldy     $84
         lda     $85
         jsr     L7E19
@@ -4201,7 +4233,7 @@ L6626:  jsr     L67E4
         bcs     L663F
         tax
         ldy     #$00
-L662E:  lda     ($80),y
+L662E:  lda     (params_addr),y
         sta     L6754,x
         inx
         iny
@@ -4221,10 +4253,10 @@ L6645:  lda     #$00
         bpl     L664E
         lda     #$04
 L664E:  ldy     #0
-        sta     ($80),y         ; Store 2 bytes at params
+        sta     (params_addr),y         ; Store 2 bytes at params
         iny
 L6653:  lda     L5FF3,y
-        sta     ($80),y
+        sta     (params_addr),y
         iny
         cpy     #$05
         bne     L6653
@@ -4324,7 +4356,7 @@ int_stash_rd80store:
         sta     SET80COL
 
         ldx     #8              ; preserve 9 bytes of ZP
-sloop:  lda     L0082,x
+sloop:  lda     $82,x
         sta     int_stash_zp,x
         dex
         bpl     sloop
@@ -4340,7 +4372,7 @@ sloop:  lda     L0082,x
 
 :       ldx     #8              ; restore ZP
 rloop:  lda     int_stash_zp,x
-        sta     L0082,x
+        sta     $82,x
         dex
         bpl     rloop
 
@@ -4418,10 +4450,12 @@ L6811:  clc
 
 ;;; $2E IMPL
 
+;;; 1 byte of params, copied to $82
+
 L6813:  .byte   $80
 L6814:
         asl     L6813
-        ror     L0082
+        ror     $82
         ror     L6813
         rts
 
@@ -4490,11 +4524,11 @@ L6865:  .byte   $5A
 L6866:  .byte   $68
 
 L6867:  lda     L6823
-        sta     L0082
+        sta     $82
         lda     L6824
-        sta     L0083
+        sta     $83
         ldy     #$00
-        lda     (L0082),y
+        lda     ($82),y
         sta     $A8
         rts
 
@@ -4562,14 +4596,14 @@ L68E1:  lda     $BF,y
         bpl     L68E1
         rts
 
-L68EA:  sty     YPOS
+L68EA:  sty     state_ypos
         ldy     #0
-        sty     YPOS+1
-L68F0:  sta     XPOS
-        stx     XPOS+1
+        sty     state_ypos+1
+L68F0:  sta     state_xpos
+        stx     state_xpos+1
         rts
 
-L68F5:  sta     $F0
+L68F5:  sta     state_fill
         jmp     SET_FILL_MODE_IMPL
 
 L68FA:  jsr     L6906
@@ -4578,8 +4612,8 @@ L68FA:  jsr     L6906
 L6900:  jsr     L6906
         jmp     DRAW_TEXT_IMPL
 
-L6906:  sta     L0082
-        stx     L0083
+L6906:  sta     $82
+        stx     $83
         clc
         adc     #1
         bcc     L6910
@@ -4587,12 +4621,12 @@ L6906:  sta     L0082
 L6910:  sta     $A1
         stx     $A2
         ldy     #0
-        lda     (L0082),y
+        lda     ($82),y
         sta     $A3
         rts
 
-L691B:  A2D_CALL A2D_GET_INPUT, L0082
-        lda     L0082
+L691B:  A2D_CALL A2D_GET_INPUT, $82
+        lda     $82
         rts
 
 ;;; ==================================================
@@ -4605,9 +4639,9 @@ L6926:
         lda     #$00
         sta     L633D
         sta     L633E
-        lda     $80
+        lda     params_addr
         sta     L6823
-        lda     $81
+        lda     params_addr+1
         sta     L6824
         jsr     L6867
         jsr     L653C
@@ -4622,8 +4656,8 @@ L6926:
         jsr     L68EA
         ldx     #$00
 L6957:  jsr     L6878
-        lda     XPOS
-        ldx     XPOS+1
+        lda     state_xpos
+        ldx     state_xpos+1
         sta     $B5
         stx     $B6
         sec
@@ -4643,8 +4677,8 @@ L6976:  jsr     L68BE
         lda     $C3
         ldx     $C4
         jsr     L68FA
-        sta     L0082
-        stx     L0083
+        sta     $82
+        stx     $83
         lda     $BF
         and     #$03
         bne     L6997
@@ -4654,18 +4688,18 @@ L6976:  jsr     L68BE
         bne     L699A
 L6997:  lda     L6821
 L699A:  clc
-        adc     L0082
-        sta     L0082
+        adc     $82
+        sta     $82
         bcc     L69A3
-        inc     L0083
+        inc     $83
 L69A3:  sec
         sbc     $C5
-        lda     L0083
+        lda     $83
         sbc     $C6
         bmi     L69B4
-        lda     L0082
+        lda     $82
         sta     $C5
-        lda     L0083
+        lda     $83
         sta     $C6
 L69B4:  ldx     $A9
         inx
@@ -4717,8 +4751,8 @@ L6A00:  lda     $BB
         ldx     $B2
         jsr     L6900
         jsr     L6A5C
-        lda     XPOS
-        ldx     XPOS+1
+        lda     state_xpos
+        ldx     state_xpos+1
         clc
         adc     #$08
         bcc     L6A24
@@ -4783,7 +4817,7 @@ L6A9D:  jsr     L6878
         bvs     L6ACA
         bmi     L6AAE
         lda     $AF
-        cmp     L00C7
+        cmp     $C7
         bne     L6ACF
         beq     L6AD9
 L6AAE:  lda     set_pos_params::xcoord
@@ -4849,10 +4883,12 @@ L6B1C:  rts
 
 ;;; $33 IMPL
 
-L6B1D:  lda     L00C7
+;;; 2 bytes of params, copied to $C7
+
+L6B1D:  lda     $C7
         bne     L6B26
         lda     L6BD9
-        sta     L00C7
+        sta     $C7
 L6B26:  jsr     L6A89
 L6B29:  jsr     L653C
         jsr     L657E
@@ -4881,6 +4917,8 @@ L6B37:  lda     $B7,x
 
 ;;; $32 IMPL
 
+;;; 4 bytes of params, copied to $C7
+
 L6B60:
         lda     $C9
         cmp     #$1B
@@ -4904,10 +4942,10 @@ L6B70:  lda     #$C0
 L6B88:  lda     #$00
         tax
 L6B8B:  ldy     #$00
-        sta     ($80),y
+        sta     (params_addr),y
         iny
         txa
-        sta     ($80),y
+        sta     (params_addr),y
         bne     L6B29
         rts
 
@@ -4925,6 +4963,8 @@ L6B9F:  jsr     L6B96
 
 ;;; $35 IMPL
 
+;;; 3 bytes of params, copied to $C7
+
 L6BA9:
         jsr     L6B9F
         asl     $BF
@@ -4935,6 +4975,8 @@ L6BA9:
 ;;; ==================================================
 
 ;;; $36 IMPL
+
+;;; 3 bytes of params, copied to $C7
 
 L6BB5:
         jsr     L6B9F
@@ -4951,6 +4993,8 @@ L6BC6:  sta     $BF
 ;;; ==================================================
 
 ;;; $34 IMPL
+
+;;; 2 bytes of params, copied to $C7
 
 L6BCB:
         jsr     L6A89
@@ -4983,7 +5027,7 @@ L6BFD:  bit     L7D81
         bpl     L6C05
         jmp     L8149
 
-L6C05:  A2D_CALL A2D_SET_POS, L0083
+L6C05:  A2D_CALL A2D_SET_POS, $83
         A2D_CALL A2D_TEST_BOX, test_box_params
         bne     L6C58
         lda     L6BD9
@@ -5049,7 +5093,7 @@ L6C98:  lda     $BC
         ror     a
         tax
         lda     L4821,x
-        sta     L0082
+        sta     $82
         lda     $BE
         lsr     a
         lda     $BD
@@ -5057,7 +5101,7 @@ L6C98:  lda     $BC
         tax
         lda     L4821,x
         sec
-        sbc     L0082
+        sbc     $82
         sta     $90
         lda     L6835
         sta     $8E
@@ -5066,7 +5110,7 @@ L6C98:  lda     $BC
         ldy     $AA
         ldx     L6847,y
         inx
-        stx     L0083
+        stx     $83
         stx     fill_rect_params4::bottom
         stx     test_box_params2::bottom
         ldx     L6822
@@ -5079,7 +5123,7 @@ L6C98:  lda     $BC
 
 L6CD8:  lda     hires_table_lo,x
         clc
-        adc     L0082
+        adc     $82
         sta     $84
         lda     hires_table_hi,x
         ora     #$20
@@ -5111,7 +5155,7 @@ L6D0E:  lda     ($8E),y
         bpl     L6D0E
         jsr     L6CE8
         inx
-        cpx     L0083
+        cpx     $83
         bcc     L6CF7
         beq     L6CF7
         jmp     SHOW_CURSOR_IMPL
@@ -5124,7 +5168,7 @@ L6D26:  sec
 L6D27:  lda     L6BD9
         beq     L6D22
         php
-        sta     L00C7
+        sta     $C7
         jsr     L6A94
         jsr     HIDE_CURSOR_IMPL
         jsr     L6B35
@@ -5147,7 +5191,7 @@ L6D55:  lda     ($84),y
         bpl     L6D55
         jsr     L6CE8
         inx
-        cpx     L0083
+        cpx     $83
         bcc     L6D3E
         beq     L6D3E
         jsr     L657E
@@ -5290,11 +5334,11 @@ bottom: .word   0
         fill_rect_params3_right := fill_rect_params3::right
         fill_rect_params3_bottom := fill_rect_params3::bottom
 
-L6E92:  sta     L0082
+L6E92:  sta     $82
         lda     $BD
         ldx     $BE
         sec
-        sbc     L0082
+        sbc     $82
         bcs     L6E9E
         dex
 L6E9E:  jmp     L68F0
@@ -5321,18 +5365,20 @@ L6EAA:  ldx     L6BDA
 
 ;;; $2F IMPL
 
+;;; 4 bytes of params, copied to $82
+
 .proc L6ECD
         ldx     #$03
-loop:   lda     L0082,x
+loop:   lda     $82,x
         sta     L6856,x
         dex
         bpl     loop
         lda     L5F1E::font
-        sta     L0082
+        sta     $82
         lda     L5F1E::font+1
-        sta     L0083
+        sta     $83
         ldy     #$00
-        lda     (L0082),y
+        lda     ($82),y
         bmi     :+
 
         lda     #$02
@@ -5363,6 +5409,8 @@ end:    rts
 ;;; ==================================================
 
 ;;; $37 IMPL
+
+;;; 4 bytes of params, copied to $C7
 
 L6F1C:
         jsr     L6B9F
@@ -5557,7 +5605,7 @@ L705E:  lda     $A9
 L7063:  jsr     L7013
         beq     L7073
 L7068:  lda     $AB
-        cmp     L0082
+        cmp     $82
         beq     L705E
         jsr     L7026
         bne     L7068
@@ -5570,15 +5618,15 @@ L7074:  jsr     L7063
 L707A:  lda     #$9F
         jmp     a2d_exit_with_a
 
-L707F:  A2D_CALL A2D_DRAW_RECT, L00C7
+L707F:  A2D_CALL A2D_DRAW_RECT, $C7
         rts
 
-L7086:  A2D_CALL A2D_TEST_BOX, L00C7
+L7086:  A2D_CALL A2D_TEST_BOX, $C7
         rts
 
 L708D:  ldx     #$03
 L708F:  lda     $B7,x
-        sta     L00C7,x
+        sta     $C7,x
         dex
         bpl     L708F
         ldx     #$02
@@ -5591,7 +5639,7 @@ L7098:  lda     $C3,x
         pha
         tya
         clc
-        adc     L00C7,x
+        adc     $C7,x
         sta     $CB,x
         pla
         adc     $C8,x
@@ -5604,10 +5652,10 @@ L70B2:  lda     #$C7
         rts
 
 L70B7:  jsr     L708D
-        lda     L00C7
+        lda     $C7
         bne     L70C0
         dec     $C8
-L70C0:  dec     L00C7
+L70C0:  dec     $C7
         bit     $B0
         bmi     L70D0
         lda     $AC
@@ -5634,10 +5682,10 @@ L70EC:  lda     #$01
         and     $AC
         bne     L70F5
         lda     L78CF
-L70F5:  sta     L0082
+L70F5:  sta     $82
         lda     $C9
         sec
-        sbc     L0082
+        sbc     $82
         sta     $C9
         bcs     L70B2
         dec     $CA
@@ -5649,7 +5697,7 @@ L7104:  jsr     L70B7
         sbc     #$14
         bcs     L7111
         dex
-L7111:  sta     L00C7
+L7111:  sta     $C7
         stx     $C8
         lda     $AC
         and     #$01
@@ -5686,13 +5734,13 @@ L7143:  jsr     L70B7
         jmp     L70B2
 
 L7157:  jsr     L7143
-        lda     L00C7
+        lda     $C7
         ldx     $C8
         clc
         adc     #$0C
         bcc     L7164
         inx
-L7164:  sta     L00C7
+L7164:  sta     $C7
         stx     $C8
         clc
         adc     #$0E
@@ -5792,7 +5840,7 @@ L720F:  stx     L71E4
         jsr     L7157
         jsr     L707F
         jsr     L71EE
-        lda     L00C7
+        lda     $C7
         ldx     $C8
         sec
         sbc     #$09
@@ -5878,7 +5926,7 @@ L72C9:  jsr     L703E
         bpl     L7319
         jsr     L7104
         ldx     #$03
-L72D5:  lda     L00C7,x
+L72D5:  lda     $C7,x
         sta     up_scroll_params,x
         sta     down_scroll_params,x
         dex
@@ -5915,7 +5963,7 @@ L7319:  bit     $AF
         bpl     L7363
         jsr     L7129
         ldx     #$03
-L7322:  lda     L00C7,x
+L7322:  lda     $C7,x
         sta     left_scroll_params,x
         sta     right_scroll_params,x
         dex
@@ -5977,7 +6025,7 @@ L738E:  lda     $AC
         jmp     L73BE
 
 L73A6:  ldx     #$03
-L73A8:  lda     L00C7,x
+L73A8:  lda     $C7,x
         sta     resize_box_params,x
         dex
         bpl     L73A8
@@ -5991,9 +6039,9 @@ L73BE:  rts
 L73BF:  lda     $AD
         ldx     $AE
         jsr     L68FA
-        sta     L0082
-        stx     L0083
-        lda     L00C7
+        sta     $82
+        stx     $83
+        lda     $C7
         clc
         adc     $CB
         tay
@@ -6002,29 +6050,31 @@ L73BF:  lda     $AD
         tax
         tya
         sec
-        sbc     L0082
+        sbc     $82
         tay
         txa
-        sbc     L0083
+        sbc     $83
         cmp     #$80
         ror     a
-        sta     XPOS+1
+        sta     state_xpos+1
         tya
         ror     a
-        sta     XPOS
+        sta     state_xpos
         lda     $CD
         ldx     $CE
         sec
         sbc     #$02
         bcs     L73F0
         dex
-L73F0:  sta     YPOS
-        stx     YPOS+1
-        lda     L0082
-        ldx     L0083
+L73F0:  sta     state_ypos
+        stx     state_ypos+1
+        lda     $82
+        ldx     $83
         rts
 
 ;;; ==================================================
+
+;;; 4 bytes of params, copied to state_pos
 
 QUERY_TARGET_IMPL:
         jsr     L653F
@@ -6090,9 +6140,9 @@ L7476:  lda     #$02
 
 L747A:  .byte   0
 CREATE_WINDOW_IMPL:
-        lda     $80
+        lda     params_addr
         sta     $A9
-        lda     $81
+        lda     params_addr+1
         sta     $AA
         ldy     #$00
         lda     ($A9),y
@@ -6100,15 +6150,15 @@ CREATE_WINDOW_IMPL:
         lda     #$9E
         jmp     a2d_exit_with_a
 
-L748E:  sta     L0082
+L748E:  sta     $82
         jsr     L7063
         beq     L749A
         lda     #$9D
         jmp     a2d_exit_with_a
 
-L749A:  lda     $80
+L749A:  lda     params_addr
         sta     $A9
-        lda     $81
+        lda     params_addr+1
         sta     $AA
         ldy     #$0A
         lda     ($A9),y
@@ -6119,6 +6169,8 @@ L749A:  lda     $80
 ;;; ==================================================
 
 ;;; $42 IMPL
+
+;;; 1 byte of params, copied to $82
 
 L74AC:
         jsr     L7074
@@ -6166,6 +6218,8 @@ L74F4:  ldy     #$38
 
 ;;; $3B IMPL
 
+;;; 1 byte of params, copied to $C7
+
 L7500:
         jsr     L7074
         lda     $A9
@@ -6176,6 +6230,8 @@ L7500:
 ;;; ==================================================
 
 ;;; $3E IMPL
+
+;;; 1 byte of params, copied to $82
 
 L750C:  .byte   $00
 L750D:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -6223,6 +6279,8 @@ L7585:  lda     #$A3
 
 ;;; $3F IMPL
 
+;;; 1 byte of params, copied to $82
+
 L758A:  .byte   $0E
 L758B:  .byte   $75
 
@@ -6235,13 +6293,15 @@ L758C:  jsr     SHOW_CURSOR_IMPL
 
 ;;; ==================================================
 
+;;; 3 bytes of params, copied to $82
+
 QUERY_STATE_IMPL:
         jsr     copy_params_from_zp
         jsr     L7074
-        lda     L0083
-        sta     $80
+        lda     $83
+        sta     params_addr
         lda     $84
-        sta     $81
+        sta     params_addr+1
         ldx     #$07
 L75AC:  lda     fill_rect_params,x
         sta     $D8,x
@@ -6251,7 +6311,7 @@ L75AC:  lda     fill_rect_params,x
         bcc     L7585
         ldy     #$23
 L75BB:  lda     $D0,y
-        sta     ($80),y
+        sta     (params_addr),y
         dey
         bpl     L75BB
         jmp     copy_params_to_zp
@@ -6260,7 +6320,7 @@ L75C6:  jsr     L708D
         ldx     #$07
 L75CB:  lda     #$00
         sta     $9B,x
-        lda     L00C7,x
+        lda     $C7,x
         sta     $92,x
         dex
         bpl     L75CB
@@ -6282,10 +6342,10 @@ L75EA:  lda     $92,x
         lda     $96,x
         sec
         sbc     $92,x
-        sta     L0082,x
+        sta     $82,x
         lda     $97,x
         sbc     $93,x
-        sta     L0083,x
+        sta     $83,x
         lda     $D8,x
         sec
         sbc     $9B,x
@@ -6295,10 +6355,10 @@ L75EA:  lda     $92,x
         sta     $D9,x
         lda     $D8,x
         clc
-        adc     L0082,x
+        adc     $82,x
         sta     $DC,x
         lda     $D9,x
-        adc     L0083,x
+        adc     $83,x
         sta     $DD,x
         dex
         dex
@@ -6310,6 +6370,8 @@ L75EA:  lda     $92,x
 
 ;;; $3D IMPL
 
+;;; 2 bytes of params, copied to $82
+
 L761F:
         jsr     L7074
         lda     $A9
@@ -6319,7 +6381,7 @@ L761F:
         bcc     L762D
         inc     $AA
 L762D:  ldy     #$23
-L762F:  lda     (L0082),y
+L762F:  lda     ($82),y
         sta     ($A9),y
         dey
         cpy     #$10
@@ -6337,7 +6399,7 @@ L7639:
         bne     L7644
 L7642:  lda     #$00
 L7644:  ldy     #$00
-        sta     ($80),y
+        sta     (params_addr),y
         rts
 
 ;;; ==================================================
@@ -6354,7 +6416,7 @@ L765A:  sta     L7649
         lda     #$02
         jsr     L68F5
         jsr     HIDE_CURSOR_IMPL
-        A2D_CALL A2D_FILL_RECT, L00C7
+        A2D_CALL A2D_FILL_RECT, $C7
         jsr     SHOW_CURSOR_IMPL
 L766E:  jsr     L691B
         cmp     #$02
@@ -6372,7 +6434,7 @@ L768B:  jsr     L6556
         lda     L7649
         beq     L7697
         lda     #$01
-L7697:  sta     ($80),y
+L7697:  sta     (params_addr),y
         rts
 
         .byte   $00
@@ -6388,18 +6450,22 @@ L76A7:  .byte   $00
 
 ;;; ==================================================
 
+;;; 5 bytes of params, copied to $82
+
 DRAG_RESIZE_IMPL:
         lda     #$80
         bmi     L76AE
 
 ;;; ==================================================
 
+;;; 5 bytes of params, copied to $82
+
 DRAG_WINDOW_IMPL:
         lda     #$00
 L76AE:  sta     L76A7
         jsr     L7ECD
         ldx     #$03
-L76B6:  lda     L0083,x
+L76B6:  lda     $83,x
         sta     L769B,x
         sta     L769F,x
         lda     #$00
@@ -6434,7 +6500,7 @@ L7702:  lda     L76A3,x
 L770A:  jsr     L6553
         lda     #$00
 L770F:  ldy     #$05
-        sta     ($80),y
+        sta     (params_addr),y
         rts
 
 L7714:  ldy     #$14
@@ -6499,18 +6565,18 @@ L7782:  clc
         sec
         lda     $C3,x
         sbc     $BF,x
-        sta     L0082
+        sta     $82
         lda     $C4,x
         sbc     $C0,x
-        sta     L0083
+        sta     $83
         sec
-        lda     L0082
-        sbc     L00C7,x
-        lda     L0083
+        lda     $82
+        sbc     $C7,x
+        lda     $83
         sbc     $C8,x
         bpl     L77BC
         clc
-        lda     L00C7,x
+        lda     $C7,x
         adc     $BF,x
         sta     $C3,x
         lda     $C8,x
@@ -6521,9 +6587,9 @@ L7782:  clc
 
 L77BC:  sec
         lda     $CB,x
-        sbc     L0082
+        sbc     $82
         lda     $CC,x
-        sbc     L0083
+        sbc     $83
         bpl     L77D7
         clc
         lda     $CB,x
@@ -6545,7 +6611,7 @@ L77E4:  lda     $84,x
         cmp     L76A0,x
         bne     L77EC
         iny
-L77EC:  lda     L0083,x
+L77EC:  lda     $83,x
         cmp     L769F,x
         bne     L77F4
         iny
@@ -6566,6 +6632,8 @@ L77F4:  sta     L769F,x
 L7814:  rts
 
 ;;; ==================================================
+
+;;; 1 byte of params, copied to $82
 
 DESTROY_WINDOW_IMPL:
         jsr     L7074
@@ -6600,7 +6668,7 @@ L7849:  jmp     L6454
 L784C:  jsr     L6588
         jsr     L70B7
         ldx     #$07
-L7854:  lda     L00C7,x
+L7854:  lda     $C7,x
         sta     $92,x
         dex
         bpl     L7854
@@ -6642,7 +6710,7 @@ L78A3:  jsr     L67E4
         lda     $AB
         cmp     L700D
         beq     L78C9
-        sta     L0082
+        sta     $82
         jsr     L7063
         lda     $A7
         ldx     $A8
@@ -6677,10 +6745,10 @@ height: .word   0
 L78E1:
         jsr     L7074
         ldx     #$02
-L78E6:  lda     L0083,x
+L78E6:  lda     $83,x
         clc
         adc     $B7,x
-        sta     L0083,x
+        sta     $83,x
         lda     $84,x
         adc     $B8,x
         sta     $84,x
@@ -6691,13 +6759,15 @@ L78E6:  lda     L0083,x
 
 ;;; ==================================================
 
+;;; 5 bytes of params, copied to $82
+
 MAP_COORDS_IMPL:
         jsr     L7074
         ldx     #$02
-L78FE:  lda     L0083,x
+L78FE:  lda     $83,x
         sec
         sbc     $B7,x
-        sta     L0083,x
+        sta     $83,x
         lda     $84,x
         sbc     $B8,x
         sta     $84,x
@@ -6706,25 +6776,25 @@ L78FE:  lda     L0083,x
         bpl     L78FE
 L790F:  ldy     #$05
 L7911:  lda     $7E,y
-        sta     ($80),y
+        sta     (params_addr),y
         iny
         cpy     #$09
         bne     L7911
         rts
 
-L791C:  sta     L0082
-        stx     L0083
+L791C:  sta     $82
+        stx     $83
         ldy     #$03
 L7922:  lda     #$00
         sta     $8A,y
-        lda     (L0082),y
+        lda     ($82),y
         sta     $92,y
         dey
         bpl     L7922
         iny
         sty     $91
         ldy     #$04
-        lda     (L0082),y
+        lda     ($82),y
         tax
         lda     L4828,x
         sta     $90
@@ -6737,7 +6807,7 @@ L7922:  lda     #$00
 L7945:  sta     $96
         stx     $97
         iny
-        lda     (L0082),y
+        lda     ($82),y
         ldx     $95
         clc
         adc     $94
@@ -6746,16 +6816,18 @@ L7945:  sta     $96
 L7954:  sta     $98
         stx     $99
         iny
-        lda     (L0082),y
+        lda     ($82),y
         sta     $8E
         iny
-        lda     (L0082),y
+        lda     ($82),y
         sta     $8F
         jmp     L51B3
 
 ;;; ==================================================
 
 ;;; $4C IMPL
+
+;;; 2 bytes of params, copied to $8C
 
 L7965:
         lda     $8C
@@ -6791,7 +6863,7 @@ L7990:  eor     $8D
 L79A0:  bne     L79AF
         jsr     L79F1
         jsr     L657E
-        A2D_CALL A2D_FILL_RECT, L00C7
+        A2D_CALL A2D_FILL_RECT, $C7
         rts
 
 L79AF:  bit     $8C
@@ -6805,7 +6877,7 @@ L79B8:  bit     $B0
 L79BC:  jsr     L657E
         jsr     L79F1
         A2D_CALL A2D_SET_PATTERN, light_speckles_pattern
-        A2D_CALL A2D_FILL_RECT, L00C7
+        A2D_CALL A2D_FILL_RECT, $C7
         A2D_CALL A2D_SET_PATTERN, L5F1E::pattern
         bit     $8C
         bmi     L79DD
@@ -6829,6 +6901,7 @@ light_speckles_pattern:
         .byte   %01110111
 
         .byte   $00,$00
+
 L79F1:  bit     $8C
         bpl     L7A34
         jsr     L7104
@@ -6855,7 +6928,7 @@ L7A18:  lda     $CD
         sta     $CD
         bcs     L7A23
         dec     $CE
-L7A23:  inc     L00C7
+L7A23:  inc     $C7
         bne     L7A29
         inc     $C8
 L7A29:  lda     $CB
@@ -6865,10 +6938,10 @@ L7A2F:  dec     $CB
         jmp     L7A70
 
 L7A34:  jsr     L7129
-        lda     L00C7
+        lda     $C7
         clc
         adc     #$15
-        sta     L00C7
+        sta     $C7
         bcc     L7A42
         inc     $C8
 L7A42:  lda     $CB
@@ -6912,8 +6985,8 @@ L7A73:  jsr     L79F1
         beq     L7A94
         ldx     $A0
         jsr     L7C93
-L7A94:  sta     L0082
-        sty     L0083
+L7A94:  sta     $82
+        sty     $83
         ldx     #$00
         lda     #$14
         bit     $8C
@@ -6921,16 +6994,16 @@ L7A94:  sta     L0082
         ldx     #$02
         lda     #$0C
 L7AA4:  pha
-        lda     L00C7,x
+        lda     $C7,x
         clc
-        adc     L0082
-        sta     L00C7,x
+        adc     $82
+        sta     $C7,x
         lda     $C8,x
-        adc     L0083
+        adc     $83
         sta     $C8,x
         pla
         clc
-        adc     L00C7,x
+        adc     $C7,x
         sta     $CB,x
         lda     $C8,x
         adc     #$00
@@ -6938,6 +7011,8 @@ L7AA4:  pha
         jmp     L70B2
 
 ;;; ==================================================
+
+;;; 4 bytes of params, copied to state_pos
 
 QUERY_CLIENT_IMPL:
         jsr     L653F
@@ -6974,7 +7049,7 @@ L7B04:  pha
         jsr     L7A73
         pla
         tax
-        lda     YPOS
+        lda     state_ypos
         cmp     $C9
         bcc     L7B11
         inx
@@ -7008,12 +7083,12 @@ L7B4B:  pha
         jsr     L7A73
         pla
         tax
-        lda     XPOS+1
+        lda     state_xpos+1
         cmp     $C8
         bcc     L7B60
         bne     L7B5F
-        lda     XPOS
-        cmp     L00C7
+        lda     state_xpos
+        cmp     $C7
         bcc     L7B60
 L7B5F:  inx
 L7B60:  lda     #$02
@@ -7028,17 +7103,19 @@ L7B72:  jmp     L7408
 
 ;;; ==================================================
 
+;;; 3 bytes of params, copied to $82
+
 RESIZE_WINDOW_IMPL:
-        lda     L0082
+        lda     $82
         cmp     #$01
         bne     L7B81
         lda     #$80
-        sta     L0082
+        sta     $82
         bne     L7B90
 L7B81:  cmp     #$02
         bne     L7B8B
         lda     #$00
-        sta     L0082
+        sta     $82
         beq     L7B90
 L7B8B:  lda     #$A4
         jmp     a2d_exit_with_a
@@ -7049,35 +7126,37 @@ L7B90:  jsr     L7013
         jmp     a2d_exit_with_a
 
 L7B9A:  ldy     #$06
-        bit     L0082
+        bit     $82
         bpl     L7BA2
         ldy     #$08
-L7BA2:  lda     L0083
+L7BA2:  lda     $83
         sta     ($A9),y
         sta     $AB,y
         rts
 
 ;;; ==================================================
 
+;;; 5 bytes of params, copied to $82
+
 DRAG_SCROLL_IMPL:
-        lda     L0082
+        lda     $82
         cmp     #$01
         bne     L7BB6
         lda     #$80
-        sta     L0082
+        sta     $82
         bne     L7BC5
 L7BB6:  cmp     #$02
         bne     L7BC0
         lda     #$00
-        sta     L0082
+        sta     $82
         beq     L7BC5
 L7BC0:  lda     #$A4
         jmp     a2d_exit_with_a
 
-L7BC5:  lda     L0082
+L7BC5:  lda     $82
         sta     $8C
         ldx     #$03
-L7BCB:  lda     L0083,x
+L7BCB:  lda     $83,x
         sta     L769B,x
         sta     L769F,x
         dex
@@ -7111,8 +7190,8 @@ L7BFD:  jsr     L691B
         bpl     L7C21
         ldx     #$02
         lda     #$0C
-L7C21:  sta     L0082
-        lda     L00C7,x
+L7C21:  sta     $82
+        lda     $C7,x
         clc
         adc     L76A3,x
         tay
@@ -7134,9 +7213,9 @@ L7C4D:  lda     L7CB7
         ldy     L7CB6
 L7C53:  sta     $C8,x
         tya
-        sta     L00C7,x
+        sta     $C7,x
         clc
-        adc     L0082
+        adc     $82
         sta     $CB,x
         lda     $C8,x
         adc     #$00
@@ -7163,19 +7242,19 @@ L7C87:  ldx     #$01
 L7C8E:  ldy     #$05
         jmp     L5EBD
 
-L7C93:  sta     L0082
-        sty     L0083
+L7C93:  sta     $82
+        sty     $83
         lda     #$80
         sta     $84
         ldy     #$00
         sty     $85
         txa
         beq     L7CB5
-L7CA2:  lda     L0082
+L7CA2:  lda     $82
         clc
         adc     $84
         sta     $84
-        lda     L0083
+        lda     $83
         adc     $85
         sta     $85
         bcc     L7CB2
@@ -7200,7 +7279,7 @@ L7CBA:  lda     L7CB6
         bit     $8C
         bpl     L7CD3
         ldx     #$02
-L7CD3:  lda     L00C7,x
+L7CD3:  lda     $C7,x
         sec
         sbc     L7CB8
         sta     $A1
@@ -7229,15 +7308,15 @@ L7CFB:  ldx     #$00
         bpl     L7D07
         ldx     #$02
         lda     #$0C
-L7D07:  sta     L0082
-        lda     L00C7,x
+L7D07:  sta     $82
+        lda     $C7,x
         ldy     $C8,x
         sta     L7CB8
         sty     L7CB9
         lda     $CB,x
         ldy     $CC,x
         sec
-        sbc     L0082
+        sbc     $82
         bcs     L7D1D
         dey
 L7D1D:  sta     L7CB6
@@ -7245,6 +7324,8 @@ L7D1D:  sta     L7CB6
         rts
 
 ;;; ==================================================
+
+;;; 3 bytes of params, copied to $8C
 
 UPDATE_SCROLL_IMPL:
         lda     $8C
@@ -7282,6 +7363,8 @@ L7D51:  lda     $8D
 
 ;;; $22 IMPL
 
+;;; 1 byte of params, copied to $82
+
 L7D61:  lda     #$80
         sta     L7D74
         jmp     L67D8
@@ -7290,10 +7373,12 @@ L7D61:  lda     #$80
 
 ;;; $4E IMPL
 
+;;; 2 bytes of params, copied to $82
+
 L7D69:
-        lda     L0082
+        lda     $82
         sta     L7D7A
-        lda     L0083
+        lda     $83
         sta     L7D7B
         rts
 
@@ -7405,13 +7490,13 @@ L7EA3:  lda     L5FF8,x
         bpl     L7EA3
         rts
 
-L7EAD:  jsr     L7F30
+L7EAD:  jsr     stash_params_addr
         lda     L7F2E
-        sta     $80
+        sta     params_addr
         lda     L7F2F
-        sta     $81
+        sta     params_addr+1
         jsr     SET_CURSOR_IMPL
-        jsr     L7F3B
+        jsr     restore_params_addr
         lda     #$00
         sta     L7D74
         lda     #$40
@@ -7455,34 +7540,37 @@ L7EFB:  cmp     #$04
 
 L7F0C:  jmp     L825F
 
-L7F0F:  jsr     L7F30
+L7F0F:  jsr     stash_params_addr
         lda     L6142
         sta     L7F2E
         lda     L6143
         sta     L7F2F
         lda     L6065
-        sta     $80
+        sta     params_addr
         lda     L6066
-        sta     $81
+        sta     params_addr+1
         jsr     SET_CURSOR_IMPL
-        jmp     L7F3B
+        jmp     restore_params_addr
 
 L7F2E:  .byte   0
 L7F2F:  .byte   0
-L7F30:  lda     $80
-        sta     L7F46
-        lda     $81
-        sta     L7F47
+
+stash_params_addr:
+        lda     params_addr
+        sta     stashed_params_addr
+        lda     params_addr+1
+        sta     stashed_params_addr+1
         rts
 
-L7F3B:  lda     L7F46
-        sta     $80
-        lda     L7F47
-        sta     $81
+restore_params_addr:
+        lda     stashed_params_addr
+        sta     params_addr
+        lda     stashed_params_addr+1
+        sta     params_addr+1
         rts
 
-L7F46:  .byte   0
-L7F47:  .byte   0
+stashed_params_addr:  .addr     0
+
 L7F48:  jsr     L7ED6
         ror     a
         ror     a
@@ -7728,7 +7816,7 @@ L813E:  pla
         sta     L6BDA
         pla
         sta     L6BD9
-        sta     L00C7
+        sta     $C7
         rts
 
 L8149:  php
@@ -7736,7 +7824,7 @@ L8149:  php
         jsr     L6D23
         jsr     L7EAD
         lda     L7D7F
-        sta     L00C7
+        sta     $C7
         sta     L6BD9
         lda     L7D80
         sta     $C8
@@ -7812,7 +7900,7 @@ L81E4:  lda     $AC
 
 L81F4:  ldx     #$00
 L81F6:  clc
-        lda     L00C7,x
+        lda     $C7,x
         cpx     #$02
         beq     L8202
         adc     #$23
@@ -8042,7 +8130,7 @@ L83B3:  sec
 L83B5:  jsr     L70B7
         sec
         lda     #$2F
-        sbc     L00C7
+        sbc     $C7
         tax
         lda     #$02
         sbc     $C8
@@ -8106,10 +8194,12 @@ L840D:  sec
 
 ;;; $21 IMPL
 
+;;; 2 bytes of params, copied to $82
+
 L8427:
-        lda     L0082
+        lda     $82
         sta     L5FFD
-        lda     L0083
+        lda     $83
         sta     L5FFE
 L8431:  bit     L851C
         bmi     L84AC
@@ -8196,13 +8286,13 @@ L84DE:  ldy     #$19
 L84F2:  ora     #$C0
         sta     $89
         lda     #$00
-        sta     L0088
+        sta     $88
         ldy     #$0C
-        lda     (L0088),y
+        lda     ($88),y
         cmp     #$20
         bne     L8519
         ldy     #$FB
-        lda     (L0088),y
+        lda     ($88),y
         cmp     #$D6
         bne     L8519
         lda     $89
@@ -8952,7 +9042,8 @@ height: .word   192-1
 pattern:.res    8, $FF
 mskand: .byte   A2D_DEFAULT_MSKAND
 mskor:  .byte   A2D_DEFAULT_MSKOR
-        .byte   0,0,0,0         ; ???
+xpos:   .word   0
+ypos:   .word   0
 hthick: .byte   1
 vthick: .byte   1
         .byte   $96,$00         ; ???
@@ -8976,7 +9067,8 @@ height: .word   0
 pattern:.res    8, 0
 mskand: .byte   0
 mskor:  .byte   0
-        .byte   0,0,0,0         ; ???
+xpos:   .word   0
+ypos:   .word   0
 hthick: .byte   0
 vthick: .byte   0
         .byte   0               ; ???

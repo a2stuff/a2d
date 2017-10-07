@@ -47,7 +47,7 @@ A2D             := $4000
 
 A2D_QUERY_SCREEN        := $03  ; Get screen state
         ;; (input length 0 bytes)
-        ;; (output length 35 bytes - NOT 36 - TODO - where is this off???)
+        ;; (output length 36 bytes)
         ;; .word left
         ;; .word top
         ;; .addr addr           A2D_SCREEN_ADDR
@@ -59,7 +59,8 @@ A2D_QUERY_SCREEN        := $03  ; Get screen state
         ;; .res 8 pattern
         ;; .byte mskand         AND mask, default $FF
         ;; .byte mskor          ORA mask, default $00
-        ;; .byte 0,0,0,0        ??? position - (x, y)
+        ;; .word xpos
+        ;; .word ypos
         ;; .byte hthick         horizontal pen thickness
         ;; .byte vthick         vertical pen thickness
         ;; .byte 0              ??? fill mode?
@@ -79,7 +80,8 @@ A2D_SET_STATE   := $04          ; Set full drawing state
         ;; .res 8 pattern
         ;; .byte mskand         AND mask, default $FF
         ;; .byte mskor          ORA mask, default $00
-        ;; .byte 0,0,0,0        ???
+        ;; .word xpos
+        ;; .word ypos
         ;; .byte hthick         horizontal pen thickness
         ;; .byte vthick         vertical pen thickness
         ;; .byte 0              ??? fill mode?
@@ -107,7 +109,11 @@ A2D_SET_FILL_MODE := $07
 A2D_SET_PATTERN := $08
         ;; (input length 8 bytes)
         ;; .res 8 pattern       8x8 pixel pattern for A2D_FILL_RECT calls
-        ;; (TODO: Is there an output???)
+
+A2D_SET_MSK := $09
+        ;; (input length 2 bytes)
+        ;; .byte mskand
+        ;; .byte mskor
 
 A2D_SET_THICKNESS := $0A
         ;; (input length 2 bytes)
@@ -254,7 +260,8 @@ A2D_CREATE_WINDOW := $38
         ;; .res 8 pattern
         ;; .byte mskand         AND mask, default $FF
         ;; .byte mskor          ORA mask, default $00
-        ;; .byte 0,0,0,0        ???
+        ;; .word xpos
+        ;; .word ypos
         ;; .byte hthick
         ;; .byte vthick
         ;; .byte 0              ??? fill mode?
@@ -346,7 +353,7 @@ A2D_UPDATE_SCROLL:= $4B
 
 ;;; Used in A2D_QUERY_STATE / A2D_SET_BOX
 A2D_SCREEN_ADDR     := $2000    ; Screen address
-A2D_SCREEN_STRIDE   := $80      ; Stride in bytes (???)
+A2D_SCREEN_STRIDE   := $80      ; Stride in bytes
 
 ;;; Used in A2D_GET_INPUT
 A2D_INPUT_NONE  := 0            ; No mouse or keypress
