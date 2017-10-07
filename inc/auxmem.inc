@@ -10,10 +10,15 @@ RAMWRTON        := $C005
 ALTZPOFF        := $C008
 ALTZPON         := $C009
 
+SET80VID        := $C00D
+RD80STORE       := $C018
+RDPAGE2         := $C01C
+
 PAGE2OFF        := $C054
 PAGE2ON         := $C055
 HIRESON         := $C056
 HIRESOFF        := $C057
+DHIRESON        := $C05E
 
 ;;; Routines
 AUXMOVE         := $C311        ; carry set main>aux, carry clear aux>main

@@ -2,15 +2,11 @@
         .setcpu "65C02"
 
         .include "apple2.inc"
+        .include "../inc/apple2.inc"
         .include "../inc/auxmem.inc"
         .include "../inc/prodos.inc"
         .include "../desk.acc/a2d.inc"
 
-DHIRESON  := $C05E
-SET80VID  := $C00D
-RD80STORE := $C018
-RDPAGE2   := $C01C
-SPKR      := $C030
 
 L0000           := $0000
 L0082           := $0082
@@ -19,6 +15,25 @@ L0088           := $0088
 L00C7           := $00C7
 LD05E           := $D05E
 LD2D0           := $D2D0
+
+;;; ==================================================
+
+;;; ZP Usage
+
+        ;; $E0-$E7      - Pattern
+        ;; $E8-$E9      - ??? (set by $9 call)
+        ;; $EA-$ED      - position (x/y words)
+        ;; $EE-$EF      - thickness (h/v bytes)
+        ;; $F1          - text mask
+
+        PATTERN := $E0
+        POS     := $EA
+        XPOS    := $EA
+        YPOS    := $EC
+        THICK   := $EE
+        HTHICK  := $EE
+        VTHICK  := $EF
+        TMASK   := $F1
 
 ;;; ==================================================
 ;;; A2D
@@ -202,7 +217,12 @@ hide_cursor_count:
 ;;; ==================================================
 ;;; Jump table for A2D entry point calls
 
+        ;; jt_rts can be used if the only thing the
+        ;; routine needs to do is copy params into
+        ;; the zero page.
         jt_rts := a2d_dispatch::rts1
+
+
 
 a2d_jump_table:
         .addr   jt_rts              ; $00
@@ -215,11 +235,11 @@ a2d_jump_table:
         .addr   SET_FILL_MODE_IMPL  ; $07 SET_FILL_MODE
         .addr   SET_PATTERN_IMPL    ; $08 SET_PATTERN
         .addr   jt_rts              ; $09
-        .addr   jt_rts              ; $0A SET_THICKNESS  ???
+        .addr   jt_rts              ; $0A SET_THICKNESS
         .addr   L586A               ; $0B
-        .addr   jt_rts              ; $0C SET_TEXT_MASK  ???
+        .addr   jt_rts              ; $0C SET_TEXT_MASK
         .addr   L5742               ; $0D
-        .addr   jt_rts              ; $0E SET_POS        ???
+        .addr   jt_rts              ; $0E SET_POS
         .addr   DRAW_LINE_IMPL      ; $0F DRAW_LINE
         .addr   L5776               ; $10
         .addr   FILL_RECT_IMPL      ; $11 FILL_RECT
@@ -293,85 +313,85 @@ param_lengths:
         .byte zp, (length | (cursor << 7))
 .endmacro
 
-        PARAM_DEFN  0, $00, 0   ; call $00
-        PARAM_DEFN  0, $00, 0   ; call $01
-        PARAM_DEFN  1, $82, 0   ; call $02
-        PARAM_DEFN  0, $00, 0   ; call $03
-        PARAM_DEFN 36, $D0, 0   ; call $04
-        PARAM_DEFN  0, $00, 0   ; call $05
-        PARAM_DEFN 16, $D0, 0   ; call $06
-        PARAM_DEFN  1, $F0, 0   ; call $07
-        PARAM_DEFN  8, $E0, 0   ; call $08
-        PARAM_DEFN  2, $E8, 0   ; call $09
-        PARAM_DEFN  2, $EE, 0   ; call $0A
-        PARAM_DEFN  0, $00, 0   ; call $0B
-        PARAM_DEFN  1, $F1, 0   ; call $0C
-        PARAM_DEFN  4, $A1, 0   ; call $0D
-        PARAM_DEFN  4, $EA, 0   ; call $0E
-        PARAM_DEFN  4, $A1, 1   ; call $0F
-        PARAM_DEFN  4, $92, 1   ; call $10
-        PARAM_DEFN  8, $92, 1   ; call $11
-        PARAM_DEFN  8, $9F, 1   ; call $12
-        PARAM_DEFN  8, $92, 0   ; call $13
-        PARAM_DEFN 16, $8A, 0   ; call $14
-        PARAM_DEFN  0, $00, 1   ; call $15
-        PARAM_DEFN  0, $00, 1   ; call $16
-        PARAM_DEFN  0, $00, 0   ; call $17
-        PARAM_DEFN  3, $A1, 0   ; call $18
-        PARAM_DEFN  3, $A1, 1   ; call $19
-        PARAM_DEFN  1, $82, 0   ; call $1A
-        PARAM_DEFN  1, $82, 0   ; call $1B
-        PARAM_DEFN  0, $00, 0   ; call $1C
-        PARAM_DEFN 12, $82, 0   ; call $1D
-        PARAM_DEFN  0, $00, 0   ; call $1E
-        PARAM_DEFN  3, $82, 0   ; call $1F
-        PARAM_DEFN  2, $82, 0   ; call $20
-        PARAM_DEFN  2, $82, 0   ; call $21
-        PARAM_DEFN  1, $82, 0   ; call $22
-        PARAM_DEFN  0, $00, 0   ; call $23
-        PARAM_DEFN  0, $00, 0   ; call $24
-        PARAM_DEFN  0, $00, 0   ; call $25
-        PARAM_DEFN  0, $00, 0   ; call $26
-        PARAM_DEFN  0, $00, 0   ; call $27
-        PARAM_DEFN  0, $00, 0   ; call $28
-        PARAM_DEFN  0, $00, 0   ; call $29
-        PARAM_DEFN  0, $00, 0   ; call $2A
-        PARAM_DEFN  0, $00, 0   ; call $2B
-        PARAM_DEFN  0, $00, 0   ; call $2C
-        PARAM_DEFN  5, $82, 0   ; call $2D
-        PARAM_DEFN  1, $82, 0   ; call $2E
-        PARAM_DEFN  4, $82, 0   ; call $2F
-        PARAM_DEFN  0, $00, 0   ; call $30
-        PARAM_DEFN  0, $00, 0   ; call $31
-        PARAM_DEFN  4, $C7, 0   ; call $32
-        PARAM_DEFN  1, $C7, 0   ; call $33
-        PARAM_DEFN  2, $C7, 0   ; call $34
-        PARAM_DEFN  3, $C7, 0   ; call $35
-        PARAM_DEFN  3, $C7, 0   ; call $36
-        PARAM_DEFN  4, $C7, 0   ; call $37
-        PARAM_DEFN  0, $00, 0   ; call $38
-        PARAM_DEFN  1, $82, 0   ; call $39
-        PARAM_DEFN  0, $00, 0   ; call $3A
-        PARAM_DEFN  1, $82, 0   ; call $3B
-        PARAM_DEFN  3, $82, 0   ; call $3C
-        PARAM_DEFN  2, $82, 0   ; call $3D
-        PARAM_DEFN  1, $82, 0   ; call $3E
-        PARAM_DEFN  1, $82, 0   ; call $3F
-        PARAM_DEFN  4, $EA, 0   ; call $40
-        PARAM_DEFN  0, $00, 0   ; call $41
-        PARAM_DEFN  1, $82, 0   ; call $42
-        PARAM_DEFN  0, $00, 0   ; call $43
-        PARAM_DEFN  5, $82, 0   ; call $44
-        PARAM_DEFN  5, $82, 0   ; call $45
-        PARAM_DEFN  5, $82, 0   ; call $46
-        PARAM_DEFN  5, $82, 0   ; call $47
-        PARAM_DEFN  4, $EA, 0   ; call $48
-        PARAM_DEFN  3, $82, 0   ; call $49
-        PARAM_DEFN  5, $82, 0   ; call $4A
-        PARAM_DEFN  3, $8C, 0   ; call $4B
-        PARAM_DEFN  2, $8C, 0   ; call $4C
-        PARAM_DEFN 16, $8A, 0   ; call $4D
-        PARAM_DEFN  2, $82, 0   ; call $4E
+        PARAM_DEFN  0, $00, 0   ; $00
+        PARAM_DEFN  0, $00, 0   ; $01
+        PARAM_DEFN  1, $82, 0   ; $02
+        PARAM_DEFN  0, $00, 0   ; $03 QUERY_SCREEN
+        PARAM_DEFN 36, $D0, 0   ; $04 SET_STATE
+        PARAM_DEFN  0, $00, 0   ; $05
+        PARAM_DEFN 16, $D0, 0   ; $06 SET_BOX
+        PARAM_DEFN  1, $F0, 0   ; $07 SET_FILL_MODE
+        PARAM_DEFN  8, PATTERN, 0  ; $08 SET_PATTERN
+        PARAM_DEFN  2, $E8, 0   ; $09
+        PARAM_DEFN  2, THICK, 0 ; $0A SET_THICKNESS
+        PARAM_DEFN  0, $00, 0   ; $0B
+        PARAM_DEFN  1, TMASK, 0 ; $0C SET_TEXT_MASK
+        PARAM_DEFN  4, $A1, 0   ; $0D
+        PARAM_DEFN  4, POS, 0   ; $0E SET_POS
+        PARAM_DEFN  4, $A1, 1   ; $0F DRAW_LINE
+        PARAM_DEFN  4, $92, 1   ; $10
+        PARAM_DEFN  8, $92, 1   ; $11 FILL_RECT
+        PARAM_DEFN  8, $9F, 1   ; $12 DRAW_RECT
+        PARAM_DEFN  8, $92, 0   ; $13 TEST_BOX
+        PARAM_DEFN 16, $8A, 0   ; $14 DRAW_BITMAP
+        PARAM_DEFN  0, $00, 1   ; $15
+        PARAM_DEFN  0, $00, 1   ; $16
+        PARAM_DEFN  0, $00, 0   ; $17
+        PARAM_DEFN  3, $A1, 0   ; $18 MEASURE_TEXT
+        PARAM_DEFN  3, $A1, 1   ; $19 DRAW_TEXT
+        PARAM_DEFN  1, $82, 0   ; $1A CONFIGURE_ZP_USE
+        PARAM_DEFN  1, $82, 0   ; $1B
+        PARAM_DEFN  0, $00, 0   ; $1C
+        PARAM_DEFN 12, $82, 0   ; $1D
+        PARAM_DEFN  0, $00, 0   ; $1E
+        PARAM_DEFN  3, $82, 0   ; $1F
+        PARAM_DEFN  2, $82, 0   ; $20
+        PARAM_DEFN  2, $82, 0   ; $21
+        PARAM_DEFN  1, $82, 0   ; $22
+        PARAM_DEFN  0, $00, 0   ; $23
+        PARAM_DEFN  0, $00, 0   ; $24 SET_CURSOR
+        PARAM_DEFN  0, $00, 0   ; $25 SHOW_CURSOR
+        PARAM_DEFN  0, $00, 0   ; $26 HIDE_CURSOR
+        PARAM_DEFN  0, $00, 0   ; $27
+        PARAM_DEFN  0, $00, 0   ; $28
+        PARAM_DEFN  0, $00, 0   ; $29
+        PARAM_DEFN  0, $00, 0   ; $2A GET_INPUT
+        PARAM_DEFN  0, $00, 0   ; $2B
+        PARAM_DEFN  0, $00, 0   ; $2C
+        PARAM_DEFN  5, $82, 0   ; $2D SET_INPUT
+        PARAM_DEFN  1, $82, 0   ; $2E
+        PARAM_DEFN  4, $82, 0   ; $2F
+        PARAM_DEFN  0, $00, 0   ; $30
+        PARAM_DEFN  0, $00, 0   ; $31
+        PARAM_DEFN  4, $C7, 0   ; $32
+        PARAM_DEFN  1, $C7, 0   ; $33
+        PARAM_DEFN  2, $C7, 0   ; $34
+        PARAM_DEFN  3, $C7, 0   ; $35
+        PARAM_DEFN  3, $C7, 0   ; $36
+        PARAM_DEFN  4, $C7, 0   ; $37
+        PARAM_DEFN  0, $00, 0   ; $38 CREATE_WINDOW
+        PARAM_DEFN  1, $82, 0   ; $39 DESTROY_WINDOW
+        PARAM_DEFN  0, $00, 0   ; $3A
+        PARAM_DEFN  1, $82, 0   ; $3B
+        PARAM_DEFN  3, $82, 0   ; $3C QUERY_STATE
+        PARAM_DEFN  2, $82, 0   ; $3D
+        PARAM_DEFN  1, $82, 0   ; $3E
+        PARAM_DEFN  1, $82, 0   ; $3F
+        PARAM_DEFN  4, POS, 0   ; $40 QUERY_TARGET
+        PARAM_DEFN  0, $00, 0   ; $41
+        PARAM_DEFN  1, $82, 0   ; $42
+        PARAM_DEFN  0, $00, 0   ; $43 CLOSE_CLICK
+        PARAM_DEFN  5, $82, 0   ; $44 DRAG_WINDOW
+        PARAM_DEFN  5, $82, 0   ; $45 DRAG_RESIZE
+        PARAM_DEFN  5, $82, 0   ; $46 MAP_COORDS
+        PARAM_DEFN  5, $82, 0   ; $47
+        PARAM_DEFN  4, POS, 0   ; $48 QUERY_CLIENT
+        PARAM_DEFN  3, $82, 0   ; $49 RESIZE_WINDOW
+        PARAM_DEFN  5, $82, 0   ; $4A DRAG_SCROLL
+        PARAM_DEFN  3, $8C, 0   ; $4B UPDATE_SCROLL
+        PARAM_DEFN  2, $8C, 0   ; $4C
+        PARAM_DEFN 16, $8A, 0   ; $4D
+        PARAM_DEFN  2, $82, 0   ; $4E
 
 ;;; ==================================================
 
@@ -1256,7 +1276,7 @@ SET_PATTERN_IMPL:
 L4FA3:  lda     $F7
         and     #$07
         tay
-        lda     $E0,x
+        lda     PATTERN,x
 L4FAA:  dey
         bmi     L4FB2
         cmp     #$80
@@ -1319,14 +1339,14 @@ L4FE9:  lda     $9F,x
         bpl     L4FE7
         ldx     #$03
 L500E:  lda     $9F,x
-        sta     $EA,x
+        sta     POS,x
         dex
         bpl     L500E
 L5015:  rts
 
 L5016:  .byte   $00,$02,$04,$06
 L501A:  .byte   $04,$06,$00,$02
-L501E:  lda     $EE
+L501E:  lda     HTHICK
         sec
         sbc     #$01
         cmp     #$FF
@@ -1335,7 +1355,7 @@ L501E:  lda     $EE
         sta     $96
         bcc     L502F
         inc     $97
-L502F:  lda     $EF
+L502F:  lda     VTHICK
         sec
         sbc     #$01
         cmp     #$FF
@@ -1360,8 +1380,8 @@ L5043:  jsr     L50A9
 
 .proc TEST_BOX_IMPL
         jsr     L514C
-        lda     $EA
-        ldx     $EB
+        lda     XPOS
+        ldx     XPOS+1
         cpx     $93
         bmi     fail
         bne     :+
@@ -1373,8 +1393,8 @@ L5043:  jsr     L50A9
         cmp     $96
         bcc     :+
         bne     fail
-:       lda     $EC
-        ldx     $ED
+:       lda     YPOS
+        ldx     YPOS+1
         cpx     $95
         bmi     fail
         bne     :+
@@ -1569,6 +1589,8 @@ L516C:  lda     $8A,x
 
 ;;; ==================================================
 
+;;; $4D IMPL
+
 L51B3:  lda     #$00
         sta     $9B
         sta     $9C
@@ -1678,13 +1700,12 @@ L5276:  lda     L5285,x
 L5285:  .byte   $BE
 L5286:  .byte   $4C
 L5287:  .byte   $A3
-L5288:  jmp     L4221
-
-        .byte   $21,$43,$21,$44,$21,$45,$21,$46
+L5288:  .byte   $4C,$21,$42,$21,$43,$21,$44,$21,$45,$21,$46
 L5293:  .byte   $21
 L5294:  .byte   $47,$A1,$42,$A1,$43,$A1,$44,$A1
         .byte   $45,$A1,$46,$A1
         .byte   $47
+
 L52A1:  stx     $B0
         asl     a
         asl     a
@@ -1805,11 +1826,15 @@ L5379:  rts
 
 ;;; ==================================================
 
+;;; $17 IMPL
+
 L537A:
         lda     #$80
         bne     L5380
 
 ;;; ==================================================
+
+;;; $15 IMPL
 
 L537E:  lda     #$00
 L5380:  sta     $BA
@@ -2218,6 +2243,8 @@ L56D5:  rts
 
 ;;; ==================================================
 
+;;; $16 IMPL
+
 L56D6:
         lda     #$00
         sta     $BA
@@ -2260,7 +2287,7 @@ L5715:  lda     ($B7),y
         ldy     #$03
 L5721:  lda     ($B7),y
         sta     $96,y
-        sta     $EA,y
+        sta     POS,y
         dey
         bpl     L5721
         jsr     L5783
@@ -2277,6 +2304,8 @@ L5731:  lda     $B7,x
 
 ;;; ==================================================
 
+;;; $0D IMPL
+
 L5742:
         lda     $A1
         ldx     $A2
@@ -2284,19 +2313,19 @@ L5742:
         lda     $A3
         ldx     $A4
         clc
-        adc     $EC
-        sta     $EC
+        adc     YPOS
+        sta     YPOS
         txa
-        adc     $ED
-        sta     $ED
+        adc     YPOS+1
+        sta     YPOS+1
         rts
 
 L5758:  clc
-        adc     $EA
-        sta     $EA
+        adc     XPOS
+        sta     XPOS
         txa
-        adc     $EB
-        sta     $EB
+        adc     XPOS+1
+        sta     XPOS+1
         rts
 
 ;;; ==================================================
@@ -2305,10 +2334,10 @@ DRAW_LINE_IMPL:
         ldx     #$02
 L5765:  lda     $A1,x
         clc
-        adc     $EA,x
+        adc     XPOS,x
         sta     $92,x
         lda     $A2,x
-        adc     $EB,x
+        adc     XPOS+1,x
         sta     $93,x
         dex
         dex
@@ -2316,12 +2345,14 @@ L5765:  lda     $A1,x
 
 ;;; ==================================================
 
+;;; $10 IMPL
+
 L5776:
         ldx     #$03
-L5778:  lda     $EA,x
+L5778:  lda     POS,x
         sta     $96,x
         lda     $92,x
-        sta     $EA,x
+        sta     POS,x
         dex
         bpl     L5778
 L5783:  lda     $99
@@ -2356,10 +2387,10 @@ L57B2:  lda     $92,x
         sta     $96,x
         dex
         bpl     L57B2
-L57BF:  ldx     $EE
+L57BF:  ldx     HTHICK
         dex
         stx     $A2
-        lda     $EF
+        lda     VTHICK
         sta     $A4
         lda     #$00
         sta     $A1
@@ -2432,6 +2463,8 @@ L5852:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
 ;;; ==================================================
+
+;;; $0B IMPL
 
 L586A:
         lda     $80
@@ -2524,18 +2557,18 @@ L5907:  sec
         bcs     L590D
         dex
 L590D:  clc
-        adc     $EA
+        adc     XPOS
         sta     $96
         txa
-        adc     $EB
+        adc     XPOS+1
         sta     $97
-        lda     $EA
+        lda     XPOS
         sta     $92
-        lda     $EB
+        lda     XPOS+1
         sta     $93
-        lda     $EC
+        lda     YPOS
         sta     $98
-        ldx     $ED
+        ldx     YPOS+1
         stx     $99
         clc
         adc     #$01
@@ -2932,52 +2965,52 @@ L5C23           := * + 2
         jmp     L5C24
 
 L5C24:  lda     $0F
-        eor     $F1
+        eor     TMASK
         sta     ($3E),y
         lda     $0E
-        eor     $F1
+        eor     TMASK
         sta     ($3C),y
         lda     $0D
-        eor     $F1
+        eor     TMASK
         sta     ($3A),y
         lda     $0C
-        eor     $F1
+        eor     TMASK
         sta     ($38),y
         lda     $0B
-        eor     $F1
+        eor     TMASK
         sta     ($36),y
         lda     $0A
-        eor     $F1
+        eor     TMASK
         sta     ($34),y
         lda     $09
-        eor     $F1
+        eor     TMASK
         sta     ($32),y
         lda     $08
-        eor     $F1
+        eor     TMASK
         sta     ($30),y
         lda     $07
-        eor     $F1
+        eor     TMASK
         sta     ($2E),y
         lda     $06
-        eor     $F1
+        eor     TMASK
         sta     ($2C),y
         lda     $05
-        eor     $F1
+        eor     TMASK
         sta     ($2A),y
         lda     $04
-        eor     $F1
+        eor     TMASK
         sta     ($28),y
         lda     $03
-        eor     $F1
+        eor     TMASK
         sta     ($26),y
         lda     $02
-        eor     $F1
+        eor     TMASK
         sta     ($24),y
         lda     $01
-        eor     $F1
+        eor     TMASK
         sta     ($22),y
         lda     L0000
-        eor     $F1
+        eor     TMASK
         sta     ($20),y
 L5C84:  bit     $D6
         bpl     L5C94
@@ -3015,97 +3048,97 @@ L5CBF           := * + 2
         jmp     L5CC0
 
 L5CC0:  lda     $0F
-        eor     $F1
+        eor     TMASK
         eor     ($3E),y
         and     $80
         eor     ($3E),y
         sta     ($3E),y
         lda     $0E
-        eor     $F1
+        eor     TMASK
         eor     ($3C),y
         and     $80
         eor     ($3C),y
         sta     ($3C),y
         lda     $0D
-        eor     $F1
+        eor     TMASK
         eor     ($3A),y
         and     $80
         eor     ($3A),y
         sta     ($3A),y
         lda     $0C
-        eor     $F1
+        eor     TMASK
         eor     ($38),y
         and     $80
         eor     ($38),y
         sta     ($38),y
         lda     $0B
-        eor     $F1
+        eor     TMASK
         eor     ($36),y
         and     $80
         eor     ($36),y
         sta     ($36),y
         lda     $0A
-        eor     $F1
+        eor     TMASK
         eor     ($34),y
         and     $80
         eor     ($34),y
         sta     ($34),y
         lda     $09
-        eor     $F1
+        eor     TMASK
         eor     ($32),y
         and     $80
         eor     ($32),y
         sta     ($32),y
         lda     $08
-        eor     $F1
+        eor     TMASK
         eor     ($30),y
         and     $80
         eor     ($30),y
         sta     ($30),y
         lda     $07
-        eor     $F1
+        eor     TMASK
         eor     ($2E),y
         and     $80
         eor     ($2E),y
         sta     ($2E),y
         lda     $06
-        eor     $F1
+        eor     TMASK
         eor     ($2C),y
         and     $80
         eor     ($2C),y
         sta     ($2C),y
         lda     $05
-        eor     $F1
+        eor     TMASK
         eor     ($2A),y
         and     $80
         eor     ($2A),y
         sta     ($2A),y
         lda     $04
-        eor     $F1
+        eor     TMASK
         eor     ($28),y
         and     $80
         eor     ($28),y
         sta     ($28),y
         lda     $03
-        eor     $F1
+        eor     TMASK
         eor     ($26),y
         and     $80
         eor     ($26),y
         sta     ($26),y
         lda     $02
-        eor     $F1
+        eor     TMASK
         eor     ($24),y
         and     $80
         eor     ($24),y
         sta     ($24),y
         lda     $01
-        eor     $F1
+        eor     TMASK
         eor     ($22),y
         and     $80
         eor     ($22),y
         sta     ($22),y
         lda     L0000
-        eor     $F1
+        eor     TMASK
         eor     ($20),y
         and     $80
         eor     ($20),y
@@ -3148,6 +3181,8 @@ L5E42:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
 ;;; ==================================================
 
+;;; $01 IMPL
+
 L5E51:  lda     #$71
         sta     L0082
         jsr     L5E7B
@@ -3170,6 +3205,8 @@ L5E5A:  lda     L5F1E,x
 L5E79:  .addr   $5F42
 
 ;;; ==================================================
+
+;;; $02 IMPL
 
 L5E7B:  lda     DHIRESON
         sta     SET80VID
@@ -3204,6 +3241,8 @@ L5EAB:  jsr     SET_BOX_IMPL
 
 ;;; ==================================================
 
+;;; $05 IMPL
+
 L5EB4:
         jsr     copy_params_from_zp
         lda     $F4
@@ -3237,6 +3276,8 @@ CONFIGURE_ZP_IMPL:
 
 ;;; ==================================================
 
+;;; $1B IMPL
+
 L5EDE:
         lda     L0082
         cmp     L5F1C
@@ -3264,6 +3305,8 @@ L5F01:  lda     L0000,x
 
 ;;; ==================================================
 
+;;; $1C IMPL
+
 L5F0A:
         ldy     #5              ; Store 5 bytes at params
 L5F0C:  lda     L5F15,y
@@ -3273,20 +3316,36 @@ L5F0C:  lda     L5F15,y
         rts
 
 L5F15:  .byte   $01,$00,$00,$46,$01,$00
+
+
 preserve_zp_flag:  .byte   $80  ; if high bit set, ZP saved during A2D calls
+
 L5F1C:  .byte   $80
+
 stack_ptr_stash:  .byte   $00
-L5F1E:  .byte   $00,$00,$00,$00,$00,$20,$80,$00
-        .byte   $00,$00,$00,$00,$2F,$02,$BF,$00
 
-white_pattern:
-        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+        ;; Screen State
 
-        .byte   $FF,$00,$00,$00,$00,$00,$01,$01
-        .byte   $00
-L5F3F:  .byte   $00
-L5F40:  .byte   $00
-L5F41:  .byte   $00
+.proc L5F1E
+left:   .word   0
+top:    .word   0
+addr:   .addr   A2D_SCREEN_ADDR
+stride: .word   A2D_SCREEN_STRIDE
+hoff:   .word   0
+voff:   .word   0
+width:  .word   560-1
+height: .word   192-1
+pattern:.res    8, $FF
+mskand: .byte   A2D_DEFAULT_MSKAND
+mskor:  .byte   A2D_DEFAULT_MSKOR
+        .byte   0,0,0,0         ; ???
+hthick: .byte   1
+vthick: .byte   1
+        .byte   0               ; ???
+tmsk:   .byte   0
+font:   .addr   0
+.endproc
+
 L5F42:  .byte   $00,$00,$00,$00,$00,$20,$80
         .byte   $00,$00,$00,$00,$00,$2F,$02,$BF
         .byte   $00,$FF,$FF,$FF,$FF,$FF,$FF,$FF
@@ -3591,6 +3650,8 @@ L624C:  plp
 
 ;;; ==================================================
 
+;;; $27 IMPL
+
 L624E:
         php
         sei
@@ -3683,6 +3744,8 @@ L6309:  rts
 
 ;;; ==================================================
 
+;;; $28 IMPL
+
 L630A:
         lda     L6142
         ldx     L6143
@@ -3723,6 +3786,8 @@ L6340:  .byte   $00
 
 ;;; ==================================================
 
+;;; $1D IMPL
+
 L6341:
         php
         pla
@@ -3733,11 +3798,11 @@ L6348:  lda     L0082,x
         dex
         bpl     L6348
         lda     #$7F
-        sta     L5F3F
+        sta     L5F1E::tmsk
         lda     $87
-        sta     L5F40
+        sta     L5F1E::font
         lda     L0088
-        sta     L5F41
+        sta     L5F1E::font+1
         lda     $89
         sta     L6835
         lda     $8A
@@ -3892,6 +3957,8 @@ L64A4:  rts
 
 ;;; ==================================================
 
+;;; $1E IMPL
+
 L64A5:
         ldy     #$12
         lda     #$00
@@ -3913,6 +3980,8 @@ L64C7:  lda     L6340
         rts
 
 ;;; ==================================================
+
+;;; $1F IMPL
 
 L64D2:
         lda     L0082
@@ -4041,6 +4110,8 @@ checkerboard_pattern:
 
 ;;; ==================================================
 
+;;; $20 IMPL
+
 L65B3:
         bit     $633F
         bmi     L65CD
@@ -4154,6 +4225,8 @@ L6660:  .byte   0
 L6662:  .byte   0
 
 ;;; ==================================================
+
+;;; $29 IMPL
 
 L6663:  bit     L6339
         bpl     L666D
@@ -4273,6 +4346,8 @@ rloop:  lda     int_stash_zp,x
 
 ;;; ==================================================
 
+;;; $23 IMPL
+
 L6747:
         lda     L6750
         ldx     L6751
@@ -4328,6 +4403,8 @@ L6811:  clc
         rts
 
 ;;; ==================================================
+
+;;; $2E IMPL
 
 L6813:  .byte   $80
 L6814:
@@ -4472,11 +4549,11 @@ L68E1:  lda     $BF,y
         bpl     L68E1
         rts
 
-L68EA:  sty     $EC
+L68EA:  sty     YPOS
         ldy     #$00
-        sty     $ED
-L68F0:  sta     $EA
-        stx     $EB
+        sty     YPOS+1
+L68F0:  sta     XPOS
+        stx     XPOS+1
         rts
 
 L68F5:  sta     $F0
@@ -4505,6 +4582,10 @@ L691B:  A2D_CALL A2D_GET_INPUT, L0082
         lda     L0082
         rts
 
+;;; ==================================================
+
+;;; $30 IMPL
+
 L6924:  .byte   0
 L6925:  .byte   0
 L6926:
@@ -4528,8 +4609,8 @@ L6926:
         jsr     L68EA
         ldx     #$00
 L6957:  jsr     L6878
-        lda     $EA
-        ldx     $EB
+        lda     XPOS
+        ldx     XPOS+1
         sta     $B5
         stx     $B6
         sec
@@ -4623,8 +4704,8 @@ L6A00:  lda     $BB
         ldx     $B2
         jsr     L6900
         jsr     L6A5C
-        lda     $EA
-        ldx     $EB
+        lda     XPOS
+        ldx     XPOS+1
         clc
         adc     #$08
         bcc     L6A24
@@ -4753,6 +4834,8 @@ L6B1C:  rts
 
 ;;; ==================================================
 
+;;; $33 IMPL
+
 L6B1D:  lda     L00C7
         bne     L6B26
         lda     L6BD9
@@ -4782,6 +4865,8 @@ L6B37:  lda     $B7,x
         rts
 
 ;;; ==================================================
+
+;;; $32 IMPL
 
 L6B60:
         lda     $C9
@@ -4825,6 +4910,8 @@ L6B9F:  jsr     L6B96
 
 ;;; ==================================================
 
+;;; $35 IMPL
+
 L6BA9:
         jsr     L6B9F
         asl     $BF
@@ -4833,6 +4920,8 @@ L6BA9:
         jmp     L68DF
 
 ;;; ==================================================
+
+;;; $36 IMPL
 
 L6BB5:
         jsr     L6B9F
@@ -4848,6 +4937,8 @@ L6BC6:  sta     $BF
 
 ;;; ==================================================
 
+;;; $34 IMPL
+
 L6BCB:
         jsr     L6A89
         asl     $B0
@@ -4857,6 +4948,8 @@ L6BCB:
         jmp     L68A9
 
 ;;; ==================================================
+
+;;; $31 IMPL
 
 L6BD9:  .byte   0
 L6BDA:  .byte   0
@@ -5158,7 +5251,7 @@ L6E36:  ldx     $A9
         lda     #$01
         jsr     L68F5
         A2D_CALL A2D_FILL_RECT, fill_rect_params3
-        A2D_CALL A2D_SET_PATTERN, white_pattern
+        A2D_CALL A2D_SET_PATTERN, L5F1E::pattern
         lda     #$02
         jsr     L68F5
         rts
@@ -5213,15 +5306,17 @@ L6EAA:  ldx     L6BDA
 
 ;;; ==================================================
 
+;;; $2F IMPL
+
 .proc L6ECD
         ldx     #$03
 loop:   lda     L0082,x
         sta     L6856,x
         dex
         bpl     loop
-        lda     L5F40
+        lda     L5F1E::font
         sta     L0082
-        lda     L5F41
+        lda     L5F1E::font+1
         sta     L0083
         ldy     #$00
         lda     (L0082),y
@@ -5253,6 +5348,8 @@ end:    rts
 .endproc
 
 ;;; ==================================================
+
+;;; $37 IMPL
 
 L6F1C:
         jsr     L6B9F
@@ -5762,7 +5859,7 @@ L72A0:  jsr     FILL_RECT_IMPL
         sbc     #$00
         sta     $97
         jsr     FILL_RECT_IMPL
-        A2D_CALL A2D_SET_PATTERN, white_pattern
+        A2D_CALL A2D_SET_PATTERN, L5F1E::pattern
 L72C9:  jsr     L703E
         bit     $B0
         bpl     L7319
@@ -5898,18 +5995,18 @@ L73BF:  lda     $AD
         sbc     L0083
         cmp     #$80
         ror     a
-        sta     $EB
+        sta     XPOS+1
         tya
         ror     a
-        sta     $EA
+        sta     XPOS
         lda     $CD
         ldx     $CE
         sec
         sbc     #$02
         bcs     L73F0
         dex
-L73F0:  sta     $EC
-        stx     $ED
+L73F0:  sta     YPOS
+        stx     YPOS+1
         lda     L0082
         ldx     L0083
         rts
@@ -6008,6 +6105,8 @@ L749A:  lda     $80
 
 ;;; ==================================================
 
+;;; $42 IMPL
+
 L74AC:
         jsr     L7074
         cmp     L700B
@@ -6052,6 +6151,8 @@ L74F4:  ldy     #$38
 
 ;;; ==================================================
 
+;;; $3B IMPL
+
 L7500:
         jsr     L7074
         lda     $A9
@@ -6060,6 +6161,8 @@ L7500:
         jmp     L5EBD
 
 ;;; ==================================================
+
+;;; $3E IMPL
 
 L750C:  .byte   $00
 L750D:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -6105,8 +6208,11 @@ L7585:  lda     #$A3
 
 ;;; ==================================================
 
+;;; $3F IMPL
+
 L758A:  .byte   $0E
 L758B:  .byte   $75
+
 L758C:  jsr     SHOW_CURSOR_IMPL
         lda     L750C
         ldx     L750D
@@ -6189,6 +6295,8 @@ L75EA:  lda     $92,x
 
 ;;; ==================================================
 
+;;; $3D IMPL
+
 L761F:
         jsr     L7074
         lda     $A9
@@ -6206,6 +6314,8 @@ L762F:  lda     (L0082),y
         rts
 
 ;;; ==================================================
+
+;;; $41 IMPL
 
 L7639:
         jsr     L7013
@@ -6461,6 +6571,8 @@ DESTROY_WINDOW_IMPL:
 
 ;;; ==================================================
 
+;;; $3A IMPL
+
 L7836:  jsr     L7013
         beq     L7849
         ldy     #$0A
@@ -6547,6 +6659,8 @@ height: .word   0
 
 ;;; ==================================================
 
+;;; $47 IMPL
+
 L78E1:
         jsr     L7074
         ldx     #$02
@@ -6628,6 +6742,8 @@ L7954:  sta     $98
 
 ;;; ==================================================
 
+;;; $4C IMPL
+
 L7965:
         lda     $8C
         cmp     #$01
@@ -6677,7 +6793,7 @@ L79BC:  jsr     L657E
         jsr     L79F1
         A2D_CALL A2D_SET_PATTERN, light_speckles_pattern
         A2D_CALL A2D_FILL_RECT, L00C7
-        A2D_CALL A2D_SET_PATTERN, white_pattern
+        A2D_CALL A2D_SET_PATTERN, L5F1E::pattern
         bit     $8C
         bmi     L79DD
         bit     $AF
@@ -6845,7 +6961,7 @@ L7B04:  pha
         jsr     L7A73
         pla
         tax
-        lda     $EC
+        lda     YPOS
         cmp     $C9
         bcc     L7B11
         inx
@@ -6879,11 +6995,11 @@ L7B4B:  pha
         jsr     L7A73
         pla
         tax
-        lda     $EB
+        lda     XPOS+1
         cmp     $C8
         bcc     L7B60
         bne     L7B5F
-        lda     $EA
+        lda     XPOS
         cmp     L00C7
         bcc     L7B60
 L7B5F:  inx
@@ -7151,11 +7267,15 @@ L7D51:  lda     $8D
 
 ;;; ==================================================
 
+;;; $22 IMPL
+
 L7D61:  lda     #$80
         sta     L7D74
         jmp     L67D8
 
 ;;; ==================================================
+
+;;; $4E IMPL
 
 L7D69:
         lda     L0082
@@ -7970,6 +8090,8 @@ L840D:  sec
         rts
 
 ;;; ==================================================
+
+;;; $21 IMPL
 
 L8427:
         lda     L0082
