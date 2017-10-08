@@ -13,6 +13,13 @@ L0000           := $0000
 LD05E           := $D05E
 LD2D0           := $D2D0
 
+.macro A2D_RELAY2_CALL call, addr
+        ldy     #call
+        lda     #<addr
+        ldx     #>addr
+        jsr     A2D_RELAY2
+.endmacro
+
 ;;; ==================================================
 
 ;;; ZP Usage
@@ -4218,7 +4225,14 @@ bottom: .word   191
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
 checkerboard_pattern:
-        .byte   $55,$AA,$55,$AA,$55,$AA,$55,$AA
+        .byte   %01010101
+        .byte   %10101010
+        .byte   %01010101
+        .byte   %10101010
+        .byte   %01010101
+        .byte   %10101010
+        .byte   %01010101
+        .byte   %10101010
         .byte   $00
 
 ;;; ==================================================
@@ -8501,10 +8515,8 @@ L859C:  sta     $D409,x
         lda     #$0A
         sta     $D40D
         sta     $D40F
-        ldy     #$04
-        lda     #$01
-        ldx     #$D4
-        jsr     A2D_RELAY
+
+        A2D_RELAY_CALL A2D_SET_STATE, $D401
         rts
 
         lda     #$39
@@ -8562,10 +8574,7 @@ L8616:  cmp     #$57
         jsr     L6B17
         ldx     $D5CA
         txs
-L8625:  ldy     #$33
-        lda     #$3F
-        ldx     #$D6
-        jsr     A2D_RELAY
+L8625:  A2D_RELAY_CALL $33, $D63F
         rts
 
         lda     #$9C
@@ -8573,10 +8582,7 @@ L8625:  ldy     #$33
         jsr     L6B17
         ldx     $D5CA
         txs
-        ldy     #$33
-        lda     #$3F
-        ldx     #$D6
-        jsr     A2D_RELAY
+        A2D_RELAY_CALL $33, $D63F
         rts
 
         lda     #$BF
@@ -8584,10 +8590,7 @@ L8625:  ldy     #$33
         jsr     L6B17
         ldx     $D5CA
         txs
-        ldy     #$33
-        lda     #$3F
-        ldx     #$D6
-        jsr     A2D_RELAY
+        A2D_RELAY_CALL $33, $D63F
         rts
 
         sta     L8737
@@ -11748,7 +11751,7 @@ LA938:  lda     set_state_params::top
 
 
         ;; 5.25" Floppy Disk
-        .addr   LA9AC           ; address
+LA980:  .addr   LA9AC           ; address
         .word   4               ; stride
         .word   0               ; left
         .word   1               ; top
@@ -11774,7 +11777,7 @@ LA9AC:
         .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
 
         ;; RAM Disk
-        .addr   LA9D8           ; address
+LA9CC:  .addr   LA9D8           ; address
         .word   6               ; stride
         .word   1               ; left (???)
         .word   0               ; top
@@ -11795,7 +11798,7 @@ LA9D8:
         .byte   px(%1010101),px(%0101010),px(%1010101),px(%1111111),px(%1111111),px(%1111110)
 
         ;; 3.5" Floppy Disk
-        .addr   LAA2C           ; address
+LAA20:  .addr   LAA2C           ; address
         .word   3               ; stride
         .word   0               ; left
         .word   0               ; top
@@ -11816,7 +11819,7 @@ LAA2C:
         .byte   px(%1111111),px(%1111111),px(%1111111)
 
         ;; Hard Disk
-        .addr   LAA5C           ; address
+LAA50:  .addr   LAA5C           ; address
         .word   8               ; stride
         .word   1               ; left
         .word   0               ; top
@@ -11835,7 +11838,7 @@ LAA5C:
         .byte   px(%1010111),px(%0101010),px(%1010101),px(%0101010),px(%1010101),px(%0101010),px(%1010111),px(%0101010)
 
         ;; Trash Can
-        .addr   LAAB8           ; address
+LAAAC:  .addr   LAAB8           ; address
         .word   5               ; stride
         .word   7               ; left
         .word   1               ; top
@@ -12114,9 +12117,7 @@ LB6DF:  .byte   $A4
 LB6E0:  .byte   $01
 LB6E1:  .byte   $37,$00
 
-
-
-        PASCAL_STRING {"OK            ",A2D_GLYPH_RETURN}
+LB6E3:  PASCAL_STRING {"OK            ",A2D_GLYPH_RETURN}
 
         .byte   $14,$00,$25,$00,$78,$00
         .byte   $30,$00,$19,$00,$2F,$00,$2C,$01
@@ -12127,41 +12128,38 @@ LB713:  .byte   $00
 LB714:  .byte   $00
 LB715:  .byte   $00
 
-        PASCAL_STRING "Try Again     A"
-        PASCAL_STRING "Cancel     Esc"
+LB716:  PASCAL_STRING "Try Again     A"
+LB726:  PASCAL_STRING "Cancel     Esc"
 
-        PASCAL_STRING "System Error"
-        PASCAL_STRING "I/O error"
-        PASCAL_STRING "No device connected"
-        PASCAL_STRING "The disk is write protected."
-        PASCAL_STRING "The syntax of the pathname is invalid."
-        PASCAL_STRING "Part of the pathname doesn't exist."
-        PASCAL_STRING "The volume cannot be found."
-
-        PASCAL_STRING "The file cannot be found."
-        PASCAL_STRING "That name already exists. Please use another name."
-        PASCAL_STRING "The disk is full."
-        PASCAL_STRING "The volume directory cannot hold more than 51 files."
-        PASCAL_STRING "The file is locked."
-        PASCAL_STRING "This is not a ProDOS disk."
-        PASCAL_STRING "There is another volume with that name on the desktop."
-        PASCAL_STRING "There are 2 volumes with the same name."
-        PASCAL_STRING "This file cannot be run."
-        PASCAL_STRING "That name is too long."
-        PASCAL_STRING "Please insert source disk"
-        PASCAL_STRING "Please insert destination disk"
-        PASCAL_STRING "BASIC.SYSTEM not found"
+LB735:  PASCAL_STRING "System Error"
+LB742:  PASCAL_STRING "I/O error"
+LB74C:  PASCAL_STRING "No device connected"
+LB760:  PASCAL_STRING "The disk is write protected."
+LB77D:  PASCAL_STRING "The syntax of the pathname is invalid."
+LB7A4:  PASCAL_STRING "Part of the pathname doesn't exist."
+LB7C8:  PASCAL_STRING "The volume cannot be found."
+LB7E4:  PASCAL_STRING "The file cannot be found."
+LB7FE:  PASCAL_STRING "That name already exists. Please use another name."
+LB831:  PASCAL_STRING "The disk is full."
+LB843:  PASCAL_STRING "The volume directory cannot hold more than 51 files."
+LB878:  PASCAL_STRING "The file is locked."
+LB88C:  PASCAL_STRING "This is not a ProDOS disk."
+LB8A7:  PASCAL_STRING "There is another volume with that name on the desktop."
+LB8DE:  PASCAL_STRING "There are 2 volumes with the same name."
+LB906:  PASCAL_STRING "This file cannot be run."
+LB91F:  PASCAL_STRING "That name is too long."
+LB936:  PASCAL_STRING "Please insert source disk"
+LB950:  PASCAL_STRING "Please insert destination disk"
+LB96F:  PASCAL_STRING "BASIC.SYSTEM not found"
 
 LB986:  .byte   $14
 LB987:  .byte   $00,$27,$28,$2B,$40,$44,$45,$46
         .byte   $47,$48,$49,$4E,$52,$57,$F9,$FA
         .byte   $FB,$FC,$FD,$FE
-LB99B:  .byte   $35
-LB99C:  .byte   $B7,$42,$B7,$4C,$B7,$60,$B7,$7D
-        .byte   $B7,$A4,$B7,$C8,$B7,$E4,$B7,$FE
-        .byte   $B7,$31,$B8,$43,$B8,$78,$B8,$8C
-        .byte   $B8,$A7,$B8,$DE,$B8,$06,$B9,$1F
-        .byte   $B9,$36,$B9,$50,$B9,$6F,$B9
+
+prompt_table:
+        .addr   LB735,LB742,LB74C,LB760,LB77D,LB7A4,LB7C8,LB7E4,LB7FE,LB831,LB843,LB878,LB88C,LB8A7,LB8DE,LB906,LB91F,LB936,LB950,LB96F
+
 LB9C3:  .byte   $00,$00,$00,$80,$00,$80,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$80,$80,$00,$48,$8A,$48,$A0
@@ -12188,10 +12186,7 @@ LBA0B:  sta     $D239,x
         sta     $D247
         lda     #$00
         sta     $D248
-        ldy     #$04
-        lda     #$39
-        ldx     #$D2
-        jsr     LBFEC
+        A2D_RELAY2_CALL $04, $D239
         lda     LB6D3
         ldx     LB6D4
         jsr     LBF8B
@@ -12213,59 +12208,20 @@ LBA0B:  sta     $D239,x
         clc
         adc     LB6E1
         sta     LBFCB
-        ldy     #$26
-        lda     #$00
-        ldx     #$00
-        jsr     LBFEC
+        A2D_RELAY2_CALL $26, $0000
         jsr     LBE08
-        ldy     #$25
-        lda     #$00
-        ldx     #$00
-        jsr     LBFEC
-        ldy     #$07
-        lda     #$00
-        ldx     #$D2
-        jsr     LBFEC
-        ldy     #$11
-        lda     #$BB
-        ldx     #$B6
-        jsr     LBFEC
-        ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     LBFEC
-        ldy     #$12
-        lda     #$BB
-        ldx     #$B6
-        jsr     LBFEC
-        ldy     #$06
-        lda     #$D3
-        ldx     #$B6
-        jsr     LBFEC
-        ldy     #$12
-        lda     #$C3
-        ldx     #$B6
-        jsr     LBFEC
-        ldy     #$12
-        lda     #$CB
-        ldx     #$B6
-        jsr     LBFEC
-        ldy     #$07
-        lda     #$00
-        ldx     #$D2
-        jsr     LBFEC
-        ldy     #$26
-        lda     #$00
-        ldx     #$00
-        jsr     LBFEC
-        ldy     #$14
-        lda     #$AB
-        ldx     #$B6
-        jsr     LBFEC
-        ldy     #$25
-        lda     #$00
-        ldx     #$00
-        jsr     LBFEC
+        A2D_RELAY2_CALL $25, $0000
+        A2D_RELAY2_CALL $07, $D200
+        A2D_RELAY2_CALL $11, $B6BB
+        A2D_RELAY2_CALL $07, $D202
+        A2D_RELAY2_CALL $12, $B6BB
+        A2D_RELAY2_CALL $06, $B6D3
+        A2D_RELAY2_CALL $12, $B6C3
+        A2D_RELAY2_CALL $12, $B6CB
+        A2D_RELAY2_CALL $07, $D200
+        A2D_RELAY2_CALL $26, $0000
+        A2D_RELAY2_CALL $14, $B6AB
+        A2D_RELAY2_CALL $25, $0000
         pla
         tax
         pla
@@ -12279,9 +12235,9 @@ LBAE5:  cmp     LB987,y
 LBAEF:  tya
         asl     a
         tay
-        lda     LB99B,y
+        lda     prompt_table,y
         sta     LB714
-        lda     LB99C,y
+        lda     prompt_table+1,y
         sta     LB715
         cpx     #$00
         beq     LBB0B
@@ -12295,60 +12251,33 @@ LBB0B:  tya
         tay
         lda     LB9C3,y
         sta     LB713
-LBB14:  ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     LBFEC
+LBB14:  A2D_RELAY2_CALL $07, $D202
         bit     LB713
         bpl     LBB5C
-        ldy     #$12
-        lda     #$FF
-        ldx     #$B6
-        jsr     LBFEC
-        ldy     #$0E
-        lda     #$07
-        ldx     #$B7
-        jsr     LBFEC
+        A2D_RELAY2_CALL $12, $B6FF
+        A2D_RELAY2_CALL $0E, $B707
         lda     #$26
         ldx     #$B7
         jsr     LBFD0
         bit     LB713
         bvs     LBB5C
-        ldy     #$12
-        lda     #$F3
-        ldx     #$B6
-        jsr     LBFEC
-        ldy     #$0E
-        lda     #$FB
-        ldx     #$B6
-        jsr     LBFEC
+        A2D_RELAY2_CALL $12, $B6F3
+        A2D_RELAY2_CALL $0E, $B6FB
         lda     #$16
         ldx     #$B7
         jsr     LBFD0
         jmp     LBB75
 
-LBB5C:  ldy     #$12
-        lda     #$F3
-        ldx     #$B6
-        jsr     LBFEC
-        ldy     #$0E
-        lda     #$FB
-        ldx     #$B6
-        jsr     LBFEC
+LBB5C:  A2D_RELAY2_CALL $12, $B6F3
+        A2D_RELAY2_CALL $0E, $B6FB
         lda     #$E3
         ldx     #$B6
         jsr     LBFD0
-LBB75:  ldy     #$0E
-        lda     #$0F
-        ldx     #$B7
-        jsr     LBFEC
+LBB75:  A2D_RELAY2_CALL $0E, $B70F
         lda     LB714
         ldx     LB715
         jsr     LBFD0
-LBB87:  ldy     #$2A
-        lda     #$08
-        ldx     #$D2
-        jsr     LBFEC
+LBB87:  A2D_RELAY2_CALL $2A, $D208
         lda     $D208
         cmp     #$01
         bne     LBB9A
@@ -12362,14 +12291,8 @@ LBB9A:  cmp     #$03
         bpl     LBBEE
         cmp     #$1B
         bne     LBBC3
-        ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     LBFEC
-        ldy     #$11
-        lda     #$FF
-        ldx     #$B6
-        jsr     LBFEC
+        A2D_RELAY2_CALL $07, $D202
+        A2D_RELAY2_CALL $11, $B6FF
         lda     #$01
         jmp     LBC55
 
@@ -12377,14 +12300,8 @@ LBBC3:  bit     LB713
         bvs     LBBEE
         cmp     #$61
         bne     LBBE3
-LBBCC:  ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     LBFEC
-        ldy     #$11
-        lda     #$F3
-        ldx     #$B6
-        jsr     LBFEC
+LBBCC:  A2D_RELAY2_CALL $07, $D202
+        A2D_RELAY2_CALL $11, $B6F3
         lda     #$00
         jmp     LBC55
 
@@ -12396,48 +12313,30 @@ LBBE3:  cmp     #$41
 
 LBBEE:  cmp     #$0D
         bne     LBC09
-        ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     LBFEC
-        ldy     #$11
-        lda     #$F3
-        ldx     #$B6
-        jsr     LBFEC
+        A2D_RELAY2_CALL $07, $D202
+        A2D_RELAY2_CALL $11, $B6F3
         lda     #$02
         jmp     LBC55
 
 LBC09:  jmp     LBB87
 
 LBC0C:  jsr     LBDE1
-        ldy     #$0E
-        lda     #$09
-        ldx     #$D2
-        jsr     LBFEC
+        A2D_RELAY2_CALL $0E, $D209
         bit     LB713
         bpl     LBC42
-        ldy     #$13
-        lda     #$FF
-        ldx     #$B6
-        jsr     LBFEC
+        A2D_RELAY2_CALL $13, $B6FF
         cmp     #$80
         bne     LBC2D
         jmp     LBCE9
 
 LBC2D:  bit     LB713
         bvs     LBC42
-        ldy     #$13
-        lda     #$F3
-        ldx     #$B6
-        jsr     LBFEC
+        A2D_RELAY2_CALL $13, $B6F3
         cmp     #$80
         bne     LBC52
         jmp     LBC6D
 
-LBC42:  ldy     #$13
-        lda     #$F3
-        ldx     #$B6
-        jsr     LBFEC
+LBC42:  A2D_RELAY2_CALL $13, $B6F3
         cmp     #$80
         bne     LBC52
         jmp     LBD65
@@ -12445,44 +12344,23 @@ LBC42:  ldy     #$13
 LBC52:  jmp     LBB87
 
 LBC55:  pha
-        ldy     #$26
-        lda     #$00
-        ldx     #$00
-        jsr     LBFEC
+        A2D_RELAY2_CALL $26, $0000
         jsr     LBE5D
-        ldy     #$25
-        lda     #$00
-        ldx     #$00
-        jsr     LBFEC
+        A2D_RELAY2_CALL $25, $0000
         pla
         rts
 
-LBC6D:  ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     LBFEC
-        ldy     #$11
-        lda     #$F3
-        ldx     #$B6
-        jsr     LBFEC
+LBC6D:  A2D_RELAY2_CALL $07, $D202
+        A2D_RELAY2_CALL $11, $B6F3
         lda     #$00
         sta     LBCE8
-LBC84:  ldy     #$2A
-        lda     #$08
-        ldx     #$D2
-        jsr     LBFEC
+LBC84:  A2D_RELAY2_CALL $2A, $D208
         lda     $D208
         cmp     #$02
         beq     LBCDB
         jsr     LBDE1
-        ldy     #$0E
-        lda     #$09
-        ldx     #$D2
-        jsr     LBFEC
-        ldy     #$13
-        lda     #$F3
-        ldx     #$B6
-        jsr     LBFEC
+        A2D_RELAY2_CALL $0E, $D209
+        A2D_RELAY2_CALL $13, $B6F3
         cmp     #$80
         beq     LBCB5
         lda     LBCE8
@@ -12493,14 +12371,8 @@ LBCB5:  lda     LBCE8
         bne     LBCBD
         jmp     LBC84
 
-LBCBD:  ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     LBFEC
-        ldy     #$11
-        lda     #$F3
-        ldx     #$B6
-        jsr     LBFEC
+LBCBD:  A2D_RELAY2_CALL $07, $D202
+        A2D_RELAY2_CALL $11, $B6F3
         lda     LBCE8
         clc
         adc     #$80
@@ -12515,32 +12387,17 @@ LBCE3:  lda     #$00
         jmp     LBC55
 
 LBCE8:  .byte   0
-LBCE9:  ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     LBFEC
-        ldy     #$11
-        lda     #$FF
-        ldx     #$B6
-        jsr     LBFEC
+LBCE9:  A2D_RELAY2_CALL $07, $D202
+        A2D_RELAY2_CALL $11, $B6FF
         lda     #$00
         sta     LBD64
-LBD00:  ldy     #$2A
-        lda     #$08
-        ldx     #$D2
-        jsr     LBFEC
+LBD00:  A2D_RELAY2_CALL $2A, $D208
         lda     $D208
         cmp     #$02
         beq     LBD57
         jsr     LBDE1
-        ldy     #$0E
-        lda     #$09
-        ldx     #$D2
-        jsr     LBFEC
-        ldy     #$13
-        lda     #$FF
-        ldx     #$B6
-        jsr     LBFEC
+        A2D_RELAY2_CALL $0E, $D209
+        A2D_RELAY2_CALL $13, $B6FF
         cmp     #$80
         beq     LBD31
         lda     LBD64
@@ -12551,14 +12408,8 @@ LBD31:  lda     LBD64
         bne     LBD39
         jmp     LBD00
 
-LBD39:  ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     LBFEC
-        ldy     #$11
-        lda     #$FF
-        ldx     #$B6
-        jsr     LBFEC
+LBD39:  A2D_RELAY2_CALL $07, $D202
+        A2D_RELAY2_CALL $11, $B6FF
         lda     LBD64
         clc
         adc     #$80
@@ -12575,30 +12426,15 @@ LBD5F:  lda     #$01
 LBD64:  .byte   0
 LBD65:  lda     #$00
         sta     LBDE0
-        ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     LBFEC
-        ldy     #$11
-        lda     #$F3
-        ldx     #$B6
-        jsr     LBFEC
-LBD7C:  ldy     #$2A
-        lda     #$08
-        ldx     #$D2
-        jsr     LBFEC
+        A2D_RELAY2_CALL $07, $D202
+        A2D_RELAY2_CALL $11, $B6F3
+LBD7C:  A2D_RELAY2_CALL $2A, $D208
         lda     $D208
         cmp     #$02
         beq     LBDD3
         jsr     LBDE1
-        ldy     #$0E
-        lda     #$09
-        ldx     #$D2
-        jsr     LBFEC
-        ldy     #$13
-        lda     #$F3
-        ldx     #$B6
-        jsr     LBFEC
+        A2D_RELAY2_CALL $0E, $D209
+        A2D_RELAY2_CALL $13, $B6F3
         cmp     #$80
         beq     LBDAD
         lda     LBDE0
@@ -12609,14 +12445,8 @@ LBDAD:  lda     LBDE0
         bne     LBDB5
         jmp     LBD7C
 
-LBDB5:  ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     LBFEC
-        ldy     #$11
-        lda     #$F3
-        ldx     #$B6
-        jsr     LBFEC
+LBDB5:  A2D_RELAY2_CALL $07, $D202
+        A2D_RELAY2_CALL $11, $B6F3
         lda     LBDE0
         clc
         adc     #$80
@@ -12886,17 +12716,16 @@ LBFD0:  sta     $06
         inc     $06
         bne     LBFE2
         inc     $07
-LBFE2:  ldy     #$19
-        lda     #$06
-        ldx     #$00
-        jsr     LBFEC
+LBFE2:  A2D_RELAY2_CALL $19, $0006
 LBFEB:  rts
 
-LBFEC:  sty     LBFF9-1
-        sta     LBFF9
-        stx     LBFF9+1
-        A2D_CALL 0, 0, LBFF9
+.proc A2D_RELAY2
+        sty     call-1
+        sta     call
+        stx     call+1
+        A2D_CALL 0, 0, call
         rts
+.endproc
 
         .byte   0
         .byte   0

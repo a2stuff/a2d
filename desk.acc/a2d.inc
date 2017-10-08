@@ -31,6 +31,13 @@ JUMP_TABLE_3F   := $403F        ; ???
 
 A2D_RELAY       := $D000
 
+.macro A2D_RELAY_CALL call, addr
+        ldy     #call
+        lda     #<addr
+        ldx     #>addr
+        jsr     A2D_RELAY
+.endmacro
+
 ;;; ==================================================
 ;;; A2D Calls
 
