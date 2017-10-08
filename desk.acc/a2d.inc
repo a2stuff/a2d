@@ -127,6 +127,10 @@ A2D_SET_THICKNESS := $0A
         ;; .byte hthick         horizontal pen thickness
         ;; .byte vthick         vertical pen thickness
 
+A2D_SET_FONT    := $0B
+        ;; (input length 2 bytes)
+        ;; .addr font           font definition (see below)
+
 A2D_SET_TEXT_MASK := $0C        ; Stored to background before XORing glyph
         ;; (input length 1 byte)
         ;; .byte mask
@@ -536,9 +540,8 @@ end:
 
         A2D_DEFAULT_FONT := $8800
 
-        font_unk        := $8800 ; = $00 - ???
-        font_size_count := $8801 ; = $7F - max glyph number
-                                 ; looks like an address ($7F00) but is used as count
+        font_flag       := $8800 ; = $00 - if high bit set, glyphs are 2 bytes wide (???)
+        font_size_count := $8801 ; = $7F - max glyph number (count is this + 1)
         font_height     := $8802 ; 9 pixels
         font_width_table := $8803 ; width in pixels, indexed by ASCII code
 

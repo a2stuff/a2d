@@ -48,6 +48,10 @@ LD2D0           := $D2D0
         ;;  $F0          - fill mode (still sketchy on this???)
         ;;  $F1          - text mask
         ;;  $F2-$F3      - font
+        ;;  $FB-$FC      - glyph widths
+        ;;  $FD          - glyph flag (if set, stride is 2x???)
+        ;;  $FE          - last glyph index (count is this + 1)
+        ;;  $FF          - glyph height
 
 
         state           := $D0
@@ -77,6 +81,11 @@ LD2D0           := $D2D0
         sizeof_state := 36
 
         fill_eor_mask   := $F6
+
+        glyph_widths    := $FB  ; address
+        glyph_flag      := $FD  ;
+        glyph_last      := $FE  ; last glyph index
+        glyph_height_p  := $FF  ; glyph height
 
 ;;; ==================================================
 ;;; A2D
@@ -277,7 +286,7 @@ a2d_jump_table:
         .addr   SET_PATTERN_IMPL    ; $08 SET_PATTERN
         .addr   jt_rts              ; $09 SET_MSK
         .addr   jt_rts              ; $0A SET_THICKNESS
-        .addr   L586A               ; $0B
+        .addr   SET_FONT_IMPL       ; $0B SET_FONT
         .addr   jt_rts              ; $0C SET_TEXT_MASK
         .addr   OFFSET_POS_IMPL     ; $0D OFFSET_POS
         .addr   jt_rts              ; $0E SET_POS
@@ -1948,6 +1957,8 @@ L537A:
 
 ;;; $15 IMPL
 
+        ;; also called from the end of DRAW_LINE_ABS_IMPL
+
 L537E:  lda     #$00
 L5380:  sta     $BA
         ldx     #$00
@@ -2584,15 +2595,18 @@ L581F:  lda     $83,x
         bpl     L57EB
         lda     L583C
         sta     params_addr
-        lda     L583D
+        lda     L583C+1
         sta     params_addr+1
         jmp     L537E
 
-L583C:  .byte   $50
-L583D:  .byte   $58
+L583C:  .addr   L5850
+
 L583E:  .byte   $03,$03,$07,$07,$07,$03
 L5844:  .byte   $00,$00,$00,$01,$01,$01
-L584A:  .byte   $00,$01,$01,$01,$00,$00,$06,$00
+L584A:  .byte   $00,$01,$01,$01,$00,$00
+
+        ;; params for a $15 call
+L5850:  .byte   $06,$00
 L5852:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -2605,63 +2619,72 @@ L5852:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
 ;;; SET_FONT ???
 
-L586A:
+.proc SET_FONT_IMPL
         lda     params_addr     ; set font to passed address
         sta     state_font
         lda     params_addr+1
         sta     state_font+1
 
-L5872:  ldy     #0              ; copy first 3 bytes of font defn (??, ??, height) to $FD-$FF
+        ;; Compute addresses of each row of the glyphs.
+prepare_font:
+        ldy     #0              ; copy first 3 bytes of font defn ($00 ??, $7F ??, height) to $FD-$FF
 :       lda     (state_font),y
         sta     $FD,y
         iny
         cpy     #3
         bne     :-
+
         cmp     #17             ; if height >= 17, skip this next bit
-        bcs     L58B7
+        bcs     end
 
         lda     state_font
         ldx     state_font+1
         clc
         adc     #3
-        bcc     L588C
+        bcc     :+
         inx
-L588C:  sta     $FB             ; set $FB/$FC to start of widths
-        stx     $FC
+:       sta     glyph_widths    ; set $FB/$FC to start of widths
+        stx     glyph_widths+1
 
         sec
-        adc     $FE
-        bcc     L5896
+        adc     glyph_last
+        bcc     :+
         inx
 
-L5896:  ldy     #0              ; loop 0... height-1
-
-L5898:  sta     L58BC,y
+:       ldy     #0              ; loop 0... height-1
+loop:   sta     glyph_row_lo,y
         pha
         txa
-        sta     L58CC,y
+        sta     glyph_row_hi,y
         pla
+
         sec
-        adc     $FE
+        adc     glyph_last
         bcc     :+
         inx
-:       bit     $FD
+
+:       bit     glyph_flag   ; if flag is set, double the offset (???)
         bpl     :+
+
         sec
-        adc     $FE
+        adc     glyph_last
         bcc     :+
         inx
+
 :       iny
-        cpy     $FF             ; =height?
-        bne     L5898
+        cpy     glyph_height_p
+        bne     loop
         rts
 
-L58B7:  lda     #$83
+end:    lda     #$83
         jmp     a2d_exit_with_a
+.endproc
 
-L58BC:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+glyph_row_lo:
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
-L58CC:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+glyph_row_hi:
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
 ;;; ==================================================
@@ -2685,7 +2708,7 @@ L58EE:  sty     $83
         tay
         txa
         clc
-        adc     ($FB),y
+        adc     (glyph_widths),y
         bcc     L58FB
         inc     $82
 L58FB:  tax
@@ -2752,7 +2775,7 @@ DRAW_TEXT_IMPL:
 L595C:  sty     $9F
         lda     ($A1),y
         tay
-        lda     ($FB),y
+        lda     (glyph_widths),y
         clc
         adc     $9B
         bcc     L596B
@@ -2837,9 +2860,9 @@ L59C3:  lda     $98
         tay
         ldx     #$C3
         sec
-L5A0C:  lda     L58BC,y
+L5A0C:  lda     glyph_row_lo,y
         sta     L5B04+1,x
-        lda     L58CC,y
+        lda     glyph_row_hi,y
         sta     L5B04+2,x
         txa
         sbc     #$0D
@@ -2850,9 +2873,9 @@ L5A0C:  lda     L58BC,y
         ldy     $9D
         ldx     #$4B
         sec
-L5A26:  lda     L58BC,y
+L5A26:  lda     glyph_row_lo,y
         sta     L5A97+1,x
-        lda     L58CC,y
+        lda     glyph_row_hi,y
         sta     L5A97+2,x
         txa
         sbc     #$05
@@ -2905,7 +2928,7 @@ L5A81:  lda     ($A1),y
         sec
         adc     $FE
 L5A8B:  tax
-        lda     ($FB),y
+        lda     (glyph_widths),y
         beq     L5AE7
         ldy     $87
         bne     L5AEA
@@ -3067,7 +3090,7 @@ L5BD4:  bit     $81
         bne     L5BF6
 L5BE2:  txa
         tay
-        lda     ($FB),y
+        lda     (glyph_widths),y
         cmp     #$08
         bcs     L5BEE
         inc     $9F
@@ -3365,7 +3388,7 @@ L5EA0:  sta     $F4
         stx     $F5
 L5EA4:  lda     state_font+1
         beq     L5EAB
-        jsr     L5872
+        jsr     SET_FONT_IMPL::prepare_font
 L5EAB:  jsr     SET_BOX_IMPL
         jsr     SET_PATTERN_IMPL
         jmp     SET_FILL_MODE_IMPL
