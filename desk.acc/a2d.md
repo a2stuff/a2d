@@ -19,8 +19,8 @@ The _box_ block is reused in several places. It has the following structure:
   .word top            pixels from screen top edge
   .addr addr           A2D_SCREEN_ADDR ($2000)
   .word stride         A2D_SCREEN_STRIDE ($80)
-  .word hoffset        pixels scrolled left
-  .word voffset        pixels scrolled up
+  .word hoff           pixels scrolled left
+  .word voff           pixels scrolled up
   .word width          pixels wide
   .word height         pixels tall
 ```

@@ -247,8 +247,8 @@ top:    .word   row1_top - border_lt
 bitmap: .addr   button_bitmap
 stride: .byte   bitmap_stride
         .byte   0               ; ???
-hoffset:.word   0
-voffset:.word   0
+hoff:   .word   0
+voff:   .word   0
 width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   'c'
@@ -262,8 +262,8 @@ top:    .word   row1_top - border_lt
 bitmap: .addr   button_bitmap
 stride: .byte   bitmap_stride
         .byte   0               ; ???
-hoffset:.word   0
-voffset:.word   0
+hoff:   .word   0
+voff:   .word   0
 width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   'e'
@@ -277,8 +277,8 @@ top:    .word   row1_top - border_lt
 bitmap: .addr   button_bitmap
 stride: .byte   bitmap_stride
         .byte   0               ; ???
-hoffset:.word   0
-voffset:.word   0
+hoff:   .word   0
+voff:   .word   0
 width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '='
@@ -292,8 +292,8 @@ top:    .word   row1_top - border_lt
 bitmap: .addr   button_bitmap
 stride: .byte   bitmap_stride
         .byte   0               ; ???
-hoffset:.word   0
-voffset:.word   0
+hoff:   .word   0
+voff:   .word   0
 width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '*'
@@ -307,8 +307,8 @@ top:    .word   row2_top - border_lt
 bitmap: .addr   button_bitmap
 stride: .byte   bitmap_stride
         .byte   0               ; ???
-hoffset:.word   0
-voffset:.word   0
+hoff:   .word   0
+voff:   .word   0
 width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '7'
@@ -322,8 +322,8 @@ top:    .word   row2_top - border_lt
 bitmap: .addr   button_bitmap
 stride: .byte   bitmap_stride
         .byte   0               ; ???
-hoffset:.word   0
-voffset:.word   0
+hoff:   .word   0
+voff:   .word   0
 width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '8'
@@ -337,8 +337,8 @@ top:    .word   row2_top - border_lt
 bitmap: .addr   button_bitmap
 stride: .byte   bitmap_stride
         .byte   0               ; ???
-hoffset:.word   0
-voffset:.word   0
+hoff:   .word   0
+voff:   .word   0
 width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '9'
@@ -352,8 +352,8 @@ top:    .word   row2_top - border_lt
 bitmap: .addr   button_bitmap
 stride: .byte   bitmap_stride
         .byte   0               ; ???
-hoffset:.word   0
-voffset:.word   0
+hoff:   .word   0
+voff:   .word   0
 width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '/'
@@ -367,8 +367,8 @@ top:    .word   row3_top - border_lt
 bitmap: .addr   button_bitmap
 stride: .byte   bitmap_stride
         .byte   0               ; ???
-hoffset:.word   0
-voffset:.word   0
+hoff:   .word   0
+voff:   .word   0
 width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '4'
@@ -382,8 +382,8 @@ top:    .word   row3_top - border_lt
 bitmap: .addr   button_bitmap
 stride: .byte   bitmap_stride
         .byte   0               ; ???
-hoffset:.word   0
-voffset:.word   0
+hoff:   .word   0
+voff:   .word   0
 width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '5'
@@ -397,8 +397,8 @@ top:    .word   row3_top - border_lt
 bitmap: .addr   button_bitmap
 stride: .byte   bitmap_stride
         .byte   0               ; ???
-hoffset:.word   0
-voffset:.word   0
+hoff:   .word   0
+voff:   .word   0
 width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '6'
@@ -412,8 +412,8 @@ top:    .word   row3_top - border_lt
 bitmap: .addr   button_bitmap
 stride: .byte   bitmap_stride
         .byte   0               ; ???
-hoffset:.word   0
-voffset:.word   0
+hoff:   .word   0
+voff:   .word   0
 width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '-'
@@ -427,8 +427,8 @@ top:    .word   row4_top - border_lt
 bitmap: .addr   button_bitmap
 stride: .byte   bitmap_stride
         .byte   0               ; ???
-hoffset:.word   0
-voffset:.word   0
+hoff:   .word   0
+voff:   .word   0
 width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '1'
@@ -442,8 +442,8 @@ top:    .word   row4_top - border_lt
 bitmap: .addr   button_bitmap
 stride: .byte   bitmap_stride
         .byte   0               ; ???
-hoffset:.word   0
-voffset:.word   0
+hoff:   .word   0
+voff:   .word   0
 width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '2'
@@ -457,8 +457,8 @@ top:    .word   row4_top - border_lt
 bitmap: .addr   button_bitmap
 stride: .byte   bitmap_stride
         .byte   0               ; ???
-hoffset:.word   0
-voffset:.word   0
+hoff:   .word   0
+voff:   .word   0
 width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '3'
@@ -472,8 +472,8 @@ top:    .word   row5_top - border_lt
 bitmap: .addr   wide_button_bitmap
 stride: .byte   8                   ; bitmap_stride (bytes)
         .byte   0               ; ???
-hoffset:.word   0
-voffset:.word   0
+hoff:   .word   0
+voff:   .word   0
 width:  .word   49                      ; 0 is extra wide
 height: .word   button_height + border_lt + border_br
 label:  .byte   '0'
@@ -487,8 +487,8 @@ top:    .word   row5_top - border_lt
 bitmap: .addr   button_bitmap
 stride: .byte   bitmap_stride
         .byte   0               ; ???
-hoffset:.word   0
-voffset:.word   0
+hoff:   .word   0
+voff:   .word   0
 width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '.'
@@ -502,8 +502,8 @@ top:    .word   row4_top - border_lt
 bitmap: .addr   tall_button_bitmap
 stride: .byte   bitmap_stride
         .byte   0               ; ???
-hoffset:.word   0
-voffset:.word   0
+hoff:   .word   0
+voff:   .word   0
 width:  .word   button_width + border_lt + border_br
 height: .word   27              ; + is extra tall
 label:  .byte   '+'
@@ -703,8 +703,8 @@ top:    .word   $FFF7           ; overwritten
 bitmap:.addr   pixels
 stride: .byte   1
         .byte   0               ; ???
-hoffset:.word   0
-voffset:.word   0
+hoff:   .word   0
+voff:   .word   0
 width:  .word   6
 height: .word   5
         ;;  (not part of struct, but not referenced outside)
@@ -720,10 +720,10 @@ pixels: .byte   px(%1000001)
 .proc state_params
 left:   .word   0
 top:    .word   0
-saddr:  .word   0
+addr:   .word   0
 stride: .word   0
-hoffset:.word   0
-voffset:.word   0
+hoff:   .word   0
+voff:   .word   0
 width:  .word   0
 height: .word   0
 pattern:.res    8, 0
@@ -733,7 +733,7 @@ xpos:   .word   0
 ypos:   .word   0
 hthick: .byte   0
 vthick: .byte   0
-        .byte   0               ; ???
+mode:   .byte   0
 tmask:  .byte   0
 font:   .addr   0
 .endproc
@@ -747,13 +747,14 @@ font:   .addr   0
 
         ;; params for A2D_SET_BOX when decorating title bar
 .proc screen_box
-        .word   0
-        .word   menu_bar_height
-        .word   A2D_SCREEN_ADDR
-        .word   A2D_SCREEN_STRIDE
-        .word   0, 0            ; hoffset/voffset
-        .word   screen_width - 1
-        .word   screen_height - menu_bar_height - 2
+left:   .word   0
+top:    .word   menu_bar_height
+addr:   .word   A2D_SCREEN_ADDR
+stride: .word   A2D_SCREEN_STRIDE
+hoff:   .word   0
+voff:   .word   0
+width:  .word   screen_width - 1
+height: .word   screen_height - menu_bar_height - 2
 .endproc
 
 .proc fill_mode_normal
@@ -788,10 +789,10 @@ w2:     .word   window_width
 h2:     .word   window_height
 left:   .word   default_left
 top:    .word   default_top
-saddr:  .addr   A2D_SCREEN_ADDR
+addr:   .addr   A2D_SCREEN_ADDR
 stride: .word   A2D_SCREEN_STRIDE
-hoffset:.word   0
-voffset:.word   0
+hoff:   .word   0
+voff:   .word   0
 width:  .word   window_width
 height: .word   window_height
 pattern:.res    8, $FF
@@ -801,7 +802,7 @@ xpos:   .word   0
 ypos:   .word   0
 hthick: .byte   1
 vthick: .byte   1
-        .byte   0               ; ???
+mode:   .byte   0
 tmask:  .byte   $7f
 font:   .addr   A2D_DEFAULT_FONT
 next:   .addr   0

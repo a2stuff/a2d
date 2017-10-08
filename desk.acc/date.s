@@ -270,10 +270,10 @@ h2:     .word   $1F4
 .proc box
 left:   .word   180
 top:    .word   50
-saddr:  .addr   A2D_SCREEN_ADDR
+addr:   .addr   A2D_SCREEN_ADDR
 stride: .word   A2D_SCREEN_STRIDE
-hoffset:.word   0
-voffset:.word   0
+hoff:   .word   0
+voff:   .word   0
 width:  .word   $C7
 height: .word   $40
 .endproc
@@ -284,7 +284,7 @@ xpos:   .word   0
 ypos:   .word   0
 hthick: .byte   4
 vthick: .byte   2
-        .byte   0               ; ???
+mode:   .byte   0
 tmask:  .byte   $7F
 font:   .addr   A2D_DEFAULT_FONT
 next:   .addr   0

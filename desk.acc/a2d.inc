@@ -52,8 +52,8 @@ A2D_QUERY_SCREEN        := $03  ; Get screen state
         ;; .word top
         ;; .addr addr           A2D_SCREEN_ADDR
         ;; .word stride         A2D_SCREEN_STRIDE
-        ;; .word hoffset
-        ;; .word voffset
+        ;; .word hoff
+        ;; .word voff
         ;; .word width          560-1
         ;; .word height         192-1
         ;; .res 8 pattern
@@ -64,7 +64,7 @@ A2D_QUERY_SCREEN        := $03  ; Get screen state
         ;; .byte hthick         horizontal pen thickness
         ;; .byte vthick         vertical pen thickness
         ;; .byte 0              ??? fill mode?
-        ;; .byte tmsk           AND mask for text, default $7F
+        ;; .byte tmask          AND mask for text, default $7F
         ;; .addr font           A2D_DEFAULT_FONT
 
 A2D_SET_STATE   := $04          ; Set full drawing state
@@ -73,8 +73,8 @@ A2D_SET_STATE   := $04          ; Set full drawing state
         ;; .word top
         ;; .addr addr           A2D_SCREEN_ADDR
         ;; .word stride         A2D_SCREEN_STRIDE
-        ;; .word hoffset        pixels scrolled
-        ;; .word voffset
+        ;; .word hoff           pixels scrolled
+        ;; .word voff
         ;; .word width          pixels
         ;; .word height
         ;; .res 8 pattern
@@ -85,7 +85,7 @@ A2D_SET_STATE   := $04          ; Set full drawing state
         ;; .byte hthick         horizontal pen thickness
         ;; .byte vthick         vertical pen thickness
         ;; .byte 0              ??? fill mode?
-        ;; .byte tmsk           AND mask for text, default $7F
+        ;; .byte tmask          AND mask for text, default $7F
         ;; .addr font           A2D_DEFAULT_FONT
 
         ;; $05 used in DeskTop but not DAs - icon click
@@ -97,14 +97,14 @@ A2D_SET_BOX   := $06            ; Set just the drawing box, subset of full state
         ;; .word top
         ;; .addr addr           A2D_SCREEN_ADDR ($2000)
         ;; .word stride         A2D_SCREEN_STRIDE ($80)
-        ;; .word hoffset        pixels scrolled
-        ;; .word voffset
+        ;; .word hoff           pixels scrolled
+        ;; .word voff
         ;; .word width          pixels
         ;; .word height
 
 A2D_SET_FILL_MODE := $07
         ;; (input length 1 byte)
-        ;; .byte mode           0 = normal, 6 = xor     (<4, >=4)
+        ;; .byte mode           (>=4 also sets eor mask to $7f)
 
 A2D_SET_PATTERN := $08
         ;; (input length 8 bytes)
@@ -167,8 +167,8 @@ A2D_DRAW_BITMAP := $14          ; Draw pattern
         ;; .addr bitmap         bitmap is 7 bits per byte, 0 = black, 1 = white
         ;; .byte stride         bitmap width in bytes
         ;; .byte 0              ???
-        ;; .word hoffset        offset within bitmap definition
-        ;; .word voffset
+        ;; .word hoff           offset within bitmap definition
+        ;; .word voff
         ;; .word width          pixels
         ;; .word height         pixels
 
@@ -258,8 +258,8 @@ A2D_CREATE_WINDOW := $38
         ;; .word top
         ;; .word screen_addr
         ;; .word screen_stride
-        ;; .word hoffset        pixels scrolled
-        ;; .word voffset
+        ;; .word hoff          pixels scrolled
+        ;; .word voff
         ;; .word width          pixels
         ;; .word height
         ;; .res 8 pattern
@@ -270,7 +270,7 @@ A2D_CREATE_WINDOW := $38
         ;; .byte hthick
         ;; .byte vthick
         ;; .byte 0              ??? fill mode?
-        ;; .byte tmsk           AND mask for text, default $7F
+        ;; .byte tmask          AND mask for text, default $7F
         ;; .addr font           A2D_DEFAULT_FONT
         ;; .addr next           address of next lower window in stack (filled in by call)
 
@@ -413,7 +413,7 @@ A2D_CZP_OVERWRITE       := 0
 ;;; Used in various state blocks
 A2D_DEFAULT_MSKAND      := $FF
 A2D_DEFAULT_MSKOR       := $00
-A2D_DEFAULT_TMSK        := $7F
+A2D_DEFAULT_TMASK       := $7F
 
 ;;; ==================================================
 

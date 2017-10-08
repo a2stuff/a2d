@@ -318,10 +318,10 @@ h2:     .word   default_height
 .proc box
 left:   .word   default_left
 top:    .word   default_top
-saddr:  .addr   A2D_SCREEN_ADDR
+addr:   .addr   A2D_SCREEN_ADDR
 stride: .word   A2D_SCREEN_STRIDE
-hoffset:.word   0               ; Also used for A2D_FILL_RECT
-voffset:.word   0
+hoff:   .word   0               ; Also used for A2D_FILL_RECT
+voff:   .word   0
 width:  .word   default_width
 height: .word   default_height
 .endproc
@@ -333,7 +333,7 @@ xpos:   .word   0
 ypos:   .word   0
 hthick: .byte   1
 vthick: .byte   1
-        .byte   0               ; ???
+mode:   .byte   0
 tmask:  .byte   $7F
 font:   .addr   A2D_DEFAULT_FONT
 next:   .addr   0
@@ -345,8 +345,8 @@ left:   .word   default_left
 top:    .word   default_top
 addr:   .word   A2D_SCREEN_ADDR
 stride: .word   A2D_SCREEN_STRIDE
-hoffset:.word   0
-voffset:.word   0
+hoff:   .word   0
+voff:   .word   0
 width:  .word   default_width
 height: .word   default_height
 .endproc
@@ -580,10 +580,10 @@ title:  jsr     on_title_bar_click
         sec
         lda     window_params::box::width
         sbc     window_width
-        sta     window_params::box::hoffset
+        sta     window_params::box::hoff
         lda     window_params::box::width+1
         sbc     window_width+1
-        sta     window_params::box::hoffset+1
+        sta     window_params::box::hoff+1
 wider:  lda     window_params::hscroll
         ldx     window_width
         cpx     #<max_width
@@ -779,14 +779,14 @@ loop:   inx
         lda     thumb_drag_params::pos
         jsr     mul_by_16
         lda     $06
-        sta     window_params::box::hoffset
+        sta     window_params::box::hoff
         lda     $07
-        sta     window_params::box::hoffset+1
+        sta     window_params::box::hoff+1
         clc
-        lda     window_params::box::hoffset
+        lda     window_params::box::hoff
         adc     window_width
         sta     window_params::box::width
-        lda     window_params::box::hoffset+1
+        lda     window_params::box::hoff+1
         adc     window_width+1
         sta     window_params::box::width+1
         jsr     update_hscroll
@@ -875,11 +875,11 @@ store:  sta     window_params::hspos
         jsr     mul_by_16
         clc
         lda     $06
-        sta     window_params::box::hoffset
+        sta     window_params::box::hoff
         adc     window_width
         sta     window_params::box::width
         lda     $07
-        sta     window_params::box::hoffset+1
+        sta     window_params::box::hoff+1
         adc     window_width+1
         sta     window_params::box::width+1
         rts
@@ -887,26 +887,26 @@ store:  sta     window_params::hspos
 
 .proc update_voffset
         lda     #0
-        sta     window_params::box::voffset
-        sta     window_params::box::voffset+1
+        sta     window_params::box::voff
+        sta     window_params::box::voff+1
         ldx     update_scroll_params::pos
 loop:   beq     adjust_box_height
         clc
-        lda     window_params::box::voffset
+        lda     window_params::box::voff
         adc     #50
-        sta     window_params::box::voffset
+        sta     window_params::box::voff
         bcc     :+
-        inc     window_params::box::voffset+1
+        inc     window_params::box::voff+1
 :       dex
         jmp     loop
 .endproc
 
 .proc adjust_box_height
         clc
-        lda     window_params::box::voffset
+        lda     window_params::box::voff
         adc     window_height
         sta     window_params::box::height
-        lda     window_params::box::voffset+1
+        lda     window_params::box::voff+1
         adc     window_height+1
         sta     window_params::box::height+1
         jsr     calc_line_position
@@ -929,9 +929,9 @@ end:    rts
 .proc update_hscroll
         lda     #2
         sta     update_scroll_params::type
-        lda     window_params::box::hoffset
+        lda     window_params::box::hoff
         sta     $06
-        lda     window_params::box::hoffset+1
+        lda     window_params::box::hoff+1
         sta     $07
         jsr     div_by_16
         sta     update_scroll_params::pos
@@ -962,7 +962,7 @@ end:    rts
 
 .proc clear_window
         A2D_CALL A2D_SET_PATTERN, white_pattern
-        A2D_CALL A2D_FILL_RECT, window_params::box::hoffset
+        A2D_CALL A2D_FILL_RECT, window_params::box::hoff
         A2D_CALL A2D_SET_PATTERN, black_pattern
         rts
 .endproc
@@ -1273,15 +1273,15 @@ end:    rts
 .proc calc_window_size
         sec
         lda     window_params::box::width
-        sbc     window_params::box::hoffset
+        sbc     window_params::box::hoff
         sta     window_width
         lda     window_params::box::width+1
-        sbc     window_params::box::hoffset+1
+        sbc     window_params::box::hoff+1
         sta     window_width+1
 
         sec
         lda     window_params::box::height
-        sbc     window_params::box::voffset
+        sbc     window_params::box::voff
         sta     window_height
         ;; fall through
 .endproc
@@ -1432,8 +1432,8 @@ left:   .word   0
 top:    .word   0
 addr:   .word   A2D_SCREEN_ADDR
 stride: .word   A2D_SCREEN_STRIDE
-hoffset:.word   0
-voffset:.word   0
+hoff:   .word   0
+voff:   .word   0
 width:  .word   80
 height: .word   10
 .endproc

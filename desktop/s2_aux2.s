@@ -374,7 +374,7 @@ w2:     .word   $1F4
 h2:     .word   $8C
 left:   .word   $4B
 top:    .word   $23
-saddr:  .addr   A2D_SCREEN_ADDR
+addr:   .addr   A2D_SCREEN_ADDR
 stride: .word   A2D_SCREEN_STRIDE
 hoff:   .word   0
 voff:   .word   0
@@ -383,11 +383,12 @@ height: .word   $64
 pattern:.res    8, $FF
 mskand: .byte   A2D_DEFAULT_MSKAND
 mskor:  .byte   A2D_DEFAULT_MSKOR
-        .byte   0,0,0,0         ; ???
+xpos:   .word   0
+ypos:   .word   0
 hthick: .byte   1
 vthick: .byte   1
-        .byte   0               ; ???
-tmsk:   .byte   A2D_DEFAULT_TMSK
+fill:   .byte   0
+tmask:  .byte   A2D_DEFAULT_TMASK
 font:   .addr   A2D_DEFAULT_FONT
 next:   .addr   0
 .endproc
@@ -409,7 +410,7 @@ w2:     .word   $1F4
 h2:     .word   $8C
 left:   .word   $19
 top:    .word   $14
-saddr:  .addr   A2D_SCREEN_ADDR
+addr:   .addr   A2D_SCREEN_ADDR
 stride: .word   A2D_SCREEN_STRIDE
 hoff:   .word   0
 voff:   .word   0
@@ -418,11 +419,12 @@ height: .word   $99
 pattern:.res    8, $FF
 mskand: .byte   A2D_DEFAULT_MSKAND
 mskor:  .byte   A2D_DEFAULT_MSKOR
-        .byte   0,0,0,0         ; ???
+xpos:   .word   0
+ypos:   .word   0
 hthick: .byte   1
 vthick: .byte   1
-        .byte   0               ; ???
-tmsk:   .byte   A2D_DEFAULT_TMSK
+mode:   .byte   0
+tmask:  .byte   A2D_DEFAULT_TMASK
 font:   .addr   A2D_DEFAULT_FONT
 next:   .addr   0
 .endproc
@@ -444,7 +446,7 @@ w2:     .word   $64
 h2:     .word   $46
 left:   .word   $35
 top:    .word   $32
-saddr:  .addr   A2D_SCREEN_ADDR
+addr:   .addr   A2D_SCREEN_ADDR
 stride: .word   A2D_SCREEN_STRIDE
 hoff:   .word   0
 voff:   .word   0
@@ -453,11 +455,12 @@ height: .word   $46
 pattern:.res    8, $FF
 mskand: .byte   A2D_DEFAULT_MSKAND
 mskor:  .byte   A2D_DEFAULT_MSKOR
-        .byte   0,0,0,0         ; ???
+xpos:   .word   0
+ypos:   .word   0
 hthick: .byte   1
 vthick: .byte   1
-        .byte   0               ; ???
-tmsk:   .byte   A2D_DEFAULT_TMSK
+mode:   .byte   0
+tmask:  .byte   A2D_DEFAULT_TMASK
 font:   .addr   A2D_DEFAULT_FONT
 next:   .addr   0
 .endproc
@@ -479,7 +482,7 @@ w2:     .word   $1F4
 h2:     .word   $8C
 left:   .word   $50
 top:    .word   $28
-saddr:  .addr   A2D_SCREEN_ADDR
+addr:   .addr   A2D_SCREEN_ADDR
 stride: .word   A2D_SCREEN_STRIDE
 hoff:   .word   0
 voff:   .word   0
@@ -488,11 +491,12 @@ height: .word   $6E
 pattern:.res    8, $FF
 mskand: .byte   A2D_DEFAULT_MSKAND
 mskor:  .byte   A2D_DEFAULT_MSKOR
-        .byte   0,0,0,0         ; ???
+xpos:   .word   0
+ypos:   .word   0
 hthick: .byte   1
 vthick: .byte   1
-        .byte   0               ; ???
-tmsk:   .byte   A2D_DEFAULT_TMSK
+mode:   .byte   0
+tmask:  .byte   A2D_DEFAULT_TMASK
 font:   .addr   A2D_DEFAULT_FONT
 next:   .addr   0
 .endproc
@@ -514,7 +518,7 @@ w2:     .word   $1F4
 h2:     .word   $8C
 left:   .word   $69
 top:    .word   $19
-saddr:  .addr   A2D_SCREEN_ADDR
+addr:   .addr   A2D_SCREEN_ADDR
 stride: .word   A2D_SCREEN_STRIDE
 hoff:   .word   0
 voff:   .word   0
@@ -523,11 +527,12 @@ height: .word   $6E
 pattern:.res    8, $FF
 mskand: .byte   A2D_DEFAULT_MSKAND
 mskor:  .byte   A2D_DEFAULT_MSKOR
-        .byte   0,0,0,0         ; ???
+xpos:   .word   0
+ypos:   .word   0
 hthick: .byte   1
 vthick: .byte   1
-        .byte   0               ; ???
-tmsk:   .byte   A2D_DEFAULT_TMSK
+mode:   .byte   0
+tmask:  .byte   A2D_DEFAULT_TMASK
 font:   .addr   A2D_DEFAULT_FONT
 next:   .addr   0
 .endproc
@@ -868,7 +873,7 @@ w2:     .word   545
 h2:     .word   175
 left:   .word   20
 top:    .word   27
-saddr:  .addr   A2D_SCREEN_ADDR
+addr:   .addr   A2D_SCREEN_ADDR
 stride: .word   A2D_SCREEN_STRIDE
 hoff:   .word   0
 voff:   .word   0
@@ -877,11 +882,12 @@ height: .word   120
 pattern:.res    8, $FF
 mskand: .byte   A2D_DEFAULT_MSKAND
 mskor:  .byte   A2D_DEFAULT_MSKOR
-        .byte   0,0,0,0         ; ???
+xpos:   .word   0
+ypos:   .word   0
 hthick: .byte   1
 vthick: .byte   1
-        .byte   0               ; ???
-tmsk:   .byte   A2D_DEFAULT_TMSK
+mode:   .byte   0
+tmask:  .byte   A2D_DEFAULT_TMASK
 font:   .addr   A2D_DEFAULT_FONT
 next:   .addr   0
 .endproc

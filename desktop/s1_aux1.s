@@ -64,6 +64,8 @@ LD2D0           := $D2D0
 
         sizeof_state := 36
 
+        fill_eor_mask   := $F6
+
 ;;; ==================================================
 ;;; A2D
 
@@ -738,88 +740,104 @@ hires_table_hi:
         .byte   $03,$07,$0B,$0F,$13,$17,$1B,$1F
 
 ;;; ==================================================
+;;; Routines called during FILL_RECT etc based on
+;;; state_fill
 
-L4BA1:  lda     ($84),y
+.proc fillmode0
+        lda     ($84),y
         eor     ($8E),y
-        eor     $F6
+        eor     fill_eor_mask
         and     $89
         eor     ($84),y
-        bcc     L4BB1
-L4BAD:  lda     ($8E),y
-        eor     $F6
-L4BB1:  and     state_mskand
+        bcc     :+
+loop:   lda     ($8E),y
+        eor     fill_eor_mask
+:       and     state_mskand
         ora     state_mskor
         sta     ($84),y
         dey
-        bne     L4BAD
+        bne     loop
+.endproc
+.proc fillmode0a
         lda     ($84),y
         eor     ($8E),y
-        eor     $F6
+        eor     fill_eor_mask
         and     $88
         eor     ($84),y
         and     state_mskand
         ora     state_mskor
         sta     ($84),y
         rts
+.endproc
 
-
+.proc fillmode1
         lda     ($8E),y
-        eor     $F6
+        eor     fill_eor_mask
         and     $89
-        bcc     L4BD7
-L4BD3:  lda     ($8E),y
-        eor     $F6
-L4BD7:  ora     ($84),y
+        bcc     :+
+loop:   lda     ($8E),y
+        eor     fill_eor_mask
+:       ora     ($84),y
         and     state_mskand
         ora     state_mskor
         sta     ($84),y
         dey
-        bne     L4BD3
+        bne     loop
+.endproc
+.proc fillmode1a
         lda     ($8E),y
-        eor     $F6
+        eor     fill_eor_mask
         and     $88
         ora     ($84),y
         and     state_mskand
         ora     state_mskor
         sta     ($84),y
         rts
+.endproc
 
+.proc fillmode2
         lda     ($8E),y
-        eor     $F6
+        eor     fill_eor_mask
         and     $89
-        bcc     L4BFD
-L4BF9:  lda     ($8E),y
-        eor     $F6
-L4BFD:  eor     ($84),y
+        bcc     :+
+loop:   lda     ($8E),y
+        eor     fill_eor_mask
+:       eor     ($84),y
         and     state_mskand
         ora     state_mskor
         sta     ($84),y
         dey
-        bne     L4BF9
+        bne     loop
+.endproc
+.proc fillmode2a
         lda     ($8E),y
-        eor     $F6
+        eor     fill_eor_mask
         and     $88
         eor     ($84),y
         and     state_mskand
         ora     state_mskor
         sta     ($84),y
         rts
+.endproc
 
+.proc fillmode3
         lda     ($8E),y
-        eor     $F6
+        eor     fill_eor_mask
         and     $89
-        bcc     L4C23
-L4C1F:  lda     ($8E),y
-        eor     $F6
-L4C23:  eor     #$FF
+        bcc     :+
+loop:   lda     ($8E),y
+        eor     fill_eor_mask
+:       eor     #$FF
         and     ($84),y
         and     state_mskand
         ora     state_mskor
         sta     ($84),y
         dey
-        bne     L4C1F
-L4C30:  lda     ($8E),y
-        eor     $F6
+        bne     loop
+.endproc
+.proc fillmode3a
+        lda     ($8E),y
+        eor     fill_eor_mask
         and     $88
         eor     #$FF
         and     ($84),y
@@ -827,6 +845,7 @@ L4C30:  lda     ($8E),y
         ora     state_mskor
         sta     ($84),y
         rts
+.endproc
 
 L4C41:  cpx     $98
         beq     L4C49
@@ -1002,10 +1021,7 @@ L4D54:  sta     LOWSCR,y
         ora     #$80
         sta     $89
         ldy     $91
-L4D67:
-L4D68           := * + 1
-L4D69           := * + 2
-        jmp     L4BA1
+L4D67:  jmp     fillmode0       ; modified with fillmode routine
 
 L4D6A:  .byte   $FB
 L4D6B:
@@ -1017,12 +1033,15 @@ L4D73:  .byte   $01,$03,$07,$0F,$1F,$3F,$7F
 L4D7A:  .byte   $7F,$7F,$7F,$7F,$7F,$7F,$7F
 L4D81:  .byte   $7F,$7E,$7C,$78,$70,$60,$40,$00
         .byte   $00,$00,$00,$00,$00,$00
-L4D8F:  .byte   $A1
-L4D90:  .byte   $4B,$CB,$4B,$F1,$4B,$17,$4C,$A1
-        .byte   $4B,$CB,$4B,$F1,$4B,$17,$4C
-L4D9F:  .byte   $BA
-L4DA0:  .byte   $4B,$E2,$4B,$08,$4C,$30,$4C,$BA
-        .byte   $4B,$E2,$4B,$08,$4C,$30,$4C
+
+        ;; Tables used for fill modes
+fill_mode_table:
+        .addr   fillmode0,fillmode1,fillmode2,fillmode3
+        .addr   fillmode0,fillmode1,fillmode2,fillmode3
+
+fill_mode_table_a:
+        .addr   fillmode0a,fillmode1a,fillmode2a,fillmode3a
+        .addr   fillmode0a,fillmode1a,fillmode2a,fillmode3a
 
 ;;; ==================================================
 
@@ -1030,12 +1049,15 @@ SET_FILL_MODE_IMPL:
         lda     state_fill
         ldx     #$00
         cmp     #$04
-        bcc     L4DB9
+        bcc     :+
         ldx     #$7F
-L4DB9:  stx     $F6
+:       stx     fill_eor_mask
         rts
 
-L4DBC:  lda     $F7
+        ;; Called from FILL_RECT, DRAW_TEXT, etc to configure
+        ;; fill routines from mode.
+set_up_fill_mode:
+        lda     $F7
         clc
         adc     $96
         sta     $96
@@ -1064,10 +1086,10 @@ L4DBC:  lda     $F7
         adc     $95
         sta     $95
         lsr     $97
-        beq     L4DF7
+        beq     :+
         jmp     L4E79
 
-L4DF7:  lda     $96
+:       lda     $96
         ror     a
         tax
         lda     L4821,x
@@ -1114,16 +1136,16 @@ L4E34:  sta     $91
         and     $96
         sta     $92
         sta     $96
-        lda     L4D9F,x
-        sta     L4D68
-        lda     L4DA0,x
-        sta     L4D69
+        lda     fill_mode_table_a,x
+        sta     L4D67+1
+        lda     fill_mode_table_a+1,x
+        sta     L4D67+2
         rts
 
-L4E5B:  lda     L4D8F,x
-        sta     L4D68
-        lda     L4D90,x
-        sta     L4D69
+L4E5B:  lda     fill_mode_table,x
+        sta     L4D67+1
+        lda     fill_mode_table+1,x
+        sta     L4D67+2
         rts
 
 L4E68:  lda     $92
@@ -1411,7 +1433,7 @@ FILL_RECT_IMPL:
         jsr     L514C
 L5043:  jsr     L50A9
         bcc     L5015
-        jsr     L4DBC
+        jsr     set_up_fill_mode
         jsr     L4EA9
         jmp     L4CED
 
@@ -1669,7 +1691,7 @@ L51B3:  lda     #$00
         bcs     L51C5
         rts
 
-L51C5:  jsr     L4DBC
+L51C5:  jsr     set_up_fill_mode
         lda     $91
         asl     a
         ldx     $93
@@ -2544,32 +2566,39 @@ L5852:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
 ;;; $0B IMPL
 
+;;; SET_FONT ???
+
 L586A:
-        lda     params_addr
+        lda     params_addr     ; set font to passed address
         sta     state_font
         lda     params_addr+1
         sta     state_font+1
-L5872:  ldy     #$00
-L5874:  lda     (state_font),y
+
+L5872:  ldy     #0              ; copy first 3 bytes of font defn (??, ??, height) to $FD-$FF
+:       lda     (state_font),y
         sta     $FD,y
         iny
-        cpy     #$03
-        bne     L5874
-        cmp     #$11
+        cpy     #3
+        bne     :-
+        cmp     #17             ; if height >= 17, skip this next bit
         bcs     L58B7
+
         lda     state_font
         ldx     state_font+1
         clc
-        adc     #$03
+        adc     #3
         bcc     L588C
         inx
-L588C:  sta     $FB
+L588C:  sta     $FB             ; set $FB/$FC to start of widths
         stx     $FC
+
         sec
         adc     $FE
         bcc     L5896
         inx
-L5896:  ldy     #$00
+
+L5896:  ldy     #0              ; loop 0... height-1
+
 L5898:  sta     L58BC,y
         pha
         txa
@@ -2577,25 +2606,24 @@ L5898:  sta     L58BC,y
         pla
         sec
         adc     $FE
-        bcc     L58A7
+        bcc     :+
         inx
-L58A7:  bit     $FD
-        bpl     L58B1
+:       bit     $FD
+        bpl     :+
         sec
         adc     $FE
-        bcc     L58B1
+        bcc     :+
         inx
-L58B1:  iny
-        cpy     $FF
+:       iny
+        cpy     $FF             ; =height?
         bne     L5898
         rts
 
 L58B7:  lda     #$83
         jmp     a2d_exit_with_a
 
-L58BC:  .byte   0
+L58BC:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00
 L58CC:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
@@ -2697,7 +2725,7 @@ L596B:  sta     $9B
         ldy     $9F
         iny
         bne     L595C
-L5972:  jsr     L4DBC
+L5972:  jsr     set_up_fill_mode
         jsr     L4EA9
         lda     $87
         clc
@@ -3260,10 +3288,10 @@ L5E5A:  lda     L5F1E,x
         ldx     L5E79+1
         jsr     L5EA0
         lda     #$7F
-        sta     $F6
+        sta     fill_eor_mask
         jsr     FILL_RECT_IMPL
         lda     #$00
-        sta     $F6
+        sta     fill_eor_mask
         rts
 
 L5E79:  .addr   $5F42
@@ -3416,8 +3444,8 @@ xpos:   .word   0
 ypos:   .word   0
 hthick: .byte   1
 vthick: .byte   1
-        .byte   0               ; ???
-tmsk:   .byte   0
+mode:   .byte   0
+tmask:  .byte   0
 font:   .addr   0
 .endproc
 
@@ -3881,7 +3909,7 @@ L6348:  lda     $82,x
         dex
         bpl     L6348
         lda     #$7F
-        sta     L5F1E::tmsk
+        sta     L5F1E::tmask
         lda     $87
         sta     L5F1E::font
         lda     $88
@@ -7642,7 +7670,7 @@ L7F66:  pha
         lda     #$04
         sta     L7D74
         ldx     #$0A
-L7F7D:  lda     SPKR
+L7F7D:  lda     SPKR            ; Beep?
         ldy     #$00
 L7F82:  dey
         bne     L7F82
@@ -7754,21 +7782,21 @@ L8056:  jsr     L7EE2
 L805C:  pha
         jsr     L8035
         pla
-        cmp     #$1B
+        cmp     #KEY_ESCAPE
         bne     L8073
-        lda     #$00
+        lda     #0
         sta     L7D80
         sta     L7D7F
         lda     #$80
         sta     L7D81
         rts
 
-L8073:  cmp     #$0D
+L8073:  cmp     #KEY_RETURN
         bne     L807D
         jsr     L7E8C
         jmp     L7EAD
 
-L807D:  cmp     #$0B
+L807D:  cmp     #KEY_UP
         bne     L80A3
 L8081:  dec     L7D7B
         bpl     L8091
@@ -7785,7 +7813,7 @@ L8091:  ldx     L7D7B
         bne     L8081
 L80A0:  jmp     L800F
 
-L80A3:  cmp     #$0A
+L80A3:  cmp     #KEY_DOWN
         bne     L80D0
 L80A7:  inc     L7D7B
         ldx     L7D7A
@@ -7794,7 +7822,7 @@ L80A7:  inc     L7D7B
         cmp     $AA
         bcc     L80BE
         beq     L80BE
-        lda     #$00
+        lda     #0
         sta     L7D7B
 L80BE:  ldx     L7D7B
         beq     L80CD
@@ -7805,9 +7833,9 @@ L80BE:  ldx     L7D7B
         bne     L80A7
 L80CD:  jmp     L800F
 
-L80D0:  cmp     #$15
+L80D0:  cmp     #KEY_RIGHT
         bne     L80EB
-        lda     #$00
+        lda     #0
         sta     L7D7B
         inc     L7D7A
         lda     L7D7A
@@ -7817,9 +7845,9 @@ L80D0:  cmp     #$15
         sta     L7D7A
 L80E8:  jmp     L800F
 
-L80EB:  cmp     #$08
+L80EB:  cmp     #KEY_LEFT
         bne     L8105
-        lda     #$00
+        lda     #0
         sta     L7D7B
         dec     L7D7A
         bmi     L80FC
@@ -9129,7 +9157,8 @@ xpos:   .word   0
 ypos:   .word   0
 hthick: .byte   1
 vthick: .byte   1
-        .byte   $96,$00         ; ???
+mode:   .byte   $96             ; ???
+tmask:  .byte   0
 font:   .addr   A2D_DEFAULT_FONT
 .endproc
 
@@ -9154,8 +9183,8 @@ xpos:   .word   0
 ypos:   .word   0
 hthick: .byte   0
 vthick: .byte   0
-        .byte   0               ; ???
-tmsk:   .byte   0
+mode:   .byte   0
+tmask:  .byte   0
 font:   .addr   0
 .endproc
 
