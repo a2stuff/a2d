@@ -5,6 +5,7 @@
         .include "../inc/apple2.inc"
         .include "../inc/auxmem.inc"
         .include "../inc/prodos.inc"
+        .include "../inc/mouse.inc"
         .include "../desk.acc/a2d.inc"
 
 
@@ -3440,11 +3441,12 @@ xcoord: .word   0
 ycoord: .word   0
 .endproc
 
-L5FF8:  .byte   $00
-L5FF9:  .byte   $00
-L5FFA:  .byte   $00
-L5FFB:  .byte   $00
-L5FFC:  .byte   $00
+mouse_x_lo:  .byte   0
+mouse_x_hi:  .byte   0
+mouse_y_lo:  .byte   0
+mouse_y_hi:  .byte   $00        ; not really used due to clamping
+mouse_status:  .byte   $00
+
 L5FFD:  .byte   $00
 L5FFE:  .byte   $00
 L5FFF:  .byte   $00
@@ -3758,7 +3760,7 @@ L6265:  bit     L6339
         lda     #$02
         sta     L6264
 L627C:  ldx     #2
-L627E:  lda     L5FF8,x
+L627E:  lda     mouse_x_lo,x
         cmp     set_pos_params,x
         bne     L628B
         dex
@@ -3767,7 +3769,7 @@ L627E:  lda     L5FF8,x
 L628B:  jsr     L61C6
         ldx     #2
         stx     L5FF2
-L6293:  lda     L5FF8,x
+L6293:  lda     mouse_x_lo,x
         sta     set_pos_params,x
         dex
         bpl     L6293
@@ -3778,44 +3780,44 @@ L629F:  bit     no_mouse_flag
 L62A7:  bit     no_mouse_flag
         bpl     L62B1
         lda     #$00
-        sta     L5FFC
+        sta     mouse_status
 L62B1:  lda     L7D74
         beq     rts4
         jsr     L7EF5
 rts4:   rts
 
-L62BA:  ldy     #$14
+L62BA:  ldy     #READMOUSE
         jsr     call_mouse
         bit     L5FFF
         bmi     L62D9
         ldx     mouse_firmware_hi
-        lda     $03B8,x
-        sta     L5FF8
-        lda     $04B8,x
-        sta     L5FF9
-        lda     $0438,x
-        sta     L5FFA
+        lda     MOUSE_X_LO,x
+        sta     mouse_x_lo
+        lda     MOUSE_X_HI,x
+        sta     mouse_x_hi
+        lda     MOUSE_Y_LO,x
+        sta     mouse_y_lo
 L62D9:  ldy     L5FFD
         beq     L62EF
-L62DE:  lda     L5FF8
+L62DE:  lda     mouse_x_lo
         asl     a
-        sta     L5FF8
-        lda     L5FF9
+        sta     mouse_x_lo
+        lda     mouse_x_hi
         rol     a
-        sta     L5FF9
+        sta     mouse_x_hi
         dey
         bne     L62DE
 L62EF:  ldy     L5FFE
         beq     L62FE
-        lda     L5FFA
+        lda     mouse_y_lo
 L62F7:  asl     a
         dey
         bne     L62F7
-        sta     L5FFA
+        sta     mouse_y_lo
 L62FE:  bit     L5FFF
         bmi     L6309
-        lda     $06B8,x
-        sta     L5FFC
+        lda     MOUSE_STATUS,x
+        sta     mouse_status
 L6309:  rts
 
 ;;; ==================================================
@@ -3975,7 +3977,7 @@ L642A:  lda     $FBB3
         pha
         lda     #$06
         sta     $FBB3
-        ldy     #$12
+        ldy     #SETMOUSE
         lda     #$01
         bit     L6339
         bpl     L643F
@@ -4041,10 +4043,10 @@ L64A4:  rts
 ;;; $1E IMPL
 
 L64A5:
-        ldy     #$12
-        lda     #$00
+        ldy     #SETMOUSE
+        lda     #MOUSE_MODE_OFF
         jsr     call_mouse
-        ldy     #$13
+        ldy     #SERVEMOUSE
         jsr     call_mouse
         bit     L6339
         bpl     L64C7
@@ -4292,7 +4294,7 @@ L6641:  plp
         jmp     a2d_exit_with_a
 
 L6645:  lda     #$00
-        bit     L5FFC
+        bit     mouse_status
         bpl     L664E
         lda     #$04
 L664E:  ldy     #0
@@ -4332,11 +4334,11 @@ L666D:  sec
         sta     L6662
         jsr     L7F66
         jsr     L6265
-        lda     L5FFC
+        lda     mouse_status
         asl     a
-        eor     L5FFC
+        eor     mouse_status
         bmi     L66B9
-        bit     L5FFC
+        bit     mouse_status
         bmi     L66EA
         bit     L6813
         bpl     L66B9
@@ -4404,7 +4406,7 @@ sloop:  lda     $82,x
         dex
         bpl     sloop
 
-        ldy     #$13
+        ldy     #SERVEMOUSE
         jsr     call_mouse
         bcs     :+
         jsr     L666D
@@ -7465,26 +7467,26 @@ L7E19:  bit     L5FFF
         sec
         jsr     L7E75
         ldx     mouse_firmware_hi
-        sta     $03B8,x
+        sta     MOUSE_X_LO,x
         tya
-        sta     $04B8,x
+        sta     MOUSE_X_HI,x
         pla
         ldy     #$00
         clc
         jsr     L7E75
         ldx     mouse_firmware_hi
-        sta     $0438,x
+        sta     MOUSE_Y_LO,x
         tya
-        sta     $0538,x
-        ldy     #$16
+        sta     MOUSE_Y_HI,x
+        ldy     #POSMOUSE
         jmp     call_mouse
 
-L7E49:  stx     L5FF8
-        sty     L5FF9
-        sta     L5FFA
+L7E49:  stx     mouse_x_lo
+        sty     mouse_x_hi
+        sta     mouse_y_lo
         bit     L5FFF
         bpl     L7E5C
-        ldy     #$16
+        ldy     #POSMOUSE
         jmp     call_mouse
 
 L7E5C:  rts
@@ -7518,7 +7520,7 @@ L7E82:  pha
 
 L7E8C:  ldx     #$02
 L7E8E:  lda     L7D75,x
-        sta     L5FF8,x
+        sta     mouse_x_lo,x
         dex
         bpl     L7E8E
         rts
@@ -7528,7 +7530,7 @@ L7E98:  jsr     L7E8C
 
 L7E9E:  jsr     L62BA
         ldx     #$02
-L7EA3:  lda     L5FF8,x
+L7EA3:  lda     mouse_x_lo,x
         sta     L7D7C,x
         dex
         bpl     L7EA3
@@ -7544,7 +7546,7 @@ L7EAD:  jsr     stash_params_addr
         lda     #$00
         sta     L7D74
         lda     #$40
-        sta     L5FFC
+        sta     mouse_status
         jmp     L7E5D
 
 L7ECD:  lda     #$00
@@ -7620,7 +7622,7 @@ L7F48:  jsr     L7ED6
         ror     a
         ror     L7D82
         lda     L7D82
-        sta     L5FFC
+        sta     mouse_status
         lda     #$00
         sta     L6662
         jsr     L7EE8
@@ -7635,7 +7637,7 @@ L7F66:  pha
         pla
         cmp     #$03
         bne     L7FA2
-        bit     L5FFC
+        bit     mouse_status
         bmi     L7FA2
         lda     #$04
         sta     L7D74
@@ -7671,21 +7673,21 @@ L7FB1:  rts
 L7FB2:  pla
         rts
 
-L7FB4:  bit     L5FFC
+L7FB4:  bit     mouse_status
         bpl     L7FC1
         lda     #$00
         sta     L7D74
         jmp     L7E69
 
-L7FC1:  lda     L5FFC
+L7FC1:  lda     mouse_status
         pha
         lda     #$C0
-        sta     L5FFC
+        sta     mouse_status
         pla
         and     #$20
         beq     L7FDE
         ldx     #$02
-L7FD1:  lda     L5FF8,x
+L7FD1:  lda     mouse_x_lo,x
         sta     L7D75,x
         dex
         bpl     L7FD1
@@ -7701,7 +7703,7 @@ L7FE1:  php
         sta     L7D74
         jsr     L800F
         lda     #$80
-        sta     L5FFC
+        sta     mouse_status
         jsr     L7F0F
         ldx     L7D7A
         jsr     L6878
@@ -7727,7 +7729,7 @@ L800F:  ldx     L7D7A
         lda     L6847,y
         sta     L7D77
         lda     #$C0
-        sta     L5FFC
+        sta     mouse_status
         jmp     L7E98
 
 L8035:  bit     L7D79
@@ -7888,7 +7890,7 @@ L817C:  php
         sei
         jsr     L7E9E
         lda     #$80
-        sta     L5FFC
+        sta     mouse_status
         jsr     L70B7
         bit     L76A7
         bpl     L81E4
@@ -8019,7 +8021,7 @@ L8281:  pha
         sta     set_input_params_modifiers
 L828C:  pla
         ldx     #$C0
-        stx     L5FFC
+        stx     mouse_status
 L8292:  cmp     #$0B
         bne     L82A2
         lda     #$F8
@@ -8238,65 +8240,78 @@ L840D:  sec
 
 ;;; $21 IMPL
 
-;;; 2 bytes of params, copied to $82
+;;; Sets up mouse clamping
 
-L8427:
+;;; 2 bytes of params, copied to $82
+;;; byte 1 controls x clamp, 2 controls y clamp
+;;; clamp is to fractions of screen (0 = full, 1 = 1/2, 2 = 1/4, 3 = 1/8) (why???)
+
+.proc L8427
         lda     $82
         sta     L5FFD
         lda     $83
         sta     L5FFE
-L8431:  bit     no_mouse_flag
-        bmi     L84AC
+
+L8431:  bit     no_mouse_flag   ; called after INITMOUSE
+        bmi     end
+
         lda     L5FFD
         asl     a
         tay
-        lda     #$00
-        sta     L5FF8
-        sta     L5FF9
+        lda     #0
+        sta     mouse_x_lo
+        sta     mouse_x_hi
         bit     L5FFF
-        bmi     L844E
-        sta     $0478
-        sta     $0578
-L844E:  lda     L84AD,y
-        sta     L5FFA
+        bmi     :+
+
+        sta     CLAMP_MIN_LO
+        sta     CLAMP_MIN_HI
+
+:       lda     clamp_x_table,y
+        sta     mouse_y_lo
         bit     L5FFF
-        bmi     L845C
-        sta     $04F8
-L845C:  lda     L84AD+1,y
-        sta     L5FFB
+        bmi     :+
+
+        sta     CLAMP_MAX_LO
+
+:       lda     clamp_x_table+1,y
+        sta     mouse_y_hi
         bit     L5FFF
-        bmi     L846A
-        sta     $05F8
-L846A:  lda     #$00
-        ldy     #$17
+        bmi     :+
+        sta     CLAMP_MAX_HI
+:       lda     #CLAMP_X
+        ldy     #CLAMPMOUSE
         jsr     call_mouse
+
         lda     L5FFE
         asl     a
         tay
-        lda     #$00
-        sta     L5FF8
-        sta     L5FF9
+        lda     #0
+        sta     mouse_x_lo
+        sta     mouse_x_hi
         bit     L5FFF
-        bmi     L8489
-        sta     $0478
-        sta     $0578
-L8489:  lda     L84B5,y
-        sta     L5FFA
+        bmi     :+
+        sta     CLAMP_MIN_LO
+        sta     CLAMP_MIN_HI
+:       lda     clamp_y_table,y
+        sta     mouse_y_lo
         bit     L5FFF
-        bmi     L8497
-        sta     $04F8
-L8497:  lda     L84B5+1,y
-        sta     L5FFB
+        bmi     :+
+        sta     CLAMP_MAX_LO
+:       lda     clamp_y_table+1,y
+        sta     mouse_y_hi
         bit     L5FFF
-        bmi     L84A5
-        sta     $05F8
-L84A5:  lda     #$01
-        ldy     #$17
+        bmi     :+
+        sta     CLAMP_MAX_HI
+:       lda     #CLAMP_Y
+        ldy     #CLAMPMOUSE
         jsr     call_mouse
-L84AC:  rts
+end:    rts
 
-L84AD:  .word   560-1, 560/2-1, 560/4-1, 560/8-1
-L84B5:  .word   192-1, 192/2-1, 192/4-1, 192/8-1
+clamp_x_table:  .word   560-1, 560/2-1, 560/4-1, 560/8-1
+clamp_y_table:  .word   192-1, 192/2-1, 192/4-1, 192/8-1
+
+.endproc
 
 ;;; ==================================================
 ;;; Locate Mouse Slot
@@ -8326,10 +8341,10 @@ loop:   txa
         ldx     #0              ; no mouse found
         rts
 
-found:  ldy     #$19
+found:  ldy     #INITMOUSE
         jsr     call_mouse
-        jsr     L8431
-        ldy     #$18
+        jsr     L8427::L8431
+        ldy     #HOMEMOUSE
         jsr     call_mouse
         lda     mouse_firmware_hi
         and     #$0F
