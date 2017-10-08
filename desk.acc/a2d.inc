@@ -52,6 +52,14 @@ A2D             := $4000
 ;;;   if <0, and with $7E to get length
 ;;;   if $4185,(call*2) is non-zero, param block is copied.
 
+A2D_CFG_DISPLAY         := $02  ; Configure display switches
+        ;; (input length 1 byte)
+        ;; Turns on 80 col/DHR, and then:
+        ;;   bit 0: LoRes if clear, HiRes if set
+        ;;   bit 1: Page 1 if clear, Page 2 if set
+        ;;   bit 2: Full screen if clear, split screen if set
+        ;;   bit 3: Graphics if clear, text if set
+
 A2D_QUERY_SCREEN        := $03  ; Get screen state
         ;; (input length 0 bytes)
         ;; (output length 36 bytes)
@@ -377,11 +385,12 @@ A2D_SCREEN_ADDR     := $2000    ; Screen address
 A2D_SCREEN_STRIDE   := $80      ; Stride in bytes
 
 ;;; Used in A2D_GET_INPUT
-A2D_INPUT_NONE  := 0            ; No mouse or keypress
-A2D_INPUT_DOWN  := 1            ; Mouse button was depressed
-A2D_INPUT_UP    := 2            ; Mouse button was released
-A2D_INPUT_KEY   := 3            ; Key was pressed
-A2D_INPUT_HELD  := 4            ; Mouse button still down
+A2D_INPUT_NONE          := 0    ; No mouse or keypress
+A2D_INPUT_DOWN          := 1    ; Mouse button was depressed
+A2D_INPUT_UP            := 2    ; Mouse button was released
+A2D_INPUT_KEY           := 3    ; Key was pressed
+A2D_INPUT_HELD          := 4    ; Mouse button still down
+A2D_INPUT_DOWN_MOD      := 5    ; Mouse button was depressed, modifier key down
 
 ;;; Used in A2D_GET_MOUSE
 A2D_ELEM_DESKTOP:= 0

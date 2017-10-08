@@ -31,6 +31,8 @@ LD2D0           := $D2D0
 
         params_addr     := $80
 
+        ;; $8A initialized same way as state (see $01 IMPL)
+
         ;; $D0-$F3      - Drawing state
         ;;  $D0-$DF      - Box
         ;;   $D0-D1       - left
@@ -48,6 +50,9 @@ LD2D0           := $D2D0
         ;;  $F0          - fill mode (still sketchy on this???)
         ;;  $F1          - text mask
         ;;  $F2-$F3      - font
+
+        ;;  $F4-$F5      - Active state (???)
+        ;;  $F6-$FA      - ???
         ;;  $FB-$FC      - glyph widths
         ;;  $FD          - glyph flag (if set, stride is 2x???)
         ;;  $FE          - last glyph index (count is this + 1)
@@ -78,7 +83,11 @@ LD2D0           := $D2D0
         state_tmask     := $F1
         state_font      := $F2
 
-        sizeof_state := 36
+        sizeof_state    := 36
+
+
+        active          := $F4
+        active_state    := $F4  ; address of live state block
 
         fill_eor_mask   := $F6
 
@@ -106,11 +115,11 @@ LD2D0           := $D2D0
         dex
         bpl     :-
         ldx     #$0B
-:       lda     L5F66,x
-        sta     $F4,x
+:       lda     active_saved,x
+        sta     active,x
         dex
         bpl     :-
-        jsr     copy_params_to_zp
+        jsr     apply_active_state_to_state
 
 adjust_stack:                   ; Adjust stack to account for params
         pla                     ; and stash address at params_addr.
@@ -195,10 +204,10 @@ cleanup:
 
 :       bit     preserve_zp_flag
         bpl     exit_with_0
-        jsr     copy_params_from_zp
+        jsr     apply_state_to_active_state
         ldx     #$0B
-:       lda     $F4,x
-        sta     L5F66,x
+:       lda     active,x
+        sta     active_saved,x
         dex
         bpl     :-
         ldx     #$7F
@@ -227,21 +236,21 @@ a2d_exit_with_a:
 rts2:   rts
 
 ;;; ==================================================
-;;; Copy params (36 bytes) to/from ($F4) to $D0
+;;; Copy state params (36 bytes) to/from active state addr
 
-.proc copy_params_to_zp
+.proc apply_active_state_to_state
         ldy     #sizeof_state-1
-:       lda     ($F4),y
-        sta     $D0,y
+:       lda     (active_state),y
+        sta     state,y
         dey
         bpl     :-
         rts
 .endproc
 
-.proc copy_params_from_zp
+.proc apply_state_to_active_state
         ldy     #sizeof_state-1
-:       lda     $D0,y
-        sta     ($F4),y
+:       lda     state,y
+        sta     (active_state),y
         dey
         bpl     :-
         rts
@@ -277,7 +286,7 @@ hide_cursor_count:
 a2d_jump_table:
         .addr   jt_rts              ; $00
         .addr   L5E51               ; $01
-        .addr   L5E7B               ; $02
+        .addr   CFG_DISPLAY_IMPL    ; $02 CFG_DISPLAY
         .addr   QUERY_SCREEN_IMPL   ; $03 QUERY_SCREEN
         .addr   SET_STATE_IMPL      ; $04 SET_STATE
         .addr   L5EB4               ; $05
@@ -318,7 +327,7 @@ a2d_jump_table:
         .addr   L630A               ; $28
         .addr   L6663               ; $29
         .addr   GET_INPUT_IMPL      ; $2A GET_INPUT
-        .addr   L67D8               ; $2B
+        .addr   CALL_2B_IMPL        ; $2B
         .addr   L65D4               ; $2C
         .addr   SET_INPUT_IMPL      ; $2D SET_INPUT
         .addr   L6814               ; $2E
@@ -2691,34 +2700,45 @@ glyph_row_hi:
 
 ;;; 3 bytes of params, copied to $A1
 
-MEASURE_TEXT_IMPL:
-        jsr     L58E8
+.proc MEASURE_TEXT_IMPL
+        jsr     measure_text
         ldy     #3              ; Store result (X,A) at params+3
         sta     (params_addr),y
         txa
         iny
         sta     (params_addr),y
         rts
+.endproc
 
-L58E8:  ldx     #$00
-        ldy     #$00
-        sty     $82
-L58EE:  sty     $83
-        lda     ($A1),y
+        ;; Call with data at ($A1), length in $A3, result in (X,A)
+.proc measure_text
+        data   := $A1
+        length := $A3
+
+        accum  := $82
+
+        ldx     #0
+        ldy     #0
+        sty     accum
+loop:   sty     accum+1
+        lda     (data),y
         tay
         txa
         clc
         adc     (glyph_widths),y
-        bcc     L58FB
-        inc     $82
-L58FB:  tax
-        ldy     $83
+        bcc     :+
+        inc     accum
+:       tax
+        ldy     accum+1
         iny
-        cpy     $A3
-        bne     L58EE
+        cpy     length
+        bne     loop
         txa
-        ldx     $82
+        ldx     accum
         rts
+.endproc
+
+;;; ==================================================
 
 L5907:  sec
         sbc     #$01
@@ -2756,7 +2776,7 @@ L5933:  sta     $94
 
 DRAW_TEXT_IMPL:
         jsr     L5EFA
-        jsr     L58E8
+        jsr     measure_text
         sta     $A4
         stx     $A5
         ldy     #$00
@@ -3335,18 +3355,24 @@ L5E42:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
 ;;; $01 IMPL
 
-L5E51:  lda     #$71
-        sta     $82
-        jsr     L5E7B
+.proc L5E51
+
+        lda     #$71            ; %0001 lo nibble = HiRes, Page 1, Full, Graphics
+        sta     $82             ; (why is high nibble 7 ???)
+        jsr     CFG_DISPLAY_IMPL
+
+        ;; Initialize state
         ldx     #sizeof_state-1
-L5E5A:  lda     L5F1E,x
+loop:   lda     screen_state,x
         sta     $8A,x
         sta     $D0,x
         dex
-        bpl     L5E5A
+        bpl     loop
+
         lda     L5E79
         ldx     L5E79+1
-        jsr     L5EA0
+        jsr     assign_and_prepare_state
+
         lda     #$7F
         sta     fill_eor_mask
         jsr     FILL_RECT_IMPL
@@ -3354,42 +3380,66 @@ L5E5A:  lda     L5F1E,x
         sta     fill_eor_mask
         rts
 
-L5E79:  .addr   $5F42
+L5E79:  .addr   L5F42
+.endproc
 
 ;;; ==================================================
 
-;;; $02 IMPL
+;;; CFG_DISPLAY_IMPL
 
 ;;; 1 byte param, copied to $82
 
-L5E7B:  lda     DHIRESON
+;;; Toggle display softswitches
+;;;   bit 0: LoRes if clear, HiRes if set
+;;;   bit 1: Page 1 if clear, Page 2 if set
+;;;   bit 2: Full screen if clear, split screen if set
+;;;   bit 3: Graphics if clear, text if set
+
+.proc CFG_DISPLAY_IMPL
+        param := $82
+
+        lda     DHIRESON        ; enable dhr graphics
         sta     SET80VID
-        ldx     #$03
-L5E83:  lsr     $82
-        lda     L5E98,x
+
+        ldx     #3
+loop:   lsr     param           ; shift low bit into carry
+        lda     table,x
         rol     a
-        tay
-        bcs     L5E91
-        lda     $C000,y
-        bcc     L5E94
-L5E91:  sta     $C000,y
-L5E94:  dex
-        bpl     L5E83
+        tay                     ; y = table[x] * 2 + carry
+        bcs     store
+
+        lda     $C000,y         ; why load vs. store ???
+        bcc     :+
+
+store:  sta     $C000,y
+
+:       dex
+        bpl     loop
         rts
 
-L5E98:  .byte   $28,$29,$2A,$2B
+table:  .byte   <(TXTCLR / 2), <(MIXCLR / 2), <(LOWSCR / 2), <(LORES / 2)
+.endproc
 
 ;;; ==================================================
 
-SET_STATE_IMPL:
+.proc SET_STATE_IMPL
         lda     params_addr
         ldx     params_addr+1
-L5EA0:  sta     $F4
-        stx     $F5
-L5EA4:  lda     state_font+1
-        beq     L5EAB
+        ;; fall through
+.endproc
+
+        ;; Call with state address in (X,A)
+assign_and_prepare_state:
+        sta     active_state
+        stx     active_state+1
+        ;; fall through
+
+        ;; Initializes font (if needed), box, pattern, and fill mode
+prepare_state:
+        lda     state_font+1
+        beq     :+              ; only prepare font if necessary
         jsr     SET_FONT_IMPL::prepare_font
-L5EAB:  jsr     SET_BOX_IMPL
+:       jsr     SET_BOX_IMPL
         jsr     SET_PATTERN_IMPL
         jmp     SET_FILL_MODE_IMPL
 
@@ -3398,11 +3448,18 @@ L5EAB:  jsr     SET_BOX_IMPL
 ;;; $05 IMPL
 
 L5EB4:
-        jsr     copy_params_from_zp
-        lda     $F4
-        ldx     $F5
-L5EBB:  ldy     #0              ; Store result (X,A) at params
-L5EBD:  sta     (params_addr),y
+        jsr     apply_state_to_active_state
+        lda     active_state
+        ldx     active_state+1
+        ;;  fall through
+
+        ;; Store result (X,A) at params
+store_xa_at_params:
+        ldy     #0
+
+        ;; Store result (X,A) at params+Y
+store_xa_at_params_y:
+        sta     (params_addr),y
         txa
         iny
         sta     (params_addr),y
@@ -3412,7 +3469,7 @@ L5EBD:  sta     (params_addr),y
 
 .proc QUERY_SCREEN_IMPL
         ldy     #sizeof_state-1 ; Store 36 bytes at params
-loop:   lda     L5F1E,y
+loop:   lda     screen_state,y
         sta     (params_addr),y
         dey
         bpl     loop
@@ -3469,26 +3526,34 @@ L5F01:  lda     L0000,x
 
 ;;; $1C IMPL
 
-L5F0A:
-        ldy     #5              ; Store 5 bytes at params
-L5F0C:  lda     L5F15,y
+;;; Just copies static bytes to params???
+
+.proc L5F0A
+        ldy     #5              ; Store 6 bytes at params
+loop:   lda     table,y
         sta     (params_addr),y
         dey
-        bpl     L5F0C
+        bpl     loop
         rts
 
-L5F15:  .byte   $01,$00,$00,$46,$01,$00
+table:  .byte   $01,$00,$00,$46,$01,$00
+.endproc
 
+;;; ==================================================
 
-preserve_zp_flag:  .byte   $80  ; if high bit set, ZP saved during A2D calls
+preserve_zp_flag:         ; if high bit set, ZP saved during A2D calls
+        .byte   $80
 
 L5F1C:  .byte   $80
 
-stack_ptr_stash:  .byte   $00
+stack_ptr_stash:
+        .byte   0
 
-        ;; Screen State
+;;; ==================================================
 
-.proc L5F1E
+;;; Screen State
+
+.proc screen_state
 left:   .word   0
 top:    .word   0
 addr:   .addr   A2D_SCREEN_ADDR
@@ -3509,17 +3574,36 @@ tmask:  .byte   0
 font:   .addr   0
 .endproc
 
-L5F42:  .byte   $00,$00,$00,$00,$00,$20,$80
-        .byte   $00,$00,$00,$00,$00,$2F,$02,$BF
-        .byte   $00,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-        .byte   $FF,$FF,$00,$00,$00,$00,$00,$01
-        .byte   $01,$00,$00,$00,$00
+;;; ==================================================
 
-L5F66:  .addr   L5F42
-        .byte   $00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00
 
-zp_saved:  .res    128, 0       ; top half of ZP for when preserve_zp_flag set
+.proc L5F42
+left:   .word   0
+top:    .word   0
+addr:   .addr   A2D_SCREEN_ADDR
+stride: .word   A2D_SCREEN_STRIDE
+hoff:   .word   0
+voff:   .word   0
+width:  .word   560-1
+height: .word   192-1
+pattern:.res    8, $FF
+mskand: .byte   A2D_DEFAULT_MSKAND
+mskor:  .byte   A2D_DEFAULT_MSKOR
+xpos:   .word   0
+ypos:   .word   0
+hthick: .byte   1
+vthick: .byte   1
+mode:   .byte   0
+tmask:  .byte   0
+font:   .addr   0
+.endproc
+
+active_saved:           ; saved copy of $F4...$FF when ZP swapped
+        .addr   L5F42
+        .res    10, 0
+
+zp_saved:               ; top half of ZP for when preserve_zp_flag set
+        .res    128, 0
 
 L5FF2:  .byte   $00
 L5FF3:  .byte   $FF
@@ -3532,8 +3616,8 @@ ycoord: .word   0
 mouse_x_lo:  .byte   0
 mouse_x_hi:  .byte   0
 mouse_y_lo:  .byte   0
-mouse_y_hi:  .byte   $00        ; not really used due to clamping
-mouse_status:  .byte   $00
+mouse_y_hi:  .byte   0          ; not really used due to clamping
+mouse_status:.byte   0
 
 L5FFD:  .byte   $00
 L5FFE:  .byte   $00
@@ -3837,6 +3921,8 @@ HIDE_CURSOR_IMPL:
         plp
 L6263:  rts
 
+;;; ==================================================
+
 L6264:  .byte   0
 L6265:  bit     L6339
         bpl     L627C
@@ -3915,7 +4001,7 @@ L6309:  rts
 L630A:
         lda     L6142
         ldx     L6143
-        jmp     L5EBB
+        jmp     store_xa_at_params
 
         ;; Call mouse firmware, operation in Y, param in A
 call_mouse:
@@ -3969,11 +4055,11 @@ L6348:  lda     $82,x
         dex
         bpl     L6348
         lda     #$7F
-        sta     L5F1E::tmask
+        sta     screen_state::tmask
         lda     $87
-        sta     L5F1E::font
+        sta     screen_state::font
         lda     $88
-        sta     L5F1E::font+1
+        sta     screen_state::font+1
         lda     $89
         sta     L6835
         lda     $8A
@@ -4076,7 +4162,7 @@ L643F:  jsr     call_mouse
         sta     $FBB3
         jsr     L5E51
         jsr     L6067
-        jsr     L67D8
+        jsr     CALL_2B_IMPL
         lda     #$00
         sta     L700C
 L6454:  jsr     L653F
@@ -4235,9 +4321,9 @@ L6556:  asl     preserve_zp_flag
         sta     params_addr
         lda     L653A
         sta     params_addr+1
-        lda     $F4
+        lda     active_state
 L6566           := * + 1
-        ldx     $F5
+        ldx     active_state+1
 L6567:  sta     $82
         stx     $83
         lda     L653B
@@ -4247,7 +4333,7 @@ L6573:  lda     ($82),y
         sta     $D0,y
         dey
         bpl     L6573
-        jmp     L5EA4
+        jmp     prepare_state
 
 L657E:  lda     L6586
         ldx     L6587
@@ -4304,7 +4390,7 @@ L65B3:
         lda     L65D2
         ldx     L65D3
         ldy     #$02
-        jmp     L5EBD
+        jmp     store_xa_at_params_y
 
 L65CD:  lda     #$95
         jmp     a2d_exit_with_a
@@ -4388,12 +4474,12 @@ L663F:  lda     #$99
 L6641:  plp
         jmp     a2d_exit_with_a
 
-L6645:  lda     #$00
+L6645:  lda     #0
         bit     mouse_status
         bpl     L664E
-        lda     #$04
+        lda     #4
 L664E:  ldy     #0
-        sta     (params_addr),y         ; Store 2 bytes at params
+        sta     (params_addr),y         ; Store 5 bytes at params
         iny
 L6653:  lda     L5FF3,y
         sta     (params_addr),y
@@ -4402,78 +4488,101 @@ L6653:  lda     L5FF3,y
         bne     L6653
         rts
 
-L665E:  .byte   0
-L665F:  .byte   0
-L6660:  .byte   0
-        .byte   0
-L6662:  .byte   0
-
 ;;; ==================================================
 
 ;;; $29 IMPL
 
-L6663:  bit     L6339
+
+.proc input
+state:  .byte   0
+
+key        := *
+kmods      := * + 1
+
+xpos       := *
+ypos       := * + 2
+modifiers  := * + 3
+
+        .res    4, 0
+.endproc
+
+.proc L6663
+        bit     L6339
         bpl     L666D
         lda     #$97
         jmp     a2d_exit_with_a
 
-L666D:  sec
+L666D:
+        sec                     ; called from interrupt handler
         jsr     L650D
-        bcc     L66EA
-        lda     BUTN1
+        bcc     end
+
+        lda     BUTN1           ; Look at buttons (apple keys), compute modifiers
         asl     a
         lda     BUTN0
         and     #$80
         rol     a
         rol     a
-        sta     L6662
+        sta     input::modifiers
+
         jsr     L7F66
         jsr     L6265
-        lda     mouse_status
+        lda     mouse_status    ; bit 7 = is down, bit 6 = was down, still down
         asl     a
         eor     mouse_status
-        bmi     L66B9
+        bmi     L66B9           ; minus = (is down & !was down)
+
         bit     mouse_status
-        bmi     L66EA
+        bmi     end             ; minus = is down
         bit     L6813
         bpl     L66B9
         lda     L7D74
         bne     L66B9
+
         lda     KBD
-        bpl     L66EA
+        bpl     end             ; no key
         and     #$7F
-        sta     L665F
-        bit     KBDSTRB
-        lda     L6662
-        sta     L6660
-        lda     #$03
-        sta     L665E
+        sta     input::key
+        bit     KBDSTRB         ; clear strobe
+
+        lda     input::modifiers
+        sta     input::kmods
+        lda     #A2D_INPUT_KEY
+        sta     input::state
         bne     L66D8
-L66B9:  bcc     L66C8
-        lda     L6662
-        beq     L66C4
-        lda     #$05
-        bne     L66CA
-L66C4:  lda     #$01
-        bne     L66CA
-L66C8:  lda     #$02
-L66CA:  sta     L665E
-        ldx     #$02
-L66CF:  lda     set_pos_params,x
-        sta     L665F,x
+
+L66B9:  bcc     up
+        lda     input::modifiers
+        beq     :+
+        lda     #A2D_INPUT_DOWN_MOD
+        bne     set_state
+
+:       lda     #A2D_INPUT_DOWN
+        bne     set_state
+
+up:     lda     #A2D_INPUT_UP
+
+set_state:
+        sta     input::state
+
+        ldx     #2
+:       lda     set_pos_params,x
+        sta     input::key,x
         dex
-        bpl     L66CF
+        bpl     :-
+
 L66D8:  jsr     L67E4
         tax
         ldy     #$00
-L66DE:  lda     L665E,y
+L66DE:  lda     input,y
         sta     L6754,x
         inx
         iny
         cpy     #$04
         bne     L66DE
-L66EA:  jmp     L6523
 
+end:    jmp     L6523
+.endproc
 
 ;;; ==================================================
 ;;; Interrupt Handler
@@ -4504,7 +4613,7 @@ sloop:  lda     $82,x
         ldy     #SERVEMOUSE
         jsr     call_mouse
         bcs     :+
-        jsr     L666D
+        jsr     L6663::L666D
         clc
 :       bit     L633A
         bpl     :+
@@ -4535,7 +4644,7 @@ rloop:  lda     int_stash_zp,x
 L6747:
         lda     L6750
         ldx     L6751
-        jmp     L5EBB
+        jmp     store_xa_at_params
 
 L6750:  .byte   $F9
 L6751:  .byte   $66
@@ -4544,39 +4653,51 @@ L6751:  .byte   $66
 
 ;;; $2B IMPL
 
-L6752:  .byte   $00
-L6753:  .byte   $00
+;;; This is called during init by the DAs, just befire
+;;; entering the input loop.
+
+L6752:  .byte   0
+L6753:  .byte   0
+
 L6754:  .byte   $00
 L6755:  .res    128, 0
         .byte   $00,$00,$00
 
-L67D8:  php
+.proc CALL_2B_IMPL
+        php
         sei
-        lda     #$00
+        lda     #0
         sta     L6752
         sta     L6753
         plp
         rts
-
-L67E4:  lda     L6753
-        cmp     #$80
-        bne     L67EF
-        lda     #$00
-        bcs     L67F2
-L67EF:  clc
+.endproc
+        ;; called during SET_INPUT and a few other places
+.proc L67E4
+        lda     L6753
+        cmp     #$80            ; if L675E is not $80, add $4
+        bne     :+
+        lda     #$00            ; otherwise reset to 0
+        bcs     compare
+:       clc
         adc     #$04
-L67F2:  cmp     L6752
-        beq     L67FC
-        sta     L6753
+
+compare:
+        cmp     L6752           ; did L6753 catch up with L6752?
+        beq     rts_with_carry_set
+        sta     L6753           ; nope, maybe next time
         clc
         rts
+.endproc
 
-L67FC:  sec
+rts_with_carry_set:
+        sec
         rts
 
-L67FE:  lda     L6752
+        ;; called during GET_INPUT
+L67FE:  lda     L6752           ; equal?
         cmp     L6753
-        beq     L67FC
+        beq     rts_with_carry_set
         cmp     #$80
         bne     L680E
         lda     #0
@@ -4747,7 +4868,7 @@ L68F5:  sta     state_fill
         jmp     SET_FILL_MODE_IMPL
 
 L68FA:  jsr     L6906
-        jmp     L58E8
+        jmp     measure_text
 
 L6900:  jsr     L6906
         jmp     DRAW_TEXT_IMPL
@@ -5195,7 +5316,7 @@ L6C40:  jsr     L6556
         ldy     $A7
         sty     L7D7A
         stx     L7D7B
-L6C55:  jmp     L5EBB
+L6C55:  jmp     store_xa_at_params
 
 L6C58:  jsr     L6EA1
         lda     #$80
@@ -5448,7 +5569,7 @@ L6E36:  ldx     $A9
         lda     #$01
         jsr     L68F5
         A2D_CALL A2D_FILL_RECT, fill_rect_params3
-        A2D_CALL A2D_SET_PATTERN, L5F1E::pattern
+        A2D_CALL A2D_SET_PATTERN, screen_state::pattern
         lda     #$02
         jsr     L68F5
         rts
@@ -5513,9 +5634,9 @@ loop:   lda     $82,x
         sta     L6856,x
         dex
         bpl     loop
-        lda     L5F1E::font
+        lda     screen_state::font
         sta     $82
-        lda     L5F1E::font+1
+        lda     screen_state::font+1
         sta     $83
         ldy     #$00
         lda     ($82),y
@@ -6060,7 +6181,7 @@ L72A0:  jsr     FILL_RECT_IMPL
         sbc     #$00
         sta     $97
         jsr     FILL_RECT_IMPL
-        A2D_CALL A2D_SET_PATTERN, L5F1E::pattern
+        A2D_CALL A2D_SET_PATTERN, screen_state::pattern
 L72C9:  jsr     L703E
         bit     $B0
         bpl     L7319
@@ -6230,7 +6351,7 @@ L7408:  pha
         tax
         pla
         ldy     #$04
-        jmp     L5EBD
+        jmp     store_xa_at_params_y
 
 L7416:  lda     #$00
         sta     L747A
@@ -6365,7 +6486,7 @@ L7500:
         lda     $A9
         ldx     $AA
         ldy     #$01
-        jmp     L5EBD
+        jmp     store_xa_at_params_y
 
 ;;; ==================================================
 
@@ -6397,15 +6518,15 @@ L7550:  jsr     L718E
         bne     L7561
         A2D_CALL A2D_SET_BOX, set_box_params
 L7561:  jsr     L703E
-        lda     $F4
+        lda     active_state
         sta     L750C
-        lda     $F5
+        lda     active_state+1
         sta     L750D
         jsr     L75C6
         php
         lda     L758A
         ldx     L758B
-        jsr     L5EA0
+        jsr     assign_and_prepare_state
         asl     preserve_zp_flag
         plp
         bcc     L7582
@@ -6427,8 +6548,8 @@ L758B:  .byte   $75
 L758C:  jsr     SHOW_CURSOR_IMPL
         lda     L750C
         ldx     L750D
-        sta     $F4
-        stx     $F5
+        sta     active_state
+        stx     active_state+1
         jmp     L6567
 
 ;;; ==================================================
@@ -6436,7 +6557,7 @@ L758C:  jsr     SHOW_CURSOR_IMPL
 ;;; 3 bytes of params, copied to $82
 
 QUERY_STATE_IMPL:
-        jsr     copy_params_from_zp
+        jsr     apply_state_to_active_state
         jsr     L7074
         lda     $83
         sta     params_addr
@@ -6454,7 +6575,7 @@ L75BB:  lda     $D0,y
         sta     (params_addr),y
         dey
         bpl     L75BB
-        jmp     copy_params_to_zp
+        jmp     apply_active_state_to_state
 
 L75C6:  jsr     L708D
         ldx     #$07
@@ -6838,7 +6959,7 @@ L7872:  sta     L7010
         beq     L78CA
         php
         sei
-        jsr     L67D8
+        jsr     CALL_2B_IMPL
 L789E:  jsr     L7026
         bne     L789E
 L78A3:  jsr     L67E4
@@ -7019,7 +7140,7 @@ L79BC:  jsr     L657E
         jsr     L79F1
         A2D_CALL A2D_SET_PATTERN, light_speckles_pattern
         A2D_CALL A2D_FILL_RECT, $C7
-        A2D_CALL A2D_SET_PATTERN, L5F1E::pattern
+        A2D_CALL A2D_SET_PATTERN, screen_state::pattern
         bit     $8C
         bmi     L79DD
         bit     $AF
@@ -7381,7 +7502,7 @@ L7C87:  ldx     #$01
         bne     L7C8E
         dex
 L7C8E:  ldy     #$05
-        jmp     L5EBD
+        jmp     store_xa_at_params_y
 
 L7C93:  sta     $82
         sty     $83
@@ -7508,7 +7629,7 @@ L7D51:  lda     $8D
 
 L7D61:  lda     #$80
         sta     L7D74
-        jmp     L67D8
+        jmp     CALL_2B_IMPL
 
 ;;; ==================================================
 
@@ -7649,15 +7770,19 @@ L7ECD:  lda     #$00
         sta     set_input_params_unk
         rts
 
-L7ED6:  lda     BUTN1
+        ;; Look at buttons (apple keys), compute modifiers in A
+        ;; (bit = button 0 / open apple, bit 1 = button 1 / closed apple)
+.proc compute_modifiers
+        lda     BUTN1
         asl     a
         lda     BUTN0
         and     #$80
         rol     a
         rol     a
         rts
+.endproc
 
-L7EE2:  jsr     L7ED6
+L7EE2:  jsr     compute_modifiers
         sta     set_input_params_modifiers
 L7EE8:  clc
         lda     KBD
@@ -7712,14 +7837,14 @@ restore_params_addr:
 
 stashed_params_addr:  .addr     0
 
-L7F48:  jsr     L7ED6
+L7F48:  jsr     compute_modifiers
         ror     a
         ror     a
         ror     L7D82
         lda     L7D82
         sta     mouse_status
-        lda     #$00
-        sta     L6662
+        lda     #0
+        sta     input::modifiers
         jsr     L7EE8
         bcc     L7F63
         jmp     L8292
@@ -7743,10 +7868,10 @@ L7F82:  dey
         bne     L7F82
         dex
         bpl     L7F7D
-L7F88:  jsr     L7ED6
-        cmp     #$03
+L7F88:  jsr     compute_modifiers
+        cmp     #3
         beq     L7F88
-        sta     L6662
+        sta     input::modifiers
         lda     #$00
         sta     L7D82
         ldx     #$02
@@ -7979,7 +8104,7 @@ L816F:  sta     L6BD9
         ldx     L7D80
         stx     L6BDA
         plp
-        jmp     L5EBB
+        jmp     store_xa_at_params
 
 L817C:  php
         sei
