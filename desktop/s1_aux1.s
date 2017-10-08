@@ -15,8 +15,13 @@ LD2D0           := $D2D0
 
 .macro A2D_RELAY2_CALL call, addr
         ldy     #call
+        .if .paramcount = 1
+        lda     #0
+        ldx     #0
+        .else
         lda     #<addr
         ldx     #>addr
+        .endif
         jsr     A2D_RELAY2
 .endmacro
 
@@ -9210,21 +9215,21 @@ set_fill_mode_params5:
         .byte   $05,$06,$07
 
         ;; DESKTOP command jump table
-L939E:  .addr   0
-        .addr   L9419
-        .addr   L9454
-        .addr   L94C0
-        .addr   L9508
-        .addr   L95A2
-        .addr   L9692
-        .addr   L96D2
-        .addr   L975B
-        .addr   L977D
-        .addr   L97F7
-        .addr   L9EBE
-        .addr   LA2A6
-        .addr   L9EFB
-        .addr   L958F
+L939E:  .addr   0               ; $00
+        .addr   L9419           ; $01
+        .addr   L9454           ; $02
+        .addr   L94C0           ; $03
+        .addr   L9508           ; $04
+        .addr   L95A2           ; $05
+        .addr   L9692           ; $06
+        .addr   L96D2           ; $07
+        .addr   L975B           ; $08
+        .addr   L977D           ; $09
+        .addr   L97F7           ; $0A
+        .addr   L9EBE           ; $0B
+        .addr   LA2A6           ; $0C REDRAW_ICONS
+        .addr   L9EFB           ; $0D
+        .addr   L958F           ; $0E
 
 .macro  DESKTOP_DIRECT_CALL    op, addr, label
         jsr DESKTOP_DIRECT
@@ -9304,6 +9309,8 @@ ycoord: .word   0
 
 ;;; ==================================================
 
+;;; DESKTOP $01 IMPL
+
 L9419:
         ldy     #$00
         lda     ($06),y
@@ -9337,6 +9344,10 @@ L943E:  ldx     L8E95
         lda     $07
         sta     L8F15+1,x
         rts
+
+;;; ==================================================
+
+;;; DESKTOP $02 IMPL
 
 L9454:  ldx     L8E95
         beq     L9466
@@ -9397,6 +9408,8 @@ L949D:  ldx     L9016
 
 ;;; ==================================================
 
+;;; DESKTOP $03 IMPL
+
 L94C0:
         ldx     L8E95
         beq     L94D2
@@ -9439,6 +9452,8 @@ L9502:  jsr     L9F98
         rts
 
 ;;; ==================================================
+
+;;; DESKTOP $04 IMPL
 
 L9508:
         ldy     #$00
@@ -9506,6 +9521,8 @@ L958C:  lda     #$00
 
 ;;; ==================================================
 
+;;; DESKTOP $0E IMPL
+
 L958F:
         ldy     #$00
         lda     ($06),y
@@ -9518,6 +9535,8 @@ L958F:
         jmp     LA39D
 
 ;;; ==================================================
+
+;;; DESKTOP $05 IMPL
 
 L95A2:
         jmp     L9625
@@ -9580,6 +9599,8 @@ L9681:  sta     L95A5
 
 ;;; ==================================================
 
+;;; DESKTOP $06 IMPL
+
 L9692:
         jmp     L9697
 
@@ -9613,6 +9634,8 @@ L96CF:  lda     #$00
         rts
 
 ;;; ==================================================
+
+;;; DESKTOP $07 IMPL
 
 L96D2:
         jmp     L96D7
@@ -9681,6 +9704,8 @@ L9758:  jmp     L96DD
 
 ;;; ==================================================
 
+;;; DESKTOP $08 IMPL
+
 L975B:
         ldx     #$00
         txa
@@ -9704,6 +9729,8 @@ L977A:  lda     #$00
         rts
 
 ;;; ==================================================
+
+;;; DESKTOP $09 IMPL
 
 L977D:
         jmp     L9789
@@ -9775,6 +9802,10 @@ L97E6:  pla
         .byte   0
 L97F5:  .byte   0
 L97F6:  .byte   0
+
+;;; ==================================================
+
+;;; DESKTOP $0A IMPL
 
 L97F7:
         ldy     #$00
@@ -10539,6 +10570,8 @@ L9EB4:  asl     a
 
 ;;; ==================================================
 
+;;; DESKTOP $08 IMPL
+
 L9EBE:
         jmp     L9EC3
 
@@ -10571,6 +10604,8 @@ L9EEA:  ldy     #$00
         rts
 
 ;;; ==================================================
+
+;;; DESKTOP $0D IMPL
 
 L9EFB:
         jmp     L9F07
@@ -10957,6 +10992,8 @@ LA2A4:  .byte   0
 LA2A5:  .byte   0
 
 ;;; ==================================================
+
+DESKTOP_REDRAW_ICONS_IMPL:
 
 LA2A6:
         jmp     LA2AE
@@ -12070,7 +12107,7 @@ LAAB8:
         .byte   $00,$00,$00,$00,$00,$00,$00,$4C
         .byte   $D7,$B9
 
-LB603:
+alert_bitmap:
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
         .byte   PX(%0111111),px(%1111100),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
         .byte   PX(%0111111),px(%1111100),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
@@ -12096,13 +12133,16 @@ LB603:
         .byte   PX(%0111111),px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
 
-        .byte   $14,$00,$08,$00
-        .addr   LB603           ; addr
+.proc alert_bitmap_params
+        .word   $14             ; left
+        .word   $8              ; top
+        .addr   alert_bitmap    ; addr
         .word   7               ; stride
         .word   0               ; left
         .word   0               ; top
         .word   $24             ; width
         .word   $17             ; height
+.endproc
 
         .byte   $41,$00,$57,$00,$E5,$01
         .byte   $8E,$00,$04,$00,$02,$00,$A0,$01
@@ -12117,19 +12157,28 @@ LB6DF:  .byte   $A4
 LB6E0:  .byte   $01
 LB6E1:  .byte   $37,$00
 
-LB6E3:  PASCAL_STRING {"OK            ",A2D_GLYPH_RETURN}
+ok_label:
+        PASCAL_STRING {"OK            ",A2D_GLYPH_RETURN}
 
-        .byte   $14,$00,$25,$00,$78,$00
-        .byte   $30,$00,$19,$00,$2F,$00,$2C,$01
-        .byte   $25,$00,$90,$01,$30,$00,$31,$01
-        .byte   $2F,$00,$BE,$00,$10,$00,$4B,$00
-        .byte   $1D,$00
+try_again_rect:
+        .word   $14,$25,$78,$30
+try_again_pos:
+        .word   $0019,$002F
+
+cancel_rect:
+        .word   $12C,$25,$190,$30
+cancel_pos:  .word   $0131,$002F
+        .word   $00BE,$0010
+LB70F:  .word   $004B,$001D
+
 LB713:  .byte   $00
 LB714:  .byte   $00
 LB715:  .byte   $00
 
-LB716:  PASCAL_STRING "Try Again     A"
-LB726:  PASCAL_STRING "Cancel     Esc"
+try_again_label:
+        PASCAL_STRING "Try Again     A"
+cancel_label:
+        PASCAL_STRING "Cancel     Esc"
 
 LB735:  PASCAL_STRING "System Error"
 LB742:  PASCAL_STRING "I/O error"
@@ -12186,7 +12235,7 @@ LBA0B:  sta     $D239,x
         sta     $D247
         lda     #$00
         sta     $D248
-        A2D_RELAY2_CALL $04, $D239
+        A2D_RELAY2_CALL A2D_SET_STATE, $D239
         lda     LB6D3
         ldx     LB6D4
         jsr     LBF8B
@@ -12208,20 +12257,20 @@ LBA0B:  sta     $D239,x
         clc
         adc     LB6E1
         sta     LBFCB
-        A2D_RELAY2_CALL $26, $0000
+        A2D_RELAY2_CALL A2D_HIDE_CURSOR
         jsr     LBE08
-        A2D_RELAY2_CALL $25, $0000
-        A2D_RELAY2_CALL $07, $D200
-        A2D_RELAY2_CALL $11, $B6BB
-        A2D_RELAY2_CALL $07, $D202
-        A2D_RELAY2_CALL $12, $B6BB
-        A2D_RELAY2_CALL $06, $B6D3
-        A2D_RELAY2_CALL $12, $B6C3
-        A2D_RELAY2_CALL $12, $B6CB
-        A2D_RELAY2_CALL $07, $D200
-        A2D_RELAY2_CALL $26, $0000
-        A2D_RELAY2_CALL $14, $B6AB
-        A2D_RELAY2_CALL $25, $0000
+        A2D_RELAY2_CALL A2D_SHOW_CURSOR
+        A2D_RELAY2_CALL A2D_SET_FILL_MODE, $D200
+        A2D_RELAY2_CALL A2D_FILL_RECT, $B6BB
+        A2D_RELAY2_CALL A2D_SET_FILL_MODE, $D202
+        A2D_RELAY2_CALL A2D_DRAW_RECT, $B6BB
+        A2D_RELAY2_CALL A2D_SET_BOX, $B6D3
+        A2D_RELAY2_CALL A2D_DRAW_RECT, $B6C3
+        A2D_RELAY2_CALL A2D_DRAW_RECT, $B6CB
+        A2D_RELAY2_CALL A2D_SET_FILL_MODE, $D200
+        A2D_RELAY2_CALL A2D_HIDE_CURSOR
+        A2D_RELAY2_CALL A2D_DRAW_BITMAP, alert_bitmap_params
+        A2D_RELAY2_CALL A2D_SHOW_CURSOR
         pla
         tax
         pla
@@ -12246,38 +12295,38 @@ LBAEF:  tya
         sta     LB713
         jmp     LBB14
 
+.macro DRAW_PASCAL_STRING addr
+        lda     #<addr
+        ldx     #>addr
+        jsr     draw_pascal_string
+.endmacro
+
 LBB0B:  tya
         lsr     a
         tay
         lda     LB9C3,y
         sta     LB713
-LBB14:  A2D_RELAY2_CALL $07, $D202
+LBB14:  A2D_RELAY2_CALL A2D_SET_FILL_MODE, $D202
         bit     LB713
         bpl     LBB5C
-        A2D_RELAY2_CALL $12, $B6FF
-        A2D_RELAY2_CALL $0E, $B707
-        lda     #$26
-        ldx     #$B7
-        jsr     LBFD0
+        A2D_RELAY2_CALL A2D_DRAW_RECT, cancel_rect
+        A2D_RELAY2_CALL A2D_SET_POS, cancel_pos
+        DRAW_PASCAL_STRING cancel_label
         bit     LB713
         bvs     LBB5C
-        A2D_RELAY2_CALL $12, $B6F3
-        A2D_RELAY2_CALL $0E, $B6FB
-        lda     #$16
-        ldx     #$B7
-        jsr     LBFD0
+        A2D_RELAY2_CALL A2D_DRAW_RECT, try_again_rect
+        A2D_RELAY2_CALL A2D_SET_POS, try_again_pos
+        DRAW_PASCAL_STRING try_again_label
         jmp     LBB75
 
-LBB5C:  A2D_RELAY2_CALL $12, $B6F3
-        A2D_RELAY2_CALL $0E, $B6FB
-        lda     #$E3
-        ldx     #$B6
-        jsr     LBFD0
-LBB75:  A2D_RELAY2_CALL $0E, $B70F
+LBB5C:  A2D_RELAY2_CALL A2D_DRAW_RECT, try_again_rect
+        A2D_RELAY2_CALL A2D_SET_POS, try_again_pos
+        DRAW_PASCAL_STRING ok_label
+LBB75:  A2D_RELAY2_CALL A2D_SET_POS, $B70F
         lda     LB714
         ldx     LB715
-        jsr     LBFD0
-LBB87:  A2D_RELAY2_CALL $2A, $D208
+        jsr     draw_pascal_string
+LBB87:  A2D_RELAY2_CALL A2D_GET_INPUT, $D208
         lda     $D208
         cmp     #$01
         bne     LBB9A
@@ -12291,8 +12340,8 @@ LBB9A:  cmp     #$03
         bpl     LBBEE
         cmp     #$1B
         bne     LBBC3
-        A2D_RELAY2_CALL $07, $D202
-        A2D_RELAY2_CALL $11, $B6FF
+        A2D_RELAY2_CALL A2D_SET_FILL_MODE, $D202
+        A2D_RELAY2_CALL A2D_FILL_RECT, cancel_rect
         lda     #$01
         jmp     LBC55
 
@@ -12300,8 +12349,8 @@ LBBC3:  bit     LB713
         bvs     LBBEE
         cmp     #$61
         bne     LBBE3
-LBBCC:  A2D_RELAY2_CALL $07, $D202
-        A2D_RELAY2_CALL $11, $B6F3
+LBBCC:  A2D_RELAY2_CALL A2D_SET_FILL_MODE, $D202
+        A2D_RELAY2_CALL A2D_FILL_RECT, try_again_rect
         lda     #$00
         jmp     LBC55
 
@@ -12313,30 +12362,30 @@ LBBE3:  cmp     #$41
 
 LBBEE:  cmp     #$0D
         bne     LBC09
-        A2D_RELAY2_CALL $07, $D202
-        A2D_RELAY2_CALL $11, $B6F3
+        A2D_RELAY2_CALL A2D_SET_FILL_MODE, $D202
+        A2D_RELAY2_CALL A2D_FILL_RECT, try_again_rect
         lda     #$02
         jmp     LBC55
 
 LBC09:  jmp     LBB87
 
 LBC0C:  jsr     LBDE1
-        A2D_RELAY2_CALL $0E, $D209
+        A2D_RELAY2_CALL A2D_SET_POS, $D209
         bit     LB713
         bpl     LBC42
-        A2D_RELAY2_CALL $13, $B6FF
+        A2D_RELAY2_CALL A2D_TEST_BOX, cancel_rect
         cmp     #$80
         bne     LBC2D
         jmp     LBCE9
 
 LBC2D:  bit     LB713
         bvs     LBC42
-        A2D_RELAY2_CALL $13, $B6F3
+        A2D_RELAY2_CALL A2D_TEST_BOX, try_again_rect
         cmp     #$80
         bne     LBC52
         jmp     LBC6D
 
-LBC42:  A2D_RELAY2_CALL $13, $B6F3
+LBC42:  A2D_RELAY2_CALL A2D_TEST_BOX, try_again_rect
         cmp     #$80
         bne     LBC52
         jmp     LBD65
@@ -12344,23 +12393,23 @@ LBC42:  A2D_RELAY2_CALL $13, $B6F3
 LBC52:  jmp     LBB87
 
 LBC55:  pha
-        A2D_RELAY2_CALL $26, $0000
+        A2D_RELAY2_CALL A2D_HIDE_CURSOR
         jsr     LBE5D
-        A2D_RELAY2_CALL $25, $0000
+        A2D_RELAY2_CALL A2D_SHOW_CURSOR
         pla
         rts
 
-LBC6D:  A2D_RELAY2_CALL $07, $D202
-        A2D_RELAY2_CALL $11, $B6F3
+LBC6D:  A2D_RELAY2_CALL A2D_SET_FILL_MODE, $D202
+        A2D_RELAY2_CALL A2D_FILL_RECT, try_again_rect
         lda     #$00
         sta     LBCE8
-LBC84:  A2D_RELAY2_CALL $2A, $D208
+LBC84:  A2D_RELAY2_CALL A2D_GET_INPUT, $D208
         lda     $D208
         cmp     #$02
         beq     LBCDB
         jsr     LBDE1
-        A2D_RELAY2_CALL $0E, $D209
-        A2D_RELAY2_CALL $13, $B6F3
+        A2D_RELAY2_CALL A2D_SET_POS, $D209
+        A2D_RELAY2_CALL A2D_TEST_BOX, try_again_rect
         cmp     #$80
         beq     LBCB5
         lda     LBCE8
@@ -12371,8 +12420,8 @@ LBCB5:  lda     LBCE8
         bne     LBCBD
         jmp     LBC84
 
-LBCBD:  A2D_RELAY2_CALL $07, $D202
-        A2D_RELAY2_CALL $11, $B6F3
+LBCBD:  A2D_RELAY2_CALL A2D_SET_FILL_MODE, $D202
+        A2D_RELAY2_CALL A2D_FILL_RECT, try_again_rect
         lda     LBCE8
         clc
         adc     #$80
@@ -12387,17 +12436,17 @@ LBCE3:  lda     #$00
         jmp     LBC55
 
 LBCE8:  .byte   0
-LBCE9:  A2D_RELAY2_CALL $07, $D202
-        A2D_RELAY2_CALL $11, $B6FF
+LBCE9:  A2D_RELAY2_CALL A2D_SET_FILL_MODE, $D202
+        A2D_RELAY2_CALL A2D_FILL_RECT, cancel_rect
         lda     #$00
         sta     LBD64
-LBD00:  A2D_RELAY2_CALL $2A, $D208
+LBD00:  A2D_RELAY2_CALL A2D_GET_INPUT, $D208
         lda     $D208
         cmp     #$02
         beq     LBD57
         jsr     LBDE1
-        A2D_RELAY2_CALL $0E, $D209
-        A2D_RELAY2_CALL $13, $B6FF
+        A2D_RELAY2_CALL A2D_SET_POS, $D209
+        A2D_RELAY2_CALL A2D_TEST_BOX, cancel_rect
         cmp     #$80
         beq     LBD31
         lda     LBD64
@@ -12408,8 +12457,8 @@ LBD31:  lda     LBD64
         bne     LBD39
         jmp     LBD00
 
-LBD39:  A2D_RELAY2_CALL $07, $D202
-        A2D_RELAY2_CALL $11, $B6FF
+LBD39:  A2D_RELAY2_CALL A2D_SET_FILL_MODE, $D202
+        A2D_RELAY2_CALL A2D_FILL_RECT, cancel_rect
         lda     LBD64
         clc
         adc     #$80
@@ -12426,15 +12475,15 @@ LBD5F:  lda     #$01
 LBD64:  .byte   0
 LBD65:  lda     #$00
         sta     LBDE0
-        A2D_RELAY2_CALL $07, $D202
-        A2D_RELAY2_CALL $11, $B6F3
-LBD7C:  A2D_RELAY2_CALL $2A, $D208
+        A2D_RELAY2_CALL A2D_SET_FILL_MODE, $D202
+        A2D_RELAY2_CALL A2D_FILL_RECT, try_again_rect
+LBD7C:  A2D_RELAY2_CALL A2D_GET_INPUT, $D208
         lda     $D208
         cmp     #$02
         beq     LBDD3
         jsr     LBDE1
-        A2D_RELAY2_CALL $0E, $D209
-        A2D_RELAY2_CALL $13, $B6F3
+        A2D_RELAY2_CALL A2D_SET_POS, $D209
+        A2D_RELAY2_CALL A2D_TEST_BOX, try_again_rect
         cmp     #$80
         beq     LBDAD
         lda     LBDE0
@@ -12445,8 +12494,8 @@ LBDAD:  lda     LBDE0
         bne     LBDB5
         jmp     LBD7C
 
-LBDB5:  A2D_RELAY2_CALL $07, $D202
-        A2D_RELAY2_CALL $11, $B6F3
+LBDB5:  A2D_RELAY2_CALL A2D_SET_FILL_MODE, $D202
+        A2D_RELAY2_CALL A2D_FILL_RECT, try_again_rect
         lda     LBDE0
         clc
         adc     #$80
@@ -12707,23 +12756,31 @@ LBFCD:  .byte   $00
 LBFCE:  .byte   $00
 LBFCF:  .byte   $00
 
-LBFD0:  sta     $06
-        stx     $07
-        ldy     #$00
-        lda     ($06),y
-        beq     LBFEB
-        sta     $08
-        inc     $06
-        bne     LBFE2
-        inc     $07
-LBFE2:  A2D_RELAY2_CALL $19, $0006
-LBFEB:  rts
+        ;; Draw pascal string; address in (X,A)
+.proc draw_pascal_string
+        ptr := $06
 
+        sta     ptr
+        stx     ptr+1
+        ldy     #$00
+        lda     (ptr),y         ; Check length
+        beq     end
+        sta     ptr+2
+        inc     ptr
+        bne     call
+        inc     ptr+1
+call:   A2D_RELAY2_CALL A2D_DRAW_TEXT, ptr
+end:    rts
+.endproc
+
+        ;; A2D call in Y, params addr (X,A)
 .proc A2D_RELAY2
-        sty     call-1
-        sta     call
-        stx     call+1
-        A2D_CALL 0, 0, call
+        sty     call
+        sta     addr
+        stx     addr+1
+        jsr     A2D
+call:   .byte   0
+addr:   .addr   0
         rts
 .endproc
 
