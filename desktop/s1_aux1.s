@@ -59,7 +59,7 @@ LD2D0           := $D2D0
         state_hoff      := $D8
         state_voff      := $DA
         state_width     := $DC
-        state_height    := $DF
+        state_height    := $DE
         state_pattern   := $E0
         state_msk       := $E8
         state_mskand    := $E8
@@ -279,7 +279,7 @@ a2d_jump_table:
         .addr   jt_rts              ; $0A SET_THICKNESS
         .addr   L586A               ; $0B
         .addr   jt_rts              ; $0C SET_TEXT_MASK
-        .addr   L5742               ; $0D
+        .addr   OFFSET_POS_IMPL     ; $0D OFFSET_POS
         .addr   jt_rts              ; $0E SET_POS
         .addr   DRAW_LINE_IMPL      ; $0F DRAW_LINE
         .addr   DRAW_LINE_ABS_IMPL  ; $10 DRAW_LINE_ABS
@@ -453,7 +453,8 @@ L4221:  .byte   $00,$02,$04,$06,$08,$0A,$0C,$0E
         .byte   $50,$52,$54,$56,$58,$5A,$5C,$5E
         .byte   $60,$62,$64,$66,$68,$6A,$6C,$6E
         .byte   $70,$72,$74,$76,$78,$7A,$7C,$7E
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+
+L42A1:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -469,7 +470,8 @@ L4221:  .byte   $00,$02,$04,$06,$08,$0A,$0C,$0E
         .byte   $01,$01,$01,$01,$01,$01,$01,$01
         .byte   $01,$01,$01,$01,$01,$01,$01,$01
         .byte   $01,$01,$01,$01,$01,$01,$01,$01
-        .byte   $00,$04,$08,$0C,$10,$14,$18,$1C
+
+L4321:  .byte   $00,$04,$08,$0C,$10,$14,$18,$1C
         .byte   $20,$24,$28,$2C,$30,$34,$38,$3C
         .byte   $40,$44,$48,$4C,$50,$54,$58,$5C
         .byte   $60,$64,$68,$6C,$70,$74,$78,$7C
@@ -485,7 +487,8 @@ L4221:  .byte   $00,$02,$04,$06,$08,$0A,$0C,$0E
         .byte   $20,$24,$28,$2C,$30,$34,$38,$3C
         .byte   $40,$44,$48,$4C,$50,$54,$58,$5C
         .byte   $60,$64,$68,$6C,$70,$74,$78,$7C
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+
+L43A1:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -501,7 +504,8 @@ L4221:  .byte   $00,$02,$04,$06,$08,$0A,$0C,$0E
         .byte   $03,$03,$03,$03,$03,$03,$03,$03
         .byte   $03,$03,$03,$03,$03,$03,$03,$03
         .byte   $03,$03,$03,$03,$03,$03,$03,$03
-        .byte   $00,$08,$10,$18,$20,$28,$30,$38
+
+L4421:  .byte   $00,$08,$10,$18,$20,$28,$30,$38
         .byte   $40,$48,$50,$58,$60,$68,$70,$78
         .byte   $00,$08,$10,$18,$20,$28,$30,$38
         .byte   $40,$48,$50,$58,$60,$68,$70,$78
@@ -517,7 +521,8 @@ L4221:  .byte   $00,$02,$04,$06,$08,$0A,$0C,$0E
         .byte   $40,$48,$50,$58,$60,$68,$70,$78
         .byte   $00,$08,$10,$18,$20,$28,$30,$38
         .byte   $40,$48,$50,$58,$60,$68,$70,$78
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+
+L44A1:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $01,$01,$01,$01,$01,$01,$01,$01
         .byte   $01,$01,$01,$01,$01,$01,$01,$01
@@ -533,6 +538,8 @@ L4221:  .byte   $00,$02,$04,$06,$08,$0A,$0C,$0E
         .byte   $06,$06,$06,$06,$06,$06,$06,$06
         .byte   $07,$07,$07,$07,$07,$07,$07,$07
         .byte   $07,$07,$07,$07,$07,$07,$07,$07
+
+L4521:  .byte   $00,$10,$20,$30,$40,$50,$60,$70
         .byte   $00,$10,$20,$30,$40,$50,$60,$70
         .byte   $00,$10,$20,$30,$40,$50,$60,$70
         .byte   $00,$10,$20,$30,$40,$50,$60,$70
@@ -548,8 +555,8 @@ L4221:  .byte   $00,$02,$04,$06,$08,$0A,$0C,$0E
         .byte   $00,$10,$20,$30,$40,$50,$60,$70
         .byte   $00,$10,$20,$30,$40,$50,$60,$70
         .byte   $00,$10,$20,$30,$40,$50,$60,$70
-        .byte   $00,$10,$20,$30,$40,$50,$60,$70
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+
+L45A1:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $01,$01,$01,$01,$01,$01,$01,$01
         .byte   $02,$02,$02,$02,$02,$02,$02,$02
         .byte   $03,$03,$03,$03,$03,$03,$03,$03
@@ -565,6 +572,8 @@ L4221:  .byte   $00,$02,$04,$06,$08,$0A,$0C,$0E
         .byte   $0D,$0D,$0D,$0D,$0D,$0D,$0D,$0D
         .byte   $0E,$0E,$0E,$0E,$0E,$0E,$0E,$0E
         .byte   $0F,$0F,$0F,$0F,$0F,$0F,$0F,$0F
+
+L4621:  .byte   $00,$20,$40,$60,$00,$20,$40,$60
         .byte   $00,$20,$40,$60,$00,$20,$40,$60
         .byte   $00,$20,$40,$60,$00,$20,$40,$60
         .byte   $00,$20,$40,$60,$00,$20,$40,$60
@@ -580,8 +589,8 @@ L4221:  .byte   $00,$02,$04,$06,$08,$0A,$0C,$0E
         .byte   $00,$20,$40,$60,$00,$20,$40,$60
         .byte   $00,$20,$40,$60,$00,$20,$40,$60
         .byte   $00,$20,$40,$60,$00,$20,$40,$60
-        .byte   $00,$20,$40,$60,$00,$20,$40,$60
-        .byte   $00,$00,$00,$00,$01,$01,$01,$01
+
+L46A1:  .byte   $00,$00,$00,$00,$01,$01,$01,$01
         .byte   $02,$02,$02,$02,$03,$03,$03,$03
         .byte   $04,$04,$04,$04,$05,$05,$05,$05
         .byte   $06,$06,$06,$06,$07,$07,$07,$07
@@ -597,6 +606,8 @@ L4221:  .byte   $00,$02,$04,$06,$08,$0A,$0C,$0E
         .byte   $1A,$1A,$1A,$1A,$1B,$1B,$1B,$1B
         .byte   $1C,$1C,$1C,$1C,$1D,$1D,$1D,$1D
         .byte   $1E,$1E,$1E,$1E,$1F,$1F,$1F,$1F
+
+L4721:  .byte   $00,$40,$00,$40,$00,$40,$00,$40
         .byte   $00,$40,$00,$40,$00,$40,$00,$40
         .byte   $00,$40,$00,$40,$00,$40,$00,$40
         .byte   $00,$40,$00,$40,$00,$40,$00,$40
@@ -612,8 +623,8 @@ L4221:  .byte   $00,$02,$04,$06,$08,$0A,$0C,$0E
         .byte   $00,$40,$00,$40,$00,$40,$00,$40
         .byte   $00,$40,$00,$40,$00,$40,$00,$40
         .byte   $00,$40,$00,$40,$00,$40,$00,$40
-        .byte   $00,$40,$00,$40,$00,$40,$00,$40
-        .byte   $00,$00,$01,$01,$02,$02,$03,$03
+
+L47A1:  .byte   $00,$00,$01,$01,$02,$02,$03,$03
         .byte   $04,$04,$05,$05,$06,$06,$07,$07
         .byte   $08,$08,$09,$09,$0A,$0A,$0B,$0B
         .byte   $0C,$0C,$0D,$0D,$0E,$0E,$0F,$0F
@@ -629,8 +640,10 @@ L4221:  .byte   $00,$02,$04,$06,$08,$0A,$0C,$0E
         .byte   $34,$34,$35,$35,$36,$36,$37,$37
         .byte   $38,$38,$39,$39,$3A,$3A,$3B,$3B
         .byte   $3C,$3C,$3D,$3D,$3E,$3E,$3F,$3F
+
 L4821:  .byte   $00,$00,$00,$00
 L4825:  .byte   $00,$00,$00
+
 L4828:  .byte   $01,$01,$01,$01,$01,$01,$01,$02
         .byte   $02,$02,$02,$02,$02,$02,$03,$03
         .byte   $03,$03,$03,$03,$03,$04,$04,$04
@@ -917,13 +930,13 @@ L4CA1           := * + 1
 L4CA2           := * + 2
         jmp     L4CBE
 
-        stx     $82
+L4CA3:  stx     $82
         ldy     L5168
         lda     #$00
 L4CAA:  ldx     $0601,y
 L4CAE           := * + 1
 L4CAF           := * + 2
-        ora     $42A1,x
+        ora     L42A1,x
 L4CB1           := * + 1
         sta     $0602,y
 L4CB4           := * + 1
@@ -1496,27 +1509,27 @@ fail:   rts
 ;;; ==================================================
 
 SET_BOX_IMPL:
-        lda     $D0
+        lda     state_left
         sec
         sbc     state_hoff
         sta     $F7
-        lda     $D1
+        lda     state_left+1
         sbc     state_hoff+1
         sta     $F8
-        lda     $D2
+        lda     state_top
         sec
         sbc     state_voff
         sta     $F9
-        lda     $D3
+        lda     state_top+1
         sbc     state_voff+1
         sta     $FA
         rts
 
-L50A9:  lda     $DD
+L50A9:  lda     state_width+1
         cmp     $93
         bmi     L50B7
         bne     L50B9
-        lda     $DC
+        lda     state_width
         cmp     $92
         bcs     L50B9
 L50B7:  clc
@@ -1529,11 +1542,11 @@ L50B9:  lda     $97
         lda     $96
         cmp     state_hoff
         bcc     L50B8
-L50C7:  lda     $DF
+L50C7:  lda     state_height+1
         cmp     $95
         bmi     L50B7
         bne     L50D5
-        lda     $DE
+        lda     state_height
         cmp     $94
         bcc     L50B8
 L50D5:  lda     $99
@@ -1558,16 +1571,16 @@ L50E3:  ldy     #$00
         lda     state_hoff+1
         sta     $93
         iny
-L50FE:  lda     $DC
+L50FE:  lda     state_width
         sec
         sbc     $96
         tax
-        lda     $DD
+        lda     state_width+1
         sbc     $97
         bpl     L5116
-        lda     $DC
+        lda     state_width
         sta     $96
-        lda     $DD
+        lda     state_width+1
         sta     $97
         tya
         ora     #$04
@@ -1587,16 +1600,16 @@ L5116:  lda     $94
         sta     $95
         iny
         iny
-L5130:  lda     $DE
+L5130:  lda     state_height
         sec
         sbc     $98
         tax
-        lda     $DF
+        lda     state_height+1
         sbc     $99
         bpl     L5148
-        lda     $DE
+        lda     state_height
         sta     $98
-        lda     $DF
+        lda     state_height+1
         sta     $99
         tya
         ora     #$08
@@ -1782,11 +1795,11 @@ L5250:  tya
         tay
         lda     L5293,y
         sta     L4CAE
-        lda     L5294,y
+        lda     L5293+1,y
         sta     L4CAF
-        lda     L5287,y
+        lda     L5285+2,y
         sta     L4CB4
-        lda     L5288,y
+        lda     L5285+3,y
         sta     L4CB5
         ldy     $81
         sty     L4CB1
@@ -1795,18 +1808,15 @@ L5250:  tya
         ldx     #$02
 L5276:  lda     L5285,x
         sta     L4CA1
-        lda     L5286,x
+        lda     L5285+1,x
         sta     L4CA2
         jmp     L4CE7
 
-L5285:  .byte   $BE
-L5286:  .byte   $4C
-L5287:  .byte   $A3
-L5288:  .byte   $4C,$21,$42,$21,$43,$21,$44,$21,$45,$21,$46
-L5293:  .byte   $21
-L5294:  .byte   $47,$A1,$42,$A1,$43,$A1,$44,$A1
-        .byte   $45,$A1,$46,$A1
-        .byte   $47
+L5285:  .addr   L4CBE,L4CA3
+
+        .addr   L4221,L4321,L4421,L4521,L4621
+
+L5293:  .addr   L4721,L42A1,L43A1,L44A1,L45A1,L46A1,L47A1
 
 L52A1:  stx     $B0
         asl     a
@@ -2373,7 +2383,7 @@ L56FE:  lda     ($B7),y
         inx
         cpx     #$08
         bne     L56FE
-        jsr     L5783
+        jsr     DRAW_LINE_ABS_IMPL_L5783
         lda     $B9
         clc
         adc     #$04
@@ -2392,7 +2402,7 @@ L5721:  lda     ($B7),y
         sta     state_pos,y
         dey
         bpl     L5721
-        jsr     L5783
+        jsr     DRAW_LINE_ABS_IMPL_L5783
 L572F:  ldx     #$01
 L5731:  lda     $B7,x
         sta     $80,x
@@ -2406,16 +2416,19 @@ L5731:  lda     $B7,x
 
 ;;; ==================================================
 
-;;; $0D IMPL
+;;; OFFSET_POS IMPL
 
 ;;; 4 bytes of params, copied to $A1
 
-L5742:
-        lda     $A1
-        ldx     $A2
-        jsr     L5758
-        lda     $A3
-        ldx     $A4
+.proc OFFSET_POS_IMPL
+        xdelta := $A1
+        ydelta := $A3
+
+        lda     xdelta
+        ldx     xdelta+1
+        jsr     adjust_xpos
+        lda     ydelta
+        ldx     ydelta+1
         clc
         adc     state_ypos
         sta     state_ypos
@@ -2423,14 +2436,18 @@ L5742:
         adc     state_ypos+1
         sta     state_ypos+1
         rts
+.endproc
 
-L5758:  clc
+        ;; Adjust state_xpos by (X,A)
+.proc adjust_xpos
+        clc
         adc     state_xpos
         sta     state_xpos
         txa
         adc     state_xpos+1
         sta     state_xpos+1
         rts
+.endproc
 
 ;;; ==================================================
 
@@ -2459,15 +2476,21 @@ loop:   lda     xdelta,x
 
 ;;; 4 bytes of params, copied to $92
 
-DRAW_LINE_ABS_IMPL:
-        ldx     #$03
-L5778:  lda     state_pos,x
+.proc DRAW_LINE_ABS_IMPL
+
+        params  := $92
+        xend    := params + 0
+        yend    := params + 2
+
+        ldx     #3
+L5778:  lda     state_pos,x     ; move pos to $96, assign params to pos
         sta     $96,x
         lda     $92,x
         sta     state_pos,x
         dex
         bpl     L5778
-L5783:  lda     $99
+
+L5783:  lda     $99             ; Called from elsewhere
         cmp     $95
         bmi     L57B0
         bne     L57BF
@@ -2573,6 +2596,8 @@ L584A:  .byte   $00,$01,$01,$01,$00,$00,$06,$00
 L5852:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
+.endproc
+        DRAW_LINE_ABS_IMPL_L5783 := DRAW_LINE_ABS_IMPL::L5783
 
 ;;; ==================================================
 
@@ -2776,8 +2801,8 @@ L59A8:  lda     #$00
         sta     LOWSCR
 L59B9:  jsr     L5EEA
         lda     $A4
-        ldx     $A5
-        jmp     L5758
+        ldx     $A4+1
+        jmp     adjust_xpos
 
 L59C3:  lda     $98
         sec
@@ -2925,13 +2950,13 @@ L5AE7:  jmp     L5BD4
 L5AEA:  tya
         asl     a
         tay
-        lda     L5287,y
+        lda     L5285+2,y
         sta     $40
-        lda     L5288,y
+        lda     L5285+3,y
         sta     $41
         lda     L5293,y
         sta     $42
-        lda     L5294,y
+        lda     L5293+1,y
         sta     $43
 L5B02           := * + 1
 L5B03           := * + 2
@@ -3596,11 +3621,11 @@ L60EE:  tay
         tay
         lda     L5293,y
         sta     L6164
-        lda     L5294,y
+        lda     L5293+1,y
         sta     L6165
-        lda     L5287,y
+        lda     L5285+2,y
         sta     L616A
-        lda     L5288,y
+        lda     L5285+3,y
         sta     L616B
         ldx     #$03
 L6116:  lda     $82,x
@@ -4852,9 +4877,9 @@ L6A00:  lda     $BB
 L6A24:  sta     $B9
         stx     $BA
         jsr     L68A9
-        lda     #$0C
-        ldx     #$00
-        jsr     L5758
+        lda     #<12
+        ldx     #>12
+        jsr     adjust_xpos
         ldx     $A7
         inx
         cpx     $A8

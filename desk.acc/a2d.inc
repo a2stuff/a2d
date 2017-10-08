@@ -131,6 +131,11 @@ A2D_SET_TEXT_MASK := $0C        ; Stored to background before XORing glyph
         ;; (input length 1 byte)
         ;; .byte mask
 
+A2D_OFFSET_POS    := $0D        ; Adjust start of subsequent DRAW_TEXT, DRAW_LINE
+        ;; (input length 4 bytes)
+        ;; .word xdelta
+        ;; .word ydelta
+
 A2D_SET_POS     := $0E          ; Start of subsequent DRAW_TEXT, DRAW_LINE
         ;; (input length 4 bytes)
         ;; .word xcoord
