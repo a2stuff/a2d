@@ -5793,24 +5793,19 @@ resize_box_bitmap:
         .byte   px(%1000000),px(%0000000),px(%0000001)
         .byte   px(%1111111),px(%1111111),px(%1111111)
 
-L7001:
-L7002:=*+1
+up_scroll_params_addr:
         .addr   up_scroll_params
 
-L7003:
-L7004:=*+1
+down_scroll_params_addr:
         .addr   down_scroll_params
 
-L7005:
-L7006:=*+1
+left_scroll_params_addr:
         .addr   left_scroll_params
 
-L7007:
-L7008:=*+1
+right_scroll_params_addr:
         .addr   right_scroll_params
 
-L7009:
-L700A:=*+1
+resize_box_params_addr:
         .addr   resize_box_params
 
 L700B:  .byte   $00
@@ -5820,12 +5815,11 @@ L700E:  .byte   $00
 L700F:  .byte   $00
 L7010:  .byte   $00
 
-L7011:  .byte   $D3
-L7012:  .byte   $6F
+L7011:  .addr   $6FD3
 
 L7013:  lda     L7011
         sta     $A7
-        lda     L7012
+        lda     L7011+1
         sta     $A8
         lda     L700B
         ldx     L700C
@@ -5872,6 +5866,7 @@ L7068:  lda     $AB
         bne     L7068
 L7073:  rts
 
+        ;; Look up window state by id ???
 L7074:  jsr     L7063
         beq     L707A
         rts
@@ -6214,11 +6209,11 @@ L72FF:  pha
 L7300:  pla
         sta     down_scroll_params::unk1
         stx     down_scroll_params::unk2
-        lda     L7003
-        ldx     L7004
+        lda     down_scroll_params_addr
+        ldx     down_scroll_params_addr+1
         jsr     L791C
-        lda     L7001
-        ldx     L7002
+        lda     up_scroll_params_addr
+        ldx     up_scroll_params_addr+1
         jsr     L791C
 L7319:  bit     $AF
         bpl     L7363
@@ -6250,11 +6245,11 @@ L7349:  pha
 L734A:  pla
         sta     right_scroll_params
         stx     right_scroll_params+1
-        lda     L7007
-        ldx     L7008
+        lda     right_scroll_params_addr
+        ldx     right_scroll_params_addr+1
         jsr     L791C
-        lda     L7005
-        ldx     L7006
+        lda     left_scroll_params_addr
+        ldx     left_scroll_params_addr+1
         jsr     L791C
 L7363:  lda     #$00
         jsr     L68F5
@@ -6292,8 +6287,8 @@ L73A8:  lda     $C7,x
         bpl     L73A8
         lda     #$04
         jsr     L68F5
-        lda     L7009
-        ldx     L700A
+        lda     resize_box_params_addr
+        ldx     resize_box_params_addr+1
         jsr     L791C
 L73BE:  rts
 
@@ -6665,39 +6660,42 @@ L7644:  ldy     #$00
 
 ;;; ==================================================
 
-L7649:  .byte   0
+in_close_box:  .byte   0
 
-CLOSE_CLICK_IMPL:
+.proc CLOSE_CLICK_IMPL
         jsr     L7013
-        beq     L7697
+        beq     end
         jsr     L7157
         jsr     L653F
         jsr     L6588
         lda     #$80
-L765A:  sta     L7649
+toggle: sta     in_close_box
         lda     #$02
         jsr     L68F5
         jsr     HIDE_CURSOR_IMPL
         A2D_CALL A2D_FILL_RECT, $C7
         jsr     SHOW_CURSOR_IMPL
-L766E:  jsr     L691B
+loop:   jsr     L691B
         cmp     #$02
         beq     L768B
         A2D_CALL A2D_SET_POS, set_pos_params
         jsr     L7086
-        eor     L7649
-        bpl     L766E
-        lda     L7649
+        eor     in_close_box
+        bpl     loop
+        lda     in_close_box
         eor     #$80
-        jmp     L765A
+        jmp     toggle
 
 L768B:  jsr     L6556
         ldy     #$00
-        lda     L7649
-        beq     L7697
+        lda     in_close_box
+        beq     end
         lda     #$01
-L7697:  sta     (params_addr),y
+end:    sta     (params_addr),y
         rts
+.endproc
+
+;;; ==================================================
 
         .byte   $00
 L769B:  .byte   $00
@@ -6724,6 +6722,7 @@ DRAG_RESIZE_IMPL:
 
 DRAG_WINDOW_IMPL:
         lda     #$00
+
 L76AE:  sta     L76A7
         jsr     L7ECD
         ldx     #$03
@@ -6945,6 +6944,7 @@ L7860:  lda     $92,x
         bpl     L7860
         rts
 
+        ;; Erases window after destruction
 L7871:  .byte   0
 L7872:  sta     L7010
         lda     #$00
@@ -7968,14 +7968,17 @@ L804D:  jsr     L7D83
         jmp     L7D8E
 
 L8056:  jsr     L7EE2
-        bcs     L805C
+        bcs     handle_menu_key
         rts
 
-L805C:  pha
+
+        ;; Keyboard navigation of menu
+.proc handle_menu_key
+        pha
         jsr     L8035
         pla
         cmp     #KEY_ESCAPE
-        bne     L8073
+        bne     try_return
         lda     #0
         sta     L7D80
         sta     L7D7F
@@ -7983,13 +7986,15 @@ L805C:  pha
         sta     L7D81
         rts
 
-L8073:  cmp     #KEY_RETURN
-        bne     L807D
+try_return:
+        cmp     #KEY_RETURN
+        bne     try_up
         jsr     L7E8C
         jmp     L7EAD
 
-L807D:  cmp     #KEY_UP
-        bne     L80A3
+try_up:
+        cmp     #KEY_UP
+        bne     try_down
 L8081:  dec     L7D7B
         bpl     L8091
         ldx     L7D7A
@@ -8005,8 +8010,9 @@ L8091:  ldx     L7D7B
         bne     L8081
 L80A0:  jmp     L800F
 
-L80A3:  cmp     #KEY_DOWN
-        bne     L80D0
+try_down:
+        cmp     #KEY_DOWN
+        bne     try_right
 L80A7:  inc     L7D7B
         ldx     L7D7A
         jsr     L6878
@@ -8025,8 +8031,9 @@ L80BE:  ldx     L7D7B
         bne     L80A7
 L80CD:  jmp     L800F
 
-L80D0:  cmp     #KEY_RIGHT
-        bne     L80EB
+try_right:
+        cmp     #KEY_RIGHT
+        bne     try_left
         lda     #0
         sta     L7D7B
         inc     L7D7A
@@ -8037,8 +8044,9 @@ L80D0:  cmp     #KEY_RIGHT
         sta     L7D7A
 L80E8:  jmp     L800F
 
-L80EB:  cmp     #KEY_LEFT
-        bne     L8105
+try_left:
+        cmp     #KEY_LEFT
+        bne     nope
         lda     #0
         sta     L7D7B
         dec     L7D7A
@@ -8050,11 +8058,12 @@ L80FC:  ldx     $A8
         stx     L7D7A
         jmp     L800F
 
-L8105:  jsr     L8110
+nope:   jsr     L8110
         bcc     L810F
         lda     #$80
         sta     L7D81
 L810F:  rts
+.endproc
 
 L8110:  sta     $C9
         lda     set_input_params_modifiers
@@ -12076,74 +12085,68 @@ LAAB8:
         .byte   px(%0000000),PX(%1111111),PX(%1111111),PX(%1111111),px(%0000000)
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
 
-        PASCAL_STRING A2D_GLYPH_CAPPLE
-        PASCAL_STRING "File"
-        PASCAL_STRING "View"
-        PASCAL_STRING "Special"
-        PASCAL_STRING "Startup"
-        PASCAL_STRING "Selector"
+LAB1C:  PASCAL_STRING A2D_GLYPH_CAPPLE
+LAB1E:  PASCAL_STRING "File"
+LAB22:  PASCAL_STRING "View"
+LAB28:  PASCAL_STRING "Special"
+LAB30:  PASCAL_STRING "Startup"
+LAB38:  PASCAL_STRING "Selector"
 
-        PASCAL_STRING "New Folder ..."
-        PASCAL_STRING "Open"
-        PASCAL_STRING "Close"
-        PASCAL_STRING "Close All"
-        PASCAL_STRING "Select All"
-        PASCAL_STRING "Copy a File ..."
-        PASCAL_STRING "Delete a File ..."
-        PASCAL_STRING "Eject"
-        PASCAL_STRING "Quit"
+LAB41:  PASCAL_STRING "New Folder ..."
+LAB50:  PASCAL_STRING "Open"
+LAB55:  PASCAL_STRING "Close"
+LAB5B:  PASCAL_STRING "Close All"
+LAB65:  PASCAL_STRING "Select All"
+LAB70:  PASCAL_STRING "Copy a File ..."
+LAB80:  PASCAL_STRING "Delete a File ..."
+LAB92:  PASCAL_STRING "Eject"
+LAB98:  PASCAL_STRING "Quit"
 
-        PASCAL_STRING "By Icon"
-        PASCAL_STRING "By Name"
-        PASCAL_STRING "By Date"
-        PASCAL_STRING "By Size"
-        PASCAL_STRING "By Type"
+LAB9D:  PASCAL_STRING "By Icon"
+LABA5:  PASCAL_STRING "By Name"
+LABAD:  PASCAL_STRING "By Date"
+LABB5:  PASCAL_STRING "By Size"
+LABBD:  PASCAL_STRING "By Type"
 
-        PASCAL_STRING "Check Drives"
-        PASCAL_STRING "Format a Disk ..."
-        PASCAL_STRING "Erase a Disk ..."
-        PASCAL_STRING "Disk Copy ..."
-        PASCAL_STRING "Lock ..."
-        PASCAL_STRING "Unlock ..."
-        PASCAL_STRING "Get Info ..."
-        PASCAL_STRING "Get Size ..."
-        PASCAL_STRING "Rename an Icon ..."
+LABC5:  PASCAL_STRING "Check Drives"
+LABD2:  PASCAL_STRING "Format a Disk ..."
+LABE4:  PASCAL_STRING "Erase a Disk ..."
+LABF5:  PASCAL_STRING "Disk Copy ..."
+LAC03:  PASCAL_STRING "Lock ..."
+LAC0C:  PASCAL_STRING "Unlock ..."
+LAC17:  PASCAL_STRING "Get Info ..."
+LAC24:  PASCAL_STRING "Get Size ..."
+LAC31:  PASCAL_STRING "Rename an Icon ..."
 
-        .byte   $06,$00,$01,$00,$1C
-        .byte   $AB,$94,$E5,$00,$00,$00,$00,$00
-        .byte   $00,$02,$00,$1E,$AB,$8E,$AC,$00
-        .byte   $00,$00,$00,$00,$00,$04,$00,$23
-        .byte   $AB,$DC,$AC,$00,$00,$00,$00,$00
-        .byte   $00,$05,$00,$28,$AB,$00,$AD,$00
-        .byte   $00,$00,$00,$00,$00,$08,$00,$30
-        .byte   $AB,$D6,$E2,$00,$00,$00,$00,$00
-        .byte   $00,$03,$00,$38,$AB,$F2,$E4,$00
-        .byte   $00,$00,$00,$00,$00,$0C,$00,$00
-        .byte   $00,$00,$00,$01,$00,$46,$66,$41
-        .byte   $AB,$40,$00,$13,$00,$00,$00,$01
-        .byte   $00,$4F,$6F,$50,$AB,$01,$00,$43
-        .byte   $63,$55,$AB,$01,$00,$42,$62,$5B
-        .byte   $AB,$01,$00,$41,$61,$65,$AB,$40
-        .byte   $00,$13,$00,$00,$00,$01,$00,$59
-        .byte   $79,$70,$AB,$01,$00,$44,$64,$80
-        .byte   $AB,$40,$00,$13,$00,$00,$00,$01
-        .byte   $00,$45,$65,$92,$AB,$01,$00,$51
-        .byte   $71,$98,$AB,$05,$00,$00,$00,$00
-        .byte   $00,$01,$00,$4A,$6A,$9D,$AB,$01
-        .byte   $00,$4E,$6E,$A5,$AB,$01,$00,$54
-        .byte   $74,$AD,$AB,$01,$00,$4B,$6B,$B5
-        .byte   $AB,$01,$00,$4C,$6C,$BD,$AB,$0D
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$C5,$AB,$40,$00,$13,$00,$00
-        .byte   $00,$01,$00,$53,$73,$D2,$AB,$01
-        .byte   $00,$5A,$7A,$E4,$AB,$00,$00,$00
-        .byte   $00,$F5,$AB,$40,$00,$13,$00,$00
-        .byte   $00,$00,$00,$00,$00,$03,$AC,$00
-        .byte   $00,$00,$00,$0C,$AC,$40,$00,$13
-        .byte   $00,$00,$00,$01,$00,$49,$69,$17
-        .byte   $AC,$00,$00,$00,$00,$24,$AC,$40
-        .byte   $00,$13,$00,$00,$00,$00,$00,$00
-        .byte   $00,$31,$AC,$00,$00,$00,$00
+        .addr   $0006,$0001
+        .addr   LAB1C,$E594,$0000,$0000,$0000,$0002
+        .addr   LAB1E,$AC8E,$0000,$0000,$0000,$0004,$AB23,$ACDC,$0000,$0000,$0000,$0005
+        .addr   LAB28,$AD00,$0000,$0000,$0000,$0008
+        .addr   LAB30,$E2D6,$0000,$0000,$0000,$0003
+        .addr   LAB38,$E4F2,$0000,$0000,$0000,$000C,$0000,$0000,$0001,$6646
+        .addr   LAB41,$0040,$0013,$0000,$0001,$6F4F
+        .addr   LAB50,$0001,$6343
+        .addr   LAB55,$0001,$6242
+        .addr   LAB5B,$0001,$6141
+        .addr   LAB65,$0040,$0013,$0000,$0001,$7959
+        .addr   LAB70,$0001,$6444
+        .addr   LAB80,$0040,$0013,$0000,$0001,$6545
+        .addr   LAB92,$0001,$7151
+        .addr   LAB98,$0005,$0000,$0000,$0001,$6A4A
+        .addr   LAB9D,$0001,$6E4E
+        .addr   LABA5,$0001,$7454
+        .addr   LABAD,$0001,$6B4B
+        .addr   LABB5,$0001,$6C4C
+        .addr   LABBD,$000D,$0000,$0000,$0000,$0000
+        .addr   LABC5,$0040,$0013,$0000,$0001,$7353
+        .addr   LABD2,$0001,$7A5A
+        .addr   LABE4,$0000,$0000
+        .addr   LABF5,$0040,$0013,$0000,$0000,$0000
+        .addr   LAC03,$0000,$0000
+        .addr   LAC0C,$0040,$0013,$0000,$0001,$6949
+        .addr   LAC17,$0000,$0000
+        .addr   LAC24,$0040,$0013,$0000,$0000,$0000
+        .addr   LAC31,$0000,$0000
 
         .res    168, 0
 

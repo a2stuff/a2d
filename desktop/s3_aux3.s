@@ -1,8 +1,6 @@
         .org $FB00
         .setcpu "65C02"
 
-;;; To find: Hard disk, 5.25 floppy, 3.5 floppy, Trash
-
         .include "../desk.acc/a2d.inc"
         .include "../inc/prodos.inc"
 
