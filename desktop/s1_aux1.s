@@ -12120,33 +12120,71 @@ LAC31:  PASCAL_STRING "Rename an Icon ..."
 
         .addr   $0006,$0001
         .addr   LAB1C,$E594,$0000,$0000,$0000,$0002
-        .addr   LAB1E,$AC8E,$0000,$0000,$0000,$0004,$AB23,$ACDC,$0000,$0000,$0000,$0005
+        .addr   LAB1E,$AC8E,$0000,$0000,$0000,$0004
+        .addr   $AB23,$ACDC,$0000,$0000,$0000,$0005 ; Why is address off by 1?
         .addr   LAB28,$AD00,$0000,$0000,$0000,$0008
         .addr   LAB30,$E2D6,$0000,$0000,$0000,$0003
-        .addr   LAB38,$E4F2,$0000,$0000,$0000,$000C,$0000,$0000,$0001,$6646
-        .addr   LAB41,$0040,$0013,$0000,$0001,$6F4F
-        .addr   LAB50,$0001,$6343
-        .addr   LAB55,$0001,$6242
-        .addr   LAB5B,$0001,$6141
-        .addr   LAB65,$0040,$0013,$0000,$0001,$7959
-        .addr   LAB70,$0001,$6444
-        .addr   LAB80,$0040,$0013,$0000,$0001,$6545
-        .addr   LAB92,$0001,$7151
-        .addr   LAB98,$0005,$0000,$0000,$0001,$6A4A
-        .addr   LAB9D,$0001,$6E4E
-        .addr   LABA5,$0001,$7454
-        .addr   LABAD,$0001,$6B4B
-        .addr   LABB5,$0001,$6C4C
-        .addr   LABBD,$000D,$0000,$0000,$0000,$0000
-        .addr   LABC5,$0040,$0013,$0000,$0001,$7353
-        .addr   LABD2,$0001,$7A5A
-        .addr   LABE4,$0000,$0000
-        .addr   LABF5,$0040,$0013,$0000,$0000,$0000
-        .addr   LAC03,$0000,$0000
-        .addr   LAC0C,$0040,$0013,$0000,$0001,$6949
-        .addr   LAC17,$0000,$0000
-        .addr   LAC24,$0040,$0013,$0000,$0000,$0000
-        .addr   LAC31,$0000,$0000
+        .addr   LAB38,$E4F2,$0000,$0000,$0000,$000C
+
+        .addr   $0000,$0000
+
+.macro  DEFINE_MENU_ITEM saddr, shortcut1, shortcut2
+        .if .paramcount > 1
+        .word   1
+        .byte   shortcut1
+        .else
+        .word   0
+        .byte   0
+        .endif
+        .if .paramcount > 2
+        .byte   shortcut2
+        .else
+        .byte   0
+        .endif
+        .addr   saddr
+.endmacro
+.macro  DEFINE_MENU_SEPARATOR
+        .addr   $0040, $0013, $0000
+.endmacro
+
+        DEFINE_MENU_ITEM LAB41, 'F', 'f'
+        DEFINE_MENU_SEPARATOR
+        DEFINE_MENU_ITEM LAB50, 'O', 'o'
+        DEFINE_MENU_ITEM LAB55, 'C', 'c'
+        DEFINE_MENU_ITEM LAB5B, 'B', 'b'
+        DEFINE_MENU_ITEM LAB65, 'A', 'a'
+        DEFINE_MENU_SEPARATOR
+        DEFINE_MENU_ITEM LAB70, 'Y', 'y'
+        DEFINE_MENU_ITEM LAB80, 'D', 'd'
+        DEFINE_MENU_SEPARATOR
+        DEFINE_MENU_ITEM LAB92, 'E', 'e'
+        DEFINE_MENU_ITEM LAB98, 'Q', 'q'
+
+        .addr   $0005,$0000,$0000
+
+        DEFINE_MENU_ITEM LAB9D, 'J', 'j'
+        DEFINE_MENU_ITEM LABA5, 'N', 'n'
+        DEFINE_MENU_ITEM LABAD, 'T', 't'
+        DEFINE_MENU_ITEM LABB5, 'K', 'k'
+        DEFINE_MENU_ITEM LABBD, 'L', 'l'
+
+        .addr   $000D,$0000,$0000
+
+        DEFINE_MENU_ITEM LABC5
+        DEFINE_MENU_SEPARATOR
+        DEFINE_MENU_ITEM LABD2, 'S', 's'
+        DEFINE_MENU_ITEM LABE4, 'Z', 'z'
+        DEFINE_MENU_ITEM LABF5
+        DEFINE_MENU_SEPARATOR
+        DEFINE_MENU_ITEM LAC03
+        DEFINE_MENU_ITEM LAC0C
+        DEFINE_MENU_SEPARATOR
+        DEFINE_MENU_ITEM LAC17, 'I', 'i'
+        DEFINE_MENU_ITEM LAC24
+        DEFINE_MENU_SEPARATOR
+        DEFINE_MENU_ITEM LAC31
+
+        .addr   $0000,$0000
 
         .res    168, 0
 
