@@ -12086,48 +12086,49 @@ LAAB8:
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
 
 LAB1C:  PASCAL_STRING A2D_GLYPH_CAPPLE
-LAB1E:  PASCAL_STRING "File"
-LAB22:  PASCAL_STRING "View"
-LAB28:  PASCAL_STRING "Special"
+label_file:  PASCAL_STRING "File"
+label_view:  PASCAL_STRING "View"
+label_special:  PASCAL_STRING "Special"
 LAB30:  PASCAL_STRING "Startup"
 LAB38:  PASCAL_STRING "Selector"
 
-LAB41:  PASCAL_STRING "New Folder ..."
-LAB50:  PASCAL_STRING "Open"
-LAB55:  PASCAL_STRING "Close"
-LAB5B:  PASCAL_STRING "Close All"
-LAB65:  PASCAL_STRING "Select All"
-LAB70:  PASCAL_STRING "Copy a File ..."
-LAB80:  PASCAL_STRING "Delete a File ..."
-LAB92:  PASCAL_STRING "Eject"
-LAB98:  PASCAL_STRING "Quit"
+label_new_folder:  PASCAL_STRING "New Folder ..."
+label_open:  PASCAL_STRING "Open"
+label_close:  PASCAL_STRING "Close"
+label_close_all:  PASCAL_STRING "Close All"
+label_select_all:  PASCAL_STRING "Select All"
+label_copy_file:  PASCAL_STRING "Copy a File ..."
+label_delete_file:  PASCAL_STRING "Delete a File ..."
+label_eject:  PASCAL_STRING "Eject"
+label_quit:  PASCAL_STRING "Quit"
 
-LAB9D:  PASCAL_STRING "By Icon"
-LABA5:  PASCAL_STRING "By Name"
-LABAD:  PASCAL_STRING "By Date"
-LABB5:  PASCAL_STRING "By Size"
-LABBD:  PASCAL_STRING "By Type"
+label_by_icon:  PASCAL_STRING "By Icon"
+label_by_name:  PASCAL_STRING "By Name"
+label_by_date:  PASCAL_STRING "By Date"
+label_by_size:  PASCAL_STRING "By Size"
+label_by_type:  PASCAL_STRING "By Type"
 
-LABC5:  PASCAL_STRING "Check Drives"
-LABD2:  PASCAL_STRING "Format a Disk ..."
-LABE4:  PASCAL_STRING "Erase a Disk ..."
-LABF5:  PASCAL_STRING "Disk Copy ..."
-LAC03:  PASCAL_STRING "Lock ..."
-LAC0C:  PASCAL_STRING "Unlock ..."
-LAC17:  PASCAL_STRING "Get Info ..."
-LAC24:  PASCAL_STRING "Get Size ..."
-LAC31:  PASCAL_STRING "Rename an Icon ..."
+label_check_drives:  PASCAL_STRING "Check Drives"
+label_format_disk:  PASCAL_STRING "Format a Disk ..."
+label_erase_disk:  PASCAL_STRING "Erase a Disk ..."
+label_disk_copy:  PASCAL_STRING "Disk Copy ..."
+label_lock:  PASCAL_STRING "Lock ..."
+label_unlock:  PASCAL_STRING "Unlock ..."
+label_get_info:  PASCAL_STRING "Get Info ..."
+label_get_size:  PASCAL_STRING "Get Size ..."
+label_rename_icon:  PASCAL_STRING "Rename an Icon ..."
 
         .addr   $0006,$0001
         .addr   LAB1C,$E594,$0000,$0000,$0000,$0002
-        .addr   LAB1E,$AC8E,$0000,$0000,$0000,$0004
-        .addr   $AB23,$ACDC,$0000,$0000,$0000,$0005 ; Why is address off by 1?
-        .addr   LAB28,$AD00,$0000,$0000,$0000,$0008
+        .addr   label_file,file_menu,$0000,$0000,$0000,$0004
+        .addr   label_view,view_menu,$0000,$0000,$0000,$0005
+        .addr   label_special,special_menu,$0000,$0000,$0000,$0008
         .addr   LAB30,$E2D6,$0000,$0000,$0000,$0003
-        .addr   LAB38,$E4F2,$0000,$0000,$0000,$000C
+        .addr   LAB38,$E4F2,$0000,$0000,$0000
 
-        .addr   $0000,$0000
-
+.macro  DEFINE_MENU count
+        .word   count, 0, 0
+.endmacro
 .macro  DEFINE_MENU_ITEM saddr, shortcut1, shortcut2
         .if .paramcount > 1
         .word   1
@@ -12147,42 +12148,44 @@ LAC31:  PASCAL_STRING "Rename an Icon ..."
         .addr   $0040, $0013, $0000
 .endmacro
 
-        DEFINE_MENU_ITEM LAB41, 'F', 'f'
+file_menu:
+        DEFINE_MENU 12
+        DEFINE_MENU_ITEM label_new_folder, 'F', 'f'
         DEFINE_MENU_SEPARATOR
-        DEFINE_MENU_ITEM LAB50, 'O', 'o'
-        DEFINE_MENU_ITEM LAB55, 'C', 'c'
-        DEFINE_MENU_ITEM LAB5B, 'B', 'b'
-        DEFINE_MENU_ITEM LAB65, 'A', 'a'
+        DEFINE_MENU_ITEM label_open, 'O', 'o'
+        DEFINE_MENU_ITEM label_close, 'C', 'c'
+        DEFINE_MENU_ITEM label_close_all, 'B', 'b'
+        DEFINE_MENU_ITEM label_select_all, 'A', 'a'
         DEFINE_MENU_SEPARATOR
-        DEFINE_MENU_ITEM LAB70, 'Y', 'y'
-        DEFINE_MENU_ITEM LAB80, 'D', 'd'
+        DEFINE_MENU_ITEM label_copy_file, 'Y', 'y'
+        DEFINE_MENU_ITEM label_delete_file, 'D', 'd'
         DEFINE_MENU_SEPARATOR
-        DEFINE_MENU_ITEM LAB92, 'E', 'e'
-        DEFINE_MENU_ITEM LAB98, 'Q', 'q'
+        DEFINE_MENU_ITEM label_eject, 'E', 'e'
+        DEFINE_MENU_ITEM label_quit, 'Q', 'q'
 
-        .addr   $0005,$0000,$0000
+view_menu:
+        DEFINE_MENU 5
+        DEFINE_MENU_ITEM label_by_icon, 'J', 'j'
+        DEFINE_MENU_ITEM label_by_name, 'N', 'n'
+        DEFINE_MENU_ITEM label_by_date, 'T', 't'
+        DEFINE_MENU_ITEM label_by_size, 'K', 'k'
+        DEFINE_MENU_ITEM label_by_type, 'L', 'l'
 
-        DEFINE_MENU_ITEM LAB9D, 'J', 'j'
-        DEFINE_MENU_ITEM LABA5, 'N', 'n'
-        DEFINE_MENU_ITEM LABAD, 'T', 't'
-        DEFINE_MENU_ITEM LABB5, 'K', 'k'
-        DEFINE_MENU_ITEM LABBD, 'L', 'l'
-
-        .addr   $000D,$0000,$0000
-
-        DEFINE_MENU_ITEM LABC5
+special_menu:
+        DEFINE_MENU 13
+        DEFINE_MENU_ITEM label_check_drives
         DEFINE_MENU_SEPARATOR
-        DEFINE_MENU_ITEM LABD2, 'S', 's'
-        DEFINE_MENU_ITEM LABE4, 'Z', 'z'
-        DEFINE_MENU_ITEM LABF5
+        DEFINE_MENU_ITEM label_format_disk, 'S', 's'
+        DEFINE_MENU_ITEM label_erase_disk, 'Z', 'z'
+        DEFINE_MENU_ITEM label_disk_copy
         DEFINE_MENU_SEPARATOR
-        DEFINE_MENU_ITEM LAC03
-        DEFINE_MENU_ITEM LAC0C
+        DEFINE_MENU_ITEM label_lock
+        DEFINE_MENU_ITEM label_unlock
         DEFINE_MENU_SEPARATOR
-        DEFINE_MENU_ITEM LAC17, 'I', 'i'
-        DEFINE_MENU_ITEM LAC24
+        DEFINE_MENU_ITEM label_get_info, 'I', 'i'
+        DEFINE_MENU_ITEM label_get_size
         DEFINE_MENU_SEPARATOR
-        DEFINE_MENU_ITEM LAC31
+        DEFINE_MENU_ITEM label_rename_icon
 
         .addr   $0000,$0000
 
