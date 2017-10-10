@@ -12102,46 +12102,75 @@ LAAB8:
         .byte   px(%0000000),PX(%1111111),PX(%1111111),PX(%1111111),px(%0000000)
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
 
-LAB1C:  PASCAL_STRING A2D_GLYPH_CAPPLE
-label_file:  PASCAL_STRING "File"
-label_view:  PASCAL_STRING "View"
-label_special:  PASCAL_STRING "Special"
-label_startup:  PASCAL_STRING "Startup"
-label_selector:  PASCAL_STRING "Selector"
+label_apple:
+        PASCAL_STRING A2D_GLYPH_CAPPLE
+label_file:
+        PASCAL_STRING "File"
+label_view:
+        PASCAL_STRING "View"
+label_special:
+        PASCAL_STRING "Special"
+label_startup:
+        PASCAL_STRING "Startup"
+label_selector:
+        PASCAL_STRING "Selector"
 
-label_new_folder:  PASCAL_STRING "New Folder ..."
-label_open:  PASCAL_STRING "Open"
-label_close:  PASCAL_STRING "Close"
-label_close_all:  PASCAL_STRING "Close All"
-label_select_all:  PASCAL_STRING "Select All"
-label_copy_file:  PASCAL_STRING "Copy a File ..."
-label_delete_file:  PASCAL_STRING "Delete a File ..."
-label_eject:  PASCAL_STRING "Eject"
-label_quit:  PASCAL_STRING "Quit"
+label_new_folder:
+        PASCAL_STRING "New Folder ..."
+label_open:
+        PASCAL_STRING "Open"
+label_close:
+        PASCAL_STRING "Close"
+label_close_all:
+        PASCAL_STRING "Close All"
+label_select_all:
+        PASCAL_STRING "Select All"
+label_copy_file:
+        PASCAL_STRING "Copy a File ..."
+label_delete_file:
+        PASCAL_STRING "Delete a File ..."
+label_eject:
+        PASCAL_STRING "Eject"
+label_quit:
+        PASCAL_STRING "Quit"
 
-label_by_icon:  PASCAL_STRING "By Icon"
-label_by_name:  PASCAL_STRING "By Name"
-label_by_date:  PASCAL_STRING "By Date"
-label_by_size:  PASCAL_STRING "By Size"
-label_by_type:  PASCAL_STRING "By Type"
+label_by_icon:
+        PASCAL_STRING "By Icon"
+label_by_name:
+        PASCAL_STRING "By Name"
+label_by_date:
+        PASCAL_STRING "By Date"
+label_by_size:
+        PASCAL_STRING "By Size"
+label_by_type:
+        PASCAL_STRING "By Type"
 
-label_check_drives:  PASCAL_STRING "Check Drives"
-label_format_disk:  PASCAL_STRING "Format a Disk ..."
-label_erase_disk:  PASCAL_STRING "Erase a Disk ..."
-label_disk_copy:  PASCAL_STRING "Disk Copy ..."
-label_lock:  PASCAL_STRING "Lock ..."
-label_unlock:  PASCAL_STRING "Unlock ..."
-label_get_info:  PASCAL_STRING "Get Info ..."
-label_get_size:  PASCAL_STRING "Get Size ..."
-label_rename_icon:  PASCAL_STRING "Rename an Icon ..."
+label_check_drives:
+        PASCAL_STRING "Check Drives"
+label_format_disk:
+        PASCAL_STRING "Format a Disk ..."
+label_erase_disk:
+        PASCAL_STRING "Erase a Disk ..."
+label_disk_copy:
+        PASCAL_STRING "Disk Copy ..."
+label_lock:
+        PASCAL_STRING "Lock ..."
+label_unlock:
+        PASCAL_STRING "Unlock ..."
+label_get_info:
+        PASCAL_STRING "Get Info ..."
+label_get_size:
+        PASCAL_STRING "Get Size ..."
+label_rename_icon:
+        PASCAL_STRING "Rename an Icon ..."
 
-        .addr   $0006,$0001
-        .addr   LAB1C,$E594,$0000,$0000,$0000,$0002
-        .addr   label_file,file_menu,$0000,$0000,$0000,$0004
-        .addr   label_view,view_menu,$0000,$0000,$0000,$0005
-        .addr   label_special,special_menu,$0000,$0000,$0000,$0008
-        .addr   label_startup,$E2D6,$0000,$0000,$0000,$0003
-        .addr   label_selector,$E4F2,$0000,$0000,$0000
+LAC44:  .word   6
+        .addr   1, label_apple, apple_menu, 0,0,0
+        .addr   2, label_file, file_menu, 0,0,0
+        .addr   4, label_view, view_menu, 0,0,0
+        .addr   5, label_special, special_menu, 0,0,0
+        .addr   8, label_startup, startup_menu, 0,0,0
+        .addr   3, label_selector, selector_menu, 0,0,0
 
 .macro  DEFINE_MENU count
         .word   count, 0, 0
@@ -12150,13 +12179,10 @@ label_rename_icon:  PASCAL_STRING "Rename an Icon ..."
         .if .paramcount > 1
         .word   1
         .byte   shortcut1
+        .byte   shortcut2
         .else
         .word   0
         .byte   0
-        .endif
-        .if .paramcount > 2
-        .byte   shortcut2
-        .else
         .byte   0
         .endif
         .addr   saddr
@@ -12231,107 +12257,104 @@ special_menu:
         .byte   $00,$8A,$01,$2A,$00,$41,$00,$2B
         .byte   $00,$8A,$01,$32,$00
 
-        PASCAL_STRING "Cancel        Esc"
-        PASCAL_STRING " Yes"
-        PASCAL_STRING " No"
-        PASCAL_STRING " All"
-        PASCAL_STRING "Source filename:"
-        PASCAL_STRING "Destination filename:"
+LAE96:  PASCAL_STRING "Cancel        Esc"
+LAEA8:  PASCAL_STRING " Yes"
+LAEAD:  PASCAL_STRING " No"
+LAEB1:  PASCAL_STRING " All"
+LAEB6:  PASCAL_STRING "Source filename:"
+LAEC7:  PASCAL_STRING "Destination filename:"
 
         .byte   $04,$00,$02,$00
         .byte   $8C,$01,$6C,$00,$05,$00,$03,$00
         .byte   $8B,$01,$6B,$00
 
-        PASCAL_STRING "Apple II DeskTop"
-        PASCAL_STRING "Copyright Apple Computer Inc., 1986"
-        PASCAL_STRING "Copyright Version Soft, 1985 - 1986"
-        PASCAL_STRING "All Rights Reserved"
-        PASCAL_STRING "Authors: Stephane Cavril, Bernard Gallet, Henri Lamiraux"
-        PASCAL_STRING "Richard Danais and Luc Barthelet"
-        PASCAL_STRING "With thanks to: A. Gerard, J. Gerber, P. Pahl, J. Bernard"
-        PASCAL_STRING "November 26, 1986"
-        PASCAL_STRING "Version 1.1"
+LAEED:  PASCAL_STRING "Apple II DeskTop"
+LAEFE:  PASCAL_STRING "Copyright Apple Computer Inc., 1986"
+LAF22:  PASCAL_STRING "Copyright Version Soft, 1985 - 1986"
+LAF46:  PASCAL_STRING "All Rights Reserved"
+LAF5A:  PASCAL_STRING "Authors: Stephane Cavril, Bernard Gallet, Henri Lamiraux"
+LAF93:  PASCAL_STRING "Richard Danais and Luc Barthelet"
+LAFB4:  PASCAL_STRING "With thanks to: A. Gerard, J. Gerber, P. Pahl, J. Bernard"
+LAFEE:  PASCAL_STRING "November 26, 1986"
+LB000:  PASCAL_STRING "Version 1.1"
 
-        PASCAL_STRING "Copy ..."
-        PASCAL_STRING "Now Copying "
-        PASCAL_STRING "from:"
-        PASCAL_STRING "to :"
-        PASCAL_STRING "Files remaining to copy: "
-        PASCAL_STRING "That file already exists. Do you want to write over it ?"
-        PASCAL_STRING "This file is too large to copy, click OK to continue."
+LB00C:  PASCAL_STRING "Copy ..."
+LB015:  PASCAL_STRING "Now Copying "
+LB022:  PASCAL_STRING "from:"
+LB028:  PASCAL_STRING "to :"
+LB02D:  PASCAL_STRING "Files remaining to copy: "
+LB047:  PASCAL_STRING "That file already exists. Do you want to write over it ?"
+LB080:  PASCAL_STRING "This file is too large to copy, click OK to continue."
 
         .byte   $6E,$00,$23
         .byte   $00,$AA,$00,$3B,$00
 
-        PASCAL_STRING "Delete ..."
-        PASCAL_STRING "Click OK to delete:"
-        PASCAL_STRING "Clicking OK will immediately empty the trash of:"
-        PASCAL_STRING "File:"
-        PASCAL_STRING "Files remaining to be deleted:"
-        PASCAL_STRING "This file is locked, do you want to delete it anyway ?"
+LB0BE:  PASCAL_STRING "Delete ..."
+LB0C9:  PASCAL_STRING "Click OK to delete:"
+LB0DD:  PASCAL_STRING "Clicking OK will immediately empty the trash of:"
+LB10E:  PASCAL_STRING "File:"
+LB114:  PASCAL_STRING "Files remaining to be deleted:"
+LB133:  PASCAL_STRING "This file is locked, do you want to delete it anyway ?"
 
         .byte   $91,$00,$3B,$00,$C8,$00,$3B,$00,$2C,$01,$3B,$00
 
-        PASCAL_STRING "New Folder ..."
-        PASCAL_STRING "in:"
-        PASCAL_STRING "Enter the folder name:"
-        PASCAL_STRING "Rename an Icon ..."
-	PASCAL_STRING "Rename: "
-        PASCAL_STRING "New name:"
-        PASCAL_STRING "Get Info ..."
-        PASCAL_STRING "Name"
-        PASCAL_STRING "Locked"
-        PASCAL_STRING "Size"
-        PASCAL_STRING "Creation date"
-        PASCAL_STRING "Last modification"
-        PASCAL_STRING "Type"
-        PASCAL_STRING "Write protected"
-        PASCAL_STRING "Blocks free/size"
-        PASCAL_STRING ": "
-
+LB176:  PASCAL_STRING "New Folder ..."
+LB185:  PASCAL_STRING "in:"
+LB189:  PASCAL_STRING "Enter the folder name:"
+LB1A0:  PASCAL_STRING "Rename an Icon ..."
+LB1B3:	PASCAL_STRING "Rename: "
+LB1BC:  PASCAL_STRING "New name:"
+LB1C6:  PASCAL_STRING "Get Info ..."
+LB1D3:  PASCAL_STRING "Name"
+LB1D8:  PASCAL_STRING "Locked"
+LB1DF:  PASCAL_STRING "Size"
+LB1E4:  PASCAL_STRING "Creation date"
+LB1F2:  PASCAL_STRING "Last modification"
+LB204:  PASCAL_STRING "Type"
+LB209:  PASCAL_STRING "Write protected"
+LB219:  PASCAL_STRING "Blocks free/size"
+LB22A:  PASCAL_STRING ": "
 
         .byte   $A0,$00,$3B,$00
         .byte   $91,$00,$3B,$00,$C8,$00,$3B,$00
         .byte   $B9,$00,$3B,$00,$CD,$00,$3B,$00
         .byte   $C3,$00,$3B,$00
 
-        PASCAL_STRING "Format a Disk ..."
-        PASCAL_STRING "Select the location where the disk is to be formatted"
-        PASCAL_STRING "Enter the name of the new volume:"
-        PASCAL_STRING "Do you want to format "
-        PASCAL_STRING "Formatting the disk...."
-        PASCAL_STRING "Formatting error. Check drive, then click OK to try again."
-        PASCAL_STRING "Erase a Disk ..."
-        PASCAL_STRING "Select the location where the disk is to be erased"
-        PASCAL_STRING "Do you want to erase "
-        PASCAL_STRING "Erasing the disk...."
-        PASCAL_STRING "Erasing error. Check drive, then click OK to try again."
-        PASCAL_STRING "Unlock ..."
-
-        PASCAL_STRING "Click OK to unlock "
-        PASCAL_STRING "Files remaining to be unlocked: "
-        PASCAL_STRING "Lock ..."
-        PASCAL_STRING "Click OK to lock "
-        PASCAL_STRING "Files remaining to be locked: "
-
-        PASCAL_STRING "Get Size ..."
-        PASCAL_STRING "Number of files"
-        PASCAL_STRING "Blocks used on disk"
+LB245:  PASCAL_STRING "Format a Disk ..."
+LB257:  PASCAL_STRING "Select the location where the disk is to be formatted"
+LB28D:  PASCAL_STRING "Enter the name of the new volume:"
+LB2AF:  PASCAL_STRING "Do you want to format "
+LB2C6:  PASCAL_STRING "Formatting the disk...."
+LB2DE:  PASCAL_STRING "Formatting error. Check drive, then click OK to try again."
+LB319:  PASCAL_STRING "Erase a Disk ..."
+LB32A:  PASCAL_STRING "Select the location where the disk is to be erased"
+LB35D:  PASCAL_STRING "Do you want to erase "
+LB373:  PASCAL_STRING "Erasing the disk...."
+LB388:  PASCAL_STRING "Erasing error. Check drive, then click OK to try again."
+LB3C0:  PASCAL_STRING "Unlock ..."
+LB3CB:  PASCAL_STRING "Click OK to unlock "
+LB3DF:  PASCAL_STRING "Files remaining to be unlocked: "
+LB400:  PASCAL_STRING "Lock ..."
+LB409:  PASCAL_STRING "Click OK to lock "
+LB41B:  PASCAL_STRING "Files remaining to be locked: "
+LB43A:  PASCAL_STRING "Get Size ..."
+LB447:  PASCAL_STRING "Number of files"
+LB457:  PASCAL_STRING "Blocks used on disk"
 
         .byte   $6E,$00,$23,$00,$6E,$00,$2B,$00
 
-        PASCAL_STRING "DownLoad ..."
-        PASCAL_STRING "The RAMCard is full. The copy was not completed."
-        PASCAL_STRING " "
-        PASCAL_STRING "Warning !"
-        PASCAL_STRING "Please insert the system disk."
-        PASCAL_STRING "The Selector list is full. You must delete an entry"
-        PASCAL_STRING "before you can add new entries."
-        PASCAL_STRING "A window must be closed before opening this new catalog."
+LB473:  PASCAL_STRING "DownLoad ..."
+LB480:  PASCAL_STRING "The RAMCard is full. The copy was not completed."
+LB4B1:  PASCAL_STRING " "
+LB4B3:  PASCAL_STRING "Warning !"
+LB4BD:  PASCAL_STRING "Please insert the system disk."
+LB4DC:  PASCAL_STRING "The Selector list is full. You must delete an entry"
+LB50C:  PASCAL_STRING "before you can add new entries."
+LB530:  PASCAL_STRING "A window must be closed before opening this new catalog."
 
-        PASCAL_STRING "There are too many windows open on the desktop !"
-        PASCAL_STRING "Do you want to save the new Selector list"
-        PASCAL_STRING "on the system disk ?"
+LB569:  PASCAL_STRING "There are too many windows open on the desktop !"
+LB59A:  PASCAL_STRING "Do you want to save the new Selector list"
+LB5C4:  PASCAL_STRING "on the system disk ?"
 
 
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -13689,7 +13712,7 @@ LD760:  PASCAL_STRING "Run list"
         .addr   sd0s, sd1s, sd2s, sd3s, sd4s, sd5s, sd6s
         .addr   sd7s, sd8s, sd9s, sd10s, sd11s, sd12s, sd13s
 
-        .addr   LE4F2
+        .addr   selector_menu
 
         ;; Buffer for Run List entries
 run_list_entries:
@@ -13700,7 +13723,8 @@ LDE9F:  .byte   $00
 LDEA0:  .res    256, 0
         .byte   $00
 
-LDFA1:  .addr   $0000,win1,win2,win3,win4,win5,win6,win7,win8
+        ;; Buffer for desktop windows
+LDFA1:  .addr   0,win1,win2,win3,win4,win5,win6,win7,win8
         .addr   $0000
         .repeat 8,i
         .addr   buf2+i*$41
@@ -13729,53 +13753,31 @@ LDFA1:  .addr   $0000,win1,win2,win3,win4,win5,win6,win7,win8
 
         .addr   str_all
 
-        .byte   $40,$00,$13,$00,$00,$00
-        .byte   0,0,0,0
-        .addr   sd0s
-        .byte   0,0,0,0
-        .addr   sd1s
-        .byte   0,0,0,0
-        .addr   sd2s
-        .byte   0,0,0,0
-        .addr   sd3s
-        .byte   0,0,0,0
-        .addr   sd4s
-        .byte   0,0,0,0
-        .addr   sd5s
-        .byte   0,0,0,0
-        .addr   sd6s
-        .byte   0,0,0,0
-        .addr   sd7s
-        .byte   0,0,0,0
-        .addr   sd8s
-        .byte   0,0,0,0
-        .addr   sd9s
-        .byte   0,0,0,0
-        .addr   sd10s
-        .byte   0,0,0,0
-        .addr   sd11s
-        .byte   0,0,0,0
-        .addr   sd12s
-        .byte   0,0,0,0
-        .addr   sd13s
+LE27C:  DEFINE_MENU_SEPARATOR
+        DEFINE_MENU_ITEM sd0s
+        DEFINE_MENU_ITEM sd1s
+        DEFINE_MENU_ITEM sd2s
+        DEFINE_MENU_ITEM sd3s
+        DEFINE_MENU_ITEM sd4s
+        DEFINE_MENU_ITEM sd5s
+        DEFINE_MENU_ITEM sd6s
+        DEFINE_MENU_ITEM sd7s
+        DEFINE_MENU_ITEM sd8s
+        DEFINE_MENU_ITEM sd9s
+        DEFINE_MENU_ITEM sd10s
+        DEFINE_MENU_ITEM sd11s
+        DEFINE_MENU_ITEM sd12s
+        DEFINE_MENU_ITEM sd13s
 
-        .byte   $07,$00,$00,$00
-        .byte   $00,$00
-        .byte   0,0,0,0
-        .addr   s00
-        .byte   0,0,0,0
-        .addr   s01
-        .byte   0,0,0,0
-        .addr   s02
-        .byte   0,0,0,0
-        .addr   s03
-        .byte   0,0,0,0
-        .addr   s04
-        .byte   0,0,0,0
-        .addr   s05
-        .byte   0,0,0,0
-
-        .addr   $E47C
+startup_menu:
+        DEFINE_MENU 7
+        DEFINE_MENU_ITEM s00
+        DEFINE_MENU_ITEM s01
+        DEFINE_MENU_ITEM s02
+        DEFINE_MENU_ITEM s03
+        DEFINE_MENU_ITEM s04
+        DEFINE_MENU_ITEM s05
+        DEFINE_MENU_ITEM s06
 
 str_all:PASCAL_STRING "All"
 
@@ -13810,9 +13812,8 @@ s06:    PASCAL_STRING "Slot 0 "
         PASCAL_STRING "RAMCard Slot x      "
         PASCAL_STRING "Slot    drive       "
 
-LE4F2:
-        .byte   $05,$00,$00,$00,$00,$00
-
+selector_menu:
+        DEFINE_MENU 5
         DEFINE_MENU_ITEM label_add
         DEFINE_MENU_ITEM label_edit
         DEFINE_MENU_ITEM label_del
@@ -13836,30 +13837,21 @@ label_del:
 label_run:
         PASCAL_STRING "Run an Entry ..."
 
-        .byte   $01,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00
-        .addr   str_about
-        .byte   $40,$00
-        .byte   $13,$00,$00,$00
+        ;; Apple Menu
+apple_menu:
+        DEFINE_MENU 1
+        DEFINE_MENU_ITEM label_about
+        DEFINE_MENU_SEPARATOR
+        DEFINE_MENU_ITEM buf + 0 * $10
+        DEFINE_MENU_ITEM buf + 1 * $10
+        DEFINE_MENU_ITEM buf + 2 * $10
+        DEFINE_MENU_ITEM buf + 3 * $10
+        DEFINE_MENU_ITEM buf + 4 * $10
+        DEFINE_MENU_ITEM buf + 5 * $10
+        DEFINE_MENU_ITEM buf + 6 * $10
+        DEFINE_MENU_ITEM buf + 7 * $10
 
-        .byte   0,0,0,0
-        .addr   buf
-        .byte   0,0,0,0
-        .addr   buf + $10
-        .byte   0,0,0,0
-        .addr   buf + $20
-        .byte   0,0,0,0
-        .addr   buf + $30
-        .byte   0,0,0,0
-        .addr   buf + $40
-        .byte   0,0,0,0
-        .addr   buf + $50
-        .byte   0,0,0,0
-        .addr   buf + $60
-        .byte   0,0,0,0
-        .addr   buf + $70
-
-str_about:
+label_about:
         PASCAL_STRING "About Apple II DeskTop ... "
 
 buf:    .res    $80, 0
@@ -13966,6 +13958,8 @@ LEC25:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00
 
         .res    147, 0
+
+;;; ==================================================
 
         .org $FB00
 

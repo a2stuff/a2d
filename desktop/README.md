@@ -23,11 +23,21 @@ The file is broken down into multiple segments:
   * main $BF00-$BFFF is ProDOS buffers
   * main $C000-$CFFF is I/O space
   * main $D000-$FFFF is ProDOS
-* segment 5: _TBD_ - 38k so must be further subdivided.
+* segment 5: _TBD_ - 38k so must be further subdivided. Disk Copy???
 
-Much of the space is data:
+## Structure
 
-* API jump table at $40E5, param details at $4184
+### GUI Library "A2D"
+
+AUX $4000-$8DFF is the GUI library used for the DeskTop application
+and (presumably) for disk copy and Selector apps (TBD).
+
+Entry point is $4000 with a ProDOS MLI-style calling convention
+
 * Font is at $8800
 
-Icon bitmaps are at $FF00-ish (.SYSTEM file is $FF06), stride 5, $22x$11px
+### "DeskTop" Application
+
+AUX $8E00-$FFFF (with hole at $C000-$CFFF for I/O and at $ED00-$FAFF for
+data buffer) is the DeskTop application itself, with desktop and file
+icons, menus, dialogs, and so on.
