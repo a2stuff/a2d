@@ -20,19 +20,12 @@ function asmseg {
 
 
 #daseg s0_loader 2000
-#asmseg s0_loader 2000
+#asmseg s0_loader
 
-# s1 has been disassembled by hand ; daseg s1_aux1 4000
-asmseg s1_aux1 4000
-
-# s2 has been disassembled by hand
-asmseg s2_aux2 D000
-
-# s3 has been disassembled by hand
-asmseg s3_aux3 D000
+asmseg s123_aux
 
 #daseg s4_main1 4000
-#asmseg s4_main1 4000
+#asmseg s4_main1
 
 #daseg 12680_1BCDF
 #asmseg 12680_1BCDF
