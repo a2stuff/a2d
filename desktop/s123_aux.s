@@ -7,6 +7,12 @@
         .include "../inc/mouse.inc"
         .include "../desk.acc/a2d.inc"
 
+.proc a2d
+
+;;; ==================================================
+;;; A2D - the GUI library
+;;; ==================================================
+
         .org $4000
 
 .macro A2D_RELAY2_CALL call, addr
@@ -96,7 +102,7 @@
 ;;; A2D
 
 .proc a2d_dispatch
-        .assert * = $4000, error, "A2D entry point must be at $4000"
+        .assert * = A2D, error, "A2D entry point must be at $4000"
 
         lda     LOWSCR
         sta     SET80COL
@@ -8793,7 +8799,7 @@ L8672:  pha
 L867B:  lda     online_params_buffer
         beq     L8672
         jsr     L8388           ; ??? This is the middle of an instruction?
-        jsr     LD05E
+        jsr     desktop_LD05E
         ldy     L8738
         sta     $D464,y
         asl     a
@@ -9145,9 +9151,15 @@ glyph_bitmaps:
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00
+.endproc
+
+.proc desktop
+;;; ==================================================
+;;; DeskTop - the actual application
+;;; ==================================================
 
         ;; Entry point for "DESKTOP"
-        .assert * = $8E00, error, "DESKTOP entry point must be at $8E00"
+        .assert * = DESKTOP, error, "DESKTOP entry point must be at $8E00"
         jmp     DESKTOP_DIRECT
 
 L8E03:  .byte   $08,$00
@@ -9199,8 +9211,7 @@ height: .word   0
 left:   .word   0
 top:    .word   0
 addr:   .addr   0
-stride: .byte   0
-        .byte   0               ; ???
+stride: .word   0
 hoff:   .word   0
 voff:   .word   0
 .endproc
@@ -10942,7 +10953,7 @@ LA010:  lsr     a
         sta     set_pos_params2::ycoord+1
         lda     set_pos_params2::ycoord
         clc
-        adc     glyph_height
+        adc     a2d::glyph_height
         sta     set_pos_params2::ycoord
         lda     set_pos_params2::ycoord+1
         adc     #$00
@@ -11105,7 +11116,7 @@ LA191:  lda     ($06),y
         sta     L8E14
         sta     L8E20
         sta     L8E24
-        lda     glyph_height
+        lda     a2d::glyph_height
         clc
         adc     L8E0F
         sta     L8E17
@@ -12085,8 +12096,8 @@ LAB1C:  PASCAL_STRING A2D_GLYPH_CAPPLE
 label_file:  PASCAL_STRING "File"
 label_view:  PASCAL_STRING "View"
 label_special:  PASCAL_STRING "Special"
-LAB30:  PASCAL_STRING "Startup"
-LAB38:  PASCAL_STRING "Selector"
+label_startup:  PASCAL_STRING "Startup"
+label_selector:  PASCAL_STRING "Selector"
 
 label_new_folder:  PASCAL_STRING "New Folder ..."
 label_open:  PASCAL_STRING "Open"
@@ -12119,8 +12130,8 @@ label_rename_icon:  PASCAL_STRING "Rename an Icon ..."
         .addr   label_file,file_menu,$0000,$0000,$0000,$0004
         .addr   label_view,view_menu,$0000,$0000,$0000,$0005
         .addr   label_special,special_menu,$0000,$0000,$0000,$0008
-        .addr   LAB30,$E2D6,$0000,$0000,$0000,$0003
-        .addr   LAB38,$E4F2,$0000,$0000,$0000
+        .addr   label_startup,$E2D6,$0000,$0000,$0000,$0003
+        .addr   label_selector,$E4F2,$0000,$0000,$0000
 
 .macro  DEFINE_MENU count
         .word   count, 0, 0
@@ -13546,11 +13557,12 @@ next:   .addr   0
 
         .byte   $66,$01,$64,$00,$00,$04,$00,$02,$00,$5A,$01,$6C,$00,$05,$00,$03,$00,$59,$01,$6B,$00,$06,$00,$16,$00,$58,$01,$16,$00,$06,$00,$59,$00,$58,$01,$59,$00,$D2,$00,$5C,$00,$36,$01,$67,$00,$28,$00,$5C,$00,$8C,$00,$67,$00,$D7,$00,$66,$00,$2D,$00,$66,$00,$82,$00,$07,$00,$DC,$00,$13,$00
 
-        PASCAL_STRING "Add an Entry ..."
-        PASCAL_STRING "Edit an Entry ..."
-        PASCAL_STRING "Delete an Entry ..."
-        PASCAL_STRING "Run an Entry ..."
-        PASCAL_STRING "Run list"
+LD718:  PASCAL_STRING "Add an Entry ..."
+LD729:  PASCAL_STRING "Edit an Entry ..."
+LD73B:  PASCAL_STRING "Delete an Entry ..."
+LD74F:  PASCAL_STRING "Run an Entry ..."
+
+LD760:  PASCAL_STRING "Run list"
         PASCAL_STRING "Enter the full pathname of the run list file:"
         PASCAL_STRING "Enter the name (14 characters max)  you wish to appear in the run list"
         PASCAL_STRING "Add a new entry to the:"
@@ -13658,6 +13670,8 @@ next:   .addr   0
 
         .addr   LE4F2
 
+        ;; Buffer for Run List entries
+run_list_entries:
         .res    896, 0
 
         .byte   $00
@@ -13778,30 +13792,27 @@ s06:    PASCAL_STRING "Slot 0 "
 LE4F2:
         .byte   $05,$00,$00,$00,$00,$00
 
-        .byte   $00,$00,$00,$00
-        .addr   str_add
-        .byte   $00,$00,$00,$00
-        .addr   str_edit
-        .byte   $00,$00,$00,$00
-        .addr   str_del
-        .byte   $01,$00,$30,$30
-        .addr   str_run
-        .byte   $40,$00
-        .byte   $13,$00,$00,$00,$01,$00,$31,$31
-        .byte   $1E,$DB,$01,$00,$32,$32,$2E,$DB
-        .byte   $01,$00,$33,$33,$3E,$DB,$01,$00
-        .byte   $34,$34,$4E,$DB,$01,$00,$35,$35
-        .byte   $5E,$DB,$01,$00,$36,$36,$6E,$DB
-        .byte   $01,$00,$37,$37,$7E,$DB,$01,$00
-        .byte   $38,$38,$8E,$DB
+        DEFINE_MENU_ITEM label_add
+        DEFINE_MENU_ITEM label_edit
+        DEFINE_MENU_ITEM label_del
+        DEFINE_MENU_ITEM label_run, '0', '0'
+        DEFINE_MENU_SEPARATOR
+        DEFINE_MENU_ITEM run_list_entries + 0 * $10, '1', '1'
+        DEFINE_MENU_ITEM run_list_entries + 1 * $10, '2', '2'
+        DEFINE_MENU_ITEM run_list_entries + 2 * $10, '3', '3'
+        DEFINE_MENU_ITEM run_list_entries + 3 * $10, '4', '4'
+        DEFINE_MENU_ITEM run_list_entries + 4 * $10, '5', '5'
+        DEFINE_MENU_ITEM run_list_entries + 5 * $10, '6', '6'
+        DEFINE_MENU_ITEM run_list_entries + 6 * $10, '7', '7'
+        DEFINE_MENU_ITEM run_list_entries + 7 * $10, '8', '8'
 
-str_add:
+label_add:
         PASCAL_STRING "Add an Entry ..."
-str_edit:
+label_edit:
         PASCAL_STRING "Edit an Entry ..."
-str_del:
+label_del:
         PASCAL_STRING "Delete an Entry ...      "
-str_run:
+label_run:
         PASCAL_STRING "Run an Entry ..."
 
         .byte   $01,$00,$00,$00,$00,$00
@@ -14270,3 +14281,5 @@ app_mask:
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
 
         .res    70
+.endproc
+        desktop_LD05E := desktop::LD05E
