@@ -7,6 +7,7 @@
         .include "../inc/mouse.inc"
         .include "../desk.acc/a2d.inc"
 
+
 .proc a2d
 
 ;;; ==================================================
@@ -15,17 +16,6 @@
 
         .org $4000
 
-.macro A2D_RELAY2_CALL call, addr
-        ldy     #call
-        .if .paramcount = 1
-        lda     #0
-        ldx     #0
-        .else
-        lda     #<addr
-        ldx     #>addr
-        .endif
-        jsr     A2D_RELAY2
-.endmacro
 
 ;;; ==================================================
 
@@ -8705,6 +8695,14 @@ L859C:  sta     $D409,x
         sta     $D40D
         sta     $D40F
 
+        ;; Relay for main>aux A2D call (Y=call, X,A=params addr)
+.macro A2D_RELAY_CALL call, addr
+        ldy     #call
+        lda     #<addr
+        ldx     #>addr
+        jsr     desktop_A2D_RELAY
+.endmacro
+
         A2D_RELAY_CALL A2D_SET_STATE, $D401
         rts
 
@@ -9161,6 +9159,18 @@ glyph_bitmaps:
         ;; Entry point for "DESKTOP"
         .assert * = DESKTOP, error, "DESKTOP entry point must be at $8E00"
         jmp     DESKTOP_DIRECT
+
+.macro A2D_RELAY2_CALL call, addr
+        ldy     #call
+        .if .paramcount = 1
+        lda     #0
+        ldx     #0
+        .else
+        lda     #<addr
+        ldx     #>addr
+        .endif
+        jsr     A2D_RELAY2
+.endmacro
 
 L8E03:  .byte   $08,$00
 L8E05:  .byte   $00
@@ -12328,8 +12338,9 @@ special_menu:
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$4C
-        .byte   $D7,$B9
+        .byte   $00,$00,$00,$00,$00,$00,$00
+
+LB600:  jmp     LB9D7
 
 alert_bitmap:
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
@@ -12435,14 +12446,28 @@ prompt_table:
 
 LB9C3:  .byte   $00,$00,$00,$80,$00,$80,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$80,$80,$00,$48,$8A,$48,$A0
-        .byte   $26,$A9,$00,$A2,$00,$20,$EC,$BF
-        .byte   $A0,$24,$A9,$AD,$A2,$D2,$20,$EC
-        .byte   $BF,$A0,$25,$A9,$00,$A2,$00,$20
-        .byte   $EC,$BF,$8D,$08,$C0,$8D,$82,$C0
-        .byte   $20,$DD,$FB,$8D
+        .byte   $00,$80,$80,$00
 
-        ora     #$C0
+
+LB9D7:  pha
+        txa
+        pha
+        ldy     #$26
+        lda     #0
+        ldx     #0
+        jsr     $BFEC
+        ldy     #$24
+        lda     #$AD
+        ldx     #$D2
+        jsr     $BFEC
+        ldy     #$25
+        lda     #0
+        ldx     #0
+        jsr     $BFEC
+        sta     ALTZPOFF
+        sta     ROMIN2
+        jsr     $FBDD
+        sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         ldx     #$03
@@ -13017,10 +13042,9 @@ addr:   .addr   0
 
 L87F6           := $87F6
 L8813           := $8813
-LB600           := $B600
 
-        ;; A2D call from aux>main, call in Y, params at (X,A)
-.proc LD000
+        ;; A2D call from main>aux, call in Y, params at (X,A)
+.proc A2D_RELAY
         sty     addr-1
         sta     addr
         stx     addr+1
@@ -13040,10 +13064,7 @@ LB600           := $B600
         sta     RAMRDON
         sta     RAMWRTON
         A2D_CALL A2D_SET_POS, 0, addr
-        ldy     #A2D_DRAW_TEXT
-        lda     #<text_buffer2
-        ldx     #>text_buffer2
-        jsr     A2D_RELAY
+        A2D_RELAY_CALL A2D_DRAW_TEXT, text_buffer2
         tay
         sta     RAMRDOFF
         sta     RAMWRTOFF
@@ -14283,3 +14304,4 @@ app_mask:
         .res    70
 .endproc
         desktop_LD05E := desktop::LD05E
+        desktop_A2D_RELAY := desktop::A2D_RELAY
