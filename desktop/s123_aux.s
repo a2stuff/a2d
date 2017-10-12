@@ -282,7 +282,7 @@ a2d_jump_table:
         .addr   CFG_DISPLAY_IMPL    ; $02 CFG_DISPLAY
         .addr   QUERY_SCREEN_IMPL   ; $03 QUERY_SCREEN
         .addr   SET_STATE_IMPL      ; $04 SET_STATE
-        .addr   L5EB4               ; $05
+        .addr   GET_STATE_IMPL      ; $05 GET_STATE
         .addr   SET_BOX_IMPL        ; $06 SET_BOX
         .addr   SET_FILL_MODE_IMPL  ; $07 SET_FILL_MODE
         .addr   SET_PATTERN_IMPL    ; $08 SET_PATTERN
@@ -370,7 +370,7 @@ param_lengths:
         PARAM_DEFN  1, $82, 0           ; $02
         PARAM_DEFN  0, $00, 0           ; $03 QUERY_SCREEN
         PARAM_DEFN 36, state, 0         ; $04 SET_STATE
-        PARAM_DEFN  0, $00, 0           ; $05
+        PARAM_DEFN  0, $00, 0           ; $05 GET_STATE
         PARAM_DEFN 16, state_box, 0     ; $06 SET_BOX
         PARAM_DEFN  1, state_fill, 0    ; $07 SET_FILL_MODE
         PARAM_DEFN  8, state_pattern, 0 ; $08 SET_PATTERN
@@ -3437,13 +3437,12 @@ prepare_state:
 
 ;;; ==================================================
 
-;;; $05 IMPL
-
-L5EB4:
+.proc GET_STATE_IMPL
         jsr     apply_state_to_active_state
         lda     active_state
         ldx     active_state+1
         ;;  fall through
+.endproc
 
         ;; Store result (X,A) at params
 store_xa_at_params:

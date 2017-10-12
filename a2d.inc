@@ -67,8 +67,10 @@ A2D_SET_STATE   := $04          ; Set full drawing state
         ;; .byte tmask          AND mask for text, default $7F
         ;; .addr font           A2D_DEFAULT_FONT
 
-        ;; $05 used in DeskTop but not DAs - icon click
+A2D_GET_STATE   := $05          ; Get pointer to active drawing state
         ;; (input length 0 bytes)
+        ;; (output length 2 bytes)
+        ;; .addr state          (out)
 
 A2D_SET_BOX   := $06            ; Set just the drawing box, subset of full state
         ;; (input length 16 bytes)
