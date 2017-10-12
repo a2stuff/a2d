@@ -1,31 +1,6 @@
 ;;; ==================================================
-;;; A2Desktop
+;;; A2Desktop - GUI Library
 ;;; ==================================================
-
-;;; ==================================================
-;;; Direct Calls
-
-        ;; These must be called from main memory (RAMRDOFF/RAMWRTOFF)
-JUMP_TABLE_03   := $4003        ; Enter DeskTop input loop
-JUMP_TABLE_06   := $4006        ; ???
-JUMP_TABLE_09   := $4009        ; ???
-JUMP_TABLE_0C   := $400C        ; ??? (made "items/in disk/..." redraw oddly)
-JUMP_TABLE_0F   := $400F        ; ???
-JUMP_TABLE_12   := $4012        ; ???
-JUMP_TABLE_REDRAW_ALL  := $4015 ; Redraw all windows (e.g. after a drag)
-JUMP_TABLE_18   := $4018        ; ???
-JUMP_TABLE_CLEAR_SEL   := $401E ; Clear DeskTop selection
-JUMP_TABLE_MLI  := $4021        ; ProDOS MLI call (Y=call, X,A=params addr)
-JUMP_TABLE_24   := $4024        ; ???
-JUMP_TABLE_27   := $4027        ; ???
-JUMP_TABLE_2A   := $402A        ; Just an RTS
-JUMP_TABLE_2D   := $402D        ; Draw type/size/date in non-icon views
-JUMP_TABLE_30   := $4030        ; ???
-JUMP_TABLE_33   := $4033        ; Shows "The syntax of the pathname is invalid.", hangs
-JUMP_TABLE_36   := $4036        ; ditto
-JUMP_TABLE_CUR_POINTER  := $4039 ; Changes mouse cursor to pointer
-JUMP_TABLE_CUR_WATCH    := $403C ; Changes mouse cursor to watch
-JUMP_TABLE_3F   := $403F        ; ???
 
 ;;; ==================================================
 ;;; A2D Calls
@@ -299,6 +274,10 @@ A2D_QUERY_STATE      := $3C     ; get drawing state of window
         ;; .byte id             window
         ;; .addr state          state definition to populate, like A2D_SET_STATE
 
+A2D_REDRAW_WINDOW := $3E        ; Draws window border, background, title bar, scroll bars
+        ;; (input length 1 byte)
+        ;; .byte id
+
 A2D_QUERY_TARGET   := $40
         ;; (input length 4 bytes)
         ;; .word queryx         relative to screen
@@ -430,20 +409,6 @@ A2D_DEFAULT_MSKOR       := $00
 A2D_DEFAULT_TMASK       := $7F
 
 ;;; ==================================================
-
-DESKTOP    := $8E00
-        ;; MLI-style call (jsr A2D ; .byte call ; .addr params)
-        ;; Call from AUX (RAMRDON/RAMWRTON)
-
-        ;; Implementation bounces to $93BC, uses jump table at $939E
-
-;;; This is the only known call:
-
-DESKTOP_REDRAW_ICONS := $0C     ; Repaints desktop icons
-
-        ;; $0D used at start of drag-select, $09 at end (then another $0D)
-
-;;; ==================================================
 ;;; Macros
 
 ;;; Call an A2D entry point:
@@ -453,24 +418,6 @@ DESKTOP_REDRAW_ICONS := $0C     ; Repaints desktop icons
 
 .macro  A2D_CALL    op, addr, label
         jsr A2D
-        .byte op
-
-.if .paramcount > 2
-        label := *
-.endif
-
-.if .paramcount > 1
-        .addr addr
-.else
-        .addr 0
-.endif
-.endmacro
-
-;;; ------------------------------------
-;;; Same as above, but for DESKTOP
-
-.macro  DESKTOP_CALL    op, addr, label
-        jsr DESKTOP
         .byte op
 
 .if .paramcount > 2
@@ -515,26 +462,7 @@ end:
 .define PX(bits) (((bits&$40)>>6)|((bits&$20)>>4)|((bits&$10)>>2)|(bits&$8)|((bits&$4)<<2)|((bits&$2)<<4)|((bits&$1)<<6)|$80)
 
 ;;; ==================================================
-;;; DeskTop Internals
-
-        ;; These are DeskTop internals, but it appears there is no
-        ;; API for getting the selected file.
-        file_selected := $DF21  ; 0 if no selection, 1 otherwise
-        path_index := $DF20     ; index of selected window (used to get prefix)
-        path_table := $DFB3     ; window address table
-        ;; each entry is 65 bytes long
-        ;;      length-prefixed path string (no trailing /)
-        file_index := $DF22     ; index of selected file (global, not w/in window)
-        file_table := $DD9F     ; file address table
-        ;; each entry is 27 bytes long
-        ;;      .byte ??
-        ;;      .byte ??
-        ;;      .byte type/icon (bits 4,5,6 clear = directory)
-        ;;      .word iconx     (pixels)
-        ;;      .word icony     (pixels)
-        ;;      .byte ??
-        ;;      .byte ??
-        ;;      .byte len, name (length-prefixed, spaces before/after; 17 byte buffer)
+;;; Internals
 
         A2D_DEFAULT_FONT := $8800
 

@@ -1,11 +1,14 @@
-        .setcpu "65C02"
-        .org $800
+        .setcpu "6502"
 
         .include "apple2.inc"
         .include "../inc/ascii.inc"
         .include "../inc/prodos.inc"
         .include "../inc/auxmem.inc"
-        .include "a2d.inc"
+
+        .include "../a2d.inc"
+        .include "../desktop.inc" ; needed to get/clear DeskTop selection
+
+        .org $800
 
 start:  jmp     copy2aux
 

@@ -1,6 +1,6 @@
 .org $4000
 ; da65 V2.16 - Git f5e9b401
-; Created:    2017-09-27 19:43:21
+; Created:    2017-10-11 20:36:26
 ; Input file: orig/DESKTOP2_s4_main1
 ; Page:       1
 
@@ -11,17 +11,13 @@ L0000           := $0000
 L0002           := $0002
 L0006           := $0006
 L0020           := $0020
-L0520           := $0520
 L0800           := $0800
-L0A20           := $0A20
 L0CB8           := $0CB8
 L0CD7           := $0CD7
 L0CF9           := $0CF9
 L0D14           := $0D14
 L1C00           := $1C00
-L2020           := $2020
 L2710           := $2710
-L3931           := $3931
 MLI             := $BF00
 RAMRDOFF        := $C002
 RAMRDON         := $C003
@@ -188,7 +184,7 @@ L4100:  jsr     L48F0
         lda     $D208
         cmp     #$06
         bne     L412B
-L410A:  jsr     L48E6
+        jsr     L48E6
 L410D:  jsr     L4113
         jmp     L4100
 
@@ -4696,7 +4692,7 @@ L6556:  bit     L5B1B
         jsr     L6E6E
 L655E:  ldy     #$11
         lda     #$1D
-L6562:  ldx     #$D2
+        ldx     #$D2
         jsr     LD000
         jsr     L4510
         jmp     L6C19
@@ -6248,7 +6244,7 @@ L724E:  lda     ($08),y
         lda     ($08),y
         sta     $1F00,x
         inx
-L7261:  ldy     #$25
+        ldy     #$25
         lda     ($08),y
         sta     $1F00,x
         inx
@@ -6755,7 +6751,7 @@ L7666:  sta     L7630,x
         dex
         bpl     L7666
         lda     $E6BE
-L766F:  ldx     $E1F1
+        ldx     $E1F1
         dex
 L7673:  cmp     $E1F2,x
         beq     L767C
@@ -7095,8 +7091,7 @@ L78EF:  lda     $D21D
         ldx     #$EB
         jsr     LD000
         ldy     #$10
-        .byte   $A9
-L7961:  .byte   $C2
+        lda     #$C2
         ldx     #$EB
         jsr     LD000
         lda     $D21F
@@ -8313,97 +8308,40 @@ L83C7:  tay
         ldx     #$84
         jmp     L84A4
 
-L83DB:  brk
-L83DC:  brk
-L83DD:  brk
+L83DB:  .byte   $00
+L83DC:  .byte   $00
+L83DD:  .byte   $00
 L83DE:  .byte   $03
 L83DF:  .byte   $20
 L83E0:  .byte   $20
 L83E1:  .byte   $20
 L83E2:  .byte   $FC
-L83E3:  .byte   $83
-        asl     $84
-        ora     ($84),y
-        trb     $2784
-        sty     $32
-        sty     $3D
-        sty     $48
-        sty     $53
-        sty     $5E
-        sty     $69
-        sty     $74
-        sty     $7F
-        sty     $09
-        ror     $206F
-        stz     $61
-        stz     $65,x
-        jsr     L0A20
-        lsr     a
-        adc     ($6E,x)
-        adc     $61,x
-        adc     ($79)
-        jsr     L2020
-        asl     a
-        lsr     $65
-        .byte   $62
-        adc     ($75)
-        adc     ($72,x)
-        adc     L2020,y
-        asl     a
-        eor     L7261
-        .byte   $63
-        pla
-        jsr     L2020
-        jsr     L0A20
-        eor     ($70,x)
-        adc     ($69)
-        jmp     (L2020)
-
-        jsr     L2020
-        asl     a
-        eor     L7961
-        jsr     L2020
-        jsr     L2020
-        jsr     L4A0A
-        adc     $6E,x
-        adc     L0020
-        jsr     L2020
-        jsr     L0A20
-        lsr     a
-        adc     $6C,x
-        adc     L2020,y
-        jsr     L2020
-        jsr     L410A
-        adc     $67,x
-        adc     $73,x
-        stz     L0020,x
-        jsr     L2020
-        asl     a
-        .byte   $53
-        adc     $70
-        stz     $65,x
-        adc     L6562
-        adc     (L0020)
-        asl     a
-        bbr4    $63,L84E1
-        bbr6    $62,L84D5
-        adc     (L0020)
-        jsr     L0A20
-        lsr     L766F
-        adc     $6D
-        .byte   $62
-        adc     $72
-        jsr     L0A20
-        .byte   $44
-        adc     $63
-        adc     $6D
-        .byte   $62
-        adc     $72
-        jsr     L0520
-        jsr     L3931
-L848E:  sec
+L83E3:  .byte   $83,$06,$84,$11,$84,$1C,$84,$27
+        .byte   $84,$32,$84,$3D,$84,$48,$84,$53
+        .byte   $84,$5E,$84,$69,$84,$74,$84,$7F
+        .byte   $84,$09,$6E,$6F,$20,$64,$61,$74
+        .byte   $65,$20,$20,$0A,$4A,$61,$6E,$75
+        .byte   $61,$72,$79,$20,$20,$20,$0A,$46
+        .byte   $65,$62,$72,$75,$61,$72,$79,$20
+        .byte   $20,$0A,$4D,$61,$72,$63,$68,$20
+        .byte   $20,$20,$20,$20,$0A,$41,$70,$72
+        .byte   $69,$6C,$20,$20,$20,$20,$20,$0A
+        .byte   $4D,$61,$79,$20,$20,$20,$20,$20
+        .byte   $20,$20,$0A,$4A,$75,$6E,$65,$20
+        .byte   $20,$20,$20,$20,$20,$0A,$4A,$75
+        .byte   $6C,$79,$20,$20,$20,$20,$20,$20
+        .byte   $0A,$41,$75,$67,$75,$73,$74,$20
+        .byte   $20,$20,$20,$0A,$53,$65,$70,$74
+        .byte   $65,$6D,$62,$65,$72,$20,$0A,$4F
+        .byte   $63,$74,$6F,$62,$65,$72,$20,$20
+        .byte   $20,$0A,$4E,$6F,$76,$65,$6D,$62
+        .byte   $65,$72,$20,$20,$0A,$44,$65,$63
+        .byte   $65,$6D,$62,$65,$72,$20,$20,$05
+        .byte   $20,$31,$39
+L848E:  .byte   $38
 L848F:  .byte   $35
-L8490:  ora     #$0A
+L8490:  .byte   $09
+        asl     a
         trb     $1E
         plp
         and     ($3C)
@@ -8441,23 +8379,18 @@ L84CD:  .byte   $EB
 L84CF:  brk
 L84D0:  brk
 L84D1:  jsr     L87F6
-        .byte   $2C
-L84D5:  .byte   $1B
-        .byte   $5B
+        bit     L5B1B
         bmi     L84DC
         jsr     L6E52
 L84DC:  lda     $D221
         sec
-        .byte   $ED
-L84E1:  ora     L8DD2,x
-        sed
-        sta     $AD
-        .byte   $22
-        cmp     ($ED)
-        asl     L8DD2,x
-        sbc     LAD85,y
-        .byte   $23
-        cmp     ($38)
+        sbc     $D21D
+        sta     L85F8
+        lda     $D222
+        sbc     $D21E
+        sta     L85F9
+        lda     $D223
+        sec
         sbc     $D21F
         sta     L85FA
         lda     $D224
@@ -9621,7 +9554,7 @@ L8DC7:  lda     L8E0F
         asl     a
         asl     a
         clc
-L8DD2:  adc     #$07
+        adc     #$07
         tax
         ldy     #$07
 L8DD7:  lda     L0800,x
@@ -13684,7 +13617,7 @@ LAD6C:  ldy     #$01
         jsr     LBDDF
         lda     $D57D
         jsr     LB7B9
-LAD85:  jsr     LBE8D
+        jsr     LBE8D
         jsr     LB3BF
         ldy     #$03
         lda     (L0006),y

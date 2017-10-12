@@ -1,12 +1,14 @@
-        .org $800
-        .setcpu "65C02"
+        .setcpu "6502"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
         .include "../inc/prodos.inc"
         .include "../inc/auxmem.inc"
 
-        .include "a2d.inc"
+        .include "../a2d.inc"
+        .include "../desktop.inc" ; needed to redraw DeskTop icons after window move
+
+        .org $800
 
 ;;; ==================================================
 

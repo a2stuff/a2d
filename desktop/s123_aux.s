@@ -5,7 +5,8 @@
         .include "../inc/auxmem.inc"
         .include "../inc/prodos.inc"
         .include "../inc/mouse.inc"
-        .include "../desk.acc/a2d.inc"
+        .include "../a2d.inc"
+        .include "../desktop.inc"
 
 
 .proc a2d
@@ -338,7 +339,7 @@ a2d_jump_table:
         .addr   L7500               ; $3B
         .addr   QUERY_STATE_IMPL    ; $3C QUERY_STATE
         .addr   L761F               ; $3D
-        .addr   L7532               ; $3E
+        .addr   REDRAW_WINDOW_IMPL  ; $3E REDRAW_WINDOW
         .addr   L758C               ; $3F
         .addr   QUERY_TARGET_IMPL   ; $40 QUERY_TARGET
         .addr   L7639               ; $41
@@ -426,7 +427,7 @@ param_lengths:
         PARAM_DEFN  1, $82, 0           ; $3B
         PARAM_DEFN  3, $82, 0           ; $3C QUERY_STATE
         PARAM_DEFN  2, $82, 0           ; $3D
-        PARAM_DEFN  1, $82, 0           ; $3E
+        PARAM_DEFN  1, $82, 0           ; $3E REDRAW_WINDOW
         PARAM_DEFN  1, $82, 0           ; $3F
         PARAM_DEFN  4, state_pos, 0     ; $40 QUERY_TARGET
         PARAM_DEFN  0, $00, 0           ; $41
@@ -4859,13 +4860,18 @@ L68F0:  sta     state_xpos
 L68F5:  sta     state_fill
         jmp     SET_FILL_MODE_IMPL
 
-L68FA:  jsr     L6906
+do_measure_text:
+        jsr     prepare_text_params
         jmp     measure_text
 
-L6900:  jsr     L6906
+draw_text:
+        jsr     prepare_text_params
         jmp     DRAW_TEXT_IMPL
 
-L6906:  sta     $82
+        ;; Prepare $A1,$A2 as params for MEASURE_TEXT/DRAW_TEXT call
+        ;; ($A3 is length)
+prepare_text_params:
+        sta     $82
         stx     $83
         clc
         adc     #1
@@ -4928,8 +4934,8 @@ L6976:  jsr     L68BE
         bit     $BF
         bvs     L69B4
         lda     $C3
-        ldx     $C4
-        jsr     L68FA
+        ldx     $C3+1
+        jsr     do_measure_text
         sta     $82
         stx     $83
         lda     $BF
@@ -5001,8 +5007,8 @@ L6A00:  lda     $BB
         sta     $BE
         jsr     L68A9
         lda     $B1
-        ldx     $B2
-        jsr     L6900
+        ldx     $B1+1
+        jsr     draw_text
         jsr     L6A5C
         lda     state_xpos
         ldx     state_xpos+1
@@ -5478,14 +5484,14 @@ L6D94:  lda     $BF
         lda     $C0
         sta     L685E
 L6DB1:  lda     L6863
-        ldx     L6864
-        jsr     L6900
+        ldx     L6863+1
+        jsr     draw_text
         jsr     L6A5C
 L6DBD:  lda     L681E
         jsr     L6E25
         lda     $C3
-        ldx     $C4
-        jsr     L6900
+        ldx     $C3+1
+        jsr     draw_text
         jsr     L6A5C
         lda     $BF
         and     #$03
@@ -5509,8 +5515,8 @@ L6DF3:  lda     $C1
         lda     L681F
         jsr     L6E92
         lda     L6865
-        ldx     L6866
-        jsr     L6900
+        ldx     L6865+1
+        jsr     draw_text
         jsr     L6A5C
 L6E0A:  bit     $B0
         bmi     L6E12
@@ -5814,14 +5820,14 @@ L7013:  lda     L7011
         lda     L7011+1
         sta     $A8
         lda     L700B
-        ldx     L700C
+        ldx     L700B+1
         bne     L7038
 L7025:  rts
 
 L7026:  lda     $A9
         sta     $A7
-        lda     $AA
-        sta     $A8
+        lda     $A9+1
+        sta     $A7+1
         ldy     #$39
         lda     ($A9),y
         beq     L7025
@@ -5829,11 +5835,11 @@ L7026:  lda     $A9
         dey
         lda     ($A9),y
 L7038:  sta     L700E
-        stx     L700F
+        stx     L700E+1
 L703E:  lda     L700E
-        ldx     L700F
+        ldx     L700E+1
 L7044:  sta     $A9
-        stx     $AA
+        stx     $A9+1
         ldy     #$0B
 L704A:  lda     ($A9),y
         sta     $AB,y
@@ -6021,8 +6027,8 @@ L718E:  jsr     L70B7
         jsr     L6A66
         jsr     L73BF
         lda     $AD
-        ldx     $AE
-        jsr     L6900
+        ldx     $AD+1
+        jsr     draw_text
 L71AA:  jsr     L703E
         bit     $B0
         bpl     L71B7
@@ -6110,7 +6116,7 @@ L723E:  sta     $96
         sta     $98
         lda     $CE
         sta     $99
-        jsr     FILL_RECT_IMPL
+        jsr     FILL_RECT_IMPL  ; draws title bar stripes to left of close box
 L7255:  lda     $AC
         and     #$01
         bne     L72C9
@@ -6151,7 +6157,7 @@ L7280:  tya
         sta     $96
         bcs     L72A0
         dec     $97
-L72A0:  jsr     FILL_RECT_IMPL
+L72A0:  jsr     FILL_RECT_IMPL  ; Draw title bar stripes between close box and title
         lda     $CB
         clc
         adc     #$0A
@@ -6167,7 +6173,7 @@ L72A0:  jsr     FILL_RECT_IMPL
         lda     $CC
         sbc     #$00
         sta     $97
-        jsr     FILL_RECT_IMPL
+        jsr     FILL_RECT_IMPL  ; Draw title bar stripes to right of title
         A2D_CALL A2D_SET_PATTERN, screen_state::pattern
 L72C9:  jsr     L703E
         bit     $B0
@@ -6272,6 +6278,7 @@ L738E:  lda     $AC
         jsr     L6A66
         jmp     L73BE
 
+        ;; Draw resize box
 L73A6:  ldx     #$03
 L73A8:  lda     $C7,x
         sta     resize_box_params,x
@@ -6285,8 +6292,8 @@ L73A8:  lda     $C7,x
 L73BE:  rts
 
 L73BF:  lda     $AD
-        ldx     $AE
-        jsr     L68FA
+        ldx     $AD+1
+        jsr     do_measure_text
         sta     $82
         stx     $83
         lda     $C7
@@ -6477,7 +6484,7 @@ L7500:
 
 ;;; ==================================================
 
-;;; $3E IMPL
+;;; REDRAW_WINDOW_IMPL
 
 ;;; 1 byte of params, copied to $82
 
@@ -6488,7 +6495,7 @@ L750D:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00
 
-L7532:
+REDRAW_WINDOW_IMPL:
         jsr     L7074
         lda     $AB
         cmp     L7010
@@ -7036,6 +7043,7 @@ L7911:  lda     $7E,y
         bne     L7911
         rts
 
+        ;; Used to draw scrollbar arrows
 L791C:  sta     $82
         stx     $83
         ldy     #$03

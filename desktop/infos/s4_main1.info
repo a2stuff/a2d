@@ -37,3 +37,5 @@ RANGE { START $46ce; END $46ce; TYPE ByteTable; };
 RANGE { START $46cf; END $46d0; TYPE AddrTable; };
 RANGE { START $50f6; END $50f6; TYPE ByteTable; };
 RANGE { START $50f7; END $50f8; TYPE AddrTable; };
+
+RANGE { START $83DB; END $8490; TYPE ByteTable; };
