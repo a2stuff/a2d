@@ -336,7 +336,7 @@ a2d_jump_table:
         .addr   CREATE_WINDOW_IMPL  ; $38 CREATE_WINDOW
         .addr   DESTROY_WINDOW_IMPL ; $39 DESTROY_WINDOW
         .addr   L7836               ; $3A
-        .addr   L7500               ; $3B
+        .addr   QUERY_WINDOW_IMPL   ; $3B QUERY_WINDOW
         .addr   QUERY_STATE_IMPL    ; $3C QUERY_STATE
         .addr   L761F               ; $3D
         .addr   REDRAW_WINDOW_IMPL  ; $3E REDRAW_WINDOW
@@ -424,7 +424,7 @@ param_lengths:
         PARAM_DEFN  0, $00, 0           ; $38 CREATE_WINDOW
         PARAM_DEFN  1, $82, 0           ; $39 DESTROY_WINDOW
         PARAM_DEFN  0, $00, 0           ; $3A
-        PARAM_DEFN  1, $82, 0           ; $3B
+        PARAM_DEFN  1, $82, 0           ; $3B QUERY_WINDOW
         PARAM_DEFN  3, $82, 0           ; $3C QUERY_STATE
         PARAM_DEFN  2, $82, 0           ; $3D
         PARAM_DEFN  1, $82, 0           ; $3E REDRAW_WINDOW
@@ -2370,6 +2370,7 @@ L56D5:  rts
 
 ;;; $16 IMPL
 
+        ;; Triggered by dragging icons
 L56D6:
         lda     #$00
         sta     $BA
@@ -2377,7 +2378,7 @@ L56D6:
 L56DD:  lda     params_addr
         sta     $B7
         lda     params_addr+1
-        sta     $B8
+        sta     $B7+1
         lda     $B4
         sta     $B6
         ldx     #$00
@@ -2617,9 +2618,7 @@ L5852:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
 ;;; ==================================================
 
-;;; $0B IMPL
-
-;;; SET_FONT ???
+;;; SET_FONT IMPL
 
 .proc SET_FONT_IMPL
         lda     params_addr     ; set font to passed address
@@ -5818,7 +5817,7 @@ L7011:  .addr   $6FD3
 L7013:  lda     L7011
         sta     $A7
         lda     L7011+1
-        sta     $A8
+        sta     $A7+1
         lda     L700B
         ldx     L700B+1
         bne     L7038
@@ -5852,25 +5851,30 @@ L7054:  lda     ($A9),y
         cpy     #$13
         bne     L7054
 L705E:  lda     $A9
-        ldx     $AA
+        ldx     $A9+1
         rts
 
-L7063:  jsr     L7013
-        beq     L7073
-L7068:  lda     $AB
+.proc L7063
+        jsr     L7013
+        beq     end
+loop:   lda     $AB
         cmp     $82
         beq     L705E
         jsr     L7026
-        bne     L7068
-L7073:  rts
+        bne     loop
+end:    rts
+.endproc
 
-        ;; Look up window state by id ???
-L7074:  jsr     L7063
-        beq     L707A
+        ;; Look up window state by id (in $82)
+        ;; This will exit the A2D call directly (restoring stack, etc)
+        ;; if the window is not found.
+.proc window_by_id
+        jsr     L7063
+        beq     nope
         rts
-
-L707A:  lda     #$9F
+nope:   lda     #$9F
         jmp     a2d_exit_with_a
+.endproc
 
 L707F:  A2D_CALL A2D_DRAW_RECT, $C7
         rts
@@ -6427,8 +6431,9 @@ L749A:  lda     params_addr
 
 ;;; 1 byte of params, copied to $82
 
+        ;; Seems to be called when window becomes top-most
 L74AC:
-        jsr     L7074
+        jsr     window_by_id
         cmp     L700B
         bne     L74BA
         cpx     L700C
@@ -6471,14 +6476,14 @@ L74F4:  ldy     #$38
 
 ;;; ==================================================
 
-;;; $3B IMPL
+;;; QUERY_WINDOW IMPL
 
 ;;; 1 byte of params, copied to $C7
 
-L7500:
-        jsr     L7074
+QUERY_WINDOW_IMPL:
+        jsr     window_by_id
         lda     $A9
-        ldx     $AA
+        ldx     $A9+1
         ldy     #$01
         jmp     store_xa_at_params_y
 
@@ -6496,7 +6501,7 @@ L750D:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00
 
 REDRAW_WINDOW_IMPL:
-        jsr     L7074
+        jsr     window_by_id
         lda     $AB
         cmp     L7010
         bne     L753F
@@ -6552,7 +6557,7 @@ L758C:  jsr     SHOW_CURSOR_IMPL
 
 QUERY_STATE_IMPL:
         jsr     apply_state_to_active_state
-        jsr     L7074
+        jsr     window_by_id
         lda     $83
         sta     params_addr
         lda     $84
@@ -6628,7 +6633,7 @@ L75EA:  lda     $92,x
 ;;; 2 bytes of params, copied to $82
 
 L761F:
-        jsr     L7074
+        jsr     window_by_id
         lda     $A9
         clc
         adc     #$14
@@ -6732,7 +6737,7 @@ L76B6:  lda     $83,x
         sta     L76A3,x
         dex
         bpl     L76B6
-        jsr     L7074
+        jsr     window_by_id
         bit     L7D74
         bpl     L76D1
         jsr     L817C
@@ -6896,7 +6901,7 @@ L7814:  rts
 ;;; 1 byte of params, copied to $82
 
 DESTROY_WINDOW_IMPL:
-        jsr     L7074
+        jsr     window_by_id
         jsr     L653C
         jsr     L784C
         jsr     L74F4
@@ -7004,7 +7009,7 @@ height: .word   0
 ;;; $47 IMPL
 
 L78E1:
-        jsr     L7074
+        jsr     window_by_id
         ldx     #$02
 L78E6:  lda     $83,x
         clc
@@ -7023,7 +7028,7 @@ L78E6:  lda     $83,x
 ;;; 5 bytes of params, copied to $82
 
 MAP_COORDS_IMPL:
-        jsr     L7074
+        jsr     window_by_id
         ldx     #$02
 L78FE:  lda     $83,x
         sec
@@ -11811,7 +11816,7 @@ LA77D:  lda     LA6B3,x
         sta     query_state_params
         A2D_CALL A2D_QUERY_STATE, query_state_params
         jsr     LA365
-        A2D_CALL $3B, query_target_params::id
+        A2D_CALL A2D_QUERY_WINDOW, query_target_params::id
         lda     LA6AE
         sta     $06
         lda     LA6AF

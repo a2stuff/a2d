@@ -266,8 +266,11 @@ A2D_DESTROY_WINDOW := $39
         ;; (input length 1 byte)
         ;; .byte id
 
-        ;; $3B used in DeskTop but not DAs - triggered by dragging window near right edge
+A2D_QUERY_WINDOW := $3B         ; Get pointer to window params by id; A=0 on success
         ;; (input length 1 byte)
+        ;; (output length 3 bytes)
+        ;; .byte id             of window
+        ;; .addr window         (out) window params
 
 A2D_QUERY_STATE      := $3C     ; get drawing state of window
         ;; (input length 3 bytes)
@@ -282,17 +285,21 @@ A2D_QUERY_TARGET   := $40
         ;; (input length 4 bytes)
         ;; .word queryx         relative to screen
         ;; .word queryy
-        ;; .byte element        A2D_ELEM_*
-        ;; .byte id             of window
+        ;; .byte element        (out) A2D_ELEM_*
+        ;; .byte id             (out) of window
 
         ;; $41 used in DeskTop but not DAs - icon in window drop
         ;; (input length 0 bytes)
 
+        ;; $42 ???
+        ;; (input length 1 byte)
+        ;; .byte id
+
 A2D_CLOSE_CLICK := $43
         ;; (input length 0 bytes)
-        ;; .byte clicked        0 = cancelled, 1 = clicked
-        ;; .byte ??
-        ;; .byte ??
+        ;; .byte clicked        (out) 0 = cancelled, 1 = clicked
+        ;; .byte ??             (out)
+        ;; .byte ??             (out)
 
 A2D_DRAG_WINDOW := $44
         ;; (input length 5 bytes)
