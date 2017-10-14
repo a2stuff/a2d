@@ -192,7 +192,7 @@ A2D_CONFIGURE_ZP_USE    := $1A  ; Configure ZP usage by API (speed vs. convenien
         ;; (input length 1 byte)
         ;; .byte flag           (AWS_CZP_*; high bit set = preserve ZP during calls)
 
-A2D_SET_CURSOR  := $24          ; Change cursor pattern
+A2D_SET_CURSOR  := $24          ; Set cursor definition
         ;; (input not copied)
         ;; .res 24 bitmap       2x12 byte bitmap
         ;; .res 24 mask         2x12 byte mask
@@ -204,6 +204,11 @@ A2D_SHOW_CURSOR := $25
 
 A2D_HIDE_CURSOR := $26
         ;; (no parameters; pass $0000 as address)
+
+A2D_GET_CURSOR := $28           ; Get cursor definition
+        ;; (input length 0 bytes)
+        ;; (output length 2 bytes)
+        ;; .addr definition     See A2D_SET_CURSOR
 
 A2D_GET_INPUT   := $2A
         ;; (input length 0 bytes)

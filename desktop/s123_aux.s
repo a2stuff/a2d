@@ -317,7 +317,7 @@ a2d_jump_table:
         .addr   SHOW_CURSOR_IMPL    ; $25 SHOW_CURSOR
         .addr   HIDE_CURSOR_IMPL    ; $26 HIDE_CURSOR
         .addr   L624E               ; $27
-        .addr   L630A               ; $28
+        .addr   GET_CURSOR_IMPL     ; $28 GET_CURSOR
         .addr   L6663               ; $29
         .addr   GET_INPUT_IMPL      ; $2A GET_INPUT
         .addr   CALL_2B_IMPL        ; $2B
@@ -405,7 +405,7 @@ param_lengths:
         PARAM_DEFN  0, $00, 0           ; $25 SHOW_CURSOR
         PARAM_DEFN  0, $00, 0           ; $26 HIDE_CURSOR
         PARAM_DEFN  0, $00, 0           ; $27
-        PARAM_DEFN  0, $00, 0           ; $28
+        PARAM_DEFN  0, $00, 0           ; $28 GET_CURSOR
         PARAM_DEFN  0, $00, 0           ; $29
         PARAM_DEFN  0, $00, 0           ; $2A GET_INPUT
         PARAM_DEFN  0, $00, 0           ; $2B
@@ -3634,8 +3634,11 @@ active_saved:           ; saved copy of $F4...$FF when ZP swapped
 zp_saved:               ; top half of ZP for when preserve_zp_flag set
         .res    128, 0
 
-L5FF2:  .byte   $00
-L5FF3:  .byte   $FF
+        ;; cursor shown/hidden flags/counts
+cursor_flag:                    ; high bit clear if cursor drawn, set if not drawn
+        .byte   0
+cursor_count:
+        .byte   $FF             ; decremented on hide, incremented on shown; 0 = visible
 
 .proc set_pos_params
 xcoord: .word   0
@@ -3653,8 +3656,10 @@ L5FFE:  .byte   $00
 L5FFF:  .byte   $00
 L6000:  .byte   $00
 L6001:  .byte   $00
-L6002:  .byte   $00
-L6003:  .byte   $00
+
+cursor_hotspot_x:  .byte   $00
+cursor_hotspot_y:  .byte   $00
+
 L6004:  .byte   $00
 L6005:  .byte   $00
 L6006:  .byte   $00
@@ -3677,9 +3682,9 @@ L602F:  .byte   $00,$00,$00,$00,$00,$00,$02,$00
 L6065:  .byte   $33
 L6066:  .byte   $60
 L6067:  lda     #$FF
-        sta     L5FF3
-        lda     #$00
-        sta     L5FF2
+        sta     cursor_count
+        lda     #0
+        sta     cursor_flag
         lda     L6065
         sta     params_addr
         lda     L6066
@@ -3688,47 +3693,55 @@ L6067:  lda     #$FF
 
 ;;; ==================================================
 
+        cursor_height := 12
+        cursor_width  := 2
+        cursor_mask_offset := cursor_width * cursor_height
+        cursor_hotspot_offset := 2 * cursor_width * cursor_height
+
 SET_CURSOR_IMPL:
         php
         sei
         lda     params_addr
         ldx     params_addr+1
-        sta     L6142
-        stx     L6142+1
+        sta     active_cursor
+        stx     active_cursor+1
         clc
-        adc     #$18
-        bcc     L608D
+        adc     #cursor_mask_offset
+        bcc     :+
         inx
-L608D:  sta     L6148
-        stx     L6148+1
-        ldy     #$30
+:       sta     active_cursor_mask
+        stx     active_cursor_mask+1
+        ldy     #cursor_hotspot_offset
         lda     (params_addr),y
-        sta     L6002
+        sta     cursor_hotspot_x
         iny
         lda     (params_addr),y
-        sta     L6003
-        jsr     L61C6
-        jsr     L60B2
+        sta     cursor_hotspot_y
+        jsr     restore_cursor_background
+        jsr     draw_cursor
         plp
 L60A7:  rts
 
-L60A8:  lda     L5FF3
+update_cursor:
+        lda     cursor_count           ; hidden? if so, skip
         bne     L60A7
-        bit     L5FF2
+        bit     cursor_flag
         bmi     L60A7
-L60B2:  lda     #$00
-        sta     L5FF3
-        sta     L5FF2
+
+draw_cursor:
+        lda     #$00
+        sta     cursor_count
+        sta     cursor_flag
         lda     set_pos_params::ycoord
         clc
-        sbc     L6003
+        sbc     cursor_hotspot_y
         sta     $84
         clc
         adc     #$0C
         sta     $85
         lda     set_pos_params::xcoord
         sec
-        sbc     L6002
+        sbc     cursor_hotspot_x
         tax
         lda     set_pos_params::xcoord+1
         sbc     #$00
@@ -3786,10 +3799,10 @@ L612D:  lda     hires_table_lo,y
         ldy     $86
         ldx     #$01
 L6141:
-L6142           := * + 1
+active_cursor           := * + 1
         lda     $FFFF,y
         sta     L6005,x
-L6148           := * + 1
+active_cursor_mask      := * + 1
         lda     $FFFF,y
         sta     L6008,x
         dey
@@ -3852,10 +3865,12 @@ L61B9:  dec     $86
 
 L61C5:  rts
 
-L61C6:  lda     L5FF3
+restore_cursor_background:
+        lda     cursor_count           ; already hidden?
         bne     L61C5
-        bit     L5FF2
+        bit     cursor_flag
         bmi     L61C5
+
         ldx     #$03
 L61D2:  lda     L602F,x
         sta     $82,x
@@ -3912,15 +3927,15 @@ L622E:  bbs7    $C0,L61F1
 .proc SHOW_CURSOR_IMPL
         php
         sei
-        lda     L5FF3
+        lda     cursor_count
         beq     done
-        inc     L5FF3
+        inc     cursor_count
         bmi     done
         beq     :+
-        dec     L5FF3
-:       bit     L5FF2
+        dec     cursor_count
+:       bit     cursor_flag
         bmi     done
-        jsr     L60B2
+        jsr     draw_cursor
 done:   plp
         rts
 .endproc
@@ -3932,9 +3947,9 @@ done:   plp
 L624E:
         php
         sei
-        jsr     L61C6
+        jsr     restore_cursor_background
         lda     #$80
-        sta     L5FF2
+        sta     cursor_flag
         plp
         rts
 
@@ -3943,8 +3958,8 @@ L624E:
 HIDE_CURSOR_IMPL:
         php
         sei
-        jsr     L61C6
-        dec     L5FF3
+        jsr     restore_cursor_background
+        dec     cursor_count
         plp
 L6263:  rts
 
@@ -3967,14 +3982,14 @@ L627E:  lda     mouse_x_lo,x
         dex
         bpl     L627E
         bmi     L629F
-L628B:  jsr     L61C6
+L628B:  jsr     restore_cursor_background
         ldx     #2
-        stx     L5FF2
+        stx     cursor_flag
 L6293:  lda     mouse_x_lo,x
         sta     set_pos_params,x
         dex
         bpl     L6293
-        jsr     L60A8
+        jsr     update_cursor
 L629F:  bit     no_mouse_flag
         bmi     L62A7
         jsr     L62BA
@@ -4023,12 +4038,15 @@ L6309:  rts
 
 ;;; ==================================================
 
-;;; $28 IMPL
+;;; GET_CURSOR IMPL
 
-L630A:
-        lda     L6142
-        ldx     L6142+1
+.proc GET_CURSOR_IMPL
+        lda     active_cursor
+        ldx     active_cursor+1
         jmp     store_xa_at_params
+.endproc
+
+;;; ==================================================
 
         ;; Call mouse firmware, operation in Y, param in A
 call_mouse:
@@ -4508,7 +4526,7 @@ L6645:  lda     #0
 L664E:  ldy     #0
         sta     (params_addr),y         ; Store 5 bytes at params
         iny
-L6653:  lda     L5FF3,y
+L6653:  lda     cursor_count,y
         sta     (params_addr),y
         iny
         cpy     #$05
@@ -5188,8 +5206,10 @@ L6B29:  jsr     L653C
         jsr     L6B35
         jmp     L6553
 
-L6B35:  ldx     #$01
-L6B37:  lda     $B7,x
+        ;; Highlight/Unhighlight top level menu item
+.proc L6B35
+        ldx     #$01
+loop:   lda     $B7,x
         sta     fill_rect_params2::left,x
         lda     $B9,x
         sta     fill_rect_params2::width,x
@@ -5200,11 +5220,12 @@ L6B37:  lda     $B7,x
         sta     test_box_params2::right,x
         sta     fill_rect_params4::right,x
         dex
-        bpl     L6B37
+        bpl     loop
         lda     #$02
         jsr     L68F5
         A2D_CALL A2D_FILL_RECT, fill_rect_params2
         rts
+.endproc
 
 ;;; ==================================================
 
@@ -7847,9 +7868,9 @@ L7EFB:  cmp     #$04
 L7F0C:  jmp     L825F
 
 L7F0F:  jsr     stash_params_addr
-        lda     L6142
+        lda     active_cursor
         sta     L7F2E
-        lda     L6142+1
+        lda     active_cursor+1
         sta     L7F2F
         lda     L6065
         sta     params_addr
@@ -8809,7 +8830,7 @@ L8616:  cmp     #$57
         jsr     L6B17
         ldx     $D5CA
         txs
-L8625:  A2D_RELAY_CALL $33, $D63F
+L8625:  A2D_RELAY_CALL $33, desktop_win18_state
         rts
 
         lda     #$9C
@@ -8817,7 +8838,7 @@ L8625:  A2D_RELAY_CALL $33, $D63F
         jsr     L6B17
         ldx     $D5CA
         txs
-        A2D_RELAY_CALL $33, $D63F
+        A2D_RELAY_CALL $33, desktop_win18_state
         rts
 
         lda     #$BF
@@ -8825,7 +8846,7 @@ L8625:  A2D_RELAY_CALL $33, $D63F
         jsr     L6B17
         ldx     $D5CA
         txs
-        A2D_RELAY_CALL $33, $D63F
+        A2D_RELAY_CALL $33, desktop_win18_state
         rts
 
         sta     L8737
@@ -9381,11 +9402,8 @@ L9018:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00
 
-        ;; buffer for drag icon outline shape
-L9096:  .byte   $00,$00
-L9098:
-        .res    678, 0
-
+drag_outline_buffer:
+        .res    680, 0
 
 L933E:  .byte   $00
 
@@ -10136,9 +10154,9 @@ L98AC:  lda     L9016
         bcc     L98B6
         jmp     L9852
 
-L98B6:  lda     #<L9096
+L98B6:  lda     #<drag_outline_buffer
         sta     $08
-        lda     #>L9096
+        lda     #>drag_outline_buffer
         sta     $08+1
         lda     L9015
         bne     L98C8
@@ -10211,13 +10229,13 @@ L9954:  dec     L9C74
         jmp     L98F2
 
 L995F:  ldx     #$07
-L9961:  lda     L9098,x
+L9961:  lda     drag_outline_buffer+2,x
         sta     L9C76,x
         dex
         bpl     L9961
-        lda     #<L9096
+        lda     #<drag_outline_buffer
         sta     $08
-        lda     #>L9096
+        lda     #>drag_outline_buffer
         sta     $08+1
 L9972:  ldy     #$02
 L9974:  lda     ($08),y
@@ -10292,7 +10310,7 @@ L99E1:  iny
 
 L99FC:  A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
         A2D_CALL A2D_SET_FILL_MODE, const2a
-        A2D_CALL A2D_DRAW_POLYGONS, L9096
+        A2D_CALL A2D_DRAW_POLYGONS, drag_outline_buffer
 L9A0E:  A2D_CALL $2C, L933E
         lda     L933E
         cmp     #$04
@@ -10323,11 +10341,11 @@ L9A33:  lda     query_target_params2,x
         beq     L9A84
         A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
         A2D_CALL A2D_SET_FILL_MODE, const2a
-        A2D_CALL A2D_DRAW_POLYGONS, L9096
+        A2D_CALL A2D_DRAW_POLYGONS, drag_outline_buffer
         DESKTOP_DIRECT_CALL $B, $9830
         A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
         A2D_CALL A2D_SET_FILL_MODE, const2a
-        A2D_CALL A2D_DRAW_POLYGONS, L9096
+        A2D_CALL A2D_DRAW_POLYGONS, drag_outline_buffer
         lda     #$00
         sta     L9830
 L9A84:  lda     query_target_params2::queryx
@@ -10415,10 +10433,10 @@ L9B48:  bit     L9C75
 L9B4E:  .byte   $03
         jmp     L9A0E
 
-L9B52:  A2D_CALL A2D_DRAW_POLYGONS, L9096
-        lda     #<L9096
+L9B52:  A2D_CALL A2D_DRAW_POLYGONS, drag_outline_buffer
+        lda     #<drag_outline_buffer
         sta     $08
-        lda     #>L9096
+        lda     #>drag_outline_buffer
         sta     $08+1
 L9B60:  ldy     #$02
 L9B62:  lda     ($08),y
@@ -10452,10 +10470,10 @@ L9B62:  lda     ($08),y
         inc     $09
 L9B99:  jmp     L9B60
 
-L9B9C:  A2D_CALL A2D_DRAW_POLYGONS, L9096
+L9B9C:  A2D_CALL A2D_DRAW_POLYGONS, drag_outline_buffer
         jmp     L9A0E
 
-L9BA5:  A2D_CALL A2D_DRAW_POLYGONS, L9096
+L9BA5:  A2D_CALL A2D_DRAW_POLYGONS, drag_outline_buffer
         lda     L9830
         beq     L9BB9
         DESKTOP_DIRECT_CALL $B, $9830
@@ -10504,9 +10522,9 @@ L9C18:  jsr     LA382
         dex
         txa
         pha
-        lda     #<L9096
+        lda     #<drag_outline_buffer
         sta     $08
-        lda     #>L9096
+        lda     #>drag_outline_buffer
         sta     $09
 L9C29:  lda     L9017,x
         asl     a
@@ -10789,11 +10807,11 @@ L9E3D:  cmp     L9017,x
 L9E6A:  sta     L9830
         A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
         A2D_CALL A2D_SET_FILL_MODE, const2a
-        A2D_CALL A2D_DRAW_POLYGONS, L9096
+        A2D_CALL A2D_DRAW_POLYGONS, drag_outline_buffer
         DESKTOP_DIRECT_CALL $2, $9830
         A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
         A2D_CALL A2D_SET_FILL_MODE, const2a
-        A2D_CALL A2D_DRAW_POLYGONS, L9096
+        A2D_CALL A2D_DRAW_POLYGONS, drag_outline_buffer
 L9E97:  A2D_CALL A2D_QUERY_SCREEN, query_screen_params
         A2D_CALL A2D_SET_STATE, query_screen_params
         A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
@@ -13343,7 +13361,7 @@ LD293:
         .byte   $00,$00,$00,$00,$88,$00,$08,$00
         .byte   $13,$00,$00,$00,$00,$00,$00
 
-;;; Cursors (bitmap, mask, hotspot)
+;;; Cursors (bitmap - 2x12 bytes, mask - 2x12 bytes, hotspot - 2 bytes)
 
 ;;; Pointer
 
@@ -13592,6 +13610,7 @@ w1:     .word   $96
 h1:     .word   $32
 w2:     .word   $1F4
 h2:     .word   $8C
+state:
 left:   .word   $50
 top:    .word   $28
 addr:   .addr   A2D_SCREEN_ADDR
@@ -14357,3 +14376,4 @@ app_mask:
 .endproc
         desktop_LD05E := desktop::LD05E
         desktop_A2D_RELAY := desktop::A2D_RELAY
+        desktop_win18_state := desktop::win18::state
