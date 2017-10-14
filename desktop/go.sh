@@ -24,8 +24,8 @@ function asmseg {
 
 asmseg s123_aux
 
-daseg s4_main1 4000
-asmseg s4_main1
+#daseg s4_main1 4000
+#asmseg s4_main1
 
 #daseg 12680_1BCDF
 #asmseg 12680_1BCDF

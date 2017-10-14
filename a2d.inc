@@ -165,8 +165,14 @@ A2D_DRAW_BITMAP := $14          ; Draw pattern
         ;; $15 used in DeskTop but not DAs - icon redraw
         ;; (input length 0 bytes)
 
-        ;; $16 used in DeskTop but not DAs - desktop icon drag
+A2D_DRAW_POLYGONS := $16       ; Draw multiple closed polygons
         ;; (input length 0 bytes)
+        ;; Address points at struct:
+        ;; .byte points         count
+        ;; .byte flag           high bit clear if this is last polygon, set if not
+        ;; .word x1, y1
+        ;; .word x2, y2
+        ;; ...
 
         ;; $17 used in DeskTop but not DAs - maybe selection drag
         ;; (input length 0 bytes)
