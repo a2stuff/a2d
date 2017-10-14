@@ -199,10 +199,13 @@ A2D_SET_CURSOR  := $24          ; Set cursor definition
         ;; .byte hotx           hotspot coords
         ;; .byte hoty
 
-A2D_SHOW_CURSOR := $25
+A2D_SHOW_CURSOR := $25          ; Return cursor to visibility
         ;; (no parameters; pass $0000 as address)
 
-A2D_HIDE_CURSOR := $26
+A2D_HIDE_CURSOR := $26          ; Cursor hidden until A2D_SHOW_CURSOR call
+        ;; (no parameters; pass $0000 as address)
+
+A2D_ERASE_CURSOR := $27         ; Cursor hidden until moved or other A2D call
         ;; (no parameters; pass $0000 as address)
 
 A2D_GET_CURSOR := $28           ; Get cursor definition

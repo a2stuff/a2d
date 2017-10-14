@@ -316,7 +316,7 @@ a2d_jump_table:
         .addr   SET_CURSOR_IMPL     ; $24 SET_CURSOR
         .addr   SHOW_CURSOR_IMPL    ; $25 SHOW_CURSOR
         .addr   HIDE_CURSOR_IMPL    ; $26 HIDE_CURSOR
-        .addr   L624E               ; $27
+        .addr   ERASE_CURSOR_IMPL   ; $27 ERASE_CURSOR
         .addr   GET_CURSOR_IMPL     ; $28 GET_CURSOR
         .addr   L6663               ; $29
         .addr   GET_INPUT_IMPL      ; $2A GET_INPUT
@@ -404,7 +404,7 @@ param_lengths:
         PARAM_DEFN  0, $00, 0           ; $24 SET_CURSOR
         PARAM_DEFN  0, $00, 0           ; $25 SHOW_CURSOR
         PARAM_DEFN  0, $00, 0           ; $26 HIDE_CURSOR
-        PARAM_DEFN  0, $00, 0           ; $27
+        PARAM_DEFN  0, $00, 0           ; $27 ERASE_CURSOR
         PARAM_DEFN  0, $00, 0           ; $28 GET_CURSOR
         PARAM_DEFN  0, $00, 0           ; $29
         PARAM_DEFN  0, $00, 0           ; $2A GET_INPUT
@@ -3942,9 +3942,9 @@ done:   plp
 
 ;;; ==================================================
 
-;;; $27 IMPL
+;;; ERASE_CURSOR IMPL
 
-L624E:
+.proc ERASE_CURSOR_IMPL
         php
         sei
         jsr     restore_cursor_background
@@ -3952,6 +3952,7 @@ L624E:
         sta     cursor_flag
         plp
         rts
+.endproc
 
 ;;; ==================================================
 
