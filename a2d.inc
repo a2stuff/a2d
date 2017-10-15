@@ -192,6 +192,13 @@ A2D_CONFIGURE_ZP_USE    := $1A  ; Configure ZP usage by API (speed vs. convenien
         ;; (input length 1 byte)
         ;; .byte flag           (AWS_CZP_*; high bit set = preserve ZP during calls)
 
+A2D_INIT_SCREEN_AND_MOUSE := $1D; Inits state, registers interrupt handler, draws desktop
+        ;; (input length 12 byte)
+        ;; ???
+
+A2D_DISABLE_MOUSE  := $1E       ; Deallocates interrupt, hides cursor
+        ;; (no parameters; pass $0000 as address)
+
 A2D_SET_CURSOR  := $24          ; Set cursor definition
         ;; (input not copied)
         ;; .res 24 bitmap       2x12 byte bitmap

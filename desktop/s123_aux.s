@@ -314,8 +314,8 @@ a2d_jump_table:
         .addr   CONFIGURE_ZP_IMPL   ; $1A CONFIGURE_ZP_USE
         .addr   L5EDE               ; $1B
         .addr   L5F0A               ; $1C
-        .addr   L6341               ; $1D
-        .addr   L64A5               ; $1E
+        .addr   INIT_SCREEN_AND_MOUSE_IMPL ; $1D INIT_SCREEN_AND_MOUSE
+        .addr   DISABLE_MOUSE_IMPL  ; $1E DISABLE_MOUSE
         .addr   L64D2               ; $1F
         .addr   L65B3               ; $20
         .addr   L8427               ; $21
@@ -402,8 +402,8 @@ param_lengths:
         PARAM_DEFN  1, $82, 0           ; $1A CONFIGURE_ZP_USE
         PARAM_DEFN  1, $82, 0           ; $1B
         PARAM_DEFN  0, $00, 0           ; $1C
-        PARAM_DEFN 12, $82, 0           ; $1D
-        PARAM_DEFN  0, $00, 0           ; $1E
+        PARAM_DEFN 12, $82, 0           ; $1D INIT_SCREEN_AND_MOUSE
+        PARAM_DEFN  0, $00, 0           ; $1E DISABLE_MOUSE
         PARAM_DEFN  3, $82, 0           ; $1F
         PARAM_DEFN  2, $82, 0           ; $20
         PARAM_DEFN  2, $82, 0           ; $21
@@ -4099,7 +4099,7 @@ L6340:  .byte   $00
 
 ;;; 12 bytes of params, copied to $82
 
-L6341:
+INIT_SCREEN_AND_MOUSE_IMPL:
         php
         pla
         sta     L6340
@@ -4221,6 +4221,7 @@ L643F:  jsr     call_mouse
         sta     L700C
 L6454:  jsr     L653F
         jsr     L6588
+        ;; Fills the desktop background on startup (menu left black)
         A2D_CALL A2D_SET_PATTERN, checkerboard_pattern
         A2D_CALL A2D_FILL_RECT, fill_rect_params
         jmp     L6556
@@ -4268,27 +4269,28 @@ L64A4:  rts
 
 ;;; ==================================================
 
-;;; $1E IMPL
+;;; DISABLE_MOUSE IMPL
 
-L64A5:
+.proc DISABLE_MOUSE_IMPL
         ldy     #SETMOUSE
         lda     #MOUSE_MODE_OFF
         jsr     call_mouse
         ldy     #SERVEMOUSE
         jsr     call_mouse
         bit     L6339
-        bpl     L64C7
+        bpl     :+
         bit     L6337
-        bpl     L64C7
+        bpl     :+
         lda     alloc_interrupt_params::int_num
         sta     dealloc_interrupt_params::int_num
         MLI_CALL DEALLOC_INTERRUPT, dealloc_interrupt_params
-L64C7:  lda     L6340
+:       lda     L6340
         pha
         plp
         lda     #$00
         sta     hide_cursor_flag
         rts
+.endproc
 
 ;;; ==================================================
 
