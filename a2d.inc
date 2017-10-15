@@ -240,6 +240,34 @@ A2D_SET_INPUT   := $2D          ; Set pending input state (mouse or keyboard)
         ;;   .word xcoord
         ;;   .word ycoord
 
+A2D_SET_MENU := $30             ; Configure (and draw) menu
+        ;; (input not copied)
+        ;; .word count          Number of top-level menus
+        ;;
+        ;; .word menu_id        Menu identifier
+        ;; .addr label          Address of pascal (length-prefixed) string
+        ;; .addr menu_defn      Address of menu definition
+        ;; .word 0,0,0          (overwritten with ???, left edge, right edge)
+        ;; ...
+        ;;
+        ;; Menu definitions are:
+        ;; .word count          Number of items in menu
+
+        ;; Menu items are:
+        ;; .word 0,0            ???
+        ;; .word has_shortcut   1 if has keyboard shortcuts, 0 otherwise
+        ;; .byte shortcut1      ASCII code of shortcut #1 (e.g. uppercase B); or 0
+        ;; .byte shortcut2      ASCII code of shortcut #2 (e.g. uppercase b, or same); or 0
+        ;; .addr label          Address of pascal (length-prefixed) string
+        ;; or for a separator:
+        ;; .word $40, $13, $0
+
+A2D_MENU_CLICK := $31           ; Enter modal loop for handling mouse-down on menu bar
+        ;; (input not copied)
+        ;; (output 2 bytes)
+        ;; .byte menu_id        Top level menu identifier, or 0 if none
+        ;; .byte item_num       Index (1-based) of item in menu, or 0 if none
+
 A2D_CREATE_WINDOW := $38
         ;; (input not copied)
         ;; .byte id             0 = desktop, 1-...n = DeskTop windows, DAs use 51, 52, 100

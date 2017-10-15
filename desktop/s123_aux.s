@@ -26,6 +26,8 @@
 
         ;; $8A initialized same way as state (see $01 IMPL)
 
+        ;; $A8          - Menu count
+
         ;; $D0-$F3      - Drawing state
         ;;  $D0-$DF      - Box
         ;;   $D0-D1       - left
@@ -325,8 +327,8 @@ a2d_jump_table:
         .addr   SET_INPUT_IMPL      ; $2D SET_INPUT
         .addr   L6814               ; $2E
         .addr   L6ECD               ; $2F
-        .addr   L6926               ; $30
-        .addr   L6BDB               ; $31
+        .addr   SET_MENU_IMPL       ; $30 SET_MENU
+        .addr   MENU_CLICK_IMPL     ; $31 MENU_CLICK
         .addr   L6B60               ; $32
         .addr   L6B1D               ; $33
         .addr   L6BCB               ; $34
@@ -413,8 +415,8 @@ param_lengths:
         PARAM_DEFN  5, $82, 0           ; $2D SET_INPUT
         PARAM_DEFN  1, $82, 0           ; $2E
         PARAM_DEFN  4, $82, 0           ; $2F
-        PARAM_DEFN  0, $00, 0           ; $30
-        PARAM_DEFN  0, $00, 0           ; $31
+        PARAM_DEFN  0, $00, 0           ; $30 SET_MENU
+        PARAM_DEFN  0, $00, 0           ; $31 MENU_CLICK
         PARAM_DEFN  4, $C7, 0           ; $32
         PARAM_DEFN  1, $C7, 0           ; $33
         PARAM_DEFN  2, $C7, 0           ; $34
@@ -4699,7 +4701,7 @@ L6751:  .byte   $66
 
 ;;; $2B IMPL
 
-;;; This is called during init by the DAs, just befire
+;;; This is called during init by the DAs, just before
 ;;; entering the input loop.
 
 L6752:  .byte   0
@@ -4772,8 +4774,10 @@ L681F:  .byte   $10
 L6820:  .byte   $09
 L6821:  .byte   $1E
 L6822:  .byte   $00
-L6823:  .byte   $00
-L6824:  .byte   $00
+
+active_menu:
+        .addr   0
+
 
 .proc test_box_params
 left:   .word   $ffff
@@ -4830,11 +4834,12 @@ L6864:  .byte   $68
 L6865:  .byte   $5A
 L6866:  .byte   $68
 
-L6867:  lda     L6823
+get_menu_count:
+        lda     active_menu
         sta     $82
-        lda     L6824
+        lda     active_menu+1
         sta     $83
-        ldy     #$00
+        ldy     #0
         lda     ($82),y
         sta     $A8
         rts
@@ -4846,9 +4851,9 @@ L687D:  dex
         bmi     L6884
         adc     #$0C
         bne     L687D
-L6884:  adc     L6823
+L6884:  adc     active_menu
         sta     $AB
-        lda     L6824
+        lda     active_menu+1
         adc     #$00
         sta     $AC
         ldy     #$0B
@@ -4910,7 +4915,9 @@ L68F0:  sta     state_xpos
         stx     state_xpos+1
         rts
 
-L68F5:  sta     state_fill
+        ;; Set fill mode to A
+set_fill_mode:
+        sta     state_fill
         jmp     SET_FILL_MODE_IMPL
 
 do_measure_text:
@@ -4943,24 +4950,27 @@ L691B:  A2D_CALL A2D_GET_INPUT, $82
 
 ;;; ==================================================
 
-;;; $30 IMPL
+;;; SET_MENU IMPL
 
 L6924:  .byte   0
 L6925:  .byte   0
-L6926:
+
+SET_MENU_IMPL:
         lda     #$00
         sta     L633D
         sta     L633E
         lda     params_addr
-        sta     L6823
+        sta     active_menu
         lda     params_addr+1
-        sta     L6824
-        jsr     L6867
+        sta     active_menu+1
+
+        jsr     get_menu_count  ; into $A8
         jsr     L653C
         jsr     L657E
         lda     L685F
         ldx     L6860
-        jsr     L6A66
+        jsr     fill_and_frame_rect
+
         lda     #$0C
         ldx     #$00
         ldy     L6822
@@ -5101,17 +5111,20 @@ L6A5C:  ldx     $A7
         ldx     $A9
         jmp     L68BE
 
-L6A66:  sta     L6A7B
-        stx     L6A7B+1
-        sta     L6A86
-        stx     L6A86+1
-        lda     #$00
-        jsr     L68F5
-        A2D_CALL A2D_FILL_RECT, 0, L6A7B
-        lda     #$04
-        jsr     L68F5
-        A2D_CALL A2D_DRAW_RECT, 0, L6A86
+        ;; Fills rect (params at X,A) then inverts border
+.proc fill_and_frame_rect
+        sta     fill_params
+        stx     fill_params+1
+        sta     draw_params
+        stx     draw_params+1
+        lda     #0
+        jsr     set_fill_mode
+        A2D_CALL A2D_FILL_RECT, 0, fill_params
+        lda     #4
+        jsr     set_fill_mode
+        A2D_CALL A2D_DRAW_RECT, 0, draw_params
         rts
+.endproc
 
 L6A89:  jsr     L6A94
         bne     L6A93
@@ -5122,7 +5135,7 @@ L6A93:  rts
 
 L6A94:  lda     #$00
 L6A96:  sta     $C6
-        jsr     L6867
+        jsr     get_menu_count
         ldx     #$00
 L6A9D:  jsr     L6878
         bit     $C6
@@ -5223,7 +5236,7 @@ loop:   lda     $B7,x
         dex
         bpl     loop
         lda     #$02
-        jsr     L68F5
+        jsr     set_fill_mode
         A2D_CALL A2D_FILL_RECT, fill_rect_params2
         rts
 .endproc
@@ -5236,12 +5249,12 @@ loop:   lda     $B7,x
 
 L6B60:
         lda     $C9
-        cmp     #$1B
+        cmp     #$1B            ; Menu height?
         bne     L6B70
         lda     $CA
         bne     L6B70
         jsr     L7D61
-        jmp     L6BDB
+        jmp     MENU_CLICK_IMPL
 
 L6B70:  lda     #$C0
         jsr     L6A96
@@ -5321,12 +5334,14 @@ L6BCB:
 
 ;;; ==================================================
 
-;;; $31 IMPL
+;;; MENU_CLICK IMPL
 
 L6BD9:  .byte   0
 L6BDA:  .byte   0
-L6BDB:  jsr     L7ECD
-        jsr     L6867
+
+MENU_CLICK_IMPL:
+        jsr     L7ECD
+        jsr     get_menu_count
         jsr     L653F
         jsr     L657E
         bit     L7D74
@@ -5334,7 +5349,7 @@ L6BDB:  jsr     L7ECD
         jsr     L7FE1
         jmp     L6C23
 
-L6BF2:  lda     #$00
+L6BF2:  lda     #0
         sta     L6BD9
         sta     L6BDA
         jsr     L691B
@@ -5512,7 +5527,7 @@ L6D55:  lda     ($84),y
         jsr     L657E
         lda     L6861
         ldx     L6862
-        jsr     L6A66
+        jsr     fill_and_frame_rect
         inc     fill_rect_params4::left
         bne     L6D7A
         inc     fill_rect_params4::left+1
@@ -5621,11 +5636,11 @@ L6E36:  ldx     $A9
         sta     fill_rect_params3_right+1
         A2D_CALL A2D_SET_PATTERN, light_speckle_pattern
         lda     #$01
-        jsr     L68F5
+        jsr     set_fill_mode
         A2D_CALL A2D_FILL_RECT, fill_rect_params3
         A2D_CALL A2D_SET_PATTERN, screen_state::pattern
         lda     #$02
-        jsr     L68F5
+        jsr     set_fill_mode
         rts
 
 light_speckle_pattern:
@@ -5672,7 +5687,7 @@ L6EAA:  ldx     L6BDA
         sty     fill_rect_params4::bottom
         jsr     HIDE_CURSOR_IMPL
         lda     #$02
-        jsr     L68F5
+        jsr     set_fill_mode
         A2D_CALL A2D_FILL_RECT, fill_rect_params4
         jmp     SHOW_CURSOR_IMPL
 
@@ -6080,12 +6095,12 @@ L7187:  sta     $CD
         jmp     L70B2
 
 L718E:  jsr     L70B7
-        jsr     L6A66
+        jsr     fill_and_frame_rect
         lda     $AC
         and     #$01
         bne     L71AA
         jsr     L7143
-        jsr     L6A66
+        jsr     fill_and_frame_rect
         jsr     L73BF
         lda     $AD
         ldx     $AD+1
@@ -6145,7 +6160,7 @@ L7205:  lda     #$01
 L720B:  lda     #$03
         ldx     #$01
 L720F:  stx     L71E4
-        jsr     L68F5
+        jsr     set_fill_mode
         lda     $AC
         and     #$02
         beq     L7255
@@ -6311,7 +6326,7 @@ L734A:  pla
         ldx     left_scroll_params_addr+1
         jsr     L791C
 L7363:  lda     #$00
-        jsr     L68F5
+        jsr     set_fill_mode
         lda     $B0
         and     #$01
         beq     L737B
@@ -6336,7 +6351,7 @@ L738E:  lda     $AC
         bne     L73A6
         lda     #$C7
         ldx     #$00
-        jsr     L6A66
+        jsr     fill_and_frame_rect
         jmp     L73BE
 
         ;; Draw resize box
@@ -6346,7 +6361,7 @@ L73A8:  lda     $C7,x
         dex
         bpl     L73A8
         lda     #$04
-        jsr     L68F5
+        jsr     set_fill_mode
         lda     resize_box_params_addr
         ldx     resize_box_params_addr+1
         jsr     L791C
@@ -6732,7 +6747,7 @@ in_close_box:  .byte   0
         lda     #$80
 toggle: sta     in_close_box
         lda     #$02
-        jsr     L68F5
+        jsr     set_fill_mode
         jsr     HIDE_CURSOR_IMPL
         A2D_CALL A2D_FILL_RECT, $C7
         jsr     SHOW_CURSOR_IMPL
@@ -6801,7 +6816,7 @@ L76B6:  lda     $83,x
 L76D1:  jsr     L653C
         jsr     L784C
         lda     #$02
-        jsr     L68F5
+        jsr     set_fill_mode
         A2D_CALL A2D_SET_PATTERN, checkerboard_pattern
 L76E2:  jsr     L703E
         jsr     L7749
@@ -7012,7 +7027,7 @@ L7872:  sta     L7010
         sta     L7871
         A2D_CALL A2D_SET_BOX, set_box_params
         lda     #$00
-        jsr     L68F5
+        jsr     set_fill_mode
         A2D_CALL A2D_SET_PATTERN, checkerboard_pattern
         A2D_CALL A2D_FILL_RECT, set_box_params_box
         jsr     L6553
@@ -7212,7 +7227,7 @@ L79DC:  rts
 L79DD:  bit     $B0
         bvc     L79DC
 L79E1:  jsr     L7A73
-        jmp     L6A66
+        jmp     fill_and_frame_rect
 
 light_speckles_pattern:
         .byte   %11011101
@@ -7494,7 +7509,7 @@ L7BE0:  jsr     L7A73
         jsr     L653F
         jsr     L6588
         lda     #$02
-        jsr     L68F5
+        jsr     set_fill_mode
         A2D_CALL A2D_SET_PATTERN, light_speckles_pattern
         jsr     HIDE_CURSOR_IMPL
 L7BF7:  jsr     L707F
