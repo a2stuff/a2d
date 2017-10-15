@@ -321,6 +321,13 @@ A2D_QUERY_STATE      := $3C     ; get drawing state of window
         ;; .byte id             window
         ;; .addr state          state definition to populate, like A2D_SET_STATE
 
+A2D_UPDATE_STATE     := $3D     ; Update drawing state by passed window id
+        ;; ** Implementation appears buggy - or maybe just really cryptic ??? **
+        ;; (input length 2 bytes)
+        ;; .byte id             window
+        ;; .byte ???
+
+
 A2D_REDRAW_WINDOW := $3E        ; Draws window border, background, title bar, scroll bars
         ;; (input length 1 byte)
         ;; .byte id
@@ -332,12 +339,14 @@ A2D_QUERY_TARGET   := $40
         ;; .byte element        (out) A2D_ELEM_*
         ;; .byte id             (out) of window
 
-        ;; $41 used in DeskTop but not DAs - icon in window drop
+A2D_QUERY_TOP := $41            ; Get id of top window
         ;; (input length 0 bytes)
+        ;; (output length 1 byte)
+        ;; .byte id             (out) window, or 0 if none
 
-        ;; $42 ???
+A2D_RAISE_WINDOW   := $42       ; Make window topmost
         ;; (input length 1 byte)
-        ;; .byte id
+        ;; .byte id             window
 
 A2D_CLOSE_CLICK := $43
         ;; (input length 0 bytes)
