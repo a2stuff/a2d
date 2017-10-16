@@ -206,6 +206,11 @@ A2D_HOOK_MOUSE := $20           ; Install mouse hook; A=0 on success, $95 if mou
         ;; .addr hook           Mouse hook routine to install
         ;; .addr mouse_state    (out) Address of mouse state (.word x, y; .byte status)
 
+A2D_GET_INT_HANDLER     := $24  ; Get address of interrupt handler
+        ;; (input length 0)
+        ;; (output length 2 bytes)
+        ;; .addr handler        (out) Address of interrupt handler (after cld)
+
 A2D_SET_CURSOR  := $24          ; Set cursor definition
         ;; (input not copied)
         ;; .res 24 bitmap       2x12 byte bitmap

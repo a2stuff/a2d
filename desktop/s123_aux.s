@@ -320,7 +320,7 @@ a2d_jump_table:
         .addr   HOOK_MOUSE_IMPL     ; $20 HOOK_MOUSE
         .addr   L8427               ; $21
         .addr   L7D61               ; $22
-        .addr   L6747               ; $23
+        .addr   GET_INT_HANDLER_IMPL; $23 GET_INT_HANDLER
         .addr   SET_CURSOR_IMPL     ; $24 SET_CURSOR
         .addr   SHOW_CURSOR_IMPL    ; $25 SHOW_CURSOR
         .addr   HIDE_CURSOR_IMPL    ; $26 HIDE_CURSOR
@@ -408,7 +408,7 @@ param_lengths:
         PARAM_DEFN  2, $82, 0           ; $20 HOOK_MOUSE
         PARAM_DEFN  2, $82, 0           ; $21
         PARAM_DEFN  1, $82, 0           ; $22
-        PARAM_DEFN  0, $00, 0           ; $23
+        PARAM_DEFN  0, $00, 0           ; $23 GET_INT_HANDLER
         PARAM_DEFN  0, $00, 0           ; $24 SET_CURSOR
         PARAM_DEFN  0, $00, 0           ; $25 SHOW_CURSOR
         PARAM_DEFN  0, $00, 0           ; $26 HIDE_CURSOR
@@ -4661,6 +4661,8 @@ int_stash_rd80store:
 .proc interrupt_handler
         cld                     ; required for interrupt handlers
 
+body:                           ; returned by A2D_GET_INT_HANDLER
+
         lda     RDPAGE2         ; record softswitch state
         sta     int_stash_rdpage2
         lda     RD80STORE
@@ -4703,15 +4705,15 @@ rloop:  lda     int_stash_zp,x
 
 ;;; ==================================================
 
-;;; $23 IMPL
+;;; GET_INT_HANDLER IMPL
 
-L6747:
+.proc GET_INT_HANDLER_IMPL
         lda     L6750
-        ldx     L6751
+        ldx     L6750+1
         jmp     store_xa_at_params
 
-L6750:  .byte   $F9
-L6751:  .byte   $66
+L6750:  .addr   interrupt_handler::body
+.endproc
 
 ;;; ==================================================
 
