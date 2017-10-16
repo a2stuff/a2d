@@ -4843,6 +4843,7 @@ bottom: .word   0
 L6847:  .byte   $0C
 L6848:  .byte   $18,$24,$30,$3C,$48,$54,$60,$6C
         .byte   $78,$84,$90,$9C,$A8,$B4
+
 L6856:  .byte   $1E
 L6857:  .byte   $1F
 L6858:  .byte   $1D
@@ -5723,16 +5724,19 @@ L6EAA:  ldx     L6BDA
 ;;; 4 bytes of params, copied to $82
 
 .proc L6ECD
-        ldx     #$03
-loop:   lda     $82,x
+        params := $82
+
+        ldx     #3
+loop:   lda     params,x
         sta     L6856,x
         dex
         bpl     loop
+
         lda     screen_state::font
-        sta     $82
+        sta     params
         lda     screen_state::font+1
-        sta     $83
-        ldy     #$00
+        sta     params+1
+        ldy     #0
         lda     ($82),y
         bmi     :+
 
