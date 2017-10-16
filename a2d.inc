@@ -199,6 +199,13 @@ A2D_INIT_SCREEN_AND_MOUSE := $1D; Inits state, registers interrupt handler, draw
 A2D_DISABLE_MOUSE  := $1E       ; Deallocates interrupt, hides cursor
         ;; (no parameters; pass $0000 as address)
 
+A2D_HOOK_MOUSE := $20           ; Install mouse hook; A=0 on success, $95 if mouse disabled
+        ;; NOTE: Doesn't set the internal flag - buggy ???
+        ;; (input length 2 bytes)
+        ;; (output length 2 bytes)
+        ;; .addr hook           Mouse hook routine to install
+        ;; .addr mouse_state    (out) Address of mouse state (.word x, y; .byte status)
+
 A2D_SET_CURSOR  := $24          ; Set cursor definition
         ;; (input not copied)
         ;; .res 24 bitmap       2x12 byte bitmap

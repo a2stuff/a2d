@@ -317,7 +317,7 @@ a2d_jump_table:
         .addr   INIT_SCREEN_AND_MOUSE_IMPL ; $1D INIT_SCREEN_AND_MOUSE
         .addr   DISABLE_MOUSE_IMPL  ; $1E DISABLE_MOUSE
         .addr   L64D2               ; $1F
-        .addr   L65B3               ; $20
+        .addr   HOOK_MOUSE_IMPL     ; $20 HOOK_MOUSE
         .addr   L8427               ; $21
         .addr   L7D61               ; $22
         .addr   L6747               ; $23
@@ -405,7 +405,7 @@ param_lengths:
         PARAM_DEFN 12, $82, 0           ; $1D INIT_SCREEN_AND_MOUSE
         PARAM_DEFN  0, $00, 0           ; $1E DISABLE_MOUSE
         PARAM_DEFN  3, $82, 0           ; $1F
-        PARAM_DEFN  2, $82, 0           ; $20
+        PARAM_DEFN  2, $82, 0           ; $20 HOOK_MOUSE
         PARAM_DEFN  2, $82, 0           ; $21
         PARAM_DEFN  1, $82, 0           ; $22
         PARAM_DEFN  0, $00, 0           ; $23
@@ -3653,17 +3653,19 @@ xcoord: .word   0
 ycoord: .word   0
 .endproc
 
-mouse_x_lo:  .byte   0
-mouse_x_hi:  .byte   0
-mouse_y_lo:  .byte   0
-mouse_y_hi:  .byte   0          ; not really used due to clamping
+mouse_state:
+mouse_x:  .word   0
+mouse_y:  .word   0
 mouse_status:.byte   0
 
 L5FFD:  .byte   $00
 L5FFE:  .byte   $00
-L5FFF:  .byte   $00
-L6000:  .byte   $00
-L6001:  .byte   $00
+
+mouse_hooked_flag:              ; High bit set if mouse is "hooked", and calls
+        .byte   0               ; bypassed; never appears to be set.
+
+mouse_hook:
+        .addr   0
 
 cursor_hotspot_x:  .byte   $00
 cursor_hotspot_y:  .byte   $00
@@ -3985,7 +3987,7 @@ L6265:  bit     L6339
         lda     #$02
         sta     L6264
 L627C:  ldx     #2
-L627E:  lda     mouse_x_lo,x
+L627E:  lda     mouse_x,x
         cmp     set_pos_params,x
         bne     L628B
         dex
@@ -3994,7 +3996,7 @@ L627E:  lda     mouse_x_lo,x
 L628B:  jsr     restore_cursor_background
         ldx     #2
         stx     cursor_flag
-L6293:  lda     mouse_x_lo,x
+L6293:  lda     mouse_x,x
         sta     set_pos_params,x
         dex
         bpl     L6293
@@ -4013,33 +4015,33 @@ rts4:   rts
 
 L62BA:  ldy     #READMOUSE
         jsr     call_mouse
-        bit     L5FFF
+        bit     mouse_hooked_flag
         bmi     L62D9
         ldx     mouse_firmware_hi
         lda     MOUSE_X_LO,x
-        sta     mouse_x_lo
+        sta     mouse_x
         lda     MOUSE_X_HI,x
-        sta     mouse_x_hi
+        sta     mouse_x+1
         lda     MOUSE_Y_LO,x
-        sta     mouse_y_lo
+        sta     mouse_y
 L62D9:  ldy     L5FFD
         beq     L62EF
-L62DE:  lda     mouse_x_lo
+L62DE:  lda     mouse_x
         asl     a
-        sta     mouse_x_lo
-        lda     mouse_x_hi
+        sta     mouse_x
+        lda     mouse_x+1
         rol     a
-        sta     mouse_x_hi
+        sta     mouse_x+1
         dey
         bne     L62DE
 L62EF:  ldy     L5FFE
         beq     L62FE
-        lda     mouse_y_lo
+        lda     mouse_y
 L62F7:  asl     a
         dey
         bne     L62F7
-        sta     mouse_y_lo
-L62FE:  bit     L5FFF
+        sta     mouse_y
+L62FE:  bit     mouse_hooked_flag
         bmi     L6309
         lda     MOUSE_STATUS,x
         sta     mouse_status
@@ -4058,12 +4060,12 @@ L6309:  rts
 ;;; ==================================================
 
         ;; Call mouse firmware, operation in Y, param in A
-call_mouse:
+.proc call_mouse
         bit     no_mouse_flag
         bmi     rts4
 
-        bit     L5FFF
-        bmi     L6332
+        bit     mouse_hooked_flag
+        bmi     hooked
         pha
         ldx     mouse_firmware_hi
         stx     $89
@@ -4075,7 +4077,8 @@ call_mouse:
         ldy     mouse_operand
         jmp     ($88)
 
-L6332:  jmp     (L6000)
+hooked: jmp     (mouse_hook)
+.endproc
 
 L6335:  .byte   $00
 L6336:  .byte   $00
@@ -4432,27 +4435,32 @@ checkerboard_pattern:
 
 ;;; ==================================================
 
-;;; $20 IMPL
+;;; HOOK_MOUSE IMPL
 
 ;;; 2 bytes of params, copied to $82
 
-L65B3:
-        bit     $633F
-        bmi     L65CD
-        lda     $82
-        sta     L6000
-        lda     $83
-        sta     L6001
-        lda     L65D2
-        ldx     L65D3
-        ldy     #$02
+.proc HOOK_MOUSE_IMPL
+        params := $82
+
+        bit     hide_cursor_flag
+        bmi     fail
+
+        lda     params
+        sta     mouse_hook
+        lda     params+1
+        sta     mouse_hook+1
+
+        lda     mouse_state_addr
+        ldx     mouse_state_addr+1
+        ldy     #2
         jmp     store_xa_at_params_y
 
-L65CD:  lda     #$95
+fail:   lda     #$95
         jmp     a2d_exit_with_a
 
-L65D2:  .byte   $F8
-L65D3:  .byte   $5F
+mouse_state_addr:
+        .addr   mouse_state
+.endproc
 
 ;;; ==================================================
 
@@ -7784,7 +7792,7 @@ L7D90:  lda     L7D99,x
 
 L7D99:  .res    128, 0
 
-L7E19:  bit     L5FFF
+L7E19:  bit     mouse_hooked_flag
         bmi     L7E49
         bit     no_mouse_flag
         bmi     L7E49
@@ -7807,10 +7815,10 @@ L7E19:  bit     L5FFF
         ldy     #POSMOUSE
         jmp     call_mouse
 
-L7E49:  stx     mouse_x_lo
-        sty     mouse_x_hi
-        sta     mouse_y_lo
-        bit     L5FFF
+L7E49:  stx     mouse_x
+        sty     mouse_x+1
+        sta     mouse_y
+        bit     mouse_hooked_flag
         bpl     L7E5C
         ldy     #POSMOUSE
         jmp     call_mouse
@@ -7846,7 +7854,7 @@ L7E82:  pha
 
 L7E8C:  ldx     #$02
 L7E8E:  lda     L7D75,x
-        sta     mouse_x_lo,x
+        sta     mouse_x,x
         dex
         bpl     L7E8E
         rts
@@ -7856,7 +7864,7 @@ L7E98:  jsr     L7E8C
 
 L7E9E:  jsr     L62BA
         ldx     #$02
-L7EA3:  lda     mouse_x_lo,x
+L7EA3:  lda     mouse_x,x
         sta     L7D7C,x
         dex
         bpl     L7EA3
@@ -8017,7 +8025,7 @@ L7FC1:  lda     mouse_status
         and     #$20
         beq     L7FDE
         ldx     #$02
-L7FD1:  lda     mouse_x_lo,x
+L7FD1:  lda     mouse_x,x
         sta     L7D75,x
         dex
         bpl     L7FD1
@@ -8598,24 +8606,24 @@ L8431:  bit     no_mouse_flag   ; called after INITMOUSE
         asl     a
         tay
         lda     #0
-        sta     mouse_x_lo
-        sta     mouse_x_hi
-        bit     L5FFF
+        sta     mouse_x
+        sta     mouse_x+1
+        bit     mouse_hooked_flag
         bmi     :+
 
         sta     CLAMP_MIN_LO
         sta     CLAMP_MIN_HI
 
 :       lda     clamp_x_table,y
-        sta     mouse_y_lo
-        bit     L5FFF
+        sta     mouse_y
+        bit     mouse_hooked_flag
         bmi     :+
 
         sta     CLAMP_MAX_LO
 
 :       lda     clamp_x_table+1,y
-        sta     mouse_y_hi
-        bit     L5FFF
+        sta     mouse_y+1
+        bit     mouse_hooked_flag
         bmi     :+
         sta     CLAMP_MAX_HI
 :       lda     #CLAMP_X
@@ -8626,20 +8634,20 @@ L8431:  bit     no_mouse_flag   ; called after INITMOUSE
         asl     a
         tay
         lda     #0
-        sta     mouse_x_lo
-        sta     mouse_x_hi
-        bit     L5FFF
+        sta     mouse_x
+        sta     mouse_x+1
+        bit     mouse_hooked_flag
         bmi     :+
         sta     CLAMP_MIN_LO
         sta     CLAMP_MIN_HI
 :       lda     clamp_y_table,y
-        sta     mouse_y_lo
-        bit     L5FFF
+        sta     mouse_y
+        bit     mouse_hooked_flag
         bmi     :+
         sta     CLAMP_MAX_LO
 :       lda     clamp_y_table+1,y
-        sta     mouse_y_hi
-        bit     L5FFF
+        sta     mouse_y+1
+        bit     mouse_hooked_flag
         bmi     :+
         sta     CLAMP_MAX_HI
 :       lda     #CLAMP_Y
