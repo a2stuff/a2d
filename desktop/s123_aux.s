@@ -331,7 +331,7 @@ a2d_jump_table:
         .addr   CALL_2B_IMPL        ; $2B
         .addr   L65D4               ; $2C
         .addr   SET_INPUT_IMPL      ; $2D SET_INPUT
-        .addr   L6814               ; $2E
+        .addr   SET_KBD_FLAG_IMPL   ; $2E SET_KBD_FLAG
         .addr   L6ECD               ; $2F
         .addr   SET_MENU_IMPL       ; $30 SET_MENU
         .addr   MENU_CLICK_IMPL     ; $31 MENU_CLICK
@@ -419,7 +419,7 @@ param_lengths:
         PARAM_DEFN  0, $00, 0           ; $2B
         PARAM_DEFN  0, $00, 0           ; $2C
         PARAM_DEFN  5, $82, 0           ; $2D SET_INPUT
-        PARAM_DEFN  1, $82, 0           ; $2E
+        PARAM_DEFN  1, $82, 0           ; $2E SET_KBD_FLAG
         PARAM_DEFN  4, $82, 0           ; $2F
         PARAM_DEFN  0, $00, 0           ; $30 SET_MENU
         PARAM_DEFN  0, $00, 0           ; $31 MENU_CLICK
@@ -4598,7 +4598,7 @@ L666D:
 
         bit     mouse_status
         bmi     end             ; minus = is down
-        bit     L6813
+        bit     check_kbd_flag
         bpl     L66B9
         lda     L7D74
         bne     L66B9
@@ -4779,12 +4779,19 @@ L6811:  clc
 
 ;;; 1 byte of params, copied to $82
 
-L6813:  .byte   $80
-L6814:
-        asl     L6813
-        ror     $82
-        ror     L6813
+check_kbd_flag:  .byte   $80
+
+.proc SET_KBD_FLAG_IMPL
+        params := $82
+
+        asl     check_kbd_flag
+        ror     params
+        ror     check_kbd_flag
         rts
+.endproc
+
+;;; ==================================================
+
 
 L681D:  .byte   $02
 L681E:  .byte   $09

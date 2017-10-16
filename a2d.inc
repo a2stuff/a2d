@@ -259,6 +259,10 @@ A2D_SET_INPUT   := $2D          ; Set pending input state (mouse or keyboard)
         ;;   .word xcoord
         ;;   .word ycoord
 
+A2D_SET_KBD_FLAG   := $2E       ; When set, keyboard is ignored in $29 calls
+        ;; (input length 1 byte)
+        ;; .byte flag           high bit set = ignore keyboard, otherwise check
+
 A2D_SET_MENU := $30             ; Configure (and draw) menu
         ;; (input not copied)
         ;; .word count          Number of top-level menus
