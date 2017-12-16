@@ -9,7 +9,7 @@ TARGETS = calculator.F1 show_text_file.F1 date.F1 puzzle.F1 show_image_file.F1 c
 .PHONY: clean all
 all: $(TARGETS)
 
-HEADERS = $(wildcard ../*.inc) $(wildcard *.inc)
+HEADERS = $(wildcard ../*.inc) $(wildcard ../inc/*.inc) $(wildcard *.inc)
 
 clean:
 	rm -f *.o

@@ -26,6 +26,7 @@
 
         ;; $8A initialized same way as state (see $01 IMPL)
 
+
         ;; $A8          - Menu count
 
         ;; $A9-$AA      - Address of current window
@@ -312,7 +313,7 @@ a2d_jump_table:
         .addr   MEASURE_TEXT_IMPL   ; $18 MEASURE_TEXT
         .addr   DRAW_TEXT_IMPL      ; $19 DRAW_TEXT
         .addr   CONFIGURE_ZP_IMPL   ; $1A CONFIGURE_ZP_USE
-        .addr   L5EDE               ; $1B
+        .addr   LOW_ZP_STASH_IMPL   ; $1B LOW_ZP_STASH
         .addr   L5F0A               ; $1C
         .addr   INIT_SCREEN_AND_MOUSE_IMPL ; $1D INIT_SCREEN_AND_MOUSE
         .addr   DISABLE_MOUSE_IMPL  ; $1E DISABLE_MOUSE
@@ -400,7 +401,7 @@ param_lengths:
         PARAM_DEFN  3, $A1, 0           ; $18 MEASURE_TEXT
         PARAM_DEFN  3, $A1, 1           ; $19 DRAW_TEXT
         PARAM_DEFN  1, $82, 0           ; $1A CONFIGURE_ZP_USE
-        PARAM_DEFN  1, $82, 0           ; $1B
+        PARAM_DEFN  1, $82, 0           ; $1B LOW_ZP_STASH
         PARAM_DEFN  0, $00, 0           ; $1C
         PARAM_DEFN 12, $82, 0           ; $1D INIT_SCREEN_AND_MOUSE
         PARAM_DEFN  0, $00, 0           ; $1E DISABLE_MOUSE
@@ -2052,7 +2053,7 @@ L53F8:  ldx     $AD
         sta     $05E8,x
         sta     $05E9,x
         lda     $07BC,y
-        sta     L5E01,x
+        sta     low_zp_stash_buffer,x
         sta     L5E02,x
         lda     $0700,y
         sta     L5E32,x
@@ -2127,7 +2128,7 @@ L54B2:  ldx     $B1
         lda     $05E8,x
         sta     $A9
         sta     $94
-        lda     L5E01,x
+        lda     low_zp_stash_buffer,x
         sta     $AA
         sta     $95
 L54C2:  ldx     $B1
@@ -2135,7 +2136,7 @@ L54C2:  ldx     $B1
 L54C6:  lda     $05E8,x
         cmp     $A9
         bne     L5532
-        lda     L5E01,x
+        lda     low_zp_stash_buffer,x
         cmp     $AA
         bne     L5532
         lda     $0428,x
@@ -2192,7 +2193,7 @@ L553E:  tax
         cmp     $05E8,x
         bne     L5584
         lda     $AA
-        cmp     L5E01,x
+        cmp     low_zp_stash_buffer,x
         bne     L5584
         ldy     $0468,x
         lda     $0680,y
@@ -2282,7 +2283,7 @@ L5606:  ldy     $04A8,x
         sbc     $A9
         sta     $A3
         lda     $07BC,y
-        sta     L5E01,x
+        sta     low_zp_stash_buffer,x
         sbc     $AA
         sta     $A4
         lda     $0700,y
@@ -2813,7 +2814,7 @@ L5933:  sta     $94
 ;;; 3 bytes of params, copied to $A1
 
 DRAW_TEXT_IMPL:
-        jsr     L5EFA
+        jsr     maybe_unstash_low_zp
         jsr     measure_text
         sta     $A4
         stx     $A5
@@ -2880,7 +2881,7 @@ L59A8:  lda     #0
         sta     LOWSCR,x
         jsr     L59C3
         sta     LOWSCR
-L59B9:  jsr     L5EEA
+L59B9:  jsr     maybe_stash_low_zp
         lda     $A4
         ldx     $A4+1
         jmp     adjust_xpos
@@ -3372,6 +3373,7 @@ L5DA1:  .addr   L5AE2,L5ADD,L5AD8,L5AD3,L5ACE,L5AC9,L5AC4,L5ABF,L5ABA,L5AB5,L5AB
 L5DC1:  .addr   L5C7E,L5C78,L5C72,L5C6C,L5C66,L5C60,L5C5A,L5C54,L5C4E,L5C48,L5C42,L5C3C,L5C36,L5C30,L5C2A,L5C24
 L5DE1:  .addr   L5D74,L5D68,L5D5C,L5D50,L5D44,L5D38,L5D2C,L5D20,L5D14,L5D08,L5CFC,L5CF0,L5CE4,L5CD8,L5CCC,L5CC0
 
+low_zp_stash_buffer:
 L5E01:  .byte   $00
 L5E02:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00
@@ -3403,12 +3405,12 @@ L5E42:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         ldx     #sizeof_state-1
 loop:   lda     screen_state,x
         sta     $8A,x
-        sta     $D0,x
+        sta     state,x
         dex
         bpl     loop
 
-        lda     L5E79
-        ldx     L5E79+1
+        lda     saved_state_addr
+        ldx     saved_state_addr+1
         jsr     assign_and_prepare_state
 
         lda     #$7F
@@ -3418,7 +3420,8 @@ loop:   lda     screen_state,x
         sta     fill_eor_mask
         rts
 
-L5E79:  .addr   L5F42
+saved_state_addr:
+        .addr   saved_state
 .endproc
 
 ;;; ==================================================
@@ -3530,34 +3533,49 @@ rts3:   rts
 
 ;;; ==================================================
 
-;;; $1B IMPL
+;;; LOW_ZP_STASH IMPL
 
 ;;; 1 byte of params, copied to $82
 
-L5EDE:
+;;; If high bit clear stash ZP $00-$43 to buffer if not already stashed.
+;;; If high bit clear unstash ZP $00-$43 from buffer if not already unstashed.
+
+.proc LOW_ZP_STASH_IMPL
         lda     $82
-        cmp     L5F1C
+        cmp     low_zp_stash_flag
         beq     rts3
-        sta     L5F1C
-        bcc     L5EFF
-L5EEA:  bit     L5F1C
-        bpl     L5EF9
+        sta     low_zp_stash_flag
+        bcc     unstash
+
+maybe_stash:
+        bit     low_zp_stash_flag
+        bpl     end
+
+        ;; Copy buffer to ZP $00-$43
+stash:
         ldx     #$43
-L5EF1:  lda     L5E01,x
+:       lda     low_zp_stash_buffer,x
         sta     $00,x
         dex
-        bpl     L5EF1
-L5EF9:  rts
+        bpl     :-
 
+end:    rts
 
-L5EFA:  bit     L5F1C
-        bpl     L5EF9
-L5EFF:  ldx     #$43
-L5F01:  lda     $00,x
-        sta     L5E01,x
+maybe_unstash:
+        bit     low_zp_stash_flag
+        bpl     end
+
+        ;; Copy ZP $00-$43 to buffer
+unstash:
+        ldx     #$43
+:       lda     $00,x
+        sta     low_zp_stash_buffer,x
         dex
-        bpl     L5F01
+        bpl     :-
         rts
+.endproc
+        maybe_stash_low_zp := LOW_ZP_STASH_IMPL::maybe_stash
+        maybe_unstash_low_zp := LOW_ZP_STASH_IMPL::maybe_unstash
 
 ;;; ==================================================
 
@@ -3581,7 +3599,8 @@ table:  .byte   $01,$00,$00,$46,$01,$00
 preserve_zp_flag:         ; if high bit set, ZP saved during A2D calls
         .byte   $80
 
-L5F1C:  .byte   $80
+low_zp_stash_flag:
+        .byte   $80
 
 stack_ptr_stash:
         .byte   0
@@ -3614,7 +3633,7 @@ font:   .addr   0
 ;;; ==================================================
 
 
-.proc L5F42
+.proc saved_state
 left:   .word   0
 top:    .word   0
 addr:   .addr   A2D_SCREEN_ADDR
@@ -3636,7 +3655,7 @@ font:   .addr   0
 .endproc
 
 active_saved:           ; saved copy of $F4...$FF when ZP swapped
-        .addr   L5F42
+        .addr   saved_state
         .res    10, 0
 
 zp_saved:               ; top half of ZP for when preserve_zp_flag set
@@ -4148,13 +4167,13 @@ L6348:  lda     $82,x
         stx     L6594
         stx     fill_rect_params_top
         dex
-        stx     L6847
+        stx     menu_item_y_table
         clc
         ldy     #$00
 L63AC:  txa
-        adc     L6847,y
+        adc     menu_item_y_table,y
         iny
-        sta     L6847,y
+        sta     menu_item_y_table,y
         cpy     #$0E
         bcc     L63AC
         lda     #$01
@@ -4389,7 +4408,7 @@ L6567:  sta     $82
         sta     stack_ptr_stash
         ldy     #sizeof_state-1
 L6573:  lda     ($82),y
-        sta     $D0,y
+        sta     state,y
         dey
         bpl     L6573
         jmp     prepare_state
@@ -4840,9 +4859,10 @@ bottom: .word   0
 .endproc
         fill_rect_params4_top := fill_rect_params4::top
 
-L6847:  .byte   $0C
-L6848:  .byte   $18,$24,$30,$3C,$48,$54,$60,$6C
-        .byte   $78,$84,$90,$9C,$A8,$B4
+menu_item_y_table:
+        .repeat 15, i
+        .byte   12 + 12 * i
+        .endrepeat
 
 L6856:  .byte   $1E
 L6857:  .byte   $1F
@@ -5206,7 +5226,7 @@ L6ADE:  jsr     L68BE
         cpx     $C8
         bne     L6B16
         beq     L6B1C
-L6AF0:  lda     L6847,x
+L6AF0:  lda     menu_item_y_table,x
         cmp     set_pos_params::ycoord
         bcs     L6B1C
         bcc     L6B16
@@ -5464,7 +5484,7 @@ L6C98:  lda     $BC
         lda     L6836
         sta     $8F
         ldy     $AA
-        ldx     L6847,y
+        ldx     menu_item_y_table,y ; ???
         inx
         stx     $83
         stx     fill_rect_params4::bottom
@@ -5631,7 +5651,7 @@ L6E18:  ldx     $A9
 L6E22:  jmp     SHOW_CURSOR_IMPL
 
 L6E25:  ldx     $A9
-        ldy     L6848,x
+        ldy     menu_item_y_table+1,x ; ???
         dey
         ldx     $BC
         clc
@@ -5641,10 +5661,10 @@ L6E25:  ldx     $A9
 L6E33:  jmp     L68EA
 
 L6E36:  ldx     $A9
-        lda     L6847,x
+        lda     menu_item_y_table,x
         sta     fill_rect_params3_top
         inc     fill_rect_params3_top
-        lda     L6848,x
+        lda     menu_item_y_table+1,x
         sta     fill_rect_params3_bottom
         clc
         lda     $BB
@@ -5709,7 +5729,7 @@ L6EAA:  ldx     L6BDA
         ldy     fill_rect_params4::bottom+1,x ; ???
         iny
         sty     fill_rect_params4::top
-        ldy     L6847,x
+        ldy     menu_item_y_table,x
         sty     fill_rect_params4::bottom
         jsr     HIDE_CURSOR_IMPL
         lda     #$02
@@ -6612,19 +6632,20 @@ L750C:  .res    38,0
         jsr     window_by_id_or_exit
         lda     $AB
         cmp     L7010
-        bne     L753F
+        bne     :+
         inc     L7871
-L753F:  jsr     L653C
+
+:       jsr     L653C
         jsr     L6588
         lda     L7871
-        bne     L7550
+        bne     :+
         A2D_CALL A2D_SET_BOX, set_box_params
-L7550:  jsr     L718E
+:       jsr     L718E
         jsr     L6588
         lda     L7871
-        bne     L7561
+        bne     :+
         A2D_CALL A2D_SET_BOX, set_box_params
-L7561:  jsr     next_window::L703E
+:       jsr     next_window::L703E
         lda     active_state
         sta     L750C
         lda     active_state+1
@@ -6632,15 +6653,16 @@ L7561:  jsr     next_window::L703E
         jsr     L75C6
         php
         lda     L758A
-        ldx     L758B
+        ldx     L758A+1
         jsr     assign_and_prepare_state
         asl     preserve_zp_flag
         plp
-        bcc     L7582
+        bcc     :+
         rts
+:       jsr     L758C
+        ;; fall through
 .endproc
 
-L7582:  jsr     L758C
 L7585:  lda     #$A3
         jmp     a2d_exit_with_a
 
@@ -6650,8 +6672,7 @@ L7585:  lda     #$A3
 
 ;;; 1 byte of params, copied to $82
 
-L758A:  .byte   $0E
-L758B:  .byte   $75
+L758A:  .addr   L750C + 2
 
 L758C:  jsr     SHOW_CURSOR_IMPL
         lda     L750C
@@ -6679,7 +6700,7 @@ L75AC:  lda     fill_rect_params,x
         jsr     L75C6
         bcc     L7585
         ldy     #sizeof_state-1
-L75BB:  lda     $D0,y
+L75BB:  lda     state,y
         sta     (params_addr),y
         dey
         bpl     L75BB
@@ -6831,7 +6852,10 @@ L769F:  .byte   $00
 L76A0:  .byte   $00,$00,$00
 L76A3:  .byte   $00
 L76A4:  .byte   $00,$00,$00
-L76A7:  .byte   $00
+
+        ;; High bit set if window is being resized, clear if moved.
+drag_resize_flag:
+        .byte   0
 
 ;;; ==================================================
 
@@ -6848,7 +6872,7 @@ DRAG_RESIZE_IMPL:
 DRAG_WINDOW_IMPL:
         lda     #$00
 
-L76AE:  sta     L76A7
+L76AE:  sta     drag_resize_flag
         jsr     L7ECD
         ldx     #$03
 L76B6:  lda     $83,x
@@ -6920,7 +6944,7 @@ L774B:  lda     ($A9),y
         bne     L774B
         ldx     #$00
         stx     set_input_params_unk
-        bit     L76A7
+        bit     drag_resize_flag
         bmi     L777D
 L775F:  lda     $B7,x
         clc
@@ -8077,7 +8101,7 @@ L800F:  ldx     L7D7A
         adc     #$00
         sta     L7D76
         ldy     L7D7B
-        lda     L6847,y
+        lda     menu_item_y_table,y
         sta     L7D77
         lda     #$C0
         sta     mouse_status
@@ -8252,7 +8276,7 @@ L817C:  php
         lda     #$80
         sta     mouse_status
         jsr     L70B7
-        bit     L76A7
+        bit     drag_resize_flag
         bpl     L81E4
         lda     $AC
         and     #$04
@@ -8488,7 +8512,7 @@ L8352:  lda     L7D74
         bne     L8368
         lda     L7D76
         bne     L8368
-        bit     L76A7
+        bit     drag_resize_flag
         bpl     L836A
 L8368:  sec
         rts
@@ -8522,7 +8546,7 @@ L8398:  clc
 L839A:  lda     L7D74
         cmp     #$04
         beq     L83B3
-        bit     L76A7
+        bit     drag_resize_flag
         .byte   $30
 L83A5:  ora     $75AD
         adc     $2FE9,x
@@ -8755,8 +8779,9 @@ mouse_operand:               ; e.g. if mouse is in slot 4, this is $40
 ;;; ==================================================
 
         .byte   $03
-        sbc     #$85
-        php
+        .addr    $85E9
+
+L8522:  php
         lda     $E904,x
         sta     $09
         ldy     #$14
@@ -8822,6 +8847,7 @@ L8594:  .byte   $00
 L8595:  .byte   $00
 L8596:  .byte   $00
 L8597:  .byte   $00
+
         lda     #$00
         ldx     #$00
 L859C:  sta     $D409,x
@@ -14442,7 +14468,7 @@ app_mask:
         .byte   px(%0000000),px(%0000000),px(%0011000),px(%0000000),px(%0000000)
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
 
-        .res    70
+        .res    70, 0
 .endproc
         desktop_LD05E := desktop::LD05E
         desktop_A2D_RELAY := desktop::A2D_RELAY
