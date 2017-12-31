@@ -8860,14 +8860,6 @@ L859C:  sta     $D409,x
         sta     $D40D
         sta     $D40F
 
-        ;; Relay for main>aux A2D call (Y=call, X,A=params addr)
-.macro A2D_RELAY_CALL call, addr
-        ldy     #(call)
-        lda     #<(addr)
-        ldx     #>(addr)
-        jsr     desktop_A2D_RELAY
-.endmacro
-
         A2D_RELAY_CALL A2D_SET_STATE, $D401
         rts
 

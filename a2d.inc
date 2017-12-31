@@ -588,3 +588,11 @@ end:
         A2D_GLYPH_RETURN := $0D
         A2D_GLYPH_OAPPLE := $1F
         A2D_GLYPH_CAPPLE := $1E
+
+        ;; Relay for main>aux A2D call (Y=call, X,A=params addr)
+.macro A2D_RELAY_CALL call, addr
+        ldy     #(call)
+        lda     #<(addr)
+        ldx     #>(addr)
+        jsr     desktop_A2D_RELAY
+.endmacro
