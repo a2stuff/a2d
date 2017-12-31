@@ -168,10 +168,10 @@ L4100:  jsr     L48F0
 L410D:  jsr     L4113
         jmp     L4100
 
-L4113:  A2D_RELAY_CALL $3E, $D209
+L4113:  A2D_RELAY_CALL A2D_REDRAW_WINDOW, $D209
         bne     L4151
         jsr     L4153
-        A2D_RELAY_CALL $3F, $0000
+        A2D_RELAY_CALL $3F, $0000 ; ???
         rts
 
 L412B:  lda     #$00
@@ -412,7 +412,7 @@ L4394:  lda     $D209
         beq     L43A1
         lda     #$01
 L43A1:  sta     $E25D
-        A2D_RELAY_CALL $32, $E25A
+        A2D_RELAY_CALL $32, $E25A ; ???
 L43AD:  ldx     $E25A
         bne     L43B3
         rts
@@ -434,7 +434,7 @@ L43B3:  dex
         lda     L42C5,x
         sta     L43E6
         jsr     L43E0
-        A2D_RELAY_CALL $33, $E25A
+        A2D_RELAY_CALL $33, $E25A ; ???
         rts
 
 L43E0:  tsx
@@ -444,7 +444,7 @@ L43E5:  .byte   $34
 L43E6:  .byte   $12
 L43E7:  tsx
         stx     $E256
-        A2D_RELAY_CALL $40, $D209
+        A2D_RELAY_CALL A2D_QUERY_TARGET, $D209
         lda     $D20D
         bne     L4418
         jsr     L85FC
@@ -463,7 +463,7 @@ L4415:  jmp     L68AA
 
 L4418:  cmp     #$01
         bne     L4428
-        A2D_RELAY_CALL $31, $E25A
+        A2D_RELAY_CALL A2D_MENU_CLICK, $E25A
         jmp     L43AD
 
 L4428:  pha
@@ -527,7 +527,7 @@ L445D:  jsr     L6D2B
         sta     $DF21
         lda     $E22F
         sta     $DF22
-L44A6:  A2D_RELAY_CALL $42, $D20E
+L44A6:  A2D_RELAY_CALL A2D_RAISE_WINDOW, $D20E
         lda     $D20E
         sta     $EC25
         sta     $DE9F
@@ -538,7 +538,7 @@ L44B8:  jsr     LD09A
         jsr     LD09A
         lda     #$00
         sta     $E269
-        A2D_RELAY_CALL $36, $E267
+        A2D_RELAY_CALL $36, $E267 ; ???
         ldx     $EC25
         dex
         lda     $E6D1,x
@@ -547,20 +547,20 @@ L44B8:  jsr     LD09A
         inc     $E268
         lda     #$01
         sta     $E269
-        A2D_RELAY_CALL $36, $E267
+        A2D_RELAY_CALL $36, $E267 ; ???
         rts
 
-L44F2:  A2D_RELAY_CALL $3C, $D212
-        A2D_RELAY_CALL $04, $D215
+L44F2:  A2D_RELAY_CALL A2D_QUERY_STATE, $D212
+        A2D_RELAY_CALL A2D_SET_STATE, $D215
         rts
 
-L4505:  A2D_RELAY_CALL $3C, $D212
+L4505:  A2D_RELAY_CALL A2D_QUERY_STATE, $D212
         rts
 
         rts
 
-L4510:  A2D_RELAY_CALL $03, $D239
-        A2D_RELAY_CALL $04, $D239
+L4510:  A2D_RELAY_CALL A2D_QUERY_SCREEN, $D239
+        A2D_RELAY_CALL A2D_SET_STATE, $D239
         rts
 
 L4523:  jsr     L40F2
@@ -832,8 +832,8 @@ L4755:  ldy     #$06
         lda     #$00
         ldx     #$00
         jsr     DESKTOP_RELAY
-        A2D_RELAY_CALL $3A, $0000
-        A2D_RELAY_CALL $30, $E680
+        A2D_RELAY_CALL $3A, $0000 ; ???
+        A2D_RELAY_CALL A2D_SET_MENU, $E680
         ldx     $D355
 L4773:  lda     $D355,x
         sta     $0220,x
@@ -935,19 +935,19 @@ L4860:  .byte   $D0,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00
 L488A:  jsr     L48AA
-        A2D_RELAY_CALL $24, $D311
+        A2D_RELAY_CALL A2D_SET_CURSOR, $D311
         jsr     L48B4
         rts
 
 L489A:  jsr     L48AA
-        A2D_RELAY_CALL $24, $D2AD
+        A2D_RELAY_CALL A2D_SET_CURSOR, $D2AD
         jsr     L48B4
         rts
 
-L48AA:  A2D_RELAY_CALL $26, $0000
+L48AA:  A2D_RELAY_CALL A2D_HIDE_CURSOR, 0
         rts
 
-L48B4:  A2D_RELAY_CALL $25, $0000
+L48B4:  A2D_RELAY_CALL A2D_SHOW_CURSOR, 0
         rts
 
 L48BE:  ldx     $E196
@@ -972,16 +972,16 @@ L48CC:  sta     $D2AC
         .byte   $4C
 L48E4:  .byte   $34
 L48E5:  .byte   $12
-L48E6:  A2D_RELAY_CALL $2A, $D208
+L48E6:  A2D_RELAY_CALL A2D_GET_INPUT, $D208
         rts
 
-L48F0:  A2D_RELAY_CALL $2C, $D208
+L48F0:  A2D_RELAY_CALL $2C, $D208 ; ???
         rts
 
-L48FA:  A2D_RELAY_CALL $07, $D202
+L48FA:  A2D_RELAY_CALL A2D_SET_FILL_MODE, $D202
         rts
 
-L4904:  A2D_RELAY_CALL $07, $D200
+L4904:  A2D_RELAY_CALL A2D_SET_FILL_MODE, $D200
         rts
 
 L490E:  rts
@@ -1354,10 +1354,10 @@ L4C07:  lda     L4C7C
         sta     L4CA1
         jsr     L489A
         jsr     L4510
-        A2D_RELAY_CALL $1A, $D2A7
-        A2D_RELAY_CALL $1A, $4BBE
+        A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, $D2A7
+        A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, $4BBE
         jsr     L0800
-        A2D_RELAY_CALL $1A, $D2A7
+        A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, $D2A7
         lda     #$00
         sta     L4CA1
         jsr     L4510
@@ -1668,7 +1668,7 @@ L4EC3:  sta     $DEA0
         lda     #$00
         sta     $DE9F
         jsr     LD09A
-        A2D_RELAY_CALL $39, $EC25
+        A2D_RELAY_CALL A2D_DESTROY_WINDOW, $EC25
         ldx     $EC25
         dex
         lda     $EC26,x
@@ -1700,7 +1700,7 @@ L4EC3:  sta     $DEA0
         dex
         lda     #$00
         sta     $EC26,x
-        A2D_RELAY_CALL $41, $EC25
+        A2D_RELAY_CALL A2D_QUERY_TOP, $EC25
         lda     $EC25
         bne     L4F3C
         ldy     #$0C
@@ -1709,7 +1709,7 @@ L4EC3:  sta     $DEA0
         jsr     DESKTOP_RELAY
 L4F3C:  lda     #$00
         sta     $E269
-        A2D_RELAY_CALL $36, $E267
+        A2D_RELAY_CALL $36, $E267 ; ???
         jsr     L66A2
         jmp     L4510
 
@@ -1908,7 +1908,7 @@ L511E:  sta     $DEA0
         jsr     L4505
         jsr     L6E8E
         jsr     L4904
-        A2D_RELAY_CALL $11, $D21D
+        A2D_RELAY_CALL A2D_FILL_RECT, $D21D
         lda     $EC25
         jsr     L7D5D
         sta     L51EB
@@ -1994,7 +1994,7 @@ L51F0:  ldx     $EC25
         jsr     L4505
         jsr     L6E8E
         jsr     L4904
-        A2D_RELAY_CALL $11, $D21D
+        A2D_RELAY_CALL A2D_FILL_RECT, $D21D
         lda     $EC25
         jsr     L7D5D
         sta     L5263
@@ -2100,12 +2100,12 @@ L52D7:  jsr     L52DF
 
 L52DF:  lda     #$00
         sta     $E269
-        A2D_RELAY_CALL $36, $E267
+        A2D_RELAY_CALL $36, $E267 ; ???
         lda     $E25B
         sta     $E268
         lda     #$01
         sta     $E269
-        A2D_RELAY_CALL $36, $E267
+        A2D_RELAY_CALL $36, $E267 ; ???
         rts
 
 L5302:  ldy     #$07
@@ -2652,10 +2652,10 @@ L578B:  rts
 
 L578C:  brk
 L578D:  brk
-L578E:  A2D_RELAY_CALL $22, $0000
+L578E:  A2D_RELAY_CALL $22, $0000 ; ???
         jmp     L619B
 
-L579A:  A2D_RELAY_CALL $22, $0000
+L579A:  A2D_RELAY_CALL $22, $0000 ; ???
         jmp     L60DB
 
 L57A6:  jsr     L5803
@@ -3089,7 +3089,7 @@ L5B31:  lda     $EBFD,x
         sta     $D209,x
         dex
         bpl     L5B31
-        A2D_RELAY_CALL $48, $D209
+        A2D_RELAY_CALL A2D_QUERY_CLIENT, $D209
         lda     $D20D
         bne     L5B4B
         jmp     L5CB7
@@ -3205,7 +3205,7 @@ L5C26:  jsr     LD096
 
 L5C31:  lda     $D20D
         sta     $D208
-        A2D_RELAY_CALL $4A, $D208
+        A2D_RELAY_CALL A2D_DRAG_SCROLL, $D208
         lda     $D20E
         bne     L5C46
         rts
@@ -3218,7 +3218,7 @@ L5C46:  jsr     L5C54
 
 L5C54:  lda     $D20D
         sta     $D209
-        A2D_RELAY_CALL $4B, $D208
+        A2D_RELAY_CALL A2D_UPDATE_SCROLL, $D208
         jsr     L6523
         jsr     L84D1
         bit     L5B1B
@@ -3227,7 +3227,7 @@ L5C54:  lda     $D20D
 L5C71:  lda     $EC25
         sta     $D212
         jsr     L44F2
-        A2D_RELAY_CALL $11, $D21D
+        A2D_RELAY_CALL A2D_FILL_RECT, $D21D
         jsr     L4510
         jmp     L6C19
 
@@ -3239,7 +3239,7 @@ L5C89:  sta     L5CB6
 L5C96:  lda     #$FF
         rts
 
-L5C99:  A2D_RELAY_CALL $48, $D209
+L5C99:  A2D_RELAY_CALL A2D_QUERY_CLIENT, $D209
         lda     $D20D
         beq     L5C96
         cmp     #$03
@@ -3468,7 +3468,7 @@ L5E8F:  lda     $EC25
         sta     $D212
         jsr     L44F2
         jsr     L4904
-        A2D_RELAY_CALL $11, $D21D
+        A2D_RELAY_CALL A2D_FILL_RECT, $D21D
         ldx     $EC25
         dex
         lda     $EC26,x
@@ -3554,12 +3554,12 @@ L5F50:  lda     L5F0B,x
         dex
         bpl     L5F50
         jsr     L48FA
-        A2D_RELAY_CALL $12, $E230
+        A2D_RELAY_CALL A2D_DRAW_RECT, $E230
 L5F6B:  jsr     L48F0
         lda     $D208
         cmp     #$04
         beq     L5FC5
-        A2D_RELAY_CALL $12, $E230
+        A2D_RELAY_CALL A2D_DRAW_RECT, $E230
         ldx     #$00
 L5F80:  cpx     $DEA0
         bne     L5F88
@@ -3627,7 +3627,7 @@ L600E:  lda     L60CB
         bcs     L601F
         jmp     L5F6B
 
-L601F:  A2D_RELAY_CALL $12, $E230
+L601F:  A2D_RELAY_CALL A2D_DRAW_RECT, $E230
         ldx     #$03
 L602A:  lda     $D209,x
         sta     L60CF,x
@@ -3685,7 +3685,7 @@ L60AE:  lda     $D20B
         sta     $E237
         lda     #$00
         sta     L60D4
-L60BF:  A2D_RELAY_CALL $12, $E230
+L60BF:  A2D_RELAY_CALL A2D_DRAW_RECT, $E230
         jmp     L5F6B
 
 L60CB:  brk
@@ -3705,10 +3705,10 @@ L60DB:  jmp     L60DE
 
 L60DE:  lda     $EC25
         sta     $D208
-        A2D_RELAY_CALL $41, $EC25
+        A2D_RELAY_CALL A2D_QUERY_TOP, $EC25
         lda     $EC25
         jsr     L8855
-        A2D_RELAY_CALL $44, $D208
+        A2D_RELAY_CALL A2D_DRAG_WINDOW, $D208
         lda     $EC25
         jsr     L86EF
         sta     L0006
@@ -3792,7 +3792,7 @@ L6199:  brk
 L619A:  brk
 L619B:  lda     $EC25
         sta     $D208
-        A2D_RELAY_CALL $45, $D208
+        A2D_RELAY_CALL A2D_DRAG_RESIZE, $D208
         jsr     L4523
         lda     $EC25
         sta     $DE9F
@@ -3806,7 +3806,7 @@ L619B:  lda     $EC25
         jmp     L4510
 
 L61CA:  lda     $EC25
-        A2D_RELAY_CALL $43, $D2A8
+        A2D_RELAY_CALL A2D_CLOSE_CLICK, $D2A8
         lda     $D2A8
         bne     L61DC
         rts
@@ -3846,7 +3846,7 @@ L621B:  sta     $DEA1,x
 
 L6227:  sta     $DEA0
         jsr     LD096
-        A2D_RELAY_CALL $39, $EC25
+        A2D_RELAY_CALL A2D_DESTROY_WINDOW, $EC25
         ldx     $EC25
         dex
         lda     $EC26,x
@@ -3888,13 +3888,13 @@ L6276:  ldx     $EC25
         lda     #$00
         sta     $EC26,x
         sta     $E6D1,x
-        A2D_RELAY_CALL $41, $EC25
+        A2D_RELAY_CALL A2D_QUERY_TOP, $EC25
         lda     #$00
         sta     $DE9F
         jsr     LD09A
         lda     #$00
         sta     $E269
-        A2D_RELAY_CALL $36, $E267
+        A2D_RELAY_CALL $36, $E267 ; ???
         jsr     L66A2
         jmp     L4523
 
@@ -4193,7 +4193,7 @@ L654C:  lda     $D21D,x
 L6556:  bit     L5B1B
         bmi     L655E
         jsr     L6E6E
-L655E:  A2D_RELAY_CALL $11, $D21D
+L655E:  A2D_RELAY_CALL A2D_FILL_RECT, $D21D
         jsr     L4510
         jmp     L6C19
 
@@ -4250,7 +4250,7 @@ L65EB:  jsr     L62BC
 L65EE:  sta     $D209
         lda     #$02
         sta     $D208
-        A2D_RELAY_CALL $4B, $D208
+        A2D_RELAY_CALL A2D_UPDATE_SCROLL, $D208
         rts
 
 L6600:  brk
@@ -4313,7 +4313,7 @@ L668A:  jsr     L62BC
 L668D:  sta     $D209
         lda     #$01
         sta     $D208
-        A2D_RELAY_CALL $4B, $D208
+        A2D_RELAY_CALL A2D_UPDATE_SCROLL, $D208
         rts
 
 L669F:  brk
@@ -4325,20 +4325,20 @@ L66A2:  ldx     $EC25
 
 L66AA:  lda     #$01
         sta     $E26B
-        A2D_RELAY_CALL $34, $E26A
+        A2D_RELAY_CALL $34, $E26A ; ???
         lda     #$01
         sta     $E26E
         lda     #$02
         sta     $E26C
         lda     #$01
         sta     $E26D
-        A2D_RELAY_CALL $35, $E26C
+        A2D_RELAY_CALL $35, $E26C ; ???
         lda     #$04
         sta     $E26D
-        A2D_RELAY_CALL $35, $E26C
+        A2D_RELAY_CALL $35, $E26C ; ???
         lda     #$05
         sta     $E26D
-        A2D_RELAY_CALL $35, $E26C
+        A2D_RELAY_CALL $35, $E26C ; ???
         lda     #$00
         sta     L4359
         rts
@@ -4351,7 +4351,7 @@ L66F2:  dex
         stx     $E268
         lda     #$01
         sta     $E269
-        A2D_RELAY_CALL $36, $E267
+        A2D_RELAY_CALL $36, $E267 ; ???
         rts
 
 L670C:  lda     #$01
@@ -4375,7 +4375,7 @@ L670C:  lda     #$01
         rts
 
 L673A:  sta     $E26D
-        A2D_RELAY_CALL $35, $E26C
+        A2D_RELAY_CALL $35, $E26C ; ???
         rts
 
 L6747:  lda     #$00
@@ -4399,7 +4399,7 @@ L6747:  lda     #$00
         rts
 
 L6775:  sta     $E26D
-        A2D_RELAY_CALL $35, $E26C
+        A2D_RELAY_CALL $35, $E26C ; ???
         rts
 
 L6782:  lda     #$00
@@ -4412,7 +4412,7 @@ L678F:  lda     #$02
         sta     $E26C
         lda     #$0B
         sta     $E26D
-        A2D_RELAY_CALL $35, $E26C
+        A2D_RELAY_CALL $35, $E26C ; ???
         rts
 
 L67A3:  lda     #$01
@@ -4434,7 +4434,7 @@ L67B0:  lda     #$03
         rts
 
 L67CA:  sta     $E26D
-        A2D_RELAY_CALL $35, $E26C
+        A2D_RELAY_CALL $35, $E26C ; ???
         rts
 
 L67D7:  lda     $DF21
@@ -4556,14 +4556,14 @@ L68B8:  lda     $D209,x
         beq     L68CF
         rts
 
-L68CF:  A2D_RELAY_CALL $08, $D293
+L68CF:  A2D_RELAY_CALL A2D_SET_PATTERN, $D293
         jsr     L48FA
-        A2D_RELAY_CALL $12, $E230
+        A2D_RELAY_CALL A2D_DRAW_RECT, $E230
 L68E4:  jsr     L48F0
         lda     $D208
         cmp     #$04
         beq     L6932
-        A2D_RELAY_CALL $12, $E230
+        A2D_RELAY_CALL A2D_DRAW_RECT, $E230
         ldx     #$00
 L68F9:  cpx     $DEA0
         bne     L6904
@@ -4627,7 +4627,7 @@ L6978:  lda     L6A35
         bcs     L6989
         jmp     L68E4
 
-L6989:  A2D_RELAY_CALL $12, $E230
+L6989:  A2D_RELAY_CALL A2D_DRAW_RECT, $E230
         ldx     #$03
 L6994:  lda     $D209,x
         sta     L6A39,x
@@ -4685,7 +4685,7 @@ L6A18:  lda     $D20B
         sta     $E237
         lda     #$00
         sta     L6A3E
-L6A29:  A2D_RELAY_CALL $12, $E230
+L6A29:  A2D_RELAY_CALL A2D_DRAW_RECT, $E230
         jmp     L68E4
 
 L6A35:  brk
@@ -4789,7 +4789,7 @@ L6AF6:  cmp     $E1F2,x
         dex
         bpl     L6AF6
         jsr     L7054
-L6B01:  A2D_RELAY_CALL $42, $DE9F
+L6B01:  A2D_RELAY_CALL A2D_RAISE_WINDOW, $DE9F
         lda     $DE9F
         sta     $EC25
         jsr     L6C19
@@ -4898,7 +4898,7 @@ L6BF4:  lda     $DE9F
         jmp     L4510
 
 L6C0E:  brk
-L6C0F:  A2D_RELAY_CALL $36, $E267
+L6C0F:  A2D_RELAY_CALL $36, $E267 ; ???
         rts
 
 L6C19:  ldx     $DE9F
@@ -5140,7 +5140,7 @@ L6E38:  lda     #$01
         jsr     L6E48
         jmp     L6604
 
-L6E48:  A2D_RELAY_CALL $4C, $D208
+L6E48:  A2D_RELAY_CALL $4C, $D208 ; ???
         rts
 
 L6E52:  lda     #$00
@@ -5191,26 +5191,26 @@ L6E90:  sta     L6EC4
         sta     $D220
         bit     L6EC4
         bmi     L6EC3
-        A2D_RELAY_CALL $04, $D215
+        A2D_RELAY_CALL A2D_SET_STATE, $D215
 L6EC3:  rts
 
 L6EC4:  brk
 L6EC5:  lda     #$00
         sta     $E26B
-        A2D_RELAY_CALL $34, $E26A
+        A2D_RELAY_CALL $34, $E26A ; ???
         lda     #$00
         sta     $E26E
         lda     #$02
         sta     $E26C
         lda     #$01
         sta     $E26D
-        A2D_RELAY_CALL $35, $E26C
+        A2D_RELAY_CALL $35, $E26C ; ???
         lda     #$04
         sta     $E26D
-        A2D_RELAY_CALL $35, $E26C
+        A2D_RELAY_CALL $35, $E26C ; ???
         lda     #$05
         sta     $E26D
-        A2D_RELAY_CALL $35, $E26C
+        A2D_RELAY_CALL $35, $E26C ; ???
         lda     #$80
         sta     L4359
         rts
@@ -6411,13 +6411,13 @@ L78EF:  lda     $D21D
         adc     #$00
         sta     $EBC1
         sta     $EBC5
-        A2D_RELAY_CALL $0E, $EBBE
+        A2D_RELAY_CALL A2D_SET_POS, $EBBE
         lda     $D221
         sta     $EBC2
         lda     $D222
         sta     $EBC3
         jsr     L48FA
-        A2D_RELAY_CALL $10, $EBC2
+        A2D_RELAY_CALL A2D_DRAW_LINE_ABS, $EBC2
         lda     $EBC0
         clc
         adc     #$02
@@ -6427,8 +6427,8 @@ L78EF:  lda     $D21D
         adc     #$00
         sta     $EBC1
         sta     $EBC5
-        A2D_RELAY_CALL $0E, $EBBE
-        A2D_RELAY_CALL $10, $EBC2
+        A2D_RELAY_CALL A2D_SET_POS, $EBBE
+        A2D_RELAY_CALL A2D_DRAW_LINE_ABS, $EBC2
         lda     $D21F
         clc
         adc     #$0A
@@ -6443,7 +6443,7 @@ L78EF:  lda     $D21D
         cmp     #$02
         bcs     L798A
         dec     $EBB3
-L798A:  A2D_RELAY_CALL $0E, $EBBA
+L798A:  A2D_RELAY_CALL A2D_SET_POS, $EBBA
         jsr     L7AD7
         lda     #$B3
         ldx     #$EB
@@ -6464,7 +6464,7 @@ L79A7:  jsr     L79F7
         tax
         tya
         jsr     L7AE0
-        A2D_RELAY_CALL $0E, $EBEB
+        A2D_RELAY_CALL A2D_SET_POS, $EBEB
         jsr     L7AD7
         lda     #$C6
         ldx     #$EB
@@ -6480,7 +6480,7 @@ L79A7:  jsr     L79F7
         tax
         tya
         jsr     L7AE0
-        A2D_RELAY_CALL $0E, $EBEF
+        A2D_RELAY_CALL A2D_SET_POS, $EBEF
         jsr     L7AD7
         lda     #$D0
         ldx     #$EB
@@ -8040,7 +8040,7 @@ L8780:  sta     L0006
         inc     L0006
         bne     L8792
         inc     $07
-L8792:  A2D_RELAY_CALL $19, $0006
+L8792:  A2D_RELAY_CALL A2D_DRAW_TEXT, $0006
 L879B:  rts
 
         sta     L0006
@@ -8051,7 +8051,7 @@ L879B:  rts
         inc     L0006
         bne     L87AC
         inc     $07
-L87AC:  A2D_RELAY_CALL $18, $0006
+L87AC:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $0006
         lda     $09
         ldx     $0A
         rts
@@ -8350,7 +8350,7 @@ L899A:  sta     $D265,x
         inx
         cpx     #$04
         bne     L899A
-        A2D_RELAY_CALL $04, $D25D
+        A2D_RELAY_CALL A2D_SET_STATE, $D25D
         rts
 
         .byte   $02
@@ -8775,7 +8775,7 @@ L8D57:  brk
 L8D58:  lda     #$00
         sta     L8DB2
         jsr     L4510
-        A2D_RELAY_CALL $08, $D293
+        A2D_RELAY_CALL A2D_SET_PATTERN, $D293
         jsr     L48FA
 L8D6C:  lda     L8DB2
         cmp     #$0C
@@ -8820,7 +8820,7 @@ L8DB2:  brk
 L8DB3:  lda     #$0B
         sta     L8E0F
         jsr     L4510
-        A2D_RELAY_CALL $08, $D293
+        A2D_RELAY_CALL A2D_SET_PATTERN, $D293
         jsr     L48FA
 L8DC7:  lda     L8E0F
         bmi     L8DE4
@@ -8865,7 +8865,7 @@ L8E04:  dec     L8E0F
         rts
 
 L8E0F:  brk
-L8E10:  A2D_RELAY_CALL $12, $E230
+L8E10:  A2D_RELAY_CALL A2D_DRAW_RECT, $E230
         rts
 
 L8E1A:  .byte   $E0
@@ -11661,7 +11661,7 @@ LA567:  lda     $D8E8
         jsr     LB8F5
         lda     #$14
         sta     $D8E9
-LA579:  A2D_RELAY_CALL $2A, $D208
+LA579:  A2D_RELAY_CALL A2D_GET_INPUT, $D208
         lda     $D208
         cmp     #$01
         bne     LA58C
@@ -11673,7 +11673,7 @@ LA58C:  cmp     #$03
 
 LA593:  lda     $D8E8
         beq     LA567
-        A2D_RELAY_CALL $40, $D209
+        A2D_RELAY_CALL A2D_QUERY_TARGET, $D209
         lda     $D20D
         bne     LA5A9
         jmp     LA567
@@ -11687,9 +11687,9 @@ LA5B4:  lda     $D57D
         jsr     LB7B9
         lda     $D57D
         sta     $D208
-        A2D_RELAY_CALL $46, $D208
-        A2D_RELAY_CALL $0E, $D20D
-LA5D2:  A2D_RELAY_CALL $13, $D6AB
+        A2D_RELAY_CALL A2D_MAP_COORDS, $D208
+        A2D_RELAY_CALL A2D_SET_POS, $D20D
+LA5D2:  A2D_RELAY_CALL A2D_TEST_BOX, $D6AB
         cmp     #$80
         bne     LA5E5
         jsr     LB3D8
@@ -11699,7 +11699,7 @@ LA5E5:  jsr     LB3CA
 LA5E8:  jsr     LBEB1
         jmp     LA567
 
-LA5EE:  A2D_RELAY_CALL $40, $D209
+LA5EE:  A2D_RELAY_CALL A2D_QUERY_TARGET, $D209
         lda     $D20D
         bne     LA5FF
         lda     #$FF
@@ -11722,49 +11722,49 @@ LA614:  lda     $D57D
         jsr     LB7B9
         lda     $D57D
         sta     $D208
-        A2D_RELAY_CALL $46, $D208
-        A2D_RELAY_CALL $0E, $D20D
+        A2D_RELAY_CALL A2D_MAP_COORDS, $D208
+        A2D_RELAY_CALL A2D_SET_POS, $D20D
         bit     $D8E7
         bvc     LA63A
         jmp     LA65E
 
-LA63A:  A2D_RELAY_CALL $13, $AE20
+LA63A:  A2D_RELAY_CALL A2D_TEST_BOX, $AE20
         cmp     #$80
         beq     LA64A
         jmp     LA6C1
 
 LA64A:  jsr     LB43B
-        A2D_RELAY_CALL $11, $AE20
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE20
         jsr     LB7CF
         bmi     LA65D
         lda     #$00
 LA65D:  rts
 
-LA65E:  A2D_RELAY_CALL $13, $AE28
+LA65E:  A2D_RELAY_CALL A2D_TEST_BOX, $AE28
         cmp     #$80
         bne     LA67F
         jsr     LB43B
-        A2D_RELAY_CALL $11, $AE28
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE28
         jsr     LB7D9
         bmi     LA67E
         lda     #$02
 LA67E:  rts
 
-LA67F:  A2D_RELAY_CALL $13, $AE30
+LA67F:  A2D_RELAY_CALL A2D_TEST_BOX, $AE30
         cmp     #$80
         bne     LA6A0
         jsr     LB43B
-        A2D_RELAY_CALL $11, $AE30
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE30
         jsr     LB7DE
         bmi     LA69F
         lda     #$03
 LA69F:  rts
 
-LA6A0:  A2D_RELAY_CALL $13, $AE38
+LA6A0:  A2D_RELAY_CALL A2D_TEST_BOX, $AE38
         cmp     #$80
         bne     LA6C1
         jsr     LB43B
-        A2D_RELAY_CALL $11, $AE38
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE38
         jsr     LB7E3
         bmi     LA6C0
         lda     #$04
@@ -11775,13 +11775,13 @@ LA6C1:  bit     $D8E7
         lda     #$FF
         rts
 
-LA6C9:  A2D_RELAY_CALL $13, $AE10
+LA6C9:  A2D_RELAY_CALL A2D_TEST_BOX, $AE10
         cmp     #$80
         beq     LA6D9
         jmp     LA6ED
 
 LA6D9:  jsr     LB43B
-        A2D_RELAY_CALL $11, $AE10
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE10
         jsr     LB7D4
         bmi     LA6EC
         lda     #$01
@@ -11920,17 +11920,17 @@ LA7E5:  lda     #$FF
         rts
 
 LA7E8:  jsr     LB43B
-        A2D_RELAY_CALL $11, $AE28
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE28
         lda     #$02
         rts
 
 LA7F7:  jsr     LB43B
-        A2D_RELAY_CALL $11, $AE30
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE30
         lda     #$03
         rts
 
 LA806:  jsr     LB43B
-        A2D_RELAY_CALL $11, $AE38
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE38
         lda     #$04
         rts
 
@@ -11969,16 +11969,16 @@ LA84E:  lda     #$FF
 LA851:  lda     $D57D
         jsr     LB7B9
         jsr     LB43B
-        A2D_RELAY_CALL $11, $AE20
-        A2D_RELAY_CALL $11, $AE20
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE20
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE20
         lda     #$00
         rts
 
 LA86F:  lda     $D57D
         jsr     LB7B9
         jsr     LB43B
-        A2D_RELAY_CALL $11, $AE10
-        A2D_RELAY_CALL $11, $AE10
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE10
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE10
         lda     #$01
         rts
 
@@ -11993,12 +11993,12 @@ LA895:  lda     #$FF
 LA899:  .byte   $4C
 LA89A:  brk
 LA89B:  brk
-        A2D_RELAY_CALL $38, $D62B
+        A2D_RELAY_CALL A2D_CREATE_WINDOW, $D62B
         lda     $D62B
         jsr     LB7B9
         jsr     LB43B
-        A2D_RELAY_CALL $12, $AEDD
-        A2D_RELAY_CALL $12, $AEE5
+        A2D_RELAY_CALL A2D_DRAW_RECT, $AEDD
+        A2D_RELAY_CALL A2D_DRAW_RECT, $AEE5
         lda     #$ED
         ldx     #$AE
         jsr     LB723
@@ -12042,7 +12042,7 @@ LA89B:  brk
         sta     $D6C3
         lda     #$00
         sta     $D6C4
-LA923:  A2D_RELAY_CALL $2A, $D208
+LA923:  A2D_RELAY_CALL A2D_GET_INPUT, $D208
         lda     $D208
         cmp     #$01
         beq     LA947
@@ -12056,7 +12056,7 @@ LA923:  A2D_RELAY_CALL $2A, $D208
         bne     LA923
         jmp     LA947
 
-LA947:  A2D_RELAY_CALL $39, $D62B
+LA947:  A2D_RELAY_CALL A2D_DESTROY_WINDOW, $D62B
         jsr     LBEB1
         jsr     LB3CA
         rts
@@ -12118,7 +12118,7 @@ LA9B5:  ldy     #$01
         jsr     LBDDF
         lda     $D57D
         jsr     LB7B9
-        A2D_RELAY_CALL $0E, $B0B6
+        A2D_RELAY_CALL A2D_SET_POS, $B0B6
         lda     #$01
         ldx     #$D9
         jsr     LB708
@@ -12148,7 +12148,7 @@ LA9E6:  ldy     #$01
         sta     $07
         stx     L0006
         jsr     LBE63
-        A2D_RELAY_CALL $0E, $AE7E
+        A2D_RELAY_CALL A2D_SET_POS, $AE7E
         lda     #$02
         ldx     #$D4
         jsr     LB708
@@ -12161,7 +12161,7 @@ LA9E6:  ldy     #$01
         sta     $07
         stx     L0006
         jsr     LBE78
-        A2D_RELAY_CALL $0E, $AE82
+        A2D_RELAY_CALL A2D_SET_POS, $AE82
         lda     #$43
         ldx     #$D4
         .byte   $20
@@ -12176,7 +12176,7 @@ LAA48:  smb3    $A0
         rts
 
 LAA5A:  jsr     LBEB1
-        A2D_RELAY_CALL $39, $D57D
+        A2D_RELAY_CALL A2D_DESTROY_WINDOW, $D57D
         jsr     LB403
         rts
 
@@ -12192,8 +12192,8 @@ LAA7F:  jsr     LA567
         bmi     LAA7F
         pha
         jsr     LB687
-        A2D_RELAY_CALL $07, $D200
-        A2D_RELAY_CALL $11, $AE76
+        A2D_RELAY_CALL A2D_SET_FILL_MODE, $D200
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE76
         pla
         rts
 
@@ -12209,8 +12209,8 @@ LAAB1:  jsr     LA567
         bmi     LAAB1
         pha
         jsr     LB6D0
-        A2D_RELAY_CALL $07, $D200
-        A2D_RELAY_CALL $11, $AE76
+        A2D_RELAY_CALL A2D_SET_FILL_MODE, $D200
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE76
         pla
         rts
 
@@ -12275,7 +12275,7 @@ LAB38:  ldy     #$01
         jsr     LBDDF
         lda     $D57D
         jsr     LB7B9
-        A2D_RELAY_CALL $0E, $B0B6
+        A2D_RELAY_CALL A2D_SET_POS, $B0B6
         lda     #$01
         ldx     #$D9
         jsr     LB708
@@ -12304,18 +12304,18 @@ LAB69:  ldy     #$01
         sta     $07
         stx     L0006
         jsr     LBE63
-        A2D_RELAY_CALL $0E, $AE7E
+        A2D_RELAY_CALL A2D_SET_POS, $AE7E
         lda     #$02
         ldx     #$D4
         jsr     LB708
-        A2D_RELAY_CALL $0E, $B0BA
+        A2D_RELAY_CALL A2D_SET_POS, $B0BA
         lda     #$01
         ldx     #$D9
         jsr     LB708
         rts
 
 LABB8:  jsr     LBEB1
-        A2D_RELAY_CALL $39, $D57D
+        A2D_RELAY_CALL A2D_DESTROY_WINDOW, $D57D
         jsr     LB403
         rts
 
@@ -12331,8 +12331,8 @@ LABDD:  jsr     LA567
         bmi     LABDD
         pha
         jsr     LB6FB
-        A2D_RELAY_CALL $07, $D200
-        A2D_RELAY_CALL $11, $AE76
+        A2D_RELAY_CALL A2D_SET_FILL_MODE, $D200
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE76
         pla
         rts
 
@@ -12416,7 +12416,7 @@ LAC3D:  ldy     #$01
         rts
 
 LAC9E:  jsr     LBEB1
-        A2D_RELAY_CALL $39, $D57D
+        A2D_RELAY_CALL A2D_DESTROY_WINDOW, $D57D
         jsr     LB403
         rts
 
@@ -12425,8 +12425,8 @@ LACAE:  lda     $D57D
         jsr     LB6E6
 LACB7:  jsr     LA567
         bmi     LACB7
-        A2D_RELAY_CALL $07, $D200
-        A2D_RELAY_CALL $11, $AE6E
+        A2D_RELAY_CALL A2D_SET_FILL_MODE, $D200
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE6E
         jsr     LB6FB
         lda     #$00
         rts
@@ -12488,10 +12488,10 @@ LAD2A:  ldy     #$01
         jsr     LB7B9
         lda     LAD1F
 LAD46:  bne     LAD54
-        A2D_RELAY_CALL $0E, $B16A
+        A2D_RELAY_CALL A2D_SET_POS, $B16A
         jmp     LAD5D
 
-LAD54:  A2D_RELAY_CALL $0E, $B172
+LAD54:  A2D_RELAY_CALL A2D_SET_POS, $B172
 LAD5D:  lda     #$01
         ldx     #$D9
         jsr     LB708
@@ -12520,11 +12520,11 @@ LAD6C:  ldy     #$01
         sta     $07
         stx     L0006
         jsr     LBE63
-        A2D_RELAY_CALL $0E, $AE7E
+        A2D_RELAY_CALL A2D_SET_POS, $AE7E
         lda     #$02
         ldx     #$D4
         jsr     LB708
-        A2D_RELAY_CALL $0E, $B16E
+        A2D_RELAY_CALL A2D_SET_POS, $B16E
         lda     #$01
         ldx     #$D9
         jsr     LB708
@@ -12536,8 +12536,8 @@ LADBB:  lda     $D57D
 LADC4:  jsr     LA567
         bmi     LADC4
         bne     LADF4
-        A2D_RELAY_CALL $07, $D200
-        A2D_RELAY_CALL $11, $AE6E
+        A2D_RELAY_CALL A2D_SET_FILL_MODE, $D200
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE6E
         jsr     LB6D0
         ldy     #$02
         lda     #$0E
@@ -12551,7 +12551,7 @@ LADC4:  jsr     LA567
 LADF4:  rts
 
 LADF5:  jsr     LBEB1
-        A2D_RELAY_CALL $39, $D57D
+        A2D_RELAY_CALL A2D_DESTROY_WINDOW, $D57D
         jsr     LB403
         rts
 
@@ -12566,8 +12566,8 @@ LAE17:  jsr     LA567
         bmi     LAE17
         pha
         jsr     LB687
-        A2D_RELAY_CALL $07, $D200
-        A2D_RELAY_CALL $11, $AE76
+        A2D_RELAY_CALL A2D_SET_FILL_MODE, $D200
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE76
         pla
         rts
 
@@ -12593,7 +12593,7 @@ LAE49:  lda     #$80
         ldx     #$B1
         jsr     LB723
         jsr     LB43B
-        A2D_RELAY_CALL $12, $D6AB
+        A2D_RELAY_CALL A2D_DRAW_RECT, $D6AB
         rts
 
 LAE70:  lda     #$80
@@ -12672,7 +12672,7 @@ LAEFF:  inx
         rts
 
 LAF16:  jsr     LBEB1
-        A2D_RELAY_CALL $39, $D57D
+        A2D_RELAY_CALL A2D_DESTROY_WINDOW, $D57D
         jsr     LB403
         lda     #$01
         rts
@@ -12786,7 +12786,7 @@ LB006:  jsr     LA567
         bmi     LB006
         pha
         jsr     LBEB1
-        A2D_RELAY_CALL $39, $D57D
+        A2D_RELAY_CALL A2D_DESTROY_WINDOW, $D57D
         jsr     LB3CA
         pla
         rts
@@ -12841,11 +12841,11 @@ LB068:  ldy     #$01
         jsr     LBDDF
         lda     $D57D
         jsr     LB7B9
-        A2D_RELAY_CALL $0E, $B231
+        A2D_RELAY_CALL A2D_SET_POS, $B231
         lda     #$01
         ldx     #$D9
         jsr     LB708
-        A2D_RELAY_CALL $0E, $B239
+        A2D_RELAY_CALL A2D_SET_POS, $B239
         lda     #$FB
         ldx     #$D8
         jsr     LB708
@@ -12871,11 +12871,11 @@ LB0A2:  ldy     #$01
         sta     $07
         stx     L0006
         jsr     LBE63
-        A2D_RELAY_CALL $0E, $AE7E
+        A2D_RELAY_CALL A2D_SET_POS, $AE7E
         lda     #$02
         ldx     #$D4
         jsr     LB708
-        A2D_RELAY_CALL $0E, $B241
+        A2D_RELAY_CALL A2D_SET_POS, $B241
         lda     #$01
         ldx     #$D9
         jsr     LB708
@@ -12887,10 +12887,10 @@ LB0F1:  lda     $D57D
 LB0FA:  jsr     LA567
         bmi     LB0FA
         bne     LB139
-        A2D_RELAY_CALL $07, $D200
-        A2D_RELAY_CALL $11, $AE6E
-        A2D_RELAY_CALL $11, $AE20
-        A2D_RELAY_CALL $11, $AE10
+        A2D_RELAY_CALL A2D_SET_FILL_MODE, $D200
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE6E
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE20
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE10
         ldy     #$02
         lda     #$0E
         ldx     #$B1
@@ -12903,7 +12903,7 @@ LB0FA:  jsr     LA567
 LB139:  rts
 
 LB13A:  jsr     LBEB1
-        A2D_RELAY_CALL $39, $D57D
+        A2D_RELAY_CALL A2D_DESTROY_WINDOW, $D57D
         jsr     LB403
         rts
 
@@ -12948,11 +12948,11 @@ LB186:  ldy     #$01
         jsr     LBDDF
         lda     $D57D
         jsr     LB7B9
-        A2D_RELAY_CALL $0E, $B22D
+        A2D_RELAY_CALL A2D_SET_POS, $B22D
         lda     #$01
         ldx     #$D9
         jsr     LB708
-        A2D_RELAY_CALL $0E, $B235
+        A2D_RELAY_CALL A2D_SET_POS, $B235
         lda     #$FB
         ldx     #$D8
         jsr     LB708
@@ -12978,11 +12978,11 @@ LB1C0:  ldy     #$01
         sta     $07
         stx     L0006
         jsr     LBE63
-        A2D_RELAY_CALL $0E, $AE7E
+        A2D_RELAY_CALL A2D_SET_POS, $AE7E
         lda     #$02
         ldx     #$D4
         jsr     LB708
-        A2D_RELAY_CALL $0E, $B23D
+        A2D_RELAY_CALL A2D_SET_POS, $B23D
         lda     #$01
         ldx     #$D9
         jsr     LB708
@@ -12994,10 +12994,10 @@ LB20F:  lda     $D57D
 LB218:  jsr     LA567
         bmi     LB218
         bne     LB257
-        A2D_RELAY_CALL $07, $D200
-        A2D_RELAY_CALL $11, $AE6E
-        A2D_RELAY_CALL $11, $AE20
-        A2D_RELAY_CALL $11, $AE10
+        A2D_RELAY_CALL A2D_SET_FILL_MODE, $D200
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE6E
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE20
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE10
         ldy     #$02
         lda     #$0E
         ldx     #$B1
@@ -13010,7 +13010,7 @@ LB218:  jsr     LA567
 LB257:  rts
 
 LB258:  jsr     LBEB1
-        A2D_RELAY_CALL $39, $D57D
+        A2D_RELAY_CALL A2D_DESTROY_WINDOW, $D57D
         jsr     LB403
         rts
 
@@ -13038,7 +13038,7 @@ LB27D:  jsr     LBD75
         ldx     #$B1
         jsr     LB723
         jsr     LB43B
-        A2D_RELAY_CALL $12, $D6AB
+        A2D_RELAY_CALL A2D_DRAW_RECT, $D6AB
         ldy     #$02
         lda     #$B3
         ldx     #$B1
@@ -13090,19 +13090,19 @@ LB2FD:  jsr     LA567
         rts
 
 LB313:  jsr     LBEB1
-        A2D_RELAY_CALL $39, $D57D
+        A2D_RELAY_CALL A2D_DESTROY_WINDOW, $D57D
         jsr     LB403
         lda     #$01
         rts
 
-        A2D_RELAY_CALL $26, $0000
+        A2D_RELAY_CALL A2D_HIDE_CURSOR, $0000
         jsr     LB55F
         lda     $D57D
         jsr     LB7B9
         lda     #$B3
         ldx     #$B4
         jsr     LB723
-        A2D_RELAY_CALL $25, $0000
+        A2D_RELAY_CALL A2D_SHOW_CURSOR, $0000
         jsr     LB3BF
         ldy     #$00
         lda     (L0006),y
@@ -13141,7 +13141,7 @@ LB385:  jsr     LA567
         bmi     LB385
         pha
         jsr     LBEB1
-        A2D_RELAY_CALL $39, $D57D
+        A2D_RELAY_CALL A2D_DESTROY_WINDOW, $D57D
         jsr     LB403
         pla
         rts
@@ -13174,22 +13174,22 @@ LB3D8:  bit     LB3E6
 LB3E5:  rts
 
 LB3E6:  brk
-        A2D_RELAY_CALL $26, $0000
-        A2D_RELAY_CALL $24, $D311
-        A2D_RELAY_CALL $25, $0000
+        A2D_RELAY_CALL A2D_HIDE_CURSOR, $0000
+        A2D_RELAY_CALL A2D_SET_CURSOR, $D311
+        A2D_RELAY_CALL A2D_SHOW_CURSOR, $0000
         rts
 
-LB403:  A2D_RELAY_CALL $26, $0000
-        A2D_RELAY_CALL $24, $D2AD
-        A2D_RELAY_CALL $25, $0000
+LB403:  A2D_RELAY_CALL A2D_HIDE_CURSOR, $0000
+        A2D_RELAY_CALL A2D_SET_CURSOR, $D2AD
+        A2D_RELAY_CALL A2D_SHOW_CURSOR, $0000
         rts
 
-LB41F:  A2D_RELAY_CALL $26, $0000
-        A2D_RELAY_CALL $24, $D2DF
-        A2D_RELAY_CALL $25, $0000
+LB41F:  A2D_RELAY_CALL A2D_HIDE_CURSOR, $0000
+        A2D_RELAY_CALL A2D_SET_CURSOR, $D2DF
+        A2D_RELAY_CALL A2D_SHOW_CURSOR, $0000
         rts
 
-LB43B:  A2D_RELAY_CALL $07, $D202
+LB43B:  A2D_RELAY_CALL A2D_SET_FILL_MODE, $D202
         rts
 
         ldx     #$03
@@ -13212,7 +13212,7 @@ LB46C:  lda     LB501
         bne     LB476
         lda     LB500
         beq     LB4B7
-LB476:  A2D_RELAY_CALL $2C, $D208
+LB476:  A2D_RELAY_CALL $2C, $D208 ; ???
         jsr     LB4BA
         bmi     LB4B7
         lda     #$FF
@@ -13225,12 +13225,12 @@ LB476:  A2D_RELAY_CALL $2C, $D208
         beq     LB45F
         cmp     #$02
         bne     LB4A7
-        A2D_RELAY_CALL $2A, $D208
+        A2D_RELAY_CALL A2D_GET_INPUT, $D208
         jmp     LB45F
 
 LB4A7:  cmp     #$01
         bne     LB4B7
-        A2D_RELAY_CALL $2A, $D208
+        A2D_RELAY_CALL A2D_GET_INPUT, $D208
         lda     #$00
         rts
 
@@ -13285,30 +13285,30 @@ LB509:  sta     $D8E7
         jsr     LB64E
         jmp     LB526
 
-LB51A:  A2D_RELAY_CALL $12, $AE20
+LB51A:  A2D_RELAY_CALL A2D_DRAW_RECT, $AE20
         jsr     LB5F9
 LB526:  bit     $D8E7
         bmi     LB537
-        A2D_RELAY_CALL $12, $AE10
+        A2D_RELAY_CALL A2D_DRAW_RECT, $AE10
         jsr     LB60A
 LB537:  jmp     LBEB1
 
-LB53A:  A2D_RELAY_CALL $38, $D57D
+LB53A:  A2D_RELAY_CALL A2D_CREATE_WINDOW, $D57D
         lda     $D57D
         jsr     LB7B9
         jsr     LB43B
-        A2D_RELAY_CALL $12, $AE00
-        A2D_RELAY_CALL $12, $AE08
+        A2D_RELAY_CALL A2D_DRAW_RECT, $AE00
+        A2D_RELAY_CALL A2D_DRAW_RECT, $AE08
         rts
 
-LB55F:  A2D_RELAY_CALL $38, $D57D
+LB55F:  A2D_RELAY_CALL A2D_CREATE_WINDOW, $D57D
         lda     $D57D
         jsr     LB7B9
         jsr     LBEA7
-        A2D_RELAY_CALL $14, $D56D
+        A2D_RELAY_CALL A2D_DRAW_BITMAP, $D56D
         jsr     LB43B
-        A2D_RELAY_CALL $12, $AE00
-        A2D_RELAY_CALL $12, $AE08
+        A2D_RELAY_CALL A2D_DRAW_RECT, $AE00
+        A2D_RELAY_CALL A2D_DRAW_RECT, $AE08
         rts
 
 LB590:  stx     $07
@@ -13328,7 +13328,7 @@ LB59A:  tya
         sta     $09
         jsr     LBD7B
         sta     $0A
-        A2D_RELAY_CALL $18, $0008
+        A2D_RELAY_CALL A2D_MEASURE_TEXT, $0008
         lsr     $0C
         ror     $0B
         lda     #$C8
@@ -13351,7 +13351,7 @@ LB5CC:  dey
         lda     $D6C2
         adc     #$00
         sta     $D6C6
-        A2D_RELAY_CALL $0E, $D6C3
+        A2D_RELAY_CALL A2D_SET_POS, $D6C3
         lda     L0006
         ldx     $07
         jsr     LB708
@@ -13360,41 +13360,41 @@ LB5CC:  dey
         sta     $D6C3
         rts
 
-LB5F9:  A2D_RELAY_CALL $0E, $AE50
+LB5F9:  A2D_RELAY_CALL A2D_SET_POS, $AE50
         lda     #$40
         ldx     #$AE
         jsr     LB708
         rts
 
-LB60A:  A2D_RELAY_CALL $0E, $AE54
+LB60A:  A2D_RELAY_CALL A2D_SET_POS, $AE54
         lda     #$96
         ldx     #$AE
         jsr     LB708
         rts
 
-LB61B:  A2D_RELAY_CALL $0E, $AE58
+LB61B:  A2D_RELAY_CALL A2D_SET_POS, $AE58
         lda     #$A8
         ldx     #$AE
         jsr     LB708
         rts
 
-LB62C:  A2D_RELAY_CALL $0E, $AE5C
+LB62C:  A2D_RELAY_CALL A2D_SET_POS, $AE5C
         lda     #$AD
         ldx     #$AE
         jsr     LB708
         rts
 
-LB63D:  A2D_RELAY_CALL $0E, $AE60
+LB63D:  A2D_RELAY_CALL A2D_SET_POS, $AE60
         lda     #$B1
         ldx     #$AE
         jsr     LB708
         rts
 
 LB64E:  jsr     LB43B
-        A2D_RELAY_CALL $12, $AE28
-        A2D_RELAY_CALL $12, $AE30
-        A2D_RELAY_CALL $12, $AE38
-        A2D_RELAY_CALL $12, $AE10
+        A2D_RELAY_CALL A2D_DRAW_RECT, $AE28
+        A2D_RELAY_CALL A2D_DRAW_RECT, $AE30
+        A2D_RELAY_CALL A2D_DRAW_RECT, $AE38
+        A2D_RELAY_CALL A2D_DRAW_RECT, $AE10
         jsr     LB61B
         jsr     LB62C
         jsr     LB63D
@@ -13404,15 +13404,15 @@ LB64E:  jsr     LB43B
         rts
 
 LB687:  jsr     LBEA7
-        A2D_RELAY_CALL $11, $AE28
-        A2D_RELAY_CALL $11, $AE30
-        A2D_RELAY_CALL $11, $AE38
-        A2D_RELAY_CALL $11, $AE10
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE28
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE30
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE38
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE10
         rts
 
 LB6AF:  jsr     LB43B
-        A2D_RELAY_CALL $12, $AE20
-        A2D_RELAY_CALL $12, $AE10
+        A2D_RELAY_CALL A2D_DRAW_RECT, $AE20
+        A2D_RELAY_CALL A2D_DRAW_RECT, $AE10
         jsr     LB5F9
         jsr     LB60A
         lda     #$00
@@ -13420,19 +13420,19 @@ LB6AF:  jsr     LB43B
         rts
 
 LB6D0:  jsr     LBEA7
-        A2D_RELAY_CALL $11, $AE20
-        A2D_RELAY_CALL $11, $AE10
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE20
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE10
         rts
 
 LB6E6:  jsr     LB43B
-        A2D_RELAY_CALL $12, $AE20
+        A2D_RELAY_CALL A2D_DRAW_RECT, $AE20
         jsr     LB5F9
         lda     #$80
         sta     $D8E7
         rts
 
 LB6FB:  jsr     LBEA7
-        A2D_RELAY_CALL $11, $AE20
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE20
         rts
 
 LB708:  sta     L0006
@@ -13443,7 +13443,7 @@ LB708:  sta     L0006
         inc     L0006
         bne     LB719
         inc     $07
-LB719:  A2D_RELAY_CALL $19, $0006
+LB719:  A2D_RELAY_CALL A2D_DRAW_TEXT, $0006
 LB722:  rts
 
 LB723:  sta     L0006
@@ -13453,7 +13453,7 @@ LB723:  sta     L0006
         inc     L0006
         bne     LB732
         inc     $07
-LB732:  A2D_RELAY_CALL $18, $0006
+LB732:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $0006
         lsr     $0A
         ror     $09
         lda     #$01
@@ -13467,14 +13467,14 @@ LB732:  A2D_RELAY_CALL $18, $0006
         lda     LB76B
         sbc     $0A
         sta     $D6B8
-        A2D_RELAY_CALL $0E, $D6B7
-        A2D_RELAY_CALL $19, $0006
+        A2D_RELAY_CALL A2D_SET_POS, $D6B7
+        A2D_RELAY_CALL A2D_DRAW_TEXT, $0006
         rts
 
 LB76B:  brk
         sta     L0006
         stx     $07
-        A2D_RELAY_CALL $0E, $D6BB
+        A2D_RELAY_CALL A2D_SET_POS, $D6BB
         lda     L0006
         ldx     $07
         jsr     LB708
@@ -13516,7 +13516,7 @@ LB7B5:  dey
         jmp     LB78D
 
 LB7B9:  sta     $D212
-        A2D_RELAY_CALL $3C, $D212
+        A2D_RELAY_CALL A2D_QUERY_STATE, $D212
         ldy     #$04
         lda     #$15
         .byte   $A2
@@ -13569,34 +13569,34 @@ LB80B:  clv
 
         clv
         ror     $B8,x
-        A2D_RELAY_CALL $13, $AE20
+        A2D_RELAY_CALL A2D_TEST_BOX, $AE20
         rts
 
-        A2D_RELAY_CALL $13, $AE10
+        A2D_RELAY_CALL A2D_TEST_BOX, $AE10
         rts
 
-        A2D_RELAY_CALL $13, $AE28
+        A2D_RELAY_CALL A2D_TEST_BOX, $AE28
         rts
 
-        A2D_RELAY_CALL $13, $AE30
+        A2D_RELAY_CALL A2D_TEST_BOX, $AE30
         rts
 
-        A2D_RELAY_CALL $13, $AE38
+        A2D_RELAY_CALL A2D_TEST_BOX, $AE38
         rts
 
-        A2D_RELAY_CALL $11, $AE20
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE20
         rts
 
-        A2D_RELAY_CALL $11, $AE10
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE10
         rts
 
-        A2D_RELAY_CALL $11, $AE28
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE28
         rts
 
-        A2D_RELAY_CALL $11, $AE30
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE30
         rts
 
-        A2D_RELAY_CALL $11, $AE38
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE38
         rts
 
 LB880:  jmp     (LB886)
@@ -13610,14 +13610,14 @@ LB889:  brk
 LB88A:  sta     LB8F3
         lda     #$00
         sta     LB8F2
-LB892:  A2D_RELAY_CALL $2A, $D208
+LB892:  A2D_RELAY_CALL A2D_GET_INPUT, $D208
         lda     $D208
         cmp     #$02
         beq     LB8E3
         lda     $D57D
         sta     $D208
-        A2D_RELAY_CALL $46, $D208
-        A2D_RELAY_CALL $0E, $D20D
+        A2D_RELAY_CALL A2D_MAP_COORDS, $D208
+        A2D_RELAY_CALL A2D_SET_POS, $D20D
         jsr     LB880
         cmp     #$80
         beq     LB8C9
@@ -13657,15 +13657,15 @@ LB8F5:  jsr     LBD3B
         sta     $08
         lda     $D6B6
         sta     $09
-        A2D_RELAY_CALL $0E, $0006
-        A2D_RELAY_CALL $06, $D6C7
+        A2D_RELAY_CALL A2D_SET_POS, $0006
+        A2D_RELAY_CALL A2D_SET_BOX, $D6C7
         bit     $D8EB
         bpl     LB92D
-        A2D_RELAY_CALL $0C, $AE6C
+        A2D_RELAY_CALL A2D_SET_TEXT_MASK, $AE6C
         lda     #$00
         sta     $D8EB
         beq     LB93B
-LB92D:  A2D_RELAY_CALL $0C, $AE6D
+LB92D:  A2D_RELAY_CALL A2D_SET_TEXT_MASK, $AE6D
         lda     #$FF
         sta     $D8EB
 LB93B:  lda     #$EF
@@ -13674,8 +13674,8 @@ LB93B:  lda     #$EF
         sta     $07
         lda     $D8EE
         sta     $08
-        A2D_RELAY_CALL $19, $0006
-        A2D_RELAY_CALL $0C, $AE6D
+        A2D_RELAY_CALL A2D_DRAW_TEXT, $0006
+        A2D_RELAY_CALL A2D_SET_TEXT_MASK, $AE6D
         lda     $D57D
         jsr     LB7B9
         rts
@@ -13685,11 +13685,11 @@ LB961:  lda     $D443
         lda     $D57D
         jsr     LB7B9
         jsr     LBEA7
-        A2D_RELAY_CALL $11, $D6AB
-        A2D_RELAY_CALL $07, $D202
-        A2D_RELAY_CALL $12, $D6AB
-        A2D_RELAY_CALL $0E, $D6B3
-        A2D_RELAY_CALL $06, $D6C7
+        A2D_RELAY_CALL A2D_FILL_RECT, $D6AB
+        A2D_RELAY_CALL A2D_SET_FILL_MODE, $D202
+        A2D_RELAY_CALL A2D_DRAW_RECT, $D6AB
+        A2D_RELAY_CALL A2D_SET_POS, $D6B3
+        A2D_RELAY_CALL A2D_SET_BOX, $D6C7
         lda     #$43
         ldx     #$D4
         jsr     LB708
@@ -13703,9 +13703,9 @@ LB961:  lda     $D443
         jsr     LB7B9
 LB9B7:  rts
 
-LB9B8:  A2D_RELAY_CALL $46, $D208
-        A2D_RELAY_CALL $0E, $D20D
-        A2D_RELAY_CALL $13, $D6AB
+LB9B8:  A2D_RELAY_CALL A2D_MAP_COORDS, $D208
+        A2D_RELAY_CALL A2D_SET_POS, $D20D
+        A2D_RELAY_CALL A2D_TEST_BOX, $D6AB
         cmp     #$80
         beq     LB9D8
         rts
@@ -13734,7 +13734,7 @@ LB9EE:  jsr     LBD3B
         sta     $07
         lda     $D484
         sta     $08
-LBA10:  A2D_RELAY_CALL $18, $0006
+LBA10:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $0006
         lda     $09
         clc
         adc     LBB09
@@ -13793,7 +13793,7 @@ LBA83:  lda     #$43
         sta     $07
         lda     $D443
         sta     $08
-LBA90:  A2D_RELAY_CALL $18, $0006
+LBA90:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $0006
         lda     $09
         clc
         adc     $D6B3
@@ -13871,8 +13871,8 @@ LBB1A:  lda     LBB62
         sta     $08
         lda     $D6B6
         sta     $09
-        A2D_RELAY_CALL $0E, $0006
-        A2D_RELAY_CALL $06, $D6C7
+        A2D_RELAY_CALL A2D_SET_POS, $0006
+        A2D_RELAY_CALL A2D_SET_BOX, $D6C7
         lda     #$F6
         ldx     #$D8
         jsr     LB708
@@ -13896,8 +13896,8 @@ LBB69:  dec     $D443
         sta     $08
         lda     $D6B6
         sta     $09
-        A2D_RELAY_CALL $0E, $0006
-        A2D_RELAY_CALL $06, $D6C7
+        A2D_RELAY_CALL A2D_SET_POS, $0006
+        A2D_RELAY_CALL A2D_SET_BOX, $D6C7
         lda     #$84
         ldx     #$D4
         jsr     LB708
@@ -13932,8 +13932,8 @@ LBBBC:  ldx     $D443
         sta     $08
         lda     $D6B6
         sta     $09
-        A2D_RELAY_CALL $0E, $0006
-        A2D_RELAY_CALL $06, $D6C7
+        A2D_RELAY_CALL A2D_SET_POS, $0006
+        A2D_RELAY_CALL A2D_SET_BOX, $D6C7
         lda     #$84
         ldx     #$D4
         jsr     LB708
@@ -13964,8 +13964,8 @@ LBC21:  lda     $D485,x
         cpx     $D484
         bne     LBC21
 LBC2D:  dec     $D484
-        A2D_RELAY_CALL $0E, $D6B3
-        A2D_RELAY_CALL $06, $D6C7
+        A2D_RELAY_CALL A2D_SET_POS, $D6B3
+        A2D_RELAY_CALL A2D_SET_BOX, $D6C7
         lda     #$43
         ldx     #$D4
         jsr     LB708
@@ -14021,7 +14021,7 @@ LBCB3:  pla
         sta     $D484
         lda     #$00
         sta     $D443
-        A2D_RELAY_CALL $0E, $D6B3
+        A2D_RELAY_CALL A2D_SET_POS, $D6B3
         jsr     LB961
         rts
 
@@ -14048,7 +14048,7 @@ LBCDF:  lda     $D484,x
         sta     $D443
         lda     #$01
         sta     $D484
-        A2D_RELAY_CALL $0E, $D6B3
+        A2D_RELAY_CALL A2D_SET_POS, $D6B3
         jsr     LB961
         rts
 
@@ -14095,7 +14095,7 @@ LBD3B:  lda     #$44
         ldx     $D6B4
         rts
 
-LBD51:  A2D_RELAY_CALL $18, $0006
+LBD51:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $0006
         lda     $09
         clc
         adc     $D6B3
@@ -14267,18 +14267,18 @@ LBE7D:  lda     (L0006),y
         rts
 
 LBE8D:  jsr     LBEA7
-        A2D_RELAY_CALL $11, $AE86
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE86
         rts
 
 LBE9A:  jsr     LBEA7
-        A2D_RELAY_CALL $11, $AE8E
+        A2D_RELAY_CALL A2D_FILL_RECT, $AE8E
         rts
 
-LBEA7:  A2D_RELAY_CALL $07, $D200
+LBEA7:  A2D_RELAY_CALL A2D_SET_FILL_MODE, $D200
         rts
 
-LBEB1:  A2D_RELAY_CALL $03, $D239
-        A2D_RELAY_CALL $04, $D239
+LBEB1:  A2D_RELAY_CALL A2D_QUERY_SCREEN, $D239
+        A2D_RELAY_CALL A2D_SET_STATE, $D239
         rts
 
         .res    60, 0
