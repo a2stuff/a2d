@@ -9308,7 +9308,7 @@ glyph_bitmaps:
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00
-.endproc
+.endproc                        ; a2d
 
 .proc desktop
 ;;; ==================================================
@@ -14477,7 +14477,7 @@ app_mask:
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
 
         .res    70, 0
-.endproc
+.endproc                        ; desktop
         desktop_LD05E := desktop::LD05E
         desktop_A2D_RELAY := desktop::A2D_RELAY
         desktop_win18_state := desktop::win18::state

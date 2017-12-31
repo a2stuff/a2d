@@ -38,6 +38,72 @@ Entry point is $4000 with a ProDOS MLI-style calling convention
 
 ### "DeskTop" Application
 
-AUX $8E00-$FFFF (with hole at $C000-$CFFF for I/O and at $ED00-$FAFF for
-data buffer) is the DeskTop application itself, with desktop and file
-icons, menus, dialogs, and so on.
+DeskTop application code is in the lower 48k of both Aux and Main:
+
+* Aux $8E00-$BFFF - sitting above the GUI library
+* Main $4000-$BEFF
+
+And in the Aux language card area (accessible from both aux and main code) are relays, buffers and resources:
+
+* Aux $D000-$ECFF - relays and other aux/main helpers, resources (menus, strings, window)
+* Aux $ED00-$FAFF - hole for data buffer
+* Aux $FB00-$FFFF - more resources (file types, icons)
+
+($C000-$CFFF is reserved for I/O, and main $BF page and language card is ProDOS)
+
+```
+       Main              Aux               ROM
+$FFFF +------------+    +------------+    +------------+
+      | ProDOS     |    | DeskTop    |    | Monitor    |
+$F800 |            |    | Resources/ |    +------------+
+      |            |    | Buffers    |    | Applesoft  |
+      |            |    |            |    |            |
+      |            |    |            |    |            |
+      |            |    |            |    |            |
+$D000 +------------+    +------------+    +------------+    +------------+
+                                                            | I/O        |
+                                                            |            |
+$C000 +------------+    +------------+                      +------------+
+      | ProDOS     |    | DeskTop    |
+$BF00 +------------+    | App Code   |
+      | DeskTop    |    |            |
+      | App Code   |    |            |
+      |            |    |            |
+      |            |    |            |
+      |            |    |            |
+      |            |    |            |
+      |            |    |            |
+$8E00 |            |    +------------+
+      |            |    | A2D GUI    |
+      |            |    | Library    |
+      |            |    |            |
+      |            |    |            |
+      |            |    |            |
+      |            |    |            |
+      |            |    |            |
+      |            |    |            |
+$4000 +------------+    +------------+
+      | Graphics   |    | Graphics   |
+      |            |    |            |
+      |            |    |            |
+      |            |    |            |
+      |            |    |            |
+      |            |    |            |
+      |            |    |            |
+      |            |    |            |
+$2000 +------------+    +------------+
+      | Desk Acc   |    | Desk Acc   |
+      |            |    |            |
+      |            |    |            |
+$0800 +------------+    +------------+
+      | Text       |    | Text       |
+$0400 +------------+    +------------+
+      |            |    |            |
+$0300 +------------+    +------------+
+      | Input Buf  |    | Input Buf  |
+$0200 +------------+    +------------+
+      | Stack      |    | Stack      |
+$0100 +------------+    +------------+
+      | Zero Page  |    | Zero Page  |
+$0000 +------------+    +------------+
+```
