@@ -5,6 +5,7 @@
         .include "../inc/auxmem.inc"
         .include "../inc/prodos.inc"
         .include "../a2d.inc"
+        .include "../desktop.inc"
 
 L0000           := $0000
 L0006           := $0006
@@ -17,11 +18,7 @@ L0D14           := $0D14
 L2710           := $2710
 
         ;; Various Main>Aux relays and routines
-A2D_RELAY       := $D000
-desktop_A2D_RELAY       := $D000
-
 LD01C           := $D01C
-DESKTOP_RELAY   := $D040
 LD05E           := $D05E
 LD082           := $D082
 LD096           := $D096
@@ -185,10 +182,7 @@ L412B:  lda     #$00
         jsr     L4244
 L4143:  bit     L40F1
         bpl     L4151
-        ldy     #$0C
-        lda     #$00
-        ldx     #$00
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $0C, $0000
 L4151:  rts
 
 L4152:  brk
@@ -271,15 +265,9 @@ L41FE:  lda     L4241
         tax
         lda     $DEA1,x
         sta     $E22F
-        ldy     #$0D
-        lda     #$2F
-        ldx     #$E2
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $0D, $E22F
         beq     L4221
-        ldy     #$03
-        lda     #$2F
-        ldx     #$E2
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $03, $E22F
 L4221:  inc     L4241
         jmp     L41FE
 
@@ -322,15 +310,9 @@ L4270:  lda     L42C3
         lda     $DF22,x
         sta     $E22F
         jsr     L8915
-        ldy     #$0D
-        lda     #$2F
-        ldx     #$E2
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $0D, $E22F
         beq     L4296
-        ldy     #$03
-        lda     #$2F
-        ldx     #$E2
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $03, $E22F
 L4296:  lda     $E22F
         jsr     L8893
         inc     L42C3
@@ -344,10 +326,7 @@ L42A5:  lda     L42C3
         tax
         lda     $DF22,x
         sta     $E22F
-        ldy     #$03
-        lda     #$2F
-        ldx     #$E2
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $03, $E22F
         inc     L42C3
         jmp     L42A5
 
@@ -451,10 +430,7 @@ L43E7:  tsx
         sta     $D2AA
         lda     #$00
         sta     $D20E
-        ldy     #$09
-        lda     #$09
-        ldx     #$D2
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $09, $D209
         lda     $D20D
         beq     L4415
         jmp     L67D7
@@ -516,10 +492,7 @@ L445D:  jsr     L6D2B
         and     #$0F
         sta     L445C
         jsr     L8997
-        ldy     #$02
-        lda     #$2F
-        ldx     #$E2
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $02, $E22F
         jsr     L4510
         lda     L445C
         sta     $DF20
@@ -564,10 +537,7 @@ L4510:  A2D_RELAY_CALL A2D_QUERY_SCREEN, $D239
         rts
 
 L4523:  jsr     L40F2
-        ldy     #$0C
-        lda     #$00
-        ldx     #$00
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $0C, $0000
         rts
 
 L4530:  ldx     #$00
@@ -828,10 +798,7 @@ L4748:  cmp     #$FF
         beq     L4755
         lda     #$FA
         jsr     L4802
-L4755:  ldy     #$06
-        lda     #$00
-        ldx     #$00
-        jsr     DESKTOP_RELAY
+L4755:  DESKTOP_RELAY_CALL $06, $0000
         A2D_RELAY_CALL $3A      ; ???
         A2D_RELAY_CALL A2D_SET_MENU, $E680
         ldx     $D355
@@ -1639,10 +1606,7 @@ L4E78:  jsr     L6D2B
         dex
         lda     $E6D1,x
         bmi     L4EB4
-        ldy     #$07
-        lda     #$25
-        ldx     #$EC
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $07, $EC25
         lda     $DD9E
         sec
         sbc     $DEA0
@@ -1683,10 +1647,7 @@ L4EC3:  sta     $DEA0
         and     #$0F
         sta     $DF20
         jsr     L8997
-        ldy     #$02
-        lda     #$2F
-        ldx     #$E2
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $02, $E22F
         jsr     L4510
         lda     #$01
         sta     $DF21
@@ -1703,10 +1664,7 @@ L4EC3:  sta     $DEA0
         A2D_RELAY_CALL A2D_QUERY_TOP, $EC25
         lda     $EC25
         bne     L4F3C
-        ldy     #$0C
-        lda     #$00
-        ldx     #$00
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $0C, $0000
 L4F3C:  lda     #$00
         sta     $E269
         A2D_RELAY_CALL $36, $E267 ; ???
@@ -1964,10 +1922,7 @@ L51C0:  ldx     L51EF
         sta     $E22F
         jsr     L8915
         jsr     L6E8E
-        ldy     #$02
-        lda     #$2F
-        ldx     #$E2
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $02, $E22F
         lda     $E22F
         jsr     L8893
         dec     L51EF
@@ -2108,10 +2063,7 @@ L52DF:  lda     #$00
         A2D_RELAY_CALL $36, $E267 ; ???
         rts
 
-L5302:  ldy     #$07
-        lda     #$25
-        ldx     #$EC
-        jsr     DESKTOP_RELAY
+L5302:  DESKTOP_RELAY_CALL $07, $EC25
         lda     $EC25
         sta     $DE9F
         jsr     LD09A
@@ -2307,10 +2259,7 @@ L5485:  cpx     $DEA0
         lda     $DEA1,x
         sta     $E22F
         jsr     L8915
-        ldy     #$0D
-        lda     #$2F
-        ldx     #$E2
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $0D, $E22F
         pha
         lda     $E22F
         jsr     L8893
@@ -2482,10 +2431,7 @@ L55F0:  ldx     L544A
         jsr     L56F9
         lda     $E22F
         jsr     L8915
-L5614:  ldy     #$02
-        lda     #$2F
-        ldx     #$E2
-        jsr     DESKTOP_RELAY
+L5614:  DESKTOP_RELAY_CALL $02, $E22F
         lda     $D212
         beq     L562B
         lda     $E22F
@@ -2505,10 +2451,7 @@ L562C:  lda     $E22F
         jsr     L56F9
         lda     $E22F
         jsr     L8915
-L564A:  ldy     #$0B
-        lda     #$2F
-        ldx     #$E2
-        jsr     DESKTOP_RELAY
+L564A:  DESKTOP_RELAY_CALL $0B, $E22F
         lda     $D212
         beq     L5661
         lda     $E22F
@@ -2560,10 +2503,7 @@ L56B4:  ldx     L56F8
         beq     L56CF
         lda     $E22B
         jsr     L8915
-L56CF:  ldy     #$02
-        lda     #$2B
-        ldx     #$E2
-        jsr     DESKTOP_RELAY
+L56CF:  DESKTOP_RELAY_CALL $02, $E22B
         lda     $E22C
         beq     L56E3
         lda     $E22B
@@ -2849,10 +2789,7 @@ L5916:  lda     $DEA1,x
         sta     $E22F
         lda     #$00
         sta     $DEA1,x
-        ldy     #$04
-        lda     #$2F
-        ldx     #$E2
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $04, $E22F
         lda     $E22F
         jsr     LD082
         dec     $DEA0
@@ -2995,10 +2932,7 @@ L5A4C:  jsr     L4523
         lda     $E22F
         jsr     LD082
         jsr     L4510
-        ldy     #$04
-        lda     #$2F
-        ldx     #$E2
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $04, $E22F
 L5A7F:  lda     $DEA0
         sta     L5AC6
         inc     $DEA0
@@ -3257,10 +3191,7 @@ L5CB7:  bit     L5B1B
 
 L5CBF:  lda     $EC25
         sta     $D20E
-        ldy     #$09
-        lda     #$09
-        ldx     #$D2
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $09, $D209
         lda     $D20D
         bne     L5CDA
         jsr     L5F13
@@ -3302,10 +3233,7 @@ L5D0B:  ldx     $DF21
         sta     $E22F
         jsr     L8915
         jsr     L6E8E
-        ldy     #$02
-        lda     #$2F
-        ldx     #$E2
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $02, $E22F
         lda     $EC25
         sta     $D212
         jsr     L44F2
@@ -3318,10 +3246,7 @@ L5D0B:  ldx     $DF21
 
 L5D55:  lda     L5CD9
         sta     $EBFC
-        ldy     #$0A
-        lda     #$FC
-        ldx     #$EB
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $0A, $EBFC
         tax
         lda     $EBFC
         beq     L5DA6
@@ -3369,10 +3294,7 @@ L5DC4:  txa
         pha
         lda     $DF22,x
         sta     $E22E
-        ldy     #$03
-        lda     #$2E
-        ldx     #$E2
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $03, $E22E
         pla
         tax
         dex
@@ -3570,15 +3492,9 @@ L5F88:  txa
         lda     $DEA1,x
         sta     $E22F
         jsr     L8915
-        ldy     #$0D
-        lda     #$2F
-        ldx     #$E2
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $0D, $E22F
         beq     L5FB9
-        ldy     #$02
-        lda     #$2F
-        ldx     #$E2
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $02, $E22F
         ldx     $DF21
         inc     $DF21
         lda     $E22F
@@ -3823,10 +3739,7 @@ L61DC:  lda     $EC25
         sec
         sbc     $DEA0
         sta     $DD9E
-        ldy     #$07
-        lda     #$25
-        ldx     #$EC
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $07, $EC25
         ldx     #$00
 L6206:  cpx     $DEA0
         beq     L6215
@@ -3865,10 +3778,7 @@ L6227:  sta     $DEA0
         and     #$0F
         sta     $DF20
         jsr     L8997
-        ldy     #$02
-        lda     #$2F
-        ldx     #$E2
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $02, $E22F
         jsr     L4510
         lda     #$01
         sta     $DF21
@@ -4457,10 +4367,7 @@ L67F6:  bit     $C061
         bpl     L6818
         lda     $DF20
         bne     L6818
-        ldy     #$02
-        lda     #$0D
-        ldx     #$D2
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $02, $D20D
         ldx     $DF21
         lda     $D20D
         sta     $DF22,x
@@ -4468,10 +4375,7 @@ L67F6:  bit     $C061
         jmp     L6834
 
 L6818:  jsr     L6D2B
-L681B:  ldy     #$02
-        lda     #$0D
-        ldx     #$D2
-        jsr     DESKTOP_RELAY
+L681B:  DESKTOP_RELAY_CALL $02, $D20D
         lda     #$01
         sta     $DF21
         lda     $D20D
@@ -4482,10 +4386,7 @@ L6834:  bit     $D2AA
         bpl     L6880
         lda     $D20D
         sta     $EBFC
-        ldy     #$0A
-        lda     #$FC
-        ldx     #$EB
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $0A, $EBFC
         tax
         lda     $EBFC
         beq     L6878
@@ -4528,10 +4429,7 @@ L6893:  txa
         pha
         lda     $DF22,x
         sta     $E22D
-        ldy     #$03
-        lda     #$2D
-        ldx     #$E2
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $03, $E22D
         pla
         tax
         dex
@@ -4575,15 +4473,9 @@ L6904:  txa
         pha
         lda     $DEA1,x
         sta     $E22F
-        ldy     #$0D
-        lda     #$2F
-        ldx     #$E2
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $0D, $E22F
         beq     L692C
-        ldy     #$02
-        lda     #$2F
-        ldx     #$E2
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $02, $E22F
         ldx     $DF21
         inc     $DF21
         lda     $E22F
@@ -4772,10 +4664,7 @@ L6AA7:  stx     $DE9F
         jsr     L44F2
         lda     $E6BE
         jsr     L8915
-L6AD8:  ldy     #$03
-        lda     #$BE
-        ldx     #$E6
-        jsr     DESKTOP_RELAY
+L6AD8:  DESKTOP_RELAY_CALL $03, $E6BE
         lda     $D212
         beq     L6AEF
         lda     $E6BE
@@ -4855,10 +4744,7 @@ L6B68:  lda     #$01
         jsr     L6E8E
         lda     $E6BE
         jsr     L8915
-L6BA1:  ldy     #$03
-        lda     #$BE
-        ldx     #$E6
-        jsr     DESKTOP_RELAY
+L6BA1:  DESKTOP_RELAY_CALL $03, $E6BE
         lda     $D212
         beq     L6BB8
         lda     $E6BE
@@ -5008,15 +4894,9 @@ L6D09:  txa
         pha
         lda     $DEA1,x
         sta     $E22F
-        ldy     #$0D
-        lda     #$2F
-        ldx     #$E2
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $0D, $E22F
         beq     L6D25
-        ldy     #$03
-        lda     #$2F
-        ldx     #$E2
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $03, $E22F
 L6D25:  pla
         tax
         inx
@@ -5047,10 +4927,7 @@ L6D56:  lda     L6DB0
         lda     $DF22,x
         sta     $E22F
         jsr     L8915
-        ldy     #$0B
-        lda     #$2F
-        ldx     #$E2
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $0B, $E22F
         lda     $E22F
         jsr     L8893
         inc     L6DB0
@@ -5062,10 +4939,7 @@ L6D7D:  lda     L6DB0
         tax
         lda     $DF22,x
         sta     $E22F
-        ldy     #$0B
-        lda     #$2F
-        ldx     #$E2
-        jsr     DESKTOP_RELAY
+        DESKTOP_RELAY_CALL $0B, $E22F
         inc     L6DB0
         jmp     L6D7D
 

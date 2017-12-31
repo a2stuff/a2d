@@ -65,6 +65,40 @@ DESKTOP_REDRAW_ICONS := $0C     ; Repaints desktop icons
 .endmacro
 
 ;;; ==================================================
+
+        ;; Relay for main>aux A2D call (Y=call, X,A=params addr)
+A2D_RELAY       := $D000
+
+.macro A2D_RELAY_CALL call, addr
+        ldy     #(call)
+.if .paramcount > 1
+        lda     #<(addr)
+        ldx     #>(addr)
+.else
+        lda     #0
+        ldx     #0
+.endif
+        jsr     A2D_RELAY
+.endmacro
+
+        ;; Relay for main>aux DESKTOP call (Y=call, X,A=params addr)
+DESKTOP_RELAY   := $D040
+
+.macro DESKTOP_RELAY_CALL call, addr
+        ldy     #(call)
+.if .paramcount > 1
+        lda     #<(addr)
+        ldx     #>(addr)
+.else
+        lda     #0
+        ldx     #0
+.endif
+        jsr     DESKTOP_RELAY
+.endmacro
+
+
+
+;;; ==================================================
 ;;; DeskTop Internals
 
         ;; These are DeskTop internals, but it appears there is no
