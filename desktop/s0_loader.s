@@ -34,8 +34,8 @@ A2D             := $4000
 L7ECA           := $7ECA
 UNKNOWN_CALL    := $8E00
 
-L2000:  lda     $C083
-L2003:  lda     $C083
+L2000:  lda     LCBANK2
+L2003:  lda     LCBANK2
         ldy     #$00
 L2008:
 L2009           := * + 1
@@ -51,7 +51,7 @@ L2013           := * + 2
         sta     $D200,y
 L2014:  dey
         bne     L2008
-        lda     $C082
+        lda     ROMIN2
         jsr     MLI
         .byte   $65
         .addr   L2020
@@ -75,16 +75,16 @@ L204B:  .byte   $6B,$54,$6F,$70,$08,$44,$65,$73
         .byte   $6B,$54,$6F,$70,$32,$04,$00,$00
         .byte   $1E,$00,$04,$00,$00,$01,$00,$01
         .byte   $90,$11,$03,$28,$10,$00,$1A,$00
-        lda     $C082
+        lda     ROMIN2
         jsr     SETVID
         jsr     SETKBD
-        sta     $C00C
-        sta     $C00F
-        sta     $C000
+        sta     CLR80VID
+        sta     SETALTCHAR
+        sta     CLR80COL
         jsr     SLOT3ENTRY
 L2080:  jsr     HOME
         lda     #$00
-        sta     $C035
+        sta     SHADOW          ; ??? IIgs specific?
         lda     #$40
         sta     RAMWRTON
         sta     $0100
@@ -133,8 +133,8 @@ L20E1:  lda     #$FF
         sta     $1189
         lda     $03FF
         sta     $118A
-        lda     $C083
-        lda     $C083
+        lda     LCBANK2
+        lda     LCBANK2
         ldy     #$00
 L20FA:  lda     $1000,y
         sta     $D100,y
@@ -142,7 +142,7 @@ L20FA:  lda     $1000,y
         sta     $D200,y
         dey
         bne     L20FA
-        lda     $C082
+        lda     ROMIN2
         jmp     L10F4
 
 L210F:  lda     $1189
@@ -197,8 +197,8 @@ L2169:  adc     ($11,x)
         iny
         cpy     $1160
         bne     L2168
-L2176:  sta     $C010
-L2179:  lda     $C000
+L2176:  sta     KBDSTRB
+L2179:  lda     CLR80COL
         bpl     L2179
         and     #$7F
         cmp     #$0D
@@ -336,7 +336,7 @@ L2314:  lda     ($06),y
         cmp     L212D
         bne     L2314
         sta     ALTZPOFF
-        lda     $C082
+        lda     ROMIN2
         rts
 
         brk
@@ -388,23 +388,23 @@ L2352:  lda     ($06),y
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         pha
-        lda     $C061
-        and     $C062
+        lda     BUTN0
+        and     BUTN1
         bpl     L2410
-        lda     $C000
+        lda     KBD
         cmp     #$D0
         beq     L2414
 L2410:  pla
         jmp     L7ECA
 
-L2414:  sta     $C010
-        sta     $C001
-        sta     $C00D
-        sta     $C05E
-        lda     $C050
-        lda     $C057
+L2414:  sta     KBDSTRB
+        sta     SET80COL
+        sta     SET80VID
+        sta     DHIRESON
+        lda     TXTCLR
+        lda     HIRES
         sta     ALTZPOFF
-        sta     $C082
+        sta     ROMIN2
         lda     #$00
         sta     $03C5
         jmp     L035F
@@ -458,9 +458,9 @@ L2487:  iny
         lda     $03CC
         lsr     a
         tay
-        sta     $C054
+        sta     LOWSCR
         bcs     L2499
-        sta     $C055
+        sta     HISCR
 L2499:  lda     ($06),y
         and     $03C9
         cmp     #$01
@@ -470,7 +470,7 @@ L2499:  lda     ($06),y
         bne     L2486
         lda     $03CA
         eor     #$FF
-        sta     $C054
+        sta     LOWSCR
         jsr     L03C1
         lda     $03C6
         cmp     #$2F
@@ -487,7 +487,7 @@ L24D1:  inc     $03C6
         bne     L247B
         inc     $03C7
         bne     L247B
-L24DB:  sta     $C054
+L24DB:  sta     LOWSCR
         rts
 
         jsr     L03B3

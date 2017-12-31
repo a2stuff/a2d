@@ -735,7 +735,7 @@ L46BA:  sty     L46CE
         php
         sei
         sta     ALTZPOFF
-        sta     $C082
+        sta     ROMIN2
         jsr     MLI
 L46CE:  .byte   $00
 L46CF:  .addr   L0000
@@ -786,8 +786,8 @@ L472B:  lda     L46E5
 
 L4738:  cmp     #$06
         bne     L4748
-        lda     $C061
-        ora     $C062
+        lda     BUTN0
+        ora     BUTN1
         bmi     L4755
         jsr     L489A
         rts
@@ -1182,8 +1182,8 @@ L4AEA:  jsr     L4B5F
         rts
 
 L4AFD:  sta     ALTZPOFF
-        lda     $C083
-        lda     $C083
+        lda     LCBANK2
+        lda     LCBANK2
         lda     $D3FF
         tax
         sta     ALTZPON
@@ -1195,8 +1195,8 @@ L4AFD:  sta     ALTZPOFF
 L4B15:  sta     L4B2B
         stx     L4B2C
         sta     ALTZPOFF
-        lda     $C083
-        lda     $C083
+        lda     LCBANK2
+        lda     LCBANK2
         ldx     $D3EE
 L4B27:  lda     $D3EE,x
         .byte   $9D
@@ -1211,8 +1211,8 @@ L4B2C:  ora     ($CA)
         sta     L4B50
         stx     L4B51
         sta     ALTZPOFF
-        lda     $C083
-        lda     $C083
+        lda     LCBANK2
+        lda     LCBANK2
         ldx     $D3AD
 L4B4C:  lda     $D3AD,x
         .byte   $9D
@@ -1811,27 +1811,27 @@ L50AC:  lda     L5099,x
         dex
         bpl     L50AC
         sta     ALTZPOFF
-        lda     $C083
-        lda     $C083
+        lda     LCBANK2
+        lda     LCBANK2
         ldx     #$05
 L50C0:  lda     L509D,x
         sta     $D100,x
         dex
         bpl     L50C0
         sta     ALTZPOFF
-        lda     $C082
+        lda     ROMIN2
         jsr     SETVID
         jsr     SETKBD
         jsr     INIT
         jsr     HOME
-        sta     $C051
-        sta     $C054
-        sta     $C056
-        sta     $C052
-        sta     $C05F
-        sta     $C00E
-        sta     $C00C
-        sta     $C000
+        sta     TXTSET
+        sta     LOWSCR
+        sta     LORES
+        sta     MIXCLR
+        sta     DHIRESOFF
+        sta     CLRALTCHAR
+        sta     CLR80VID
+        sta     CLR80COL
         jsr     MLI
         .byte   $65
         .addr   L50A3
@@ -2994,19 +2994,19 @@ L5AD0:  brk
         lda     #$00
         sta     L5B19
 L5AEE:  sta     ALTZPOFF
-        lda     $C082
+        lda     ROMIN2
         jsr     SETVID
         jsr     SETKBD
         jsr     INIT
         jsr     HOME
-        sta     $C051
-        sta     $C054
-        sta     $C056
-        sta     $C052
-        sta     $C05F
-        sta     $C00E
-        sta     $C00C
-        sta     $C000
+        sta     TXTSET
+        sta     LOWSCR
+        sta     LORES
+        sta     MIXCLR
+        sta     DHIRESOFF
+        sta     CLRALTCHAR
+        sta     CLR80VID
+        sta     CLR80COL
         .byte   $4C
 L5B19:  brk
 L5B1A:  brk
@@ -3214,7 +3214,7 @@ L5CF0:  bit     $D2AA
 
 L5CF8:  jmp     L5D55
 
-L5CFB:  bit     $C061
+L5CFB:  bit     BUTN0
         bpl     L5D08
         lda     $DF20
         cmp     $EC25
@@ -3458,7 +3458,7 @@ L5F20:  lda     $D209,x
         lda     $D208
         cmp     #$04
         beq     L5F3F
-        bit     $C061
+        bit     BUTN0
         bmi     L5F3E
         jsr     L6D2B
 L5F3E:  rts
@@ -4363,7 +4363,7 @@ L67EE:  bit     $D2AA
         bmi     L6834
         jmp     L6880
 
-L67F6:  bit     $C061
+L67F6:  bit     BUTN0
         bpl     L6818
         lda     $DF20
         bne     L6818
@@ -4437,7 +4437,7 @@ L6893:  txa
         rts
 
 L68AA:  jsr     L4510
-        bit     $C061
+        bit     BUTN0
         bpl     L68B3
         rts
 
@@ -4826,8 +4826,8 @@ L6C5F:  txa
         lda     $E203,x
         sta     $E71E
         sta     $07
-        lda     $C083
-        lda     $C083
+        lda     LCBANK2
+        lda     LCBANK2
         ldy     #$00
         lda     (L0006),y
         tay
@@ -5368,8 +5368,8 @@ L7169:  lda     L485F
         inc     $E1F1
         lda     L70C1
         pha
-        lda     $C083
-        lda     $C083
+        lda     LCBANK2
+        lda     LCBANK2
         ldy     #$00
         pla
         sta     (L0006),y
@@ -5475,8 +5475,8 @@ L724E:  lda     ($08),y
         iny
         lda     ($08),y
         sta     $1F00,x
-        lda     $C083
-        lda     $C083
+        lda     LCBANK2
+        lda     LCBANK2
         ldx     #$1F
         ldy     #$1F
 L7279:  lda     $1F00,x
@@ -5622,8 +5622,8 @@ L7385:  lda     L7446
         sta     $09
         ldy     #$00
         jsr     L87F6
-L73A5:  lda     $C083
-        lda     $C083
+L73A5:  lda     LCBANK2
+        lda     LCBANK2
         lda     ($08),y
         sta     (L0006),y
         lda     LCBANK1
@@ -5989,8 +5989,8 @@ L767C:  txa
         sta     L0006
         lda     $E203,x
         sta     $07
-        lda     $C083
-        lda     $C083
+        lda     LCBANK2
+        lda     LCBANK2
         ldy     #$00
         lda     (L0006),y
         sta     L7764
@@ -6098,8 +6098,8 @@ L7768:  inc     $DD9E
         jsr     L86E3
         sta     $08
         stx     $09
-        lda     $C083
-        lda     $C083
+        lda     LCBANK2
+        lda     LCBANK2
         ldy     #$00
         lda     (L0006),y
         sta     $1800
@@ -6800,8 +6800,8 @@ L7DB4:  txa
         lda     $E203,x
         sta     $07
         sta     $0802
-        lda     $C083
-        lda     $C083
+        lda     LCBANK2
+        lda     LCBANK2
         lda     #$00
         sta     L0800
         tay
@@ -6840,8 +6840,8 @@ L7E0C:  lda     LCBANK1
         beq     L7E20
         jmp     L7EC1
 
-L7E20:  lda     $C083
-        lda     $C083
+L7E20:  lda     LCBANK2
+        lda     LCBANK2
         lda     #$5A
         ldx     #$0F
 L7E2A:  sta     $0808,x
@@ -6917,8 +6917,8 @@ L7EC1:  cmp     #$82
         beq     L7EC8
         jmp     L7F58
 
-L7EC8:  lda     $C083
-        lda     $C083
+L7EC8:  lda     LCBANK2
+        lda     LCBANK2
         lda     #$00
         sta     $0808
         sta     $0809
@@ -6983,8 +6983,8 @@ L7F58:  cmp     #$83
         beq     L7F5F
         jmp     L801F
 
-L7F5F:  lda     $C083
-        lda     $C083
+L7F5F:  lda     LCBANK2
+        lda     LCBANK2
         lda     #$00
         sta     $0808
         sta     $0809
@@ -7059,8 +7059,8 @@ L7FBB:  inc     $0805
         sta     $E6E5
         lda     #$00
         sta     $E6E6
-        lda     $C083
-        lda     $C083
+        lda     LCBANK2
+        lda     LCBANK2
         jmp     L80F5
 
 L801F:  cmp     #$84
@@ -7079,8 +7079,8 @@ L8036:  lda     ($08),y
         sta     $0807,y
         dey
         bne     L8036
-        lda     $C083
-        lda     $C083
+        lda     LCBANK2
+        lda     LCBANK2
         lda     #$00
         sta     $0805
         sta     L0800
@@ -7190,8 +7190,8 @@ L812B:  lda     LCBANK1
         lda     LCBANK1
         tya
         sta     $DEA1,x
-        lda     $C083
-        lda     $C083
+        lda     LCBANK2
+        lda     LCBANK2
         rts
 
 L813C:  brk
@@ -7218,8 +7218,8 @@ L813F:  ldy     #$00
         lda     $E71E
         adc     L813C
         sta     $07
-        lda     $C083
-        lda     $C083
+        lda     LCBANK2
+        lda     LCBANK2
         ldy     #$1F
 L8171:  lda     (L0006),y
         sta     $EC43,y
@@ -12089,7 +12089,7 @@ LAAB1:  jsr     LA567
         rts
 
 LAACE:  sta     ALTZPOFF
-        sta     $C082
+        sta     ROMIN2
         jsr     BELL1
         sta     ALTZPON
         lda     LCBANK1

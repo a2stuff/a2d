@@ -10,6 +10,7 @@ RAMWRTON        := $C005
 ALTZPOFF        := $C008
 ALTZPON         := $C009
 
+CLR80VID        := $C00C
 SET80VID        := $C00D
 RD80STORE       := $C018
 RDPAGE2         := $C01C
@@ -19,6 +20,7 @@ PAGE2ON         := $C055
 HIRESON         := $C056
 HIRESOFF        := $C057
 DHIRESON        := $C05E
+DHIRESOFF       := $C05F
 
 ;;; Routines
 SLOT3ENTRY      := $C300

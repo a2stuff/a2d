@@ -11,6 +11,8 @@ COUT_HOOK       := $36
 SPKR            := $C030
 ROMIN2          := $C082
 
+SHADOW          := $C035        ; IIgs - inhibit shadowing
+
 ;;; Key Codes
 
 KEY_RETURN      := $0D
