@@ -182,7 +182,7 @@ L412B:  lda     #$00
         jsr     L4244
 L4143:  bit     L40F1
         bpl     L4151
-        DESKTOP_RELAY_CALL $0C, $0000
+        DESKTOP_RELAY_CALL DESKTOP_REDRAW_ICONS
 L4151:  rts
 
 L4152:  brk
@@ -537,7 +537,7 @@ L4510:  A2D_RELAY_CALL A2D_QUERY_SCREEN, $D239
         rts
 
 L4523:  jsr     L40F2
-        DESKTOP_RELAY_CALL $0C, $0000
+        DESKTOP_RELAY_CALL DESKTOP_REDRAW_ICONS
         rts
 
 L4530:  ldx     #$00
@@ -1664,7 +1664,7 @@ L4EC3:  sta     $DEA0
         A2D_RELAY_CALL A2D_QUERY_TOP, $EC25
         lda     $EC25
         bne     L4F3C
-        DESKTOP_RELAY_CALL $0C, $0000
+        DESKTOP_RELAY_CALL DESKTOP_REDRAW_ICONS
 L4F3C:  lda     #$00
         sta     $E269
         A2D_RELAY_CALL $36, $E267 ; ???

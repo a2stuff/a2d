@@ -35,11 +35,15 @@ DESKTOP    := $8E00
 
         ;; Implementation bounces to $93BC, uses jump table at $939E
 
-;;; This is the only known call:
+        ;; $02 ???
+        ;; $03 ???
+        ;; $06 ???
+        ;; $07 ???
 
 DESKTOP_REDRAW_ICONS := $0C     ; Repaints desktop icons
 
-        ;; $0D used at start of drag-select, $09 at end (then another $0D)
+        ;; $0D used at start of drag-select
+        ;; $09 at end (then another $0D)
 
 ;;; ==================================================
 ;;; Macros

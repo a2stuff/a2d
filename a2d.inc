@@ -192,6 +192,10 @@ A2D_CONFIGURE_ZP_USE    := $1A  ; Configure ZP usage by API (speed vs. convenien
         ;; (input length 1 byte)
         ;; .byte flag           (AWS_CZP_*; high bit set = preserve ZP during calls)
 
+A2D_LOW_ZP_STASH        := $1B  ; Stash or restore lower 128 bytes of ZP; calls are idempotent
+        ;; (input length 1 byte)
+        ;; .byte flag           (high bit set = stash ZP, clear = unstash ZP)
+
 A2D_INIT_SCREEN_AND_MOUSE := $1D; Inits state, registers interrupt handler, draws desktop
         ;; (input length 12 byte)
         ;; ???

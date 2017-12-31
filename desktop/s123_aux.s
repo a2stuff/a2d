@@ -3537,7 +3537,7 @@ rts3:   rts
 
 ;;; 1 byte of params, copied to $82
 
-;;; If high bit clear stash ZP $00-$43 to buffer if not already stashed.
+;;; If high bit set stash ZP $00-$43 to buffer if not already stashed.
 ;;; If high bit clear unstash ZP $00-$43 from buffer if not already unstashed.
 
 .proc LOW_ZP_STASH_IMPL
@@ -4482,6 +4482,8 @@ mouse_state_addr:
 .endproc
 
 ;;; ==================================================
+
+;;; $2C Impl
 
 L65D4:
         clc
@@ -13216,6 +13218,14 @@ addr:   .addr   0
         .byte   0
         .byte   0
 
+        .assert * = $C000, error, "Segment expected to fill through $C000"
+
+;;; ==================================================
+;;;
+;;; $C000 - $CFFF is I/O Space
+;;;
+;;; ==================================================
+
         .org $D000
 
 L87F6           := $87F6
@@ -14124,6 +14134,12 @@ LEC25:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
         .res    147, 0
 
+        .assert * = $ED00, error, "Segment expected to fill through $ED00"
+
+;;; ==================================================
+;;;
+;;; $ED00 - $FAFF is data buffers
+;;;
 ;;; ==================================================
 
         .org $FB00
