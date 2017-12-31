@@ -11,7 +11,7 @@ function daseg {
 }
 
 #daseg s0_loader 2000
-daseg s4_main1 4000
+#daseg s4_main1 4000
 #daseg 12680_1BCDF
 
 make

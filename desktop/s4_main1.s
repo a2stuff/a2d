@@ -1,11 +1,10 @@
-.org $4000
-; da65 V2.16 - Git f5e9b401
-; Created:    2017-12-30 18:00:35
-; Input file: orig/DESKTOP2_s4_main1
-; Page:       1
-
-
         .setcpu "65C02"
+
+        .include "apple2.inc"
+        .include "../inc/apple2.inc"
+        .include "../inc/auxmem.inc"
+        .include "../inc/prodos.inc"
+        .include "../a2d.inc"
 
 L0000           := $0000
 L0006           := $0006
@@ -16,16 +15,7 @@ L0CD7           := $0CD7
 L0CF9           := $0CF9
 L0D14           := $0D14
 L2710           := $2710
-MLI             := $BF00
-RAMRDOFF        := $C002
-RAMRDON         := $C003
-RAMWRTOFF       := $C004
-RAMWRTON        := $C005
-ALTZPOFF        := $C008
-ALTZPON         := $C009
-LCBANK1         := $C08B
-AUXMOVE         := $C311
-XFER            := $C314
+
 A2D_RELAY       := $D000
 LD01C           := $D01C
 DESKTOP_RELAY   := $D040
@@ -37,21 +27,10 @@ LD108           := $D108
 LD13E           := $D13E
 LD154           := $D154
 LD156           := $D156
-FSUB            := $E7A7
-FADD            := $E7BE
-FMULT           := $E97F
-FDIV            := $EA66
-ROUND           := $EB2B
-FLOAT           := $EB93
-FIN             := $EC4A
-FOUT            := $ED34
-INIT            := $FB2F
-BELL1           := $FBDD
-HOME            := $FC58
-COUT            := $FDED
-SETKBD          := $FE89
-SETVID          := $FE93
-A2D:    jmp     L4042
+
+        .org $4000
+
+L4000:   jmp     L4042
 
 L4003:  jmp     A2D_RELAY
 
@@ -972,8 +951,7 @@ L4808:  cpx     #$01
         jmp     L47D2
 
 L4816:  .byte   $00
-L4817:  .byte   $0C,$42,$61,$73,$69,$63,$2E,$73
-        .byte   $79,$73,$74,$65,$6D,$00,$00,$00
+L4817:  .byte   12, "Basic.system",$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -1494,8 +1472,7 @@ L4C6D:  ldy     #$CC
 L4C7C:  .byte   $00,$04
 L4C7E:  .byte   $00,$00,$08,$00,$14,$00,$00,$01
 L4C86:  .byte   $00,$09
-L4C88:  .byte   $09,$44,$65,$73,$6B,$2E,$61,$63
-        .byte   $63,$2F,$00,$00,$00,$00,$00,$00
+L4C88:  .byte   $09,"Desk.acc/",$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00
 L4CA1:  .byte   $00
@@ -7730,12 +7707,10 @@ L8259:  sta     L8272
         stx     L8273
         jmp     L8276
 
-L8262:  jsr     L6C42
-        bbr6    $63,L82D3
-        .byte   $73
-        .byte   $20
-L826A:  .byte   $10
-L826B:  rmb2    $E8
+L8262:  .byte   $20
+        .byte   "Blocks "
+L826A:  .byte   $10             ; ???
+L826B:  .byte   $27,$E8
         .byte   $03
         stz     L0000
         asl     a
@@ -7923,40 +7898,32 @@ L83E2:  .byte   $FC
 L83E3:  .byte   $83,$06,$84,$11,$84,$1C,$84,$27
         .byte   $84,$32,$84,$3D,$84,$48,$84,$53
         .byte   $84,$5E,$84,$69,$84,$74,$84,$7F
-        .byte   $84,$09,$6E,$6F,$20,$64,$61,$74
-        .byte   $65,$20,$20,$0A,$4A,$61,$6E,$75
-        .byte   $61,$72,$79,$20,$20,$20,$0A,$46
-        .byte   $65,$62,$72,$75,$61,$72,$79,$20
-        .byte   $20,$0A,$4D,$61,$72,$63,$68,$20
-        .byte   $20,$20,$20,$20,$0A,$41,$70,$72
-        .byte   $69,$6C,$20,$20,$20,$20,$20,$0A
-        .byte   $4D,$61,$79,$20,$20,$20,$20,$20
-        .byte   $20,$20,$0A,$4A,$75,$6E,$65,$20
-        .byte   $20,$20,$20,$20,$20,$0A,$4A,$75
-        .byte   $6C,$79,$20,$20,$20,$20,$20,$20
-        .byte   $0A,$41,$75,$67,$75,$73,$74,$20
-        .byte   $20,$20,$20,$0A,$53,$65,$70,$74
-        .byte   $65,$6D,$62,$65,$72,$20,$0A,$4F
-        .byte   $63,$74,$6F,$62,$65,$72,$20,$20
-        .byte   $20,$0A,$4E,$6F,$76,$65,$6D,$62
-        .byte   $65,$72,$20,$20,$0A,$44,$65,$63
-        .byte   $65,$6D,$62,$65,$72,$20,$20,$05
-        .byte   $20,$31,$39
-L848E:  .byte   $38
-L848F:  .byte   $35
-L8490:  .byte   $09
+        .byte   $84
+        PASCAL_STRING "no date  "
+        PASCAL_STRING "January   "
+        PASCAL_STRING "February  "
+        PASCAL_STRING "March     "
+        PASCAL_STRING "April     "
+        PASCAL_STRING "May       "
+        PASCAL_STRING "June      "
+        PASCAL_STRING "July      "
+        PASCAL_STRING "August    "
+        PASCAL_STRING "September "
+        PASCAL_STRING "October   "
+        PASCAL_STRING "November  "
+        PASCAL_STRING "December  "
+        PASCAL_STRING " 1985"
+L848E  := *-2                   ; 10s digit
+L848F  := *-1                   ; 1s digit
+
+L8490:  .byte   $09             ; ????
         asl     a
         trb     $1E
         plp
         and     ($3C)
         lsr     $50
         phy
-L849A:  bmi     L84CD
-        and     ($33)
-        bit     $35,x
-        rol     $37,x
-        sec
-        .byte   $39
+L849A:  .byte   "0123456789"
 L84A4:  sta     L0006
         stx     $07
         ldy     #$00
@@ -10013,9 +9980,7 @@ L9534:  lda     #$00
         sta     $DFC9
         rts
 
-L953A:  tsb     L0020
-        lsr     $4F,x
-        .byte   $4C
+L953A:  PASCAL_STRING " VOL"
 L953F:  ldy     #$06
         lda     #$E3
         ldx     #$92
