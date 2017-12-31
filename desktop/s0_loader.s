@@ -7,6 +7,11 @@
 
         .setcpu "65C02"
 
+        .include "apple2.inc"
+        .include "../inc/apple2.inc"
+        .include "../inc/auxmem.inc"
+        .include "../inc/prodos.inc"
+
 L02B4           := $02B4
 L02B6           := $02B6
 L02C3           := $02C3
@@ -28,30 +33,7 @@ L118B           := $118B
 A2D             := $4000
 L7ECA           := $7ECA
 UNKNOWN_CALL    := $8E00
-MLI             := $BF00
-RAMRDOFF        := $C002
-RAMRDON         := $C003
-RAMWRTOFF       := $C004
-RAMWRTON        := $C005
-ALTZPOFF        := $C008
-ALTZPON         := $C009
-LCBANK1         := $C08B
-LC300           := $C300
-AUXMOVE         := $C311
-XFER            := $C314
-FSUB            := $E7A7
-FADD            := $E7BE
-FMULT           := $E97F
-FDIV            := $EA66
-ROUND           := $EB2B
-FLOAT           := $EB93
-FIN             := $EC4A
-FOUT            := $ED34
-LFC22           := $FC22
-LFC58           := $FC58
-COUT            := $FDED
-LFE89           := $FE89
-LFE93           := $FE93
+
 L2000:  lda     $C083
 L2003:  lda     $C083
         ldy     #$00
@@ -94,13 +76,13 @@ L204B:  .byte   $6B,$54,$6F,$70,$08,$44,$65,$73
         .byte   $1E,$00,$04,$00,$00,$01,$00,$01
         .byte   $90,$11,$03,$28,$10,$00,$1A,$00
         lda     $C082
-        jsr     LFE93
-        jsr     LFE89
+        jsr     SETVID
+        jsr     SETKBD
         sta     $C00C
         sta     $C00F
         sta     $C000
-        jsr     LC300
-L2080:  jsr     LFC58
+        jsr     SLOT3ENTRY
+L2080:  jsr     HOME
         lda     #$00
         sta     $C035
         lda     #$40
@@ -110,7 +92,7 @@ L2080:  jsr     LFC58
         sta     RAMWRTOFF
         lda     #$0C
         sta     $25
-        jsr     LFC22
+        jsr     VTAB
         lda     #$50
         sec
         sbc     $100F
@@ -197,11 +179,11 @@ L2142:  jsr     MLI
 
 L214D:  jmp     L2000
 
-        jsr     LC300
-        jsr     LFC58
+        jsr     SLOT3ENTRY
+        jsr     HOME
         lda     #$0C
         sta     $25
-        jsr     LFC22
+        jsr     VTAB
         lda     #$50
         sec
         sbc     $1160

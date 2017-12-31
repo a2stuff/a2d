@@ -1,6 +1,6 @@
 .org $4000
 ; da65 V2.16 - Git f5e9b401
-; Created:    2017-10-12 21:29:38
+; Created:    2017-12-30 18:00:35
 ; Input file: orig/DESKTOP2_s4_main1
 ; Page:       1
 
@@ -8,7 +8,6 @@
         .setcpu "65C02"
 
 L0000           := $0000
-L0002           := $0002
 L0006           := $0006
 L0020           := $0020
 L0800           := $0800
@@ -16,7 +15,6 @@ L0CB8           := $0CB8
 L0CD7           := $0CD7
 L0CF9           := $0CF9
 L0D14           := $0D14
-L1C00           := $1C00
 L2710           := $2710
 MLI             := $BF00
 RAMRDOFF        := $C002
@@ -28,9 +26,9 @@ ALTZPON         := $C009
 LCBANK1         := $C08B
 AUXMOVE         := $C311
 XFER            := $C314
-LD000           := $D000
+A2D_RELAY       := $D000
 LD01C           := $D01C
-LD040           := $D040
+DESKTOP_RELAY   := $D040
 LD05E           := $D05E
 LD082           := $D082
 LD096           := $D096
@@ -47,15 +45,15 @@ ROUND           := $EB2B
 FLOAT           := $EB93
 FIN             := $EC4A
 FOUT            := $ED34
-LFB2F           := $FB2F
-LFBDD           := $FBDD
-LFC58           := $FC58
+INIT            := $FB2F
+BELL1           := $FBDD
+HOME            := $FC58
 COUT            := $FDED
-LFE89           := $FE89
-LFE93           := $FE93
+SETKBD          := $FE89
+SETVID          := $FE93
 A2D:    jmp     L4042
 
-L4003:  jmp     LD000
+L4003:  jmp     A2D_RELAY
 
 L4006:  jmp     L8259
 
@@ -69,7 +67,7 @@ L4012:  jmp     L5050
 
 L4015:  jmp     L40F2
 
-L4018:  jmp     LD040
+L4018:  jmp     DESKTOP_RELAY
 
         jmp     L8E81
 
@@ -110,7 +108,7 @@ L4051:  cpx     $DEA0
         lda     $DEA1,x
         jsr     L86E3
         ldy     #$01
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         pla
         tax
         inx
@@ -164,7 +162,7 @@ L40C7:  cmp     #$06
         jsr     L410D
 L40DC:  jmp     L4088
 
-L40DF:  brk
+L40DF:  .byte   $00
 L40E0:  tsx
         stx     $E256
         sta     $E25B
@@ -173,8 +171,8 @@ L40E0:  tsx
         sta     $E25B
         rts
 
-L40F0:  brk
-L40F1:  brk
+L40F0:  .byte   $00
+L40F1:  .byte   $00
 L40F2:  jsr     L4510
         lda     $EC25
         sta     L40F0
@@ -191,13 +189,13 @@ L410D:  jsr     L4113
 L4113:  ldy     #$3E
         lda     #$09
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         bne     L4151
         jsr     L4153
         ldy     #$3F
         lda     #$00
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 L412B:  lda     #$00
@@ -214,7 +212,7 @@ L4143:  bit     L40F1
         ldy     #$0C
         lda     #$00
         ldx     #$00
-        jsr     LD040
+        jsr     DESKTOP_RELAY
 L4151:  rts
 
 L4152:  brk
@@ -300,12 +298,12 @@ L41FE:  lda     L4241
         ldy     #$0D
         lda     #$2F
         ldx     #$E2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         beq     L4221
         ldy     #$03
         lda     #$2F
         ldx     #$E2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
 L4221:  inc     L4241
         jmp     L41FE
 
@@ -351,18 +349,14 @@ L4270:  lda     L42C3
         ldy     #$0D
         lda     #$2F
         ldx     #$E2
-        jsr     LD040
-        .byte   $F0
-L428C:  ora     #$A0
-        .byte   $03
-        .byte   $A9
-L4290:  bbr2    $A2,$4275
-        .byte   $20
-L4294:  rti
-
-        .byte   $D0
+        jsr     DESKTOP_RELAY
+        beq     L4296
+        ldy     #$03
+        lda     #$2F
+        ldx     #$E2
+        jsr     DESKTOP_RELAY
 L4296:  lda     $E22F
-L4299:  jsr     L8893
+        jsr     L8893
         inc     L42C3
         jmp     L4270
 
@@ -377,93 +371,33 @@ L42A5:  lda     L42C3
         ldy     #$03
         lda     #$2F
         ldx     #$E2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         inc     L42C3
         jmp     L42A5
 
-L42C3:  brk
+L42C3:  .byte   $00
 L42C4:  .byte   $B2
-L42C5:  .byte   $4B
-        asl     $BF49
-        .byte   $4B
-        bbs3    $4B,L428C
-        .byte   $4B
-        bbs3    $4B,L4290
-        .byte   $4B
-        bbs3    $4B,L4294
-        .byte   $4B
-        bbs3    $4B,L4290
-        bbr4    $0E,L4325
-        nop
-        eor     L4E72
-        bvc     L4331
-        .byte   $62
-        lsr     $0E,x
-        eor     #$A2
-        jmp     L4D5F
-
-        asl     L5049
-        bvc     L4299
-        bvc     L4300
-        eor     #$0F
-        eor     #$0F
-        eor     #$0F
-        eor     #$0E
-        eor     #$A2
-        eor     #$A2
-        eor     #$A2
-        .byte   $49
-L4300:  ldx     #$49
-        ldx     #$49
-        ldx     #$49
-        ldx     #$49
-        ldx     #$49
-        sbc     L6750,y
-        eor     ($85)
-        eor     ($A3)
-        eor     ($C1)
-        eor     ($01)
-        eor     L490E,y
-        rti
-
-        .byte   $53
-        .byte   $5B
-        .byte   $53
-        .byte   $5C
-        bbr4    $0E,L4369
-        smb0    $53
-        sta     ($53,x)
-        .byte   $0E
-L4325:  eor     #$75
-        .byte   $53
-        .byte   $7B
-        .byte   $53
-        asl     L8D49
-        .byte   $53
-        ora     ($59,x)
-        .byte   $0E
-L4331:  eor     #$A0
-        eor     L59A0,y
-        ldy     #$59
-        ldy     #$59
-        ldy     #$59
-        ldy     #$59
-        ldy     #$59
-        ldy     #$59
-        cmp     ($5A),y
-        cmp     ($5A),y
-        cmp     ($5A),y
-        cmp     ($5A),y
-        cmp     ($5A),y
-        cmp     ($5A),y
-        cmp     ($5A),y
-L4350:  brk
-        trb     $2C
-        lsr     $50
-        bvc     L43C1
-        .byte   $7E
+L42C5:  .byte   $4B,$0E,$49,$BF,$4B,$BF,$4B,$BF
+        .byte   $4B,$BF,$4B,$BF,$4B,$BF,$4B,$BF
+        .byte   $4B,$BF,$4B,$B7,$4F,$0E,$49,$EA
+        .byte   $4D,$72,$4E,$50,$4F,$62,$56,$0E
+        .byte   $49,$A2,$4C,$5F,$4D,$0E,$49,$50
+        .byte   $50,$AA,$50,$0F,$49,$0F,$49,$0F
+        .byte   $49,$0F,$49,$0E,$49,$A2,$49,$A2
+        .byte   $49,$A2,$49,$A2,$49,$A2,$49,$A2
+        .byte   $49,$A2,$49,$A2,$49,$F9,$50,$67
+        .byte   $52,$85,$52,$A3,$52,$C1,$52,$01
+        .byte   $59,$0E,$49,$40,$53,$5B,$53,$5C
+        .byte   $4F,$0E,$49,$87,$53,$81,$53,$0E
+        .byte   $49,$75,$53,$7B,$53,$0E,$49,$8D
+        .byte   $53,$01,$59,$0E,$49,$A0,$59,$A0
+        .byte   $59,$A0,$59,$A0,$59,$A0,$59,$A0
+        .byte   $59,$A0,$59,$A0,$59,$D1,$5A,$D1
+        .byte   $5A,$D1,$5A,$D1,$5A,$D1,$5A,$D1
+        .byte   $5A,$D1,$5A
+L4350:  .byte   $00,$14,$2C,$46,$50,$50,$6A,$7E
         .byte   $8C
-L4359:  brk
+L4359:  .byte   $00
 L435A:  lda     $D20A
         bne     L4362
         jmp     L4394
@@ -472,10 +406,9 @@ L4362:  cmp     #$03
         bne     L4367
         rts
 
-L4367:  .byte   $AD
-        .byte   $09
-L4369:  cmp     ($09)
-        jsr     L68C9
+L4367:  lda     $D209
+        ora     #$20
+        cmp     #$68
         bne     L4373
         jmp     L5441
 
@@ -506,7 +439,7 @@ L43A1:  sta     $E25D
         ldy     #$32
         lda     #$5A
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
 L43AD:  ldx     $E25A
         bne     L43B3
         rts
@@ -519,7 +452,7 @@ L43B3:  dex
         tya
         asl     a
         sta     L43E5
-L43C1:  txa
+        txa
         clc
         adc     L43E5
         tax
@@ -531,7 +464,7 @@ L43C1:  txa
         ldy     #$33
         lda     #$5A
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 L43E0:  tsx
@@ -544,7 +477,7 @@ L43E7:  tsx
         ldy     #$40
         lda     #$09
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $D20D
         bne     L4418
         jsr     L85FC
@@ -554,7 +487,7 @@ L43E7:  tsx
         ldy     #$09
         lda     #$09
         ldx     #$D2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         lda     $D20D
         beq     L4415
         jmp     L67D7
@@ -566,7 +499,7 @@ L4418:  cmp     #$01
         ldy     #$31
         lda     #$5A
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         jmp     L43AD
 
 L4428:  pha
@@ -622,7 +555,7 @@ L445D:  jsr     L6D2B
         ldy     #$02
         lda     #$2F
         ldx     #$E2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         jsr     L4510
         lda     L445C
         sta     $DF20
@@ -633,7 +566,7 @@ L445D:  jsr     L6D2B
 L44A6:  ldy     #$42
         lda     #$0E
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $D20E
         sta     $EC25
         sta     $DE9F
@@ -647,7 +580,7 @@ L44B8:  jsr     LD09A
         ldy     #$36
         lda     #$67
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         ldx     $EC25
         dex
         lda     $E6D1,x
@@ -659,23 +592,23 @@ L44B8:  jsr     LD09A
         ldy     #$36
         lda     #$67
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 L44F2:  ldy     #$3C
         lda     #$12
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$04
         lda     #$15
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 L4505:  ldy     #$3C
         lda     #$12
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
         rts
@@ -683,18 +616,18 @@ L4505:  ldy     #$3C
 L4510:  ldy     #$03
         lda     #$39
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$04
         lda     #$39
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 L4523:  jsr     L40F2
         ldy     #$0C
         lda     #$00
         ldx     #$00
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         rts
 
 L4530:  ldx     #$00
@@ -749,34 +682,13 @@ L4591:  tya
         adc     #$03
         rts
 
-        brk
-L4597:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-L45A0:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-L45A9:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+        .byte   $00
+L4597:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00
+L45A0:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00
+L45A9:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00
 L45B2:  ldx     L4597
         beq     L45C6
         stx     L45A0
@@ -852,27 +764,11 @@ L4629:  sta     L4638
 
 L4634:  jmp     (L0006)
 
-L4637:  brk
-L4638:  brk
-        .byte   $03
-L463A:  ora     ($3E,x)
-        lsr     L0000
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+L4637:  .byte   $00
+L4638:  .byte   $00,$03
+L463A:  .byte   $01,$3E,$46,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00
 L464E:  lda     $D343
         beq     L465E
         bit     $D344
@@ -943,22 +839,9 @@ L46CF:  .addr   L0000
 
 L46DE:  jmp     L46F3
 
-        asl     a
-        jsr     L0002
-L46E5:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+        .byte   $0A,$20,$02,$00
+L46E5:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00
 L46F3:  jsr     L488A
         ldx     #$FF
 L46F8:  inx
@@ -1008,15 +891,15 @@ L4748:  cmp     #$FF
 L4755:  ldy     #$06
         lda     #$00
         ldx     #$00
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         ldy     #$3A
         lda     #$00
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$30
         lda     #$80
         ldx     #$E6
-        jsr     LD000
+        jsr     A2D_RELAY
         ldx     $D355
 L4773:  lda     $D355,x
         sta     $0220,x
@@ -1040,24 +923,9 @@ L477F:  lda     $D345,x
         sta     L5B1A
         jmp     L5AEE
 
-        asl     a
-        brk
-        clc
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+        .byte   $0A,$00,$18,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00
 L47B8:  ldx     $D355
         stx     L4816
 L47BE:  lda     $D355,x
@@ -1103,42 +971,13 @@ L4808:  cpx     #$01
         stx     L4816
         jmp     L47D2
 
-L4816:  brk
-L4817:  tsb     L6142
-        .byte   $73
-        adc     #$63
-        rol     L7973
-        .byte   $73
-        stz     $65,x
-        adc     a:L0000
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+L4816:  .byte   $00
+L4817:  .byte   $0C,$42,$61,$73,$69,$63,$2E,$73
+        .byte   $79,$73,$74,$65,$6D,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00
 L4842:  sta     L0006
         stx     $07
         ldy     #$00
@@ -1155,55 +994,20 @@ L4859:  dey
         bne     L484B
         rts
 
-L485D:  brk
+L485D:  .byte   $00
 L485E:  .byte   $E0
-L485F:  brk
-L4860:  bne     L4862
-L4862:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+L485F:  .byte   $00
+L4860:  .byte   $D0,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00
 L488A:  jsr     L48AA
         ldy     #$24
         lda     #$11
         ldx     #$D3
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     L48B4
         rts
 
@@ -1211,20 +1015,20 @@ L489A:  jsr     L48AA
         ldy     #$24
         lda     #$AD
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     L48B4
         rts
 
 L48AA:  ldy     #$26
         lda     #$00
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 L48B4:  ldy     #$25
         lda     #$00
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 L48BE:  ldx     $E196
@@ -1252,25 +1056,25 @@ L48E5:  .byte   $12
 L48E6:  ldy     #$2A
         lda     #$08
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 L48F0:  ldy     #$2C
         lda     #$08
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 L48FA:  ldy     #$07
         lda     #$02
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 L4904:  ldy     #$07
         lda     #$00
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 L490E:  rts
@@ -1328,25 +1132,10 @@ L4980:  lda     L0800,x
         jsr     L4A17
         jmp     L4961
 
-L498F:  brk
-        asl     a
+L498F:  .byte   $00,$0A
 L4991:  .byte   $20
-L4992:  .byte   $02
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+L4992:  .byte   $02,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
         jmp     L49A6
 
 L49A5:  brk
@@ -1661,16 +1450,16 @@ L4C07:  lda     L4C7C
         ldy     #$1A
         lda     #$A7
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$1A
         lda     #$BE
         ldx     #$4B
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     L0800
         ldy     #$1A
         lda     #$A7
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$00
         sta     L4CA1
         jsr     L4510
@@ -1701,42 +1490,15 @@ L4C6D:  ldy     #$CC
         lda     #$85
         jmp     L46BA
 
-        brk
-        .byte   $03
-        dey
-        jmp     L1C00
-
-L4C7C:  brk
-        .byte   $04
-L4C7E:  brk
-        brk
-        php
-        brk
-        trb     L0000
-        brk
-        .byte   $01
-L4C86:  brk
-        .byte   $09
-L4C88:  ora     #$44
-        adc     $73
-        .byte   $6B
-        rol     L6361
-        .byte   $63
-        bbr2    L0000,L4C94
-L4C94:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-L4CA1:  brk
+        .byte   $00,$03,$88,$4C,$00,$1C
+L4C7C:  .byte   $00,$04
+L4C7E:  .byte   $00,$00,$08,$00,$14,$00,$00,$01
+L4C86:  .byte   $00,$09
+L4C88:  .byte   $09,$44,$65,$73,$6B,$2E,$61,$63
+        .byte   $63,$2F,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00
+L4CA1:  .byte   $00
         jsr     L488A
         lda     #$03
         jsr     L8E81
@@ -1829,7 +1591,7 @@ L4D4E:  stx     $E04B
         dec     $DFC9
         rts
 
-L4D5F:  jsr     L488A
+        jsr     L488A
         lda     #$03
         jsr     L8E81
         bmi     L4D9D
@@ -1984,7 +1746,7 @@ L4E78:  jsr     L6D2B
         ldy     #$07
         lda     #$25
         ldx     #$EC
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         lda     $DD9E
         sec
         sbc     $DEA0
@@ -2013,7 +1775,7 @@ L4EC3:  sta     $DEA0
         ldy     #$39
         lda     #$25
         ldx     #$EC
-        jsr     LD000
+        jsr     A2D_RELAY
         ldx     $EC25
         dex
         lda     $EC26,x
@@ -2031,7 +1793,7 @@ L4EC3:  sta     $DEA0
         ldy     #$02
         lda     #$2F
         ldx     #$E2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         jsr     L4510
         lda     #$01
         sta     $DF21
@@ -2048,19 +1810,19 @@ L4EC3:  sta     $DEA0
         ldy     #$41
         lda     #$25
         ldx     #$EC
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $EC25
         bne     L4F3C
         ldy     #$0C
         lda     #$00
         ldx     #$00
-        jsr     LD040
+        jsr     DESKTOP_RELAY
 L4F3C:  lda     #$00
         sta     $E269
         ldy     #$36
         lda     #$67
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     L66A2
         jmp     L4510
 
@@ -2078,83 +1840,20 @@ L4F5B:  rts
 
 L4F66:  rts
 
-L4F67:  brk
-L4F68:  brk
-L4F69:  brk
-        rmb0    $76
-        bbr4    $C3,L4F7E
-        brk
-        brk
+L4F67:  .byte   $00
+L4F68:  .byte   $00
+L4F69:  .byte   $00,$07,$76,$4F,$C3,$0F,$00,$00
         .byte   $0D
-L4F72:  brk
-        brk
-        brk
-        brk
-L4F76:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-L4F7E:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+L4F72:  .byte   $00,$00,$00,$00
+L4F76:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00
         lda     $EC25
         sta     L4F67
         ldy     #$03
@@ -2219,9 +1918,7 @@ L5027:  lda     #$40
         ldx     #$4F
         jsr     L6FAF
         beq     L504B
-        .byte   $20
-L5049:  sei
-        .byte   $5E
+        jsr     L5E78
 L504B:  jmp     L4523
 
 L504E:  brk
@@ -2259,20 +1956,10 @@ L5084:  ldx     L5098
         bpl     L5084
         jmp     L4523
 
-L5098:  brk
-L5099:  bbs2    $DE,L5049
-        .byte   $DE
-L509D:  clc
-        .byte   $FB
-        .byte   $5C
-        tsb     $D0
-        .byte   $E0
-L50A3:  tsb     L0000
-        brk
-        brk
-        brk
-        brk
-        brk
+L5098:  .byte   $00
+L5099:  .byte   $AF,$DE,$AD,$DE
+L509D:  .byte   $18,$FB,$5C,$04,$D0,$E0
+L50A3:  .byte   $04,$00,$00,$00,$00,$00,$00
         ldx     #$03
 L50AC:  lda     L5099,x
         sta     $0102,x
@@ -2288,10 +1975,10 @@ L50C0:  lda     L509D,x
         bpl     L50C0
         sta     ALTZPOFF
         lda     $C082
-        jsr     LFE93
-        jsr     LFE89
-        jsr     LFB2F
-        jsr     LFC58
+        jsr     SETVID
+        jsr     SETKBD
+        jsr     INIT
+        jsr     HOME
         sta     $C051
         sta     $C054
         sta     $C056
@@ -2337,7 +2024,7 @@ L511E:  sta     $DEA0
         ldy     #$11
         lda     #$1D
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $EC25
         jsr     L7D5D
         sta     L51EB
@@ -2375,7 +2062,7 @@ L518D:  lda     L51EF
         lda     $DEA1,x
         jsr     L86E3
         ldy     #$01
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         inc     L51EF
         jmp     L518D
 
@@ -2396,7 +2083,7 @@ L51C0:  ldx     L51EF
         ldy     #$02
         lda     #$2F
         ldx     #$E2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         lda     $E22F
         jsr     L8893
         dec     L51EF
@@ -2426,7 +2113,7 @@ L51F0:  ldx     $EC25
         ldy     #$11
         lda     #$1D
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $EC25
         jsr     L7D5D
         sta     L5263
@@ -2535,7 +2222,7 @@ L52DF:  lda     #$00
         ldy     #$36
         lda     #$67
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $E25B
         sta     $E268
         lda     #$01
@@ -2543,13 +2230,13 @@ L52DF:  lda     #$00
         ldy     #$36
         lda     #$67
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 L5302:  ldy     #$07
         lda     #$25
         ldx     #$EC
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         lda     $EC25
         sta     $DE9F
         jsr     LD09A
@@ -2748,7 +2435,7 @@ L5485:  cpx     $DEA0
         ldy     #$0D
         lda     #$2F
         ldx     #$E2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         pha
         lda     $E22F
         jsr     L8893
@@ -2923,7 +2610,7 @@ L55F0:  ldx     L544A
 L5614:  ldy     #$02
         lda     #$2F
         ldx     #$E2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         lda     $D212
         beq     L562B
         lda     $E22F
@@ -2946,7 +2633,7 @@ L562C:  lda     $E22F
 L564A:  ldy     #$0B
         lda     #$2F
         ldx     #$E2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         lda     $D212
         beq     L5661
         lda     $E22F
@@ -3001,7 +2688,7 @@ L56B4:  ldx     L56F8
 L56CF:  ldy     #$02
         lda     #$2B
         ldx     #$E2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         lda     $E22C
         beq     L56E3
         lda     $E22B
@@ -3093,18 +2780,16 @@ L578D:  brk
 L578E:  ldy     #$22
         lda     #$00
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
         jmp     L619B
 
 L579A:  ldy     #$22
         lda     #$00
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
         jmp     L60DB
 
-L57A6:  .byte   $20
-        .byte   $03
-L57A8:  cli
+L57A6:  jsr     L5803
 L57A9:  jsr     L48E6
         lda     $D208
         cmp     #$01
@@ -3298,7 +2983,7 @@ L5916:  lda     $DEA1,x
         ldy     #$04
         lda     #$2F
         ldx     #$E2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         lda     $E22F
         jsr     LD082
         dec     $DEA0
@@ -3340,7 +3025,7 @@ L5986:  txa
         beq     L5998
         jsr     L86E3
         ldy     #$01
-        jsr     LD040
+        jsr     DESKTOP_RELAY
 L5998:  pla
         tax
         inx
@@ -3444,7 +3129,7 @@ L5A4C:  jsr     L4523
         ldy     #$04
         lda     #$2F
         ldx     #$E2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
 L5A7F:  lda     $DEA0
         sta     L5AC6
         inc     $DEA0
@@ -3473,7 +3158,7 @@ L5AA9:  lda     $DEA0
         lda     $DEA1,x
         jsr     L86E3
         ldy     #$01
-        jsr     LD040
+        jsr     DESKTOP_RELAY
 L5AC0:  jsr     LD096
         jmp     L4523
 
@@ -3507,10 +3192,10 @@ L5AD0:  brk
         sta     L5B19
 L5AEE:  sta     ALTZPOFF
         lda     $C082
-        jsr     LFE93
-        jsr     LFE89
-        jsr     LFB2F
-        jsr     LFC58
+        jsr     SETVID
+        jsr     SETKBD
+        jsr     INIT
+        jsr     HOME
         sta     $C051
         sta     $C054
         sta     $C056
@@ -3538,7 +3223,7 @@ L5B31:  lda     $EBFD,x
         ldy     #$48
         lda     #$09
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $D20D
         bne     L5B4B
         jmp     L5CB7
@@ -3657,7 +3342,7 @@ L5C31:  lda     $D20D
         ldy     #$4A
         lda     #$08
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $D20E
         bne     L5C46
         rts
@@ -3673,7 +3358,7 @@ L5C54:  lda     $D20D
         ldy     #$4B
         lda     #$08
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     L6523
         jsr     L84D1
         bit     L5B1B
@@ -3685,7 +3370,7 @@ L5C71:  lda     $EC25
         ldy     #$11
         lda     #$1D
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     L4510
         jmp     L6C19
 
@@ -3700,7 +3385,7 @@ L5C96:  lda     #$FF
 L5C99:  ldy     #$48
         lda     #$09
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $D20D
         beq     L5C96
         cmp     #$03
@@ -3721,7 +3406,7 @@ L5CBF:  lda     $EC25
         ldy     #$09
         lda     #$09
         ldx     #$D2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         lda     $D20D
         bne     L5CDA
         jsr     L5F13
@@ -3766,7 +3451,7 @@ L5D0B:  ldx     $DF21
         ldy     #$02
         lda     #$2F
         ldx     #$E2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         lda     $EC25
         sta     $D212
         jsr     L44F2
@@ -3782,7 +3467,7 @@ L5D55:  lda     L5CD9
         ldy     #$0A
         lda     #$FC
         ldx     #$EB
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         tax
         lda     $EBFC
         beq     L5DA6
@@ -3833,7 +3518,7 @@ L5DC4:  txa
         ldy     #$03
         lda     #$2E
         ldx     #$E2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         pla
         tax
         dex
@@ -3932,7 +3617,7 @@ L5E8F:  lda     $EC25
         ldy     #$11
         lda     #$1D
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         ldx     $EC25
         dex
         lda     $EC26,x
@@ -4021,7 +3706,7 @@ L5F50:  lda     L5F0B,x
         ldy     #$12
         lda     #$30
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
 L5F6B:  jsr     L48F0
         lda     $D208
         cmp     #$04
@@ -4029,7 +3714,7 @@ L5F6B:  jsr     L48F0
         ldy     #$12
         lda     #$30
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         ldx     #$00
 L5F80:  cpx     $DEA0
         bne     L5F88
@@ -4043,12 +3728,12 @@ L5F88:  txa
         ldy     #$0D
         lda     #$2F
         ldx     #$E2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         beq     L5FB9
         ldy     #$02
         lda     #$2F
         ldx     #$E2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         ldx     $DF21
         inc     $DF21
         lda     $E22F
@@ -4100,7 +3785,7 @@ L600E:  lda     L60CB
 L601F:  ldy     #$12
         lda     #$30
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         ldx     #$03
 L602A:  lda     $D209,x
         sta     L60CF,x
@@ -4161,7 +3846,7 @@ L60AE:  lda     $D20B
 L60BF:  ldy     #$12
         lda     #$30
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         jmp     L5F6B
 
 L60CB:  brk
@@ -4184,13 +3869,13 @@ L60DE:  lda     $EC25
         ldy     #$41
         lda     #$25
         ldx     #$EC
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $EC25
         jsr     L8855
         ldy     #$44
         lda     #$08
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $EC25
         jsr     L86EF
         sta     L0006
@@ -4223,7 +3908,7 @@ L6112:  ldy     #$14
         dex
         lda     $E6D1,x
         beq     L6143
-L6142:  rts
+        rts
 
 L6143:  lda     $EC25
         sta     $DE9F
@@ -4277,7 +3962,7 @@ L619B:  lda     $EC25
         ldy     #$45
         lda     #$08
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     L4523
         lda     $EC25
         sta     $DE9F
@@ -4294,7 +3979,7 @@ L61CA:  lda     $EC25
         ldy     #$43
         lda     #$A8
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $D2A8
         bne     L61DC
         rts
@@ -4314,7 +3999,7 @@ L61DC:  lda     $EC25
         ldy     #$07
         lda     #$25
         ldx     #$EC
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         ldx     #$00
 L6206:  cpx     $DEA0
         beq     L6215
@@ -4337,7 +4022,7 @@ L6227:  sta     $DEA0
         ldy     #$39
         lda     #$25
         ldx     #$EC
-        jsr     LD000
+        jsr     A2D_RELAY
         ldx     $EC25
         dex
         lda     $EC26,x
@@ -4359,7 +4044,7 @@ L6227:  sta     $DEA0
         ldy     #$02
         lda     #$2F
         ldx     #$E2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         jsr     L4510
         lda     #$01
         sta     $DF21
@@ -4382,7 +4067,7 @@ L6276:  ldx     $EC25
         ldy     #$41
         lda     #$25
         ldx     #$EC
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$00
         sta     $DE9F
         jsr     LD09A
@@ -4391,7 +4076,7 @@ L6276:  ldx     $EC25
         ldy     #$36
         lda     #$67
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     L66A2
         jmp     L4523
 
@@ -4468,7 +4153,7 @@ L634E:  lda     L6383
         lda     L6384
         adc     L6386
         sta     L6384
-L6361:  lda     L6387
+        lda     L6387
         clc
         adc     L6389
         sta     L6387
@@ -4693,7 +4378,7 @@ L6556:  bit     L5B1B
 L655E:  ldy     #$11
         lda     #$1D
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     L4510
         jmp     L6C19
 
@@ -4753,7 +4438,7 @@ L65EE:  sta     $D209
         ldy     #$4B
         lda     #$08
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 L6600:  brk
@@ -4819,7 +4504,7 @@ L668D:  sta     $D209
         ldy     #$4B
         lda     #$08
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 L669F:  brk
@@ -4834,7 +4519,7 @@ L66AA:  lda     #$01
         ldy     #$34
         lda     #$6A
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$01
         sta     $E26E
         lda     #$02
@@ -4844,19 +4529,19 @@ L66AA:  lda     #$01
         ldy     #$35
         lda     #$6C
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$04
         sta     $E26D
         ldy     #$35
         lda     #$6C
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$05
         sta     $E26D
         ldy     #$35
         lda     #$6C
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$00
         sta     L4359
         rts
@@ -4872,7 +4557,7 @@ L66F2:  dex
         ldy     #$36
         lda     #$67
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 L670C:  lda     #$01
@@ -4899,15 +4584,13 @@ L673A:  sta     $E26D
         ldy     #$35
         lda     #$6C
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 L6747:  lda     #$00
         sta     $E26E
         lda     #$02
-        .byte   $8D
-        .byte   $6C
-L6750:  .byte   $E2
+        sta     $E26C
         lda     #$03
         jsr     L6775
         lda     #$05
@@ -4928,7 +4611,7 @@ L6775:  sta     $E26D
         ldy     #$35
         lda     #$6C
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 L6782:  lda     #$00
@@ -4944,7 +4627,7 @@ L678F:  lda     #$02
         ldy     #$35
         lda     #$6C
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 L67A3:  lda     #$01
@@ -4969,7 +4652,7 @@ L67CA:  sta     $E26D
         ldy     #$35
         lda     #$6C
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 L67D7:  lda     $DF21
@@ -4995,7 +4678,7 @@ L67F6:  bit     $C061
         ldy     #$02
         lda     #$0D
         ldx     #$D2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         ldx     $DF21
         lda     $D20D
         sta     $DF22,x
@@ -5006,7 +4689,7 @@ L6818:  jsr     L6D2B
 L681B:  ldy     #$02
         lda     #$0D
         ldx     #$D2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         lda     #$01
         sta     $DF21
         lda     $D20D
@@ -5020,7 +4703,7 @@ L6834:  bit     $D2AA
         ldy     #$0A
         lda     #$FC
         ldx     #$EB
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         tax
         lda     $EBFC
         beq     L6878
@@ -5066,7 +4749,7 @@ L6893:  txa
         ldy     #$03
         lda     #$2D
         ldx     #$E2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         pla
         tax
         dex
@@ -5086,20 +4769,20 @@ L68B8:  lda     $D209,x
         dex
         bpl     L68B8
         jsr     L48F0
-        .byte   $AD
-        php
-L68C9:  cmp     ($C9)
-        tsb     $F0
-        ora     ($60,x)
-        ldy     #$08
+        lda     $D208
+        cmp     #$04
+        beq     L68CF
+        rts
+
+L68CF:  ldy     #$08
         lda     #$93
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     L48FA
         ldy     #$12
         lda     #$30
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
 L68E4:  jsr     L48F0
         lda     $D208
         cmp     #$04
@@ -5107,7 +4790,7 @@ L68E4:  jsr     L48F0
         ldy     #$12
         lda     #$30
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         ldx     #$00
 L68F9:  cpx     $DEA0
         bne     L6904
@@ -5122,12 +4805,12 @@ L6904:  txa
         ldy     #$0D
         lda     #$2F
         ldx     #$E2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         beq     L692C
         ldy     #$02
         lda     #$2F
         ldx     #$E2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         ldx     $DF21
         inc     $DF21
         lda     $E22F
@@ -5174,7 +4857,7 @@ L6978:  lda     L6A35
 L6989:  ldy     #$12
         lda     #$30
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         ldx     #$03
 L6994:  lda     $D209,x
         sta     L6A39,x
@@ -5235,7 +4918,7 @@ L6A18:  lda     $D20B
 L6A29:  ldy     #$12
         lda     #$30
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         jmp     L68E4
 
 L6A35:  brk
@@ -5325,7 +5008,7 @@ L6AA7:  stx     $DE9F
 L6AD8:  ldy     #$03
         lda     #$BE
         ldx     #$E6
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         lda     $D212
         beq     L6AEF
         lda     $E6BE
@@ -5342,7 +5025,7 @@ L6AF6:  cmp     $E1F2,x
 L6B01:  ldy     #$42
         lda     #$9F
         ldx     #$DE
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $DE9F
         sta     $EC25
         jsr     L6C19
@@ -5411,7 +5094,7 @@ L6B68:  lda     #$01
 L6BA1:  ldy     #$03
         lda     #$BE
         ldx     #$E6
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         lda     $D212
         beq     L6BB8
         lda     $E6BE
@@ -5421,7 +5104,7 @@ L6BB8:  jsr     L744B
         lda     $DE9F
         jsr     L86EF
         ldy     #$38
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $EC25
         sta     $D212
         jsr     L44F2
@@ -5436,7 +5119,7 @@ L6BDA:  lda     L6C0E
         lda     $DEA1,x
         jsr     L86E3
         ldy     #$01
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         inc     L6C0E
         jmp     L6BDA
 
@@ -5454,7 +5137,7 @@ L6C0E:  brk
 L6C0F:  ldy     #$36
         lda     #$67
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 L6C19:  ldx     $DE9F
@@ -5567,12 +5250,12 @@ L6D09:  txa
         ldy     #$0D
         lda     #$2F
         ldx     #$E2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         beq     L6D25
         ldy     #$03
         lda     #$2F
         ldx     #$E2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
 L6D25:  pla
         tax
         inx
@@ -5606,7 +5289,7 @@ L6D56:  lda     L6DB0
         ldy     #$0B
         lda     #$2F
         ldx     #$E2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         lda     $E22F
         jsr     L8893
         inc     L6DB0
@@ -5621,7 +5304,7 @@ L6D7D:  lda     L6DB0
         ldy     #$0B
         lda     #$2F
         ldx     #$E2
-        jsr     LD040
+        jsr     DESKTOP_RELAY
         inc     L6DB0
         jmp     L6D7D
 
@@ -5699,7 +5382,7 @@ L6E38:  lda     #$01
 L6E48:  ldy     #$4C
         lda     #$08
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 L6E52:  lda     #$00
@@ -5753,7 +5436,7 @@ L6E90:  sta     L6EC4
         ldy     #$04
         lda     #$15
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
 L6EC3:  rts
 
 L6EC4:  brk
@@ -5762,7 +5445,7 @@ L6EC5:  lda     #$00
         ldy     #$34
         lda     #$6A
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$00
         sta     $E26E
         lda     #$02
@@ -5772,19 +5455,19 @@ L6EC5:  lda     #$00
         ldy     #$35
         lda     #$6C
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$04
         sta     $E26D
         ldy     #$35
         lda     #$6C
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$05
         sta     $E26D
         ldy     #$35
         lda     #$6C
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$80
         sta     L4359
         rts
@@ -5956,110 +5639,34 @@ L704C:  brk
         brk
 L7054:  jmp     L70C5
 
-        .byte   $03
-        eor     a:$70,x
-        php
-L705C:  brk
-L705D:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        .byte   $04
-L709F:  brk
-        brk
-        tsb     $0200
-        brk
-        brk
-        .byte   $01
-L70A7:  brk
-        asl     a
-        eor     a:$70,x
-        brk
-L70AD:  brk
-L70AE:  brk
-        brk
-L70B0:  brk
-L70B1:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-L70BB:  brk
-L70BC:  brk
-L70BD:  brk
-L70BE:  brk
-L70BF:  brk
-L70C0:  brk
-L70C1:  brk
-L70C2:  brk
-L70C3:  brk
-L70C4:  brk
+        .byte   $03,$5D,$70,$00,$08
+L705C:  .byte   $00
+L705D:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$04
+L709F:  .byte   $00,$00,$0C,$00,$02,$00,$00,$01
+L70A7:  .byte   $00,$0A,$5D,$70,$00,$00
+L70AD:  .byte   $00
+L70AE:  .byte   $00,$00
+L70B0:  .byte   $00
+L70B1:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00
+L70BB:  .byte   $00
+L70BC:  .byte   $00
+L70BD:  .byte   $00
+L70BE:  .byte   $00
+L70BF:  .byte   $00
+L70C0:  .byte   $00
+L70C1:  .byte   $00
+L70C2:  .byte   $00
+L70C3:  .byte   $00
+L70C4:  .byte   $00
 L70C5:  sta     L72A7
         jsr     L87F6
         ldx     #$40
@@ -6705,26 +6312,25 @@ L75FA:  ldx     $DE9F
         jsr     L7635
         rts
 
-L7620:  brk
-L7621:  brk
-L7622:  brk
-L7623:  brk
-L7624:  brk
-L7625:  brk
+L7620:  .byte   $00
+L7621:  .byte   $00
+L7622:  .byte   $00
+L7623:  .byte   $00
+L7624:  .byte   $00
+L7625:  .byte   $00
 L7626:  .byte   $34
-L7627:  brk
-        bpl     L762A
-L762A:  brk
-L762B:  brk
-L762C:  brk
-L762D:  brk
+L7627:  .byte   $00,$10,$00
+L762A:  .byte   $00
+L762B:  .byte   $00
+L762C:  .byte   $00
+L762D:  .byte   $00
 L762E:  .byte   $05
-L762F:  brk
-L7630:  brk
-L7631:  brk
-L7632:  brk
-L7633:  brk
-L7634:  brk
+L762F:  .byte   $00
+L7630:  .byte   $00
+L7631:  .byte   $00
+L7632:  .byte   $00
+L7633:  .byte   $00
+L7634:  .byte   $00
 L7635:  pha
         lda     #$00
         beq     L7647
@@ -6865,9 +6471,7 @@ L7744:  ldy     #$22
         jsr     L8813
         rts
 
-L7764:  brk
-        brk
-        brk
+L7764:  .byte   $00,$00,$00
 L7767:  .byte   $14
 L7768:  inc     $DD9E
         jsr     LD05E
@@ -7067,7 +6671,7 @@ L78EF:  lda     $D21D
         ldy     #$0E
         lda     #$BE
         ldx     #$EB
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $D221
         sta     $EBC2
         lda     $D222
@@ -7076,7 +6680,7 @@ L78EF:  lda     $D21D
         ldy     #$10
         lda     #$C2
         ldx     #$EB
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $EBC0
         clc
         adc     #$02
@@ -7089,17 +6693,17 @@ L78EF:  lda     $D21D
         ldy     #$0E
         lda     #$BE
         ldx     #$EB
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$10
         lda     #$C2
         ldx     #$EB
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $D21F
         clc
         adc     #$0A
         sta     $EBBC
         lda     $D220
-L7973:  adc     #$00
+        adc     #$00
         sta     $EBBD
         lda     $DEA0
         ldx     #$00
@@ -7111,7 +6715,7 @@ L7973:  adc     #$00
 L798A:  ldy     #$0E
         lda     #$BA
         ldx     #$EB
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     L7AD7
         lda     #$B3
         ldx     #$EB
@@ -7135,7 +6739,7 @@ L79A7:  jsr     L79F7
         ldy     #$0E
         lda     #$EB
         ldx     #$EB
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     L7AD7
         lda     #$C6
         ldx     #$EB
@@ -7154,7 +6758,7 @@ L79A7:  jsr     L79F7
         ldy     #$0E
         lda     #$EF
         ldx     #$EB
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     L7AD7
         lda     #$D0
         ldx     #$EB
@@ -8461,8 +8065,10 @@ L8562:  lsr     L85F3
         lda     $EC25
         jsr     L7D5D
         sta     L85F4
-        stx     L85F5
-        sty     L85F6
+        .byte   $8E
+        .byte   $F5
+L85A5:  sta     $8C
+        inc     $85,x
         lda     L85F1
         beq     L85C3
         lda     $D21F
@@ -8725,7 +8331,7 @@ L8780:  sta     L0006
 L8792:  ldy     #$19
         lda     #$06
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
 L879B:  rts
 
         sta     L0006
@@ -8739,7 +8345,7 @@ L879B:  rts
 L87AC:  ldy     #$18
         lda     #$06
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $09
         ldx     $0A
         rts
@@ -9041,7 +8647,7 @@ L899A:  sta     $D265,x
         ldy     #$04
         lda     #$5D
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
         .byte   $02
@@ -9185,42 +8791,14 @@ L8AA7:  lda     L8AC5,x
         lda     #$00
         rts
 
-L8AC3:  brk
-L8AC4:  brk
-L8AC5:  brk
-        brk
-        brk
-        brk
-        nop
-        ora     ($10,x)
-        brk
-        nop
-        ora     ($2D,x)
-        brk
-        nop
-        ora     ($4B,x)
-        brk
-        nop
-        ora     ($67,x)
-        brk
-        nop
-        ora     ($83,x)
-        brk
-        bcc     L8AE0
-        .byte   $A0
-L8AE0:  brk
-        rol     $01,x
-        ldy     #$00
-        .byte   $DC
-        brk
-        ldy     #$00
-        .byte   $82
-        brk
-        ldy     #$00
-        plp
-        brk
-        ldy     #$00
-        ora     ($24,x)
+L8AC3:  .byte   $00
+L8AC4:  .byte   $00
+L8AC5:  .byte   $00,$00,$00,$00,$EA,$01,$10,$00
+        .byte   $EA,$01,$2D,$00,$EA,$01,$4B,$00
+        .byte   $EA,$01,$67,$00,$EA,$01,$83,$00
+        .byte   $90,$01,$A0,$00,$36,$01,$A0,$00
+        .byte   $DC,$00,$A0,$00,$82,$00,$A0,$00
+        .byte   $28,$00,$A0,$00,$01,$24
         pha
 L8AF4:  ldx     $DEA0
         dex
@@ -9475,7 +9053,7 @@ L8D3D:  bit     L8D4A
         rts
 
 L8D46:  jsr     L8DB3
-L8D49:  rts
+        rts
 
 L8D4A:  brk
 L8D4B:  brk
@@ -9497,7 +9075,7 @@ L8D58:  lda     #$00
         ldy     #$08
         lda     #$93
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     L48FA
 L8D6C:  lda     L8DB2
         cmp     #$0C
@@ -9545,7 +9123,7 @@ L8DB3:  lda     #$0B
         ldy     #$08
         lda     #$93
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     L48FA
 L8DC7:  lda     L8E0F
         bmi     L8DE4
@@ -9569,7 +9147,7 @@ L8DE4:  lda     L8E0F
         cmp     #$0E
         bcs     L8E04
         asl     a
-L8DEF:  asl     a
+        asl     a
         asl     a
         clc
         adc     #$07
@@ -9593,83 +9171,36 @@ L8E0F:  brk
 L8E10:  ldy     #$12
         lda     #$30
         ldx     #$E2
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 L8E1A:  .byte   $E0
 L8E1B:  .byte   $2F
-L8E1C:  ora     (L0000,x)
-        cpx     #$60
-        ora     (L0000,x)
-        cpx     #$74
-        ora     (L0000,x)
-        cpx     #$84
-        ora     (L0000,x)
-        cpx     #$A4
-        ora     (L0000,x)
-        cpx     #$AC
-        ora     (L0000,x)
-        .byte   $E0
-L8E33:  ldy     $01,x
-        brk
-        bra     L8DEF
-        brk
-        brk
-        bra     L8E33
-        brk
-        brk
-L8E3E:  brk
-L8E3F:  .byte   $02
-        brk
-        trb     L0000
-        bpl     L8E45
-L8E45:  jsr     L0800
-        brk
-        php
-        brk
-        php
-        brk
-        plp
-        brk
+L8E1C:  .byte   $01,$00,$E0,$60,$01,$00,$E0,$74
+        .byte   $01,$00,$E0,$84,$01,$00,$E0,$A4
+        .byte   $01,$00,$E0,$AC,$01,$00,$E0,$B4
+        .byte   $01,$00,$80,$B7,$00,$00,$80,$F7
+        .byte   $00,$00
+L8E3E:  .byte   $00
+L8E3F:  .byte   $02,$00,$14,$00,$10,$00,$20,$00
+        .byte   $08,$00,$08,$00,$08,$00,$28,$00
         .byte   $10
-L8E50:  brk
-L8E51:  php
-        brk
-        php
-        brk
-        bcc     L8E57
-L8E57:  bvc     L8E59
-L8E59:  bvs     L8E5B
-L8E5B:  bvs     L8E5D
-L8E5D:  bvs     L8E5F
-L8E5F:  bvc     L8E61
-L8E61:  bcc     L8E66
-        pla
-        .byte   $8E
-        brk
-L8E66:  .byte   $1C
-L8E67:  brk
-        php
-        .byte   $44
-        adc     $73
-        .byte   $6B
-        .byte   $54
-        bbr6    $70,L8EA3
-        .byte   $02
-L8E72:  brk
-L8E73:  brk
-L8E74:  brk
-L8E75:  brk
-        .byte   $04
-L8E77:  brk
-L8E78:  brk
-L8E79:  brk
-L8E7A:  brk
-L8E7B:  brk
-        brk
-        brk
-        ora     (L0000,x)
-L8E80:  brk
+L8E50:  .byte   $00
+L8E51:  .byte   $08,$00,$08,$00,$90,$00,$50,$00
+        .byte   $70,$00,$70,$00,$70,$00,$50,$00
+        .byte   $90,$03,$68,$8E,$00,$1C
+L8E67:  .byte   $00,$08,$44,$65,$73,$6B,$54,$6F
+        .byte   $70,$32,$02
+L8E72:  .byte   $00
+L8E73:  .byte   $00
+L8E74:  .byte   $00
+L8E75:  .byte   $00,$04
+L8E77:  .byte   $00
+L8E78:  .byte   $00
+L8E79:  .byte   $00
+L8E7A:  .byte   $00
+L8E7B:  .byte   $00,$00,$00,$01,$00
+L8E80:  .byte   $00
 L8E81:  pha
         lda     #$00
         sta     L8E80
@@ -9687,7 +9218,7 @@ L8E8F:  pla
         lda     L8E1B,x
         sta     L8E74
         lda     L8E1C,x
-L8EA3:  sta     L8E75
+        sta     L8E75
         lda     L8E3E,y
         sta     L8E7A
         lda     L8E3F,y
@@ -10213,42 +9744,23 @@ L928F:  asl     $D0
 L92BD:  jmp     (L0006)
 
         .byte   $03
-L92C1:  brk
-        cmp     $92
-        tsb     L0000
-        brk
-L92C7:  brk
-        brk
-        asl     a
-        .byte   $20
-        .byte   $02
-L92CC:  brk
-L92CD:  brk
-L92CE:  brk
-L92CF:  brk
-        brk
-L92D1:  brk
-L92D2:  brk
-L92D3:  brk
-L92D4:  brk
-        brk
-        brk
-L92D7:  brk
-L92D8:  brk
-        brk
-        brk
-        brk
-        brk
-        .byte   $03
-L92DE:  brk
-        brk
-        php
-        asl     a
-        brk
-L92E3:  brk
-L92E4:  brk
-L92E5:  brk
-L92E6:  brk
+L92C1:  .byte   $00,$C5,$92,$04,$00,$00
+L92C7:  .byte   $00,$00,$0A,$20,$02
+L92CC:  .byte   $00
+L92CD:  .byte   $00
+L92CE:  .byte   $00
+L92CF:  .byte   $00,$00
+L92D1:  .byte   $00
+L92D2:  .byte   $00
+L92D3:  .byte   $00
+L92D4:  .byte   $00,$00,$00
+L92D7:  .byte   $00
+L92D8:  .byte   $00,$00,$00,$00,$00,$03
+L92DE:  .byte   $00,$00,$08,$0A,$00
+L92E3:  .byte   $00
+L92E4:  .byte   $00
+L92E5:  .byte   $00
+L92E6:  .byte   $00
 L92E7:  lda     $DF21
         bne     L92ED
         rts
@@ -10720,214 +10232,72 @@ L96F8:  sta     L956E
         jsr     LA500
         rts
 
-        brk
-L9706:  brk
-L9707:  brk
-L9708:  brk
-L9709:  brk
-        .byte   $03
-        jsr     L0002
-        php
-L970F:  brk
-        .byte   $04
-L9711:  brk
-        clc
-        smb1    $04
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+        .byte   $00
+L9706:  .byte   $00
+L9707:  .byte   $00
+L9708:  .byte   $00
+L9709:  .byte   $00,$03,$20,$02,$00,$08
+L970F:  .byte   $00,$04
+L9711:  .byte   $00,$18,$97,$04,$00,$00,$00,$00
+        .byte   $00,$00,$00,$01
+L971D:  .byte   $00,$04
+L971F:  .byte   $00,$AD,$97,$27,$00,$00,$00,$04
+L9727:  .byte   $00,$2E,$97,$05,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $01
-L971D:  brk
-        .byte   $04
-L971F:  brk
-        lda     $2797
-        brk
-        brk
-        brk
-        .byte   $04
-L9727:  brk
-        rol     $0597
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        .byte   $01
-L9738:  brk
-        .byte   $01
-L973A:  brk
-        ora     (L0020,x)
-        .byte   $02
-        .byte   $03
-        jsr     L0002
+L9738:  .byte   $00,$01
+L973A:  .byte   $00,$01,$20,$02,$03,$20,$02,$00
         .byte   $0D
-L9743:  brk
-        .byte   $03
-        cpy     #$1F
-        brk
-        .byte   $11
-L9749:  brk
-        .byte   $04
-L974B:  brk
-        brk
-        .byte   $15
+L9743:  .byte   $00,$03,$C0,$1F,$00,$11
+L9749:  .byte   $00,$04
+L974B:  .byte   $00,$00,$15
 L974E:  .byte   $C0
-L974F:  asl     a
-L9750:  brk
-L9751:  brk
-        .byte   $04
-L9753:  brk
-        brk
-        .byte   $15
+L974F:  .byte   $0A
+L9750:  .byte   $00
+L9751:  .byte   $00,$04
+L9753:  .byte   $00,$00,$15
 L9756:  .byte   $C0
-L9757:  asl     a
-        brk
-        brk
-L975A:  rmb0    $C0
-        bbr1    $C3,L975F
-L975F:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-L9766:  rmb0    $C0
-        .byte   $1F
-L9769:  brk
-        brk
-L976B:  brk
-        brk
-L976D:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-L9774:  asl     a
-        .byte   $20
-        .byte   $02
-L9777:  brk
-L9778:  brk
-        brk
-        brk
-L977B:  brk
-L977C:  brk
-L977D:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-L9787:  asl     a
-        cpy     #$1F
-L978A:  brk
-        brk
-L978C:  brk
-L978D:  brk
-        brk
-L978F:  brk
-L9790:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        .byte   $02
-L979B:  brk
-        brk
-        brk
-        brk
-        .byte   $02
-L97A0:  brk
-L97A1:  brk
-L97A2:  brk
-L97A3:  brk
-        .byte   $02
-L97A5:  brk
-L97A6:  brk
-L97A7:  brk
-L97A8:  brk
-        .byte   $02
-        brk
-        brk
-        php
-L97AD:  brk
-L97AE:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-L97BD:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-L97DD:  rol     $9B,x
-L97DF:  .byte   $33
-        .byte   $9B
-L97E1:  .byte   $E3
-        .byte   $97
-L97E3:  rts
-
-L97E4:  brk
+L9757:  .byte   $0A,$00,$00
+L975A:  .byte   $07,$C0,$1F,$C3,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00
+L9766:  .byte   $07,$C0,$1F
+L9769:  .byte   $00,$00,$00,$00
+L976D:  .byte   $00,$00,$00,$00,$00,$00,$00
+L9774:  .byte   $0A,$20,$02
+L9777:  .byte   $00
+L9778:  .byte   $00,$00,$00
+L977B:  .byte   $00
+L977C:  .byte   $00
+L977D:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00
+L9787:  .byte   $0A,$C0,$1F
+L978A:  .byte   $00,$00
+L978C:  .byte   $00
+L978D:  .byte   $00,$00
+L978F:  .byte   $00
+L9790:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$02
+L979B:  .byte   $00,$00,$00,$00,$02
+L97A0:  .byte   $00
+L97A1:  .byte   $00
+L97A2:  .byte   $00
+L97A3:  .byte   $00,$02
+L97A5:  .byte   $00
+L97A6:  .byte   $00
+L97A7:  .byte   $00
+L97A8:  .byte   $00,$02,$00,$00,$08
+L97AD:  .byte   $00
+L97AE:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00
+L97BD:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+L97DD:  .byte   $36,$9B
+L97DF:  .byte   $33,$9B
+L97E1:  .byte   $E3,$97
+L97E3:  .byte   $60
+L97E4:  .byte   $00
 L97E5:  ldx     $E10C
         lda     $E061
         sta     $E062,x
@@ -11078,18 +10448,11 @@ L9927:  jmp     (L97DF)
 
 L992A:  jmp     (L97E1)
 
-L992D:  brk
-        brk
-        brk
-        brk
-L9931:  rol     $9B,x
-        .byte   $33
-        .byte   $9B
-        .byte   $E3
-        .byte   $97
-L9937:  brk
-L9938:  brk
-L9939:  brk
+L992D:  .byte   $00,$00,$00,$00
+L9931:  .byte   $36,$9B,$33,$9B,$E3,$97
+L9937:  .byte   $00
+L9938:  .byte   $00
+L9939:  .byte   $00
         jsr     RAMRDOFF
         .byte   $1F
 L993E:  lda     #$00
@@ -12504,9 +11867,8 @@ LA4BA:  jsr     L4030
         bne     LA4C2
         jmp     LA4C6
 
-LA4C2:  .byte   $4C
-LA4C3:  .byte   $9F
-        .byte   $A3
+LA4C2:  jmp     LA39F
+
 LA4C5:  brk
 LA4C6:  ldy     #$C5
         lda     #$A9
@@ -12565,26 +11927,12 @@ LA4C6:  ldy     #$C5
 LA500:  jmp     LA520
 
 LA503:  .byte   $9C
-LA504:  tay
-        rmb5    $A9
-        .byte   $D4
-        ldy     LAE34
-        tya
-        tay
-        tya
-        tay
-        plp
-        bbs2    $2C,LA4C3
-        lsr     a
-        lda     ($68),y
-        lda     ($E1)
-        tax
-        plx
-        .byte   $AB
-        and     $B3
-LA51D:  brk
-LA51E:  brk
-        brk
+LA504:  .byte   $A8,$57,$A9,$D4,$AC,$34,$AE,$98
+        .byte   $A8,$98,$A8,$28,$AF,$2C,$B0,$4A
+        .byte   $B1,$68,$B2,$E1,$AA,$FA,$AB,$25
+        .byte   $B3
+LA51D:  .byte   $00
+LA51E:  .byte   $00,$00
 LA520:  sta     LA51D
         stx     LA51E
         tya
@@ -12624,7 +11972,7 @@ LA567:  lda     $D8E8
 LA579:  ldy     #$2A
         lda     #$08
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $D208
         cmp     #$01
         bne     LA58C
@@ -12639,7 +11987,7 @@ LA593:  lda     $D8E8
         ldy     #$40
         lda     #$09
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $D20D
         bne     LA5A9
         jmp     LA567
@@ -12656,15 +12004,15 @@ LA5B4:  lda     $D57D
         ldy     #$46
         lda     #$08
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$0E
         lda     #$0D
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
 LA5D2:  ldy     #$13
         lda     #$AB
         ldx     #$D6
-        jsr     LD000
+        jsr     A2D_RELAY
         cmp     #$80
         bne     LA5E5
         jsr     LB3D8
@@ -12677,7 +12025,7 @@ LA5E8:  jsr     LBEB1
 LA5EE:  ldy     #$40
         lda     #$09
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $D20D
         bne     LA5FF
         lda     #$FF
@@ -12703,11 +12051,11 @@ LA614:  lda     $D57D
         ldy     #$46
         lda     #$08
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$0E
         lda     #$0D
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         bit     $D8E7
         bvc     LA63A
         jmp     LA65E
@@ -12715,7 +12063,7 @@ LA614:  lda     $D57D
 LA63A:  ldy     #$13
         lda     #$20
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         cmp     #$80
         beq     LA64A
         jmp     LA6C1
@@ -12724,7 +12072,7 @@ LA64A:  jsr     LB43B
         ldy     #$11
         lda     #$20
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB7CF
         bmi     LA65D
         lda     #$00
@@ -12733,14 +12081,14 @@ LA65D:  rts
 LA65E:  ldy     #$13
         lda     #$28
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         cmp     #$80
         bne     LA67F
         jsr     LB43B
         ldy     #$11
         lda     #$28
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB7D9
         bmi     LA67E
         lda     #$02
@@ -12749,14 +12097,14 @@ LA67E:  rts
 LA67F:  ldy     #$13
         lda     #$30
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         cmp     #$80
         bne     LA6A0
         jsr     LB43B
         ldy     #$11
         lda     #$30
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB7DE
         bmi     LA69F
         lda     #$03
@@ -12765,14 +12113,14 @@ LA69F:  rts
 LA6A0:  ldy     #$13
         lda     #$38
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         cmp     #$80
         bne     LA6C1
         jsr     LB43B
         ldy     #$11
         lda     #$38
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB7E3
         bmi     LA6C0
         lda     #$04
@@ -12786,7 +12134,7 @@ LA6C1:  bit     $D8E7
 LA6C9:  ldy     #$13
         lda     #$10
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         cmp     #$80
         beq     LA6D9
         jmp     LA6ED
@@ -12795,7 +12143,7 @@ LA6D9:  jsr     LB43B
         ldy     #$11
         lda     #$10
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB7D4
         bmi     LA6EC
         lda     #$01
@@ -12937,7 +12285,7 @@ LA7E8:  jsr     LB43B
         ldy     #$11
         lda     #$28
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$02
         rts
 
@@ -12945,7 +12293,7 @@ LA7F7:  jsr     LB43B
         ldy     #$11
         lda     #$30
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$03
         rts
 
@@ -12953,7 +12301,7 @@ LA806:  jsr     LB43B
         ldy     #$11
         lda     #$38
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$04
         rts
 
@@ -12995,11 +12343,11 @@ LA851:  lda     $D57D
         ldy     #$11
         lda     #$20
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$11
         lda     #$20
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$00
         rts
 
@@ -13009,11 +12357,11 @@ LA86F:  lda     $D57D
         ldy     #$11
         lda     #$10
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$11
         lda     #$10
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$01
         rts
 
@@ -13031,18 +12379,18 @@ LA89B:  brk
         ldy     #$38
         lda     #$2B
         ldx     #$D6
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $D62B
         jsr     LB7B9
         jsr     LB43B
         ldy     #$12
         lda     #$DD
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$12
         lda     #$E5
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$ED
         ldx     #$AE
         jsr     LB723
@@ -13089,7 +12437,7 @@ LA89B:  brk
 LA923:  ldy     #$2A
         lda     #$08
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $D208
         cmp     #$01
         beq     LA947
@@ -13106,7 +12454,7 @@ LA923:  ldy     #$2A
 LA947:  ldy     #$39
         lda     #$2B
         ldx     #$D6
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LBEB1
         jsr     LB3CA
         rts
@@ -13171,7 +12519,7 @@ LA9B5:  ldy     #$01
         ldy     #$0E
         lda     #$B6
         ldx     #$B0
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$01
         ldx     #$D9
         jsr     LB708
@@ -13204,7 +12552,7 @@ LA9E6:  ldy     #$01
         ldy     #$0E
         lda     #$7E
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$02
         ldx     #$D4
         jsr     LB708
@@ -13220,7 +12568,7 @@ LA9E6:  ldy     #$01
         ldy     #$0E
         lda     #$82
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$43
         ldx     #$D4
         .byte   $20
@@ -13228,7 +12576,7 @@ LA9E6:  ldy     #$01
 LAA48:  smb3    $A0
         asl     LBAA9
         ldx     #$B0
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$01
         ldx     #$D9
         jsr     LB708
@@ -13238,7 +12586,7 @@ LAA5A:  jsr     LBEB1
         ldy     #$39
         lda     #$7D
         ldx     #$D5
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB403
         rts
 
@@ -13257,11 +12605,11 @@ LAA7F:  jsr     LA567
         ldy     #$07
         lda     #$00
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$11
         lda     #$76
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         pla
         rts
 
@@ -13280,17 +12628,17 @@ LAAB1:  jsr     LA567
         ldy     #$07
         lda     #$00
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$11
         lda     #$76
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         pla
         rts
 
 LAACE:  sta     ALTZPOFF
         sta     $C082
-        jsr     LFBDD
+        jsr     BELL1
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
@@ -13352,7 +12700,7 @@ LAB38:  ldy     #$01
         ldy     #$0E
         lda     #$B6
         ldx     #$B0
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$01
         ldx     #$D9
         jsr     LB708
@@ -13384,14 +12732,14 @@ LAB69:  ldy     #$01
         ldy     #$0E
         lda     #$7E
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$02
         ldx     #$D4
         jsr     LB708
         ldy     #$0E
         lda     #$BA
         ldx     #$B0
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$01
         ldx     #$D9
         jsr     LB708
@@ -13401,7 +12749,7 @@ LABB8:  jsr     LBEB1
         ldy     #$39
         lda     #$7D
         ldx     #$D5
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB403
         rts
 
@@ -13420,11 +12768,11 @@ LABDD:  jsr     LA567
         ldy     #$07
         lda     #$00
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$11
         lda     #$76
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         pla
         rts
 
@@ -13511,7 +12859,7 @@ LAC9E:  jsr     LBEB1
         ldy     #$39
         lda     #$7D
         ldx     #$D5
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB403
         rts
 
@@ -13523,11 +12871,11 @@ LACB7:  jsr     LA567
         ldy     #$07
         lda     #$00
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$11
         lda     #$6E
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB6FB
         lda     #$00
         rts
@@ -13592,13 +12940,13 @@ LAD46:  bne     LAD54
         ldy     #$0E
         lda     #$6A
         ldx     #$B1
-        jsr     LD000
+        jsr     A2D_RELAY
         jmp     LAD5D
 
 LAD54:  ldy     #$0E
         lda     #$72
         ldx     #$B1
-        jsr     LD000
+        jsr     A2D_RELAY
 LAD5D:  lda     #$01
         ldx     #$D9
         jsr     LB708
@@ -13630,14 +12978,14 @@ LAD6C:  ldy     #$01
         ldy     #$0E
         lda     #$7E
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$02
         ldx     #$D4
         jsr     LB708
         ldy     #$0E
         lda     #$6E
         ldx     #$B1
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$01
         ldx     #$D9
         jsr     LB708
@@ -13652,11 +13000,11 @@ LADC4:  jsr     LA567
         ldy     #$07
         lda     #$00
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$11
         lda     #$6E
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB6D0
         ldy     #$02
         lda     #$0E
@@ -13673,7 +13021,7 @@ LADF5:  jsr     LBEB1
         ldy     #$39
         lda     #$7D
         ldx     #$D5
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB403
         rts
 
@@ -13691,15 +13039,15 @@ LAE17:  jsr     LA567
         ldy     #$07
         lda     #$00
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$11
         lda     #$76
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         pla
         rts
 
-LAE34:  jsr     LB3BF
+        jsr     LB3BF
         ldy     #$00
         lda     (L0006),y
         cmp     #$80
@@ -13724,7 +13072,7 @@ LAE49:  lda     #$80
         ldy     #$12
         lda     #$AB
         ldx     #$D6
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 LAE70:  lda     #$80
@@ -13806,7 +13154,7 @@ LAF16:  jsr     LBEB1
         ldy     #$39
         lda     #$7D
         ldx     #$D5
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB403
         lda     #$01
         rts
@@ -13923,7 +13271,7 @@ LB006:  jsr     LA567
         ldy     #$39
         lda     #$7D
         ldx     #$D5
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB3CA
         pla
         rts
@@ -13981,14 +13329,14 @@ LB068:  ldy     #$01
         ldy     #$0E
         lda     #$31
         ldx     #$B2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$01
         ldx     #$D9
         jsr     LB708
         ldy     #$0E
         lda     #$39
         ldx     #$B2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$FB
         ldx     #$D8
         jsr     LB708
@@ -14017,14 +13365,14 @@ LB0A2:  ldy     #$01
         ldy     #$0E
         lda     #$7E
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$02
         ldx     #$D4
         jsr     LB708
         ldy     #$0E
         lda     #$41
         ldx     #$B2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$01
         ldx     #$D9
         jsr     LB708
@@ -14039,19 +13387,19 @@ LB0FA:  jsr     LA567
         ldy     #$07
         lda     #$00
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$11
         lda     #$6E
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$11
         lda     #$20
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$11
         lda     #$10
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$02
         lda     #$0E
         ldx     #$B1
@@ -14067,7 +13415,7 @@ LB13A:  jsr     LBEB1
         ldy     #$39
         lda     #$7D
         ldx     #$D5
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB403
         rts
 
@@ -14115,14 +13463,14 @@ LB186:  ldy     #$01
         ldy     #$0E
         lda     #$2D
         ldx     #$B2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$01
         ldx     #$D9
         jsr     LB708
         ldy     #$0E
         lda     #$35
         ldx     #$B2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$FB
         ldx     #$D8
         jsr     LB708
@@ -14151,14 +13499,14 @@ LB1C0:  ldy     #$01
         ldy     #$0E
         lda     #$7E
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$02
         ldx     #$D4
         jsr     LB708
         ldy     #$0E
         lda     #$3D
         ldx     #$B2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$01
         ldx     #$D9
         jsr     LB708
@@ -14173,19 +13521,19 @@ LB218:  jsr     LA567
         ldy     #$07
         lda     #$00
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$11
         lda     #$6E
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$11
         lda     #$20
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$11
         lda     #$10
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$02
         lda     #$0E
         ldx     #$B1
@@ -14201,7 +13549,7 @@ LB258:  jsr     LBEB1
         ldy     #$39
         lda     #$7D
         ldx     #$D5
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB403
         rts
 
@@ -14232,7 +13580,7 @@ LB27D:  jsr     LBD75
         ldy     #$12
         lda     #$AB
         ldx     #$D6
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$02
         lda     #$B3
         ldx     #$B1
@@ -14287,7 +13635,7 @@ LB313:  jsr     LBEB1
         ldy     #$39
         lda     #$7D
         ldx     #$D5
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB403
         lda     #$01
         rts
@@ -14295,7 +13643,7 @@ LB313:  jsr     LBEB1
         ldy     #$26
         lda     #$00
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB55F
         lda     $D57D
         jsr     LB7B9
@@ -14305,7 +13653,7 @@ LB313:  jsr     LBEB1
         ldy     #$25
         lda     #$00
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB3BF
         ldy     #$00
         lda     (L0006),y
@@ -14347,38 +13695,24 @@ LB385:  jsr     LA567
         ldy     #$39
         lda     #$7D
         ldx     #$D5
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB403
         pla
         rts
 
-LB39C:  bra     LB39E
-LB39E:  brk
-        bra     LB3A1
-LB3A1:  brk
-        .byte   $80
+LB39C:  .byte   $80,$00,$00,$80,$00,$00,$80
 LB3A3:  .byte   $BD
 LB3A4:  .byte   $B4
 LB3A5:  .byte   $B1
-LB3A6:  ldy     $DC,x
-        ldy     $10,x
-        lda     $DC,x
-        ldy     $10,x
-        lda     $30,x
-        lda     $B1,x
-        ldy     $30,x
-        lda     $B1,x
-        ldy     $69,x
-        lda     $B1,x
-        ldy     $9A,x
-        lda     $C4,x
+LB3A6:  .byte   $B4,$DC,$B4,$10,$B5,$DC,$B4,$10
+        .byte   $B5,$30,$B5,$B1,$B4,$30,$B5,$B1
+        .byte   $B4,$69,$B5,$B1,$B4,$9A,$B5,$C4
         .byte   $B5
-LB3BF:  lda     LA51D
-        sta     L0006
-        lda     LA51E
-        sta     $07
-        rts
-
+LB3BF:  .byte   $AD
+        ora     L85A5,x
+        asl     $AD
+        asl     L85A5,x
+        rmb0    $60
 LB3CA:  bit     LB3E6
         bpl     LB3D7
         jsr     LB403
@@ -14397,49 +13731,49 @@ LB3E6:  brk
         ldy     #$26
         lda     #$00
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$24
         lda     #$11
         ldx     #$D3
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$25
         lda     #$00
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 LB403:  ldy     #$26
         lda     #$00
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$24
         lda     #$AD
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$25
         lda     #$00
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 LB41F:  ldy     #$26
         lda     #$00
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$24
         lda     #$DF
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$25
         lda     #$00
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 LB43B:  ldy     #$07
         lda     #$02
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
         ldx     #$03
@@ -14465,7 +13799,7 @@ LB46C:  lda     LB501
 LB476:  ldy     #$2C
         lda     #$08
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB4BA
         bmi     LB4B7
         lda     #$FF
@@ -14481,7 +13815,7 @@ LB476:  ldy     #$2C
         ldy     #$2A
         lda     #$08
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         jmp     LB45F
 
 LB4A7:  cmp     #$01
@@ -14489,7 +13823,7 @@ LB4A7:  cmp     #$01
         ldy     #$2A
         lda     #$08
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$00
         rts
 
@@ -14547,54 +13881,54 @@ LB509:  sta     $D8E7
 LB51A:  ldy     #$12
         lda     #$20
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB5F9
 LB526:  bit     $D8E7
         bmi     LB537
         ldy     #$12
         lda     #$10
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB60A
 LB537:  jmp     LBEB1
 
 LB53A:  ldy     #$38
         lda     #$7D
         ldx     #$D5
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $D57D
         jsr     LB7B9
         jsr     LB43B
         ldy     #$12
         lda     #$00
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$12
         lda     #$08
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 LB55F:  ldy     #$38
         lda     #$7D
         ldx     #$D5
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $D57D
         jsr     LB7B9
         jsr     LBEA7
         ldy     #$14
         lda     #$6D
         ldx     #$D5
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB43B
         ldy     #$12
         lda     #$00
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$12
         lda     #$08
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 LB590:  stx     $07
@@ -14617,7 +13951,7 @@ LB59A:  tya
         ldy     #$18
         lda     #$08
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
         lsr     $0C
         ror     $0B
         lda     #$C8
@@ -14643,7 +13977,7 @@ LB5CC:  dey
         ldy     #$0E
         lda     #$C3
         ldx     #$D6
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     L0006
         ldx     $07
         jsr     LB708
@@ -14655,7 +13989,7 @@ LB5CC:  dey
 LB5F9:  ldy     #$0E
         lda     #$50
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$40
         ldx     #$AE
         jsr     LB708
@@ -14664,7 +13998,7 @@ LB5F9:  ldy     #$0E
 LB60A:  ldy     #$0E
         lda     #$54
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$96
         ldx     #$AE
         jsr     LB708
@@ -14673,7 +14007,7 @@ LB60A:  ldy     #$0E
 LB61B:  ldy     #$0E
         lda     #$58
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$A8
         ldx     #$AE
         jsr     LB708
@@ -14682,7 +14016,7 @@ LB61B:  ldy     #$0E
 LB62C:  ldy     #$0E
         lda     #$5C
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$AD
         ldx     #$AE
         jsr     LB708
@@ -14691,7 +14025,7 @@ LB62C:  ldy     #$0E
 LB63D:  ldy     #$0E
         lda     #$60
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$B1
         ldx     #$AE
         jsr     LB708
@@ -14701,19 +14035,19 @@ LB64E:  jsr     LB43B
         ldy     #$12
         lda     #$28
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$12
         lda     #$30
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$12
         lda     #$38
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$12
         lda     #$10
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB61B
         jsr     LB62C
         jsr     LB63D
@@ -14726,30 +14060,30 @@ LB687:  jsr     LBEA7
         ldy     #$11
         lda     #$28
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$11
         lda     #$30
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$11
         lda     #$38
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$11
         lda     #$10
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 LB6AF:  jsr     LB43B
         ldy     #$12
         lda     #$20
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$12
         lda     #$10
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB5F9
         jsr     LB60A
         lda     #$00
@@ -14760,18 +14094,18 @@ LB6D0:  jsr     LBEA7
         ldy     #$11
         lda     #$20
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$11
         lda     #$10
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 LB6E6:  jsr     LB43B
         ldy     #$12
         lda     #$20
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB5F9
         lda     #$80
         sta     $D8E7
@@ -14781,7 +14115,7 @@ LB6FB:  jsr     LBEA7
         ldy     #$11
         lda     #$20
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 LB708:  sta     L0006
@@ -14795,7 +14129,7 @@ LB708:  sta     L0006
 LB719:  ldy     #$19
         lda     #$06
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
 LB722:  rts
 
 LB723:  sta     L0006
@@ -14808,7 +14142,7 @@ LB723:  sta     L0006
 LB732:  ldy     #$18
         lda     #$06
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
         lsr     $0A
         ror     $09
         lda     #$01
@@ -14825,11 +14159,11 @@ LB732:  ldy     #$18
         ldy     #$0E
         lda     #$B7
         ldx     #$D6
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$19
         lda     #$06
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 LB76B:  brk
@@ -14838,7 +14172,7 @@ LB76B:  brk
         ldy     #$0E
         lda     #$BB
         ldx     #$D6
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     L0006
         ldx     $07
         jsr     LB708
@@ -14883,7 +14217,7 @@ LB7B9:  sta     $D212
         ldy     #$3C
         lda     #$12
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$04
         lda     #$15
         .byte   $A2
@@ -14939,61 +14273,61 @@ LB80B:  clv
         ldy     #$13
         lda     #$20
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
         ldy     #$13
         lda     #$10
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
         ldy     #$13
         lda     #$28
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
         ldy     #$13
         lda     #$30
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
         ldy     #$13
         lda     #$38
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
         ldy     #$11
         lda     #$20
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
         ldy     #$11
         lda     #$10
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
         ldy     #$11
         lda     #$28
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
         ldy     #$11
         lda     #$30
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
         ldy     #$11
         lda     #$38
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 LB880:  jmp     (LB886)
@@ -15010,7 +14344,7 @@ LB88A:  sta     LB8F3
 LB892:  ldy     #$2A
         lda     #$08
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $D208
         cmp     #$02
         beq     LB8E3
@@ -15019,11 +14353,11 @@ LB892:  ldy     #$2A
         ldy     #$46
         lda     #$08
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$0E
         lda     #$0D
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB880
         cmp     #$80
         beq     LB8C9
@@ -15066,24 +14400,24 @@ LB8F5:  jsr     LBD3B
         ldy     #$0E
         lda     #$06
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$06
         lda     #$C7
         ldx     #$D6
-        jsr     LD000
+        jsr     A2D_RELAY
         bit     $D8EB
         bpl     LB92D
         ldy     #$0C
         lda     #$6C
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$00
         sta     $D8EB
         beq     LB93B
 LB92D:  ldy     #$0C
         lda     #$6D
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$FF
         sta     $D8EB
 LB93B:  lda     #$EF
@@ -15095,11 +14429,11 @@ LB93B:  lda     #$EF
         ldy     #$19
         lda     #$06
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$0C
         lda     #$6D
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $D57D
         jsr     LB7B9
         rts
@@ -15112,23 +14446,23 @@ LB961:  lda     $D443
         ldy     #$11
         lda     #$AB
         ldx     #$D6
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$07
         lda     #$02
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$12
         lda     #$AB
         ldx     #$D6
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$0E
         lda     #$B3
         ldx     #$D6
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$06
         lda     #$C7
         ldx     #$D6
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$43
         ldx     #$D4
         jsr     LB708
@@ -15145,15 +14479,15 @@ LB9B7:  rts
 LB9B8:  ldy     #$46
         lda     #$08
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$0E
         lda     #$0D
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$13
         lda     #$AB
         ldx     #$D6
-        jsr     LD000
+        jsr     A2D_RELAY
         cmp     #$80
         beq     LB9D8
         rts
@@ -15185,7 +14519,7 @@ LB9EE:  jsr     LBD3B
 LBA10:  ldy     #$18
         lda     #$06
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $09
         clc
         adc     LBB09
@@ -15247,7 +14581,7 @@ LBA83:  lda     #$43
 LBA90:  ldy     #$18
         lda     #$06
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $09
         clc
         adc     $D6B3
@@ -15328,11 +14662,11 @@ LBB1A:  lda     LBB62
         ldy     #$0E
         lda     #$06
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$06
         lda     #$C7
         ldx     #$D6
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$F6
         ldx     #$D8
         jsr     LB708
@@ -15359,11 +14693,11 @@ LBB69:  dec     $D443
         ldy     #$0E
         lda     #$06
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$06
         lda     #$C7
         ldx     #$D6
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$84
         ldx     #$D4
         jsr     LB708
@@ -15401,11 +14735,11 @@ LBBBC:  ldx     $D443
         ldy     #$0E
         lda     #$06
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$06
         lda     #$C7
         ldx     #$D6
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$84
         ldx     #$D4
         jsr     LB708
@@ -15439,11 +14773,11 @@ LBC2D:  dec     $D484
         ldy     #$0E
         lda     #$B3
         ldx     #$D6
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$06
         lda     #$C7
         ldx     #$D6
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     #$43
         ldx     #$D4
         jsr     LB708
@@ -15502,7 +14836,7 @@ LBCB3:  pla
         ldy     #$0E
         lda     #$B3
         ldx     #$D6
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB961
         rts
 
@@ -15532,7 +14866,7 @@ LBCDF:  lda     $D484,x
         ldy     #$0E
         lda     #$B3
         ldx     #$D6
-        jsr     LD000
+        jsr     A2D_RELAY
         jsr     LB961
         rts
 
@@ -15582,7 +14916,7 @@ LBD3B:  lda     #$44
 LBD51:  ldy     #$18
         lda     #$06
         ldx     #$00
-        jsr     LD000
+        jsr     A2D_RELAY
         lda     $09
         clc
         adc     $D6B3
@@ -15757,89 +15091,37 @@ LBE8D:  jsr     LBEA7
         ldy     #$11
         lda     #$86
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 LBE9A:  jsr     LBEA7
         ldy     #$11
         lda     #$8E
         ldx     #$AE
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 LBEA7:  ldy     #$07
         lda     #$00
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
 LBEB1:  ldy     #$03
         lda     #$39
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         ldy     #$04
         lda     #$39
         ldx     #$D2
-        jsr     LD000
+        jsr     A2D_RELAY
         rts
 
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00

@@ -13244,7 +13244,7 @@ L8813           := $8813
 
 
         ;; SET_POS with params at (X,A) followed by DRAW_TEXT call
-.proc LD01C
+.proc SETPOS_RELAY
         sta     addr
         stx     addr+1
         sta     RAMRDON
@@ -13258,8 +13258,8 @@ L8813           := $8813
         rts
 .endproc
 
-        ;; DESKTOP call from aux>main, call in Y params at (X,A)
-.proc LD040
+        ;; DESKTOP call from main>aux, call in Y params at (X,A)
+.proc DESKTOP_RELAY
         sty     addr-1
         sta     addr
         stx     addr+1
