@@ -30,7 +30,7 @@ LD156           := $D156
 
         .org $4000
 
-L4000:   jmp     L4042
+L4000:  jmp     L4042
 
 L4003:  jmp     A2D_RELAY
 
@@ -185,7 +185,7 @@ L4143:  bit     L40F1
         DESKTOP_RELAY_CALL DESKTOP_REDRAW_ICONS
 L4151:  rts
 
-L4152:  brk
+L4152:  .byte   0
 L4153:  lda     $D209
         cmp     #$09
         bcc     L415B
@@ -281,9 +281,9 @@ L4227:  lda     #$00
         jsr     L8874
         jmp     L4510
 
-L4241:  brk
-L4242:  brk
-L4243:  brk
+L4241:  .byte   0
+L4242:  .byte   0
+L4243:  .byte   0
 L4244:  lda     $DF21
         bne     L424A
 L4249:  rts
@@ -472,7 +472,7 @@ L4458:  rts
 
 L4459:  jmp     L445D
 
-L445C:  brk
+L445C:  .byte   0
 L445D:  jsr     L6D2B
         ldx     $D20E
         dex
@@ -629,7 +629,7 @@ L45D9:  stx     L45EC
         adc     L45EC
         sta     L45EC
         .byte   $AD
-L45EC:  brk
+L45EC:  .byte   0
         bbs3    $85,L45F7
         lda     #$00
         sta     L0006
@@ -657,7 +657,7 @@ L4612:  ora     ($8D,x)
         dec     a
         lsr     L0020
         bit     $46,x
-        brk
+        .byte   0
         and     LAD46,y
         rol     $2946,x
         bpl     L4612
@@ -1012,7 +1012,7 @@ L4992:  .byte   $02,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         jmp     L49A6
 
-L49A5:  brk
+L49A5:  .byte   0
 L49A6:  lda     $E25B
         sec
         sbc     #$06
@@ -1088,7 +1088,7 @@ L4A2B:  iny
         lda     #$00
         jmp     L46DE
 
-L4A46:  brk
+L4A46:  .byte   0
 L4A47:  pha
         jsr     L86C1
         clc
@@ -1266,8 +1266,8 @@ L4B9C:  inx
         ldx     #$4F
         rts
 
-L4BB0:  brk
-L4BB1:  brk
+L4BB0:  .byte   0
+L4BB1:  .byte   0
         ldy     #$00
         lda     #$00
         ldx     #$00
@@ -1592,7 +1592,7 @@ L4E51:  lda     (L0006),y
         lda     L4E71
 L4E6E:  jmp     L46DE
 
-L4E71:  brk
+L4E71:  .byte   0
 L4E72:  lda     $EC25
         bne     L4E78
         rts
@@ -1766,8 +1766,8 @@ L5027:  lda     #$40
         jsr     L5E78
 L504B:  jmp     L4523
 
-L504E:  brk
-L504F:  brk
+L504E:  .byte   0
+L504F:  .byte   0
 L5050:  lda     $DF20
         beq     L5056
 L5055:  rts
@@ -1931,11 +1931,11 @@ L51E3:  lda     #$00
         sta     $DE9F
         jmp     LD09A
 
-L51EB:  brk
-L51EC:  brk
-L51ED:  brk
-        brk
-L51EF:  brk
+L51EB:  .byte   0
+L51EC:  .byte   0
+L51ED:  .byte   0
+        .byte   0
+L51EF:  .byte   0
 L51F0:  ldx     $EC25
         dex
         sta     $E6D1,x
@@ -1981,10 +1981,10 @@ L5246:  lda     L5263,x
         sta     L4152
         rts
 
-L5263:  brk
-L5264:  brk
-L5265:  brk
-        brk
+L5263:  .byte   0
+L5264:  .byte   0
+L5265:  .byte   0
+        .byte   0
         ldx     $EC25
         bne     L526D
         rts
@@ -2086,7 +2086,7 @@ L5334:  jsr     LD096
         sta     $DE9F
         jmp     LD09A
 
-L533F:  brk
+L533F:  .byte   0
         lda     #$01
         jsr     L8E81
         bmi     L535A
@@ -2191,17 +2191,9 @@ L5411:  lda     L5428,x
         bpl     L5411
         jmp     L4523
 
-L5426:  brk
-L5427:  brk
-L5428:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+L5426:  .byte   0
+L5427:  .byte   0
+L5428:  .res    9, 0
 L5431:  ldx     #$07
 L5433:  cmp     $EC26,x
         beq     L543E
@@ -2216,15 +2208,15 @@ L543E:  inx
 
 L5441:  jmp     L544D
 
-L5444:  brk
-L5445:  brk
-L5446:  brk
-L5447:  brk
-L5448:  brk
-L5449:  brk
-L544A:  brk
-        brk
-        brk
+L5444:  .byte   0
+L5445:  .byte   0
+L5446:  .byte   0
+L5447:  .byte   0
+L5448:  .byte   0
+L5449:  .byte   0
+L544A:  .byte   0
+        .byte   0
+        .byte   0
 L544D:  lda     #$00
         sta     $1800
         .byte   $AD
@@ -2517,7 +2509,7 @@ L56F0:  lda     #$00
         sta     $DE9F
         jmp     LD09A
 
-L56F8:  brk
+L56F8:  .byte   0
 L56F9:  sta     $D212
         jsr     L4505
         jmp     L6E8E
@@ -2590,8 +2582,8 @@ L577C:  stx     L578C
 
 L578B:  rts
 
-L578C:  brk
-L578D:  brk
+L578C:  .byte   0
+L578D:  .byte   0
 L578E:  A2D_RELAY_CALL $22      ; ???
         jmp     L619B
 
@@ -2682,12 +2674,12 @@ L5853:  lda     L5861
         sta     L5861
         rts
 
-L585D:  brk
-L585E:  brk
-L585F:  brk
-L5860:  brk
-L5861:  brk
-L5862:  brk
+L585D:  .byte   0
+L585E:  .byte   0
+L585F:  .byte   0
+L5860:  .byte   0
+L5861:  .byte   0
+L5862:  .byte   0
 L5863:  stx     L587D
         cmp     L587D
         beq     L587C
@@ -2699,7 +2691,7 @@ L5863:  stx     L587D
         lda     $D20D
 L587C:  rts
 
-L587D:  brk
+L587D:  .byte   0
 L587E:  beq     L5891
         sta     $D20D
         dec     $D20D
@@ -2709,7 +2701,7 @@ L587E:  beq     L5891
         lda     $D20D
 L5891:  rts
 
-        brk
+        .byte   0
 L5893:  stx     L58AD
         cmp     L58AD
         beq     L58AC
@@ -2721,7 +2713,7 @@ L5893:  stx     L58AD
         lda     $D20D
 L58AC:  rts
 
-L58AD:  brk
+L58AD:  .byte   0
 L58AE:  beq     L58C1
         sta     $D20D
         dec     $D20D
@@ -2731,7 +2723,7 @@ L58AE:  beq     L58C1
         lda     $D20D
 L58C1:  rts
 
-        brk
+        .byte   0
 L58C3:  lda     $EC25
         jsr     L86EF
         sta     L0006
@@ -2837,8 +2829,8 @@ L5998:  pla
         inx
         jmp     L5976
 
-L599E:  brk
-L599F:  brk
+L599E:  .byte   0
+L599F:  .byte   0
 L59A0:  lda     #$00
         beq     L59AA
 L59A4:  lda     #$80
@@ -2965,17 +2957,8 @@ L5AA9:  lda     $DEA0
 L5AC0:  jsr     LD096
         jmp     L4523
 
-L5AC6:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-L5AD0:  brk
+L5AC6:  .res    10, 0
+L5AD0:  .byte   0
         ldx     $E25B
         dex
         txa
@@ -3008,9 +2991,9 @@ L5AEE:  sta     ALTZPOFF
         sta     CLR80VID
         sta     CLR80COL
         .byte   $4C
-L5B19:  brk
-L5B1A:  brk
-L5B1B:  brk
+L5B19:  .byte   0
+L5B1A:  .byte   0
+L5B1B:  .byte   0
 L5B1C:  lda     $EC25
         sta     $DE9F
         jsr     LD09A
@@ -3184,7 +3167,7 @@ L5C99:  A2D_RELAY_CALL A2D_QUERY_CLIENT, $D209
         lda     #$00
         rts
 
-L5CB6:  brk
+L5CB6:  .byte   0
 L5CB7:  bit     L5B1B
         bpl     L5CBF
         jmp     L6D2B
@@ -3197,7 +3180,7 @@ L5CBF:  lda     $EC25
         jsr     L5F13
         jmp     L5DEC
 
-L5CD9:  brk
+L5CD9:  .byte   0
 L5CDA:  sta     L5CD9
         ldx     $DF21
         beq     L5CFB
@@ -3377,7 +3360,7 @@ L5E57:  lda     (L0006),y
         lda     L5E77
 L5E74:  jmp     L46DE
 
-L5E77:  brk
+L5E77:  .byte   0
 L5E78:  sta     L5F0A
         jsr     L4523
         jsr     L6D2B
@@ -3434,15 +3417,15 @@ L5ECB:  lda     (L0006),y
         sta     $DE9F
         jmp     LD09A
 
-L5F0A:  brk
-L5F0B:  brk
-        brk
-        brk
-        brk
-L5F0F:  brk
-        brk
-        brk
-        brk
+L5F0A:  .byte   0
+L5F0B:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+L5F0F:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
 L5F13:  lda     #$06
         sta     L0006
         lda     #$D2
@@ -3604,16 +3587,16 @@ L60AE:  lda     $D20B
 L60BF:  A2D_RELAY_CALL A2D_DRAW_RECT, $E230
         jmp     L5F6B
 
-L60CB:  brk
-L60CC:  brk
-L60CD:  brk
-L60CE:  brk
-L60CF:  brk
-L60D0:  brk
-L60D1:  brk
-L60D2:  brk
-L60D3:  brk
-L60D4:  brk
+L60CB:  .byte   0
+L60CC:  .byte   0
+L60CD:  .byte   0
+L60CE:  .byte   0
+L60CF:  .byte   0
+L60D0:  .byte   0
+L60D1:  .byte   0
+L60D2:  .byte   0
+L60D3:  .byte   0
+L60D4:  .byte   0
 L60D5:  jsr     L87F6
         jmp     L8921
 
@@ -3702,10 +3685,10 @@ L6161:  txa
 
 L6196:  rts
 
-L6197:  brk
-L6198:  brk
-L6199:  brk
-L619A:  brk
+L6197:  .byte   0
+L6198:  .byte   0
+L6199:  .byte   0
+L619A:  .byte   0
 L619B:  lda     $EC25
         sta     $D208
         A2D_RELAY_CALL A2D_DRAG_RESIZE, $D208
@@ -3896,15 +3879,15 @@ L634E:  lda     L6383
         ror     L6389
         rts
 
-L6383:  brk
-L6384:  brk
-L6385:  brk
-L6386:  brk
-L6387:  brk
-L6388:  brk
-L6389:  brk
-L638A:  brk
-L638B:  brk
+L6383:  .byte   0
+L6384:  .byte   0
+L6385:  .byte   0
+L6386:  .byte   0
+L6387:  .byte   0
+L6388:  .byte   0
+L6389:  .byte   0
+L638A:  .byte   0
+L638B:  .byte   0
 L638C:  jsr     L650F
         sty     L63E9
         jsr     L644C
@@ -3940,10 +3923,10 @@ L63C7:  sta     $D21F
         jsr     L6DB1
         jmp     L6556
 
-L63E8:  brk
-L63E9:  brk
-L63EA:  brk
-L63EB:  brk
+L63E8:  .byte   0
+L63E9:  .byte   0
+L63EA:  .byte   0
+L63EB:  .byte   0
 L63EC:  jsr     L650F
         sty     L6449
         jsr     L644C
@@ -3979,10 +3962,10 @@ L6427:  sta     $D223
         jsr     L6DB1
         jmp     L6556
 
-L6448:  brk
-L6449:  brk
-L644A:  brk
-L644B:  brk
+L6448:  .byte   0
+L6449:  .byte   0
+L644A:  .byte   0
+L644B:  .byte   0
 L644C:  tya
         sec
         sbc     #$0E
@@ -4022,10 +4005,10 @@ L648A:  sta     $D21D
         jsr     L6DB1
         jmp     L6556
 
-L64AC:  brk
-L64AD:  brk
-L64AE:  brk
-L64AF:  brk
+L64AC:  .byte   0
+L64AD:  .byte   0
+L64AE:  .byte   0
+L64AF:  .byte   0
 L64B0:  jsr     L650F
         sta     L650B
         stx     L650C
@@ -4060,10 +4043,10 @@ L64E9:  sta     $D221
         jsr     L6DB1
         jmp     L6556
 
-L650B:  brk
-L650C:  brk
-L650D:  brk
-L650E:  brk
+L650B:  .byte   0
+L650C:  .byte   0
+L650D:  .byte   0
+L650E:  .byte   0
 L650F:  bit     L5B1B
         bmi     L6517
         jsr     L6E52
@@ -4163,10 +4146,10 @@ L65EE:  sta     $D209
         A2D_RELAY_CALL A2D_UPDATE_SCROLL, $D208
         rts
 
-L6600:  brk
-L6601:  brk
-L6602:  brk
-L6603:  brk
+L6600:  .byte   0
+L6601:  .byte   0
+L6602:  .byte   0
+L6603:  .byte   0
 L6604:  lda     $EC25
         jsr     L7D5D
         sty     L669F
@@ -4226,9 +4209,9 @@ L668D:  sta     $D209
         A2D_RELAY_CALL A2D_UPDATE_SCROLL, $D208
         rts
 
-L669F:  brk
-L66A0:  brk
-L66A1:  brk
+L669F:  .byte   0
+L66A0:  .byte   0
+L66A1:  .byte   0
 L66A2:  ldx     $EC25
         beq     L66AA
         jmp     L66F2
@@ -4580,16 +4563,16 @@ L6A18:  lda     $D20B
 L6A29:  A2D_RELAY_CALL A2D_DRAW_RECT, $E230
         jmp     L68E4
 
-L6A35:  brk
-L6A36:  brk
-L6A37:  brk
-L6A38:  brk
-L6A39:  brk
-L6A3A:  brk
-L6A3B:  brk
-L6A3C:  brk
-L6A3D:  brk
-L6A3E:  brk
+L6A35:  .byte   0
+L6A36:  .byte   0
+L6A37:  .byte   0
+L6A38:  .byte   0
+L6A39:  .byte   0
+L6A3A:  .byte   0
+L6A3B:  .byte   0
+L6A3C:  .byte   0
+L6A3D:  .byte   0
+L6A3E:  .byte   0
 L6A3F:  ldx     #$07
 L6A41:  cmp     $EC26,x
         beq     L6A80
@@ -4783,7 +4766,7 @@ L6BF4:  lda     $DE9F
         jsr     LD09A
         jmp     L4510
 
-L6C0E:  brk
+L6C0E:  .byte   0
 L6C0F:  A2D_RELAY_CALL $36, $E267 ; ???
         rts
 
@@ -4863,7 +4846,7 @@ L6CC5:  jsr     L4510
         jsr     L8813
         rts
 
-L6CCC:  brk
+L6CCC:  .byte   0
 L6CCD:  lda     $DE9F
         sta     $D212
         jsr     L44F2
@@ -4953,7 +4936,7 @@ L6DA1:  sta     $DF22,x
         sta     $DF20
         jmp     L4510
 
-L6DB0:  brk
+L6DB0:  .byte   0
 L6DB1:  ldx     $EC25
         dex
         lda     $E6D1,x
@@ -5030,7 +5013,7 @@ L6E57:  lda     L6E6D
 
 L6E6C:  rts
 
-L6E6D:  brk
+L6E6D:  .byte   0
 L6E6E:  lda     #$00
         sta     L6E89
 L6E73:  lda     L6E89
@@ -5044,7 +5027,7 @@ L6E73:  lda     L6E89
 
 L6E88:  rts
 
-L6E89:  brk
+L6E89:  .byte   0
 L6E8A:  lda     #$80
         beq     L6E90
 L6E8E:  lda     #$00
@@ -5068,7 +5051,7 @@ L6E90:  sta     L6EC4
         A2D_RELAY_CALL A2D_SET_STATE, $D215
 L6EC3:  rts
 
-L6EC4:  brk
+L6EC4:  .byte   0
 L6EC5:  lda     #$00
         sta     $E26B
         A2D_RELAY_CALL $34, $E26A ; ???
@@ -5116,9 +5099,9 @@ L6F32:  sty     L6F4A
         ldy     L6F4A
         jmp     L6F4B
 
-L6F48:  brk
-L6F49:  brk
-L6F4A:  brk
+L6F48:  .byte   0
+L6F49:  .byte   0
+L6F4A:  .byte   0
 L6F4B:  sta     L0006
         stx     $07
         sty     L705D
@@ -5243,29 +5226,22 @@ L7027:  lda     (L0006),y
 L7045:  lda     L7049
         rts
 
-L7049:  brk
-L704A:  brk
-L704B:  brk
-L704C:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+L7049:  .byte   0
+L704A:  .byte   0
+L704B:  .byte   0
+L704C:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
 L7054:  jmp     L70C5
 
         .byte   $03,$5D,$70,$00,$08
 L705C:  .byte   $00
-L705D:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+L705D:  .res    64, 0
         .byte   $00,$04
 L709F:  .byte   $00,$00,$0C,$00,$02,$00,$00,$01
 L70A7:  .byte   $00,$0A,$5D,$70,$00,$00
@@ -5502,9 +5478,9 @@ L7296:  lda     L0006
         jsr     L8813
         rts
 
-L72A7:  brk
-L72A8:  brk
-L72A9:  brk
+L72A7:  .byte   0
+L72A8:  .byte   0
+L72A9:  .byte   0
 L72AA:  ldy     #$C8
         lda     #$57
         ldx     #$70
@@ -5691,12 +5667,12 @@ L7429:  lda     $E1F1
         sta     L4860
         rts
 
-L7445:  brk
-L7446:  brk
-L7447:  brk
-L7448:  brk
-L7449:  brk
-L744A:  brk
+L7445:  .byte   0
+L7446:  .byte   0
+L7447:  .byte   0
+L7448:  .byte   0
+L7449:  .byte   0
+L744A:  .byte   0
 L744B:  lda     $DE9F
         asl     a
         tax
@@ -6227,8 +6203,8 @@ L7870:  lda     $DE9F
         sta     $07
         rts
 
-        brk
-        brk
+        .byte   0
+        .byte   0
 L78A1:  sta     L78EE
         jsr     L87F6
         lda     $FB00
@@ -6266,7 +6242,7 @@ L78C2:  lda     $FB04
         jsr     L8813
         rts
 
-L78EE:  brk
+L78EE:  .byte   0
 L78EF:  lda     $D21D
         sta     $EBBE
         clc
@@ -6452,8 +6428,8 @@ L7AD7:  lda     #$DC
         ldx     #$EB
         jmp     L8780
 
-L7ADE:  brk
-L7ADF:  brk
+L7ADE:  .byte   0
+L7ADF:  .byte   0
 L7AE0:  sta     L7B5B
         stx     L7B5C
         ldx     #$06
@@ -6512,23 +6488,23 @@ L7B54:  rmb2    $E8
         .byte   $03
         stz     L0000
         asl     a
-        brk
-L7B5B:  brk
-L7B5C:  brk
-L7B5D:  brk
-L7B5E:  brk
-L7B5F:  brk
-L7B60:  brk
-L7B61:  brk
-L7B62:  brk
-L7B63:  brk
-L7B64:  brk
-L7B65:  brk
-L7B66:  brk
-L7B67:  brk
-L7B68:  brk
-L7B69:  brk
-L7B6A:  brk
+        .byte   0
+L7B5B:  .byte   0
+L7B5C:  .byte   0
+L7B5D:  .byte   0
+L7B5E:  .byte   0
+L7B5F:  .byte   0
+L7B60:  .byte   0
+L7B61:  .byte   0
+L7B62:  .byte   0
+L7B63:  .byte   0
+L7B64:  .byte   0
+L7B65:  .byte   0
+L7B66:  .byte   0
+L7B67:  .byte   0
+L7B68:  .byte   0
+L7B69:  .byte   0
+L7B6A:  .byte   0
 L7B6B:  ldx     #$03
         lda     #$00
 L7B6F:  sta     L7B63,x
@@ -6738,8 +6714,8 @@ L7D49:  lda     L7B69
 L7D55:  inc     L7D5B
         jmp     L7BEF
 
-L7D5B:  brk
-L7D5C:  brk
+L7D5B:  .byte   0
+L7D5C:  .byte   0
 L7D5D:  jsr     L86EF
         sta     L0006
         stx     $07
@@ -6770,14 +6746,14 @@ L7D68:  lda     (L0006),y
         pla
         rts
 
-L7D94:  brk
-L7D95:  brk
-L7D96:  brk
-L7D97:  brk
-L7D98:  brk
-L7D99:  brk
-L7D9A:  brk
-L7D9B:  brk
+L7D94:  .byte   0
+L7D95:  .byte   0
+L7D96:  .byte   0
+L7D97:  .byte   0
+L7D98:  .byte   0
+L7D99:  .byte   0
+L7D9A:  .byte   0
+L7D9B:  .byte   0
 L7D9C:  jmp     L7D9F
 
 L7D9F:  ldx     $DE9F
@@ -7194,8 +7170,8 @@ L812B:  lda     LCBANK1
         lda     LCBANK2
         rts
 
-L813C:  brk
-        brk
+L813C:  .byte   0
+        .byte   0
 L813E:  php
 L813F:  ldy     #$00
         tax
@@ -7333,11 +7309,11 @@ L826B:  .byte   $27,$E8
         .byte   $03
         stz     L0000
         asl     a
-        brk
-L8272:  brk
-L8273:  brk
-L8274:  brk
-L8275:  brk
+        .byte   0
+L8272:  .byte   0
+L8273:  .byte   0
+L8274:  .byte   0
+L8275:  .byte   0
 L8276:  ldx     #$11
         lda     #$20
 L827A:  sta     $E6EB,x
@@ -7498,10 +7474,10 @@ L83BB:  lda     L83DB
         dex
         bne     L83BB
 L83C7:  tay
-        lda     L849A,x
-        sta     L848E
-        lda     L849A,y
-        sta     L848F
+        lda     ascii_digits,x
+        sta     year_string_10s
+        lda     ascii_digits,y
+        sta     year_string_1s
         lda     #$8A
         ldx     #$84
         jmp     L84A4
@@ -7532,8 +7508,9 @@ L83E3:  .byte   $83,$06,$84,$11,$84,$1C,$84,$27
         PASCAL_STRING "November  "
         PASCAL_STRING "December  "
         PASCAL_STRING " 1985"
-L848E  := *-2                   ; 10s digit
-L848F  := *-1                   ; 1s digit
+
+year_string_10s := *-2          ; 10s digit
+year_string_1s  := *-1          ; 1s digit
 
 L8490:  .byte   $09             ; ????
         asl     a
@@ -7542,7 +7519,10 @@ L8490:  .byte   $09             ; ????
         and     ($3C)
         lsr     $50
         phy
-L849A:  .byte   "0123456789"
+
+ascii_digits:
+        .byte   "0123456789"
+
 L84A4:  sta     L0006
         stx     $07
         ldy     #$00
@@ -7561,13 +7541,13 @@ L84A4:  sta     L0006
         sta     ($08),y
         ldy     L84CF
         .byte   $C0
-L84CB:  brk
+L84CB:  .byte   0
         .byte   $90
 L84CD:  .byte   $EB
         rts
 
-L84CF:  brk
-L84D0:  brk
+L84CF:  .byte   0
+L84D0:  .byte   0
 L84D1:  jsr     L87F6
         bit     L5B1B
         bmi     L84DC
@@ -7687,17 +7667,17 @@ L85E4:  lda     $D21D,x
         jsr     L8813
         rts
 
-L85F1:  brk
-L85F2:  brk
-L85F3:  brk
-L85F4:  brk
-L85F5:  brk
-L85F6:  brk
-        brk
-L85F8:  brk
-L85F9:  brk
-L85FA:  brk
-L85FB:  brk
+L85F1:  .byte   0
+L85F2:  .byte   0
+L85F3:  .byte   0
+L85F4:  .byte   0
+L85F5:  .byte   0
+L85F6:  .byte   0
+        .byte   0
+L85F8:  .byte   0
+L85F9:  .byte   0
+L85FA:  .byte   0
+L85FB:  .byte   0
 L85FC:  ldx     #$03
 L85FE:  lda     $D209,x
         sta     L86A0,x
@@ -7772,15 +7752,15 @@ L8694:  lda     L86A4
 L869B:  lda     #$00
         rts
 
-L869E:  brk
-L869F:  brk
-L86A0:  brk
-L86A1:  brk
-L86A2:  brk
-L86A3:  brk
-L86A4:  brk
-L86A5:  brk
-L86A6:  brk
+L869E:  .byte   0
+L869F:  .byte   0
+L86A0:  .byte   0
+L86A1:  .byte   0
+L86A2:  .byte   0
+L86A3:  .byte   0
+L86A4:  .byte   0
+L86A5:  .byte   0
+L86A6:  .byte   0
 L86A7:  ldx     #$00
         stx     L86C0
         asl     a
@@ -7794,7 +7774,7 @@ L86A7:  ldx     #$00
         ldx     L86C0
         rts
 
-L86C0:  brk
+L86C0:  .byte   0
 L86C1:  ldx     #$00
         stx     L86E2
         asl     a
@@ -7812,7 +7792,7 @@ L86C1:  ldx     #$00
         ldx     L86E2
         rts
 
-L86E2:  brk
+L86E2:  .byte   0
 L86E3:  asl     a
         tax
         lda     $DD9F,x
@@ -7904,7 +7884,7 @@ L8778:  clc
 L877B:  sta     $DFC9
         rts
 
-L877F:  brk
+L877F:  .byte   0
 L8780:  sta     L0006
         stx     $07
         ldy     #$00
@@ -7983,8 +7963,8 @@ L8800:  lda     L0006,x
         pha
         rts
 
-L8811:  brk
-L8812:  brk
+L8811:  .byte   0
+L8812:  .byte   0
 L8813:  pla
         sta     L882E
         pla
@@ -8001,45 +7981,13 @@ L881D:  pla
         pha
         rts
 
-L882E:  brk
-L882F:  brk
-L8830:  brk
-L8831:  brk
-L8832:  brk
-L8833:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+L882E:  .byte   0
+L882F:  .byte   0
+L8830:  .byte   0
+L8831:  .byte   0
+L8832:  .byte   0
+L8833:  .res    34, 0
+
 L8855:  tay
         jsr     L87F6
         tya
@@ -8137,14 +8085,14 @@ L88BA:  lda     ($08),y
         jsr     L8813
         rts
 
-L890D:  brk
-L890E:  brk
-L890F:  brk
-L8910:  brk
-L8911:  brk
-L8912:  brk
-L8913:  brk
-L8914:  brk
+L890D:  .byte   0
+L890E:  .byte   0
+L890F:  .byte   0
+L8910:  .byte   0
+L8911:  .byte   0
+L8912:  .byte   0
+L8913:  .byte   0
+L8914:  .byte   0
 L8915:  tay
         jsr     L87F6
         tya
@@ -8208,14 +8156,14 @@ L893C:  lda     ($08),y
         jsr     L8813
         rts
 
-L898F:  brk
-L8990:  brk
-L8991:  brk
-L8992:  brk
-L8993:  brk
-L8994:  brk
-L8995:  brk
-L8996:  brk
+L898F:  .byte   0
+L8990:  .byte   0
+L8991:  .byte   0
+L8992:  .byte   0
+L8993:  .byte   0
+L8994:  .byte   0
+L8995:  .byte   0
+L8996:  .byte   0
 L8997:  lda     #$00
         tax
 L899A:  sta     $D265,x
@@ -8228,8 +8176,8 @@ L899A:  sta     $D265,x
         rts
 
         .byte   $02
-L89B3:  brk
-        brk
+L89B3:  .byte   0
+        .byte   0
         php
 L89B6:  sta     L8AC3
         sty     L8AC4
@@ -8632,20 +8580,20 @@ L8D3D:  bit     L8D4A
 L8D46:  jsr     L8DB3
         rts
 
-L8D4A:  brk
-L8D4B:  brk
-L8D4C:  brk
-L8D4D:  brk
-L8D4E:  brk
-L8D4F:  brk
-L8D50:  brk
-L8D51:  brk
-L8D52:  brk
-L8D53:  brk
-L8D54:  brk
-L8D55:  brk
-L8D56:  brk
-L8D57:  brk
+L8D4A:  .byte   0
+L8D4B:  .byte   0
+L8D4C:  .byte   0
+L8D4D:  .byte   0
+L8D4E:  .byte   0
+L8D4F:  .byte   0
+L8D50:  .byte   0
+L8D51:  .byte   0
+L8D52:  .byte   0
+L8D53:  .byte   0
+L8D54:  .byte   0
+L8D55:  .byte   0
+L8D56:  .byte   0
+L8D57:  .byte   0
 L8D58:  lda     #$00
         sta     L8DB2
         jsr     L4510
@@ -8690,7 +8638,7 @@ L8DA7:  inc     L8DB2
         bne     L8D6C
         rts
 
-L8DB2:  brk
+L8DB2:  .byte   0
 L8DB3:  lda     #$0B
         sta     L8E0F
         jsr     L4510
@@ -8738,7 +8686,7 @@ L8E04:  dec     L8E0F
         bne     L8DC7
         rts
 
-L8E0F:  brk
+L8E0F:  .byte   0
 L8E10:  A2D_RELAY_CALL A2D_DRAW_RECT, $E230
         rts
 
@@ -8824,11 +8772,11 @@ L8ED6:  lda     L8E67
         jsr     L46BA
         rts
 
-        brk
-        brk
-        brk
-        brk
-        brk
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
 L8F00:  jmp     L8FC5
 
         jmp     L97E3
@@ -9006,7 +8954,7 @@ L9066:  iny
         lda     (L0006),y
         sta     $E00A,y
         .byte   $C0
-L906D:  brk
+L906D:  .byte   0
         bne     L9066
         ldy     #$01
         lda     #$20
@@ -9127,26 +9075,26 @@ L9168:  jsr     L917F
         lda     #$00
         rts
 
-L917A:  brk
-        brk
+L917A:  .byte   0
+        .byte   0
 L917C:  .byte   $4C
-L917D:  brk
-L917E:  brk
+L917D:  .byte   0
+L917E:  .byte   0
 L917F:  .byte   $4C
-L9180:  brk
-L9181:  brk
+L9180:  .byte   0
+L9181:  .byte   0
 L9182:  .byte   $4C
-L9183:  brk
-L9184:  brk
+L9183:  .byte   0
+L9184:  .byte   0
 L9185:  .byte   $4C
-L9186:  brk
-L9187:  brk
-L9188:  brk
-L9189:  brk
-L918A:  brk
-L918B:  brk
-L918C:  brk
-L918D:  brk
+L9186:  .byte   0
+L9187:  .byte   0
+L9188:  .byte   0
+L9189:  .byte   0
+L918A:  .byte   0
+L918B:  .byte   0
+L918C:  .byte   0
+L918D:  .byte   0
 L918E:  asl     a
         tay
         lda     $DD9F,y
@@ -9168,7 +9116,7 @@ L91AB:  iny
         lda     ($08),y
         sta     $E00A,x
         .byte   $C0
-L91B3:  brk
+L91B3:  .byte   0
         bne     L91AB
 L91B6:  inx
         lda     #$2F
@@ -9183,7 +9131,7 @@ L91C6:  iny
         lda     (L0006),y
         sta     $E00A,x
         .byte   $C0
-L91CE:  brk
+L91CE:  .byte   0
         bne     L91C6
 L91D1:  stx     $E00A
         rts
@@ -9220,8 +9168,8 @@ L91F5:  lda     #$11
         lda     #$00
 L9210:  rts
 
-        brk
-        brk
+        .byte   0
+        .byte   0
 L9213:  lda     $DF21
         bne     L9219
         rts
@@ -9247,12 +9195,12 @@ L923E:  inc     L924A
         bne     L9231
         rts
 
-L924A:  brk
+L924A:  .byte   0
 L924B:  sta     L9254
         ldy     #$00
 L9250:  lda     $E1A0,y
         .byte   $C9
-L9254:  brk
+L9254:  .byte   0
         beq     L9260
         cpy     $BF31
         beq     L925F
@@ -9277,7 +9225,7 @@ L9271:  stx     L9284
         adc     L9284
         sta     L9284
         .byte   $AD
-L9284:  brk
+L9284:  .byte   0
         bbs3    $85,L928F
         lda     #$00
         sta     L0006
@@ -9469,7 +9417,7 @@ L9423:  lda     #$00
 L9428:  jsr     L953F
         jmp     L942F
 
-L942E:  brk
+L942E:  .byte   0
 L942F:  lda     #$03
         sta     L92E3
         lda     #$00
@@ -9608,8 +9556,8 @@ L9558:  lda     $E6EC,x
         .byte   $02
         jsr     RAMRDOFF
         .byte   $1F
-L956E:  brk
-        brk
+L956E:  .byte   0
+        .byte   0
 L9570:  .byte   $1F
 L9571:  lda     #$00
         sta     L9706
@@ -10007,7 +9955,7 @@ L9912:  lda     $E05D
 
 L9920:  jmp     L983F
 
-L9923:  brk
+L9923:  .byte   0
 L9924:  jmp     (L97DD)
 
 L9927:  jmp     (L97DF)
@@ -10247,14 +10195,14 @@ L9B23:  lda     L9B30
         beq     L9B2D
 L9B28:  jmp     L98D8
 
-        brk
+        .byte   0
 L9B2C:  rts
 
 L9B2D:  jmp     L9CDA
 
-L9B30:  brk
-L9B31:  brk
-L9B32:  brk
+L9B30:  .byte   0
+L9B31:  .byte   0
+L9B32:  .byte   0
         jmp     LA360
 
         jsr     LA3D1
@@ -10347,8 +10295,8 @@ L9BDA:  lda     L978C
 
 L9BFE:  rts
 
-L9BFF:  brk
-L9C00:  brk
+L9BFF:  .byte   0
+L9C00:  .byte   0
 L9C01:  jsr     L9C1A
         bcc     L9C19
         lda     #$04
@@ -10443,12 +10391,12 @@ L9CCD:  lda     L9CD6
         sta     $1FC0
         rts
 
-L9CD4:  brk
-L9CD5:  brk
-L9CD6:  brk
-L9CD7:  brk
-L9CD8:  brk
-L9CD9:  brk
+L9CD4:  .byte   0
+L9CD5:  .byte   0
+L9CD6:  .byte   0
+L9CD7:  .byte   0
+L9CD8:  .byte   0
+L9CD9:  .byte   0
 L9CDA:  jsr     LA2F1
         lda     #$00
         sta     L9E17
@@ -10592,8 +10540,8 @@ L9E0D:  ldy     #$CC
         jsr     L4021
         rts
 
-L9E17:  brk
-L9E18:  brk
+L9E17:  .byte   0
+L9E18:  .byte   0
 L9E19:  ldx     #$07
 L9E1B:  lda     L9774,x
         sta     L975A,x
@@ -10645,9 +10593,9 @@ L9E73:  sty     $9F,x
         .byte   $E3
         smb1    $2E
         .byte   $A0
-L9E79:  brk
-L9E7A:  brk
-L9E7B:  brk
+L9E79:  .byte   0
+L9E7A:  .byte   0
+L9E7B:  .byte   0
         .byte   $20
         .byte   $02
 L9E7E:  sta     L9E79
@@ -10724,8 +10672,8 @@ L9F18:  jmp     L9F1E
 
         rts
 
-L9F1C:  brk
-L9F1D:  brk
+L9F1C:  .byte   0
+L9F1D:  .byte   0
 L9F1E:  bit     $E05C
         bmi     L9F26
         jsr     LA3EF
@@ -10875,9 +10823,9 @@ LA04E:  bvs     L9FF1
         .byte   $E3
         smb1    $E3
         .byte   $97
-LA054:  brk
-LA055:  brk
-LA056:  brk
+LA054:  .byte   0
+LA055:  .byte   0
+LA056:  .byte   0
         .byte   $20
         .byte   $02
 LA059:  lda     #$00
@@ -11009,8 +10957,8 @@ LA158:  sta     LA168
         bne     LA16A
         rts
 
-LA168:  brk
-LA169:  brk
+LA168:  .byte   0
+LA169:  .byte   0
 LA16A:  jsr     LA173
         jmp     LA2FD
 
@@ -11065,7 +11013,7 @@ LA1C3:  lda     LA2ED
 
 LA1DC:  jmp     LA100
 
-LA1DF:  brk
+LA1DF:  .byte   0
         sbc     $EFA2
         .byte   $A2
 LA1E4:  lda     #$00
@@ -11161,8 +11109,8 @@ LA299:  sta     LA2A9
         bne     LA2AB
         rts
 
-LA2A9:  brk
-LA2AA:  brk
+LA2A9:  .byte   0
+LA2AA:  .byte   0
 LA2AB:  jmp     LA2AE
 
 LA2AE:  bit     L9189
@@ -11190,10 +11138,10 @@ LA2E4:  lda     LA2ED
         ldx     LA2EE
         jmp     L917C
 
-LA2ED:  brk
-LA2EE:  brk
-LA2EF:  brk
-LA2F0:  brk
+LA2ED:  .byte   0
+LA2EE:  .byte   0
+LA2EF:  .byte   0
+LA2F0:  .byte   0
 LA2F1:  lda     LA2ED
         bne     LA2F9
         dec     LA2EE
@@ -11355,7 +11303,7 @@ LA40A:  lda     LA2ED
         jsr     LA500
         rts
 
-LA425:  brk
+LA425:  .byte   0
 LA426:  jsr     LA46D
         lda     #$C3
         sta     L978A
@@ -11435,61 +11383,14 @@ LA4BA:  jsr     L4030
 
 LA4C2:  jmp     LA39F
 
-LA4C5:  brk
+LA4C5:  .byte   0
 LA4C6:  ldy     #$C5
         lda     #$A9
         ldx     #$97
         jsr     L4021
         rts
 
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+        .res    48, 0
 LA500:  jmp     LA520
 
 LA503:  .byte   $9C
@@ -11526,8 +11427,8 @@ LA520:  sta     LA51D
         sta     LA89B
         jsr     LB403
         .byte   $4C
-LA565:  brk
-LA566:  brk
+LA565:  .byte   0
+LA566:  .byte   0
 LA567:  lda     $D8E8
         beq     LA579
         dec     $D8E9
@@ -11865,9 +11766,10 @@ LA895:  lda     #$FF
         rts
 
 LA899:  .byte   $4C
-LA89A:  brk
-LA89B:  brk
-        A2D_RELAY_CALL A2D_CREATE_WINDOW, $D62B
+LA89A:  .byte   0
+LA89B:  .byte   0
+
+LA89C:  A2D_RELAY_CALL A2D_CREATE_WINDOW, $D62B
         lda     $D62B
         jsr     LB7B9
         jsr     LB43B
@@ -12343,7 +12245,7 @@ LACFE:  sta     LAD1F
         jsr     LB590
         rts
 
-LAD1F:  brk
+LAD1F:  .byte   0
 LAD20:  lda     #$C9
         ldx     #$B0
         ldy     #$04
@@ -12665,8 +12567,8 @@ LB006:  jsr     LA567
         pla
         rts
 
-LB01D:  brk
-LB01E:  brk
+LB01D:  .byte   0
+LB01E:  .byte   0
 LB01F:  lda     #$A0
         sta     $D6C3
         lda     #$2A
@@ -13047,19 +12949,19 @@ LB3D8:  bit     LB3E6
         sta     LB3E6
 LB3E5:  rts
 
-LB3E6:  brk
+LB3E6:  .byte   0
         A2D_RELAY_CALL A2D_HIDE_CURSOR
-        A2D_RELAY_CALL A2D_SET_CURSOR, $D311
+        A2D_RELAY_CALL A2D_SET_CURSOR, $D311 ; watch
         A2D_RELAY_CALL A2D_SHOW_CURSOR
         rts
 
 LB403:  A2D_RELAY_CALL A2D_HIDE_CURSOR
-        A2D_RELAY_CALL A2D_SET_CURSOR, $D2AD
+        A2D_RELAY_CALL A2D_SET_CURSOR, $D2AD ; pointer
         A2D_RELAY_CALL A2D_SHOW_CURSOR
         rts
 
 LB41F:  A2D_RELAY_CALL A2D_HIDE_CURSOR
-        A2D_RELAY_CALL A2D_SET_CURSOR, $D2DF
+        A2D_RELAY_CALL A2D_SET_CURSOR, $D2DF ; insertion point
         A2D_RELAY_CALL A2D_SHOW_CURSOR
         rts
 
@@ -13143,15 +13045,15 @@ LB4F6:  lda     LB506
 LB4FD:  lda     #$00
         rts
 
-LB500:  brk
-LB501:  brk
-LB502:  brk
-LB503:  brk
-LB504:  brk
-LB505:  brk
-LB506:  brk
-LB507:  brk
-LB508:  brk
+LB500:  .byte   0
+LB501:  .byte   0
+LB502:  .byte   0
+LB503:  .byte   0
+LB504:  .byte   0
+LB505:  .byte   0
+LB506:  .byte   0
+LB507:  .byte   0
+LB508:  .byte   0
 LB509:  sta     $D8E7
         jsr     LB53A
         bit     $D8E7
@@ -13345,7 +13247,7 @@ LB732:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $0006
         A2D_RELAY_CALL A2D_DRAW_TEXT, $0006
         rts
 
-LB76B:  brk
+LB76B:  .byte   0
         sta     L0006
         stx     $07
         A2D_RELAY_CALL A2D_SET_POS, $D6BB
@@ -13395,7 +13297,7 @@ LB7B9:  sta     $D212
         lda     #$15
         .byte   $A2
 LB7CA:  cmp     (L0020)
-        brk
+        .byte   0
         bne     $B82F
 LB7CF:  lda     #$00
         jmp     LB7E8
@@ -13477,10 +13379,10 @@ LB880:  jmp     (LB886)
 
 LB883:  jmp     (LB888)
 
-LB886:  brk
-LB887:  brk
-LB888:  brk
-LB889:  brk
+LB886:  .byte   0
+LB887:  .byte   0
+LB888:  .byte   0
+LB889:  .byte   0
 LB88A:  sta     LB8F3
         lda     #$00
         sta     LB8F2
@@ -13520,8 +13422,8 @@ LB8EB:  jsr     LB883
         lda     LB8F3
         rts
 
-LB8F2:  brk
-LB8F3:  brk
+LB8F2:  .byte   0
+LB8F3:  .byte   0
         rts
 
 LB8F5:  jsr     LBD3B
@@ -13722,8 +13624,8 @@ LBAF7:  lda     $D3C1,y
 LBB05:  jsr     LB961
         rts
 
-LBB09:  brk
-LBB0A:  brk
+LBB09:  .byte   0
+LBB0A:  .byte   0
 LBB0B:  sta     LBB62
         lda     $D443
         clc
@@ -13757,7 +13659,7 @@ LBB1A:  lda     LBB62
         jsr     LB7B9
         rts
 
-LBB62:  brk
+LBB62:  .byte   0
 LBB63:  lda     $D443
         bne     LBB69
         rts
@@ -14018,26 +13920,26 @@ LBD9F:  sta     RAMRDON
         sta     RAMWRTOFF
         rts
 
-LBDB0:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+LBDB0:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
 LBDC4:  ldx     $D8FB
         lda     $D90A
         bne     LBDD9
@@ -14111,11 +14013,11 @@ LBE58:  rmb2    $E8
         .byte   $03
         stz     L0000
         asl     a
-        brk
-LBE5F:  brk
-LBE60:  brk
-LBE61:  brk
-LBE62:  brk
+        .byte   0
+LBE5F:  .byte   0
+LBE60:  .byte   0
+LBE61:  .byte   0
+LBE62:  .byte   0
 LBE63:  ldy     #$00
         lda     (L0006),y
         tay
