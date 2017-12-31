@@ -592,7 +592,12 @@ end:
         ;; Relay for main>aux A2D call (Y=call, X,A=params addr)
 .macro A2D_RELAY_CALL call, addr
         ldy     #(call)
+.if .paramcount > 1
         lda     #<(addr)
         ldx     #>(addr)
+.else
+        lda     #0
+        ldx     #0
+.endif
         jsr     desktop_A2D_RELAY
 .endmacro

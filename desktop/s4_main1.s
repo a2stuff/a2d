@@ -171,7 +171,7 @@ L410D:  jsr     L4113
 L4113:  A2D_RELAY_CALL A2D_REDRAW_WINDOW, $D209
         bne     L4151
         jsr     L4153
-        A2D_RELAY_CALL $3F, $0000 ; ???
+        A2D_RELAY_CALL $3F      ; ???
         rts
 
 L412B:  lda     #$00
@@ -832,7 +832,7 @@ L4755:  ldy     #$06
         lda     #$00
         ldx     #$00
         jsr     DESKTOP_RELAY
-        A2D_RELAY_CALL $3A, $0000 ; ???
+        A2D_RELAY_CALL $3A      ; ???
         A2D_RELAY_CALL A2D_SET_MENU, $E680
         ldx     $D355
 L4773:  lda     $D355,x
@@ -944,10 +944,10 @@ L489A:  jsr     L48AA
         jsr     L48B4
         rts
 
-L48AA:  A2D_RELAY_CALL A2D_HIDE_CURSOR, 0
+L48AA:  A2D_RELAY_CALL A2D_HIDE_CURSOR
         rts
 
-L48B4:  A2D_RELAY_CALL A2D_SHOW_CURSOR, 0
+L48B4:  A2D_RELAY_CALL A2D_SHOW_CURSOR
         rts
 
 L48BE:  ldx     $E196
@@ -2652,10 +2652,10 @@ L578B:  rts
 
 L578C:  brk
 L578D:  brk
-L578E:  A2D_RELAY_CALL $22, $0000 ; ???
+L578E:  A2D_RELAY_CALL $22      ; ???
         jmp     L619B
 
-L579A:  A2D_RELAY_CALL $22, $0000 ; ???
+L579A:  A2D_RELAY_CALL $22      ; ???
         jmp     L60DB
 
 L57A6:  jsr     L5803
@@ -13095,14 +13095,14 @@ LB313:  jsr     LBEB1
         lda     #$01
         rts
 
-        A2D_RELAY_CALL A2D_HIDE_CURSOR, $0000
+        A2D_RELAY_CALL A2D_HIDE_CURSOR
         jsr     LB55F
         lda     $D57D
         jsr     LB7B9
         lda     #$B3
         ldx     #$B4
         jsr     LB723
-        A2D_RELAY_CALL A2D_SHOW_CURSOR, $0000
+        A2D_RELAY_CALL A2D_SHOW_CURSOR
         jsr     LB3BF
         ldy     #$00
         lda     (L0006),y
@@ -13174,19 +13174,19 @@ LB3D8:  bit     LB3E6
 LB3E5:  rts
 
 LB3E6:  brk
-        A2D_RELAY_CALL A2D_HIDE_CURSOR, $0000
+        A2D_RELAY_CALL A2D_HIDE_CURSOR
         A2D_RELAY_CALL A2D_SET_CURSOR, $D311
-        A2D_RELAY_CALL A2D_SHOW_CURSOR, $0000
+        A2D_RELAY_CALL A2D_SHOW_CURSOR
         rts
 
-LB403:  A2D_RELAY_CALL A2D_HIDE_CURSOR, $0000
+LB403:  A2D_RELAY_CALL A2D_HIDE_CURSOR
         A2D_RELAY_CALL A2D_SET_CURSOR, $D2AD
-        A2D_RELAY_CALL A2D_SHOW_CURSOR, $0000
+        A2D_RELAY_CALL A2D_SHOW_CURSOR
         rts
 
-LB41F:  A2D_RELAY_CALL A2D_HIDE_CURSOR, $0000
+LB41F:  A2D_RELAY_CALL A2D_HIDE_CURSOR
         A2D_RELAY_CALL A2D_SET_CURSOR, $D2DF
-        A2D_RELAY_CALL A2D_SHOW_CURSOR, $0000
+        A2D_RELAY_CALL A2D_SHOW_CURSOR
         rts
 
 LB43B:  A2D_RELAY_CALL A2D_SET_FILL_MODE, $D202
