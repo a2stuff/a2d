@@ -1,4 +1,4 @@
-        .setcpu "65C02"
+        .setcpu "6502"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
@@ -628,15 +628,15 @@ L45D9:  stx     L45EC
         clc
         adc     L45EC
         sta     L45EC
-        .byte   $AD
-L45EC:  .byte   0
-        bbs3    $85,L45F7
-        lda     #$00
+        L45EC := *+1
+        lda     $BF00
+        sta     L0006+1
+        lda     #0
         sta     L0006
         ldy     #$07
-        .byte   $B1
-L45F7:  asl     $D0
-        and     $FFA0
+        lda     (L0006),y
+        bne     L4627
+        ldy     #$FF
         lda     (L0006),y
         clc
         adc     #$03
@@ -652,18 +652,20 @@ L45F7:  asl     $D0
         lsr     a
         lsr     a
         plp
-        .byte   $69
-L4612:  ora     ($8D,x)
-        dec     a
-        lsr     L0020
-        bit     $46,x
-        .byte   0
-        and     LAD46,y
-        rol     $2946,x
-        bpl     L4612
-        tsb     $A9
-        bbs7    $D0,L4629
-        lda     #$00
+
+        adc     #1
+        sta     L463A
+
+        jsr     L4634
+        .byte   0               ; ???
+        .addr   $4639
+
+        lda     $463E
+        and     #$10
+        beq     $4627
+        lda     #$FF
+        bne     $4629
+L4627:  lda     #$00
 L4629:  sta     L4638
         pla
         tay
@@ -1199,15 +1201,17 @@ L4B15:  sta     L4B2B
         lda     LCBANK2
         ldx     $D3EE
 L4B27:  lda     $D3EE,x
-        .byte   $9D
-L4B2B:  .byte   $34
-L4B2C:  ora     ($CA)
+
+        L4B2B := *+1
+        L4B2C := *+2
+        sta     $1234,x
+
+        dex
         bpl     L4B27
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         rts
-
         sta     L4B50
         stx     L4B51
         sta     ALTZPOFF
@@ -1215,9 +1219,10 @@ L4B2C:  ora     ($CA)
         lda     LCBANK2
         ldx     $D3AD
 L4B4C:  lda     $D3AD,x
-        .byte   $9D
-L4B50:  .byte   $34
-L4B51:  ora     ($CA)
+        L4B50 := *+1
+        L4B51 := *+2
+        sta     $1234,x
+        dex
         bpl     L4B4C
         sta     ALTZPON
         lda     LCBANK1
@@ -1274,7 +1279,7 @@ L4BB1:  .byte   0
         jsr     LA500
         jmp     L4523
 
-        bra     L4BE0
+        .byte   $80,$20         ; ???
         bpl     L4C07
         jsr     L488A
         lda     $E25B
@@ -1291,10 +1296,9 @@ L4BB1:  .byte   0
         lda     (L0006),y
         tay
         clc
-        .byte   $6D
-        .byte   $87
-L4BE0:  jmp     LAA48
-
+        adc     $4C87
+        pha
+        tax
 L4BE3:  lda     (L0006),y
         sta     L4C88,x
         dex
@@ -6112,10 +6116,7 @@ L77BF:  lda     (L0006),y
         bne     L77BF
 L77CC:  lda     #$01
         bne     L77DA
-L77D0:  rmb0    $2E
-        .byte   $53
-        eor     L5453,y
-        eor     $4D
+L77D0:  PASCAL_STRING ".SYSTEM"
 L77D8:  lda     #$FF
 L77DA:  tay
         lda     LCBANK1
@@ -6484,11 +6485,7 @@ L7B4A:  lda     L7B5B
         rts
 
 L7B53:  .byte   $10
-L7B54:  rmb2    $E8
-        .byte   $03
-        stz     L0000
-        asl     a
-        .byte   0
+L7B54:  .byte   $27,$E8,$03,$64,$00,$0A,$00
 L7B5B:  .byte   0
 L7B5C:  .byte   0
 L7B5D:  .byte   0
@@ -7306,10 +7303,7 @@ L8262:  .byte   $20
         .byte   "Blocks "
 L826A:  .byte   $10             ; ???
 L826B:  .byte   $27,$E8
-        .byte   $03
-        stz     L0000
-        asl     a
-        .byte   0
+        .byte   $03,$64,$00,$0A,$00
 L8272:  .byte   0
 L8273:  .byte   0
 L8274:  .byte   0
@@ -7513,12 +7507,7 @@ year_string_10s := *-2          ; 10s digit
 year_string_1s  := *-1          ; 1s digit
 
 L8490:  .byte   $09             ; ????
-        asl     a
-        trb     $1E
-        plp
-        and     ($3C)
-        lsr     $50
-        phy
+        .byte   $0A,$14,$1E,$28,$32,$3C,$46,$50,$5A
 
 ascii_digits:
         .byte   "0123456789"
@@ -8253,11 +8242,10 @@ L8A22:  lda     $0801,x
         lsr     a
         ora     #$C0
         sta     L8A54
-        .byte   $AD
-        .byte   $FB
-L8A54:  smb4    $29
-        ora     ($F0,x)
-        .byte   $0E
+        L8A54 := *+2
+        lda     $C7FB
+        and     #$01
+        beq     L8A67
 L8A59:  ldy     #$07
         lda     #$CC
         sta     (L0006),y
@@ -8904,7 +8892,8 @@ L8FFF:  .byte   $2C
 L9000:  txa
         sta     ($10),y
         ora     $20AD
-        bbs5    $F0,L900C
+        .byte   $DF             ; ???
+        beq     L900C
         jmp     L908C
 
 L900C:  pla
@@ -9224,9 +9213,9 @@ L9271:  stx     L9284
         clc
         adc     L9284
         sta     L9284
-        .byte   $AD
-L9284:  .byte   0
-        bbs3    $85,L928F
+        L9284 := *+1
+        lda     $BF00
+        sta     L0006+1
         lda     #$00
         sta     L0006
         ldy     #$07
@@ -9255,11 +9244,12 @@ L928F:  asl     $D0
         adc     #$01
         sta     L92C1
         jsr     L92BD
-        tsb     $C0
-        sta     ($60)
+        .byte   $04
+        .addr   L92C0
+        rts
 L92BD:  jmp     (L0006)
 
-        .byte   $03
+L92C0:  .byte   $03
 L92C1:  .byte   $00,$C5,$92,$04,$00,$00
 L92C7:  .byte   $00,$00,$0A,$20,$02
 L92CC:  .byte   $00
@@ -10589,10 +10579,7 @@ L9E6F:  clc
 L9E71:  sec
         rts
 
-L9E73:  sty     $9F,x
-        .byte   $E3
-        smb1    $2E
-        .byte   $A0
+L9E73:  .byte   $94,$9F,$E3,$97,$2E,$A0
 L9E79:  .byte   0
 L9E7A:  .byte   0
 L9E7B:  .byte   0
@@ -10819,10 +10806,7 @@ LA044:  ldy     #$02
         jsr     LA500
         rts
 
-LA04E:  bvs     L9FF1
-        .byte   $E3
-        smb1    $E3
-        .byte   $97
+LA04E:  .byte   $70,$A1,$E3,$97,$E3,$97
 LA054:  .byte   0
 LA055:  .byte   0
 LA056:  .byte   0
@@ -11061,9 +11045,7 @@ LA21F:  rts
         jsr     LA500
 LA241:  rts
 
-LA242:  ldx     $E3A2
-        smb1    $E3
-        .byte   $97
+LA242:  .byte   $AE,$A2,$E3,$97,$E3,$97
 LA248:  lda     #$00
         sta     LA425
         ldy     #$05
@@ -11940,10 +11922,10 @@ LA9E6:  ldy     #$01
         A2D_RELAY_CALL A2D_SET_POS, $AE82
         lda     #$43
         ldx     #$D4
-        .byte   $20
-        php
-LAA48:  smb3    $A0
-        asl     LBAA9
+        LAA48 := *+2            ; ???
+        jsr     $B708
+        ldy     #$0E
+        lda     #$BA
         ldx     #$B0
         jsr     A2D_RELAY
         lda     #$01
@@ -12930,11 +12912,11 @@ LB3A6:  .byte   $B4,$DC,$B4,$10,$B5,$DC,$B4,$10
         .byte   $B5,$30,$B5,$B1,$B4,$30,$B5,$B1
         .byte   $B4,$69,$B5,$B1,$B4,$9A,$B5,$C4
         .byte   $B5
-LB3BF:  .byte   $AD
-        ora     L85A5,x
-        asl     $AD
-        asl     L85A5,x
-        rmb0    $60
+LB3BF:  lda     $A51D
+        sta     L0006
+        lda     $A51E
+        sta     L0006+1
+        rts
 LB3CA:  bit     LB3E6
         bpl     LB3D7
         jsr     LB403
@@ -13295,10 +13277,10 @@ LB7B9:  sta     $D212
         A2D_RELAY_CALL A2D_QUERY_STATE, $D212
         ldy     #$04
         lda     #$15
-        .byte   $A2
-LB7CA:  cmp     (L0020)
-        .byte   0
-        bne     $B82F
+        LB7CA := *+1
+        ldx     #$D2
+        jsr     A2D_RELAY
+        rts
 LB7CF:  lda     #$00
         jmp     LB7E8
 
@@ -13330,21 +13312,11 @@ LB7E8:  pha
         jmp     LB88A
 
 LB808:  .byte   $1C
-LB809:  clv
+LB809:  .byte   $B8
 LB80A:  .byte   $4E
-LB80B:  clv
-        rol     $B8
-        cli
-        clv
-        bmi     LB7CA
-        .byte   $62
-        clv
-        dec     a
-        clv
-        jmp     (L44B8)
+LB80B:  .byte   $B8,$26,$B8,$58,$B8,$30,$B8,$62,$B8
+        .byte   $3A,$B8,$6C,$B8,$44,$B8,$76,$B8
 
-        clv
-        ror     $B8,x
         A2D_RELAY_CALL A2D_TEST_BOX, $AE20
         rts
 
@@ -14009,10 +13981,7 @@ LBE4E:  lda     LBE5F
         rts
 
 LBE57:  .byte   $10
-LBE58:  rmb2    $E8
-        .byte   $03
-        stz     L0000
-        asl     a
+LBE58:  .byte   $27,$E8,$03,$64,$00,$0A
         .byte   0
 LBE5F:  .byte   0
 LBE60:  .byte   0
