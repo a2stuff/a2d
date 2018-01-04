@@ -1,7 +1,7 @@
 
 CC65 = ~/dev/cc65/bin
 CAFLAGS = --target apple2enh --list-bytes 0
-CCFLAGS = --config apple2-asm.cfg
+CCFLAGS = --config asm.cfg
 
 TARGETS = s0_loader.built s123_aux.built s4_main1.built
 
@@ -17,7 +17,7 @@ clean:
 %.o: %.s $(HEADERS)
 	$(CC65)/ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
-%.built: %.o
+%.built: %.o asm.cfg
 	$(CC65)/ld65 $(CCFLAGS) -o $@ $<
 
 check:
