@@ -13327,7 +13327,7 @@ loop:   lda     $1F80,x
         .assert * = DESKTOP_COPY_TO_BUF, error, "Entry point mismatch"
         lda     #$00
 
-        sta     flag
+:       sta     flag
         jsr     DESKTOP_MAIN_PUSH_ADDRS
 
         lda     bufnum
@@ -13359,7 +13359,7 @@ set_copy_ptr:
         lda     table2,x         ; copy table2 entry to ptr
         sta     ptr
         lda     table2+1,x
-        sta     ptr
+        sta     ptr+1
         bit     flag
         bmi     copy_from
 

@@ -7246,7 +7246,9 @@ L81F7:  jsr     L821F
         jsr     L8253
         SETPOS_RELAY_CALL $E6E1
         jsr     L830F
-        SETPOS_RELAY_CALL $E6E5
+        lda     #<$E6E5
+        ldx     #>$E6E5
+        jmp     SETPOS_RELAY
 
 L821F:  lda     $EC43
         and     #$0F
