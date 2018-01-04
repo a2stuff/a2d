@@ -3,7 +3,7 @@ CC65 = ~/dev/cc65/bin
 CAFLAGS = --target apple2enh --list-bytes 0
 CCFLAGS = --config asm.cfg
 
-TARGETS = s0_loader.built s123_aux.built s4_main1.built
+TARGETS = loader.built a2d.built desktop.built
 
 .PHONY: clean all
 all: $(TARGETS)
@@ -21,6 +21,6 @@ clean:
 	$(CC65)/ld65 $(CCFLAGS) -o $@ $<
 
 check:
-	diff s0_loader.built orig/DESKTOP2_s0_loader
-	diff s123_aux.built orig/DESKTOP2_s123_aux
-	diff s4_main1.built orig/DESKTOP2_s4_main1
+	diff loader.built orig/DESKTOP2_s0_loader
+	diff a2d.built orig/DESKTOP2_s1_a2d
+	diff desktop.built orig/DESKTOP2_s2_desktop

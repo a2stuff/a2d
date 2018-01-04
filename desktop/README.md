@@ -29,6 +29,8 @@ The file is broken down into multiple segments:
 
 ### GUI Library "A2D"
 
+`a2d.s`
+
 AUX $4000-$8DFF is the GUI library used for the DeskTop application
 and (presumably) for disk copy and Selector apps (TBD).
 
@@ -38,12 +40,14 @@ Entry point is $4000 with a ProDOS MLI-style calling convention
 
 ### "DeskTop" Application
 
+`desktop.s`
+
 DeskTop application code is in the lower 48k of both Aux and Main:
 
 * Aux $8E00-$BFFF - sitting above the GUI library
 * Main $4000-$BEFF
 
-And in the Aux language card area (accessible from both aux and main code) are relays, buffers and resources:
+...and in the Aux language card area (accessible from both aux and main code) are relays, buffers and resources:
 
 * Aux $D000-$ECFF - relays and other aux/main helpers, resources (menus, strings, window)
 * Aux $ED00-$FAFF - hole for data buffer
