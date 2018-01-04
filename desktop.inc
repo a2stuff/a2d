@@ -5,6 +5,8 @@
 ;;; ==================================================
 ;;; Direct Calls
 
+;;; NOTE: Some of these are used by Desk Accessories
+
         ;; These must be called from main memory (RAMRDOFF/RAMWRTOFF)
 JUMP_TABLE_03   := $4003        ; Enter DeskTop input loop
 JUMP_TABLE_06   := $4006        ; ???
@@ -28,6 +30,8 @@ JUMP_TABLE_CUR_WATCH    := $403C ; Changes mouse cursor to watch
 JUMP_TABLE_3F   := $403F        ; ???
 
 ;;; ==================================================
+
+;;; NOTE: Some of these are used by Desk Accessories
 
 DESKTOP    := $8E00
         ;; MLI-style call (jsr A2D ; .byte call ; .addr params)
@@ -69,6 +73,12 @@ DESKTOP_REDRAW_ICONS := $0C     ; Repaints desktop icons
 .endmacro
 
 ;;; ==================================================
+;;; $D000 routines/pointers (called from MAIN)
+
+;;; These are used by the MAIN (and sometimes AUX) halves of DeskTop itself,
+;;; since this bank can be accessed from both AUX and MAIN.
+
+;;; TODO: move into "internal" include file
 
         ;; Relay for main>aux A2D call (Y=call, X,A=params addr)
 A2D_RELAY       := $D000
@@ -83,6 +93,15 @@ A2D_RELAY       := $D000
         ldx     #0
 .endif
         jsr     A2D_RELAY
+.endmacro
+
+        ;; SET_POS with params at (X,A) followed by DRAW_TEXT call
+SETPOS_RELAY    := $D01C
+
+.macro SETPOS_RELAY_CALL addr
+        lda     #<addr
+        ldx     #>addr
+        jsr     SETPOS_RELAY
 .endmacro
 
         ;; Relay for main>aux DESKTOP call (Y=call, X,A=params addr)
@@ -100,10 +119,29 @@ DESKTOP_RELAY   := $D040
         jsr     DESKTOP_RELAY
 .endmacro
 
+DESKTOP_FIND_SPACE      := $D05E ; Find space in AUX $1F80 table
+DESKTOP_FREE_SPACE      := $D082 ; Free space in AUX $1F80 table
+DESKTOP_COPY_FROM_BUF   := $D096 ; Copy from buffer to blocks around $1B00
+DESKTOP_COPY_TO_BUF     := $D09A ; Copy to buffer from blocks around $1B00
+DESKTOP_ASSIGN_STATE    := $D108 ; Assign active state to DESKTOP_WINID window
+DESKTOP_AUXLOAD         := $D13E ; Load AUX (X,A) into A
+DESKTOP_SHOW_ALERT0     := $D154 ; Show alert 0
+DESKTOP_SHOW_ALERT      := $D156 ; Show alert in X
 
+;;; Data fields providing parame for the above
+
+DESKTOP_BUFNUM          := $DE9F ; Buffer num for DESKTOP_COPY_*_BUF
+DESKTOP_WINID           := $EC25 ; Window ID for some operations ???
+
+;;; A handful of entry points in MAIN are referenced from AUX code
+
+DESKTOP_MAIN_PUSH_ADDRS := $87F6 ; Push two words from stack from $6/$8
+DESKTOP_MAIN_POP_ADDRS  := $8813 ; Pop two words from stack to $6/$8
 
 ;;; ==================================================
 ;;; DeskTop Internals
+
+;;; NOTE: Some of these are used by Desk Accessories
 
         ;; These are DeskTop internals, but it appears there is no
         ;; API for getting the selected file.

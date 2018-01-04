@@ -15,18 +15,6 @@ L0CB8           := $0CB8
 L0CD7           := $0CD7
 L0CF9           := $0CF9
 L0D14           := $0D14
-L2710           := $2710
-
-        ;; Various Main>Aux relays and routines
-LD01C           := $D01C
-LD05E           := $D05E
-LD082           := $D082
-LD096           := $D096
-LD09A           := $D09A
-LD108           := $D108
-LD13E           := $D13E
-LD154           := $D154
-LD156           := $D156
 
         .org $4000
 
@@ -40,7 +28,7 @@ L4009:  jmp     L830F
 
         jmp     L5E78
 
-        jmp     LD13E
+        jmp     DESKTOP_AUXLOAD
 
 L4012:  jmp     L5050
 
@@ -54,17 +42,17 @@ L401E:  jmp     L6D2B
 
 L4021:  jmp     L46BA
 
-        jmp     LD09A
+        jmp     DESKTOP_COPY_TO_BUF
 
-        jmp     LD096
+        jmp     DESKTOP_COPY_FROM_BUF
 
         jmp     L490E
 
 L402D:  jmp     L8707
 
-L4030:  jmp     LD154
+L4030:  jmp     DESKTOP_SHOW_ALERT0
 
-L4033:  jmp     LD156
+L4033:  jmp     DESKTOP_SHOW_ALERT
 
         jmp     L46DE
 
@@ -94,8 +82,8 @@ L4051:  cpx     $DEA0
         jmp     L4051
 
 L4069:  lda     #$00
-        sta     $DE9F
-        jsr     LD096
+        sta     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_FROM_BUF
         lda     #$00
         sta     $D2A9
         sta     $D2AA
@@ -104,7 +92,7 @@ L4069:  lda     #$00
         lda     L599F
         beq     L4088
         tay
-        jsr     LD154
+        jsr     DESKTOP_SHOW_ALERT0
 L4088:  jsr     L4510
         inc     L40DF
         inc     L40DF
@@ -134,7 +122,7 @@ L40BD:  cmp     #$03
 L40C7:  cmp     #$06
         bne     L40DC
         jsr     L4510
-        lda     $EC25
+        lda     DESKTOP_WINID
         sta     L40F0
         lda     #$80
         sta     L40F1
@@ -153,7 +141,7 @@ L40E0:  tsx
 L40F0:  .byte   $00
 L40F1:  .byte   $00
 L40F2:  jsr     L4510
-        lda     $EC25
+        lda     DESKTOP_WINID
         sta     L40F0
         lda     #$00
         sta     L40F1
@@ -172,10 +160,10 @@ L4113:  A2D_RELAY_CALL A2D_REDRAW_WINDOW, $D209
         rts
 
 L412B:  lda     #$00
-        sta     $DE9F
-        jsr     LD09A
+        sta     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_TO_BUF
         lda     L40F0
-        sta     $EC25
+        sta     DESKTOP_WINID
         beq     L4143
         bit     L4CA1
         bmi     L4143
@@ -191,19 +179,19 @@ L4153:  lda     $D209
         bcc     L415B
         rts
 
-L415B:  sta     $EC25
-        sta     $DE9F
-        jsr     LD09A
+L415B:  sta     DESKTOP_WINID
+        sta     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_TO_BUF
         lda     #$80
         sta     L4152
-        lda     $DE9F
+        lda     DESKTOP_BUFNUM
         sta     $D212
         jsr     L4505
         jsr     L78EF
-        lda     $EC25
+        lda     DESKTOP_WINID
         jsr     L8855
-        jsr     LD108
-        lda     $EC25
+        jsr     DESKTOP_ASSIGN_STATE
+        lda     DESKTOP_WINID
         jsr     L86EF
         sta     L0006
         stx     $07
@@ -238,17 +226,17 @@ L415B:  sta     $EC25
         dex
         lda     $D215,x
         sta     (L0006),y
-L41CB:  ldx     $DE9F
+L41CB:  ldx     DESKTOP_BUFNUM
         dex
         lda     $E6D1,x
         bpl     L41E2
         jsr     L6C19
         lda     #$00
         sta     L4152
-        lda     $EC25
+        lda     DESKTOP_WINID
         jmp     L8874
 
-L41E2:  lda     $DE9F
+L41E2:  lda     DESKTOP_BUFNUM
         sta     $D212
         jsr     L44F2
         jsr     L6E52
@@ -273,11 +261,11 @@ L4221:  inc     L4241
 
 L4227:  lda     #$00
         sta     L4152
-        lda     $DE9F
+        lda     DESKTOP_BUFNUM
         sta     $D212
         jsr     L44F2
         jsr     L6E6E
-        lda     $EC25
+        lda     DESKTOP_WINID
         jsr     L8874
         jmp     L4510
 
@@ -292,9 +280,9 @@ L424A:  lda     #$00
         sta     L42C3
         lda     $DF20
         beq     L42A5
-        cmp     $EC25
+        cmp     DESKTOP_WINID
         bne     L4249
-        lda     $EC25
+        lda     DESKTOP_WINID
         sta     $D212
         jsr     L4505
         jsr     L6E8E
@@ -443,7 +431,7 @@ L4418:  cmp     #$01
         jmp     L43AD
 
 L4428:  pha
-        lda     $EC25
+        lda     DESKTOP_WINID
         cmp     $D20E
         beq     L4435
         pla
@@ -502,17 +490,17 @@ L445D:  jsr     L6D2B
         sta     $DF22
 L44A6:  A2D_RELAY_CALL A2D_RAISE_WINDOW, $D20E
         lda     $D20E
-        sta     $EC25
-        sta     $DE9F
-L44B8:  jsr     LD09A
+        sta     DESKTOP_WINID
+        sta     DESKTOP_BUFNUM
+L44B8:  jsr     DESKTOP_COPY_TO_BUF
         jsr     L6C19
         lda     #$00
-        sta     $DE9F
-        jsr     LD09A
+        sta     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_TO_BUF
         lda     #$00
         sta     $E269
         A2D_RELAY_CALL $36, $E267 ; ???
-        ldx     $EC25
+        ldx     DESKTOP_WINID
         dex
         lda     $E6D1,x
         and     #$0F
@@ -777,7 +765,7 @@ L470C:  iny
         ldx     #$46
         jsr     L46BA
         beq     L472B
-        jsr     LD154
+        jsr     DESKTOP_SHOW_ALERT0
         rts
 
 L472B:  lda     L46E5
@@ -862,7 +850,7 @@ L47F6:  lda     $1800,x
         dex
         bne     L47F6
 L4800:  lda     #$FE
-L4802:  jsr     LD154
+L4802:  jsr     DESKTOP_SHOW_ALERT0
         pla
         pla
         rts
@@ -1556,7 +1544,7 @@ L4E1A:  sta     L4E71
         cmp     #$02
         bcs     L4E14
         pla
-        lda     $EC25
+        lda     DESKTOP_WINID
         jsr     L86FB
         sta     L0006
         stx     $07
@@ -1597,20 +1585,20 @@ L4E51:  lda     (L0006),y
 L4E6E:  jmp     L46DE
 
 L4E71:  .byte   0
-L4E72:  lda     $EC25
+L4E72:  lda     DESKTOP_WINID
         bne     L4E78
         rts
 
 L4E78:  jsr     L6D2B
         dec     $EC2E
-        lda     $EC25
-        sta     $DE9F
-        jsr     LD09A
-        ldx     $EC25
+        lda     DESKTOP_WINID
+        sta     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_TO_BUF
+        ldx     DESKTOP_WINID
         dex
         lda     $E6D1,x
         bmi     L4EB4
-        DESKTOP_RELAY_CALL $07, $EC25
+        DESKTOP_RELAY_CALL $07, DESKTOP_WINID
         lda     $DD9E
         sec
         sbc     $DEA0
@@ -1619,7 +1607,7 @@ L4E78:  jsr     L6D2B
 L4EA5:  cpx     $DEA0
         beq     L4EB4
         lda     $DEA1,x
-        jsr     LD082
+        jsr     DESKTOP_FREE_SPACE
         inx
         jmp     L4EA5
 
@@ -1632,12 +1620,12 @@ L4EB7:  sta     $DEA1,x
         jmp     L4EB7
 
 L4EC3:  sta     $DEA0
-        jsr     LD096
+        jsr     DESKTOP_COPY_FROM_BUF
         lda     #$00
-        sta     $DE9F
-        jsr     LD09A
-        A2D_RELAY_CALL A2D_DESTROY_WINDOW, $EC25
-        ldx     $EC25
+        sta     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_TO_BUF
+        A2D_RELAY_CALL A2D_DESTROY_WINDOW, DESKTOP_WINID
+        ldx     DESKTOP_WINID
         dex
         lda     $EC26,x
         sta     $E22F
@@ -1657,16 +1645,16 @@ L4EC3:  sta     $DEA0
         sta     $DF21
         lda     $E22F
         sta     $DF22
-        ldx     $EC25
+        ldx     DESKTOP_WINID
         dex
         lda     $EC26,x
         jsr     L7345
-        ldx     $EC25
+        ldx     DESKTOP_WINID
         dex
         lda     #$00
         sta     $EC26,x
-        A2D_RELAY_CALL A2D_QUERY_TOP, $EC25
-        lda     $EC25
+        A2D_RELAY_CALL A2D_QUERY_TOP, DESKTOP_WINID
+        lda     DESKTOP_WINID
         bne     L4F3C
         DESKTOP_RELAY_CALL DESKTOP_REDRAW_ICONS
 L4F3C:  lda     #$00
@@ -1675,7 +1663,7 @@ L4F3C:  lda     #$00
         jsr     L66A2
         jmp     L4510
 
-L4F50:  lda     $EC25
+L4F50:  lda     DESKTOP_WINID
         beq     L4F5B
         jsr     L4E72
         jmp     L4F50
@@ -1703,13 +1691,13 @@ L4F76:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00
-        lda     $EC25
+        lda     DESKTOP_WINID
         sta     L4F67
         ldy     #$03
         lda     #$67
         ldx     #$4F
         jsr     LA500
-L4FC6:  lda     $EC25
+L4FC6:  lda     DESKTOP_WINID
         beq     L4FD4
         jsr     L86FB
         sta     L4F68
@@ -1744,7 +1732,7 @@ L5000:  lda     $BF90,x
         ldx     #$4F
         jsr     L46BA
         beq     L5027
-        jsr     LD154
+        jsr     DESKTOP_SHOW_ALERT0
         lda     L504E
         sta     L4F68
         lda     L504F
@@ -1839,7 +1827,7 @@ L50C0:  lda     L509D,x
         jsr     MLI
         .byte   $65
         .addr   L50A3
-        ldx     $EC25
+        ldx     DESKTOP_WINID
         bne     L50FF
         rts
 
@@ -1848,9 +1836,9 @@ L50FF:  dex
         bne     L5106
         rts
 
-L5106:  lda     $EC25
-        sta     $DE9F
-        jsr     LD09A
+L5106:  lda     DESKTOP_WINID
+        sta     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_TO_BUF
         ldx     #$00
         txa
 L5112:  cpx     $DEA0
@@ -1861,22 +1849,22 @@ L5112:  cpx     $DEA0
 
 L511E:  sta     $DEA0
         lda     #$00
-        ldx     $EC25
+        ldx     DESKTOP_WINID
         dex
         sta     $E6D1,x
         jsr     L52DF
-        lda     $EC25
+        lda     DESKTOP_WINID
         sta     $D212
         jsr     L4505
         jsr     L6E8E
         jsr     L4904
         A2D_RELAY_CALL A2D_FILL_RECT, $D21D
-        lda     $EC25
+        lda     DESKTOP_WINID
         jsr     L7D5D
         sta     L51EB
         stx     L51EC
         sty     L51ED
-        lda     $EC25
+        lda     DESKTOP_WINID
         jsr     L86EF
         sta     L0006
         stx     $07
@@ -1893,9 +1881,9 @@ L516D:  lda     L51EB,x
         dey
         dex
         bpl     L516D
-        lda     $EC25
+        lda     DESKTOP_WINID
         jsr     L763A
-        lda     $EC25
+        lda     DESKTOP_WINID
         sta     $D212
         jsr     L44F2
         jsr     L6E52
@@ -1914,7 +1902,7 @@ L518D:  lda     L51EF
 
 L51A7:  jsr     L4510
         jsr     L6E6E
-        jsr     LD096
+        jsr     DESKTOP_COPY_FROM_BUF
         jsr     L6DB1
         lda     $DF20
         beq     L51E3
@@ -1932,34 +1920,34 @@ L51C0:  ldx     L51EF
         dec     L51EF
         bne     L51C0
 L51E3:  lda     #$00
-        sta     $DE9F
-        jmp     LD09A
+        sta     DESKTOP_BUFNUM
+        jmp     DESKTOP_COPY_TO_BUF
 
 L51EB:  .byte   0
 L51EC:  .byte   0
 L51ED:  .byte   0
         .byte   0
 L51EF:  .byte   0
-L51F0:  ldx     $EC25
+L51F0:  ldx     DESKTOP_WINID
         dex
         sta     $E6D1,x
-        lda     $EC25
-        sta     $DE9F
-        jsr     LD09A
+        lda     DESKTOP_WINID
+        sta     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_TO_BUF
         jsr     L7D9C
-        jsr     LD096
-        lda     $EC25
+        jsr     DESKTOP_COPY_FROM_BUF
+        lda     DESKTOP_WINID
         sta     $D212
         jsr     L4505
         jsr     L6E8E
         jsr     L4904
         A2D_RELAY_CALL A2D_FILL_RECT, $D21D
-        lda     $EC25
+        lda     DESKTOP_WINID
         jsr     L7D5D
         sta     L5263
         stx     L5264
         sty     L5265
-        lda     $EC25
+        lda     DESKTOP_WINID
         jsr     L86EF
         sta     L0006
         stx     $07
@@ -1989,7 +1977,7 @@ L5263:  .byte   0
 L5264:  .byte   0
 L5265:  .byte   0
         .byte   0
-        ldx     $EC25
+        ldx     DESKTOP_WINID
         bne     L526D
         rts
 
@@ -2006,7 +1994,7 @@ L527D:  jsr     L52DF
         lda     #$81
         jmp     L51F0
 
-        ldx     $EC25
+        ldx     DESKTOP_WINID
         bne     L528B
         rts
 
@@ -2023,7 +2011,7 @@ L529B:  jsr     L52DF
         lda     #$82
         jmp     L51F0
 
-        ldx     $EC25
+        ldx     DESKTOP_WINID
         bne     L52A9
         rts
 
@@ -2040,7 +2028,7 @@ L52B9:  jsr     L52DF
         lda     #$83
         jmp     L51F0
 
-        ldx     $EC25
+        ldx     DESKTOP_WINID
         bne     L52C7
         rts
 
@@ -2067,10 +2055,10 @@ L52DF:  lda     #$00
         A2D_RELAY_CALL $36, $E267 ; ???
         rts
 
-L5302:  DESKTOP_RELAY_CALL $07, $EC25
-        lda     $EC25
-        sta     $DE9F
-        jsr     LD09A
+L5302:  DESKTOP_RELAY_CALL $07, DESKTOP_WINID
+        lda     DESKTOP_WINID
+        sta     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_TO_BUF
         lda     $DD9E
         sec
         sbc     $DEA0
@@ -2079,16 +2067,16 @@ L5302:  DESKTOP_RELAY_CALL $07, $EC25
 L5320:  cpx     $DEA0
         beq     L5334
         lda     $DEA1,x
-        jsr     LD082
+        jsr     DESKTOP_FREE_SPACE
         lda     #$00
         sta     $DEA1,x
         inx
         jmp     L5320
 
-L5334:  jsr     LD096
+L5334:  jsr     DESKTOP_COPY_FROM_BUF
         lda     #$00
-        sta     $DE9F
-        jmp     LD09A
+        sta     DESKTOP_BUFNUM
+        jmp     DESKTOP_COPY_TO_BUF
 
 L533F:  .byte   0
         lda     #$01
@@ -2176,7 +2164,7 @@ L53D0:  tax
 L53EF:  dec     L704B
         ldx     L704B
         lda     L704C,x
-        cmp     $EC25
+        cmp     DESKTOP_WINID
         beq     L5403
         sta     $D20E
         jsr     L4459
@@ -2234,10 +2222,10 @@ L545A:  tax
         bpl     L5464
         jmp     L54C5
 
-L5464:  lda     $EC25
-        sta     $DE9F
-        jsr     LD09A
-        lda     $EC25
+L5464:  lda     DESKTOP_WINID
+        sta     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_TO_BUF
+        lda     DESKTOP_WINID
         jsr     L86EF
         sta     L0006
         stx     $07
@@ -2274,8 +2262,8 @@ L54B7:  pla
         jmp     L5485
 
 L54BD:  lda     #$00
-        sta     $DE9F
-        jsr     LD09A
+        sta     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_TO_BUF
 L54C5:  ldx     $1800
         ldy     #$00
 L54CA:  lda     $DEA1,y
@@ -2458,16 +2446,16 @@ L5661:  rts
         lda     $DF21
         beq     L566A
         jsr     L6D2B
-L566A:  ldx     $EC25
+L566A:  ldx     DESKTOP_WINID
         beq     L5676
         dex
         lda     $E6D1,x
         bpl     L5676
         rts
 
-L5676:  lda     $EC25
-        sta     $DE9F
-        jsr     LD09A
+L5676:  lda     DESKTOP_WINID
+        sta     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_TO_BUF
         lda     $DEA0
         bne     L5687
         jmp     L56F0
@@ -2480,7 +2468,7 @@ L568B:  lda     $DEA1,x
         bpl     L568B
         lda     $DEA0
         sta     $DF21
-        lda     $EC25
+        lda     DESKTOP_WINID
         sta     $DF20
         lda     $DF20
         sta     $E22C
@@ -2510,15 +2498,15 @@ L56E3:  dec     L56F8
         beq     L56F0
         jsr     L4510
 L56F0:  lda     #$00
-        sta     $DE9F
-        jmp     LD09A
+        sta     DESKTOP_BUFNUM
+        jmp     DESKTOP_COPY_TO_BUF
 
 L56F8:  .byte   0
 L56F9:  sta     $D212
         jsr     L4505
         jmp     L6E8E
 
-L5702:  lda     $EC25
+L5702:  lda     DESKTOP_WINID
         bne     L5708
         rts
 
@@ -2528,7 +2516,7 @@ L5708:  sta     L0800
 L570F:  lda     $EC26,x
         beq     L5720
         inx
-        cpx     $EC25
+        cpx     DESKTOP_WINID
         beq     L5721
         txa
         dex
@@ -2607,8 +2595,8 @@ L57A9:  jsr     L48E6
         cmp     #$1B
         bne     L57CB
 L57C2:  lda     #$00
-        sta     $DE9F
-        jsr     LD09A
+        sta     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_TO_BUF
         rts
 
 L57CB:  bit     L585D
@@ -2639,10 +2627,10 @@ L57F9:  cmp     #$0B
         jsr     L5853
         jmp     L57A9
 
-L5803:  lda     $EC25
-        sta     $DE9F
-        jsr     LD09A
-        ldx     $EC25
+L5803:  lda     DESKTOP_WINID
+        sta     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_TO_BUF
+        ldx     DESKTOP_WINID
         dex
         lda     $E6D1,x
         sta     L5B1B
@@ -2728,7 +2716,7 @@ L58AE:  beq     L58C1
 L58C1:  rts
 
         .byte   0
-L58C3:  lda     $EC25
+L58C3:  lda     DESKTOP_WINID
         jsr     L86EF
         sta     L0006
         stx     $07
@@ -2748,7 +2736,7 @@ L58C3:  lda     $EC25
         pla
         rts
 
-L58E2:  lda     $EC25
+L58E2:  lda     DESKTOP_WINID
         jsr     L86EF
         sta     L0006
         stx     $07
@@ -2770,8 +2758,8 @@ L58E2:  lda     $EC25
 
         lda     #$00
         sta     L599F
-        sta     $DE9F
-        jsr     LD09A
+        sta     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_TO_BUF
         jsr     L4F50
         jsr     L6D2B
         ldx     $DEA0
@@ -2787,7 +2775,7 @@ L5916:  lda     $DEA1,x
         sta     $DEA1,x
         DESKTOP_RELAY_CALL $04, $E22F
         lda     $E22F
-        jsr     LD082
+        jsr     DESKTOP_FREE_SPACE
         dec     $DEA0
         dec     $DD9E
         pla
@@ -2817,8 +2805,8 @@ L5976:  cpx     $DEA0
         bne     L5986
         lda     L599F
         beq     L5983
-        jsr     LD154
-L5983:  jmp     LD096
+        jsr     DESKTOP_SHOW_ALERT0
+L5983:  jmp     DESKTOP_COPY_FROM_BUF
 
 L5986:  txa
         pha
@@ -2842,8 +2830,8 @@ L59A4:  lda     #$80
 L59A8:  lda     #$C0
 L59AA:  sta     L5AD0
         lda     #$00
-        sta     $DE9F
-        jsr     LD09A
+        sta     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_TO_BUF
         bit     L5AD0
         bpl     L59EA
         bvc     L59D2
@@ -2904,7 +2892,7 @@ L5A2F:  ldx     L704B
         beq     L5A4C
         dex
         lda     L704C,x
-        cmp     $EC25
+        cmp     DESKTOP_WINID
         beq     L5A43
         sta     $D20E
         jsr     L4459
@@ -2915,8 +2903,8 @@ L5A43:  jsr     L61DC
 L5A4C:  jsr     L4523
         jsr     L6D2B
         lda     #$00
-        sta     $DE9F
-        jsr     LD09A
+        sta     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_TO_BUF
         lda     $E25B
         tay
         pha
@@ -2926,7 +2914,7 @@ L5A4C:  jsr     L4523
         jsr     L8AF4
         dec     $DD9E
         lda     $E22F
-        jsr     LD082
+        jsr     DESKTOP_FREE_SPACE
         jsr     L4510
         DESKTOP_RELAY_CALL $04, $E22F
 L5A7F:  lda     $DEA0
@@ -2944,9 +2932,9 @@ L5A7F:  lda     $DEA0
         cmp     #$2F
         beq     L5AA9
         pha
-        jsr     LD096
+        jsr     DESKTOP_COPY_FROM_BUF
         pla
-        jsr     LD154
+        jsr     DESKTOP_SHOW_ALERT0
         rts
 
 L5AA9:  lda     $DEA0
@@ -2958,7 +2946,7 @@ L5AA9:  lda     $DEA0
         jsr     L86E3
         ldy     #$01
         jsr     DESKTOP_RELAY
-L5AC0:  jsr     LD096
+L5AC0:  jsr     DESKTOP_COPY_FROM_BUF
         jmp     L4523
 
 L5AC6:  .res    10, 0
@@ -2998,10 +2986,10 @@ L5AEE:  sta     ALTZPOFF
 L5B19:  .byte   0
 L5B1A:  .byte   0
 L5B1B:  .byte   0
-L5B1C:  lda     $EC25
-        sta     $DE9F
-        jsr     LD09A
-        ldx     $EC25
+L5B1C:  lda     DESKTOP_WINID
+        sta     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_TO_BUF
+        ldx     DESKTOP_WINID
         dex
         lda     $E6D1,x
         sta     L5B1B
@@ -3025,7 +3013,7 @@ L5B53:  cmp     #$03
 
 L5B58:  cmp     #$01
         bne     L5BC1
-        lda     $EC25
+        lda     DESKTOP_WINID
         jsr     L86EF
         sta     L0006
         stx     $07
@@ -3072,7 +3060,7 @@ L5BB4:  jsr     L63EC
         bpl     L5BB4
         jmp     L5C26
 
-L5BC1:  lda     $EC25
+L5BC1:  lda     DESKTOP_WINID
         jsr     L86EF
         sta     L0006
         stx     $07
@@ -3119,10 +3107,10 @@ L5C19:  jsr     L64B0
         bpl     L5C19
         jmp     L5C26
 
-L5C26:  jsr     LD096
+L5C26:  jsr     DESKTOP_COPY_FROM_BUF
         lda     #$00
-        sta     $DE9F
-        jmp     LD09A
+        sta     DESKTOP_BUFNUM
+        jmp     DESKTOP_COPY_TO_BUF
 
 L5C31:  lda     $D20D
         sta     $D208
@@ -3132,10 +3120,10 @@ L5C31:  lda     $D20D
         rts
 
 L5C46:  jsr     L5C54
-        jsr     LD096
+        jsr     DESKTOP_COPY_FROM_BUF
         lda     #$00
-        sta     $DE9F
-        jmp     LD09A
+        sta     DESKTOP_BUFNUM
+        jmp     DESKTOP_COPY_TO_BUF
 
 L5C54:  lda     $D20D
         sta     $D209
@@ -3145,7 +3133,7 @@ L5C54:  lda     $D20D
         bit     L5B1B
         bmi     L5C71
         jsr     L6E6E
-L5C71:  lda     $EC25
+L5C71:  lda     DESKTOP_WINID
         sta     $D212
         jsr     L44F2
         A2D_RELAY_CALL A2D_FILL_RECT, $D21D
@@ -3176,7 +3164,7 @@ L5CB7:  bit     L5B1B
         bpl     L5CBF
         jmp     L6D2B
 
-L5CBF:  lda     $EC25
+L5CBF:  lda     DESKTOP_WINID
         sta     $D20E
         DESKTOP_RELAY_CALL $09, $D209
         lda     $D20D
@@ -3204,16 +3192,16 @@ L5CF8:  jmp     L5D55
 L5CFB:  bit     BUTN0
         bpl     L5D08
         lda     $DF20
-        cmp     $EC25
+        cmp     DESKTOP_WINID
         beq     L5D0B
 L5D08:  jsr     L6D2B
 L5D0B:  ldx     $DF21
         lda     L5CD9
         sta     $DF22,x
         inc     $DF21
-        lda     $EC25
+        lda     DESKTOP_WINID
         sta     $DF20
-        lda     $EC25
+        lda     DESKTOP_WINID
         sta     $D212
         jsr     L44F2
         lda     L5CD9
@@ -3221,7 +3209,7 @@ L5D0B:  ldx     $DF21
         jsr     L8915
         jsr     L6E8E
         DESKTOP_RELAY_CALL $02, $E22F
-        lda     $EC25
+        lda     DESKTOP_WINID
         sta     $D212
         jsr     L44F2
         lda     L5CD9
@@ -3246,9 +3234,9 @@ L5D55:  lda     L5CD9
 L5D77:  lda     $EBFC
         cmp     $EBFB
         bne     L5D8E
-        lda     $EC25
+        lda     DESKTOP_WINID
         jsr     L6F0D
-        lda     $EC25
+        lda     DESKTOP_WINID
         jsr     L5E78
         jmp     L4523
 
@@ -3270,7 +3258,7 @@ L5DA6:  cpx     #$02
 
 L5DAD:  cpx     #$FF
         beq     L5DF7
-        lda     $EC25
+        lda     DESKTOP_WINID
         sta     $D212
         jsr     L44F2
         jsr     L6E52
@@ -3286,16 +3274,16 @@ L5DC4:  txa
         tax
         dex
         bpl     L5DC4
-        lda     $EC25
+        lda     DESKTOP_WINID
         sta     $D212
         jsr     L44F2
         jsr     L6DB1
         jsr     L6E6E
         jsr     L4510
-L5DEC:  jsr     LD096
+L5DEC:  jsr     DESKTOP_COPY_FROM_BUF
         lda     #$00
-        sta     $DE9F
-        jmp     LD09A
+        sta     DESKTOP_BUFNUM
+        jmp     DESKTOP_COPY_TO_BUF
 
 L5DF7:  ldx     $E256
         txs
@@ -3324,7 +3312,7 @@ L5DFC:  lda     L5CD9
 L5E27:  rts
 
 L5E28:  sta     L5E77
-        lda     $EC25
+        lda     DESKTOP_WINID
         jsr     L86FB
         sta     L0006
         stx     $07
@@ -3369,16 +3357,16 @@ L5E78:  sta     L5F0A
         jsr     L4523
         jsr     L6D2B
         lda     L5F0A
-        cmp     $EC25
+        cmp     DESKTOP_WINID
         beq     L5E8F
         sta     $D20E
         jsr     L4459
-L5E8F:  lda     $EC25
+L5E8F:  lda     DESKTOP_WINID
         sta     $D212
         jsr     L44F2
         jsr     L4904
         A2D_RELAY_CALL A2D_FILL_RECT, $D21D
-        ldx     $EC25
+        ldx     DESKTOP_WINID
         dex
         lda     $EC26,x
         pha
@@ -3389,7 +3377,7 @@ L5E8F:  lda     $EC25
         lda     $E6D1,x
         bmi     L5EBC
         jsr     L5302
-L5EBC:  lda     $EC25
+L5EBC:  lda     DESKTOP_WINID
         jsr     L86FB
         sta     L0006
         stx     $07
@@ -3403,23 +3391,23 @@ L5ECB:  lda     (L0006),y
         pla
         jsr     L7054
         jsr     L5106
-        jsr     LD096
-        lda     $EC25
-        sta     $DE9F
-        jsr     LD09A
-        lda     $EC25
+        jsr     DESKTOP_COPY_FROM_BUF
+        lda     DESKTOP_WINID
+        sta     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_TO_BUF
+        lda     DESKTOP_WINID
         sta     $D212
         jsr     L4505
         jsr     L78EF
         lda     #$00
-        ldx     $EC25
+        ldx     DESKTOP_WINID
         sta     $E6D0,x
         lda     #$01
         sta     $E25B
         jsr     L52DF
         lda     #$00
-        sta     $DE9F
-        jmp     LD09A
+        sta     DESKTOP_BUFNUM
+        jmp     DESKTOP_COPY_TO_BUF
 
 L5F0A:  .byte   0
 L5F0B:  .byte   0
@@ -3451,7 +3439,7 @@ L5F20:  lda     $D209,x
 L5F3E:  rts
 
 L5F3F:  jsr     L6D2B
-        lda     $EC25
+        lda     DESKTOP_WINID
         sta     $D212
         jsr     L4505
         jsr     L6E8E
@@ -3486,7 +3474,7 @@ L5F88:  txa
         inc     $DF21
         lda     $E22F
         sta     $DF22,x
-        lda     $EC25
+        lda     DESKTOP_WINID
         sta     $DF20
 L5FB9:  lda     $E22F
         jsr     L8893
@@ -3601,18 +3589,18 @@ L60D1:  .byte   0
 L60D2:  .byte   0
 L60D3:  .byte   0
 L60D4:  .byte   0
-L60D5:  jsr     L87F6
+L60D5:  jsr     push_zp_to_stack
         jmp     L8921
 
 L60DB:  jmp     L60DE
 
-L60DE:  lda     $EC25
+L60DE:  lda     DESKTOP_WINID
         sta     $D208
-        A2D_RELAY_CALL A2D_QUERY_TOP, $EC25
-        lda     $EC25
+        A2D_RELAY_CALL A2D_QUERY_TOP, DESKTOP_WINID
+        lda     DESKTOP_WINID
         jsr     L8855
         A2D_RELAY_CALL A2D_DRAG_WINDOW, $D208
-        lda     $EC25
+        lda     DESKTOP_WINID
         jsr     L86EF
         sta     L0006
         stx     $07
@@ -3640,22 +3628,22 @@ L6112:  ldy     #$14
         lda     (L0006),y
         sbc     L8833
         sta     L619A
-        ldx     $EC25
+        ldx     DESKTOP_WINID
         dex
         lda     $E6D1,x
         beq     L6143
         rts
 
-L6143:  lda     $EC25
-        sta     $DE9F
-        jsr     LD09A
+L6143:  lda     DESKTOP_WINID
+        sta     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_TO_BUF
         ldx     #$00
 L614E:  cpx     $DEA0
         bne     L6161
-        jsr     LD096
+        jsr     DESKTOP_COPY_FROM_BUF
         lda     #$00
-        sta     $DE9F
-        jsr     LD09A
+        sta     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_TO_BUF
         jmp     L6196
 
 L6161:  txa
@@ -3693,32 +3681,32 @@ L6197:  .byte   0
 L6198:  .byte   0
 L6199:  .byte   0
 L619A:  .byte   0
-L619B:  lda     $EC25
+L619B:  lda     DESKTOP_WINID
         sta     $D208
         A2D_RELAY_CALL A2D_DRAG_RESIZE, $D208
         jsr     L4523
-        lda     $EC25
-        sta     $DE9F
-        jsr     LD09A
+        lda     DESKTOP_WINID
+        sta     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_TO_BUF
         jsr     L6E52
         jsr     L6DB1
         jsr     L6E6E
         lda     #$00
-        sta     $DE9F
-        jsr     LD09A
+        sta     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_TO_BUF
         jmp     L4510
 
-L61CA:  lda     $EC25
+L61CA:  lda     DESKTOP_WINID
         A2D_RELAY_CALL A2D_CLOSE_CLICK, $D2A8
         lda     $D2A8
         bne     L61DC
         rts
 
-L61DC:  lda     $EC25
-        sta     $DE9F
-        jsr     LD09A
+L61DC:  lda     DESKTOP_WINID
+        sta     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_TO_BUF
         jsr     L6D2B
-        ldx     $EC25
+        ldx     DESKTOP_WINID
         dex
         lda     $E6D1,x
         bmi     L6215
@@ -3726,12 +3714,12 @@ L61DC:  lda     $EC25
         sec
         sbc     $DEA0
         sta     $DD9E
-        DESKTOP_RELAY_CALL $07, $EC25
+        DESKTOP_RELAY_CALL $07, DESKTOP_WINID
         ldx     #$00
 L6206:  cpx     $DEA0
         beq     L6215
         lda     $DEA1,x
-        jsr     LD082
+        jsr     DESKTOP_FREE_SPACE
         inx
         jmp     L6206
 
@@ -3745,9 +3733,9 @@ L621B:  sta     $DEA1,x
         jmp     L621B
 
 L6227:  sta     $DEA0
-        jsr     LD096
-        A2D_RELAY_CALL A2D_DESTROY_WINDOW, $EC25
-        ldx     $EC25
+        jsr     DESKTOP_COPY_FROM_BUF
+        A2D_RELAY_CALL A2D_DESTROY_WINDOW, DESKTOP_WINID
+        ldx     DESKTOP_WINID
         dex
         lda     $EC26,x
         sta     $E22F
@@ -3771,24 +3759,24 @@ L6227:  sta     $DEA0
         sta     $DF21
         lda     $E22F
         sta     $DF22
-L6276:  ldx     $EC25
+L6276:  ldx     DESKTOP_WINID
         dex
         lda     $EC26,x
         jsr     L7345
-        ldx     $EC25
+        ldx     DESKTOP_WINID
         dex
         lda     $EC26,x
         inx
         jsr     L8B5C
-        ldx     $EC25
+        ldx     DESKTOP_WINID
         dex
         lda     #$00
         sta     $EC26,x
         sta     $E6D1,x
-        A2D_RELAY_CALL A2D_QUERY_TOP, $EC25
+        A2D_RELAY_CALL A2D_QUERY_TOP, DESKTOP_WINID
         lda     #$00
-        sta     $DE9F
-        jsr     LD09A
+        sta     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_TO_BUF
         lda     #$00
         sta     $E269
         A2D_RELAY_CALL $36, $E267 ; ???
@@ -4056,10 +4044,10 @@ L650F:  bit     L5B1B
         jsr     L6E52
 L6517:  jsr     L6523
         jsr     L7B6B
-        lda     $EC25
+        lda     DESKTOP_WINID
         jmp     L7D5D
 
-L6523:  lda     $EC25
+L6523:  lda     DESKTOP_WINID
         jsr     L86EF
         clc
         adc     #$14
@@ -4074,7 +4062,7 @@ L6535:  lda     (L0006),y
         bpl     L6535
         rts
 
-L653E:  lda     $EC25
+L653E:  lda     DESKTOP_WINID
         jsr     L86EF
         sta     L0006
         stx     $07
@@ -4094,11 +4082,11 @@ L655E:  A2D_RELAY_CALL A2D_FILL_RECT, $D21D
         jsr     L4510
         jmp     L6C19
 
-L656D:  lda     $EC25
+L656D:  lda     DESKTOP_WINID
         jsr     L7D5D
         sta     L6600
         stx     L6601
-        lda     $EC25
+        lda     DESKTOP_WINID
         jsr     L86EF
         sta     L0006
         stx     $07
@@ -4154,10 +4142,10 @@ L6600:  .byte   0
 L6601:  .byte   0
 L6602:  .byte   0
 L6603:  .byte   0
-L6604:  lda     $EC25
+L6604:  lda     DESKTOP_WINID
         jsr     L7D5D
         sty     L669F
-        lda     $EC25
+        lda     DESKTOP_WINID
         jsr     L86EF
         sta     L0006
         stx     $07
@@ -4216,7 +4204,7 @@ L668D:  sta     $D209
 L669F:  .byte   0
 L66A0:  .byte   0
 L66A1:  .byte   0
-L66A2:  ldx     $EC25
+L66A2:  ldx     DESKTOP_WINID
         beq     L66AA
         jmp     L66F2
 
@@ -4407,7 +4395,7 @@ L6880:  lda     $D20D
         cmp     $EBFB
         beq     L688E
         jsr     L6A8A
-        jsr     LD096
+        jsr     DESKTOP_COPY_FROM_BUF
 L688E:  rts
 
 L688F:  ldx     $DF21
@@ -4617,7 +4605,7 @@ L6A80:  inx
         jmp     L5E78
 
 L6A8A:  sta     $E6BE
-        jsr     LD096
+        jsr     DESKTOP_COPY_FROM_BUF
         lda     $E6BE
         ldx     #$07
 L6A95:  cmp     $EC26,x
@@ -4627,12 +4615,12 @@ L6A95:  cmp     $EC26,x
         jmp     L6B1E
 
 L6AA0:  inx
-        cpx     $EC25
+        cpx     DESKTOP_WINID
         bne     L6AA7
         rts
 
-L6AA7:  stx     $DE9F
-        jsr     LD09A
+L6AA7:  stx     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_TO_BUF
         lda     $E6BE
         jsr     L86E3
         sta     L0006
@@ -4646,7 +4634,7 @@ L6AA7:  stx     $DE9F
         and     #$0F
         sta     $D212
         beq     L6AD8
-        cmp     $EC25
+        cmp     DESKTOP_WINID
         bne     L6AEF
         jsr     L44F2
         lda     $E6BE
@@ -4665,14 +4653,14 @@ L6AF6:  cmp     $E1F2,x
         dex
         bpl     L6AF6
         jsr     L7054
-L6B01:  A2D_RELAY_CALL A2D_RAISE_WINDOW, $DE9F
-        lda     $DE9F
-        sta     $EC25
+L6B01:  A2D_RELAY_CALL A2D_RAISE_WINDOW, DESKTOP_BUFNUM
+        lda     DESKTOP_BUFNUM
+        sta     DESKTOP_WINID
         jsr     L6C19
         jsr     L40F2
         lda     #$00
-        sta     $DE9F
-        jmp     LD09A
+        sta     DESKTOP_BUFNUM
+        jmp     DESKTOP_COPY_TO_BUF
 
 L6B1E:  lda     $EC2E
         cmp     #$08
@@ -4692,10 +4680,10 @@ L6B31:  lda     $EC26,x
 L6B3A:  lda     $E6BE
         sta     $EC26,x
         inx
-        stx     $DE9F
-        jsr     LD09A
+        stx     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_TO_BUF
         inc     $EC2E
-        ldx     $DE9F
+        ldx     DESKTOP_BUFNUM
         dex
         lda     #$00
         sta     $E6D1,x
@@ -4725,7 +4713,7 @@ L6B68:  lda     #$01
         and     #$0F
         sta     $D212
         beq     L6BA1
-        cmp     $EC25
+        cmp     DESKTOP_WINID
         bne     L6BB8
         jsr     L44F2
         jsr     L6E8E
@@ -4738,11 +4726,11 @@ L6BA1:  DESKTOP_RELAY_CALL $03, $E6BE
         jsr     L8893
         jsr     L4510
 L6BB8:  jsr     L744B
-        lda     $DE9F
+        lda     DESKTOP_BUFNUM
         jsr     L86EF
         ldy     #$38
         jsr     A2D_RELAY
-        lda     $EC25
+        lda     DESKTOP_WINID
         sta     $D212
         jsr     L44F2
         jsr     L78EF
@@ -4760,40 +4748,40 @@ L6BDA:  lda     L6C0E
         inc     L6C0E
         jmp     L6BDA
 
-L6BF4:  lda     $DE9F
-        sta     $EC25
+L6BF4:  lda     DESKTOP_BUFNUM
+        sta     DESKTOP_WINID
         jsr     L6DB1
         jsr     L6E6E
-        jsr     LD096
+        jsr     DESKTOP_COPY_FROM_BUF
         lda     #$00
-        sta     $DE9F
-        jsr     LD09A
+        sta     DESKTOP_BUFNUM
+        jsr     DESKTOP_COPY_TO_BUF
         jmp     L4510
 
 L6C0E:  .byte   0
 L6C0F:  A2D_RELAY_CALL $36, $E267 ; ???
         rts
 
-L6C19:  ldx     $DE9F
+L6C19:  ldx     DESKTOP_BUFNUM
         dex
         lda     $E6D1,x
         bmi     L6C25
         jmp     L6CCD
 
-L6C25:  jsr     L87F6
-        lda     $DE9F
+L6C25:  jsr     push_zp_to_stack
+        lda     DESKTOP_BUFNUM
         sta     $D212
         jsr     L44F2
         bit     L4152
         bmi     L6C39
         jsr     L78EF
-L6C39:  lda     $DE9F
+L6C39:  lda     DESKTOP_BUFNUM
         sta     $D212
         jsr     L4505
 L6C42:  bit     L4152
         bmi     L6C4A
         jsr     L6E8E
-L6C4A:  ldx     $DE9F
+L6C4A:  ldx     DESKTOP_BUFNUM
         dex
         lda     $EC26,x
         ldx     #$00
@@ -4847,11 +4835,11 @@ L6CB0:  lda     L6CCC
         jmp     L6CB0
 
 L6CC5:  jsr     L4510
-        jsr     L8813
+        jsr     pop_addrs_to_zp
         rts
 
 L6CCC:  .byte   0
-L6CCD:  lda     $DE9F
+L6CCD:  lda     DESKTOP_BUFNUM
         sta     $D212
         jsr     L44F2
         bit     L4152
@@ -4871,7 +4859,7 @@ L6CF3:  cpx     $DEA0
         bne     L6D09
         pla
         jsr     L4510
-        lda     $DE9F
+        lda     DESKTOP_BUFNUM
         sta     $D212
         jsr     L44F2
         jsr     L6E6E
@@ -4898,7 +4886,7 @@ L6D31:  lda     #$00
         lda     $DF20
         sta     $E230
         beq     L6D7D
-        cmp     $EC25
+        cmp     DESKTOP_WINID
         beq     L6D4D
         jsr     L8997
         lda     #$00
@@ -4941,7 +4929,7 @@ L6DA1:  sta     $DF22,x
         jmp     L4510
 
 L6DB0:  .byte   0
-L6DB1:  ldx     $EC25
+L6DB1:  ldx     DESKTOP_WINID
         dex
         lda     $E6D1,x
         bmi     L6DC0
@@ -4951,7 +4939,7 @@ L6DB1:  ldx     $EC25
 L6DC0:  jsr     L6E52
         jsr     L7B6B
         jsr     L6E6E
-L6DC9:  lda     $EC25
+L6DC9:  lda     DESKTOP_WINID
         sta     $D212
         jsr     L44F2
         lda     L7B5F
@@ -5265,7 +5253,7 @@ L70C2:  .byte   $00
 L70C3:  .byte   $00
 L70C4:  .byte   $00
 L70C5:  sta     L72A7
-        jsr     L87F6
+        jsr     push_zp_to_stack
         ldx     #$40
 L70CD:  lda     $E1B0,x
         sta     L705D,x
@@ -5321,7 +5309,7 @@ L7147:  lda     $EC2E
         dec     $EC2E
         jsr     L4523
         jsr     L72D8
-        lda     $EC25
+        lda     DESKTOP_WINID
         beq     L715F
         lda     #$03
         bne     L7161
@@ -5479,7 +5467,7 @@ L7296:  lda     L0006
         lda     $07
         sta     L4860
         jsr     L72D8
-        jsr     L8813
+        jsr     pop_addrs_to_zp
         rts
 
 L72A7:  .byte   0
@@ -5490,7 +5478,7 @@ L72AA:  ldy     #$C8
         ldx     #$70
         jsr     L46BA
         beq     L72CD
-        jsr     LD154
+        jsr     DESKTOP_SHOW_ALERT0
         jsr     L8B1F
         lda     $DF20
         bne     L72C9
@@ -5601,7 +5589,7 @@ L7385:  lda     L7446
         lda     $E203,x
         sta     $09
         ldy     #$00
-        jsr     L87F6
+        jsr     push_zp_to_stack
 L73A5:  lda     LCBANK2
         lda     LCBANK2
         lda     ($08),y
@@ -5620,7 +5608,7 @@ L73C1:  lda     $09
         lda     $08
         cmp     L485F
         bne     L73A5
-        jsr     L8813
+        jsr     pop_addrs_to_zp
         lda     $E1F1
         asl     a
         tax
@@ -5677,7 +5665,7 @@ L7447:  .byte   0
 L7448:  .byte   0
 L7449:  .byte   0
 L744A:  .byte   0
-L744B:  lda     $DE9F
+L744B:  lda     DESKTOP_BUFNUM
         asl     a
         tax
         lda     $E6BF,x
@@ -5687,7 +5675,7 @@ L744B:  lda     $DE9F
         ldy     #$09
         lda     (L0006),y
         tay
-        jsr     L87F6
+        jsr     push_zp_to_stack
         lda     L0006
         clc
         adc     #$09
@@ -5708,13 +5696,13 @@ L7471:  lda     (L0006),y
         lda     ($08),y
         and     #$DF
         sta     ($08),y
-        jsr     L8813
+        jsr     pop_addrs_to_zp
         ldy     #$02
         lda     (L0006),y
         and     #$0F
         bne     L74D3
-        jsr     L87F6
-        lda     $DE9F
+        jsr     push_zp_to_stack
+        lda     DESKTOP_BUFNUM
         jsr     L86FB
         sta     $08
         stx     $09
@@ -5751,7 +5739,7 @@ L74C8:  lda     ($08),y
 L74D3:  tay
         lda     #$00
         sta     L7620
-        jsr     L87F6
+        jsr     push_zp_to_stack
         tya
         pha
         jsr     L86FB
@@ -5771,7 +5759,7 @@ L74D3:  tay
         cmp     #$43
         bcc     L750D
         lda     #$40
-        jsr     LD154
+        jsr     DESKTOP_SHOW_ALERT0
         jsr     L8B1F
         dec     $EC2E
         ldx     $E256
@@ -5809,7 +5797,7 @@ L7548:  iny
         sta     $E1B0,x
         cpx     $E1B0
         bne     L7548
-        lda     $DE9F
+        lda     DESKTOP_BUFNUM
         jsr     L86FB
         sta     $08
         stx     $09
@@ -5821,12 +5809,12 @@ L7561:  lda     $E1B0,y
 L7569:  lda     $08
         ldx     $09
         jsr     L87BA
-        lda     $DE9F
+        lda     DESKTOP_BUFNUM
         jsr     L86EF
         sta     L0006
         stx     $07
         ldy     #$14
-        lda     $DE9F
+        lda     DESKTOP_BUFNUM
         sec
         sbc     #$01
         asl     a
@@ -5868,7 +5856,7 @@ L75A3:  sta     (L0006),y
         sta     (L0006),y
         ldy     #$09
         sta     (L0006),y
-        jsr     L8813
+        jsr     pop_addrs_to_zp
         lda     $E6BE
         jsr     L7054
         lda     $E6BE
@@ -5892,7 +5880,7 @@ L75A3:  sta     (L0006),y
         sta     L70BB
         lda     $EB9C,x
         sta     L70BC
-L75FA:  ldx     $DE9F
+L75FA:  ldx     DESKTOP_BUFNUM
         dex
         txa
         asl     a
@@ -5905,7 +5893,7 @@ L75FA:  ldx     $DE9F
         sta     $EB9B,x
         lda     L70BC
         sta     $EB9C,x
-        lda     $DE9F
+        lda     DESKTOP_BUFNUM
         jsr     L7635
         rts
 
@@ -5932,7 +5920,7 @@ L7635:  pha
         lda     #$00
         beq     L7647
 L763A:  pha
-        ldx     $DE9F
+        ldx     DESKTOP_BUFNUM
         dex
         lda     $EC26,x
         sta     $E6BE
@@ -5940,7 +5928,7 @@ L763A:  pha
 L7647:  sta     L7634
         pla
         sta     L7621
-        jsr     L87F6
+        jsr     push_zp_to_stack
         ldx     #$03
 L7653:  lda     L7626,x
         sta     L762A,x
@@ -5980,8 +5968,8 @@ L767C:  txa
         lda     L0006
         bne     L76A4
         inc     $07
-L76A4:  lda     $DE9F
-        sta     $EC25
+L76A4:  lda     DESKTOP_BUFNUM
+        sta     DESKTOP_WINID
 L76AA:  lda     L7625
         cmp     L7764
         beq     L76BB
@@ -5991,7 +5979,7 @@ L76AA:  lda     L7625
 
 L76BB:  bit     L7634
         bpl     L76C4
-        jsr     L8813
+        jsr     pop_addrs_to_zp
         rts
 
 L76C4:  jsr     L7B6B
@@ -6065,13 +6053,13 @@ L7744:  ldy     #$22
         lda     $E6BE
         ldx     L7621
         jsr     L8B60
-        jsr     L8813
+        jsr     pop_addrs_to_zp
         rts
 
 L7764:  .byte   $00,$00,$00
 L7767:  .byte   $14
 L7768:  inc     $DD9E
-        jsr     LD05E
+        jsr     DESKTOP_FIND_SPACE
         ldx     $DEA0
         inc     $DEA0
         sta     $DEA1,x
@@ -6181,7 +6169,7 @@ L7862:  lda     L762A
         sta     L762A
         bcc     L7870
         inc     L762B
-L7870:  lda     $DE9F
+L7870:  lda     DESKTOP_BUFNUM
         ora     L7624
         ldy     #$02
         sta     ($08),y
@@ -6207,7 +6195,7 @@ L7870:  lda     $DE9F
         .byte   0
         .byte   0
 L78A1:  sta     L78EE
-        jsr     L87F6
+        jsr     push_zp_to_stack
         lda     $FB00
         sta     L0006
         lda     $FB01
@@ -6240,7 +6228,7 @@ L78C2:  lda     $FB04
         iny
         lda     (L0006),y
         sta     L7623
-        jsr     L8813
+        jsr     pop_addrs_to_zp
         rts
 
 L78EE:  .byte   0
@@ -6304,7 +6292,7 @@ L798A:  A2D_RELAY_CALL A2D_SET_POS, $EBBA
         bcs     L79A7
         inc     $EBB3
 L79A7:  jsr     L79F7
-        ldx     $EC25
+        ldx     DESKTOP_WINID
         dex
         txa
         asl     a
@@ -6320,7 +6308,7 @@ L79A7:  jsr     L79F7
         lda     #$C6
         ldx     #$EB
         jsr     L8780
-        ldx     $EC25
+        ldx     DESKTOP_WINID
         dex
         txa
         asl     a
@@ -6514,7 +6502,7 @@ L7B6F:  sta     L7B63,x
         lda     #$7F
         sta     L7B60
         sta     L7B62
-        ldx     $DE9F
+        ldx     DESKTOP_BUFNUM
         dex
         lda     $E6D1,x
         bpl     L7BCB
@@ -6753,7 +6741,7 @@ L7D9A:  .byte   0
 L7D9B:  .byte   0
 L7D9C:  jmp     L7D9F
 
-L7D9F:  ldx     $DE9F
+L7D9F:  ldx     DESKTOP_BUFNUM
         dex
         lda     $EC26,x
         ldx     #$00
@@ -6806,7 +6794,7 @@ L7E06:  inc     L0800
 
 L7E0C:  lda     LCBANK1
         lda     LCBANK1
-        ldx     $DE9F
+        ldx     DESKTOP_BUFNUM
         dex
         lda     $E6D1,x
         cmp     #$81
@@ -7252,21 +7240,13 @@ L81E8:  lda     $E6DB
         rts
 
 L81F7:  jsr     L821F
-        lda     #$D9
-        ldx     #$E6
-        jsr     LD01C
+        SETPOS_RELAY_CALL $E6D9
         jsr     L8241
-        lda     #$DD
-        ldx     #$E6
-        jsr     LD01C
+        SETPOS_RELAY_CALL $E6DD
         jsr     L8253
-        lda     #$E1
-        ldx     #$E6
-        jsr     LD01C
+        SETPOS_RELAY_CALL $E6E1
         jsr     L830F
-        lda     #$E5
-        ldx     #$E6
-        jmp     LD01C
+        SETPOS_RELAY_CALL $E6E5
 
 L821F:  lda     $EC43
         and     #$0F
@@ -7537,7 +7517,7 @@ L84CD:  .byte   $EB
 
 L84CF:  .byte   0
 L84D0:  .byte   0
-L84D1:  jsr     L87F6
+L84D1:  jsr     push_zp_to_stack
         bit     L5B1B
         bmi     L84DC
         jsr     L6E52
@@ -7562,7 +7542,7 @@ L84DC:  lda     $D221
         bne     L850E
 L850C:  lda     #$00
 L850E:  sta     L85F1
-        lda     $EC25
+        lda     DESKTOP_WINID
         jsr     L86EF
         sta     L0006
         stx     $07
@@ -7617,7 +7597,7 @@ L8562:  lsr     L85F3
         lda     L85F2
         adc     L7B60,x
         sta     $D21E,x
-        lda     $EC25
+        lda     DESKTOP_WINID
         jsr     L7D5D
         sta     L85F4
         .byte   $8E
@@ -7642,7 +7622,7 @@ L85C3:  lda     $D21D
         lda     $D21E
         adc     L85F5
         sta     $D222
-L85D6:  lda     $EC25
+L85D6:  lda     DESKTOP_WINID
         jsr     L86EF
         sta     L0006
         stx     $07
@@ -7653,7 +7633,7 @@ L85E4:  lda     $D21D,x
         dey
         dex
         bpl     L85E4
-        jsr     L8813
+        jsr     pop_addrs_to_zp
         rts
 
 L85F1:  .byte   0
@@ -7936,49 +7916,69 @@ L87E0:  iny
 L87F2:  dey
         jmp     L87C6
 
-L87F6:  pla
-        sta     L8811
+;;; ==================================================
+
+;;; Pushes two words from $8/$8 to stack
+.proc push_zp_to_stack
+        .assert * = DESKTOP_MAIN_PUSH_ADDRS, error, "Entry point mismatch"
+
+        pla                     ; stash return address
+        sta     addr
         pla
-        sta     L8812
-        ldx     #$00
-L8800:  lda     L0006,x
+        sta     addr+1
+
+        ldx     #0              ; copy 4 bytes from $8 to stack
+loop:   lda     L0006,x
         pha
         inx
-        cpx     #$04
-        bne     L8800
-        lda     L8812
+        cpx     #4
+        bne     loop
+
+        lda     addr+1           ; restore return address
         pha
-        lda     L8811
+        lda     addr
         pha
         rts
 
-L8811:  .byte   0
-L8812:  .byte   0
-L8813:  pla
-        sta     L882E
+addr:   .addr   0
+.endproc
+
+;;; ==================================================
+
+;;; Pops two words from stack to $6/$8
+.proc pop_addrs_to_zp
+        .assert * = DESKTOP_MAIN_POP_ADDRS, error, "Entry point mismatch"
+
+        pla                     ; stash return address
+        sta     addr
         pla
-        sta     L882F
-        ldx     #$03
-L881D:  pla
+        sta     addr+1
+
+        ldx     #3              ; copy 4 bytes from stack to $6
+loop:   pla
         sta     L0006,x
         dex
-        cpx     #$FF
-        bne     L881D
-        lda     L882F
+        cpx     #$FF            ; why not bpl ???
+        bne     loop
+
+        lda     addr+1          ; restore return address to stack
         pha
-        lda     L882E
+        lda     addr
         pha
         rts
 
-L882E:  .byte   0
-L882F:  .byte   0
+addr:   .addr   0
+.endproc
+
+;;; ==================================================
+
 L8830:  .byte   0
 L8831:  .byte   0
 L8832:  .byte   0
 L8833:  .res    34, 0
 
 L8855:  tay
-        jsr     L87F6
+        jsr     push_zp_to_stack
         tya
         jsr     L86EF
         sta     L0006
@@ -7991,11 +7991,11 @@ L8865:  lda     (L0006),y
         inx
         cpx     #$24
         bne     L8865
-        jsr     L8813
+        jsr     pop_addrs_to_zp
         rts
 
 L8874:  tay
-        jsr     L87F6
+        jsr     push_zp_to_stack
         tya
         jsr     L86EF
         sta     L0006
@@ -8008,16 +8008,16 @@ L8884:  lda     L8830,x
         inx
         cpx     #$24
         bne     L8884
-        jsr     L8813
+        jsr     pop_addrs_to_zp
         rts
 
 L8893:  tay
-        jsr     L87F6
+        jsr     push_zp_to_stack
         tya
         jsr     L86E3
         sta     L0006
         stx     $07
-        lda     $EC25
+        lda     DESKTOP_WINID
         jsr     L86EF
         sta     $08
         stx     $09
@@ -8071,7 +8071,7 @@ L88BA:  lda     ($08),y
         lda     (L0006),y
         sbc     L8914
         sta     (L0006),y
-        jsr     L8813
+        jsr     pop_addrs_to_zp
         rts
 
 L890D:  .byte   0
@@ -8083,12 +8083,12 @@ L8912:  .byte   0
 L8913:  .byte   0
 L8914:  .byte   0
 L8915:  tay
-        jsr     L87F6
+        jsr     push_zp_to_stack
         tya
         jsr     L86E3
         sta     L0006
         stx     $07
-L8921:  lda     $EC25
+L8921:  lda     DESKTOP_WINID
         jsr     L86EF
         sta     $08
         stx     $09
@@ -8142,7 +8142,7 @@ L893C:  lda     ($08),y
         lda     (L0006),y
         adc     L8996
         sta     (L0006),y
-        jsr     L8813
+        jsr     pop_addrs_to_zp
         rts
 
 L898F:  .byte   0
@@ -8192,8 +8192,8 @@ L89DD:  lda     L0800
         lda     $0801
         jmp     L89CC
 
-L89EA:  jsr     L87F6
-        jsr     LD05E
+L89EA:  jsr     push_zp_to_stack
+        jsr     DESKTOP_FIND_SPACE
         ldy     L8AC4
         sta     $E1A0,y
         jsr     L86E3
@@ -8300,7 +8300,7 @@ L8AA7:  lda     L8AC5,x
         ldy     #$00
         lda     (L0006),y
         sta     $DEA1,x
-        jsr     L8813
+        jsr     pop_addrs_to_zp
         lda     #$00
         rts
 
@@ -8332,14 +8332,14 @@ L8B01:  lda     $DEA2,x
         sta     $DEA1,x
         rts
 
-L8B19:  jsr     L87F6
+L8B19:  jsr     push_zp_to_stack
         jmp     L8B2E
 
 L8B1F:  lda     $E6BE
         bne     L8B25
         rts
 
-L8B25:  jsr     L87F6
+L8B25:  jsr     push_zp_to_stack
         lda     $E6BE
         jsr     L7345
 L8B2E:  lda     $E6BE
@@ -8361,7 +8361,7 @@ L8B43:  lda     $E6BE
         and     #$7F
         sta     (L0006),y
         jsr     L4244
-        jsr     L8813
+        jsr     pop_addrs_to_zp
         rts
 
 L8B5C:  ldy     #$80

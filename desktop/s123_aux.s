@@ -8956,7 +8956,7 @@ L8672:  pha
 L867B:  lda     online_params_buffer
         beq     L8672
         jsr     L8388           ; ??? This is the middle of an instruction?
-        jsr     desktop_LD05E
+        jsr     DESKTOP_FIND_SPACE ; AUX > MAIN call???
         ldy     L8738
         sta     $D464,y
         asl     a
@@ -12513,7 +12513,8 @@ LB5C4:  PASCAL_STRING "on the system disk ?"
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00
 
-LB600:  jmp     show_alert_dialog
+show_alert_indirection:
+        jmp     show_alert_dialog
 
 alert_bitmap:
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
@@ -12635,7 +12636,7 @@ alert_action_table:
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$80,$80,$00
 
-        ;; Show alert; prompt number in A
+        ;; Show alert; prompt number in X (???), A = ???
 .proc show_alert_dialog
         pha
         txa
@@ -13228,11 +13229,11 @@ addr:   .addr   0
 
         .org $D000
 
-L87F6           := $87F6
-L8813           := $8813
+;;; Various routines callable from MAIN
 
         ;; A2D call from main>aux, call in Y, params at (X,A)
-.proc A2D_RELAY
+.proc A2D_RELAY_IMPL
+        .assert * = A2D_RELAY, error, "Entry point mismatch"
         sty     addr-1
         sta     addr
         stx     addr+1
@@ -13244,9 +13245,9 @@ L8813           := $8813
         rts
 .endproc
 
-
         ;; SET_POS with params at (X,A) followed by DRAW_TEXT call
-.proc SETPOS_RELAY
+.proc SETPOS_RELAY_IMPL
+        .assert * = SETPOS_RELAY, error, "Entry point mismatch"
         sta     addr
         stx     addr+1
         sta     RAMRDON
@@ -13277,7 +13278,8 @@ L8813           := $8813
 
         ;; Find first 0 in AUX $1F80 ... $1F7F; if present,
         ;; mark it 1 and return index+1 in A
-.proc LD05E
+.proc DESKTOP_FIND_SPACE_IMPL
+        .assert * = DESKTOP_FIND_SPACE, error, "Entry point mismatch"
         sta     RAMRDON
         sta     RAMWRTON
         ldx     #0
@@ -13300,6 +13302,9 @@ loop:   lda     $1F80,x
         rts
 .endproc
 
+        ;; Zero the AUX $1F80 table entry in A
+.proc DESKTOP_FREE_SPACE_IMPL
+        .assert * = DESKTOP_FREE_SPACE, error, "Entry point mismatch"
         tay
         sta     RAMRDON
         sta     RAMWRTON
@@ -13309,88 +13314,120 @@ loop:   lda     $1F80,x
         sta     RAMRDOFF
         sta     RAMWRTOFF
         rts
+.endproc
 
+        ;; Copy data to/from buffers (see bufnum / buf3 / table1/2) ???
+.proc DESKTOP_COPY_BUF_IMPL
+        ptr := $6
+
+        .assert * = DESKTOP_COPY_FROM_BUF, error, "Entry point mismatch"
         lda     #$80
-        bne     LD09C
+        bne     :+              ; always
+
+        .assert * = DESKTOP_COPY_TO_BUF, error, "Entry point mismatch"
         lda     #$00
-LD09C:  sta     LD106
-        jsr     L87F6
-        lda     LDE9F
-        asl     a
+
+        sta     flag
+        jsr     DESKTOP_MAIN_PUSH_ADDRS
+
+        lda     bufnum
+        asl     a               ; * 2
         tax
-        lda     LEC01,x
-        sta     $06
-        lda     LEC01+1,x
-        sta     $07
+        lda     table1,x        ; copy table1 entry to ptr
+        sta     ptr
+        lda     table1+1,x
+        sta     ptr+1
+
         sta     RAMRDON
         sta     RAMWRTON
-        bit     LD106
-        bpl     LD0C6
-        lda     LDEA0
-        ldy     #$00
-        sta     ($06),y
-        jmp     LD0CD
+        bit     flag
+        bpl     set_length
 
-LD0C6:  ldy     #$00
-        lda     ($06),y
-        sta     LDEA0
-LD0CD:  lda     LEC13,x
-        sta     $06
-        lda     LEC13+1,x
-        sta     $07
-        bit     LD106
-        bmi     LD0EC
+        ;; assign length from buf3
+        lda     buf3len
         ldy     #0
-LD0DE:  cpy     LDEA0
-        beq     LD0FC
-        lda     ($06),y
-        sta     LDEA0+1,y
-        iny
-        jmp     LD0DE
+        sta     (ptr),y
+        jmp     set_copy_ptr
 
-LD0EC:  ldy     #0
-LD0EE:  cpy     LDEA0
-        beq     LD0FC
-        lda     LDEA0+1,y
-        sta     ($06),y
-        iny
-        jmp     LD0EE
+        ;; assign length to buf3
+set_length:
+        ldy     #0
+        lda     (ptr),y
+        sta     buf3len
 
-LD0FC:  sta     RAMRDOFF
+set_copy_ptr:
+        lda     table2,x         ; copy table2 entry to ptr
+        sta     ptr
+        lda     table2+1,x
+        sta     ptr
+        bit     flag
+        bmi     copy_from
+
+        ;; copy into buf3
+        ldy     #0              ; flag clear...
+:       cpy     buf3len
+        beq     done
+        lda     (ptr),y
+        sta     buf3,y
+        iny
+        jmp     :-
+
+        ;; copy from buf3
+copy_from:
+        ldy     #0
+:       cpy     buf3len
+        beq     done
+        lda     buf3,y
+        sta     (ptr),y
+        iny
+        jmp     :-
+
+done:   sta     RAMRDOFF
         sta     RAMWRTOFF
-        jsr     L8813
+        jsr     DESKTOP_MAIN_POP_ADDRS
         rts
 
-LD106:  .byte   0
+flag:   .byte   0
         rts                     ; ???
+.endproc
+
+        ;; Assign active state to DESKTOP_WINID window
+.proc DESKTOP_ASSIGN_STATE_IMPL
+        src := $6
+        dst := $8
 
         sta     RAMRDON
         sta     RAMWRTON
-        A2D_CALL A2D_GET_STATE, $06
-        lda     LEC25
+        A2D_CALL A2D_GET_STATE, src ; grab window state
+
+        lda     DESKTOP_WINID   ; which desktop window?
         asl     a
         tax
-        lda     LDFA1,x
-        sta     $08
-        lda     LDFA1+1,x
-        sta     $09
-        lda     $08
+        lda     win_table,x     ; window table
+        sta     dst
+        lda     win_table+1,x
+        sta     dst+1
+        lda     dst
         clc
-        adc     #$14
-        sta     $08
-        bcc     LD12E
-        inc     $09
-LD12E:  ldy     #$23
-LD130:  lda     ($06),y
-        sta     ($08),y
+        adc     #20             ; add offset
+        sta     dst
+        bcc     :+
+        inc     dst+1
+
+:       ldy     #35             ; copy 35 bytes into window state
+loop:   lda     (src),y
+        sta     (dst),y
         dey
-        bpl     LD130
+        bpl     loop
+
         sta     RAMRDOFF
         sta     RAMWRTOFF
         rts
+.endproc
 
         ;; From MAIN, load AUX (X,A) into A
-.proc LD13E
+.proc DESKTOP_AUXLOAD_IMPL
+        .assert * = DESKTOP_AUXLOAD, error, "Entry point mismatch"
         stx     op+2
         sta     op+1
         sta     RAMRDON
@@ -13401,15 +13438,25 @@ op:     lda     $1234
         rts
 .endproc
 
-.proc LD154
+        ;; From MAIN, show alert with prompt #0
+.proc DESKTOP_SHOW_ALERT0_IMPL
+        .assert * = DESKTOP_SHOW_ALERT0, error, "Entry point mismatch"
         ldx     #$00
+        ;; fall through
+.endproc
+
+        ;; From MAIN, show alert with prompt # in X
+.proc DESKTOP_SHOW_ALERT_IMPL
+        .assert * = DESKTOP_SHOW_ALERT, error, "Entry point mismatch"
         sta     RAMRDON
         sta     RAMWRTON
-        jsr     LB600
+        jsr     show_alert_indirection
         sta     RAMRDOFF
         sta     RAMWRTOFF
         rts
 .endproc
+
+;;; ============================================================
 
         .res    154, 0
 
@@ -13894,12 +13941,17 @@ run_list_entries:
         .res    896, 0
 
         .byte   $00
-LDE9F:  .byte   $00
-LDEA0:  .res    256, 0
-        .byte   $00
+
+        ;; Used by DESKTOP_COPY_*_BUF
+        .assert * = DESKTOP_BUFNUM, error, "Entry point mismatch"
+bufnum: .byte   $00
+buf3len:.byte   0
+buf3:   .res    256, 0
 
         ;; Buffer for desktop windows
-LDFA1:  .addr   0,win1,win2,win3,win4,win5,win6,win7,win8
+win_table:
+        .addr   0,win1,win2,win3,win4,win5,win6,win7,win8
+
         .addr   $0000
         .repeat 8,i
         .addr   buf2+i*$41
@@ -14117,22 +14169,16 @@ buf2:   .res    560, 0
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00
 
-LEC01:  .byte   $00,$1B,$80,$1B,$00,$1C,$80,$1C,$00,$1D,$80,$1D,$00,$1E,$80,$1E,$00,$1F
-LEC13:  .byte   $01,$1B,$81,$1B,$01,$1C,$81,$1C,$01,$1D,$81,$1D,$01,$1E,$81,$1E,$01,$1F
+        ;; Used by DESKTOP_COPY_*_BUF
+table1: .addr   $1B00,$1B80,$1C00,$1C80,$1D00,$1D80,$1E00,$1E80,$1F00
+table2: .addr   $1B01,$1B81,$1C01,$1C81,$1D01,$1D81,$1E01,$1E81,$1F01
 
-LEC25:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .assert * = DESKTOP_WINID, error, "Entry point mismatch"
+desktop_winid:
         .byte   $00
+        .res    64, 0
         .word   500, 160
-        .byte   $00,$00,$00
-
-        .res    147, 0
+        .res    150, 0
 
         .assert * = $ED00, error, "Segment expected to fill through $ED00"
 
@@ -14478,6 +14524,4 @@ app_mask:
 
         .res    70, 0
 .endproc                        ; desktop
-        desktop_LD05E := desktop::LD05E
-        desktop_A2D_RELAY := desktop::A2D_RELAY
         desktop_win18_state := desktop::win18::state
