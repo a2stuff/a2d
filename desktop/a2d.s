@@ -8,9 +8,6 @@
         .include "../a2d.inc"
         .include "../desktop.inc"
 
-        ;; Is this actually needed, or a coincidence?
-desktop_win18_state := $D63F
-
 ;;; ==================================================
 ;;; A2D - the GUI library
 ;;; ==================================================
@@ -8781,6 +8778,9 @@ mouse_operand:               ; e.g. if mouse is in slot 4, this is $40
 ;;; ==================================================
 
 ;;; TODO: This section behaves almost like part of DeskTop, not A2D ???
+
+        ;; Is this actually needed, or a coincidence?
+desktop_win18_state := $D63F
 
         .byte   $03
         .addr    $85E9

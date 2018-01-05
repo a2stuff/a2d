@@ -4,7 +4,6 @@
         .include "../inc/apple2.inc"
         .include "../inc/auxmem.inc"
         .include "../inc/prodos.inc"
-        .include "../inc/mouse.inc"
         .include "../a2d.inc"
         .include "../desktop.inc"
 
@@ -5224,7 +5223,6 @@ app_mask:
 
         .res    70, 0
 .endproc ; desktop_aux
-        desktop_win18_state := desktop_aux::win18::state
 
 .proc desktop_main
 L0000           := $0000
@@ -5238,50 +5236,31 @@ L0D14           := $0D14
 
         .org $4000
 
+        ;; Jump table
 L4000:  jmp     L4042
-
 L4003:  jmp     A2D_RELAY
-
 L4006:  jmp     L8259
-
 L4009:  jmp     L830F
-
         jmp     L5E78
-
         jmp     DESKTOP_AUXLOAD
-
 L4012:  jmp     L5050
-
 L4015:  jmp     L40F2
-
 L4018:  jmp     DESKTOP_RELAY
-
         jmp     L8E81
-
 L401E:  jmp     L6D2B
-
 L4021:  jmp     L46BA
-
         jmp     DESKTOP_COPY_TO_BUF
-
         jmp     DESKTOP_COPY_FROM_BUF
-
         jmp     L490E
-
 L402D:  jmp     L8707
-
 L4030:  jmp     DESKTOP_SHOW_ALERT0
-
 L4033:  jmp     DESKTOP_SHOW_ALERT
-
         jmp     L46DE
-
         jmp     L489A
-
         jmp     L488A
-
         jmp     L8E89
 
+        ;; API entry point
 L4042:  cli
         sta     ALTZPON
         lda     LCBANK1
@@ -5619,16 +5598,15 @@ L43B3:  dex
         lda     L42C4,x
         sta     L43E5
         lda     L42C5,x
-        sta     L43E6
+        sta     L43E5+1
         jsr     L43E0
         A2D_RELAY_CALL $33, $E25A ; ???
         rts
 
 L43E0:  tsx
         stx     $E256
-        .byte   $4C
-L43E5:  .byte   $34
-L43E6:  .byte   $12
+        L43E5 := *+1
+        jmp     $1234           ; self-modified
 L43E7:  tsx
         stx     $E256
         A2D_RELAY_CALL A2D_QUERY_TARGET, $D209
@@ -6031,7 +6009,7 @@ L477F:  lda     $D345,x
         lda     #$90
         sta     L5B19
         lda     #$02
-        sta     L5B1A
+        sta     L5B19+1
         jmp     L5AEE
 
         .byte   $0A,$00,$18,$00,$00,$00,$00,$00
@@ -6145,10 +6123,11 @@ L48CC:  sta     $D2AC
         lda     #$88
         sta     L48E4
         lda     #$40
-        sta     L48E5
-        .byte   $4C
-L48E4:  .byte   $34
-L48E5:  .byte   $12
+        sta     L48E4+1
+
+        L48E4 := *+1
+        jmp     $1234           ; self-modified
+
 L48E6:  A2D_RELAY_CALL A2D_GET_INPUT, $D208
         rts
 
@@ -8185,7 +8164,7 @@ L5AD0:  .byte   0
         sbc     #$30
         clc
         adc     #$C0
-        sta     L5B1A
+        sta     L5B19+1
         lda     #$00
         sta     L5B19
 L5AEE:  sta     ALTZPOFF
@@ -8202,9 +8181,10 @@ L5AEE:  sta     ALTZPOFF
         sta     CLRALTCHAR
         sta     CLR80VID
         sta     CLR80COL
-        .byte   $4C
-L5B19:  .byte   0
-L5B1A:  .byte   0
+
+        L5B19 := *+1
+        jmp     $0000           ; self-modified
+
 L5B1B:  .byte   0
 L5B1C:  lda     DESKTOP_WINID
         sta     DESKTOP_BUFNUM
@@ -14288,18 +14268,17 @@ L9168:  jsr     L917F
 
 L917A:  .byte   0
         .byte   0
-L917C:  .byte   $4C
-L917D:  .byte   0
-L917E:  .byte   0
-L917F:  .byte   $4C
-L9180:  .byte   0
-L9181:  .byte   0
-L9182:  .byte   $4C
-L9183:  .byte   0
-L9184:  .byte   0
-L9185:  .byte   $4C
-L9186:  .byte   0
-L9187:  .byte   0
+
+        ;; Dynamically constructed jump table???
+        L917D := *+1
+L917C:  jmp     $0000
+        L9180 := *+1
+L917F:  jmp     $0000
+        L9183 := *+1
+L9182:  jmp     $0000
+        L9186 := *+1
+L9185:  jmp     $0000
+
 L9188:  .byte   0
 L9189:  .byte   0
 L918A:  .byte   0
@@ -15186,11 +15165,11 @@ L993E:  lda     #$00
         lda     #$5A
         sta     L917D
         lda     #$99
-        sta     L917E
+        sta     L917D+1
         lda     #$7C
         sta     L9180
         lda     #$99
-        sta     L9181
+        sta     L9180+1
         jmp     L9BBF
 
         sta     L9938
@@ -15218,11 +15197,11 @@ L9984:  lda     #$00
         lda     #$A7
         sta     L917D
         lda     #$99
-        sta     L917E
+        sta     L917D+1
         lda     #$DC
         sta     L9180
         lda     #$99
-        sta     L9181
+        sta     L9180+1
         ldy     #$0A
         lda     #$37
         ldx     #$99
@@ -15251,7 +15230,7 @@ L99C3:  lda     L9931,y
         lda     #$EB
         sta     L9186
         lda     #$99
-        sta     L9187
+        sta     L9186+1
         rts
 
         lda     #$03
@@ -15811,16 +15790,16 @@ L9E7E:  sta     L9E79
         lda     #$B1
         sta     L9183
         lda     #$9E
-        sta     L9184
+        sta     L9183+1
         lda     #$A3
         sta     L917D
         lda     #$9E
-        sta     L917E
+        sta     L917D+1
         jsr     LA044
         lda     #$D3
         sta     L9180
         lda     #$9E
-        sta     L9181
+        sta     L9180+1
         rts
 
         sta     L9E7A
@@ -16041,31 +16020,31 @@ LA059:  lda     #$00
         lda     #$D1
         sta     L9183
         lda     #$A0
-        sta     L9184
+        sta     L9183+1
         lda     #$B5
         sta     L917D
         lda     #$A0
-        sta     L917E
+        sta     L917D+1
         jsr     LA10A
         lda     #$F8
         sta     L9180
         lda     #$A0
-        sta     L9181
+        sta     L9180+1
         rts
 
 LA085:  lda     #$C3
         sta     L9183
         lda     #$A0
-        sta     L9184
+        sta     L9183+1
         lda     #$A7
         sta     L917D
         lda     #$A0
-        sta     L917E
+        sta     L917D+1
         jsr     LA100
         lda     #$F0
         sta     L9180
         lda     #$A0
-        sta     L9181
+        sta     L9180+1
         rts
 
         sta     LA055
@@ -16227,11 +16206,11 @@ LA1E4:  lda     #$00
         lda     #$20
         sta     L9183
         lda     #$A2
-        sta     L9184
+        sta     L9183+1
         lda     #$11
         sta     L917D
         lda     #$A2
-        sta     L917E
+        sta     L917D+1
         ldy     #$0B
         lda     #$DF
         ldx     #$A1
@@ -16239,7 +16218,7 @@ LA1E4:  lda     #$00
         lda     #$33
         sta     L9180
         lda     #$A2
-        sta     L9181
+        sta     L9180+1
         rts
 
         lda     #$01
@@ -16597,11 +16576,7 @@ LA4C6:  ldy     #$C5
         .res    48, 0
 LA500:  jmp     LA520
 
-LA503:  .byte   $9C
-LA504:  .byte   $A8,$57,$A9,$D4,$AC,$34,$AE,$98
-        .byte   $A8,$98,$A8,$28,$AF,$2C,$B0,$4A
-        .byte   $B1,$68,$B2,$E1,$AA,$FA,$AB,$25
-        .byte   $B3
+LA503:  .addr   $A89C,$A957,$ACD4,$AE34,$A898,$A898,$AF28,$B02C,$B14A,$B268,$AAE1,$ABFA,$B325
 LA51D:  .byte   $00
 LA51E:  .byte   $00,$00
 LA520:  sta     LA51D
@@ -16611,8 +16586,8 @@ LA520:  sta     LA51D
         tax
         lda     LA503,x
         sta     LA565
-        lda     LA504,x
-        sta     LA566
+        lda     LA503+1,x
+        sta     LA565+1
         lda     #$00
         sta     $D8EB
         sta     $D8EC
@@ -16628,11 +16603,11 @@ LA520:  sta     LA51D
         lda     #$98
         sta     LA89A
         lda     #$A8
-        sta     LA89B
+        sta     LA89A+1
         jsr     LB403
-        .byte   $4C
-LA565:  .byte   0
-LA566:  .byte   0
+
+        LA565 := *+1
+        jmp     $0000           ; self-modified
 LA567:  lda     $D8E8
         beq     LA579
         dec     $D8E9
@@ -16969,9 +16944,8 @@ LA895:  lda     #$FF
 
         rts
 
-LA899:  .byte   $4C
-LA89A:  .byte   0
-LA89B:  .byte   0
+        LA89A := *+1
+LA899:  jmp     $0000
 
 LA89C:  A2D_RELAY_CALL A2D_CREATE_WINDOW, $D62B
         lda     $D62B
@@ -19249,4 +19223,4 @@ LBEB1:  A2D_RELAY_CALL A2D_QUERY_SCREEN, $D239
         rts
 
         .res    60, 0
-.endproc
+.endproc ; desktop_main
