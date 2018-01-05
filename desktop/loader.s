@@ -84,7 +84,7 @@ pathname:
 .proc read_params
 params: .byte   4
 ref_num:.byte   0
-buffer: .addr   $1E00
+buffer: .addr   $1E00           ; so the $200 byte mark ends up at $2000
 request:.word   $0400
 trans:  .word   0
 .endproc
@@ -266,88 +266,136 @@ L11D0:
 ;;; This chunk is invoked at $2000 after the quit
 ;;; handler has been invoked and updated itself.
 
-.proc rest
+.proc install_segments
+        .org $2000
 
-        .byte   $4C,$4C,$20,$03,$18,$20,$00
-        .byte   $30,$00,$04,$00,$00,$00,$00,$00
-        .byte   $00,$00,$01,$00,$02,$00,$80,$05
-        .byte   $00
+        jmp     start
 
+.proc open_params
+params: .byte   3
+path:   .addr   pathname
+buffer: .addr   $3000
+ref_num:.byte   0
+.endproc
+
+.proc read_params
+params: .byte   4
+ref_num:.byte   0
+buffer: .addr   0
+request:.word   0
+trans:  .word   0
+.endproc
+
+.proc close_params
+params: .byte   1
+ref_num:.byte   0
+.endproc
+
+.proc set_mark_params
+params: .byte   2
+ref_num:.byte   0
+pos:    .faraddr $580           ; This many bytes before the good stuff.
+.endproc
+
+pathname:
         PASCAL_STRING "DeskTop2"
 
-        .byte   $00,$3F,$00,$40,$00,$40
+;;; Consecutive segments are loaded, |size| bytes are loaded at |addr|
+;;; then relocated to |dest| according to |type|.
 
-        .byte   $00,$40,$00,$08,$90,$02,$00,$40
-        .byte   $00,$D0,$00,$FB,$00,$40,$00,$08
-        .byte   $90,$02,$00,$80,$00,$1D,$00,$05
-        .byte   $00,$7F,$00,$08,$60,$01,$01,$02
-        .byte   $02,$00,$00,$00,$06,$A2,$17,$A9
-        .byte   $00
+segment_addr_table:
+        .word   $3F00,$4000,$4000,$4000,$0800,$0290
 
-L1229:  sta     $BF59,x
+segment_dest_table:
+        .addr   $4000,$D000,$FB00,$4000,$0800,$0290
+
+segment_size_table:
+        .word   $8000,$1D00,$0500,$7F00,$0800,$0160
+
+segment_type_table:             ; 0 = main, 1 = aux, 2 = banked (main)
+        .byte   $01,$02,$02,$00,$00,$00
+
+num_segments:
+        .byte   6
+
+start:
+        ;; Configure system bitmap - everything is available
+        ldx     #BITMAP_SIZE-1
+        lda     #0
+:       sta     BITMAP+1,x
         dex
-        bpl     L1229
-        php
-        sei
-        MLI_CALL OPEN, $2003
-        plp
-        and     #$FF
-        beq     L123D
-        brk
-L123D:  lda     $2008
-        sta     $2014
-        sta     $200A
-        php
-        sei
-        MLI_CALL SET_MARK, $2013
-        plp
-        and     #$FF
-        beq     L1254
-        brk
-L1254:  lda     #$00
-        sta     $20DC
-        lda     $20DC
-        cmp     $204B
-        bne     L1272
-        php
-        sei
-        MLI_CALL CLOSE, $2011
-        plp
-        and     #$FF
-        beq     L126F
-        brk
-L126F:  jmp     L0800
+        bpl     :-
 
-L1272:  asl     a
+        ;; Open this system file
+        php
+        sei
+        MLI_CALL OPEN, open_params
+        plp
+        and     #$FF
+        beq     :+
+        brk                     ; crash
+:       lda     open_params::ref_num
+        sta     set_mark_params::ref_num
+        sta     read_params::ref_num
+        php
+        sei
+        MLI_CALL SET_MARK, set_mark_params
+        plp
+        and     #$FF
+        beq     :+
+        brk                     ; crash
+:       lda     #0
+        sta     segment_num
+
+loop:   lda     segment_num
+        cmp     num_segments
+        bne     continue
+
+        ;; Close and invoke... $800 ???
+        php
+        sei
+        MLI_CALL CLOSE, close_params
+        plp
+        and     #$FF
+        beq     :+
+        brk                     ; crash
+:       jmp     L0800           ; ??? What is there?
+
+continue:
+        asl     a
         tax
-        lda     $2021,x
-        sta     $200B
-        lda     $2022,x
-        sta     $200C
-        lda     $2039,x
-        sta     $200D
-        lda     $203A,x
-        sta     $200E
+        lda     segment_addr_table,x
+        sta     read_params::buffer
+        lda     segment_addr_table+1,x
+        sta     read_params::buffer+1
+        lda     segment_size_table,x
+        sta     read_params::request
+        lda     segment_size_table+1,x
+        sta     read_params::request+1
         php
         sei
-        MLI_CALL READ, $2009
+        MLI_CALL READ, read_params
         plp
         and     #$FF
-        beq     L129A
-        brk
-L129A:  ldx     $20DC
-        lda     $2045,x
-        beq     L12AF
-        cmp     #$02
-        beq     L12AC
-        jsr     $212E
-        jmp     $20D6
+        beq     :+
+        brk                     ; crash
+:       ldx     segment_num
+        lda     segment_type_table,x
+        beq     next_segment    ; type 0 = main, so done
+        cmp     #2
+        beq     :+
+        jsr     aux_segment
+        jmp     next_segment
+:       jsr     banked_segment
 
-L12AC:  jsr     $20DD
-L12AF:  inc     $20DC
-        jmp     $2080
+next_segment:
+        inc     segment_num
+        jmp     loop
 
-        brk
+segment_num:  .byte   0
+
+        ;; Handle bank-switched memory segment
+banked_segment:
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
@@ -357,77 +405,89 @@ L12AF:  inc     $20DC
         lda     #$00
         sta     $06
         sta     $08
-        lda     $20DC
+        lda     segment_num
         asl     a
         tax
-        lda     $202E,x
-        sta     $09
-        lda     $200C
-        sta     $07
+        lda     segment_dest_table+1,x
+        sta     $08+1
+        lda     read_params::buffer+1
+        sta     $06+1
         clc
-        adc     $203A,x
-        sta     $212D
-        lda     $2039,x
-        beq     L12EB
-        inc     $212D
-L12EB:  ldy     #$00
-L12ED:  lda     ($06),y
+        adc     segment_size_table+1,x
+        sta     L212D
+        lda     segment_size_table,x
+        beq     L2112
+        inc     L212D
+L2112:  ldy     #0
+L2114:  lda     ($06),y
         sta     ($08),y
         iny
-        bne     L12ED
-        inc     $07
-        inc     $09
-        lda     $07
-        cmp     $212D
-        bne     L12ED
+        bne     L2114
+        inc     $06+1
+        inc     $08+1
+        lda     $06+1
+        cmp     L212D
+        bne     L2114
         sta     ALTZPOFF
         lda     ROMIN2
         rts
 
-        brk
+L212D:  .byte   0
+
+        ;; Handle aux memory segment
+aux_segment:
         lda     #$00
         sta     $06
         sta     $08
-        lda     $20DC
+        lda     segment_num
         asl     a
         tax
-        lda     $202E,x
-        sta     $09
-        lda     $200C
-        sta     $07
+        lda     segment_dest_table+1,x
+        sta     $08+1
+        lda     read_params::buffer+1
+        sta     $06+1
         clc
-        adc     $203A,x
-        sta     $2168
+        adc     segment_size_table+1,x
+        sta     L2168
         sta     RAMRDOFF
         sta     RAMWRTON
         ldy     #$00
-L132B:  lda     ($06),y
+L2152:  lda     ($06),y
         sta     ($08),y
         iny
-        bne     L132B
-        inc     $07
-        inc     $09
-        lda     $07
-        cmp     $2168
-        bne     L132B
+        bne     L2152
+        inc     $06+1
+        inc     $08+1
+        lda     $06+1
+        cmp     L2168
+        bne     L2152
         sta     RAMWRTOFF
         rts
 
-        .res    152,0
+L2168:  .byte   0
+
+        ;; Padding
+        .res    $2200 - *,0
+.endproc ; install_segments
+
+;;; ==================================================
+;;; Not sure where this could be invoked from
+
+.proc rest
 
         ;; Test for OpenApple+ClosedApple+P
         pha
         lda     BUTN0
         and     BUTN1
-        bpl     L13E9
+        bpl     L2210
         lda     KBD
         cmp     #('P' | $80)
-        beq     L13ED
-L13E9:  pla
+        beq     L2214
+L2210:  pla
         jmp     L7ECA
 
         ;; Invoked if OA+CA+P is held
-L13ED:  sta     KBDSTRB
+L2214:  sta     KBDSTRB
         sta     SET80COL
         sta     SET80VID
         sta     DHIRESON
@@ -442,28 +502,28 @@ L13ED:  sta     KBDSTRB
 
         ldy     #$00
         lda     $03CF,y
-        beq     L141B
+        beq     L2242
         jsr     L03C1
         iny
         jmp     L02B6
 
-L141B:  rts
+L2242:  rts
 
         ldy     #$00
         lda     $03DE,y
-        beq     L142A
+        beq     L2251
         jsr     L03C1
         iny
         jmp     L02C5
 
-L142A:  rts
+L2251:  rts
 
         ldx     #$00
-L142D:  lda     $02E0,x
+L2254:  lda     $02E0,x
         jsr     L03C1
         inx
         cpx     #$06
-        bne     L142D
+        bne     L2254
         rts
 
         .byte   $1B,$47,$30,$35,$36,$30 ; ???
@@ -476,50 +536,50 @@ L142D:  lda     $02E0,x
         lda     #$00
         sta     $03C6
         sta     $03C7
-L1454:  lda     #$08
+L227B:  lda     #$08
         sta     $03CB
         lda     $03C5
         sta     $03C8
-L145F:  lda     $03C8
+L2286:  lda     $03C8
         jsr     L0393
         lda     $03CC
         lsr     a
         tay
         sta     LOWSCR
-        bcs     L1472
+        bcs     L2299
         sta     HISCR
-L1472:  lda     ($06),y
+L2299:  lda     ($06),y
         and     $03C9
         cmp     #$01
         ror     $03CA
         inc     $03C8
         dec     $03CB
-        bne     L145F
+        bne     L2286
         lda     $03CA
         eor     #$FF
         sta     LOWSCR
         jsr     L03C1
         lda     $03C6
         cmp     #$2F
-        bne     L149D
+        bne     L22C4
         lda     $03C7
         cmp     #$02
-        beq     L14B4
-L149D:  asl     $03C9
-        bpl     L14AA
+        beq     L22DB
+L22C4:  asl     $03C9
+        bpl     L22D1
         lda     #$01
         sta     $03C9
         inc     $03CC
-L14AA:  inc     $03C6
-        bne     L1454
+L22D1:  inc     $03C6
+        bne     L227B
         inc     $03C7
-        bne     L1454
-L14B4:  sta     LOWSCR
+        bne     L227B
+L22DB:  sta     LOWSCR
         rts
 
         jsr     L03B3
         jsr     L02B4
-L14BE:  jsr     L02E6
+L22E5:  jsr     L02E6
         lda     #$0D
         jsr     L03C1
         lda     #$0A
@@ -527,7 +587,7 @@ L14BE:  jsr     L02E6
         lda     $03C8
         sta     $03C5
         cmp     #$C0
-        bcc     L14BE
+        bcc     L22E5
         lda     #$0D
         jsr     L03C1
         lda     #$0D
@@ -572,7 +632,7 @@ L14BE:  jsr     L02E6
         jsr     COUT
         rts
 
-L151E:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+L2345:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$1B,$65,$1B,$54,$31,$36
         .byte   $09,$4C,$20,$44,$8D,$09,$5A,$8D
         .byte   $00,$1B,$4E,$1B,$54,$32,$34,$00

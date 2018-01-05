@@ -38,6 +38,9 @@ The invoked code stashes the current prefix and re-patches ProDOS. It
 then (in a convoluted way) loads in the second $200 bytes of the
 system file at $2000 and invokes that.
 
+This code then loads the rest of the file as a sequence of segments,
+moving them to the appropriate destination in aux/banked/main memory.
+
 ### GUI Library "A2D"
 
 `a2d.s`
@@ -67,6 +70,7 @@ DeskTop application code is in the lower 48k of both Aux and Main:
 * Aux $FB00-$FFFF - more resources (file types, icons)
 
 ($C000-$CFFF is reserved for I/O, and main $BF page and language card is ProDOS)
+
 
 ```
        Main              Aux               ROM

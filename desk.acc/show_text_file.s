@@ -184,7 +184,7 @@ ref_num:.byte   0               ; ref_num
 .proc set_mark_params
         .byte   2               ; param_count
 ref_num:.byte   0               ; ref_num
-        .byte   0,0,0           ; position (lo, mid, hi)
+        .faraddr 0              ; position (lo, mid, hi)
 .endproc
 
 .proc close_params
