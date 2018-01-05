@@ -11,10 +11,14 @@
 ;;; DeskTop - the actual application
 ;;; ==================================================
 
+
+;;; AUX memory segment - follows the A2D GUI library
+
         .org $8E00
 
         ;; Entry point for "DESKTOP"
         .assert * = DESKTOP, error, "DESKTOP entry point must be at $8E00"
+
         jmp     DESKTOP_DIRECT
 
 .macro A2D_RELAY2_CALL call, addr
@@ -4208,24 +4212,45 @@ alert_input_params:
         .byte   $00,$00,$00,$00,$00
         .addr   buffer
 
+.proc buffer
+        .res    56, $0
+
         ;; Looks like a window definition?
-buffer: .byte   $00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$20,$80,$00,$00
-        .byte   $00,$00,$00,$0A,$00,$0A,$00,$FF
-        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-        .byte   $00,$00,$00,$00,$00,$01,$01,$00
-        .byte   $00,$00,$88,$FF,$FF,$FF,$FF,$FF
+id:     .byte   0
+flags:  .byte   0
+title:  .addr   0
+hscroll:.byte   A2D_CWS_NOSCROLL
+vscroll:.byte   A2D_CWS_NOSCROLL
+hsmax:  .byte   0
+hspos:  .byte   0
+vsmax:  .byte   0
+vspos:  .byte   0
+        .byte   0,0             ; ???
+w1:     .word   0
+h1:     .word   0
+w2:     .word   0
+h2:     .word   0
+addr:   .addr   A2D_SCREEN_ADDR
+stride: .word   A2D_SCREEN_STRIDE
+hoff:   .word   0
+voff:   .word   0
+width:  .word   10
+height: .word   10
+pattern:.res    8, $FF
+mskand: .byte   A2D_DEFAULT_MSKAND
+mskor:  .byte   A2D_DEFAULT_MSKOR
+xpos:   .word   0
+ypos:   .word   0
+hthick: .byte   1
+vthick: .byte   1
+mode:   .byte   0
+tmask:  .byte   0
+font:   .addr   A2D_DEFAULT_FONT
+
+        .byte   $FF,$FF,$FF,$FF,$FF
         .byte   $FF,$FF,$FF,$FF,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$FF
+.endproc
 
 LD293:
         .byte   px(%1010101)
