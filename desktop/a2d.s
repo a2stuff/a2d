@@ -8780,6 +8780,8 @@ mouse_operand:               ; e.g. if mouse is in slot 4, this is $40
 
 ;;; ==================================================
 
+;;; TODO: This section behaves almost like part of DeskTop, not A2D ???
+
         .byte   $03
         .addr    $85E9
 
@@ -9102,13 +9104,17 @@ online_params_buffer:
 ;;; ==================================================
 ;;; Font
 
-font_table:
-        .byte   $00,$7F         ; ??
+font_definition:
+        .assert * = font_flag, error, "Entry point mismatch"
+        .byte   $00
 
-glyph_height:
+        .assert * = font_size_count, error, "Entry point mismatch"
+        .byte   $7F
+
+        .assert * = font_height, error, "Entry point mismatch"
         .byte   9
 
-glyph_width_table:
+        .assert * = font_width_table, error, "Entry point mismatch"
         .byte   $01,$07,$07,$07,$07,$07,$01,$07
         .byte   $07,$07,$07,$07,$07,$07,$07,$07
         .byte   $07,$03,$07,$06,$07,$07,$07,$07
@@ -9126,7 +9132,7 @@ glyph_width_table:
         .byte   $06,$06,$06,$06,$06,$06,$06,$07
         .byte   $06,$06,$06,$04,$02,$04,$05,$07
 
-glyph_bitmaps:
+        .assert * = font_glyphs, error, "Entry point mismatch"
         ;; Format is: glyph0-row0, glyph1-row0, ...
         .byte   $00,$00,$00,$3F,$77,$01,$01,$00
         .byte   $00,$7F,$00,$00,$7F,$20,$3E,$3E
@@ -9259,6 +9265,8 @@ glyph_bitmaps:
         ;; end of font glyphs
 
 ;;; ==================================================
+
+        ;; ???
 
         .byte   $00,$00,$00,$00,$77,$30,$01
         .byte   $00,$00,$7F,$00,$00,$7F,$00,$00

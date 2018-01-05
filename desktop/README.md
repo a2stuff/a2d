@@ -38,6 +38,8 @@ Entry point is $4000 with a ProDOS MLI-style calling convention
 
 * Font is at $8800
 
+* Part of $8500-$87FF looks like part of "DeskTop" (see below), dealing with online volumes.
+
 ### "DeskTop" Application
 
 `desktop.s`
