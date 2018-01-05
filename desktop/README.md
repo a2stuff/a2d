@@ -27,6 +27,17 @@ The file is broken down into multiple segments:
 
 ## Structure
 
+### Loader
+
+`loader.s`
+
+Invoked at $2000; patches the ProDOS QUIT routine (at LC2 $D100) then
+invokes it. That gets copied to $1000-$11FF and run by ProDOS.
+
+The invoked code stashes the current prefix and re-patches ProDOS. It
+then (in a convoluted way) loads in the second $200 bytes of the
+system file at $2000 and invokes that.
+
 ### GUI Library "A2D"
 
 `a2d.s`

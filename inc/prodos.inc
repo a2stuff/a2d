@@ -2,10 +2,12 @@
 ;;; ProDOS MLI
 ;;; ------------------------------
 
-;;; Entry point
+;;; Entry point / Global Page
 MLI             := $BF00
 
-;;; Date/Time
+BITMAP          := $BF58        ; System Bitmap
+BITMAP_SIZE     := $18
+
 DATELO          := $BF90
 DATEHI          := $BF91
 TIMELO          := $BF92
@@ -51,8 +53,6 @@ FT_DIRECTORY    := $0F
 FT_SRC          := $B0  ; IIgs system type; re-used?
 FT_BASIC        := $FC
 FT_SYSTEM       := $FF
-
-
 
 ;;; Macros
 .macro  MLI_CALL    op, addr

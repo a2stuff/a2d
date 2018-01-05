@@ -17,17 +17,23 @@ L03C1           := $03C1
 L03E5           := $03E5
 L0800           := $0800
 
-L7ECA           := $7ECA
+IRQ_VECTOR      := $3FE
 
-        .org $2000
+L7ECA           := $7ECA        ; ???
+MONZ            := $FF69
 
+SELECTOR        := $D100
+
+;;; ==================================================
 ;;; Patch self in as ProDOS QUIT routine (LCBank2 $D100)
-;;; and invoke QUIT
+;;; and invoke QUIT. Note that only $200 bytes are copied.
 
 .proc install_as_quit
+        .org $2000
+
 
         src     := quit_routine
-        dst     := $D100
+        dst     := SELECTOR
 
         lda     LCBANK2
         lda     LCBANK2
@@ -52,159 +58,217 @@ params: .byte   4
 .endproc
 .endproc ; install_as_quit
 
+;;; ==================================================
 ;;; New QUIT routine. Gets relocated to $1000 by ProDOS before
 ;;; being executed.
 
 .proc quit_routine
         .org    $1000
+self:
 
-        jmp     L1044
 
-        .byte   $00,"Mouse Desk",$00
+        jmp     start
 
+reinstall_flag:                 ; set once prefix saved and reinstalled
+        .byte   0
+
+        .byte   "Mouse Desk"
+        .byte   0
+
+splash_string:
         PASCAL_STRING "Loading Apple II DeskTop"
+
+pathname:
         PASCAL_STRING "DeskTop2"
 
-L1031:
-        .byte   $04,$00,$00
-        .byte   $1E,$00,$04,$00,$00
-L1039:  .byte   $01,$00
-L103B:  .byte   $01,$90,$11,$03,$28,$10,$00,$1A,$00
-L1044:  lda     ROMIN2
+.proc read_params
+params: .byte   4
+ref_num:.byte   0
+buffer: .addr   $1E00
+request:.word   $0400
+trans:  .word   0
+.endproc
+
+.proc close_params
+params: .byte   1
+ref_num:.byte   0               ; close all
+.endproc
+
+.proc prefix_params
+params: .byte   1
+buffer: .addr   prefix_buffer
+.endproc
+
+.proc open_params
+params: .byte   3
+path:   .addr   pathname
+buffer: .addr   $1A00
+ref_num:.byte   0
+.endproc
+
+
+start:  lda     ROMIN2
+
+        ;; Show a splash message on 80 column text screen
         jsr     SETVID
         jsr     SETKBD
         sta     CLR80VID
         sta     SETALTCHAR
         sta     CLR80COL
         jsr     SLOT3ENTRY
-L1059:  jsr     HOME
-        lda     #$00
-        sta     SHADOW          ; ??? IIgs specific?
+        jsr     HOME
+
+        lda     #$00            ; IIgs specific ???
+        sta     SHADOW
         lda     #$40
         sta     RAMWRTON
-        sta     $0100
-        sta     $0101
+        sta     $0100           ; ???
+        sta     $0101           ; ???
         sta     RAMWRTOFF
-        lda     #$0C
-        sta     $25
+
+        lda     #12             ; VTAB 12
+        sta     CV
         jsr     VTAB
-        lda     #$50
-        sec
-        sbc     $100F
+
+        lda     #80             ; HTAB (80-width)/2
+        sec                     ; to center
+        sbc     splash_string
         lsr     a
-        sta     $24
+        sta     CH
+
         ldy     #$00
-L1081:  lda     $1010,y
+:       lda     splash_string+1,y
         ora     #$80
         jsr     COUT
         iny
-        cpy     $100F
-        bne     L1081
-        MLI_CALL CLOSE, L1039
-        ldx     #$17
-        lda     #$01
-        sta     $BF58,x
+        cpy     splash_string
+        bne     :-
+
+        ;; Close all open files (???)
+        MLI_CALL CLOSE, close_params
+
+        ;; Initialize system memory bitmap
+        ldx     #BITMAP_SIZE-1
+        lda     #$01            ; Protect ProDOS global page
+        sta     BITMAP,x
         dex
         lda     #$00
-L109F:  sta     $BF58,x
+L109F:  sta     BITMAP,x
         dex
         bpl     L109F
-        lda     #$CF
-        sta     $BF58
-        lda     $1003
-        bne     L10E8
-L10AF:  MLI_CALL GET_PREFIX, L103B
-L10B5:  .byte   $F0
-L10B6:  .byte   $03
-        jmp     L118B
+        lda     #%11001111       ; Protect ZP, stack, Text Page 1
+        sta     BITMAP
 
-L10BA:  lda     #$FF
-        sta     $1003
-        lda     $03FE
-        sta     $1189
-        lda     $03FF
-        sta     $118A
+        lda     reinstall_flag
+        bne     no_reinstall
+
+        ;; Re-install quit routine (with prefix memorized)
+L10AF:  MLI_CALL GET_PREFIX, prefix_params
+        beq     :+
+        jmp     crash
+:       lda     #$FF
+        sta     reinstall_flag
+
+        lda     IRQ_VECTOR
+        sta     irq_saved
+        lda     IRQ_VECTOR+1
+        sta     irq_saved+1
         lda     LCBANK2
         lda     LCBANK2
-        ldy     #$00
-L10D3:  lda     $1000,y
-        sta     $D100,y
-        lda     $1100,y
-        sta     $D200,y
+
+        ldy     #0
+:       lda     self,y
+        sta     SELECTOR,y
+        lda     self+$100,y
+        sta     SELECTOR+$100,y
         dey
-        bne     L10D3
+        bne     :-
+
         lda     ROMIN2
-        jmp     L10F4
+        jmp     done_reinstall
 
-L10E8:  lda     $1189
-        sta     $03FE
-        lda     $118A
-        sta     $03FF
-L10F4:  MLI_CALL SET_PREFIX, L103B
-        beq     L10FF
-        jmp     L1129
+no_reinstall:
+        lda     irq_saved
+        sta     IRQ_VECTOR
+        lda     irq_saved+1
+        sta     IRQ_VECTOR+1
 
-L10FF:  .byte   $20
-L1100:  brk
-        .byte   $BF, $C8, $3E
-        .byte   $10
-        .byte   $F0
-L1106:  .byte   $03
-L1107:  jmp     L118B
+done_reinstall:
+        ;; Set the prefix, read the first $400 bytes of this system
+        ;; file in (at $1E00), and invoke $200 bytes into it (at $2000)
 
-L110A:  lda     $1043
-        sta     $1032
-        MLI_CALL READ, L1031
-        beq     L111B
-        jmp     L118B
+        MLI_CALL SET_PREFIX, prefix_params
+        beq     :+
+        jmp     prompt_for_system_disk
+:       MLI_CALL OPEN, open_params
+        beq     :+
+        jmp     crash
+:       lda     open_params::ref_num
+        sta     read_params::ref_num
+        MLI_CALL READ, read_params
+        beq     :+
+        jmp     crash
+:       MLI_CALL CLOSE, close_params
+        beq     :+
+        jmp     crash
+:       jmp     $2000           ; Invoke system file
 
-L111B:  MLI_CALL CLOSE, L1039
-        beq     L1126
-        jmp     L118B
 
-L1126:  jmp     $2000
-
-L1129:  jsr     SLOT3ENTRY
+        ;; Display a string, and wait for Return keypress
+prompt_for_system_disk:
+        jsr     SLOT3ENTRY      ; 80 column mode
         jsr     HOME
-        lda     #$0C
-        sta     $25
+        lda     #12             ; VTAB 12
+        sta     CV
         jsr     VTAB
-        lda     #$50
-        sec
-        sbc     $1160
+
+        lda     #80             ; HTAB (80 - width)/2
+        sec                     ; to center the string
+        sbc     disk_prompt
         lsr     a
-        sta     $24
+        sta     CH
+
         ldy     #$00
-L1141:  .byte   $B9
-L1142:  adc     ($11,x)
+:       lda     disk_prompt+1,y
         ora     #$80
         jsr     COUT
         iny
-        cpy     $1160
-        bne     L1141
-L114F:  sta     KBDSTRB
-L1152:  lda     CLR80COL
-        bpl     L1152
+        cpy     disk_prompt
+        bne     :-
+
+wait:   sta     KBDSTRB
+:       lda     KBD
+        bpl     :-
         and     #$7F
-        cmp     #$0D
-        bne     L114F
-        jmp     L1044
+        cmp     #$0D            ; Return
+        bne     wait
+        jmp     start
 
+disk_prompt:
         PASCAL_STRING "Insert the system disk and Press Return."
-        .byte   $00,$00
-L118B:  sta     $6
-        jmp     $FF69
 
+irq_saved:
+        .addr   0
+
+crash:  sta     $6              ; Crash?
+        jmp     MONZ
+
+prefix_buffer:
+        .res    64, 0
+
+        ;; ???
+L11D0:
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$4C,$4C,$20,$03,$18,$20,$00
+        .byte   $00
+.endproc ; quit_routine
+
+;;; ==================================================
+;;; This chunk is invoked at $2000 after the quit
+;;; handler has been invoked and updated itself.
+
+.proc rest
+
+        .byte   $4C,$4C,$20,$03,$18,$20,$00
         .byte   $30,$00,$04,$00,$00,$00,$00,$00
         .byte   $00,$00,$01,$00,$02,$00,$80,$05
         .byte   $00
@@ -212,12 +276,14 @@ L118B:  sta     $6
         PASCAL_STRING "DeskTop2"
 
         .byte   $00,$3F,$00,$40,$00,$40
+
         .byte   $00,$40,$00,$08,$90,$02,$00,$40
         .byte   $00,$D0,$00,$FB,$00,$40,$00,$08
         .byte   $90,$02,$00,$80,$00,$1D,$00,$05
         .byte   $00,$7F,$00,$08,$60,$01,$01,$02
         .byte   $02,$00,$00,$00,$06,$A2,$17,$A9
         .byte   $00
+
 L1229:  sta     $BF59,x
         dex
         bpl     L1229
@@ -347,35 +413,20 @@ L132B:  lda     ($06),y
         sta     RAMWRTOFF
         rts
 
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .res    152,0
+
+        ;; Test for OpenApple+ClosedApple+P
         pha
         lda     BUTN0
         and     BUTN1
         bpl     L13E9
         lda     KBD
-        cmp     #$D0
+        cmp     #('P' | $80)
         beq     L13ED
 L13E9:  pla
         jmp     L7ECA
 
+        ;; Invoked if OA+CA+P is held
 L13ED:  sta     KBDSTRB
         sta     SET80COL
         sta     SET80VID
@@ -387,6 +438,7 @@ L13ED:  sta     KBDSTRB
         lda     #$00
         sta     $03C5
         jmp     L035F
+
 
         ldy     #$00
         lda     $03CF,y
@@ -414,11 +466,9 @@ L142D:  lda     $02E0,x
         bne     L142D
         rts
 
-        .byte   $1B
-        .byte   $47, $30
-        and     $36,x
-        bmi     L1460
-        .byte   $D2, $02
+        .byte   $1B,$47,$30,$35,$36,$30 ; ???
+
+        jsr     $02D2
         ldy     #$00
         sty     $03CC
         lda     #$01
@@ -430,9 +480,7 @@ L1454:  lda     #$08
         sta     $03CB
         lda     $03C5
         sta     $03C8
-L145F:  .byte   $AD
-L1460:  iny
-        .byte   $03
+L145F:  lda     $03C8
         jsr     L0393
         lda     $03CC
         lsr     a
@@ -512,10 +560,11 @@ L14BE:  jsr     L02E6
         sta     $06
         rts
 
-        lda     #$C1
-        sta     $37
-        lda     #$00
-        sta     $36
+        lda     #>$C100
+        sta     COUT_HOOK+1
+        lda     #<$C100
+        sta     COUT_HOOK
+
         lda     #$8D
         jsr     L03E5
         rts
@@ -523,7 +572,7 @@ L14BE:  jsr     L02E6
         jsr     COUT
         rts
 
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+L151E:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$1B,$65,$1B,$54,$31,$36
         .byte   $09,$4C,$20,$44,$8D,$09,$5A,$8D
         .byte   $00,$1B,$4E,$1B,$54,$32,$34,$00
@@ -531,4 +580,4 @@ L14BE:  jsr     L02E6
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00
-.endproc ; quit_routine
+.endproc ; rest
