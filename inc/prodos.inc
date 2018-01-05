@@ -34,6 +34,7 @@ GET_EOF         := $D1
 SET_BUF         := $D2
 GET_BUF         := $D3
 ;;; System Calls
+QUIT            := $65
 GET_TIME        := $82
 ALLOC_INTERRUPT := $40
 DEALLOC_INTERRUPT       := $41
@@ -58,4 +59,12 @@ FT_SYSTEM       := $FF
         jsr MLI
         .byte op
         .addr addr
+.endmacro
+
+.macro PASCAL_STRING str        ; Length-prefixed string
+        .local  data            ; Can include control chars by using:
+        .local  end             ; PASCAL_STRING {"abc",$0D,"def"}
+        .byte   end - data
+data:   .byte   str
+end:
 .endmacro

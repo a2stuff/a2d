@@ -1,11 +1,4 @@
-.org $2000
-; da65 V2.16 - Git f5e9b401
-; Created:    2017-09-27 19:43:21
-; Input file: orig/DESKTOP2_s0_loader
-; Page:       1
-
-
-        .setcpu "65C02"
+        .setcpu "6502"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
@@ -23,59 +16,61 @@ L03B3           := $03B3
 L03C1           := $03C1
 L03E5           := $03E5
 L0800           := $0800
-L1031           := $1031
-L1039           := $1039
-L103B           := $103B
-L1044           := $1044
-L10F4           := $10F4
-L1129           := $1129
-L118B           := $118B
-A2D             := $4000
+
 L7ECA           := $7ECA
-UNKNOWN_CALL    := $8E00
 
-L2000:  lda     LCBANK2
-L2003:  lda     LCBANK2
+        .org $2000
+
+;;; Patch self in as ProDOS QUIT routine (LCBank2 $D100)
+;;; and invoke QUIT
+
+.proc install_as_quit
+
+        src     := quit_routine
+        dst     := $D100
+
+        lda     LCBANK2
+        lda     LCBANK2
+
         ldy     #$00
-L2008:
-L2009           := * + 1
-L200A           := * + 2
-        lda     L2027,y
-L200B:
-L200C           := * + 1
-L200D           := * + 2
-        sta     $D100,y
-L200E:  lda     L2127,y
-L2011:
-L2013           := * + 2
-        sta     $D200,y
-L2014:  dey
-        bne     L2008
+loop:   lda     src,y
+        sta     dst,y
+        lda     src+$100,y
+        sta     dst+$100,y
+        dey
+        bne     loop
         lda     ROMIN2
-        jsr     MLI
-        .byte   $65
-        .addr   L2020
-L2020:  .byte   $04
-L2021:  brk
-L2022:  brk
-        brk
-        brk
-        brk
-        brk
-L2027:  jmp     L1044
 
-        .byte   $00,$4D,$6F,$75
-L202E:  .byte   $73,$65,$20,$44,$65,$73,$6B,$00
-        .byte   $18,$4C,$6F
-L2039:  .byte   $61
-L203A:  .byte   $64,$69,$6E,$67,$20,$41,$70,$70
-        .byte   $6C,$65,$20
-L2045:  .byte   $49,$49,$20,$44,$65,$73
-L204B:  .byte   $6B,$54,$6F,$70,$08,$44,$65,$73
-        .byte   $6B,$54,$6F,$70,$32,$04,$00,$00
-        .byte   $1E,$00,$04,$00,$00,$01,$00,$01
-        .byte   $90,$11,$03,$28,$10,$00,$1A,$00
-        lda     ROMIN2
+        MLI_CALL QUIT, quit_params
+
+.proc quit_params
+params: .byte   4
+        .byte   0
+        .word   0
+        .byte   0
+        .word   0
+.endproc
+.endproc ; install_as_quit
+
+;;; New QUIT routine. Gets relocated to $1000 by ProDOS before
+;;; being executed.
+
+.proc quit_routine
+        .org    $1000
+
+        jmp     L1044
+
+        .byte   $00,"Mouse Desk",$00
+
+        PASCAL_STRING "Loading Apple II DeskTop"
+        PASCAL_STRING "DeskTop2"
+
+L1031:
+        .byte   $04,$00,$00
+        .byte   $1E,$00,$04,$00,$00
+L1039:  .byte   $01,$00
+L103B:  .byte   $01,$90,$11,$03,$28,$10,$00,$1A,$00
+L1044:  lda     ROMIN2
         jsr     SETVID
         jsr     SETKBD
         sta     CLR80VID
@@ -105,9 +100,7 @@ L20A8:  lda     $1010,y
         iny
         cpy     $100F
         bne     L20A8
-        jsr     MLI
-        .byte   $CC
-        .addr   L1039
+        MLI_CALL CLOSE, L1039
         ldx     #$17
         lda     #$01
         sta     $BF58,x
@@ -120,9 +113,7 @@ L20C6:  sta     $BF58,x
         sta     $BF58
         lda     $1003
         bne     L210F
-L20D6:  jsr     MLI
-        .byte   $C7
-        .addr   L103B
+L20D6:  MLI_CALL GET_PREFIX, L103B
 L20DC:  .byte   $F0
 L20DD:  .byte   $03
         jmp     L118B
@@ -149,15 +140,13 @@ L210F:  lda     $1189
         sta     $03FE
         lda     $118A
         sta     $03FF
-        jsr     MLI
-        .byte   $C6
-        .addr   L103B
+L10F4:  MLI_CALL SET_PREFIX, L103B
         beq     L2126
         jmp     L1129
 
 L2126:  .byte   $20
 L2127:  brk
-        bbs3    $C8,L2169
+        .byte   $BF, $C8, $3E
         .byte   $10
         .byte   $F0
 L212D:  .byte   $03
@@ -165,21 +154,17 @@ L212E:  jmp     L118B
 
 L2131:  lda     $1043
         sta     $1032
-        jsr     MLI
-        .byte   $CA
-        .addr   L1031
+        MLI_CALL READ, L1031
         beq     L2142
         jmp     L118B
 
-L2142:  jsr     MLI
-        .byte   $CC
-        .addr   L1039
+L2142:  MLI_CALL CLOSE, L1039
         beq     L214D
         jmp     L118B
 
-L214D:  jmp     L2000
+L214D:  jmp     $2000
 
-        jsr     SLOT3ENTRY
+L1129:  jsr     SLOT3ENTRY
         jsr     HOME
         lda     #$0C
         sta     $25
@@ -205,12 +190,11 @@ L2179:  lda     CLR80COL
         bne     L2176
         jmp     L1044
 
-        .byte   $28,$49,$6E,$73,$65,$72,$74,$20
-        .byte   $74,$68,$65,$20,$73,$79,$73,$74
-        .byte   $65,$6D,$20,$64,$69,$73,$6B,$20
-        .byte   $61,$6E,$64,$20,$50,$72,$65,$73
-        .byte   $73,$20,$52,$65,$74,$75,$72,$6E
-        .byte   $2E,$00,$00,$85,$06,$4C,$69,$FF
+        PASCAL_STRING "Insert the system disk and Press Return."
+        .byte   $00,$00
+L118B:  sta     $6
+        jmp     $FF69
+
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -223,8 +207,11 @@ L2179:  lda     CLR80COL
         .byte   $00,$4C,$4C,$20,$03,$18,$20,$00
         .byte   $30,$00,$04,$00,$00,$00,$00,$00
         .byte   $00,$00,$01,$00,$02,$00,$80,$05
-        .byte   $00,$08,$44,$65,$73,$6B,$54,$6F
-        .byte   $70,$32,$00,$3F,$00,$40,$00,$40
+        .byte   $00
+
+        PASCAL_STRING "DeskTop2"
+
+        .byte   $00,$3F,$00,$40,$00,$40
         .byte   $00,$40,$00,$08,$90,$02,$00,$40
         .byte   $00,$D0,$00,$FB,$00,$40,$00,$08
         .byte   $90,$02,$00,$80,$00,$1D,$00,$05
@@ -236,35 +223,29 @@ L2250:  sta     $BF59,x
         bpl     L2250
         php
         sei
-        jsr     MLI
-        .byte   $C8
-        .addr   L2003
+        MLI_CALL OPEN, $2003
         plp
         and     #$FF
         beq     L2264
         brk
-L2264:  lda     L2008
-        sta     L2014
-        sta     L200A
+L2264:  lda     $2008
+        sta     $2014
+        sta     $200A
         php
         sei
-        jsr     MLI
-        .byte   $CE
-        .addr   L2013
+        MLI_CALL SET_MARK, $2013
         plp
         and     #$FF
         beq     L227B
         brk
 L227B:  lda     #$00
-        sta     L20DC
-        lda     L20DC
-        cmp     L204B
+        sta     $20DC
+        lda     $20DC
+        cmp     $204B
         bne     L2299
         php
         sei
-        jsr     MLI
-        .byte   $CC
-        .addr   L2011
+        MLI_CALL CLOSE, $2011
         plp
         and     #$FF
         beq     L2296
@@ -273,34 +254,32 @@ L2296:  jmp     L0800
 
 L2299:  asl     a
         tax
-        lda     L2021,x
-        sta     L200B
-        lda     L2022,x
-        sta     L200C
-        lda     L2039,x
-        sta     L200D
-        lda     L203A,x
-        sta     L200E
+        lda     $2021,x
+        sta     $200B
+        lda     $2022,x
+        sta     $200C
+        lda     $2039,x
+        sta     $200D
+        lda     $203A,x
+        sta     $200E
         php
         sei
-        jsr     MLI
-        .byte   $CA
-        .addr   L2009
+        MLI_CALL READ, $2009
         plp
         and     #$FF
         beq     L22C1
         brk
-L22C1:  ldx     L20DC
-        lda     L2045,x
+L22C1:  ldx     $20DC
+        lda     $2045,x
         beq     L22D6
         cmp     #$02
         beq     L22D3
-        jsr     L212E
-        jmp     L20D6
+        jsr     $212E
+        jmp     $20D6
 
-L22D3:  jsr     L20DD
-L22D6:  inc     L20DC
-        jmp     L2080
+L22D3:  jsr     $20DD
+L22D6:  inc     $20DC
+        jmp     $2080
 
         brk
         sta     ALTZPON
@@ -312,19 +291,19 @@ L22D6:  inc     L20DC
         lda     #$00
         sta     $06
         sta     $08
-        lda     L20DC
+        lda     $20DC
         asl     a
         tax
-        lda     L202E,x
+        lda     $202E,x
         sta     $09
-        lda     L200C
+        lda     $200C
         sta     $07
         clc
-        adc     L203A,x
-        sta     L212D
-        lda     L2039,x
+        adc     $203A,x
+        sta     $212D
+        lda     $2039,x
         beq     L2312
-        inc     L212D
+        inc     $212D
 L2312:  ldy     #$00
 L2314:  lda     ($06),y
         sta     ($08),y
@@ -333,7 +312,7 @@ L2314:  lda     ($06),y
         inc     $07
         inc     $09
         lda     $07
-        cmp     L212D
+        cmp     $212D
         bne     L2314
         sta     ALTZPOFF
         lda     ROMIN2
@@ -343,16 +322,16 @@ L2314:  lda     ($06),y
         lda     #$00
         sta     $06
         sta     $08
-        lda     L20DC
+        lda     $20DC
         asl     a
         tax
-        lda     L202E,x
+        lda     $202E,x
         sta     $09
-        lda     L200C
+        lda     $200C
         sta     $07
         clc
-        adc     L203A,x
-        sta     L2168
+        adc     $203A,x
+        sta     $2168
         sta     RAMRDOFF
         sta     RAMWRTON
         ldy     #$00
@@ -363,7 +342,7 @@ L2352:  lda     ($06),y
         inc     $07
         inc     $09
         lda     $07
-        cmp     L2168
+        cmp     $2168
         bne     L2352
         sta     RAMWRTOFF
         rts
@@ -436,10 +415,10 @@ L2454:  lda     $02E0,x
         rts
 
         .byte   $1B
-        rmb4    $30
+        .byte   $47, $30
         and     $36,x
         bmi     L2487
-        cmp     ($02)
+        .byte   $D2, $02
         ldy     #$00
         sty     $03CC
         lda     #$01
@@ -552,3 +531,4 @@ L24E5:  jsr     L02E6
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00
+.endproc ; quit_routine

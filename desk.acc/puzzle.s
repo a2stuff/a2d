@@ -3,6 +3,7 @@
         .include "apple2.inc"
         .include "../inc/apple2.inc"
         .include "../inc/auxmem.inc"
+        .include "../inc/prodos.inc"
 
         .include "../a2d.inc"
         .include "../desktop.inc" ; needed to redraw DeskTop icons after window mode
