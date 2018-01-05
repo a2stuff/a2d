@@ -30,3 +30,7 @@ HOME            := $FC58
 COUT            := $FDED
 SETKBD          := $FE89
 SETVID          := $FE93
+MONZ            := $FF69
+
+;;; Miscellaneous
+IRQ_VECTOR      := $3FE

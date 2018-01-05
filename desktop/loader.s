@@ -5,24 +5,8 @@
         .include "../inc/auxmem.inc"
         .include "../inc/prodos.inc"
 
-L02B4           := $02B4
-L02B6           := $02B6
-L02C3           := $02C3
-L02C5           := $02C5
-L02E6           := $02E6
-L035F           := $035F
-L0393           := $0393
-L03B3           := $03B3
-L03C1           := $03C1
-L03E5           := $03E5
-L0800           := $0800
-
-IRQ_VECTOR      := $3FE
-
+L0800           := $0800        ; init location
 L7ECA           := $7ECA        ; ???
-MONZ            := $FF69
-
-SELECTOR        := $D100
 
 ;;; ==================================================
 ;;; Patch self in as ProDOS QUIT routine (LCBank2 $D100)
@@ -312,8 +296,8 @@ segment_dest_table:
 segment_size_table:
         .word   $8000,$1D00,$0500,$7F00,$0800,$0160
 
-segment_type_table:             ; 0 = main, 1 = aux, 2 = banked (main)
-        .byte   $01,$02,$02,$00,$00,$00
+segment_type_table:             ; 0 = main, 1 = aux, 2 = banked (aux)
+        .byte   1,2,2,0,0,0
 
 num_segments:
         .byte   6
@@ -395,7 +379,7 @@ next_segment:
 segment_num:  .byte   0
 
         ;; Handle bank-switched memory segment
-banked_segment:
+.proc banked_segment
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
@@ -414,28 +398,30 @@ banked_segment:
         sta     $06+1
         clc
         adc     segment_size_table+1,x
-        sta     L212D
+        sta     max_page
         lda     segment_size_table,x
-        beq     L2112
-        inc     L212D
-L2112:  ldy     #0
-L2114:  lda     ($06),y
+        beq     :+
+        inc     max_page
+:       ldy     #0
+loop:   lda     ($06),y
         sta     ($08),y
         iny
-        bne     L2114
+        bne     loop
         inc     $06+1
         inc     $08+1
         lda     $06+1
-        cmp     L212D
-        bne     L2114
+        cmp     max_page
+        bne     loop
         sta     ALTZPOFF
         lda     ROMIN2
         rts
 
-L212D:  .byte   0
+max_page:
+        .byte   0
+.endproc
 
         ;; Handle aux memory segment
-aux_segment:
+.proc aux_segment
         lda     #$00
         sta     $06
         sta     $08
@@ -448,23 +434,25 @@ aux_segment:
         sta     $06+1
         clc
         adc     segment_size_table+1,x
-        sta     L2168
+        sta     max_page
         sta     RAMRDOFF
         sta     RAMWRTON
         ldy     #$00
-L2152:  lda     ($06),y
+loop:   lda     ($06),y
         sta     ($08),y
         iny
-        bne     L2152
+        bne     loop
         inc     $06+1
         inc     $08+1
         lda     $06+1
-        cmp     L2168
-        bne     L2152
+        cmp     max_page
+        bne     loop
         sta     RAMWRTOFF
         rts
 
-L2168:  .byte   0
+max_page:
+        .byte   0
+.endproc
 
         ;; Padding
         .res    $2200 - *,0
@@ -474,6 +462,18 @@ L2168:  .byte   0
 ;;; Not sure where this could be invoked from
 
 .proc rest
+
+L02B4           := $02B4
+L02B6           := $02B6
+L02C3           := $02C3
+L02C5           := $02C5
+L02E6           := $02E6
+L035F           := $035F
+L0393           := $0393
+L03B3           := $03B3
+L03C1           := $03C1
+L03E5           := $03E5
+
 
         ;; Test for OpenApple+ClosedApple+P
         pha

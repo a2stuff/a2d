@@ -13,6 +13,9 @@ DATEHI          := $BF91
 TIMELO          := $BF92
 TIMEHI          := $BF93
 
+;;; Patch Locations
+SELECTOR        := $D100
+
 ;;; Housekeeping Calls
 CREATE          := $C0
 DESTROY         := $C1

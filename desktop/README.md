@@ -15,15 +15,15 @@ probably the disk copy code which is swapped in dynamically.
 
 The file is broken down into multiple segments:
 
-* segment 0: load - offset $0000, length $0580, loaded at $2000
-* segment 1: aux1 - offset $0580, length $8000, loaded at $4000 (through $BFFF)
-* segment 2: aux2 - offset $8580, length $1D00, loaded at $D000 (through $ECFF)
-* segment 3: aux2 - offset $A280, length $0500, loaded at $FB00 (through $FFFF)
-* segment 4: main - offset $A780, length $7F00, loaded at $4000 (through $BEFF)
-  * main $BF00-$BFFF is ProDOS buffers
-  * main $C000-$CFFF is I/O space
-  * main $D000-$FFFF is ProDOS
-* segment 5: _TBD_ - 38k so must be further subdivided. Disk Copy???
+* segment 0: load - address $2000-$257F, length $0580, file offset $000000
+* segment 1: aux1 - address $4000-$BFFF, length $8000, file offset $000580
+* segment 2: aux2 - address $D000-$ECFF, length $1D00, file offset $008580
+* segment 3: aux3 - address $FB00-$FFFF, length $0500, file offset $00A280
+* segment 4: main - address $4000-$BEFF, length $7F00, file offset $00A780
+* segment 5: main - address $0800-$0FFF, length $0800, file offset $012680
+* segment 6: main - address $0290-$03EF, length $0160, file offset $012E80
+
+* segment N: _TBD_ - 38k so must be further subdivided. Disk Copy???
 
 ## Structure
 
@@ -34,12 +34,16 @@ The file is broken down into multiple segments:
 Invoked at $2000; patches the ProDOS QUIT routine (at LC2 $D100) then
 invokes it. That gets copied to $1000-$11FF and run by ProDOS.
 
-The invoked code stashes the current prefix and re-patches ProDOS. It
-then (in a convoluted way) loads in the second $200 bytes of the
-system file at $2000 and invokes that.
+The invoked code stashes the current prefix and re-patches ProDOS with
+itself. It then (in a convoluted way) loads in the second $200 bytes of
+`DESKTOP2` at $2000 and invokes that.
 
 This code then loads the rest of the file as a sequence of segments,
 moving them to the appropriate destination in aux/banked/main memory.
+
+There's fourth chunk of code; it's unclear where that ends up or how
+it is invoked, but it appears to handle an OpenApple+ClosedApple+P
+key sequence and invoke slot one code - possibly debugging support?
 
 ### GUI Library "A2D"
 

@@ -14,5 +14,8 @@ function daseg {
 #daseg s4_main1 4000
 #daseg 12680_1BCDF
 
+#daseg s5
+#daseg s6
+
 make
 make check
