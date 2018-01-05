@@ -53,7 +53,8 @@ FT_BAD          := $01
 FT_TEXT         := $04
 FT_BINARY       := $06
 FT_DIRECTORY    := $0F
-FT_SRC          := $B0  ; IIgs system type; re-used?
+FT_SRC          := $B0          ; IIgs system type; re-used?
+FT_S16          := $B3          ; IIgs Application Program
 FT_BASIC        := $FC
 FT_SYSTEM       := $FF
 
