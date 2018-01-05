@@ -1,15 +1,13 @@
-.org $800
-; da65 V2.16 - Git f5e9b401
-; Created:    2018-01-05 09:39:35
-; Input file: orig/DESKTOP2_s5
-; Page:       1
-
-
         .setcpu "6502"
 
+        .include "apple2.inc"
+        .include "../inc/auxmem.inc"
+        .include "../inc/prodos.inc"
+        .include "../a2d.inc"
+        .include "../desktop.inc"
+
 L0006           := $0006
-A2D             := $4000
-L46BA           := $46BA
+
 L4AFD           := $4AFD
 L4B3A           := $4B3A
 L6365           := $6365
@@ -25,35 +23,21 @@ L87BA           := $87BA
 L87F6           := $87F6
 L8813           := $8813
 L89B6           := $89B6
-UNKNOWN_CALL    := $8E00
-MLI             := $BF00
-RAMRDOFF        := $C002
-RAMRDON         := $C003
-RAMWRTOFF       := $C004
-RAMWRTON        := $C005
-ALTZPOFF        := $C008
-ALTZPON         := $C009
-LCBANK1         := $C08B
-AUXMOVE         := $C311
-XFER            := $C314
-A2D_RELAY       := $D000
-DESKTOP_RELAY   := $D040
+
 LD05E           := $D05E
-FSUB            := $E7A7
-FADD            := $E7BE
-FMULT           := $E97F
-FDIV            := $EA66
-ROUND           := $EB2B
-FLOAT           := $EB93
-FIN             := $EC4A
-FOUT            := $ED34
-INIT            := $FB2F
-BELL1           := $FBDD
-HOME            := $FC58
-COUT            := $FDED
 LFE1F           := $FE1F
-SETKBD          := $FE89
-SETVID          := $FE93
+
+MLI_RELAY       := $46BA
+.macro MLI_RELAY_CALL call, addr
+        ldy     #(call)
+        lda     #<(addr)
+        ldx     #>(addr)
+        jsr     MLI_RELAY
+.endmacro
+
+        .org $800
+
+start:
         lda     #$00
         sta     L0853
         lda     $FBC0
@@ -67,7 +51,7 @@ L0815:  ldx     $FBB3
         ldy     $FBC0
         cpx     #$06
         beq     L0820
-        brk
+        .byte   0
 L0820:  sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
@@ -90,7 +74,8 @@ L084B:  lda     #$FA
         sta     $D2AB
         jmp     L0854
 
-L0853:  brk
+L0853:  .byte   0
+
 L0854:  sta     $C00C
         sta     $C05E
         sta     $C05F
@@ -119,26 +104,11 @@ L088C:  lda     $BF32,x
         bpl     L088C
         bmi     L089B
 L0898:  jsr     L0E35
-L089B:  ldy     #$1D
-        lda     #$9C
-        ldx     #$D2
-        jsr     A2D_RELAY
-        ldy     #$30
-        lda     #$72
-        ldx     #$E6
-        jsr     A2D_RELAY
-        ldy     #$1A
-        lda     #$A7
-        ldx     #$D2
-        jsr     A2D_RELAY
-        ldy     #$24
-        lda     #$11
-        ldx     #$D3
-        jsr     A2D_RELAY
-        ldy     #$25
-        lda     #$00
-        ldx     #$00
-        jsr     A2D_RELAY
+L089B:  A2D_RELAY_CALL A2D_INIT_SCREEN_AND_MOUSE, $D29C
+        A2D_RELAY_CALL A2D_SET_MENU, $E672
+        A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, $D2A7
+        A2D_RELAY_CALL A2D_SET_CURSOR, $D311
+        A2D_RELAY_CALL A2D_SHOW_CURSOR, $0000
         jsr     L87F6
         lda     #$63
         sta     L0006
@@ -189,11 +159,7 @@ L090F:  sta     $1F00,x
         sta     RAMWRTOFF
         jmp     L092F
 
-L0927:  .byte   $07
-        jsr     L7254
-        adc     ($73,x)
-        pla
-        .byte   $20
+L0927:  PASCAL_STRING " Trash "
 L092F:  lda     #$00
         sta     $DE9F
         lda     #$01
@@ -255,7 +221,7 @@ L09A2:  stx     L09B5
         adc     L09B5
         sta     L09B5
         .byte   $AD
-L09B5:  brk
+L09B5:  .byte   0
         .byte   $BF
         sta     $07
         lda     #$00
@@ -273,7 +239,7 @@ L09B5:  brk
         adc     #$03
         sta     L0006
         jsr     L09F9
-        brk
+        .byte   0
         .byte   $FC
         ora     #$B0
         ora     $AD,y
@@ -289,28 +255,20 @@ L09E6:  lda     $BF33,x
         dec     $BF31
 L09F5:  jmp     L0A03
 
-L09F8:  brk
+L09F8:  .byte   0
 L09F9:  jmp     (L0006)
 
         .byte   $03
-        brk
-        brk
+        .byte   0
+        .byte   0
         .byte   $1F
-        brk
-L0A01:  brk
-L0A02:  brk
-L0A03:  ldy     #$29
-        lda     #$00
-        ldx     #$00
-        jsr     A2D_RELAY
-        ldy     #$C7
-        lda     #$F1
-        ldx     #$8A
-        jsr     L46BA
-        ldy     #$29
-        lda     #$00
-        ldx     #$00
-        jsr     A2D_RELAY
+        .byte   0
+L0A01:  .byte   0
+L0A02:  .byte   0
+
+L0A03:  A2D_RELAY_CALL $29, $0000
+        MLI_RELAY_CALL GET_PREFIX, $8AF1
+        A2D_RELAY_CALL $29, $0000
         lda     #$00
         sta     L0A92
         jsr     L0AE7
@@ -363,9 +321,10 @@ L0A7F:  lda     (L0006),y
 
 L0A8F:  jmp     L0B09
 
-L0A92:  brk
-L0A93:  brk
-        brk
+L0A92:  .byte   0
+L0A93:  .byte   0
+        .byte   0
+
 L0A95:  jsr     L86A7
         clc
         adc     #$02
@@ -408,42 +367,28 @@ L0ABC:  jsr     L86C1
 
         .byte   $03
         .byte   $CF
-        asl     a
-        brk
+        .byte   $0A
+        .byte   0
         .byte   $10
-L0ACE:  brk
-L0ACF:  ora     $6553
-        jmp     (L6365)
+L0ACE:  .byte   0
 
-        .byte   $74
-        .byte   $6F
-        .byte   $72
-        rol     $694C
-        .byte   $73
-        .byte   $74
+L0ACF:  PASCAL_STRING "Selector.List"
+
         .byte   $04
-L0ADE:  brk
-        brk
+L0ADE:  .byte   0
+        .byte   0
         .byte   $14
-        brk
+        .byte   0
         .byte   $04
-        brk
-        brk
-        ora     ($00,x)
-L0AE7:  ldy     #$C8
-        lda     #$C9
-        ldx     #$0A
-        jsr     L46BA
+        .byte   0
+        .byte   0
+        .byte   1,0
+
+L0AE7:  MLI_RELAY_CALL OPEN, $0AC9
         lda     L0ACE
         sta     L0ADE
-        ldy     #$CA
-        lda     #$DD
-        ldx     #$0A
-        jsr     L46BA
-        ldy     #$CC
-        lda     #$E5
-        ldx     #$0A
-        jsr     L46BA
+        MLI_RELAY_CALL READ, $0ADD
+        MLI_RELAY_CALL CLOSE, $0AE5
         rts
 
 L0B09:  lda     #$DC
@@ -508,16 +453,11 @@ L0B09:  lda     #$DC
         sta     $EBE8
         jmp     L0BA2
 
-L0BA0:  brk
-L0BA1:  brk
-L0BA2:  ldy     #$29
-        lda     #$00
-        ldx     #$00
-        jsr     A2D_RELAY
-        ldy     #$C4
-        lda     #$E5
-        ldx     #$0C
-        jsr     L46BA
+L0BA0:  .byte   0
+L0BA1:  .byte   0
+
+L0BA2:  A2D_RELAY_CALL $29, $0000
+        MLI_RELAY_CALL GET_FILE_INFO, $0CE5
         beq     L0BB9
         jmp     L0D0A
 
@@ -526,17 +466,11 @@ L0BB9:  lda     L0CE9
         beq     L0BC3
         jmp     L0D0A
 
-L0BC3:  ldy     #$C8
-        lda     #$D7
-        ldx     #$0C
-        jsr     L46BA
+L0BC3:  MLI_RELAY_CALL OPEN, $0CD7
         lda     L0CDC
         sta     L0CDE
         sta     L0CF9
-        ldy     #$CA
-        lda     #$DD
-        ldx     #$0C
-        jsr     L46BA
+        MLI_RELAY_CALL READ, $0CDD
         lda     #$00
         sta     L0D04
         sta     L0D05
@@ -628,10 +562,7 @@ L0C96:  inc     L0D08
         lda     L0D08
         cmp     L0D07
         bne     L0CBA
-        ldy     #$CA
-        lda     #$DD
-        ldx     #$0C
-        jsr     L46BA
+        MLI_RELAY_CALL READ, $0CDD
         lda     #$04
         sta     L0006
         lda     #$14
@@ -649,60 +580,55 @@ L0CBA:  lda     L0006
         sta     $07
         jmp     L0C0C
 
-L0CCB:  ldy     #$CC
-        lda     #$F8
-        ldx     #$0C
-        jsr     L46BA
+L0CCB:  MLI_RELAY_CALL CLOSE, $0CF8
         jmp     L0D0A
 
         .byte   $03
         .byte   $FA
         .byte   $0C
-        brk
+        .byte   0
         .byte   $10
-L0CDC:  brk
+L0CDC:  .byte   0
         .byte   $04
-L0CDE:  brk
-        brk
+L0CDE:  .byte   0
+        .byte   0
         .byte   $14
-        brk
+        .byte   0
         .byte   $02
-        brk
-        brk
+        .byte   0
+        .byte   0
         asl     a
         .byte   $FA
         .byte   $0C
-        brk
-L0CE9:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+        .byte   0
+L0CE9:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
         .byte   $01
-L0CF9:  brk
-        php
-        .byte   $44
-        adc     $73
-        .byte   $6B
-        rol     $6361
-        .byte   $63
-L0D03:  brk
-L0D04:  brk
-L0D05:  brk
-L0D06:  brk
-L0D07:  brk
-L0D08:  brk
-L0D09:  brk
+L0CF9:  .byte   0
+
+        PASCAL_STRING "Desk.acc"
+
+L0D03:  .byte   0
+L0D04:  .byte   0
+L0D05:  .byte   0
+L0D06:  .byte   0
+L0D07:  .byte   0
+L0D08:  .byte   0
+L0D09:  .byte   0
+
 L0D0A:  ldy     #$00
         sty     $599F
         sty     L0E33
@@ -725,10 +651,7 @@ L0D12:  lda     L0E33
         lda     $BF32,y
         jsr     L89B6
         sta     L0E34
-        ldy     #$29
-        lda     #$00
-        ldx     #$00
-        jsr     A2D_RELAY
+        A2D_RELAY_CALL $29, $0000
         pla
         tay
         pla
@@ -797,7 +720,7 @@ L0DB8:  iny
         lda     (L0006),y
         sta     ($08),y
         .byte   $C0
-L0DBE:  brk
+L0DBE:  .byte   0
         bne     L0DB8
         tay
 L0DC2:  pla
@@ -865,9 +788,9 @@ L0E25:  lda     L0E33
         bcs     L0E4C
 L0E2F:  jmp     L0D12
 
-L0E32:  brk
-L0E33:  brk
-L0E34:  brk
+L0E32:  .byte   0
+L0E33:  .byte   0
+L0E34:  .byte   0
 L0E35:  dex
 L0E36:  inx
         lda     $BF33,x
@@ -913,7 +836,7 @@ L0E79:  sta     L0EAF
         tax
         lda     L0EB0,x
         sta     L0E9A
-        lda     L0EB1,x
+        lda     L0EB0+1,x
         sta     L0E9B
         ldx     $E44C
         dex
@@ -932,54 +855,34 @@ L0E9B:  .byte   $12
 L0EA8:  stx     $E2D6
         jmp     L0EE1
 
-L0EAE:  brk
-L0EAF:  brk
-L0EB0:  .byte   $4C
-L0EB1:  cpx     $54
-        cpx     $5C
-        cpx     $64
-        cpx     $6C
-        cpx     $74
-        cpx     $7C
-        cpx     $0A
-        .byte   $62
-        pha
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+L0EAE:  .byte   0
+L0EAF:  .byte   0
+L0EB0:  .byte   $4C,$E4,$54,$E4,$5C,$E4,$64,$E4,$6C,$E4,$74,$E4,$7C,$E4,$0A,$62,$48
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
         ora     ($62,x)
         pha
-L0ED4:  .byte   $0C
-        .byte   $53
-        adc     $7473,y
-        adc     $6D
-        .byte   $2F
-        .byte   $53
-        .byte   $74
-        adc     ($72,x)
-        .byte   $74
+L0ED4:  PASCAL_STRING "System/Start"
 L0EE1:  lda     #$00
         sta     $4861
         jsr     L4AFD
         cmp     #$80
         beq     L0EFE
-        ldy     #$C7
-        lda     #$D1
-        ldx     #$0E
-        jsr     L46BA
+        MLI_RELAY_CALL GET_PREFIX, $0ED1
         bne     L0F34
         dec     $4862
         jmp     L0F05
@@ -1001,25 +904,13 @@ L0F14:  inx
         cpy     L0ED4
         bne     L0F14
         stx     $4862
-        ldy     #$C4
-        lda     #$BE
-        ldx     #$0E
-        jsr     L46BA
+        MLI_RELAY_CALL GET_FILE_INFO, $0EBE
         bne     L0F34
         lda     #$80
         sta     $4861
-L0F34:  ldy     #$29
-        lda     #$00
-        ldx     #$00
-        jsr     A2D_RELAY
-        ldy     #$30
-        lda     #$44
-        ldx     #$AC
-        jsr     A2D_RELAY
-        ldy     #$24
-        lda     #$AD
-        ldx     #$D2
-        jsr     A2D_RELAY
+L0F34:  A2D_RELAY_CALL $29, $0000
+        A2D_RELAY_CALL A2D_SET_MENU, $AC44
+        A2D_RELAY_CALL A2D_SET_CURSOR, $D2AD
         lda     #$00
         sta     $EC25
         jsr     L66A2
@@ -1027,163 +918,5 @@ L0F34:  ldy     #$29
         jsr     L670C
         jmp     A2D
 
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+        ;; Pad out to $800
+        .res    $800 - (* - start), 0

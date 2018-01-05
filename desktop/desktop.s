@@ -5308,7 +5308,7 @@ L4015:  jmp     L40F2
 L4018:  jmp     DESKTOP_RELAY
         jmp     L8E81
 L401E:  jmp     L6D2B
-L4021:  jmp     L46BA
+L4021:  jmp     MLI_RELAY
         jmp     DESKTOP_COPY_TO_BUF
         jmp     DESKTOP_COPY_FROM_BUF
         jmp     L490E
@@ -5977,7 +5977,8 @@ L46AE:  jsr     L678A
         sta     $E26F
         rts
 
-L46BA:  sty     L46CE
+MLI_RELAY:
+        sty     L46CE
         sta     L46CF
         stx     L46CF+1
         php
@@ -5994,6 +5995,14 @@ L46CF:  .addr   L0000
         plp
         txa
         rts
+
+.macro MLI_RELAY_CALL call, addr
+        ldy     #(call)
+        lda     #<(addr)
+        ldx     #>(addr)
+        jsr     MLI_RELAY
+.endmacro
+
 
 L46DE:  jmp     L46F3
 
@@ -6018,10 +6027,7 @@ L470C:  iny
         cpy     $D345
         bne     L470C
         stx     $0220
-        ldy     #$C4
-        lda     #$E1
-        ldx     #$46
-        jsr     L46BA
+        MLI_RELAY_CALL $C4, $46E1
         beq     L472B
         jsr     DESKTOP_SHOW_ALERT0
         rts
@@ -6094,10 +6100,7 @@ L47D7:  inx
         cpy     L4817
         bne     L47D7
         stx     $1800
-        ldy     #$C4
-        lda     #$A6
-        ldx     #$47
-        jsr     L46BA
+        MLI_RELAY_CALL $C4, $47A6
         bne     L47F3
         rts
 
@@ -6424,10 +6427,7 @@ L4ADC:  iny
 L4AEA:  jsr     L4B5F
         sta     L4991
         stx     L4992
-        ldy     #$C4
-        lda     #$90
-        ldx     #$49
-        jsr     L46BA
+        MLI_RELAY_CALL $C4, $4990
         rts
 
 L4AFD:  sta     ALTZPOFF
@@ -6584,9 +6584,9 @@ L4C4A:  jsr     L489A
         rts
 
 L4C4E:  ldy     #$C8
-        ldx     #$4C
-        lda     #$77
-        jsr     L46BA
+        ldx     #>$4C77
+        lda     #<$4C77
+        jsr     MLI_RELAY
         bne     L4C5A
         rts
 
@@ -6597,14 +6597,14 @@ L4C5A:  lda     #$00
         rts
 
 L4C64:  ldy     #$CA
-        ldx     #$4C
-        lda     #$7D
-        jmp     L46BA
+        ldx     #>$4C7D
+        lda     #<$4C7D
+        jmp     MLI_RELAY
 
 L4C6D:  ldy     #$CC
-        ldx     #$4C
-        lda     #$85
-        jmp     L46BA
+        ldx     #>$4C85
+        lda     #<$4C85
+        jmp     MLI_RELAY
 
         .byte   $00,$03,$88,$4C,$00,$1C
 L4C7C:  .byte   $00,$04
@@ -6979,10 +6979,7 @@ L5000:  lda     $BF90,x
         sta     L4F72,x
         dex
         bpl     L5000
-        ldy     #$C0
-        lda     #$6A
-        ldx     #$4F
-        jsr     L46BA
+        MLI_RELAY_CALL $C0, $4F6A
         beq     L5027
         jsr     DESKTOP_SHOW_ALERT0
         lda     L504E
@@ -10726,10 +10723,7 @@ L7296:  lda     L0006
 L72A7:  .byte   0
 L72A8:  .byte   0
 L72A9:  .byte   0
-L72AA:  ldy     #$C8
-        lda     #$57
-        ldx     #$70
-        jsr     L46BA
+L72AA:  MLI_RELAY_CALL $C8, $7057
         beq     L72CD
         jsr     DESKTOP_SHOW_ALERT0
         jsr     L8B1F
@@ -10742,16 +10736,10 @@ L72C9:  ldx     $E256
         txs
 L72CD:  rts
 
-L72CE:  ldy     #$CA
-        lda     #$9E
-        ldx     #$70
-        jsr     L46BA
+L72CE:  MLI_RELAY_CALL $CA, $709E
         rts
 
-L72D8:  ldy     #$CC
-        lda     #$A6
-        ldx     #$70
-        jsr     L46BA
+L72D8:  MLI_RELAY_CALL $CC, $70A6
         rts
 
 L72E2:  lda     $0C04
@@ -10760,10 +10748,7 @@ L72E2:  lda     $0C04
         beq     L72EC
         rts
 
-L72EC:  ldy     #$C4
-        lda     #$A8
-        ldx     #$70
-        jsr     L46BA
+L72EC:  MLI_RELAY_CALL $C4, $70A8
         beq     L72F8
         rts
 
@@ -13425,10 +13410,7 @@ L89B6:  sta     L8AC3
         sty     L8AC4
         and     #$F0
         sta     L89B3
-        ldy     #$C5
-        lda     #$B2
-        ldx     #$89
-        jsr     L46BA
+        MLI_RELAY_CALL $C5, $89B2
         beq     L89DD
 L89CC:  pha
         ldy     L8AC4
@@ -13984,10 +13966,7 @@ L8E8F:  pla
         sta     L8E78
         lda     L8E51,y
         sta     L8E79
-L8EBE:  ldy     #$C8
-        lda     #$62
-        ldx     #$8E
-        jsr     L46BA
+L8EBE:  MLI_RELAY_CALL $C8, $8E62
         beq     L8ED6
         lda     #$00
         ora     L8E80
@@ -13999,18 +13978,9 @@ L8EBE:  ldy     #$C8
 L8ED6:  lda     L8E67
         sta     L8E77
         sta     L8E72
-        ldy     #$CE
-        lda     #$71
-        ldx     #$8E
-        jsr     L46BA
-        ldy     #$CA
-        lda     #$76
-        ldx     #$8E
-        jsr     L46BA
-        ldy     #$CC
-        lda     #$7E
-        ldx     #$8E
-        jsr     L46BA
+        MLI_RELAY_CALL $CE, $8E71
+        MLI_RELAY_CALL $CA, $8E76
+        MLI_RELAY_CALL $CC, $8E7E
         rts
 
         .byte   0
