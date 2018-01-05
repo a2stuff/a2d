@@ -77,7 +77,7 @@ L1044:  lda     ROMIN2
         sta     SETALTCHAR
         sta     CLR80COL
         jsr     SLOT3ENTRY
-L2080:  jsr     HOME
+L1059:  jsr     HOME
         lda     #$00
         sta     SHADOW          ; ??? IIgs specific?
         lda     #$40
@@ -94,31 +94,31 @@ L2080:  jsr     HOME
         lsr     a
         sta     $24
         ldy     #$00
-L20A8:  lda     $1010,y
+L1081:  lda     $1010,y
         ora     #$80
         jsr     COUT
         iny
         cpy     $100F
-        bne     L20A8
+        bne     L1081
         MLI_CALL CLOSE, L1039
         ldx     #$17
         lda     #$01
         sta     $BF58,x
         dex
         lda     #$00
-L20C6:  sta     $BF58,x
+L109F:  sta     $BF58,x
         dex
-        bpl     L20C6
+        bpl     L109F
         lda     #$CF
         sta     $BF58
         lda     $1003
-        bne     L210F
-L20D6:  MLI_CALL GET_PREFIX, L103B
-L20DC:  .byte   $F0
-L20DD:  .byte   $03
+        bne     L10E8
+L10AF:  MLI_CALL GET_PREFIX, L103B
+L10B5:  .byte   $F0
+L10B6:  .byte   $03
         jmp     L118B
 
-L20E1:  lda     #$FF
+L10BA:  lda     #$FF
         sta     $1003
         lda     $03FE
         sta     $1189
@@ -127,42 +127,42 @@ L20E1:  lda     #$FF
         lda     LCBANK2
         lda     LCBANK2
         ldy     #$00
-L20FA:  lda     $1000,y
+L10D3:  lda     $1000,y
         sta     $D100,y
         lda     $1100,y
         sta     $D200,y
         dey
-        bne     L20FA
+        bne     L10D3
         lda     ROMIN2
         jmp     L10F4
 
-L210F:  lda     $1189
+L10E8:  lda     $1189
         sta     $03FE
         lda     $118A
         sta     $03FF
 L10F4:  MLI_CALL SET_PREFIX, L103B
-        beq     L2126
+        beq     L10FF
         jmp     L1129
 
-L2126:  .byte   $20
-L2127:  brk
+L10FF:  .byte   $20
+L1100:  brk
         .byte   $BF, $C8, $3E
         .byte   $10
         .byte   $F0
-L212D:  .byte   $03
-L212E:  jmp     L118B
+L1106:  .byte   $03
+L1107:  jmp     L118B
 
-L2131:  lda     $1043
+L110A:  lda     $1043
         sta     $1032
         MLI_CALL READ, L1031
-        beq     L2142
+        beq     L111B
         jmp     L118B
 
-L2142:  MLI_CALL CLOSE, L1039
-        beq     L214D
+L111B:  MLI_CALL CLOSE, L1039
+        beq     L1126
         jmp     L118B
 
-L214D:  jmp     $2000
+L1126:  jmp     $2000
 
 L1129:  jsr     SLOT3ENTRY
         jsr     HOME
@@ -175,19 +175,19 @@ L1129:  jsr     SLOT3ENTRY
         lsr     a
         sta     $24
         ldy     #$00
-L2168:  .byte   $B9
-L2169:  adc     ($11,x)
+L1141:  .byte   $B9
+L1142:  adc     ($11,x)
         ora     #$80
         jsr     COUT
         iny
         cpy     $1160
-        bne     L2168
-L2176:  sta     KBDSTRB
-L2179:  lda     CLR80COL
-        bpl     L2179
+        bne     L1141
+L114F:  sta     KBDSTRB
+L1152:  lda     CLR80COL
+        bpl     L1152
         and     #$7F
         cmp     #$0D
-        bne     L2176
+        bne     L114F
         jmp     L1044
 
         PASCAL_STRING "Insert the system disk and Press Return."
@@ -218,17 +218,17 @@ L118B:  sta     $6
         .byte   $00,$7F,$00,$08,$60,$01,$01,$02
         .byte   $02,$00,$00,$00,$06,$A2,$17,$A9
         .byte   $00
-L2250:  sta     $BF59,x
+L1229:  sta     $BF59,x
         dex
-        bpl     L2250
+        bpl     L1229
         php
         sei
         MLI_CALL OPEN, $2003
         plp
         and     #$FF
-        beq     L2264
+        beq     L123D
         brk
-L2264:  lda     $2008
+L123D:  lda     $2008
         sta     $2014
         sta     $200A
         php
@@ -236,23 +236,23 @@ L2264:  lda     $2008
         MLI_CALL SET_MARK, $2013
         plp
         and     #$FF
-        beq     L227B
+        beq     L1254
         brk
-L227B:  lda     #$00
+L1254:  lda     #$00
         sta     $20DC
         lda     $20DC
         cmp     $204B
-        bne     L2299
+        bne     L1272
         php
         sei
         MLI_CALL CLOSE, $2011
         plp
         and     #$FF
-        beq     L2296
+        beq     L126F
         brk
-L2296:  jmp     L0800
+L126F:  jmp     L0800
 
-L2299:  asl     a
+L1272:  asl     a
         tax
         lda     $2021,x
         sta     $200B
@@ -267,18 +267,18 @@ L2299:  asl     a
         MLI_CALL READ, $2009
         plp
         and     #$FF
-        beq     L22C1
+        beq     L129A
         brk
-L22C1:  ldx     $20DC
+L129A:  ldx     $20DC
         lda     $2045,x
-        beq     L22D6
+        beq     L12AF
         cmp     #$02
-        beq     L22D3
+        beq     L12AC
         jsr     $212E
         jmp     $20D6
 
-L22D3:  jsr     $20DD
-L22D6:  inc     $20DC
+L12AC:  jsr     $20DD
+L12AF:  inc     $20DC
         jmp     $2080
 
         brk
@@ -302,18 +302,18 @@ L22D6:  inc     $20DC
         adc     $203A,x
         sta     $212D
         lda     $2039,x
-        beq     L2312
+        beq     L12EB
         inc     $212D
-L2312:  ldy     #$00
-L2314:  lda     ($06),y
+L12EB:  ldy     #$00
+L12ED:  lda     ($06),y
         sta     ($08),y
         iny
-        bne     L2314
+        bne     L12ED
         inc     $07
         inc     $09
         lda     $07
         cmp     $212D
-        bne     L2314
+        bne     L12ED
         sta     ALTZPOFF
         lda     ROMIN2
         rts
@@ -335,15 +335,15 @@ L2314:  lda     ($06),y
         sta     RAMRDOFF
         sta     RAMWRTON
         ldy     #$00
-L2352:  lda     ($06),y
+L132B:  lda     ($06),y
         sta     ($08),y
         iny
-        bne     L2352
+        bne     L132B
         inc     $07
         inc     $09
         lda     $07
         cmp     $2168
-        bne     L2352
+        bne     L132B
         sta     RAMWRTOFF
         rts
 
@@ -369,14 +369,14 @@ L2352:  lda     ($06),y
         pha
         lda     BUTN0
         and     BUTN1
-        bpl     L2410
+        bpl     L13E9
         lda     KBD
         cmp     #$D0
-        beq     L2414
-L2410:  pla
+        beq     L13ED
+L13E9:  pla
         jmp     L7ECA
 
-L2414:  sta     KBDSTRB
+L13ED:  sta     KBDSTRB
         sta     SET80COL
         sta     SET80VID
         sta     DHIRESON
@@ -390,34 +390,34 @@ L2414:  sta     KBDSTRB
 
         ldy     #$00
         lda     $03CF,y
-        beq     L2442
+        beq     L141B
         jsr     L03C1
         iny
         jmp     L02B6
 
-L2442:  rts
+L141B:  rts
 
         ldy     #$00
         lda     $03DE,y
-        beq     L2451
+        beq     L142A
         jsr     L03C1
         iny
         jmp     L02C5
 
-L2451:  rts
+L142A:  rts
 
         ldx     #$00
-L2454:  lda     $02E0,x
+L142D:  lda     $02E0,x
         jsr     L03C1
         inx
         cpx     #$06
-        bne     L2454
+        bne     L142D
         rts
 
         .byte   $1B
         .byte   $47, $30
         and     $36,x
-        bmi     L2487
+        bmi     L1460
         .byte   $D2, $02
         ldy     #$00
         sty     $03CC
@@ -426,52 +426,52 @@ L2454:  lda     $02E0,x
         lda     #$00
         sta     $03C6
         sta     $03C7
-L247B:  lda     #$08
+L1454:  lda     #$08
         sta     $03CB
         lda     $03C5
         sta     $03C8
-L2486:  .byte   $AD
-L2487:  iny
+L145F:  .byte   $AD
+L1460:  iny
         .byte   $03
         jsr     L0393
         lda     $03CC
         lsr     a
         tay
         sta     LOWSCR
-        bcs     L2499
+        bcs     L1472
         sta     HISCR
-L2499:  lda     ($06),y
+L1472:  lda     ($06),y
         and     $03C9
         cmp     #$01
         ror     $03CA
         inc     $03C8
         dec     $03CB
-        bne     L2486
+        bne     L145F
         lda     $03CA
         eor     #$FF
         sta     LOWSCR
         jsr     L03C1
         lda     $03C6
         cmp     #$2F
-        bne     L24C4
+        bne     L149D
         lda     $03C7
         cmp     #$02
-        beq     L24DB
-L24C4:  asl     $03C9
-        bpl     L24D1
+        beq     L14B4
+L149D:  asl     $03C9
+        bpl     L14AA
         lda     #$01
         sta     $03C9
         inc     $03CC
-L24D1:  inc     $03C6
-        bne     L247B
+L14AA:  inc     $03C6
+        bne     L1454
         inc     $03C7
-        bne     L247B
-L24DB:  sta     LOWSCR
+        bne     L1454
+L14B4:  sta     LOWSCR
         rts
 
         jsr     L03B3
         jsr     L02B4
-L24E5:  jsr     L02E6
+L14BE:  jsr     L02E6
         lda     #$0D
         jsr     L03C1
         lda     #$0A
@@ -479,7 +479,7 @@ L24E5:  jsr     L02E6
         lda     $03C8
         sta     $03C5
         cmp     #$C0
-        bcc     L24E5
+        bcc     L14BE
         lda     #$0D
         jsr     L03C1
         lda     #$0D
