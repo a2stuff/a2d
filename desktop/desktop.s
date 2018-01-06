@@ -6017,9 +6017,8 @@ L46CF:  .addr   L0000
         ldy     #(call)
         lda     #<(addr)
         ldx     #>(addr)
-        jsr     MLI_RELAY
+        jsr     desktop_main::MLI_RELAY
 .endmacro
-
 
 L46DE:  jmp     L46F3
 
@@ -6476,7 +6475,8 @@ L4B27:  lda     $D3EE,x
         lda     LCBANK1
         lda     LCBANK1
         rts
-        sta     L4B50
+
+L4B3A:  sta     L4B50
         stx     L4B51
         sta     ALTZPOFF
         lda     LCBANK2
@@ -13123,7 +13123,7 @@ L8780:  sta     L0006
 L8792:  A2D_RELAY_CALL A2D_DRAW_TEXT, $0006
 L879B:  rts
 
-        sta     L0006
+L879C:  sta     L0006
         stx     $07
         ldy     #$00
         lda     (L0006),y
@@ -19274,29 +19274,23 @@ LBEB1:  A2D_RELAY_CALL A2D_QUERY_SCREEN, $D239
 .proc desktop_800
 L0006           := $0006
 
-L4AFD           := $4AFD
-L4B3A           := $4B3A
-L6365           := $6365
-L66A2           := $66A2
-L670C           := $670C
-L678A           := $678A
-L7254           := $7254
-L86A7           := $86A7
-L86C1           := $86C1
-L86E3           := $86E3
-L879C           := $879C
-L87BA           := $87BA
-L87F6           := $87F6
-L8813           := $8813
-L89B6           := $89B6
+L4AFD           := desktop_main::L4AFD
+L4B3A           := desktop_main::L4B3A
+L66A2           := desktop_main::L66A2
+L670C           := desktop_main::L670C
+L678A           := desktop_main::L678A
+L86A7           := desktop_main::L86A7
+L86C1           := desktop_main::L86C1
+L86E3           := desktop_main::L86E3
+L879C           := desktop_main::L879C
+L87BA           := desktop_main::L87BA
+L87F6           := desktop_main::push_addrs_from_zp
+L8813           := desktop_main::pop_addrs_to_zp
+L89B6           := desktop_main::L89B6
 
-LD05E           := $D05E
-LD29C           := $D29C        ; machine type byte stash
-LD29D           := $D29D
-LD2AB           := $D2AB        ; gets a machine flag of sorts
+LD05E           := DESKTOP_FIND_SPACE
 DESKTOP_DEVICELIST := $E196
 
-MLI_RELAY       := $46BA
 
         .org $800
 
