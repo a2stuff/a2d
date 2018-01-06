@@ -1,6 +1,7 @@
         .setcpu "6502"
 
         .include "apple2.inc"
+        .include "../inc/apple2.inc"
         .include "../inc/auxmem.inc"
         .include "../inc/prodos.inc"
         .include "../a2d.inc"
@@ -25,7 +26,10 @@ L8813           := $8813
 L89B6           := $89B6
 
 LD05E           := $D05E
-LFE1F           := $FE1F
+LD29C           := $D29C        ; machine type byte stash
+LD29D           := $D29D
+LD2AB           := $D2AB        ; gets a machine flag of sorts
+DESKTOP_DEVICELIST := $E196
 
 MLI_RELAY       := $46BA
 .macro MLI_RELAY_CALL call, addr
@@ -38,73 +42,85 @@ MLI_RELAY       := $46BA
         .org $800
 
 start:
-        lda     #$00
-        sta     L0853
-        lda     $FBC0
-        beq     L0815
-        sec
-        jsr     LFE1F
-        bcs     L0815
+        ;; Detect machine type
+        ;; See Apple II Miscellaneous #7: Apple II Family Identification
+        lda     #0
+        sta     iigs_flag
+        lda     $FBC0           ; 0 = IIc or IIc+
+        beq     :+
+        sec                     ; Follow detection protocol
+        jsr     $FE1F           ; RTS on pre-IIgs
+        bcs     :+              ; carry clear = IIgs
         lda     #$80
-        sta     L0853
-L0815:  ldx     $FBB3
+        sta     iigs_flag
+
+:       ldx     $FBB3
         ldy     $FBC0
-        cpx     #$06
-        beq     L0820
-        .byte   0
-L0820:  sta     ALTZPON
+        cpx     #$06            ; Ensure a IIe or later
+        beq     :+
+        brk                     ; Otherwise (][, ][+, ///), just crash
+
+:       sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
-        sta     $C001
-        stx     $D29C
-        sty     $D29D
-        cpy     #$00
-        beq     L084B
-        bit     L0853
-        bpl     L0843
+        sta     SET80COL
+        stx     LD29C           ; Stash so DeskTop can check machine bytes
+        sty     LD29D           ; when ROM is banked out.
+        cpy     #0
+        beq     is_iic          ; Now identify/store specific machine type.
+        bit     iigs_flag
+        bpl     is_iie
         lda     #$FD
-        sta     $D2AB
-        jmp     L0854
+        sta     LD2AB
+        jmp     done_machine_id
 
-L0843:  lda     #$96
-        sta     $D2AB
-        jmp     L0854
+is_iie: lda     #$96
+        sta     LD2AB
+        jmp     done_machine_id
 
-L084B:  lda     #$FA
-        sta     $D2AB
-        jmp     L0854
+is_iic: lda     #$FA
+        sta     LD2AB
+        jmp     done_machine_id
 
-L0853:  .byte   0
+iigs_flag:                      ; High bit set if IIgs detected.
+        .byte   0
 
-L0854:  sta     $C00C
-        sta     $C05E
-        sta     $C05F
-        sta     $C05E
-        sta     $C05F
-        sta     $C00D
-        sta     $C05E
-        sta     $C0B5
-        sta     $C0B7
-        bit     L0853
-        bpl     L087C
-        lda     $C029
-        ora     #$20
-        sta     $C029
-L087C:  ldx     $BF31
+done_machine_id:
+        sta     CLR80VID
+        sta     DHIRESON
+        sta     DHIRESOFF
+        sta     DHIRESON        ; For good measure???
+        sta     DHIRESOFF
+        sta     SET80VID
+        sta     DHIRESON
+        sta     $C0B5           ; ??? IIgs video of some sort
+        sta     $C0B7           ; ???
+        bit     iigs_flag
+        bpl     :+
+
+        ;; Force B&W mode on the IIgs
+        lda     NEWVIDEO
+        ora     #(1<<5)         ; B&W
+        sta     NEWVIDEO
+
+        ;; Look for /RAM
+:       ldx     DEVCNT
         inx
-L0880:  lda     $BF31,x
-        sta     $E196,x
+:       lda     DEVLST-1,x
+        sta     DESKTOP_DEVICELIST,x
         dex
-        bpl     L0880
-        ldx     $BF31
-L088C:  lda     $BF32,x
-        cmp     #$BF
-        beq     L0898
+        bpl     :-
+        ldx     DEVCNT
+:       lda     DEVLST,x
+        cmp     #(1<<7 | 3<<4 | DT_RAM) ; unit_num for /RAM is Slot 3, Drive 2
+        beq     found_ram
         dex
-        bpl     L088C
-        bmi     L089B
-L0898:  jsr     L0E35
-L089B:  A2D_RELAY_CALL A2D_INIT_SCREEN_AND_MOUSE, $D29C
+        bpl     :-
+        bmi     :+
+found_ram:
+        jsr     remove_device
+
+:       A2D_RELAY_CALL A2D_INIT_SCREEN_AND_MOUSE, $D29C
         A2D_RELAY_CALL A2D_SET_MENU, $E672
         A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, $D2A7
         A2D_RELAY_CALL A2D_SET_CURSOR, $D311
@@ -666,7 +682,7 @@ L0D12:  lda     L0E33
         and     #$0F
         beq     L0D6D
         ldx     L0E33
-        jsr     L0E35
+        jsr     remove_device
         jmp     L0E25
 
 L0D64:  cmp     #$57
@@ -791,18 +807,22 @@ L0E2F:  jmp     L0D12
 L0E32:  .byte   0
 L0E33:  .byte   0
 L0E34:  .byte   0
-L0E35:  dex
-L0E36:  inx
-        lda     $BF33,x
-        sta     $BF32,x
-        lda     $E1A1,x
-        sta     $E1A0,x
-        cpx     $BF31
-        bne     L0E36
-        dec     $BF31
-        rts
 
-L0E4C:  lda     $BF31
+        ;; Remove device num in X from devices list
+.proc remove_device
+        dex
+L0E36:  inx
+        lda     DEVLST+1,x
+        sta     DEVLST,x
+        lda     $E1A0+1,x
+        sta     $E1A0,x
+        cpx     DEVCNT
+        bne     L0E36
+        dec     DEVCNT
+        rts
+.endproc
+
+L0E4C:  lda     DEVCNT
         clc
         adc     #$03
         sta     $E270
@@ -810,7 +830,7 @@ L0E4C:  lda     $BF31
         sta     L0EAF
         tay
         tax
-L0E5C:  lda     $BF32,y
+L0E5C:  lda     DEVLST,y
         and     #$70
         beq     L0EA8
         lsr     a
@@ -821,7 +841,7 @@ L0E5C:  lda     $BF32,y
         beq     L0E70
         cmp     #$02
         bne     L0E79
-L0E70:  cpy     $BF31
+L0E70:  cpy     DEVCNT
         beq     L0EA8
         iny
         jmp     L0E5C
@@ -835,19 +855,18 @@ L0E79:  sta     L0EAF
         asl     a
         tax
         lda     L0EB0,x
-        sta     L0E9A
+        sta     sta_addr
         lda     L0EB0+1,x
-        sta     L0E9B
+        sta     sta_addr+1
         ldx     $E44C
         dex
         lda     L0EAE
-        .byte   $9D
-L0E9A:  .byte   $34
-L0E9B:  .byte   $12
+        sta_addr := *+1
+        sta     $1234,x
         pla
         tax
         inx
-        cpy     $BF31
+        cpy     DEVCNT
         beq     L0EA8
         iny
         jmp     L0E5C
@@ -857,7 +876,8 @@ L0EA8:  stx     $E2D6
 
 L0EAE:  .byte   0
 L0EAF:  .byte   0
-L0EB0:  .byte   $4C,$E4,$54,$E4,$5C,$E4,$64,$E4,$6C,$E4,$74,$E4,$7C,$E4,$0A,$62,$48
+L0EB0:  .addr   $E44C,$E454,$E45C,$E464,$E46C,$E474,$E47C
+        .byte   $0A,$62,$48
         .byte   0
         .byte   0
         .byte   0

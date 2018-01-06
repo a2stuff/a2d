@@ -4262,9 +4262,19 @@ LD293:
         .byte   px(%1010101)
         .byte   PX(%0101010)
 
-        .byte   $FF,$06,$EA
+        .byte   $FF
+
+        ;; Copies of ROM bytes used for machine identification
+LD29C:  .byte   $06             ; ROM $FBB3 ($0C = IIe or later)
+LD29D:  .byte   $EA             ; ROM $FBC0 ($EA = IIe, $E0 = IIe enh/IIgs, $00 = IIc/IIc+)
+
         .byte   $00,$00,$00,$00,$88,$00,$08,$00
-        .byte   $13,$00,$00,$00,$00,$00,$00
+        .byte   $13,$00,$00,$00,$00
+
+        ;; Set to specific machine type
+LD2AB:  .byte   $00             ; Set to: $96 = IIe, $FA = IIc, $FD = IIgs
+
+        .byte   $00
 
 ;;; Cursors (bitmap - 2x12 bytes, mask - 2x12 bytes, hotspot - 2 bytes)
 
@@ -4723,6 +4733,8 @@ win_table:
 
         .byte   $00,$00,$00,$00,$0D,$00,$00,$00
 
+
+        ;; In here, at $E196, is a device table
         .res    440, 0
 
         .byte   $00,$00,$00,$00,$7F,$64,$00,$1C

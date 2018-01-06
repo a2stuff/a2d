@@ -15,14 +15,13 @@ probably the disk copy code which is swapped in dynamically.
 
 The file is broken down into multiple segments:
 
-* segment 0: load - address $2000-$257F, length $0580, file offset $000000
-* segment 1: aux1 - address $4000-$BFFF, length $8000, file offset $000580
-* segment 2: aux2 - address $D000-$ECFF, length $1D00, file offset $008580
-* segment 3: aux3 - address $FB00-$FFFF, length $0500, file offset $00A280
-* segment 4: main - address $4000-$BEFF, length $7F00, file offset $00A780
-* segment 5: main - address $0800-$0FFF, length $0800, file offset $012680
-* segment 6: main - address $0290-$03EF, length $0160, file offset $012E80
-
+* segment 0: load - address $2000-$257F, length $0580, file offset $000000 (Loader)
+* segment 1: aux1 - address $4000-$BFFF, length $8000, file offset $000580 (A2D, part of DeskTop)
+* segment 2: aux2 - address $D000-$ECFF, length $1D00, file offset $008580 (More of DeskTop)
+* segment 3: aux3 - address $FB00-$FFFF, length $0500, file offset $00A280 (More of DeskTop)
+* segment 4: main - address $4000-$BEFF, length $7F00, file offset $00A780 (More of DeskTop)
+* segment 5: main - address $0800-$0FFF, length $0800, file offset $012680 (???)
+* segment 6: main - address $0290-$03EF, length $0160, file offset $012E80 (Invoker)
 * segment N: _TBD_ - 38k so must be further subdivided. Disk Copy???
 
 ## Structure
@@ -44,6 +43,16 @@ moving them to the appropriate destination in aux/banked/main memory.
 There's fourth chunk of code; it's unclear where that ends up or how
 it is invoked, but it appears to handle an OpenApple+ClosedApple+P
 key sequence and invoke slot one code - possibly debugging support?
+
+### Invoker
+
+`s6.s`
+
+Loaded at $290-$03EF, this small routine is used to invoke a target,
+e.g. a double-clicked file. System files are loaded/run at $2000,
+binary files at the location specified by their aux type, and BASIC
+files loaded by searching for BASIC.SYSTEM and running it with the
+pathname passed at $2006 (see ProDOS TLM).
 
 ### GUI Library "A2D"
 
@@ -123,7 +132,7 @@ $2000 +------------+    +------------+
 $0800 +------------+    +------------+
       | Text       |    | Text       |
 $0400 +------------+    +------------+
-      |            |    |            |
+      | Invoker    |    |            |
 $0300 +------------+    +------------+
       | Input Buf  |    | Input Buf  |
 $0200 +------------+    +------------+

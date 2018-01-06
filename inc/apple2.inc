@@ -11,6 +11,7 @@ COUT_HOOK       := $36
 SPKR            := $C030
 ROMIN2          := $C082
 
+NEWVIDEO        := $C029        ; IIgs - new video modes
 SHADOW          := $C035        ; IIgs - inhibit shadowing
 
 ;;; Key Codes

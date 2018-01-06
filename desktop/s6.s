@@ -4,7 +4,7 @@
         .include "../inc/apple2.inc"
         .include "../inc/prodos.inc"
 
-;;; Used to invoke programs from selector menu
+;;; Used to invoke other programs
 
 PREFIX  := $0220
 
@@ -16,12 +16,16 @@ start:
 
 ;;; ==================================================
 
+        default_start_address := $2000
+
+
 .proc set_prefix_params
 params: .byte   1
 path:   .addr   PREFIX
 .endproc
 
-L0296:  .byte   0
+prefix_length:
+        .byte   0
 
 .proc open_params
 params: .byte   3
@@ -33,7 +37,7 @@ ref_num:.byte   1
 .proc read_params
 params: .byte   4
 ref_num:.byte   0
-buffer: .addr   $2000
+buffer: .addr   default_start_address
 request:.word   $9F00
 trans:  .word   0
 .endproc
@@ -72,39 +76,46 @@ params: .byte   4
 
 ;;; ==================================================
 
-bail:  MLI_CALL SET_PREFIX, set_prefix_params
-        beq     L02DD
+set_prefix:
+        MLI_CALL SET_PREFIX, set_prefix_params
+        beq     :+
         pla
         pla
-        jmp     L03CB
+        jmp     exit
+:       rts
 
-L02DD:  rts
+;;; ==================================================
 
-L02DE:  MLI_CALL OPEN, open_params
+open:   MLI_CALL OPEN, open_params
         rts
 
+;;; ==================================================
+
 begin:  lda     ROMIN2
-        lda     #<$0000
+
+        lda     #<default_start_address
         sta     jmp_addr
-        lda     #>$2000
+        lda     #>default_start_address
         sta     jmp_addr+1
-        ldx     #$16
-        lda     #$00
-:       sta     $BF58,x
+
+        ;; clear system memory bitmap
+        ldx     #BITMAP_SIZE-2
+        lda     #0
+:       sta     BITMAP,x
         dex
         bne     :-
-        jsr     bail
-        lda     PREFIX
-        sta     L0296
-        MLI_CALL GET_FILE_INFO, get_info_params
-        beq     L0310
-        jmp     L03CB
 
-L0310:  lda     get_info_params::type
+        jsr     set_prefix
+        lda     PREFIX
+        sta     prefix_length
+        MLI_CALL GET_FILE_INFO, get_info_params
+        beq     :+
+        jmp     exit
+:       lda     get_info_params::type
         cmp     #FT_S16
         bne     L031D
-        jsr     L03C0
-        jmp     L03BA
+        jsr     update_bitmap
+        jmp     quit_call
 
 L031D:  cmp     #FT_BINARY
         bne     L0345
@@ -118,73 +129,89 @@ L031D:  cmp     #FT_BINARY
         bcs     L033E
         lda     #$BB
         sta     open_params::buffer+1
-        bne     L037D
+        bne     load_target
 L033E:  lda     #$08
         sta     open_params::buffer+1
-        bne     L037D
+        bne     load_target
 
-L0345:  cmp     #FT_BASIC
-        bne     L037D
+L0345:  cmp     #FT_BASIC       ; BASIC?
+        bne     load_target
+
+        ;; Invoke BASIC.SYSTEM as path instead.
         lda     #<bs_path
         sta     open_params::path
         lda     #>bs_path
         sta     open_params::path+1
-L0353:  jsr     L02DE
-        beq     L0374
-        ldy     PREFIX
-L035B:  lda     PREFIX,y
-        cmp     #$2F
-        beq     L036A
+
+        ;; Try opening BASIC.SYSTEM with current prefix.
+check_for_bs:
+        jsr     open
+        beq     found_bs
+        ldy     PREFIX          ; Pop a path segment to try
+:       lda     PREFIX,y        ; parent directory.
+        cmp     #'/'
+        beq     update_prefix
         dey
         cpy     #1
-        bne     L035B
-        jmp     L03CB
+        bne     :-
+        jmp     exit
 
-L036A:  dey
+update_prefix:                  ; Update prefix and try again.
+        dey
         sty     PREFIX
-        jsr     bail
-        jmp     L0353
+        jsr     set_prefix
+        jmp     check_for_bs
 
-L0374:  lda     L0296
+found_bs:
+        lda     prefix_length
         sta     PREFIX
-        jmp     L0382
+        jmp     do_read
 
-L037D:  jsr     L02DE
-        bne     L03CB
-L0382:  lda     open_params::ref_num
+load_target:
+        jsr     open
+        bne     exit
+do_read:
+        lda     open_params::ref_num
         sta     read_params::ref_num
         MLI_CALL READ, read_params
-        bne     L03CB
+        bne     exit
         MLI_CALL CLOSE, close_params
-        bne     L03CB
+        bne     exit
+
+        ;; If it's BASIC, copy prefix to interpreter buffer.
         lda     get_info_params::type
         cmp     #FT_BASIC
-        bne     L03AE
-        jsr     bail
+        bne     update_stack
+        jsr     set_prefix
         ldy     $0280
 :       lda     $0280,y
         sta     $2006,y
         dey
         bpl     :-
-L03AE:  lda     #$03
+
+        ;; Set return address to the QUIT call below
+update_stack:
+        lda     #>(quit_call-1)
         pha
-        lda     #$B9
+        lda     #<(quit_call-1)
         pha
-        jsr     L03C0
+        jsr     update_bitmap
 
         jmp_addr := *+1
-        jmp     $2000
+        jmp     default_start_address
 
-L03BA:  MLI_CALL QUIT, quit_params
+quit_call:
+        MLI_CALL QUIT, quit_params
 
-        ;; Initialize system bitmap
-L03C0:  lda     #$01            ; ProDOS global page
+        ;; Update system bitmap
+update_bitmap:
+        lda     #%00000001      ; ProDOS global page
         sta     BITMAP+BITMAP_SIZE-1
         lda     #%11001111      ; ZP, Stack, Text Page 1
         sta     BITMAP
         rts
 
-L03CB:  rts
+exit:   rts
 
         ;; Pad to $160 bytes
         .res    $160 - (* - start), 0
