@@ -11,6 +11,9 @@
 ;;; DeskTop - the actual application
 ;;; ==================================================
 
+INVOKER          := $290                 ; Invoke other programs
+INVOKER_FILENAME := $280                 ; File to invoke (PREFIX must be set)
+
 ;;; ==================================================
 ;;; Segment loaded into AUX $8E00-$BFFF (follows A2D)
 ;;; ==================================================
@@ -2840,14 +2843,14 @@ LA938:  lda     set_state_params::top
 
 
         ;; 5.25" Floppy Disk
-LA980:  .addr   LA9AC           ; address
+LA980:  .addr   floppy140_pixels; address
         .word   4               ; stride
         .word   0               ; left
         .word   1               ; top
         .word   26              ; width
         .word   15              ; height
 
-LA9AC:
+floppy140_pixels:
         .byte   px(%1010101),px(%0101010),px(%1010101),px(%0101010)
         .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
         .byte   px(%1100000),px(%0000011),px(%1000000),px(%0000110)
@@ -2866,13 +2869,14 @@ LA9AC:
         .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
 
         ;; RAM Disk
-LA9CC:  .addr   LA9D8           ; address
+LA9CC:  .addr   ramdisk_pixels  ; address
         .word   6               ; stride
         .word   1               ; left (???)
         .word   0               ; top
         .word   38              ; width
         .word   11              ; height
-LA9D8:
+
+ramdisk_pixels:
         .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111101)
         .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0001110)
         .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0001101)
@@ -2887,13 +2891,14 @@ LA9D8:
         .byte   px(%1010101),px(%0101010),px(%1010101),px(%1111111),px(%1111111),px(%1111110)
 
         ;; 3.5" Floppy Disk
-LAA20:  .addr   LAA2C           ; address
+LAA20:  .addr   floppy800_pixels; address
         .word   3               ; stride
         .word   0               ; left
         .word   0               ; top
         .word   20              ; width
         .word   11              ; height
-LAA2C:
+
+floppy800_pixels:
         .byte   px(%1111111),px(%1111111),px(%1111110)
         .byte   px(%1100011),px(%0000000),px(%1100111)
         .byte   px(%1100011),px(%0000000),px(%1100111)
@@ -2908,13 +2913,14 @@ LAA2C:
         .byte   px(%1111111),px(%1111111),px(%1111111)
 
         ;; Hard Disk
-LAA50:  .addr   LAA5C           ; address
+LAA50:  .addr   profile_pixels  ; address
         .word   8               ; stride
         .word   1               ; left
         .word   0               ; top
         .word   51              ; width
         .word   9               ; height
-LAA5C:
+
+profile_pixels:
         .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1110101)
         .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0011010)
         .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0011101)
@@ -6078,7 +6084,7 @@ L4773:  lda     $D355,x
         bpl     L4773
         ldx     $D345
 L477F:  lda     $D345,x
-        sta     $0280,x
+        sta     INVOKER_FILENAME,x
         dex
         bpl     L477F
         lda     #$80
@@ -6088,9 +6094,9 @@ L477F:  lda     $D345,x
         ldx     #$02
         jsr     L4842
         jsr     L48BE
-        lda     #$90
+        lda     #<INVOKER
         sta     L5B19
-        lda     #$02
+        lda     #>INVOKER
         sta     L5B19+1
         jmp     L5AEE
 
@@ -20194,219 +20200,3 @@ L0F34:  A2D_RELAY_CALL $29, $0000
         ;; Pad out to $800
         .res    $800 - (* - start), 0
 .endproc ; desktop_800
-
-;;; ==================================================
-;;; Segment loaded into MAIN $290-$3EF
-;;; ==================================================
-
-;;; Used to invoke other programs (system, binary, BASIC)
-
-.proc desktop_290
-        .org $290
-
-PREFIX  := $0220
-
-start:
-        jmp     begin
-
-;;; ==================================================
-
-        default_start_address := $2000
-
-.proc set_prefix_params
-params: .byte   1
-path:   .addr   PREFIX
-.endproc
-
-prefix_length:
-        .byte   0
-
-.proc open_params
-params: .byte   3
-path:   .addr   $280
-buffer: .addr   $800
-ref_num:.byte   1
-.endproc
-
-.proc read_params
-params: .byte   4
-ref_num:.byte   0
-buffer: .addr   default_start_address
-request:.word   $9F00
-trans:  .word   0
-.endproc
-
-.proc close_params
-params: .byte   1
-ref_nun:.byte   0
-.endproc
-
-.proc get_info_params
-params: .byte   $A
-path:   .addr   $0280
-access: .byte   0
-type:   .byte   0
-auxtype:.word   0
-storage:.byte   0
-blocks: .word   0
-mod_date:       .word 0
-mod_time:       .word 0
-create_date:    .word 0
-create_time:    .word 0
-.endproc
-
-        .res    3
-
-bs_path:
-        PASCAL_STRING "BASIC.SYSTEM"
-
-.proc quit_params
-params: .byte   4
-        .byte   $EE             ; nonstandard ???
-        .word   $0280           ; nonstandard ???
-        .byte   0
-        .word   0
-.endproc
-
-;;; ==================================================
-
-set_prefix:
-        MLI_CALL SET_PREFIX, set_prefix_params
-        beq     :+
-        pla
-        pla
-        jmp     exit
-:       rts
-
-;;; ==================================================
-
-open:   MLI_CALL OPEN, open_params
-        rts
-
-;;; ==================================================
-
-begin:  lda     ROMIN2
-
-        lda     #<default_start_address
-        sta     jmp_addr
-        lda     #>default_start_address
-        sta     jmp_addr+1
-
-        ;; clear system memory bitmap
-        ldx     #BITMAP_SIZE-2
-        lda     #0
-:       sta     BITMAP,x
-        dex
-        bne     :-
-
-        jsr     set_prefix
-        lda     PREFIX
-        sta     prefix_length
-        MLI_CALL GET_FILE_INFO, get_info_params
-        beq     :+
-        jmp     exit
-:       lda     get_info_params::type
-        cmp     #FT_S16
-        bne     L031D
-        jsr     update_bitmap
-        jmp     quit_call
-
-L031D:  cmp     #FT_BINARY
-        bne     L0345
-        lda     get_info_params::auxtype
-        sta     jmp_addr
-        sta     read_params::buffer
-        lda     get_info_params::auxtype+1
-        sta     jmp_addr+1
-        sta     read_params::buffer+1
-        cmp     #$0C
-        bcs     L033E
-        lda     #$BB
-        sta     open_params::buffer+1
-        bne     load_target
-L033E:  lda     #$08
-        sta     open_params::buffer+1
-        bne     load_target
-
-L0345:  cmp     #FT_BASIC       ; BASIC?
-        bne     load_target
-
-        ;; Invoke BASIC.SYSTEM as path instead.
-        lda     #<bs_path
-        sta     open_params::path
-        lda     #>bs_path
-        sta     open_params::path+1
-
-        ;; Try opening BASIC.SYSTEM with current prefix.
-check_for_bs:
-        jsr     open
-        beq     found_bs
-        ldy     PREFIX          ; Pop a path segment to try
-:       lda     PREFIX,y        ; parent directory.
-        cmp     #'/'
-        beq     update_prefix
-        dey
-        cpy     #1
-        bne     :-
-        jmp     exit
-
-update_prefix:                  ; Update prefix and try again.
-        dey
-        sty     PREFIX
-        jsr     set_prefix
-        jmp     check_for_bs
-
-found_bs:
-        lda     prefix_length
-        sta     PREFIX
-        jmp     do_read
-
-load_target:
-        jsr     open
-        bne     exit
-do_read:
-        lda     open_params::ref_num
-        sta     read_params::ref_num
-        MLI_CALL READ, read_params
-        bne     exit
-        MLI_CALL CLOSE, close_params
-        bne     exit
-
-        ;; If it's BASIC, copy prefix to interpreter buffer.
-        lda     get_info_params::type
-        cmp     #FT_BASIC
-        bne     update_stack
-        jsr     set_prefix
-        ldy     $0280
-:       lda     $0280,y
-        sta     $2006,y
-        dey
-        bpl     :-
-
-        ;; Set return address to the QUIT call below
-update_stack:
-        lda     #>(quit_call-1)
-        pha
-        lda     #<(quit_call-1)
-        pha
-        jsr     update_bitmap
-
-        jmp_addr := *+1
-        jmp     default_start_address
-
-quit_call:
-        MLI_CALL QUIT, quit_params
-
-        ;; Update system bitmap
-update_bitmap:
-        lda     #%00000001      ; ProDOS global page
-        sta     BITMAP+BITMAP_SIZE-1
-        lda     #%11001111      ; ZP, Stack, Text Page 1
-        sta     BITMAP
-        rts
-
-exit:   rts
-
-        ;; Pad to $160 bytes
-        .res    $160 - (* - start), 0
-.endproc ; desktop_290

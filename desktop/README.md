@@ -20,9 +20,9 @@ The file is broken down into multiple segments:
 * segment 2: aux2 - address $D000-$ECFF, length $1D00, file offset $008580 (More of DeskTop)
 * segment 3: aux3 - address $FB00-$FFFF, length $0500, file offset $00A280 (More of DeskTop)
 * segment 4: main - address $4000-$BEFF, length $7F00, file offset $00A780 (More of DeskTop)
-* segment 5: main - address $0800-$0FFF, length $0800, file offset $012680 (???)
+* segment 5: main - address $0800-$0FFF, length $0800, file offset $012680 (Initializer)
 * segment 6: main - address $0290-$03EF, length $0160, file offset $012E80 (Invoker)
-* segment N: _TBD_ - 38k so must be further subdivided. Disk Copy???
+* segment N: _TBD_ - 38k so must be further subdivided. Disk Copy, and ...???
 
 ## Structure
 
@@ -44,9 +44,17 @@ There's fourth chunk of code; it's unclear where that ends up or how
 it is invoked, but it appears to handle an OpenApple+ClosedApple+P
 key sequence and invoke slot one code - possibly debugging support?
 
+### Initializer
+
+`desktop.s`
+
+Loaded at $800-$FFF, this does one-time initialization of the
+DeskTop. It is later overwritten when any desk accessories are
+run.
+
 ### Invoker
 
-`s6.s`
+`desktop.s`
 
 Loaded at $290-$03EF, this small routine is used to invoke a target,
 e.g. a double-clicked file. System files are loaded/run at $2000,
@@ -86,58 +94,69 @@ DeskTop application code is in the lower 48k of both Aux and Main:
 
 
 ```
-       Main              Aux               ROM
-$FFFF +------------+    +------------+    +------------+
-      | ProDOS     |    | DeskTop    |    | Monitor    |
-$F800 |            |    | Resources/ |    +------------+
-      |            |    | Buffers    |    | Applesoft  |
-      |            |    |            |    |            |
-      |            |    |            |    |            |
-      |            |    |            |    |            |
-$D000 +------------+    +------------+    +------------+    +------------+
-                                                            | I/O        |
-                                                            |            |
-$C000 +------------+    +------------+                      +------------+
-      | ProDOS     |    | DeskTop    |
-$BF00 +------------+    | App Code   |
-      | DeskTop    |    |            |
-      | App Code   |    |            |
-      |            |    |            |
-      |            |    |            |
-      |            |    |            |
-      |            |    |            |
-      |            |    |            |
-$8E00 |            |    +------------+
-      |            |    | A2D GUI    |
-      |            |    | Library    |
-      |            |    |            |
-      |            |    |            |
-      |            |    |            |
-      |            |    |            |
-      |            |    |            |
-      |            |    |            |
-$4000 +------------+    +------------+
-      | Graphics   |    | Graphics   |
-      |            |    |            |
-      |            |    |            |
-      |            |    |            |
-      |            |    |            |
-      |            |    |            |
-      |            |    |            |
-      |            |    |            |
-$2000 +------------+    +------------+
-      | Init &     |    | Desk Acc   |
-      | Desk Acc   |    |            |
-      |            |    |            |
-$0800 +------------+    +------------+
-      | Text       |    | Text       |
-$0400 +------------+    +------------+
-      | Invoker    |    |            |
-$0300 +------------+    +------------+
-      | Input Buf  |    | Input Buf  |
-$0200 +------------+    +------------+
-      | Stack      |    | Stack      |
-$0100 +------------+    +------------+
-      | Zero Page  |    | Zero Page  |
-$0000 +------------+    +------------+
+       Main               Aux                 ROM
+$FFFF +-------------+    +-------------+    +-------------+
+      | ProDOS      |    | DeskTop     |    | Monitor     |
+$F800 |             |    | Resources/  |    +-------------+
+      |             |    | Buffers     |    | Applesoft   |
+      |             |    |             |    |             |
+      |             |    |             |    |             |
+      |             |    |             |    |             |
+$D000 +-------------+    +-------------+    +-------------+    +-------------+
+                                                               | I/O         |
+                                                               |             |
+$C000 +-------------+    +-------------+                       +-------------+
+      | ProDOS GP   |    | DeskTop     |
+$BF00 +-------------+    | App Code    |
+      | DeskTop     |    |             |
+      | App Code    |    |             |
+      |             |    |             |
+      |             |    |             |
+      |             |    |             |
+      |             |    |             |
+      |             |    |             |
+      |             |    |             |
+      |             |    |             |
+      |             |    |             |
+      |             |    |             |
+      |             |    |             |
+      |             |    |             |
+$8E00 |             |    +-------------+
+      |             |    | A2D GUI     |
+      |             |    | Library     |
+      |             |    |             |
+      |             |    |             |
+      |             |    |             |
+      |             |    |             |
+      |             |    |             |
+      |             |    |             |
+      |             |    |             |
+      |             |    |             |
+$4000 +-------------+    +-------------+
+      | Graphics    |    | Graphics    |
+      |             |    |             |
+      |             |    |             |
+      |             |    |             |
+      |             |    |             |
+      |             |    |             |
+      |             |    |             |
+      |             |    |             |
+      |             |    |             |
+$2000 +-------------+    +-------------+
+      | Initializer |    | Desk Acc    |
+      | & Desk Acc  |    |             |
+      |             |    |             |
+      |             |    |             |
+$0800 +-------------+    +-------------+
+      | Text        |    | Text        |
+      |             |    |             |
+$0400 +-------------+    +-------------+
+      | Invoker     |    |             |
+$0300 +-------------+    +-------------+
+      | Input Buf   |    | Input Buf   |
+$0200 +-------------+    +-------------+
+      | Stack       |    | Stack       |
+$0100 +-------------+    +-------------+
+      | Zero Page   |    | Zero Page   |
+$0000 +-------------+    +-------------+
 ```

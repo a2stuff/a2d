@@ -5,7 +5,7 @@
         .include "../inc/auxmem.inc"
         .include "../inc/prodos.inc"
 
-L0800           := $0800        ; init location
+DESKTOP_INIT    := $0800        ; init location
 L7ECA           := $7ECA        ; ???
 
 ;;; ==================================================
@@ -14,7 +14,6 @@ L7ECA           := $7ECA        ; ???
 
 .proc install_as_quit
         .org $2000
-
 
         src     := quit_routine
         dst     := SELECTOR
@@ -247,8 +246,10 @@ L11D0:
 .endproc ; quit_routine
 
 ;;; ==================================================
-;;; This chunk is invoked at $2000 after the quit
-;;; handler has been invoked and updated itself.
+;;; This chunk is invoked at $2000 after the quit handler has been invoked
+;;; and updated itself. Using the segment_*_tables below, this loads the
+;;; DeskTop application into various parts of main, aux, and bank-switched
+;;; memory, then invokes the DeskTop initialization routine.
 
 .proc install_segments
         .org $2000
@@ -286,6 +287,14 @@ pathname:
 
 ;;; Consecutive segments are loaded, |size| bytes are loaded at |addr|
 ;;; then relocated to |dest| according to |type|.
+
+;;; Segments are:
+;;; $4000 aux        - A2D GUI library and DeskTop code
+;;; $D000 aux/banked - DeskTop code callable from main, and resources
+;;; $FB00 aux/banked - more DeskTop resources (icons, strings, etc)
+;;; $4000 main       - more DeskTop code
+;;; $0800 main       - DeskTop initialization code; later overwritten by DAs
+;;; $0290 main       - Routine to invoke other programs
 
 segment_addr_table:
         .word   $3F00,$4000,$4000,$4000,$0800,$0290
@@ -343,7 +352,7 @@ loop:   lda     segment_num
         and     #$FF
         beq     :+
         brk                     ; crash
-:       jmp     L0800           ; ??? What is there?
+:       jmp     DESKTOP_INIT
 
 continue:
         asl     a
@@ -360,7 +369,7 @@ continue:
         sei
         MLI_CALL READ, read_params
         plp
-        and     #$FF
+        and     #$FF            ; ???
         beq     :+
         brk                     ; crash
 :       ldx     segment_num
@@ -380,38 +389,45 @@ segment_num:  .byte   0
 
         ;; Handle bank-switched memory segment
 .proc banked_segment
+        src := $6
+        dst := $8
+
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
-        lda     #$80
+
+        lda     #$80            ; ???
         sta     $0100
         sta     $0101
-        lda     #$00
-        sta     $06
-        sta     $08
+
+        lda     #0
+        sta     src
+        sta     dst
         lda     segment_num
         asl     a
         tax
         lda     segment_dest_table+1,x
-        sta     $08+1
+        sta     dst+1
         lda     read_params::buffer+1
-        sta     $06+1
+        sta     src+1
         clc
         adc     segment_size_table+1,x
         sta     max_page
         lda     segment_size_table,x
         beq     :+
         inc     max_page
+
 :       ldy     #0
-loop:   lda     ($06),y
-        sta     ($08),y
+loop:   lda     (src),y
+        sta     (dst),y
         iny
         bne     loop
-        inc     $06+1
-        inc     $08+1
-        lda     $06+1
+        inc     src+1
+        inc     dst+1
+        lda     src+1
         cmp     max_page
         bne     loop
+
         sta     ALTZPOFF
         lda     ROMIN2
         rts
@@ -422,29 +438,32 @@ max_page:
 
         ;; Handle aux memory segment
 .proc aux_segment
-        lda     #$00
-        sta     $06
-        sta     $08
+        src := $6
+        dst := $8
+
+        lda     #0
+        sta     src
+        sta     dst
         lda     segment_num
         asl     a
         tax
         lda     segment_dest_table+1,x
-        sta     $08+1
+        sta     dst+1
         lda     read_params::buffer+1
-        sta     $06+1
+        sta     src+1
         clc
         adc     segment_size_table+1,x
         sta     max_page
         sta     RAMRDOFF
         sta     RAMWRTON
-        ldy     #$00
-loop:   lda     ($06),y
-        sta     ($08),y
+        ldy     #0
+loop:   lda     (src),y
+        sta     (dst),y
         iny
         bne     loop
-        inc     $06+1
-        inc     $08+1
-        lda     $06+1
+        inc     src+1
+        inc     dst+1
+        lda     src+1
         cmp     max_page
         bne     loop
         sta     RAMWRTOFF
