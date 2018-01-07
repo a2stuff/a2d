@@ -48,8 +48,6 @@ params: .byte   4
 .proc quit_routine
         .org    $1000
 self:
-
-
         jmp     start
 
 reinstall_flag:                 ; set once prefix saved and reinstalled
@@ -239,10 +237,6 @@ crash:  sta     $6              ; Crash?
 prefix_buffer:
         .res    64, 0
 
-        ;; ???
-L11D0:
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00
 .endproc ; quit_routine
 
 ;;; ==================================================
@@ -252,6 +246,9 @@ L11D0:
 ;;; memory, then invokes the DeskTop initialization routine.
 
 .proc install_segments
+        ;; Pad to be at $200 into the file
+        .res    $200 - (.sizeof(install_as_quit) + .sizeof(quit_routine)), 0
+
         .org $2000
 
         jmp     start
@@ -324,7 +321,7 @@ start:
         sei
         MLI_CALL OPEN, open_params
         plp
-        and     #$FF
+        and     #$FF            ; ???
         beq     :+
         brk                     ; crash
 :       lda     open_params::ref_num
@@ -334,7 +331,7 @@ start:
         sei
         MLI_CALL SET_MARK, set_mark_params
         plp
-        and     #$FF
+        and     #$FF            ; ???
         beq     :+
         brk                     ; crash
 :       lda     #0
@@ -344,12 +341,12 @@ loop:   lda     segment_num
         cmp     num_segments
         bne     continue
 
-        ;; Close and invoke... $800 ???
+        ;; Close and invoke DeskTop init routine
         php
         sei
         MLI_CALL CLOSE, close_params
         plp
-        and     #$FF
+        and     #$FF            ; ???
         beq     :+
         brk                     ; crash
 :       jmp     DESKTOP_INIT
@@ -481,32 +478,27 @@ max_page:
 ;;; Not sure where this could be invoked from
 
 .proc rest
+        .org $280
 
-L02B4           := $02B4
-L02B6           := $02B6
-L02C3           := $02C3
-L02C5           := $02C5
-L02E6           := $02E6
-L035F           := $035F
-L0393           := $0393
-L03B3           := $03B3
-L03C1           := $03C1
-L03E5           := $03E5
-
+        SLOT1   := $C100
+        TAB     := $09
+        LF      := $0A
+        CR      := $0D
+        ESC     := $1B
 
         ;; Test for OpenApple+ClosedApple+P
         pha
         lda     BUTN0
         and     BUTN1
-        bpl     L2210
+        bpl     :+
         lda     KBD
         cmp     #('P' | $80)
-        beq     L2214
-L2210:  pla
-        jmp     L7ECA
+        beq     L0294
+:       pla
+        jmp     L7ECA           ; ???
 
         ;; Invoked if OA+CA+P is held
-L2214:  sta     KBDSTRB
+L0294:  sta     KBDSTRB
         sta     SET80COL
         sta     SET80VID
         sta     DHIRESON
@@ -514,110 +506,114 @@ L2214:  sta     KBDSTRB
         lda     HIRES
         sta     ALTZPOFF
         sta     ROMIN2
-        lda     #$00
-        sta     $03C5
+        lda     #0
+        sta     L03C5
         jmp     L035F
 
 
-        ldy     #$00
-        lda     $03CF,y
-        beq     L2242
-        jsr     L03C1
+.proc send_spacing_sequence
+        ldy     #0
+:       lda     spacing_sequence,y
+        beq     done
+        jsr     cout
         iny
-        jmp     L02B6
+        jmp     :-
+done:   rts
+.endproc
 
-L2242:  rts
-
+.proc send_restore_state
         ldy     #$00
-        lda     $03DE,y
-        beq     L2251
-        jsr     L03C1
+:       lda     restore_state,y
+        beq     done
+        jsr     cout
         iny
-        jmp     L02C5
+        jmp     :-
+done:   rts
+.endproc
 
-L2251:  rts
-
-        ldx     #$00
-L2254:  lda     $02E0,x
-        jsr     L03C1
+.proc send_init_graphics
+        ldx     #0
+:       lda     init_graphics,x
+        jsr     cout
         inx
-        cpx     #$06
-        bne     L2254
+        cpx     #6
+        bne     :-
         rts
+init_graphics:
+        .byte   ESC,"G0560"     ; Graphics, 560 data bytes
+.endproc
 
-        .byte   $1B,$47,$30,$35,$36,$30 ; ???
-
-        jsr     $02D2
+L02E6:  jsr     send_init_graphics
         ldy     #$00
-        sty     $03CC
+        sty     L03CC
         lda     #$01
-        sta     $03C9
+        sta     L03C9
         lda     #$00
-        sta     $03C6
-        sta     $03C7
-L227B:  lda     #$08
-        sta     $03CB
-        lda     $03C5
-        sta     $03C8
-L2286:  lda     $03C8
+        sta     L03C6
+        sta     L03C7
+L02FB:  lda     #$08
+        sta     L03CB
+        lda     L03C5
+        sta     L03C8
+L0306:  lda     L03C8
         jsr     L0393
-        lda     $03CC
+        lda     L03CC
         lsr     a
         tay
         sta     LOWSCR
-        bcs     L2299
+        bcs     L0319
         sta     HISCR
-L2299:  lda     ($06),y
-        and     $03C9
-        cmp     #$01
-        ror     $03CA
-        inc     $03C8
-        dec     $03CB
-        bne     L2286
-        lda     $03CA
+L0319:  lda     ($06),y
+        and     L03C9
+        cmp     #1
+        ror     L03CA
+        inc     L03C8
+        dec     L03CB
+        bne     L0306
+        lda     L03CA
         eor     #$FF
         sta     LOWSCR
-        jsr     L03C1
-        lda     $03C6
+        jsr     cout
+        lda     L03C6
         cmp     #$2F
-        bne     L22C4
-        lda     $03C7
-        cmp     #$02
-        beq     L22DB
-L22C4:  asl     $03C9
-        bpl     L22D1
-        lda     #$01
-        sta     $03C9
-        inc     $03CC
-L22D1:  inc     $03C6
-        bne     L227B
-        inc     $03C7
-        bne     L227B
-L22DB:  sta     LOWSCR
+        bne     L0344
+        lda     L03C7
+        cmp     #2
+        beq     L035B
+L0344:  asl     L03C9
+        bpl     L0351
+        lda     #1
+        sta     L03C9
+        inc     L03CC
+L0351:  inc     L03C6
+        bne     L02FB
+        inc     L03C7
+        bne     L02FB
+L035B:  sta     LOWSCR
         rts
 
-        jsr     L03B3
-        jsr     L02B4
-L22E5:  jsr     L02E6
-        lda     #$0D
-        jsr     L03C1
-        lda     #$0A
-        jsr     L03C1
-        lda     $03C8
-        sta     $03C5
-        cmp     #$C0
-        bcc     L22E5
-        lda     #$0D
-        jsr     L03C1
-        lda     #$0D
-        jsr     L03C1
-        jsr     L02C3
+L035F:  jsr     pr_num_1
+        jsr     send_spacing_sequence
+L0365:  jsr     L02E6
+        lda     #CR
+        jsr     cout
+        lda     #LF
+        jsr     cout
+        lda     L03C8
+        sta     L03C5
+        cmp     #192            ; screen height in pixels
+        bcc     L0365
+        lda     #CR
+        jsr     cout
+        lda     #CR
+        jsr     cout
+        jsr     send_restore_state
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         rts
 
-        pha
+L0393:  pha
         and     #$C7
         eor     #$08
         sta     $07
@@ -639,24 +635,45 @@ L22E5:  jsr     L02E6
         sta     $06
         rts
 
-        lda     #>$C100
+pr_num_1:
+        lda     #>SLOT1
         sta     COUT_HOOK+1
-        lda     #<$C100
+        lda     #<SLOT1
         sta     COUT_HOOK
-
-        lda     #$8D
-        jsr     L03E5
+        lda     #(CR | $80)
+        jsr     invoke_slot1
         rts
 
-        jsr     COUT
+cout:   jsr     COUT
         rts
 
-L2345:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$1B,$65,$1B,$54,$31,$36
-        .byte   $09,$4C,$20,$44,$8D,$09,$5A,$8D
-        .byte   $00,$1B,$4E,$1B,$54,$32,$34,$00
-        .byte   $4C,$00,$C1,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00
+L03C5:  .byte   0
+L03C6:  .byte   0
+L03C7:  .byte   0
+L03C8:  .byte   0
+L03C9:  .byte   0
+L03CA:  .byte   0
+L03CB:  .byte   0
+L03CC:  .byte   0
+        .byte   $00,$00
+
+spacing_sequence:
+        .byte   ESC,'e'         ; 107 DPI (horizontal)
+        .byte   ESC,"T16"       ; distance between lines (16/144")
+        .byte   TAB,$4C,$20,$44,$8D ; ???
+        .byte   TAB,$5A,$8D     ; ???
+        .byte   0
+
+restore_state:
+        .byte   ESC,'N'         ; 80 DPI (horizontal)
+        .byte   ESC,"T24"       ; distance between lines (24/144")
+        .byte   0
+
+invoke_slot1:
+        jmp     SLOT1
+
+        ;; Padding
+        .res    $400 - *, 0
 .endproc ; rest
+
+        .assert .sizeof(install_as_quit) + .sizeof(quit_routine) + .sizeof(install_segments) + .sizeof(rest) = $580, error, "Size mismatch"
