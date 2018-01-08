@@ -117,28 +117,30 @@ begin:  lda     ROMIN2
         jmp     exit
 :       lda     get_info_params::type
         cmp     #FT_S16
-        bne     L031D
+        bne     not_s16
         jsr     update_bitmap
         jmp     quit_call
+not_s16:
 
-L031D:  cmp     #FT_BINARY
-        bne     L0345
+:       cmp     #FT_BINARY
+        bne     not_binary
         lda     get_info_params::auxtype
         sta     jmp_addr
         sta     read_params::buffer
         lda     get_info_params::auxtype+1
         sta     jmp_addr+1
         sta     read_params::buffer+1
-        cmp     #$0C
-        bcs     L033E
-        lda     #$BB
+        cmp     #$0C            ; If loading at page < $0C
+        bcs     :+
+        lda     #$BB            ; ... use a high address buffer ($BB)
         sta     open_params::buffer+1
-        bne     load_target
-L033E:  lda     #$08
+        bne     load_target     ; always
+:       lda     #$08            ; ... otherwise a low address buffer ($08)
         sta     open_params::buffer+1
-        bne     load_target
+        bne     load_target     ; always
+not_binary:
 
-L0345:  cmp     #FT_BASIC       ; BASIC?
+        cmp     #FT_BASIC       ; BASIC?
         bne     load_target
 
         ;; Invoke BASIC.SYSTEM as path instead.
@@ -182,7 +184,7 @@ do_read:
         MLI_CALL CLOSE, close_params
         bne     exit
 
-        ;; If it's BASIC, copy prefix to interpreter buffer.
+        ;; If it's BASIC, set prefix and copy filename to interpreter buffer.
         lda     get_info_params::type
         cmp     #FT_BASIC
         bne     update_stack

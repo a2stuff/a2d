@@ -134,9 +134,9 @@ start:  lda     ROMIN2
         sta     BITMAP,x
         dex
         lda     #$00
-L109F:  sta     BITMAP,x
+:       sta     BITMAP,x
         dex
-        bpl     L109F
+        bpl     :-
         lda     #%11001111       ; Protect ZP, stack, Text Page 1
         sta     BITMAP
 
@@ -144,7 +144,7 @@ L109F:  sta     BITMAP,x
         bne     no_reinstall
 
         ;; Re-install quit routine (with prefix memorized)
-L10AF:  MLI_CALL GET_PREFIX, prefix_params
+        MLI_CALL GET_PREFIX, prefix_params
         beq     :+
         jmp     crash
 :       lda     #$FF
