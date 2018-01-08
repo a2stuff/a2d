@@ -1,4 +1,4 @@
-        .setcpu "65C02"         ; TODO: Reduce down to 6502
+        .setcpu "6502"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
@@ -3943,9 +3943,10 @@ L6220:  lda     L622E
         beq     L622A
         iny
 L622A:  sta     L622E
-        .byte   $8D
-L622E:  bbs7    $C0,L61F1
-        plp
+
+        L622E := *+1
+        sta     $C0FF
+        cpy     #$28
         rts
 
 ;;; ==================================================

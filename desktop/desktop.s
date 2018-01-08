@@ -1,4 +1,4 @@
-        .setcpu "65C02"         ; TODO: Reduce down to 6502
+        .setcpu "6502"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
