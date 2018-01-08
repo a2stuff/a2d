@@ -477,7 +477,7 @@ max_page:
 ;;; ==================================================
 ;;; Not sure where this could be invoked from
 
-.proc rest
+.proc dump_screen
         .org $280
 
         SLOT1   := $C100
@@ -486,6 +486,9 @@ max_page:
         CR      := $0D
         ESC     := $1B
 
+        hbasl := $6
+        screen_width := 560
+
         ;; Test for OpenApple+ClosedApple+P
         pha
         lda     BUTN0
@@ -493,12 +496,11 @@ max_page:
         bpl     :+
         lda     KBD
         cmp     #('P' | $80)
-        beq     L0294
+        beq     invoke
 :       pla
         jmp     L7ECA           ; ???
 
-        ;; Invoked if OA+CA+P is held
-L0294:  sta     KBDSTRB
+invoke: sta     KBDSTRB
         sta     SET80COL
         sta     SET80VID
         sta     DHIRESON
@@ -507,11 +509,11 @@ L0294:  sta     KBDSTRB
         sta     ALTZPOFF
         sta     ROMIN2
         lda     #0
-        sta     L03C5
-        jmp     L035F
+        sta     y_row
+        jmp     print_screen
 
 
-.proc send_spacing_sequence
+.proc send_spacing
         ldy     #0
 :       lda     spacing_sequence,y
         beq     done
@@ -543,66 +545,90 @@ init_graphics:
         .byte   ESC,"G0560"     ; Graphics, 560 data bytes
 .endproc
 
-L02E6:  jsr     send_init_graphics
-        ldy     #$00
-        sty     L03CC
-        lda     #$01
-        sta     L03C9
-        lda     #$00
-        sta     L03C6
-        sta     L03C7
-L02FB:  lda     #$08
-        sta     L03CB
-        lda     L03C5
-        sta     L03C8
-L0306:  lda     L03C8
-        jsr     L0393
-        lda     L03CC
-        lsr     a
-        tay
-        sta     LOWSCR
-        bcs     L0319
-        sta     HISCR
-L0319:  lda     ($06),y
-        and     L03C9
-        cmp     #1
-        ror     L03CA
-        inc     L03C8
-        dec     L03CB
-        bne     L0306
-        lda     L03CA
-        eor     #$FF
-        sta     LOWSCR
-        jsr     cout
-        lda     L03C6
-        cmp     #$2F
-        bne     L0344
-        lda     L03C7
-        cmp     #2
-        beq     L035B
-L0344:  asl     L03C9
-        bpl     L0351
+.proc send_row
+        ;; Tell printer to expect graphics
+        jsr     send_init_graphics
+        ldy     #0
+        sty     col_num
         lda     #1
-        sta     L03C9
-        inc     L03CC
-L0351:  inc     L03C6
-        bne     L02FB
-        inc     L03C7
-        bne     L02FB
-L035B:  sta     LOWSCR
-        rts
+        sta     mask
+        lda     #0
+        sta     x_coord
+        sta     x_coord+1
 
-L035F:  jsr     pr_num_1
-        jsr     send_spacing_sequence
-L0365:  jsr     L02E6
+col_loop:
+        lda     #8              ; 8 vertical pixels per row
+        sta     count
+        lda     y_row
+        sta     y_coord
+
+        ;; Accumulate 8 pixels
+y_loop: lda     y_coord
+        jsr     compute_hbasl   ; Row address in screen
+
+        lda     col_num
+        lsr     a               ; Even or odd column?
+        tay
+        sta     PAGE2OFF        ; By default, read main mem $2000-$3FFF
+        bcs     :+              ; But even columns come from aux, so...
+        sta     PAGE2ON         ; Read aux mem $2000-$3FFF
+
+:       lda     (hbasl),y       ; Grab the whole byte
+        and     mask            ; Isolate the pixel we care about
+        cmp     #1              ; Set carry if non-zero
+        ror     accum           ; And slide it into place
+        inc     y_coord
+        dec     count
+        bne     y_loop
+
+        ;; Send the 8 pixels to the printer.
+        lda     accum           ; Now output it
+        eor     #$FF            ; Invert pixels (screen vs. print)
+        sta     PAGE2OFF        ; Read main mem $2000-$3FFF
+        jsr     cout            ; And actually print
+
+        ;; Done all pixels across?
+        lda     x_coord
+        cmp     #<(screen_width-1)
+        bne     :+
+        lda     x_coord+1
+        cmp     #>(screen_width-1)
+        beq     done
+
+        ;; Next pixel to the right
+:       asl     mask
+        bpl     :+              ; Only 7 pixels per column
+        lda     #1
+        sta     mask
+        inc     col_num
+
+:       inc     x_coord
+        bne     col_loop
+        inc     x_coord+1
+        bne     col_loop
+
+done:   sta     PAGE2OFF        ; Read main mem $2000-$3FFF
+        rts
+.endproc
+
+.proc print_screen
+        ;; Init printer
+        jsr     pr_num_1
+        jsr     send_spacing
+
+        ;; Print a row (560x8), CR+LF
+loop:   jsr     send_row
         lda     #CR
         jsr     cout
         lda     #LF
         jsr     cout
-        lda     L03C8
-        sta     L03C5
+
+        lda     y_coord
+        sta     y_row
         cmp     #192            ; screen height in pixels
-        bcc     L0365
+        bcc     loop
+
+        ;; Finish up
         lda     #CR
         jsr     cout
         lda     #CR
@@ -612,8 +638,11 @@ L0365:  jsr     L02E6
         lda     LCBANK1
         lda     LCBANK1
         rts
+.endproc
 
-L0393:  pha
+        ;; Given y-coordinate in A, compute HBASL-equivalent
+.proc compute_hbasl
+        pha
         and     #$C7
         eor     #$08
         sta     $07
@@ -621,21 +650,22 @@ L0393:  pha
         lsr     a
         lsr     a
         lsr     a
-        sta     $06
+        sta     hbasl
         pla
         and     #$38
         asl     a
         asl     a
-        eor     $06
+        eor     hbasl
         asl     a
-        rol     $07
+        rol     hbasl+1
         asl     a
-        rol     $07
-        eor     $06
-        sta     $06
+        rol     hbasl+1
+        eor     hbasl
+        sta     hbasl
         rts
+.endproc
 
-pr_num_1:
+.proc pr_num_1
         lda     #>SLOT1
         sta     COUT_HOOK+1
         lda     #<SLOT1
@@ -643,19 +673,22 @@ pr_num_1:
         lda     #(CR | $80)
         jsr     invoke_slot1
         rts
+.endproc
 
-cout:   jsr     COUT
+.proc cout
+        jsr     COUT
         rts
+.endproc
 
-L03C5:  .byte   0
-L03C6:  .byte   0
-L03C7:  .byte   0
-L03C8:  .byte   0
-L03C9:  .byte   0
-L03CA:  .byte   0
-L03CB:  .byte   0
-L03CC:  .byte   0
-        .byte   $00,$00
+y_row:  .byte   0              ; y-coordinate of row start (0, 8, ...)
+x_coord:.word   0              ; x-coordinate of pixels being accumulated
+y_coord:.byte   0              ; iterates y_row to y_row+7
+mask:   .byte   0              ; mask for pixel being processed
+accum:  .byte   0              ; accumulates pixels for output
+count:  .byte   0              ; 8...1 while a row is output
+col_num:.byte   0               ; 0...79
+
+        .byte   0, 0
 
 spacing_sequence:
         .byte   ESC,'e'         ; 107 DPI (horizontal)
@@ -674,6 +707,6 @@ invoke_slot1:
 
         ;; Padding
         .res    $400 - *, 0
-.endproc ; rest
+.endproc ; dump_screen
 
-        .assert .sizeof(install_as_quit) + .sizeof(quit_routine) + .sizeof(install_segments) + .sizeof(rest) = $580, error, "Size mismatch"
+        .assert .sizeof(install_as_quit) + .sizeof(quit_routine) + .sizeof(install_segments) + .sizeof(dump_screen) = $580, error, "Size mismatch"

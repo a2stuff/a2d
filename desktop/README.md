@@ -40,9 +40,22 @@ itself. It then (in a convoluted way) loads in the second $200 bytes of
 This code then loads the rest of the file as a sequence of segments,
 moving them to the appropriate destination in aux/banked/main memory.
 
-There's fourth chunk of code; it's unclear where that ends up or how
-it is invoked, but it appears to handle an OpenApple+ClosedApple+P
-key sequence and invoke slot one code - possibly debugging support?
+There's fourth chunk of code, which expects to live at $280 so it
+can't co-exist with the Invoker; it may be temporary code, as there is
+no sign that it is ever moved into place. It's also unclear how it
+would be hooked in. The routine detects OA+CA+P and prints the DHR
+screen to an ImageWriter II printer attached to Slot 1. (This may have
+been used to produce screenshots during development for manuals.)
+
+### Invoker
+
+`invoker.s`
+
+Loaded at $290-$03EF, this small routine is used to invoke a target,
+e.g. a double-clicked file. System files are loaded/run at $2000,
+binary files at the location specified by their aux type, and BASIC
+files loaded by searching for BASIC.SYSTEM and running it with the
+pathname passed at $2006 (see ProDOS TLM).
 
 ### Initializer
 
@@ -51,16 +64,6 @@ key sequence and invoke slot one code - possibly debugging support?
 Loaded at $800-$FFF, this does one-time initialization of the
 DeskTop. It is later overwritten when any desk accessories are
 run.
-
-### Invoker
-
-`desktop.s`
-
-Loaded at $290-$03EF, this small routine is used to invoke a target,
-e.g. a double-clicked file. System files are loaded/run at $2000,
-binary files at the location specified by their aux type, and BASIC
-files loaded by searching for BASIC.SYSTEM and running it with the
-pathname passed at $2006 (see ProDOS TLM).
 
 ### GUI Library "A2D"
 
