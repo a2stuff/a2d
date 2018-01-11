@@ -14,6 +14,17 @@
 INVOKER          := $290                 ; Invoke other programs
 INVOKER_FILENAME := $280                 ; File to invoke (PREFIX must be set)
 
+.macro addr_call target, addr
+        lda     #<addr
+        ldx     #>addr
+        jsr     target
+.endmacro
+.macro addr_jump target, addr
+        lda     #<addr
+        ldx     #>addr
+        jmp     target
+.endmacro
+
 ;;; ==================================================
 ;;; Segment loaded into AUX $8E00-$BFFF (follows A2D)
 ;;; ==================================================
@@ -35,12 +46,6 @@ INVOKER_FILENAME := $280                 ; File to invoke (PREFIX must be set)
         ldx     #>(addr)
         .endif
         jsr     A2D_RELAY2
-.endmacro
-
-.macro draw_text1_call addr
-        lda     #<addr
-        ldx     #>addr
-        jsr     draw_text1
 .endmacro
 
 L8E03:  .byte   $08,$00
@@ -6104,12 +6109,8 @@ L477F:  lda     $D345,x
         sta     INVOKER_FILENAME,x
         dex
         bpl     L477F
-        lda     #$80
-        ldx     #$02
-        jsr     L4842
-        lda     #$20
-        ldx     #$02
-        jsr     L4842
+        addr_call L4842, $0280
+        addr_call L4842, $0220
         jsr     L48BE
         lda     #<INVOKER
         sta     L5B19
@@ -6167,7 +6168,7 @@ L4817:  PASCAL_STRING "Basic.system"
         .res    30, 0
 
 L4842:  sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$00
         lda     (L0006),y
         tay
@@ -6681,9 +6682,7 @@ L4CD6:  pha
         bpl     L4CE0
         jmp     L4523
 
-L4CE0:  lda     #$C9
-        ldx     #$DF
-        jsr     L6FAF
+L4CE0:  addr_call L6FAF, $DFC9
         beq     L4CF1
         pha
         jsr     L6F0D
@@ -6700,9 +6699,7 @@ L4CF3:  iny
         iny
 L4D01:  dey
         sty     $DFC9
-        lda     #$C9
-        ldx     #$DF
-        jsr     L6FB7
+        addr_call L6FB7, $DFC9
         lda     #$C9
         ldx     #$DF
         ldy     $DFC9
@@ -6783,9 +6780,7 @@ L4DA7:  lda     #$0A
         ldx     #$E0
         jsr     L6F90
         sty     $E00A
-        lda     #$0A
-        ldx     #$E0
-        jsr     L6FAF
+        addr_call L6FAF, $E00A
         beq     L4DC2
         pha
         jsr     L6F0D
@@ -6802,9 +6797,7 @@ L4DC4:  iny
         iny
 L4DD2:  dey
         sty     $E00A
-        lda     #$0A
-        ldx     #$E0
-        jsr     L6FB7
+        addr_call L6FB7, $E00A
         lda     #$0A
         ldx     #$E0
         ldy     $E00A
@@ -7040,9 +7033,7 @@ L5027:  lda     #$40
         ldx     #$4F
         jsr     L6F90
         sty     L4F76
-        lda     #$76
-        ldx     #$4F
-        jsr     L6FAF
+        addr_call L6FAF, $4F76
         beq     L504B
         jsr     L5E78
 L504B:  jmp     L4523
@@ -10374,7 +10365,7 @@ L6F22:  iny
 L6F31:  dey
 L6F32:  sty     L6F4A
         lda     L0006
-        ldx     $07
+        ldx     L0006+1
         jsr     L6FB7
         lda     L6F48
         ldx     L6F49
@@ -10385,7 +10376,7 @@ L6F48:  .byte   0
 L6F49:  .byte   0
 L6F4A:  .byte   0
 L6F4B:  sta     L0006
-        stx     $07
+        stx     L0006+1
         sty     L705D
 L6F52:  lda     (L0006),y
         sta     L705D,y
@@ -10437,11 +10428,11 @@ L6FA9:  cpy     #$01
         rts
 
 L6FAF:  sta     L0006
-        stx     $07
+        stx     L0006+1
         lda     #$80
         bne     L6FBD
 L6FB7:  sta     L0006
-        stx     $07
+        stx     L0006+1
         lda     #$00
 L6FBD:  sta     L704A
         bit     L704A
@@ -11562,9 +11553,7 @@ L78EF:  lda     $D21D
         dec     $EBB3
 L798A:  A2D_RELAY_CALL A2D_SET_POS, $EBBA
         jsr     L7AD7
-        lda     #$B3
-        ldx     #$EB
-        jsr     L8780
+        addr_call draw_text2, $EBB3
         lda     buf3len
         cmp     #$02
         bcs     L79A7
@@ -11583,9 +11572,7 @@ L79A7:  jsr     L79F7
         jsr     L7AE0
         A2D_RELAY_CALL A2D_SET_POS, $EBEB
         jsr     L7AD7
-        lda     #$C6
-        ldx     #$EB
-        jsr     L8780
+        addr_call draw_text2, $EBC6
         ldx     desktop_winid
         dex
         txa
@@ -11599,9 +11586,7 @@ L79A7:  jsr     L79F7
         jsr     L7AE0
         A2D_RELAY_CALL A2D_SET_POS, $EBEF
         jsr     L7AD7
-        lda     #$D0
-        ldx     #$EB
-        jsr     L8780
+        addr_call draw_text2, $EBD0
         rts
 
 L79F7:  lda     $D221
@@ -11691,9 +11676,7 @@ L7A9E:  lda     $EBEB
         sta     $EBF2
         rts
 
-L7AD7:  lda     #$DC
-        ldx     #$EB
-        jmp     L8780
+L7AD7:  addr_jump draw_text2, $EBDC
 
 L7ADE:  .byte   0
 L7ADF:  .byte   0
@@ -12708,9 +12691,7 @@ L8397:  sec
         bne     L8397
         ora     #$30
         sta     L83E0
-L83A2:  lda     #$DE
-        ldx     #$83
-        jmp     L84A4
+L83A2:  addr_jump L84A4, $83DE
 
 L83A9:  lda     L83DC
         asl     a
@@ -12773,7 +12754,7 @@ ascii_digits:
         .byte   "0123456789"
 
 L84A4:  sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$00
         lda     ($08),y
         sta     L84D0
@@ -13134,8 +13115,9 @@ L877B:  sta     $DFC9
         rts
 
 L877F:  .byte   0
-L8780:  sta     L0006
-        stx     $07
+draw_text2:
+        sta     L0006
+        stx     L0006+1
         ldy     #$00
         lda     (L0006),y
         beq     L879B
@@ -13146,8 +13128,9 @@ L8780:  sta     L0006
 L8792:  A2D_RELAY_CALL A2D_DRAW_TEXT, $0006
 L879B:  rts
 
-L879C:  sta     L0006
-        stx     $07
+measure_text1:
+        sta     L0006
+        stx     L0006+1
         ldy     #$00
         lda     (L0006),y
         sta     $08
@@ -17014,9 +16997,7 @@ LA89C:  A2D_RELAY_CALL A2D_CREATE_WINDOW, $D62B
         jsr     LB43B
         A2D_RELAY_CALL A2D_DRAW_RECT, $AEDD
         A2D_RELAY_CALL A2D_DRAW_RECT, $AEE5
-        lda     #$ED
-        ldx     #$AE
-        jsr     LB723
+        addr_call LB723, $AEED
         lda     #$FE
         ldx     #$AE
         ldy     #$81
@@ -17102,9 +17083,7 @@ LA97A:  cmp     #$05
 LA981:  lda     #$00
         sta     $D8E8
         jsr     LB53A
-        lda     #$0C
-        ldx     #$B0
-        jsr     LB723
+        addr_call LB723, $B00C
         lda     #$15
         ldx     #$B0
         ldy     #$01
@@ -17134,8 +17113,8 @@ LA9B5:  ldy     #$01
         lda     winF
         jsr     LB7B9
         A2D_RELAY_CALL A2D_SET_POS, $B0B6
-        draw_text1_call str_7_spaces
-        draw_text1_call str_files
+        addr_call draw_text1, str_7_spaces
+        addr_call draw_text1, str_files
         rts
 
 LA9E6:  ldy     #$01
@@ -17160,7 +17139,7 @@ LA9E6:  ldy     #$01
         stx     L0006
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, $AE7E
-        draw_text1_call $D402
+        addr_call draw_text1, $D402
         jsr     LB3BF
         ldy     #$05
         lda     (L0006),y
@@ -17179,7 +17158,7 @@ LA9E6:  ldy     #$01
         lda     #$BA
         ldx     #$B0
         jsr     A2D_RELAY
-        draw_text1_call str_7_spaces
+        addr_call draw_text1, str_7_spaces
         rts
 
 LAA5A:  jsr     LBEB1
@@ -17251,9 +17230,7 @@ LAAFD:  cmp     #$04
 LAB04:  lda     #$00
         sta     $D8E8
         jsr     LB53A
-        lda     #$73
-        ldx     #$B4
-        jsr     LB723
+        addr_call LB723, $B473
         lda     #$15
         ldx     #$B0
         ldy     #$01
@@ -17283,8 +17260,8 @@ LAB38:  ldy     #$01
         lda     winF
         jsr     LB7B9
         A2D_RELAY_CALL A2D_SET_POS, $B0B6
-        draw_text1_call str_7_spaces
-        draw_text1_call str_files
+        addr_call draw_text1, str_7_spaces
+        addr_call draw_text1, str_files
         rts
 
 LAB69:  ldy     #$01
@@ -17308,9 +17285,9 @@ LAB69:  ldy     #$01
         stx     L0006
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, $AE7E
-        draw_text1_call $D402
+        addr_call draw_text1, $D402
         A2D_RELAY_CALL A2D_SET_POS, $B0BA
-        draw_text1_call str_7_spaces
+        addr_call draw_text1, str_7_spaces
         rts
 
 LABB8:  jsr     LBEB1
@@ -17351,9 +17328,7 @@ LAC0F:  cmp     #$03
         jmp     LAC9E
 
 LAC16:  jsr     LB53A
-        lda     #$3A
-        ldx     #$B4
-        jsr     LB723
+        addr_call LB723, $B43A
         lda     #$47
         ldx     #$B4
         ldy     #$01
@@ -17457,9 +17432,7 @@ LACFE:  sta     LAD1F
         lda     #$00
         sta     $D8E8
         jsr     LB53A
-        lda     #$BE
-        ldx     #$B0
-        jsr     LB723
+        addr_call LB723, $B0BE
         lda     LAD1F
         beq     LAD20
         lda     #$DD
@@ -17491,8 +17464,8 @@ LAD46:  bne     LAD54
         jmp     LAD5D
 
 LAD54:  A2D_RELAY_CALL A2D_SET_POS, $B172
-LAD5D:  draw_text1_call str_7_spaces
-        draw_text1_call str_files
+LAD5D:  addr_call draw_text1, str_7_spaces
+        addr_call draw_text1, str_files
         rts
 
 LAD6C:  ldy     #$01
@@ -17516,9 +17489,9 @@ LAD6C:  ldy     #$01
         stx     L0006
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, $AE7E
-        draw_text1_call $D402
+        addr_call draw_text1, $D402
         A2D_RELAY_CALL A2D_SET_POS, $B16E
-        draw_text1_call str_7_spaces
+        addr_call draw_text1, str_7_spaces
         rts
 
 LADBB:  lda     winF
@@ -17580,9 +17553,7 @@ LAE49:  lda     #$80
         jsr     LB509
         lda     winF
         jsr     LB7B9
-        lda     #$76
-        ldx     #$B1
-        jsr     LB723
+        addr_call LB723, $B176
         jsr     LB43B
         A2D_RELAY_CALL A2D_DRAW_RECT, $D6AB
         rts
@@ -17684,9 +17655,7 @@ LAF34:  lda     #$00
         jsr     LB509
         lda     winF
         jsr     LB7B9
-        lda     #$C6
-        ldx     #$B1
-        jsr     LB723
+        addr_call LB723, $B1C6
         jsr     LB3BF
         ldy     #$00
         lda     (L0006),y
@@ -17813,9 +17782,7 @@ LB048:  cmp     #$04
 LB04F:  lda     #$00
         sta     $D8E8
         jsr     LB53A
-        lda     #$00
-        ldx     #$B4
-        jsr     LB723
+        addr_call LB723, $B400
         ldy     #$04
         lda     #$09
         ldx     #$B4
@@ -17833,9 +17800,9 @@ LB068:  ldy     #$01
         lda     winF
         jsr     LB7B9
         A2D_RELAY_CALL A2D_SET_POS, $B231
-        draw_text1_call str_7_spaces
+        addr_call draw_text1, str_7_spaces
         A2D_RELAY_CALL A2D_SET_POS, $B239
-        draw_text1_call str_files
+        addr_call draw_text1, str_files
         rts
 
 LB0A2:  ldy     #$01
@@ -17859,9 +17826,9 @@ LB0A2:  ldy     #$01
         stx     L0006
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, $AE7E
-        draw_text1_call $D402
+        addr_call draw_text1, $D402
         A2D_RELAY_CALL A2D_SET_POS, $B241
-        draw_text1_call str_7_spaces
+        addr_call draw_text1, str_7_spaces
         rts
 
 LB0F1:  lda     winF
@@ -17912,9 +17879,7 @@ LB166:  cmp     #$04
 LB16D:  lda     #$00
         sta     $D8E8
         jsr     LB53A
-        lda     #$C0
-        ldx     #$B3
-        jsr     LB723
+        addr_call LB723, $B3C0
         ldy     #$04
         lda     #$CB
         ldx     #$B3
@@ -17932,9 +17897,9 @@ LB186:  ldy     #$01
         lda     winF
         jsr     LB7B9
         A2D_RELAY_CALL A2D_SET_POS, $B22D
-        draw_text1_call str_7_spaces
+        addr_call draw_text1, str_7_spaces
         A2D_RELAY_CALL A2D_SET_POS, $B235
-        draw_text1_call str_files
+        addr_call draw_text1, str_files
         rts
 
 LB1C0:  ldy     #$01
@@ -17958,9 +17923,9 @@ LB1C0:  ldy     #$01
         stx     L0006
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, $AE7E
-        draw_text1_call $D402
+        addr_call draw_text1, $D402
         A2D_RELAY_CALL A2D_SET_POS, $B23D
-        draw_text1_call str_7_spaces
+        addr_call draw_text1, str_7_spaces
         rts
 
 LB20F:  lda     winF
@@ -18009,9 +17974,7 @@ LB27D:  jsr     LBD75
         jsr     LB509
         lda     winF
         jsr     LB7B9
-        lda     #$A0
-        ldx     #$B1
-        jsr     LB723
+        addr_call LB723, $B1A0
         jsr     LB43B
         A2D_RELAY_CALL A2D_DRAW_RECT, $D6AB
         ldy     #$02
@@ -18074,9 +18037,7 @@ LB313:  jsr     LBEB1
         jsr     LB55F
         lda     winF
         jsr     LB7B9
-        lda     #$B3
-        ldx     #$B4
-        jsr     LB723
+        addr_call LB723, $B4B3
         A2D_RELAY_CALL A2D_SHOW_CURSOR
         jsr     LB3BF
         ldy     #$00
@@ -18336,23 +18297,23 @@ LB5CC:  dey
         rts
 
 LB5F9:  A2D_RELAY_CALL A2D_SET_POS, $AE50
-        draw_text1_call str_ok_label
+        addr_call draw_text1, str_ok_label
         rts
 
 LB60A:  A2D_RELAY_CALL A2D_SET_POS, $AE54
-        draw_text1_call str_cancel_label
+        addr_call draw_text1, str_cancel_label
         rts
 
 LB61B:  A2D_RELAY_CALL A2D_SET_POS, $AE58
-        draw_text1_call str_yes_label
+        addr_call draw_text1, str_yes_label
         rts
 
 LB62C:  A2D_RELAY_CALL A2D_SET_POS, $AE5C
-        draw_text1_call str_no_label
+        addr_call draw_text1, str_no_label
         rts
 
 LB63D:  A2D_RELAY_CALL A2D_SET_POS, $AE60
-        draw_text1_call str_all_label
+        addr_call draw_text1, str_all_label
         rts
 
 LB64E:  jsr     LB43B
@@ -18400,7 +18361,8 @@ LB6FB:  jsr     LBEA7
         A2D_RELAY_CALL A2D_FILL_RECT, $AE20
         rts
 
-draw_text1:  sta     L0006
+draw_text1:
+        sta     L0006
         stx     L0006+1
         jsr     LBD7B
         beq     LB722
@@ -18645,9 +18607,9 @@ LB961:  lda     $D443
         A2D_RELAY_CALL A2D_DRAW_RECT, $D6AB
         A2D_RELAY_CALL A2D_SET_POS, $D6B3
         A2D_RELAY_CALL A2D_SET_BOX, $D6C7
-        draw_text1_call $D443
-        draw_text1_call $D484
-        draw_text1_call str_2_spaces
+        addr_call draw_text1, $D443
+        addr_call draw_text1, $D484
+        addr_call draw_text1, str_2_spaces
         lda     winF
         jsr     LB7B9
 LB9B7:  rts
@@ -18822,8 +18784,8 @@ LBB1A:  lda     LBB62
         sta     $09
         A2D_RELAY_CALL A2D_SET_POS, $0006
         A2D_RELAY_CALL A2D_SET_BOX, $D6C7
-        draw_text1_call str_1_null
-        draw_text1_call $D484
+        addr_call draw_text1, str_1_null
+        addr_call draw_text1, $D484
         lda     winF
         jsr     LB7B9
         rts
@@ -18843,8 +18805,8 @@ LBB69:  dec     $D443
         sta     $09
         A2D_RELAY_CALL A2D_SET_POS, $0006
         A2D_RELAY_CALL A2D_SET_BOX, $D6C7
-        draw_text1_call $D484
-        draw_text1_call str_2_spaces
+        addr_call draw_text1, $D484
+        addr_call draw_text1, str_2_spaces
         lda     winF
         jsr     LB7B9
         rts
@@ -18875,8 +18837,8 @@ LBBBC:  ldx     $D443
         sta     $09
         A2D_RELAY_CALL A2D_SET_POS, $0006
         A2D_RELAY_CALL A2D_SET_BOX, $D6C7
-        draw_text1_call $D484
-        draw_text1_call str_2_spaces
+        addr_call draw_text1, $D484
+        addr_call draw_text1, str_2_spaces
         lda     winF
         jsr     LB7B9
         rts
@@ -18903,9 +18865,9 @@ LBC21:  lda     $D485,x
 LBC2D:  dec     $D484
         A2D_RELAY_CALL A2D_SET_POS, $D6B3
         A2D_RELAY_CALL A2D_SET_BOX, $D6C7
-        draw_text1_call $D443
-        draw_text1_call $D484
-        draw_text1_call str_2_spaces
+        addr_call draw_text1, $D443
+        addr_call draw_text1, $D484
+        addr_call draw_text1, str_2_spaces
         lda     winF
         jsr     LB7B9
         rts
@@ -19233,7 +19195,7 @@ L678A           := desktop_main::L678A
 L86A7           := desktop_main::L86A7
 L86C1           := desktop_main::L86C1
 L86E3           := desktop_main::L86E3
-L879C           := desktop_main::L879C
+measure_text1   := desktop_main::measure_text1
 L87BA           := desktop_main::L87BA
 L87F6           := desktop_main::push_addrs_from_zp
 L8813           := desktop_main::pop_addrs_to_zp
@@ -19611,32 +19573,24 @@ L0AE7:  MLI_RELAY_CALL OPEN, $0AC9
         MLI_RELAY_CALL CLOSE, $0AE5
         rts
 
-L0B09:  lda     #$DC
-        ldx     #$EB
-        jsr     L879C
+L0B09:  addr_call measure_text1, $EBDC
         sta     L0BA0
         stx     L0BA1
-        lda     #$B3
-        ldx     #$EB
-        jsr     L879C
+        addr_call measure_text1, $EBB3
         clc
         adc     L0BA0
         sta     $EBF3
         txa
         adc     L0BA1
         sta     $EBF4
-        lda     #$C6
-        ldx     #$EB
-        jsr     L879C
+        addr_call measure_text1, $EBC6
         clc
         adc     L0BA0
         sta     $EBF5
         txa
         adc     L0BA1
         sta     $EBF6
-        lda     #$D0
-        ldx     #$EB
-        jsr     L879C
+        addr_call measure_text1, $EBD0
         clc
         adc     L0BA0
         sta     $EBF7
@@ -19899,9 +19853,7 @@ L0D6D:  pla
         sta     L0E32
         cmp     #$00
         bne     L0D7F
-        lda     #$DD
-        ldx     #$E4
-        jmp     L0DAD
+        addr_jump L0DAD, $E4DD
 
 L0D7F:  cmp     #$0B
         beq     L0DA9
@@ -19921,18 +19873,14 @@ L0D7F:  cmp     #$0B
 L0D96:  .byte   $C7
         and     #$01
         bne     L0DA2
-        lda     #$A0
-        ldx     #$E4
-        jmp     L0DAD
+        addr_jump L0DAD, $E4A0
 
-L0DA2:  lda     #$C8
-        ldx     #$E4
-        jmp     L0DAD
+L0DA2:  addr_jump L0DAD, $E4C8
 
-L0DA9:  lda     #$B4
-        ldx     #$E4
+L0DA9:  lda     #<$E4B4
+        ldx     #>$E4B4
 L0DAD:  sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$00
         lda     (L0006),y
         sta     L0DBE
