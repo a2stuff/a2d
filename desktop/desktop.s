@@ -37,6 +37,12 @@ INVOKER_FILENAME := $280                 ; File to invoke (PREFIX must be set)
         jsr     A2D_RELAY2
 .endmacro
 
+.macro draw_text1_call addr
+        lda     #<addr
+        ldx     #>addr
+        jsr     draw_text1
+.endmacro
+
 L8E03:  .byte   $08,$00
 L8E05:  .byte   $00
 L8E06:  .byte   $00
@@ -17118,12 +17124,8 @@ LA9B5:  ldy     #$01
         lda     winF
         jsr     LB7B9
         A2D_RELAY_CALL A2D_SET_POS, $B0B6
-        lda     #$01
-        ldx     #$D9
-        jsr     draw_text1
-        lda     #$FB
-        ldx     #$D8
-        jsr     draw_text1
+        draw_text1_call $D901
+        draw_text1_call $D8FB
         rts
 
 LA9E6:  ldy     #$01
@@ -17148,9 +17150,7 @@ LA9E6:  ldy     #$01
         stx     L0006
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, $AE7E
-        lda     #$02
-        ldx     #$D4
-        jsr     draw_text1
+        draw_text1_call $D402
         jsr     LB3BF
         ldy     #$05
         lda     (L0006),y
@@ -17169,9 +17169,7 @@ LA9E6:  ldy     #$01
         lda     #$BA
         ldx     #$B0
         jsr     A2D_RELAY
-        lda     #$01
-        ldx     #$D9
-        jsr     draw_text1
+        draw_text1_call $D901
         rts
 
 LAA5A:  jsr     LBEB1
@@ -17275,12 +17273,8 @@ LAB38:  ldy     #$01
         lda     winF
         jsr     LB7B9
         A2D_RELAY_CALL A2D_SET_POS, $B0B6
-        lda     #$01
-        ldx     #$D9
-        jsr     draw_text1
-        lda     #$FB
-        ldx     #$D8
-        jsr     draw_text1
+        draw_text1_call $D901
+        draw_text1_call $D8FB
         rts
 
 LAB69:  ldy     #$01
@@ -17304,13 +17298,9 @@ LAB69:  ldy     #$01
         stx     L0006
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, $AE7E
-        lda     #$02
-        ldx     #$D4
-        jsr     draw_text1
+        draw_text1_call $D402
         A2D_RELAY_CALL A2D_SET_POS, $B0BA
-        lda     #$01
-        ldx     #$D9
-        jsr     draw_text1
+        draw_text1_call $D901
         rts
 
 LABB8:  jsr     LBEB1
@@ -17491,12 +17481,8 @@ LAD46:  bne     LAD54
         jmp     LAD5D
 
 LAD54:  A2D_RELAY_CALL A2D_SET_POS, $B172
-LAD5D:  lda     #$01
-        ldx     #$D9
-        jsr     draw_text1
-        lda     #$FB
-        ldx     #$D8
-        jsr     draw_text1
+LAD5D:  draw_text1_call $D901
+        draw_text1_call $D8FB
         rts
 
 LAD6C:  ldy     #$01
@@ -17520,13 +17506,9 @@ LAD6C:  ldy     #$01
         stx     L0006
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, $AE7E
-        lda     #$02
-        ldx     #$D4
-        jsr     draw_text1
+        draw_text1_call $D402
         A2D_RELAY_CALL A2D_SET_POS, $B16E
-        lda     #$01
-        ldx     #$D9
-        jsr     draw_text1
+        draw_text1_call $D901
         rts
 
 LADBB:  lda     winF
@@ -17841,13 +17823,9 @@ LB068:  ldy     #$01
         lda     winF
         jsr     LB7B9
         A2D_RELAY_CALL A2D_SET_POS, $B231
-        lda     #$01
-        ldx     #$D9
-        jsr     draw_text1
+        draw_text1_call $D901
         A2D_RELAY_CALL A2D_SET_POS, $B239
-        lda     #$FB
-        ldx     #$D8
-        jsr     draw_text1
+        draw_text1_call $D8FB
         rts
 
 LB0A2:  ldy     #$01
@@ -17871,13 +17849,9 @@ LB0A2:  ldy     #$01
         stx     L0006
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, $AE7E
-        lda     #$02
-        ldx     #$D4
-        jsr     draw_text1
+        draw_text1_call $D402
         A2D_RELAY_CALL A2D_SET_POS, $B241
-        lda     #$01
-        ldx     #$D9
-        jsr     draw_text1
+        draw_text1_call $D901
         rts
 
 LB0F1:  lda     winF
@@ -17948,13 +17922,9 @@ LB186:  ldy     #$01
         lda     winF
         jsr     LB7B9
         A2D_RELAY_CALL A2D_SET_POS, $B22D
-        lda     #$01
-        ldx     #$D9
-        jsr     draw_text1
+        draw_text1_call $D901
         A2D_RELAY_CALL A2D_SET_POS, $B235
-        lda     #$FB
-        ldx     #$D8
-        jsr     draw_text1
+        draw_text1_call $D8FB
         rts
 
 LB1C0:  ldy     #$01
@@ -17978,13 +17948,9 @@ LB1C0:  ldy     #$01
         stx     L0006
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, $AE7E
-        lda     #$02
-        ldx     #$D4
-        jsr     draw_text1
+        draw_text1_call $D402
         A2D_RELAY_CALL A2D_SET_POS, $B23D
-        lda     #$01
-        ldx     #$D9
-        jsr     draw_text1
+        draw_text1_call $D901
         rts
 
 LB20F:  lda     winF
@@ -18352,7 +18318,7 @@ LB5CC:  dey
         sta     $D6C6
         A2D_RELAY_CALL A2D_SET_POS, $D6C3
         lda     L0006
-        ldx     $07
+        ldx     L0006+1
         jsr     draw_text1
         ldx     $D6C3
         lda     #$28
@@ -18360,33 +18326,23 @@ LB5CC:  dey
         rts
 
 LB5F9:  A2D_RELAY_CALL A2D_SET_POS, $AE50
-        lda     #$40
-        ldx     #$AE
-        jsr     draw_text1
+        draw_text1_call $AE40
         rts
 
 LB60A:  A2D_RELAY_CALL A2D_SET_POS, $AE54
-        lda     #$96
-        ldx     #$AE
-        jsr     draw_text1
+        draw_text1_call $AE96
         rts
 
 LB61B:  A2D_RELAY_CALL A2D_SET_POS, $AE58
-        lda     #$A8
-        ldx     #$AE
-        jsr     draw_text1
+        draw_text1_call $AEA8
         rts
 
 LB62C:  A2D_RELAY_CALL A2D_SET_POS, $AE5C
-        lda     #$AD
-        ldx     #$AE
-        jsr     draw_text1
+        draw_text1_call $AEAD
         rts
 
 LB63D:  A2D_RELAY_CALL A2D_SET_POS, $AE60
-        lda     #$B1
-        ldx     #$AE
-        jsr     draw_text1
+        draw_text1_call $AEB1
         rts
 
 LB64E:  jsr     LB43B
@@ -18475,7 +18431,7 @@ LB76B:  .byte   0
         stx     $07
         A2D_RELAY_CALL A2D_SET_POS, $D6BB
         lda     L0006
-        ldx     $07
+        ldx     L0006+1
         jsr     draw_text1
         rts
 
@@ -18679,15 +18635,9 @@ LB961:  lda     $D443
         A2D_RELAY_CALL A2D_DRAW_RECT, $D6AB
         A2D_RELAY_CALL A2D_SET_POS, $D6B3
         A2D_RELAY_CALL A2D_SET_BOX, $D6C7
-        lda     #$43
-        ldx     #$D4
-        jsr     draw_text1
-        lda     #$84
-        ldx     #$D4
-        jsr     draw_text1
-        lda     #$F8
-        ldx     #$D8
-        jsr     draw_text1
+        draw_text1_call $D443
+        draw_text1_call $D484
+        draw_text1_call $D8F8
         lda     winF
         jsr     LB7B9
 LB9B7:  rts
@@ -18862,12 +18812,8 @@ LBB1A:  lda     LBB62
         sta     $09
         A2D_RELAY_CALL A2D_SET_POS, $0006
         A2D_RELAY_CALL A2D_SET_BOX, $D6C7
-        lda     #$F6
-        ldx     #$D8
-        jsr     draw_text1
-        lda     #$84
-        ldx     #$D4
-        jsr     draw_text1
+        draw_text1_call $D8F6
+        draw_text1_call $D484
         lda     winF
         jsr     LB7B9
         rts
@@ -18887,12 +18833,8 @@ LBB69:  dec     $D443
         sta     $09
         A2D_RELAY_CALL A2D_SET_POS, $0006
         A2D_RELAY_CALL A2D_SET_BOX, $D6C7
-        lda     #$84
-        ldx     #$D4
-        jsr     draw_text1
-        lda     #$F8
-        ldx     #$D8
-        jsr     draw_text1
+        draw_text1_call $D484
+        draw_text1_call $D8F8
         lda     winF
         jsr     LB7B9
         rts
@@ -18923,12 +18865,8 @@ LBBBC:  ldx     $D443
         sta     $09
         A2D_RELAY_CALL A2D_SET_POS, $0006
         A2D_RELAY_CALL A2D_SET_BOX, $D6C7
-        lda     #$84
-        ldx     #$D4
-        jsr     draw_text1
-        lda     #$F8
-        ldx     #$D8
-        jsr     draw_text1
+        draw_text1_call $D484
+        draw_text1_call $D8F8
         lda     winF
         jsr     LB7B9
         rts
@@ -18955,15 +18893,9 @@ LBC21:  lda     $D485,x
 LBC2D:  dec     $D484
         A2D_RELAY_CALL A2D_SET_POS, $D6B3
         A2D_RELAY_CALL A2D_SET_BOX, $D6C7
-        lda     #$43
-        ldx     #$D4
-        jsr     draw_text1
-        lda     #$84
-        ldx     #$D4
-        jsr     draw_text1
-        lda     #$F8
-        ldx     #$D8
-        jsr     draw_text1
+        draw_text1_call $D443
+        draw_text1_call $D484
+        draw_text1_call $D8F8
         lda     winF
         jsr     LB7B9
         rts
