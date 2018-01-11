@@ -3143,51 +3143,82 @@ LAEC7:  PASCAL_STRING "Destination filename:"
         .byte   $8C,$01,$6C,$00,$05,$00,$03,$00
         .byte   $8B,$01,$6B,$00
 
-LAEED:  PASCAL_STRING "Apple II DeskTop"
-LAEFE:  PASCAL_STRING "Copyright Apple Computer Inc., 1986"
-LAF22:  PASCAL_STRING "Copyright Version Soft, 1985 - 1986"
-LAF46:  PASCAL_STRING "All Rights Reserved"
-LAF5A:  PASCAL_STRING "Authors: Stephane Cavril, Bernard Gallet, Henri Lamiraux"
-LAF93:  PASCAL_STRING "Richard Danais and Luc Barthelet"
-LAFB4:  PASCAL_STRING "With thanks to: A. Gerard, J. Gerber, P. Pahl, J. Bernard"
-LAFEE:  PASCAL_STRING "November 26, 1986"
-LB000:  PASCAL_STRING "Version 1.1"
+str_about1:  PASCAL_STRING "Apple II DeskTop"
+str_about2:  PASCAL_STRING "Copyright Apple Computer Inc., 1986"
+str_about3:  PASCAL_STRING "Copyright Version Soft, 1985 - 1986"
+str_about4:  PASCAL_STRING "All Rights Reserved"
+str_about5:  PASCAL_STRING "Authors: Stephane Cavril, Bernard Gallet, Henri Lamiraux"
+str_about6:  PASCAL_STRING "Richard Danais and Luc Barthelet"
+str_about7:  PASCAL_STRING "With thanks to: A. Gerard, J. Gerber, P. Pahl, J. Bernard"
+str_about8:  PASCAL_STRING "November 26, 1986"
+str_about9:  PASCAL_STRING "Version 1.1"
 
-LB00C:  PASCAL_STRING "Copy ..."
-LB015:  PASCAL_STRING "Now Copying "
-LB022:  PASCAL_STRING "from:"
-LB028:  PASCAL_STRING "to :"
-LB02D:  PASCAL_STRING "Files remaining to copy: "
-LB047:  PASCAL_STRING "That file already exists. Do you want to write over it ?"
-LB080:  PASCAL_STRING "This file is too large to copy, click OK to continue."
+str_copy1:   PASCAL_STRING "Copy ..."
+str_copy2:   PASCAL_STRING "Now Copying "
+str_copy3:   PASCAL_STRING "from:"
+str_copy4:   PASCAL_STRING "to :"
+str_copy5:   PASCAL_STRING "Files remaining to copy: "
+
+str_exists_prompt:
+        PASCAL_STRING "That file already exists. Do you want to write over it ?"
+str_large_prompt:
+        PASCAL_STRING "This file is too large to copy, click OK to continue."
 
         .byte   $6E,$00,$23
         .byte   $00,$AA,$00,$3B,$00
 
-LB0BE:  PASCAL_STRING "Delete ..."
-LB0C9:  PASCAL_STRING "Click OK to delete:"
-LB0DD:  PASCAL_STRING "Clicking OK will immediately empty the trash of:"
-LB10E:  PASCAL_STRING "File:"
-LB114:  PASCAL_STRING "Files remaining to be deleted:"
-LB133:  PASCAL_STRING "This file is locked, do you want to delete it anyway ?"
+str_delete:
+        PASCAL_STRING "Delete ..."
+str_ok_delete:
+        PASCAL_STRING "Click OK to delete:"
+str_ok_empty:
+        PASCAL_STRING "Clicking OK will immediately empty the trash of:"
+
+str_file_colon:
+        PASCAL_STRING "File:"
+str_files_remaining:
+        PASCAL_STRING "Files remaining to be deleted:"
+str_delete_locked_file:
+        PASCAL_STRING "This file is locked, do you want to delete it anyway ?"
 
         .byte   $91,$00,$3B,$00,$C8,$00,$3B,$00,$2C,$01,$3B,$00
 
-LB176:  PASCAL_STRING "New Folder ..."
-LB185:  PASCAL_STRING "in:"
-LB189:  PASCAL_STRING "Enter the folder name:"
-LB1A0:  PASCAL_STRING "Rename an Icon ..."
-LB1B3:	PASCAL_STRING "Rename: "
-LB1BC:  PASCAL_STRING "New name:"
-LB1C6:  PASCAL_STRING "Get Info ..."
-LB1D3:  PASCAL_STRING "Name"
-LB1D8:  PASCAL_STRING "Locked"
-LB1DF:  PASCAL_STRING "Size"
-LB1E4:  PASCAL_STRING "Creation date"
-LB1F2:  PASCAL_STRING "Last modification"
-LB204:  PASCAL_STRING "Type"
-LB209:  PASCAL_STRING "Write protected"
-LB219:  PASCAL_STRING "Blocks free/size"
+        ;; "New Folder" dialog strings
+str_new_folder_title:
+        PASCAL_STRING "New Folder ..."
+str_in_colon:
+        PASCAL_STRING "in:"
+str_enter_folder_name:
+        PASCAL_STRING "Enter the folder name:"
+
+        ;; "Rename Icon" dialog strings
+str_rename_title:
+        PASCAL_STRING "Rename an Icon ..."
+str_rename_old:
+        PASCAL_STRING "Rename: "
+str_rename_new:
+        PASCAL_STRING "New name:"
+
+        ;; "Get Info" dialog strings
+str_info_title:
+        PASCAL_STRING "Get Info ..."
+str_info_name:
+        PASCAL_STRING "Name"
+str_info_locked:
+        PASCAL_STRING "Locked"
+str_info_size:
+        PASCAL_STRING "Size"
+str_info_create:
+        PASCAL_STRING "Creation date"
+str_info_mod:
+        PASCAL_STRING "Last modification"
+str_info_type:
+        PASCAL_STRING "Type"
+str_info_protected:
+        PASCAL_STRING "Write protected"
+str_info_blocks:
+        PASCAL_STRING "Blocks free/size"
+
 LB22A:  PASCAL_STRING ": "
 
         .byte   $A0,$00,$3B,$00
@@ -3483,7 +3514,7 @@ LBB75:  A2D_RELAY2_CALL A2D_SET_POS, $B70F
         jsr     draw_pascal_string
 LBB87:  A2D_RELAY2_CALL A2D_GET_INPUT, alert_input_params
         lda     alert_input_params
-        cmp     #$01
+        cmp     #A2D_INPUT_DOWN
         bne     LBB9A
         jmp     LBC0C
 
@@ -3560,7 +3591,7 @@ LBC6D:  A2D_RELAY2_CALL A2D_SET_FILL_MODE, const2
         sta     LBCE8
 LBC84:  A2D_RELAY2_CALL A2D_GET_INPUT, alert_input_params
         lda     alert_input_params
-        cmp     #$02
+        cmp     #A2D_INPUT_UP
         beq     LBCDB
         jsr     LBDE1
         A2D_RELAY2_CALL A2D_SET_POS, alert_input_params+1
@@ -3597,7 +3628,7 @@ LBCE9:  A2D_RELAY2_CALL A2D_SET_FILL_MODE, const2
         sta     LBD64
 LBD00:  A2D_RELAY2_CALL A2D_GET_INPUT, alert_input_params
         lda     alert_input_params
-        cmp     #$02
+        cmp     #A2D_INPUT_UP
         beq     LBD57
         jsr     LBDE1
         A2D_RELAY2_CALL A2D_SET_POS, alert_input_params+1
@@ -3634,7 +3665,7 @@ LBD65:  lda     #$00
         A2D_RELAY2_CALL A2D_FILL_RECT, try_again_rect
 LBD7C:  A2D_RELAY2_CALL A2D_GET_INPUT, alert_input_params
         lda     alert_input_params
-        cmp     #$02
+        cmp     #A2D_INPUT_UP
         beq     LBDD3
         jsr     LBDE1
         A2D_RELAY2_CALL A2D_SET_POS, alert_input_params+1
@@ -5418,7 +5449,7 @@ L4088:  jsr     L4510
         jsr     L40E0
 L40A6:  jsr     L464E
         jsr     L48E6
-        lda     $D208
+        lda     alert_input_params
         cmp     #$01
         beq     L40B7
         cmp     #$05
@@ -5458,7 +5489,7 @@ L40F2:  jsr     L4510
         lda     #$00
         sta     L40F1
 L4100:  jsr     L48F0
-        lda     $D208
+        lda     alert_input_params
         cmp     #$06
         bne     L412B
         jsr     L48E6
@@ -6239,10 +6270,10 @@ L48CC:  sta     $D2AC
         L48E4 := *+1
         jmp     $1234           ; self-modified
 
-L48E6:  A2D_RELAY_CALL A2D_GET_INPUT, $D208
+L48E6:  A2D_RELAY_CALL A2D_GET_INPUT, alert_input_params
         rts
 
-L48F0:  A2D_RELAY_CALL $2C, $D208 ; ???
+L48F0:  A2D_RELAY_CALL $2C, alert_input_params ; ???
         rts
 
 L48FA:  A2D_RELAY_CALL A2D_SET_FILL_MODE, $D202
@@ -7640,7 +7671,7 @@ L5579:  lda     #$00
         jsr     L6D2B
 L5581:  jsr     L55F0
 L5584:  jsr     L48E6
-        lda     $D208
+        lda     alert_input_params
         cmp     #$03
         beq     L5595
         cmp     #$01
@@ -7821,7 +7852,7 @@ L5721:  cpx     #$08
 L572D:  lda     #$00
         sta     L578C
 L5732:  jsr     L48E6
-        lda     $D208
+        lda     alert_input_params
         cmp     #$03
         beq     L5743
         cmp     #$01
@@ -7872,7 +7903,7 @@ L579A:  A2D_RELAY_CALL $22      ; ???
 
 L57A6:  jsr     L5803
 L57A9:  jsr     L48E6
-        lda     $D208
+        lda     alert_input_params
         cmp     #$01
         beq     L57C2
         cmp     #$03
@@ -7966,7 +7997,7 @@ L5863:  stx     L587D
         sta     $D20D
         inc     $D20D
         lda     #$02
-        sta     $D208
+        sta     alert_input_params
         jsr     L5C54
         lda     $D20D
 L587C:  rts
@@ -7976,7 +8007,7 @@ L587E:  beq     L5891
         sta     $D20D
         dec     $D20D
         lda     #$02
-        sta     $D208
+        sta     alert_input_params
         jsr     L5C54
         lda     $D20D
 L5891:  rts
@@ -7988,7 +8019,7 @@ L5893:  stx     L58AD
         sta     $D20D
         inc     $D20D
         lda     #$01
-        sta     $D208
+        sta     alert_input_params
         jsr     L5C54
         lda     $D20D
 L58AC:  rts
@@ -7998,7 +8029,7 @@ L58AE:  beq     L58C1
         sta     $D20D
         dec     $D20D
         lda     #$01
-        sta     $D208
+        sta     alert_input_params
         jsr     L5C54
         lda     $D20D
 L58C1:  rts
@@ -8402,8 +8433,8 @@ L5C26:  jsr     DESKTOP_COPY_FROM_BUF
         jmp     DESKTOP_COPY_TO_BUF
 
 L5C31:  lda     $D20D
-        sta     $D208
-        A2D_RELAY_CALL A2D_DRAG_SCROLL, $D208
+        sta     alert_input_params
+        A2D_RELAY_CALL A2D_DRAG_SCROLL, alert_input_params
         lda     $D20E
         bne     L5C46
         rts
@@ -8416,7 +8447,7 @@ L5C46:  jsr     L5C54
 
 L5C54:  lda     $D20D
         sta     $D209
-        A2D_RELAY_CALL A2D_UPDATE_SCROLL, $D208
+        A2D_RELAY_CALL A2D_UPDATE_SCROLL, alert_input_params
         jsr     L6523
         jsr     L84D1
         bit     L5B1B
@@ -8431,7 +8462,7 @@ L5C71:  lda     desktop_winid
 
 L5C89:  sta     L5CB6
         jsr     L48F0
-        lda     $D208
+        lda     alert_input_params
         cmp     #$04
         beq     L5C99
 L5C96:  lda     #$FF
@@ -8719,7 +8750,7 @@ L5F20:  lda     $D209,x
         dex
         bpl     L5F20
         jsr     L48F0
-        lda     $D208
+        lda     alert_input_params
         cmp     #$04
         beq     L5F3F
         bit     BUTN0
@@ -8742,7 +8773,7 @@ L5F50:  lda     L5F0B,x
         jsr     L48FA
         A2D_RELAY_CALL A2D_DRAW_RECT, $E230
 L5F6B:  jsr     L48F0
-        lda     $D208
+        lda     alert_input_params
         cmp     #$04
         beq     L5FC5
         A2D_RELAY_CALL A2D_DRAW_RECT, $E230
@@ -8884,11 +8915,11 @@ L60D5:  jsr     push_zp_addrs
 L60DB:  jmp     L60DE
 
 L60DE:  lda     desktop_winid
-        sta     $D208
+        sta     alert_input_params
         A2D_RELAY_CALL A2D_QUERY_TOP, desktop_winid
         lda     desktop_winid
         jsr     L8855
-        A2D_RELAY_CALL A2D_DRAG_WINDOW, $D208
+        A2D_RELAY_CALL A2D_DRAG_WINDOW, alert_input_params
         lda     desktop_winid
         jsr     L86EF
         sta     L0006
@@ -8971,8 +9002,8 @@ L6198:  .byte   0
 L6199:  .byte   0
 L619A:  .byte   0
 L619B:  lda     desktop_winid
-        sta     $D208
-        A2D_RELAY_CALL A2D_DRAG_RESIZE, $D208
+        sta     alert_input_params
+        A2D_RELAY_CALL A2D_DRAG_RESIZE, alert_input_params
         jsr     L4523
         lda     desktop_winid
         sta     bufnum
@@ -9423,8 +9454,8 @@ L65E2:  lsr     L6603
 L65EB:  jsr     L62BC
 L65EE:  sta     $D209
         lda     #$02
-        sta     $D208
-        A2D_RELAY_CALL A2D_UPDATE_SCROLL, $D208
+        sta     alert_input_params
+        A2D_RELAY_CALL A2D_UPDATE_SCROLL, alert_input_params
         rts
 
 L6600:  .byte   0
@@ -9486,8 +9517,8 @@ L667B:  lsr     L66A1
 L668A:  jsr     L62BC
 L668D:  sta     $D209
         lda     #$01
-        sta     $D208
-        A2D_RELAY_CALL A2D_UPDATE_SCROLL, $D208
+        sta     alert_input_params
+        A2D_RELAY_CALL A2D_UPDATE_SCROLL, alert_input_params
         rts
 
 L669F:  .byte   0
@@ -9713,7 +9744,7 @@ L68B8:  lda     $D209,x
         dex
         bpl     L68B8
         jsr     L48F0
-        lda     $D208
+        lda     alert_input_params
         cmp     #$04
         beq     L68CF
         rts
@@ -9722,7 +9753,7 @@ L68CF:  A2D_RELAY_CALL A2D_SET_PATTERN, checkerboard_pattern3
         jsr     L48FA
         A2D_RELAY_CALL A2D_DRAW_RECT, $E230
 L68E4:  jsr     L48F0
-        lda     $D208
+        lda     alert_input_params
         cmp     #$04
         beq     L6932
         A2D_RELAY_CALL A2D_DRAW_RECT, $E230
@@ -10242,14 +10273,14 @@ L6DC9:  lda     desktop_winid
         sbc     L7B64
         bmi     L6DFE
         lda     #$02
-        sta     $D208
+        sta     alert_input_params
         lda     #$00
         sta     $D209
         jsr     L6E48
         jmp     L6E0E
 
 L6DFE:  lda     #$02
-        sta     $D208
+        sta     alert_input_params
         lda     #$01
         sta     $D209
         jsr     L6E48
@@ -10265,20 +10296,20 @@ L6E0E:  lda     L7B61
         sbc     L7B66
         bmi     L6E38
         lda     #$01
-        sta     $D208
+        sta     alert_input_params
         lda     #$00
         sta     $D209
         jsr     L6E48
         rts
 
 L6E38:  lda     #$01
-        sta     $D208
+        sta     alert_input_params
         lda     #$01
         sta     $D209
         jsr     L6E48
         jmp     L6604
 
-L6E48:  A2D_RELAY_CALL $4C, $D208 ; ???
+L6E48:  A2D_RELAY_CALL $4C, alert_input_params ; ???
         rts
 
 L6E52:  lda     #$00
@@ -12804,7 +12835,7 @@ L84DC:  lda     $D221
         lda     $D224
         sbc     $D220
         sta     L85FB
-        lda     $D208
+        lda     alert_input_params
         cmp     #$01
         bne     L850C
         asl     a
@@ -12938,7 +12969,7 @@ L8626:  jsr     L48F0
         bmi     L8655
         lda     #$FF
         sta     L86A6
-        lda     $D208
+        lda     alert_input_params
         sta     L86A5
         cmp     #$00
         beq     L8619
@@ -16501,7 +16532,7 @@ LA3D1:  ldy     #$2A
         lda     #$08
         ldx     #$D2
         jsr     L4003
-        lda     $D208
+        lda     alert_input_params
         cmp     #$03
         bne     LA3EC
         lda     $D209
@@ -16667,9 +16698,9 @@ LA567:  lda     $D8E8
         jsr     LB8F5
         lda     #$14
         sta     $D8E9
-LA579:  A2D_RELAY_CALL A2D_GET_INPUT, $D208
-        lda     $D208
-        cmp     #$01
+LA579:  A2D_RELAY_CALL A2D_GET_INPUT, alert_input_params
+        lda     alert_input_params
+        cmp     #A2D_INPUT_DOWN
         bne     LA58C
         jmp     LA5EE
 
@@ -16692,8 +16723,8 @@ LA5A9:  lda     $D20E
 LA5B4:  lda     winF
         jsr     LB7B9
         lda     winF
-        sta     $D208
-        A2D_RELAY_CALL A2D_MAP_COORDS, $D208
+        sta     alert_input_params
+        A2D_RELAY_CALL A2D_MAP_COORDS, alert_input_params
         A2D_RELAY_CALL A2D_SET_POS, $D20D
 LA5D2:  A2D_RELAY_CALL A2D_TEST_BOX, $D6AB
         cmp     #$80
@@ -16727,8 +16758,8 @@ LA609:  lda     $D20E
 LA614:  lda     winF
         jsr     LB7B9
         lda     winF
-        sta     $D208
-        A2D_RELAY_CALL A2D_MAP_COORDS, $D208
+        sta     alert_input_params
+        A2D_RELAY_CALL A2D_MAP_COORDS, alert_input_params
         A2D_RELAY_CALL A2D_SET_POS, $D20D
         bit     $D8E7
         bvc     LA63A
@@ -17003,81 +17034,61 @@ LA899:  jmp     $0000
 .macro  axy_call target, addr, yparam
         lda     #<addr
         ldx     #>addr
-        ldy     yparam
+        ldy     #yparam
         jsr     target
 .endmacro
 .macro  yax_call target, addr, yparam
-        ldy     yparam
+        ldy     #yparam
         lda     #<addr
         ldx     #>addr
         jsr     target
 .endmacro
 
-LA89C:  A2D_RELAY_CALL A2D_CREATE_WINDOW, $D62B
+        ;; "About" dialog
+.proc show_about_dialog
+        A2D_RELAY_CALL A2D_CREATE_WINDOW, $D62B
         lda     $D62B
         jsr     LB7B9
         jsr     LB43B
         A2D_RELAY_CALL A2D_DRAW_RECT, $AEDD
         A2D_RELAY_CALL A2D_DRAW_RECT, $AEE5
-        addr_call LB723, $AEED
-        lda     #$FE
-        ldx     #$AE
-        ldy     #$81
-        jsr     LB590
-        lda     #$22
-        ldx     #$AF
-        ldy     #$82
-        jsr     LB590
-        lda     #$46
-        ldx     #$AF
-        ldy     #$83
-        jsr     LB590
-        lda     #$5A
-        ldx     #$AF
-        ldy     #$05
-        jsr     LB590
-        lda     #$93
-        ldx     #$AF
-        ldy     #$86
-        jsr     LB590
-        lda     #$B4
-        ldx     #$AF
-        ldy     #$07
-        jsr     LB590
-        lda     #$EE
-        ldx     #$AF
-        ldy     #$09
-        jsr     LB590
+        addr_call LB723, str_about1
+        axy_call LB590, str_about2, $81
+        axy_call LB590, str_about3, $82
+        axy_call LB590, str_about4, $83
+        axy_call LB590, str_about5, $05
+        axy_call LB590, str_about6, $86
+        axy_call LB590, str_about7, $07
+        axy_call LB590, str_about8, $09
         lda     #$36
         sta     $D6C3
         lda     #$01
         sta     $D6C4
-        lda     #$00
-        ldx     #$B0
-        ldy     #$09
-        jsr     LB590
+        axy_call LB590, str_about9, $09
         lda     #$28
         sta     $D6C3
         lda     #$00
         sta     $D6C4
-LA923:  A2D_RELAY_CALL A2D_GET_INPUT, $D208
-        lda     $D208
-        cmp     #$01
-        beq     LA947
-        cmp     #$03
-        bne     LA923
+
+:       A2D_RELAY_CALL A2D_GET_INPUT, alert_input_params
+        lda     alert_input_params
+        cmp     #A2D_INPUT_DOWN
+        beq     close
+        cmp     #A2D_INPUT_KEY
+        bne     :-
         lda     $D209
         and     #$7F
-        cmp     #$1B
-        beq     LA947
-        cmp     #$0D
-        bne     LA923
-        jmp     LA947
+        cmp     #KEY_ESCAPE
+        beq     close
+        cmp     #KEY_RETURN
+        bne     :-
+        jmp     close
 
-LA947:  A2D_RELAY_CALL A2D_DESTROY_WINDOW, $D62B
+close:  A2D_RELAY_CALL A2D_DESTROY_WINDOW, $D62B
         jsr     LBEB1
         jsr     LB3CA
         rts
+.endproc
 
         jsr     LB3BF
         ldy     #$00
@@ -17105,23 +17116,11 @@ LA97A:  cmp     #$05
 LA981:  lda     #$00
         sta     $D8E8
         jsr     LB53A
-        addr_call LB723, $B00C
-        lda     #$15
-        ldx     #$B0
-        ldy     #$01
-        jsr     LB590
-        lda     #$22
-        ldx     #$B0
-        ldy     #$02
-        jsr     LB590
-        lda     #$28
-        ldx     #$B0
-        ldy     #$03
-        jsr     LB590
-        lda     #$2D
-        ldx     #$B0
-        ldy     #$04
-        jsr     LB590
+        addr_call LB723, str_copy1
+        axy_call LB590, str_copy2, $01
+        axy_call LB590, str_copy3, $02
+        axy_call LB590, str_copy4, $03
+        axy_call LB590, str_copy5, $04
         rts
 
 LA9B5:  ldy     #$01
@@ -17191,10 +17190,7 @@ LAA5A:  jsr     LBEB1
 LAA6A:  jsr     LAACE
         lda     winF
         jsr     LB7B9
-        lda     #$47
-        ldx     #$B0
-        ldy     #$06
-        jsr     LB590
+        axy_call LB590, str_exists_prompt, $06
         jsr     LB64E
 LAA7F:  jsr     LA567
         bmi     LAA7F
@@ -17208,10 +17204,7 @@ LAA7F:  jsr     LA567
 LAA9C:  jsr     LAACE
         lda     winF
         jsr     LB7B9
-        lda     #$80
-        ldx     #$B0
-        ldy     #$06
-        jsr     LB590
+        axy_call LB590, str_large_prompt, $06
         jsr     LB6AF
 LAAB1:  jsr     LA567
         bmi     LAAB1
@@ -17253,22 +17246,10 @@ LAB04:  lda     #$00
         sta     $D8E8
         jsr     LB53A
         addr_call LB723, $B473
-        lda     #$15
-        ldx     #$B0
-        ldy     #$01
-        jsr     LB590
-        lda     #$22
-        ldx     #$B0
-        ldy     #$02
-        jsr     LB590
-        lda     #$28
-        ldx     #$B0
-        ldy     #$03
-        jsr     LB590
-        lda     #$2D
-        ldx     #$B0
-        ldy     #$04
-        jsr     LB590
+        axy_call LB590, $B015, $01
+        axy_call LB590, $B022, $02
+        axy_call LB590, $B028, $03
+        axy_call LB590, $B02D, $04
         rts
 
 LAB38:  ldy     #$01
@@ -17320,10 +17301,7 @@ LABB8:  jsr     LBEB1
 LABC8:  jsr     LAACE
         lda     winF
         jsr     LB7B9
-        lda     #$80
-        ldx     #$B4
-        ldy     #$06
-        jsr     LB590
+        axy_call LB590, $B480, $06
         jsr     LB6E6
 LABDD:  jsr     LA567
         bmi     LABDD
@@ -17351,16 +17329,10 @@ LAC0F:  cmp     #$03
 
 LAC16:  jsr     LB53A
         addr_call LB723, $B43A
-        lda     #$47
-        ldx     #$B4
-        ldy     #$01
-        jsr     LB590
+        axy_call LB590, $B447, $01
         ldy     #$01
         jsr     LB01F
-        lda     #$57
-        ldx     #$B4
-        ldy     #$02
-        jsr     LB590
+        axy_call LB590, $B457, $02
         ldy     #$02
         jsr     LB01F
         rts
@@ -17384,10 +17356,7 @@ LAC3D:  ldy     #$01
         jsr     LB7B9
         lda     #$A5
         sta     $D6C3
-        ldy     #$01
-        lda     #$01
-        ldx     #$D9
-        jsr     LB590
+        yax_call LB590, $D901, $01
         jsr     LB3BF
         ldy     #$03
         lda     (L0006),y
@@ -17405,10 +17374,7 @@ LAC3D:  ldy     #$01
         jsr     LBDDF
         lda     #$A5
         sta     $D6C3
-        ldy     #$02
-        lda     #$01
-        ldx     #$D9
-        jsr     LB590
+        yax_call LB590, $D901, $02
         rts
 
 LAC9E:  jsr     LBEB1
@@ -17454,20 +17420,14 @@ LACFE:  sta     LAD1F
         lda     #$00
         sta     $D8E8
         jsr     LB53A
-        addr_call LB723, $B0BE
+        addr_call LB723, str_delete
         lda     LAD1F
         beq     LAD20
-        lda     #$DD
-        ldx     #$B0
-        ldy     #$04
-        jsr     LB590
+        axy_call LB590, str_ok_empty, $04
         rts
 
 LAD1F:  .byte   0
-LAD20:  lda     #$C9
-        ldx     #$B0
-        ldy     #$04
-        jsr     LB590
+LAD20:  axy_call LB590, str_ok_delete, $04
         rts
 
 LAD2A:  ldy     #$01
@@ -17525,14 +17485,8 @@ LADC4:  jsr     LA567
         A2D_RELAY_CALL A2D_SET_FILL_MODE, $D200
         A2D_RELAY_CALL A2D_FILL_RECT, $AE6E
         jsr     LB6D0
-        ldy     #$02
-        lda     #$0E
-        ldx     #$B1
-        jsr     LB590
-        ldy     #$04
-        lda     #$14
-        ldx     #$B1
-        jsr     LB590
+        yax_call LB590, str_file_colon, $02
+        yax_call LB590, str_files_remaining, $04
         lda     #$00
 LADF4:  rts
 
@@ -17543,10 +17497,7 @@ LADF5:  jsr     LBEB1
 
 LAE05:  lda     winF
         jsr     LB7B9
-        lda     #$33
-        ldx     #$B1
-        ldy     #$06
-        jsr     LB590
+        axy_call LB590, str_delete_locked_file, $06
         jsr     LB64E
 LAE17:  jsr     LA567
         bmi     LAE17
@@ -17575,7 +17526,7 @@ LAE49:  lda     #$80
         jsr     LB509
         lda     winF
         jsr     LB7B9
-        addr_call LB723, $B176
+        addr_call LB723, str_new_folder_title
         jsr     LB43B
         A2D_RELAY_CALL A2D_DRAW_RECT, $D6AB
         rts
@@ -17601,22 +17552,13 @@ LAE90:  lda     ($08),y
         bpl     LAE90
         lda     winF
         jsr     LB7B9
-        ldy     #$02
-        lda     #$85
-        ldx     #$B1
-        jsr     LB590
+        yax_call LB590, str_in_colon, $02
         lda     #$37
         sta     $D6C3
-        ldy     #$02
-        lda     #$02
-        ldx     #$D4
-        jsr     LB590
+        yax_call LB590, $D402, $02
         lda     #$28
         sta     $D6C3
-        ldy     #$04
-        lda     #$89
-        ldx     #$B1
-        jsr     LB590
+        yax_call LB590, str_enter_folder_name, $04
         jsr     LB961
 LAEC6:  jsr     LA567
         bmi     LAEC6
@@ -17677,7 +17619,7 @@ LAF34:  lda     #$00
         jsr     LB509
         lda     winF
         jsr     LB7B9
-        addr_call LB723, $B1C6
+        addr_call LB723, str_info_title
         jsr     LB3BF
         ldy     #$00
         lda     (L0006),y
@@ -17685,46 +17627,22 @@ LAF34:  lda     #$00
         lsr     a
         ror     a
         sta     LB01D
-        ldy     #$01
-        lda     #$D3
-        ldx     #$B1
-        jsr     LB590
+        yax_call LB590, str_info_name, $01
         bit     LB01D
         bmi     LAF78
-        ldy     #$02
-        lda     #$D8
-        ldx     #$B1
-        jsr     LB590
+        yax_call LB590, str_info_locked, $02
         jmp     LAF81
 
-LAF78:  ldy     #$02
-        lda     #$09
-        ldx     #$B2
-        jsr     LB590
+LAF78:  yax_call LB590, str_info_protected, $02
 LAF81:  bit     LB01D
         bpl     LAF92
-        ldy     #$03
-        lda     #$19
-        ldx     #$B2
-        jsr     LB590
+        yax_call LB590, str_info_blocks, $03
         jmp     LAF9B
 
-LAF92:  ldy     #$03
-        lda     #$DF
-        ldx     #$B1
-        jsr     LB590
-LAF9B:  ldy     #$04
-        lda     #$E4
-        ldx     #$B1
-        jsr     LB590
-        ldy     #$05
-        lda     #$F2
-        ldx     #$B1
-        jsr     LB590
-        ldy     #$06
-        lda     #$04
-        ldx     #$B2
-        jsr     LB590
+LAF92:  yax_call LB590, str_info_size, $03
+LAF9B:  yax_call LB590, str_info_create, $04
+        yax_call LB590, str_info_mod, $05
+        yax_call LB590, str_info_type, $06
         jmp     LBEB1
 
 LAFB9:  lda     winF
@@ -17805,10 +17723,7 @@ LB04F:  lda     #$00
         sta     $D8E8
         jsr     LB53A
         addr_call LB723, $B400
-        ldy     #$04
-        lda     #$09
-        ldx     #$B4
-        jsr     LB590
+        yax_call LB590, $B409, $04
         rts
 
 LB068:  ldy     #$01
@@ -17863,14 +17778,8 @@ LB0FA:  jsr     LA567
         A2D_RELAY_CALL A2D_FILL_RECT, $AE6E
         A2D_RELAY_CALL A2D_FILL_RECT, $AE20
         A2D_RELAY_CALL A2D_FILL_RECT, $AE10
-        ldy     #$02
-        lda     #$0E
-        ldx     #$B1
-        jsr     LB590
-        ldy     #$04
-        lda     #$1B
-        ldx     #$B4
-        jsr     LB590
+        yax_call LB590, $B10E, $02
+        yax_call LB590, $B41B, $04
         lda     #$00
 LB139:  rts
 
@@ -17902,10 +17811,7 @@ LB16D:  lda     #$00
         sta     $D8E8
         jsr     LB53A
         addr_call LB723, $B3C0
-        ldy     #$04
-        lda     #$CB
-        ldx     #$B3
-        jsr     LB590
+        yax_call LB590, $B3CB, $04
         rts
 
 LB186:  ldy     #$01
@@ -17960,14 +17866,8 @@ LB218:  jsr     LA567
         A2D_RELAY_CALL A2D_FILL_RECT, $AE6E
         A2D_RELAY_CALL A2D_FILL_RECT, $AE20
         A2D_RELAY_CALL A2D_FILL_RECT, $AE10
-        ldy     #$02
-        lda     #$0E
-        ldx     #$B1
-        jsr     LB590
-        ldy     #$04
-        lda     #$DF
-        ldx     #$B3
-        jsr     LB590
+        yax_call LB590, $B10E, $02
+        yax_call LB590, $B3DF, $04
         lda     #$00
 LB257:  rts
 
@@ -17996,13 +17896,10 @@ LB27D:  jsr     LBD75
         jsr     LB509
         lda     winF
         jsr     LB7B9
-        addr_call LB723, $B1A0
+        addr_call LB723, str_rename_title
         jsr     LB43B
         A2D_RELAY_CALL A2D_DRAW_RECT, $D6AB
-        ldy     #$02
-        lda     #$B3
-        ldx     #$B1
-        jsr     LB590
+        yax_call LB590, str_rename_old, $02
         lda     #$55
         sta     $D6C3
         jsr     LB3BF
@@ -18019,14 +17916,8 @@ LB2CA:  lda     ($08),y
         sta     $D8D7,y
         dey
         bpl     LB2CA
-        ldy     #$02
-        lda     #$D7
-        ldx     #$D8
-        jsr     LB590
-        ldy     #$04
-        lda     #$BC
-        ldx     #$B1
-        jsr     LB590
+        yax_call LB590, $D8D7, $02
+        yax_call LB590, str_rename_new, $04
         lda     #$00
         sta     $D443
         jsr     LB961
@@ -18170,12 +18061,12 @@ LB46C:  lda     LB501
         bne     LB476
         lda     LB500
         beq     LB4B7
-LB476:  A2D_RELAY_CALL $2C, $D208 ; ???
+LB476:  A2D_RELAY_CALL $2C, alert_input_params ; ???
         jsr     LB4BA
         bmi     LB4B7
         lda     #$FF
         sta     LB508
-        lda     $D208
+        lda     alert_input_params
         sta     LB507
         cmp     #$00
         beq     LB45F
@@ -18183,12 +18074,12 @@ LB476:  A2D_RELAY_CALL $2C, $D208 ; ???
         beq     LB45F
         cmp     #$02
         bne     LB4A7
-        A2D_RELAY_CALL A2D_GET_INPUT, $D208
+        A2D_RELAY_CALL A2D_GET_INPUT, alert_input_params
         jmp     LB45F
 
 LB4A7:  cmp     #$01
         bne     LB4B7
-        A2D_RELAY_CALL A2D_GET_INPUT, $D208
+        A2D_RELAY_CALL A2D_GET_INPUT, alert_input_params
         lda     #$00
         rts
 
@@ -18269,7 +18160,7 @@ LB55F:  A2D_RELAY_CALL A2D_CREATE_WINDOW, winF
         A2D_RELAY_CALL A2D_DRAW_RECT, $AE08
         rts
 
-LB590:  stx     $07
+LB590:  stx     L0006+1
         sta     L0006
         tya
         bmi     LB59A
@@ -18549,13 +18440,13 @@ LB889:  .byte   0
 LB88A:  sta     LB8F3
         lda     #$00
         sta     LB8F2
-LB892:  A2D_RELAY_CALL A2D_GET_INPUT, $D208
-        lda     $D208
-        cmp     #$02
+LB892:  A2D_RELAY_CALL A2D_GET_INPUT, alert_input_params
+        lda     alert_input_params
+        cmp     #A2D_INPUT_UP
         beq     LB8E3
         lda     winF
-        sta     $D208
-        A2D_RELAY_CALL A2D_MAP_COORDS, $D208
+        sta     alert_input_params
+        A2D_RELAY_CALL A2D_MAP_COORDS, alert_input_params
         A2D_RELAY_CALL A2D_SET_POS, $D20D
         jsr     LB880
         cmp     #$80
@@ -18636,7 +18527,7 @@ LB961:  lda     $D443
         jsr     LB7B9
 LB9B7:  rts
 
-LB9B8:  A2D_RELAY_CALL A2D_MAP_COORDS, $D208
+LB9B8:  A2D_RELAY_CALL A2D_MAP_COORDS, alert_input_params
         A2D_RELAY_CALL A2D_SET_POS, $D20D
         A2D_RELAY_CALL A2D_TEST_BOX, $D6AB
         cmp     #$80
