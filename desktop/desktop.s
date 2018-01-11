@@ -3153,11 +3153,17 @@ str_about7:  PASCAL_STRING "With thanks to: A. Gerard, J. Gerber, P. Pahl, J. Be
 str_about8:  PASCAL_STRING "November 26, 1986"
 str_about9:  PASCAL_STRING "Version 1.1"
 
-str_copy1:   PASCAL_STRING "Copy ..."
-str_copy2:   PASCAL_STRING "Now Copying "
-str_copy3:   PASCAL_STRING "from:"
-str_copy4:   PASCAL_STRING "to :"
-str_copy5:   PASCAL_STRING "Files remaining to copy: "
+        ;; "Copy File" dialog strings
+str_copy_title:
+        PASCAL_STRING "Copy ..."
+str_copy_copying:
+        PASCAL_STRING "Now Copying "
+str_copy_from:
+        PASCAL_STRING "from:"
+str_copy_to:
+        PASCAL_STRING "to :"
+str_copy_remaining:
+        PASCAL_STRING "Files remaining to copy: "
 
 str_exists_prompt:
         PASCAL_STRING "That file already exists. Do you want to write over it ?"
@@ -3167,16 +3173,16 @@ str_large_prompt:
         .byte   $6E,$00,$23
         .byte   $00,$AA,$00,$3B,$00
 
-str_delete:
+        ;; "Delete" dialog strings
+str_delete_title:
         PASCAL_STRING "Delete ..."
-str_ok_delete:
+str_delete_ok:
         PASCAL_STRING "Click OK to delete:"
 str_ok_empty:
         PASCAL_STRING "Clicking OK will immediately empty the trash of:"
-
-str_file_colon:
+str_delete_file_colon:
         PASCAL_STRING "File:"
-str_files_remaining:
+str_delete_remaining:
         PASCAL_STRING "Files remaining to be deleted:"
 str_delete_locked_file:
         PASCAL_STRING "This file is locked, do you want to delete it anyway ?"
@@ -17136,11 +17142,11 @@ LA97A:  cmp     #$05
 LA981:  lda     #$00
         sta     $D8E8
         jsr     LB53A
-        addr_call LB723, str_copy1
-        axy_call LB590, str_copy2, $01
-        axy_call LB590, str_copy3, $02
-        axy_call LB590, str_copy4, $03
-        axy_call LB590, str_copy5, $04
+        addr_call LB723, str_copy_title
+        axy_call LB590, str_copy_copying, $01
+        axy_call LB590, str_copy_from, $02
+        axy_call LB590, str_copy_to, $03
+        axy_call LB590, str_copy_remaining, $04
         rts
 
 LA9B5:  ldy     #$01
@@ -17440,14 +17446,14 @@ LACFE:  sta     LAD1F
         lda     #$00
         sta     $D8E8
         jsr     LB53A
-        addr_call LB723, str_delete
+        addr_call LB723, str_delete_title
         lda     LAD1F
         beq     LAD20
         axy_call LB590, str_ok_empty, $04
         rts
 
 LAD1F:  .byte   0
-LAD20:  axy_call LB590, str_ok_delete, $04
+LAD20:  axy_call LB590, str_delete_ok, $04
         rts
 
 LAD2A:  ldy     #$01
@@ -17505,8 +17511,8 @@ LADC4:  jsr     LA567
         A2D_RELAY_CALL A2D_SET_FILL_MODE, $D200
         A2D_RELAY_CALL A2D_FILL_RECT, $AE6E
         jsr     LB6D0
-        yax_call LB590, str_file_colon, $02
-        yax_call LB590, str_files_remaining, $04
+        yax_call LB590, str_delete_file_colon, $02
+        yax_call LB590, str_delete_remaining, $04
         lda     #$00
 LADF4:  rts
 
