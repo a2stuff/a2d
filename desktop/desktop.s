@@ -4082,7 +4082,7 @@ to:
         lda     #$00
 
 :       sta     flag
-        jsr     desktop_main_push_addrs_from_zp
+        jsr     desktop_main_push_zp_addrs
 
         lda     bufnum
         asl     a               ; * 2
@@ -4138,7 +4138,7 @@ copy_from:
 
 done:   sta     RAMRDOFF
         sta     RAMWRTOFF
-        jsr     desktop_main_pop_addrs_to_zp
+        jsr     desktop_main_pop_zp_addrs
         rts
 
 flag:   .byte   0
@@ -4956,13 +4956,21 @@ buflabel:.res    18, 0
 
 buf2:   .res    560, 0
 
+str_items:
         PASCAL_STRING " Items"
 
-        .byte   $08,$00,$0A,$00,$00,$00,$00,$00
+items_label_pos:
+        .word   8, 10
+        .byte   $00,$00,$00,$00
         .byte   $00,$00,$00,$00
 
+str_k_in_disk:
         PASCAL_STRING "K in disk"
+
+str_k_available:
         PASCAL_STRING "K available"
+
+str_6_spaces:
         PASCAL_STRING "      "
 
         .byte   $00,$00,$00,$00,$00,$00,$00
@@ -8870,7 +8878,7 @@ L60D1:  .byte   0
 L60D2:  .byte   0
 L60D3:  .byte   0
 L60D4:  .byte   0
-L60D5:  jsr     push_addrs_from_zp
+L60D5:  jsr     push_zp_addrs
         jmp     L8921
 
 L60DB:  jmp     L60DE
@@ -10049,7 +10057,7 @@ L6C19:  ldx     bufnum
         bmi     L6C25
         jmp     L6CCD
 
-L6C25:  jsr     push_addrs_from_zp
+L6C25:  jsr     push_zp_addrs
         lda     bufnum
         sta     $D212
         jsr     L44F2
@@ -10116,7 +10124,7 @@ L6CB0:  lda     L6CCC
         jmp     L6CB0
 
 L6CC5:  jsr     L4510
-        jsr     pop_addrs_to_zp
+        jsr     pop_zp_addrs
         rts
 
 L6CCC:  .byte   0
@@ -10534,7 +10542,7 @@ L70C2:  .byte   $00
 L70C3:  .byte   $00
 L70C4:  .byte   $00
 L70C5:  sta     L72A7
-        jsr     push_addrs_from_zp
+        jsr     push_zp_addrs
         ldx     #$40
 L70CD:  lda     $E1B0,x
         sta     L705D,x
@@ -10748,7 +10756,7 @@ L7296:  lda     L0006
         lda     $07
         sta     L4860
         jsr     L72D8
-        jsr     pop_addrs_to_zp
+        jsr     pop_zp_addrs
         rts
 
 L72A7:  .byte   0
@@ -10858,7 +10866,7 @@ L7385:  lda     L7446
         lda     $E203,x
         sta     $09
         ldy     #$00
-        jsr     push_addrs_from_zp
+        jsr     push_zp_addrs
 L73A5:  lda     LCBANK2
         lda     LCBANK2
         lda     ($08),y
@@ -10877,7 +10885,7 @@ L73C1:  lda     $09
         lda     $08
         cmp     L485F
         bne     L73A5
-        jsr     pop_addrs_to_zp
+        jsr     pop_zp_addrs
         lda     $E1F1
         asl     a
         tax
@@ -10944,7 +10952,7 @@ L744B:  lda     bufnum
         ldy     #$09
         lda     (L0006),y
         tay
-        jsr     push_addrs_from_zp
+        jsr     push_zp_addrs
         lda     L0006
         clc
         adc     #$09
@@ -10965,12 +10973,12 @@ L7471:  lda     (L0006),y
         lda     ($08),y
         and     #$DF
         sta     ($08),y
-        jsr     pop_addrs_to_zp
+        jsr     pop_zp_addrs
         ldy     #$02
         lda     (L0006),y
         and     #$0F
         bne     L74D3
-        jsr     push_addrs_from_zp
+        jsr     push_zp_addrs
         lda     bufnum
         jsr     L86FB
         sta     $08
@@ -11008,7 +11016,7 @@ L74C8:  lda     ($08),y
 L74D3:  tay
         lda     #$00
         sta     L7620
-        jsr     push_addrs_from_zp
+        jsr     push_zp_addrs
         tya
         pha
         jsr     L86FB
@@ -11125,7 +11133,7 @@ L75A3:  sta     (L0006),y
         sta     (L0006),y
         ldy     #$09
         sta     (L0006),y
-        jsr     pop_addrs_to_zp
+        jsr     pop_zp_addrs
         lda     $E6BE
         jsr     L7054
         lda     $E6BE
@@ -11197,7 +11205,7 @@ L763A:  pha
 L7647:  sta     L7634
         pla
         sta     L7621
-        jsr     push_addrs_from_zp
+        jsr     push_zp_addrs
         ldx     #$03
 L7653:  lda     L7626,x
         sta     L762A,x
@@ -11248,7 +11256,7 @@ L76AA:  lda     L7625
 
 L76BB:  bit     L7634
         bpl     L76C4
-        jsr     pop_addrs_to_zp
+        jsr     pop_zp_addrs
         rts
 
 L76C4:  jsr     L7B6B
@@ -11322,7 +11330,7 @@ L7744:  ldy     #$22
         lda     $E6BE
         ldx     L7621
         jsr     L8B60
-        jsr     pop_addrs_to_zp
+        jsr     pop_zp_addrs
         rts
 
 L7764:  .byte   $00,$00,$00
@@ -11464,7 +11472,7 @@ L7870:  lda     bufnum
         .byte   0
         .byte   0
 L78A1:  sta     L78EE
-        jsr     push_addrs_from_zp
+        jsr     push_zp_addrs
         lda     type_table_addr
         sta     L0006
         lda     type_table_addr+1
@@ -11497,7 +11505,7 @@ L78C2:  lda     LFB04           ; ???
         iny
         lda     (L0006),y
         sta     L7623
-        jsr     pop_addrs_to_zp
+        jsr     pop_zp_addrs
         rts
 
 L78EE:  .byte   0
@@ -11505,7 +11513,7 @@ L78EF:  lda     $D21D
         sta     $EBBE           ; Directory header line (items / k in disk)
         clc
         adc     #$05
-        sta     $EBBA
+        sta     items_label_pos
         lda     $D21E
         sta     $EBBF
         adc     #$00
@@ -11550,14 +11558,14 @@ L78EF:  lda     $D21D
         lda     buf3len
         cmp     #$02
         bcs     L798A
-        dec     $EBB3
-L798A:  A2D_RELAY_CALL A2D_SET_POS, $EBBA
+        dec     str_items       ; remove trailing s
+L798A:  A2D_RELAY_CALL A2D_SET_POS, items_label_pos
         jsr     L7AD7
-        addr_call draw_text2, $EBB3
+        addr_call draw_text2, str_items
         lda     buf3len
         cmp     #$02
         bcs     L79A7
-        inc     $EBB3
+        inc     str_items       ; restore trailing s
 L79A7:  jsr     L79F7
         ldx     desktop_winid
         dex
@@ -11572,7 +11580,7 @@ L79A7:  jsr     L79F7
         jsr     L7AE0
         A2D_RELAY_CALL A2D_SET_POS, $EBEB
         jsr     L7AD7
-        addr_call draw_text2, $EBC6
+        addr_call draw_text2, str_k_in_disk
         ldx     desktop_winid
         dex
         txa
@@ -11586,7 +11594,7 @@ L79A7:  jsr     L79F7
         jsr     L7AE0
         A2D_RELAY_CALL A2D_SET_POS, $EBEF
         jsr     L7AD7
-        addr_call draw_text2, $EBD0
+        addr_call draw_text2, str_k_available
         rts
 
 L79F7:  lda     $D221
@@ -11676,7 +11684,7 @@ L7A9E:  lda     $EBEB
         sta     $EBF2
         rts
 
-L7AD7:  addr_jump draw_text2, $EBDC
+L7AD7:  addr_jump draw_text2, str_6_spaces
 
 L7ADE:  .byte   0
 L7ADF:  .byte   0
@@ -12778,7 +12786,7 @@ L84CD:  .byte   $EB
 
 L84CF:  .byte   0
 L84D0:  .byte   0
-L84D1:  jsr     push_addrs_from_zp
+L84D1:  jsr     push_zp_addrs
         bit     L5B1B
         bmi     L84DC
         jsr     L6E52
@@ -12894,7 +12902,7 @@ L85E4:  lda     $D21D,x
         dey
         dex
         bpl     L85E4
-        jsr     pop_addrs_to_zp
+        jsr     pop_zp_addrs
         rts
 
 L85F1:  .byte   0
@@ -13182,7 +13190,7 @@ L87F2:  dey
 ;;; ==================================================
 
 ;;; Pushes two words from $8/$8 to stack
-.proc push_addrs_from_zp
+.proc push_zp_addrs
 
         pla                     ; stash return address
         sta     addr
@@ -13208,7 +13216,7 @@ addr:   .addr   0
 ;;; ==================================================
 
 ;;; Pops two words from stack to $6/$8
-.proc pop_addrs_to_zp
+.proc pop_zp_addrs
 
         pla                     ; stash return address
         sta     addr
@@ -13239,7 +13247,7 @@ L8832:  .byte   0
 L8833:  .res    34, 0
 
 L8855:  tay
-        jsr     push_addrs_from_zp
+        jsr     push_zp_addrs
         tya
         jsr     L86EF
         sta     L0006
@@ -13252,11 +13260,11 @@ L8865:  lda     (L0006),y
         inx
         cpx     #$24
         bne     L8865
-        jsr     pop_addrs_to_zp
+        jsr     pop_zp_addrs
         rts
 
 L8874:  tay
-        jsr     push_addrs_from_zp
+        jsr     push_zp_addrs
         tya
         jsr     L86EF
         sta     L0006
@@ -13269,11 +13277,11 @@ L8884:  lda     L8830,x
         inx
         cpx     #$24
         bne     L8884
-        jsr     pop_addrs_to_zp
+        jsr     pop_zp_addrs
         rts
 
 L8893:  tay
-        jsr     push_addrs_from_zp
+        jsr     push_zp_addrs
         tya
         jsr     L86E3
         sta     L0006
@@ -13332,7 +13340,7 @@ L88BA:  lda     ($08),y
         lda     (L0006),y
         sbc     L8914
         sta     (L0006),y
-        jsr     pop_addrs_to_zp
+        jsr     pop_zp_addrs
         rts
 
 L890D:  .byte   0
@@ -13344,7 +13352,7 @@ L8912:  .byte   0
 L8913:  .byte   0
 L8914:  .byte   0
 L8915:  tay
-        jsr     push_addrs_from_zp
+        jsr     push_zp_addrs
         tya
         jsr     L86E3
         sta     L0006
@@ -13403,7 +13411,7 @@ L893C:  lda     ($08),y
         lda     (L0006),y
         adc     L8996
         sta     (L0006),y
-        jsr     pop_addrs_to_zp
+        jsr     pop_zp_addrs
         rts
 
 L898F:  .byte   0
@@ -13450,7 +13458,7 @@ L89DD:  lda     L0800
         lda     $0801
         jmp     L89CC
 
-L89EA:  jsr     push_addrs_from_zp
+L89EA:  jsr     push_zp_addrs
         jsr     DESKTOP_FIND_SPACE
         ldy     L8AC4
         sta     $E1A0,y
@@ -13558,7 +13566,7 @@ L8AA7:  lda     L8AC5,x
         ldy     #$00
         lda     (L0006),y
         sta     buf3,x
-        jsr     pop_addrs_to_zp
+        jsr     pop_zp_addrs
         lda     #$00
         rts
 
@@ -13590,14 +13598,14 @@ L8B01:  lda     buf3+1,x
         sta     buf3,x
         rts
 
-L8B19:  jsr     push_addrs_from_zp
+L8B19:  jsr     push_zp_addrs
         jmp     L8B2E
 
 L8B1F:  lda     $E6BE
         bne     L8B25
         rts
 
-L8B25:  jsr     push_addrs_from_zp
+L8B25:  jsr     push_zp_addrs
         lda     $E6BE
         jsr     L7345
 L8B2E:  lda     $E6BE
@@ -13619,7 +13627,7 @@ L8B43:  lda     $E6BE
         and     #$7F
         sta     (L0006),y
         jsr     L4244
-        jsr     pop_addrs_to_zp
+        jsr     pop_zp_addrs
         rts
 
 L8B5C:  ldy     #$80
@@ -16991,6 +16999,20 @@ LA895:  lda     #$FF
         LA89A := *+1
 LA899:  jmp     $0000
 
+
+.macro  axy_call target, addr, yparam
+        lda     #<addr
+        ldx     #>addr
+        ldy     yparam
+        jsr     target
+.endmacro
+.macro  yax_call target, addr, yparam
+        ldy     yparam
+        lda     #<addr
+        ldx     #>addr
+        jsr     target
+.endmacro
+
 LA89C:  A2D_RELAY_CALL A2D_CREATE_WINDOW, $D62B
         lda     $D62B
         jsr     LB7B9
@@ -19175,8 +19197,8 @@ LBEB1:  A2D_RELAY_CALL A2D_QUERY_SCREEN, $D239
 
         .res    60, 0
 .endproc ; desktop_main
-        desktop_main_pop_addrs_to_zp := desktop_main::pop_addrs_to_zp
-        desktop_main_push_addrs_from_zp := desktop_main::push_addrs_from_zp
+        desktop_main_pop_zp_addrs := desktop_main::pop_zp_addrs
+        desktop_main_push_zp_addrs := desktop_main::push_zp_addrs
 
 ;;; ==================================================
 ;;; Segment loaded into MAIN $800-$FFF
@@ -19197,8 +19219,8 @@ L86C1           := desktop_main::L86C1
 L86E3           := desktop_main::L86E3
 measure_text1   := desktop_main::measure_text1
 L87BA           := desktop_main::L87BA
-L87F6           := desktop_main::push_addrs_from_zp
-L8813           := desktop_main::pop_addrs_to_zp
+push_zp_addrs   := desktop_main::push_zp_addrs
+pop_zp_addrs    := desktop_main::pop_zp_addrs
 L89B6           := desktop_main::L89B6
 
 LD05E           := DESKTOP_FIND_SPACE
@@ -19291,7 +19313,7 @@ found_ram:
         A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, $D2A7
         A2D_RELAY_CALL A2D_SET_CURSOR, watch_cursor
         A2D_RELAY_CALL A2D_SHOW_CURSOR, $0000
-        jsr     L87F6
+        jsr     push_zp_addrs
         lda     #$63
         sta     L0006
         lda     #$EC
@@ -19299,7 +19321,7 @@ found_ram:
         ldx     #$01
 L08D5:  cpx     #$7F
         bne     L08DF
-        jsr     L8813
+        jsr     pop_zp_addrs
         jmp     L0909
 
 L08DF:  txa
@@ -19573,24 +19595,24 @@ L0AE7:  MLI_RELAY_CALL OPEN, $0AC9
         MLI_RELAY_CALL CLOSE, $0AE5
         rts
 
-L0B09:  addr_call measure_text1, $EBDC
+L0B09:  addr_call measure_text1, str_6_spaces
         sta     L0BA0
         stx     L0BA1
-        addr_call measure_text1, $EBB3
+        addr_call measure_text1, str_items
         clc
         adc     L0BA0
         sta     $EBF3
         txa
         adc     L0BA1
         sta     $EBF4
-        addr_call measure_text1, $EBC6
+        addr_call measure_text1, str_k_in_disk
         clc
         adc     L0BA0
         sta     $EBF5
         txa
         adc     L0BA1
         sta     $EBF6
-        addr_call measure_text1, $EBD0
+        addr_call measure_text1, str_k_available
         clc
         adc     L0BA0
         sta     $EBF7
