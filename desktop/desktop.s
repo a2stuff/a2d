@@ -5563,7 +5563,7 @@ L415B:  sta     desktop_winid
         lda     desktop_winid
         jsr     L86EF
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$16
         lda     (L0006),y
         sec
@@ -5837,7 +5837,7 @@ L445D:  jsr     L6D2B
         lda     $E22F
         jsr     L86E3
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$01
         lda     (L0006),y
         beq     L44A6
@@ -6380,7 +6380,7 @@ L49A6:  lda     $E25B
         sta     L0006
         txa
         adc     #$DB
-        sta     $07
+        sta     L0006+1
         ldy     #$0F
         lda     (L0006),y
         asl     a
@@ -6405,7 +6405,7 @@ L49E0:  jsr     L4AFD
 L49ED:  lda     L49A5
         jsr     L4B5F
         sta     L0006
-        stx     $07
+        stx     L0006+1
         jmp     L4A0A
 
 L49FA:  lda     L49A5
@@ -6415,7 +6415,7 @@ L49FA:  lda     L49A5
         sta     L0006
         txa
         adc     #$DB
-        sta     $07
+        sta     L0006+1
 L4A0A:  ldy     #$00
         lda     (L0006),y
         tay
@@ -6453,7 +6453,7 @@ L4A47:  pha
         sta     L0006
         txa
         adc     #$DB
-        sta     $07
+        sta     L0006+1
         ldy     #$00
         lda     (L0006),y
         tay
@@ -6491,7 +6491,7 @@ L4A95:  dey
         lda     #$00
         sta     L0006
         lda     #$08
-        sta     $07
+        sta     L0006+1
         lda     #$40
         sta     $08
         lda     #$08
@@ -6593,7 +6593,7 @@ L4B5F:  sta     L4BB0
         sta     L0006
         txa
         adc     #$DB
-        sta     $07
+        sta     L0006+1
         ldy     #$00
         lda     (L0006),y
         sta     L4BB1
@@ -6644,7 +6644,7 @@ L4BB1:  .byte   0
         sta     L0006
         txa
         adc     #$E5
-        sta     $07
+        sta     L0006+1
         ldy     #$00
         lda     (L0006),y
         tay
@@ -6879,7 +6879,7 @@ L4DF2:  txa
         lda     $DF22,x
         jsr     L86E3
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$02
         lda     (L0006),y
         and     #$70
@@ -6904,7 +6904,7 @@ L4E1A:  sta     L4E71
         lda     desktop_winid
         jsr     L86FB
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$00
         lda     (L0006),y
         tay
@@ -6915,7 +6915,7 @@ L4E34:  lda     (L0006),y
         lda     $DF22
         jsr     L86E3
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$09
         lda     (L0006),y
         tax
@@ -6988,7 +6988,7 @@ L4EC3:  sta     buf3len
         sta     $E22F
         jsr     L86E3
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$02
         lda     (L0006),y
         and     #$7F
@@ -7061,7 +7061,7 @@ L4FD4:  lda     #$80
         beq     L4FE7
         jmp     L504B
 
-L4FE7:  stx     $07
+L4FE7:  stx     L0006+1
         stx     L504F
         sty     L0006
         sty     L504E
@@ -7212,7 +7212,7 @@ L511E:  sta     buf3len
         lda     desktop_winid
         jsr     L86EF
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$1F
         lda     #$00
 L5162:  sta     (L0006),y
@@ -7295,7 +7295,7 @@ L51F0:  ldx     desktop_winid
         lda     desktop_winid
         jsr     L86EF
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$1F
         lda     #$00
 L523B:  sta     (L0006),y
@@ -7498,7 +7498,7 @@ L53D0:  tax
         bmi     L53BA
         jsr     L86FB
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$00
         lda     (L0006),y
         tay
@@ -7573,7 +7573,7 @@ L5464:  lda     desktop_winid
         lda     desktop_winid
         jsr     L86EF
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$1C
 L5479:  lda     (L0006),y
         sta     $E214,y
@@ -7635,7 +7635,7 @@ L54F3:  lda     $1801,x
         lda     $DD9F,y
         sta     L0006
         lda     $DDA0,y
-        sta     $07
+        sta     L0006+1
         ldy     #$06
         lda     (L0006),y
         cmp     L5447
@@ -7737,7 +7737,7 @@ L55D1:  ldx     L544A
         sta     $DF22
         jsr     L86E3
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$02
         lda     (L0006),y
         and     #$0F
@@ -7751,7 +7751,7 @@ L55F0:  ldx     L544A
         sta     $E22F
         jsr     L86E3
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$02
         lda     (L0006),y
         and     #$0F
@@ -7771,7 +7771,7 @@ L562B:  rts
 L562C:  lda     $E22F
         jsr     L86E3
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$02
         lda     (L0006),y
         and     #$0F
@@ -7827,7 +7827,7 @@ L56B4:  ldx     L56F8
         sta     $E22B
         jsr     L86E3
         sta     L0006
-        stx     $07
+        stx     L0006+1
         lda     $E22C
         beq     L56CF
         lda     $E22B
@@ -8064,7 +8064,7 @@ L58C1:  rts
 L58C3:  lda     desktop_winid
         jsr     L86EF
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$06
         lda     (L0006),y
         tax
@@ -8084,7 +8084,7 @@ L58C3:  lda     desktop_winid
 L58E2:  lda     desktop_winid
         jsr     L86EF
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$08
         lda     (L0006),y
         tax
@@ -8216,7 +8216,7 @@ L59FE:  jsr     L86E3
         sta     L0006
         txa
         adc     #$00
-        sta     $07
+        sta     L0006+1
         ldy     #$00
         lda     (L0006),y
         tay
@@ -8362,7 +8362,7 @@ L5B58:  cmp     #$01
         lda     desktop_winid
         jsr     L86EF
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$05
         lda     (L0006),y
         and     #$01
@@ -8409,7 +8409,7 @@ L5BB4:  jsr     L63EC
 L5BC1:  lda     desktop_winid
         jsr     L86EF
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$04
         lda     (L0006),y
         and     #$01
@@ -8638,7 +8638,7 @@ L5DF7:  ldx     $E256
 L5DFC:  lda     L5CD9
         jsr     L86E3
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$02
         lda     (L0006),y
         and     #$70
@@ -8661,7 +8661,7 @@ L5E28:  sta     L5E77
         lda     desktop_winid
         jsr     L86FB
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$00
         lda     (L0006),y
         tay
@@ -8672,7 +8672,7 @@ L5E3A:  lda     (L0006),y
         lda     L5CD9
         jsr     L86E3
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$09
         lda     (L0006),y
         tax
@@ -8726,7 +8726,7 @@ L5E8F:  lda     desktop_winid
 L5EBC:  lda     desktop_winid
         jsr     L86FB
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$00
         lda     (L0006),y
         tay
@@ -8767,7 +8767,7 @@ L5F0F:  .byte   0
 L5F13:  lda     #$06
         sta     L0006
         lda     #$D2
-        sta     $07
+        sta     L0006+1
         jsr     L60D5
         ldx     #$03
 L5F20:  lda     $D209,x
@@ -8949,7 +8949,7 @@ L60DE:  lda     desktop_winid
         lda     desktop_winid
         jsr     L86EF
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$16
         lda     (L0006),y
         cmp     #$19
@@ -8997,7 +8997,7 @@ L6161:  txa
         lda     buf3,x
         jsr     L86E3
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$03
         lda     (L0006),y
         clc
@@ -9087,7 +9087,7 @@ L6227:  sta     buf3len
         sta     $E22F
         jsr     L86E3
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$01
         lda     (L0006),y
         and     #$0F
@@ -9400,7 +9400,7 @@ L6523:  lda     desktop_winid
         sta     L0006
         txa
         adc     #$00
-        sta     $07
+        sta     L0006+1
         ldy     #$25
 L6535:  lda     (L0006),y
         sta     $D215,y
@@ -9411,7 +9411,7 @@ L6535:  lda     (L0006),y
 L653E:  lda     desktop_winid
         jsr     L86EF
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$23
         ldx     #$07
 L654C:  lda     $D21D,x
@@ -9435,7 +9435,7 @@ L656D:  lda     desktop_winid
         lda     desktop_winid
         jsr     L86EF
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$06
         lda     (L0006),y
         tay
@@ -9494,7 +9494,7 @@ L6604:  lda     desktop_winid
         lda     desktop_winid
         jsr     L86EF
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$08
         lda     (L0006),y
         tay
@@ -9922,7 +9922,7 @@ L6A41:  cmp     $EC26,x
         sta     L0006
         txa
         adc     #$00
-        sta     $07
+        sta     L0006+1
         ldy     #$00
         lda     (L0006),y
         tay
@@ -9970,7 +9970,7 @@ L6AA7:  stx     bufnum
         lda     $E6BE
         jsr     L86E3
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$02
         lda     (L0006),y
         ora     #$80
@@ -10049,7 +10049,7 @@ L6B68:  lda     #$01
         lda     $E6BE
         jsr     L86E3
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$02
         lda     (L0006),y
         ora     #$80
@@ -10146,7 +10146,7 @@ L6C5F:  txa
         sta     L0006
         lda     $E203,x
         sta     $E71E
-        sta     $07
+        sta     L0006+1
         lda     LCBANK2
         lda     LCBANK2
         ldy     #$00
@@ -10413,7 +10413,7 @@ L6EC5:  lda     #$00
 L6F0D:  jsr     L86FB
         sta     L0006
         sta     L6F48
-        stx     $07
+        stx     L0006+1
         stx     L6F49
         ldy     #$00
         lda     (L0006),y
@@ -10527,14 +10527,14 @@ L6FF5:  rts
 
 L6FF6:  jsr     L86EF
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$0A
         lda     (L0006),y
         beq     L6FE4
         lda     L7049
         jsr     L86FB
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$00
         lda     (L0006),y
         tay
@@ -10668,13 +10668,13 @@ L7161:  jsr     L48CC
 L7169:  lda     L485F
         sta     L0006
         lda     L4860
-        sta     $07
+        sta     L0006+1
         lda     $E1F1
         asl     a
         tax
         lda     L0006
         sta     $E202,x
-        lda     $07
+        lda     L0006+1
         sta     $E203,x
         ldx     $E1F1
         lda     L72A7
@@ -10700,7 +10700,7 @@ L7169:  lda     L485F
         inc     L0006
         lda     L0006
         bne     L71BD
-        inc     $07
+        inc     L0006+1
 L71BD:  inc     L70C4
         lda     L70C4
         cmp     L70C1
@@ -10805,12 +10805,12 @@ L7279:  lda     $1F00,x
         adc     L0006
         sta     L0006
         bcc     L7293
-        inc     $07
+        inc     L0006+1
 L7293:  jmp     L71BD
 
 L7296:  lda     L0006
         sta     L485F
-        lda     $07
+        lda     L0006+1
         sta     L4860
         jsr     L72D8
         jsr     pop_zp_addrs
@@ -10915,7 +10915,7 @@ L7385:  lda     L7446
         lda     $E202,x
         sta     L0006
         lda     $E203,x
-        sta     $07
+        sta     L0006+1
         inx
         inx
         lda     $E202,x
@@ -10932,7 +10932,7 @@ L73A5:  lda     LCBANK2
         lda     LCBANK1
         inc     L0006
         bne     L73BB
-        inc     $07
+        inc     L0006+1
 L73BB:  inc     $08
         bne     L73C1
         inc     $09
@@ -11015,7 +11015,7 @@ L744B:  lda     bufnum
         adc     #$09
         sta     L0006
         bcc     L746D
-        inc     $07
+        inc     L0006+1
 L746D:  tya
         tax
         ldy     #$00
@@ -11045,7 +11045,7 @@ L7471:  lda     (L0006),y
         adc     #$09
         sta     L0006
         bcc     L74A8
-        inc     $07
+        inc     L0006+1
 L74A8:  ldy     #$00
         lda     (L0006),y
         tay
@@ -11078,7 +11078,7 @@ L74D3:  tay
         pha
         jsr     L86FB
         sta     L0006
-        stx     $07
+        stx     L0006+1
         pla
         asl     a
         tax
@@ -11146,7 +11146,7 @@ L7569:  lda     $08
         lda     bufnum
         jsr     L86EF
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$14
         lda     bufnum
         sec
@@ -11196,7 +11196,7 @@ L75A3:  sta     (L0006),y
         lda     $E6BE
         jsr     L86E3
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$02
         lda     (L0006),y
         and     #$0F
@@ -11290,7 +11290,7 @@ L767C:  txa
         lda     $E202,x
         sta     L0006
         lda     $E203,x
-        sta     $07
+        sta     L0006+1
         lda     LCBANK2
         lda     LCBANK2
         ldy     #$00
@@ -11301,7 +11301,7 @@ L767C:  txa
         inc     L0006
         lda     L0006
         bne     L76A4
-        inc     $07
+        inc     L0006+1
 L76A4:  lda     bufnum
         sta     desktop_winid
 L76AA:  lda     L7625
@@ -11320,7 +11320,7 @@ L76C4:  jsr     L7B6B
         lda     L7621
         jsr     L86EF
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$16
         lda     L7B65
         sec
@@ -11521,9 +11521,9 @@ L7870:  lda     bufnum
         clc
         adc     #$20
         sta     L0006
-        lda     $07
+        lda     L0006+1
         adc     #$00
-        sta     $07
+        sta     L0006+1
         rts
 
         .byte   0
@@ -11533,7 +11533,7 @@ L78A1:  sta     L78EE
         lda     type_table_addr
         sta     L0006
         lda     type_table_addr+1
-        sta     $07
+        sta     L0006+1
         ldy     #$00
         lda     (L0006),y
         tay
@@ -11546,7 +11546,7 @@ L78B6:  lda     (L0006),y
 L78C2:  lda     LFB04           ; ???
         sta     L0006
         lda     LFB04+1
-        sta     $07
+        sta     L0006+1
         lda     (L0006),y
         sta     L7624
         dey
@@ -11556,7 +11556,7 @@ L78C2:  lda     LFB04           ; ???
         lda     type_icons_addr
         sta     L0006
         lda     type_icons_addr+1
-        sta     $07
+        sta     L0006+1
         lda     (L0006),y
         sta     L7622
         iny
@@ -11866,7 +11866,7 @@ L7BCB:  lda     buf3len
         lda     buf3
         jsr     L86E3
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$06
         ldx     #$03
 L7BE0:  lda     (L0006),y
@@ -11912,7 +11912,7 @@ L7C36:  tax
         lda     buf3,x
         jsr     L86E3
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$02
         lda     (L0006),y
         and     #$0F
@@ -12029,7 +12029,7 @@ L7D5B:  .byte   0
 L7D5C:  .byte   0
 L7D5D:  jsr     L86EF
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$23
         ldx     #$07
 L7D68:  lda     (L0006),y
@@ -12085,7 +12085,7 @@ L7DB4:  txa
         sta     L0006
         sta     $0801
         lda     $E203,x
-        sta     $07
+        sta     L0006+1
         sta     $0802
         lda     LCBANK2
         lda     LCBANK2
@@ -12097,7 +12097,7 @@ L7DB4:  txa
         inc     L0006
         inc     $0801
         bne     L7DE4
-        inc     $07
+        inc     L0006+1
         inc     $0802
 L7DE4:  lda     L0800
         cmp     $0803
@@ -12444,7 +12444,7 @@ L80CA:  lda     #$00
         sta     L0006
         lda     $0802
         adc     $0804
-        sta     $07
+        sta     L0006+1
         rts
 
 L80F5:  lda     #$00
@@ -12504,7 +12504,7 @@ L813F:  ldy     #$00
         sta     L0006
         lda     $E71E
         adc     L813C
-        sta     $07
+        sta     L0006+1
         lda     LCBANK2
         lda     LCBANK2
         ldy     #$1F
@@ -12871,7 +12871,7 @@ L850E:  sta     L85F1
         lda     desktop_winid
         jsr     L86EF
         sta     L0006
-        stx     $07
+        stx     L0006+1
         lda     #$06
         clc
         adc     L85F1
@@ -12951,7 +12951,7 @@ L85C3:  lda     $D21D
 L85D6:  lda     desktop_winid
         jsr     L86EF
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$23
         ldx     #$07
 L85E4:  lda     $D21D,x
@@ -13119,7 +13119,7 @@ L8707:  sta     L877F
         lda     type_table_addr
         sta     L0006
         lda     type_table_addr+1
-        sta     $07
+        sta     L0006+1
         ldy     #$00
         lda     (L0006),y
         tay
@@ -13137,7 +13137,7 @@ L8726:  tya
         lda     type_names_addr
         sta     L0006
         lda     type_names_addr+1
-        sta     $07
+        sta     L0006+1
         ldx     #$00
 L8736:  lda     (L0006),y
         sta     $DFC6,x
@@ -13189,7 +13189,7 @@ draw_text2:
         sta     $08
         inc     L0006
         bne     L8792
-        inc     $07
+        inc     L0006+1
 L8792:  A2D_RELAY_CALL A2D_DRAW_TEXT, $0006
 L879B:  rts
 
@@ -13201,7 +13201,7 @@ measure_text1:
         sta     $08
         inc     L0006
         bne     L87AC
-        inc     $07
+        inc     L0006+1
 L87AC:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $0006
         lda     $09
         ldx     $0A
@@ -13308,7 +13308,7 @@ L8855:  tay
         tya
         jsr     L86EF
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldx     #$00
         ldy     #$14
 L8865:  lda     (L0006),y
@@ -13325,7 +13325,7 @@ L8874:  tay
         tya
         jsr     L86EF
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldx     #$00
         ldy     #$14
 L8884:  lda     L8830,x
@@ -13342,7 +13342,7 @@ L8893:  tay
         tya
         jsr     L86E3
         sta     L0006
-        stx     $07
+        stx     L0006+1
         lda     desktop_winid
         jsr     L86EF
         sta     $08
@@ -13413,7 +13413,7 @@ L8915:  tay
         tya
         jsr     L86E3
         sta     L0006
-        stx     $07
+        stx     L0006+1
 L8921:  lda     desktop_winid
         jsr     L86EF
         sta     $08
@@ -13521,7 +13521,7 @@ L89EA:  jsr     push_zp_addrs
         sta     $E1A0,y
         jsr     L86E3
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldx     #$00
         ldy     #$09
         lda     #$20
@@ -13678,7 +13678,7 @@ L8B3E:  lda     #$00
 L8B43:  lda     $E6BE
         jsr     L86E3
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$02
         lda     (L0006),y
         and     #$7F
@@ -13696,7 +13696,7 @@ L8B62:  sty     L8D4A
         txa
         jsr     L86EF
         sta     L0006
-        stx     $07
+        stx     L0006+1
         lda     #$14
         clc
         adc     #$23
@@ -13710,7 +13710,7 @@ L8B7B:  lda     (L0006),y
         lda     L8D4B
         jsr     L86E3
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$03
         lda     (L0006),y
         clc
@@ -14162,7 +14162,7 @@ L8FA7:  asl     a
         lda     $DD9F,y
         sta     L0006
         lda     $DDA0,y
-        sta     $07
+        sta     L0006+1
         ldy     #$02
         lda     (L0006),y
         rts
@@ -14223,7 +14223,7 @@ L900C:  pla
         lda     #$7B
         sta     L0006
         lda     #$91
-        sta     $07
+        sta     L0006+1
         jsr     L91A0
         jmp     L9076
 
@@ -14323,7 +14323,7 @@ L90EE:  jsr     L91F5
         lda     #$0A
         sta     L0006
         lda     #$E0
-        sta     $07
+        sta     L0006+1
         ldy     #$00
         lda     (L0006),y
         beq     L9114
@@ -14402,7 +14402,7 @@ L918E:  asl     a
         sta     L0006
         lda     $DDA0,y
         adc     #$00
-        sta     $07
+        sta     L0006+1
         rts
 
 L91A0:  ldx     #$00
@@ -14690,7 +14690,7 @@ L93DB:  ldx     L92E6
         sta     L92E3
         lda     L0006
         sta     L92E4
-        lda     $07
+        lda     L0006+1
         sta     L92E5
         jsr     L953F
         lda     #$02
@@ -14956,13 +14956,13 @@ L962F:  sty     $08
         lda     $DFB3,x
         sta     L0006
         lda     $DFB4,x
-        sta     $07
+        sta     L0006+1
         jmp     L9655
 
 L964D:  lda     #$05
         sta     L0006
         lda     #$97
-        sta     $07
+        sta     L0006+1
 L9655:  ldy     #$00
         lda     (L0006),y
         tay
@@ -15022,7 +15022,7 @@ L969E:  lda     #$40
         tay
         inc     L0006
         bne     L96DA
-        inc     $07
+        inc     L0006+1
 L96DA:  lda     ($08),y
         sta     (L0006),y
         dey
@@ -15031,7 +15031,7 @@ L96DA:  lda     ($08),y
         lda     L0006
         cmp     #$FF
         bne     L96EB
-        dec     $07
+        dec     L0006+1
 L96EB:  lda     (L0006),y
         tay
         lda     #$20
@@ -17182,7 +17182,7 @@ LA9E6:  ldy     #$01
         tax
         iny
         lda     (L0006),y
-        sta     $07
+        sta     L0006+1
         stx     L0006
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, $AE7E
@@ -17193,7 +17193,7 @@ LA9E6:  ldy     #$01
         tax
         iny
         lda     (L0006),y
-        sta     $07
+        sta     L0006+1
         stx     L0006
         jsr     LBE78
         A2D_RELAY_CALL A2D_SET_POS, $AE82
@@ -17310,7 +17310,7 @@ LAB69:  ldy     #$01
         tax
         iny
         lda     (L0006),y
-        sta     $07
+        sta     L0006+1
         stx     L0006
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, $AE7E
@@ -17369,7 +17369,7 @@ LAC3D:  ldy     #$01
         tax
         iny
         lda     (L0006),y
-        sta     $07
+        sta     L0006+1
         stx     L0006
         ldy     #$00
         lda     (L0006),y
@@ -17389,7 +17389,7 @@ LAC3D:  ldy     #$01
         tax
         iny
         lda     (L0006),y
-        sta     $07
+        sta     L0006+1
         stx     L0006
         ldy     #$00
         lda     (L0006),y
@@ -17493,7 +17493,7 @@ LAD6C:  ldy     #$01
         tax
         iny
         lda     (L0006),y
-        sta     $07
+        sta     L0006+1
         stx     L0006
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, $AE7E
@@ -17785,7 +17785,7 @@ LB0A2:  ldy     #$01
         tax
         iny
         lda     (L0006),y
-        sta     $07
+        sta     L0006+1
         stx     L0006
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, $AE7E
@@ -17873,7 +17873,7 @@ LB1C0:  ldy     #$01
         tax
         iny
         lda     (L0006),y
-        sta     $07
+        sta     L0006+1
         stx     L0006
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, $AE7E
@@ -18198,7 +18198,7 @@ LB59A:  tya
         clc
         adc     #$01
         sta     $08
-        lda     $07
+        lda     L0006+1
         adc     #$00
         sta     $09
         jsr     LBD7B
@@ -18308,17 +18308,17 @@ draw_text1:
         sta     $08
         inc     L0006
         bne     LB719
-        inc     $07
+        inc     L0006+1
 LB719:  A2D_RELAY_CALL A2D_DRAW_TEXT, $0006
 LB722:  rts
 
 LB723:  sta     L0006
-        stx     $07
+        stx     L0006+1
         jsr     LBD7B
         sta     $08
         inc     L0006
         bne     LB732
-        inc     $07
+        inc     L0006+1
 LB732:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $0006
         lsr     $0A
         ror     $09
@@ -18339,7 +18339,7 @@ LB732:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $0006
 
 LB76B:  .byte   0
         sta     L0006
-        stx     $07
+        stx     L0006+1
         A2D_RELAY_CALL A2D_SET_POS, $D6BB
         lda     L0006
         ldx     L0006+1
@@ -18508,7 +18508,7 @@ LB8F3:  .byte   0
 
 LB8F5:  jsr     LBD3B
         sta     L0006
-        stx     $07
+        stx     L0006+1
         lda     $D6B5
         sta     $08
         lda     $D6B6
@@ -18527,7 +18527,7 @@ LB92D:  A2D_RELAY_CALL A2D_SET_TEXT_MASK, $AE6D
 LB93B:  lda     #$EF
         sta     L0006
         lda     #$D8
-        sta     $07
+        sta     L0006+1
         lda     $D8EE
         sta     $08
         A2D_RELAY_CALL A2D_DRAW_TEXT, $0006
@@ -18562,11 +18562,11 @@ LB9B8:  A2D_RELAY_CALL A2D_MAP_COORDS, alert_input_params
 
 LB9D8:  jsr     LBD3B
         sta     L0006
-        stx     $07
+        stx     L0006+1
         lda     $D20D
         cmp     L0006
         lda     $D20E
-        sbc     $07
+        sbc     L0006+1
         bcs     LB9EE
         jmp     LBA83
 
@@ -18581,7 +18581,7 @@ LB9EE:  jsr     LBD3B
         lda     #$84
         sta     L0006
         lda     #$D4
-        sta     $07
+        sta     L0006+1
         lda     $D484
         sta     $08
 LBA10:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $0006
@@ -18640,7 +18640,7 @@ LBA7C:  dey
 LBA83:  lda     #$43
         sta     L0006
         lda     #$D4
-        sta     $07
+        sta     L0006+1
         lda     $D443
         sta     $08
 LBA90:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $0006
@@ -18716,7 +18716,7 @@ LBB1A:  lda     LBB62
         jsr     LBD3B
         inc     $D443
         sta     L0006
-        stx     $07
+        stx     L0006+1
         lda     $D6B5
         sta     $08
         lda     $D6B6
@@ -18737,7 +18737,7 @@ LBB63:  lda     $D443
 LBB69:  dec     $D443
         jsr     LBD3B
         sta     L0006
-        stx     $07
+        stx     L0006+1
         lda     $D6B5
         sta     $08
         lda     $D6B6
@@ -18769,7 +18769,7 @@ LBBBC:  ldx     $D443
         inc     $D484
         jsr     LBD3B
         sta     L0006
-        stx     $07
+        stx     L0006+1
         lda     $D6B5
         sta     $08
         lda     $D6B6
@@ -18885,7 +18885,7 @@ LBCDF:  lda     $D484,x
         rts
 
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$00
         lda     (L0006),y
         tay
@@ -18919,7 +18919,7 @@ LBD33:  rts
 LBD3B:  lda     #$44
         sta     L0006
         lda     #$D4
-        sta     $07
+        sta     L0006+1
         lda     $D443
         sta     $08
         bne     LBD51
@@ -19234,7 +19234,7 @@ found_ram:
         lda     #$63
         sta     L0006
         lda     #$EC
-        sta     $07
+        sta     L0006+1
         ldx     #$01
 L08D5:  cpx     #$7F
         bne     L08DF
@@ -19247,7 +19247,7 @@ L08DF:  txa
         tax
         lda     L0006
         sta     $DD9F,x
-        lda     $07
+        lda     L0006+1
         sta     $DDA0,x
         pla
         pha
@@ -19261,7 +19261,7 @@ L08DF:  txa
         adc     #$1B
         sta     L0006
         bcc     L0903
-        inc     $07
+        inc     L0006+1
 L0903:  pla
         tax
         inx
@@ -19291,7 +19291,7 @@ L092F:  lda     #$00
         sta     $DEA1
         jsr     L86E3
         sta     L0006
-        stx     $07
+        stx     L0006+1
         ldy     #$02
         lda     #$70
         sta     (L0006),y
@@ -19344,7 +19344,7 @@ L09A2:  stx     L09B5
         .byte   $AD
 L09B5:  .byte   0
         .byte   $BF
-        sta     $07
+        sta     L0006+1
         lda     #$00
         sta     L0006
         ldy     #$07
@@ -19406,7 +19406,7 @@ L0A3B:  lda     L0A92
         beq     L0A8F
         jsr     L0A95
         sta     L0006
-        stx     $07
+        stx     L0006+1
         lda     L0A92
         jsr     L0AA2
         sta     $08
@@ -19424,7 +19424,7 @@ L0A59:  lda     (L0006),y
         lda     L0A92
         jsr     L0ABC
         sta     L0006
-        stx     $07
+        stx     L0006+1
         lda     L0A92
         jsr     L0AAF
         sta     $08
@@ -19601,7 +19601,7 @@ L0BC3:  MLI_RELAY_CALL OPEN, $0CD7
         lda     #$2B
         sta     L0006
         lda     #$14
-        sta     $07
+        sta     L0006+1
 L0C0C:  ldy     #$00
         lda     (L0006),y
         and     #$0F
@@ -19679,7 +19679,7 @@ L0C96:  inc     L0D08
         lda     #$04
         sta     L0006
         lda     #$14
-        sta     $07
+        sta     L0006+1
         lda     #$00
         sta     L0D08
         jmp     L0C0C
@@ -19688,9 +19688,9 @@ L0CBA:  lda     L0006
         clc
         adc     L0D06
         sta     L0006
-        lda     $07
+        lda     L0006+1
         adc     #$00
-        sta     $07
+        sta     L0006+1
         jmp     L0C0C
 
 L0CCB:  MLI_RELAY_CALL CLOSE, $0CF8
