@@ -3232,27 +3232,47 @@ LB28D:  PASCAL_STRING "Enter the name of the new volume:"
 LB2AF:  PASCAL_STRING "Do you want to format "
 LB2C6:  PASCAL_STRING "Formatting the disk...."
 LB2DE:  PASCAL_STRING "Formatting error. Check drive, then click OK to try again."
+
 LB319:  PASCAL_STRING "Erase a Disk ..."
 LB32A:  PASCAL_STRING "Select the location where the disk is to be erased"
 LB35D:  PASCAL_STRING "Do you want to erase "
 LB373:  PASCAL_STRING "Erasing the disk...."
 LB388:  PASCAL_STRING "Erasing error. Check drive, then click OK to try again."
-LB3C0:  PASCAL_STRING "Unlock ..."
-LB3CB:  PASCAL_STRING "Click OK to unlock "
-LB3DF:  PASCAL_STRING "Files remaining to be unlocked: "
-LB400:  PASCAL_STRING "Lock ..."
-LB409:  PASCAL_STRING "Click OK to lock "
-LB41B:  PASCAL_STRING "Files remaining to be locked: "
-LB43A:  PASCAL_STRING "Get Size ..."
-LB447:  PASCAL_STRING "Number of files"
-LB457:  PASCAL_STRING "Blocks used on disk"
+
+        ;; "Unlock File" dialog strings
+str_unlock_title:
+        PASCAL_STRING "Unlock ..."
+str_unlock_ok:
+        PASCAL_STRING "Click OK to unlock "
+str_unlock_remaining:
+        PASCAL_STRING "Files remaining to be unlocked: "
+
+        ;; "Lock File" dialog strings
+str_lock_title:
+        PASCAL_STRING "Lock ..."
+str_lock_ok:
+        PASCAL_STRING "Click OK to lock "
+str_lock_remaining:
+        PASCAL_STRING "Files remaining to be locked: "
+
+        ;; "Get Size" dialog strings
+str_size_title:
+        PASCAL_STRING "Get Size ..."
+str_size_number:
+        PASCAL_STRING "Number of files"
+str_size_blocks:
+        PASCAL_STRING "Blocks used on disk"
 
         .byte   $6E,$00,$23,$00,$6E,$00,$2B,$00
 
-LB473:  PASCAL_STRING "DownLoad ..."
+str_download:
+        PASCAL_STRING "DownLoad ..."
+
 LB480:  PASCAL_STRING "The RAMCard is full. The copy was not completed."
 LB4B1:  PASCAL_STRING " "
-LB4B3:  PASCAL_STRING "Warning !"
+
+str_warning:
+        PASCAL_STRING "Warning !"
 LB4BD:  PASCAL_STRING "Please insert the system disk."
 LB4DC:  PASCAL_STRING "The Selector list is full. You must delete an entry"
 LB50C:  PASCAL_STRING "before you can add new entries."
@@ -17245,7 +17265,7 @@ LAAFD:  cmp     #$04
 LAB04:  lda     #$00
         sta     $D8E8
         jsr     LB53A
-        addr_call LB723, $B473
+        addr_call LB723, str_download
         axy_call LB590, $B015, $01
         axy_call LB590, $B022, $02
         axy_call LB590, $B028, $03
@@ -17328,11 +17348,11 @@ LAC0F:  cmp     #$03
         jmp     LAC9E
 
 LAC16:  jsr     LB53A
-        addr_call LB723, $B43A
-        axy_call LB590, $B447, $01
+        addr_call LB723, str_size_title
+        axy_call LB590, str_size_number, $01
         ldy     #$01
         jsr     LB01F
-        axy_call LB590, $B457, $02
+        axy_call LB590, str_size_blocks, $02
         ldy     #$02
         jsr     LB01F
         rts
@@ -17722,8 +17742,8 @@ LB048:  cmp     #$04
 LB04F:  lda     #$00
         sta     $D8E8
         jsr     LB53A
-        addr_call LB723, $B400
-        yax_call LB590, $B409, $04
+        addr_call LB723, str_lock_title
+        yax_call LB590, str_lock_ok, $04
         rts
 
 LB068:  ldy     #$01
@@ -17779,7 +17799,7 @@ LB0FA:  jsr     LA567
         A2D_RELAY_CALL A2D_FILL_RECT, $AE20
         A2D_RELAY_CALL A2D_FILL_RECT, $AE10
         yax_call LB590, $B10E, $02
-        yax_call LB590, $B41B, $04
+        yax_call LB590, str_lock_remaining, $04
         lda     #$00
 LB139:  rts
 
@@ -17810,8 +17830,8 @@ LB166:  cmp     #$04
 LB16D:  lda     #$00
         sta     $D8E8
         jsr     LB53A
-        addr_call LB723, $B3C0
-        yax_call LB590, $B3CB, $04
+        addr_call LB723, str_unlock_title
+        yax_call LB590, str_unlock_ok, $04
         rts
 
 LB186:  ldy     #$01
@@ -17867,7 +17887,7 @@ LB218:  jsr     LA567
         A2D_RELAY_CALL A2D_FILL_RECT, $AE20
         A2D_RELAY_CALL A2D_FILL_RECT, $AE10
         yax_call LB590, $B10E, $02
-        yax_call LB590, $B3DF, $04
+        yax_call LB590, str_unlock_remaining, $04
         lda     #$00
 LB257:  rts
 
@@ -17950,7 +17970,7 @@ LB313:  jsr     LBEB1
         jsr     LB55F
         lda     winF
         jsr     LB7B9
-        addr_call LB723, $B4B3
+        addr_call LB723, str_warning
         A2D_RELAY_CALL A2D_SHOW_CURSOR
         jsr     LB3BF
         ldy     #$00
