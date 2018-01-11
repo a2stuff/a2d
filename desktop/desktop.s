@@ -3109,6 +3109,7 @@ special_menu:
         .byte   $01,$51,$00,$2C,$01,$5C,$00,$40
         .byte   $01,$51,$00,$68,$01,$5C,$00
 
+str_ok_label:
         PASCAL_STRING {"OK            ",A2D_GLYPH_RETURN}
 
         .byte   $09
@@ -3122,10 +3123,14 @@ special_menu:
         .byte   $00,$8A,$01,$2A,$00,$41,$00,$2B
         .byte   $00,$8A,$01,$32,$00
 
-LAE96:  PASCAL_STRING "Cancel        Esc"
-LAEA8:  PASCAL_STRING " Yes"
-LAEAD:  PASCAL_STRING " No"
-LAEB1:  PASCAL_STRING " All"
+str_cancel_label:
+        PASCAL_STRING "Cancel        Esc"
+str_yes_label:
+        PASCAL_STRING " Yes"
+str_no_label:
+        PASCAL_STRING " No"
+str_all_label:
+        PASCAL_STRING " All"
 LAEB6:  PASCAL_STRING "Source filename:"
 LAEC7:  PASCAL_STRING "Destination filename:"
 
@@ -4640,12 +4645,17 @@ LD760:  PASCAL_STRING "Run list"
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$14,$00,$00,$00,$00
         .byte   $01,$06,$00,$00,$00,$00,$00,$00
-        .byte   $01,$00
 
+str_1_null:
+        PASCAL_STRING {0}
+
+str_2_spaces:
         PASCAL_STRING "  "
 
+str_files:
         PASCAL_STRING "Files"
 
+str_7_spaces:
         PASCAL_STRING "       "
 
         .byte   $00,$00,$00,$00,$0D
@@ -17124,8 +17134,8 @@ LA9B5:  ldy     #$01
         lda     winF
         jsr     LB7B9
         A2D_RELAY_CALL A2D_SET_POS, $B0B6
-        draw_text1_call $D901
-        draw_text1_call $D8FB
+        draw_text1_call str_7_spaces
+        draw_text1_call str_files
         rts
 
 LA9E6:  ldy     #$01
@@ -17169,7 +17179,7 @@ LA9E6:  ldy     #$01
         lda     #$BA
         ldx     #$B0
         jsr     A2D_RELAY
-        draw_text1_call $D901
+        draw_text1_call str_7_spaces
         rts
 
 LAA5A:  jsr     LBEB1
@@ -17273,8 +17283,8 @@ LAB38:  ldy     #$01
         lda     winF
         jsr     LB7B9
         A2D_RELAY_CALL A2D_SET_POS, $B0B6
-        draw_text1_call $D901
-        draw_text1_call $D8FB
+        draw_text1_call str_7_spaces
+        draw_text1_call str_files
         rts
 
 LAB69:  ldy     #$01
@@ -17300,7 +17310,7 @@ LAB69:  ldy     #$01
         A2D_RELAY_CALL A2D_SET_POS, $AE7E
         draw_text1_call $D402
         A2D_RELAY_CALL A2D_SET_POS, $B0BA
-        draw_text1_call $D901
+        draw_text1_call str_7_spaces
         rts
 
 LABB8:  jsr     LBEB1
@@ -17481,8 +17491,8 @@ LAD46:  bne     LAD54
         jmp     LAD5D
 
 LAD54:  A2D_RELAY_CALL A2D_SET_POS, $B172
-LAD5D:  draw_text1_call $D901
-        draw_text1_call $D8FB
+LAD5D:  draw_text1_call str_7_spaces
+        draw_text1_call str_files
         rts
 
 LAD6C:  ldy     #$01
@@ -17508,7 +17518,7 @@ LAD6C:  ldy     #$01
         A2D_RELAY_CALL A2D_SET_POS, $AE7E
         draw_text1_call $D402
         A2D_RELAY_CALL A2D_SET_POS, $B16E
-        draw_text1_call $D901
+        draw_text1_call str_7_spaces
         rts
 
 LADBB:  lda     winF
@@ -17823,9 +17833,9 @@ LB068:  ldy     #$01
         lda     winF
         jsr     LB7B9
         A2D_RELAY_CALL A2D_SET_POS, $B231
-        draw_text1_call $D901
+        draw_text1_call str_7_spaces
         A2D_RELAY_CALL A2D_SET_POS, $B239
-        draw_text1_call $D8FB
+        draw_text1_call str_files
         rts
 
 LB0A2:  ldy     #$01
@@ -17851,7 +17861,7 @@ LB0A2:  ldy     #$01
         A2D_RELAY_CALL A2D_SET_POS, $AE7E
         draw_text1_call $D402
         A2D_RELAY_CALL A2D_SET_POS, $B241
-        draw_text1_call $D901
+        draw_text1_call str_7_spaces
         rts
 
 LB0F1:  lda     winF
@@ -17922,9 +17932,9 @@ LB186:  ldy     #$01
         lda     winF
         jsr     LB7B9
         A2D_RELAY_CALL A2D_SET_POS, $B22D
-        draw_text1_call $D901
+        draw_text1_call str_7_spaces
         A2D_RELAY_CALL A2D_SET_POS, $B235
-        draw_text1_call $D8FB
+        draw_text1_call str_files
         rts
 
 LB1C0:  ldy     #$01
@@ -17950,7 +17960,7 @@ LB1C0:  ldy     #$01
         A2D_RELAY_CALL A2D_SET_POS, $AE7E
         draw_text1_call $D402
         A2D_RELAY_CALL A2D_SET_POS, $B23D
-        draw_text1_call $D901
+        draw_text1_call str_7_spaces
         rts
 
 LB20F:  lda     winF
@@ -18326,23 +18336,23 @@ LB5CC:  dey
         rts
 
 LB5F9:  A2D_RELAY_CALL A2D_SET_POS, $AE50
-        draw_text1_call $AE40
+        draw_text1_call str_ok_label
         rts
 
 LB60A:  A2D_RELAY_CALL A2D_SET_POS, $AE54
-        draw_text1_call $AE96
+        draw_text1_call str_cancel_label
         rts
 
 LB61B:  A2D_RELAY_CALL A2D_SET_POS, $AE58
-        draw_text1_call $AEA8
+        draw_text1_call str_yes_label
         rts
 
 LB62C:  A2D_RELAY_CALL A2D_SET_POS, $AE5C
-        draw_text1_call $AEAD
+        draw_text1_call str_no_label
         rts
 
 LB63D:  A2D_RELAY_CALL A2D_SET_POS, $AE60
-        draw_text1_call $AEB1
+        draw_text1_call str_all_label
         rts
 
 LB64E:  jsr     LB43B
@@ -18637,7 +18647,7 @@ LB961:  lda     $D443
         A2D_RELAY_CALL A2D_SET_BOX, $D6C7
         draw_text1_call $D443
         draw_text1_call $D484
-        draw_text1_call $D8F8
+        draw_text1_call str_2_spaces
         lda     winF
         jsr     LB7B9
 LB9B7:  rts
@@ -18812,7 +18822,7 @@ LBB1A:  lda     LBB62
         sta     $09
         A2D_RELAY_CALL A2D_SET_POS, $0006
         A2D_RELAY_CALL A2D_SET_BOX, $D6C7
-        draw_text1_call $D8F6
+        draw_text1_call str_1_null
         draw_text1_call $D484
         lda     winF
         jsr     LB7B9
@@ -18834,7 +18844,7 @@ LBB69:  dec     $D443
         A2D_RELAY_CALL A2D_SET_POS, $0006
         A2D_RELAY_CALL A2D_SET_BOX, $D6C7
         draw_text1_call $D484
-        draw_text1_call $D8F8
+        draw_text1_call str_2_spaces
         lda     winF
         jsr     LB7B9
         rts
@@ -18866,7 +18876,7 @@ LBBBC:  ldx     $D443
         A2D_RELAY_CALL A2D_SET_POS, $0006
         A2D_RELAY_CALL A2D_SET_BOX, $D6C7
         draw_text1_call $D484
-        draw_text1_call $D8F8
+        draw_text1_call str_2_spaces
         lda     winF
         jsr     LB7B9
         rts
@@ -18895,7 +18905,7 @@ LBC2D:  dec     $D484
         A2D_RELAY_CALL A2D_SET_BOX, $D6C7
         draw_text1_call $D443
         draw_text1_call $D484
-        draw_text1_call $D8F8
+        draw_text1_call str_2_spaces
         lda     winF
         jsr     LB7B9
         rts
@@ -19085,29 +19095,31 @@ LBDB0:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-LBDC4:  ldx     $D8FB
+LBDC4:  ldx     str_files
         lda     $D90A
         bne     LBDD9
         lda     $D909
         cmp     #$02
         bcs     LBDD9
         lda     #$20
-        sta     $D8FB,x
+        sta     str_files,x
         rts
 
 LBDD9:  lda     #$73
-        sta     $D8FB,x
+        sta     str_files,x
         rts
 
 LBDDF:  lda     $D909
         sta     LBE5F
         lda     $D90A
         sta     LBE60
-        ldx     #$07
-        lda     #$20
-LBDEF:  sta     $D901,x
+
+        ldx     #7              ; does this ever get overwritten???
+        lda     #' '
+:       sta     str_7_spaces,x
         dex
-        bne     LBDEF
+        bne     :-
+
         lda     #$00
         sta     LBE62
         ldy     #$00
