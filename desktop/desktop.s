@@ -3225,7 +3225,8 @@ str_info_protected:
 str_info_blocks:
         PASCAL_STRING "Blocks free/size"
 
-LB22A:  PASCAL_STRING ": "
+str_colon:
+        PASCAL_STRING ": "
 
         .byte   $A0,$00,$3B,$00
         .byte   $91,$00,$3B,$00,$C8,$00,$3B,$00
@@ -3275,18 +3276,27 @@ str_download:
         PASCAL_STRING "DownLoad ..."
 
 LB480:  PASCAL_STRING "The RAMCard is full. The copy was not completed."
-LB4B1:  PASCAL_STRING " "
+
+str_1_space:
+        PASCAL_STRING " "
 
 str_warning:
         PASCAL_STRING "Warning !"
-LB4BD:  PASCAL_STRING "Please insert the system disk."
-LB4DC:  PASCAL_STRING "The Selector list is full. You must delete an entry"
-LB50C:  PASCAL_STRING "before you can add new entries."
-LB530:  PASCAL_STRING "A window must be closed before opening this new catalog."
+str_insert_system_disk:
+        PASCAL_STRING "Please insert the system disk."
+str_selector_list_full:
+        PASCAL_STRING "The Selector list is full. You must delete an entry"
+str_before_new_entries:
+        PASCAL_STRING "before you can add new entries."
+str_window_must_be_closed:
+        PASCAL_STRING "A window must be closed before opening this new catalog."
 
-LB569:  PASCAL_STRING "There are too many windows open on the desktop !"
-LB59A:  PASCAL_STRING "Do you want to save the new Selector list"
-LB5C4:  PASCAL_STRING "on the system disk ?"
+str_too_many_windows:
+        PASCAL_STRING "There are too many windows open on the desktop !"
+str_save_selector_list:
+        PASCAL_STRING "Do you want to save the new Selector list"
+str_on_system_disk:
+        PASCAL_STRING "on the system disk ?"
 
 
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -4809,6 +4819,8 @@ run_list_entries:
         ;;      .byte ??
         ;;      .byte ??
         ;;      .byte len, name (length-prefixed, spaces before/after; 17 byte buffer)
+        ;;
+        ;; (likely point into buffer at $ED00, which has room for 127*27)
 file_address_table:
         .assert * = file_table, error, "Entry point mismatch"
         .res    256, 0
@@ -5091,6 +5103,7 @@ desktop_winid:
 ;;;
 ;;; $ED00 - $FAFF is data buffers
 ;;;
+;;; (there's enough room here for 127 files at 27 bytes each)
 ;;; ==================================================
 
         .org $FB00
@@ -17760,8 +17773,8 @@ LB01D:  .byte   0
 LB01E:  .byte   0
 LB01F:  lda     #$A0
         sta     $D6C3
-        lda     #$2A
-        ldx     #$B2
+        lda     #<str_colon
+        ldx     #>str_colon
         jsr     LB590
         rts
 
@@ -18037,7 +18050,7 @@ LB364:  pla
         asl     a
         asl     a
         tay
-        lda     LB3A4,y
+        lda     LB3A3+1,y
         tax
         lda     LB3A3,y
         ldy     #$03
@@ -18046,9 +18059,9 @@ LB364:  pla
         asl     a
         asl     a
         tay
-        lda     LB3A6,y
+        lda     LB3A3+2+1,y
         tax
-        lda     LB3A5,y
+        lda     LB3A3+2,y
         ldy     #$04
         jsr     LB590
 LB385:  jsr     LA567
@@ -18061,13 +18074,15 @@ LB385:  jsr     LA567
         rts
 
 LB39C:  .byte   $80,$00,$00,$80,$00,$00,$80
-LB3A3:  .byte   $BD
-LB3A4:  .byte   $B4
-LB3A5:  .byte   $B1
-LB3A6:  .byte   $B4,$DC,$B4,$10,$B5,$DC,$B4,$10
-        .byte   $B5,$30,$B5,$B1,$B4,$30,$B5,$B1
-        .byte   $B4,$69,$B5,$B1,$B4,$9A,$B5,$C4
-        .byte   $B5
+
+LB3A3:  .addr   str_insert_system_disk,str_1_space
+        .addr   str_selector_list_full,str_before_new_entries
+        .addr   str_selector_list_full,str_before_new_entries
+        .addr   str_window_must_be_closed,str_1_space
+        .addr   str_window_must_be_closed,str_1_space
+        .addr   str_too_many_windows,str_1_space
+        .addr   str_save_selector_list,str_on_system_disk
+
 LB3BF:  lda     $A51D
         sta     L0006
         lda     $A51E
@@ -19179,7 +19194,6 @@ push_zp_addrs   := desktop_main::push_zp_addrs
 pop_zp_addrs    := desktop_main::pop_zp_addrs
 L89B6           := desktop_main::L89B6
 
-LD05E           := DESKTOP_FIND_SPACE
 DESKTOP_DEVICELIST := $E196
 
 
@@ -19325,7 +19339,7 @@ L092F:  lda     #$00
         lda     #$01
         sta     $DEA0
         sta     $DD9E
-        jsr     LD05E
+        jsr     DESKTOP_FIND_SPACE
         sta     $EBFB
         sta     $DEA1
         jsr     L86E3
