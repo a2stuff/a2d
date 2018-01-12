@@ -22,6 +22,7 @@ KEY_LEFT        := $08
 KEY_DOWN        := $0A
 KEY_UP          := $0B
 KEY_RIGHT       := $15
+KEY_DELETE      := $7F
 
 ;;; Monitor
 INIT            := $FB2F
