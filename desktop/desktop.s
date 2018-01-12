@@ -3374,30 +3374,31 @@ try_again_label:
 cancel_label:
         PASCAL_STRING "Cancel     Esc"
 
-LB735:  PASCAL_STRING "System Error"
-LB742:  PASCAL_STRING "I/O error"
-LB74C:  PASCAL_STRING "No device connected"
-LB760:  PASCAL_STRING "The disk is write protected."
-LB77D:  PASCAL_STRING "The syntax of the pathname is invalid."
-LB7A4:  PASCAL_STRING "Part of the pathname doesn't exist."
-LB7C8:  PASCAL_STRING "The volume cannot be found."
-LB7E4:  PASCAL_STRING "The file cannot be found."
-LB7FE:  PASCAL_STRING "That name already exists. Please use another name."
-LB831:  PASCAL_STRING "The disk is full."
-LB843:  PASCAL_STRING "The volume directory cannot hold more than 51 files."
-LB878:  PASCAL_STRING "The file is locked."
-LB88C:  PASCAL_STRING "This is not a ProDOS disk."
-LB8A7:  PASCAL_STRING "There is another volume with that name on the desktop."
-LB8DE:  PASCAL_STRING "There are 2 volumes with the same name."
-LB906:  PASCAL_STRING "This file cannot be run."
-LB91F:  PASCAL_STRING "That name is too long."
-LB936:  PASCAL_STRING "Please insert source disk"
-LB950:  PASCAL_STRING "Please insert destination disk"
-LB96F:  PASCAL_STRING "BASIC.SYSTEM not found"
+err_00:  PASCAL_STRING "System Error"
+err_27:  PASCAL_STRING "I/O error"
+err_28:  PASCAL_STRING "No device connected"
+err_2B:  PASCAL_STRING "The disk is write protected."
+err_40:  PASCAL_STRING "The syntax of the pathname is invalid."
+err_44:  PASCAL_STRING "Part of the pathname doesn't exist."
+err_45:  PASCAL_STRING "The volume cannot be found."
+err_46:  PASCAL_STRING "The file cannot be found."
+err_47:  PASCAL_STRING "That name already exists. Please use another name."
+err_48:  PASCAL_STRING "The disk is full."
+err_49:  PASCAL_STRING "The volume directory cannot hold more than 51 files."
+err_4E:  PASCAL_STRING "The file is locked."
+err_52:  PASCAL_STRING "This is not a ProDOS disk."
+err_57:  PASCAL_STRING "There is another volume with that name on the desktop."
+        ;; Below are not ProDOS MLI error codes.
+err_F9:  PASCAL_STRING "There are 2 volumes with the same name."
+err_FA:  PASCAL_STRING "This file cannot be run."
+err_FB:  PASCAL_STRING "That name is too long."
+err_FC:  PASCAL_STRING "Please insert source disk"
+err_FD:  PASCAL_STRING "Please insert destination disk"
+err_FE:  PASCAL_STRING "BASIC.SYSTEM not found"
 
         ;; number of alert messages
 alert_count:
-        .byte   $14
+        .byte   20
 
         ;; message number-to-index table
         ;; (look up by scan to determine index)
@@ -3408,9 +3409,9 @@ alert_table:
 
         ;; alert index to string address
 prompt_table:
-        .addr   LB735,LB742,LB74C,LB760,LB77D,LB7A4,LB7C8,LB7E4
-        .addr   LB7FE,LB831,LB843,LB878,LB88C,LB8A7,LB8DE,LB906
-        .addr   LB91F,LB936,LB950,LB96F
+        .addr   err_00,err_27,err_28,err_2B,err_40,err_44,err_45,err_46
+        .addr   err_47,err_48,err_49,err_4E,err_52,err_57,err_F9,err_FA
+        .addr   err_FB,err_FC,err_FD,err_FE
 
         ;; alert index to action (0 = Cancel, $80 = Try Again)
 alert_action_table:
@@ -3754,9 +3755,9 @@ LBE21:  lda     LBFCA
 LBE27:  lda     LBE5C
         lsr     a
         tay
-        sta     LOWSCR
+        sta     PAGE2OFF        ; main $2000-$3FFF
         bcs     LBE34
-        sta     HISCR
+        sta     PAGE2ON         ; aux $2000-$3FFF
 LBE34:  lda     ($06),y
 LBE37           := * + 1
 LBE38           := * + 2
@@ -3818,9 +3819,9 @@ LBEA8:  lda     LBFCA
 LBEAE:  lda     LBF0B
         lsr     a
         tay
-        sta     LOWSCR
+        sta     PAGE2OFF        ; main $2000-$3FFF
         bcs     LBEBB
-        sta     HISCR
+        sta     PAGE2ON         ; aux $2000-$3FFF
 LBEBB:  .byte   $AD
 LBEBC:  .byte   0
 LBEBD:  php
@@ -4794,23 +4795,55 @@ str_7_spaces:
 
         ;; Buffer for Run List entries
 run_list_entries:
-        .res    896, 0
+        .res    640, 0
+        .byte   0
 
-        .byte   $00
+        ;; Icon to File mapping table
+        ;;
+        ;; each entry is 27 bytes long
+        ;;      .byte ??
+        ;;      .byte ??
+        ;;      .byte type/icon (bits 4,5,6 clear = directory)
+        ;;      .word iconx     (pixels)
+        ;;      .word icony     (pixels)
+        ;;      .byte ??
+        ;;      .byte ??
+        ;;      .byte len, name (length-prefixed, spaces before/after; 17 byte buffer)
+file_address_table:
+        .assert * = file_table, error, "Entry point mismatch"
+        .res    256, 0
 
         ;; Used by DESKTOP_COPY_*_BUF
         .assert * = bufnum, error, "Entry point mismatch"
 bufnum: .byte   $00
 buf3len:.byte   0
-buf3:   .res    256, 0
+buf3:   .res    127, 0
+
+selected_window_index: ; index of selected window (used to get prefix)
+        .assert * = path_index, error, "Entry point mismatch"
+        .byte   0
+
+is_file_selected:               ; 0 if no selection, 1 otherwise
+        .assert * = file_selected, error, "Entry point mismatch"
+        .byte   0
+
+selected_file_index:            ; index of selected icon (global, not w/in window)
+        .assert * = file_index, error, "Entry point mismatch"
+        .byte   0
+
+        .res    126, 0
+
 
         ;; Buffer for desktop windows
 win_table:
         .addr   0,win1,win2,win3,win4,win5,win6,win7,win8
 
+        ;; Window to Path mapping table
+window_address_table:
+        .assert * = path_table, error, "Entry point mismatch"
         .addr   $0000
         .repeat 8,i
-        .addr   buf2+i*$41
+        .addr   window_path_table+i*65
         .endrepeat
 
         .byte   $00,$00,$00,$00,$00
@@ -5011,7 +5044,13 @@ buflabel:.res    18, 0
         WIN_PARAMS_DEFN 7, win7, win7buf
         WIN_PARAMS_DEFN 8, win8, win8buf
 
-buf2:   .res    560, 0
+
+        ;; 8 entries; each entry is 65 bytes long
+        ;; * length-prefixed path string (no trailing /)
+window_path_table:
+        .res    (8*65), 0
+
+        .res    40, 0
 
 str_items:
         PASCAL_STRING " Items"
@@ -5641,13 +5680,13 @@ L4227:  lda     #$00
 L4241:  .byte   0
 L4242:  .byte   0
 L4243:  .byte   0
-L4244:  lda     $DF21
+L4244:  lda     is_file_selected
         bne     L424A
 L4249:  rts
 
 L424A:  lda     #$00
         sta     L42C3
-        lda     $DF20
+        lda     selected_window_index
         beq     L42A5
         cmp     desktop_winid
         bne     L4249
@@ -5661,10 +5700,10 @@ L4267:  lda     $D21D,x
         dex
         bpl     L4267
 L4270:  lda     L42C3
-        cmp     $DF21
+        cmp     is_file_selected
         beq     L42A2
         tax
-        lda     $DF22,x
+        lda     selected_file_index,x
         sta     $E22F
         jsr     L8915
         DESKTOP_RELAY_CALL $0D, $E22F
@@ -5678,10 +5717,10 @@ L4296:  lda     $E22F
 L42A2:  jmp     L4510
 
 L42A5:  lda     L42C3
-        cmp     $DF21
+        cmp     is_file_selected
         beq     L42A2
         tax
-        lda     $DF22,x
+        lda     selected_file_index,x
         sta     $E22F
         DESKTOP_RELAY_CALL $03, $E22F
         inc     L42C3
@@ -5851,11 +5890,11 @@ L445D:  jsr     L6D2B
         DESKTOP_RELAY_CALL $02, $E22F
         jsr     L4510
         lda     L445C
-        sta     $DF20
+        sta     selected_window_index
         lda     #$01
-        sta     $DF21
+        sta     is_file_selected
         lda     $E22F
-        sta     $DF22
+        sta     selected_file_index
 L44A6:  A2D_RELAY_CALL A2D_RAISE_WINDOW, $D20E
         lda     $D20E
         sta     desktop_winid
@@ -6047,14 +6086,14 @@ L464E:  lda     $D343
 L465E:  bit     $D344
         bmi     L4666
         jsr     L67A3
-L4666:  lda     $DF21
+L4666:  lda     is_file_selected
         beq     L46A8
-        lda     $DF20
+        lda     selected_window_index
         bne     L4691
-        lda     $DF21
+        lda     is_file_selected
         cmp     #$02
         bcs     L4697
-        lda     $DF22
+        lda     selected_file_index
         cmp     $EBFB
         bne     L468B
         jsr     L678A
@@ -6870,13 +6909,13 @@ L4DD2:  dey
         jmp     L4523
 
         ldx     #$00
-L4DEC:  cpx     $DF21
+L4DEC:  cpx     is_file_selected
         bne     L4DF2
         rts
 
 L4DF2:  txa
         pha
-        lda     $DF22,x
+        lda     selected_file_index,x
         jsr     L86E3
         sta     L0006
         stx     L0006+1
@@ -6897,7 +6936,7 @@ L4E14:  pla
         jmp     L4DEC
 
 L4E1A:  sta     L4E71
-        lda     $DF21
+        lda     is_file_selected
         cmp     #$02
         bcs     L4E14
         pla
@@ -6912,7 +6951,7 @@ L4E34:  lda     (L0006),y
         sta     $D355,y
         dey
         bpl     L4E34
-        lda     $DF22
+        lda     selected_file_index
         jsr     L86E3
         sta     L0006
         stx     L0006+1
@@ -6994,14 +7033,14 @@ L4EC3:  sta     buf3len
         and     #$7F
         sta     (L0006),y
         and     #$0F
-        sta     $DF20
+        sta     selected_window_index
         jsr     L8997
         DESKTOP_RELAY_CALL $02, $E22F
         jsr     L4510
         lda     #$01
-        sta     $DF21
+        sta     is_file_selected
         lda     $E22F
-        sta     $DF22
+        sta     selected_file_index
         ldx     desktop_winid
         dex
         lda     $EC26,x
@@ -7105,27 +7144,27 @@ L504B:  jmp     L4523
 
 L504E:  .byte   0
 L504F:  .byte   0
-L5050:  lda     $DF20
+L5050:  lda     selected_window_index
         beq     L5056
 L5055:  rts
 
-L5056:  lda     $DF21
+L5056:  lda     is_file_selected
         beq     L5055
         cmp     #$01
         bne     L5067
-        lda     $DF22
+        lda     selected_file_index
         cmp     $EBFB
         beq     L5055
 L5067:  lda     #$00
         tax
         tay
-L506B:  lda     $DF22,y
+L506B:  lda     selected_file_index,y
         cmp     $EBFB
         beq     L5077
         sta     $1800,x
         inx
 L5077:  iny
-        cpy     $DF21
+        cpy     is_file_selected
         bne     L506B
         dex
         stx     L5098
@@ -7249,13 +7288,13 @@ L51A7:  jsr     L4510
         jsr     L6E6E
         jsr     DESKTOP_COPY_FROM_BUF
         jsr     L6DB1
-        lda     $DF20
+        lda     selected_window_index
         beq     L51E3
-        lda     $DF21
+        lda     is_file_selected
         beq     L51E3
         sta     L51EF
 L51C0:  ldx     L51EF
-        lda     $DF21,x
+        lda     is_file_selected,x
         sta     $E22F
         jsr     L8915
         jsr     L6E8E
@@ -7467,33 +7506,33 @@ L5372:  jmp     L4523
         beq     L5398
         rts
 
-L5398:  lda     $DF20
+L5398:  lda     selected_window_index
         bne     L53B5
         ldx     #$00
         ldy     #$00
-L53A1:  lda     $DF22,x
+L53A1:  lda     selected_file_index,x
         cmp     #$01
         beq     L53AC
         sta     L5428,y
         iny
 L53AC:  inx
-        cpx     $DF22
+        cpx     selected_file_index
         bne     L53A1
         sty     L5427
 L53B5:  lda     #$FF
         sta     L5426
 L53BA:  inc     L5426
         lda     L5426
-        cmp     $DF21
+        cmp     is_file_selected
         bne     L53D0
-        lda     $DF20
+        lda     selected_window_index
         bne     L53CD
         jmp     L540E
 
 L53CD:  jmp     L5E78
 
 L53D0:  tax
-        lda     $DF22,x
+        lda     selected_file_index,x
         jsr     L5431
         bmi     L53BA
         jsr     L86FB
@@ -7632,9 +7671,9 @@ L54F0:  ldx     L544A
 L54F3:  lda     $1801,x
         asl     a
         tay
-        lda     $DD9F,y
+        lda     file_address_table,y
         sta     L0006
-        lda     $DDA0,y
+        lda     file_address_table+1,y
         sta     L0006+1
         ldy     #$06
         lda     (L0006),y
@@ -7734,16 +7773,16 @@ L55C8:  stx     L544A
 
 L55D1:  ldx     L544A
         lda     $1801,x
-        sta     $DF22
+        sta     selected_file_index
         jsr     L86E3
         sta     L0006
         stx     L0006+1
         ldy     #$02
         lda     (L0006),y
         and     #$0F
-        sta     $DF20
+        sta     selected_window_index
         lda     #$01
-        sta     $DF21
+        sta     is_file_selected
         rts
 
 L55F0:  ldx     L544A
@@ -7788,7 +7827,7 @@ L564A:  DESKTOP_RELAY_CALL $0B, $E22F
         jsr     L4510
 L5661:  rts
 
-        lda     $DF21
+        lda     is_file_selected
         beq     L566A
         jsr     L6D2B
 L566A:  ldx     desktop_winid
@@ -7808,22 +7847,22 @@ L5676:  lda     desktop_winid
 L5687:  ldx     buf3len
         dex
 L568B:  lda     buf3,x
-        sta     $DF22,x
+        sta     selected_file_index,x
         dex
         bpl     L568B
         lda     buf3len
-        sta     $DF21
+        sta     is_file_selected
         lda     desktop_winid
-        sta     $DF20
-        lda     $DF20
+        sta     selected_window_index
+        lda     selected_window_index
         sta     $E22C
         beq     L56AB
         jsr     L56F9
-L56AB:  lda     $DF21
+L56AB:  lda     is_file_selected
         sta     L56F8
         dec     L56F8
 L56B4:  ldx     L56F8
-        lda     $DF22,x
+        lda     selected_file_index,x
         sta     $E22B
         jsr     L86E3
         sta     L0006
@@ -7839,7 +7878,7 @@ L56CF:  DESKTOP_RELAY_CALL $02, $E22B
         jsr     L8893
 L56E3:  dec     L56F8
         bpl     L56B4
-        lda     $DF20
+        lda     selected_window_index
         beq     L56F0
         jsr     L4510
 L56F0:  lda     #$00
@@ -8520,11 +8559,11 @@ L5CBF:  lda     desktop_winid
 
 L5CD9:  .byte   0
 L5CDA:  sta     L5CD9
-        ldx     $DF21
+        ldx     is_file_selected
         beq     L5CFB
         dex
         lda     L5CD9
-L5CE6:  cmp     $DF22,x
+L5CE6:  cmp     selected_file_index,x
         beq     L5CF0
         dex
         bpl     L5CE6
@@ -8537,16 +8576,16 @@ L5CF8:  jmp     L5D55
 
 L5CFB:  bit     BUTN0
         bpl     L5D08
-        lda     $DF20
+        lda     selected_window_index
         cmp     desktop_winid
         beq     L5D0B
 L5D08:  jsr     L6D2B
-L5D0B:  ldx     $DF21
+L5D0B:  ldx     is_file_selected
         lda     L5CD9
-        sta     $DF22,x
-        inc     $DF21
+        sta     selected_file_index,x
+        inc     is_file_selected
         lda     desktop_winid
-        sta     $DF20
+        sta     selected_window_index
         lda     desktop_winid
         sta     $D212
         jsr     L44F2
@@ -8609,11 +8648,11 @@ L5DAD:  cpx     #$FF
         jsr     L44F2
         jsr     L6E52
         jsr     L6E8E
-        ldx     $DF21
+        ldx     is_file_selected
         dex
 L5DC4:  txa
         pha
-        lda     $DF22,x
+        lda     selected_file_index,x
         sta     $E22E
         DESKTOP_RELAY_CALL $03, $E22E
         pla
@@ -8816,12 +8855,12 @@ L5F88:  txa
         DESKTOP_RELAY_CALL $0D, $E22F
         beq     L5FB9
         DESKTOP_RELAY_CALL $02, $E22F
-        ldx     $DF21
-        inc     $DF21
+        ldx     is_file_selected
+        inc     is_file_selected
         lda     $E22F
-        sta     $DF22,x
+        sta     selected_file_index,x
         lda     desktop_winid
-        sta     $DF20
+        sta     selected_window_index
 L5FB9:  lda     $E22F
         jsr     L8893
         pla
@@ -9097,14 +9136,14 @@ L6227:  sta     buf3len
         and     #$7F
         sta     (L0006),y
         and     #$0F
-        sta     $DF20
+        sta     selected_window_index
         jsr     L8997
         DESKTOP_RELAY_CALL $02, $E22F
         jsr     L4510
         lda     #$01
-        sta     $DF21
+        sta     is_file_selected
         lda     $E22F
-        sta     $DF22
+        sta     selected_file_index
 L6276:  ldx     desktop_winid
         dex
         lda     $EC26,x
@@ -9668,14 +9707,14 @@ L67CA:  sta     $E26D
         A2D_RELAY_CALL $35, $E26C ; ???
         rts
 
-L67D7:  lda     $DF21
+L67D7:  lda     is_file_selected
         bne     L67DF
         jmp     L681B
 
 L67DF:  tax
         dex
         lda     $D20D
-L67E4:  cmp     $DF22,x
+L67E4:  cmp     selected_file_index,x
         beq     L67EE
         dex
         bpl     L67E4
@@ -9686,23 +9725,23 @@ L67EE:  bit     $D2AA
 
 L67F6:  bit     BUTN0
         bpl     L6818
-        lda     $DF20
+        lda     selected_window_index
         bne     L6818
         DESKTOP_RELAY_CALL $02, $D20D
-        ldx     $DF21
+        ldx     is_file_selected
         lda     $D20D
-        sta     $DF22,x
-        inc     $DF21
+        sta     selected_file_index,x
+        inc     is_file_selected
         jmp     L6834
 
 L6818:  jsr     L6D2B
 L681B:  DESKTOP_RELAY_CALL $02, $D20D
         lda     #$01
-        sta     $DF21
+        sta     is_file_selected
         lda     $D20D
-        sta     $DF22
+        sta     selected_file_index
         lda     #$00
-        sta     $DF20
+        sta     selected_window_index
 L6834:  bit     $D2AA
         bpl     L6880
         lda     $D20D
@@ -9744,11 +9783,11 @@ L6880:  lda     $D20D
         jsr     DESKTOP_COPY_FROM_BUF
 L688E:  rts
 
-L688F:  ldx     $DF21
+L688F:  ldx     is_file_selected
         dex
 L6893:  txa
         pha
-        lda     $DF22,x
+        lda     selected_file_index,x
         sta     $E22D
         DESKTOP_RELAY_CALL $03, $E22D
         pla
@@ -9787,7 +9826,7 @@ L68E4:  jsr     L48F0
 L68F9:  cpx     buf3len
         bne     L6904
         lda     #$00
-        sta     $DF20
+        sta     selected_window_index
         rts
 
 L6904:  txa
@@ -9797,10 +9836,10 @@ L6904:  txa
         DESKTOP_RELAY_CALL $0D, $E22F
         beq     L692C
         DESKTOP_RELAY_CALL $02, $E22F
-        ldx     $DF21
-        inc     $DF21
+        ldx     is_file_selected
+        inc     is_file_selected
         lda     $E22F
-        sta     $DF22,x
+        sta     selected_file_index,x
 L692C:  pla
         tax
         inx
@@ -10223,13 +10262,13 @@ L6D25:  pla
         inx
         jmp     L6CF3
 
-L6D2B:  lda     $DF21
+L6D2B:  lda     is_file_selected
         bne     L6D31
         rts
 
 L6D31:  lda     #$00
         sta     L6DB0
-        lda     $DF20
+        lda     selected_window_index
         sta     $E230
         beq     L6D7D
         cmp     desktop_winid
@@ -10242,10 +10281,10 @@ L6D4D:  sta     $D212
         jsr     L44F2
         jsr     L6E8E
 L6D56:  lda     L6DB0
-        cmp     $DF21
+        cmp     is_file_selected
         beq     L6D9B
         tax
-        lda     $DF22,x
+        lda     selected_file_index,x
         sta     $E22F
         jsr     L8915
         DESKTOP_RELAY_CALL $0B, $E22F
@@ -10255,23 +10294,23 @@ L6D56:  lda     L6DB0
         jmp     L6D56
 
 L6D7D:  lda     L6DB0
-        cmp     $DF21
+        cmp     is_file_selected
         beq     L6D9B
         tax
-        lda     $DF22,x
+        lda     selected_file_index,x
         sta     $E22F
         DESKTOP_RELAY_CALL $0B, $E22F
         inc     L6DB0
         jmp     L6D7D
 
 L6D9B:  lda     #$00
-        ldx     $DF21
+        ldx     is_file_selected
         dex
-L6DA1:  sta     $DF22,x
+L6DA1:  sta     selected_file_index,x
         dex
         bpl     L6DA1
-        sta     $DF21
-        sta     $DF20
+        sta     is_file_selected
+        sta     selected_window_index
         jmp     L4510
 
 L6DB0:  .byte   0
@@ -10823,7 +10862,7 @@ L72AA:  MLI_RELAY_CALL $C8, $7057
         beq     L72CD
         jsr     DESKTOP_SHOW_ALERT0
         jsr     L8B1F
-        lda     $DF20
+        lda     selected_window_index
         bne     L72C9
         lda     $E6BE
         sta     L533F
@@ -13090,9 +13129,9 @@ L86C1:  ldx     #$00
 L86E2:  .byte   0
 L86E3:  asl     a
         tax
-        lda     $DD9F,x
+        lda     file_address_table,x
         pha
-        lda     $DDA0,x
+        lda     file_address_table+1,x
         tax
         pla
         rts
@@ -13108,9 +13147,9 @@ L86EF:  asl     a
 
 L86FB:  asl     a
         tax
-        lda     $DFB3,x
+        lda     window_address_table,x
         pha
-        lda     $DFB4,x
+        lda     window_address_table+1,x
         tax
         pla
         rts
@@ -14159,9 +14198,9 @@ L8FA1:  jsr     L8FE1
 
 L8FA7:  asl     a
         tay
-        lda     $DD9F,y
+        lda     file_address_table,y
         sta     L0006
-        lda     $DDA0,y
+        lda     file_address_table+1,y
         sta     L0006+1
         ldy     #$02
         lda     (L0006),y
@@ -14216,9 +14255,9 @@ L900C:  pla
         and     #$7F
         asl     a
         tax
-        lda     $DFB3,x
+        lda     window_address_table,x
         sta     $08
-        lda     $DFB4,x
+        lda     window_address_table+1,x
         sta     $09
         lda     #$7B
         sta     L0006
@@ -14232,9 +14271,9 @@ L9032:  jsr     L8FA7
         beq     L9051
         asl     a
         tax
-        lda     $DFB3,x
+        lda     window_address_table,x
         sta     $08
-        lda     $DFB4,x
+        lda     window_address_table+1,x
         sta     $09
         lda     $EBFC
         jsr     L918E
@@ -14307,7 +14346,7 @@ L90D8:  jsr     LA241
         jmp     L90DE
 
 L90DE:  jsr     L91F5
-        lda     $DF21
+        lda     is_file_selected
         bne     L90E9
         jmp     L9168
 
@@ -14315,7 +14354,7 @@ L90E9:  ldx     #$00
         stx     L917A
 L90EE:  jsr     L91F5
         ldx     L917A
-        lda     $DF22,x
+        lda     selected_file_index,x
         cmp     #$01
         beq     L9140
         jsr     L918E
@@ -14352,7 +14391,7 @@ L9137:  jsr     LA271
 L913D:  jsr     LA271
 L9140:  inc     L917A
         ldx     L917A
-        cpx     $DF21
+        cpx     is_file_selected
         bne     L90EE
         lda     L97E4
         bne     L9168
@@ -14396,11 +14435,11 @@ L918C:  .byte   0
 L918D:  .byte   0
 L918E:  asl     a
         tay
-        lda     $DD9F,y
+        lda     file_address_table,y
         clc
         adc     #$09
         sta     L0006
-        lda     $DDA0,y
+        lda     file_address_table+1,y
         adc     #$00
         sta     L0006+1
         rts
@@ -14456,27 +14495,27 @@ L91F5:  lda     #$11
         sta     $08
         lda     #$92
         sta     $09
-        lda     $DF20
+        lda     selected_window_index
         beq     L9210
         asl     a
         tax
-        lda     $DFB3,x
+        lda     window_address_table,x
         sta     $08
-        lda     $DFB4,x
+        lda     window_address_table+1,x
         sta     $09
         lda     #$00
 L9210:  rts
 
         .byte   0
         .byte   0
-L9213:  lda     $DF21
+L9213:  lda     is_file_selected
         bne     L9219
         rts
 
-L9219:  ldx     $DF21
+L9219:  ldx     is_file_selected
         stx     L0800
         dex
-L9220:  lda     $DF22,x
+L9220:  lda     selected_file_index,x
         sta     $0801,x
         dex
         bpl     L9220
@@ -14577,7 +14616,7 @@ L92E3:  .byte   $00
 L92E4:  .byte   $00
 L92E5:  .byte   $00
 L92E6:  .byte   $00
-L92E7:  lda     $DF21
+L92E7:  lda     is_file_selected
         bne     L92ED
         rts
 
@@ -14585,20 +14624,20 @@ L92ED:  lda     #$00
         sta     L92E6
         jsr     L91D5
 L92F5:  ldx     L92E6
-        cpx     $DF21
+        cpx     is_file_selected
         bne     L9300
         jmp     L9534
 
-L9300:  lda     $DF20
+L9300:  lda     selected_window_index
         beq     L9331
         asl     a
         tax
-        lda     $DFB3,x
+        lda     window_address_table,x
         sta     $08
-        lda     $DFB4,x
+        lda     window_address_table+1,x
         sta     $09
         ldx     L92E6
-        lda     $DF22,x
+        lda     selected_file_index,x
         jsr     L918E
         jsr     L91A0
         ldy     #$00
@@ -14611,7 +14650,7 @@ L931F:  lda     $E00A,y
         jmp     L9356
 
 L9331:  ldx     L92E6
-        lda     $DF22,x
+        lda     selected_file_index,x
         cmp     #$01
         bne     L933E
         jmp     L952E
@@ -14633,14 +14672,14 @@ L9356:  ldy     #$C4
         beq     L9366
         jsr     LA49B
         beq     L9356
-L9366:  lda     $DF20
+L9366:  lda     selected_window_index
         beq     L9387
         lda     #$80
         sta     L92E3
         lda     L92E6
         clc
         adc     #$01
-        cmp     $DF21
+        cmp     is_file_selected
         beq     L9381
         inc     L92E3
         inc     L92E3
@@ -14652,7 +14691,7 @@ L9387:  lda     #$81
         lda     L92E6
         clc
         adc     #$01
-        cmp     $DF21
+        cmp     is_file_selected
         beq     L939D
         inc     L92E3
         inc     L92E3
@@ -14660,7 +14699,7 @@ L939D:  jsr     L953F
         lda     #$00
         sta     L942E
         ldx     L92E6
-        lda     $DF22,x
+        lda     selected_file_index,x
         ldy     #$0F
 L93AD:  cmp     $E1A0,y
         beq     L93B8
@@ -14684,7 +14723,7 @@ L93B8:  lda     $BF32,y
         lda     #$80
         sta     L942E
 L93DB:  ldx     L92E6
-        lda     $DF22,x
+        lda     selected_file_index,x
         jsr     L918E
         lda     #$01
         sta     L92E3
@@ -14695,7 +14734,7 @@ L93DB:  ldx     L92E6
         jsr     L953F
         lda     #$02
         sta     L92E3
-        lda     $DF20
+        lda     selected_window_index
         bne     L9413
         bit     L942E
         bmi     L940C
@@ -14722,7 +14761,7 @@ L942F:  lda     #$03
         sta     L92E3
         lda     #$00
         sta     $0220
-        lda     $DF20
+        lda     selected_window_index
         bne     L9472
         lda     L92CE
         sec
@@ -14748,7 +14787,7 @@ L9469:  lda     $E6EB,x
         sta     $0220,x
         dex
         bne     L9469
-L9472:  lda     $DF20
+L9472:  lda     selected_window_index
         bne     L9480
         lda     L92CE
         ldx     L92CF
@@ -14806,7 +14845,7 @@ L94A9:  lda     $0220,x
         jsr     L953F
         lda     #$06
         sta     L92E3
-        lda     $DF20
+        lda     selected_window_index
         bne     L9519
         ldx     L953A
 L950E:  lda     L953A,x
@@ -14862,28 +14901,28 @@ L9570:  .byte   $1F
 L9571:  lda     #$00
         sta     L9706
 L9576:  lda     L9706
-        cmp     $DF21
+        cmp     is_file_selected
         bne     L9581
         lda     #$00
         rts
 
 L9581:  ldx     L9706
-        lda     $DF22,x
+        lda     selected_file_index,x
         cmp     #$01
         bne     L9591
         inc     L9706
         jmp     L9576
 
-L9591:  lda     $DF20
+L9591:  lda     selected_window_index
         beq     L95C2
         asl     a
         tax
-        lda     $DFB3,x
+        lda     window_address_table,x
         sta     $08
-        lda     $DFB4,x
+        lda     window_address_table+1,x
         sta     $09
         ldx     L9706
-        lda     $DF22,x
+        lda     selected_file_index,x
         jsr     L918E
         jsr     L91A0
         ldy     #$00
@@ -14896,7 +14935,7 @@ L95B0:  lda     $E00A,y
         jmp     L95E0
 
 L95C2:  ldx     L9706
-        lda     $DF22,x
+        lda     selected_file_index,x
         jsr     L918E
         ldy     #$00
 L95CD:  lda     (L0006),y
@@ -14908,7 +14947,7 @@ L95CD:  lda     (L0006),y
         lda     #$2F
         sta     $0221
 L95E0:  ldx     L9706
-        lda     $DF22,x
+        lda     selected_file_index,x
         jsr     L918E
         ldy     #$00
         lda     (L0006),y
@@ -14935,7 +14974,7 @@ L9611:  lda     #$80
         jsr     L96F8
         beq     L962F
 L9618:  ldx     L9706
-        lda     $DF22,x
+        lda     selected_file_index,x
         jsr     L918E
         ldy     $1F12
 L9624:  lda     $1F12,y
@@ -14949,13 +14988,13 @@ L962F:  sty     $08
         sty     L9707
         stx     $09
         stx     L9708
-        lda     $DF20
+        lda     selected_window_index
         beq     L964D
         asl     a
         tax
-        lda     $DFB3,x
+        lda     window_address_table,x
         sta     L0006
-        lda     $DFB4,x
+        lda     window_address_table+1,x
         sta     L0006+1
         jmp     L9655
 
@@ -15000,7 +15039,7 @@ L9696:  lda     #$40
 L969E:  lda     #$40
         jsr     L96F8
         ldx     L9706
-        lda     $DF22,x
+        lda     selected_file_index,x
         sta     $E22B
         ldy     #$0E
         lda     #$2B
@@ -15011,7 +15050,7 @@ L969E:  lda     #$40
         lda     L9708
         sta     $09
         ldx     L9706
-        lda     $DF22,x
+        lda     selected_file_index,x
         jsr     L918E
         ldy     #$00
         lda     ($08),y
@@ -15380,7 +15419,7 @@ L9A22:  bit     $E05B
         bvs     L9A50
         lda     L9B31
         bne     L9A36
-        lda     $DF20
+        lda     selected_window_index
         bne     L9A36
         jmp     L9B28
 
@@ -16538,7 +16577,7 @@ LA3A7:  ldy     #$CC
         lda     #$A5
         ldx     #$A3
         jsr     L4021
-        lda     $DF20
+        lda     selected_window_index
         beq     LA3CA
         sta     $D212
         ldy     #$3C
@@ -19246,9 +19285,9 @@ L08DF:  txa
         asl     a
         tax
         lda     L0006
-        sta     $DD9F,x
+        sta     file_address_table,x
         lda     L0006+1
-        sta     $DDA0,x
+        sta     file_address_table+1,x
         pla
         pha
         ldy     #$00
