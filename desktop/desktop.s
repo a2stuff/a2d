@@ -4958,9 +4958,13 @@ s06:    PASCAL_STRING "Slot 0 "
         .addr   sd0, sd1, sd2, sd3, sd4, sd5, sd6, sd7
         .addr   sd8, sd9, sd10, sd11, sd12, sd13
 
+str_profile_slot_x:
         PASCAL_STRING "ProFile Slot x     "
+str_unidisk_xy:
         PASCAL_STRING "UniDisk 3.5  Sx,y  "
+str_ramcard_slot_x:
         PASCAL_STRING "RAMCard Slot x      "
+str_slot_drive:
         PASCAL_STRING "Slot    drive       "
 
 selector_menu:
@@ -6375,7 +6379,7 @@ L48E6:  A2D_RELAY_CALL A2D_GET_INPUT, input_params
 L48F0:  A2D_RELAY_CALL $2C, input_params ; ???
         rts
 
-L48FA:  A2D_RELAY_CALL A2D_SET_FILL_MODE, $D202
+L48FA:  A2D_RELAY_CALL A2D_SET_FILL_MODE, const2
         rts
 
 L4904:  A2D_RELAY_CALL A2D_SET_FILL_MODE, $D200
@@ -18139,7 +18143,7 @@ LB41F:  A2D_RELAY_CALL A2D_HIDE_CURSOR
         A2D_RELAY_CALL A2D_SHOW_CURSOR
         rts
 
-LB43B:  A2D_RELAY_CALL A2D_SET_FILL_MODE, $D202
+LB43B:  A2D_RELAY_CALL A2D_SET_FILL_MODE, const2
         rts
 
         ldx     #$03
@@ -18617,7 +18621,7 @@ LB961:  lda     $D443
         jsr     LB7B9
         jsr     LBEA7
         A2D_RELAY_CALL A2D_FILL_RECT, $D6AB
-        A2D_RELAY_CALL A2D_SET_FILL_MODE, $D202
+        A2D_RELAY_CALL A2D_SET_FILL_MODE, const2
         A2D_RELAY_CALL A2D_DRAW_RECT, $D6AB
         A2D_RELAY_CALL A2D_SET_POS, $D6B3
         A2D_RELAY_CALL A2D_SET_BOX, $D6C7
@@ -19511,7 +19515,7 @@ L0A7F:  lda     (L0006),y
         dey
         bpl     L0A7F
         inc     L0A92
-        inc     $E4F2
+        inc     selector_menu
         jmp     L0A3B
 
 L0A8F:  jmp     L0B09
@@ -19667,7 +19671,7 @@ L0BC3:  MLI_RELAY_CALL OPEN, $0CD7
         and     #$7F
         sta     L0D03
         lda     #$02
-        sta     $E594
+        sta     apple_menu
         lda     $1424
         sta     L0D07
         lda     $1423
@@ -19696,7 +19700,7 @@ L0C25:  inc     L0D05
         sta     $09
         lda     #$00
         sta     L0D09
-        lda     $E594
+        lda     apple_menu
         sec
         sbc     #$02
         asl     a
@@ -19734,7 +19738,7 @@ L0C71:  lda     ($08),y
         sta     ($08),y
 L0C7B:  dey
         bne     L0C71
-        inc     $E594
+        inc     apple_menu
 L0C81:  lda     L0D05
         cmp     #$08
         bcc     L0C8B
@@ -19866,7 +19870,7 @@ L0D6D:  pla
         sta     L0E32
         cmp     #$00
         bne     L0D7F
-        addr_jump L0DAD, $E4DD
+        addr_jump L0DAD, str_slot_drive
 
 L0D7F:  cmp     #$0B
         beq     L0DA9
@@ -19886,12 +19890,12 @@ L0D7F:  cmp     #$0B
 L0D96:  .byte   $C7
         and     #$01
         bne     L0DA2
-        addr_jump L0DAD, $E4A0
+        addr_jump L0DAD, str_profile_slot_x
 
-L0DA2:  addr_jump L0DAD, $E4C8
+L0DA2:  addr_jump L0DAD, str_ramcard_slot_x
 
-L0DA9:  lda     #<$E4B4
-        ldx     #>$E4B4
+L0DA9:  lda     #<str_unidisk_xy
+        ldx     #>str_unidisk_xy
 L0DAD:  sta     L0006
         stx     L0006+1
         ldy     #$00
@@ -20036,7 +20040,7 @@ L0E79:  sta     L0EAF
         iny
         jmp     L0E5C
 
-L0EA8:  stx     $E2D6
+L0EA8:  stx     startup_menu
         jmp     L0EE1
 
 L0EAE:  .byte   0
