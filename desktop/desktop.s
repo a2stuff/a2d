@@ -4312,7 +4312,16 @@ ycoord: .word   0
         input_params_xcoord := input_params::xcoord
         input_params_ycoord := input_params::ycoord
 
-        .byte   $00,$00,$00,$00,$00,$00
+        ;; When input_params_coords is used for A2D_QUERY_CLIENT/TARGET
+
+query_client_params_part:
+query_target_params_element:
+        .byte   0
+query_client_params_scroll:
+query_target_params_id:
+        .byte   0
+
+        .byte   $00,$00,$00,$00
         .addr   buffer
 
 .proc buffer
@@ -5843,15 +5852,15 @@ L43E0:  tsx
         jmp     $1234           ; self-modified
 L43E7:  tsx
         stx     $E256
-        A2D_RELAY_CALL A2D_QUERY_TARGET, input_params+1
-        lda     $D20D
+        A2D_RELAY_CALL A2D_QUERY_TARGET, input_params_coords
+        lda     query_target_params_element
         bne     L4418
         jsr     L85FC
         sta     $D2AA
         lda     #$00
         sta     $D20E
-        DESKTOP_RELAY_CALL $09, input_params+1
-        lda     $D20D
+        DESKTOP_RELAY_CALL $09, input_params_coords
+        lda     query_client_params_part ; ??
         beq     L4415
         jmp     L67D7
 
@@ -5864,7 +5873,7 @@ L4418:  cmp     #$01
 
 L4428:  pha
         lda     desktop_winid
-        cmp     $D20E
+        cmp     query_target_params_id
         beq     L4435
         pla
         jmp     L4459
@@ -8559,7 +8568,7 @@ L5C96:  lda     #$FF
         rts
 
 L5C99:  A2D_RELAY_CALL A2D_QUERY_CLIENT, input_params_coords
-        lda     $D20D
+        lda     query_client_params_part
         beq     L5C96
         cmp     #$03
         beq     L5C96
@@ -8576,8 +8585,8 @@ L5CB7:  bit     L5B1B
 
 L5CBF:  lda     desktop_winid
         sta     $D20E
-        DESKTOP_RELAY_CALL $09, input_params+1
-        lda     $D20D
+        DESKTOP_RELAY_CALL $09, input_params_coords
+        lda     query_client_params_part
         bne     L5CDA
         jsr     L5F13
         jmp     L5DEC
@@ -16801,7 +16810,7 @@ LA58C:  cmp     #$03
 LA593:  lda     $D8E8
         beq     LA567
         A2D_RELAY_CALL A2D_QUERY_TARGET, input_params_coords
-        lda     $D20D
+        lda     query_target_params_element
         bne     LA5A9
         jmp     LA567
 
@@ -16827,7 +16836,7 @@ LA5E8:  jsr     LBEB1
         jmp     LA567
 
 LA5EE:  A2D_RELAY_CALL A2D_QUERY_TARGET, input_params_coords
-        lda     $D20D
+        lda     query_target_params_element
         bne     LA5FF
         lda     #$FF
         rts
@@ -16991,19 +17000,19 @@ LA777:  jmp     L0CF9
 
 LA77A:  bit     $D8E7
         bvc     LA79B
-        cmp     #$59
+        cmp     #'Y'
         beq     LA7E8
-        cmp     #$79
+        cmp     #'y'
         beq     LA7E8
-        cmp     #$4E
+        cmp     #'N'
         beq     LA7F7
-        cmp     #$6E
+        cmp     #'n'
         beq     LA7F7
-        cmp     #$41
+        cmp     #'A'
         beq     LA806
-        cmp     #$61
+        cmp     #'a'
         beq     LA806
-        cmp     #$0D
+        cmp     #KEY_RETURN
         beq     LA7E8
 LA79B:  bit     $D8F5
         bmi     LA7C8
