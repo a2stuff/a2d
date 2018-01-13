@@ -5052,9 +5052,17 @@ dummy_dd_item:
         PASCAL_STRING "Rien"    ; ???
 
 LE6BE:
-        .byte   $00,$00,$00,$5D
-        .byte   $E7,$A9,$E7,$F5,$E7,$41,$E8,$8D
-        .byte   $E8,$D9,$E8,$25,$E9,$71,$E9
+        .byte   $00,$00,$00
+
+LE6C1:
+        .addr   win1buf
+        .addr   win2buf
+        .addr   win3buf
+        .addr   win4buf
+        .addr   win5buf
+        .addr   win6buf
+        .addr   win7buf
+        .addr   win8buf
 
 LE6D1:
         .byte   $00
