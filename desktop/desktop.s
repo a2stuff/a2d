@@ -3039,18 +3039,23 @@ label_get_size:
 label_rename_icon:
         PASCAL_STRING "Rename an Icon ..."
 
-desktop_menu:
-        .word   6
-        .addr   1, label_apple, apple_menu, 0,0,0
-        .addr   2, label_file, file_menu, 0,0,0
-        .addr   4, label_view, view_menu, 0,0,0
-        .addr   5, label_special, special_menu, 0,0,0
-        .addr   8, label_startup, startup_menu, 0,0,0
-        .addr   3, label_selector, selector_menu, 0,0,0
+;;; Top-level menus
+.macro  DEFINE_TL_MENU count
+        .word   count
+.endmacro
 
+.macro  DEFINE_TL_MENU_ITEM id, label, menu
+        .word   id
+        .addr   label
+        .addr   menu
+        .word   0, 0, 0
+.endmacro
+
+;;; Drop-down menus
 .macro  DEFINE_MENU count
         .word   count, 0, 0
 .endmacro
+
 .macro  DEFINE_MENU_ITEM saddr, shortcut1, shortcut2
         .if .paramcount > 1
         .word   1
@@ -3066,6 +3071,15 @@ desktop_menu:
 .macro  DEFINE_MENU_SEPARATOR
         .addr   $0040, $0013, $0000
 .endmacro
+
+desktop_menu:
+        DEFINE_TL_MENU 6
+        DEFINE_TL_MENU_ITEM 1, label_apple, apple_menu
+        DEFINE_TL_MENU_ITEM 2, label_file, file_menu
+        DEFINE_TL_MENU_ITEM 4, label_view, view_menu
+        DEFINE_TL_MENU_ITEM 5, label_special, special_menu
+        DEFINE_TL_MENU_ITEM 8, label_startup, startup_menu
+        DEFINE_TL_MENU_ITEM 3, label_selector, selector_menu
 
 file_menu:
         DEFINE_MENU 12
@@ -5017,23 +5031,25 @@ label_about:
 
 buf:    .res    $80, 0
 
-        ;; Menu during startup?
-LE672:
-        .byte   $01,$00,$01,$00,$9A,$E6,$8E,$E6
-        .byte   $00,$00,$00,$00,$00,$00
+splash_menu:
+        DEFINE_TL_MENU 1
+        DEFINE_TL_MENU_ITEM 1, splash_menu_label, dummy_dd_menu
 
-        ;; Some other menu?
-LE680:
-        .byte   $01,$00
-        .byte   $01,$00,$B7,$E6,$8E,$E6,$00,$00
-        .byte   $00,$00,$00,$00,$01,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$B9,$E6
+blank_menu:
+        DEFINE_TL_MENU 1
+        DEFINE_TL_MENU_ITEM 1, blank_dd_label, dummy_dd_menu
 
-LE69A:
+dummy_dd_menu:
+        DEFINE_MENU 1
+        DEFINE_MENU_ITEM dummy_dd_item
+
+splash_menu_label:
         PASCAL_STRING "Apple II DeskTop Version 1.1"
 
-        .byte   $01,$20,$04
-        .byte   $52,$69,$65,$6E
+blank_dd_label:
+        PASCAL_STRING " "
+dummy_dd_item:
+        PASCAL_STRING "Rien"    ; ???
 
 LE6BE:
         .byte   $00,$00,$00,$5D
@@ -6260,7 +6276,7 @@ L4748:  cmp     #$FF
         jsr     L4802
 L4755:  DESKTOP_RELAY_CALL $06, $0000
         A2D_RELAY_CALL $3A      ; ???
-        A2D_RELAY_CALL A2D_SET_MENU, LE680
+        A2D_RELAY_CALL A2D_SET_MENU, blank_menu
         ldx     $D355
 L4773:  lda     $D355,x
         sta     $0220,x
@@ -19325,7 +19341,7 @@ found_ram:
         jsr     remove_device
 
 :       A2D_RELAY_CALL A2D_INIT_SCREEN_AND_MOUSE, id_byte_1
-        A2D_RELAY_CALL A2D_SET_MENU, LE672
+        A2D_RELAY_CALL A2D_SET_MENU, splash_menu
         A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, $D2A7
         A2D_RELAY_CALL A2D_SET_CURSOR, watch_cursor
         A2D_RELAY_CALL A2D_SHOW_CURSOR, $0000
