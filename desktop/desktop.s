@@ -3104,19 +3104,15 @@ special_menu:
 
         .res    168, 0
 
-        .byte   $04
-        .byte   $00,$02,$00,$8C,$01,$62,$00,$05
-        .byte   $00,$03,$00,$8B,$01,$61,$00,$28
-        .byte   $00,$51,$00,$8C,$00,$5C,$00
-
-LAE10:
-        .word   $C1, $1E, $125, $29
-
-        .byte   $04
-        .byte   $01,$51,$00,$68,$01,$5C,$00,$C8
-        .byte   $00,$51,$00,$F0,$00,$5C,$00,$04
-        .byte   $01,$51,$00,$2C,$01,$5C,$00,$40
-        .byte   $01,$51,$00,$68,$01,$5C,$00
+        ;; Rects
+LAE00:  .word   4,2,396,98
+LAE08:  .word   5,3,395,97
+LAE10:  .word   40,81,140,92
+LAE18:  .word   193,30,293,41
+LAE20:  .word   260,81,360,92
+LAE28:  .word   200,81,240,92
+LAE30:  .word   260,81,300,92
+LAE38:  .word   320,81,360,92
 
 str_ok_label:
         PASCAL_STRING {"OK            ",A2D_GLYPH_RETURN}
@@ -16886,43 +16882,43 @@ LA614:  lda     winF
         bvc     LA63A
         jmp     LA65E
 
-LA63A:  A2D_RELAY_CALL A2D_TEST_BOX, $AE20
+LA63A:  A2D_RELAY_CALL A2D_TEST_BOX, LAE20
         cmp     #$80
         beq     LA64A
         jmp     LA6C1
 
 LA64A:  jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE20
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE20
         jsr     LB7CF
         bmi     LA65D
         lda     #$00
 LA65D:  rts
 
-LA65E:  A2D_RELAY_CALL A2D_TEST_BOX, $AE28
+LA65E:  A2D_RELAY_CALL A2D_TEST_BOX, LAE28
         cmp     #$80
         bne     LA67F
         jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE28
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE28
         jsr     LB7D9
         bmi     LA67E
         lda     #$02
 LA67E:  rts
 
-LA67F:  A2D_RELAY_CALL A2D_TEST_BOX, $AE30
+LA67F:  A2D_RELAY_CALL A2D_TEST_BOX, LAE30
         cmp     #$80
         bne     LA6A0
         jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE30
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE30
         jsr     LB7DE
         bmi     LA69F
         lda     #$03
 LA69F:  rts
 
-LA6A0:  A2D_RELAY_CALL A2D_TEST_BOX, $AE38
+LA6A0:  A2D_RELAY_CALL A2D_TEST_BOX, LAE38
         cmp     #$80
         bne     LA6C1
         jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE38
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE38
         jsr     LB7E3
         bmi     LA6C0
         lda     #$04
@@ -17078,17 +17074,17 @@ LA7E5:  lda     #$FF
         rts
 
 LA7E8:  jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE28
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE28
         lda     #$02
         rts
 
 LA7F7:  jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE30
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE30
         lda     #$03
         rts
 
 LA806:  jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE38
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE38
         lda     #$04
         rts
 
@@ -17127,8 +17123,8 @@ LA84E:  lda     #$FF
 LA851:  lda     winF
         jsr     LB7B9
         jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE20
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE20
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE20
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE20
         lda     #$00
         rts
 
@@ -17897,7 +17893,7 @@ LB0FA:  jsr     LA567
         bne     LB139
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
         A2D_RELAY_CALL A2D_FILL_RECT, $AE6E
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE20
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE20
         A2D_RELAY_CALL A2D_FILL_RECT, LAE10
         yax_call LB590, $B10E, $02
         yax_call LB590, str_lock_remaining, $04
@@ -17985,7 +17981,7 @@ LB218:  jsr     LA567
         bne     LB257
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
         A2D_RELAY_CALL A2D_FILL_RECT, $AE6E
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE20
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE20
         A2D_RELAY_CALL A2D_FILL_RECT, LAE10
         yax_call LB590, $B10E, $02
         yax_call LB590, str_unlock_remaining, $04
@@ -18257,7 +18253,7 @@ LB509:  sta     $D8E7
         jsr     LB64E
         jmp     LB526
 
-LB51A:  A2D_RELAY_CALL A2D_DRAW_RECT, $AE20
+LB51A:  A2D_RELAY_CALL A2D_DRAW_RECT, LAE20
         jsr     LB5F9
 LB526:  bit     $D8E7
         bmi     LB537
@@ -18269,8 +18265,8 @@ LB53A:  A2D_RELAY_CALL A2D_CREATE_WINDOW, winF
         lda     winF
         jsr     LB7B9
         jsr     LB43B
-        A2D_RELAY_CALL A2D_DRAW_RECT, $AE00
-        A2D_RELAY_CALL A2D_DRAW_RECT, $AE08
+        A2D_RELAY_CALL A2D_DRAW_RECT, LAE00
+        A2D_RELAY_CALL A2D_DRAW_RECT, LAE08
         rts
 
 LB55F:  A2D_RELAY_CALL A2D_CREATE_WINDOW, winF
@@ -18279,8 +18275,8 @@ LB55F:  A2D_RELAY_CALL A2D_CREATE_WINDOW, winF
         jsr     LBEA7
         A2D_RELAY_CALL A2D_DRAW_BITMAP, alert_bitmap2_params
         jsr     LB43B
-        A2D_RELAY_CALL A2D_DRAW_RECT, $AE00
-        A2D_RELAY_CALL A2D_DRAW_RECT, $AE08
+        A2D_RELAY_CALL A2D_DRAW_RECT, LAE00
+        A2D_RELAY_CALL A2D_DRAW_RECT, LAE08
         rts
 
 LB590:  stx     L0006+1
@@ -18353,9 +18349,9 @@ LB63D:  A2D_RELAY_CALL A2D_SET_POS, $AE60
         rts
 
 LB64E:  jsr     LB43B
-        A2D_RELAY_CALL A2D_DRAW_RECT, $AE28
-        A2D_RELAY_CALL A2D_DRAW_RECT, $AE30
-        A2D_RELAY_CALL A2D_DRAW_RECT, $AE38
+        A2D_RELAY_CALL A2D_DRAW_RECT, LAE28
+        A2D_RELAY_CALL A2D_DRAW_RECT, LAE30
+        A2D_RELAY_CALL A2D_DRAW_RECT, LAE38
         A2D_RELAY_CALL A2D_DRAW_RECT, LAE10
         jsr     LB61B
         jsr     LB62C
@@ -18366,14 +18362,14 @@ LB64E:  jsr     LB43B
         rts
 
 LB687:  jsr     LBEA7
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE28
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE30
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE38
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE28
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE30
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE38
         A2D_RELAY_CALL A2D_FILL_RECT, LAE10
         rts
 
 LB6AF:  jsr     LB43B
-        A2D_RELAY_CALL A2D_DRAW_RECT, $AE20
+        A2D_RELAY_CALL A2D_DRAW_RECT, LAE20
         A2D_RELAY_CALL A2D_DRAW_RECT, LAE10
         jsr     LB5F9
         jsr     LB60A
@@ -18382,19 +18378,19 @@ LB6AF:  jsr     LB43B
         rts
 
 LB6D0:  jsr     LBEA7
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE20
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE20
         A2D_RELAY_CALL A2D_FILL_RECT, LAE10
         rts
 
 LB6E6:  jsr     LB43B
-        A2D_RELAY_CALL A2D_DRAW_RECT, $AE20
+        A2D_RELAY_CALL A2D_DRAW_RECT, LAE20
         jsr     LB5F9
         lda     #$80
         sta     $D8E7
         rts
 
 LB6FB:  jsr     LBEA7
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE20
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE20
         rts
 
 draw_text1:
@@ -18522,34 +18518,34 @@ LB80A:  .byte   $4E
 LB80B:  .byte   $B8,$26,$B8,$58,$B8,$30,$B8,$62,$B8
         .byte   $3A,$B8,$6C,$B8,$44,$B8,$76,$B8
 
-        A2D_RELAY_CALL A2D_TEST_BOX, $AE20
+        A2D_RELAY_CALL A2D_TEST_BOX, LAE20
         rts
 
         A2D_RELAY_CALL A2D_TEST_BOX, LAE10
         rts
 
-        A2D_RELAY_CALL A2D_TEST_BOX, $AE28
+        A2D_RELAY_CALL A2D_TEST_BOX, LAE28
         rts
 
-        A2D_RELAY_CALL A2D_TEST_BOX, $AE30
+        A2D_RELAY_CALL A2D_TEST_BOX, LAE30
         rts
 
-        A2D_RELAY_CALL A2D_TEST_BOX, $AE38
+        A2D_RELAY_CALL A2D_TEST_BOX, LAE38
         rts
 
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE20
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE20
         rts
 
         A2D_RELAY_CALL A2D_FILL_RECT, LAE10
         rts
 
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE28
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE28
         rts
 
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE30
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE30
         rts
 
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE38
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE38
         rts
 
 LB880:  jmp     (LB886)
