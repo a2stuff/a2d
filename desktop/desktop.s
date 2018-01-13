@@ -3107,8 +3107,12 @@ special_menu:
         .byte   $04
         .byte   $00,$02,$00,$8C,$01,$62,$00,$05
         .byte   $00,$03,$00,$8B,$01,$61,$00,$28
-        .byte   $00,$51,$00,$8C,$00,$5C,$00,$C1
-        .byte   $00,$1E,$00,$25,$01,$29,$00,$04
+        .byte   $00,$51,$00,$8C,$00,$5C,$00
+
+LAE10:
+        .word   $C1, $1E, $125, $29
+
+        .byte   $04
         .byte   $01,$51,$00,$68,$01,$5C,$00,$C8
         .byte   $00,$51,$00,$F0,$00,$5C,$00,$04
         .byte   $01,$51,$00,$2C,$01,$5C,$00,$40
@@ -4377,8 +4381,8 @@ checkerboard_pattern3:
         .byte   $FF
 
         ;; Copies of ROM bytes used for machine identification
-id_byte_1:  .byte   $06             ; ROM $FBB3 ($0C = IIe or later)
-id_byte_2:  .byte   $EA             ; ROM $FBC0 ($EA = IIe, $E0 = IIe enh/IIgs, $00 = IIc/IIc+)
+id_byte_1:  .byte   $06             ; ROM FBB3 ($06 = IIe or later)
+id_byte_2:  .byte   $EA             ; ROM FBC0 ($EA = IIe, $E0 = IIe enh/IIgs, $00 = IIc/IIc+)
 
         .byte   $00,$00,$00,$00,$88,$00,$08,$00
         .byte   $13,$00,$00,$00,$00
@@ -5119,7 +5123,7 @@ str_k_available:
 str_6_spaces:
         PASCAL_STRING "      "
 
-        .byte   $00,$00,$00,$00,$00,$00,$00
+LEBE3:  .byte   $00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00
@@ -5131,6 +5135,7 @@ table2: .addr   $1B01,$1B81,$1C01,$1C81,$1D01,$1D81,$1E01,$1E81,$1F01
 desktop_winid:
         .byte   $00
 
+LEC26:
         .res    64, 0
         .word   500, 160
         .res    150, 0
@@ -5922,7 +5927,7 @@ L445C:  .byte   0
 L445D:  jsr     L6D2B
         ldx     $D20E
         dex
-        lda     $EC26,x
+        lda     LEC26,x
         sta     $E22F
         lda     $E22F
         jsr     L86E3
@@ -7074,7 +7079,7 @@ L4EC3:  sta     buf3len
         A2D_RELAY_CALL A2D_DESTROY_WINDOW, desktop_winid
         ldx     desktop_winid
         dex
-        lda     $EC26,x
+        lda     LEC26,x
         sta     $E22F
         jsr     L86E3
         sta     L0006
@@ -7094,12 +7099,12 @@ L4EC3:  sta     buf3len
         sta     selected_file_index
         ldx     desktop_winid
         dex
-        lda     $EC26,x
+        lda     LEC26,x
         jsr     L7345
         ldx     desktop_winid
         dex
         lda     #$00
-        sta     $EC26,x
+        sta     LEC26,x
         A2D_RELAY_CALL A2D_QUERY_TOP, desktop_winid
         lda     desktop_winid
         bne     L4F3C
@@ -7622,7 +7627,7 @@ L5426:  .byte   0
 L5427:  .byte   0
 L5428:  .res    9, 0
 L5431:  ldx     #$07
-L5433:  cmp     $EC26,x
+L5433:  cmp     LEC26,x
         beq     L543E
         dex
         bpl     L5433
@@ -7948,7 +7953,7 @@ L5702:  lda     desktop_winid
 L5708:  sta     L0800
         ldy     #$01
         ldx     #$00
-L570F:  lda     $EC26,x
+L570F:  lda     LEC26,x
         beq     L5720
         inx
         cpx     desktop_winid
@@ -8393,9 +8398,9 @@ L5AD0:  .byte   0
         asl     a
         asl     a
         clc
-        adc     #$06
+        adc     #6
         tax
-        lda     $E44C,x
+        lda     s00,x
         sec
         sbc     #$30
         clc
@@ -8804,7 +8809,7 @@ L5E8F:  lda     desktop_winid
         A2D_RELAY_CALL A2D_FILL_RECT, $D21D
         ldx     desktop_winid
         dex
-        lda     $EC26,x
+        lda     LEC26,x
         pha
         jsr     L7345
         lda     L5F0A
@@ -9173,7 +9178,7 @@ L6227:  sta     buf3len
         A2D_RELAY_CALL A2D_DESTROY_WINDOW, desktop_winid
         ldx     desktop_winid
         dex
-        lda     $EC26,x
+        lda     LEC26,x
         sta     $E22F
         jsr     L86E3
         sta     L0006
@@ -9197,17 +9202,17 @@ L6227:  sta     buf3len
         sta     selected_file_index
 L6276:  ldx     desktop_winid
         dex
-        lda     $EC26,x
+        lda     LEC26,x
         jsr     L7345
         ldx     desktop_winid
         dex
-        lda     $EC26,x
+        lda     LEC26,x
         inx
         jsr     L8B5C
         ldx     desktop_winid
         dex
         lda     #$00
-        sta     $EC26,x
+        sta     LEC26,x
         sta     LE6D1,x
         A2D_RELAY_CALL A2D_QUERY_TOP, desktop_winid
         lda     #$00
@@ -10002,7 +10007,7 @@ L6A3C:  .byte   0
 L6A3D:  .byte   0
 L6A3E:  .byte   0
 L6A3F:  ldx     #$07
-L6A41:  cmp     $EC26,x
+L6A41:  cmp     LEC26,x
         beq     L6A80
         dex
         bpl     L6A41
@@ -10044,7 +10049,7 @@ L6A8A:  sta     LE6BE
         jsr     DESKTOP_COPY_FROM_BUF
         lda     LE6BE
         ldx     #$07
-L6A95:  cmp     $EC26,x
+L6A95:  cmp     LEC26,x
         beq     L6AA0
         dex
         bpl     L6A95
@@ -10108,13 +10113,13 @@ L6B1E:  lda     $EC2E
         rts
 
 L6B2F:  ldx     #$00
-L6B31:  lda     $EC26,x
+L6B31:  lda     LEC26,x
         beq     L6B3A
         inx
         jmp     L6B31
 
 L6B3A:  lda     LE6BE
-        sta     $EC26,x
+        sta     LEC26,x
         inx
         stx     bufnum
         jsr     DESKTOP_COPY_TO_BUF
@@ -10219,7 +10224,7 @@ L6C42:  bit     L4152
         jsr     L6E8E
 L6C4A:  ldx     bufnum
         dex
-        lda     $EC26,x
+        lda     LEC26,x
         ldx     #$00
 L6C53:  cmp     $E1F2,x
         beq     L6C5F
@@ -11346,7 +11351,7 @@ L7635:  pha
 L763A:  pha
         ldx     bufnum
         dex
-        lda     $EC26,x
+        lda     LEC26,x
         sta     LE6BE
         lda     #$80
 L7647:  sta     L7634
@@ -11792,7 +11797,7 @@ L7A59:  lda     $EBEF
         sta     $EBF0
 L7A6A:  lsr     L7ADF
         ror     L7ADE
-        lda     $EBE3
+        lda     LEBE3
         clc
         adc     L7ADE
         sta     $EBEB
@@ -11801,9 +11806,9 @@ L7A6A:  lsr     L7ADF
         sta     $EBEC
         jmp     L7A9E
 
-L7A86:  lda     $EBE3
+L7A86:  lda     LEBE3
         sta     $EBEB
-        lda     $EBE4
+        lda     LEBE3+1
         sta     $EBEC
         lda     $EBE7
         sta     $EBEF
@@ -12159,7 +12164,7 @@ L7D9C:  jmp     L7D9F
 
 L7D9F:  ldx     bufnum
         dex
-        lda     $EC26,x
+        lda     LEC26,x
         ldx     #$00
 L7DA8:  cmp     $E1F2,x
         beq     L7DB4
@@ -13757,14 +13762,14 @@ L8B25:  jsr     push_zp_addrs
         jsr     L7345
 L8B2E:  lda     LE6BE
         ldx     #$07
-L8B33:  cmp     $EC26,x
+L8B33:  cmp     LEC26,x
         beq     L8B3E
         dex
         bpl     L8B33
         jmp     L8B43
 
 L8B3E:  lda     #$00
-        sta     $EC26,x
+        sta     LEC26,x
 L8B43:  lda     LE6BE
         jsr     L86E3
         sta     L0006
@@ -16397,9 +16402,9 @@ LA1C3:  lda     LA2ED
 
 LA1DC:  jmp     LA100
 
-LA1DF:  .byte   0
-        sbc     $EFA2
-        .byte   $A2
+LA1DF:  .byte   $00
+        .byte   $ED, $A2, $EF, $A2 ; ???
+
 LA1E4:  lda     #$00
         sta     LA1DF
         lda     #$20
@@ -16928,13 +16933,13 @@ LA6C1:  bit     $D8E7
         lda     #$FF
         rts
 
-LA6C9:  A2D_RELAY_CALL A2D_TEST_BOX, $AE10
+LA6C9:  A2D_RELAY_CALL A2D_TEST_BOX, LAE10
         cmp     #$80
         beq     LA6D9
         jmp     LA6ED
 
 LA6D9:  jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE10
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE10
         jsr     LB7D4
         bmi     LA6EC
         lda     #$01
@@ -17130,8 +17135,8 @@ LA851:  lda     winF
 LA86F:  lda     winF
         jsr     LB7B9
         jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE10
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE10
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE10
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE10
         lda     #$01
         rts
 
@@ -17472,7 +17477,7 @@ LAC3D:  ldy     #$01
         jsr     LB7B9
         lda     #$A5
         sta     $D6C3
-        yax_call LB590, $D901, $01
+        yax_call LB590, str_7_spaces, $01
         jsr     LB3BF
         ldy     #$03
         lda     (L0006),y
@@ -17490,7 +17495,7 @@ LAC3D:  ldy     #$01
         jsr     LBDDF
         lda     #$A5
         sta     $D6C3
-        yax_call LB590, $D901, $02
+        yax_call LB590, str_7_spaces, $02
         rts
 
 LAC9E:  jsr     LBEB1
@@ -17893,7 +17898,7 @@ LB0FA:  jsr     LA567
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
         A2D_RELAY_CALL A2D_FILL_RECT, $AE6E
         A2D_RELAY_CALL A2D_FILL_RECT, $AE20
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE10
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE10
         yax_call LB590, $B10E, $02
         yax_call LB590, str_lock_remaining, $04
         lda     #$00
@@ -17981,7 +17986,7 @@ LB218:  jsr     LA567
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
         A2D_RELAY_CALL A2D_FILL_RECT, $AE6E
         A2D_RELAY_CALL A2D_FILL_RECT, $AE20
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE10
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE10
         yax_call LB590, $B10E, $02
         yax_call LB590, str_unlock_remaining, $04
         lda     #$00
@@ -18256,7 +18261,7 @@ LB51A:  A2D_RELAY_CALL A2D_DRAW_RECT, $AE20
         jsr     LB5F9
 LB526:  bit     $D8E7
         bmi     LB537
-        A2D_RELAY_CALL A2D_DRAW_RECT, $AE10
+        A2D_RELAY_CALL A2D_DRAW_RECT, LAE10
         jsr     LB60A
 LB537:  jmp     LBEB1
 
@@ -18351,7 +18356,7 @@ LB64E:  jsr     LB43B
         A2D_RELAY_CALL A2D_DRAW_RECT, $AE28
         A2D_RELAY_CALL A2D_DRAW_RECT, $AE30
         A2D_RELAY_CALL A2D_DRAW_RECT, $AE38
-        A2D_RELAY_CALL A2D_DRAW_RECT, $AE10
+        A2D_RELAY_CALL A2D_DRAW_RECT, LAE10
         jsr     LB61B
         jsr     LB62C
         jsr     LB63D
@@ -18364,12 +18369,12 @@ LB687:  jsr     LBEA7
         A2D_RELAY_CALL A2D_FILL_RECT, $AE28
         A2D_RELAY_CALL A2D_FILL_RECT, $AE30
         A2D_RELAY_CALL A2D_FILL_RECT, $AE38
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE10
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE10
         rts
 
 LB6AF:  jsr     LB43B
         A2D_RELAY_CALL A2D_DRAW_RECT, $AE20
-        A2D_RELAY_CALL A2D_DRAW_RECT, $AE10
+        A2D_RELAY_CALL A2D_DRAW_RECT, LAE10
         jsr     LB5F9
         jsr     LB60A
         lda     #$00
@@ -18378,7 +18383,7 @@ LB6AF:  jsr     LB43B
 
 LB6D0:  jsr     LBEA7
         A2D_RELAY_CALL A2D_FILL_RECT, $AE20
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE10
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE10
         rts
 
 LB6E6:  jsr     LB43B
@@ -18520,7 +18525,7 @@ LB80B:  .byte   $B8,$26,$B8,$58,$B8,$30,$B8,$62,$B8
         A2D_RELAY_CALL A2D_TEST_BOX, $AE20
         rts
 
-        A2D_RELAY_CALL A2D_TEST_BOX, $AE10
+        A2D_RELAY_CALL A2D_TEST_BOX, LAE10
         rts
 
         A2D_RELAY_CALL A2D_TEST_BOX, $AE28
@@ -18535,7 +18540,7 @@ LB80B:  .byte   $B8,$26,$B8,$58,$B8,$30,$B8,$62,$B8
         A2D_RELAY_CALL A2D_FILL_RECT, $AE20
         rts
 
-        A2D_RELAY_CALL A2D_FILL_RECT, $AE10
+        A2D_RELAY_CALL A2D_FILL_RECT, LAE10
         rts
 
         A2D_RELAY_CALL A2D_FILL_RECT, $AE28
@@ -19135,7 +19140,7 @@ LBE1F:  ora     #$30
         lda     #$80
         sta     LBE62
         pla
-LBE28:  sta     $D903,y
+LBE28:  sta     str_7_spaces+2,y
         iny
         inx
         inx
@@ -19154,8 +19159,8 @@ LBE35:  inc     LBE61
         jmp     LBE03
 
 LBE4E:  lda     LBE5F
-        ora     #$30
-        sta     $D903,y
+        ora     #'0'
+        sta     str_7_spaces+2,y
         rts
 
 LBE57:  .byte   $10
@@ -19242,16 +19247,16 @@ start:
         ;; See Apple II Miscellaneous #7: Apple II Family Identification
         lda     #0
         sta     iigs_flag
-        lda     $FBC0           ; 0 = IIc or IIc+
+        lda     ID_BYTE_FBC0    ; 0 = IIc or IIc+
         beq     :+
         sec                     ; Follow detection protocol
-        jsr     $FE1F           ; RTS on pre-IIgs
+        jsr     ID_BYTE_FE1F    ; RTS on pre-IIgs
         bcs     :+              ; carry clear = IIgs
         lda     #$80
         sta     iigs_flag
 
-:       ldx     $FBB3
-        ldy     $FBC0
+:       ldx     ID_BYTE_FBB3
+        ldy     ID_BYTE_FBC0
         cpx     #$06            ; Ensure a IIe or later
         beq     :+
         brk                     ; Otherwise (][, ][+, ///), just crash
@@ -19375,11 +19380,11 @@ L0927:  PASCAL_STRING " Trash "
 L092F:  lda     #$00
         sta     $DE9F
         lda     #$01
-        sta     $DEA0
+        sta     buf3len
         sta     $DD9E
         jsr     DESKTOP_FIND_SPACE
         sta     $EBFB
-        sta     $DEA1
+        sta     buf3
         jsr     L86E3
         sta     L0006
         stx     L0006+1
@@ -19637,15 +19642,15 @@ L0B09:  addr_call measure_text1, str_6_spaces
         lda     $EBF3
         clc
         adc     #$05
-        sta     $EBE3
+        sta     LEBE3
         lda     $EBF4
         adc     #$00
-        sta     $EBE4
-        lda     $EBE3
+        sta     LEBE3+1
+        lda     LEBE3
         clc
         adc     $EBF5
         sta     $EBE7
-        lda     $EBE4
+        lda     LEBE3+1
         adc     $EBF6
         sta     $EBE8
         lda     $EBE7
@@ -19850,7 +19855,7 @@ L0D12:  lda     L0E33
         pha
         tya
         pha
-        inc     $DEA0
+        inc     buf3len
         inc     $DD9E
         lda     $BF32,y
         jsr     L89B6
@@ -20040,7 +20045,7 @@ L0E79:  sta     L0EAF
         sta     sta_addr
         lda     L0EB0+1,x
         sta     sta_addr+1
-        ldx     $E44C
+        ldx     s00
         dex
         lda     L0EAE
         sta_addr := *+1
@@ -20058,7 +20063,7 @@ L0EA8:  stx     startup_menu
 
 L0EAE:  .byte   0
 L0EAF:  .byte   0
-L0EB0:  .addr   $E44C,$E454,$E45C,$E464,$E46C,$E474,$E47C
+L0EB0:  .addr   s00,s01,s02,s03,s04,s05,s06
         .byte   $0A,$62,$48
         .byte   0
         .byte   0
