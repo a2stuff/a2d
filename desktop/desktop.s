@@ -1236,8 +1236,7 @@ L9B3D:  jsr     L9DD9
         sta     L9C75
 L9B48:  bit     L9C75
         bpl     L9B52
-        .byte   $50
-L9B4E:  .byte   $03
+        bvc     L9B52
         jmp     L9A0E
 
 L9B52:  A2D_CALL A2D_DRAW_POLYGONS, drag_outline_buffer
@@ -2854,7 +2853,8 @@ LA938:  lda     set_state_params::top
 
 
         ;; 5.25" Floppy Disk
-LA980:  .addr   floppy140_pixels; address
+floppy_140_icon:
+        .addr   floppy140_pixels; address
         .word   4               ; stride
         .word   0               ; left
         .word   1               ; top
@@ -2880,7 +2880,8 @@ floppy140_pixels:
         .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
 
         ;; RAM Disk
-LA9CC:  .addr   ramdisk_pixels  ; address
+ramdisk_icon:
+        .addr   ramdisk_pixels  ; address
         .word   6               ; stride
         .word   1               ; left (???)
         .word   0               ; top
@@ -2902,7 +2903,8 @@ ramdisk_pixels:
         .byte   px(%1010101),px(%0101010),px(%1010101),px(%1111111),px(%1111111),px(%1111110)
 
         ;; 3.5" Floppy Disk
-LAA20:  .addr   floppy800_pixels; address
+floppy_800_icon:
+        .addr   floppy800_pixels; address
         .word   3               ; stride
         .word   0               ; left
         .word   0               ; top
@@ -2924,7 +2926,8 @@ floppy800_pixels:
         .byte   px(%1111111),px(%1111111),px(%1111111)
 
         ;; Hard Disk
-LAA50:  .addr   profile_pixels  ; address
+profile_icon:
+        .addr   profile_pixels  ; address
         .word   8               ; stride
         .word   1               ; left
         .word   0               ; top
@@ -2944,13 +2947,15 @@ profile_pixels:
         .byte   px(%1010111),px(%0101010),px(%1010101),px(%0101010),px(%1010101),px(%0101010),px(%1010111),px(%0101010)
 
         ;; Trash Can
-LAAAC:  .addr   LAAB8           ; address
+trash_icon:
+        .addr   trash_pixels    ; address
         .word   5               ; stride
         .word   7               ; left
         .word   1               ; top
         .word   27              ; width
         .word   18              ; height
-LAAB8:
+
+trash_pixels:
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
         .byte   px(%0000000),px(%1010101),PX(%1111111),px(%1010101),px(%0000000)
         .byte   px(%0000000),px(%0101010),PX(%1100011),px(%0101010),px(%0000000)
@@ -3034,7 +3039,8 @@ label_get_size:
 label_rename_icon:
         PASCAL_STRING "Rename an Icon ..."
 
-LAC44:  .word   6
+desktop_menu:
+        .word   6
         .addr   1, label_apple, apple_menu, 0,0,0
         .addr   2, label_file, file_menu, 0,0,0
         .addr   4, label_view, view_menu, 0,0,0
@@ -13660,39 +13666,40 @@ L8A22:  lda     $0801,x
         lda     $C7FB
         and     #$01
         beq     L8A67
-L8A59:  ldy     #$07
-        lda     #$CC
+
+L8A59:  ldy     #7
+        lda     #<ramdisk_icon
         sta     (L0006),y
         iny
-        lda     #$A9
+        lda     #>ramdisk_icon
         sta     (L0006),y
         jmp     L8A96
 
-L8A67:  ldy     #$07
-        lda     #$50
+L8A67:  ldy     #7
+        lda     #<profile_icon
         sta     (L0006),y
         iny
-        lda     #$AA
+        lda     #>profile_icon
         sta     (L0006),y
         jmp     L8A96
 
 L8A75:  cmp     #$0B
         bne     L8A87
         ldy     #$07
-        lda     #$20
+        lda     #<floppy_800_icon
         sta     (L0006),y
         iny
-        lda     #$AA
+        lda     #>floppy_800_icon
         sta     (L0006),y
         jmp     L8A96
 
 L8A87:  cmp     #$00
         bne     L8A67
         ldy     #$07
-        lda     #$80
+        lda     #<floppy_140_icon
         sta     (L0006),y
         iny
-        lda     #$A9
+        lda     #>floppy_140_icon
         sta     (L0006),y
 L8A96:  ldy     #$02
         lda     #$00
@@ -19388,10 +19395,10 @@ L092F:  lda     #$00
         lda     #$70
         sta     (L0006),y
         ldy     #$07
-        lda     #$AC
+        lda     #<trash_icon
         sta     (L0006),y
         iny
-        lda     #$AA
+        lda     #>trash_icon
         sta     (L0006),y
         iny
         ldx     #$00
@@ -20112,7 +20119,7 @@ L0F14:  inx
         lda     #$80
         sta     $4861
 L0F34:  A2D_RELAY_CALL $29, $0000
-        A2D_RELAY_CALL A2D_SET_MENU, $AC44
+        A2D_RELAY_CALL A2D_SET_MENU, desktop_menu
         A2D_RELAY_CALL A2D_SET_CURSOR, pointer_cursor
         lda     #$00
         sta     $EC25
