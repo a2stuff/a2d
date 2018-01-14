@@ -10710,8 +10710,14 @@ ref_num:.byte   0
 
 L705D:  .res    64, 0
         .byte   $00
-L709E:  .byte   $04
-L709F:  .byte   $00,$00,$0C,$00,$02,$00,$00
+
+.proc read_params
+params: .byte   4
+ref_num:.byte   0
+buffer: .addr   $0C00
+request:.word   $200
+trans:  .word   0
+.endproc
 
 .proc close_params
 params: .byte   1
@@ -10744,7 +10750,7 @@ L70CD:  lda     $E1B0,x
         bpl     L70CD
         jsr     L72AA
         lda     open_params::ref_num
-        sta     L709F
+        sta     read_params::ref_num
         sta     close_params::ref_num
         jsr     L72CE
         jsr     L72E2
@@ -10969,7 +10975,7 @@ L72C9:  ldx     $E256
         txs
 L72CD:  rts
 
-L72CE:  MLI_RELAY_CALL READ, L709E
+L72CE:  MLI_RELAY_CALL READ, read_params
         rts
 
 L72D8:  MLI_RELAY_CALL CLOSE, close_params
@@ -14175,12 +14181,14 @@ L8E72:  .byte   $00
 L8E73:  .byte   $00
 L8E74:  .byte   $00
 L8E75:  .byte   $00
-L8E76:  .byte   $04
-L8E77:  .byte   $00
-L8E78:  .byte   $00
-L8E79:  .byte   $00
-L8E7A:  .byte   $00
-L8E7B:  .byte   $00,$00,$00
+
+.proc read_params2
+params: .byte   4
+ref_num:.byte   0
+buffer: .addr   0
+request:.word   0
+trans:  .word   0
+.endproc
 
 .proc close_params2
 params: .byte   1
@@ -14207,13 +14215,13 @@ L8E8F:  pla
         lda     L8E1C,x
         sta     L8E75
         lda     L8E3E,y
-        sta     L8E7A
+        sta     read_params2::request
         lda     L8E3F,y
-        sta     L8E7B
+        sta     read_params2::request+1
         lda     L8E50,y
-        sta     L8E78
+        sta     read_params2::buffer
         lda     L8E51,y
-        sta     L8E79
+        sta     read_params2::buffer+1
 L8EBE:  MLI_RELAY_CALL OPEN, open_params2
         beq     L8ED6
         lda     #$00
@@ -14224,10 +14232,10 @@ L8EBE:  MLI_RELAY_CALL OPEN, open_params2
         rts
 
 L8ED6:  lda     open_params2::ref_num
-        sta     L8E77
+        sta     read_params2::ref_num
         sta     L8E72
         MLI_RELAY_CALL SET_MARK, L8E71
-        MLI_RELAY_CALL READ, L8E76
+        MLI_RELAY_CALL READ, read_params2
         MLI_RELAY_CALL CLOSE, close_params2
         rts
 
@@ -19712,14 +19720,13 @@ ref_num:.byte   0
 
 L0ACF:  PASCAL_STRING "Selector.List"
 
-L0ADD:  .byte   $04
-L0ADE:  .byte   0
-        .byte   0
-        .byte   $14
-        .byte   0
-        .byte   $04
-        .byte   0
-        .byte   0
+.proc read_params
+params: .byte   4
+ref_num:.byte   0
+buffer: .addr   $1400
+request:.word   $400
+trans:  .word   0
+.endproc
 
 .proc close_params
 params: .byte   1
@@ -19728,8 +19735,8 @@ ref_num:.byte   0
 
 L0AE7:  MLI_RELAY_CALL OPEN, open_params
         lda     open_params::ref_num
-        sta     L0ADE
-        MLI_RELAY_CALL READ, L0ADD
+        sta     read_params::ref_num
+        MLI_RELAY_CALL READ, read_params
         MLI_RELAY_CALL CLOSE, close_params
         rts
 
@@ -19802,9 +19809,9 @@ L0BB9:  lda     L0CE9
 
 L0BC3:  MLI_RELAY_CALL OPEN, open_params2
         lda     open_params2_ref_num
-        sta     L0CDE
+        sta     read_params2_ref_num
         sta     close_params2_ref_num
-        MLI_RELAY_CALL READ, L0CDD
+        MLI_RELAY_CALL READ, read_params2
         lda     #$00
         sta     L0D04
         sta     L0D05
@@ -19896,7 +19903,7 @@ L0C96:  inc     L0D08
         lda     L0D08
         cmp     L0D07
         bne     L0CBA
-        MLI_RELAY_CALL READ, L0CDD
+        MLI_RELAY_CALL READ, read_params2
         lda     #$04
         sta     L0006
         lda     #$14
@@ -19925,14 +19932,15 @@ ref_num:.byte   0
 .endproc
         open_params2_ref_num := open_params2::ref_num
 
-L0CDD:  .byte   $04
-L0CDE:  .byte   0
-        .byte   0
-        .byte   $14
-        .byte   0
-        .byte   $02
-        .byte   0
-        .byte   0
+.proc read_params2
+params: .byte   4
+ref_num:.byte   0
+buffer: .addr   $1400
+request:.word   $200
+trans:  .word   0
+.endproc
+        read_params2_ref_num := read_params2::ref_num
+
 L0CE5:  .byte   $0A
         .byte   $FA
         .byte   $0C
