@@ -19850,11 +19850,11 @@ L0BA0:  .byte   0
 L0BA1:  .byte   0
 
 L0BA2:  A2D_RELAY_CALL $29, $0000
-        MLI_RELAY_CALL GET_FILE_INFO, L0CE5
+        MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
         beq     L0BB9
         jmp     L0D0A
 
-L0BB9:  lda     L0CE9
+L0BB9:  lda     get_file_info_params_type
         cmp     #$0F
         beq     L0BC3
         jmp     L0D0A
@@ -19993,24 +19993,21 @@ trans:  .word   0
 .endproc
         read_params2_ref_num := read_params2::ref_num
 
-L0CE5:  .byte   $0A
-        .byte   $FA
-        .byte   $0C
-        .byte   0
-L0CE9:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+.proc get_file_info_params
+params: .byte   $A
+path:   .addr   $0CFA
+access: .byte   0
+type:   .byte   0
+auxtype:.word   0
+storage:.byte   0
+blocks: .word   0
+mdate:  .word   0
+mtime:  .word   0
+cdate:  .word   0
+ctime:  .word   0
+.endproc
+        get_file_info_params_type := get_file_info_params::type
+
         .byte   0
 
 .proc close_params2
@@ -20255,22 +20252,21 @@ L0EA8:  stx     startup_menu
 L0EAE:  .byte   0
 L0EAF:  .byte   0
 L0EB0:  .addr   s00,s01,s02,s03,s04,s05,s06
-L0EBE:  .byte   $0A,$62,$48
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+
+
+.proc get_file_info_params2
+params: .byte   $A
+path:   .addr   $4862
+access: .byte   0
+type:   .byte   0
+auxtype:.word   0
+storage:.byte   0
+blocks: .word   0
+mdate:  .word   0
+mtime:  .word   0
+cdate:  .word   0
+ctime:  .word   0
+.endproc
         .byte   0
 
 .proc get_prefix_params
@@ -20307,7 +20303,7 @@ L0F14:  inx
         cpy     L0ED4
         bne     L0F14
         stx     L4862
-        MLI_RELAY_CALL GET_FILE_INFO, L0EBE
+        MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params2
         bne     L0F34
         lda     #$80
         sta     $4861
