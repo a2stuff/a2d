@@ -6236,6 +6236,7 @@ L46CF:  .addr   L0000
 
 L46DE:  jmp     L46F3
 
+L46E1:
         .byte   $0A,$20,$02,$00
 L46E5:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00
@@ -6257,7 +6258,7 @@ L470C:  iny
         cpy     $D345
         bne     L470C
         stx     $0220
-        MLI_RELAY_CALL GET_FILE_INFO, $46E1
+        MLI_RELAY_CALL GET_FILE_INFO, L46E1
         beq     L472B
         jsr     DESKTOP_SHOW_ALERT0
         rts
@@ -6304,7 +6305,7 @@ L477F:  lda     $D345,x
         sta     L5B19+1
         jmp     L5AEE
 
-        .byte   $0A,$00,$18,$00,$00,$00,$00,$00
+L47A6:  .byte   $0A,$00,$18,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00
 L47B8:  ldx     $D355
@@ -6326,7 +6327,7 @@ L47D7:  inx
         cpy     L4817
         bne     L47D7
         stx     $1800
-        MLI_RELAY_CALL GET_FILE_INFO, $47A6
+        MLI_RELAY_CALL GET_FILE_INFO, L47A6
         bne     L47F3
         rts
 
@@ -6484,7 +6485,8 @@ L4980:  lda     L0800,x
         jsr     L4A17
         jmp     L4961
 
-L498F:  .byte   $00,$0A
+L498F:  .byte   $00
+L4990:  .byte   $0A
 L4991:  .byte   $20
 L4992:  .byte   $02,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -6653,7 +6655,7 @@ L4ADC:  iny
 L4AEA:  jsr     L4B5F
         sta     L4991
         stx     L4992
-        MLI_RELAY_CALL GET_FILE_INFO, $4990
+        MLI_RELAY_CALL GET_FILE_INFO, L4990
         rts
 
 L4AFD:  sta     ALTZPOFF
@@ -7157,7 +7159,8 @@ L4F66:  rts
 
 L4F67:  .byte   $00
 L4F68:  .byte   $00
-L4F69:  .byte   $00,$07,$76,$4F,$C3,$0F,$00,$00
+L4F69:  .byte   $00
+L4F6A:  .byte   $07,$76,$4F,$C3,$0F,$00,$00
         .byte   $0D
 L4F72:  .byte   $00,$00,$00,$00
 L4F76:  .res    64
@@ -7198,7 +7201,7 @@ L5000:  lda     $BF90,x
         sta     L4F72,x
         dex
         bpl     L5000
-        MLI_RELAY_CALL CREATE, $4F6A
+        MLI_RELAY_CALL CREATE, L4F6A
         beq     L5027
         jsr     DESKTOP_SHOW_ALERT0
         lda     L504E
@@ -10698,12 +10701,15 @@ L704C:  .byte   0
         .byte   0
 L7054:  jmp     L70C5
 
-        .byte   $03,$5D,$70,$00,$08
+L7057:  .byte   $03,$5D,$70,$00,$08
 L705C:  .byte   $00
 L705D:  .res    64, 0
-        .byte   $00,$04
-L709F:  .byte   $00,$00,$0C,$00,$02,$00,$00,$01
-L70A7:  .byte   $00,$0A,$5D,$70,$00,$00
+        .byte   $00
+L709E:  .byte   $04
+L709F:  .byte   $00,$00,$0C,$00,$02,$00,$00
+L70A6:  .byte   $01
+L70A7:  .byte   $00
+L70A8:  .byte   $0A,$5D,$70,$00,$00
 L70AD:  .byte   $00
 L70AE:  .byte   $00,$00
 L70B0:  .byte   $00
@@ -10940,7 +10946,7 @@ L7296:  lda     L0006
 L72A7:  .byte   0
 L72A8:  .byte   0
 L72A9:  .byte   0
-L72AA:  MLI_RELAY_CALL OPEN, $7057
+L72AA:  MLI_RELAY_CALL OPEN, L7057
         beq     L72CD
         jsr     DESKTOP_SHOW_ALERT0
         jsr     L8B1F
@@ -10953,10 +10959,10 @@ L72C9:  ldx     $E256
         txs
 L72CD:  rts
 
-L72CE:  MLI_RELAY_CALL READ, $709E
+L72CE:  MLI_RELAY_CALL READ, L709E
         rts
 
-L72D8:  MLI_RELAY_CALL CLOSE, $70A6
+L72D8:  MLI_RELAY_CALL CLOSE, L70A6
         rts
 
 L72E2:  lda     $0C04
@@ -10965,7 +10971,7 @@ L72E2:  lda     $0C04
         beq     L72EC
         rts
 
-L72EC:  MLI_RELAY_CALL GET_FILE_INFO, $70A8
+L72EC:  MLI_RELAY_CALL GET_FILE_INFO, L70A8
         beq     L72F8
         rts
 
@@ -19676,7 +19682,7 @@ L0ABC:  jsr     L86C1
         tya
         rts
 
-        .byte   $03
+L0AC9:  .byte   $03
         .byte   $CF
         .byte   $0A
         .byte   0
@@ -19685,7 +19691,7 @@ L0ACE:  .byte   0
 
 L0ACF:  PASCAL_STRING "Selector.List"
 
-        .byte   $04
+L0ADD:  .byte   $04
 L0ADE:  .byte   0
         .byte   0
         .byte   $14
@@ -19693,13 +19699,14 @@ L0ADE:  .byte   0
         .byte   $04
         .byte   0
         .byte   0
-        .byte   1,0
 
-L0AE7:  MLI_RELAY_CALL OPEN, $0AC9
+L0AE5:  .byte   1,0
+
+L0AE7:  MLI_RELAY_CALL OPEN, L0AC9
         lda     L0ACE
         sta     L0ADE
-        MLI_RELAY_CALL READ, $0ADD
-        MLI_RELAY_CALL CLOSE, $0AE5
+        MLI_RELAY_CALL READ, L0ADD
+        MLI_RELAY_CALL CLOSE, L0AE5
         rts
 
 L0B09:  addr_call measure_text1, str_6_spaces
@@ -19760,7 +19767,7 @@ L0BA0:  .byte   0
 L0BA1:  .byte   0
 
 L0BA2:  A2D_RELAY_CALL $29, $0000
-        MLI_RELAY_CALL GET_FILE_INFO, $0CE5
+        MLI_RELAY_CALL GET_FILE_INFO, L0CE5
         beq     L0BB9
         jmp     L0D0A
 
@@ -19769,11 +19776,11 @@ L0BB9:  lda     L0CE9
         beq     L0BC3
         jmp     L0D0A
 
-L0BC3:  MLI_RELAY_CALL OPEN, $0CD7
+L0BC3:  MLI_RELAY_CALL OPEN, L0CD7
         lda     L0CDC
         sta     L0CDE
         sta     L0CF9
-        MLI_RELAY_CALL READ, $0CDD
+        MLI_RELAY_CALL READ, L0CDD
         lda     #$00
         sta     L0D04
         sta     L0D05
@@ -19865,7 +19872,7 @@ L0C96:  inc     L0D08
         lda     L0D08
         cmp     L0D07
         bne     L0CBA
-        MLI_RELAY_CALL READ, $0CDD
+        MLI_RELAY_CALL READ, L0CDD
         lda     #$04
         sta     L0006
         lda     #$14
@@ -19883,16 +19890,16 @@ L0CBA:  lda     L0006
         sta     L0006+1
         jmp     L0C0C
 
-L0CCB:  MLI_RELAY_CALL CLOSE, $0CF8
+L0CCB:  MLI_RELAY_CALL CLOSE, L0CF8
         jmp     L0D0A
 
-        .byte   $03
+L0CD7:  .byte   $03
         .byte   $FA
         .byte   $0C
         .byte   0
         .byte   $10
 L0CDC:  .byte   0
-        .byte   $04
+L0CDD:  .byte   $04
 L0CDE:  .byte   0
         .byte   0
         .byte   $14
@@ -19900,7 +19907,7 @@ L0CDE:  .byte   0
         .byte   $02
         .byte   0
         .byte   0
-        asl     a
+L0CE5:  .byte   $0A
         .byte   $FA
         .byte   $0C
         .byte   0
@@ -19919,7 +19926,7 @@ L0CE9:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-        .byte   $01
+L0CF8:  .byte   $01
 L0CF9:  .byte   0
 
         PASCAL_STRING "Desk.acc"
@@ -20158,7 +20165,7 @@ L0EA8:  stx     startup_menu
 L0EAE:  .byte   0
 L0EAF:  .byte   0
 L0EB0:  .addr   s00,s01,s02,s03,s04,s05,s06
-        .byte   $0A,$62,$48
+L0EBE:  .byte   $0A,$62,$48
         .byte   0
         .byte   0
         .byte   0
@@ -20175,15 +20182,16 @@ L0EB0:  .addr   s00,s01,s02,s03,s04,s05,s06
         .byte   0
         .byte   0
         .byte   0
-        ora     ($62,x)
-        pha
+L0ED1:  .byte   $01,$62,$48
+
 L0ED4:  PASCAL_STRING "System/Start"
+
 L0EE1:  lda     #$00
         sta     $4861
         jsr     L4AFD
         cmp     #$80
         beq     L0EFE
-        MLI_RELAY_CALL GET_PREFIX, $0ED1
+        MLI_RELAY_CALL GET_PREFIX, L0ED1
         bne     L0F34
         dec     $4862
         jmp     L0F05
@@ -20205,7 +20213,7 @@ L0F14:  inx
         cpy     L0ED4
         bne     L0F14
         stx     $4862
-        MLI_RELAY_CALL GET_FILE_INFO, $0EBE
+        MLI_RELAY_CALL GET_FILE_INFO, L0EBE
         bne     L0F34
         lda     #$80
         sta     $4861
