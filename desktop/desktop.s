@@ -6373,7 +6373,8 @@ L4859:  dey
 L485D:  .byte   $00
 L485E:  .byte   $E0
 L485F:  .byte   $00
-L4860:  .byte   $D0,$00,$00,$00,$00,$00,$00,$00
+L4860:  .byte   $D0,$00
+L4862:  .byte   $00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -19363,6 +19364,7 @@ LBEB1:  A2D_RELAY_CALL A2D_QUERY_SCREEN, $D239
 L0006           := $0006
 
 L4AFD           := desktop_main::L4AFD
+L4862           := desktop_main::L4862
 L4B3A           := desktop_main::L4B3A
 L66A2           := desktop_main::L66A2
 L670C           := desktop_main::L670C
@@ -20230,7 +20232,11 @@ L0EBE:  .byte   $0A,$62,$48
         .byte   0
         .byte   0
         .byte   0
-L0ED1:  .byte   $01,$62,$48
+
+.proc get_prefix_params
+params: .byte   1
+buffer: .addr   L4862
+.endproc
 
 L0ED4:  PASCAL_STRING "System/Start"
 
@@ -20239,16 +20245,16 @@ L0EE1:  lda     #$00
         jsr     L4AFD
         cmp     #$80
         beq     L0EFE
-        MLI_RELAY_CALL GET_PREFIX, L0ED1
+        MLI_RELAY_CALL GET_PREFIX, get_prefix_params
         bne     L0F34
-        dec     $4862
+        dec     L4862
         jmp     L0F05
 
 L0EFE:  lda     #$62
         ldx     #$48
         jsr     L4B3A
-L0F05:  ldx     $4862
-L0F08:  lda     $4862,x
+L0F05:  ldx     L4862
+L0F08:  lda     L4862,x
         cmp     #$2F
         beq     L0F12
         dex
@@ -20257,10 +20263,10 @@ L0F12:  ldy     #$00
 L0F14:  inx
         iny
         lda     L0ED4,y
-        sta     $4862,x
+        sta     L4862,x
         cpy     L0ED4
         bne     L0F14
-        stx     $4862
+        stx     L4862
         MLI_RELAY_CALL GET_FILE_INFO, L0EBE
         bne     L0F34
         lda     #$80
