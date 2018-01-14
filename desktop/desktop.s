@@ -7160,11 +7160,21 @@ L4F66:  rts
 L4F67:  .byte   $00
 L4F68:  .byte   $00
 L4F69:  .byte   $00
-L4F6A:  .byte   $07,$76,$4F,$C3,$0F,$00,$00
-        .byte   $0D
-L4F72:  .byte   $00,$00,$00,$00
+
+.proc create_params
+params: .byte   7
+path:   .addr   $4F76
+access: .byte   $C3
+type:   .byte   $0F
+auxtype:.word   0
+storage:.byte   $0D
+cdate:  .word   0
+ctime:  .word   0
+.endproc
+
 L4F76:  .res    64
         .byte   $00
+
         lda     desktop_winid
         sta     L4F67
         ldy     #$03
@@ -7197,11 +7207,11 @@ L4FF6:  lda     (L0006),y
         dey
         bpl     L4FF6
         ldx     #$03
-L5000:  lda     $BF90,x
-        sta     L4F72,x
+L5000:  lda     DATELO,x
+        sta     create_params::cdate,x
         dex
         bpl     L5000
-        MLI_RELAY_CALL CREATE, L4F6A
+        MLI_RELAY_CALL CREATE, create_params
         beq     L5027
         jsr     DESKTOP_SHOW_ALERT0
         lda     L504E
@@ -14176,11 +14186,11 @@ ref_num:.byte   0
 str_desktop2:
         PASCAL_STRING "DeskTop2"
 
-L8E71:  .byte   $02
-L8E72:  .byte   $00
-L8E73:  .byte   $00
-L8E74:  .byte   $00
-L8E75:  .byte   $00
+.proc set_mark_params
+params: .byte   2
+ref_num:.byte   0
+pos:    .faraddr  0
+.endproc
 
 .proc read_params2
 params: .byte   4
@@ -14209,11 +14219,11 @@ L8E8F:  pla
         asl     a
         tax
         lda     L8E1A,x
-        sta     L8E73
+        sta     set_mark_params::pos
         lda     L8E1B,x
-        sta     L8E74
+        sta     set_mark_params::pos+1
         lda     L8E1C,x
-        sta     L8E75
+        sta     set_mark_params::pos+2
         lda     L8E3E,y
         sta     read_params2::request
         lda     L8E3F,y
@@ -14233,8 +14243,8 @@ L8EBE:  MLI_RELAY_CALL OPEN, open_params2
 
 L8ED6:  lda     open_params2::ref_num
         sta     read_params2::ref_num
-        sta     L8E72
-        MLI_RELAY_CALL SET_MARK, L8E71
+        sta     set_mark_params::ref_num
+        MLI_RELAY_CALL SET_MARK, set_mark_params
         MLI_RELAY_CALL READ, read_params2
         MLI_RELAY_CALL CLOSE, close_params2
         rts
