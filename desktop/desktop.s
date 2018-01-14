@@ -383,13 +383,12 @@ L9419:
         ldx     L8E95
         beq     L9430
         dex
-L9423:  .byte   $DD
-        .byte   $96
-L9425:  stx     $05F0
+L9423:  cmp     L8E96,x
+        beq     L942D
         dex
         bpl     L9423
         bmi     L9430
-        lda     #$01
+L942D:  lda     #$01
         rts
 
 L9430:  jsr     L943E
@@ -615,7 +614,7 @@ L9625:  lda     L9454
         beq     L9639
         lda     L9017
         sta     L95A5
-        DESKTOP_DIRECT_CALL $B, $95A5
+        DESKTOP_DIRECT_CALL $B, L95A5
         jmp     L9625
 
 L9639:  ldx     #$7E
@@ -655,7 +654,7 @@ L967A:  lda     L95A6,x
         rts
 
 L9681:  sta     L95A5
-        DESKTOP_DIRECT_CALL $2, $95A5
+        DESKTOP_DIRECT_CALL $2, L95A5
         pla
         tax
         inx
@@ -694,7 +693,7 @@ L969D:  ldx     L9696
         ldy     #$00
         cmp     ($06),y
         bne     L969D
-        DESKTOP_DIRECT_CALL $4, $9695
+        DESKTOP_DIRECT_CALL $4, L9695
         jmp     L969D
 L96CF:  lda     #$00
         rts
@@ -997,7 +996,7 @@ L98F2:  lda     L9016,x
         ldx     #$80
         stx     L9833
 L9909:  sta     L9834
-        DESKTOP_DIRECT_CALL $D, $9834
+        DESKTOP_DIRECT_CALL $D, L9834
         beq     L9954
         jsr     LA18A
         lda     L9C74
@@ -1142,14 +1141,14 @@ L9A33:  lda     query_target_params2,x
         beq     L9A84
         lda     L9831
         sta     query_target_params2::id
-        DESKTOP_DIRECT_CALL $9, $933F
+        DESKTOP_DIRECT_CALL $9, query_target_params2
         lda     query_target_params2::element
         cmp     L9830
         beq     L9A84
         A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
         A2D_CALL A2D_SET_FILL_MODE, const2a
         A2D_CALL A2D_DRAW_POLYGONS, drag_outline_buffer
-        DESKTOP_DIRECT_CALL $B, $9830
+        DESKTOP_DIRECT_CALL $B, L9830
         A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
         A2D_CALL A2D_SET_FILL_MODE, const2a
         A2D_CALL A2D_DRAW_POLYGONS, drag_outline_buffer
@@ -1282,7 +1281,7 @@ L9B9C:  A2D_CALL A2D_DRAW_POLYGONS, drag_outline_buffer
 L9BA5:  A2D_CALL A2D_DRAW_POLYGONS, drag_outline_buffer
         lda     L9830
         beq     L9BB9
-        DESKTOP_DIRECT_CALL $B, $9830
+        DESKTOP_DIRECT_CALL $B, L9830
         jmp     L9C63
 
 L9BB9:  A2D_CALL A2D_QUERY_TARGET, query_target_params2
@@ -1582,7 +1581,7 @@ L9E1D:  A2D_CALL A2D_QUERY_TARGET, query_target_params2
         lda     query_target_params2::element
         bne     L9E2B
         sta     query_target_params2::id
-L9E2B:  DESKTOP_DIRECT_CALL $9, $933F
+L9E2B:  DESKTOP_DIRECT_CALL $9, query_target_params2
         lda     query_target_params2::element
         bne     L9E39
         jmp     L9E97
@@ -1614,7 +1613,7 @@ L9E6A:  sta     L9830
         A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
         A2D_CALL A2D_SET_FILL_MODE, const2a
         A2D_CALL A2D_DRAW_POLYGONS, drag_outline_buffer
-        DESKTOP_DIRECT_CALL $2, $9830
+        DESKTOP_DIRECT_CALL $2, L9830
         A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
         A2D_CALL A2D_SET_FILL_MODE, const2a
         A2D_CALL A2D_DRAW_POLYGONS, drag_outline_buffer
@@ -5187,6 +5186,7 @@ type_table:
         .byte   FT_TYPELESS, FT_SRC, FT_TEXT, FT_BINARY
         .byte   FT_DIRECTORY, FT_SYSTEM, FT_BASIC, FT_BAD
 
+        ;; Used as bitwise-or mask, stored in L7624
         ;; ???
 LFB11:  .byte   $60,$50,$50,$50,$20,$00,$10,$30,$10
 
@@ -16807,7 +16807,18 @@ LA4C6:  ldy     #$C5
         .res    48, 0
 LA500:  jmp     LA520
 
-LA503:  .addr   $A89C,$A957,$ACD4,$AE34,$A898,$A898,$AF28,$B02C,$B14A,$B268,$AAE1,$ABFA,$B325
+LA503:  .addr   show_about_dialog
+        .addr   show_copy_file_dialog
+        .addr   show_delete_file_dialog
+        .addr   show_new_folder_dialog
+        .addr   rts1,rts1,show_get_info_dialog
+        .addr   show_lock_dialog
+        .addr   show_unlock_dialog
+        .addr   show_rename_dialog
+        .addr   LAAE1
+        .addr   LABFA
+        .addr   LB325
+
 LA51D:  .byte   $00
 LA51E:  .byte   $00,$00
 LA520:  sta     LA51D
@@ -17173,6 +17184,7 @@ LA88D:  lda     $D8E8
 LA895:  lda     #$FF
         rts
 
+rts1:
         rts
 
         LA89A := *+1
@@ -17192,7 +17204,9 @@ LA899:  jmp     $0000
         jsr     target
 .endmacro
 
-        ;; "About" dialog
+;;; ==================================================
+;;; "About" dialog
+
 .proc show_about_dialog
         A2D_RELAY_CALL A2D_CREATE_WINDOW, win18::id
         lda     win18::id
@@ -17201,18 +17215,18 @@ LA899:  jmp     $0000
         A2D_RELAY_CALL A2D_DRAW_RECT, $AEDD
         A2D_RELAY_CALL A2D_DRAW_RECT, $AEE5
         addr_call LB723, str_about1
-        axy_call LB590, str_about2, $81
-        axy_call LB590, str_about3, $82
-        axy_call LB590, str_about4, $83
-        axy_call LB590, str_about5, $05
-        axy_call LB590, str_about6, $86
-        axy_call LB590, str_about7, $07
-        axy_call LB590, str_about8, $09
+        axy_call draw_dialog_label, str_about2, $81
+        axy_call draw_dialog_label, str_about3, $82
+        axy_call draw_dialog_label, str_about4, $83
+        axy_call draw_dialog_label, str_about5, $05
+        axy_call draw_dialog_label, str_about6, $86
+        axy_call draw_dialog_label, str_about7, $07
+        axy_call draw_dialog_label, str_about8, $09
         lda     #$36
         sta     $D6C3
         lda     #$01
         sta     $D6C4
-        axy_call LB590, str_about9, $09
+        axy_call draw_dialog_label, str_about9, $09
         lda     #$28
         sta     $D6C3
         lda     #$00
@@ -17237,6 +17251,10 @@ close:  A2D_RELAY_CALL A2D_DESTROY_WINDOW, win18::id
         jsr     LB3CA
         rts
 .endproc
+
+;;; ==================================================
+
+show_copy_file_dialog:
 
         jsr     LB3BF
         ldy     #$00
@@ -17265,10 +17283,10 @@ LA981:  lda     #$00
         sta     $D8E8
         jsr     LB53A
         addr_call LB723, str_copy_title
-        axy_call LB590, str_copy_copying, $01
-        axy_call LB590, str_copy_from, $02
-        axy_call LB590, str_copy_to, $03
-        axy_call LB590, str_copy_remaining, $04
+        axy_call draw_dialog_label, str_copy_copying, $01
+        axy_call draw_dialog_label, str_copy_from, $02
+        axy_call draw_dialog_label, str_copy_to, $03
+        axy_call draw_dialog_label, str_copy_remaining, $04
         rts
 
 LA9B5:  ldy     #$01
@@ -17338,7 +17356,7 @@ LAA5A:  jsr     LBEB1
 LAA6A:  jsr     LAACE
         lda     winF
         jsr     LB7B9
-        axy_call LB590, str_exists_prompt, $06
+        axy_call draw_dialog_label, str_exists_prompt, $06
         jsr     LB64E
 LAA7F:  jsr     LA567
         bmi     LAA7F
@@ -17352,7 +17370,7 @@ LAA7F:  jsr     LA567
 LAA9C:  jsr     LAACE
         lda     winF
         jsr     LB7B9
-        axy_call LB590, str_large_prompt, $06
+        axy_call draw_dialog_label, str_large_prompt, $06
         jsr     LB6AF
 LAAB1:  jsr     LA567
         bmi     LAAB1
@@ -17371,6 +17389,7 @@ LAACE:  sta     ALTZPOFF
         lda     LCBANK1
         rts
 
+LAAE1:
         jsr     LB3BF
         ldy     #$00
         lda     (L0006),y
@@ -17394,10 +17413,10 @@ LAB04:  lda     #$00
         sta     $D8E8
         jsr     LB53A
         addr_call LB723, str_download
-        axy_call LB590, $B015, $01
-        axy_call LB590, $B022, $02
-        axy_call LB590, $B028, $03
-        axy_call LB590, $B02D, $04
+        axy_call draw_dialog_label, $B015, $01
+        axy_call draw_dialog_label, $B022, $02
+        axy_call draw_dialog_label, $B028, $03
+        axy_call draw_dialog_label, $B02D, $04
         rts
 
 LAB38:  ldy     #$01
@@ -17449,7 +17468,7 @@ LABB8:  jsr     LBEB1
 LABC8:  jsr     LAACE
         lda     winF
         jsr     LB7B9
-        axy_call LB590, $B480, $06
+        axy_call draw_dialog_label, $B480, $06
         jsr     LB6E6
 LABDD:  jsr     LA567
         bmi     LABDD
@@ -17460,6 +17479,7 @@ LABDD:  jsr     LA567
         pla
         rts
 
+LABFA:
         jsr     LB3BF
         ldy     #$00
         lda     (L0006),y
@@ -17477,10 +17497,10 @@ LAC0F:  cmp     #$03
 
 LAC16:  jsr     LB53A
         addr_call LB723, str_size_title
-        axy_call LB590, str_size_number, $01
+        axy_call draw_dialog_label, str_size_number, $01
         ldy     #$01
         jsr     LB01F
-        axy_call LB590, str_size_blocks, $02
+        axy_call draw_dialog_label, str_size_blocks, $02
         ldy     #$02
         jsr     LB01F
         rts
@@ -17504,7 +17524,7 @@ LAC3D:  ldy     #$01
         jsr     LB7B9
         lda     #$A5
         sta     $D6C3
-        yax_call LB590, str_7_spaces, $01
+        yax_call draw_dialog_label, str_7_spaces, $01
         jsr     LB3BF
         ldy     #$03
         lda     (L0006),y
@@ -17522,7 +17542,7 @@ LAC3D:  ldy     #$01
         jsr     LBDDF
         lda     #$A5
         sta     $D6C3
-        yax_call LB590, str_7_spaces, $02
+        yax_call draw_dialog_label, str_7_spaces, $02
         rts
 
 LAC9E:  jsr     LBEB1
@@ -17541,6 +17561,7 @@ LACB7:  jsr     LA567
         lda     #$00
         rts
 
+show_delete_file_dialog:        ; ???
         jsr     LB3BF
         ldy     #$00
         lda     (L0006),y
@@ -17571,11 +17592,11 @@ LACFE:  sta     LAD1F
         addr_call LB723, str_delete_title
         lda     LAD1F
         beq     LAD20
-        axy_call LB590, str_ok_empty, $04
+        axy_call draw_dialog_label, str_ok_empty, $04
         rts
 
 LAD1F:  .byte   0
-LAD20:  axy_call LB590, str_delete_ok, $04
+LAD20:  axy_call draw_dialog_label, str_delete_ok, $04
         rts
 
 LAD2A:  ldy     #$01
@@ -17633,8 +17654,8 @@ LADC4:  jsr     LA567
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
         A2D_RELAY_CALL A2D_FILL_RECT, $AE6E
         jsr     LB6D0
-        yax_call LB590, str_delete_file_colon, $02
-        yax_call LB590, str_delete_remaining, $04
+        yax_call draw_dialog_label, str_delete_file_colon, $02
+        yax_call draw_dialog_label, str_delete_remaining, $04
         lda     #$00
 LADF4:  rts
 
@@ -17645,7 +17666,7 @@ LADF5:  jsr     LBEB1
 
 LAE05:  lda     winF
         jsr     LB7B9
-        axy_call LB590, str_delete_locked_file, $06
+        axy_call draw_dialog_label, str_delete_locked_file, $06
         jsr     LB64E
 LAE17:  jsr     LA567
         bmi     LAE17
@@ -17656,6 +17677,7 @@ LAE17:  jsr     LA567
         pla
         rts
 
+show_new_folder_dialog:
         jsr     LB3BF
         ldy     #$00
         lda     (L0006),y
@@ -17700,13 +17722,13 @@ LAE90:  lda     ($08),y
         bpl     LAE90
         lda     winF
         jsr     LB7B9
-        yax_call LB590, str_in_colon, $02
+        yax_call draw_dialog_label, str_in_colon, $02
         lda     #$37
         sta     $D6C3
-        yax_call LB590, $D402, $02
+        yax_call draw_dialog_label, $D402, $02
         lda     #$28
         sta     $D6C3
-        yax_call LB590, str_enter_folder_name, $04
+        yax_call draw_dialog_label, str_enter_folder_name, $04
         jsr     LB961
 LAEC6:  jsr     LA567
         bmi     LAEC6
@@ -17751,6 +17773,10 @@ LAF16:  jsr     LBEB1
         lda     #$01
         rts
 
+;;; ==================================================
+;;; "Get Info" dialog
+
+show_get_info_dialog:
         jsr     LB3BF
         ldy     #$00
         lda     (L0006),y
@@ -17775,22 +17801,22 @@ LAF34:  lda     #$00
         lsr     a
         ror     a
         sta     LB01D
-        yax_call LB590, str_info_name, $01
+        yax_call draw_dialog_label, str_info_name, $01
         bit     LB01D
         bmi     LAF78
-        yax_call LB590, str_info_locked, $02
+        yax_call draw_dialog_label, str_info_locked, $02
         jmp     LAF81
 
-LAF78:  yax_call LB590, str_info_protected, $02
+LAF78:  yax_call draw_dialog_label, str_info_protected, $02
 LAF81:  bit     LB01D
         bpl     LAF92
-        yax_call LB590, str_info_blocks, $03
+        yax_call draw_dialog_label, str_info_blocks, $03
         jmp     LAF9B
 
-LAF92:  yax_call LB590, str_info_size, $03
-LAF9B:  yax_call LB590, str_info_create, $04
-        yax_call LB590, str_info_mod, $05
-        yax_call LB590, str_info_type, $06
+LAF92:  yax_call draw_dialog_label, str_info_size, $03
+LAF9B:  yax_call draw_dialog_label, str_info_create, $04
+        yax_call draw_dialog_label, str_info_mod, $05
+        yax_call draw_dialog_label, str_info_type, $06
         jmp     LBEB1
 
 LAFB9:  lda     winF
@@ -17824,7 +17850,7 @@ LAFF0:  ldy     #$02
         dey
         lda     (L0006),y
 LAFF8:  ldy     LB01E
-        jsr     LB590
+        jsr     draw_dialog_label
         lda     LB01E
         cmp     #$06
         beq     LB006
@@ -17839,15 +17865,21 @@ LB006:  jsr     LA567
         pla
         rts
 
+;;; ==================================================
+
 LB01D:  .byte   0
 LB01E:  .byte   0
 LB01F:  lda     #$A0
         sta     $D6C3
         lda     #<str_colon
         ldx     #>str_colon
-        jsr     LB590
+        jsr     draw_dialog_label
         rts
 
+;;; ==================================================
+;;; "Lock" dialog
+
+show_lock_dialog:
         jsr     LB3BF
         ldy     #$00
         lda     (L0006),y
@@ -17871,7 +17903,7 @@ LB04F:  lda     #$00
         sta     $D8E8
         jsr     LB53A
         addr_call LB723, str_lock_title
-        yax_call LB590, str_lock_ok, $04
+        yax_call draw_dialog_label, str_lock_ok, $04
         rts
 
 LB068:  ldy     #$01
@@ -17926,8 +17958,8 @@ LB0FA:  jsr     LA567
         A2D_RELAY_CALL A2D_FILL_RECT, $AE6E
         A2D_RELAY_CALL A2D_FILL_RECT, LAE20
         A2D_RELAY_CALL A2D_FILL_RECT, LAE10
-        yax_call LB590, $B10E, $02
-        yax_call LB590, str_lock_remaining, $04
+        yax_call draw_dialog_label, $B10E, $02
+        yax_call draw_dialog_label, str_lock_remaining, $04
         lda     #$00
 LB139:  rts
 
@@ -17936,6 +17968,10 @@ LB13A:  jsr     LBEB1
         jsr     LB403
         rts
 
+;;; ==================================================
+;;; "Unlock" dialog
+
+show_unlock_dialog:
         jsr     LB3BF
         ldy     #$00
         lda     (L0006),y
@@ -17959,7 +17995,7 @@ LB16D:  lda     #$00
         sta     $D8E8
         jsr     LB53A
         addr_call LB723, str_unlock_title
-        yax_call LB590, str_unlock_ok, $04
+        yax_call draw_dialog_label, str_unlock_ok, $04
         rts
 
 LB186:  ldy     #$01
@@ -18014,8 +18050,8 @@ LB218:  jsr     LA567
         A2D_RELAY_CALL A2D_FILL_RECT, $AE6E
         A2D_RELAY_CALL A2D_FILL_RECT, LAE20
         A2D_RELAY_CALL A2D_FILL_RECT, LAE10
-        yax_call LB590, $B10E, $02
-        yax_call LB590, str_unlock_remaining, $04
+        yax_call draw_dialog_label, $B10E, $02
+        yax_call draw_dialog_label, str_unlock_remaining, $04
         lda     #$00
 LB257:  rts
 
@@ -18024,6 +18060,10 @@ LB258:  jsr     LBEB1
         jsr     LB403
         rts
 
+;;; ==================================================
+;;; "Rename" dialog
+
+show_rename_dialog:
         jsr     LB3BF
         ldy     #$00
         lda     (L0006),y
@@ -18047,7 +18087,7 @@ LB27D:  jsr     LBD75
         addr_call LB723, str_rename_title
         jsr     LB43B
         A2D_RELAY_CALL A2D_DRAW_RECT, $D6AB
-        yax_call LB590, str_rename_old, $02
+        yax_call draw_dialog_label, str_rename_old, $02
         lda     #$55
         sta     $D6C3
         jsr     LB3BF
@@ -18064,8 +18104,8 @@ LB2CA:  lda     ($08),y
         sta     $D8D7,y
         dey
         bpl     LB2CA
-        yax_call LB590, $D8D7, $02
-        yax_call LB590, str_rename_new, $04
+        yax_call draw_dialog_label, $D8D7, $02
+        yax_call draw_dialog_label, str_rename_new, $04
         lda     #$00
         sta     $D443
         jsr     LB961
@@ -18094,6 +18134,9 @@ LB313:  jsr     LBEB1
         lda     #$01
         rts
 
+;;; ==================================================
+
+LB325:
         A2D_RELAY_CALL A2D_HIDE_CURSOR
         jsr     LB55F
         lda     winF
@@ -18124,7 +18167,7 @@ LB364:  pla
         tax
         lda     LB3A3,y
         ldy     #$03
-        jsr     LB590
+        jsr     draw_dialog_label
         pla
         asl     a
         asl     a
@@ -18133,7 +18176,7 @@ LB364:  pla
         tax
         lda     LB3A3+2,y
         ldy     #$04
-        jsr     LB590
+        jsr     draw_dialog_label
 LB385:  jsr     LA567
         bmi     LB385
         pha
@@ -18310,7 +18353,8 @@ LB55F:  A2D_RELAY_CALL A2D_CREATE_WINDOW, winF
         A2D_RELAY_CALL A2D_DRAW_RECT, LAE08
         rts
 
-LB590:  stx     L0006+1
+draw_dialog_label:
+        stx     L0006+1
         sta     L0006
         tya
         bmi     LB59A
@@ -18436,30 +18480,42 @@ draw_text1:
 LB719:  A2D_RELAY_CALL A2D_DRAW_TEXT, $0006
 LB722:  rts
 
-LB723:  sta     L0006
-        stx     L0006+1
+;;; ==================================================
+
+.proc LB723                     ; draw centered string???
+        str       := $6
+        str_data  := $6
+        str_len   := $8
+        str_width := $9
+
+        sta     str             ; input is length-prefixed string
+        stx     str+1
+
         jsr     LBD7B
-        sta     $08
-        inc     L0006
-        bne     LB732
-        inc     L0006+1
-LB732:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $0006
-        lsr     $0A
-        ror     $09
+        sta     str_len
+        inc     str_data        ; point past length byte
+        bne     :+
+        inc     str_data+1
+:       A2D_RELAY_CALL A2D_MEASURE_TEXT, str
+        lsr     str_width+1     ; divide by two
+        ror     str_width
         lda     #$01
         sta     LB76B
         lda     #$90
-        lsr     LB76B
+        lsr     LB76B           ; divide by two
         ror     a
         sec
-        sbc     $09
+        sbc     str_width
         sta     $D6B7
         lda     LB76B
-        sbc     $0A
-        sta     $D6B8
+        sbc     str_width+1
+        sta     $D6B7+1
         A2D_RELAY_CALL A2D_SET_POS, $D6B7
-        A2D_RELAY_CALL A2D_DRAW_TEXT, $0006
+        A2D_RELAY_CALL A2D_DRAW_TEXT, str
         rts
+.endproc
+
+;;; ==================================================
 
 LB76B:  .byte   0
         sta     L0006
