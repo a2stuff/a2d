@@ -6236,10 +6236,20 @@ L46CF:  .addr   L0000
 
 L46DE:  jmp     L46F3
 
-L46E1:
-        .byte   $0A,$20,$02,$00
-L46E5:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00
+.proc get_file_info_params
+params: .byte   $A
+path:   .addr   $220
+access: .byte   0
+type:   .byte   0
+auxtype:.word   0
+storage:.byte   0
+blocks: .word   0
+mdate:  .word   0
+mtime:  .word   0
+cdate:  .word   0
+ctime:  .word   0
+.endproc
+
 L46F3:  jsr     L488A
         ldx     #$FF
 L46F8:  inx
@@ -6258,12 +6268,12 @@ L470C:  iny
         cpy     $D345
         bne     L470C
         stx     $0220
-        MLI_RELAY_CALL GET_FILE_INFO, L46E1
+        MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
         beq     L472B
         jsr     DESKTOP_SHOW_ALERT0
         rts
 
-L472B:  lda     L46E5
+L472B:  lda     get_file_info_params::type
         cmp     #$FC
         bne     L4738
         jsr     L47B8
@@ -6305,9 +6315,20 @@ L477F:  lda     $D345,x
         sta     L5B19+1
         jmp     L5AEE
 
-L47A6:  .byte   $0A,$00,$18,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00
+.proc get_file_info_params2
+params: .byte   $A
+path:   .addr   $1800
+access: .byte   0
+type:   .byte   0
+auxtype:.word   0
+storage:.byte   0
+blocks: .word   0
+mdate:  .word   0
+mtime:  .word   0
+cdate:  .word   0
+ctime:  .word   0
+.endproc
+
 L47B8:  ldx     $D355
         stx     L4816
 L47BE:  lda     $D355,x
@@ -6327,7 +6348,7 @@ L47D7:  inx
         cpy     L4817
         bne     L47D7
         stx     $1800
-        MLI_RELAY_CALL GET_FILE_INFO, L47A6
+        MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params2
         bne     L47F3
         rts
 
@@ -6487,10 +6508,21 @@ L4980:  lda     L0800,x
         jmp     L4961
 
 L498F:  .byte   $00
-L4990:  .byte   $0A
-L4991:  .byte   $20
-L4992:  .byte   $02,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+
+.proc get_file_info_params3
+params: .byte   $A
+path:   .addr   $0220
+access: .byte   0
+type:   .byte   0
+auxtype:.word   0
+storage:.byte   0
+blocks: .word   0
+mdate:  .word   0
+mtime:  .word   0
+cdate:  .word   0
+ctime:  .word   0
+.endproc
+
         jmp     L49A6
 
 L49A5:  .byte   0
@@ -6654,9 +6686,9 @@ L4ADC:  iny
         rts
 
 L4AEA:  jsr     L4B5F
-        sta     L4991
-        stx     L4992
-        MLI_RELAY_CALL GET_FILE_INFO, L4990
+        sta     get_file_info_params3::path
+        stx     get_file_info_params3::path+1
+        MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params3
         rts
 
 L4AFD:  sta     ALTZPOFF
@@ -10735,13 +10767,21 @@ params: .byte   1
 ref_num:.byte   0
 .endproc
 
+.proc get_file_info_params4
+params: .byte   $A
+path:   .addr   $705D
+access: .byte   0
+type:   .byte   0
+auxtype:.word   0
+storage:.byte   0
+blocks: .word   0
+mdate:  .word   0
+mtime:  .word   0
+cdate:  .word   0
+ctime:  .word   0
+.endproc
 
-L70A8:  .byte   $0A,$5D,$70,$00,$00
-L70AD:  .byte   $00
-L70AE:  .byte   $00,$00
-L70B0:  .byte   $00
-L70B1:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00
+        .byte   0
 L70BB:  .byte   $00
 L70BC:  .byte   $00
 L70BD:  .byte   $00
@@ -10998,20 +11038,20 @@ L72E2:  lda     $0C04
         beq     L72EC
         rts
 
-L72EC:  MLI_RELAY_CALL GET_FILE_INFO, L70A8
+L72EC:  MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params4
         beq     L72F8
         rts
 
-L72F8:  lda     L70AD
+L72F8:  lda     get_file_info_params4::auxtype
         sta     L70BD
-        lda     L70AE
+        lda     get_file_info_params4::auxtype+1
         sta     L70BE
-        lda     L70AD
+        lda     get_file_info_params4::auxtype
         sec
-        sbc     L70B0
+        sbc     get_file_info_params4::blocks
         sta     L70BB
-        lda     L70AE
-        sbc     L70B1
+        lda     get_file_info_params4::auxtype+1
+        sbc     get_file_info_params4::blocks+1
         sta     L70BC
         lda     L70BD
         sec
