@@ -1661,7 +1661,7 @@ L9ECB:  ldx     L9016
 L9EEA:  ldy     #$00
         lda     ($06),y
         sta     L9EC2
-        DESKTOP_DIRECT_CALL $3, $9EC2
+        DESKTOP_DIRECT_CALL $3, L9EC2
         lda     #0
         rts
 
@@ -2086,7 +2086,7 @@ LA2B5:  bmi     LA2AA
         ldy     #$00
         lda     ($06),y
         sta     LA2A9
-        DESKTOP_DIRECT_CALL $3, $A2A9
+        DESKTOP_DIRECT_CALL $3, LA2A9
 LA2DD:  pla
         tax
         dex
@@ -2299,10 +2299,10 @@ LA49D:  ldy     #$00
         bit     LA3B7
         bpl     LA4AC
         jsr     LA4D3
-LA4AC:  DESKTOP_DIRECT_CALL $D, $A3AE
+LA4AC:  DESKTOP_DIRECT_CALL $D, LA3AE
         beq     LA4BA
 
-        DESKTOP_DIRECT_CALL $3, $A3AE
+        DESKTOP_DIRECT_CALL $3, LA3AE
 
 LA4BA:  bit     LA3B7
         bpl     LA4C5
@@ -3505,7 +3505,7 @@ LBA0B:  sta     $D239,x
         A2D_RELAY2_CALL A2D_FILL_RECT, alert_rect ; alert background
         A2D_RELAY2_CALL A2D_SET_FILL_MODE, const2 ; ensures corners are inverted
         A2D_RELAY2_CALL A2D_DRAW_RECT, alert_rect ; alert outline
-        A2D_RELAY2_CALL A2D_SET_BOX, $B6D3
+        A2D_RELAY2_CALL A2D_SET_BOX, LB6D3
         A2D_RELAY2_CALL A2D_DRAW_RECT, alert_inner_frame_rect1 ; inner 2x border
         A2D_RELAY2_CALL A2D_DRAW_RECT, alert_inner_frame_rect2
         A2D_RELAY2_CALL A2D_SET_FILL_MODE, const0 ; restores normal mode
@@ -3564,7 +3564,7 @@ LBB14:  A2D_RELAY2_CALL A2D_SET_FILL_MODE, const2
 LBB5C:  A2D_RELAY2_CALL A2D_DRAW_RECT, try_again_rect
         A2D_RELAY2_CALL A2D_SET_POS, try_again_pos
         DRAW_PASCAL_STRING ok_label
-LBB75:  A2D_RELAY2_CALL A2D_SET_POS, $B70F
+LBB75:  A2D_RELAY2_CALL A2D_SET_POS, LB70F
         lda     LB714
         ldx     LB715
         jsr     draw_pascal_string
@@ -6257,7 +6257,7 @@ L470C:  iny
         cpy     $D345
         bne     L470C
         stx     $0220
-        MLI_RELAY_CALL $C4, $46E1
+        MLI_RELAY_CALL GET_FILE_INFO, $46E1
         beq     L472B
         jsr     DESKTOP_SHOW_ALERT0
         rts
@@ -6326,7 +6326,7 @@ L47D7:  inx
         cpy     L4817
         bne     L47D7
         stx     $1800
-        MLI_RELAY_CALL $C4, $47A6
+        MLI_RELAY_CALL GET_FILE_INFO, $47A6
         bne     L47F3
         rts
 
@@ -6653,7 +6653,7 @@ L4ADC:  iny
 L4AEA:  jsr     L4B5F
         sta     L4991
         stx     L4992
-        MLI_RELAY_CALL $C4, $4990
+        MLI_RELAY_CALL GET_FILE_INFO, $4990
         rts
 
 L4AFD:  sta     ALTZPOFF
@@ -7198,7 +7198,7 @@ L5000:  lda     $BF90,x
         sta     L4F72,x
         dex
         bpl     L5000
-        MLI_RELAY_CALL $C0, $4F6A
+        MLI_RELAY_CALL CREATE, $4F6A
         beq     L5027
         jsr     DESKTOP_SHOW_ALERT0
         lda     L504E
@@ -10940,7 +10940,7 @@ L7296:  lda     L0006
 L72A7:  .byte   0
 L72A8:  .byte   0
 L72A9:  .byte   0
-L72AA:  MLI_RELAY_CALL $C8, $7057
+L72AA:  MLI_RELAY_CALL OPEN, $7057
         beq     L72CD
         jsr     DESKTOP_SHOW_ALERT0
         jsr     L8B1F
@@ -10953,10 +10953,10 @@ L72C9:  ldx     $E256
         txs
 L72CD:  rts
 
-L72CE:  MLI_RELAY_CALL $CA, $709E
+L72CE:  MLI_RELAY_CALL READ, $709E
         rts
 
-L72D8:  MLI_RELAY_CALL $CC, $70A6
+L72D8:  MLI_RELAY_CALL CLOSE, $70A6
         rts
 
 L72E2:  lda     $0C04
@@ -10965,7 +10965,7 @@ L72E2:  lda     $0C04
         beq     L72EC
         rts
 
-L72EC:  MLI_RELAY_CALL $C4, $70A8
+L72EC:  MLI_RELAY_CALL GET_FILE_INFO, $70A8
         beq     L72F8
         rts
 
@@ -12877,7 +12877,7 @@ L8397:  sec
         bne     L8397
         ora     #$30
         sta     L83E0
-L83A2:  addr_jump L84A4, $83DE
+L83A2:  addr_jump L84A4, L83DE
 
 L83A9:  lda     L83DC
         asl     a
@@ -13611,15 +13611,17 @@ L899A:  sta     $D265,x
         A2D_RELAY_CALL A2D_SET_STATE, $D25D
         rts
 
-        .byte   $02
-L89B3:  .byte   0
-        .byte   0
-        php
+.proc on_line_params
+params: .byte   2
+unit:   .byte   0
+buffer: .addr   $800
+.endproc
+
 L89B6:  sta     L8AC3
         sty     L8AC4
         and     #$F0
-        sta     L89B3
-        MLI_RELAY_CALL $C5, $89B2
+        sta     on_line_params::unit
+        MLI_RELAY_CALL ON_LINE, on_line_params
         beq     L89DD
 L89CC:  pha
         ldy     L8AC4
@@ -13756,7 +13758,10 @@ L8AC5:  .byte   $00,$00,$00,$00,$EA,$01,$10,$00
         .byte   $EA,$01,$67,$00,$EA,$01,$83,$00
         .byte   $90,$01,$A0,$00,$36,$01,$A0,$00
         .byte   $DC,$00,$A0,$00,$82,$00,$A0,$00
-        .byte   $28,$00,$A0,$00,$01,$24
+        .byte   $28,$00,$A0,$00
+L8AF1:  .byte   $01,$24
+
+
         pha
 L8AF4:  ldx     buf3len
         dex
@@ -14137,18 +14142,24 @@ L8E3F:  .byte   $02,$00,$14,$00,$10,$00,$20,$00
 L8E50:  .byte   $00
 L8E51:  .byte   $08,$00,$08,$00,$90,$00,$50,$00
         .byte   $70,$00,$70,$00,$70,$00,$50,$00
-        .byte   $90,$03,$68,$8E,$00,$1C
-L8E67:  .byte   $00,$08,$44,$65,$73,$6B,$54,$6F
-        .byte   $70,$32,$02
+        .byte   $90
+L8E62:  .byte   $03
+        .addr   L8E68
+        .byte   $00,$1C
+L8E67:  .byte   $00
+L8E68:  PASCAL_STRING "DeskTop2"
+L8E71:  .byte   $02
 L8E72:  .byte   $00
 L8E73:  .byte   $00
 L8E74:  .byte   $00
-L8E75:  .byte   $00,$04
+L8E75:  .byte   $00
+L8E76:  .byte   $04
 L8E77:  .byte   $00
 L8E78:  .byte   $00
 L8E79:  .byte   $00
 L8E7A:  .byte   $00
-L8E7B:  .byte   $00,$00,$00,$01,$00
+L8E7B:  .byte   $00,$00,$00
+L8E7E:  .byte   $01,$00
 L8E80:  .byte   $00
 L8E81:  pha
         lda     #$00
@@ -14176,7 +14187,7 @@ L8E8F:  pla
         sta     L8E78
         lda     L8E51,y
         sta     L8E79
-L8EBE:  MLI_RELAY_CALL $C8, $8E62
+L8EBE:  MLI_RELAY_CALL OPEN, L8E62
         beq     L8ED6
         lda     #$00
         ora     L8E80
@@ -14188,9 +14199,9 @@ L8EBE:  MLI_RELAY_CALL $C8, $8E62
 L8ED6:  lda     L8E67
         sta     L8E77
         sta     L8E72
-        MLI_RELAY_CALL $CE, $8E71
-        MLI_RELAY_CALL $CA, $8E76
-        MLI_RELAY_CALL $CC, $8E7E
+        MLI_RELAY_CALL SET_MARK, L8E71
+        MLI_RELAY_CALL READ, L8E76
+        MLI_RELAY_CALL CLOSE, L8E7E
         rts
 
         .byte   0
@@ -19567,7 +19578,7 @@ L0A01:  .byte   0
 L0A02:  .byte   0
 
 L0A03:  A2D_RELAY_CALL $29, $0000
-        MLI_RELAY_CALL GET_PREFIX, $8AF1
+        MLI_RELAY_CALL GET_PREFIX, desktop_main::L8AF1 ; ???
         A2D_RELAY_CALL $29, $0000
         lda     #$00
         sta     L0A92
