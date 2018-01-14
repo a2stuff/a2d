@@ -10701,14 +10701,24 @@ L704C:  .byte   0
         .byte   0
 L7054:  jmp     L70C5
 
-L7057:  .byte   $03,$5D,$70,$00,$08
-L705C:  .byte   $00
+.proc open_params
+params: .byte   3
+path:   .addr   $705D
+buffer: .addr   $800
+ref_num:.byte   0
+.endproc
+
 L705D:  .res    64, 0
         .byte   $00
 L709E:  .byte   $04
 L709F:  .byte   $00,$00,$0C,$00,$02,$00,$00
-L70A6:  .byte   $01
-L70A7:  .byte   $00
+
+.proc close_params
+params: .byte   1
+ref_num:.byte   0
+.endproc
+
+
 L70A8:  .byte   $0A,$5D,$70,$00,$00
 L70AD:  .byte   $00
 L70AE:  .byte   $00,$00
@@ -10733,9 +10743,9 @@ L70CD:  lda     $E1B0,x
         dex
         bpl     L70CD
         jsr     L72AA
-        lda     L705C
+        lda     open_params::ref_num
         sta     L709F
-        sta     L70A7
+        sta     close_params::ref_num
         jsr     L72CE
         jsr     L72E2
         ldx     #$00
@@ -10946,7 +10956,7 @@ L7296:  lda     L0006
 L72A7:  .byte   0
 L72A8:  .byte   0
 L72A9:  .byte   0
-L72AA:  MLI_RELAY_CALL OPEN, L7057
+L72AA:  MLI_RELAY_CALL OPEN, open_params
         beq     L72CD
         jsr     DESKTOP_SHOW_ALERT0
         jsr     L8B1F
@@ -10962,7 +10972,7 @@ L72CD:  rts
 L72CE:  MLI_RELAY_CALL READ, L709E
         rts
 
-L72D8:  MLI_RELAY_CALL CLOSE, L70A6
+L72D8:  MLI_RELAY_CALL CLOSE, close_params
         rts
 
 L72E2:  lda     $0C04
@@ -14149,11 +14159,17 @@ L8E50:  .byte   $00
 L8E51:  .byte   $08,$00,$08,$00,$90,$00,$50,$00
         .byte   $70,$00,$70,$00,$70,$00,$50,$00
         .byte   $90
-L8E62:  .byte   $03
-        .addr   L8E68
-        .byte   $00,$1C
-L8E67:  .byte   $00
-L8E68:  PASCAL_STRING "DeskTop2"
+
+.proc open_params2
+params: .byte   3
+path:   .addr   str_desktop2
+buffer: .addr   $1C00
+ref_num:.byte   0
+.endproc
+
+str_desktop2:
+        PASCAL_STRING "DeskTop2"
+
 L8E71:  .byte   $02
 L8E72:  .byte   $00
 L8E73:  .byte   $00
@@ -14165,7 +14181,12 @@ L8E78:  .byte   $00
 L8E79:  .byte   $00
 L8E7A:  .byte   $00
 L8E7B:  .byte   $00,$00,$00
-L8E7E:  .byte   $01,$00
+
+.proc close_params2
+params: .byte   1
+ref_num:.byte   0
+.endproc
+
 L8E80:  .byte   $00
 L8E81:  pha
         lda     #$00
@@ -14193,7 +14214,7 @@ L8E8F:  pla
         sta     L8E78
         lda     L8E51,y
         sta     L8E79
-L8EBE:  MLI_RELAY_CALL OPEN, L8E62
+L8EBE:  MLI_RELAY_CALL OPEN, open_params2
         beq     L8ED6
         lda     #$00
         ora     L8E80
@@ -14202,12 +14223,12 @@ L8EBE:  MLI_RELAY_CALL OPEN, L8E62
         lda     #$FF
         rts
 
-L8ED6:  lda     L8E67
+L8ED6:  lda     open_params2::ref_num
         sta     L8E77
         sta     L8E72
         MLI_RELAY_CALL SET_MARK, L8E71
         MLI_RELAY_CALL READ, L8E76
-        MLI_RELAY_CALL CLOSE, L8E7E
+        MLI_RELAY_CALL CLOSE, close_params2
         rts
 
         .byte   0
@@ -19682,12 +19703,12 @@ L0ABC:  jsr     L86C1
         tya
         rts
 
-L0AC9:  .byte   $03
-        .byte   $CF
-        .byte   $0A
-        .byte   0
-        .byte   $10
-L0ACE:  .byte   0
+.proc open_params
+params: .byte   3
+path:   .addr   $0ACF
+buffer: .addr   $1000
+ref_num:.byte   0
+.endproc
 
 L0ACF:  PASCAL_STRING "Selector.List"
 
@@ -19700,13 +19721,16 @@ L0ADE:  .byte   0
         .byte   0
         .byte   0
 
-L0AE5:  .byte   1,0
+.proc close_params
+params: .byte   1
+ref_num:.byte   0
+.endproc
 
-L0AE7:  MLI_RELAY_CALL OPEN, L0AC9
-        lda     L0ACE
+L0AE7:  MLI_RELAY_CALL OPEN, open_params
+        lda     open_params::ref_num
         sta     L0ADE
         MLI_RELAY_CALL READ, L0ADD
-        MLI_RELAY_CALL CLOSE, L0AE5
+        MLI_RELAY_CALL CLOSE, close_params
         rts
 
 L0B09:  addr_call measure_text1, str_6_spaces
@@ -19776,10 +19800,10 @@ L0BB9:  lda     L0CE9
         beq     L0BC3
         jmp     L0D0A
 
-L0BC3:  MLI_RELAY_CALL OPEN, L0CD7
-        lda     L0CDC
+L0BC3:  MLI_RELAY_CALL OPEN, open_params2
+        lda     open_params2_ref_num
         sta     L0CDE
-        sta     L0CF9
+        sta     close_params2_ref_num
         MLI_RELAY_CALL READ, L0CDD
         lda     #$00
         sta     L0D04
@@ -19890,15 +19914,17 @@ L0CBA:  lda     L0006
         sta     L0006+1
         jmp     L0C0C
 
-L0CCB:  MLI_RELAY_CALL CLOSE, L0CF8
+L0CCB:  MLI_RELAY_CALL CLOSE, close_params2
         jmp     L0D0A
 
-L0CD7:  .byte   $03
-        .byte   $FA
-        .byte   $0C
-        .byte   0
-        .byte   $10
-L0CDC:  .byte   0
+.proc open_params2
+params: .byte   3
+path:   .addr   $0CFA
+buffer: .addr   $1000
+ref_num:.byte   0
+.endproc
+        open_params2_ref_num := open_params2::ref_num
+
 L0CDD:  .byte   $04
 L0CDE:  .byte   0
         .byte   0
@@ -19926,8 +19952,12 @@ L0CE9:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-L0CF8:  .byte   $01
-L0CF9:  .byte   0
+
+.proc close_params2
+params: .byte   1
+ref_num:.byte   0
+.endproc
+        close_params2_ref_num := close_params2::ref_num
 
         PASCAL_STRING "Desk.acc"
 
