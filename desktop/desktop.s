@@ -4802,7 +4802,10 @@ str_files:
 str_7_spaces:
         PASCAL_STRING "       "
 
-        .byte   $00,$00,$00,$00,$0D
+LD909:  .byte   $00
+LD90A:  .byte   $00
+
+        .byte   $00,$00,$0D
         .byte   $00,$00,$00,$00,$00,$7D,$00,$00
         .byte   $00,$02,$00,$00,$00,$00,$00,$02
         .byte   $01,$02,$00,$00,$57,$01,$28,$00
@@ -4877,7 +4880,8 @@ str_7_spaces:
         ;; Buffer for Run List entries
 run_list_entries:
         .res    640, 0
-        .byte   0
+
+LDD9E:  .byte   0
 
         ;; Icon to File mapping table
         ;;
@@ -7161,10 +7165,10 @@ L4E78:  jsr     L6D2B
         lda     LE6D1,x
         bmi     L4EB4
         DESKTOP_RELAY_CALL $07, desktop_winid
-        lda     $DD9E
+        lda     LDD9E
         sec
         sbc     buf3len
-        sta     $DD9E
+        sta     LDD9E
         ldx     #$00
 L4EA5:  cpx     buf3len
         beq     L4EB4
@@ -7620,10 +7624,10 @@ L5302:  DESKTOP_RELAY_CALL $07, desktop_winid
         lda     desktop_winid
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
-        lda     $DD9E
+        lda     LDD9E
         sec
         sbc     buf3len
-        sta     $DD9E
+        sta     LDD9E
         ldx     #$00
 L5320:  cpx     buf3len
         beq     L5334
@@ -8338,7 +8342,7 @@ L5916:  lda     buf3,x
         lda     LE22F
         jsr     DESKTOP_FREE_SPACE
         dec     buf3len
-        dec     $DD9E
+        dec     LDD9E
         pla
         tax
 L5942:  dex
@@ -8347,7 +8351,7 @@ L5942:  dex
         sty     L599E
 L594A:  ldy     L599E
         inc     buf3len
-        inc     $DD9E
+        inc     LDD9E
         lda     #$00
         sta     $E1A0,y
         lda     DEVLST,y
@@ -8473,7 +8477,7 @@ L5A4C:  jsr     L4523
         sta     LE22F
         beq     L5A7F
         jsr     L8AF4
-        dec     $DD9E
+        dec     LDD9E
         lda     LE22F
         jsr     DESKTOP_FREE_SPACE
         jsr     L4510
@@ -8481,7 +8485,7 @@ L5A4C:  jsr     L4523
 L5A7F:  lda     buf3len
         sta     L5AC6
         inc     buf3len
-        inc     $DD9E
+        inc     LDD9E
         pla
         tay
         lda     DEVLST,y
@@ -9272,10 +9276,10 @@ L61DC:  lda     desktop_winid
         dex
         lda     LE6D1,x
         bmi     L6215
-        lda     $DD9E
+        lda     LDD9E
         sec
         sbc     buf3len
-        sta     $DD9E
+        sta     LDD9E
         DESKTOP_RELAY_CALL $07, desktop_winid
         ldx     #$00
 L6206:  cpx     buf3len
@@ -10875,7 +10879,7 @@ L710A:  lsr     L72A9
         bne     L710A
         lda     L70C2
         bne     L7147
-        lda     $DD9E
+        lda     LDD9E
         clc
         adc     L70C1
         bcs     L7147
@@ -11635,7 +11639,7 @@ L7744:  ldy     #$22
 
 L7764:  .byte   $00,$00,$00
 L7767:  .byte   $14
-L7768:  inc     $DD9E
+L7768:  inc     LDD9E
         jsr     DESKTOP_FIND_SPACE
         ldx     buf3len
         inc     buf3len
@@ -13750,7 +13754,7 @@ L89CC:  pha
         lda     #$00
         sta     $E1A0,y
         dec     buf3len
-        dec     $DD9E
+        dec     LDD9E
         pla
         rts
 
@@ -17437,10 +17441,10 @@ LA981:  lda     #$00
 
 LA9B5:  ldy     #$01
         lda     (L0006),y
-        sta     $D909
+        sta     LD909
         iny
         lda     (L0006),y
-        sta     $D90A
+        sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
         lda     winF
@@ -17452,10 +17456,10 @@ LA9B5:  ldy     #$01
 
 LA9E6:  ldy     #$01
         lda     (L0006),y
-        sta     $D909
+        sta     LD909
         iny
         lda     (L0006),y
-        sta     $D90A
+        sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
         lda     winF
@@ -17566,10 +17570,10 @@ LAB04:  lda     #$00
 
 LAB38:  ldy     #$01
         lda     (L0006),y
-        sta     $D909
+        sta     LD909
         iny
         lda     (L0006),y
-        sta     $D90A
+        sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
         lda     winF
@@ -17581,10 +17585,10 @@ LAB38:  ldy     #$01
 
 LAB69:  ldy     #$01
         lda     (L0006),y
-        sta     $D909
+        sta     LD909
         iny
         lda     (L0006),y
-        sta     $D90A
+        sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
         lda     winF
@@ -17652,7 +17656,7 @@ LAC16:  jsr     LB53A
 
 LAC3D:  ldy     #$01
         lda     (L0006),y
-        sta     $D909
+        sta     LD909
         tax
         iny
         lda     (L0006),y
@@ -17660,10 +17664,10 @@ LAC3D:  ldy     #$01
         stx     L0006
         ldy     #$00
         lda     (L0006),y
-        sta     $D909
+        sta     LD909
         iny
         lda     (L0006),y
-        sta     $D90A
+        sta     LD90A
         jsr     LBDDF
         lda     winF
         jsr     LB7B9
@@ -17680,10 +17684,10 @@ LAC3D:  ldy     #$01
         stx     L0006
         ldy     #$00
         lda     (L0006),y
-        sta     $D909
+        sta     LD909
         iny
         lda     (L0006),y
-        sta     $D90A
+        sta     LD90A
         jsr     LBDDF
         lda     #$A5
         sta     LD6C3
@@ -17746,10 +17750,10 @@ LAD20:  axy_call draw_dialog_label, str_delete_ok, $04
 
 LAD2A:  ldy     #$01
         lda     (L0006),y
-        sta     $D909
+        sta     LD909
         iny
         lda     (L0006),y
-        sta     $D90A
+        sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
         lda     winF
@@ -17766,10 +17770,10 @@ LAD5D:  addr_call draw_text1, str_7_spaces
 
 LAD6C:  ldy     #$01
         lda     (L0006),y
-        sta     $D909
+        sta     LD909
         iny
         lda     (L0006),y
-        sta     $D90A
+        sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
         lda     winF
@@ -18053,10 +18057,10 @@ LB04F:  lda     #$00
 
 LB068:  ldy     #$01
         lda     (L0006),y
-        sta     $D909
+        sta     LD909
         iny
         lda     (L0006),y
-        sta     $D90A
+        sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
         lda     winF
@@ -18069,10 +18073,10 @@ LB068:  ldy     #$01
 
 LB0A2:  ldy     #$01
         lda     (L0006),y
-        sta     $D909
+        sta     LD909
         iny
         lda     (L0006),y
-        sta     $D90A
+        sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
         lda     winF
@@ -18145,10 +18149,10 @@ LB16D:  lda     #$00
 
 LB186:  ldy     #$01
         lda     (L0006),y
-        sta     $D909
+        sta     LD909
         iny
         lda     (L0006),y
-        sta     $D90A
+        sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
         lda     winF
@@ -18161,10 +18165,10 @@ LB186:  ldy     #$01
 
 LB1C0:  ldy     #$01
         lda     (L0006),y
-        sta     $D909
+        sta     LD909
         iny
         lda     (L0006),y
-        sta     $D90A
+        sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
         lda     winF
@@ -19322,9 +19326,9 @@ LBDB0:  .byte   0
         .byte   0
         .byte   0
 LBDC4:  ldx     str_files
-        lda     $D90A
+        lda     LD90A
         bne     LBDD9
-        lda     $D909
+        lda     LD909
         cmp     #$02
         bcs     LBDD9
         lda     #$20
@@ -19335,9 +19339,9 @@ LBDD9:  lda     #$73
         sta     str_files,x
         rts
 
-LBDDF:  lda     $D909
+LBDDF:  lda     LD909
         sta     LBE5F
-        lda     $D90A
+        lda     LD90A
         sta     LBE60
 
         ldx     #7              ; does this ever get overwritten???
@@ -19610,7 +19614,7 @@ L092F:  lda     #$00
         sta     $DE9F
         lda     #$01
         sta     buf3len
-        sta     $DD9E
+        sta     LDD9E
         jsr     DESKTOP_FIND_SPACE
         sta     $EBFB
         sta     buf3
@@ -20092,7 +20096,7 @@ L0D12:  lda     L0E33
         tya
         pha
         inc     buf3len
-        inc     $DD9E
+        inc     LDD9E
         lda     DEVLST,y
         jsr     L89B6
         sta     L0E34
