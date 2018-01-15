@@ -4934,13 +4934,23 @@ window_address_table:
 
         .byte   $00,$00,$00,$00,$7F,$64,$00,$1C
         .byte   $00,$1E,$00,$32,$00,$1E,$00,$40
+        .byte   $00,$00,$00,$00,$00
+
+LE22F:  .byte   0
+LE230:  DEFINE_RECT 0,0,0,0
+
+        .byte   $00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+
+.proc menu_click_params
+menu_id:.byte   0
+item_num:.byte  0
+.endproc
+
+        .byte   $00,$00,$00,$00,$00,$00
         .byte   $00,$04,$00,$00,$00,$04,$00,$00
         .byte   $04,$00,$00,$00,$00,$00,$04,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -5159,9 +5169,11 @@ str_items:
         PASCAL_STRING " Items"
 
 items_label_pos:
-        .word   8, 10
-        .byte   $00,$00,$00,$00
-        .byte   $00,$00,$00,$00
+        DEFINE_POINT 8, 10
+
+LEBBE:  DEFINE_POINT 0, 0
+
+LEBC2:  DEFINE_POINT 0, 0
 
 str_k_in_disk:
         PASCAL_STRING "K in disk"
@@ -5173,8 +5185,11 @@ str_6_spaces:
         PASCAL_STRING "      "
 
 LEBE3:  .byte   $00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00
+LEBEB:  DEFINE_POINT 0, 0
+LEBEF:  DEFINE_POINT 0, 0
+        .byte   $00,$00,$00
+        .byte   $00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00
 
         ;; Used by DESKTOP_COPY_*_BUF
@@ -5756,7 +5771,7 @@ L41E2:  lda     bufnum
         jsr     L6E52
         ldx     #$07
 L41F0:  lda     $D21D,x
-        sta     $E230,x
+        sta     LE230,x
         dex
         bpl     L41F0
         lda     #$00
@@ -5766,10 +5781,10 @@ L41FE:  lda     L4241
         beq     L4227
         tax
         lda     buf3,x
-        sta     $E22F
-        DESKTOP_RELAY_CALL $0D, $E22F
+        sta     LE22F
+        DESKTOP_RELAY_CALL $0D, LE22F
         beq     L4221
-        DESKTOP_RELAY_CALL $03, $E22F
+        DESKTOP_RELAY_CALL $03, LE22F
 L4221:  inc     L4241
         jmp     L41FE
 
@@ -5802,7 +5817,7 @@ L424A:  lda     #$00
         jsr     L6E8E
         ldx     #$07
 L4267:  lda     $D21D,x
-        sta     $E230,x
+        sta     LE230,x
         dex
         bpl     L4267
 L4270:  lda     L42C3
@@ -5810,12 +5825,12 @@ L4270:  lda     L42C3
         beq     L42A2
         tax
         lda     selected_file_index,x
-        sta     $E22F
+        sta     LE22F
         jsr     L8915
-        DESKTOP_RELAY_CALL $0D, $E22F
+        DESKTOP_RELAY_CALL $0D, LE22F
         beq     L4296
-        DESKTOP_RELAY_CALL $03, $E22F
-L4296:  lda     $E22F
+        DESKTOP_RELAY_CALL $03, LE22F
+L4296:  lda     LE22F
         jsr     L8893
         inc     L42C3
         jmp     L4270
@@ -5827,8 +5842,8 @@ L42A5:  lda     L42C3
         beq     L42A2
         tax
         lda     selected_file_index,x
-        sta     $E22F
-        DESKTOP_RELAY_CALL $03, $E22F
+        sta     LE22F
+        DESKTOP_RELAY_CALL $03, LE22F
         inc     L42C3
         jmp     L42A5
 
@@ -5893,8 +5908,8 @@ L4394:  lda     input_params+1
         beq     L43A1
         lda     #$01
 L43A1:  sta     $E25D
-        A2D_RELAY_CALL $32, $E25A ; ???
-L43AD:  ldx     $E25A
+        A2D_RELAY_CALL $32, menu_click_params
+L43AD:  ldx     menu_click_params::menu_id
         bne     L43B3
         rts
 
@@ -5915,7 +5930,7 @@ L43B3:  dex
         lda     L42C5,x
         sta     L43E5+1
         jsr     L43E0
-        A2D_RELAY_CALL $33, $E25A ; ???
+        A2D_RELAY_CALL $33, menu_click_params
         rts
 
 L43E0:  tsx
@@ -5940,7 +5955,7 @@ L4415:  jmp     L68AA
 
 L4418:  cmp     #$01
         bne     L4428
-        A2D_RELAY_CALL A2D_MENU_CLICK, $E25A
+        A2D_RELAY_CALL A2D_MENU_CLICK, menu_click_params
         jmp     L43AD
 
 L4428:  pha
@@ -5978,8 +5993,8 @@ L445D:  jsr     L6D2B
         ldx     $D20E
         dex
         lda     LEC26,x
-        sta     $E22F
-        lda     $E22F
+        sta     LE22F
+        lda     LE22F
         jsr     L86E3
         sta     L0006
         stx     L0006+1
@@ -5993,13 +6008,13 @@ L445D:  jsr     L6D2B
         and     #$0F
         sta     L445C
         jsr     L8997
-        DESKTOP_RELAY_CALL $02, $E22F
+        DESKTOP_RELAY_CALL $02, LE22F
         jsr     L4510
         lda     L445C
         sta     selected_window_index
         lda     #$01
         sta     is_file_selected
-        lda     $E22F
+        lda     LE22F
         sta     selected_file_index
 L44A6:  A2D_RELAY_CALL A2D_RAISE_WINDOW, $D20E
         lda     $D20E
@@ -6042,8 +6057,8 @@ L4523:  jsr     L40F2
         rts
 
 L4530:  ldx     #$00
-        ldy     $BF31
-L4535:  lda     $BF32,y
+        ldy     DEVCNT
+L4535:  lda     DEVLST,y
         and     #$0F
         cmp     #$0B
         beq     L4559
@@ -6060,7 +6075,7 @@ L454F:  lda     L45A0,x
         bpl     L454F
 L4558:  rts
 
-L4559:  lda     $BF32,y
+L4559:  lda     DEVLST,y
         inx
         sta     L4597,x
         bne     L453E
@@ -6081,8 +6096,8 @@ L4579:  lda     #$00
 L457C:  lda     L45A0,x
         sta     L45A9,x
         lda     L4597,x
-        ldy     $BF31
-L4588:  cmp     $BF32,y
+        ldy     DEVCNT
+L4588:  cmp     DEVLST,y
         beq     L4591
         dey
         bpl     L4588
@@ -6130,7 +6145,7 @@ L45D9:  stx     L45EC
         adc     L45EC
         sta     L45EC
         L45EC := *+1
-        lda     $BF00
+        lda     $BF00           ; self-modified
         sta     L0006+1
         lda     #0
         sta     L0006
@@ -6444,7 +6459,7 @@ L48B4:  A2D_RELAY_CALL A2D_SHOW_CURSOR
 L48BE:  ldx     $E196
         inx
 L48C2:  lda     $E196,x
-        sta     $BF31,x
+        sta     DEVCNT,x
         dex
         bpl     L48C2
         rts
@@ -7165,7 +7180,7 @@ L4EC3:  sta     buf3len
         ldx     desktop_winid
         dex
         lda     LEC26,x
-        sta     $E22F
+        sta     LE22F
         jsr     L86E3
         sta     L0006
         stx     L0006+1
@@ -7176,11 +7191,11 @@ L4EC3:  sta     buf3len
         and     #$0F
         sta     selected_window_index
         jsr     L8997
-        DESKTOP_RELAY_CALL $02, $E22F
+        DESKTOP_RELAY_CALL $02, LE22F
         jsr     L4510
         lda     #$01
         sta     is_file_selected
-        lda     $E22F
+        lda     LE22F
         sta     selected_file_index
         ldx     desktop_winid
         dex
@@ -7447,11 +7462,11 @@ L51A7:  jsr     L4510
         sta     L51EF
 L51C0:  ldx     L51EF
         lda     is_file_selected,x
-        sta     $E22F
+        sta     LE22F
         jsr     L8915
         jsr     L6E8E
-        DESKTOP_RELAY_CALL $02, $E22F
-        lda     $E22F
+        DESKTOP_RELAY_CALL $02, LE22F
+        lda     LE22F
         jsr     L8893
         dec     L51EF
         bne     L51C0
@@ -7777,11 +7792,11 @@ L5485:  cpx     buf3len
         txa
         pha
         lda     buf3,x
-        sta     $E22F
+        sta     LE22F
         jsr     L8915
-        DESKTOP_RELAY_CALL $0D, $E22F
+        DESKTOP_RELAY_CALL $0D, LE22F
         pha
-        lda     $E22F
+        lda     LE22F
         jsr     L8893
         pla
         beq     L54B7
@@ -7939,7 +7954,7 @@ L55D1:  ldx     L544A
 
 L55F0:  ldx     L544A
         lda     $1801,x
-        sta     $E22F
+        sta     LE22F
         jsr     L86E3
         sta     L0006
         stx     L0006+1
@@ -7949,17 +7964,17 @@ L55F0:  ldx     L544A
         sta     $D212
         beq     L5614
         jsr     L56F9
-        lda     $E22F
+        lda     LE22F
         jsr     L8915
-L5614:  DESKTOP_RELAY_CALL $02, $E22F
+L5614:  DESKTOP_RELAY_CALL $02, LE22F
         lda     $D212
         beq     L562B
-        lda     $E22F
+        lda     LE22F
         jsr     L8893
         jsr     L4510
 L562B:  rts
 
-L562C:  lda     $E22F
+L562C:  lda     LE22F
         jsr     L86E3
         sta     L0006
         stx     L0006+1
@@ -7969,12 +7984,12 @@ L562C:  lda     $E22F
         sta     $D212
         beq     L564A
         jsr     L56F9
-        lda     $E22F
+        lda     LE22F
         jsr     L8915
-L564A:  DESKTOP_RELAY_CALL $0B, $E22F
+L564A:  DESKTOP_RELAY_CALL $0B, LE22F
         lda     $D212
         beq     L5661
-        lda     $E22F
+        lda     LE22F
         jsr     L8893
         jsr     L4510
 L5661:  rts
@@ -8306,11 +8321,11 @@ L5916:  lda     buf3,x
         txa
         pha
         lda     buf3,x
-        sta     $E22F
+        sta     LE22F
         lda     #$00
         sta     buf3,x
-        DESKTOP_RELAY_CALL $04, $E22F
-        lda     $E22F
+        DESKTOP_RELAY_CALL $04, LE22F
+        lda     LE22F
         jsr     DESKTOP_FREE_SPACE
         dec     buf3len
         dec     $DD9E
@@ -8325,7 +8340,7 @@ L594A:  ldy     L599E
         inc     $DD9E
         lda     #$00
         sta     $E1A0,y
-        lda     $BF32,y
+        lda     DEVLST,y
         jsr     L89B6
         cmp     #$57
         bne     L5967
@@ -8333,7 +8348,7 @@ L594A:  ldy     L599E
         sta     L599F
 L5967:  inc     L599E
         lda     L599E
-        cmp     $BF31
+        cmp     DEVCNT
         beq     L594A
         bcc     L594A
         ldx     #$00
@@ -8381,9 +8396,9 @@ L59C9:  sty     L5AC6
         sty     $E25B
         jmp     L59F3
 
-L59D2:  ldy     $BF31
+L59D2:  ldy     DEVCNT
         lda     L533F
-L59D8:  cmp     $BF32,y
+L59D8:  cmp     DEVLST,y
         beq     L59E1
         dey
         bpl     L59D8
@@ -8445,21 +8460,21 @@ L5A4C:  jsr     L4523
         tay
         pha
         lda     $E1A0,y
-        sta     $E22F
+        sta     LE22F
         beq     L5A7F
         jsr     L8AF4
         dec     $DD9E
-        lda     $E22F
+        lda     LE22F
         jsr     DESKTOP_FREE_SPACE
         jsr     L4510
-        DESKTOP_RELAY_CALL $04, $E22F
+        DESKTOP_RELAY_CALL $04, LE22F
 L5A7F:  lda     buf3len
         sta     L5AC6
         inc     buf3len
         inc     $DD9E
         pla
         tay
-        lda     $BF32,y
+        lda     DEVLST,y
         jsr     L89B6
         bit     L5AD0
         bmi     L5AA9
@@ -8742,10 +8757,10 @@ L5D0B:  ldx     is_file_selected
         sta     $D212
         jsr     L44F2
         lda     L5CD9
-        sta     $E22F
+        sta     LE22F
         jsr     L8915
         jsr     L6E8E
-        DESKTOP_RELAY_CALL $02, $E22F
+        DESKTOP_RELAY_CALL $02, LE22F
         lda     desktop_winid
         sta     $D212
         jsr     L44F2
@@ -8982,18 +8997,18 @@ L5F3F:  jsr     L6D2B
         jsr     L6E8E
         ldx     #$03
 L5F50:  lda     L5F0B,x
-        sta     $E230,x
+        sta     LE230,x
         lda     L5F0F,x
         sta     $E234,x
         dex
         bpl     L5F50
         jsr     L48FA
-        A2D_RELAY_CALL A2D_DRAW_RECT, $E230
+        A2D_RELAY_CALL A2D_DRAW_RECT, LE230
 L5F6B:  jsr     L48F0
         lda     input_params_state
         cmp     #A2D_INPUT_HELD
         beq     L5FC5
-        A2D_RELAY_CALL A2D_DRAW_RECT, $E230
+        A2D_RELAY_CALL A2D_DRAW_RECT, LE230
         ldx     #$00
 L5F80:  cpx     buf3len
         bne     L5F88
@@ -9002,18 +9017,18 @@ L5F80:  cpx     buf3len
 L5F88:  txa
         pha
         lda     buf3,x
-        sta     $E22F
+        sta     LE22F
         jsr     L8915
-        DESKTOP_RELAY_CALL $0D, $E22F
+        DESKTOP_RELAY_CALL $0D, LE22F
         beq     L5FB9
-        DESKTOP_RELAY_CALL $02, $E22F
+        DESKTOP_RELAY_CALL $02, LE22F
         ldx     is_file_selected
         inc     is_file_selected
-        lda     $E22F
+        lda     LE22F
         sta     selected_file_index,x
         lda     desktop_winid
         sta     selected_window_index
-L5FB9:  lda     $E22F
+L5FB9:  lda     LE22F
         jsr     L8893
         pla
         tax
@@ -9055,7 +9070,7 @@ L600E:  lda     L60CB
         bcs     L601F
         jmp     L5F6B
 
-L601F:  A2D_RELAY_CALL A2D_DRAW_RECT, $E230
+L601F:  A2D_RELAY_CALL A2D_DRAW_RECT, LE230
         ldx     #$03
 L602A:  lda     input_params_coords,x
         sta     L60CF,x
@@ -9067,14 +9082,14 @@ L602A:  lda     input_params_coords,x
         sbc     $E235
         bpl     L6068
         lda     input_params_xcoord
-        cmp     $E230
+        cmp     LE230
         lda     input_params_xcoord+1
         sbc     $E231
         bmi     L6054
         bit     L60D3
         bpl     L6068
 L6054:  lda     input_params_xcoord
-        sta     $E230
+        sta     LE230
         lda     input_params_xcoord+1
         sta     $E231
         lda     #$80
@@ -9113,7 +9128,7 @@ L60AE:  lda     input_params_ycoord
         sta     $E237
         lda     #$00
         sta     L60D4
-L60BF:  A2D_RELAY_CALL A2D_DRAW_RECT, $E230
+L60BF:  A2D_RELAY_CALL A2D_DRAW_RECT, LE230
         jmp     L5F6B
 
 L60CB:  .byte   0
@@ -9275,7 +9290,7 @@ L6227:  sta     buf3len
         ldx     desktop_winid
         dex
         lda     LEC26,x
-        sta     $E22F
+        sta     LE22F
         jsr     L86E3
         sta     L0006
         stx     L0006+1
@@ -9290,11 +9305,11 @@ L6227:  sta     buf3len
         and     #$0F
         sta     selected_window_index
         jsr     L8997
-        DESKTOP_RELAY_CALL $02, $E22F
+        DESKTOP_RELAY_CALL $02, LE22F
         jsr     L4510
         lda     #$01
         sta     is_file_selected
-        lda     $E22F
+        lda     LE22F
         sta     selected_file_index
 L6276:  ldx     desktop_winid
         dex
@@ -9956,7 +9971,7 @@ L68AA:  jsr     L4510
 L68B3:  jsr     L6D2B
         ldx     #$03
 L68B8:  lda     input_params_coords,x
-        sta     $E230,x
+        sta     LE230,x
         sta     $E234,x
         dex
         bpl     L68B8
@@ -9968,12 +9983,12 @@ L68B8:  lda     input_params_coords,x
 
 L68CF:  A2D_RELAY_CALL A2D_SET_PATTERN, checkerboard_pattern3
         jsr     L48FA
-        A2D_RELAY_CALL A2D_DRAW_RECT, $E230
+        A2D_RELAY_CALL A2D_DRAW_RECT, LE230
 L68E4:  jsr     L48F0
         lda     input_params_state
         cmp     #A2D_INPUT_HELD
         beq     L6932
-        A2D_RELAY_CALL A2D_DRAW_RECT, $E230
+        A2D_RELAY_CALL A2D_DRAW_RECT, LE230
         ldx     #$00
 L68F9:  cpx     buf3len
         bne     L6904
@@ -9984,13 +9999,13 @@ L68F9:  cpx     buf3len
 L6904:  txa
         pha
         lda     buf3,x
-        sta     $E22F
-        DESKTOP_RELAY_CALL $0D, $E22F
+        sta     LE22F
+        DESKTOP_RELAY_CALL $0D, LE22F
         beq     L692C
-        DESKTOP_RELAY_CALL $02, $E22F
+        DESKTOP_RELAY_CALL $02, LE22F
         ldx     is_file_selected
         inc     is_file_selected
-        lda     $E22F
+        lda     LE22F
         sta     selected_file_index,x
 L692C:  pla
         tax
@@ -10031,7 +10046,7 @@ L6978:  lda     L6A35
         bcs     L6989
         jmp     L68E4
 
-L6989:  A2D_RELAY_CALL A2D_DRAW_RECT, $E230
+L6989:  A2D_RELAY_CALL A2D_DRAW_RECT, LE230
         ldx     #$03
 L6994:  lda     input_params_coords,x
         sta     L6A39,x
@@ -10043,14 +10058,14 @@ L6994:  lda     input_params_coords,x
         sbc     $E235
         bpl     L69D2
         lda     input_params_xcoord
-        cmp     $E230
+        cmp     LE230
         lda     input_params_xcoord+1
         sbc     $E231
         bmi     L69BE
         bit     L6A3D
         bpl     L69D2
 L69BE:  lda     input_params_xcoord
-        sta     $E230
+        sta     LE230
         lda     input_params_xcoord+1
         sta     $E231
         lda     #$80
@@ -10089,7 +10104,7 @@ L6A18:  lda     input_params_ycoord
         sta     $E237
         lda     #$00
         sta     L6A3E
-L6A29:  A2D_RELAY_CALL A2D_DRAW_RECT, $E230
+L6A29:  A2D_RELAY_CALL A2D_DRAW_RECT, LE230
         jmp     L68E4
 
 L6A35:  .byte   0
@@ -10386,7 +10401,7 @@ L6CDE:  jsr     L6E52
         jsr     L6E8E
         ldx     #$07
 L6CE6:  lda     $D21D,x
-        sta     $E230,x
+        sta     LE230,x
         dex
         bpl     L6CE6
         ldx     #$00
@@ -10405,10 +10420,10 @@ L6CF3:  cpx     buf3len
 L6D09:  txa
         pha
         lda     buf3,x
-        sta     $E22F
-        DESKTOP_RELAY_CALL $0D, $E22F
+        sta     LE22F
+        DESKTOP_RELAY_CALL $0D, LE22F
         beq     L6D25
-        DESKTOP_RELAY_CALL $03, $E22F
+        DESKTOP_RELAY_CALL $03, LE22F
 L6D25:  pla
         tax
         inx
@@ -10421,13 +10436,13 @@ L6D2B:  lda     is_file_selected
 L6D31:  lda     #$00
         sta     L6DB0
         lda     selected_window_index
-        sta     $E230
+        sta     LE230
         beq     L6D7D
         cmp     desktop_winid
         beq     L6D4D
         jsr     L8997
         lda     #$00
-        sta     $E230
+        sta     LE230
         beq     L6D56
 L6D4D:  sta     $D212
         jsr     L44F2
@@ -10437,10 +10452,10 @@ L6D56:  lda     L6DB0
         beq     L6D9B
         tax
         lda     selected_file_index,x
-        sta     $E22F
+        sta     LE22F
         jsr     L8915
-        DESKTOP_RELAY_CALL $0B, $E22F
-        lda     $E22F
+        DESKTOP_RELAY_CALL $0B, LE22F
+        lda     LE22F
         jsr     L8893
         inc     L6DB0
         jmp     L6D56
@@ -10450,8 +10465,8 @@ L6D7D:  lda     L6DB0
         beq     L6D9B
         tax
         lda     selected_file_index,x
-        sta     $E22F
-        DESKTOP_RELAY_CALL $0B, $E22F
+        sta     LE22F
+        DESKTOP_RELAY_CALL $0B, LE22F
         inc     L6DB0
         jmp     L6D7D
 
@@ -10858,7 +10873,7 @@ L710A:  lsr     L72A9
         bcs     L7147
         lda     L72A8
         sec
-        sbc     $BF31
+        sbc     DEVCNT
         sta     L72A8
         lda     L72A9
         sbc     #$00
@@ -11785,7 +11800,7 @@ L78C2:  lda     LFB04           ; ???
 
 L78EE:  .byte   0
 L78EF:  lda     $D21D
-        sta     $EBBE           ; Directory header line (items / k in disk)
+        sta     LEBBE           ; Directory header line (items / k in disk)
         clc
         adc     #$05
         sta     items_label_pos
@@ -11802,13 +11817,13 @@ L78EF:  lda     $D21D
         adc     #$00
         sta     $EBC1
         sta     $EBC5
-        A2D_RELAY_CALL A2D_SET_POS, $EBBE
+        A2D_RELAY_CALL A2D_SET_POS, LEBBE
         lda     $D221
-        sta     $EBC2
+        sta     LEBC2
         lda     $D222
         sta     $EBC3
         jsr     L48FA
-        A2D_RELAY_CALL A2D_DRAW_LINE_ABS, $EBC2
+        A2D_RELAY_CALL A2D_DRAW_LINE_ABS, LEBC2
         lda     $EBC0
         clc
         adc     #$02
@@ -11818,8 +11833,8 @@ L78EF:  lda     $D21D
         adc     #$00
         sta     $EBC1
         sta     $EBC5
-        A2D_RELAY_CALL A2D_SET_POS, $EBBE
-        A2D_RELAY_CALL A2D_DRAW_LINE_ABS, $EBC2
+        A2D_RELAY_CALL A2D_SET_POS, LEBBE
+        A2D_RELAY_CALL A2D_DRAW_LINE_ABS, LEBC2
         lda     $D21F
         clc
         adc     #$0A
@@ -11853,7 +11868,7 @@ L79A7:  jsr     L79F7
         tax
         tya
         jsr     L7AE0
-        A2D_RELAY_CALL A2D_SET_POS, $EBEB
+        A2D_RELAY_CALL A2D_SET_POS, LEBEB
         jsr     L7AD7
         addr_call draw_text2, str_k_in_disk
         ldx     desktop_winid
@@ -11867,7 +11882,7 @@ L79A7:  jsr     L79F7
         tax
         tya
         jsr     L7AE0
-        A2D_RELAY_CALL A2D_SET_POS, $EBEF
+        A2D_RELAY_CALL A2D_SET_POS, LEBEF
         jsr     L7AD7
         addr_call draw_text2, str_k_available
         rts
@@ -11902,7 +11917,7 @@ L7A22:  lda     L7ADE
 L7A3A:  lda     $EBE7
         clc
         adc     L7ADE
-        sta     $EBEF
+        sta     LEBEF
         lda     $EBE8
         adc     L7ADF
         sta     $EBF0
@@ -11911,10 +11926,10 @@ L7A3A:  lda     $EBE7
         lda     L7ADE
         cmp     #$18
         bcc     L7A6A
-L7A59:  lda     $EBEF
+L7A59:  lda     LEBEF
         sec
         sbc     #$0C
-        sta     $EBEF
+        sta     LEBEF
         lda     $EBF0
         sbc     #$00
         sta     $EBF0
@@ -11923,31 +11938,31 @@ L7A6A:  lsr     L7ADF
         lda     LEBE3
         clc
         adc     L7ADE
-        sta     $EBEB
+        sta     LEBEB
         lda     $EBE4
         adc     L7ADF
         sta     $EBEC
         jmp     L7A9E
 
 L7A86:  lda     LEBE3
-        sta     $EBEB
+        sta     LEBEB
         lda     LEBE3+1
         sta     $EBEC
         lda     $EBE7
-        sta     $EBEF
+        sta     LEBEF
         lda     $EBE8
         sta     $EBF0
-L7A9E:  lda     $EBEB
+L7A9E:  lda     LEBEB
         clc
         adc     $D21D
-        sta     $EBEB
+        sta     LEBEB
         lda     $EBEC
         adc     $D21E
         sta     $EBEC
-        lda     $EBEF
+        lda     LEBEF
         clc
         adc     $D21D
-        sta     $EBEF
+        sta     LEBEF
         lda     $EBF0
         adc     $D21E
         sta     $EBF0
@@ -13786,7 +13801,7 @@ L8A22:  lda     $0801,x
         ora     #$C0
         sta     L8A54
         L8A54 := *+2
-        lda     $C7FB
+        lda     $C7FB           ; self-modified $Cx7B
         and     #$01
         beq     L8A67
 
@@ -14145,7 +14160,7 @@ L8D6C:  lda     L8DB2
         tax
         ldy     #$07
 L8D7C:  lda     L0800,x
-        sta     $E230,y
+        sta     LE230,y
         dex
         dey
         bpl     L8D7C
@@ -14162,7 +14177,7 @@ L8D92:  asl     a
         tax
         ldy     #$07
 L8D9A:  lda     L0800,x
-        sta     $E230,y
+        sta     LE230,y
         dex
         dey
         bpl     L8D9A
@@ -14190,7 +14205,7 @@ L8DC7:  lda     L8E0F
         tax
         ldy     #$07
 L8DD7:  lda     L0800,x
-        sta     $E230,y
+        sta     LE230,y
         dex
         dey
         bpl     L8DD7
@@ -14208,7 +14223,7 @@ L8DE4:  lda     L8E0F
         tax
         ldy     #$07
         lda     L0800,x
-        sta     $E230,y
+        sta     LE230,y
         dex
         dey
         .byte   $10
@@ -14222,7 +14237,7 @@ L8E04:  dec     L8E0F
         rts
 
 L8E0F:  .byte   0
-L8E10:  A2D_RELAY_CALL A2D_DRAW_RECT, $E230
+L8E10:  A2D_RELAY_CALL A2D_DRAW_RECT, LE230
         rts
 
 L8E1A:  .byte   $E0
@@ -14744,13 +14759,13 @@ L9250:  lda     $E1A0,y
         .byte   $C9
 L9254:  .byte   0
         beq     L9260
-        cpy     $BF31
+        cpy     DEVCNT
         beq     L925F
         iny
         bne     L9250
 L925F:  rts
 
-L9260:  lda     $BF32,y
+L9260:  lda     DEVLST,y
         sta     L92C7
         ldx     #$11
         lda     L92C7
@@ -14767,7 +14782,7 @@ L9271:  stx     L9284
         adc     L9284
         sta     L9284
         L9284 := *+1
-        lda     $BF00
+        lda     $BF00           ; self-modified
         sta     L0006+1
         lda     #$00
         sta     L0006
@@ -14911,7 +14926,7 @@ L93AD:  cmp     $E1A0,y
         bpl     L93AD
         jmp     L93DB
 
-L93B8:  lda     $BF32,y
+L93B8:  lda     DEVLST,y
         sta     L92DE
         ldy     #$80
         lda     #$DD
@@ -16613,7 +16628,7 @@ LA24F:  lda     LA242,y
         sta     LA2F0
         ldy     #$17
         lda     #$00
-LA26A:  sta     $BF58,y
+LA26A:  sta     BITMAP,y
         dey
         bpl     LA26A
         rts
@@ -17460,8 +17475,7 @@ LA9E6:  ldy     #$01
         A2D_RELAY_CALL A2D_SET_POS, LAE82
         lda     #$43
         ldx     #$D4
-        LAA48 := *+2            ; ???
-        jsr     $B708
+        jsr     draw_text1
         ldy     #$0E
         lda     #$BA
         ldx     #$B0
@@ -19612,11 +19626,11 @@ L0960:  lda     L0927,x
         bne     L0960
         lda     L0927,x
         sta     (L0006),y
-        lda     $BF31
+        lda     DEVCNT
         sta     L0A01
         inc     L0A01
         ldx     #$00
-L097C:  lda     $BF32,x
+L097C:  lda     DEVLST,x
         and     #$8F
         cmp     #$8B
         beq     L098E
@@ -19625,7 +19639,7 @@ L097C:  lda     $BF32,x
         bne     L097C
         jmp     L09F5
 
-L098E:  lda     $BF32,x
+L098E:  lda     DEVLST,x
         stx     L09F8
         sta     L0A02
         ldx     #$11
@@ -19669,12 +19683,12 @@ L09B5:  .byte   0
         cmp     #$02
         bcs     L09F5
         ldx     L09F8
-L09E6:  lda     $BF33,x
-        sta     $BF32,x
+L09E6:  lda     DEVLST+1,x
+        sta     DEVLST,x
         inx
         cpx     L0A01
         bne     L09E6
-        dec     $BF31
+        dec     DEVCNT
 L09F5:  jmp     L0A03
 
 L09F8:  .byte   0
@@ -20061,7 +20075,7 @@ L0D12:  lda     L0E33
         lda     $DB01,y
         sta     $09
         ldy     L0E33
-        lda     $BF32,y
+        lda     DEVLST,y
         pha
         txa
         pha
@@ -20069,7 +20083,7 @@ L0D12:  lda     L0E33
         pha
         inc     buf3len
         inc     $DD9E
-        lda     $BF32,y
+        lda     DEVLST,y
         jsr     L89B6
         sta     L0E34
         A2D_RELAY_CALL $29, $0000
@@ -20083,7 +20097,7 @@ L0D12:  lda     L0E33
         cmp     #$28
         bne     L0D64
         ldy     L0E33
-        lda     $BF32,y
+        lda     DEVLST,y
         and     #$0F
         beq     L0D6D
         ldx     L0E33
@@ -20198,7 +20212,7 @@ L0E1F:  sta     ($08),y
 L0E21:  pla
         inc     L0E33
 L0E25:  lda     L0E33
-        cmp     $BF31
+        cmp     DEVCNT
         beq     L0E2F
         bcs     L0E4C
 L0E2F:  jmp     L0D12
