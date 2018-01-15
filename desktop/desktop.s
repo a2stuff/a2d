@@ -3208,8 +3208,8 @@ str_exists_prompt:
 str_large_prompt:
         PASCAL_STRING "This file is too large to copy, click OK to continue."
 
-        .byte   $6E,$00,$23
-        .byte   $00,$AA,$00,$3B,$00
+LB0B6:  DEFINE_POINT $6E, $23
+LB0BA:  DEFINE_POINT $AA, $3B
 
         ;; "Delete" dialog strings
 str_delete_title:
@@ -3218,14 +3218,16 @@ str_delete_ok:
         PASCAL_STRING "Click OK to delete:"
 str_ok_empty:
         PASCAL_STRING "Clicking OK will immediately empty the trash of:"
-str_delete_file_colon:
+str_file_colon:
         PASCAL_STRING "File:"
 str_delete_remaining:
         PASCAL_STRING "Files remaining to be deleted:"
 str_delete_locked_file:
         PASCAL_STRING "This file is locked, do you want to delete it anyway ?"
 
-        .byte   $91,$00,$3B,$00,$C8,$00,$3B,$00,$2C,$01,$3B,$00
+LB16A:  DEFINE_POINT $91, $3B
+LB16E:  DEFINE_POINT $C8, $3B
+LB172:  DEFINE_POINT $12C, $3B
 
         ;; "New Folder" dialog strings
 str_new_folder_title:
@@ -3266,10 +3268,12 @@ str_info_blocks:
 str_colon:
         PASCAL_STRING ": "
 
-        .byte   $A0,$00,$3B,$00
-        .byte   $91,$00,$3B,$00,$C8,$00,$3B,$00
-        .byte   $B9,$00,$3B,$00,$CD,$00,$3B,$00
-        .byte   $C3,$00,$3B,$00
+LB22D:  DEFINE_POINT $A0,$3B
+LB231:  DEFINE_POINT $91,$3B
+LB235:  DEFINE_POINT $C8,$3B
+LB239:  DEFINE_POINT $B9,$3B
+LB23D:  DEFINE_POINT $CD,$3B
+LB241:  DEFINE_POINT $C3,$3B
 
 LB245:  PASCAL_STRING "Format a Disk ..."
 LB257:  PASCAL_STRING "Select the location where the disk is to be formatted"
@@ -17416,7 +17420,7 @@ LA9B5:  ldy     #$01
         jsr     LBDDF
         lda     winF
         jsr     LB7B9
-        A2D_RELAY_CALL A2D_SET_POS, $B0B6
+        A2D_RELAY_CALL A2D_SET_POS, LB0B6
         addr_call draw_text1, str_7_spaces
         addr_call draw_text1, str_files
         rts
@@ -17546,7 +17550,7 @@ LAB38:  ldy     #$01
         jsr     LBDDF
         lda     winF
         jsr     LB7B9
-        A2D_RELAY_CALL A2D_SET_POS, $B0B6
+        A2D_RELAY_CALL A2D_SET_POS, LB0B6
         addr_call draw_text1, str_7_spaces
         addr_call draw_text1, str_files
         rts
@@ -17573,7 +17577,7 @@ LAB69:  ldy     #$01
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, LAE7E
         addr_call draw_text1, $D402
-        A2D_RELAY_CALL A2D_SET_POS, $B0BA
+        A2D_RELAY_CALL A2D_SET_POS, LB0BA
         addr_call draw_text1, str_7_spaces
         rts
 
@@ -17728,10 +17732,10 @@ LAD2A:  ldy     #$01
         jsr     LB7B9
         lda     LAD1F
 LAD46:  bne     LAD54
-        A2D_RELAY_CALL A2D_SET_POS, $B16A
+        A2D_RELAY_CALL A2D_SET_POS, LB16A
         jmp     LAD5D
 
-LAD54:  A2D_RELAY_CALL A2D_SET_POS, $B172
+LAD54:  A2D_RELAY_CALL A2D_SET_POS, LB172
 LAD5D:  addr_call draw_text1, str_7_spaces
         addr_call draw_text1, str_files
         rts
@@ -17758,7 +17762,7 @@ LAD6C:  ldy     #$01
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, LAE7E
         addr_call draw_text1, $D402
-        A2D_RELAY_CALL A2D_SET_POS, $B16E
+        A2D_RELAY_CALL A2D_SET_POS, LB16E
         addr_call draw_text1, str_7_spaces
         rts
 
@@ -17771,7 +17775,7 @@ LADC4:  jsr     LA567
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
         A2D_RELAY_CALL A2D_FILL_RECT, LAE6E
         jsr     LB6D0
-        yax_call draw_dialog_label, str_delete_file_colon, $02
+        yax_call draw_dialog_label, str_file_colon, $02
         yax_call draw_dialog_label, str_delete_remaining, $04
         lda     #$00
 LADF4:  rts
@@ -18033,9 +18037,9 @@ LB068:  ldy     #$01
         jsr     LBDDF
         lda     winF
         jsr     LB7B9
-        A2D_RELAY_CALL A2D_SET_POS, $B231
+        A2D_RELAY_CALL A2D_SET_POS, LB231
         addr_call draw_text1, str_7_spaces
-        A2D_RELAY_CALL A2D_SET_POS, $B239
+        A2D_RELAY_CALL A2D_SET_POS, LB239
         addr_call draw_text1, str_files
         rts
 
@@ -18061,7 +18065,7 @@ LB0A2:  ldy     #$01
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, LAE7E
         addr_call draw_text1, $D402
-        A2D_RELAY_CALL A2D_SET_POS, $B241
+        A2D_RELAY_CALL A2D_SET_POS, LB241
         addr_call draw_text1, str_7_spaces
         rts
 
@@ -18075,7 +18079,7 @@ LB0FA:  jsr     LA567
         A2D_RELAY_CALL A2D_FILL_RECT, LAE6E
         A2D_RELAY_CALL A2D_FILL_RECT, LAE20
         A2D_RELAY_CALL A2D_FILL_RECT, LAE10
-        yax_call draw_dialog_label, $B10E, $02
+        yax_call draw_dialog_label, str_file_colon, $02
         yax_call draw_dialog_label, str_lock_remaining, $04
         lda     #$00
 LB139:  rts
@@ -18125,9 +18129,9 @@ LB186:  ldy     #$01
         jsr     LBDDF
         lda     winF
         jsr     LB7B9
-        A2D_RELAY_CALL A2D_SET_POS, $B22D
+        A2D_RELAY_CALL A2D_SET_POS, LB22D
         addr_call draw_text1, str_7_spaces
-        A2D_RELAY_CALL A2D_SET_POS, $B235
+        A2D_RELAY_CALL A2D_SET_POS, LB235
         addr_call draw_text1, str_files
         rts
 
@@ -18153,7 +18157,7 @@ LB1C0:  ldy     #$01
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, LAE7E
         addr_call draw_text1, $D402
-        A2D_RELAY_CALL A2D_SET_POS, $B23D
+        A2D_RELAY_CALL A2D_SET_POS, LB23D
         addr_call draw_text1, str_7_spaces
         rts
 
@@ -18167,7 +18171,7 @@ LB218:  jsr     LA567
         A2D_RELAY_CALL A2D_FILL_RECT, LAE6E
         A2D_RELAY_CALL A2D_FILL_RECT, LAE20
         A2D_RELAY_CALL A2D_FILL_RECT, LAE10
-        yax_call draw_dialog_label, $B10E, $02
+        yax_call draw_dialog_label, str_file_colon, $02
         yax_call draw_dialog_label, str_unlock_remaining, $04
         lda     #$00
 LB257:  rts
