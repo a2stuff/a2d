@@ -1,4 +1,4 @@
-        .setcpu "6502"
+       .setcpu "6502"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
@@ -4787,10 +4787,26 @@ LD760:  PASCAL_STRING "Run list"
         .byte   $12
         .byte   $1A,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$14,$00,$00,$00,$00
-        .byte   $01,$06,$00,$00,$00,$00,$00,$00
+        .byte   $00
 
-str_1_null:
+LD8E7:  .byte   0
+LD8E8:  .byte   0
+LD8E9:  .byte   $14
+        .byte   $00
+LD8EB:  .byte   0
+LD8EC:  .byte   0
+LD8ED:  .byte   0
+LD8EE:  .byte   1
+LD8EF:  .byte   6
+
+LD8F0:  .byte   0
+LD8F1:  .byte   0
+LD8F2:  .byte   0
+LD8F3:  .byte   0
+LD8F4:  .byte   0
+LD8F5:  .byte   0
+
+str_1_char:
         PASCAL_STRING {0}
 
 str_2_spaces:
@@ -16981,17 +16997,17 @@ LA520:  sta     LA51D
         lda     LA503+1,x
         sta     LA565+1
         lda     #$00
-        sta     $D8EB
-        sta     $D8EC
-        sta     $D8F0
-        sta     $D8F1
-        sta     $D8F2
-        sta     $D8E8
-        sta     $D8F5
-        sta     $D8ED
+        sta     LD8EB
+        sta     LD8EC
+        sta     LD8F0
+        sta     LD8F1
+        sta     LD8F2
+        sta     LD8E8
+        sta     LD8F5
+        sta     LD8ED
         sta     LB3E6
         lda     #$14
-        sta     $D8E9
+        sta     LD8E9
         lda     #$98
         sta     LA89A
         lda     #$A8
@@ -17000,13 +17016,13 @@ LA520:  sta     LA51D
 
         LA565 := *+1
         jmp     $0000           ; self-modified
-LA567:  lda     $D8E8
+LA567:  lda     LD8E8
         beq     LA579
-        dec     $D8E9
+        dec     LD8E9
         bne     LA579
         jsr     LB8F5
         lda     #$14
-        sta     $D8E9
+        sta     LD8E9
 LA579:  A2D_RELAY_CALL A2D_GET_INPUT, input_params
         lda     input_params_state
         cmp     #A2D_INPUT_DOWN
@@ -17017,7 +17033,7 @@ LA58C:  cmp     #$03
         bne     LA593
         jmp     LA6FD
 
-LA593:  lda     $D8E8
+LA593:  lda     LD8E8
         beq     LA567
         A2D_RELAY_CALL A2D_QUERY_TARGET, input_params_coords
         lda     query_target_params_element
@@ -17070,7 +17086,7 @@ LA614:  lda     winF
         sta     input_params
         A2D_RELAY_CALL A2D_MAP_COORDS, input_params
         A2D_RELAY_CALL A2D_SET_POS, $D20D
-        bit     $D8E7
+        bit     LD8E7
         bvc     LA63A
         jmp     LA65E
 
@@ -17116,7 +17132,7 @@ LA6A0:  A2D_RELAY_CALL A2D_TEST_BOX, LAE38
         lda     #$04
 LA6C0:  rts
 
-LA6C1:  bit     $D8E7
+LA6C1:  bit     LD8E7
         bpl     LA6C9
         lda     #$FF
         rts
@@ -17133,7 +17149,7 @@ LA6D9:  jsr     LB43B
         lda     #$01
 LA6EC:  rts
 
-LA6ED:  bit     $D8E8
+LA6ED:  bit     LD8E8
         bmi     LA6F7
         lda     #$FF
         jmp     LA899
@@ -17162,7 +17178,7 @@ LA71A:  lda     input_params_key
         and     #$7F
         cmp     #KEY_LEFT
         bne     LA72E
-        bit     $D8ED
+        bit     LD8ED
         bpl     LA72B
         jmp     L0CB8
 
@@ -17170,7 +17186,7 @@ LA72B:  jmp     LA82B
 
 LA72E:  cmp     #KEY_RIGHT
         bne     LA73D
-        bit     $D8ED
+        bit     LD8ED
         bpl     LA73A
         jmp     L0CD7
 
@@ -17178,13 +17194,13 @@ LA73A:  jmp     LA83E
 
 LA73D:  cmp     #KEY_RETURN
         bne     LA749
-        bit     $D8E7
+        bit     LD8E7
         bvs     LA717
         jmp     LA851
 
 LA749:  cmp     #KEY_ESCAPE
         bne     LA755
-        bit     $D8E7
+        bit     LD8E7
         bmi     LA717
         jmp     LA86F
 
@@ -17194,7 +17210,7 @@ LA755:  cmp     #KEY_DELETE
 
 LA75C:  cmp     #KEY_UP
         bne     LA76B
-        bit     $D8ED
+        bit     LD8ED
         bmi     LA768
         jmp     LA717
 
@@ -17202,13 +17218,13 @@ LA768:  jmp     L0D14
 
 LA76B:  cmp     #KEY_DOWN
         bne     LA77A
-        bit     $D8ED
+        bit     LD8ED
         bmi     LA777
         jmp     LA717
 
 LA777:  jmp     L0CF9
 
-LA77A:  bit     $D8E7
+LA77A:  bit     LD8E7
         bvc     LA79B
         cmp     #'Y'
         beq     LA7E8
@@ -17224,7 +17240,7 @@ LA77A:  bit     $D8E7
         beq     LA806
         cmp     #KEY_RETURN
         beq     LA7E8
-LA79B:  bit     $D8F5
+LA79B:  bit     LD8F5
         bmi     LA7C8
         cmp     #$2E
         beq     LA7D8
@@ -17259,7 +17275,7 @@ LA7CF:  cmp     #$7E
 
 LA7D8:  ldx     $D443
         beq     LA7E5
-LA7DD:  ldx     $D8E8
+LA7DD:  ldx     LD8E8
         beq     LA7E5
         jsr     LBB0B
 LA7E5:  lda     #$FF
@@ -17280,21 +17296,21 @@ LA806:  jsr     LB43B
         lda     #$04
         rts
 
-LA815:  lda     $D8E8
+LA815:  lda     LD8E8
         beq     LA81D
         jsr     LBC5E
 LA81D:  lda     #$FF
         rts
 
-LA820:  lda     $D8E8
+LA820:  lda     LD8E8
         beq     LA828
         jsr     LBCC9
 LA828:  lda     #$FF
         rts
 
-LA82B:  lda     $D8E8
+LA82B:  lda     LD8E8
         beq     LA83B
-        bit     $D8ED
+        bit     LD8ED
         bpl     LA838
         jmp     L0CD7
 
@@ -17302,9 +17318,9 @@ LA838:  jsr     LBBA4
 LA83B:  lda     #$FF
         rts
 
-LA83E:  lda     $D8E8
+LA83E:  lda     LD8E8
         beq     LA84E
-        bit     $D8ED
+        bit     LD8ED
         bpl     LA84B
         jmp     L0CB8
 
@@ -17328,7 +17344,7 @@ LA86F:  lda     winF
         lda     #$01
         rts
 
-LA88D:  lda     $D8E8
+LA88D:  lda     LD8E8
         beq     LA895
         jsr     LBB63
 LA895:  lda     #$FF
@@ -17430,7 +17446,7 @@ LA97A:  cmp     #$05
         jmp     LAA5A
 
 LA981:  lda     #$00
-        sta     $D8E8
+        sta     LD8E8
         jsr     LB53A
         addr_call LB723, str_copy_title
         axy_call draw_dialog_label, str_copy_copying, $01
@@ -17559,7 +17575,7 @@ LAAFD:  cmp     #$04
         jmp     LABC8
 
 LAB04:  lda     #$00
-        sta     $D8E8
+        sta     LD8E8
         jsr     LB53A
         addr_call LB723, str_download
         axy_call draw_dialog_label, str_copy_copying, $01
@@ -17736,7 +17752,7 @@ LACF7:  cmp     #$05
 
 LACFE:  sta     LAD1F
         lda     #$00
-        sta     $D8E8
+        sta     LD8E8
         jsr     LB53A
         addr_call LB723, str_delete_title
         lda     LAD1F
@@ -17839,7 +17855,7 @@ LAE42:  cmp     #$40
         jmp     LAF16
 
 LAE49:  lda     #$80
-        sta     $D8E8
+        sta     LD8E8
         jsr     LBD69
         lda     #$00
         jsr     LB509
@@ -17851,9 +17867,9 @@ LAE49:  lda     #$80
         rts
 
 LAE70:  lda     #$80
-        sta     $D8E8
+        sta     LD8E8
         lda     #$00
-        sta     $D8E7
+        sta     LD8E7
         jsr     LBD75
         jsr     LB3BF
         ldy     #$01
@@ -17933,7 +17949,7 @@ show_get_info_dialog:
         jmp     LAFB9
 
 LAF34:  lda     #$00
-        sta     $D8E8
+        sta     LD8E8
         lda     (L0006),y
         lsr     a
         lsr     a
@@ -18049,7 +18065,7 @@ LB048:  cmp     #$04
         jmp     LB13A
 
 LB04F:  lda     #$00
-        sta     $D8E8
+        sta     LD8E8
         jsr     LB53A
         addr_call LB723, str_lock_title
         yax_call draw_dialog_label, str_lock_ok, $04
@@ -18141,7 +18157,7 @@ LB166:  cmp     #$04
         jmp     LB258
 
 LB16D:  lda     #$00
-        sta     $D8E8
+        sta     LD8E8
         jsr     LB53A
         addr_call LB723, str_unlock_title
         yax_call draw_dialog_label, str_unlock_ok, $04
@@ -18227,7 +18243,7 @@ LB276:  cmp     #$40
 LB27D:  jsr     LBD75
         jsr     LB3BF
         lda     #$80
-        sta     $D8E8
+        sta     LD8E8
         jsr     LBD69
         lda     #$00
         jsr     LB509
@@ -18261,9 +18277,9 @@ LB2CA:  lda     ($08),y
         rts
 
 LB2ED:  lda     #$00
-        sta     $D8E7
+        sta     LD8E7
         lda     #$80
-        sta     $D8E8
+        sta     LD8E8
         lda     winF
         jsr     LB7B9
 LB2FD:  jsr     LA567
@@ -18469,16 +18485,16 @@ LB505:  .byte   0
 LB506:  .byte   0
 LB507:  .byte   0
 LB508:  .byte   0
-LB509:  sta     $D8E7
+LB509:  sta     LD8E7
         jsr     LB53A
-        bit     $D8E7
+        bit     LD8E7
         bvc     LB51A
         jsr     LB64E
         jmp     LB526
 
 LB51A:  A2D_RELAY_CALL A2D_DRAW_RECT, LAE20
         jsr     LB5F9
-LB526:  bit     $D8E7
+LB526:  bit     LD8E7
         bmi     LB537
         A2D_RELAY_CALL A2D_DRAW_RECT, LAE10
         jsr     LB60A
@@ -18582,7 +18598,7 @@ LB64E:  jsr     LB43B
         jsr     LB63D
         jsr     LB60A
         lda     #$40
-        sta     $D8E7
+        sta     LD8E7
         rts
 
 LB687:  jsr     LBEA7
@@ -18598,7 +18614,7 @@ LB6AF:  jsr     LB43B
         jsr     LB5F9
         jsr     LB60A
         lda     #$00
-        sta     $D8E7
+        sta     LD8E7
         rts
 
 LB6D0:  jsr     LBEA7
@@ -18610,7 +18626,7 @@ LB6E6:  jsr     LB43B
         A2D_RELAY_CALL A2D_DRAW_RECT, LAE20
         jsr     LB5F9
         lda     #$80
-        sta     $D8E7
+        sta     LD8E7
         rts
 
 LB6FB:  jsr     LBEA7
@@ -18844,20 +18860,20 @@ LB8F5:  jsr     LBD3B
         sta     $09
         A2D_RELAY_CALL A2D_SET_POS, $0006
         A2D_RELAY_CALL A2D_SET_BOX, LD6C7
-        bit     $D8EB
+        bit     LD8EB
         bpl     LB92D
         A2D_RELAY_CALL A2D_SET_TEXT_MASK, LAE6C
         lda     #$00
-        sta     $D8EB
+        sta     LD8EB
         beq     LB93B
 LB92D:  A2D_RELAY_CALL A2D_SET_TEXT_MASK, LAE6D
         lda     #$FF
-        sta     $D8EB
+        sta     LD8EB
 LB93B:  lda     #$EF
         sta     L0006
         lda     #$D8
         sta     L0006+1
-        lda     $D8EE
+        lda     LD8EE
         sta     $08
         A2D_RELAY_CALL A2D_DRAW_TEXT, $0006
         A2D_RELAY_CALL A2D_SET_TEXT_MASK, LAE6D
@@ -19016,7 +19032,7 @@ LBADE:  cpx     $D484
         jmp     LBADE
 
 LBAEE:  sty     $D3C1
-        lda     $D8EF
+        lda     LD8EF
         sta     $D3C2
 LBAF7:  lda     $D3C1,y
         sta     $D484,y
@@ -19041,7 +19057,7 @@ LBB1A:  lda     LBB62
         ldx     $D443
         inx
         sta     $D443,x
-        sta     $D8F7
+        sta     str_1_char+1
         jsr     LBD3B
         inc     $D443
         sta     L0006
@@ -19052,7 +19068,7 @@ LBB1A:  lda     LBB62
         sta     $09
         A2D_RELAY_CALL A2D_SET_POS, $0006
         A2D_RELAY_CALL A2D_SET_BOX, LD6C7
-        addr_call draw_text1, str_1_null
+        addr_call draw_text1, str_1_char
         addr_call draw_text1, $D484
         lda     winF
         jsr     LB7B9
@@ -19160,7 +19176,7 @@ LBC80:  lda     $D443,x
         sta     $D485,x
         dex
         bne     LBC80
-        lda     $D8EF
+        lda     LD8EF
         sta     $D485
         inc     $D443
         lda     $D443
@@ -19269,7 +19285,7 @@ LBD51:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $0006
 
 LBD69:  lda     #$01
         sta     $D484
-        lda     $D8EF
+        lda     LD8EF
         sta     $D485
         rts
 
