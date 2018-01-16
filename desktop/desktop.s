@@ -3488,19 +3488,19 @@ alert_action_table:
         lda     LCBANK1
         ldx     #$03
         lda     #$00
-LBA0B:  sta     $D239,x
-        sta     $D241,x
+LBA0B:  sta     state2_left,x
+        sta     state2_hoff,x
         dex
         bpl     LBA0B
         lda     #$26
-        sta     $D245
+        sta     state2_width
         lda     #$02
-        sta     $D246
+        sta     state2_width+1
         lda     #$B9
-        sta     $D247
+        sta     state2_height
         lda     #$00
-        sta     $D248
-        A2D_RELAY2_CALL A2D_SET_STATE, $D239
+        sta     state2_height+1
+        A2D_RELAY2_CALL A2D_SET_STATE, state2
         lda     LB6D3
         ldx     LB6D4
         jsr     LBF8B
@@ -4050,12 +4050,9 @@ addr:   .addr   0
         rts
 .endproc
 
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-
-        .assert * = $C000, error, "Segment expected to fill through $C000"
+        ;; Pad to $C000
+        .res $C000 - *, 0
+        .assert * = $C000, error, "Segment length mismatch"
 
 ;;; ==================================================
 ;;;
@@ -4395,24 +4392,34 @@ tmask:  .byte   0
 font:   .addr   0
 .endproc
 
-.proc buffer
-        .res    20, 0
+.proc state2
+left:   .word   0
+top:    .word   0
+addr:   .addr   0
+stride: .word   0
+hoff:   .word   0
+voff:   .word   0
+width:  .word   0
+height: .word   0
+pattern:.res 8, 0
+mskand: .byte   0
+mskor:  .byte   0
+xpos:   .word   0
+ypos:   .word   0
+hthick: .byte   0
+vthick: .byte   0
+unk:    .byte   0
+tmask:  .byte   0
+font:   .addr   0
+.endproc
+        state2_left := state2::left
+        state2_hoff := state2::hoff
+        state2_width := state2::width
+        state2_height := state2::height
 
-        ;; Looks like a window definition?
-id:     .byte   0
-flags:  .byte   0
-title:  .addr   0
-hscroll:.byte   A2D_CWS_NOSCROLL
-vscroll:.byte   A2D_CWS_NOSCROLL
-hsmax:  .byte   0
-hspos:  .byte   0
-vsmax:  .byte   0
-vspos:  .byte   0
-        .byte   0,0             ; ???
-w1:     .word   0
-h1:     .word   0
-w2:     .word   0
-h2:     .word   0
+.proc state1
+left:   .word   0
+top:    .word   0
 addr:   .addr   A2D_SCREEN_ADDR
 stride: .word   A2D_SCREEN_STRIDE
 hoff:   .word   0
@@ -4429,11 +4436,11 @@ vthick: .byte   1
 mode:   .byte   0
 tmask:  .byte   0
 font:   .addr   A2D_DEFAULT_FONT
+.endproc
 
         .byte   $FF,$FF,$FF,$FF,$FF
         .byte   $FF,$FF,$FF,$FF,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$FF
-.endproc
 
 checkerboard_pattern3:
         .byte   px(%1010101)
@@ -5264,9 +5271,9 @@ desktop_winid:
 LEC26:
         .res    64, 0
         .word   500, 160
-        .res    150, 0
 
-        .assert * = $ED00, error, "Segment expected to fill through $ED00"
+        .res    $ED00 - *, 0
+        .assert * = $ED00, error, "Segment length mismatch"
 
 ;;; ==================================================
 ;;;
@@ -6110,8 +6117,8 @@ L4505:  A2D_RELAY_CALL A2D_QUERY_STATE, query_state_params2
 
         rts
 
-L4510:  A2D_RELAY_CALL A2D_QUERY_SCREEN, $D239
-        A2D_RELAY_CALL A2D_SET_STATE, $D239
+L4510:  A2D_RELAY_CALL A2D_QUERY_SCREEN, state2
+        A2D_RELAY_CALL A2D_SET_STATE, state2
         rts
 
 L4523:  jsr     L40F2
@@ -13776,13 +13783,13 @@ L8995:  .byte   0
 L8996:  .byte   0
 L8997:  lda     #$00
         tax
-L899A:  sta     $D265,x
-        sta     $D25D,x
-        sta     $D269,x
+L899A:  sta     state1::hoff,x
+        sta     state1::left,x
+        sta     state1::width,x
         inx
         cpx     #$04
         bne     L899A
-        A2D_RELAY_CALL A2D_SET_STATE, $D25D
+        A2D_RELAY_CALL A2D_SET_STATE, state1
         rts
 
 .proc on_line_params
@@ -19485,14 +19492,16 @@ LBE9A:  jsr     LBEA7
 LBEA7:  A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
         rts
 
-LBEB1:  A2D_RELAY_CALL A2D_QUERY_SCREEN, $D239
-        A2D_RELAY_CALL A2D_SET_STATE, $D239
+LBEB1:  A2D_RELAY_CALL A2D_QUERY_SCREEN, state2
+        A2D_RELAY_CALL A2D_SET_STATE, state2
         rts
 
-        .res    60, 0
+        .res    $BF00 - *, 0
+
 .endproc ; desktop_main
         desktop_main_pop_zp_addrs := desktop_main::pop_zp_addrs
         desktop_main_push_zp_addrs := desktop_main::push_zp_addrs
+        .assert * = $BF00, error, "Segment length mismatch"
 
 ;;; ==================================================
 ;;; Segment loaded into MAIN $800-$FFF
@@ -20417,6 +20426,7 @@ L0F34:  A2D_RELAY_CALL $29, $0000
         jsr     L670C
         jmp     A2D
 
-        ;; Pad out to $800
-        .res    $800 - (* - start), 0
+        ;; Pad out to $1000
+        .res    $1000 - *, 0
+        .assert * = $1000, error, "Segment length mismatch"
 .endproc ; desktop_800
