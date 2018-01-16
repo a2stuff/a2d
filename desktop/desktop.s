@@ -4364,8 +4364,15 @@ query_client_params_scroll:
 query_target_params_id:
         .byte   0
 
-        .byte   $00,$00,$00,$00
+LD20F:  .byte   0
+LD210:  .byte   0
+LD211:  .byte   0
+
+
+.proc query_state_params2
+id:     .byte   0
         .addr   buffer
+.endproc
 
 .proc buffer
         .res    56, $0
@@ -4785,9 +4792,10 @@ LD760:  PASCAL_STRING "Run list"
         PASCAL_STRING "the disk in slot   drive   ?"
 
         .byte   $12
-        .byte   $1A,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00
+        .byte   $1A
+
+buf_filename:
+        .res    16, 0
 
 LD8E7:  .byte   0
 LD8E8:  .byte   0
@@ -4949,9 +4957,12 @@ window_address_table:
         .addr   window_path_table+i*65
         .endrepeat
 
-        .byte   $00,$00,$00,$00,$00
+LDFC5:  .byte   0
+LDFC6:  .byte   0
+LDFC7:  .byte   0
+LDFC8:  .byte   0
 
-        .res    144, 0
+LDFC9:  .res    145, 0
 
         .byte   $00,$00,$00,$00,$0D,$00,$00,$00
 
@@ -5744,7 +5755,7 @@ L415B:  sta     desktop_winid
         lda     #$80
         sta     L4152
         lda     bufnum
-        sta     $D212
+        sta     query_state_params2::id
         jsr     L4505
         jsr     L78EF
         lda     desktop_winid
@@ -5796,7 +5807,7 @@ L41CB:  ldx     bufnum
         jmp     L8874
 
 L41E2:  lda     bufnum
-        sta     $D212
+        sta     query_state_params2::id
         jsr     L44F2
         jsr     L6E52
         ldx     #$07
@@ -5821,7 +5832,7 @@ L4221:  inc     L4241
 L4227:  lda     #$00
         sta     L4152
         lda     bufnum
-        sta     $D212
+        sta     query_state_params2::id
         jsr     L44F2
         jsr     L6E6E
         lda     desktop_winid
@@ -5842,7 +5853,7 @@ L424A:  lda     #$00
         cmp     desktop_winid
         bne     L4249
         lda     desktop_winid
-        sta     $D212
+        sta     query_state_params2::id
         jsr     L4505
         jsr     L6E8E
         ldx     #$07
@@ -6069,11 +6080,11 @@ L44B8:  jsr     DESKTOP_COPY_TO_BUF
         A2D_RELAY_CALL $36, LE267 ; ???
         rts
 
-L44F2:  A2D_RELAY_CALL A2D_QUERY_STATE, $D212
+L44F2:  A2D_RELAY_CALL A2D_QUERY_STATE, query_state_params2
         A2D_RELAY_CALL A2D_SET_STATE, $D215
         rts
 
-L4505:  A2D_RELAY_CALL A2D_QUERY_STATE, $D212
+L4505:  A2D_RELAY_CALL A2D_QUERY_STATE, query_state_params2
         rts
 
         rts
@@ -6972,7 +6983,7 @@ L4CD6:  pha
         bpl     L4CE0
         jmp     L4523
 
-L4CE0:  addr_call L6FAF, $DFC9
+L4CE0:  addr_call L6FAF, LDFC9
         beq     L4CF1
         pha
         jsr     L6F0D
@@ -6981,18 +6992,18 @@ L4CE0:  addr_call L6FAF, $DFC9
 
 L4CF1:  ldy     #$01
 L4CF3:  iny
-        lda     $DFC9,y
+        lda     LDFC9,y
         cmp     #$2F
         beq     L4D01
-        cpy     $DFC9
+        cpy     LDFC9
         bne     L4CF3
         iny
 L4D01:  dey
-        sty     $DFC9
-        addr_call L6FB7, $DFC9
+        sty     LDFC9
+        addr_call L6FB7, LDFC9
         lda     #$C9
         ldx     #$DF
-        ldy     $DFC9
+        ldy     LDFC9
         jsr     L6F4B
         jmp     L4523
 
@@ -7007,7 +7018,7 @@ L4D1E:  lda     (L0006),y
         lda     ($08),y
         tay
 L4D2B:  lda     ($08),y
-        sta     $DFC9,y
+        sta     LDFC9,y
         dey
         bpl     L4D2B
         lda     #$C9
@@ -7016,20 +7027,20 @@ L4D2B:  lda     ($08),y
         ldx     #$01
         iny
         iny
-L4D3E:  lda     $DFC9,y
+L4D3E:  lda     LDFC9,y
         sta     $E04B,x
-        cpy     $DFC9
+        cpy     LDFC9
         beq     L4D4E
         iny
         inx
         jmp     L4D3E
 
 L4D4E:  stx     $E04B
-        lda     $DFC9
+        lda     LDFC9
         sec
         sbc     $E04B
-        sta     $DFC9
-        dec     $DFC9
+        sta     LDFC9
+        dec     LDFC9
         rts
 
         jsr     L488A
@@ -7435,7 +7446,7 @@ L511E:  sta     buf3len
         sta     LE6D1,x
         jsr     L52DF
         lda     desktop_winid
-        sta     $D212
+        sta     query_state_params2::id
         jsr     L4505
         jsr     L6E8E
         jsr     L4904
@@ -7465,7 +7476,7 @@ L516D:  lda     L51EB,x
         lda     desktop_winid
         jsr     L763A
         lda     desktop_winid
-        sta     $D212
+        sta     query_state_params2::id
         jsr     L44F2
         jsr     L6E52
         lda     #$00
@@ -7518,7 +7529,7 @@ L51F0:  ldx     desktop_winid
         jsr     L7D9C
         jsr     DESKTOP_COPY_FROM_BUF
         lda     desktop_winid
-        sta     $D212
+        sta     query_state_params2::id
         jsr     L4505
         jsr     L6E8E
         jsr     L4904
@@ -7991,13 +8002,13 @@ L55F0:  ldx     L544A
         ldy     #$02
         lda     (L0006),y
         and     #$0F
-        sta     $D212
+        sta     query_state_params2::id
         beq     L5614
         jsr     L56F9
         lda     LE22F
         jsr     L8915
 L5614:  DESKTOP_RELAY_CALL $02, LE22F
-        lda     $D212
+        lda     query_state_params2::id
         beq     L562B
         lda     LE22F
         jsr     L8893
@@ -8011,13 +8022,13 @@ L562C:  lda     LE22F
         ldy     #$02
         lda     (L0006),y
         and     #$0F
-        sta     $D212
+        sta     query_state_params2::id
         beq     L564A
         jsr     L56F9
         lda     LE22F
         jsr     L8915
 L564A:  DESKTOP_RELAY_CALL $0B, LE22F
-        lda     $D212
+        lda     query_state_params2::id
         beq     L5661
         lda     LE22F
         jsr     L8893
@@ -8083,7 +8094,7 @@ L56F0:  lda     #$00
         jmp     DESKTOP_COPY_TO_BUF
 
 L56F8:  .byte   0
-L56F9:  sta     $D212
+L56F9:  sta     query_state_params2::id
         jsr     L4505
         jmp     L6E8E
 
@@ -8716,7 +8727,7 @@ L5C54:  lda     $D20D
         bmi     L5C71
         jsr     L6E6E
 L5C71:  lda     desktop_winid
-        sta     $D212
+        sta     query_state_params2::id
         jsr     L44F2
         A2D_RELAY_CALL A2D_FILL_RECT, $D21D
         jsr     L4510
@@ -8784,7 +8795,7 @@ L5D0B:  ldx     is_file_selected
         lda     desktop_winid
         sta     selected_window_index
         lda     desktop_winid
-        sta     $D212
+        sta     query_state_params2::id
         jsr     L44F2
         lda     L5CD9
         sta     LE22F
@@ -8792,7 +8803,7 @@ L5D0B:  ldx     is_file_selected
         jsr     L6E8E
         DESKTOP_RELAY_CALL $02, LE22F
         lda     desktop_winid
-        sta     $D212
+        sta     query_state_params2::id
         jsr     L44F2
         lda     L5CD9
         jsr     L8893
@@ -8841,7 +8852,7 @@ L5DA6:  cpx     #$02
 L5DAD:  cpx     #$FF
         beq     L5DF7
         lda     desktop_winid
-        sta     $D212
+        sta     query_state_params2::id
         jsr     L44F2
         jsr     L6E52
         jsr     L6E8E
@@ -8857,7 +8868,7 @@ L5DC4:  txa
         dex
         bpl     L5DC4
         lda     desktop_winid
-        sta     $D212
+        sta     query_state_params2::id
         jsr     L44F2
         jsr     L6DB1
         jsr     L6E6E
@@ -8944,7 +8955,7 @@ L5E78:  sta     L5F0A
         sta     $D20E
         jsr     L4459
 L5E8F:  lda     desktop_winid
-        sta     $D212
+        sta     query_state_params2::id
         jsr     L44F2
         jsr     L4904
         A2D_RELAY_CALL A2D_FILL_RECT, $D21D
@@ -8978,7 +8989,7 @@ L5ECB:  lda     (L0006),y
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         lda     desktop_winid
-        sta     $D212
+        sta     query_state_params2::id
         jsr     L4505
         jsr     L78EF
         lda     #$00
@@ -9022,7 +9033,7 @@ L5F3E:  rts
 
 L5F3F:  jsr     L6D2B
         lda     desktop_winid
-        sta     $D212
+        sta     query_state_params2::id
         jsr     L4505
         jsr     L6E8E
         ldx     #$03
@@ -10214,7 +10225,7 @@ L6AA7:  stx     bufnum
         ldy     #$02
         lda     (L0006),y
         and     #$0F
-        sta     $D212
+        sta     query_state_params2::id
         beq     L6AD8
         cmp     desktop_winid
         bne     L6AEF
@@ -10222,7 +10233,7 @@ L6AA7:  stx     bufnum
         lda     LE6BE
         jsr     L8915
 L6AD8:  DESKTOP_RELAY_CALL $03, LE6BE
-        lda     $D212
+        lda     query_state_params2::id
         beq     L6AEF
         lda     LE6BE
         jsr     L8893
@@ -10293,7 +10304,7 @@ L6B68:  lda     #$01
         ldy     #$02
         lda     (L0006),y
         and     #$0F
-        sta     $D212
+        sta     query_state_params2::id
         beq     L6BA1
         cmp     desktop_winid
         bne     L6BB8
@@ -10302,7 +10313,7 @@ L6B68:  lda     #$01
         lda     LE6BE
         jsr     L8915
 L6BA1:  DESKTOP_RELAY_CALL $03, LE6BE
-        lda     $D212
+        lda     query_state_params2::id
         beq     L6BB8
         lda     LE6BE
         jsr     L8893
@@ -10313,7 +10324,7 @@ L6BB8:  jsr     L744B
         ldy     #$38
         jsr     A2D_RELAY
         lda     desktop_winid
-        sta     $D212
+        sta     query_state_params2::id
         jsr     L44F2
         jsr     L78EF
         jsr     L6E52
@@ -10352,13 +10363,13 @@ L6C19:  ldx     bufnum
 
 L6C25:  jsr     push_zp_addrs
         lda     bufnum
-        sta     $D212
+        sta     query_state_params2::id
         jsr     L44F2
         bit     L4152
         bmi     L6C39
         jsr     L78EF
 L6C39:  lda     bufnum
-        sta     $D212
+        sta     query_state_params2::id
         jsr     L4505
 L6C42:  bit     L4152
         bmi     L6C4A
@@ -10422,7 +10433,7 @@ L6CC5:  jsr     L4510
 
 L6CCC:  .byte   0
 L6CCD:  lda     bufnum
-        sta     $D212
+        sta     query_state_params2::id
         jsr     L44F2
         bit     L4152
         bmi     L6CDE
@@ -10442,7 +10453,7 @@ L6CF3:  cpx     buf3len
         pla
         jsr     L4510
         lda     bufnum
-        sta     $D212
+        sta     query_state_params2::id
         jsr     L44F2
         jsr     L6E6E
         rts
@@ -10474,7 +10485,7 @@ L6D31:  lda     #$00
         lda     #$00
         sta     LE230
         beq     L6D56
-L6D4D:  sta     $D212
+L6D4D:  sta     query_state_params2::id
         jsr     L44F2
         jsr     L6E8E
 L6D56:  lda     L6DB0
@@ -10522,7 +10533,7 @@ L6DC0:  jsr     L6E52
         jsr     L7B6B
         jsr     L6E6E
 L6DC9:  lda     desktop_winid
-        sta     $D212
+        sta     query_state_params2::id
         jsr     L44F2
         lda     L7B5F
         cmp     $D21D
@@ -12858,7 +12869,7 @@ L8228:  lda     $EC43,x
 L8241:  lda     $EC53
         jsr     L8707
         ldx     #$04
-L8249:  lda     $DFC5,x
+L8249:  lda     LDFC5,x
         sta     text_buffer2::data-1,x
         dex
         bpl     L8249
@@ -13403,20 +13414,20 @@ L8726:  tya
         sta     L0006+1
         ldx     #$00
 L8736:  lda     (L0006),y
-        sta     $DFC6,x
+        sta     LDFC6,x
         iny
         inx
         cpx     #$04
         bne     L8736
-        stx     $DFC5
+        stx     LDFC5
         rts
 
 L8745:  lda     #$04
-        sta     $DFC5
+        sta     LDFC5
         lda     #$20
-        sta     $DFC6
+        sta     LDFC6
         lda     #$24
-        sta     $DFC7
+        sta     LDFC7
         lda     L877F
         lsr     a
         lsr     a
@@ -13429,7 +13440,7 @@ L8745:  lda     #$04
         bne     L8767
 L8764:  clc
         adc     #$37
-L8767:  sta     $DFC8
+L8767:  sta     LDFC8
         lda     L877F
         and     #$0F
         cmp     #$0A
@@ -13439,7 +13450,7 @@ L8767:  sta     $DFC8
         bne     L877B
 L8778:  clc
         adc     #$37
-L877B:  sta     $DFC9
+L877B:  sta     LDFC9
         rts
 
 L877F:  .byte   0
@@ -14550,12 +14561,12 @@ L906D:  .byte   0
 L9076:  ldy     #$FF
 L9078:  iny
         lda     $E00A,y
-        sta     $DFC9,y
+        sta     LDFC9,y
         cpy     $E00A
         bne     L9078
-        lda     $DFC9
+        lda     LDFC9
         beq     L908C
-        dec     $DFC9
+        dec     LDFC9
 L908C:  lda     #$00
         sta     L97E4
         jsr     LA248
@@ -15060,7 +15071,7 @@ L9491:  lda     $E6EC,y
         sta     $0220
         ldx     $0220
 L94A9:  lda     $0220,x
-        sta     $DFC9,x
+        sta     LDFC9,x
         dex
         bpl     L94A9
         lda     #$C9
@@ -15098,7 +15109,7 @@ L94A9:  lda     $0220,x
         bne     L9519
         ldx     L953A
 L950E:  lda     L953A,x
-        sta     $DFC5,x
+        sta     LDFC5,x
         dex
         bpl     L950E
         bmi     L951F
@@ -15114,7 +15125,7 @@ L952E:  inc     L92E6
         jmp     L92F5
 
 L9534:  lda     #$00
-        sta     $DFC9
+        sta     LDFC9
         rts
 
 L953A:  PASCAL_STRING " VOL"
@@ -16811,8 +16822,8 @@ LA37F:  iny
 LA38A:  sta     $0220,y
         cpy     $E00A
         bne     LA37F
-        ldy     $DFC9
-LA395:  lda     $DFC9,y
+        ldy     LDFC9
+LA395:  lda     LDFC9,y
         sta     $1FC0,y
         dey
         bpl     LA395
@@ -16828,7 +16839,7 @@ LA3A7:  ldy     #$CC
         jsr     L4021
         lda     selected_window_index
         beq     LA3CA
-        sta     $D212
+        sta     query_state_params2::id
         ldy     #$3C
         lda     #$12
         ldx     #$D2
@@ -18266,10 +18277,10 @@ LB27D:  jsr     LBD75
         lda     ($08),y
         tay
 LB2CA:  lda     ($08),y
-        sta     $D8D7,y
+        sta     buf_filename,y
         dey
         bpl     LB2CA
-        yax_call draw_dialog_label, $D8D7, $02
+        yax_call draw_dialog_label, buf_filename, $02
         yax_call draw_dialog_label, str_rename_new, $04
         lda     #$00
         sta     $D443
@@ -18726,8 +18737,8 @@ LB7A3:  iny
 LB7B5:  dey
         jmp     LB78D
 
-LB7B9:  sta     $D212
-        A2D_RELAY_CALL A2D_QUERY_STATE, $D212
+LB7B9:  sta     query_state_params2::id
+        A2D_RELAY_CALL A2D_QUERY_STATE, query_state_params2
         ldy     #$04
         lda     #$15
         LB7CA := *+1
