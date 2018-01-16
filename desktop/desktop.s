@@ -4371,11 +4371,32 @@ LD211:  .byte   0
 
 .proc query_state_params2
 id:     .byte   0
-        .addr   buffer
+        .addr   query_state_buffer
+.endproc
+
+.proc query_state_buffer
+left:   .word   0
+top:    .word   0
+addr:   .addr   0
+stride: .word   0
+hoff:   .word   0
+voff:   .word   0
+width:  .word   0
+height: .word   0
+pattern:.res 8, 0
+mskand: .byte   0
+mskor:  .byte   0
+xpos:   .word   0
+ypos:   .word   0
+hthick: .byte   0
+vthick: .byte   0
+unk:    .byte   0
+tmask:  .byte   0
+font:   .addr   0
 .endproc
 
 .proc buffer
-        .res    56, $0
+        .res    20, 0
 
         ;; Looks like a window definition?
 id:     .byte   0
@@ -5768,11 +5789,11 @@ L415B:  sta     desktop_winid
         ldy     #$16
         lda     (L0006),y
         sec
-        sbc     $D217
+        sbc     query_state_buffer::top
         sta     L4242
         iny
         lda     (L0006),y
-        sbc     $D218
+        sbc     query_state_buffer::top+1
         sta     L4243
         lda     L4242
         cmp     #$0F
@@ -5782,19 +5803,19 @@ L415B:  sta     desktop_winid
         jsr     L6E8A
         ldx     #$0B
         ldy     #$1F
-        lda     $D215,x
+        lda     query_state_buffer,x
         sta     (L0006),y
         dey
         dex
-        lda     $D215,x
+        lda     query_state_buffer,x
         sta     (L0006),y
         ldx     #$03
         ldy     #$17
-        lda     $D215,x
+        lda     query_state_buffer,x
         sta     (L0006),y
         dey
         dex
-        lda     $D215,x
+        lda     query_state_buffer,x
         sta     (L0006),y
 L41CB:  ldx     bufnum
         dex
@@ -5810,8 +5831,8 @@ L41E2:  lda     bufnum
         sta     query_state_params2::id
         jsr     L44F2
         jsr     L6E52
-        ldx     #$07
-L41F0:  lda     $D21D,x
+        ldx     #7
+L41F0:  lda     query_state_buffer::hoff,x
         sta     LE230,x
         dex
         bpl     L41F0
@@ -5856,8 +5877,8 @@ L424A:  lda     #$00
         sta     query_state_params2::id
         jsr     L4505
         jsr     L6E8E
-        ldx     #$07
-L4267:  lda     $D21D,x
+        ldx     #7
+L4267:  lda     query_state_buffer::hoff,x
         sta     LE230,x
         dex
         bpl     L4267
@@ -6081,7 +6102,7 @@ L44B8:  jsr     DESKTOP_COPY_TO_BUF
         rts
 
 L44F2:  A2D_RELAY_CALL A2D_QUERY_STATE, query_state_params2
-        A2D_RELAY_CALL A2D_SET_STATE, $D215
+        A2D_RELAY_CALL A2D_SET_STATE, query_state_buffer
         rts
 
 L4505:  A2D_RELAY_CALL A2D_QUERY_STATE, query_state_params2
@@ -7450,7 +7471,7 @@ L511E:  sta     buf3len
         jsr     L4505
         jsr     L6E8E
         jsr     L4904
-        A2D_RELAY_CALL A2D_FILL_RECT, $D21D
+        A2D_RELAY_CALL A2D_FILL_RECT, query_state_buffer::hoff
         lda     desktop_winid
         jsr     L7D5D
         sta     L51EB
@@ -7533,7 +7554,7 @@ L51F0:  ldx     desktop_winid
         jsr     L4505
         jsr     L6E8E
         jsr     L4904
-        A2D_RELAY_CALL A2D_FILL_RECT, $D21D
+        A2D_RELAY_CALL A2D_FILL_RECT, query_state_buffer::hoff
         lda     desktop_winid
         jsr     L7D5D
         sta     L5263
@@ -8729,7 +8750,7 @@ L5C54:  lda     $D20D
 L5C71:  lda     desktop_winid
         sta     query_state_params2::id
         jsr     L44F2
-        A2D_RELAY_CALL A2D_FILL_RECT, $D21D
+        A2D_RELAY_CALL A2D_FILL_RECT, query_state_buffer::hoff
         jsr     L4510
         jmp     L6C19
 
@@ -8958,7 +8979,7 @@ L5E8F:  lda     desktop_winid
         sta     query_state_params2::id
         jsr     L44F2
         jsr     L4904
-        A2D_RELAY_CALL A2D_FILL_RECT, $D21D
+        A2D_RELAY_CALL A2D_FILL_RECT, query_state_buffer::hoff
         ldx     desktop_winid
         dex
         lda     LEC26,x
@@ -9477,11 +9498,11 @@ L638C:  jsr     L650F
         sty     L63E9
         jsr     L644C
         sta     L63E8
-        lda     $D21F
+        lda     query_state_buffer::voff
         sec
         sbc     L63E8
         sta     L63EA
-        lda     $D220
+        lda     query_state_buffer::voff+1
         sbc     #$00
         sta     L63EB
         lda     L63EA
@@ -9495,15 +9516,15 @@ L638C:  jsr     L650F
 
 L63C1:  lda     L7B61
         ldx     L7B62
-L63C7:  sta     $D21F
-        stx     $D220
-        lda     $D21F
+L63C7:  sta     query_state_buffer::voff
+        stx     query_state_buffer::voff+1
+        lda     query_state_buffer::voff
         clc
         adc     L63E9
-        sta     $D223
-        lda     $D220
+        sta     query_state_buffer::height
+        lda     query_state_buffer::voff+1
         adc     #$00
-        sta     $D224
+        sta     query_state_buffer::height+1
         jsr     L653E
         jsr     L6DB1
         jmp     L6556
@@ -9516,11 +9537,11 @@ L63EC:  jsr     L650F
         sty     L6449
         jsr     L644C
         sta     L6448
-        lda     $D223
+        lda     query_state_buffer::height
         clc
         adc     L6448
         sta     L644A
-        lda     $D224
+        lda     query_state_buffer::height+1
         adc     #$00
         sta     L644B
         lda     L644A
@@ -9534,15 +9555,15 @@ L63EC:  jsr     L650F
 
 L6421:  lda     L7B65
         ldx     L7B66
-L6427:  sta     $D223
-        stx     $D224
-        lda     $D223
+L6427:  sta     query_state_buffer::height
+        stx     query_state_buffer::height+1
+        lda     query_state_buffer::height
         sec
         sbc     L6449
-        sta     $D21F
-        lda     $D224
+        sta     query_state_buffer::voff
+        lda     query_state_buffer::height+1
         sbc     #$00
-        sta     $D220
+        sta     query_state_buffer::voff+1
         jsr     L653E
         jsr     L6DB1
         jmp     L6556
@@ -9559,11 +9580,11 @@ L644C:  tya
 L6451:  jsr     L650F
         sta     L64AC
         stx     L64AD
-        lda     $D21D
+        lda     query_state_buffer::hoff
         sec
         sbc     L64AC
         sta     L64AE
-        lda     $D21E
+        lda     query_state_buffer::hoff+1
         sbc     L64AD
         sta     L64AF
         lda     L64AE
@@ -9577,15 +9598,15 @@ L6451:  jsr     L650F
 
 L6484:  lda     L7B5F
         ldx     L7B60
-L648A:  sta     $D21D
-        stx     $D21E
-        lda     $D21D
+L648A:  sta     query_state_buffer::hoff
+        stx     query_state_buffer::hoff+1
+        lda     query_state_buffer::hoff
         clc
         adc     L64AC
-        sta     $D221
-        lda     $D21E
+        sta     query_state_buffer::width
+        lda     query_state_buffer::hoff+1
         adc     L64AD
-        sta     $D222
+        sta     query_state_buffer::width+1
         jsr     L653E
         jsr     L6DB1
         jmp     L6556
@@ -9597,11 +9618,11 @@ L64AF:  .byte   0
 L64B0:  jsr     L650F
         sta     L650B
         stx     L650C
-        lda     $D221
+        lda     query_state_buffer::width
         clc
         adc     L650B
         sta     L650D
-        lda     $D222
+        lda     query_state_buffer::width+1
         adc     L650C
         sta     L650E
         lda     L650D
@@ -9615,15 +9636,15 @@ L64B0:  jsr     L650F
 
 L64E3:  lda     L7B63
         ldx     L7B64
-L64E9:  sta     $D221
-        stx     $D222
-        lda     $D221
+L64E9:  sta     query_state_buffer::width
+        stx     query_state_buffer::width+1
+        lda     query_state_buffer::width
         sec
         sbc     L650B
-        sta     $D21D
-        lda     $D222
+        sta     query_state_buffer::hoff
+        lda     query_state_buffer::width+1
         sbc     L650C
-        sta     $D21E
+        sta     query_state_buffer::hoff+1
         jsr     L653E
         jsr     L6DB1
         jmp     L6556
@@ -9650,7 +9671,7 @@ L6523:  lda     desktop_winid
         sta     L0006+1
         ldy     #$25
 L6535:  lda     (L0006),y
-        sta     $D215,y
+        sta     query_state_buffer,y
         dey
         bpl     L6535
         rts
@@ -9661,7 +9682,7 @@ L653E:  lda     desktop_winid
         stx     L0006+1
         ldy     #$23
         ldx     #$07
-L654C:  lda     $D21D,x
+L654C:  lda     query_state_buffer::hoff,x
         sta     (L0006),y
         dey
         dex
@@ -9671,7 +9692,7 @@ L654C:  lda     $D21D,x
 L6556:  bit     L5B1B
         bmi     L655E
         jsr     L6E6E
-L655E:  A2D_RELAY_CALL A2D_FILL_RECT, $D21D
+L655E:  A2D_RELAY_CALL A2D_FILL_RECT, query_state_buffer::hoff
         jsr     L4510
         jmp     L6C19
 
@@ -9703,19 +9724,19 @@ L656D:  lda     desktop_winid
         lsr     L6603
         ror     L6602
         ldx     L6602
-        lda     $D21D
+        lda     query_state_buffer::hoff
         sec
         sbc     L7B5F
         sta     L6602
-        lda     $D21E
+        lda     query_state_buffer::hoff+1
         sbc     L7B60
         sta     L6603
         bpl     L65D0
         lda     #$00
         beq     L65EB
-L65D0:  lda     $D221
+L65D0:  lda     query_state_buffer::width
         cmp     L7B63
-        lda     $D222
+        lda     query_state_buffer::width+1
         sbc     L7B64
         bmi     L65E2
         tya
@@ -9764,19 +9785,19 @@ L6604:  lda     desktop_winid
         lsr     L66A1
         ror     L66A0
         ldx     L66A0
-        lda     $D21F
+        lda     query_state_buffer::voff
         sec
         sbc     L7B61
         sta     L66A0
-        lda     $D220
+        lda     query_state_buffer::voff+1
         sbc     L7B62
         sta     L66A1
         bpl     L6669
         lda     #$00
         beq     L668A
-L6669:  lda     $D223
+L6669:  lda     query_state_buffer::height
         cmp     L7B65
-        lda     $D224
+        lda     query_state_buffer::height+1
         sbc     L7B66
         bmi     L667B
         tya
@@ -10441,7 +10462,7 @@ L6CCD:  lda     bufnum
 L6CDE:  jsr     L6E52
         jsr     L6E8E
         ldx     #$07
-L6CE6:  lda     $D21D,x
+L6CE6:  lda     query_state_buffer::hoff,x
         sta     LE230,x
         dex
         bpl     L6CE6
@@ -10536,13 +10557,13 @@ L6DC9:  lda     desktop_winid
         sta     query_state_params2::id
         jsr     L44F2
         lda     L7B5F
-        cmp     $D21D
+        cmp     query_state_buffer::hoff
         lda     L7B60
-        sbc     $D21E
+        sbc     query_state_buffer::hoff+1
         bmi     L6DFE
-        lda     $D221
+        lda     query_state_buffer::width
         cmp     L7B63
-        lda     $D222
+        lda     query_state_buffer::width+1
         sbc     L7B64
         bmi     L6DFE
         lda     #$02
@@ -10559,13 +10580,13 @@ L6DFE:  lda     #$02
         jsr     L6E48
         jsr     L656D
 L6E0E:  lda     L7B61
-        cmp     $D21F
+        cmp     query_state_buffer::voff
         lda     L7B62
-        sbc     $D220
+        sbc     query_state_buffer::voff+1
         bmi     L6E38
-        lda     $D223
+        lda     query_state_buffer::height
         cmp     L7B65
-        lda     $D224
+        lda     query_state_buffer::height+1
         sbc     L7B66
         bmi     L6E38
         lda     #$01
@@ -10617,23 +10638,23 @@ L6E8A:  lda     #$80
         beq     L6E90
 L6E8E:  lda     #$00
 L6E90:  sta     L6EC4
-        lda     $D217
+        lda     query_state_buffer::top
         clc
         adc     #$0F
-        sta     $D217
-        lda     $D218
+        sta     query_state_buffer::top
+        lda     query_state_buffer::top+1
         adc     #$00
-        sta     $D218
-        lda     $D21F
+        sta     query_state_buffer::top+1
+        lda     query_state_buffer::voff
         clc
         adc     #$0F
-        sta     $D21F
-        lda     $D220
+        sta     query_state_buffer::voff
+        lda     query_state_buffer::voff+1
         adc     #$00
-        sta     $D220
+        sta     query_state_buffer::voff+1
         bit     L6EC4
         bmi     L6EC3
-        A2D_RELAY_CALL A2D_SET_STATE, $D215
+        A2D_RELAY_CALL A2D_SET_STATE, query_state_buffer
 L6EC3:  rts
 
 L6EC4:  .byte   0
@@ -11840,28 +11861,28 @@ L78C2:  lda     LFB04           ; ???
         rts
 
 L78EE:  .byte   0
-L78EF:  lda     $D21D
+L78EF:  lda     query_state_buffer::hoff
         sta     LEBBE           ; Directory header line (items / k in disk)
         clc
         adc     #$05
         sta     items_label_pos
-        lda     $D21E
+        lda     query_state_buffer::hoff+1
         sta     $EBBF
         adc     #$00
         sta     $EBBB
-        lda     $D21F
+        lda     query_state_buffer::voff
         clc
         adc     #$0C
         sta     $EBC0
         sta     $EBC4
-        lda     $D220
+        lda     query_state_buffer::voff+1
         adc     #$00
         sta     $EBC1
         sta     $EBC5
         A2D_RELAY_CALL A2D_SET_POS, LEBBE
-        lda     $D221
+        lda     query_state_buffer::width
         sta     LEBC2
-        lda     $D222
+        lda     query_state_buffer::width+1
         sta     $EBC3
         jsr     L48FA
         A2D_RELAY_CALL A2D_DRAW_LINE_ABS, LEBC2
@@ -11876,11 +11897,11 @@ L78EF:  lda     $D21D
         sta     $EBC5
         A2D_RELAY_CALL A2D_SET_POS, LEBBE
         A2D_RELAY_CALL A2D_DRAW_LINE_ABS, LEBC2
-        lda     $D21F
+        lda     query_state_buffer::voff
         clc
         adc     #$0A
         sta     $EBBC
-        lda     $D220
+        lda     query_state_buffer::voff+1
         adc     #$00
         sta     $EBBD
         lda     buf3len
@@ -11928,12 +11949,12 @@ L79A7:  jsr     L79F7
         addr_call draw_text2, str_k_available
         rts
 
-L79F7:  lda     $D221
+L79F7:  lda     query_state_buffer::width
         sec
-        sbc     $D21D
+        sbc     query_state_buffer::hoff
         sta     L7ADE
-        lda     $D222
-        sbc     $D21E
+        lda     query_state_buffer::width+1
+        sbc     query_state_buffer::hoff+1
         sta     L7ADF
         lda     L7ADE
         sec
@@ -11995,17 +12016,17 @@ L7A86:  lda     LEBE3
         sta     $EBF0
 L7A9E:  lda     LEBEB
         clc
-        adc     $D21D
+        adc     query_state_buffer::hoff
         sta     LEBEB
         lda     $EBEC
-        adc     $D21E
+        adc     query_state_buffer::hoff+1
         sta     $EBEC
         lda     LEBEF
         clc
-        adc     $D21D
+        adc     query_state_buffer::hoff
         sta     LEBEF
         lda     $EBF0
-        adc     $D21E
+        adc     query_state_buffer::hoff+1
         sta     $EBF0
         lda     $EBBC
         sta     $EBED
@@ -12814,9 +12835,9 @@ L81AC:  lda     $E6E7
         bcc     L81BB
         inc     $E6E8
 L81BB:  lda     $E6DB
-        cmp     $D223
+        cmp     query_state_buffer::height
         lda     $E6DC
-        sbc     $D224
+        sbc     query_state_buffer::height+1
         bmi     L81D9
         lda     $E6DB
         clc
@@ -12833,9 +12854,9 @@ L81D9:  lda     $E6DB
         bcc     L81E8
         inc     $E6DC
 L81E8:  lda     $E6DB
-        cmp     $D21F
+        cmp     query_state_buffer::voff
         lda     $E6DC
-        sbc     $D220
+        sbc     query_state_buffer::voff+1
         bpl     L81F7
         rts
 
@@ -13121,19 +13142,19 @@ L84D1:  jsr     push_zp_addrs
         bit     L5B1B
         bmi     L84DC
         jsr     L6E52
-L84DC:  lda     $D221
+L84DC:  lda     query_state_buffer::width
         sec
-        sbc     $D21D
+        sbc     query_state_buffer::hoff
         sta     L85F8
-        lda     $D222
-        sbc     $D21E
+        lda     query_state_buffer::width+1
+        sbc     query_state_buffer::hoff+1
         sta     L85F9
-        lda     $D223
+        lda     query_state_buffer::height
         sec
-        sbc     $D21F
+        sbc     query_state_buffer::voff
         sta     L85FA
-        lda     $D224
-        sbc     $D220
+        lda     query_state_buffer::height+1
+        sbc     query_state_buffer::voff+1
         sta     L85FB
         lda     input_params_state
         cmp     #A2D_INPUT_DOWN
@@ -13193,10 +13214,10 @@ L8562:  lsr     L85F3
         ldx     L85F1
         clc
         adc     L7B5F,x
-        sta     $D21D,x
+        sta     query_state_buffer::hoff,x
         lda     L85F2
         adc     L7B60,x
-        sta     $D21E,x
+        sta     query_state_buffer::hoff+1,x
         lda     desktop_winid
         jsr     L7D5D
         sta     L85F4
@@ -13206,29 +13227,29 @@ L85A5:  sta     $8C
         inc     $85,x
         lda     L85F1
         beq     L85C3
-        lda     $D21F
+        lda     query_state_buffer::voff
         clc
         adc     L85F6
-        sta     $D223
-        lda     $D220
+        sta     query_state_buffer::height
+        lda     query_state_buffer::voff+1
         adc     #$00
-        sta     $D224
+        sta     query_state_buffer::height+1
         jmp     L85D6
 
-L85C3:  lda     $D21D
+L85C3:  lda     query_state_buffer::hoff
         clc
         adc     L85F4
-        sta     $D221
-        lda     $D21E
+        sta     query_state_buffer::width
+        lda     query_state_buffer::hoff+1
         adc     L85F5
-        sta     $D222
+        sta     query_state_buffer::width+1
 L85D6:  lda     desktop_winid
         jsr     L86EF
         sta     L0006
         stx     L0006+1
         ldy     #$23
         ldx     #$07
-L85E4:  lda     $D21D,x
+L85E4:  lda     query_state_buffer::hoff,x
         sta     (L0006),y
         dey
         dex
@@ -13983,7 +14004,7 @@ L8B62:  sty     L8D4A
         tay
         ldx     #$23
 L8B7B:  lda     (L0006),y
-        sta     $D215,x
+        sta     query_state_buffer,x
         dey
         dex
         bpl     L8B7B
@@ -14015,24 +14036,24 @@ L8B7B:  lda     (L0006),y
         sta     $0807
         ldy     #$5B
         ldx     #$03
-L8BC1:  lda     $D215,x
+L8BC1:  lda     query_state_buffer,x
         sta     L0800,y
         dey
         dex
         bpl     L8BC1
-        lda     $D221
+        lda     query_state_buffer::width
         sec
-        sbc     $D21D
+        sbc     query_state_buffer::hoff
         sta     L8D54
-        lda     $D222
-        sbc     $D21E
+        lda     query_state_buffer::width+1
+        sbc     query_state_buffer::hoff+1
         sta     L8D55
-        lda     $D223
+        lda     query_state_buffer::height
         sec
-        sbc     $D21F
+        sbc     query_state_buffer::voff
         sta     L8D56
-        lda     $D224
-        sbc     $D220
+        lda     query_state_buffer::height+1
+        sbc     query_state_buffer::voff+1
         sta     L8D57
         lda     $0858
         clc
