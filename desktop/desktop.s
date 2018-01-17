@@ -14,6 +14,9 @@
 INVOKER          := $290                 ; Invoke other programs
 INVOKER_FILENAME := $280                 ; File to invoke (PREFIX must be set)
 
+        dummy0000 := $0000      ; overwritten by self-modified code
+        dummy1234 := $1234      ; overwritten by self-modified code
+
 .macro addr_call target, addr
         lda     #<addr
         ldx     #>addr
@@ -366,7 +369,7 @@ DESKTOP_DIRECT:
         stx     $06
 
 dispatch:
-        jsr     $0000
+        jsr     dummy0000
 
         tay
         ldx     #$03
@@ -3080,7 +3083,7 @@ label_rename_icon:
         .addr   saddr
 .endmacro
 .macro  DEFINE_MENU_SEPARATOR
-        .addr   $0040, $0013, $0000
+        .addr   $0040, $0013, 0
 .endmacro
 
 desktop_menu:
@@ -3814,7 +3817,7 @@ LBE27:  lda     LBE5C
 LBE34:  lda     ($06),y
 LBE37           := * + 1
 LBE38           := * + 2
-        sta     $1234
+        sta     dummy1234
         inc     LBE37
         bne     LBE41
         inc     LBE38
@@ -4299,7 +4302,7 @@ loop:   lda     (src),y
         sta     op+1
         sta     RAMRDON
         sta     RAMWRTON
-op:     lda     $1234
+op:     lda     dummy1234
         sta     RAMRDOFF
         sta     RAMWRTOFF
         rts
@@ -5624,7 +5627,6 @@ app_mask:
 ;;; ==================================================
 
 .proc desktop_main
-L0000           := $0000
 L0006           := $0006
 L0020           := $0020
 L0800           := $0800
@@ -6005,7 +6007,7 @@ L43B3:  dex
 L43E0:  tsx
         stx     $E256
         L43E5 := *+1
-        jmp     $1234           ; self-modified
+        jmp     dummy1234           ; self-modified
 L43E7:  tsx
         stx     $E256
         A2D_RELAY_CALL A2D_QUERY_TARGET, input_params_coords
@@ -6243,13 +6245,13 @@ L45D9:  stx     L45EC
 
         jsr     L4634
         .byte   0               ; ???
-        .addr   $4639
+        .addr   L4639
 
-        lda     $463E
+        lda     L463E
         and     #$10
-        beq     $4627
+        beq     L4627
         lda     #$FF
-        bne     $4629
+        bne     L4629
 L4627:  lda     #$00
 L4629:  sta     L4638
         pla
@@ -6262,10 +6264,13 @@ L4629:  sta     L4638
 L4634:  jmp     (L0006)
 
 L4637:  .byte   $00
-L4638:  .byte   $00,$03
-L463A:  .byte   $01,$3E,$46,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00
+L4638:  .byte   $00
+L4639:  .byte   $03
+L463A:  .byte   $01
+        .addr   L463E
+        .byte   0
+L463E:  .res    16, 0
+
 L464E:  lda     $D343
         beq     L465E
         bit     $D344
@@ -6326,7 +6331,7 @@ MLI_RELAY:
         sta     ROMIN2
         jsr     MLI
 L46CE:  .byte   $00
-L46CF:  .addr   L0000
+L46CF:  .addr   dummy0000
         sta     ALTZPON
         tax
         lda     LCBANK1
@@ -6401,7 +6406,7 @@ L4748:  cmp     #$FF
         beq     L4755
         lda     #$FA
         jsr     L4802
-L4755:  DESKTOP_RELAY_CALL $06, $0000
+L4755:  DESKTOP_RELAY_CALL $06
         A2D_RELAY_CALL $3A      ; ???
         A2D_RELAY_CALL A2D_SET_MENU, blank_menu
         ldx     $D355
@@ -6502,7 +6507,8 @@ L4859:  dey
 L485D:  .byte   $00
 L485E:  .byte   $E0
 L485F:  .byte   $00
-L4860:  .byte   $D0,$00
+L4860:  .byte   $D0
+L4861:  .byte   $00
 L4862:  .byte   $00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -6546,7 +6552,7 @@ L48CC:  sta     $D2AC
         sta     L48E4+1
 
         L48E4 := *+1
-        jmp     $1234           ; self-modified
+        jmp     dummy1234           ; self-modified
 
 L48E6:  A2D_RELAY_CALL A2D_GET_INPUT, input_params
         rts
@@ -6820,7 +6826,7 @@ L4B27:  lda     $D3EE,x
 
         L4B2B := *+1
         L4B2C := *+2
-        sta     $1234,x
+        sta     dummy1234,x
 
         dex
         bpl     L4B27
@@ -6838,7 +6844,7 @@ L4B3A:  sta     L4B50
 L4B4C:  lda     $D3AD,x
         L4B50 := *+1
         L4B51 := *+2
-        sta     $1234,x
+        sta     dummy1234,x
         dex
         bpl     L4B4C
         sta     ALTZPON
@@ -6896,7 +6902,7 @@ L4BB1:  .byte   0
         jsr     LA500
         jmp     L4523
 
-        .byte   $80,$20         ; ???
+L4BBE:  .byte   $80,$20         ; ???
         bpl     L4C07
         jsr     L488A
         lda     $E25B
@@ -6913,7 +6919,7 @@ L4BB1:  .byte   0
         lda     (L0006),y
         tay
         clc
-        adc     $4C87
+        adc     L4C87
         pha
         tax
 L4BE3:  lda     (L0006),y
@@ -6943,7 +6949,7 @@ L4C07:  lda     L4C7C
         jsr     L489A
         jsr     L4510
         A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, $D2A7
-        A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, $4BBE
+        A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, L4BBE
         jsr     L0800
         A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, $D2A7
         lda     #$00
@@ -6954,8 +6960,8 @@ L4C4A:  jsr     L489A
         rts
 
 L4C4E:  ldy     #$C8
-        ldx     #>$4C77
-        lda     #<$4C77
+        ldx     #>L4C77
+        lda     #<L4C77
         jsr     MLI_RELAY
         bne     L4C5A
         rts
@@ -6967,19 +6973,23 @@ L4C5A:  lda     #$00
         rts
 
 L4C64:  ldy     #$CA
-        ldx     #>$4C7D
-        lda     #<$4C7D
+        ldx     #>L4C7D
+        lda     #<L4C7D
         jmp     MLI_RELAY
 
 L4C6D:  ldy     #$CC
-        ldx     #>$4C85
-        lda     #<$4C85
+        ldx     #>L4C85
+        lda     #<L4C85
         jmp     MLI_RELAY
 
-        .byte   $00,$03,$88,$4C,$00,$1C
-L4C7C:  .byte   $00,$04
-L4C7E:  .byte   $00,$00,$08,$00,$14,$00,$00,$01
-L4C86:  .byte   $00,$09
+L4C76:  .byte   $00
+L4C77:  .byte   $03,$88,$4C,$00,$1C
+L4C7C:  .byte   $00
+L4C7D:  .byte   $04
+L4C7E:  .byte   $00,$00,$08,$00,$14,$00,$00
+L4C85:  .byte   $01
+L4C86:  .byte   $00
+L4C87:  .byte   $09
 L4C88:  PASCAL_STRING "Desk.acc/"
         .res    15, 0
 L4CA1:  .byte   $00
@@ -7304,7 +7314,7 @@ L4F69:  .byte   $00
 
 .proc create_params
 params: .byte   7
-path:   .addr   $4F76
+path:   .addr   L4F76
 access: .byte   $C3
 type:   .byte   $0F
 auxtype:.word   0
@@ -7373,7 +7383,7 @@ L5027:  lda     #$40
         ldx     #$4F
         jsr     L6F90
         sty     L4F76
-        addr_call L6FAF, $4F76
+        addr_call L6FAF, L4F76
         beq     L504B
         jsr     L5E78
 L504B:  jmp     L4523
@@ -7427,7 +7437,7 @@ L50AC:  lda     L5099,x
         lda     LCBANK2
         ldx     #$05
 L50C0:  lda     L509D,x
-        sta     $D100,x
+        sta     $D100,x         ; ???
         dex
         bpl     L50C0
         sta     ALTZPOFF
@@ -8604,7 +8614,7 @@ L5AEE:  sta     ALTZPOFF
         sta     CLR80COL
 
         L5B19 := *+1
-        jmp     $0000           ; self-modified
+        jmp     dummy0000       ; self-modified
 
 L5B1B:  .byte   0
 L5B1C:  lda     desktop_winid
@@ -14527,10 +14537,9 @@ L8FEB:  tsx
         jmp     L908C
 
 L8FFF:  .byte   $2C
-L9000:  txa
+L9000:  txa                     ; ???
         sta     ($10),y
-        ora     $20AD
-        .byte   $DF             ; ???
+        .byte   $0D,$AD,$20,$DF
         beq     L900C
         jmp     L908C
 
@@ -14707,13 +14716,13 @@ L917A:  .byte   0
 
         ;; Dynamically constructed jump table???
         L917D := *+1
-L917C:  jmp     $0000
+L917C:  jmp     dummy0000
         L9180 := *+1
-L917F:  jmp     $0000
+L917F:  jmp     dummy0000
         L9183 := *+1
-L9182:  jmp     $0000
+L9182:  jmp     dummy0000
         L9186 := *+1
-L9185:  jmp     $0000
+L9185:  jmp     dummy0000
 
 L9188:  .byte   0
 L9189:  .byte   0
@@ -16860,7 +16869,7 @@ LA395:  lda     LDFC9,y
 LA39F:  jsr     L917F
         jmp     LA3A7
 
-        ora     (L0000,x)
+        .byte   1, 0
 LA3A7:  ldy     #$CC
         lda     #$A5
         ldx     #$A3
@@ -17054,7 +17063,7 @@ LA520:  sta     LA51D
         jsr     LB403
 
         LA565 := *+1
-        jmp     $0000           ; self-modified
+        jmp     dummy0000       ; self-modified
 LA567:  lda     LD8E8
         beq     LA579
         dec     LD8E9
@@ -17393,7 +17402,7 @@ rts1:
         rts
 
         LA89A := *+1
-LA899:  jmp     $0000
+LA899:  jmp     dummy0000
 
 
 .macro  axy_call target, addr, yparam
@@ -19615,7 +19624,7 @@ found_ram:
         A2D_RELAY_CALL A2D_SET_MENU, splash_menu
         A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, $D2A7
         A2D_RELAY_CALL A2D_SET_CURSOR, watch_cursor
-        A2D_RELAY_CALL A2D_SHOW_CURSOR, $0000
+        A2D_RELAY_CALL A2D_SHOW_CURSOR
         jsr     push_zp_addrs
         lda     #$63
         sta     L0006
@@ -19773,9 +19782,9 @@ L09F9:  jmp     (L0006)
 L0A01:  .byte   0
 L0A02:  .byte   0
 
-L0A03:  A2D_RELAY_CALL $29, $0000
+L0A03:  A2D_RELAY_CALL $29
         MLI_RELAY_CALL GET_PREFIX, desktop_main::L8AF1 ; ???
-        A2D_RELAY_CALL $29, $0000
+        A2D_RELAY_CALL $29
         lda     #$00
         sta     L0A92
         jsr     L0AE7
@@ -19958,7 +19967,7 @@ L0B09:  addr_call measure_text1, str_6_spaces
 L0BA0:  .byte   0
 L0BA1:  .byte   0
 
-L0BA2:  A2D_RELAY_CALL $29, $0000
+L0BA2:  A2D_RELAY_CALL $29
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
         beq     L0BB9
         jmp     L0D0A
@@ -20157,7 +20166,7 @@ L0D12:  lda     L0E33
         lda     DEVLST,y
         jsr     L89B6
         sta     L0E34
-        A2D_RELAY_CALL $29, $0000
+        A2D_RELAY_CALL $29
         pla
         tay
         pla
@@ -20346,7 +20355,7 @@ L0E79:  sta     L0EAF
         dex
         lda     L0EAE
         sta_addr := *+1
-        sta     $1234,x
+        sta     dummy1234,x
         pla
         tax
         inx
@@ -20365,7 +20374,7 @@ L0EB0:  .addr   s00,s01,s02,s03,s04,s05,s06
 
 .proc get_file_info_params2
 params: .byte   $A
-path:   .addr   $4862
+path:   .addr   L4862
 access: .byte   0
 type:   .byte   0
 auxtype:.word   0
@@ -20386,7 +20395,7 @@ buffer: .addr   L4862
 L0ED4:  PASCAL_STRING "System/Start"
 
 L0EE1:  lda     #$00
-        sta     $4861
+        sta     desktop_main::L4861
         jsr     L4AFD
         cmp     #$80
         beq     L0EFE
@@ -20415,8 +20424,8 @@ L0F14:  inx
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params2
         bne     L0F34
         lda     #$80
-        sta     $4861
-L0F34:  A2D_RELAY_CALL $29, $0000
+        sta     desktop_main::L4861
+L0F34:  A2D_RELAY_CALL $29
         A2D_RELAY_CALL A2D_SET_MENU, desktop_menu
         A2D_RELAY_CALL A2D_SET_CURSOR, pointer_cursor
         lda     #$00
