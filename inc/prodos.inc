@@ -53,7 +53,7 @@ QUIT            := $65
 
 ;;; Direct Disk Access Commands
 READ_BLOCK      := $80
-WRITE_BLOCK     := $71
+WRITE_BLOCK     := $81
 
 ;;; ------------------------------------------------------------
 ;;; Device Types
