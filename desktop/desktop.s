@@ -10864,7 +10864,7 @@ L7054:  jmp     L70C5
 
 .proc open_params
 params: .byte   3
-path:   .addr   $705D
+path:   .addr   L705D
 buffer: .addr   $800
 ref_num:.byte   0
 .endproc
@@ -10887,7 +10887,7 @@ ref_num:.byte   0
 
 .proc get_file_info_params4
 params: .byte   $A
-path:   .addr   $705D
+path:   .addr   L705D
 access: .byte   0
 type:   .byte   0
 auxtype:.word   0
@@ -20145,7 +20145,7 @@ L0D08:  .byte   0
 L0D09:  .byte   0
 
 L0D0A:  ldy     #$00
-        sty     $599F
+        sty     desktop_main::L599F
         sty     L0E33
 L0D12:  lda     L0E33
         asl     a
@@ -20187,7 +20187,7 @@ L0D12:  lda     L0E33
 L0D64:  cmp     #$57
         bne     L0D6D
         lda     #$F9
-        sta     $599F
+        sta     desktop_main::L599F
 L0D6D:  pla
         pha
         and     #$0F
