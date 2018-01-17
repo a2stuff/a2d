@@ -28,6 +28,19 @@ INVOKER_FILENAME := $280                 ; File to invoke (PREFIX must be set)
         jmp     target
 .endmacro
 
+.macro  axy_call target, addr, yparam
+        lda     #<addr
+        ldx     #>addr
+        ldy     #yparam
+        jsr     target
+.endmacro
+.macro  yax_call target, addr, yparam
+        ldy     #yparam
+        lda     #<addr
+        ldx     #>addr
+        jsr     target
+.endmacro
+
 .macro DEFINE_RECT left, top, right, bottom
         .word   left
         .word   top
@@ -14962,10 +14975,7 @@ L9343:  lda     (L0006),y
         dec     $0220
         lda     #$2F
         sta     $0221
-L9356:  ldy     #$C4
-        lda     #$C9
-        ldx     #$92
-        jsr     L4021
+L9356:  yax_call L4021, $92C9, $C4
         beq     L9366
         jsr     LA49B
         beq     L9356
@@ -15006,15 +15016,9 @@ L93AD:  cmp     $E1A0,y
 
 L93B8:  lda     DEVLST,y
         sta     L92DE
-        ldy     #$80
-        lda     #$DD
-        ldx     #$92
-        jsr     L4021
+        yax_call L4021, $92DD, $80
         bne     L93DB
-        ldy     #$81
-        lda     #$DD
-        ldx     #$92
-        jsr     L4021
+        yax_call L4021, $92DD, $81
         cmp     #$2B
         bne     L93DB
         lda     #$80
@@ -15320,10 +15324,7 @@ L9674:  inx
         cpy     L9709
         bne     L9674
         stx     $1FC0
-        ldy     #$C2
-        lda     #$69
-        ldx     #$95
-        jsr     L4021
+        yax_call L4021, $9569, $C2
         beq     L969E
         jsr     L4030
         bne     L9696
@@ -15465,10 +15466,7 @@ L97F3:  ldx     $E10C
 L9801:  lda     #$00
         sta     $E05F
         sta     $E10D
-L9809:  ldy     #$C8
-        lda     #$0A
-        ldx     #$97
-        jsr     L4021
+L9809:  yax_call L4021, $970A, $C8
         beq     L981E
         ldx     #$80
         jsr     L4033
@@ -15478,10 +15476,7 @@ L9809:  ldy     #$C8
 L981E:  lda     L970F
         sta     $E060
         sta     L9711
-L9827:  ldy     #$CA
-        lda     #$10
-        ldx     #$97
-        jsr     L4021
+L9827:  yax_call L4021, $9710, $CA
         beq     L983C
         ldx     #$80
         jsr     L4033
@@ -15492,10 +15487,7 @@ L983C:  jmp     L985B
 
 L983F:  lda     $E060
         sta     L971D
-L9845:  ldy     #$CC
-        lda     #$1C
-        ldx     #$97
-        jsr     L4021
+L9845:  yax_call L4021, $971C, $CC
         beq     L985A
         ldx     #$80
         jsr     L4033
@@ -15507,10 +15499,7 @@ L985A:  rts
 L985B:  inc     $E05F
         lda     $E060
         sta     L971F
-L9864:  ldy     #$CA
-        lda     #$1E
-        ldx     #$97
-        jsr     L4021
+L9864:  yax_call L4021, $971E, $CA
         beq     L987D
         cmp     #$4C
         beq     L989F
@@ -15527,10 +15516,7 @@ L987D:  inc     $E10D
         sta     $E10D
         lda     $E060
         sta     L9727
-        ldy     #$CA
-        lda     #$26
-        ldx     #$97
-        jsr     L4021
+        yax_call L4021, $9726, $CA
 L989C:  lda     #$00
         rts
 
@@ -15745,10 +15731,7 @@ L9A60:  iny
         cpy     $E04B
         bne     L9A60
         stx     $1FC0
-L9A70:  ldy     #$C4
-        lda     #$74
-        ldx     #$97
-        jsr     L4021
+L9A70:  yax_call L4021, $9774, $C4
         beq     L9A81
         jsr     LA49B
         jmp     L9A70
@@ -15795,10 +15778,7 @@ L9AC8:  lda     L9774,y
         bne     L9AE0
         lda     #$0D
         sta     L976D
-L9AE0:  ldy     #$C0
-        lda     #$66
-        ldx     #$97
-        jsr     L4021
+L9AE0:  yax_call L4021, $9766, $C0
         beq     L9B23
         cmp     #$47
         bne     L9B1D
@@ -15849,10 +15829,7 @@ L9B3E:  lda     L97BD
         cmp     #$0F
         bne     L9B88
         jsr     LA2FD
-L9B48:  ldy     #$C4
-        lda     #$74
-        ldx     #$97
-        jsr     L4021
+L9B48:  yax_call L4021, $9774, $C4
         beq     L9B59
         jsr     LA49B
         jmp     L9B48
@@ -15880,10 +15857,7 @@ L9B7A:  jsr     LA360
 L9B88:  jsr     LA33B
         jsr     LA2FD
         jsr     LA40A
-L9B91:  ldy     #$C4
-        lda     #$74
-        ldx     #$97
-        jsr     L4021
+L9B91:  yax_call L4021, $9774, $C4
         beq     L9BA2
         jsr     LA49B
         jmp     L9B91
@@ -15907,10 +15881,7 @@ L9BBF:  ldy     #$01
         jsr     LA500
         rts
 
-L9BC9:  ldy     #$C4
-        lda     #$87
-        ldx     #$97
-        jsr     L4021
+L9BC9:  yax_call L4021, $9787, $C4
         beq     L9BDA
         jsr     LA497
         jmp     L9BC9
@@ -15946,10 +15917,7 @@ L9C13:  lda     #$03
         sec
 L9C19:  rts
 
-L9C1A:  ldy     #$C4
-        lda     #$74
-        ldx     #$97
-        jsr     L4021
+L9C1A:  yax_call L4021, $9774, $C4
         beq     L9C2B
         jsr     LA49B
         jmp     L9C1A
@@ -15957,10 +15925,7 @@ L9C1A:  ldy     #$C4
 L9C2B:  lda     #$00
         sta     L9CD8
         sta     L9CD9
-L9C33:  ldy     #$C4
-        lda     #$87
-        ldx     #$97
-        jsr     L4021
+L9C33:  yax_call L4021, $9787, $C4
         beq     L9C48
         cmp     #$46
         beq     L9C54
@@ -15983,10 +15948,7 @@ L9C5C:  iny
         tya
         sta     $1FC0
         sta     L9CD7
-L9C70:  ldy     #$C4
-        lda     #$87
-        ldx     #$97
-        jsr     L4021
+L9C70:  yax_call L4021, $9787, $C4
         beq     L9C95
         pha
         lda     L9CD6
@@ -16058,10 +16020,7 @@ L9D0C:  jsr     L9DA9
 L9D17:  jsr     L9D81
         bne     L9D17
         jsr     L9D9C
-        ldy     #$CE
-        lda     #$A4
-        ldx     #$97
-        jsr     L4021
+        yax_call L4021, $97A4, $CE
 L9D28:  bit     L9E18
         bmi     L9D51
         jsr     L9DE8
@@ -16070,10 +16029,7 @@ L9D28:  bit     L9E18
         jsr     L9E03
         jsr     L9D62
         jsr     L9D74
-        ldy     #$CE
-        lda     #$9F
-        ldx     #$97
-        jsr     L4021
+        yax_call L4021, $979F, $CE
         beq     L9D0C
         lda     #$FF
         sta     L9E18
@@ -16086,10 +16042,7 @@ L9D51:  jsr     L9E03
 L9D5C:  jsr     LA46D
         jmp     LA479
 
-L9D62:  ldy     #$C8
-        lda     #$3E
-        ldx     #$97
-        jsr     L4021
+L9D62:  yax_call L4021, $973E, $C8
         beq     L9D73
         jsr     LA49B
         jmp     L9D62
@@ -16102,10 +16055,7 @@ L9D74:  lda     L9743
         sta     L97A0
         rts
 
-L9D81:  ldy     #$C8
-        lda     #$44
-        ldx     #$97
-        jsr     L4021
+L9D81:  yax_call L4021, $9744, $C8
         beq     L9D9B
         cmp     #$45
         beq     L9D96
@@ -16126,10 +16076,7 @@ L9DA9:  lda     #$C0
         sta     L974E
         lda     #$0A
         sta     L974F
-L9DB3:  ldy     #$CA
-        lda     #$4A
-        ldx     #$97
-        jsr     L4021
+L9DB3:  yax_call L4021, $974A, $CA
         beq     L9DC8
         cmp     #$4C
         beq     L9DD9
@@ -16144,36 +16091,21 @@ L9DC8:  lda     L9750
         bne     L9DDE
 L9DD9:  lda     #$FF
         sta     L9E18
-L9DDE:  ldy     #$CF
-        lda     #$9F
-        ldx     #$97
-        jsr     L4021
+L9DDE:  yax_call L4021, $979F, $CF
         rts
 
-L9DE8:  ldy     #$CB
-        lda     #$52
-        ldx     #$97
-        jsr     L4021
+L9DE8:  yax_call L4021, $9752, $CB
         beq     L9DF9
         jsr     LA497
         jmp     L9DE8
 
-L9DF9:  ldy     #$CF
-        lda     #$A4
-        ldx     #$97
-        jsr     L4021
+L9DF9:  yax_call L4021, $97A4, $CF
         rts
 
-L9E03:  ldy     #$CC
-        lda     #$39
-        ldx     #$97
-        jsr     L4021
+L9E03:  yax_call L4021, $9739, $CC
         rts
 
-L9E0D:  ldy     #$CC
-        lda     #$37
-        ldx     #$97
-        jsr     L4021
+L9E0D:  yax_call L4021, $9737, $CC
         rts
 
 L9E17:  .byte   0
@@ -16184,10 +16116,7 @@ L9E1B:  lda     L9774,x
         dex
         cpx     #$03
         bne     L9E1B
-L9E26:  ldy     #$C0
-        lda     #$5A
-        ldx     #$97
-        jsr     L4021
+L9E26:  yax_call L4021, $975A, $C0
         beq     L9E6F
         cmp     #$47
         bne     L9E69
@@ -16278,10 +16207,7 @@ L9EC1:  lda     L9E73,y
 L9EDB:  lda     #$03
         sta     L9E79
         jsr     LA379
-L9EE3:  ldy     #$C4
-        lda     #$74
-        ldx     #$97
-        jsr     L4021
+L9EE3:  yax_call L4021, $9774, $C4
         beq     L9EF4
         jsr     LA49B
         jmp     L9EE3
@@ -16311,10 +16237,7 @@ L9F1E:  bit     $E05C
         bmi     L9F26
         jsr     LA3EF
 L9F26:  jsr     LA2F1
-L9F29:  ldy     #$C1
-        lda     #$3B
-        ldx     #$97
-        jsr     L4021
+L9F29:  yax_call L4021, $973B, $C1
         beq     L9F8D
         cmp     #$4E
         bne     L9F8E
@@ -16338,10 +16261,7 @@ L9F29:  ldy     #$C1
         bne     L9F62
 L9F5F:  jmp     LA39F
 
-L9F62:  ldy     #$C4
-        lda     #$74
-        ldx     #$97
-        jsr     L4021
+L9F62:  yax_call L4021, $9774, $C4
         lda     L9777
         and     #$80
         bne     L9F8D
@@ -16349,10 +16269,7 @@ L9F62:  ldy     #$C4
         sta     L9777
         lda     #$07
         sta     L9774
-        ldy     #$C3
-        lda     #$74
-        ldx     #$97
-        jsr     L4021
+        yax_call L4021, $9774, $C3
         lda     #$0A
         sta     L9774
         jmp     L9F29
@@ -16371,10 +16288,7 @@ L9F9C:  jsr     LA2FD
         bmi     L9FA7
         jsr     LA3EF
 L9FA7:  jsr     LA2F1
-L9FAA:  ldy     #$C4
-        lda     #$74
-        ldx     #$97
-        jsr     L4021
+L9FAA:  yax_call L4021, $9774, $C4
         beq     L9FBB
         jsr     LA49B
         jmp     L9FAA
@@ -16382,10 +16296,7 @@ L9FAA:  ldy     #$C4
 L9FBB:  lda     L977B
         cmp     #$0D
         beq     LA022
-L9FC2:  ldy     #$C1
-        lda     #$3B
-        ldx     #$97
-        jsr     L4021
+L9FC2:  yax_call L4021, $973B, $C1
         beq     LA022
         cmp     #$4E
         bne     LA01C
@@ -16416,10 +16327,7 @@ LA001:  lda     #$C3
         sta     L9777
         lda     #$07
         sta     L9774
-        ldy     #$C3
-        lda     #$74
-        ldx     #$97
-        jsr     L4021
+        yax_call L4021, $9774, $C3
         lda     #$0A
         sta     L9774
         jmp     L9FC2
@@ -16434,10 +16342,7 @@ LA022:  jmp     LA322
         sta     L9923
         rts
 
-LA02E:  ldy     #$C1
-        lda     #$3B
-        ldx     #$97
-        jsr     L4021
+LA02E:  yax_call L4021, $973B, $C1
         beq     LA043
         cmp     #$4E
         beq     LA043
@@ -16562,10 +16467,7 @@ LA123:  iny
         cpy     $0220
         bne     LA123
         stx     $1FC0
-LA133:  ldy     #$C4
-        lda     #$74
-        ldx     #$97
-        jsr     L4021
+LA133:  yax_call L4021, $9774, $C4
         beq     LA144
         jsr     LA49B
         jmp     LA133
@@ -16595,10 +16497,7 @@ LA16A:  jsr     LA173
         jsr     LA2FD
 LA173:  jsr     LA1C3
         jsr     LA2F1
-LA179:  ldy     #$C4
-        lda     #$74
-        ldx     #$97
-        jsr     L4021
+LA179:  yax_call L4021, $9774, $C4
         beq     LA18A
         jsr     LA49B
         jmp     LA179
@@ -16616,10 +16515,7 @@ LA19E:  lda     #$21
 LA1A0:  sta     L9777
 LA1A3:  lda     #$07
         sta     L9774
-        ldy     #$C3
-        lda     #$74
-        ldx     #$97
-        jsr     L4021
+        yax_call L4021, $9774, $C3
         pha
         lda     #$0A
         sta     L9774
@@ -16712,10 +16608,7 @@ LA26A:  sta     BITMAP,y
         rts
 
 LA271:  jsr     LA379
-LA274:  ldy     #$C4
-        lda     #$74
-        ldx     #$97
-        jsr     L4021
+LA274:  yax_call L4021, $9774, $C4
         beq     LA285
         jsr     LA49B
         jmp     LA274
@@ -16744,10 +16637,7 @@ LA2AB:  jmp     LA2AE
 LA2AE:  bit     L9189
         bvc     LA2D4
         jsr     LA2FD
-        ldy     #$C4
-        lda     #$74
-        ldx     #$97
-        jsr     L4021
+        yax_call L4021, $9774, $C4
         bne     LA2D4
         lda     LA2EF
         clc
@@ -16870,10 +16760,7 @@ LA39F:  jsr     L917F
         jmp     LA3A7
 
         .byte   1, 0
-LA3A7:  ldy     #$CC
-        lda     #$A5
-        ldx     #$A3
-        jsr     L4021
+LA3A7:  yax_call L4021, $A3A5, $CC
         lda     selected_window_index
         beq     LA3CA
         sta     query_state_params2::id
@@ -16939,10 +16826,7 @@ LA426:  jsr     LA46D
         lda     L9778
         cmp     #$0F
         beq     LA46C
-        ldy     #$C8
-        lda     #$44
-        ldx     #$97
-        jsr     L4021
+        yax_call L4021, $9744, $C8
         beq     LA449
         jsr     LA497
         jmp     LA426
@@ -16950,18 +16834,12 @@ LA426:  jsr     LA46D
 LA449:  lda     L9749
         sta     L979B
         sta     L973A
-LA452:  ldy     #$D0
-        lda     #$9A
-        ldx     #$97
-        jsr     L4021
+LA452:  yax_call L4021, $979A, $D0
         beq     LA463
         jsr     LA497
         jmp     LA452
 
-LA463:  ldy     #$CC
-        lda     #$39
-        ldx     #$97
-        jsr     L4021
+LA463:  yax_call L4021, $9739, $CC
 LA46C:  rts
 
 LA46D:  ldx     #$0A
@@ -16973,10 +16851,7 @@ LA46F:  lda     L9777,x
 
 LA479:  lda     #$07
         sta     L9787
-        ldy     #$C3
-        lda     #$87
-        ldx     #$97
-        jsr     L4021
+        yax_call L4021, $9787, $C3
         pha
         lda     #$0A
         sta     L9787
@@ -17012,10 +16887,7 @@ LA4BA:  jsr     L4030
 LA4C2:  jmp     LA39F
 
 LA4C5:  .byte   0
-LA4C6:  ldy     #$C5
-        lda     #$A9
-        ldx     #$97
-        jsr     L4021
+LA4C6:  yax_call L4021, $97A9, $C5
         rts
 
         .res    48, 0
@@ -17404,19 +17276,6 @@ rts1:
         LA89A := *+1
 LA899:  jmp     dummy0000
 
-
-.macro  axy_call target, addr, yparam
-        lda     #<addr
-        ldx     #>addr
-        ldy     #yparam
-        jsr     target
-.endmacro
-.macro  yax_call target, addr, yparam
-        ldy     #yparam
-        lda     #<addr
-        ldx     #>addr
-        jsr     target
-.endmacro
 
 ;;; ==================================================
 ;;; "About" dialog
