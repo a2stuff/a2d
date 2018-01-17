@@ -14889,17 +14889,22 @@ L92BD:  jmp     ($06)
 L92C0:  .byte   $03
 L92C1:  .byte   $00,$C5,$92,$04,$00,$00
 L92C7:  .byte   $00,$00
-L92C9:  .byte   $0A,$20,$02
-L92CC:  .byte   $00
-L92CD:  .byte   $00
-L92CE:  .byte   $00
-L92CF:  .byte   $00,$00
-L92D1:  .byte   $00
-L92D2:  .byte   $00
-L92D3:  .byte   $00
-L92D4:  .byte   $00,$00,$00
-L92D7:  .byte   $00
-L92D8:  .byte   $00,$00,$00,$00,$00
+
+.proc get_file_info_params5
+params: .byte   $A
+path:   .addr   $220
+access: .byte   0
+type:   .byte   0
+auxtype:.word   0
+storage:.byte   0
+blocks: .word   0
+mdate:  .word   0
+mtime:  .word   0
+cdate:  .word   0
+ctime:  .word   0
+.endproc
+
+L92DB:  .byte   0,0
 L92DD:  .byte   $03
 L92DE:  .byte   $00,$00,$08,$0A,$00
 L92E3:  .byte   $00
@@ -14955,7 +14960,7 @@ L9343:  lda     ($06),y
         dec     $220
         lda     #$2F
         sta     $0221
-L9356:  yax_call JT_MLI_RELAY, L92C9, GET_FILE_INFO
+L9356:  yax_call JT_MLI_RELAY, get_file_info_params5, GET_FILE_INFO
         beq     L9366
         jsr     LA49B
         beq     L9356
@@ -15025,7 +15030,7 @@ L93DB:  ldx     L92E6
 L940C:  lda     #$01
         sta     L92E4
         bne     L9428
-L9413:  lda     L92CC
+L9413:  lda     get_file_info_params5::access
         and     #$C3
         cmp     #$C3
         beq     L9423
@@ -15044,12 +15049,12 @@ L942F:  lda     #$03
         sta     $220
         lda     selected_window_index
         bne     L9472
-        lda     L92CE
+        lda     get_file_info_params5::auxtype
         sec
-        sbc     L92D1
+        sbc     get_file_info_params5::blocks
         pha
-        lda     L92CF
-        sbc     L92D2
+        lda     get_file_info_params5::auxtype+1
+        sbc     get_file_info_params5::blocks+1
         tax
         pla
         jsr     L4006
@@ -15070,12 +15075,12 @@ L9469:  lda     text_buffer2::data-1,x
         bne     L9469
 L9472:  lda     selected_window_index
         bne     L9480
-        lda     L92CE
-        ldx     L92CF
+        lda     get_file_info_params5::auxtype
+        ldx     get_file_info_params5::auxtype+1
         jmp     L9486
 
-L9480:  lda     L92D1
-        ldx     L92D2
+L9480:  lda     get_file_info_params5::blocks
+        ldx     get_file_info_params5::blocks+1
 L9486:  jsr     L4006
         jsr     L9549
         ldx     $220
@@ -15102,9 +15107,9 @@ L94A9:  lda     $220,x
         jsr     L953F
         lda     #$04
         sta     L92E3
-        lda     L92D7
+        lda     get_file_info_params5::cdate
         sta     $EC5A
-        lda     L92D8
+        lda     get_file_info_params5::cdate+1
         sta     $EC5B
         jsr     L4009
         lda     #$EB
@@ -15114,9 +15119,9 @@ L94A9:  lda     $220,x
         jsr     L953F
         lda     #$05
         sta     L92E3
-        lda     L92D3
+        lda     get_file_info_params5::mdate
         sta     $EC5A
-        lda     L92D4
+        lda     get_file_info_params5::mdate+1
         sta     $EC5B
         jsr     L4009
         lda     #$EB
@@ -15134,7 +15139,7 @@ L950E:  lda     L953A,x
         dex
         bpl     L950E
         bmi     L951F
-L9519:  lda     L92CD
+L9519:  lda     get_file_info_params5::type
         jsr     L402D
 L951F:  lda     #$C5
         sta     L92E4
@@ -18386,7 +18391,7 @@ LB59A:  tya
         sta     $09
         jsr     LBD7B
         sta     $0A
-        A2D_RELAY_CALL A2D_MEASURE_TEXT, $0008
+        A2D_RELAY_CALL A2D_MEASURE_TEXT, $08
         lsr     $0C
         ror     $0B
         lda     #$C8
@@ -19683,12 +19688,13 @@ L0ABC:  jsr     L86C1
 
 .proc open_params
 params: .byte   3
-path:   .addr   $0ACF
+path:   .addr   str_selector_list
 buffer: .addr   $1000
 ref_num:.byte   0
 .endproc
 
-L0ACF:  PASCAL_STRING "Selector.List"
+str_selector_list:
+        PASCAL_STRING "Selector.List"
 
 .proc read_params
 params: .byte   4
@@ -19896,7 +19902,7 @@ L0CCB:  MLI_RELAY_CALL CLOSE, close_params2
 
 .proc open_params2
 params: .byte   3
-path:   .addr   $0CFA
+path:   .addr   str_desk_acc
 buffer: .addr   $1000
 ref_num:.byte   0
 .endproc
@@ -19913,7 +19919,7 @@ trans:  .word   0
 
 .proc get_file_info_params
 params: .byte   $A
-path:   .addr   $0CFA
+path:   .addr   str_desk_acc
 access: .byte   0
 type:   .byte   0
 auxtype:.word   0
@@ -19934,6 +19940,7 @@ ref_num:.byte   0
 .endproc
         close_params2_ref_num := close_params2::ref_num
 
+str_desk_acc:
         PASCAL_STRING "Desk.acc"
 
 L0D03:  .byte   0
