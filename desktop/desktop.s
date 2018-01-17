@@ -14769,8 +14769,8 @@ L91CE:  .byte   0
 L91D1:  stx     $E00A
         rts
 
-L91D5:  yax_call JT_A2D_RELAY, $D239, $03
-        yax_call JT_A2D_RELAY, $D239, $04
+L91D5:  yax_call JT_A2D_RELAY, state2, A2D_QUERY_SCREEN
+        yax_call JT_A2D_RELAY, state2, A2D_SET_STATE
         rts
 
 L91E8:  jsr     L4015
@@ -14900,7 +14900,8 @@ L92D2:  .byte   $00
 L92D3:  .byte   $00
 L92D4:  .byte   $00,$00,$00
 L92D7:  .byte   $00
-L92D8:  .byte   $00,$00,$00,$00,$00,$03
+L92D8:  .byte   $00,$00,$00,$00,$00
+L92DD:  .byte   $03
 L92DE:  .byte   $00,$00,$08,$0A,$00
 L92E3:  .byte   $00
 L92E4:  .byte   $00
@@ -14996,9 +14997,9 @@ L93AD:  cmp     $E1A0,y
 
 L93B8:  lda     DEVLST,y
         sta     L92DE
-        yax_call JT_MLI_RELAY, $92DD, READ_BLOCK
+        yax_call JT_MLI_RELAY, L92DD, READ_BLOCK
         bne     L93DB
-        yax_call JT_MLI_RELAY, $92DD, WRITE_BLOCK
+        yax_call JT_MLI_RELAY, L92DD, WRITE_BLOCK
         cmp     #$2B
         bne     L93DB
         lda     #$80
@@ -15170,9 +15171,8 @@ L9558:  lda     $E6EC,x
         sty     text_buffer2::length
         rts
 
-        .byte   $02
-        jsr     RAMRDOFF
-        .byte   $1F
+L9569:  .byte   2
+        .byte   $20, $02, $C0, $1F
 L956E:  .byte   0
         .byte   0
 L9570:  .byte   $1F
@@ -15301,7 +15301,7 @@ L9674:  inx
         cpy     L9709
         bne     L9674
         stx     $1FC0
-        yax_call JT_MLI_RELAY, $9569, RENAME
+        yax_call JT_MLI_RELAY, L9569, RENAME
         beq     L969E
         jsr     L4030
         bne     L9696
@@ -15361,56 +15361,82 @@ L96F8:  sta     L956E
 L9706:  .byte   $00
 L9707:  .byte   $00
 L9708:  .byte   $00
-L9709:  .byte   $00,$03,$20,$02,$00,$08
-L970F:  .byte   $00,$04
+L9709:  .byte   $00
+L970A:  .byte   $03,$20,$02,$00,$08
+L970F:  .byte   $00
+L9710:  .byte   $04
 L9711:  .byte   $00,$18,$97,$04,$00,$00,$00,$00
-        .byte   $00,$00,$00,$01
-L971D:  .byte   $00,$04
-L971F:  .byte   $00,$AD,$97,$27,$00,$00,$00,$04
+        .byte   $00,$00,$00
+L971C:  .byte   $01
+L971D:  .byte   $00
+L971E:  .byte   $04
+L971F:  .byte   $00,$AD,$97,$27,$00,$00,$00
+L9726:  .byte   $04
 L9727:  .byte   $00,$2E,$97,$05,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $01
-L9738:  .byte   $00,$01
-L973A:  .byte   $00,$01,$20,$02,$03,$20,$02,$00
+
+L9737:  .byte   $01
+L9738:  .byte   $00
+
+L9739:  .byte   $01
+L973A:  .byte   $00
+L973B:  .byte   $01,$20,$02
+
+L973E:  .byte   $03,$20,$02,$00
         .byte   $0D
-L9743:  .byte   $00,$03,$C0,$1F,$00,$11
-L9749:  .byte   $00,$04
+L9743:  .byte   $00
+L9744:  .byte   $03,$C0,$1F,$00,$11
+L9749:  .byte   $00
+
+L974A:  .byte   $04
 L974B:  .byte   $00,$00,$15
 L974E:  .byte   $C0
 L974F:  .byte   $0A
 L9750:  .byte   $00
-L9751:  .byte   $00,$04
+L9751:  .byte   $00
+
+L9752:  .byte   $04
 L9753:  .byte   $00,$00,$15
 L9756:  .byte   $C0
 L9757:  .byte   $0A,$00,$00
+
 L975A:  .byte   $07,$C0,$1F,$C3,$00,$00,$00,$00
         .byte   $00,$00,$00,$00
+
 L9766:  .byte   $07,$C0,$1F
 L9769:  .byte   $00,$00,$00,$00
 L976D:  .byte   $00,$00,$00,$00,$00,$00,$00
-L9774:  .byte   $0A,$20,$02
+file_info_params2:  .byte   $0A,$20,$02
 L9777:  .byte   $00
 L9778:  .byte   $00,$00,$00
 L977B:  .byte   $00
 L977C:  .byte   $00
 L977D:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00
+
 L9787:  .byte   $0A,$C0,$1F
 L978A:  .byte   $00,$00
 L978C:  .byte   $00
 L978D:  .byte   $00,$00
 L978F:  .byte   $00
 L9790:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$02
-L979B:  .byte   $00,$00,$00,$00,$02
+        .byte   $00,$00
+
+L979A:  .byte   $02
+L979B:  .byte   $00,$00,$00,$00
+
+L979F:  .byte   $02
 L97A0:  .byte   $00
 L97A1:  .byte   $00
 L97A2:  .byte   $00
-L97A3:  .byte   $00,$02
+L97A3:  .byte   $00
+
+L97A4:  .byte   2
 L97A5:  .byte   $00
 L97A6:  .byte   $00
 L97A7:  .byte   $00
-L97A8:  .byte   $00,$02,$00,$00,$08
+L97A8:  .byte   $00
+L97A9:  .byte   $02,$00,$00,$08
 L97AD:  .byte   $00
 L97AE:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00
@@ -15440,7 +15466,7 @@ L97F3:  ldx     $E10C
 L9801:  lda     #$00
         sta     $E05F
         sta     $E10D
-L9809:  yax_call JT_MLI_RELAY, $970A, OPEN
+L9809:  yax_call JT_MLI_RELAY, L970A, OPEN
         beq     L981E
         ldx     #$80
         jsr     L4033
@@ -15450,7 +15476,7 @@ L9809:  yax_call JT_MLI_RELAY, $970A, OPEN
 L981E:  lda     L970F
         sta     $E060
         sta     L9711
-L9827:  yax_call JT_MLI_RELAY, $9710, READ
+L9827:  yax_call JT_MLI_RELAY, L9710, READ
         beq     L983C
         ldx     #$80
         jsr     L4033
@@ -15461,7 +15487,7 @@ L983C:  jmp     L985B
 
 L983F:  lda     $E060
         sta     L971D
-L9845:  yax_call JT_MLI_RELAY, $971C, CLOSE
+L9845:  yax_call JT_MLI_RELAY, L971C, CLOSE
         beq     L985A
         ldx     #$80
         jsr     L4033
@@ -15473,7 +15499,7 @@ L985A:  rts
 L985B:  inc     $E05F
         lda     $E060
         sta     L971F
-L9864:  yax_call JT_MLI_RELAY, $971E, READ
+L9864:  yax_call JT_MLI_RELAY, L971E, READ
         beq     L987D
         cmp     #$4C
         beq     L989F
@@ -15490,7 +15516,7 @@ L987D:  inc     $E10D
         sta     $E10D
         lda     $E060
         sta     L9727
-        yax_call JT_MLI_RELAY, $9726, READ
+        yax_call JT_MLI_RELAY, L9726, READ
 L989C:  lda     #$00
         rts
 
@@ -15693,7 +15719,7 @@ L9A60:  iny
         cpy     $E04B
         bne     L9A60
         stx     $1FC0
-L9A70:  yax_call JT_MLI_RELAY, $9774, GET_FILE_INFO
+L9A70:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
         beq     L9A81
         jsr     LA49B
         jmp     L9A70
@@ -15716,7 +15742,7 @@ L9A95:  sta     L9B30
         jmp     LA39F
 
 L9AA8:  ldy     #$07
-L9AAA:  lda     L9774,y
+L9AAA:  lda     file_info_params2,y
         sta     L9766,y
         dey
         cpy     #$02
@@ -15729,7 +15755,7 @@ L9AAA:  lda     L9774,y
         bcs     L9B2C
         ldy     #$11
         ldx     #$0B
-L9AC8:  lda     L9774,y
+L9AC8:  lda     file_info_params2,y
         sta     L9766,x
         dex
         dey
@@ -15740,7 +15766,7 @@ L9AC8:  lda     L9774,y
         bne     L9AE0
         lda     #$0D
         sta     L976D
-L9AE0:  yax_call JT_MLI_RELAY, $9766, CREATE
+L9AE0:  yax_call JT_MLI_RELAY, L9766, CREATE
         beq     L9B23
         cmp     #$47
         bne     L9B1D
@@ -15791,7 +15817,7 @@ L9B3E:  lda     L97BD
         cmp     #$0F
         bne     L9B88
         jsr     LA2FD
-L9B48:  yax_call JT_MLI_RELAY, $9774, GET_FILE_INFO
+L9B48:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
         beq     L9B59
         jsr     LA49B
         jmp     L9B48
@@ -15819,7 +15845,7 @@ L9B7A:  jsr     LA360
 L9B88:  jsr     LA33B
         jsr     LA2FD
         jsr     LA40A
-L9B91:  yax_call JT_MLI_RELAY, $9774, GET_FILE_INFO
+L9B91:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
         beq     L9BA2
         jsr     LA49B
         jmp     L9B91
@@ -15840,7 +15866,7 @@ L9BBE:  rts
 L9BBF:  yax_call LA500, $9937, $01
         rts
 
-L9BC9:  yax_call JT_MLI_RELAY, $9787, GET_FILE_INFO
+L9BC9:  yax_call JT_MLI_RELAY, L9787, GET_FILE_INFO
         beq     L9BDA
         jsr     LA497
         jmp     L9BC9
@@ -15876,7 +15902,7 @@ L9C13:  lda     #$03
         sec
 L9C19:  rts
 
-L9C1A:  yax_call JT_MLI_RELAY, $9774, GET_FILE_INFO
+L9C1A:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
         beq     L9C2B
         jsr     LA49B
         jmp     L9C1A
@@ -15884,7 +15910,7 @@ L9C1A:  yax_call JT_MLI_RELAY, $9774, GET_FILE_INFO
 L9C2B:  lda     #$00
         sta     L9CD8
         sta     L9CD9
-L9C33:  yax_call JT_MLI_RELAY, $9787, GET_FILE_INFO
+L9C33:  yax_call JT_MLI_RELAY, L9787, GET_FILE_INFO
         beq     L9C48
         cmp     #$46
         beq     L9C54
@@ -15907,7 +15933,7 @@ L9C5C:  iny
         tya
         sta     $1FC0
         sta     L9CD7
-L9C70:  yax_call JT_MLI_RELAY, $9787, GET_FILE_INFO
+L9C70:  yax_call JT_MLI_RELAY, L9787, GET_FILE_INFO
         beq     L9C95
         pha
         lda     L9CD6
@@ -15979,7 +16005,7 @@ L9D0C:  jsr     L9DA9
 L9D17:  jsr     L9D81
         bne     L9D17
         jsr     L9D9C
-        yax_call JT_MLI_RELAY, $97A4, SET_MARK
+        yax_call JT_MLI_RELAY, L97A4, SET_MARK
 L9D28:  bit     L9E18
         bmi     L9D51
         jsr     L9DE8
@@ -15988,7 +16014,7 @@ L9D28:  bit     L9E18
         jsr     L9E03
         jsr     L9D62
         jsr     L9D74
-        yax_call JT_MLI_RELAY, $979F, SET_MARK
+        yax_call JT_MLI_RELAY, L979F, SET_MARK
         beq     L9D0C
         lda     #$FF
         sta     L9E18
@@ -16001,7 +16027,7 @@ L9D51:  jsr     L9E03
 L9D5C:  jsr     LA46D
         jmp     LA479
 
-L9D62:  yax_call JT_MLI_RELAY, $973E, OPEN
+L9D62:  yax_call JT_MLI_RELAY, L973E, OPEN
         beq     L9D73
         jsr     LA49B
         jmp     L9D62
@@ -16014,7 +16040,7 @@ L9D74:  lda     L9743
         sta     L97A0
         rts
 
-L9D81:  yax_call JT_MLI_RELAY, $9744, OPEN
+L9D81:  yax_call JT_MLI_RELAY, L9744, OPEN
         beq     L9D9B
         cmp     #$45
         beq     L9D96
@@ -16035,7 +16061,7 @@ L9DA9:  lda     #$C0
         sta     L974E
         lda     #$0A
         sta     L974F
-L9DB3:  yax_call JT_MLI_RELAY, $974A, READ
+L9DB3:  yax_call JT_MLI_RELAY, L974A, READ
         beq     L9DC8
         cmp     #$4C
         beq     L9DD9
@@ -16050,32 +16076,32 @@ L9DC8:  lda     L9750
         bne     L9DDE
 L9DD9:  lda     #$FF
         sta     L9E18
-L9DDE:  yax_call JT_MLI_RELAY, $979F, GET_MARK
+L9DDE:  yax_call JT_MLI_RELAY, L979F, GET_MARK
         rts
 
-L9DE8:  yax_call JT_MLI_RELAY, $9752, WRITE
+L9DE8:  yax_call JT_MLI_RELAY, L9752, WRITE
         beq     L9DF9
         jsr     LA497
         jmp     L9DE8
 
-L9DF9:  yax_call JT_MLI_RELAY, $97A4, GET_MARK
+L9DF9:  yax_call JT_MLI_RELAY, L97A4, GET_MARK
         rts
 
-L9E03:  yax_call JT_MLI_RELAY, $9739, CLOSE
+L9E03:  yax_call JT_MLI_RELAY, L9739, CLOSE
         rts
 
-L9E0D:  yax_call JT_MLI_RELAY, $9737, CLOSE
+L9E0D:  yax_call JT_MLI_RELAY, L9737, CLOSE
         rts
 
 L9E17:  .byte   0
 L9E18:  .byte   0
 L9E19:  ldx     #$07
-L9E1B:  lda     L9774,x
+L9E1B:  lda     file_info_params2,x
         sta     L975A,x
         dex
         cpx     #$03
         bne     L9E1B
-L9E26:  yax_call JT_MLI_RELAY, $975A, CREATE
+L9E26:  yax_call JT_MLI_RELAY, L975A, CREATE
         beq     L9E6F
         cmp     #$47
         bne     L9E69
@@ -16163,7 +16189,7 @@ L9EC1:  lda     L9E73,y
 L9EDB:  lda     #$03
         sta     L9E79
         jsr     LA379
-L9EE3:  yax_call JT_MLI_RELAY, $9774, GET_FILE_INFO
+L9EE3:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
         beq     L9EF4
         jsr     LA49B
         jmp     L9EE3
@@ -16193,7 +16219,7 @@ L9F1E:  bit     $E05C
         bmi     L9F26
         jsr     LA3EF
 L9F26:  jsr     LA2F1
-L9F29:  yax_call JT_MLI_RELAY, $973B, DESTROY
+L9F29:  yax_call JT_MLI_RELAY, L973B, DESTROY
         beq     L9F8D
         cmp     #$4E
         bne     L9F8E
@@ -16217,17 +16243,17 @@ L9F29:  yax_call JT_MLI_RELAY, $973B, DESTROY
         bne     L9F62
 L9F5F:  jmp     LA39F
 
-L9F62:  yax_call JT_MLI_RELAY, $9774, GET_FILE_INFO
+L9F62:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
         lda     L9777
         and     #$80
         bne     L9F8D
         lda     #$C3
         sta     L9777
-        lda     #$07
-        sta     L9774
-        yax_call JT_MLI_RELAY, $9774, SET_FILE_INFO
-        lda     #$0A
-        sta     L9774
+        lda     #7              ; param count for SET_FILE_INFO
+        sta     file_info_params2
+        yax_call JT_MLI_RELAY, file_info_params2, SET_FILE_INFO
+        lda     #$A             ; param count for GET_FILE_INFO
+        sta     file_info_params2
         jmp     L9F29
 
 L9F8D:  rts
@@ -16244,7 +16270,7 @@ L9F9C:  jsr     LA2FD
         bmi     L9FA7
         jsr     LA3EF
 L9FA7:  jsr     LA2F1
-L9FAA:  yax_call JT_MLI_RELAY, $9774, GET_FILE_INFO
+L9FAA:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
         beq     L9FBB
         jsr     LA49B
         jmp     L9FAA
@@ -16252,7 +16278,7 @@ L9FAA:  yax_call JT_MLI_RELAY, $9774, GET_FILE_INFO
 L9FBB:  lda     L977B
         cmp     #$0D
         beq     LA022
-L9FC2:  yax_call JT_MLI_RELAY, $973B, DESTROY
+L9FC2:  yax_call JT_MLI_RELAY, L973B, DESTROY
         beq     LA022
         cmp     #$4E
         bne     LA01C
@@ -16278,11 +16304,11 @@ L9FFE:  jmp     LA39F
 
 LA001:  lda     #$C3
         sta     L9777
-        lda     #$07
-        sta     L9774
-        yax_call JT_MLI_RELAY, $9774, SET_FILE_INFO
-        lda     #$0A
-        sta     L9774
+        lda     #7              ; param count for SET_FILE_INFO
+        sta     file_info_params2
+        yax_call JT_MLI_RELAY, file_info_params2, SET_FILE_INFO
+        lda     #$A             ; param count for GET_FILE_INFO
+        sta     file_info_params2
         jmp     L9FC2
 
 LA01C:  jsr     LA49B
@@ -16295,7 +16321,7 @@ LA022:  jmp     LA322
         sta     L9923
         rts
 
-LA02E:  yax_call JT_MLI_RELAY, $973B, DESTROY
+LA02E:  yax_call JT_MLI_RELAY, L973B, DESTROY
         beq     LA043
         cmp     #$4E
         beq     LA043
@@ -16411,7 +16437,7 @@ LA123:  iny
         cpy     $0220
         bne     LA123
         stx     $1FC0
-LA133:  yax_call JT_MLI_RELAY, $9774, GET_FILE_INFO
+LA133:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
         beq     LA144
         jsr     LA49B
         jmp     LA133
@@ -16441,7 +16467,7 @@ LA16A:  jsr     LA173
         jsr     LA2FD
 LA173:  jsr     LA1C3
         jsr     LA2F1
-LA179:  yax_call JT_MLI_RELAY, $9774, GET_FILE_INFO
+LA179:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
         beq     LA18A
         jsr     LA49B
         jmp     LA179
@@ -16457,12 +16483,12 @@ LA18A:  lda     L977B
         bne     LA1A0
 LA19E:  lda     #$21
 LA1A0:  sta     L9777
-LA1A3:  lda     #$07
-        sta     L9774
-        yax_call JT_MLI_RELAY, $9774, SET_FILE_INFO
+LA1A3:  lda     #7              ; param count for SET_FILE_INFO
+        sta     file_info_params2
+        yax_call JT_MLI_RELAY, file_info_params2, SET_FILE_INFO
         pha
-        lda     #$0A
-        sta     L9774
+        lda     #$A             ; param count for GET_FILE_INFO
+        sta     file_info_params2
         pla
         beq     LA1C0
         jsr     LA49B
@@ -16540,7 +16566,7 @@ LA26A:  sta     BITMAP,y
         rts
 
 LA271:  jsr     LA379
-LA274:  yax_call JT_MLI_RELAY, $9774, GET_FILE_INFO
+LA274:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
         beq     LA285
         jsr     LA49B
         jmp     LA274
@@ -16569,7 +16595,7 @@ LA2AB:  jmp     LA2AE
 LA2AE:  bit     L9189
         bvc     LA2D4
         jsr     LA2FD
-        yax_call JT_MLI_RELAY, $9774, GET_FILE_INFO
+        yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
         bne     LA2D4
         lda     LA2EF
         clc
@@ -16691,19 +16717,19 @@ LA395:  lda     LDFC9,y
 LA39F:  jsr     L917F
         jmp     LA3A7
 
-        .byte   1, 0
-LA3A7:  yax_call JT_MLI_RELAY, $A3A5, CLOSE
+LA3A5:  .byte   1, 0
+LA3A7:  yax_call JT_MLI_RELAY, LA3A5, CLOSE
         lda     selected_window_index
         beq     LA3CA
         sta     query_state_params2::id
-        yax_call JT_A2D_RELAY, $D212, $3C
-        yax_call JT_A2D_RELAY, $D215, $04
+        yax_call JT_A2D_RELAY, query_state_params2, A2D_QUERY_STATE
+        yax_call JT_A2D_RELAY, query_state_buffer, A2D_SET_STATE
 LA3CA:  ldx     L9188
         txs
         lda     #$FF
         rts
 
-LA3D1:  yax_call JT_A2D_RELAY, $D208, $2A
+LA3D1:  yax_call JT_A2D_RELAY, input_params, A2D_GET_INPUT
         lda     input_params_state
         cmp     #A2D_INPUT_KEY
         bne     LA3EC
@@ -16743,7 +16769,7 @@ LA426:  jsr     LA46D
         lda     L9778
         cmp     #$0F
         beq     LA46C
-        yax_call JT_MLI_RELAY, $9744, OPEN
+        yax_call JT_MLI_RELAY, L9744, OPEN
         beq     LA449
         jsr     LA497
         jmp     LA426
@@ -16751,12 +16777,12 @@ LA426:  jsr     LA46D
 LA449:  lda     L9749
         sta     L979B
         sta     L973A
-LA452:  yax_call JT_MLI_RELAY, $979A, SET_EOF
+LA452:  yax_call JT_MLI_RELAY, L979A, SET_EOF
         beq     LA463
         jsr     LA497
         jmp     LA452
 
-LA463:  yax_call JT_MLI_RELAY, $9739, CLOSE
+LA463:  yax_call JT_MLI_RELAY, L9739, CLOSE
 LA46C:  rts
 
 LA46D:  ldx     #$0A
@@ -16768,7 +16794,7 @@ LA46F:  lda     L9777,x
 
 LA479:  lda     #$07
         sta     L9787
-        yax_call JT_MLI_RELAY, $9787, SET_FILE_INFO
+        yax_call JT_MLI_RELAY, L9787, SET_FILE_INFO
         pha
         lda     #$0A
         sta     L9787
@@ -16804,7 +16830,7 @@ LA4BA:  jsr     L4030
 LA4C2:  jmp     LA39F
 
 LA4C5:  .byte   0
-LA4C6:  yax_call JT_MLI_RELAY, $97A9, ON_LINE
+LA4C6:  yax_call JT_MLI_RELAY, L97A9, ON_LINE
         rts
 
         .res    48, 0
