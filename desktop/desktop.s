@@ -15151,7 +15151,7 @@ L9534:  lda     #$00
         rts
 
 L953A:  PASCAL_STRING " VOL"
-L953F:  yax_call LA500, $92E3, $06
+L953F:  yax_call LA500, L92E3, $06
         rts
 
 L9549:  ldx     #$00
@@ -15354,7 +15354,7 @@ L96EB:  lda     (L0006),y
         jmp     L9576
 
 L96F8:  sta     L956E
-        yax_call LA500, $956E, $09
+        yax_call LA500, L956E, $09
         rts
 
         .byte   $00
@@ -15633,14 +15633,14 @@ L9984:  lda     #$00
         sta     L9180
         lda     #$99
         sta     L9180+1
-        yax_call LA500, $9937, $0A
+        yax_call LA500, L9937, $0A
         rts
 
         sta     L9938
         stx     L9939
         lda     #$01
         sta     L9937
-        yax_call LA500, $9937, $0A
+        yax_call LA500, L9937, $0A
         rts
 
 L99BC:  lda     #$80
@@ -15660,12 +15660,12 @@ L99C3:  lda     L9931,y
 
         lda     #$03
         sta     L9937
-        yax_call LA500, $9937, $0A
+        yax_call LA500, L9937, $0A
         rts
 
         lda     #$04
         sta     L9937
-        yax_call LA500, $9937, $0A
+        yax_call LA500, L9937, $0A
         cmp     #$02
         bne     L99FE
         rts
@@ -15863,7 +15863,7 @@ L9BAA:  jsr     LA322
 L9BBB:  jsr     LA360
 L9BBE:  rts
 
-L9BBF:  yax_call LA500, $9937, $01
+L9BBF:  yax_call LA500, L9937, $01
         rts
 
 L9BC9:  yax_call JT_MLI_RELAY, L9787, GET_FILE_INFO
@@ -16109,7 +16109,7 @@ L9E26:  yax_call JT_MLI_RELAY, L975A, CREATE
         bmi     L9E60
         lda     #$03
         sta     L9937
-        yax_call LA500, $9937, $01
+        yax_call LA500, L9937, $01
         pha
         lda     #$02
         sta     L9937
@@ -16286,7 +16286,7 @@ L9FC2:  yax_call JT_MLI_RELAY, L973B, DESTROY
         bmi     LA001
         lda     #$04
         sta     L9E79
-        yax_call LA500, $9E79, $02
+        yax_call LA500, L9E79, $02
         pha
         lda     #$03
         sta     L9E79
@@ -16330,7 +16330,7 @@ LA02E:  yax_call JT_MLI_RELAY, L973B, DESTROY
 
 LA043:  rts
 
-LA044:  yax_call LA500, $9E79, $02
+LA044:  yax_call LA500, L9E79, $02
         rts
 
 LA04E:  .byte   $70,$A1,$E3,$97,$E3,$97
@@ -16418,10 +16418,10 @@ LA0E6:  lda     LA04E,y
         sta     LA054
         jmp     LA10A
 
-LA100:  yax_call LA500, $A054, $07
+LA100:  yax_call LA500, LA054, $07
         rts
 
-LA10A:  yax_call LA500, $A054, $08
+LA10A:  yax_call LA500, LA054, $08
         rts
 
 LA114:  lda     #$03
@@ -16522,7 +16522,7 @@ LA1E4:  lda     #$00
         sta     L917D
         lda     #$A2
         sta     L917D+1
-        yax_call LA500, $A1DF, $0B
+        yax_call LA500, LA1DF, $0B
         lda     #$33
         sta     L9180
         lda     #$A2
@@ -16531,18 +16531,18 @@ LA1E4:  lda     #$00
 
         lda     #$01
         sta     LA1DF
-        yax_call LA500, $A1DF, $0B
+        yax_call LA500, LA1DF, $0B
 LA21F:  rts
 
         lda     #$02
         sta     LA1DF
-        yax_call LA500, $A1DF, $0B
+        yax_call LA500, LA1DF, $0B
         beq     LA21F
         jmp     LA39F
 
         lda     #$03
         sta     LA1DF
-        yax_call LA500, $A1DF, $0B
+        yax_call LA500, LA1DF, $0B
 LA241:  rts
 
 LA242:  .byte   $AE,$A2,$E3,$97,$E3,$97
@@ -16748,7 +16748,7 @@ LA3EF:  lda     LA2ED
         lda     LA2EE
         sbc     #$00
         sta     L9E7B
-        yax_call LA500, $9E79, $02
+        yax_call LA500, L9E79, $02
         rts
 
 LA40A:  lda     LA2ED
@@ -16758,7 +16758,7 @@ LA40A:  lda     LA2ED
         lda     LA2EE
         sbc     #$00
         sta     L9939
-        yax_call LA500, $9937, $01
+        yax_call LA500, L9937, $01
         rts
 
 LA425:  .byte   0
@@ -16850,6 +16850,7 @@ LA503:  .addr   show_about_dialog
 
 LA51D:  .byte   $00
 LA51E:  .byte   $00,$00
+
 LA520:  sta     LA51D
         stx     LA51E
         tya
