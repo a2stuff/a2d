@@ -6553,10 +6553,7 @@ L48C2:  lda     $E196,x
         rts
 
 L48CC:  sta     $D2AC
-        ldy     #$0C
-        lda     #$AC
-        ldx     #$D2
-        jsr     LA500
+        yax_call LA500, $D2AC, $0C
         rts
 
         lda     #$88
@@ -6909,10 +6906,7 @@ L4B9C:  inx
 
 L4BB0:  .byte   0
 L4BB1:  .byte   0
-        ldy     #$00
-        lda     #$00
-        ldx     #$00
-        jsr     LA500
+        yax_call LA500, $0000, $00
         jmp     L4523
 
 L4BBE:  .byte   $80,$20         ; ???
@@ -7341,10 +7335,7 @@ L4F76:  .res    64
 
         lda     desktop_winid
         sta     L4F67
-        ldy     #$03
-        lda     #$67
-        ldx     #$4F
-        jsr     LA500
+        yax_call LA500, $4F67, $03
 L4FC6:  lda     desktop_winid
         beq     L4FD4
         jsr     L86FB
@@ -7352,10 +7343,7 @@ L4FC6:  lda     desktop_winid
         stx     L4F69
 L4FD4:  lda     #$80
         sta     L4F67
-        ldy     #$03
-        lda     #$67
-        ldx     #$4F
-        jsr     LA500
+        yax_call LA500, $4F67, $03
         beq     L4FE7
         jmp     L504B
 
@@ -7388,10 +7376,7 @@ L5000:  lda     DATELO,x
 
 L5027:  lda     #$40
         sta     L4F67
-        ldy     #$03
-        lda     #$67
-        ldx     #$4F
-        jsr     LA500
+        yax_call LA500, $4F67, $03
         lda     #$76
         ldx     #$4F
         jsr     L6F90
@@ -15170,10 +15155,7 @@ L9534:  lda     #$00
         rts
 
 L953A:  PASCAL_STRING " VOL"
-L953F:  ldy     #$06
-        lda     #$E3
-        ldx     #$92
-        jsr     LA500
+L953F:  yax_call LA500, $92E3, $06
         rts
 
 L9549:  ldx     #$00
@@ -15377,10 +15359,7 @@ L96EB:  lda     (L0006),y
         jmp     L9576
 
 L96F8:  sta     L956E
-        ldy     #$09
-        lda     #$6E
-        ldx     #$95
-        jsr     LA500
+        yax_call LA500, $956E, $09
         rts
 
         .byte   $00
@@ -15633,20 +15612,14 @@ L9984:  lda     #$00
         sta     L9180
         lda     #$99
         sta     L9180+1
-        ldy     #$0A
-        lda     #$37
-        ldx     #$99
-        jsr     LA500
+        yax_call LA500, $9937, $0A
         rts
 
         sta     L9938
         stx     L9939
         lda     #$01
         sta     L9937
-        ldy     #$0A
-        lda     #$37
-        ldx     #$99
-        jsr     LA500
+        yax_call LA500, $9937, $0A
         rts
 
 L99BC:  lda     #$80
@@ -15666,18 +15639,12 @@ L99C3:  lda     L9931,y
 
         lda     #$03
         sta     L9937
-        ldy     #$0A
-        lda     #$37
-        ldx     #$99
-        jsr     LA500
+        yax_call LA500, $9937, $0A
         rts
 
         lda     #$04
         sta     L9937
-        ldy     #$0A
-        lda     #$37
-        ldx     #$99
-        jsr     LA500
+        yax_call LA500, $9937, $0A
         cmp     #$02
         bne     L99FE
         rts
@@ -15875,10 +15842,7 @@ L9BAA:  jsr     LA322
 L9BBB:  jsr     LA360
 L9BBE:  rts
 
-L9BBF:  ldy     #$01
-        lda     #$37
-        ldx     #$99
-        jsr     LA500
+L9BBF:  yax_call LA500, $9937, $01
         rts
 
 L9BC9:  yax_call L4021, $9787, $C4
@@ -16124,10 +16088,7 @@ L9E26:  yax_call L4021, $975A, $C0
         bmi     L9E60
         lda     #$03
         sta     L9937
-        ldy     #$01
-        lda     #$37
-        ldx     #$99
-        jsr     LA500
+        yax_call LA500, $9937, $01
         pha
         lda     #$02
         sta     L9937
@@ -16304,10 +16265,7 @@ L9FC2:  yax_call L4021, $973B, $C1
         bmi     LA001
         lda     #$04
         sta     L9E79
-        ldy     #$02
-        lda     #$79
-        ldx     #$9E
-        jsr     LA500
+        yax_call LA500, $9E79, $02
         pha
         lda     #$03
         sta     L9E79
@@ -16351,10 +16309,7 @@ LA02E:  yax_call L4021, $973B, $C1
 
 LA043:  rts
 
-LA044:  ldy     #$02
-        lda     #$79
-        ldx     #$9E
-        jsr     LA500
+LA044:  yax_call LA500, $9E79, $02
         rts
 
 LA04E:  .byte   $70,$A1,$E3,$97,$E3,$97
@@ -16442,16 +16397,10 @@ LA0E6:  lda     LA04E,y
         sta     LA054
         jmp     LA10A
 
-LA100:  ldy     #$07
-        lda     #$54
-        ldx     #$A0
-        jsr     LA500
+LA100:  yax_call LA500, $A054, $07
         rts
 
-LA10A:  ldy     #$08
-        lda     #$54
-        ldx     #$A0
-        jsr     LA500
+LA10A:  yax_call LA500, $A054, $08
         rts
 
 LA114:  lda     #$03
@@ -16552,10 +16501,7 @@ LA1E4:  lda     #$00
         sta     L917D
         lda     #$A2
         sta     L917D+1
-        ldy     #$0B
-        lda     #$DF
-        ldx     #$A1
-        jsr     LA500
+        yax_call LA500, $A1DF, $0B
         lda     #$33
         sta     L9180
         lda     #$A2
@@ -16564,27 +16510,18 @@ LA1E4:  lda     #$00
 
         lda     #$01
         sta     LA1DF
-        ldy     #$0B
-        lda     #$DF
-        ldx     #$A1
-        jsr     LA500
+        yax_call LA500, $A1DF, $0B
 LA21F:  rts
 
         lda     #$02
         sta     LA1DF
-        ldy     #$0B
-        lda     #$DF
-        ldx     #$A1
-        jsr     LA500
+        yax_call LA500, $A1DF, $0B
         beq     LA21F
         jmp     LA39F
 
         lda     #$03
         sta     LA1DF
-        ldy     #$0B
-        lda     #$DF
-        ldx     #$A1
-        jsr     LA500
+        yax_call LA500, $A1DF, $0B
 LA241:  rts
 
 LA242:  .byte   $AE,$A2,$E3,$97,$E3,$97
@@ -16799,10 +16736,7 @@ LA3EF:  lda     LA2ED
         lda     LA2EE
         sbc     #$00
         sta     L9E7B
-        ldy     #$02
-        lda     #$79
-        ldx     #$9E
-        jsr     LA500
+        yax_call LA500, $9E79, $02
         rts
 
 LA40A:  lda     LA2ED
@@ -16812,10 +16746,7 @@ LA40A:  lda     LA2ED
         lda     LA2EE
         sbc     #$00
         sta     L9939
-        ldy     #$01
-        lda     #$37
-        ldx     #$99
-        jsr     LA500
+        yax_call LA500, $9937, $01
         rts
 
 LA425:  .byte   0
