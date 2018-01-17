@@ -5640,7 +5640,6 @@ app_mask:
 ;;; ==================================================
 
 .proc desktop_main
-L0006           := $0006
 L0020           := $0020
 L0800           := $0800
 L0CB8           := $0CB8
@@ -5806,15 +5805,15 @@ L415B:  sta     desktop_winid
         jsr     DESKTOP_ASSIGN_STATE
         lda     desktop_winid
         jsr     L86EF
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$16
-        lda     (L0006),y
+        lda     ($06),y
         sec
         sbc     query_state_buffer::top
         sta     L4242
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sbc     query_state_buffer::top+1
         sta     L4243
         lda     L4242
@@ -5826,19 +5825,19 @@ L415B:  sta     desktop_winid
         ldx     #$0B
         ldy     #$1F
         lda     query_state_buffer,x
-        sta     (L0006),y
+        sta     ($06),y
         dey
         dex
         lda     query_state_buffer,x
-        sta     (L0006),y
+        sta     ($06),y
         ldx     #$03
         ldy     #$17
         lda     query_state_buffer,x
-        sta     (L0006),y
+        sta     ($06),y
         dey
         dex
         lda     query_state_buffer,x
-        sta     (L0006),y
+        sta     ($06),y
 L41CB:  ldx     bufnum
         dex
         lda     LE6D1,x
@@ -6080,15 +6079,15 @@ L445D:  jsr     L6D2B
         sta     LE22F
         lda     LE22F
         jsr     L86E3
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$01
-        lda     (L0006),y
+        lda     ($06),y
         beq     L44A6
         ora     #$80
-        sta     (L0006),y
+        sta     ($06),y
         iny
-        lda     (L0006),y
+        lda     ($06),y
         and     #$0F
         sta     L445C
         jsr     L8997
@@ -6230,17 +6229,17 @@ L45D9:  stx     L45EC
         sta     L45EC
         L45EC := *+1
         lda     $BF00           ; self-modified
-        sta     L0006+1
+        sta     $06+1
         lda     #0
-        sta     L0006
+        sta     $06
         ldy     #$07
-        lda     (L0006),y
+        lda     ($06),y
         bne     L4627
         ldy     #$FF
-        lda     (L0006),y
+        lda     ($06),y
         clc
         adc     #$03
-        sta     L0006
+        sta     $06
         lda     L4637
         pha
         rol     a
@@ -6274,7 +6273,7 @@ L4629:  sta     L4638
         lda     L4638
         rts
 
-L4634:  jmp     (L0006)
+L4634:  jmp     ($06)
 
 L4637:  .byte   $00
 L4638:  .byte   $00
@@ -6380,20 +6379,20 @@ L46F3:  jsr     L488A
         ldx     #$FF
 L46F8:  inx
         lda     $D355,x
-        sta     $0220,x
+        sta     $220,x
         cpx     $D355
         bne     L46F8
         inx
         lda     #$2F
-        sta     $0220,x
+        sta     $220,x
         ldy     #$00
 L470C:  iny
         inx
         lda     $D345,y
-        sta     $0220,x
+        sta     $220,x
         cpy     $D345
         bne     L470C
-        stx     $0220
+        stx     $220
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
         beq     L472B
         jsr     DESKTOP_SHOW_ALERT0
@@ -6424,7 +6423,7 @@ L4755:  DESKTOP_RELAY_CALL $06
         A2D_RELAY_CALL A2D_SET_MENU, blank_menu
         ldx     $D355
 L4773:  lda     $D355,x
-        sta     $0220,x
+        sta     $220,x
         dex
         bpl     L4773
         ldx     $D345
@@ -6433,7 +6432,7 @@ L477F:  lda     $D345,x
         dex
         bpl     L477F
         addr_call L4842, $0280
-        addr_call L4842, $0220
+        addr_call L4842, $220
         jsr     L48BE
         lda     #<INVOKER
         sta     L5B19
@@ -6501,18 +6500,18 @@ L4816:  .byte   $00
 L4817:  PASCAL_STRING "Basic.system"
         .res    30, 0
 
-L4842:  sta     L0006
-        stx     L0006+1
+L4842:  sta     $06
+        stx     $06+1
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
-L484B:  lda     (L0006),y
+L484B:  lda     ($06),y
         cmp     #$61
         bcc     L4859
         cmp     #$7B
         bcs     L4859
         and     #$DF
-        sta     (L0006),y
+        sta     ($06),y
 L4859:  dey
         bne     L484B
         rts
@@ -6635,7 +6634,7 @@ L498F:  .byte   $00
 
 .proc get_file_info_params3
 params: .byte   $A
-path:   .addr   $0220
+path:   .addr   $220
 access: .byte   0
 type:   .byte   0
 auxtype:.word   0
@@ -6657,12 +6656,12 @@ L49A6:  lda     $E25B
         jsr     L86A7
         clc
         adc     #$1E
-        sta     L0006
+        sta     $06
         txa
         adc     #$DB
-        sta     L0006+1
+        sta     $06+1
         ldy     #$0F
-        lda     (L0006),y
+        lda     ($06),y
         asl     a
         bmi     L49FA
         bcc     L49E0
@@ -6684,22 +6683,22 @@ L49E0:  jsr     L4AFD
         bne     L49FA
 L49ED:  lda     L49A5
         jsr     L4B5F
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         jmp     L4A0A
 
 L49FA:  lda     L49A5
         jsr     L86C1
         clc
         adc     #$9E
-        sta     L0006
+        sta     $06
         txa
         adc     #$DB
-        sta     L0006+1
+        sta     $06+1
 L4A0A:  ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
-L4A0F:  lda     (L0006),y
+L4A0F:  lda     ($06),y
         sta     $D355,y
         dey
         bpl     L4A0F
@@ -6730,14 +6729,14 @@ L4A47:  pha
         jsr     L86C1
         clc
         adc     #$9E
-        sta     L0006
+        sta     $06
         txa
         adc     #$DB
-        sta     L0006+1
+        sta     $06+1
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
-L4A5A:  lda     (L0006),y
+L4A5A:  lda     ($06),y
         sta     L0800,y
         dey
         bpl     L4A5A
@@ -6769,9 +6768,9 @@ L4A8B:  lda     $0840,y
 L4A95:  dey
         sty     $0840
         lda     #$00
-        sta     L0006
+        sta     $06
         lda     #$08
-        sta     L0006+1
+        sta     $06+1
         lda     #$40
         sta     $08
         lda     #$08
@@ -6870,22 +6869,22 @@ L4B5F:  sta     L4BB0
         jsr     L86C1
         clc
         adc     #$9E
-        sta     L0006
+        sta     $06
         txa
         adc     #$DB
-        sta     L0006+1
+        sta     $06+1
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         sta     L4BB1
         tay
-L4B81:  lda     (L0006),y
+L4B81:  lda     ($06),y
         and     #$7F
         cmp     #$2F
         beq     L4B8C
         dey
         bne     L4B81
 L4B8C:  dey
-L4B8D:  lda     (L0006),y
+L4B8D:  lda     ($06),y
         and     #$7F
         cmp     #$2F
         beq     L4B98
@@ -6895,7 +6894,7 @@ L4B98:  dey
         ldx     L4F76
 L4B9C:  inx
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sta     L4F76,x
         cpy     L4BB1
         bne     L4B9C
@@ -6918,18 +6917,18 @@ L4BBE:  .byte   $80,$20         ; ???
         jsr     L86A7
         clc
         adc     #$F2
-        sta     L0006
+        sta     $06
         txa
         adc     #$E5
-        sta     L0006+1
+        sta     $06+1
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
         clc
         adc     L4C87
         pha
         tax
-L4BE3:  lda     (L0006),y
+L4BE3:  lda     ($06),y
         sta     L4C88,x
         dex
         dey
@@ -7053,9 +7052,9 @@ L4D01:  dey
         jmp     L4523
 
 L4D19:  ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
-L4D1E:  lda     (L0006),y
+L4D1E:  lda     ($06),y
         sta     $E00A,y
         dey
         bpl     L4D1E
@@ -7108,9 +7107,9 @@ L4D4E:  stx     $E04B
         jmp     L4D9D
 
 L4D8A:  ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
-L4D8F:  lda     (L0006),y
+L4D8F:  lda     ($06),y
         sta     $E00A,y
         dey
         bpl     L4D8F
@@ -7159,14 +7158,14 @@ L4DF2:  txa
         pha
         lda     selected_file_index,x
         jsr     L86E3
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$02
-        lda     (L0006),y
+        lda     ($06),y
         and     #$70
         bne     L4E10
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         jsr     L6A8A
         jmp     L4E14
 
@@ -7184,34 +7183,34 @@ L4E1A:  sta     L4E71
         pla
         lda     desktop_winid
         jsr     L86FB
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
-L4E34:  lda     (L0006),y
+L4E34:  lda     ($06),y
         sta     $D355,y
         dey
         bpl     L4E34
         lda     selected_file_index
         jsr     L86E3
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$09
-        lda     (L0006),y
+        lda     ($06),y
         tax
         clc
         adc     #$09
         tay
         dex
         dey
-L4E51:  lda     (L0006),y
+L4E51:  lda     ($06),y
         sta     $D344,x
         dey
         dex
         bne     L4E51
         ldy     #$09
-        lda     (L0006),y
+        lda     ($06),y
         tax
         dex
         dex
@@ -7268,12 +7267,12 @@ L4EC3:  sta     buf3len
         lda     LEC26,x
         sta     LE22F
         jsr     L86E3
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$02
-        lda     (L0006),y
+        lda     ($06),y
         and     #$7F
-        sta     (L0006),y
+        sta     ($06),y
         and     #$0F
         sta     selected_window_index
         jsr     L8997
@@ -7347,14 +7346,14 @@ L4FD4:  lda     #$80
         beq     L4FE7
         jmp     L504B
 
-L4FE7:  stx     L0006+1
+L4FE7:  stx     $06+1
         stx     L504F
-        sty     L0006
+        sty     $06
         sty     L504E
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
-L4FF6:  lda     (L0006),y
+L4FF6:  lda     ($06),y
         sta     L4F76,y
         dey
         bpl     L4FF6
@@ -7494,18 +7493,18 @@ L511E:  sta     buf3len
         sty     L51ED
         lda     desktop_winid
         jsr     L86EF
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$1F
         lda     #$00
-L5162:  sta     (L0006),y
+L5162:  sta     ($06),y
         dey
         cpy     #$1B
         bne     L5162
         ldy     #$23
         ldx     #$03
 L516D:  lda     L51EB,x
-        sta     (L0006),y
+        sta     ($06),y
         dey
         dex
         bpl     L516D
@@ -7577,18 +7576,18 @@ L51F0:  ldx     desktop_winid
         sty     L5265
         lda     desktop_winid
         jsr     L86EF
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$1F
         lda     #$00
-L523B:  sta     (L0006),y
+L523B:  sta     ($06),y
         dey
         cpy     #$1B
         bne     L523B
         ldy     #$23
         ldx     #$03
 L5246:  lda     L5263,x
-        sta     (L0006),y
+        sta     ($06),y
         dey
         dex
         bpl     L5246
@@ -7780,12 +7779,12 @@ L53D0:  tax
         jsr     L5431
         bmi     L53BA
         jsr     L86FB
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
-        lda     L0006
+        lda     $06
         jsr     L6FB7
         lda     L704B
         beq     L53BA
@@ -7855,10 +7854,10 @@ L5464:  lda     desktop_winid
         jsr     DESKTOP_COPY_TO_BUF
         lda     desktop_winid
         jsr     L86EF
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$1C
-L5479:  lda     (L0006),y
+L5479:  lda     ($06),y
         sta     $E214,y
         iny
         cpy     #$24
@@ -7916,39 +7915,39 @@ L54F3:  lda     $1801,x
         asl     a
         tay
         lda     file_address_table,y
-        sta     L0006
+        sta     $06
         lda     file_address_table+1,y
-        sta     L0006+1
+        sta     $06+1
         ldy     #$06
-        lda     (L0006),y
+        lda     ($06),y
         cmp     L5447
         beq     L5510
         bcc     L5532
         jmp     L5547
 
 L5510:  dey
-        lda     (L0006),y
+        lda     ($06),y
         cmp     L5446
         beq     L551D
         bcc     L5532
         jmp     L5547
 
 L551D:  dey
-        lda     (L0006),y
+        lda     ($06),y
         cmp     L5445
         beq     L552A
         bcc     L5532
         jmp     L5547
 
 L552A:  dey
-        lda     (L0006),y
+        lda     ($06),y
         cmp     L5444
         bcs     L5547
 L5532:  lda     $1801,x
         stx     L5449
         sta     L5448
         ldy     #$03
-L553D:  lda     (L0006),y
+L553D:  lda     ($06),y
         sta     L5441,y
         iny
         cpy     #$07
@@ -8019,10 +8018,10 @@ L55D1:  ldx     L544A
         lda     $1801,x
         sta     selected_file_index
         jsr     L86E3
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$02
-        lda     (L0006),y
+        lda     ($06),y
         and     #$0F
         sta     selected_window_index
         lda     #$01
@@ -8033,10 +8032,10 @@ L55F0:  ldx     L544A
         lda     $1801,x
         sta     LE22F
         jsr     L86E3
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$02
-        lda     (L0006),y
+        lda     ($06),y
         and     #$0F
         sta     query_state_params2::id
         beq     L5614
@@ -8053,10 +8052,10 @@ L562B:  rts
 
 L562C:  lda     LE22F
         jsr     L86E3
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$02
-        lda     (L0006),y
+        lda     ($06),y
         and     #$0F
         sta     query_state_params2::id
         beq     L564A
@@ -8109,8 +8108,8 @@ L56B4:  ldx     L56F8
         lda     selected_file_index,x
         sta     $E22B
         jsr     L86E3
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         lda     $E22C
         beq     L56CF
         lda     $E22B
@@ -8346,16 +8345,16 @@ L58C1:  rts
         .byte   0
 L58C3:  lda     desktop_winid
         jsr     L86EF
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$06
-        lda     (L0006),y
+        lda     ($06),y
         tax
         iny
-        lda     (L0006),y
+        lda     ($06),y
         pha
         ldy     #$04
-        lda     (L0006),y
+        lda     ($06),y
         and     #$01
         clc
         ror     a
@@ -8366,16 +8365,16 @@ L58C3:  lda     desktop_winid
 
 L58E2:  lda     desktop_winid
         jsr     L86EF
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$08
-        lda     (L0006),y
+        lda     ($06),y
         tax
         iny
-        lda     (L0006),y
+        lda     ($06),y
         pha
         ldy     #$05
-        lda     (L0006),y
+        lda     ($06),y
         and     #$01
         clc
         ror     a
@@ -8496,14 +8495,14 @@ L59F3:  ldy     $E25B
 L59FE:  jsr     L86E3
         clc
         adc     #$09
-        sta     L0006
+        sta     $06
         txa
         adc     #$00
-        sta     L0006+1
+        sta     $06+1
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
-L5A10:  lda     (L0006),y
+L5A10:  lda     ($06),y
         sta     $1F00,y
         dey
         bpl     L5A10
@@ -8644,10 +8643,10 @@ L5B58:  cmp     #$01
         bne     L5BC1
         lda     desktop_winid
         jsr     L86EF
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$05
-        lda     (L0006),y
+        lda     ($06),y
         and     #$01
         bne     L5B71
         jmp     L5C26
@@ -8691,10 +8690,10 @@ L5BB4:  jsr     L63EC
 
 L5BC1:  lda     desktop_winid
         jsr     L86EF
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$04
-        lda     (L0006),y
+        lda     ($06),y
         and     #$01
         bne     L5BD6
         jmp     L5C26
@@ -8920,10 +8919,10 @@ L5DF7:  ldx     $E256
 
 L5DFC:  lda     L5CD9
         jsr     L86E3
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$02
-        lda     (L0006),y
+        lda     ($06),y
         and     #$70
         cmp     #$10
         beq     L5E28
@@ -8943,34 +8942,34 @@ L5E27:  rts
 L5E28:  sta     L5E77
         lda     desktop_winid
         jsr     L86FB
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
-L5E3A:  lda     (L0006),y
+L5E3A:  lda     ($06),y
         sta     $D355,y
         dey
         bpl     L5E3A
         lda     L5CD9
         jsr     L86E3
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$09
-        lda     (L0006),y
+        lda     ($06),y
         tax
         clc
         adc     #$09
         tay
         dex
         dey
-L5E57:  lda     (L0006),y
+L5E57:  lda     ($06),y
         sta     $D344,x
         dey
         dex
         bne     L5E57
         ldy     #$09
-        lda     (L0006),y
+        lda     ($06),y
         tax
         dex
         dex
@@ -9008,12 +9007,12 @@ L5E8F:  lda     desktop_winid
         jsr     L5302
 L5EBC:  lda     desktop_winid
         jsr     L86FB
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
-L5ECB:  lda     (L0006),y
+L5ECB:  lda     ($06),y
         sta     $E1B0,y
         dey
         bpl     L5ECB
@@ -9048,9 +9047,9 @@ L5F0F:  .byte   0
         .byte   0
         .byte   0
 L5F13:  lda     #$06
-        sta     L0006
+        sta     $06
         lda     #$D2
-        sta     L0006+1
+        sta     $06+1
         jsr     L60D5
         ldx     #$03
 L5F20:  lda     input_params_coords,x
@@ -9231,30 +9230,30 @@ L60DE:  lda     desktop_winid
         A2D_RELAY_CALL A2D_DRAG_WINDOW, input_params
         lda     desktop_winid
         jsr     L86EF
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$16
-        lda     (L0006),y
+        lda     ($06),y
         cmp     #$19
         bcs     L6112
         lda     #$19
-        sta     (L0006),y
+        sta     ($06),y
 L6112:  ldy     #$14
-        lda     (L0006),y
+        lda     ($06),y
         sec
         sbc     L8830
         sta     L6197
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sbc     L8831
         sta     L6198
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sec
         sbc     L8832
         sta     L6199
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sbc     L8833
         sta     L619A
         ldx     desktop_winid
@@ -9279,26 +9278,26 @@ L6161:  txa
         pha
         lda     buf3,x
         jsr     L86E3
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$03
-        lda     (L0006),y
+        lda     ($06),y
         clc
         adc     L6197
-        sta     (L0006),y
+        sta     ($06),y
         iny
-        lda     (L0006),y
+        lda     ($06),y
         adc     L6198
-        sta     (L0006),y
+        sta     ($06),y
         iny
-        lda     (L0006),y
+        lda     ($06),y
         clc
         adc     L6199
-        sta     (L0006),y
+        sta     ($06),y
         iny
-        lda     (L0006),y
+        lda     ($06),y
         adc     L619A
-        sta     (L0006),y
+        sta     ($06),y
         pla
         tax
         inx
@@ -9369,16 +9368,16 @@ L6227:  sta     buf3len
         lda     LEC26,x
         sta     LE22F
         jsr     L86E3
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$01
-        lda     (L0006),y
+        lda     ($06),y
         and     #$0F
         beq     L6276
         ldy     #$02
-        lda     (L0006),y
+        lda     ($06),y
         and     #$7F
-        sta     (L0006),y
+        sta     ($06),y
         and     #$0F
         sta     selected_window_index
         jsr     L8997
@@ -9680,12 +9679,12 @@ L6523:  lda     desktop_winid
         jsr     L86EF
         clc
         adc     #$14
-        sta     L0006
+        sta     $06
         txa
         adc     #$00
-        sta     L0006+1
+        sta     $06+1
         ldy     #$25
-L6535:  lda     (L0006),y
+L6535:  lda     ($06),y
         sta     query_state_buffer,y
         dey
         bpl     L6535
@@ -9693,12 +9692,12 @@ L6535:  lda     (L0006),y
 
 L653E:  lda     desktop_winid
         jsr     L86EF
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$23
         ldx     #$07
 L654C:  lda     query_state_buffer::hoff,x
-        sta     (L0006),y
+        sta     ($06),y
         dey
         dex
         bpl     L654C
@@ -9717,10 +9716,10 @@ L656D:  lda     desktop_winid
         stx     L6601
         lda     desktop_winid
         jsr     L86EF
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$06
-        lda     (L0006),y
+        lda     ($06),y
         tay
         lda     L7B63
         sec
@@ -9776,10 +9775,10 @@ L6604:  lda     desktop_winid
         sty     L669F
         lda     desktop_winid
         jsr     L86EF
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$08
-        lda     (L0006),y
+        lda     ($06),y
         tay
         lda     L7B65
         sec
@@ -10202,28 +10201,28 @@ L6A41:  cmp     LEC26,x
         jsr     L86E3
         clc
         adc     #$09
-        sta     L0006
+        sta     $06
         txa
         adc     #$00
-        sta     L0006+1
+        sta     $06+1
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
         dey
-L6A5C:  lda     (L0006),y
-        sta     $0220,y
+L6A5C:  lda     ($06),y
+        sta     $220,y
         dey
         bpl     L6A5C
-        dec     $0220
+        dec     $220
         lda     #$2F
         sta     $0221
         lda     #$20
         ldx     #$02
-        ldy     $0220
+        ldy     $220
         jsr     L6FB7
         lda     #$20
         ldx     #$02
-        ldy     $0220
+        ldy     $220
         jmp     L6F4B
 
 L6A80:  inx
@@ -10252,14 +10251,14 @@ L6AA7:  stx     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         lda     LE6BE
         jsr     L86E3
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$02
-        lda     (L0006),y
+        lda     ($06),y
         ora     #$80
-        sta     (L0006),y
+        sta     ($06),y
         ldy     #$02
-        lda     (L0006),y
+        lda     ($06),y
         and     #$0F
         sta     query_state_params2::id
         beq     L6AD8
@@ -10331,14 +10330,14 @@ L6B68:  lda     #$01
         jsr     L6C0F
         lda     LE6BE
         jsr     L86E3
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$02
-        lda     (L0006),y
+        lda     ($06),y
         ora     #$80
-        sta     (L0006),y
+        sta     ($06),y
         ldy     #$02
-        lda     (L0006),y
+        lda     ($06),y
         and     #$0F
         sta     query_state_params2::id
         beq     L6BA1
@@ -10426,14 +10425,14 @@ L6C5F:  txa
         tax
         lda     $E202,x
         sta     $E71D
-        sta     L0006
+        sta     $06
         lda     $E203,x
         sta     $E71E
-        sta     L0006+1
+        sta     $06+1
         lda     LCBANK2
         lda     LCBANK2
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
         lda     LCBANK1
         lda     LCBANK1
@@ -10694,16 +10693,16 @@ L6EC5:  lda     #$00
         rts
 
 L6F0D:  jsr     L86FB
-        sta     L0006
+        sta     $06
         sta     L6F48
-        stx     L0006+1
+        stx     $06+1
         stx     L6F49
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         sta     L6F4A
         iny
 L6F22:  iny
-        lda     (L0006),y
+        lda     ($06),y
         cmp     #$2F
         beq     L6F31
         cpy     L6F4A
@@ -10712,8 +10711,8 @@ L6F22:  iny
 
 L6F31:  dey
 L6F32:  sty     L6F4A
-        lda     L0006
-        ldx     L0006+1
+        lda     $06
+        ldx     $06+1
         jsr     L6FB7
         lda     L6F48
         ldx     L6F49
@@ -10723,10 +10722,10 @@ L6F32:  sty     L6F4A
 L6F48:  .byte   0
 L6F49:  .byte   0
 L6F4A:  .byte   0
-L6F4B:  sta     L0006
-        stx     L0006+1
+L6F4B:  sta     $06
+        stx     $06+1
         sty     L705D
-L6F52:  lda     (L0006),y
+L6F52:  lda     ($06),y
         sta     L705D,y
         dey
         bne     L6F52
@@ -10775,21 +10774,21 @@ L6FA9:  cpy     #$01
         dey
         rts
 
-L6FAF:  sta     L0006
-        stx     L0006+1
+L6FAF:  sta     $06
+        stx     $06+1
         lda     #$80
         bne     L6FBD
-L6FB7:  sta     L0006
-        stx     L0006+1
+L6FB7:  sta     $06
+        stx     $06+1
         lda     #$00
 L6FBD:  sta     L704A
         bit     L704A
         bpl     L6FCA
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
 L6FCA:  sty     L4F76
-L6FCD:  lda     (L0006),y
+L6FCD:  lda     ($06),y
         sta     L4F76,y
         dey
         bne     L6FCD
@@ -10809,17 +10808,17 @@ L6FE4:  inc     L7049
 L6FF5:  rts
 
 L6FF6:  jsr     L86EF
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$0A
-        lda     (L0006),y
+        lda     ($06),y
         beq     L6FE4
         lda     L7049
         jsr     L86FB
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
         cmp     L4F76
         beq     L7027
@@ -10827,11 +10826,11 @@ L6FF6:  jsr     L86EF
         bmi     L6FE4
         ldy     L4F76
         iny
-        lda     (L0006),y
+        lda     ($06),y
         cmp     #$2F
         bne     L6FE4
         dey
-L7027:  lda     (L0006),y
+L7027:  lda     ($06),y
         cmp     L4F76,y
         bne     L6FE4
         dey
@@ -10976,15 +10975,15 @@ L7161:  jsr     L48CC
         rts
 
 L7169:  lda     L485F
-        sta     L0006
+        sta     $06
         lda     L4860
-        sta     L0006+1
+        sta     $06+1
         lda     $E1F1
         asl     a
         tax
-        lda     L0006
+        lda     $06
         sta     $E202,x
-        lda     L0006+1
+        lda     $06+1
         sta     $E203,x
         ldx     $E1F1
         lda     L72A7
@@ -10996,7 +10995,7 @@ L7169:  lda     L485F
         lda     LCBANK2
         ldy     #$00
         pla
-        sta     (L0006),y
+        sta     ($06),y
         lda     LCBANK1
         lda     LCBANK1
         lda     #$FF
@@ -11007,10 +11006,10 @@ L7169:  lda     L485F
         sta     $08
         lda     #$0C
         sta     $09
-        inc     L0006
-        lda     L0006
+        inc     $06
+        lda     $06
         bne     L71BD
-        inc     L0006+1
+        inc     $06+1
 L71BD:  inc     L70C4
         lda     L70C4
         cmp     L70C1
@@ -11104,7 +11103,7 @@ L724E:  lda     ($08),y
         ldx     #$1F
         ldy     #$1F
 L7279:  lda     $1F00,x
-        sta     (L0006),y
+        sta     ($06),y
         dex
         dey
         bpl     L7279
@@ -11112,15 +11111,15 @@ L7279:  lda     $1F00,x
         lda     LCBANK1
         lda     #$20
         clc
-        adc     L0006
-        sta     L0006
+        adc     $06
+        sta     $06
         bcc     L7293
-        inc     L0006+1
+        inc     $06+1
 L7293:  jmp     L71BD
 
-L7296:  lda     L0006
+L7296:  lda     $06
         sta     L485F
-        lda     L0006+1
+        lda     $06+1
         sta     L4860
         jsr     L72D8
         jsr     pop_zp_addrs
@@ -11223,9 +11222,9 @@ L7385:  lda     L7446
         asl     a
         tax
         lda     $E202,x
-        sta     L0006
+        sta     $06
         lda     $E203,x
-        sta     L0006+1
+        sta     $06+1
         inx
         inx
         lda     $E202,x
@@ -11237,12 +11236,12 @@ L7385:  lda     L7446
 L73A5:  lda     LCBANK2
         lda     LCBANK2
         lda     ($08),y
-        sta     (L0006),y
+        sta     ($06),y
         lda     LCBANK1
         lda     LCBANK1
-        inc     L0006
+        inc     $06
         bne     L73BB
-        inc     L0006+1
+        inc     $06+1
 L73BB:  inc     $08
         bne     L73C1
         inc     $09
@@ -11317,19 +11316,19 @@ L744B:  lda     bufnum
         lda     $E6C0,x
         sta     $09
         ldy     #$09
-        lda     (L0006),y
+        lda     ($06),y
         tay
         jsr     push_zp_addrs
-        lda     L0006
+        lda     $06
         clc
         adc     #$09
-        sta     L0006
+        sta     $06
         bcc     L746D
-        inc     L0006+1
+        inc     $06+1
 L746D:  tya
         tax
         ldy     #$00
-L7471:  lda     (L0006),y
+L7471:  lda     ($06),y
         sta     ($08),y
         iny
         dex
@@ -11342,7 +11341,7 @@ L7471:  lda     (L0006),y
         sta     ($08),y
         jsr     pop_zp_addrs
         ldy     #$02
-        lda     (L0006),y
+        lda     ($06),y
         and     #$0F
         bne     L74D3
         jsr     push_zp_addrs
@@ -11350,16 +11349,16 @@ L7471:  lda     (L0006),y
         jsr     L86FB
         sta     $08
         stx     $09
-        lda     L0006
+        lda     $06
         clc
         adc     #$09
-        sta     L0006
+        sta     $06
         bcc     L74A8
-        inc     L0006+1
+        inc     $06+1
 L74A8:  ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
-L74AD:  lda     (L0006),y
+L74AD:  lda     ($06),y
         sta     ($08),y
         dey
         bpl     L74AD
@@ -11387,8 +11386,8 @@ L74D3:  tay
         tya
         pha
         jsr     L86FB
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         pla
         asl     a
         tax
@@ -11397,7 +11396,7 @@ L74D3:  tay
         lda     $E6C0,x
         sta     $09
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         clc
         adc     ($08),y
         cmp     #$43
@@ -11411,9 +11410,9 @@ L74D3:  tay
         rts
 
 L750D:  ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
-L7512:  lda     (L0006),y
+L7512:  lda     ($06),y
         sta     $E1B0,y
         dey
         bpl     L7512
@@ -11455,8 +11454,8 @@ L7569:  lda     $08
         jsr     L87BA
         lda     bufnum
         jsr     L86EF
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$14
         lda     bufnum
         sec
@@ -11467,48 +11466,48 @@ L7569:  lda     $08
         asl     a
         pha
         adc     #$05
-        sta     (L0006),y
+        sta     ($06),y
         iny
         lda     #$00
-        sta     (L0006),y
+        sta     ($06),y
         iny
         pla
         lsr     a
         clc
         adc     #$1B
-        sta     (L0006),y
+        sta     ($06),y
         iny
         lda     #$00
-        sta     (L0006),y
+        sta     ($06),y
         lda     #$00
         ldy     #$1F
         ldx     #$03
-L75A3:  sta     (L0006),y
+L75A3:  sta     ($06),y
         dey
         dex
         bpl     L75A3
         ldy     #$04
-        lda     (L0006),y
+        lda     ($06),y
         and     #$FE
-        sta     (L0006),y
+        sta     ($06),y
         iny
-        lda     (L0006),y
+        lda     ($06),y
         and     #$FE
-        sta     (L0006),y
+        sta     ($06),y
         lda     #$00
         ldy     #$07
-        sta     (L0006),y
+        sta     ($06),y
         ldy     #$09
-        sta     (L0006),y
+        sta     ($06),y
         jsr     pop_zp_addrs
         lda     LE6BE
         jsr     L7054
         lda     LE6BE
         jsr     L86E3
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$02
-        lda     (L0006),y
+        lda     ($06),y
         and     #$0F
         beq     L75FA
         tax
@@ -11598,20 +11597,20 @@ L767C:  txa
         asl     a
         tax
         lda     $E202,x
-        sta     L0006
+        sta     $06
         lda     $E203,x
-        sta     L0006+1
+        sta     $06+1
         lda     LCBANK2
         lda     LCBANK2
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         sta     L7764
         lda     LCBANK1
         lda     LCBANK1
-        inc     L0006
-        lda     L0006
+        inc     $06
+        lda     $06
         bne     L76A4
-        inc     L0006+1
+        inc     $06+1
 L76A4:  lda     bufnum
         sta     desktop_winid
 L76AA:  lda     L7625
@@ -11629,12 +11628,12 @@ L76BB:  bit     L7634
 L76C4:  jsr     L7B6B
         lda     L7621
         jsr     L86EF
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$16
         lda     L7B65
         sec
-        sbc     (L0006),y
+        sbc     ($06),y
         sta     L7B65
         lda     L7B66
         sbc     #$00
@@ -11660,10 +11659,10 @@ L7705:  lda     #$AA
 L770C:  lda     #$C2
         ldx     #$01
 L7710:  ldy     #$20
-        sta     (L0006),y
+        sta     ($06),y
         txa
         iny
-        sta     (L0006),y
+        sta     ($06),y
         lda     L7B65
         cmp     #$32
         lda     L7B66
@@ -11685,15 +11684,15 @@ L7739:  lda     #$32
 L7740:  lda     #$6C
         ldx     #$00
 L7744:  ldy     #$22
-        sta     (L0006),y
+        sta     ($06),y
         txa
         iny
-        sta     (L0006),y
+        sta     ($06),y
         lda     L7767
         ldy     #$06
-        sta     (L0006),y
+        sta     ($06),y
         ldy     #$08
-        sta     (L0006),y
+        sta     ($06),y
         lda     LE6BE
         ldx     L7621
         jsr     L8B60
@@ -11713,11 +11712,11 @@ L7768:  inc     LDD9E
         lda     LCBANK2
         lda     LCBANK2
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         sta     $1800
         iny
         ldx     #$00
-L778E:  lda     (L0006),y
+L778E:  lda     ($06),y
         sta     $1802,x
         inx
         iny
@@ -11730,16 +11729,16 @@ L778E:  lda     (L0006),y
         ldx     $1800
         sta     $1800,x
         ldy     #$10
-        lda     (L0006),y
+        lda     ($06),y
         cmp     #$B3
         beq     L77CC
         cmp     #$FF
         bne     L77DA
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
         ldx     L77D0
-L77BF:  lda     (L0006),y
+L77BF:  lda     ($06),y
         cmp     L77D0,x
         bne     L77D8
         dey
@@ -11827,13 +11826,13 @@ L7870:  lda     bufnum
         dex
         lda     buf3,x
         jsr     L8893
-        lda     L0006
+        lda     $06
         clc
         adc     #$20
-        sta     L0006
-        lda     L0006+1
+        sta     $06
+        lda     $06+1
         adc     #$00
-        sta     L0006+1
+        sta     $06+1
         rts
 
         .byte   0
@@ -11841,36 +11840,36 @@ L7870:  lda     bufnum
 L78A1:  sta     L78EE
         jsr     push_zp_addrs
         lda     type_table_addr
-        sta     L0006
+        sta     $06
         lda     type_table_addr+1
-        sta     L0006+1
+        sta     $06+1
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
-L78B6:  lda     (L0006),y
+L78B6:  lda     ($06),y
         cmp     L78EE
         beq     L78C2
         dey
         bpl     L78B6
         ldy     #$01
 L78C2:  lda     LFB04           ; ???
-        sta     L0006
+        sta     $06
         lda     LFB04+1
-        sta     L0006+1
-        lda     (L0006),y
+        sta     $06+1
+        lda     ($06),y
         sta     L7624
         dey
         tya
         asl     a
         tay
         lda     type_icons_addr
-        sta     L0006
+        sta     $06
         lda     type_icons_addr+1
-        sta     L0006+1
-        lda     (L0006),y
+        sta     $06+1
+        lda     ($06),y
         sta     L7622
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sta     L7623
         jsr     pop_zp_addrs
         rts
@@ -12175,11 +12174,11 @@ L7BCB:  lda     buf3len
         bne     L7BEF
         lda     buf3
         jsr     L86E3
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$06
         ldx     #$03
-L7BE0:  lda     (L0006),y
+L7BE0:  lda     ($06),y
         sta     L7B5F,x
         sta     L7B63,x
         dey
@@ -12221,10 +12220,10 @@ L7C13:  lda     L7B5F
 L7C36:  tax
         lda     buf3,x
         jsr     L86E3
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$02
-        lda     (L0006),y
+        lda     ($06),y
         and     #$0F
         cmp     L7D5C
         bne     L7C52
@@ -12233,7 +12232,7 @@ L7C36:  tax
 
 L7C52:  ldy     #$06
         ldx     #$03
-L7C56:  lda     (L0006),y
+L7C56:  lda     ($06),y
         sta     L7B67,x
         dey
         dex
@@ -12338,11 +12337,11 @@ L7D55:  inc     L7D5B
 L7D5B:  .byte   0
 L7D5C:  .byte   0
 L7D5D:  jsr     L86EF
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$23
         ldx     #$07
-L7D68:  lda     (L0006),y
+L7D68:  lda     ($06),y
         sta     L7D94,x
         dey
         dex
@@ -12392,39 +12391,39 @@ L7DB4:  txa
         asl     a
         tax
         lda     $E202,x
-        sta     L0006
+        sta     $06
         sta     $0801
         lda     $E203,x
-        sta     L0006+1
+        sta     $06+1
         sta     $0802
         lda     LCBANK2
         lda     LCBANK2
         lda     #$00
         sta     L0800
         tay
-        lda     (L0006),y
+        lda     ($06),y
         sta     $0803
-        inc     L0006
+        inc     $06
         inc     $0801
         bne     L7DE4
-        inc     L0006+1
+        inc     $06+1
         inc     $0802
 L7DE4:  lda     L0800
         cmp     $0803
         beq     L7E0C
         jsr     L80CA
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         and     #$7F
-        sta     (L0006),y
+        sta     ($06),y
         ldy     #$17
-        lda     (L0006),y
+        lda     ($06),y
         bne     L7E06
         iny
-        lda     (L0006),y
+        lda     ($06),y
         bne     L7E06
         lda     #$01
-        sta     (L0006),y
+        sta     ($06),y
 L7E06:  inc     L0800
         jmp     L7DE4
 
@@ -12454,12 +12453,12 @@ L7E38:  lda     $0805
 
 L7E43:  jsr     L80CA
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         bmi     L7E82
         and     #$0F
         sta     $0804
         ldy     #$01
-L7E53:  lda     (L0006),y
+L7E53:  lda     ($06),y
         cmp     $0807,y
         beq     L7E5F
         bcs     L7E82
@@ -12478,7 +12477,7 @@ L7E71:  sta     $0808,x
         dex
         bpl     L7E71
         ldy     $0804
-L7E7A:  lda     (L0006),y
+L7E7A:  lda     ($06),y
         sta     $0807,y
         dey
         bne     L7E7A
@@ -12493,9 +12492,9 @@ L7E90:  inc     $0805
         sta     L0800
         jsr     L80CA
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         ora     #$80
-        sta     (L0006),y
+        sta     ($06),y
         lda     #$5A
         ldx     #$0F
 L7EA8:  sta     $0808,x
@@ -12528,25 +12527,25 @@ L7EDC:  lda     $0805
 
 L7EE7:  jsr     L80CA
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         bmi     L7F1B
         ldy     #$18
-        lda     (L0006),y
+        lda     ($06),y
         cmp     $0809
         beq     L7EFE
         bcs     L7F08
         jmp     L7F1B
 
 L7EFE:  dey
-        lda     (L0006),y
+        lda     ($06),y
         cmp     $0808
         beq     L7F1B
         bcc     L7F1B
 L7F08:  ldy     #$18
-        lda     (L0006),y
+        lda     ($06),y
         sta     $0809
         dey
-        lda     (L0006),y
+        lda     ($06),y
         sta     $0808
         lda     L0800
         sta     $0806
@@ -12561,9 +12560,9 @@ L7F29:  inc     $0805
         sta     L0800
         jsr     L80CA
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         ora     #$80
-        sta     (L0006),y
+        sta     ($06),y
         lda     #$00
         sta     $0808
         sta     $0809
@@ -12594,22 +12593,22 @@ L7F73:  lda     $0805
 
 L7F7E:  jsr     L80CA
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         bmi     L7FAD
         ldy     #$12
-        lda     (L0006),y
+        lda     ($06),y
         cmp     $0809
         beq     L7F92
         bcs     L7F9C
 L7F92:  dey
-        lda     (L0006),y
+        lda     ($06),y
         cmp     $0808
         beq     L7F9C
         bcc     L7FAD
-L7F9C:  lda     (L0006),y
+L7F9C:  lda     ($06),y
         sta     $0808
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sta     $0809
         lda     L0800
         sta     $0806
@@ -12624,9 +12623,9 @@ L7FBB:  inc     $0805
         sta     L0800
         jsr     L80CA
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         ora     #$80
-        sta     (L0006),y
+        sta     ($06),y
         lda     #$00
         sta     $0808
         sta     $0809
@@ -12690,10 +12689,10 @@ L8051:  lda     $0805
 
 L805C:  jsr     L80CA
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         bmi     L807E
         ldy     #$10
-        lda     (L0006),y
+        lda     ($06),y
         ldx     $0807
         cpx     #$00
         beq     L8075
@@ -12722,9 +12721,9 @@ L809E:  inc     $0805
         sta     L0800
         jsr     L80CA
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         ora     #$80
-        sta     (L0006),y
+        sta     ($06),y
         ldx     $0805
         dex
         ldy     $0806
@@ -12751,10 +12750,10 @@ L80CA:  lda     #$00
         rol     $0804
         clc
         adc     $0801
-        sta     L0006
+        sta     $06
         lda     $0802
         adc     $0804
-        sta     L0006+1
+        sta     $06+1
         rts
 
 L80F5:  lda     #$00
@@ -12764,18 +12763,18 @@ L80FA:  lda     L0800
         beq     L8124
         jsr     L80CA
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         and     #$7F
-        sta     (L0006),y
+        sta     ($06),y
         ldy     #$17
-        lda     (L0006),y
+        lda     ($06),y
         bne     L811E
         iny
-        lda     (L0006),y
+        lda     ($06),y
         cmp     #$01
         bne     L811E
         lda     #$00
-        sta     (L0006),y
+        sta     ($06),y
 L811E:  inc     L0800
         jmp     L80FA
 
@@ -12811,14 +12810,14 @@ L813F:  ldy     #$00
         rol     L813C
         clc
         adc     $E71D
-        sta     L0006
+        sta     $06
         lda     $E71E
         adc     L813C
-        sta     L0006+1
+        sta     $06+1
         lda     LCBANK2
         lda     LCBANK2
         ldy     #$1F
-L8171:  lda     (L0006),y
+L8171:  lda     ($06),y
         sta     $EC43,y
         dey
         bpl     L8171
@@ -13128,19 +13127,19 @@ L8490:  .byte   $09             ; ????
 ascii_digits:
         .byte   "0123456789"
 
-L84A4:  sta     L0006
-        stx     L0006+1
+L84A4:  sta     $06
+        stx     $06+1
         ldy     #$00
         lda     ($08),y
         sta     L84D0
         clc
-        adc     (L0006),y
+        adc     ($06),y
         sta     ($08),y
-        lda     (L0006),y
+        lda     ($06),y
         sta     L84CB
         inc     L84D0
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sty     L84CF
         ldy     L84D0
         sta     ($08),y
@@ -13180,13 +13179,13 @@ L850C:  lda     #$00
 L850E:  sta     L85F1
         lda     desktop_winid
         jsr     L86EF
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         lda     #$06
         clc
         adc     L85F1
         tay
-        lda     (L0006),y
+        lda     ($06),y
         pha
         jsr     L7B6B
         ldx     L85F1
@@ -13260,12 +13259,12 @@ L85C3:  lda     query_state_buffer::hoff
         sta     query_state_buffer::width+1
 L85D6:  lda     desktop_winid
         jsr     L86EF
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$23
         ldx     #$07
 L85E4:  lda     query_state_buffer::hoff,x
-        sta     (L0006),y
+        sta     ($06),y
         dey
         dex
         bpl     L85E4
@@ -13427,13 +13426,13 @@ L86FB:  asl     a
 
 L8707:  sta     L877F
         lda     type_table_addr
-        sta     L0006
+        sta     $06
         lda     type_table_addr+1
-        sta     L0006+1
+        sta     $06+1
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
-L8719:  lda     (L0006),y
+L8719:  lda     ($06),y
         cmp     L877F
         beq     L8726
         dey
@@ -13445,11 +13444,11 @@ L8726:  tya
         asl     a
         tay
         lda     type_names_addr
-        sta     L0006
+        sta     $06
         lda     type_names_addr+1
-        sta     L0006+1
+        sta     $06+1
         ldx     #$00
-L8736:  lda     (L0006),y
+L8736:  lda     ($06),y
         sta     LDFC6,x
         iny
         inx
@@ -13491,28 +13490,28 @@ L877B:  sta     LDFC9
 
 L877F:  .byte   0
 draw_text2:
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         beq     L879B
         sta     $08
-        inc     L0006
+        inc     $06
         bne     L8792
-        inc     L0006+1
-L8792:  A2D_RELAY_CALL A2D_DRAW_TEXT, $0006
+        inc     $06+1
+L8792:  A2D_RELAY_CALL A2D_DRAW_TEXT, $6
 L879B:  rts
 
 measure_text1:
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         sta     $08
-        inc     L0006
+        inc     $06
         bne     L87AC
-        inc     L0006+1
-L87AC:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $0006
+        inc     $06+1
+L87AC:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $6
         lda     $09
         ldx     $0A
         rts
@@ -13565,7 +13564,7 @@ L87F2:  dey
         sta     addr+1
 
         ldx     #0              ; copy 4 bytes from $8 to stack
-loop:   lda     L0006,x
+loop:   lda     $06,x
         pha
         inx
         cpx     #4
@@ -13592,7 +13591,7 @@ addr:   .addr   0
 
         ldx     #3              ; copy 4 bytes from stack to $6
 loop:   pla
-        sta     L0006,x
+        sta     $06,x
         dex
         cpx     #$FF            ; why not bpl ???
         bne     loop
@@ -13617,11 +13616,11 @@ L8855:  tay
         jsr     push_zp_addrs
         tya
         jsr     L86EF
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldx     #$00
         ldy     #$14
-L8865:  lda     (L0006),y
+L8865:  lda     ($06),y
         sta     L8830,x
         iny
         inx
@@ -13634,12 +13633,12 @@ L8874:  tay
         jsr     push_zp_addrs
         tya
         jsr     L86EF
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldx     #$00
         ldy     #$14
 L8884:  lda     L8830,x
-        sta     (L0006),y
+        sta     ($06),y
         iny
         inx
         cpx     #$24
@@ -13651,8 +13650,8 @@ L8893:  tay
         jsr     push_zp_addrs
         tya
         jsr     L86E3
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         lda     desktop_winid
         jsr     L86EF
         sta     $08
@@ -13672,41 +13671,41 @@ L88BA:  lda     ($08),y
         dex
         bpl     L88BA
         ldy     #$03
-        lda     (L0006),y
+        lda     ($06),y
         clc
         adc     L890D
-        sta     (L0006),y
+        sta     ($06),y
         iny
-        lda     (L0006),y
+        lda     ($06),y
         adc     L890E
-        sta     (L0006),y
+        sta     ($06),y
         iny
-        lda     (L0006),y
+        lda     ($06),y
         clc
         adc     L890F
-        sta     (L0006),y
+        sta     ($06),y
         iny
-        lda     (L0006),y
+        lda     ($06),y
         adc     L8910
-        sta     (L0006),y
+        sta     ($06),y
         ldy     #$03
-        lda     (L0006),y
+        lda     ($06),y
         sec
         sbc     L8911
-        sta     (L0006),y
+        sta     ($06),y
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sbc     L8912
-        sta     (L0006),y
+        sta     ($06),y
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sec
         sbc     L8913
-        sta     (L0006),y
+        sta     ($06),y
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sbc     L8914
-        sta     (L0006),y
+        sta     ($06),y
         jsr     pop_zp_addrs
         rts
 
@@ -13722,8 +13721,8 @@ L8915:  tay
         jsr     push_zp_addrs
         tya
         jsr     L86E3
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
 L8921:  lda     desktop_winid
         jsr     L86EF
         sta     $08
@@ -13743,41 +13742,41 @@ L893C:  lda     ($08),y
         dex
         bpl     L893C
         ldy     #$03
-        lda     (L0006),y
+        lda     ($06),y
         sec
         sbc     L898F
-        sta     (L0006),y
+        sta     ($06),y
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sbc     L8990
-        sta     (L0006),y
+        sta     ($06),y
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sec
         sbc     L8991
-        sta     (L0006),y
+        sta     ($06),y
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sbc     L8992
-        sta     (L0006),y
+        sta     ($06),y
         ldy     #$03
-        lda     (L0006),y
+        lda     ($06),y
         clc
         adc     L8993
-        sta     (L0006),y
+        sta     ($06),y
         iny
-        lda     (L0006),y
+        lda     ($06),y
         adc     L8994
-        sta     (L0006),y
+        sta     ($06),y
         iny
-        lda     (L0006),y
+        lda     ($06),y
         clc
         adc     L8995
-        sta     (L0006),y
+        sta     ($06),y
         iny
-        lda     (L0006),y
+        lda     ($06),y
         adc     L8996
-        sta     (L0006),y
+        sta     ($06),y
         jsr     pop_zp_addrs
         rts
 
@@ -13832,12 +13831,12 @@ L89EA:  jsr     push_zp_addrs
         ldy     L8AC4
         sta     $E1A0,y
         jsr     L86E3
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldx     #$00
         ldy     #$09
         lda     #$20
-L8A03:  sta     (L0006),y
+L8A03:  sta     ($06),y
         iny
         inx
         cpx     #$12
@@ -13846,23 +13845,23 @@ L8A03:  sta     (L0006),y
         lda     L0800
         and     #$0F
         sta     L0800
-        sta     (L0006),y
+        sta     ($06),y
         lda     #$00
         ldx     #$08
         jsr     L87BA
         ldx     #$00
         ldy     #$0B
 L8A22:  lda     $0801,x
-        sta     (L0006),y
+        sta     ($06),y
         iny
         inx
         cpx     L0800
         bne     L8A22
         ldy     #$09
-        lda     (L0006),y
+        lda     ($06),y
         clc
         adc     #$02
-        sta     (L0006),y
+        sta     ($06),y
         lda     L8AC3
         cmp     #$3E
         beq     L8A59
@@ -13884,41 +13883,41 @@ L8A22:  lda     $0801,x
 
 L8A59:  ldy     #7
         lda     #<ramdisk_icon
-        sta     (L0006),y
+        sta     ($06),y
         iny
         lda     #>ramdisk_icon
-        sta     (L0006),y
+        sta     ($06),y
         jmp     L8A96
 
 L8A67:  ldy     #7
         lda     #<profile_icon
-        sta     (L0006),y
+        sta     ($06),y
         iny
         lda     #>profile_icon
-        sta     (L0006),y
+        sta     ($06),y
         jmp     L8A96
 
 L8A75:  cmp     #$0B
         bne     L8A87
         ldy     #$07
         lda     #<floppy_800_icon
-        sta     (L0006),y
+        sta     ($06),y
         iny
         lda     #>floppy_800_icon
-        sta     (L0006),y
+        sta     ($06),y
         jmp     L8A96
 
 L8A87:  cmp     #$00
         bne     L8A67
         ldy     #$07
         lda     #<floppy_140_icon
-        sta     (L0006),y
+        sta     ($06),y
         iny
         lda     #>floppy_140_icon
-        sta     (L0006),y
+        sta     ($06),y
 L8A96:  ldy     #$02
         lda     #$00
-        sta     (L0006),y
+        sta     ($06),y
         inc     L8AC4
         lda     L8AC4
         asl     a
@@ -13926,7 +13925,7 @@ L8A96:  ldy     #$02
         tax
         ldy     #$03
 L8AA7:  lda     L8AC5,x
-        sta     (L0006),y
+        sta     ($06),y
         inx
         iny
         cpy     #$07
@@ -13934,7 +13933,7 @@ L8AA7:  lda     L8AC5,x
         ldx     buf3len
         dex
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         sta     buf3,x
         jsr     pop_zp_addrs
         lda     #$00
@@ -13993,12 +13992,12 @@ L8B3E:  lda     #$00
         sta     LEC26,x
 L8B43:  lda     LE6BE
         jsr     L86E3
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$02
-        lda     (L0006),y
+        lda     ($06),y
         and     #$7F
-        sta     (L0006),y
+        sta     ($06),y
         jsr     L4244
         jsr     pop_zp_addrs
         rts
@@ -14011,41 +14010,41 @@ L8B62:  sty     L8D4A
         stx     L8D4C
         txa
         jsr     L86EF
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         lda     #$14
         clc
         adc     #$23
         tay
         ldx     #$23
-L8B7B:  lda     (L0006),y
+L8B7B:  lda     ($06),y
         sta     query_state_buffer,x
         dey
         dex
         bpl     L8B7B
         lda     L8D4B
         jsr     L86E3
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$03
-        lda     (L0006),y
+        lda     ($06),y
         clc
         adc     #$07
         sta     L0800
         sta     $0804
         iny
-        lda     (L0006),y
+        lda     ($06),y
         adc     #$00
         sta     $0801
         sta     $0805
         iny
-        lda     (L0006),y
+        lda     ($06),y
         clc
         adc     #$07
         sta     $0802
         sta     $0806
         iny
-        lda     (L0006),y
+        lda     ($06),y
         adc     #$00
         sta     $0803
         sta     $0807
@@ -14495,11 +14494,11 @@ L8FA1:  jsr     L8FE1
 L8FA7:  asl     a
         tay
         lda     file_address_table,y
-        sta     L0006
+        sta     $06
         lda     file_address_table+1,y
-        sta     L0006+1
+        sta     $06+1
         ldy     #$02
-        lda     (L0006),y
+        lda     ($06),y
         rts
 
 L8FB8:  lda     #$00
@@ -14555,9 +14554,9 @@ L900C:  pla
         lda     window_address_table+1,x
         sta     $09
         lda     #$7B
-        sta     L0006
+        sta     $06
         lda     #$91
-        sta     L0006+1
+        sta     $06+1
         jsr     L91A0
         jmp     L9076
 
@@ -14579,20 +14578,20 @@ L9051:  lda     $EBFC
         jsr     L918E
         ldy     #$01
         lda     #$2F
-        sta     (L0006),y
+        sta     ($06),y
         dey
-        lda     (L0006),y
+        lda     ($06),y
         sta     L906D
         sta     $E00A,y
 L9066:  iny
-        lda     (L0006),y
+        lda     ($06),y
         sta     $E00A,y
         .byte   $C0
 L906D:  .byte   0
         bne     L9066
         ldy     #$01
         lda     #$20
-        sta     (L0006),y
+        sta     ($06),y
 L9076:  ldy     #$FF
 L9078:  iny
         lda     $E00A,y
@@ -14655,15 +14654,15 @@ L90EE:  jsr     L91F5
         jsr     L918E
         jsr     L91A0
         lda     #$0A
-        sta     L0006
+        sta     $06
         lda     #$E0
-        sta     L0006+1
+        sta     $06+1
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         beq     L9114
         sec
         sbc     #$01
-        sta     (L0006),y
+        sta     ($06),y
 L9114:  lda     L97E4
         beq     L913D
         bit     L9189
@@ -14705,7 +14704,7 @@ L9168:  jsr     L917F
         jsr     L918E
         ldy     #$01
         lda     #$20
-        sta     (L0006),y
+        sta     ($06),y
         lda     #$00
         rts
 
@@ -14733,10 +14732,10 @@ L918E:  asl     a
         lda     file_address_table,y
         clc
         adc     #$09
-        sta     L0006
+        sta     $06
         lda     file_address_table+1,y
         adc     #$00
-        sta     L0006+1
+        sta     $06+1
         rts
 
 L91A0:  ldx     #$00
@@ -14755,13 +14754,13 @@ L91B6:  inx
         lda     #$2F
         sta     $E00A,x
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         beq     L91D1
         sta     L91CE
         iny
 L91C6:  iny
         inx
-        lda     (L0006),y
+        lda     ($06),y
         sta     $E00A,x
         .byte   $C0
 L91CE:  .byte   0
@@ -14853,21 +14852,21 @@ L9271:  stx     L9284
         sta     L9284
         L9284 := *+1
         lda     $BF00           ; self-modified
-        sta     L0006+1
+        sta     $06+1
         lda     #$00
-        sta     L0006
+        sta     $06
         ldy     #$07
         .byte   $B1
 L928F:  asl     $D0
         cmp     $FBA0           ; generic_icon - 6 ?
-        lda     (L0006),y
+        lda     ($06),y
         and     #$7F
         bne     L925F
         ldy     #$FF
-        lda     (L0006),y
+        lda     ($06),y
         clc
         adc     #$03
-        sta     L0006
+        sta     $06
         lda     L92C7
         pha
         rol     a
@@ -14885,7 +14884,7 @@ L928F:  asl     $D0
         .byte   $04
         .addr   L92C0
         rts
-L92BD:  jmp     (L0006)
+L92BD:  jmp     ($06)
 
 L92C0:  .byte   $03
 L92C1:  .byte   $00,$C5,$92,$04,$00,$00
@@ -14933,11 +14932,11 @@ L9300:  lda     selected_window_index
         jsr     L91A0
         ldy     #$00
 L931F:  lda     $E00A,y
-        sta     $0220,y
+        sta     $220,y
         iny
-        cpy     $0220
+        cpy     $220
         bne     L931F
-        dec     $0220
+        dec     $220
         jmp     L9356
 
 L9331:  ldx     L92E6
@@ -14948,12 +14947,12 @@ L9331:  ldx     L92E6
 
 L933E:  jsr     L918E
         ldy     #$00
-L9343:  lda     (L0006),y
-        sta     $0220,y
+L9343:  lda     ($06),y
+        sta     $220,y
         iny
-        cpy     $0220
+        cpy     $220
         bne     L9343
-        dec     $0220
+        dec     $220
         lda     #$2F
         sta     $0221
 L9356:  yax_call JT_MLI_RELAY, L92C9, GET_FILE_INFO
@@ -15009,9 +15008,9 @@ L93DB:  ldx     L92E6
         jsr     L918E
         lda     #$01
         sta     L92E3
-        lda     L0006
+        lda     $06
         sta     L92E4
-        lda     L0006+1
+        lda     $06+1
         sta     L92E5
         jsr     L953F
         lda     #$02
@@ -15042,7 +15041,7 @@ L942E:  .byte   0
 L942F:  lda     #$03
         sta     L92E3
         lda     #$00
-        sta     $0220
+        sta     $220
         lda     selected_window_index
         bne     L9472
         lda     L92CE
@@ -15061,12 +15060,12 @@ L9456:  lda     text_buffer2::data-1,x
         beq     L9460
         inx
         bne     L9456
-L9460:  stx     $0220
+L9460:  stx     $220
         lda     #$2F
-        sta     $0220,x
+        sta     $220,x
         dex
 L9469:  lda     text_buffer2::data-1,x
-        sta     $0220,x
+        sta     $220,x
         dex
         bne     L9469
 L9472:  lda     selected_window_index
@@ -15079,7 +15078,7 @@ L9480:  lda     L92D1
         ldx     L92D2
 L9486:  jsr     L4006
         jsr     L9549
-        ldx     $0220
+        ldx     $220
         ldy     #$00
 L9491:  lda     $E6EC,y
         sta     $0221,x
@@ -15089,10 +15088,10 @@ L9491:  lda     $E6EC,y
         bne     L9491
         tya
         clc
-        adc     $0220
-        sta     $0220
-        ldx     $0220
-L94A9:  lda     $0220,x
+        adc     $220
+        sta     $220
+        ldx     $220
+L94A9:  lda     $220,x
         sta     LDFC9,x
         dex
         bpl     L94A9
@@ -15205,43 +15204,43 @@ L9591:  lda     selected_window_index
         jsr     L91A0
         ldy     #$00
 L95B0:  lda     $E00A,y
-        sta     $0220,y
+        sta     $220,y
         iny
-        cpy     $0220
+        cpy     $220
         bne     L95B0
-        dec     $0220
+        dec     $220
         jmp     L95E0
 
 L95C2:  ldx     L9706
         lda     selected_file_index,x
         jsr     L918E
         ldy     #$00
-L95CD:  lda     (L0006),y
-        sta     $0220,y
+L95CD:  lda     ($06),y
+        sta     $220,y
         iny
-        cpy     $0220
+        cpy     $220
         bne     L95CD
-        dec     $0220
+        dec     $220
         lda     #$2F
         sta     $0221
 L95E0:  ldx     L9706
         lda     selected_file_index,x
         jsr     L918E
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
-L95EE:  lda     (L0006),y
+L95EE:  lda     ($06),y
         sta     $1F12,y
         dey
         bpl     L95EE
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
         dey
         sec
         sbc     #$02
         sta     $1F00
-L9602:  lda     (L0006),y
+L9602:  lda     ($06),y
         sta     $1EFF,y
         dey
         cpy     #$01
@@ -15256,7 +15255,7 @@ L9618:  ldx     L9706
         jsr     L918E
         ldy     $1F12
 L9624:  lda     $1F12,y
-        sta     (L0006),y
+        sta     ($06),y
         dey
         bpl     L9624
         lda     #$FF
@@ -15271,19 +15270,19 @@ L962F:  sty     $08
         asl     a
         tax
         lda     window_address_table,x
-        sta     L0006
+        sta     $06
         lda     window_address_table+1,x
-        sta     L0006+1
+        sta     $06+1
         jmp     L9655
 
 L964D:  lda     #$05
-        sta     L0006
+        sta     $06
         lda     #$97
-        sta     L0006+1
+        sta     $06+1
 L9655:  ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
-L965A:  lda     (L0006),y
+L965A:  lda     ($06),y
         sta     $1FC0,y
         dey
         bpl     L965A
@@ -15331,25 +15330,25 @@ L969E:  lda     #$40
         lda     ($08),y
         clc
         adc     #$02
-        sta     (L0006),y
+        sta     ($06),y
         lda     ($08),y
         tay
-        inc     L0006
+        inc     $06
         bne     L96DA
-        inc     L0006+1
+        inc     $06+1
 L96DA:  lda     ($08),y
-        sta     (L0006),y
+        sta     ($06),y
         dey
         bne     L96DA
-        dec     L0006
-        lda     L0006
+        dec     $06
+        lda     $06
         cmp     #$FF
         bne     L96EB
-        dec     L0006+1
-L96EB:  lda     (L0006),y
+        dec     $06+1
+L96EB:  lda     ($06),y
         tay
         lda     #$20
-        sta     (L0006),y
+        sta     ($06),y
         inc     L9706
         jmp     L9576
 
@@ -15699,9 +15698,9 @@ L9A36:  ldx     $1FC0
         dey
 L9A3D:  iny
         inx
-        lda     $0220,y
+        lda     $220,y
         sta     $1FC0,x
-        cpy     $0220
+        cpy     $220
         bne     L9A3D
         stx     $1FC0
         jmp     L9A70
@@ -16432,9 +16431,9 @@ LA114:  lda     #$03
         dey
 LA123:  iny
         inx
-        lda     $0220,y
+        lda     $220,y
         sta     $1FC0,x
-        cpy     $0220
+        cpy     $220
         bne     LA123
         stx     $1FC0
 LA133:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
@@ -16629,7 +16628,7 @@ LA2FD:  lda     L97AD
         rts
 
 LA303:  ldx     #$00
-        ldy     $0220
+        ldy     $220
         lda     #$2F
         sta     $0221,y
         iny
@@ -16641,23 +16640,23 @@ LA30E:  cpx     L97AD
         iny
         jmp     LA30E
 
-LA31E:  sty     $0220
+LA31E:  sty     $220
         rts
 
-LA322:  ldx     $0220
+LA322:  ldx     $220
         bne     LA328
         rts
 
-LA328:  lda     $0220,x
+LA328:  lda     $220,x
         cmp     #$2F
         beq     LA336
         dex
         bne     LA328
-        stx     $0220
+        stx     $220
         rts
 
 LA336:  dex
-        stx     $0220
+        stx     $220
         rts
 
 LA33B:  lda     L97AD
@@ -16704,7 +16703,7 @@ LA37F:  iny
         cmp     #$2F
         bne     LA38A
         sty     L9B32
-LA38A:  sta     $0220,y
+LA38A:  sta     $220,y
         cpy     $E00A
         bne     LA37F
         ldy     LDFC9
@@ -17275,7 +17274,7 @@ show_copy_file_dialog:
 
         jsr     LB3BF
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         cmp     #$01
         bne     LA965
         jmp     LA9B5
@@ -17307,10 +17306,10 @@ LA981:  lda     #$00
         rts
 
 LA9B5:  ldy     #$01
-        lda     (L0006),y
+        lda     ($06),y
         sta     LD909
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
@@ -17322,10 +17321,10 @@ LA9B5:  ldy     #$01
         rts
 
 LA9E6:  ldy     #$01
-        lda     (L0006),y
+        lda     ($06),y
         sta     LD909
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
@@ -17335,23 +17334,23 @@ LA9E6:  ldy     #$01
         jsr     LBE9A
         jsr     LB3BF
         ldy     #$03
-        lda     (L0006),y
+        lda     ($06),y
         tax
         iny
-        lda     (L0006),y
-        sta     L0006+1
-        stx     L0006
+        lda     ($06),y
+        sta     $06+1
+        stx     $06
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, LAE7E
         addr_call draw_text1, $D402
         jsr     LB3BF
         ldy     #$05
-        lda     (L0006),y
+        lda     ($06),y
         tax
         iny
-        lda     (L0006),y
-        sta     L0006+1
-        stx     L0006
+        lda     ($06),y
+        sta     $06+1
+        stx     $06
         jsr     LBE78
         A2D_RELAY_CALL A2D_SET_POS, LAE82
         lda     #$43
@@ -17408,7 +17407,7 @@ LAACE:  sta     ALTZPOFF
 LAAE1:
         jsr     LB3BF
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         cmp     #$01
         bne     LAAEF
         jmp     LAB38
@@ -17436,10 +17435,10 @@ LAB04:  lda     #$00
         rts
 
 LAB38:  ldy     #$01
-        lda     (L0006),y
+        lda     ($06),y
         sta     LD909
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
@@ -17451,10 +17450,10 @@ LAB38:  ldy     #$01
         rts
 
 LAB69:  ldy     #$01
-        lda     (L0006),y
+        lda     ($06),y
         sta     LD909
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
@@ -17463,12 +17462,12 @@ LAB69:  ldy     #$01
         jsr     LBE8D
         jsr     LB3BF
         ldy     #$03
-        lda     (L0006),y
+        lda     ($06),y
         tax
         iny
-        lda     (L0006),y
-        sta     L0006+1
-        stx     L0006
+        lda     ($06),y
+        sta     $06+1
+        stx     $06
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, LAE7E
         addr_call draw_text1, $D402
@@ -17498,7 +17497,7 @@ LABDD:  jsr     LA567
 LABFA:
         jsr     LB3BF
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         cmp     #$01
         bne     LAC08
         jmp     LAC3D
@@ -17522,18 +17521,18 @@ LAC16:  jsr     LB53A
         rts
 
 LAC3D:  ldy     #$01
-        lda     (L0006),y
+        lda     ($06),y
         sta     LD909
         tax
         iny
-        lda     (L0006),y
-        sta     L0006+1
-        stx     L0006
+        lda     ($06),y
+        sta     $06+1
+        stx     $06
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         sta     LD909
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sta     LD90A
         jsr     LBDDF
         lda     winF
@@ -17543,17 +17542,17 @@ LAC3D:  ldy     #$01
         yax_call draw_dialog_label, str_7_spaces, $01
         jsr     LB3BF
         ldy     #$03
-        lda     (L0006),y
+        lda     ($06),y
         tax
         iny
-        lda     (L0006),y
-        sta     L0006+1
-        stx     L0006
+        lda     ($06),y
+        sta     $06+1
+        stx     $06
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         sta     LD909
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sta     LD90A
         jsr     LBDDF
         lda     #$A5
@@ -17580,7 +17579,7 @@ LACB7:  jsr     LA567
 show_delete_file_dialog:        ; ???
         jsr     LB3BF
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         cmp     #$01
         bne     LACE2
         jmp     LAD2A
@@ -17616,10 +17615,10 @@ LAD20:  axy_call draw_dialog_label, str_delete_ok, $04
         rts
 
 LAD2A:  ldy     #$01
-        lda     (L0006),y
+        lda     ($06),y
         sta     LD909
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
@@ -17636,10 +17635,10 @@ LAD5D:  addr_call draw_text1, str_7_spaces
         rts
 
 LAD6C:  ldy     #$01
-        lda     (L0006),y
+        lda     ($06),y
         sta     LD909
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
@@ -17648,12 +17647,12 @@ LAD6C:  ldy     #$01
         jsr     LBE8D
         jsr     LB3BF
         ldy     #$03
-        lda     (L0006),y
+        lda     ($06),y
         tax
         iny
-        lda     (L0006),y
-        sta     L0006+1
-        stx     L0006
+        lda     ($06),y
+        sta     $06+1
+        stx     $06
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, LAE7E
         addr_call draw_text1, $D402
@@ -17696,7 +17695,7 @@ LAE17:  jsr     LA567
 show_new_folder_dialog:
         jsr     LB3BF
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         cmp     #$80
         bne     LAE42
         jmp     LAE70
@@ -17724,10 +17723,10 @@ LAE70:  lda     #$80
         jsr     LBD75
         jsr     LB3BF
         ldy     #$01
-        lda     (L0006),y
+        lda     ($06),y
         sta     $08
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sta     $09
         ldy     #$00
         lda     ($08),y
@@ -17795,13 +17794,13 @@ LAF16:  jsr     LBEB1
 show_get_info_dialog:
         jsr     LB3BF
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         bmi     LAF34
         jmp     LAFB9
 
 LAF34:  lda     #$00
         sta     LD8E8
-        lda     (L0006),y
+        lda     ($06),y
         lsr     a
         lsr     a
         ror     a
@@ -17812,7 +17811,7 @@ LAF34:  lda     #$00
         addr_call LB723, str_info_title
         jsr     LB3BF
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         and     #$7F
         lsr     a
         ror     a
@@ -17839,7 +17838,7 @@ LAFB9:  lda     winF
         jsr     LB7B9
         jsr     LB3BF
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         sta     LB01E
         tay
         jsr     LB01F
@@ -17850,7 +17849,7 @@ LAFB9:  lda     winF
         cmp     #$02
         bne     LAFF0
         ldy     #$01
-        lda     (L0006),y
+        lda     ($06),y
         beq     LAFE9
         lda     #$A8
         ldx     #$AE
@@ -17861,10 +17860,10 @@ LAFE9:  lda     #$AD
         jmp     LAFF8
 
 LAFF0:  ldy     #$02
-        lda     (L0006),y
+        lda     ($06),y
         tax
         dey
-        lda     (L0006),y
+        lda     ($06),y
 LAFF8:  ldy     LB01E
         jsr     draw_dialog_label
         lda     LB01E
@@ -17898,7 +17897,7 @@ LB01F:  lda     #$A0
 show_lock_dialog:
         jsr     LB3BF
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         cmp     #$01
         bne     LB03A
         jmp     LB068
@@ -17923,10 +17922,10 @@ LB04F:  lda     #$00
         rts
 
 LB068:  ldy     #$01
-        lda     (L0006),y
+        lda     ($06),y
         sta     LD909
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
@@ -17939,10 +17938,10 @@ LB068:  ldy     #$01
         rts
 
 LB0A2:  ldy     #$01
-        lda     (L0006),y
+        lda     ($06),y
         sta     LD909
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
@@ -17951,12 +17950,12 @@ LB0A2:  ldy     #$01
         jsr     LBE8D
         jsr     LB3BF
         ldy     #$03
-        lda     (L0006),y
+        lda     ($06),y
         tax
         iny
-        lda     (L0006),y
-        sta     L0006+1
-        stx     L0006
+        lda     ($06),y
+        sta     $06+1
+        stx     $06
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, LAE7E
         addr_call draw_text1, $D402
@@ -17990,7 +17989,7 @@ LB13A:  jsr     LBEB1
 show_unlock_dialog:
         jsr     LB3BF
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         cmp     #$01
         bne     LB158
         jmp     LB186
@@ -18015,10 +18014,10 @@ LB16D:  lda     #$00
         rts
 
 LB186:  ldy     #$01
-        lda     (L0006),y
+        lda     ($06),y
         sta     LD909
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
@@ -18031,10 +18030,10 @@ LB186:  ldy     #$01
         rts
 
 LB1C0:  ldy     #$01
-        lda     (L0006),y
+        lda     ($06),y
         sta     LD909
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
@@ -18043,12 +18042,12 @@ LB1C0:  ldy     #$01
         jsr     LBE8D
         jsr     LB3BF
         ldy     #$03
-        lda     (L0006),y
+        lda     ($06),y
         tax
         iny
-        lda     (L0006),y
-        sta     L0006+1
-        stx     L0006
+        lda     ($06),y
+        sta     $06+1
+        stx     $06
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, LAE7E
         addr_call draw_text1, $D402
@@ -18082,7 +18081,7 @@ LB258:  jsr     LBEB1
 show_rename_dialog:
         jsr     LB3BF
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         cmp     #$80
         bne     LB276
         jmp     LB2ED
@@ -18108,10 +18107,10 @@ LB27D:  jsr     LBD75
         sta     LD6C3
         jsr     LB3BF
         ldy     #$01
-        lda     (L0006),y
+        lda     ($06),y
         sta     $08
         iny
-        lda     (L0006),y
+        lda     ($06),y
         sta     $09
         ldy     #$00
         lda     ($08),y
@@ -18161,7 +18160,7 @@ LB325:
         A2D_RELAY_CALL A2D_SHOW_CURSOR
         jsr     LB3BF
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         pha
         bmi     LB357
         tax
@@ -18213,9 +18212,9 @@ LB3A3:  .addr   str_insert_system_disk,str_1_space
         .addr   str_save_selector_list,str_on_system_disk
 
 LB3BF:  lda     LA51D
-        sta     L0006
+        sta     $06
         lda     LA51E
-        sta     L0006+1
+        sta     $06+1
         rts
 LB3CA:  bit     LB3E6
         bpl     LB3D7
@@ -18370,19 +18369,19 @@ LB55F:  A2D_RELAY_CALL A2D_CREATE_WINDOW, winF
         rts
 
 draw_dialog_label:
-        stx     L0006+1
-        sta     L0006
+        stx     $06+1
+        sta     $06
         tya
         bmi     LB59A
         jmp     LB5CC
 
 LB59A:  tya
         pha
-        lda     L0006
+        lda     $06
         clc
         adc     #$01
         sta     $08
-        lda     L0006+1
+        lda     $06+1
         adc     #$00
         sta     $09
         jsr     LBD7B
@@ -18411,8 +18410,8 @@ LB5CC:  dey
         adc     #$00
         sta     $D6C6
         A2D_RELAY_CALL A2D_SET_POS, LD6C3
-        lda     L0006
-        ldx     L0006+1
+        lda     $06
+        ldx     $06+1
         jsr     draw_text1
         ldx     LD6C3
         lda     #$28
@@ -18485,15 +18484,15 @@ LB6FB:  jsr     LBEA7
         rts
 
 draw_text1:
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         jsr     LBD7B
         beq     LB722
         sta     $08
-        inc     L0006
+        inc     $06
         bne     LB719
-        inc     L0006+1
-LB719:  A2D_RELAY_CALL A2D_DRAW_TEXT, $0006
+        inc     $06+1
+LB719:  A2D_RELAY_CALL A2D_DRAW_TEXT, $6
 LB722:  rts
 
 ;;; ==================================================
@@ -18534,11 +18533,11 @@ LB722:  rts
 ;;; ==================================================
 
 LB76B:  .byte   0
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         A2D_RELAY_CALL A2D_SET_POS, LD6BB
-        lda     L0006
-        ldx     L0006+1
+        lda     $06
+        ldx     $06+1
         jsr     draw_text1
         rts
 
@@ -18703,13 +18702,13 @@ LB8F3:  .byte   0
         rts
 
 LB8F5:  jsr     LBD3B
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         lda     $D6B5
         sta     $08
         lda     $D6B6
         sta     $09
-        A2D_RELAY_CALL A2D_SET_POS, $0006
+        A2D_RELAY_CALL A2D_SET_POS, $6
         A2D_RELAY_CALL A2D_SET_BOX, LD6C7
         bit     LD8EB
         bpl     LB92D
@@ -18721,12 +18720,12 @@ LB92D:  A2D_RELAY_CALL A2D_SET_TEXT_MASK, LAE6D
         lda     #$FF
         sta     LD8EB
 LB93B:  lda     #$EF
-        sta     L0006
+        sta     $06
         lda     #$D8
-        sta     L0006+1
+        sta     $06+1
         lda     LD8EE
         sta     $08
-        A2D_RELAY_CALL A2D_DRAW_TEXT, $0006
+        A2D_RELAY_CALL A2D_DRAW_TEXT, $6
         A2D_RELAY_CALL A2D_SET_TEXT_MASK, LAE6D
         lda     winF
         jsr     LB7B9
@@ -18757,12 +18756,12 @@ LB9B8:  A2D_RELAY_CALL A2D_MAP_COORDS, input_params
         rts
 
 LB9D8:  jsr     LBD3B
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         lda     $D20D
-        cmp     L0006
+        cmp     $06
         lda     $D20E
-        sbc     L0006+1
+        sbc     $06+1
         bcs     LB9EE
         jmp     LBA83
 
@@ -18775,12 +18774,12 @@ LB9EE:  jsr     LBD3B
         sta     $D484,x
         inc     $D484
         lda     #$84
-        sta     L0006
+        sta     $06
         lda     #$D4
-        sta     L0006+1
+        sta     $06+1
         lda     $D484
         sta     $08
-LBA10:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $0006
+LBA10:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $6
         lda     $09
         clc
         adc     LBB09
@@ -18834,12 +18833,12 @@ LBA7C:  dey
         jmp     LBB05
 
 LBA83:  lda     #$43
-        sta     L0006
+        sta     $06
         lda     #$D4
-        sta     L0006+1
+        sta     $06+1
         lda     $D443
         sta     $08
-LBA90:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $0006
+LBA90:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $6
         lda     $09
         clc
         adc     LD6B3
@@ -18911,13 +18910,13 @@ LBB1A:  lda     LBB62
         sta     str_1_char+1
         jsr     LBD3B
         inc     $D443
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         lda     $D6B5
         sta     $08
         lda     $D6B6
         sta     $09
-        A2D_RELAY_CALL A2D_SET_POS, $0006
+        A2D_RELAY_CALL A2D_SET_POS, $6
         A2D_RELAY_CALL A2D_SET_BOX, LD6C7
         addr_call draw_text1, str_1_char
         addr_call draw_text1, $D484
@@ -18932,13 +18931,13 @@ LBB63:  lda     $D443
 
 LBB69:  dec     $D443
         jsr     LBD3B
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         lda     $D6B5
         sta     $08
         lda     $D6B6
         sta     $09
-        A2D_RELAY_CALL A2D_SET_POS, $0006
+        A2D_RELAY_CALL A2D_SET_POS, $6
         A2D_RELAY_CALL A2D_SET_BOX, LD6C7
         addr_call draw_text1, $D484
         addr_call draw_text1, str_2_spaces
@@ -18964,13 +18963,13 @@ LBBBC:  ldx     $D443
         dec     $D443
         inc     $D484
         jsr     LBD3B
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         lda     $D6B5
         sta     $08
         lda     $D6B6
         sta     $09
-        A2D_RELAY_CALL A2D_SET_POS, $0006
+        A2D_RELAY_CALL A2D_SET_POS, $6
         A2D_RELAY_CALL A2D_SET_BOX, LD6C7
         addr_call draw_text1, $D484
         addr_call draw_text1, str_2_spaces
@@ -19080,16 +19079,16 @@ LBCDF:  lda     $D484,x
         jsr     LB961
         rts
 
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
         clc
         adc     $D443
         pha
         tax
-LBD11:  lda     (L0006),y
+LBD11:  lda     ($06),y
         sta     $D443,x
         dey
         dex
@@ -19113,9 +19112,9 @@ LBD33:  rts
         rts
 
 LBD3B:  lda     #$44
-        sta     L0006
+        sta     $06
         lda     #$D4
-        sta     L0006+1
+        sta     $06+1
         lda     $D443
         sta     $08
         bne     LBD51
@@ -19123,7 +19122,7 @@ LBD3B:  lda     #$44
         ldx     $D6B4
         rts
 
-LBD51:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $0006
+LBD51:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $6
         lda     $09
         clc
         adc     LD6B3
@@ -19167,7 +19166,7 @@ LBD95:  lda     LBDB0,x
 LBD9F:  sta     RAMRDON
         sta     RAMWRTON
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         sta     RAMRDOFF
         sta     RAMWRTOFF
         rts
@@ -19270,9 +19269,9 @@ LBE60:  .byte   0
 LBE61:  .byte   0
 LBE62:  .byte   0
 LBE63:  ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
-LBE68:  lda     (L0006),y
+LBE68:  lda     ($06),y
         sta     $D402,y
         dey
         bpl     LBE68
@@ -19282,9 +19281,9 @@ LBE68:  lda     (L0006),y
         rts
 
 LBE78:  ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
-LBE7D:  lda     (L0006),y
+LBE7D:  lda     ($06),y
         sta     $D443,y
         dey
         bpl     LBE7D
@@ -19322,8 +19321,6 @@ LBEB1:  A2D_RELAY_CALL A2D_QUERY_SCREEN, state2
 ;;; Appears to be init sequence - machine identification, etc
 
 .proc desktop_800
-L0006           := $0006
-
 L4AFD           := desktop_main::L4AFD
 L4862           := desktop_main::L4862
 L4B3A           := desktop_main::L4B3A
@@ -19430,9 +19427,9 @@ found_ram:
         A2D_RELAY_CALL A2D_SHOW_CURSOR
         jsr     push_zp_addrs
         lda     #$63
-        sta     L0006
+        sta     $06
         lda     #$EC
-        sta     L0006+1
+        sta     $06+1
         ldx     #$01
 L08D5:  cpx     #$7F
         bne     L08DF
@@ -19443,23 +19440,23 @@ L08DF:  txa
         pha
         asl     a
         tax
-        lda     L0006
+        lda     $06
         sta     file_address_table,x
-        lda     L0006+1
+        lda     $06+1
         sta     file_address_table+1,x
         pla
         pha
         ldy     #$00
-        sta     (L0006),y
+        sta     ($06),y
         iny
         lda     #$00
-        sta     (L0006),y
-        lda     L0006
+        sta     ($06),y
+        lda     $06
         clc
         adc     #$1B
-        sta     L0006
+        sta     $06
         bcc     L0903
-        inc     L0006+1
+        inc     $06+1
 L0903:  pla
         tax
         inx
@@ -19488,27 +19485,27 @@ L092F:  lda     #$00
         sta     $EBFB
         sta     buf3
         jsr     L86E3
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         ldy     #$02
         lda     #$70
-        sta     (L0006),y
+        sta     ($06),y
         ldy     #$07
         lda     #<trash_icon
-        sta     (L0006),y
+        sta     ($06),y
         iny
         lda     #>trash_icon
-        sta     (L0006),y
+        sta     ($06),y
         iny
         ldx     #$00
 L0960:  lda     L0927,x
-        sta     (L0006),y
+        sta     ($06),y
         iny
         inx
         cpx     L0927
         bne     L0960
         lda     L0927,x
-        sta     (L0006),y
+        sta     ($06),y
         lda     DEVCNT
         sta     L0A01
         inc     L0A01
@@ -19542,21 +19539,21 @@ L09A2:  stx     L09B5
         .byte   $AD
 L09B5:  .byte   0
         .byte   $BF
-        sta     L0006+1
+        sta     $06+1
         lda     #$00
-        sta     L0006
+        sta     $06
         ldy     #$07
-        lda     (L0006),y
+        lda     ($06),y
         bne     L09F5
         ldy     #$FB
-        lda     (L0006),y
+        lda     ($06),y
         and     #$7F
         bne     L09F5
         ldy     #$FF
-        lda     (L0006),y
+        lda     ($06),y
         clc
         adc     #$03
-        sta     L0006
+        sta     $06
         jsr     L09F9
         .byte   0
         .byte   $FC
@@ -19575,7 +19572,7 @@ L09E6:  lda     DEVLST+1,x
 L09F5:  jmp     L0A03
 
 L09F8:  .byte   0
-L09F9:  jmp     (L0006)
+L09F9:  jmp     ($06)
 
         .byte   $03
         .byte   0
@@ -19603,34 +19600,34 @@ L0A3B:  lda     L0A92
         cmp     L0A93
         beq     L0A8F
         jsr     L0A95
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         lda     L0A92
         jsr     L0AA2
         sta     $08
         stx     $09
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
-L0A59:  lda     (L0006),y
+L0A59:  lda     ($06),y
         sta     ($08),y
         dey
         bpl     L0A59
         ldy     #$0F
-        lda     (L0006),y
+        lda     ($06),y
         sta     ($08),y
         lda     L0A92
         jsr     L0ABC
-        sta     L0006
-        stx     L0006+1
+        sta     $06
+        stx     $06+1
         lda     L0A92
         jsr     L0AAF
         sta     $08
         stx     $09
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         tay
-L0A7F:  lda     (L0006),y
+L0A7F:  lda     ($06),y
         sta     ($08),y
         dey
         bpl     L0A7F
@@ -19800,18 +19797,18 @@ L0BC3:  MLI_RELAY_CALL OPEN, open_params2
         lda     $1423
         sta     L0D06
         lda     #$2B
-        sta     L0006
+        sta     $06
         lda     #$14
-        sta     L0006+1
+        sta     $06+1
 L0C0C:  ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         and     #$0F
         bne     L0C17
         jmp     L0C81
 
 L0C17:  inc     L0D04
         ldy     #$10
-        lda     (L0006),y
+        lda     ($06),y
         cmp     #$F1
         beq     L0C25
         jmp     L0C81
@@ -19841,11 +19838,11 @@ L0C25:  inc     L0D05
         adc     $09
         sta     $09
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         and     #$0F
         sta     ($08),y
         tay
-L0C60:  lda     (L0006),y
+L0C60:  lda     ($06),y
         sta     ($08),y
         dey
         bne     L0C60
@@ -19878,20 +19875,20 @@ L0C96:  inc     L0D08
         bne     L0CBA
         MLI_RELAY_CALL READ, read_params2
         lda     #$04
-        sta     L0006
+        sta     $06
         lda     #$14
-        sta     L0006+1
+        sta     $06+1
         lda     #$00
         sta     L0D08
         jmp     L0C0C
 
-L0CBA:  lda     L0006
+L0CBA:  lda     $06
         clc
         adc     L0D06
-        sta     L0006
-        lda     L0006+1
+        sta     $06
+        lda     $06+1
         adc     #$00
-        sta     L0006+1
+        sta     $06+1
         jmp     L0C0C
 
 L0CCB:  MLI_RELAY_CALL CLOSE, close_params2
@@ -20023,13 +20020,13 @@ L0DA2:  addr_jump L0DAD, str_ramcard_slot_x
 
 L0DA9:  lda     #<str_unidisk_xy
         ldx     #>str_unidisk_xy
-L0DAD:  sta     L0006
-        stx     L0006+1
+L0DAD:  sta     $06
+        stx     $06+1
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         sta     L0DBE
 L0DB8:  iny
-        lda     (L0006),y
+        lda     ($06),y
         sta     ($08),y
         .byte   $C0
 L0DBE:  .byte   0
