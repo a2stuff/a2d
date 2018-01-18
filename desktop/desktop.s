@@ -2881,7 +2881,7 @@ LA938:  lda     set_state_params::top
 
 
         ;; 5.25" Floppy Disk
-floppy_140_icon:
+floppy140_icon:
         .addr   floppy140_pixels; address
         .word   4               ; stride
         .word   0               ; left
@@ -2931,7 +2931,7 @@ ramdisk_pixels:
         .byte   px(%1010101),px(%0101010),px(%1010101),px(%1111111),px(%1111111),px(%1111110)
 
         ;; 3.5" Floppy Disk
-floppy_800_icon:
+floppy800_icon:
         .addr   floppy800_pixels; address
         .word   3               ; stride
         .word   0               ; left
@@ -4483,7 +4483,7 @@ id_byte_2:  .byte   $EA             ; ROM FBC0 ($EA = IIe, $E0 = IIe enh/IIgs, $
 machine_type:
         .byte   $00             ; Set to: $96 = IIe, $FA = IIc, $FD = IIgs
 
-        .byte   $00
+LD2AC:  .byte   $00
 
 ;;; Cursors (bitmap - 2x12 bytes, mask - 2x12 bytes, hotspot - 2 bytes)
 
@@ -5271,13 +5271,11 @@ str_k_available:
 str_6_spaces:
         PASCAL_STRING "      "
 
-LEBE3:  .byte   $00,$00,$00,$00,$00,$00,$00
-        .byte   $00
+LEBE3:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 LEBEB:  DEFINE_POINT 0, 0
 LEBEF:  DEFINE_POINT 0, 0
-        .byte   $00,$00,$00
-        .byte   $00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00
 
         ;; Used by DESKTOP_COPY_*_BUF
 table1: .addr   $1B00,$1B80,$1C00,$1C80,$1D00,$1D80,$1E00,$1E80,$1F00
@@ -6104,7 +6102,7 @@ L445D:  jsr     L6D2B
         sta     is_file_selected
         lda     LE22F
         sta     selected_file_index
-L44A6:  A2D_RELAY_CALL A2D_RAISE_WINDOW, $D20E
+L44A6:  A2D_RELAY_CALL A2D_RAISE_WINDOW, query_target_params_id
         lda     $D20E
         sta     desktop_winid
         sta     bufnum
@@ -6556,8 +6554,8 @@ L48C2:  lda     $E196,x
         bpl     L48C2
         rts
 
-L48CC:  sta     $D2AC
-        yax_call LA500, $D2AC, $0C
+L48CC:  sta     LD2AC
+        yax_call LA500, LD2AC, $0C
         rts
 
         lda     #$88
@@ -8422,7 +8420,7 @@ L594A:  ldy     L599E
         lda     #$00
         sta     $E1A0,y
         lda     DEVLST,y
-        jsr     L89B6
+        jsr     get_device_info
         cmp     #$57
         bne     L5967
         lda     #$F9
@@ -8556,7 +8554,7 @@ L5A7F:  lda     buf3len
         pla
         tay
         lda     DEVLST,y
-        jsr     L89B6
+        jsr     get_device_info
         bit     L5AD0
         bmi     L5AA9
         and     #$FF
@@ -13810,14 +13808,15 @@ unit:   .byte   0
 buffer: .addr   $800
 .endproc
 
-L89B6:  sta     L8AC3
-        sty     L8AC4
+.proc get_device_info
+        sta     device_id
+        sty     device_num
         and     #$F0
         sta     on_line_params::unit
         MLI_RELAY_CALL ON_LINE, on_line_params
         beq     L89DD
 L89CC:  pha
-        ldy     L8AC4
+        ldy     device_num
         lda     #$00
         sta     $E1A0,y
         dec     buf3len
@@ -13833,7 +13832,7 @@ L89DD:  lda     L0800
 
 L89EA:  jsr     push_zp_addrs
         jsr     DESKTOP_FIND_SPACE
-        ldy     L8AC4
+        ldy     device_num
         sta     $E1A0,y
         jsr     L86E3
         sta     $06
@@ -13867,64 +13866,78 @@ L8A22:  lda     $0801,x
         clc
         adc     #$02
         sta     ($06),y
-        lda     L8AC3
-        cmp     #$3E
-        beq     L8A59
-        and     #$0F
-        cmp     #$04
-        bne     L8A75
-        lda     L8AC3
-        and     #$70
+
+        lda     device_id
+        cmp     #$3E            ; ??? Special case? Maybe RamWorks?
+        beq     use_ramdisk_icon
+
+        and     #$0F            ; lower nibble
+        cmp     #4              ; 0 = Disk II, 4 = ProFile, $F = /RAM
+        bne     use_floppy_icon
+
+        ;; BUG: This defaults SmartPort hard drives to use floppy icons.
+        ;; https://github.com/inexorabletash/a2d/issues/6
+
+        ;; Either ProFile or a "Slinky"/RamFactor-style Disk
+        lda     device_id       ; bit 7 = drive (0=1, 1=2); 5-7 = slot
+        and     #%01110000      ; mask off slot
         lsr     a
         lsr     a
         lsr     a
         lsr     a
         ora     #$C0
-        sta     L8A54
-        L8A54 := *+2
+        sta     load_CxFB
+        load_CxFB := *+2
         lda     $C7FB           ; self-modified $Cx7B
-        and     #$01
-        beq     L8A67
+        and     #$01            ; $Cx7B bit 1 = ProFile, apparently???
+        beq     use_profile_icon
+        ;; fall through...
 
-L8A59:  ldy     #7
+use_ramdisk_icon:
+        ldy     #7
         lda     #<desktop_aux::ramdisk_icon
         sta     ($06),y
         iny
         lda     #>desktop_aux::ramdisk_icon
         sta     ($06),y
-        jmp     L8A96
+        jmp     selected_device_icon
 
-L8A67:  ldy     #7
+use_profile_icon:
+        ldy     #7
         lda     #<desktop_aux::profile_icon
         sta     ($06),y
         iny
         lda     #>desktop_aux::profile_icon
         sta     ($06),y
-        jmp     L8A96
+        jmp     selected_device_icon
 
-L8A75:  cmp     #$0B
-        bne     L8A87
-        ldy     #$07
-        lda     #<desktop_aux::floppy_800_icon
+use_floppy_icon:
+        cmp     #$B             ; SmartPort device ???
+        bne     use_floppy140_icon
+        ldy     #7
+        lda     #<desktop_aux::floppy800_icon
         sta     ($06),y
         iny
-        lda     #>desktop_aux::floppy_800_icon
+        lda     #>desktop_aux::floppy800_icon
         sta     ($06),y
-        jmp     L8A96
+        jmp     selected_device_icon
 
-L8A87:  cmp     #$00
-        bne     L8A67
-        ldy     #$07
-        lda     #<desktop_aux::floppy_140_icon
+use_floppy140_icon:
+        cmp     #0               ; 0 = Disk II
+        bne     use_profile_icon ; last chance
+        ldy     #7
+        lda     #<desktop_aux::floppy140_icon
         sta     ($06),y
         iny
-        lda     #>desktop_aux::floppy_140_icon
+        lda     #>desktop_aux::floppy140_icon
         sta     ($06),y
-L8A96:  ldy     #$02
+
+selected_device_icon:
+        ldy     #$02
         lda     #$00
         sta     ($06),y
-        inc     L8AC4
-        lda     L8AC4
+        inc     device_num
+        lda     device_num
         asl     a
         asl     a
         tax
@@ -13943,19 +13956,23 @@ L8AA7:  lda     L8AC5,x
         jsr     pop_zp_addrs
         lda     #$00
         rts
+.endproc
 
-L8AC3:  .byte   $00
-L8AC4:  .byte   $00
+device_id:      .byte   0
+device_num:     .byte   0
+
 L8AC5:  .byte   $00,$00,$00,$00,$EA,$01,$10,$00
         .byte   $EA,$01,$2D,$00,$EA,$01,$4B,$00
         .byte   $EA,$01,$67,$00,$EA,$01,$83,$00
         .byte   $90,$01,$A0,$00,$36,$01,$A0,$00
         .byte   $DC,$00,$A0,$00,$82,$00,$A0,$00
         .byte   $28,$00,$A0,$00
-L8AF1:  .byte   $01,$24
 
+.proc get_prefix_params
+params: .byte   1
+buffer: .addr   $4824
+.endproc
 
-        pha
 L8AF4:  ldx     buf3len
         dex
 L8AF8:  cmp     buf3,x
@@ -19436,23 +19453,8 @@ LBEB1:  A2D_RELAY_CALL A2D_QUERY_SCREEN, state2
 ;;; Appears to be init sequence - machine identification, etc
 
 .proc desktop_800
-L4AFD           := desktop_main::L4AFD
-L4862           := desktop_main::L4862
-L4B3A           := desktop_main::L4B3A
-L66A2           := desktop_main::L66A2
-L670C           := desktop_main::L670C
-L678A           := desktop_main::L678A
-L86A7           := desktop_main::L86A7
-L86C1           := desktop_main::L86C1
-L86E3           := desktop_main::L86E3
-measure_text1   := desktop_main::measure_text1
-L87BA           := desktop_main::L87BA
-push_zp_addrs   := desktop_main::push_zp_addrs
-pop_zp_addrs    := desktop_main::pop_zp_addrs
-L89B6           := desktop_main::L89B6
 
 DESKTOP_DEVICELIST := $E196
-
 
         .org $800
 
@@ -19540,7 +19542,7 @@ found_ram:
         A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, $D2A7
         A2D_RELAY_CALL A2D_SET_CURSOR, watch_cursor
         A2D_RELAY_CALL A2D_SHOW_CURSOR
-        jsr     push_zp_addrs
+        jsr     desktop_main::push_zp_addrs
         lda     #$63
         sta     $06
         lda     #$EC
@@ -19548,7 +19550,7 @@ found_ram:
         ldx     #$01
 L08D5:  cpx     #$7F
         bne     L08DF
-        jsr     pop_zp_addrs
+        jsr     desktop_main::pop_zp_addrs
         jmp     L0909
 
 L08DF:  txa
@@ -19599,7 +19601,7 @@ L092F:  lda     #$00
         jsr     DESKTOP_FIND_SPACE
         sta     $EBFB
         sta     buf3
-        jsr     L86E3
+        jsr     desktop_main::L86E3
         sta     $06
         stx     $06+1
         ldy     #$02
@@ -19698,7 +19700,7 @@ L0A01:  .byte   0
 L0A02:  .byte   0
 
 L0A03:  A2D_RELAY_CALL $29
-        MLI_RELAY_CALL GET_PREFIX, desktop_main::L8AF1 ; ???
+        MLI_RELAY_CALL GET_PREFIX, desktop_main::get_prefix_params
         A2D_RELAY_CALL $29
         lda     #$00
         sta     L0A92
@@ -19756,7 +19758,7 @@ L0A92:  .byte   0
 L0A93:  .byte   0
         .byte   0
 
-L0A95:  jsr     L86A7
+L0A95:  jsr     desktop_main::L86A7
         clc
         adc     #$02
         tay
@@ -19766,7 +19768,7 @@ L0A95:  jsr     L86A7
         tya
         rts
 
-L0AA2:  jsr     L86A7
+L0AA2:  jsr     desktop_main::L86A7
         clc
         adc     #$1E
         tay
@@ -19776,7 +19778,7 @@ L0AA2:  jsr     L86A7
         tya
         rts
 
-L0AAF:  jsr     L86C1
+L0AAF:  jsr     desktop_main::L86C1
         clc
         adc     #$9E
         tay
@@ -19786,7 +19788,7 @@ L0AAF:  jsr     L86C1
         tya
         rts
 
-L0ABC:  jsr     L86C1
+L0ABC:  jsr     desktop_main::L86C1
         clc
         adc     #$82
         tay
@@ -19826,24 +19828,24 @@ L0AE7:  MLI_RELAY_CALL OPEN, open_params
         MLI_RELAY_CALL CLOSE, close_params
         rts
 
-L0B09:  addr_call measure_text1, str_6_spaces
+L0B09:  addr_call desktop_main::measure_text1, str_6_spaces
         sta     L0BA0
         stx     L0BA1
-        addr_call measure_text1, str_items
+        addr_call desktop_main::measure_text1, str_items
         clc
         adc     L0BA0
         sta     $EBF3
         txa
         adc     L0BA1
         sta     $EBF4
-        addr_call measure_text1, str_k_in_disk
+        addr_call desktop_main::measure_text1, str_k_in_disk
         clc
         adc     L0BA0
         sta     $EBF5
         txa
         adc     L0BA1
         sta     $EBF6
-        addr_call measure_text1, str_k_available
+        addr_call desktop_main::measure_text1, str_k_available
         clc
         adc     L0BA0
         sta     $EBF7
@@ -19964,7 +19966,7 @@ L0C60:  lda     ($06),y
         bne     L0C60
         lda     $08
         ldx     $09
-        jsr     L87BA
+        jsr     desktop_main::L87BA
         lda     ($08),y
         tay
 L0C71:  lda     ($08),y
@@ -20081,7 +20083,7 @@ L0D12:  lda     L0E33
         inc     buf3len
         inc     LDD9E
         lda     DEVLST,y
-        jsr     L89B6
+        jsr     desktop_main::get_device_info
         sta     L0E34
         A2D_RELAY_CALL $29
         pla
@@ -20291,7 +20293,7 @@ L0EB0:  .addr   s00,s01,s02,s03,s04,s05,s06
 
 .proc get_file_info_params2
 params: .byte   $A
-path:   .addr   L4862
+path:   .addr   desktop_main::L4862
 access: .byte   0
 type:   .byte   0
 auxtype:.word   0
@@ -20306,26 +20308,26 @@ ctime:  .word   0
 
 .proc get_prefix_params
 params: .byte   1
-buffer: .addr   L4862
+buffer: .addr   desktop_main::L4862
 .endproc
 
 L0ED4:  PASCAL_STRING "System/Start"
 
 L0EE1:  lda     #$00
         sta     desktop_main::L4861
-        jsr     L4AFD
+        jsr     desktop_main::L4AFD
         cmp     #$80
         beq     L0EFE
         MLI_RELAY_CALL GET_PREFIX, get_prefix_params
         bne     L0F34
-        dec     L4862
+        dec     desktop_main::L4862
         jmp     L0F05
 
 L0EFE:  lda     #$62
         ldx     #$48
-        jsr     L4B3A
-L0F05:  ldx     L4862
-L0F08:  lda     L4862,x
+        jsr     desktop_main::L4B3A
+L0F05:  ldx     desktop_main::L4862
+L0F08:  lda     desktop_main::L4862,x
         cmp     #$2F
         beq     L0F12
         dex
@@ -20334,10 +20336,10 @@ L0F12:  ldy     #$00
 L0F14:  inx
         iny
         lda     L0ED4,y
-        sta     L4862,x
+        sta     desktop_main::L4862,x
         cpy     L0ED4
         bne     L0F14
-        stx     L4862
+        stx     desktop_main::L4862
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params2
         bne     L0F34
         lda     #$80
@@ -20347,9 +20349,9 @@ L0F34:  A2D_RELAY_CALL $29
         A2D_RELAY_CALL A2D_SET_CURSOR, pointer_cursor
         lda     #$00
         sta     $EC25
-        jsr     L66A2
-        jsr     L678A
-        jsr     L670C
+        jsr     desktop_main::L66A2
+        jsr     desktop_main::L678A
+        jsr     desktop_main::L670C
         jmp     A2D
 
         ;; Pad out to $1000
