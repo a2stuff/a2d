@@ -1,4 +1,4 @@
-       .setcpu "6502"
+        .setcpu "6502"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
@@ -5288,6 +5288,7 @@ LEC26:
         .res    64, 0
         .word   500, 160
 
+        ;; Pad to $ED00
         .res    $ED00 - *, 0
         .assert * = $ED00, error, "Segment length mismatch"
 
@@ -5633,7 +5634,9 @@ app_mask:
         .byte   px(%0000000),px(%0000000),px(%0011000),px(%0000000),px(%0000000)
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
 
-        .res    70, 0
+        ;; Pad to $10000
+        .res $10000 - *, 0
+        .assert * = $10000, error, "Segment length mismatch"
 
 ;;; ==================================================
 ;;; Segment loaded into MAIN $4000-$BEFF
