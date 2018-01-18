@@ -15417,8 +15417,10 @@ L972E:  .res    5, 0
 
         .res    4, 0
 
-L9737:  .byte   $01
-L9738:  .byte   $00
+.proc close_params5
+params: .byte   1
+ref_num:.byte   0
+.endproc
 
 .proc close_params3
 params: .byte   1
@@ -15437,23 +15439,39 @@ buffer: .addr   $0D00
 ref_num:.byte   0
 .endproc
 
-L9744:  .byte   $03,$C0,$1F,$00,$11
-L9749:  .byte   $00
+.proc open_params5
+params: .byte   3
+path:   .addr   $1FC0
+buffer: .addr   $1100
+ref_num:.byte   0
+.endproc
 
-L974A:  .byte   $04
-L974B:  .byte   $00,$00,$15
-L974E:  .byte   $C0
-L974F:  .byte   $0A
-L9750:  .byte   $00
-L9751:  .byte   $00
+.proc read_params6
+params: .byte   4
+ref_num:.byte   0
+buffer: .addr   $1500
+request:.word   $AC0
+trans:  .word   0
+.endproc
 
-L9752:  .byte   $04
-L9753:  .byte   $00,$00,$15
-L9756:  .byte   $C0
-L9757:  .byte   $0A,$00,$00
+.proc write_params
+params: .byte   4
+ref_num:.byte   0
+buffer: .addr   $1500
+request:.word   $AC0
+trans:  .word   0
+.endproc
 
-L975A:  .byte   $07,$C0,$1F,$C3,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00
+.proc create_params3
+params: .byte   7
+path:   .addr   $1FC0
+access: .byte   $C3
+type:   .byte   0
+auxtype:.word   0
+storage:.byte   0
+cdate:  .word   0
+ctime:  .word   0
+.endproc
 
 .proc create_params2
 params: .byte   7
@@ -15512,12 +15530,18 @@ ref_num:.byte   0
 position:       .faraddr        0
 .endproc
 
-L97A4:  .byte   2
-L97A5:  .byte   $00
-L97A6:  .byte   $00
-L97A7:  .byte   $00
-L97A8:  .byte   $00
-L97A9:  .byte   $02,$00,$00,$08
+.proc mark_params2
+params: .byte   2
+ref_num:.byte   0
+position:       .faraddr       0
+.endproc
+
+.proc on_line_params2
+params: .byte   2
+unit_num:.byte  0
+buffer: .addr    $800
+.endproc
+
 L97AD:  .byte   $00
 L97AE:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00
@@ -16068,9 +16092,9 @@ L9CDA:  jsr     LA2F1
         sta     mark_params::position
         sta     mark_params::position+1
         sta     mark_params::position+2
-        sta     L97A6
-        sta     L97A7
-        sta     L97A8
+        sta     mark_params2::position
+        sta     mark_params2::position+1
+        sta     mark_params2::position+2
         jsr     L9D62
         jsr     L9D74
         jsr     L9D81
@@ -16086,7 +16110,7 @@ L9D0C:  jsr     L9DA9
 L9D17:  jsr     L9D81
         bne     L9D17
         jsr     L9D9C
-        yax_call JT_MLI_RELAY, L97A4, SET_MARK
+        yax_call JT_MLI_RELAY, mark_params2, SET_MARK
 L9D28:  bit     L9E18
         bmi     L9D51
         jsr     L9DE8
@@ -16116,12 +16140,12 @@ L9D62:  yax_call JT_MLI_RELAY, open_params4, OPEN
 L9D73:  rts
 
 L9D74:  lda     open_params4::ref_num
-        sta     L974B
-        sta     L9738
+        sta     read_params6::ref_num
+        sta     close_params5::ref_num
         sta     mark_params::ref_num
         rts
 
-L9D81:  yax_call JT_MLI_RELAY, L9744, OPEN
+L9D81:  yax_call JT_MLI_RELAY, open_params5, OPEN
         beq     L9D9B
         cmp     #$45
         beq     L9D96
@@ -16132,57 +16156,57 @@ L9D96:  jsr     LA497
         lda     #$45
 L9D9B:  rts
 
-L9D9C:  lda     L9749
-        sta     L9753
+L9D9C:  lda     open_params5::ref_num
+        sta     write_params::ref_num
         sta     close_params3::ref_num
-        sta     L97A5
+        sta     mark_params2::ref_num
         rts
 
-L9DA9:  lda     #$C0
-        sta     L974E
-        lda     #$0A
-        sta     L974F
-L9DB3:  yax_call JT_MLI_RELAY, L974A, READ
+L9DA9:  lda     #<$0AC0
+        sta     read_params6::request
+        lda     #>$0AC0
+        sta     read_params6::request+1
+L9DB3:  yax_call JT_MLI_RELAY, read_params6, READ
         beq     L9DC8
         cmp     #$4C
         beq     L9DD9
         jsr     LA49B
         jmp     L9DB3
 
-L9DC8:  lda     L9750
-        sta     L9756
-        lda     L9751
-        sta     L9757
-        ora     L9750
+L9DC8:  lda     read_params6::trans
+        sta     write_params::request
+        lda     read_params6::trans+1
+        sta     write_params::request+1
+        ora     read_params6::trans
         bne     L9DDE
 L9DD9:  lda     #$FF
         sta     L9E18
 L9DDE:  yax_call JT_MLI_RELAY, mark_params, GET_MARK
         rts
 
-L9DE8:  yax_call JT_MLI_RELAY, L9752, WRITE
+L9DE8:  yax_call JT_MLI_RELAY, write_params, WRITE
         beq     L9DF9
         jsr     LA497
         jmp     L9DE8
 
-L9DF9:  yax_call JT_MLI_RELAY, L97A4, GET_MARK
+L9DF9:  yax_call JT_MLI_RELAY, mark_params2, GET_MARK
         rts
 
 L9E03:  yax_call JT_MLI_RELAY, close_params3, CLOSE
         rts
 
-L9E0D:  yax_call JT_MLI_RELAY, L9737, CLOSE
+L9E0D:  yax_call JT_MLI_RELAY, close_params5, CLOSE
         rts
 
 L9E17:  .byte   0
 L9E18:  .byte   0
 L9E19:  ldx     #$07
 L9E1B:  lda     file_info_params2,x
-        sta     L975A,x
+        sta     create_params3,x
         dex
         cpx     #$03
         bne     L9E1B
-L9E26:  yax_call JT_MLI_RELAY, L975A, CREATE
+L9E26:  yax_call JT_MLI_RELAY, create_params3, CREATE
         beq     L9E6F
         cmp     #$47
         bne     L9E69
@@ -16854,12 +16878,12 @@ LA426:  jsr     LA46D
         lda     file_info_params2::type
         cmp     #$0F
         beq     LA46C
-        yax_call JT_MLI_RELAY, L9744, OPEN
+        yax_call JT_MLI_RELAY, open_params5, OPEN
         beq     LA449
         jsr     LA497
         jmp     LA426
 
-LA449:  lda     L9749
+LA449:  lda     open_params5::ref_num
         sta     set_eof_params::ref_num
         sta     close_params3::ref_num
 LA452:  yax_call JT_MLI_RELAY, set_eof_params, SET_EOF
@@ -16915,7 +16939,7 @@ LA4BA:  jsr     L4030
 LA4C2:  jmp     LA39F
 
 LA4C5:  .byte   0
-LA4C6:  yax_call JT_MLI_RELAY, L97A9, ON_LINE
+LA4C6:  yax_call JT_MLI_RELAY, on_line_params2, ON_LINE
         rts
 
         .res    48, 0
