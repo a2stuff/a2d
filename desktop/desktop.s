@@ -15468,15 +15468,23 @@ ctime:  .word   0
 
         .byte   $00,$00
 
-file_info_params2:  .byte   $0A,$20,$02
-L9777:  .byte   $00
-L9778:  .byte   $00,$00,$00
-L977B:  .byte   $00
-L977C:  .byte   $00
-L977D:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00
+.proc file_info_params2
+params: .byte   $A
+path:   .addr   $220
+access: .byte   0
+type:   .byte   0
+auxtype:.word   0
+storage:.byte   0
+blocks: .word   0
+mdate:  .word   0
+mtime:  .word   0
+cdate:  .word   0
+ctime:  .word   0
+.endproc
 
-.proc file_info_params3
+        .byte   0
+
+        .proc file_info_params3
 params: .byte   $A
 path:   .addr   $1FC0
 access: .byte   0
@@ -15797,7 +15805,7 @@ L9A70:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
         jsr     LA49B
         jmp     L9A70
 
-L9A81:  lda     L977B
+L9A81:  lda     file_info_params2::storage
         cmp     #$0F
         beq     L9A90
         cmp     #$0D
@@ -16036,7 +16044,7 @@ L9C95:  lda     file_info_params3::auxtype
         adc     L9CD9
         sta     L9CD5
         lda     L9CD4
-        cmp     L977C
+        cmp     file_info_params2::blocks
         lda     L9CD5
         sbc     L977D
         bcs     L9CCC
@@ -16267,7 +16275,7 @@ L9EE3:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
         jsr     LA49B
         jmp     L9EE3
 
-L9EF4:  lda     L977B
+L9EF4:  lda     file_info_params2::storage
         sta     L9F1D
         cmp     #$0D
         beq     L9F02
@@ -16317,11 +16325,11 @@ L9F29:  yax_call JT_MLI_RELAY, destroy_params, DESTROY
 L9F5F:  jmp     LA39F
 
 L9F62:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
-        lda     L9777
+        lda     file_info_params2::access
         and     #$80
         bne     L9F8D
         lda     #$C3
-        sta     L9777
+        sta     file_info_params2::access
         lda     #7              ; param count for SET_FILE_INFO
         sta     file_info_params2
         yax_call JT_MLI_RELAY, file_info_params2, SET_FILE_INFO
@@ -16348,7 +16356,7 @@ L9FAA:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
         jsr     LA49B
         jmp     L9FAA
 
-L9FBB:  lda     L977B
+L9FBB:  lda     file_info_params2::storage
         cmp     #$0D
         beq     LA022
 L9FC2:  yax_call JT_MLI_RELAY, destroy_params, DESTROY
@@ -16376,7 +16384,7 @@ L9FF1:  beq     LA001
 L9FFE:  jmp     LA39F
 
 LA001:  lda     #$C3
-        sta     L9777
+        sta     file_info_params2::access
         lda     #7              ; param count for SET_FILE_INFO
         sta     file_info_params2
         yax_call JT_MLI_RELAY, file_info_params2, SET_FILE_INFO
@@ -16515,7 +16523,7 @@ LA133:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
         jsr     LA49B
         jmp     LA133
 
-LA144:  lda     L977B
+LA144:  lda     file_info_params2::storage
         sta     LA169
         cmp     #$0F
         beq     LA156
@@ -16545,7 +16553,7 @@ LA179:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
         jsr     LA49B
         jmp     LA179
 
-LA18A:  lda     L977B
+LA18A:  lda     file_info_params2::storage
         cmp     #$0F
         beq     LA1C0
         cmp     #$0D
@@ -16555,7 +16563,7 @@ LA18A:  lda     L977B
         lda     #$C3
         bne     LA1A0
 LA19E:  lda     #$21
-LA1A0:  sta     L9777
+LA1A0:  sta     file_info_params2::access
 LA1A3:  lda     #7              ; param count for SET_FILE_INFO
         sta     file_info_params2
         yax_call JT_MLI_RELAY, file_info_params2, SET_FILE_INFO
@@ -16644,7 +16652,7 @@ LA274:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
         jsr     LA49B
         jmp     LA274
 
-LA285:  lda     L977B
+LA285:  lda     file_info_params2::storage
         sta     LA2AA
         cmp     #$0F
         beq     LA297
@@ -16672,10 +16680,10 @@ LA2AE:  bit     L9189
         bne     LA2D4
         lda     LA2EF
         clc
-        adc     L977C
+        adc     file_info_params2::blocks
         sta     LA2EF
         lda     LA2F0
-        adc     L977D
+        adc     file_info_params2::blocks+1
         sta     LA2F0
 LA2D4:  inc     LA2ED
         bne     LA2DC
@@ -16843,7 +16851,7 @@ LA426:  jsr     LA46D
         lda     #$C3
         sta     file_info_params3::access
         jsr     LA479
-        lda     L9778
+        lda     file_info_params2::type
         cmp     #$0F
         beq     LA46C
         yax_call JT_MLI_RELAY, L9744, OPEN
@@ -16863,7 +16871,7 @@ LA463:  yax_call JT_MLI_RELAY, close_params3, CLOSE
 LA46C:  rts
 
 LA46D:  ldx     #$0A
-LA46F:  lda     L9777,x
+LA46F:  lda     file_info_params2::access,x
         sta     file_info_params3::access,x
         dex
         bpl     LA46F
