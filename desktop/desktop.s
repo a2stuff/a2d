@@ -56,6 +56,7 @@ INVOKER_FILENAME := $280                 ; File to invoke (PREFIX must be set)
 ;;; ==================================================
 ;;; Segment loaded into AUX $8E00-$BFFF (follows A2D)
 ;;; ==================================================
+.proc desktop_aux
 
         .org $8E00
 
@@ -4069,6 +4070,7 @@ addr:   .addr   0
         ;; Pad to $C000
         .res $C000 - *, 0
         .assert * = $C000, error, "Segment length mismatch"
+.endproc ; desktop_aux
 
 ;;; ==================================================
 ;;;
@@ -4334,7 +4336,7 @@ op:     lda     dummy1234
 .proc DESKTOP_SHOW_ALERT
         sta     RAMRDON
         sta     RAMWRTON
-        jsr     show_alert_indirection
+        jsr     desktop_aux::show_alert_indirection
         sta     RAMRDOFF
         sta     RAMWRTOFF
         rts
@@ -13885,38 +13887,38 @@ L8A22:  lda     $0801,x
         beq     L8A67
 
 L8A59:  ldy     #7
-        lda     #<ramdisk_icon
+        lda     #<desktop_aux::ramdisk_icon
         sta     ($06),y
         iny
-        lda     #>ramdisk_icon
+        lda     #>desktop_aux::ramdisk_icon
         sta     ($06),y
         jmp     L8A96
 
 L8A67:  ldy     #7
-        lda     #<profile_icon
+        lda     #<desktop_aux::profile_icon
         sta     ($06),y
         iny
-        lda     #>profile_icon
+        lda     #>desktop_aux::profile_icon
         sta     ($06),y
         jmp     L8A96
 
 L8A75:  cmp     #$0B
         bne     L8A87
         ldy     #$07
-        lda     #<floppy_800_icon
+        lda     #<desktop_aux::floppy_800_icon
         sta     ($06),y
         iny
-        lda     #>floppy_800_icon
+        lda     #>desktop_aux::floppy_800_icon
         sta     ($06),y
         jmp     L8A96
 
 L8A87:  cmp     #$00
         bne     L8A67
         ldy     #$07
-        lda     #<floppy_140_icon
+        lda     #<desktop_aux::floppy_140_icon
         sta     ($06),y
         iny
-        lda     #>floppy_140_icon
+        lda     #>desktop_aux::floppy_140_icon
         sta     ($06),y
 L8A96:  ldy     #$02
         lda     #$00
@@ -16073,7 +16075,7 @@ L9C95:  lda     file_info_params3::auxtype
         lda     L9CD4
         cmp     file_info_params2::blocks
         lda     L9CD5
-        sbc     L977D
+        sbc     file_info_params2::blocks+1
         bcs     L9CCC
         sec
         bcs     L9CCD
@@ -17066,43 +17068,43 @@ LA614:  lda     winF
         bvc     LA63A
         jmp     LA65E
 
-LA63A:  A2D_RELAY_CALL A2D_TEST_BOX, LAE20
+LA63A:  A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::LAE20
         cmp     #$80
         beq     LA64A
         jmp     LA6C1
 
 LA64A:  jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE20
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE20
         jsr     LB7CF
         bmi     LA65D
         lda     #$00
 LA65D:  rts
 
-LA65E:  A2D_RELAY_CALL A2D_TEST_BOX, LAE28
+LA65E:  A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::LAE28
         cmp     #$80
         bne     LA67F
         jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE28
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE28
         jsr     LB7D9
         bmi     LA67E
         lda     #$02
 LA67E:  rts
 
-LA67F:  A2D_RELAY_CALL A2D_TEST_BOX, LAE30
+LA67F:  A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::LAE30
         cmp     #$80
         bne     LA6A0
         jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE30
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE30
         jsr     LB7DE
         bmi     LA69F
         lda     #$03
 LA69F:  rts
 
-LA6A0:  A2D_RELAY_CALL A2D_TEST_BOX, LAE38
+LA6A0:  A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::LAE38
         cmp     #$80
         bne     LA6C1
         jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE38
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE38
         jsr     LB7E3
         bmi     LA6C0
         lda     #$04
@@ -17113,13 +17115,13 @@ LA6C1:  bit     LD8E7
         lda     #$FF
         rts
 
-LA6C9:  A2D_RELAY_CALL A2D_TEST_BOX, LAE10
+LA6C9:  A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::LAE10
         cmp     #$80
         beq     LA6D9
         jmp     LA6ED
 
 LA6D9:  jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE10
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE10
         jsr     LB7D4
         bmi     LA6EC
         lda     #$01
@@ -17258,17 +17260,17 @@ LA7E5:  lda     #$FF
         rts
 
 LA7E8:  jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE28
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE28
         lda     #$02
         rts
 
 LA7F7:  jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE30
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE30
         lda     #$03
         rts
 
 LA806:  jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE38
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE38
         lda     #$04
         rts
 
@@ -17307,16 +17309,16 @@ LA84E:  lda     #$FF
 LA851:  lda     winF
         jsr     LB7B9
         jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE20
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE20
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE20
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE20
         lda     #$00
         rts
 
 LA86F:  lda     winF
         jsr     LB7B9
         jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE10
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE10
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE10
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE10
         lda     #$01
         rts
 
@@ -17341,21 +17343,21 @@ LA899:  jmp     dummy0000
         lda     win18::id
         jsr     LB7B9
         jsr     LB43B
-        A2D_RELAY_CALL A2D_DRAW_RECT, LAEDD
-        A2D_RELAY_CALL A2D_DRAW_RECT, LAEE5
-        addr_call LB723, str_about1
-        axy_call draw_dialog_label, str_about2, $81
-        axy_call draw_dialog_label, str_about3, $82
-        axy_call draw_dialog_label, str_about4, $83
-        axy_call draw_dialog_label, str_about5, $05
-        axy_call draw_dialog_label, str_about6, $86
-        axy_call draw_dialog_label, str_about7, $07
-        axy_call draw_dialog_label, str_about8, $09
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAEDD
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAEE5
+        addr_call LB723, desktop_aux::str_about1
+        axy_call draw_dialog_label, desktop_aux::str_about2, $81
+        axy_call draw_dialog_label, desktop_aux::str_about3, $82
+        axy_call draw_dialog_label, desktop_aux::str_about4, $83
+        axy_call draw_dialog_label, desktop_aux::str_about5, $05
+        axy_call draw_dialog_label, desktop_aux::str_about6, $86
+        axy_call draw_dialog_label, desktop_aux::str_about7, $07
+        axy_call draw_dialog_label, desktop_aux::str_about8, $09
         lda     #$36
         sta     LD6C3
         lda     #$01
         sta     $D6C4
-        axy_call draw_dialog_label, str_about9, $09
+        axy_call draw_dialog_label, desktop_aux::str_about9, $09
         lda     #$28
         sta     LD6C3
         lda     #$00
@@ -17411,11 +17413,11 @@ LA97A:  cmp     #$05
 LA981:  lda     #$00
         sta     LD8E8
         jsr     LB53A
-        addr_call LB723, str_copy_title
-        axy_call draw_dialog_label, str_copy_copying, $01
-        axy_call draw_dialog_label, str_copy_from, $02
-        axy_call draw_dialog_label, str_copy_to, $03
-        axy_call draw_dialog_label, str_copy_remaining, $04
+        addr_call LB723, desktop_aux::str_copy_title
+        axy_call draw_dialog_label, desktop_aux::str_copy_copying, $01
+        axy_call draw_dialog_label, desktop_aux::str_copy_from, $02
+        axy_call draw_dialog_label, desktop_aux::str_copy_to, $03
+        axy_call draw_dialog_label, desktop_aux::str_copy_remaining, $04
         rts
 
 LA9B5:  ldy     #$01
@@ -17428,7 +17430,7 @@ LA9B5:  ldy     #$01
         jsr     LBDDF
         lda     winF
         jsr     LB7B9
-        A2D_RELAY_CALL A2D_SET_POS, LB0B6
+        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB0B6
         addr_call draw_text1, str_7_spaces
         addr_call draw_text1, str_files
         rts
@@ -17454,7 +17456,7 @@ LA9E6:  ldy     #$01
         sta     $06+1
         stx     $06
         jsr     LBE63
-        A2D_RELAY_CALL A2D_SET_POS, LAE7E
+        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE7E
         addr_call draw_text1, $D402
         jsr     LB3BF
         ldy     #$05
@@ -17465,7 +17467,7 @@ LA9E6:  ldy     #$01
         sta     $06+1
         stx     $06
         jsr     LBE78
-        A2D_RELAY_CALL A2D_SET_POS, LAE82
+        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE82
         lda     #$43
         ldx     #$D4
         jsr     draw_text1
@@ -17484,28 +17486,28 @@ LAA5A:  jsr     LBEB1
 LAA6A:  jsr     LAACE
         lda     winF
         jsr     LB7B9
-        axy_call draw_dialog_label, str_exists_prompt, $06
+        axy_call draw_dialog_label, desktop_aux::str_exists_prompt, $06
         jsr     LB64E
 LAA7F:  jsr     LA567
         bmi     LAA7F
         pha
         jsr     LB687
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE76
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE76
         pla
         rts
 
 LAA9C:  jsr     LAACE
         lda     winF
         jsr     LB7B9
-        axy_call draw_dialog_label, str_large_prompt, $06
+        axy_call draw_dialog_label, desktop_aux::str_large_prompt, $06
         jsr     LB6AF
 LAAB1:  jsr     LA567
         bmi     LAAB1
         pha
         jsr     LB6D0
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE76
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE76
         pla
         rts
 
@@ -17540,11 +17542,11 @@ LAAFD:  cmp     #$04
 LAB04:  lda     #$00
         sta     LD8E8
         jsr     LB53A
-        addr_call LB723, str_download
-        axy_call draw_dialog_label, str_copy_copying, $01
-        axy_call draw_dialog_label, str_copy_from, $02
-        axy_call draw_dialog_label, str_copy_to, $03
-        axy_call draw_dialog_label, str_copy_remaining, $04
+        addr_call LB723, desktop_aux::str_download
+        axy_call draw_dialog_label, desktop_aux::str_copy_copying, $01
+        axy_call draw_dialog_label, desktop_aux::str_copy_from, $02
+        axy_call draw_dialog_label, desktop_aux::str_copy_to, $03
+        axy_call draw_dialog_label, desktop_aux::str_copy_remaining, $04
         rts
 
 LAB38:  ldy     #$01
@@ -17557,7 +17559,7 @@ LAB38:  ldy     #$01
         jsr     LBDDF
         lda     winF
         jsr     LB7B9
-        A2D_RELAY_CALL A2D_SET_POS, LB0B6
+        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB0B6
         addr_call draw_text1, str_7_spaces
         addr_call draw_text1, str_files
         rts
@@ -17582,9 +17584,9 @@ LAB69:  ldy     #$01
         sta     $06+1
         stx     $06
         jsr     LBE63
-        A2D_RELAY_CALL A2D_SET_POS, LAE7E
+        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE7E
         addr_call draw_text1, $D402
-        A2D_RELAY_CALL A2D_SET_POS, LB0BA
+        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB0BA
         addr_call draw_text1, str_7_spaces
         rts
 
@@ -17596,14 +17598,14 @@ LABB8:  jsr     LBEB1
 LABC8:  jsr     LAACE
         lda     winF
         jsr     LB7B9
-        axy_call draw_dialog_label, str_ramcard_full, $06
+        axy_call draw_dialog_label, desktop_aux::str_ramcard_full, $06
         jsr     LB6E6
 LABDD:  jsr     LA567
         bmi     LABDD
         pha
         jsr     LB6FB
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE76
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE76
         pla
         rts
 
@@ -17624,11 +17626,11 @@ LAC0F:  cmp     #$03
         jmp     LAC9E
 
 LAC16:  jsr     LB53A
-        addr_call LB723, str_size_title
-        axy_call draw_dialog_label, str_size_number, $01
+        addr_call LB723, desktop_aux::str_size_title
+        axy_call draw_dialog_label, desktop_aux::str_size_number, $01
         ldy     #$01
         jsr     LB01F
-        axy_call draw_dialog_label, str_size_blocks, $02
+        axy_call draw_dialog_label, desktop_aux::str_size_blocks, $02
         ldy     #$02
         jsr     LB01F
         rts
@@ -17684,7 +17686,7 @@ LACAE:  lda     winF
 LACB7:  jsr     LA567
         bmi     LACB7
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE6E
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE6E
         jsr     LB6FB
         lda     #$00
         rts
@@ -17717,14 +17719,14 @@ LACFE:  sta     LAD1F
         lda     #$00
         sta     LD8E8
         jsr     LB53A
-        addr_call LB723, str_delete_title
+        addr_call LB723, desktop_aux::str_delete_title
         lda     LAD1F
         beq     LAD20
-        axy_call draw_dialog_label, str_ok_empty, $04
+        axy_call draw_dialog_label, desktop_aux::str_ok_empty, $04
         rts
 
 LAD1F:  .byte   0
-LAD20:  axy_call draw_dialog_label, str_delete_ok, $04
+LAD20:  axy_call draw_dialog_label, desktop_aux::str_delete_ok, $04
         rts
 
 LAD2A:  ldy     #$01
@@ -17739,10 +17741,10 @@ LAD2A:  ldy     #$01
         jsr     LB7B9
         lda     LAD1F
 LAD46:  bne     LAD54
-        A2D_RELAY_CALL A2D_SET_POS, LB16A
+        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB16A
         jmp     LAD5D
 
-LAD54:  A2D_RELAY_CALL A2D_SET_POS, LB172
+LAD54:  A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB172
 LAD5D:  addr_call draw_text1, str_7_spaces
         addr_call draw_text1, str_files
         rts
@@ -17767,9 +17769,9 @@ LAD6C:  ldy     #$01
         sta     $06+1
         stx     $06
         jsr     LBE63
-        A2D_RELAY_CALL A2D_SET_POS, LAE7E
+        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE7E
         addr_call draw_text1, $D402
-        A2D_RELAY_CALL A2D_SET_POS, LB16E
+        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB16E
         addr_call draw_text1, str_7_spaces
         rts
 
@@ -17780,10 +17782,10 @@ LADC4:  jsr     LA567
         bmi     LADC4
         bne     LADF4
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE6E
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE6E
         jsr     LB6D0
-        yax_call draw_dialog_label, str_file_colon, $02
-        yax_call draw_dialog_label, str_delete_remaining, $04
+        yax_call draw_dialog_label, desktop_aux::str_file_colon, $02
+        yax_call draw_dialog_label, desktop_aux::str_delete_remaining, $04
         lda     #$00
 LADF4:  rts
 
@@ -17794,14 +17796,14 @@ LADF5:  jsr     LBEB1
 
 LAE05:  lda     winF
         jsr     LB7B9
-        axy_call draw_dialog_label, str_delete_locked_file, $06
+        axy_call draw_dialog_label, desktop_aux::str_delete_locked_file, $06
         jsr     LB64E
 LAE17:  jsr     LA567
         bmi     LAE17
         pha
         jsr     LB687
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE76
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE76
         pla
         rts
 
@@ -17824,7 +17826,7 @@ LAE49:  lda     #$80
         jsr     LB509
         lda     winF
         jsr     LB7B9
-        addr_call LB723, str_new_folder_title
+        addr_call LB723, desktop_aux::str_new_folder_title
         jsr     LB43B
         A2D_RELAY_CALL A2D_DRAW_RECT, LD6AB
         rts
@@ -17850,13 +17852,13 @@ LAE90:  lda     ($08),y
         bpl     LAE90
         lda     winF
         jsr     LB7B9
-        yax_call draw_dialog_label, str_in_colon, $02
+        yax_call draw_dialog_label, desktop_aux::str_in_colon, $02
         lda     #$37
         sta     LD6C3
         yax_call draw_dialog_label, $D402, $02
         lda     #$28
         sta     LD6C3
-        yax_call draw_dialog_label, str_enter_folder_name, $04
+        yax_call draw_dialog_label, desktop_aux::str_enter_folder_name, $04
         jsr     LB961
 LAEC6:  jsr     LA567
         bmi     LAEC6
@@ -17921,7 +17923,7 @@ LAF34:  lda     #$00
         jsr     LB509
         lda     winF
         jsr     LB7B9
-        addr_call LB723, str_info_title
+        addr_call LB723, desktop_aux::str_info_title
         jsr     LB3BF
         ldy     #$00
         lda     ($06),y
@@ -17929,22 +17931,22 @@ LAF34:  lda     #$00
         lsr     a
         ror     a
         sta     LB01D
-        yax_call draw_dialog_label, str_info_name, $01
+        yax_call draw_dialog_label, desktop_aux::str_info_name, $01
         bit     LB01D
         bmi     LAF78
-        yax_call draw_dialog_label, str_info_locked, $02
+        yax_call draw_dialog_label, desktop_aux::str_info_locked, $02
         jmp     LAF81
 
-LAF78:  yax_call draw_dialog_label, str_info_protected, $02
+LAF78:  yax_call draw_dialog_label, desktop_aux::str_info_protected, $02
 LAF81:  bit     LB01D
         bpl     LAF92
-        yax_call draw_dialog_label, str_info_blocks, $03
+        yax_call draw_dialog_label, desktop_aux::str_info_blocks, $03
         jmp     LAF9B
 
-LAF92:  yax_call draw_dialog_label, str_info_size, $03
-LAF9B:  yax_call draw_dialog_label, str_info_create, $04
-        yax_call draw_dialog_label, str_info_mod, $05
-        yax_call draw_dialog_label, str_info_type, $06
+LAF92:  yax_call draw_dialog_label, desktop_aux::str_info_size, $03
+LAF9B:  yax_call draw_dialog_label, desktop_aux::str_info_create, $04
+        yax_call draw_dialog_label, desktop_aux::str_info_mod, $05
+        yax_call draw_dialog_label, desktop_aux::str_info_type, $06
         jmp     LBEB1
 
 LAFB9:  lda     winF
@@ -17999,8 +18001,8 @@ LB01D:  .byte   0
 LB01E:  .byte   0
 LB01F:  lda     #$A0
         sta     LD6C3
-        lda     #<str_colon
-        ldx     #>str_colon
+        lda     #<desktop_aux::str_colon
+        ldx     #>desktop_aux::str_colon
         jsr     draw_dialog_label
         rts
 
@@ -18030,8 +18032,8 @@ LB048:  cmp     #$04
 LB04F:  lda     #$00
         sta     LD8E8
         jsr     LB53A
-        addr_call LB723, str_lock_title
-        yax_call draw_dialog_label, str_lock_ok, $04
+        addr_call LB723, desktop_aux::str_lock_title
+        yax_call draw_dialog_label, desktop_aux::str_lock_ok, $04
         rts
 
 LB068:  ldy     #$01
@@ -18044,9 +18046,9 @@ LB068:  ldy     #$01
         jsr     LBDDF
         lda     winF
         jsr     LB7B9
-        A2D_RELAY_CALL A2D_SET_POS, LB231
+        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB231
         addr_call draw_text1, str_7_spaces
-        A2D_RELAY_CALL A2D_SET_POS, LB239
+        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB239
         addr_call draw_text1, str_files
         rts
 
@@ -18070,9 +18072,9 @@ LB0A2:  ldy     #$01
         sta     $06+1
         stx     $06
         jsr     LBE63
-        A2D_RELAY_CALL A2D_SET_POS, LAE7E
+        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE7E
         addr_call draw_text1, $D402
-        A2D_RELAY_CALL A2D_SET_POS, LB241
+        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB241
         addr_call draw_text1, str_7_spaces
         rts
 
@@ -18083,11 +18085,11 @@ LB0FA:  jsr     LA567
         bmi     LB0FA
         bne     LB139
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE6E
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE20
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE10
-        yax_call draw_dialog_label, str_file_colon, $02
-        yax_call draw_dialog_label, str_lock_remaining, $04
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE6E
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE20
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE10
+        yax_call draw_dialog_label, desktop_aux::str_file_colon, $02
+        yax_call draw_dialog_label, desktop_aux::str_lock_remaining, $04
         lda     #$00
 LB139:  rts
 
@@ -18122,8 +18124,8 @@ LB166:  cmp     #$04
 LB16D:  lda     #$00
         sta     LD8E8
         jsr     LB53A
-        addr_call LB723, str_unlock_title
-        yax_call draw_dialog_label, str_unlock_ok, $04
+        addr_call LB723, desktop_aux::str_unlock_title
+        yax_call draw_dialog_label, desktop_aux::str_unlock_ok, $04
         rts
 
 LB186:  ldy     #$01
@@ -18136,9 +18138,9 @@ LB186:  ldy     #$01
         jsr     LBDDF
         lda     winF
         jsr     LB7B9
-        A2D_RELAY_CALL A2D_SET_POS, LB22D
+        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB22D
         addr_call draw_text1, str_7_spaces
-        A2D_RELAY_CALL A2D_SET_POS, LB235
+        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB235
         addr_call draw_text1, str_files
         rts
 
@@ -18162,9 +18164,9 @@ LB1C0:  ldy     #$01
         sta     $06+1
         stx     $06
         jsr     LBE63
-        A2D_RELAY_CALL A2D_SET_POS, LAE7E
+        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE7E
         addr_call draw_text1, $D402
-        A2D_RELAY_CALL A2D_SET_POS, LB23D
+        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB23D
         addr_call draw_text1, str_7_spaces
         rts
 
@@ -18175,11 +18177,11 @@ LB218:  jsr     LA567
         bmi     LB218
         bne     LB257
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE6E
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE20
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE10
-        yax_call draw_dialog_label, str_file_colon, $02
-        yax_call draw_dialog_label, str_unlock_remaining, $04
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE6E
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE20
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE10
+        yax_call draw_dialog_label, desktop_aux::str_file_colon, $02
+        yax_call draw_dialog_label, desktop_aux::str_unlock_remaining, $04
         lda     #$00
 LB257:  rts
 
@@ -18212,10 +18214,10 @@ LB27D:  jsr     LBD75
         jsr     LB509
         lda     winF
         jsr     LB7B9
-        addr_call LB723, str_rename_title
+        addr_call LB723, desktop_aux::str_rename_title
         jsr     LB43B
         A2D_RELAY_CALL A2D_DRAW_RECT, LD6AB
-        yax_call draw_dialog_label, str_rename_old, $02
+        yax_call draw_dialog_label, desktop_aux::str_rename_old, $02
         lda     #$55
         sta     LD6C3
         jsr     LB3BF
@@ -18233,7 +18235,7 @@ LB2CA:  lda     ($08),y
         dey
         bpl     LB2CA
         yax_call draw_dialog_label, buf_filename, $02
-        yax_call draw_dialog_label, str_rename_new, $04
+        yax_call draw_dialog_label, desktop_aux::str_rename_new, $04
         lda     #$00
         sta     $D443
         jsr     LB961
@@ -18269,7 +18271,7 @@ LB325:
         jsr     LB55F
         lda     winF
         jsr     LB7B9
-        addr_call LB723, str_warning
+        addr_call LB723, desktop_aux::str_warning
         A2D_RELAY_CALL A2D_SHOW_CURSOR
         jsr     LB3BF
         ldy     #$00
@@ -18316,13 +18318,13 @@ LB385:  jsr     LA567
 
 LB39C:  .byte   $80,$00,$00,$80,$00,$00,$80
 
-LB3A3:  .addr   str_insert_system_disk,str_1_space
-        .addr   str_selector_list_full,str_before_new_entries
-        .addr   str_selector_list_full,str_before_new_entries
-        .addr   str_window_must_be_closed,str_1_space
-        .addr   str_window_must_be_closed,str_1_space
-        .addr   str_too_many_windows,str_1_space
-        .addr   str_save_selector_list,str_on_system_disk
+LB3A3:  .addr   desktop_aux::str_insert_system_disk,desktop_aux::str_1_space
+        .addr   desktop_aux::str_selector_list_full,desktop_aux::str_before_new_entries
+        .addr   desktop_aux::str_selector_list_full,desktop_aux::str_before_new_entries
+        .addr   desktop_aux::str_window_must_be_closed,desktop_aux::str_1_space
+        .addr   desktop_aux::str_window_must_be_closed,desktop_aux::str_1_space
+        .addr   desktop_aux::str_too_many_windows,desktop_aux::str_1_space
+        .addr   desktop_aux::str_save_selector_list,desktop_aux::str_on_system_disk
 
 LB3BF:  lda     LA51D
         sta     $06
@@ -18455,11 +18457,11 @@ LB509:  sta     LD8E7
         jsr     LB64E
         jmp     LB526
 
-LB51A:  A2D_RELAY_CALL A2D_DRAW_RECT, LAE20
+LB51A:  A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAE20
         jsr     LB5F9
 LB526:  bit     LD8E7
         bmi     LB537
-        A2D_RELAY_CALL A2D_DRAW_RECT, LAE10
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAE10
         jsr     LB60A
 LB537:  jmp     LBEB1
 
@@ -18467,8 +18469,8 @@ LB53A:  A2D_RELAY_CALL A2D_CREATE_WINDOW, winF
         lda     winF
         jsr     LB7B9
         jsr     LB43B
-        A2D_RELAY_CALL A2D_DRAW_RECT, LAE00
-        A2D_RELAY_CALL A2D_DRAW_RECT, LAE08
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAE00
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAE08
         rts
 
 LB55F:  A2D_RELAY_CALL A2D_CREATE_WINDOW, winF
@@ -18477,8 +18479,8 @@ LB55F:  A2D_RELAY_CALL A2D_CREATE_WINDOW, winF
         jsr     LBEA7
         A2D_RELAY_CALL A2D_DRAW_BITMAP, alert_bitmap2_params
         jsr     LB43B
-        A2D_RELAY_CALL A2D_DRAW_RECT, LAE00
-        A2D_RELAY_CALL A2D_DRAW_RECT, LAE08
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAE00
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAE08
         rts
 
 draw_dialog_label:
@@ -18531,31 +18533,31 @@ LB5CC:  dey
         sta     LD6C3
         rts
 
-LB5F9:  A2D_RELAY_CALL A2D_SET_POS, LAE50
-        addr_call draw_text1, str_ok_label
+LB5F9:  A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE50
+        addr_call draw_text1, desktop_aux::str_ok_label
         rts
 
-LB60A:  A2D_RELAY_CALL A2D_SET_POS, LAE54
-        addr_call draw_text1, str_cancel_label
+LB60A:  A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE54
+        addr_call draw_text1, desktop_aux::str_cancel_label
         rts
 
-LB61B:  A2D_RELAY_CALL A2D_SET_POS, LAE58
-        addr_call draw_text1, str_yes_label
+LB61B:  A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE58
+        addr_call draw_text1, desktop_aux::str_yes_label
         rts
 
-LB62C:  A2D_RELAY_CALL A2D_SET_POS, LAE5C
-        addr_call draw_text1, str_no_label
+LB62C:  A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE5C
+        addr_call draw_text1, desktop_aux::str_no_label
         rts
 
-LB63D:  A2D_RELAY_CALL A2D_SET_POS, LAE60
-        addr_call draw_text1, str_all_label
+LB63D:  A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE60
+        addr_call draw_text1, desktop_aux::str_all_label
         rts
 
 LB64E:  jsr     LB43B
-        A2D_RELAY_CALL A2D_DRAW_RECT, LAE28
-        A2D_RELAY_CALL A2D_DRAW_RECT, LAE30
-        A2D_RELAY_CALL A2D_DRAW_RECT, LAE38
-        A2D_RELAY_CALL A2D_DRAW_RECT, LAE10
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAE28
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAE30
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAE38
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAE10
         jsr     LB61B
         jsr     LB62C
         jsr     LB63D
@@ -18565,15 +18567,15 @@ LB64E:  jsr     LB43B
         rts
 
 LB687:  jsr     LBEA7
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE28
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE30
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE38
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE10
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE28
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE30
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE38
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE10
         rts
 
 LB6AF:  jsr     LB43B
-        A2D_RELAY_CALL A2D_DRAW_RECT, LAE20
-        A2D_RELAY_CALL A2D_DRAW_RECT, LAE10
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAE20
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAE10
         jsr     LB5F9
         jsr     LB60A
         lda     #$00
@@ -18581,19 +18583,19 @@ LB6AF:  jsr     LB43B
         rts
 
 LB6D0:  jsr     LBEA7
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE20
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE10
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE20
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE10
         rts
 
 LB6E6:  jsr     LB43B
-        A2D_RELAY_CALL A2D_DRAW_RECT, LAE20
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAE20
         jsr     LB5F9
         lda     #$80
         sta     LD8E7
         rts
 
 LB6FB:  jsr     LBEA7
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE20
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE20
         rts
 
 draw_text1:
@@ -18733,34 +18735,34 @@ LB80A:  .byte   $4E
 LB80B:  .byte   $B8,$26,$B8,$58,$B8,$30,$B8,$62,$B8
         .byte   $3A,$B8,$6C,$B8,$44,$B8,$76,$B8
 
-        A2D_RELAY_CALL A2D_TEST_BOX, LAE20
+        A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::LAE20
         rts
 
-        A2D_RELAY_CALL A2D_TEST_BOX, LAE10
+        A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::LAE10
         rts
 
-        A2D_RELAY_CALL A2D_TEST_BOX, LAE28
+        A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::LAE28
         rts
 
-        A2D_RELAY_CALL A2D_TEST_BOX, LAE30
+        A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::LAE30
         rts
 
-        A2D_RELAY_CALL A2D_TEST_BOX, LAE38
+        A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::LAE38
         rts
 
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE20
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE20
         rts
 
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE10
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE10
         rts
 
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE28
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE28
         rts
 
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE30
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE30
         rts
 
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE38
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE38
         rts
 
 LB880:  jmp     (LB886)
@@ -18825,11 +18827,11 @@ LB8F5:  jsr     LBD3B
         A2D_RELAY_CALL A2D_SET_BOX, LD6C7
         bit     LD8EB
         bpl     LB92D
-        A2D_RELAY_CALL A2D_SET_TEXT_MASK, LAE6C
+        A2D_RELAY_CALL A2D_SET_TEXT_MASK, desktop_aux::LAE6C
         lda     #$00
         sta     LD8EB
         beq     LB93B
-LB92D:  A2D_RELAY_CALL A2D_SET_TEXT_MASK, LAE6D
+LB92D:  A2D_RELAY_CALL A2D_SET_TEXT_MASK, desktop_aux::LAE6D
         lda     #$FF
         sta     LD8EB
 LB93B:  lda     #$EF
@@ -18839,7 +18841,7 @@ LB93B:  lda     #$EF
         lda     LD8EE
         sta     $08
         A2D_RELAY_CALL A2D_DRAW_TEXT, $6
-        A2D_RELAY_CALL A2D_SET_TEXT_MASK, LAE6D
+        A2D_RELAY_CALL A2D_SET_TEXT_MASK, desktop_aux::LAE6D
         lda     winF
         jsr     LB7B9
         rts
@@ -19406,11 +19408,11 @@ LBE7D:  lda     ($06),y
         rts
 
 LBE8D:  jsr     LBEA7
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE86
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE86
         rts
 
 LBE9A:  jsr     LBEA7
-        A2D_RELAY_CALL A2D_FILL_RECT, LAE8E
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE8E
         rts
 
 LBEA7:  A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
@@ -19604,10 +19606,10 @@ L092F:  lda     #$00
         lda     #$70
         sta     ($06),y
         ldy     #$07
-        lda     #<trash_icon
+        lda     #<desktop_aux::trash_icon
         sta     ($06),y
         iny
-        lda     #>trash_icon
+        lda     #>desktop_aux::trash_icon
         sta     ($06),y
         iny
         ldx     #$00
@@ -20341,7 +20343,7 @@ L0F14:  inx
         lda     #$80
         sta     desktop_main::L4861
 L0F34:  A2D_RELAY_CALL $29
-        A2D_RELAY_CALL A2D_SET_MENU, desktop_menu
+        A2D_RELAY_CALL A2D_SET_MENU, desktop_aux::desktop_menu
         A2D_RELAY_CALL A2D_SET_CURSOR, pointer_cursor
         lda     #$00
         sta     $EC25
