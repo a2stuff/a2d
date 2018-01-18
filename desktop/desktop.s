@@ -5671,7 +5671,7 @@ JT_MLI_RELAY:  jmp     MLI_RELAY
 L402D:  jmp     L8707
 L4030:  jmp     DESKTOP_SHOW_ALERT0
 L4033:  jmp     DESKTOP_SHOW_ALERT
-        jmp     L46DE
+        jmp     launch_file
         jmp     L489A
         jmp     L488A
         jmp     L8E89
@@ -6362,7 +6362,11 @@ L46CF:  .addr   dummy0000
         jsr     desktop_main::MLI_RELAY
 .endmacro
 
-L46DE:  jmp     L46F3
+;;; ==================================================
+;;; Launch file (double-click) ???
+
+.proc launch_file
+        jmp     begin
 
 .proc get_file_info_params
 params: .byte   $A
@@ -6378,7 +6382,8 @@ cdate:  .word   0
 ctime:  .word   0
 .endproc
 
-L46F3:  jsr     L488A
+begin:
+        jsr     L488A
         ldx     #$FF
 L46F8:  inx
         lda     $D355,x
@@ -6402,22 +6407,22 @@ L470C:  iny
         rts
 
 L472B:  lda     get_file_info_params::type
-        cmp     #$FC
+        cmp     #FT_BASIC
         bne     L4738
         jsr     L47B8
         jmp     L4755
 
-L4738:  cmp     #$06
+L4738:  cmp     #FT_BINARY
         bne     L4748
-        lda     BUTN0
+        lda     BUTN0           ; special hack to launch anything ???
         ora     BUTN1
         bmi     L4755
         jsr     L489A
         rts
 
-L4748:  cmp     #$FF
+L4748:  cmp     #FT_SYSTEM
         beq     L4755
-        cmp     #$B3
+        cmp     #FT_S16
         beq     L4755
         lda     #$FA
         jsr     L4802
@@ -6442,6 +6447,9 @@ L477F:  lda     $D345,x
         lda     #>INVOKER
         sta     L5B19+1
         jmp     L5AEE
+.endproc
+
+;;; ==================================================
 
 .proc get_file_info_params2
 params: .byte   $A
@@ -6725,7 +6733,7 @@ L4A2B:  iny
         lda     L4A46
         sta     $D355
         lda     #$00
-        jmp     L46DE
+        jmp     launch_file
 
 L4A46:  .byte   0
 L4A47:  pha
@@ -7222,7 +7230,7 @@ L4E51:  lda     ($06),y
         cmp     #$20
         bcc     L4E6E
         lda     L4E71
-L4E6E:  jmp     L46DE
+L4E6E:  jmp     launch_file
 
 L4E71:  .byte   0
 L4E72:  lda     desktop_winid
@@ -8981,7 +8989,7 @@ L5E57:  lda     ($06),y
         cmp     #$20
         bcc     L5E74
         lda     L5E77
-L5E74:  jmp     L46DE
+L5E74:  jmp     launch_file
 
 L5E77:  .byte   0
 L5E78:  sta     L5F0A
