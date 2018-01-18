@@ -56,11 +56,19 @@ READ_BLOCK      := $80
 WRITE_BLOCK     := $81
 
 ;;; ------------------------------------------------------------
-;;; Device Types
+;;; Device Types (low nibble of unit number in DEVLST)
 
 DT_DISKII       := $0
 DT_PROFILE      := $4
 DT_RAM          := $F
+
+;;; See ProDOS Tech Note #21 - other than the above types, there
+;;; is not an "ID nibble". The nibble is a copy of $CnFE's high
+;;; nibble, with this meaning:
+;;;   bit 3   = removable
+;;;   bit 2   = interruptable
+;;;   bit 1-0 = number of volumes (0-1)
+;;; "You should ignore the low nibble in the unit number..."
 
 ;;; ------------------------------------------------------------
 ;;; File Types

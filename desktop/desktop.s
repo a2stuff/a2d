@@ -13817,7 +13817,7 @@ buffer: .addr   $800
 .endproc
 
 .proc get_device_info
-        sta     device_id
+        sta     unit_number
         sty     device_num
         and     #$F0
         sta     on_line_params::unit
@@ -13875,19 +13875,21 @@ L8A22:  lda     $0801,x
         adc     #$02
         sta     ($06),y
 
-        lda     device_id
+        lda     unit_number
         cmp     #$3E            ; ??? Special case? Maybe RamWorks?
         beq     use_ramdisk_icon
 
         and     #$0F            ; lower nibble
-        cmp     #4              ; 0 = Disk II, 4 = ProFile, $F = /RAM
+        cmp     #DT_PROFILE     ; ProFile or Slinky-style RAM ?
         bne     use_floppy_icon
 
         ;; BUG: This defaults SmartPort hard drives to use floppy icons.
-        ;; https://github.com/inexorabletash/a2d/issues/6
+        ;; See https://github.com/inexorabletash/a2d/issues/6 for more
+        ;; context; this code is basically unsalvageable per ProDOS
+        ;; Tech Note #21.
 
         ;; Either ProFile or a "Slinky"/RamFactor-style Disk
-        lda     device_id       ; bit 7 = drive (0=1, 1=2); 5-7 = slot
+        lda     unit_number       ; bit 7 = drive (0=1, 1=2); 5-7 = slot
         and     #%01110000      ; mask off slot
         lsr     a
         lsr     a
@@ -13920,7 +13922,7 @@ use_profile_icon:
         jmp     selected_device_icon
 
 use_floppy_icon:
-        cmp     #$B             ; SmartPort device ???
+        cmp     #$B             ; removable / 4 volumes
         bne     use_floppy140_icon
         ldy     #7
         lda     #<desktop_aux::floppy800_icon
@@ -13931,7 +13933,7 @@ use_floppy_icon:
         jmp     selected_device_icon
 
 use_floppy140_icon:
-        cmp     #0               ; 0 = Disk II
+        cmp     #DT_DISKII       ; 0 = Disk II
         bne     use_profile_icon ; last chance
         ldy     #7
         lda     #<desktop_aux::floppy140_icon
@@ -13966,7 +13968,7 @@ L8AA7:  lda     L8AC5,x
         rts
 .endproc
 
-device_id:      .byte   0
+unit_number:    .byte   0
 device_num:     .byte   0
 
 L8AC5:  .byte   $00,$00,$00,$00,$EA,$01,$10,$00
@@ -19537,6 +19539,7 @@ done_machine_id:
         bpl     :-
         ldx     DEVCNT
 :       lda     DEVLST,x
+        ;; BUG: ProDOS Tech Note #21 says $B3,$B7,$BB or $BF could be /RAM
         cmp     #(1<<7 | 3<<4 | DT_RAM) ; unit_num for /RAM is Slot 3, Drive 2
         beq     found_ram
         dex
