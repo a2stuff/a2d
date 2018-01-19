@@ -5661,7 +5661,7 @@ L4009:  jmp     L830F
         jmp     DESKTOP_AUXLOAD
 L4012:  jmp     L5050
 L4015:  jmp     L40F2
-L4018:  jmp     DESKTOP_RELAY
+JT_DESKTOP_RELAY:  jmp     DESKTOP_RELAY
         jmp     L8E81
 L401E:  jmp     L6D2B
 JT_MLI_RELAY:  jmp     MLI_RELAY
@@ -5669,11 +5669,11 @@ JT_MLI_RELAY:  jmp     MLI_RELAY
         jmp     DESKTOP_COPY_FROM_BUF
         jmp     L490E
 L402D:  jmp     L8707
-L4030:  jmp     DESKTOP_SHOW_ALERT0
-L4033:  jmp     DESKTOP_SHOW_ALERT
+JT_DESKTOP_SHOW_ALERT0:  jmp     DESKTOP_SHOW_ALERT0
+JT_DESKTOP_SHOW_ALERT:  jmp     DESKTOP_SHOW_ALERT
         jmp     launch_file
-        jmp     L489A
-        jmp     L488A
+        jmp     set_pointer_cursor
+        jmp     set_watch_cursor
         jmp     L8E89
 
         ;; API entry point
@@ -5934,33 +5934,47 @@ L42A5:  lda     L42C3
         jmp     L42A5
 
 L42C3:  .byte   $00
-L42C4:  .byte   $B2
-L42C5:  .byte   $4B,$0E,$49,$BF,$4B,$BF,$4B,$BF
-        .byte   $4B,$BF,$4B,$BF,$4B,$BF,$4B,$BF
-        .byte   $4B,$BF,$4B,$B7,$4F,$0E,$49,$EA
-        .byte   $4D,$72,$4E,$50,$4F,$62,$56,$0E
-        .byte   $49,$A2,$4C,$5F,$4D,$0E,$49,$50
-        .byte   $50,$AA,$50,$0F,$49,$0F,$49,$0F
-        .byte   $49,$0F,$49,$0E,$49,$A2,$49,$A2
-        .byte   $49,$A2,$49,$A2,$49,$A2,$49,$A2
-        .byte   $49,$A2,$49,$A2,$49,$F9,$50,$67
-        .byte   $52,$85,$52,$A3,$52,$C1,$52,$01
-        .byte   $59,$0E,$49,$40,$53,$5B,$53,$5C
-        .byte   $4F,$0E,$49,$87,$53,$81,$53,$0E
-        .byte   $49,$75,$53,$7B,$53,$0E,$49,$8D
-        .byte   $53,$01,$59,$0E,$49,$A0,$59,$A0
-        .byte   $59,$A0,$59,$A0,$59,$A0,$59,$A0
-        .byte   $59,$A0,$59,$A0,$59,$D1,$5A,$D1
-        .byte   $5A,$D1,$5A,$D1,$5A,$D1,$5A,$D1
-        .byte   $5A,$D1,$5A
-L4350:  .byte   $00,$14,$2C,$46,$50,$50,$6A,$7E
-        .byte   $8C
+
+;;; ==================================================
+;;; Menu Dispatch
+
+        ;; jump table for menu item handlers
+L42C4:
+        ;; Apple menu (1)
+        .addr   L4BB2,L490E,L4BBF,L4BBF,L4BBF,L4BBF,L4BBF,L4BBF,L4BBF,L4BBF
+
+        ;; File menu (2)
+        .addr   L4FB7,L490E,L4DEA,L4E72,L4F50,L5662,L490E,L4CA2,L4D5F,L490E,L5050,L50AA
+
+        ;; Selector menu (3)
+        .addr   L490F,L490F,L490F,L490F,L490E,L49A2,L49A2,L49A2,L49A2,L49A2,L49A2,L49A2,L49A2
+
+        ;; View menu (4)
+        .addr   L50F9,L5267,L5285,L52A3,L52C1
+
+        ;; Special menu (5)
+        .addr   L5901,L490E,L5340,L535B,L4F5C
+
+        ;; (6 is duplicated to 5)
+
+        ;; ??? menu (7)
+        .addr   L490E,L5387,L5381,L490E,L5375,L537B,L490E,L538D
+
+        ;; Startup menu (8)
+        .addr   L5901,L490E,L59A0,L59A0,L59A0,L59A0,L59A0,L59A0,L59A0,L59A0
+
+        ;; ??? menu (9)
+        .addr   L5AD1,L5AD1,L5AD1,L5AD1,L5AD1,L5AD1,L5AD1
+
+        ;; indexed by menu id-1
+L4350:  .byte   $00,$14,$2C,$46,$50,$50,$6A,$7E,$8C
+
 L4359:  .byte   $00
 L435A:  lda     input_params+2
         bne     L4362
         jmp     L4394
 
-L4362:  cmp     #$03
+L4362:  cmp     #3
         bne     L4367
         rts
 
@@ -5988,6 +6002,7 @@ L438D:  cmp     #$78
         bne     L4394
         jmp     L57A6
 
+
 L4394:  lda     input_params+1
         sta     $E25C
         lda     input_params+2
@@ -5999,7 +6014,7 @@ L43AD:  ldx     menu_click_params::menu_id
         bne     L43B3
         rts
 
-L43B3:  dex
+L43B3:  dex                     ; x has top level menu id
         lda     L4350,x
         tax
         ldy     $E25B
@@ -6013,7 +6028,7 @@ L43B3:  dex
         tax
         lda     L42C4,x
         sta     L43E5
-        lda     L42C5,x
+        lda     L42C4+1,x
         sta     L43E5+1
         jsr     L43E0
         A2D_RELAY_CALL $33, menu_click_params
@@ -6023,6 +6038,9 @@ L43E0:  tsx
         stx     $E256
         L43E5 := *+1
         jmp     dummy1234           ; self-modified
+
+;;; ==================================================
+
 L43E7:  tsx
         stx     $E256
         A2D_RELAY_CALL A2D_QUERY_TARGET, input_params_coords
@@ -6383,7 +6401,7 @@ ctime:  .word   0
 .endproc
 
 begin:
-        jsr     L488A
+        jsr     set_watch_cursor
         ldx     #$FF
 L46F8:  inx
         lda     $D355,x
@@ -6417,7 +6435,7 @@ L4738:  cmp     #FT_BINARY
         lda     BUTN0           ; special hack to launch anything ???
         ora     BUTN1
         bmi     L4755
-        jsr     L489A
+        jsr     set_pointer_cursor
         rts
 
 L4748:  cmp     #FT_SYSTEM
@@ -6538,21 +6556,30 @@ L4862:  .byte   $00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00
-L488A:  jsr     L48AA
+
+;;; ==================================================
+
+set_watch_cursor:
+        jsr     hide_cursor
         A2D_RELAY_CALL A2D_SET_CURSOR, watch_cursor
-        jsr     L48B4
+        jsr     show_cursor
         rts
 
-L489A:  jsr     L48AA
+set_pointer_cursor:
+        jsr     hide_cursor
         A2D_RELAY_CALL A2D_SET_CURSOR, pointer_cursor
-        jsr     L48B4
+        jsr     show_cursor
         rts
 
-L48AA:  A2D_RELAY_CALL A2D_HIDE_CURSOR
+hide_cursor:
+        A2D_RELAY_CALL A2D_HIDE_CURSOR
         rts
 
-L48B4:  A2D_RELAY_CALL A2D_SHOW_CURSOR
+show_cursor:
+        A2D_RELAY_CALL A2D_SHOW_CURSOR
         rts
+
+;;; ==================================================
 
 L48BE:  ldx     $E196
         inx
@@ -6588,7 +6615,7 @@ L4904:  A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
 
 L490E:  rts
 
-        jsr     L488A
+L490F:  jsr     set_watch_cursor
         lda     #$02
         jsr     L8E81
         bmi     L4961
@@ -6601,11 +6628,11 @@ L490E:  rts
         lda     #$03
         jsr     L8E81
         bmi     L4961
-L492E:  jsr     L489A
+L492E:  jsr     set_pointer_cursor
         lda     $E25B
         jsr     L9000
         sta     L498F
-        jsr     L488A
+        jsr     set_watch_cursor
         lda     #$08
         jsr     L8E89
         lda     $E25B
@@ -6620,7 +6647,7 @@ L492E:  jsr     L489A
         jsr     L8F24
         bmi     L4961
         jsr     L4968
-L4961:  jsr     L489A
+L4961:  jsr     set_pointer_cursor
         jsr     L4523
         rts
 
@@ -6657,7 +6684,7 @@ cdate:  .word   0
 ctime:  .word   0
 .endproc
 
-        jmp     L49A6
+L49A2:  jmp     L49A6
 
 L49A5:  .byte   0
 L49A6:  lda     $E25B
@@ -6916,12 +6943,12 @@ L4B9C:  inx
 
 L4BB0:  .byte   0
 L4BB1:  .byte   0
-        yax_call LA500, $0000, $00
+L4BB2:  yax_call LA500, $0000, $00
         jmp     L4523
 
-L4BBE:  .byte   $80,$20         ; ???
-        bpl     L4C07
-        jsr     L488A
+L4BBE:  .byte   $80
+L4BBF:  jsr     L4510
+        jsr     set_watch_cursor
         lda     $E25B
         sec
         sbc     #$03
@@ -6963,7 +6990,7 @@ L4C07:  lda     L4C7C
         jsr     L4C6D
         lda     #$80
         sta     L4CA1
-        jsr     L489A
+        jsr     set_pointer_cursor
         jsr     L4510
         A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, $D2A7
         A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, L4BBE
@@ -6973,7 +7000,7 @@ L4C07:  lda     L4C7C
         sta     L4CA1
         jsr     L4510
         jsr     L4523
-L4C4A:  jsr     L489A
+L4C4A:  jsr     set_pointer_cursor
         rts
 
 L4C4E:  ldy     #$C8
@@ -7009,22 +7036,23 @@ L4C86:  .byte   $00
 L4C87:  .byte   $09
 L4C88:  PASCAL_STRING "Desk.acc/"
         .res    15, 0
+
 L4CA1:  .byte   $00
-        jsr     L488A
+L4CA2:  jsr     set_watch_cursor
         lda     #$03
         jsr     L8E81
         bmi     L4CD6
         lda     #$04
         jsr     L8E81
         bmi     L4CD6
-        jsr     L489A
+        jsr     set_pointer_cursor
         lda     #$00
         jsr     L5000
         pha
-        jsr     L488A
+        jsr     set_watch_cursor
         lda     #$07
         jsr     L8E89
-        jsr     L489A
+        jsr     set_pointer_cursor
         pla
         bpl     L4CCD
         jmp     L4CD6
@@ -7033,7 +7061,7 @@ L4CCD:  jsr     L4D19
         jsr     L4523
         jsr     L8F18
 L4CD6:  pha
-        jsr     L489A
+        jsr     set_pointer_cursor
         pla
         bpl     L4CE0
         jmp     L4523
@@ -7098,21 +7126,21 @@ L4D4E:  stx     $E04B
         dec     LDFC9
         rts
 
-        jsr     L488A
+L4D5F:  jsr     set_watch_cursor
         lda     #$03
         jsr     L8E81
         bmi     L4D9D
         lda     #$05
         jsr     L8E81
         bmi     L4D9D
-        jsr     L489A
+        jsr     set_pointer_cursor
         lda     #$01
         jsr     L5000
         pha
-        jsr     L488A
+        jsr     set_watch_cursor
         lda     #$07
         jsr     L8E89
-        jsr     L489A
+        jsr     set_pointer_cursor
         pla
         bpl     L4D8A
         jmp     L4D9D
@@ -7127,7 +7155,7 @@ L4D8F:  lda     ($06),y
         jsr     L4523
         jsr     L8F1B
 L4D9D:  pha
-        jsr     L489A
+        jsr     set_pointer_cursor
         pla
         bpl     L4DA7
         jmp     L4523
@@ -7160,7 +7188,7 @@ L4DD2:  dey
         jsr     L6F4B
         jmp     L4523
 
-        ldx     #$00
+L4DEA:  ldx     #$00
 L4DEC:  cpx     is_file_selected
         bne     L4DF2
         rts
@@ -7318,7 +7346,7 @@ L4F50:  lda     desktop_winid
 
 L4F5B:  rts
 
-        lda     #$00
+L4F5C:  lda     #$00
         jsr     L8E81
         bmi     L4F66
         jmp     L0800
@@ -7343,7 +7371,7 @@ ctime:  .word   0
 L4F76:  .res    64
         .byte   $00
 
-        lda     desktop_winid
+L4FB7:  lda     desktop_winid
         sta     L4F67
         yax_call LA500, L4F67, $03
 L4FC6:  lda     desktop_winid
@@ -7435,7 +7463,7 @@ L5098:  .byte   $00
 L5099:  .byte   $AF,$DE,$AD,$DE
 L509D:  .byte   $18,$FB,$5C,$04,$D0,$E0
 L50A3:  .byte   $04,$00,$00,$00,$00,$00,$00
-        ldx     #$03
+L50AA:  ldx     #$03
 L50AC:  lda     L5099,x
         sta     $0102,x
         dex
@@ -7462,10 +7490,8 @@ L50C0:  lda     L509D,x
         sta     CLRALTCHAR
         sta     CLR80VID
         sta     CLR80COL
-        jsr     MLI
-        .byte   $65
-        .addr   L50A3
-        ldx     desktop_winid
+        MLI_CALL $65, L50A3
+L50F9:  ldx     desktop_winid
         bne     L50FF
         rts
 
@@ -7615,7 +7641,7 @@ L5263:  .byte   0
 L5264:  .byte   0
 L5265:  .byte   0
         .byte   0
-        ldx     desktop_winid
+L5267:  ldx     desktop_winid
         bne     L526D
         rts
 
@@ -7632,7 +7658,7 @@ L527D:  jsr     L52DF
         lda     #$81
         jmp     L51F0
 
-        ldx     desktop_winid
+L5285:  ldx     desktop_winid
         bne     L528B
         rts
 
@@ -7649,7 +7675,7 @@ L529B:  jsr     L52DF
         lda     #$82
         jmp     L51F0
 
-        ldx     desktop_winid
+L52A3:  ldx     desktop_winid
         bne     L52A9
         rts
 
@@ -7666,7 +7692,7 @@ L52B9:  jsr     L52DF
         lda     #$83
         jmp     L51F0
 
-        ldx     desktop_winid
+L52C1:  ldx     desktop_winid
         bne     L52C7
         rts
 
@@ -7717,7 +7743,7 @@ L5334:  jsr     DESKTOP_COPY_FROM_BUF
         jmp     DESKTOP_COPY_TO_BUF
 
 L533F:  .byte   0
-        lda     #$01
+L5340:  lda     #$01
         jsr     L8E81
         bmi     L535A
         lda     #$04
@@ -7730,7 +7756,7 @@ L5357:  jmp     L4523
 
 L535A:  rts
 
-        lda     #$01
+L535B:  lda     #$01
         jsr     L8E81
         bmi     L5372
         lda     #$05
@@ -7741,19 +7767,19 @@ L535A:  rts
         jsr     L59A4
 L5372:  jmp     L4523
 
-        jsr     L8F09
+L5375:  jsr     L8F09
         jmp     L4523
 
-        jsr     L8F27
+L537B:  jsr     L8F27
         jmp     L4523
 
-        jsr     L8F0F
+L5381:  jsr     L8F0F
         jmp     L4523
 
-        jsr     L8F0C
+L5387:  jsr     L8F0C
         jmp     L4523
 
-        jsr     L8F12
+L538D:  jsr     L8F12
         pha
         jsr     L4523
         pla
@@ -8081,7 +8107,7 @@ L564A:  DESKTOP_RELAY_CALL $0B, LE22F
         jsr     L4510
 L5661:  rts
 
-        lda     is_file_selected
+L5662:  lda     is_file_selected
         beq     L566A
         jsr     L6D2B
 L566A:  ldx     desktop_winid
@@ -8394,7 +8420,7 @@ L58E2:  lda     desktop_winid
         pla
         rts
 
-        lda     #$00
+L5901:  lda     #$00
         sta     L599F
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
@@ -8589,7 +8615,7 @@ L5AC0:  jsr     DESKTOP_COPY_FROM_BUF
 
 L5AC6:  .res    10, 0
 L5AD0:  .byte   0
-        ldx     $E25B
+L5AD1:  ldx     $E25B
         dex
         txa
         asl     a
@@ -14808,7 +14834,7 @@ L91E8:  jsr     L4015
         ldy     #$0C
         lda     #$00
         ldx     #$00
-        jsr     L4018
+        jsr     JT_DESKTOP_RELAY
         rts
 
 L91F5:  lda     #$11
@@ -15349,7 +15375,7 @@ L9674:  inx
         stx     $1FC0
         yax_call JT_MLI_RELAY, rename_params, RENAME
         beq     L969E
-        jsr     L4030
+        jsr     JT_DESKTOP_SHOW_ALERT0
         bne     L9696
         jmp     L9611
 
@@ -15365,7 +15391,7 @@ L969E:  lda     #$40
         ldy     #$0E
         lda     #$2B
         ldx     #$E2
-        jsr     L4018
+        jsr     JT_DESKTOP_RELAY
         lda     L9707
         sta     $08
         lda     L9708
@@ -15606,7 +15632,7 @@ L9801:  lda     #$00
 L9809:  yax_call JT_MLI_RELAY, open_params3, OPEN
         beq     L981E
         ldx     #$80
-        jsr     L4033
+        jsr     JT_DESKTOP_SHOW_ALERT
         beq     L9809
         jmp     LA39F
 
@@ -15616,7 +15642,7 @@ L981E:  lda     open_params3::ref_num
 L9827:  yax_call JT_MLI_RELAY, read_params3, READ
         beq     L983C
         ldx     #$80
-        jsr     L4033
+        jsr     JT_DESKTOP_SHOW_ALERT
         beq     L9827
         jmp     LA39F
 
@@ -15627,7 +15653,7 @@ L983F:  lda     $E060
 L9845:  yax_call JT_MLI_RELAY, close_params6, CLOSE
         beq     L985A
         ldx     #$80
-        jsr     L4033
+        jsr     JT_DESKTOP_SHOW_ALERT
         beq     L9845
         jmp     LA39F
 
@@ -15641,7 +15667,7 @@ L9864:  yax_call JT_MLI_RELAY, read_params4, READ
         cmp     #$4C
         beq     L989F
         ldx     #$80
-        jsr     L4033
+        jsr     JT_DESKTOP_SHOW_ALERT
         beq     L9864
         jmp     LA39F
 
@@ -16954,7 +16980,7 @@ LA49D:  stx     LA4C5
         beq     LA4AE
         cmp     #$44
         beq     LA4AE
-        jsr     L4030
+        jsr     JT_DESKTOP_SHOW_ALERT0
         bne     LA4C2
         rts
 
@@ -16964,7 +16990,7 @@ LA4AE:  bit     LA4C5
         jmp     LA4BA
 
 LA4B8:  lda     #$FC
-LA4BA:  jsr     L4030
+LA4BA:  jsr     JT_DESKTOP_SHOW_ALERT0
         bne     LA4C2
         jmp     LA4C6
 
@@ -17895,7 +17921,7 @@ LAEC6:  jsr     LA567
         cmp     #$10
         bcc     LAEE1
 LAED6:  lda     #$FB
-        jsr     L4030
+        jsr     JT_DESKTOP_SHOW_ALERT0
         jsr     LB961
         jmp     LAEC6
 
