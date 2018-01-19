@@ -5659,7 +5659,7 @@ L4006:  jmp     L8259
 L4009:  jmp     L830F
         jmp     L5E78
         jmp     DESKTOP_AUXLOAD
-L4012:  jmp     cmd_eject
+JT_DESKTOP_EJECT:  jmp     cmd_eject
 L4015:  jmp     L40F2
 JT_DESKTOP_RELAY:  jmp     DESKTOP_RELAY
         jmp     L8E81
@@ -6673,7 +6673,11 @@ L48FA:  A2D_RELAY_CALL A2D_SET_FILL_MODE, const2
 L4904:  A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
         rts
 
+;;; ==================================================
+
 cmd_noop:  rts
+
+;;; ==================================================
 
 cmd_selector_action:
         jsr     set_watch_cursor
@@ -6744,6 +6748,8 @@ mtime:  .word   0
 cdate:  .word   0
 ctime:  .word   0
 .endproc
+
+;;; ==================================================
 
 cmd_selector_item:
         jmp     L49A6
@@ -7003,11 +7009,15 @@ L4B9C:  inx
         ldx     #$4F
         rts
 
+;;; ==================================================
+
 L4BB0:  .byte   0
 L4BB1:  .byte   0
 cmd_about:
         yax_call LA500, $0000, $00
         jmp     L4523
+
+;;; ==================================================
 
 L4BBE:  .byte   $80
 cmd_deskacc:
@@ -7101,6 +7111,8 @@ L4C87:  .byte   $09
 L4C88:  PASCAL_STRING "Desk.acc/"
         .res    15, 0
 
+;;; ==================================================
+
 L4CA1:  .byte   $00
 cmd_copy_file:
         jsr     set_watch_cursor
@@ -7191,6 +7203,8 @@ L4D4E:  stx     $E04B
         dec     LDFC9
         rts
 
+;;; ==================================================
+
 cmd_delete_file:
         jsr     set_watch_cursor
         lda     #$03
@@ -7254,7 +7268,10 @@ L4DD2:  dey
         jsr     L6F4B
         jmp     L4523
 
-cmd_open:  ldx     #$00
+;;; ==================================================
+
+cmd_open:
+        ldx     #$00
 L4DEC:  cpx     is_file_selected
         bne     L4DF2
         rts
@@ -7326,8 +7343,12 @@ L4E51:  lda     ($06),y
         lda     L4E71
 L4E6E:  jmp     launch_file
 
+;;; ==================================================
+
 L4E71:  .byte   0
-cmd_close:  lda     desktop_winid
+
+cmd_close:
+        lda     desktop_winid
         bne     L4E78
         rts
 
@@ -7405,18 +7426,25 @@ L4F3C:  lda     #$00
         jsr     L66A2
         jmp     L4510
 
-cmd_close_all:  lda     desktop_winid
+;;; ==================================================
+
+cmd_close_all:
+        lda     desktop_winid
         beq     L4F5B
         jsr     cmd_close
         jmp     cmd_close_all
 
 L4F5B:  rts
 
+;;; ==================================================
+
 cmd_disk_copy:
         lda     #$00
         jsr     L8E81
         bmi     L4F66
         jmp     L0800
+
+;;; ==================================================
 
 L4F66:  rts
 
@@ -7434,6 +7462,8 @@ storage:.byte   $0D
 cdate:  .word   0
 ctime:  .word   0
 .endproc
+
+;;; ==================================================
 
 L4F76:  .res    64
         .byte   $00
@@ -7492,8 +7522,11 @@ L5027:  lda     #$40
         jsr     L5E78
 L504B:  jmp     L4523
 
+;;; ==================================================
+
 L504E:  .byte   0
 L504F:  .byte   0
+
 cmd_eject:
         lda     selected_window_index
         beq     L5056
@@ -7528,10 +7561,13 @@ L5084:  ldx     L5098
         bpl     L5084
         jmp     L4523
 
+;;; ==================================================
+
 L5098:  .byte   $00
 L5099:  .byte   $AF,$DE,$AD,$DE
 L509D:  .byte   $18,$FB,$5C,$04,$D0,$E0
 L50A3:  .byte   $04,$00,$00,$00,$00,$00,$00
+
 cmd_quit:
         ldx     #$03
 L50AC:  lda     L5099,x
@@ -7561,6 +7597,9 @@ L50C0:  lda     L509D,x
         sta     CLR80VID
         sta     CLR80COL
         MLI_CALL $65, L50A3
+
+;;; ==================================================
+
 cmd_view_by_icon:
         ldx     desktop_winid
         bne     L50FF
@@ -7708,10 +7747,13 @@ L5246:  lda     L5263,x
         sta     L4152
         rts
 
+;;; ==================================================
+
 L5263:  .byte   0
 L5264:  .byte   0
 L5265:  .byte   0
         .byte   0
+
 cmd_view_by_name:
         ldx     desktop_winid
         bne     L526D
@@ -7729,6 +7771,8 @@ L5276:  cmp     #$00
 L527D:  jsr     L52DF
         lda     #$81
         jmp     L51F0
+
+;;; ==================================================
 
 cmd_view_by_date:
         ldx     desktop_winid
@@ -7748,6 +7792,8 @@ L529B:  jsr     L52DF
         lda     #$82
         jmp     L51F0
 
+;;; ==================================================
+
 cmd_view_by_size:
         ldx     desktop_winid
         bne     L52A9
@@ -7765,6 +7811,8 @@ L52B2:  cmp     #$00
 L52B9:  jsr     L52DF
         lda     #$83
         jmp     L51F0
+
+;;; ==================================================
 
 cmd_view_by_type:
         ldx     desktop_winid
@@ -7817,7 +7865,10 @@ L5334:  jsr     DESKTOP_COPY_FROM_BUF
         sta     bufnum
         jmp     DESKTOP_COPY_TO_BUF
 
+;;; ==================================================
+
 L533F:  .byte   0
+
 cmd_format_disk:
         lda     #$01
         jsr     L8E81
@@ -7832,6 +7883,8 @@ L5357:  jmp     L4523
 
 L535A:  rts
 
+;;; ==================================================
+
 cmd_erase_disk:
         lda     #$01
         jsr     L8E81
@@ -7844,21 +7897,31 @@ cmd_erase_disk:
         jsr     L59A4
 L5372:  jmp     L4523
 
+;;; ==================================================
+
 cmd_get_info:
         jsr     L8F09
         jmp     L4523
+
+;;; ==================================================
 
 cmd_get_size:
         jsr     L8F27
         jmp     L4523
 
+;;; ==================================================
+
 cmd_unlock:
         jsr     L8F0F
         jmp     L4523
 
+;;; ==================================================
+
 cmd_lock:
         jsr     L8F0C
         jmp     L4523
+
+;;; ==================================================
 
 cmd_rename_icon:
         jsr     L8F12
@@ -8189,6 +8252,8 @@ L564A:  DESKTOP_RELAY_CALL $0B, LE22F
         jsr     L4510
 L5661:  rts
 
+;;; ==================================================
+
 cmd_select_all:
         lda     is_file_selected
         beq     L566A
@@ -8503,6 +8568,8 @@ L58E2:  lda     desktop_winid
         pla
         rts
 
+;;; ==================================================
+
 cmd_check_drives:
         lda     #$00
         sta     L599F
@@ -8697,8 +8764,11 @@ L5AA9:  lda     buf3len
 L5AC0:  jsr     DESKTOP_COPY_FROM_BUF
         jmp     L4523
 
+;;; ==================================================
+
 L5AC6:  .res    10, 0
 L5AD0:  .byte   0
+
 cmd_startup_item:
         ldx     $E25B
         dex
@@ -8717,6 +8787,8 @@ cmd_startup_item:
         sta     L5B19+1
         lda     #$00
         sta     L5B19
+
+        ;; also invoked by launcher code
 L5AEE:  sta     ALTZPOFF
         lda     ROMIN2
         jsr     SETVID
@@ -8732,8 +8804,11 @@ L5AEE:  sta     ALTZPOFF
         sta     CLR80VID
         sta     CLR80COL
 
+        ;; also used by launcher code
         L5B19 := *+1
         jmp     dummy0000       ; self-modified
+
+;;; ==================================================
 
 L5B1B:  .byte   0
 L5B1C:  lda     desktop_winid
@@ -14685,7 +14760,7 @@ L9000:  txa                     ; ???
 
 L900C:  pla
         pla
-        jmp     L4012
+        jmp     JT_DESKTOP_EJECT
 
         lda     $EBFC
         bpl     L9032
