@@ -15,14 +15,22 @@ probably the disk copy code which is swapped in dynamically.
 
 The file is broken down into multiple segments:
 
-* segment 0: load - address $2000-$257F, length $0580, file offset $000000 (Loader)
-* segment 1: aux1 - address $4000-$BFFF, length $8000, file offset $000580 (A2D, part of DeskTop)
-* segment 2: aux2 - address $D000-$ECFF, length $1D00, file offset $008580 (More of DeskTop)
-* segment 3: aux3 - address $FB00-$FFFF, length $0500, file offset $00A280 (More of DeskTop)
-* segment 4: main - address $4000-$BEFF, length $7F00, file offset $00A780 (More of DeskTop)
-* segment 5: main - address $0800-$0FFF, length $0800, file offset $012680 (Initializer)
-* segment 6: main - address $0290-$03EF, length $0160, file offset $012E80 (Invoker)
-* segment N: _TBD_ - 38k so must be further subdivided. Disk Copy, and ...???
+* segment 0: load - A$2000-$257F, L$0580, mark $000000 (Loader)
+* segment 1: aux1 - A$4000-$BFFF, L$8000, mark $000580 (A2D, part of DeskTop)
+* segment 2: aux2 - A$D000-$ECFF, L$1D00, mark $008580 (More of DeskTop)
+* segment 3: aux3 - A$FB00-$FFFF, L$0500, mark $00A280 (More of DeskTop)
+* segment 4: main - A$4000-$BEFF, L$7F00, mark $00A780 (More of DeskTop)
+* segment 5: main - A$0800-$0FFF, L$0800, mark $012680 (Initializer)
+* segment 6: main - A$0290-$03EF, L$0160, mark $012E80 (Invoker)
+* segments dynamically loaded for these actions:
+  * disk copy     - A$0800, L$0200, mark $012FE0
+  * format/erase  - A$0800, L$1400, mark $0160E0
+  * selector      - A$9000, L$1000, mark $0174E0
+  * helpers       - A$5000, L$2000, mark $0184E0 (used by selector, copy, delete)
+  * file copy     - A$7000, L$0800, mark $01A4E0
+  * file delete   - A$7000, L$0800, mark $01ACE0
+  * selector      - A$7000, L$0800, mark $01B4E0
+* (EOF is $01BCE0)
 
 ## Structure
 

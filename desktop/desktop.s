@@ -5662,7 +5662,7 @@ L4009:  jmp     L830F
 JT_DESKTOP_EJECT:  jmp     cmd_eject
 L4015:  jmp     L40F2
 JT_DESKTOP_RELAY:  jmp     DESKTOP_RELAY
-        jmp     L8E81
+        jmp     load_desktop2_routine_a
 L401E:  jmp     L6D2B
 JT_MLI_RELAY:  jmp     MLI_RELAY
         jmp     DESKTOP_COPY_TO_BUF
@@ -5674,7 +5674,7 @@ JT_DESKTOP_SHOW_ALERT:  jmp     DESKTOP_SHOW_ALERT
         jmp     launch_file
         jmp     set_pointer_cursor
         jmp     set_watch_cursor
-        jmp     L8E89
+        jmp     load_desktop2_routine_b
 
         ;; API entry point
 L4042:  cli
@@ -6682,16 +6682,16 @@ cmd_noop:  rts
 cmd_selector_action:
         jsr     set_watch_cursor
         lda     #$02
-        jsr     L8E81
+        jsr     load_desktop2_routine_a
         bmi     L4961
         lda     $E25B
         cmp     #$03
         bcs     L492E
         lda     #$06
-        jsr     L8E81
+        jsr     load_desktop2_routine_a
         bmi     L4961
         lda     #$03
-        jsr     L8E81
+        jsr     load_desktop2_routine_a
         bmi     L4961
 L492E:  jsr     set_pointer_cursor
         lda     $E25B
@@ -6699,7 +6699,7 @@ L492E:  jsr     set_pointer_cursor
         sta     L498F
         jsr     set_watch_cursor
         lda     #$08
-        jsr     L8E89
+        jsr     load_desktop2_routine_b
         lda     $E25B
         cmp     #$04
         bne     L4961
@@ -7117,10 +7117,10 @@ L4CA1:  .byte   $00
 cmd_copy_file:
         jsr     set_watch_cursor
         lda     #$03
-        jsr     L8E81
+        jsr     load_desktop2_routine_a
         bmi     L4CD6
         lda     #$04
-        jsr     L8E81
+        jsr     load_desktop2_routine_a
         bmi     L4CD6
         jsr     set_pointer_cursor
         lda     #$00
@@ -7128,7 +7128,7 @@ cmd_copy_file:
         pha
         jsr     set_watch_cursor
         lda     #$07
-        jsr     L8E89
+        jsr     load_desktop2_routine_b
         jsr     set_pointer_cursor
         pla
         bpl     L4CCD
@@ -7208,10 +7208,10 @@ L4D4E:  stx     $E04B
 cmd_delete_file:
         jsr     set_watch_cursor
         lda     #$03
-        jsr     L8E81
+        jsr     load_desktop2_routine_a
         bmi     L4D9D
         lda     #$05
-        jsr     L8E81
+        jsr     load_desktop2_routine_a
         bmi     L4D9D
         jsr     set_pointer_cursor
         lda     #$01
@@ -7219,7 +7219,7 @@ cmd_delete_file:
         pha
         jsr     set_watch_cursor
         lda     #$07
-        jsr     L8E89
+        jsr     load_desktop2_routine_b
         jsr     set_pointer_cursor
         pla
         bpl     L4D8A
@@ -7440,7 +7440,7 @@ L4F5B:  rts
 
 cmd_disk_copy:
         lda     #$00
-        jsr     L8E81
+        jsr     load_desktop2_routine_a
         bmi     L4F66
         jmp     L0800
 
@@ -7871,7 +7871,7 @@ L533F:  .byte   0
 
 cmd_format_disk:
         lda     #$01
-        jsr     L8E81
+        jsr     load_desktop2_routine_a
         bmi     L535A
         lda     #$04
         jsr     L0800
@@ -7887,7 +7887,7 @@ L535A:  rts
 
 cmd_erase_disk:
         lda     #$01
-        jsr     L8E81
+        jsr     load_desktop2_routine_a
         bmi     L5372
         lda     #$05
         jsr     L0800
@@ -14534,23 +14534,36 @@ L8E0F:  .byte   0
 L8E10:  A2D_RELAY_CALL A2D_DRAW_RECT, LE230
         rts
 
-L8E1A:  .byte   $E0
-L8E1B:  .byte   $2F
-L8E1C:  .byte   $01,$00,$E0,$60,$01,$00,$E0,$74
-        .byte   $01,$00,$E0,$84,$01,$00,$E0,$A4
-        .byte   $01,$00,$E0,$AC,$01,$00,$E0,$B4
-        .byte   $01,$00,$80,$B7,$00,$00,$80,$F7
-        .byte   $00,$00
-L8E3E:  .byte   $00
-L8E3F:  .byte   $02,$00,$14,$00,$10,$00,$20,$00
-        .byte   $08,$00,$08,$00,$08,$00,$28,$00
-        .byte   $10
-L8E50:  .byte   $00
-L8E51:  .byte   $08,$00,$08,$00,$90,$00,$50,$00
-        .byte   $70,$00,$70,$00,$70,$00,$50,$00
-        .byte   $90
+;;; ==================================================
+;;; Dynamically load parts of Desktop2
 
-.proc open_params2
+;;; Call load_desktop2_routine_a or load_desktop2_routine_b
+;;; with A set to routine number (0-8); routine is loaded
+;;; from DeskTop2 file to target address. Returns with
+;;; minus flag set on failure.
+
+;;; Routines are:
+;;;  0 = disk copy (no restore needed) - A$800,L$200
+;;;  1 = format/erase disk (no restore needed) - A$800,L$1400 call w/ A = 4 = format, A = 5 = erase
+;;;  2 = part of selector actions - A$9000,L$1000
+;;;  3 = part of selector actions, copy file, delete file - A$5000,L$2000
+;;;  4 = part of copy file - A$7000,L$800
+;;;  5 = part of delete file - A$7000,l$800
+;;;  6 = part of selector actions - $7000
+;;;  7 = restore from copy file, delete file - A$5000,L$2800
+;;;  8 = restore from selector actions - A$9000,L$1000
+
+.proc load_desktop2_routine
+
+pos_table:
+        .dword  $00012FE0,$000160E0,$000174E0,$000184E0,$0001A4E0
+        .dword  $0001ACE0,$0001B4E0,$0000B780,$0000F780
+len_table:
+        .word   $0200,$1400,$1000,$2000,$0800,$0800,$0800,$2800,$1000
+addr_table:
+        .addr   $0800,$0800,$9000,$5000,$7000,$7000,$7000,$5000,$9000
+
+.proc open_params
 params: .byte   3
 path:   .addr   str_desktop2
 buffer: .addr   $1C00
@@ -14566,7 +14579,7 @@ ref_num:.byte   0
 pos:    .faraddr  0
 .endproc
 
-.proc read_params2
+.proc read_params
 params: .byte   4
 ref_num:.byte   0
 buffer: .addr   0
@@ -14574,54 +14587,70 @@ request:.word   0
 trans:  .word   0
 .endproc
 
-.proc close_params2
+.proc close_params
 params: .byte   1
 ref_num:.byte   0
 .endproc
 
 L8E80:  .byte   $00
-L8E81:  pha
+
+        ;; Called with routine # in A
+
+L8E81:  pha                     ; entry point with bit clear
         lda     #$00
         sta     L8E80
-        beq     L8E8F
+        beq     :+
+
 L8E89:  pha
-        lda     #$80
+        lda     #$80            ; entry point with bit set
         sta     L8E80
-L8E8F:  pla
-        asl     a
+
+:       pla
+        asl     a               ; y = A * 2 (to index into word table)
         tay
-        asl     a
+        asl     a               ; x = A * 4 (to index into dword table)
         tax
-        lda     L8E1A,x
+
+        lda     pos_table,x
         sta     set_mark_params::pos
-        lda     L8E1B,x
+        lda     pos_table+1,x
         sta     set_mark_params::pos+1
-        lda     L8E1C,x
+        lda     pos_table+2,x
         sta     set_mark_params::pos+2
-        lda     L8E3E,y
-        sta     read_params2::request
-        lda     L8E3F,y
-        sta     read_params2::request+1
-        lda     L8E50,y
-        sta     read_params2::buffer
-        lda     L8E51,y
-        sta     read_params2::buffer+1
-L8EBE:  MLI_RELAY_CALL OPEN, open_params2
-        beq     L8ED6
-        lda     #$00
-        ora     L8E80
-        jsr     L48CC
-        beq     L8EBE
-        lda     #$FF
+
+        lda     len_table,y
+        sta     read_params::request
+        lda     len_table+1,y
+        sta     read_params::request+1
+
+        lda     addr_table,y
+        sta     read_params::buffer
+        lda     addr_table+1,y
+        sta     read_params::buffer+1
+
+open:   MLI_RELAY_CALL OPEN, open_params
+        beq     :+
+
+        lda     #$00            ; on error
+        ora     L8E80           ; check flag
+        jsr     L48CC           ; ??? reset path ???
+        beq     open
+        lda     #$FF            ; failed
         rts
 
-L8ED6:  lda     open_params2::ref_num
-        sta     read_params2::ref_num
+:       lda     open_params::ref_num
+        sta     read_params::ref_num
         sta     set_mark_params::ref_num
         MLI_RELAY_CALL SET_MARK, set_mark_params
-        MLI_RELAY_CALL READ, read_params2
-        MLI_RELAY_CALL CLOSE, close_params2
+        MLI_RELAY_CALL READ, read_params
+        MLI_RELAY_CALL CLOSE, close_params
         rts
+
+.endproc
+        load_desktop2_routine_a := load_desktop2_routine::L8E81
+        load_desktop2_routine_b := load_desktop2_routine::L8E89
+
+;;; ==================================================
 
         .byte   0
         .byte   0
@@ -20092,8 +20121,8 @@ L0BB9:  lda     get_file_info_params_type
         beq     L0BC3
         jmp     L0D0A
 
-L0BC3:  MLI_RELAY_CALL OPEN, open_params2
-        lda     open_params2_ref_num
+L0BC3:  MLI_RELAY_CALL OPEN, open_desktop2_params
+        lda     open_desktop2_params_ref_num
         sta     read_params2_ref_num
         sta     close_params2_ref_num
         MLI_RELAY_CALL READ, read_params2
@@ -20209,13 +20238,13 @@ L0CBA:  lda     $06
 L0CCB:  MLI_RELAY_CALL CLOSE, close_params2
         jmp     L0D0A
 
-.proc open_params2
+.proc open_desktop2_params
 params: .byte   3
 path:   .addr   str_desk_acc
 buffer: .addr   $1000
 ref_num:.byte   0
 .endproc
-        open_params2_ref_num := open_params2::ref_num
+        open_desktop2_params_ref_num := open_desktop2_params::ref_num
 
 .proc read_params2
 params: .byte   4
