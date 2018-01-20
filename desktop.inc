@@ -3,31 +3,32 @@
 ;;; ==================================================
 
 ;;; ==================================================
-;;; Direct Calls
+;;; Direct Calls (from main memory)
 
 ;;; NOTE: Some of these are used by Desk Accessories
 
-        ;; These must be called from main memory (RAMRDOFF/RAMWRTOFF)
-JUMP_TABLE_03   := $4003        ; Enter DeskTop input loop
-JUMP_TABLE_06   := $4006        ; ???
-JUMP_TABLE_09   := $4009        ; ???
-JUMP_TABLE_0C   := $400C        ; ??? (made "items/in disk/..." redraw oddly)
-JUMP_TABLE_0F   := $400F        ; ???
-JUMP_TABLE_12   := $4012        ; ???
-JUMP_TABLE_REDRAW_ALL  := $4015 ; Redraw all windows (e.g. after a drag)
-JUMP_TABLE_18   := $4018        ; ???
-JUMP_TABLE_CLEAR_SEL   := $401E ; Clear DeskTop selection
-JUMP_TABLE_MLI  := $4021        ; ProDOS MLI call (Y=call, X,A=params addr)
-JUMP_TABLE_24   := $4024        ; ???
-JUMP_TABLE_27   := $4027        ; ???
-JUMP_TABLE_2A   := $402A        ; Just an RTS
-JUMP_TABLE_2D   := $402D        ; Draw type/size/date in non-icon views
-JUMP_TABLE_30   := $4030        ; ???
-JUMP_TABLE_33   := $4033        ; Shows "The syntax of the pathname is invalid.", hangs
-JUMP_TABLE_36   := $4036        ; ditto
+JUMP_TABLE_00           := $4042 ; ???
+JUMP_TABLE_03           := $4003 ; A2D relay call (main>aux)
+JUMP_TABLE_06           := $4006 ; ???
+JUMP_TABLE_09           := $4009 ; ???
+JUMP_TABLE_0C           := $400C ; ???
+JUMP_TABLE_0F           := $400F ; Auxload
+JUMP_TABLE_12           := $4012 ; Eject command
+JUMP_TABLE_REDRAW_ALL   := $4015 ; Redraw all windows (e.g. after a drag)
+JUMP_TABLE_18           := $4018 ; DESKTOP relay call (main>aux)
+JUMP_TABLE_1B           := $401B ; Load dynamic routine
+JUMP_TABLE_CLEAR_SEL    := $401E ; Clear DeskTop selection
+JUMP_TABLE_MLI          := $4021 ; ProDOS MLI call (Y=call, X,A=params addr)
+JUMP_TABLE_24           := $4024 ; Copy to buffer
+JUMP_TABLE_27           := $4027 ; Copy from buffer
+JUMP_TABLE_2A           := $402A ; No-Op command (RTS)
+JUMP_TABLE_2D           := $402D ; Draw type/size/date in non-icon views
+JUMP_TABLE_30           := $4030 ; Show alert 0
+JUMP_TABLE_33           := $4033 ; Show alert X
+JUMP_TABLE_36           := $4036 ; Launch file
 JUMP_TABLE_CUR_POINTER  := $4039 ; Changes mouse cursor to pointer
 JUMP_TABLE_CUR_WATCH    := $403C ; Changes mouse cursor to watch
-JUMP_TABLE_3F   := $403F        ; ???
+JUMP_TABLE_3F           := $403F ; Restore from dynamic routine
 
 ;;; ==================================================
 ;;; API Calls
@@ -95,11 +96,14 @@ file_table := $DD9F     ; file address table
 ;;      .byte ??
 ;;      .byte len, name (length-prefixed, spaces before/after; 17 byte buffer)
 
+
 ;;; ==================================================
 ;;; Internals - Default Font
 
+;;; Used by DAs for window definitions
 DEFAULT_FONT := $8800
 
+;;; Modified by Show Text File DA to toggle fixed width
 font_flag       := $8800 ; = $00 - if high bit set, glyphs are 2 bytes wide (???)
 font_size_count := $8801 ; = $7F - max glyph number (count is this + 1)
 font_height     := $8802 ; 9 pixels
@@ -114,8 +118,7 @@ font_glyphs     := $8883 ; $80 glyphs, organized by row, 9 bytes per
 ;;; etc
 
 ;;; Control Character Glyphs
-
-
+;;;
 ;;; Glyphs $00-$1F are useful symbols; some overlap with MouseText
 ;;; (called out as MT:X in the table below)
 ;;;

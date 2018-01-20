@@ -6034,17 +6034,17 @@ L0D14           := $0D14
         .org $4000
 
         ;; Jump table
-L4000:  jmp     L4042
+        jmp     L4042
 JT_A2D_RELAY:  jmp     A2D_RELAY
 L4006:  jmp     L8259
 L4009:  jmp     L830F
         jmp     L5E78
         jmp     DESKTOP_AUXLOAD
 JT_DESKTOP_EJECT:  jmp     cmd_eject
-L4015:  jmp     L40F2
+JT_DESKTOP_REDRAW_ALL:  jmp     redraw_windows
 JT_DESKTOP_RELAY:  jmp     DESKTOP_RELAY
         jmp     load_dynamic_routine
-L401E:  jmp     L6D2B
+JT_CLEAR_SELECTION:  jmp     clear_selection
 JT_MLI_RELAY:  jmp     MLI_RELAY
         jmp     DESKTOP_COPY_TO_BUF
         jmp     DESKTOP_COPY_FROM_BUF
@@ -6136,7 +6136,8 @@ L40E0:  tsx
 
 L40F0:  .byte   $00
 L40F1:  .byte   $00
-L40F2:  jsr     L4510
+redraw_windows:
+        jsr     L4510
         lda     desktop_winid
         sta     L40F0
         lda     #$00
@@ -6534,7 +6535,7 @@ L4458:  rts
 L4459:  jmp     L445D
 
 L445C:  .byte   0
-L445D:  jsr     L6D2B
+L445D:  jsr     clear_selection
         ldx     $D20E
         dex
         lda     LEC26,x
@@ -6597,7 +6598,7 @@ L4510:  A2D_RELAY_CALL A2D_QUERY_SCREEN, state2
         A2D_RELAY_CALL A2D_SET_STATE, state2
         rts
 
-L4523:  jsr     L40F2
+L4523:  jsr     redraw_windows
         DESKTOP_RELAY_CALL DESKTOP_REDRAW_ICONS
         rts
 
@@ -7755,7 +7756,7 @@ L4E71:  .byte   0
         bne     L4E78
         rts
 
-L4E78:  jsr     L6D2B
+L4E78:  jsr     clear_selection
         dec     $EC2E
         lda     desktop_winid
         sta     bufnum
@@ -8613,7 +8614,7 @@ L5565:  sta     L5444,x
 
 L5579:  lda     #$00
         sta     L544A
-        jsr     L6D2B
+        jsr     clear_selection
 L5581:  jsr     L55F0
 L5584:  jsr     L48E6
         lda     input_params_state
@@ -8712,7 +8713,7 @@ L5661:  rts
 .proc cmd_select_all
         lda     is_file_selected
         beq     L566A
-        jsr     L6D2B
+        jsr     clear_selection
 L566A:  ldx     desktop_winid
         beq     L5676
         dex
@@ -9035,7 +9036,7 @@ L58E2:  lda     desktop_winid
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         jsr     cmd_close_all
-        jsr     L6D2B
+        jsr     clear_selection
         ldx     buf3len
         dex
 L5916:  lda     buf3,x
@@ -9178,7 +9179,7 @@ L5A43:  jsr     L61DC
         jmp     L5A2F
 
 L5A4C:  jsr     L4523
-        jsr     L6D2B
+        jsr     clear_selection
         lda     #$00
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
@@ -9455,7 +9456,7 @@ L5C99:  A2D_RELAY_CALL A2D_QUERY_CLIENT, input_params_coords
 L5CB6:  .byte   0
 L5CB7:  bit     L5B1B
         bpl     L5CBF
-        jmp     L6D2B
+        jmp     clear_selection
 
 L5CBF:  lda     desktop_winid
         sta     $D20E
@@ -9487,7 +9488,7 @@ L5CFB:  bit     BUTN0
         lda     selected_window_index
         cmp     desktop_winid
         beq     L5D0B
-L5D08:  jsr     L6D2B
+L5D08:  jsr     clear_selection
 L5D0B:  ldx     is_file_selected
         lda     L5CD9
         sta     selected_file_index,x
@@ -9648,7 +9649,7 @@ L5E74:  jmp     launch_file
 L5E77:  .byte   0
 L5E78:  sta     L5F0A
         jsr     L4523
-        jsr     L6D2B
+        jsr     clear_selection
         lda     L5F0A
         cmp     desktop_winid
         beq     L5E8F
@@ -9728,10 +9729,10 @@ L5F20:  lda     input_params_coords,x
         beq     L5F3F
         bit     BUTN0
         bmi     L5F3E
-        jsr     L6D2B
+        jsr     clear_selection
 L5F3E:  rts
 
-L5F3F:  jsr     L6D2B
+L5F3F:  jsr     clear_selection
         lda     desktop_winid
         sta     query_state_params2::id
         jsr     L4505
@@ -9998,7 +9999,7 @@ L61CA:  lda     desktop_winid
 L61DC:  lda     desktop_winid
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
-        jsr     L6D2B
+        jsr     clear_selection
         ldx     desktop_winid
         dex
         lda     LE6D1,x
@@ -10642,7 +10643,7 @@ L67F6:  bit     BUTN0
         inc     is_file_selected
         jmp     L6834
 
-L6818:  jsr     L6D2B
+L6818:  jsr     clear_selection
 L681B:  DESKTOP_RELAY_CALL $02, $D20D
         lda     #$01
         sta     is_file_selected
@@ -10709,7 +10710,7 @@ L68AA:  jsr     L4510
         bpl     L68B3
         rts
 
-L68B3:  jsr     L6D2B
+L68B3:  jsr     clear_selection
         ldx     #$03
 L68B8:  lda     input_params_coords,x
         sta     LE230,x
@@ -10950,7 +10951,7 @@ L6B01:  A2D_RELAY_CALL A2D_RAISE_WINDOW, bufnum
         lda     bufnum
         sta     desktop_winid
         jsr     L6C19
-        jsr     L40F2
+        jsr     redraw_windows
         lda     #$00
         sta     bufnum
         jmp     DESKTOP_COPY_TO_BUF
@@ -11170,7 +11171,8 @@ L6D25:  pla
         inx
         jmp     L6CF3
 
-L6D2B:  lda     is_file_selected
+clear_selection:
+        lda     is_file_selected
         bne     L6D31
         rts
 
@@ -15490,7 +15492,7 @@ L91D5:  yax_call JT_A2D_RELAY, state2, A2D_QUERY_SCREEN
         yax_call JT_A2D_RELAY, state2, A2D_SET_STATE
         rts
 
-L91E8:  jsr     L4015
+L91E8:  jsr     JT_DESKTOP_REDRAW_ALL
         ldy     #$0C
         lda     #$00
         ldx     #$00
@@ -15525,7 +15527,7 @@ L9220:  lda     selected_file_index,x
         sta     $0801,x
         dex
         bpl     L9220
-        jsr     L401E
+        jsr     JT_CLEAR_SELECTION
         ldx     #$00
         stx     L924A
 L9231:  ldx     L924A
