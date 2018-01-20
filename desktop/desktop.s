@@ -5650,11 +5650,21 @@ L0CD7           := $0CD7
 L0CF9           := $0CF9
 L0D14           := $0D14
 
-
         dynamic_routine_800  := $0800
         dynamic_routine_5000 := $5000
         dynamic_routine_7000 := $7000
         dynamic_routine_9000 := $9000
+
+        dynamic_routine_disk_copy    := 0
+        dynamic_routine_format_erase := 1
+        dynamic_routine_selector1    := 2
+        dynamic_routine_common       := 3
+        dynamic_routine_file_copy    := 4
+        dynamic_routine_file_delete  := 5
+        dynamic_routine_selector2    := 6
+        dynamic_routine_restore5000  := 7
+        dynamic_routine_restore9000  := 8
+
 
         .org $4000
 
@@ -6687,16 +6697,16 @@ cmd_noop:  rts
 
 cmd_selector_action:
         jsr     set_watch_cursor
-        lda     #$02
+        lda     #dynamic_routine_selector1
         jsr     load_dynamic_routine
         bmi     L4961
         lda     $E25B
         cmp     #$03
         bcs     L492E
-        lda     #$06
+        lda     #dynamic_routine_selector2
         jsr     load_dynamic_routine
         bmi     L4961
-        lda     #$03
+        lda     #dynamic_routine_common
         jsr     load_dynamic_routine
         bmi     L4961
 L492E:  jsr     set_pointer_cursor
@@ -6704,7 +6714,7 @@ L492E:  jsr     set_pointer_cursor
         jsr     dynamic_routine_9000
         sta     L498F
         jsr     set_watch_cursor
-        lda     #$08
+        lda     #dynamic_routine_restore9000
         jsr     restore_dynamic_routine
         lda     $E25B
         cmp     #$04
@@ -7122,10 +7132,10 @@ L4C88:  PASCAL_STRING "Desk.acc/"
 L4CA1:  .byte   $00
 cmd_copy_file:
         jsr     set_watch_cursor
-        lda     #$03
+        lda     #dynamic_routine_common
         jsr     load_dynamic_routine
         bmi     L4CD6
-        lda     #$04
+        lda     #dynamic_routine_file_copy
         jsr     load_dynamic_routine
         bmi     L4CD6
         jsr     set_pointer_cursor
@@ -7133,7 +7143,7 @@ cmd_copy_file:
         jsr     dynamic_routine_5000
         pha
         jsr     set_watch_cursor
-        lda     #$07
+        lda     #dynamic_routine_restore5000
         jsr     restore_dynamic_routine
         jsr     set_pointer_cursor
         pla
@@ -7213,10 +7223,10 @@ L4D4E:  stx     $E04B
 
 cmd_delete_file:
         jsr     set_watch_cursor
-        lda     #$03
+        lda     #dynamic_routine_common
         jsr     load_dynamic_routine
         bmi     L4D9D
-        lda     #$05
+        lda     #dynamic_routine_file_delete
         jsr     load_dynamic_routine
         bmi     L4D9D
         jsr     set_pointer_cursor
@@ -7224,7 +7234,7 @@ cmd_delete_file:
         jsr     dynamic_routine_5000
         pha
         jsr     set_watch_cursor
-        lda     #$07
+        lda     #dynamic_routine_restore5000
         jsr     restore_dynamic_routine
         jsr     set_pointer_cursor
         pla
@@ -7445,7 +7455,7 @@ L4F5B:  rts
 ;;; ==================================================
 
 cmd_disk_copy:
-        lda     #$00
+        lda     #dynamic_routine_disk_copy
         jsr     load_dynamic_routine
         bmi     L4F66
         jmp     dynamic_routine_800
@@ -7876,7 +7886,7 @@ L5334:  jsr     DESKTOP_COPY_FROM_BUF
 L533F:  .byte   0
 
 cmd_format_disk:
-        lda     #$01
+        lda     #dynamic_routine_format_erase
         jsr     load_dynamic_routine
         bmi     L535A
         lda     #$04
@@ -7892,7 +7902,7 @@ L535A:  rts
 ;;; ==================================================
 
 cmd_erase_disk:
-        lda     #$01
+        lda     #dynamic_routine_format_erase
         jsr     load_dynamic_routine
         bmi     L5372
         lda     #$05
@@ -14549,15 +14559,17 @@ L8E10:  A2D_RELAY_CALL A2D_DRAW_RECT, LE230
 ;;; minus flag set on failure.
 
 ;;; Routines are:
-;;;  0 = disk copy (no restore needed) - A$800,L$200
-;;;  1 = format/erase disk (no restore needed) - A$800,L$1400 call w/ A = 4 = format, A = 5 = erase
+;;;  0 = disk copy                - A$ 800,L$ 200
+;;;  1 = format/erase disk        - A$ 800,L$1400 call w/ A = 4 = format, A = 5 = erase
 ;;;  2 = part of selector actions - A$9000,L$1000
-;;;  3 = part of selector actions, copy file, delete file - A$5000,L$2000
-;;;  4 = part of copy file - A$7000,L$800
-;;;  5 = part of delete file - A$7000,l$800
-;;;  6 = part of selector actions - $7000
-;;;  7 = restore from copy file, delete file - A$5000,L$2800
-;;;  8 = restore from selector actions - A$9000,L$1000
+;;;  3 = common routines          - A$5000,L$2000
+;;;  4 = part of copy file        - A$7000,L$ 800
+;;;  5 = part of delete file      - A$7000,L$ 800
+;;;  6 = part of selector actions - L$7000,L$ 800
+;;;  7 = restore 1                - A$5000,L$2800 (restore $5000...$77FF)
+;;;  8 = restore 2                - A$9000,L$1000 (restore $9000...$9FFF)
+;;;
+;;; Routines 2-6 need appropriate "restore routines" applied when complete.
 
 .proc load_dynamic_routine_impl
 
