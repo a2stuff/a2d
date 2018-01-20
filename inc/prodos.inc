@@ -84,6 +84,13 @@ FT_BASIC        := $FC
 FT_SYSTEM       := $FF
 
 ;;; ------------------------------------------------------------
+;;; Storage Types
+
+ST_STANDARD_FILE        := $01
+ST_LINKED_DIRECTORY     := $0D
+ST_VOLUME_DIRECTORY     := $0F
+
+;;; ------------------------------------------------------------
 ;;; Macros
 
 .macro  MLI_CALL    op, addr

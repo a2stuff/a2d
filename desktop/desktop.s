@@ -6695,20 +6695,21 @@ cmd_noop:  rts
 
 ;;; ==================================================
 
-cmd_selector_action:
+.proc cmd_selector_action
         jsr     set_watch_cursor
         lda     #dynamic_routine_selector1
         jsr     load_dynamic_routine
-        bmi     L4961
+        bmi     done
         lda     $E25B
         cmp     #$03
         bcs     L492E
         lda     #dynamic_routine_selector2
         jsr     load_dynamic_routine
-        bmi     L4961
+        bmi     done
         lda     #dynamic_routine_common
         jsr     load_dynamic_routine
-        bmi     L4961
+        bmi     done
+
 L492E:  jsr     set_pointer_cursor
         lda     $E25B
         jsr     dynamic_routine_9000
@@ -6718,17 +6719,17 @@ L492E:  jsr     set_pointer_cursor
         jsr     restore_dynamic_routine
         lda     $E25B
         cmp     #$04
-        bne     L4961
+        bne     done
         lda     L498F
-        bpl     L4961
+        bpl     done
         jsr     L4AAD
         jsr     L4A77
         jsr     L4AFD
         bpl     L497A
         jsr     L8F24
-        bmi     L4961
+        bmi     done
         jsr     L4968
-L4961:  jsr     set_pointer_cursor
+done:   jsr     set_pointer_cursor
         jsr     L4523
         rts
 
@@ -6747,9 +6748,13 @@ L4980:  lda     L0800,x
         dex
         bpl     L4980
         jsr     L4A17
-        jmp     L4961
+        jmp     done
 
 L498F:  .byte   $00
+.endproc
+
+
+;;; ==================================================
 
 .proc get_file_info_params3
 params: .byte   $A
@@ -6765,12 +6770,11 @@ cdate:  .word   0
 ctime:  .word   0
 .endproc
 
-;;; ==================================================
-
 cmd_selector_item:
         jmp     L49A6
 
 L49A5:  .byte   0
+
 L49A6:  lda     $E25B
         sec
         sbc     #$06
@@ -7025,19 +7029,22 @@ L4B9C:  inx
         ldx     #$4F
         rts
 
-;;; ==================================================
-
 L4BB0:  .byte   0
 L4BB1:  .byte   0
+
+;;; ==================================================
+
 cmd_about:
         yax_call LA500, $0000, $00
         jmp     L4523
 
 ;;; ==================================================
 
+.proc cmd_deskacc_impl
+
 L4BBE:  .byte   $80
-cmd_deskacc:
-        jsr     L4510
+
+start:  jsr     L4510
         jsr     set_watch_cursor
         lda     $E25B
         sec
@@ -7126,11 +7133,16 @@ L4C86:  .byte   $00
 L4C87:  .byte   $09
 L4C88:  PASCAL_STRING "Desk.acc/"
         .res    15, 0
+.endproc
+        cmd_deskacc := cmd_deskacc_impl::start
 
 ;;; ==================================================
 
 L4CA1:  .byte   $00
-cmd_copy_file:
+
+;;; ==================================================
+
+.proc cmd_copy_file
         jsr     set_watch_cursor
         lda     #dynamic_routine_common
         jsr     load_dynamic_routine
@@ -7182,6 +7194,9 @@ L4D01:  dey
         ldy     LDFC9
         jsr     L6F4B
         jmp     L4523
+.endproc
+
+;;; ==================================================
 
 L4D19:  ldy     #$00
         lda     ($06),y
@@ -7221,7 +7236,7 @@ L4D4E:  stx     $E04B
 
 ;;; ==================================================
 
-cmd_delete_file:
+.proc cmd_delete_file
         jsr     set_watch_cursor
         lda     #dynamic_routine_common
         jsr     load_dynamic_routine
@@ -7283,10 +7298,11 @@ L4DD2:  dey
         ldy     $E00A
         jsr     L6F4B
         jmp     L4523
+.endproc
 
 ;;; ==================================================
 
-cmd_open:
+.proc cmd_open
         ldx     #$00
 L4DEC:  cpx     is_file_selected
         bne     L4DF2
@@ -7359,11 +7375,12 @@ L4E51:  lda     ($06),y
         lda     L4E71
 L4E6E:  jmp     launch_file
 
+L4E71:  .byte   0
+.endproc
+
 ;;; ==================================================
 
-L4E71:  .byte   0
-
-cmd_close:
+.proc cmd_close
         lda     desktop_winid
         bne     L4E78
         rts
@@ -7441,28 +7458,33 @@ L4F3C:  lda     #$00
         A2D_RELAY_CALL $36, LE267 ; ???
         jsr     L66A2
         jmp     L4510
+.endproc
 
 ;;; ==================================================
 
-cmd_close_all:
+.proc cmd_close_all
         lda     desktop_winid
         beq     L4F5B
         jsr     cmd_close
         jmp     cmd_close_all
 
 L4F5B:  rts
+.endproc
 
 ;;; ==================================================
 
-cmd_disk_copy:
+.proc cmd_disk_copy
         lda     #dynamic_routine_disk_copy
         jsr     load_dynamic_routine
         bmi     L4F66
         jmp     dynamic_routine_800
 
+L4F66:  rts
+.endproc
+
 ;;; ==================================================
 
-L4F66:  rts
+.proc cmd_new_folder_impl
 
 L4F67:  .byte   $00
 L4F68:  .byte   $00
@@ -7471,21 +7493,17 @@ L4F69:  .byte   $00
 .proc create_params
 params: .byte   7
 path:   .addr   L4F76
-access: .byte   $C3
-type:   .byte   $0F
+access: .byte   %11000011       ; destroy/rename/write/read
+type:   .byte   FT_DIRECTORY
 auxtype:.word   0
-storage:.byte   $0D
+storage:.byte   ST_LINKED_DIRECTORY
 cdate:  .word   0
 ctime:  .word   0
 .endproc
 
-;;; ==================================================
+L4F76:  .res    65, 0              ; buffer is used elsewhere too
 
-L4F76:  .res    64
-        .byte   $00
-
-cmd_new_folder:
-        lda     desktop_winid
+start:  lda     desktop_winid
         sta     L4F67
         yax_call LA500, L4F67, $03
 L4FC6:  lda     desktop_winid
@@ -7538,12 +7556,15 @@ L5027:  lda     #$40
         jsr     L5E78
 L504B:  jmp     L4523
 
-;;; ==================================================
-
 L504E:  .byte   0
 L504F:  .byte   0
+.endproc
+        cmd_new_folder := cmd_new_folder_impl::start
+        L4F76 := cmd_new_folder_impl::L4F76 ; ???
 
-cmd_eject:
+;;; ==================================================
+
+.proc cmd_eject
         lda     selected_window_index
         beq     L5056
 L5055:  rts
@@ -7576,28 +7597,46 @@ L5084:  ldx     L5098
         dec     L5098
         bpl     L5084
         jmp     L4523
+L5098:  .byte   $00
+
+.endproc
 
 ;;; ==================================================
 
-L5098:  .byte   $00
-L5099:  .byte   $AF,$DE,$AD,$DE
-L509D:  .byte   $18,$FB,$5C,$04,$D0,$E0
-L50A3:  .byte   $04,$00,$00,$00,$00,$00,$00
+.proc cmd_quit_impl
 
-cmd_quit:
-        ldx     #$03
-L50AC:  lda     L5099,x
-        sta     $0102,x
+stack_data:
+        .addr   $DEAF,$DEAD     ; ???
+
+quit_code:
+        .byte   $18,$FB,$5C,$04,$D0,$E0
+
+.proc quit_params
+params: .byte   4
+        .byte   0
+        .word   0
+        .byte   0
+        .word   0
+.endproc
+
+start:
+        ldx     #3
+:       lda     stack_data,x
+        sta     $0102,x         ; Populate stack ???
         dex
-        bpl     L50AC
+        bpl     :-
+
+        ;; Install new quit routine
         sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
-        ldx     #$05
-L50C0:  lda     L509D,x
-        sta     $D100,x         ; ???
+        ldx     #5
+:       lda     quit_code,x
+        sta     SELECTOR,x
         dex
-        bpl     L50C0
+        bpl     :-
+
+        ;; Restore machine to text state
         sta     ALTZPOFF
         lda     ROMIN2
         jsr     SETVID
@@ -7612,11 +7651,14 @@ L50C0:  lda     L509D,x
         sta     CLRALTCHAR
         sta     CLR80VID
         sta     CLR80COL
-        MLI_CALL $65, L50A3
+
+        MLI_CALL QUIT, quit_params
+.endproc
+        cmd_quit := cmd_quit_impl::start
 
 ;;; ==================================================
 
-cmd_view_by_icon:
+.proc cmd_view_by_icon
         ldx     desktop_winid
         bne     L50FF
         rts
@@ -7718,6 +7760,10 @@ L51EC:  .byte   0
 L51ED:  .byte   0
         .byte   0
 L51EF:  .byte   0
+.endproc
+
+;;; ==================================================
+
 L51F0:  ldx     desktop_winid
         dex
         sta     LE6D1,x
@@ -7763,14 +7809,14 @@ L5246:  lda     L5263,x
         sta     L4152
         rts
 
-;;; ==================================================
-
 L5263:  .byte   0
 L5264:  .byte   0
 L5265:  .byte   0
         .byte   0
 
-cmd_view_by_name:
+;;; ==================================================
+
+.proc cmd_view_by_name
         ldx     desktop_winid
         bne     L526D
         rts
@@ -7787,10 +7833,11 @@ L5276:  cmp     #$00
 L527D:  jsr     L52DF
         lda     #$81
         jmp     L51F0
+.endproc
 
 ;;; ==================================================
 
-cmd_view_by_date:
+.proc cmd_view_by_date
         ldx     desktop_winid
         bne     L528B
         rts
@@ -7807,10 +7854,11 @@ L5294:  cmp     #$00
 L529B:  jsr     L52DF
         lda     #$82
         jmp     L51F0
+.endproc
 
 ;;; ==================================================
 
-cmd_view_by_size:
+.proc cmd_view_by_size
         ldx     desktop_winid
         bne     L52A9
         rts
@@ -7827,10 +7875,11 @@ L52B2:  cmp     #$00
 L52B9:  jsr     L52DF
         lda     #$83
         jmp     L51F0
+.endproc
 
 ;;; ==================================================
 
-cmd_view_by_type:
+.proc cmd_view_by_type
         ldx     desktop_winid
         bne     L52C7
         rts
@@ -7847,6 +7896,9 @@ L52D0:  cmp     #$00
 L52D7:  jsr     L52DF
         lda     #$84
         jmp     L51F0
+.endproc
+
+;;; ==================================================
 
 L52DF:  lda     #$00
         sta     $E269
@@ -7885,7 +7937,9 @@ L5334:  jsr     DESKTOP_COPY_FROM_BUF
 
 L533F:  .byte   0
 
-cmd_format_disk:
+;;; ==================================================
+
+.proc cmd_format_disk
         lda     #dynamic_routine_format_erase
         jsr     load_dynamic_routine
         bmi     L535A
@@ -7898,10 +7952,11 @@ cmd_format_disk:
 L5357:  jmp     L4523
 
 L535A:  rts
+.endproc
 
 ;;; ==================================================
 
-cmd_erase_disk:
+.proc cmd_erase_disk
         lda     #dynamic_routine_format_erase
         jsr     load_dynamic_routine
         bmi     L5372
@@ -7912,34 +7967,39 @@ cmd_erase_disk:
         jsr     L4523
         jsr     L59A4
 L5372:  jmp     L4523
+.endproc
 
 ;;; ==================================================
 
-cmd_get_info:
+.proc cmd_get_info
         jsr     L8F09
         jmp     L4523
+.endproc
 
 ;;; ==================================================
 
-cmd_get_size:
+.proc cmd_get_size
         jsr     L8F27
         jmp     L4523
+.endproc
 
 ;;; ==================================================
 
-cmd_unlock:
+.proc cmd_unlock
         jsr     L8F0F
         jmp     L4523
+.endproc
 
 ;;; ==================================================
 
-cmd_lock:
+.proc cmd_lock
         jsr     L8F0C
         jmp     L4523
+.endproc
 
 ;;; ==================================================
 
-cmd_rename_icon:
+.proc cmd_rename_icon
         jsr     L8F12
         pha
         jsr     L4523
@@ -7969,7 +8029,6 @@ L53BA:  inc     L5426
         lda     selected_window_index
         bne     L53CD
         jmp     L540E
-
 L53CD:  jmp     L5E78
 
 L53D0:  tax
@@ -8011,13 +8070,17 @@ L5411:  lda     L5428,x
 L5426:  .byte   0
 L5427:  .byte   0
 L5428:  .res    9, 0
-L5431:  ldx     #$07
+
+L5431:  ldx     #7
 L5433:  cmp     LEC26,x
         beq     L543E
         dex
         bpl     L5433
         lda     #$FF
         rts
+.endproc
+
+;;; ==================================================
 
 L543E:  inx
         txa
@@ -9231,7 +9294,7 @@ L5ECB:  lda     ($06),y
         bpl     L5ECB
         pla
         jsr     L7054
-        jsr     L5106
+        jsr     cmd_view_by_icon::L5106
         jsr     DESKTOP_COPY_FROM_BUF
         lda     desktop_winid
         sta     bufnum
@@ -14610,19 +14673,20 @@ params: .byte   1
 ref_num:.byte   0
 .endproc
 
-L8E80:  .byte   $00
+restore_flag:
+        .byte   0
 
         ;; Called with routine # in A
 
 load:   pha                     ; entry point with bit clear
         lda     #$00
-        sta     L8E80
+        sta     restore_flag
         beq     :+
 
 restore:
         pha
         lda     #$80            ; entry point with bit set
-        sta     L8E80
+        sta     restore_flag
 
 :       pla
         asl     a               ; y = A * 2 (to index into word table)
@@ -14651,7 +14715,7 @@ open:   MLI_RELAY_CALL OPEN, open_params
         beq     :+
 
         lda     #$00            ; on error
-        ora     L8E80           ; check flag
+        ora     restore_flag    ; error during restore?
         jsr     L48CC           ; ??? reset path ???
         beq     open
         lda     #$FF            ; failed
@@ -15730,7 +15794,7 @@ trans:  .word   0
 .proc create_params3
 params: .byte   7
 path:   .addr   $1FC0
-access: .byte   $C3
+access: .byte   %11000011
 type:   .byte   0
 auxtype:.word   0
 storage:.byte   0
@@ -16095,9 +16159,9 @@ L9A70:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
         jmp     L9A70
 
 L9A81:  lda     file_info_params2::storage
-        cmp     #$0F
+        cmp     #ST_VOLUME_DIRECTORY
         beq     L9A90
-        cmp     #$0D
+        cmp     #ST_LINKED_DIRECTORY
         beq     L9A90
         lda     #$00
         beq     L9A95
@@ -16117,7 +16181,7 @@ L9AAA:  lda     file_info_params2,y
         dey
         cpy     #$02
         bne     L9AAA
-        lda     #$C3
+        lda     #%11000011
         sta     create_params2::access
         lda     $E05B
         beq     L9B23
@@ -16132,9 +16196,9 @@ L9AC8:  lda     file_info_params2,y
         cpy     #$0D
         bne     L9AC8
         lda     create_params2::storage
-        cmp     #$0F
+        cmp     #ST_VOLUME_DIRECTORY
         bne     L9AE0
-        lda     #$0D
+        lda     #ST_LINKED_DIRECTORY
         sta     create_params2::storage
 L9AE0:  yax_call JT_MLI_RELAY, create_params2, CREATE
         beq     L9B23
@@ -16566,7 +16630,7 @@ L9EE3:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
 
 L9EF4:  lda     file_info_params2::storage
         sta     L9F1D
-        cmp     #$0D
+        cmp     #ST_LINKED_DIRECTORY
         beq     L9F02
         lda     #$00
         beq     L9F04
@@ -16646,7 +16710,7 @@ L9FAA:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
         jmp     L9FAA
 
 L9FBB:  lda     file_info_params2::storage
-        cmp     #$0D
+        cmp     #ST_LINKED_DIRECTORY
         beq     LA022
 L9FC2:  yax_call JT_MLI_RELAY, destroy_params, DESTROY
         beq     LA022
@@ -16814,9 +16878,9 @@ LA133:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
 
 LA144:  lda     file_info_params2::storage
         sta     LA169
-        cmp     #$0F
+        cmp     #ST_VOLUME_DIRECTORY
         beq     LA156
-        cmp     #$0D
+        cmp     #ST_LINKED_DIRECTORY
         beq     LA156
         lda     #$00
         beq     LA158
@@ -16843,13 +16907,13 @@ LA179:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
         jmp     LA179
 
 LA18A:  lda     file_info_params2::storage
-        cmp     #$0F
+        cmp     #ST_VOLUME_DIRECTORY
         beq     LA1C0
-        cmp     #$0D
+        cmp     #ST_LINKED_DIRECTORY
         beq     LA1C0
         bit     L918B
         bpl     LA19E
-        lda     #$C3
+        lda     #%11000011
         bne     LA1A0
 LA19E:  lda     #$21
 LA1A0:  sta     file_info_params2::access
@@ -16943,9 +17007,9 @@ LA274:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
 
 LA285:  lda     file_info_params2::storage
         sta     LA2AA
-        cmp     #$0F
+        cmp     #ST_VOLUME_DIRECTORY
         beq     LA297
-        cmp     #$0D
+        cmp     #ST_LINKED_DIRECTORY
         beq     LA297
         lda     #$00
         beq     LA299
