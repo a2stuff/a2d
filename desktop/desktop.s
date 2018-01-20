@@ -689,7 +689,7 @@ L939E:  .addr   0               ; $00
         .addr   L977D           ; $09
         .addr   L97F7           ; $0A
         .addr   L9EBE           ; $0B
-        .addr   LA2A6           ; $0C REDRAW_ICONS
+        .addr   DESKTOP_REDRAW_ICONS_IMPL ; $0C REDRAW_ICONS
         .addr   L9EFB           ; $0D
         .addr   L958F           ; $0E
 
@@ -2454,8 +2454,6 @@ LA2A5:  .byte   0
 ;;; ==================================================
 
 DESKTOP_REDRAW_ICONS_IMPL:
-
-LA2A6:
         jmp     LA2AE
 
 LA2A9:  .byte   0
@@ -6034,28 +6032,31 @@ L0D14           := $0D14
         .org $4000
 
         ;; Jump table
-        jmp     L4042
-JT_A2D_RELAY:  jmp     A2D_RELAY
-L4006:  jmp     L8259
-L4009:  jmp     L830F
-        jmp     L5E78
-        jmp     DESKTOP_AUXLOAD
-JT_DESKTOP_EJECT:  jmp     cmd_eject
-JT_DESKTOP_REDRAW_ALL:  jmp     redraw_windows
-JT_DESKTOP_RELAY:  jmp     DESKTOP_RELAY
-        jmp     load_dynamic_routine
-JT_CLEAR_SELECTION:  jmp     clear_selection
-JT_MLI_RELAY:  jmp     MLI_RELAY
-        jmp     DESKTOP_COPY_TO_BUF
-        jmp     DESKTOP_COPY_FROM_BUF
-        jmp     cmd_noop
-L402D:  jmp     L8707
-JT_DESKTOP_SHOW_ALERT0:  jmp     DESKTOP_SHOW_ALERT0
-JT_DESKTOP_SHOW_ALERT:  jmp     DESKTOP_SHOW_ALERT
-        jmp     launch_file
-        jmp     set_pointer_cursor
-        jmp     set_watch_cursor
-        jmp     restore_dynamic_routine
+        ;; Entries marked with * are used by DAs
+        ;; "Exported" by desktop.inc
+
+L4000:                  jmp     L4042 ; ???
+JT_A2D_RELAY:           jmp     A2D_RELAY
+L4006:                  jmp     L8259 ; ???
+L4009:                  jmp     L830F ; ???
+L400C:                  jmp     L5E78 ; ???
+L400F:                  jmp     DESKTOP_AUXLOAD
+JT_EJECT:               jmp     cmd_eject
+JT_REDRAW_ALL:          jmp     redraw_windows          ; *
+JT_DESKTOP_RELAY:       jmp     DESKTOP_RELAY
+JT_LOAD_SEG:            jmp     load_dynamic_routine
+JT_CLEAR_SELECTION:     jmp     clear_selection         ; *
+JT_MLI_RELAY:           jmp     MLI_RELAY               ; *
+JT_COPY_TO_BUF:         jmp     DESKTOP_COPY_TO_BUF
+JT_COPY_FROM_BUF:       jmp     DESKTOP_COPY_FROM_BUF
+JT_NOOP:                jmp     cmd_noop
+L402D:                  jmp     L8707 ; ???
+JT_SHOW_ALERT0:         jmp     DESKTOP_SHOW_ALERT0
+JT_SHOW_ALERT:          jmp     DESKTOP_SHOW_ALERT
+JT_LAUNCH_FILE:         jmp     launch_file
+JT_CUR_POINTER:         jmp     set_pointer_cursor      ; *
+JT_CUR_WATCH:           jmp     set_watch_cursor
+JT_RESTORE_SEF:         jmp     restore_dynamic_routine
 
         ;; API entry point
 L4042:  cli
@@ -15262,7 +15263,7 @@ L8FFF:  bit     L918A
 
 L900C:  pla
         pla
-        jmp     JT_DESKTOP_EJECT
+        jmp     JT_EJECT
 
 L9011:  lda     $EBFC
         bpl     L9032
@@ -15492,7 +15493,7 @@ L91D5:  yax_call JT_A2D_RELAY, state2, A2D_QUERY_SCREEN
         yax_call JT_A2D_RELAY, state2, A2D_SET_STATE
         rts
 
-L91E8:  jsr     JT_DESKTOP_REDRAW_ALL
+L91E8:  jsr     JT_REDRAW_ALL
         ldy     #$0C
         lda     #$00
         ldx     #$00
@@ -16037,7 +16038,7 @@ L9674:  inx
         stx     $1FC0
         yax_call JT_MLI_RELAY, rename_params, RENAME
         beq     L969E
-        jsr     JT_DESKTOP_SHOW_ALERT0
+        jsr     JT_SHOW_ALERT0
         bne     L9696
         jmp     L9611
 
@@ -16294,7 +16295,7 @@ L9801:  lda     #$00
 L9809:  yax_call JT_MLI_RELAY, open_params3, OPEN
         beq     L981E
         ldx     #$80
-        jsr     JT_DESKTOP_SHOW_ALERT
+        jsr     JT_SHOW_ALERT
         beq     L9809
         jmp     LA39F
 
@@ -16304,7 +16305,7 @@ L981E:  lda     open_params3::ref_num
 L9827:  yax_call JT_MLI_RELAY, read_params3, READ
         beq     L983C
         ldx     #$80
-        jsr     JT_DESKTOP_SHOW_ALERT
+        jsr     JT_SHOW_ALERT
         beq     L9827
         jmp     LA39F
 
@@ -16315,7 +16316,7 @@ L983F:  lda     $E060
 L9845:  yax_call JT_MLI_RELAY, close_params6, CLOSE
         beq     L985A
         ldx     #$80
-        jsr     JT_DESKTOP_SHOW_ALERT
+        jsr     JT_SHOW_ALERT
         beq     L9845
         jmp     LA39F
 
@@ -16329,7 +16330,7 @@ L9864:  yax_call JT_MLI_RELAY, read_params4, READ
         cmp     #$4C
         beq     L989F
         ldx     #$80
-        jsr     JT_DESKTOP_SHOW_ALERT
+        jsr     JT_SHOW_ALERT
         beq     L9864
         jmp     LA39F
 
@@ -17642,7 +17643,7 @@ LA49D:  stx     LA4C5
         beq     LA4AE
         cmp     #$44
         beq     LA4AE
-        jsr     JT_DESKTOP_SHOW_ALERT0
+        jsr     JT_SHOW_ALERT0
         bne     LA4C2
         rts
 
@@ -17652,7 +17653,7 @@ LA4AE:  bit     LA4C5
         jmp     LA4BA
 
 LA4B8:  lda     #$FC
-LA4BA:  jsr     JT_DESKTOP_SHOW_ALERT0
+LA4BA:  jsr     JT_SHOW_ALERT0
         bne     LA4C2
         jmp     LA4C6
 
@@ -18583,7 +18584,7 @@ LAEC6:  jsr     LA567
         cmp     #$10
         bcc     LAEE1
 LAED6:  lda     #$FB
-        jsr     JT_DESKTOP_SHOW_ALERT0
+        jsr     JT_SHOW_ALERT0
         jsr     LB961
         jmp     LAEC6
 

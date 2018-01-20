@@ -5,30 +5,30 @@
 ;;; ==================================================
 ;;; Direct Calls (from main memory)
 
-;;; NOTE: Some of these are used by Desk Accessories
+;;; * = Used by Desk Accessories
 
-JUMP_TABLE_00           := $4042 ; ???
-JUMP_TABLE_03           := $4003 ; A2D relay call (main>aux)
+JUMP_TABLE_00           := $4000 ; ???
+JUMP_TABLE_A2D_RELAY    := $4003 ; A2D relay call (main>aux)
 JUMP_TABLE_06           := $4006 ; ???
 JUMP_TABLE_09           := $4009 ; ???
 JUMP_TABLE_0C           := $400C ; ???
 JUMP_TABLE_0F           := $400F ; Auxload
-JUMP_TABLE_12           := $4012 ; Eject command
-JUMP_TABLE_REDRAW_ALL   := $4015 ; Redraw all windows (e.g. after a drag)
-JUMP_TABLE_18           := $4018 ; DESKTOP relay call (main>aux)
-JUMP_TABLE_1B           := $401B ; Load dynamic routine
-JUMP_TABLE_CLEAR_SEL    := $401E ; Clear DeskTop selection
-JUMP_TABLE_MLI          := $4021 ; ProDOS MLI call (Y=call, X,A=params addr)
-JUMP_TABLE_24           := $4024 ; Copy to buffer
-JUMP_TABLE_27           := $4027 ; Copy from buffer
-JUMP_TABLE_2A           := $402A ; No-Op command (RTS)
-JUMP_TABLE_2D           := $402D ; Draw type/size/date in non-icon views
+JUMP_TABLE_EJECT        := $4012 ; Eject command
+JUMP_TABLE_REDRAW_ALL   := $4015 ; Redraw all windows (e.g. after a drag) *
+JUMP_TABLE_DESKTOP_RELAY:= $4018 ; DESKTOP relay call (main>aux)
+JUMP_TABLE_LOAD_SEG     := $401B ; Load dynamic routine
+JUMP_TABLE_CLEAR_SEL    := $401E ; Clear DeskTop selection *
+JUMP_TABLE_MLI          := $4021 ; ProDOS MLI call (Y=call, X,A=params addr) *
+JUMP_TABLE_COPY_TO_BUF  := $4024 ; Copy to buffer
+JUMP_TABLE_COPY_FROM_BUF:= $4027 ; Copy from buffer
+JUMP_TABLE_NOOP         := $402A ; No-Op command (RTS)
+JUMP_TABLE_2D           := $402D ; ??? (Draw type/size/date in non-icon views?)
 JUMP_TABLE_30           := $4030 ; Show alert 0
 JUMP_TABLE_33           := $4033 ; Show alert X
-JUMP_TABLE_36           := $4036 ; Launch file
-JUMP_TABLE_CUR_POINTER  := $4039 ; Changes mouse cursor to pointer
+JUMP_TABLE_LAUNCH_FILE  := $4036 ; Launch file
+JUMP_TABLE_CUR_POINTER  := $4039 ; Changes mouse cursor to pointer *
 JUMP_TABLE_CUR_WATCH    := $403C ; Changes mouse cursor to watch
-JUMP_TABLE_3F           := $403F ; Restore from dynamic routine
+JUMP_TABLE_RESTORE_SEG  := $403F ; Restore from dynamic routine
 
 ;;; ==================================================
 ;;; API Calls
