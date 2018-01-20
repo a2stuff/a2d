@@ -6537,10 +6537,10 @@ L477F:  lda     $D345,x
         addr_call L4842, $220
         jsr     L48BE
         lda     #<INVOKER
-        sta     L5B19
+        sta     reset_and_invoke_target
         lda     #>INVOKER
-        sta     L5B19+1
-        jmp     L5AEE
+        sta     reset_and_invoke_target+1
+        jmp     reset_and_invoke
 .endproc
 
 ;;; ==================================================
@@ -6691,7 +6691,9 @@ L4904:  A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
 
 ;;; ==================================================
 
-cmd_noop:  rts
+.proc cmd_noop
+        rts
+.endproc
 
 ;;; ==================================================
 
@@ -7034,9 +7036,10 @@ L4BB1:  .byte   0
 
 ;;; ==================================================
 
-cmd_about:
+.proc cmd_about
         yax_call LA500, $0000, $00
         jmp     L4523
+.endproc
 
 ;;; ==================================================
 
@@ -7241,9 +7244,11 @@ L4D4E:  stx     $E04B
         lda     #dynamic_routine_common
         jsr     load_dynamic_routine
         bmi     L4D9D
+
         lda     #dynamic_routine_file_delete
         jsr     load_dynamic_routine
         bmi     L4D9D
+
         jsr     set_pointer_cursor
         lda     #$01
         jsr     dynamic_routine_5000
@@ -7463,12 +7468,11 @@ L4F3C:  lda     #$00
 ;;; ==================================================
 
 .proc cmd_close_all
-        lda     desktop_winid
-        beq     L4F5B
-        jsr     cmd_close
-        jmp     cmd_close_all
-
-L4F5B:  rts
+        lda     desktop_winid   ; current window
+        beq     done            ; nope, done!
+        jsr     cmd_close       ; close it...
+        jmp     cmd_close_all   ; and try again
+done:   rts
 .endproc
 
 ;;; ==================================================
@@ -7476,10 +7480,10 @@ L4F5B:  rts
 .proc cmd_disk_copy
         lda     #dynamic_routine_disk_copy
         jsr     load_dynamic_routine
-        bmi     L4F66
+        bmi     fail
         jmp     dynamic_routine_800
 
-L4F66:  rts
+fail:   rts
 .endproc
 
 ;;; ==================================================
@@ -7610,6 +7614,10 @@ stack_data:
 
 quit_code:
         .byte   $18,$FB,$5C,$04,$D0,$E0
+        ;; 65816 code:
+        ;; 18           clc             ; clear carry
+        ;; FB           xce             ; exchange carry/emulation (i.e. turn on 16 bit)
+        ;; 5C 04 D0 E0  jmp $E0D004     ; long jump
 
 .proc quit_params
 params: .byte   4
@@ -7942,16 +7950,17 @@ L533F:  .byte   0
 .proc cmd_format_disk
         lda     #dynamic_routine_format_erase
         jsr     load_dynamic_routine
-        bmi     L535A
+        bmi     fail
+
         lda     #$04
         jsr     dynamic_routine_800
-        bne     L5357
+        bne     :+
         stx     L533F
         jsr     L4523
         jsr     L59A4
-L5357:  jmp     L4523
+:       jmp     L4523
 
-L535A:  rts
+fail:   rts
 .endproc
 
 ;;; ==================================================
@@ -7959,14 +7968,16 @@ L535A:  rts
 .proc cmd_erase_disk
         lda     #dynamic_routine_format_erase
         jsr     load_dynamic_routine
-        bmi     L5372
+        bmi     done
+
         lda     #$05
         jsr     dynamic_routine_800
-        bne     L5372
+        bne     done
+
         stx     L533F
         jsr     L4523
         jsr     L59A4
-L5372:  jmp     L4523
+done:   jmp     L4523
 .endproc
 
 ;;; ==================================================
@@ -8333,7 +8344,7 @@ L5661:  rts
 
 ;;; ==================================================
 
-cmd_select_all:
+.proc cmd_select_all
         lda     is_file_selected
         beq     L566A
         jsr     L6D2B
@@ -8393,6 +8404,10 @@ L56F0:  lda     #$00
         jmp     DESKTOP_COPY_TO_BUF
 
 L56F8:  .byte   0
+.endproc
+
+;;; ==================================================
+
 L56F9:  sta     query_state_params2::id
         jsr     L4505
         jmp     L6E8E
@@ -8649,7 +8664,7 @@ L58E2:  lda     desktop_winid
 
 ;;; ==================================================
 
-cmd_check_drives:
+.proc cmd_check_drives
         lda     #$00
         sta     L599F
         sta     bufnum
@@ -8714,6 +8729,9 @@ L5998:  pla
         tax
         inx
         jmp     L5976
+.endproc
+
+;;; ==================================================
 
 L599E:  .byte   0
 L599F:  .byte   0
@@ -8843,12 +8861,12 @@ L5AA9:  lda     buf3len
 L5AC0:  jsr     DESKTOP_COPY_FROM_BUF
         jmp     L4523
 
-;;; ==================================================
-
 L5AC6:  .res    10, 0
 L5AD0:  .byte   0
 
-cmd_startup_item:
+;;; ==================================================
+
+.proc cmd_startup_item
         ldx     $E25B
         dex
         txa
@@ -8862,13 +8880,16 @@ cmd_startup_item:
         sec
         sbc     #$30
         clc
-        adc     #$C0
-        sta     L5B19+1
-        lda     #$00
-        sta     L5B19
+        adc     #>$C000         ; compute $Cn00
+        sta     reset_and_invoke_target+1
+        lda     #<$0000
+        sta     reset_and_invoke_target
+        ;; fall through
+.endproc
 
         ;; also invoked by launcher code
-L5AEE:  sta     ALTZPOFF
+.proc reset_and_invoke
+        sta     ALTZPOFF
         lda     ROMIN2
         jsr     SETVID
         jsr     SETKBD
@@ -8884,8 +8905,11 @@ L5AEE:  sta     ALTZPOFF
         sta     CLR80COL
 
         ;; also used by launcher code
-        L5B19 := *+1
+        target := *+1
         jmp     dummy0000       ; self-modified
+.endproc
+        reset_and_invoke_target := reset_and_invoke::target
+
 
 ;;; ==================================================
 
