@@ -122,7 +122,7 @@ begin:  lda     ROMIN2
         jmp     quit_call
 not_s16:
 
-:       cmp     #FT_BINARY
+        cmp     #FT_BINARY
         bne     not_binary
         lda     get_info_params::auxtype
         sta     jmp_addr
