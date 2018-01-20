@@ -6,7 +6,7 @@
         .include "../inc/auxmem.inc"
 
         .include "../a2d.inc"
-        .include "../desktop.inc" ; needed to redraw DeskTop icons after window move
+        .include "../desktop.inc" ; redraw icons after window move; font; glyphs
 
         .org $800
 
@@ -288,7 +288,7 @@ hthick: .byte   4
 vthick: .byte   2
 mode:   .byte   0
 tmask:  .byte   $7F
-font:   .addr   A2D_DEFAULT_FONT
+font:   .addr   DEFAULT_FONT
 next:   .addr   0
 .endproc
 
@@ -760,13 +760,13 @@ date_rect:
         .word   $20,$0F,$9A,$23
 
 label_ok:
-        A2D_DEFSTRING {"OK         ",A2D_GLYPH_RETURN} ;
+        A2D_DEFSTRING {"OK         ",GLYPH_RETURN} ;
 label_cancel:
         A2D_DEFSTRING "Cancel  ESC"
 label_uparrow:
-        A2D_DEFSTRING A2D_GLYPH_UARROW
+        A2D_DEFSTRING GLYPH_UARROW
 label_downarrow:
-        A2D_DEFSTRING A2D_GLYPH_DARROW
+        A2D_DEFSTRING GLYPH_DARROW
 
 label_cancel_pos:
         .word   $15,$38

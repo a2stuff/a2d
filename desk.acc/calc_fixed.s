@@ -7,7 +7,7 @@
         .include "../inc/prodos.inc"
 
         .include "../a2d.inc"
-        .include "../desktop.inc" ; needed to redraw DeskTop icons after window move
+        .include "../desktop.inc" ; redraw icons after window move; font
 
         .org $800
 
@@ -798,7 +798,7 @@ hthick: .byte   1
 vthick: .byte   1
 mode:   .byte   0
 tmask:  .byte   0
-font:   .addr   A2D_DEFAULT_FONT
+font:   .addr   DEFAULT_FONT
 next:   .addr   0
 .endproc
 create_window_params_top := create_window_params::top

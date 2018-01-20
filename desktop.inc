@@ -70,52 +70,76 @@ DESKTOP_REDRAW_ICONS := $0C     ; Repaints desktop icons
 .endif
 .endmacro
 
-;;; ==================================================
-;;; $D000 routines/pointers (called from MAIN)
-
-;;; These are used by the MAIN (and sometimes AUX) halves of DeskTop itself,
-;;; since this bank can be accessed from both AUX and MAIN.
-
-;; Listed here as they are used by weird DeskTop block in A2D space
-
-        ;; Relay for main>aux A2D call (Y=call, X,A=params addr)
-A2D_RELAY       := $D000
-
-.macro A2D_RELAY_CALL call, addr
-        ldy     #(call)
-.if .paramcount > 1
-        lda     #<(addr)
-        ldx     #>(addr)
-.else
-        lda     #0
-        ldx     #0
-.endif
-        jsr     A2D_RELAY
-.endmacro
-
-DESKTOP_FIND_SPACE      := $D05E ; Find space in AUX $1F80 table
-
 
 ;;; ==================================================
-;;; DeskTop Internals
+;;; Internals - Windows (paths) and Icons (files)
 
 ;;; NOTE: Some of these are used by Desk Accessories
 
-        ;; These are DeskTop internals, but it appears there is no
-        ;; API for getting the selected file.
-        file_selected := $DF21  ; 0 if no selection, 1 otherwise
-        path_index := $DF20     ; index of selected window (used to get prefix)
-        path_table := $DFB3     ; window address table
-        ;; each entry is 65 bytes long
-        ;;      length-prefixed path string (no trailing /)
-        file_index := $DF22     ; index of selected file (global, not w/in window)
-        file_table := $DD9F     ; file address table
-        ;; each entry is 27 bytes long
-        ;;      .byte ??
-        ;;      .byte ??
-        ;;      .byte type/icon (bits 4,5,6 clear = directory)
-        ;;      .word iconx     (pixels)
-        ;;      .word icony     (pixels)
-        ;;      .byte ??
-        ;;      .byte ??
-        ;;      .byte len, name (length-prefixed, spaces before/after; 17 byte buffer)
+;; These are DeskTop internals, but it appears there is no
+;; API for getting the selected file.
+file_selected := $DF21  ; 0 if no selection, 1 otherwise
+path_index := $DF20     ; index of selected window (used to get prefix)
+path_table := $DFB3     ; window address table
+;; each entry is 65 bytes long
+;;      length-prefixed path string (no trailing /)
+file_index := $DF22     ; index of selected file (global, not w/in window)
+file_table := $DD9F     ; file address table
+;; each entry is 27 bytes long
+;;      .byte ??
+;;      .byte ??
+;;      .byte type/icon (bits 4,5,6 clear = directory)
+;;      .word iconx     (pixels)
+;;      .word icony     (pixels)
+;;      .byte ??
+;;      .byte ??
+;;      .byte len, name (length-prefixed, spaces before/after; 17 byte buffer)
+
+;;; ==================================================
+;;; Internals - Default Font
+
+DEFAULT_FONT := $8800
+
+font_flag       := $8800 ; = $00 - if high bit set, glyphs are 2 bytes wide (???)
+font_size_count := $8801 ; = $7F - max glyph number (count is this + 1)
+font_height     := $8802 ; 9 pixels
+font_width_table := $8803 ; width in pixels, indexed by ASCII code
+
+font_glyphs     := $8883 ; $80 glyphs, organized by row, 9 bytes per
+
+;;; So glyph for A $41
+;;;  width is at $8803 + $41 = $8844 which is 7
+;;;  row0 is at $8883 + $41 + (0 * $80) = $88C4 ~ $1E = %00011110
+;;;  row1 is at $8883 + $41 + (1 * $80) = $8944 ~ $33 = %00110011
+;;; etc
+
+;;; Control Character Glyphs
+
+
+;;; Glyphs $00-$1F are useful symbols; some overlap with MouseText
+;;; (called out as MT:X in the table below)
+;;;
+;;; $00 = space                $10 = TM left
+;;; $01 = folder left  (MT:X)  $11 = TM right
+;;; $02 = folder right (MT:Y)  $12 = pound
+;;; $03 = hourglass    (MT:C)  $13 = pi
+;;; $04 = insertion pt         $14 = divide
+;;; $05 = pointer      (MT:B)  $15 = rarrow       (MT:U)
+;;; $06 = vbar         (MT:_)  $16 = tri
+;;; $07 = hbar         (MT:S)  $17 = open circ
+;;; $08 = larrow               $18 = close        (MT:])
+;;; $09 = left box             $19 = gray odd     (MT:W)
+;;; $0A = darrow       (MT:J)  $1A = gray even    (MT:V)
+;;; $0B = uarrow       (MT:K)  $1B = solid circ
+;;; $0C = right box            $1C = inv check    (MT:E)
+;;; $0D = return       (MT:M)  $1D = check        (MT:D)
+;;; $0E = (C)                  $1E = solid apple  (MT:@)
+;;; $0F = (R)                  $1F = open apple   (MT:A)
+
+GLYPH_LARROW := $09
+GLYPH_RARROW := $15
+GLYPH_UARROW := $0B
+GLYPH_DARROW := $0A
+GLYPH_RETURN := $0D
+GLYPH_OAPPLE := $1F
+GLYPH_CAPPLE := $1E

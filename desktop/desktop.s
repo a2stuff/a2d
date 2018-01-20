@@ -11,6 +11,7 @@
 ;;; DeskTop - the actual application
 ;;; ==================================================
 
+
 INVOKER          := $290                 ; Invoke other programs
 INVOKER_FILENAME := $280                 ; File to invoke (PREFIX must be set)
 
@@ -53,12 +54,378 @@ INVOKER_FILENAME := $280                 ; File to invoke (PREFIX must be set)
         .word   top
 .endmacro
 
+.macro A2D_RELAY_CALL call, addr
+        ldy     #(call)
+.if .paramcount > 1
+        lda     #<(addr)
+        ldx     #>(addr)
+.else
+        lda     #0
+        ldx     #0
+.endif
+        jsr     A2D_RELAY
+.endmacro
+
+
 ;;; ==================================================
-;;; Segment loaded into AUX $8E00-$BFFF (follows A2D)
+;;; Segment loaded into AUX $851F-$BFFF (follows A2D)
 ;;; ==================================================
 .proc desktop_aux
 
-        .org $8E00
+        .org $851F
+
+;;; ==================================================
+;;; This chunk of code appears to be used by one or more
+;;; of the dynamically loaded segments.
+
+        .byte   $03
+        .addr    $85E9
+
+L8522:  php
+        lda     $E904,x
+        sta     $09
+        ldy     #$14
+        ldx     #$00
+L852C:  lda     ($08),y
+        sta     L8590,x
+        iny
+        inx
+        cpx     #$04
+        bne     L852C
+        ldy     #$1C
+        ldx     #$00
+L853B:  lda     ($08),y
+        sta     L8594,x
+        iny
+        inx
+        cpx     #$04
+        bne     L853B
+        ldy     #$03
+        lda     ($06),y
+        sec
+        sbc     L8590
+        sta     ($06),y
+        iny
+        lda     ($06),y
+        sbc     L8591
+        sta     ($06),y
+        iny
+        lda     ($06),y
+        sec
+        sbc     L8592
+        sta     ($06),y
+        iny
+        lda     ($06),y
+        sbc     L8593
+        sta     ($06),y
+        ldy     #$03
+        lda     ($06),y
+        clc
+        adc     L8594
+        sta     ($06),y
+        iny
+        lda     ($06),y
+        adc     L8595
+        sta     ($06),y
+        iny
+        lda     ($06),y
+        clc
+        adc     L8596
+        sta     ($06),y
+        iny
+        lda     ($06),y
+        adc     L8597
+        sta     ($06),y
+        jsr     $83A5
+        rts
+
+L8590:  .byte   $24
+L8591:  .byte   $00
+L8592:  .byte   $23
+L8593:  .byte   $00
+L8594:  .byte   $00
+L8595:  .byte   $00
+L8596:  .byte   $00
+L8597:  .byte   $00
+
+        lda     #$00
+        ldx     #$00
+L859C:  sta     $D409,x
+        sta     $D401,x
+        sta     $D40D
+        inx
+        cpx     #$04
+        bne     L859C
+        lda     #$0A
+        sta     $D40D
+        sta     $D40F
+
+        A2D_RELAY_CALL A2D_SET_STATE, $D401
+        rts
+
+        lda     #$39
+        ldx     #$1A
+        jsr     $6B17
+        ldx     $D5CA
+        txs
+        rts
+
+        lda     #$56
+        ldx     #$1A
+        jsr     $6B17
+        ldx     $D5CA
+        txs
+        rts
+
+        lda     #$71
+        ldx     #$1A
+        jsr     $6B17
+        ldx     $D5CA
+        txs
+        rts
+
+        cmp     #$27
+        bne     L85F2
+        lda     #$22
+        ldx     #$1B
+        jsr     $6B17
+        ldx     $D5CA
+        txs
+        jmp     L8625
+
+L85F2:  cmp     #$45
+        bne     L8604
+        lda     #$3B
+        ldx     #$1B
+        jsr     $6B17
+        ldx     $D5CA
+        txs
+        jmp     L8625
+
+L8604:  cmp     #$52
+        bne     L8616
+        lda     #$5B
+        ldx     #$1B
+        jsr     $6B17
+        ldx     $D5CA
+        txs
+        jmp     L8625
+
+L8616:  cmp     #$57
+        bne     L8625
+        lda     #$7C
+        ldx     #$1B
+        jsr     $6B17
+        ldx     $D5CA
+        txs
+L8625:  A2D_RELAY_CALL $33, win18_state
+        rts
+
+        lda     #$9C
+        ldx     #$1B
+        jsr     $6B17
+        ldx     $D5CA
+        txs
+        A2D_RELAY_CALL $33, win18_state
+        rts
+
+        lda     #$BF
+        ldx     #$1B
+        jsr     $6B17
+        ldx     $D5CA
+        txs
+        A2D_RELAY_CALL $33, win18_state
+        rts
+
+        sta     L8737
+        sty     L8738
+        and     #$F0
+        sta     online_params_unit
+        sta     ALTZPOFF
+        MLI_CALL ON_LINE, online_params
+        sta     ALTZPON
+        beq     L867B
+L8672:  pha
+        dec     $EF8A
+        dec     $EF88
+        pla
+        rts
+
+L867B:  lda     online_params_buffer
+        beq     L8672
+        jsr     $8388      ; into dynamically loaded code???
+        jsr     DESKTOP_FIND_SPACE ; AUX > MAIN call???
+        ldy     L8738
+        sta     $D464,y
+        asl     a
+        tax
+        lda     $F13A,x
+        sta     $06
+        lda     $F13B,x
+        sta     $07
+        ldx     #$00
+        ldy     #$09
+        lda     #$20
+L869E:  sta     ($06),y
+        iny
+        inx
+        cpx     #$12
+        bne     L869E
+        ldy     #$09
+        lda     online_params_buffer
+        and     #$0F
+        sta     online_params_buffer
+        sta     ($06),y
+        ldx     #$00
+        ldy     #$0B
+L86B6:  lda     online_params_buffer+1,x
+        cmp     #$41
+        bcc     L86C4
+        cmp     #$5F
+        bcs     L86C4
+        clc
+        adc     #$20
+L86C4:  sta     ($06),y
+        iny
+        inx
+        cpx     online_params_buffer
+        bne     L86B6
+        ldy     #$09
+        lda     ($06),y
+        clc
+        adc     #$02
+        sta     ($06),y
+        lda     L8737
+        and     #$0F
+        cmp     #$04
+        bne     L86ED
+        ldy     #$07
+        lda     #$B4
+        sta     ($06),y
+        iny
+        lda     #$14
+        sta     ($06),y
+        jmp     L870A
+
+L86ED:  cmp     #$0B
+        bne     L86FF
+        ldy     #$07
+        lda     #$70
+        sta     ($06),y
+        iny
+        lda     #$14
+        sta     ($06),y
+        jmp     L870A
+
+L86FF:  ldy     #$07
+        lda     #$40
+        sta     ($06),y
+        iny
+        lda     #$14
+        sta     ($06),y
+L870A:  ldy     #$02
+        lda     #$00
+        sta     ($06),y
+        inc     L8738
+        lda     L8738
+        asl     a
+        asl     a
+        tax
+        ldy     #$03
+L871B:  lda     L8739,x
+        sta     ($06),y
+        inx
+        iny
+        cpy     #$07
+        bne     L871B
+        ldx     $EF8A
+        dex
+        ldy     #$00
+        lda     ($06),y
+        sta     $EF8B,x
+        jsr     $83A5
+        lda     #$00
+        rts
+
+L8737:  rts
+
+L8738:  .byte   $04
+L8739:  .byte   $00,$00,$00,$00
+
+        ;; Desktop icon placements?
+L873D:  .word   500, 16
+        .word   500, 41
+        .word   500, 66
+        .word   500, 91
+        .word   500, 116
+
+        .word   440, 16
+        .word   440, 41
+        .word   440, 66
+        .word   440, 91
+        .word   440, 116
+        .word   440, 141
+
+        .word   400, 16
+        .word   400, 41
+        .word   400, 66
+
+.proc online_params
+count:  .byte   2
+unit:   .byte   $60             ; Slot 6 Drive 1
+buffer: .addr   online_params_buffer
+.endproc
+        online_params_unit := online_params::unit
+
+        ;; Per ProDOS TRM this should be 256 bytes!
+online_params_buffer:
+        .byte   $0B
+        .byte   "GRAPHICS.TK",$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$C8
+
+;;; ==================================================
+
+        .include "font.inc"
+
+;;; ==================================================
+
+        ;; ???
+
+L8C83:  .byte   $00,$00,$00,$00,$77,$30,$01
+        .byte   $00,$00,$7F,$00,$00,$7F,$00,$00
+        .byte   $00,$00,$00,$7A,$00,$00,$00,$00
+        .byte   $00,$14,$55,$2A,$00,$7F,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$01,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $0E,$00,$00,$07,$00,$00,$00,$00
+        .byte   $00,$03,$18,$00,$00,$00,$00,$00
+        .byte   $00,$00,$0E,$00,$00,$00,$00,$00
+
+        ;; Pad to $8E00
+        .res    $8E00 - *, 0
+
+;;; ==================================================
 
         ;; Entry point for "DESKTOP"
         .assert * = DESKTOP, error, "DESKTOP entry point must be at $8E00"
@@ -269,7 +636,7 @@ hthick: .byte   1
 vthick: .byte   1
 mode:   .byte   $96             ; ???
 tmask:  .byte   0
-font:   .addr   A2D_DEFAULT_FONT
+font:   .addr   DEFAULT_FONT
 .endproc
 
 .proc query_state_params
@@ -3006,7 +3373,7 @@ trash_pixels:
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
 
 label_apple:
-        PASCAL_STRING A2D_GLYPH_CAPPLE
+        PASCAL_STRING GLYPH_CAPPLE
 label_file:
         PASCAL_STRING "File"
 label_view:
@@ -3163,7 +3530,7 @@ LAE30:  DEFINE_RECT   260,81,300,92
 LAE38:  DEFINE_RECT   320,81,360,92
 
 str_ok_label:
-        PASCAL_STRING {"OK            ",A2D_GLYPH_RETURN}
+        PASCAL_STRING {"OK            ",GLYPH_RETURN}
 
 LAE50:  DEFINE_POINT $109,$5B
 LAE54:  DEFINE_POINT $2D,$5B
@@ -3422,7 +3789,7 @@ LB6E0:  .byte   $01
 LB6E1:  .byte   $37,$00
 
 ok_label:
-        PASCAL_STRING {"OK            ",A2D_GLYPH_RETURN}
+        PASCAL_STRING {"OK            ",GLYPH_RETURN}
 
 try_again_rect:
         .word   $14,$25,$78,$30
@@ -4068,7 +4435,7 @@ addr:   .addr   0
 .endproc
 
         ;; Pad to $C000
-        .res $C000 - *, 0
+        .res    $C000 - *, 0
         .assert * = $C000, error, "Segment length mismatch"
 .endproc ; desktop_aux
 
@@ -4084,8 +4451,8 @@ addr:   .addr   0
 
 ;;; ==================================================
 ;;; A2D call from main>aux, call in Y, params at (X,A)
-.proc A2D_RELAY_IMPL
-        .assert * = A2D_RELAY, error, "Entry point mismatch"
+.proc A2D_RELAY
+        .assert * = $D000, error, "Entry point mismatch"
         sty     addr-1
         sta     addr
         stx     addr+1
@@ -4101,7 +4468,6 @@ addr:   .addr   0
 ;;; SET_POS with params at (X,A) followed by DRAW_TEXT call
 
 .proc SETPOS_RELAY
-        .assert * = SETPOS_RELAY, error, "Entry point mismatch"
         sta     addr
         stx     addr+1
         sta     RAMRDON
@@ -4125,7 +4491,6 @@ addr:   .addr   0
 ;;; DESKTOP call from main>aux, call in Y params at (X,A)
 
 .proc DESKTOP_RELAY
-        .assert * = DESKTOP_RELAY, error, "Entry point mismatch"
         sty     addr-1
         sta     addr
         stx     addr+1
@@ -4155,8 +4520,7 @@ addr:   .addr   0
 ;;; Find first 0 in AUX $1F80 ... $1F7F; if present,
 ;;; mark it 1 and return index+1 in A
 
-.proc DESKTOP_FIND_SPACE_IMPL
-        .assert * = DESKTOP_FIND_SPACE, error, "Entry point mismatch"
+.proc DESKTOP_FIND_SPACE
         sta     RAMRDON
         sta     RAMWRTON
         ldx     #0
@@ -4453,7 +4817,7 @@ hthick: .byte   1
 vthick: .byte   1
 mode:   .byte   0
 tmask:  .byte   0
-font:   .addr   A2D_DEFAULT_FONT
+font:   .addr   DEFAULT_FONT
 .endproc
 
         .byte   $FF,$FF,$FF,$FF,$FF
@@ -4643,7 +5007,7 @@ hthick: .byte   1
 vthick: .byte   1
 fill:   .byte   0
 tmask:  .byte   A2D_DEFAULT_TMASK
-font:   .addr   A2D_DEFAULT_FONT
+font:   .addr   DEFAULT_FONT
 next:   .addr   0
 .endproc
 
@@ -4679,7 +5043,7 @@ hthick: .byte   1
 vthick: .byte   1
 mode:   .byte   0
 tmask:  .byte   A2D_DEFAULT_TMASK
-font:   .addr   A2D_DEFAULT_FONT
+font:   .addr   DEFAULT_FONT
 next:   .addr   0
 .endproc
 
@@ -4715,7 +5079,7 @@ hthick: .byte   1
 vthick: .byte   1
 mode:   .byte   0
 tmask:  .byte   A2D_DEFAULT_TMASK
-font:   .addr   A2D_DEFAULT_FONT
+font:   .addr   DEFAULT_FONT
 next:   .addr   0
 .endproc
 
@@ -4752,9 +5116,10 @@ hthick: .byte   1
 vthick: .byte   1
 mode:   .byte   0
 tmask:  .byte   A2D_DEFAULT_TMASK
-font:   .addr   A2D_DEFAULT_FONT
+font:   .addr   DEFAULT_FONT
 next:   .addr   0
 .endproc
+        win18_state := win18::state
 
 .proc win1B
 id:     .byte   $1B
@@ -4788,7 +5153,7 @@ hthick: .byte   1
 vthick: .byte   1
 mode:   .byte   0
 tmask:  .byte   A2D_DEFAULT_TMASK
-font:   .addr   A2D_DEFAULT_FONT
+font:   .addr   DEFAULT_FONT
 next:   .addr   0
 .endproc
 
@@ -4818,12 +5183,12 @@ LD760:  PASCAL_STRING "Run list"
         PASCAL_STRING "Enter the full pathname of the run list file:"
         PASCAL_STRING "Enter the name (14 characters max)  you wish to appear in the run list"
         PASCAL_STRING "Add a new entry to the:"
-        PASCAL_STRING {A2D_GLYPH_OAPPLE,"1 Run list"}
-        PASCAL_STRING {A2D_GLYPH_OAPPLE,"2 Other Run list"}
+        PASCAL_STRING {GLYPH_OAPPLE,"1 Run list"}
+        PASCAL_STRING {GLYPH_OAPPLE,"2 Other Run list"}
         PASCAL_STRING "Down load:"
-        PASCAL_STRING {A2D_GLYPH_OAPPLE,"3 at first boot"}
-        PASCAL_STRING {A2D_GLYPH_OAPPLE,"4 at first use"}
-        PASCAL_STRING {A2D_GLYPH_OAPPLE,"5 never"}
+        PASCAL_STRING {GLYPH_OAPPLE,"3 at first boot"}
+        PASCAL_STRING {GLYPH_OAPPLE,"4 at first use"}
+        PASCAL_STRING {GLYPH_OAPPLE,"5 never"}
         PASCAL_STRING "Enter the full pathname of the run list file:"
 
         .byte   $00,$00,$00,$00,$00,$00,$00
@@ -4909,7 +5274,7 @@ LD90A:  .byte   $00
         .byte   $64,$00,$81,$D3,$00
 
         .word   $C6,$63
-        PASCAL_STRING {"OK            ",A2D_GLYPH_RETURN}
+        PASCAL_STRING {"OK            ",GLYPH_RETURN}
 
         .word   $C6,$44
         PASCAL_STRING "Close"
@@ -5229,7 +5594,7 @@ hthick: .byte   1
 vthick: .byte   1
 mode:   .byte   0
 tmask:  .byte   A2D_DEFAULT_TMASK
-font:   .addr   A2D_DEFAULT_FONT
+font:   .addr   DEFAULT_FONT
 next:   .addr   0
 .endproc
 buflabel:.res    18, 0
@@ -5635,7 +6000,7 @@ app_mask:
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
 
         ;; Pad to $10000
-        .res $10000 - *, 0
+        .res    $10000 - *, 0
         .assert * = $10000, error, "Segment length mismatch"
 
 ;;; ==================================================

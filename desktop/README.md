@@ -10,27 +10,31 @@ the rest to a RAM card (if available), then invoking the main app.
 
 This is large - 111k. It includes a loader, the DeskTop app (with both
 main memory and aux memory segments, filling everything from $4000 to
-$FFFF (except for I/O space and ProDOS), and still having more code -
-probably the disk copy code which is swapped in dynamically.
+$FFFF (except for I/O space and ProDOS), and still having more code
+segments swapped in dynamically.
 
 The file is broken down into multiple segments:
 
-* segment 0: load - A$2000-$257F, L$0580, mark $000000 (Loader)
-* segment 1: aux1 - A$4000-$BFFF, L$8000, mark $000580 (A2D, part of DeskTop)
-* segment 2: aux2 - A$D000-$ECFF, L$1D00, mark $008580 (More of DeskTop)
-* segment 3: aux3 - A$FB00-$FFFF, L$0500, mark $00A280 (More of DeskTop)
-* segment 4: main - A$4000-$BEFF, L$7F00, mark $00A780 (More of DeskTop)
-* segment 5: main - A$0800-$0FFF, L$0800, mark $012680 (Initializer)
-* segment 6: main - A$0290-$03EF, L$0160, mark $012E80 (Invoker)
+* segment 0: load  - A$2000-$257F, L$0580, mark $000000 (Loader)
+* segment 1: aux   - A$4000-$BFFF, L$8000, mark $000580 (A2D, DeskTop)
+* segment 2: auxlc - A$D000-$ECFF, L$1D00, mark $008580 (DeskTop)
+* segment 3: auxlc - A$FB00-$FFFF, L$0500, mark $00A280 (DeskTop)
+* segment 4: main  - A$4000-$BEFF, L$7F00, mark $00A780 (DeskTop)
+* segment 5: main  - A$0800-$0FFF, L$0800, mark $012680 (Initializer)
+* segment 6: main  - A$0290-$03EF, L$0160, mark $012E80 (Invoker)
 * segments dynamically loaded for these actions:
   * disk copy     - A$0800, L$0200, mark $012FE0
   * format/erase  - A$0800, L$1400, mark $0160E0
   * selector      - A$9000, L$1000, mark $0174E0
-  * helpers       - A$5000, L$2000, mark $0184E0 (used by selector, copy, delete)
+  * common        - A$5000, L$2000, mark $0184E0 (used by selector, copy, delete)
   * file copy     - A$7000, L$0800, mark $01A4E0
   * file delete   - A$7000, L$0800, mark $01ACE0
   * selector      - A$7000, L$0800, mark $01B4E0
 * (EOF is $01BCE0)
+
+The DeskTop segments loaded into the Aux bank switched ("language
+card") memory can be used from both main and aux, so contain relay
+routines, resources, and buffers. More details below.
 
 ## Structure
 
@@ -77,14 +81,10 @@ run.
 
 `a2d.s`
 
-AUX $4000-$8DFF is the GUI library used for the DeskTop application
+AUX $4000-$851E is the GUI library used for the DeskTop application
 and (presumably) for disk copy and Selector apps (TBD).
 
 Entry point is $4000 with a ProDOS MLI-style calling convention
-
-* Font is at $8800
-
-* Part of $8500-$87FF looks like part of "DeskTop" (see below), dealing with online volumes.
 
 ### "DeskTop" Application
 
@@ -92,10 +92,11 @@ Entry point is $4000 with a ProDOS MLI-style calling convention
 
 DeskTop application code is in the lower 48k of both Aux and Main:
 
-* Aux $8E00-$BFFF - sitting above the GUI library
+* Aux $851F-$BFFF - sitting above the GUI library
 * Main $4000-$BEFF
 
-...and in the Aux language card area (accessible from both aux and main code) are relays, buffers and resources:
+...and in the Aux language card area (accessible from both aux and
+main code) are relays, buffers and resources:
 
 * Aux $D000-$ECFF - relays and other aux/main helpers, resources (menus, strings, window)
 * Aux $ED00-$FAFF - hole for data buffer
@@ -103,6 +104,11 @@ DeskTop application code is in the lower 48k of both Aux and Main:
 
 ($C000-$CFFF is reserved for I/O, and main $BF page and language card is ProDOS)
 
+Interactive commands including disk copy/format/erase, file
+copy/delete, and Selector add/edit/delete/run all dynamically load
+main memory code segments into one or more of: $800-$1FFF,
+$5000-$6FFF, $7000-$77FF, and $9000-$9FFF. When complete, any original
+code above $4000 is reloaded.
 
 ```
        Main               Aux                 ROM
@@ -125,20 +131,31 @@ $BF00 +-------------+    | App Code    |
       |             |    |             |
       |             |    |             |
       |             |    |             |
+$A000 |      +------+    |             |
+      |      | Seg  |    |             |
+      |      |      |    |             |
+      |      |      |    |             |
+$9000 |      +------+    |             |
       |             |    |             |
+$8800 |             |    | Font        |
       |             |    |             |
-      |             |    |             |
-      |             |    |             |
-      |             |    |             |
-      |             |    |             |
-      |             |    |             |
-$8E00 |             |    +-------------+
+$851F |             |    +-------------+
       |             |    | A2D GUI     |
       |             |    | Library     |
       |             |    |             |
       |             |    |             |
-      |             |    |             |
-      |             |    |             |
+$7800 |      +------+    |             |
+      |      | Seg  |    |             |
+$7000 |      +------+    |             |
+      |      | Seg  |    |             |
+      |      |      |    |             |
+      |      |      |    |             |
+      |      |      |    |             |
+      |      |      |    |             |
+      |      |      |    |             |
+      |      |      |    |             |
+      |      |      |    |             |
+$5000 |      +------+    |             |
       |             |    |             |
       |             |    |             |
       |             |    |             |
@@ -152,11 +169,10 @@ $4000 +-------------+    +-------------+
       |             |    |             |
       |             |    |             |
       |             |    |             |
-      |             |    |             |
 $2000 +-------------+    +-------------+
       | Initializer |    | Desk Acc    |
       | & Desk Acc  |    |             |
-      |             |    |             |
+      | & Segments  |    |             |
       |             |    |             |
 $0800 +-------------+    +-------------+
       | Text        |    | Text        |

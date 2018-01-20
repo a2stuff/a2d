@@ -44,7 +44,7 @@ A2D_QUERY_SCREEN        := $03  ; Get screen state
         ;; .byte vthick         vertical pen thickness
         ;; .byte 0              ??? fill mode?
         ;; .byte tmask          AND mask for text, default $7F
-        ;; .addr font           A2D_DEFAULT_FONT
+        ;; .addr font
 
 A2D_SET_STATE   := $04          ; Set full drawing state
         ;; (input length 36 bytes)
@@ -65,7 +65,7 @@ A2D_SET_STATE   := $04          ; Set full drawing state
         ;; .byte vthick         vertical pen thickness
         ;; .byte 0              ??? fill mode?
         ;; .byte tmask          AND mask for text, default $7F
-        ;; .addr font           A2D_DEFAULT_FONT
+        ;; .addr font
 
 A2D_GET_STATE   := $05          ; Get pointer to active drawing state
         ;; (input length 0 bytes)
@@ -330,7 +330,7 @@ A2D_CREATE_WINDOW := $38
         ;; .byte vthick
         ;; .byte 0              ??? fill mode?
         ;; .byte tmask          AND mask for text, default $7F
-        ;; .addr font           A2D_DEFAULT_FONT
+        ;; .addr font
         ;; .addr next           address of next lower window in stack (filled in by call)
 
 A2D_DESTROY_WINDOW := $39
@@ -539,48 +539,3 @@ end:
 ;;; px() has high bit clear, PX() has high bit set
 .define px(bits) (((bits&$40)>>6)|((bits&$20)>>4)|((bits&$10)>>2)|(bits&$8)|((bits&$4)<<2)|((bits&$2)<<4)|((bits&$1)<<6))
 .define PX(bits) (((bits&$40)>>6)|((bits&$20)>>4)|((bits&$10)>>2)|(bits&$8)|((bits&$4)<<2)|((bits&$2)<<4)|((bits&$1)<<6)|$80)
-
-;;; ==================================================
-;;; Internals
-
-        A2D_DEFAULT_FONT := $8800
-
-        font_flag       := $8800 ; = $00 - if high bit set, glyphs are 2 bytes wide (???)
-        font_size_count := $8801 ; = $7F - max glyph number (count is this + 1)
-        font_height     := $8802 ; 9 pixels
-        font_width_table := $8803 ; width in pixels, indexed by ASCII code
-
-        font_glyphs     := $8883 ; $80 glyphs, organized by row, 9 bytes per
-        ;; So glyph for A $41
-        ;;  width is at $8803 + $41 = $8844 which is 7
-        ;;  row0 is at $8883 + $41 + (0 * $80) = $88C4 ~ $1E = %00011110
-        ;;  row1 is at $8883 + $41 + (1 * $80) = $8944 ~ $33 = %00110011
-        ;; etc
-        ;;
-        ;; Glyphs $00-$1F are useful symbols; some overlap with MouseText
-        ;; (called out as MT:X in the table below)
-        ;;
-        ;; $00 = space                $10 = TM left
-        ;; $01 = folder left  (MT:X)  $11 = TM right
-        ;; $02 = folder right (MT:Y)  $12 = pound
-        ;; $03 = hourglass    (MT:C)  $13 = pi
-        ;; $04 = insertion pt         $14 = divide
-        ;; $05 = pointer      (MT:B)  $15 = rarrow       (MT:U)
-        ;; $06 = vbar         (MT:_)  $16 = tri
-        ;; $07 = hbar         (MT:S)  $17 = open circ
-        ;; $08 = larrow               $18 = close        (MT:])
-        ;; $09 = left box             $19 = gray odd     (MT:W)
-        ;; $0A = darrow       (MT:J)  $1A = gray even    (MT:V)
-        ;; $0B = uarrow       (MT:K)  $1B = solid circ
-        ;; $0C = right box            $1C = inv check    (MT:E)
-        ;; $0D = return       (MT:M)  $1D = check        (MT:D)
-        ;; $0E = (C)                  $1E = solid apple  (MT:@)
-        ;; $0F = (R)                  $1F = open apple   (MT:A)
-
-        A2D_GLYPH_LARROW := $09
-        A2D_GLYPH_RARROW := $15
-        A2D_GLYPH_UARROW := $0B
-        A2D_GLYPH_DARROW := $0A
-        A2D_GLYPH_RETURN := $0D
-        A2D_GLYPH_OAPPLE := $1F
-        A2D_GLYPH_CAPPLE := $1E
