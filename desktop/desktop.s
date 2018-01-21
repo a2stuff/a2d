@@ -1029,7 +1029,7 @@ L9648:  lda     L8E96,x
         lda     L8F15,y
         sta     $08
         lda     L8F15+1,y
-        sta     $09
+        sta     $08+1
         ldy     #$02
         lda     ($08),y
         and     #$0F
@@ -1085,7 +1085,7 @@ L969D:  ldx     L9696
         lda     L8F15,x
         sta     $08
         lda     L8F15+1,x
-        sta     $09
+        sta     $08+1
         ldy     #$02
         lda     ($08),y
         and     #$0F
@@ -1123,7 +1123,7 @@ L96E5:  dec     L96D6
         lda     L8F15,x
         sta     $08
         lda     L8F15+1,x
-        sta     $09
+        sta     $08+1
         ldy     #$02
         lda     ($08),y
         and     #$0F
@@ -1216,8 +1216,8 @@ L978B:  lda     ($06),y
         bpl     L978B
         lda     $06
         sta     $08
-        lda     $07
-        sta     $09
+        lda     $06+1
+        sta     $08+1
         ldy     #$05
         lda     ($06),y
         sta     L97F5
@@ -1407,7 +1407,7 @@ L9909:  sta     L9834
         sbc     #$22
         sta     $08
         bcs     L992D
-        dec     $09
+        dec     $08+1
 L992D:  ldy     #$01
         lda     #$80
         sta     ($08),y
@@ -1427,7 +1427,7 @@ L993A:  lda     L8E03,x
         adc     #$22
         sta     $08
         bcc     L9954
-        inc     $09
+        inc     $08+1
 L9954:  dec     L9C74
         beq     L995F
         ldx     L9C74
@@ -1508,9 +1508,9 @@ L99E1:  iny
         clc
         adc     #$22
         sta     $08
-        lda     $09
+        lda     $08+1
         adc     #$00
-        sta     $09
+        sta     $08+1
         jmp     L9972
 
 L99FC:  A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
@@ -1671,7 +1671,7 @@ L9B62:  lda     ($08),y
         adc     #$22
         sta     $08
         bcc     L9B99
-        inc     $09
+        inc     $08+1
 L9B99:  jmp     L9B60
 
 L9B9C:  A2D_CALL A2D_DRAW_POLYGONS, drag_outline_buffer
@@ -1729,7 +1729,7 @@ L9C18:  jsr     LA382
         lda     #<drag_outline_buffer
         sta     $08
         lda     #>drag_outline_buffer
-        sta     $09
+        sta     $08+1
 L9C29:  lda     L9017,x
         asl     a
         tax
@@ -1761,7 +1761,7 @@ L9C29:  lda     L9017,x
         adc     #$22
         sta     $08
         bcc     L9C60
-        inc     $09
+        inc     $08+1
 L9C60:  jmp     L9C29
 
 L9C63:  lda     #$00
@@ -2167,7 +2167,7 @@ L9FB6:  lda     ($06),y
         lda     draw_bitmap_params2::addr
         sta     $08
         lda     draw_bitmap_params2::addr+1
-        sta     $09
+        sta     $08+1
         ldy     #$0B
 L9FCF:  lda     ($08),y
         sta     draw_bitmap_params2::addr,y
@@ -2356,7 +2356,7 @@ LA191:  lda     ($06),y
         sta     $08
         iny
         lda     ($06),y
-        sta     $09
+        sta     $08+1
         ldy     #$08
         lda     ($08),y
         clc
@@ -2674,7 +2674,7 @@ LA466:  txa
         lda     L8F15,x
         sta     $08
         lda     L8F15+1,x
-        sta     $09
+        sta     $08+1
         ldy     #$02
         lda     ($08),y
         and     #$07
@@ -5575,7 +5575,8 @@ LE6D1:
         .byte   $00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$70,$00,$00,$00,$8C
-        .byte   $00,$00,$00,$E7,$00,$00,$00
+        .byte   $00,$00,$00
+LE6E5:  .byte   $E7,$00,$00,$00
 
 .proc text_buffer2
         .addr   data
@@ -5672,7 +5673,12 @@ desktop_winid:
         .byte   $00
 
 LEC26:
-        .res    64, 0
+        .res    52, 0
+
+date:  .word   0
+
+        .res    10, 0
+
         .word   500, 160
 
         .assert * = $EC6A, error, "Segment length mismatch"
@@ -7278,7 +7284,7 @@ L4A5A:  lda     ($06),y
         pla
         jsr     L4B5F
         sta     $08
-        stx     $09
+        stx     $08+1
         ldy     #$00
         lda     ($08),y
         tay
@@ -7306,10 +7312,10 @@ L4A95:  dey
         sta     $06
         lda     #$08
         sta     $06+1
-        lda     #$40
+        lda     #<$0840
         sta     $08
-        lda     #$08
-        sta     $09
+        lda     #>$0840
+        sta     $08+1
         jsr     L4D19
         rts
 
@@ -11710,10 +11716,10 @@ L7169:  lda     L485F
         sta     L70C4
         lda     #$00
         sta     L70C3
-        lda     #$04
+        lda     #<$0C04
         sta     $08
-        lda     #$0C
-        sta     $09
+        lda     #>$0C04
+        sta     $08+1
         inc     $06
         lda     $06
         bne     L71BD
@@ -11732,17 +11738,17 @@ L71CB:  inc     L70C3
         clc
         adc     L70BF
         sta     $08
-        lda     $09
+        lda     $08+1
         adc     #$00
-        sta     $09
+        sta     $08+1
         jmp     L71F7
 
 L71E7:  lda     #$00
         sta     L70C3
-        lda     #$04
+        lda     #<$0C04
         sta     $08
-        lda     #$0C
-        sta     $09
+        lda     #>$0C04
+        sta     $08+1
         jsr     L72CE
 L71F7:  ldx     #$00
         ldy     #$00
@@ -11760,9 +11766,9 @@ L7212:  lda     $08
         clc
         adc     L70BF
         sta     $08
-        lda     $09
+        lda     $08+1
         adc     #$00
-        sta     $09
+        sta     $08+1
         jmp     L71F7
 
 L7223:  iny
@@ -11937,8 +11943,8 @@ L7385:  lda     L7446
         inx
         lda     $E202,x
         sta     $08
-        lda     $E203,x
-        sta     $09
+        lda     $E202+1,x
+        sta     $08+1
         ldy     #$00
         jsr     push_zp_addrs
 L73A5:  lda     LCBANK2
@@ -11952,8 +11958,8 @@ L73A5:  lda     LCBANK2
         inc     $06+1
 L73BB:  inc     $08
         bne     L73C1
-        inc     $09
-L73C1:  lda     $09
+        inc     $08+1
+L73C1:  lda     $08+1
         cmp     L4860
         bne     L73A5
         lda     $08
@@ -12022,7 +12028,7 @@ L744B:  lda     bufnum
         lda     $E6BF,x
         sta     $08
         lda     $E6C0,x
-        sta     $09
+        sta     $08+1
         ldy     #$09
         lda     ($06),y
         tay
@@ -12056,7 +12062,7 @@ L7471:  lda     ($06),y
         lda     bufnum
         jsr     window_address_lookup
         sta     $08
-        stx     $09
+        stx     $08+1
         lda     $06
         clc
         adc     #$09
@@ -12102,7 +12108,7 @@ L74D3:  tay
         lda     $E6BF,x
         sta     $08
         lda     $E6C0,x
-        sta     $09
+        sta     $08+1
         ldy     #$00
         lda     ($06),y
         clc
@@ -12132,7 +12138,7 @@ L7512:  lda     ($06),y
         lda     LE6BE
         jsr     file_address_lookup
         sta     $08
-        stx     $09
+        stx     $08+1
         ldx     $E1B0
         ldy     #$09
         lda     ($08),y
@@ -12151,14 +12157,14 @@ L7548:  iny
         lda     bufnum
         jsr     window_address_lookup
         sta     $08
-        stx     $09
+        stx     $08+1
         ldy     $E1B0
 L7561:  lda     $E1B0,y
         sta     ($08),y
         dey
         bpl     L7561
 L7569:  lda     $08
-        ldx     $09
+        ldx     $08+1
         jsr     L87BA
         lda     bufnum
         jsr     window_lookup
@@ -12416,7 +12422,7 @@ L7768:  inc     LDD9E
         sta     buf3,x
         jsr     file_address_lookup
         sta     $08
-        stx     $09
+        stx     $08+1
         lda     LCBANK2
         lda     LCBANK2
         ldy     #$00
@@ -13360,7 +13366,7 @@ L7FBB:  inc     $0805
         sta     $E6E1
         sta     $E6E2
         lda     #$E7
-        sta     $E6E5
+        sta     LE6E5
         lda     #$00
         sta     $E6E6
         lda     LCBANK2
@@ -13374,7 +13380,7 @@ L801F:  cmp     #$84
 L8024:  lda     type_table_addr
         sta     $08
         lda     type_table_addr+1
-        sta     $09
+        sta     $08+1
         ldy     #$00
         lda     ($08),y
         sta     $0807
@@ -13589,8 +13595,8 @@ L81F7:  jsr     L821F
         jsr     L8253
         SETPOS_RELAY_CALL $E6E1
         jsr     L830F
-        lda     #<$E6E5
-        ldx     #>$E6E5
+        lda     #<LE6E5
+        ldx     #>LE6E5
         jmp     SETPOS_RELAY
 
 L821F:  lda     $EC43
@@ -13705,92 +13711,110 @@ L830B:  sta     text_buffer2::length
 
 L830F:  ldx     #$15
         lda     #$20
-L8313:  sta     text_buffer2::data-1,x
+:       sta     text_buffer2::data-1,x
         dex
-        bpl     L8313
+        bpl     :-
         lda     #$01
         sta     text_buffer2::length
-        lda     #$EB
+        lda     #<text_buffer2::length
         sta     $08
-        lda     #$E6
-        sta     $09
-        lda     $EC5A
-        ora     $EC5B
-        bne     L8334
-        sta     L83DC
-        jmp     L83A9
+        lda     #>text_buffer2::length
+        sta     $08+1
+        lda     date            ; any bits set?
+        ora     date+1
+        bne     prep_date_strings
+        sta     month           ; 0 is "no date" string
+        jmp     prep_month_string
 
-L8334:  lda     $EC5B
-        and     #$FE
+prep_date_strings:
+        lda     date+1
+        and     #$FE            ; extract year
         lsr     a
-        sta     L83DB
-        lda     $EC5B
+        sta     year
+        lda     date+1          ; extract month
         ror     a
-        lda     $EC5A
+        lda     date
         ror     a
         lsr     a
         lsr     a
         lsr     a
         lsr     a
-        sta     L83DC
-        lda     $EC5A
+        sta     month
+        lda     date            ; extract day
         and     #$1F
-        sta     L83DD
-        jsr     L83A9
-        jsr     L835D
-        jmp     L83B8
+        sta     day
 
-L835D:  lda     #$20
-        sta     L83DF
-        sta     L83E0
-        sta     L83E1
-        ldx     #$02
-        lda     L83DD
-        ora     #$30
+        jsr     prep_month_string
+        jsr     prep_day_string
+        jmp     prep_year_string
+
+.proc prep_day_string
+        ;; String will have trailing space.
+        lda     #' '
+        sta     str_3_spaces+1
+        sta     str_3_spaces+2
+        sta     str_3_spaces+3
+
+        ;; Assume 1 digit (plus trailing space)
+        ldx     #2
+
+        ;; Determine first digit.
+        lda     day
+        ora     #'0'            ; if < 10, will just be value itself
         tay
-        lda     L83DD
-        cmp     #$0A
-        bcc     L8386
-        inx
-        ldy     #$31
-        cmp     #$14
-        bcc     L8386
-        ldy     #$32
-        cmp     #$1E
-        bcc     L8386
-        ldy     #$33
-L8386:  stx     L83DE
-        sty     L83DF
-        cpx     #$02
-        beq     L83A2
+
+        lda     day
+        cmp     #10
+        bcc     :+
+        inx                     ; will be 2 digits
+        ldy     #'1'
+        cmp     #20
+        bcc     :+
+        ldy     #'2'
+        cmp     #30
+        bcc     :+
+        ldy     #'3'
+:       stx     str_3_spaces    ; length (including trailing space)
+        sty     str_3_spaces+1  ; first digit
+
+        ;; Determine second digit.
+        cpx     #2              ; only 1 digit (plus trailing space?)
+        beq     done
+
         tya
-        and     #$03
+        and     #$03            ; ascii -> tens digit
         tay
-        lda     L83DD
-L8397:  sec
-        sbc     #$0A
-        dey
-        bne     L8397
-        ora     #$30
-        sta     L83E0
-L83A2:  addr_jump L84A4, L83DE
 
-L83A9:  lda     L83DC
+        lda     day             ; subtract 10 as needed
+:       sec
+        sbc     #10
+        dey
+        bne     :-
+
+        ora     #'0'
+        sta     str_3_spaces+2
+done:   addr_jump L84A4, str_3_spaces
+.endproc
+
+.proc prep_month_string
+        lda     month
         asl     a
         tay
-        lda     L83E3,y
+        lda     month_table+1,y
         tax
-        lda     L83E2,y
+        lda     month_table,y
         jmp     L84A4
+.endproc
 
-L83B8:  ldx     L8490
-L83BB:  lda     L83DB
+.proc prep_year_string
+        ldx     tens_table_length
+:       lda     year
         sec
-        sbc     L8490,x
-        bpl     L83C7
+        sbc     tens_table-1,x
+        bpl     :+
         dex
-        bne     L83BB
-L83C7:  tay
+        bne     :-
+:       tay
         lda     ascii_digits,x
         sta     year_string_10s
         lda     ascii_digits,y
@@ -13798,39 +13822,46 @@ L83C7:  tay
         lda     #$8A
         ldx     #$84
         jmp     L84A4
+.endproc
 
-L83DB:  .byte   $00
-L83DC:  .byte   $00
-L83DD:  .byte   $00
-L83DE:  .byte   $03
-L83DF:  .byte   $20
-L83E0:  .byte   $20
-L83E1:  .byte   $20
-L83E2:  .byte   $FC
-L83E3:  .byte   $83,$06,$84,$11,$84,$1C,$84,$27
-        .byte   $84,$32,$84,$3D,$84,$48,$84,$53
-        .byte   $84,$5E,$84,$69,$84,$74,$84,$7F
-        .byte   $84
+year:   .byte   $00
+month:  .byte   $00
+day:    .byte   $00
+
+str_3_spaces:
+        PASCAL_STRING "   "
+
+month_table:
+        .addr   str_no_date
+        .addr   str_jan,str_feb,str_mar,str_apr,str_may,str_jun
+        .addr   str_jul,str_aug,str_sep,str_oct,str_nov,str_dec
+
+str_no_date:
         PASCAL_STRING "no date  "
-        PASCAL_STRING "January   "
-        PASCAL_STRING "February  "
-        PASCAL_STRING "March     "
-        PASCAL_STRING "April     "
-        PASCAL_STRING "May       "
-        PASCAL_STRING "June      "
-        PASCAL_STRING "July      "
-        PASCAL_STRING "August    "
-        PASCAL_STRING "September "
-        PASCAL_STRING "October   "
-        PASCAL_STRING "November  "
-        PASCAL_STRING "December  "
+
+str_jan:PASCAL_STRING "January   "
+str_feb:PASCAL_STRING "February  "
+str_mar:PASCAL_STRING "March     "
+str_apr:PASCAL_STRING "April     "
+str_may:PASCAL_STRING "May       "
+str_jun:PASCAL_STRING "June      "
+str_jul:PASCAL_STRING "July      "
+str_aug:PASCAL_STRING "August    "
+str_sep:PASCAL_STRING "September "
+str_oct:PASCAL_STRING "October   "
+str_nov:PASCAL_STRING "November  "
+str_dec:PASCAL_STRING "December  "
+
+str_year:
         PASCAL_STRING " 1985"
 
 year_string_10s := *-2          ; 10s digit
 year_string_1s  := *-1          ; 1s digit
 
-L8490:  .byte   $09             ; ????
-        .byte   $0A,$14,$1E,$28,$32,$3C,$46,$50,$5A
+tens_table_length:
+        .byte   9
+tens_table:
+        .byte   10,20,30,40,50,60,70,80,90
 
 ascii_digits:
         .byte   "0123456789"
@@ -13844,22 +13875,23 @@ L84A4:  sta     $06
         adc     ($06),y
         sta     ($08),y
         lda     ($06),y
-        sta     L84CB
-        inc     L84D0
+        sta     compare_y
+:       inc     L84D0
         iny
         lda     ($06),y
         sty     L84CF
         ldy     L84D0
         sta     ($08),y
         ldy     L84CF
-        .byte   $C0
-L84CB:  .byte   0
-        .byte   $90
-L84CD:  .byte   $EB
+        compare_y := *+1
+        cpy     #0              ; self-modified
+        bcc     :-
         rts
 
 L84CF:  .byte   0
 L84D0:  .byte   0
+
+
 L84D1:  jsr     push_zp_addrs
         bit     L5B1B
         bmi     L84DC
@@ -14444,7 +14476,7 @@ L8893:  tay
         lda     desktop_winid
         jsr     window_lookup
         sta     $08
-        stx     $09
+        stx     $08+1
         ldy     #$17
         ldx     #$03
 L88AD:  lda     ($08),y
@@ -14518,7 +14550,7 @@ L8915:  tay
 L8921:  lda     desktop_winid
         jsr     window_lookup
         sta     $08
-        stx     $09
+        stx     $08+1
         ldy     #$17
         ldx     #$03
 L892F:  lda     ($08),y
@@ -15411,7 +15443,7 @@ L9011:  lda     $EBFC
         lda     window_address_table,x
         sta     $08
         lda     window_address_table+1,x
-        sta     $09
+        sta     $08+1
         lda     #$7B
         sta     $06
         lda     #$91
@@ -15427,7 +15459,7 @@ L9032:  jsr     L8FA7
         lda     window_address_table,x
         sta     $08
         lda     window_address_table+1,x
-        sta     $09
+        sta     $08+1
         lda     $EBFC
         jsr     L918E
         jsr     L91A0
@@ -15638,10 +15670,10 @@ L91E8:  jsr     JT_REDRAW_ALL
         jsr     JT_DESKTOP_RELAY
         rts
 
-L91F5:  lda     #$11
+L91F5:  lda     #<L9211
         sta     $08
-        lda     #$92
-        sta     $09
+        lda     #>L9211
+        sta     $08+1
         lda     selected_window_index
         beq     L9210
         asl     a
@@ -15649,12 +15681,12 @@ L91F5:  lda     #$11
         lda     window_address_table,x
         sta     $08
         lda     window_address_table+1,x
-        sta     $09
+        sta     $08+1
         lda     #$00
 L9210:  rts
 
-        .byte   0
-        .byte   0
+L9211:  .addr   0
+
 L9213:  lda     is_file_selected
         bne     L9219
         rts
@@ -15795,7 +15827,7 @@ L9300:  lda     selected_window_index
         lda     window_address_table,x
         sta     $08
         lda     window_address_table+1,x
-        sta     $09
+        sta     $08+1
         ldx     L92E6
         lda     selected_file_index,x
         jsr     L918E
@@ -15973,9 +16005,9 @@ L94A9:  lda     $220,x
         lda     #$04
         sta     L92E3
         lda     get_file_info_params5::cdate
-        sta     $EC5A
+        sta     date
         lda     get_file_info_params5::cdate+1
-        sta     $EC5B
+        sta     date+1
         jsr     L4009
         lda     #$EB
         sta     L92E4
@@ -15985,9 +16017,9 @@ L94A9:  lda     $220,x
         lda     #$05
         sta     L92E3
         lda     get_file_info_params5::mdate
-        sta     $EC5A
+        sta     date
         lda     get_file_info_params5::mdate+1
-        sta     $EC5B
+        sta     date+1
         jsr     L4009
         lda     #$EB
         sta     L92E4
@@ -16071,7 +16103,7 @@ L9591:  lda     selected_window_index
         lda     window_address_table,x
         sta     $08
         lda     window_address_table+1,x
-        sta     $09
+        sta     $08+1
         ldx     L9706
         lda     selected_file_index,x
         jsr     L918E
@@ -16137,7 +16169,7 @@ L9624:  lda     $1F12,y
 
 L962F:  sty     $08
         sty     L9707
-        stx     $09
+        stx     $08+1
         stx     L9708
         lda     selected_window_index
         beq     L964D
@@ -16196,7 +16228,7 @@ L969E:  lda     #$40
         lda     L9707
         sta     $08
         lda     L9708
-        sta     $09
+        sta     $08+1
         ldx     L9706
         lda     selected_file_index,x
         jsr     L918E
@@ -18720,7 +18752,7 @@ LAE70:  lda     #$80
         sta     $08
         iny
         lda     ($06),y
-        sta     $09
+        sta     $08+1
         ldy     #$00
         lda     ($08),y
         tay
@@ -19108,7 +19140,7 @@ LB27D:  jsr     LBD75
         sta     $08
         iny
         lda     ($06),y
-        sta     $09
+        sta     $08+1
         ldy     #$00
         lda     ($08),y
         tay
@@ -19380,7 +19412,7 @@ LB59A:  tya
         sta     $08
         lda     $06+1
         adc     #$00
-        sta     $09
+        sta     $08+1
         jsr     LBD7B
         sta     $0A
         A2D_RELAY_CALL A2D_MEASURE_TEXT, $08
@@ -19703,8 +19735,8 @@ LB8F5:  jsr     LBD3B
         stx     $06+1
         lda     $D6B5
         sta     $08
-        lda     $D6B6
-        sta     $09
+        lda     $D6B5+1
+        sta     $08+1
         A2D_RELAY_CALL A2D_SET_POS, $6
         A2D_RELAY_CALL A2D_SET_BOX, LD6C7
         bit     LD8EB
@@ -19911,8 +19943,8 @@ LBB1A:  lda     LBB62
         stx     $06+1
         lda     $D6B5
         sta     $08
-        lda     $D6B6
-        sta     $09
+        lda     $D6B5+1
+        sta     $08+1
         A2D_RELAY_CALL A2D_SET_POS, $6
         A2D_RELAY_CALL A2D_SET_BOX, LD6C7
         addr_call draw_text1, str_1_char
@@ -19932,8 +19964,8 @@ LBB69:  dec     $D443
         stx     $06+1
         lda     $D6B5
         sta     $08
-        lda     $D6B6
-        sta     $09
+        lda     $D6B5+1
+        sta     $08+1
         A2D_RELAY_CALL A2D_SET_POS, $6
         A2D_RELAY_CALL A2D_SET_BOX, LD6C7
         addr_call draw_text1, $D484
@@ -19964,8 +19996,8 @@ LBBBC:  ldx     $D443
         stx     $06+1
         lda     $D6B5
         sta     $08
-        lda     $D6B6
-        sta     $09
+        lda     $D6B5+1
+        sta     $08+1
         A2D_RELAY_CALL A2D_SET_POS, $6
         A2D_RELAY_CALL A2D_SET_BOX, LD6C7
         addr_call draw_text1, $D484
@@ -20588,7 +20620,7 @@ L0A3B:  lda     L0A92
         lda     L0A92
         jsr     L0AA2
         sta     $08
-        stx     $09
+        stx     $08+1
         ldy     #$00
         lda     ($06),y
         tay
@@ -20606,7 +20638,7 @@ L0A59:  lda     ($06),y
         lda     L0A92
         jsr     L0AAF
         sta     $08
-        stx     $09
+        stx     $08+1
         ldy     #$00
         lda     ($06),y
         tay
@@ -20798,10 +20830,10 @@ L0C17:  inc     L0D04
         jmp     L0C81
 
 L0C25:  inc     L0D05
-        lda     #$F2
+        lda     #<buf
         sta     $08
-        lda     #$E5
-        sta     $09
+        lda     #>buf
+        sta     $08+1
         lda     #$00
         sta     L0D09
         lda     apple_menu
@@ -20819,8 +20851,8 @@ L0C25:  inc     L0D05
         adc     $08
         sta     $08
         lda     L0D09
-        adc     $09
-        sta     $09
+        adc     $08+1
+        sta     $08+1
         ldy     #$00
         lda     ($06),y
         and     #$0F
@@ -20831,7 +20863,7 @@ L0C60:  lda     ($06),y
         dey
         bne     L0C60
         lda     $08
-        ldx     $09
+        ldx     $08+1
         jsr     desktop_main::L87BA
         lda     ($08),y
         tay
@@ -20937,8 +20969,8 @@ L0D12:  lda     L0E33
         tay
         lda     $DB00,y
         sta     $08
-        lda     $DB01,y
-        sta     $09
+        lda     $DB00+1,y
+        sta     $08+1
         ldy     L0E33
         lda     DEVLST,y
         pha
