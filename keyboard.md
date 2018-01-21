@@ -21,6 +21,7 @@
 
 ## Shortcuts
 
+__File Menu__
 * △-F - New Folder
 * △-O - Open
 * △-C - Close
@@ -31,15 +32,18 @@
 * △-E - Eject
 * △-Q - Quit
 
+__View Menu__
 * △-J - View By Icon
 * △-N - View By Name
 * △-T - View By Date
 * △-K - View By Size
 * △-L - View By Type
 
+__Special Menu__
 * △-S - Format a Disk
 * △-Z - Erase a Disk
 * △-I - Get Info
 
+__Selector Menu__
 * △-0 - Run Selector
 * △-1-9 - Selector Entries
