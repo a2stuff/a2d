@@ -3521,6 +3521,8 @@ special_menu:
         .assert * = $AD58, error, "Segment length mismatch"
         PAD_TO $AE00
 
+;;; ==================================================
+
         ;; Rects
 LAE00:  DEFINE_RECT   4,2,396,98
 LAE08:  DEFINE_RECT   5,3,395,97
@@ -5324,6 +5326,8 @@ LD90A:  .byte   $00
         .assert * = $DAD8, error, "Segment length mismatch"
         PAD_TO $DB00
 
+;;; ==================================================
+
         .addr   sd0s, sd1s, sd2s, sd3s, sd4s, sd5s, sd6s
         .addr   sd7s, sd8s, sd9s, sd10s, sd11s, sd12s, sd13s
 
@@ -7067,7 +7071,7 @@ L48C2:  lda     $E196,x
         rts
 
 L48CC:  sta     LD2AC
-        yax_call LA500, LD2AC, $0C
+        yax_call launch_dialog, LD2AC, $0C
         rts
 
         lda     #$88
@@ -7439,7 +7443,7 @@ L4BB1:  .byte   0
 ;;; ==================================================
 
 .proc cmd_about
-        yax_call LA500, $0000, $00
+        yax_call launch_dialog, $0000, index_about_dialog
         jmp     redraw_windows_and_desktop
 .endproc
 
@@ -7911,7 +7915,7 @@ L4F76:  .res    65, 0              ; buffer is used elsewhere too
 
 start:  lda     desktop_winid
         sta     L4F67
-        yax_call LA500, L4F67, $03
+        yax_call launch_dialog, L4F67, index_new_folder_dialog
 L4FC6:  lda     desktop_winid
         beq     L4FD4
         jsr     window_address_lookup
@@ -7919,7 +7923,7 @@ L4FC6:  lda     desktop_winid
         stx     L4F69
 L4FD4:  lda     #$80
         sta     L4F67
-        yax_call LA500, L4F67, $03
+        yax_call launch_dialog, L4F67, index_new_folder_dialog
         beq     L4FE7
         jmp     L504B
 
@@ -7952,7 +7956,7 @@ L4FF6:  lda     ($06),y
 
 L5027:  lda     #$40
         sta     L4F67
-        yax_call LA500, L4F67, $03
+        yax_call launch_dialog, L4F67, index_new_folder_dialog
         lda     #$76
         ldx     #$4F
         jsr     L6F90
@@ -15256,12 +15260,12 @@ open:   MLI_RELAY_CALL OPEN, open_params
         MLI_RELAY_CALL CLOSE, close_params
         rts
 
+        .assert * = $8EFB, error, "Segment length mismatch"
+        PAD_TO $8F00
+
 .endproc
         load_dynamic_routine := load_dynamic_routine_impl::load
         restore_dynamic_routine := load_dynamic_routine_impl::restore
-
-        .assert * = $8EFB, error, "Segment length mismatch"
-        PAD_TO $8F00
 
 ;;; ==================================================
 
@@ -16015,7 +16019,7 @@ L9534:  lda     #$00
         rts
 
 L953A:  PASCAL_STRING " VOL"
-L953F:  yax_call LA500, L92E3, $06
+L953F:  yax_call launch_dialog, L92E3, index_get_info_dialog
         rts
 
 L9549:  ldx     #$00
@@ -16222,7 +16226,7 @@ L96EB:  lda     ($06),y
         jmp     L9576
 
 L96F8:  sta     L956E
-        yax_call LA500, L956E, $09
+        yax_call launch_dialog, L956E, index_rename_dialog
         rts
 
         .byte   $00
@@ -16592,14 +16596,14 @@ L9984:  lda     #$00
         sta     L9180
         lda     #$99
         sta     L9180+1
-        yax_call LA500, L9937, $0A
+        yax_call launch_dialog, L9937, $0A
         rts
 
         sta     L9938
         stx     L9939
         lda     #$01
         sta     L9937
-        yax_call LA500, L9937, $0A
+        yax_call launch_dialog, L9937, $0A
         rts
 
 L99BC:  lda     #$80
@@ -16619,12 +16623,12 @@ L99C3:  lda     L9931,y
 
         lda     #$03
         sta     L9937
-        yax_call LA500, L9937, $0A
+        yax_call launch_dialog, L9937, $0A
         rts
 
         lda     #$04
         sta     L9937
-        yax_call LA500, L9937, $0A
+        yax_call launch_dialog, L9937, $0A
         cmp     #$02
         bne     L99FE
         rts
@@ -16822,7 +16826,7 @@ L9BAA:  jsr     LA322
 L9BBB:  jsr     LA360
 L9BBE:  rts
 
-L9BBF:  yax_call LA500, L9937, $01
+L9BBF:  yax_call launch_dialog, L9937, index_copy_file_dialog
         rts
 
 L9BC9:  yax_call JT_MLI_RELAY, file_info_params3, GET_FILE_INFO
@@ -17068,7 +17072,7 @@ L9E26:  yax_call JT_MLI_RELAY, create_params3, CREATE
         bmi     L9E60
         lda     #$03
         sta     L9937
-        yax_call LA500, L9937, $01
+        yax_call launch_dialog, L9937, index_copy_file_dialog
         pha
         lda     #$02
         sta     L9937
@@ -17245,7 +17249,7 @@ L9FC2:  yax_call JT_MLI_RELAY, destroy_params, DESTROY
         bmi     LA001
         lda     #$04
         sta     L9E79
-        yax_call LA500, L9E79, $02
+        yax_call launch_dialog, L9E79, index_delete_file_dialog
         pha
         lda     #$03
         sta     L9E79
@@ -17289,7 +17293,7 @@ LA02E:  yax_call JT_MLI_RELAY, destroy_params, DESTROY
 
 LA043:  rts
 
-LA044:  yax_call LA500, L9E79, $02
+LA044:  yax_call launch_dialog, L9E79, index_delete_file_dialog
         rts
 
 LA04E:  .byte   $70,$A1,$E3,$97,$E3,$97
@@ -17377,10 +17381,10 @@ LA0E6:  lda     LA04E,y
         sta     LA054
         jmp     LA10A
 
-LA100:  yax_call LA500, LA054, $07
+LA100:  yax_call launch_dialog, LA054, index_lock_dialog
         rts
 
-LA10A:  yax_call LA500, LA054, $08
+LA10A:  yax_call launch_dialog, LA054, index_unlock_dialog
         rts
 
 LA114:  lda     #$03
@@ -17481,7 +17485,7 @@ LA1E4:  lda     #$00
         sta     L917D
         lda     #$A2
         sta     L917D+1
-        yax_call LA500, LA1DF, $0B
+        yax_call launch_dialog, LA1DF, $0B
         lda     #$33
         sta     L9180
         lda     #$A2
@@ -17490,18 +17494,18 @@ LA1E4:  lda     #$00
 
         lda     #$01
         sta     LA1DF
-        yax_call LA500, LA1DF, $0B
+        yax_call launch_dialog, LA1DF, $0B
 LA21F:  rts
 
         lda     #$02
         sta     LA1DF
-        yax_call LA500, LA1DF, $0B
+        yax_call launch_dialog, LA1DF, $0B
         beq     LA21F
         jmp     LA39F
 
         lda     #$03
         sta     LA1DF
-        yax_call LA500, LA1DF, $0B
+        yax_call launch_dialog, LA1DF, $0B
 LA241:  rts
 
 LA242:  .byte   $AE,$A2,$E3,$97,$E3,$97
@@ -17711,7 +17715,7 @@ LA3EF:  lda     LA2ED
         lda     LA2EE
         sbc     #$00
         sta     L9E7B
-        yax_call LA500, L9E79, $02
+        yax_call launch_dialog, L9E79, index_delete_file_dialog
         rts
 
 LA40A:  lda     LA2ED
@@ -17721,7 +17725,7 @@ LA40A:  lda     LA2ED
         lda     LA2EE
         sbc     #$00
         sta     L9939
-        yax_call LA500, L9937, $01
+        yax_call launch_dialog, L9937, index_copy_file_dialog
         rts
 
 LA425:  .byte   0
@@ -17799,13 +17803,28 @@ LA4C6:  yax_call JT_MLI_RELAY, on_line_params2, ON_LINE
         .assert * = $A4D0, error, "Segment length mismatch"
         PAD_TO $A500
 
-LA500:  jmp     LA520
+;;; ==================================================
+;;; Dialog Launcher
+
+        index_about_dialog              := 0
+        index_copy_file_dialog          := 1
+        index_delete_file_dialog        := 2
+        index_new_folder_dialog         := 3
+        index_get_info_dialog           := 6
+        index_lock_dialog               := 7
+        index_unlock_dialog             := 8
+        index_rename_dialog             := 9
+
+launch_dialog:
+        jmp     LA520
 
 LA503:  .addr   show_about_dialog
         .addr   show_copy_file_dialog
         .addr   show_delete_file_dialog
         .addr   show_new_folder_dialog
-        .addr   rts1,rts1,show_get_info_dialog
+        .addr   rts1
+        .addr   rts1
+        .addr   show_get_info_dialog
         .addr   show_lock_dialog
         .addr   show_unlock_dialog
         .addr   show_rename_dialog
@@ -17845,6 +17864,7 @@ LA520:  sta     LA51D
 
         LA565 := *+1
         jmp     dummy0000       ; self-modified
+
 LA567:  lda     LD8E8
         beq     LA579
         dec     LD8E9
@@ -21191,4 +21211,5 @@ L0F34:  A2D_RELAY_CALL $29
 
         .assert * = $0F60, error, "Segment length mismatch"
         PAD_TO $1000
+
 .endproc ; desktop_800
