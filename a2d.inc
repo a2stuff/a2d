@@ -16,6 +16,9 @@ A2D             := $4000
 ;;;   if <0, and with $7E to get length
 ;;;   if $4185,(call*2) is non-zero, param block is copied.
 
+A2D_NOOP                := $00  ; No-op
+        ;; (input length 0 bytes)
+
 A2D_CFG_DISPLAY         := $02  ; Configure display switches
         ;; (input length 1 byte)
         ;; Turns on 80 col/DHR, and then:
@@ -86,6 +89,8 @@ A2D_SET_BOX   := $06            ; Set just the drawing box, subset of full state
 A2D_SET_FILL_MODE := $07
         ;; (input length 1 byte)
         ;; .byte mode           (>=4 also sets eor mask to $7f)
+        ;;    0 = white (???)
+        ;;    2 = black (???)
 
 A2D_SET_PATTERN := $08
         ;; (input length 8 bytes)

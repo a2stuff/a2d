@@ -283,7 +283,7 @@ hide_cursor_count:
         jt_rts := a2d_dispatch::rts1
 
 a2d_jump_table:
-        .addr   jt_rts              ; $00
+        .addr   jt_rts              ; $00 NOOP
         .addr   L5E51               ; $01
         .addr   CFG_DISPLAY_IMPL    ; $02 CFG_DISPLAY
         .addr   QUERY_SCREEN_IMPL   ; $03 QUERY_SCREEN
@@ -371,7 +371,7 @@ param_lengths:
         .byte zp, ((length) | ((cursor) << 7))
 .endmacro
 
-        PARAM_DEFN  0, $00, 0           ; $00
+        PARAM_DEFN  0, $00, 0           ; $00 NOOP
         PARAM_DEFN  0, $00, 0           ; $01
         PARAM_DEFN  1, $82, 0           ; $02
         PARAM_DEFN  0, $00, 0           ; $03 QUERY_SCREEN

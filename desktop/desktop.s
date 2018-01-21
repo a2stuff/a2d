@@ -3527,8 +3527,8 @@ special_menu:
 ;;; ==================================================
 
         ;; Rects
-LAE00:  DEFINE_RECT 4,2,396,98
-LAE08:  DEFINE_RECT 5,3,395,97
+confirm_dialog_outer_rect:  DEFINE_RECT 4,2,396,98
+confirm_dialog_inner_rect:  DEFINE_RECT 5,3,395,97
 cancel_button_rect:  DEFINE_RECT 40,81,140,92
 LAE18:  DEFINE_RECT 193,30,293,41
 ok_button_rect:  DEFINE_RECT 260,81,360,92
@@ -3539,11 +3539,11 @@ all_button_rect:  DEFINE_RECT 320,81,360,92
 str_ok_label:
         PASCAL_STRING {"OK            ",GLYPH_RETURN}
 
-LAE50:  DEFINE_POINT 265,91
-LAE54:  DEFINE_POINT 45,91
-LAE58:  DEFINE_POINT 205,91
-LAE5C:  DEFINE_POINT 265,91
-LAE60:  DEFINE_POINT 325,91
+ok_label_pos:  DEFINE_POINT 265,91
+cancel_label_pos:  DEFINE_POINT 45,91
+yes_label_pos:  DEFINE_POINT 205,91
+no_label_pos:  DEFINE_POINT 265,91
+all_label_pos:  DEFINE_POINT 325,91
 
         .byte   $1C,$00,$70,$00
         .byte   $1C,$00,$87,$00
@@ -3552,7 +3552,7 @@ LAE6C:  .byte   $00             ; text mask
 LAE6D:  .byte   $7F             ; text mask
 
 LAE6E:  DEFINE_RECT 39,25,360,80
-LAE76:  DEFINE_RECT 40,60,360,80
+prompt_rect:  DEFINE_RECT 40,60,360,80
 LAE7E:  DEFINE_POINT 65,43
 LAE82:  DEFINE_POINT 65,51
 LAE86:  DEFINE_RECT 65,35,394,42
@@ -3566,11 +3566,13 @@ str_no_label:
         PASCAL_STRING " No"
 str_all_label:
         PASCAL_STRING " All"
+
 LAEB6:  PASCAL_STRING "Source filename:"
 LAEC7:  PASCAL_STRING "Destination filename:"
 
-LAEDD:  DEFINE_RECT 4, 2, 396, 108
-LAEE5:  DEFINE_RECT 5, 3, 395, 107
+        ;; "About" dialog resources
+about_dialog_outer_rect:  DEFINE_RECT 4, 2, 396, 108
+about_dialog_inner_rect:  DEFINE_RECT 5, 3, 395, 107
 
 str_about1:  PASCAL_STRING "Apple II DeskTop"
 str_about2:  PASCAL_STRING "Copyright Apple Computer Inc., 1986"
@@ -17540,7 +17542,7 @@ LA1E4:  lda     #$00
         sta     L917D
         lda     #$A2
         sta     L917D+1
-        yax_call launch_dialog, LA1DF, $0B
+        yax_call launch_dialog, LA1DF, index_get_size_dialog
         lda     #$33
         sta     L9180
         lda     #$A2
@@ -17549,18 +17551,18 @@ LA1E4:  lda     #$00
 
         lda     #$01
         sta     LA1DF
-        yax_call launch_dialog, LA1DF, $0B
+        yax_call launch_dialog, LA1DF, index_get_size_dialog
 LA21F:  rts
 
         lda     #$02
         sta     LA1DF
-        yax_call launch_dialog, LA1DF, $0B
+        yax_call launch_dialog, LA1DF, index_get_size_dialog
         beq     LA21F
         jmp     LA39F
 
         lda     #$03
         sta     LA1DF
-        yax_call launch_dialog, LA1DF, $0B
+        yax_call launch_dialog, LA1DF, index_get_size_dialog
 LA241:  rts
 
 LA242:  .addr   LA2AE,rts2,rts2
@@ -17860,7 +17862,7 @@ LA4C6:  yax_call JT_MLI_RELAY, on_line_params2, ON_LINE
         PAD_TO $A500
 
 ;;; ==================================================
-;;; Dialog Launcher
+;;; Dialog Launcher (or just proc handler???)
 
         index_about_dialog              := 0
         index_copy_file_dialog          := 1
@@ -17870,6 +17872,7 @@ LA4C6:  yax_call JT_MLI_RELAY, on_line_params2, ON_LINE
         index_lock_dialog               := 7
         index_unlock_dialog             := 8
         index_rename_dialog             := 9
+        index_get_size_dialog           := 11
 
 launch_dialog:
         jmp     LA520
@@ -17885,7 +17888,7 @@ LA503:  .addr   show_about_dialog
         .addr   show_unlock_dialog
         .addr   show_rename_dialog
         .addr   LAAE1
-        .addr   LABFA
+        .addr   show_get_size_dialog
         .addr   LB325
 
 LA51D:  .byte   $00
@@ -18000,7 +18003,7 @@ LA63A:  A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::ok_button_rect
         beq     LA64A
         jmp     LA6C1
 
-LA64A:  jsr     LB43B
+LA64A:  jsr     set_fill_black
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::ok_button_rect
         jsr     LB7CF
         bmi     LA65D
@@ -18010,7 +18013,7 @@ LA65D:  rts
 LA65E:  A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::yes_button_rect
         cmp     #$80
         bne     LA67F
-        jsr     LB43B
+        jsr     set_fill_black
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::yes_button_rect
         jsr     LB7D9
         bmi     LA67E
@@ -18020,7 +18023,7 @@ LA67E:  rts
 LA67F:  A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::no_button_rect
         cmp     #$80
         bne     LA6A0
-        jsr     LB43B
+        jsr     set_fill_black
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::no_button_rect
         jsr     LB7DE
         bmi     LA69F
@@ -18030,7 +18033,7 @@ LA69F:  rts
 LA6A0:  A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::all_button_rect
         cmp     #$80
         bne     LA6C1
-        jsr     LB43B
+        jsr     set_fill_black
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::all_button_rect
         jsr     LB7E3
         bmi     LA6C0
@@ -18047,7 +18050,7 @@ LA6C9:  A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::cancel_button_rect
         beq     LA6D9
         jmp     LA6ED
 
-LA6D9:  jsr     LB43B
+LA6D9:  jsr     set_fill_black
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::cancel_button_rect
         jsr     LB7D4
         bmi     LA6EC
@@ -18186,17 +18189,17 @@ LA7DD:  ldx     LD8E8
 LA7E5:  lda     #$FF
         rts
 
-LA7E8:  jsr     LB43B
+LA7E8:  jsr     set_fill_black
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::yes_button_rect
         lda     #$02
         rts
 
-LA7F7:  jsr     LB43B
+LA7F7:  jsr     set_fill_black
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::no_button_rect
         lda     #$03
         rts
 
-LA806:  jsr     LB43B
+LA806:  jsr     set_fill_black
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::all_button_rect
         lda     #$04
         rts
@@ -18235,7 +18238,7 @@ LA84E:  lda     #$FF
 
 LA851:  lda     winF
         jsr     LB7B9
-        jsr     LB43B
+        jsr     set_fill_black
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::ok_button_rect
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::ok_button_rect
         lda     #$00
@@ -18243,7 +18246,7 @@ LA851:  lda     winF
 
 LA86F:  lda     winF
         jsr     LB7B9
-        jsr     LB43B
+        jsr     set_fill_black
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::cancel_button_rect
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::cancel_button_rect
         lda     #$01
@@ -18269,9 +18272,9 @@ LA899:  jmp     dummy0000
         A2D_RELAY_CALL A2D_CREATE_WINDOW, win18::id
         lda     win18::id
         jsr     LB7B9
-        jsr     LB43B
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAEDD
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAEE5
+        jsr     set_fill_black
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::about_dialog_outer_rect
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::about_dialog_inner_rect
         addr_call LB723, desktop_aux::str_about1
         axy_call draw_dialog_label, desktop_aux::str_about2, $81
         axy_call draw_dialog_label, desktop_aux::str_about3, $82
@@ -18414,13 +18417,13 @@ LAA6A:  jsr     LAACE
         lda     winF
         jsr     LB7B9
         axy_call draw_dialog_label, desktop_aux::str_exists_prompt, $06
-        jsr     LB64E
+        jsr     draw_yes_no_all_cancel_buttons
 LAA7F:  jsr     LA567
         bmi     LAA7F
         pha
-        jsr     LB687
+        jsr     erase_yes_no_all_cancel_buttons
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE76
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::prompt_rect
         pla
         rts
 
@@ -18428,13 +18431,13 @@ LAA9C:  jsr     LAACE
         lda     winF
         jsr     LB7B9
         axy_call draw_dialog_label, desktop_aux::str_large_prompt, $06
-        jsr     LB6AF
+        jsr     draw_ok_cancel_buttons
 LAAB1:  jsr     LA567
         bmi     LAAB1
         pha
-        jsr     LB6D0
+        jsr     erase_ok_cancel_buttons
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE76
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::prompt_rect
         pla
         rts
 
@@ -18445,6 +18448,8 @@ LAACE:  sta     ALTZPOFF
         lda     LCBANK1
         lda     LCBANK1
         rts
+
+;;; ==================================================
 
 LAAE1:
         jsr     LB3BF
@@ -18526,17 +18531,20 @@ LABC8:  jsr     LAACE
         lda     winF
         jsr     LB7B9
         axy_call draw_dialog_label, desktop_aux::str_ramcard_full, $06
-        jsr     LB6E6
+        jsr     draw_ok_button
 LABDD:  jsr     LA567
         bmi     LABDD
         pha
-        jsr     LB6FB
+        jsr     erase_ok_button
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE76
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::prompt_rect
         pla
         rts
 
-LABFA:
+;;; ==================================================
+;;; "Get Size" dialog
+
+show_get_size_dialog:
         jsr     LB3BF
         ldy     #$00
         lda     ($06),y
@@ -18609,12 +18617,12 @@ LAC9E:  jsr     LBEB1
 
 LACAE:  lda     winF
         jsr     LB7B9
-        jsr     LB6E6
+        jsr     draw_ok_button
 LACB7:  jsr     LA567
         bmi     LACB7
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE6E
-        jsr     LB6FB
+        jsr     erase_ok_button
         lda     #$00
         rts
 
@@ -18707,13 +18715,13 @@ LAD6C:  ldy     #$01
 
 LADBB:  lda     winF
         jsr     LB7B9
-        jsr     LB6AF
+        jsr     draw_ok_cancel_buttons
 LADC4:  jsr     LA567
         bmi     LADC4
         bne     LADF4
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE6E
-        jsr     LB6D0
+        jsr     erase_ok_cancel_buttons
         yax_call draw_dialog_label, desktop_aux::str_file_colon, $02
         yax_call draw_dialog_label, desktop_aux::str_delete_remaining, $04
         lda     #$00
@@ -18727,13 +18735,13 @@ LADF5:  jsr     LBEB1
 LAE05:  lda     winF
         jsr     LB7B9
         axy_call draw_dialog_label, desktop_aux::str_delete_locked_file, $06
-        jsr     LB64E
+        jsr     draw_yes_no_all_cancel_buttons
 LAE17:  jsr     LA567
         bmi     LAE17
         pha
-        jsr     LB687
-        A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE76
+        jsr     erase_yes_no_all_cancel_buttons
+        A2D_RELAY_CALL A2D_SET_FILL_MODE, const0 ; white
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::prompt_rect ; erase prompt
         pla
         rts
 
@@ -18760,7 +18768,7 @@ LAE49:  lda     #$80
         lda     winF
         jsr     LB7B9
         addr_call LB723, desktop_aux::str_new_folder_title
-        jsr     LB43B
+        jsr     set_fill_black
         A2D_RELAY_CALL A2D_DRAW_RECT, LD6AB
         rts
 
@@ -19017,7 +19025,7 @@ LB0A2:  ldy     #$01
 
 LB0F1:  lda     winF
         jsr     LB7B9
-        jsr     LB6AF
+        jsr     draw_ok_cancel_buttons
 LB0FA:  jsr     LA567
         bmi     LB0FA
         bne     LB139
@@ -19109,7 +19117,7 @@ LB1C0:  ldy     #$01
 
 LB20F:  lda     winF
         jsr     LB7B9
-        jsr     LB6AF
+        jsr     draw_ok_cancel_buttons
 LB218:  jsr     LA567
         bmi     LB218
         bne     LB257
@@ -19152,7 +19160,7 @@ LB27D:  jsr     LBD75
         lda     winF
         jsr     LB7B9
         addr_call LB723, desktop_aux::str_rename_title
-        jsr     LB43B
+        jsr     set_fill_black
         A2D_RELAY_CALL A2D_DRAW_RECT, LD6AB
         yax_call draw_dialog_label, desktop_aux::str_rename_old, $02
         lda     #$55
@@ -19221,10 +19229,10 @@ LB325:
 LB357:  pla
         and     #$7F
         pha
-        jsr     LB6E6
+        jsr     draw_ok_button
         jmp     LB364
 
-LB361:  jsr     LB6AF
+LB361:  jsr     draw_ok_cancel_buttons
 LB364:  pla
         pha
         asl     a
@@ -19298,7 +19306,8 @@ LB41F:  A2D_RELAY_CALL A2D_HIDE_CURSOR
         A2D_RELAY_CALL A2D_SHOW_CURSOR
         rts
 
-LB43B:  A2D_RELAY_CALL A2D_SET_FILL_MODE, const2
+set_fill_black:
+        A2D_RELAY_CALL A2D_SET_FILL_MODE, const2
         rts
 
         ldx     #$03
@@ -19391,33 +19400,33 @@ LB509:  sta     LD8E7
         jsr     LB53A
         bit     LD8E7
         bvc     LB51A
-        jsr     LB64E
+        jsr     draw_yes_no_all_cancel_buttons
         jmp     LB526
 
 LB51A:  A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::ok_button_rect
-        jsr     LB5F9
+        jsr     draw_ok_label
 LB526:  bit     LD8E7
         bmi     LB537
         A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::cancel_button_rect
-        jsr     LB60A
+        jsr     draw_cancel_label
 LB537:  jmp     LBEB1
 
 LB53A:  A2D_RELAY_CALL A2D_CREATE_WINDOW, winF
         lda     winF
         jsr     LB7B9
-        jsr     LB43B
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAE00
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAE08
+        jsr     set_fill_black
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::confirm_dialog_outer_rect
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::confirm_dialog_inner_rect
         rts
 
 LB55F:  A2D_RELAY_CALL A2D_CREATE_WINDOW, winF
         lda     winF
         jsr     LB7B9
-        jsr     LBEA7
+        jsr     set_fill_white
         A2D_RELAY_CALL A2D_DRAW_BITMAP, alert_bitmap2_params
-        jsr     LB43B
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAE00
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAE08
+        jsr     set_fill_black
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::confirm_dialog_outer_rect
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::confirm_dialog_inner_rect
         rts
 
 draw_dialog_label:
@@ -19470,68 +19479,79 @@ LB5CC:  dey
         sta     dialog_label_pos
         rts
 
-LB5F9:  A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE50
+draw_ok_label:
+        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::ok_label_pos
         addr_call draw_text1, desktop_aux::str_ok_label
         rts
 
-LB60A:  A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE54
+draw_cancel_label:
+        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::cancel_label_pos
         addr_call draw_text1, desktop_aux::str_cancel_label
         rts
 
-LB61B:  A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE58
+draw_yes_label:
+        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::yes_label_pos
         addr_call draw_text1, desktop_aux::str_yes_label
         rts
 
-LB62C:  A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE5C
+draw_no_label:
+        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::no_label_pos
         addr_call draw_text1, desktop_aux::str_no_label
         rts
 
-LB63D:  A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE60
+draw_all_label:
+        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::all_label_pos
         addr_call draw_text1, desktop_aux::str_all_label
         rts
 
-LB64E:  jsr     LB43B
+draw_yes_no_all_cancel_buttons:
+        jsr     set_fill_black
         A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::yes_button_rect
         A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::no_button_rect
         A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::all_button_rect
         A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::cancel_button_rect
-        jsr     LB61B
-        jsr     LB62C
-        jsr     LB63D
-        jsr     LB60A
+        jsr     draw_yes_label
+        jsr     draw_no_label
+        jsr     draw_all_label
+        jsr     draw_cancel_label
         lda     #$40
         sta     LD8E7
         rts
 
-LB687:  jsr     LBEA7
+erase_yes_no_all_cancel_buttons:
+        jsr     set_fill_white
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::yes_button_rect
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::no_button_rect
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::all_button_rect
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::cancel_button_rect
         rts
 
-LB6AF:  jsr     LB43B
+draw_ok_cancel_buttons:
+        jsr     set_fill_black
         A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::ok_button_rect
         A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::cancel_button_rect
-        jsr     LB5F9
-        jsr     LB60A
+        jsr     draw_ok_label
+        jsr     draw_cancel_label
         lda     #$00
         sta     LD8E7
         rts
 
-LB6D0:  jsr     LBEA7
+erase_ok_cancel_buttons:
+        jsr     set_fill_white
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::ok_button_rect
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::cancel_button_rect
         rts
 
-LB6E6:  jsr     LB43B
+draw_ok_button:
+        jsr     set_fill_black
         A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::ok_button_rect
-        jsr     LB5F9
+        jsr     draw_ok_label
         lda     #$80
         sta     LD8E7
         rts
 
-LB6FB:  jsr     LBEA7
+erase_ok_button:
+        jsr     set_fill_white
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::ok_button_rect
         rts
 
@@ -19742,7 +19762,7 @@ LB8C9:  lda     LB8F2
         bne     LB8D1
         jmp     LB892
 
-LB8D1:  jsr     LB43B
+LB8D1:  jsr     set_fill_black
         jsr     LB883
         lda     LB8F2
         clc
@@ -19797,7 +19817,7 @@ LB961:  lda     $D443
         beq     LB9B7
         lda     winF
         jsr     LB7B9
-        jsr     LBEA7
+        jsr     set_fill_white
         A2D_RELAY_CALL A2D_FILL_RECT, LD6AB
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const2
         A2D_RELAY_CALL A2D_DRAW_RECT, LD6AB
@@ -20351,15 +20371,16 @@ LBE7D:  lda     ($06),y
         jsr     LB781
         rts
 
-LBE8D:  jsr     LBEA7
+LBE8D:  jsr     set_fill_white
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE86
         rts
 
-LBE9A:  jsr     LBEA7
+LBE9A:  jsr     set_fill_white
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE8E
         rts
 
-LBEA7:  A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
+set_fill_white:
+        A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
         rts
 
 LBEB1:  A2D_RELAY_CALL A2D_QUERY_SCREEN, state2
