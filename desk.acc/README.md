@@ -67,6 +67,6 @@ Tips:
 * You can use the Sort Directory DA to order the files, which controls
     the menu order:
   * Open the `A2.DESKTOP\DESK.ACC` folder
-  * Press Open-Apple and click on the each file in the desired order
+  * Press Open-Apple and click on each file in the desired order
   * Select Sort Directory from the Apple menu, and verify the order
   * Restart

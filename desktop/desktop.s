@@ -3735,11 +3735,8 @@ str_on_system_disk:
         PASCAL_STRING "on the system disk ?"
 
 
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00
+        .assert * = $B5D9, error, "Segment length mismatch"
+        PAD_TO $B600
 
 ;;; ==================================================
 
@@ -3790,14 +3787,14 @@ alert_inner_frame_rect1:
 alert_inner_frame_rect2:
         DEFINE_RECT 5, 3, 415, 52
 
-LB6D3:  .byte   $41
-LB6D4:  .byte   $00
-LB6D5:  .byte   $57
-LB6D6:  .byte   $00,$00,$20,$80,$00,$00,$00,$00
+LB6D3:  .word   $41
+LB6D5:  .word   $57
+
+        .byte   $00,$20,$80,$00,$00,$00,$00
         .byte   $00
-LB6DF:  .byte   $A4
-LB6E0:  .byte   $01
-LB6E1:  .byte   $37,$00
+
+LB6DF:  .word   $1A4
+LB6E1:  .word   $37
 
 
 ;;; ==================================================
@@ -3908,7 +3905,7 @@ LBA0B:  sta     state2_left,x
         sta     state2_height+1
         A2D_RELAY2_CALL A2D_SET_STATE, state2
         lda     LB6D3
-        ldx     LB6D4
+        ldx     LB6D3+1
         jsr     LBF8B
         sty     LBFCA
         sta     LBFCD
@@ -3916,8 +3913,8 @@ LBA0B:  sta     state2_left,x
         clc
         adc     LB6DF
         pha
-        lda     LB6D4
-        adc     LB6E0
+        lda     LB6D3+1
+        adc     LB6DF+1
         tax
         pla
         jsr     LBF8B
@@ -4190,14 +4187,14 @@ LBDE1:  lda     input_params_xcoord
         sbc     LB6D3
         sta     input_params_xcoord
         lda     input_params_xcoord+1
-        sbc     LB6D4
+        sbc     LB6D3+1
         sta     input_params_xcoord+1
         lda     input_params_ycoord
         sec
         sbc     LB6D5
         sta     input_params_ycoord
         lda     input_params_ycoord+1
-        sbc     LB6D6
+        sbc     LB6D5+1
         sta     input_params_ycoord+1
         rts
 

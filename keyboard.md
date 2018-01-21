@@ -1,18 +1,19 @@
 # Keyboard Control
 
-OA = Open Apple
+△ = Open Apple
+▲ = Closed Apple
 
 ## Windows
 
-* OA-W - Activate window; Left/Right Arrows to navigate
-* OA-G - Resize window; Arrows to resize, Return to finish
-* OA-M - Move window; Arrows to move, Return to finish
-* OA-X - Scroll contents; Arrows to scroll, Esc or Return when done
+* △-W - Activate window; Left/Right Arrows to navigate
+* △-G - Resize window; Arrows to resize, Return to finish
+* △-M - Move window; Arrows to move, Return to finish
+* △-X - Scroll contents; Arrows to scroll, Esc or Return when done
 
 ## Icons
 
-* OA-H - Highlight icon; Left/Right Arrows to navigate, Esc or Return when done
-* OA-A - Select all icons
+* △-H - Highlight icon; Left/Right Arrows to navigate, Esc or Return when done
+* △-A - Select all icons
 
 ## Menus
 
@@ -20,25 +21,25 @@ OA = Open Apple
 
 ## Shortcuts
 
-* OA-F - New Folder
-* OA-O - Open
-* OA-C - Close
-* OA-B - Close All
-* OA-A - Select All
-* OA-Y - Copy a File
-* OA-D - Delete a File
-* OA-E - Eject
-* OA-Q - Quit
+* △-F - New Folder
+* △-O - Open
+* △-C - Close
+* △-B - Close All
+* △-A - Select All
+* △-Y - Copy a File
+* △-D - Delete a File
+* △-E - Eject
+* △-Q - Quit
 
-* OA-J - View By Icon
-* OA-N - View By Name
-* OA-T - View By Date
-* OA-K - View By Size
-* OA-L - View By Type
+* △-J - View By Icon
+* △-N - View By Name
+* △-T - View By Date
+* △-K - View By Size
+* △-L - View By Type
 
-* OA-S - Format a Disk
-* OA-Z - Erase a Disk
-* OA-I - Get Info
+* △-S - Format a Disk
+* △-Z - Erase a Disk
+* △-I - Get Info
 
-* OA-0 - Run Selector
-* OA-1-9 - Selector Entries
+* △-0 - Run Selector
+* △-1-9 - Selector Entries
