@@ -620,6 +620,9 @@ element:.byte   0
 id:     .byte   0
 .endproc
 
+        screen_width := 560
+        screen_height := 192
+
 .proc query_screen_params
 left:   .word   0
 top:    .word   0
@@ -628,8 +631,8 @@ stride: .word   A2D_SCREEN_STRIDE
 L934D:
 hoff:   .word   0
 voff:   .word   0
-width:  .word   560-1
-height: .word   192-1
+width:  .word   screen_width-1
+height: .word   screen_height-1
 pattern:.res    8, $FF
 mskand: .byte   A2D_DEFAULT_MSKAND
 mskor:  .byte   A2D_DEFAULT_MSKOR
@@ -698,8 +701,8 @@ L939E:  .addr   0               ; $00
 
 .macro  DESKTOP_DIRECT_CALL    op, addr, label
         jsr DESKTOP_DIRECT
-        .byte op
-        .addr addr
+        .byte   op
+        .addr   addr
 .endmacro
 
         ;; DESKTOP entry point (after jump)
@@ -3526,12 +3529,12 @@ special_menu:
         ;; Rects
 LAE00:  DEFINE_RECT 4,2,396,98
 LAE08:  DEFINE_RECT 5,3,395,97
-LAE10:  DEFINE_RECT 40,81,140,92
+cancel_button_rect:  DEFINE_RECT 40,81,140,92
 LAE18:  DEFINE_RECT 193,30,293,41
-LAE20:  DEFINE_RECT 260,81,360,92
-LAE28:  DEFINE_RECT 200,81,240,92
-LAE30:  DEFINE_RECT 260,81,300,92
-LAE38:  DEFINE_RECT 320,81,360,92
+ok_button_rect:  DEFINE_RECT 260,81,360,92
+yes_button_rect:  DEFINE_RECT 200,81,240,92
+no_button_rect:  DEFINE_RECT 260,81,300,92
+all_button_rect:  DEFINE_RECT 320,81,360,92
 
 str_ok_label:
         PASCAL_STRING {"OK            ",GLYPH_RETURN}
@@ -3856,9 +3859,11 @@ alert_count:
         ;; message number-to-index table
         ;; (look up by scan to determine index)
 alert_table:
+        ;; ProDOS MLI error codes:
         .byte   $00,$27,$28,$2B,$40,$44,$45,$46
-        .byte   $47,$48,$49,$4E,$52,$57,$F9,$FA
-        .byte   $FB,$FC,$FD,$FE
+        .byte   $47,$48,$49,$4E,$52,$57
+        ;; Internal error codes:
+        .byte   $F9,$FA,$FB,$FC,$FD,$FE
 
         ;; alert index to string address
 prompt_table:
@@ -4237,7 +4242,7 @@ LBE5C:  .byte   0
 LBE5D:  lda     #$00
         sta     LBEBC
         lda     #$08
-        sta     LBEBD
+        sta     LBEBC+1
         ldx     LBFCD
         ldy     LBFCE
         lda     #$FF
@@ -4275,11 +4280,12 @@ LBEAE:  lda     LBF0B
         lsr     a
         tay
         sta     PAGE2OFF        ; main $2000-$3FFF
-        bcs     LBEBB
+        bcs     :+
         sta     PAGE2ON         ; aux $2000-$3FFF
-LBEBB:  .byte   $AD
-LBEBC:  .byte   0
-LBEBD:  php
+
+        LBEBC := *+1
+:       lda     $0800           ; self-modified
+
         pha
         lda     LBF0B
         cmp     LBFCA
@@ -4306,7 +4312,7 @@ LBEEB:  pla
         sta     ($06),y
         inc     LBEBC
         bne     LBEF6
-        inc     LBEBD
+        inc     LBEBC+1
 LBEF6:  lda     LBF0B
         cmp     LBFCC
         bcs     LBF03
@@ -4838,9 +4844,28 @@ tmask:  .byte   0
 font:   .addr   DEFAULT_FONT
 .endproc
 
-        .byte   $FF,$FF,$FF,$FF,$FF
-        .byte   $FF,$FF,$FF,$FF,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$FF
+
+white_pattern3:                 ; unused?
+        .byte   %11111111
+        .byte   %11111111
+        .byte   %11111111
+        .byte   %11111111
+        .byte   %11111111
+        .byte   %11111111
+        .byte   %11111111
+        .byte   %11111111
+        .byte   $FF
+
+black_pattern3:                 ; unused?
+        .byte   %00000000
+        .byte   %00000000
+        .byte   %00000000
+        .byte   %00000000
+        .byte   %00000000
+        .byte   %00000000
+        .byte   %00000000
+        .byte   %00000000
+        .byte   $FF
 
 checkerboard_pattern3:
         .byte   px(%1010101)
@@ -4861,7 +4886,7 @@ id_byte_2:  .byte   $EA             ; ROM FBC0 ($EA = IIe, $E0 = IIe enh/IIgs, $
         .byte   $00,$00,$00,$00,$88,$00,$08,$00
         .byte   $13,$00,$00,$00,$00
 
-        ;; Set to specific machine type
+        ;; Set to specific machine type; used for double-click timing.
 machine_type:
         .byte   $00             ; Set to: $96 = IIe, $FA = IIc, $FD = IIgs
 
@@ -5191,6 +5216,7 @@ LD6C7:  DEFINE_POINT 75, 35
         .word   0, 0            ; hoff, voff
         .word   $166, $64       ; width, height
 
+        ;; ???
         .byte   $00,$04,$00,$02,$00,$5A,$01,$6C,$00,$05,$00,$03,$00,$59,$01,$6B,$00,$06,$00,$16,$00,$58,$01,$16,$00,$06,$00,$59,$00,$58,$01,$59,$00,$D2,$00,$5C,$00,$36,$01,$67,$00,$28,$00,$5C,$00,$8C,$00,$67,$00,$D7,$00,$66,$00,$2D,$00,$66,$00,$82,$00,$07,$00,$DC,$00,$13,$00
 
 LD718:  PASCAL_STRING "Add an Entry ..."
@@ -8521,10 +8547,10 @@ L5449:  .byte   0
 L544A:  .byte   0
         .byte   0
         .byte   0
+
 L544D:  lda     #$00
         sta     $1800
-        .byte   $AD
-L5453:  and     $EC
+        lda     $EC25
         bne     L545A
         jmp     L54C5
 
@@ -13975,10 +14001,8 @@ L8562:  lsr     L85F3
         lda     desktop_winid
         jsr     L7D5D
         sta     L85F4
-        .byte   $8E
-        .byte   $F5
-L85A5:  sta     $8C
-        inc     $85,x
+        stx     L85F5
+        sty     L85F6
         lda     L85F1
         beq     L85C3
         lda     query_state_buffer::voff
@@ -14042,7 +14066,7 @@ L85FB:  .byte   0
 
         lda     #0
         sta     counter+1
-        lda     machine_type ; Since IIgs is faster? ($96=IIe,$FA=IIc,$FD=IIgs)
+        lda     machine_type ; Speed of mouse driver? ($96=IIe,$FA=IIc,$FD=IIgs)
         asl     a            ; * 2
         rol     counter+1    ; So IIe = $12C, IIc = $1F4, IIgs = $1FA
         sta     counter
@@ -15303,31 +15327,18 @@ open:   MLI_RELAY_CALL OPEN, open_params
 ;;; ==================================================
 
 L8F00:  jmp     L8FC5
-
-        jmp     L97E3
-
-        jmp     L97E3
-
+        jmp     rts2            ; rts
+        jmp     rts2            ; rts
 L8F09:  jmp     L92E7
-
 L8F0C:  jmp     L8F9B
-
 L8F0F:  jmp     L8FA1
-
 L8F12:  jmp     L9571
-
 L8F15:  jmp     L9213
-
 L8F18:  jmp     L8F2A
-
 L8F1B:  jmp     L8F5B
-
-        jmp     L97E3
-
-        jmp     L97E3
-
+        jmp     rts2            ; rts
+        jmp     rts2            ; rts
 L8F24:  jmp     L8F7E
-
 L8F27:  jmp     L8FB8
 
 L8F2A:  lda     #$00
@@ -15444,9 +15455,9 @@ L9011:  lda     $EBFC
         sta     $08
         lda     window_address_table+1,x
         sta     $08+1
-        lda     #$7B
+        lda     #<L917B
         sta     $06
-        lda     #$91
+        lda     #>L917B
         sta     $06+1
         jsr     L91A0
         jmp     L9076
@@ -15477,8 +15488,8 @@ L9051:  lda     $EBFC
 L9066:  iny
         lda     ($06),y
         sta     $E00A,y
-        .byte   $C0
-L906D:  .byte   0
+        L906D := *+1
+        cpy     #$00            ; self-modified
         bne     L9066
         ldy     #$01
         lda     #$20
@@ -15600,7 +15611,7 @@ L9168:  jsr     L917F
         rts
 
 L917A:  .byte   0
-        .byte   0
+L917B:  .byte   0
 
         ;; Dynamically constructed jump table???
         L917D := *+1
@@ -15638,8 +15649,8 @@ L91AB:  iny
         inx
         lda     ($08),y
         sta     $E00A,x
-        .byte   $C0
-L91B3:  .byte   0
+        L91B3 := *+1
+        cpy     #0              ; self-modified
         bne     L91AB
 L91B6:  inx
         lda     #$2F
@@ -15777,8 +15788,11 @@ L9271:  stx     L9284
         rts
 L92BD:  jmp     ($06)
 
-L92C0:  .byte   $03
-L92C1:  .byte   $00,$C5,$92,$04,$00,$00
+L92C0:  .byte   3
+L92C1:  .byte   $00
+        .addr   L92C5
+        .byte   4
+L92C5:  .byte   $00,$00
 L92C7:  .byte   $00,$00
 
 .proc get_file_info_params5
@@ -16052,6 +16066,8 @@ L9534:  lda     #$00
         rts
 
 L953A:  PASCAL_STRING " VOL"
+
+
 L953F:  yax_call launch_dialog, L92E3, index_get_info_dialog
         rts
 
@@ -16440,10 +16456,13 @@ L97BD:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
-L97DD:  .byte   $36,$9B
-L97DF:  .byte   $33,$9B
-L97E1:  .byte   $E3,$97
-L97E3:  .byte   $60
+
+L97DD:  .addr   L9B36
+L97DF:  .addr   L9B33
+L97E1:  .addr   rts2
+
+rts2:   rts
+
 L97E4:  .byte   $00
 L97E5:  ldx     $E10C
         lda     $E061
@@ -16575,32 +16594,33 @@ L9920:  jmp     L983F
 
 L9923:  .byte   0
 L9924:  jmp     (L97DD)
-
 L9927:  jmp     (L97DF)
-
 L992A:  jmp     (L97E1)
 
 L992D:  .byte   $00,$00,$00,$00
-L9931:  .byte   $36,$9B,$33,$9B,$E3,$97
+L9931:  .addr   L9B36
+        .addr   L9B33
+        .addr   rts2
+
 L9937:  .byte   $00
-L9938:  .byte   $00
-L9939:  .byte   $00
-        jsr     RAMRDOFF
-        .byte   $1F
+L9938:  .addr   0
+        .addr   $220
+        .addr   $1FC0
+
 L993E:  lda     #$00
         sta     L9937
-        lda     #$5A
+        lda     #<L995A
         sta     L917D
-        lda     #$99
+        lda     #>L995A
         sta     L917D+1
-        lda     #$7C
+        lda     #<L997C
         sta     L9180
-        lda     #$99
+        lda     #>L997C
         sta     L9180+1
         jmp     L9BBF
 
-        sta     L9938
-        stx     L9939
+L995A:  sta     L9938
+        stx     L9938+1
         lda     #$01
         sta     L9937
         jmp     L9BBF
@@ -16615,7 +16635,7 @@ L996A:  lda     L9931,y
         sta     L918D
         rts
 
-        lda     #$05
+L997C:  lda     #$05
         sta     L9937
         jmp     L9BBF
 
@@ -16633,7 +16653,7 @@ L9984:  lda     #$00
         rts
 
         sta     L9938
-        stx     L9939
+        stx     L9938+1
         lda     #$01
         sta     L9937
         yax_call launch_dialog, L9937, $0A
@@ -16803,9 +16823,9 @@ L9B2D:  jmp     L9CDA
 L9B30:  .byte   0
 L9B31:  .byte   0
 L9B32:  .byte   0
-        jmp     LA360
+L9B33:  jmp     LA360
 
-        jsr     LA3D1
+L9B36:  jsr     LA3D1
         beq     L9B3E
         jmp     LA39F
 
@@ -17329,12 +17349,14 @@ LA043:  rts
 LA044:  yax_call launch_dialog, L9E79, index_delete_file_dialog
         rts
 
-LA04E:  .byte   $70,$A1,$E3,$97,$E3,$97
+LA04E:  .addr   LA170
+        .addr   rts2
+        .addr   rts2
 LA054:  .byte   0
 LA055:  .byte   0
 LA056:  .byte   0
-        .byte   $20
-        .byte   $02
+        .addr   $220
+
 LA059:  lda     #$00
         sta     LA054
         bit     L918B
@@ -17460,7 +17482,7 @@ LA169:  .byte   0
 LA16A:  jsr     LA173
         jmp     LA2FD
 
-        jsr     LA2FD
+LA170:  jsr     LA2FD
 LA173:  jsr     LA1C3
         jsr     LA2F1
 LA179:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
@@ -17505,8 +17527,8 @@ LA1C3:  lda     LA2ED
 
 LA1DC:  jmp     LA100
 
-LA1DF:  .byte   $00
-        .byte   $ED, $A2, $EF, $A2 ; ???
+LA1DF:  .byte   0
+        .addr   LA2ED, LA2EF
 
 LA1E4:  lda     #$00
         sta     LA1DF
@@ -17541,7 +17563,8 @@ LA21F:  rts
         yax_call launch_dialog, LA1DF, $0B
 LA241:  rts
 
-LA242:  .byte   $AE,$A2,$E3,$97,$E3,$97
+LA242:  .addr   LA2AE,rts2,rts2
+
 LA248:  lda     #$00
         sta     LA425
         ldy     #$05
@@ -17757,7 +17780,7 @@ LA40A:  lda     LA2ED
         sta     L9938
         lda     LA2EE
         sbc     #$00
-        sta     L9939
+        sta     L9938+1
         yax_call launch_dialog, L9937, index_copy_file_dialog
         rts
 
@@ -17972,43 +17995,43 @@ LA614:  lda     winF
         bvc     LA63A
         jmp     LA65E
 
-LA63A:  A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::LAE20
+LA63A:  A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::ok_button_rect
         cmp     #$80
         beq     LA64A
         jmp     LA6C1
 
 LA64A:  jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE20
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::ok_button_rect
         jsr     LB7CF
         bmi     LA65D
         lda     #$00
 LA65D:  rts
 
-LA65E:  A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::LAE28
+LA65E:  A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::yes_button_rect
         cmp     #$80
         bne     LA67F
         jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE28
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::yes_button_rect
         jsr     LB7D9
         bmi     LA67E
         lda     #$02
 LA67E:  rts
 
-LA67F:  A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::LAE30
+LA67F:  A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::no_button_rect
         cmp     #$80
         bne     LA6A0
         jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE30
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::no_button_rect
         jsr     LB7DE
         bmi     LA69F
         lda     #$03
 LA69F:  rts
 
-LA6A0:  A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::LAE38
+LA6A0:  A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::all_button_rect
         cmp     #$80
         bne     LA6C1
         jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE38
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::all_button_rect
         jsr     LB7E3
         bmi     LA6C0
         lda     #$04
@@ -18019,13 +18042,13 @@ LA6C1:  bit     LD8E7
         lda     #$FF
         rts
 
-LA6C9:  A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::LAE10
+LA6C9:  A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::cancel_button_rect
         cmp     #$80
         beq     LA6D9
         jmp     LA6ED
 
 LA6D9:  jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE10
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::cancel_button_rect
         jsr     LB7D4
         bmi     LA6EC
         lda     #$01
@@ -18164,17 +18187,17 @@ LA7E5:  lda     #$FF
         rts
 
 LA7E8:  jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE28
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::yes_button_rect
         lda     #$02
         rts
 
 LA7F7:  jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE30
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::no_button_rect
         lda     #$03
         rts
 
 LA806:  jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE38
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::all_button_rect
         lda     #$04
         rts
 
@@ -18213,16 +18236,16 @@ LA84E:  lda     #$FF
 LA851:  lda     winF
         jsr     LB7B9
         jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE20
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE20
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::ok_button_rect
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::ok_button_rect
         lda     #$00
         rts
 
 LA86F:  lda     winF
         jsr     LB7B9
         jsr     LB43B
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE10
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE10
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::cancel_button_rect
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::cancel_button_rect
         lda     #$01
         rts
 
@@ -19000,8 +19023,8 @@ LB0FA:  jsr     LA567
         bne     LB139
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE6E
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE20
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE10
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::ok_button_rect
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::cancel_button_rect
         yax_call draw_dialog_label, desktop_aux::str_file_colon, $02
         yax_call draw_dialog_label, desktop_aux::str_lock_remaining, $04
         lda     #$00
@@ -19092,8 +19115,8 @@ LB218:  jsr     LA567
         bne     LB257
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE6E
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE20
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE10
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::ok_button_rect
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::cancel_button_rect
         yax_call draw_dialog_label, desktop_aux::str_file_colon, $02
         yax_call draw_dialog_label, desktop_aux::str_unlock_remaining, $04
         lda     #$00
@@ -19371,11 +19394,11 @@ LB509:  sta     LD8E7
         jsr     LB64E
         jmp     LB526
 
-LB51A:  A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAE20
+LB51A:  A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::ok_button_rect
         jsr     LB5F9
 LB526:  bit     LD8E7
         bmi     LB537
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAE10
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::cancel_button_rect
         jsr     LB60A
 LB537:  jmp     LBEB1
 
@@ -19468,10 +19491,10 @@ LB63D:  A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE60
         rts
 
 LB64E:  jsr     LB43B
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAE28
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAE30
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAE38
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAE10
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::yes_button_rect
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::no_button_rect
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::all_button_rect
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::cancel_button_rect
         jsr     LB61B
         jsr     LB62C
         jsr     LB63D
@@ -19481,15 +19504,15 @@ LB64E:  jsr     LB43B
         rts
 
 LB687:  jsr     LBEA7
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE28
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE30
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE38
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE10
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::yes_button_rect
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::no_button_rect
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::all_button_rect
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::cancel_button_rect
         rts
 
 LB6AF:  jsr     LB43B
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAE20
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAE10
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::ok_button_rect
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::cancel_button_rect
         jsr     LB5F9
         jsr     LB60A
         lda     #$00
@@ -19497,19 +19520,19 @@ LB6AF:  jsr     LB43B
         rts
 
 LB6D0:  jsr     LBEA7
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE20
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE10
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::ok_button_rect
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::cancel_button_rect
         rts
 
 LB6E6:  jsr     LB43B
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::LAE20
+        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::ok_button_rect
         jsr     LB5F9
         lda     #$80
         sta     LD8E7
         rts
 
 LB6FB:  jsr     LBEA7
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE20
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::ok_button_rect
         rts
 
 draw_text1:
@@ -19634,49 +19657,59 @@ LB7E8:  pha
         tax
         lda     LB808,x
         sta     LB886
-        lda     LB809,x
+        lda     LB808+1,x
         sta     LB887
-        lda     LB80A,x
+        lda     LB808+2,x
         sta     LB888
-        lda     LB80B,x
+        lda     LB808+3,x
         sta     LB889
         pla
         jmp     LB88A
 
-LB808:  .byte   $1C
-LB809:  .byte   $B8
-LB80A:  .byte   $4E
-LB80B:  .byte   $B8,$26,$B8,$58,$B8,$30,$B8,$62,$B8
-        .byte   $3A,$B8,$6C,$B8,$44,$B8,$76,$B8
+LB808:  .addr   test_ok_button,fill_ok_button
+        .addr   test_cancel_button,fill_cancel_button
+        .addr   test_yes_button,fill_yes_button
+        .addr   test_no_button,fill_no_button
+        .addr   test_all_button,fill_all_button
 
-        A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::LAE20
+test_ok_button:
+        A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::ok_button_rect
         rts
 
-        A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::LAE10
+test_cancel_button:
+        A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::cancel_button_rect
         rts
 
-        A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::LAE28
+test_yes_button:
+        A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::yes_button_rect
         rts
 
-        A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::LAE30
+test_no_button:
+        A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::no_button_rect
         rts
 
-        A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::LAE38
+test_all_button:
+        A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::all_button_rect
         rts
 
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE20
+fill_ok_button:
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::ok_button_rect
         rts
 
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE10
+fill_cancel_button:
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::cancel_button_rect
         rts
 
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE28
+fill_yes_button:
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::yes_button_rect
         rts
 
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE30
+fill_no_button:
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::no_button_rect
         rts
 
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE38
+fill_all_button:
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::all_button_rect
         rts
 
 LB880:  jmp     (LB886)
@@ -21019,16 +21052,15 @@ L0D7F:  cmp     #$0B
         bne     L0DC2
         pla
         pha
-        and     #$70
+        and     #$70            ; Compute $CnFB
         lsr     a
         lsr     a
         lsr     a
         lsr     a
         ora     #$C0
         sta     L0D96
-        .byte   $AD
-        .byte   $FB
-L0D96:  .byte   $C7
+        L0D96 := *+2
+        lda     $C7FB           ; self-modified
         and     #$01
         bne     L0DA2
         addr_jump L0DAD, str_profile_slot_x
@@ -21063,16 +21095,15 @@ L0DC2:  pla
         bne     L0DF0
         pla
         pha
-        and     #$70
+        and     #$70            ; compute $CnFB
         lsr     a
         lsr     a
         lsr     a
         lsr     a
         ora     #$C0
         sta     L0DE3
-        .byte   $AD
-        .byte   $FB
-L0DE3:  .byte   $C7
+        L0DE3 := *+2
+        lda     $C7FB           ; self-modified
         and     #$01
         bne     L0DEC
         ldy     #$0E
