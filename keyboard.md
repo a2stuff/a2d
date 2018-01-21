@@ -1,6 +1,7 @@
 # Keyboard Control
 
 △ = Open Apple
+
 ▲ = Closed Apple
 
 ## Windows
