@@ -3730,6 +3730,8 @@ str_on_system_disk:
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00
 
+;;; ==================================================
+
 show_alert_indirection:
         jmp     show_alert_dialog
 
@@ -3771,11 +3773,11 @@ alert_bitmap:
 .endproc
 
 alert_rect:
-        .word   $41, $57, $1E5, $8E
+        DEFINE_RECT $41, $57, $1E5, $8E
 alert_inner_frame_rect1:
-        .word   $4, $2, $1A0, $35
+        DEFINE_RECT $4, $2, $1A0, $35
 alert_inner_frame_rect2:
-        .word   $5, $3, $19F, $34
+        DEFINE_RECT $5, $3, $19F, $34
 
 LB6D3:  .byte   $41
 LB6D4:  .byte   $00
@@ -3786,19 +3788,29 @@ LB6DF:  .byte   $A4
 LB6E0:  .byte   $01
 LB6E1:  .byte   $37,$00
 
+
+;;; ==================================================
+;;; Show Alert Dialog
+;;; Call show_alert_dialog with prompt number in X (???), A = ???
+
+.proc show_alert_dialog_impl
+
 ok_label:
         PASCAL_STRING {"OK            ",GLYPH_RETURN}
 
 try_again_rect:
-        .word   $14,$25,$78,$30
+        DEFINE_RECT $14,$25,$78,$30
 try_again_pos:
-        .word   $0019,$002F
+        DEFINE_POINT $19,$2F
 
 cancel_rect:
-        .word   $12C,$25,$190,$30
-cancel_pos:  .word   $0131,$002F
-        .word   $00BE,$0010
-LB70F:  .word   $004B,$001D
+        DEFINE_RECT $12C,$25,$190,$30
+cancel_pos:
+        DEFINE_POINT $131,$2F
+
+        .word   $BE,$10     ; ???
+
+LB70F:  DEFINE_POINT $4B,$1D
 
 alert_action:  .byte   $00
 LB714:  .byte   $00
@@ -3823,7 +3835,7 @@ err_49:  PASCAL_STRING "The volume directory cannot hold more than 51 files."
 err_4E:  PASCAL_STRING "The file is locked."
 err_52:  PASCAL_STRING "This is not a ProDOS disk."
 err_57:  PASCAL_STRING "There is another volume with that name on the desktop."
-        ;; Below are not ProDOS MLI error codes.
+        ;; Below are internal (not ProDOS MLI) error codes.
 err_F9:  PASCAL_STRING "There are 2 volumes with the same name."
 err_FA:  PASCAL_STRING "This file cannot be run."
 err_FB:  PASCAL_STRING "That name is too long."
@@ -3854,9 +3866,8 @@ alert_action_table:
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$80,$80,$00
 
-        ;; Show alert; prompt number in X (???), A = ???
-.proc show_alert_dialog
-        pha
+        ;; Actual entry point
+start:  pha
         txa
         pha
         A2D_RELAY2_CALL A2D_HIDE_CURSOR
@@ -3965,7 +3976,6 @@ LBB14:  A2D_RELAY2_CALL A2D_SET_FILL_MODE, const2
         A2D_RELAY2_CALL A2D_SET_POS, try_again_pos
         DRAW_PASCAL_STRING try_again_label
         jmp     LBB75
-.endproc
 
 LBB5C:  A2D_RELAY2_CALL A2D_DRAW_RECT, try_again_rect
         A2D_RELAY2_CALL A2D_SET_POS, try_again_pos
@@ -4156,6 +4166,10 @@ LBDD3:  lda     LBDE0
 
 LBDDB:  lda     #$02
         jmp     LBC55
+.endproc
+        show_alert_dialog := show_alert_dialog_impl::start
+
+;;; ==================================================
 
 LBDE0:  .byte   0
 LBDE1:  lda     input_params_xcoord
@@ -6102,7 +6116,7 @@ L4088:  jsr     L4510
         beq     L40A6
         jsr     L40E0
 L40A6:  jsr     L464E
-        jsr     L48E6
+        jsr     get_input
         lda     input_params_state
         cmp     #A2D_INPUT_DOWN
         beq     L40B7
@@ -6113,7 +6127,7 @@ L40B7:  jsr     L43E7
 
 L40BD:  cmp     #$03
         bne     L40C7
-        jsr     L435A
+        jsr     menu_dispatch
         jmp     L4088
 
 L40C7:  cmp     #$06
@@ -6147,7 +6161,7 @@ L4100:  jsr     L48F0
         lda     input_params_state
         cmp     #$06            ; ???
         bne     L412B
-        jsr     L48E6
+        jsr     get_input
 L410D:  jsr     L4113
         jmp     L4100
 
@@ -6321,8 +6335,10 @@ L42C3:  .byte   $00
 ;;; ==================================================
 ;;; Menu Dispatch
 
+.proc menu_dispatch_impl
+
         ;; jump table for menu item handlers
-L42C4:
+dispatch_table:
         ;; Apple menu (1)
         .addr   cmd_about
         .addr   cmd_noop        ; --------
@@ -6410,10 +6426,13 @@ L42C4:
         .addr   cmd_startup_item
 
         ;; indexed by menu id-1
-L4350:  .byte   $00,$14,$2C,$46,$50,$50,$6A,$7E,$8C
+offset_table:
+        .byte   $00,$14,$2C,$46,$50,$50,$6A,$7E,$8C
 
-L4359:  .byte   $00
-L435A:  lda     input_params+2
+flag:   .byte   $00
+
+menu_dispatch:
+        lda     input_params+2
         bne     L4362
         jmp     L4394
 
@@ -6427,7 +6446,7 @@ L4367:  lda     input_params+1
         bne     L4373
         jmp     L5441
 
-L4373:  bit     L4359
+L4373:  bit     flag
         bpl     L4394
         cmp     #$77
         bne     L437F
@@ -6445,7 +6464,6 @@ L438D:  cmp     #$78
         bne     L4394
         jmp     L57A6
 
-
 L4394:  lda     input_params+1
         sta     $E25C
         lda     input_params+2
@@ -6453,12 +6471,14 @@ L4394:  lda     input_params+1
         lda     #$01
 L43A1:  sta     $E25D
         A2D_RELAY_CALL $32, menu_click_params
-L43AD:  ldx     menu_click_params::menu_id
+
+menu_dispatch2:
+        ldx     menu_click_params::menu_id
         bne     L43B3
         rts
 
 L43B3:  dex                     ; x has top level menu id
-        lda     L4350,x
+        lda     offset_table,x
         tax
         ldy     $E25B
         dey
@@ -6469,9 +6489,9 @@ L43B3:  dex                     ; x has top level menu id
         clc
         adc     L43E5
         tax
-        lda     L42C4,x
+        lda     dispatch_table,x
         sta     L43E5
-        lda     L42C4+1,x
+        lda     dispatch_table+1,x
         sta     L43E5+1
         jsr     L43E0
         A2D_RELAY_CALL $33, menu_click_params
@@ -6481,6 +6501,11 @@ L43E0:  tsx
         stx     $E256
         L43E5 := *+1
         jmp     dummy1234           ; self-modified
+.endproc
+
+        menu_dispatch := menu_dispatch_impl::menu_dispatch
+        menu_dispatch2 := menu_dispatch_impl::menu_dispatch2
+        menu_dispatch_flag := menu_dispatch_impl::flag
 
 ;;; ==================================================
 
@@ -6503,7 +6528,7 @@ L4415:  jmp     L68AA
 L4418:  cmp     #$01
         bne     L4428
         A2D_RELAY_CALL A2D_MENU_CLICK, menu_click_params
-        jmp     L43AD
+        jmp     menu_dispatch2
 
 L4428:  pha
         lda     desktop_winid
@@ -7044,7 +7069,8 @@ L48CC:  sta     LD2AC
         L48E4 := *+1
         jmp     dummy1234           ; self-modified
 
-L48E6:  A2D_RELAY_CALL A2D_GET_INPUT, input_params
+get_input:
+        A2D_RELAY_CALL A2D_GET_INPUT, input_params
         rts
 
 L48F0:  A2D_RELAY_CALL $2C, input_params ; ???
@@ -8617,7 +8643,7 @@ L5579:  lda     #$00
         sta     L544A
         jsr     clear_selection
 L5581:  jsr     L55F0
-L5584:  jsr     L48E6
+L5584:  jsr     get_input
         lda     input_params_state
         cmp     #A2D_INPUT_KEY
         beq     L5595
@@ -8805,7 +8831,7 @@ L5721:  cpx     #$08
 
 L572D:  lda     #$00
         sta     L578C
-L5732:  jsr     L48E6
+L5732:  jsr     get_input
         lda     input_params_state
         cmp     #A2D_INPUT_KEY
         beq     L5743
@@ -8856,7 +8882,7 @@ L579A:  A2D_RELAY_CALL $22      ; ???
         jmp     L60DB
 
 L57A6:  jsr     L5803
-L57A9:  jsr     L48E6
+L57A9:  jsr     get_input
         lda     input_params_state
         cmp     #A2D_INPUT_DOWN
         beq     L57C2
@@ -9480,7 +9506,7 @@ L5CE6:  cmp     selected_file_index,x
         bmi     L5CFB
 L5CF0:  bit     $D2AA
         bmi     L5CF8
-        jmp     L5DFC
+        jmp     L5DFC           ; double click to launch can come through here
 
 L5CF8:  jmp     L5D55
 
@@ -9512,7 +9538,7 @@ L5D0B:  ldx     is_file_selected
         jsr     L4510
         bit     $D2AA
         bmi     L5D55
-        jmp     L5DFC
+        jmp     L5DFC           ; double click to launch can come through here
 
 L5D55:  lda     L5CD9
         sta     $EBFC
@@ -9584,7 +9610,7 @@ L5DF7:  ldx     $E256
         txs
         rts
 
-L5DFC:  lda     L5CD9
+L5DFC:  lda     L5CD9           ; after a double-click (on file or folder)
         jsr     L86E3
         sta     $06
         stx     $06+1
@@ -9645,7 +9671,7 @@ L5E57:  lda     ($06),y
         cmp     #$20
         bcc     L5E74
         lda     L5E77
-L5E74:  jmp     launch_file
+L5E74:  jmp     launch_file     ; when double-clicked
 
 L5E77:  .byte   0
 L5E78:  sta     L5F0A
@@ -10520,7 +10546,7 @@ L66AA:  lda     #$01
         sta     $E26D
         A2D_RELAY_CALL $35, LE26C ; ???
         lda     #$00
-        sta     L4359
+        sta     menu_dispatch_flag
         rts
 
 L66F2:  dex
@@ -11357,7 +11383,7 @@ L6EC5:  lda     #$00
         sta     $E26D
         A2D_RELAY_CALL $35, LE26C ; ???
         lda     #$80
-        sta     L4359
+        sta     menu_dispatch_flag
         rts
 
 L6F0D:  jsr     L86FB
@@ -13950,89 +13976,124 @@ L85F8:  .byte   0
 L85F9:  .byte   0
 L85FA:  .byte   0
 L85FB:  .byte   0
-L85FC:  ldx     #$03
-L85FE:  lda     input_params_coords,x
-        sta     L86A0,x
+
+;;; ==================================================
+;;; Double Click Detection
+
+.proc L85FC
+
+        double_click_deltax := 8
+        double_click_deltay := 7
+
+        ;; stash initial coords
+        ldx     #3
+:       lda     input_params_coords,x
+        sta     coords,x
         sta     $EBFD,x
         dex
-        bpl     L85FE
-        lda     #$00
+        bpl     :-
+
+        lda     #0
         sta     L869F
-        lda     machine_type
+        lda     machine_type    ; Since IIgs is faster?
         asl     a
         rol     L869F
         sta     L869E
-L8619:  dec     L869E
-        bne     L8626
+
+loop:   dec     L869E
+        bne     :+
         dec     L869F
         lda     L869F
-        bne     L8655
-L8626:  jsr     L48F0
-        jsr     L8658
-        bmi     L8655
-        lda     #$FF
-        sta     L86A6
+        bne     exit
+
+:       jsr     L48F0
+        jsr     check_delta
+        bmi     exit            ; moved past delta; no double-click
+
+        lda     #$FF            ; ???
+        sta     unused
+
         lda     input_params_state
-        sta     L86A5
+        sta     state           ; unused ???
+
         cmp     #A2D_INPUT_NONE
-        beq     L8619
+        beq     loop
         cmp     #A2D_INPUT_HELD
-        beq     L8619
+        beq     loop
         cmp     #A2D_INPUT_UP
-        bne     L864B
-        jsr     L48E6
-        jmp     L8619
+        bne     :+
+        jsr     get_input
+        jmp     loop
+:       cmp     #A2D_INPUT_DOWN
+        bne     exit
 
-L864B:  cmp     #$01
-        bne     L8655
-        jsr     L48E6
-        lda     #$00
+        jsr     get_input
+        lda     #$00            ; double-click
         rts
 
-L8655:  lda     #$FF
+exit:   lda     #$FF            ; not double-click
         rts
 
-L8658:  lda     input_params_xcoord
+        ;; Is the new coord within range of the old coord?
+.proc check_delta
+        ;; compute x delta
+        lda     input_params_xcoord
         sec
-        sbc     L86A0
-        sta     L86A4
+        sbc     xcoord
+        sta     delta
         lda     input_params_xcoord+1
-        sbc     L86A1
-        bpl     L8674
-        lda     L86A4
-        cmp     #$F8
-        bcs     L867B
-L8671:  lda     #$FF
+        sbc     xcoord+1
+        bpl     :+
+
+        ;; is -delta < x < 0 ?
+        lda     delta
+        cmp     #($100 - double_click_deltax)
+        bcs     check_y
+fail:   lda     #$FF
         rts
 
-L8674:  lda     L86A4
-        cmp     #$08
-        bcs     L8671
-L867B:  lda     input_params_ycoord
+        ;; is 0 < x < delta ?
+:       lda     delta
+        cmp     #double_click_deltax
+        bcs     fail
+
+        ;; compute y delta
+check_y:lda     input_params_ycoord
         sec
-        sbc     L86A2
-        sta     L86A4
+        sbc     ycoord
+        sta     delta
         lda     input_params_ycoord+1
-        sbc     L86A3
-        bpl     L8694
-        lda     L86A4
-        cmp     #$F9
-        bcs     L869B
-L8694:  lda     L86A4
-        cmp     #$07
-        bcs     L8671
-L869B:  lda     #$00
+        sbc     ycoord+1
+        bpl     :+
+
+        ;; is -delta < y < 0 ?
+        lda     delta
+        cmp     #($100 - double_click_deltay)
+        bcs     ok
+
+        ;; is 0 < y < delta ?
+:       lda     delta
+        cmp     #double_click_deltay
+        bcs     fail
+ok:     lda     #$00
         rts
+.endproc
 
 L869E:  .byte   0
 L869F:  .byte   0
-L86A0:  .byte   0
-L86A1:  .byte   0
-L86A2:  .byte   0
-L86A3:  .byte   0
-L86A4:  .byte   0
-L86A5:  .byte   0
-L86A6:  .byte   0
+
+coords:
+xcoord: .word   0
+ycoord: .word   0
+
+delta:  .byte   0
+state:  .byte   0
+unused: .byte   0               ; ???
+
+.endproc
+
+;;; ==================================================
+
 L86A7:  ldx     #$00
         stx     L86C0
         asl     a
@@ -18072,12 +18133,12 @@ LA899:  jmp     dummy0000
         lda     #$36
         sta     LD6C3
         lda     #$01
-        sta     $D6C4
+        sta     LD6C3+1
         axy_call draw_dialog_label, desktop_aux::str_about9, $09
         lda     #$28
         sta     LD6C3
         lda     #$00
-        sta     $D6C4
+        sta     LD6C3+1
 
 :       A2D_RELAY_CALL A2D_GET_INPUT, input_params
         lda     input_params_state
@@ -19226,7 +19287,7 @@ LB59A:  tya
         sta     LD6C3
         lda     #$00
         sbc     $0C
-        sta     $D6C4
+        sta     LD6C3+1
         pla
         tay
 LB5CC:  dey
@@ -19236,10 +19297,10 @@ LB5CC:  dey
         asl     a
         clc
         adc     $D6C1
-        sta     $D6C5
+        sta     LD6C3+2
         lda     $D6C2
         adc     #$00
-        sta     $D6C6
+        sta     LD6C3+3
         A2D_RELAY_CALL A2D_SET_POS, LD6C3
         lda     $06
         ldx     $06+1
