@@ -46,4 +46,4 @@ __Special Menu__
 
 __Selector Menu__
 * △-0 - Run Selector
-* △-1-9 - Selector Entries
+* △-1 ... △-9 - Selector Entries
