@@ -66,6 +66,9 @@ INVOKER_FILENAME := $280                 ; File to invoke (PREFIX must be set)
         jsr     A2D_RELAY
 .endmacro
 
+.macro  PAD_TO addr
+        .res    addr - *, 0
+.endmacro
 
 ;;; ==================================================
 ;;; Segment loaded into AUX $851F-$BFFF (follows A2D)
@@ -422,8 +425,8 @@ L8C83:  .byte   $00,$00,$00,$00,$77,$30,$01
         .byte   $00,$03,$18,$00,$00,$00,$00,$00
         .byte   $00,$00,$0E,$00,$00,$00,$00,$00
 
-        ;; Pad to $8E00
-        .res    $8E00 - *, 0
+        .assert * = $8D02, error, "Segment length mismatch"
+        PAD_TO $8E00
 
 ;;; ==================================================
 
@@ -3515,7 +3518,8 @@ special_menu:
 
         .addr   $0000,$0000
 
-        .res    168, 0
+        .assert * = $AD58, error, "Segment length mismatch"
+        PAD_TO $AE00
 
         ;; Rects
 LAE00:  DEFINE_RECT   4,2,396,98
@@ -4446,9 +4450,8 @@ addr:   .addr   0
         rts
 .endproc
 
-        ;; Pad to $C000
-        .res    $C000 - *, 0
-        .assert * = $C000, error, "Segment length mismatch"
+        .assert * = $BFFC, error, "Segment length mismatch"
+        PAD_TO $C000
 .endproc ; desktop_aux
 
 ;;; ==================================================
@@ -4720,7 +4723,8 @@ op:     lda     dummy1234
 
 ;;; ============================================================
 
-        .res    154, 0
+        .assert * = $D166, error, "Segment length mismatch"
+        PAD_TO $D200
 
 const0: .byte   0
 const1: .byte   1
@@ -5317,7 +5321,8 @@ LD90A:  .byte   $00
         PASCAL_STRING "Delete a File ..."
         PASCAL_STRING "File to delete:"
 
-        .res    40, 0
+        .assert * = $DAD8, error, "Segment length mismatch"
+        PAD_TO $DB00
 
         .addr   sd0s, sd1s, sd2s, sd3s, sd4s, sd5s, sd6s
         .addr   sd7s, sd8s, sd9s, sd10s, sd11s, sd12s, sd13s
@@ -5398,7 +5403,7 @@ LDFC9:  .res    145, 0
         .byte   $00,$00,$00,$00,$00
 
 LE22F:  .byte   0
-LE230:  DEFINE_RECT 0,0,0,0
+rect_E230:  DEFINE_RECT 0,0,0,0
 
         .byte   $00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -5665,9 +5670,8 @@ LEC26:
         .res    64, 0
         .word   500, 160
 
-        ;; Pad to $ED00
-        .res    $ED00 - *, 0
-        .assert * = $ED00, error, "Segment length mismatch"
+        .assert * = $EC6A, error, "Segment length mismatch"
+        PAD_TO $ED00
 
 ;;; ==================================================
 ;;;
@@ -6011,9 +6015,8 @@ app_mask:
         .byte   px(%0000000),px(%0000000),px(%0011000),px(%0000000),px(%0000000)
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
 
-        ;; Pad to $10000
-        .res    $10000 - *, 0
-        .assert * = $10000, error, "Segment length mismatch"
+        .assert * = $FFBA, error, "Segment length mismatch"
+        PAD_TO $10000
 
 ;;; ==================================================
 ;;; Segment loaded into MAIN $4000-$BEFF
@@ -6254,7 +6257,7 @@ L41E2:  lda     bufnum
         jsr     L6E52
         ldx     #7
 L41F0:  lda     query_state_buffer::hoff,x
-        sta     LE230,x
+        sta     rect_E230,x
         dex
         bpl     L41F0
         lda     #$00
@@ -6300,7 +6303,7 @@ L424A:  lda     #$00
         jsr     L6E8E
         ldx     #7
 L4267:  lda     query_state_buffer::hoff,x
-        sta     LE230,x
+        sta     rect_E230,x
         dex
         bpl     L4267
 L4270:  lda     L42C3
@@ -9766,18 +9769,18 @@ L5F3F:  jsr     clear_selection
         jsr     L6E8E
         ldx     #$03
 L5F50:  lda     L5F0B,x
-        sta     LE230,x
+        sta     rect_E230,x
         lda     L5F0F,x
         sta     $E234,x
         dex
         bpl     L5F50
         jsr     L48FA
-        A2D_RELAY_CALL A2D_DRAW_RECT, LE230
+        A2D_RELAY_CALL A2D_DRAW_RECT, rect_E230
 L5F6B:  jsr     L48F0
         lda     input_params_state
         cmp     #A2D_INPUT_HELD
         beq     L5FC5
-        A2D_RELAY_CALL A2D_DRAW_RECT, LE230
+        A2D_RELAY_CALL A2D_DRAW_RECT, rect_E230
         ldx     #$00
 L5F80:  cpx     buf3len
         bne     L5F88
@@ -9839,7 +9842,7 @@ L600E:  lda     L60CB
         bcs     L601F
         jmp     L5F6B
 
-L601F:  A2D_RELAY_CALL A2D_DRAW_RECT, LE230
+L601F:  A2D_RELAY_CALL A2D_DRAW_RECT, rect_E230
         ldx     #$03
 L602A:  lda     input_params_coords,x
         sta     L60CF,x
@@ -9851,14 +9854,14 @@ L602A:  lda     input_params_coords,x
         sbc     $E235
         bpl     L6068
         lda     input_params_xcoord
-        cmp     LE230
+        cmp     rect_E230
         lda     input_params_xcoord+1
         sbc     $E231
         bmi     L6054
         bit     L60D3
         bpl     L6068
 L6054:  lda     input_params_xcoord
-        sta     LE230
+        sta     rect_E230
         lda     input_params_xcoord+1
         sta     $E231
         lda     #$80
@@ -9897,7 +9900,7 @@ L60AE:  lda     input_params_ycoord
         sta     $E237
         lda     #$00
         sta     L60D4
-L60BF:  A2D_RELAY_CALL A2D_DRAW_RECT, LE230
+L60BF:  A2D_RELAY_CALL A2D_DRAW_RECT, rect_E230
         jmp     L5F6B
 
 L60CB:  .byte   0
@@ -10740,7 +10743,7 @@ L68AA:  jsr     L4510
 L68B3:  jsr     clear_selection
         ldx     #$03
 L68B8:  lda     input_params_coords,x
-        sta     LE230,x
+        sta     rect_E230,x
         sta     $E234,x
         dex
         bpl     L68B8
@@ -10752,12 +10755,12 @@ L68B8:  lda     input_params_coords,x
 
 L68CF:  A2D_RELAY_CALL A2D_SET_PATTERN, checkerboard_pattern3
         jsr     L48FA
-        A2D_RELAY_CALL A2D_DRAW_RECT, LE230
+        A2D_RELAY_CALL A2D_DRAW_RECT, rect_E230
 L68E4:  jsr     L48F0
         lda     input_params_state
         cmp     #A2D_INPUT_HELD
         beq     L6932
-        A2D_RELAY_CALL A2D_DRAW_RECT, LE230
+        A2D_RELAY_CALL A2D_DRAW_RECT, rect_E230
         ldx     #$00
 L68F9:  cpx     buf3len
         bne     L6904
@@ -10815,7 +10818,7 @@ L6978:  lda     L6A35
         bcs     L6989
         jmp     L68E4
 
-L6989:  A2D_RELAY_CALL A2D_DRAW_RECT, LE230
+L6989:  A2D_RELAY_CALL A2D_DRAW_RECT, rect_E230
         ldx     #$03
 L6994:  lda     input_params_coords,x
         sta     L6A39,x
@@ -10827,14 +10830,14 @@ L6994:  lda     input_params_coords,x
         sbc     $E235
         bpl     L69D2
         lda     input_params_xcoord
-        cmp     LE230
+        cmp     rect_E230
         lda     input_params_xcoord+1
         sbc     $E231
         bmi     L69BE
         bit     L6A3D
         bpl     L69D2
 L69BE:  lda     input_params_xcoord
-        sta     LE230
+        sta     rect_E230
         lda     input_params_xcoord+1
         sta     $E231
         lda     #$80
@@ -10873,7 +10876,7 @@ L6A18:  lda     input_params_ycoord
         sta     $E237
         lda     #$00
         sta     L6A3E
-L6A29:  A2D_RELAY_CALL A2D_DRAW_RECT, LE230
+L6A29:  A2D_RELAY_CALL A2D_DRAW_RECT, rect_E230
         jmp     L68E4
 
 L6A35:  .byte   0
@@ -11170,7 +11173,7 @@ L6CDE:  jsr     L6E52
         jsr     L6E8E
         ldx     #$07
 L6CE6:  lda     query_state_buffer::hoff,x
-        sta     LE230,x
+        sta     rect_E230,x
         dex
         bpl     L6CE6
         ldx     #$00
@@ -11206,13 +11209,13 @@ clear_selection:
 L6D31:  lda     #$00
         sta     L6DB0
         lda     selected_window_index
-        sta     LE230
+        sta     rect_E230
         beq     L6D7D
         cmp     desktop_winid
         beq     L6D4D
         jsr     L8997
         lda     #$00
-        sta     LE230
+        sta     rect_E230
         beq     L6D56
 L6D4D:  sta     query_state_params2::id
         jsr     L44F2
@@ -14243,34 +14246,50 @@ L8778:  clc
         adc     #$37
 L877B:  sta     LDFC9
         rts
-
 L877F:  .byte   0
-draw_text2:
-        sta     $06
-        stx     $06+1
-        ldy     #$00
-        lda     ($06),y
-        beq     L879B
-        sta     $08
-        inc     $06
-        bne     L8792
-        inc     $06+1
-L8792:  A2D_RELAY_CALL A2D_DRAW_TEXT, $6
-L879B:  rts
 
-measure_text1:
-        sta     $06
-        stx     $06+1
-        ldy     #$00
-        lda     ($06),y
-        sta     $08
-        inc     $06
-        bne     L87AC
-        inc     $06+1
-L87AC:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $6
-        lda     $09
-        ldx     $0A
+;;; ==================================================
+;;; Draw text, pascal string address in A,X
+.proc draw_text2
+        ptr := $6
+        len := $8
+
+        sta     ptr
+        stx     ptr+1
+        ldy     #0
+        lda     (ptr),y
+        beq     exit
+        sta     len
+        inc     ptr
+        bne     :+
+        inc     ptr+1
+:       A2D_RELAY_CALL A2D_DRAW_TEXT, $6
+exit:   rts
+.endproc
+
+;;; ==================================================
+;;; Measure text, pascal string address in A,X; result in A,X
+
+.proc measure_text1
+        ptr := $6
+        len := $8
+        result := $9
+
+        sta     ptr
+        stx     ptr+1
+        ldy     #0
+        lda     (ptr),y
+        sta     len
+        inc     ptr
+        bne     :+
+        inc     ptr+1
+:       A2D_RELAY_CALL A2D_MEASURE_TEXT, $6
+        lda     result
+        ldx     result+1
         rts
+.endproc
+
+;;; ==================================================
 
 L87BA:  stx     $0B
         sta     $0A
@@ -14310,9 +14329,11 @@ L87F2:  dey
         jmp     L87C6
 
 ;;; ==================================================
+;;; Pushes two words from $6/$8 to stack
 
-;;; Pushes two words from $8/$8 to stack
 .proc push_zp_addrs
+        ptr := $6
+
 
         pla                     ; stash return address
         sta     addr
@@ -14320,7 +14341,7 @@ L87F2:  dey
         sta     addr+1
 
         ldx     #0              ; copy 4 bytes from $8 to stack
-loop:   lda     $06,x
+loop:   lda     ptr,x
         pha
         inx
         cpx     #4
@@ -14336,9 +14357,10 @@ addr:   .addr   0
 .endproc
 
 ;;; ==================================================
-
 ;;; Pops two words from stack to $6/$8
+
 .proc pop_zp_addrs
+        ptr := $6
 
         pla                     ; stash return address
         sta     addr
@@ -14347,7 +14369,7 @@ addr:   .addr   0
 
         ldx     #3              ; copy 4 bytes from stack to $6
 loop:   pla
-        sta     $06,x
+        sta     ptr,x
         dex
         cpx     #$FF            ; why not bpl ???
         bne     loop
@@ -14473,6 +14495,9 @@ L8911:  .byte   0
 L8912:  .byte   0
 L8913:  .byte   0
 L8914:  .byte   0
+
+;;; ==================================================
+
 L8915:  tay
         jsr     push_zp_addrs
         tya
@@ -14544,6 +14569,9 @@ L8993:  .byte   0
 L8994:  .byte   0
 L8995:  .byte   0
 L8996:  .byte   0
+
+;;; ==================================================
+
 L8997:  lda     #$00
         tax
 L899A:  sta     state1::hoff,x
@@ -14554,6 +14582,8 @@ L899A:  sta     state1::hoff,x
         bne     L899A
         A2D_RELAY_CALL A2D_SET_STATE, state1
         rts
+
+;;; ==================================================
 
 .proc on_line_params
 params: .byte   2
@@ -14712,6 +14742,8 @@ L8AA7:  lda     L8AC5,x
         lda     #$00
         rts
 .endproc
+
+;;; ==================================================
 
 unit_number:    .byte   0
 device_num:     .byte   0
@@ -14997,6 +15029,9 @@ L8D54:  .byte   0
 L8D55:  .byte   0
 L8D56:  .byte   0
 L8D57:  .byte   0
+
+;;; ==================================================
+
 L8D58:  lda     #$00
         sta     L8DB2
         jsr     L4510
@@ -15013,11 +15048,11 @@ L8D6C:  lda     L8DB2
         tax
         ldy     #$07
 L8D7C:  lda     L0800,x
-        sta     LE230,y
+        sta     rect_E230,y
         dex
         dey
         bpl     L8D7C
-        jsr     L8E10
+        jsr     draw_rect_E230
 L8D89:  lda     L8DB2
         sec
         sbc     #$02
@@ -15030,11 +15065,11 @@ L8D92:  asl     a
         tax
         ldy     #$07
 L8D9A:  lda     L0800,x
-        sta     LE230,y
+        sta     rect_E230,y
         dex
         dey
         bpl     L8D9A
-        jsr     L8E10
+        jsr     draw_rect_E230
 L8DA7:  inc     L8DB2
         lda     L8DB2
         cmp     #$0E
@@ -15042,6 +15077,9 @@ L8DA7:  inc     L8DB2
         rts
 
 L8DB2:  .byte   0
+
+;;; ==================================================
+
 L8DB3:  lda     #$0B
         sta     L8E0F
         jsr     L4510
@@ -15058,11 +15096,11 @@ L8DC7:  lda     L8E0F
         tax
         ldy     #$07
 L8DD7:  lda     L0800,x
-        sta     LE230,y
+        sta     rect_E230,y
         dex
         dey
         bpl     L8DD7
-        jsr     L8E10
+        jsr     draw_rect_E230
 L8DE4:  lda     L8E0F
         clc
         adc     #$02
@@ -15075,14 +15113,12 @@ L8DE4:  lda     L8E0F
         adc     #$07
         tax
         ldy     #$07
-        lda     L0800,x
-        sta     LE230,y
+L8DF7:  lda     L0800,x
+        sta     rect_E230,y
         dex
         dey
-        .byte   $10
-UNKNOWN_CALL:
-        inc     L0020,x
-        bpl     L8D92
+        bpl     L8DF7
+        jsr     draw_rect_E230
 L8E04:  dec     L8E0F
         lda     L8E0F
         cmp     #$FD
@@ -15090,8 +15126,13 @@ L8E04:  dec     L8E0F
         rts
 
 L8E0F:  .byte   0
-L8E10:  A2D_RELAY_CALL A2D_DRAW_RECT, LE230
+
+;;; ==================================================
+
+.proc draw_rect_E230
+        A2D_RELAY_CALL A2D_DRAW_RECT, rect_E230
         rts
+.endproc
 
 ;;; ==================================================
 ;;; Dynamically load parts of Desktop2
@@ -15213,13 +15254,11 @@ open:   MLI_RELAY_CALL OPEN, open_params
         load_dynamic_routine := load_dynamic_routine_impl::load
         restore_dynamic_routine := load_dynamic_routine_impl::restore
 
+        .assert * = $8EFB, error, "Segment length mismatch"
+        PAD_TO $8F00
+
 ;;; ==================================================
 
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
 L8F00:  jmp     L8FC5
 
         jmp     L97E3
@@ -17751,7 +17790,9 @@ LA4C5:  .byte   0
 LA4C6:  yax_call JT_MLI_RELAY, on_line_params2, ON_LINE
         rts
 
-        .res    48, 0
+        .assert * = $A4D0, error, "Segment length mismatch"
+        PAD_TO $A500
+
 LA500:  jmp     LA520
 
 LA503:  .addr   show_about_dialog
@@ -20226,7 +20267,8 @@ LBEB1:  A2D_RELAY_CALL A2D_QUERY_SCREEN, state2
         A2D_RELAY_CALL A2D_SET_STATE, state2
         rts
 
-        .res    $BF00 - *, 0
+        .assert * = $BEC4, error, "Segment length mismatch"
+        PAD_TO $BF00
 
 .endproc ; desktop_main
         desktop_main_pop_zp_addrs := desktop_main::pop_zp_addrs
@@ -21142,7 +21184,6 @@ L0F34:  A2D_RELAY_CALL $29
         jsr     desktop_main::L670C
         jmp     A2D
 
-        ;; Pad out to $1000
-        .res    $1000 - *, 0
-        .assert * = $1000, error, "Segment length mismatch"
+        .assert * = $0F60, error, "Segment length mismatch"
+        PAD_TO $1000
 .endproc ; desktop_800
