@@ -5182,7 +5182,8 @@ LD6B3:  DEFINE_POINT $2D,$46
 LD6B7:  DEFINE_POINT 0, 18
 LD6BB:  DEFINE_POINT $28,18
         .byte $28,$00,$23,$00
-LD6C3:  DEFINE_POINT $28,$00
+dialog_label_pos:
+        DEFINE_POINT $28,$00
 
 LD6C7:  .word   $4B, $23        ; left, top
         .addr   A2D_SCREEN_ADDR
@@ -18225,14 +18226,14 @@ LA899:  jmp     dummy0000
         axy_call draw_dialog_label, desktop_aux::str_about7, $07
         axy_call draw_dialog_label, desktop_aux::str_about8, $09
         lda     #$36
-        sta     LD6C3
+        sta     dialog_label_pos
         lda     #$01
-        sta     LD6C3+1
+        sta     dialog_label_pos+1
         axy_call draw_dialog_label, desktop_aux::str_about9, $09
         lda     #$28
-        sta     LD6C3
+        sta     dialog_label_pos
         lda     #$00
-        sta     LD6C3+1
+        sta     dialog_label_pos+1
 
 :       A2D_RELAY_CALL A2D_GET_INPUT, input_params
         lda     input_params_state
@@ -18500,10 +18501,10 @@ LAC16:  jsr     LB53A
         addr_call LB723, desktop_aux::str_size_title
         axy_call draw_dialog_label, desktop_aux::str_size_number, $01
         ldy     #$01
-        jsr     LB01F
+        jsr     draw_colon
         axy_call draw_dialog_label, desktop_aux::str_size_blocks, $02
         ldy     #$02
-        jsr     LB01F
+        jsr     draw_colon
         rts
 
 LAC3D:  ldy     #$01
@@ -18524,7 +18525,7 @@ LAC3D:  ldy     #$01
         lda     winF
         jsr     LB7B9
         lda     #$A5
-        sta     LD6C3
+        sta     dialog_label_pos
         yax_call draw_dialog_label, str_7_spaces, $01
         jsr     LB3BF
         ldy     #$03
@@ -18542,7 +18543,7 @@ LAC3D:  ldy     #$01
         sta     LD90A
         jsr     LBDDF
         lda     #$A5
-        sta     LD6C3
+        sta     dialog_label_pos
         yax_call draw_dialog_label, str_7_spaces, $02
         rts
 
@@ -18562,7 +18563,10 @@ LACB7:  jsr     LA567
         lda     #$00
         rts
 
-show_delete_file_dialog:        ; ???
+;;; ==================================================
+;;; "Delete File" dialog
+
+show_delete_file_dialog:
         jsr     LB3BF
         ldy     #$00
         lda     ($06),y
@@ -18678,6 +18682,9 @@ LAE17:  jsr     LA567
         pla
         rts
 
+;;; ==================================================
+;;; "New Folder" dialog
+
 show_new_folder_dialog:
         jsr     LB3BF
         ldy     #$00
@@ -18725,10 +18732,10 @@ LAE90:  lda     ($08),y
         jsr     LB7B9
         yax_call draw_dialog_label, desktop_aux::str_in_colon, $02
         lda     #$37
-        sta     LD6C3
+        sta     dialog_label_pos
         yax_call draw_dialog_label, $D402, $02
         lda     #$28
-        sta     LD6C3
+        sta     dialog_label_pos
         yax_call draw_dialog_label, desktop_aux::str_enter_folder_name, $04
         jsr     LB961
 LAEC6:  jsr     LA567
@@ -18827,9 +18834,9 @@ LAFB9:  lda     winF
         lda     ($06),y
         sta     LB01E
         tay
-        jsr     LB01F
+        jsr     draw_colon
         lda     #$A5
-        sta     LD6C3
+        sta     dialog_label_pos
         jsr     LB3BF
         lda     LB01E
         cmp     #$02
@@ -18866,16 +18873,20 @@ LB006:  jsr     LA567
         pla
         rts
 
-;;; ==================================================
-
 LB01D:  .byte   0
 LB01E:  .byte   0
-LB01F:  lda     #$A0
-        sta     LD6C3
+
+;;; ==================================================
+;;; Draw ":" after dialog label
+
+.proc draw_colon
+        lda     #$A0
+        sta     dialog_label_pos
         lda     #<desktop_aux::str_colon
         ldx     #>desktop_aux::str_colon
         jsr     draw_dialog_label
         rts
+.endproc
 
 ;;; ==================================================
 ;;; "Lock" dialog
@@ -19090,7 +19101,7 @@ LB27D:  jsr     LBD75
         A2D_RELAY_CALL A2D_DRAW_RECT, LD6AB
         yax_call draw_dialog_label, desktop_aux::str_rename_old, $02
         lda     #$55
-        sta     LD6C3
+        sta     dialog_label_pos
         jsr     LB3BF
         ldy     #$01
         lda     ($06),y
@@ -19378,10 +19389,10 @@ LB59A:  tya
         lda     #$C8
         sec
         sbc     $0B
-        sta     LD6C3
+        sta     dialog_label_pos
         lda     #$00
         sbc     $0C
-        sta     LD6C3+1
+        sta     dialog_label_pos+1
         pla
         tay
 LB5CC:  dey
@@ -19391,17 +19402,17 @@ LB5CC:  dey
         asl     a
         clc
         adc     $D6C1
-        sta     LD6C3+2
+        sta     dialog_label_pos+2
         lda     $D6C2
         adc     #$00
-        sta     LD6C3+3
-        A2D_RELAY_CALL A2D_SET_POS, LD6C3
+        sta     dialog_label_pos+3
+        A2D_RELAY_CALL A2D_SET_POS, dialog_label_pos
         lda     $06
         ldx     $06+1
         jsr     draw_text1
-        ldx     LD6C3
+        ldx     dialog_label_pos
         lda     #$28
-        sta     LD6C3
+        sta     dialog_label_pos
         rts
 
 LB5F9:  A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE50
