@@ -6514,7 +6514,7 @@ L43E7:  tsx
         A2D_RELAY_CALL A2D_QUERY_TARGET, input_params_coords
         lda     query_target_params_element
         bne     L4418
-        jsr     L85FC
+        jsr     detect_double_click
         sta     $D2AA
         lda     #$00
         sta     $D20E
@@ -6540,7 +6540,7 @@ L4428:  pha
 L4435:  pla
         cmp     #$02
         bne     L4443
-        jsr     L85FC
+        jsr     detect_double_click
         sta     $D2AA
         jmp     L5B1C
 
@@ -9506,7 +9506,7 @@ L5CE6:  cmp     selected_file_index,x
         bmi     L5CFB
 L5CF0:  bit     $D2AA
         bmi     L5CF8
-        jmp     L5DFC           ; double click to launch can come through here
+        jmp     L5DFC
 
 L5CF8:  jmp     L5D55
 
@@ -9538,7 +9538,7 @@ L5D0B:  ldx     is_file_selected
         jsr     L4510
         bit     $D2AA
         bmi     L5D55
-        jmp     L5DFC           ; double click to launch can come through here
+        jmp     L5DFC
 
 L5D55:  lda     L5CD9
         sta     $EBFC
@@ -13979,13 +13979,14 @@ L85FB:  .byte   0
 
 ;;; ==================================================
 ;;; Double Click Detection
+;;; Returns with A=0 if double click, A=$FF otherwise.
 
-.proc L85FC
+.proc detect_double_click
 
         double_click_deltax := 8
         double_click_deltay := 7
 
-        ;; stash initial coords
+        ;; Stash initial coords
         ldx     #3
 :       lda     input_params_coords,x
         sta     coords,x
@@ -13994,19 +13995,22 @@ L85FB:  .byte   0
         bpl     :-
 
         lda     #0
-        sta     L869F
-        lda     machine_type    ; Since IIgs is faster?
-        asl     a
-        rol     L869F
-        sta     L869E
+        sta     counter+1
+        lda     machine_type ; Since IIgs is faster? ($96=IIe,$FA=IIc,$FD=IIgs)
+        asl     a            ; * 2
+        rol     counter+1    ; So IIe = $12C, IIc = $1F4, IIgs = $1FA
+        sta     counter
 
-loop:   dec     L869E
+        ;; Decrement counter, bail if time delta exceeded
+loop:   dec     counter
         bne     :+
-        dec     L869F
-        lda     L869F
+        dec     counter+1
+        lda     counter+1
         bne     exit
 
-:       jsr     L48F0
+:       jsr     L48F0           ; ???
+
+        ;; Check coords, bail if pixel delta exceeded
         jsr     check_delta
         bmi     exit            ; moved past delta; no double-click
 
@@ -14079,15 +14083,14 @@ ok:     lda     #$00
         rts
 .endproc
 
-L869E:  .byte   0
-L869F:  .byte   0
+counter:.word   0
 
 coords:
 xcoord: .word   0
 ycoord: .word   0
 
 delta:  .byte   0
-state:  .byte   0
+state:  .byte   0               ; unused?
 unused: .byte   0               ; ???
 
 .endproc
