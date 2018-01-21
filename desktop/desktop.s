@@ -356,22 +356,22 @@ L8738:  .byte   $04
 L8739:  .byte   $00,$00,$00,$00
 
         ;; Desktop icon placements?
-L873D:  .word   500, 16
-        .word   500, 41
-        .word   500, 66
-        .word   500, 91
-        .word   500, 116
+L873D:  DEFINE_POINT 500, 16
+        DEFINE_POINT 500, 41
+        DEFINE_POINT 500, 66
+        DEFINE_POINT 500, 91
+        DEFINE_POINT 500, 116
 
-        .word   440, 16
-        .word   440, 41
-        .word   440, 66
-        .word   440, 91
-        .word   440, 116
-        .word   440, 141
+        DEFINE_POINT 440, 16
+        DEFINE_POINT 440, 41
+        DEFINE_POINT 440, 66
+        DEFINE_POINT 440, 91
+        DEFINE_POINT 440, 116
+        DEFINE_POINT 440, 141
 
-        .word   400, 16
-        .word   400, 41
-        .word   400, 66
+        DEFINE_POINT 400, 16
+        DEFINE_POINT 400, 41
+        DEFINE_POINT 400, 66
 
 .proc online_params
 count:  .byte   2
@@ -3524,23 +3524,23 @@ special_menu:
 ;;; ==================================================
 
         ;; Rects
-LAE00:  DEFINE_RECT   4,2,396,98
-LAE08:  DEFINE_RECT   5,3,395,97
-LAE10:  DEFINE_RECT   40,81,140,92
-LAE18:  DEFINE_RECT   193,30,293,41
-LAE20:  DEFINE_RECT   260,81,360,92
-LAE28:  DEFINE_RECT   200,81,240,92
-LAE30:  DEFINE_RECT   260,81,300,92
-LAE38:  DEFINE_RECT   320,81,360,92
+LAE00:  DEFINE_RECT 4,2,396,98
+LAE08:  DEFINE_RECT 5,3,395,97
+LAE10:  DEFINE_RECT 40,81,140,92
+LAE18:  DEFINE_RECT 193,30,293,41
+LAE20:  DEFINE_RECT 260,81,360,92
+LAE28:  DEFINE_RECT 200,81,240,92
+LAE30:  DEFINE_RECT 260,81,300,92
+LAE38:  DEFINE_RECT 320,81,360,92
 
 str_ok_label:
         PASCAL_STRING {"OK            ",GLYPH_RETURN}
 
-LAE50:  DEFINE_POINT $109,$5B
-LAE54:  DEFINE_POINT $2D,$5B
-LAE58:  DEFINE_POINT $CD,$5B
-LAE5C:  DEFINE_POINT $109,$5B
-LAE60:  DEFINE_POINT $145,$5B
+LAE50:  DEFINE_POINT 265,91
+LAE54:  DEFINE_POINT 45,91
+LAE58:  DEFINE_POINT 205,91
+LAE5C:  DEFINE_POINT 265,91
+LAE60:  DEFINE_POINT 325,91
 
         .byte   $1C,$00,$70,$00
         .byte   $1C,$00,$87,$00
@@ -3548,12 +3548,12 @@ LAE60:  DEFINE_POINT $145,$5B
 LAE6C:  .byte   $00             ; text mask
 LAE6D:  .byte   $7F             ; text mask
 
-LAE6E:  DEFINE_RECT $27,$19,$168,$50
-LAE76:  DEFINE_RECT $28,$3C,$168,$50
-LAE7E:  DEFINE_POINT $41,$2B
-LAE82:  DEFINE_POINT $41,$33
-LAE86:  DEFINE_RECT $41,$23,$18A,$2A
-LAE8E:  DEFINE_RECT $41,$2B,$18A,$32
+LAE6E:  DEFINE_RECT 39,25,360,80
+LAE76:  DEFINE_RECT 40,60,360,80
+LAE7E:  DEFINE_POINT 65,43
+LAE82:  DEFINE_POINT 65,51
+LAE86:  DEFINE_RECT 65,35,394,42
+LAE8E:  DEFINE_RECT 65,43,394,50
 
 str_cancel_label:
         PASCAL_STRING "Cancel        Esc"
@@ -3566,8 +3566,8 @@ str_all_label:
 LAEB6:  PASCAL_STRING "Source filename:"
 LAEC7:  PASCAL_STRING "Destination filename:"
 
-LAEDD:  DEFINE_RECT 4, 2, $18C, $6C
-LAEE5:  DEFINE_RECT 5, 3, $18B, $6B
+LAEDD:  DEFINE_RECT 4, 2, 396, 108
+LAEE5:  DEFINE_RECT 5, 3, 395, 107
 
 str_about1:  PASCAL_STRING "Apple II DeskTop"
 str_about2:  PASCAL_STRING "Copyright Apple Computer Inc., 1986"
@@ -3596,8 +3596,8 @@ str_exists_prompt:
 str_large_prompt:
         PASCAL_STRING "This file is too large to copy, click OK to continue."
 
-LB0B6:  DEFINE_POINT $6E, $23
-LB0BA:  DEFINE_POINT $AA, $3B
+LB0B6:  DEFINE_POINT 110, 35
+LB0BA:  DEFINE_POINT 170, 59
 
         ;; "Delete" dialog strings
 str_delete_title:
@@ -3613,9 +3613,9 @@ str_delete_remaining:
 str_delete_locked_file:
         PASCAL_STRING "This file is locked, do you want to delete it anyway ?"
 
-LB16A:  DEFINE_POINT $91, $3B
-LB16E:  DEFINE_POINT $C8, $3B
-LB172:  DEFINE_POINT $12C, $3B
+LB16A:  DEFINE_POINT 145, 59
+LB16E:  DEFINE_POINT 200, 59
+LB172:  DEFINE_POINT 300, 59
 
         ;; "New Folder" dialog strings
 str_new_folder_title:
@@ -3656,12 +3656,12 @@ str_info_blocks:
 str_colon:
         PASCAL_STRING ": "
 
-LB22D:  DEFINE_POINT $A0,$3B
-LB231:  DEFINE_POINT $91,$3B
-LB235:  DEFINE_POINT $C8,$3B
-LB239:  DEFINE_POINT $B9,$3B
-LB23D:  DEFINE_POINT $CD,$3B
-LB241:  DEFINE_POINT $C3,$3B
+LB22D:  DEFINE_POINT 160,59
+LB231:  DEFINE_POINT 145,59
+LB235:  DEFINE_POINT 200,59
+LB239:  DEFINE_POINT 185,59
+LB23D:  DEFINE_POINT 205,59
+LB241:  DEFINE_POINT 195,59
 
 LB245:  PASCAL_STRING "Format a Disk ..."
 LB257:  PASCAL_STRING "Select the location where the disk is to be formatted"
@@ -3779,11 +3779,11 @@ alert_bitmap:
 .endproc
 
 alert_rect:
-        DEFINE_RECT $41, $57, $1E5, $8E
+        DEFINE_RECT 65, 87, 485, 142
 alert_inner_frame_rect1:
-        DEFINE_RECT $4, $2, $1A0, $35
+        DEFINE_RECT 4, 2, 416, 53
 alert_inner_frame_rect2:
-        DEFINE_RECT $5, $3, $19F, $34
+        DEFINE_RECT 5, 3, 415, 52
 
 LB6D3:  .byte   $41
 LB6D4:  .byte   $00
@@ -3805,18 +3805,18 @@ ok_label:
         PASCAL_STRING {"OK            ",GLYPH_RETURN}
 
 try_again_rect:
-        DEFINE_RECT $14,$25,$78,$30
+        DEFINE_RECT 20,37,120,48
 try_again_pos:
-        DEFINE_POINT $19,$2F
+        DEFINE_POINT 25,47
 
 cancel_rect:
-        DEFINE_RECT $12C,$25,$190,$30
+        DEFINE_RECT 300,37,400,48
 cancel_pos:
-        DEFINE_POINT $131,$2F
+        DEFINE_POINT 305,47
 
         .word   $BE,$10     ; ???
 
-LB70F:  DEFINE_POINT $4B,$1D
+LB70F:  DEFINE_POINT 75,29
 
 alert_action:  .byte   $00
 LB714:  .byte   $00
@@ -4985,7 +4985,7 @@ alert_bitmap2:
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
 
 alert_bitmap2_params:
-        .word   $28, $8         ; left, top
+        DEFINE_POINT 40, 8
         .addr   alert_bitmap2
         .byte   $07             ; stride
         .byte   $00
@@ -5177,15 +5177,15 @@ next:   .addr   0
 
         ;; Coordinates for labels?
         .byte   $28,$00,$25,$00,$68,$01,$2F,$00,$2D,$00,$2E,$00
-LD6AB:  DEFINE_RECT $28,$3D,$168,$47
-LD6B3:  DEFINE_POINT $2D,$46
+LD6AB:  DEFINE_RECT 40,61,360,71
+LD6B3:  DEFINE_POINT 45,70
 LD6B7:  DEFINE_POINT 0, 18
-LD6BB:  DEFINE_POINT $28,18
+LD6BB:  DEFINE_POINT 40,18
         .byte $28,$00,$23,$00
 dialog_label_pos:
-        DEFINE_POINT $28,$00
+        DEFINE_POINT 40,0
 
-LD6C7:  .word   $4B, $23        ; left, top
+LD6C7:  DEFINE_POINT 75, 35
         .addr   A2D_SCREEN_ADDR
         .word   A2D_SCREEN_STRIDE
         .word   0, 0            ; hoff, voff
