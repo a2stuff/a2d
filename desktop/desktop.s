@@ -6084,7 +6084,7 @@ L4051:  cpx     buf3len
         txa
         pha
         lda     buf3,x
-        jsr     L86E3
+        jsr     file_address_lookup
         ldy     #$01
         jsr     DESKTOP_RELAY
         pla
@@ -6204,7 +6204,7 @@ L415B:  sta     desktop_winid
         jsr     L8855
         jsr     DESKTOP_ASSIGN_STATE
         lda     desktop_winid
-        jsr     L86EF
+        jsr     window_lookup
         sta     $06
         stx     $06+1
         ldy     #$16
@@ -6567,7 +6567,7 @@ L445D:  jsr     clear_selection
         lda     LEC26,x
         sta     LE22F
         lda     LE22F
-        jsr     L86E3
+        jsr     file_address_lookup
         sta     $06
         stx     $06+1
         ldy     #$01
@@ -7174,7 +7174,7 @@ L49A6:  lda     $E25B
         sec
         sbc     #$06
         sta     L49A5
-        jsr     L86A7
+        jsr     a_times_4
         clc
         adc     #$1E
         sta     $06
@@ -7209,7 +7209,7 @@ L49ED:  lda     L49A5
         jmp     L4A0A
 
 L49FA:  lda     L49A5
-        jsr     L86C1
+        jsr     a_times_6
         clc
         adc     #$9E
         sta     $06
@@ -7247,7 +7247,7 @@ L4A2B:  iny
 
 L4A46:  .byte   0
 L4A47:  pha
-        jsr     L86C1
+        jsr     a_times_6
         clc
         adc     #$9E
         sta     $06
@@ -7387,7 +7387,7 @@ L4B5F:  sta     L4BB0
         ldx     #$4F
         jsr     L4B15
         lda     L4BB0
-        jsr     L86C1
+        jsr     a_times_6
         clc
         adc     #$9E
         sta     $06
@@ -7445,7 +7445,7 @@ start:  jsr     L4510
         lda     $E25B
         sec
         sbc     #$03
-        jsr     L86A7
+        jsr     a_times_4
         clc
         adc     #$F2
         sta     $06
@@ -7709,7 +7709,7 @@ L4DEC:  cpx     is_file_selected
 L4DF2:  txa
         pha
         lda     selected_file_index,x
-        jsr     L86E3
+        jsr     file_address_lookup
         sta     $06
         stx     $06+1
         ldy     #$02
@@ -7734,7 +7734,7 @@ L4E1A:  sta     L4E71
         bcs     L4E14
         pla
         lda     desktop_winid
-        jsr     L86FB
+        jsr     window_address_lookup
         sta     $06
         stx     $06+1
         ldy     #$00
@@ -7745,7 +7745,7 @@ L4E34:  lda     ($06),y
         dey
         bpl     L4E34
         lda     selected_file_index
-        jsr     L86E3
+        jsr     file_address_lookup
         sta     $06
         stx     $06+1
         ldy     #$09
@@ -7823,7 +7823,7 @@ L4EC3:  sta     buf3len
         dex
         lda     LEC26,x
         sta     LE22F
-        jsr     L86E3
+        jsr     file_address_lookup
         sta     $06
         stx     $06+1
         ldy     #$02
@@ -7905,7 +7905,7 @@ start:  lda     desktop_winid
         yax_call LA500, L4F67, $03
 L4FC6:  lda     desktop_winid
         beq     L4FD4
-        jsr     L86FB
+        jsr     window_address_lookup
         sta     L4F68
         stx     L4F69
 L4FD4:  lda     #$80
@@ -8098,7 +8098,7 @@ L511E:  sta     buf3len
         stx     L51EC
         sty     L51ED
         lda     desktop_winid
-        jsr     L86EF
+        jsr     window_lookup
         sta     $06
         stx     $06+1
         ldy     #$1F
@@ -8127,7 +8127,7 @@ L518D:  lda     L51EF
         beq     L51A7
         tax
         lda     buf3,x
-        jsr     L86E3
+        jsr     file_address_lookup
         ldy     #$01
         jsr     DESKTOP_RELAY
         inc     L51EF
@@ -8185,7 +8185,7 @@ L51F0:  ldx     desktop_winid
         stx     L5264
         sty     L5265
         lda     desktop_winid
-        jsr     L86EF
+        jsr     window_lookup
         sta     $06
         stx     $06+1
         ldy     #$1F
@@ -8439,7 +8439,7 @@ L53D0:  tax
         lda     selected_file_index,x
         jsr     L5431
         bmi     L53BA
-        jsr     L86FB
+        jsr     window_address_lookup
         sta     $06
         stx     $06+1
         ldy     #$00
@@ -8518,7 +8518,7 @@ L5464:  lda     desktop_winid
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         lda     desktop_winid
-        jsr     L86EF
+        jsr     window_lookup
         sta     $06
         stx     $06+1
         ldy     #$1C
@@ -8682,7 +8682,7 @@ L55C8:  stx     L544A
 L55D1:  ldx     L544A
         lda     $1801,x
         sta     selected_file_index
-        jsr     L86E3
+        jsr     file_address_lookup
         sta     $06
         stx     $06+1
         ldy     #$02
@@ -8696,7 +8696,7 @@ L55D1:  ldx     L544A
 L55F0:  ldx     L544A
         lda     $1801,x
         sta     LE22F
-        jsr     L86E3
+        jsr     file_address_lookup
         sta     $06
         stx     $06+1
         ldy     #$02
@@ -8716,7 +8716,7 @@ L5614:  DESKTOP_RELAY_CALL $02, LE22F
 L562B:  rts
 
 L562C:  lda     LE22F
-        jsr     L86E3
+        jsr     file_address_lookup
         sta     $06
         stx     $06+1
         ldy     #$02
@@ -8775,7 +8775,7 @@ L56AB:  lda     is_file_selected
 L56B4:  ldx     L56F8
         lda     selected_file_index,x
         sta     $E22B
-        jsr     L86E3
+        jsr     file_address_lookup
         sta     $06
         stx     $06+1
         lda     $E22C
@@ -9016,7 +9016,7 @@ L58C1:  rts
 
         .byte   0
 L58C3:  lda     desktop_winid
-        jsr     L86EF
+        jsr     window_lookup
         sta     $06
         stx     $06+1
         ldy     #$06
@@ -9036,7 +9036,7 @@ L58C3:  lda     desktop_winid
         rts
 
 L58E2:  lda     desktop_winid
-        jsr     L86EF
+        jsr     window_lookup
         sta     $06
         stx     $06+1
         ldy     #$08
@@ -9115,7 +9115,7 @@ L5986:  txa
         lda     buf3,x
         cmp     $EBFB
         beq     L5998
-        jsr     L86E3
+        jsr     file_address_lookup
         ldy     #$01
         jsr     DESKTOP_RELAY
 L5998:  pla
@@ -9170,7 +9170,7 @@ L59F3:  ldy     $E25B
         bne     L59FE
         jmp     L5A4C
 
-L59FE:  jsr     L86E3
+L59FE:  jsr     file_address_lookup
         clc
         adc     #$09
         sta     $06
@@ -9248,7 +9248,7 @@ L5AA9:  lda     buf3len
         ldx     buf3len
         dex
         lda     buf3,x
-        jsr     L86E3
+        jsr     file_address_lookup
         ldy     #$01
         jsr     DESKTOP_RELAY
 L5AC0:  jsr     DESKTOP_COPY_FROM_BUF
@@ -9335,7 +9335,7 @@ L5B53:  cmp     #$03
 L5B58:  cmp     #$01
         bne     L5BC1
         lda     desktop_winid
-        jsr     L86EF
+        jsr     window_lookup
         sta     $06
         stx     $06+1
         ldy     #$05
@@ -9382,7 +9382,7 @@ L5BB4:  jsr     L63EC
         jmp     L5C26
 
 L5BC1:  lda     desktop_winid
-        jsr     L86EF
+        jsr     window_lookup
         sta     $06
         stx     $06+1
         ldy     #$04
@@ -9611,7 +9611,7 @@ L5DF7:  ldx     $E256
         rts
 
 L5DFC:  lda     L5CD9           ; after a double-click (on file or folder)
-        jsr     L86E3
+        jsr     file_address_lookup
         sta     $06
         stx     $06+1
         ldy     #$02
@@ -9634,7 +9634,7 @@ L5E27:  rts
 
 L5E28:  sta     L5E77
         lda     desktop_winid
-        jsr     L86FB
+        jsr     window_address_lookup
         sta     $06
         stx     $06+1
         ldy     #$00
@@ -9645,7 +9645,7 @@ L5E3A:  lda     ($06),y
         dey
         bpl     L5E3A
         lda     L5CD9
-        jsr     L86E3
+        jsr     file_address_lookup
         sta     $06
         stx     $06+1
         ldy     #$09
@@ -9699,7 +9699,7 @@ L5E8F:  lda     desktop_winid
         bmi     L5EBC
         jsr     L5302
 L5EBC:  lda     desktop_winid
-        jsr     L86FB
+        jsr     window_address_lookup
         sta     $06
         stx     $06+1
         ldy     #$00
@@ -9922,7 +9922,7 @@ L60DE:  lda     desktop_winid
         jsr     L8855
         A2D_RELAY_CALL A2D_DRAG_WINDOW, input_params
         lda     desktop_winid
-        jsr     L86EF
+        jsr     window_lookup
         sta     $06
         stx     $06+1
         ldy     #$16
@@ -9970,7 +9970,7 @@ L614E:  cpx     buf3len
 L6161:  txa
         pha
         lda     buf3,x
-        jsr     L86E3
+        jsr     file_address_lookup
         sta     $06
         stx     $06+1
         ldy     #$03
@@ -10060,7 +10060,7 @@ L6227:  sta     buf3len
         dex
         lda     LEC26,x
         sta     LE22F
-        jsr     L86E3
+        jsr     file_address_lookup
         sta     $06
         stx     $06+1
         ldy     #$01
@@ -10369,7 +10369,7 @@ L6517:  jsr     L6523
         jmp     L7D5D
 
 L6523:  lda     desktop_winid
-        jsr     L86EF
+        jsr     window_lookup
         clc
         adc     #$14
         sta     $06
@@ -10384,7 +10384,7 @@ L6535:  lda     ($06),y
         rts
 
 L653E:  lda     desktop_winid
-        jsr     L86EF
+        jsr     window_lookup
         sta     $06
         stx     $06+1
         ldy     #$23
@@ -10408,7 +10408,7 @@ L656D:  lda     desktop_winid
         sta     L6600
         stx     L6601
         lda     desktop_winid
-        jsr     L86EF
+        jsr     window_lookup
         sta     $06
         stx     $06+1
         ldy     #$06
@@ -10467,7 +10467,7 @@ L6604:  lda     desktop_winid
         jsr     L7D5D
         sty     L669F
         lda     desktop_winid
-        jsr     L86EF
+        jsr     window_lookup
         sta     $06
         stx     $06+1
         ldy     #$08
@@ -10891,7 +10891,7 @@ L6A41:  cmp     LEC26,x
         beq     L6A80
         dex
         bpl     L6A41
-        jsr     L86E3
+        jsr     file_address_lookup
         clc
         adc     #$09
         sta     $06
@@ -10943,7 +10943,7 @@ L6AA0:  inx
 L6AA7:  stx     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         lda     LE6BE
-        jsr     L86E3
+        jsr     file_address_lookup
         sta     $06
         stx     $06+1
         ldy     #$02
@@ -11022,7 +11022,7 @@ L6B68:  lda     #$01
         sta     $E269
         jsr     L6C0F
         lda     LE6BE
-        jsr     L86E3
+        jsr     file_address_lookup
         sta     $06
         stx     $06+1
         ldy     #$02
@@ -11048,7 +11048,7 @@ L6BA1:  DESKTOP_RELAY_CALL $03, LE6BE
         jsr     L4510
 L6BB8:  jsr     L744B
         lda     bufnum
-        jsr     L86EF
+        jsr     window_lookup
         ldy     #$38
         jsr     A2D_RELAY
         lda     desktop_winid
@@ -11063,7 +11063,7 @@ L6BDA:  lda     L6C0E
         beq     L6BF4
         tax
         lda     buf3,x
-        jsr     L86E3
+        jsr     file_address_lookup
         ldy     #$01
         jsr     DESKTOP_RELAY
         inc     L6C0E
@@ -11386,7 +11386,7 @@ L6EC5:  lda     #$00
         sta     menu_dispatch_flag
         rts
 
-L6F0D:  jsr     L86FB
+L6F0D:  jsr     window_address_lookup
         sta     $06
         sta     L6F48
         stx     $06+1
@@ -11501,14 +11501,14 @@ L6FE4:  inc     L7049
         lda     #$00
 L6FF5:  rts
 
-L6FF6:  jsr     L86EF
+L6FF6:  jsr     window_lookup
         sta     $06
         stx     $06+1
         ldy     #$0A
         lda     ($06),y
         beq     L6FE4
         lda     L7049
-        jsr     L86FB
+        jsr     window_address_lookup
         sta     $06
         stx     $06+1
         ldy     #$00
@@ -12040,7 +12040,7 @@ L7471:  lda     ($06),y
         bne     L74D3
         jsr     push_zp_addrs
         lda     bufnum
-        jsr     L86FB
+        jsr     window_address_lookup
         sta     $08
         stx     $09
         lda     $06
@@ -12079,7 +12079,7 @@ L74D3:  tay
         jsr     push_zp_addrs
         tya
         pha
-        jsr     L86FB
+        jsr     window_address_lookup
         sta     $06
         stx     $06+1
         pla
@@ -12116,7 +12116,7 @@ L7512:  lda     ($06),y
         ldx     $E1B0
         sta     $E1B0,x
         lda     LE6BE
-        jsr     L86E3
+        jsr     file_address_lookup
         sta     $08
         stx     $09
         ldx     $E1B0
@@ -12135,7 +12135,7 @@ L7548:  iny
         cpx     $E1B0
         bne     L7548
         lda     bufnum
-        jsr     L86FB
+        jsr     window_address_lookup
         sta     $08
         stx     $09
         ldy     $E1B0
@@ -12147,7 +12147,7 @@ L7569:  lda     $08
         ldx     $09
         jsr     L87BA
         lda     bufnum
-        jsr     L86EF
+        jsr     window_lookup
         sta     $06
         stx     $06+1
         ldy     #$14
@@ -12197,7 +12197,7 @@ L75A3:  sta     ($06),y
         lda     LE6BE
         jsr     L7054
         lda     LE6BE
-        jsr     L86E3
+        jsr     file_address_lookup
         sta     $06
         stx     $06+1
         ldy     #$02
@@ -12321,7 +12321,7 @@ L76BB:  bit     L7634
 
 L76C4:  jsr     L7B6B
         lda     L7621
-        jsr     L86EF
+        jsr     window_lookup
         sta     $06
         stx     $06+1
         ldy     #$16
@@ -12400,7 +12400,7 @@ L7768:  inc     LDD9E
         ldx     buf3len
         inc     buf3len
         sta     buf3,x
-        jsr     L86E3
+        jsr     file_address_lookup
         sta     $08
         stx     $09
         lda     LCBANK2
@@ -12867,7 +12867,7 @@ L7BCB:  lda     buf3len
         cmp     #$01
         bne     L7BEF
         lda     buf3
-        jsr     L86E3
+        jsr     file_address_lookup
         sta     $06
         stx     $06+1
         ldy     #$06
@@ -12913,7 +12913,7 @@ L7C13:  lda     L7B5F
 
 L7C36:  tax
         lda     buf3,x
-        jsr     L86E3
+        jsr     file_address_lookup
         sta     $06
         stx     $06+1
         ldy     #$02
@@ -13030,7 +13030,7 @@ L7D55:  inc     L7D5B
 
 L7D5B:  .byte   0
 L7D5C:  .byte   0
-L7D5D:  jsr     L86EF
+L7D5D:  jsr     window_lookup
         sta     $06
         stx     $06+1
         ldy     #$23
@@ -13872,7 +13872,7 @@ L84DC:  lda     query_state_buffer::width
 L850C:  lda     #$00
 L850E:  sta     L85F1
         lda     desktop_winid
-        jsr     L86EF
+        jsr     window_lookup
         sta     $06
         stx     $06+1
         lda     #$06
@@ -13952,7 +13952,7 @@ L85C3:  lda     query_state_buffer::hoff
         adc     L85F5
         sta     query_state_buffer::width+1
 L85D6:  lda     desktop_winid
-        jsr     L86EF
+        jsr     window_lookup
         sta     $06
         stx     $06+1
         ldy     #$23
@@ -14096,40 +14096,54 @@ unused: .byte   0               ; ???
 .endproc
 
 ;;; ==================================================
+;;; A = A * 4, high bits into X
 
-L86A7:  ldx     #$00
-        stx     L86C0
+.proc a_times_4
+        ldx     #0
+        stx     tmp
         asl     a
-        rol     L86C0
+        rol     tmp
         asl     a
-        rol     L86C0
+        rol     tmp
         asl     a
-        rol     L86C0
+        rol     tmp
         asl     a
-        rol     L86C0
-        ldx     L86C0
+        rol     tmp
+        ldx     tmp
         rts
 
-L86C0:  .byte   0
-L86C1:  ldx     #$00
-        stx     L86E2
+tmp:    .byte   0
+.endproc
+
+;;; ==================================================
+;;; A = A * 6, high bits into X
+
+.proc a_times_6
+        ldx     #$00
+        stx     tmp
         asl     a
-        rol     L86E2
+        rol     tmp
         asl     a
-        rol     L86E2
+        rol     tmp
         asl     a
-        rol     L86E2
+        rol     tmp
         asl     a
-        rol     L86E2
+        rol     tmp
         asl     a
-        rol     L86E2
+        rol     tmp
         asl     a
-        rol     L86E2
-        ldx     L86E2
+        rol     tmp
+        ldx     tmp
         rts
 
-L86E2:  .byte   0
-L86E3:  asl     a
+tmp:    .byte   0
+.endproc
+
+;;; ==================================================
+;;; Look up file address. Index in A, address in A,X.
+
+file_address_lookup:
+        asl     a
         tax
         lda     file_address_table,x
         pha
@@ -14138,16 +14152,24 @@ L86E3:  asl     a
         pla
         rts
 
-L86EF:  asl     a
+;;; ==================================================
+;;; Look up window. Index in A, address in A,X.
+
+window_lookup:
+        asl     a
         tax
-        lda     $DFA1,x
+        lda     win_table,x
         pha
-        lda     $DFA2,x
+        lda     win_table+1,x
         tax
         pla
         rts
 
-L86FB:  asl     a
+;;; ==================================================
+;;; Look up window address. Index in A, address in A,X.
+
+window_address_lookup:
+        asl     a
         tax
         lda     window_address_table,x
         pha
@@ -14155,6 +14177,8 @@ L86FB:  asl     a
         tax
         pla
         rts
+
+;;; ==================================================
 
 L8707:  sta     L877F
         lda     type_table_addr
@@ -14347,7 +14371,7 @@ L8833:  .res    34, 0
 L8855:  tay
         jsr     push_zp_addrs
         tya
-        jsr     L86EF
+        jsr     window_lookup
         sta     $06
         stx     $06+1
         ldx     #$00
@@ -14364,7 +14388,7 @@ L8865:  lda     ($06),y
 L8874:  tay
         jsr     push_zp_addrs
         tya
-        jsr     L86EF
+        jsr     window_lookup
         sta     $06
         stx     $06+1
         ldx     #$00
@@ -14381,11 +14405,11 @@ L8884:  lda     L8830,x
 L8893:  tay
         jsr     push_zp_addrs
         tya
-        jsr     L86E3
+        jsr     file_address_lookup
         sta     $06
         stx     $06+1
         lda     desktop_winid
-        jsr     L86EF
+        jsr     window_lookup
         sta     $08
         stx     $09
         ldy     #$17
@@ -14452,11 +14476,11 @@ L8914:  .byte   0
 L8915:  tay
         jsr     push_zp_addrs
         tya
-        jsr     L86E3
+        jsr     file_address_lookup
         sta     $06
         stx     $06+1
 L8921:  lda     desktop_winid
-        jsr     L86EF
+        jsr     window_lookup
         sta     $08
         stx     $09
         ldy     #$17
@@ -14563,7 +14587,7 @@ L89EA:  jsr     push_zp_addrs
         jsr     DESKTOP_FIND_SPACE
         ldy     device_num
         sta     $E1A0,y
-        jsr     L86E3
+        jsr     file_address_lookup
         sta     $06
         stx     $06+1
         ldx     #$00
@@ -14744,7 +14768,7 @@ L8B33:  cmp     LEC26,x
 L8B3E:  lda     #$00
         sta     LEC26,x
 L8B43:  lda     LE6BE
-        jsr     L86E3
+        jsr     file_address_lookup
         sta     $06
         stx     $06+1
         ldy     #$02
@@ -14762,7 +14786,7 @@ L8B62:  sty     L8D4A
         sta     L8D4B
         stx     L8D4C
         txa
-        jsr     L86EF
+        jsr     window_lookup
         sta     $06
         stx     $06+1
         lda     #$14
@@ -14776,7 +14800,7 @@ L8B7B:  lda     ($06),y
         dex
         bpl     L8B7B
         lda     L8D4B
-        jsr     L86E3
+        jsr     file_address_lookup
         sta     $06
         stx     $06+1
         ldy     #$03
@@ -20365,7 +20389,7 @@ L092F:  lda     #$00
         jsr     DESKTOP_FIND_SPACE
         sta     $EBFB
         sta     buf3
-        jsr     desktop_main::L86E3
+        jsr     desktop_main::file_address_lookup
         sta     $06
         stx     $06+1
         ldy     #$02
@@ -20522,7 +20546,7 @@ L0A92:  .byte   0
 L0A93:  .byte   0
         .byte   0
 
-L0A95:  jsr     desktop_main::L86A7
+L0A95:  jsr     desktop_main::a_times_4
         clc
         adc     #$02
         tay
@@ -20532,7 +20556,7 @@ L0A95:  jsr     desktop_main::L86A7
         tya
         rts
 
-L0AA2:  jsr     desktop_main::L86A7
+L0AA2:  jsr     desktop_main::a_times_4
         clc
         adc     #$1E
         tay
@@ -20542,7 +20566,7 @@ L0AA2:  jsr     desktop_main::L86A7
         tya
         rts
 
-L0AAF:  jsr     desktop_main::L86C1
+L0AAF:  jsr     desktop_main::a_times_6
         clc
         adc     #$9E
         tay
@@ -20552,7 +20576,7 @@ L0AAF:  jsr     desktop_main::L86C1
         tya
         rts
 
-L0ABC:  jsr     desktop_main::L86C1
+L0ABC:  jsr     desktop_main::a_times_6
         clc
         adc     #$82
         tay
