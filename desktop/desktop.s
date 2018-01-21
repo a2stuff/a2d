@@ -526,7 +526,7 @@ length: .byte   0
 text_buffer:
         .res    19, 0
 
-white_pattern2:
+white_pattern:
         .byte   %11111111
         .byte   %11111111
         .byte   %11111111
@@ -2614,7 +2614,7 @@ LA3B9:  ldy     #$00
         beq     LA3F4
         lda     #$80
         sta     LA3B7
-        A2D_CALL A2D_SET_PATTERN, white_pattern2
+        A2D_CALL A2D_SET_PATTERN, white_pattern
         A2D_CALL $41, LA3B8
         lda     LA3B8
         sta     query_state_params
@@ -6627,9 +6627,15 @@ L4510:  A2D_RELAY_CALL A2D_QUERY_SCREEN, state2
         A2D_RELAY_CALL A2D_SET_STATE, state2
         rts
 
-L4523:  jsr     redraw_windows
+;;; ==================================================
+
+.proc redraw_windows_and_desktop
+        jsr     redraw_windows
         DESKTOP_RELAY_CALL DESKTOP_REDRAW_ICONS
         rts
+.endproc
+
+;;; ==================================================
 
 L4530:  ldx     #$00
         ldy     DEVCNT
@@ -7128,7 +7134,7 @@ L492E:  jsr     set_pointer_cursor
         bmi     done
         jsr     L4968
 done:   jsr     set_pointer_cursor
-        jsr     L4523
+        jsr     redraw_windows_and_desktop
         rts
 
 L4968:  jsr     L4AAD
@@ -7198,7 +7204,7 @@ L49A6:  lda     $E25B
         jsr     L4A47
         jsr     L8F24
         bpl     L49ED
-        jmp     L4523
+        jmp     redraw_windows_and_desktop
 
 L49E0:  jsr     L4AFD
         beq     L49FA
@@ -7434,7 +7440,7 @@ L4BB1:  .byte   0
 
 .proc cmd_about
         yax_call LA500, $0000, $00
-        jmp     L4523
+        jmp     redraw_windows_and_desktop
 .endproc
 
 ;;; ==================================================
@@ -7495,7 +7501,7 @@ L4C07:  lda     L4C7C
         lda     #$00
         sta     L4CA1
         jsr     L4510
-        jsr     L4523
+        jsr     redraw_windows_and_desktop
 L4C4A:  jsr     set_pointer_cursor
         rts
 
@@ -7562,13 +7568,13 @@ L4CA1:  .byte   $00
         jmp     L4CD6
 
 L4CCD:  jsr     L4D19
-        jsr     L4523
+        jsr     redraw_windows_and_desktop
         jsr     L8F18
 L4CD6:  pha
         jsr     set_pointer_cursor
         pla
         bpl     L4CE0
-        jmp     L4523
+        jmp     redraw_windows_and_desktop
 
 L4CE0:  addr_call L6FAF, LDFC9
         beq     L4CF1
@@ -7592,7 +7598,7 @@ L4D01:  dey
         ldx     #$DF
         ldy     LDFC9
         jsr     L6F4B
-        jmp     L4523
+        jmp     redraw_windows_and_desktop
 .endproc
 
 ;;; ==================================================
@@ -7664,13 +7670,13 @@ L4D8F:  lda     ($06),y
         sta     $E00A,y
         dey
         bpl     L4D8F
-        jsr     L4523
+        jsr     redraw_windows_and_desktop
         jsr     L8F1B
 L4D9D:  pha
         jsr     set_pointer_cursor
         pla
         bpl     L4DA7
-        jmp     L4523
+        jmp     redraw_windows_and_desktop
 
 L4DA7:  lda     #$0A
         ldx     #$E0
@@ -7698,7 +7704,7 @@ L4DD2:  dey
         ldx     #$E0
         ldy     $E00A
         jsr     L6F4B
-        jmp     L4523
+        jmp     redraw_windows_and_desktop
 .endproc
 
 ;;; ==================================================
@@ -7954,7 +7960,7 @@ L5027:  lda     #$40
         addr_call L6FAF, L4F76
         beq     L504B
         jsr     L5E78
-L504B:  jmp     L4523
+L504B:  jmp     redraw_windows_and_desktop
 
 L504E:  .byte   0
 L504F:  .byte   0
@@ -7996,7 +8002,7 @@ L5084:  ldx     L5098
         jsr     L59A8
         dec     L5098
         bpl     L5084
-        jmp     L4523
+        jmp     redraw_windows_and_desktop
 L5098:  .byte   $00
 
 .endproc
@@ -8352,9 +8358,9 @@ L533F:  .byte   0
         jsr     dynamic_routine_800
         bne     :+
         stx     L533F
-        jsr     L4523
+        jsr     redraw_windows_and_desktop
         jsr     L59A4
-:       jmp     L4523
+:       jmp     redraw_windows_and_desktop
 
 fail:   rts
 .endproc
@@ -8371,37 +8377,37 @@ fail:   rts
         bne     done
 
         stx     L533F
-        jsr     L4523
+        jsr     redraw_windows_and_desktop
         jsr     L59A4
-done:   jmp     L4523
+done:   jmp     redraw_windows_and_desktop
 .endproc
 
 ;;; ==================================================
 
 .proc cmd_get_info
         jsr     L8F09
-        jmp     L4523
+        jmp     redraw_windows_and_desktop
 .endproc
 
 ;;; ==================================================
 
 .proc cmd_get_size
         jsr     L8F27
-        jmp     L4523
+        jmp     redraw_windows_and_desktop
 .endproc
 
 ;;; ==================================================
 
 .proc cmd_unlock
         jsr     L8F0F
-        jmp     L4523
+        jmp     redraw_windows_and_desktop
 .endproc
 
 ;;; ==================================================
 
 .proc cmd_lock
         jsr     L8F0C
-        jmp     L4523
+        jmp     redraw_windows_and_desktop
 .endproc
 
 ;;; ==================================================
@@ -8409,7 +8415,7 @@ done:   jmp     L4523
 .proc cmd_rename_icon
         jsr     L8F12
         pha
-        jsr     L4523
+        jsr     redraw_windows_and_desktop
         pla
         beq     L5398
         rts
@@ -8472,7 +8478,7 @@ L5411:  lda     L5428,x
         dec     L5427
         dex
         bpl     L5411
-        jmp     L4523
+        jmp     redraw_windows_and_desktop
 
 L5426:  .byte   0
 L5427:  .byte   0
@@ -9208,7 +9214,7 @@ L5A43:  jsr     L61DC
         dec     L704B
         jmp     L5A2F
 
-L5A4C:  jsr     L4523
+L5A4C:  jsr     redraw_windows_and_desktop
         jsr     clear_selection
         lda     #$00
         sta     bufnum
@@ -9255,7 +9261,7 @@ L5AA9:  lda     buf3len
         ldy     #$01
         jsr     DESKTOP_RELAY
 L5AC0:  jsr     DESKTOP_COPY_FROM_BUF
-        jmp     L4523
+        jmp     redraw_windows_and_desktop
 
 L5AC6:  .res    10, 0
 L5AD0:  .byte   0
@@ -9553,7 +9559,7 @@ L5D55:  lda     L5CD9
         cmp     #$FF
         bne     L5D77
         jsr     L5DEC
-        jmp     L4523
+        jmp     redraw_windows_and_desktop
 
 L5D77:  lda     $EBFC
         cmp     $EBFB
@@ -9562,19 +9568,19 @@ L5D77:  lda     $EBFC
         jsr     L6F0D
         lda     desktop_winid
         jsr     L5E78
-        jmp     L4523
+        jmp     redraw_windows_and_desktop
 
 L5D8E:  lda     $EBFC
         bmi     L5D99
         jsr     L6A3F
-        jmp     L4523
+        jmp     redraw_windows_and_desktop
 
 L5D99:  and     #$7F
         pha
         jsr     L6F0D
         pla
         jsr     L5E78
-        jmp     L4523
+        jmp     redraw_windows_and_desktop
 
 L5DA6:  cpx     #$02
         bne     L5DAD
@@ -9678,7 +9684,7 @@ L5E74:  jmp     launch_file     ; when double-clicked
 
 L5E77:  .byte   0
 L5E78:  sta     L5F0A
-        jsr     L4523
+        jsr     redraw_windows_and_desktop
         jsr     clear_selection
         lda     L5F0A
         cmp     desktop_winid
@@ -10008,7 +10014,7 @@ L619A:  .byte   0
 L619B:  lda     desktop_winid
         sta     input_params
         A2D_RELAY_CALL A2D_DRAG_RESIZE, input_params
-        jsr     L4523
+        jsr     redraw_windows_and_desktop
         lda     desktop_winid
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
@@ -10105,7 +10111,7 @@ L6276:  ldx     desktop_winid
         sta     $E269
         A2D_RELAY_CALL $36, LE267 ; ???
         jsr     L66A2
-        jmp     L4523
+        jmp     redraw_windows_and_desktop
 
 L62BC:  cmp     #$01
         bcc     L62C2
@@ -10692,12 +10698,12 @@ L6834:  bit     $D2AA
         jsr     L8F00
         cmp     #$FF
         bne     L6858
-        jmp     L4523
+        jmp     redraw_windows_and_desktop
 
 L6858:  lda     $EBFC
         cmp     $EBFB
         bne     L6863
-        jmp     L4523
+        jmp     redraw_windows_and_desktop
 
 L6863:  lda     $EBFC
         bpl     L6872
@@ -10708,12 +10714,12 @@ L6863:  lda     $EBFC
         jmp     L5E78
 
 L6872:  jsr     L6A3F
-        jmp     L4523
+        jmp     redraw_windows_and_desktop
 
 L6878:  txa
         cmp     #$02
         bne     L688F
-        jmp     L4523
+        jmp     redraw_windows_and_desktop
 
 L6880:  lda     $D20D
         cmp     $EBFB
@@ -11659,7 +11665,7 @@ L710A:  lsr     L72A9
 L7147:  lda     $EC2E
         jsr     L8B19
         dec     $EC2E
-        jsr     L4523
+        jsr     redraw_windows_and_desktop
         jsr     L72D8
         lda     desktop_winid
         beq     L715F
@@ -20273,7 +20279,6 @@ LBEB1:  A2D_RELAY_CALL A2D_QUERY_SCREEN, state2
 .endproc ; desktop_main
         desktop_main_pop_zp_addrs := desktop_main::pop_zp_addrs
         desktop_main_push_zp_addrs := desktop_main::push_zp_addrs
-        .assert * = $BF00, error, "Segment length mismatch"
 
 ;;; ==================================================
 ;;; Segment loaded into MAIN $800-$FFF
