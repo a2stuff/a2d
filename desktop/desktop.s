@@ -20270,7 +20270,7 @@ LBDD9:  lda     #$73
 LBDDF:  lda     LD909
         sta     LBE5F
         lda     LD90A
-        sta     LBE60
+        sta     LBE5F+1
 
         ldx     #7              ; does this ever get overwritten???
         lda     #' '
@@ -20286,8 +20286,8 @@ LBDFE:  lda     #$00
         sta     LBE61
 LBE03:  lda     LBE5F
         cmp     LBE57,x
-        lda     LBE60
-        sbc     LBE58,x
+        lda     LBE5F+1
+        sbc     LBE57+1,x
         bpl     LBE35
         lda     LBE61
         bne     LBE1F
@@ -20313,9 +20313,9 @@ LBE35:  inc     LBE61
         sec
         sbc     LBE57,x
         sta     LBE5F
-        lda     LBE60
-        sbc     LBE58,x
-        sta     LBE60
+        lda     LBE5F+1
+        sbc     LBE57+1,x
+        sta     LBE5F+1
         jmp     LBE03
 
 LBE4E:  lda     LBE5F
@@ -20323,11 +20323,8 @@ LBE4E:  lda     LBE5F
         sta     str_7_spaces+2,y
         rts
 
-LBE57:  .byte   $10
-LBE58:  .byte   $27,$E8,$03,$64,$00,$0A
-        .byte   0
-LBE5F:  .byte   0
-LBE60:  .byte   0
+LBE57:  .word   10000,1000,100,10
+LBE5F:  .addr   0
 LBE61:  .byte   0
 LBE62:  .byte   0
 LBE63:  ldy     #$00
@@ -20584,9 +20581,8 @@ L09A2:  stx     L09B5
         clc
         adc     L09B5
         sta     L09B5
-        .byte   $AD
-L09B5:  .byte   0
-        .byte   $BF
+        L09B5 := *+1
+        lda     $BF00           ; self-modified
         sta     $06+1
         lda     #$00
         sta     $06
@@ -20604,10 +20600,9 @@ L09B5:  .byte   0
         sta     $06
         jsr     L09F9
         .byte   0
-        .byte   $FC
-        ora     #$B0
-        ora     $AD,y
-        .byte   $1F
+        .addr   L09FC
+        bcs     L09F5
+        lda     $1F00
         cmp     #$02
         bcs     L09F5
         ldx     L09F8
@@ -20622,7 +20617,7 @@ L09F5:  jmp     L0A03
 L09F8:  .byte   0
 L09F9:  jmp     ($06)
 
-        .byte   $03
+L09FC:  .byte   $03
         .byte   0
         .byte   0
         .byte   $1F
@@ -21077,8 +21072,8 @@ L0DAD:  sta     $06
 L0DB8:  iny
         lda     ($06),y
         sta     ($08),y
-        .byte   $C0
-L0DBE:  .byte   0
+        L0DBE := *+1
+        cpy     #0
         bne     L0DB8
         tay
 L0DC2:  pla
