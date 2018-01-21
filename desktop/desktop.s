@@ -15747,9 +15747,9 @@ L9271:  stx     L9284
         lda     #$00
         sta     $06
         ldy     #$07
-        .byte   $B1
-L928F:  asl     $D0
-        cmp     $FBA0           ; generic_icon - 6 ?
+        lda     ($06),y
+        bne     L925F
+        ldy     #$FB
         lda     ($06),y
         and     #$7F
         bne     L925F
