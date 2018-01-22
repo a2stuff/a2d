@@ -779,7 +779,7 @@ ycoord: .word   0
 
 ;;; DESKTOP $01 IMPL
 
-L9419:
+.proc L9419
         ldy     #$00
         lda     ($06),y
         ldx     L8E95
@@ -811,12 +811,14 @@ L943E:  ldx     L8E95
         lda     $07
         sta     L8F15+1,x
         rts
+.endproc
 
 ;;; ==================================================
 
 ;;; DESKTOP $02 IMPL
 
-L9454:  ldx     L8E95
+.proc L9454
+        ldx     L8E95
         beq     L9466
         dex
         ldy     #$00
@@ -872,12 +874,13 @@ L949D:  ldx     L9016
         jsr     L9F9F
         lda     #$00
         rts
+.endproc
 
 ;;; ==================================================
 
 ;;; DESKTOP $03 IMPL
 
-L94C0:
+.proc L94C0
         ldx     L8E95
         beq     L94D2
         dex
@@ -917,12 +920,13 @@ L94FC:  jsr     L9F9F
 L9502:  jsr     L9F98
         lda     #$00
         rts
+.endproc
 
 ;;; ==================================================
 
 ;;; DESKTOP $04 IMPL
 
-L9508:
+.proc L9508
         ldy     #$00
         ldx     L8E95
         beq     L951A
@@ -985,12 +989,13 @@ L9584:  lda     #$00
         sta     L9017,x
 L958C:  lda     #$00
         rts
+.endproc
 
 ;;; ==================================================
 
 ;;; DESKTOP $0E IMPL
 
-L958F:
+.proc L958F
         ldy     #$00
         lda     ($06),y
         asl     a
@@ -1000,12 +1005,13 @@ L958F:
         lda     L8F15+1,x
         sta     $07
         jmp     LA39D
+.endproc
 
 ;;; ==================================================
 
 ;;; DESKTOP $05 IMPL
 
-L95A2:
+.proc L95A2
         jmp     L9625
 
 L95A5:
@@ -1063,12 +1069,13 @@ L9681:  sta     L95A5
         txa
         pha
         jmp     L967A
+.endproc
 
 ;;; ==================================================
 
 ;;; DESKTOP $06 IMPL
 
-L9692:
+.proc L9692
         jmp     L9697
 
 L9695:  .byte   0
@@ -1099,12 +1106,13 @@ L969D:  ldx     L9696
         jmp     L969D
 L96CF:  lda     #$00
         rts
+.endproc
 
 ;;; ==================================================
 
 ;;; DESKTOP $07 IMPL
 
-L96D2:
+.proc L96D2
         jmp     L96D7
 
 L96D5:  .byte   0
@@ -1168,12 +1176,13 @@ L9750:  lda     #$00
         ldx     L9016
         sta     L9017,x
 L9758:  jmp     L96DD
+.endproc
 
 ;;; ==================================================
 
 ;;; DESKTOP $08 IMPL
 
-L975B:
+.proc L975B
         ldx     #$00
         txa
         tay
@@ -1194,12 +1203,13 @@ L976B:  lda     L9017,x
 
 L977A:  lda     #$00
         rts
+.endproc
 
 ;;; ==================================================
 
 ;;; DESKTOP $09 IMPL
 
-L977D:
+.proc L977D
         jmp     L9789
 
         .byte   0
@@ -1269,12 +1279,13 @@ L97E6:  pla
         .byte   0
 L97F5:  .byte   0
 L97F6:  .byte   0
+.endproc
 
 ;;; ==================================================
 
 ;;; DESKTOP $0A IMPL
 
-L97F7:
+.proc L97F7
         ldy     #$00
         lda     ($06),y
         sta     L982A
@@ -2033,12 +2044,13 @@ L9EB4:  asl     a
         tax
         lda     L8F15,y
         rts
+.endproc
 
 ;;; ==================================================
 
 ;;; DESKTOP $08 IMPL
 
-L9EBE:
+.proc L9EBE
         jmp     L9EC3
 
         .byte   0
@@ -2068,6 +2080,7 @@ L9EEA:  ldy     #$00
         rts
 
         rts
+.endproc
 
 ;;; ==================================================
 
@@ -3551,7 +3564,7 @@ all_label_pos:  DEFINE_POINT 325,91
 LAE6C:  .byte   $00             ; text mask
 LAE6D:  .byte   $7F             ; text mask
 
-LAE6E:  DEFINE_RECT 39,25,360,80
+press_ok_to_rect:  DEFINE_RECT 39,25,360,80
 prompt_rect:  DEFINE_RECT 40,60,360,80
 LAE7E:  DEFINE_POINT 65,43
 LAE82:  DEFINE_POINT 65,51
@@ -6953,10 +6966,13 @@ L4738:  cmp     #FT_BINARY
 
 L4748:  cmp     #FT_SYSTEM
         beq     L4755
+
         cmp     #FT_S16
         beq     L4755
+
         lda     #$FA
         jsr     L4802
+
 L4755:  DESKTOP_RELAY_CALL $06
         A2D_RELAY_CALL $3A      ; ???
         A2D_RELAY_CALL A2D_SET_MENU, blank_menu
@@ -17888,11 +17904,11 @@ LA503:  .addr   show_about_dialog
         .addr   show_get_size_dialog
         .addr   LB325
 
-LA51D:  .byte   $00
-LA51E:  .byte   $00,$00
+LA51D:  .word   0
+        .byte   0
 
 LA520:  sta     LA51D
-        stx     LA51E
+        stx     LA51D+1
         tya
         asl     a
         tax
@@ -17909,14 +17925,14 @@ LA520:  sta     LA51D
         sta     LD8E8
         sta     LD8F5
         sta     LD8ED
-        sta     LB3E6
+        sta     cursor_ip_flag
         lda     #$14
         sta     LD8E9
         lda     #$98
         sta     LA89A
         lda     #$A8
         sta     LA89A+1
-        jsr     LB403
+        jsr     set_cursor_pointer
 
         LA565 := *+1
         jmp     dummy0000       ; self-modified
@@ -17959,11 +17975,11 @@ LA5B4:  lda     winF
 LA5D2:  A2D_RELAY_CALL A2D_TEST_BOX, LD6AB
         cmp     #$80
         bne     LA5E5
-        jsr     LB3D8
+        jsr     set_cursor_insertion_point_with_flag
         jmp     LA5E8
 
-LA5E5:  jsr     LB3CA
-LA5E8:  jsr     LBEB1
+LA5E5:  jsr     set_cursor_pointer_with_flag
+LA5E8:  jsr     reset_state
         jmp     LA567
 
 LA5EE:  A2D_RELAY_CALL A2D_QUERY_TARGET, input_params_coords
@@ -18272,7 +18288,7 @@ LA899:  jmp     dummy0000
         jsr     set_fill_black
         A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::about_dialog_outer_rect
         A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::about_dialog_inner_rect
-        addr_call LB723, desktop_aux::str_about1
+        addr_call draw_centered_string, desktop_aux::str_about1
         axy_call draw_dialog_label, desktop_aux::str_about2, $81
         axy_call draw_dialog_label, desktop_aux::str_about3, $82
         axy_call draw_dialog_label, desktop_aux::str_about4, $83
@@ -18305,8 +18321,8 @@ LA899:  jmp     dummy0000
         jmp     close
 
 close:  A2D_RELAY_CALL A2D_DESTROY_WINDOW, win18::id
-        jsr     LBEB1
-        jsr     LB3CA
+        jsr     reset_state
+        jsr     set_cursor_pointer_with_flag
         rts
 .endproc
 
@@ -18340,7 +18356,7 @@ LA97A:  cmp     #$05
 LA981:  lda     #$00
         sta     LD8E8
         jsr     LB53A
-        addr_call LB723, desktop_aux::str_copy_title
+        addr_call draw_centered_string, desktop_aux::str_copy_title
         axy_call draw_dialog_label, desktop_aux::str_copy_copying, $01
         axy_call draw_dialog_label, desktop_aux::str_copy_from, $02
         axy_call draw_dialog_label, desktop_aux::str_copy_to, $03
@@ -18405,9 +18421,9 @@ LA9E6:  ldy     #$01
         addr_call draw_text1, str_7_spaces
         rts
 
-LAA5A:  jsr     LBEB1
+LAA5A:  jsr     reset_state
         A2D_RELAY_CALL A2D_DESTROY_WINDOW, winF
-        jsr     LB403
+        jsr     set_cursor_pointer
         rts
 
 LAA6A:  jsr     LAACE
@@ -18471,7 +18487,7 @@ LAAFD:  cmp     #$04
 LAB04:  lda     #$00
         sta     LD8E8
         jsr     LB53A
-        addr_call LB723, desktop_aux::str_download
+        addr_call draw_centered_string, desktop_aux::str_download
         axy_call draw_dialog_label, desktop_aux::str_copy_copying, $01
         axy_call draw_dialog_label, desktop_aux::str_copy_from, $02
         axy_call draw_dialog_label, desktop_aux::str_copy_to, $03
@@ -18519,9 +18535,9 @@ LAB69:  ldy     #$01
         addr_call draw_text1, str_7_spaces
         rts
 
-LABB8:  jsr     LBEB1
+LABB8:  jsr     reset_state
         A2D_RELAY_CALL A2D_DESTROY_WINDOW, winF
-        jsr     LB403
+        jsr     set_cursor_pointer
         rts
 
 LABC8:  jsr     LAACE
@@ -18558,7 +18574,7 @@ LAC0F:  cmp     #$03
         jmp     LAC9E
 
 LAC16:  jsr     LB53A
-        addr_call LB723, desktop_aux::str_size_title
+        addr_call draw_centered_string, desktop_aux::str_size_title
         axy_call draw_dialog_label, desktop_aux::str_size_number, $01
         ldy     #$01
         jsr     draw_colon
@@ -18607,9 +18623,9 @@ LAC3D:  ldy     #$01
         yax_call draw_dialog_label, str_7_spaces, $02
         rts
 
-LAC9E:  jsr     LBEB1
+LAC9E:  jsr     reset_state
         A2D_RELAY_CALL A2D_DESTROY_WINDOW, winF
-        jsr     LB403
+        jsr     set_cursor_pointer
         rts
 
 LACAE:  lda     winF
@@ -18618,7 +18634,7 @@ LACAE:  lda     winF
 LACB7:  jsr     LA567
         bmi     LACB7
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE6E
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::press_ok_to_rect
         jsr     erase_ok_button
         lda     #$00
         rts
@@ -18654,7 +18670,7 @@ LACFE:  sta     LAD1F
         lda     #$00
         sta     LD8E8
         jsr     LB53A
-        addr_call LB723, desktop_aux::str_delete_title
+        addr_call draw_centered_string, desktop_aux::str_delete_title
         lda     LAD1F
         beq     LAD20
         axy_call draw_dialog_label, desktop_aux::str_ok_empty, $04
@@ -18717,16 +18733,16 @@ LADC4:  jsr     LA567
         bmi     LADC4
         bne     LADF4
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE6E
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::press_ok_to_rect
         jsr     erase_ok_cancel_buttons
         yax_call draw_dialog_label, desktop_aux::str_file_colon, $02
         yax_call draw_dialog_label, desktop_aux::str_delete_remaining, $04
         lda     #$00
 LADF4:  rts
 
-LADF5:  jsr     LBEB1
+LADF5:  jsr     reset_state
         A2D_RELAY_CALL A2D_DESTROY_WINDOW, winF
-        jsr     LB403
+        jsr     set_cursor_pointer
         rts
 
 LAE05:  lda     winF
@@ -18764,7 +18780,7 @@ LAE49:  lda     #$80
         jsr     LB509
         lda     winF
         jsr     LB7B9
-        addr_call LB723, desktop_aux::str_new_folder_title
+        addr_call draw_centered_string, desktop_aux::str_new_folder_title
         jsr     set_fill_black
         A2D_RELAY_CALL A2D_DRAW_RECT, LD6AB
         rts
@@ -18835,9 +18851,9 @@ LAEFF:  inx
         lda     #$00
         rts
 
-LAF16:  jsr     LBEB1
+LAF16:  jsr     reset_state
         A2D_RELAY_CALL A2D_DESTROY_WINDOW, winF
-        jsr     LB403
+        jsr     set_cursor_pointer
         lda     #$01
         rts
 
@@ -18861,7 +18877,7 @@ LAF34:  lda     #$00
         jsr     LB509
         lda     winF
         jsr     LB7B9
-        addr_call LB723, desktop_aux::str_info_title
+        addr_call draw_centered_string, desktop_aux::str_info_title
         jsr     LB3BF
         ldy     #$00
         lda     ($06),y
@@ -18885,7 +18901,7 @@ LAF92:  yax_call draw_dialog_label, desktop_aux::str_info_size, $03
 LAF9B:  yax_call draw_dialog_label, desktop_aux::str_info_create, $04
         yax_call draw_dialog_label, desktop_aux::str_info_mod, $05
         yax_call draw_dialog_label, desktop_aux::str_info_type, $06
-        jmp     LBEB1
+        jmp     reset_state
 
 LAFB9:  lda     winF
         jsr     LB7B9
@@ -18927,9 +18943,9 @@ LAFF8:  ldy     LB01E
 LB006:  jsr     LA567
         bmi     LB006
         pha
-        jsr     LBEB1
+        jsr     reset_state
         A2D_RELAY_CALL A2D_DESTROY_WINDOW, winF
-        jsr     LB3CA
+        jsr     set_cursor_pointer_with_flag
         pla
         rts
 
@@ -18974,7 +18990,7 @@ LB048:  cmp     #$04
 LB04F:  lda     #$00
         sta     LD8E8
         jsr     LB53A
-        addr_call LB723, desktop_aux::str_lock_title
+        addr_call draw_centered_string, desktop_aux::str_lock_title
         yax_call draw_dialog_label, desktop_aux::str_lock_ok, $04
         rts
 
@@ -19027,7 +19043,7 @@ LB0FA:  jsr     LA567
         bmi     LB0FA
         bne     LB139
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE6E
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::press_ok_to_rect
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::ok_button_rect
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::cancel_button_rect
         yax_call draw_dialog_label, desktop_aux::str_file_colon, $02
@@ -19035,9 +19051,9 @@ LB0FA:  jsr     LA567
         lda     #$00
 LB139:  rts
 
-LB13A:  jsr     LBEB1
+LB13A:  jsr     reset_state
         A2D_RELAY_CALL A2D_DESTROY_WINDOW, winF
-        jsr     LB403
+        jsr     set_cursor_pointer
         rts
 
 ;;; ==================================================
@@ -19066,7 +19082,7 @@ LB166:  cmp     #$04
 LB16D:  lda     #$00
         sta     LD8E8
         jsr     LB53A
-        addr_call LB723, desktop_aux::str_unlock_title
+        addr_call draw_centered_string, desktop_aux::str_unlock_title
         yax_call draw_dialog_label, desktop_aux::str_unlock_ok, $04
         rts
 
@@ -19119,7 +19135,7 @@ LB218:  jsr     LA567
         bmi     LB218
         bne     LB257
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE6E
+        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::press_ok_to_rect
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::ok_button_rect
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::cancel_button_rect
         yax_call draw_dialog_label, desktop_aux::str_file_colon, $02
@@ -19127,9 +19143,9 @@ LB218:  jsr     LA567
         lda     #$00
 LB257:  rts
 
-LB258:  jsr     LBEB1
+LB258:  jsr     reset_state
         A2D_RELAY_CALL A2D_DESTROY_WINDOW, winF
-        jsr     LB403
+        jsr     set_cursor_pointer
         rts
 
 ;;; ==================================================
@@ -19156,7 +19172,7 @@ LB27D:  jsr     LBD75
         jsr     LB509
         lda     winF
         jsr     LB7B9
-        addr_call LB723, desktop_aux::str_rename_title
+        addr_call draw_centered_string, desktop_aux::str_rename_title
         jsr     set_fill_black
         A2D_RELAY_CALL A2D_DRAW_RECT, LD6AB
         yax_call draw_dialog_label, desktop_aux::str_rename_old, $02
@@ -19200,9 +19216,9 @@ LB2FD:  jsr     LA567
         lda     #$00
         rts
 
-LB313:  jsr     LBEB1
+LB313:  jsr     reset_state
         A2D_RELAY_CALL A2D_DESTROY_WINDOW, winF
-        jsr     LB403
+        jsr     set_cursor_pointer
         lda     #$01
         rts
 
@@ -19213,7 +19229,7 @@ LB325:
         jsr     LB55F
         lda     winF
         jsr     LB7B9
-        addr_call LB723, desktop_aux::str_warning
+        addr_call draw_centered_string, desktop_aux::str_warning
         A2D_RELAY_CALL A2D_SHOW_CURSOR
         jsr     LB3BF
         ldy     #$00
@@ -19252,9 +19268,9 @@ LB364:  pla
 LB385:  jsr     LA567
         bmi     LB385
         pha
-        jsr     LBEB1
+        jsr     reset_state
         A2D_RELAY_CALL A2D_DESTROY_WINDOW, winF
-        jsr     LB403
+        jsr     set_cursor_pointer
         pla
         rts
 
@@ -19270,36 +19286,46 @@ LB3A3:  .addr   desktop_aux::str_insert_system_disk,desktop_aux::str_1_space
 
 LB3BF:  lda     LA51D
         sta     $06
-        lda     LA51E
+        lda     LA51D+1
         sta     $06+1
         rts
-LB3CA:  bit     LB3E6
-        bpl     LB3D7
-        jsr     LB403
+
+.proc set_cursor_pointer_with_flag
+        bit     cursor_ip_flag
+        bpl     :+
+        jsr     set_cursor_pointer
         lda     #$00
-        sta     LB3E6
-LB3D7:  rts
+        sta     cursor_ip_flag
+:       rts
+.endproc
 
-LB3D8:  bit     LB3E6
-        bmi     LB3E5
-        jsr     LB41F
+.proc set_cursor_insertion_point_with_flag
+        bit     cursor_ip_flag
+        bmi     :+
+        jsr     set_cursor_insertion_point
         lda     #$80
-        sta     LB3E6
-LB3E5:  rts
+        sta     cursor_ip_flag
+:       rts
+.endproc
 
-LB3E6:  .byte   0
+cursor_ip_flag:                 ; high bit set if IP, clear if pointer
+        .byte   0
+
+set_cursor_watch:
         A2D_RELAY_CALL A2D_HIDE_CURSOR
-        A2D_RELAY_CALL A2D_SET_CURSOR, watch_cursor ; watch
+        A2D_RELAY_CALL A2D_SET_CURSOR, watch_cursor
         A2D_RELAY_CALL A2D_SHOW_CURSOR
         rts
 
-LB403:  A2D_RELAY_CALL A2D_HIDE_CURSOR
-        A2D_RELAY_CALL A2D_SET_CURSOR, pointer_cursor ; pointer
+set_cursor_pointer:
+        A2D_RELAY_CALL A2D_HIDE_CURSOR
+        A2D_RELAY_CALL A2D_SET_CURSOR, pointer_cursor
         A2D_RELAY_CALL A2D_SHOW_CURSOR
         rts
 
-LB41F:  A2D_RELAY_CALL A2D_HIDE_CURSOR
-        A2D_RELAY_CALL A2D_SET_CURSOR, insertion_point_cursor ; insertion point
+set_cursor_insertion_point:
+        A2D_RELAY_CALL A2D_HIDE_CURSOR
+        A2D_RELAY_CALL A2D_SET_CURSOR, insertion_point_cursor
         A2D_RELAY_CALL A2D_SHOW_CURSOR
         rts
 
@@ -19406,7 +19432,7 @@ LB526:  bit     LD8E7
         bmi     LB537
         A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::cancel_button_rect
         jsr     draw_cancel_label
-LB537:  jmp     LBEB1
+LB537:  jmp     reset_state
 
 LB53A:  A2D_RELAY_CALL A2D_CREATE_WINDOW, winF
         lda     winF
@@ -19426,14 +19452,16 @@ LB55F:  A2D_RELAY_CALL A2D_CREATE_WINDOW, winF
         A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::confirm_dialog_inner_rect
         rts
 
-draw_dialog_label:
+;;; ==================================================
+
+.proc draw_dialog_label
         stx     $06+1
         sta     $06
         tya
-        bmi     LB59A
-        jmp     LB5CC
+        bmi     :+
+        jmp     skip
 
-LB59A:  tya
+:       tya
         pha
         lda     $06
         clc
@@ -19456,7 +19484,8 @@ LB59A:  tya
         sta     dialog_label_pos+1
         pla
         tay
-LB5CC:  dey
+
+skip:   dey
         tya
         asl     a
         asl     a
@@ -19475,6 +19504,9 @@ LB5CC:  dey
         lda     #$28
         sta     dialog_label_pos
         rts
+.endproc
+
+;;; ==================================================
 
 draw_ok_label:
         A2D_RELAY_CALL A2D_SET_POS, desktop_aux::ok_label_pos
@@ -19552,21 +19584,24 @@ erase_ok_button:
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::ok_button_rect
         rts
 
-draw_text1:
+;;; ==================================================
+
+.proc draw_text1
         sta     $06
         stx     $06+1
         jsr     LBD7B
-        beq     LB722
+        beq     done
         sta     $08
         inc     $06
-        bne     LB719
+        bne     :+
         inc     $06+1
-LB719:  A2D_RELAY_CALL A2D_DRAW_TEXT, $6
-LB722:  rts
+:       A2D_RELAY_CALL A2D_DRAW_TEXT, $6
+done:   rts
+.endproc
 
 ;;; ==================================================
 
-.proc LB723                     ; draw centered string???
+.proc draw_centered_string
         str       := $6
         str_data  := $6
         str_len   := $8
@@ -20380,7 +20415,8 @@ set_fill_white:
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
         rts
 
-LBEB1:  A2D_RELAY_CALL A2D_QUERY_SCREEN, state2
+reset_state:
+        A2D_RELAY_CALL A2D_QUERY_SCREEN, state2
         A2D_RELAY_CALL A2D_SET_STATE, state2
         rts
 
