@@ -2,6 +2,9 @@
 ;;; DeskTop Internals
 ;;; ==================================================
 
+DA_LOAD_ADDRESS := $800
+DA_MAX_SIZE     := $1C00 - DA_LOAD_ADDRESS
+
 ;;; ==================================================
 ;;; Direct Calls (from main memory)
 

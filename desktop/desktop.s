@@ -4888,7 +4888,8 @@ id_byte_2:  .byte   $EA             ; ROM FBC0 ($EA = IIe, $E0 = IIe enh/IIgs, $
 machine_type:
         .byte   $00             ; Set to: $96 = IIe, $FA = IIc, $FD = IIgs
 
-LD2AC:  .byte   $00
+warning_dialog_num:
+        .byte   $00
 
 ;;; Cursors (bitmap - 2x12 bytes, mask - 2x12 bytes, hotspot - 2 bytes)
 
@@ -6142,7 +6143,7 @@ L4069:  lda     #$00
         beq     L4088
         tay
         jsr     DESKTOP_SHOW_ALERT0
-L4088:  jsr     L4510
+L4088:  jsr     reset_state2
         inc     L40DF
         inc     L40DF
         lda     L40DF
@@ -6170,7 +6171,7 @@ L40BD:  cmp     #$03
 
 L40C7:  cmp     #$06
         bne     L40DC
-        jsr     L4510
+        jsr     reset_state2
         lda     desktop_winid
         sta     L40F0
         lda     #$80
@@ -6190,7 +6191,7 @@ L40E0:  tsx
 L40F0:  .byte   $00
 L40F1:  .byte   $00
 redraw_windows:
-        jsr     L4510
+        jsr     reset_state2
         lda     desktop_winid
         sta     L40F0
         lda     #$00
@@ -6215,7 +6216,7 @@ L412B:  lda     #$00
         lda     L40F0
         sta     desktop_winid
         beq     L4143
-        bit     L4CA1
+        bit     running_da_flag
         bmi     L4143
         jsr     L4244
 L4143:  bit     L40F1
@@ -6317,7 +6318,7 @@ L4227:  lda     #$00
         jsr     L6E6E
         lda     desktop_winid
         jsr     L8874
-        jmp     L4510
+        jmp     reset_state2
 
 L4241:  .byte   0
 L4242:  .byte   0
@@ -6356,7 +6357,7 @@ L4296:  lda     LE22F
         inc     L42C3
         jmp     L4270
 
-L42A2:  jmp     L4510
+L42A2:  jmp     reset_state2
 
 L42A5:  lda     L42C3
         cmp     is_file_selected
@@ -6619,7 +6620,7 @@ L445D:  jsr     clear_selection
         sta     L445C
         jsr     L8997
         DESKTOP_RELAY_CALL $02, LE22F
-        jsr     L4510
+        jsr     reset_state2
         lda     L445C
         sta     selected_window_index
         lda     #$01
@@ -6658,7 +6659,7 @@ L4505:  A2D_RELAY_CALL A2D_QUERY_STATE, query_state_params2
 
         rts
 
-L4510:  A2D_RELAY_CALL A2D_QUERY_SCREEN, state2
+reset_state2:  A2D_RELAY_CALL A2D_QUERY_SCREEN, state2
         A2D_RELAY_CALL A2D_SET_STATE, state2
         rts
 
@@ -7104,9 +7105,11 @@ L48C2:  lda     $E196,x
         bpl     L48C2
         rts
 
-L48CC:  sta     LD2AC
-        yax_call launch_dialog, $0C, LD2AC
+.proc show_warning_dialog_num
+        sta     warning_dialog_num
+        yax_call launch_dialog, index_warning_dialog, warning_dialog_num
         rts
+.endproc
 
         lda     #$88
         sta     L48E4
@@ -7480,80 +7483,94 @@ L4BB1:  .byte   0
 ;;; ==================================================
 
 .proc cmd_deskacc_impl
+        ptr := $6
 
 L4BBE:  .byte   $80
 
-start:  jsr     L4510
+start:  jsr     reset_state2
         jsr     set_watch_cursor
-        lda     $E25B
+
+        ;; Find DA name
+        lda     $E25B           ; menu item index (1-based)
         sec
-        sbc     #3
+        sbc     #3              ; About and separator before first item
         jsr     a_times_4
         clc
         adc     #<buf
-        sta     $06
+        sta     ptr
         txa
         adc     #>buf
-        sta     $06+1
-        ldy     #$00
-        lda     ($06),y
+        sta     ptr+1
+
+        ;; Compute total length
+        ldy     #0
+        lda     (ptr),y
         tay
         clc
-        adc     L4C87
+        adc     prefix_length
         pha
         tax
-L4BE3:  lda     ($06),y
+
+        ;; Append name to path
+:       lda     ($06),y
         sta     str_desk_acc,x
         dex
         dey
-        bne     L4BE3
+        bne     :-
         pla
-        sta     str_desk_acc
+        sta     str_desk_acc    ; update length
+
+        ;; Convert spaces to periods
         ldx     str_desk_acc
-L4BF3:  lda     str_desk_acc,x
-        cmp     #$20
-        bne     L4BFF
-        lda     #$2E
+:       lda     str_desk_acc,x
+        cmp     #' '
+        bne     nope
+        lda     #'.'
         sta     str_desk_acc,x
-L4BFF:  dex
-        bne     L4BF3
-        jsr     L4C4E
-        bmi     L4C4A
-L4C07:  lda     open_params_ref_num
+nope:   dex
+        bne     :-
+
+        ;; Load the DA
+        jsr     open
+        bmi     done
+        lda     open_params_ref_num
         sta     read_params_ref_num
         sta     close_params_ref_num
-        jsr     L4C64
-        jsr     L4C6D
+        jsr     read
+        jsr     close
         lda     #$80
-        sta     L4CA1
+        sta     running_da_flag
+
+        ;; Invoke it
         jsr     set_pointer_cursor
-        jsr     L4510
+        jsr     reset_state2
         A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, $D2A7
         A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, L4BBE
-        jsr     L0800
+        jsr     DA_LOAD_ADDRESS
         A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, $D2A7
-        lda     #$00
-        sta     L4CA1
-        jsr     L4510
+        lda     #0
+        sta     running_da_flag
+
+        ;; Restore state
+        jsr     reset_state2
         jsr     redraw_windows_and_desktop
-L4C4A:  jsr     set_pointer_cursor
+done:   jsr     set_pointer_cursor
         rts
 
-L4C4E:  yxa_call MLI_RELAY, OPEN, open_params
-        bne     L4C5A
+open:   yxa_call MLI_RELAY, OPEN, open_params
+        bne     :+
+        rts
+:       lda     #warning_msg_insert_system_disk
+        jsr     show_warning_dialog_num
+        beq     open            ; ok, so try again
+        lda     #$FF            ; cancel, so fail
         rts
 
-L4C5A:  lda     #$00
-        jsr     L48CC
-        beq     L4C4E
-        lda     #$FF
-        rts
+read:   yxa_jump MLI_RELAY, READ, read_params
 
-L4C64:  yxa_jump MLI_RELAY, READ, read_params
+close:  yxa_jump MLI_RELAY, CLOSE, close_params
 
-L4C6D:  yxa_jump MLI_RELAY, CLOSE, close_params
-
-L4C76:  .byte   $00
+unused: .byte   0               ; ???
 
 .proc open_params
 params: .byte   3
@@ -7566,8 +7583,8 @@ ref_num:.byte   0
 .proc read_params
 params: .byte   4
 ref_num:.byte   0
-buffer: .addr   $800
-request:.word   $1400
+buffer: .addr   DA_LOAD_ADDRESS
+request:.word   DA_MAX_SIZE
 trans:  .word   0
 .endproc
         read_params_ref_num := read_params::ref_num
@@ -7578,17 +7595,22 @@ ref_num:.byte   0
 .endproc
         close_params_ref_num := close_params::ref_num
 
-L4C87:  .byte   $09
+        .define prefix "Desk.acc/"
+
+prefix_length:
+        .byte   .strlen(prefix)
 
 str_desk_acc:
-        PASCAL_STRING "Desk.acc/", 24 ; reserve extra space for name
+        PASCAL_STRING prefix, .strlen(prefix) + 15
 
 .endproc
         cmd_deskacc := cmd_deskacc_impl::start
 
 ;;; ==================================================
 
-L4CA1:  .byte   $00
+        ;; high bit set while a DA is running
+running_da_flag:
+        .byte   0
 
 ;;; ==================================================
 
@@ -7888,7 +7910,7 @@ L4EC3:  sta     buf3len
         sta     selected_window_index
         jsr     L8997
         DESKTOP_RELAY_CALL $02, LE22F
-        jsr     L4510
+        jsr     reset_state2
         lda     #$01
         sta     is_file_selected
         lda     LE22F
@@ -7909,7 +7931,7 @@ L4F3C:  lda     #$00
         sta     $E269
         A2D_RELAY_CALL $36, LE267 ; ???
         jsr     L66A2
-        jmp     L4510
+        jmp     reset_state2
 .endproc
 
 ;;; ==================================================
@@ -8187,7 +8209,7 @@ L518D:  lda     L51EF
         inc     L51EF
         jmp     L518D
 
-L51A7:  jsr     L4510
+L51A7:  jsr     reset_state2
         jsr     L6E6E
         jsr     DESKTOP_COPY_FROM_BUF
         jsr     L6DB1
@@ -8257,7 +8279,7 @@ L5246:  lda     L5263,x
         bpl     L5246
         lda     #$80
         sta     L4152
-        jsr     L4510
+        jsr     reset_state2
         jsr     L6C19
         jsr     L6DB1
         lda     #$00
@@ -8766,7 +8788,7 @@ L5614:  DESKTOP_RELAY_CALL $02, LE22F
         beq     L562B
         lda     LE22F
         jsr     L8893
-        jsr     L4510
+        jsr     reset_state2
 L562B:  rts
 
 L562C:  lda     LE22F
@@ -8786,7 +8808,7 @@ L564A:  DESKTOP_RELAY_CALL $0B, LE22F
         beq     L5661
         lda     LE22F
         jsr     L8893
-        jsr     L4510
+        jsr     reset_state2
 L5661:  rts
 
 ;;; ==================================================
@@ -8845,7 +8867,7 @@ L56E3:  dec     L56F8
         bpl     L56B4
         lda     selected_window_index
         beq     L56F0
-        jsr     L4510
+        jsr     reset_state2
 L56F0:  lda     #$00
         sta     bufnum
         jmp     DESKTOP_COPY_TO_BUF
@@ -9274,7 +9296,7 @@ L5A4C:  jsr     redraw_windows_and_desktop
         dec     LDD9E
         lda     LE22F
         jsr     DESKTOP_FREE_SPACE
-        jsr     L4510
+        jsr     reset_state2
         DESKTOP_RELAY_CALL $04, LE22F
 L5A7F:  lda     buf3len
         sta     L5AC6
@@ -9512,7 +9534,7 @@ L5C71:  lda     desktop_winid
         sta     query_state_params2::id
         jsr     L44F2
         A2D_RELAY_CALL A2D_FILL_RECT, query_state_buffer::hoff
-        jsr     L4510
+        jsr     reset_state2
         jmp     L6C19
 
 L5C89:  sta     L5CB6
@@ -9589,7 +9611,7 @@ L5D0B:  ldx     is_file_selected
         jsr     L44F2
         lda     L5CD9
         jsr     L8893
-        jsr     L4510
+        jsr     reset_state2
         bit     $D2AA
         bmi     L5D55
         jmp     L5DFC
@@ -9654,7 +9676,7 @@ L5DC4:  txa
         jsr     L44F2
         jsr     L6DB1
         jsr     L6E6E
-        jsr     L4510
+        jsr     reset_state2
 L5DEC:  jsr     DESKTOP_COPY_FROM_BUF
         lda     #$00
         sta     bufnum
@@ -9835,7 +9857,7 @@ L5F6B:  jsr     L48F0
         ldx     #$00
 L5F80:  cpx     buf3len
         bne     L5F88
-        jmp     L4510
+        jmp     reset_state2
 
 L5F88:  txa
         pha
@@ -10069,7 +10091,7 @@ L619B:  lda     desktop_winid
         lda     #$00
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
-        jmp     L4510
+        jmp     reset_state2
 
 L61CA:  lda     desktop_winid
         A2D_RELAY_CALL A2D_CLOSE_CLICK, $D2A8
@@ -10129,7 +10151,7 @@ L6227:  sta     buf3len
         sta     selected_window_index
         jsr     L8997
         DESKTOP_RELAY_CALL $02, LE22F
-        jsr     L4510
+        jsr     reset_state2
         lda     #$01
         sta     is_file_selected
         lda     LE22F
@@ -10454,7 +10476,7 @@ L6556:  bit     L5B1B
         bmi     L655E
         jsr     L6E6E
 L655E:  A2D_RELAY_CALL A2D_FILL_RECT, query_state_buffer::hoff
-        jsr     L4510
+        jsr     reset_state2
         jmp     L6C19
 
 L656D:  lda     desktop_winid
@@ -10786,7 +10808,7 @@ L6893:  txa
         bpl     L6893
         rts
 
-L68AA:  jsr     L4510
+L68AA:  jsr     reset_state2
         bit     BUTN0
         bpl     L68B3
         rts
@@ -11019,7 +11041,7 @@ L6AD8:  DESKTOP_RELAY_CALL $03, LE6BE
         beq     L6AEF
         lda     LE6BE
         jsr     L8893
-        jsr     L4510
+        jsr     reset_state2
 L6AEF:  lda     LE6BE
         ldx     $E1F1
         dex
@@ -11040,8 +11062,8 @@ L6B01:  A2D_RELAY_CALL A2D_RAISE_WINDOW, bufnum
 L6B1E:  lda     $EC2E
         cmp     #$08
         bcc     L6B2F
-        lda     #$05
-        jsr     L48CC
+        lda     #warning_msg_too_many_windows
+        jsr     show_warning_dialog_num
         ldx     $E256
         txs
         rts
@@ -11099,7 +11121,7 @@ L6BA1:  DESKTOP_RELAY_CALL $03, LE6BE
         beq     L6BB8
         lda     LE6BE
         jsr     L8893
-        jsr     L4510
+        jsr     reset_state2
 L6BB8:  jsr     L744B
         lda     bufnum
         jsr     window_lookup
@@ -11131,7 +11153,7 @@ L6BF4:  lda     bufnum
         lda     #$00
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
-        jmp     L4510
+        jmp     reset_state2
 
 L6C0E:  .byte   0
 L6C0F:  A2D_RELAY_CALL $36, LE267 ; ???
@@ -11209,7 +11231,7 @@ L6CB0:  lda     L6CCC
         inc     L6CCC
         jmp     L6CB0
 
-L6CC5:  jsr     L4510
+L6CC5:  jsr     reset_state2
         jsr     pop_zp_addrs
         rts
 
@@ -11233,7 +11255,7 @@ L6CE6:  lda     query_state_buffer::hoff,x
 L6CF3:  cpx     buf3len
         bne     L6D09
         pla
-        jsr     L4510
+        jsr     reset_state2
         lda     bufnum
         sta     query_state_params2::id
         jsr     L44F2
@@ -11302,7 +11324,7 @@ L6DA1:  sta     selected_file_index,x
         bpl     L6DA1
         sta     is_file_selected
         sta     selected_window_index
-        jmp     L4510
+        jmp     reset_state2
 
 L6DB0:  .byte   0
 L6DB1:  ldx     desktop_winid
@@ -11716,8 +11738,8 @@ L7147:  lda     $EC2E
         beq     L715F
         lda     #$03
         bne     L7161
-L715F:  lda     #$04
-L7161:  jsr     L48CC
+L715F:  lda     #warning_msg_window_must_be_closed2
+L7161:  jsr     show_warning_dialog_num
         ldx     $E256
         txs
         rts
@@ -15109,7 +15131,7 @@ L8D57:  .byte   0
 
 L8D58:  lda     #$00
         sta     L8DB2
-        jsr     L4510
+        jsr     reset_state2
         A2D_RELAY_CALL A2D_SET_PATTERN, checkerboard_pattern3
         jsr     L48FA
 L8D6C:  lda     L8DB2
@@ -15157,7 +15179,7 @@ L8DB2:  .byte   0
 
 L8DB3:  lda     #$0B
         sta     L8E0F
-        jsr     L4510
+        jsr     reset_state2
         A2D_RELAY_CALL A2D_SET_PATTERN, checkerboard_pattern3
         jsr     L48FA
 L8DC7:  lda     L8E0F
@@ -15310,9 +15332,9 @@ restore:
 open:   MLI_RELAY_CALL OPEN, open_params
         beq     :+
 
-        lda     #$00            ; on error
-        ora     restore_flag    ; error during restore?
-        jsr     L48CC           ; ??? reset path ???
+        lda     #warning_msg_insert_system_disk
+        ora     restore_flag    ; high bit set = no cancel
+        jsr     show_warning_dialog_num
         beq     open
         lda     #$FF            ; failed
         rts
@@ -17878,7 +17900,8 @@ LA4C6:  yax_call JT_MLI_RELAY, ON_LINE, on_line_params2
         index_lock_dialog               := 7
         index_unlock_dialog             := 8
         index_rename_dialog             := 9
-        index_get_size_dialog           := 11
+        index_get_size_dialog           := $B
+        index_warning_dialog            := $C
 
 launch_dialog:
         jmp     LA520
@@ -17895,7 +17918,7 @@ LA503:  .addr   show_about_dialog
         .addr   show_rename_dialog
         .addr   LAAE1
         .addr   show_get_size_dialog
-        .addr   LB325
+        .addr   show_warning_dialog
 
 LA51D:  .word   0
         .byte   0
@@ -17930,7 +17953,11 @@ LA520:  sta     LA51D
         LA565 := *+1
         jmp     dummy0000       ; self-modified
 
-LA567:  lda     LD8E8
+
+;;; ==================================================
+;;; Message handler for OK/Cancel dialog
+
+prompt_input_loop:  lda     LD8E8
         beq     LA579
         dec     LD8E9
         bne     LA579
@@ -17948,16 +17975,16 @@ LA58C:  cmp     #$03
         jmp     LA6FD
 
 LA593:  lda     LD8E8
-        beq     LA567
+        beq     prompt_input_loop
         A2D_RELAY_CALL A2D_QUERY_TARGET, input_params_coords
         lda     query_target_params_element
         bne     LA5A9
-        jmp     LA567
+        jmp     prompt_input_loop
 
 LA5A9:  lda     $D20E
         cmp     winF
         beq     LA5B4
-        jmp     LA567
+        jmp     prompt_input_loop
 
 LA5B4:  lda     winF
         jsr     LB7B9
@@ -17973,7 +18000,7 @@ LA5D2:  A2D_RELAY_CALL A2D_TEST_BOX, LD6AB
 
 LA5E5:  jsr     set_cursor_pointer_with_flag
 LA5E8:  jsr     reset_state
-        jmp     LA567
+        jmp     prompt_input_loop
 
 LA5EE:  A2D_RELAY_CALL A2D_QUERY_TARGET, input_params_coords
         lda     query_target_params_element
@@ -18424,7 +18451,7 @@ LAA6A:  jsr     LAACE
         jsr     LB7B9
         axy_call draw_dialog_label, $06, desktop_aux::str_exists_prompt
         jsr     draw_yes_no_all_cancel_buttons
-LAA7F:  jsr     LA567
+LAA7F:  jsr     prompt_input_loop
         bmi     LAA7F
         pha
         jsr     erase_yes_no_all_cancel_buttons
@@ -18438,7 +18465,7 @@ LAA9C:  jsr     LAACE
         jsr     LB7B9
         axy_call draw_dialog_label, $06, desktop_aux::str_large_prompt
         jsr     draw_ok_cancel_buttons
-LAAB1:  jsr     LA567
+LAAB1:  jsr     prompt_input_loop
         bmi     LAAB1
         pha
         jsr     erase_ok_cancel_buttons
@@ -18538,7 +18565,7 @@ LABC8:  jsr     LAACE
         jsr     LB7B9
         axy_call draw_dialog_label, $06, desktop_aux::str_ramcard_full
         jsr     draw_ok_button
-LABDD:  jsr     LA567
+LABDD:  jsr     prompt_input_loop
         bmi     LABDD
         pha
         jsr     erase_ok_button
@@ -18624,7 +18651,7 @@ LAC9E:  jsr     reset_state
 LACAE:  lda     winF
         jsr     LB7B9
         jsr     draw_ok_button
-LACB7:  jsr     LA567
+LACB7:  jsr     prompt_input_loop
         bmi     LACB7
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::press_ok_to_rect
@@ -18722,7 +18749,7 @@ LAD6C:  ldy     #$01
 LADBB:  lda     winF
         jsr     LB7B9
         jsr     draw_ok_cancel_buttons
-LADC4:  jsr     LA567
+LADC4:  jsr     prompt_input_loop
         bmi     LADC4
         bne     LADF4
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
@@ -18742,7 +18769,7 @@ LAE05:  lda     winF
         jsr     LB7B9
         axy_call draw_dialog_label, $06, desktop_aux::str_delete_locked_file
         jsr     draw_yes_no_all_cancel_buttons
-LAE17:  jsr     LA567
+LAE17:  jsr     prompt_input_loop
         bmi     LAE17
         pha
         jsr     erase_yes_no_all_cancel_buttons
@@ -18807,7 +18834,7 @@ LAE90:  lda     ($08),y
         sta     dialog_label_pos
         yax_call draw_dialog_label, $04, desktop_aux::str_enter_folder_name
         jsr     LB961
-LAEC6:  jsr     LA567
+LAEC6:  jsr     prompt_input_loop
         bmi     LAEC6
         bne     LAF16
         lda     $D443
@@ -18933,7 +18960,7 @@ LAFF8:  ldy     LB01E
         beq     LB006
         rts
 
-LB006:  jsr     LA567
+LB006:  jsr     prompt_input_loop
         bmi     LB006
         pha
         jsr     reset_state
@@ -19032,7 +19059,7 @@ LB0A2:  ldy     #$01
 LB0F1:  lda     winF
         jsr     LB7B9
         jsr     draw_ok_cancel_buttons
-LB0FA:  jsr     LA567
+LB0FA:  jsr     prompt_input_loop
         bmi     LB0FA
         bne     LB139
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
@@ -19124,7 +19151,7 @@ LB1C0:  ldy     #$01
 LB20F:  lda     winF
         jsr     LB7B9
         jsr     draw_ok_cancel_buttons
-LB218:  jsr     LA567
+LB218:  jsr     prompt_input_loop
         bmi     LB218
         bne     LB257
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
@@ -19198,7 +19225,7 @@ LB2ED:  lda     #$00
         sta     LD8E8
         lda     winF
         jsr     LB7B9
-LB2FD:  jsr     LA567
+LB2FD:  jsr     prompt_input_loop
         bmi     LB2FD
         bne     LB313
         lda     $D443
@@ -19216,50 +19243,68 @@ LB313:  jsr     reset_state
         rts
 
 ;;; ==================================================
+;;; "Warning!" dialog
+;;; $6/$7 ptr to message num
 
-LB325:
+.proc show_warning_dialog
+        ptr := $6
+
+        ;; Create window
         A2D_RELAY_CALL A2D_HIDE_CURSOR
-        jsr     LB55F
+        jsr     create_window_with_alert_bitmap
         lda     winF
         jsr     LB7B9
         addr_call draw_centered_string, desktop_aux::str_warning
         A2D_RELAY_CALL A2D_SHOW_CURSOR
         jsr     LB3BF
+
+        ;; Dig up message
         ldy     #$00
-        lda     ($06),y
+        lda     (ptr),y
         pha
-        bmi     LB357
+        bmi     only_ok         ; high bit set means no cancel
         tax
-        lda     LB39C,x
-        bne     LB361
-LB357:  pla
+        lda     warning_cancel_table,x
+        bne     ok_and_cancel
+
+only_ok:                        ; no cancel button
+        pla
         and     #$7F
         pha
         jsr     draw_ok_button
-        jmp     LB364
+        jmp     draw_string
 
-LB361:  jsr     draw_ok_cancel_buttons
-LB364:  pla
+ok_and_cancel:                  ; has cancel button
+        jsr     draw_ok_cancel_buttons
+
+draw_string:
+        ;; First string
+        pla
         pha
-        asl     a
-        asl     a
+        asl     a               ; * 2
+        asl     a               ; * 4, since there are two strings each
         tay
-        lda     LB3A3+1,y
+        lda     warning_message_table+1,y
         tax
-        lda     LB3A3,y
+        lda     warning_message_table,y
         ldy     #$03
         jsr     draw_dialog_label
+
+        ;; Second string
         pla
         asl     a
         asl     a
         tay
-        lda     LB3A3+2+1,y
+        lda     warning_message_table+2+1,y
         tax
-        lda     LB3A3+2,y
+        lda     warning_message_table+2,y
         ldy     #$04
         jsr     draw_dialog_label
-LB385:  jsr     LA567
-        bmi     LB385
+
+        ;; Input loop
+:       jsr     prompt_input_loop
+        bmi     :-
+
         pha
         jsr     reset_state
         A2D_RELAY_CALL A2D_DESTROY_WINDOW, winF
@@ -19267,15 +19312,28 @@ LB385:  jsr     LA567
         pla
         rts
 
-LB39C:  .byte   $80,$00,$00,$80,$00,$00,$80
+        ;; high bit set if "cancel" should be an option
+warning_cancel_table:
+        .byte   $80,$00,$00,$80,$00,$00,$80
 
-LB3A3:  .addr   desktop_aux::str_insert_system_disk,desktop_aux::str_1_space
+warning_message_table:
+        .addr   desktop_aux::str_insert_system_disk,desktop_aux::str_1_space
         .addr   desktop_aux::str_selector_list_full,desktop_aux::str_before_new_entries
         .addr   desktop_aux::str_selector_list_full,desktop_aux::str_before_new_entries
         .addr   desktop_aux::str_window_must_be_closed,desktop_aux::str_1_space
         .addr   desktop_aux::str_window_must_be_closed,desktop_aux::str_1_space
         .addr   desktop_aux::str_too_many_windows,desktop_aux::str_1_space
         .addr   desktop_aux::str_save_selector_list,desktop_aux::str_on_system_disk
+.endproc
+        warning_msg_insert_system_disk          := 0
+        warning_msg_selector_list_full          := 1
+        warning_msg_selector_list_full2         := 2
+        warning_msg_window_must_be_closed       := 3
+        warning_msg_window_must_be_closed2      := 4
+        warning_msg_too_many_windows            := 5
+        warning_msg_save_selector_list          := 6
+
+;;; ==================================================
 
 LB3BF:  lda     LA51D
         sta     $06
@@ -19435,7 +19493,8 @@ LB53A:  A2D_RELAY_CALL A2D_CREATE_WINDOW, winF
         A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::confirm_dialog_inner_rect
         rts
 
-LB55F:  A2D_RELAY_CALL A2D_CREATE_WINDOW, winF
+create_window_with_alert_bitmap:
+        A2D_RELAY_CALL A2D_CREATE_WINDOW, winF
         lda     winF
         jsr     LB7B9
         jsr     set_fill_white
