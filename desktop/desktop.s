@@ -174,75 +174,57 @@ L859C:  sta     $D409,x
         A2D_RELAY_CALL A2D_SET_STATE, $D401
         rts
 
-        lda     #$39
-        ldx     #$1A
-        jsr     $6B17
+        addr_call $6B17, $1A39
         ldx     $D5CA
         txs
         rts
 
-        lda     #$56
-        ldx     #$1A
-        jsr     $6B17
+        addr_call $6B17, $1A56
         ldx     $D5CA
         txs
         rts
 
-        lda     #$71
-        ldx     #$1A
-        jsr     $6B17
+        addr_call $6B17, $1A71
         ldx     $D5CA
         txs
         rts
 
         cmp     #$27
         bne     L85F2
-        lda     #$22
-        ldx     #$1B
-        jsr     $6B17
+        addr_call $6B17, $1B22
         ldx     $D5CA
         txs
         jmp     L8625
 
 L85F2:  cmp     #$45
         bne     L8604
-        lda     #$3B
-        ldx     #$1B
-        jsr     $6B17
+        addr_call $6B17, $1B3B
         ldx     $D5CA
         txs
         jmp     L8625
 
 L8604:  cmp     #$52
         bne     L8616
-        lda     #$5B
-        ldx     #$1B
-        jsr     $6B17
+        addr_call $6B17, $1B5B
         ldx     $D5CA
         txs
         jmp     L8625
 
 L8616:  cmp     #$57
         bne     L8625
-        lda     #$7C
-        ldx     #$1B
-        jsr     $6B17
+        addr_call $6B17, $1B7C
         ldx     $D5CA
         txs
 L8625:  A2D_RELAY_CALL $33, win18_state
         rts
 
-        lda     #$9C
-        ldx     #$1B
-        jsr     $6B17
+        addr_call $6B17, $1B9C
         ldx     $D5CA
         txs
         A2D_RELAY_CALL $33, win18_state
         rts
 
-        lda     #$BF
-        ldx     #$1B
-        jsr     $6B17
+        addr_call $6B17, $1BBF
         ldx     $D5CA
         txs
         A2D_RELAY_CALL $33, win18_state
@@ -7369,9 +7351,7 @@ L4AB0:  lda     $D355,y
         sta     L0800,y
         dey
         bpl     L4AB0
-        lda     #$40
-        ldx     #$08
-        jsr     L4B15
+        addr_call L4B15, $0840
         ldy     L0800
 L4AC3:  lda     L0800,y
         cmp     #$2F
@@ -7448,9 +7428,7 @@ L4B4C:  lda     $D3AD,x
         rts
 
 L4B5F:  sta     L4BB0
-        lda     #$76
-        ldx     #$4F
-        jsr     L4B15
+        addr_call L4B15, $4F76
         lda     L4BB0
         jsr     a_times_6
         clc
@@ -7509,13 +7487,13 @@ start:  jsr     L4510
         jsr     set_watch_cursor
         lda     $E25B
         sec
-        sbc     #$03
+        sbc     #3
         jsr     a_times_4
         clc
-        adc     #$F2
+        adc     #<buf
         sta     $06
         txa
-        adc     #$E5
+        adc     #>buf
         sta     $06+1
         ldy     #$00
         lda     ($06),y
@@ -7525,25 +7503,25 @@ start:  jsr     L4510
         pha
         tax
 L4BE3:  lda     ($06),y
-        sta     L4C88,x
+        sta     str_desk_acc,x
         dex
         dey
         bne     L4BE3
         pla
-        sta     L4C88
-        ldx     L4C88
-L4BF3:  lda     L4C88,x
+        sta     str_desk_acc
+        ldx     str_desk_acc
+L4BF3:  lda     str_desk_acc,x
         cmp     #$20
         bne     L4BFF
         lda     #$2E
-        sta     L4C88,x
+        sta     str_desk_acc,x
 L4BFF:  dex
         bne     L4BF3
         jsr     L4C4E
         bmi     L4C4A
-L4C07:  lda     L4C7C
-        sta     L4C7E
-        sta     L4C86
+L4C07:  lda     open_params_ref_num
+        sta     read_params_ref_num
+        sta     close_params_ref_num
         jsr     L4C64
         jsr     L4C6D
         lda     #$80
@@ -7561,7 +7539,7 @@ L4C07:  lda     L4C7C
 L4C4A:  jsr     set_pointer_cursor
         rts
 
-L4C4E:  yxa_call MLI_RELAY, OPEN, L4C77
+L4C4E:  yxa_call MLI_RELAY, OPEN, open_params
         bne     L4C5A
         rts
 
@@ -7571,20 +7549,40 @@ L4C5A:  lda     #$00
         lda     #$FF
         rts
 
-L4C64:  yxa_jump MLI_RELAY, READ, L4C7D
+L4C64:  yxa_jump MLI_RELAY, READ, read_params
 
-L4C6D:  yxa_jump MLI_RELAY, CLOSE, L4C85
+L4C6D:  yxa_jump MLI_RELAY, CLOSE, close_params
 
 L4C76:  .byte   $00
-L4C77:  .byte   $03,$88,$4C,$00,$1C
-L4C7C:  .byte   $00
-L4C7D:  .byte   $04
-L4C7E:  .byte   $00,$00,$08,$00,$14,$00,$00
-L4C85:  .byte   $01
-L4C86:  .byte   $00
+
+.proc open_params
+params: .byte   3
+pathname:.addr  str_desk_acc
+buffer: .addr   $1C00
+ref_num:.byte   0
+.endproc
+        open_params_ref_num := open_params::ref_num
+
+.proc read_params
+params: .byte   4
+ref_num:.byte   0
+buffer: .addr   $800
+request:.word   $1400
+trans:  .word   0
+.endproc
+        read_params_ref_num := read_params::ref_num
+
+.proc close_params
+params: .byte   1
+ref_num:.byte   0
+.endproc
+        close_params_ref_num := close_params::ref_num
+
 L4C87:  .byte   $09
-L4C88:  PASCAL_STRING "Desk.acc/"
-        .res    15, 0
+
+str_desk_acc:
+        PASCAL_STRING "Desk.acc/", 24 ; reserve extra space for name
+
 .endproc
         cmd_deskacc := cmd_deskacc_impl::start
 

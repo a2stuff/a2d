@@ -99,10 +99,13 @@ ST_VOLUME_DIRECTORY     := $0F
         .addr addr
 .endmacro
 
-.macro PASCAL_STRING str        ; Length-prefixed string
+.macro PASCAL_STRING str,res    ; Length-prefixed string
         .local  data            ; Can include control chars by using:
         .local  end             ; PASCAL_STRING {"abc",$0D,"def"}
         .byte   end - data
 data:   .byte   str
 end:
+.if     .paramcount > 1
+        .res    res - (end - data), 0
+.endif
 .endmacro
