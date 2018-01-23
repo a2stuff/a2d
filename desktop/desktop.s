@@ -29,17 +29,29 @@ INVOKER_FILENAME := $280                 ; File to invoke (PREFIX must be set)
         jmp     target
 .endmacro
 
-.macro  axy_call target, addr, yparam
+.macro  axy_call target, yparam, addr
         lda     #<addr
         ldx     #>addr
         ldy     #yparam
         jsr     target
 .endmacro
-.macro  yax_call target, addr, yparam
+.macro  yax_call target, yparam, addr
         ldy     #yparam
         lda     #<addr
         ldx     #>addr
         jsr     target
+.endmacro
+.macro  yxa_call target, yparam, addr
+        ldy     #yparam
+        ldx     #>addr
+        lda     #<addr
+        jsr     target
+.endmacro
+.macro  yxa_jump target, yparam, addr
+        ldy     #yparam
+        ldx     #>addr
+        lda     #<addr
+        jmp     target
 .endmacro
 
 .macro DEFINE_RECT left, top, right, bottom
@@ -55,15 +67,11 @@ INVOKER_FILENAME := $280                 ; File to invoke (PREFIX must be set)
 .endmacro
 
 .macro A2D_RELAY_CALL call, addr
-        ldy     #(call)
 .if .paramcount > 1
-        lda     #<(addr)
-        ldx     #>(addr)
+        yax_call A2D_RELAY, (call), (addr)
 .else
-        lda     #0
-        ldx     #0
+        yax_call A2D_RELAY, (call), 0
 .endif
-        jsr     A2D_RELAY
 .endmacro
 
 .macro  PAD_TO addr
@@ -436,15 +444,11 @@ L8C83:  .byte   $00,$00,$00,$00,$77,$30,$01
         jmp     DESKTOP_DIRECT
 
 .macro A2D_RELAY2_CALL call, addr
-        ldy     #call
-        .if .paramcount = 1
-        lda     #0
-        ldx     #0
-        .else
-        lda     #<(addr)
-        ldx     #>(addr)
-        .endif
-        jsr     A2D_RELAY2
+.if .paramcount > 1
+        yax_call A2D_RELAY2, (call), (addr)
+.else
+        yax_call A2D_RELAY2, (call), 0
+.endif
 .endmacro
 
 L8E03:  .byte   $08,$00
@@ -6958,7 +6962,7 @@ L472B:  lda     get_file_info_params::type
 
 L4738:  cmp     #FT_BINARY
         bne     L4748
-        lda     BUTN0           ; special hack to launch anything ???
+        lda     BUTN0           ; only launch if a button is down
         ora     BUTN1
         bmi     L4755
         jsr     set_pointer_cursor
@@ -7119,7 +7123,7 @@ L48C2:  lda     $E196,x
         rts
 
 L48CC:  sta     LD2AC
-        yax_call launch_dialog, LD2AC, $0C
+        yax_call launch_dialog, $0C, LD2AC
         rts
 
         lda     #$88
@@ -7491,7 +7495,7 @@ L4BB1:  .byte   0
 ;;; ==================================================
 
 .proc cmd_about
-        yax_call launch_dialog, $0000, index_about_dialog
+        yax_call launch_dialog, index_about_dialog, $0000
         jmp     redraw_windows_and_desktop
 .endproc
 
@@ -7557,10 +7561,7 @@ L4C07:  lda     L4C7C
 L4C4A:  jsr     set_pointer_cursor
         rts
 
-L4C4E:  ldy     #$C8
-        ldx     #>L4C77
-        lda     #<L4C77
-        jsr     MLI_RELAY
+L4C4E:  yxa_call MLI_RELAY, OPEN, L4C77
         bne     L4C5A
         rts
 
@@ -7570,15 +7571,9 @@ L4C5A:  lda     #$00
         lda     #$FF
         rts
 
-L4C64:  ldy     #$CA
-        ldx     #>L4C7D
-        lda     #<L4C7D
-        jmp     MLI_RELAY
+L4C64:  yxa_jump MLI_RELAY, READ, L4C7D
 
-L4C6D:  ldy     #$CC
-        ldx     #>L4C85
-        lda     #<L4C85
-        jmp     MLI_RELAY
+L4C6D:  yxa_jump MLI_RELAY, CLOSE, L4C85
 
 L4C76:  .byte   $00
 L4C77:  .byte   $03,$88,$4C,$00,$1C
@@ -7963,7 +7958,7 @@ L4F76:  .res    65, 0              ; buffer is used elsewhere too
 
 start:  lda     desktop_winid
         sta     L4F67
-        yax_call launch_dialog, L4F67, index_new_folder_dialog
+        yax_call launch_dialog, index_new_folder_dialog, L4F67
 L4FC6:  lda     desktop_winid
         beq     L4FD4
         jsr     window_address_lookup
@@ -7971,7 +7966,7 @@ L4FC6:  lda     desktop_winid
         stx     L4F69
 L4FD4:  lda     #$80
         sta     L4F67
-        yax_call launch_dialog, L4F67, index_new_folder_dialog
+        yax_call launch_dialog, index_new_folder_dialog, L4F67
         beq     L4FE7
         jmp     L504B
 
@@ -8004,7 +7999,7 @@ L4FF6:  lda     ($06),y
 
 L5027:  lda     #$40
         sta     L4F67
-        yax_call launch_dialog, L4F67, index_new_folder_dialog
+        yax_call launch_dialog, index_new_folder_dialog, L4F67
         lda     #$76
         ldx     #$4F
         jsr     L6F90
@@ -15685,8 +15680,8 @@ L91CE:  .byte   0
 L91D1:  stx     $E00A
         rts
 
-L91D5:  yax_call JT_A2D_RELAY, state2, A2D_QUERY_SCREEN
-        yax_call JT_A2D_RELAY, state2, A2D_SET_STATE
+L91D5:  yax_call JT_A2D_RELAY, A2D_QUERY_SCREEN, state2
+        yax_call JT_A2D_RELAY, A2D_SET_STATE, state2
         rts
 
 L91E8:  jsr     JT_REDRAW_ALL
@@ -15886,7 +15881,7 @@ L9343:  lda     ($06),y
         dec     $220
         lda     #$2F
         sta     $0221
-L9356:  yax_call JT_MLI_RELAY, get_file_info_params5, GET_FILE_INFO
+L9356:  yax_call JT_MLI_RELAY, GET_FILE_INFO, get_file_info_params5
         beq     L9366
         jsr     LA49B
         beq     L9356
@@ -15927,9 +15922,9 @@ L93AD:  cmp     $E1A0,y
 
 L93B8:  lda     DEVLST,y
         sta     block_params::unit_num
-        yax_call JT_MLI_RELAY, block_params, READ_BLOCK
+        yax_call JT_MLI_RELAY, READ_BLOCK, block_params
         bne     L93DB
-        yax_call JT_MLI_RELAY, block_params, WRITE_BLOCK
+        yax_call JT_MLI_RELAY, WRITE_BLOCK, block_params
         cmp     #$2B
         bne     L93DB
         lda     #$80
@@ -16083,7 +16078,7 @@ L9534:  lda     #$00
 L953A:  PASCAL_STRING " VOL"
 
 
-L953F:  yax_call launch_dialog, L92E3, index_get_info_dialog
+L953F:  yax_call launch_dialog, index_get_info_dialog, L92E3
         rts
 
 L9549:  ldx     #$00
@@ -16237,7 +16232,7 @@ L9674:  inx
         cpy     L9709
         bne     L9674
         stx     $1FC0
-        yax_call JT_MLI_RELAY, rename_params, RENAME
+        yax_call JT_MLI_RELAY, RENAME, rename_params
         beq     L969E
         jsr     JT_SHOW_ALERT0
         bne     L9696
@@ -16290,7 +16285,7 @@ L96EB:  lda     ($06),y
         jmp     L9576
 
 L96F8:  sta     L956E
-        yax_call launch_dialog, L956E, index_rename_dialog
+        yax_call launch_dialog, index_rename_dialog, L956E
         rts
 
         .byte   $00
@@ -16496,7 +16491,7 @@ L97F3:  ldx     $E10C
 L9801:  lda     #$00
         sta     $E05F
         sta     $E10D
-L9809:  yax_call JT_MLI_RELAY, open_params3, OPEN
+L9809:  yax_call JT_MLI_RELAY, OPEN, open_params3
         beq     L981E
         ldx     #$80
         jsr     JT_SHOW_ALERT
@@ -16506,7 +16501,7 @@ L9809:  yax_call JT_MLI_RELAY, open_params3, OPEN
 L981E:  lda     open_params3::ref_num
         sta     $E060
         sta     read_params3::ref_num
-L9827:  yax_call JT_MLI_RELAY, read_params3, READ
+L9827:  yax_call JT_MLI_RELAY, READ, read_params3
         beq     L983C
         ldx     #$80
         jsr     JT_SHOW_ALERT
@@ -16517,7 +16512,7 @@ L983C:  jmp     L985B
 
 L983F:  lda     $E060
         sta     close_params6::ref_num
-L9845:  yax_call JT_MLI_RELAY, close_params6, CLOSE
+L9845:  yax_call JT_MLI_RELAY, CLOSE, close_params6
         beq     L985A
         ldx     #$80
         jsr     JT_SHOW_ALERT
@@ -16529,7 +16524,7 @@ L985A:  rts
 L985B:  inc     $E05F
         lda     $E060
         sta     read_params4::ref_num
-L9864:  yax_call JT_MLI_RELAY, read_params4, READ
+L9864:  yax_call JT_MLI_RELAY, READ, read_params4
         beq     L987D
         cmp     #$4C
         beq     L989F
@@ -16546,7 +16541,7 @@ L987D:  inc     $E10D
         sta     $E10D
         lda     $E060
         sta     read_params5::ref_num
-        yax_call JT_MLI_RELAY, read_params5, READ
+        yax_call JT_MLI_RELAY, READ, read_params5
 L989C:  lda     #$00
         rts
 
@@ -16664,14 +16659,14 @@ L9984:  lda     #$00
         sta     L9180
         lda     #$99
         sta     L9180+1
-        yax_call launch_dialog, L9937, $0A
+        yax_call launch_dialog, $0A, L9937
         rts
 
         sta     L9938
         stx     L9938+1
         lda     #$01
         sta     L9937
-        yax_call launch_dialog, L9937, $0A
+        yax_call launch_dialog, $0A, L9937
         rts
 
 L99BC:  lda     #$80
@@ -16691,12 +16686,12 @@ L99C3:  lda     L9931,y
 
         lda     #$03
         sta     L9937
-        yax_call launch_dialog, L9937, $0A
+        yax_call launch_dialog, $0A, L9937
         rts
 
         lda     #$04
         sta     L9937
-        yax_call launch_dialog, L9937, $0A
+        yax_call launch_dialog, $0A, L9937
         cmp     #$02
         bne     L99FE
         rts
@@ -16750,7 +16745,7 @@ L9A60:  iny
         cpy     $E04B
         bne     L9A60
         stx     $1FC0
-L9A70:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
+L9A70:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     L9A81
         jsr     LA49B
         jmp     L9A70
@@ -16797,7 +16792,7 @@ L9AC8:  lda     file_info_params2,y
         bne     L9AE0
         lda     #ST_LINKED_DIRECTORY
         sta     create_params2::storage
-L9AE0:  yax_call JT_MLI_RELAY, create_params2, CREATE
+L9AE0:  yax_call JT_MLI_RELAY, CREATE, create_params2
         beq     L9B23
         cmp     #$47
         bne     L9B1D
@@ -16848,7 +16843,7 @@ L9B3E:  lda     L97BD
         cmp     #$0F
         bne     L9B88
         jsr     LA2FD
-L9B48:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
+L9B48:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     L9B59
         jsr     LA49B
         jmp     L9B48
@@ -16876,7 +16871,7 @@ L9B7A:  jsr     LA360
 L9B88:  jsr     LA33B
         jsr     LA2FD
         jsr     LA40A
-L9B91:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
+L9B91:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     L9BA2
         jsr     LA49B
         jmp     L9B91
@@ -16894,10 +16889,10 @@ L9BAA:  jsr     LA322
 L9BBB:  jsr     LA360
 L9BBE:  rts
 
-L9BBF:  yax_call launch_dialog, L9937, index_copy_file_dialog
+L9BBF:  yax_call launch_dialog, index_copy_file_dialog, L9937
         rts
 
-L9BC9:  yax_call JT_MLI_RELAY, file_info_params3, GET_FILE_INFO
+L9BC9:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params3
         beq     L9BDA
         jsr     LA497
         jmp     L9BC9
@@ -16933,7 +16928,7 @@ L9C13:  lda     #$03
         sec
 L9C19:  rts
 
-L9C1A:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
+L9C1A:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     L9C2B
         jsr     LA49B
         jmp     L9C1A
@@ -16941,7 +16936,7 @@ L9C1A:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
 L9C2B:  lda     #$00
         sta     L9CD8
         sta     L9CD9
-L9C33:  yax_call JT_MLI_RELAY, file_info_params3, GET_FILE_INFO
+L9C33:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params3
         beq     L9C48
         cmp     #$46
         beq     L9C54
@@ -16964,7 +16959,7 @@ L9C5C:  iny
         tya
         sta     $1FC0
         sta     L9CD7
-L9C70:  yax_call JT_MLI_RELAY, file_info_params3, GET_FILE_INFO
+L9C70:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params3
         beq     L9C95
         pha
         lda     L9CD6
@@ -17036,7 +17031,7 @@ L9D0C:  jsr     L9DA9
 L9D17:  jsr     L9D81
         bne     L9D17
         jsr     L9D9C
-        yax_call JT_MLI_RELAY, mark_params2, SET_MARK
+        yax_call JT_MLI_RELAY, SET_MARK, mark_params2
 L9D28:  bit     L9E18
         bmi     L9D51
         jsr     L9DE8
@@ -17045,7 +17040,7 @@ L9D28:  bit     L9E18
         jsr     L9E03
         jsr     L9D62
         jsr     L9D74
-        yax_call JT_MLI_RELAY, mark_params, SET_MARK
+        yax_call JT_MLI_RELAY, SET_MARK, mark_params
         beq     L9D0C
         lda     #$FF
         sta     L9E18
@@ -17058,7 +17053,7 @@ L9D51:  jsr     L9E03
 L9D5C:  jsr     LA46D
         jmp     LA479
 
-L9D62:  yax_call JT_MLI_RELAY, open_params4, OPEN
+L9D62:  yax_call JT_MLI_RELAY, OPEN, open_params4
         beq     L9D73
         jsr     LA49B
         jmp     L9D62
@@ -17071,7 +17066,7 @@ L9D74:  lda     open_params4::ref_num
         sta     mark_params::ref_num
         rts
 
-L9D81:  yax_call JT_MLI_RELAY, open_params5, OPEN
+L9D81:  yax_call JT_MLI_RELAY, OPEN, open_params5
         beq     L9D9B
         cmp     #$45
         beq     L9D96
@@ -17092,7 +17087,7 @@ L9DA9:  lda     #<$0AC0
         sta     read_params6::request
         lda     #>$0AC0
         sta     read_params6::request+1
-L9DB3:  yax_call JT_MLI_RELAY, read_params6, READ
+L9DB3:  yax_call JT_MLI_RELAY, READ, read_params6
         beq     L9DC8
         cmp     #$4C
         beq     L9DD9
@@ -17107,21 +17102,21 @@ L9DC8:  lda     read_params6::trans
         bne     L9DDE
 L9DD9:  lda     #$FF
         sta     L9E18
-L9DDE:  yax_call JT_MLI_RELAY, mark_params, GET_MARK
+L9DDE:  yax_call JT_MLI_RELAY, GET_MARK, mark_params
         rts
 
-L9DE8:  yax_call JT_MLI_RELAY, write_params, WRITE
+L9DE8:  yax_call JT_MLI_RELAY, WRITE, write_params
         beq     L9DF9
         jsr     LA497
         jmp     L9DE8
 
-L9DF9:  yax_call JT_MLI_RELAY, mark_params2, GET_MARK
+L9DF9:  yax_call JT_MLI_RELAY, GET_MARK, mark_params2
         rts
 
-L9E03:  yax_call JT_MLI_RELAY, close_params3, CLOSE
+L9E03:  yax_call JT_MLI_RELAY, CLOSE, close_params3
         rts
 
-L9E0D:  yax_call JT_MLI_RELAY, close_params5, CLOSE
+L9E0D:  yax_call JT_MLI_RELAY, CLOSE, close_params5
         rts
 
 L9E17:  .byte   0
@@ -17132,7 +17127,7 @@ L9E1B:  lda     file_info_params2,x
         dex
         cpx     #$03
         bne     L9E1B
-L9E26:  yax_call JT_MLI_RELAY, create_params3, CREATE
+L9E26:  yax_call JT_MLI_RELAY, CREATE, create_params3
         beq     L9E6F
         cmp     #$47
         bne     L9E69
@@ -17140,7 +17135,7 @@ L9E26:  yax_call JT_MLI_RELAY, create_params3, CREATE
         bmi     L9E60
         lda     #$03
         sta     L9937
-        yax_call launch_dialog, L9937, index_copy_file_dialog
+        yax_call launch_dialog, index_copy_file_dialog, L9937
         pha
         lda     #$02
         sta     L9937
@@ -17220,7 +17215,7 @@ L9EC1:  lda     L9E73,y
 L9EDB:  lda     #$03
         sta     L9E79
         jsr     LA379
-L9EE3:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
+L9EE3:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     L9EF4
         jsr     LA49B
         jmp     L9EE3
@@ -17250,7 +17245,7 @@ L9F1E:  bit     $E05C
         bmi     L9F26
         jsr     LA3EF
 L9F26:  jsr     LA2F1
-L9F29:  yax_call JT_MLI_RELAY, destroy_params, DESTROY
+L9F29:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
         beq     L9F8D
         cmp     #$4E
         bne     L9F8E
@@ -17274,7 +17269,7 @@ L9F29:  yax_call JT_MLI_RELAY, destroy_params, DESTROY
         bne     L9F62
 L9F5F:  jmp     LA39F
 
-L9F62:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
+L9F62:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         lda     file_info_params2::access
         and     #$80
         bne     L9F8D
@@ -17282,7 +17277,7 @@ L9F62:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
         sta     file_info_params2::access
         lda     #7              ; param count for SET_FILE_INFO
         sta     file_info_params2
-        yax_call JT_MLI_RELAY, file_info_params2, SET_FILE_INFO
+        yax_call JT_MLI_RELAY, SET_FILE_INFO, file_info_params2
         lda     #$A             ; param count for GET_FILE_INFO
         sta     file_info_params2
         jmp     L9F29
@@ -17301,7 +17296,7 @@ L9F9C:  jsr     LA2FD
         bmi     L9FA7
         jsr     LA3EF
 L9FA7:  jsr     LA2F1
-L9FAA:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
+L9FAA:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     L9FBB
         jsr     LA49B
         jmp     L9FAA
@@ -17309,7 +17304,7 @@ L9FAA:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
 L9FBB:  lda     file_info_params2::storage
         cmp     #ST_LINKED_DIRECTORY
         beq     LA022
-L9FC2:  yax_call JT_MLI_RELAY, destroy_params, DESTROY
+L9FC2:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
         beq     LA022
         cmp     #$4E
         bne     LA01C
@@ -17317,7 +17312,7 @@ L9FC2:  yax_call JT_MLI_RELAY, destroy_params, DESTROY
         bmi     LA001
         lda     #$04
         sta     L9E79
-        yax_call launch_dialog, L9E79, index_delete_file_dialog
+        yax_call launch_dialog, index_delete_file_dialog, L9E79
         pha
         lda     #$03
         sta     L9E79
@@ -17337,7 +17332,7 @@ LA001:  lda     #$C3
         sta     file_info_params2::access
         lda     #7              ; param count for SET_FILE_INFO
         sta     file_info_params2
-        yax_call JT_MLI_RELAY, file_info_params2, SET_FILE_INFO
+        yax_call JT_MLI_RELAY, SET_FILE_INFO, file_info_params2
         lda     #$A             ; param count for GET_FILE_INFO
         sta     file_info_params2
         jmp     L9FC2
@@ -17352,7 +17347,7 @@ LA022:  jmp     LA322
         sta     L9923
         rts
 
-LA02E:  yax_call JT_MLI_RELAY, destroy_params, DESTROY
+LA02E:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
         beq     LA043
         cmp     #$4E
         beq     LA043
@@ -17361,7 +17356,7 @@ LA02E:  yax_call JT_MLI_RELAY, destroy_params, DESTROY
 
 LA043:  rts
 
-LA044:  yax_call launch_dialog, L9E79, index_delete_file_dialog
+LA044:  yax_call launch_dialog, index_delete_file_dialog, L9E79
         rts
 
 LA04E:  .addr   LA170
@@ -17451,10 +17446,10 @@ LA0E6:  lda     LA04E,y
         sta     LA054
         jmp     LA10A
 
-LA100:  yax_call launch_dialog, LA054, index_lock_dialog
+LA100:  yax_call launch_dialog, index_lock_dialog, LA054
         rts
 
-LA10A:  yax_call launch_dialog, LA054, index_unlock_dialog
+LA10A:  yax_call launch_dialog, index_unlock_dialog, LA054
         rts
 
 LA114:  lda     #$03
@@ -17470,7 +17465,7 @@ LA123:  iny
         cpy     $220
         bne     LA123
         stx     $1FC0
-LA133:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
+LA133:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     LA144
         jsr     LA49B
         jmp     LA133
@@ -17500,7 +17495,7 @@ LA16A:  jsr     LA173
 LA170:  jsr     LA2FD
 LA173:  jsr     LA1C3
         jsr     LA2F1
-LA179:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
+LA179:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     LA18A
         jsr     LA49B
         jmp     LA179
@@ -17518,7 +17513,7 @@ LA19E:  lda     #$21
 LA1A0:  sta     file_info_params2::access
 LA1A3:  lda     #7              ; param count for SET_FILE_INFO
         sta     file_info_params2
-        yax_call JT_MLI_RELAY, file_info_params2, SET_FILE_INFO
+        yax_call JT_MLI_RELAY, SET_FILE_INFO, file_info_params2
         pha
         lda     #$A             ; param count for GET_FILE_INFO
         sta     file_info_params2
@@ -17555,7 +17550,7 @@ LA1E4:  lda     #$00
         sta     L917D
         lda     #$A2
         sta     L917D+1
-        yax_call launch_dialog, LA1DF, index_get_size_dialog
+        yax_call launch_dialog, index_get_size_dialog, LA1DF
         lda     #$33
         sta     L9180
         lda     #$A2
@@ -17564,18 +17559,18 @@ LA1E4:  lda     #$00
 
         lda     #$01
         sta     LA1DF
-        yax_call launch_dialog, LA1DF, index_get_size_dialog
+        yax_call launch_dialog, index_get_size_dialog, LA1DF
 LA21F:  rts
 
         lda     #$02
         sta     LA1DF
-        yax_call launch_dialog, LA1DF, index_get_size_dialog
+        yax_call launch_dialog, index_get_size_dialog, LA1DF
         beq     LA21F
         jmp     LA39F
 
         lda     #$03
         sta     LA1DF
-        yax_call launch_dialog, LA1DF, index_get_size_dialog
+        yax_call launch_dialog, index_get_size_dialog, LA1DF
 LA241:  rts
 
 LA242:  .addr   LA2AE,rts2,rts2
@@ -17600,7 +17595,7 @@ LA26A:  sta     BITMAP,y
         rts
 
 LA271:  jsr     LA379
-LA274:  yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
+LA274:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     LA285
         jsr     LA49B
         jmp     LA274
@@ -17629,7 +17624,7 @@ LA2AB:  jmp     LA2AE
 LA2AE:  bit     L9189
         bvc     LA2D4
         jsr     LA2FD
-        yax_call JT_MLI_RELAY, file_info_params2, GET_FILE_INFO
+        yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         bne     LA2D4
         lda     LA2EF
         clc
@@ -17756,18 +17751,18 @@ params: .byte   1
 ref_num:.byte   0
 .endproc
 
-LA3A7:  yax_call JT_MLI_RELAY, close_params4, CLOSE
+LA3A7:  yax_call JT_MLI_RELAY, CLOSE, close_params4
         lda     selected_window_index
         beq     LA3CA
         sta     query_state_params2::id
-        yax_call JT_A2D_RELAY, query_state_params2, A2D_QUERY_STATE
-        yax_call JT_A2D_RELAY, query_state_buffer, A2D_SET_STATE
+        yax_call JT_A2D_RELAY, A2D_QUERY_STATE, query_state_params2
+        yax_call JT_A2D_RELAY, A2D_SET_STATE, query_state_buffer
 LA3CA:  ldx     L9188
         txs
         lda     #$FF
         rts
 
-LA3D1:  yax_call JT_A2D_RELAY, input_params, A2D_GET_INPUT
+LA3D1:  yax_call JT_A2D_RELAY, A2D_GET_INPUT, input_params
         lda     input_params_state
         cmp     #A2D_INPUT_KEY
         bne     LA3EC
@@ -17786,7 +17781,7 @@ LA3EF:  lda     LA2ED
         lda     LA2EE
         sbc     #$00
         sta     L9E7B
-        yax_call launch_dialog, L9E79, index_delete_file_dialog
+        yax_call launch_dialog, index_delete_file_dialog, L9E79
         rts
 
 LA40A:  lda     LA2ED
@@ -17796,7 +17791,7 @@ LA40A:  lda     LA2ED
         lda     LA2EE
         sbc     #$00
         sta     L9938+1
-        yax_call launch_dialog, L9937, index_copy_file_dialog
+        yax_call launch_dialog, index_copy_file_dialog, L9937
         rts
 
 LA425:  .byte   0
@@ -17807,7 +17802,7 @@ LA426:  jsr     LA46D
         lda     file_info_params2::type
         cmp     #$0F
         beq     LA46C
-        yax_call JT_MLI_RELAY, open_params5, OPEN
+        yax_call JT_MLI_RELAY, OPEN, open_params5
         beq     LA449
         jsr     LA497
         jmp     LA426
@@ -17815,12 +17810,12 @@ LA426:  jsr     LA46D
 LA449:  lda     open_params5::ref_num
         sta     set_eof_params::ref_num
         sta     close_params3::ref_num
-LA452:  yax_call JT_MLI_RELAY, set_eof_params, SET_EOF
+LA452:  yax_call JT_MLI_RELAY, SET_EOF, set_eof_params
         beq     LA463
         jsr     LA497
         jmp     LA452
 
-LA463:  yax_call JT_MLI_RELAY, close_params3, CLOSE
+LA463:  yax_call JT_MLI_RELAY, CLOSE, close_params3
 LA46C:  rts
 
 LA46D:  ldx     #$0A
@@ -17832,7 +17827,7 @@ LA46F:  lda     file_info_params2::access,x
 
 LA479:  lda     #7              ; SET_FILE_INFO param_count
         sta     file_info_params3
-        yax_call JT_MLI_RELAY, file_info_params3, SET_FILE_INFO
+        yax_call JT_MLI_RELAY, SET_FILE_INFO, file_info_params3
         pha
         lda     #$A             ; GET_FILE_INFO param_count
         sta     file_info_params3
@@ -17868,7 +17863,7 @@ LA4BA:  jsr     JT_SHOW_ALERT0
 LA4C2:  jmp     LA39F
 
 LA4C5:  .byte   0
-LA4C6:  yax_call JT_MLI_RELAY, on_line_params2, ON_LINE
+LA4C6:  yax_call JT_MLI_RELAY, ON_LINE, on_line_params2
         rts
 
         .assert * = $A4D0, error, "Segment length mismatch"
@@ -18289,18 +18284,18 @@ LA899:  jmp     dummy0000
         A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::about_dialog_outer_rect
         A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::about_dialog_inner_rect
         addr_call draw_centered_string, desktop_aux::str_about1
-        axy_call draw_dialog_label, desktop_aux::str_about2, $81
-        axy_call draw_dialog_label, desktop_aux::str_about3, $82
-        axy_call draw_dialog_label, desktop_aux::str_about4, $83
-        axy_call draw_dialog_label, desktop_aux::str_about5, $05
-        axy_call draw_dialog_label, desktop_aux::str_about6, $86
-        axy_call draw_dialog_label, desktop_aux::str_about7, $07
-        axy_call draw_dialog_label, desktop_aux::str_about8, $09
+        axy_call draw_dialog_label, $81, desktop_aux::str_about2
+        axy_call draw_dialog_label, $82, desktop_aux::str_about3
+        axy_call draw_dialog_label, $83, desktop_aux::str_about4
+        axy_call draw_dialog_label, $05, desktop_aux::str_about5
+        axy_call draw_dialog_label, $86, desktop_aux::str_about6
+        axy_call draw_dialog_label, $07, desktop_aux::str_about7
+        axy_call draw_dialog_label, $09, desktop_aux::str_about8
         lda     #$36
         sta     dialog_label_pos
         lda     #$01
         sta     dialog_label_pos+1
-        axy_call draw_dialog_label, desktop_aux::str_about9, $09
+        axy_call draw_dialog_label, $09, desktop_aux::str_about9
         lda     #$28
         sta     dialog_label_pos
         lda     #$00
@@ -18357,10 +18352,10 @@ LA981:  lda     #$00
         sta     LD8E8
         jsr     LB53A
         addr_call draw_centered_string, desktop_aux::str_copy_title
-        axy_call draw_dialog_label, desktop_aux::str_copy_copying, $01
-        axy_call draw_dialog_label, desktop_aux::str_copy_from, $02
-        axy_call draw_dialog_label, desktop_aux::str_copy_to, $03
-        axy_call draw_dialog_label, desktop_aux::str_copy_remaining, $04
+        axy_call draw_dialog_label, $01, desktop_aux::str_copy_copying
+        axy_call draw_dialog_label, $02, desktop_aux::str_copy_from
+        axy_call draw_dialog_label, $03, desktop_aux::str_copy_to
+        axy_call draw_dialog_label, $04, desktop_aux::str_copy_remaining
         rts
 
 LA9B5:  ldy     #$01
@@ -18429,7 +18424,7 @@ LAA5A:  jsr     reset_state
 LAA6A:  jsr     LAACE
         lda     winF
         jsr     LB7B9
-        axy_call draw_dialog_label, desktop_aux::str_exists_prompt, $06
+        axy_call draw_dialog_label, $06, desktop_aux::str_exists_prompt
         jsr     draw_yes_no_all_cancel_buttons
 LAA7F:  jsr     LA567
         bmi     LAA7F
@@ -18443,7 +18438,7 @@ LAA7F:  jsr     LA567
 LAA9C:  jsr     LAACE
         lda     winF
         jsr     LB7B9
-        axy_call draw_dialog_label, desktop_aux::str_large_prompt, $06
+        axy_call draw_dialog_label, $06, desktop_aux::str_large_prompt
         jsr     draw_ok_cancel_buttons
 LAAB1:  jsr     LA567
         bmi     LAAB1
@@ -18488,10 +18483,10 @@ LAB04:  lda     #$00
         sta     LD8E8
         jsr     LB53A
         addr_call draw_centered_string, desktop_aux::str_download
-        axy_call draw_dialog_label, desktop_aux::str_copy_copying, $01
-        axy_call draw_dialog_label, desktop_aux::str_copy_from, $02
-        axy_call draw_dialog_label, desktop_aux::str_copy_to, $03
-        axy_call draw_dialog_label, desktop_aux::str_copy_remaining, $04
+        axy_call draw_dialog_label, $01, desktop_aux::str_copy_copying
+        axy_call draw_dialog_label, $02, desktop_aux::str_copy_from
+        axy_call draw_dialog_label, $03, desktop_aux::str_copy_to
+        axy_call draw_dialog_label, $04, desktop_aux::str_copy_remaining
         rts
 
 LAB38:  ldy     #$01
@@ -18543,7 +18538,7 @@ LABB8:  jsr     reset_state
 LABC8:  jsr     LAACE
         lda     winF
         jsr     LB7B9
-        axy_call draw_dialog_label, desktop_aux::str_ramcard_full, $06
+        axy_call draw_dialog_label, $06, desktop_aux::str_ramcard_full
         jsr     draw_ok_button
 LABDD:  jsr     LA567
         bmi     LABDD
@@ -18575,10 +18570,10 @@ LAC0F:  cmp     #$03
 
 LAC16:  jsr     LB53A
         addr_call draw_centered_string, desktop_aux::str_size_title
-        axy_call draw_dialog_label, desktop_aux::str_size_number, $01
+        axy_call draw_dialog_label, $01, desktop_aux::str_size_number
         ldy     #$01
         jsr     draw_colon
-        axy_call draw_dialog_label, desktop_aux::str_size_blocks, $02
+        axy_call draw_dialog_label, $02, desktop_aux::str_size_blocks
         ldy     #$02
         jsr     draw_colon
         rts
@@ -18602,7 +18597,7 @@ LAC3D:  ldy     #$01
         jsr     LB7B9
         lda     #$A5
         sta     dialog_label_pos
-        yax_call draw_dialog_label, str_7_spaces, $01
+        yax_call draw_dialog_label, $01, str_7_spaces
         jsr     LB3BF
         ldy     #$03
         lda     ($06),y
@@ -18620,7 +18615,7 @@ LAC3D:  ldy     #$01
         jsr     LBDDF
         lda     #$A5
         sta     dialog_label_pos
-        yax_call draw_dialog_label, str_7_spaces, $02
+        yax_call draw_dialog_label, $02, str_7_spaces
         rts
 
 LAC9E:  jsr     reset_state
@@ -18673,11 +18668,11 @@ LACFE:  sta     LAD1F
         addr_call draw_centered_string, desktop_aux::str_delete_title
         lda     LAD1F
         beq     LAD20
-        axy_call draw_dialog_label, desktop_aux::str_ok_empty, $04
+        axy_call draw_dialog_label, $04, desktop_aux::str_ok_empty
         rts
 
 LAD1F:  .byte   0
-LAD20:  axy_call draw_dialog_label, desktop_aux::str_delete_ok, $04
+LAD20:  axy_call draw_dialog_label, $04, desktop_aux::str_delete_ok
         rts
 
 LAD2A:  ldy     #$01
@@ -18735,8 +18730,8 @@ LADC4:  jsr     LA567
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::press_ok_to_rect
         jsr     erase_ok_cancel_buttons
-        yax_call draw_dialog_label, desktop_aux::str_file_colon, $02
-        yax_call draw_dialog_label, desktop_aux::str_delete_remaining, $04
+        yax_call draw_dialog_label, $02, desktop_aux::str_file_colon
+        yax_call draw_dialog_label, $04, desktop_aux::str_delete_remaining
         lda     #$00
 LADF4:  rts
 
@@ -18747,7 +18742,7 @@ LADF5:  jsr     reset_state
 
 LAE05:  lda     winF
         jsr     LB7B9
-        axy_call draw_dialog_label, desktop_aux::str_delete_locked_file, $06
+        axy_call draw_dialog_label, $06, desktop_aux::str_delete_locked_file
         jsr     draw_yes_no_all_cancel_buttons
 LAE17:  jsr     LA567
         bmi     LAE17
@@ -18806,13 +18801,13 @@ LAE90:  lda     ($08),y
         bpl     LAE90
         lda     winF
         jsr     LB7B9
-        yax_call draw_dialog_label, desktop_aux::str_in_colon, $02
+        yax_call draw_dialog_label, $02, desktop_aux::str_in_colon
         lda     #$37
         sta     dialog_label_pos
-        yax_call draw_dialog_label, $D402, $02
+        yax_call draw_dialog_label, $02, $D402
         lda     #$28
         sta     dialog_label_pos
-        yax_call draw_dialog_label, desktop_aux::str_enter_folder_name, $04
+        yax_call draw_dialog_label, $04, desktop_aux::str_enter_folder_name
         jsr     LB961
 LAEC6:  jsr     LA567
         bmi     LAEC6
@@ -18885,22 +18880,22 @@ LAF34:  lda     #$00
         lsr     a
         ror     a
         sta     LB01D
-        yax_call draw_dialog_label, desktop_aux::str_info_name, $01
+        yax_call draw_dialog_label, $01, desktop_aux::str_info_name
         bit     LB01D
         bmi     LAF78
-        yax_call draw_dialog_label, desktop_aux::str_info_locked, $02
+        yax_call draw_dialog_label, $02, desktop_aux::str_info_locked
         jmp     LAF81
 
-LAF78:  yax_call draw_dialog_label, desktop_aux::str_info_protected, $02
+LAF78:  yax_call draw_dialog_label, $02, desktop_aux::str_info_protected
 LAF81:  bit     LB01D
         bpl     LAF92
-        yax_call draw_dialog_label, desktop_aux::str_info_blocks, $03
+        yax_call draw_dialog_label, $03, desktop_aux::str_info_blocks
         jmp     LAF9B
 
-LAF92:  yax_call draw_dialog_label, desktop_aux::str_info_size, $03
-LAF9B:  yax_call draw_dialog_label, desktop_aux::str_info_create, $04
-        yax_call draw_dialog_label, desktop_aux::str_info_mod, $05
-        yax_call draw_dialog_label, desktop_aux::str_info_type, $06
+LAF92:  yax_call draw_dialog_label, $03, desktop_aux::str_info_size
+LAF9B:  yax_call draw_dialog_label, $04, desktop_aux::str_info_create
+        yax_call draw_dialog_label, $05, desktop_aux::str_info_mod
+        yax_call draw_dialog_label, $06, desktop_aux::str_info_type
         jmp     reset_state
 
 LAFB9:  lda     winF
@@ -18991,7 +18986,7 @@ LB04F:  lda     #$00
         sta     LD8E8
         jsr     LB53A
         addr_call draw_centered_string, desktop_aux::str_lock_title
-        yax_call draw_dialog_label, desktop_aux::str_lock_ok, $04
+        yax_call draw_dialog_label, $04, desktop_aux::str_lock_ok
         rts
 
 LB068:  ldy     #$01
@@ -19046,8 +19041,8 @@ LB0FA:  jsr     LA567
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::press_ok_to_rect
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::ok_button_rect
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::cancel_button_rect
-        yax_call draw_dialog_label, desktop_aux::str_file_colon, $02
-        yax_call draw_dialog_label, desktop_aux::str_lock_remaining, $04
+        yax_call draw_dialog_label, $02, desktop_aux::str_file_colon
+        yax_call draw_dialog_label, $04, desktop_aux::str_lock_remaining
         lda     #$00
 LB139:  rts
 
@@ -19083,7 +19078,7 @@ LB16D:  lda     #$00
         sta     LD8E8
         jsr     LB53A
         addr_call draw_centered_string, desktop_aux::str_unlock_title
-        yax_call draw_dialog_label, desktop_aux::str_unlock_ok, $04
+        yax_call draw_dialog_label, $04, desktop_aux::str_unlock_ok
         rts
 
 LB186:  ldy     #$01
@@ -19138,8 +19133,8 @@ LB218:  jsr     LA567
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::press_ok_to_rect
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::ok_button_rect
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::cancel_button_rect
-        yax_call draw_dialog_label, desktop_aux::str_file_colon, $02
-        yax_call draw_dialog_label, desktop_aux::str_unlock_remaining, $04
+        yax_call draw_dialog_label, $02, desktop_aux::str_file_colon
+        yax_call draw_dialog_label, $04, desktop_aux::str_unlock_remaining
         lda     #$00
 LB257:  rts
 
@@ -19175,7 +19170,7 @@ LB27D:  jsr     LBD75
         addr_call draw_centered_string, desktop_aux::str_rename_title
         jsr     set_fill_black
         A2D_RELAY_CALL A2D_DRAW_RECT, LD6AB
-        yax_call draw_dialog_label, desktop_aux::str_rename_old, $02
+        yax_call draw_dialog_label, $02, desktop_aux::str_rename_old
         lda     #$55
         sta     dialog_label_pos
         jsr     LB3BF
@@ -19192,8 +19187,8 @@ LB2CA:  lda     ($08),y
         sta     buf_filename,y
         dey
         bpl     LB2CA
-        yax_call draw_dialog_label, buf_filename, $02
-        yax_call draw_dialog_label, desktop_aux::str_rename_new, $04
+        yax_call draw_dialog_label, $02, buf_filename
+        yax_call draw_dialog_label, $04, desktop_aux::str_rename_new
         lda     #$00
         sta     $D443
         jsr     LB961
