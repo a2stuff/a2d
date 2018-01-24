@@ -17189,7 +17189,7 @@ L9E7E:  sta     L9E79
         lda     #>$9EA3
         sta     L917D+1
         jsr     LA044
-        lda     #<$9ED3
+        lda     #<$9ED3         ; ???
         sta     L9180
         lda     #>$9ED3
         sta     L9180+1
