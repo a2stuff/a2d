@@ -4978,9 +4978,11 @@ watch_cursor:
         .byte   px(%0000000),px(%0000000)
         .byte   5, 5
 
-        .res    384, 0
+LD343:  .res    256, 0
 
-        .byte   $00,$00
+path_buf1:  .res    65, 0
+path_buf2:  .res    65, 0
+
 
 alert_bitmap2:
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
@@ -7431,7 +7433,7 @@ L4B4C:  lda     $D3AD,x
         rts
 
 L4B5F:  sta     L4BB0
-        addr_call L4B15, $4F76
+        addr_call L4B15, path_buffer
         lda     L4BB0
         jsr     a_times_6
         clc
@@ -7458,14 +7460,14 @@ L4B8D:  lda     ($06),y
         dey
         bne     L4B8D
 L4B98:  dey
-        ldx     L4F76
+        ldx     path_buffer
 L4B9C:  inx
         iny
         lda     ($06),y
-        sta     L4F76,x
+        sta     path_buffer,x
         cpy     L4BB1
         bne     L4B9C
-        stx     L4F76
+        stx     path_buffer
         lda     #$76
         ldx     #$4F
         rts
@@ -7963,7 +7965,7 @@ L4F69:  .byte   $00
 
 .proc create_params
 params: .byte   7
-path:   .addr   L4F76
+path:   .addr   path_buffer
 access: .byte   %11000011       ; destroy/rename/write/read
 type:   .byte   FT_DIRECTORY
 auxtype:.word   0
@@ -7972,7 +7974,8 @@ cdate:  .word   0
 ctime:  .word   0
 .endproc
 
-L4F76:  .res    65, 0              ; buffer is used elsewhere too
+path_buffer:
+        .res    65, 0              ; buffer is used elsewhere too
 
 start:  lda     desktop_winid
         sta     L4F67
@@ -7996,7 +7999,7 @@ L4FE7:  stx     $06+1
         lda     ($06),y
         tay
 L4FF6:  lda     ($06),y
-        sta     L4F76,y
+        sta     path_buffer,y
         dey
         bpl     L4FF6
         ldx     #$03
@@ -8018,9 +8021,9 @@ L4FF6:  lda     ($06),y
 L5027:  lda     #$40
         sta     L4F67
         yax_call launch_dialog, index_new_folder_dialog, L4F67
-        addr_call L6F90, $4F76
-        sty     L4F76
-        addr_call L6FAF, L4F76
+        addr_call L6F90, path_buffer
+        sty     path_buffer
+        addr_call L6FAF, path_buffer
         beq     L504B
         jsr     L5E78
 L504B:  jmp     redraw_windows_and_desktop
@@ -8029,7 +8032,7 @@ L504E:  .byte   0
 L504F:  .byte   0
 .endproc
         cmd_new_folder := cmd_new_folder_impl::start
-        L4F76 := cmd_new_folder_impl::L4F76 ; ???
+        path_buffer := cmd_new_folder_impl::path_buffer ; ???
 
 ;;; ==================================================
 
@@ -11553,12 +11556,12 @@ L6FBD:  sta     L704A
         ldy     #$00
         lda     ($06),y
         tay
-L6FCA:  sty     L4F76
+L6FCA:  sty     path_buffer
 L6FCD:  lda     ($06),y
-        sta     L4F76,y
+        sta     path_buffer,y
         dey
         bne     L6FCD
-        addr_call L87BA, L4F76
+        addr_call L87BA, path_buffer
         lda     #$00
         sta     L704B
         sta     L7049
@@ -11584,18 +11587,18 @@ L6FF6:  jsr     window_lookup
         ldy     #$00
         lda     ($06),y
         tay
-        cmp     L4F76
+        cmp     path_buffer
         beq     L7027
         bit     L704A
         bmi     L6FE4
-        ldy     L4F76
+        ldy     path_buffer
         iny
         lda     ($06),y
         cmp     #$2F
         bne     L6FE4
         dey
 L7027:  lda     ($06),y
-        cmp     L4F76,y
+        cmp     path_buffer,y
         bne     L6FE4
         dey
         bne     L7027
@@ -13660,9 +13663,7 @@ L8228:  lda     $EC43,x
         lda     #$20
         sta     $E6EC
         inc     text_buffer2::length
-        lda     #$EB
-        ldx     #$E6
-        jsr     L87BA
+        addr_call L87BA, $E6EB
         rts
 
 L8241:  lda     $EC53
@@ -13869,14 +13870,12 @@ done:   addr_jump L84A4, str_3_spaces
         sta     year_string_10s
         lda     ascii_digits,y
         sta     year_string_1s
-        lda     #$8A
-        ldx     #$84
-        jmp     L84A4
+        addr_jump L84A4, str_year
 .endproc
 
-year:   .byte   $00
-month:  .byte   $00
-day:    .byte   $00
+year:   .byte   0
+month:  .byte   0
+day:    .byte   0
 
 str_3_spaces:
         PASCAL_STRING "   "
@@ -16689,9 +16688,9 @@ L99C3:  lda     L9931,y
         bpl     L99C3
         lda     #$00
         sta     LA425
-        lda     #$EB
+        lda     #<$99EB
         sta     L9186
-        lda     #$99
+        lda     #>$99EB
         sta     L9186+1
         rts
 
@@ -18205,7 +18204,7 @@ LA7CF:  cmp     #$7E
         bcc     LA7DD
         jmp     LA717
 
-LA7D8:  ldx     $D443
+LA7D8:  ldx     path_buf1
         beq     LA7E5
 LA7DD:  ldx     LD8E8
         beq     LA7E5
@@ -18422,7 +18421,7 @@ LA9E6:  ldy     #$01
         stx     $06
         jsr     LBE78
         A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE82
-        addr_call draw_text1, $D443
+        addr_call draw_text1, path_buf1
         yax_call A2D_RELAY, $E, $B0BA
         addr_call draw_text1, str_7_spaces
         rts
@@ -18823,7 +18822,7 @@ LAE90:  lda     ($08),y
 LAEC6:  jsr     prompt_input_loop
         bmi     LAEC6
         bne     LAF16
-        lda     $D443
+        lda     path_buf1
         beq     LAEC6
         cmp     #$10
         bcc     LAEE1
@@ -18834,7 +18833,7 @@ LAED6:  lda     #$FB
 
 LAEE1:  lda     $D402
         clc
-        adc     $D443
+        adc     path_buf1
         clc
         adc     #$01
         cmp     #$41
@@ -18847,9 +18846,9 @@ LAEE1:  lda     $D402
         ldy     #$00
 LAEFF:  inx
         iny
-        lda     $D443,y
+        lda     path_buf1,y
         sta     $D402,x
-        cpy     $D443
+        cpy     path_buf1
         bne     LAEFF
         stx     $D402
         ldy     #$02
@@ -19201,7 +19200,7 @@ LB2CA:  lda     ($08),y
         yax_call draw_dialog_label, $02, buf_filename
         yax_call draw_dialog_label, $04, desktop_aux::str_rename_new
         lda     #$00
-        sta     $D443
+        sta     path_buf1
         jsr     LB961
         rts
 
@@ -19214,7 +19213,7 @@ LB2ED:  lda     #$00
 LB2FD:  jsr     prompt_input_loop
         bmi     LB2FD
         bne     LB313
-        lda     $D443
+        lda     path_buf1
         beq     LB2FD
         jsr     LBCC9
         ldy     #$43
@@ -19883,7 +19882,7 @@ LB93B:  lda     #<$D8EF
         jsr     LB7B9
         rts
 
-LB961:  lda     $D443
+LB961:  lda     path_buf1
         beq     LB9B7
         lda     winF
         jsr     LB7B9
@@ -19893,8 +19892,8 @@ LB961:  lda     $D443
         A2D_RELAY_CALL A2D_DRAW_RECT, LD6AB
         A2D_RELAY_CALL A2D_SET_POS, LD6B3
         A2D_RELAY_CALL A2D_SET_BOX, LD6C7
-        addr_call draw_text1, $D443
-        addr_call draw_text1, $D484
+        addr_call draw_text1, path_buf1
+        addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
         lda     winF
         jsr     LB7B9
@@ -19920,16 +19919,16 @@ LB9D8:  jsr     LBD3B
 LB9EE:  jsr     LBD3B
         sta     LBB09
         stx     LBB0A
-        ldx     $D484
+        ldx     path_buf2
         inx
-        lda     #$20
-        sta     $D484,x
-        inc     $D484
-        lda     #$84
+        lda     #' '
+        sta     path_buf2,x
+        inc     path_buf2
+        lda     #<path_buf2
         sta     $06
-        lda     #$D4
+        lda     #>path_buf2
         sta     $06+1
-        lda     $D484
+        lda     path_buf2
         sta     $08
 LBA10:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $6
         lda     $09
@@ -19948,47 +19947,47 @@ LBA10:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $6
         lda     $08
         cmp     #$01
         bne     LBA10
-        dec     $D484
+        dec     path_buf2
         jmp     LBB05
 
 LBA42:  lda     $08
-        cmp     $D484
+        cmp     path_buf2
         bcc     LBA4F
-        dec     $D484
+        dec     path_buf2
         jmp     LBCC9
 
 LBA4F:  ldx     #$02
-        ldy     $D443
+        ldy     path_buf1
         iny
-LBA55:  lda     $D484,x
-        sta     $D443,y
+LBA55:  lda     path_buf2,x
+        sta     path_buf1,y
         cpx     $08
         beq     LBA64
         iny
         inx
         jmp     LBA55
 
-LBA64:  sty     $D443
+LBA64:  sty     path_buf1
         ldy     #$02
         ldx     $08
         inx
-LBA6C:  lda     $D484,x
-        sta     $D484,y
-        cpx     $D484
+LBA6C:  lda     path_buf2,x
+        sta     path_buf2,y
+        cpx     path_buf2
         beq     LBA7C
         iny
         inx
         jmp     LBA6C
 
 LBA7C:  dey
-        sty     $D484
+        sty     path_buf2
         jmp     LBB05
 
-LBA83:  lda     #<$D443
+LBA83:  lda     #<path_buf1
         sta     $06
-        lda     #>$D443
+        lda     #>path_buf1
         sta     $06+1
-        lda     $D443
+        lda     path_buf1
         sta     $08
 LBA90:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $6
         lda     $09
@@ -20013,11 +20012,11 @@ LBAA9:  ora     #$CD
 LBABF:  inc     $08
         ldy     #$00
         ldx     $08
-LBAC5:  cpx     $D443
+LBAC5:  cpx     path_buf1
         beq     LBAD5
         inx
         iny
-        lda     $D443,x
+        lda     path_buf1,x
         sta     $D3C2,y
         jmp     LBAC5
 
@@ -20025,11 +20024,11 @@ LBAD5:  iny
         sty     $D3C1
         ldx     #$01
         ldy     $D3C1
-LBADE:  cpx     $D484
+LBADE:  cpx     path_buf2
         beq     LBAEE
         inx
         iny
-        lda     $D484,x
+        lda     path_buf2,x
         sta     $D3C1,y
         jmp     LBADE
 
@@ -20037,31 +20036,31 @@ LBAEE:  sty     $D3C1
         lda     LD8EF
         sta     $D3C2
 LBAF7:  lda     $D3C1,y
-        sta     $D484,y
+        sta     path_buf2,y
         dey
         bpl     LBAF7
         lda     $08
-        sta     $D443
+        sta     path_buf1
 LBB05:  jsr     LB961
         rts
 
 LBB09:  .byte   0
 LBB0A:  .byte   0
 LBB0B:  sta     LBB62
-        lda     $D443
+        lda     path_buf1
         clc
-        adc     $D484
+        adc     path_buf2
         cmp     #$10
         bcc     LBB1A
         rts
 
 LBB1A:  lda     LBB62
-        ldx     $D443
+        ldx     path_buf1
         inx
-        sta     $D443,x
+        sta     path_buf1,x
         sta     str_1_char+1
         jsr     LBD3B
-        inc     $D443
+        inc     path_buf1
         sta     $06
         stx     $06+1
         lda     $D6B5
@@ -20071,17 +20070,17 @@ LBB1A:  lda     LBB62
         A2D_RELAY_CALL A2D_SET_POS, $6
         A2D_RELAY_CALL A2D_SET_BOX, LD6C7
         addr_call draw_text1, str_1_char
-        addr_call draw_text1, $D484
+        addr_call draw_text1, path_buf2
         lda     winF
         jsr     LB7B9
         rts
 
 LBB62:  .byte   0
-LBB63:  lda     $D443
+LBB63:  lda     path_buf1
         bne     LBB69
         rts
 
-LBB69:  dec     $D443
+LBB69:  dec     path_buf1
         jsr     LBD3B
         sta     $06
         stx     $06+1
@@ -20091,29 +20090,29 @@ LBB69:  dec     $D443
         sta     $08+1
         A2D_RELAY_CALL A2D_SET_POS, $6
         A2D_RELAY_CALL A2D_SET_BOX, LD6C7
-        addr_call draw_text1, $D484
+        addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
         lda     winF
         jsr     LB7B9
         rts
 
-LBBA4:  lda     $D443
+LBBA4:  lda     path_buf1
         bne     LBBAA
         rts
 
-LBBAA:  ldx     $D484
-        cpx     #$01
+LBBAA:  ldx     path_buf2
+        cpx     #1
         beq     LBBBC
-LBBB1:  lda     $D484,x
+LBBB1:  lda     path_buf2,x
         sta     $D485,x
         dex
-        cpx     #$01
+        cpx     #1
         bne     LBBB1
-LBBBC:  ldx     $D443
-        lda     $D443,x
+LBBBC:  ldx     path_buf1
+        lda     path_buf1,x
         sta     $D486
-        dec     $D443
-        inc     $D484
+        dec     path_buf1
+        inc     path_buf2
         jsr     LBD3B
         sta     $06
         stx     $06+1
@@ -20123,67 +20122,67 @@ LBBBC:  ldx     $D443
         sta     $08+1
         A2D_RELAY_CALL A2D_SET_POS, $6
         A2D_RELAY_CALL A2D_SET_BOX, LD6C7
-        addr_call draw_text1, $D484
+        addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
         lda     winF
         jsr     LB7B9
         rts
 
-LBC03:  lda     $D484
+LBC03:  lda     path_buf2
         cmp     #$02
         bcs     LBC0B
         rts
 
-LBC0B:  ldx     $D443
+LBC0B:  ldx     path_buf1
         inx
         lda     $D486
-        sta     $D443,x
-        inc     $D443
-        ldx     $D484
+        sta     path_buf1,x
+        inc     path_buf1
+        ldx     path_buf2
         cpx     #$03
         bcc     LBC2D
         ldx     #$02
 LBC21:  lda     $D485,x
-        sta     $D484,x
+        sta     path_buf2,x
         inx
-        cpx     $D484
+        cpx     path_buf2
         bne     LBC21
-LBC2D:  dec     $D484
+LBC2D:  dec     path_buf2
         A2D_RELAY_CALL A2D_SET_POS, LD6B3
         A2D_RELAY_CALL A2D_SET_BOX, LD6C7
-        addr_call draw_text1, $D443
-        addr_call draw_text1, $D484
+        addr_call draw_text1, path_buf1
+        addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
         lda     winF
         jsr     LB7B9
         rts
 
-LBC5E:  lda     $D443
+LBC5E:  lda     path_buf1
         bne     LBC64
         rts
 
-LBC64:  ldx     $D484
+LBC64:  ldx     path_buf2
         cpx     #$01
         beq     LBC79
-LBC6B:  lda     $D484,x
+LBC6B:  lda     path_buf2,x
         sta     $D3C0,x
         dex
         cpx     #$01
         bne     LBC6B
-        ldx     $D484
+        ldx     path_buf2
 LBC79:  dex
         stx     $D3C1
-        ldx     $D443
-LBC80:  lda     $D443,x
+        ldx     path_buf1
+LBC80:  lda     path_buf1,x
         sta     $D485,x
         dex
         bne     LBC80
         lda     LD8EF
         sta     $D485
-        inc     $D443
-        lda     $D443
-        sta     $D484
-        lda     $D443
+        inc     path_buf1
+        lda     path_buf1
+        sta     path_buf2
+        lda     path_buf1
         clc
         adc     $D3C1
         tay
@@ -20191,42 +20190,42 @@ LBC80:  lda     $D443,x
         ldx     $D3C1
         beq     LBCB3
 LBCA6:  lda     $D3C1,x
-        sta     $D484,y
+        sta     path_buf2,y
         dex
         dey
-        cpy     $D484
+        cpy     path_buf2
         bne     LBCA6
 LBCB3:  pla
-        sta     $D484
+        sta     path_buf2
         lda     #$00
-        sta     $D443
+        sta     path_buf1
         A2D_RELAY_CALL A2D_SET_POS, LD6B3
         jsr     LB961
         rts
 
-LBCC9:  lda     $D484
+LBCC9:  lda     path_buf2
         cmp     #$02
         bcs     LBCD1
         rts
 
-LBCD1:  ldx     $D484
+LBCD1:  ldx     path_buf2
         dex
         txa
         clc
-        adc     $D443
+        adc     path_buf1
         pha
         tay
-        ldx     $D484
-LBCDF:  lda     $D484,x
-        sta     $D443,y
+        ldx     path_buf2
+LBCDF:  lda     path_buf2,x
+        sta     path_buf1,y
         dex
         dey
-        cpy     $D443
+        cpy     path_buf1
         bne     LBCDF
         pla
-        sta     $D443
+        sta     path_buf1
         lda     #$01
-        sta     $D484
+        sta     path_buf2
         A2D_RELAY_CALL A2D_SET_POS, LD6B3
         jsr     LB961
         rts
@@ -20237,24 +20236,24 @@ LBCDF:  lda     $D484,x
         lda     ($06),y
         tay
         clc
-        adc     $D443
+        adc     path_buf1
         pha
         tax
 LBD11:  lda     ($06),y
-        sta     $D443,x
+        sta     path_buf1,x
         dey
         dex
-        cpx     $D443
+        cpx     path_buf1
         bne     LBD11
         pla
-        sta     $D443
+        sta     path_buf1
         rts
 
-LBD22:  ldx     $D443
+LBD22:  ldx     path_buf1
         cpx     #$00
         beq     LBD33
-        dec     $D443
-        lda     $D443,x
+        dec     path_buf1
+        lda     path_buf1,x
         cmp     #$2F
         bne     LBD22
 LBD33:  rts
@@ -20267,7 +20266,7 @@ LBD3B:  lda     #<$D444
         sta     $06
         lda     #>$D444
         sta     $06+1
-        lda     $D443
+        lda     path_buf1
         sta     $08
         bne     LBD51
         lda     LD6B3
@@ -20286,13 +20285,13 @@ LBD51:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $6
         rts
 
 LBD69:  lda     #$01
-        sta     $D484
+        sta     path_buf2
         lda     LD8EF
         sta     $D485
         rts
 
 LBD75:  lda     #$00
-        sta     $D443
+        sta     path_buf1
         rts
 
 LBD7B:  ldx     #$11
@@ -20433,10 +20432,10 @@ LBE78:  ldy     #$00
         lda     ($06),y
         tay
 LBE7D:  lda     ($06),y
-        sta     $D443,y
+        sta     path_buf1,y
         dey
         bpl     LBE7D
-        addr_call LB781, $D443
+        addr_call LB781, path_buf1
         rts
 
 LBE8D:  jsr     set_fill_white
