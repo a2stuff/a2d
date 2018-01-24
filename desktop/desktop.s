@@ -3467,7 +3467,7 @@ label_rename_icon:
         .addr   saddr
 .endmacro
 .macro  DEFINE_MENU_SEPARATOR
-        .addr   $0040, $0013, 0
+        .word   64, 19, 0
 .endmacro
 
 desktop_menu:
@@ -4978,8 +4978,9 @@ watch_cursor:
         .byte   px(%0000000),px(%0000000)
         .byte   5, 5
 
-LD343:  .res    256, 0
+LD343:  .res    191, 0
 
+path_buf0:  .res    65, 0
 path_buf1:  .res    65, 0
 path_buf2:  .res    65, 0
 
@@ -6819,14 +6820,14 @@ L463A:  .byte   $01
         .byte   0
 L463E:  .res    16, 0
 
-L464E:  lda     $D343
+L464E:  lda     LD343
         beq     L465E
-        bit     $D344
+        bit     LD343+1
         bmi     L4666
         jsr     L67AB
         jmp     L4666
 
-L465E:  bit     $D344
+L465E:  bit     LD343+1
         bmi     L4666
         jsr     L67A3
 L4666:  lda     is_file_selected
@@ -6975,7 +6976,7 @@ L477F:  lda     $D345,x
         sta     INVOKER_FILENAME,x
         dex
         bpl     L477F
-        addr_call L4842, $0280
+        addr_call L4842, $280
         addr_call L4842, $220
         jsr     L48BE
         lda     #<INVOKER
@@ -7181,8 +7182,8 @@ done:   jsr     set_pointer_cursor
         rts
 
 L4968:  jsr     L4AAD
-        ldx     $0840
-L496E:  lda     $0840,x
+        ldx     $840
+L496E:  lda     $840,x
         sta     $D355,x
         dex
         bpl     L496E
@@ -7321,7 +7322,7 @@ L4A5A:  lda     ($06),y
         lda     ($08),y
         tay
 L4A6F:  lda     ($08),y
-        sta     $0840,y
+        sta     $840,y
         dey
         bpl     L4A6F
 L4A77:  ldy     L0800
@@ -7332,21 +7333,21 @@ L4A7A:  lda     L0800,y
         bne     L4A7A
 L4A84:  dey
         sty     L0800
-        ldy     $0840
-L4A8B:  lda     $0840,y
+        ldy     $840
+L4A8B:  lda     $840,y
         cmp     #$2F
         beq     L4A95
         dey
         bne     L4A8B
 L4A95:  dey
-        sty     $0840
+        sty     $840
         lda     #$00
         sta     $06
         lda     #$08
         sta     $06+1
-        lda     #<$0840
+        lda     #<$840
         sta     $08
-        lda     #>$0840
+        lda     #>$840
         sta     $08+1
         jsr     L4D19
         rts
@@ -7356,7 +7357,7 @@ L4AB0:  lda     $D355,y
         sta     L0800,y
         dey
         bpl     L4AB0
-        addr_call L4B15, $0840
+        addr_call L4B15, $840
         ldy     L0800
 L4AC3:  lda     L0800,y
         cmp     #$2F
@@ -7370,11 +7371,11 @@ L4ACE:  lda     L0800,y
         dey
         bne     L4ACE
 L4AD8:  dey
-        ldx     $0840
+        ldx     $840
 L4ADC:  iny
         inx
         lda     L0800,y
-        sta     $0840,x
+        sta     $840,x
         cpy     L0800
         bne     L4ADC
         rts
@@ -7833,7 +7834,7 @@ L4E34:  lda     ($06),y
         dex
         dey
 L4E51:  lda     ($06),y
-        sta     $D344,x
+        sta     LD343+1,x
         dey
         dex
         bne     L4E51
@@ -9732,7 +9733,7 @@ L5E3A:  lda     ($06),y
         dex
         dey
 L5E57:  lda     ($06),y
-        sta     $D344,x
+        sta     LD343+1,x
         dey
         dex
         bne     L5E57
@@ -10711,7 +10712,7 @@ L67B0:  lda     #$03
         lda     #$04
         jsr     L67CA
         lda     #$80
-        sta     $D344
+        sta     LD343+1
         rts
 
 L67CA:  sta     $E26D
@@ -16622,7 +16623,7 @@ L9931:  .addr   L9B36
         .addr   L9B33
         .addr   rts2
 
-L9937:  .byte   $00
+L9937:  .byte   0
 L9938:  .addr   0
         .addr   $220
         .addr   $1FC0
@@ -16661,11 +16662,11 @@ L997C:  lda     #$05
 
 L9984:  lda     #$00
         sta     L9937
-        lda     #<$99A7
+        lda     #<$99A7         ; ???
         sta     L917D
         lda     #>$99A7
         sta     L917D+1
-        lda     #<$99DC
+        lda     #<$99DC         ; ???
         sta     L9180
         lda     #>$99DC
         sta     L9180+1
@@ -17179,11 +17180,11 @@ L9E7B:  .byte   0
         .byte   $20
         .byte   $02
 L9E7E:  sta     L9E79
-        lda     #<$9EB1
+        lda     #<$9EB1         ; ???
         sta     L9183
         lda     #>$9EB1
         sta     L9183+1
-        lda     #<$9EA3
+        lda     #<$9EA3         ; ???
         sta     L917D
         lda     #>$9EA3
         sta     L917D+1
@@ -18410,7 +18411,7 @@ LA9E6:  ldy     #$01
         stx     $06
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE7E
-        addr_call draw_text1, $D402
+        addr_call draw_text1, path_buf0
         jsr     LB3BF
         ldy     #$05
         lda     ($06),y
@@ -18422,7 +18423,7 @@ LA9E6:  ldy     #$01
         jsr     LBE78
         A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE82
         addr_call draw_text1, path_buf1
-        yax_call A2D_RELAY, $E, $B0BA
+        yax_call A2D_RELAY, A2D_SET_POS, desktop_aux::LB0BA
         addr_call draw_text1, str_7_spaces
         rts
 
@@ -18535,7 +18536,7 @@ LAB69:  ldy     #$01
         stx     $06
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE7E
-        addr_call draw_text1, $D402
+        addr_call draw_text1, path_buf0
         A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB0BA
         addr_call draw_text1, str_7_spaces
         rts
@@ -18726,7 +18727,7 @@ LAD6C:  ldy     #$01
         stx     $06
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE7E
-        addr_call draw_text1, $D402
+        addr_call draw_text1, path_buf0
         A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB16E
         addr_call draw_text1, str_7_spaces
         rts
@@ -18806,7 +18807,7 @@ LAE70:  lda     #$80
         lda     ($08),y
         tay
 LAE90:  lda     ($08),y
-        sta     $D402,y
+        sta     path_buf0,y
         dey
         bpl     LAE90
         lda     winF
@@ -18814,7 +18815,7 @@ LAE90:  lda     ($08),y
         yax_call draw_dialog_label, $02, desktop_aux::str_in_colon
         lda     #$37
         sta     dialog_label_pos
-        yax_call draw_dialog_label, $02, $D402
+        yax_call draw_dialog_label, $02, path_buf0
         lda     #$28
         sta     dialog_label_pos
         yax_call draw_dialog_label, $04, desktop_aux::str_enter_folder_name
@@ -18831,26 +18832,26 @@ LAED6:  lda     #$FB
         jsr     LB961
         jmp     LAEC6
 
-LAEE1:  lda     $D402
+LAEE1:  lda     path_buf0
         clc
         adc     path_buf1
         clc
         adc     #$01
         cmp     #$41
         bcs     LAED6
-        inc     $D402
-        ldx     $D402
+        inc     path_buf0
+        ldx     path_buf0
         lda     #'/'
-        sta     $D402,x
-        ldx     $D402
+        sta     path_buf0,x
+        ldx     path_buf0
         ldy     #$00
 LAEFF:  inx
         iny
         lda     path_buf1,y
-        sta     $D402,x
+        sta     path_buf0,x
         cpy     path_buf1
         bne     LAEFF
-        stx     $D402
+        stx     path_buf0
         ldy     #$02
         ldx     #$D4
         lda     #$00
@@ -19036,7 +19037,7 @@ LB0A2:  ldy     #$01
         stx     $06
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE7E
-        addr_call draw_text1, $D402
+        addr_call draw_text1, path_buf0
         A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB241
         addr_call draw_text1, str_7_spaces
         rts
@@ -19128,7 +19129,7 @@ LB1C0:  ldy     #$01
         stx     $06
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE7E
-        addr_call draw_text1, $D402
+        addr_call draw_text1, path_buf0
         A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB23D
         addr_call draw_text1, str_7_spaces
         rts
@@ -20420,7 +20421,7 @@ LBE63:  ldy     #$00
         lda     ($06),y
         tay
 LBE68:  lda     ($06),y
-        sta     $D402,y
+        sta     path_buf0,y
         dey
         bpl     LBE68
         lda     #$02
@@ -20723,9 +20724,9 @@ L0A03:  A2D_RELAY_CALL $29
         lda     $1400
         clc
         adc     $1401
-        sta     $D343
+        sta     LD343
         lda     #$00
-        sta     $D344
+        sta     LD343+1
         lda     $1400
         sta     L0A93
 L0A3B:  lda     L0A92
