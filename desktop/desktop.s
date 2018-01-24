@@ -252,10 +252,10 @@ L867B:  lda     online_params_buffer
         sta     $D464,y
         asl     a
         tax
-        lda     $F13A,x
+        lda     $F13A,x         ; ???
         sta     $06
-        lda     $F13B,x
-        sta     $07
+        lda     $F13A+1,x
+        sta     $06+1
         ldx     #$00
         ldy     #$09
         lda     #' '
@@ -3122,7 +3122,7 @@ LA820:  bit     LA6B1
         bpl     LA833
         lda     set_state_params::height
         clc
-        adc     #$0C
+        adc     #12
         sta     set_state_params::height
         bcc     LA833
         inc     set_state_params::height+1
@@ -3130,7 +3130,7 @@ LA833:  bit     LA6B1
         bvc     LA846
         lda     set_state_params::width
         clc
-        adc     #$14
+        adc     #20
         sta     set_state_params::width
         bcc     LA846
         inc     set_state_params::width+1
@@ -3170,10 +3170,10 @@ LA846:  jsr     LA382
         bmi     LA8B7
         lda     LA6C3
         clc
-        adc     #$01
+        adc     #1
         sta     set_box_params2::width
         lda     LA6C4
-        adc     #$00
+        adc     #0
         sta     set_box_params2::width+1
         jmp     LA8D4
 
@@ -3197,7 +3197,7 @@ LA8D4:  lda     set_state_params::top
         sta     set_box_params2::height
         lda     set_state_params::top+1
         sta     set_box_params2::height+1
-        lda     #$01
+        lda     #1
         sta     L9F93
         jmp     LA6FA
 
@@ -3208,14 +3208,14 @@ LA8F6:  lda     LA6C5
         bpl     LA923
         lda     LA6C5
         clc
-        adc     #$02
+        adc     #2
         sta     set_box_params2::voff
         sta     set_box_params2::top
         lda     LA6C6
-        adc     #$00
+        adc     #0
         sta     set_box_params2::voff+1
         sta     set_box_params2::top+1
-        lda     #$01
+        lda     #1
         sta     L9F93
         jmp     LA6FA
 
@@ -3229,14 +3229,14 @@ LA923:  lda     set_box_params2::width
 
 LA938:  lda     set_state_params::top
         clc
-        adc     #$0F
+        adc     #15
         sta     set_state_params::top
         lda     set_state_params::top+1
         adc     #0
         sta     set_state_params::top+1
         lda     set_state_params::voff
         clc
-        adc     #$0F
+        adc     #15
         sta     set_state_params::voff
         lda     set_state_params::voff+1
         adc     #0
@@ -3882,12 +3882,15 @@ start:  pha
         A2D_RELAY2_CALL A2D_HIDE_CURSOR
         A2D_RELAY2_CALL A2D_SET_CURSOR, pointer_cursor
         A2D_RELAY2_CALL A2D_SHOW_CURSOR
+
+        ;; play bell
         sta     ALTZPOFF
         sta     ROMIN2
         jsr     BELL1
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
+
         ldx     #$03
         lda     #$00
 LBA0B:  sta     state2_left,x
@@ -5452,7 +5455,8 @@ item_num:.byte  0
         .byte   $00,$00,$00,$00,$00,$00
         .byte   $00,$04,$00,$00,$00
 
-LE267:  .byte   $04,$00,$00
+LE267:  .byte   $04,$00,$00     ; params for an A2D $36 call
+
 LE26A:  .byte   $04,$00
 LE26C:  .byte   $00,$00,$00,$00,$04,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -5690,8 +5694,13 @@ str_6_spaces:
 LEBE3:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 LEBEB:  DEFINE_POINT 0, 0
 LEBEF:  DEFINE_POINT 0, 0
+
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00
+        .byte   $00
+
+LEBFC:  .byte   0               ; flag of some sort ???
+
+        .byte   $00,$00,$00,$00
 
         ;; Used by DESKTOP_COPY_*_BUF
 table1: .addr   $1B00,$1B80,$1C00,$1C80,$1D00,$1D80,$1E00,$1E80,$1F00
@@ -9617,10 +9626,10 @@ L5D0B:  ldx     is_file_selected
         jmp     L5DFC
 
 L5D55:  lda     L5CD9
-        sta     $EBFC
-        DESKTOP_RELAY_CALL $0A, $EBFC
+        sta     LEBFC
+        DESKTOP_RELAY_CALL $0A, LEBFC
         tax
-        lda     $EBFC
+        lda     LEBFC
         beq     L5DA6
         jsr     L8F00
         cmp     #$FF
@@ -9628,7 +9637,7 @@ L5D55:  lda     L5CD9
         jsr     L5DEC
         jmp     redraw_windows_and_desktop
 
-L5D77:  lda     $EBFC
+L5D77:  lda     LEBFC
         cmp     $EBFB
         bne     L5D8E
         lda     desktop_winid
@@ -9637,7 +9646,7 @@ L5D77:  lda     $EBFC
         jsr     L5E78
         jmp     redraw_windows_and_desktop
 
-L5D8E:  lda     $EBFC
+L5D8E:  lda     LEBFC
         bmi     L5D99
         jsr     L6A3F
         jmp     redraw_windows_and_desktop
@@ -10757,22 +10766,22 @@ L681B:  DESKTOP_RELAY_CALL $02, $D20D
 L6834:  bit     $D2AA
         bpl     L6880
         lda     $D20D
-        sta     $EBFC
-        DESKTOP_RELAY_CALL $0A, $EBFC
+        sta     LEBFC
+        DESKTOP_RELAY_CALL $0A, LEBFC
         tax
-        lda     $EBFC
+        lda     LEBFC
         beq     L6878
         jsr     L8F00
         cmp     #$FF
         bne     L6858
         jmp     redraw_windows_and_desktop
 
-L6858:  lda     $EBFC
+L6858:  lda     LEBFC
         cmp     $EBFB
         bne     L6863
         jmp     redraw_windows_and_desktop
 
-L6863:  lda     $EBFC
+L6863:  lda     LEBFC
         bpl     L6872
         and     #$7F
         pha
@@ -12682,10 +12691,10 @@ L78EF:  lda     query_state_buffer::hoff
         lda     query_state_buffer::voff
         clc
         adc     #$0A
-        sta     $EBBC
+        sta     items_label_pos+2
         lda     query_state_buffer::voff+1
         adc     #$00
-        sta     $EBBD
+        sta     items_label_pos+3
         lda     buf3len
         ldx     #$00
         jsr     L7AE0
@@ -12764,7 +12773,7 @@ L7A3A:  lda     $EBE7
         sta     LEBEF
         lda     $EBE8
         adc     L7ADF
-        sta     $EBF0
+        sta     LEBEF+1
         lda     L7ADF
         beq     L7A59
         lda     L7ADE
@@ -12774,9 +12783,9 @@ L7A59:  lda     LEBEF
         sec
         sbc     #$0C
         sta     LEBEF
-        lda     $EBF0
+        lda     LEBEF+1
         sbc     #$00
-        sta     $EBF0
+        sta     LEBEF+1
 L7A6A:  lsr     L7ADF
         ror     L7ADE
         lda     LEBE3
@@ -12785,37 +12794,37 @@ L7A6A:  lsr     L7ADF
         sta     LEBEB
         lda     $EBE4
         adc     L7ADF
-        sta     $EBEC
+        sta     LEBEB+1
         jmp     L7A9E
 
 L7A86:  lda     LEBE3
         sta     LEBEB
         lda     LEBE3+1
-        sta     $EBEC
+        sta     LEBEB+1
         lda     $EBE7
         sta     LEBEF
         lda     $EBE8
-        sta     $EBF0
+        sta     LEBEF+1
 L7A9E:  lda     LEBEB
         clc
         adc     query_state_buffer::hoff
         sta     LEBEB
-        lda     $EBEC
+        lda     LEBEB+1
         adc     query_state_buffer::hoff+1
-        sta     $EBEC
+        sta     LEBEB+1
         lda     LEBEF
         clc
         adc     query_state_buffer::hoff
         sta     LEBEF
-        lda     $EBF0
+        lda     LEBEF+1
         adc     query_state_buffer::hoff+1
-        sta     $EBF0
-        lda     $EBBC
-        sta     $EBED
-        sta     $EBF1
-        lda     $EBBD
-        sta     $EBEE
-        sta     $EBF2
+        sta     LEBEF+1
+        lda     items_label_pos+2
+        sta     LEBEB+2
+        sta     LEBEF+2
+        lda     items_label_pos+3
+        sta     LEBEB+3
+        sta     LEBEF+3
         rts
 
 L7AD7:  addr_jump draw_text2, str_6_spaces
@@ -15434,7 +15443,7 @@ L8FB8:  lda     #$00
         sta     L9189
         jmp     L8FEB
 
-L8FC5:  lda     $EBFC
+L8FC5:  lda     LEBFC
         cmp     #$01
         bne     L8FD0
         lda     #$80
@@ -15470,7 +15479,7 @@ L900C:  pla
         pla
         jmp     JT_EJECT
 
-L9011:  lda     $EBFC
+L9011:  lda     LEBFC
         bpl     L9032
         and     #$7F
         asl     a
@@ -15495,12 +15504,12 @@ L9032:  jsr     L8FA7
         sta     $08
         lda     window_address_table+1,x
         sta     $08+1
-        lda     $EBFC
+        lda     LEBFC
         jsr     L918E
         jsr     L91A0
         jmp     L9076
 
-L9051:  lda     $EBFC
+L9051:  lda     LEBFC
         jsr     L918E
         ldy     #$01
         lda     #$2F
@@ -15626,7 +15635,7 @@ L915D:  jsr     L9182
 L9165:  jmp     L90BA
 
 L9168:  jsr     L917F
-        lda     $EBFC
+        lda     LEBFC
         jsr     L918E
         ldy     #$01
         lda     #$20
@@ -16670,14 +16679,14 @@ L9984:  lda     #$00
         sta     L9180
         lda     #>$99DC
         sta     L9180+1
-        yax_call launch_dialog, $0A, L9937
+        yax_call launch_dialog, index_download_dialog, L9937
         rts
 
         sta     L9938
         stx     L9938+1
         lda     #$01
         sta     L9937
-        yax_call launch_dialog, $0A, L9937
+        yax_call launch_dialog, index_download_dialog, L9937
         rts
 
 L99BC:  lda     #$80
@@ -16697,12 +16706,12 @@ L99C3:  lda     L9931,y
 
         lda     #$03
         sta     L9937
-        yax_call launch_dialog, $0A, L9937
+        yax_call launch_dialog, index_download_dialog, L9937
         rts
 
         lda     #$04
         sta     L9937
-        yax_call launch_dialog, $0A, L9937
+        yax_call launch_dialog, index_download_dialog, L9937
         cmp     #$02
         bne     L99FE
         rts
@@ -17891,6 +17900,7 @@ LA4C6:  yax_call JT_MLI_RELAY, ON_LINE, on_line_params2
         index_lock_dialog               := 7
         index_unlock_dialog             := 8
         index_rename_dialog             := 9
+        index_download_dialog           := $A
         index_get_size_dialog           := $B
         index_warning_dialog            := $C
 
@@ -17907,15 +17917,15 @@ LA503:  .addr   show_about_dialog
         .addr   show_lock_dialog
         .addr   show_unlock_dialog
         .addr   show_rename_dialog
-        .addr   LAAE1
+        .addr   show_download_dialog
         .addr   show_get_size_dialog
         .addr   show_warning_dialog
 
-LA51D:  .word   0
+dialog_param_addr:  .addr   0
         .byte   0
 
-LA520:  sta     LA51D
-        stx     LA51D+1
+LA520:  sta     dialog_param_addr
+        stx     dialog_param_addr+1
         tya
         asl     a
         tax
@@ -18341,7 +18351,7 @@ close:  A2D_RELAY_CALL A2D_DESTROY_WINDOW, win18::id
 
 show_copy_file_dialog:
 
-        jsr     LB3BF
+        jsr     copy_dialog_param_addr_to_ptr
         ldy     #$00
         lda     ($06),y
         cmp     #$01
@@ -18401,7 +18411,7 @@ LA9E6:  ldy     #$01
         jsr     LB7B9
         jsr     LBE8D
         jsr     LBE9A
-        jsr     LB3BF
+        jsr     copy_dialog_param_addr_to_ptr
         ldy     #$03
         lda     ($06),y
         tax
@@ -18412,7 +18422,7 @@ LA9E6:  ldy     #$01
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE7E
         addr_call draw_text1, path_buf0
-        jsr     LB3BF
+        jsr     copy_dialog_param_addr_to_ptr
         ldy     #$05
         lda     ($06),y
         tax
@@ -18432,7 +18442,7 @@ LAA5A:  jsr     reset_state
         jsr     set_cursor_pointer
         rts
 
-LAA6A:  jsr     LAACE
+LAA6A:  jsr     bell
         lda     winF
         jsr     LB7B9
         axy_call draw_dialog_label, $06, desktop_aux::str_exists_prompt
@@ -18446,7 +18456,7 @@ LAA7F:  jsr     prompt_input_loop
         pla
         rts
 
-LAA9C:  jsr     LAACE
+LAA9C:  jsr     bell
         lda     winF
         jsr     LB7B9
         axy_call draw_dialog_label, $06, desktop_aux::str_large_prompt
@@ -18460,37 +18470,39 @@ LAAB1:  jsr     prompt_input_loop
         pla
         rts
 
-LAACE:  sta     ALTZPOFF
+.proc bell
+        sta     ALTZPOFF
         sta     ROMIN2
         jsr     BELL1
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         rts
+.endproc
 
 ;;; ==================================================
+;;; "DownLoad" dialog
 
-LAAE1:
-        jsr     LB3BF
-        ldy     #$00
-        lda     ($06),y
-        cmp     #$01
-        bne     LAAEF
-        jmp     LAB38
+.proc show_download_dialog
+        ptr := $6
 
-LAAEF:  cmp     #$02
-        bne     LAAF6
-        jmp     LAB69
+        jsr     copy_dialog_param_addr_to_ptr
+        ldy     #0
+        lda     (ptr),y
+        cmp     #1
+        bne     :+
+        jmp     do1
+:       cmp     #2
+        bne     :+
+        jmp     do2
+:       cmp     #3
+        bne     :+
+        jmp     do3
+:       cmp     #4
+        bne     else
+        jmp     do4
 
-LAAF6:  cmp     #$03
-        bne     LAAFD
-        jmp     LABB8
-
-LAAFD:  cmp     #$04
-        bne     LAB04
-        jmp     LABC8
-
-LAB04:  lda     #$00
+else:   lda     #0
         sta     LD8E8
         jsr     LB53A
         addr_call draw_centered_string, desktop_aux::str_download
@@ -18500,12 +18512,12 @@ LAB04:  lda     #$00
         axy_call draw_dialog_label, $04, desktop_aux::str_copy_remaining
         rts
 
-LAB38:  ldy     #$01
-        lda     ($06),y
+do1:    ldy     #1
+        lda     (ptr),y
         sta     LD909
         iny
-        lda     ($06),y
-        sta     LD90A
+        lda     (ptr),y
+        sta     LD909+1
         jsr     LBDC4
         jsr     LBDDF
         lda     winF
@@ -18515,25 +18527,25 @@ LAB38:  ldy     #$01
         addr_call draw_text1, str_files
         rts
 
-LAB69:  ldy     #$01
-        lda     ($06),y
+do2:    ldy     #$01
+        lda     (ptr),y
         sta     LD909
         iny
-        lda     ($06),y
+        lda     (ptr),y
         sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
         lda     winF
         jsr     LB7B9
         jsr     LBE8D
-        jsr     LB3BF
+        jsr     copy_dialog_param_addr_to_ptr
         ldy     #$03
-        lda     ($06),y
+        lda     (ptr),y
         tax
         iny
-        lda     ($06),y
-        sta     $06+1
-        stx     $06
+        lda     (ptr),y
+        sta     ptr+1
+        stx     ptr
         jsr     LBE63
         A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE7E
         addr_call draw_text1, path_buf0
@@ -18541,67 +18553,68 @@ LAB69:  ldy     #$01
         addr_call draw_text1, str_7_spaces
         rts
 
-LABB8:  jsr     reset_state
+do3:    jsr     reset_state
         A2D_RELAY_CALL A2D_DESTROY_WINDOW, winF
         jsr     set_cursor_pointer
         rts
 
-LABC8:  jsr     LAACE
+do4:    jsr     bell
         lda     winF
         jsr     LB7B9
-        axy_call draw_dialog_label, $06, desktop_aux::str_ramcard_full
+        axy_call draw_dialog_label, ptr, desktop_aux::str_ramcard_full
         jsr     draw_ok_button
-LABDD:  jsr     prompt_input_loop
-        bmi     LABDD
+:       jsr     prompt_input_loop
+        bmi     :-
         pha
         jsr     erase_ok_button
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::prompt_rect
         pla
         rts
+.endproc
 
 ;;; ==================================================
 ;;; "Get Size" dialog
 
-show_get_size_dialog:
-        jsr     LB3BF
-        ldy     #$00
-        lda     ($06),y
-        cmp     #$01
-        bne     LAC08
-        jmp     LAC3D
+.proc show_get_size_dialog
+        ptr := $6
 
-LAC08:  cmp     #$02
-        bne     LAC0F
-        jmp     LACAE
+        jsr     copy_dialog_param_addr_to_ptr
+        ldy     #0
+        lda     (ptr),y
+        cmp     #1
+        bne     :+
+        jmp     do1
+:       cmp     #2
+        bne     :+
+        jmp     do2
+:       cmp     #3
+        bne     else
+        jmp     do3
 
-LAC0F:  cmp     #$03
-        bne     LAC16
-        jmp     LAC9E
-
-LAC16:  jsr     LB53A
+else:   jsr     LB53A
         addr_call draw_centered_string, desktop_aux::str_size_title
         axy_call draw_dialog_label, $01, desktop_aux::str_size_number
-        ldy     #$01
+        ldy     #1
         jsr     draw_colon
         axy_call draw_dialog_label, $02, desktop_aux::str_size_blocks
-        ldy     #$02
+        ldy     #2
         jsr     draw_colon
         rts
 
-LAC3D:  ldy     #$01
-        lda     ($06),y
+do1:    ldy     #$01
+        lda     (ptr),y
         sta     LD909
         tax
         iny
-        lda     ($06),y
-        sta     $06+1
-        stx     $06
+        lda     (ptr),y
+        sta     ptr+1
+        stx     ptr
         ldy     #$00
-        lda     ($06),y
+        lda     (ptr),y
         sta     LD909
         iny
-        lda     ($06),y
+        lda     (ptr),y
         sta     LD90A
         jsr     LBDDF
         lda     winF
@@ -18609,19 +18622,19 @@ LAC3D:  ldy     #$01
         lda     #$A5
         sta     dialog_label_pos
         yax_call draw_dialog_label, $01, str_7_spaces
-        jsr     LB3BF
+        jsr     copy_dialog_param_addr_to_ptr
         ldy     #$03
-        lda     ($06),y
+        lda     (ptr),y
         tax
         iny
-        lda     ($06),y
-        sta     $06+1
-        stx     $06
+        lda     (ptr),y
+        sta     ptr+1
+        stx     ptr
         ldy     #$00
-        lda     ($06),y
+        lda     (ptr),y
         sta     LD909
         iny
-        lda     ($06),y
+        lda     (ptr),y
         sta     LD90A
         jsr     LBDDF
         lda     #$A5
@@ -18629,27 +18642,28 @@ LAC3D:  ldy     #$01
         yax_call draw_dialog_label, $02, str_7_spaces
         rts
 
-LAC9E:  jsr     reset_state
+do3:    jsr     reset_state
         A2D_RELAY_CALL A2D_DESTROY_WINDOW, winF
         jsr     set_cursor_pointer
         rts
 
-LACAE:  lda     winF
+do2:    lda     winF
         jsr     LB7B9
         jsr     draw_ok_button
-LACB7:  jsr     prompt_input_loop
-        bmi     LACB7
+:       jsr     prompt_input_loop
+        bmi     :-
         A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
         A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::press_ok_to_rect
         jsr     erase_ok_button
         lda     #$00
         rts
+.endproc
 
 ;;; ==================================================
 ;;; "Delete File" dialog
 
 show_delete_file_dialog:
-        jsr     LB3BF
+        jsr     copy_dialog_param_addr_to_ptr
         ldy     #$00
         lda     ($06),y
         cmp     #$01
@@ -18717,7 +18731,7 @@ LAD6C:  ldy     #$01
         lda     winF
         jsr     LB7B9
         jsr     LBE8D
-        jsr     LB3BF
+        jsr     copy_dialog_param_addr_to_ptr
         ldy     #$03
         lda     ($06),y
         tax
@@ -18768,7 +18782,7 @@ LAE17:  jsr     prompt_input_loop
 ;;; "New Folder" dialog
 
 show_new_folder_dialog:
-        jsr     LB3BF
+        jsr     copy_dialog_param_addr_to_ptr
         ldy     #$00
         lda     ($06),y
         cmp     #$80
@@ -18796,7 +18810,7 @@ LAE70:  lda     #$80
         lda     #$00
         sta     LD8E7
         jsr     LBD75
-        jsr     LB3BF
+        jsr     copy_dialog_param_addr_to_ptr
         ldy     #$01
         lda     ($06),y
         sta     $08
@@ -18867,7 +18881,7 @@ LAF16:  jsr     reset_state
 ;;; "Get Info" dialog
 
 show_get_info_dialog:
-        jsr     LB3BF
+        jsr     copy_dialog_param_addr_to_ptr
         ldy     #$00
         lda     ($06),y
         bmi     LAF34
@@ -18884,7 +18898,7 @@ LAF34:  lda     #$00
         lda     winF
         jsr     LB7B9
         addr_call draw_centered_string, desktop_aux::str_info_title
-        jsr     LB3BF
+        jsr     copy_dialog_param_addr_to_ptr
         ldy     #$00
         lda     ($06),y
         and     #$7F
@@ -18911,7 +18925,7 @@ LAF9B:  yax_call draw_dialog_label, $04, desktop_aux::str_info_create
 
 LAFB9:  lda     winF
         jsr     LB7B9
-        jsr     LB3BF
+        jsr     copy_dialog_param_addr_to_ptr
         ldy     #$00
         lda     ($06),y
         sta     LB01E
@@ -18919,7 +18933,7 @@ LAFB9:  lda     winF
         jsr     draw_colon
         lda     #$A5
         sta     dialog_label_pos
-        jsr     LB3BF
+        jsr     copy_dialog_param_addr_to_ptr
         lda     LB01E
         cmp     #$02
         bne     LAFF0
@@ -18974,7 +18988,7 @@ LB01E:  .byte   0
 ;;; "Lock" dialog
 
 show_lock_dialog:
-        jsr     LB3BF
+        jsr     copy_dialog_param_addr_to_ptr
         ldy     #$00
         lda     ($06),y
         cmp     #$01
@@ -19027,7 +19041,7 @@ LB0A2:  ldy     #$01
         lda     winF
         jsr     LB7B9
         jsr     LBE8D
-        jsr     LB3BF
+        jsr     copy_dialog_param_addr_to_ptr
         ldy     #$03
         lda     ($06),y
         tax
@@ -19066,7 +19080,7 @@ LB13A:  jsr     reset_state
 ;;; "Unlock" dialog
 
 show_unlock_dialog:
-        jsr     LB3BF
+        jsr     copy_dialog_param_addr_to_ptr
         ldy     #$00
         lda     ($06),y
         cmp     #$01
@@ -19119,7 +19133,7 @@ LB1C0:  ldy     #$01
         lda     winF
         jsr     LB7B9
         jsr     LBE8D
-        jsr     LB3BF
+        jsr     copy_dialog_param_addr_to_ptr
         ldy     #$03
         lda     ($06),y
         tax
@@ -19158,7 +19172,7 @@ LB258:  jsr     reset_state
 ;;; "Rename" dialog
 
 show_rename_dialog:
-        jsr     LB3BF
+        jsr     copy_dialog_param_addr_to_ptr
         ldy     #$00
         lda     ($06),y
         cmp     #$80
@@ -19170,7 +19184,7 @@ LB276:  cmp     #$40
         jmp     LB313
 
 LB27D:  jsr     LBD75
-        jsr     LB3BF
+        jsr     copy_dialog_param_addr_to_ptr
         lda     #$80
         sta     LD8E8
         jsr     LBD69
@@ -19184,7 +19198,7 @@ LB27D:  jsr     LBD75
         yax_call draw_dialog_label, $02, desktop_aux::str_rename_old
         lda     #$55
         sta     dialog_label_pos
-        jsr     LB3BF
+        jsr     copy_dialog_param_addr_to_ptr
         ldy     #$01
         lda     ($06),y
         sta     $08
@@ -19242,7 +19256,7 @@ LB313:  jsr     reset_state
         jsr     LB7B9
         addr_call draw_centered_string, desktop_aux::str_warning
         A2D_RELAY_CALL A2D_SHOW_CURSOR
-        jsr     LB3BF
+        jsr     copy_dialog_param_addr_to_ptr
 
         ;; Dig up message
         ldy     #$00
@@ -19321,11 +19335,13 @@ warning_message_table:
 
 ;;; ==================================================
 
-LB3BF:  lda     LA51D
+.proc copy_dialog_param_addr_to_ptr
+        lda     dialog_param_addr
         sta     $06
-        lda     LA51D+1
+        lda     dialog_param_addr+1
         sta     $06+1
         rts
+.endproc
 
 .proc set_cursor_pointer_with_flag
         bit     cursor_ip_flag
