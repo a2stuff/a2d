@@ -7755,9 +7755,7 @@ L4D9D:  pha
         bpl     L4DA7
         jmp     redraw_windows_and_desktop
 
-L4DA7:  lda     #$0A
-        ldx     #$E0
-        jsr     L6F90
+L4DA7:  addr_call L6F90, $E00A
         sty     $E00A
         addr_call L6FAF, $E00A
         beq     L4DC2
@@ -10994,6 +10992,7 @@ L6A5C:  lda     ($06),y
         dec     $220
         lda     #$2F
         sta     $0221
+
         lda     #$20
         ldx     #$02
         ldy     $220
@@ -12531,9 +12530,7 @@ L77DA:  tay
         lda     LCBANK1
         tya
         jsr     L78A1
-        lda     #$00
-        ldx     #$18
-        jsr     L87BA
+        addr_call L87BA, $1800
         ldy     #$09
         ldx     #$00
 L77F0:  lda     $1800,x
@@ -14733,9 +14730,7 @@ L8A03:  sta     ($06),y
         and     #$0F
         sta     L0800
         sta     ($06),y
-        lda     #$00
-        ldx     #$08
-        jsr     L87BA
+        addr_call L87BA, $800
         ldx     #$00
         ldy     #$0B
 L8A22:  lda     $0801,x
@@ -15708,10 +15703,7 @@ L91D5:  yax_call JT_A2D_RELAY, A2D_QUERY_SCREEN, state2
         rts
 
 L91E8:  jsr     JT_REDRAW_ALL
-        ldy     #$0C
-        lda     #$00
-        ldx     #$00
-        jsr     JT_DESKTOP_RELAY
+        yax_call JT_DESKTOP_RELAY, $C, 0
         rts
 
 L91F5:  lda     #<L9211
@@ -18866,9 +18858,9 @@ LAEFF:  inx
         cpy     path_buf1
         bne     LAEFF
         stx     path_buf0
-        ldy     #$02
-        ldx     #$D4
-        lda     #$00
+        ldy     #<path_buf0
+        ldx     #>path_buf0
+        lda     #0
         rts
 
 LAF16:  jsr     reset_state
@@ -18940,13 +18932,9 @@ LAFB9:  lda     winF
         ldy     #$01
         lda     ($06),y
         beq     LAFE9
-        lda     #$A8
-        ldx     #$AE
-        jmp     LAFF8
+        addr_jump LAFF8, desktop_aux::str_yes_label
 
-LAFE9:  lda     #$AD
-        ldx     #$AE
-        jmp     LAFF8
+LAFE9:  addr_jump LAFF8, desktop_aux::str_no_label
 
 LAFF0:  ldy     #$02
         lda     ($06),y
@@ -20440,9 +20428,7 @@ LBE68:  lda     ($06),y
         sta     path_buf0,y
         dey
         bpl     LBE68
-        lda     #$02
-        ldx     #$D4
-        jsr     LB781
+        addr_call LB781, path_buf0
         rts
 
 LBE78:  ldy     #$00
