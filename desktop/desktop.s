@@ -9014,12 +9014,12 @@ done:   lda     #$00
 
 :       cmp     #KEY_RIGHT
         bne     :+
-        jsr     L582F
+        jsr     scroll_right
         jmp     loop
 
 :       cmp     #KEY_LEFT
         bne     vertical
-        jsr     L583C
+        jsr     scroll_left
         jmp     loop
 
         ;; Vertical ok?
@@ -9030,12 +9030,12 @@ vertical:
 
 :       cmp     #KEY_DOWN
         bne     :+
-        jsr     L5846
+        jsr     scroll_down
         jmp     loop
 
 :       cmp     #KEY_UP
         bne     loop
-        jsr     L5853
+        jsr     scroll_up
         jmp     loop
 .endproc
 
@@ -9058,30 +9058,34 @@ L5803:  lda     desktop_winid
         sty     L585E
         rts
 
-L582F:  lda     L585F
+scroll_right:                   ; elevator right / contents left
+        lda     L585F
         ldx     L5860
         jsr     L5863
         sta     L585F
         rts
 
-L583C:  lda     L585F
+scroll_left:                    ; elevator left / contents right
+        lda     L585F
         jsr     L587E
         sta     L585F
         rts
 
-L5846:  lda     L5861
+scroll_down:                    ; elevator down / contents up
+        lda     L5861
         ldx     L5862
         jsr     L5893
         sta     L5861
         rts
 
-L5853:  lda     L5861
+scroll_up:                      ; elevator up / contents down
+        lda     L5861
         jsr     L58AE
         sta     L5861
         rts
 
-L585D:  .byte   0
-L585E:  .byte   0
+L585D:  .byte   0               ; can scroll horiz?
+L585E:  .byte   0               ; can scroll vert?
 L585F:  .byte   0
 L5860:  .byte   0
 L5861:  .byte   0
@@ -9470,7 +9474,7 @@ L5B71:  jsr     L5803
 
 L5B81:  cmp     #$01
         bne     L5B92
-L5B85:  jsr     L5853
+L5B85:  jsr     scroll_up
         lda     #$01
         jsr     L5C89
         bpl     L5B85
@@ -9478,7 +9482,7 @@ L5B85:  jsr     L5853
 
 L5B92:  cmp     #$02
         bne     L5BA3
-L5B96:  jsr     L5846
+L5B96:  jsr     scroll_down
         lda     #$02
         jsr     L5C89
         bpl     L5B96
@@ -9517,7 +9521,7 @@ L5BD6:  jsr     L5803
 
 L5BE6:  cmp     #$01
         bne     L5BF7
-L5BEA:  jsr     L583C
+L5BEA:  jsr     scroll_left
         lda     #$01
         jsr     L5C89
         bpl     L5BEA
@@ -9525,7 +9529,7 @@ L5BEA:  jsr     L583C
 
 L5BF7:  cmp     #$02
         bne     L5C08
-L5BFB:  jsr     L582F
+L5BFB:  jsr     scroll_right
         lda     #$02
         jsr     L5C89
         bpl     L5BFB
