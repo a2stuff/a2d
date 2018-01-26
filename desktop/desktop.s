@@ -5376,7 +5376,12 @@ LDD9E:  .byte   0
         ;; each entry is 27 bytes long
         ;;      .byte ??
         ;;      .byte ??
-        ;;      .byte type/icon (bits 4,5,6 clear = directory)
+        ;;      .byte type/icon (bits 4,5,6 are type)
+        ;;                      $00 = directory
+        ;;                      $10 = system
+        ;;                      $20 = binary
+        ;;                      $30 = basic
+        ;;                      $50 = text, generic
         ;;      .word iconx     (pixels)
         ;;      .word icony     (pixels)
         ;;      .byte ??
@@ -6482,40 +6487,38 @@ offset_table:
 
 flag:   .byte   $00
 
+        ;; Handle accelerator keys
 menu_dispatch:
-        lda     input_params+2
-        bne     L4362
-        jmp     L4394
-
-L4362:  cmp     #3
-        bne     L4367
+        lda     input_params_modifiers
+        bne     :+              ; either OA or CA ?
+        jmp     menu_accelerators           ; nope
+:       cmp     #3              ; both OA + CA ?
+        bne     :+              ; nope
         rts
 
-L4367:  lda     input_params+1
-        ora     #$20
-        cmp     #$68
-        bne     L4373
-        jmp     L5441
+        ;; Non-menu keys
+:       lda     input_params_key
+        ora     #$20            ; force to lower-case
+        cmp     #'h'            ; OA-H (Highlight Icon)
+        bne     :+
+        jmp     cmd_higlight
+:       bit     flag
+        bpl     menu_accelerators
+        cmp     #'w'            ; OA-W (Activate Window)
+        bne     :+
+        jmp     cmd_activate
+:       cmp     #'g'            ; OA-G (Resize)
+        bne     :+
+        jmp     cmd_resize
+:       cmp     #'m'            ; OA-M (Move)
+        bne     :+
+        jmp     cmd_move
+:       cmp     #'x'            ; OA-X (Scroll)
+        bne     menu_accelerators
+        jmp     cmd_scroll
 
-L4373:  bit     flag
-        bpl     L4394
-        cmp     #$77
-        bne     L437F
-        jmp     L5702
-
-L437F:  cmp     #$67
-        bne     L4386
-        jmp     L578E
-
-L4386:  cmp     #$6D
-        bne     L438D
-        jmp     L579A
-
-L438D:  cmp     #$78
-        bne     L4394
-        jmp     L57A6
-
-L4394:  lda     input_params+1
+menu_accelerators:
+        lda     input_params+1
         sta     $E25C
         lda     input_params+2
         beq     L43A1
@@ -6589,23 +6592,20 @@ L4428:  pha
         jmp     L4459
 
 L4435:  pla
-        cmp     #$02
-        bne     L4443
+        cmp     #A2D_ELEM_CLIENT
+        bne     :+
         jsr     detect_double_click
         sta     $D2AA
-        jmp     L5B1C
-
-L4443:  cmp     #$03
-        bne     L444A
-        jmp     L60DB
-
-L444A:  cmp     #$04
-        bne     L4451
-        jmp     L619B
-
-L4451:  cmp     #$05
+        jmp     handle_client_click
+:       cmp     #A2D_ELEM_TITLE
+        bne     :+
+        jmp     handle_title_click
+:       cmp     #A2D_ELEM_RESIZE
+        bne     :+
+        jmp     handle_resize_click
+:       cmp     #A2D_ELEM_CLOSE
         bne     L4458
-        jmp     L61CA
+        jmp     handle_close_click
 
 L4458:  rts
 
@@ -8565,15 +8565,17 @@ L5433:  cmp     LEC26,x
         bpl     L5433
         lda     #$FF
         rts
-.endproc
-
-;;; ==================================================
 
 L543E:  inx
         txa
         rts
+.endproc
 
-L5441:  jmp     L544D
+;;; ==================================================
+;;; Handle keyboard-based icon selection ("highlighting")
+
+.proc cmd_higlight
+        jmp     L544D
 
 L5444:  .byte   0
 L5445:  .byte   0
@@ -8585,7 +8587,8 @@ L544A:  .byte   0
         .byte   0
         .byte   0
 
-L544D:  lda     #$00
+L544D:
+        lda     #$00
         sta     $1800
         lda     $EC25
         bne     L545A
@@ -8696,7 +8699,7 @@ L5532:  lda     $1801,x
         sta     L5448
         ldy     #$03
 L553D:  lda     ($06),y
-        sta     L5441,y
+        sta     L5444-3,y
         iny
         cpy     #$07
         bne     L553D
@@ -8817,6 +8820,7 @@ L564A:  DESKTOP_RELAY_CALL $0B, LE22F
         jsr     L8893
         jsr     reset_state2
 L5661:  rts
+.endproc
 
 ;;; ==================================================
 
@@ -8888,7 +8892,11 @@ L56F9:  sta     query_state_params2::id
         jsr     L4505
         jmp     L6E8E
 
-L5702:  lda     desktop_winid
+;;; ==================================================
+;;; Handle keyboard-based window activation
+
+.proc cmd_activate
+        lda     desktop_winid
         bne     L5708
         rts
 
@@ -8958,56 +8966,80 @@ L578B:  rts
 
 L578C:  .byte   0
 L578D:  .byte   0
-L578E:  A2D_RELAY_CALL $22      ; ???
-        jmp     L619B
 
-L579A:  A2D_RELAY_CALL $22      ; ???
-        jmp     L60DB
+.endproc
 
-L57A6:  jsr     L5803
-L57A9:  jsr     get_input
+;;; ==================================================
+;;;Initiate keyboard-based resizing
+
+.proc cmd_resize
+        A2D_RELAY_CALL $22      ; ???
+        jmp     handle_resize_click
+.endproc
+
+;;; ==================================================
+;;; Initiate keyboard-based window moving
+
+.proc cmd_move
+        A2D_RELAY_CALL $22      ; ???
+        jmp     handle_title_click
+.endproc
+
+;;; ==================================================
+;;; Keyboard-based scrolling of window contents
+
+.proc cmd_scroll
+        jsr     L5803
+loop:   jsr     get_input
         lda     input_params_state
         cmp     #A2D_INPUT_DOWN
-        beq     L57C2
+        beq     done
         cmp     #A2D_INPUT_KEY
-        bne     L57A9
+        bne     loop
         lda     input_params_key
         cmp     #KEY_RETURN
-        beq     L57C2
+        beq     done
         cmp     #KEY_ESCAPE
-        bne     L57CB
-L57C2:  lda     #$00
+        bne     :+
+
+done:   lda     #$00
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         rts
 
-L57CB:  bit     L585D
-        bmi     L57D3
-        jmp     L57E7
+        ;; Horizontal ok?
+:       bit     L585D
+        bmi     :+
+        jmp     vertical
 
-L57D3:  cmp     #$15
-        bne     L57DD
+:       cmp     #KEY_RIGHT
+        bne     :+
         jsr     L582F
-        jmp     L57A9
+        jmp     loop
 
-L57DD:  cmp     #$08
-        bne     L57E7
+:       cmp     #KEY_LEFT
+        bne     vertical
         jsr     L583C
-        jmp     L57A9
+        jmp     loop
 
-L57E7:  bit     L585E
-        bmi     L57EF
-        jmp     L57A9
+        ;; Vertical ok?
+vertical:
+        bit     L585E
+        bmi     :+
+        jmp     loop
 
-L57EF:  cmp     #$0A
-        bne     L57F9
+:       cmp     #KEY_DOWN
+        bne     :+
         jsr     L5846
-        jmp     L57A9
+        jmp     loop
 
-L57F9:  cmp     #$0B
-        bne     L57A9
+:       cmp     #KEY_UP
+        bne     loop
         jsr     L5853
-        jmp     L57A9
+        jmp     loop
+.endproc
+
+;;; ==================================================
 
 L5803:  lda     desktop_winid
         sta     bufnum
@@ -9054,6 +9086,7 @@ L585F:  .byte   0
 L5860:  .byte   0
 L5861:  .byte   0
 L5862:  .byte   0
+
 L5863:  stx     L587D
         cmp     L587D
         beq     L587C
@@ -9390,7 +9423,8 @@ L5AD0:  .byte   0
 ;;; ==================================================
 
 L5B1B:  .byte   0
-L5B1C:  lda     desktop_winid
+handle_client_click:
+        lda     desktop_winid
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         ldx     desktop_winid
@@ -9697,18 +9731,19 @@ L5DFC:  lda     L5CD9           ; after a double-click (on file or folder)
         jsr     file_address_lookup
         sta     $06
         stx     $06+1
-        ldy     #$02
+        ldy     #2              ; byte type icon offset
         lda     ($06),y
-        and     #$70
-        cmp     #$10
+        and     #$70            ; bits 4-6
+        cmp     #$10            ; $10 = system
         beq     L5E28
-        cmp     #$20
+        cmp     #$20            ; $20 = binary
         beq     L5E28
-        cmp     #$30
+        cmp     #$30            ; $30 = basic
         beq     L5E28
-        cmp     #$00
+        cmp     #$00            ; $00 = directory
         bne     L5E27
-        lda     L5CD9
+
+        lda     L5CD9           ; handle directory
         jsr     L6A8A
         bmi     L5E27
         jmp     L5DEC
@@ -9996,7 +10031,8 @@ L60D4:  .byte   0
 L60D5:  jsr     push_zp_addrs
         jmp     L8921
 
-L60DB:  jmp     L60DE
+handle_title_click:
+        jmp     L60DE
 
 L60DE:  lda     desktop_winid
         sta     input_params
@@ -10085,7 +10121,9 @@ L6197:  .byte   0
 L6198:  .byte   0
 L6199:  .byte   0
 L619A:  .byte   0
-L619B:  lda     desktop_winid
+
+handle_resize_click:
+        lda     desktop_winid
         sta     input_params
         A2D_RELAY_CALL A2D_DRAG_RESIZE, input_params
         jsr     redraw_windows_and_desktop
@@ -10100,7 +10138,8 @@ L619B:  lda     desktop_winid
         jsr     DESKTOP_COPY_TO_BUF
         jmp     reset_state2
 
-L61CA:  lda     desktop_winid
+handle_close_click:
+        lda     desktop_winid
         A2D_RELAY_CALL A2D_CLOSE_CLICK, $D2A8
         lda     $D2A8
         bne     L61DC
@@ -17963,7 +18002,7 @@ LA579:  A2D_RELAY_CALL A2D_GET_INPUT, input_params
         bne     LA58C
         jmp     LA5EE
 
-LA58C:  cmp     #$03
+LA58C:  cmp     #A2D_INPUT_KEY
         bne     LA593
         jmp     LA6FD
 
@@ -18092,16 +18131,16 @@ LA6F7:  jsr     LB9B8
         lda     #$FF
         rts
 
-LA6FD:  lda     input_params_xcoord+1
-        cmp     #$2
+LA6FD:  lda     input_params_modifiers
+        cmp     #$2             ; closed-apple
         bne     LA71A
-        lda     input_params_xcoord
+        lda     input_params_key
         and     #$7F
-        cmp     #$08
+        cmp     #KEY_LEFT
         bne     LA710
         jmp     LA815
 
-LA710:  cmp     #$15
+LA710:  cmp     #KEY_RIGHT
         bne     LA717
         jmp     LA820
 
