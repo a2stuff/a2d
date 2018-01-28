@@ -2519,9 +2519,9 @@ LA318:  ldx     LA322
         lda     LA323
         sta     L8E95,x
         rts
-
 LA322:  .byte   0
 LA323:  .byte   0
+
 LA324:  stx     LA363
         sta     LA364
         ldx     #$00
@@ -2550,9 +2550,9 @@ LA359:  ldx     LA363
         lda     LA364
         sta     L9016,x
         rts
-
 LA363:  .byte   0
 LA364:  .byte   0
+
 LA365:  pla
         sta     LA380
         pla
@@ -2568,9 +2568,9 @@ LA36F:  lda     $06,x
         lda     LA380
         pha
         rts
-
 LA380:  .byte   0
 LA381:  .byte   0
+
 LA382:  pla
         sta     LA39B
         pla
@@ -2585,9 +2585,9 @@ LA38C:  pla
         lda     LA39B
         pha
         rts
-
 LA39B:  .byte   0
 LA39C:  .byte   0
+
 LA39D:  A2D_CALL A2D_QUERY_SCREEN, query_screen_params
         A2D_CALL A2D_SET_STATE, query_screen_params
         jmp     LA3B9
@@ -4662,7 +4662,7 @@ flag:   .byte   0
         DESKTOP_COPY_TO_BUF := DESKTOP_COPY_BUF_IMPL::to
 
 ;;; ==================================================
-;;; Assign active state to desktop_winid window
+;;; Assign active state to desktop_active_winid window
 
 .proc DESKTOP_ASSIGN_STATE
         src := $6
@@ -4672,7 +4672,7 @@ flag:   .byte   0
         sta     RAMWRTON
         A2D_CALL A2D_GET_STATE, src ; grab window state
 
-        lda     desktop_winid   ; which desktop window?
+        lda     desktop_active_winid   ; which desktop window?
         asl     a
         tax
         lda     win_table,x     ; window table
@@ -4885,7 +4885,17 @@ id_byte_1:  .byte   $06             ; ROM FBB3 ($06 = IIe or later)
 id_byte_2:  .byte   $EA             ; ROM FBC0 ($EA = IIe, $E0 = IIe enh/IIgs, $00 = IIc/IIc+)
 
         .byte   $00,$00,$00,$00,$88,$00,$08,$00
-        .byte   $13,$00,$00,$00,$00
+        .byte   $13
+
+zp_use_flag0:
+        .byte   0
+
+.proc close_click_params        ; next 3 bytes???
+clicked:.byte   0
+.endproc
+LD2A9:  .byte   0
+double_click_flag:
+        .byte   0               ; high bit clear if double-clicked, set otherwise
 
         ;; Set to specific machine type; used for double-click timing.
 machine_type:
@@ -5711,7 +5721,7 @@ LEBFC:  .byte   0               ; flag of some sort ???
 table1: .addr   $1B00,$1B80,$1C00,$1C80,$1D00,$1D80,$1E00,$1E80,$1F00
 table2: .addr   $1B01,$1B81,$1C01,$1C81,$1D01,$1D81,$1E01,$1E81,$1F01
 
-desktop_winid:
+desktop_active_winid:
         .byte   $00
 
 LEC26:
@@ -6152,8 +6162,8 @@ L4069:  lda     #$00
         sta     bufnum
         jsr     DESKTOP_COPY_FROM_BUF
         lda     #$00
-        sta     $D2A9
-        sta     $D2AA
+        sta     LD2A9
+        sta     double_click_flag
         sta     L40DF
         sta     $E26F
         lda     L599F
@@ -6178,7 +6188,7 @@ L40A6:  jsr     L464E
         beq     L40B7
         cmp     #A2D_INPUT_DOWN_MOD
         bne     L40BD
-L40B7:  jsr     L43E7
+L40B7:  jsr     handle_click
         jmp     L4088
 
 L40BD:  cmp     #$03
@@ -6189,7 +6199,7 @@ L40BD:  cmp     #$03
 L40C7:  cmp     #$06
         bne     L40DC
         jsr     reset_state2
-        lda     desktop_winid
+        lda     desktop_active_winid
         sta     L40F0
         lda     #$80
         sta     L40F1
@@ -6209,7 +6219,7 @@ L40F0:  .byte   $00
 L40F1:  .byte   $00
 redraw_windows:
         jsr     reset_state2
-        lda     desktop_winid
+        lda     desktop_active_winid
         sta     L40F0
         lda     #$00
         sta     L40F1
@@ -6231,7 +6241,7 @@ L412B:  lda     #$00
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         lda     L40F0
-        sta     desktop_winid
+        sta     desktop_active_winid
         beq     L4143
         bit     running_da_flag
         bmi     L4143
@@ -6247,7 +6257,7 @@ L4153:  lda     input_params+1
         bcc     L415B
         rts
 
-L415B:  sta     desktop_winid
+L415B:  sta     desktop_active_winid
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         lda     #$80
@@ -6256,10 +6266,10 @@ L415B:  sta     desktop_winid
         sta     query_state_params2::id
         jsr     L4505
         jsr     L78EF
-        lda     desktop_winid
+        lda     desktop_active_winid
         jsr     L8855
         jsr     DESKTOP_ASSIGN_STATE
-        lda     desktop_winid
+        lda     desktop_active_winid
         jsr     window_lookup
         sta     $06
         stx     $06+1
@@ -6301,7 +6311,7 @@ L41CB:  ldx     bufnum
         jsr     L6C19
         lda     #$00
         sta     L4152
-        lda     desktop_winid
+        lda     desktop_active_winid
         jmp     L8874
 
 L41E2:  lda     bufnum
@@ -6333,7 +6343,7 @@ L4227:  lda     #$00
         sta     query_state_params2::id
         jsr     L44F2
         jsr     L6E6E
-        lda     desktop_winid
+        lda     desktop_active_winid
         jsr     L8874
         jmp     reset_state2
 
@@ -6348,9 +6358,9 @@ L424A:  lda     #$00
         sta     L42C3
         lda     selected_window_index
         beq     L42A5
-        cmp     desktop_winid
+        cmp     desktop_active_winid
         bne     L4249
-        lda     desktop_winid
+        lda     desktop_active_winid
         sta     query_state_params2::id
         jsr     L4505
         jsr     L6E8E
@@ -6562,40 +6572,50 @@ L43E0:  tsx
         menu_dispatch_flag := menu_dispatch_impl::flag
 
 ;;; ==================================================
+;;; Handle click
 
-L43E7:  tsx
+.proc handle_click
+        tsx
         stx     $E256
         A2D_RELAY_CALL A2D_QUERY_TARGET, input_params_coords
         lda     query_target_params_element
-        bne     L4418
+        bne     not_desktop
+
+        ;; Click on desktop
         jsr     detect_double_click
-        sta     $D2AA
-        lda     #$00
-        sta     $D20E
-        DESKTOP_RELAY_CALL $09, input_params_coords
-        lda     query_client_params_part ; ??
+        sta     double_click_flag
+        lda     #0
+        sta     query_target_params_id
+        DESKTOP_RELAY_CALL $09, input_params_coords ; maybe "was it an icon" ???
+        lda     query_client_params_part ; ???
         beq     L4415
         jmp     L67D7
 
 L4415:  jmp     L68AA
 
-L4418:  cmp     #$01
-        bne     L4428
+not_desktop:
+        cmp     #A2D_ELEM_MENU  ; menu?
+        bne     not_menu
         A2D_RELAY_CALL A2D_MENU_CLICK, menu_click_params
         jmp     menu_dispatch2
 
-L4428:  pha
-        lda     desktop_winid
+not_menu:
+        pha                     ; which window - active or not?
+        lda     desktop_active_winid
         cmp     query_target_params_id
-        beq     L4435
+        beq     handle_active_window_click
         pla
-        jmp     L4459
+        jmp     handle_inactive_window_click
+.endproc
 
-L4435:  pla
+;;; ==================================================
+
+.proc handle_active_window_click
+        pla
         cmp     #A2D_ELEM_CLIENT
         bne     :+
         jsr     detect_double_click
-        sta     $D2AA
+        sta     double_click_flag
         jmp     handle_client_click
 :       cmp     #A2D_ELEM_TITLE
         bne     :+
@@ -6604,12 +6624,15 @@ L4435:  pla
         bne     :+
         jmp     handle_resize_click
 :       cmp     #A2D_ELEM_CLOSE
-        bne     L4458
+        bne     :+
         jmp     handle_close_click
+:       rts
+.endproc
 
-L4458:  rts
+;;; ==================================================
 
-L4459:  jmp     L445D
+.proc handle_inactive_window_click
+        jmp     L445D
 
 L445C:  .byte   0
 L445D:  jsr     clear_selection
@@ -6641,7 +6664,7 @@ L445D:  jsr     clear_selection
         sta     selected_file_index
 L44A6:  A2D_RELAY_CALL A2D_RAISE_WINDOW, query_target_params_id
         lda     $D20E
-        sta     desktop_winid
+        sta     desktop_active_winid
         sta     bufnum
 L44B8:  jsr     DESKTOP_COPY_TO_BUF
         jsr     L6C19
@@ -6651,7 +6674,7 @@ L44B8:  jsr     DESKTOP_COPY_TO_BUF
         lda     #$00
         sta     $E269
         A2D_RELAY_CALL $36, LE267 ; ???
-        ldx     desktop_winid
+        ldx     desktop_active_winid
         dex
         lda     LE6D1,x
         and     #$0F
@@ -6661,6 +6684,9 @@ L44B8:  jsr     DESKTOP_COPY_TO_BUF
         sta     $E269
         A2D_RELAY_CALL $36, LE267 ; ???
         rts
+.endproc
+
+;;; ==================================================
 
 L44F2:  A2D_RELAY_CALL A2D_QUERY_STATE, query_state_params2
         A2D_RELAY_CALL A2D_SET_STATE, query_state_buffer
@@ -6671,7 +6697,8 @@ L4505:  A2D_RELAY_CALL A2D_QUERY_STATE, query_state_params2
 
         rts
 
-reset_state2:  A2D_RELAY_CALL A2D_QUERY_SCREEN, state2
+reset_state2:
+        A2D_RELAY_CALL A2D_QUERY_SCREEN, state2
         A2D_RELAY_CALL A2D_SET_STATE, state2
         rts
 
@@ -7497,7 +7524,8 @@ L4BB1:  .byte   0
 .proc cmd_deskacc_impl
         ptr := $6
 
-L4BBE:  .byte   $80
+zp_use_flag1:
+        .byte   $80
 
 start:  jsr     reset_state2
         jsr     set_watch_cursor
@@ -7556,10 +7584,10 @@ nope:   dex
         ;; Invoke it
         jsr     set_pointer_cursor
         jsr     reset_state2
-        A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, $D2A7
-        A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, L4BBE
+        A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, zp_use_flag0
+        A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, zp_use_flag1
         jsr     DA_LOAD_ADDRESS
-        A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, $D2A7
+        A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, zp_use_flag0
         lda     #0
         sta     running_da_flag
 
@@ -7817,7 +7845,7 @@ L4E1A:  sta     L4E71
         cmp     #$02
         bcs     L4E14
         pla
-        lda     desktop_winid
+        lda     desktop_active_winid
         jsr     window_address_lookup
         sta     $06
         stx     $06+1
@@ -7863,20 +7891,20 @@ L4E71:  .byte   0
 ;;; ==================================================
 
 .proc cmd_close
-        lda     desktop_winid
+        lda     desktop_active_winid
         bne     L4E78
         rts
 
 L4E78:  jsr     clear_selection
         dec     $EC2E
-        lda     desktop_winid
+        lda     desktop_active_winid
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
-        ldx     desktop_winid
+        ldx     desktop_active_winid
         dex
         lda     LE6D1,x
         bmi     L4EB4
-        DESKTOP_RELAY_CALL $07, desktop_winid
+        DESKTOP_RELAY_CALL $07, desktop_active_winid
         lda     LDD9E
         sec
         sbc     buf3len
@@ -7902,8 +7930,8 @@ L4EC3:  sta     buf3len
         lda     #$00
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
-        A2D_RELAY_CALL A2D_DESTROY_WINDOW, desktop_winid
-        ldx     desktop_winid
+        A2D_RELAY_CALL A2D_DESTROY_WINDOW, desktop_active_winid
+        ldx     desktop_active_winid
         dex
         lda     LEC26,x
         sta     LE22F
@@ -7923,16 +7951,16 @@ L4EC3:  sta     buf3len
         sta     is_file_selected
         lda     LE22F
         sta     selected_file_index
-        ldx     desktop_winid
+        ldx     desktop_active_winid
         dex
         lda     LEC26,x
         jsr     L7345
-        ldx     desktop_winid
+        ldx     desktop_active_winid
         dex
         lda     #$00
         sta     LEC26,x
-        A2D_RELAY_CALL A2D_QUERY_TOP, desktop_winid
-        lda     desktop_winid
+        A2D_RELAY_CALL A2D_QUERY_TOP, desktop_active_winid
+        lda     desktop_active_winid
         bne     L4F3C
         DESKTOP_RELAY_CALL DESKTOP_REDRAW_ICONS
 L4F3C:  lda     #$00
@@ -7945,7 +7973,7 @@ L4F3C:  lda     #$00
 ;;; ==================================================
 
 .proc cmd_close_all
-        lda     desktop_winid   ; current window
+        lda     desktop_active_winid   ; current window
         beq     done            ; nope, done!
         jsr     cmd_close       ; close it...
         jmp     cmd_close_all   ; and try again
@@ -7985,10 +8013,10 @@ ctime:  .word   0
 path_buffer:
         .res    65, 0              ; buffer is used elsewhere too
 
-start:  lda     desktop_winid
+start:  lda     desktop_active_winid
         sta     L4F67
         yax_call launch_dialog, index_new_folder_dialog, L4F67
-L4FC6:  lda     desktop_winid
+L4FC6:  lda     desktop_active_winid
         beq     L4FD4
         jsr     window_address_lookup
         sta     L4F68
@@ -8143,7 +8171,7 @@ start:
 ;;; ==================================================
 
 .proc cmd_view_by_icon
-        ldx     desktop_winid
+        ldx     desktop_active_winid
         bne     L50FF
         rts
 
@@ -8152,7 +8180,7 @@ L50FF:  dex
         bne     L5106
         rts
 
-L5106:  lda     desktop_winid
+L5106:  lda     desktop_active_winid
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         ldx     #$00
@@ -8165,22 +8193,22 @@ L5112:  cpx     buf3len
 
 L511E:  sta     buf3len
         lda     #$00
-        ldx     desktop_winid
+        ldx     desktop_active_winid
         dex
         sta     LE6D1,x
         jsr     L52DF
-        lda     desktop_winid
+        lda     desktop_active_winid
         sta     query_state_params2::id
         jsr     L4505
         jsr     L6E8E
         jsr     L4904
         A2D_RELAY_CALL A2D_FILL_RECT, query_state_buffer::hoff
-        lda     desktop_winid
+        lda     desktop_active_winid
         jsr     L7D5D
         sta     L51EB
         stx     L51EC
         sty     L51ED
-        lda     desktop_winid
+        lda     desktop_active_winid
         jsr     window_lookup
         sta     $06
         stx     $06+1
@@ -8197,9 +8225,9 @@ L516D:  lda     L51EB,x
         dey
         dex
         bpl     L516D
-        lda     desktop_winid
+        lda     desktop_active_winid
         jsr     L763A
-        lda     desktop_winid
+        lda     desktop_active_winid
         sta     query_state_params2::id
         jsr     L44F2
         jsr     L6E52
@@ -8248,26 +8276,26 @@ L51EF:  .byte   0
 
 ;;; ==================================================
 
-L51F0:  ldx     desktop_winid
+L51F0:  ldx     desktop_active_winid
         dex
         sta     LE6D1,x
-        lda     desktop_winid
+        lda     desktop_active_winid
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         jsr     L7D9C
         jsr     DESKTOP_COPY_FROM_BUF
-        lda     desktop_winid
+        lda     desktop_active_winid
         sta     query_state_params2::id
         jsr     L4505
         jsr     L6E8E
         jsr     L4904
         A2D_RELAY_CALL A2D_FILL_RECT, query_state_buffer::hoff
-        lda     desktop_winid
+        lda     desktop_active_winid
         jsr     L7D5D
         sta     L5263
         stx     L5264
         sty     L5265
-        lda     desktop_winid
+        lda     desktop_active_winid
         jsr     window_lookup
         sta     $06
         stx     $06+1
@@ -8301,7 +8329,7 @@ L5265:  .byte   0
 ;;; ==================================================
 
 .proc cmd_view_by_name
-        ldx     desktop_winid
+        ldx     desktop_active_winid
         bne     L526D
         rts
 
@@ -8322,7 +8350,7 @@ L527D:  jsr     L52DF
 ;;; ==================================================
 
 .proc cmd_view_by_date
-        ldx     desktop_winid
+        ldx     desktop_active_winid
         bne     L528B
         rts
 
@@ -8343,7 +8371,7 @@ L529B:  jsr     L52DF
 ;;; ==================================================
 
 .proc cmd_view_by_size
-        ldx     desktop_winid
+        ldx     desktop_active_winid
         bne     L52A9
         rts
 
@@ -8364,7 +8392,7 @@ L52B9:  jsr     L52DF
 ;;; ==================================================
 
 .proc cmd_view_by_type
-        ldx     desktop_winid
+        ldx     desktop_active_winid
         bne     L52C7
         rts
 
@@ -8394,8 +8422,8 @@ L52DF:  lda     #$00
         A2D_RELAY_CALL $36, LE267 ; ???
         rts
 
-L5302:  DESKTOP_RELAY_CALL $07, desktop_winid
-        lda     desktop_winid
+L5302:  DESKTOP_RELAY_CALL $07, desktop_active_winid
+        lda     desktop_active_winid
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         lda     LDD9E
@@ -8535,10 +8563,10 @@ L53D0:  tax
 L53EF:  dec     L704B
         ldx     L704B
         lda     L704C,x
-        cmp     desktop_winid
+        cmp     desktop_active_winid
         beq     L5403
         sta     $D20E
-        jsr     L4459
+        jsr     handle_inactive_window_click
 L5403:  jsr     L61DC
         lda     L704B
         bne     L53EF
@@ -8600,10 +8628,10 @@ L545A:  tax
         bpl     L5464
         jmp     L54C5
 
-L5464:  lda     desktop_winid
+L5464:  lda     desktop_active_winid
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
-        lda     desktop_winid
+        lda     desktop_active_winid
         jsr     window_lookup
         sta     $06
         stx     $06+1
@@ -8828,14 +8856,14 @@ L5661:  rts
         lda     is_file_selected
         beq     L566A
         jsr     clear_selection
-L566A:  ldx     desktop_winid
+L566A:  ldx     desktop_active_winid
         beq     L5676
         dex
         lda     LE6D1,x
         bpl     L5676
         rts
 
-L5676:  lda     desktop_winid
+L5676:  lda     desktop_active_winid
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         lda     buf3len
@@ -8850,7 +8878,7 @@ L568B:  lda     buf3,x
         bpl     L568B
         lda     buf3len
         sta     is_file_selected
-        lda     desktop_winid
+        lda     desktop_active_winid
         sta     selected_window_index
         lda     selected_window_index
         sta     $E22C
@@ -8896,7 +8924,7 @@ L56F9:  sta     query_state_params2::id
 ;;; Handle keyboard-based window activation
 
 .proc cmd_activate
-        lda     desktop_winid
+        lda     desktop_active_winid
         bne     L5708
         rts
 
@@ -8906,7 +8934,7 @@ L5708:  sta     L0800
 L570F:  lda     LEC26,x
         beq     L5720
         inx
-        cpx     desktop_winid
+        cpx     desktop_active_winid
         beq     L5721
         txa
         dex
@@ -8948,7 +8976,7 @@ L5743:  lda     input_params_key
 L5763:  stx     L578C
         lda     L0800,x
         sta     $D20E
-        jsr     L4459
+        jsr     handle_inactive_window_click
         jmp     L5732
 
 L5772:  ldx     L578C
@@ -8959,7 +8987,7 @@ L5772:  ldx     L578C
 L577C:  stx     L578C
         lda     L0800,x
         sta     $D20E
-        jsr     L4459
+        jsr     handle_inactive_window_click
         jmp     L5732
 
 L578B:  rts
@@ -9041,10 +9069,10 @@ vertical:
 
 ;;; ==================================================
 
-L5803:  lda     desktop_winid
+L5803:  lda     desktop_active_winid
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
-        ldx     desktop_winid
+        ldx     desktop_active_winid
         dex
         lda     LE6D1,x
         sta     L5B1B
@@ -9135,7 +9163,7 @@ L58AE:  beq     L58C1
 L58C1:  rts
 
         .byte   0
-L58C3:  lda     desktop_winid
+L58C3:  lda     desktop_active_winid
         jsr     window_lookup
         sta     $06
         stx     $06+1
@@ -9155,7 +9183,7 @@ L58C3:  lda     desktop_winid
         pla
         rts
 
-L58E2:  lda     desktop_winid
+L58E2:  lda     desktop_active_winid
         jsr     window_lookup
         sta     $06
         stx     $06+1
@@ -9317,10 +9345,10 @@ L5A2F:  ldx     L704B
         beq     L5A4C
         dex
         lda     L704C,x
-        cmp     desktop_winid
+        cmp     desktop_active_winid
         beq     L5A43
         sta     $D20E
-        jsr     L4459
+        jsr     handle_inactive_window_click
 L5A43:  jsr     L61DC
         dec     L704B
         jmp     L5A2F
@@ -9428,10 +9456,10 @@ L5AD0:  .byte   0
 
 L5B1B:  .byte   0
 handle_client_click:
-        lda     desktop_winid
+        lda     desktop_active_winid
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
-        ldx     desktop_winid
+        ldx     desktop_active_winid
         dex
         lda     LE6D1,x
         sta     L5B1B
@@ -9445,7 +9473,7 @@ L5B31:  lda     $EBFD,x
         bne     L5B4B
         jmp     L5CB7
 
-L5B4B:  bit     $D2AA
+L5B4B:  bit     double_click_flag
         bmi     L5B53
         jmp     L5C26
 
@@ -9455,7 +9483,7 @@ L5B53:  cmp     #$03
 
 L5B58:  cmp     #$01
         bne     L5BC1
-        lda     desktop_winid
+        lda     desktop_active_winid
         jsr     window_lookup
         sta     $06
         stx     $06+1
@@ -9502,7 +9530,7 @@ L5BB4:  jsr     L63EC
         bpl     L5BB4
         jmp     L5C26
 
-L5BC1:  lda     desktop_winid
+L5BC1:  lda     desktop_active_winid
         jsr     window_lookup
         sta     $06
         stx     $06+1
@@ -9575,7 +9603,7 @@ L5C54:  lda     $D20D
         bit     L5B1B
         bmi     L5C71
         jsr     L6E6E
-L5C71:  lda     desktop_winid
+L5C71:  lda     desktop_active_winid
         sta     query_state_params2::id
         jsr     L44F2
         A2D_RELAY_CALL A2D_FILL_RECT, query_state_buffer::hoff
@@ -9606,7 +9634,7 @@ L5CB7:  bit     L5B1B
         bpl     L5CBF
         jmp     clear_selection
 
-L5CBF:  lda     desktop_winid
+L5CBF:  lda     desktop_active_winid
         sta     $D20E
         DESKTOP_RELAY_CALL $09, input_params_coords
         lda     query_client_params_part
@@ -9625,7 +9653,7 @@ L5CE6:  cmp     selected_file_index,x
         dex
         bpl     L5CE6
         bmi     L5CFB
-L5CF0:  bit     $D2AA
+L5CF0:  bit     double_click_flag
         bmi     L5CF8
         jmp     L5DFC
 
@@ -9634,16 +9662,16 @@ L5CF8:  jmp     L5D55
 L5CFB:  bit     BUTN0
         bpl     L5D08
         lda     selected_window_index
-        cmp     desktop_winid
+        cmp     desktop_active_winid
         beq     L5D0B
 L5D08:  jsr     clear_selection
 L5D0B:  ldx     is_file_selected
         lda     L5CD9
         sta     selected_file_index,x
         inc     is_file_selected
-        lda     desktop_winid
+        lda     desktop_active_winid
         sta     selected_window_index
-        lda     desktop_winid
+        lda     desktop_active_winid
         sta     query_state_params2::id
         jsr     L44F2
         lda     L5CD9
@@ -9651,13 +9679,13 @@ L5D0B:  ldx     is_file_selected
         jsr     L8915
         jsr     L6E8E
         DESKTOP_RELAY_CALL $02, LE22F
-        lda     desktop_winid
+        lda     desktop_active_winid
         sta     query_state_params2::id
         jsr     L44F2
         lda     L5CD9
         jsr     L8893
         jsr     reset_state2
-        bit     $D2AA
+        bit     double_click_flag
         bmi     L5D55
         jmp     L5DFC
 
@@ -9676,9 +9704,9 @@ L5D55:  lda     L5CD9
 L5D77:  lda     LEBFC
         cmp     $EBFB
         bne     L5D8E
-        lda     desktop_winid
+        lda     desktop_active_winid
         jsr     L6F0D
-        lda     desktop_winid
+        lda     desktop_active_winid
         jsr     L5E78
         jmp     redraw_windows_and_desktop
 
@@ -9700,7 +9728,7 @@ L5DA6:  cpx     #$02
 
 L5DAD:  cpx     #$FF
         beq     L5DF7
-        lda     desktop_winid
+        lda     desktop_active_winid
         sta     query_state_params2::id
         jsr     L44F2
         jsr     L6E52
@@ -9716,7 +9744,7 @@ L5DC4:  txa
         tax
         dex
         bpl     L5DC4
-        lda     desktop_winid
+        lda     desktop_active_winid
         sta     query_state_params2::id
         jsr     L44F2
         jsr     L6DB1
@@ -9755,7 +9783,7 @@ L5DFC:  lda     L5CD9           ; after a double-click (on file or folder)
 L5E27:  rts
 
 L5E28:  sta     L5E77
-        lda     desktop_winid
+        lda     desktop_active_winid
         jsr     window_address_lookup
         sta     $06
         stx     $06+1
@@ -9800,16 +9828,16 @@ L5E78:  sta     L5F0A
         jsr     redraw_windows_and_desktop
         jsr     clear_selection
         lda     L5F0A
-        cmp     desktop_winid
+        cmp     desktop_active_winid
         beq     L5E8F
         sta     $D20E
-        jsr     L4459
-L5E8F:  lda     desktop_winid
+        jsr     handle_inactive_window_click
+L5E8F:  lda     desktop_active_winid
         sta     query_state_params2::id
         jsr     L44F2
         jsr     L4904
         A2D_RELAY_CALL A2D_FILL_RECT, query_state_buffer::hoff
-        ldx     desktop_winid
+        ldx     desktop_active_winid
         dex
         lda     LEC26,x
         pha
@@ -9820,7 +9848,7 @@ L5E8F:  lda     desktop_winid
         lda     LE6D1,x
         bmi     L5EBC
         jsr     L5302
-L5EBC:  lda     desktop_winid
+L5EBC:  lda     desktop_active_winid
         jsr     window_address_lookup
         sta     $06
         stx     $06+1
@@ -9835,15 +9863,15 @@ L5ECB:  lda     ($06),y
         jsr     L7054
         jsr     cmd_view_by_icon::L5106
         jsr     DESKTOP_COPY_FROM_BUF
-        lda     desktop_winid
+        lda     desktop_active_winid
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
-        lda     desktop_winid
+        lda     desktop_active_winid
         sta     query_state_params2::id
         jsr     L4505
         jsr     L78EF
         lda     #$00
-        ldx     desktop_winid
+        ldx     desktop_active_winid
         sta     $E6D0,x
         lda     #$01
         sta     $E25B
@@ -9882,7 +9910,7 @@ L5F20:  lda     input_params_coords,x
 L5F3E:  rts
 
 L5F3F:  jsr     clear_selection
-        lda     desktop_winid
+        lda     desktop_active_winid
         sta     query_state_params2::id
         jsr     L4505
         jsr     L6E8E
@@ -9917,7 +9945,7 @@ L5F88:  txa
         inc     is_file_selected
         lda     LE22F
         sta     selected_file_index,x
-        lda     desktop_winid
+        lda     desktop_active_winid
         sta     selected_window_index
 L5FB9:  lda     LE22F
         jsr     L8893
@@ -10038,13 +10066,13 @@ L60D5:  jsr     push_zp_addrs
 handle_title_click:
         jmp     L60DE
 
-L60DE:  lda     desktop_winid
+L60DE:  lda     desktop_active_winid
         sta     input_params
-        A2D_RELAY_CALL A2D_QUERY_TOP, desktop_winid
-        lda     desktop_winid
+        A2D_RELAY_CALL A2D_QUERY_TOP, desktop_active_winid
+        lda     desktop_active_winid
         jsr     L8855
         A2D_RELAY_CALL A2D_DRAG_WINDOW, input_params
-        lda     desktop_winid
+        lda     desktop_active_winid
         jsr     window_lookup
         sta     $06
         stx     $06+1
@@ -10072,13 +10100,13 @@ L6112:  ldy     #$14
         lda     ($06),y
         sbc     L8833
         sta     L619A
-        ldx     desktop_winid
+        ldx     desktop_active_winid
         dex
         lda     LE6D1,x
         beq     L6143
         rts
 
-L6143:  lda     desktop_winid
+L6143:  lda     desktop_active_winid
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         ldx     #$00
@@ -10127,11 +10155,11 @@ L6199:  .byte   0
 L619A:  .byte   0
 
 handle_resize_click:
-        lda     desktop_winid
+        lda     desktop_active_winid
         sta     input_params
         A2D_RELAY_CALL A2D_DRAG_RESIZE, input_params
         jsr     redraw_windows_and_desktop
-        lda     desktop_winid
+        lda     desktop_active_winid
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         jsr     L6E52
@@ -10143,17 +10171,17 @@ handle_resize_click:
         jmp     reset_state2
 
 handle_close_click:
-        lda     desktop_winid
-        A2D_RELAY_CALL A2D_CLOSE_CLICK, $D2A8
-        lda     $D2A8
+        lda     desktop_active_winid
+        A2D_RELAY_CALL A2D_CLOSE_CLICK, close_click_params
+        lda     close_click_params::clicked
         bne     L61DC
         rts
 
-L61DC:  lda     desktop_winid
+L61DC:  lda     desktop_active_winid
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         jsr     clear_selection
-        ldx     desktop_winid
+        ldx     desktop_active_winid
         dex
         lda     LE6D1,x
         bmi     L6215
@@ -10161,7 +10189,7 @@ L61DC:  lda     desktop_winid
         sec
         sbc     buf3len
         sta     LDD9E
-        DESKTOP_RELAY_CALL $07, desktop_winid
+        DESKTOP_RELAY_CALL $07, desktop_active_winid
         ldx     #$00
 L6206:  cpx     buf3len
         beq     L6215
@@ -10181,8 +10209,8 @@ L621B:  sta     buf3,x
 
 L6227:  sta     buf3len
         jsr     DESKTOP_COPY_FROM_BUF
-        A2D_RELAY_CALL A2D_DESTROY_WINDOW, desktop_winid
-        ldx     desktop_winid
+        A2D_RELAY_CALL A2D_DESTROY_WINDOW, desktop_active_winid
+        ldx     desktop_active_winid
         dex
         lda     LEC26,x
         sta     LE22F
@@ -10206,21 +10234,21 @@ L6227:  sta     buf3len
         sta     is_file_selected
         lda     LE22F
         sta     selected_file_index
-L6276:  ldx     desktop_winid
+L6276:  ldx     desktop_active_winid
         dex
         lda     LEC26,x
         jsr     L7345
-        ldx     desktop_winid
+        ldx     desktop_active_winid
         dex
         lda     LEC26,x
         inx
         jsr     L8B5C
-        ldx     desktop_winid
+        ldx     desktop_active_winid
         dex
         lda     #$00
         sta     LEC26,x
         sta     LE6D1,x
-        A2D_RELAY_CALL A2D_QUERY_TOP, desktop_winid
+        A2D_RELAY_CALL A2D_QUERY_TOP, desktop_active_winid
         lda     #$00
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
@@ -10491,10 +10519,10 @@ L650F:  bit     L5B1B
         jsr     L6E52
 L6517:  jsr     L6523
         jsr     L7B6B
-        lda     desktop_winid
+        lda     desktop_active_winid
         jmp     L7D5D
 
-L6523:  lda     desktop_winid
+L6523:  lda     desktop_active_winid
         jsr     window_lookup
         clc
         adc     #$14
@@ -10509,7 +10537,7 @@ L6535:  lda     ($06),y
         bpl     L6535
         rts
 
-L653E:  lda     desktop_winid
+L653E:  lda     desktop_active_winid
         jsr     window_lookup
         sta     $06
         stx     $06+1
@@ -10529,11 +10557,11 @@ L655E:  A2D_RELAY_CALL A2D_FILL_RECT, query_state_buffer::hoff
         jsr     reset_state2
         jmp     L6C19
 
-L656D:  lda     desktop_winid
+L656D:  lda     desktop_active_winid
         jsr     L7D5D
         sta     L6600
         stx     L6601
-        lda     desktop_winid
+        lda     desktop_active_winid
         jsr     window_lookup
         sta     $06
         stx     $06+1
@@ -10589,10 +10617,10 @@ L6600:  .byte   0
 L6601:  .byte   0
 L6602:  .byte   0
 L6603:  .byte   0
-L6604:  lda     desktop_winid
+L6604:  lda     desktop_active_winid
         jsr     L7D5D
         sty     L669F
-        lda     desktop_winid
+        lda     desktop_active_winid
         jsr     window_lookup
         sta     $06
         stx     $06+1
@@ -10651,7 +10679,7 @@ L668D:  sta     input_params+1
 L669F:  .byte   0
 L66A0:  .byte   0
 L66A1:  .byte   0
-L66A2:  ldx     desktop_winid
+L66A2:  ldx     desktop_active_winid
         beq     L66AA
         jmp     L66F2
 
@@ -10781,7 +10809,7 @@ L67E4:  cmp     selected_file_index,x
         dex
         bpl     L67E4
         bmi     L67F6
-L67EE:  bit     $D2AA
+L67EE:  bit     double_click_flag
         bmi     L6834
         jmp     L6880
 
@@ -10804,7 +10832,7 @@ L681B:  DESKTOP_RELAY_CALL $02, $D20D
         sta     selected_file_index
         lda     #$00
         sta     selected_window_index
-L6834:  bit     $D2AA
+L6834:  bit     double_click_flag
         bpl     L6880
         lda     $D20D
         sta     LEBFC
@@ -11063,7 +11091,7 @@ L6A95:  cmp     LEC26,x
         jmp     L6B1E
 
 L6AA0:  inx
-        cpx     desktop_winid
+        cpx     desktop_active_winid
         bne     L6AA7
         rts
 
@@ -11082,7 +11110,7 @@ L6AA7:  stx     bufnum
         and     #$0F
         sta     query_state_params2::id
         beq     L6AD8
-        cmp     desktop_winid
+        cmp     desktop_active_winid
         bne     L6AEF
         jsr     L44F2
         lda     LE6BE
@@ -11103,7 +11131,7 @@ L6AF6:  cmp     $E1F2,x
         jsr     L7054
 L6B01:  A2D_RELAY_CALL A2D_RAISE_WINDOW, bufnum
         lda     bufnum
-        sta     desktop_winid
+        sta     desktop_active_winid
         jsr     L6C19
         jsr     redraw_windows
         lda     #$00
@@ -11161,7 +11189,7 @@ L6B68:  lda     #$01
         and     #$0F
         sta     query_state_params2::id
         beq     L6BA1
-        cmp     desktop_winid
+        cmp     desktop_active_winid
         bne     L6BB8
         jsr     L44F2
         jsr     L6E8E
@@ -11178,7 +11206,7 @@ L6BB8:  jsr     L744B
         jsr     window_lookup
         ldy     #$38
         jsr     A2D_RELAY
-        lda     desktop_winid
+        lda     desktop_active_winid
         sta     query_state_params2::id
         jsr     L44F2
         jsr     L78EF
@@ -11197,7 +11225,7 @@ L6BDA:  lda     L6C0E
         jmp     L6BDA
 
 L6BF4:  lda     bufnum
-        sta     desktop_winid
+        sta     desktop_active_winid
         jsr     L6DB1
         jsr     L6E6E
         jsr     DESKTOP_COPY_FROM_BUF
@@ -11335,7 +11363,7 @@ L6D31:  lda     #$00
         lda     selected_window_index
         sta     rect_E230
         beq     L6D7D
-        cmp     desktop_winid
+        cmp     desktop_active_winid
         beq     L6D4D
         jsr     L8997
         lda     #$00
@@ -11378,7 +11406,7 @@ L6DA1:  sta     selected_file_index,x
         jmp     reset_state2
 
 L6DB0:  .byte   0
-L6DB1:  ldx     desktop_winid
+L6DB1:  ldx     desktop_active_winid
         dex
         lda     LE6D1,x
         bmi     L6DC0
@@ -11388,7 +11416,7 @@ L6DB1:  ldx     desktop_winid
 L6DC0:  jsr     L6E52
         jsr     L7B6B
         jsr     L6E6E
-L6DC9:  lda     desktop_winid
+L6DC9:  lda     desktop_active_winid
         sta     query_state_params2::id
         jsr     L44F2
         lda     L7B5F
@@ -11783,7 +11811,7 @@ L7147:  lda     $EC2E
         dec     $EC2E
         jsr     redraw_windows_and_desktop
         jsr     L72D8
-        lda     desktop_winid
+        lda     desktop_active_winid
         beq     L715F
         lda     #$03
         bne     L7161
@@ -11943,10 +11971,10 @@ L7296:  lda     $06
         jsr     L72D8
         jsr     pop_zp_addrs
         rts
-
 L72A7:  .byte   0
 L72A8:  .byte   0
 L72A9:  .byte   0
+
 L72AA:  MLI_RELAY_CALL OPEN, open_params
         beq     L72CD
         jsr     DESKTOP_SHOW_ALERT0
@@ -12120,13 +12148,13 @@ L7429:  lda     $E1F1
         adc     L7448
         sta     L4860
         rts
-
 L7445:  .byte   0
 L7446:  .byte   0
 L7447:  .byte   0
 L7448:  .byte   0
 L7449:  .byte   0
 L744A:  .byte   0
+
 L744B:  lda     bufnum
         asl     a
         tax
@@ -12358,8 +12386,8 @@ L75FA:  ldx     bufnum
         lda     bufnum
         jsr     L7635
         rts
-
 L7620:  .byte   $00
+
 L7621:  .byte   $00
 L7622:  .byte   $00
 L7623:  .byte   $00
@@ -12431,7 +12459,7 @@ L767C:  txa
         bne     L76A4
         inc     $06+1
 L76A4:  lda     bufnum
-        sta     desktop_winid
+        sta     desktop_active_winid
 L76AA:  lda     L7625
         cmp     L7764
         beq     L76BB
@@ -12517,9 +12545,9 @@ L7744:  ldy     #$22
         jsr     L8B60
         jsr     pop_zp_addrs
         rts
-
 L7764:  .byte   $00,$00,$00
 L7767:  .byte   $14
+
 L7768:  inc     LDD9E
         jsr     DESKTOP_FIND_SPACE
         ldx     buf3len
@@ -12567,6 +12595,7 @@ L77BF:  lda     ($06),y
 L77CC:  lda     #$01
         bne     L77DA
 L77D0:  PASCAL_STRING ".SYSTEM"
+
 L77D8:  lda     #$FF
 L77DA:  tay
         lda     LCBANK1
@@ -12654,6 +12683,7 @@ L7870:  lda     bufnum
 
         .byte   0
         .byte   0
+
 L78A1:  sta     L78EE
         jsr     push_zp_addrs
         lda     type_table_addr
@@ -12750,7 +12780,7 @@ L798A:  A2D_RELAY_CALL A2D_SET_POS, items_label_pos
         bcs     L79A7
         inc     str_items       ; restore trailing s
 L79A7:  jsr     L79F7
-        ldx     desktop_winid
+        ldx     desktop_active_winid
         dex
         txa
         asl     a
@@ -12764,7 +12794,7 @@ L79A7:  jsr     L79F7
         A2D_RELAY_CALL A2D_SET_POS, LEBEB
         jsr     L7AD7
         addr_call draw_text2, str_k_in_disk
-        ldx     desktop_winid
+        ldx     desktop_active_winid
         dex
         txa
         asl     a
@@ -14016,7 +14046,7 @@ L84DC:  lda     query_state_buffer::width
         bne     L850E
 L850C:  lda     #$00
 L850E:  sta     L85F1
-        lda     desktop_winid
+        lda     desktop_active_winid
         jsr     window_lookup
         sta     $06
         stx     $06+1
@@ -14071,7 +14101,7 @@ L8562:  lsr     L85F3
         lda     L85F2
         adc     L7B60,x
         sta     query_state_buffer::hoff+1,x
-        lda     desktop_winid
+        lda     desktop_active_winid
         jsr     L7D5D
         sta     L85F4
         stx     L85F5
@@ -14094,7 +14124,7 @@ L85C3:  lda     query_state_buffer::hoff
         lda     query_state_buffer::hoff+1
         adc     L85F5
         sta     query_state_buffer::width+1
-L85D6:  lda     desktop_winid
+L85D6:  lda     desktop_active_winid
         jsr     window_lookup
         sta     $06
         stx     $06+1
@@ -14570,7 +14600,7 @@ L8893:  tay
         jsr     file_address_lookup
         sta     $06
         stx     $06+1
-        lda     desktop_winid
+        lda     desktop_active_winid
         jsr     window_lookup
         sta     $08
         stx     $08+1
@@ -14644,7 +14674,7 @@ L8915:  tay
         jsr     file_address_lookup
         sta     $06
         stx     $06+1
-L8921:  lda     desktop_winid
+L8921:  lda     desktop_active_winid
         jsr     window_lookup
         sta     $08
         stx     $08+1
@@ -20547,17 +20577,17 @@ start:
         sty     id_byte_2       ; when ROM is banked out.
         cpy     #0
         beq     is_iic          ; Now identify/store specific machine type.
-        bit     iigs_flag
+        bit     iigs_flag       ; (number is used in double-click timer)
         bpl     is_iie
-        lda     #$FD
+        lda     #$FD            ; IIgs
         sta     machine_type
         jmp     done_machine_id
 
-is_iie: lda     #$96
+is_iie: lda     #$96            ; IIe
         sta     machine_type
         jmp     done_machine_id
 
-is_iic: lda     #$FA
+is_iic: lda     #$FA            ; IIc
         sta     machine_type
         jmp     done_machine_id
 
@@ -20602,7 +20632,7 @@ found_ram:
 
 :       A2D_RELAY_CALL A2D_INIT_SCREEN_AND_MOUSE, id_byte_1
         A2D_RELAY_CALL A2D_SET_MENU, splash_menu
-        A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, $D2A7
+        A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, zp_use_flag0
         A2D_RELAY_CALL A2D_SET_CURSOR, watch_cursor
         A2D_RELAY_CALL A2D_SHOW_CURSOR
         jsr     desktop_main::push_zp_addrs
