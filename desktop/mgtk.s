@@ -5,14 +5,14 @@
         .include "../inc/auxmem.inc"
         .include "../inc/prodos.inc"
         .include "../inc/mouse.inc"
-        .include "../a2d.inc"
+        .include "../mgtk.inc"
         .include "../desktop.inc"
 
 ;;; ==================================================
-;;; A2D - the GUI library
+;;; Mouse Graphics Tool Kit
 ;;; ==================================================
 
-.proc a2d
+.proc mgtk
         .org $4000
 
 ;;; ==================================================
@@ -96,10 +96,10 @@
         glyph_height_p  := $FF  ; glyph height
 
 ;;; ==================================================
-;;; A2D
+;;; MGTK
 
-.proc a2d_dispatch
-        .assert * = A2D, error, "A2D entry point must be at $4000"
+.proc mgtk_dispatch
+        .assert * = MGTK::MLI, error, "Entry point must be at $4000"
 
         lda     LOWSCR
         sta     SET80COL
@@ -107,7 +107,7 @@
         bit     preserve_zp_flag ; save ZP?
         bpl     adjust_stack
 
-        ;; Save $80...$FF, swap in what A2D needs at $F4...$FF
+        ;; Save $80...$FF, swap in what MGTK needs at $F4...$FF
         ldx     #$7F
 :       lda     $80,x
         sta     zp_saved,x
@@ -140,9 +140,9 @@ adjust_stack:                   ; Adjust stack to account for params
         lda     (params_addr),y
         asl     a
         tax
-        lda     a2d_jump_table,x
+        lda     mgtk_jump_table,x
         sta     jump+1
-        lda     a2d_jump_table+1,x
+        lda     mgtk_jump_table+1,x
         sta     jump+2
 
         iny                     ; Point params_addr at params
@@ -225,9 +225,9 @@ rts1:   rts
 ;;; ==================================================
 ;;; Routines can jmp here to exit with A set
 
-a2d_exit_with_a:
+mgtk_exit_with_a:
         pha
-        jsr     a2d_dispatch::cleanup
+        jsr     mgtk_dispatch::cleanup
         pla
         ldx     stack_ptr_stash
         txs
@@ -275,17 +275,25 @@ hide_cursor_count:
 .endproc
 
 ;;; ==================================================
-;;; Jump table for A2D entry point calls
+;;; Jump table for MGTK entry point calls
 
         ;; jt_rts can be used if the only thing the
         ;; routine needs to do is copy params into
         ;; the zero page (state)
-        jt_rts := a2d_dispatch::rts1
+        jt_rts := mgtk_dispatch::rts1
 
-a2d_jump_table:
+mgtk_jump_table:
         .addr   jt_rts              ; $00 NOOP
+
+        ;; ----------------------------------------
+        ;; Graphics Primitives
+
+
+        ;; Initialization Commands
         .addr   L5E51               ; $01
         .addr   CFG_DISPLAY_IMPL    ; $02 CFG_DISPLAY
+
+        ;; GrafPort Commands
         .addr   QUERY_SCREEN_IMPL   ; $03 QUERY_SCREEN
         .addr   SET_STATE_IMPL      ; $04 SET_STATE
         .addr   GET_STATE_IMPL      ; $05 GET_STATE
@@ -296,6 +304,8 @@ a2d_jump_table:
         .addr   jt_rts              ; $0A SET_THICKNESS
         .addr   SET_FONT_IMPL       ; $0B SET_FONT
         .addr   jt_rts              ; $0C SET_TEXT_MASK
+
+        ;; Drawing Commands
         .addr   OFFSET_POS_IMPL     ; $0D OFFSET_POS
         .addr   jt_rts              ; $0E SET_POS
         .addr   DRAW_LINE_IMPL      ; $0F DRAW_LINE
@@ -307,11 +317,20 @@ a2d_jump_table:
         .addr   L537E               ; $15
         .addr   DRAW_POLYGONS_IMPL  ; $16 DRAW_POLYGONS
         .addr   L537A               ; $17
+
+        ;; Text Commands
         .addr   MEASURE_TEXT_IMPL   ; $18 MEASURE_TEXT
         .addr   DRAW_TEXT_IMPL      ; $19 DRAW_TEXT
+
+        ;; Utility Commands
         .addr   CONFIGURE_ZP_IMPL   ; $1A CONFIGURE_ZP_USE
         .addr   LOW_ZP_STASH_IMPL   ; $1B LOW_ZP_STASH
         .addr   L5F0A               ; $1C
+
+        ;; ----------------------------------------
+        ;; Mouse Graphics Tool Kit
+
+        ;; Initialization Calls
         .addr   INIT_SCREEN_AND_MOUSE_IMPL ; $1D INIT_SCREEN_AND_MOUSE
         .addr   DISABLE_MOUSE_IMPL  ; $1E DISABLE_MOUSE
         .addr   L64D2               ; $1F
@@ -319,17 +338,23 @@ a2d_jump_table:
         .addr   L8427               ; $21
         .addr   L7D61               ; $22
         .addr   GET_INT_HANDLER_IMPL; $23 GET_INT_HANDLER
+
+        ;; Cursor Manager Calls
         .addr   SET_CURSOR_IMPL     ; $24 SET_CURSOR
         .addr   SHOW_CURSOR_IMPL    ; $25 SHOW_CURSOR
         .addr   HIDE_CURSOR_IMPL    ; $26 HIDE_CURSOR
         .addr   ERASE_CURSOR_IMPL   ; $27 ERASE_CURSOR
         .addr   GET_CURSOR_IMPL     ; $28 GET_CURSOR
         .addr   L6663               ; $29
+
+        ;; Event Manager Calls
         .addr   GET_INPUT_IMPL      ; $2A GET_INPUT
         .addr   CALL_2B_IMPL        ; $2B
         .addr   L65D4               ; $2C
         .addr   SET_INPUT_IMPL      ; $2D SET_INPUT
         .addr   SET_KBD_FLAG_IMPL   ; $2E SET_KBD_FLAG
+
+        ;; Menu Manager Calls
         .addr   L6ECD               ; $2F
         .addr   SET_MENU_IMPL       ; $30 SET_MENU
         .addr   MENU_CLICK_IMPL     ; $31 MENU_CLICK
@@ -339,6 +364,8 @@ a2d_jump_table:
         .addr   L6BA9               ; $35
         .addr   L6BB5               ; $36
         .addr   L6F1C               ; $37
+
+        ;; Window Manager Calls
         .addr   CREATE_WINDOW_IMPL  ; $38 CREATE_WINDOW
         .addr   DESTROY_WINDOW_IMPL ; $39 DESTROY_WINDOW
         .addr   L7836               ; $3A
@@ -355,6 +382,8 @@ a2d_jump_table:
         .addr   DRAG_RESIZE_IMPL    ; $45 DRAG_RESIZE
         .addr   MAP_COORDS_IMPL     ; $46 MAP_COORDS
         .addr   L78E1               ; $47
+
+        ;; Control Manager Calls
         .addr   QUERY_CLIENT_IMPL   ; $48 QUERY_CLIENT
         .addr   RESIZE_WINDOW_IMPL  ; $49 RESIZE_WINDOW
         .addr   DRAG_SCROLL_IMPL    ; $4A DRAG_SCROLL
@@ -1531,7 +1560,7 @@ L5043:  jsr     L50A9
         bcc     :+
         bne     fail
 :       lda     #$80            ; success!
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 
 fail:   rts
 .endproc
@@ -1663,7 +1692,7 @@ L514C:  sec
         rts
 
 L5163:  lda     #$81
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 
 ;;; ==================================================
 
@@ -2005,7 +2034,7 @@ L5390:  jsr     L5354
         jmp     L546F
 
 L5398:  lda     #$82
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 
 L539D:  ldy     #1
         sty     $AF
@@ -2739,7 +2768,7 @@ loop:   sta     glyph_row_lo,y
         rts
 
 end:    lda     #$83
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 .endproc
 
 glyph_row_lo:
@@ -3547,7 +3576,7 @@ rts3:   rts
         beq     rts3
         sta     preserve_zp_flag
         bcc     rts3
-        jmp     a2d_dispatch::cleanup
+        jmp     mgtk_dispatch::cleanup
 .endproc
 
 ;;; ==================================================
@@ -3615,7 +3644,7 @@ table:  .byte   $01,$00,$00,$46,$01,$00
 
 ;;; ==================================================
 
-preserve_zp_flag:         ; if high bit set, ZP saved during A2D calls
+preserve_zp_flag:         ; if high bit set, ZP saved during MGTK calls
         .byte   $80
 
 low_zp_stash_flag:
@@ -3631,15 +3660,15 @@ stack_ptr_stash:
 .proc screen_state
 left:   .word   0
 top:    .word   0
-addr:   .addr   A2D_SCREEN_ADDR
-stride: .word   A2D_SCREEN_STRIDE
+addr:   .addr   MGTK::screen_mapbits
+stride: .word   MGTK::screen_mapwidth
 hoff:   .word   0
 voff:   .word   0
 width:  .word   560-1
 height: .word   192-1
 pattern:.res    8, $FF
-mskand: .byte   A2D_DEFAULT_MSKAND
-mskor:  .byte   A2D_DEFAULT_MSKOR
+mskand: .byte   MGTK::colormask_and
+mskor:  .byte   MGTK::colormask_or
 xpos:   .word   0
 ypos:   .word   0
 hthick: .byte   1
@@ -3655,15 +3684,15 @@ font:   .addr   0
 .proc saved_state
 left:   .word   0
 top:    .word   0
-addr:   .addr   A2D_SCREEN_ADDR
-stride: .word   A2D_SCREEN_STRIDE
+addr:   .addr   MGTK::screen_mapbits
+stride: .word   MGTK::screen_mapwidth
 hoff:   .word   0
 voff:   .word   0
 width:  .word   560-1
 height: .word   192-1
 pattern:.res    8, $FF
-mskand: .byte   A2D_DEFAULT_MSKAND
-mskor:  .byte   A2D_DEFAULT_MSKOR
+mskand: .byte   MGTK::colormask_and
+mskor:  .byte   MGTK::colormask_or
 xpos:   .word   0
 ypos:   .word   0
 hthick: .byte   1
@@ -4213,7 +4242,7 @@ L63D1:  ldx     L6338
         cpx     #$00
         bne     L63E5
         lda     #$92
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 
 L63E5:  lda     L6338
         and     #$7F
@@ -4221,7 +4250,7 @@ L63E5:  lda     L6338
         cpx     L6338
         beq     L63F6
         lda     #$91
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 
 L63F6:  stx     L6338
         lda     #$80
@@ -4264,8 +4293,8 @@ L643F:  jsr     call_mouse
 L6454:  jsr     L653F
         jsr     L6588
         ;; Fills the desktop background on startup (menu left black)
-        A2D_CALL A2D_SET_PATTERN, checkerboard_pattern
-        A2D_CALL A2D_FILL_RECT, fill_rect_params
+        MGTK_CALL MGTK::SetPattern, checkerboard_pattern
+        MGTK_CALL MGTK::PaintRect, fill_rect_params
         jmp     L6556
 
 .proc alloc_interrupt_params
@@ -4295,7 +4324,7 @@ L6486:  lda     #$80
 L648B:  rts
 
 L648C:  lda     #$93
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 
 L6491:
         lda     L6337
@@ -4303,7 +4332,7 @@ L6491:
         cmp     #$01
         beq     L64A4
         lda     #$90
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 
 L649F:  lda     #$80
         sta     L6337
@@ -4371,7 +4400,7 @@ L64FF:  lda     #$00
         rts
 
 L6508:  lda     #$94
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 
 L650D:  lda     L6522
         beq     L651D
@@ -4495,7 +4524,7 @@ checkerboard_pattern:
         jmp     store_xa_at_params_y
 
 fail:   lda     #$95
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 
 mouse_state_addr:
         .addr   mouse_state
@@ -4577,7 +4606,7 @@ L663B:  lda     #$98
         bmi     L6641
 L663F:  lda     #$99
 L6641:  plp
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 
 L6645:  lda     #0
         bit     mouse_status
@@ -4615,7 +4644,7 @@ modifiers  := * + 3
         bit     L6339
         bpl     L666D
         lda     #$97
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 
 L666D:
         sec                     ; called from interrupt handler
@@ -4652,20 +4681,20 @@ L666D:
 
         lda     input::modifiers
         sta     input::kmods
-        lda     #A2D_INPUT_KEY
+        lda     #MGTK::key_down
         sta     input::state
         bne     L66D8
 
 L66B9:  bcc     up
         lda     input::modifiers
         beq     :+
-        lda     #A2D_INPUT_DOWN_MOD
+        lda     #MGTK::apple_key
         bne     set_state
 
-:       lda     #A2D_INPUT_DOWN
+:       lda     #MGTK::button_down
         bne     set_state
 
-up:     lda     #A2D_INPUT_UP
+up:     lda     #MGTK::button_up
 
 set_state:
         sta     input::state
@@ -4702,7 +4731,7 @@ int_stash_rd80store:
 .proc interrupt_handler
         cld                     ; required for interrupt handlers
 
-body:                           ; returned by A2D_GET_INT_HANDLER
+body:                           ; returned by MGTK_GET_INT_HANDLER
 
         lda     RDPAGE2         ; record softswitch state
         sta     int_stash_rdpage2
@@ -5012,7 +5041,7 @@ L6910:  sta     $A1
         sta     $A3
         rts
 
-L691B:  A2D_CALL A2D_GET_INPUT, $82
+L691B:  MGTK_CALL MGTK::GetEvent, $82
         lda     $82
         rts
 
@@ -5170,7 +5199,7 @@ L6A3C:  lda     #$00
         sbc     L633E
         bpl     L6A5B
         lda     #$9C
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 
 L6A5B:  rts
 
@@ -5187,17 +5216,17 @@ L6A5C:  ldx     $A7
         stx     draw_params+1
         lda     #0
         jsr     set_fill_mode
-        A2D_CALL A2D_FILL_RECT, 0, fill_params
+        MGTK_CALL MGTK::PaintRect, 0, fill_params
         lda     #4
         jsr     set_fill_mode
-        A2D_CALL A2D_DRAW_RECT, 0, draw_params
+        MGTK_CALL MGTK::FrameRect, 0, draw_params
         rts
 .endproc
 
 L6A89:  jsr     L6A94
         bne     L6A93
         lda     #$9A
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 
 L6A93:  rts
 
@@ -5305,7 +5334,7 @@ loop:   lda     $B7,x
         bpl     loop
         lda     #$02
         jsr     set_fill_mode
-        A2D_CALL A2D_FILL_RECT, fill_rect_params2
+        MGTK_CALL MGTK::PaintRect, fill_rect_params2
         rts
 .endproc
 
@@ -5353,7 +5382,7 @@ L6B9E:  rts
 L6B9F:  jsr     L6B96
         bne     L6B9E
         lda     #$9B
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 
 ;;; ==================================================
 
@@ -5425,12 +5454,12 @@ L6BFD:  bit     L7D81
         bpl     L6C05
         jmp     L8149
 
-L6C05:  A2D_CALL A2D_SET_POS, $83
-        A2D_CALL A2D_TEST_BOX, test_box_params
+L6C05:  MGTK_CALL MGTK::MoveTo, $83
+        MGTK_CALL MGTK::InRect, test_box_params
         bne     L6C58
         lda     L6BD9
         beq     L6C23
-        A2D_CALL A2D_TEST_BOX, test_box_params2
+        MGTK_CALL MGTK::InRect, test_box_params2
         bne     L6C73
         jsr     L6EA1
 L6C23:  jsr     L691B
@@ -5702,11 +5731,11 @@ L6E36:  ldx     $A9
         lda     $BE
         sbc     #$00
         sta     fill_rect_params3_right+1
-        A2D_CALL A2D_SET_PATTERN, light_speckle_pattern
+        MGTK_CALL MGTK::SetPattern, light_speckle_pattern
         lda     #$01
         jsr     set_fill_mode
-        A2D_CALL A2D_FILL_RECT, fill_rect_params3
-        A2D_CALL A2D_SET_PATTERN, screen_state::pattern
+        MGTK_CALL MGTK::PaintRect, fill_rect_params3
+        MGTK_CALL MGTK::SetPattern, screen_state::pattern
         lda     #$02
         jsr     set_fill_mode
         rts
@@ -5756,7 +5785,7 @@ L6EAA:  ldx     L6BDA
         jsr     HIDE_CURSOR_IMPL
         lda     #$02
         jsr     set_fill_mode
-        A2D_CALL A2D_FILL_RECT, fill_rect_params4
+        MGTK_CALL MGTK::PaintRect, fill_rect_params4
         jmp     SHOW_CURSOR_IMPL
 
 ;;; ==================================================
@@ -6020,20 +6049,20 @@ end:    rts
 
         ;; Look up window state by id (in $82); $A9/$AA will point at
         ;; window params (also X,A).
-        ;; This will exit the A2D call directly (restoring stack, etc)
+        ;; This will exit the MGTK call directly (restoring stack, etc)
         ;; if the window is not found.
 .proc window_by_id_or_exit
         jsr     window_by_id
         beq     nope
         rts
 nope:   lda     #$9F
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 .endproc
 
-L707F:  A2D_CALL A2D_DRAW_RECT, $C7
+L707F:  MGTK_CALL MGTK::FrameRect, $C7
         rts
 
-L7086:  A2D_CALL A2D_TEST_BOX, $C7
+L7086:  MGTK_CALL MGTK::InRect, $C7
         rts
 
 L708D:  ldx     #$03
@@ -6230,10 +6259,10 @@ L71EE:  jsr     L7157
         lda     $C9
         and     #$01
         beq     L71FE
-        A2D_CALL A2D_SET_PATTERN, stripes_pattern
+        MGTK_CALL MGTK::SetPattern, stripes_pattern
         rts
 
-L71FE:  A2D_CALL A2D_SET_PATTERN, stripes_pattern_alt
+L71FE:  MGTK_CALL MGTK::SetPattern, stripes_pattern_alt
         rts
 
 L7205:  lda     #$01
@@ -6332,7 +6361,7 @@ L72A0:  jsr     FILL_RECT_IMPL  ; Draw title bar stripes between close box and t
         sbc     #$00
         sta     $97
         jsr     FILL_RECT_IMPL  ; Draw title bar stripes to right of title
-        A2D_CALL A2D_SET_PATTERN, screen_state::pattern
+        MGTK_CALL MGTK::SetPattern, screen_state::pattern
 L72C9:  jsr     next_window::L703E
         bit     $B0
         bpl     L7319
@@ -6491,7 +6520,7 @@ L73F0:  sta     state_ypos
 
 QUERY_TARGET_IMPL:
         jsr     L653F
-        A2D_CALL A2D_TEST_BOX, test_box_params
+        MGTK_CALL MGTK::InRect, test_box_params
         beq     L7416
         lda     #$01
 L7406:  ldx     #$00
@@ -6561,13 +6590,13 @@ CREATE_WINDOW_IMPL:
         lda     ($A9),y
         bne     L748E
         lda     #$9E
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 
 L748E:  sta     $82
         jsr     window_by_id
         beq     L749A
         lda     #$9D
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 
 L749A:  lda     params_addr
         sta     $A9
@@ -6661,12 +6690,12 @@ L750C:  .res    38,0
         jsr     L6588
         lda     L7871
         bne     :+
-        A2D_CALL A2D_SET_BOX, set_box_params
+        MGTK_CALL MGTK::SetPortSite, set_box_params
 :       jsr     L718E
         jsr     L6588
         lda     L7871
         bne     :+
-        A2D_CALL A2D_SET_BOX, set_box_params
+        MGTK_CALL MGTK::SetPortSite, set_box_params
 :       jsr     next_window::L703E
         lda     active_state
         sta     L750C
@@ -6686,7 +6715,7 @@ L750C:  .res    38,0
 .endproc
 
 L7585:  lda     #$A3
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 
 ;;; ==================================================
 
@@ -6841,12 +6870,12 @@ toggle: sta     in_close_box
         lda     #$02
         jsr     set_fill_mode
         jsr     HIDE_CURSOR_IMPL
-        A2D_CALL A2D_FILL_RECT, $C7
+        MGTK_CALL MGTK::PaintRect, $C7
         jsr     SHOW_CURSOR_IMPL
 loop:   jsr     L691B
         cmp     #$02
         beq     L768B
-        A2D_CALL A2D_SET_POS, set_pos_params
+        MGTK_CALL MGTK::MoveTo, set_pos_params
         jsr     L7086
         eor     in_close_box
         bpl     loop
@@ -6912,7 +6941,7 @@ L76D1:  jsr     L653C
         jsr     L784C
         lda     #$02
         jsr     set_fill_mode
-        A2D_CALL A2D_SET_PATTERN, checkerboard_pattern
+        MGTK_CALL MGTK::SetPattern, checkerboard_pattern
 L76E2:  jsr     next_window::L703E
         jsr     L7749
         jsr     L70B7
@@ -7121,11 +7150,11 @@ L7871:  .byte   0
 L7872:  sta     L7010
         lda     #$00
         sta     L7871
-        A2D_CALL A2D_SET_BOX, set_box_params
+        MGTK_CALL MGTK::SetPortSite, set_box_params
         lda     #$00
         jsr     set_fill_mode
-        A2D_CALL A2D_SET_PATTERN, checkerboard_pattern
-        A2D_CALL A2D_FILL_RECT, set_box_params_box
+        MGTK_CALL MGTK::SetPattern, checkerboard_pattern
+        MGTK_CALL MGTK::PaintRect, set_box_params_box
         jsr     L6553
         jsr     top_window
         beq     L78CA
@@ -7161,8 +7190,8 @@ L78CF:  .byte   $0D,$00
 .proc set_box_params
 left:   .word   0
 top:    .word   $D
-addr:   .addr   A2D_SCREEN_ADDR
-stride: .word   A2D_SCREEN_STRIDE
+addr:   .addr   MGTK::screen_mapbits
+stride: .word   MGTK::screen_mapwidth
 hoffset:.word   0
 voffset:.word   0
 width:  .word   0
@@ -7302,7 +7331,7 @@ L7990:  eor     $8D
 L79A0:  bne     L79AF
         jsr     L79F1
         jsr     L657E
-        A2D_CALL A2D_FILL_RECT, $C7
+        MGTK_CALL MGTK::PaintRect, $C7
         rts
 
 L79AF:  bit     $8C
@@ -7315,9 +7344,9 @@ L79B8:  bit     $B0
         bpl     L79B7
 L79BC:  jsr     L657E
         jsr     L79F1
-        A2D_CALL A2D_SET_PATTERN, light_speckles_pattern
-        A2D_CALL A2D_FILL_RECT, $C7
-        A2D_CALL A2D_SET_PATTERN, screen_state::pattern
+        MGTK_CALL MGTK::SetPattern, light_speckles_pattern
+        MGTK_CALL MGTK::PaintRect, $C7
+        MGTK_CALL MGTK::SetPattern, screen_state::pattern
         bit     $8C
         bmi     L79DD
         bit     $AF
@@ -7458,7 +7487,7 @@ QUERY_CLIENT_IMPL:
         jsr     top_window
         bne     L7ACE
         lda     #$A0
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 
 L7ACE:  bit     $B0
         bpl     L7B15
@@ -7557,12 +7586,12 @@ L7B81:  cmp     #$02
         sta     $82
         beq     L7B90
 L7B8B:  lda     #$A4
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 
 L7B90:  jsr     top_window
         bne     L7B9A
         lda     #$A0
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 
 L7B9A:  ldy     #$06
         bit     $82
@@ -7590,7 +7619,7 @@ L7BB6:  cmp     #$02
         sta     $82
         beq     L7BC5
 L7BC0:  lda     #$A4
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 
 L7BC5:  lda     $82
         sta     $8C
@@ -7603,14 +7632,14 @@ L7BCB:  lda     $83,x
         jsr     top_window
         bne     L7BE0
         lda     #$A0
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 
 L7BE0:  jsr     L7A73
         jsr     L653F
         jsr     L6588
         lda     #$02
         jsr     set_fill_mode
-        A2D_CALL A2D_SET_PATTERN, light_speckles_pattern
+        MGTK_CALL MGTK::SetPattern, light_speckles_pattern
         jsr     HIDE_CURSOR_IMPL
 L7BF7:  jsr     L707F
         jsr     SHOW_CURSOR_IMPL
@@ -7779,12 +7808,12 @@ L7D30:  cmp     #$02
         sta     $8C
         beq     L7D3F
 L7D3A:  lda     #$A4
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 
 L7D3F:  jsr     top_window
         bne     L7D49
         lda     #$A0
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 
 L7D49:  ldy     #$07
         bit     $8C
@@ -8340,7 +8369,7 @@ L81D9:  lda     #$00
         sta     L7D74
         lda     #$A2
         plp
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 
 L81E4:  lda     $AC
         and     #$01
@@ -8348,7 +8377,7 @@ L81E4:  lda     $AC
         lda     #$00
         sta     L7D74
         lda     #$A1
-        jmp     a2d_exit_with_a
+        jmp     mgtk_exit_with_a
 
 L81F4:  ldx     #$00
 L81F6:  clc
@@ -8513,11 +8542,11 @@ L8333:  lda     $0600,x
 
 L8346:  rts
 
-L8347:  A2D_CALL A2D_SET_INPUT, set_input_params
+L8347:  MGTK_CALL MGTK::PostEvent, set_input_params
         rts
 
 .proc set_input_params          ; 1 byte shorter than normal, since KEY
-state:  .byte   A2D_INPUT_KEY
+state:  .byte   MGTK::key_down
 key:    .byte   0
 modifiers:
         .byte   0
@@ -8797,4 +8826,4 @@ mouse_firmware_hi:           ; e.g. if mouse is in slot 4, this is $C4
 mouse_operand:               ; e.g. if mouse is in slot 4, this is $40
         .byte   0
 
-.endproc  ; a2d
+.endproc  ; mgtk

@@ -1,32 +1,32 @@
-# A2D API
+# MGTK API
 
 There are three distinct API classes that need to be used:
 
-* Main A2D API - entry point $4000 AUX, called MLI-style (JSR followed by command type and address of param block)
+* Main MGTK API - entry point $4000 AUX, called MLI-style (JSR followed by command type and address of param block)
 * DeskTop Jump Table - simple JSR calls starting at $4003 MAIN, no arguments
 * DeskTop API - another MLI-style interface starting at $8E00 AUX
 
-## Main A2D API
+## Main MGTK API
 
 ### Concepts
 
-#### Box
+#### GrafPort
 
-The _box_ block is reused in several places. It has the following structure:
+The _port_ block is reused in several places. It has the following structure:
 
 ```
   .word left           pixels from screen left edge
   .word top            pixels from screen top edge
-  .addr addr           A2D_SCREEN_ADDR ($2000)
-  .word stride         A2D_SCREEN_STRIDE ($80)
+  .addr addr           screen address $2000
+  .word stride         screen stride $80
   .word hoff           pixels scrolled left
   .word voff           pixels scrolled up
   .word width          pixels wide
   .word height         pixels tall
 ```
 
-Drawing state can be set to a box (A2D_SET_BOX) and then subsequent operations will occur
-within the box: they will be clipped to the bounds and the offset will be taken into account.
+Drawing state can be set to a port (SetPort) and then subsequent operations will occur
+within the port: they will be clipped to the bounds and the offset will be taken into account.
 For example, if hoffset is 15 and voffset is 5 then a pixel plotted at 40, 40 will appear
 at 40 - 15 = 25 pixels from the left edge and 40 - 5 = 35 pixels from the top edge.
 
@@ -48,12 +48,12 @@ optional _resize box_ and optional _scroll bars_.
 * Copy DA code from MAIN to AUX (e.g. using AUXMOVE)
 * Transfer control to AUX
 * Turn on ALTZP and LCBANK1
-* Create window (A2D_CREATE_WINDOW)
+* Create window (OpenWindow)
 * Draw everything
 * Call $2B (no idea what this does!)
 * Enter [input loop](#input-loop)
 * ...
-* Destroy window (A2D_DESTROY_WINDOW)
+* Destroy window (CloseWindow)
 * Redraw desktop icons (DESKTOP_REDRAW_ICONS)
 * Switch control back to MAIN (RAMRDOFF/RAMWRTOFF)
 * Ensure ALTZP and LCBANK1 are on
@@ -66,26 +66,26 @@ optional _resize box_ and optional _scroll bars_.
 
 #### Input Loop
 
-* Call A2D_GET_INPUT.
-* If a key (A2D_INPUT_KEY), then check modifiers (Open/Closed Apple) and key code, ignore or take action.
-* If a click, call A2D_QUERY_TARGET.
+* Call GetEvent.
+* If a key, then check modifiers (Open/Closed Apple) and key code, ignore or take action.
+* If a click, call FindWindow.
 * If target id not the window id, ignore.
-* If target element is desktop (A2D_ELEM_DESKTOP) or menu (A2D_ELEM_MENU) then ignore.
-* If target element is close box (A2D_ELEM_CLOSE) then initiate [window close](#window-close).
-* If target element is title bar (A2D_ELEM_TITLE) then initiate [window drag](#window-drag).
-* If target element is resize box (A2D_ELEM_RESIZE) then initiate [window resize](#window-resize).
-* Otherwise, it is client area (A2D_ELEM_CLIENT); call A2D_QUERY_CLIENT.
-* If client part is a scrollbar (A2D_VSCROLL or A2D_HSCROLL) then initiate a [scroll](#window-scroll).
+* If target element is desktop or menu then ignore.
+* If target element is close box then initiate [window close](#window-close).
+* If target element is title bar then initiate [window drag](#window-drag).
+* If target element is resize box then initiate [window resize](#window-resize).
+* Otherwise, it is client area; call FindControl.
+* If client part is a scrollbar then initiate a [scroll](#window-scroll).
 * Otherwise, handle a client click using custom logic (e.g. hit testing buttons, etc)
 
 #### Window Close
 
-* Call A2D_CLOSE_CLICK, which enters a modal loop to handle the mouse moving out/in the box.
+* Call TrackGoAway, which enters a modal loop to handle the mouse moving out/in the box.
 * Result indicates clicked or canceled; if clicked, exit the DA, otherwise ignore.
 
 #### Window Drag
 
-* Call A2D_DRAG_WINDOW.
+* Call DragWindow.
 * Call JUMP_TABLE_REDRAW_ALL.
 * If _offscreen flag_ was not set, redraw desktop icons (DESKTOP_REDRAW_ICONS).
 * Set _offscreen flag_ if window's `top` is greater than or equal to the screen bottom (191), clear otherwise.
@@ -93,10 +93,10 @@ optional _resize box_ and optional _scroll bars_.
 
 #### Window Resize
 
-* Call A2D_DRAG_RESIZE.
+* Call GrowWindow.
 * Call JUMP_TABLE_REDRAW_ALL.
 * Call DESKTOP_REDRAW_ICONS.
-* Call A2D_RESIZE_WINDOW if needed to adjust scroll bar settings. (Details TBD).
+* Call UpdateThumb if needed to adjust scroll bar settings. (Details TBD).
 * Redraw window.
 
 #### Window Scroll
@@ -155,6 +155,6 @@ Parameters: none (pass $0000 as address)
 
 Redraws the icons on the desktop (mounted volumes, trash). This call is required in these cases:
 
-* After destroying a window (A2D_DESTROY_WINDOW)
-* After repainting the desktop (JUMP_TABLE_REDRAW_ALL) following a drag (A2D_DRAG_WINDOW)
-* After repainting the desktop (JUMP_TABLE_REDRAW_ALL) following a resize (A2D_DRAG_RESIZE/A2D_RESIZE_WINDOW)
+* After destroying a window (CloseWindow)
+* After repainting the desktop (JUMP_TABLE_REDRAW_ALL) following a drag (DragWindow)
+* After repainting the desktop (JUMP_TABLE_REDRAW_ALL) following a resize (GrowWindow)

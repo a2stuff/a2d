@@ -16,7 +16,7 @@ segments swapped in dynamically.
 The file is broken down into multiple segments:
 
 * segment 0: load  - A$2000-$257F, L$0580, mark $000000 (Loader)
-* segment 1: aux   - A$4000-$BFFF, L$8000, mark $000580 (A2D, DeskTop)
+* segment 1: aux   - A$4000-$BFFF, L$8000, mark $000580 (MGTK, DeskTop)
 * segment 2: auxlc - A$D000-$ECFF, L$1D00, mark $008580 (DeskTop)
 * segment 3: auxlc - A$FB00-$FFFF, L$0500, mark $00A280 (DeskTop)
 * segment 4: main  - A$4000-$BEFF, L$7F00, mark $00A780 (DeskTop)
@@ -77,7 +77,7 @@ Loaded at $800-$FFF, this does one-time initialization of the
 DeskTop. It is later overwritten when any desk accessories are
 run.
 
-### GUI Library "A2D"
+### Mouse Graphics Tool Kit (MGTK)
 
 `a2d.s`
 
@@ -140,8 +140,8 @@ $9000 |      +------+    |             |
 $8800 |             |    | Font        |
       |             |    |             |
 $851F |             |    +-------------+
-      |             |    | A2D GUI     |
-      |             |    | Library     |
+      |             |    | MGTK        |
+      |             |    |             |
       |             |    |             |
       |             |    |             |
 $7800 |      +------+    |             |

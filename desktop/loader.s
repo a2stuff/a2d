@@ -286,7 +286,7 @@ pathname:
 ;;; then relocated to |dest| according to |type|.
 
 ;;; Segments are:
-;;; $4000 aux        - A2D GUI library and DeskTop code
+;;; $4000 aux        - MGTK and DeskTop code
 ;;; $D000 aux/banked - DeskTop code callable from main, and resources
 ;;; $FB00 aux/banked - more DeskTop resources (icons, strings, etc)
 ;;; $4000 main       - more DeskTop code

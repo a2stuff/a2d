@@ -5,7 +5,7 @@
         .include "../inc/auxmem.inc"
         .include "../inc/prodos.inc"
 
-        .include "../a2d.inc"
+        .include "../mgtk.inc"
         .include "../desktop.inc" ; redraw icons after window move, font
 
         .org $800
@@ -135,8 +135,8 @@ check_window_pos:
         sta     window_pos_flag
         rts
 
-:       A2D_CALL A2D_QUERY_STATE, query_state_params
-        A2D_CALL A2D_SET_STATE, set_state_params
+:       MGTK_CALL MGTK::GetWinPort, query_state_params
+        MGTK_CALL MGTK::SetPort, set_state_params
         lda     query_state_params_id
         cmp     #window_id
         bne     :+
@@ -593,10 +593,10 @@ set_state_params:
 
 .proc create_window_params
 id:     .byte   window_id
-flags:  .byte   A2D_CWF_ADDCLOSE
+flags:  .byte   MGTK::option_go_away_box
 title:  .addr   name
-hscroll:.byte   A2D_CWS_NOSCROLL
-vscroll:.byte   A2D_CWS_NOSCROLL
+hscroll:.byte   MGTK::scroll_option_none
+vscroll:.byte   MGTK::scroll_option_none
 hsmax:  .byte   0
 hspos:  .byte   0
 vsmax:  .byte   0
@@ -609,16 +609,16 @@ h2:     .word   default_height
 
 left:   .word   default_left
 top:    .word   default_top
-addr:   .addr   A2D_SCREEN_ADDR
-stride: .word   A2D_SCREEN_STRIDE
+addr:   .addr   MGTK::screen_mapbits
+stride: .word   MGTK::screen_mapwidth
 hoff:   .word   0
 voff:   .word   0
 width:  .word   default_width
 height: .word   default_height
 
 pattern:.res    8, $FF
-mskand: .byte   A2D_DEFAULT_MSKAND
-mskor:  .byte   A2D_DEFAULT_MSKOR
+mskand: .byte   MGTK::colormask_and
+mskor:  .byte   MGTK::colormask_or
 xpos:   .word   0
 ypos:   .word   0
 hthick: .byte   1
@@ -633,15 +633,15 @@ next:   .addr   0
 .proc box_cruft                 ; Unknown usage
 left:   .word   default_left
 top:    .word   default_top
-addr:   .addr   A2D_SCREEN_ADDR
-stride: .word   A2D_SCREEN_STRIDE
+addr:   .addr   MGTK::screen_mapbits
+stride: .word   MGTK::screen_mapwidth
 hoff:   .word   0
 voff:   .word   0
 width:  .word   default_width
 height: .word   default_height
 pattern:.res    8, $FF
-mskand: .byte   A2D_DEFAULT_MSKAND
-mskor:  .byte   A2D_DEFAULT_MSKOR
+mskand: .byte   MGTK::colormask_and
+mskor:  .byte   MGTK::colormask_or
 xpos:   .word   0
 ypos:   .word   0
 hthick: .byte   1
@@ -661,7 +661,7 @@ name:   PASCAL_STRING "Puzzle"
 
 .proc create_window
         jsr     save_zp
-        A2D_CALL A2D_CREATE_WINDOW, create_window_params
+        MGTK_CALL MGTK::OpenWindow, create_window_params
 
         ;; init pieces
         ldy     #15
@@ -672,7 +672,7 @@ loop:   tya
 
         lda     #window_id
         jsr     check_window_pos
-        A2D_CALL $2B            ; ???
+        MGTK_CALL $2B            ; ???
 
         ;; Scramble?
 .proc scramble
@@ -698,7 +698,7 @@ ploop:  lda     position_table+1,y
         stx     position_table+1
 .endproc
 
-        A2D_CALL A2D_GET_INPUT, get_input_params
+        MGTK_CALL MGTK::GetEvent, get_input_params
         lda     get_input_params::state
         beq     scramble
         jsr     check_victory
@@ -712,22 +712,22 @@ ploop:  lda     position_table+1,y
 ;;; Input loop and processing
 
 .proc input_loop
-        A2D_CALL A2D_GET_INPUT, get_input_params
+        MGTK_CALL MGTK::GetEvent, get_input_params
         lda     get_input_params::state
-        cmp     #A2D_INPUT_DOWN
+        cmp     #MGTK::button_down
         bne     :+
         jsr     on_click
         jmp     input_loop
 
         ;; key?
-:       cmp     #A2D_INPUT_KEY
+:       cmp     #MGTK::key_down
         bne     input_loop
         jsr     check_key
         jmp     input_loop
 
         ;; click - where?
 on_click:
-        A2D_CALL A2D_QUERY_TARGET, query_target_params
+        MGTK_CALL MGTK::FindWindow, query_target_params
         lda     query_target_params::id
         cmp     #window_id
         bne     bail
@@ -736,20 +736,20 @@ on_click:
 bail:   rts
 
         ;; client area?
-:       cmp     #A2D_ELEM_CLIENT
+:       cmp     #MGTK::area_content
         bne     :+
         jsr     find_click_piece
         bcc     bail
         jmp     process_click
 
         ;; close box?
-:       cmp     #A2D_ELEM_CLOSE
+:       cmp     #MGTK::area_close_box
         bne     check_title
-        A2D_CALL A2D_CLOSE_CLICK, close_click_params
+        MGTK_CALL MGTK::TrackGoAway, close_click_params
         lda     close_click_params::clicked
         beq     bail
 destroy:
-        A2D_CALL A2D_DESTROY_WINDOW, destroy_window_params
+        MGTK_CALL MGTK::CloseWindow, destroy_window_params
         DESKTOP_CALL DESKTOP_REDRAW_ICONS
 
         target = $20            ; copy following to ZP and run it
@@ -769,11 +769,11 @@ loop:   lda     routine,x
 
         ;; title bar?
 check_title:
-        cmp     #A2D_ELEM_TITLE
+        cmp     #MGTK::area_dragbar
         bne     bail
         lda     #window_id
         sta     drag_window_params::id
-        A2D_CALL A2D_DRAG_WINDOW, drag_window_params
+        MGTK_CALL MGTK::DragWindow, drag_window_params
         ldx     #$23
         jsr     redraw_screen
         rts
@@ -794,7 +794,7 @@ check_key:
 .proc find_click_piece
         lda     #window_id
         sta     map_coords_params::id
-        A2D_CALL A2D_MAP_COORDS, map_coords_params
+        MGTK_CALL MGTK::ScreenToWindow, map_coords_params
         lda     map_coords_params::clientx+1
         ora     map_coords_params::clienty+1
         bne     nope            ; ensure high bytes are 0
@@ -988,19 +988,19 @@ after_click:
 ;;; Clear the background
 
 draw_window:
-        A2D_CALL A2D_SET_PATTERN, pattern_speckles
-        A2D_CALL A2D_FILL_RECT, fill_rect_params
-        A2D_CALL A2D_SET_PATTERN, pattern_black
+        MGTK_CALL MGTK::SetPattern, pattern_speckles
+        MGTK_CALL MGTK::PaintRect, fill_rect_params
+        MGTK_CALL MGTK::SetPattern, pattern_black
 
-        A2D_CALL A2D_SET_POS, set_pos_params
-        A2D_CALL A2D_DRAW_LINE, draw_line_params
+        MGTK_CALL MGTK::MoveTo, set_pos_params
+        MGTK_CALL MGTK::Line, draw_line_params
 
         jsr     draw_all
 
         lda     #window_id
         sta     query_state_params::id
-        A2D_CALL A2D_QUERY_STATE, query_state_params
-        A2D_CALL A2D_SET_STATE, set_state_params
+        MGTK_CALL MGTK::GetWinPort, query_state_params
+        MGTK_CALL MGTK::SetPort, set_state_params
         rts
 
 ;;; ==================================================
@@ -1062,11 +1062,11 @@ saved_zp:
 .proc draw_selected
         tya
         pha
-        A2D_CALL A2D_HIDE_CURSOR
+        MGTK_CALL MGTK::HideCursor
         lda     #window_id
         sta     query_state_params::id
-        A2D_CALL A2D_QUERY_STATE, query_state_params
-        A2D_CALL A2D_SET_STATE, set_state_params
+        MGTK_CALL MGTK::GetWinPort, query_state_params
+        MGTK_CALL MGTK::SetPort, set_state_params
         pla
         tay
 
@@ -1090,14 +1090,14 @@ loop:   tya
         sta     draw_bitmap_params::addr
         lda     bitmap_table+1,x
         sta     draw_bitmap_params::addr+1
-        A2D_CALL A2D_DRAW_BITMAP, draw_bitmap_params
+        MGTK_CALL MGTK::PaintBits, draw_bitmap_params
         pla
         clc
         adc     draw_inc
         tay
         cpy     draw_end
         bcc     loop
-        A2D_CALL A2D_SHOW_CURSOR
+        MGTK_CALL MGTK::ShowCursor
         rts
 .endproc
 

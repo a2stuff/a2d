@@ -5,7 +5,7 @@
         .include "../inc/prodos.inc"
         .include "../inc/auxmem.inc"
 
-        .include "../a2d.inc"
+        .include "../mgtk.inc"
         .include "../desktop.inc" ; get selection, font
 
         .org $800
@@ -173,7 +173,7 @@ base:   .word   0
 .proc input_params             ; queried to track mouse-up
 state:  .byte   $00
 
-;;; if state is A2D_INPUT_KEY
+;;; if state is MGTK::key_down
 key    := *
 modifiers := *+1
 
@@ -195,10 +195,10 @@ ycoord := *+2
 
 .proc window_params
 id:     .byte   window_id       ; window identifier
-flags:  .byte   A2D_CWF_NOTITLE
+flags:  .byte   MGTK::option_dialog_box
 title:  .addr   window_title
-hscroll:.byte   A2D_CWS_NOSCROLL
-vscroll:.byte   A2D_CWS_NOSCROLL
+hscroll:.byte   MGTK::scroll_option_none
+vscroll:.byte   MGTK::scroll_option_none
 hsmax:  .byte   32
 hspos:  .byte   0
 vsmax:  .byte   32
@@ -212,8 +212,8 @@ h2:     .word   default_height
 .proc box
 left:   .word   default_left
 top:    .word   default_top
-addr:   .addr   A2D_SCREEN_ADDR
-stride: .word   A2D_SCREEN_STRIDE
+addr:   .addr   MGTK::screen_mapbits
+stride: .word   MGTK::screen_mapwidth
 hoff:   .word   0
 voff:   .word   0
 width:  .word   default_width
@@ -221,8 +221,8 @@ height: .word   default_height
 .endproc
 
 pattern:.res    8, 0
-mskand: .byte   A2D_DEFAULT_MSKAND
-mskor:  .byte   A2D_DEFAULT_MSKOR
+mskand: .byte   MGTK::colormask_and
+mskor:  .byte   MGTK::colormask_or
 xpos:   .word   0
 ypos:   .word   0
 hthick: .byte   1
@@ -342,14 +342,14 @@ end:    rts
         sta     read_params::ref_num
         sta     close_params::ref_num
 
-        A2D_CALL A2D_HIDE_CURSOR
+        MGTK_CALL MGTK::HideCursor
         jsr     stash_menu
-        A2D_CALL A2D_CREATE_WINDOW, window_params
-        A2D_CALL A2D_SET_STATE, window_params::box
+        MGTK_CALL MGTK::OpenWindow, window_params
+        MGTK_CALL MGTK::SetPort, window_params::box
         jsr     show_file
-        A2D_CALL A2D_SHOW_CURSOR
+        MGTK_CALL MGTK::ShowCursor
 
-        A2D_CALL $2B            ; ???
+        MGTK_CALL $2B            ; ???
         ;; fall through
 .endproc
 
@@ -357,11 +357,11 @@ end:    rts
 ;;; Main Input Loop
 
 .proc input_loop
-        A2D_CALL A2D_GET_INPUT, input_params
+        MGTK_CALL MGTK::GetEvent, input_params
         lda     input_params::state
-        cmp     #A2D_INPUT_DOWN ; was clicked?
+        cmp     #MGTK::button_down ; was clicked?
         beq     exit
-        cmp     #A2D_INPUT_KEY  ; any key?
+        cmp     #MGTK::key_down  ; any key?
         beq     on_key
         bne     input_loop
 
@@ -374,11 +374,11 @@ on_key:
         bne     input_loop
 
 exit:
-        A2D_CALL A2D_HIDE_CURSOR
-        A2D_CALL A2D_DESTROY_WINDOW, window_params
+        MGTK_CALL MGTK::HideCursor
+        MGTK_CALL MGTK::CloseWindow, window_params
         DESKTOP_CALL DESKTOP_REDRAW_ICONS
         jsr     unstash_menu
-        A2D_CALL A2D_SHOW_CURSOR
+        MGTK_CALL MGTK::ShowCursor
 
         rts                     ; exits input loop
 .endproc

@@ -13,7 +13,7 @@ New desk accessories:
 
 * Loaded at $800 through (at least) $14FF
 * Copy themselves from Main into Aux memory (same location)
-* Can call into ProDOS MLI and A2D entry points ($4000, etc)
+* Can call into ProDOS MLI and MGTK/A2D entry points ($4000, etc)
 
 ## Files
 

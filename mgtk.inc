@@ -1,25 +1,24 @@
 ;;; ==================================================
-;;; A2Desktop - GUI Library
+;;; Mouse Graphics Tool Kit (w/ Graphics Primitives)
 ;;; ==================================================
 
-;;; ==================================================
-;;; A2D Calls
+.scope MGTK
 
-A2D             := $4000
-        ;; MLI-style call (jsr A2D ; .byte call ; .addr params)
+MLI     := $4000
+        ;; MLI-style call (jsr MLI ; .byte call ; .addr params)
         ;; Call from AUX (RAMRDON/RAMWRTON)
 
+;;; ==================================================
+;;; Graphics Primitives
+;;; ==================================================
 
-;;; $40E5,(call*2) is the jump table used for processing these calls
-;;; $4184,(call*2) defines param blocks input length
-;;;   if >=0, is length of param block
-;;;   if <0, and with $7E to get length
-;;;   if $4185,(call*2) is non-zero, param block is copied.
+;;; --------------------------------------------------
+;;; Initialization Commands
 
-A2D_NOOP                := $00  ; No-op
+NoOp                := $00  ; No-op
         ;; (input length 0 bytes)
 
-A2D_CFG_DISPLAY         := $02  ; Configure display switches
+SetSwitches         := $02  ; Configure display switches
         ;; (input length 1 byte)
         ;; Turns on 80 col/DHR, and then:
         ;;   bit 0: LoRes if clear, HiRes if set
@@ -27,13 +26,16 @@ A2D_CFG_DISPLAY         := $02  ; Configure display switches
         ;;   bit 2: Full screen if clear, split screen if set
         ;;   bit 3: Graphics if clear, text if set
 
-A2D_QUERY_SCREEN        := $03  ; Get screen state
+;;; --------------------------------------------------
+;;; GrafPort Commands
+
+InitPort        := $03  ; Get screen state
         ;; (input length 0 bytes)
         ;; (output length 36 bytes)
         ;; .word left
         ;; .word top
-        ;; .addr addr           A2D_SCREEN_ADDR
-        ;; .word stride         A2D_SCREEN_STRIDE
+        ;; .addr addr           screen_mapbits
+        ;; .word stride         screen_mapwidth
         ;; .word hoff
         ;; .word voff
         ;; .word width          560-1
@@ -49,12 +51,12 @@ A2D_QUERY_SCREEN        := $03  ; Get screen state
         ;; .byte tmask          AND mask for text, default $7F
         ;; .addr font
 
-A2D_SET_STATE   := $04          ; Set full drawing state
+SetPort   := $04          ; Set full drawing state
         ;; (input length 36 bytes)
         ;; .word left           pixels from screen edge
         ;; .word top
-        ;; .addr addr           A2D_SCREEN_ADDR
-        ;; .word stride         A2D_SCREEN_STRIDE
+        ;; .addr addr           screen_mapbits
+        ;; .word stride         screen_mapwidth
         ;; .word hoff           pixels scrolled
         ;; .word voff
         ;; .word width          pixels
@@ -70,92 +72,95 @@ A2D_SET_STATE   := $04          ; Set full drawing state
         ;; .byte tmask          AND mask for text, default $7F
         ;; .addr font
 
-A2D_GET_STATE   := $05          ; Get pointer to active drawing state
+GetPort   := $05          ; Get pointer to active drawing state
         ;; (input length 0 bytes)
         ;; (output length 2 bytes)
         ;; .addr state          (out)
 
-A2D_SET_BOX   := $06            ; Set just the drawing box, subset of full state
+SetPortSite   := $06            ; Set just the drawing box, subset of full state
         ;; (input length 16 bytes)
         ;; .word left           pixels from screen edge
         ;; .word top
-        ;; .addr addr           A2D_SCREEN_ADDR ($2000)
-        ;; .word stride         A2D_SCREEN_STRIDE ($80)
+        ;; .addr addr           screen_mapbits ($2000)
+        ;; .word stride         screen_mapwidth ($80)
         ;; .word hoff           pixels scrolled
         ;; .word voff
         ;; .word width          pixels
         ;; .word height
 
-A2D_SET_FILL_MODE := $07
+SetPenMode := $07
         ;; (input length 1 byte)
         ;; .byte mode           (>=4 also sets eor mask to $7f)
         ;;    0 = white (???)
         ;;    2 = black (???)
 
-A2D_SET_PATTERN := $08
+SetPattern := $08
         ;; (input length 8 bytes)
-        ;; .res 8 pattern       8x8 pixel pattern for A2D_FILL_RECT calls
+        ;; .res 8 pattern       8x8 pixel pattern for PaintRect calls
 
-A2D_SET_MSK := $09
+SetColorMasks := $09
         ;; (input length 2 bytes)
         ;; .byte mskand
         ;; .byte mskor
 
-A2D_SET_THICKNESS := $0A
+SetPenSize := $0A
         ;; (input length 2 bytes)
         ;; .byte hthick         horizontal pen thickness
         ;; .byte vthick         vertical pen thickness
 
-A2D_SET_FONT    := $0B
+SetFont    := $0B
         ;; (input length 2 bytes)
         ;; .addr font           font definition (see below)
 
-A2D_SET_TEXT_MASK := $0C        ; Stored to background before XORing glyph
+SetTextBG := $0C        ; Stored to background before XORing glyph
         ;; (input length 1 byte)
         ;; .byte mask
 
-A2D_OFFSET_POS    := $0D        ; Adjust start of subsequent DRAW_TEXT, DRAW_LINE
+;;; --------------------------------------------------
+;;; Drawing Commands
+
+Move    := $0D        ; Adjust start of subsequent DRAW_TEXT, DRAW_LINE
         ;; (input length 4 bytes)
         ;; .word xdelta
         ;; .word ydelta
 
-A2D_SET_POS     := $0E          ; Start of subsequent DRAW_TEXT, DRAW_LINE
+MoveTo     := $0E          ; Start of subsequent DRAW_TEXT, DRAW_LINE
         ;; (input length 4 bytes)
         ;; .word xcoord
         ;; .word ycoord
 
-A2D_DRAW_LINE   := $0F          ; Draw line (from SET_POS)
+Line   := $0F          ; Draw line (from SET_POS)
         ;; (input length 4 bytes)
         ;; .word xdelta         signed, delta in pixels
         ;; .word ydelta
 
-A2D_DRAW_LINE_ABS := $10        ; Draw line (from SET_POS)
+LineTo := $10        ; Draw line (from SET_POS)
         ;; (input length 4 bytes)
         ;; .word xcoord         end coords in pixels
         ;; .word ycoord
 
-A2D_FILL_RECT   := $11          ; Fill rectangle with selected simple pattern/thickness
+PaintRect   := $11          ; Fill rectangle with selected simple pattern/thickness
         ;; (input length 8 bytes)
         ;; .word left           (includes scroll pos)
         ;; .word top
         ;; .word right          pixels
         ;; .word bottom
 
-A2D_DRAW_RECT   := $12          ; Draw rectangle with selected simple pattern/thickness
+FrameRect   := $12          ; Draw rectangle with selected simple pattern/thickness
         ;; (input length 8 bytes)
         ;; .word left           pixels
         ;; .word top
         ;; .word right
         ;; .word bottom
 
-A2D_TEST_BOX    := $13          ; Is pos (via SET_POS) in bounds? Returns true/false in A
+InRect    := $13          ; Is pos (via SET_POS) in bounds? Returns true/false in A
         ;; (input length 8 bytes)
         ;; .word left
         ;; .word top
         ;; .word right
         ;; .word bottom
 
-A2D_DRAW_BITMAP := $14          ; Draw pattern
+PaintBits := $14          ; Draw pattern
         ;; (input length 16 bytes)
         ;; .word left
         ;; .word top
@@ -170,7 +175,7 @@ A2D_DRAW_BITMAP := $14          ; Draw pattern
         ;; $15 used in DeskTop but not DAs - icon redraw
         ;; (input length 0 bytes)
 
-A2D_DRAW_POLYGONS := $16       ; Draw multiple closed polygons
+FramePoly := $16       ; Draw multiple closed polygons
         ;; (input length 0 bytes)
         ;; Address points at struct:
         ;; .byte points         count
@@ -182,97 +187,120 @@ A2D_DRAW_POLYGONS := $16       ; Draw multiple closed polygons
         ;; $17 used in DeskTop but not DAs - maybe selection drag
         ;; (input length 0 bytes)
 
-A2D_MEASURE_TEXT := $18         ; Measure the width of a string in pixels
+;;; --------------------------------------------------
+;;; Text Commands
+
+TextWidth := $18         ; Measure the width of a string in pixels
         ;; (input length 3 bytes)
         ;; .addr data
         ;; .byte length
         ;; .word width          result in pixels
 
-A2D_DRAW_TEXT   := $19          ; Drawn at last SET_POS as left, baseline
+DrawText   := $19          ; Drawn at last SET_POS as left, baseline
         ;; (input length 3 bytes)
         ;; .addr data
         ;; .byte length
 
-A2D_CONFIGURE_ZP_USE    := $1A  ; Configure ZP usage by API (speed vs. convenience)
+;;; --------------------------------------------------
+;;; Utility Commands
+
+SetZP1    := $1A  ; Configure ZP usage by API (speed vs. convenience)
         ;; (input length 1 byte)
         ;; .byte flag           (AWS_CZP_*; high bit set = preserve ZP during calls)
 
-A2D_LOW_ZP_STASH        := $1B  ; Stash or restore lower 128 bytes of ZP; calls are idempotent
+SetZP2        := $1B  ; Stash or restore lower 128 bytes of ZP; calls are idempotent
         ;; (input length 1 byte)
         ;; .byte flag           (high bit set = stash ZP, clear = unstash ZP)
 
-A2D_INIT_SCREEN_AND_MOUSE := $1D; Inits state, registers interrupt handler, draws desktop
+
+;;; ==================================================
+;;; Mouse Graphics Tool Kit Calls
+;;; ==================================================
+
+;;; --------------------------------------------------
+;;; Initialization Calls
+
+StartDeskTop := $1D; Inits state, registers interrupt handler, draws desktop
         ;; (input length 12 byte)
         ;; ???
 
-A2D_DISABLE_MOUSE  := $1E       ; Deallocates interrupt, hides cursor
+StopDeskTop  := $1E       ; Deallocates interrupt, hides cursor
         ;; (no parameters; pass $0000 as address)
 
-A2D_HOOK_MOUSE := $20           ; Install mouse hook; A=0 on success, $95 if mouse disabled
+SetUserHook := $20           ; Install mouse hook; A=0 on success, $95 if mouse disabled
         ;; NOTE: Doesn't set the internal flag - buggy ???
         ;; (input length 2 bytes)
         ;; (output length 2 bytes)
         ;; .addr hook           Mouse hook routine to install
         ;; .addr mouse_state    (out) Address of mouse state (.word x, y; .byte status)
 
-A2D_GET_INT_HANDLER     := $23  ; Get address of interrupt handler
+GetIntHandler     := $23  ; Get address of interrupt handler
         ;; (input length 0)
         ;; (output length 2 bytes)
         ;; .addr handler        (out) Address of interrupt handler (after cld)
 
-A2D_SET_CURSOR  := $24          ; Set cursor definition
+;;; --------------------------------------------------
+;;; Cursor Manager Calls
+
+SetCursor  := $24          ; Set cursor definition
         ;; (input not copied)
         ;; .res 24 bitmap       2x12 byte bitmap
         ;; .res 24 mask         2x12 byte mask
         ;; .byte hotx           hotspot coords
         ;; .byte hoty
 
-A2D_SHOW_CURSOR := $25          ; Return cursor to visibility
+ShowCursor := $25          ; Return cursor to visibility
         ;; (no parameters; pass $0000 as address)
 
-A2D_HIDE_CURSOR := $26          ; Cursor hidden until A2D_SHOW_CURSOR call
+HideCursor := $26          ; Cursor hidden until ShowCursor call
         ;; (no parameters; pass $0000 as address)
 
-A2D_ERASE_CURSOR := $27         ; Cursor hidden until moved or other A2D call
+ObscureCursor := $27         ; Cursor hidden until moved
         ;; (no parameters; pass $0000 as address)
 
-A2D_GET_CURSOR := $28           ; Get cursor definition
+GetCursorAddr := $28           ; Get cursor definition
         ;; (input length 0 bytes)
         ;; (output length 2 bytes)
-        ;; .addr definition     See A2D_SET_CURSOR
+        ;; .addr definition     See SetCursor
 
-A2D_GET_INPUT   := $2A
+;;; --------------------------------------------------
+;;; Event Manager Calls
+
+GetEvent   := $2A
         ;; (input length 0 bytes)
         ;; (output length 5 bytes)
-        ;; .byte state          (A2D_INPUT_*)
-        ;; if state is A2D_INPUT_KEY:
+        ;; .byte state
+        ;; if state is key_down:
         ;;   .byte key          (ASCII code; high bit clear)
         ;;   .byte modifiers    (0=none, 1=open-apple, 2=closed-apple, 3=both)
         ;; if state otherwise:
         ;;   .word xcoord
         ;;   .word ycoord
 
-A2D_UNK_2B      := $2B          ; Unknown - possibly "reset drawing state"
+FlushEvents      := $2B
         ;; (no parameters; pass $0000 as address)
 
         ;; $2C used in DeskTop but not DAs - icon drag
         ;; (input length 0 bytes)
 
-A2D_SET_INPUT   := $2D          ; Set pending input state (mouse or keyboard)
+PostEvent   := $2D          ; Set pending input state (mouse or keyboard)
         ;; (input length 5 bytes)
-        ;; .byte state          A2D_INPUT_*
-        ;; if state is A2D_INPUT_KEY:
+        ;; .byte state
+        ;; if state is key_down:
         ;;   .byte key          ASCII code; high bit clear
         ;;   .byte modifiers    0=none, 1=open-apple, 2=closed-apple, 3=both
         ;; if state otherwise:
         ;;   .word xcoord
         ;;   .word ycoord
 
-A2D_SET_KBD_FLAG   := $2E       ; When set, keyboard is ignored in $29 calls
+SetKeyEvent   := $2E       ; When set, keyboard is ignored in $29 calls
         ;; (input length 1 byte)
         ;; .byte flag           high bit set = ignore keyboard, otherwise check
 
-A2D_SET_MENU := $30             ; Configure (and draw) menu
+;;; --------------------------------------------------
+;;; Menu Manager Calls
+
+SetMenu := $30             ; Configure (and draw) menu
         ;; (input not copied)
         ;; .word count          Number of top-level menus
         ;;
@@ -294,19 +322,22 @@ A2D_SET_MENU := $30             ; Configure (and draw) menu
         ;; or for a separator:
         ;; .word $40, $13, $0
 
-A2D_MENU_CLICK := $31           ; Enter modal loop for handling mouse-down on menu bar
+MenuSelect := $31           ; Enter modal loop for handling mouse-down on menu bar
         ;; (input not copied)
         ;; (output 2 bytes)
         ;; .byte menu_id        Top level menu identifier, or 0 if none
         ;; .byte item_num       Index (1-based) of item in menu, or 0 if none
 
-A2D_CREATE_WINDOW := $38
+;;; --------------------------------------------------
+;;; Window Manager Calls
+
+OpenWindow := $38
         ;; (input not copied)
-        ;; .byte id             0 = desktop, 1-...n = DeskTop windows, DAs use 51, 52, 100
-        ;; .byte flags          A2D_CWF_*
+        ;; .byte id
+        ;; .byte options                option_*
         ;; .addr title
-        ;; .byte hscroll        A2D_CWS_*
-        ;; .byte vscroll        A2D_CWS_*
+        ;; .byte hscroll                scroll_option_*
+        ;; .byte vscroll                scroll_option_*
         ;; .byte hsmax
         ;; .byte hspos
         ;; .byte vsmax
@@ -317,7 +348,7 @@ A2D_CREATE_WINDOW := $38
         ;; .word height_a       ???
         ;; .word width_b        (of scroll area?)
         ;; .word height_b       (of scroll area?)
-        ;;  - next section is identical to that for A2D_SET_STATE
+        ;;  - next section is identical to that for SetPort
         ;; .word left           pixels from screen edge
         ;; .word top
         ;; .word screen_addr
@@ -338,69 +369,69 @@ A2D_CREATE_WINDOW := $38
         ;; .addr font
         ;; .addr next           address of next lower window in stack (filled in by call)
 
-A2D_DESTROY_WINDOW := $39
+CloseWindow := $39
         ;; (input length 1 byte)
         ;; .byte id
 
-A2D_QUERY_WINDOW := $3B         ; Get pointer to window params by id; A=0 on success
+GetWinPtr := $3B         ; Get pointer to window params by id; A=0 on success
         ;; (input length 1 byte)
         ;; (output length 3 bytes)
         ;; .byte id             of window
         ;; .addr window         (out) window params
 
-A2D_QUERY_STATE      := $3C     ; get drawing state of window
+GetWinPort      := $3C     ; get drawing state of window
         ;; (input length 3 bytes)
         ;; .byte id             window
-        ;; .addr state          state definition to populate, like A2D_SET_STATE
+        ;; .addr state          state definition to populate, like SetPort
 
-A2D_UPDATE_STATE     := $3D     ; Update drawing state by passed window id
+SetWinPort     := $3D     ; Update drawing state by passed window id
         ;; ** Implementation appears buggy - or maybe just really cryptic ??? **
         ;; (input length 2 bytes)
         ;; .byte id             window
         ;; .byte ???
 
 
-A2D_REDRAW_WINDOW := $3E        ; Draws window border, background, title bar, scroll bars
+BeginUpdate := $3E        ; Draws window border, background, title bar, scroll bars
         ;; (input length 1 byte)
         ;; .byte id
 
-A2D_QUERY_TARGET   := $40
+FindWindow   := $40
         ;; (input length 4 bytes)
         ;; .word queryx         relative to screen
         ;; .word queryy
-        ;; .byte element        (out) A2D_ELEM_*
+        ;; .byte element        (out) area_*
         ;; .byte id             (out) of window
 
-A2D_QUERY_TOP := $41            ; Get id of top window
+FrontWindow := $41            ; Get id of top window
         ;; (input length 0 bytes)
         ;; (output length 1 byte)
         ;; .byte id             (out) window, or 0 if none
 
-A2D_RAISE_WINDOW   := $42       ; Make window topmost
+SelectWindow   := $42       ; Make window topmost
         ;; (input length 1 byte)
         ;; .byte id             window
 
-A2D_CLOSE_CLICK := $43
+TrackGoAway := $43
         ;; (input length 0 bytes)
         ;; .byte clicked        (out) 0 = cancelled, 1 = clicked
         ;; .byte ??             (out)
         ;; .byte ??             (out)
 
-A2D_DRAG_WINDOW := $44
+DragWindow := $44
         ;; (input length 5 bytes)
         ;; .byte id             window
         ;; .word xcoord         mouse coords
         ;; .word ycoord
         ;; .byte moved          high bit set if moved, clear if not
 
-A2D_DRAG_RESIZE := $45
+GrowWindow := $45
         ;; (input length 5 bytes)
         ;; .byte id             window
         ;; .word xcoord         mouse coords
         ;; .word ycoord
         ;; .byte ??             likely: moved? 0 = no change, 1 = moved
 
-A2D_MAP_COORDS  := $46          ; Map screen coords to client coords
+ScreenToWindow  := $46          ; Map screen coords to client coords
         ;; (input length 5 bytes)
         ;; .byte window_id
         ;; .word screenx
@@ -408,108 +439,116 @@ A2D_MAP_COORDS  := $46          ; Map screen coords to client coords
         ;; .word clientx
         ;; .word clienty
 
-A2D_QUERY_CLIENT:= $48
+;;; --------------------------------------------------
+;;; Control Manager Calls
+
+FindControl := $48
         ;; (input length 4 bytes)
         ;; .word xcoord
         ;; .word ycoord
-        ;; .byte part           A2D_CLIENT, A2D_HSCROLL or A2D_VSCROLL
-        ;; .byte scroll         A2D_SCROLL_PART_*
+        ;; .byte part           ctl_*
+        ;; .byte scroll         part_*
 
-A2D_RESIZE_WINDOW := $49        ; ???
+SetCtlMax := $49        ; ???
         ;; (input length 3 bytes)
         ;; .byte ???            maybe part (i.e. HSCROLL or VSCROLL) ???
         ;; .byte ???            width fraction ??
         ;; .byte ???
 
-A2D_DRAG_SCROLL := $4A
+TrackThumb := $4A
         ;; (input length 5 bytes)
-        ;; .byte type           A2D_HSCROLL or A2D_VSCROLL
+        ;; .byte type           ctl_horizontal_scroll_bar or ctl_vertical_scroll_bar
         ;; .word mouse xcoord
         ;; .word mouse ycoord
         ;; .byte position       0...255
         ;; .byte moved          0 = no change, 1 = moved
 
-A2D_UPDATE_SCROLL:= $4B
+UpdateThumb := $4B
         ;; (input length 3 bytes)
-        ;; .byte type           A2D_HSCROLL or A2D_VSCROLL
+        ;; .byte type           ctl_horizontal_scroll_bar or ctl_vertical_scroll_bar
         ;; .byte pos            new position 0...250
         ;; .byte ???
 
-;;; $4E looks like last call
+;;; $4E is last call
 
 ;;; ==================================================
-;;; Constants
+;;; Graphics Primitives Constants
 
-;;; Used in A2D_QUERY_STATE / A2D_SET_BOX
-A2D_SCREEN_ADDR     := $2000    ; Screen address
-A2D_SCREEN_STRIDE   := $80      ; Stride in bytes
+;;; Used in GetWinPort / SetPortSite
+screen_mapbits     := $2000    ; Screen address
+screen_mapwidth   := $80      ; Stride in bytes
 
-;;; Used in A2D_GET_INPUT
-A2D_INPUT_NONE          := 0    ; No mouse or keypress
-A2D_INPUT_DOWN          := 1    ; Mouse button was depressed
-A2D_INPUT_UP            := 2    ; Mouse button was released
-A2D_INPUT_KEY           := 3    ; Key was pressed
-A2D_INPUT_HELD          := 4    ; Mouse button still down
-A2D_INPUT_DOWN_MOD      := 5    ; Mouse button was depressed, modifier key down
+;;; Used in SetPenMode
+pencopy          := 0
+notpenXOR             := 6
 
-;;; Used in A2D_GET_MOUSE
-A2D_ELEM_DESKTOP:= 0
-A2D_ELEM_MENU   := 1
-A2D_ELEM_CLIENT := 2            ; Includes scroll bars
-A2D_ELEM_TITLE  := 3
-A2D_ELEM_RESIZE := 4
-A2D_ELEM_CLOSE  := 5
-
-;;; Used in A2D_QUERY_CLIENT, A2D_DRAG_SCROLL, A2D_UPDATE_SCROLL
-A2D_CLIENT      := 0
-A2D_VSCROLL     := 1
-A2D_HSCROLL     := 2
-
-;;; Used in A2D_QUERY_CLIENT
-A2D_SCROLL_PART_UP      := 1
-A2D_SCROLL_PART_LEFT    := 1
-A2D_SCROLL_PART_DOWN    := 2
-A2D_SCROLL_PART_RIGHT   := 2
-A2D_SCROLL_PART_ABOVE   := 3
-A2D_SCROLL_PART_BEFORE  := 3
-A2D_SCROLL_PART_BELOW   := 4
-A2D_SCROLL_PART_AFTER   := 4
-A2D_SCROLL_PART_THUMB   := 5
-
-;;; Used in A2D_SET_FILL_MODE
-A2D_SFM_NORMAL          := 0
-A2D_SFM_XOR             := 6
-
-;;; Used in A2D_CREATE_WINDOW
-A2D_CWF_NOTITLE         := 1 << 0
-A2D_CWF_ADDCLOSE        := 1 << 1
-A2D_CWF_ADDRESIZE       := 1 << 2
-
-A2D_CWS_NOSCROLL        := 0
-A2D_CWS_SCROLL_ENABLED  := 1 << 7
-A2D_CWS_SCROLL_THUMB    := 1 << 6
-A2D_CWS_SCROLL_TRACK    := 1 << 0
-A2D_CWS_SCROLL_NORMAL   := A2D_CWS_SCROLL_ENABLED | A2D_CWS_SCROLL_THUMB | A2D_CWS_SCROLL_TRACK
-
-;;; Used in A2D_CONFIGURE_ZP_USE
-A2D_CZP_PRESERVE        := 1<<7
-A2D_CZP_OVERWRITE       := 0
+;;; Used in SetZP1
+zp_overwrite       := 0
+zp_preserve        := 1<<7
 
 ;;; Used in various state blocks
-A2D_DEFAULT_MSKAND      := $FF
-A2D_DEFAULT_MSKOR       := $00
-A2D_DEFAULT_TMASK       := $7F
+colormask_and      := $FF
+colormask_or       := $00
+textbg_white       := $7F
+
+;;; ==================================================
+;;; Mouse Graphics Tool Kit Constants
+
+;;; Used in GetEvent
+no_event        := 0    ; No mouse or keypress
+button_down     := 1    ; Mouse button was depressed
+button_up       := 2    ; Mouse button was released
+key_down        := 3    ; Key was pressed
+drag            := 4    ; Mouse button still down
+apple_key       := 5    ; Mouse button was depressed, modifier key down
+
+;;; Used in FindWindow
+area_desktop    := 0
+area_menubar    := 1
+area_content    := 2            ; Includes scroll bars
+area_dragbar    := 3
+area_grow_box   := 4
+area_close_box  := 5
+
+;;; Used in FindControl, TrackThumb, UpdateThumb
+ctl_not_a_control               := 0
+ctl_vertical_scroll_bar         := 1
+ctl_horizontal_scroll_bar       := 2
+
+;;; Used in FindControl
+part_up_arrow           := 1
+part_left_arrow         := 1
+part_down_arrow         := 2
+part_right_arrow        := 2
+part_page_up            := 3
+part_page_left          := 3
+part_page_down          := 4
+part_page_right         := 4
+part_thumb              := 5
+
+;;; Used in OpenWindow
+option_dialog_box       := 1 << 0
+option_go_away_box      := 1 << 1
+option_grow_box         := 1 << 2
+
+scroll_option_none      := 0
+scroll_option_present   := 1 << 7
+scroll_option_thumb     := 1 << 6
+scroll_option_active    := 1 << 0
+scroll_option_normal    := scroll_option_present | scroll_option_thumb | scroll_option_active
+
+.endscope ; MGTK
 
 ;;; ==================================================
 ;;; Macros
 
-;;; Call an A2D entry point:
-;;;     A2D_CALL n                      - params is $0000
-;;;     A2D_CALL n, params_addr
-;;;     A2D_CALL m, params_addr, label  - params_addr is labeled for modifying
+;;; Call an MGTK entry point:
+;;;     MGTK_CALL n                      - params is $0000
+;;;     MGTK_CALL n, params_addr
+;;;     MGTK_CALL m, params_addr, label  - params_addr is labeled for modifying
 
-.macro  A2D_CALL    op, addr, label
-        jsr A2D
+.macro  MGTK_CALL    op, addr, label
+        jsr MGTK::MLI
         .byte op
 
 .if .paramcount > 2
@@ -525,10 +564,10 @@ A2D_DEFAULT_TMASK       := $7F
 
 ;;; ------------------------------------
 
-.macro A2D_DEFSTRING str, label ; String definition, for use with A2D_TEXT
-        .local  data            ; Call as A2D_DEFSTRING "abc"
+.macro DEFINE_STRING str, label ; String definition, for use with TextWidth/DrawText
+        .local  data            ; Call as DEFINE_STRING "abc"
         .local  end             ; Can include control chars by using:
-        .addr   data            ; A2D_DEFSTRING {"abc",$0D,"def"}
+        .addr   data            ; DEFINE_STRING {"abc",$0D,"def"}
 
 .if .paramcount > 1
 label:
@@ -539,7 +578,7 @@ end:
 .endmacro
 
 
-;;; Define pattern for A2D_DRAW_BITMAP - low 7 bits are reversed
+;;; Define pattern for PaintBits - low 7 bits are reversed
 ;;; e.g. .byte px(%1000000)
 ;;; px() has high bit clear, PX() has high bit set
 .define px(bits) (((bits&$40)>>6)|((bits&$20)>>4)|((bits&$10)>>2)|(bits&$8)|((bits&$4)<<2)|((bits&$2)<<4)|((bits&$1)<<6))

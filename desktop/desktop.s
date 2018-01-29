@@ -4,7 +4,7 @@
         .include "../inc/apple2.inc"
         .include "../inc/auxmem.inc"
         .include "../inc/prodos.inc"
-        .include "../a2d.inc"
+        .include "../mgtk.inc"
         .include "../desktop.inc"
 
 ;;; ==================================================
@@ -66,11 +66,11 @@ INVOKER_FILENAME := $280                 ; File to invoke (PREFIX must be set)
         .word   top
 .endmacro
 
-.macro A2D_RELAY_CALL call, addr
+.macro MGTK_RELAY_CALL call, addr
 .if .paramcount > 1
-        yax_call A2D_RELAY, (call), (addr)
+        yax_call MGTK_RELAY, (call), (addr)
 .else
-        yax_call A2D_RELAY, (call), 0
+        yax_call MGTK_RELAY, (call), 0
 .endif
 .endmacro
 
@@ -79,7 +79,7 @@ INVOKER_FILENAME := $280                 ; File to invoke (PREFIX must be set)
 .endmacro
 
 ;;; ==================================================
-;;; Segment loaded into AUX $851F-$BFFF (follows A2D)
+;;; Segment loaded into AUX $851F-$BFFF (follows MGTK)
 ;;; ==================================================
 .proc desktop_aux
 
@@ -171,7 +171,7 @@ L859C:  sta     $D409,x
         sta     $D40D
         sta     $D40F
 
-        A2D_RELAY_CALL A2D_SET_STATE, $D401
+        MGTK_RELAY_CALL MGTK::SetPort, $D401
         rts
 
         addr_call $6B17, $1A39
@@ -215,19 +215,19 @@ L8616:  cmp     #$57
         addr_call $6B17, $1B7C
         ldx     $D5CA
         txs
-L8625:  A2D_RELAY_CALL $33, win18_state
+L8625:  MGTK_RELAY_CALL $33, win18_state
         rts
 
         addr_call $6B17, $1B9C
         ldx     $D5CA
         txs
-        A2D_RELAY_CALL $33, win18_state
+        MGTK_RELAY_CALL $33, win18_state
         rts
 
         addr_call $6B17, $1BBF
         ldx     $D5CA
         txs
-        A2D_RELAY_CALL $33, win18_state
+        MGTK_RELAY_CALL $33, win18_state
         rts
 
         sta     L8737
@@ -425,11 +425,11 @@ L8C83:  .byte   $00,$00,$00,$00,$77,$30,$01
 
         jmp     DESKTOP_DIRECT
 
-.macro A2D_RELAY2_CALL call, addr
+.macro MGTK_RELAY2_CALL call, addr
 .if .paramcount > 1
-        yax_call A2D_RELAY2, (call), (addr)
+        yax_call MGTK_RELAY2, (call), (addr)
 .else
-        yax_call A2D_RELAY2, (call), 0
+        yax_call MGTK_RELAY2, (call), 0
 .endif
 .endmacro
 
@@ -612,16 +612,16 @@ id:     .byte   0
 .proc query_screen_params
 left:   .word   0
 top:    .word   0
-addr:   .addr   A2D_SCREEN_ADDR
-stride: .word   A2D_SCREEN_STRIDE
+addr:   .addr   MGTK::screen_mapbits
+stride: .word   MGTK::screen_mapwidth
 L934D:
 hoff:   .word   0
 voff:   .word   0
 width:  .word   screen_width-1
 height: .word   screen_height-1
 pattern:.res    8, $FF
-mskand: .byte   A2D_DEFAULT_MSKAND
-mskor:  .byte   A2D_DEFAULT_MSKOR
+mskand: .byte   MGTK::colormask_and
+mskor:  .byte   MGTK::colormask_or
 xpos:   .word   0
 ypos:   .word   0
 hthick: .byte   1
@@ -938,7 +938,7 @@ L951D:  asl     a
         rts
 
 L9532:  jsr     LA18A
-        A2D_CALL A2D_SET_FILL_MODE, const0a
+        MGTK_CALL MGTK::SetPenMode, const0a
         jsr     LA39D
         ldy     #$00
         lda     ($06),y
@@ -1220,7 +1220,7 @@ L978B:  lda     ($06),y
         ldy     #$05
         lda     ($06),y
         sta     L97F5
-        A2D_CALL A2D_SET_POS, set_pos_params2
+        MGTK_CALL MGTK::MoveTo, set_pos_params2
         ldx     #$00
 L97AA:  cpx     L8E95
         bne     L97B9
@@ -1245,7 +1245,7 @@ L97B9:  txa
         cmp     L97F5
         bne     L97E0
         jsr     LA18A
-        A2D_CALL $17, L8E03
+        MGTK_CALL $17, L8E03
         bne     L97E6
 L97E0:  pla
         tax
@@ -1311,7 +1311,7 @@ L9835:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 L983D:  lda     #$00
         sta     L9830
         sta     L9833
-L9845:  A2D_CALL $2C, L933E
+L9845:  MGTK_CALL $2C, L933E
         lda     L933E
         cmp     #$04
         beq     L9857
@@ -1376,7 +1376,7 @@ L98C8:  lda     L9017
         lda     ($06),y
         and     #$0F
         sta     L9832
-        A2D_CALL A2D_QUERY_SCREEN, query_screen_params
+        MGTK_CALL MGTK::InitPort, query_screen_params
         ldx     #$07
 L98E3:  lda     query_screen_params::L934D,x
         sta     L9835,x
@@ -1513,10 +1513,10 @@ L99E1:  iny
         sta     $08+1
         jmp     L9972
 
-L99FC:  A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
-        A2D_CALL A2D_SET_FILL_MODE, const2a
-        A2D_CALL A2D_DRAW_POLYGONS, drag_outline_buffer
-L9A0E:  A2D_CALL $2C, L933E
+L99FC:  MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
+        MGTK_CALL MGTK::SetPenMode, const2a
+        MGTK_CALL MGTK::FramePoly, drag_outline_buffer
+L9A0E:  MGTK_CALL $2C, L933E
         lda     L933E
         cmp     #$04
         beq     L9A1E
@@ -1544,13 +1544,13 @@ L9A33:  lda     query_target_params2,x
         lda     query_target_params2::element
         cmp     L9830
         beq     L9A84
-        A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
-        A2D_CALL A2D_SET_FILL_MODE, const2a
-        A2D_CALL A2D_DRAW_POLYGONS, drag_outline_buffer
+        MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
+        MGTK_CALL MGTK::SetPenMode, const2a
+        MGTK_CALL MGTK::FramePoly, drag_outline_buffer
         DESKTOP_DIRECT_CALL $B, L9830
-        A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
-        A2D_CALL A2D_SET_FILL_MODE, const2a
-        A2D_CALL A2D_DRAW_POLYGONS, drag_outline_buffer
+        MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
+        MGTK_CALL MGTK::SetPenMode, const2a
+        MGTK_CALL MGTK::FramePoly, drag_outline_buffer
         lda     #$00
         sta     L9830
 L9A84:  lda     query_target_params2::queryx
@@ -1637,7 +1637,7 @@ L9B48:  bit     L9C75
         bvc     L9B52
         jmp     L9A0E
 
-L9B52:  A2D_CALL A2D_DRAW_POLYGONS, drag_outline_buffer
+L9B52:  MGTK_CALL MGTK::FramePoly, drag_outline_buffer
         lda     #<drag_outline_buffer
         sta     $08
         lda     #>drag_outline_buffer
@@ -1674,16 +1674,16 @@ L9B62:  lda     ($08),y
         inc     $08+1
 L9B99:  jmp     L9B60
 
-L9B9C:  A2D_CALL A2D_DRAW_POLYGONS, drag_outline_buffer
+L9B9C:  MGTK_CALL MGTK::FramePoly, drag_outline_buffer
         jmp     L9A0E
 
-L9BA5:  A2D_CALL A2D_DRAW_POLYGONS, drag_outline_buffer
+L9BA5:  MGTK_CALL MGTK::FramePoly, drag_outline_buffer
         lda     L9830
         beq     L9BB9
         DESKTOP_DIRECT_CALL $B, L9830
         jmp     L9C63
 
-L9BB9:  A2D_CALL A2D_QUERY_TARGET, query_target_params2
+L9BB9:  MGTK_CALL MGTK::FindWindow, query_target_params2
         lda     query_target_params2::id
         cmp     L9832
         beq     L9BE1
@@ -1700,8 +1700,8 @@ L9BD4:  ora     #$80
 L9BDC:  lda     L9832
         beq     L9BD1
 L9BE1:  jsr     LA365
-        A2D_CALL A2D_QUERY_SCREEN, query_screen_params
-        A2D_CALL A2D_SET_STATE, query_screen_params
+        MGTK_CALL MGTK::InitPort, query_screen_params
+        MGTK_CALL MGTK::SetPort, query_screen_params
         ldx     L9016
 L9BF3:  dex
         bmi     L9C18
@@ -1715,7 +1715,7 @@ L9BF3:  dex
         lda     L8F15+1,x
         sta     $07
         jsr     LA18A
-        A2D_CALL A2D_SET_FILL_MODE, const0a
+        MGTK_CALL MGTK::SetPenMode, const0a
         jsr     LA39D
         pla
         tax
@@ -1976,7 +1976,7 @@ L9E14:  bit     L9833
         rts
 
 L9E1A:  jsr     LA365
-L9E1D:  A2D_CALL A2D_QUERY_TARGET, query_target_params2
+L9E1D:  MGTK_CALL MGTK::FindWindow, query_target_params2
         lda     query_target_params2::element
         bne     L9E2B
         sta     query_target_params2::id
@@ -2009,17 +2009,17 @@ L9E3D:  cmp     L9017,x
         bne     L9E97
         lda     L9EB3
 L9E6A:  sta     L9830
-        A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
-        A2D_CALL A2D_SET_FILL_MODE, const2a
-        A2D_CALL A2D_DRAW_POLYGONS, drag_outline_buffer
+        MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
+        MGTK_CALL MGTK::SetPenMode, const2a
+        MGTK_CALL MGTK::FramePoly, drag_outline_buffer
         DESKTOP_DIRECT_CALL $2, L9830
-        A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
-        A2D_CALL A2D_SET_FILL_MODE, const2a
-        A2D_CALL A2D_DRAW_POLYGONS, drag_outline_buffer
-L9E97:  A2D_CALL A2D_QUERY_SCREEN, query_screen_params
-        A2D_CALL A2D_SET_STATE, query_screen_params
-        A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
-        A2D_CALL A2D_SET_FILL_MODE, const2a
+        MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
+        MGTK_CALL MGTK::SetPenMode, const2a
+        MGTK_CALL MGTK::FramePoly, drag_outline_buffer
+L9E97:  MGTK_CALL MGTK::InitPort, query_screen_params
+        MGTK_CALL MGTK::SetPort, query_screen_params
+        MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
+        MGTK_CALL MGTK::SetPenMode, const2a
         jsr     LA382
         rts
 
@@ -2187,7 +2187,7 @@ L9FE4:  lda     ($06),y
         bne     L9FE4
 L9FEE:  lda     draw_text_params::length
         sta     measure_text_params::length
-        A2D_CALL A2D_MEASURE_TEXT, measure_text_params
+        MGTK_CALL MGTK::TextWidth, measure_text_params
         lda     measure_text_params::width
         cmp     draw_bitmap_params2::width
         bcs     LA010
@@ -2241,57 +2241,57 @@ LA06E:  lda     set_pos_params2,x
         bpl     LA06E
         bit     L9F92
         bvc     LA097
-        A2D_CALL A2D_QUERY_SCREEN, query_screen_params
+        MGTK_CALL MGTK::InitPort, query_screen_params
         jsr     LA63F
 LA085:  jsr     LA6A3
         jsr     LA097
         lda     L9F93
         bne     LA085
-        A2D_CALL A2D_SET_BOX, query_screen_params
+        MGTK_CALL MGTK::SetPortSite, query_screen_params
         rts
 
-LA097:  A2D_CALL A2D_HIDE_CURSOR, DESKTOP_DIRECT ; These params should be ignored - bogus?
-        A2D_CALL A2D_SET_FILL_MODE, const4a
+LA097:  MGTK_CALL MGTK::HideCursor, DESKTOP_DIRECT ; These params should be ignored - bogus?
+        MGTK_CALL MGTK::SetPenMode, const4a
         bit     L9F92
         bpl     LA0C2
         bit     L9F92
         bvc     LA0B6
-        A2D_CALL A2D_SET_FILL_MODE, const0a
+        MGTK_CALL MGTK::SetPenMode, const0a
         jmp     LA0C2
 
-LA0B6:  A2D_CALL A2D_DRAW_BITMAP, draw_bitmap_params
-        A2D_CALL A2D_SET_FILL_MODE, const2a
-LA0C2:  A2D_CALL A2D_DRAW_BITMAP, draw_bitmap_params2
+LA0B6:  MGTK_CALL MGTK::PaintBits, draw_bitmap_params
+        MGTK_CALL MGTK::SetPenMode, const2a
+LA0C2:  MGTK_CALL MGTK::PaintBits, draw_bitmap_params2
         ldy     #$02
         lda     ($06),y
         and     #$80
         beq     LA0F2
         jsr     LA14D
-        A2D_CALL A2D_SET_PATTERN, dark_pattern
+        MGTK_CALL MGTK::SetPattern, dark_pattern
         bit     L9F92
         bmi     LA0E6
-        A2D_CALL A2D_SET_FILL_MODE, const3a
+        MGTK_CALL MGTK::SetPenMode, const3a
         beq     LA0EC
-LA0E6:  A2D_CALL A2D_SET_FILL_MODE, const1a
-LA0EC:  A2D_CALL A2D_FILL_RECT, fill_rect_params6
+LA0E6:  MGTK_CALL MGTK::SetPenMode, const1a
+LA0EC:  MGTK_CALL MGTK::PaintRect, fill_rect_params6
 LA0F2:  ldx     #$03
 LA0F4:  lda     L9F94,x
         sta     set_pos_params2,x
         dex
         bpl     LA0F4
-        A2D_CALL A2D_SET_POS, set_pos_params2
+        MGTK_CALL MGTK::MoveTo, set_pos_params2
         bit     L9F92
         bmi     LA10C
         lda     #$7F
         bne     LA10E
 LA10C:  lda     #$00
 LA10E:  sta     set_text_mask_params
-        A2D_CALL A2D_SET_TEXT_MASK, set_text_mask_params
+        MGTK_CALL MGTK::SetTextBG, set_text_mask_params
         lda     text_buffer+1
         and     #$DF
         sta     text_buffer+1
-        A2D_CALL A2D_DRAW_TEXT, draw_text_params
-        A2D_CALL A2D_SHOW_CURSOR
+        MGTK_CALL MGTK::DrawText, draw_text_params
+        MGTK_CALL MGTK::ShowCursor
         rts
 
 LA12C:  ldx     #$0F
@@ -2410,7 +2410,7 @@ LA22A:  lda     ($06),y
         bpl     LA22A
 LA233:  lda     draw_text_params::length
         sta     measure_text_params::length
-        A2D_CALL A2D_MEASURE_TEXT, measure_text_params
+        MGTK_CALL MGTK::TextWidth, measure_text_params
         ldy     #$08
         lda     measure_text_params::width
         cmp     ($08),y
@@ -2588,8 +2588,8 @@ LA38C:  pla
 LA39B:  .byte   0
 LA39C:  .byte   0
 
-LA39D:  A2D_CALL A2D_QUERY_SCREEN, query_screen_params
-        A2D_CALL A2D_SET_STATE, query_screen_params
+LA39D:  MGTK_CALL MGTK::InitPort, query_screen_params
+        MGTK_CALL MGTK::SetPort, query_screen_params
         jmp     LA3B9
 
 LA3AC:  .byte   0
@@ -2616,28 +2616,28 @@ LA3B9:  ldy     #$00
         beq     LA3F4
         lda     #$80
         sta     LA3B7
-        A2D_CALL A2D_SET_PATTERN, white_pattern
-        A2D_CALL $41, LA3B8
+        MGTK_CALL MGTK::SetPattern, white_pattern
+        MGTK_CALL $41, LA3B8
         lda     LA3B8
         sta     query_state_params
-        A2D_CALL A2D_QUERY_STATE, query_state_params
+        MGTK_CALL MGTK::GetWinPort, query_state_params
         jsr     LA4CC
         jsr     LA938
         jsr     LA41C
         jmp     LA446
 
-LA3F4:  A2D_CALL A2D_QUERY_SCREEN, query_screen_params
+LA3F4:  MGTK_CALL MGTK::InitPort, query_screen_params
         jsr     LA63F
 LA3FD:  jsr     LA6A3
         jsr     LA411
         lda     L9F93
         bne     LA3FD
-        A2D_CALL A2D_SET_BOX, query_screen_params
+        MGTK_CALL MGTK::SetPortSite, query_screen_params
         jmp     LA446
 
 LA411:  lda     #$00
         sta     LA3B7
-        A2D_CALL A2D_SET_PATTERN, checkerboard_pattern2
+        MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
 LA41C:  lda     L8E07
         sta     LA3B1
         lda     L8E08
@@ -2651,7 +2651,7 @@ LA436:  lda     L8E15,x
         sta     LA3B3,x
         dex
         bpl     LA436
-        A2D_CALL $15, L8E03
+        MGTK_CALL $15, L8E03
         rts
 
 LA446:  jsr     LA365
@@ -2661,8 +2661,8 @@ LA44D:  cpx     #$FF
         bne     LA466
         bit     LA3B7
         bpl     LA462
-        A2D_CALL A2D_QUERY_SCREEN, query_screen_params
-        A2D_CALL A2D_SET_STATE, set_state_params
+        MGTK_CALL MGTK::InitPort, query_screen_params
+        MGTK_CALL MGTK::SetPort, set_state_params
 LA462:  jsr     LA382
         rts
 
@@ -2902,8 +2902,8 @@ LA62C:  .byte   $00,$00,$00
 .proc set_box_params2
 left:   .word   0
 top:    .word   0
-addr:   .addr   A2D_SCREEN_ADDR
-stride: .word   A2D_SCREEN_STRIDE
+addr:   .addr   MGTK::screen_mapbits
+stride: .word   MGTK::screen_mapwidth
 hoff:   .word   0
 voff:   .word   0
 width:  .word   0
@@ -2944,7 +2944,7 @@ LA674:  lda     L8E15,x
         lda     #$02
         sta     LA62C
         sta     set_box_params2::width+1
-LA69C:  A2D_CALL A2D_SET_BOX, set_box_params2
+LA69C:  MGTK_CALL MGTK::SetPortSite, set_box_params2
         rts
 
 LA6A3:  lda     #$00
@@ -3033,7 +3033,7 @@ LA747:  lda     LA6B0
         bne     LA775
         lda     #$00
         sta     LA6B0
-LA753:  A2D_CALL A2D_SET_BOX, set_box_params2
+LA753:  MGTK_CALL MGTK::SetPortSite, set_box_params2
         lda     set_box_params2::width+1
         cmp     LA62C
         bne     LA76F
@@ -3060,14 +3060,14 @@ LA77D:  lda     LA6B3,x
         cpy     #$04
         bne     LA77D
         inc     LA6B0
-        A2D_CALL A2D_QUERY_TARGET, query_target_params
+        MGTK_CALL MGTK::FindWindow, query_target_params
         lda     query_target_params::element
         beq     LA747
         lda     query_target_params::id
         sta     query_state_params
-        A2D_CALL A2D_QUERY_STATE, query_state_params
+        MGTK_CALL MGTK::GetWinPort, query_state_params
         jsr     LA365
-        A2D_CALL A2D_QUERY_WINDOW, query_target_params::id
+        MGTK_CALL MGTK::GetWinPtr, query_target_params::id
         lda     LA6AE
         sta     $06
         lda     LA6AF
@@ -3241,7 +3241,7 @@ LA938:  lda     set_state_params::top
         lda     set_state_params::voff+1
         adc     #0
         sta     set_state_params::voff+1
-        A2D_CALL A2D_SET_STATE, set_state_params
+        MGTK_CALL MGTK::SetPort, set_state_params
         rts
 
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -3879,9 +3879,9 @@ alert_action_table:
 start:  pha
         txa
         pha
-        A2D_RELAY2_CALL A2D_HIDE_CURSOR
-        A2D_RELAY2_CALL A2D_SET_CURSOR, pointer_cursor
-        A2D_RELAY2_CALL A2D_SHOW_CURSOR
+        MGTK_RELAY2_CALL MGTK::HideCursor
+        MGTK_RELAY2_CALL MGTK::SetCursor, pointer_cursor
+        MGTK_RELAY2_CALL MGTK::ShowCursor
 
         ;; play bell
         sta     ALTZPOFF
@@ -3905,7 +3905,7 @@ LBA0B:  sta     state2_left,x
         sta     state2_height
         lda     #>$B9
         sta     state2_height+1
-        A2D_RELAY2_CALL A2D_SET_STATE, state2
+        MGTK_RELAY2_CALL MGTK::SetPort, state2
         lda     LB6D3
         ldx     LB6D3+1
         jsr     LBF8B
@@ -3927,20 +3927,20 @@ LBA0B:  sta     state2_left,x
         clc
         adc     LB6E1
         sta     LBFCB
-        A2D_RELAY2_CALL A2D_HIDE_CURSOR
+        MGTK_RELAY2_CALL MGTK::HideCursor
         jsr     LBE08
-        A2D_RELAY2_CALL A2D_SHOW_CURSOR
-        A2D_RELAY2_CALL A2D_SET_FILL_MODE, const0
-        A2D_RELAY2_CALL A2D_FILL_RECT, alert_rect ; alert background
-        A2D_RELAY2_CALL A2D_SET_FILL_MODE, const2 ; ensures corners are inverted
-        A2D_RELAY2_CALL A2D_DRAW_RECT, alert_rect ; alert outline
-        A2D_RELAY2_CALL A2D_SET_BOX, LB6D3
-        A2D_RELAY2_CALL A2D_DRAW_RECT, alert_inner_frame_rect1 ; inner 2x border
-        A2D_RELAY2_CALL A2D_DRAW_RECT, alert_inner_frame_rect2
-        A2D_RELAY2_CALL A2D_SET_FILL_MODE, const0 ; restores normal mode
-        A2D_RELAY2_CALL A2D_HIDE_CURSOR
-        A2D_RELAY2_CALL A2D_DRAW_BITMAP, alert_bitmap_params
-        A2D_RELAY2_CALL A2D_SHOW_CURSOR
+        MGTK_RELAY2_CALL MGTK::ShowCursor
+        MGTK_RELAY2_CALL MGTK::SetPenMode, const0
+        MGTK_RELAY2_CALL MGTK::PaintRect, alert_rect ; alert background
+        MGTK_RELAY2_CALL MGTK::SetPenMode, const2 ; ensures corners are inverted
+        MGTK_RELAY2_CALL MGTK::FrameRect, alert_rect ; alert outline
+        MGTK_RELAY2_CALL MGTK::SetPortSite, LB6D3
+        MGTK_RELAY2_CALL MGTK::FrameRect, alert_inner_frame_rect1 ; inner 2x border
+        MGTK_RELAY2_CALL MGTK::FrameRect, alert_inner_frame_rect2
+        MGTK_RELAY2_CALL MGTK::SetPenMode, const0 ; restores normal mode
+        MGTK_RELAY2_CALL MGTK::HideCursor
+        MGTK_RELAY2_CALL MGTK::PaintBits, alert_bitmap_params
+        MGTK_RELAY2_CALL MGTK::ShowCursor
         pla
         tax
         pla
@@ -3976,33 +3976,33 @@ LBB0B:  tya
         tay
         lda     alert_action_table,y
         sta     alert_action
-LBB14:  A2D_RELAY2_CALL A2D_SET_FILL_MODE, const2
+LBB14:  MGTK_RELAY2_CALL MGTK::SetPenMode, const2
         bit     alert_action
         bpl     LBB5C
-        A2D_RELAY2_CALL A2D_DRAW_RECT, cancel_rect
-        A2D_RELAY2_CALL A2D_SET_POS, cancel_pos
+        MGTK_RELAY2_CALL MGTK::FrameRect, cancel_rect
+        MGTK_RELAY2_CALL MGTK::MoveTo, cancel_pos
         DRAW_PASCAL_STRING cancel_label
         bit     alert_action
         bvs     LBB5C
-        A2D_RELAY2_CALL A2D_DRAW_RECT, try_again_rect
-        A2D_RELAY2_CALL A2D_SET_POS, try_again_pos
+        MGTK_RELAY2_CALL MGTK::FrameRect, try_again_rect
+        MGTK_RELAY2_CALL MGTK::MoveTo, try_again_pos
         DRAW_PASCAL_STRING try_again_label
         jmp     LBB75
 
-LBB5C:  A2D_RELAY2_CALL A2D_DRAW_RECT, try_again_rect
-        A2D_RELAY2_CALL A2D_SET_POS, try_again_pos
+LBB5C:  MGTK_RELAY2_CALL MGTK::FrameRect, try_again_rect
+        MGTK_RELAY2_CALL MGTK::MoveTo, try_again_pos
         DRAW_PASCAL_STRING ok_label
-LBB75:  A2D_RELAY2_CALL A2D_SET_POS, LB70F
+LBB75:  MGTK_RELAY2_CALL MGTK::MoveTo, LB70F
         lda     LB714
         ldx     LB715
         jsr     draw_pascal_string
-LBB87:  A2D_RELAY2_CALL A2D_GET_INPUT, input_params
+LBB87:  MGTK_RELAY2_CALL MGTK::GetEvent, input_params
         lda     input_params_state
-        cmp     #A2D_INPUT_DOWN
+        cmp     #MGTK::button_down
         bne     LBB9A
         jmp     LBC0C
 
-LBB9A:  cmp     #A2D_INPUT_KEY
+LBB9A:  cmp     #MGTK::key_down
         bne     LBB87
         lda     input_params_key
         and     #$7F
@@ -4010,8 +4010,8 @@ LBB9A:  cmp     #A2D_INPUT_KEY
         bpl     LBBEE
         cmp     #KEY_ESCAPE
         bne     LBBC3
-        A2D_RELAY2_CALL A2D_SET_FILL_MODE, const2
-        A2D_RELAY2_CALL A2D_FILL_RECT, cancel_rect
+        MGTK_RELAY2_CALL MGTK::SetPenMode, const2
+        MGTK_RELAY2_CALL MGTK::PaintRect, cancel_rect
         lda     #$01
         jmp     LBC55
 
@@ -4019,8 +4019,8 @@ LBBC3:  bit     alert_action
         bvs     LBBEE
         cmp     #'a'
         bne     LBBE3
-LBBCC:  A2D_RELAY2_CALL A2D_SET_FILL_MODE, const2
-        A2D_RELAY2_CALL A2D_FILL_RECT, try_again_rect
+LBBCC:  MGTK_RELAY2_CALL MGTK::SetPenMode, const2
+        MGTK_RELAY2_CALL MGTK::PaintRect, try_again_rect
         lda     #$00
         jmp     LBC55
 
@@ -4032,30 +4032,30 @@ LBBE3:  cmp     #'A'
 
 LBBEE:  cmp     #KEY_RETURN
         bne     LBC09
-        A2D_RELAY2_CALL A2D_SET_FILL_MODE, const2
-        A2D_RELAY2_CALL A2D_FILL_RECT, try_again_rect
+        MGTK_RELAY2_CALL MGTK::SetPenMode, const2
+        MGTK_RELAY2_CALL MGTK::PaintRect, try_again_rect
         lda     #$02
         jmp     LBC55
 
 LBC09:  jmp     LBB87
 
 LBC0C:  jsr     LBDE1
-        A2D_RELAY2_CALL A2D_SET_POS, input_params_coords
+        MGTK_RELAY2_CALL MGTK::MoveTo, input_params_coords
         bit     alert_action
         bpl     LBC42
-        A2D_RELAY2_CALL A2D_TEST_BOX, cancel_rect
+        MGTK_RELAY2_CALL MGTK::InRect, cancel_rect
         cmp     #$80
         bne     LBC2D
         jmp     LBCE9
 
 LBC2D:  bit     alert_action
         bvs     LBC42
-        A2D_RELAY2_CALL A2D_TEST_BOX, try_again_rect
+        MGTK_RELAY2_CALL MGTK::InRect, try_again_rect
         cmp     #$80
         bne     LBC52
         jmp     LBC6D
 
-LBC42:  A2D_RELAY2_CALL A2D_TEST_BOX, try_again_rect
+LBC42:  MGTK_RELAY2_CALL MGTK::InRect, try_again_rect
         cmp     #$80
         bne     LBC52
         jmp     LBD65
@@ -4063,23 +4063,23 @@ LBC42:  A2D_RELAY2_CALL A2D_TEST_BOX, try_again_rect
 LBC52:  jmp     LBB87
 
 LBC55:  pha
-        A2D_RELAY2_CALL A2D_HIDE_CURSOR
+        MGTK_RELAY2_CALL MGTK::HideCursor
         jsr     LBE5D
-        A2D_RELAY2_CALL A2D_SHOW_CURSOR
+        MGTK_RELAY2_CALL MGTK::ShowCursor
         pla
         rts
 
-LBC6D:  A2D_RELAY2_CALL A2D_SET_FILL_MODE, const2
-        A2D_RELAY2_CALL A2D_FILL_RECT, try_again_rect
+LBC6D:  MGTK_RELAY2_CALL MGTK::SetPenMode, const2
+        MGTK_RELAY2_CALL MGTK::PaintRect, try_again_rect
         lda     #$00
         sta     LBCE8
-LBC84:  A2D_RELAY2_CALL A2D_GET_INPUT, input_params
+LBC84:  MGTK_RELAY2_CALL MGTK::GetEvent, input_params
         lda     input_params_state
-        cmp     #A2D_INPUT_UP
+        cmp     #MGTK::button_up
         beq     LBCDB
         jsr     LBDE1
-        A2D_RELAY2_CALL A2D_SET_POS, input_params_coords
-        A2D_RELAY2_CALL A2D_TEST_BOX, try_again_rect
+        MGTK_RELAY2_CALL MGTK::MoveTo, input_params_coords
+        MGTK_RELAY2_CALL MGTK::InRect, try_again_rect
         cmp     #$80
         beq     LBCB5
         lda     LBCE8
@@ -4090,8 +4090,8 @@ LBCB5:  lda     LBCE8
         bne     LBCBD
         jmp     LBC84
 
-LBCBD:  A2D_RELAY2_CALL A2D_SET_FILL_MODE, const2
-        A2D_RELAY2_CALL A2D_FILL_RECT, try_again_rect
+LBCBD:  MGTK_RELAY2_CALL MGTK::SetPenMode, const2
+        MGTK_RELAY2_CALL MGTK::PaintRect, try_again_rect
         lda     LBCE8
         clc
         adc     #$80
@@ -4106,17 +4106,17 @@ LBCE3:  lda     #$00
         jmp     LBC55
 
 LBCE8:  .byte   0
-LBCE9:  A2D_RELAY2_CALL A2D_SET_FILL_MODE, const2
-        A2D_RELAY2_CALL A2D_FILL_RECT, cancel_rect
+LBCE9:  MGTK_RELAY2_CALL MGTK::SetPenMode, const2
+        MGTK_RELAY2_CALL MGTK::PaintRect, cancel_rect
         lda     #$00
         sta     LBD64
-LBD00:  A2D_RELAY2_CALL A2D_GET_INPUT, input_params
+LBD00:  MGTK_RELAY2_CALL MGTK::GetEvent, input_params
         lda     input_params_state
-        cmp     #A2D_INPUT_UP
+        cmp     #MGTK::button_up
         beq     LBD57
         jsr     LBDE1
-        A2D_RELAY2_CALL A2D_SET_POS, input_params_coords
-        A2D_RELAY2_CALL A2D_TEST_BOX, cancel_rect
+        MGTK_RELAY2_CALL MGTK::MoveTo, input_params_coords
+        MGTK_RELAY2_CALL MGTK::InRect, cancel_rect
         cmp     #$80
         beq     LBD31
         lda     LBD64
@@ -4127,8 +4127,8 @@ LBD31:  lda     LBD64
         bne     LBD39
         jmp     LBD00
 
-LBD39:  A2D_RELAY2_CALL A2D_SET_FILL_MODE, const2
-        A2D_RELAY2_CALL A2D_FILL_RECT, cancel_rect
+LBD39:  MGTK_RELAY2_CALL MGTK::SetPenMode, const2
+        MGTK_RELAY2_CALL MGTK::PaintRect, cancel_rect
         lda     LBD64
         clc
         adc     #$80
@@ -4145,15 +4145,15 @@ LBD5F:  lda     #$01
 LBD64:  .byte   0
 LBD65:  lda     #$00
         sta     LBDE0
-        A2D_RELAY2_CALL A2D_SET_FILL_MODE, const2
-        A2D_RELAY2_CALL A2D_FILL_RECT, try_again_rect
-LBD7C:  A2D_RELAY2_CALL A2D_GET_INPUT, input_params
+        MGTK_RELAY2_CALL MGTK::SetPenMode, const2
+        MGTK_RELAY2_CALL MGTK::PaintRect, try_again_rect
+LBD7C:  MGTK_RELAY2_CALL MGTK::GetEvent, input_params
         lda     input_params_state
-        cmp     #A2D_INPUT_UP
+        cmp     #MGTK::button_up
         beq     LBDD3
         jsr     LBDE1
-        A2D_RELAY2_CALL A2D_SET_POS, input_params_coords
-        A2D_RELAY2_CALL A2D_TEST_BOX, try_again_rect
+        MGTK_RELAY2_CALL MGTK::MoveTo, input_params_coords
+        MGTK_RELAY2_CALL MGTK::InRect, try_again_rect
         cmp     #$80
         beq     LBDAD
         lda     LBDE0
@@ -4164,8 +4164,8 @@ LBDAD:  lda     LBDE0
         bne     LBDB5
         jmp     LBD7C
 
-LBDB5:  A2D_RELAY2_CALL A2D_SET_FILL_MODE, const2
-        A2D_RELAY2_CALL A2D_FILL_RECT, try_again_rect
+LBDB5:  MGTK_RELAY2_CALL MGTK::SetPenMode, const2
+        MGTK_RELAY2_CALL MGTK::PaintRect, try_again_rect
         lda     LBDE0
         clc
         adc     #$80
@@ -4444,16 +4444,16 @@ LBFCF:  .byte   $00
         inc     ptr
         bne     call
         inc     ptr+1
-call:   A2D_RELAY2_CALL A2D_DRAW_TEXT, ptr
+call:   MGTK_RELAY2_CALL MGTK::DrawText, ptr
 end:    rts
 .endproc
 
-        ;; A2D call in Y, params addr (X,A)
-.proc A2D_RELAY2
+        ;; MGTK call in Y, params addr (X,A)
+.proc MGTK_RELAY2
         sty     call
         sta     addr
         stx     addr+1
-        jsr     A2D
+        jsr     MGTK::MLI
 call:   .byte   0
 addr:   .addr   0
         rts
@@ -4474,15 +4474,15 @@ addr:   .addr   0
 ;;; Various routines callable from MAIN
 
 ;;; ==================================================
-;;; A2D call from main>aux, call in Y, params at (X,A)
-.proc A2D_RELAY
+;;; MGTK call from main>aux, call in Y, params at (X,A)
+.proc MGTK_RELAY
         .assert * = $D000, error, "Entry point mismatch"
         sty     addr-1
         sta     addr
         stx     addr+1
         sta     RAMRDON
         sta     RAMWRTON
-        A2D_CALL 0, 0, addr
+        MGTK_CALL 0, 0, addr
         sta     RAMRDOFF
         sta     RAMWRTOFF
         rts
@@ -4496,8 +4496,8 @@ addr:   .addr   0
         stx     addr+1
         sta     RAMRDON
         sta     RAMWRTON
-        A2D_CALL A2D_SET_POS, 0, addr
-        A2D_RELAY_CALL A2D_DRAW_TEXT, text_buffer2
+        MGTK_CALL MGTK::MoveTo, 0, addr
+        MGTK_RELAY_CALL MGTK::DrawText, text_buffer2
         tay
         sta     RAMRDOFF
         sta     RAMWRTOFF
@@ -4670,7 +4670,7 @@ flag:   .byte   0
 
         sta     RAMRDON
         sta     RAMWRTON
-        A2D_CALL A2D_GET_STATE, src ; grab window state
+        MGTK_CALL MGTK::GetPort, src ; grab window state
 
         lda     desktop_active_winid   ; which desktop window?
         asl     a
@@ -4759,7 +4759,7 @@ ycoord: .word   0
         input_params_xcoord := input_params::xcoord
         input_params_ycoord := input_params::ycoord
 
-        ;; When input_params_coords is used for A2D_QUERY_CLIENT/TARGET
+        ;; When input_params_coords is used for FindControl/FindWindow
 
 query_client_params_part:
 query_target_params_element:
@@ -4827,15 +4827,15 @@ font:   .addr   0
 .proc state1
 left:   .word   0
 top:    .word   0
-addr:   .addr   A2D_SCREEN_ADDR
-stride: .word   A2D_SCREEN_STRIDE
+addr:   .addr   MGTK::screen_mapbits
+stride: .word   MGTK::screen_mapwidth
 hoff:   .word   0
 voff:   .word   0
 width:  .word   10
 height: .word   10
 pattern:.res    8, $FF
-mskand: .byte   A2D_DEFAULT_MSKAND
-mskor:  .byte   A2D_DEFAULT_MSKOR
+mskand: .byte   MGTK::colormask_and
+mskor:  .byte   MGTK::colormask_or
 xpos:   .word   0
 ypos:   .word   0
 hthick: .byte   1
@@ -5035,10 +5035,10 @@ alert_bitmap2_params:
 
 .proc winF
 id:     .byte   $0F
-flags:  .byte   A2D_CWF_NOTITLE
+flags:  .byte   MGTK::option_dialog_box
 title:  .addr   0
-hscroll:.byte   A2D_CWS_NOSCROLL
-vscroll:.byte   A2D_CWS_NOSCROLL
+hscroll:.byte   MGTK::scroll_option_none
+vscroll:.byte   MGTK::scroll_option_none
 hsmax:  .byte   0
 hspos:  .byte   0
 vsmax:  .byte   0
@@ -5050,31 +5050,31 @@ w2:     .word   $1F4
 h2:     .word   $8C
 left:   .word   $4B
 top:    .word   $23
-addr:   .addr   A2D_SCREEN_ADDR
-stride: .word   A2D_SCREEN_STRIDE
+addr:   .addr   MGTK::screen_mapbits
+stride: .word   MGTK::screen_mapwidth
 hoff:   .word   0
 voff:   .word   0
 width:  .word   $190
 height: .word   $64
 pattern:.res    8, $FF
-mskand: .byte   A2D_DEFAULT_MSKAND
-mskor:  .byte   A2D_DEFAULT_MSKOR
+mskand: .byte   MGTK::colormask_and
+mskor:  .byte   MGTK::colormask_or
 xpos:   .word   0
 ypos:   .word   0
 hthick: .byte   1
 vthick: .byte   1
 fill:   .byte   0
-tmask:  .byte   A2D_DEFAULT_TMASK
+tmask:  .byte   MGTK::textbg_white
 font:   .addr   DEFAULT_FONT
 next:   .addr   0
 .endproc
 
 .proc win12
 id:     .byte   $12
-flags:  .byte   A2D_CWF_NOTITLE
+flags:  .byte   MGTK::option_dialog_box
 title:  .addr   0
-hscroll:.byte   A2D_CWS_NOSCROLL
-vscroll:.byte   A2D_CWS_NOSCROLL
+hscroll:.byte   MGTK::scroll_option_none
+vscroll:.byte   MGTK::scroll_option_none
 hsmax:  .byte   0
 hspos:  .byte   0
 vsmax:  .byte   0
@@ -5086,31 +5086,31 @@ w2:     .word   $1F4
 h2:     .word   $8C
 left:   .word   $19
 top:    .word   $14
-addr:   .addr   A2D_SCREEN_ADDR
-stride: .word   A2D_SCREEN_STRIDE
+addr:   .addr   MGTK::screen_mapbits
+stride: .word   MGTK::screen_mapwidth
 hoff:   .word   0
 voff:   .word   0
 width:  .word   $1F4
 height: .word   $99
 pattern:.res    8, $FF
-mskand: .byte   A2D_DEFAULT_MSKAND
-mskor:  .byte   A2D_DEFAULT_MSKOR
+mskand: .byte   MGTK::colormask_and
+mskor:  .byte   MGTK::colormask_or
 xpos:   .word   0
 ypos:   .word   0
 hthick: .byte   1
 vthick: .byte   1
 mode:   .byte   0
-tmask:  .byte   A2D_DEFAULT_TMASK
+tmask:  .byte   MGTK::textbg_white
 font:   .addr   DEFAULT_FONT
 next:   .addr   0
 .endproc
 
 .proc win15
 id:     .byte   $15
-flags:  .byte   A2D_CWF_NOTITLE
+flags:  .byte   MGTK::option_dialog_box
 title:  .addr   0
-hscroll:.byte   A2D_CWS_NOSCROLL
-vscroll:.byte   A2D_CWS_SCROLL_NORMAL
+hscroll:.byte   MGTK::scroll_option_none
+vscroll:.byte   MGTK::scroll_option_normal
 hsmax:  .byte   0
 hspos:  .byte   0
 vsmax:  .byte   3
@@ -5122,31 +5122,31 @@ w2:     .word   $64
 h2:     .word   $46
 left:   .word   $35
 top:    .word   $32
-addr:   .addr   A2D_SCREEN_ADDR
-stride: .word   A2D_SCREEN_STRIDE
+addr:   .addr   MGTK::screen_mapbits
+stride: .word   MGTK::screen_mapwidth
 hoff:   .word   0
 voff:   .word   0
 width:  .word   $7D
 height: .word   $46
 pattern:.res    8, $FF
-mskand: .byte   A2D_DEFAULT_MSKAND
-mskor:  .byte   A2D_DEFAULT_MSKOR
+mskand: .byte   MGTK::colormask_and
+mskor:  .byte   MGTK::colormask_or
 xpos:   .word   0
 ypos:   .word   0
 hthick: .byte   1
 vthick: .byte   1
 mode:   .byte   0
-tmask:  .byte   A2D_DEFAULT_TMASK
+tmask:  .byte   MGTK::textbg_white
 font:   .addr   DEFAULT_FONT
 next:   .addr   0
 .endproc
 
 .proc win18
 id:     .byte   $18
-flags:  .byte   A2D_CWF_NOTITLE
+flags:  .byte   MGTK::option_dialog_box
 title:  .addr   0
-hscroll:.byte   A2D_CWS_NOSCROLL
-vscroll:.byte   A2D_CWS_NOSCROLL
+hscroll:.byte   MGTK::scroll_option_none
+vscroll:.byte   MGTK::scroll_option_none
 hsmax:  .byte   0
 hspos:  .byte   0
 vsmax:  .byte   0
@@ -5159,21 +5159,21 @@ h2:     .word   $8C
 state:
 left:   .word   $50
 top:    .word   $28
-addr:   .addr   A2D_SCREEN_ADDR
-stride: .word   A2D_SCREEN_STRIDE
+addr:   .addr   MGTK::screen_mapbits
+stride: .word   MGTK::screen_mapwidth
 hoff:   .word   0
 voff:   .word   0
 width:  .word   $190
 height: .word   $6E
 pattern:.res    8, $FF
-mskand: .byte   A2D_DEFAULT_MSKAND
-mskor:  .byte   A2D_DEFAULT_MSKOR
+mskand: .byte   MGTK::colormask_and
+mskor:  .byte   MGTK::colormask_or
 xpos:   .word   0
 ypos:   .word   0
 hthick: .byte   1
 vthick: .byte   1
 mode:   .byte   0
-tmask:  .byte   A2D_DEFAULT_TMASK
+tmask:  .byte   MGTK::textbg_white
 font:   .addr   DEFAULT_FONT
 next:   .addr   0
 .endproc
@@ -5181,10 +5181,10 @@ next:   .addr   0
 
 .proc win1B
 id:     .byte   $1B
-flags:  .byte   A2D_CWF_NOTITLE
+flags:  .byte   MGTK::option_dialog_box
 title:  .addr   0
-hscroll:.byte   A2D_CWS_NOSCROLL
-vscroll:.byte   A2D_CWS_NOSCROLL
+hscroll:.byte   MGTK::scroll_option_none
+vscroll:.byte   MGTK::scroll_option_none
 hsmax:  .byte   0
 hspos:  .byte   0
 vsmax:  .byte   0
@@ -5196,21 +5196,21 @@ w2:     .word   $1F4
 h2:     .word   $8C
 left:   .word   $69
 top:    .word   $19
-addr:   .addr   A2D_SCREEN_ADDR
-stride: .word   A2D_SCREEN_STRIDE
+addr:   .addr   MGTK::screen_mapbits
+stride: .word   MGTK::screen_mapwidth
 hoff:   .word   0
 voff:   .word   0
 width:  .word   $15E
 height: .word   $6E
 pattern:.res    8, $FF
-mskand: .byte   A2D_DEFAULT_MSKAND
-mskor:  .byte   A2D_DEFAULT_MSKOR
+mskand: .byte   MGTK::colormask_and
+mskor:  .byte   MGTK::colormask_or
 xpos:   .word   0
 ypos:   .word   0
 hthick: .byte   1
 vthick: .byte   1
 mode:   .byte   0
-tmask:  .byte   A2D_DEFAULT_TMASK
+tmask:  .byte   MGTK::textbg_white
 font:   .addr   DEFAULT_FONT
 next:   .addr   0
 .endproc
@@ -5226,8 +5226,8 @@ dialog_label_pos:
         DEFINE_POINT 40,0
 
 LD6C7:  DEFINE_POINT 75, 35
-        .addr   A2D_SCREEN_ADDR
-        .word   A2D_SCREEN_STRIDE
+        .addr   MGTK::screen_mapbits
+        .word   MGTK::screen_mapwidth
         .word   0, 0            ; hoff, voff
         .word   $166, $64       ; width, height
 
@@ -5470,7 +5470,7 @@ item_num:.byte  0
         .byte   $00,$00,$00,$00,$00,$00
         .byte   $00,$04,$00,$00,$00
 
-LE267:  .byte   $04,$00,$00     ; params for an A2D $36 call
+LE267:  .byte   $04,$00,$00     ; params for an MGTK $36 call
 
 LE26A:  .byte   $04,$00
 LE26C:  .byte   $00,$00,$00,$00,$04,$00
@@ -5506,20 +5506,20 @@ startup_menu:
 
 str_all:PASCAL_STRING "All"
 
-sd0:    A2D_DEFSTRING "Slot    drive       ", sd0s
-sd1:    A2D_DEFSTRING "Slot    drive       ", sd1s
-sd2:    A2D_DEFSTRING "Slot    drive       ", sd2s
-sd3:    A2D_DEFSTRING "Slot    drive       ", sd3s
-sd4:    A2D_DEFSTRING "Slot    drive       ", sd4s
-sd5:    A2D_DEFSTRING "Slot    drive       ", sd5s
-sd6:    A2D_DEFSTRING "Slot    drive       ", sd6s
-sd7:    A2D_DEFSTRING "Slot    drive       ", sd7s
-sd8:    A2D_DEFSTRING "Slot    drive       ", sd8s
-sd9:    A2D_DEFSTRING "Slot    drive       ", sd9s
-sd10:   A2D_DEFSTRING "Slot    drive       ", sd10s
-sd11:   A2D_DEFSTRING "Slot    drive       ", sd11s
-sd12:   A2D_DEFSTRING "Slot    drive       ", sd12s
-sd13:   A2D_DEFSTRING "Slot    drive       ", sd13s
+sd0:    DEFINE_STRING "Slot    drive       ", sd0s
+sd1:    DEFINE_STRING "Slot    drive       ", sd1s
+sd2:    DEFINE_STRING "Slot    drive       ", sd2s
+sd3:    DEFINE_STRING "Slot    drive       ", sd3s
+sd4:    DEFINE_STRING "Slot    drive       ", sd4s
+sd5:    DEFINE_STRING "Slot    drive       ", sd5s
+sd6:    DEFINE_STRING "Slot    drive       ", sd6s
+sd7:    DEFINE_STRING "Slot    drive       ", sd7s
+sd8:    DEFINE_STRING "Slot    drive       ", sd8s
+sd9:    DEFINE_STRING "Slot    drive       ", sd9s
+sd10:   DEFINE_STRING "Slot    drive       ", sd10s
+sd11:   DEFINE_STRING "Slot    drive       ", sd11s
+sd12:   DEFINE_STRING "Slot    drive       ", sd12s
+sd13:   DEFINE_STRING "Slot    drive       ", sd13s
 
 s00:    PASCAL_STRING "Slot 0 "
 s01:    PASCAL_STRING "Slot 0 "
@@ -5634,10 +5634,10 @@ data:   .res    55, 0
 .macro WIN_PARAMS_DEFN window_id, label, buflabel
 .proc label
 id:     .byte   window_id
-flags:  .byte   A2D_CWF_ADDCLOSE | A2D_CWF_ADDRESIZE
+flags:  .byte   MGTK::option_go_away_box | MGTK::option_grow_box
 title:  .addr   buflabel
-hscroll:.byte   A2D_CWS_SCROLL_NORMAL
-vscroll:.byte   A2D_CWS_SCROLL_NORMAL
+hscroll:.byte   MGTK::scroll_option_normal
+vscroll:.byte   MGTK::scroll_option_normal
 hsmax:  .byte   3
 hspos:  .byte   0
 vsmax:  .byte   3
@@ -5649,21 +5649,21 @@ w2:     .word   545
 h2:     .word   175
 left:   .word   20
 top:    .word   27
-addr:   .addr   A2D_SCREEN_ADDR
-stride: .word   A2D_SCREEN_STRIDE
+addr:   .addr   MGTK::screen_mapbits
+stride: .word   MGTK::screen_mapwidth
 hoff:   .word   0
 voff:   .word   0
 width:  .word   440
 height: .word   120
 pattern:.res    8, $FF
-mskand: .byte   A2D_DEFAULT_MSKAND
-mskor:  .byte   A2D_DEFAULT_MSKOR
+mskand: .byte   MGTK::colormask_and
+mskor:  .byte   MGTK::colormask_or
 xpos:   .word   0
 ypos:   .word   0
 hthick: .byte   1
 vthick: .byte   1
 mode:   .byte   0
-tmask:  .byte   A2D_DEFAULT_TMASK
+tmask:  .byte   MGTK::textbg_white
 font:   .addr   DEFAULT_FONT
 next:   .addr   0
 .endproc
@@ -6116,7 +6116,7 @@ L0D14           := $0D14
         ;; "Exported" by desktop.inc
 
 L4000:                  jmp     L4042 ; ???
-JT_A2D_RELAY:           jmp     A2D_RELAY
+JT_MGTK_RELAY:           jmp     MGTK_RELAY
 L4006:                  jmp     L8259 ; ???
 L4009:                  jmp     L830F ; ???
 L400C:                  jmp     L5E78 ; ???
@@ -6184,9 +6184,9 @@ L4088:  jsr     reset_state2
 L40A6:  jsr     L464E
         jsr     get_input
         lda     input_params_state
-        cmp     #A2D_INPUT_DOWN
+        cmp     #MGTK::button_down
         beq     L40B7
-        cmp     #A2D_INPUT_DOWN_MOD
+        cmp     #MGTK::apple_key
         bne     L40BD
 L40B7:  jsr     handle_click
         jmp     L4088
@@ -6231,10 +6231,10 @@ L4100:  jsr     L48F0
 L410D:  jsr     L4113
         jmp     L4100
 
-L4113:  A2D_RELAY_CALL A2D_REDRAW_WINDOW, input_params+1
+L4113:  MGTK_RELAY_CALL MGTK::BeginUpdate, input_params+1
         bne     L4151
         jsr     L4153
-        A2D_RELAY_CALL $3F      ; ???
+        MGTK_RELAY_CALL $3F      ; ???
         rts
 
 L412B:  lda     #$00
@@ -6534,7 +6534,7 @@ menu_accelerators:
         beq     L43A1
         lda     #$01
 L43A1:  sta     $E25D
-        A2D_RELAY_CALL $32, menu_click_params
+        MGTK_RELAY_CALL $32, menu_click_params
 
 menu_dispatch2:
         ldx     menu_click_params::menu_id
@@ -6558,7 +6558,7 @@ L43B3:  dex                     ; x has top level menu id
         lda     dispatch_table+1,x
         sta     L43E5+1
         jsr     L43E0
-        A2D_RELAY_CALL $33, menu_click_params
+        MGTK_RELAY_CALL $33, menu_click_params
         rts
 
 L43E0:  tsx
@@ -6577,7 +6577,7 @@ L43E0:  tsx
 .proc handle_click
         tsx
         stx     $E256
-        A2D_RELAY_CALL A2D_QUERY_TARGET, input_params_coords
+        MGTK_RELAY_CALL MGTK::FindWindow, input_params_coords
         lda     query_target_params_element
         bne     not_desktop
 
@@ -6594,9 +6594,9 @@ L43E0:  tsx
 L4415:  jmp     L68AA
 
 not_desktop:
-        cmp     #A2D_ELEM_MENU  ; menu?
+        cmp     #MGTK::area_menubar  ; menu?
         bne     not_menu
-        A2D_RELAY_CALL A2D_MENU_CLICK, menu_click_params
+        MGTK_RELAY_CALL MGTK::MenuSelect, menu_click_params
         jmp     menu_dispatch2
 
 not_menu:
@@ -6612,18 +6612,18 @@ not_menu:
 
 .proc handle_active_window_click
         pla
-        cmp     #A2D_ELEM_CLIENT
+        cmp     #MGTK::area_content
         bne     :+
         jsr     detect_double_click
         sta     double_click_flag
         jmp     handle_client_click
-:       cmp     #A2D_ELEM_TITLE
+:       cmp     #MGTK::area_dragbar
         bne     :+
         jmp     handle_title_click
-:       cmp     #A2D_ELEM_RESIZE
+:       cmp     #MGTK::area_grow_box
         bne     :+
         jmp     handle_resize_click
-:       cmp     #A2D_ELEM_CLOSE
+:       cmp     #MGTK::area_close_box
         bne     :+
         jmp     handle_close_click
 :       rts
@@ -6662,7 +6662,7 @@ L445D:  jsr     clear_selection
         sta     is_file_selected
         lda     LE22F
         sta     selected_file_index
-L44A6:  A2D_RELAY_CALL A2D_RAISE_WINDOW, query_target_params_id
+L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, query_target_params_id
         lda     $D20E
         sta     desktop_active_winid
         sta     bufnum
@@ -6673,7 +6673,7 @@ L44B8:  jsr     DESKTOP_COPY_TO_BUF
         jsr     DESKTOP_COPY_TO_BUF
         lda     #$00
         sta     $E269
-        A2D_RELAY_CALL $36, LE267 ; ???
+        MGTK_RELAY_CALL $36, LE267 ; ???
         ldx     desktop_active_winid
         dex
         lda     LE6D1,x
@@ -6682,24 +6682,24 @@ L44B8:  jsr     DESKTOP_COPY_TO_BUF
         inc     $E268
         lda     #$01
         sta     $E269
-        A2D_RELAY_CALL $36, LE267 ; ???
+        MGTK_RELAY_CALL $36, LE267 ; ???
         rts
 .endproc
 
 ;;; ==================================================
 
-L44F2:  A2D_RELAY_CALL A2D_QUERY_STATE, query_state_params2
-        A2D_RELAY_CALL A2D_SET_STATE, query_state_buffer
+L44F2:  MGTK_RELAY_CALL MGTK::GetWinPort, query_state_params2
+        MGTK_RELAY_CALL MGTK::SetPort, query_state_buffer
         rts
 
-L4505:  A2D_RELAY_CALL A2D_QUERY_STATE, query_state_params2
+L4505:  MGTK_RELAY_CALL MGTK::GetWinPort, query_state_params2
         rts
 
         rts
 
 reset_state2:
-        A2D_RELAY_CALL A2D_QUERY_SCREEN, state2
-        A2D_RELAY_CALL A2D_SET_STATE, state2
+        MGTK_RELAY_CALL MGTK::InitPort, state2
+        MGTK_RELAY_CALL MGTK::SetPort, state2
         rts
 
 ;;; ==================================================
@@ -7000,8 +7000,8 @@ L4748:  cmp     #FT_SYSTEM
         jsr     L4802
 
 L4755:  DESKTOP_RELAY_CALL $06
-        A2D_RELAY_CALL $3A      ; ???
-        A2D_RELAY_CALL A2D_SET_MENU, blank_menu
+        MGTK_RELAY_CALL $3A      ; ???
+        MGTK_RELAY_CALL MGTK::SetMenu, blank_menu
         ldx     $D355
 L4773:  lda     $D355,x
         sta     $220,x
@@ -7116,22 +7116,22 @@ L4862:  .byte   $00,$00,$00,$00,$00,$00
 
 set_watch_cursor:
         jsr     hide_cursor
-        A2D_RELAY_CALL A2D_SET_CURSOR, watch_cursor
+        MGTK_RELAY_CALL MGTK::SetCursor, watch_cursor
         jsr     show_cursor
         rts
 
 set_pointer_cursor:
         jsr     hide_cursor
-        A2D_RELAY_CALL A2D_SET_CURSOR, pointer_cursor
+        MGTK_RELAY_CALL MGTK::SetCursor, pointer_cursor
         jsr     show_cursor
         rts
 
 hide_cursor:
-        A2D_RELAY_CALL A2D_HIDE_CURSOR
+        MGTK_RELAY_CALL MGTK::HideCursor
         rts
 
 show_cursor:
-        A2D_RELAY_CALL A2D_SHOW_CURSOR
+        MGTK_RELAY_CALL MGTK::ShowCursor
         rts
 
 ;;; ==================================================
@@ -7159,16 +7159,16 @@ L48C2:  lda     $E196,x
         jmp     dummy1234           ; self-modified
 
 get_input:
-        A2D_RELAY_CALL A2D_GET_INPUT, input_params
+        MGTK_RELAY_CALL MGTK::GetEvent, input_params
         rts
 
-L48F0:  A2D_RELAY_CALL $2C, input_params ; ???
+L48F0:  MGTK_RELAY_CALL $2C, input_params ; ???
         rts
 
-L48FA:  A2D_RELAY_CALL A2D_SET_FILL_MODE, const2
+L48FA:  MGTK_RELAY_CALL MGTK::SetPenMode, const2
         rts
 
-L4904:  A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
+L4904:  MGTK_RELAY_CALL MGTK::SetPenMode, const0
         rts
 
 ;;; ==================================================
@@ -7584,10 +7584,10 @@ nope:   dex
         ;; Invoke it
         jsr     set_pointer_cursor
         jsr     reset_state2
-        A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, zp_use_flag0
-        A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, zp_use_flag1
+        MGTK_RELAY_CALL MGTK::SetZP1, zp_use_flag0
+        MGTK_RELAY_CALL MGTK::SetZP1, zp_use_flag1
         jsr     DA_LOAD_ADDRESS
-        A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, zp_use_flag0
+        MGTK_RELAY_CALL MGTK::SetZP1, zp_use_flag0
         lda     #0
         sta     running_da_flag
 
@@ -7930,7 +7930,7 @@ L4EC3:  sta     buf3len
         lda     #$00
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
-        A2D_RELAY_CALL A2D_DESTROY_WINDOW, desktop_active_winid
+        MGTK_RELAY_CALL MGTK::CloseWindow, desktop_active_winid
         ldx     desktop_active_winid
         dex
         lda     LEC26,x
@@ -7959,13 +7959,13 @@ L4EC3:  sta     buf3len
         dex
         lda     #$00
         sta     LEC26,x
-        A2D_RELAY_CALL A2D_QUERY_TOP, desktop_active_winid
+        MGTK_RELAY_CALL MGTK::FrontWindow, desktop_active_winid
         lda     desktop_active_winid
         bne     L4F3C
         DESKTOP_RELAY_CALL DESKTOP_REDRAW_ICONS
 L4F3C:  lda     #$00
         sta     $E269
-        A2D_RELAY_CALL $36, LE267 ; ???
+        MGTK_RELAY_CALL $36, LE267 ; ???
         jsr     L66A2
         jmp     reset_state2
 .endproc
@@ -8202,7 +8202,7 @@ L511E:  sta     buf3len
         jsr     L4505
         jsr     L6E8E
         jsr     L4904
-        A2D_RELAY_CALL A2D_FILL_RECT, query_state_buffer::hoff
+        MGTK_RELAY_CALL MGTK::PaintRect, query_state_buffer::hoff
         lda     desktop_active_winid
         jsr     L7D5D
         sta     L51EB
@@ -8289,7 +8289,7 @@ L51F0:  ldx     desktop_active_winid
         jsr     L4505
         jsr     L6E8E
         jsr     L4904
-        A2D_RELAY_CALL A2D_FILL_RECT, query_state_buffer::hoff
+        MGTK_RELAY_CALL MGTK::PaintRect, query_state_buffer::hoff
         lda     desktop_active_winid
         jsr     L7D5D
         sta     L5263
@@ -8414,12 +8414,12 @@ L52D7:  jsr     L52DF
 
 L52DF:  lda     #$00
         sta     $E269
-        A2D_RELAY_CALL $36, LE267 ; ???
+        MGTK_RELAY_CALL $36, LE267 ; ???
         lda     $E25B
         sta     $E268
         lda     #$01
         sta     $E269
-        A2D_RELAY_CALL $36, LE267 ; ???
+        MGTK_RELAY_CALL $36, LE267 ; ???
         rts
 
 L5302:  DESKTOP_RELAY_CALL $07, desktop_active_winid
@@ -8759,9 +8759,9 @@ L5579:  lda     #$00
 L5581:  jsr     L55F0
 L5584:  jsr     get_input
         lda     input_params_state
-        cmp     #A2D_INPUT_KEY
+        cmp     #MGTK::key_down
         beq     L5595
-        cmp     #A2D_INPUT_DOWN
+        cmp     #MGTK::button_down
         bne     L5584
         jmp     L55D1
 
@@ -8952,9 +8952,9 @@ L572D:  lda     #$00
         sta     L578C
 L5732:  jsr     get_input
         lda     input_params_state
-        cmp     #A2D_INPUT_KEY
+        cmp     #MGTK::key_down
         beq     L5743
-        cmp     #A2D_INPUT_DOWN
+        cmp     #MGTK::button_down
         bne     L5732
         jmp     L578B
 
@@ -9001,7 +9001,7 @@ L578D:  .byte   0
 ;;;Initiate keyboard-based resizing
 
 .proc cmd_resize
-        A2D_RELAY_CALL $22      ; ???
+        MGTK_RELAY_CALL $22      ; ???
         jmp     handle_resize_click
 .endproc
 
@@ -9009,7 +9009,7 @@ L578D:  .byte   0
 ;;; Initiate keyboard-based window moving
 
 .proc cmd_move
-        A2D_RELAY_CALL $22      ; ???
+        MGTK_RELAY_CALL $22      ; ???
         jmp     handle_title_click
 .endproc
 
@@ -9020,9 +9020,9 @@ L578D:  .byte   0
         jsr     L5803
 loop:   jsr     get_input
         lda     input_params_state
-        cmp     #A2D_INPUT_DOWN
+        cmp     #MGTK::button_down
         beq     done
-        cmp     #A2D_INPUT_KEY
+        cmp     #MGTK::key_down
         bne     loop
         lda     input_params_key
         cmp     #KEY_RETURN
@@ -9468,7 +9468,7 @@ L5B31:  lda     $EBFD,x
         sta     input_params_coords,x
         dex
         bpl     L5B31
-        A2D_RELAY_CALL A2D_QUERY_CLIENT, input_params_coords
+        MGTK_RELAY_CALL MGTK::FindControl, input_params_coords
         lda     $D20D
         bne     L5B4B
         jmp     L5CB7
@@ -9584,7 +9584,7 @@ L5C26:  jsr     DESKTOP_COPY_FROM_BUF
 
 L5C31:  lda     $D20D
         sta     input_params
-        A2D_RELAY_CALL A2D_DRAG_SCROLL, input_params
+        MGTK_RELAY_CALL MGTK::TrackThumb, input_params
         lda     $D20E
         bne     L5C46
         rts
@@ -9597,7 +9597,7 @@ L5C46:  jsr     L5C54
 
 L5C54:  lda     $D20D
         sta     input_params+1
-        A2D_RELAY_CALL A2D_UPDATE_SCROLL, input_params
+        MGTK_RELAY_CALL MGTK::UpdateThumb, input_params
         jsr     L6523
         jsr     L84D1
         bit     L5B1B
@@ -9606,19 +9606,19 @@ L5C54:  lda     $D20D
 L5C71:  lda     desktop_active_winid
         sta     query_state_params2::id
         jsr     L44F2
-        A2D_RELAY_CALL A2D_FILL_RECT, query_state_buffer::hoff
+        MGTK_RELAY_CALL MGTK::PaintRect, query_state_buffer::hoff
         jsr     reset_state2
         jmp     L6C19
 
 L5C89:  sta     L5CB6
         jsr     L48F0
         lda     input_params_state
-        cmp     #A2D_INPUT_HELD
+        cmp     #MGTK::drag
         beq     L5C99
 L5C96:  lda     #$FF
         rts
 
-L5C99:  A2D_RELAY_CALL A2D_QUERY_CLIENT, input_params_coords
+L5C99:  MGTK_RELAY_CALL MGTK::FindControl, input_params_coords
         lda     query_client_params_part
         beq     L5C96
         cmp     #$03
@@ -9836,7 +9836,7 @@ L5E8F:  lda     desktop_active_winid
         sta     query_state_params2::id
         jsr     L44F2
         jsr     L4904
-        A2D_RELAY_CALL A2D_FILL_RECT, query_state_buffer::hoff
+        MGTK_RELAY_CALL MGTK::PaintRect, query_state_buffer::hoff
         ldx     desktop_active_winid
         dex
         lda     LEC26,x
@@ -9902,7 +9902,7 @@ L5F20:  lda     input_params_coords,x
         bpl     L5F20
         jsr     L48F0
         lda     input_params_state
-        cmp     #A2D_INPUT_HELD
+        cmp     #MGTK::drag
         beq     L5F3F
         bit     BUTN0
         bmi     L5F3E
@@ -9922,12 +9922,12 @@ L5F50:  lda     L5F0B,x
         dex
         bpl     L5F50
         jsr     L48FA
-        A2D_RELAY_CALL A2D_DRAW_RECT, rect_E230
+        MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
 L5F6B:  jsr     L48F0
         lda     input_params_state
-        cmp     #A2D_INPUT_HELD
+        cmp     #MGTK::drag
         beq     L5FC5
-        A2D_RELAY_CALL A2D_DRAW_RECT, rect_E230
+        MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
         ldx     #$00
 L5F80:  cpx     buf3len
         bne     L5F88
@@ -9989,7 +9989,7 @@ L600E:  lda     L60CB
         bcs     L601F
         jmp     L5F6B
 
-L601F:  A2D_RELAY_CALL A2D_DRAW_RECT, rect_E230
+L601F:  MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
         ldx     #$03
 L602A:  lda     input_params_coords,x
         sta     L60CF,x
@@ -10047,7 +10047,7 @@ L60AE:  lda     input_params_ycoord
         sta     $E237
         lda     #$00
         sta     L60D4
-L60BF:  A2D_RELAY_CALL A2D_DRAW_RECT, rect_E230
+L60BF:  MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
         jmp     L5F6B
 
 L60CB:  .byte   0
@@ -10068,10 +10068,10 @@ handle_title_click:
 
 L60DE:  lda     desktop_active_winid
         sta     input_params
-        A2D_RELAY_CALL A2D_QUERY_TOP, desktop_active_winid
+        MGTK_RELAY_CALL MGTK::FrontWindow, desktop_active_winid
         lda     desktop_active_winid
         jsr     L8855
-        A2D_RELAY_CALL A2D_DRAG_WINDOW, input_params
+        MGTK_RELAY_CALL MGTK::DragWindow, input_params
         lda     desktop_active_winid
         jsr     window_lookup
         sta     $06
@@ -10157,7 +10157,7 @@ L619A:  .byte   0
 handle_resize_click:
         lda     desktop_active_winid
         sta     input_params
-        A2D_RELAY_CALL A2D_DRAG_RESIZE, input_params
+        MGTK_RELAY_CALL MGTK::GrowWindow, input_params
         jsr     redraw_windows_and_desktop
         lda     desktop_active_winid
         sta     bufnum
@@ -10172,7 +10172,7 @@ handle_resize_click:
 
 handle_close_click:
         lda     desktop_active_winid
-        A2D_RELAY_CALL A2D_CLOSE_CLICK, close_click_params
+        MGTK_RELAY_CALL MGTK::TrackGoAway, close_click_params
         lda     close_click_params::clicked
         bne     L61DC
         rts
@@ -10209,7 +10209,7 @@ L621B:  sta     buf3,x
 
 L6227:  sta     buf3len
         jsr     DESKTOP_COPY_FROM_BUF
-        A2D_RELAY_CALL A2D_DESTROY_WINDOW, desktop_active_winid
+        MGTK_RELAY_CALL MGTK::CloseWindow, desktop_active_winid
         ldx     desktop_active_winid
         dex
         lda     LEC26,x
@@ -10248,13 +10248,13 @@ L6276:  ldx     desktop_active_winid
         lda     #$00
         sta     LEC26,x
         sta     LE6D1,x
-        A2D_RELAY_CALL A2D_QUERY_TOP, desktop_active_winid
+        MGTK_RELAY_CALL MGTK::FrontWindow, desktop_active_winid
         lda     #$00
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         lda     #$00
         sta     $E269
-        A2D_RELAY_CALL $36, LE267 ; ???
+        MGTK_RELAY_CALL $36, LE267 ; ???
         jsr     L66A2
         jmp     redraw_windows_and_desktop
 
@@ -10553,7 +10553,7 @@ L654C:  lda     query_state_buffer::hoff,x
 L6556:  bit     L5B1B
         bmi     L655E
         jsr     L6E6E
-L655E:  A2D_RELAY_CALL A2D_FILL_RECT, query_state_buffer::hoff
+L655E:  MGTK_RELAY_CALL MGTK::PaintRect, query_state_buffer::hoff
         jsr     reset_state2
         jmp     L6C19
 
@@ -10610,7 +10610,7 @@ L65EB:  jsr     L62BC
 L65EE:  sta     input_params+1
         lda     #$02
         sta     input_params
-        A2D_RELAY_CALL A2D_UPDATE_SCROLL, input_params
+        MGTK_RELAY_CALL MGTK::UpdateThumb, input_params
         rts
 
 L6600:  .byte   0
@@ -10673,7 +10673,7 @@ L668A:  jsr     L62BC
 L668D:  sta     input_params+1
         lda     #$01
         sta     input_params
-        A2D_RELAY_CALL A2D_UPDATE_SCROLL, input_params
+        MGTK_RELAY_CALL MGTK::UpdateThumb, input_params
         rts
 
 L669F:  .byte   0
@@ -10685,20 +10685,20 @@ L66A2:  ldx     desktop_active_winid
 
 L66AA:  lda     #$01
         sta     $E26B
-        A2D_RELAY_CALL $34, LE26A ; ???
+        MGTK_RELAY_CALL $34, LE26A ; ???
         lda     #$01
         sta     $E26E
         lda     #$02
         sta     LE26C
         lda     #$01
         sta     $E26D
-        A2D_RELAY_CALL $35, LE26C ; ???
+        MGTK_RELAY_CALL $35, LE26C ; ???
         lda     #$04
         sta     $E26D
-        A2D_RELAY_CALL $35, LE26C ; ???
+        MGTK_RELAY_CALL $35, LE26C ; ???
         lda     #$05
         sta     $E26D
-        A2D_RELAY_CALL $35, LE26C ; ???
+        MGTK_RELAY_CALL $35, LE26C ; ???
         lda     #$00
         sta     menu_dispatch_flag
         rts
@@ -10711,7 +10711,7 @@ L66F2:  dex
         stx     $E268
         lda     #$01
         sta     $E269
-        A2D_RELAY_CALL $36, LE267 ; ???
+        MGTK_RELAY_CALL $36, LE267 ; ???
         rts
 
 L670C:  lda     #$01
@@ -10735,7 +10735,7 @@ L670C:  lda     #$01
         rts
 
 L673A:  sta     $E26D
-        A2D_RELAY_CALL $35, LE26C ; ???
+        MGTK_RELAY_CALL $35, LE26C ; ???
         rts
 
 L6747:  lda     #$00
@@ -10759,7 +10759,7 @@ L6747:  lda     #$00
         rts
 
 L6775:  sta     $E26D
-        A2D_RELAY_CALL $35, LE26C ; ???
+        MGTK_RELAY_CALL $35, LE26C ; ???
         rts
 
 L6782:  lda     #$00
@@ -10772,7 +10772,7 @@ L678F:  lda     #$02
         sta     LE26C
         lda     #$0B
         sta     $E26D
-        A2D_RELAY_CALL $35, LE26C ; ???
+        MGTK_RELAY_CALL $35, LE26C ; ???
         rts
 
 L67A3:  lda     #$01
@@ -10794,7 +10794,7 @@ L67B0:  lda     #$03
         rts
 
 L67CA:  sta     $E26D
-        A2D_RELAY_CALL $35, LE26C ; ???
+        MGTK_RELAY_CALL $35, LE26C ; ???
         rts
 
 L67D7:  lda     is_file_selected
@@ -10900,18 +10900,18 @@ L68B8:  lda     input_params_coords,x
         bpl     L68B8
         jsr     L48F0
         lda     input_params_state
-        cmp     #A2D_INPUT_HELD
+        cmp     #MGTK::drag
         beq     L68CF
         rts
 
-L68CF:  A2D_RELAY_CALL A2D_SET_PATTERN, checkerboard_pattern3
+L68CF:  MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern3
         jsr     L48FA
-        A2D_RELAY_CALL A2D_DRAW_RECT, rect_E230
+        MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
 L68E4:  jsr     L48F0
         lda     input_params_state
-        cmp     #A2D_INPUT_HELD
+        cmp     #MGTK::drag
         beq     L6932
-        A2D_RELAY_CALL A2D_DRAW_RECT, rect_E230
+        MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
         ldx     #$00
 L68F9:  cpx     buf3len
         bne     L6904
@@ -10969,7 +10969,7 @@ L6978:  lda     L6A35
         bcs     L6989
         jmp     L68E4
 
-L6989:  A2D_RELAY_CALL A2D_DRAW_RECT, rect_E230
+L6989:  MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
         ldx     #$03
 L6994:  lda     input_params_coords,x
         sta     L6A39,x
@@ -11027,7 +11027,7 @@ L6A18:  lda     input_params_ycoord
         sta     $E237
         lda     #$00
         sta     L6A3E
-L6A29:  A2D_RELAY_CALL A2D_DRAW_RECT, rect_E230
+L6A29:  MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
         jmp     L68E4
 
 L6A35:  .byte   0
@@ -11129,7 +11129,7 @@ L6AF6:  cmp     $E1F2,x
         dex
         bpl     L6AF6
         jsr     L7054
-L6B01:  A2D_RELAY_CALL A2D_RAISE_WINDOW, bufnum
+L6B01:  MGTK_RELAY_CALL MGTK::SelectWindow, bufnum
         lda     bufnum
         sta     desktop_active_winid
         jsr     L6C19
@@ -11205,7 +11205,7 @@ L6BB8:  jsr     L744B
         lda     bufnum
         jsr     window_lookup
         ldy     #$38
-        jsr     A2D_RELAY
+        jsr     MGTK_RELAY
         lda     desktop_active_winid
         sta     query_state_params2::id
         jsr     L44F2
@@ -11235,7 +11235,7 @@ L6BF4:  lda     bufnum
         jmp     reset_state2
 
 L6C0E:  .byte   0
-L6C0F:  A2D_RELAY_CALL $36, LE267 ; ???
+L6C0F:  MGTK_RELAY_CALL $36, LE267 ; ???
         rts
 
 L6C19:  ldx     bufnum
@@ -11466,7 +11466,7 @@ L6E38:  lda     #$01
         jsr     L6E48
         jmp     L6604
 
-L6E48:  A2D_RELAY_CALL $4C, input_params ; ???
+L6E48:  MGTK_RELAY_CALL $4C, input_params ; ???
         rts
 
 L6E52:  lda     #$00
@@ -11517,26 +11517,26 @@ L6E90:  sta     L6EC4
         sta     query_state_buffer::voff+1
         bit     L6EC4
         bmi     L6EC3
-        A2D_RELAY_CALL A2D_SET_STATE, query_state_buffer
+        MGTK_RELAY_CALL MGTK::SetPort, query_state_buffer
 L6EC3:  rts
 
 L6EC4:  .byte   0
 L6EC5:  lda     #$00
         sta     $E26B
-        A2D_RELAY_CALL $34, LE26A ; ???
+        MGTK_RELAY_CALL $34, LE26A ; ???
         lda     #$00
         sta     $E26E
         lda     #$02
         sta     LE26C
         lda     #$01
         sta     $E26D
-        A2D_RELAY_CALL $35, LE26C ; ???
+        MGTK_RELAY_CALL $35, LE26C ; ???
         lda     #$04
         sta     $E26D
-        A2D_RELAY_CALL $35, LE26C ; ???
+        MGTK_RELAY_CALL $35, LE26C ; ???
         lda     #$05
         sta     $E26D
-        A2D_RELAY_CALL $35, LE26C ; ???
+        MGTK_RELAY_CALL $35, LE26C ; ???
         lda     #$80
         sta     menu_dispatch_flag
         rts
@@ -12740,13 +12740,13 @@ L78EF:  lda     query_state_buffer::hoff
         adc     #$00
         sta     $EBC1
         sta     $EBC5
-        A2D_RELAY_CALL A2D_SET_POS, LEBBE
+        MGTK_RELAY_CALL MGTK::MoveTo, LEBBE
         lda     query_state_buffer::width
         sta     LEBC2
         lda     query_state_buffer::width+1
         sta     $EBC3
         jsr     L48FA
-        A2D_RELAY_CALL A2D_DRAW_LINE_ABS, LEBC2
+        MGTK_RELAY_CALL MGTK::LineTo, LEBC2
         lda     $EBC0
         clc
         adc     #$02
@@ -12756,8 +12756,8 @@ L78EF:  lda     query_state_buffer::hoff
         adc     #$00
         sta     $EBC1
         sta     $EBC5
-        A2D_RELAY_CALL A2D_SET_POS, LEBBE
-        A2D_RELAY_CALL A2D_DRAW_LINE_ABS, LEBC2
+        MGTK_RELAY_CALL MGTK::MoveTo, LEBBE
+        MGTK_RELAY_CALL MGTK::LineTo, LEBC2
         lda     query_state_buffer::voff
         clc
         adc     #$0A
@@ -12772,7 +12772,7 @@ L78EF:  lda     query_state_buffer::hoff
         cmp     #$02
         bcs     L798A
         dec     str_items       ; remove trailing s
-L798A:  A2D_RELAY_CALL A2D_SET_POS, items_label_pos
+L798A:  MGTK_RELAY_CALL MGTK::MoveTo, items_label_pos
         jsr     L7AD7
         addr_call draw_text2, str_items
         lda     buf3len
@@ -12791,7 +12791,7 @@ L79A7:  jsr     L79F7
         tax
         tya
         jsr     L7AE0
-        A2D_RELAY_CALL A2D_SET_POS, LEBEB
+        MGTK_RELAY_CALL MGTK::MoveTo, LEBEB
         jsr     L7AD7
         addr_call draw_text2, str_k_in_disk
         ldx     desktop_active_winid
@@ -12805,7 +12805,7 @@ L79A7:  jsr     L79F7
         tax
         tya
         jsr     L7AE0
-        A2D_RELAY_CALL A2D_SET_POS, LEBEF
+        MGTK_RELAY_CALL MGTK::MoveTo, LEBEF
         jsr     L7AD7
         addr_call draw_text2, str_k_available
         rts
@@ -14040,7 +14040,7 @@ L84DC:  lda     query_state_buffer::width
         sbc     query_state_buffer::voff+1
         sta     L85FB
         lda     input_params_state
-        cmp     #A2D_INPUT_DOWN
+        cmp     #MGTK::button_down
         bne     L850C
         asl     a
         bne     L850E
@@ -14193,15 +14193,15 @@ loop:   dec     counter
         lda     input_params_state
         sta     state           ; unused ???
 
-        cmp     #A2D_INPUT_NONE
+        cmp     #MGTK::no_event
         beq     loop
-        cmp     #A2D_INPUT_HELD
+        cmp     #MGTK::drag
         beq     loop
-        cmp     #A2D_INPUT_UP
+        cmp     #MGTK::button_up
         bne     :+
         jsr     get_input
         jmp     loop
-:       cmp     #A2D_INPUT_DOWN
+:       cmp     #MGTK::button_down
         bne     exit
 
         jsr     get_input
@@ -14433,7 +14433,7 @@ L877F:  .byte   0
         inc     ptr
         bne     :+
         inc     ptr+1
-:       A2D_RELAY_CALL A2D_DRAW_TEXT, $6
+:       MGTK_RELAY_CALL MGTK::DrawText, $6
 exit:   rts
 .endproc
 
@@ -14453,7 +14453,7 @@ exit:   rts
         inc     ptr
         bne     :+
         inc     ptr+1
-:       A2D_RELAY_CALL A2D_MEASURE_TEXT, $6
+:       MGTK_RELAY_CALL MGTK::TextWidth, $6
         lda     result
         ldx     result+1
         rts
@@ -14750,7 +14750,7 @@ L899A:  sta     state1::hoff,x
         inx
         cpx     #$04
         bne     L899A
-        A2D_RELAY_CALL A2D_SET_STATE, state1
+        MGTK_RELAY_CALL MGTK::SetPort, state1
         rts
 
 ;;; ==================================================
@@ -15203,7 +15203,7 @@ L8D57:  .byte   0
 L8D58:  lda     #$00
         sta     L8DB2
         jsr     reset_state2
-        A2D_RELAY_CALL A2D_SET_PATTERN, checkerboard_pattern3
+        MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern3
         jsr     L48FA
 L8D6C:  lda     L8DB2
         cmp     #$0C
@@ -15251,7 +15251,7 @@ L8DB2:  .byte   0
 L8DB3:  lda     #$0B
         sta     L8E0F
         jsr     reset_state2
-        A2D_RELAY_CALL A2D_SET_PATTERN, checkerboard_pattern3
+        MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern3
         jsr     L48FA
 L8DC7:  lda     L8E0F
         bmi     L8DE4
@@ -15298,7 +15298,7 @@ L8E0F:  .byte   0
 ;;; ==================================================
 
 .proc draw_rect_E230
-        A2D_RELAY_CALL A2D_DRAW_RECT, rect_E230
+        MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
         rts
 .endproc
 
@@ -15771,8 +15771,8 @@ L91CE:  .byte   0
 L91D1:  stx     $E00A
         rts
 
-L91D5:  yax_call JT_A2D_RELAY, A2D_QUERY_SCREEN, state2
-        yax_call JT_A2D_RELAY, A2D_SET_STATE, state2
+L91D5:  yax_call JT_MGTK_RELAY, MGTK::InitPort, state2
+        yax_call JT_MGTK_RELAY, MGTK::SetPort, state2
         rts
 
 L91E8:  jsr     JT_REDRAW_ALL
@@ -17840,16 +17840,16 @@ LA3A7:  yax_call JT_MLI_RELAY, CLOSE, close_params4
         lda     selected_window_index
         beq     LA3CA
         sta     query_state_params2::id
-        yax_call JT_A2D_RELAY, A2D_QUERY_STATE, query_state_params2
-        yax_call JT_A2D_RELAY, A2D_SET_STATE, query_state_buffer
+        yax_call JT_MGTK_RELAY, MGTK::GetWinPort, query_state_params2
+        yax_call JT_MGTK_RELAY, MGTK::SetPort, query_state_buffer
 LA3CA:  ldx     L9188
         txs
         lda     #$FF
         rts
 
-LA3D1:  yax_call JT_A2D_RELAY, A2D_GET_INPUT, input_params
+LA3D1:  yax_call JT_MGTK_RELAY, MGTK::GetEvent, input_params
         lda     input_params_state
-        cmp     #A2D_INPUT_KEY
+        cmp     #MGTK::key_down
         bne     LA3EC
         lda     input_params_key
         cmp     #KEY_ESCAPE
@@ -18030,19 +18030,19 @@ prompt_input_loop:  lda     LD8E8
         jsr     LB8F5
         lda     #$14
         sta     LD8E9
-LA579:  A2D_RELAY_CALL A2D_GET_INPUT, input_params
+LA579:  MGTK_RELAY_CALL MGTK::GetEvent, input_params
         lda     input_params_state
-        cmp     #A2D_INPUT_DOWN
+        cmp     #MGTK::button_down
         bne     LA58C
         jmp     LA5EE
 
-LA58C:  cmp     #A2D_INPUT_KEY
+LA58C:  cmp     #MGTK::key_down
         bne     LA593
         jmp     LA6FD
 
 LA593:  lda     LD8E8
         beq     prompt_input_loop
-        A2D_RELAY_CALL A2D_QUERY_TARGET, input_params_coords
+        MGTK_RELAY_CALL MGTK::FindWindow, input_params_coords
         lda     query_target_params_element
         bne     LA5A9
         jmp     prompt_input_loop
@@ -18056,9 +18056,9 @@ LA5B4:  lda     winF
         jsr     LB7B9
         lda     winF
         sta     input_params
-        A2D_RELAY_CALL A2D_MAP_COORDS, input_params
-        A2D_RELAY_CALL A2D_SET_POS, $D20D
-LA5D2:  A2D_RELAY_CALL A2D_TEST_BOX, LD6AB
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, input_params
+        MGTK_RELAY_CALL MGTK::MoveTo, $D20D
+LA5D2:  MGTK_RELAY_CALL MGTK::InRect, LD6AB
         cmp     #$80
         bne     LA5E5
         jsr     set_cursor_insertion_point_with_flag
@@ -18068,7 +18068,7 @@ LA5E5:  jsr     set_cursor_pointer_with_flag
 LA5E8:  jsr     reset_state
         jmp     prompt_input_loop
 
-LA5EE:  A2D_RELAY_CALL A2D_QUERY_TARGET, input_params_coords
+LA5EE:  MGTK_RELAY_CALL MGTK::FindWindow, input_params_coords
         lda     query_target_params_element
         bne     LA5FF
         lda     #$FF
@@ -18091,49 +18091,49 @@ LA614:  lda     winF
         jsr     LB7B9
         lda     winF
         sta     input_params
-        A2D_RELAY_CALL A2D_MAP_COORDS, input_params
-        A2D_RELAY_CALL A2D_SET_POS, $D20D
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, input_params
+        MGTK_RELAY_CALL MGTK::MoveTo, $D20D
         bit     LD8E7
         bvc     LA63A
         jmp     LA65E
 
-LA63A:  A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::ok_button_rect
+LA63A:  MGTK_RELAY_CALL MGTK::InRect, desktop_aux::ok_button_rect
         cmp     #$80
         beq     LA64A
         jmp     LA6C1
 
 LA64A:  jsr     set_fill_black
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::ok_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
         jsr     LB7CF
         bmi     LA65D
         lda     #$00
 LA65D:  rts
 
-LA65E:  A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::yes_button_rect
+LA65E:  MGTK_RELAY_CALL MGTK::InRect, desktop_aux::yes_button_rect
         cmp     #$80
         bne     LA67F
         jsr     set_fill_black
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::yes_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::yes_button_rect
         jsr     LB7D9
         bmi     LA67E
         lda     #$02
 LA67E:  rts
 
-LA67F:  A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::no_button_rect
+LA67F:  MGTK_RELAY_CALL MGTK::InRect, desktop_aux::no_button_rect
         cmp     #$80
         bne     LA6A0
         jsr     set_fill_black
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::no_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::no_button_rect
         jsr     LB7DE
         bmi     LA69F
         lda     #$03
 LA69F:  rts
 
-LA6A0:  A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::all_button_rect
+LA6A0:  MGTK_RELAY_CALL MGTK::InRect, desktop_aux::all_button_rect
         cmp     #$80
         bne     LA6C1
         jsr     set_fill_black
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::all_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::all_button_rect
         jsr     LB7E3
         bmi     LA6C0
         lda     #$04
@@ -18144,13 +18144,13 @@ LA6C1:  bit     LD8E7
         lda     #$FF
         rts
 
-LA6C9:  A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::cancel_button_rect
+LA6C9:  MGTK_RELAY_CALL MGTK::InRect, desktop_aux::cancel_button_rect
         cmp     #$80
         beq     LA6D9
         jmp     LA6ED
 
 LA6D9:  jsr     set_fill_black
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::cancel_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
         jsr     LB7D4
         bmi     LA6EC
         lda     #$01
@@ -18289,17 +18289,17 @@ LA7E5:  lda     #$FF
         rts
 
 LA7E8:  jsr     set_fill_black
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::yes_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::yes_button_rect
         lda     #$02
         rts
 
 LA7F7:  jsr     set_fill_black
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::no_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::no_button_rect
         lda     #$03
         rts
 
 LA806:  jsr     set_fill_black
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::all_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::all_button_rect
         lda     #$04
         rts
 
@@ -18338,16 +18338,16 @@ LA84E:  lda     #$FF
 LA851:  lda     winF
         jsr     LB7B9
         jsr     set_fill_black
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::ok_button_rect
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::ok_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
         lda     #$00
         rts
 
 LA86F:  lda     winF
         jsr     LB7B9
         jsr     set_fill_black
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::cancel_button_rect
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::cancel_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
         lda     #$01
         rts
 
@@ -18368,12 +18368,12 @@ LA899:  jmp     dummy0000
 ;;; "About" dialog
 
 .proc show_about_dialog
-        A2D_RELAY_CALL A2D_CREATE_WINDOW, win18::id
+        MGTK_RELAY_CALL MGTK::OpenWindow, win18::id
         lda     win18::id
         jsr     LB7B9
         jsr     set_fill_black
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::about_dialog_outer_rect
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::about_dialog_inner_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::about_dialog_outer_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::about_dialog_inner_rect
         addr_call draw_centered_string, desktop_aux::str_about1
         axy_call draw_dialog_label, $81, desktop_aux::str_about2
         axy_call draw_dialog_label, $82, desktop_aux::str_about3
@@ -18392,11 +18392,11 @@ LA899:  jmp     dummy0000
         lda     #$00
         sta     dialog_label_pos+1
 
-:       A2D_RELAY_CALL A2D_GET_INPUT, input_params
+:       MGTK_RELAY_CALL MGTK::GetEvent, input_params
         lda     input_params_state
-        cmp     #A2D_INPUT_DOWN
+        cmp     #MGTK::button_down
         beq     close
-        cmp     #A2D_INPUT_KEY
+        cmp     #MGTK::key_down
         bne     :-
         lda     input_params_key
         and     #$7F
@@ -18406,7 +18406,7 @@ LA899:  jmp     dummy0000
         bne     :-
         jmp     close
 
-close:  A2D_RELAY_CALL A2D_DESTROY_WINDOW, win18::id
+close:  MGTK_RELAY_CALL MGTK::CloseWindow, win18::id
         jsr     reset_state
         jsr     set_cursor_pointer_with_flag
         rts
@@ -18459,7 +18459,7 @@ LA9B5:  ldy     #$01
         jsr     LBDDF
         lda     winF
         jsr     LB7B9
-        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB0B6
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB0B6
         addr_call draw_text1, str_7_spaces
         addr_call draw_text1, str_files
         rts
@@ -18485,7 +18485,7 @@ LA9E6:  ldy     #$01
         sta     $06+1
         stx     $06
         jsr     LBE63
-        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE7E
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE7E
         addr_call draw_text1, path_buf0
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$05
@@ -18496,14 +18496,14 @@ LA9E6:  ldy     #$01
         sta     $06+1
         stx     $06
         jsr     LBE78
-        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE82
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE82
         addr_call draw_text1, path_buf1
-        yax_call A2D_RELAY, A2D_SET_POS, desktop_aux::LB0BA
+        yax_call MGTK_RELAY, MGTK::MoveTo, desktop_aux::LB0BA
         addr_call draw_text1, str_7_spaces
         rts
 
 LAA5A:  jsr     reset_state
-        A2D_RELAY_CALL A2D_DESTROY_WINDOW, winF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winF
         jsr     set_cursor_pointer
         rts
 
@@ -18516,8 +18516,8 @@ LAA7F:  jsr     prompt_input_loop
         bmi     LAA7F
         pha
         jsr     erase_yes_no_all_cancel_buttons
-        A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::prompt_rect
+        MGTK_RELAY_CALL MGTK::SetPenMode, const0
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::prompt_rect
         pla
         rts
 
@@ -18530,8 +18530,8 @@ LAAB1:  jsr     prompt_input_loop
         bmi     LAAB1
         pha
         jsr     erase_ok_cancel_buttons
-        A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::prompt_rect
+        MGTK_RELAY_CALL MGTK::SetPenMode, const0
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::prompt_rect
         pla
         rts
 
@@ -18587,7 +18587,7 @@ do1:    ldy     #1
         jsr     LBDDF
         lda     winF
         jsr     LB7B9
-        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB0B6
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB0B6
         addr_call draw_text1, str_7_spaces
         addr_call draw_text1, str_files
         rts
@@ -18612,14 +18612,14 @@ do2:    ldy     #$01
         sta     ptr+1
         stx     ptr
         jsr     LBE63
-        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE7E
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE7E
         addr_call draw_text1, path_buf0
-        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB0BA
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB0BA
         addr_call draw_text1, str_7_spaces
         rts
 
 do3:    jsr     reset_state
-        A2D_RELAY_CALL A2D_DESTROY_WINDOW, winF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winF
         jsr     set_cursor_pointer
         rts
 
@@ -18632,8 +18632,8 @@ do4:    jsr     bell
         bmi     :-
         pha
         jsr     erase_ok_button
-        A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::prompt_rect
+        MGTK_RELAY_CALL MGTK::SetPenMode, const0
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::prompt_rect
         pla
         rts
 .endproc
@@ -18708,7 +18708,7 @@ do1:    ldy     #$01
         rts
 
 do3:    jsr     reset_state
-        A2D_RELAY_CALL A2D_DESTROY_WINDOW, winF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winF
         jsr     set_cursor_pointer
         rts
 
@@ -18717,8 +18717,8 @@ do2:    lda     winF
         jsr     draw_ok_button
 :       jsr     prompt_input_loop
         bmi     :-
-        A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::press_ok_to_rect
+        MGTK_RELAY_CALL MGTK::SetPenMode, const0
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
         jsr     erase_ok_button
         lda     #$00
         rts
@@ -18777,10 +18777,10 @@ LAD2A:  ldy     #$01
         jsr     LB7B9
         lda     LAD1F
 LAD46:  bne     LAD54
-        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB16A
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB16A
         jmp     LAD5D
 
-LAD54:  A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB172
+LAD54:  MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB172
 LAD5D:  addr_call draw_text1, str_7_spaces
         addr_call draw_text1, str_files
         rts
@@ -18805,9 +18805,9 @@ LAD6C:  ldy     #$01
         sta     $06+1
         stx     $06
         jsr     LBE63
-        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE7E
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE7E
         addr_call draw_text1, path_buf0
-        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB16E
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB16E
         addr_call draw_text1, str_7_spaces
         rts
 
@@ -18817,8 +18817,8 @@ LADBB:  lda     winF
 LADC4:  jsr     prompt_input_loop
         bmi     LADC4
         bne     LADF4
-        A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::press_ok_to_rect
+        MGTK_RELAY_CALL MGTK::SetPenMode, const0
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
         jsr     erase_ok_cancel_buttons
         yax_call draw_dialog_label, $02, desktop_aux::str_file_colon
         yax_call draw_dialog_label, $04, desktop_aux::str_delete_remaining
@@ -18826,7 +18826,7 @@ LADC4:  jsr     prompt_input_loop
 LADF4:  rts
 
 LADF5:  jsr     reset_state
-        A2D_RELAY_CALL A2D_DESTROY_WINDOW, winF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winF
         jsr     set_cursor_pointer
         rts
 
@@ -18838,8 +18838,8 @@ LAE17:  jsr     prompt_input_loop
         bmi     LAE17
         pha
         jsr     erase_yes_no_all_cancel_buttons
-        A2D_RELAY_CALL A2D_SET_FILL_MODE, const0 ; white
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::prompt_rect ; erase prompt
+        MGTK_RELAY_CALL MGTK::SetPenMode, const0 ; white
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::prompt_rect ; erase prompt
         pla
         rts
 
@@ -18867,7 +18867,7 @@ LAE49:  lda     #$80
         jsr     LB7B9
         addr_call draw_centered_string, desktop_aux::str_new_folder_title
         jsr     set_fill_black
-        A2D_RELAY_CALL A2D_DRAW_RECT, LD6AB
+        MGTK_RELAY_CALL MGTK::FrameRect, LD6AB
         rts
 
 LAE70:  lda     #$80
@@ -18937,7 +18937,7 @@ LAEFF:  inx
         rts
 
 LAF16:  jsr     reset_state
-        A2D_RELAY_CALL A2D_DESTROY_WINDOW, winF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winF
         jsr     set_cursor_pointer
         lda     #$01
         rts
@@ -19025,7 +19025,7 @@ LB006:  jsr     prompt_input_loop
         bmi     LB006
         pha
         jsr     reset_state
-        A2D_RELAY_CALL A2D_DESTROY_WINDOW, winF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winF
         jsr     set_cursor_pointer_with_flag
         pla
         rts
@@ -19085,9 +19085,9 @@ LB068:  ldy     #$01
         jsr     LBDDF
         lda     winF
         jsr     LB7B9
-        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB231
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB231
         addr_call draw_text1, str_7_spaces
-        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB239
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB239
         addr_call draw_text1, str_files
         rts
 
@@ -19111,9 +19111,9 @@ LB0A2:  ldy     #$01
         sta     $06+1
         stx     $06
         jsr     LBE63
-        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE7E
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE7E
         addr_call draw_text1, path_buf0
-        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB241
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB241
         addr_call draw_text1, str_7_spaces
         rts
 
@@ -19123,17 +19123,17 @@ LB0F1:  lda     winF
 LB0FA:  jsr     prompt_input_loop
         bmi     LB0FA
         bne     LB139
-        A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::press_ok_to_rect
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::ok_button_rect
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::cancel_button_rect
+        MGTK_RELAY_CALL MGTK::SetPenMode, const0
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
         yax_call draw_dialog_label, $02, desktop_aux::str_file_colon
         yax_call draw_dialog_label, $04, desktop_aux::str_lock_remaining
         lda     #$00
 LB139:  rts
 
 LB13A:  jsr     reset_state
-        A2D_RELAY_CALL A2D_DESTROY_WINDOW, winF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winF
         jsr     set_cursor_pointer
         rts
 
@@ -19177,9 +19177,9 @@ LB186:  ldy     #$01
         jsr     LBDDF
         lda     winF
         jsr     LB7B9
-        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB22D
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB22D
         addr_call draw_text1, str_7_spaces
-        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB235
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB235
         addr_call draw_text1, str_files
         rts
 
@@ -19203,9 +19203,9 @@ LB1C0:  ldy     #$01
         sta     $06+1
         stx     $06
         jsr     LBE63
-        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LAE7E
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE7E
         addr_call draw_text1, path_buf0
-        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::LB23D
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB23D
         addr_call draw_text1, str_7_spaces
         rts
 
@@ -19215,17 +19215,17 @@ LB20F:  lda     winF
 LB218:  jsr     prompt_input_loop
         bmi     LB218
         bne     LB257
-        A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::press_ok_to_rect
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::ok_button_rect
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::cancel_button_rect
+        MGTK_RELAY_CALL MGTK::SetPenMode, const0
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
         yax_call draw_dialog_label, $02, desktop_aux::str_file_colon
         yax_call draw_dialog_label, $04, desktop_aux::str_unlock_remaining
         lda     #$00
 LB257:  rts
 
 LB258:  jsr     reset_state
-        A2D_RELAY_CALL A2D_DESTROY_WINDOW, winF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winF
         jsr     set_cursor_pointer
         rts
 
@@ -19255,7 +19255,7 @@ LB27D:  jsr     LBD75
         jsr     LB7B9
         addr_call draw_centered_string, desktop_aux::str_rename_title
         jsr     set_fill_black
-        A2D_RELAY_CALL A2D_DRAW_RECT, LD6AB
+        MGTK_RELAY_CALL MGTK::FrameRect, LD6AB
         yax_call draw_dialog_label, $02, desktop_aux::str_rename_old
         lda     #$55
         sta     dialog_label_pos
@@ -19298,7 +19298,7 @@ LB2FD:  jsr     prompt_input_loop
         rts
 
 LB313:  jsr     reset_state
-        A2D_RELAY_CALL A2D_DESTROY_WINDOW, winF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winF
         jsr     set_cursor_pointer
         lda     #$01
         rts
@@ -19311,12 +19311,12 @@ LB313:  jsr     reset_state
         ptr := $6
 
         ;; Create window
-        A2D_RELAY_CALL A2D_HIDE_CURSOR
+        MGTK_RELAY_CALL MGTK::HideCursor
         jsr     create_window_with_alert_bitmap
         lda     winF
         jsr     LB7B9
         addr_call draw_centered_string, desktop_aux::str_warning
-        A2D_RELAY_CALL A2D_SHOW_CURSOR
+        MGTK_RELAY_CALL MGTK::ShowCursor
         jsr     copy_dialog_param_addr_to_ptr
 
         ;; Dig up message
@@ -19368,7 +19368,7 @@ draw_string:
 
         pha
         jsr     reset_state
-        A2D_RELAY_CALL A2D_DESTROY_WINDOW, winF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winF
         jsr     set_cursor_pointer
         pla
         rts
@@ -19426,25 +19426,25 @@ cursor_ip_flag:                 ; high bit set if IP, clear if pointer
         .byte   0
 
 set_cursor_watch:
-        A2D_RELAY_CALL A2D_HIDE_CURSOR
-        A2D_RELAY_CALL A2D_SET_CURSOR, watch_cursor
-        A2D_RELAY_CALL A2D_SHOW_CURSOR
+        MGTK_RELAY_CALL MGTK::HideCursor
+        MGTK_RELAY_CALL MGTK::SetCursor, watch_cursor
+        MGTK_RELAY_CALL MGTK::ShowCursor
         rts
 
 set_cursor_pointer:
-        A2D_RELAY_CALL A2D_HIDE_CURSOR
-        A2D_RELAY_CALL A2D_SET_CURSOR, pointer_cursor
-        A2D_RELAY_CALL A2D_SHOW_CURSOR
+        MGTK_RELAY_CALL MGTK::HideCursor
+        MGTK_RELAY_CALL MGTK::SetCursor, pointer_cursor
+        MGTK_RELAY_CALL MGTK::ShowCursor
         rts
 
 set_cursor_insertion_point:
-        A2D_RELAY_CALL A2D_HIDE_CURSOR
-        A2D_RELAY_CALL A2D_SET_CURSOR, insertion_point_cursor
-        A2D_RELAY_CALL A2D_SHOW_CURSOR
+        MGTK_RELAY_CALL MGTK::HideCursor
+        MGTK_RELAY_CALL MGTK::SetCursor, insertion_point_cursor
+        MGTK_RELAY_CALL MGTK::ShowCursor
         rts
 
 set_fill_black:
-        A2D_RELAY_CALL A2D_SET_FILL_MODE, const2
+        MGTK_RELAY_CALL MGTK::SetPenMode, const2
         rts
 
         ldx     #$03
@@ -19467,25 +19467,25 @@ LB46C:  lda     LB501
         bne     LB476
         lda     LB500
         beq     LB4B7
-LB476:  A2D_RELAY_CALL $2C, input_params ; ???
+LB476:  MGTK_RELAY_CALL $2C, input_params ; ???
         jsr     LB4BA
         bmi     LB4B7
         lda     #$FF
         sta     LB508
         lda     input_params_state
         sta     LB507
-        cmp     #A2D_INPUT_NONE
+        cmp     #MGTK::no_event
         beq     LB45F
-        cmp     #A2D_INPUT_HELD
+        cmp     #MGTK::drag
         beq     LB45F
-        cmp     #A2D_INPUT_UP
+        cmp     #MGTK::button_up
         bne     LB4A7
-        A2D_RELAY_CALL A2D_GET_INPUT, input_params
+        MGTK_RELAY_CALL MGTK::GetEvent, input_params
         jmp     LB45F
 
 LB4A7:  cmp     #$01
         bne     LB4B7
-        A2D_RELAY_CALL A2D_GET_INPUT, input_params
+        MGTK_RELAY_CALL MGTK::GetEvent, input_params
         lda     #$00
         rts
 
@@ -19540,31 +19540,31 @@ LB509:  sta     LD8E7
         jsr     draw_yes_no_all_cancel_buttons
         jmp     LB526
 
-LB51A:  A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::ok_button_rect
+LB51A:  MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::ok_button_rect
         jsr     draw_ok_label
 LB526:  bit     LD8E7
         bmi     LB537
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::cancel_button_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::cancel_button_rect
         jsr     draw_cancel_label
 LB537:  jmp     reset_state
 
-LB53A:  A2D_RELAY_CALL A2D_CREATE_WINDOW, winF
+LB53A:  MGTK_RELAY_CALL MGTK::OpenWindow, winF
         lda     winF
         jsr     LB7B9
         jsr     set_fill_black
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::confirm_dialog_outer_rect
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::confirm_dialog_inner_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::confirm_dialog_outer_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::confirm_dialog_inner_rect
         rts
 
 create_window_with_alert_bitmap:
-        A2D_RELAY_CALL A2D_CREATE_WINDOW, winF
+        MGTK_RELAY_CALL MGTK::OpenWindow, winF
         lda     winF
         jsr     LB7B9
         jsr     set_fill_white
-        A2D_RELAY_CALL A2D_DRAW_BITMAP, alert_bitmap2_params
+        MGTK_RELAY_CALL MGTK::PaintBits, alert_bitmap2_params
         jsr     set_fill_black
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::confirm_dialog_outer_rect
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::confirm_dialog_inner_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::confirm_dialog_outer_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::confirm_dialog_inner_rect
         rts
 
 ;;; ==================================================
@@ -19587,7 +19587,7 @@ create_window_with_alert_bitmap:
         sta     $08+1
         jsr     LBD7B
         sta     $0A
-        A2D_RELAY_CALL A2D_MEASURE_TEXT, $08
+        MGTK_RELAY_CALL MGTK::TextWidth, $08
         lsr     $0C
         ror     $0B
         lda     #$C8
@@ -19611,7 +19611,7 @@ skip:   dey
         lda     $D6C2
         adc     #$00
         sta     dialog_label_pos+3
-        A2D_RELAY_CALL A2D_SET_POS, dialog_label_pos
+        MGTK_RELAY_CALL MGTK::MoveTo, dialog_label_pos
         lda     $06
         ldx     $06+1
         jsr     draw_text1
@@ -19624,36 +19624,36 @@ skip:   dey
 ;;; ==================================================
 
 draw_ok_label:
-        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::ok_label_pos
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::ok_label_pos
         addr_call draw_text1, desktop_aux::str_ok_label
         rts
 
 draw_cancel_label:
-        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::cancel_label_pos
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::cancel_label_pos
         addr_call draw_text1, desktop_aux::str_cancel_label
         rts
 
 draw_yes_label:
-        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::yes_label_pos
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::yes_label_pos
         addr_call draw_text1, desktop_aux::str_yes_label
         rts
 
 draw_no_label:
-        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::no_label_pos
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::no_label_pos
         addr_call draw_text1, desktop_aux::str_no_label
         rts
 
 draw_all_label:
-        A2D_RELAY_CALL A2D_SET_POS, desktop_aux::all_label_pos
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::all_label_pos
         addr_call draw_text1, desktop_aux::str_all_label
         rts
 
 draw_yes_no_all_cancel_buttons:
         jsr     set_fill_black
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::yes_button_rect
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::no_button_rect
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::all_button_rect
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::cancel_button_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::yes_button_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::no_button_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::all_button_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::cancel_button_rect
         jsr     draw_yes_label
         jsr     draw_no_label
         jsr     draw_all_label
@@ -19664,16 +19664,16 @@ draw_yes_no_all_cancel_buttons:
 
 erase_yes_no_all_cancel_buttons:
         jsr     set_fill_white
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::yes_button_rect
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::no_button_rect
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::all_button_rect
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::cancel_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::yes_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::no_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::all_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
         rts
 
 draw_ok_cancel_buttons:
         jsr     set_fill_black
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::ok_button_rect
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::cancel_button_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::ok_button_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::cancel_button_rect
         jsr     draw_ok_label
         jsr     draw_cancel_label
         lda     #$00
@@ -19682,13 +19682,13 @@ draw_ok_cancel_buttons:
 
 erase_ok_cancel_buttons:
         jsr     set_fill_white
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::ok_button_rect
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::cancel_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
         rts
 
 draw_ok_button:
         jsr     set_fill_black
-        A2D_RELAY_CALL A2D_DRAW_RECT, desktop_aux::ok_button_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::ok_button_rect
         jsr     draw_ok_label
         lda     #$80
         sta     LD8E7
@@ -19696,7 +19696,7 @@ draw_ok_button:
 
 erase_ok_button:
         jsr     set_fill_white
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::ok_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
         rts
 
 ;;; ==================================================
@@ -19710,7 +19710,7 @@ erase_ok_button:
         inc     $06
         bne     :+
         inc     $06+1
-:       A2D_RELAY_CALL A2D_DRAW_TEXT, $6
+:       MGTK_RELAY_CALL MGTK::DrawText, $6
 done:   rts
 .endproc
 
@@ -19730,7 +19730,7 @@ done:   rts
         inc     str_data        ; point past length byte
         bne     :+
         inc     str_data+1
-:       A2D_RELAY_CALL A2D_MEASURE_TEXT, str
+:       MGTK_RELAY_CALL MGTK::TextWidth, str
         lsr     str_width+1     ; divide by two
         ror     str_width
         lda     #$01
@@ -19744,8 +19744,8 @@ done:   rts
         lda     LB76B
         sbc     str_width+1
         sta     LD6B7+1
-        A2D_RELAY_CALL A2D_SET_POS, LD6B7
-        A2D_RELAY_CALL A2D_DRAW_TEXT, str
+        MGTK_RELAY_CALL MGTK::MoveTo, LD6B7
+        MGTK_RELAY_CALL MGTK::DrawText, str
         rts
 .endproc
 
@@ -19754,7 +19754,7 @@ done:   rts
 LB76B:  .byte   0
         sta     $06
         stx     $06+1
-        A2D_RELAY_CALL A2D_SET_POS, LD6BB
+        MGTK_RELAY_CALL MGTK::MoveTo, LD6BB
         lda     $06
         ldx     $06+1
         jsr     draw_text1
@@ -19796,12 +19796,12 @@ LB7B5:  dey
         jmp     LB78D
 
 LB7B9:  sta     query_state_params2::id
-        A2D_RELAY_CALL A2D_QUERY_STATE, query_state_params2
+        MGTK_RELAY_CALL MGTK::GetWinPort, query_state_params2
         ldy     #$04
         lda     #$15
         LB7CA := *+1
         ldx     #$D2
-        jsr     A2D_RELAY
+        jsr     MGTK_RELAY
         rts
 LB7CF:  lda     #$00
         jmp     LB7E8
@@ -19840,43 +19840,43 @@ LB808:  .addr   test_ok_button,fill_ok_button
         .addr   test_all_button,fill_all_button
 
 test_ok_button:
-        A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::ok_button_rect
+        MGTK_RELAY_CALL MGTK::InRect, desktop_aux::ok_button_rect
         rts
 
 test_cancel_button:
-        A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::cancel_button_rect
+        MGTK_RELAY_CALL MGTK::InRect, desktop_aux::cancel_button_rect
         rts
 
 test_yes_button:
-        A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::yes_button_rect
+        MGTK_RELAY_CALL MGTK::InRect, desktop_aux::yes_button_rect
         rts
 
 test_no_button:
-        A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::no_button_rect
+        MGTK_RELAY_CALL MGTK::InRect, desktop_aux::no_button_rect
         rts
 
 test_all_button:
-        A2D_RELAY_CALL A2D_TEST_BOX, desktop_aux::all_button_rect
+        MGTK_RELAY_CALL MGTK::InRect, desktop_aux::all_button_rect
         rts
 
 fill_ok_button:
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::ok_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
         rts
 
 fill_cancel_button:
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::cancel_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
         rts
 
 fill_yes_button:
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::yes_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::yes_button_rect
         rts
 
 fill_no_button:
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::no_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::no_button_rect
         rts
 
 fill_all_button:
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::all_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::all_button_rect
         rts
 
 LB880:  jmp     (LB886)
@@ -19890,14 +19890,14 @@ LB889:  .byte   0
 LB88A:  sta     LB8F3
         lda     #$00
         sta     LB8F2
-LB892:  A2D_RELAY_CALL A2D_GET_INPUT, input_params
+LB892:  MGTK_RELAY_CALL MGTK::GetEvent, input_params
         lda     input_params_state
-        cmp     #A2D_INPUT_UP
+        cmp     #MGTK::button_up
         beq     LB8E3
         lda     winF
         sta     input_params
-        A2D_RELAY_CALL A2D_MAP_COORDS, input_params
-        A2D_RELAY_CALL A2D_SET_POS, $D20D
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, input_params
+        MGTK_RELAY_CALL MGTK::MoveTo, $D20D
         jsr     LB880
         cmp     #$80
         beq     LB8C9
@@ -19937,15 +19937,15 @@ LB8F5:  jsr     LBD3B
         sta     $08
         lda     $D6B5+1
         sta     $08+1
-        A2D_RELAY_CALL A2D_SET_POS, $6
-        A2D_RELAY_CALL A2D_SET_BOX, LD6C7
+        MGTK_RELAY_CALL MGTK::MoveTo, $6
+        MGTK_RELAY_CALL MGTK::SetPortSite, LD6C7
         bit     LD8EB
         bpl     LB92D
-        A2D_RELAY_CALL A2D_SET_TEXT_MASK, desktop_aux::LAE6C
+        MGTK_RELAY_CALL MGTK::SetTextBG, desktop_aux::LAE6C
         lda     #$00
         sta     LD8EB
         beq     LB93B
-LB92D:  A2D_RELAY_CALL A2D_SET_TEXT_MASK, desktop_aux::LAE6D
+LB92D:  MGTK_RELAY_CALL MGTK::SetTextBG, desktop_aux::LAE6D
         lda     #$FF
         sta     LD8EB
 LB93B:  lda     #<$D8EF
@@ -19954,8 +19954,8 @@ LB93B:  lda     #<$D8EF
         sta     $06+1
         lda     LD8EE
         sta     $08
-        A2D_RELAY_CALL A2D_DRAW_TEXT, $6
-        A2D_RELAY_CALL A2D_SET_TEXT_MASK, desktop_aux::LAE6D
+        MGTK_RELAY_CALL MGTK::DrawText, $6
+        MGTK_RELAY_CALL MGTK::SetTextBG, desktop_aux::LAE6D
         lda     winF
         jsr     LB7B9
         rts
@@ -19965,11 +19965,11 @@ LB961:  lda     path_buf1
         lda     winF
         jsr     LB7B9
         jsr     set_fill_white
-        A2D_RELAY_CALL A2D_FILL_RECT, LD6AB
-        A2D_RELAY_CALL A2D_SET_FILL_MODE, const2
-        A2D_RELAY_CALL A2D_DRAW_RECT, LD6AB
-        A2D_RELAY_CALL A2D_SET_POS, LD6B3
-        A2D_RELAY_CALL A2D_SET_BOX, LD6C7
+        MGTK_RELAY_CALL MGTK::PaintRect, LD6AB
+        MGTK_RELAY_CALL MGTK::SetPenMode, const2
+        MGTK_RELAY_CALL MGTK::FrameRect, LD6AB
+        MGTK_RELAY_CALL MGTK::MoveTo, LD6B3
+        MGTK_RELAY_CALL MGTK::SetPortSite, LD6C7
         addr_call draw_text1, path_buf1
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
@@ -19977,9 +19977,9 @@ LB961:  lda     path_buf1
         jsr     LB7B9
 LB9B7:  rts
 
-LB9B8:  A2D_RELAY_CALL A2D_MAP_COORDS, input_params
-        A2D_RELAY_CALL A2D_SET_POS, $D20D
-        A2D_RELAY_CALL A2D_TEST_BOX, LD6AB
+LB9B8:  MGTK_RELAY_CALL MGTK::ScreenToWindow, input_params
+        MGTK_RELAY_CALL MGTK::MoveTo, $D20D
+        MGTK_RELAY_CALL MGTK::InRect, LD6AB
         cmp     #$80
         beq     LB9D8
         rts
@@ -20008,7 +20008,7 @@ LB9EE:  jsr     LBD3B
         sta     $06+1
         lda     path_buf2
         sta     $08
-LBA10:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $6
+LBA10:  MGTK_RELAY_CALL MGTK::TextWidth, $6
         lda     $09
         clc
         adc     LBB09
@@ -20067,7 +20067,7 @@ LBA83:  lda     #<path_buf1
         sta     $06+1
         lda     path_buf1
         sta     $08
-LBA90:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $6
+LBA90:  MGTK_RELAY_CALL MGTK::TextWidth, $6
         lda     $09
         clc
         adc     LD6B3
@@ -20145,8 +20145,8 @@ LBB1A:  lda     LBB62
         sta     $08
         lda     $D6B5+1
         sta     $08+1
-        A2D_RELAY_CALL A2D_SET_POS, $6
-        A2D_RELAY_CALL A2D_SET_BOX, LD6C7
+        MGTK_RELAY_CALL MGTK::MoveTo, $6
+        MGTK_RELAY_CALL MGTK::SetPortSite, LD6C7
         addr_call draw_text1, str_1_char
         addr_call draw_text1, path_buf2
         lda     winF
@@ -20166,8 +20166,8 @@ LBB69:  dec     path_buf1
         sta     $08
         lda     $D6B5+1
         sta     $08+1
-        A2D_RELAY_CALL A2D_SET_POS, $6
-        A2D_RELAY_CALL A2D_SET_BOX, LD6C7
+        MGTK_RELAY_CALL MGTK::MoveTo, $6
+        MGTK_RELAY_CALL MGTK::SetPortSite, LD6C7
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
         lda     winF
@@ -20198,8 +20198,8 @@ LBBBC:  ldx     path_buf1
         sta     $08
         lda     $D6B5+1
         sta     $08+1
-        A2D_RELAY_CALL A2D_SET_POS, $6
-        A2D_RELAY_CALL A2D_SET_BOX, LD6C7
+        MGTK_RELAY_CALL MGTK::MoveTo, $6
+        MGTK_RELAY_CALL MGTK::SetPortSite, LD6C7
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
         lda     winF
@@ -20226,8 +20226,8 @@ LBC21:  lda     $D485,x
         cpx     path_buf2
         bne     LBC21
 LBC2D:  dec     path_buf2
-        A2D_RELAY_CALL A2D_SET_POS, LD6B3
-        A2D_RELAY_CALL A2D_SET_BOX, LD6C7
+        MGTK_RELAY_CALL MGTK::MoveTo, LD6B3
+        MGTK_RELAY_CALL MGTK::SetPortSite, LD6C7
         addr_call draw_text1, path_buf1
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
@@ -20277,7 +20277,7 @@ LBCB3:  pla
         sta     path_buf2
         lda     #$00
         sta     path_buf1
-        A2D_RELAY_CALL A2D_SET_POS, LD6B3
+        MGTK_RELAY_CALL MGTK::MoveTo, LD6B3
         jsr     LB961
         rts
 
@@ -20304,7 +20304,7 @@ LBCDF:  lda     path_buf2,x
         sta     path_buf1
         lda     #$01
         sta     path_buf2
-        A2D_RELAY_CALL A2D_SET_POS, LD6B3
+        MGTK_RELAY_CALL MGTK::MoveTo, LD6B3
         jsr     LB961
         rts
 
@@ -20351,7 +20351,7 @@ LBD3B:  lda     #<$D444
         ldx     $D6B4
         rts
 
-LBD51:  A2D_RELAY_CALL A2D_MEASURE_TEXT, $6
+LBD51:  MGTK_RELAY_CALL MGTK::TextWidth, $6
         lda     $09
         clc
         adc     LD6B3
@@ -20515,20 +20515,20 @@ LBE7D:  lda     ($06),y
         rts
 
 LBE8D:  jsr     set_fill_white
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE86
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::LAE86
         rts
 
 LBE9A:  jsr     set_fill_white
-        A2D_RELAY_CALL A2D_FILL_RECT, desktop_aux::LAE8E
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::LAE8E
         rts
 
 set_fill_white:
-        A2D_RELAY_CALL A2D_SET_FILL_MODE, const0
+        MGTK_RELAY_CALL MGTK::SetPenMode, const0
         rts
 
 reset_state:
-        A2D_RELAY_CALL A2D_QUERY_SCREEN, state2
-        A2D_RELAY_CALL A2D_SET_STATE, state2
+        MGTK_RELAY_CALL MGTK::InitPort, state2
+        MGTK_RELAY_CALL MGTK::SetPort, state2
         rts
 
         .assert * = $BEC4, error, "Segment length mismatch"
@@ -20630,11 +20630,11 @@ done_machine_id:
 found_ram:
         jsr     remove_device
 
-:       A2D_RELAY_CALL A2D_INIT_SCREEN_AND_MOUSE, id_byte_1
-        A2D_RELAY_CALL A2D_SET_MENU, splash_menu
-        A2D_RELAY_CALL A2D_CONFIGURE_ZP_USE, zp_use_flag0
-        A2D_RELAY_CALL A2D_SET_CURSOR, watch_cursor
-        A2D_RELAY_CALL A2D_SHOW_CURSOR
+:       MGTK_RELAY_CALL MGTK::StartDeskTop, id_byte_1
+        MGTK_RELAY_CALL MGTK::SetMenu, splash_menu
+        MGTK_RELAY_CALL MGTK::SetZP1, zp_use_flag0
+        MGTK_RELAY_CALL MGTK::SetCursor, watch_cursor
+        MGTK_RELAY_CALL MGTK::ShowCursor
         jsr     desktop_main::push_zp_addrs
         lda     #<$EC63
         sta     $06
@@ -20790,9 +20790,9 @@ L09FC:  .byte   $03
 L0A01:  .byte   0
 L0A02:  .byte   0
 
-L0A03:  A2D_RELAY_CALL $29
+L0A03:  MGTK_RELAY_CALL $29
         MLI_RELAY_CALL GET_PREFIX, desktop_main::get_prefix_params
-        A2D_RELAY_CALL $29
+        MGTK_RELAY_CALL $29
         lda     #$00
         sta     L0A92
         jsr     L0AE7
@@ -20976,7 +20976,7 @@ L0B09:  addr_call desktop_main::measure_text1, str_6_spaces
 L0BA0:  .byte   0
 L0BA1:  .byte   0
 
-L0BA2:  A2D_RELAY_CALL $29
+L0BA2:  MGTK_RELAY_CALL $29
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
         beq     L0BB9
         jmp     L0D0A
@@ -21176,7 +21176,7 @@ L0D12:  lda     L0E33
         lda     DEVLST,y
         jsr     desktop_main::get_device_info
         sta     L0E34
-        A2D_RELAY_CALL $29
+        MGTK_RELAY_CALL $29
         pla
         tay
         pla
@@ -21431,15 +21431,15 @@ L0F14:  inx
         bne     L0F34
         lda     #$80
         sta     desktop_main::L4861
-L0F34:  A2D_RELAY_CALL $29
-        A2D_RELAY_CALL A2D_SET_MENU, desktop_aux::desktop_menu
-        A2D_RELAY_CALL A2D_SET_CURSOR, pointer_cursor
+L0F34:  MGTK_RELAY_CALL $29
+        MGTK_RELAY_CALL MGTK::SetMenu, desktop_aux::desktop_menu
+        MGTK_RELAY_CALL MGTK::SetCursor, pointer_cursor
         lda     #$00
         sta     $EC25
         jsr     desktop_main::L66A2
         jsr     desktop_main::L678A
         jsr     desktop_main::L670C
-        jmp     A2D
+        jmp     MGTK::MLI
 
         .assert * = $0F60, error, "Segment length mismatch"
         PAD_TO $1000

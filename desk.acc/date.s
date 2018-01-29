@@ -5,7 +5,7 @@
         .include "../inc/prodos.inc"
         .include "../inc/auxmem.inc"
 
-        .include "../a2d.inc"
+        .include "../mgtk.inc"
         .include "../desktop.inc" ; redraw icons after window move; font; glyphs
 
         .org $800
@@ -197,22 +197,22 @@ month:  .byte   2               ; The date this was written?
 year:   .byte   85
 
 spaces_string:
-        A2D_DEFSTRING "    "
+        DEFINE_STRING "    "
 
 day_pos:
         .word   43, 30
 day_string:
-        A2D_DEFSTRING "  "
+        DEFINE_STRING "  "
 
 month_pos:
         .word   87, 30
 month_string:
-        A2D_DEFSTRING "   "
+        DEFINE_STRING "   "
 
 year_pos:
         .word   133, 30
 year_string:
-        A2D_DEFSTRING "  "
+        DEFINE_STRING "  "
 
 .proc get_input_params
 state:  .byte   0
@@ -256,10 +256,10 @@ mode:   .byte   $02             ; this should be normal, but we do inverts ???
 
 .proc create_window_params
 id:     .byte   window_id
-flags:  .byte   A2D_CWF_NOTITLE
+flags:  .byte   MGTK::option_dialog_box
 title:  .addr   0
-hscroll:.byte   A2D_CWS_NOSCROLL
-vscroll:.byte   A2D_CWS_NOSCROLL
+hscroll:.byte   MGTK::scroll_option_none
+vscroll:.byte   MGTK::scroll_option_none
 hsmax:  .byte   0
 hspos:  .byte   0
 vsmax:  .byte   0
@@ -272,16 +272,16 @@ h2:     .word   $1F4
 .proc box
 left:   .word   180
 top:    .word   50
-addr:   .addr   A2D_SCREEN_ADDR
-stride: .word   A2D_SCREEN_STRIDE
+addr:   .addr   MGTK::screen_mapbits
+stride: .word   MGTK::screen_mapwidth
 hoff:   .word   0
 voff:   .word   0
 width:  .word   $C7
 height: .word   $40
 .endproc
 pattern:.res    8,$00
-mskand: .byte   A2D_DEFAULT_MSKAND
-mskor:  .byte   A2D_DEFAULT_MSKOR
+mskand: .byte   MGTK::colormask_and
+mskor:  .byte   MGTK::colormask_or
 xpos:   .word   0
 ypos:   .word   0
 hthick: .byte   4
@@ -321,25 +321,25 @@ init_window:
         lsr     a
         sta     month
 
-        A2D_CALL A2D_CREATE_WINDOW, create_window_params
+        MGTK_CALL MGTK::OpenWindow, create_window_params
         lda     #0
         sta     selected_field
         jsr     draw_window
-        A2D_CALL $2B
+        MGTK_CALL $2B
         ;; fall through
 
 ;;; ==================================================
 ;;; Input loop
 
 .proc input_loop
-        A2D_CALL A2D_GET_INPUT, get_input_params
+        MGTK_CALL MGTK::GetEvent, get_input_params
         lda     get_input_params::state
-        cmp     #A2D_INPUT_DOWN
+        cmp     #MGTK::button_down
         bne     :+
         jsr     on_click
         jmp     input_loop
 
-:       cmp     #A2D_INPUT_KEY
+:       cmp     #MGTK::key_down
         bne     input_loop
 .endproc
 
@@ -364,19 +364,19 @@ init_window:
         bne     input_loop
 
 on_key_up:
-        A2D_CALL A2D_FILL_RECT, up_arrow_rect
+        MGTK_CALL MGTK::PaintRect, up_arrow_rect
         lda     #up_rect_index
         sta     hit_rect_index
         jsr     do_inc_or_dec
-        A2D_CALL A2D_FILL_RECT, up_arrow_rect
+        MGTK_CALL MGTK::PaintRect, up_arrow_rect
         jmp     input_loop
 
 on_key_down:
-        A2D_CALL A2D_FILL_RECT, down_arrow_rect
+        MGTK_CALL MGTK::PaintRect, down_arrow_rect
         lda     #down_rect_index
         sta     hit_rect_index
         jsr     do_inc_or_dec
-        A2D_CALL A2D_FILL_RECT, down_arrow_rect
+        MGTK_CALL MGTK::PaintRect, down_arrow_rect
         jmp     input_loop
 
 on_key_left:
@@ -403,9 +403,9 @@ update_selection:
 ;;; ==================================================
 
 .proc on_click
-        A2D_CALL A2D_QUERY_TARGET, get_input_params::xcoord
-        A2D_CALL A2D_SET_FILL_MODE, fill_mode_params
-        A2D_CALL A2D_SET_PATTERN, white_pattern
+        MGTK_CALL MGTK::FindWindow, get_input_params::xcoord
+        MGTK_CALL MGTK::SetPenMode, fill_mode_params
+        MGTK_CALL MGTK::SetPattern, white_pattern
         lda     query_target_params::id
         cmp     #window_id
         bne     miss
@@ -413,7 +413,7 @@ update_selection:
         bne     hit
 miss:   rts
 
-hit:    cmp     #A2D_ELEM_CLIENT
+hit:    cmp     #MGTK::area_content
         bne     miss
         jsr     find_hit_target
         cpx     #0
@@ -437,7 +437,7 @@ hit_target_jump_table:
 ;;; ==================================================
 
 .proc on_ok
-        A2D_CALL A2D_FILL_RECT, ok_button_rect
+        MGTK_CALL MGTK::PaintRect, ok_button_rect
 
         ;; Pack the date bytes and store
         sta     RAMWRTOFF
@@ -460,7 +460,7 @@ hit_target_jump_table:
 .endproc
 
 on_cancel:
-        A2D_CALL A2D_FILL_RECT, cancel_button_rect
+        MGTK_CALL MGTK::PaintRect, cancel_button_rect
         lda     #0
         sta     dialog_result
         jmp     destroy
@@ -468,7 +468,7 @@ on_cancel:
 on_up:
         txa
         pha
-        A2D_CALL A2D_FILL_RECT, up_arrow_rect
+        MGTK_CALL MGTK::PaintRect, up_arrow_rect
         pla
         tax
         jsr     on_up_or_down
@@ -477,7 +477,7 @@ on_up:
 on_down:
         txa
         pha
-        A2D_CALL A2D_FILL_RECT, down_arrow_rect
+        MGTK_CALL MGTK::PaintRect, down_arrow_rect
         pla
         tax
         jsr     on_up_or_down
@@ -491,9 +491,9 @@ on_field_click:
 
 .proc on_up_or_down
         stx     hit_rect_index
-loop:   A2D_CALL A2D_GET_INPUT, get_input_params ; Repeat while mouse is down
+loop:   MGTK_CALL MGTK::GetEvent, get_input_params ; Repeat while mouse is down
         lda     get_input_params::state
-        cmp     #A2D_INPUT_UP
+        cmp     #MGTK::button_up
         beq     :+
         jsr     do_inc_or_dec
         jmp     loop
@@ -502,10 +502,10 @@ loop:   A2D_CALL A2D_GET_INPUT, get_input_params ; Repeat while mouse is down
         cmp     #up_rect_index
         beq     :+
 
-        A2D_CALL A2D_FILL_RECT, down_arrow_rect
+        MGTK_CALL MGTK::PaintRect, down_arrow_rect
         rts
 
-:       A2D_CALL A2D_FILL_RECT, up_arrow_rect
+:       MGTK_CALL MGTK::PaintRect, up_arrow_rect
         rts
 .endproc
 
@@ -538,7 +538,7 @@ go:     lda     selected_field
         sta     gosub+2
 
 gosub:  jsr     $1000           ; self modified
-        A2D_CALL A2D_SET_TEXT_MASK, text_mask_params
+        MGTK_CALL MGTK::SetTextBG, text_mask_params
         jmp     draw_selected_field
 .endproc
 
@@ -666,7 +666,7 @@ month_name_table:
 dialog_result:  .byte   0
 
 .proc destroy
-        A2D_CALL A2D_DESTROY_WINDOW, destroy_window_params
+        MGTK_CALL MGTK::CloseWindow, destroy_window_params
         DESKTOP_CALL DESKTOP_REDRAW_ICONS
 
         ;; Copy the relay routine to the zero page
@@ -717,8 +717,8 @@ skip:   jmp     dest
         sta     map_coords_params::screeny
         lda     get_input_params::ycoord+1
         sta     map_coords_params::screeny+1
-        A2D_CALL A2D_MAP_COORDS, map_coords_params
-        A2D_CALL A2D_SET_POS, map_coords_params::client
+        MGTK_CALL MGTK::ScreenToWindow, map_coords_params
+        MGTK_CALL MGTK::MoveTo, map_coords_params::client
         ldx     #1
         lda     #<first_hit_rect
         sta     test_addr
@@ -727,7 +727,7 @@ skip:   jmp     dest
 
 loop:   txa
         pha
-        A2D_CALL A2D_TEST_BOX, $1000, test_addr
+        MGTK_CALL MGTK::InRect, $1000, test_addr
         bne     done
 
         clc
@@ -760,13 +760,13 @@ date_rect:
         .word   $20,$0F,$9A,$23
 
 label_ok:
-        A2D_DEFSTRING {"OK         ",GLYPH_RETURN} ;
+        DEFINE_STRING {"OK         ",GLYPH_RETURN} ;
 label_cancel:
-        A2D_DEFSTRING "Cancel  ESC"
+        DEFINE_STRING "Cancel  ESC"
 label_uparrow:
-        A2D_DEFSTRING GLYPH_UARROW
+        DEFINE_STRING GLYPH_UARROW
 label_downarrow:
-        A2D_DEFSTRING GLYPH_DARROW
+        DEFINE_STRING GLYPH_DARROW
 
 label_cancel_pos:
         .word   $15,$38
@@ -787,26 +787,26 @@ vthick: .byte   1
 ;;; Render the window contents
 
 draw_window:
-        A2D_CALL A2D_SET_STATE, create_window_params::box
-        A2D_CALL A2D_DRAW_RECT, border_rect
-        A2D_CALL A2D_SET_THICKNESS, thickness_params
-        A2D_CALL A2D_DRAW_RECT, date_rect
-        A2D_CALL A2D_DRAW_RECT, ok_button_rect
-        A2D_CALL A2D_DRAW_RECT, cancel_button_rect
+        MGTK_CALL MGTK::SetPort, create_window_params::box
+        MGTK_CALL MGTK::FrameRect, border_rect
+        MGTK_CALL MGTK::SetPenSize, thickness_params
+        MGTK_CALL MGTK::FrameRect, date_rect
+        MGTK_CALL MGTK::FrameRect, ok_button_rect
+        MGTK_CALL MGTK::FrameRect, cancel_button_rect
 
-        A2D_CALL A2D_SET_POS, label_ok_pos
-        A2D_CALL A2D_DRAW_TEXT, label_ok
+        MGTK_CALL MGTK::MoveTo, label_ok_pos
+        MGTK_CALL MGTK::DrawText, label_ok
 
-        A2D_CALL A2D_SET_POS, label_cancel_pos
-        A2D_CALL A2D_DRAW_TEXT, label_cancel
+        MGTK_CALL MGTK::MoveTo, label_cancel_pos
+        MGTK_CALL MGTK::DrawText, label_cancel
 
-        A2D_CALL A2D_SET_POS, label_uparrow_pos
-        A2D_CALL A2D_DRAW_TEXT, label_uparrow
-        A2D_CALL A2D_DRAW_RECT, up_arrow_rect
+        MGTK_CALL MGTK::MoveTo, label_uparrow_pos
+        MGTK_CALL MGTK::DrawText, label_uparrow
+        MGTK_CALL MGTK::FrameRect, up_arrow_rect
 
-        A2D_CALL A2D_SET_POS, label_downarrow_pos
-        A2D_CALL A2D_DRAW_TEXT, label_downarrow
-        A2D_CALL A2D_DRAW_RECT, down_arrow_rect
+        MGTK_CALL MGTK::MoveTo, label_downarrow_pos
+        MGTK_CALL MGTK::DrawText, label_downarrow
+        MGTK_CALL MGTK::FrameRect, down_arrow_rect
 
         jsr     prepare_day_string
         jsr     prepare_month_string
@@ -815,8 +815,8 @@ draw_window:
         jsr     draw_day
         jsr     draw_month
         jsr     draw_year
-        A2D_CALL A2D_SET_FILL_MODE, fill_mode_params
-        A2D_CALL A2D_SET_PATTERN, white_pattern
+        MGTK_CALL MGTK::SetPenMode, fill_mode_params
+        MGTK_CALL MGTK::SetPattern, white_pattern
         lda     #1
         jmp     highlight_selected_field
 
@@ -830,22 +830,22 @@ draw_window:
 .endproc
 
 .proc draw_day
-        A2D_CALL A2D_SET_POS, day_pos
-        A2D_CALL A2D_DRAW_TEXT, day_string
+        MGTK_CALL MGTK::MoveTo, day_pos
+        MGTK_CALL MGTK::DrawText, day_string
         rts
 .endproc
 
 .proc draw_month
-        A2D_CALL A2D_SET_POS, month_pos
-        A2D_CALL A2D_DRAW_TEXT, spaces_string ; variable width, so clear first
-        A2D_CALL A2D_SET_POS, month_pos
-        A2D_CALL A2D_DRAW_TEXT, month_string
+        MGTK_CALL MGTK::MoveTo, month_pos
+        MGTK_CALL MGTK::DrawText, spaces_string ; variable width, so clear first
+        MGTK_CALL MGTK::MoveTo, month_pos
+        MGTK_CALL MGTK::DrawText, month_string
         rts
 .endproc
 
 .proc draw_year
-        A2D_CALL A2D_SET_POS, year_pos
-        A2D_CALL A2D_DRAW_TEXT, year_string
+        MGTK_CALL MGTK::MoveTo, year_pos
+        MGTK_CALL MGTK::DrawText, year_string
         rts
 .endproc
 
@@ -878,15 +878,15 @@ update: pla                     ; update selection
         beq     fill_month
 
 fill_year:
-        A2D_CALL A2D_FILL_RECT, year_rect
+        MGTK_CALL MGTK::PaintRect, year_rect
         rts
 
 fill_day:
-        A2D_CALL A2D_FILL_RECT, day_rect
+        MGTK_CALL MGTK::PaintRect, day_rect
         rts
 
 fill_month:
-        A2D_CALL A2D_FILL_RECT, month_rect
+        MGTK_CALL MGTK::PaintRect, month_rect
         rts
 .endproc
 

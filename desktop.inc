@@ -11,7 +11,7 @@ DA_MAX_SIZE     := $1C00 - DA_LOAD_ADDRESS
 ;;; * = Used by Desk Accessories
 
 JUMP_TABLE_00           := $4000 ; ???
-JUMP_TABLE_A2D_RELAY    := $4003 ; A2D relay call (main>aux)
+JUMP_TABLE_MGTK_RELAY   := $4003 ; MGTK relay call (main>aux)
 JUMP_TABLE_06           := $4006 ; ???
 JUMP_TABLE_09           := $4009 ; ???
 JUMP_TABLE_0C           := $400C ; ???
@@ -39,7 +39,7 @@ JUMP_TABLE_RESTORE_SEG  := $403F ; Restore from dynamic routine
 ;;; NOTE: Some of these are used by Desk Accessories
 
 DESKTOP    := $8E00
-        ;; MLI-style call (jsr A2D ; .byte call ; .addr params)
+        ;; MLI-style call (jsr DEKSTOP ; .byte call ; .addr params)
         ;; Call from AUX (RAMRDON/RAMWRTON)
 
         ;; Implementation bounces to $93BC, uses jump table at $939E

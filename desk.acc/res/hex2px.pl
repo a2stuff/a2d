@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-# Convert $xx into px(bbbbbbb) - input to A2D_DRAW_PATTERN
+# Convert $xx into px(bbbbbbb) - MGTK pattern/bits
 
 use strict;
 use warnings;

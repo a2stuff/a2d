@@ -6,7 +6,7 @@
         .include "../inc/applesoft.inc"
         .include "../inc/prodos.inc"
 
-        .include "../a2d.inc"
+        .include "../mgtk.inc"
         .include "../desktop.inc" ; redraw icons after window move, font
 
         .org $800
@@ -111,8 +111,8 @@ call_init:
 skip:   lda     #0
         sta     offscreen_flag
         lda     ROMIN2
-        A2D_CALL A2D_QUERY_STATE, query_state_params
-        A2D_CALL A2D_SET_STATE, state_params
+        MGTK_CALL MGTK::GetWinPort, query_state_params
+        MGTK_CALL MGTK::SetPort, state_params
         rts
 
 .proc routine
@@ -147,8 +147,8 @@ offscreen_flag:
 
         ;; Is skipping this responsible for display redraw bug?
         ;; https://github.com/inexorabletash/a2d/issues/34
-:       A2D_CALL A2D_QUERY_STATE, query_state_params
-        A2D_CALL A2D_SET_STATE, state_params
+:       MGTK_CALL MGTK::GetWinPort, query_state_params
+        MGTK_CALL MGTK::SetPort, state_params
         lda     query_state_params_id
         cmp     #window_id
         bne     :+
@@ -207,11 +207,11 @@ id:     .byte   0
         query_state_params_id := query_state_params::id
 
 .proc preserve_zp_params
-flag:   .byte   A2D_CZP_PRESERVE
+flag:   .byte   MGTK::zp_preserve
 .endproc
 
 .proc overwrite_zp_params
-flag:   .byte   A2D_CZP_OVERWRITE
+flag:   .byte   MGTK::zp_overwrite
 .endproc
 
 ;;; ==================================================
@@ -665,9 +665,9 @@ text_buffer2:
         .res    text_buffer_size+2, 0
 
 spaces_string:
-        A2D_DEFSTRING "          "
+        DEFINE_STRING "          "
 error_string:
-        A2D_DEFSTRING "Error "
+        DEFINE_STRING "Error "
 
         ;;  used when clearing display; params to a $18 call
 .proc measure_text_params
@@ -699,7 +699,7 @@ base:   .word   16
 
 farg:   .byte   $00,$00,$00,$00,$00,$00
 
-.proc title_bar_decoration      ; Params for A2D_DRAW_BITMAP
+.proc title_bar_decoration      ; Params for MGTK::PaintBits
 left:   .word   115             ; overwritten
 top:    .word   $FFF7           ; overwritten
 bitmap:.addr   pixels
@@ -747,12 +747,12 @@ font:   .addr   0
         screen_width    := 560
         screen_height   := 192
 
-        ;; params for A2D_SET_BOX when decorating title bar
+        ;; params for MGTK::SetPortSite when decorating title bar
 .proc screen_box
 left:   .word   0
 top:    .word   menu_bar_height
-addr:   .word   A2D_SCREEN_ADDR
-stride: .word   A2D_SCREEN_STRIDE
+addr:   .word   MGTK::screen_mapbits
+stride: .word   MGTK::screen_mapwidth
 hoff:   .word   0
 voff:   .word   0
 width:  .word   screen_width - 1
@@ -760,13 +760,13 @@ height: .word   screen_height - menu_bar_height - 2
 .endproc
 
 .proc fill_mode_normal
-mode:   .byte   A2D_SFM_NORMAL
+mode:   .byte   MGTK::pencopy
 .endproc
 
         .byte   $01,$02         ; ??
 
 .proc fill_mode_xor
-mode:   .byte   A2D_SFM_XOR
+mode:   .byte   MGTK::notpenXOR
 .endproc
 
         window_width := 130
@@ -776,10 +776,10 @@ mode:   .byte   A2D_SFM_XOR
 
 .proc create_window_params
 id:     .byte   window_id
-flags:  .byte   A2D_CWF_ADDCLOSE
+flags:  .byte   MGTK::option_go_away_box
 title:  .addr   window_title
-hscroll:.byte   A2D_CWS_NOSCROLL
-vscroll:.byte   A2D_CWS_NOSCROLL
+hscroll:.byte   MGTK::scroll_option_none
+vscroll:.byte   MGTK::scroll_option_none
 hs_max: .byte   0
 hs_pos: .byte   0
 vs_max: .byte   0
@@ -791,15 +791,15 @@ w2:     .word   window_width
 h2:     .word   window_height
 left:   .word   default_left
 top:    .word   default_top
-addr:   .addr   A2D_SCREEN_ADDR
-stride: .word   A2D_SCREEN_STRIDE
+addr:   .addr   MGTK::screen_mapbits
+stride: .word   MGTK::screen_mapwidth
 hoff:   .word   0
 voff:   .word   0
 width:  .word   window_width
 height: .word   window_height
 pattern:.res    8, $FF
-mskand: .byte   A2D_DEFAULT_MSKAND
-mskor:  .byte   A2D_DEFAULT_MSKOR
+mskand: .byte   MGTK::colormask_and
+mskor:  .byte   MGTK::colormask_or
 xpos:   .word   0
 ypos:   .word   0
 hthick: .byte   1
@@ -848,15 +848,15 @@ cursor: .byte   px(%0000000),px(%0000000) ; cursor
 init:   sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
-        A2D_CALL A2D_CONFIGURE_ZP_USE, preserve_zp_params
-        A2D_CALL A2D_CREATE_WINDOW, create_window_params
-        A2D_CALL A2D_QUERY_SCREEN, state_params
-        A2D_CALL A2D_SET_STATE, state_params     ; set clipping bounds?
-        A2D_CALL $2B                          ; reset drawing state?
+        MGTK_CALL MGTK::SetZP1, preserve_zp_params
+        MGTK_CALL MGTK::OpenWindow, create_window_params
+        MGTK_CALL MGTK::InitPort, state_params
+        MGTK_CALL MGTK::SetPort, state_params     ; set clipping bounds?
+        MGTK_CALL $2B                          ; reset drawing state?
         lda     #$01
         sta     input_state_params::state
-        A2D_CALL A2D_SET_INPUT, input_state_params
-        A2D_CALL A2D_GET_INPUT, input_state_params
+        MGTK_CALL MGTK::PostEvent, input_state_params
+        MGTK_CALL MGTK::GetEvent, input_state_params
         lda     ROMIN2
         jsr     reset_buffer2
         lda     #window_id
@@ -916,21 +916,21 @@ loop:   lda     adjust_txtptr_copied-1,x
         jsr     process_key
 
         ;; previous draws mangle the cursor (why???)
-        A2D_CALL A2D_SET_CURSOR, cursor ; Why not use JUMP_TABLE_CUR_POINTER ?
+        MGTK_CALL MGTK::SetCursor, cursor ; Why not use JUMP_TABLE_CUR_POINTER ?
         ;; fall through
 
 ;;; ==================================================
 ;;; Input Loop
 
 input_loop:
-        A2D_CALL A2D_GET_INPUT, input_state_params
+        MGTK_CALL MGTK::GetEvent, input_state_params
         lda     input_state_params::state
-        cmp     #A2D_INPUT_DOWN
+        cmp     #MGTK::button_down
         bne     :+
         jsr     on_click
         jmp     input_loop
 
-:       cmp     #A2D_INPUT_KEY
+:       cmp     #MGTK::key_down
         bne     input_loop
         jsr     on_key_press
         jmp     input_loop
@@ -941,10 +941,10 @@ input_loop:
 on_click:
         lda     LCBANK1
         lda     LCBANK1
-        A2D_CALL A2D_QUERY_TARGET, target_params
+        MGTK_CALL MGTK::FindWindow, target_params
         lda     ROMIN2
         lda     target_params::elem
-        cmp     #A2D_ELEM_CLIENT ; Less than CLIENT is MENU or DESKTOP
+        cmp     #MGTK::area_content ; Less than CLIENT is MENU or DESKTOP
         bcc     ignore_click
         lda     target_params::id
         cmp     #window_id      ; This window?
@@ -954,23 +954,23 @@ ignore_click:
         rts
 
 :       lda     target_params::elem
-        cmp     #A2D_ELEM_CLIENT ; Client area?
+        cmp     #MGTK::area_content ; Client area?
         bne     :+
         jsr     map_click_to_button ; try to translate click into key
         bcc     ignore_click
         jmp     process_key
 
-:       cmp     #A2D_ELEM_CLOSE ; Close box?
+:       cmp     #MGTK::area_close_box ; Close box?
         bne     :+
-        A2D_CALL A2D_CLOSE_CLICK, close_click_params
+        MGTK_CALL MGTK::TrackGoAway, close_click_params
         lda     close_click_params::state
         beq     ignore_click
 exit:   lda     LCBANK1
         lda     LCBANK1
-        A2D_CALL A2D_DESTROY_WINDOW, destroy_window_params
+        MGTK_CALL MGTK::CloseWindow, destroy_window_params
         DESKTOP_CALL DESKTOP_REDRAW_ICONS
         lda     ROMIN2
-        A2D_CALL A2D_CONFIGURE_ZP_USE, overwrite_zp_params
+        MGTK_CALL MGTK::SetZP1, overwrite_zp_params
 
 .proc do_close
         ;; Copy following routine to ZP and invoke it
@@ -991,13 +991,13 @@ loop:   lda     routine,x
         sizeof_routine := * - routine       ; Can't use .sizeof before the .proc definition
 .endproc
 
-:       cmp     #A2D_ELEM_TITLE ; Title bar?
+:       cmp     #MGTK::area_dragbar ; Title bar?
         bne     ignore_click
         lda     #window_id
         sta     drag_params::id
         lda     LCBANK1
         lda     LCBANK1
-        A2D_CALL A2D_DRAG_WINDOW, drag_params
+        MGTK_CALL MGTK::DragWindow, drag_params
         lda     ROMIN2
         jsr     redraw_screen_and_window
         rts
@@ -1036,7 +1036,7 @@ rts1:  rts                     ; used by next proc
 .proc map_click_to_button
         lda     #window_id
         sta     map_coords_params::id
-        A2D_CALL A2D_MAP_COORDS, map_coords_params
+        MGTK_CALL MGTK::ScreenToWindow, map_coords_params
         lda     map_coords_params::clientx+1        ; ensure high bits of coords are 0
         ora     map_coords_params::clienty+1
         bne     rts1
@@ -1534,24 +1534,24 @@ end:    jsr     display_buffer1
         sty     invert_addr+1
         sty     c13_addr+1
         sty     restore_addr+1
-        A2D_CALL A2D_SET_PATTERN, black_pattern
-        A2D_CALL A2D_SET_FILL_MODE, fill_mode_xor
+        MGTK_CALL MGTK::SetPattern, black_pattern
+        MGTK_CALL MGTK::SetPenMode, fill_mode_xor
         sec
         ror     button_state
 
-invert:  A2D_CALL A2D_FILL_RECT, 0, invert_addr ; Inverts box
+invert:  MGTK_CALL MGTK::PaintRect, 0, invert_addr ; Inverts box
 
 check_button:
-        A2D_CALL A2D_GET_INPUT, input_state_params
+        MGTK_CALL MGTK::GetEvent, input_state_params
         lda     input_state_params::state
-        cmp     #A2D_INPUT_HELD ; Button down?
+        cmp     #MGTK::drag ; Button down?
         bne     done            ; Nope, done immediately
         lda     #window_id
         sta     map_coords_params::id
 
-        A2D_CALL A2D_MAP_COORDS, map_coords_params
-        A2D_CALL A2D_SET_POS, map_coords_params::client
-        A2D_CALL A2D_TEST_BOX, 0, c13_addr
+        MGTK_CALL MGTK::ScreenToWindow, map_coords_params
+        MGTK_CALL MGTK::MoveTo, map_coords_params::client
+        MGTK_CALL MGTK::InRect, 0, c13_addr
         bne     inside
 
         lda     button_state    ; outside, not down
@@ -1570,8 +1570,8 @@ inside: lda     button_state    ; inside, and down
 
 done:   lda     button_state                    ; high bit set if button down
         beq     :+
-        A2D_CALL A2D_FILL_RECT, 0, restore_addr ; Inverts back to normal
-:       A2D_CALL A2D_SET_FILL_MODE, fill_mode_normal ; Normal draw mode??
+        MGTK_CALL MGTK::PaintRect, 0, restore_addr ; Inverts back to normal
+:       MGTK_CALL MGTK::SetPenMode, fill_mode_normal ; Normal draw mode??
         lda     button_state
         rts
 .endproc
@@ -1610,7 +1610,7 @@ loop:   lda     #' '
         ldx     #<text_buffer1
         ldy     #>text_buffer1
         jsr     pre_display_buffer
-        A2D_CALL A2D_DRAW_TEXT, draw_text_params1
+        MGTK_CALL MGTK::DrawText, draw_text_params1
         rts
 .endproc
 
@@ -1618,21 +1618,21 @@ loop:   lda     #' '
         ldx     #<text_buffer2
         ldy     #>text_buffer2
         jsr     pre_display_buffer
-        A2D_CALL A2D_DRAW_TEXT, draw_text_params2
+        MGTK_CALL MGTK::DrawText, draw_text_params2
         rts
 .endproc
 
 .proc pre_display_buffer
         stx     measure_text_params::addr ; text buffer address in x,y
         sty     measure_text_params::addr+1
-        A2D_CALL A2D_MEASURE_TEXT, measure_text_params
+        MGTK_CALL MGTK::TextWidth, measure_text_params
         lda     #display_width-15 ; ???
         sec
         sbc     measure_text_params::width
         sta     text_pos_params3::left
-        A2D_CALL A2D_SET_POS, text_pos_params2 ; clear with spaces
-        A2D_CALL A2D_DRAW_TEXT, spaces_string
-        A2D_CALL A2D_SET_POS, text_pos_params3 ; set up for display
+        MGTK_CALL MGTK::MoveTo, text_pos_params2 ; clear with spaces
+        MGTK_CALL MGTK::DrawText, spaces_string
+        MGTK_CALL MGTK::MoveTo, text_pos_params3 ; set up for display
         rts
 .endproc
 
@@ -1641,14 +1641,14 @@ loop:   lda     #' '
 
 .proc draw_background
         ;; Frame
-        A2D_CALL A2D_HIDE_CURSOR
-        A2D_CALL A2D_SET_PATTERN, background_pattern
-        A2D_CALL A2D_FILL_RECT, background_box_params
-        A2D_CALL A2D_SET_PATTERN, black_pattern
-        A2D_CALL A2D_DRAW_RECT, frame_display_params
-        A2D_CALL A2D_SET_PATTERN, white_pattern
-        A2D_CALL A2D_FILL_RECT, clear_display_params
-        A2D_CALL A2D_SET_TEXT_MASK, text_mask_params
+        MGTK_CALL MGTK::HideCursor
+        MGTK_CALL MGTK::SetPattern, background_pattern
+        MGTK_CALL MGTK::PaintRect, background_box_params
+        MGTK_CALL MGTK::SetPattern, black_pattern
+        MGTK_CALL MGTK::FrameRect, frame_display_params
+        MGTK_CALL MGTK::SetPattern, white_pattern
+        MGTK_CALL MGTK::PaintRect, clear_display_params
+        MGTK_CALL MGTK::SetTextBG, text_mask_params
         ;; fall through
 .endproc
 
@@ -1680,9 +1680,9 @@ loop:   ldy     #0
         lda     (ptr),y
         sta     label
 
-        A2D_CALL A2D_DRAW_BITMAP, 0, bitmap_addr ; draw shadowed rect
-        A2D_CALL A2D_SET_POS, 0, text_addr         ; button label pos
-        A2D_CALL A2D_DRAW_TEXT, draw_text_params_label  ; button label text
+        MGTK_CALL MGTK::PaintBits, 0, bitmap_addr ; draw shadowed rect
+        MGTK_CALL MGTK::MoveTo, 0, text_addr         ; button label pos
+        MGTK_CALL MGTK::DrawText, draw_text_params_label  ; button label text
 
         lda     ptr             ; advance to next record
         clc
@@ -1715,13 +1715,13 @@ draw_title_bar:
         bcs     :+
         dex
 :       stx     title_bar_decoration::top+1
-        A2D_CALL A2D_SET_BOX, screen_box ; set clipping rect to whole screen
-        A2D_CALL A2D_DRAW_BITMAP, title_bar_decoration     ; Draws decoration in title bar
+        MGTK_CALL MGTK::SetPortSite, screen_box ; set clipping rect to whole screen
+        MGTK_CALL MGTK::PaintBits, title_bar_decoration     ; Draws decoration in title bar
         lda     #window_id
         sta     query_state_params::id
-        A2D_CALL A2D_QUERY_STATE, query_state_params
-        A2D_CALL A2D_SET_STATE, state_params
-        A2D_CALL A2D_SHOW_CURSOR
+        MGTK_CALL MGTK::GetWinPort, query_state_params
+        MGTK_CALL MGTK::SetPort, state_params
+        MGTK_CALL MGTK::ShowCursor
         jsr     display_buffer2
         rts
 
@@ -1729,8 +1729,8 @@ draw_title_bar:
         ;; and returns to the input loop.
 .proc error_hook
         jsr     reset_buffers_and_display
-        A2D_CALL A2D_SET_POS, error_pos
-        A2D_CALL A2D_DRAW_TEXT, error_string
+        MGTK_CALL MGTK::MoveTo, error_pos
+        MGTK_CALL MGTK::DrawText, error_string
         jsr     reset_buffer1_and_state
         lda     #'='
         sta     calc_op

@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 # Input: HCRG-style Font (768 bytes)
-# Output: A2D font definition
+# Output: MGTK font definition
 
 # Usage: perl convert.pl < font_data > font.inc
 

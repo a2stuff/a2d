@@ -5,7 +5,7 @@
         .include "../inc/prodos.inc"
         .include "../inc/auxmem.inc"
 
-        .include "../a2d.inc"
+        .include "../mgtk.inc"
         .include "../desktop.inc" ; get/clear selection, font
 
         .org $800
@@ -304,10 +304,10 @@ len:    .byte   0               ; length
 
 .proc window_params
 id:     .byte   window_id       ; window identifier
-flags:  .byte   A2D_CWF_ADDCLOSE; window flags (2=include close box)
+flags:  .byte   MGTK::option_go_away_box; window flags (2=include close box)
 title:  .addr   $1000           ; overwritten to point at filename
-hscroll:.byte   A2D_CWS_NOSCROLL
-vscroll:.byte   A2D_CWS_SCROLL_NORMAL
+hscroll:.byte   MGTK::scroll_option_none
+vscroll:.byte   MGTK::scroll_option_normal
 hsmax:  .byte   32
 hspos:  .byte   0
 vsmax:  .byte   255
@@ -321,17 +321,17 @@ h2:     .word   default_height
 .proc box
 left:   .word   default_left
 top:    .word   default_top
-addr:   .addr   A2D_SCREEN_ADDR
-stride: .word   A2D_SCREEN_STRIDE
-hoff:   .word   0               ; Also used for A2D_FILL_RECT
+addr:   .addr   MGTK::screen_mapbits
+stride: .word   MGTK::screen_mapwidth
+hoff:   .word   0               ; Also used for MGTK::PaintRect
 voff:   .word   0
 width:  .word   default_width
 height: .word   default_height
 .endproc
 
 pattern:.res    8, $00
-mskand: .byte   A2D_DEFAULT_MSKAND
-mskor:  .byte   A2D_DEFAULT_MSKOR
+mskand: .byte   MGTK::colormask_and
+mskor:  .byte   MGTK::colormask_or
 xpos:   .word   0
 ypos:   .word   0
 hthick: .byte   1
@@ -346,8 +346,8 @@ next:   .addr   0
 .proc default_box
 left:   .word   default_left
 top:    .word   default_top
-addr:   .word   A2D_SCREEN_ADDR
-stride: .word   A2D_SCREEN_STRIDE
+addr:   .word   MGTK::screen_mapbits
+stride: .word   MGTK::screen_mapwidth
 hoff:   .word   0
 voff:   .word   0
 width:  .word   default_width
@@ -497,12 +497,12 @@ loop:   lda     font_width_table - 1,x
         jsr     get_file_eof
 
         ;; create window
-        A2D_CALL A2D_CREATE_WINDOW, window_params
-        A2D_CALL A2D_SET_STATE, window_params::box
+        MGTK_CALL MGTK::OpenWindow, window_params
+        MGTK_CALL MGTK::SetPort, window_params::box
         jsr     calc_window_size
         jsr     calc_and_draw_mode
         jsr     draw_content
-        A2D_CALL $2B            ; ???
+        MGTK_CALL $2B            ; ???
         ;; fall through
 .endproc
 
@@ -510,19 +510,19 @@ loop:   lda     font_width_table - 1,x
 ;;; Main Input Loop
 
 input_loop:
-        A2D_CALL A2D_GET_INPUT, input_params
+        MGTK_CALL MGTK::GetEvent, input_params
         lda     input_params
         cmp     #1              ; was clicked?
         bne     input_loop      ; nope, keep waiting
 
-        A2D_CALL A2D_QUERY_TARGET, input_params::coords
+        MGTK_CALL MGTK::FindWindow, input_params::coords
         lda     target_params::win ; in our window?
         cmp     #window_id
         bne     input_loop
 
         ;; which part of the window?
         lda     target_params::elem
-        cmp     #A2D_ELEM_CLOSE
+        cmp     #MGTK::area_close_box
         beq     on_close_click
 
         ;; title and resize clicks need mouse location
@@ -536,9 +536,9 @@ input_loop:
         stx     resize_drag_params::ycoord
         stx     query_client_params::ycoord
 
-        cmp     #A2D_ELEM_TITLE
+        cmp     #MGTK::area_dragbar
         beq     title
-        cmp     #A2D_ELEM_RESIZE ; not enabled, so this will never match
+        cmp     #MGTK::area_grow_box ; not enabled, so this will never match
         beq     input_loop
         jsr     on_client_click
         jmp     input_loop
@@ -550,11 +550,11 @@ title:  jsr     on_title_bar_click
 ;;; Close Button
 
 .proc on_close_click
-        A2D_CALL A2D_CLOSE_CLICK, close_btn_params     ; wait to see if the click completes
+        MGTK_CALL MGTK::TrackGoAway, close_btn_params     ; wait to see if the click completes
         lda     close_btn_params::state ; did click complete?
         beq     input_loop      ; nope
         jsr     close_file
-        A2D_CALL A2D_DESTROY_WINDOW, window_params
+        MGTK_CALL MGTK::CloseWindow, window_params
         DESKTOP_CALL DESKTOP_REDRAW_ICONS
         rts                     ; exits input loop
 .endproc
@@ -564,7 +564,7 @@ title:  jsr     on_title_bar_click
 
 ;;; This is dead code (no resize handle!) and may be buggy
 .proc on_resize_click
-        A2D_CALL A2D_DRAG_RESIZE, resize_drag_params
+        MGTK_CALL MGTK::GrowWindow, resize_drag_params
         jsr     redraw_screen
         jsr     calc_window_size
 
@@ -594,10 +594,10 @@ wider:  lda     window_params::hscroll
         ldx     window_width+1
         cpx     #>max_width
         bne     enable
-        and     #(<~A2D_CWS_SCROLL_TRACK)       ; disable scroll
+        and     #(<~MGTK::scroll_option_active)       ; disable scroll
         jmp     :+
 
-enable: ora     #A2D_CWS_SCROLL_TRACK           ; enable scroll
+enable: ora     #MGTK::scroll_option_active           ; enable scroll
 
 :       sta     window_params::hscroll
         sec
@@ -609,9 +609,9 @@ enable: ora     #A2D_CWS_SCROLL_TRACK           ; enable scroll
         sta     $07
         jsr     div_by_16
         sta     resize_window_params::L0987
-        lda     #A2D_HSCROLL
+        lda     #MGTK::ctl_horizontal_scroll_bar
         sta     resize_window_params::part
-        A2D_CALL A2D_RESIZE_WINDOW, resize_window_params ; change to clamped size ???
+        MGTK_CALL MGTK::SetCtlMax, resize_window_params ; change to clamped size ???
         jsr     calc_and_draw_mode
         jmp     finish_resize
 .endproc
@@ -622,11 +622,11 @@ enable: ora     #A2D_CWS_SCROLL_TRACK           ; enable scroll
 ;;; Non-title (client) area clicked
 .proc on_client_click
         ;; On one of the scroll bars?
-        A2D_CALL A2D_QUERY_CLIENT, query_client_params
+        MGTK_CALL MGTK::FindControl, query_client_params
         lda     query_client_params::part
-        cmp     #A2D_VSCROLL
+        cmp     #MGTK::ctl_vertical_scroll_bar
         beq     on_vscroll_click
-        cmp     #A2D_HSCROLL
+        cmp     #MGTK::ctl_horizontal_scroll_bar
         bne     end
         jmp     on_hscroll_click
 end:    rts
@@ -636,19 +636,19 @@ end:    rts
 ;;; Vertical Scroll Bar
 
 .proc on_vscroll_click
-        lda     #A2D_VSCROLL
+        lda     #MGTK::ctl_vertical_scroll_bar
         sta     thumb_drag_params::type
         sta     update_scroll_params::type
         lda     query_client_params::scroll
-        cmp     #A2D_SCROLL_PART_THUMB
+        cmp     #MGTK::part_thumb
         beq     on_vscroll_thumb_click
-        cmp     #A2D_SCROLL_PART_BELOW
+        cmp     #MGTK::part_page_down
         beq     on_vscroll_below_click
-        cmp     #A2D_SCROLL_PART_ABOVE
+        cmp     #MGTK::part_page_up
         beq     on_vscroll_above_click
-        cmp     #A2D_SCROLL_PART_UP
+        cmp     #MGTK::part_up_arrow
         beq     on_vscroll_up_click
-        cmp     #A2D_SCROLL_PART_DOWN
+        cmp     #MGTK::part_down_arrow
         bne     end
         jmp     on_vscroll_down_click
 end:    rts
@@ -758,19 +758,19 @@ loop:   inx
 ;;; (Unused in STF DA, so most of this is speculation)
 
 .proc on_hscroll_click
-        lda     #A2D_HSCROLL
+        lda     #MGTK::ctl_horizontal_scroll_bar
         sta     thumb_drag_params::type
         sta     update_scroll_params::type
         lda     query_client_params::scroll
-        cmp     #A2D_SCROLL_PART_THUMB
+        cmp     #MGTK::part_thumb
         beq     on_hscroll_thumb_click
-        cmp     #A2D_SCROLL_PART_AFTER
+        cmp     #MGTK::part_page_right
         beq     on_hscroll_after_click
-        cmp     #A2D_SCROLL_PART_BEFORE
+        cmp     #MGTK::part_page_left
         beq     on_hscroll_before_click
-        cmp     #A2D_SCROLL_PART_LEFT
+        cmp     #MGTK::part_left_arrow
         beq     on_hscroll_left_click
-        cmp     #A2D_SCROLL_PART_RIGHT
+        cmp     #MGTK::part_right_arrow
         beq     on_hscroll_right_click
         rts
 .endproc
@@ -860,13 +860,13 @@ store:  sta     window_params::hspos
         sta     thumb_drag_params::xcoord+1
         lda     input_params::ycoord
         sta     thumb_drag_params::ycoord
-        A2D_CALL A2D_DRAG_SCROLL, thumb_drag_params
+        MGTK_CALL MGTK::TrackThumb, thumb_drag_params
         rts
 .endproc
 
 ;;; Checks button state; z clear if button was released, set otherwise
 .proc was_button_released
-        A2D_CALL A2D_GET_INPUT, input_params
+        MGTK_CALL MGTK::GetEvent, input_params
         lda     input_params
         cmp     #2
         rts
@@ -938,20 +938,20 @@ end:    rts
         sta     $07
         jsr     div_by_16
         sta     update_scroll_params::pos
-        A2D_CALL A2D_UPDATE_SCROLL, update_scroll_params
+        MGTK_CALL MGTK::UpdateThumb, update_scroll_params
         rts
 .endproc
 
 .proc update_vscroll            ; update_scroll_params::pos set by caller
         lda     #1
         sta     update_scroll_params::type
-        A2D_CALL A2D_UPDATE_SCROLL, update_scroll_params
+        MGTK_CALL MGTK::UpdateThumb, update_scroll_params
         rts
 .endproc
 
 .proc finish_resize             ; only called from dead code
         DESKTOP_CALL DESKTOP_REDRAW_ICONS
-        A2D_CALL A2D_SET_STATE, window_params::box
+        MGTK_CALL MGTK::SetPort, window_params::box
         lda     window_params::hscroll
         ror     a               ; check if low bit (track enabled) is set
         bcc     :+
@@ -964,9 +964,9 @@ end:    rts
 .endproc
 
 .proc clear_window
-        A2D_CALL A2D_SET_PATTERN, white_pattern
-        A2D_CALL A2D_FILL_RECT, window_params::box::hoff
-        A2D_CALL A2D_SET_PATTERN, black_pattern
+        MGTK_CALL MGTK::SetPattern, white_pattern
+        MGTK_CALL MGTK::PaintRect, window_params::box::hoff
+        MGTK_CALL MGTK::SetPattern, black_pattern
         rts
 .endproc
 
@@ -1005,7 +1005,7 @@ do_line:
         bne     :+
         jsr     clear_window
         inc     L0948
-:       A2D_CALL A2D_SET_POS, line_pos
+:       MGTK_CALL MGTK::MoveTo, line_pos
         sec
         lda     #250
         sbc     line_pos::left
@@ -1194,7 +1194,7 @@ times70:.word   70
         beq     end
         lda     text_string::len
         beq     end
-        A2D_CALL A2D_DRAW_TEXT, text_string
+        MGTK_CALL MGTK::DrawText, text_string
         lda     #1
         sta     L0949
 end:    rts
@@ -1426,15 +1426,15 @@ ignore: clc                     ; Click ignored
         rts
 .endproc
 
-fixed_str:      A2D_DEFSTRING "Fixed        "
-prop_str:       A2D_DEFSTRING "Proportional"
+fixed_str:      DEFINE_STRING "Fixed        "
+prop_str:       DEFINE_STRING "Proportional"
         label_width := 50
         title_bar_height := 12
 .proc mode_box                  ; bounding box for mode label
 left:   .word   0
 top:    .word   0
-addr:   .word   A2D_SCREEN_ADDR
-stride: .word   A2D_SCREEN_STRIDE
+addr:   .word   MGTK::screen_mapbits
+stride: .word   MGTK::screen_mapwidth
 hoff:   .word   0
 voff:   .word   0
 width:  .word   80
@@ -1471,19 +1471,19 @@ base:   .word   10              ; vertical text offset (to baseline)
 .endproc
 
 .proc draw_mode
-        A2D_CALL A2D_SET_BOX, mode_box
-        A2D_CALL A2D_SET_POS, mode_pos
+        MGTK_CALL MGTK::SetPortSite, mode_box
+        MGTK_CALL MGTK::MoveTo, mode_pos
         lda     fixed_mode_flag
         beq     else            ; is proportional?
-        A2D_CALL A2D_DRAW_TEXT, fixed_str
+        MGTK_CALL MGTK::DrawText, fixed_str
         jmp     endif
-else:   A2D_CALL A2D_DRAW_TEXT, prop_str
+else:   MGTK_CALL MGTK::DrawText, prop_str
 
 endif:  ldx     #$0F
 loop:   lda     default_box,x
         sta     window_params::box,x
         dex
         bpl     loop
-        A2D_CALL A2D_SET_BOX, window_params::box
+        MGTK_CALL MGTK::SetPortSite, window_params::box
         rts
 .endproc
