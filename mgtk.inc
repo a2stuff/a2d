@@ -34,87 +34,87 @@ SetSwitches     := $02      ; Configure display switches
 InitPort        := $03  ; Get screen state
         ;; (input length 0 bytes)
         ;; (output length 36 bytes)
-        ;; .word left
-        ;; .word top
-        ;; .addr addr           screen_mapbits
-        ;; .word stride         screen_mapwidth
-        ;; .word hoff
-        ;; .word voff
-        ;; .word width          560-1
-        ;; .word height         192-1
+        ;; .word viewloc x
+        ;; .word viewloc y
+        ;; .addr mapbits        screen_mapbits
+        ;; .word mapwidth       screen_mapwidth
+        ;; .word maprect_x1
+        ;; .word maprect_y1
+        ;; .word maprect_x2     560-1
+        ;; .word maprect_y2     192-1
         ;; .res 8 pattern
         ;; .byte mskand         AND mask, default $FF
         ;; .byte mskor          ORA mask, default $00
         ;; .word xpos
         ;; .word ypos
-        ;; .byte hthick         horizontal pen thickness
-        ;; .byte vthick         vertical pen thickness
-        ;; .byte 0              ??? fill mode?
-        ;; .byte tmask          AND mask for text, default $7F
-        ;; .addr font
+        ;; .byte penwidth       horizontal pen thickness
+        ;; .byte penheight      vertical pen thickness
+        ;; .byte penmode
+        ;; .byte textback       text background
+        ;; .addr textfont
 
 SetPort   := $04          ; Set full drawing state
         ;; (input length 36 bytes)
         ;; .word left           pixels from screen edge
         ;; .word top
-        ;; .addr addr           screen_mapbits
-        ;; .word stride         screen_mapwidth
-        ;; .word hoff           pixels scrolled
-        ;; .word voff
-        ;; .word width          pixels
-        ;; .word height
+        ;; .addr mapbits        screen_mapbits
+        ;; .word mapwidth       screen_mapwidth
+        ;; .word maprect_x1     pixels scrolled
+        ;; .word maprect_y1
+        ;; .word maprect_x2     pixels
+        ;; .word maprect_y2
         ;; .res 8 pattern
         ;; .byte mskand         AND mask, default $FF
         ;; .byte mskor          ORA mask, default $00
         ;; .word xpos
         ;; .word ypos
-        ;; .byte hthick         horizontal pen thickness
-        ;; .byte vthick         vertical pen thickness
-        ;; .byte 0              ??? fill mode?
-        ;; .byte tmask          AND mask for text, default $7F
-        ;; .addr font
+        ;; .byte penwidth       horizontal pen thickness
+        ;; .byte penheight      vertical pen thickness
+        ;; .byte penmode
+        ;; .byte textback       text background
+        ;; .addr textfont
 
-GetPort         := $05          ; Get pointer to active drawing state
+GetPort         := $05          ; Get pointer to current grafport
         ;; (input length 0 bytes)
         ;; (output length 2 bytes)
-        ;; .addr state          (out)
+        ;; .addr port          (out)
 
-SetPortBits     := $06            ; Set just the drawing box, subset of full state
+SetPortBits     := $06 ; Set just the drawing port, subset of full state
         ;; (input length 16 bytes)
         ;; .word left           pixels from screen edge
         ;; .word top
-        ;; .addr addr           screen_mapbits ($2000)
-        ;; .word stride         screen_mapwidth ($80)
-        ;; .word hoff           pixels scrolled
-        ;; .word voff
-        ;; .word width          pixels
-        ;; .word height
+        ;; .addr mapbits        screen_mapbits ($2000)
+        ;; .word mapwidth       screen_mapwidth ($80)
+        ;; .word maprect_x1
+        ;; .word maprect_y1
+        ;; .word maprect_x2
+        ;; .word maprect_y2
 
-SetPenMode      := $07
+SetPenMode      := $07          ; Set the current pen mode
         ;; (input length 1 byte)
         ;; .byte mode           (>=4 also sets eor mask to $7f)
         ;;    0 = white (???)
         ;;    2 = black (???)
 
-SetPattern      := $08
+SetPattern      := $08          ; Set the current pattern
         ;; (input length 8 bytes)
         ;; .res 8 pattern       8x8 pixel pattern for PaintRect calls
 
-SetColorMasks   := $09
+SetColorMasks   := $09          ; Set the current color masks
         ;; (input length 2 bytes)
         ;; .byte mskand
         ;; .byte mskor
 
-SetPenSize      := $0A
+SetPenSize      := $0A          ; Set the current pen size
         ;; (input length 2 bytes)
-        ;; .byte hthick         horizontal pen thickness
-        ;; .byte vthick         vertical pen thickness
+        ;; .byte penwidth       horizontal pen thickness
+        ;; .byte penheight      vertical pen thickness
 
-SetFont         := $0B
+SetFont         := $0B          ; Set the current font
         ;; (input length 2 bytes)
-        ;; .addr font           font definition (see below)
+        ;; .addr textfont       font definition (see below)
 
-SetTextBG       := $0C      ; Stored to background before XORing glyph
+SetTextBG       := $0C          ; Set the current text background
         ;; (input length 1 byte)
         ;; .byte mask
 
@@ -126,17 +126,17 @@ Move            := $0D ; Adjust start of subsequent DRAW_TEXT, DRAW_LINE
         ;; .word xdelta
         ;; .word ydelta
 
-MoveTo          := $0E          ; Start of subsequent DRAW_TEXT, DRAW_LINE
+MoveTo          := $0E      ; Start of subsequent DRAW_TEXT, DRAW_LINE
         ;; (input length 4 bytes)
         ;; .word xcoord
         ;; .word ycoord
 
-Line            := $0F          ; Draw line (from SET_POS)
+Line            := $0F ; Draw line (from SET_POS)
         ;; (input length 4 bytes)
         ;; .word xdelta         signed, delta in pixels
         ;; .word ydelta
 
-LineTo          := $10        ; Draw line (from SET_POS)
+LineTo          := $10    ; Draw line (from SET_POS)
         ;; (input length 4 bytes)
         ;; .word xcoord         end coords in pixels
         ;; .word ycoord
@@ -169,10 +169,10 @@ PaintBits       := $14          ; Draw pattern
         ;; .addr bitmap         bitmap is 7 bits per byte, 0 = black, 1 = white
         ;; .byte stride         bitmap width in bytes
         ;; .byte 0              ???
-        ;; .word hoff           offset within bitmap definition
-        ;; .word voff
-        ;; .word width          pixels
-        ;; .word height         pixels
+        ;; .word x1             offset within bitmap definition (pixels)
+        ;; .word y1
+        ;; .word x2
+        ;; .word y2
 
 PaintPoly       := $15
         ;; (input length 0 bytes)
@@ -294,10 +294,8 @@ GetEvent        := $2A
 FlushEvents     := $2B
         ;; (no parameters; pass $0000 as address)
 
-        ;; $2C used in DeskTop but not DAs - icon drag
+PeekEvent       := $2C
         ;; (input length 0 bytes)
-
-PeekEvent       := $4C
 
 PostEvent       := $2D          ; Set pending input state (mouse or keyboard)
         ;; (input length 5 bytes)
@@ -378,20 +376,20 @@ OpenWindow      := $38
         ;; .word top
         ;; .word screen_addr
         ;; .word screen_stride
-        ;; .word hoff          pixels scrolled
-        ;; .word voff
-        ;; .word width          pixels
-        ;; .word height
+        ;; .word maprect_x1     pixels scrolled
+        ;; .word maprect_y1
+        ;; .word maprect_x2     pixels
+        ;; .word maprect_y2
         ;; .res 8 pattern
         ;; .byte mskand         AND mask, default $FF
         ;; .byte mskor          ORA mask, default $00
         ;; .word xpos
         ;; .word ypos
-        ;; .byte hthick
-        ;; .byte vthick
+        ;; .byte penwidth
+        ;; .byte penheight
         ;; .byte 0              ??? fill mode?
-        ;; .byte tmask          AND mask for text, default $7F
-        ;; .addr font
+        ;; .byte textback       text background
+        ;; .addr textfont
         ;; .addr next           address of next lower window in stack (filled in by call)
 
 CloseWindow     := $39
@@ -409,9 +407,9 @@ GetWinPtr       := $3B         ; Get pointer to window params by id; A=0 on succ
 GetWinPort      := $3C     ; get drawing state of window
         ;; (input length 3 bytes)
         ;; .byte id             window
-        ;; .addr state          state definition to populate, like SetPort
+        ;; .addr port           port definition to populate, like SetPort
 
-SetWinPort      := $3D     ; Update drawing state by passed window id
+SetWinPort      := $3D     ; Update port by passed window id
         ;; ** Implementation appears buggy - or maybe just really cryptic ??? **
         ;; (input length 2 bytes)
         ;; .byte id             window

@@ -21,7 +21,7 @@
 
         params_addr     := $80
 
-        ;; $8A initialized same way as state (see $01 IMPL)
+        ;; $8A initialized same way as current port (see $01 IMPL)
 
 
         ;; $A8          - Menu count
@@ -29,64 +29,59 @@
         ;; $A9-$AA      - Address of current window
         ;; $AB-...      - Copy of current window params (first 12 bytes)
 
-        ;; $D0-$F3      - Drawing state
-        ;;  $D0-$DF      - Box
-        ;;   $D0-D1       - left
-        ;;   $D2-D3       - top
-        ;;   $D4-D5       - addr (low byte might be mask?)
-        ;;   $D6-D7       - stride
-        ;;   $D8-D9       - hoff
-        ;;   $DA-DB       - voff
-        ;;   $DC-DD       - width
-        ;;   $DE-DF       - height
-        ;;  $E0-$E7      - Pattern
-        ;;  $E8-$E9      - mskand/mskor
-        ;;  $EA-$ED      - position (x/y words)
-        ;;  $EE-$EF      - thickness (h/v bytes)
-        ;;  $F0          - fill mode (still sketchy on this???)
-        ;;  $F1          - text mask
-        ;;  $F2-$F3      - font
+        ;; $D0-$F3      - Current GrafPort
+        ;;  $D0-$DF      - portmap
+        ;;   $D0-D3       - viewloc (x/y words)
+        ;;   $D4-D5       - mapbits - screen address = $2000
+        ;;   $D6-D7       - mapwidth - screen stride = $80
+        ;;   $D8-DF       - maprect (x1/y1/x2/y2)
+        ;;  $E0-$E7      - penpattern
+        ;;  $E8-$E9      - colormasks (AND, OR)
+        ;;  $EA-$ED      - penloc (x/y words)
+        ;;  $EE-$EF      - penwidth/penheight
+        ;;  $F0          - penmode
+        ;;  $F1          - textback
+        ;;  $F2-$F3      - textfont
 
-        ;;  $F4-$F5      - Active state (???)
+        ;;  $F4-$F5      - Active port (???)
         ;;  $F6-$FA      - ???
         ;;  $FB-$FC      - glyph widths
         ;;  $FD          - glyph flag (if set, stride is 2x???)
         ;;  $FE          - last glyph index (count is this + 1)
         ;;  $FF          - glyph height
 
-
-        state           := $D0
-        state_box       := $D0
-        state_left      := $D0
-        state_top       := $D2
-        state_addr      := $D4
-        state_stride    := $D6
-        state_hoff      := $D8
-        state_voff      := $DA
-        state_width     := $DC
-        state_height    := $DE
-        state_pattern   := $E0
-        state_msk       := $E8
-        state_mskand    := $E8
-        state_mskor     := $E9
-        state_pos       := $EA
-        state_xpos      := $EA
-        state_ypos      := $EC
-        state_thick     := $EE
-        state_hthick    := $EE
-        state_vthick    := $EF
-        state_fill      := $F0
-        state_tmask     := $F1
-        state_font      := $F2
+        current_grafport          := $D0
+        current_portmap           := $D0
+        current_viewloc_x         := $D0
+        current_viewloc_y         := $D2
+        current_mapbits           := $D4
+        current_mapwidth          := $D6
+        current_maprect_x1        := $D8
+        current_maprect_y1        := $DA
+        current_maprect_x2        := $DC
+        current_maprect_y2        := $DE
+        current_penpattern        := $E0
+        current_colormasks        := $E8
+        current_colormask_and     := $E8
+        current_colormasks_or     := $E9
+        current_penloc            := $EA
+        current_penloc_x          := $EA
+        current_penloc_y          := $EC
+        current_pensize           := $EE
+        current_penwidth          := $EE
+        current_penheight         := $EF
+        current_penmode           := $F0
+        current_textback          := $F1
+        current_textfont          := $F2
 
         sizeof_window_params := $3A
 
-        sizeof_state    := 36
-        state_offset_in_window_params := $14
+        sizeof_grafport    := 36
+        port_offset_in_window_params := $14
         next_offset_in_window_params := $38
 
         active          := $F4
-        active_state    := $F4  ; address of live state block
+        active_port    := $F4  ; address of live port block
 
         fill_eor_mask   := $F6
 
@@ -118,7 +113,7 @@
         sta     active,x
         dex
         bpl     :-
-        jsr     apply_active_state_to_state
+        jsr     apply_active_port_to_port
 
 adjust_stack:                   ; Adjust stack to account for params
         pla                     ; and stash address at params_addr.
@@ -203,7 +198,7 @@ cleanup:
 
 :       bit     preserve_zp_flag
         bpl     exit_with_0
-        jsr     apply_state_to_active_state
+        jsr     apply_port_to_active_port
         ldx     #$0B
 :       lda     active,x
         sta     active_saved,x
@@ -235,21 +230,21 @@ exit_with_a:
 rts2:   rts
 
 ;;; ==================================================
-;;; Copy state params (36 bytes) to/from active state addr
+;;; Copy port params (36 bytes) to/from active port addr
 
-.proc apply_active_state_to_state
-        ldy     #sizeof_state-1
-:       lda     (active_state),y
-        sta     state,y
+.proc apply_active_port_to_port
+        ldy     #sizeof_grafport-1
+:       lda     (active_port),y
+        sta     current_grafport,y
         dey
         bpl     :-
         rts
 .endproc
 
-.proc apply_state_to_active_state
-        ldy     #sizeof_state-1
-:       lda     state,y
-        sta     (active_state),y
+.proc apply_port_to_active_port
+        ldy     #sizeof_grafport-1
+:       lda     current_grafport,y
+        sta     (active_port),y
         dey
         bpl     :-
         rts
@@ -279,7 +274,7 @@ hide_cursor_count:
 
         ;; jt_rts can be used if the only thing the
         ;; routine needs to do is copy params into
-        ;; the zero page (state)
+        ;; the zero page (port)
         jt_rts := dispatch::rts1
 
 jump_table:
@@ -400,85 +395,85 @@ param_lengths:
         .byte zp, ((length) | ((cursor) << 7))
 .endmacro
 
-        PARAM_DEFN  0, $00, 0           ; $00 NoOp
-        PARAM_DEFN  0, $00, 0           ; $01
-        PARAM_DEFN  1, $82, 0           ; $02
-        PARAM_DEFN  0, $00, 0           ; $03 InitPort
-        PARAM_DEFN 36, state, 0         ; $04 SetPort
-        PARAM_DEFN  0, $00, 0           ; $05 GetPort
-        PARAM_DEFN 16, state_box, 0     ; $06 SetPortBits
-        PARAM_DEFN  1, state_fill, 0    ; $07 SetPenMode
-        PARAM_DEFN  8, state_pattern, 0 ; $08 SetPattern
-        PARAM_DEFN  2, state_msk, 0     ; $09
-        PARAM_DEFN  2, state_thick, 0   ; $0A SetPenSize
-        PARAM_DEFN  0, $00, 0           ; $0B
-        PARAM_DEFN  1, state_tmask, 0   ; $0C SetTextBG
-        PARAM_DEFN  4, $A1, 0           ; $0D
-        PARAM_DEFN  4, state_pos, 0     ; $0E MoveTo
-        PARAM_DEFN  4, $A1, 1           ; $0F Line
-        PARAM_DEFN  4, $92, 1           ; $10 LineTo
-        PARAM_DEFN  8, $92, 1           ; $11 PaintRect
-        PARAM_DEFN  8, $9F, 1           ; $12 FrameRect
-        PARAM_DEFN  8, $92, 0           ; $13 InRect
-        PARAM_DEFN 16, $8A, 0           ; $14 PaintBits
-        PARAM_DEFN  0, $00, 1           ; $15
-        PARAM_DEFN  0, $00, 1           ; $16 FramePoly
-        PARAM_DEFN  0, $00, 0           ; $17
-        PARAM_DEFN  3, $A1, 0           ; $18 TextWidth
-        PARAM_DEFN  3, $A1, 1           ; $19 DrawText
-        PARAM_DEFN  1, $82, 0           ; $1A SetZP1
-        PARAM_DEFN  1, $82, 0           ; $1B SetZP2
-        PARAM_DEFN  0, $00, 0           ; $1C
-        PARAM_DEFN 12, $82, 0           ; $1D StartDeskTop
-        PARAM_DEFN  0, $00, 0           ; $1E StopDeskTop
-        PARAM_DEFN  3, $82, 0           ; $1F
-        PARAM_DEFN  2, $82, 0           ; $20 SetUserHook
-        PARAM_DEFN  2, $82, 0           ; $21
-        PARAM_DEFN  1, $82, 0           ; $22
-        PARAM_DEFN  0, $00, 0           ; $23 GetIntHandler
-        PARAM_DEFN  0, $00, 0           ; $24 SetCursor
-        PARAM_DEFN  0, $00, 0           ; $25 ShowCursor
-        PARAM_DEFN  0, $00, 0           ; $26 HideCursor
-        PARAM_DEFN  0, $00, 0           ; $27 ObscureCursor
-        PARAM_DEFN  0, $00, 0           ; $28 GetCursorAddr
-        PARAM_DEFN  0, $00, 0           ; $29
-        PARAM_DEFN  0, $00, 0           ; $2A GetEvent
-        PARAM_DEFN  0, $00, 0           ; $2B
-        PARAM_DEFN  0, $00, 0           ; $2C
-        PARAM_DEFN  5, $82, 0           ; $2D PostEvent
-        PARAM_DEFN  1, $82, 0           ; $2E SetKeyEvent
-        PARAM_DEFN  4, $82, 0           ; $2F
-        PARAM_DEFN  0, $00, 0           ; $30 SetMenu
-        PARAM_DEFN  0, $00, 0           ; $31 MenuSelect
-        PARAM_DEFN  4, $C7, 0           ; $32
-        PARAM_DEFN  1, $C7, 0           ; $33
-        PARAM_DEFN  2, $C7, 0           ; $34
-        PARAM_DEFN  3, $C7, 0           ; $35
-        PARAM_DEFN  3, $C7, 0           ; $36
-        PARAM_DEFN  4, $C7, 0           ; $37
-        PARAM_DEFN  0, $00, 0           ; $38 OpenWindow
-        PARAM_DEFN  1, $82, 0           ; $39 CloseWindow
-        PARAM_DEFN  0, $00, 0           ; $3A
-        PARAM_DEFN  1, $82, 0           ; $3B GetWinPtr
-        PARAM_DEFN  3, $82, 0           ; $3C GetWinPort
-        PARAM_DEFN  2, $82, 0           ; $3D SetWinPort
-        PARAM_DEFN  1, $82, 0           ; $3E BeginUpdate
-        PARAM_DEFN  1, $82, 0           ; $3F
-        PARAM_DEFN  4, state_pos, 0     ; $40 FindWindow
-        PARAM_DEFN  0, $00, 0           ; $41
-        PARAM_DEFN  1, $82, 0           ; $42 SelectWindow
-        PARAM_DEFN  0, $00, 0           ; $43 TrackGoAway
-        PARAM_DEFN  5, $82, 0           ; $44 DragWindow
-        PARAM_DEFN  5, $82, 0           ; $45 GrowWindow
-        PARAM_DEFN  5, $82, 0           ; $46 ScreenToWindow
-        PARAM_DEFN  5, $82, 0           ; $47
-        PARAM_DEFN  4, state_pos, 0     ; $48 FindControl
-        PARAM_DEFN  3, $82, 0           ; $49 SetCtlMax
-        PARAM_DEFN  5, $82, 0           ; $4A TrackThumb
-        PARAM_DEFN  3, $8C, 0           ; $4B UpdateThumb
-        PARAM_DEFN  2, $8C, 0           ; $4C
-        PARAM_DEFN 16, $8A, 0           ; $4D
-        PARAM_DEFN  2, $82, 0           ; $4E
+        PARAM_DEFN  0, $00, 0                ; $00 NoOp
+        PARAM_DEFN  0, $00, 0                ; $01
+        PARAM_DEFN  1, $82, 0                ; $02
+        PARAM_DEFN  0, $00, 0                ; $03 InitPort
+        PARAM_DEFN 36, current_grafport, 0   ; $04 SetPort
+        PARAM_DEFN  0, $00, 0                ; $05 GetPort
+        PARAM_DEFN 16, current_portmap, 0    ; $06 SetPortBits
+        PARAM_DEFN  1, current_penmode, 0    ; $07 SetPenMode
+        PARAM_DEFN  8, current_penpattern, 0 ; $08 SetPattern
+        PARAM_DEFN  2, current_colormasks, 0 ; $09 SetColorMasks
+        PARAM_DEFN  2, current_pensize, 0    ; $0A SetPenSize
+        PARAM_DEFN  0, $00, 0                ; $0B SetFont
+        PARAM_DEFN  1, current_textback, 0   ; $0C SetTextBG
+        PARAM_DEFN  4, $A1, 0                ; $0D Move
+        PARAM_DEFN  4, current_penloc, 0     ; $0E MoveTo
+        PARAM_DEFN  4, $A1, 1                ; $0F Line
+        PARAM_DEFN  4, $92, 1                ; $10 LineTo
+        PARAM_DEFN  8, $92, 1                ; $11 PaintRect
+        PARAM_DEFN  8, $9F, 1                ; $12 FrameRect
+        PARAM_DEFN  8, $92, 0                ; $13 InRect
+        PARAM_DEFN 16, $8A, 0                ; $14 PaintBits
+        PARAM_DEFN  0, $00, 1                ; $15 PaintPoly
+        PARAM_DEFN  0, $00, 1                ; $16 FramePoly
+        PARAM_DEFN  0, $00, 0                ; $17 InPoly
+        PARAM_DEFN  3, $A1, 0                ; $18 TextWidth
+        PARAM_DEFN  3, $A1, 1                ; $19 DrawText
+        PARAM_DEFN  1, $82, 0                ; $1A SetZP1
+        PARAM_DEFN  1, $82, 0                ; $1B SetZP2
+        PARAM_DEFN  0, $00, 0                ; $1C Version
+        PARAM_DEFN 12, $82, 0                ; $1D StartDeskTop
+        PARAM_DEFN  0, $00, 0                ; $1E StopDeskTop
+        PARAM_DEFN  3, $82, 0                ; $1F
+        PARAM_DEFN  2, $82, 0                ; $20 SetUserHook
+        PARAM_DEFN  2, $82, 0                ; $21 ScaleMouse
+        PARAM_DEFN  1, $82, 0                ; $22 KeyboardMouse
+        PARAM_DEFN  0, $00, 0                ; $23 GetIntHandler
+        PARAM_DEFN  0, $00, 0                ; $24 SetCursor
+        PARAM_DEFN  0, $00, 0                ; $25 ShowCursor
+        PARAM_DEFN  0, $00, 0                ; $26 HideCursor
+        PARAM_DEFN  0, $00, 0                ; $27 ObscureCursor
+        PARAM_DEFN  0, $00, 0                ; $28 GetCursorAddr
+        PARAM_DEFN  0, $00, 0                ; $29 CheckEvents
+        PARAM_DEFN  0, $00, 0                ; $2A GetEvent
+        PARAM_DEFN  0, $00, 0                ; $2B FlushEvents
+        PARAM_DEFN  0, $00, 0                ; $2C PeekEvent
+        PARAM_DEFN  5, $82, 0                ; $2D PostEvent
+        PARAM_DEFN  1, $82, 0                ; $2E SetKeyEvent
+        PARAM_DEFN  4, $82, 0                ; $2F InitMenu
+        PARAM_DEFN  0, $00, 0                ; $30 SetMenu
+        PARAM_DEFN  0, $00, 0                ; $31 MenuSelect
+        PARAM_DEFN  4, $C7, 0                ; $32 MenuKey
+        PARAM_DEFN  1, $C7, 0                ; $33 HiliteMenu
+        PARAM_DEFN  2, $C7, 0                ; $34 DisableMenu
+        PARAM_DEFN  3, $C7, 0                ; $35 DisableItem
+        PARAM_DEFN  3, $C7, 0                ; $36 CheckItem
+        PARAM_DEFN  4, $C7, 0                ; $37 SetMark
+        PARAM_DEFN  0, $00, 0                ; $38 OpenWindow
+        PARAM_DEFN  1, $82, 0                ; $39 CloseWindow
+        PARAM_DEFN  0, $00, 0                ; $3A CloseAll
+        PARAM_DEFN  1, $82, 0                ; $3B GetWinPtr
+        PARAM_DEFN  3, $82, 0                ; $3C GetWinPort
+        PARAM_DEFN  2, $82, 0                ; $3D SetWinPort
+        PARAM_DEFN  1, $82, 0                ; $3E BeginUpdate
+        PARAM_DEFN  1, $82, 0                ; $3F EndUpdate
+        PARAM_DEFN  4, current_penloc, 0     ; $40 FindWindow
+        PARAM_DEFN  0, $00, 0                ; $41 FrontWindow
+        PARAM_DEFN  1, $82, 0                ; $42 SelectWindow
+        PARAM_DEFN  0, $00, 0                ; $43 TrackGoAway
+        PARAM_DEFN  5, $82, 0                ; $44 DragWindow
+        PARAM_DEFN  5, $82, 0                ; $45 GrowWindow
+        PARAM_DEFN  5, $82, 0                ; $46 ScreenToWindow
+        PARAM_DEFN  5, $82, 0                ; $47 WindowToScreen
+        PARAM_DEFN  4, current_penloc, 0     ; $48 FindControl
+        PARAM_DEFN  3, $82, 0                ; $49 SetCtlMax
+        PARAM_DEFN  5, $82, 0                ; $4A TrackThumb
+        PARAM_DEFN  3, $8C, 0                ; $4B UpdateThumb
+        PARAM_DEFN  2, $8C, 0                ; $4C ActivateCtl
+        PARAM_DEFN 16, $8A, 0                ; $4D
+        PARAM_DEFN  2, $82, 0                ; $4E
 
 ;;; ==================================================
 ;;; Pre-Shift Tables
@@ -825,7 +820,7 @@ hires_table_hi:
 
 ;;; ==================================================
 ;;; Routines called during PaintRect etc based on
-;;; state_fill
+;;; current_penmode
 
 .proc fillmode0
         lda     ($84),y
@@ -836,8 +831,8 @@ hires_table_hi:
         bcc     :+
 loop:   lda     ($8E),y
         eor     fill_eor_mask
-:       and     state_mskand
-        ora     state_mskor
+:       and     current_colormask_and
+        ora     current_colormasks_or
         sta     ($84),y
         dey
         bne     loop
@@ -848,8 +843,8 @@ loop:   lda     ($8E),y
         eor     fill_eor_mask
         and     $88
         eor     ($84),y
-        and     state_mskand
-        ora     state_mskor
+        and     current_colormask_and
+        ora     current_colormasks_or
         sta     ($84),y
         rts
 .endproc
@@ -862,8 +857,8 @@ loop:   lda     ($8E),y
 loop:   lda     ($8E),y
         eor     fill_eor_mask
 :       ora     ($84),y
-        and     state_mskand
-        ora     state_mskor
+        and     current_colormask_and
+        ora     current_colormasks_or
         sta     ($84),y
         dey
         bne     loop
@@ -873,8 +868,8 @@ loop:   lda     ($8E),y
         eor     fill_eor_mask
         and     $88
         ora     ($84),y
-        and     state_mskand
-        ora     state_mskor
+        and     current_colormask_and
+        ora     current_colormasks_or
         sta     ($84),y
         rts
 .endproc
@@ -887,8 +882,8 @@ loop:   lda     ($8E),y
 loop:   lda     ($8E),y
         eor     fill_eor_mask
 :       eor     ($84),y
-        and     state_mskand
-        ora     state_mskor
+        and     current_colormask_and
+        ora     current_colormasks_or
         sta     ($84),y
         dey
         bne     loop
@@ -898,8 +893,8 @@ loop:   lda     ($8E),y
         eor     fill_eor_mask
         and     $88
         eor     ($84),y
-        and     state_mskand
-        ora     state_mskor
+        and     current_colormask_and
+        ora     current_colormasks_or
         sta     ($84),y
         rts
 .endproc
@@ -913,8 +908,8 @@ loop:   lda     ($8E),y
         eor     fill_eor_mask
 :       eor     #$FF
         and     ($84),y
-        and     state_mskand
-        ora     state_mskor
+        and     current_colormask_and
+        ora     current_colormasks_or
         sta     ($84),y
         dey
         bne     loop
@@ -925,8 +920,8 @@ loop:   lda     ($8E),y
         and     $88
         eor     #$FF
         and     ($84),y
-        and     state_mskand
-        ora     state_mskor
+        and     current_colormask_and
+        ora     current_colormasks_or
         sta     ($84),y
         rts
 .endproc
@@ -1075,7 +1070,7 @@ L4D23           := * + 2
 
 L4D24:  lda     $84
         clc
-        adc     state_stride
+        adc     current_mapwidth
         sta     $84
         bcc     L4D30
         inc     $85
@@ -1085,7 +1080,7 @@ L4D30:  ldy     $91
         jmp     L4C41
 
 L4D38:  lda     hires_table_hi,x
-        ora     state_addr+1
+        ora     current_mapbits+1
         sta     $85
         lda     hires_table_lo,x
         clc
@@ -1131,7 +1126,7 @@ fill_mode_table_a:
 ;;; SetPenMode
 
 SetPenModeImpl:
-        lda     state_fill
+        lda     current_penmode
         ldx     #0
         cmp     #4
         bcc     :+
@@ -1208,7 +1203,7 @@ L4E1E:  sta     $86
         sbc     $86
 L4E34:  sta     $91
         pha
-        lda     state_fill
+        lda     current_penmode
         asl     a
         tax
         pla
@@ -1277,18 +1272,18 @@ L4E9A:  txa
 
 L4EA9:  lda     $86
         ldx     $94
-        ldy     state_stride
+        ldy     current_mapwidth
         jsr     L4F6D
         clc
-        adc     state_addr
+        adc     current_mapbits
         sta     $84
         tya
-        adc     state_addr+1
+        adc     current_mapbits+1
         sta     $85
         lda     #$02
         tax
         tay
-        bit     state_stride
+        bit     current_mapwidth
         bmi     L4EE9
         lda     #$01
         sta     $8E
@@ -1411,7 +1406,7 @@ SetPatternImpl:
 L4FA3:  lda     $F7
         and     #$07
         tay
-        lda     state_pattern,x
+        lda     current_penpattern,x
 L4FAA:  dey
         bmi     L4FB2
         cmp     #$80
@@ -1483,7 +1478,7 @@ L4FE9:  lda     $9F,x
         bpl     L4FE7
         ldx     #$03
 L500E:  lda     $9F,x
-        sta     state_pos,x
+        sta     current_penloc,x
         dex
         bpl     L500E
 L5015:  rts
@@ -1491,7 +1486,7 @@ L5015:  rts
 L5016:  .byte   $00,$02,$04,$06
 L501A:  .byte   $04,$06,$00,$02
 
-L501E:  lda     state_hthick    ; Also: draw horizontal line $92 to $96 at $98
+L501E:  lda     current_penwidth    ; Also: draw horizontal line $92 to $96 at $98
         sec
         sbc     #1
         cmp     #$FF
@@ -1501,7 +1496,7 @@ L501E:  lda     state_hthick    ; Also: draw horizontal line $92 to $96 at $98
         bcc     L502F
         inc     $96+1
 
-L502F:  lda     state_vthick
+L502F:  lda     current_penheight
         sec
         sbc     #1
         cmp     #$FF
@@ -1538,8 +1533,8 @@ L5043:  jsr     L50A9
         bottom := $98
 
         jsr     L514C
-        lda     state_xpos
-        ldx     state_xpos+1
+        lda     current_penloc_x
+        ldx     current_penloc_x+1
         cpx     left+1
         bmi     fail
         bne     :+
@@ -1551,8 +1546,8 @@ L5043:  jsr     L50A9
         cmp     right
         bcc     :+
         bne     fail
-:       lda     state_ypos
-        ldx     state_ypos+1
+:       lda     current_penloc_y
+        ldx     current_penloc_y+1
         cpx     top+1
         bmi     fail
         bne     :+
@@ -1574,107 +1569,107 @@ fail:   rts
 ;;; SetPortBits
 
 SetPortBitsImpl:
-        lda     state_left
+        lda     current_viewloc_x
         sec
-        sbc     state_hoff
+        sbc     current_maprect_x1
         sta     $F7
-        lda     state_left+1
-        sbc     state_hoff+1
+        lda     current_viewloc_x+1
+        sbc     current_maprect_x1+1
         sta     $F8
-        lda     state_top
+        lda     current_viewloc_y
         sec
-        sbc     state_voff
+        sbc     current_maprect_y1
         sta     $F9
-        lda     state_top+1
-        sbc     state_voff+1
+        lda     current_viewloc_y+1
+        sbc     current_maprect_y1+1
         sta     $FA
         rts
 
-L50A9:  lda     state_width+1
+L50A9:  lda     current_maprect_x2+1
         cmp     $92+1
         bmi     L50B7
         bne     L50B9
-        lda     state_width
+        lda     current_maprect_x2
         cmp     $92
         bcs     L50B9
 L50B7:  clc
 L50B8:  rts
 
 L50B9:  lda     $96+1
-        cmp     state_hoff+1
+        cmp     current_maprect_x1+1
         bmi     L50B7
         bne     L50C7
         lda     $96
-        cmp     state_hoff
+        cmp     current_maprect_x1
         bcc     L50B8
-L50C7:  lda     state_height+1
+L50C7:  lda     current_maprect_y2+1
         cmp     $94+1
         bmi     L50B7
         bne     L50D5
-        lda     state_height
+        lda     current_maprect_y2
         cmp     $94
         bcc     L50B8
 L50D5:  lda     $98+1
-        cmp     state_voff+1
+        cmp     current_maprect_y1+1
         bmi     L50B7
         bne     L50E3
         lda     $98
-        cmp     state_voff
+        cmp     current_maprect_y1
         bcc     L50B8
 L50E3:  ldy     #$00
         lda     $92
         sec
-        sbc     state_hoff
+        sbc     current_maprect_x1
         tax
         lda     $92+1
-        sbc     state_hoff+1
+        sbc     current_maprect_x1+1
         bpl     L50FE
         stx     $9B
         sta     $9C
-        lda     state_hoff
+        lda     current_maprect_x1
         sta     $92
-        lda     state_hoff+1
+        lda     current_maprect_x1+1
         sta     $92+1
         iny
-L50FE:  lda     state_width
+L50FE:  lda     current_maprect_x2
         sec
         sbc     $96
         tax
-        lda     state_width+1
+        lda     current_maprect_x2+1
         sbc     $96+1
         bpl     L5116
-        lda     state_width
+        lda     current_maprect_x2
         sta     $96
-        lda     state_width+1
+        lda     current_maprect_x2+1
         sta     $96+1
         tya
         ora     #$04
         tay
 L5116:  lda     $94
         sec
-        sbc     state_voff
+        sbc     current_maprect_y1
         tax
         lda     $94+1
-        sbc     state_voff+1
+        sbc     current_maprect_y1+1
         bpl     L5130
         stx     $9D
         sta     $9E
-        lda     state_voff
+        lda     current_maprect_y1
         sta     $94
-        lda     state_voff+1
+        lda     current_maprect_y1+1
         sta     $94+1
         iny
         iny
-L5130:  lda     state_height
+L5130:  lda     current_maprect_y2
         sec
         sbc     $98
         tax
-        lda     state_height+1
+        lda     current_maprect_y2+1
         sbc     $98+1
         bpl     L5148
-        lda     state_height
+        lda     current_maprect_y2
         sta     $98
-        lda     state_height+1
+        lda     current_maprect_y2+1
         sta     $98+1
         tya
         ora     #$08
@@ -2487,7 +2482,7 @@ endloop:
         ldy     #3
 :       lda     (ptr),y
         sta     draw_line_params+4,y
-        sta     state_pos,y
+        sta     current_penloc,y
         dey
         bpl     :-
         jsr     DRAW_LINE_ABS_IMPL_L5783
@@ -2522,22 +2517,22 @@ L572F:  ldx     #1
         lda     ydelta
         ldx     ydelta+1
         clc
-        adc     state_ypos
-        sta     state_ypos
+        adc     current_penloc_y
+        sta     current_penloc_y
         txa
-        adc     state_ypos+1
-        sta     state_ypos+1
+        adc     current_penloc_y+1
+        sta     current_penloc_y+1
         rts
 .endproc
 
-        ;; Adjust state_xpos by (X,A)
+        ;; Adjust current_penloc_x by (X,A)
 .proc adjust_xpos
         clc
-        adc     state_xpos
-        sta     state_xpos
+        adc     current_penloc_x
+        sta     current_penloc_x
         txa
-        adc     state_xpos+1
-        sta     state_xpos+1
+        adc     current_penloc_x+1
+        sta     current_penloc_x+1
         rts
 .endproc
 
@@ -2554,10 +2549,10 @@ L572F:  ldx     #1
         ldx     #2              ; Convert relative x/y to absolute x/y at $92,$94
 loop:   lda     xdelta,x
         clc
-        adc     state_xpos,x
+        adc     current_penloc_x,x
         sta     $92,x
         lda     xdelta+1,x
-        adc     state_xpos+1,x
+        adc     current_penloc_x+1,x
         sta     $93,x
         dex
         dex
@@ -2585,10 +2580,10 @@ loop:   lda     xdelta,x
         y2      := pt2+2
 
         ldx     #3
-L5778:  lda     state_pos,x     ; move pos to $96, assign params to pos
+L5778:  lda     current_penloc,x     ; move pos to $96, assign params to pos
         sta     pt2,x
         lda     pt1,x
-        sta     state_pos,x
+        sta     current_penloc,x
         dex
         bpl     L5778
 
@@ -2630,10 +2625,10 @@ L57B0:  ldx     #3              ; Swap start/end
         dex
         bpl     :-
 
-L57BF:  ldx     state_hthick
+L57BF:  ldx     current_penwidth
         dex
         stx     $A2
-        lda     state_vthick
+        lda     current_penheight
         sta     $A4
         lda     #0
         sta     $A1
@@ -2715,14 +2710,14 @@ L5852:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
 .proc SetFontImpl
         lda     params_addr     ; set font to passed address
-        sta     state_font
+        sta     current_textfont
         lda     params_addr+1
-        sta     state_font+1
+        sta     current_textfont+1
 
         ;; Compute addresses of each row of the glyphs.
 prepare_font:
         ldy     #0              ; copy first 3 bytes of font defn ($00 ??, $7F ??, height) to $FD-$FF
-:       lda     (state_font),y
+:       lda     (current_textfont),y
         sta     $FD,y
         iny
         cpy     #3
@@ -2731,8 +2726,8 @@ prepare_font:
         cmp     #17             ; if height >= 17, skip this next bit
         bcs     end
 
-        lda     state_font
-        ldx     state_font+1
+        lda     current_textfont
+        ldx     current_textfont+1
         clc
         adc     #3
         bcc     :+
@@ -2831,18 +2826,18 @@ L5907:  sec
         bcs     L590D
         dex
 L590D:  clc
-        adc     state_xpos
+        adc     current_penloc_x
         sta     $96
         txa
-        adc     state_xpos+1
+        adc     current_penloc_x+1
         sta     $97
-        lda     state_xpos
+        lda     current_penloc_x
         sta     $92
-        lda     state_xpos+1
+        lda     current_penloc_x+1
         sta     $93
-        lda     state_ypos
+        lda     current_penloc_y
         sta     $98
-        ldx     state_ypos+1
+        ldx     current_penloc_y+1
         stx     $99
         clc
         adc     #1
@@ -2903,7 +2898,7 @@ L5972:  jsr     set_up_fill_mode
 L5985:  sta     $87
         lda     $91
         inc     $91
-        ldy     state_stride
+        ldy     current_mapwidth
         bpl     L599F
         asl     a
         tax
@@ -2991,11 +2986,11 @@ L5A26:  lda     glyph_row_lo,y
         bpl     L5A26
         ldy     $94
         ldx     #$00
-L5A3F:  bit     state_stride
+L5A3F:  bit     current_mapwidth
         bmi     L5A56
         lda     $84
         clc
-        adc     state_stride
+        adc     current_mapwidth
         sta     $84
         sta     $20,x
         lda     $85
@@ -3008,7 +3003,7 @@ L5A56:  lda     hires_table_lo,y
         adc     $86
         sta     $20,x
         lda     hires_table_hi,y
-        ora     state_addr+1
+        ora     current_mapbits+1
         sta     $21,x
 L5A65:  cpy     $98
 L5A68           := * + 1
@@ -3238,54 +3233,54 @@ L5C23           := * + 2
 ;;; Per JB: "looks like the quickdraw fast-path draw unclipped pattern slab"
 
 L5C24:  lda     $0F
-        eor     state_tmask
+        eor     current_textback
         sta     ($3E),y
 L5C2A:  lda     $0E
-        eor     state_tmask
+        eor     current_textback
         sta     ($3C),y
 L5C30:  lda     $0D
-        eor     state_tmask
+        eor     current_textback
         sta     ($3A),y
 L5C36:  lda     $0C
-        eor     state_tmask
+        eor     current_textback
         sta     ($38),y
 L5C3C:  lda     $0B
-        eor     state_tmask
+        eor     current_textback
         sta     ($36),y
 L5C42:  lda     $0A
-        eor     state_tmask
+        eor     current_textback
         sta     ($34),y
 L5C48:  lda     $09
-        eor     state_tmask
+        eor     current_textback
         sta     ($32),y
 L5C4E:  lda     $08
-        eor     state_tmask
+        eor     current_textback
         sta     ($30),y
 L5C54:  lda     $07
-        eor     state_tmask
+        eor     current_textback
         sta     ($2E),y
 L5C5A:  lda     $06
-        eor     state_tmask
+        eor     current_textback
         sta     ($2C),y
 L5C60:  lda     $05
-        eor     state_tmask
+        eor     current_textback
         sta     ($2A),y
 L5C66:  lda     $04
-        eor     state_tmask
+        eor     current_textback
         sta     ($28),y
 L5C6C:  lda     $03
-        eor     state_tmask
+        eor     current_textback
         sta     ($26),y
 L5C72:  lda     $02
-        eor     state_tmask
+        eor     current_textback
         sta     ($24),y
 L5C78:  lda     $01
-        eor     state_tmask
+        eor     current_textback
         sta     ($22),y
 L5C7E:  lda     $00
-        eor     state_tmask
+        eor     current_textback
         sta     ($20),y
-L5C84:  bit     state_stride
+L5C84:  bit     current_mapwidth
         bpl     L5C94
         lda     $9C
         eor     #$01
@@ -3323,97 +3318,97 @@ L5CBF           := * + 2
 ;;; Per JB: "looks like the quickdraw slow-path draw clipped pattern slab"
 
 L5CC0:  lda     $0F
-        eor     state_tmask
+        eor     current_textback
         eor     ($3E),y
         and     $80
         eor     ($3E),y
         sta     ($3E),y
 L5CCC:  lda     $0E
-        eor     state_tmask
+        eor     current_textback
         eor     ($3C),y
         and     $80
         eor     ($3C),y
         sta     ($3C),y
 L5CD8:  lda     $0D
-        eor     state_tmask
+        eor     current_textback
         eor     ($3A),y
         and     $80
         eor     ($3A),y
         sta     ($3A),y
 L5CE4:  lda     $0C
-        eor     state_tmask
+        eor     current_textback
         eor     ($38),y
         and     $80
         eor     ($38),y
         sta     ($38),y
 L5CF0:  lda     $0B
-        eor     state_tmask
+        eor     current_textback
         eor     ($36),y
         and     $80
         eor     ($36),y
         sta     ($36),y
 L5CFC:  lda     $0A
-        eor     state_tmask
+        eor     current_textback
         eor     ($34),y
         and     $80
         eor     ($34),y
         sta     ($34),y
 L5D08:  lda     $09
-        eor     state_tmask
+        eor     current_textback
         eor     ($32),y
         and     $80
         eor     ($32),y
         sta     ($32),y
 L5D14:  lda     $08
-        eor     state_tmask
+        eor     current_textback
         eor     ($30),y
         and     $80
         eor     ($30),y
         sta     ($30),y
 L5D20:  lda     $07
-        eor     state_tmask
+        eor     current_textback
         eor     ($2E),y
         and     $80
         eor     ($2E),y
         sta     ($2E),y
 L5D2C:  lda     $06
-        eor     state_tmask
+        eor     current_textback
         eor     ($2C),y
         and     $80
         eor     ($2C),y
         sta     ($2C),y
 L5D38:  lda     $05
-        eor     state_tmask
+        eor     current_textback
         eor     ($2A),y
         and     $80
         eor     ($2A),y
         sta     ($2A),y
 L5D44:  lda     $04
-        eor     state_tmask
+        eor     current_textback
         eor     ($28),y
         and     $80
         eor     ($28),y
         sta     ($28),y
 L5D50:  lda     $03
-        eor     state_tmask
+        eor     current_textback
         eor     ($26),y
         and     $80
         eor     ($26),y
         sta     ($26),y
 L5D5C:  lda     $02
-        eor     state_tmask
+        eor     current_textback
         eor     ($24),y
         and     $80
         eor     ($24),y
         sta     ($24),y
 L5D68:  lda     $01
-        eor     state_tmask
+        eor     current_textback
         eor     ($22),y
         and     $80
         eor     ($22),y
         sta     ($22),y
 L5D74:  lda     $00
-        eor     state_tmask
+        eor     current_textback
         eor     ($20),y
         and     $80
         eor     ($20),y
@@ -3452,17 +3447,17 @@ L5E42:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         sta     $82             ; (why is high nibble 7 ???)
         jsr     SetSwitchesImpl
 
-        ;; Initialize state
-        ldx     #sizeof_state-1
-loop:   lda     screen_state,x
+        ;; Initialize port
+        ldx     #sizeof_grafport-1
+loop:   lda     standard_port,x
         sta     $8A,x
-        sta     state,x
+        sta     current_grafport,x
         dex
         bpl     loop
 
-        lda     saved_state_addr
-        ldx     saved_state_addr+1
-        jsr     assign_and_prepare_state
+        lda     saved_port_addr
+        ldx     saved_port_addr+1
+        jsr     assign_and_prepare_port
 
         lda     #$7F
         sta     fill_eor_mask
@@ -3471,8 +3466,8 @@ loop:   lda     screen_state,x
         sta     fill_eor_mask
         rts
 
-saved_state_addr:
-        .addr   saved_state
+saved_port_addr:
+        .addr   saved_port
 .endproc
 
 ;;; ==================================================
@@ -3520,15 +3515,15 @@ table:  .byte   <(TXTCLR / 2), <(MIXCLR / 2), <(LOWSCR / 2), <(LORES / 2)
         ;; fall through
 .endproc
 
-        ;; Call with state address in (X,A)
-assign_and_prepare_state:
-        sta     active_state
-        stx     active_state+1
+        ;; Call with port address in (X,A)
+assign_and_prepare_port:
+        sta     active_port
+        stx     active_port+1
         ;; fall through
 
-        ;; Initializes font (if needed), box, pattern, and fill mode
-prepare_state:
-        lda     state_font+1
+        ;; Initializes font (if needed), port, pattern, and fill mode
+prepare_port:
+        lda     current_textfont+1
         beq     :+              ; only prepare font if necessary
         jsr     SetFontImpl::prepare_font
 :       jsr     SetPortBitsImpl
@@ -3539,9 +3534,9 @@ prepare_state:
 ;;; GetPort
 
 .proc GetPortImpl
-        jsr     apply_state_to_active_state
-        lda     active_state
-        ldx     active_state+1
+        jsr     apply_port_to_active_port
+        lda     active_port
+        ldx     active_port+1
         ;;  fall through
 .endproc
 
@@ -3561,8 +3556,8 @@ store_xa_at_params_y:
 ;;; InitPort
 
 .proc InitPortImpl
-        ldy     #sizeof_state-1 ; Store 36 bytes at params
-loop:   lda     screen_state,y
+        ldy     #sizeof_grafport-1 ; Store 36 bytes at params
+loop:   lda     standard_port,y
         sta     (params_addr),y
         dey
         bpl     loop
@@ -3664,55 +3659,42 @@ stack_ptr_stash:
 
 ;;; ==================================================
 
-;;; Screen State
+;;; Standard GrafPort
 
-.proc screen_state
-left:   .word   0
-top:    .word   0
-addr:   .addr   MGTK::screen_mapbits
-stride: .word   MGTK::screen_mapwidth
-hoff:   .word   0
-voff:   .word   0
-width:  .word   560-1
-height: .word   192-1
-pattern:.res    8, $FF
-mskand: .byte   MGTK::colormask_and
-mskor:  .byte   MGTK::colormask_or
-xpos:   .word   0
-ypos:   .word   0
-hthick: .byte   1
-vthick: .byte   1
-mode:   .byte   0
-tmask:  .byte   0
-font:   .addr   0
+.proc standard_port
+viewloc:        .word   0, 0
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .word MGTK::screen_mapwidth
+maprect:        .word 0, 0, 560-1, 192-1
+penpattern:     .res    8, $FF
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+penloc:         .word   0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+mode:           .byte   0
+textback:       .byte   0
+textfont:       .addr   0
 .endproc
 
 ;;; ==================================================
 
-
-.proc saved_state
-left:   .word   0
-top:    .word   0
-addr:   .addr   MGTK::screen_mapbits
-stride: .word   MGTK::screen_mapwidth
-hoff:   .word   0
-voff:   .word   0
-width:  .word   560-1
-height: .word   192-1
-pattern:.res    8, $FF
-mskand: .byte   MGTK::colormask_and
-mskor:  .byte   MGTK::colormask_or
-xpos:   .word   0
-ypos:   .word   0
-hthick: .byte   1
-vthick: .byte   1
-mode:   .byte   0
-tmask:  .byte   0
-font:   .addr   0
+.proc saved_port
+viewloc:        .word   0, 0
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .word   MGTK::screen_mapwidth
+maprect:        .word 0, 0, 560-1, 192-1
+penpattern:     .res    8, $FF
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+penloc:         .word   0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+mode:           .byte   0
+textback:       .byte   0
+textfont:       .addr   0
 .endproc
 
 active_saved:           ; saved copy of $F4...$FF when ZP swapped
-        .addr   saved_state
+        .addr   saved_port
         .res    10, 0
 
 zp_saved:               ; top half of ZP for when preserve_zp_flag set
@@ -4189,11 +4171,11 @@ L6348:  lda     $82,x
         dex
         bpl     L6348
         lda     #$7F
-        sta     screen_state::tmask
+        sta     standard_port::textback
         lda     $87
-        sta     screen_state::font
+        sta     standard_port::textfont
         lda     $88
-        sta     screen_state::font+1
+        sta     standard_port::textfont+1
         lda     $89
         sta     L6835
         lda     $8A
@@ -4216,11 +4198,11 @@ L6348:  lda     $82,x
         stx     fill_rect_params2_height
         inx
         stx     L78CD
-        stx     test_box_params_bottom
-        stx     test_box_params2_top
+        stx     test_rect_params_bottom
+        stx     test_rect_params2_top
         stx     fill_rect_params4_top
         inx
-        stx     set_box_params_top
+        stx     set_port_params_top
         stx     L78CF
         stx     L6594
         stx     fill_rect_params_top
@@ -4456,19 +4438,19 @@ L6556:  asl     preserve_zp_flag
         sta     params_addr
         lda     L653A
         sta     params_addr+1
-        lda     active_state
+        lda     active_port
 L6566           := * + 1
-        ldx     active_state+1
+        ldx     active_port+1
 L6567:  sta     $82
         stx     $83
         lda     L653B
         sta     stack_ptr_stash
-        ldy     #sizeof_state-1
+        ldy     #sizeof_grafport-1
 L6573:  lda     ($82),y
-        sta     state,y
+        sta     current_grafport,y
         dey
         bpl     L6573
-        jmp     prepare_state
+        jmp     prepare_port
 
 L657E:  lda     L6586
         ldx     L6587
@@ -4877,14 +4859,14 @@ active_menu:
         .addr   0
 
 
-.proc test_box_params
+.proc test_rect_params
 left:   .word   $ffff
 top:    .word   $ffff
 right:  .word   $230
 bottom: .word   $C
 .endproc
-        test_box_params_top := test_box_params::top
-        test_box_params_bottom := test_box_params::bottom
+        test_rect_params_top := test_rect_params::top
+        test_rect_params_bottom := test_rect_params::bottom
 
 .proc fill_rect_params2
 left:   .word   0
@@ -4897,13 +4879,13 @@ height: .word   11
 L6835:  .byte   $00
 L6836:  .byte   $00
 
-.proc test_box_params2
+.proc test_rect_params2
 left:   .word   0
 top:    .word   12
 right:  .word   0
 bottom: .word   0
 .endproc
-        test_box_params2_top := test_box_params2::top
+        test_rect_params2_top := test_rect_params2::top
 
 .proc fill_rect_params4
 left:   .word   0
@@ -5008,16 +4990,16 @@ L68E1:  lda     $BF,y
         bpl     L68E1
         rts
 
-L68EA:  sty     state_ypos
+L68EA:  sty     current_penloc_y
         ldy     #0
-        sty     state_ypos+1
-L68F0:  sta     state_xpos
-        stx     state_xpos+1
+        sty     current_penloc_y+1
+L68F0:  sta     current_penloc_x
+        stx     current_penloc_x+1
         rts
 
         ;; Set fill mode to A
 set_fill_mode:
-        sta     state_fill
+        sta     current_penmode
         jmp     SetPenModeImpl
 
 do_measure_text:
@@ -5077,8 +5059,8 @@ SetMenuImpl:
         jsr     L68EA
         ldx     #$00
 L6957:  jsr     L6878
-        lda     state_xpos
-        ldx     state_xpos+1
+        lda     current_penloc_x
+        ldx     current_penloc_x+1
         sta     $B5
         stx     $B6
         sec
@@ -5172,8 +5154,8 @@ L6A00:  lda     $BB
         ldx     $B1+1
         jsr     draw_text
         jsr     L6A5C
-        lda     state_xpos
-        ldx     state_xpos+1
+        lda     current_penloc_x
+        ldx     current_penloc_x+1
         clc
         adc     #$08
         bcc     L6A24
@@ -5327,10 +5309,10 @@ loop:   lda     $B7,x
         lda     $B9,x
         sta     fill_rect_params2::width,x
         lda     $BB,x
-        sta     test_box_params2::left,x
+        sta     test_rect_params2::left,x
         sta     fill_rect_params4::left,x
         lda     $BD,x
-        sta     test_box_params2::right,x
+        sta     test_rect_params2::right,x
         sta     fill_rect_params4::right,x
         dex
         bpl     loop
@@ -5452,11 +5434,11 @@ L6BFD:  bit     L7D81
         jmp     L8149
 
 L6C05:  MGTK_CALL MGTK::MoveTo, $83
-        MGTK_CALL MGTK::InRect, test_box_params
+        MGTK_CALL MGTK::InRect, test_rect_params
         bne     L6C58
         lda     L6BD9
         beq     L6C23
-        MGTK_CALL MGTK::InRect, test_box_params2
+        MGTK_CALL MGTK::InRect, test_rect_params2
         bne     L6C73
         jsr     L6EA1
 L6C23:  jsr     L691B
@@ -5536,13 +5518,13 @@ L6C98:  lda     $BC
         inx
         stx     $83
         stx     fill_rect_params4::bottom
-        stx     test_box_params2::bottom
+        stx     test_rect_params2::bottom
         ldx     L6822
         inx
         inx
         inx
         stx     fill_rect_params4::top
-        stx     test_box_params2::top
+        stx     test_rect_params2::top
         rts
 
 L6CD8:  lda     hires_table_lo,x
@@ -5732,7 +5714,7 @@ L6E36:  ldx     $A9
         lda     #$01
         jsr     set_fill_mode
         MGTK_CALL MGTK::PaintRect, fill_rect_params3
-        MGTK_CALL MGTK::SetPattern, screen_state::pattern
+        MGTK_CALL MGTK::SetPattern, standard_port::penpattern
         lda     #$02
         jsr     set_fill_mode
         rts
@@ -5799,9 +5781,9 @@ loop:   lda     params,x
         dex
         bpl     loop
 
-        lda     screen_state::font
+        lda     standard_port::textfont
         sta     params
-        lda     screen_state::font+1
+        lda     standard_port::textfont+1
         sta     params+1
         ldy     #0
         lda     ($82),y
@@ -6017,7 +5999,7 @@ L704A:  lda     ($A9),y         ; to $AB
         sta     $AB,y
         dey
         bpl     L704A
-        ldy     #sizeof_state-1
+        ldy     #sizeof_grafport-1
 L7054:  lda     ($A9),y
         sta     $A3,y
         dey
@@ -6356,7 +6338,7 @@ L72A0:  jsr     PaintRectImpl  ; Draw title bar stripes between close box and ti
         sbc     #$00
         sta     $97
         jsr     PaintRectImpl  ; Draw title bar stripes to right of title
-        MGTK_CALL MGTK::SetPattern, screen_state::pattern
+        MGTK_CALL MGTK::SetPattern, standard_port::penpattern
 L72C9:  jsr     next_window::L703E
         bit     $B0
         bpl     L7319
@@ -6493,29 +6475,29 @@ L73BF:  lda     $AD
         sbc     $83
         cmp     #$80
         ror     a
-        sta     state_xpos+1
+        sta     current_penloc_x+1
         tya
         ror     a
-        sta     state_xpos
+        sta     current_penloc_x
         lda     $CD
         ldx     $CE
         sec
         sbc     #$02
         bcs     L73F0
         dex
-L73F0:  sta     state_ypos
-        stx     state_ypos+1
+L73F0:  sta     current_penloc_y
+        stx     current_penloc_y+1
         lda     $82
         ldx     $83
         rts
 
 ;;; ==================================================
 
-;;; 4 bytes of params, copied to state_pos
+;;; 4 bytes of params, copied to current_penloc
 
 FindWindowImpl:
         jsr     L653F
-        MGTK_CALL MGTK::InRect, test_box_params
+        MGTK_CALL MGTK::InRect, test_rect_params
         beq     L7416
         lda     #$01
 L7406:  ldx     #$00
@@ -6682,22 +6664,22 @@ L750C:  .res    38,0
         jsr     L6588
         lda     L7871
         bne     :+
-        MGTK_CALL MGTK::SetPortBits, set_box_params
+        MGTK_CALL MGTK::SetPortBits, set_port_params
 :       jsr     L718E
         jsr     L6588
         lda     L7871
         bne     :+
-        MGTK_CALL MGTK::SetPortBits, set_box_params
+        MGTK_CALL MGTK::SetPortBits, set_port_params
 :       jsr     next_window::L703E
-        lda     active_state
+        lda     active_port
         sta     L750C
-        lda     active_state+1
+        lda     active_port+1
         sta     L750C+1
         jsr     L75C6
         php
         lda     L758A
         ldx     L758A+1
-        jsr     assign_and_prepare_state
+        jsr     assign_and_prepare_port
         asl     preserve_zp_flag
         plp
         bcc     :+
@@ -6720,8 +6702,8 @@ EndUpdateImpl:
         jsr     ShowCursorImpl
         lda     L750C
         ldx     L750C+1
-        sta     active_state
-        stx     active_state+1
+        sta     active_port
+        stx     active_port+1
         jmp     L6567
 
 ;;; ==================================================
@@ -6730,7 +6712,7 @@ EndUpdateImpl:
 ;;; 3 bytes of params, copied to $82
 
 GetWinPortImpl:
-        jsr     apply_state_to_active_state
+        jsr     apply_port_to_active_port
         jsr     window_by_id_or_exit
         lda     $83
         sta     params_addr
@@ -6743,12 +6725,12 @@ L75AC:  lda     fill_rect_params,x
         bpl     L75AC
         jsr     L75C6
         bcc     L7585
-        ldy     #sizeof_state-1
-L75BB:  lda     state,y
+        ldy     #sizeof_grafport-1
+L75BB:  lda     current_grafport,y
         sta     (params_addr),y
         dey
         bpl     L75BB
-        jmp     apply_active_state_to_state
+        jmp     apply_active_port_to_port
 
 L75C6:  jsr     L708D
         ldx     #$07
@@ -6805,13 +6787,13 @@ L75EA:  lda     $92,x
 
 ;;; 2 bytes of params, copied to $82
 
-        ;; This updates current state from params ???
+        ;; This updates win grafport from params ???
         ;; The math is weird; $82 is the window id so
         ;; how does ($82),y do anything useful - is
         ;; this buggy ???
 
         ;; It seems like it's trying to update a fraction
-        ;; of the drawing state (from |pattern| to |font|)
+        ;; of the drawing port (from |pattern| to |font|)
 
 .proc SetWinPortImpl
         ptr := $A9
@@ -6819,11 +6801,11 @@ L75EA:  lda     $92,x
         jsr     window_by_id_or_exit
         lda     ptr
         clc
-        adc     #state_offset_in_window_params
+        adc     #port_offset_in_window_params
         sta     ptr
         bcc     :+
         inc     ptr+1
-:       ldy     #sizeof_state-1
+:       ldy     #sizeof_grafport-1
 loop:   lda     ($82),y
         sta     ($A9),y
         dey
@@ -7130,10 +7112,10 @@ L7854:  lda     $C7,x
         jsr     L50A9
         ldx     #$03
 L7860:  lda     $92,x
-        sta     set_box_params_box,x
-        sta     set_box_params,x
+        sta     set_port_params_maprect,x
+        sta     set_port_params,x
         lda     $96,x
-        sta     set_box_params_size,x
+        sta     set_port_params_size,x
         dex
         bpl     L7860
         rts
@@ -7143,11 +7125,11 @@ L7871:  .byte   0
 L7872:  sta     L7010
         lda     #$00
         sta     L7871
-        MGTK_CALL MGTK::SetPortBits, set_box_params
+        MGTK_CALL MGTK::SetPortBits, set_port_params
         lda     #$00
         jsr     set_fill_mode
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
-        MGTK_CALL MGTK::PaintRect, set_box_params_box
+        MGTK_CALL MGTK::PaintRect, set_port_params_maprect
         jsr     L6553
         jsr     top_window
         beq     L78CA
@@ -7180,19 +7162,19 @@ L78CB:  .byte   $08,$00
 L78CD:  .byte   $0C,$00
 L78CF:  .byte   $0D,$00
 
-.proc set_box_params
-left:   .word   0
-top:    .word   $D
-addr:   .addr   MGTK::screen_mapbits
-stride: .word   MGTK::screen_mapwidth
-hoffset:.word   0
-voffset:.word   0
-width:  .word   0
-height: .word   0
+.proc set_port_params
+left:           .word   0
+top:            .word   $D
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .word   MGTK::screen_mapwidth
+hoffset:        .word   0
+voffset:        .word   0
+width:          .word   0
+height:         .word   0
 .endproc
-        set_box_params_top  := set_box_params::top
-        set_box_params_size := set_box_params::width
-        set_box_params_box  := set_box_params::hoffset ; Re-used since h/voff are 0
+        set_port_params_top  := set_port_params::top
+        set_port_params_size := set_port_params::width
+        set_port_params_maprect  := set_port_params::hoffset ; Re-used since h/voff are 0
 
 ;;; ==================================================
 ;;; WindowToScreen
@@ -7338,7 +7320,7 @@ L79BC:  jsr     L657E
         jsr     L79F1
         MGTK_CALL MGTK::SetPattern, light_speckles_pattern
         MGTK_CALL MGTK::PaintRect, $C7
-        MGTK_CALL MGTK::SetPattern, screen_state::pattern
+        MGTK_CALL MGTK::SetPattern, standard_port::penpattern
         bit     $8C
         bmi     L79DD
         bit     $AF
@@ -7473,7 +7455,7 @@ L7AA4:  pha
 ;;; ==================================================
 ;;; FindControl
 
-;;; 4 bytes of params, copied to state_pos
+;;; 4 bytes of params, copied to current_penloc
 
 FindControlImpl:
         jsr     L653F
@@ -7510,7 +7492,7 @@ L7B04:  pha
         jsr     L7A73
         pla
         tax
-        lda     state_ypos
+        lda     current_penloc_y
         cmp     $C9
         bcc     L7B11
         inx
@@ -7544,11 +7526,11 @@ L7B4B:  pha
         jsr     L7A73
         pla
         tax
-        lda     state_xpos+1
+        lda     current_penloc_x+1
         cmp     $C8
         bcc     L7B60
         bne     L7B5F
-        lda     state_xpos
+        lda     current_penloc_x
         cmp     $C7
         bcc     L7B60
 L7B5F:  inx
@@ -8517,7 +8499,7 @@ L8305:  sta     L7D75
 L831A:  jmp     L7E98
 
 L831D:  sta     set_input_params_key
-        ldx     #sizeof_state-1
+        ldx     #sizeof_grafport-1
 L8322:  lda     $A7,x
         sta     $0600,x
         dex
@@ -8525,7 +8507,7 @@ L8322:  lda     $A7,x
         lda     set_input_params_key
         jsr     L8110
         php
-        ldx     #sizeof_state-1
+        ldx     #sizeof_grafport-1
 L8333:  lda     $0600,x
         sta     $A7,x
         dex
