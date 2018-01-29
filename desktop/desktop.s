@@ -2247,7 +2247,7 @@ LA085:  jsr     LA6A3
         jsr     LA097
         lda     L9F93
         bne     LA085
-        MGTK_CALL MGTK::SetPortSite, query_screen_params
+        MGTK_CALL MGTK::SetPortBits, query_screen_params
         rts
 
 LA097:  MGTK_CALL MGTK::HideCursor, DESKTOP_DIRECT ; These params should be ignored - bogus?
@@ -2632,7 +2632,7 @@ LA3FD:  jsr     LA6A3
         jsr     LA411
         lda     L9F93
         bne     LA3FD
-        MGTK_CALL MGTK::SetPortSite, query_screen_params
+        MGTK_CALL MGTK::SetPortBits, query_screen_params
         jmp     LA446
 
 LA411:  lda     #$00
@@ -2944,7 +2944,7 @@ LA674:  lda     L8E15,x
         lda     #$02
         sta     LA62C
         sta     set_box_params2::width+1
-LA69C:  MGTK_CALL MGTK::SetPortSite, set_box_params2
+LA69C:  MGTK_CALL MGTK::SetPortBits, set_box_params2
         rts
 
 LA6A3:  lda     #$00
@@ -3033,7 +3033,7 @@ LA747:  lda     LA6B0
         bne     LA775
         lda     #$00
         sta     LA6B0
-LA753:  MGTK_CALL MGTK::SetPortSite, set_box_params2
+LA753:  MGTK_CALL MGTK::SetPortBits, set_box_params2
         lda     set_box_params2::width+1
         cmp     LA62C
         bne     LA76F
@@ -3934,7 +3934,7 @@ LBA0B:  sta     state2_left,x
         MGTK_RELAY2_CALL MGTK::PaintRect, alert_rect ; alert background
         MGTK_RELAY2_CALL MGTK::SetPenMode, const2 ; ensures corners are inverted
         MGTK_RELAY2_CALL MGTK::FrameRect, alert_rect ; alert outline
-        MGTK_RELAY2_CALL MGTK::SetPortSite, LB6D3
+        MGTK_RELAY2_CALL MGTK::SetPortBits, LB6D3
         MGTK_RELAY2_CALL MGTK::FrameRect, alert_inner_frame_rect1 ; inner 2x border
         MGTK_RELAY2_CALL MGTK::FrameRect, alert_inner_frame_rect2
         MGTK_RELAY2_CALL MGTK::SetPenMode, const0 ; restores normal mode
@@ -19938,7 +19938,7 @@ LB8F5:  jsr     LBD3B
         lda     $D6B5+1
         sta     $08+1
         MGTK_RELAY_CALL MGTK::MoveTo, $6
-        MGTK_RELAY_CALL MGTK::SetPortSite, LD6C7
+        MGTK_RELAY_CALL MGTK::SetPortBits, LD6C7
         bit     LD8EB
         bpl     LB92D
         MGTK_RELAY_CALL MGTK::SetTextBG, desktop_aux::LAE6C
@@ -19969,7 +19969,7 @@ LB961:  lda     path_buf1
         MGTK_RELAY_CALL MGTK::SetPenMode, const2
         MGTK_RELAY_CALL MGTK::FrameRect, LD6AB
         MGTK_RELAY_CALL MGTK::MoveTo, LD6B3
-        MGTK_RELAY_CALL MGTK::SetPortSite, LD6C7
+        MGTK_RELAY_CALL MGTK::SetPortBits, LD6C7
         addr_call draw_text1, path_buf1
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
@@ -20146,7 +20146,7 @@ LBB1A:  lda     LBB62
         lda     $D6B5+1
         sta     $08+1
         MGTK_RELAY_CALL MGTK::MoveTo, $6
-        MGTK_RELAY_CALL MGTK::SetPortSite, LD6C7
+        MGTK_RELAY_CALL MGTK::SetPortBits, LD6C7
         addr_call draw_text1, str_1_char
         addr_call draw_text1, path_buf2
         lda     winF
@@ -20167,7 +20167,7 @@ LBB69:  dec     path_buf1
         lda     $D6B5+1
         sta     $08+1
         MGTK_RELAY_CALL MGTK::MoveTo, $6
-        MGTK_RELAY_CALL MGTK::SetPortSite, LD6C7
+        MGTK_RELAY_CALL MGTK::SetPortBits, LD6C7
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
         lda     winF
@@ -20199,7 +20199,7 @@ LBBBC:  ldx     path_buf1
         lda     $D6B5+1
         sta     $08+1
         MGTK_RELAY_CALL MGTK::MoveTo, $6
-        MGTK_RELAY_CALL MGTK::SetPortSite, LD6C7
+        MGTK_RELAY_CALL MGTK::SetPortBits, LD6C7
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
         lda     winF
@@ -20227,7 +20227,7 @@ LBC21:  lda     $D485,x
         bne     LBC21
 LBC2D:  dec     path_buf2
         MGTK_RELAY_CALL MGTK::MoveTo, LD6B3
-        MGTK_RELAY_CALL MGTK::SetPortSite, LD6C7
+        MGTK_RELAY_CALL MGTK::SetPortBits, LD6C7
         addr_call draw_text1, path_buf1
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces

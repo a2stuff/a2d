@@ -1471,7 +1471,7 @@ base:   .word   10              ; vertical text offset (to baseline)
 .endproc
 
 .proc draw_mode
-        MGTK_CALL MGTK::SetPortSite, mode_box
+        MGTK_CALL MGTK::SetPortBits, mode_box
         MGTK_CALL MGTK::MoveTo, mode_pos
         lda     fixed_mode_flag
         beq     else            ; is proportional?
@@ -1484,6 +1484,6 @@ loop:   lda     default_box,x
         sta     window_params::box,x
         dex
         bpl     loop
-        MGTK_CALL MGTK::SetPortSite, window_params::box
+        MGTK_CALL MGTK::SetPortBits, window_params::box
         rts
 .endproc

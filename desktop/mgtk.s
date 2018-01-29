@@ -98,7 +98,7 @@
 ;;; ==================================================
 ;;; MGTK
 
-.proc mgtk_dispatch
+.proc dispatch
         .assert * = MGTK::MLI, error, "Entry point must be at $4000"
 
         lda     LOWSCR
@@ -140,9 +140,9 @@ adjust_stack:                   ; Adjust stack to account for params
         lda     (params_addr),y
         asl     a
         tax
-        lda     mgtk_jump_table,x
+        lda     jump_table,x
         sta     jump+1
-        lda     mgtk_jump_table+1,x
+        lda     jump_table+1,x
         sta     jump+2
 
         iny                     ; Point params_addr at params
@@ -225,9 +225,9 @@ rts1:   rts
 ;;; ==================================================
 ;;; Routines can jmp here to exit with A set
 
-mgtk_exit_with_a:
+exit_with_a:
         pha
-        jsr     mgtk_dispatch::cleanup
+        jsr     dispatch::cleanup
         pla
         ldx     stack_ptr_stash
         txs
@@ -264,14 +264,14 @@ hide_cursor_count:
 
 .proc hide_cursor
         dec     hide_cursor_count
-        jmp     HIDE_CURSOR_IMPL
+        jmp     HideCursorImpl
 .endproc
 
 .proc show_cursor
         bit     hide_cursor_count
         bpl     rts2
         inc     hide_cursor_count
-        jmp     SHOW_CURSOR_IMPL
+        jmp     ShowCursorImpl
 .endproc
 
 ;;; ==================================================
@@ -280,117 +280,117 @@ hide_cursor_count:
         ;; jt_rts can be used if the only thing the
         ;; routine needs to do is copy params into
         ;; the zero page (state)
-        jt_rts := mgtk_dispatch::rts1
+        jt_rts := dispatch::rts1
 
-mgtk_jump_table:
-        .addr   jt_rts              ; $00 NOOP
+jump_table:
+        .addr   jt_rts              ; $00 NoOp
 
         ;; ----------------------------------------
         ;; Graphics Primitives
 
 
         ;; Initialization Commands
-        .addr   L5E51               ; $01
-        .addr   CFG_DISPLAY_IMPL    ; $02 CFG_DISPLAY
+        .addr   InitGrafImpl        ; $01 InitGraf
+        .addr   SetSwitchesImpl     ; $02 SetSwitches
 
         ;; GrafPort Commands
-        .addr   QUERY_SCREEN_IMPL   ; $03 QUERY_SCREEN
-        .addr   SET_STATE_IMPL      ; $04 SET_STATE
-        .addr   GET_STATE_IMPL      ; $05 GET_STATE
-        .addr   SET_BOX_IMPL        ; $06 SET_BOX
-        .addr   SET_FILL_MODE_IMPL  ; $07 SET_FILL_MODE
-        .addr   SET_PATTERN_IMPL    ; $08 SET_PATTERN
-        .addr   jt_rts              ; $09 SET_MSK
-        .addr   jt_rts              ; $0A SET_THICKNESS
-        .addr   SET_FONT_IMPL       ; $0B SET_FONT
-        .addr   jt_rts              ; $0C SET_TEXT_MASK
+        .addr   InitPortImpl        ; $03 InitPort
+        .addr   SetPortImpl         ; $04 SetPort
+        .addr   GetPortImpl         ; $05 GetPort
+        .addr   SetPortBitsImpl     ; $06 SetPortBits
+        .addr   SetPenModeImpl      ; $07 SetPenMode
+        .addr   SetPatternImpl      ; $08 SetPattern
+        .addr   jt_rts              ; $09 SetColorMasks
+        .addr   jt_rts              ; $0A SetPenSize
+        .addr   SetFontImpl         ; $0B SetFont
+        .addr   jt_rts              ; $0C SetTextBG
 
         ;; Drawing Commands
-        .addr   OFFSET_POS_IMPL     ; $0D OFFSET_POS
-        .addr   jt_rts              ; $0E SET_POS
-        .addr   DRAW_LINE_IMPL      ; $0F DRAW_LINE
-        .addr   DRAW_LINE_ABS_IMPL  ; $10 DRAW_LINE_ABS
-        .addr   FILL_RECT_IMPL      ; $11 FILL_RECT
-        .addr   DRAW_RECT_IMPL      ; $12 DRAW_RECT
-        .addr   TEST_BOX_IMPL       ; $13 TEST_BOX
-        .addr   DRAW_BITMAP_IMPL    ; $14 DRAW_BITMAP
-        .addr   L537E               ; $15
-        .addr   DRAW_POLYGONS_IMPL  ; $16 DRAW_POLYGONS
-        .addr   L537A               ; $17
+        .addr   MoveImpl            ; $0D Move
+        .addr   jt_rts              ; $0E MoveTo
+        .addr   LineImpl            ; $0F Line
+        .addr   LineToImpl          ; $10 LineTo
+        .addr   PaintRectImpl       ; $11 PaintRect
+        .addr   FrameRectImpl       ; $12 FrameRect
+        .addr   InRectImpl          ; $13 InRect
+        .addr   PaintBitsImpl       ; $14 PaintBits
+        .addr   PaintPolyImpl       ; $15 PaintPoly
+        .addr   FramePolyImpl       ; $16 FramePoly
+        .addr   InPolyImpl          ; $17 InPoly
 
         ;; Text Commands
-        .addr   MEASURE_TEXT_IMPL   ; $18 MEASURE_TEXT
-        .addr   DRAW_TEXT_IMPL      ; $19 DRAW_TEXT
+        .addr   TextWidthImpl       ; $18 TextWidth
+        .addr   DrawTextImpl        ; $19 DrawText
 
         ;; Utility Commands
-        .addr   CONFIGURE_ZP_IMPL   ; $1A CONFIGURE_ZP_USE
-        .addr   LOW_ZP_STASH_IMPL   ; $1B LOW_ZP_STASH
-        .addr   L5F0A               ; $1C
+        .addr   SetZP1Impl          ; $1A SetZP1
+        .addr   SetZP2Impl          ; $1B SetZP2
+        .addr   VersionImpl         ; $1C Version
 
         ;; ----------------------------------------
         ;; Mouse Graphics Tool Kit
 
         ;; Initialization Calls
-        .addr   INIT_SCREEN_AND_MOUSE_IMPL ; $1D INIT_SCREEN_AND_MOUSE
-        .addr   DISABLE_MOUSE_IMPL  ; $1E DISABLE_MOUSE
-        .addr   L64D2               ; $1F
-        .addr   HOOK_MOUSE_IMPL     ; $20 HOOK_MOUSE
-        .addr   L8427               ; $21
-        .addr   L7D61               ; $22
-        .addr   GET_INT_HANDLER_IMPL; $23 GET_INT_HANDLER
+        .addr   StartDeskTopImpl    ; $1D StartDeskTop
+        .addr   StopDeskTopImpl     ; $1E StopDeskTop
+        .addr   L64D2               ; $1F ???
+        .addr   SetUserHookImpl     ; $20 SetUserHook
+        .addr   ScaleMouseImpl      ; $21 ScaleMouseImpl
+        .addr   KeyboardMouse       ; $22 KeyboardMouse
+        .addr   GetIntHandlerImpl   ; $23 GetIntHandler
 
         ;; Cursor Manager Calls
-        .addr   SET_CURSOR_IMPL     ; $24 SET_CURSOR
-        .addr   SHOW_CURSOR_IMPL    ; $25 SHOW_CURSOR
-        .addr   HIDE_CURSOR_IMPL    ; $26 HIDE_CURSOR
-        .addr   ERASE_CURSOR_IMPL   ; $27 ERASE_CURSOR
-        .addr   GET_CURSOR_IMPL     ; $28 GET_CURSOR
-        .addr   L6663               ; $29
+        .addr   SetCursorImpl       ; $24 SetCursor
+        .addr   ShowCursorImpl      ; $25 ShowCursor
+        .addr   HideCursorImpl      ; $26 HideCursor
+        .addr   ObscureCursorImpl   ; $27 ObscureCursor
+        .addr   GetCursorAddrImpl   ; $28 GetCursorAddr
 
         ;; Event Manager Calls
-        .addr   GET_INPUT_IMPL      ; $2A GET_INPUT
-        .addr   CALL_2B_IMPL        ; $2B
-        .addr   L65D4               ; $2C
-        .addr   SET_INPUT_IMPL      ; $2D SET_INPUT
-        .addr   SET_KBD_FLAG_IMPL   ; $2E SET_KBD_FLAG
+        .addr   CheckEventsImpl     ; $29 CheckEvents
+        .addr   GetEventImpl        ; $2A GetEvent
+        .addr   FlushEventsImpl     ; $2B FlushEvents
+        .addr   PeekEventImpl       ; $2C PeekEvent
+        .addr   PostEventImpl       ; $2D PostEvent
+        .addr   SetKeyEventImpl     ; $2E SetKeyEvent
 
         ;; Menu Manager Calls
-        .addr   L6ECD               ; $2F
-        .addr   SET_MENU_IMPL       ; $30 SET_MENU
-        .addr   MENU_CLICK_IMPL     ; $31 MENU_CLICK
-        .addr   L6B60               ; $32
-        .addr   L6B1D               ; $33
-        .addr   L6BCB               ; $34
-        .addr   L6BA9               ; $35
-        .addr   L6BB5               ; $36
-        .addr   L6F1C               ; $37
+        .addr   InitMenuImpl        ; $2F InitMenu
+        .addr   SetMenuImpl         ; $30 SetMenu
+        .addr   MenuSelectImpl      ; $31 MenuSelect
+        .addr   MenuKeyImpl         ; $32 MenuKey
+        .addr   HiliteMenuImpl      ; $33 HiliteMenu
+        .addr   DisableMenuImpl     ; $34 DisableMenu
+        .addr   DisableItemImpl     ; $35 DisableItem
+        .addr   CheckItemImpl       ; $36 CheckItem
+        .addr   SetMarkImpl         ; $37 SetMark
 
         ;; Window Manager Calls
-        .addr   CREATE_WINDOW_IMPL  ; $38 CREATE_WINDOW
-        .addr   DESTROY_WINDOW_IMPL ; $39 DESTROY_WINDOW
-        .addr   L7836               ; $3A
-        .addr   QUERY_WINDOW_IMPL   ; $3B QUERY_WINDOW
-        .addr   QUERY_STATE_IMPL    ; $3C QUERY_STATE
-        .addr   UPDATE_STATE_IMPL   ; $3D UPDATE_STATE
-        .addr   REDRAW_WINDOW_IMPL  ; $3E REDRAW_WINDOW
-        .addr   L758C               ; $3F
-        .addr   QUERY_TARGET_IMPL   ; $40 QUERY_TARGET
-        .addr   QUERY_TOP_IMPL      ; $41 QUERY_TOP
-        .addr   RAISE_WINDOW_IMPL   ; $42 RAISE_WINDOW
-        .addr   CLOSE_CLICK_IMPL    ; $43 CLOSE_CLICK
-        .addr   DRAG_WINDOW_IMPL    ; $44 DRAG_WINDOW
-        .addr   DRAG_RESIZE_IMPL    ; $45 DRAG_RESIZE
-        .addr   MAP_COORDS_IMPL     ; $46 MAP_COORDS
-        .addr   L78E1               ; $47
+        .addr   OpenWindowImpl      ; $38 OpenWindow
+        .addr   CloseWindowImpl     ; $39 CloseWindow
+        .addr   CloseAllImpl        ; $3A CloseAll
+        .addr   GetWinPtrImpl       ; $3B GetWinPtr
+        .addr   GetWinPortImpl      ; $3C GetWinPort
+        .addr   SetWinPortImpl      ; $3D SetWinPort
+        .addr   BeginUpdateImpl     ; $3E BeginUpdate
+        .addr   EndUpdateImpl       ; $3F EndUpdate
+        .addr   FindWindowImpl      ; $40 FindWindow
+        .addr   FrontWindowImpl     ; $41 FrontWindow
+        .addr   SelectWindowImpl    ; $42 SelectWindow
+        .addr   TrackGoAwayImpl     ; $43 TrackGoAway
+        .addr   DragWindowImpl      ; $44 DragWindow
+        .addr   GrowWindowImpl      ; $45 GrowWindow
+        .addr   ScreenToWindowImpl  ; $46 ScreenToWindow
+        .addr   WindowToScreenImpl  ; $47 WindowToScreenImpl
 
         ;; Control Manager Calls
-        .addr   QUERY_CLIENT_IMPL   ; $48 QUERY_CLIENT
-        .addr   RESIZE_WINDOW_IMPL  ; $49 RESIZE_WINDOW
-        .addr   DRAG_SCROLL_IMPL    ; $4A DRAG_SCROLL
-        .addr   UPDATE_SCROLL_IMPL  ; $4B UPDATE_SCROLL
-        .addr   L7965               ; $4C
-        .addr   L51B3               ; $4D
-        .addr   L7D69               ; $4E
+        .addr   FindControlImpl     ; $48 FindControl
+        .addr   SetCtlMaxImpl       ; $49 SetCtlMax
+        .addr   TrackThumbImpl      ; $4A TrackThumb
+        .addr   UpdateThumbImpl     ; $4B UpdateThumb
+        .addr   ActivateCtlImpl     ; $4C ActivateCtl
+        .addr   L51B3               ; $4D ???
+        .addr   L7D69               ; $4E ???
 
         ;; Entry point param lengths
         ;; (length, ZP destination, hide cursor flag)
@@ -400,82 +400,82 @@ param_lengths:
         .byte zp, ((length) | ((cursor) << 7))
 .endmacro
 
-        PARAM_DEFN  0, $00, 0           ; $00 NOOP
+        PARAM_DEFN  0, $00, 0           ; $00 NoOp
         PARAM_DEFN  0, $00, 0           ; $01
         PARAM_DEFN  1, $82, 0           ; $02
-        PARAM_DEFN  0, $00, 0           ; $03 QUERY_SCREEN
-        PARAM_DEFN 36, state, 0         ; $04 SET_STATE
-        PARAM_DEFN  0, $00, 0           ; $05 GET_STATE
-        PARAM_DEFN 16, state_box, 0     ; $06 SET_BOX
-        PARAM_DEFN  1, state_fill, 0    ; $07 SET_FILL_MODE
-        PARAM_DEFN  8, state_pattern, 0 ; $08 SET_PATTERN
+        PARAM_DEFN  0, $00, 0           ; $03 InitPort
+        PARAM_DEFN 36, state, 0         ; $04 SetPort
+        PARAM_DEFN  0, $00, 0           ; $05 GetPort
+        PARAM_DEFN 16, state_box, 0     ; $06 SetPortBits
+        PARAM_DEFN  1, state_fill, 0    ; $07 SetPenMode
+        PARAM_DEFN  8, state_pattern, 0 ; $08 SetPattern
         PARAM_DEFN  2, state_msk, 0     ; $09
-        PARAM_DEFN  2, state_thick, 0   ; $0A SET_THICKNESS
+        PARAM_DEFN  2, state_thick, 0   ; $0A SetPenSize
         PARAM_DEFN  0, $00, 0           ; $0B
-        PARAM_DEFN  1, state_tmask, 0   ; $0C SET_TEXT_MASK
+        PARAM_DEFN  1, state_tmask, 0   ; $0C SetTextBG
         PARAM_DEFN  4, $A1, 0           ; $0D
-        PARAM_DEFN  4, state_pos, 0     ; $0E SET_POS
-        PARAM_DEFN  4, $A1, 1           ; $0F DRAW_LINE
-        PARAM_DEFN  4, $92, 1           ; $10 DRAW_LINE_ABS
-        PARAM_DEFN  8, $92, 1           ; $11 FILL_RECT
-        PARAM_DEFN  8, $9F, 1           ; $12 DRAW_RECT
-        PARAM_DEFN  8, $92, 0           ; $13 TEST_BOX
-        PARAM_DEFN 16, $8A, 0           ; $14 DRAW_BITMAP
+        PARAM_DEFN  4, state_pos, 0     ; $0E MoveTo
+        PARAM_DEFN  4, $A1, 1           ; $0F Line
+        PARAM_DEFN  4, $92, 1           ; $10 LineTo
+        PARAM_DEFN  8, $92, 1           ; $11 PaintRect
+        PARAM_DEFN  8, $9F, 1           ; $12 FrameRect
+        PARAM_DEFN  8, $92, 0           ; $13 InRect
+        PARAM_DEFN 16, $8A, 0           ; $14 PaintBits
         PARAM_DEFN  0, $00, 1           ; $15
-        PARAM_DEFN  0, $00, 1           ; $16 DRAW_POLYGONS
+        PARAM_DEFN  0, $00, 1           ; $16 FramePoly
         PARAM_DEFN  0, $00, 0           ; $17
-        PARAM_DEFN  3, $A1, 0           ; $18 MEASURE_TEXT
-        PARAM_DEFN  3, $A1, 1           ; $19 DRAW_TEXT
-        PARAM_DEFN  1, $82, 0           ; $1A CONFIGURE_ZP_USE
-        PARAM_DEFN  1, $82, 0           ; $1B LOW_ZP_STASH
+        PARAM_DEFN  3, $A1, 0           ; $18 TextWidth
+        PARAM_DEFN  3, $A1, 1           ; $19 DrawText
+        PARAM_DEFN  1, $82, 0           ; $1A SetZP1
+        PARAM_DEFN  1, $82, 0           ; $1B SetZP2
         PARAM_DEFN  0, $00, 0           ; $1C
-        PARAM_DEFN 12, $82, 0           ; $1D INIT_SCREEN_AND_MOUSE
-        PARAM_DEFN  0, $00, 0           ; $1E DISABLE_MOUSE
+        PARAM_DEFN 12, $82, 0           ; $1D StartDeskTop
+        PARAM_DEFN  0, $00, 0           ; $1E StopDeskTop
         PARAM_DEFN  3, $82, 0           ; $1F
-        PARAM_DEFN  2, $82, 0           ; $20 HOOK_MOUSE
+        PARAM_DEFN  2, $82, 0           ; $20 SetUserHook
         PARAM_DEFN  2, $82, 0           ; $21
         PARAM_DEFN  1, $82, 0           ; $22
-        PARAM_DEFN  0, $00, 0           ; $23 GET_INT_HANDLER
-        PARAM_DEFN  0, $00, 0           ; $24 SET_CURSOR
-        PARAM_DEFN  0, $00, 0           ; $25 SHOW_CURSOR
-        PARAM_DEFN  0, $00, 0           ; $26 HIDE_CURSOR
-        PARAM_DEFN  0, $00, 0           ; $27 ERASE_CURSOR
-        PARAM_DEFN  0, $00, 0           ; $28 GET_CURSOR
+        PARAM_DEFN  0, $00, 0           ; $23 GetIntHandler
+        PARAM_DEFN  0, $00, 0           ; $24 SetCursor
+        PARAM_DEFN  0, $00, 0           ; $25 ShowCursor
+        PARAM_DEFN  0, $00, 0           ; $26 HideCursor
+        PARAM_DEFN  0, $00, 0           ; $27 ObscureCursor
+        PARAM_DEFN  0, $00, 0           ; $28 GetCursorAddr
         PARAM_DEFN  0, $00, 0           ; $29
-        PARAM_DEFN  0, $00, 0           ; $2A GET_INPUT
+        PARAM_DEFN  0, $00, 0           ; $2A GetEvent
         PARAM_DEFN  0, $00, 0           ; $2B
         PARAM_DEFN  0, $00, 0           ; $2C
-        PARAM_DEFN  5, $82, 0           ; $2D SET_INPUT
-        PARAM_DEFN  1, $82, 0           ; $2E SET_KBD_FLAG
+        PARAM_DEFN  5, $82, 0           ; $2D PostEvent
+        PARAM_DEFN  1, $82, 0           ; $2E SetKeyEvent
         PARAM_DEFN  4, $82, 0           ; $2F
-        PARAM_DEFN  0, $00, 0           ; $30 SET_MENU
-        PARAM_DEFN  0, $00, 0           ; $31 MENU_CLICK
+        PARAM_DEFN  0, $00, 0           ; $30 SetMenu
+        PARAM_DEFN  0, $00, 0           ; $31 MenuSelect
         PARAM_DEFN  4, $C7, 0           ; $32
         PARAM_DEFN  1, $C7, 0           ; $33
         PARAM_DEFN  2, $C7, 0           ; $34
         PARAM_DEFN  3, $C7, 0           ; $35
         PARAM_DEFN  3, $C7, 0           ; $36
         PARAM_DEFN  4, $C7, 0           ; $37
-        PARAM_DEFN  0, $00, 0           ; $38 CREATE_WINDOW
-        PARAM_DEFN  1, $82, 0           ; $39 DESTROY_WINDOW
+        PARAM_DEFN  0, $00, 0           ; $38 OpenWindow
+        PARAM_DEFN  1, $82, 0           ; $39 CloseWindow
         PARAM_DEFN  0, $00, 0           ; $3A
-        PARAM_DEFN  1, $82, 0           ; $3B QUERY_WINDOW
-        PARAM_DEFN  3, $82, 0           ; $3C QUERY_STATE
-        PARAM_DEFN  2, $82, 0           ; $3D UPDATE_STATE
-        PARAM_DEFN  1, $82, 0           ; $3E REDRAW_WINDOW
+        PARAM_DEFN  1, $82, 0           ; $3B GetWinPtr
+        PARAM_DEFN  3, $82, 0           ; $3C GetWinPort
+        PARAM_DEFN  2, $82, 0           ; $3D SetWinPort
+        PARAM_DEFN  1, $82, 0           ; $3E BeginUpdate
         PARAM_DEFN  1, $82, 0           ; $3F
-        PARAM_DEFN  4, state_pos, 0     ; $40 QUERY_TARGET
+        PARAM_DEFN  4, state_pos, 0     ; $40 FindWindow
         PARAM_DEFN  0, $00, 0           ; $41
-        PARAM_DEFN  1, $82, 0           ; $42 RAISE_WINDOW
-        PARAM_DEFN  0, $00, 0           ; $43 CLOSE_CLICK
-        PARAM_DEFN  5, $82, 0           ; $44 DRAG_WINDOW
-        PARAM_DEFN  5, $82, 0           ; $45 DRAG_RESIZE
-        PARAM_DEFN  5, $82, 0           ; $46 MAP_COORDS
+        PARAM_DEFN  1, $82, 0           ; $42 SelectWindow
+        PARAM_DEFN  0, $00, 0           ; $43 TrackGoAway
+        PARAM_DEFN  5, $82, 0           ; $44 DragWindow
+        PARAM_DEFN  5, $82, 0           ; $45 GrowWindow
+        PARAM_DEFN  5, $82, 0           ; $46 ScreenToWindow
         PARAM_DEFN  5, $82, 0           ; $47
-        PARAM_DEFN  4, state_pos, 0     ; $48 QUERY_CLIENT
-        PARAM_DEFN  3, $82, 0           ; $49 RESIZE_WINDOW
-        PARAM_DEFN  5, $82, 0           ; $4A DRAG_SCROLL
-        PARAM_DEFN  3, $8C, 0           ; $4B UPDATE_SCROLL
+        PARAM_DEFN  4, state_pos, 0     ; $48 FindControl
+        PARAM_DEFN  3, $82, 0           ; $49 SetCtlMax
+        PARAM_DEFN  5, $82, 0           ; $4A TrackThumb
+        PARAM_DEFN  3, $8C, 0           ; $4B UpdateThumb
         PARAM_DEFN  2, $8C, 0           ; $4C
         PARAM_DEFN 16, $8A, 0           ; $4D
         PARAM_DEFN  2, $82, 0           ; $4E
@@ -824,7 +824,7 @@ hires_table_hi:
         .byte   $03,$07,$0B,$0F,$13,$17,$1B,$1F
 
 ;;; ==================================================
-;;; Routines called during FILL_RECT etc based on
+;;; Routines called during PaintRect etc based on
 ;;; state_fill
 
 .proc fillmode0
@@ -1128,8 +1128,9 @@ fill_mode_table_a:
         .addr   fillmode0a,fillmode1a,fillmode2a,fillmode3a
 
 ;;; ==================================================
+;;; SetPenMode
 
-SET_FILL_MODE_IMPL:
+SetPenModeImpl:
         lda     state_fill
         ldx     #0
         cmp     #4
@@ -1138,7 +1139,7 @@ SET_FILL_MODE_IMPL:
 :       stx     fill_eor_mask
         rts
 
-        ;; Called from FILL_RECT, DRAW_TEXT, etc to configure
+        ;; Called from PaintRect, DrawText, etc to configure
         ;; fill routines from mode.
 set_up_fill_mode:
         lda     $F7
@@ -1393,8 +1394,9 @@ L4F7D:  ror     a
 L4F8E:  rts
 
 ;;; ==================================================
+;;; SetPattern
 
-SET_PATTERN_IMPL:
+SetPatternImpl:
         lda     #$00
         sta     $8E
         lda     $F9
@@ -1447,12 +1449,13 @@ L4FDD:  dex
         rts
 
 ;;; ==================================================
+;;; FrameRect
 
 ;;; 4 bytes of params, copied to $9F
 
 L4FE4:  .byte   0
 
-DRAW_RECT_IMPL:
+FrameRectImpl:
 
         left   := $9F
         top    := $A1
@@ -1505,15 +1508,16 @@ L502F:  lda     state_vthick
         beq     L5015
         adc     $98
         sta     $98
-        bcc     FILL_RECT_IMPL
+        bcc     PaintRectImpl
         inc     $98+1
         ;; Fall through...
 
 ;;; ==================================================
+;;; PaintRect
 
 ;;; 4 bytes of params, copied to $92
 
-FILL_RECT_IMPL:
+PaintRectImpl:
         jsr     L514C
 L5043:  jsr     L50A9
         bcc     L5015
@@ -1522,10 +1526,11 @@ L5043:  jsr     L50A9
         jmp     L4CED
 
 ;;; ==================================================
+;;; InRect
 
 ;;; 4 bytes of params, copied to $92
 
-.proc TEST_BOX_IMPL
+.proc InRectImpl
 
         left   := $92
         top    := $94
@@ -1560,14 +1565,15 @@ L5043:  jsr     L50A9
         bcc     :+
         bne     fail
 :       lda     #$80            ; success!
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 
 fail:   rts
 .endproc
 
 ;;; ==================================================
+;;; SetPortBits
 
-SET_BOX_IMPL:
+SetPortBitsImpl:
         lda     state_left
         sec
         sbc     state_hoff
@@ -1692,7 +1698,7 @@ L514C:  sec
         rts
 
 L5163:  lda     #$81
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 
 ;;; ==================================================
 
@@ -1701,7 +1707,7 @@ L5163:  lda     #$81
 L5168:  .byte   0
 L5169:  .byte   0
 
-DRAW_BITMAP_IMPL:
+PaintBitsImpl:
 
         dbi_left   := $8A
         dbi_top    := $8C
@@ -2008,20 +2014,18 @@ ora_2_param_bytes:
 L5379:  rts
 
 ;;; ==================================================
+;;; InPoly
 
-;;; $17 IMPL
-
-L537A:
+InPolyImpl:
         lda     #$80
         bne     L5380
 
 ;;; ==================================================
+;;; PaintPoly
 
-;;; $15 IMPL
+        ;; also called from the end of LineToImpl
 
-        ;; also called from the end of DRAW_LINE_ABS_IMPL
-
-L537E:  lda     #$00
+PaintPolyImpl:  lda     #$00
 L5380:  sta     $BA
         ldx     #0
         stx     $AD
@@ -2034,7 +2038,7 @@ L5390:  jsr     L5354
         jmp     L546F
 
 L5398:  lda     #$82
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 
 L539D:  ldy     #1
         sty     $AF
@@ -2292,7 +2296,7 @@ L55B5:  lda     $A9
         sta     $99
         bit     $BA
         bpl     L55CB
-        jsr     TEST_BOX_IMPL
+        jsr     InRectImpl
         jmp     L55CE
 
 L55CB:  jsr     L5043
@@ -2427,10 +2431,9 @@ L56D2:  dey
 L56D5:  rts
 
 ;;; ==================================================
+;;; FramePoly
 
-;;; DRAW_POLYGONS IMPL
-
-.proc DRAW_POLYGONS_IMPL
+.proc FramePolyImpl
         lda     #0
         sta     $BA
         jsr     ora_2_param_bytes
@@ -2505,12 +2508,11 @@ L572F:  ldx     #1
 .endproc
 
 ;;; ==================================================
-
-;;; OFFSET_POS IMPL
+;;; Move
 
 ;;; 4 bytes of params, copied to $A1
 
-.proc OFFSET_POS_IMPL
+.proc MoveImpl
         xdelta := $A1
         ydelta := $A3
 
@@ -2540,10 +2542,11 @@ L572F:  ldx     #1
 .endproc
 
 ;;; ==================================================
+;;; LineImpl
 
 ;;; 4 bytes of params, copied to $A1
 
-.proc DRAW_LINE_IMPL
+.proc LineImpl
 
         xdelta := $A1
         ydelta := $A2
@@ -2563,10 +2566,11 @@ loop:   lda     xdelta,x
 .endproc
 
 ;;; ==================================================
+;;; LineTo
 
 ;;; 4 bytes of params, copied to $92
 
-.proc DRAW_LINE_ABS_IMPL
+.proc LineToImpl
 
         params  := $92
         xend    := params + 0
@@ -2690,7 +2694,7 @@ L581F:  lda     $83,x
         sta     params_addr
         lda     L583C+1
         sta     params_addr+1
-        jmp     L537E
+        jmp     PaintPolyImpl
 
 L583C:  .addr   L5850
 
@@ -2704,13 +2708,12 @@ L5852:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
 .endproc
-        DRAW_LINE_ABS_IMPL_L5783 := DRAW_LINE_ABS_IMPL::L5783
+        DRAW_LINE_ABS_IMPL_L5783 := LineToImpl::L5783
 
 ;;; ==================================================
+;;; SetFont
 
-;;; SET_FONT IMPL
-
-.proc SET_FONT_IMPL
+.proc SetFontImpl
         lda     params_addr     ; set font to passed address
         sta     state_font
         lda     params_addr+1
@@ -2768,7 +2771,7 @@ loop:   sta     glyph_row_lo,y
         rts
 
 end:    lda     #$83
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 .endproc
 
 glyph_row_lo:
@@ -2779,10 +2782,11 @@ glyph_row_hi:
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
 ;;; ==================================================
+;;; TextWidth
 
 ;;; 3 bytes of params, copied to $A1
 
-.proc MEASURE_TEXT_IMPL
+.proc TextWidthImpl
         jsr     measure_text
         ldy     #3              ; Store result (X,A) at params+3
         sta     (params_addr),y
@@ -2856,7 +2860,7 @@ L5933:  sta     $94
 
 ;;; 3 bytes of params, copied to $A1
 
-DRAW_TEXT_IMPL:
+DrawTextImpl:
         jsr     maybe_unstash_low_zp
         jsr     measure_text
         sta     $A4
@@ -3440,14 +3444,13 @@ L5E42:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00
 
 ;;; ==================================================
+;;; InitGraf
 
-;;; $01 IMPL
-
-.proc L5E51
+.proc InitGrafImpl
 
         lda     #$71            ; %0001 lo nibble = HiRes, Page 1, Full, Graphics
         sta     $82             ; (why is high nibble 7 ???)
-        jsr     CFG_DISPLAY_IMPL
+        jsr     SetSwitchesImpl
 
         ;; Initialize state
         ldx     #sizeof_state-1
@@ -3463,7 +3466,7 @@ loop:   lda     screen_state,x
 
         lda     #$7F
         sta     fill_eor_mask
-        jsr     FILL_RECT_IMPL
+        jsr     PaintRectImpl
         lda     #$00
         sta     fill_eor_mask
         rts
@@ -3473,8 +3476,7 @@ saved_state_addr:
 .endproc
 
 ;;; ==================================================
-
-;;; CFG_DISPLAY_IMPL
+;;; SetSwitches
 
 ;;; 1 byte param, copied to $82
 
@@ -3484,7 +3486,7 @@ saved_state_addr:
 ;;;   bit 2: Full screen if clear, split screen if set
 ;;;   bit 3: Graphics if clear, text if set
 
-.proc CFG_DISPLAY_IMPL
+.proc SetSwitchesImpl
         param := $82
 
         lda     DHIRESON        ; enable dhr graphics
@@ -3510,8 +3512,9 @@ table:  .byte   <(TXTCLR / 2), <(MIXCLR / 2), <(LOWSCR / 2), <(LORES / 2)
 .endproc
 
 ;;; ==================================================
+;;; SetPort
 
-.proc SET_STATE_IMPL
+.proc SetPortImpl
         lda     params_addr
         ldx     params_addr+1
         ;; fall through
@@ -3527,14 +3530,15 @@ assign_and_prepare_state:
 prepare_state:
         lda     state_font+1
         beq     :+              ; only prepare font if necessary
-        jsr     SET_FONT_IMPL::prepare_font
-:       jsr     SET_BOX_IMPL
-        jsr     SET_PATTERN_IMPL
-        jmp     SET_FILL_MODE_IMPL
+        jsr     SetFontImpl::prepare_font
+:       jsr     SetPortBitsImpl
+        jsr     SetPatternImpl
+        jmp     SetPenModeImpl
 
 ;;; ==================================================
+;;; GetPort
 
-.proc GET_STATE_IMPL
+.proc GetPortImpl
         jsr     apply_state_to_active_state
         lda     active_state
         ldx     active_state+1
@@ -3554,8 +3558,9 @@ store_xa_at_params_y:
         rts
 
 ;;; ==================================================
+;;; InitPort
 
-.proc QUERY_SCREEN_IMPL
+.proc InitPortImpl
         ldy     #sizeof_state-1 ; Store 36 bytes at params
 loop:   lda     screen_state,y
         sta     (params_addr),y
@@ -3565,10 +3570,11 @@ loop:   lda     screen_state,y
 rts3:   rts
 
 ;;; ==================================================
+;;; SetZP1
 
 ;;; 1 byte of params, copied to $82
 
-.proc CONFIGURE_ZP_IMPL
+.proc SetZP1Impl
         param := $82
 
         lda     param
@@ -3576,19 +3582,18 @@ rts3:   rts
         beq     rts3
         sta     preserve_zp_flag
         bcc     rts3
-        jmp     mgtk_dispatch::cleanup
+        jmp     dispatch::cleanup
 .endproc
 
 ;;; ==================================================
-
-;;; LOW_ZP_STASH IMPL
+;;; SetZP2
 
 ;;; 1 byte of params, copied to $82
 
 ;;; If high bit set stash ZP $00-$43 to buffer if not already stashed.
 ;;; If high bit clear unstash ZP $00-$43 from buffer if not already unstashed.
 
-.proc LOW_ZP_STASH_IMPL
+.proc SetZP2Impl
         lda     $82
         cmp     low_zp_stash_flag
         beq     rts3
@@ -3622,24 +3627,28 @@ unstash:
         bpl     :-
         rts
 .endproc
-        maybe_stash_low_zp := LOW_ZP_STASH_IMPL::maybe_stash
-        maybe_unstash_low_zp := LOW_ZP_STASH_IMPL::maybe_unstash
+        maybe_stash_low_zp := SetZP2Impl::maybe_stash
+        maybe_unstash_low_zp := SetZP2Impl::maybe_unstash
 
 ;;; ==================================================
+;;; Version
 
-;;; $1C IMPL
-
-;;; Just copies static bytes to params???
-
-.proc L5F0A
+.proc VersionImpl
         ldy     #5              ; Store 6 bytes at params
-loop:   lda     table,y
+loop:   lda     version,y
         sta     (params_addr),y
         dey
         bpl     loop
         rts
 
-table:  .byte   $01,$00,$00,$46,$01,$00
+.proc version
+major:  .byte   1               ; 1.0.0
+minor:  .byte   0
+patch:  .byte   0
+status: .byte   70              ; ???
+release:.byte   1               ; ???
+        .byte   0               ; ???
+.endproc
 .endproc
 
 ;;; ==================================================
@@ -3769,13 +3778,14 @@ L6067:  lda     #$FF
         ;; fall through
 
 ;;; ==================================================
+;;; SetCursor
 
         cursor_height := 12
         cursor_width  := 2
         cursor_mask_offset := cursor_width * cursor_height
         cursor_hotspot_offset := 2 * cursor_width * cursor_height
 
-SET_CURSOR_IMPL:
+SetCursorImpl:
         php
         sei
         lda     params_addr
@@ -4001,8 +4011,9 @@ L622A:  sta     L622E
         rts
 
 ;;; ==================================================
+;;; ShowCursor
 
-.proc SHOW_CURSOR_IMPL
+.proc ShowCursorImpl
         php
         sei
         lda     cursor_count
@@ -4019,10 +4030,9 @@ done:   plp
 .endproc
 
 ;;; ==================================================
+;;; ObscureCursor
 
-;;; ERASE_CURSOR IMPL
-
-.proc ERASE_CURSOR_IMPL
+.proc ObscureCursorImpl
         php
         sei
         jsr     restore_cursor_background
@@ -4033,8 +4043,9 @@ done:   plp
 .endproc
 
 ;;; ==================================================
+;;; HideCursor
 
-HIDE_CURSOR_IMPL:
+HideCursorImpl:
         php
         sei
         jsr     restore_cursor_background
@@ -4116,10 +4127,9 @@ L62FE:  bit     mouse_hooked_flag
 L6309:  rts
 
 ;;; ==================================================
+;;; GetCursorAddr
 
-;;; GET_CURSOR IMPL
-
-.proc GET_CURSOR_IMPL
+.proc GetCursorAddrImpl
         lda     active_cursor
         ldx     active_cursor+1
         jmp     store_xa_at_params
@@ -4165,12 +4175,11 @@ hide_cursor_flag:
 L6340:  .byte   $00
 
 ;;; ==================================================
-
-;;; $1D IMPL
+;;; StartDeskTop
 
 ;;; 12 bytes of params, copied to $82
 
-INIT_SCREEN_AND_MOUSE_IMPL:
+StartDeskTopImpl:
         php
         pla
         sta     L6340
@@ -4242,7 +4251,7 @@ L63D1:  ldx     L6338
         cpx     #$00
         bne     L63E5
         lda     #$92
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 
 L63E5:  lda     L6338
         and     #$7F
@@ -4250,7 +4259,7 @@ L63E5:  lda     L6338
         cpx     L6338
         beq     L63F6
         lda     #$91
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 
 L63F6:  stx     L6338
         lda     #$80
@@ -4285,9 +4294,9 @@ L642A:  lda     $FBB3
 L643F:  jsr     call_mouse
         pla
         sta     $FBB3
-        jsr     L5E51
+        jsr     InitGrafImpl
         jsr     L6067
-        jsr     CALL_2B_IMPL
+        jsr     FlushEventsImpl
         lda     #$00
         sta     L700C
 L6454:  jsr     L653F
@@ -4324,7 +4333,7 @@ L6486:  lda     #$80
 L648B:  rts
 
 L648C:  lda     #$93
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 
 L6491:
         lda     L6337
@@ -4332,17 +4341,16 @@ L6491:
         cmp     #$01
         beq     L64A4
         lda     #$90
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 
 L649F:  lda     #$80
         sta     L6337
 L64A4:  rts
 
 ;;; ==================================================
+;;; StopDeskTop
 
-;;; DISABLE_MOUSE IMPL
-
-.proc DISABLE_MOUSE_IMPL
+.proc StopDeskTopImpl
         ldy     #SETMOUSE
         lda     #MOUSE_MODE_OFF
         jsr     call_mouse
@@ -4400,7 +4408,7 @@ L64FF:  lda     #$00
         rts
 
 L6508:  lda     #$94
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 
 L650D:  lda     L6522
         beq     L651D
@@ -4432,7 +4440,7 @@ L6539:  .byte   $00
 L653A:  .byte   $00
 L653B:  .byte   $00
 
-L653C:  jsr     HIDE_CURSOR_IMPL
+L653C:  jsr     HideCursorImpl
 L653F:  lda     params_addr
         sta     L6539
         lda     params_addr+1
@@ -4442,7 +4450,7 @@ L653F:  lda     params_addr
         lsr     preserve_zp_flag
         rts
 
-L6553:  jsr     SHOW_CURSOR_IMPL
+L6553:  jsr     ShowCursorImpl
 L6556:  asl     preserve_zp_flag
         lda     L6539
         sta     params_addr
@@ -4502,12 +4510,11 @@ checkerboard_pattern:
         .byte   $00
 
 ;;; ==================================================
-
-;;; HOOK_MOUSE IMPL
+;;; SetUserHook
 
 ;;; 2 bytes of params, copied to $82
 
-.proc HOOK_MOUSE_IMPL
+.proc SetUserHookImpl
         params := $82
 
         bit     hide_cursor_flag
@@ -4524,30 +4531,30 @@ checkerboard_pattern:
         jmp     store_xa_at_params_y
 
 fail:   lda     #$95
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 
 mouse_state_addr:
         .addr   mouse_state
 .endproc
 
 ;;; ==================================================
+;;; PeekEvent
 
-;;; $2C Impl
-
-L65D4:
+PeekEventImpl:
         clc
         bcc     L65D8
 
 ;;; ==================================================
+;;; GetEvent
 
-GET_INPUT_IMPL:
+GetEventImpl:
         sec
 L65D8:  php
         bit     L6339
         bpl     L65E1
         sei
         bmi     L65E4
-L65E1:  jsr     L6663
+L65E1:  jsr     CheckEventsImpl
 L65E4:  jsr     L67FE
 L65E7:  bcs     L6604
         plp
@@ -4576,7 +4583,7 @@ L660E:  rts
 
 ;;; 5 bytes of params, copied to $82
 
-SET_INPUT_IMPL:
+PostEventImpl:
         php
         sei
         lda     $82
@@ -4606,7 +4613,7 @@ L663B:  lda     #$98
         bmi     L6641
 L663F:  lda     #$99
 L6641:  plp
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 
 L6645:  lda     #0
         bit     mouse_status
@@ -4623,8 +4630,7 @@ L6653:  lda     cursor_count,y
         rts
 
 ;;; ==================================================
-
-;;; $29 IMPL
+;;; CheckEvents
 
 
 .proc input
@@ -4640,11 +4646,11 @@ modifiers  := * + 3
         .res    4, 0
 .endproc
 
-.proc L6663
+.proc CheckEventsImpl
         bit     L6339
         bpl     L666D
         lda     #$97
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 
 L666D:
         sec                     ; called from interrupt handler
@@ -4731,7 +4737,7 @@ int_stash_rd80store:
 .proc interrupt_handler
         cld                     ; required for interrupt handlers
 
-body:                           ; returned by MGTK_GET_INT_HANDLER
+body:                           ; returned by GetIntHandler
 
         lda     RDPAGE2         ; record softswitch state
         sta     int_stash_rdpage2
@@ -4749,7 +4755,7 @@ sloop:  lda     $82,x
         ldy     #SERVEMOUSE
         jsr     call_mouse
         bcs     :+
-        jsr     L6663::L666D
+        jsr     CheckEventsImpl::L666D
         clc
 :       bit     L633A
         bpl     :+
@@ -4774,10 +4780,9 @@ rloop:  lda     int_stash_zp,x
 .endproc
 
 ;;; ==================================================
+;;; GetIntHandler
 
-;;; GET_INT_HANDLER IMPL
-
-.proc GET_INT_HANDLER_IMPL
+.proc GetIntHandlerImpl
         lda     L6750
         ldx     L6750+1
         jmp     store_xa_at_params
@@ -4786,8 +4791,7 @@ L6750:  .addr   interrupt_handler::body
 .endproc
 
 ;;; ==================================================
-
-;;; $2B IMPL
+;;; FlushEvents
 
 ;;; This is called during init by the DAs, just before
 ;;; entering the input loop.
@@ -4799,7 +4803,7 @@ L6754:  .byte   $00
 L6755:  .res    128, 0
         .byte   $00,$00,$00
 
-.proc CALL_2B_IMPL
+.proc FlushEventsImpl
         php
         sei
         lda     #0
@@ -4808,7 +4812,7 @@ L6755:  .res    128, 0
         plp
         rts
 .endproc
-        ;; called during SET_INPUT and a few other places
+        ;; called during PostEvent and a few other places
 .proc L67E4
         lda     L6753
         cmp     #$80            ; if L675E is not $80, add $4
@@ -4830,7 +4834,7 @@ rts_with_carry_set:
         sec
         rts
 
-        ;; called during GET_INPUT
+        ;; called during GetEvent
 L67FE:  lda     L6752           ; equal?
         cmp     L6753
         beq     rts_with_carry_set
@@ -4844,14 +4848,13 @@ L6811:  clc
         rts
 
 ;;; ==================================================
-
-;;; $2E IMPL
+;;; SetKeyEvent
 
 ;;; 1 byte of params, copied to $82
 
 check_kbd_flag:  .byte   $80
 
-.proc SET_KBD_FLAG_IMPL
+.proc SetKeyEventImpl
         params := $82
 
         asl     check_kbd_flag
@@ -5015,7 +5018,7 @@ L68F0:  sta     state_xpos
         ;; Set fill mode to A
 set_fill_mode:
         sta     state_fill
-        jmp     SET_FILL_MODE_IMPL
+        jmp     SetPenModeImpl
 
 do_measure_text:
         jsr     prepare_text_params
@@ -5023,9 +5026,9 @@ do_measure_text:
 
 draw_text:
         jsr     prepare_text_params
-        jmp     DRAW_TEXT_IMPL
+        jmp     DrawTextImpl
 
-        ;; Prepare $A1,$A2 as params for MEASURE_TEXT/DRAW_TEXT call
+        ;; Prepare $A1,$A2 as params for TextWidth/DrawText call
         ;; ($A3 is length)
 prepare_text_params:
         sta     $82
@@ -5046,13 +5049,12 @@ L691B:  MGTK_CALL MGTK::GetEvent, $82
         rts
 
 ;;; ==================================================
-
-;;; SET_MENU IMPL
+;;; SetMenu
 
 L6924:  .byte   0
 L6925:  .byte   0
 
-SET_MENU_IMPL:
+SetMenuImpl:
         lda     #$00
         sta     L633D
         sta     L633E
@@ -5199,7 +5201,7 @@ L6A3C:  lda     #$00
         sbc     L633E
         bpl     L6A5B
         lda     #$9C
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 
 L6A5B:  rts
 
@@ -5226,7 +5228,7 @@ L6A5C:  ldx     $A7
 L6A89:  jsr     L6A94
         bne     L6A93
         lda     #$9A
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 
 L6A93:  rts
 
@@ -5302,12 +5304,12 @@ L6B17:  tax
 L6B1C:  rts
 
 ;;; ==================================================
-
-;;; $33 IMPL
+;;; HiliteMenu
 
 ;;; 2 bytes of params, copied to $C7
 
-L6B1D:  lda     $C7
+HiliteMenuImpl:
+        lda     $C7
         bne     L6B26
         lda     L6BD9
         sta     $C7
@@ -5339,19 +5341,18 @@ loop:   lda     $B7,x
 .endproc
 
 ;;; ==================================================
-
-;;; $32 IMPL
+;;; MenuKey
 
 ;;; 4 bytes of params, copied to $C7
 
-L6B60:
+MenuKeyImpl:
         lda     $C9
         cmp     #$1B            ; Menu height?
         bne     L6B70
         lda     $CA
         bne     L6B70
-        jsr     L7D61
-        jmp     MENU_CLICK_IMPL
+        jsr     KeyboardMouse
+        jmp     MenuSelectImpl
 
 L6B70:  lda     #$C0
         jsr     L6A96
@@ -5382,15 +5383,14 @@ L6B9E:  rts
 L6B9F:  jsr     L6B96
         bne     L6B9E
         lda     #$9B
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 
 ;;; ==================================================
-
-;;; $35 IMPL
+;;; DisableItem
 
 ;;; 3 bytes of params, copied to $C7
 
-L6BA9:
+DisableItemImpl:
         jsr     L6B9F
         asl     $BF
         ror     $C9
@@ -5398,12 +5398,11 @@ L6BA9:
         jmp     L68DF
 
 ;;; ==================================================
-
-;;; $36 IMPL
+;;; CheckItem
 
 ;;; 3 bytes of params, copied to $C7
 
-L6BB5:
+CheckItemImpl:
         jsr     L6B9F
         lda     $C9
         beq     L6BC2
@@ -5416,12 +5415,11 @@ L6BC6:  sta     $BF
         jmp     L68DF
 
 ;;; ==================================================
-
-;;; $34 IMPL
+;;; DisableMenu
 
 ;;; 2 bytes of params, copied to $C7
 
-L6BCB:
+DisableMenuImpl:
         jsr     L6A89
         asl     $B0
         ror     $C8
@@ -5430,13 +5428,12 @@ L6BCB:
         jmp     L68A9
 
 ;;; ==================================================
-
-;;; MENU_CLICK IMPL
+;;; MenuSelect
 
 L6BD9:  .byte   0
 L6BDA:  .byte   0
 
-MENU_CLICK_IMPL:
+MenuSelectImpl:
         jsr     L7ECD
         jsr     get_menu_count
         jsr     L653F
@@ -5471,7 +5468,7 @@ L6C2C:  lda     L6BDA
         jsr     L6D23
         jmp     L6C40
 
-L6C37:  jsr     HIDE_CURSOR_IMPL
+L6C37:  jsr     HideCursorImpl
         jsr     L657E
         jsr     L6CF4
 L6C40:  jsr     L6556
@@ -5585,7 +5582,7 @@ L6D0E:  lda     ($8E),y
         cpx     $83
         bcc     L6CF7
         beq     L6CF7
-        jmp     SHOW_CURSOR_IMPL
+        jmp     ShowCursorImpl
 
 L6D22:  rts
 
@@ -5597,7 +5594,7 @@ L6D27:  lda     L6BD9
         php
         sta     $C7
         jsr     L6A94
-        jsr     HIDE_CURSOR_IMPL
+        jsr     HideCursorImpl
         jsr     L6B35
         plp
         bcc     L6CF4
@@ -5699,7 +5696,7 @@ L6E18:  ldx     $A9
         beq     L6E22
         jmp     L6D8A
 
-L6E22:  jmp     SHOW_CURSOR_IMPL
+L6E22:  jmp     ShowCursorImpl
 
 L6E25:  ldx     $A9
         ldy     menu_item_y_table+1,x ; ???
@@ -5782,19 +5779,18 @@ L6EAA:  ldx     L6BDA
         sty     fill_rect_params4::top
         ldy     menu_item_y_table,x
         sty     fill_rect_params4::bottom
-        jsr     HIDE_CURSOR_IMPL
+        jsr     HideCursorImpl
         lda     #$02
         jsr     set_fill_mode
         MGTK_CALL MGTK::PaintRect, fill_rect_params4
-        jmp     SHOW_CURSOR_IMPL
+        jmp     ShowCursorImpl
 
 ;;; ==================================================
-
-;;; $2F IMPL
+;;; InitMenu
 
 ;;; 4 bytes of params, copied to $82
 
-.proc L6ECD
+.proc InitMenuImpl
         params := $82
 
         ldx     #3
@@ -5837,12 +5833,11 @@ end:    rts
 .endproc
 
 ;;; ==================================================
-
-;;; $37 IMPL
+;;; SetMark
 
 ;;; 4 bytes of params, copied to $C7
 
-L6F1C:
+SetMarkImpl:
         jsr     L6B9F
         lda     $C9
         beq     L6F30
@@ -6056,7 +6051,7 @@ end:    rts
         beq     nope
         rts
 nope:   lda     #$9F
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 .endproc
 
 L707F:  MGTK_CALL MGTK::FrameRect, $C7
@@ -6303,7 +6298,7 @@ L723E:  sta     $96
         sta     $98
         lda     $CE
         sta     $99
-        jsr     FILL_RECT_IMPL  ; draws title bar stripes to left of close box
+        jsr     PaintRectImpl  ; draws title bar stripes to left of close box
 L7255:  lda     $AC
         and     #$01
         bne     L72C9
@@ -6344,7 +6339,7 @@ L7280:  tya
         sta     $96
         bcs     L72A0
         dec     $97
-L72A0:  jsr     FILL_RECT_IMPL  ; Draw title bar stripes between close box and title
+L72A0:  jsr     PaintRectImpl  ; Draw title bar stripes between close box and title
         lda     $CB
         clc
         adc     #$0A
@@ -6360,7 +6355,7 @@ L72A0:  jsr     FILL_RECT_IMPL  ; Draw title bar stripes between close box and t
         lda     $CC
         sbc     #$00
         sta     $97
-        jsr     FILL_RECT_IMPL  ; Draw title bar stripes to right of title
+        jsr     PaintRectImpl  ; Draw title bar stripes to right of title
         MGTK_CALL MGTK::SetPattern, screen_state::pattern
 L72C9:  jsr     next_window::L703E
         bit     $B0
@@ -6518,7 +6513,7 @@ L73F0:  sta     state_ypos
 
 ;;; 4 bytes of params, copied to state_pos
 
-QUERY_TARGET_IMPL:
+FindWindowImpl:
         jsr     L653F
         MGTK_CALL MGTK::InRect, test_box_params
         beq     L7416
@@ -6581,7 +6576,7 @@ L7476:  lda     #$02
 ;;; ==================================================
 
 L747A:  .byte   0
-CREATE_WINDOW_IMPL:
+OpenWindowImpl:
         lda     params_addr
         sta     $A9
         lda     params_addr+1
@@ -6590,13 +6585,13 @@ CREATE_WINDOW_IMPL:
         lda     ($A9),y
         bne     L748E
         lda     #$9E
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 
 L748E:  sta     $82
         jsr     window_by_id
         beq     L749A
         lda     #$9D
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 
 L749A:  lda     params_addr
         sta     $A9
@@ -6609,12 +6604,11 @@ L749A:  lda     params_addr
         bmi     L74BD
 
 ;;; ==================================================
-
-;;; RAISE_WINDOW IMPL
+;;; SelectWindow
 
 ;;; 1 byte of params, copied to $82
 
-RAISE_WINDOW_IMPL:
+SelectWindowImpl:
         jsr     window_by_id_or_exit
         cmp     L700B
         bne     L74BA
@@ -6657,12 +6651,11 @@ L74F4:  ldy     #next_offset_in_window_params ; Called from elsewhere
         rts
 
 ;;; ==================================================
-
-;;; QUERY_WINDOW IMPL
+;;; GetWinPtr
 
 ;;; 1 byte of params, copied to $C7
 
-.proc QUERY_WINDOW_IMPL
+.proc GetWinPtrImpl
         ptr := $A9
         jsr     window_by_id_or_exit
         lda     ptr
@@ -6672,14 +6665,13 @@ L74F4:  ldy     #next_offset_in_window_params ; Called from elsewhere
 .endproc
 
 ;;; ==================================================
-
-;;; REDRAW_WINDOW_IMPL
+;;; BeginUpdate
 
 ;;; 1 byte of params, copied to $82
 
 L750C:  .res    38,0
 
-.proc REDRAW_WINDOW_IMPL
+.proc BeginUpdateImpl
         jsr     window_by_id_or_exit
         lda     $AB
         cmp     L7010
@@ -6690,12 +6682,12 @@ L750C:  .res    38,0
         jsr     L6588
         lda     L7871
         bne     :+
-        MGTK_CALL MGTK::SetPortSite, set_box_params
+        MGTK_CALL MGTK::SetPortBits, set_box_params
 :       jsr     L718E
         jsr     L6588
         lda     L7871
         bne     :+
-        MGTK_CALL MGTK::SetPortSite, set_box_params
+        MGTK_CALL MGTK::SetPortBits, set_box_params
 :       jsr     next_window::L703E
         lda     active_state
         sta     L750C
@@ -6710,22 +6702,22 @@ L750C:  .res    38,0
         plp
         bcc     :+
         rts
-:       jsr     L758C
+:       jsr     EndUpdateImpl
         ;; fall through
 .endproc
 
 L7585:  lda     #$A3
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 
 ;;; ==================================================
-
-;;; $3F IMPL
+;;; EndUpdate
 
 ;;; 1 byte of params, copied to $82
 
 L758A:  .addr   L750C + 2
 
-L758C:  jsr     SHOW_CURSOR_IMPL
+EndUpdateImpl:
+        jsr     ShowCursorImpl
         lda     L750C
         ldx     L750C+1
         sta     active_state
@@ -6733,10 +6725,11 @@ L758C:  jsr     SHOW_CURSOR_IMPL
         jmp     L6567
 
 ;;; ==================================================
+;;; GetWinPort
 
 ;;; 3 bytes of params, copied to $82
 
-QUERY_STATE_IMPL:
+GetWinPortImpl:
         jsr     apply_state_to_active_state
         jsr     window_by_id_or_exit
         lda     $83
@@ -6808,8 +6801,7 @@ L75EA:  lda     $92,x
         rts
 
 ;;; ==================================================
-
-;;; UPDATE_STATE IMPL
+;;; SetWinPort
 
 ;;; 2 bytes of params, copied to $82
 
@@ -6821,7 +6813,7 @@ L75EA:  lda     $92,x
         ;; It seems like it's trying to update a fraction
         ;; of the drawing state (from |pattern| to |font|)
 
-.proc UPDATE_STATE_IMPL
+.proc SetWinPortImpl
         ptr := $A9
 
         jsr     window_by_id_or_exit
@@ -6841,10 +6833,9 @@ loop:   lda     ($82),y
 .endproc
 
 ;;; ==================================================
+;;; FrontWindow
 
-;;; QUERY_TOP IMPL
-
-.proc QUERY_TOP_IMPL
+.proc FrontWindowImpl
         jsr     top_window
         beq     nope
         lda     $AB
@@ -6856,10 +6847,11 @@ nope:   lda     #0
 .endproc
 
 ;;; ==================================================
+;;; TrackGoAway
 
 in_close_box:  .byte   0
 
-.proc CLOSE_CLICK_IMPL
+.proc TrackGoAwayImpl
         jsr     top_window
         beq     end
         jsr     L7157
@@ -6869,9 +6861,9 @@ in_close_box:  .byte   0
 toggle: sta     in_close_box
         lda     #$02
         jsr     set_fill_mode
-        jsr     HIDE_CURSOR_IMPL
+        jsr     HideCursorImpl
         MGTK_CALL MGTK::PaintRect, $C7
-        jsr     SHOW_CURSOR_IMPL
+        jsr     ShowCursorImpl
 loop:   jsr     L691B
         cmp     #$02
         beq     L768B
@@ -6912,7 +6904,7 @@ drag_resize_flag:
 
 ;;; 5 bytes of params, copied to $82
 
-DRAG_RESIZE_IMPL:
+GrowWindowImpl:
         lda     #$80
         bmi     L76AE
 
@@ -6920,7 +6912,7 @@ DRAG_RESIZE_IMPL:
 
 ;;; 5 bytes of params, copied to $82
 
-DRAG_WINDOW_IMPL:
+DragWindowImpl:
         lda     #$00
 
 L76AE:  sta     drag_resize_flag
@@ -6946,7 +6938,7 @@ L76E2:  jsr     next_window::L703E
         jsr     L7749
         jsr     L70B7
         jsr     L707F
-        jsr     SHOW_CURSOR_IMPL
+        jsr     ShowCursorImpl
 L76F1:  jsr     L691B
         cmp     #$02
         bne     L773B
@@ -6970,7 +6962,7 @@ L7716:  lda     $A3,y
         iny
         cpy     #$24
         bne     L7716
-        jsr     HIDE_CURSOR_IMPL
+        jsr     HideCursorImpl
         lda     $AB
         jsr     L7872
         jsr     L653C
@@ -6983,7 +6975,7 @@ L7733:  jsr     L6553
 
 L773B:  jsr     L77E0
         beq     L76F1
-        jsr     HIDE_CURSOR_IMPL
+        jsr     HideCursorImpl
         jsr     L707F
         jmp     L76E2
 
@@ -7093,10 +7085,11 @@ L77F4:  sta     L769F,x
 L7814:  rts
 
 ;;; ==================================================
+;;; CloseWindow
 
 ;;; 1 byte of params, copied to $82
 
-.proc DESTROY_WINDOW_IMPL
+.proc CloseWindowImpl
         jsr     window_by_id_or_exit
         jsr     L653C
         jsr     L784C
@@ -7113,17 +7106,17 @@ L7814:  rts
 .endproc
 
 ;;; ==================================================
+;;; CloseAll
 
-;;; $3A IMPL
-
-L7836:  jsr     top_window
+CloseAllImpl:
+        jsr     top_window
         beq     L7849
         ldy     #$0A
         lda     ($A9),y
         and     #$7F
         sta     ($A9),y
         jsr     L74F4
-        jmp     L7836
+        jmp     CloseAllImpl
 
 L7849:  jmp     L6454
 
@@ -7150,7 +7143,7 @@ L7871:  .byte   0
 L7872:  sta     L7010
         lda     #$00
         sta     L7871
-        MGTK_CALL MGTK::SetPortSite, set_box_params
+        MGTK_CALL MGTK::SetPortBits, set_box_params
         lda     #$00
         jsr     set_fill_mode
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
@@ -7160,7 +7153,7 @@ L7872:  sta     L7010
         beq     L78CA
         php
         sei
-        jsr     CALL_2B_IMPL
+        jsr     FlushEventsImpl
 L789E:  jsr     next_window
         bne     L789E
 L78A3:  jsr     L67E4
@@ -7202,13 +7195,12 @@ height: .word   0
         set_box_params_box  := set_box_params::hoffset ; Re-used since h/voff are 0
 
 ;;; ==================================================
-
-;;; $47 IMPL
+;;; WindowToScreen
 
         ;; $83/$84 += $B7/$B8
         ;; $85/$86 += $B9/$BA
 
-.proc L78E1
+.proc WindowToScreenImpl
         jsr     window_by_id_or_exit
         ldx     #2
 loop:   lda     $83,x
@@ -7225,10 +7217,11 @@ loop:   lda     $83,x
 .endproc
 
 ;;; ==================================================
+;;; ScreenToWindow
 
 ;;; 5 bytes of params, copied to $82
 
-MAP_COORDS_IMPL:
+ScreenToWindowImpl:
         jsr     window_by_id_or_exit
         ldx     #$02
 L78FE:  lda     $83,x
@@ -7292,12 +7285,11 @@ L7954:  sta     $98
         jmp     L51B3
 
 ;;; ==================================================
-
-;;; $4C IMPL
+;;; ActivateCtl
 
 ;;; 2 bytes of params, copied to $8C
 
-L7965:
+ActivateCtlImpl:
         lda     $8C
         cmp     #$01
         bne     L7971
@@ -7479,15 +7471,16 @@ L7AA4:  pha
         jmp     L70B2
 
 ;;; ==================================================
+;;; FindControl
 
 ;;; 4 bytes of params, copied to state_pos
 
-QUERY_CLIENT_IMPL:
+FindControlImpl:
         jsr     L653F
         jsr     top_window
         bne     L7ACE
         lda     #$A0
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 
 L7ACE:  bit     $B0
         bpl     L7B15
@@ -7570,10 +7563,11 @@ L7B70:  lda     #$03
 L7B72:  jmp     L7408
 
 ;;; ==================================================
+;;; SetCtlMax
 
 ;;; 3 bytes of params, copied to $82
 
-RESIZE_WINDOW_IMPL:
+SetCtlMaxImpl:
         lda     $82
         cmp     #$01
         bne     L7B81
@@ -7586,12 +7580,12 @@ L7B81:  cmp     #$02
         sta     $82
         beq     L7B90
 L7B8B:  lda     #$A4
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 
 L7B90:  jsr     top_window
         bne     L7B9A
         lda     #$A0
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 
 L7B9A:  ldy     #$06
         bit     $82
@@ -7603,10 +7597,11 @@ L7BA2:  lda     $83
         rts
 
 ;;; ==================================================
+;;; TrackThumb
 
 ;;; 5 bytes of params, copied to $82
 
-DRAG_SCROLL_IMPL:
+TrackThumbImpl:
         lda     $82
         cmp     #$01
         bne     L7BB6
@@ -7619,7 +7614,7 @@ L7BB6:  cmp     #$02
         sta     $82
         beq     L7BC5
 L7BC0:  lda     #$A4
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 
 L7BC5:  lda     $82
         sta     $8C
@@ -7632,7 +7627,7 @@ L7BCB:  lda     $83,x
         jsr     top_window
         bne     L7BE0
         lda     #$A0
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 
 L7BE0:  jsr     L7A73
         jsr     L653F
@@ -7640,15 +7635,15 @@ L7BE0:  jsr     L7A73
         lda     #$02
         jsr     set_fill_mode
         MGTK_CALL MGTK::SetPattern, light_speckles_pattern
-        jsr     HIDE_CURSOR_IMPL
+        jsr     HideCursorImpl
 L7BF7:  jsr     L707F
-        jsr     SHOW_CURSOR_IMPL
+        jsr     ShowCursorImpl
 L7BFD:  jsr     L691B
         cmp     #$02
         beq     L7C66
         jsr     L77E0
         beq     L7BFD
-        jsr     HIDE_CURSOR_IMPL
+        jsr     HideCursorImpl
         jsr     L707F
         jsr     top_window
         jsr     L7A73
@@ -7690,7 +7685,7 @@ L7C53:  sta     $C8,x
         sta     $CC,x
         jmp     L7BF7
 
-L7C66:  jsr     HIDE_CURSOR_IMPL
+L7C66:  jsr     HideCursorImpl
         jsr     L707F
         jsr     L6553
         jsr     L7CBA
@@ -7792,10 +7787,11 @@ L7D1D:  sta     L7CB6
         rts
 
 ;;; ==================================================
+;;; UpdateThumb
 
 ;;; 3 bytes of params, copied to $8C
 
-UPDATE_SCROLL_IMPL:
+UpdateThumbImpl:
         lda     $8C
         cmp     #$01
         bne     L7D30
@@ -7808,12 +7804,12 @@ L7D30:  cmp     #$02
         sta     $8C
         beq     L7D3F
 L7D3A:  lda     #$A4
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 
 L7D3F:  jsr     top_window
         bne     L7D49
         lda     #$A0
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 
 L7D49:  ldy     #$07
         bit     $8C
@@ -7828,14 +7824,14 @@ L7D51:  lda     $8D
 
 
 ;;; ==================================================
-
-;;; $22 IMPL
+;;; KeyboardMouse
 
 ;;; 1 byte of params, copied to $82
 
-L7D61:  lda     #$80
+KeyboardMouse:
+        lda     #$80
         sta     L7D74
-        jmp     CALL_2B_IMPL
+        jmp     FlushEventsImpl
 
 ;;; ==================================================
 
@@ -7963,7 +7959,7 @@ L7EAD:  jsr     stash_params_addr
         sta     params_addr
         lda     L7F2F
         sta     params_addr+1
-        jsr     SET_CURSOR_IMPL
+        jsr     SetCursorImpl
         jsr     restore_params_addr
         lda     #$00
         sta     L7D74
@@ -8021,7 +8017,7 @@ L7F0F:  jsr     stash_params_addr
         sta     params_addr
         lda     L6066
         sta     params_addr+1
-        jsr     SET_CURSOR_IMPL
+        jsr     SetCursorImpl
         jmp     restore_params_addr
 
 L7F2E:  .byte   0
@@ -8313,7 +8309,7 @@ L8149:  php
         jsr     L6556
         lda     L7D7F
         beq     L816F
-        jsr     L6B1D
+        jsr     HiliteMenuImpl
         lda     L7D7F
 L816F:  sta     L6BD9
         ldx     L7D80
@@ -8369,7 +8365,7 @@ L81D9:  lda     #$00
         sta     L7D74
         lda     #$A2
         plp
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 
 L81E4:  lda     $AC
         and     #$01
@@ -8377,7 +8373,7 @@ L81E4:  lda     $AC
         lda     #$00
         sta     L7D74
         lda     #$A1
-        jmp     mgtk_exit_with_a
+        jmp     exit_with_a
 
 L81F4:  ldx     #$00
 L81F6:  clc
@@ -8671,8 +8667,7 @@ L840D:  sec
         rts
 
 ;;; ==================================================
-
-;;; $21 IMPL
+;;; ScaleMouse
 
 ;;; Sets up mouse clamping
 
@@ -8680,7 +8675,7 @@ L840D:  sec
 ;;; byte 1 controls x clamp, 2 controls y clamp
 ;;; clamp is to fractions of screen (0 = full, 1 = 1/2, 2 = 1/4, 3 = 1/8) (why???)
 
-.proc L8427
+.proc ScaleMouseImpl
         lda     $82
         sta     L5FFD
         lda     $83
@@ -8777,7 +8772,7 @@ loop:   txa
 
 found:  ldy     #INITMOUSE
         jsr     call_mouse
-        jsr     L8427::L8431
+        jsr     ScaleMouseImpl::L8431
         ldy     #HOMEMOUSE
         jsr     call_mouse
         lda     mouse_firmware_hi

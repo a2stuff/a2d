@@ -740,7 +740,7 @@ font:   .addr   0
         screen_width    := 560
         screen_height   := 192
 
-        ;; params for MGTK::SetPortSite when decorating title bar
+        ;; params for MGTK::SetPortBits when decorating title bar
 .proc screen_box
         .word   0
         .word   menu_bar_height
@@ -1668,7 +1668,7 @@ draw_title_bar:
         bcs     :+
         dex
 :       stx     title_bar_decoration::top+1
-        MGTK_CALL MGTK::SetPortSite, screen_box ; set clipping rect to whole screen
+        MGTK_CALL MGTK::SetPortBits, screen_box ; set clipping rect to whole screen
         MGTK_CALL MGTK::PaintBits, title_bar_decoration     ; Draws decoration in title bar
         lda     #window_id
         sta     query_state_params::id

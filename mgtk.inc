@@ -12,13 +12,15 @@ MLI     := $4000
 ;;; Graphics Primitives
 ;;; ==================================================
 
-;;; --------------------------------------------------
-;;; Initialization Commands
-
 NoOp                := $00  ; No-op
         ;; (input length 0 bytes)
 
-SetSwitches         := $02  ; Configure display switches
+;;; --------------------------------------------------
+;;; Initialization Commands
+
+InitGraf        := $01
+
+SetSwitches     := $02      ; Configure display switches
         ;; (input length 1 byte)
         ;; Turns on 80 col/DHR, and then:
         ;;   bit 0: LoRes if clear, HiRes if set
@@ -72,12 +74,12 @@ SetPort   := $04          ; Set full drawing state
         ;; .byte tmask          AND mask for text, default $7F
         ;; .addr font
 
-GetPort   := $05          ; Get pointer to active drawing state
+GetPort         := $05          ; Get pointer to active drawing state
         ;; (input length 0 bytes)
         ;; (output length 2 bytes)
         ;; .addr state          (out)
 
-SetPortSite   := $06            ; Set just the drawing box, subset of full state
+SetPortBits     := $06            ; Set just the drawing box, subset of full state
         ;; (input length 16 bytes)
         ;; .word left           pixels from screen edge
         ;; .word top
@@ -88,79 +90,79 @@ SetPortSite   := $06            ; Set just the drawing box, subset of full state
         ;; .word width          pixels
         ;; .word height
 
-SetPenMode := $07
+SetPenMode      := $07
         ;; (input length 1 byte)
         ;; .byte mode           (>=4 also sets eor mask to $7f)
         ;;    0 = white (???)
         ;;    2 = black (???)
 
-SetPattern := $08
+SetPattern      := $08
         ;; (input length 8 bytes)
         ;; .res 8 pattern       8x8 pixel pattern for PaintRect calls
 
-SetColorMasks := $09
+SetColorMasks   := $09
         ;; (input length 2 bytes)
         ;; .byte mskand
         ;; .byte mskor
 
-SetPenSize := $0A
+SetPenSize      := $0A
         ;; (input length 2 bytes)
         ;; .byte hthick         horizontal pen thickness
         ;; .byte vthick         vertical pen thickness
 
-SetFont    := $0B
+SetFont         := $0B
         ;; (input length 2 bytes)
         ;; .addr font           font definition (see below)
 
-SetTextBG := $0C        ; Stored to background before XORing glyph
+SetTextBG       := $0C      ; Stored to background before XORing glyph
         ;; (input length 1 byte)
         ;; .byte mask
 
 ;;; --------------------------------------------------
 ;;; Drawing Commands
 
-Move    := $0D        ; Adjust start of subsequent DRAW_TEXT, DRAW_LINE
+Move            := $0D ; Adjust start of subsequent DRAW_TEXT, DRAW_LINE
         ;; (input length 4 bytes)
         ;; .word xdelta
         ;; .word ydelta
 
-MoveTo     := $0E          ; Start of subsequent DRAW_TEXT, DRAW_LINE
+MoveTo          := $0E          ; Start of subsequent DRAW_TEXT, DRAW_LINE
         ;; (input length 4 bytes)
         ;; .word xcoord
         ;; .word ycoord
 
-Line   := $0F          ; Draw line (from SET_POS)
+Line            := $0F          ; Draw line (from SET_POS)
         ;; (input length 4 bytes)
         ;; .word xdelta         signed, delta in pixels
         ;; .word ydelta
 
-LineTo := $10        ; Draw line (from SET_POS)
+LineTo          := $10        ; Draw line (from SET_POS)
         ;; (input length 4 bytes)
         ;; .word xcoord         end coords in pixels
         ;; .word ycoord
 
-PaintRect   := $11          ; Fill rectangle with selected simple pattern/thickness
+PaintRect       := $11          ; Fill rectangle with selected simple pattern/thickness
         ;; (input length 8 bytes)
         ;; .word left           (includes scroll pos)
         ;; .word top
         ;; .word right          pixels
         ;; .word bottom
 
-FrameRect   := $12          ; Draw rectangle with selected simple pattern/thickness
+FrameRect       := $12          ; Draw rectangle with selected simple pattern/thickness
         ;; (input length 8 bytes)
         ;; .word left           pixels
         ;; .word top
         ;; .word right
         ;; .word bottom
 
-InRect    := $13          ; Is pos (via SET_POS) in bounds? Returns true/false in A
+InRect          := $13          ; Is pos (via SET_POS) in bounds? Returns true/false in A
         ;; (input length 8 bytes)
         ;; .word left
         ;; .word top
         ;; .word right
         ;; .word bottom
 
-PaintBits := $14          ; Draw pattern
+PaintBits       := $14          ; Draw pattern
         ;; (input length 16 bytes)
         ;; .word left
         ;; .word top
@@ -172,10 +174,10 @@ PaintBits := $14          ; Draw pattern
         ;; .word width          pixels
         ;; .word height         pixels
 
-        ;; $15 used in DeskTop but not DAs - icon redraw
+PaintPoly       := $15
         ;; (input length 0 bytes)
 
-FramePoly := $16       ; Draw multiple closed polygons
+FramePoly       := $16       ; Draw multiple closed polygons
         ;; (input length 0 bytes)
         ;; Address points at struct:
         ;; .byte points         count
@@ -187,16 +189,18 @@ FramePoly := $16       ; Draw multiple closed polygons
         ;; $17 used in DeskTop but not DAs - maybe selection drag
         ;; (input length 0 bytes)
 
+InPoly          := $16
+
 ;;; --------------------------------------------------
 ;;; Text Commands
 
-TextWidth := $18         ; Measure the width of a string in pixels
+TextWidth       := $18         ; Measure the width of a string in pixels
         ;; (input length 3 bytes)
         ;; .addr data
         ;; .byte length
         ;; .word width          result in pixels
 
-DrawText   := $19          ; Drawn at last SET_POS as left, baseline
+DrawText        := $19          ; Drawn at last SET_POS as left, baseline
         ;; (input length 3 bytes)
         ;; .addr data
         ;; .byte length
@@ -204,14 +208,15 @@ DrawText   := $19          ; Drawn at last SET_POS as left, baseline
 ;;; --------------------------------------------------
 ;;; Utility Commands
 
-SetZP1    := $1A  ; Configure ZP usage by API (speed vs. convenience)
+SetZP1          := $1A  ; Configure ZP usage by API (speed vs. convenience)
         ;; (input length 1 byte)
         ;; .byte flag           (AWS_CZP_*; high bit set = preserve ZP during calls)
 
-SetZP2        := $1B  ; Stash or restore lower 128 bytes of ZP; calls are idempotent
+SetZP2          := $1B  ; Stash or restore lower 128 bytes of ZP; calls are idempotent
         ;; (input length 1 byte)
         ;; .byte flag           (high bit set = stash ZP, clear = unstash ZP)
 
+Version         := $1C          ; ???
 
 ;;; ==================================================
 ;;; Mouse Graphics Tool Kit Calls
@@ -220,21 +225,28 @@ SetZP2        := $1B  ; Stash or restore lower 128 bytes of ZP; calls are idempo
 ;;; --------------------------------------------------
 ;;; Initialization Calls
 
-StartDeskTop := $1D; Inits state, registers interrupt handler, draws desktop
+StartDeskTop    := $1D  ; Inits state, registers interrupt handler, draws desktop
         ;; (input length 12 byte)
         ;; ???
 
-StopDeskTop  := $1E       ; Deallocates interrupt, hides cursor
+StopDeskTop     := $1E       ; Deallocates interrupt, hides cursor
         ;; (no parameters; pass $0000 as address)
 
-SetUserHook := $20           ; Install mouse hook; A=0 on success, $95 if mouse disabled
+
+;;; $1F ???
+
+SetUserHook     := $20           ; Install mouse hook; A=0 on success, $95 if mouse disabled
         ;; NOTE: Doesn't set the internal flag - buggy ???
         ;; (input length 2 bytes)
         ;; (output length 2 bytes)
         ;; .addr hook           Mouse hook routine to install
         ;; .addr mouse_state    (out) Address of mouse state (.word x, y; .byte status)
 
-GetIntHandler     := $23  ; Get address of interrupt handler
+ScaleMouse      := $21          ; ???
+
+KeyboardMouse   := $22          ; ???
+
+GetIntHandler   := $23  ; Get address of interrupt handler
         ;; (input length 0)
         ;; (output length 2 bytes)
         ;; .addr handler        (out) Address of interrupt handler (after cld)
@@ -266,7 +278,9 @@ GetCursorAddr := $28           ; Get cursor definition
 ;;; --------------------------------------------------
 ;;; Event Manager Calls
 
-GetEvent   := $2A
+CheckEvents     := $29          ; ???
+
+GetEvent        := $2A
         ;; (input length 0 bytes)
         ;; (output length 5 bytes)
         ;; .byte state
@@ -277,13 +291,15 @@ GetEvent   := $2A
         ;;   .word xcoord
         ;;   .word ycoord
 
-FlushEvents      := $2B
+FlushEvents     := $2B
         ;; (no parameters; pass $0000 as address)
 
         ;; $2C used in DeskTop but not DAs - icon drag
         ;; (input length 0 bytes)
 
-PostEvent   := $2D          ; Set pending input state (mouse or keyboard)
+PeekEvent       := $4C
+
+PostEvent       := $2D          ; Set pending input state (mouse or keyboard)
         ;; (input length 5 bytes)
         ;; .byte state
         ;; if state is key_down:
@@ -293,14 +309,16 @@ PostEvent   := $2D          ; Set pending input state (mouse or keyboard)
         ;;   .word xcoord
         ;;   .word ycoord
 
-SetKeyEvent   := $2E       ; When set, keyboard is ignored in $29 calls
+SetKeyEvent     := $2E       ; When set, keyboard is ignored in $29 calls
         ;; (input length 1 byte)
         ;; .byte flag           high bit set = ignore keyboard, otherwise check
 
 ;;; --------------------------------------------------
 ;;; Menu Manager Calls
 
-SetMenu := $30             ; Configure (and draw) menu
+InitMenu        := $2F
+
+SetMenu         := $30             ; Configure (and draw) menu
         ;; (input not copied)
         ;; .word count          Number of top-level menus
         ;;
@@ -322,16 +340,23 @@ SetMenu := $30             ; Configure (and draw) menu
         ;; or for a separator:
         ;; .word $40, $13, $0
 
-MenuSelect := $31           ; Enter modal loop for handling mouse-down on menu bar
+MenuSelect      := $31           ; Enter modal loop for handling mouse-down on menu bar
         ;; (input not copied)
         ;; (output 2 bytes)
         ;; .byte menu_id        Top level menu identifier, or 0 if none
         ;; .byte item_num       Index (1-based) of item in menu, or 0 if none
 
+MenuKey         := $32
+HiliteMenu      := $33
+DisableMenu     := $34
+DisableItem     := $35
+CheckItem       := $36
+SetMark         := $37
+
 ;;; --------------------------------------------------
 ;;; Window Manager Calls
 
-OpenWindow := $38
+OpenWindow      := $38
         ;; (input not copied)
         ;; .byte id
         ;; .byte options                option_*
@@ -369,11 +394,13 @@ OpenWindow := $38
         ;; .addr font
         ;; .addr next           address of next lower window in stack (filled in by call)
 
-CloseWindow := $39
+CloseWindow     := $39
         ;; (input length 1 byte)
         ;; .byte id
 
-GetWinPtr := $3B         ; Get pointer to window params by id; A=0 on success
+CloseAll        := $3A
+
+GetWinPtr       := $3B         ; Get pointer to window params by id; A=0 on success
         ;; (input length 1 byte)
         ;; (output length 3 bytes)
         ;; .byte id             of window
@@ -384,47 +411,49 @@ GetWinPort      := $3C     ; get drawing state of window
         ;; .byte id             window
         ;; .addr state          state definition to populate, like SetPort
 
-SetWinPort     := $3D     ; Update drawing state by passed window id
+SetWinPort      := $3D     ; Update drawing state by passed window id
         ;; ** Implementation appears buggy - or maybe just really cryptic ??? **
         ;; (input length 2 bytes)
         ;; .byte id             window
         ;; .byte ???
 
 
-BeginUpdate := $3E        ; Draws window border, background, title bar, scroll bars
+BeginUpdate     := $3E
         ;; (input length 1 byte)
         ;; .byte id
 
-FindWindow   := $40
+EndUpdate       := $3F
+
+FindWindow      := $40
         ;; (input length 4 bytes)
         ;; .word queryx         relative to screen
         ;; .word queryy
         ;; .byte element        (out) area_*
         ;; .byte id             (out) of window
 
-FrontWindow := $41            ; Get id of top window
+FrontWindow     := $41            ; Get id of top window
         ;; (input length 0 bytes)
         ;; (output length 1 byte)
         ;; .byte id             (out) window, or 0 if none
 
-SelectWindow   := $42       ; Make window topmost
+SelectWindow    := $42       ; Make window topmost
         ;; (input length 1 byte)
         ;; .byte id             window
 
-TrackGoAway := $43
+TrackGoAway     := $43
         ;; (input length 0 bytes)
         ;; .byte clicked        (out) 0 = cancelled, 1 = clicked
         ;; .byte ??             (out)
         ;; .byte ??             (out)
 
-DragWindow := $44
+DragWindow      := $44
         ;; (input length 5 bytes)
         ;; .byte id             window
         ;; .word xcoord         mouse coords
         ;; .word ycoord
         ;; .byte moved          high bit set if moved, clear if not
 
-GrowWindow := $45
+GrowWindow      := $45
         ;; (input length 5 bytes)
         ;; .byte id             window
         ;; .word xcoord         mouse coords
@@ -439,23 +468,25 @@ ScreenToWindow  := $46          ; Map screen coords to client coords
         ;; .word clientx
         ;; .word clienty
 
+WindowToScreen  := $47
+
 ;;; --------------------------------------------------
 ;;; Control Manager Calls
 
-FindControl := $48
+FindControl     := $48
         ;; (input length 4 bytes)
         ;; .word xcoord
         ;; .word ycoord
         ;; .byte part           ctl_*
         ;; .byte scroll         part_*
 
-SetCtlMax := $49        ; ???
+SetCtlMax       := $49        ; ???
         ;; (input length 3 bytes)
         ;; .byte ???            maybe part (i.e. HSCROLL or VSCROLL) ???
         ;; .byte ???            width fraction ??
         ;; .byte ???
 
-TrackThumb := $4A
+TrackThumb      := $4A
         ;; (input length 5 bytes)
         ;; .byte type           ctl_horizontal_scroll_bar or ctl_vertical_scroll_bar
         ;; .word mouse xcoord
@@ -463,18 +494,20 @@ TrackThumb := $4A
         ;; .byte position       0...255
         ;; .byte moved          0 = no change, 1 = moved
 
-UpdateThumb := $4B
+UpdateThumb     := $4B
         ;; (input length 3 bytes)
         ;; .byte type           ctl_horizontal_scroll_bar or ctl_vertical_scroll_bar
         ;; .byte pos            new position 0...250
         ;; .byte ???
+
+ActivateCtl     := $4C          ; ???
 
 ;;; $4E is last call
 
 ;;; ==================================================
 ;;; Graphics Primitives Constants
 
-;;; Used in GetWinPort / SetPortSite
+;;; Used in GetWinPort / SetPortBits
 screen_mapbits     := $2000    ; Screen address
 screen_mapwidth   := $80      ; Stride in bytes
 
