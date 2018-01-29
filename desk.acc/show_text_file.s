@@ -502,7 +502,7 @@ loop:   lda     font_width_table - 1,x
         jsr     calc_window_size
         jsr     calc_and_draw_mode
         jsr     draw_content
-        MGTK_CALL $2B            ; ???
+        MGTK_CALL MGTK::FlushEvents
         ;; fall through
 .endproc
 

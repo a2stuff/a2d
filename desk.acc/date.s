@@ -325,7 +325,7 @@ init_window:
         lda     #0
         sta     selected_field
         jsr     draw_window
-        MGTK_CALL $2B
+        MGTK_CALL MGTK::FlushEvents
         ;; fall through
 
 ;;; ==================================================

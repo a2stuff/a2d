@@ -672,7 +672,7 @@ loop:   tya
 
         lda     #window_id
         jsr     check_window_pos
-        MGTK_CALL $2B            ; ???
+        MGTK_CALL MGTK::FlushEvents
 
         ;; Scramble?
 .proc scramble

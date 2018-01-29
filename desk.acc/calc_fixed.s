@@ -816,7 +816,7 @@ init:   sta     ALTZPON
         MGTK_CALL MGTK::OpenWindow, create_window_params
         MGTK_CALL MGTK::InitPort, state_params
         MGTK_CALL MGTK::SetPort, state_params
-        MGTK_CALL $2B                          ; reset drawing state?
+        MGTK_CALL MGTK::FlushEvents
 
         jsr     reset_buffer2
 

@@ -852,7 +852,7 @@ init:   sta     ALTZPON
         MGTK_CALL MGTK::OpenWindow, create_window_params
         MGTK_CALL MGTK::InitPort, state_params
         MGTK_CALL MGTK::SetPort, state_params     ; set clipping bounds?
-        MGTK_CALL $2B                          ; reset drawing state?
+        MGTK_CALL MGTK::FlushEvents
         lda     #$01
         sta     input_state_params::state
         MGTK_CALL MGTK::PostEvent, input_state_params

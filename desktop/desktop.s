@@ -215,19 +215,19 @@ L8616:  cmp     #$57
         addr_call $6B17, $1B7C
         ldx     $D5CA
         txs
-L8625:  MGTK_RELAY_CALL $33, win18_state
+L8625:  MGTK_RELAY_CALL MGTK::HiliteMenu, win18_state
         rts
 
         addr_call $6B17, $1B9C
         ldx     $D5CA
         txs
-        MGTK_RELAY_CALL $33, win18_state
+        MGTK_RELAY_CALL MGTK::HiliteMenu, win18_state
         rts
 
         addr_call $6B17, $1BBF
         ldx     $D5CA
         txs
-        MGTK_RELAY_CALL $33, win18_state
+        MGTK_RELAY_CALL MGTK::HiliteMenu, win18_state
         rts
 
         sta     L8737
@@ -1245,7 +1245,7 @@ L97B9:  txa
         cmp     L97F5
         bne     L97E0
         jsr     LA18A
-        MGTK_CALL $17, L8E03
+        MGTK_CALL MGTK::InPoly, L8E03
         bne     L97E6
 L97E0:  pla
         tax
@@ -1311,7 +1311,7 @@ L9835:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 L983D:  lda     #$00
         sta     L9830
         sta     L9833
-L9845:  MGTK_CALL $2C, L933E
+L9845:  MGTK_CALL MGTK::PeekEvent, L933E
         lda     L933E
         cmp     #$04
         beq     L9857
@@ -1516,7 +1516,7 @@ L99E1:  iny
 L99FC:  MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
         MGTK_CALL MGTK::SetPenMode, const2a
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
-L9A0E:  MGTK_CALL $2C, L933E
+L9A0E:  MGTK_CALL MGTK::PeekEvent, L933E
         lda     L933E
         cmp     #$04
         beq     L9A1E
@@ -2617,7 +2617,7 @@ LA3B9:  ldy     #$00
         lda     #$80
         sta     LA3B7
         MGTK_CALL MGTK::SetPattern, white_pattern
-        MGTK_CALL $41, LA3B8
+        MGTK_CALL MGTK::FrontWindow, LA3B8
         lda     LA3B8
         sta     query_state_params
         MGTK_CALL MGTK::GetWinPort, query_state_params
@@ -2651,7 +2651,7 @@ LA436:  lda     L8E15,x
         sta     LA3B3,x
         dex
         bpl     LA436
-        MGTK_CALL $15, L8E03
+        MGTK_CALL MGTK::PaintPoly, L8E03
         rts
 
 LA446:  jsr     LA365
@@ -6234,7 +6234,7 @@ L410D:  jsr     L4113
 L4113:  MGTK_RELAY_CALL MGTK::BeginUpdate, input_params+1
         bne     L4151
         jsr     L4153
-        MGTK_RELAY_CALL $3F      ; ???
+        MGTK_RELAY_CALL MGTK::EndUpdate
         rts
 
 L412B:  lda     #$00
@@ -6534,7 +6534,7 @@ menu_accelerators:
         beq     L43A1
         lda     #$01
 L43A1:  sta     $E25D
-        MGTK_RELAY_CALL $32, menu_click_params
+        MGTK_RELAY_CALL MGTK::MenuKey, menu_click_params
 
 menu_dispatch2:
         ldx     menu_click_params::menu_id
@@ -6558,7 +6558,7 @@ L43B3:  dex                     ; x has top level menu id
         lda     dispatch_table+1,x
         sta     L43E5+1
         jsr     L43E0
-        MGTK_RELAY_CALL $33, menu_click_params
+        MGTK_RELAY_CALL MGTK::HiliteMenu, menu_click_params
         rts
 
 L43E0:  tsx
@@ -6673,7 +6673,7 @@ L44B8:  jsr     DESKTOP_COPY_TO_BUF
         jsr     DESKTOP_COPY_TO_BUF
         lda     #$00
         sta     $E269
-        MGTK_RELAY_CALL $36, LE267 ; ???
+        MGTK_RELAY_CALL MGTK::CheckItem, LE267 ; ???
         ldx     desktop_active_winid
         dex
         lda     LE6D1,x
@@ -6682,7 +6682,7 @@ L44B8:  jsr     DESKTOP_COPY_TO_BUF
         inc     $E268
         lda     #$01
         sta     $E269
-        MGTK_RELAY_CALL $36, LE267 ; ???
+        MGTK_RELAY_CALL MGTK::CheckItem, LE267 ; ???
         rts
 .endproc
 
@@ -7000,7 +7000,7 @@ L4748:  cmp     #FT_SYSTEM
         jsr     L4802
 
 L4755:  DESKTOP_RELAY_CALL $06
-        MGTK_RELAY_CALL $3A      ; ???
+        MGTK_RELAY_CALL MGTK::CloseAll
         MGTK_RELAY_CALL MGTK::SetMenu, blank_menu
         ldx     $D355
 L4773:  lda     $D355,x
@@ -7162,7 +7162,7 @@ get_input:
         MGTK_RELAY_CALL MGTK::GetEvent, input_params
         rts
 
-L48F0:  MGTK_RELAY_CALL $2C, input_params ; ???
+L48F0:  MGTK_RELAY_CALL MGTK::PeekEvent, input_params
         rts
 
 L48FA:  MGTK_RELAY_CALL MGTK::SetPenMode, const2
@@ -7965,7 +7965,7 @@ L4EC3:  sta     buf3len
         DESKTOP_RELAY_CALL DESKTOP_REDRAW_ICONS
 L4F3C:  lda     #$00
         sta     $E269
-        MGTK_RELAY_CALL $36, LE267 ; ???
+        MGTK_RELAY_CALL MGTK::CheckItem, LE267 ; ???
         jsr     L66A2
         jmp     reset_state2
 .endproc
@@ -8414,12 +8414,12 @@ L52D7:  jsr     L52DF
 
 L52DF:  lda     #$00
         sta     $E269
-        MGTK_RELAY_CALL $36, LE267 ; ???
+        MGTK_RELAY_CALL MGTK::CheckItem, LE267
         lda     $E25B
         sta     $E268
         lda     #$01
         sta     $E269
-        MGTK_RELAY_CALL $36, LE267 ; ???
+        MGTK_RELAY_CALL MGTK::CheckItem, LE267
         rts
 
 L5302:  DESKTOP_RELAY_CALL $07, desktop_active_winid
@@ -9001,7 +9001,7 @@ L578D:  .byte   0
 ;;;Initiate keyboard-based resizing
 
 .proc cmd_resize
-        MGTK_RELAY_CALL $22      ; ???
+        MGTK_RELAY_CALL MGTK::KeyboardMouse
         jmp     handle_resize_click
 .endproc
 
@@ -9009,7 +9009,7 @@ L578D:  .byte   0
 ;;; Initiate keyboard-based window moving
 
 .proc cmd_move
-        MGTK_RELAY_CALL $22      ; ???
+        MGTK_RELAY_CALL MGTK::KeyboardMouse
         jmp     handle_title_click
 .endproc
 
@@ -10254,7 +10254,7 @@ L6276:  ldx     desktop_active_winid
         jsr     DESKTOP_COPY_TO_BUF
         lda     #$00
         sta     $E269
-        MGTK_RELAY_CALL $36, LE267 ; ???
+        MGTK_RELAY_CALL MGTK::CheckItem, LE267
         jsr     L66A2
         jmp     redraw_windows_and_desktop
 
@@ -10685,20 +10685,20 @@ L66A2:  ldx     desktop_active_winid
 
 L66AA:  lda     #$01
         sta     $E26B
-        MGTK_RELAY_CALL $34, LE26A ; ???
+        MGTK_RELAY_CALL MGTK::DisableMenu, LE26A
         lda     #$01
         sta     $E26E
         lda     #$02
         sta     LE26C
         lda     #$01
         sta     $E26D
-        MGTK_RELAY_CALL $35, LE26C ; ???
+        MGTK_RELAY_CALL MGTK::DisableItem, LE26C
         lda     #$04
         sta     $E26D
-        MGTK_RELAY_CALL $35, LE26C ; ???
+        MGTK_RELAY_CALL MGTK::DisableItem, LE26C
         lda     #$05
         sta     $E26D
-        MGTK_RELAY_CALL $35, LE26C ; ???
+        MGTK_RELAY_CALL MGTK::DisableItem, LE26C
         lda     #$00
         sta     menu_dispatch_flag
         rts
@@ -10711,7 +10711,7 @@ L66F2:  dex
         stx     $E268
         lda     #$01
         sta     $E269
-        MGTK_RELAY_CALL $36, LE267 ; ???
+        MGTK_RELAY_CALL MGTK::CheckItem, LE267
         rts
 
 L670C:  lda     #$01
@@ -10735,7 +10735,7 @@ L670C:  lda     #$01
         rts
 
 L673A:  sta     $E26D
-        MGTK_RELAY_CALL $35, LE26C ; ???
+        MGTK_RELAY_CALL MGTK::DisableItem, LE26C
         rts
 
 L6747:  lda     #$00
@@ -10759,7 +10759,7 @@ L6747:  lda     #$00
         rts
 
 L6775:  sta     $E26D
-        MGTK_RELAY_CALL $35, LE26C ; ???
+        MGTK_RELAY_CALL MGTK::DisableItem, LE26C
         rts
 
 L6782:  lda     #$00
@@ -10772,7 +10772,7 @@ L678F:  lda     #$02
         sta     LE26C
         lda     #$0B
         sta     $E26D
-        MGTK_RELAY_CALL $35, LE26C ; ???
+        MGTK_RELAY_CALL MGTK::DisableItem, LE26C
         rts
 
 L67A3:  lda     #$01
@@ -10794,7 +10794,7 @@ L67B0:  lda     #$03
         rts
 
 L67CA:  sta     $E26D
-        MGTK_RELAY_CALL $35, LE26C ; ???
+        MGTK_RELAY_CALL MGTK::DisableItem, LE26C
         rts
 
 L67D7:  lda     is_file_selected
@@ -11235,7 +11235,7 @@ L6BF4:  lda     bufnum
         jmp     reset_state2
 
 L6C0E:  .byte   0
-L6C0F:  MGTK_RELAY_CALL $36, LE267 ; ???
+L6C0F:  MGTK_RELAY_CALL MGTK::CheckItem, LE267
         rts
 
 L6C19:  ldx     bufnum
@@ -11466,7 +11466,7 @@ L6E38:  lda     #$01
         jsr     L6E48
         jmp     L6604
 
-L6E48:  MGTK_RELAY_CALL $4C, input_params ; ???
+L6E48:  MGTK_RELAY_CALL MGTK::ActivateCtl, input_params ; ???
         rts
 
 L6E52:  lda     #$00
@@ -11523,20 +11523,20 @@ L6EC3:  rts
 L6EC4:  .byte   0
 L6EC5:  lda     #$00
         sta     $E26B
-        MGTK_RELAY_CALL $34, LE26A ; ???
+        MGTK_RELAY_CALL MGTK::DisableMenu, LE26A
         lda     #$00
         sta     $E26E
         lda     #$02
         sta     LE26C
         lda     #$01
         sta     $E26D
-        MGTK_RELAY_CALL $35, LE26C ; ???
+        MGTK_RELAY_CALL MGTK::DisableItem, LE26C
         lda     #$04
         sta     $E26D
-        MGTK_RELAY_CALL $35, LE26C ; ???
+        MGTK_RELAY_CALL MGTK::DisableItem, LE26C
         lda     #$05
         sta     $E26D
-        MGTK_RELAY_CALL $35, LE26C ; ???
+        MGTK_RELAY_CALL MGTK::DisableItem, LE26C
         lda     #$80
         sta     menu_dispatch_flag
         rts
@@ -19467,7 +19467,7 @@ LB46C:  lda     LB501
         bne     LB476
         lda     LB500
         beq     LB4B7
-LB476:  MGTK_RELAY_CALL $2C, input_params ; ???
+LB476:  MGTK_RELAY_CALL MGTK::PeekEvent, input_params
         jsr     LB4BA
         bmi     LB4B7
         lda     #$FF
@@ -20790,9 +20790,9 @@ L09FC:  .byte   $03
 L0A01:  .byte   0
 L0A02:  .byte   0
 
-L0A03:  MGTK_RELAY_CALL $29
+L0A03:  MGTK_RELAY_CALL MGTK::CheckEvents
         MLI_RELAY_CALL GET_PREFIX, desktop_main::get_prefix_params
-        MGTK_RELAY_CALL $29
+        MGTK_RELAY_CALL MGTK::CheckEvents
         lda     #$00
         sta     L0A92
         jsr     L0AE7
@@ -20976,7 +20976,7 @@ L0B09:  addr_call desktop_main::measure_text1, str_6_spaces
 L0BA0:  .byte   0
 L0BA1:  .byte   0
 
-L0BA2:  MGTK_RELAY_CALL $29
+L0BA2:  MGTK_RELAY_CALL MGTK::CheckEvents
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
         beq     L0BB9
         jmp     L0D0A
@@ -21176,7 +21176,7 @@ L0D12:  lda     L0E33
         lda     DEVLST,y
         jsr     desktop_main::get_device_info
         sta     L0E34
-        MGTK_RELAY_CALL $29
+        MGTK_RELAY_CALL MGTK::CheckEvents
         pla
         tay
         pla
@@ -21431,7 +21431,7 @@ L0F14:  inx
         bne     L0F34
         lda     #$80
         sta     desktop_main::L4861
-L0F34:  MGTK_RELAY_CALL $29
+L0F34:  MGTK_RELAY_CALL MGTK::CheckEvents
         MGTK_RELAY_CALL MGTK::SetMenu, desktop_aux::desktop_menu
         MGTK_RELAY_CALL MGTK::SetCursor, pointer_cursor
         lda     #$00

@@ -349,7 +349,7 @@ end:    rts
         jsr     show_file
         MGTK_CALL MGTK::ShowCursor
 
-        MGTK_CALL $2B            ; ???
+        MGTK_CALL MGTK::FlushEvents
         ;; fall through
 .endproc
 

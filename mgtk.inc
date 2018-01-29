@@ -186,10 +186,8 @@ FramePoly       := $16       ; Draw multiple closed polygons
         ;; .word x2, y2
         ;; ...
 
-        ;; $17 used in DeskTop but not DAs - maybe selection drag
+InPoly          := $17
         ;; (input length 0 bytes)
-
-InPoly          := $16
 
 ;;; --------------------------------------------------
 ;;; Text Commands
