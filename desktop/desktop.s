@@ -54,18 +54,6 @@ INVOKER_FILENAME := $280                 ; File to invoke (PREFIX must be set)
         jmp     target
 .endmacro
 
-.macro DEFINE_RECT left, top, right, bottom
-        .word   left
-        .word   top
-        .word   right
-        .word   bottom
-.endmacro
-
-.macro DEFINE_POINT left, top
-        .word   left
-        .word   top
-.endmacro
-
 .macro MGTK_RELAY_CALL call, addr
 .if .paramcount > 1
         yax_call MGTK_RELAY, (call), (addr)
@@ -3437,47 +3425,15 @@ label_get_size:
 label_rename_icon:
         PASCAL_STRING "Rename an Icon ..."
 
-;;; Top-level menus
-.macro  DEFINE_TL_MENU count
-        .word   count
-.endmacro
-
-.macro  DEFINE_TL_MENU_ITEM id, label, menu
-        .word   id
-        .addr   label
-        .addr   menu
-        .word   0, 0, 0
-.endmacro
-
-;;; Drop-down menus
-.macro  DEFINE_MENU count
-        .word   count, 0, 0
-.endmacro
-
-.macro  DEFINE_MENU_ITEM saddr, shortcut1, shortcut2
-        .if .paramcount > 1
-        .word   1
-        .byte   shortcut1
-        .byte   shortcut2
-        .else
-        .word   0
-        .byte   0
-        .byte   0
-        .endif
-        .addr   saddr
-.endmacro
-.macro  DEFINE_MENU_SEPARATOR
-        .word   64, 19, 0
-.endmacro
 
 desktop_menu:
-        DEFINE_TL_MENU 6
-        DEFINE_TL_MENU_ITEM 1, label_apple, apple_menu
-        DEFINE_TL_MENU_ITEM 2, label_file, file_menu
-        DEFINE_TL_MENU_ITEM 4, label_view, view_menu
-        DEFINE_TL_MENU_ITEM 5, label_special, special_menu
-        DEFINE_TL_MENU_ITEM 8, label_startup, startup_menu
-        DEFINE_TL_MENU_ITEM 3, label_selector, selector_menu
+        DEFINE_MENU_BAR 6
+        DEFINE_MENU_BAR_ITEM 1, label_apple, apple_menu
+        DEFINE_MENU_BAR_ITEM 2, label_file, file_menu
+        DEFINE_MENU_BAR_ITEM 4, label_view, view_menu
+        DEFINE_MENU_BAR_ITEM 5, label_special, special_menu
+        DEFINE_MENU_BAR_ITEM 8, label_startup, startup_menu
+        DEFINE_MENU_BAR_ITEM 3, label_selector, selector_menu
 
 file_menu:
         DEFINE_MENU 12
@@ -5586,12 +5542,12 @@ label_about:
 buf:    .res    $80, 0
 
 splash_menu:
-        DEFINE_TL_MENU 1
-        DEFINE_TL_MENU_ITEM 1, splash_menu_label, dummy_dd_menu
+        DEFINE_MENU_BAR 1
+        DEFINE_MENU_BAR_ITEM 1, splash_menu_label, dummy_dd_menu
 
 blank_menu:
-        DEFINE_TL_MENU 1
-        DEFINE_TL_MENU_ITEM 1, blank_dd_label, dummy_dd_menu
+        DEFINE_MENU_BAR 1
+        DEFINE_MENU_BAR_ITEM 1, blank_dd_label, dummy_dd_menu
 
 dummy_dd_menu:
         DEFINE_MENU 1

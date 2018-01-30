@@ -566,6 +566,14 @@ scroll_option_thumb     := 1 << 6
 scroll_option_active    := 1 << 0
 scroll_option_normal    := scroll_option_present | scroll_option_thumb | scroll_option_active
 
+;;; Used in menu structs
+menuopt_mod_open_apple  := 1 << 0
+menuopt_mod_solid_apple := 1 << 1
+menuopt_has_mark        := 1 << 2
+menuopt_is_checked      := 1 << 5
+menuopt_is_filler       := 1 << 6
+menuopt_disabled_flag   := 1 << 7
+
 .endscope ; MGTK
 
 ;;; ==================================================
@@ -593,6 +601,18 @@ scroll_option_normal    := scroll_option_present | scroll_option_thumb | scroll_
 
 ;;; ------------------------------------
 
+.macro DEFINE_RECT left, top, right, bottom
+        .word   left
+        .word   top
+        .word   right
+        .word   bottom
+.endmacro
+
+.macro DEFINE_POINT left, top
+        .word   left
+        .word   top
+.endmacro
+
 .macro DEFINE_STRING str, label ; String definition, for use with TextWidth/DrawText
         .local  data            ; Call as DEFINE_STRING "abc"
         .local  end             ; Can include control chars by using:
@@ -606,6 +626,55 @@ data:   .byte   str
 end:
 .endmacro
 
+;;; Menus (common cases; other options are possible)
+
+.macro DEFINE_MENU_BAR count
+        .byte   count           ; num menus
+        .byte   0               ; reserved
+.endmacro
+
+.macro DEFINE_MENU_BAR_ITEM id, label, menu
+        .byte   id              ; menu id
+        .byte   0               ; disable flag
+        .addr   label           ; title pointer
+        .addr   menu            ; pointer to menu
+        .res    6, 0            ; 6 reserved bytes
+.endmacro
+
+.macro DEFINE_MENU count
+        .byte   count           ; num items
+        .res    5, 0            ; 5 reserved bytes
+.endmacro
+
+.macro DEFINE_MENU_ITEM saddr, shortcut1, shortcut2
+        .if .paramcount > 1
+
+        .byte   MGTK::menuopt_mod_open_apple ; option byte
+        .byte   0               ; mark character
+        .byte   shortcut1       ; char 1
+        .byte   shortcut2       ; char 2
+        .addr   saddr           ; name pointer
+
+        .else
+
+        .byte   0               ; option byte
+        .byte   0               ; mark character
+        .byte   0               ; char 1
+        .byte   0               ; char 2
+        .addr   saddr           ; name pointer
+
+        .endif
+.endmacro
+
+.macro DEFINE_MENU_SEPARATOR
+        .byte   MGTK::menuopt_is_filler ; option byte
+        .byte   0                       ; mark character
+        .byte   19                      ; char 1 - Ctrl+S for separator ???
+        .byte   0                       ; char 2
+        .addr   0                       ; name pointer
+.endmacro
+
+;;; ------------------------------------
 
 ;;; Define pattern for PaintBits - low 7 bits are reversed
 ;;; e.g. .byte px(%1000000)
