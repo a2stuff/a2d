@@ -171,7 +171,7 @@ base:   .word   0
 
 
 .proc event_params             ; queried to track mouse-up
-state:  .byte   $00
+kind:  .byte   $00
 
 ;;; if state is MGTK::key_down
 key    := *
@@ -193,9 +193,9 @@ ycoord := *+2
         .byte 0                 ; length
 .endproc
 
-.proc window_params
+.proc winfo
 id:     .byte   window_id       ; window identifier
-flags:  .byte   MGTK::option_dialog_box
+options:  .byte   MGTK::option_dialog_box
 title:  .addr   window_title
 hscroll:.byte   MGTK::scroll_option_none
 vscroll:.byte   MGTK::scroll_option_none
@@ -203,7 +203,8 @@ hthumbmax:  .byte   32
 hthumbpos:  .byte   0
 vthumbmax:  .byte   32
 vthumbpos:  .byte   0
-        .byte   0, 0            ; ???
+status: .byte   0
+reserved:       .byte   0
 mincontwidth:     .word   default_width
 mincontlength:     .word   default_height
 maxcontwidth:     .word   default_width
@@ -221,16 +222,15 @@ height: .word   default_height
 .endproc
 
 pattern:.res    8, 0
-mskand: .byte   MGTK::colormask_and
-mskor:  .byte   MGTK::colormask_or
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 xpos:   .word   0
 ypos:   .word   0
-hthick: .byte   1
-vthick: .byte   1
-mode:   .byte   0
-tmask:  .byte   $7F
-font:   .addr   DEFAULT_FONT
-next:   .addr   0
+penwidth: .byte   1
+penheight: .byte   1
+penmode:   .byte   0
+textback:  .byte   $7F
+textfont:   .addr   DEFAULT_FONT
+nextwinfo:   .addr   0
 .endproc
 
 
@@ -344,8 +344,8 @@ end:    rts
 
         MGTK_CALL MGTK::HideCursor
         jsr     stash_menu
-        MGTK_CALL MGTK::OpenWindow, window_params
-        MGTK_CALL MGTK::SetPort, window_params::port
+        MGTK_CALL MGTK::OpenWindow, winfo
+        MGTK_CALL MGTK::SetPort, winfo::port
         jsr     show_file
         MGTK_CALL MGTK::ShowCursor
 
@@ -358,7 +358,7 @@ end:    rts
 
 .proc input_loop
         MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::state
+        lda     event_params::kind
         cmp     #MGTK::button_down ; was clicked?
         beq     exit
         cmp     #MGTK::key_down  ; any key?
@@ -375,7 +375,7 @@ on_key:
 
 exit:
         MGTK_CALL MGTK::HideCursor
-        MGTK_CALL MGTK::CloseWindow, window_params
+        MGTK_CALL MGTK::CloseWindow, winfo
         DESKTOP_CALL DESKTOP_REDRAW_ICONS
         jsr     unstash_menu
         MGTK_CALL MGTK::ShowCursor

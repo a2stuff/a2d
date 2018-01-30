@@ -215,7 +215,7 @@ year_string:
         DEFINE_STRING "  "
 
 .proc event_params
-state:  .byte   0
+kind:  .byte   0
 
 key       := *
 modifiers := *+1
@@ -250,7 +250,7 @@ id:     .byte   window_id
         .byte $00,$01           ; ???
 
 .proc penmode_params
-mode:   .byte   $02             ; this should be normal, but we do inverts ???
+penmode:   .byte   $02             ; this should be normal, but we do inverts ???
 .endproc
         .byte   $06             ; ???
 
@@ -281,16 +281,15 @@ width:  .word   $C7
 height: .word   $40
 .endproc
 pattern:.res    8,$00
-mskand: .byte   MGTK::colormask_and
-mskor:  .byte   MGTK::colormask_or
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 xpos:   .word   0
 ypos:   .word   0
-hthick: .byte   4
-vthick: .byte   2
-mode:   .byte   0
-tmask:  .byte   $7F
-font:   .addr   DEFAULT_FONT
-next:   .addr   0
+penwidth: .byte   4
+penheight: .byte   2
+penmode:   .byte   0
+textback:  .byte   $7F
+textfont:   .addr   DEFAULT_FONT
+nextwinfo:   .addr   0
 .endproc
 
 ;;; ==================================================
@@ -334,7 +333,7 @@ init_window:
 
 .proc input_loop
         MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::state
+        lda     event_params::kind
         cmp     #MGTK::button_down
         bne     :+
         jsr     on_click
@@ -493,7 +492,7 @@ on_field_click:
 .proc on_up_or_down
         stx     hit_rect_index
 loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
-        lda     event_params::state
+        lda     event_params::kind
         cmp     #MGTK::button_up
         beq     :+
         jsr     do_inc_or_dec
@@ -780,8 +779,8 @@ label_downarrow_pos:
         .word   $AC,$27
 
 .proc setpensize_params
-hthick: .byte   1
-vthick: .byte   1
+penwidth: .byte   1
+penheight: .byte   1
 .endproc
 
 ;;; ==================================================

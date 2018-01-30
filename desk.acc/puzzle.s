@@ -164,7 +164,7 @@ clienty := * + 7
 .endproc
 
 .proc event_params
-state:  .byte   0
+kind:  .byte   0
 key       := *
 modifiers := *+1
 
@@ -593,7 +593,7 @@ setport_params:
 
 .proc winfo
 id:     .byte   window_id
-flags:  .byte   MGTK::option_go_away_box
+options:  .byte   MGTK::option_go_away_box
 title:  .addr   name
 hscroll:.byte   MGTK::scroll_option_none
 vscroll:.byte   MGTK::scroll_option_none
@@ -601,7 +601,8 @@ hthumbmax:  .byte   0
 hthumbpos:  .byte   0
 vthumbmax:  .byte   0
 vthumbpos:  .byte   0
-        .byte   0,0             ; ???
+status: .byte   0
+reserved:       .byte   0
 mincontwidth:     .word   default_width
 mincontlength:     .word   default_height
 maxcontwidth:     .word   default_width
@@ -617,16 +618,15 @@ width:  .word   default_width
 height: .word   default_height
 
 pattern:.res    8, $FF
-mskand: .byte   MGTK::colormask_and
-mskor:  .byte   MGTK::colormask_or
+colormasks:      .byte MGTK::colormask_and, MGTK::colormask_or
 xpos:   .word   0
 ypos:   .word   0
-hthick: .byte   1
-vthick: .byte   1
-mode:   .byte   0
-tmask:  .byte   $7F
-font:   .addr   DEFAULT_FONT
-next:   .addr   0
+penwidth: .byte   1
+penheight: .byte   1
+penmode:   .byte   0
+textback:  .byte   $7F
+textfont:   .addr   DEFAULT_FONT
+nextwinfo:   .addr   0
 .endproc
 
         ;; This is QUERY_STATE/SET_BOX cruft only below
@@ -640,15 +640,14 @@ voff:   .word   0
 width:  .word   default_width
 height: .word   default_height
 pattern:.res    8, $FF
-mskand: .byte   MGTK::colormask_and
-mskor:  .byte   MGTK::colormask_or
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 xpos:   .word   0
 ypos:   .word   0
-hthick: .byte   1
-vthick: .byte   1
-mode:   .byte   0
-tmask:  .byte   $7F
-font:   .addr   DEFAULT_FONT
+penwidth: .byte   1
+penheight: .byte   1
+penmode:   .byte   0
+textback:  .byte   $7F
+textfont:   .addr   DEFAULT_FONT
         .byte   0,0             ; ???
 .endproc
 
@@ -699,7 +698,7 @@ ploop:  lda     position_table+1,y
 .endproc
 
         MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::state
+        lda     event_params::kind
         beq     scramble
         jsr     check_victory
         bcs     scramble
@@ -713,7 +712,7 @@ ploop:  lda     position_table+1,y
 
 .proc input_loop
         MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::state
+        lda     event_params::kind
         cmp     #MGTK::button_down
         bne     :+
         jsr     on_click

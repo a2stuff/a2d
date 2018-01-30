@@ -159,8 +159,8 @@ offscreen_flag:
 .proc screentowindow_params
 window_id      := *
 screen  := * + 1
-screenx := * + 1 ; aligns with input_state::xcoord
-screeny := * + 3 ; aligns with input_state::ycoord
+screenx := * + 1 ; aligns with event_params::xcoord
+screeny := * + 3 ; aligns with event_params::ycoord
 window  := * + 5
 windowx := * + 5
 windowy := * + 7
@@ -168,8 +168,8 @@ windowy := * + 7
 
 .proc dragwindow_params
 window_id      := *
-xcoord  := * + 1 ; aligns with input_state::xcoord
-ycoord  := * + 3 ; aligns with input_state::ycoord
+xcoord  := * + 1 ; aligns with event_params::xcoord
+ycoord  := * + 3 ; aligns with event_params::ycoord
 moved   := * + 5 ; ignored
 .endproc
 
@@ -241,7 +241,7 @@ flag:  .byte   MGTK::zp_overwrite
 .proc btn_c
 left:   .word   col1_left - border_lt
 top:    .word   row1_top - border_lt
-bitmap: .addr   button_bitmap
+mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
@@ -256,7 +256,7 @@ port:    .word   col1_left,row1_top,col1_right,row1_bot
 .proc btn_e
 left:   .word   col2_left - border_lt
 top:    .word   row1_top - border_lt
-bitmap: .addr   button_bitmap
+mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
@@ -271,7 +271,7 @@ port:    .word   col2_left,row1_top,col2_right,row1_bot
 .proc btn_eq
 left:   .word   col3_left - border_lt
 top:    .word   row1_top - border_lt
-bitmap: .addr   button_bitmap
+mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
@@ -286,7 +286,7 @@ port:    .word   col3_left,row1_top,col3_right,row1_bot
 .proc btn_mul
 left:   .word   col4_left - border_lt
 top:    .word   row1_top - border_lt
-bitmap: .addr   button_bitmap
+mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
@@ -301,7 +301,7 @@ port:    .word   col4_left,row1_top,col4_right,row1_bot
 .proc btn_7
 left:   .word   col1_left - border_lt
 top:    .word   row2_top - border_lt
-bitmap: .addr   button_bitmap
+mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
@@ -316,7 +316,7 @@ port:    .word   col1_left,row2_top,col1_right,row2_bot
 .proc btn_8
 left:   .word   col2_left - border_lt
 top:    .word   row2_top - border_lt
-bitmap: .addr   button_bitmap
+mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
@@ -331,7 +331,7 @@ port:    .word   col2_left,row2_top,col2_right,row2_bot
 .proc btn_9
 left:   .word   col3_left - border_lt
 top:    .word   row2_top - border_lt
-bitmap: .addr   button_bitmap
+mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
@@ -346,7 +346,7 @@ port:    .word   col3_left,row2_top,col3_right,row2_bot
 .proc btn_div
 left:   .word   col4_left - border_lt
 top:    .word   row2_top - border_lt
-bitmap: .addr   button_bitmap
+mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
@@ -361,7 +361,7 @@ port:    .word   col4_left,row2_top,col4_right,row2_bot
 .proc btn_4
 left:   .word   col1_left - border_lt
 top:    .word   row3_top - border_lt
-bitmap: .addr   button_bitmap
+mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
@@ -376,7 +376,7 @@ port:    .word   col1_left,row3_top,col1_right,row3_bot
 .proc btn_5
 left:   .word   col2_left - border_lt
 top:    .word   row3_top - border_lt
-bitmap: .addr   button_bitmap
+mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
@@ -391,7 +391,7 @@ port:    .word   col2_left,row3_top,col2_right,row3_bot
 .proc btn_6
 left:   .word   col3_left - border_lt
 top:    .word   row3_top - border_lt
-bitmap: .addr   button_bitmap
+mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
@@ -406,7 +406,7 @@ port:    .word   col3_left,row3_top,col3_right,row3_bot
 .proc btn_sub
 left:   .word   col4_left - border_lt
 top:    .word   row3_top - border_lt
-bitmap: .addr   button_bitmap
+mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
@@ -421,7 +421,7 @@ port:    .word   col4_left,row3_top,col4_right,row3_bot
 .proc btn_1
 left:   .word   col1_left - border_lt
 top:    .word   row4_top - border_lt
-bitmap: .addr   button_bitmap
+mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
@@ -436,7 +436,7 @@ port:    .word   col1_left,row4_top,col1_right,row4_bot
 .proc btn_2
 left:   .word   col2_left - border_lt
 top:    .word   row4_top - border_lt
-bitmap: .addr   button_bitmap
+mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
@@ -451,7 +451,7 @@ port:    .word   col2_left,row4_top,col2_right,row4_bot
 .proc btn_3
 left:   .word   col3_left - border_lt
 top:    .word   row4_top - border_lt
-bitmap: .addr   button_bitmap
+mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
@@ -466,7 +466,7 @@ port:    .word   col3_left,row4_top,col3_right,row4_bot
 .proc btn_0
 left:   .word   col1_left - border_lt
 top:    .word   row5_top - border_lt
-bitmap: .addr   wide_button_bitmap
+mapbits: .addr   wide_button_bitmap
 mapwidth: .byte   8                   ; bitmap_stride (bytes)
         .byte   0               ; ???
 hoff:   .word   0
@@ -481,7 +481,7 @@ port:    .word   col1_left,row5_top,col2_right,row5_bot
 .proc btn_dec
 left:   .word   col3_left - border_lt
 top:    .word   row5_top - border_lt
-bitmap: .addr   button_bitmap
+mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
@@ -496,7 +496,7 @@ port:    .word   col3_left,row5_top,col3_right,row5_bot
 .proc btn_add
 left:   .word   col4_left - border_lt
 top:    .word   row4_top - border_lt
-bitmap: .addr   tall_button_bitmap
+mapbits: .addr   tall_button_bitmap
 mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
@@ -612,7 +612,7 @@ white_pattern:
         .byte   $00
 
 .proc settextbg_params
-mask:  .byte   $7F
+backcolor:  .byte   $7F
 .endproc
 
         display_left    := 10
@@ -697,7 +697,7 @@ farg:   .byte   $00,$00,$00,$00,$00,$00
 .proc title_bar_decoration      ; Params for MGTK::PaintBits
 left:   .word   115             ; overwritten
 top:    .word   $FFF7           ; overwritten
-bitmap:.addr   pixels
+mapbits:.addr   pixels
 mapwidth: .byte   1
         .byte   0               ; ???
 hoff:   .word   0
@@ -723,15 +723,14 @@ voff:   .word   0
 width:  .word   0
 height: .word   0
 pattern:.res    8, 0
-mskand: .byte   0
-mskor:  .byte   0
+colormasks:     .byte   0, 0
 xpos:   .word   0
 ypos:   .word   0
-hthick: .byte   0
-vthick: .byte   0
-mode:   .byte   0
-tmask:  .byte   0
-font:   .addr   0
+penwidth: .byte   0
+penheight: .byte   0
+penmode:   .byte   0
+textback:  .byte   0
+textfont:   .addr   0
 .endproc
 
         .byte   0,0             ; ???
@@ -752,13 +751,13 @@ font:   .addr   0
 .endproc
 
 .proc penmode_normal
-mode:   .byte   MGTK::pencopy
+penmode:   .byte   MGTK::pencopy
 .endproc
 
         .byte   $01,$02         ; ??
 
 .proc penmode_xor
-mode:   .byte   MGTK::notpenXOR
+penmode:   .byte   MGTK::notpenXOR
 .endproc
 
         window_width := 130
@@ -768,14 +767,14 @@ mode:   .byte   MGTK::notpenXOR
 
 .proc winfo
 window_id:     .byte   da_window_id
-flags:  .byte   MGTK::option_go_away_box
+options:  .byte   MGTK::option_go_away_box
 title:  .addr   window_title
 hscroll:.byte   MGTK::scroll_option_none
 vscroll:.byte   MGTK::scroll_option_none
-hs_max: .byte   0
-hs_pos: .byte   0
-vs_max: .byte   0
-vs_pos: .byte   0
+hthumbmax: .byte   0
+hthumbpos: .byte   0
+vthumbmax: .byte   0
+vthumbpos: .byte   0
 status: .byte   0
 reserved:       .byte 0
 mincontwidth:     .word   window_width
@@ -791,16 +790,15 @@ voff:   .word   0
 width:  .word   window_width
 height: .word   window_height
 pattern:.res    8, $FF
-mskand: .byte   MGTK::colormask_and
-mskor:  .byte   MGTK::colormask_or
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 xpos:   .word   0
 ypos:   .word   0
-hthick: .byte   1
-vthick: .byte   1
-mode:   .byte   0
-tmask:  .byte   0
-font:   .addr   DEFAULT_FONT
-next:   .addr   0
+penwidth: .byte   1
+penheight: .byte   1
+penmode:   .byte   0
+textback:  .byte   0
+textfont:   .addr   DEFAULT_FONT
+nextwinfo:   .addr   0
 .endproc
 openwindow_params_top := winfo::top
 
