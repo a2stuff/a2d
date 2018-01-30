@@ -199,21 +199,21 @@ flags:  .byte   MGTK::option_dialog_box
 title:  .addr   window_title
 hscroll:.byte   MGTK::scroll_option_none
 vscroll:.byte   MGTK::scroll_option_none
-hsmax:  .byte   32
-hspos:  .byte   0
-vsmax:  .byte   32
-vspos:  .byte   0
+hthumbmax:  .byte   32
+hthumbpos:  .byte   0
+vthumbmax:  .byte   32
+vthumbpos:  .byte   0
         .byte   0, 0            ; ???
-w1:     .word   default_width
-h1:     .word   default_height
-w2:     .word   default_width
-h2:     .word   default_height
+mincontwidth:     .word   default_width
+mincontlength:     .word   default_height
+maxcontwidth:     .word   default_width
+maxcontlength:     .word   default_height
 
-.proc box
+.proc port
 left:   .word   default_left
 top:    .word   default_top
-addr:   .addr   MGTK::screen_mapbits
-stride: .word   MGTK::screen_mapwidth
+mapbits:   .addr   MGTK::screen_mapbits
+mapwidth: .word   MGTK::screen_mapwidth
 hoff:   .word   0
 voff:   .word   0
 width:  .word   default_width
@@ -345,7 +345,7 @@ end:    rts
         MGTK_CALL MGTK::HideCursor
         jsr     stash_menu
         MGTK_CALL MGTK::OpenWindow, window_params
-        MGTK_CALL MGTK::SetPort, window_params::box
+        MGTK_CALL MGTK::SetPort, window_params::port
         jsr     show_file
         MGTK_CALL MGTK::ShowCursor
 

@@ -304,25 +304,25 @@ len:    .byte   0               ; length
 
 .proc window_params
 id:     .byte   window_id       ; window identifier
-flags:  .byte   MGTK::option_go_away_box; window flags (2=include close box)
+flags:  .byte   MGTK::option_go_away_box; window flags (2=include close port)
 title:  .addr   $1000           ; overwritten to point at filename
 hscroll:.byte   MGTK::scroll_option_none
 vscroll:.byte   MGTK::scroll_option_normal
-hsmax:  .byte   32
-hspos:  .byte   0
-vsmax:  .byte   255
-vspos:  .byte   0
+hthumbmax:  .byte   32
+hthumbpos:  .byte   0
+vthumbmax:  .byte   255
+vthumbpos:  .byte   0
         .byte   0, 0            ; ???
-w1:     .word   200
-h1:     .word   51
-w2:     .word   default_width
-h2:     .word   default_height
+mincontwidth:     .word   200
+mincontlength:     .word   51
+maxcontwidth:     .word   default_width
+maxcontlength:     .word   default_height
 
-.proc box
+.proc port
 left:   .word   default_left
 top:    .word   default_top
-addr:   .addr   MGTK::screen_mapbits
-stride: .word   MGTK::screen_mapwidth
+mapbits:   .addr   MGTK::screen_mapbits
+mapwidth: .word   MGTK::screen_mapwidth
 hoff:   .word   0               ; Also used for MGTK::PaintRect
 voff:   .word   0
 width:  .word   default_width
@@ -342,12 +342,12 @@ font:   .addr   DEFAULT_FONT
 next:   .addr   0
 .endproc
 
-        ;; gets copied over window_params::box after mode is drawn
+        ;; gets copied over window_params::port after mode is drawn
 .proc default_box
 left:   .word   default_left
 top:    .word   default_top
-addr:   .word   MGTK::screen_mapbits
-stride: .word   MGTK::screen_mapwidth
+mapbits:   .word   MGTK::screen_mapbits
+mapwidth: .word   MGTK::screen_mapwidth
 hoff:   .word   0
 voff:   .word   0
 width:  .word   default_width
@@ -498,7 +498,7 @@ loop:   lda     font_width_table - 1,x
 
         ;; create window
         MGTK_CALL MGTK::OpenWindow, window_params
-        MGTK_CALL MGTK::SetPort, window_params::box
+        MGTK_CALL MGTK::SetPort, window_params::port
         jsr     calc_window_size
         jsr     calc_and_draw_mode
         jsr     draw_content
@@ -570,23 +570,23 @@ title:  jsr     on_title_bar_click
 
         max_width := default_width
         lda     #>max_width
-        cmp     window_params::box::width+1
+        cmp     window_params::port::width+1
         bne     :+
         lda     #<max_width
-        cmp     window_params::box::width
+        cmp     window_params::port::width
 :       bcs     wider
 
         lda     #<max_width
-        sta     window_params::box::width
+        sta     window_params::port::width
         lda     #>max_width
-        sta     window_params::box::width+1
+        sta     window_params::port::width+1
         sec
-        lda     window_params::box::width
+        lda     window_params::port::width
         sbc     window_width
-        sta     window_params::box::hoff
-        lda     window_params::box::width+1
+        sta     window_params::port::hoff
+        lda     window_params::port::width+1
         sbc     window_width+1
-        sta     window_params::box::hoff+1
+        sta     window_params::port::hoff+1
 wider:  lda     window_params::hscroll
         ldx     window_width
         cpx     #<max_width
@@ -672,11 +672,11 @@ end:    rts
 .endproc
 
 .proc on_vscroll_above_click
-loop:   lda     window_params::vspos
+loop:   lda     window_params::vthumbpos
         beq     end
         jsr     calc_track_scroll_delta
         sec
-        lda     window_params::vspos
+        lda     window_params::vthumbpos
         sbc     track_scroll_delta
         bcs     store
         lda     #0              ; underflow
@@ -687,7 +687,7 @@ end:    rts
 .endproc
 
 .proc on_vscroll_up_click
-loop :  lda     window_params::vspos
+loop :  lda     window_params::vthumbpos
         beq     end
         sec
         sbc     #1
@@ -700,12 +700,12 @@ end:    rts
 vscroll_max := $FA
 
 .proc on_vscroll_below_click
-loop:   lda     window_params::vspos
+loop:   lda     window_params::vthumbpos
         cmp     #vscroll_max    ; pos == max ?
         beq     end
         jsr     calc_track_scroll_delta
         clc
-        lda     window_params::vspos
+        lda     window_params::vthumbpos
         adc     track_scroll_delta ; pos + delta
         bcs     overflow
         cmp     #vscroll_max+1  ; > max ?
@@ -719,7 +719,7 @@ end:    rts
 .endproc
 
 .proc on_vscroll_down_click
-loop:   lda     window_params::vspos
+loop:   lda     window_params::vthumbpos
         cmp     #vscroll_max
         beq     end
         clc
@@ -782,16 +782,16 @@ loop:   inx
         lda     thumb_drag_params::pos
         jsr     mul_by_16
         lda     $06
-        sta     window_params::box::hoff
+        sta     window_params::port::hoff
         lda     $07
-        sta     window_params::box::hoff+1
+        sta     window_params::port::hoff+1
         clc
-        lda     window_params::box::hoff
+        lda     window_params::port::hoff
         adc     window_width
-        sta     window_params::box::width
-        lda     window_params::box::hoff+1
+        sta     window_params::port::width
+        lda     window_params::port::hoff+1
         adc     window_width+1
-        sta     window_params::box::width+1
+        sta     window_params::port::width+1
         jsr     update_hscroll
         jsr     draw_content
 end:    rts
@@ -799,7 +799,7 @@ end:    rts
 
 .proc on_hscroll_after_click
         ldx     #2
-        lda     window_params::hsmax
+        lda     window_params::hthumbmax
         jmp     hscroll_common
 .endproc
 
@@ -811,7 +811,7 @@ end:    rts
 
 .proc on_hscroll_right_click
         ldx     #1
-        lda     window_params::hsmax
+        lda     window_params::hthumbmax
         jmp     hscroll_common
 .endproc
 
@@ -824,23 +824,23 @@ end:    rts
 .proc hscroll_common
         sta     compare+1
         stx     delta+1
-loop:   lda     window_params::hspos
+loop:   lda     window_params::hthumbpos
 compare:cmp     #$0A            ; self-modified
         bne     continue
         rts
 continue:
         clc
-        lda     window_params::hspos
+        lda     window_params::hthumbpos
 delta:  adc     #1              ; self-modified
         bmi     overflow
-        cmp     window_params::hsmax
+        cmp     window_params::hthumbmax
         beq     store
         bcc     store
-        lda     window_params::hsmax
+        lda     window_params::hthumbmax
         jmp     store
 overflow:
         lda     #0
-store:  sta     window_params::hspos
+store:  sta     window_params::hthumbpos
         jsr     adjust_box_width
         jsr     update_hscroll
         jsr     draw_content
@@ -874,44 +874,44 @@ store:  sta     window_params::hspos
 
 ;;; only used from hscroll code?
 .proc adjust_box_width
-        lda     window_params::hspos
+        lda     window_params::hthumbpos
         jsr     mul_by_16
         clc
         lda     $06
-        sta     window_params::box::hoff
+        sta     window_params::port::hoff
         adc     window_width
-        sta     window_params::box::width
+        sta     window_params::port::width
         lda     $07
-        sta     window_params::box::hoff+1
+        sta     window_params::port::hoff+1
         adc     window_width+1
-        sta     window_params::box::width+1
+        sta     window_params::port::width+1
         rts
 .endproc
 
 .proc update_voffset
         lda     #0
-        sta     window_params::box::voff
-        sta     window_params::box::voff+1
+        sta     window_params::port::voff
+        sta     window_params::port::voff+1
         ldx     updatethumb_params::pos
 loop:   beq     adjust_box_height
         clc
-        lda     window_params::box::voff
+        lda     window_params::port::voff
         adc     #50
-        sta     window_params::box::voff
+        sta     window_params::port::voff
         bcc     :+
-        inc     window_params::box::voff+1
+        inc     window_params::port::voff+1
 :       dex
         jmp     loop
 .endproc
 
 .proc adjust_box_height
         clc
-        lda     window_params::box::voff
+        lda     window_params::port::voff
         adc     window_height
-        sta     window_params::box::height
-        lda     window_params::box::voff+1
+        sta     window_params::port::height
+        lda     window_params::port::voff+1
         adc     window_height+1
-        sta     window_params::box::height+1
+        sta     window_params::port::height+1
         jsr     calc_line_position
         lda     #0
         sta     L096A
@@ -932,9 +932,9 @@ end:    rts
 .proc update_hscroll
         lda     #2
         sta     updatethumb_params::type
-        lda     window_params::box::hoff
+        lda     window_params::port::hoff
         sta     $06
-        lda     window_params::box::hoff+1
+        lda     window_params::port::hoff+1
         sta     $07
         jsr     div_by_16
         sta     updatethumb_params::pos
@@ -951,12 +951,12 @@ end:    rts
 
 .proc finish_resize             ; only called from dead code
         DESKTOP_CALL DESKTOP_REDRAW_ICONS
-        MGTK_CALL MGTK::SetPort, window_params::box
+        MGTK_CALL MGTK::SetPort, window_params::port
         lda     window_params::hscroll
         ror     a               ; check if low bit (track enabled) is set
         bcc     :+
         jsr     update_hscroll
-:       lda     window_params::vspos
+:       lda     window_params::vthumbpos
         sta     updatethumb_params::pos
         jsr     update_vscroll
         jsr     draw_content
@@ -965,7 +965,7 @@ end:    rts
 
 .proc clear_window
         MGTK_CALL MGTK::SetPattern, white_pattern
-        MGTK_CALL MGTK::PaintRect, window_params::box::hoff
+        MGTK_CALL MGTK::PaintRect, window_params::port::hoff
         MGTK_CALL MGTK::SetPattern, black_pattern
         rts
 .endproc
@@ -1275,16 +1275,16 @@ end:    rts
 
 .proc calc_window_size
         sec
-        lda     window_params::box::width
-        sbc     window_params::box::hoff
+        lda     window_params::port::width
+        sbc     window_params::port::hoff
         sta     window_width
-        lda     window_params::box::width+1
-        sbc     window_params::box::hoff+1
+        lda     window_params::port::width+1
+        sbc     window_params::port::hoff+1
         sta     window_width+1
 
         sec
-        lda     window_params::box::height
-        sbc     window_params::box::voff
+        lda     window_params::port::height
+        sbc     window_params::port::voff
         sta     window_height
         ;; fall through
 .endproc
@@ -1292,9 +1292,9 @@ end:    rts
 ;;; ==================================================
 
 .proc calc_line_position
-        lda     window_params::box::height
+        lda     window_params::port::height
         sta     L0965
-        lda     window_params::box::height+1
+        lda     window_params::port::height+1
         sta     L0966
 
         lda     #0
@@ -1430,11 +1430,11 @@ fixed_str:      DEFINE_STRING "Fixed        "
 prop_str:       DEFINE_STRING "Proportional"
         label_width := 50
         title_bar_height := 12
-.proc mode_box                  ; bounding box for mode label
+.proc mode_box                  ; bounding port for mode label
 left:   .word   0
 top:    .word   0
-addr:   .word   MGTK::screen_mapbits
-stride: .word   MGTK::screen_mapwidth
+mapbits:   .word   MGTK::screen_mapbits
+mapwidth: .word   MGTK::screen_mapwidth
 hoff:   .word   0
 voff:   .word   0
 width:  .word   80
@@ -1450,14 +1450,14 @@ base:   .word   10              ; vertical text offset (to baseline)
 
 .proc calc_and_draw_mode
         sec
-        lda     window_params::box::top
+        lda     window_params::port::top
         sbc     #title_bar_height
         sta     mode_box::top
         clc
-        lda     window_params::box::left
+        lda     window_params::port::left
         adc     window_width
         pha
-        lda     window_params::box::left+1
+        lda     window_params::port::left+1
         adc     window_width+1
         tax
         sec
@@ -1481,9 +1481,9 @@ else:   MGTK_CALL MGTK::DrawText, prop_str
 
 endif:  ldx     #$0F
 loop:   lda     default_box,x
-        sta     window_params::box,x
+        sta     window_params::port,x
         dex
         bpl     loop
-        MGTK_CALL MGTK::SetPortBits, window_params::box
+        MGTK_CALL MGTK::SetPortBits, window_params::port
         rts
 .endproc

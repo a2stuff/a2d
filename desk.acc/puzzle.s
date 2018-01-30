@@ -237,8 +237,8 @@ position_table:
 .proc draw_bitmap_params
 left:   .word   0
 top:    .word   0
-addr:   .addr   0
-stride: .byte   4
+mapbits:   .addr   0
+mapwidth: .byte   4
         .byte   0               ; ???
 hoff:   .word   0
 voff:   .word   0
@@ -591,26 +591,26 @@ setport_params:
         default_width   := $79
         default_height  := $44
 
-.proc openwindow_params
+.proc winfo
 id:     .byte   window_id
 flags:  .byte   MGTK::option_go_away_box
 title:  .addr   name
 hscroll:.byte   MGTK::scroll_option_none
 vscroll:.byte   MGTK::scroll_option_none
-hsmax:  .byte   0
-hspos:  .byte   0
-vsmax:  .byte   0
-vspos:  .byte   0
+hthumbmax:  .byte   0
+hthumbpos:  .byte   0
+vthumbmax:  .byte   0
+vthumbpos:  .byte   0
         .byte   0,0             ; ???
-w1:     .word   default_width
-h1:     .word   default_height
-w2:     .word   default_width
-h2:     .word   default_height
+mincontwidth:     .word   default_width
+mincontlength:     .word   default_height
+maxcontwidth:     .word   default_width
+maxcontlength:     .word   default_height
 
 left:   .word   default_left
 top:    .word   default_top
-addr:   .addr   MGTK::screen_mapbits
-stride: .word   MGTK::screen_mapwidth
+mapbits:   .addr   MGTK::screen_mapbits
+mapwidth: .word   MGTK::screen_mapwidth
 hoff:   .word   0
 voff:   .word   0
 width:  .word   default_width
@@ -633,8 +633,8 @@ next:   .addr   0
 .proc box_cruft                 ; Unknown usage
 left:   .word   default_left
 top:    .word   default_top
-addr:   .addr   MGTK::screen_mapbits
-stride: .word   MGTK::screen_mapwidth
+mapbits:   .addr   MGTK::screen_mapbits
+mapwidth: .word   MGTK::screen_mapwidth
 hoff:   .word   0
 voff:   .word   0
 width:  .word   default_width
@@ -654,14 +654,14 @@ font:   .addr   DEFAULT_FONT
 
 name:   PASCAL_STRING "Puzzle"
 
-        openwindow_params_top := openwindow_params::top
+        openwindow_params_top := winfo::top
 
 ;;; ==================================================
 ;;; Create the window
 
 .proc create_window
         jsr     save_zp
-        MGTK_CALL MGTK::OpenWindow, openwindow_params
+        MGTK_CALL MGTK::OpenWindow, winfo
 
         ;; init pieces
         ldy     #15
@@ -742,7 +742,7 @@ bail:   rts
         bcc     bail
         jmp     process_click
 
-        ;; close box?
+        ;; close port?
 :       cmp     #MGTK::area_close_box
         bne     check_title
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
@@ -1087,9 +1087,9 @@ loop:   tya
         asl     a
         tax
         lda     bitmap_table,x
-        sta     draw_bitmap_params::addr
+        sta     draw_bitmap_params::mapbits
         lda     bitmap_table+1,x
-        sta     draw_bitmap_params::addr+1
+        sta     draw_bitmap_params::mapbits+1
         MGTK_CALL MGTK::PaintBits, draw_bitmap_params
         pla
         clc

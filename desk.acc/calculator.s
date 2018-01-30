@@ -65,7 +65,7 @@ save_stack:  .byte   0
 
 ;;; ==================================================
 
-.proc  exit_da
+.proc exit_da
         lda     LCBANK1
         lda     LCBANK1
         ldx     save_stack
@@ -96,7 +96,7 @@ call_init:
 
         ;;  Redraw window after drag
         lda     ROMIN2
-        lda     #window_id
+        lda     #da_window_id
         jsr     check_visibility_and_draw_window
 
         ;; ???
@@ -137,7 +137,7 @@ offscreen_flag:
         ;; Called after window drag is complete
         ;; (called with window_id in A)
 .proc check_visibility_and_draw_window
-        sta     get_port_params_id
+        sta     getwinport_params_window_id
         lda     openwindow_params_top
         cmp     #screen_height - 1
         bcc     :+
@@ -149,8 +149,8 @@ offscreen_flag:
         ;; https://github.com/inexorabletash/a2d/issues/34
 :       MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, port_params
-        lda     get_port_params_id
-        cmp     #window_id
+        lda     getwinport_params_window_id
+        cmp     #da_window_id
         bne     :+
         jmp     draw_background
 :       rts
@@ -162,17 +162,17 @@ offscreen_flag:
         ;; The following params blocks overlap for data re-use
 
 .proc screentowindow_params
-id      := *
+window_id      := *
 screen  := * + 1
 screenx := * + 1 ; aligns with input_state::xcoord
 screeny := * + 3 ; aligns with input_state::ycoord
-client  := * + 5
-clientx := * + 5
-clienty := * + 7
+window  := * + 5
+windowx := * + 5
+windowy := * + 7
 .endproc
 
-.proc drag_params
-id      := *
+.proc dragwindow_params
+window_id      := *
 xcoord  := * + 1 ; aligns with input_state::xcoord
 ycoord  := * + 3 ; aligns with input_state::ycoord
 moved   := * + 5 ; ignored
@@ -187,10 +187,10 @@ modifiers := * + 1              ; "
 .endproc
 
 .proc findwindow_params
-queryx: .word   0               ; aligns with event_params::xcoord
-queryy: .word   0               ; aligns with event_params::ycoord
+mousex: .word   0               ; aligns with event_params::xcoord
+mousey: .word   0               ; aligns with event_params::ycoord
 which_area:   .byte   0
-id:     .byte   0
+window_id:     .byte   0
 .endproc
 
         .byte 0, 0              ; fills out space for screentowindow_params
@@ -201,10 +201,10 @@ goaway:  .byte   0
 .endproc
 
 .proc getwinport_params
-id:     .byte   0
+window_id:     .byte   0
         .addr   port_params
 .endproc
-        get_port_params_id := getwinport_params::id
+        getwinport_params_window_id := getwinport_params::window_id
 
 .proc preserve_zp_params
 flag:   .byte   MGTK::zp_preserve
@@ -247,7 +247,7 @@ flag:   .byte   MGTK::zp_overwrite
 left:   .word   col1_left - border_lt
 top:    .word   row1_top - border_lt
 bitmap: .addr   button_bitmap
-stride: .byte   bitmap_stride
+mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
 voff:   .word   0
@@ -255,14 +255,14 @@ width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   'c'
 pos:    .word   col1_left + 6, row1_bot
-box:    .word   col1_left,row1_top,col1_right,row1_bot
+port:    .word   col1_left,row1_top,col1_right,row1_bot
 .endproc
 
 .proc btn_e
 left:   .word   col2_left - border_lt
 top:    .word   row1_top - border_lt
 bitmap: .addr   button_bitmap
-stride: .byte   bitmap_stride
+mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
 voff:   .word   0
@@ -270,14 +270,14 @@ width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   'e'
 pos:    .word   col2_left + 6, row1_bot
-box:    .word   col2_left,row1_top,col2_right,row1_bot
+port:    .word   col2_left,row1_top,col2_right,row1_bot
 .endproc
 
 .proc btn_eq
 left:   .word   col3_left - border_lt
 top:    .word   row1_top - border_lt
 bitmap: .addr   button_bitmap
-stride: .byte   bitmap_stride
+mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
 voff:   .word   0
@@ -285,14 +285,14 @@ width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '='
 pos:    .word   col3_left + 6, row1_bot
-box:    .word   col3_left,row1_top,col3_right,row1_bot
+port:    .word   col3_left,row1_top,col3_right,row1_bot
 .endproc
 
 .proc btn_mul
 left:   .word   col4_left - border_lt
 top:    .word   row1_top - border_lt
 bitmap: .addr   button_bitmap
-stride: .byte   bitmap_stride
+mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
 voff:   .word   0
@@ -300,14 +300,14 @@ width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '*'
 pos:    .word   col4_left + 6, row1_bot
-box:    .word   col4_left,row1_top,col4_right,row1_bot
+port:    .word   col4_left,row1_top,col4_right,row1_bot
 .endproc
 
 .proc btn_7
 left:   .word   col1_left - border_lt
 top:    .word   row2_top - border_lt
 bitmap: .addr   button_bitmap
-stride: .byte   bitmap_stride
+mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
 voff:   .word   0
@@ -315,14 +315,14 @@ width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '7'
 pos:    .word   col1_left + 6, row2_bot
-box:    .word   col1_left,row2_top,col1_right,row2_bot
+port:    .word   col1_left,row2_top,col1_right,row2_bot
 .endproc
 
 .proc btn_8
 left:   .word   col2_left - border_lt
 top:    .word   row2_top - border_lt
 bitmap: .addr   button_bitmap
-stride: .byte   bitmap_stride
+mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
 voff:   .word   0
@@ -330,14 +330,14 @@ width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '8'
 pos:    .word   col2_left + 6, row2_bot
-box:    .word   col2_left,row2_top,col2_right,row2_bot
+port:    .word   col2_left,row2_top,col2_right,row2_bot
 .endproc
 
 .proc btn_9
 left:   .word   col3_left - border_lt
 top:    .word   row2_top - border_lt
 bitmap: .addr   button_bitmap
-stride: .byte   bitmap_stride
+mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
 voff:   .word   0
@@ -345,14 +345,14 @@ width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '9'
 pos:    .word   col3_left + 6, row2_bot
-box:    .word   col3_left,row2_top,col3_right,row2_bot
+port:    .word   col3_left,row2_top,col3_right,row2_bot
 .endproc
 
 .proc btn_div
 left:   .word   col4_left - border_lt
 top:    .word   row2_top - border_lt
 bitmap: .addr   button_bitmap
-stride: .byte   bitmap_stride
+mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
 voff:   .word   0
@@ -360,14 +360,14 @@ width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '/'
 pos:    .word   col4_left + 6, row2_bot
-box:    .word   col4_left,row2_top,col4_right,row2_bot
+port:    .word   col4_left,row2_top,col4_right,row2_bot
 .endproc
 
 .proc btn_4
 left:   .word   col1_left - border_lt
 top:    .word   row3_top - border_lt
 bitmap: .addr   button_bitmap
-stride: .byte   bitmap_stride
+mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
 voff:   .word   0
@@ -375,14 +375,14 @@ width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '4'
 pos:    .word   col1_left + 6, row3_bot
-box:    .word   col1_left,row3_top,col1_right,row3_bot
+port:    .word   col1_left,row3_top,col1_right,row3_bot
 .endproc
 
 .proc btn_5
 left:   .word   col2_left - border_lt
 top:    .word   row3_top - border_lt
 bitmap: .addr   button_bitmap
-stride: .byte   bitmap_stride
+mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
 voff:   .word   0
@@ -390,14 +390,14 @@ width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '5'
 pos:    .word   col2_left + 6, row3_bot
-box:    .word   col2_left,row3_top,col2_right,row3_bot
+port:    .word   col2_left,row3_top,col2_right,row3_bot
 .endproc
 
 .proc btn_6
 left:   .word   col3_left - border_lt
 top:    .word   row3_top - border_lt
 bitmap: .addr   button_bitmap
-stride: .byte   bitmap_stride
+mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
 voff:   .word   0
@@ -405,14 +405,14 @@ width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '6'
 pos:    .word   col3_left + 6, row3_bot
-box:    .word   col3_left,row3_top,col3_right,row3_bot
+port:    .word   col3_left,row3_top,col3_right,row3_bot
 .endproc
 
 .proc btn_sub
 left:   .word   col4_left - border_lt
 top:    .word   row3_top - border_lt
 bitmap: .addr   button_bitmap
-stride: .byte   bitmap_stride
+mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
 voff:   .word   0
@@ -420,14 +420,14 @@ width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '-'
 pos:    .word   col4_left + 6, row3_bot
-box:    .word   col4_left,row3_top,col4_right,row3_bot
+port:    .word   col4_left,row3_top,col4_right,row3_bot
 .endproc
 
 .proc btn_1
 left:   .word   col1_left - border_lt
 top:    .word   row4_top - border_lt
 bitmap: .addr   button_bitmap
-stride: .byte   bitmap_stride
+mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
 voff:   .word   0
@@ -435,14 +435,14 @@ width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '1'
 pos:    .word   col1_left + 6, row4_bot
-box:    .word   col1_left,row4_top,col1_right,row4_bot
+port:    .word   col1_left,row4_top,col1_right,row4_bot
 .endproc
 
 .proc btn_2
 left:   .word   col2_left - border_lt
 top:    .word   row4_top - border_lt
 bitmap: .addr   button_bitmap
-stride: .byte   bitmap_stride
+mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
 voff:   .word   0
@@ -450,14 +450,14 @@ width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '2'
 pos:    .word   col2_left + 6, row4_bot
-box:    .word   col2_left,row4_top,col2_right,row4_bot
+port:    .word   col2_left,row4_top,col2_right,row4_bot
 .endproc
 
 .proc btn_3
 left:   .word   col3_left - border_lt
 top:    .word   row4_top - border_lt
 bitmap: .addr   button_bitmap
-stride: .byte   bitmap_stride
+mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
 voff:   .word   0
@@ -465,14 +465,14 @@ width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '3'
 pos:    .word   col3_left + 6, row4_bot
-box:    .word   col3_left,row4_top,col3_right,row4_bot
+port:    .word   col3_left,row4_top,col3_right,row4_bot
 .endproc
 
 .proc btn_0
 left:   .word   col1_left - border_lt
 top:    .word   row5_top - border_lt
 bitmap: .addr   wide_button_bitmap
-stride: .byte   8                   ; bitmap_stride (bytes)
+mapwidth: .byte   8                   ; bitmap_stride (bytes)
         .byte   0               ; ???
 hoff:   .word   0
 voff:   .word   0
@@ -480,14 +480,14 @@ width:  .word   49                      ; 0 is extra wide
 height: .word   button_height + border_lt + border_br
 label:  .byte   '0'
 pos:    .word   col1_left + 6, row5_bot
-box:    .word   col1_left,row5_top,col2_right,row5_bot
+port:    .word   col1_left,row5_top,col2_right,row5_bot
 .endproc
 
 .proc btn_dec
 left:   .word   col3_left - border_lt
 top:    .word   row5_top - border_lt
 bitmap: .addr   button_bitmap
-stride: .byte   bitmap_stride
+mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
 voff:   .word   0
@@ -495,14 +495,14 @@ width:  .word   button_width + border_lt + border_br
 height: .word   button_height + border_lt + border_br
 label:  .byte   '.'
 pos:    .word   col3_left + 6 + 2, row5_bot ; + 2 to center the label
-box:    .word   col3_left,row5_top,col3_right,row5_bot
+port:    .word   col3_left,row5_top,col3_right,row5_bot
 .endproc
 
 .proc btn_add
 left:   .word   col4_left - border_lt
 top:    .word   row4_top - border_lt
 bitmap: .addr   tall_button_bitmap
-stride: .byte   bitmap_stride
+mapwidth: .byte   bitmap_stride
         .byte   0               ; ???
 hoff:   .word   0
 voff:   .word   0
@@ -510,7 +510,7 @@ width:  .word   button_width + border_lt + border_br
 height: .word   27              ; + is extra tall
 label:  .byte   '+'
 pos:    .word   col4_left + 6, row5_bot
-box:    .word   col4_left,row4_top,col4_right,row5_bot
+port:    .word   col4_left,row4_top,col4_right,row5_bot
 .endproc
         .byte   0               ; sentinel
 
@@ -647,8 +647,8 @@ height: .word   display_height-1
 label:  .byte   0               ; modified with char to draw
 
 .proc drawtext_params1
-addr:   .addr   text_buffer1
-length: .byte   15
+textptr:   .addr   text_buffer1
+textlen: .byte   15
 .endproc
 
 text_buffer_size := 14
@@ -657,8 +657,8 @@ text_buffer1:
         .res    text_buffer_size+2, 0
 
 .proc drawtext_params2
-addr:   .addr   text_buffer2
-length: .byte   15
+textptr:   .addr   text_buffer2
+textlen: .byte   15
 .endproc
 
 text_buffer2:
@@ -671,15 +671,15 @@ error_string:
 
         ;;  used when clearing display; params to a $18 call
 .proc textwidth_params
-addr:   .addr   text_buffer1
-len:    .byte   15              ; ???
-width:  .word   0
+textptr:   .addr   text_buffer1
+textlen:    .byte   15              ; ???
+result:  .word   0
 .endproc
 
-        window_id = 52
+        da_window_id = 52
 
 .proc closewindow_params
-id:     .byte   window_id
+window_id:     .byte   da_window_id
 .endproc
 
 .proc text_pos_params3
@@ -703,7 +703,7 @@ farg:   .byte   $00,$00,$00,$00,$00,$00
 left:   .word   115             ; overwritten
 top:    .word   $FFF7           ; overwritten
 bitmap:.addr   pixels
-stride: .byte   1
+mapwidth: .byte   1
         .byte   0               ; ???
 hoff:   .word   0
 voff:   .word   0
@@ -722,8 +722,8 @@ pixels: .byte   px(%1000001)
 .proc port_params
 left:   .word   0
 top:    .word   0
-addr:   .word   0
-stride: .word   0
+mapbits:   .word   0
+mapwidth: .word   0
 hoff:   .word   0
 voff:   .word   0
 width:  .word   0
@@ -751,8 +751,8 @@ font:   .addr   0
 .proc screen_port
 left:   .word   0
 top:    .word   menu_bar_height
-addr:   .word   MGTK::screen_mapbits
-stride: .word   MGTK::screen_mapwidth
+mapbits:   .word   MGTK::screen_mapbits
+mapwidth: .word   MGTK::screen_mapwidth
 hoff:   .word   0
 voff:   .word   0
 width:  .word   screen_width - 1
@@ -774,8 +774,8 @@ mode:   .byte   MGTK::notpenXOR
         default_left := 210
         default_top := 60
 
-.proc openwindow_params
-id:     .byte   window_id
+.proc winfo
+window_id:     .byte   da_window_id
 flags:  .byte   MGTK::option_go_away_box
 title:  .addr   window_title
 hscroll:.byte   MGTK::scroll_option_none
@@ -784,15 +784,16 @@ hs_max: .byte   0
 hs_pos: .byte   0
 vs_max: .byte   0
 vs_pos: .byte   0
-        .byte   0,0             ; ???
-w1:     .word   window_width
-h1:     .word   window_height
-w2:     .word   window_width
-h2:     .word   window_height
+status: .byte   0
+reserved:       .byte 0
+mincontwidth:     .word   window_width
+mincontlength:     .word   window_height
+maxcontwidth:     .word   window_width
+maxcontlength:     .word   window_height
 left:   .word   default_left
 top:    .word   default_top
-addr:   .addr   MGTK::screen_mapbits
-stride: .word   MGTK::screen_mapwidth
+mapbits:   .addr   MGTK::screen_mapbits
+mapwidth: .word   MGTK::screen_mapwidth
 hoff:   .word   0
 voff:   .word   0
 width:  .word   window_width
@@ -809,7 +810,7 @@ tmask:  .byte   $7f
 font:   .addr   DEFAULT_FONT
 next:   .addr   0
 .endproc
-openwindow_params_top := openwindow_params::top
+openwindow_params_top := winfo::top
 
 window_title:
         PASCAL_STRING "Calc"
@@ -849,7 +850,7 @@ init:   sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         MGTK_CALL MGTK::SetZP1, preserve_zp_params
-        MGTK_CALL MGTK::OpenWindow, openwindow_params
+        MGTK_CALL MGTK::OpenWindow, winfo
         MGTK_CALL MGTK::InitPort, port_params
         MGTK_CALL MGTK::SetPort, port_params     ; set clipping bounds?
         MGTK_CALL MGTK::FlushEvents
@@ -859,7 +860,7 @@ init:   sta     ALTZPON
         MGTK_CALL MGTK::GetEvent, event_params
         lda     ROMIN2
         jsr     reset_buffer2
-        lda     #window_id
+        lda     #da_window_id
         jsr     check_visibility_and_draw_window
         jsr     reset_buffers_and_display
 
@@ -946,8 +947,8 @@ on_click:
         lda     findwindow_params::which_area
         cmp     #MGTK::area_content
         bcc     ignore_click
-        lda     findwindow_params::id
-        cmp     #window_id      ; This window?
+        lda     findwindow_params::window_id
+        cmp     #da_window_id      ; This window?
         beq     :+
 
 ignore_click:
@@ -993,11 +994,11 @@ loop:   lda     routine,x
 
 :       cmp     #MGTK::area_dragbar ; Title bar?
         bne     ignore_click
-        lda     #window_id
-        sta     drag_params::id
+        lda     #da_window_id
+        sta     dragwindow_params::window_id
         lda     LCBANK1
         lda     LCBANK1
-        MGTK_CALL MGTK::DragWindow, drag_params
+        MGTK_CALL MGTK::DragWindow, dragwindow_params
         lda     ROMIN2
         jsr     redraw_screen_and_window
         rts
@@ -1034,14 +1035,14 @@ rts1:  rts                     ; used by next proc
 ;;; If a button was clicked, carry is set and accum has key char
 
 .proc map_click_to_button
-        lda     #window_id
-        sta     screentowindow_params::id
+        lda     #da_window_id
+        sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        lda     screentowindow_params::clientx+1        ; ensure high bits of coords are 0
-        ora     screentowindow_params::clienty+1
+        lda     screentowindow_params::windowx+1        ; ensure high bits of coords are 0
+        ora     screentowindow_params::windowy+1
         bne     rts1
-        lda     screentowindow_params::clienty
-        ldx     screentowindow_params::clientx
+        lda     screentowindow_params::windowy
+        ldx     screentowindow_params::windowx
 
 .proc find_button_row
         cmp     #row1_top+border_lt - 1 ; row 1 ? (- 1 is bug in original?)
@@ -1083,7 +1084,7 @@ rts1:  rts                     ; used by next proc
 
 :       cmp     #row5_top-border_lt             ; special case for tall + button
         bcs     :+
-        lda     screentowindow_params::clientx
+        lda     screentowindow_params::windowx
         cmp     #col4_left-border_lt
         bcc     miss
         cmp     #col4_right+border_br-1         ; is -1 bug in original?
@@ -1099,7 +1100,7 @@ rts1:  rts                     ; used by next proc
         lda     row5_lookup,x
         rts
 
-:       lda     screentowindow_params::clientx ; special case for wide 0 button
+:       lda     screentowindow_params::windowx ; special case for wide 0 button
         cmp     #col1_left-border_lt
         bcc     miss
         cmp     #col2_right+border_br
@@ -1171,8 +1172,8 @@ miss:   clc
 .proc process_key
         cmp     #'C'            ; Clear?
         bne     :+
-        ldx     #<btn_c::box
-        ldy     #>btn_c::box
+        ldx     #<btn_c::port
+        ldy     #>btn_c::port
         lda     #'c'
         jsr     depress_button
         lda     #$00
@@ -1192,8 +1193,8 @@ miss:   clc
 
 :       cmp     #'E'            ; Exponential?
         bne     try_eq
-        ldx     #<btn_e::box
-        ldy     #>btn_e::box
+        ldx     #<btn_e::port
+        ldy     #>btn_e::port
         lda     #'e'
         jsr     depress_button
         ldy     calc_e
@@ -1213,21 +1214,21 @@ rts1:   rts
 try_eq: cmp     #'='            ; Equals?
         bne     :+
         pha
-        ldx     #<btn_eq::box
-        ldy     #>btn_eq::box
+        ldx     #<btn_eq::port
+        ldy     #>btn_eq::port
         jmp     do_op_click
 
 :       cmp     #'*'            ; Multiply?
         bne     :+
         pha
-        ldx     #<btn_mul::box
-        ldy     #>btn_mul::box
+        ldx     #<btn_mul::port
+        ldy     #>btn_mul::port
         jmp     do_op_click
 
 :       cmp     #'.'            ; Decimal?
         bne     try_add
-        ldx     #<btn_dec::box
-        ldy     #>btn_dec::box
+        ldx     #<btn_dec::port
+        ldy     #>btn_dec::port
         jsr     depress_button
         lda     calc_d
         ora     calc_e
@@ -1244,15 +1245,15 @@ rts2:   rts
 try_add:cmp     #'+'            ; Add?
         bne     :+
         pha
-        ldx     #<btn_add::box
-        ldy     #>btn_add::box
+        ldx     #<btn_add::port
+        ldy     #>btn_add::port
         jmp     do_op_click
 
 :       cmp     #'-'            ; Subtract?
         bne     trydiv
         pha
-        ldx     #<btn_sub::box
-        ldy     #>btn_sub::box
+        ldx     #<btn_sub::port
+        ldy     #>btn_sub::port
         lda     calc_e           ; negate vs. subtract
         beq     :+
         lda     calc_n
@@ -1270,78 +1271,78 @@ try_add:cmp     #'+'            ; Add?
 trydiv: cmp     #'/'            ; Divide?
         bne     :+
         pha
-        ldx     #<btn_div::box
-        ldy     #>btn_div::box
+        ldx     #<btn_div::port
+        ldy     #>btn_div::port
         jmp     do_op_click
 
 :       cmp     #'0'            ; Digit 0?
         bne     :+
         pha
-        ldx     #<btn_0::box
-        ldy     #>btn_0::box
+        ldx     #<btn_0::port
+        ldy     #>btn_0::port
         jmp     do_digit_click
 
 :       cmp     #'1'            ; Digit 1?
         bne     :+
         pha
-        ldx     #<btn_1::box
-        ldy     #>btn_1::box
+        ldx     #<btn_1::port
+        ldy     #>btn_1::port
         jmp     do_digit_click
 
 :       cmp     #'2'            ; Digit 2?
         bne     :+
         pha
-        ldx     #<btn_2::box
-        ldy     #>btn_2::box
+        ldx     #<btn_2::port
+        ldy     #>btn_2::port
         jmp     do_digit_click
 
 :       cmp     #'3'            ; Digit 3?
         bne     :+
         pha
-        ldx     #<btn_3::box
-        ldy     #>btn_3::box
+        ldx     #<btn_3::port
+        ldy     #>btn_3::port
         jmp     do_digit_click
 
 :       cmp     #'4'            ; Digit 4?
         bne     :+
         pha
-        ldx     #<btn_4::box
-        ldy     #>btn_4::box
+        ldx     #<btn_4::port
+        ldy     #>btn_4::port
         jmp     do_digit_click
 
 :       cmp     #'5'            ; Digit 5?
         bne     :+
         pha
-        ldx     #<btn_5::box
-        ldy     #>btn_5::box
+        ldx     #<btn_5::port
+        ldy     #>btn_5::port
         jmp     do_digit_click
 
 :       cmp     #'6'            ; Digit 6?
         bne     :+
         pha
-        ldx     #<btn_6::box
-        ldy     #>btn_6::box
+        ldx     #<btn_6::port
+        ldy     #>btn_6::port
         jmp     do_digit_click
 
 :       cmp     #'7'            ; Digit 7?
         bne     :+
         pha
-        ldx     #<btn_7::box
-        ldy     #>btn_7::box
+        ldx     #<btn_7::port
+        ldy     #>btn_7::port
         jmp     do_digit_click
 
 :       cmp     #'8'            ; Digit 8?
         bne     :+
         pha
-        ldx     #<btn_8::box
-        ldy     #>btn_8::box
+        ldx     #<btn_8::port
+        ldy     #>btn_8::port
         jmp     do_digit_click
 
 :       cmp     #'9'            ; Digit 9?
         bne     :+
         pha
-        ldx     #<btn_9::box
-        ldy     #>btn_9::box
+        ldx     #<btn_9::port
+        ldy     #>btn_9::port
         jmp     do_digit_click
 
 :       cmp     #$7F            ; Delete?
@@ -1539,18 +1540,18 @@ end:    jsr     display_buffer1
         sec
         ror     button_state
 
-invert:  MGTK_CALL MGTK::PaintRect, 0, invert_addr ; Inverts box
+invert:  MGTK_CALL MGTK::PaintRect, 0, invert_addr ; Inverts port
 
 check_button:
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::drag ; Button down?
         bne     done            ; Nope, done immediately
-        lda     #window_id
-        sta     screentowindow_params::id
+        lda     #da_window_id
+        sta     screentowindow_params::window_id
 
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::client
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, 0, inrect_params
         bne     inside
 
@@ -1623,12 +1624,12 @@ loop:   lda     #' '
 .endproc
 
 .proc pre_display_buffer
-        stx     textwidth_params::addr ; text buffer address in x,y
-        sty     textwidth_params::addr+1
+        stx     textwidth_params::textptr ; text buffer address in x,y
+        sty     textwidth_params::textptr+1
         MGTK_CALL MGTK::TextWidth, textwidth_params
         lda     #display_width-15 ; ???
         sec
-        sbc     textwidth_params::width
+        sbc     textwidth_params::result
         sta     text_pos_params3::left
         MGTK_CALL MGTK::MoveTo, text_pos_params2 ; clear with spaces
         MGTK_CALL MGTK::DrawText, spaces_string
@@ -1699,16 +1700,16 @@ loop:   ldy     #0
 draw_title_bar:
         offset_left     := 115  ; pixels from left of client area
         offset_top      := 22   ; pixels from top of client area (up!)
-        ldx     openwindow_params::left+1
-        lda     openwindow_params::left
+        ldx     winfo::left+1
+        lda     winfo::left
         clc
         adc     #offset_left
         sta     title_bar_decoration::left
         bcc     :+
         inx
 :       stx     title_bar_decoration::left+1
-        ldx     openwindow_params::top+1
-        lda     openwindow_params::top
+        ldx     winfo::top+1
+        lda     winfo::top
         sec
         sbc     #offset_top
         sta     title_bar_decoration::top
@@ -1717,8 +1718,8 @@ draw_title_bar:
 :       stx     title_bar_decoration::top+1
         MGTK_CALL MGTK::SetPortBits, screen_port ; set clipping rect to whole screen
         MGTK_CALL MGTK::PaintBits, title_bar_decoration     ; Draws decoration in title bar
-        lda     #window_id
-        sta     getwinport_params::id
+        lda     #da_window_id
+        sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, port_params
         MGTK_CALL MGTK::ShowCursor

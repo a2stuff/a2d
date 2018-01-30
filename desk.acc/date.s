@@ -175,7 +175,7 @@ year_rect:
         .word   $7F,$14,$95,$1E
 
 .proc settextbg_params
-mask:   .byte   0
+backcolor:   .byte   0          ; black
 .endproc
 
         .res    7, $00          ; ???
@@ -226,10 +226,10 @@ ycoord    := *+2
 .endproc
         ;; xcoord/ycoord are used to query...
 .proc findwindow_params
-xcoord    := *
-ycoord    := *+2
-element:.byte   0
-id:     .byte   0
+mousex    := *
+mousey    := *+2
+which_area:.byte   0
+window_id: .byte   0
 .endproc
 
         window_id := 100
@@ -239,9 +239,9 @@ id:     .byte   window_id
 screen:
 screenx:.word   0
 screeny:.word   0
-client:
-clientx:.word   0
-clienty:.word   0
+window:
+windowx:.word   0
+windowy:.word   0
 .endproc
 
 .proc closewindow_params
@@ -254,26 +254,27 @@ mode:   .byte   $02             ; this should be normal, but we do inverts ???
 .endproc
         .byte   $06             ; ???
 
-.proc openwindow_params
+.proc winfo
 id:     .byte   window_id
-flags:  .byte   MGTK::option_dialog_box
+options:.byte   MGTK::option_dialog_box
 title:  .addr   0
 hscroll:.byte   MGTK::scroll_option_none
 vscroll:.byte   MGTK::scroll_option_none
-hsmax:  .byte   0
-hspos:  .byte   0
-vsmax:  .byte   0
-vspos:  .byte   0
-        .byte   0, 0            ; ???
-w1:     .word   100
-h1:     .word   100
-w2:     .word   $1F4
-h2:     .word   $1F4
-.proc box
+hthumbmax:  .byte   0
+hthumbpos:  .byte   0
+vthumbmax:  .byte   0
+vthumbpos:  .byte   0
+status:     .byte       0
+reserved:       .byte   0
+mincontwidth:     .word   100
+mincontlength:     .word   100
+maxcontwidth:     .word   $1F4
+maxcontlength:     .word   $1F4
+.proc port
 left:   .word   180
 top:    .word   50
-addr:   .addr   MGTK::screen_mapbits
-stride: .word   MGTK::screen_mapwidth
+mapbits:   .addr   MGTK::screen_mapbits
+mapwidth: .word   MGTK::screen_mapwidth
 hoff:   .word   0
 voff:   .word   0
 width:  .word   $C7
@@ -321,7 +322,7 @@ init_window:
         lsr     a
         sta     month
 
-        MGTK_CALL MGTK::OpenWindow, openwindow_params
+        MGTK_CALL MGTK::OpenWindow, winfo
         lda     #0
         sta     selected_field
         jsr     draw_window
@@ -406,10 +407,10 @@ update_selection:
         MGTK_CALL MGTK::FindWindow, event_params::xcoord
         MGTK_CALL MGTK::SetPenMode, penmode_params
         MGTK_CALL MGTK::SetPattern, white_pattern
-        lda     findwindow_params::id
+        lda     findwindow_params::window_id
         cmp     #window_id
         bne     miss
-        lda     findwindow_params::element
+        lda     findwindow_params::which_area
         bne     hit
 miss:   rts
 
@@ -718,7 +719,7 @@ skip:   jmp     dest
         lda     event_params::ycoord+1
         sta     screentowindow_params::screeny+1
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::client
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         ldx     #1
         lda     #<first_hit_rect
         sta     test_addr
@@ -787,7 +788,7 @@ vthick: .byte   1
 ;;; Render the window contents
 
 draw_window:
-        MGTK_CALL MGTK::SetPort, openwindow_params::box
+        MGTK_CALL MGTK::SetPort, winfo::port
         MGTK_CALL MGTK::FrameRect, border_rect
         MGTK_CALL MGTK::SetPenSize, setpensize_params
         MGTK_CALL MGTK::FrameRect, date_rect
