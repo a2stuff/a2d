@@ -203,19 +203,19 @@ L8616:  cmp     #$57
         addr_call $6B17, $1B7C
         ldx     $D5CA
         txs
-L8625:  MGTK_RELAY_CALL MGTK::HiliteMenu, win18_state
+L8625:  MGTK_RELAY_CALL MGTK::HiliteMenu, win18_state ; ???
         rts
 
         addr_call $6B17, $1B9C
         ldx     $D5CA
         txs
-        MGTK_RELAY_CALL MGTK::HiliteMenu, win18_state
+        MGTK_RELAY_CALL MGTK::HiliteMenu, win18_state ; ???
         rts
 
         addr_call $6B17, $1BBF
         ldx     $D5CA
         txs
-        MGTK_RELAY_CALL MGTK::HiliteMenu, win18_state
+        MGTK_RELAY_CALL MGTK::HiliteMenu, win18_state ; ???
         rts
 
         sta     L8737
@@ -455,7 +455,7 @@ L8E22:  .byte   $00
 L8E23:  .byte   $00
 L8E24:  .byte   $00
 
-.proc draw_bitmap_params2
+.proc paintbits_params2
 left:   .word   0
 top:    .word   0
 mapbits: .addr   0
@@ -466,7 +466,7 @@ width:  .word   0
 height: .word   0
 .endproc
 
-.proc draw_bitmap_params
+.proc paintbits_params
 left:   .word   0
 top:    .word   0
 mapbits: .addr   0
@@ -478,21 +478,21 @@ cliprect_y1:   .word   0
         .byte   $00,$00
 L8E43:  .byte   $00,$00
 
-.proc fill_rect_params6
+.proc paintrect_params6
 left:   .word   0
 top:    .word   0
 right:  .word   0
 bottom: .word   0
 .endproc
 
-.proc measure_text_params
+.proc textwidth_params
 addr:   .addr   text_buffer
 length: .byte   0
 width:  .word   0
 .endproc
-set_text_mask_params :=  measure_text_params::width + 1 ; re-used
+set_text_mask_params :=  textwidth_params::width + 1 ; re-used
 
-.proc draw_text_params
+.proc drawtext_params
 addr:   .addr   text_buffer
 length: .byte   0
 .endproc
@@ -587,7 +587,7 @@ drag_outline_buffer:
 
 L933E:  .byte   $00
 
-.proc query_target_params2
+.proc findwindow_params2
 queryx: .word   0
 queryy: .word   0
 element:.byte   0
@@ -597,7 +597,7 @@ id:     .byte   0
         screen_width := 560
         screen_height := 192
 
-.proc query_screen_params
+.proc grafport
 left:   .word   0
 top:    .word   0
 mapbits: .addr   MGTK::screen_mapbits
@@ -617,12 +617,12 @@ textbg:  .byte   0
 fontptr:   .addr   DEFAULT_FONT
 .endproc
 
-.proc query_state_params
+.proc getwinport_params
 id:     .byte   0
-addr:   .addr   set_state_params
+addr:   .addr   grafport4
 .endproc
 
-.proc set_state_params
+.proc grafport4
 left:   .word   0
 top:    .word   0
 mapbits: .addr   0
@@ -645,12 +645,14 @@ fontptr:   .addr   0
         .byte   $00,$FF,$80
 
         ;; Used for FILL_MODE params
-const0a:.byte   0
-const1a:.byte   1
-const2a:.byte   2
-const3a:.byte   3
-const4a:.byte   4
-        .byte   5, 6, 7
+pencopy_2:.byte   0
+penOR_2:.byte   1
+penXOR_2:.byte   2
+penBIC_2:.byte   3
+notpencopy_2:.byte   4
+notpenOR_2:       .byte 5
+notpenXOR_2:       .byte 6
+notpenBIC_2:       .byte 7
 
         ;; DESKTOP command jump table
 L939E:  .addr   0               ; $00
@@ -740,7 +742,7 @@ L9409:  pla
 
 call_params:  .addr     0
 
-.proc set_pos_params2
+.proc moveto_params2
 xcoord: .word   0
 ycoord: .word   0
 .endproc
@@ -922,7 +924,7 @@ L951D:  asl     a
         rts
 
 L9532:  jsr     LA18A
-        MGTK_CALL MGTK::SetPenMode, const0a
+        MGTK_CALL MGTK::SetPenMode, pencopy_2
         jsr     LA39D
         ldy     #$00
         lda     ($06),y
@@ -1194,7 +1196,7 @@ L977A:  lda     #$00
 
 L9789:  ldy     #$03
 L978B:  lda     ($06),y
-        sta     set_pos_params2,y
+        sta     moveto_params2,y
         dey
         bpl     L978B
         lda     $06
@@ -1204,7 +1206,7 @@ L978B:  lda     ($06),y
         ldy     #$05
         lda     ($06),y
         sta     L97F5
-        MGTK_CALL MGTK::MoveTo, set_pos_params2
+        MGTK_CALL MGTK::MoveTo, moveto_params2
         ldx     #$00
 L97AA:  cpx     L8E95
         bne     L97B9
@@ -1302,18 +1304,18 @@ L9845:  MGTK_CALL MGTK::PeekEvent, L933E
 L9852:  lda     #$02
         jmp     L9C65
 
-L9857:  lda     query_target_params2::queryx
+L9857:  lda     findwindow_params2::queryx
         sec
         sbc     L9C8E
         sta     L982C
-        lda     query_target_params2::queryx+1
+        lda     findwindow_params2::queryx+1
         sbc     L9C8F
         sta     L982D
-        lda     query_target_params2::queryy
+        lda     findwindow_params2::queryy
         sec
         sbc     L9C90
         sta     L982E
-        lda     query_target_params2::queryy+1
+        lda     findwindow_params2::queryy+1
         sbc     L9C91
         sta     L982F
         lda     L982D
@@ -1360,9 +1362,9 @@ L98C8:  lda     L9017
         lda     ($06),y
         and     #$0F
         sta     L9832
-        MGTK_CALL MGTK::InitPort, query_screen_params
+        MGTK_CALL MGTK::InitPort, grafport
         ldx     #$07
-L98E3:  lda     query_screen_params::L934D,x
+L98E3:  lda     grafport::L934D,x
         sta     L9835,x
         dex
         bpl     L98E3
@@ -1498,7 +1500,7 @@ L99E1:  iny
         jmp     L9972
 
 L99FC:  MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
-        MGTK_CALL MGTK::SetPenMode, const2a
+        MGTK_CALL MGTK::SetPenMode, penXOR_2
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
 L9A0E:  MGTK_CALL MGTK::PeekEvent, L933E
         lda     L933E
@@ -1507,7 +1509,7 @@ L9A0E:  MGTK_CALL MGTK::PeekEvent, L933E
         jmp     L9BA5
 
 L9A1E:  ldx     #$03
-L9A20:  lda     query_target_params2,x
+L9A20:  lda     findwindow_params2,x
         cmp     L9C92,x
         bne     L9A31
         dex
@@ -1516,39 +1518,39 @@ L9A20:  lda     query_target_params2,x
         jmp     L9A0E
 
 L9A31:  ldx     #$03
-L9A33:  lda     query_target_params2,x
+L9A33:  lda     findwindow_params2,x
         sta     L9C92,x
         dex
         bpl     L9A33
         lda     L9830
         beq     L9A84
         lda     L9831
-        sta     query_target_params2::id
-        DESKTOP_DIRECT_CALL $9, query_target_params2
-        lda     query_target_params2::element
+        sta     findwindow_params2::id
+        DESKTOP_DIRECT_CALL $9, findwindow_params2
+        lda     findwindow_params2::element
         cmp     L9830
         beq     L9A84
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
-        MGTK_CALL MGTK::SetPenMode, const2a
+        MGTK_CALL MGTK::SetPenMode, penXOR_2
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
         DESKTOP_DIRECT_CALL $B, L9830
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
-        MGTK_CALL MGTK::SetPenMode, const2a
+        MGTK_CALL MGTK::SetPenMode, penXOR_2
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
         lda     #$00
         sta     L9830
-L9A84:  lda     query_target_params2::queryx
+L9A84:  lda     findwindow_params2::queryx
         sec
         sbc     L9C8E
         sta     L9C96
-        lda     query_target_params2::queryx+1
+        lda     findwindow_params2::queryx+1
         sbc     L9C8F
         sta     L9C97
-        lda     query_target_params2::queryy
+        lda     findwindow_params2::queryy
         sec
         sbc     L9C90
         sta     L9C98
-        lda     query_target_params2::queryy+1
+        lda     findwindow_params2::queryy+1
         sbc     L9C91
         sta     L9C99
         jsr     L9C9E
@@ -1667,13 +1669,13 @@ L9BA5:  MGTK_CALL MGTK::FramePoly, drag_outline_buffer
         DESKTOP_DIRECT_CALL $B, L9830
         jmp     L9C63
 
-L9BB9:  MGTK_CALL MGTK::FindWindow, query_target_params2
-        lda     query_target_params2::id
+L9BB9:  MGTK_CALL MGTK::FindWindow, findwindow_params2
+        lda     findwindow_params2::id
         cmp     L9832
         beq     L9BE1
         bit     L9833
         bmi     L9BDC
-        lda     query_target_params2::id
+        lda     findwindow_params2::id
         bne     L9BD4
 L9BD1:  jmp     L9852
 
@@ -1684,8 +1686,8 @@ L9BD4:  ora     #$80
 L9BDC:  lda     L9832
         beq     L9BD1
 L9BE1:  jsr     LA365
-        MGTK_CALL MGTK::InitPort, query_screen_params
-        MGTK_CALL MGTK::SetPort, query_screen_params
+        MGTK_CALL MGTK::InitPort, grafport
+        MGTK_CALL MGTK::SetPort, grafport
         ldx     L9016
 L9BF3:  dex
         bmi     L9C18
@@ -1699,7 +1701,7 @@ L9BF3:  dex
         lda     L8F15+1,x
         sta     $07
         jsr     LA18A
-        MGTK_CALL MGTK::SetPenMode, const0a
+        MGTK_CALL MGTK::SetPenMode, pencopy_2
         jsr     LA39D
         pla
         tax
@@ -1943,15 +1945,15 @@ L9DD9:  lda     L9C88
         sta     L9C99
         rts
 
-L9DFA:  lda     query_target_params2::queryx+1
+L9DFA:  lda     findwindow_params2::queryx+1
         sta     L9C8F
-        lda     query_target_params2::queryx
+        lda     findwindow_params2::queryx
         sta     L9C8E
         rts
 
-L9E07:  lda     query_target_params2::queryy+1
+L9E07:  lda     findwindow_params2::queryy+1
         sta     L9C91
-        lda     query_target_params2::queryy
+        lda     findwindow_params2::queryy
         sta     L9C90
         rts
 
@@ -1960,12 +1962,12 @@ L9E14:  bit     L9833
         rts
 
 L9E1A:  jsr     LA365
-L9E1D:  MGTK_CALL MGTK::FindWindow, query_target_params2
-        lda     query_target_params2::element
+L9E1D:  MGTK_CALL MGTK::FindWindow, findwindow_params2
+        lda     findwindow_params2::element
         bne     L9E2B
-        sta     query_target_params2::id
-L9E2B:  DESKTOP_DIRECT_CALL $9, query_target_params2
-        lda     query_target_params2::element
+        sta     findwindow_params2::id
+L9E2B:  DESKTOP_DIRECT_CALL $9, findwindow_params2
+        lda     findwindow_params2::element
         bne     L9E39
         jmp     L9E97
 
@@ -1994,16 +1996,16 @@ L9E3D:  cmp     L9017,x
         lda     L9EB3
 L9E6A:  sta     L9830
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
-        MGTK_CALL MGTK::SetPenMode, const2a
+        MGTK_CALL MGTK::SetPenMode, penXOR_2
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
         DESKTOP_DIRECT_CALL $2, L9830
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
-        MGTK_CALL MGTK::SetPenMode, const2a
+        MGTK_CALL MGTK::SetPenMode, penXOR_2
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
-L9E97:  MGTK_CALL MGTK::InitPort, query_screen_params
-        MGTK_CALL MGTK::SetPort, query_screen_params
+L9E97:  MGTK_CALL MGTK::InitPort, grafport
+        MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
-        MGTK_CALL MGTK::SetPenMode, const2a
+        MGTK_CALL MGTK::SetPenMode, penXOR_2
         jsr     LA382
         rts
 
@@ -2150,13 +2152,13 @@ L9FB6:  lda     ($06),y
         cpy     #$09
         bne     L9FB6
         jsr     LA365
-        lda     draw_bitmap_params2::mapbits
+        lda     paintbits_params2::mapbits
         sta     $08
-        lda     draw_bitmap_params2::mapbits+1
+        lda     paintbits_params2::mapbits+1
         sta     $08+1
         ldy     #$0B
 L9FCF:  lda     ($08),y
-        sta     draw_bitmap_params2::mapbits,y
+        sta     paintbits_params2::mapbits,y
         dey
         bpl     L9FCF
         bit     L9F92
@@ -2165,87 +2167,87 @@ L9FCF:  lda     ($08),y
 L9FDF:  jsr     LA382
         ldy     #$09
 L9FE4:  lda     ($06),y
-        sta     fill_rect_params6::bottom,y
+        sta     paintrect_params6::bottom,y
         iny
         cpy     #$1D
         bne     L9FE4
-L9FEE:  lda     draw_text_params::length
-        sta     measure_text_params::length
-        MGTK_CALL MGTK::TextWidth, measure_text_params
-        lda     measure_text_params::width
-        cmp     draw_bitmap_params2::width
+L9FEE:  lda     drawtext_params::length
+        sta     textwidth_params::length
+        MGTK_CALL MGTK::TextWidth, textwidth_params
+        lda     textwidth_params::width
+        cmp     paintbits_params2::width
         bcs     LA010
-        inc     draw_text_params::length
-        ldx     draw_text_params::length
+        inc     drawtext_params::length
+        ldx     drawtext_params::length
         lda     #' '
         sta     text_buffer-1,x
         jmp     L9FEE
 
 LA010:  lsr     a
-        sta     set_pos_params2::xcoord+1
-        lda     draw_bitmap_params2::width
+        sta     moveto_params2::xcoord+1
+        lda     paintbits_params2::width
         lsr     a
-        sta     set_pos_params2
-        lda     set_pos_params2::xcoord+1
+        sta     moveto_params2
+        lda     moveto_params2::xcoord+1
         sec
-        sbc     set_pos_params2::xcoord
-        sta     set_pos_params2::xcoord
-        lda     draw_bitmap_params2::left
+        sbc     moveto_params2::xcoord
+        sta     moveto_params2::xcoord
+        lda     paintbits_params2::left
         sec
-        sbc     set_pos_params2::xcoord
-        sta     set_pos_params2::xcoord
-        lda     draw_bitmap_params2::left+1
+        sbc     moveto_params2::xcoord
+        sta     moveto_params2::xcoord
+        lda     paintbits_params2::left+1
         sbc     #$00
-        sta     set_pos_params2::xcoord+1
-        lda     draw_bitmap_params2::top
+        sta     moveto_params2::xcoord+1
+        lda     paintbits_params2::top
         clc
-        adc     draw_bitmap_params2::height
-        sta     set_pos_params2::ycoord
-        lda     draw_bitmap_params2::top+1
+        adc     paintbits_params2::height
+        sta     moveto_params2::ycoord
+        lda     paintbits_params2::top+1
         adc     #$00
-        sta     set_pos_params2::ycoord+1
-        lda     set_pos_params2::ycoord
+        sta     moveto_params2::ycoord+1
+        lda     moveto_params2::ycoord
         clc
         adc     #$01
-        sta     set_pos_params2::ycoord
-        lda     set_pos_params2::ycoord+1
+        sta     moveto_params2::ycoord
+        lda     moveto_params2::ycoord+1
         adc     #$00
-        sta     set_pos_params2::ycoord+1
-        lda     set_pos_params2::ycoord
+        sta     moveto_params2::ycoord+1
+        lda     moveto_params2::ycoord
         clc
         adc     font_height
-        sta     set_pos_params2::ycoord
-        lda     set_pos_params2::ycoord+1
+        sta     moveto_params2::ycoord
+        lda     moveto_params2::ycoord+1
         adc     #$00
-        sta     set_pos_params2::ycoord+1
+        sta     moveto_params2::ycoord+1
         ldx     #$03
-LA06E:  lda     set_pos_params2,x
+LA06E:  lda     moveto_params2,x
         sta     L9F94,x
         dex
         bpl     LA06E
         bit     L9F92
         bvc     LA097
-        MGTK_CALL MGTK::InitPort, query_screen_params
+        MGTK_CALL MGTK::InitPort, grafport
         jsr     LA63F
 LA085:  jsr     LA6A3
         jsr     LA097
         lda     L9F93
         bne     LA085
-        MGTK_CALL MGTK::SetPortBits, query_screen_params
+        MGTK_CALL MGTK::SetPortBits, grafport
         rts
 
 LA097:  MGTK_CALL MGTK::HideCursor, DESKTOP_DIRECT ; These params should be ignored - bogus?
-        MGTK_CALL MGTK::SetPenMode, const4a
+        MGTK_CALL MGTK::SetPenMode, notpencopy_2
         bit     L9F92
         bpl     LA0C2
         bit     L9F92
         bvc     LA0B6
-        MGTK_CALL MGTK::SetPenMode, const0a
+        MGTK_CALL MGTK::SetPenMode, pencopy_2
         jmp     LA0C2
 
-LA0B6:  MGTK_CALL MGTK::PaintBits, draw_bitmap_params
-        MGTK_CALL MGTK::SetPenMode, const2a
-LA0C2:  MGTK_CALL MGTK::PaintBits, draw_bitmap_params2
+LA0B6:  MGTK_CALL MGTK::PaintBits, paintbits_params
+        MGTK_CALL MGTK::SetPenMode, penXOR_2
+LA0C2:  MGTK_CALL MGTK::PaintBits, paintbits_params2
         ldy     #$02
         lda     ($06),y
         and     #$80
@@ -2254,16 +2256,16 @@ LA0C2:  MGTK_CALL MGTK::PaintBits, draw_bitmap_params2
         MGTK_CALL MGTK::SetPattern, dark_pattern
         bit     L9F92
         bmi     LA0E6
-        MGTK_CALL MGTK::SetPenMode, const3a
+        MGTK_CALL MGTK::SetPenMode, penBIC_2
         beq     LA0EC
-LA0E6:  MGTK_CALL MGTK::SetPenMode, const1a
-LA0EC:  MGTK_CALL MGTK::PaintRect, fill_rect_params6
+LA0E6:  MGTK_CALL MGTK::SetPenMode, penOR_2
+LA0EC:  MGTK_CALL MGTK::PaintRect, paintrect_params6
 LA0F2:  ldx     #$03
 LA0F4:  lda     L9F94,x
-        sta     set_pos_params2,x
+        sta     moveto_params2,x
         dex
         bpl     LA0F4
-        MGTK_CALL MGTK::MoveTo, set_pos_params2
+        MGTK_CALL MGTK::MoveTo, moveto_params2
         bit     L9F92
         bmi     LA10C
         lda     #$7F
@@ -2274,51 +2276,51 @@ LA10E:  sta     set_text_mask_params
         lda     text_buffer+1
         and     #$DF
         sta     text_buffer+1
-        MGTK_CALL MGTK::DrawText, draw_text_params
+        MGTK_CALL MGTK::DrawText, drawtext_params
         MGTK_CALL MGTK::ShowCursor
         rts
 
 LA12C:  ldx     #$0F
-LA12E:  lda     draw_bitmap_params2,x
-        sta     draw_bitmap_params,x
+LA12E:  lda     paintbits_params2,x
+        sta     paintbits_params,x
         dex
         bpl     LA12E
         ldy     L8E43
-LA13A:  lda     draw_bitmap_params::mapwidth
+LA13A:  lda     paintbits_params::mapwidth
         clc
-        adc     draw_bitmap_params::mapbits
-        sta     draw_bitmap_params::mapbits
+        adc     paintbits_params::mapbits
+        sta     paintbits_params::mapbits
         bcc     LA149
-        inc     draw_bitmap_params::mapbits+1
+        inc     paintbits_params::mapbits+1
 LA149:  dey
         bpl     LA13A
         rts
 
 LA14D:  ldx     #$00
-LA14F:  lda     draw_bitmap_params2::left,x
+LA14F:  lda     paintbits_params2::left,x
         clc
-        adc     draw_bitmap_params2::cliprect_x1,x
-        sta     fill_rect_params6,x
-        lda     draw_bitmap_params2::left+1,x
-        adc     draw_bitmap_params2::cliprect_x1+1,x
-        sta     fill_rect_params6::left+1,x
-        lda     draw_bitmap_params2::left,x
+        adc     paintbits_params2::cliprect_x1,x
+        sta     paintrect_params6,x
+        lda     paintbits_params2::left+1,x
+        adc     paintbits_params2::cliprect_x1+1,x
+        sta     paintrect_params6::left+1,x
+        lda     paintbits_params2::left,x
         clc
-        adc     draw_bitmap_params2::width,x
-        sta     fill_rect_params6::right,x
-        lda     draw_bitmap_params2::left+1,x
-        adc     draw_bitmap_params2::width+1,x
-        sta     fill_rect_params6::right+1,x
+        adc     paintbits_params2::width,x
+        sta     paintrect_params6::right,x
+        lda     paintbits_params2::left+1,x
+        adc     paintbits_params2::width+1,x
+        sta     paintrect_params6::right+1,x
         inx
         inx
         cpx     #$04
         bne     LA14F
-        lda     fill_rect_params6::bottom
+        lda     paintrect_params6::bottom
         sec
         sbc     #$01
-        sta     fill_rect_params6::bottom
+        sta     paintrect_params6::bottom
         bcs     LA189
-        dec     fill_rect_params6::bottom+1
+        dec     paintrect_params6::bottom+1
 LA189:  rts
 
 LA18A:  jsr     LA365
@@ -2392,15 +2394,15 @@ LA22A:  lda     ($06),y
         dey
         dex
         bpl     LA22A
-LA233:  lda     draw_text_params::length
-        sta     measure_text_params::length
-        MGTK_CALL MGTK::TextWidth, measure_text_params
+LA233:  lda     drawtext_params::length
+        sta     textwidth_params::length
+        MGTK_CALL MGTK::TextWidth, textwidth_params
         ldy     #$08
-        lda     measure_text_params::width
+        lda     textwidth_params::width
         cmp     ($08),y
         bcs     LA256
-        inc     draw_text_params::length
-        ldx     draw_text_params::length
+        inc     drawtext_params::length
+        ldx     drawtext_params::length
         lda     #' '
         sta     text_buffer-1,x
         jmp     LA233
@@ -2423,11 +2425,11 @@ LA256:  lsr     a
         sbc     #$00
         sta     L8E1E
         sta     L8E1A
-        inc     measure_text_params::width
-        inc     measure_text_params::width
+        inc     textwidth_params::width
+        inc     textwidth_params::width
         lda     L8E19
         clc
-        adc     measure_text_params::width
+        adc     textwidth_params::width
         sta     L8E11
         sta     L8E15
         lda     L8E1A
@@ -2572,8 +2574,8 @@ LA38C:  pla
 LA39B:  .byte   0
 LA39C:  .byte   0
 
-LA39D:  MGTK_CALL MGTK::InitPort, query_screen_params
-        MGTK_CALL MGTK::SetPort, query_screen_params
+LA39D:  MGTK_CALL MGTK::InitPort, grafport
+        MGTK_CALL MGTK::SetPort, grafport
         jmp     LA3B9
 
 LA3AC:  .byte   0
@@ -2603,20 +2605,20 @@ LA3B9:  ldy     #$00
         MGTK_CALL MGTK::SetPattern, white_pattern
         MGTK_CALL MGTK::FrontWindow, LA3B8
         lda     LA3B8
-        sta     query_state_params
-        MGTK_CALL MGTK::GetWinPort, query_state_params
+        sta     getwinport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         jsr     LA4CC
         jsr     LA938
         jsr     LA41C
         jmp     LA446
 
-LA3F4:  MGTK_CALL MGTK::InitPort, query_screen_params
+LA3F4:  MGTK_CALL MGTK::InitPort, grafport
         jsr     LA63F
 LA3FD:  jsr     LA6A3
         jsr     LA411
         lda     L9F93
         bne     LA3FD
-        MGTK_CALL MGTK::SetPortBits, query_screen_params
+        MGTK_CALL MGTK::SetPortBits, grafport
         jmp     LA446
 
 LA411:  lda     #$00
@@ -2645,8 +2647,8 @@ LA44D:  cpx     #$FF
         bne     LA466
         bit     LA3B7
         bpl     LA462
-        MGTK_CALL MGTK::InitPort, query_screen_params
-        MGTK_CALL MGTK::SetPort, set_state_params
+        MGTK_CALL MGTK::InitPort, grafport
+        MGTK_CALL MGTK::SetPort, grafport4
 LA462:  jsr     LA382
         rts
 
@@ -2710,13 +2712,13 @@ LA4DC:  pha
         lda     #$00
         sta     LA4CB
 LA4E2:  ldy     #$00
-LA4E4:  lda     set_state_params,y
+LA4E4:  lda     grafport4,y
         sta     LA567,y
         iny
         cpy     #$04
         bne     LA4E4
         ldy     #$08
-LA4F1:  lda     set_state_params,y
+LA4F1:  lda     grafport4,y
         sta     LA567-4,y
         iny
         cpy     #$0C
@@ -2883,7 +2885,7 @@ LA62A:  .byte   $00
 LA62B:  .byte   $00
 LA62C:  .byte   $00,$00,$00
 
-.proc set_box_params2
+.proc setportbits_params2
 left:   .word   0
 top:    .word   0
 mapbits: .addr   MGTK::screen_mapbits
@@ -2897,24 +2899,24 @@ height: .word   0
 LA63F:  jsr     LA18A
         lda     L8E07
         sta     LA629
-        sta     set_box_params2::cliprect_y1
-        sta     set_box_params2::top
+        sta     setportbits_params2::cliprect_y1
+        sta     setportbits_params2::top
         lda     L8E08
         sta     LA62A
-        sta     set_box_params2::cliprect_y1+1
-        sta     set_box_params2::top+1
+        sta     setportbits_params2::cliprect_y1+1
+        sta     setportbits_params2::top+1
         lda     L8E19
         sta     LA627
-        sta     set_box_params2::cliprect_x1
-        sta     set_box_params2::left
+        sta     setportbits_params2::cliprect_x1
+        sta     setportbits_params2::left
         lda     L8E1A
         sta     LA628
-        sta     set_box_params2::cliprect_x1+1
-        sta     set_box_params2::left+1
+        sta     setportbits_params2::cliprect_x1+1
+        sta     setportbits_params2::left+1
         ldx     #$03
 LA674:  lda     L8E15,x
         sta     LA62B,x
-        sta     set_box_params2::width,x
+        sta     setportbits_params2::width,x
         dex
         bpl     LA674
         lda     LA62B
@@ -2924,17 +2926,17 @@ LA674:  lda     L8E15,x
         bmi     LA69C
         lda     #$2E
         sta     LA62B
-        sta     set_box_params2::width
+        sta     setportbits_params2::width
         lda     #$02
         sta     LA62C
-        sta     set_box_params2::width+1
-LA69C:  MGTK_CALL MGTK::SetPortBits, set_box_params2
+        sta     setportbits_params2::width+1
+LA69C:  MGTK_CALL MGTK::SetPortBits, setportbits_params2
         rts
 
 LA6A3:  lda     #$00
         jmp     LA6C7
 
-.proc query_target_params
+.proc findwindow_params
 queryx: .word   0
 queryy: .word   0
 element:.byte   0
@@ -2968,46 +2970,46 @@ LA6C5:  .byte   $00
 LA6C6:  .byte   $00
 LA6C7:  lda     L9F93
         beq     LA6FA
-        lda     set_box_params2::width
+        lda     setportbits_params2::width
         clc
         adc     #$01
-        sta     set_box_params2::cliprect_x1
-        sta     set_box_params2::left
-        lda     set_box_params2::width+1
+        sta     setportbits_params2::cliprect_x1
+        sta     setportbits_params2::left
+        lda     setportbits_params2::width+1
         adc     #$00
-        sta     set_box_params2::cliprect_x1+1
-        sta     set_box_params2::left+1
+        sta     setportbits_params2::cliprect_x1+1
+        sta     setportbits_params2::left+1
         ldx     #$05
 LA6E5:  lda     LA629,x
-        sta     set_box_params2::cliprect_y1,x
+        sta     setportbits_params2::cliprect_y1,x
         dex
         bpl     LA6E5
-        lda     set_box_params2::cliprect_y1
-        sta     set_box_params2::top
-        lda     set_box_params2::cliprect_y1+1
-        sta     set_box_params2::top+1
-LA6FA:  lda     set_box_params2::cliprect_x1
+        lda     setportbits_params2::cliprect_y1
+        sta     setportbits_params2::top
+        lda     setportbits_params2::cliprect_y1+1
+        sta     setportbits_params2::top+1
+LA6FA:  lda     setportbits_params2::cliprect_x1
         sta     LA6B3
         sta     LA6BF
-        lda     set_box_params2::cliprect_x1+1
+        lda     setportbits_params2::cliprect_x1+1
         sta     LA6B4
         sta     LA6C0
-        lda     set_box_params2::cliprect_y1
+        lda     setportbits_params2::cliprect_y1
         sta     LA6B5
         sta     LA6B9
-        lda     set_box_params2::cliprect_y1+1
+        lda     setportbits_params2::cliprect_y1+1
         sta     LA6B6
         sta     LA6BA
-        lda     set_box_params2::width
+        lda     setportbits_params2::width
         sta     LA6B7
         sta     LA6BB
-        lda     set_box_params2::width+1
+        lda     setportbits_params2::width+1
         sta     LA6B8
         sta     LA6BC
-        lda     set_box_params2::height
+        lda     setportbits_params2::height
         sta     LA6BD
         sta     LA6C1
-        lda     set_box_params2::height+1
+        lda     setportbits_params2::height+1
         sta     LA6BE
         sta     LA6C2
         lda     #$00
@@ -3017,11 +3019,11 @@ LA747:  lda     LA6B0
         bne     LA775
         lda     #$00
         sta     LA6B0
-LA753:  MGTK_CALL MGTK::SetPortBits, set_box_params2
-        lda     set_box_params2::width+1
+LA753:  MGTK_CALL MGTK::SetPortBits, setportbits_params2
+        lda     setportbits_params2::width+1
         cmp     LA62C
         bne     LA76F
-        lda     set_box_params2::width
+        lda     setportbits_params2::width
         cmp     LA62B
         bcc     LA76F
         lda     #$00
@@ -3038,20 +3040,20 @@ LA775:  lda     LA6B0
         tax
         ldy     #$00
 LA77D:  lda     LA6B3,x
-        sta     query_target_params,y
+        sta     findwindow_params,y
         iny
         inx
         cpy     #$04
         bne     LA77D
         inc     LA6B0
-        MGTK_CALL MGTK::FindWindow, query_target_params
-        lda     query_target_params::element
+        MGTK_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_params::element
         beq     LA747
-        lda     query_target_params::id
-        sta     query_state_params
-        MGTK_CALL MGTK::GetWinPort, query_state_params
+        lda     findwindow_params::id
+        sta     getwinport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         jsr     LA365
-        MGTK_CALL MGTK::GetWinPtr, query_target_params::id
+        MGTK_CALL MGTK::GetWinPtr, findwindow_params::id
         lda     LA6AE
         sta     $06
         lda     LA6AF
@@ -3074,158 +3076,158 @@ LA7C8:  ldy     #$04
         lsr     a
         ora     LA6B1
         sta     LA6B1
-        lda     set_state_params::left
+        lda     grafport4::left
         sec
         sbc     #2
-        sta     set_state_params::left
-        lda     set_state_params::left+1
+        sta     grafport4::left
+        lda     grafport4::left+1
         sbc     #0
-        sta     set_state_params::left+1
-        lda     set_state_params::cliprect_x1
+        sta     grafport4::left+1
+        lda     grafport4::cliprect_x1
         sec
         sbc     #2
-        sta     set_state_params::cliprect_x1
-        lda     set_state_params::cliprect_x1+1
+        sta     grafport4::cliprect_x1
+        lda     grafport4::cliprect_x1+1
         sbc     #0
-        sta     set_state_params::cliprect_x1+1
+        sta     grafport4::cliprect_x1+1
         bit     LA6B2
         bmi     LA820
-        lda     set_state_params::top
+        lda     grafport4::top
         sec
         sbc     #$0E
-        sta     set_state_params::top
+        sta     grafport4::top
         bcs     LA812
-        dec     set_state_params::top+1
-LA812:  lda     set_state_params::cliprect_y1
+        dec     grafport4::top+1
+LA812:  lda     grafport4::cliprect_y1
         sec
         sbc     #$0E
-        sta     set_state_params::cliprect_y1
+        sta     grafport4::cliprect_y1
         bcs     LA820
-        dec     set_state_params::cliprect_y1+1
+        dec     grafport4::cliprect_y1+1
 LA820:  bit     LA6B1
         bpl     LA833
-        lda     set_state_params::height
+        lda     grafport4::height
         clc
         adc     #12
-        sta     set_state_params::height
+        sta     grafport4::height
         bcc     LA833
-        inc     set_state_params::height+1
+        inc     grafport4::height+1
 LA833:  bit     LA6B1
         bvc     LA846
-        lda     set_state_params::width
+        lda     grafport4::width
         clc
         adc     #20
-        sta     set_state_params::width
+        sta     grafport4::width
         bcc     LA846
-        inc     set_state_params::width+1
+        inc     grafport4::width+1
 LA846:  jsr     LA382
-        lda     set_state_params::width
+        lda     grafport4::width
         sec
-        sbc     set_state_params::cliprect_x1
+        sbc     grafport4::cliprect_x1
         sta     LA6C3
-        lda     set_state_params::width+1
-        sbc     set_state_params::cliprect_x1+1
+        lda     grafport4::width+1
+        sbc     grafport4::cliprect_x1+1
         sta     LA6C4
-        lda     set_state_params::height
+        lda     grafport4::height
         sec
-        sbc     set_state_params::cliprect_y1
+        sbc     grafport4::cliprect_y1
         sta     LA6C5
-        lda     set_state_params::height+1
-        sbc     set_state_params::cliprect_y1+1
+        lda     grafport4::height+1
+        sbc     grafport4::cliprect_y1+1
         sta     LA6C6
         lda     LA6C3
         clc
-        adc     set_state_params::left
+        adc     grafport4::left
         sta     LA6C3
-        lda     set_state_params::left+1
+        lda     grafport4::left+1
         adc     LA6C4
         sta     LA6C4
         lda     LA6C5
         clc
-        adc     set_state_params::top
+        adc     grafport4::top
         sta     LA6C5
         lda     LA6C6
-        adc     set_state_params::top+1
+        adc     grafport4::top+1
         sta     LA6C6
-        lda     set_box_params2::width
+        lda     setportbits_params2::width
         cmp     LA6C3
-        lda     set_box_params2::width+1
+        lda     setportbits_params2::width+1
         sbc     LA6C4
         bmi     LA8B7
         lda     LA6C3
         clc
         adc     #1
-        sta     set_box_params2::width
+        sta     setportbits_params2::width
         lda     LA6C4
         adc     #0
-        sta     set_box_params2::width+1
+        sta     setportbits_params2::width+1
         jmp     LA8D4
 
-LA8B7:  lda     set_state_params::left
-        cmp     set_box_params2::cliprect_x1
-        lda     set_state_params::left+1
-        sbc     set_box_params2::cliprect_x1+1
+LA8B7:  lda     grafport4::left
+        cmp     setportbits_params2::cliprect_x1
+        lda     grafport4::left+1
+        sbc     setportbits_params2::cliprect_x1+1
         bmi     LA8D4
-        lda     set_state_params::left
-        sta     set_box_params2::width
-        lda     set_state_params::left+1
-        sta     set_box_params2::width+1
+        lda     grafport4::left
+        sta     setportbits_params2::width
+        lda     grafport4::left+1
+        sta     setportbits_params2::width+1
         jmp     LA6FA
 
-LA8D4:  lda     set_state_params::top
-        cmp     set_box_params2::cliprect_y1
-        lda     set_state_params::top+1
-        sbc     set_box_params2::cliprect_y1+1
+LA8D4:  lda     grafport4::top
+        cmp     setportbits_params2::cliprect_y1
+        lda     grafport4::top+1
+        sbc     setportbits_params2::cliprect_y1+1
         bmi     LA8F6
-        lda     set_state_params::top
-        sta     set_box_params2::height
-        lda     set_state_params::top+1
-        sta     set_box_params2::height+1
+        lda     grafport4::top
+        sta     setportbits_params2::height
+        lda     grafport4::top+1
+        sta     setportbits_params2::height+1
         lda     #1
         sta     L9F93
         jmp     LA6FA
 
 LA8F6:  lda     LA6C5
-        cmp     set_box_params2::height
+        cmp     setportbits_params2::height
         lda     LA6C6
-        sbc     set_box_params2::height+1
+        sbc     setportbits_params2::height+1
         bpl     LA923
         lda     LA6C5
         clc
         adc     #2
-        sta     set_box_params2::cliprect_y1
-        sta     set_box_params2::top
+        sta     setportbits_params2::cliprect_y1
+        sta     setportbits_params2::top
         lda     LA6C6
         adc     #0
-        sta     set_box_params2::cliprect_y1+1
-        sta     set_box_params2::top+1
+        sta     setportbits_params2::cliprect_y1+1
+        sta     setportbits_params2::top+1
         lda     #1
         sta     L9F93
         jmp     LA6FA
 
-LA923:  lda     set_box_params2::width
-        sta     set_box_params2::cliprect_x1
-        sta     set_box_params2::left
-        lda     set_box_params2::width+1
-        sta     set_box_params2::cliprect_x1+1
-        sta     set_box_params2::left+1
+LA923:  lda     setportbits_params2::width
+        sta     setportbits_params2::cliprect_x1
+        sta     setportbits_params2::left
+        lda     setportbits_params2::width+1
+        sta     setportbits_params2::cliprect_x1+1
+        sta     setportbits_params2::left+1
         jmp     LA753
 
-LA938:  lda     set_state_params::top
+LA938:  lda     grafport4::top
         clc
         adc     #15
-        sta     set_state_params::top
-        lda     set_state_params::top+1
+        sta     grafport4::top
+        lda     grafport4::top+1
         adc     #0
-        sta     set_state_params::top+1
-        lda     set_state_params::cliprect_y1
+        sta     grafport4::top+1
+        lda     grafport4::cliprect_y1
         clc
         adc     #15
-        sta     set_state_params::cliprect_y1
-        lda     set_state_params::cliprect_y1+1
+        sta     grafport4::cliprect_y1
+        lda     grafport4::cliprect_y1+1
         adc     #0
-        sta     set_state_params::cliprect_y1+1
-        MGTK_CALL MGTK::SetPort, set_state_params
+        sta     grafport4::cliprect_y1+1
+        MGTK_CALL MGTK::SetPort, grafport4
         rts
 
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -3845,19 +3847,19 @@ start:  pha
 
         ldx     #$03
         lda     #$00
-LBA0B:  sta     state2_left,x
-        sta     state2_cliprect_x1,x
+LBA0B:  sta     grafport3_left,x
+        sta     grafport3_cliprect_x1,x
         dex
         bpl     LBA0B
         lda     #<$226
-        sta     state2_width
+        sta     grafport3_width
         lda     #>$226
-        sta     state2_width+1
+        sta     grafport3_width+1
         lda     #<$B9
-        sta     state2_height
+        sta     grafport3_height
         lda     #>$B9
-        sta     state2_height+1
-        MGTK_RELAY2_CALL MGTK::SetPort, state2
+        sta     grafport3_height+1
+        MGTK_RELAY2_CALL MGTK::SetPort, grafport3
         lda     LB6D3
         ldx     LB6D3+1
         jsr     LBF8B
@@ -3882,14 +3884,14 @@ LBA0B:  sta     state2_left,x
         MGTK_RELAY2_CALL MGTK::HideCursor
         jsr     LBE08
         MGTK_RELAY2_CALL MGTK::ShowCursor
-        MGTK_RELAY2_CALL MGTK::SetPenMode, const0
+        MGTK_RELAY2_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY2_CALL MGTK::PaintRect, alert_rect ; alert background
-        MGTK_RELAY2_CALL MGTK::SetPenMode, const2 ; ensures corners are inverted
+        MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR ; ensures corners are inverted
         MGTK_RELAY2_CALL MGTK::FrameRect, alert_rect ; alert outline
         MGTK_RELAY2_CALL MGTK::SetPortBits, LB6D3
         MGTK_RELAY2_CALL MGTK::FrameRect, alert_inner_frame_rect1 ; inner 2x border
         MGTK_RELAY2_CALL MGTK::FrameRect, alert_inner_frame_rect2
-        MGTK_RELAY2_CALL MGTK::SetPenMode, const0 ; restores normal mode
+        MGTK_RELAY2_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY2_CALL MGTK::HideCursor
         MGTK_RELAY2_CALL MGTK::PaintBits, alert_bitmap_params
         MGTK_RELAY2_CALL MGTK::ShowCursor
@@ -3928,7 +3930,7 @@ LBB0B:  tya
         tay
         lda     alert_action_table,y
         sta     alert_action
-LBB14:  MGTK_RELAY2_CALL MGTK::SetPenMode, const2
+LBB14:  MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
         bit     alert_action
         bpl     LBB5C
         MGTK_RELAY2_CALL MGTK::FrameRect, cancel_rect
@@ -3948,21 +3950,21 @@ LBB75:  MGTK_RELAY2_CALL MGTK::MoveTo, LB70F
         lda     LB714
         ldx     LB715
         jsr     draw_pascal_string
-LBB87:  MGTK_RELAY2_CALL MGTK::GetEvent, input_params
-        lda     input_params_state
+LBB87:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
+        lda     event_params_kind
         cmp     #MGTK::button_down
         bne     LBB9A
         jmp     LBC0C
 
 LBB9A:  cmp     #MGTK::key_down
         bne     LBB87
-        lda     input_params_key
+        lda     event_params_key
         and     #$7F
         bit     alert_action
         bpl     LBBEE
         cmp     #KEY_ESCAPE
         bne     LBBC3
-        MGTK_RELAY2_CALL MGTK::SetPenMode, const2
+        MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY2_CALL MGTK::PaintRect, cancel_rect
         lda     #$01
         jmp     LBC55
@@ -3971,7 +3973,7 @@ LBBC3:  bit     alert_action
         bvs     LBBEE
         cmp     #'a'
         bne     LBBE3
-LBBCC:  MGTK_RELAY2_CALL MGTK::SetPenMode, const2
+LBBCC:  MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY2_CALL MGTK::PaintRect, try_again_rect
         lda     #$00
         jmp     LBC55
@@ -3984,7 +3986,7 @@ LBBE3:  cmp     #'A'
 
 LBBEE:  cmp     #KEY_RETURN
         bne     LBC09
-        MGTK_RELAY2_CALL MGTK::SetPenMode, const2
+        MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY2_CALL MGTK::PaintRect, try_again_rect
         lda     #$02
         jmp     LBC55
@@ -3992,7 +3994,7 @@ LBBEE:  cmp     #KEY_RETURN
 LBC09:  jmp     LBB87
 
 LBC0C:  jsr     LBDE1
-        MGTK_RELAY2_CALL MGTK::MoveTo, input_params_coords
+        MGTK_RELAY2_CALL MGTK::MoveTo, event_params_coords
         bit     alert_action
         bpl     LBC42
         MGTK_RELAY2_CALL MGTK::InRect, cancel_rect
@@ -4021,16 +4023,16 @@ LBC55:  pha
         pla
         rts
 
-LBC6D:  MGTK_RELAY2_CALL MGTK::SetPenMode, const2
+LBC6D:  MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY2_CALL MGTK::PaintRect, try_again_rect
         lda     #$00
         sta     LBCE8
-LBC84:  MGTK_RELAY2_CALL MGTK::GetEvent, input_params
-        lda     input_params_state
+LBC84:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
+        lda     event_params_kind
         cmp     #MGTK::button_up
         beq     LBCDB
         jsr     LBDE1
-        MGTK_RELAY2_CALL MGTK::MoveTo, input_params_coords
+        MGTK_RELAY2_CALL MGTK::MoveTo, event_params_coords
         MGTK_RELAY2_CALL MGTK::InRect, try_again_rect
         cmp     #$80
         beq     LBCB5
@@ -4042,7 +4044,7 @@ LBCB5:  lda     LBCE8
         bne     LBCBD
         jmp     LBC84
 
-LBCBD:  MGTK_RELAY2_CALL MGTK::SetPenMode, const2
+LBCBD:  MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY2_CALL MGTK::PaintRect, try_again_rect
         lda     LBCE8
         clc
@@ -4058,16 +4060,16 @@ LBCE3:  lda     #$00
         jmp     LBC55
 
 LBCE8:  .byte   0
-LBCE9:  MGTK_RELAY2_CALL MGTK::SetPenMode, const2
+LBCE9:  MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY2_CALL MGTK::PaintRect, cancel_rect
         lda     #$00
         sta     LBD64
-LBD00:  MGTK_RELAY2_CALL MGTK::GetEvent, input_params
-        lda     input_params_state
+LBD00:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
+        lda     event_params_kind
         cmp     #MGTK::button_up
         beq     LBD57
         jsr     LBDE1
-        MGTK_RELAY2_CALL MGTK::MoveTo, input_params_coords
+        MGTK_RELAY2_CALL MGTK::MoveTo, event_params_coords
         MGTK_RELAY2_CALL MGTK::InRect, cancel_rect
         cmp     #$80
         beq     LBD31
@@ -4079,7 +4081,7 @@ LBD31:  lda     LBD64
         bne     LBD39
         jmp     LBD00
 
-LBD39:  MGTK_RELAY2_CALL MGTK::SetPenMode, const2
+LBD39:  MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY2_CALL MGTK::PaintRect, cancel_rect
         lda     LBD64
         clc
@@ -4097,14 +4099,14 @@ LBD5F:  lda     #$01
 LBD64:  .byte   0
 LBD65:  lda     #$00
         sta     LBDE0
-        MGTK_RELAY2_CALL MGTK::SetPenMode, const2
+        MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY2_CALL MGTK::PaintRect, try_again_rect
-LBD7C:  MGTK_RELAY2_CALL MGTK::GetEvent, input_params
-        lda     input_params_state
+LBD7C:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
+        lda     event_params_kind
         cmp     #MGTK::button_up
         beq     LBDD3
         jsr     LBDE1
-        MGTK_RELAY2_CALL MGTK::MoveTo, input_params_coords
+        MGTK_RELAY2_CALL MGTK::MoveTo, event_params_coords
         MGTK_RELAY2_CALL MGTK::InRect, try_again_rect
         cmp     #$80
         beq     LBDAD
@@ -4116,7 +4118,7 @@ LBDAD:  lda     LBDE0
         bne     LBDB5
         jmp     LBD7C
 
-LBDB5:  MGTK_RELAY2_CALL MGTK::SetPenMode, const2
+LBDB5:  MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY2_CALL MGTK::PaintRect, try_again_rect
         lda     LBDE0
         clc
@@ -4136,20 +4138,20 @@ LBDDB:  lda     #$02
 ;;; ==================================================
 
 LBDE0:  .byte   0
-LBDE1:  lda     input_params_xcoord
+LBDE1:  lda     event_params_xcoord
         sec
         sbc     LB6D3
-        sta     input_params_xcoord
-        lda     input_params_xcoord+1
+        sta     event_params_xcoord
+        lda     event_params_xcoord+1
         sbc     LB6D3+1
-        sta     input_params_xcoord+1
-        lda     input_params_ycoord
+        sta     event_params_xcoord+1
+        lda     event_params_ycoord
         sec
         sbc     LB6D5
-        sta     input_params_ycoord
-        lda     input_params_ycoord+1
+        sta     event_params_ycoord
+        lda     event_params_ycoord+1
         sbc     LB6D5+1
-        sta     input_params_ycoord+1
+        sta     event_params_ycoord+1
         rts
 
 LBE08:  lda     #$00
@@ -4687,37 +4689,37 @@ op:     lda     dummy1234
         .assert * = $D166, error, "Segment length mismatch"
         PAD_TO $D200
 
-const0: .byte   0
-const1: .byte   1
-const2: .byte   2
-const3: .byte   3
-const4: .byte   4
-const5: .byte   5
-const6: .byte   6
-const7: .byte   7
+pencopy: .byte   0
+penOR: .byte   1
+penXOR: .byte   2
+penBIC: .byte   3
+notpencopy: .byte   4
+notpenOR: .byte   5
+notpenXOR: .byte   6
+notpenBIC: .byte   7
 
-.proc input_params
-state:  .byte   0
+.proc event_params
+kind:   .byte   0
         key := *
         modifiers := *+1
         coords := *
 xcoord: .word   0
 ycoord: .word   0
 .endproc
-        input_params_state := input_params::state
-        input_params_key := input_params::key
-        input_params_modifiers := input_params::modifiers
-        input_params_coords := input_params::coords
-        input_params_xcoord := input_params::xcoord
-        input_params_ycoord := input_params::ycoord
+        event_params_kind := event_params::kind
+        event_params_key := event_params::key
+        event_params_modifiers := event_params::modifiers
+        event_params_coords := event_params::coords
+        event_params_xcoord := event_params::xcoord
+        event_params_ycoord := event_params::ycoord
 
-        ;; When input_params_coords is used for FindControl/FindWindow
+        ;; When event_params_coords is used for FindControl/FindWindow
 
 query_client_params_part:
-query_target_params_element:
+findwindow_params_element:
         .byte   0
 query_client_params_scroll:
-query_target_params_id:
+findwindow_params_id:
         .byte   0
 
 LD20F:  .byte   0
@@ -4725,12 +4727,12 @@ LD210:  .byte   0
 LD211:  .byte   0
 
 
-.proc query_state_params2
+.proc getwinport_params2
 id:     .byte   0
-        .addr   query_state_buffer
+        .addr   grafport2
 .endproc
 
-.proc query_state_buffer
+.proc grafport2
 left:   .word   0
 top:    .word   0
 mapbits: .addr   0
@@ -4749,7 +4751,7 @@ textbg:  .byte   0
 fontptr:   .addr   0
 .endproc
 
-.proc state2
+.proc grafport3
 left:   .word   0
 top:    .word   0
 mapbits: .addr   0
@@ -4767,12 +4769,12 @@ unk:    .byte   0
 textbg:  .byte   0
 fontptr:   .addr   0
 .endproc
-        state2_left := state2::left
-        state2_cliprect_x1 := state2::cliprect_x1
-        state2_width := state2::width
-        state2_height := state2::height
+        grafport3_left := grafport3::left
+        grafport3_cliprect_x1 := grafport3::cliprect_x1
+        grafport3_width := grafport3::width
+        grafport3_height := grafport3::height
 
-.proc state1
+.proc grafport5
 left:   .word   0
 top:    .word   0
 mapbits: .addr   MGTK::screen_mapbits
@@ -4836,8 +4838,8 @@ id_byte_2:  .byte   $EA             ; ROM FBC0 ($EA = IIe, $E0 = IIe enh/IIgs, $
 zp_use_flag0:
         .byte   0
 
-.proc close_click_params        ; next 3 bytes???
-clicked:.byte   0
+.proc trackgoaway_params        ; next 3 bytes???
+goaway:.byte   0
 .endproc
 LD2A9:  .byte   0
 double_click_flag:
@@ -6110,7 +6112,7 @@ L4069:  lda     #$00
         beq     L4088
         tay
         jsr     DESKTOP_SHOW_ALERT0
-L4088:  jsr     reset_state2
+L4088:  jsr     reset_grafport3
         inc     L40DF
         inc     L40DF
         lda     L40DF
@@ -6123,7 +6125,7 @@ L4088:  jsr     reset_state2
         jsr     L40E0
 L40A6:  jsr     L464E
         jsr     get_input
-        lda     input_params_state
+        lda     event_params_kind
         cmp     #MGTK::button_down
         beq     L40B7
         cmp     #MGTK::apple_key
@@ -6138,7 +6140,7 @@ L40BD:  cmp     #$03
 
 L40C7:  cmp     #$06
         bne     L40DC
-        jsr     reset_state2
+        jsr     reset_grafport3
         lda     desktop_active_winid
         sta     L40F0
         lda     #$80
@@ -6158,20 +6160,20 @@ L40E0:  tsx
 L40F0:  .byte   $00
 L40F1:  .byte   $00
 redraw_windows:
-        jsr     reset_state2
+        jsr     reset_grafport3
         lda     desktop_active_winid
         sta     L40F0
         lda     #$00
         sta     L40F1
 L4100:  jsr     L48F0
-        lda     input_params_state
+        lda     event_params_kind
         cmp     #$06            ; ???
         bne     L412B
         jsr     get_input
 L410D:  jsr     L4113
         jmp     L4100
 
-L4113:  MGTK_RELAY_CALL MGTK::BeginUpdate, input_params+1
+L4113:  MGTK_RELAY_CALL MGTK::BeginUpdate, event_params+1
         bne     L4151
         jsr     L4153
         MGTK_RELAY_CALL MGTK::EndUpdate
@@ -6192,7 +6194,7 @@ L4143:  bit     L40F1
 L4151:  rts
 
 L4152:  .byte   0
-L4153:  lda     input_params+1
+L4153:  lda     event_params+1
         cmp     #$09
         bcc     L415B
         rts
@@ -6203,7 +6205,7 @@ L415B:  sta     desktop_active_winid
         lda     #$80
         sta     L4152
         lda     bufnum
-        sta     query_state_params2::id
+        sta     getwinport_params2::id
         jsr     L4505
         jsr     L78EF
         lda     desktop_active_winid
@@ -6216,11 +6218,11 @@ L415B:  sta     desktop_active_winid
         ldy     #$16
         lda     ($06),y
         sec
-        sbc     query_state_buffer::top
+        sbc     grafport2::top
         sta     L4242
         iny
         lda     ($06),y
-        sbc     query_state_buffer::top+1
+        sbc     grafport2::top+1
         sta     L4243
         lda     L4242
         cmp     #$0F
@@ -6230,19 +6232,19 @@ L415B:  sta     desktop_active_winid
         jsr     L6E8A
         ldx     #$0B
         ldy     #$1F
-        lda     query_state_buffer,x
+        lda     grafport2,x
         sta     ($06),y
         dey
         dex
-        lda     query_state_buffer,x
+        lda     grafport2,x
         sta     ($06),y
         ldx     #$03
         ldy     #$17
-        lda     query_state_buffer,x
+        lda     grafport2,x
         sta     ($06),y
         dey
         dex
-        lda     query_state_buffer,x
+        lda     grafport2,x
         sta     ($06),y
 L41CB:  ldx     bufnum
         dex
@@ -6255,11 +6257,11 @@ L41CB:  ldx     bufnum
         jmp     L8874
 
 L41E2:  lda     bufnum
-        sta     query_state_params2::id
+        sta     getwinport_params2::id
         jsr     L44F2
         jsr     L6E52
         ldx     #7
-L41F0:  lda     query_state_buffer::cliprect_x1,x
+L41F0:  lda     grafport2::cliprect_x1,x
         sta     rect_E230,x
         dex
         bpl     L41F0
@@ -6280,12 +6282,12 @@ L4221:  inc     L4241
 L4227:  lda     #$00
         sta     L4152
         lda     bufnum
-        sta     query_state_params2::id
+        sta     getwinport_params2::id
         jsr     L44F2
         jsr     L6E6E
         lda     desktop_active_winid
         jsr     L8874
-        jmp     reset_state2
+        jmp     reset_grafport3
 
 L4241:  .byte   0
 L4242:  .byte   0
@@ -6301,11 +6303,11 @@ L424A:  lda     #$00
         cmp     desktop_active_winid
         bne     L4249
         lda     desktop_active_winid
-        sta     query_state_params2::id
+        sta     getwinport_params2::id
         jsr     L4505
         jsr     L6E8E
         ldx     #7
-L4267:  lda     query_state_buffer::cliprect_x1,x
+L4267:  lda     grafport2::cliprect_x1,x
         sta     rect_E230,x
         dex
         bpl     L4267
@@ -6324,7 +6326,7 @@ L4296:  lda     LE22F
         inc     L42C3
         jmp     L4270
 
-L42A2:  jmp     reset_state2
+L42A2:  jmp     reset_grafport3
 
 L42A5:  lda     L42C3
         cmp     is_file_selected
@@ -6439,7 +6441,7 @@ flag:   .byte   $00
 
         ;; Handle accelerator keys
 menu_dispatch:
-        lda     input_params_modifiers
+        lda     event_params_modifiers
         bne     :+              ; either OA or CA ?
         jmp     menu_accelerators           ; nope
 :       cmp     #3              ; both OA + CA ?
@@ -6447,7 +6449,7 @@ menu_dispatch:
         rts
 
         ;; Non-menu keys
-:       lda     input_params_key
+:       lda     event_params_key
         ora     #$20            ; force to lower-case
         cmp     #'h'            ; OA-H (Highlight Icon)
         bne     :+
@@ -6468,9 +6470,9 @@ menu_dispatch:
         jmp     cmd_scroll
 
 menu_accelerators:
-        lda     input_params+1
+        lda     event_params+1
         sta     $E25C
-        lda     input_params+2
+        lda     event_params+2
         beq     L43A1
         lda     #$01
 L43A1:  sta     $E25D
@@ -6517,16 +6519,16 @@ L43E0:  tsx
 .proc handle_click
         tsx
         stx     $E256
-        MGTK_RELAY_CALL MGTK::FindWindow, input_params_coords
-        lda     query_target_params_element
+        MGTK_RELAY_CALL MGTK::FindWindow, event_params_coords
+        lda     findwindow_params_element
         bne     not_desktop
 
         ;; Click on desktop
         jsr     detect_double_click
         sta     double_click_flag
         lda     #0
-        sta     query_target_params_id
-        DESKTOP_RELAY_CALL $09, input_params_coords ; maybe "was it an icon" ???
+        sta     findwindow_params_id
+        DESKTOP_RELAY_CALL $09, event_params_coords ; maybe "was it an icon" ???
         lda     query_client_params_part ; ???
         beq     L4415
         jmp     L67D7
@@ -6542,7 +6544,7 @@ not_desktop:
 not_menu:
         pha                     ; which window - active or not?
         lda     desktop_active_winid
-        cmp     query_target_params_id
+        cmp     findwindow_params_id
         beq     handle_active_window_click
         pla
         jmp     handle_inactive_window_click
@@ -6595,14 +6597,14 @@ L445D:  jsr     clear_selection
         sta     L445C
         jsr     L8997
         DESKTOP_RELAY_CALL $02, LE22F
-        jsr     reset_state2
+        jsr     reset_grafport3
         lda     L445C
         sta     selected_window_index
         lda     #$01
         sta     is_file_selected
         lda     LE22F
         sta     selected_file_index
-L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, query_target_params_id
+L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_params_id
         lda     $D20E
         sta     desktop_active_winid
         sta     bufnum
@@ -6628,18 +6630,18 @@ L44B8:  jsr     DESKTOP_COPY_TO_BUF
 
 ;;; ==================================================
 
-L44F2:  MGTK_RELAY_CALL MGTK::GetWinPort, query_state_params2
-        MGTK_RELAY_CALL MGTK::SetPort, query_state_buffer
+L44F2:  MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
+        MGTK_RELAY_CALL MGTK::SetPort, grafport2
         rts
 
-L4505:  MGTK_RELAY_CALL MGTK::GetWinPort, query_state_params2
+L4505:  MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
         rts
 
         rts
 
-reset_state2:
-        MGTK_RELAY_CALL MGTK::InitPort, state2
-        MGTK_RELAY_CALL MGTK::SetPort, state2
+reset_grafport3:
+        MGTK_RELAY_CALL MGTK::InitPort, grafport3
+        MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
 
 ;;; ==================================================
@@ -7099,16 +7101,16 @@ L48C2:  lda     $E196,x
         jmp     dummy1234           ; self-modified
 
 get_input:
-        MGTK_RELAY_CALL MGTK::GetEvent, input_params
+        MGTK_RELAY_CALL MGTK::GetEvent, event_params
         rts
 
-L48F0:  MGTK_RELAY_CALL MGTK::PeekEvent, input_params
+L48F0:  MGTK_RELAY_CALL MGTK::PeekEvent, event_params
         rts
 
-L48FA:  MGTK_RELAY_CALL MGTK::SetPenMode, const2
+L48FA:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         rts
 
-L4904:  MGTK_RELAY_CALL MGTK::SetPenMode, const0
+L4904:  MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         rts
 
 ;;; ==================================================
@@ -7467,7 +7469,7 @@ L4BB1:  .byte   0
 zp_use_flag1:
         .byte   $80
 
-start:  jsr     reset_state2
+start:  jsr     reset_grafport3
         jsr     set_watch_cursor
 
         ;; Find DA name
@@ -7523,7 +7525,7 @@ nope:   dex
 
         ;; Invoke it
         jsr     set_pointer_cursor
-        jsr     reset_state2
+        jsr     reset_grafport3
         MGTK_RELAY_CALL MGTK::SetZP1, zp_use_flag0
         MGTK_RELAY_CALL MGTK::SetZP1, zp_use_flag1
         jsr     DA_LOAD_ADDRESS
@@ -7532,7 +7534,7 @@ nope:   dex
         sta     running_da_flag
 
         ;; Restore state
-        jsr     reset_state2
+        jsr     reset_grafport3
         jsr     redraw_windows_and_desktop
 done:   jsr     set_pointer_cursor
         rts
@@ -7886,7 +7888,7 @@ L4EC3:  sta     buf3len
         sta     selected_window_index
         jsr     L8997
         DESKTOP_RELAY_CALL $02, LE22F
-        jsr     reset_state2
+        jsr     reset_grafport3
         lda     #$01
         sta     is_file_selected
         lda     LE22F
@@ -7907,7 +7909,7 @@ L4F3C:  lda     #$00
         sta     $E269
         MGTK_RELAY_CALL MGTK::CheckItem, LE267 ; ???
         jsr     L66A2
-        jmp     reset_state2
+        jmp     reset_grafport3
 .endproc
 
 ;;; ==================================================
@@ -8138,11 +8140,11 @@ L511E:  sta     buf3len
         sta     LE6D1,x
         jsr     L52DF
         lda     desktop_active_winid
-        sta     query_state_params2::id
+        sta     getwinport_params2::id
         jsr     L4505
         jsr     L6E8E
         jsr     L4904
-        MGTK_RELAY_CALL MGTK::PaintRect, query_state_buffer::cliprect_x1
+        MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect_x1
         lda     desktop_active_winid
         jsr     L7D5D
         sta     L51EB
@@ -8168,7 +8170,7 @@ L516D:  lda     L51EB,x
         lda     desktop_active_winid
         jsr     L763A
         lda     desktop_active_winid
-        sta     query_state_params2::id
+        sta     getwinport_params2::id
         jsr     L44F2
         jsr     L6E52
         lda     #$00
@@ -8184,7 +8186,7 @@ L518D:  lda     L51EF
         inc     L51EF
         jmp     L518D
 
-L51A7:  jsr     reset_state2
+L51A7:  jsr     reset_grafport3
         jsr     L6E6E
         jsr     DESKTOP_COPY_FROM_BUF
         jsr     L6DB1
@@ -8225,11 +8227,11 @@ L51F0:  ldx     desktop_active_winid
         jsr     L7D9C
         jsr     DESKTOP_COPY_FROM_BUF
         lda     desktop_active_winid
-        sta     query_state_params2::id
+        sta     getwinport_params2::id
         jsr     L4505
         jsr     L6E8E
         jsr     L4904
-        MGTK_RELAY_CALL MGTK::PaintRect, query_state_buffer::cliprect_x1
+        MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect_x1
         lda     desktop_active_winid
         jsr     L7D5D
         sta     L5263
@@ -8254,7 +8256,7 @@ L5246:  lda     L5263,x
         bpl     L5246
         lda     #$80
         sta     L4152
-        jsr     reset_state2
+        jsr     reset_grafport3
         jsr     L6C19
         jsr     L6DB1
         lda     #$00
@@ -8698,14 +8700,14 @@ L5579:  lda     #$00
         jsr     clear_selection
 L5581:  jsr     L55F0
 L5584:  jsr     get_input
-        lda     input_params_state
+        lda     event_params_kind
         cmp     #MGTK::key_down
         beq     L5595
         cmp     #MGTK::button_down
         bne     L5584
         jmp     L55D1
 
-L5595:  lda     input_params+1
+L5595:  lda     event_params+1
         and     #$7F
         cmp     #KEY_RETURN
         beq     L55D1
@@ -8756,17 +8758,17 @@ L55F0:  ldx     L544A
         ldy     #$02
         lda     ($06),y
         and     #$0F
-        sta     query_state_params2::id
+        sta     getwinport_params2::id
         beq     L5614
         jsr     L56F9
         lda     LE22F
         jsr     L8915
 L5614:  DESKTOP_RELAY_CALL $02, LE22F
-        lda     query_state_params2::id
+        lda     getwinport_params2::id
         beq     L562B
         lda     LE22F
         jsr     L8893
-        jsr     reset_state2
+        jsr     reset_grafport3
 L562B:  rts
 
 L562C:  lda     LE22F
@@ -8776,17 +8778,17 @@ L562C:  lda     LE22F
         ldy     #$02
         lda     ($06),y
         and     #$0F
-        sta     query_state_params2::id
+        sta     getwinport_params2::id
         beq     L564A
         jsr     L56F9
         lda     LE22F
         jsr     L8915
 L564A:  DESKTOP_RELAY_CALL $0B, LE22F
-        lda     query_state_params2::id
+        lda     getwinport_params2::id
         beq     L5661
         lda     LE22F
         jsr     L8893
-        jsr     reset_state2
+        jsr     reset_grafport3
 L5661:  rts
 .endproc
 
@@ -8846,7 +8848,7 @@ L56E3:  dec     L56F8
         bpl     L56B4
         lda     selected_window_index
         beq     L56F0
-        jsr     reset_state2
+        jsr     reset_grafport3
 L56F0:  lda     #$00
         sta     bufnum
         jmp     DESKTOP_COPY_TO_BUF
@@ -8856,7 +8858,7 @@ L56F8:  .byte   0
 
 ;;; ==================================================
 
-L56F9:  sta     query_state_params2::id
+L56F9:  sta     getwinport_params2::id
         jsr     L4505
         jmp     L6E8E
 
@@ -8891,14 +8893,14 @@ L5721:  cpx     #$08
 L572D:  lda     #$00
         sta     L578C
 L5732:  jsr     get_input
-        lda     input_params_state
+        lda     event_params_kind
         cmp     #MGTK::key_down
         beq     L5743
         cmp     #MGTK::button_down
         bne     L5732
         jmp     L578B
 
-L5743:  lda     input_params_key
+L5743:  lda     event_params_key
         and     #$7F
         cmp     #KEY_RETURN
         beq     L578B
@@ -8959,12 +8961,12 @@ L578D:  .byte   0
 .proc cmd_scroll
         jsr     L5803
 loop:   jsr     get_input
-        lda     input_params_state
+        lda     event_params_kind
         cmp     #MGTK::button_down
         beq     done
         cmp     #MGTK::key_down
         bne     loop
-        lda     input_params_key
+        lda     event_params_key
         cmp     #KEY_RETURN
         beq     done
         cmp     #KEY_ESCAPE
@@ -9065,7 +9067,7 @@ L5863:  stx     L587D
         sta     $D20D
         inc     $D20D
         lda     #$02
-        sta     input_params
+        sta     event_params
         jsr     L5C54
         lda     $D20D
 L587C:  rts
@@ -9075,7 +9077,7 @@ L587E:  beq     L5891
         sta     $D20D
         dec     $D20D
         lda     #$02
-        sta     input_params
+        sta     event_params
         jsr     L5C54
         lda     $D20D
 L5891:  rts
@@ -9087,7 +9089,7 @@ L5893:  stx     L58AD
         sta     $D20D
         inc     $D20D
         lda     #$01
-        sta     input_params
+        sta     event_params
         jsr     L5C54
         lda     $D20D
 L58AC:  rts
@@ -9097,7 +9099,7 @@ L58AE:  beq     L58C1
         sta     $D20D
         dec     $D20D
         lda     #$01
-        sta     input_params
+        sta     event_params
         jsr     L5C54
         lda     $D20D
 L58C1:  rts
@@ -9308,7 +9310,7 @@ L5A4C:  jsr     redraw_windows_and_desktop
         dec     LDD9E
         lda     LE22F
         jsr     DESKTOP_FREE_SPACE
-        jsr     reset_state2
+        jsr     reset_grafport3
         DESKTOP_RELAY_CALL $04, LE22F
 L5A7F:  lda     buf3len
         sta     L5AC6
@@ -9405,10 +9407,10 @@ handle_client_click:
         sta     L5B1B
         ldx     #$03
 L5B31:  lda     $EBFD,x
-        sta     input_params_coords,x
+        sta     event_params_coords,x
         dex
         bpl     L5B31
-        MGTK_RELAY_CALL MGTK::FindControl, input_params_coords
+        MGTK_RELAY_CALL MGTK::FindControl, event_params_coords
         lda     $D20D
         bne     L5B4B
         jmp     L5CB7
@@ -9523,8 +9525,8 @@ L5C26:  jsr     DESKTOP_COPY_FROM_BUF
         jmp     DESKTOP_COPY_TO_BUF
 
 L5C31:  lda     $D20D
-        sta     input_params
-        MGTK_RELAY_CALL MGTK::TrackThumb, input_params
+        sta     event_params
+        MGTK_RELAY_CALL MGTK::TrackThumb, event_params
         lda     $D20E
         bne     L5C46
         rts
@@ -9536,29 +9538,29 @@ L5C46:  jsr     L5C54
         jmp     DESKTOP_COPY_TO_BUF
 
 L5C54:  lda     $D20D
-        sta     input_params+1
-        MGTK_RELAY_CALL MGTK::UpdateThumb, input_params
+        sta     event_params+1
+        MGTK_RELAY_CALL MGTK::UpdateThumb, event_params
         jsr     L6523
         jsr     L84D1
         bit     L5B1B
         bmi     L5C71
         jsr     L6E6E
 L5C71:  lda     desktop_active_winid
-        sta     query_state_params2::id
+        sta     getwinport_params2::id
         jsr     L44F2
-        MGTK_RELAY_CALL MGTK::PaintRect, query_state_buffer::cliprect_x1
-        jsr     reset_state2
+        MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect_x1
+        jsr     reset_grafport3
         jmp     L6C19
 
 L5C89:  sta     L5CB6
         jsr     L48F0
-        lda     input_params_state
+        lda     event_params_kind
         cmp     #MGTK::drag
         beq     L5C99
 L5C96:  lda     #$FF
         rts
 
-L5C99:  MGTK_RELAY_CALL MGTK::FindControl, input_params_coords
+L5C99:  MGTK_RELAY_CALL MGTK::FindControl, event_params_coords
         lda     query_client_params_part
         beq     L5C96
         cmp     #$03
@@ -9576,7 +9578,7 @@ L5CB7:  bit     L5B1B
 
 L5CBF:  lda     desktop_active_winid
         sta     $D20E
-        DESKTOP_RELAY_CALL $09, input_params_coords
+        DESKTOP_RELAY_CALL $09, event_params_coords
         lda     query_client_params_part
         bne     L5CDA
         jsr     L5F13
@@ -9612,7 +9614,7 @@ L5D0B:  ldx     is_file_selected
         lda     desktop_active_winid
         sta     selected_window_index
         lda     desktop_active_winid
-        sta     query_state_params2::id
+        sta     getwinport_params2::id
         jsr     L44F2
         lda     L5CD9
         sta     LE22F
@@ -9620,11 +9622,11 @@ L5D0B:  ldx     is_file_selected
         jsr     L6E8E
         DESKTOP_RELAY_CALL $02, LE22F
         lda     desktop_active_winid
-        sta     query_state_params2::id
+        sta     getwinport_params2::id
         jsr     L44F2
         lda     L5CD9
         jsr     L8893
-        jsr     reset_state2
+        jsr     reset_grafport3
         bit     double_click_flag
         bmi     L5D55
         jmp     L5DFC
@@ -9669,7 +9671,7 @@ L5DA6:  cpx     #$02
 L5DAD:  cpx     #$FF
         beq     L5DF7
         lda     desktop_active_winid
-        sta     query_state_params2::id
+        sta     getwinport_params2::id
         jsr     L44F2
         jsr     L6E52
         jsr     L6E8E
@@ -9685,11 +9687,11 @@ L5DC4:  txa
         dex
         bpl     L5DC4
         lda     desktop_active_winid
-        sta     query_state_params2::id
+        sta     getwinport_params2::id
         jsr     L44F2
         jsr     L6DB1
         jsr     L6E6E
-        jsr     reset_state2
+        jsr     reset_grafport3
 L5DEC:  jsr     DESKTOP_COPY_FROM_BUF
         lda     #$00
         sta     bufnum
@@ -9773,10 +9775,10 @@ L5E78:  sta     L5F0A
         sta     $D20E
         jsr     handle_inactive_window_click
 L5E8F:  lda     desktop_active_winid
-        sta     query_state_params2::id
+        sta     getwinport_params2::id
         jsr     L44F2
         jsr     L4904
-        MGTK_RELAY_CALL MGTK::PaintRect, query_state_buffer::cliprect_x1
+        MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect_x1
         ldx     desktop_active_winid
         dex
         lda     LEC26,x
@@ -9807,7 +9809,7 @@ L5ECB:  lda     ($06),y
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         lda     desktop_active_winid
-        sta     query_state_params2::id
+        sta     getwinport_params2::id
         jsr     L4505
         jsr     L78EF
         lda     #$00
@@ -9835,13 +9837,13 @@ L5F13:  lda     #<$D206
         sta     $06+1
         jsr     L60D5
         ldx     #$03
-L5F20:  lda     input_params_coords,x
+L5F20:  lda     event_params_coords,x
         sta     L5F0B,x
         sta     L5F0F,x
         dex
         bpl     L5F20
         jsr     L48F0
-        lda     input_params_state
+        lda     event_params_kind
         cmp     #MGTK::drag
         beq     L5F3F
         bit     BUTN0
@@ -9851,7 +9853,7 @@ L5F3E:  rts
 
 L5F3F:  jsr     clear_selection
         lda     desktop_active_winid
-        sta     query_state_params2::id
+        sta     getwinport_params2::id
         jsr     L4505
         jsr     L6E8E
         ldx     #$03
@@ -9864,14 +9866,14 @@ L5F50:  lda     L5F0B,x
         jsr     L48FA
         MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
 L5F6B:  jsr     L48F0
-        lda     input_params_state
+        lda     event_params_kind
         cmp     #MGTK::drag
         beq     L5FC5
         MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
         ldx     #$00
 L5F80:  cpx     buf3len
         bne     L5F88
-        jmp     reset_state2
+        jmp     reset_grafport3
 
 L5F88:  txa
         pha
@@ -9895,18 +9897,18 @@ L5FB9:  lda     LE22F
         jmp     L5F80
 
 L5FC5:  jsr     L60D5
-        lda     input_params_xcoord
+        lda     event_params_xcoord
         sec
         sbc     L60CF
         sta     L60CB
-        lda     input_params_xcoord+1
+        lda     event_params_xcoord+1
         sbc     L60D0
         sta     L60CC
-        lda     input_params_ycoord
+        lda     event_params_ycoord
         sec
         sbc     L60D1
         sta     L60CD
-        lda     input_params_ycoord+1
+        lda     event_params_ycoord+1
         sbc     L60D2
         sta     L60CE
         lda     L60CC
@@ -9931,59 +9933,59 @@ L600E:  lda     L60CB
 
 L601F:  MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
         ldx     #$03
-L602A:  lda     input_params_coords,x
+L602A:  lda     event_params_coords,x
         sta     L60CF,x
         dex
         bpl     L602A
-        lda     input_params_xcoord
+        lda     event_params_xcoord
         cmp     $E234
-        lda     input_params_xcoord+1
+        lda     event_params_xcoord+1
         sbc     $E235
         bpl     L6068
-        lda     input_params_xcoord
+        lda     event_params_xcoord
         cmp     rect_E230
-        lda     input_params_xcoord+1
+        lda     event_params_xcoord+1
         sbc     $E231
         bmi     L6054
         bit     L60D3
         bpl     L6068
-L6054:  lda     input_params_xcoord
+L6054:  lda     event_params_xcoord
         sta     rect_E230
-        lda     input_params_xcoord+1
+        lda     event_params_xcoord+1
         sta     $E231
         lda     #$80
         sta     L60D3
         jmp     L6079
 
-L6068:  lda     input_params_xcoord
+L6068:  lda     event_params_xcoord
         sta     $E234
-        lda     input_params_xcoord+1
+        lda     event_params_xcoord+1
         sta     $E235
         lda     #$00
         sta     L60D3
-L6079:  lda     input_params_ycoord
+L6079:  lda     event_params_ycoord
         cmp     $E236
-        lda     input_params_ycoord+1
+        lda     event_params_ycoord+1
         sbc     $E237
         bpl     L60AE
-        lda     input_params_ycoord
+        lda     event_params_ycoord
         cmp     $E232
-        lda     input_params_ycoord+1
+        lda     event_params_ycoord+1
         sbc     $E233
         bmi     L609A
         bit     L60D4
         bpl     L60AE
-L609A:  lda     input_params_ycoord
+L609A:  lda     event_params_ycoord
         sta     $E232
-        lda     input_params_ycoord+1
+        lda     event_params_ycoord+1
         sta     $E233
         lda     #$80
         sta     L60D4
         jmp     L60BF
 
-L60AE:  lda     input_params_ycoord
+L60AE:  lda     event_params_ycoord
         sta     $E236
-        lda     input_params_ycoord+1
+        lda     event_params_ycoord+1
         sta     $E237
         lda     #$00
         sta     L60D4
@@ -10007,11 +10009,11 @@ handle_title_click:
         jmp     L60DE
 
 L60DE:  lda     desktop_active_winid
-        sta     input_params
+        sta     event_params
         MGTK_RELAY_CALL MGTK::FrontWindow, desktop_active_winid
         lda     desktop_active_winid
         jsr     L8855
-        MGTK_RELAY_CALL MGTK::DragWindow, input_params
+        MGTK_RELAY_CALL MGTK::DragWindow, event_params
         lda     desktop_active_winid
         jsr     window_lookup
         sta     $06
@@ -10096,8 +10098,8 @@ L619A:  .byte   0
 
 handle_resize_click:
         lda     desktop_active_winid
-        sta     input_params
-        MGTK_RELAY_CALL MGTK::GrowWindow, input_params
+        sta     event_params
+        MGTK_RELAY_CALL MGTK::GrowWindow, event_params
         jsr     redraw_windows_and_desktop
         lda     desktop_active_winid
         sta     bufnum
@@ -10108,12 +10110,12 @@ handle_resize_click:
         lda     #$00
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
-        jmp     reset_state2
+        jmp     reset_grafport3
 
 handle_close_click:
         lda     desktop_active_winid
-        MGTK_RELAY_CALL MGTK::TrackGoAway, close_click_params
-        lda     close_click_params::clicked
+        MGTK_RELAY_CALL MGTK::TrackGoAway, trackgoaway_params
+        lda     trackgoaway_params::goaway
         bne     L61DC
         rts
 
@@ -10169,7 +10171,7 @@ L6227:  sta     buf3len
         sta     selected_window_index
         jsr     L8997
         DESKTOP_RELAY_CALL $02, LE22F
-        jsr     reset_state2
+        jsr     reset_grafport3
         lda     #$01
         sta     is_file_selected
         lda     LE22F
@@ -10299,11 +10301,11 @@ L638C:  jsr     L650F
         sty     L63E9
         jsr     L644C
         sta     L63E8
-        lda     query_state_buffer::cliprect_y1
+        lda     grafport2::cliprect_y1
         sec
         sbc     L63E8
         sta     L63EA
-        lda     query_state_buffer::cliprect_y1+1
+        lda     grafport2::cliprect_y1+1
         sbc     #$00
         sta     L63EB
         lda     L63EA
@@ -10317,15 +10319,15 @@ L638C:  jsr     L650F
 
 L63C1:  lda     L7B61
         ldx     L7B62
-L63C7:  sta     query_state_buffer::cliprect_y1
-        stx     query_state_buffer::cliprect_y1+1
-        lda     query_state_buffer::cliprect_y1
+L63C7:  sta     grafport2::cliprect_y1
+        stx     grafport2::cliprect_y1+1
+        lda     grafport2::cliprect_y1
         clc
         adc     L63E9
-        sta     query_state_buffer::height
-        lda     query_state_buffer::cliprect_y1+1
+        sta     grafport2::height
+        lda     grafport2::cliprect_y1+1
         adc     #$00
-        sta     query_state_buffer::height+1
+        sta     grafport2::height+1
         jsr     L653E
         jsr     L6DB1
         jmp     L6556
@@ -10338,11 +10340,11 @@ L63EC:  jsr     L650F
         sty     L6449
         jsr     L644C
         sta     L6448
-        lda     query_state_buffer::height
+        lda     grafport2::height
         clc
         adc     L6448
         sta     L644A
-        lda     query_state_buffer::height+1
+        lda     grafport2::height+1
         adc     #$00
         sta     L644B
         lda     L644A
@@ -10356,15 +10358,15 @@ L63EC:  jsr     L650F
 
 L6421:  lda     L7B65
         ldx     L7B66
-L6427:  sta     query_state_buffer::height
-        stx     query_state_buffer::height+1
-        lda     query_state_buffer::height
+L6427:  sta     grafport2::height
+        stx     grafport2::height+1
+        lda     grafport2::height
         sec
         sbc     L6449
-        sta     query_state_buffer::cliprect_y1
-        lda     query_state_buffer::height+1
+        sta     grafport2::cliprect_y1
+        lda     grafport2::height+1
         sbc     #$00
-        sta     query_state_buffer::cliprect_y1+1
+        sta     grafport2::cliprect_y1+1
         jsr     L653E
         jsr     L6DB1
         jmp     L6556
@@ -10381,11 +10383,11 @@ L644C:  tya
 L6451:  jsr     L650F
         sta     L64AC
         stx     L64AD
-        lda     query_state_buffer::cliprect_x1
+        lda     grafport2::cliprect_x1
         sec
         sbc     L64AC
         sta     L64AE
-        lda     query_state_buffer::cliprect_x1+1
+        lda     grafport2::cliprect_x1+1
         sbc     L64AD
         sta     L64AF
         lda     L64AE
@@ -10399,15 +10401,15 @@ L6451:  jsr     L650F
 
 L6484:  lda     L7B5F
         ldx     L7B60
-L648A:  sta     query_state_buffer::cliprect_x1
-        stx     query_state_buffer::cliprect_x1+1
-        lda     query_state_buffer::cliprect_x1
+L648A:  sta     grafport2::cliprect_x1
+        stx     grafport2::cliprect_x1+1
+        lda     grafport2::cliprect_x1
         clc
         adc     L64AC
-        sta     query_state_buffer::width
-        lda     query_state_buffer::cliprect_x1+1
+        sta     grafport2::width
+        lda     grafport2::cliprect_x1+1
         adc     L64AD
-        sta     query_state_buffer::width+1
+        sta     grafport2::width+1
         jsr     L653E
         jsr     L6DB1
         jmp     L6556
@@ -10419,11 +10421,11 @@ L64AF:  .byte   0
 L64B0:  jsr     L650F
         sta     L650B
         stx     L650C
-        lda     query_state_buffer::width
+        lda     grafport2::width
         clc
         adc     L650B
         sta     L650D
-        lda     query_state_buffer::width+1
+        lda     grafport2::width+1
         adc     L650C
         sta     L650E
         lda     L650D
@@ -10437,15 +10439,15 @@ L64B0:  jsr     L650F
 
 L64E3:  lda     L7B63
         ldx     L7B64
-L64E9:  sta     query_state_buffer::width
-        stx     query_state_buffer::width+1
-        lda     query_state_buffer::width
+L64E9:  sta     grafport2::width
+        stx     grafport2::width+1
+        lda     grafport2::width
         sec
         sbc     L650B
-        sta     query_state_buffer::cliprect_x1
-        lda     query_state_buffer::width+1
+        sta     grafport2::cliprect_x1
+        lda     grafport2::width+1
         sbc     L650C
-        sta     query_state_buffer::cliprect_x1+1
+        sta     grafport2::cliprect_x1+1
         jsr     L653E
         jsr     L6DB1
         jmp     L6556
@@ -10472,7 +10474,7 @@ L6523:  lda     desktop_active_winid
         sta     $06+1
         ldy     #$25
 L6535:  lda     ($06),y
-        sta     query_state_buffer,y
+        sta     grafport2,y
         dey
         bpl     L6535
         rts
@@ -10483,7 +10485,7 @@ L653E:  lda     desktop_active_winid
         stx     $06+1
         ldy     #$23
         ldx     #$07
-L654C:  lda     query_state_buffer::cliprect_x1,x
+L654C:  lda     grafport2::cliprect_x1,x
         sta     ($06),y
         dey
         dex
@@ -10493,8 +10495,8 @@ L654C:  lda     query_state_buffer::cliprect_x1,x
 L6556:  bit     L5B1B
         bmi     L655E
         jsr     L6E6E
-L655E:  MGTK_RELAY_CALL MGTK::PaintRect, query_state_buffer::cliprect_x1
-        jsr     reset_state2
+L655E:  MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect_x1
+        jsr     reset_grafport3
         jmp     L6C19
 
 L656D:  lda     desktop_active_winid
@@ -10525,19 +10527,19 @@ L656D:  lda     desktop_active_winid
         lsr     L6603
         ror     L6602
         ldx     L6602
-        lda     query_state_buffer::cliprect_x1
+        lda     grafport2::cliprect_x1
         sec
         sbc     L7B5F
         sta     L6602
-        lda     query_state_buffer::cliprect_x1+1
+        lda     grafport2::cliprect_x1+1
         sbc     L7B60
         sta     L6603
         bpl     L65D0
         lda     #$00
         beq     L65EB
-L65D0:  lda     query_state_buffer::width
+L65D0:  lda     grafport2::width
         cmp     L7B63
-        lda     query_state_buffer::width+1
+        lda     grafport2::width+1
         sbc     L7B64
         bmi     L65E2
         tya
@@ -10547,10 +10549,10 @@ L65E2:  lsr     L6603
         ror     L6602
         lda     L6602
 L65EB:  jsr     L62BC
-L65EE:  sta     input_params+1
+L65EE:  sta     event_params+1
         lda     #$02
-        sta     input_params
-        MGTK_RELAY_CALL MGTK::UpdateThumb, input_params
+        sta     event_params
+        MGTK_RELAY_CALL MGTK::UpdateThumb, event_params
         rts
 
 L6600:  .byte   0
@@ -10586,19 +10588,19 @@ L6604:  lda     desktop_active_winid
         lsr     L66A1
         ror     L66A0
         ldx     L66A0
-        lda     query_state_buffer::cliprect_y1
+        lda     grafport2::cliprect_y1
         sec
         sbc     L7B61
         sta     L66A0
-        lda     query_state_buffer::cliprect_y1+1
+        lda     grafport2::cliprect_y1+1
         sbc     L7B62
         sta     L66A1
         bpl     L6669
         lda     #$00
         beq     L668A
-L6669:  lda     query_state_buffer::height
+L6669:  lda     grafport2::height
         cmp     L7B65
-        lda     query_state_buffer::height+1
+        lda     grafport2::height+1
         sbc     L7B66
         bmi     L667B
         tya
@@ -10610,10 +10612,10 @@ L667B:  lsr     L66A1
         ror     L66A0
         lda     L66A0
 L668A:  jsr     L62BC
-L668D:  sta     input_params+1
+L668D:  sta     event_params+1
         lda     #$01
-        sta     input_params
-        MGTK_RELAY_CALL MGTK::UpdateThumb, input_params
+        sta     event_params
+        MGTK_RELAY_CALL MGTK::UpdateThumb, event_params
         rts
 
 L669F:  .byte   0
@@ -10826,20 +10828,20 @@ L6893:  txa
         bpl     L6893
         rts
 
-L68AA:  jsr     reset_state2
+L68AA:  jsr     reset_grafport3
         bit     BUTN0
         bpl     L68B3
         rts
 
 L68B3:  jsr     clear_selection
         ldx     #$03
-L68B8:  lda     input_params_coords,x
+L68B8:  lda     event_params_coords,x
         sta     rect_E230,x
         sta     $E234,x
         dex
         bpl     L68B8
         jsr     L48F0
-        lda     input_params_state
+        lda     event_params_kind
         cmp     #MGTK::drag
         beq     L68CF
         rts
@@ -10848,7 +10850,7 @@ L68CF:  MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern3
         jsr     L48FA
         MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
 L68E4:  jsr     L48F0
-        lda     input_params_state
+        lda     event_params_kind
         cmp     #MGTK::drag
         beq     L6932
         MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
@@ -10875,18 +10877,18 @@ L692C:  pla
         inx
         jmp     L68F9
 
-L6932:  lda     input_params_xcoord
+L6932:  lda     event_params_xcoord
         sec
         sbc     L6A39
         sta     L6A35
-        lda     input_params_xcoord+1
+        lda     event_params_xcoord+1
         sbc     L6A3A
         sta     L6A36
-        lda     input_params_ycoord
+        lda     event_params_ycoord
         sec
         sbc     L6A3B
         sta     L6A37
-        lda     input_params_ycoord+1
+        lda     event_params_ycoord+1
         sbc     L6A3C
         sta     L6A38
         lda     L6A36
@@ -10911,59 +10913,59 @@ L6978:  lda     L6A35
 
 L6989:  MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
         ldx     #$03
-L6994:  lda     input_params_coords,x
+L6994:  lda     event_params_coords,x
         sta     L6A39,x
         dex
         bpl     L6994
-        lda     input_params_xcoord
+        lda     event_params_xcoord
         cmp     $E234
-        lda     input_params_xcoord+1
+        lda     event_params_xcoord+1
         sbc     $E235
         bpl     L69D2
-        lda     input_params_xcoord
+        lda     event_params_xcoord
         cmp     rect_E230
-        lda     input_params_xcoord+1
+        lda     event_params_xcoord+1
         sbc     $E231
         bmi     L69BE
         bit     L6A3D
         bpl     L69D2
-L69BE:  lda     input_params_xcoord
+L69BE:  lda     event_params_xcoord
         sta     rect_E230
-        lda     input_params_xcoord+1
+        lda     event_params_xcoord+1
         sta     $E231
         lda     #$80
         sta     L6A3D
         jmp     L69E3
 
-L69D2:  lda     input_params_xcoord
+L69D2:  lda     event_params_xcoord
         sta     $E234
-        lda     input_params_xcoord+1
+        lda     event_params_xcoord+1
         sta     $E235
         lda     #$00
         sta     L6A3D
-L69E3:  lda     input_params_ycoord
+L69E3:  lda     event_params_ycoord
         cmp     $E236
-        lda     input_params_ycoord+1
+        lda     event_params_ycoord+1
         sbc     $E237
         bpl     L6A18
-        lda     input_params_ycoord
+        lda     event_params_ycoord
         cmp     $E232
-        lda     input_params_ycoord+1
+        lda     event_params_ycoord+1
         sbc     $E233
         bmi     L6A04
         bit     L6A3E
         bpl     L6A18
-L6A04:  lda     input_params_ycoord
+L6A04:  lda     event_params_ycoord
         sta     $E232
-        lda     input_params_ycoord+1
+        lda     event_params_ycoord+1
         sta     $E233
         lda     #$80
         sta     L6A3E
         jmp     L6A29
 
-L6A18:  lda     input_params_ycoord
+L6A18:  lda     event_params_ycoord
         sta     $E236
-        lda     input_params_ycoord+1
+        lda     event_params_ycoord+1
         sta     $E237
         lda     #$00
         sta     L6A3E
@@ -11048,7 +11050,7 @@ L6AA7:  stx     bufnum
         ldy     #$02
         lda     ($06),y
         and     #$0F
-        sta     query_state_params2::id
+        sta     getwinport_params2::id
         beq     L6AD8
         cmp     desktop_active_winid
         bne     L6AEF
@@ -11056,11 +11058,11 @@ L6AA7:  stx     bufnum
         lda     LE6BE
         jsr     L8915
 L6AD8:  DESKTOP_RELAY_CALL $03, LE6BE
-        lda     query_state_params2::id
+        lda     getwinport_params2::id
         beq     L6AEF
         lda     LE6BE
         jsr     L8893
-        jsr     reset_state2
+        jsr     reset_grafport3
 L6AEF:  lda     LE6BE
         ldx     $E1F1
         dex
@@ -11127,7 +11129,7 @@ L6B68:  lda     #$01
         ldy     #$02
         lda     ($06),y
         and     #$0F
-        sta     query_state_params2::id
+        sta     getwinport_params2::id
         beq     L6BA1
         cmp     desktop_active_winid
         bne     L6BB8
@@ -11136,18 +11138,18 @@ L6B68:  lda     #$01
         lda     LE6BE
         jsr     L8915
 L6BA1:  DESKTOP_RELAY_CALL $03, LE6BE
-        lda     query_state_params2::id
+        lda     getwinport_params2::id
         beq     L6BB8
         lda     LE6BE
         jsr     L8893
-        jsr     reset_state2
+        jsr     reset_grafport3
 L6BB8:  jsr     L744B
         lda     bufnum
         jsr     window_lookup
         ldy     #$38
         jsr     MGTK_RELAY
         lda     desktop_active_winid
-        sta     query_state_params2::id
+        sta     getwinport_params2::id
         jsr     L44F2
         jsr     L78EF
         jsr     L6E52
@@ -11172,7 +11174,7 @@ L6BF4:  lda     bufnum
         lda     #$00
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
-        jmp     reset_state2
+        jmp     reset_grafport3
 
 L6C0E:  .byte   0
 L6C0F:  MGTK_RELAY_CALL MGTK::CheckItem, LE267
@@ -11186,13 +11188,13 @@ L6C19:  ldx     bufnum
 
 L6C25:  jsr     push_zp_addrs
         lda     bufnum
-        sta     query_state_params2::id
+        sta     getwinport_params2::id
         jsr     L44F2
         bit     L4152
         bmi     L6C39
         jsr     L78EF
 L6C39:  lda     bufnum
-        sta     query_state_params2::id
+        sta     getwinport_params2::id
         jsr     L4505
 L6C42:  bit     L4152
         bmi     L6C4A
@@ -11250,13 +11252,13 @@ L6CB0:  lda     L6CCC
         inc     L6CCC
         jmp     L6CB0
 
-L6CC5:  jsr     reset_state2
+L6CC5:  jsr     reset_grafport3
         jsr     pop_zp_addrs
         rts
 
 L6CCC:  .byte   0
 L6CCD:  lda     bufnum
-        sta     query_state_params2::id
+        sta     getwinport_params2::id
         jsr     L44F2
         bit     L4152
         bmi     L6CDE
@@ -11264,7 +11266,7 @@ L6CCD:  lda     bufnum
 L6CDE:  jsr     L6E52
         jsr     L6E8E
         ldx     #$07
-L6CE6:  lda     query_state_buffer::cliprect_x1,x
+L6CE6:  lda     grafport2::cliprect_x1,x
         sta     rect_E230,x
         dex
         bpl     L6CE6
@@ -11274,9 +11276,9 @@ L6CE6:  lda     query_state_buffer::cliprect_x1,x
 L6CF3:  cpx     buf3len
         bne     L6D09
         pla
-        jsr     reset_state2
+        jsr     reset_grafport3
         lda     bufnum
-        sta     query_state_params2::id
+        sta     getwinport_params2::id
         jsr     L44F2
         jsr     L6E6E
         rts
@@ -11309,7 +11311,7 @@ L6D31:  lda     #$00
         lda     #$00
         sta     rect_E230
         beq     L6D56
-L6D4D:  sta     query_state_params2::id
+L6D4D:  sta     getwinport_params2::id
         jsr     L44F2
         jsr     L6E8E
 L6D56:  lda     L6DB0
@@ -11343,7 +11345,7 @@ L6DA1:  sta     selected_file_index,x
         bpl     L6DA1
         sta     is_file_selected
         sta     selected_window_index
-        jmp     reset_state2
+        jmp     reset_grafport3
 
 L6DB0:  .byte   0
 L6DB1:  ldx     desktop_active_winid
@@ -11357,56 +11359,56 @@ L6DC0:  jsr     L6E52
         jsr     L7B6B
         jsr     L6E6E
 L6DC9:  lda     desktop_active_winid
-        sta     query_state_params2::id
+        sta     getwinport_params2::id
         jsr     L44F2
         lda     L7B5F
-        cmp     query_state_buffer::cliprect_x1
+        cmp     grafport2::cliprect_x1
         lda     L7B60
-        sbc     query_state_buffer::cliprect_x1+1
+        sbc     grafport2::cliprect_x1+1
         bmi     L6DFE
-        lda     query_state_buffer::width
+        lda     grafport2::width
         cmp     L7B63
-        lda     query_state_buffer::width+1
+        lda     grafport2::width+1
         sbc     L7B64
         bmi     L6DFE
         lda     #$02
-        sta     input_params
+        sta     event_params
         lda     #$00
-        sta     input_params+1
+        sta     event_params+1
         jsr     L6E48
         jmp     L6E0E
 
 L6DFE:  lda     #$02
-        sta     input_params
+        sta     event_params
         lda     #$01
-        sta     input_params+1
+        sta     event_params+1
         jsr     L6E48
         jsr     L656D
 L6E0E:  lda     L7B61
-        cmp     query_state_buffer::cliprect_y1
+        cmp     grafport2::cliprect_y1
         lda     L7B62
-        sbc     query_state_buffer::cliprect_y1+1
+        sbc     grafport2::cliprect_y1+1
         bmi     L6E38
-        lda     query_state_buffer::height
+        lda     grafport2::height
         cmp     L7B65
-        lda     query_state_buffer::height+1
+        lda     grafport2::height+1
         sbc     L7B66
         bmi     L6E38
         lda     #$01
-        sta     input_params
+        sta     event_params
         lda     #$00
-        sta     input_params+1
+        sta     event_params+1
         jsr     L6E48
         rts
 
 L6E38:  lda     #$01
-        sta     input_params
+        sta     event_params
         lda     #$01
-        sta     input_params+1
+        sta     event_params+1
         jsr     L6E48
         jmp     L6604
 
-L6E48:  MGTK_RELAY_CALL MGTK::ActivateCtl, input_params ; ???
+L6E48:  MGTK_RELAY_CALL MGTK::ActivateCtl, event_params ; ???
         rts
 
 L6E52:  lda     #$00
@@ -11441,23 +11443,23 @@ L6E8A:  lda     #$80
         beq     L6E90
 L6E8E:  lda     #$00
 L6E90:  sta     L6EC4
-        lda     query_state_buffer::top
+        lda     grafport2::top
         clc
         adc     #$0F
-        sta     query_state_buffer::top
-        lda     query_state_buffer::top+1
+        sta     grafport2::top
+        lda     grafport2::top+1
         adc     #$00
-        sta     query_state_buffer::top+1
-        lda     query_state_buffer::cliprect_y1
+        sta     grafport2::top+1
+        lda     grafport2::cliprect_y1
         clc
         adc     #$0F
-        sta     query_state_buffer::cliprect_y1
-        lda     query_state_buffer::cliprect_y1+1
+        sta     grafport2::cliprect_y1
+        lda     grafport2::cliprect_y1+1
         adc     #$00
-        sta     query_state_buffer::cliprect_y1+1
+        sta     grafport2::cliprect_y1+1
         bit     L6EC4
         bmi     L6EC3
-        MGTK_RELAY_CALL MGTK::SetPort, query_state_buffer
+        MGTK_RELAY_CALL MGTK::SetPort, grafport2
 L6EC3:  rts
 
 L6EC4:  .byte   0
@@ -12662,28 +12664,28 @@ L78C2:  lda     LFB04           ; ???
         rts
 
 L78EE:  .byte   0
-L78EF:  lda     query_state_buffer::cliprect_x1
+L78EF:  lda     grafport2::cliprect_x1
         sta     LEBBE           ; Directory header line (items / k in disk)
         clc
         adc     #$05
         sta     items_label_pos
-        lda     query_state_buffer::cliprect_x1+1
+        lda     grafport2::cliprect_x1+1
         sta     $EBBF
         adc     #$00
         sta     $EBBB
-        lda     query_state_buffer::cliprect_y1
+        lda     grafport2::cliprect_y1
         clc
         adc     #$0C
         sta     $EBC0
         sta     $EBC4
-        lda     query_state_buffer::cliprect_y1+1
+        lda     grafport2::cliprect_y1+1
         adc     #$00
         sta     $EBC1
         sta     $EBC5
         MGTK_RELAY_CALL MGTK::MoveTo, LEBBE
-        lda     query_state_buffer::width
+        lda     grafport2::width
         sta     LEBC2
-        lda     query_state_buffer::width+1
+        lda     grafport2::width+1
         sta     $EBC3
         jsr     L48FA
         MGTK_RELAY_CALL MGTK::LineTo, LEBC2
@@ -12698,11 +12700,11 @@ L78EF:  lda     query_state_buffer::cliprect_x1
         sta     $EBC5
         MGTK_RELAY_CALL MGTK::MoveTo, LEBBE
         MGTK_RELAY_CALL MGTK::LineTo, LEBC2
-        lda     query_state_buffer::cliprect_y1
+        lda     grafport2::cliprect_y1
         clc
         adc     #$0A
         sta     items_label_pos+2
-        lda     query_state_buffer::cliprect_y1+1
+        lda     grafport2::cliprect_y1+1
         adc     #$00
         sta     items_label_pos+3
         lda     buf3len
@@ -12750,12 +12752,12 @@ L79A7:  jsr     L79F7
         addr_call draw_text2, str_k_available
         rts
 
-L79F7:  lda     query_state_buffer::width
+L79F7:  lda     grafport2::width
         sec
-        sbc     query_state_buffer::cliprect_x1
+        sbc     grafport2::cliprect_x1
         sta     L7ADE
-        lda     query_state_buffer::width+1
-        sbc     query_state_buffer::cliprect_x1+1
+        lda     grafport2::width+1
+        sbc     grafport2::cliprect_x1+1
         sta     L7ADF
         lda     L7ADE
         sec
@@ -12817,17 +12819,17 @@ L7A86:  lda     LEBE3
         sta     LEBEF+1
 L7A9E:  lda     LEBEB
         clc
-        adc     query_state_buffer::cliprect_x1
+        adc     grafport2::cliprect_x1
         sta     LEBEB
         lda     LEBEB+1
-        adc     query_state_buffer::cliprect_x1+1
+        adc     grafport2::cliprect_x1+1
         sta     LEBEB+1
         lda     LEBEF
         clc
-        adc     query_state_buffer::cliprect_x1
+        adc     grafport2::cliprect_x1
         sta     LEBEF
         lda     LEBEF+1
-        adc     query_state_buffer::cliprect_x1+1
+        adc     grafport2::cliprect_x1+1
         sta     LEBEF+1
         lda     items_label_pos+2
         sta     LEBEB+2
@@ -13636,9 +13638,9 @@ L81AC:  lda     $E6E7
         bcc     L81BB
         inc     $E6E8
 L81BB:  lda     $E6DB
-        cmp     query_state_buffer::height
+        cmp     grafport2::height
         lda     $E6DC
-        sbc     query_state_buffer::height+1
+        sbc     grafport2::height+1
         bmi     L81D9
         lda     $E6DB
         clc
@@ -13655,9 +13657,9 @@ L81D9:  lda     $E6DB
         bcc     L81E8
         inc     $E6DC
 L81E8:  lda     $E6DB
-        cmp     query_state_buffer::cliprect_y1
+        cmp     grafport2::cliprect_y1
         lda     $E6DC
-        sbc     query_state_buffer::cliprect_y1+1
+        sbc     grafport2::cliprect_y1+1
         bpl     L81F7
         rts
 
@@ -13965,21 +13967,21 @@ L84D1:  jsr     push_zp_addrs
         bit     L5B1B
         bmi     L84DC
         jsr     L6E52
-L84DC:  lda     query_state_buffer::width
+L84DC:  lda     grafport2::width
         sec
-        sbc     query_state_buffer::cliprect_x1
+        sbc     grafport2::cliprect_x1
         sta     L85F8
-        lda     query_state_buffer::width+1
-        sbc     query_state_buffer::cliprect_x1+1
+        lda     grafport2::width+1
+        sbc     grafport2::cliprect_x1+1
         sta     L85F9
-        lda     query_state_buffer::height
+        lda     grafport2::height
         sec
-        sbc     query_state_buffer::cliprect_y1
+        sbc     grafport2::cliprect_y1
         sta     L85FA
-        lda     query_state_buffer::height+1
-        sbc     query_state_buffer::cliprect_y1+1
+        lda     grafport2::height+1
+        sbc     grafport2::cliprect_y1+1
         sta     L85FB
-        lda     input_params_state
+        lda     event_params_kind
         cmp     #MGTK::button_down
         bne     L850C
         asl     a
@@ -14026,7 +14028,7 @@ L8562:  lsr     L85F3
         tay
         pla
         tax
-        lda     input_params+1
+        lda     event_params+1
         jsr     L62BC
         ldx     #$00
         stx     L85F2
@@ -14037,10 +14039,10 @@ L8562:  lsr     L85F3
         ldx     L85F1
         clc
         adc     L7B5F,x
-        sta     query_state_buffer::cliprect_x1,x
+        sta     grafport2::cliprect_x1,x
         lda     L85F2
         adc     L7B60,x
-        sta     query_state_buffer::cliprect_x1+1,x
+        sta     grafport2::cliprect_x1+1,x
         lda     desktop_active_winid
         jsr     L7D5D
         sta     L85F4
@@ -14048,29 +14050,29 @@ L8562:  lsr     L85F3
         sty     L85F6
         lda     L85F1
         beq     L85C3
-        lda     query_state_buffer::cliprect_y1
+        lda     grafport2::cliprect_y1
         clc
         adc     L85F6
-        sta     query_state_buffer::height
-        lda     query_state_buffer::cliprect_y1+1
+        sta     grafport2::height
+        lda     grafport2::cliprect_y1+1
         adc     #$00
-        sta     query_state_buffer::height+1
+        sta     grafport2::height+1
         jmp     L85D6
 
-L85C3:  lda     query_state_buffer::cliprect_x1
+L85C3:  lda     grafport2::cliprect_x1
         clc
         adc     L85F4
-        sta     query_state_buffer::width
-        lda     query_state_buffer::cliprect_x1+1
+        sta     grafport2::width
+        lda     grafport2::cliprect_x1+1
         adc     L85F5
-        sta     query_state_buffer::width+1
+        sta     grafport2::width+1
 L85D6:  lda     desktop_active_winid
         jsr     window_lookup
         sta     $06
         stx     $06+1
         ldy     #$23
         ldx     #$07
-L85E4:  lda     query_state_buffer::cliprect_x1,x
+L85E4:  lda     grafport2::cliprect_x1,x
         sta     ($06),y
         dey
         dex
@@ -14101,7 +14103,7 @@ L85FB:  .byte   0
 
         ;; Stash initial coords
         ldx     #3
-:       lda     input_params_coords,x
+:       lda     event_params_coords,x
         sta     coords,x
         sta     $EBFD,x
         dex
@@ -14130,7 +14132,7 @@ loop:   dec     counter
         lda     #$FF            ; ???
         sta     unused
 
-        lda     input_params_state
+        lda     event_params_kind
         sta     state           ; unused ???
 
         cmp     #MGTK::no_event
@@ -14154,11 +14156,11 @@ exit:   lda     #$FF            ; not double-click
         ;; Is the new coord within range of the old coord?
 .proc check_delta
         ;; compute x delta
-        lda     input_params_xcoord
+        lda     event_params_xcoord
         sec
         sbc     xcoord
         sta     delta
-        lda     input_params_xcoord+1
+        lda     event_params_xcoord+1
         sbc     xcoord+1
         bpl     :+
 
@@ -14175,11 +14177,11 @@ fail:   lda     #$FF
         bcs     fail
 
         ;; compute y delta
-check_y:lda     input_params_ycoord
+check_y:lda     event_params_ycoord
         sec
         sbc     ycoord
         sta     delta
-        lda     input_params_ycoord+1
+        lda     event_params_ycoord+1
         sbc     ycoord+1
         bpl     :+
 
@@ -14684,13 +14686,13 @@ L8996:  .byte   0
 
 L8997:  lda     #$00
         tax
-L899A:  sta     state1::cliprect_x1,x
-        sta     state1::left,x
-        sta     state1::width,x
+L899A:  sta     grafport5::cliprect_x1,x
+        sta     grafport5::left,x
+        sta     grafport5::width,x
         inx
         cpx     #$04
         bne     L899A
-        MGTK_RELAY_CALL MGTK::SetPort, state1
+        MGTK_RELAY_CALL MGTK::SetPort, grafport5
         rts
 
 ;;; ==================================================
@@ -14935,7 +14937,7 @@ L8B62:  sty     L8D4A
         tay
         ldx     #$23
 L8B7B:  lda     ($06),y
-        sta     query_state_buffer,x
+        sta     grafport2,x
         dey
         dex
         bpl     L8B7B
@@ -14967,24 +14969,24 @@ L8B7B:  lda     ($06),y
         sta     $0807
         ldy     #$5B
         ldx     #$03
-L8BC1:  lda     query_state_buffer,x
+L8BC1:  lda     grafport2,x
         sta     L0800,y
         dey
         dex
         bpl     L8BC1
-        lda     query_state_buffer::width
+        lda     grafport2::width
         sec
-        sbc     query_state_buffer::cliprect_x1
+        sbc     grafport2::cliprect_x1
         sta     L8D54
-        lda     query_state_buffer::width+1
-        sbc     query_state_buffer::cliprect_x1+1
+        lda     grafport2::width+1
+        sbc     grafport2::cliprect_x1+1
         sta     L8D55
-        lda     query_state_buffer::height
+        lda     grafport2::height
         sec
-        sbc     query_state_buffer::cliprect_y1
+        sbc     grafport2::cliprect_y1
         sta     L8D56
-        lda     query_state_buffer::height+1
-        sbc     query_state_buffer::cliprect_y1+1
+        lda     grafport2::height+1
+        sbc     grafport2::cliprect_y1+1
         sta     L8D57
         lda     $0858
         clc
@@ -15142,7 +15144,7 @@ L8D57:  .byte   0
 
 L8D58:  lda     #$00
         sta     L8DB2
-        jsr     reset_state2
+        jsr     reset_grafport3
         MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern3
         jsr     L48FA
 L8D6C:  lda     L8DB2
@@ -15190,7 +15192,7 @@ L8DB2:  .byte   0
 
 L8DB3:  lda     #$0B
         sta     L8E0F
-        jsr     reset_state2
+        jsr     reset_grafport3
         MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern3
         jsr     L48FA
 L8DC7:  lda     L8E0F
@@ -15711,8 +15713,8 @@ L91CE:  .byte   0
 L91D1:  stx     $E00A
         rts
 
-L91D5:  yax_call JT_MGTK_RELAY, MGTK::InitPort, state2
-        yax_call JT_MGTK_RELAY, MGTK::SetPort, state2
+L91D5:  yax_call JT_MGTK_RELAY, MGTK::InitPort, grafport3
+        yax_call JT_MGTK_RELAY, MGTK::SetPort, grafport3
         rts
 
 L91E8:  jsr     JT_REDRAW_ALL
@@ -17779,19 +17781,19 @@ ref_num:.byte   0
 LA3A7:  yax_call JT_MLI_RELAY, CLOSE, close_params4
         lda     selected_window_index
         beq     LA3CA
-        sta     query_state_params2::id
-        yax_call JT_MGTK_RELAY, MGTK::GetWinPort, query_state_params2
-        yax_call JT_MGTK_RELAY, MGTK::SetPort, query_state_buffer
+        sta     getwinport_params2::id
+        yax_call JT_MGTK_RELAY, MGTK::GetWinPort, getwinport_params2
+        yax_call JT_MGTK_RELAY, MGTK::SetPort, grafport2
 LA3CA:  ldx     L9188
         txs
         lda     #$FF
         rts
 
-LA3D1:  yax_call JT_MGTK_RELAY, MGTK::GetEvent, input_params
-        lda     input_params_state
+LA3D1:  yax_call JT_MGTK_RELAY, MGTK::GetEvent, event_params
+        lda     event_params_kind
         cmp     #MGTK::key_down
         bne     LA3EC
-        lda     input_params_key
+        lda     event_params_key
         cmp     #KEY_ESCAPE
         bne     LA3EC
         lda     #$FF
@@ -17970,8 +17972,8 @@ prompt_input_loop:  lda     LD8E8
         jsr     LB8F5
         lda     #$14
         sta     LD8E9
-LA579:  MGTK_RELAY_CALL MGTK::GetEvent, input_params
-        lda     input_params_state
+LA579:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
+        lda     event_params_kind
         cmp     #MGTK::button_down
         bne     LA58C
         jmp     LA5EE
@@ -17982,8 +17984,8 @@ LA58C:  cmp     #MGTK::key_down
 
 LA593:  lda     LD8E8
         beq     prompt_input_loop
-        MGTK_RELAY_CALL MGTK::FindWindow, input_params_coords
-        lda     query_target_params_element
+        MGTK_RELAY_CALL MGTK::FindWindow, event_params_coords
+        lda     findwindow_params_element
         bne     LA5A9
         jmp     prompt_input_loop
 
@@ -17995,8 +17997,8 @@ LA5A9:  lda     $D20E
 LA5B4:  lda     winF
         jsr     LB7B9
         lda     winF
-        sta     input_params
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, input_params
+        sta     event_params
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
 LA5D2:  MGTK_RELAY_CALL MGTK::InRect, LD6AB
         cmp     #$80
@@ -18008,8 +18010,8 @@ LA5E5:  jsr     set_cursor_pointer_with_flag
 LA5E8:  jsr     reset_state
         jmp     prompt_input_loop
 
-LA5EE:  MGTK_RELAY_CALL MGTK::FindWindow, input_params_coords
-        lda     query_target_params_element
+LA5EE:  MGTK_RELAY_CALL MGTK::FindWindow, event_params_coords
+        lda     findwindow_params_element
         bne     LA5FF
         lda     #$FF
         rts
@@ -18030,8 +18032,8 @@ LA609:  lda     $D20E
 LA614:  lda     winF
         jsr     LB7B9
         lda     winF
-        sta     input_params
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, input_params
+        sta     event_params
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
         bit     LD8E7
         bvc     LA63A
@@ -18105,10 +18107,10 @@ LA6F7:  jsr     LB9B8
         lda     #$FF
         rts
 
-LA6FD:  lda     input_params_modifiers
+LA6FD:  lda     event_params_modifiers
         cmp     #$2             ; closed-apple
         bne     LA71A
-        lda     input_params_key
+        lda     event_params_key
         and     #$7F
         cmp     #KEY_LEFT
         bne     LA710
@@ -18121,7 +18123,7 @@ LA710:  cmp     #KEY_RIGHT
 LA717:  lda     #$FF
         rts
 
-LA71A:  lda     input_params_key
+LA71A:  lda     event_params_key
         and     #$7F
         cmp     #KEY_LEFT
         bne     LA72E
@@ -18332,13 +18334,13 @@ LA899:  jmp     dummy0000
         lda     #$00
         sta     dialog_label_pos+1
 
-:       MGTK_RELAY_CALL MGTK::GetEvent, input_params
-        lda     input_params_state
+:       MGTK_RELAY_CALL MGTK::GetEvent, event_params
+        lda     event_params_kind
         cmp     #MGTK::button_down
         beq     close
         cmp     #MGTK::key_down
         bne     :-
-        lda     input_params_key
+        lda     event_params_key
         and     #$7F
         cmp     #KEY_ESCAPE
         beq     close
@@ -18456,7 +18458,7 @@ LAA7F:  jsr     prompt_input_loop
         bmi     LAA7F
         pha
         jsr     erase_yes_no_all_cancel_buttons
-        MGTK_RELAY_CALL MGTK::SetPenMode, const0
+        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::prompt_rect
         pla
         rts
@@ -18470,7 +18472,7 @@ LAAB1:  jsr     prompt_input_loop
         bmi     LAAB1
         pha
         jsr     erase_ok_cancel_buttons
-        MGTK_RELAY_CALL MGTK::SetPenMode, const0
+        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::prompt_rect
         pla
         rts
@@ -18572,7 +18574,7 @@ do4:    jsr     bell
         bmi     :-
         pha
         jsr     erase_ok_button
-        MGTK_RELAY_CALL MGTK::SetPenMode, const0
+        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::prompt_rect
         pla
         rts
@@ -18657,7 +18659,7 @@ do2:    lda     winF
         jsr     draw_ok_button
 :       jsr     prompt_input_loop
         bmi     :-
-        MGTK_RELAY_CALL MGTK::SetPenMode, const0
+        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
         jsr     erase_ok_button
         lda     #$00
@@ -18757,7 +18759,7 @@ LADBB:  lda     winF
 LADC4:  jsr     prompt_input_loop
         bmi     LADC4
         bne     LADF4
-        MGTK_RELAY_CALL MGTK::SetPenMode, const0
+        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
         jsr     erase_ok_cancel_buttons
         yax_call draw_dialog_label, $02, desktop_aux::str_file_colon
@@ -18778,7 +18780,7 @@ LAE17:  jsr     prompt_input_loop
         bmi     LAE17
         pha
         jsr     erase_yes_no_all_cancel_buttons
-        MGTK_RELAY_CALL MGTK::SetPenMode, const0 ; white
+        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy ; white
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::prompt_rect ; erase prompt
         pla
         rts
@@ -19063,7 +19065,7 @@ LB0F1:  lda     winF
 LB0FA:  jsr     prompt_input_loop
         bmi     LB0FA
         bne     LB139
-        MGTK_RELAY_CALL MGTK::SetPenMode, const0
+        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
@@ -19155,7 +19157,7 @@ LB20F:  lda     winF
 LB218:  jsr     prompt_input_loop
         bmi     LB218
         bne     LB257
-        MGTK_RELAY_CALL MGTK::SetPenMode, const0
+        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
@@ -19384,11 +19386,11 @@ set_cursor_insertion_point:
         rts
 
 set_fill_black:
-        MGTK_RELAY_CALL MGTK::SetPenMode, const2
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         rts
 
         ldx     #$03
-LB447:  lda     input_params_coords,x
+LB447:  lda     event_params_coords,x
         sta     LB502,x
         dex
         bpl     LB447
@@ -19407,12 +19409,12 @@ LB46C:  lda     LB501
         bne     LB476
         lda     LB500
         beq     LB4B7
-LB476:  MGTK_RELAY_CALL MGTK::PeekEvent, input_params
+LB476:  MGTK_RELAY_CALL MGTK::PeekEvent, event_params
         jsr     LB4BA
         bmi     LB4B7
         lda     #$FF
         sta     LB508
-        lda     input_params_state
+        lda     event_params_kind
         sta     LB507
         cmp     #MGTK::no_event
         beq     LB45F
@@ -19420,23 +19422,23 @@ LB476:  MGTK_RELAY_CALL MGTK::PeekEvent, input_params
         beq     LB45F
         cmp     #MGTK::button_up
         bne     LB4A7
-        MGTK_RELAY_CALL MGTK::GetEvent, input_params
+        MGTK_RELAY_CALL MGTK::GetEvent, event_params
         jmp     LB45F
 
 LB4A7:  cmp     #$01
         bne     LB4B7
-        MGTK_RELAY_CALL MGTK::GetEvent, input_params
+        MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     #$00
         rts
 
 LB4B7:  lda     #$FF
         rts
 
-LB4BA:  lda     input_params_xcoord
+LB4BA:  lda     event_params_xcoord
         sec
         sbc     LB502
         sta     LB506
-        lda     input_params_xcoord+1
+        lda     event_params_xcoord+1
         sbc     LB503
         bpl     LB4D6
         lda     LB506
@@ -19448,11 +19450,11 @@ LB4D3:  lda     #$FF
 LB4D6:  lda     LB506
         cmp     #$05
         bcs     LB4D3
-LB4DD:  lda     input_params_ycoord
+LB4DD:  lda     event_params_ycoord
         sec
         sbc     LB504
         sta     LB506
-        lda     input_params_ycoord+1
+        lda     event_params_ycoord+1
         sbc     LB505
         bpl     LB4F6
         lda     LB506
@@ -19735,8 +19737,8 @@ LB7A3:  iny
 LB7B5:  dey
         jmp     LB78D
 
-LB7B9:  sta     query_state_params2::id
-        MGTK_RELAY_CALL MGTK::GetWinPort, query_state_params2
+LB7B9:  sta     getwinport_params2::id
+        MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
         ldy     #$04
         lda     #$15
         LB7CA := *+1
@@ -19830,13 +19832,13 @@ LB889:  .byte   0
 LB88A:  sta     LB8F3
         lda     #$00
         sta     LB8F2
-LB892:  MGTK_RELAY_CALL MGTK::GetEvent, input_params
-        lda     input_params_state
+LB892:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
+        lda     event_params_kind
         cmp     #MGTK::button_up
         beq     LB8E3
         lda     winF
-        sta     input_params
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, input_params
+        sta     event_params
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
         jsr     LB880
         cmp     #$80
@@ -19906,7 +19908,7 @@ LB961:  lda     path_buf1
         jsr     LB7B9
         jsr     set_fill_white
         MGTK_RELAY_CALL MGTK::PaintRect, LD6AB
-        MGTK_RELAY_CALL MGTK::SetPenMode, const2
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, LD6AB
         MGTK_RELAY_CALL MGTK::MoveTo, LD6B3
         MGTK_RELAY_CALL MGTK::SetPortBits, LD6C7
@@ -19917,7 +19919,7 @@ LB961:  lda     path_buf1
         jsr     LB7B9
 LB9B7:  rts
 
-LB9B8:  MGTK_RELAY_CALL MGTK::ScreenToWindow, input_params
+LB9B8:  MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
         MGTK_RELAY_CALL MGTK::InRect, LD6AB
         cmp     #$80
@@ -20463,12 +20465,12 @@ LBE9A:  jsr     set_fill_white
         rts
 
 set_fill_white:
-        MGTK_RELAY_CALL MGTK::SetPenMode, const0
+        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         rts
 
 reset_state:
-        MGTK_RELAY_CALL MGTK::InitPort, state2
-        MGTK_RELAY_CALL MGTK::SetPort, state2
+        MGTK_RELAY_CALL MGTK::InitPort, grafport3
+        MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
 
         .assert * = $BEC4, error, "Segment length mismatch"
