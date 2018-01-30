@@ -128,15 +128,15 @@ window_pos_flag:
         ;; called with window_id in A
 check_window_pos:
         sta     query_state_params_id
-        lda     create_window_params_top ; is top on screen?
+        lda     openwindow_params_top ; is top on screen?
         cmp     #screen_height-1
         bcc     :+              ; yes
         lda     #$80            ; no, so ... ???
         sta     window_pos_flag
         rts
 
-:       MGTK_CALL MGTK::GetWinPort, query_state_params
-        MGTK_CALL MGTK::SetPort, set_state_params
+:       MGTK_CALL MGTK::GetWinPort, getwinport_params
+        MGTK_CALL MGTK::SetPort, setport_params
         lda     query_state_params_id
         cmp     #window_id
         bne     :+
@@ -155,7 +155,7 @@ ycoord  := * + 3                ; y overlap
 moved   := * + 5                ; ignored
 .endproc
 
-.proc map_coords_params
+.proc screentowindow_params
 id      := * + 0
 screenx := * + 1                ; x overlap
 screeny := * + 3                ; y overlap
@@ -163,7 +163,7 @@ clientx := * + 5
 clienty := * + 7
 .endproc
 
-.proc get_input_params
+.proc event_params
 state:  .byte   0
 key       := *
 modifiers := *+1
@@ -172,7 +172,7 @@ xcoord    := *                  ; x overlap
 ycoord    := *+2                ; y overlap
 .endproc
 
-.proc query_target_params
+.proc findwindow_params
 queryx  := *                    ; x overlap
 queryy  := *+2                  ; y overlap
 element := *+4
@@ -183,15 +183,15 @@ id      := *+5
 
         .byte   0,0             ; ???
 
-.proc close_click_params
+.proc trackgoaway_params
 clicked:.byte   0
 .endproc
 
-.proc query_state_params
+.proc getwinport_params
 id:     .byte   0
-addr:   .addr   set_state_params
+addr:   .addr   setport_params
 .endproc
-query_state_params_id := query_state_params::id
+query_state_params_id := getwinport_params::id
 
         ;; Puzzle piece row/columns
         cw := 28
@@ -544,7 +544,7 @@ piece16:
 xcoord: .word   5
 ycoord: .word   2
 .endproc
-.proc draw_line_params
+.proc line_params
 xdelta: .word   112
 ydelta: .word   0
 .endproc
@@ -564,7 +564,7 @@ draw_rc:  .byte   $00
 draw_end:  .byte   $00
 draw_inc:  .byte   $00
 
-.proc destroy_window_params
+.proc closewindow_params
 id:     .byte   window_id
 .endproc
 
@@ -576,7 +576,7 @@ id:     .byte   window_id
 str:    .byte   $41,$35,$47,$37,$36,$49   ; "A#G%#I" ?
 
         ;; SET_STATE params (filled in by QUERY_STATE)
-set_state_params:
+setport_params:
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -591,7 +591,7 @@ set_state_params:
         default_width   := $79
         default_height  := $44
 
-.proc create_window_params
+.proc openwindow_params
 id:     .byte   window_id
 flags:  .byte   MGTK::option_go_away_box
 title:  .addr   name
@@ -654,14 +654,14 @@ font:   .addr   DEFAULT_FONT
 
 name:   PASCAL_STRING "Puzzle"
 
-        create_window_params_top := create_window_params::top
+        openwindow_params_top := openwindow_params::top
 
 ;;; ==================================================
 ;;; Create the window
 
 .proc create_window
         jsr     save_zp
-        MGTK_CALL MGTK::OpenWindow, create_window_params
+        MGTK_CALL MGTK::OpenWindow, openwindow_params
 
         ;; init pieces
         ldy     #15
@@ -698,8 +698,8 @@ ploop:  lda     position_table+1,y
         stx     position_table+1
 .endproc
 
-        MGTK_CALL MGTK::GetEvent, get_input_params
-        lda     get_input_params::state
+        MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_params::state
         beq     scramble
         jsr     check_victory
         bcs     scramble
@@ -712,8 +712,8 @@ ploop:  lda     position_table+1,y
 ;;; Input loop and processing
 
 .proc input_loop
-        MGTK_CALL MGTK::GetEvent, get_input_params
-        lda     get_input_params::state
+        MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_params::state
         cmp     #MGTK::button_down
         bne     :+
         jsr     on_click
@@ -727,11 +727,11 @@ ploop:  lda     position_table+1,y
 
         ;; click - where?
 on_click:
-        MGTK_CALL MGTK::FindWindow, query_target_params
-        lda     query_target_params::id
+        MGTK_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_params::id
         cmp     #window_id
         bne     bail
-        lda     query_target_params::element
+        lda     findwindow_params::element
         bne     :+
 bail:   rts
 
@@ -745,11 +745,11 @@ bail:   rts
         ;; close box?
 :       cmp     #MGTK::area_close_box
         bne     check_title
-        MGTK_CALL MGTK::TrackGoAway, close_click_params
-        lda     close_click_params::clicked
+        MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
+        lda     trackgoaway_params::clicked
         beq     bail
 destroy:
-        MGTK_CALL MGTK::CloseWindow, destroy_window_params
+        MGTK_CALL MGTK::CloseWindow, closewindow_params
         DESKTOP_CALL DESKTOP_REDRAW_ICONS
 
         target = $20            ; copy following to ZP and run it
@@ -780,9 +780,9 @@ check_title:
 
         ;; on key press - exit if Escape
 check_key:
-        lda     get_input_params::modifiers
+        lda     event_params::modifiers
         bne     :+
-        lda     get_input_params::key
+        lda     event_params::key
         cmp     #KEY_ESCAPE
         beq     destroy
 :       rts
@@ -793,14 +793,14 @@ check_key:
 
 .proc find_click_piece
         lda     #window_id
-        sta     map_coords_params::id
-        MGTK_CALL MGTK::ScreenToWindow, map_coords_params
-        lda     map_coords_params::clientx+1
-        ora     map_coords_params::clienty+1
+        sta     screentowindow_params::id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        lda     screentowindow_params::clientx+1
+        ora     screentowindow_params::clienty+1
         bne     nope            ; ensure high bytes are 0
 
-        lda     map_coords_params::clienty
-        ldx     map_coords_params::clientx
+        lda     screentowindow_params::clienty
+        ldx     screentowindow_params::clientx
 
         cmp     #r1
         bcc     nope
@@ -993,14 +993,14 @@ draw_window:
         MGTK_CALL MGTK::SetPattern, pattern_black
 
         MGTK_CALL MGTK::MoveTo, set_pos_params
-        MGTK_CALL MGTK::Line, draw_line_params
+        MGTK_CALL MGTK::Line, line_params
 
         jsr     draw_all
 
         lda     #window_id
-        sta     query_state_params::id
-        MGTK_CALL MGTK::GetWinPort, query_state_params
-        MGTK_CALL MGTK::SetPort, set_state_params
+        sta     getwinport_params::id
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        MGTK_CALL MGTK::SetPort, setport_params
         rts
 
 ;;; ==================================================
@@ -1064,9 +1064,9 @@ saved_zp:
         pha
         MGTK_CALL MGTK::HideCursor
         lda     #window_id
-        sta     query_state_params::id
-        MGTK_CALL MGTK::GetWinPort, query_state_params
-        MGTK_CALL MGTK::SetPort, set_state_params
+        sta     getwinport_params::id
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        MGTK_CALL MGTK::SetPort, setport_params
         pla
         tay
 

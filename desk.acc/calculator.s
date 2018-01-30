@@ -111,8 +111,8 @@ call_init:
 skip:   lda     #0
         sta     offscreen_flag
         lda     ROMIN2
-        MGTK_CALL MGTK::GetWinPort, query_state_params
-        MGTK_CALL MGTK::SetPort, state_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        MGTK_CALL MGTK::SetPort, port_params
         rts
 
 .proc routine
@@ -137,8 +137,8 @@ offscreen_flag:
         ;; Called after window drag is complete
         ;; (called with window_id in A)
 .proc check_visibility_and_draw_window
-        sta     query_state_params_id
-        lda     create_window_params_top
+        sta     get_port_params_id
+        lda     openwindow_params_top
         cmp     #screen_height - 1
         bcc     :+
         lda     #$80
@@ -147,9 +147,9 @@ offscreen_flag:
 
         ;; Is skipping this responsible for display redraw bug?
         ;; https://github.com/inexorabletash/a2d/issues/34
-:       MGTK_CALL MGTK::GetWinPort, query_state_params
-        MGTK_CALL MGTK::SetPort, state_params
-        lda     query_state_params_id
+:       MGTK_CALL MGTK::GetWinPort, getwinport_params
+        MGTK_CALL MGTK::SetPort, port_params
+        lda     get_port_params_id
         cmp     #window_id
         bne     :+
         jmp     draw_background
@@ -161,7 +161,7 @@ offscreen_flag:
 
         ;; The following params blocks overlap for data re-use
 
-.proc map_coords_params
+.proc screentowindow_params
 id      := *
 screen  := * + 1
 screenx := * + 1 ; aligns with input_state::xcoord
@@ -178,33 +178,33 @@ ycoord  := * + 3 ; aligns with input_state::ycoord
 moved   := * + 5 ; ignored
 .endproc
 
-.proc input_state_params
-state:  .byte   0
+.proc event_params
+kind:  .byte   0
 xcoord    := *                  ; if state is 0,1,2,4
 ycoord    := * + 2              ; "
 key       := *                  ; if state is 3
 modifiers := * + 1              ; "
 .endproc
 
-.proc target_params
-queryx: .word   0               ; aligns with input_state_params::xcoord
-queryy: .word   0               ; aligns with input_state_params::ycoord
-elem:   .byte   0
+.proc findwindow_params
+queryx: .word   0               ; aligns with event_params::xcoord
+queryy: .word   0               ; aligns with event_params::ycoord
+which_area:   .byte   0
 id:     .byte   0
 .endproc
 
-        .byte 0, 0              ; fills out space for map_coords_params
+        .byte 0, 0              ; fills out space for screentowindow_params
         .byte 0, 0              ; ???
 
-.proc close_click_params
-state:  .byte   0
+.proc trackgoaway_params
+goaway:  .byte   0
 .endproc
 
-.proc query_state_params
+.proc getwinport_params
 id:     .byte   0
-        .addr   state_params
+        .addr   port_params
 .endproc
-        query_state_params_id := query_state_params::id
+        get_port_params_id := getwinport_params::id
 
 .proc preserve_zp_params
 flag:   .byte   MGTK::zp_preserve
@@ -616,7 +616,7 @@ white_pattern:
         .res    8, $FF
         .byte   $00
 
-.proc text_mask_params
+.proc settextbg_params
 mask:  .byte   $7F
 .endproc
 
@@ -640,13 +640,13 @@ height: .word   display_height-1
 .endproc
 
         ;; For drawing 1-character strings (button labels)
-.proc draw_text_params_label
+.proc drawtext_params_label
         .addr   label
         .byte   1
 .endproc
 label:  .byte   0               ; modified with char to draw
 
-.proc draw_text_params1
+.proc drawtext_params1
 addr:   .addr   text_buffer1
 length: .byte   15
 .endproc
@@ -656,7 +656,7 @@ text_buffer_size := 14
 text_buffer1:
         .res    text_buffer_size+2, 0
 
-.proc draw_text_params2
+.proc drawtext_params2
 addr:   .addr   text_buffer2
 length: .byte   15
 .endproc
@@ -670,7 +670,7 @@ error_string:
         DEFINE_STRING "Error "
 
         ;;  used when clearing display; params to a $18 call
-.proc measure_text_params
+.proc textwidth_params
 addr:   .addr   text_buffer1
 len:    .byte   15              ; ???
 width:  .word   0
@@ -678,7 +678,7 @@ width:  .word   0
 
         window_id = 52
 
-.proc destroy_window_params
+.proc closewindow_params
 id:     .byte   window_id
 .endproc
 
@@ -718,8 +718,8 @@ pixels: .byte   px(%1000001)
         .byte   px(%1001001)
 .endproc
 
-        ;; param block for a QUERY_SCREEN and SET_STATE calls, and ref'd in QUERY_STATE call
-.proc state_params
+        ;; param block for a QUERY_SCREEN and SET_STATE calls, and ref'd in GetWinPort call
+.proc port_params
 left:   .word   0
 top:    .word   0
 addr:   .word   0
@@ -739,7 +739,7 @@ mode:   .byte   0
 tmask:  .byte   0
 font:   .addr   0
 .endproc
-        .assert * - state_params = 36, error
+        .assert * - port_params = 36, error
 
         .byte   0               ; ???
 
@@ -748,7 +748,7 @@ font:   .addr   0
         screen_height   := 192
 
         ;; params for MGTK::SetPortBits when decorating title bar
-.proc screen_box
+.proc screen_port
 left:   .word   0
 top:    .word   menu_bar_height
 addr:   .word   MGTK::screen_mapbits
@@ -759,13 +759,13 @@ width:  .word   screen_width - 1
 height: .word   screen_height - menu_bar_height - 2
 .endproc
 
-.proc fill_mode_normal
+.proc penmode_normal
 mode:   .byte   MGTK::pencopy
 .endproc
 
         .byte   $01,$02         ; ??
 
-.proc fill_mode_xor
+.proc penmode_xor
 mode:   .byte   MGTK::notpenXOR
 .endproc
 
@@ -774,7 +774,7 @@ mode:   .byte   MGTK::notpenXOR
         default_left := 210
         default_top := 60
 
-.proc create_window_params
+.proc openwindow_params
 id:     .byte   window_id
 flags:  .byte   MGTK::option_go_away_box
 title:  .addr   window_title
@@ -809,7 +809,7 @@ tmask:  .byte   $7f
 font:   .addr   DEFAULT_FONT
 next:   .addr   0
 .endproc
-create_window_params_top := create_window_params::top
+openwindow_params_top := openwindow_params::top
 
 window_title:
         PASCAL_STRING "Calc"
@@ -849,14 +849,14 @@ init:   sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         MGTK_CALL MGTK::SetZP1, preserve_zp_params
-        MGTK_CALL MGTK::OpenWindow, create_window_params
-        MGTK_CALL MGTK::InitPort, state_params
-        MGTK_CALL MGTK::SetPort, state_params     ; set clipping bounds?
+        MGTK_CALL MGTK::OpenWindow, openwindow_params
+        MGTK_CALL MGTK::InitPort, port_params
+        MGTK_CALL MGTK::SetPort, port_params     ; set clipping bounds?
         MGTK_CALL MGTK::FlushEvents
         lda     #$01
-        sta     input_state_params::state
-        MGTK_CALL MGTK::PostEvent, input_state_params
-        MGTK_CALL MGTK::GetEvent, input_state_params
+        sta     event_params::kind
+        MGTK_CALL MGTK::PostEvent, event_params
+        MGTK_CALL MGTK::GetEvent, event_params
         lda     ROMIN2
         jsr     reset_buffer2
         lda     #window_id
@@ -923,8 +923,8 @@ loop:   lda     adjust_txtptr_copied-1,x
 ;;; Input Loop
 
 input_loop:
-        MGTK_CALL MGTK::GetEvent, input_state_params
-        lda     input_state_params::state
+        MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_params::kind
         cmp     #MGTK::button_down
         bne     :+
         jsr     on_click
@@ -941,19 +941,19 @@ input_loop:
 on_click:
         lda     LCBANK1
         lda     LCBANK1
-        MGTK_CALL MGTK::FindWindow, target_params
+        MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     ROMIN2
-        lda     target_params::elem
-        cmp     #MGTK::area_content ; Less than CLIENT is MENU or DESKTOP
+        lda     findwindow_params::which_area
+        cmp     #MGTK::area_content
         bcc     ignore_click
-        lda     target_params::id
+        lda     findwindow_params::id
         cmp     #window_id      ; This window?
         beq     :+
 
 ignore_click:
         rts
 
-:       lda     target_params::elem
+:       lda     findwindow_params::which_area
         cmp     #MGTK::area_content ; Client area?
         bne     :+
         jsr     map_click_to_button ; try to translate click into key
@@ -962,12 +962,12 @@ ignore_click:
 
 :       cmp     #MGTK::area_close_box ; Close box?
         bne     :+
-        MGTK_CALL MGTK::TrackGoAway, close_click_params
-        lda     close_click_params::state
+        MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
+        lda     trackgoaway_params::goaway
         beq     ignore_click
 exit:   lda     LCBANK1
         lda     LCBANK1
-        MGTK_CALL MGTK::CloseWindow, destroy_window_params
+        MGTK_CALL MGTK::CloseWindow, closewindow_params
         DESKTOP_CALL DESKTOP_REDRAW_ICONS
         lda     ROMIN2
         MGTK_CALL MGTK::SetZP1, overwrite_zp_params
@@ -1006,9 +1006,9 @@ loop:   lda     routine,x
 ;;; On Key Press
 
 .proc on_key_press
-        lda     input_state_params::modifiers
+        lda     event_params::modifiers
         bne     bail
-        lda     input_state_params::key
+        lda     event_params::key
         cmp     #KEY_ESCAPE
         bne     trydel
         lda     calc_p
@@ -1035,13 +1035,13 @@ rts1:  rts                     ; used by next proc
 
 .proc map_click_to_button
         lda     #window_id
-        sta     map_coords_params::id
-        MGTK_CALL MGTK::ScreenToWindow, map_coords_params
-        lda     map_coords_params::clientx+1        ; ensure high bits of coords are 0
-        ora     map_coords_params::clienty+1
+        sta     screentowindow_params::id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        lda     screentowindow_params::clientx+1        ; ensure high bits of coords are 0
+        ora     screentowindow_params::clienty+1
         bne     rts1
-        lda     map_coords_params::clienty
-        ldx     map_coords_params::clientx
+        lda     screentowindow_params::clienty
+        ldx     screentowindow_params::clientx
 
 .proc find_button_row
         cmp     #row1_top+border_lt - 1 ; row 1 ? (- 1 is bug in original?)
@@ -1083,7 +1083,7 @@ rts1:  rts                     ; used by next proc
 
 :       cmp     #row5_top-border_lt             ; special case for tall + button
         bcs     :+
-        lda     map_coords_params::clientx
+        lda     screentowindow_params::clientx
         cmp     #col4_left-border_lt
         bcc     miss
         cmp     #col4_right+border_br-1         ; is -1 bug in original?
@@ -1099,7 +1099,7 @@ rts1:  rts                     ; used by next proc
         lda     row5_lookup,x
         rts
 
-:       lda     map_coords_params::clientx ; special case for wide 0 button
+:       lda     screentowindow_params::clientx ; special case for wide 0 button
         cmp     #col1_left-border_lt
         bcc     miss
         cmp     #col2_right+border_br
@@ -1529,29 +1529,29 @@ end:    jsr     display_buffer1
         button_state := $FC
 
         stx     invert_addr
-        stx     c13_addr
+        stx     inrect_params
         stx     restore_addr
         sty     invert_addr+1
-        sty     c13_addr+1
+        sty     inrect_params+1
         sty     restore_addr+1
         MGTK_CALL MGTK::SetPattern, black_pattern
-        MGTK_CALL MGTK::SetPenMode, fill_mode_xor
+        MGTK_CALL MGTK::SetPenMode, penmode_xor
         sec
         ror     button_state
 
 invert:  MGTK_CALL MGTK::PaintRect, 0, invert_addr ; Inverts box
 
 check_button:
-        MGTK_CALL MGTK::GetEvent, input_state_params
-        lda     input_state_params::state
+        MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_params::kind
         cmp     #MGTK::drag ; Button down?
         bne     done            ; Nope, done immediately
         lda     #window_id
-        sta     map_coords_params::id
+        sta     screentowindow_params::id
 
-        MGTK_CALL MGTK::ScreenToWindow, map_coords_params
-        MGTK_CALL MGTK::MoveTo, map_coords_params::client
-        MGTK_CALL MGTK::InRect, 0, c13_addr
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::client
+        MGTK_CALL MGTK::InRect, 0, inrect_params
         bne     inside
 
         lda     button_state    ; outside, not down
@@ -1571,7 +1571,7 @@ inside: lda     button_state    ; inside, and down
 done:   lda     button_state                    ; high bit set if button down
         beq     :+
         MGTK_CALL MGTK::PaintRect, 0, restore_addr ; Inverts back to normal
-:       MGTK_CALL MGTK::SetPenMode, fill_mode_normal ; Normal draw mode??
+:       MGTK_CALL MGTK::SetPenMode, penmode_normal ; Normal draw mode??
         lda     button_state
         rts
 .endproc
@@ -1610,7 +1610,7 @@ loop:   lda     #' '
         ldx     #<text_buffer1
         ldy     #>text_buffer1
         jsr     pre_display_buffer
-        MGTK_CALL MGTK::DrawText, draw_text_params1
+        MGTK_CALL MGTK::DrawText, drawtext_params1
         rts
 .endproc
 
@@ -1618,17 +1618,17 @@ loop:   lda     #' '
         ldx     #<text_buffer2
         ldy     #>text_buffer2
         jsr     pre_display_buffer
-        MGTK_CALL MGTK::DrawText, draw_text_params2
+        MGTK_CALL MGTK::DrawText, drawtext_params2
         rts
 .endproc
 
 .proc pre_display_buffer
-        stx     measure_text_params::addr ; text buffer address in x,y
-        sty     measure_text_params::addr+1
-        MGTK_CALL MGTK::TextWidth, measure_text_params
+        stx     textwidth_params::addr ; text buffer address in x,y
+        sty     textwidth_params::addr+1
+        MGTK_CALL MGTK::TextWidth, textwidth_params
         lda     #display_width-15 ; ???
         sec
-        sbc     measure_text_params::width
+        sbc     textwidth_params::width
         sta     text_pos_params3::left
         MGTK_CALL MGTK::MoveTo, text_pos_params2 ; clear with spaces
         MGTK_CALL MGTK::DrawText, spaces_string
@@ -1648,7 +1648,7 @@ loop:   lda     #' '
         MGTK_CALL MGTK::FrameRect, frame_display_params
         MGTK_CALL MGTK::SetPattern, white_pattern
         MGTK_CALL MGTK::PaintRect, clear_display_params
-        MGTK_CALL MGTK::SetTextBG, text_mask_params
+        MGTK_CALL MGTK::SetTextBG, settextbg_params
         ;; fall through
 .endproc
 
@@ -1682,7 +1682,7 @@ loop:   ldy     #0
 
         MGTK_CALL MGTK::PaintBits, 0, bitmap_addr ; draw shadowed rect
         MGTK_CALL MGTK::MoveTo, 0, text_addr         ; button label pos
-        MGTK_CALL MGTK::DrawText, draw_text_params_label  ; button label text
+        MGTK_CALL MGTK::DrawText, drawtext_params_label  ; button label text
 
         lda     ptr             ; advance to next record
         clc
@@ -1699,28 +1699,28 @@ loop:   ldy     #0
 draw_title_bar:
         offset_left     := 115  ; pixels from left of client area
         offset_top      := 22   ; pixels from top of client area (up!)
-        ldx     create_window_params::left+1
-        lda     create_window_params::left
+        ldx     openwindow_params::left+1
+        lda     openwindow_params::left
         clc
         adc     #offset_left
         sta     title_bar_decoration::left
         bcc     :+
         inx
 :       stx     title_bar_decoration::left+1
-        ldx     create_window_params::top+1
-        lda     create_window_params::top
+        ldx     openwindow_params::top+1
+        lda     openwindow_params::top
         sec
         sbc     #offset_top
         sta     title_bar_decoration::top
         bcs     :+
         dex
 :       stx     title_bar_decoration::top+1
-        MGTK_CALL MGTK::SetPortBits, screen_box ; set clipping rect to whole screen
+        MGTK_CALL MGTK::SetPortBits, screen_port ; set clipping rect to whole screen
         MGTK_CALL MGTK::PaintBits, title_bar_decoration     ; Draws decoration in title bar
         lda     #window_id
-        sta     query_state_params::id
-        MGTK_CALL MGTK::GetWinPort, query_state_params
-        MGTK_CALL MGTK::SetPort, state_params
+        sta     getwinport_params::id
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        MGTK_CALL MGTK::SetPort, port_params
         MGTK_CALL MGTK::ShowCursor
         jsr     display_buffer2
         rts

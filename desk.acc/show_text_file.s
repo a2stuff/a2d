@@ -241,30 +241,30 @@ track_scroll_delta:
 fixed_mode_flag:
         .byte   $00             ; 0 = proportional, otherwise = fixed
 
-.proc input_params
+.proc event_params
 state:  .byte   0
 coords:                         ; spills into target query
 xcoord: .word   0
 ycoord: .word   0
 .endproc
-.proc target_params
+.proc findwindow_params
 elem:   .byte   0
 win:    .byte   0
 .endproc
 
-.proc resize_drag_params
+.proc growwindow_params
 id:     .byte   window_id
 xcoord: .word   0
 ycoord: .word   0
         .byte   0               ; ???
 .endproc
 
-.proc close_btn_params          ; queried after close clicked to see if aborted/finished
+.proc trackgoaway_params          ; queried after close clicked to see if aborted/finished
 state:  .byte   0               ; 0 = aborted, 1 = clicked
         .byte   0,0             ; ???
 .endproc
 
-.proc query_client_params       ; queried after a client click to identify target
+.proc findcontrol_params       ; queried after a client click to identify target
 xcoord: .word   0
 ycoord: .word   0
 part:   .byte   0               ; 0 = client, 1 = vscroll, 2 = hscroll
@@ -278,7 +278,7 @@ L0987:  .byte   0
         ;; needs one more byte?
 .endproc
 
-.proc update_scroll_params      ; called to update scroll bar position
+.proc updatethumb_params      ; called to update scroll bar position
 type:   .byte   0               ; 1 = vscroll, 2 = hscroll
 pos:    .byte   0               ; new position
 .endproc
@@ -510,31 +510,31 @@ loop:   lda     font_width_table - 1,x
 ;;; Main Input Loop
 
 input_loop:
-        MGTK_CALL MGTK::GetEvent, input_params
-        lda     input_params
+        MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_params
         cmp     #1              ; was clicked?
         bne     input_loop      ; nope, keep waiting
 
-        MGTK_CALL MGTK::FindWindow, input_params::coords
-        lda     target_params::win ; in our window?
+        MGTK_CALL MGTK::FindWindow, event_params::coords
+        lda     findwindow_params::win ; in our window?
         cmp     #window_id
         bne     input_loop
 
         ;; which part of the window?
-        lda     target_params::elem
+        lda     findwindow_params::elem
         cmp     #MGTK::area_close_box
         beq     on_close_click
 
         ;; title and resize clicks need mouse location
-        ldx     input_params::xcoord
-        stx     resize_drag_params::xcoord
-        stx     query_client_params::xcoord
-        ldx     input_params::xcoord+1
-        stx     resize_drag_params::xcoord+1
-        stx     query_client_params::xcoord+1
-        ldx     input_params::ycoord
-        stx     resize_drag_params::ycoord
-        stx     query_client_params::ycoord
+        ldx     event_params::xcoord
+        stx     growwindow_params::xcoord
+        stx     findcontrol_params::xcoord
+        ldx     event_params::xcoord+1
+        stx     growwindow_params::xcoord+1
+        stx     findcontrol_params::xcoord+1
+        ldx     event_params::ycoord
+        stx     growwindow_params::ycoord
+        stx     findcontrol_params::ycoord
 
         cmp     #MGTK::area_dragbar
         beq     title
@@ -550,8 +550,8 @@ title:  jsr     on_title_bar_click
 ;;; Close Button
 
 .proc on_close_click
-        MGTK_CALL MGTK::TrackGoAway, close_btn_params     ; wait to see if the click completes
-        lda     close_btn_params::state ; did click complete?
+        MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
+        lda     trackgoaway_params::state ; did click complete?
         beq     input_loop      ; nope
         jsr     close_file
         MGTK_CALL MGTK::CloseWindow, window_params
@@ -564,7 +564,7 @@ title:  jsr     on_title_bar_click
 
 ;;; This is dead code (no resize handle!) and may be buggy
 .proc on_resize_click
-        MGTK_CALL MGTK::GrowWindow, resize_drag_params
+        MGTK_CALL MGTK::GrowWindow, growwindow_params
         jsr     redraw_screen
         jsr     calc_window_size
 
@@ -622,8 +622,8 @@ enable: ora     #MGTK::scroll_option_active           ; enable scroll
 ;;; Non-title (client) area clicked
 .proc on_client_click
         ;; On one of the scroll bars?
-        MGTK_CALL MGTK::FindControl, query_client_params
-        lda     query_client_params::part
+        MGTK_CALL MGTK::FindControl, findcontrol_params
+        lda     findcontrol_params::part
         cmp     #MGTK::ctl_vertical_scroll_bar
         beq     on_vscroll_click
         cmp     #MGTK::ctl_horizontal_scroll_bar
@@ -638,8 +638,8 @@ end:    rts
 .proc on_vscroll_click
         lda     #MGTK::ctl_vertical_scroll_bar
         sta     thumb_drag_params::type
-        sta     update_scroll_params::type
-        lda     query_client_params::scroll
+        sta     updatethumb_params::type
+        lda     findcontrol_params::scroll
         cmp     #MGTK::part_thumb
         beq     on_vscroll_thumb_click
         cmp     #MGTK::part_page_down
@@ -659,7 +659,7 @@ end:    rts
         lda     thumb_drag_params::moved
         beq     end
         lda     thumb_drag_params::pos
-        sta     update_scroll_params::pos
+        sta     updatethumb_params::pos
         jsr     update_voffset
         jsr     update_vscroll
         jsr     draw_content
@@ -680,7 +680,7 @@ loop:   lda     window_params::vspos
         sbc     track_scroll_delta
         bcs     store
         lda     #0              ; underflow
-store:  sta     update_scroll_params::pos
+store:  sta     updatethumb_params::pos
         jsr     update_scroll_pos
         bcc     loop            ; repeat while button down
 end:    rts
@@ -691,7 +691,7 @@ loop :  lda     window_params::vspos
         beq     end
         sec
         sbc     #1
-        sta     update_scroll_params::pos
+        sta     updatethumb_params::pos
         jsr     update_scroll_pos
         bcc     loop            ; repeat while button down
 end:    rts
@@ -712,7 +712,7 @@ loop:   lda     window_params::vspos
         bcc     store           ; nope, it's good
 overflow:
         lda     #vscroll_max    ; set to max
-store:  sta     update_scroll_params::pos
+store:  sta     updatethumb_params::pos
         jsr     update_scroll_pos
         bcc     loop            ; repeat while button down
 end:    rts
@@ -724,7 +724,7 @@ loop:   lda     window_params::vspos
         beq     end
         clc
         adc     #1
-        sta     update_scroll_params::pos
+        sta     updatethumb_params::pos
         jsr     update_scroll_pos
         bcc     loop            ; repeat while button down
 end:    rts
@@ -760,8 +760,8 @@ loop:   inx
 .proc on_hscroll_click
         lda     #MGTK::ctl_horizontal_scroll_bar
         sta     thumb_drag_params::type
-        sta     update_scroll_params::type
-        lda     query_client_params::scroll
+        sta     updatethumb_params::type
+        lda     findcontrol_params::scroll
         cmp     #MGTK::part_thumb
         beq     on_hscroll_thumb_click
         cmp     #MGTK::part_page_right
@@ -854,11 +854,11 @@ store:  sta     window_params::hspos
 
         ;; Used at start of thumb drag
 .proc do_thumb_drag
-        lda     input_params::xcoord
+        lda     event_params::xcoord
         sta     thumb_drag_params::xcoord
-        lda     input_params::xcoord+1
+        lda     event_params::xcoord+1
         sta     thumb_drag_params::xcoord+1
-        lda     input_params::ycoord
+        lda     event_params::ycoord
         sta     thumb_drag_params::ycoord
         MGTK_CALL MGTK::TrackThumb, thumb_drag_params
         rts
@@ -866,8 +866,8 @@ store:  sta     window_params::hspos
 
 ;;; Checks button state; z clear if button was released, set otherwise
 .proc was_button_released
-        MGTK_CALL MGTK::GetEvent, input_params
-        lda     input_params
+        MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_params
         cmp     #2
         rts
 .endproc
@@ -892,7 +892,7 @@ store:  sta     window_params::hspos
         lda     #0
         sta     window_params::box::voff
         sta     window_params::box::voff+1
-        ldx     update_scroll_params::pos
+        ldx     updatethumb_params::pos
 loop:   beq     adjust_box_height
         clc
         lda     window_params::box::voff
@@ -916,7 +916,7 @@ loop:   beq     adjust_box_height
         lda     #0
         sta     L096A
         sta     L096B
-        ldx     update_scroll_params::pos
+        ldx     updatethumb_params::pos
 loop:   beq     end
         clc
         lda     L096A
@@ -931,21 +931,21 @@ end:    rts
 
 .proc update_hscroll
         lda     #2
-        sta     update_scroll_params::type
+        sta     updatethumb_params::type
         lda     window_params::box::hoff
         sta     $06
         lda     window_params::box::hoff+1
         sta     $07
         jsr     div_by_16
-        sta     update_scroll_params::pos
-        MGTK_CALL MGTK::UpdateThumb, update_scroll_params
+        sta     updatethumb_params::pos
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 .endproc
 
-.proc update_vscroll            ; update_scroll_params::pos set by caller
+.proc update_vscroll            ; updatethumb_params::pos set by caller
         lda     #1
-        sta     update_scroll_params::type
-        MGTK_CALL MGTK::UpdateThumb, update_scroll_params
+        sta     updatethumb_params::type
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 .endproc
 
@@ -957,7 +957,7 @@ end:    rts
         bcc     :+
         jsr     update_hscroll
 :       lda     window_params::vspos
-        sta     update_scroll_params::pos
+        sta     updatethumb_params::pos
         jsr     update_vscroll
         jsr     draw_content
         jmp     input_loop
@@ -1401,10 +1401,10 @@ end:    rts
 ;;; Title Bar (Proportional/Fixed mode button)
 
 .proc on_title_bar_click
-        lda     input_params::xcoord+1           ; mouse x high byte?
+        lda     event_params::xcoord+1           ; mouse x high byte?
         cmp     mode_box_left+1
         bne     :+
-        lda     input_params::xcoord
+        lda     event_params::xcoord
         cmp     mode_box_left
 :       bcc     ignore
 

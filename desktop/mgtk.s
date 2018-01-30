@@ -3640,7 +3640,7 @@ loop:   lda     version,y
 major:  .byte   1               ; 1.0.0
 minor:  .byte   0
 patch:  .byte   0
-status: .byte   70              ; ???
+status: .byte   'F'             ; Final???
 release:.byte   1               ; ???
         .byte   0               ; ???
 .endproc

@@ -174,7 +174,7 @@ month_rect:
 year_rect:
         .word   $7F,$14,$95,$1E
 
-.proc text_mask_params
+.proc settextbg_params
 mask:   .byte   0
 .endproc
 
@@ -214,7 +214,7 @@ year_pos:
 year_string:
         DEFINE_STRING "  "
 
-.proc get_input_params
+.proc event_params
 state:  .byte   0
 
 key       := *
@@ -225,7 +225,7 @@ ycoord    := *+2
         .byte   0,0,0,0
 .endproc
         ;; xcoord/ycoord are used to query...
-.proc query_target_params
+.proc findwindow_params
 xcoord    := *
 ycoord    := *+2
 element:.byte   0
@@ -234,7 +234,7 @@ id:     .byte   0
 
         window_id := 100
 
-.proc map_coords_params
+.proc screentowindow_params
 id:     .byte   window_id
 screen:
 screenx:.word   0
@@ -244,17 +244,17 @@ clientx:.word   0
 clienty:.word   0
 .endproc
 
-.proc destroy_window_params
+.proc closewindow_params
 id:     .byte   window_id
 .endproc
         .byte $00,$01           ; ???
 
-.proc fill_mode_params
+.proc penmode_params
 mode:   .byte   $02             ; this should be normal, but we do inverts ???
 .endproc
         .byte   $06             ; ???
 
-.proc create_window_params
+.proc openwindow_params
 id:     .byte   window_id
 flags:  .byte   MGTK::option_dialog_box
 title:  .addr   0
@@ -321,7 +321,7 @@ init_window:
         lsr     a
         sta     month
 
-        MGTK_CALL MGTK::OpenWindow, create_window_params
+        MGTK_CALL MGTK::OpenWindow, openwindow_params
         lda     #0
         sta     selected_field
         jsr     draw_window
@@ -332,8 +332,8 @@ init_window:
 ;;; Input loop
 
 .proc input_loop
-        MGTK_CALL MGTK::GetEvent, get_input_params
-        lda     get_input_params::state
+        MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_params::state
         cmp     #MGTK::button_down
         bne     :+
         jsr     on_click
@@ -344,9 +344,9 @@ init_window:
 .endproc
 
 .proc on_key
-        lda     get_input_params::modifiers
+        lda     event_params::modifiers
         bne     input_loop
-        lda     get_input_params::key
+        lda     event_params::key
         cmp     #KEY_RETURN
         bne     :+
         jmp     on_ok
@@ -403,13 +403,13 @@ update_selection:
 ;;; ==================================================
 
 .proc on_click
-        MGTK_CALL MGTK::FindWindow, get_input_params::xcoord
-        MGTK_CALL MGTK::SetPenMode, fill_mode_params
+        MGTK_CALL MGTK::FindWindow, event_params::xcoord
+        MGTK_CALL MGTK::SetPenMode, penmode_params
         MGTK_CALL MGTK::SetPattern, white_pattern
-        lda     query_target_params::id
+        lda     findwindow_params::id
         cmp     #window_id
         bne     miss
-        lda     query_target_params::element
+        lda     findwindow_params::element
         bne     hit
 miss:   rts
 
@@ -491,8 +491,8 @@ on_field_click:
 
 .proc on_up_or_down
         stx     hit_rect_index
-loop:   MGTK_CALL MGTK::GetEvent, get_input_params ; Repeat while mouse is down
-        lda     get_input_params::state
+loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
+        lda     event_params::state
         cmp     #MGTK::button_up
         beq     :+
         jsr     do_inc_or_dec
@@ -538,7 +538,7 @@ go:     lda     selected_field
         sta     gosub+2
 
 gosub:  jsr     $1000           ; self modified
-        MGTK_CALL MGTK::SetTextBG, text_mask_params
+        MGTK_CALL MGTK::SetTextBG, settextbg_params
         jmp     draw_selected_field
 .endproc
 
@@ -666,7 +666,7 @@ month_name_table:
 dialog_result:  .byte   0
 
 .proc destroy
-        MGTK_CALL MGTK::CloseWindow, destroy_window_params
+        MGTK_CALL MGTK::CloseWindow, closewindow_params
         DESKTOP_CALL DESKTOP_REDRAW_ICONS
 
         ;; Copy the relay routine to the zero page
@@ -709,16 +709,16 @@ skip:   jmp     dest
 ;;; Index returned in X.
 
 .proc find_hit_target
-        lda     get_input_params::xcoord
-        sta     map_coords_params::screenx
-        lda     get_input_params::xcoord+1
-        sta     map_coords_params::screenx+1
-        lda     get_input_params::ycoord
-        sta     map_coords_params::screeny
-        lda     get_input_params::ycoord+1
-        sta     map_coords_params::screeny+1
-        MGTK_CALL MGTK::ScreenToWindow, map_coords_params
-        MGTK_CALL MGTK::MoveTo, map_coords_params::client
+        lda     event_params::xcoord
+        sta     screentowindow_params::screenx
+        lda     event_params::xcoord+1
+        sta     screentowindow_params::screenx+1
+        lda     event_params::ycoord
+        sta     screentowindow_params::screeny
+        lda     event_params::ycoord+1
+        sta     screentowindow_params::screeny+1
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::client
         ldx     #1
         lda     #<first_hit_rect
         sta     test_addr
@@ -778,7 +778,7 @@ label_uparrow_pos:
 label_downarrow_pos:
         .word   $AC,$27
 
-.proc thickness_params
+.proc setpensize_params
 hthick: .byte   1
 vthick: .byte   1
 .endproc
@@ -787,9 +787,9 @@ vthick: .byte   1
 ;;; Render the window contents
 
 draw_window:
-        MGTK_CALL MGTK::SetPort, create_window_params::box
+        MGTK_CALL MGTK::SetPort, openwindow_params::box
         MGTK_CALL MGTK::FrameRect, border_rect
-        MGTK_CALL MGTK::SetPenSize, thickness_params
+        MGTK_CALL MGTK::SetPenSize, setpensize_params
         MGTK_CALL MGTK::FrameRect, date_rect
         MGTK_CALL MGTK::FrameRect, ok_button_rect
         MGTK_CALL MGTK::FrameRect, cancel_button_rect
@@ -815,7 +815,7 @@ draw_window:
         jsr     draw_day
         jsr     draw_month
         jsr     draw_year
-        MGTK_CALL MGTK::SetPenMode, fill_mode_params
+        MGTK_CALL MGTK::SetPenMode, penmode_params
         MGTK_CALL MGTK::SetPattern, white_pattern
         lda     #1
         jmp     highlight_selected_field

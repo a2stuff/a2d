@@ -170,7 +170,7 @@ base:   .word   0
 .endproc
 
 
-.proc input_params             ; queried to track mouse-up
+.proc event_params             ; queried to track mouse-up
 state:  .byte   $00
 
 ;;; if state is MGTK::key_down
@@ -357,8 +357,8 @@ end:    rts
 ;;; Main Input Loop
 
 .proc input_loop
-        MGTK_CALL MGTK::GetEvent, input_params
-        lda     input_params::state
+        MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_params::state
         cmp     #MGTK::button_down ; was clicked?
         beq     exit
         cmp     #MGTK::key_down  ; any key?
@@ -366,9 +366,9 @@ end:    rts
         bne     input_loop
 
 on_key:
-        lda     input_params::modifiers
+        lda     event_params::modifiers
         bne     input_loop
-        lda     input_params::key
+        lda     event_params::key
         cmp     #KEY_ESCAPE
         beq     exit
         bne     input_loop
