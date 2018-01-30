@@ -567,12 +567,12 @@ scroll_option_active    := 1 << 0
 scroll_option_normal    := scroll_option_present | scroll_option_thumb | scroll_option_active
 
 ;;; Used in menu structs
-menuopt_mod_open_apple  := 1 << 0
-menuopt_mod_solid_apple := 1 << 1
-menuopt_has_mark        := 1 << 2
-menuopt_is_checked      := 1 << 5
-menuopt_is_filler       := 1 << 6
-menuopt_disabled_flag   := 1 << 7
+menuopt_open_apple      := 1 << 0
+menuopt_solid_apple     := 1 << 1
+menuopt_item_has_mark   := 1 << 2
+menuopt_item_is_checked := 1 << 5
+menuopt_item_is_filler  := 1 << 6
+menuopt_disable_flag    := 1 << 7
 
 .endscope ; MGTK
 
@@ -649,29 +649,29 @@ end:
 .macro DEFINE_MENU_ITEM saddr, shortcut1, shortcut2
         .if .paramcount > 1
 
-        .byte   MGTK::menuopt_mod_open_apple ; option byte
-        .byte   0               ; mark character
-        .byte   shortcut1       ; char 1
-        .byte   shortcut2       ; char 2
-        .addr   saddr           ; name pointer
+        .byte   MGTK::menuopt_open_apple ; option byte
+        .byte   0               ; mark_char
+        .byte   shortcut1       ; char1
+        .byte   shortcut2       ; char2
+        .addr   saddr           ; item_str_pointer
 
         .else
 
         .byte   0               ; option byte
-        .byte   0               ; mark character
-        .byte   0               ; char 1
-        .byte   0               ; char 2
-        .addr   saddr           ; name pointer
+        .byte   0               ; mark_char
+        .byte   0               ; char1
+        .byte   0               ; char2
+        .addr   saddr           ; item_str_pointer
 
         .endif
 .endmacro
 
 .macro DEFINE_MENU_SEPARATOR
-        .byte   MGTK::menuopt_is_filler ; option byte
-        .byte   0                       ; mark character
-        .byte   19                      ; char 1 - Ctrl+S for separator ???
-        .byte   0                       ; char 2
-        .addr   0                       ; name pointer
+        .byte   MGTK::menuopt_item_is_filler ; option byte
+        .byte   0                       ; mark_char
+        .byte   19                      ; char1 - Ctrl+S for separator ???
+        .byte   0                       ; char2
+        .addr   0                       ; item_str_pointer
 .endmacro
 
 ;;; ------------------------------------

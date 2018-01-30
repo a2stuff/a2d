@@ -458,10 +458,10 @@ L8E24:  .byte   $00
 .proc draw_bitmap_params2
 left:   .word   0
 top:    .word   0
-addr:   .addr   0
-stride: .word   0
-hoff:   .word   0
-voff:   .word   0
+mapbits: .addr   0
+mapwidth: .word   0
+cliprect_x1:   .word   0
+cliprect_y1:   .word   0
 width:  .word   0
 height: .word   0
 .endproc
@@ -469,10 +469,10 @@ height: .word   0
 .proc draw_bitmap_params
 left:   .word   0
 top:    .word   0
-addr:   .addr   0
-stride: .word   0
-hoff:   .word   0
-voff:   .word   0
+mapbits: .addr   0
+mapwidth: .word   0
+cliprect_x1:   .word   0
+cliprect_y1:   .word   0
 .endproc
 
         .byte   $00,$00
@@ -600,23 +600,21 @@ id:     .byte   0
 .proc query_screen_params
 left:   .word   0
 top:    .word   0
-addr:   .addr   MGTK::screen_mapbits
-stride: .word   MGTK::screen_mapwidth
+mapbits: .addr   MGTK::screen_mapbits
+mapwidth: .word   MGTK::screen_mapwidth
 L934D:
-hoff:   .word   0
-voff:   .word   0
+cliprect_x1:   .word   0
+cliprect_y1:   .word   0
 width:  .word   screen_width-1
 height: .word   screen_height-1
 pattern:.res    8, $FF
-mskand: .byte   MGTK::colormask_and
-mskor:  .byte   MGTK::colormask_or
-xpos:   .word   0
-ypos:   .word   0
-hthick: .byte   1
-vthick: .byte   1
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+penloc:   DEFINE_POINT 0, 0
+penwidth: .byte   1
+penheight: .byte   1
 mode:   .byte   $96             ; ???
-tmask:  .byte   0
-font:   .addr   DEFAULT_FONT
+textbg:  .byte   0
+fontptr:   .addr   DEFAULT_FONT
 .endproc
 
 .proc query_state_params
@@ -627,22 +625,20 @@ addr:   .addr   set_state_params
 .proc set_state_params
 left:   .word   0
 top:    .word   0
-addr:   .addr   0
-stride: .word   0
-hoff:   .word   0
-voff:   .word   0
+mapbits: .addr   0
+mapwidth: .word   0
+cliprect_x1:   .word   0
+cliprect_y1:   .word   0
 width:  .word   0
 height: .word   0
 pattern:.res    8, 0
-mskand: .byte   0
-mskor:  .byte   0
-xpos:   .word   0
-ypos:   .word   0
-hthick: .byte   0
-vthick: .byte   0
+colormasks:     .byte   0, 0
+penloc:   DEFINE_POINT 0, 0
+penwidth: .byte   0
+penheight: .byte   0
 mode:   .byte   0
-tmask:  .byte   0
-font:   .addr   0
+textbg:  .byte   0
+fontptr:   .addr   0
 .endproc
 
         .byte   $00,$00,$00
@@ -2154,13 +2150,13 @@ L9FB6:  lda     ($06),y
         cpy     #$09
         bne     L9FB6
         jsr     LA365
-        lda     draw_bitmap_params2::addr
+        lda     draw_bitmap_params2::mapbits
         sta     $08
-        lda     draw_bitmap_params2::addr+1
+        lda     draw_bitmap_params2::mapbits+1
         sta     $08+1
         ldy     #$0B
 L9FCF:  lda     ($08),y
-        sta     draw_bitmap_params2::addr,y
+        sta     draw_bitmap_params2::mapbits,y
         dey
         bpl     L9FCF
         bit     L9F92
@@ -2288,12 +2284,12 @@ LA12E:  lda     draw_bitmap_params2,x
         dex
         bpl     LA12E
         ldy     L8E43
-LA13A:  lda     draw_bitmap_params::stride
+LA13A:  lda     draw_bitmap_params::mapwidth
         clc
-        adc     draw_bitmap_params::addr
-        sta     draw_bitmap_params::addr
+        adc     draw_bitmap_params::mapbits
+        sta     draw_bitmap_params::mapbits
         bcc     LA149
-        inc     draw_bitmap_params::addr+1
+        inc     draw_bitmap_params::mapbits+1
 LA149:  dey
         bpl     LA13A
         rts
@@ -2301,10 +2297,10 @@ LA149:  dey
 LA14D:  ldx     #$00
 LA14F:  lda     draw_bitmap_params2::left,x
         clc
-        adc     draw_bitmap_params2::hoff,x
+        adc     draw_bitmap_params2::cliprect_x1,x
         sta     fill_rect_params6,x
         lda     draw_bitmap_params2::left+1,x
-        adc     draw_bitmap_params2::hoff+1,x
+        adc     draw_bitmap_params2::cliprect_x1+1,x
         sta     fill_rect_params6::left+1,x
         lda     draw_bitmap_params2::left,x
         clc
@@ -2890,10 +2886,10 @@ LA62C:  .byte   $00,$00,$00
 .proc set_box_params2
 left:   .word   0
 top:    .word   0
-addr:   .addr   MGTK::screen_mapbits
-stride: .word   MGTK::screen_mapwidth
-hoff:   .word   0
-voff:   .word   0
+mapbits: .addr   MGTK::screen_mapbits
+mapwidth: .word   MGTK::screen_mapwidth
+cliprect_x1:   .word   0
+cliprect_y1:   .word   0
 width:  .word   0
 height: .word   0
 .endproc
@@ -2901,19 +2897,19 @@ height: .word   0
 LA63F:  jsr     LA18A
         lda     L8E07
         sta     LA629
-        sta     set_box_params2::voff
+        sta     set_box_params2::cliprect_y1
         sta     set_box_params2::top
         lda     L8E08
         sta     LA62A
-        sta     set_box_params2::voff+1
+        sta     set_box_params2::cliprect_y1+1
         sta     set_box_params2::top+1
         lda     L8E19
         sta     LA627
-        sta     set_box_params2::hoff
+        sta     set_box_params2::cliprect_x1
         sta     set_box_params2::left
         lda     L8E1A
         sta     LA628
-        sta     set_box_params2::hoff+1
+        sta     set_box_params2::cliprect_x1+1
         sta     set_box_params2::left+1
         ldx     #$03
 LA674:  lda     L8E15,x
@@ -2975,31 +2971,31 @@ LA6C7:  lda     L9F93
         lda     set_box_params2::width
         clc
         adc     #$01
-        sta     set_box_params2::hoff
+        sta     set_box_params2::cliprect_x1
         sta     set_box_params2::left
         lda     set_box_params2::width+1
         adc     #$00
-        sta     set_box_params2::hoff+1
+        sta     set_box_params2::cliprect_x1+1
         sta     set_box_params2::left+1
         ldx     #$05
 LA6E5:  lda     LA629,x
-        sta     set_box_params2::voff,x
+        sta     set_box_params2::cliprect_y1,x
         dex
         bpl     LA6E5
-        lda     set_box_params2::voff
+        lda     set_box_params2::cliprect_y1
         sta     set_box_params2::top
-        lda     set_box_params2::voff+1
+        lda     set_box_params2::cliprect_y1+1
         sta     set_box_params2::top+1
-LA6FA:  lda     set_box_params2::hoff
+LA6FA:  lda     set_box_params2::cliprect_x1
         sta     LA6B3
         sta     LA6BF
-        lda     set_box_params2::hoff+1
+        lda     set_box_params2::cliprect_x1+1
         sta     LA6B4
         sta     LA6C0
-        lda     set_box_params2::voff
+        lda     set_box_params2::cliprect_y1
         sta     LA6B5
         sta     LA6B9
-        lda     set_box_params2::voff+1
+        lda     set_box_params2::cliprect_y1+1
         sta     LA6B6
         sta     LA6BA
         lda     set_box_params2::width
@@ -3085,13 +3081,13 @@ LA7C8:  ldy     #$04
         lda     set_state_params::left+1
         sbc     #0
         sta     set_state_params::left+1
-        lda     set_state_params::hoff
+        lda     set_state_params::cliprect_x1
         sec
         sbc     #2
-        sta     set_state_params::hoff
-        lda     set_state_params::hoff+1
+        sta     set_state_params::cliprect_x1
+        lda     set_state_params::cliprect_x1+1
         sbc     #0
-        sta     set_state_params::hoff+1
+        sta     set_state_params::cliprect_x1+1
         bit     LA6B2
         bmi     LA820
         lda     set_state_params::top
@@ -3100,12 +3096,12 @@ LA7C8:  ldy     #$04
         sta     set_state_params::top
         bcs     LA812
         dec     set_state_params::top+1
-LA812:  lda     set_state_params::voff
+LA812:  lda     set_state_params::cliprect_y1
         sec
         sbc     #$0E
-        sta     set_state_params::voff
+        sta     set_state_params::cliprect_y1
         bcs     LA820
-        dec     set_state_params::voff+1
+        dec     set_state_params::cliprect_y1+1
 LA820:  bit     LA6B1
         bpl     LA833
         lda     set_state_params::height
@@ -3125,17 +3121,17 @@ LA833:  bit     LA6B1
 LA846:  jsr     LA382
         lda     set_state_params::width
         sec
-        sbc     set_state_params::hoff
+        sbc     set_state_params::cliprect_x1
         sta     LA6C3
         lda     set_state_params::width+1
-        sbc     set_state_params::hoff+1
+        sbc     set_state_params::cliprect_x1+1
         sta     LA6C4
         lda     set_state_params::height
         sec
-        sbc     set_state_params::voff
+        sbc     set_state_params::cliprect_y1
         sta     LA6C5
         lda     set_state_params::height+1
-        sbc     set_state_params::voff+1
+        sbc     set_state_params::cliprect_y1+1
         sta     LA6C6
         lda     LA6C3
         clc
@@ -3166,9 +3162,9 @@ LA846:  jsr     LA382
         jmp     LA8D4
 
 LA8B7:  lda     set_state_params::left
-        cmp     set_box_params2::hoff
+        cmp     set_box_params2::cliprect_x1
         lda     set_state_params::left+1
-        sbc     set_box_params2::hoff+1
+        sbc     set_box_params2::cliprect_x1+1
         bmi     LA8D4
         lda     set_state_params::left
         sta     set_box_params2::width
@@ -3177,9 +3173,9 @@ LA8B7:  lda     set_state_params::left
         jmp     LA6FA
 
 LA8D4:  lda     set_state_params::top
-        cmp     set_box_params2::voff
+        cmp     set_box_params2::cliprect_y1
         lda     set_state_params::top+1
-        sbc     set_box_params2::voff+1
+        sbc     set_box_params2::cliprect_y1+1
         bmi     LA8F6
         lda     set_state_params::top
         sta     set_box_params2::height
@@ -3197,21 +3193,21 @@ LA8F6:  lda     LA6C5
         lda     LA6C5
         clc
         adc     #2
-        sta     set_box_params2::voff
+        sta     set_box_params2::cliprect_y1
         sta     set_box_params2::top
         lda     LA6C6
         adc     #0
-        sta     set_box_params2::voff+1
+        sta     set_box_params2::cliprect_y1+1
         sta     set_box_params2::top+1
         lda     #1
         sta     L9F93
         jmp     LA6FA
 
 LA923:  lda     set_box_params2::width
-        sta     set_box_params2::hoff
+        sta     set_box_params2::cliprect_x1
         sta     set_box_params2::left
         lda     set_box_params2::width+1
-        sta     set_box_params2::hoff+1
+        sta     set_box_params2::cliprect_x1+1
         sta     set_box_params2::left+1
         jmp     LA753
 
@@ -3222,13 +3218,13 @@ LA938:  lda     set_state_params::top
         lda     set_state_params::top+1
         adc     #0
         sta     set_state_params::top+1
-        lda     set_state_params::voff
+        lda     set_state_params::cliprect_y1
         clc
         adc     #15
-        sta     set_state_params::voff
-        lda     set_state_params::voff+1
+        sta     set_state_params::cliprect_y1
+        lda     set_state_params::cliprect_y1+1
         adc     #0
-        sta     set_state_params::voff+1
+        sta     set_state_params::cliprect_y1+1
         MGTK_CALL MGTK::SetPort, set_state_params
         rts
 
@@ -3850,7 +3846,7 @@ start:  pha
         ldx     #$03
         lda     #$00
 LBA0B:  sta     state2_left,x
-        sta     state2_hoff,x
+        sta     state2_cliprect_x1,x
         dex
         bpl     LBA0B
         lda     #<$226
@@ -4737,68 +4733,62 @@ id:     .byte   0
 .proc query_state_buffer
 left:   .word   0
 top:    .word   0
-addr:   .addr   0
-stride: .word   0
-hoff:   .word   0
-voff:   .word   0
+mapbits: .addr   0
+mapwidth: .word   0
+cliprect_x1:   .word   0
+cliprect_y1:   .word   0
 width:  .word   0
 height: .word   0
 pattern:.res 8, 0
-mskand: .byte   0
-mskor:  .byte   0
-xpos:   .word   0
-ypos:   .word   0
-hthick: .byte   0
-vthick: .byte   0
+colormasks:     .byte   0, 0
+penloc:   DEFINE_POINT 0, 0
+penwidth: .byte   0
+penheight: .byte   0
 unk:    .byte   0
-tmask:  .byte   0
-font:   .addr   0
+textbg:  .byte   0
+fontptr:   .addr   0
 .endproc
 
 .proc state2
 left:   .word   0
 top:    .word   0
-addr:   .addr   0
-stride: .word   0
-hoff:   .word   0
-voff:   .word   0
+mapbits: .addr   0
+mapwidth: .word   0
+cliprect_x1:   .word   0
+cliprect_y1:   .word   0
 width:  .word   0
 height: .word   0
 pattern:.res 8, 0
-mskand: .byte   0
-mskor:  .byte   0
-xpos:   .word   0
-ypos:   .word   0
-hthick: .byte   0
-vthick: .byte   0
+colormasks:     .byte   0, 0
+penloc:   DEFINE_POINT 0, 0
+penwidth: .byte   0
+penheight: .byte   0
 unk:    .byte   0
-tmask:  .byte   0
-font:   .addr   0
+textbg:  .byte   0
+fontptr:   .addr   0
 .endproc
         state2_left := state2::left
-        state2_hoff := state2::hoff
+        state2_cliprect_x1 := state2::cliprect_x1
         state2_width := state2::width
         state2_height := state2::height
 
 .proc state1
 left:   .word   0
 top:    .word   0
-addr:   .addr   MGTK::screen_mapbits
-stride: .word   MGTK::screen_mapwidth
-hoff:   .word   0
-voff:   .word   0
+mapbits: .addr   MGTK::screen_mapbits
+mapwidth: .word   MGTK::screen_mapwidth
+cliprect_x1:   .word   0
+cliprect_y1:   .word   0
 width:  .word   10
 height: .word   10
 pattern:.res    8, $FF
-mskand: .byte   MGTK::colormask_and
-mskor:  .byte   MGTK::colormask_or
-xpos:   .word   0
-ypos:   .word   0
-hthick: .byte   1
-vthick: .byte   1
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+penloc:   DEFINE_POINT 0, 0
+penwidth: .byte   1
+penheight: .byte   1
 mode:   .byte   0
-tmask:  .byte   0
-font:   .addr   DEFAULT_FONT
+textbg:  .byte   0
+fontptr:   .addr   DEFAULT_FONT
 .endproc
 
 
@@ -4985,190 +4975,185 @@ alert_bitmap2_params:
         .addr   alert_bitmap2
         .byte   $07             ; stride
         .byte   $00
-        .word   0, 0, $24, $17  ; hoff, voff, width, height
+        .word   0, 0, $24, $17  ; cliprect_x1, cliprect_y1, width, height
 
         ;; Looks like window param blocks starting here
 
 .proc winF
-id:     .byte   $0F
-flags:  .byte   MGTK::option_dialog_box
+window_id:     .byte   $0F
+options:  .byte   MGTK::option_dialog_box
 title:  .addr   0
 hscroll:.byte   MGTK::scroll_option_none
 vscroll:.byte   MGTK::scroll_option_none
-hsmax:  .byte   0
-hspos:  .byte   0
-vsmax:  .byte   0
-vspos:  .byte   0
-        .byte   0,0             ; ???
-w1:     .word   $96
-h1:     .word   $32
-w2:     .word   $1F4
-h2:     .word   $8C
+hthumbmax:  .byte   0
+hthumbpos:  .byte   0
+vthumbmax:  .byte   0
+vthumbpos:  .byte   0
+status: .byte   0
+reserved:.byte   0
+mincontwidth:     .word   $96
+maxcontwidth:     .word   $32
+mincontlength:     .word   $1F4
+maxcontlength:     .word   $8C
 left:   .word   $4B
 top:    .word   $23
-addr:   .addr   MGTK::screen_mapbits
-stride: .word   MGTK::screen_mapwidth
-hoff:   .word   0
-voff:   .word   0
+mapbits: .addr   MGTK::screen_mapbits
+mapwidth: .word   MGTK::screen_mapwidth
+cliprect_x1:   .word   0
+cliprect_y1:   .word   0
 width:  .word   $190
 height: .word   $64
 pattern:.res    8, $FF
-mskand: .byte   MGTK::colormask_and
-mskor:  .byte   MGTK::colormask_or
-xpos:   .word   0
-ypos:   .word   0
-hthick: .byte   1
-vthick: .byte   1
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+penloc:   DEFINE_POINT 0, 0
+penwidth: .byte   1
+penheight: .byte   1
 fill:   .byte   0
-tmask:  .byte   MGTK::textbg_white
-font:   .addr   DEFAULT_FONT
-next:   .addr   0
+textbg:  .byte   MGTK::textbg_white
+fontptr:   .addr   DEFAULT_FONT
+nextwinfo:   .addr   0
 .endproc
 
 .proc win12
-id:     .byte   $12
-flags:  .byte   MGTK::option_dialog_box
+window_id:     .byte   $12
+options:  .byte   MGTK::option_dialog_box
 title:  .addr   0
 hscroll:.byte   MGTK::scroll_option_none
 vscroll:.byte   MGTK::scroll_option_none
-hsmax:  .byte   0
-hspos:  .byte   0
-vsmax:  .byte   0
-vspos:  .byte   0
-        .byte   0,0             ; ???
-w1:     .word   $96
-h1:     .word   $32
-w2:     .word   $1F4
-h2:     .word   $8C
+hthumbmax:  .byte   0
+hthumbpos:  .byte   0
+vthumbmax:  .byte   0
+vthumbpos:  .byte   0
+status: .byte   0
+reserved:.byte   0
+mincontwidth:     .word   $96
+maxcontwidth:     .word   $32
+mincontlength:     .word   $1F4
+maxcontlength:     .word   $8C
 left:   .word   $19
 top:    .word   $14
-addr:   .addr   MGTK::screen_mapbits
-stride: .word   MGTK::screen_mapwidth
-hoff:   .word   0
-voff:   .word   0
+mapbits: .addr   MGTK::screen_mapbits
+mapwidth: .word   MGTK::screen_mapwidth
+cliprect_x1:   .word   0
+cliprect_y1:   .word   0
 width:  .word   $1F4
 height: .word   $99
 pattern:.res    8, $FF
-mskand: .byte   MGTK::colormask_and
-mskor:  .byte   MGTK::colormask_or
-xpos:   .word   0
-ypos:   .word   0
-hthick: .byte   1
-vthick: .byte   1
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+penloc:   DEFINE_POINT 0, 0
+penwidth: .byte   1
+penheight: .byte   1
 mode:   .byte   0
-tmask:  .byte   MGTK::textbg_white
-font:   .addr   DEFAULT_FONT
-next:   .addr   0
+textbg:  .byte   MGTK::textbg_white
+fontptr:   .addr   DEFAULT_FONT
+nextwinfo:   .addr   0
 .endproc
 
 .proc win15
-id:     .byte   $15
-flags:  .byte   MGTK::option_dialog_box
+window_id:     .byte   $15
+options:  .byte   MGTK::option_dialog_box
 title:  .addr   0
 hscroll:.byte   MGTK::scroll_option_none
 vscroll:.byte   MGTK::scroll_option_normal
-hsmax:  .byte   0
-hspos:  .byte   0
-vsmax:  .byte   3
-vspos:  .byte   0
-        .byte   0,0             ; ???
-w1:     .word   $64
-h1:     .word   $46
-w2:     .word   $64
-h2:     .word   $46
+hthumbmax:  .byte   0
+hthumbpos:  .byte   0
+vthumbmax:  .byte   3
+vthumbpos:  .byte   0
+status: .byte   0
+reserved:.byte   0
+mincontwidth:     .word   $64
+maxcontwidth:     .word   $46
+mincontlength:     .word   $64
+maxcontlength:     .word   $46
 left:   .word   $35
 top:    .word   $32
-addr:   .addr   MGTK::screen_mapbits
-stride: .word   MGTK::screen_mapwidth
-hoff:   .word   0
-voff:   .word   0
+mapbits: .addr   MGTK::screen_mapbits
+mapwidth: .word   MGTK::screen_mapwidth
+cliprect_x1:   .word   0
+cliprect_y1:   .word   0
 width:  .word   $7D
 height: .word   $46
 pattern:.res    8, $FF
-mskand: .byte   MGTK::colormask_and
-mskor:  .byte   MGTK::colormask_or
-xpos:   .word   0
-ypos:   .word   0
-hthick: .byte   1
-vthick: .byte   1
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+penloc:   DEFINE_POINT 0, 0
+penwidth: .byte   1
+penheight: .byte   1
 mode:   .byte   0
-tmask:  .byte   MGTK::textbg_white
-font:   .addr   DEFAULT_FONT
-next:   .addr   0
+textbg:  .byte   MGTK::textbg_white
+fontptr:   .addr   DEFAULT_FONT
+nextwinfo:   .addr   0
 .endproc
 
 .proc win18
-id:     .byte   $18
-flags:  .byte   MGTK::option_dialog_box
+window_id:     .byte   $18
+options:  .byte   MGTK::option_dialog_box
 title:  .addr   0
 hscroll:.byte   MGTK::scroll_option_none
 vscroll:.byte   MGTK::scroll_option_none
-hsmax:  .byte   0
-hspos:  .byte   0
-vsmax:  .byte   0
-vspos:  .byte   0
-        .byte   0,0             ; ???
-w1:     .word   $96
-h1:     .word   $32
-w2:     .word   $1F4
-h2:     .word   $8C
+hthumbmax:  .byte   0
+hthumbpos:  .byte   0
+vthumbmax:  .byte   0
+vthumbpos:  .byte   0
+status: .byte   0
+reserved:.byte   0
+mincontwidth:     .word   $96
+maxcontwidth:     .word   $32
+mincontlength:     .word   $1F4
+maxcontlength:     .word   $8C
 state:
 left:   .word   $50
 top:    .word   $28
-addr:   .addr   MGTK::screen_mapbits
-stride: .word   MGTK::screen_mapwidth
-hoff:   .word   0
-voff:   .word   0
+mapbits: .addr   MGTK::screen_mapbits
+mapwidth: .word   MGTK::screen_mapwidth
+cliprect_x1:   .word   0
+cliprect_y1:   .word   0
 width:  .word   $190
 height: .word   $6E
 pattern:.res    8, $FF
-mskand: .byte   MGTK::colormask_and
-mskor:  .byte   MGTK::colormask_or
-xpos:   .word   0
-ypos:   .word   0
-hthick: .byte   1
-vthick: .byte   1
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+penloc:   DEFINE_POINT 0, 0
+penwidth: .byte   1
+penheight: .byte   1
 mode:   .byte   0
-tmask:  .byte   MGTK::textbg_white
-font:   .addr   DEFAULT_FONT
-next:   .addr   0
+textbg:  .byte   MGTK::textbg_white
+fontptr:   .addr   DEFAULT_FONT
+nextwinfo:   .addr   0
 .endproc
         win18_state := win18::state
 
 .proc win1B
-id:     .byte   $1B
-flags:  .byte   MGTK::option_dialog_box
+window_id:     .byte   $1B
+options:  .byte   MGTK::option_dialog_box
 title:  .addr   0
 hscroll:.byte   MGTK::scroll_option_none
 vscroll:.byte   MGTK::scroll_option_none
-hsmax:  .byte   0
-hspos:  .byte   0
-vsmax:  .byte   0
-vspos:  .byte   0
-        .byte   0,0             ; ???
-w1:     .word   $96
-h1:     .word   $32
-w2:     .word   $1F4
-h2:     .word   $8C
+hthumbmax:  .byte   0
+hthumbpos:  .byte   0
+vthumbmax:  .byte   0
+vthumbpos:  .byte   0
+status: .byte   0
+reserved:.byte   0
+mincontwidth:     .word   $96
+maxcontwidth:     .word   $32
+mincontlength:     .word   $1F4
+maxcontlength:     .word   $8C
 left:   .word   $69
 top:    .word   $19
-addr:   .addr   MGTK::screen_mapbits
-stride: .word   MGTK::screen_mapwidth
-hoff:   .word   0
-voff:   .word   0
+mapbits: .addr   MGTK::screen_mapbits
+mapwidth: .word   MGTK::screen_mapwidth
+cliprect_x1:   .word   0
+cliprect_y1:   .word   0
 width:  .word   $15E
 height: .word   $6E
 pattern:.res    8, $FF
-mskand: .byte   MGTK::colormask_and
-mskor:  .byte   MGTK::colormask_or
-xpos:   .word   0
-ypos:   .word   0
-hthick: .byte   1
-vthick: .byte   1
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+penloc:   DEFINE_POINT 0, 0
+penwidth: .byte   1
+penheight: .byte   1
 mode:   .byte   0
-tmask:  .byte   MGTK::textbg_white
-font:   .addr   DEFAULT_FONT
-next:   .addr   0
+textbg:  .byte   MGTK::textbg_white
+fontptr:   .addr   DEFAULT_FONT
+nextwinfo:   .addr   0
 .endproc
 
         ;; Coordinates for labels?
@@ -5184,7 +5169,7 @@ dialog_label_pos:
 LD6C7:  DEFINE_POINT 75, 35
         .addr   MGTK::screen_mapbits
         .word   MGTK::screen_mapwidth
-        .word   0, 0            ; hoff, voff
+        .word   0, 0            ; cliprect_x1, cliprect_y1
         .word   $166, $64       ; width, height
 
         ;; ???
@@ -5587,53 +5572,52 @@ length: .byte   0
 data:   .res    55, 0
 .endproc
 
-.macro WIN_PARAMS_DEFN window_id, label, buflabel
+.macro WINFO_DEFN id, label, buflabel
 .proc label
-id:     .byte   window_id
-flags:  .byte   MGTK::option_go_away_box | MGTK::option_grow_box
+window_id:     .byte   id
+options:  .byte   MGTK::option_go_away_box | MGTK::option_grow_box
 title:  .addr   buflabel
 hscroll:.byte   MGTK::scroll_option_normal
 vscroll:.byte   MGTK::scroll_option_normal
-hsmax:  .byte   3
-hspos:  .byte   0
-vsmax:  .byte   3
-vspos:  .byte   0
-        .byte   0,0             ; ???
-w1:     .word   170
-h1:     .word   50
-w2:     .word   545
-h2:     .word   175
+hthumbmax:  .byte   3
+hthumbpos:  .byte   0
+vthumbmax:  .byte   3
+vthumbpos:  .byte   0
+status: .byte   0
+reserved:.byte   0
+mincontwidth:     .word   170
+maxcontwidth:     .word   50
+mincontlength:     .word   545
+maxcontlength:     .word   175
 left:   .word   20
 top:    .word   27
-addr:   .addr   MGTK::screen_mapbits
-stride: .word   MGTK::screen_mapwidth
-hoff:   .word   0
-voff:   .word   0
+mapbits: .addr   MGTK::screen_mapbits
+mapwidth: .word   MGTK::screen_mapwidth
+cliprect_x1:   .word   0
+cliprect_y1:   .word   0
 width:  .word   440
 height: .word   120
 pattern:.res    8, $FF
-mskand: .byte   MGTK::colormask_and
-mskor:  .byte   MGTK::colormask_or
-xpos:   .word   0
-ypos:   .word   0
-hthick: .byte   1
-vthick: .byte   1
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+penloc:   DEFINE_POINT 0, 0
+penwidth: .byte   1
+penheight: .byte   1
 mode:   .byte   0
-tmask:  .byte   MGTK::textbg_white
-font:   .addr   DEFAULT_FONT
-next:   .addr   0
+textbg:  .byte   MGTK::textbg_white
+fontptr:   .addr   DEFAULT_FONT
+nextwinfo:   .addr   0
 .endproc
 buflabel:.res    18, 0
 .endmacro
 
-        WIN_PARAMS_DEFN 1, win1, win1buf
-        WIN_PARAMS_DEFN 2, win2, win2buf
-        WIN_PARAMS_DEFN 3, win3, win3buf
-        WIN_PARAMS_DEFN 4, win4, win4buf
-        WIN_PARAMS_DEFN 5, win5, win5buf
-        WIN_PARAMS_DEFN 6, win6, win6buf
-        WIN_PARAMS_DEFN 7, win7, win7buf
-        WIN_PARAMS_DEFN 8, win8, win8buf
+        WINFO_DEFN 1, win1, win1buf
+        WINFO_DEFN 2, win2, win2buf
+        WINFO_DEFN 3, win3, win3buf
+        WINFO_DEFN 4, win4, win4buf
+        WINFO_DEFN 5, win5, win5buf
+        WINFO_DEFN 6, win6, win6buf
+        WINFO_DEFN 7, win7, win7buf
+        WINFO_DEFN 8, win8, win8buf
 
 
         ;; 8 entries; each entry is 65 bytes long
@@ -6275,7 +6259,7 @@ L41E2:  lda     bufnum
         jsr     L44F2
         jsr     L6E52
         ldx     #7
-L41F0:  lda     query_state_buffer::hoff,x
+L41F0:  lda     query_state_buffer::cliprect_x1,x
         sta     rect_E230,x
         dex
         bpl     L41F0
@@ -6321,7 +6305,7 @@ L424A:  lda     #$00
         jsr     L4505
         jsr     L6E8E
         ldx     #7
-L4267:  lda     query_state_buffer::hoff,x
+L4267:  lda     query_state_buffer::cliprect_x1,x
         sta     rect_E230,x
         dex
         bpl     L4267
@@ -8158,7 +8142,7 @@ L511E:  sta     buf3len
         jsr     L4505
         jsr     L6E8E
         jsr     L4904
-        MGTK_RELAY_CALL MGTK::PaintRect, query_state_buffer::hoff
+        MGTK_RELAY_CALL MGTK::PaintRect, query_state_buffer::cliprect_x1
         lda     desktop_active_winid
         jsr     L7D5D
         sta     L51EB
@@ -8245,7 +8229,7 @@ L51F0:  ldx     desktop_active_winid
         jsr     L4505
         jsr     L6E8E
         jsr     L4904
-        MGTK_RELAY_CALL MGTK::PaintRect, query_state_buffer::hoff
+        MGTK_RELAY_CALL MGTK::PaintRect, query_state_buffer::cliprect_x1
         lda     desktop_active_winid
         jsr     L7D5D
         sta     L5263
@@ -9562,7 +9546,7 @@ L5C54:  lda     $D20D
 L5C71:  lda     desktop_active_winid
         sta     query_state_params2::id
         jsr     L44F2
-        MGTK_RELAY_CALL MGTK::PaintRect, query_state_buffer::hoff
+        MGTK_RELAY_CALL MGTK::PaintRect, query_state_buffer::cliprect_x1
         jsr     reset_state2
         jmp     L6C19
 
@@ -9792,7 +9776,7 @@ L5E8F:  lda     desktop_active_winid
         sta     query_state_params2::id
         jsr     L44F2
         jsr     L4904
-        MGTK_RELAY_CALL MGTK::PaintRect, query_state_buffer::hoff
+        MGTK_RELAY_CALL MGTK::PaintRect, query_state_buffer::cliprect_x1
         ldx     desktop_active_winid
         dex
         lda     LEC26,x
@@ -10315,11 +10299,11 @@ L638C:  jsr     L650F
         sty     L63E9
         jsr     L644C
         sta     L63E8
-        lda     query_state_buffer::voff
+        lda     query_state_buffer::cliprect_y1
         sec
         sbc     L63E8
         sta     L63EA
-        lda     query_state_buffer::voff+1
+        lda     query_state_buffer::cliprect_y1+1
         sbc     #$00
         sta     L63EB
         lda     L63EA
@@ -10333,13 +10317,13 @@ L638C:  jsr     L650F
 
 L63C1:  lda     L7B61
         ldx     L7B62
-L63C7:  sta     query_state_buffer::voff
-        stx     query_state_buffer::voff+1
-        lda     query_state_buffer::voff
+L63C7:  sta     query_state_buffer::cliprect_y1
+        stx     query_state_buffer::cliprect_y1+1
+        lda     query_state_buffer::cliprect_y1
         clc
         adc     L63E9
         sta     query_state_buffer::height
-        lda     query_state_buffer::voff+1
+        lda     query_state_buffer::cliprect_y1+1
         adc     #$00
         sta     query_state_buffer::height+1
         jsr     L653E
@@ -10377,10 +10361,10 @@ L6427:  sta     query_state_buffer::height
         lda     query_state_buffer::height
         sec
         sbc     L6449
-        sta     query_state_buffer::voff
+        sta     query_state_buffer::cliprect_y1
         lda     query_state_buffer::height+1
         sbc     #$00
-        sta     query_state_buffer::voff+1
+        sta     query_state_buffer::cliprect_y1+1
         jsr     L653E
         jsr     L6DB1
         jmp     L6556
@@ -10397,11 +10381,11 @@ L644C:  tya
 L6451:  jsr     L650F
         sta     L64AC
         stx     L64AD
-        lda     query_state_buffer::hoff
+        lda     query_state_buffer::cliprect_x1
         sec
         sbc     L64AC
         sta     L64AE
-        lda     query_state_buffer::hoff+1
+        lda     query_state_buffer::cliprect_x1+1
         sbc     L64AD
         sta     L64AF
         lda     L64AE
@@ -10415,13 +10399,13 @@ L6451:  jsr     L650F
 
 L6484:  lda     L7B5F
         ldx     L7B60
-L648A:  sta     query_state_buffer::hoff
-        stx     query_state_buffer::hoff+1
-        lda     query_state_buffer::hoff
+L648A:  sta     query_state_buffer::cliprect_x1
+        stx     query_state_buffer::cliprect_x1+1
+        lda     query_state_buffer::cliprect_x1
         clc
         adc     L64AC
         sta     query_state_buffer::width
-        lda     query_state_buffer::hoff+1
+        lda     query_state_buffer::cliprect_x1+1
         adc     L64AD
         sta     query_state_buffer::width+1
         jsr     L653E
@@ -10458,10 +10442,10 @@ L64E9:  sta     query_state_buffer::width
         lda     query_state_buffer::width
         sec
         sbc     L650B
-        sta     query_state_buffer::hoff
+        sta     query_state_buffer::cliprect_x1
         lda     query_state_buffer::width+1
         sbc     L650C
-        sta     query_state_buffer::hoff+1
+        sta     query_state_buffer::cliprect_x1+1
         jsr     L653E
         jsr     L6DB1
         jmp     L6556
@@ -10499,7 +10483,7 @@ L653E:  lda     desktop_active_winid
         stx     $06+1
         ldy     #$23
         ldx     #$07
-L654C:  lda     query_state_buffer::hoff,x
+L654C:  lda     query_state_buffer::cliprect_x1,x
         sta     ($06),y
         dey
         dex
@@ -10509,7 +10493,7 @@ L654C:  lda     query_state_buffer::hoff,x
 L6556:  bit     L5B1B
         bmi     L655E
         jsr     L6E6E
-L655E:  MGTK_RELAY_CALL MGTK::PaintRect, query_state_buffer::hoff
+L655E:  MGTK_RELAY_CALL MGTK::PaintRect, query_state_buffer::cliprect_x1
         jsr     reset_state2
         jmp     L6C19
 
@@ -10541,11 +10525,11 @@ L656D:  lda     desktop_active_winid
         lsr     L6603
         ror     L6602
         ldx     L6602
-        lda     query_state_buffer::hoff
+        lda     query_state_buffer::cliprect_x1
         sec
         sbc     L7B5F
         sta     L6602
-        lda     query_state_buffer::hoff+1
+        lda     query_state_buffer::cliprect_x1+1
         sbc     L7B60
         sta     L6603
         bpl     L65D0
@@ -10602,11 +10586,11 @@ L6604:  lda     desktop_active_winid
         lsr     L66A1
         ror     L66A0
         ldx     L66A0
-        lda     query_state_buffer::voff
+        lda     query_state_buffer::cliprect_y1
         sec
         sbc     L7B61
         sta     L66A0
-        lda     query_state_buffer::voff+1
+        lda     query_state_buffer::cliprect_y1+1
         sbc     L7B62
         sta     L66A1
         bpl     L6669
@@ -11280,7 +11264,7 @@ L6CCD:  lda     bufnum
 L6CDE:  jsr     L6E52
         jsr     L6E8E
         ldx     #$07
-L6CE6:  lda     query_state_buffer::hoff,x
+L6CE6:  lda     query_state_buffer::cliprect_x1,x
         sta     rect_E230,x
         dex
         bpl     L6CE6
@@ -11376,9 +11360,9 @@ L6DC9:  lda     desktop_active_winid
         sta     query_state_params2::id
         jsr     L44F2
         lda     L7B5F
-        cmp     query_state_buffer::hoff
+        cmp     query_state_buffer::cliprect_x1
         lda     L7B60
-        sbc     query_state_buffer::hoff+1
+        sbc     query_state_buffer::cliprect_x1+1
         bmi     L6DFE
         lda     query_state_buffer::width
         cmp     L7B63
@@ -11399,9 +11383,9 @@ L6DFE:  lda     #$02
         jsr     L6E48
         jsr     L656D
 L6E0E:  lda     L7B61
-        cmp     query_state_buffer::voff
+        cmp     query_state_buffer::cliprect_y1
         lda     L7B62
-        sbc     query_state_buffer::voff+1
+        sbc     query_state_buffer::cliprect_y1+1
         bmi     L6E38
         lda     query_state_buffer::height
         cmp     L7B65
@@ -11464,13 +11448,13 @@ L6E90:  sta     L6EC4
         lda     query_state_buffer::top+1
         adc     #$00
         sta     query_state_buffer::top+1
-        lda     query_state_buffer::voff
+        lda     query_state_buffer::cliprect_y1
         clc
         adc     #$0F
-        sta     query_state_buffer::voff
-        lda     query_state_buffer::voff+1
+        sta     query_state_buffer::cliprect_y1
+        lda     query_state_buffer::cliprect_y1+1
         adc     #$00
-        sta     query_state_buffer::voff+1
+        sta     query_state_buffer::cliprect_y1+1
         bit     L6EC4
         bmi     L6EC3
         MGTK_RELAY_CALL MGTK::SetPort, query_state_buffer
@@ -12678,21 +12662,21 @@ L78C2:  lda     LFB04           ; ???
         rts
 
 L78EE:  .byte   0
-L78EF:  lda     query_state_buffer::hoff
+L78EF:  lda     query_state_buffer::cliprect_x1
         sta     LEBBE           ; Directory header line (items / k in disk)
         clc
         adc     #$05
         sta     items_label_pos
-        lda     query_state_buffer::hoff+1
+        lda     query_state_buffer::cliprect_x1+1
         sta     $EBBF
         adc     #$00
         sta     $EBBB
-        lda     query_state_buffer::voff
+        lda     query_state_buffer::cliprect_y1
         clc
         adc     #$0C
         sta     $EBC0
         sta     $EBC4
-        lda     query_state_buffer::voff+1
+        lda     query_state_buffer::cliprect_y1+1
         adc     #$00
         sta     $EBC1
         sta     $EBC5
@@ -12714,11 +12698,11 @@ L78EF:  lda     query_state_buffer::hoff
         sta     $EBC5
         MGTK_RELAY_CALL MGTK::MoveTo, LEBBE
         MGTK_RELAY_CALL MGTK::LineTo, LEBC2
-        lda     query_state_buffer::voff
+        lda     query_state_buffer::cliprect_y1
         clc
         adc     #$0A
         sta     items_label_pos+2
-        lda     query_state_buffer::voff+1
+        lda     query_state_buffer::cliprect_y1+1
         adc     #$00
         sta     items_label_pos+3
         lda     buf3len
@@ -12768,10 +12752,10 @@ L79A7:  jsr     L79F7
 
 L79F7:  lda     query_state_buffer::width
         sec
-        sbc     query_state_buffer::hoff
+        sbc     query_state_buffer::cliprect_x1
         sta     L7ADE
         lda     query_state_buffer::width+1
-        sbc     query_state_buffer::hoff+1
+        sbc     query_state_buffer::cliprect_x1+1
         sta     L7ADF
         lda     L7ADE
         sec
@@ -12833,17 +12817,17 @@ L7A86:  lda     LEBE3
         sta     LEBEF+1
 L7A9E:  lda     LEBEB
         clc
-        adc     query_state_buffer::hoff
+        adc     query_state_buffer::cliprect_x1
         sta     LEBEB
         lda     LEBEB+1
-        adc     query_state_buffer::hoff+1
+        adc     query_state_buffer::cliprect_x1+1
         sta     LEBEB+1
         lda     LEBEF
         clc
-        adc     query_state_buffer::hoff
+        adc     query_state_buffer::cliprect_x1
         sta     LEBEF
         lda     LEBEF+1
-        adc     query_state_buffer::hoff+1
+        adc     query_state_buffer::cliprect_x1+1
         sta     LEBEF+1
         lda     items_label_pos+2
         sta     LEBEB+2
@@ -13671,9 +13655,9 @@ L81D9:  lda     $E6DB
         bcc     L81E8
         inc     $E6DC
 L81E8:  lda     $E6DB
-        cmp     query_state_buffer::voff
+        cmp     query_state_buffer::cliprect_y1
         lda     $E6DC
-        sbc     query_state_buffer::voff+1
+        sbc     query_state_buffer::cliprect_y1+1
         bpl     L81F7
         rts
 
@@ -13983,17 +13967,17 @@ L84D1:  jsr     push_zp_addrs
         jsr     L6E52
 L84DC:  lda     query_state_buffer::width
         sec
-        sbc     query_state_buffer::hoff
+        sbc     query_state_buffer::cliprect_x1
         sta     L85F8
         lda     query_state_buffer::width+1
-        sbc     query_state_buffer::hoff+1
+        sbc     query_state_buffer::cliprect_x1+1
         sta     L85F9
         lda     query_state_buffer::height
         sec
-        sbc     query_state_buffer::voff
+        sbc     query_state_buffer::cliprect_y1
         sta     L85FA
         lda     query_state_buffer::height+1
-        sbc     query_state_buffer::voff+1
+        sbc     query_state_buffer::cliprect_y1+1
         sta     L85FB
         lda     input_params_state
         cmp     #MGTK::button_down
@@ -14053,10 +14037,10 @@ L8562:  lsr     L85F3
         ldx     L85F1
         clc
         adc     L7B5F,x
-        sta     query_state_buffer::hoff,x
+        sta     query_state_buffer::cliprect_x1,x
         lda     L85F2
         adc     L7B60,x
-        sta     query_state_buffer::hoff+1,x
+        sta     query_state_buffer::cliprect_x1+1,x
         lda     desktop_active_winid
         jsr     L7D5D
         sta     L85F4
@@ -14064,20 +14048,20 @@ L8562:  lsr     L85F3
         sty     L85F6
         lda     L85F1
         beq     L85C3
-        lda     query_state_buffer::voff
+        lda     query_state_buffer::cliprect_y1
         clc
         adc     L85F6
         sta     query_state_buffer::height
-        lda     query_state_buffer::voff+1
+        lda     query_state_buffer::cliprect_y1+1
         adc     #$00
         sta     query_state_buffer::height+1
         jmp     L85D6
 
-L85C3:  lda     query_state_buffer::hoff
+L85C3:  lda     query_state_buffer::cliprect_x1
         clc
         adc     L85F4
         sta     query_state_buffer::width
-        lda     query_state_buffer::hoff+1
+        lda     query_state_buffer::cliprect_x1+1
         adc     L85F5
         sta     query_state_buffer::width+1
 L85D6:  lda     desktop_active_winid
@@ -14086,7 +14070,7 @@ L85D6:  lda     desktop_active_winid
         stx     $06+1
         ldy     #$23
         ldx     #$07
-L85E4:  lda     query_state_buffer::hoff,x
+L85E4:  lda     query_state_buffer::cliprect_x1,x
         sta     ($06),y
         dey
         dex
@@ -14700,7 +14684,7 @@ L8996:  .byte   0
 
 L8997:  lda     #$00
         tax
-L899A:  sta     state1::hoff,x
+L899A:  sta     state1::cliprect_x1,x
         sta     state1::left,x
         sta     state1::width,x
         inx
@@ -14990,17 +14974,17 @@ L8BC1:  lda     query_state_buffer,x
         bpl     L8BC1
         lda     query_state_buffer::width
         sec
-        sbc     query_state_buffer::hoff
+        sbc     query_state_buffer::cliprect_x1
         sta     L8D54
         lda     query_state_buffer::width+1
-        sbc     query_state_buffer::hoff+1
+        sbc     query_state_buffer::cliprect_x1+1
         sta     L8D55
         lda     query_state_buffer::height
         sec
-        sbc     query_state_buffer::voff
+        sbc     query_state_buffer::cliprect_y1
         sta     L8D56
         lda     query_state_buffer::height+1
-        sbc     query_state_buffer::voff+1
+        sbc     query_state_buffer::cliprect_y1+1
         sta     L8D57
         lda     $0858
         clc
@@ -18324,8 +18308,8 @@ LA899:  jmp     dummy0000
 ;;; "About" dialog
 
 .proc show_about_dialog
-        MGTK_RELAY_CALL MGTK::OpenWindow, win18::id
-        lda     win18::id
+        MGTK_RELAY_CALL MGTK::OpenWindow, win18
+        lda     win18::window_id
         jsr     LB7B9
         jsr     set_fill_black
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::about_dialog_outer_rect
@@ -18362,7 +18346,7 @@ LA899:  jmp     dummy0000
         bne     :-
         jmp     close
 
-close:  MGTK_RELAY_CALL MGTK::CloseWindow, win18::id
+close:  MGTK_RELAY_CALL MGTK::CloseWindow, win18
         jsr     reset_state
         jsr     set_cursor_pointer_with_flag
         rts
