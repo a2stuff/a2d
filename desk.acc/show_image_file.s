@@ -350,6 +350,7 @@ end:    rts
         MGTK_CALL MGTK::ShowCursor
 
         MGTK_CALL MGTK::FlushEvents
+        MGTK_CALL MGTK::ObscureCursor
         ;; fall through
 .endproc
 

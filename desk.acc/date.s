@@ -232,10 +232,10 @@ which_area:.byte   0
 window_id: .byte   0
 .endproc
 
-        window_id := 100
+        da_window_id := 100
 
 .proc screentowindow_params
-id:     .byte   window_id
+window_id:     .byte   da_window_id
 screen:
 screenx:.word   0
 screeny:.word   0
@@ -245,7 +245,7 @@ windowy:.word   0
 .endproc
 
 .proc closewindow_params
-id:     .byte   window_id
+window_id:     .byte   da_window_id
 .endproc
         .byte $00,$01           ; ???
 
@@ -255,7 +255,7 @@ penmode:   .byte   $02             ; this should be normal, but we do inverts ??
         .byte   $06             ; ???
 
 .proc winfo
-id:     .byte   window_id
+window_id:     .byte   da_window_id
 options:.byte   MGTK::option_dialog_box
 title:  .addr   0
 hscroll:.byte   MGTK::scroll_option_none
@@ -267,23 +267,17 @@ vthumbpos:  .byte   0
 status:     .byte       0
 reserved:       .byte   0
 mincontwidth:     .word   100
-mincontlength:     .word   100
-maxcontwidth:     .word   $1F4
+maxcontwidth:     .word   100
+mincontlength:     .word   $1F4
 maxcontlength:     .word   $1F4
-.proc port
-left:   .word   180
-top:    .word   50
+port:
+viewloc:        DEFINE_POINT 180, 50
 mapbits:   .addr   MGTK::screen_mapbits
 mapwidth: .word   MGTK::screen_mapwidth
-hoff:   .word   0
-voff:   .word   0
-width:  .word   $C7
-height: .word   $40
-.endproc
+cliprect:       DEFINE_RECT 0, 0, $C7, $40
 pattern:.res    8,$00
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-xpos:   .word   0
-ypos:   .word   0
+penloc: DEFINE_POINT 0, 0
 penwidth: .byte   4
 penheight: .byte   2
 penmode:   .byte   0
@@ -407,7 +401,7 @@ update_selection:
         MGTK_CALL MGTK::SetPenMode, penmode_params
         MGTK_CALL MGTK::SetPattern, white_pattern
         lda     findwindow_params::window_id
-        cmp     #window_id
+        cmp     #da_window_id
         bne     miss
         lda     findwindow_params::which_area
         bne     hit

@@ -212,7 +212,7 @@ black_pattern:
 white_pattern:
         .res    $8, $FF
 
-        window_id := 100
+        da_window_id := 100
 
 L095A:  .byte   $00
 L095B:  .byte   $FA
@@ -244,57 +244,59 @@ fixed_mode_flag:
 .proc event_params
 kind:  .byte   0
 coords:                         ; spills into target query
-xcoord: .word   0
-ycoord: .word   0
+mousex: .word   0
+mousey: .word   0
 .endproc
+
 .proc findwindow_params
-elem:   .byte   0
-win:    .byte   0
+which_area:   .byte   0
+window_id:    .byte   0
 .endproc
 
 .proc growwindow_params
-id:     .byte   window_id
-xcoord: .word   0
-ycoord: .word   0
-        .byte   0               ; ???
+window_id:     .byte   da_window_id
+mousex: .word   0
+mousey: .word   0
+it_grew:        .byte   0
 .endproc
 
 .proc trackgoaway_params          ; queried after close clicked to see if aborted/finished
 goaway:  .byte   0               ; 0 = aborted, 1 = clicked
-        .byte   0,0             ; ???
 .endproc
 
+        .byte   0,0             ; ???
+
 .proc findcontrol_params       ; queried after a client click to identify target
-xcoord: .word   0
-ycoord: .word   0
-part:   .byte   0               ; 0 = client, 1 = vscroll, 2 = hscroll
-scroll: .byte   0               ; 1 = up, 2 = down, 3 = above, 4 = below, 5 = thumb
+mousex: .word   0
+mousey: .word   0
+which_ctl:   .byte   0               ; 0 = client, 1 = vscroll, 2 = hscroll
+which_part: .byte   0               ; 1 = up, 2 = down, 3 = above, 4 = below, 5 = thumb
 .endproc
 
         ;; param block used in dead code (resize?)
-.proc resize_window_params
-part:   .byte   0
-L0987:  .byte   0
+.proc setctlmax_params
+which_ctl:   .byte   0
+ctlmax:  .byte   0
         ;; needs one more byte?
 .endproc
 
 .proc updatethumb_params      ; called to update scroll bar position
-type:   .byte   0               ; 1 = vscroll, 2 = hscroll
-pos:    .byte   0               ; new position
+which_ctl:   .byte   0               ; 1 = vscroll, 2 = hscroll
+thumbpos:    .byte   0               ; new position
 .endproc
 
 ;;; Used when dragging vscroll thumb
-.proc thumb_drag_params
-type:   .byte   0               ; 1 = vscroll, 2 = hscroll
-xcoord: .word   0
-ycoord: .word   0
-pos:    .byte   0               ; position
-moved:  .byte   0               ; 0 if not moved, 1 if moved
+.proc trackthumb_params
+which_ctl:   .byte   0               ; 1 = vscroll, 2 = hscroll
+mousex: .word   0
+mousey: .word   0
+thumbpos:    .byte   0               ; position
+thumbmoved:  .byte   0               ; 0 if not moved, 1 if moved
 .endproc
 
-.proc text_string
-addr:   .addr   0               ; address
-len:    .byte   0               ; length
+.proc drawtext_params
+textptr:   .addr   0               ; address
+textlen:    .byte   0               ; length
 .endproc
 
         default_width := 512
@@ -303,7 +305,7 @@ len:    .byte   0               ; length
         default_top := 28
 
 .proc winfo
-id:     .byte   window_id       ; window identifier
+window_id:     .byte   da_window_id       ; window identifier
 options:  .byte   MGTK::option_go_away_box; window flags (2=include close port)
 title:  .addr   $1000           ; overwritten to point at filename
 hscroll:.byte   MGTK::scroll_option_none
@@ -319,39 +321,30 @@ mincontlength:     .word   51
 maxcontwidth:     .word   default_width
 maxcontlength:     .word   default_height
 
-.proc port
-left:   .word   default_left
-top:    .word   default_top
+port:
+        DEFINE_POINT default_left, default_top, viewloc
 mapbits:   .addr   MGTK::screen_mapbits
 mapwidth: .word   MGTK::screen_mapwidth
-hoff:   .word   0               ; Also used for MGTK::PaintRect
-voff:   .word   0
-width:  .word   default_width
-height: .word   default_height
-.endproc
+        DEFINE_RECT 0, 0, default_width, default_height, maprect
 
 pattern:.res    8, $00
 colormasks:      .byte MGTK::colormask_and, MGTK::colormask_or
-xpos:   .word   0
-ypos:   .word   0
+penloc: DEFINE_POINT 0, 0
 penwidth: .byte   1
 penheight: .byte   1
 penmode:   .byte   0
 textback:  .byte   $7F
 textfont:   .addr   DEFAULT_FONT
+
 nextwinfo:   .addr   0
 .endproc
 
         ;; gets copied over winfo::port after mode is drawn
-.proc default_box
-left:   .word   default_left
-top:    .word   default_top
+.proc default_port
+viewloc:        DEFINE_POINT   default_left, default_top
 mapbits:   .word   MGTK::screen_mapbits
 mapwidth: .word   MGTK::screen_mapwidth
-hoff:   .word   0
-voff:   .word   0
-width:  .word   default_width
-height: .word   default_height
+maprect:        DEFINE_RECT 0, 0, default_width, default_height
 .endproc
 
 .proc init
@@ -516,25 +509,25 @@ input_loop:
         bne     input_loop      ; nope, keep waiting
 
         MGTK_CALL MGTK::FindWindow, event_params::coords
-        lda     findwindow_params::win ; in our window?
-        cmp     #window_id
+        lda     findwindow_params::window_id ; in our window?
+        cmp     #da_window_id
         bne     input_loop
 
         ;; which part of the window?
-        lda     findwindow_params::elem
+        lda     findwindow_params::which_area
         cmp     #MGTK::area_close_box
         beq     on_close_click
 
         ;; title and resize clicks need mouse location
-        ldx     event_params::xcoord
-        stx     growwindow_params::xcoord
-        stx     findcontrol_params::xcoord
-        ldx     event_params::xcoord+1
-        stx     growwindow_params::xcoord+1
-        stx     findcontrol_params::xcoord+1
-        ldx     event_params::ycoord
-        stx     growwindow_params::ycoord
-        stx     findcontrol_params::ycoord
+        ldx     event_params::mousex
+        stx     growwindow_params::mousex
+        stx     findcontrol_params::mousex
+        ldx     event_params::mousex+1
+        stx     growwindow_params::mousex+1
+        stx     findcontrol_params::mousex+1
+        ldx     event_params::mousey
+        stx     growwindow_params::mousey
+        stx     findcontrol_params::mousey
 
         cmp     #MGTK::area_dragbar
         beq     title
@@ -570,23 +563,23 @@ title:  jsr     on_title_bar_click
 
         max_width := default_width
         lda     #>max_width
-        cmp     winfo::port::width+1
+        cmp     winfo::maprect::x2+1
         bne     :+
         lda     #<max_width
-        cmp     winfo::port::width
+        cmp     winfo::maprect::x2
 :       bcs     wider
 
         lda     #<max_width
-        sta     winfo::port::width
+        sta     winfo::maprect::x2
         lda     #>max_width
-        sta     winfo::port::width+1
+        sta     winfo::maprect::x2+1
         sec
-        lda     winfo::port::width
+        lda     winfo::maprect::x2
         sbc     window_width
-        sta     winfo::port::hoff
-        lda     winfo::port::width+1
+        sta     winfo::maprect::x1
+        lda     winfo::maprect::x2+1
         sbc     window_width+1
-        sta     winfo::port::hoff+1
+        sta     winfo::maprect::x1+1
 wider:  lda     winfo::hscroll
         ldx     window_width
         cpx     #<max_width
@@ -608,10 +601,10 @@ enable: ora     #MGTK::scroll_option_active           ; enable scroll
         sbc     window_width+1
         sta     $07
         jsr     div_by_16
-        sta     resize_window_params::L0987
+        sta     setctlmax_params::ctlmax
         lda     #MGTK::ctl_horizontal_scroll_bar
-        sta     resize_window_params::part
-        MGTK_CALL MGTK::SetCtlMax, resize_window_params ; change to clamped size ???
+        sta     setctlmax_params::which_ctl
+        MGTK_CALL MGTK::SetCtlMax, setctlmax_params ; change to clamped size ???
         jsr     calc_and_draw_mode
         jmp     finish_resize
 .endproc
@@ -623,7 +616,7 @@ enable: ora     #MGTK::scroll_option_active           ; enable scroll
 .proc on_client_click
         ;; On one of the scroll bars?
         MGTK_CALL MGTK::FindControl, findcontrol_params
-        lda     findcontrol_params::part
+        lda     findcontrol_params::which_ctl
         cmp     #MGTK::ctl_vertical_scroll_bar
         beq     on_vscroll_click
         cmp     #MGTK::ctl_horizontal_scroll_bar
@@ -637,9 +630,9 @@ end:    rts
 
 .proc on_vscroll_click
         lda     #MGTK::ctl_vertical_scroll_bar
-        sta     thumb_drag_params::type
-        sta     updatethumb_params::type
-        lda     findcontrol_params::scroll
+        sta     trackthumb_params::which_ctl
+        sta     updatethumb_params::which_ctl
+        lda     findcontrol_params::which_part
         cmp     #MGTK::part_thumb
         beq     on_vscroll_thumb_click
         cmp     #MGTK::part_page_down
@@ -655,11 +648,11 @@ end:    rts
 .endproc
 
 .proc on_vscroll_thumb_click
-        jsr     do_thumb_drag
-        lda     thumb_drag_params::moved
+        jsr     do_trackthumb
+        lda     trackthumb_params::thumbmoved
         beq     end
-        lda     thumb_drag_params::pos
-        sta     updatethumb_params::pos
+        lda     trackthumb_params::thumbpos
+        sta     updatethumb_params::thumbpos
         jsr     update_voffset
         jsr     update_vscroll
         jsr     draw_content
@@ -680,7 +673,7 @@ loop:   lda     winfo::vthumbpos
         sbc     track_scroll_delta
         bcs     store
         lda     #0              ; underflow
-store:  sta     updatethumb_params::pos
+store:  sta     updatethumb_params::thumbpos
         jsr     update_scroll_pos
         bcc     loop            ; repeat while button down
 end:    rts
@@ -691,7 +684,7 @@ loop :  lda     winfo::vthumbpos
         beq     end
         sec
         sbc     #1
-        sta     updatethumb_params::pos
+        sta     updatethumb_params::thumbpos
         jsr     update_scroll_pos
         bcc     loop            ; repeat while button down
 end:    rts
@@ -712,7 +705,7 @@ loop:   lda     winfo::vthumbpos
         bcc     store           ; nope, it's good
 overflow:
         lda     #vscroll_max    ; set to max
-store:  sta     updatethumb_params::pos
+store:  sta     updatethumb_params::thumbpos
         jsr     update_scroll_pos
         bcc     loop            ; repeat while button down
 end:    rts
@@ -724,7 +717,7 @@ loop:   lda     winfo::vthumbpos
         beq     end
         clc
         adc     #1
-        sta     updatethumb_params::pos
+        sta     updatethumb_params::thumbpos
         jsr     update_scroll_pos
         bcc     loop            ; repeat while button down
 end:    rts
@@ -759,9 +752,9 @@ loop:   inx
 
 .proc on_hscroll_click
         lda     #MGTK::ctl_horizontal_scroll_bar
-        sta     thumb_drag_params::type
-        sta     updatethumb_params::type
-        lda     findcontrol_params::scroll
+        sta     trackthumb_params::which_ctl
+        sta     updatethumb_params::which_ctl
+        lda     findcontrol_params::which_part
         cmp     #MGTK::part_thumb
         beq     on_hscroll_thumb_click
         cmp     #MGTK::part_page_right
@@ -776,22 +769,22 @@ loop:   inx
 .endproc
 
 .proc on_hscroll_thumb_click
-        jsr     do_thumb_drag
-        lda     thumb_drag_params::moved
+        jsr     do_trackthumb
+        lda     trackthumb_params::thumbmoved
         beq     end
-        lda     thumb_drag_params::pos
+        lda     trackthumb_params::thumbpos
         jsr     mul_by_16
         lda     $06
-        sta     winfo::port::hoff
+        sta     winfo::maprect::x1
         lda     $07
-        sta     winfo::port::hoff+1
+        sta     winfo::maprect::x1+1
         clc
-        lda     winfo::port::hoff
+        lda     winfo::maprect::x1
         adc     window_width
-        sta     winfo::port::width
-        lda     winfo::port::hoff+1
+        sta     winfo::maprect::x2
+        lda     winfo::maprect::x1+1
         adc     window_width+1
-        sta     winfo::port::width+1
+        sta     winfo::maprect::x2+1
         jsr     update_hscroll
         jsr     draw_content
 end:    rts
@@ -853,14 +846,14 @@ store:  sta     winfo::hthumbpos
 ;;; UI Helpers
 
         ;; Used at start of thumb drag
-.proc do_thumb_drag
-        lda     event_params::xcoord
-        sta     thumb_drag_params::xcoord
-        lda     event_params::xcoord+1
-        sta     thumb_drag_params::xcoord+1
-        lda     event_params::ycoord
-        sta     thumb_drag_params::ycoord
-        MGTK_CALL MGTK::TrackThumb, thumb_drag_params
+.proc do_trackthumb
+        lda     event_params::mousex
+        sta     trackthumb_params::mousex
+        lda     event_params::mousex+1
+        sta     trackthumb_params::mousex+1
+        lda     event_params::mousey
+        sta     trackthumb_params::mousey
+        MGTK_CALL MGTK::TrackThumb, trackthumb_params
         rts
 .endproc
 
@@ -878,45 +871,45 @@ store:  sta     winfo::hthumbpos
         jsr     mul_by_16
         clc
         lda     $06
-        sta     winfo::port::hoff
+        sta     winfo::maprect::x1
         adc     window_width
-        sta     winfo::port::width
+        sta     winfo::maprect::x2
         lda     $07
-        sta     winfo::port::hoff+1
+        sta     winfo::maprect::x1+1
         adc     window_width+1
-        sta     winfo::port::width+1
+        sta     winfo::maprect::x2+1
         rts
 .endproc
 
 .proc update_voffset
         lda     #0
-        sta     winfo::port::voff
-        sta     winfo::port::voff+1
-        ldx     updatethumb_params::pos
+        sta     winfo::maprect::y1
+        sta     winfo::maprect::y1+1
+        ldx     updatethumb_params::thumbpos
 loop:   beq     adjust_box_height
         clc
-        lda     winfo::port::voff
+        lda     winfo::maprect::y1
         adc     #50
-        sta     winfo::port::voff
+        sta     winfo::maprect::y1
         bcc     :+
-        inc     winfo::port::voff+1
+        inc     winfo::maprect::y1+1
 :       dex
         jmp     loop
 .endproc
 
 .proc adjust_box_height
         clc
-        lda     winfo::port::voff
+        lda     winfo::maprect::y1
         adc     window_height
-        sta     winfo::port::height
-        lda     winfo::port::voff+1
+        sta     winfo::maprect::y2
+        lda     winfo::maprect::y1+1
         adc     window_height+1
-        sta     winfo::port::height+1
+        sta     winfo::maprect::y2+1
         jsr     calc_line_position
         lda     #0
         sta     L096A
         sta     L096B
-        ldx     updatethumb_params::pos
+        ldx     updatethumb_params::thumbpos
 loop:   beq     end
         clc
         lda     L096A
@@ -931,20 +924,20 @@ end:    rts
 
 .proc update_hscroll
         lda     #2
-        sta     updatethumb_params::type
-        lda     winfo::port::hoff
+        sta     updatethumb_params::which_ctl
+        lda     winfo::maprect::x1
         sta     $06
-        lda     winfo::port::hoff+1
+        lda     winfo::maprect::x1+1
         sta     $07
         jsr     div_by_16
-        sta     updatethumb_params::pos
+        sta     updatethumb_params::thumbpos
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 .endproc
 
-.proc update_vscroll            ; updatethumb_params::pos set by caller
+.proc update_vscroll            ; updatethumb_params::thumbpos set by caller
         lda     #1
-        sta     updatethumb_params::type
+        sta     updatethumb_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 .endproc
@@ -957,7 +950,7 @@ end:    rts
         bcc     :+
         jsr     update_hscroll
 :       lda     winfo::vthumbpos
-        sta     updatethumb_params::pos
+        sta     updatethumb_params::thumbpos
         jsr     update_vscroll
         jsr     draw_content
         jmp     input_loop
@@ -965,7 +958,7 @@ end:    rts
 
 .proc clear_window
         MGTK_CALL MGTK::SetPattern, white_pattern
-        MGTK_CALL MGTK::PaintRect, winfo::port::hoff
+        MGTK_CALL MGTK::PaintRect, winfo::maprect::x1
         MGTK_CALL MGTK::SetPattern, black_pattern
         rts
 .endproc
@@ -1016,7 +1009,7 @@ do_line:
         jsr     find_text_run
         bcs     L0ED7
         clc
-        lda     text_string::len
+        lda     drawtext_params::textlen
         adc     $06
         sta     $06
         bcc     :+
@@ -1069,11 +1062,11 @@ L0ED7:  jsr     restore_proportional_font_table_if_needed
         sta     run_width
         sta     run_width+1
         sta     L095A
-        sta     text_string::len
+        sta     drawtext_params::textlen
         lda     $06
-        sta     text_string::addr
+        sta     drawtext_params::textptr
         lda     $07
-        sta     text_string::addr+1
+        sta     drawtext_params::textptr+1
 
 loop:   lda     L0945
         bne     more
@@ -1084,7 +1077,7 @@ loop:   lda     L0945
         rts
 
 :       jsr     ensure_page_buffered
-more:   ldy     text_string::len
+more:   ldy     drawtext_params::textlen
         lda     ($06),y
         and     #$7F            ; clear high bit
         sta     ($06),y
@@ -1115,7 +1108,7 @@ more:   ldy     text_string::len
         lda     L095B
         cmp     run_width
 :       bcc     :+
-        inc     text_string::len
+        inc     drawtext_params::textlen
         jmp     loop
 
 :       lda     #0
@@ -1123,21 +1116,21 @@ more:   ldy     text_string::len
         lda     L0F9B
         cmp     #$FF
         beq     :+
-        sta     text_string::len
+        sta     drawtext_params::textlen
         lda     L0946
         sta     L0945
-:       inc     text_string::len
+:       inc     drawtext_params::textlen
         ;; fall through
 .endproc
 
 finish_text_run:  jsr     draw_text_run
-        ldy     text_string::len
+        ldy     drawtext_params::textlen
         lda     ($06),y
         cmp     #ASCII_TAB
         beq     tab
         cmp     #ASCII_RETURN
         bne     :+
-tab:    inc     text_string::len
+tab:    inc     drawtext_params::textlen
 :       clc
         rts
 
@@ -1192,9 +1185,9 @@ times70:.word   70
 .proc draw_text_run
         lda     L0948
         beq     end
-        lda     text_string::len
+        lda     drawtext_params::textlen
         beq     end
-        MGTK_CALL MGTK::DrawText, text_string
+        MGTK_CALL MGTK::DrawText, drawtext_params
         lda     #1
         sta     L0949
 end:    rts
@@ -1203,7 +1196,7 @@ end:    rts
 ;;; ==================================================
 
 .proc ensure_page_buffered
-        lda     text_string::addr+1
+        lda     drawtext_params::textptr+1
         cmp     #>default_buffer
         beq     read
 
@@ -1214,10 +1207,10 @@ loop:   lda     $1300,y
         iny
         bne     loop
 
-        dec     text_string::addr+1
-        lda     text_string::addr
+        dec     drawtext_params::textptr+1
+        lda     drawtext_params::textptr
         sta     $06
-        lda     text_string::addr+1
+        lda     drawtext_params::textptr+1
         sta     $07
 
 read:   lda     #0
@@ -1275,16 +1268,16 @@ end:    rts
 
 .proc calc_window_size
         sec
-        lda     winfo::port::width
-        sbc     winfo::port::hoff
+        lda     winfo::maprect::x2
+        sbc     winfo::maprect::x1
         sta     window_width
-        lda     winfo::port::width+1
-        sbc     winfo::port::hoff+1
+        lda     winfo::maprect::x2+1
+        sbc     winfo::maprect::x1+1
         sta     window_width+1
 
         sec
-        lda     winfo::port::height
-        sbc     winfo::port::voff
+        lda     winfo::maprect::y2
+        sbc     winfo::maprect::y1
         sta     window_height
         ;; fall through
 .endproc
@@ -1292,9 +1285,9 @@ end:    rts
 ;;; ==================================================
 
 .proc calc_line_position
-        lda     winfo::port::height
+        lda     winfo::maprect::y2
         sta     L0965
-        lda     winfo::port::height+1
+        lda     winfo::maprect::y2+1
         sta     L0966
 
         lda     #0
@@ -1401,10 +1394,10 @@ end:    rts
 ;;; Title Bar (Proportional/Fixed mode button)
 
 .proc on_title_bar_click
-        lda     event_params::xcoord+1           ; mouse x high byte?
+        lda     event_params::mousex+1           ; mouse x high byte?
         cmp     mode_box_left+1
         bne     :+
-        lda     event_params::xcoord
+        lda     event_params::mousex
         cmp     mode_box_left
 :       bcc     ignore
 
@@ -1450,14 +1443,14 @@ base:   .word   10              ; vertical text offset (to baseline)
 
 .proc calc_and_draw_mode
         sec
-        lda     winfo::port::top
+        lda     winfo::viewloc::ycoord
         sbc     #title_bar_height
         sta     mode_box::top
         clc
-        lda     winfo::port::left
+        lda     winfo::viewloc::xcoord
         adc     window_width
         pha
-        lda     winfo::port::left+1
+        lda     winfo::viewloc::xcoord+1
         adc     window_width+1
         tax
         sec
@@ -1480,7 +1473,7 @@ base:   .word   10              ; vertical text offset (to baseline)
 else:   MGTK_CALL MGTK::DrawText, prop_str
 
 endif:  ldx     #$0F
-loop:   lda     default_box,x
+loop:   lda     default_port,x
         sta     winfo::port,x
         dex
         bpl     loop

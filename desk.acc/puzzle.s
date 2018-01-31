@@ -76,7 +76,7 @@ stash_stack:  .byte   0
         jmp     create_window
 .endproc
 
-        window_id := 51
+        da_window_id := 51
 
 ;;; ==================================================
 ;;; Redraw the screen (all windows) after a drag
@@ -94,7 +94,7 @@ loop:   lda     routine,x
         jsr     dest
 
         ;; now check the window pos
-        lda     #window_id
+        lda     #da_window_id
         jsr     check_window_pos
 
         bit     window_pos_flag
@@ -127,8 +127,8 @@ window_pos_flag:
 
         ;; called with window_id in A
 check_window_pos:
-        sta     query_state_params_id
-        lda     openwindow_params_top ; is top on screen?
+        sta     getwinport_params_window_id
+        lda     winfo_viewloc_ycoord ; is top on screen?
         cmp     #screen_height-1
         bcc     :+              ; yes
         lda     #$80            ; no, so ... ???
@@ -137,8 +137,8 @@ check_window_pos:
 
 :       MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, setport_params
-        lda     query_state_params_id
-        cmp     #window_id
+        lda     getwinport_params_window_id
+        cmp     #da_window_id
         bne     :+
         jmp     draw_window
 
@@ -148,19 +148,19 @@ check_window_pos:
 ;;; Param Blocks
 
         ;; following memory space is re-used so x/y overlap
-.proc drag_window_params
-id      := * + 0
-xcoord  := * + 1                ; x overlap
-ycoord  := * + 3                ; y overlap
-moved   := * + 5                ; ignored
+.proc dragwindow_params
+window_id      := * + 0
+dragx  := * + 1                ; x overlap
+dragy  := * + 3                ; y overlap
+it_moved   := * + 5                ; ignored
 .endproc
 
 .proc screentowindow_params
-id      := * + 0
+window_id      := * + 0
 screenx := * + 1                ; x overlap
 screeny := * + 3                ; y overlap
-clientx := * + 5
-clienty := * + 7
+windowx := * + 5
+windowy := * + 7
 .endproc
 
 .proc event_params
@@ -173,10 +173,10 @@ ycoord    := *+2                ; y overlap
 .endproc
 
 .proc findwindow_params
-queryx  := *                    ; x overlap
-queryy  := *+2                  ; y overlap
-element := *+4
-id      := *+5
+mousex  := *                    ; x overlap
+mousey  := *+2                  ; y overlap
+which_area := *+4
+window_id      := *+5
 .endproc
 
         .res    8, 0            ; storage for above
@@ -184,14 +184,14 @@ id      := *+5
         .byte   0,0             ; ???
 
 .proc trackgoaway_params
-clicked:.byte   0
+goaway:.byte   0
 .endproc
 
 .proc getwinport_params
-id:     .byte   0
-addr:   .addr   setport_params
+window_id:     .byte   0
+a_grafport:   .addr   setport_params
 .endproc
-query_state_params_id := getwinport_params::id
+getwinport_params_window_id := getwinport_params::window_id
 
         ;; Puzzle piece row/columns
         cw := 28
@@ -234,16 +234,13 @@ space_positions:                 ; left, top for all 16 holes
 position_table:
         .res    16, 0
 
-.proc draw_bitmap_params
+.proc paintbits_params
 left:   .word   0
 top:    .word   0
 mapbits:   .addr   0
 mapwidth: .byte   4
-        .byte   0               ; ???
-hoff:   .word   0
-voff:   .word   0
-width:  .word   27
-height: .word   15
+        .byte   0               ; reserved
+        DEFINE_RECT 0, 0, 27, 15
 .endproc
 
 piece1:
@@ -521,17 +518,31 @@ piece16:
 
 
 .proc fill_rect_params
-        .word   1, 0, default_width, default_height
+        DEFINE_RECT 1, 0, default_width, default_height
 .endproc
 
 .proc pattern_speckles
-        .byte   $77,$DD,$77,$DD,$77,$DD,$77,$DD
+        .byte %01110111
+        .byte %11011101
+        .byte %01110111
+        .byte %11011101
+        .byte %01110111
+        .byte %11011101
+        .byte %01110111
+        .byte %11011101
 .endproc
 
         .byte   $00             ; ???
 
 .proc pattern_black
-        .res    8, 0
+        .byte %00000000
+        .byte %00000000
+        .byte %00000000
+        .byte %00000000
+        .byte %00000000
+        .byte %00000000
+        .byte %00000000
+        .byte %00000000
 .endproc
 
         ;; ???
@@ -565,7 +576,7 @@ draw_end:  .byte   $00
 draw_inc:  .byte   $00
 
 .proc closewindow_params
-id:     .byte   window_id
+window_id:     .byte   da_window_id
 .endproc
 
         .byte   $73,$00,$F7,$FF
@@ -592,7 +603,7 @@ setport_params:
         default_height  := $44
 
 .proc winfo
-id:     .byte   window_id
+window_id:     .byte   da_window_id
 options:  .byte   MGTK::option_go_away_box
 title:  .addr   name
 hscroll:.byte   MGTK::scroll_option_none
@@ -607,20 +618,14 @@ mincontwidth:     .word   default_width
 mincontlength:     .word   default_height
 maxcontwidth:     .word   default_width
 maxcontlength:     .word   default_height
-
-left:   .word   default_left
-top:    .word   default_top
+port:
+        DEFINE_POINT default_left, default_top, viewloc
 mapbits:   .addr   MGTK::screen_mapbits
 mapwidth: .word   MGTK::screen_mapwidth
-hoff:   .word   0
-voff:   .word   0
-width:  .word   default_width
-height: .word   default_height
-
+cliprect:        DEFINE_RECT 0, 0, default_width, default_height
 pattern:.res    8, $FF
 colormasks:      .byte MGTK::colormask_and, MGTK::colormask_or
-xpos:   .word   0
-ypos:   .word   0
+penloc: DEFINE_POINT 0, 0
 penwidth: .byte   1
 penheight: .byte   1
 penmode:   .byte   0
@@ -628,32 +633,28 @@ textback:  .byte   $7F
 textfont:   .addr   DEFAULT_FONT
 nextwinfo:   .addr   0
 .endproc
+        winfo_viewloc_ycoord := winfo::viewloc::ycoord
 
-        ;; This is QUERY_STATE/SET_BOX cruft only below
-.proc box_cruft                 ; Unknown usage
-left:   .word   default_left
-top:    .word   default_top
+        ;; This is grafport cruft only below
+.proc port_cruft                 ; Unknown usage
+viewloc:        DEFINE_POINT default_left, default_top
 mapbits:   .addr   MGTK::screen_mapbits
 mapwidth: .word   MGTK::screen_mapwidth
-hoff:   .word   0
-voff:   .word   0
-width:  .word   default_width
-height: .word   default_height
+cliprect:        DEFINE_RECT 0, 0, default_width, default_height
 pattern:.res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-xpos:   .word   0
-ypos:   .word   0
+penloc: DEFINE_POINT 0, 0
 penwidth: .byte   1
 penheight: .byte   1
 penmode:   .byte   0
 textback:  .byte   $7F
 textfont:   .addr   DEFAULT_FONT
-        .byte   0,0             ; ???
 .endproc
+
+        .byte   0,0             ; ???
 
 name:   PASCAL_STRING "Puzzle"
 
-        openwindow_params_top := winfo::top
 
 ;;; ==================================================
 ;;; Create the window
@@ -669,7 +670,7 @@ loop:   tya
         dey
         bpl     loop
 
-        lda     #window_id
+        lda     #da_window_id
         jsr     check_window_pos
         MGTK_CALL MGTK::FlushEvents
 
@@ -727,10 +728,10 @@ ploop:  lda     position_table+1,y
         ;; click - where?
 on_click:
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params::id
-        cmp     #window_id
+        lda     findwindow_params::window_id
+        cmp     #da_window_id
         bne     bail
-        lda     findwindow_params::element
+        lda     findwindow_params::which_area
         bne     :+
 bail:   rts
 
@@ -745,7 +746,7 @@ bail:   rts
 :       cmp     #MGTK::area_close_box
         bne     check_title
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
-        lda     trackgoaway_params::clicked
+        lda     trackgoaway_params::goaway
         beq     bail
 destroy:
         MGTK_CALL MGTK::CloseWindow, closewindow_params
@@ -770,9 +771,9 @@ loop:   lda     routine,x
 check_title:
         cmp     #MGTK::area_dragbar
         bne     bail
-        lda     #window_id
-        sta     drag_window_params::id
-        MGTK_CALL MGTK::DragWindow, drag_window_params
+        lda     #da_window_id
+        sta     dragwindow_params::window_id
+        MGTK_CALL MGTK::DragWindow, dragwindow_params
         ldx     #$23
         jsr     redraw_screen
         rts
@@ -791,15 +792,15 @@ check_key:
 ;;; Map click to piece x/y
 
 .proc find_click_piece
-        lda     #window_id
-        sta     screentowindow_params::id
+        lda     #da_window_id
+        sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        lda     screentowindow_params::clientx+1
-        ora     screentowindow_params::clienty+1
+        lda     screentowindow_params::windowx+1
+        ora     screentowindow_params::windowy+1
         bne     nope            ; ensure high bytes are 0
 
-        lda     screentowindow_params::clienty
-        ldx     screentowindow_params::clientx
+        lda     screentowindow_params::windowy
+        ldx     screentowindow_params::windowx
 
         cmp     #r1
         bcc     nope
@@ -996,8 +997,8 @@ draw_window:
 
         jsr     draw_all
 
-        lda     #window_id
-        sta     getwinport_params::id
+        lda     #da_window_id
+        sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, setport_params
         rts
@@ -1062,8 +1063,8 @@ saved_zp:
         tya
         pha
         MGTK_CALL MGTK::HideCursor
-        lda     #window_id
-        sta     getwinport_params::id
+        lda     #da_window_id
+        sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, setport_params
         pla
@@ -1075,21 +1076,21 @@ loop:   tya
         asl     a
         tax
         lda     space_positions,x
-        sta     draw_bitmap_params::left
+        sta     paintbits_params::left
         lda     space_positions+1,x
-        sta     draw_bitmap_params::left+1
+        sta     paintbits_params::left+1
         lda     space_positions+2,x
-        sta     draw_bitmap_params::top
+        sta     paintbits_params::top
         lda     space_positions+3,x
-        sta     draw_bitmap_params::top+1
+        sta     paintbits_params::top+1
         lda     position_table,y
         asl     a
         tax
         lda     bitmap_table,x
-        sta     draw_bitmap_params::mapbits
+        sta     paintbits_params::mapbits
         lda     bitmap_table+1,x
-        sta     draw_bitmap_params::mapbits+1
-        MGTK_CALL MGTK::PaintBits, draw_bitmap_params
+        sta     paintbits_params::mapbits+1
+        MGTK_CALL MGTK::PaintBits, paintbits_params
         pla
         clc
         adc     draw_inc
