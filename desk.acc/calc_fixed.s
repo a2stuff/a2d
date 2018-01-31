@@ -239,270 +239,198 @@ flag:  .byte   MGTK::zp_overwrite
         border_br := 2          ; (bottom/right)
 
 .proc btn_c
-left:   .word   col1_left - border_lt
-top:    .word   row1_top - border_lt
+viewloc:        DEFINE_POINT col1_left - border_lt, row1_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
-        .byte   0               ; ???
-hoff:   .word   0
-voff:   .word   0
-width:  .word   button_width + border_lt + border_br
-height: .word   button_height + border_lt + border_br
+reserved: .byte 0
+maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
 label:  .byte   'c'
 pos:    .word   col1_left + 6, row1_bot
 port:    .word   col1_left,row1_top,col1_right,row1_bot
 .endproc
 
 .proc btn_e
-left:   .word   col2_left - border_lt
-top:    .word   row1_top - border_lt
+viewloc:        DEFINE_POINT col2_left - border_lt, row1_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
-        .byte   0               ; ???
-hoff:   .word   0
-voff:   .word   0
-width:  .word   button_width + border_lt + border_br
-height: .word   button_height + border_lt + border_br
+reserved: .byte 0
+maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
 label:  .byte   'e'
 pos:    .word   col2_left + 6, row1_bot
 port:    .word   col2_left,row1_top,col2_right,row1_bot
 .endproc
 
 .proc btn_eq
-left:   .word   col3_left - border_lt
-top:    .word   row1_top - border_lt
+viewloc:        DEFINE_POINT col3_left - border_lt, row1_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
-        .byte   0               ; ???
-hoff:   .word   0
-voff:   .word   0
-width:  .word   button_width + border_lt + border_br
-height: .word   button_height + border_lt + border_br
+reserved: .byte 0
+maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
 label:  .byte   '='
 pos:    .word   col3_left + 6, row1_bot
 port:    .word   col3_left,row1_top,col3_right,row1_bot
 .endproc
 
 .proc btn_mul
-left:   .word   col4_left - border_lt
-top:    .word   row1_top - border_lt
+viewloc:        DEFINE_POINT col4_left - border_lt, row1_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
-        .byte   0               ; ???
-hoff:   .word   0
-voff:   .word   0
-width:  .word   button_width + border_lt + border_br
-height: .word   button_height + border_lt + border_br
+reserved: .byte 0
+maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
 label:  .byte   '*'
 pos:    .word   col4_left + 6, row1_bot
 port:    .word   col4_left,row1_top,col4_right,row1_bot
 .endproc
 
 .proc btn_7
-left:   .word   col1_left - border_lt
-top:    .word   row2_top - border_lt
+viewloc:        DEFINE_POINT col1_left - border_lt, row2_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
-        .byte   0               ; ???
-hoff:   .word   0
-voff:   .word   0
-width:  .word   button_width + border_lt + border_br
-height: .word   button_height + border_lt + border_br
+reserved: .byte 0
+maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
 label:  .byte   '7'
 pos:    .word   col1_left + 6, row2_bot
 port:    .word   col1_left,row2_top,col1_right,row2_bot
 .endproc
 
 .proc btn_8
-left:   .word   col2_left - border_lt
-top:    .word   row2_top - border_lt
+viewloc:        DEFINE_POINT col2_left - border_lt, row2_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
-        .byte   0               ; ???
-hoff:   .word   0
-voff:   .word   0
-width:  .word   button_width + border_lt + border_br
-height: .word   button_height + border_lt + border_br
+reserved: .byte 0
+maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
 label:  .byte   '8'
 pos:    .word   col2_left + 6, row2_bot
 port:    .word   col2_left,row2_top,col2_right,row2_bot
 .endproc
 
 .proc btn_9
-left:   .word   col3_left - border_lt
-top:    .word   row2_top - border_lt
+viewloc:        DEFINE_POINT col3_left - border_lt, row2_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
-        .byte   0               ; ???
-hoff:   .word   0
-voff:   .word   0
-width:  .word   button_width + border_lt + border_br
-height: .word   button_height + border_lt + border_br
+reserved: .byte 0
+maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
 label:  .byte   '9'
 pos:    .word   col3_left + 6, row2_bot
 port:    .word   col3_left,row2_top,col3_right,row2_bot
 .endproc
 
 .proc btn_div
-left:   .word   col4_left - border_lt
-top:    .word   row2_top - border_lt
+viewloc:        DEFINE_POINT col4_left - border_lt, row2_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
-        .byte   0               ; ???
-hoff:   .word   0
-voff:   .word   0
-width:  .word   button_width + border_lt + border_br
-height: .word   button_height + border_lt + border_br
+reserved: .byte 0
+maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
 label:  .byte   '/'
 pos:    .word   col4_left + 6, row2_bot
 port:    .word   col4_left,row2_top,col4_right,row2_bot
 .endproc
 
 .proc btn_4
-left:   .word   col1_left - border_lt
-top:    .word   row3_top - border_lt
+viewloc:        DEFINE_POINT col1_left - border_lt, row3_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
-        .byte   0               ; ???
-hoff:   .word   0
-voff:   .word   0
-width:  .word   button_width + border_lt + border_br
-height: .word   button_height + border_lt + border_br
+reserved: .byte 0
+maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
 label:  .byte   '4'
 pos:    .word   col1_left + 6, row3_bot
 port:    .word   col1_left,row3_top,col1_right,row3_bot
 .endproc
 
 .proc btn_5
-left:   .word   col2_left - border_lt
-top:    .word   row3_top - border_lt
+viewloc:        DEFINE_POINT col2_left - border_lt, row3_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
-        .byte   0               ; ???
-hoff:   .word   0
-voff:   .word   0
-width:  .word   button_width + border_lt + border_br
-height: .word   button_height + border_lt + border_br
+reserved: .byte 0
+maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
 label:  .byte   '5'
 pos:    .word   col2_left + 6, row3_bot
 port:    .word   col2_left,row3_top,col2_right,row3_bot
 .endproc
 
 .proc btn_6
-left:   .word   col3_left - border_lt
-top:    .word   row3_top - border_lt
+viewloc:        DEFINE_POINT col3_left - border_lt, row3_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
-        .byte   0               ; ???
-hoff:   .word   0
-voff:   .word   0
-width:  .word   button_width + border_lt + border_br
-height: .word   button_height + border_lt + border_br
+reserved: .byte 0
+maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
 label:  .byte   '6'
 pos:    .word   col3_left + 6, row3_bot
 port:    .word   col3_left,row3_top,col3_right,row3_bot
 .endproc
 
 .proc btn_sub
-left:   .word   col4_left - border_lt
-top:    .word   row3_top - border_lt
+viewloc:        DEFINE_POINT col4_left - border_lt, row3_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
-        .byte   0               ; ???
-hoff:   .word   0
-voff:   .word   0
-width:  .word   button_width + border_lt + border_br
-height: .word   button_height + border_lt + border_br
+reserved: .byte 0
+maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
 label:  .byte   '-'
 pos:    .word   col4_left + 6, row3_bot
 port:    .word   col4_left,row3_top,col4_right,row3_bot
 .endproc
 
 .proc btn_1
-left:   .word   col1_left - border_lt
-top:    .word   row4_top - border_lt
+viewloc:        DEFINE_POINT col1_left - border_lt, row4_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
-        .byte   0               ; ???
-hoff:   .word   0
-voff:   .word   0
-width:  .word   button_width + border_lt + border_br
-height: .word   button_height + border_lt + border_br
+reserved: .byte 0
+maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
 label:  .byte   '1'
 pos:    .word   col1_left + 6, row4_bot
 port:    .word   col1_left,row4_top,col1_right,row4_bot
 .endproc
 
 .proc btn_2
-left:   .word   col2_left - border_lt
-top:    .word   row4_top - border_lt
+viewloc:        DEFINE_POINT col2_left - border_lt, row4_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
-        .byte   0               ; ???
-hoff:   .word   0
-voff:   .word   0
-width:  .word   button_width + border_lt + border_br
-height: .word   button_height + border_lt + border_br
+reserved: .byte 0
+maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
 label:  .byte   '2'
 pos:    .word   col2_left + 6, row4_bot
 port:    .word   col2_left,row4_top,col2_right,row4_bot
 .endproc
 
 .proc btn_3
-left:   .word   col3_left - border_lt
-top:    .word   row4_top - border_lt
+viewloc:        DEFINE_POINT col3_left - border_lt, row4_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
-        .byte   0               ; ???
-hoff:   .word   0
-voff:   .word   0
-width:  .word   button_width + border_lt + border_br
-height: .word   button_height + border_lt + border_br
+reserved: .byte 0
+maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
 label:  .byte   '3'
 pos:    .word   col3_left + 6, row4_bot
 port:    .word   col3_left,row4_top,col3_right,row4_bot
 .endproc
 
 .proc btn_0
-left:   .word   col1_left - border_lt
-top:    .word   row5_top - border_lt
+viewloc:        DEFINE_POINT col1_left - border_lt, row5_top - border_lt
 mapbits: .addr   wide_button_bitmap
 mapwidth: .byte   8                   ; bitmap_stride (bytes)
-        .byte   0               ; ???
-hoff:   .word   0
-voff:   .word   0
-width:  .word   49                      ; 0 is extra wide
-height: .word   button_height + border_lt + border_br
+reserved: .byte 0
+maprect:         DEFINE_RECT 0, 0, 49, button_height + border_lt + border_br ; 0 is extra wide
 label:  .byte   '0'
 pos:    .word   col1_left + 6, row5_bot
 port:    .word   col1_left,row5_top,col2_right,row5_bot
 .endproc
 
 .proc btn_dec
-left:   .word   col3_left - border_lt
-top:    .word   row5_top - border_lt
+viewloc:        DEFINE_POINT col3_left - border_lt, row5_top - border_lt
 mapbits: .addr   button_bitmap
 mapwidth: .byte   bitmap_stride
-        .byte   0               ; ???
-hoff:   .word   0
-voff:   .word   0
-width:  .word   button_width + border_lt + border_br
-height: .word   button_height + border_lt + border_br
+reserved: .byte 0
+maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, button_height + border_lt + border_br
 label:  .byte   '.'
 pos:    .word   col3_left + 6 + 2, row5_bot ; + 2 to center the label
 port:    .word   col3_left,row5_top,col3_right,row5_bot
 .endproc
 
 .proc btn_add
-left:   .word   col4_left - border_lt
-top:    .word   row4_top - border_lt
+viewloc:        DEFINE_POINT col4_left - border_lt, row4_top - border_lt
 mapbits: .addr   tall_button_bitmap
 mapwidth: .byte   bitmap_stride
-        .byte   0               ; ???
-hoff:   .word   0
-voff:   .word   0
-width:  .word   button_width + border_lt + border_br
-height: .word   27              ; + is extra tall
+reserved: .byte 0
+maprect:         DEFINE_RECT 0, 0, button_width + border_lt + border_br, 27 ; + is extra tall
 label:  .byte   '+'
 pos:    .word   col4_left + 6, row5_bot
 port:    .word   col4_left,row4_top,col4_right,row5_bot
@@ -699,11 +627,8 @@ left:   .word   115             ; overwritten
 top:    .word   $FFF7           ; overwritten
 mapbits:.addr   pixels
 mapwidth: .byte   1
-        .byte   0               ; ???
-hoff:   .word   0
-voff:   .word   0
-width:  .word   6
-height: .word   5
+reserved:       .byte   0
+maprect:        DEFINE_RECT 0, 0, 6, 5
         ;;  (not part of struct, but not referenced outside)
 pixels: .byte   px(%1000001)
         .byte   px(%1010110)
@@ -714,18 +639,13 @@ pixels: .byte   px(%1000001)
 .endproc
 
 .proc port_params
-left:   .word   0
-top:    .word   0
+viewloc:        DEFINE_POINT 0, 0
 mapbits:   .word   0
 mapwidth: .word   0
-hoff:   .word   0
-voff:   .word   0
-width:  .word   0
-height: .word   0
+cliprect:       DEFINE_RECT 0, 0, 0, 0
 pattern:.res    8, 0
 colormasks:     .byte   0, 0
-xpos:   .word   0
-ypos:   .word   0
+penloc: DEFINE_POINT 0, 0
 penwidth: .byte   0
 penheight: .byte   0
 penmode:   .byte   0
@@ -785,14 +705,10 @@ left:   .word   default_left
 top:    .word   default_top
 mapbits:   .addr   MGTK::screen_mapbits
 mapwidth: .word   MGTK::screen_mapwidth
-hoff:   .word   0
-voff:   .word   0
-width:  .word   window_width
-height: .word   window_height
+cliprect:       DEFINE_RECT 0, 0, window_width, window_height
 pattern:.res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-xpos:   .word   0
-ypos:   .word   0
+penloc: DEFINE_POINT 0, 0
 penwidth: .byte   1
 penheight: .byte   1
 penmode:   .byte   0
