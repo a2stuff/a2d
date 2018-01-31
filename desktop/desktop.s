@@ -456,8 +456,7 @@ L8E23:  .byte   $00
 L8E24:  .byte   $00
 
 .proc paintbits_params2
-left:   .word   0
-top:    .word   0
+        DEFINE_POINT 0, 0, viewloc
 mapbits: .addr   0
 mapwidth: .byte   0
 reserved:       .byte 0
@@ -465,15 +464,11 @@ reserved:       .byte 0
 .endproc
 
 .proc paintbits_params
-left:   .word   0
-top:    .word   0
+        DEFINE_POINT 0, 0, viewloc
 mapbits: .addr   0
 mapwidth: .byte   0
 reserved:       .byte 0
-cliprect_x1:   .word   0
-cliprect_y1:   .word   0
-width:  .word   0
-height:  .word   0
+        DEFINE_RECT 0,0,0,0,maprect
 .endproc
 
 .proc paintrect_params6
@@ -484,15 +479,15 @@ bottom: .word   0
 .endproc
 
 .proc textwidth_params
-addr:   .addr   text_buffer
-length: .byte   0
-width:  .word   0
+textptr:   .addr   text_buffer
+textlen: .byte   0
+result:  .word   0
 .endproc
-set_text_mask_params :=  textwidth_params::width + 1 ; re-used
+set_text_mask_params :=  textwidth_params::result + 1 ; re-used
 
 .proc drawtext_params
-addr:   .addr   text_buffer
-length: .byte   0
+textptr:   .addr   text_buffer
+textlen: .byte   0
 .endproc
 
 text_buffer:
@@ -586,10 +581,10 @@ drag_outline_buffer:
 L933E:  .byte   $00
 
 .proc findwindow_params2
-queryx: .word   0
-queryy: .word   0
-element:.byte   0
-id:     .byte   0
+mousex: .word   0
+mousey: .word   0
+which_area:.byte   0
+window_id:     .byte   0
 .endproc
 
         screen_width := 560
@@ -612,8 +607,8 @@ fontptr:   .addr   DEFAULT_FONT
 .endproc
 
 .proc getwinport_params
-id:     .byte   0
-addr:   .addr   grafport4
+window_id:     .byte   0
+a_grafport:   .addr   grafport4
 .endproc
 
 .proc grafport4
@@ -1298,18 +1293,18 @@ L9845:  MGTK_CALL MGTK::PeekEvent, L933E
 L9852:  lda     #$02
         jmp     L9C65
 
-L9857:  lda     findwindow_params2::queryx
+L9857:  lda     findwindow_params2::mousex
         sec
         sbc     L9C8E
         sta     L982C
-        lda     findwindow_params2::queryx+1
+        lda     findwindow_params2::mousex+1
         sbc     L9C8F
         sta     L982D
-        lda     findwindow_params2::queryy
+        lda     findwindow_params2::mousey
         sec
         sbc     L9C90
         sta     L982E
-        lda     findwindow_params2::queryy+1
+        lda     findwindow_params2::mousey+1
         sbc     L9C91
         sta     L982F
         lda     L982D
@@ -1519,9 +1514,9 @@ L9A33:  lda     findwindow_params2,x
         lda     L9830
         beq     L9A84
         lda     L9831
-        sta     findwindow_params2::id
+        sta     findwindow_params2::window_id
         DESKTOP_DIRECT_CALL $9, findwindow_params2
-        lda     findwindow_params2::element
+        lda     findwindow_params2::which_area
         cmp     L9830
         beq     L9A84
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
@@ -1533,18 +1528,18 @@ L9A33:  lda     findwindow_params2,x
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
         lda     #$00
         sta     L9830
-L9A84:  lda     findwindow_params2::queryx
+L9A84:  lda     findwindow_params2::mousex
         sec
         sbc     L9C8E
         sta     L9C96
-        lda     findwindow_params2::queryx+1
+        lda     findwindow_params2::mousex+1
         sbc     L9C8F
         sta     L9C97
-        lda     findwindow_params2::queryy
+        lda     findwindow_params2::mousey
         sec
         sbc     L9C90
         sta     L9C98
-        lda     findwindow_params2::queryy+1
+        lda     findwindow_params2::mousey+1
         sbc     L9C91
         sta     L9C99
         jsr     L9C9E
@@ -1664,12 +1659,12 @@ L9BA5:  MGTK_CALL MGTK::FramePoly, drag_outline_buffer
         jmp     L9C63
 
 L9BB9:  MGTK_CALL MGTK::FindWindow, findwindow_params2
-        lda     findwindow_params2::id
+        lda     findwindow_params2::window_id
         cmp     L9832
         beq     L9BE1
         bit     L9833
         bmi     L9BDC
-        lda     findwindow_params2::id
+        lda     findwindow_params2::window_id
         bne     L9BD4
 L9BD1:  jmp     L9852
 
@@ -1939,15 +1934,15 @@ L9DD9:  lda     L9C88
         sta     L9C99
         rts
 
-L9DFA:  lda     findwindow_params2::queryx+1
+L9DFA:  lda     findwindow_params2::mousex+1
         sta     L9C8F
-        lda     findwindow_params2::queryx
+        lda     findwindow_params2::mousex
         sta     L9C8E
         rts
 
-L9E07:  lda     findwindow_params2::queryy+1
+L9E07:  lda     findwindow_params2::mousey+1
         sta     L9C91
-        lda     findwindow_params2::queryy
+        lda     findwindow_params2::mousey
         sta     L9C90
         rts
 
@@ -1957,11 +1952,11 @@ L9E14:  bit     L9833
 
 L9E1A:  jsr     LA365
 L9E1D:  MGTK_CALL MGTK::FindWindow, findwindow_params2
-        lda     findwindow_params2::element
+        lda     findwindow_params2::which_area
         bne     L9E2B
-        sta     findwindow_params2::id
+        sta     findwindow_params2::window_id
 L9E2B:  DESKTOP_DIRECT_CALL $9, findwindow_params2
-        lda     findwindow_params2::element
+        lda     findwindow_params2::which_area
         bne     L9E39
         jmp     L9E97
 
@@ -2165,14 +2160,14 @@ L9FE4:  lda     ($06),y
         iny
         cpy     #$1D
         bne     L9FE4
-L9FEE:  lda     drawtext_params::length
-        sta     textwidth_params::length
+L9FEE:  lda     drawtext_params::textlen
+        sta     textwidth_params::textlen
         MGTK_CALL MGTK::TextWidth, textwidth_params
-        lda     textwidth_params::width
+        lda     textwidth_params::result
         cmp     paintbits_params2::maprect::x2
         bcs     LA010
-        inc     drawtext_params::length
-        ldx     drawtext_params::length
+        inc     drawtext_params::textlen
+        ldx     drawtext_params::textlen
         lda     #' '
         sta     text_buffer-1,x
         jmp     L9FEE
@@ -2186,18 +2181,18 @@ LA010:  lsr     a
         sec
         sbc     moveto_params2::xcoord
         sta     moveto_params2::xcoord
-        lda     paintbits_params2::left
+        lda     paintbits_params2::viewloc::xcoord
         sec
         sbc     moveto_params2::xcoord
         sta     moveto_params2::xcoord
-        lda     paintbits_params2::left+1
+        lda     paintbits_params2::viewloc::xcoord+1
         sbc     #$00
         sta     moveto_params2::xcoord+1
-        lda     paintbits_params2::top
+        lda     paintbits_params2::viewloc::ycoord
         clc
         adc     paintbits_params2::maprect::y2
         sta     moveto_params2::ycoord
-        lda     paintbits_params2::top+1
+        lda     paintbits_params2::viewloc::ycoord+1
         adc     #$00
         sta     moveto_params2::ycoord+1
         lda     moveto_params2::ycoord
@@ -2279,7 +2274,7 @@ LA12E:  lda     paintbits_params2,x
         sta     paintbits_params,x
         dex
         bpl     LA12E
-        ldy     paintbits_params::height
+        ldy     paintbits_params::maprect::y2
 LA13A:  lda     paintbits_params::mapwidth
         clc
         adc     paintbits_params::mapbits
@@ -2291,18 +2286,18 @@ LA149:  dey
         rts
 
 LA14D:  ldx     #$00
-LA14F:  lda     paintbits_params2::left,x
+LA14F:  lda     paintbits_params2::viewloc::xcoord,x
         clc
         adc     paintbits_params2::maprect::x1,x
         sta     paintrect_params6,x
-        lda     paintbits_params2::left+1,x
+        lda     paintbits_params2::viewloc::xcoord+1,x
         adc     paintbits_params2::maprect::x1+1,x
         sta     paintrect_params6::left+1,x
-        lda     paintbits_params2::left,x
+        lda     paintbits_params2::viewloc::xcoord,x
         clc
         adc     paintbits_params2::maprect::x2,x
         sta     paintrect_params6::right,x
-        lda     paintbits_params2::left+1,x
+        lda     paintbits_params2::viewloc::xcoord+1,x
         adc     paintbits_params2::maprect::x2+1,x
         sta     paintrect_params6::right+1,x
         inx
@@ -2388,15 +2383,15 @@ LA22A:  lda     ($06),y
         dey
         dex
         bpl     LA22A
-LA233:  lda     drawtext_params::length
-        sta     textwidth_params::length
+LA233:  lda     drawtext_params::textlen
+        sta     textwidth_params::textlen
         MGTK_CALL MGTK::TextWidth, textwidth_params
         ldy     #$08
-        lda     textwidth_params::width
+        lda     textwidth_params::result
         cmp     ($08),y
         bcs     LA256
-        inc     drawtext_params::length
-        ldx     drawtext_params::length
+        inc     drawtext_params::textlen
+        ldx     drawtext_params::textlen
         lda     #' '
         sta     text_buffer-1,x
         jmp     LA233
@@ -2419,11 +2414,11 @@ LA256:  lsr     a
         sbc     #$00
         sta     L8E1E
         sta     L8E1A
-        inc     textwidth_params::width
-        inc     textwidth_params::width
+        inc     textwidth_params::result
+        inc     textwidth_params::result
         lda     L8E19
         clc
-        adc     textwidth_params::width
+        adc     textwidth_params::result
         sta     L8E11
         sta     L8E15
         lda     L8E1A
@@ -2931,10 +2926,10 @@ LA6A3:  lda     #$00
         jmp     LA6C7
 
 .proc findwindow_params
-queryx: .word   0
-queryy: .word   0
-element:.byte   0
-id:     .byte   0
+mousex: .word   0
+mousey: .word   0
+which_area:.byte   0
+window_id:     .byte   0
 .endproc
 
 LA6AE:  .byte   $00
@@ -3041,13 +3036,13 @@ LA77D:  lda     LA6B3,x
         bne     LA77D
         inc     LA6B0
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params::element
+        lda     findwindow_params::which_area
         beq     LA747
-        lda     findwindow_params::id
+        lda     findwindow_params::window_id
         sta     getwinport_params
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         jsr     LA365
-        MGTK_CALL MGTK::GetWinPtr, findwindow_params::id
+        MGTK_CALL MGTK::GetWinPtr, findwindow_params::window_id
         lda     LA6AE
         sta     $06
         lda     LA6AF
@@ -3232,12 +3227,10 @@ LA938:  lda     grafport4::top
 
         ;; 5.25" Floppy Disk
 floppy140_icon:
-        .addr   floppy140_pixels; address
-        .word   4               ; stride
-        .word   0               ; left
-        .word   1               ; top
-        .word   26              ; width
-        .word   15              ; height
+        .addr   floppy140_pixels; mapbits
+        .byte   4               ; mapwidth
+        .byte   0               ; reserved
+        DEFINE_RECT   0, 1, 26, 15 ; maprect
 
 floppy140_pixels:
         .byte   px(%1010101),px(%0101010),px(%1010101),px(%0101010)
@@ -3259,12 +3252,10 @@ floppy140_pixels:
 
         ;; RAM Disk
 ramdisk_icon:
-        .addr   ramdisk_pixels  ; address
-        .word   6               ; stride
-        .word   1               ; left (???)
-        .word   0               ; top
-        .word   38              ; width
-        .word   11              ; height
+        .addr   ramdisk_pixels  ; mapbits
+        .byte   6               ; mapwidth
+        .byte   0               ; reserved
+        DEFINE_RECT   1, 0, 38, 11 ; maprect
 
 ramdisk_pixels:
         .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111101)
@@ -3282,12 +3273,10 @@ ramdisk_pixels:
 
         ;; 3.5" Floppy Disk
 floppy800_icon:
-        .addr   floppy800_pixels; address
-        .word   3               ; stride
-        .word   0               ; left
-        .word   0               ; top
-        .word   20              ; width
-        .word   11              ; height
+        .addr   floppy800_pixels; mapbits
+        .byte   3               ; mapwidth
+        .byte   0               ; reserved
+        DEFINE_RECT   0, 0, 20, 11 ; maprect
 
 floppy800_pixels:
         .byte   px(%1111111),px(%1111111),px(%1111110)
@@ -3305,12 +3294,10 @@ floppy800_pixels:
 
         ;; Hard Disk
 profile_icon:
-        .addr   profile_pixels  ; address
-        .word   8               ; stride
-        .word   1               ; left
-        .word   0               ; top
-        .word   51              ; width
-        .word   9               ; height
+        .addr   profile_pixels  ; mapbits
+        .byte   8               ; mapwidth
+        .byte   0               ; reserved
+        DEFINE_RECT   1, 0, 51, 9 ; maprect
 
 profile_pixels:
         .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1110101)
@@ -3326,12 +3313,10 @@ profile_pixels:
 
         ;; Trash Can
 trash_icon:
-        .addr   trash_pixels    ; address
-        .word   5               ; stride
-        .word   7               ; left
-        .word   1               ; top
-        .word   27              ; width
-        .word   18              ; height
+        .addr   trash_pixels    ; mapbits
+        .byte   5               ; mapwidth
+        .byte   0               ; reserved
+        DEFINE_RECT   7, 1, 27, 18 ; maprect
 
 trash_pixels:
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
@@ -3717,14 +3702,11 @@ alert_bitmap:
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
 
 .proc alert_bitmap_params
-        .word   $14             ; left
-        .word   $8              ; top
-        .addr   alert_bitmap    ; addr
-        .word   7               ; stride
-        .word   0               ; left
-        .word   0               ; top
-        .word   $24             ; width
-        .word   $17             ; height
+        DEFINE_POINT 20, 8      ; viewloc
+        .addr   alert_bitmap    ; mapbits
+        .byte   7               ; mapwidth
+        .byte   0               ; reserved
+        DEFINE_RECT 0, 0, $24, $17 ; maprect
 .endproc
 
 alert_rect:
@@ -4710,10 +4692,10 @@ ycoord: .word   0
         ;; When event_params_coords is used for FindControl/FindWindow
 
 query_client_params_part:
-findwindow_params_element:
+findwindow_params_which_area:
         .byte   0
 query_client_params_scroll:
-findwindow_params_id:
+findwindow_params_window_id:
         .byte   0
 
 LD20F:  .byte   0
@@ -4722,8 +4704,8 @@ LD211:  .byte   0
 
 
 .proc getwinport_params2
-id:     .byte   0
-        .addr   grafport2
+window_id:     .byte   0
+a_grafport:     .addr   grafport2
 .endproc
 
 .proc grafport2
@@ -6183,7 +6165,7 @@ L415B:  sta     desktop_active_winid
         lda     #$80
         sta     L4152
         lda     bufnum
-        sta     getwinport_params2::id
+        sta     getwinport_params2::window_id
         jsr     L4505
         jsr     L78EF
         lda     desktop_active_winid
@@ -6235,7 +6217,7 @@ L41CB:  ldx     bufnum
         jmp     L8874
 
 L41E2:  lda     bufnum
-        sta     getwinport_params2::id
+        sta     getwinport_params2::window_id
         jsr     L44F2
         jsr     L6E52
         ldx     #7
@@ -6260,7 +6242,7 @@ L4221:  inc     L4241
 L4227:  lda     #$00
         sta     L4152
         lda     bufnum
-        sta     getwinport_params2::id
+        sta     getwinport_params2::window_id
         jsr     L44F2
         jsr     L6E6E
         lda     desktop_active_winid
@@ -6281,7 +6263,7 @@ L424A:  lda     #$00
         cmp     desktop_active_winid
         bne     L4249
         lda     desktop_active_winid
-        sta     getwinport_params2::id
+        sta     getwinport_params2::window_id
         jsr     L4505
         jsr     L6E8E
         ldx     #7
@@ -6498,14 +6480,14 @@ L43E0:  tsx
         tsx
         stx     $E256
         MGTK_RELAY_CALL MGTK::FindWindow, event_params_coords
-        lda     findwindow_params_element
+        lda     findwindow_params_which_area
         bne     not_desktop
 
         ;; Click on desktop
         jsr     detect_double_click
         sta     double_click_flag
         lda     #0
-        sta     findwindow_params_id
+        sta     findwindow_params_window_id
         DESKTOP_RELAY_CALL $09, event_params_coords ; maybe "was it an icon" ???
         lda     query_client_params_part ; ???
         beq     L4415
@@ -6522,7 +6504,7 @@ not_desktop:
 not_menu:
         pha                     ; which window - active or not?
         lda     desktop_active_winid
-        cmp     findwindow_params_id
+        cmp     findwindow_params_window_id
         beq     handle_active_window_click
         pla
         jmp     handle_inactive_window_click
@@ -6582,7 +6564,7 @@ L445D:  jsr     clear_selection
         sta     is_file_selected
         lda     LE22F
         sta     selected_file_index
-L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_params_id
+L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_params_window_id
         lda     $D20E
         sta     desktop_active_winid
         sta     bufnum
@@ -8118,7 +8100,7 @@ L511E:  sta     buf3len
         sta     LE6D1,x
         jsr     L52DF
         lda     desktop_active_winid
-        sta     getwinport_params2::id
+        sta     getwinport_params2::window_id
         jsr     L4505
         jsr     L6E8E
         jsr     L4904
@@ -8148,7 +8130,7 @@ L516D:  lda     L51EB,x
         lda     desktop_active_winid
         jsr     L763A
         lda     desktop_active_winid
-        sta     getwinport_params2::id
+        sta     getwinport_params2::window_id
         jsr     L44F2
         jsr     L6E52
         lda     #$00
@@ -8205,7 +8187,7 @@ L51F0:  ldx     desktop_active_winid
         jsr     L7D9C
         jsr     DESKTOP_COPY_FROM_BUF
         lda     desktop_active_winid
-        sta     getwinport_params2::id
+        sta     getwinport_params2::window_id
         jsr     L4505
         jsr     L6E8E
         jsr     L4904
@@ -8736,13 +8718,13 @@ L55F0:  ldx     L544A
         ldy     #$02
         lda     ($06),y
         and     #$0F
-        sta     getwinport_params2::id
+        sta     getwinport_params2::window_id
         beq     L5614
         jsr     L56F9
         lda     LE22F
         jsr     L8915
 L5614:  DESKTOP_RELAY_CALL $02, LE22F
-        lda     getwinport_params2::id
+        lda     getwinport_params2::window_id
         beq     L562B
         lda     LE22F
         jsr     L8893
@@ -8756,13 +8738,13 @@ L562C:  lda     LE22F
         ldy     #$02
         lda     ($06),y
         and     #$0F
-        sta     getwinport_params2::id
+        sta     getwinport_params2::window_id
         beq     L564A
         jsr     L56F9
         lda     LE22F
         jsr     L8915
 L564A:  DESKTOP_RELAY_CALL $0B, LE22F
-        lda     getwinport_params2::id
+        lda     getwinport_params2::window_id
         beq     L5661
         lda     LE22F
         jsr     L8893
@@ -8836,7 +8818,7 @@ L56F8:  .byte   0
 
 ;;; ==================================================
 
-L56F9:  sta     getwinport_params2::id
+L56F9:  sta     getwinport_params2::window_id
         jsr     L4505
         jmp     L6E8E
 
@@ -9524,7 +9506,7 @@ L5C54:  lda     $D20D
         bmi     L5C71
         jsr     L6E6E
 L5C71:  lda     desktop_active_winid
-        sta     getwinport_params2::id
+        sta     getwinport_params2::window_id
         jsr     L44F2
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect_x1
         jsr     reset_grafport3
@@ -9592,7 +9574,7 @@ L5D0B:  ldx     is_file_selected
         lda     desktop_active_winid
         sta     selected_window_index
         lda     desktop_active_winid
-        sta     getwinport_params2::id
+        sta     getwinport_params2::window_id
         jsr     L44F2
         lda     L5CD9
         sta     LE22F
@@ -9600,7 +9582,7 @@ L5D0B:  ldx     is_file_selected
         jsr     L6E8E
         DESKTOP_RELAY_CALL $02, LE22F
         lda     desktop_active_winid
-        sta     getwinport_params2::id
+        sta     getwinport_params2::window_id
         jsr     L44F2
         lda     L5CD9
         jsr     L8893
@@ -9649,7 +9631,7 @@ L5DA6:  cpx     #$02
 L5DAD:  cpx     #$FF
         beq     L5DF7
         lda     desktop_active_winid
-        sta     getwinport_params2::id
+        sta     getwinport_params2::window_id
         jsr     L44F2
         jsr     L6E52
         jsr     L6E8E
@@ -9665,7 +9647,7 @@ L5DC4:  txa
         dex
         bpl     L5DC4
         lda     desktop_active_winid
-        sta     getwinport_params2::id
+        sta     getwinport_params2::window_id
         jsr     L44F2
         jsr     L6DB1
         jsr     L6E6E
@@ -9753,7 +9735,7 @@ L5E78:  sta     L5F0A
         sta     $D20E
         jsr     handle_inactive_window_click
 L5E8F:  lda     desktop_active_winid
-        sta     getwinport_params2::id
+        sta     getwinport_params2::window_id
         jsr     L44F2
         jsr     L4904
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect_x1
@@ -9787,7 +9769,7 @@ L5ECB:  lda     ($06),y
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         lda     desktop_active_winid
-        sta     getwinport_params2::id
+        sta     getwinport_params2::window_id
         jsr     L4505
         jsr     L78EF
         lda     #$00
@@ -9831,7 +9813,7 @@ L5F3E:  rts
 
 L5F3F:  jsr     clear_selection
         lda     desktop_active_winid
-        sta     getwinport_params2::id
+        sta     getwinport_params2::window_id
         jsr     L4505
         jsr     L6E8E
         ldx     #$03
@@ -11028,7 +11010,7 @@ L6AA7:  stx     bufnum
         ldy     #$02
         lda     ($06),y
         and     #$0F
-        sta     getwinport_params2::id
+        sta     getwinport_params2::window_id
         beq     L6AD8
         cmp     desktop_active_winid
         bne     L6AEF
@@ -11036,7 +11018,7 @@ L6AA7:  stx     bufnum
         lda     LE6BE
         jsr     L8915
 L6AD8:  DESKTOP_RELAY_CALL $03, LE6BE
-        lda     getwinport_params2::id
+        lda     getwinport_params2::window_id
         beq     L6AEF
         lda     LE6BE
         jsr     L8893
@@ -11107,7 +11089,7 @@ L6B68:  lda     #$01
         ldy     #$02
         lda     ($06),y
         and     #$0F
-        sta     getwinport_params2::id
+        sta     getwinport_params2::window_id
         beq     L6BA1
         cmp     desktop_active_winid
         bne     L6BB8
@@ -11116,7 +11098,7 @@ L6B68:  lda     #$01
         lda     LE6BE
         jsr     L8915
 L6BA1:  DESKTOP_RELAY_CALL $03, LE6BE
-        lda     getwinport_params2::id
+        lda     getwinport_params2::window_id
         beq     L6BB8
         lda     LE6BE
         jsr     L8893
@@ -11127,7 +11109,7 @@ L6BB8:  jsr     L744B
         ldy     #$38
         jsr     MGTK_RELAY
         lda     desktop_active_winid
-        sta     getwinport_params2::id
+        sta     getwinport_params2::window_id
         jsr     L44F2
         jsr     L78EF
         jsr     L6E52
@@ -11166,13 +11148,13 @@ L6C19:  ldx     bufnum
 
 L6C25:  jsr     push_zp_addrs
         lda     bufnum
-        sta     getwinport_params2::id
+        sta     getwinport_params2::window_id
         jsr     L44F2
         bit     L4152
         bmi     L6C39
         jsr     L78EF
 L6C39:  lda     bufnum
-        sta     getwinport_params2::id
+        sta     getwinport_params2::window_id
         jsr     L4505
 L6C42:  bit     L4152
         bmi     L6C4A
@@ -11236,7 +11218,7 @@ L6CC5:  jsr     reset_grafport3
 
 L6CCC:  .byte   0
 L6CCD:  lda     bufnum
-        sta     getwinport_params2::id
+        sta     getwinport_params2::window_id
         jsr     L44F2
         bit     L4152
         bmi     L6CDE
@@ -11256,7 +11238,7 @@ L6CF3:  cpx     buf3len
         pla
         jsr     reset_grafport3
         lda     bufnum
-        sta     getwinport_params2::id
+        sta     getwinport_params2::window_id
         jsr     L44F2
         jsr     L6E6E
         rts
@@ -11289,7 +11271,7 @@ L6D31:  lda     #$00
         lda     #$00
         sta     rect_E230
         beq     L6D56
-L6D4D:  sta     getwinport_params2::id
+L6D4D:  sta     getwinport_params2::window_id
         jsr     L44F2
         jsr     L6E8E
 L6D56:  lda     L6DB0
@@ -11337,7 +11319,7 @@ L6DC0:  jsr     L6E52
         jsr     L7B6B
         jsr     L6E6E
 L6DC9:  lda     desktop_active_winid
-        sta     getwinport_params2::id
+        sta     getwinport_params2::window_id
         jsr     L44F2
         lda     L7B5F
         cmp     grafport2::cliprect_x1
@@ -17759,7 +17741,7 @@ ref_num:.byte   0
 LA3A7:  yax_call JT_MLI_RELAY, CLOSE, close_params4
         lda     selected_window_index
         beq     LA3CA
-        sta     getwinport_params2::id
+        sta     getwinport_params2::window_id
         yax_call JT_MGTK_RELAY, MGTK::GetWinPort, getwinport_params2
         yax_call JT_MGTK_RELAY, MGTK::SetPort, grafport2
 LA3CA:  ldx     L9188
@@ -17963,7 +17945,7 @@ LA58C:  cmp     #MGTK::key_down
 LA593:  lda     LD8E8
         beq     prompt_input_loop
         MGTK_RELAY_CALL MGTK::FindWindow, event_params_coords
-        lda     findwindow_params_element
+        lda     findwindow_params_which_area
         bne     LA5A9
         jmp     prompt_input_loop
 
@@ -17989,7 +17971,7 @@ LA5E8:  jsr     reset_state
         jmp     prompt_input_loop
 
 LA5EE:  MGTK_RELAY_CALL MGTK::FindWindow, event_params_coords
-        lda     findwindow_params_element
+        lda     findwindow_params_which_area
         bne     LA5FF
         lda     #$FF
         rts
@@ -19715,7 +19697,7 @@ LB7A3:  iny
 LB7B5:  dey
         jmp     LB78D
 
-LB7B9:  sta     getwinport_params2::id
+LB7B9:  sta     getwinport_params2::window_id
         MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
         ldy     #$04
         lda     #$15
