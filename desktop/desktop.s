@@ -459,24 +459,22 @@ L8E24:  .byte   $00
 left:   .word   0
 top:    .word   0
 mapbits: .addr   0
-mapwidth: .word   0
-cliprect_x1:   .word   0
-cliprect_y1:   .word   0
-width:  .word   0
-height: .word   0
+mapwidth: .byte   0
+reserved:       .byte 0
+        DEFINE_RECT 0,0,0,0,maprect
 .endproc
 
 .proc paintbits_params
 left:   .word   0
 top:    .word   0
 mapbits: .addr   0
-mapwidth: .word   0
+mapwidth: .byte   0
+reserved:       .byte 0
 cliprect_x1:   .word   0
 cliprect_y1:   .word   0
+width:  .word   0
+height:  .word   0
 .endproc
-
-        .byte   $00,$00
-L8E43:  .byte   $00,$00
 
 .proc paintrect_params6
 left:   .word   0
@@ -602,7 +600,6 @@ left:   .word   0
 top:    .word   0
 mapbits: .addr   MGTK::screen_mapbits
 mapwidth: .word   MGTK::screen_mapwidth
-L934D:
 cliprect:       DEFINE_RECT 0, 0, screen_width-1, screen_height-1
 penpattern:.res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
@@ -1361,7 +1358,7 @@ L98C8:  lda     L9017
         sta     L9832
         MGTK_CALL MGTK::InitPort, grafport
         ldx     #$07
-L98E3:  lda     grafport::L934D,x
+L98E3:  lda     grafport::cliprect,x
         sta     L9835,x
         dex
         bpl     L98E3
@@ -2172,7 +2169,7 @@ L9FEE:  lda     drawtext_params::length
         sta     textwidth_params::length
         MGTK_CALL MGTK::TextWidth, textwidth_params
         lda     textwidth_params::width
-        cmp     paintbits_params2::width
+        cmp     paintbits_params2::maprect::x2
         bcs     LA010
         inc     drawtext_params::length
         ldx     drawtext_params::length
@@ -2182,7 +2179,7 @@ L9FEE:  lda     drawtext_params::length
 
 LA010:  lsr     a
         sta     moveto_params2::xcoord+1
-        lda     paintbits_params2::width
+        lda     paintbits_params2::maprect::x2
         lsr     a
         sta     moveto_params2
         lda     moveto_params2::xcoord+1
@@ -2198,7 +2195,7 @@ LA010:  lsr     a
         sta     moveto_params2::xcoord+1
         lda     paintbits_params2::top
         clc
-        adc     paintbits_params2::height
+        adc     paintbits_params2::maprect::y2
         sta     moveto_params2::ycoord
         lda     paintbits_params2::top+1
         adc     #$00
@@ -2282,7 +2279,7 @@ LA12E:  lda     paintbits_params2,x
         sta     paintbits_params,x
         dex
         bpl     LA12E
-        ldy     L8E43
+        ldy     paintbits_params::height
 LA13A:  lda     paintbits_params::mapwidth
         clc
         adc     paintbits_params::mapbits
@@ -2296,17 +2293,17 @@ LA149:  dey
 LA14D:  ldx     #$00
 LA14F:  lda     paintbits_params2::left,x
         clc
-        adc     paintbits_params2::cliprect_x1,x
+        adc     paintbits_params2::maprect::x1,x
         sta     paintrect_params6,x
         lda     paintbits_params2::left+1,x
-        adc     paintbits_params2::cliprect_x1+1,x
+        adc     paintbits_params2::maprect::x1+1,x
         sta     paintrect_params6::left+1,x
         lda     paintbits_params2::left,x
         clc
-        adc     paintbits_params2::width,x
+        adc     paintbits_params2::maprect::x2,x
         sta     paintrect_params6::right,x
         lda     paintbits_params2::left+1,x
-        adc     paintbits_params2::width+1,x
+        adc     paintbits_params2::maprect::x2+1,x
         sta     paintrect_params6::right+1,x
         inx
         inx
@@ -4970,11 +4967,11 @@ alert_bitmap2:
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
 
 alert_bitmap2_params:
-        DEFINE_POINT 40, 8
-        .addr   alert_bitmap2
-        .byte   $07             ; stride
-        .byte   $00
-        .word   0, 0, $24, $17  ; cliprect_x1, cliprect_y1, width, height
+        DEFINE_POINT 40, 8      ; viewloc
+        .addr   alert_bitmap2   ; mapbits
+        .byte   7               ; mapwidth
+        .byte   0               ; reserved
+        DEFINE_RECT 0, 0, $24, $17 ; maprect
 
         ;; Looks like window param blocks starting here
 
@@ -5149,11 +5146,13 @@ LD6BB:  DEFINE_POINT 40,18
 dialog_label_pos:
         DEFINE_POINT 40,0
 
-LD6C7:  DEFINE_POINT 75, 35
+.proc setportbits_params3
+        DEFINE_POINT 75, 35
         .addr   MGTK::screen_mapbits
-        .word   MGTK::screen_mapwidth
-        .word   0, 0            ; cliprect_x1, cliprect_y1
-        .word   $166, $64       ; width, height
+        .byte   MGTK::screen_mapwidth
+        .byte   0
+        DEFINE_RECT 0, 0, $166, $64
+.endproc
 
         ;; ???
         .byte   $00,$04,$00,$02,$00,$5A,$01,$6C,$00,$05,$00,$03,$00,$59,$01,$6B,$00,$06,$00,$16,$00,$58,$01,$16,$00,$06,$00,$59,$00,$58,$01,$59,$00,$D2,$00,$5C,$00,$36,$01,$67,$00,$28,$00,$5C,$00,$8C,$00,$67,$00,$D7,$00,$66,$00,$2D,$00,$66,$00,$82,$00,$07,$00,$DC,$00,$13,$00
@@ -19859,7 +19858,7 @@ LB8F5:  jsr     LBD3B
         lda     $D6B5+1
         sta     $08+1
         MGTK_RELAY_CALL MGTK::MoveTo, $6
-        MGTK_RELAY_CALL MGTK::SetPortBits, LD6C7
+        MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
         bit     LD8EB
         bpl     LB92D
         MGTK_RELAY_CALL MGTK::SetTextBG, desktop_aux::LAE6C
@@ -19890,7 +19889,7 @@ LB961:  lda     path_buf1
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, LD6AB
         MGTK_RELAY_CALL MGTK::MoveTo, LD6B3
-        MGTK_RELAY_CALL MGTK::SetPortBits, LD6C7
+        MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
         addr_call draw_text1, path_buf1
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
@@ -20067,7 +20066,7 @@ LBB1A:  lda     LBB62
         lda     $D6B5+1
         sta     $08+1
         MGTK_RELAY_CALL MGTK::MoveTo, $6
-        MGTK_RELAY_CALL MGTK::SetPortBits, LD6C7
+        MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
         addr_call draw_text1, str_1_char
         addr_call draw_text1, path_buf2
         lda     winfoF
@@ -20088,7 +20087,7 @@ LBB69:  dec     path_buf1
         lda     $D6B5+1
         sta     $08+1
         MGTK_RELAY_CALL MGTK::MoveTo, $6
-        MGTK_RELAY_CALL MGTK::SetPortBits, LD6C7
+        MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
         lda     winfoF
@@ -20120,7 +20119,7 @@ LBBBC:  ldx     path_buf1
         lda     $D6B5+1
         sta     $08+1
         MGTK_RELAY_CALL MGTK::MoveTo, $6
-        MGTK_RELAY_CALL MGTK::SetPortBits, LD6C7
+        MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
         lda     winfoF
@@ -20148,7 +20147,7 @@ LBC21:  lda     $D485,x
         bne     LBC21
 LBC2D:  dec     path_buf2
         MGTK_RELAY_CALL MGTK::MoveTo, LD6B3
-        MGTK_RELAY_CALL MGTK::SetPortBits, LD6C7
+        MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
         addr_call draw_text1, path_buf1
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces

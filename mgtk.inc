@@ -617,9 +617,16 @@ y2:     .word   bottom
     .endif
 .endmacro
 
-.macro DEFINE_POINT left, top
+.macro DEFINE_POINT left, top, label
+    .if .paramcount > 2
+.proc label
+xcoord: .word   left
+ycoord: .word   top
+.endproc
+    .else
         .word   left
         .word   top
+    .endif
 .endmacro
 
 .macro DEFINE_STRING str, label ; String definition, for use with TextWidth/DrawText
