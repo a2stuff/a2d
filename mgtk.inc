@@ -601,11 +601,20 @@ menuopt_disable_flag    := 1 << 7
 
 ;;; ------------------------------------
 
-.macro DEFINE_RECT left, top, right, bottom
+.macro DEFINE_RECT left, top, right, bottom, label
+    .if .paramcount > 4
+.proc label
+x1:     .word   left
+y1:     .word   top
+x2:     .word   right
+y2:     .word   bottom
+.endproc
+    .else
         .word   left
         .word   top
         .word   right
         .word   bottom
+    .endif
 .endmacro
 
 .macro DEFINE_POINT left, top

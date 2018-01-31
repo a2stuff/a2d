@@ -203,19 +203,19 @@ L8616:  cmp     #$57
         addr_call $6B17, $1B7C
         ldx     $D5CA
         txs
-L8625:  MGTK_RELAY_CALL MGTK::HiliteMenu, win18_state ; ???
+L8625:  MGTK_RELAY_CALL MGTK::HiliteMenu, winfo18_port ; ???
         rts
 
         addr_call $6B17, $1B9C
         ldx     $D5CA
         txs
-        MGTK_RELAY_CALL MGTK::HiliteMenu, win18_state ; ???
+        MGTK_RELAY_CALL MGTK::HiliteMenu, winfo18_port ; ???
         rts
 
         addr_call $6B17, $1BBF
         ldx     $D5CA
         txs
-        MGTK_RELAY_CALL MGTK::HiliteMenu, win18_state ; ???
+        MGTK_RELAY_CALL MGTK::HiliteMenu, winfo18_port ; ???
         rts
 
         sta     L8737
@@ -603,16 +603,13 @@ top:    .word   0
 mapbits: .addr   MGTK::screen_mapbits
 mapwidth: .word   MGTK::screen_mapwidth
 L934D:
-cliprect_x1:   .word   0
-cliprect_y1:   .word   0
-width:  .word   screen_width-1
-height: .word   screen_height-1
-pattern:.res    8, $FF
+cliprect:       DEFINE_RECT 0, 0, screen_width-1, screen_height-1
+penpattern:.res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:   DEFINE_POINT 0, 0
 penwidth: .byte   1
 penheight: .byte   1
-mode:   .byte   $96             ; ???
+penmode:   .byte   $96             ; ???
 textbg:  .byte   0
 fontptr:   .addr   DEFAULT_FONT
 .endproc
@@ -631,12 +628,12 @@ cliprect_x1:   .word   0
 cliprect_y1:   .word   0
 width:  .word   0
 height: .word   0
-pattern:.res    8, 0
+penpattern:.res    8, 0
 colormasks:     .byte   0, 0
 penloc:   DEFINE_POINT 0, 0
 penwidth: .byte   0
 penheight: .byte   0
-mode:   .byte   0
+penmode:   .byte   0
 textbg:  .byte   0
 fontptr:   .addr   0
 .endproc
@@ -4741,7 +4738,7 @@ cliprect_x1:   .word   0
 cliprect_y1:   .word   0
 width:  .word   0
 height: .word   0
-pattern:.res 8, 0
+penpattern:.res 8, 0
 colormasks:     .byte   0, 0
 penloc:   DEFINE_POINT 0, 0
 penwidth: .byte   0
@@ -4760,7 +4757,7 @@ cliprect_x1:   .word   0
 cliprect_y1:   .word   0
 width:  .word   0
 height: .word   0
-pattern:.res 8, 0
+penpattern:.res 8, 0
 colormasks:     .byte   0, 0
 penloc:   DEFINE_POINT 0, 0
 penwidth: .byte   0
@@ -4783,12 +4780,12 @@ cliprect_x1:   .word   0
 cliprect_y1:   .word   0
 width:  .word   10
 height: .word   10
-pattern:.res    8, $FF
+penpattern:.res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:   DEFINE_POINT 0, 0
 penwidth: .byte   1
 penheight: .byte   1
-mode:   .byte   0
+penmode:   .byte   0
 textbg:  .byte   0
 fontptr:   .addr   DEFAULT_FONT
 .endproc
@@ -4981,7 +4978,7 @@ alert_bitmap2_params:
 
         ;; Looks like window param blocks starting here
 
-.proc winF
+.proc winfoF
 window_id:     .byte   $0F
 options:  .byte   MGTK::option_dialog_box
 title:  .addr   0
@@ -4997,26 +4994,23 @@ mincontwidth:     .word   $96
 maxcontwidth:     .word   $32
 mincontlength:     .word   $1F4
 maxcontlength:     .word   $8C
-left:   .word   $4B
-top:    .word   $23
+port:
+viewloc:        DEFINE_POINT $4B, $23
 mapbits: .addr   MGTK::screen_mapbits
 mapwidth: .word   MGTK::screen_mapwidth
-cliprect_x1:   .word   0
-cliprect_y1:   .word   0
-width:  .word   $190
-height: .word   $64
-pattern:.res    8, $FF
+cliprect:       DEFINE_RECT 0, 0, $190, $64
+penpattern:.res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:   DEFINE_POINT 0, 0
 penwidth: .byte   1
 penheight: .byte   1
-fill:   .byte   0
+penmode:   .byte   0
 textbg:  .byte   MGTK::textbg_white
 fontptr:   .addr   DEFAULT_FONT
 nextwinfo:   .addr   0
 .endproc
 
-.proc win12
+.proc winfo12
 window_id:     .byte   $12
 options:  .byte   MGTK::option_dialog_box
 title:  .addr   0
@@ -5032,26 +5026,23 @@ mincontwidth:     .word   $96
 maxcontwidth:     .word   $32
 mincontlength:     .word   $1F4
 maxcontlength:     .word   $8C
-left:   .word   $19
-top:    .word   $14
+port:
+viewloc:        DEFINE_POINT $19, $14
 mapbits: .addr   MGTK::screen_mapbits
 mapwidth: .word   MGTK::screen_mapwidth
-cliprect_x1:   .word   0
-cliprect_y1:   .word   0
-width:  .word   $1F4
-height: .word   $99
-pattern:.res    8, $FF
+cliprect:       DEFINE_RECT 0, 0, $1F4, $99
+penpattern:.res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:   DEFINE_POINT 0, 0
 penwidth: .byte   1
 penheight: .byte   1
-mode:   .byte   0
+penmode:   .byte   0
 textbg:  .byte   MGTK::textbg_white
 fontptr:   .addr   DEFAULT_FONT
 nextwinfo:   .addr   0
 .endproc
 
-.proc win15
+.proc winfo15
 window_id:     .byte   $15
 options:  .byte   MGTK::option_dialog_box
 title:  .addr   0
@@ -5067,26 +5058,23 @@ mincontwidth:     .word   $64
 maxcontwidth:     .word   $46
 mincontlength:     .word   $64
 maxcontlength:     .word   $46
-left:   .word   $35
-top:    .word   $32
+port:
+viewloc:        DEFINE_POINT $35, $32
 mapbits: .addr   MGTK::screen_mapbits
 mapwidth: .word   MGTK::screen_mapwidth
-cliprect_x1:   .word   0
-cliprect_y1:   .word   0
-width:  .word   $7D
-height: .word   $46
-pattern:.res    8, $FF
+cliprect:       DEFINE_RECT 0, 0, $7D, $46
+penpattern:.res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:   DEFINE_POINT 0, 0
 penwidth: .byte   1
 penheight: .byte   1
-mode:   .byte   0
+penmode:   .byte   0
 textbg:  .byte   MGTK::textbg_white
 fontptr:   .addr   DEFAULT_FONT
 nextwinfo:   .addr   0
 .endproc
 
-.proc win18
+.proc winfo18
 window_id:     .byte   $18
 options:  .byte   MGTK::option_dialog_box
 title:  .addr   0
@@ -5102,28 +5090,24 @@ mincontwidth:     .word   $96
 maxcontwidth:     .word   $32
 mincontlength:     .word   $1F4
 maxcontlength:     .word   $8C
-state:
-left:   .word   $50
-top:    .word   $28
+port:
+viewloc:        DEFINE_POINT $50, $28
 mapbits: .addr   MGTK::screen_mapbits
 mapwidth: .word   MGTK::screen_mapwidth
-cliprect_x1:   .word   0
-cliprect_y1:   .word   0
-width:  .word   $190
-height: .word   $6E
-pattern:.res    8, $FF
+cliprect:        DEFINE_RECT 0, 0, $190, $6E
+penpattern:.res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:   DEFINE_POINT 0, 0
 penwidth: .byte   1
 penheight: .byte   1
-mode:   .byte   0
+penmode:   .byte   0
 textbg:  .byte   MGTK::textbg_white
 fontptr:   .addr   DEFAULT_FONT
 nextwinfo:   .addr   0
 .endproc
-        win18_state := win18::state
+        winfo18_port := winfo18::port
 
-.proc win1B
+.proc winfo1B
 window_id:     .byte   $1B
 options:  .byte   MGTK::option_dialog_box
 title:  .addr   0
@@ -5139,20 +5123,17 @@ mincontwidth:     .word   $96
 maxcontwidth:     .word   $32
 mincontlength:     .word   $1F4
 maxcontlength:     .word   $8C
-left:   .word   $69
-top:    .word   $19
+port:
+viewloc:        DEFINE_POINT $69, $19
 mapbits: .addr   MGTK::screen_mapbits
 mapwidth: .word   MGTK::screen_mapwidth
-cliprect_x1:   .word   0
-cliprect_y1:   .word   0
-width:  .word   $15E
-height: .word   $6E
-pattern:.res    8, $FF
+cliprect:       DEFINE_RECT 0, 0, $15E, $6E
+penpattern:.res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:   DEFINE_POINT 0, 0
 penwidth: .byte   1
 penheight: .byte   1
-mode:   .byte   0
+penmode:   .byte   0
 textbg:  .byte   MGTK::textbg_white
 fontptr:   .addr   DEFAULT_FONT
 nextwinfo:   .addr   0
@@ -5369,7 +5350,7 @@ selected_file_index:            ; index of selected icon (global, not w/in windo
 
         ;; Buffer for desktop windows
 win_table:
-        .addr   0,win1,win2,win3,win4,win5,win6,win7,win8
+        .addr   0,winfo1,winfo2,winfo3,winfo4,winfo5,winfo6,winfo7,winfo8
 
         ;; Window to Path mapping table
 window_address_table:
@@ -5552,14 +5533,14 @@ LE6BE:
         .byte   $00,$00,$00
 
 LE6C1:
-        .addr   win1buf
-        .addr   win2buf
-        .addr   win3buf
-        .addr   win4buf
-        .addr   win5buf
-        .addr   win6buf
-        .addr   win7buf
-        .addr   win8buf
+        .addr   winfo1title_ptr
+        .addr   winfo2title_ptr
+        .addr   winfo3title_ptr
+        .addr   winfo4title_ptr
+        .addr   winfo5title_ptr
+        .addr   winfo6title_ptr
+        .addr   winfo7title_ptr
+        .addr   winfo8title_ptr
 
 LE6D1:
         .byte   $00
@@ -5591,35 +5572,33 @@ mincontwidth:     .word   170
 maxcontwidth:     .word   50
 mincontlength:     .word   545
 maxcontlength:     .word   175
-left:   .word   20
-top:    .word   27
+port:
+viewloc:        DEFINE_POINT 20, 27
 mapbits: .addr   MGTK::screen_mapbits
 mapwidth: .word   MGTK::screen_mapwidth
-cliprect_x1:   .word   0
-cliprect_y1:   .word   0
-width:  .word   440
-height: .word   120
-pattern:.res    8, $FF
+cliprect:       DEFINE_RECT 0, 0, 440, 120
+penpattern:.res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:   DEFINE_POINT 0, 0
 penwidth: .byte   1
 penheight: .byte   1
-mode:   .byte   0
+penmode:   .byte   0
 textbg:  .byte   MGTK::textbg_white
 fontptr:   .addr   DEFAULT_FONT
 nextwinfo:   .addr   0
 .endproc
+
 buflabel:.res    18, 0
 .endmacro
 
-        WINFO_DEFN 1, win1, win1buf
-        WINFO_DEFN 2, win2, win2buf
-        WINFO_DEFN 3, win3, win3buf
-        WINFO_DEFN 4, win4, win4buf
-        WINFO_DEFN 5, win5, win5buf
-        WINFO_DEFN 6, win6, win6buf
-        WINFO_DEFN 7, win7, win7buf
-        WINFO_DEFN 8, win8, win8buf
+        WINFO_DEFN 1, winfo1, winfo1title_ptr
+        WINFO_DEFN 2, winfo2, winfo2title_ptr
+        WINFO_DEFN 3, winfo3, winfo3title_ptr
+        WINFO_DEFN 4, winfo4, winfo4title_ptr
+        WINFO_DEFN 5, winfo5, winfo5title_ptr
+        WINFO_DEFN 6, winfo6, winfo6title_ptr
+        WINFO_DEFN 7, winfo7, winfo7title_ptr
+        WINFO_DEFN 8, winfo8, winfo8title_ptr
 
 
         ;; 8 entries; each entry is 65 bytes long
@@ -17990,13 +17969,13 @@ LA593:  lda     LD8E8
         jmp     prompt_input_loop
 
 LA5A9:  lda     $D20E
-        cmp     winF
+        cmp     winfoF
         beq     LA5B4
         jmp     prompt_input_loop
 
-LA5B4:  lda     winF
+LA5B4:  lda     winfoF
         jsr     LB7B9
-        lda     winF
+        lda     winfoF
         sta     event_params
         MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
@@ -18024,14 +18003,14 @@ LA606:  lda     #$FF
         rts
 
 LA609:  lda     $D20E
-        cmp     winF
+        cmp     winfoF
         beq     LA614
         lda     #$FF
         rts
 
-LA614:  lda     winF
+LA614:  lda     winfoF
         jsr     LB7B9
-        lda     winF
+        lda     winfoF
         sta     event_params
         MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
@@ -18277,7 +18256,7 @@ LA84B:  jsr     LBC03
 LA84E:  lda     #$FF
         rts
 
-LA851:  lda     winF
+LA851:  lda     winfoF
         jsr     LB7B9
         jsr     set_fill_black
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
@@ -18285,7 +18264,7 @@ LA851:  lda     winF
         lda     #$00
         rts
 
-LA86F:  lda     winF
+LA86F:  lda     winfoF
         jsr     LB7B9
         jsr     set_fill_black
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
@@ -18310,8 +18289,8 @@ LA899:  jmp     dummy0000
 ;;; "About" dialog
 
 .proc show_about_dialog
-        MGTK_RELAY_CALL MGTK::OpenWindow, win18
-        lda     win18::window_id
+        MGTK_RELAY_CALL MGTK::OpenWindow, winfo18
+        lda     winfo18::window_id
         jsr     LB7B9
         jsr     set_fill_black
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::about_dialog_outer_rect
@@ -18348,7 +18327,7 @@ LA899:  jmp     dummy0000
         bne     :-
         jmp     close
 
-close:  MGTK_RELAY_CALL MGTK::CloseWindow, win18
+close:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo18
         jsr     reset_state
         jsr     set_cursor_pointer_with_flag
         rts
@@ -18399,7 +18378,7 @@ LA9B5:  ldy     #$01
         sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
-        lda     winF
+        lda     winfoF
         jsr     LB7B9
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB0B6
         addr_call draw_text1, str_7_spaces
@@ -18414,7 +18393,7 @@ LA9E6:  ldy     #$01
         sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
-        lda     winF
+        lda     winfoF
         jsr     LB7B9
         jsr     LBE8D
         jsr     LBE9A
@@ -18445,12 +18424,12 @@ LA9E6:  ldy     #$01
         rts
 
 LAA5A:  jsr     reset_state
-        MGTK_RELAY_CALL MGTK::CloseWindow, winF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
         jsr     set_cursor_pointer
         rts
 
 LAA6A:  jsr     bell
-        lda     winF
+        lda     winfoF
         jsr     LB7B9
         axy_call draw_dialog_label, $06, desktop_aux::str_exists_prompt
         jsr     draw_yes_no_all_cancel_buttons
@@ -18464,7 +18443,7 @@ LAA7F:  jsr     prompt_input_loop
         rts
 
 LAA9C:  jsr     bell
-        lda     winF
+        lda     winfoF
         jsr     LB7B9
         axy_call draw_dialog_label, $06, desktop_aux::str_large_prompt
         jsr     draw_ok_cancel_buttons
@@ -18527,7 +18506,7 @@ do1:    ldy     #1
         sta     LD909+1
         jsr     LBDC4
         jsr     LBDDF
-        lda     winF
+        lda     winfoF
         jsr     LB7B9
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB0B6
         addr_call draw_text1, str_7_spaces
@@ -18542,7 +18521,7 @@ do2:    ldy     #$01
         sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
-        lda     winF
+        lda     winfoF
         jsr     LB7B9
         jsr     LBE8D
         jsr     copy_dialog_param_addr_to_ptr
@@ -18561,12 +18540,12 @@ do2:    ldy     #$01
         rts
 
 do3:    jsr     reset_state
-        MGTK_RELAY_CALL MGTK::CloseWindow, winF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
         jsr     set_cursor_pointer
         rts
 
 do4:    jsr     bell
-        lda     winF
+        lda     winfoF
         jsr     LB7B9
         axy_call draw_dialog_label, ptr, desktop_aux::str_ramcard_full
         jsr     draw_ok_button
@@ -18624,7 +18603,7 @@ do1:    ldy     #$01
         lda     (ptr),y
         sta     LD90A
         jsr     LBDDF
-        lda     winF
+        lda     winfoF
         jsr     LB7B9
         lda     #$A5
         sta     dialog_label_pos
@@ -18650,11 +18629,11 @@ do1:    ldy     #$01
         rts
 
 do3:    jsr     reset_state
-        MGTK_RELAY_CALL MGTK::CloseWindow, winF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
         jsr     set_cursor_pointer
         rts
 
-do2:    lda     winF
+do2:    lda     winfoF
         jsr     LB7B9
         jsr     draw_ok_button
 :       jsr     prompt_input_loop
@@ -18715,7 +18694,7 @@ LAD2A:  ldy     #$01
         sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
-        lda     winF
+        lda     winfoF
         jsr     LB7B9
         lda     LAD1F
 LAD46:  bne     LAD54
@@ -18735,7 +18714,7 @@ LAD6C:  ldy     #$01
         sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
-        lda     winF
+        lda     winfoF
         jsr     LB7B9
         jsr     LBE8D
         jsr     copy_dialog_param_addr_to_ptr
@@ -18753,7 +18732,7 @@ LAD6C:  ldy     #$01
         addr_call draw_text1, str_7_spaces
         rts
 
-LADBB:  lda     winF
+LADBB:  lda     winfoF
         jsr     LB7B9
         jsr     draw_ok_cancel_buttons
 LADC4:  jsr     prompt_input_loop
@@ -18768,11 +18747,11 @@ LADC4:  jsr     prompt_input_loop
 LADF4:  rts
 
 LADF5:  jsr     reset_state
-        MGTK_RELAY_CALL MGTK::CloseWindow, winF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
         jsr     set_cursor_pointer
         rts
 
-LAE05:  lda     winF
+LAE05:  lda     winfoF
         jsr     LB7B9
         axy_call draw_dialog_label, $06, desktop_aux::str_delete_locked_file
         jsr     draw_yes_no_all_cancel_buttons
@@ -18805,7 +18784,7 @@ LAE49:  lda     #$80
         jsr     LBD69
         lda     #$00
         jsr     LB509
-        lda     winF
+        lda     winfoF
         jsr     LB7B9
         addr_call draw_centered_string, desktop_aux::str_new_folder_title
         jsr     set_fill_black
@@ -18831,7 +18810,7 @@ LAE90:  lda     ($08),y
         sta     path_buf0,y
         dey
         bpl     LAE90
-        lda     winF
+        lda     winfoF
         jsr     LB7B9
         yax_call draw_dialog_label, $02, desktop_aux::str_in_colon
         lda     #$37
@@ -18879,7 +18858,7 @@ LAEFF:  inx
         rts
 
 LAF16:  jsr     reset_state
-        MGTK_RELAY_CALL MGTK::CloseWindow, winF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
         jsr     set_cursor_pointer
         lda     #$01
         rts
@@ -18902,7 +18881,7 @@ LAF34:  lda     #$00
         ror     a
         eor     #$80
         jsr     LB509
-        lda     winF
+        lda     winfoF
         jsr     LB7B9
         addr_call draw_centered_string, desktop_aux::str_info_title
         jsr     copy_dialog_param_addr_to_ptr
@@ -18930,7 +18909,7 @@ LAF9B:  yax_call draw_dialog_label, $04, desktop_aux::str_info_create
         yax_call draw_dialog_label, $06, desktop_aux::str_info_type
         jmp     reset_state
 
-LAFB9:  lda     winF
+LAFB9:  lda     winfoF
         jsr     LB7B9
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$00
@@ -18967,7 +18946,7 @@ LB006:  jsr     prompt_input_loop
         bmi     LB006
         pha
         jsr     reset_state
-        MGTK_RELAY_CALL MGTK::CloseWindow, winF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
         jsr     set_cursor_pointer_with_flag
         pla
         rts
@@ -19025,7 +19004,7 @@ LB068:  ldy     #$01
         sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
-        lda     winF
+        lda     winfoF
         jsr     LB7B9
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB231
         addr_call draw_text1, str_7_spaces
@@ -19041,7 +19020,7 @@ LB0A2:  ldy     #$01
         sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
-        lda     winF
+        lda     winfoF
         jsr     LB7B9
         jsr     LBE8D
         jsr     copy_dialog_param_addr_to_ptr
@@ -19059,7 +19038,7 @@ LB0A2:  ldy     #$01
         addr_call draw_text1, str_7_spaces
         rts
 
-LB0F1:  lda     winF
+LB0F1:  lda     winfoF
         jsr     LB7B9
         jsr     draw_ok_cancel_buttons
 LB0FA:  jsr     prompt_input_loop
@@ -19075,7 +19054,7 @@ LB0FA:  jsr     prompt_input_loop
 LB139:  rts
 
 LB13A:  jsr     reset_state
-        MGTK_RELAY_CALL MGTK::CloseWindow, winF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
         jsr     set_cursor_pointer
         rts
 
@@ -19117,7 +19096,7 @@ LB186:  ldy     #$01
         sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
-        lda     winF
+        lda     winfoF
         jsr     LB7B9
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB22D
         addr_call draw_text1, str_7_spaces
@@ -19133,7 +19112,7 @@ LB1C0:  ldy     #$01
         sta     LD90A
         jsr     LBDC4
         jsr     LBDDF
-        lda     winF
+        lda     winfoF
         jsr     LB7B9
         jsr     LBE8D
         jsr     copy_dialog_param_addr_to_ptr
@@ -19151,7 +19130,7 @@ LB1C0:  ldy     #$01
         addr_call draw_text1, str_7_spaces
         rts
 
-LB20F:  lda     winF
+LB20F:  lda     winfoF
         jsr     LB7B9
         jsr     draw_ok_cancel_buttons
 LB218:  jsr     prompt_input_loop
@@ -19167,7 +19146,7 @@ LB218:  jsr     prompt_input_loop
 LB257:  rts
 
 LB258:  jsr     reset_state
-        MGTK_RELAY_CALL MGTK::CloseWindow, winF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
         jsr     set_cursor_pointer
         rts
 
@@ -19193,7 +19172,7 @@ LB27D:  jsr     LBD75
         jsr     LBD69
         lda     #$00
         jsr     LB509
-        lda     winF
+        lda     winfoF
         jsr     LB7B9
         addr_call draw_centered_string, desktop_aux::str_rename_title
         jsr     set_fill_black
@@ -19226,7 +19205,7 @@ LB2ED:  lda     #$00
         sta     LD8E7
         lda     #$80
         sta     LD8E8
-        lda     winF
+        lda     winfoF
         jsr     LB7B9
 LB2FD:  jsr     prompt_input_loop
         bmi     LB2FD
@@ -19240,7 +19219,7 @@ LB2FD:  jsr     prompt_input_loop
         rts
 
 LB313:  jsr     reset_state
-        MGTK_RELAY_CALL MGTK::CloseWindow, winF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
         jsr     set_cursor_pointer
         lda     #$01
         rts
@@ -19255,7 +19234,7 @@ LB313:  jsr     reset_state
         ;; Create window
         MGTK_RELAY_CALL MGTK::HideCursor
         jsr     create_window_with_alert_bitmap
-        lda     winF
+        lda     winfoF
         jsr     LB7B9
         addr_call draw_centered_string, desktop_aux::str_warning
         MGTK_RELAY_CALL MGTK::ShowCursor
@@ -19310,7 +19289,7 @@ draw_string:
 
         pha
         jsr     reset_state
-        MGTK_RELAY_CALL MGTK::CloseWindow, winF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
         jsr     set_cursor_pointer
         pla
         rts
@@ -19490,8 +19469,8 @@ LB526:  bit     LD8E7
         jsr     draw_cancel_label
 LB537:  jmp     reset_state
 
-LB53A:  MGTK_RELAY_CALL MGTK::OpenWindow, winF
-        lda     winF
+LB53A:  MGTK_RELAY_CALL MGTK::OpenWindow, winfoF
+        lda     winfoF
         jsr     LB7B9
         jsr     set_fill_black
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::confirm_dialog_outer_rect
@@ -19499,8 +19478,8 @@ LB53A:  MGTK_RELAY_CALL MGTK::OpenWindow, winF
         rts
 
 create_window_with_alert_bitmap:
-        MGTK_RELAY_CALL MGTK::OpenWindow, winF
-        lda     winF
+        MGTK_RELAY_CALL MGTK::OpenWindow, winfoF
+        lda     winfoF
         jsr     LB7B9
         jsr     set_fill_white
         MGTK_RELAY_CALL MGTK::PaintBits, alert_bitmap2_params
@@ -19836,7 +19815,7 @@ LB892:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_params_kind
         cmp     #MGTK::button_up
         beq     LB8E3
-        lda     winF
+        lda     winfoF
         sta     event_params
         MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
@@ -19898,13 +19877,13 @@ LB93B:  lda     #<$D8EF
         sta     $08
         MGTK_RELAY_CALL MGTK::DrawText, $6
         MGTK_RELAY_CALL MGTK::SetTextBG, desktop_aux::LAE6D
-        lda     winF
+        lda     winfoF
         jsr     LB7B9
         rts
 
 LB961:  lda     path_buf1
         beq     LB9B7
-        lda     winF
+        lda     winfoF
         jsr     LB7B9
         jsr     set_fill_white
         MGTK_RELAY_CALL MGTK::PaintRect, LD6AB
@@ -19915,7 +19894,7 @@ LB961:  lda     path_buf1
         addr_call draw_text1, path_buf1
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
-        lda     winF
+        lda     winfoF
         jsr     LB7B9
 LB9B7:  rts
 
@@ -20091,7 +20070,7 @@ LBB1A:  lda     LBB62
         MGTK_RELAY_CALL MGTK::SetPortBits, LD6C7
         addr_call draw_text1, str_1_char
         addr_call draw_text1, path_buf2
-        lda     winF
+        lda     winfoF
         jsr     LB7B9
         rts
 
@@ -20112,7 +20091,7 @@ LBB69:  dec     path_buf1
         MGTK_RELAY_CALL MGTK::SetPortBits, LD6C7
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
-        lda     winF
+        lda     winfoF
         jsr     LB7B9
         rts
 
@@ -20144,7 +20123,7 @@ LBBBC:  ldx     path_buf1
         MGTK_RELAY_CALL MGTK::SetPortBits, LD6C7
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
-        lda     winF
+        lda     winfoF
         jsr     LB7B9
         rts
 
@@ -20173,7 +20152,7 @@ LBC2D:  dec     path_buf2
         addr_call draw_text1, path_buf1
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
-        lda     winF
+        lda     winfoF
         jsr     LB7B9
         rts
 
