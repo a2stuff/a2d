@@ -420,39 +420,19 @@ L8C83:  .byte   $00,$00,$00,$00,$77,$30,$01
 .endif
 .endmacro
 
-L8E03:  .byte   $08,$00
-L8E05:  .byte   $00
-L8E06:  .byte   $00
-L8E07:  .byte   $00
-L8E08:  .byte   $00
-L8E09:  .byte   $00
-L8E0A:  .byte   $00
-L8E0B:  .byte   $00
-L8E0C:  .byte   $00
-L8E0D:  .byte   $00
-L8E0E:  .byte   $00
-L8E0F:  .byte   $00
-L8E10:  .byte   $00
-L8E11:  .byte   $00
-L8E12:  .byte   $00
-L8E13:  .byte   $00
-L8E14:  .byte   $00
-L8E15:  .byte   $00
-L8E16:  .byte   $00
-L8E17:  .byte   $00
-L8E18:  .byte   $00
-L8E19:  .byte   $00
-L8E1A:  .byte   $00
-L8E1B:  .byte   $00
-L8E1C:  .byte   $00
-L8E1D:  .byte   $00
-L8E1E:  .byte   $00
-L8E1F:  .byte   $00
-L8E20:  .byte   $00
-L8E21:  .byte   $00
-L8E22:  .byte   $00
-L8E23:  .byte   $00
-L8E24:  .byte   $00
+.proc poly
+num_vertices:   .byte   8
+lastpoly:       .byte   0       ; 0 = last poly
+vertices:
+        DEFINE_POINT 0, 0, v0
+        DEFINE_POINT 0, 0, v1
+        DEFINE_POINT 0, 0, v2
+        DEFINE_POINT 0, 0, v3
+        DEFINE_POINT 0, 0, v4
+        DEFINE_POINT 0, 0, v5
+        DEFINE_POINT 0, 0, v6
+        DEFINE_POINT 0, 0, v7
+.endproc
 
 .proc paintbits_params2
         DEFINE_POINT 0, 0, viewloc
@@ -577,7 +557,9 @@ L9018:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 drag_outline_buffer:
         .res    680, 0
 
-L933E:  .byte   $00
+.proc peekevent_params
+kind:   .byte   0               ; spills into next block
+.endproc
 
 .proc findwindow_params2
 mousex: .word   0
@@ -1219,7 +1201,7 @@ L97B9:  txa
         cmp     L97F5
         bne     L97E0
         jsr     LA18A
-        MGTK_CALL MGTK::InPoly, L8E03
+        MGTK_CALL MGTK::InPoly, poly
         bne     L97E6
 L97E0:  pla
         tax
@@ -1285,8 +1267,8 @@ L9835:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 L983D:  lda     #$00
         sta     L9830
         sta     L9833
-L9845:  MGTK_CALL MGTK::PeekEvent, L933E
-        lda     L933E
+L9845:  MGTK_CALL MGTK::PeekEvent, peekevent_params
+        lda     peekevent_params::kind
         cmp     #$04
         beq     L9857
 L9852:  lda     #$02
@@ -1388,7 +1370,7 @@ L992D:  ldy     #$01
         jsr     LA382
 L9936:  ldx     #$21
         ldy     #$21
-L993A:  lda     L8E03,x
+L993A:  lda     poly,x
         sta     ($08),y
         dey
         dex
@@ -1490,13 +1472,13 @@ L99E1:  iny
 L99FC:  MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
         MGTK_CALL MGTK::SetPenMode, penXOR_2
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
-L9A0E:  MGTK_CALL MGTK::PeekEvent, L933E
-        lda     L933E
-        cmp     #$04
+L9A0E:  MGTK_CALL MGTK::PeekEvent, peekevent_params
+        lda     peekevent_params::kind
+        cmp     #MGTK::drag
         beq     L9A1E
         jmp     L9BA5
 
-L9A1E:  ldx     #$03
+L9A1E:  ldx     #3
 L9A20:  lda     findwindow_params2,x
         cmp     L9C92,x
         bne     L9A31
@@ -2074,39 +2056,39 @@ L9F10:  lda     ($06),y
         lda     L8F15+1,x
         sta     $07
         jsr     LA18A
-        lda     L8E07
+        lda     poly::vertices+2
         cmp     L9F05
-        lda     L8E08
+        lda     poly::vertices+3
         sbc     L9F06
         bpl     L9F8C
-        lda     L8E1B
+        lda     poly::v5::ycoord
         cmp     L9F01
-        lda     L8E1C
+        lda     poly::v5::ycoord+1
         sbc     L9F02
         bmi     L9F8C
-        lda     L8E19
+        lda     poly::v5::xcoord
         cmp     L9F03
-        lda     L8E1A
+        lda     poly::v5::xcoord+1
         sbc     L9F04
         bpl     L9F8C
-        lda     L8E15
+        lda     poly::v4::xcoord
         cmp     L9EFF
-        lda     L8E16
+        lda     poly::v4::xcoord+1
         sbc     L9F00
         bmi     L9F8C
-        lda     L8E23
+        lda     poly::v7::ycoord
         cmp     L9F05
-        lda     L8E24
+        lda     poly::v7::ycoord+1
         sbc     L9F06
         bmi     L9F8F
-        lda     L8E21
+        lda     poly::v7::xcoord
         cmp     L9F03
-        lda     L8E22
+        lda     poly::v7::xcoord+1
         sbc     L9F04
         bpl     L9F8C
-        lda     L8E0D
+        lda     poly::v2::xcoord
         cmp     L9EFF
-        lda     L8E0E
+        lda     poly::v2::xcoord+1
         sbc     L9F00
         bpl     L9F8F
 L9F8C:  lda     #$00
@@ -2135,7 +2117,7 @@ L9FA4:  ldy     #$02
         sta     L9F92
 L9FB4:  ldy     #$03
 L9FB6:  lda     ($06),y
-        sta     L8E22,y
+        sta     poly::v7::xcoord+1,y
         iny
         cpy     #$09
         bne     L9FB6
@@ -2315,18 +2297,18 @@ LA18A:  jsr     LA365
         ldy     #$06
         ldx     #$03
 LA191:  lda     ($06),y
-        sta     L8E05,x
+        sta     poly::vertices,x
         dey
         dex
         bpl     LA191
-        lda     L8E07
-        sta     L8E0B
-        lda     L8E08
-        sta     L8E0C
-        lda     L8E05
-        sta     L8E21
-        lda     L8E06
-        sta     L8E22
+        lda     poly::vertices+2
+        sta     poly::v1::ycoord
+        lda     poly::vertices+3
+        sta     poly::v1::ycoord+1
+        lda     poly::vertices
+        sta     poly::v7::xcoord
+        lda     poly::v0::xcoord+1
+        sta     poly::v7::xcoord+1
         ldy     #$07
         lda     ($06),y
         sta     $08
@@ -2336,45 +2318,45 @@ LA191:  lda     ($06),y
         ldy     #$08
         lda     ($08),y
         clc
-        adc     L8E05
-        sta     L8E09
-        sta     L8E0D
+        adc     poly::vertices
+        sta     poly::v1::xcoord
+        sta     poly::v2::xcoord
         iny
         lda     ($08),y
-        adc     L8E06
-        sta     L8E0A
-        sta     L8E0E
+        adc     poly::v0::xcoord+1
+        sta     poly::v1::xcoord+1
+        sta     poly::v2::xcoord+1
         ldy     #$0A
         lda     ($08),y
         clc
-        adc     L8E07
-        sta     L8E0F
+        adc     poly::vertices+2
+        sta     poly::v2::ycoord
         iny
         lda     ($08),y
-        adc     L8E08
-        sta     L8E10
-        lda     L8E0F
+        adc     poly::vertices+3
+        sta     poly::v2::ycoord+1
+        lda     poly::v2::ycoord
         clc
         adc     #$02
-        sta     L8E0F
-        sta     L8E13
-        sta     L8E1F
-        sta     L8E23
-        lda     L8E10
+        sta     poly::v2::ycoord
+        sta     poly::v3::ycoord
+        sta     poly::v6::ycoord
+        sta     poly::v7::ycoord
+        lda     poly::v2::ycoord+1
         adc     #$00
-        sta     L8E10
-        sta     L8E14
-        sta     L8E20
-        sta     L8E24
+        sta     poly::v2::ycoord+1
+        sta     poly::v3::ycoord+1
+        sta     poly::v6::ycoord+1
+        sta     poly::v7::ycoord+1
         lda     font_height
         clc
-        adc     L8E0F
-        sta     L8E17
-        sta     L8E1B
-        lda     L8E10
+        adc     poly::v2::ycoord
+        sta     poly::v4::ycoord
+        sta     poly::v5::ycoord
+        lda     poly::v2::ycoord+1
         adc     #$00
-        sta     L8E18
-        sta     L8E1C
+        sta     poly::v4::ycoord+1
+        sta     poly::v5::ycoord+1
         ldy     #$1C
         ldx     #$13
 LA22A:  lda     ($06),y
@@ -2404,26 +2386,26 @@ LA256:  lsr     a
         sec
         sbc     LA2A4
         sta     LA2A4
-        lda     L8E05
+        lda     poly::vertices
         sec
         sbc     LA2A4
-        sta     L8E1D
-        sta     L8E19
-        lda     L8E06
+        sta     poly::v6::xcoord
+        sta     poly::v5::xcoord
+        lda     poly::v0::xcoord+1
         sbc     #$00
-        sta     L8E1E
-        sta     L8E1A
+        sta     poly::v6::xcoord+1
+        sta     poly::v5::xcoord+1
         inc     textwidth_params::result
         inc     textwidth_params::result
-        lda     L8E19
+        lda     poly::v5::xcoord
         clc
         adc     textwidth_params::result
-        sta     L8E11
-        sta     L8E15
-        lda     L8E1A
+        sta     poly::v3::xcoord
+        sta     poly::v4::xcoord
+        lda     poly::v5::xcoord+1
         adc     #$00
-        sta     L8E12
-        sta     L8E16
+        sta     poly::v3::xcoord+1
+        sta     poly::v4::xcoord+1
         jsr     LA382
         rts
 
@@ -2612,20 +2594,20 @@ LA3FD:  jsr     LA6A3
 LA411:  lda     #$00
         sta     LA3B7
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
-LA41C:  lda     L8E07
+LA41C:  lda     poly::vertices+2
         sta     LA3B1
-        lda     L8E08
+        lda     poly::vertices+3
         sta     LA3B2
-        lda     L8E1D
+        lda     poly::v6::xcoord
         sta     LA3AF
-        lda     L8E1E
+        lda     poly::v6::xcoord+1
         sta     LA3B0
         ldx     #$03
-LA436:  lda     L8E15,x
+LA436:  lda     poly::v4::xcoord,x
         sta     LA3B3,x
         dex
         bpl     LA436
-        MGTK_CALL MGTK::PaintPoly, L8E03
+        MGTK_CALL MGTK::PaintPoly, poly
         rts
 
 LA446:  jsr     LA365
@@ -2717,20 +2699,20 @@ LA4F1:  lda     grafport4,y
         jmp     LA5CB
 
 LA506:  ldx     #$00
-LA508:  lda     L8E05,x
+LA508:  lda     poly::vertices,x
         sec
         sbc     LA567
-        sta     L8E05,x
-        lda     L8E06,x
+        sta     poly::vertices,x
+        lda     poly::vertices+1,x
         sbc     LA568
-        sta     L8E06,x
-        lda     L8E07,x
+        sta     poly::vertices+1,x
+        lda     poly::vertices+2,x
         sec
         sbc     LA569
-        sta     L8E07,x
-        lda     L8E08,x
+        sta     poly::vertices+2,x
+        lda     poly::vertices+3,x
         sbc     LA56A
-        sta     L8E08,x
+        sta     poly::vertices+3,x
         inx
         inx
         inx
@@ -2738,20 +2720,20 @@ LA508:  lda     L8E05,x
         cpx     #$20
         bne     LA508
         ldx     #$00
-LA538:  lda     L8E05,x
+LA538:  lda     poly::vertices,x
         clc
         adc     LA56B
-        sta     L8E05,x
-        lda     L8E06,x
+        sta     poly::vertices,x
+        lda     poly::vertices+1,x
         adc     LA56C
-        sta     L8E06,x
-        lda     L8E07,x
+        sta     poly::vertices+1,x
+        lda     poly::vertices+2,x
         clc
         adc     LA56D
-        sta     L8E07,x
-        lda     L8E08,x
+        sta     poly::vertices+2,x
+        lda     poly::vertices+3,x
         adc     LA56E
-        sta     L8E08,x
+        sta     poly::vertices+3,x
         inx
         inx
         inx
@@ -2885,24 +2867,24 @@ height: .word   0
 .endproc
 
 LA63F:  jsr     LA18A
-        lda     L8E07
+        lda     poly::vertices+2
         sta     LA629
         sta     setportbits_params2::cliprect_y1
         sta     setportbits_params2::top
-        lda     L8E08
+        lda     poly::vertices+3
         sta     LA62A
         sta     setportbits_params2::cliprect_y1+1
         sta     setportbits_params2::top+1
-        lda     L8E19
+        lda     poly::v5::xcoord
         sta     LA627
         sta     setportbits_params2::cliprect_x1
         sta     setportbits_params2::left
-        lda     L8E1A
+        lda     poly::v5::xcoord+1
         sta     LA628
         sta     setportbits_params2::cliprect_x1+1
         sta     setportbits_params2::left+1
         ldx     #$03
-LA674:  lda     L8E15,x
+LA674:  lda     poly::v4::xcoord,x
         sta     LA62B,x
         sta     setportbits_params2::width,x
         dex
@@ -5374,10 +5356,24 @@ item_num:.byte  0
         .byte   $00,$00,$00,$00,$00,$00
         .byte   $00,$04,$00,$00,$00
 
-LE267:  .byte   $04,$00,$00     ; params for an MGTK $36 call
+.proc checkitem_params
+menu_id:        .byte   4
+menu_item:      .byte   0
+check:          .byte   0
+.endproc
 
-LE26A:  .byte   $04,$00
-LE26C:  .byte   $00,$00,$00,$00,$04,$00
+.proc disablemenu_params
+menu_id:        .byte   4
+disable:        .byte   0
+.endproc
+
+.proc disableitem_params
+menu_id:        .byte   0
+menu_item:      .byte   0
+disable:        .byte   0
+.endproc
+
+        .byte   $00,$04,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
         .addr   str_all
@@ -6573,17 +6569,17 @@ L44B8:  jsr     DESKTOP_COPY_TO_BUF
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         lda     #$00
-        sta     $E269
-        MGTK_RELAY_CALL MGTK::CheckItem, LE267 ; ???
+        sta     checkitem_params::check
+        MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
         ldx     desktop_active_winid
         dex
         lda     LE6D1,x
         and     #$0F
-        sta     $E268
-        inc     $E268
+        sta     checkitem_params::menu_item
+        inc     checkitem_params::menu_item
         lda     #$01
-        sta     $E269
-        MGTK_RELAY_CALL MGTK::CheckItem, LE267 ; ???
+        sta     checkitem_params::check
+        MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
         rts
 .endproc
 
@@ -7865,8 +7861,8 @@ L4EC3:  sta     buf3len
         bne     L4F3C
         DESKTOP_RELAY_CALL DESKTOP_REDRAW_ICONS
 L4F3C:  lda     #$00
-        sta     $E269
-        MGTK_RELAY_CALL MGTK::CheckItem, LE267 ; ???
+        sta     checkitem_params::check
+        MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
         jsr     L66A2
         jmp     reset_grafport3
 .endproc
@@ -8314,13 +8310,13 @@ L52D7:  jsr     L52DF
 ;;; ==================================================
 
 L52DF:  lda     #$00
-        sta     $E269
-        MGTK_RELAY_CALL MGTK::CheckItem, LE267
+        sta     checkitem_params::check
+        MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
         lda     $E25B
-        sta     $E268
+        sta     checkitem_params::menu_item
         lda     #$01
-        sta     $E269
-        MGTK_RELAY_CALL MGTK::CheckItem, LE267
+        sta     checkitem_params::check
+        MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
         rts
 
 L5302:  DESKTOP_RELAY_CALL $07, desktop_active_winid
@@ -10154,8 +10150,8 @@ L6276:  ldx     desktop_active_winid
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         lda     #$00
-        sta     $E269
-        MGTK_RELAY_CALL MGTK::CheckItem, LE267
+        sta     checkitem_params::check
+        MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
         jsr     L66A2
         jmp     redraw_windows_and_desktop
 
@@ -10585,21 +10581,21 @@ L66A2:  ldx     desktop_active_winid
         jmp     L66F2
 
 L66AA:  lda     #$01
-        sta     $E26B
-        MGTK_RELAY_CALL MGTK::DisableMenu, LE26A
+        sta     disablemenu_params::disable
+        MGTK_RELAY_CALL MGTK::DisableMenu, disablemenu_params
         lda     #$01
-        sta     $E26E
+        sta     disableitem_params::disable
         lda     #$02
-        sta     LE26C
+        sta     disableitem_params::menu_id
         lda     #$01
-        sta     $E26D
-        MGTK_RELAY_CALL MGTK::DisableItem, LE26C
+        sta     disableitem_params::menu_item
+        MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
         lda     #$04
-        sta     $E26D
-        MGTK_RELAY_CALL MGTK::DisableItem, LE26C
+        sta     disableitem_params::menu_item
+        MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
         lda     #$05
-        sta     $E26D
-        MGTK_RELAY_CALL MGTK::DisableItem, LE26C
+        sta     disableitem_params::menu_item
+        MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
         lda     #$00
         sta     menu_dispatch_flag
         rts
@@ -10609,20 +10605,20 @@ L66F2:  dex
         and     #$0F
         tax
         inx
-        stx     $E268
+        stx     checkitem_params::menu_item
         lda     #$01
-        sta     $E269
-        MGTK_RELAY_CALL MGTK::CheckItem, LE267
+        sta     checkitem_params::check
+        MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
         rts
 
 L670C:  lda     #$01
-        sta     $E26E
+        sta     disableitem_params::disable
         lda     #$02
-        sta     LE26C
+        sta     disableitem_params::menu_id
         lda     #$03
         jsr     L673A
         lda     #$05
-        sta     LE26C
+        sta     disableitem_params::menu_id
         lda     #$07
         jsr     L673A
         lda     #$08
@@ -10635,18 +10631,18 @@ L670C:  lda     #$01
         jsr     L673A
         rts
 
-L673A:  sta     $E26D
-        MGTK_RELAY_CALL MGTK::DisableItem, LE26C
+L673A:  sta     disableitem_params::menu_item
+        MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
         rts
 
 L6747:  lda     #$00
-        sta     $E26E
+        sta     disableitem_params::disable
         lda     #$02
-        sta     LE26C
+        sta     disableitem_params::menu_id
         lda     #$03
         jsr     L6775
         lda     #$05
-        sta     LE26C
+        sta     disableitem_params::menu_id
         lda     #$07
         jsr     L6775
         lda     #$08
@@ -10659,31 +10655,31 @@ L6747:  lda     #$00
         jsr     L6775
         rts
 
-L6775:  sta     $E26D
-        MGTK_RELAY_CALL MGTK::DisableItem, LE26C
+L6775:  sta     disableitem_params::menu_item
+        MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
         rts
 
 L6782:  lda     #$00
-        sta     $E26E
+        sta     disableitem_params::disable
         jmp     L678F
 
 L678A:  lda     #$01
-        sta     $E26E
+        sta     disableitem_params::disable
 L678F:  lda     #$02
-        sta     LE26C
+        sta     disableitem_params::menu_id
         lda     #$0B
-        sta     $E26D
-        MGTK_RELAY_CALL MGTK::DisableItem, LE26C
+        sta     disableitem_params::menu_item
+        MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
         rts
 
 L67A3:  lda     #$01
-        sta     $E26E
+        sta     disableitem_params::disable
         jmp     L67B0
 
 L67AB:  lda     #$00
-        sta     $E26E
+        sta     disableitem_params::disable
 L67B0:  lda     #$03
-        sta     LE26C
+        sta     disableitem_params::menu_id
         lda     #$02
         jsr     L67CA
         lda     #$03
@@ -10694,8 +10690,8 @@ L67B0:  lda     #$03
         sta     LD343+1
         rts
 
-L67CA:  sta     $E26D
-        MGTK_RELAY_CALL MGTK::DisableItem, LE26C
+L67CA:  sta     disableitem_params::menu_item
+        MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
         rts
 
 L67D7:  lda     is_file_selected
@@ -11071,11 +11067,11 @@ L6B3A:  lda     LE6BE
         jmp     L6B68
 
 L6B60:  lda     #$00
-        sta     $E269
+        sta     checkitem_params::check
         jsr     L6C0F
 L6B68:  lda     #$01
-        sta     $E268
-        sta     $E269
+        sta     checkitem_params::menu_item
+        sta     checkitem_params::check
         jsr     L6C0F
         lda     LE6BE
         jsr     file_address_lookup
@@ -11136,7 +11132,7 @@ L6BF4:  lda     bufnum
         jmp     reset_grafport3
 
 L6C0E:  .byte   0
-L6C0F:  MGTK_RELAY_CALL MGTK::CheckItem, LE267
+L6C0F:  MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
         rts
 
 L6C19:  ldx     bufnum
@@ -11423,21 +11419,21 @@ L6EC3:  rts
 
 L6EC4:  .byte   0
 L6EC5:  lda     #$00
-        sta     $E26B
-        MGTK_RELAY_CALL MGTK::DisableMenu, LE26A
+        sta     disablemenu_params::disable
+        MGTK_RELAY_CALL MGTK::DisableMenu, disablemenu_params
         lda     #$00
-        sta     $E26E
+        sta     disableitem_params::disable
         lda     #$02
-        sta     LE26C
+        sta     disableitem_params::menu_id
         lda     #$01
-        sta     $E26D
-        MGTK_RELAY_CALL MGTK::DisableItem, LE26C
+        sta     disableitem_params::menu_item
+        MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
         lda     #$04
-        sta     $E26D
-        MGTK_RELAY_CALL MGTK::DisableItem, LE26C
+        sta     disableitem_params::menu_item
+        MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
         lda     #$05
-        sta     $E26D
-        MGTK_RELAY_CALL MGTK::DisableItem, LE26C
+        sta     disableitem_params::menu_item
+        MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
         lda     #$80
         sta     menu_dispatch_flag
         rts

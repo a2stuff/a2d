@@ -281,11 +281,11 @@ CheckEvents     := $29          ; ???
 GetEvent        := $2A
         ;; (input length 0 bytes)
         ;; (output length 5 bytes)
-        ;; .byte state
-        ;; if state is key_down:
+        ;; .byte kind
+        ;; if kind is key_down:
         ;;   .byte key          (ASCII code; high bit clear)
         ;;   .byte modifiers    (0=none, 1=open-apple, 2=closed-apple, 3=both)
-        ;; if state otherwise:
+        ;; if kind otherwise:
         ;;   .word xcoord
         ;;   .word ycoord
 
@@ -295,13 +295,13 @@ FlushEvents     := $2B
 PeekEvent       := $2C
         ;; (input length 0 bytes)
 
-PostEvent       := $2D          ; Set pending input state (mouse or keyboard)
+PostEvent       := $2D          ; Set pending input kind (mouse or keyboard)
         ;; (input length 5 bytes)
-        ;; .byte state
-        ;; if state is key_down:
+        ;; .byte kind
+        ;; if kind is key_down:
         ;;   .byte key          ASCII code; high bit clear
         ;;   .byte modifiers    0=none, 1=open-apple, 2=closed-apple, 3=both
-        ;; if state otherwise:
+        ;; if kind otherwise:
         ;;   .word xcoord
         ;;   .word ycoord
 
