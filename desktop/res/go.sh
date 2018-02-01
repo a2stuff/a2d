@@ -9,7 +9,7 @@ function do_make {
 }
 
 function verify {
-    diff "orig/$1.bin" "$1.F1" \
+    diff "orig/DESKTOP2_$1" "$1.built" \
         && (tput setaf 2 ; echo "diff $1 good" ; tput sgr0 ) \
         || (tput setaf 1 ; tput blink ; echo -e "DIFF $1 BAD" ; tput sgr0 ; return 1)
 }
@@ -21,21 +21,15 @@ function stats {
 #do_make clean
 do_make all
 
+TARGETS="loader mgtk desktop invoker"
+
 # Verify original and output match
 echo "Verifying diffs:"
-verify "calculator"
-verify "show_text_file"
-verify "date"
-verify "puzzle"
+for t in $TARGETS; do
+    verify $t
+done;
 
 echo "Unidentified symbols:"
-stats "calculator.s"
-stats "show_text_file.s"
-stats "date.s"
-stats "puzzle.s"
-
-cat show_image_file.F1 > mount/SHOW.IMAGE.FILE.\$F1 \
-    && echo "Updated mountable file (SIF)"
-
-cat calc_fixed.F1 > mount/TEST.\$F1 \
-    && echo "Updated mountable file (Test)"
+for t in $TARGETS; do
+    stats "$t.s"
+done;

@@ -14,6 +14,15 @@ ROMIN2          := $C082
 NEWVIDEO        := $C029        ; IIgs - new video modes
 SHADOW          := $C035        ; IIgs - inhibit shadowing
 
+AN3_ON          := $C05F        ; Le Chat Mauve
+AN3_OFF         := $C05E
+HR1_ON          := $C0B3
+HR1_OFF         := $C0B2
+HR2_ON          := $C0B5
+HR2_OFF         := $C0B4
+HR3_ON          := $C0B7
+HR3_OFF         := $C0B6
+
 ;;; Key Codes
 
 KEY_RETURN      := $0D

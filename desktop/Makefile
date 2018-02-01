@@ -19,9 +19,3 @@ clean:
 
 %.built: %.o asm.cfg
 	$(CC65)/ld65 $(CCFLAGS) -o $@ $<
-
-check:
-	diff loader.built orig/DESKTOP2_loader
-	diff mgtk.built orig/DESKTOP2_mgtk
-	diff desktop.built orig/DESKTOP2_desktop
-	diff invoker.built orig/DESKTOP2_invoker

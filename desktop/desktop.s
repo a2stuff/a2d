@@ -11,12 +11,11 @@
 ;;; DeskTop - the actual application
 ;;; ==================================================
 
+INVOKER          := $290         ; Invoke other programs
+INVOKER_FILENAME := $280         ; File to invoke (PREFIX must be set)
 
-INVOKER          := $290                 ; Invoke other programs
-INVOKER_FILENAME := $280                 ; File to invoke (PREFIX must be set)
-
-        dummy0000 := $0000      ; overwritten by self-modified code
-        dummy1234 := $1234      ; overwritten by self-modified code
+        dummy0000 := $0000         ; overwritten by self-modified code
+        dummy1234 := $1234         ; overwritten by self-modified code
 
 .macro addr_call target, addr
         lda     #<addr
@@ -20503,9 +20502,9 @@ done_machine_id:
         sta     DHIRESON        ; For good measure???
         sta     DHIRESOFF
         sta     SET80VID
-        sta     DHIRESON
-        sta     $C0B5           ; ??? IIgs video of some sort
-        sta     $C0B7           ; ???
+        sta     DHIRESON        ; Also AN3_OFF
+        sta     HR2_ON          ; For Le Chat Mauve: 560 B&W mode
+        sta     HR3_ON
         bit     iigs_flag
         bpl     :+
 
