@@ -2560,8 +2560,12 @@ LA3B3:  .byte   0
         .byte   0
         .byte   0
 LA3B7:  .byte   0
-LA3B8:  .byte   0
-LA3B9:  ldy     #$00
+
+.proc frontwindow_params
+window_id:      .byte   0
+.endproc
+
+LA3B9:  ldy     #0
         lda     ($06),y
         sta     LA3AC
         iny
@@ -2573,9 +2577,9 @@ LA3B9:  ldy     #$00
         lda     #$80
         sta     LA3B7
         MGTK_CALL MGTK::SetPattern, white_pattern
-        MGTK_CALL MGTK::FrontWindow, LA3B8
-        lda     LA3B8
-        sta     getwinport_params
+        MGTK_CALL MGTK::FrontWindow, frontwindow_params
+        lda     frontwindow_params::window_id
+        sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         jsr     LA4CC
         jsr     LA938
@@ -3697,14 +3701,13 @@ alert_inner_frame_rect1:
 alert_inner_frame_rect2:
         DEFINE_RECT 5, 3, 415, 52
 
-LB6D3:  .word   $41
-LB6D5:  .word   $57
-
-        .byte   $00,$20,$80,$00,$00,$00,$00
-        .byte   $00
-
-LB6DF:  .word   $1A4
-LB6E1:  .word   $37
+.proc grafport6
+        DEFINE_POINT $41, $57, viewloc
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved:       .byte   0
+        DEFINE_RECT 0, 0, $1A4, $37, maprect
+.endproc
 
 
 ;;; ==================================================
@@ -3728,11 +3731,10 @@ cancel_pos:
 
         .word   $BE,$10     ; ???
 
-LB70F:  DEFINE_POINT 75,29
+        DEFINE_POINT 75,29, point8
 
 alert_action:  .byte   $00
-LB714:  .byte   $00
-LB715:  .byte   $00
+prompt_addr:    .addr   0
 
 try_again_label:
         PASCAL_STRING "Try Again     A"
@@ -3817,26 +3819,26 @@ LBA0B:  sta     grafport3_left,x
         lda     #>$B9
         sta     grafport3_height+1
         MGTK_RELAY2_CALL MGTK::SetPort, grafport3
-        lda     LB6D3
-        ldx     LB6D3+1
+        lda     grafport6::viewloc::xcoord
+        ldx     grafport6::viewloc::xcoord+1
         jsr     LBF8B
         sty     LBFCA
         sta     LBFCD
-        lda     LB6D3
+        lda     grafport6::viewloc::xcoord
         clc
-        adc     LB6DF
+        adc     grafport6::maprect::x2
         pha
-        lda     LB6D3+1
-        adc     LB6DF+1
+        lda     grafport6::viewloc::xcoord+1
+        adc     grafport6::maprect::x2+1
         tax
         pla
         jsr     LBF8B
         sty     LBFCC
         sta     LBFCE
-        lda     LB6D5
+        lda     grafport6::viewloc::ycoord
         sta     LBFC9
         clc
-        adc     LB6E1
+        adc     grafport6::maprect::y2
         sta     LBFCB
         MGTK_RELAY2_CALL MGTK::HideCursor
         jsr     LBE08
@@ -3845,7 +3847,7 @@ LBA0B:  sta     grafport3_left,x
         MGTK_RELAY2_CALL MGTK::PaintRect, alert_rect ; alert background
         MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR ; ensures corners are inverted
         MGTK_RELAY2_CALL MGTK::FrameRect, alert_rect ; alert outline
-        MGTK_RELAY2_CALL MGTK::SetPortBits, LB6D3
+        MGTK_RELAY2_CALL MGTK::SetPortBits, grafport6::viewloc::xcoord
         MGTK_RELAY2_CALL MGTK::FrameRect, alert_inner_frame_rect1 ; inner 2x border
         MGTK_RELAY2_CALL MGTK::FrameRect, alert_inner_frame_rect2
         MGTK_RELAY2_CALL MGTK::SetPenMode, pencopy
@@ -3866,9 +3868,9 @@ LBAEF:  tya
         asl     a
         tay
         lda     prompt_table,y
-        sta     LB714
+        sta     prompt_addr
         lda     prompt_table+1,y
-        sta     LB715
+        sta     prompt_addr+1
         cpx     #$00
         beq     LBB0B
         txa
@@ -3903,9 +3905,9 @@ LBB14:  MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
 LBB5C:  MGTK_RELAY2_CALL MGTK::FrameRect, try_again_rect
         MGTK_RELAY2_CALL MGTK::MoveTo, try_again_pos
         DRAW_PASCAL_STRING ok_label
-LBB75:  MGTK_RELAY2_CALL MGTK::MoveTo, LB70F
-        lda     LB714
-        ldx     LB715
+LBB75:  MGTK_RELAY2_CALL MGTK::MoveTo, point8
+        lda     prompt_addr
+        ldx     prompt_addr+1
         jsr     draw_pascal_string
 LBB87:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
         lda     event_params_kind
@@ -4097,17 +4099,17 @@ LBDDB:  lda     #$02
 LBDE0:  .byte   0
 LBDE1:  lda     event_params_xcoord
         sec
-        sbc     LB6D3
+        sbc     grafport6::viewloc::xcoord
         sta     event_params_xcoord
         lda     event_params_xcoord+1
-        sbc     LB6D3+1
+        sbc     grafport6::viewloc::xcoord+1
         sta     event_params_xcoord+1
         lda     event_params_ycoord
         sec
-        sbc     LB6D5
+        sbc     grafport6::viewloc::ycoord
         sta     event_params_ycoord
         lda     event_params_ycoord+1
-        sbc     LB6D5+1
+        sbc     grafport6::viewloc::ycoord+1
         sta     event_params_ycoord+1
         rts
 
@@ -4672,10 +4674,10 @@ ycoord: .word   0
 
         ;; When event_params_coords is used for FindControl/FindWindow
 
-query_client_params_part:
+findcontrol_which_ctl:
 findwindow_params_which_area:
         .byte   0
-query_client_params_scroll:
+findcontrol_which_part:
 findwindow_params_window_id:
         .byte   0
 
@@ -5101,10 +5103,10 @@ nextwinfo:   .addr   0
 
         ;; Coordinates for labels?
         .byte   $28,$00,$25,$00,$68,$01,$2F,$00,$2D,$00,$2E,$00
-LD6AB:  DEFINE_RECT 40,61,360,71
-LD6B3:  DEFINE_POINT 45,70
-LD6B7:  DEFINE_POINT 0, 18
-LD6BB:  DEFINE_POINT 40,18
+        DEFINE_RECT 40,61,360,71, rect1
+        DEFINE_POINT 45,70, point6
+        DEFINE_POINT 0, 18, point4
+        DEFINE_POINT 40,18, point7
         .byte $28,$00,$23,$00
 dialog_label_pos:
         DEFINE_POINT 40,0
@@ -5590,9 +5592,9 @@ str_items:
 items_label_pos:
         DEFINE_POINT 8, 10
 
-LEBBE:  DEFINE_POINT 0, 0
+        DEFINE_POINT 0, 0, point1
 
-LEBC2:  DEFINE_POINT 0, 0
+        DEFINE_POINT 0, 0, point5
 
 str_k_in_disk:
         PASCAL_STRING "K in disk"
@@ -5604,8 +5606,8 @@ str_6_spaces:
         PASCAL_STRING "      "
 
 LEBE3:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-LEBEB:  DEFINE_POINT 0, 0
-LEBEF:  DEFINE_POINT 0, 0
+        DEFINE_POINT 0, 0, point2
+        DEFINE_POINT 0, 0, point3
 
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00
@@ -6484,7 +6486,7 @@ L43E0:  tsx
         lda     #0
         sta     findwindow_params_window_id
         DESKTOP_RELAY_CALL $09, event_params_coords ; maybe "was it an icon" ???
-        lda     query_client_params_part ; ???
+        lda     findcontrol_which_ctl ; ???
         beq     L4415
         jmp     L67D7
 
@@ -9366,7 +9368,7 @@ L5B31:  lda     $EBFD,x
         dex
         bpl     L5B31
         MGTK_RELAY_CALL MGTK::FindControl, event_params_coords
-        lda     $D20D
+        lda     findcontrol_which_ctl
         bne     L5B4B
         jmp     L5CB7
 
@@ -9516,7 +9518,7 @@ L5C96:  lda     #$FF
         rts
 
 L5C99:  MGTK_RELAY_CALL MGTK::FindControl, event_params_coords
-        lda     query_client_params_part
+        lda     findcontrol_which_ctl
         beq     L5C96
         cmp     #$03
         beq     L5C96
@@ -9534,7 +9536,7 @@ L5CB7:  bit     L5B1B
 L5CBF:  lda     desktop_active_winid
         sta     $D20E
         DESKTOP_RELAY_CALL $09, event_params_coords
-        lda     query_client_params_part
+        lda     findcontrol_which_ctl
         bne     L5CDA
         jsr     L5F13
         jmp     L5DEC
@@ -12620,41 +12622,41 @@ L78C2:  lda     LFB04           ; ???
 
 L78EE:  .byte   0
 L78EF:  lda     grafport2::cliprect_x1
-        sta     LEBBE           ; Directory header line (items / k in disk)
+        sta     point1::xcoord           ; Directory header line (items / k in disk)
         clc
         adc     #$05
         sta     items_label_pos
         lda     grafport2::cliprect_x1+1
-        sta     $EBBF
+        sta     point1::xcoord+1
         adc     #$00
         sta     $EBBB
         lda     grafport2::cliprect_y1
         clc
         adc     #$0C
-        sta     $EBC0
+        sta     point1::ycoord
         sta     $EBC4
         lda     grafport2::cliprect_y1+1
         adc     #$00
-        sta     $EBC1
+        sta     point1::ycoord+1
         sta     $EBC5
-        MGTK_RELAY_CALL MGTK::MoveTo, LEBBE
+        MGTK_RELAY_CALL MGTK::MoveTo, point1
         lda     grafport2::width
-        sta     LEBC2
+        sta     point5::xcoord
         lda     grafport2::width+1
-        sta     $EBC3
+        sta     point5::xcoord+1
         jsr     L48FA
-        MGTK_RELAY_CALL MGTK::LineTo, LEBC2
-        lda     $EBC0
+        MGTK_RELAY_CALL MGTK::LineTo, point5
+        lda     point1::ycoord
         clc
-        adc     #$02
-        sta     $EBC0
-        sta     $EBC4
-        lda     $EBC1
-        adc     #$00
-        sta     $EBC1
-        sta     $EBC5
-        MGTK_RELAY_CALL MGTK::MoveTo, LEBBE
-        MGTK_RELAY_CALL MGTK::LineTo, LEBC2
+        adc     #2
+        sta     point1::ycoord
+        sta     point5::ycoord
+        lda     point1::ycoord+1
+        adc     #0
+        sta     point1::ycoord+1
+        sta     point5::ycoord+1
+        MGTK_RELAY_CALL MGTK::MoveTo, point1
+        MGTK_RELAY_CALL MGTK::LineTo, point5
         lda     grafport2::cliprect_y1
         clc
         adc     #$0A
@@ -12688,7 +12690,7 @@ L79A7:  jsr     L79F7
         tax
         tya
         jsr     L7AE0
-        MGTK_RELAY_CALL MGTK::MoveTo, LEBEB
+        MGTK_RELAY_CALL MGTK::MoveTo, point2
         jsr     L7AD7
         addr_call draw_text2, str_k_in_disk
         ldx     desktop_active_winid
@@ -12702,7 +12704,7 @@ L79A7:  jsr     L79F7
         tax
         tya
         jsr     L7AE0
-        MGTK_RELAY_CALL MGTK::MoveTo, LEBEF
+        MGTK_RELAY_CALL MGTK::MoveTo, point3
         jsr     L7AD7
         addr_call draw_text2, str_k_available
         rts
@@ -12737,61 +12739,61 @@ L7A22:  lda     L7ADE
 L7A3A:  lda     $EBE7
         clc
         adc     L7ADE
-        sta     LEBEF
+        sta     point3::xcoord
         lda     $EBE8
         adc     L7ADF
-        sta     LEBEF+1
+        sta     point3::xcoord+1
         lda     L7ADF
         beq     L7A59
         lda     L7ADE
         cmp     #$18
         bcc     L7A6A
-L7A59:  lda     LEBEF
+L7A59:  lda     point3::xcoord
         sec
         sbc     #$0C
-        sta     LEBEF
-        lda     LEBEF+1
+        sta     point3::xcoord
+        lda     point3::xcoord+1
         sbc     #$00
-        sta     LEBEF+1
+        sta     point3::xcoord+1
 L7A6A:  lsr     L7ADF
         ror     L7ADE
         lda     LEBE3
         clc
         adc     L7ADE
-        sta     LEBEB
+        sta     point2::xcoord
         lda     $EBE4
         adc     L7ADF
-        sta     LEBEB+1
+        sta     point2::xcoord+1
         jmp     L7A9E
 
 L7A86:  lda     LEBE3
-        sta     LEBEB
+        sta     point2::xcoord
         lda     LEBE3+1
-        sta     LEBEB+1
+        sta     point2::xcoord+1
         lda     $EBE7
-        sta     LEBEF
+        sta     point3::xcoord
         lda     $EBE8
-        sta     LEBEF+1
-L7A9E:  lda     LEBEB
+        sta     point3::xcoord+1
+L7A9E:  lda     point2::xcoord
         clc
         adc     grafport2::cliprect_x1
-        sta     LEBEB
-        lda     LEBEB+1
+        sta     point2::xcoord
+        lda     point2::xcoord+1
         adc     grafport2::cliprect_x1+1
-        sta     LEBEB+1
-        lda     LEBEF
+        sta     point2::xcoord+1
+        lda     point3::xcoord
         clc
         adc     grafport2::cliprect_x1
-        sta     LEBEF
-        lda     LEBEF+1
+        sta     point3::xcoord
+        lda     point3::xcoord+1
         adc     grafport2::cliprect_x1+1
-        sta     LEBEF+1
+        sta     point3::xcoord+1
         lda     items_label_pos+2
-        sta     LEBEB+2
-        sta     LEBEF+2
+        sta     point2::ycoord
+        sta     point3::ycoord
         lda     items_label_pos+3
-        sta     LEBEB+3
-        sta     LEBEF+3
+        sta     point2::ycoord+1
+        sta     point3::ycoord+1
         rts
 
 L7AD7:  addr_jump draw_text2, str_6_spaces
@@ -14318,19 +14320,20 @@ L877F:  .byte   0
 ;;; ==================================================
 ;;; Draw text, pascal string address in A,X
 .proc draw_text2
-        ptr := $6
-        len := $8
+        params := $6
+        textptr := $6
+        textlen := $8
 
-        sta     ptr
-        stx     ptr+1
+        sta     textptr
+        stx     textptr+1
         ldy     #0
-        lda     (ptr),y
+        lda     (textptr),y
         beq     exit
-        sta     len
-        inc     ptr
+        sta     textlen
+        inc     textptr
         bne     :+
-        inc     ptr+1
-:       MGTK_RELAY_CALL MGTK::DrawText, $6
+        inc     textptr+1
+:       MGTK_RELAY_CALL MGTK::DrawText, params
 exit:   rts
 .endproc
 
@@ -14350,7 +14353,7 @@ exit:   rts
         inc     ptr
         bne     :+
         inc     ptr+1
-:       MGTK_RELAY_CALL MGTK::TextWidth, $6
+:       MGTK_RELAY_CALL MGTK::TextWidth, ptr
         lda     result
         ldx     result+1
         rts
@@ -14400,7 +14403,6 @@ L87F2:  dey
 
 .proc push_zp_addrs
         ptr := $6
-
 
         pla                     ; stash return address
         sta     addr
@@ -17955,7 +17957,7 @@ LA5B4:  lda     winfoF
         sta     event_params
         MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
-LA5D2:  MGTK_RELAY_CALL MGTK::InRect, LD6AB
+LA5D2:  MGTK_RELAY_CALL MGTK::InRect, rect1
         cmp     #$80
         bne     LA5E5
         jsr     set_cursor_insertion_point_with_flag
@@ -18764,7 +18766,7 @@ LAE49:  lda     #$80
         jsr     LB7B9
         addr_call draw_centered_string, desktop_aux::str_new_folder_title
         jsr     set_fill_black
-        MGTK_RELAY_CALL MGTK::FrameRect, LD6AB
+        MGTK_RELAY_CALL MGTK::FrameRect, rect1
         rts
 
 LAE70:  lda     #$80
@@ -19152,7 +19154,7 @@ LB27D:  jsr     LBD75
         jsr     LB7B9
         addr_call draw_centered_string, desktop_aux::str_rename_title
         jsr     set_fill_black
-        MGTK_RELAY_CALL MGTK::FrameRect, LD6AB
+        MGTK_RELAY_CALL MGTK::FrameRect, rect1
         yax_call draw_dialog_label, $02, desktop_aux::str_rename_old
         lda     #$55
         sta     dialog_label_pos
@@ -19467,6 +19469,11 @@ create_window_with_alert_bitmap:
 ;;; ==================================================
 
 .proc draw_dialog_label
+        textwidth_params := $8
+        textptr := $8
+        textlen := $A
+        result  := $B
+
         stx     $06+1
         sta     $06
         tya
@@ -19478,21 +19485,22 @@ create_window_with_alert_bitmap:
         lda     $06
         clc
         adc     #$01
-        sta     $08
+
+        sta     textptr
         lda     $06+1
         adc     #$00
-        sta     $08+1
+        sta     textptr+1
         jsr     LBD7B
-        sta     $0A
-        MGTK_RELAY_CALL MGTK::TextWidth, $08
-        lsr     $0C
-        ror     $0B
-        lda     #$C8
+        sta     textlen
+        MGTK_RELAY_CALL MGTK::TextWidth, textwidth_params
+        lsr     result+1
+        ror     result
+        lda     #<200
         sec
-        sbc     $0B
+        sbc     result
         sta     dialog_label_pos
-        lda     #$00
-        sbc     $0C
+        lda     #>200
+        sbc     result+1
         sta     dialog_label_pos+1
         pla
         tay
@@ -19599,15 +19607,19 @@ erase_ok_button:
 ;;; ==================================================
 
 .proc draw_text1
-        sta     $06
-        stx     $06+1
+        params := $6
+        textptr := $6
+        textlen := $8
+
+        sta     textptr
+        stx     textptr+1
         jsr     LBD7B
         beq     done
-        sta     $08
-        inc     $06
+        sta     textlen
+        inc     textptr
         bne     :+
-        inc     $06+1
-:       MGTK_RELAY_CALL MGTK::DrawText, $6
+        inc     textptr+1
+:       MGTK_RELAY_CALL MGTK::DrawText, params
 done:   rts
 .endproc
 
@@ -19637,21 +19649,22 @@ done:   rts
         ror     a
         sec
         sbc     str_width
-        sta     LD6B7
+        sta     point4::xcoord
         lda     LB76B
         sbc     str_width+1
-        sta     LD6B7+1
-        MGTK_RELAY_CALL MGTK::MoveTo, LD6B7
+        sta     point4::xcoord+1
+        MGTK_RELAY_CALL MGTK::MoveTo, point4
         MGTK_RELAY_CALL MGTK::DrawText, str
         rts
+
+LB76B:  .byte   0
 .endproc
 
 ;;; ==================================================
 
-LB76B:  .byte   0
-        sta     $06
+LB76C:  sta     $06
         stx     $06+1
-        MGTK_RELAY_CALL MGTK::MoveTo, LD6BB
+        MGTK_RELAY_CALL MGTK::MoveTo, point7
         lda     $06
         ldx     $06+1
         jsr     draw_text1
@@ -19827,14 +19840,19 @@ LB8F2:  .byte   0
 LB8F3:  .byte   0
         rts
 
-LB8F5:  jsr     LBD3B
-        sta     $06
-        stx     $06+1
+.proc LB8F5
+        point := $6
+        xcoord := $6
+        ycoord := $8
+
+        jsr     LBD3B
+        sta     xcoord
+        stx     xcoord+1
         lda     $D6B5
-        sta     $08
+        sta     ycoord
         lda     $D6B5+1
-        sta     $08+1
-        MGTK_RELAY_CALL MGTK::MoveTo, $6
+        sta     ycoord+1
+        MGTK_RELAY_CALL MGTK::MoveTo, point
         MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
         bit     LD8EB
         bpl     LB92D
@@ -19845,27 +19863,33 @@ LB8F5:  jsr     LBD3B
 LB92D:  MGTK_RELAY_CALL MGTK::SetTextBG, desktop_aux::LAE6D
         lda     #$FF
         sta     LD8EB
+
+        drawtext_params := $6
+        textptr := $6
+        textlen := $8
+
 LB93B:  lda     #<$D8EF
-        sta     $06
+        sta     textptr
         lda     #>$D8EF
-        sta     $06+1
+        sta     textptr+1
         lda     LD8EE
-        sta     $08
-        MGTK_RELAY_CALL MGTK::DrawText, $6
+        sta     textlen
+        MGTK_RELAY_CALL MGTK::DrawText, drawtext_params
         MGTK_RELAY_CALL MGTK::SetTextBG, desktop_aux::LAE6D
         lda     winfoF
         jsr     LB7B9
         rts
+.endproc
 
 LB961:  lda     path_buf1
         beq     LB9B7
         lda     winfoF
         jsr     LB7B9
         jsr     set_fill_white
-        MGTK_RELAY_CALL MGTK::PaintRect, LD6AB
+        MGTK_RELAY_CALL MGTK::PaintRect, rect1
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, LD6AB
-        MGTK_RELAY_CALL MGTK::MoveTo, LD6B3
+        MGTK_RELAY_CALL MGTK::FrameRect, rect1
+        MGTK_RELAY_CALL MGTK::MoveTo, point6
         MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
         addr_call draw_text1, path_buf1
         addr_call draw_text1, path_buf2
@@ -19876,7 +19900,7 @@ LB9B7:  rts
 
 LB9B8:  MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
-        MGTK_RELAY_CALL MGTK::InRect, LD6AB
+        MGTK_RELAY_CALL MGTK::InRect, rect1
         cmp     #$80
         beq     LB9D8
         rts
@@ -19891,7 +19915,9 @@ LB9D8:  jsr     LBD3B
         bcs     LB9EE
         jmp     LBA83
 
-LB9EE:  jsr     LBD3B
+.proc LB9EE
+        ptr := $6
+        jsr     LBD3B
         sta     LBB09
         stx     LBB0A
         ldx     path_buf2
@@ -19900,12 +19926,12 @@ LB9EE:  jsr     LBD3B
         sta     path_buf2,x
         inc     path_buf2
         lda     #<path_buf2
-        sta     $06
+        sta     ptr
         lda     #>path_buf2
-        sta     $06+1
+        sta     ptr+1
         lda     path_buf2
-        sta     $08
-LBA10:  MGTK_RELAY_CALL MGTK::TextWidth, $6
+        sta     ptr+2
+LBA10:  MGTK_RELAY_CALL MGTK::TextWidth, ptr
         lda     $09
         clc
         adc     LBB09
@@ -19924,6 +19950,7 @@ LBA10:  MGTK_RELAY_CALL MGTK::TextWidth, $6
         bne     LBA10
         dec     path_buf2
         jmp     LBB05
+.endproc
 
 LBA42:  lda     $08
         cmp     path_buf2
@@ -19958,31 +19985,38 @@ LBA7C:  dey
         sty     path_buf2
         jmp     LBB05
 
-LBA83:  lda     #<path_buf1
-        sta     $06
+
+.proc LBA83
+        params := $6
+        textptr := $6
+        textlen := $8
+        result  := $9
+
+        lda     #<path_buf1
+        sta     textptr
         lda     #>path_buf1
-        sta     $06+1
+        sta     textptr+1
         lda     path_buf1
-        sta     $08
-LBA90:  MGTK_RELAY_CALL MGTK::TextWidth, $6
-        lda     $09
+        sta     textlen
+:       MGTK_RELAY_CALL MGTK::TextWidth, params
+        lda     result
         clc
-        adc     LD6B3
-        sta     $09
-        lda     $0A
-        adc     $D6B4
-        sta     $0A
-        .byte   $A5
-LBAA9:  ora     #$CD
-        ora     LA5D2
-        asl     a
+        adc     point6::xcoord
+        sta     result
+        lda     result+1
+        adc     point6::xcoord+1
+        sta     result+1
+        lda     result
+        cmp     $D20D
+        lda     result+1
         sbc     $D20E
         bcc     LBABF
-        dec     $08
-        lda     $08
-        cmp     #$01
-        bcs     LBA90
+        dec     textlen
+        lda     textlen
+        cmp     #1
+        bcs     :-
         jmp     LBC5E
+.endproc
 
 LBABF:  inc     $08
         ldy     #$00
@@ -20029,53 +20063,70 @@ LBB0B:  sta     LBB62
         bcc     LBB1A
         rts
 
-LBB1A:  lda     LBB62
+.proc LBB1A
+        point := $6
+        xcoord := $6
+        ycoord := $8
+
+        lda     LBB62
         ldx     path_buf1
         inx
         sta     path_buf1,x
         sta     str_1_char+1
         jsr     LBD3B
         inc     path_buf1
-        sta     $06
-        stx     $06+1
+        sta     xcoord
+        stx     xcoord+1
         lda     $D6B5
-        sta     $08
+        sta     ycoord
         lda     $D6B5+1
-        sta     $08+1
-        MGTK_RELAY_CALL MGTK::MoveTo, $6
+        sta     ycoord+1
+        MGTK_RELAY_CALL MGTK::MoveTo, point
         MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
         addr_call draw_text1, str_1_char
         addr_call draw_text1, path_buf2
         lda     winfoF
         jsr     LB7B9
         rts
+.endproc
 
 LBB62:  .byte   0
 LBB63:  lda     path_buf1
         bne     LBB69
         rts
 
-LBB69:  dec     path_buf1
+.proc LBB69
+        point := $6
+        xcoord := $6
+        ycoord := $8
+
+        dec     path_buf1
         jsr     LBD3B
-        sta     $06
-        stx     $06+1
+        sta     xcoord
+        stx     xcoord+1
         lda     $D6B5
-        sta     $08
+        sta     ycoord
         lda     $D6B5+1
-        sta     $08+1
-        MGTK_RELAY_CALL MGTK::MoveTo, $6
+        sta     ycoord+1
+        MGTK_RELAY_CALL MGTK::MoveTo, point
         MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
         lda     winfoF
         jsr     LB7B9
         rts
+.endproc
 
 LBBA4:  lda     path_buf1
         bne     LBBAA
         rts
 
-LBBAA:  ldx     path_buf2
+.proc LBBAA
+        point := $6
+        xcoord := $6
+        ycoord := $8
+
+        ldx     path_buf2
         cpx     #1
         beq     LBBBC
 LBBB1:  lda     path_buf2,x
@@ -20089,19 +20140,20 @@ LBBBC:  ldx     path_buf1
         dec     path_buf1
         inc     path_buf2
         jsr     LBD3B
-        sta     $06
-        stx     $06+1
+        sta     xcoord
+        stx     xcoord+1
         lda     $D6B5
-        sta     $08
+        sta     ycoord
         lda     $D6B5+1
-        sta     $08+1
-        MGTK_RELAY_CALL MGTK::MoveTo, $6
+        sta     ycoord+1
+        MGTK_RELAY_CALL MGTK::MoveTo, point
         MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
         lda     winfoF
         jsr     LB7B9
         rts
+.endproc
 
 LBC03:  lda     path_buf2
         cmp     #$02
@@ -20123,7 +20175,7 @@ LBC21:  lda     $D485,x
         cpx     path_buf2
         bne     LBC21
 LBC2D:  dec     path_buf2
-        MGTK_RELAY_CALL MGTK::MoveTo, LD6B3
+        MGTK_RELAY_CALL MGTK::MoveTo, point6
         MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
         addr_call draw_text1, path_buf1
         addr_call draw_text1, path_buf2
@@ -20174,7 +20226,7 @@ LBCB3:  pla
         sta     path_buf2
         lda     #$00
         sta     path_buf1
-        MGTK_RELAY_CALL MGTK::MoveTo, LD6B3
+        MGTK_RELAY_CALL MGTK::MoveTo, point6
         jsr     LB961
         rts
 
@@ -20201,7 +20253,7 @@ LBCDF:  lda     path_buf2,x
         sta     path_buf1
         lda     #$01
         sta     path_buf2
-        MGTK_RELAY_CALL MGTK::MoveTo, LD6B3
+        MGTK_RELAY_CALL MGTK::MoveTo, point6
         jsr     LB961
         rts
 
@@ -20237,27 +20289,33 @@ LBD33:  rts
         jsr     LB961
         rts
 
-LBD3B:  lda     #<$D444
-        sta     $06
-        lda     #>$D444
-        sta     $06+1
-        lda     path_buf1
-        sta     $08
-        bne     LBD51
-        lda     LD6B3
-        ldx     $D6B4
-        rts
+.proc LBD3B
+        params := $6
+        textptr := $6
+        textlen := $8
+        result := $9
 
-LBD51:  MGTK_RELAY_CALL MGTK::TextWidth, $6
-        lda     $09
+        lda     #<$D444
+        sta     textptr
+        lda     #>$D444
+        sta     textptr+1
+        lda     path_buf1
+        sta     textlen
+        bne     :+
+        lda     point6::xcoord
+        ldx     point6::xcoord+1
+        rts
+:       MGTK_RELAY_CALL MGTK::TextWidth, params
+        lda     result
         clc
-        adc     LD6B3
+        adc     point6::xcoord
         tay
-        lda     $0A
-        adc     $D6B4
+        lda     result+1
+        adc     point6::xcoord+1
         tax
         tya
         rts
+.endproc
 
 LBD69:  lda     #$01
         sta     path_buf2
@@ -20269,7 +20327,9 @@ LBD75:  lda     #$00
         sta     path_buf1
         rts
 
-LBD7B:  ldx     #$11
+        ;; Compute length of some text???
+.proc LBD7B
+        ldx     #$11
 LBD7D:  lda     L0020,x
         sta     LBDB0,x
         dex
@@ -20288,6 +20348,7 @@ LBD95:  lda     LBDB0,x
         bpl     LBD95
         pla
         rts
+.endproc
 
 LBD9F:  sta     RAMRDON
         sta     RAMWRTON
