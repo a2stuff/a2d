@@ -5517,9 +5517,9 @@ LE6C1:
 LE6D1:
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         DEFINE_POINT 0, 0, point9
-LE6DD:  .byte   $70,$00,$00,$00
-LE6E1:  .byte   $8C,$00,$00,$00
-LE6E5:  .byte   $E7,$00,$00,$00
+        DEFINE_POINT 112, 0, pointA
+        DEFINE_POINT 140, 0, pointB
+        DEFINE_POINT 231, 0, pointC
 
 .proc text_buffer2
         .addr   data
@@ -9765,7 +9765,7 @@ L5ECB:  lda     ($06),y
         jsr     L78EF
         lda     #$00
         ldx     desktop_active_winid
-        sta     $E6D0,x
+        sta     LE6D1-1,x
         lda     #$01
         sta     $E25B
         jsr     L52DF
@@ -11184,14 +11184,14 @@ L6C5F:  txa
         inc     $E71E
 L6C8F:  lda     #$10
         sta     point9::ycoord
-        sta     $E6DF
-        sta     $E6E3
-        sta     $E6E7
+        sta     pointA::ycoord
+        sta     pointB::ycoord
+        sta     pointC::ycoord
         lda     #$00
         sta     point9::ycoord+1
-        sta     $E6E0
-        sta     $E6E4
-        sta     $E6E8
+        sta     pointA::ycoord+1
+        sta     pointB::ycoord+1
+        sta     pointC::ycoord+1
         lda     #$00
         sta     L6CCC
 L6CB0:  lda     L6CCC
@@ -13385,16 +13385,16 @@ L7FBB:  inc     $0805
         lda     #$00
         sta     point9::xcoord+1
         lda     #$CB
-        sta     $E6DD
+        sta     pointA::xcoord
         lda     #$00
-        sta     $E6DE
+        sta     pointA::xcoord+1
         lda     #$00
-        sta     $E6E1
-        sta     $E6E2
+        sta     pointB::xcoord
+        sta     pointB::xcoord+1
         lda     #$E7
-        sta     LE6E5
+        sta     pointC
         lda     #$00
-        sta     $E6E6
+        sta     pointC::xcoord+1
         lda     LCBANK2
         lda     LCBANK2
         jmp     L80F5
@@ -13570,24 +13570,24 @@ L8183:  sta     text_buffer2::data-1,x
         bpl     L8183
         lda     #$00
         sta     text_buffer2::length
-        lda     $E6DF
+        lda     pointA::ycoord
         clc
         adc     L813E
-        sta     $E6DF
+        sta     pointA::ycoord
         bcc     L819D
-        inc     $E6E0
-L819D:  lda     $E6E3
+        inc     pointA::ycoord+1
+L819D:  lda     pointB::ycoord
         clc
         adc     L813E
-        sta     $E6E3
+        sta     pointB::ycoord
         bcc     L81AC
-        inc     $E6E4
-L81AC:  lda     $E6E7
+        inc     pointB::ycoord+1
+L81AC:  lda     pointC::ycoord
         clc
         adc     L813E
-        sta     $E6E7
+        sta     pointC::ycoord
         bcc     L81BB
-        inc     $E6E8
+        inc     pointC::ycoord+1
 L81BB:  lda     point9::ycoord
         cmp     grafport2::height
         lda     point9::ycoord+1
@@ -13617,11 +13617,11 @@ L81E8:  lda     point9::ycoord
 L81F7:  jsr     L821F
         addr_call SETPOS_RELAY, point9
         jsr     L8241
-        addr_call SETPOS_RELAY, LE6DD
+        addr_call SETPOS_RELAY, pointA
         jsr     L8253
-        addr_call SETPOS_RELAY, LE6E1
+        addr_call SETPOS_RELAY, pointB
         jsr     L830F
-        addr_jump SETPOS_RELAY, LE6E5
+        addr_jump SETPOS_RELAY, pointC
 
 L821F:  lda     $EC43
         and     #$0F
