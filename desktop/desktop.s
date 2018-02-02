@@ -4418,12 +4418,6 @@ addr:   .addr   0
         rts
 .endproc
 
-.macro SETPOS_RELAY_CALL addr
-        lda     #<addr
-        ldx     #>addr
-        jsr     SETPOS_RELAY
-.endmacro
-
 ;;; ==================================================
 ;;; DESKTOP call from main>aux, call in Y params at (X,A)
 
@@ -5521,10 +5515,10 @@ LE6C1:
         .addr   winfo8title_ptr
 
 LE6D1:
-        .byte   $00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$70,$00,$00,$00,$8C
-        .byte   $00,$00,$00
+        DEFINE_POINT 0, 0, point9
+LE6DD:  .byte   $70,$00,$00,$00
+LE6E1:  .byte   $8C,$00,$00,$00
 LE6E5:  .byte   $E7,$00,$00,$00
 
 .proc text_buffer2
@@ -11189,12 +11183,12 @@ L6C5F:  txa
         bne     L6C8F
         inc     $E71E
 L6C8F:  lda     #$10
-        sta     $E6DB
+        sta     point9::ycoord
         sta     $E6DF
         sta     $E6E3
         sta     $E6E7
         lda     #$00
-        sta     $E6DC
+        sta     point9::ycoord+1
         sta     $E6E0
         sta     $E6E4
         sta     $E6E8
@@ -13387,9 +13381,9 @@ L7FBB:  inc     $0805
         lda     LCBANK1
         lda     LCBANK1
         lda     #$54
-        sta     $E6D9
+        sta     point9::xcoord
         lda     #$00
-        sta     $E6DA
+        sta     point9::xcoord+1
         lda     #$CB
         sta     $E6DD
         lda     #$00
@@ -13594,42 +13588,40 @@ L81AC:  lda     $E6E7
         sta     $E6E7
         bcc     L81BB
         inc     $E6E8
-L81BB:  lda     $E6DB
+L81BB:  lda     point9::ycoord
         cmp     grafport2::height
-        lda     $E6DC
+        lda     point9::ycoord+1
         sbc     grafport2::height+1
         bmi     L81D9
-        lda     $E6DB
+        lda     point9::ycoord
         clc
         adc     L813E
-        sta     $E6DB
+        sta     point9::ycoord
         bcc     L81D8
-        inc     $E6DC
+        inc     point9::ycoord+1
 L81D8:  rts
 
-L81D9:  lda     $E6DB
+L81D9:  lda     point9::ycoord
         clc
         adc     L813E
-        sta     $E6DB
+        sta     point9::ycoord
         bcc     L81E8
-        inc     $E6DC
-L81E8:  lda     $E6DB
+        inc     point9::ycoord+1
+L81E8:  lda     point9::ycoord
         cmp     grafport2::cliprect_y1
-        lda     $E6DC
+        lda     point9::ycoord+1
         sbc     grafport2::cliprect_y1+1
         bpl     L81F7
         rts
 
 L81F7:  jsr     L821F
-        SETPOS_RELAY_CALL $E6D9
+        addr_call SETPOS_RELAY, point9
         jsr     L8241
-        SETPOS_RELAY_CALL $E6DD
+        addr_call SETPOS_RELAY, LE6DD
         jsr     L8253
-        SETPOS_RELAY_CALL $E6E1
+        addr_call SETPOS_RELAY, LE6E1
         jsr     L830F
-        lda     #<LE6E5
-        ldx     #>LE6E5
-        jmp     SETPOS_RELAY
+        addr_jump SETPOS_RELAY, LE6E5
 
 L821F:  lda     $EC43
         and     #$0F
