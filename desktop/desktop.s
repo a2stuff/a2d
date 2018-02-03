@@ -1474,7 +1474,7 @@ L99FC:  MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
 L9A0E:  MGTK_CALL MGTK::PeekEvent, peekevent_params
         lda     peekevent_params::kind
-        cmp     #MGTK::drag
+        cmp     #MGTK::event_kind_drag
         beq     L9A1E
         jmp     L9BA5
 
@@ -3911,11 +3911,11 @@ LBB75:  MGTK_RELAY2_CALL MGTK::MoveTo, point8
         jsr     draw_pascal_string
 LBB87:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
         lda     event_params_kind
-        cmp     #MGTK::button_down
+        cmp     #MGTK::event_kind_button_down
         bne     LBB9A
         jmp     LBC0C
 
-LBB9A:  cmp     #MGTK::key_down
+LBB9A:  cmp     #MGTK::event_kind_key_down
         bne     LBB87
         lda     event_params_key
         and     #$7F
@@ -3988,7 +3988,7 @@ LBC6D:  MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
         sta     LBCE8
 LBC84:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
         lda     event_params_kind
-        cmp     #MGTK::button_up
+        cmp     #MGTK::event_kind_button_up
         beq     LBCDB
         jsr     LBDE1
         MGTK_RELAY2_CALL MGTK::MoveTo, event_params_coords
@@ -4025,7 +4025,7 @@ LBCE9:  MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
         sta     LBD64
 LBD00:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
         lda     event_params_kind
-        cmp     #MGTK::button_up
+        cmp     #MGTK::event_kind_button_up
         beq     LBD57
         jsr     LBDE1
         MGTK_RELAY2_CALL MGTK::MoveTo, event_params_coords
@@ -4062,7 +4062,7 @@ LBD65:  lda     #$00
         MGTK_RELAY2_CALL MGTK::PaintRect, try_again_rect
 LBD7C:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
         lda     event_params_kind
-        cmp     #MGTK::button_up
+        cmp     #MGTK::event_kind_button_up
         beq     LBDD3
         jsr     LBDE1
         MGTK_RELAY2_CALL MGTK::MoveTo, event_params_coords
@@ -6093,9 +6093,9 @@ L4088:  jsr     reset_grafport3
 L40A6:  jsr     L464E
         jsr     get_input
         lda     event_params_kind
-        cmp     #MGTK::button_down
+        cmp     #MGTK::event_kind_button_down
         beq     L40B7
-        cmp     #MGTK::apple_key
+        cmp     #MGTK::event_kind_apple_key
         bne     L40BD
 L40B7:  jsr     handle_click
         jmp     L4088
@@ -8668,9 +8668,9 @@ L5579:  lda     #$00
 L5581:  jsr     L55F0
 L5584:  jsr     get_input
         lda     event_params_kind
-        cmp     #MGTK::key_down
+        cmp     #MGTK::event_kind_key_down
         beq     L5595
-        cmp     #MGTK::button_down
+        cmp     #MGTK::event_kind_button_down
         bne     L5584
         jmp     L55D1
 
@@ -8861,9 +8861,9 @@ L572D:  lda     #$00
         sta     L578C
 L5732:  jsr     get_input
         lda     event_params_kind
-        cmp     #MGTK::key_down
+        cmp     #MGTK::event_kind_key_down
         beq     L5743
-        cmp     #MGTK::button_down
+        cmp     #MGTK::event_kind_button_down
         bne     L5732
         jmp     L578B
 
@@ -8929,9 +8929,9 @@ L578D:  .byte   0
         jsr     L5803
 loop:   jsr     get_input
         lda     event_params_kind
-        cmp     #MGTK::button_down
+        cmp     #MGTK::event_kind_button_down
         beq     done
-        cmp     #MGTK::key_down
+        cmp     #MGTK::event_kind_key_down
         bne     loop
         lda     event_params_key
         cmp     #KEY_RETURN
@@ -9522,7 +9522,7 @@ L5C71:  lda     desktop_active_winid
 L5C89:  sta     L5CB6
         jsr     L48F0
         lda     event_params_kind
-        cmp     #MGTK::drag
+        cmp     #MGTK::event_kind_drag
         beq     L5C99
 L5C96:  lda     #$FF
         rts
@@ -9811,7 +9811,7 @@ L5F20:  lda     event_params_coords,x
         bpl     L5F20
         jsr     L48F0
         lda     event_params_kind
-        cmp     #MGTK::drag
+        cmp     #MGTK::event_kind_drag
         beq     L5F3F
         bit     BUTN0
         bmi     L5F3E
@@ -9834,7 +9834,7 @@ L5F50:  lda     L5F0B,x
         MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
 L5F6B:  jsr     L48F0
         lda     event_params_kind
-        cmp     #MGTK::drag
+        cmp     #MGTK::event_kind_drag
         beq     L5FC5
         MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
         ldx     #$00
@@ -10809,7 +10809,7 @@ L68B8:  lda     event_params_coords,x
         bpl     L68B8
         jsr     L48F0
         lda     event_params_kind
-        cmp     #MGTK::drag
+        cmp     #MGTK::event_kind_drag
         beq     L68CF
         rts
 
@@ -10818,7 +10818,7 @@ L68CF:  MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern3
         MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
 L68E4:  jsr     L48F0
         lda     event_params_kind
-        cmp     #MGTK::drag
+        cmp     #MGTK::event_kind_drag
         beq     L6932
         MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
         ldx     #$00
@@ -13947,7 +13947,7 @@ L84DC:  lda     grafport2::width
         sbc     grafport2::cliprect_y1+1
         sta     L85FB
         lda     event_params_kind
-        cmp     #MGTK::button_down
+        cmp     #MGTK::event_kind_button_down
         bne     L850C
         asl     a
         bne     L850E
@@ -14100,15 +14100,15 @@ loop:   dec     counter
         lda     event_params_kind
         sta     state           ; unused ???
 
-        cmp     #MGTK::no_event
+        cmp     #MGTK::event_kind_no_event
         beq     loop
-        cmp     #MGTK::drag
+        cmp     #MGTK::event_kind_drag
         beq     loop
-        cmp     #MGTK::button_up
+        cmp     #MGTK::event_kind_button_up
         bne     :+
         jsr     get_input
         jmp     loop
-:       cmp     #MGTK::button_down
+:       cmp     #MGTK::event_kind_button_down
         bne     exit
 
         jsr     get_input
@@ -17756,7 +17756,7 @@ LA3CA:  ldx     L9188
 
 LA3D1:  yax_call JT_MGTK_RELAY, MGTK::GetEvent, event_params
         lda     event_params_kind
-        cmp     #MGTK::key_down
+        cmp     #MGTK::event_kind_key_down
         bne     LA3EC
         lda     event_params_key
         cmp     #KEY_ESCAPE
@@ -17940,11 +17940,11 @@ prompt_input_loop:
         sta     LD8E9
 LA579:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_params_kind
-        cmp     #MGTK::button_down
+        cmp     #MGTK::event_kind_button_down
         bne     LA58C
         jmp     LA5EE
 
-LA58C:  cmp     #MGTK::key_down
+LA58C:  cmp     #MGTK::event_kind_key_down
         bne     LA593
         jmp     LA6FD
 
@@ -18302,9 +18302,9 @@ jump_relay:
 
 :       MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_params_kind
-        cmp     #MGTK::button_down
+        cmp     #MGTK::event_kind_button_down
         beq     close
-        cmp     #MGTK::key_down
+        cmp     #MGTK::event_kind_key_down
         bne     :-
         lda     event_params_key
         and     #$7F
@@ -19382,11 +19382,11 @@ LB476:  MGTK_RELAY_CALL MGTK::PeekEvent, event_params
         sta     LB508
         lda     event_params_kind
         sta     LB507
-        cmp     #MGTK::no_event
+        cmp     #MGTK::event_kind_no_event
         beq     LB45F
-        cmp     #MGTK::drag
+        cmp     #MGTK::event_kind_drag
         beq     LB45F
-        cmp     #MGTK::button_up
+        cmp     #MGTK::event_kind_button_up
         bne     LB4A7
         MGTK_RELAY_CALL MGTK::GetEvent, event_params
         jmp     LB45F
@@ -19811,7 +19811,7 @@ LB88A:  sta     LB8F3
         sta     LB8F2
 LB892:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_params_kind
-        cmp     #MGTK::button_up
+        cmp     #MGTK::event_kind_button_up
         beq     LB8E3
         lda     winfoF
         sta     event_params

@@ -4669,20 +4669,20 @@ L666D:
 
         lda     input::modifiers
         sta     input::kmods
-        lda     #MGTK::key_down
+        lda     #MGTK::event_kind_key_down
         sta     input::state
         bne     L66D8
 
 L66B9:  bcc     up
         lda     input::modifiers
         beq     :+
-        lda     #MGTK::apple_key
+        lda     #MGTK::event_kind_apple_key
         bne     set_state
 
-:       lda     #MGTK::button_down
+:       lda     #MGTK::event_kind_button_down
         bne     set_state
 
-up:     lda     #MGTK::button_up
+up:     lda     #MGTK::event_kind_button_up
 
 set_state:
         sta     input::state
@@ -8524,7 +8524,7 @@ L8347:  MGTK_CALL MGTK::PostEvent, set_input_params
         rts
 
 .proc set_input_params          ; 1 byte shorter than normal, since KEY
-state:  .byte   MGTK::key_down
+state:  .byte   MGTK::event_kind_key_down
 key:    .byte   0
 modifiers:
         .byte   0

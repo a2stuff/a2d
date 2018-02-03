@@ -79,7 +79,7 @@ call_init:
         lda     ROMIN2
         jmp     init
 
-        ;; Used after a drag-and-drop is completed;
+        ;; Used after a event_kind_drag-and-drop is completed;
         ;; redraws the window.
 .proc redraw_screen_and_window
 
@@ -94,7 +94,7 @@ call_init:
         bpl     :-
         jsr     zp_stash
 
-        ;;  Redraw window after drag
+        ;;  Redraw window after event_kind_drag
         lda     ROMIN2
         lda     #da_window_id
         jsr     check_visibility_and_draw_window
@@ -134,7 +134,7 @@ skip:   lda     #0
 offscreen_flag:
         .byte   0
 
-        ;; Called after window drag is complete
+        ;; Called after window event_kind_drag is complete
         ;; (called with window_id in A)
 .proc check_visibility_and_draw_window
         sta     getwinport_params_window_id
@@ -840,12 +840,12 @@ loop:   lda     adjust_txtptr_copied-1,x
 input_loop:
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-        cmp     #MGTK::button_down
+        cmp     #MGTK::event_kind_button_down
         bne     :+
         jsr     on_click
         jmp     input_loop
 
-:       cmp     #MGTK::key_down
+:       cmp     #MGTK::event_kind_key_down
         bne     input_loop
         jsr     on_key_press
         jmp     input_loop
@@ -1459,7 +1459,7 @@ invert:  MGTK_CALL MGTK::PaintRect, 0, invert_addr ; Inverts port
 check_button:
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-        cmp     #MGTK::drag ; Button down?
+        cmp     #MGTK::event_kind_drag ; Button down?
         bne     done            ; Nope, done immediately
         lda     #da_window_id
         sta     screentowindow_params::window_id

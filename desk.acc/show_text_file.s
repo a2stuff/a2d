@@ -845,7 +845,7 @@ store:  sta     winfo::hthumbpos
 ;;; ==================================================
 ;;; UI Helpers
 
-        ;; Used at start of thumb drag
+        ;; Used at start of thumb event_kind_drag
 .proc do_trackthumb
         lda     event_params::mousex
         sta     trackthumb_params::mousex

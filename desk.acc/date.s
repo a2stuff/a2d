@@ -328,12 +328,12 @@ init_window:
 .proc input_loop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-        cmp     #MGTK::button_down
+        cmp     #MGTK::event_kind_button_down
         bne     :+
         jsr     on_click
         jmp     input_loop
 
-:       cmp     #MGTK::key_down
+:       cmp     #MGTK::event_kind_key_down
         bne     input_loop
 .endproc
 
@@ -487,7 +487,7 @@ on_field_click:
         stx     hit_rect_index
 loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
         lda     event_params::kind
-        cmp     #MGTK::button_up
+        cmp     #MGTK::event_kind_button_up
         beq     :+
         jsr     do_inc_or_dec
         jmp     loop

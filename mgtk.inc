@@ -282,7 +282,7 @@ GetEvent        := $2A
         ;; (input length 0 bytes)
         ;; (output length 5 bytes)
         ;; .byte kind
-        ;; if kind is key_down:
+        ;; if kind is event_kind_key_down:
         ;;   .byte key          (ASCII code; high bit clear)
         ;;   .byte modifiers    (0=none, 1=open-apple, 2=closed-apple, 3=both)
         ;; if kind otherwise:
@@ -298,7 +298,7 @@ PeekEvent       := $2C
 PostEvent       := $2D          ; Set pending input kind (mouse or keyboard)
         ;; (input length 5 bytes)
         ;; .byte kind
-        ;; if kind is key_down:
+        ;; if kind is event_kind_key_down:
         ;;   .byte key          ASCII code; high bit clear
         ;;   .byte modifiers    0=none, 1=open-apple, 2=closed-apple, 3=both
         ;; if kind otherwise:
@@ -524,12 +524,12 @@ textbg_white       := $7F
 ;;; Mouse Graphics Tool Kit Constants
 
 ;;; Used in GetEvent
-no_event        := 0    ; No mouse or keypress
-button_down     := 1    ; Mouse button was depressed
-button_up       := 2    ; Mouse button was released
-key_down        := 3    ; Key was pressed
-drag            := 4    ; Mouse button still down
-apple_key       := 5    ; Mouse button was depressed, modifier key down
+event_kind_no_event        := 0    ; No mouse or keypress
+event_kind_button_down     := 1    ; Mouse button was depressed
+event_kind_button_up       := 2    ; Mouse button was released
+event_kind_key_down        := 3    ; Key was pressed
+event_kind_drag            := 4    ; Mouse button still down
+event_kind_apple_key       := 5    ; Mouse button was depressed, modifier key down
 
 ;;; Used in FindWindow
 area_desktop    := 0

@@ -173,7 +173,7 @@ base:   .word   0
 .proc event_params             ; queried to track mouse-up
 kind:  .byte   $00
 
-;;; if state is MGTK::key_down
+;;; if state is MGTK::event_kind_key_down
 key    := *
 modifiers := *+1
 
@@ -360,9 +360,9 @@ end:    rts
 .proc input_loop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-        cmp     #MGTK::button_down ; was clicked?
+        cmp     #MGTK::event_kind_button_down ; was clicked?
         beq     exit
-        cmp     #MGTK::key_down  ; any key?
+        cmp     #MGTK::event_kind_key_down  ; any key?
         beq     on_key
         bne     input_loop
 

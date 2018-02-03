@@ -79,7 +79,7 @@ stash_stack:  .byte   0
         da_window_id := 51
 
 ;;; ==================================================
-;;; Redraw the screen (all windows) after a drag
+;;; Redraw the screen (all windows) after a event_kind_drag
 
 .proc redraw_screen
 
@@ -714,13 +714,13 @@ ploop:  lda     position_table+1,y
 .proc input_loop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-        cmp     #MGTK::button_down
+        cmp     #MGTK::event_kind_button_down
         bne     :+
         jsr     on_click
         jmp     input_loop
 
         ;; key?
-:       cmp     #MGTK::key_down
+:       cmp     #MGTK::event_kind_key_down
         bne     input_loop
         jsr     check_key
         jmp     input_loop
