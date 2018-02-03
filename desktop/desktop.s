@@ -6025,9 +6025,9 @@ L0D14           := $0D14
         ;; "Exported" by desktop.inc
 
 L4000:                  jmp     L4042 ; ???
-JT_MGTK_RELAY:           jmp     MGTK_RELAY
+JT_MGTK_RELAY:          jmp     MGTK_RELAY
 L4006:                  jmp     L8259 ; ???
-L4009:                  jmp     L830F ; ???
+L4009:                  jmp     compose_date_string ; ???
 L400C:                  jmp     L5E78 ; ???
 L400F:                  jmp     DESKTOP_AUXLOAD
 JT_EJECT:               jmp     cmd_eject
@@ -9390,10 +9390,9 @@ L5B31:  lda     $EBFD,x
         bpl     L5B31
         MGTK_RELAY_CALL MGTK::FindControl, event_params_coords
         lda     findcontrol_which_ctl
-        bne     L5B4B           ; ctl_not_a_control
-        jmp     L5CB7
-
-L5B4B:  bit     double_click_flag
+        bne     :+
+        jmp     handle_content_click ; 0 = ctl_not_a_control
+:       bit     double_click_flag
         bmi     :+
         jmp     done_client_click ; ignore double click
 :       cmp     #MGTK::ctl_dead_zone
@@ -9422,30 +9421,30 @@ L5B4B:  bit     double_click_flag
 :       cmp     #MGTK::part_up_arrow
         bne     :+
 up:     jsr     scroll_up
-        lda     #$01
-        jsr     L5C89
+        lda     #MGTK::part_up_arrow
+        jsr     check_control_repeat
         bpl     up
         jmp     done_client_click
 
 :       cmp     #MGTK::part_down_arrow
         bne     :+
 down:   jsr     scroll_down
-        lda     #$02
-        jsr     L5C89
+        lda     #MGTK::part_down_arrow
+        jsr     check_control_repeat
         bpl     down
         jmp     done_client_click
 
 :       cmp     #MGTK::part_page_down
         beq     pgdn
 pgup:   jsr     L638C
-        lda     #$03
-        jsr     L5C89
+        lda     #MGTK::part_page_up
+        jsr     check_control_repeat
         bpl     pgup
         jmp     done_client_click
 
 pgdn:   jsr     L63EC
-        lda     #$04
-        jsr     L5C89
+        lda     #MGTK::part_page_down
+        jsr     check_control_repeat
         bpl     pgdn
         jmp     done_client_click
 
@@ -9469,33 +9468,32 @@ horiz:  lda     active_window_id
 :       cmp     #MGTK::part_left_arrow
         bne     :+
 left:   jsr     scroll_left
-        lda     #$01
-        jsr     L5C89
+        lda     #MGTK::part_left_arrow
+        jsr     check_control_repeat
         bpl     left
         jmp     done_client_click
 
 :       cmp     #MGTK::part_right_arrow
         bne     :+
 rght:   jsr     scroll_right
-        lda     #$02
-        jsr     L5C89
+        lda     #MGTK::part_right_arrow
+        jsr     check_control_repeat
         bpl     rght
         jmp     done_client_click
 
 :       cmp     #MGTK::part_page_right
         beq     pgrt
 pglt:   jsr     L6451
-        lda     #$03
-        jsr     L5C89
+        lda     #MGTK::part_page_left
+        jsr     check_control_repeat
         bpl     pglt
         jmp     done_client_click
 
 pgrt:   jsr     L64B0
-        lda     #$04
-        jsr     L5C89
+        lda     #MGTK::part_page_right
+        jsr     check_control_repeat
         bpl     pgrt
         jmp     done_client_click
-
 
 done_client_click:
         jsr     DESKTOP_COPY_FROM_BUF
@@ -9537,37 +9535,50 @@ L5C71:  lda     active_window_id
         jsr     reset_grafport3
         jmp     L6C19
 
-L5C89:  sta     L5CB6
+;;; ==================================================
+;;; Handle mouse held down on scroll arrow/pager
+
+.proc check_control_repeat
+        sta     ctl
         jsr     peek_event
         lda     event_params_kind
         cmp     #MGTK::event_kind_drag
-        beq     L5C99
-L5C96:  lda     #$FF
+        beq     :+
+bail:   lda     #$FF            ; high bit set = not repeating
         rts
 
-L5C99:  MGTK_RELAY_CALL MGTK::FindControl, event_params_coords
+:       MGTK_RELAY_CALL MGTK::FindControl, event_params_coords
         lda     findcontrol_which_ctl
-        beq     L5C96
-        cmp     #$03
-        beq     L5C96
-        lda     $D20E
-        cmp     L5CB6
-        bne     L5C96
-        lda     #$00
+        beq     bail
+        cmp     #MGTK::ctl_dead_zone
+        beq     bail
+        lda     findcontrol_which_part
+        cmp     ctl
+        bne     bail
+        lda     #0              ; high bit set = repeating
         rts
 
-L5CB6:  .byte   0
-L5CB7:  bit     L5B1B
-        bpl     L5CBF
+ctl:    .byte   0
+.endproc
+
+;;; ==================================================
+
+.proc handle_content_click
+        bit     L5B1B
+        bpl     :+
         jmp     clear_selection
 
-L5CBF:  lda     active_window_id
+:       lda     active_window_id
         sta     $D20E
         DESKTOP_RELAY_CALL $09, event_params_coords
         lda     findcontrol_which_ctl
         bne     L5CDA
         jsr     L5F13
         jmp     L5DEC
+.endproc
+
+;;; ==================================================
+
 
 L5CD9:  .byte   0
 L5CDA:  sta     L5CD9
@@ -11181,7 +11192,7 @@ L6C25:  jsr     push_zp_addrs
 L6C39:  lda     bufnum
         sta     getwinport_params2::window_id
         jsr     L4505
-L6C42:  bit     L4152
+        bit     L4152
         bmi     L6C4A
         jsr     L6E8E
 L6C4A:  ldx     bufnum
@@ -13654,7 +13665,7 @@ L81F7:  jsr     L821F
         addr_call SETPOS_RELAY, pointA
         jsr     L8253
         addr_call SETPOS_RELAY, pointB
-        jsr     L830F
+        jsr     compose_date_string
         addr_jump SETPOS_RELAY, pointC
 
 L821F:  lda     $EC43
@@ -13695,6 +13706,7 @@ L8272:  .byte   0
 L8273:  .byte   0
 L8274:  .byte   0
 L8275:  .byte   0
+
 L8276:  ldx     #$11
         lda     #' '
 L827A:  sta     text_buffer2::data-1,x
@@ -13737,7 +13749,7 @@ L82C3:  inc     L8274
         sbc     L826A,x
         sta     L8272
         lda     L8273
-L82D3:  sbc     L826B,x
+        sbc     L826B,x
         sta     L8273
         jmp     L8291
 
@@ -13765,12 +13777,15 @@ L8309:  lda     #$0C
 L830B:  sta     text_buffer2::length
         rts
 
-L830F:  ldx     #$15
+;;; ==================================================
+
+compose_date_string:
+        ldx     #21
         lda     #' '
 :       sta     text_buffer2::data-1,x
         dex
         bpl     :-
-        lda     #$01
+        lda     #1
         sta     text_buffer2::length
         lda     #<text_buffer2::length
         sta     $08
@@ -13807,9 +13822,9 @@ prep_date_strings:
 .proc prep_day_string
         ;; String will have trailing space.
         lda     #' '
-        sta     str_3_spaces+1
-        sta     str_3_spaces+2
-        sta     str_3_spaces+3
+        sta     str_day+1
+        sta     str_day+2
+        sta     str_day+3
 
         ;; Assume 1 digit (plus trailing space)
         ldx     #2
@@ -13830,8 +13845,8 @@ prep_date_strings:
         cmp     #30
         bcc     :+
         ldy     #'3'
-:       stx     str_3_spaces    ; length (including trailing space)
-        sty     str_3_spaces+1  ; first digit
+:       stx     str_day    ; length (including trailing space)
+        sty     str_day+1  ; first digit
 
         ;; Determine second digit.
         cpx     #2              ; only 1 digit (plus trailing space?)
@@ -13848,8 +13863,8 @@ prep_date_strings:
         bne     :-
 
         ora     #'0'
-        sta     str_3_spaces+2
-done:   addr_jump L84A4, str_3_spaces
+        sta     str_day+2
+done:   addr_jump concatenate_date_part, str_day
 .endproc
 
 .proc prep_month_string
@@ -13859,7 +13874,7 @@ done:   addr_jump L84A4, str_3_spaces
         lda     month_table+1,y
         tax
         lda     month_table,y
-        jmp     L84A4
+        jmp     concatenate_date_part
 .endproc
 
 .proc prep_year_string
@@ -13875,14 +13890,14 @@ done:   addr_jump L84A4, str_3_spaces
         sta     year_string_10s
         lda     ascii_digits,y
         sta     year_string_1s
-        addr_jump L84A4, str_year
+        addr_jump concatenate_date_part, str_year
 .endproc
 
 year:   .byte   0
 month:  .byte   0
 day:    .byte   0
 
-str_3_spaces:
+str_day:                        ; Filled in with day of the month plus space (e.g. "10 ")
         PASCAL_STRING "   "
 
 month_table:
@@ -13920,7 +13935,8 @@ tens_table:
 ascii_digits:
         .byte   "0123456789"
 
-L84A4:  sta     $06
+.proc concatenate_date_part
+        sta     $06
         stx     $06+1
         ldy     #$00
         lda     ($08),y
@@ -13944,6 +13960,9 @@ L84A4:  sta     $06
 
 L84CF:  .byte   0
 L84D0:  .byte   0
+.endproc
+
+;;; ==================================================
 
 
 L84D1:  jsr     push_zp_addrs
@@ -16119,6 +16138,7 @@ newpath:.addr   $1FC0
 L956E:  .byte   0
         .byte   0
 L9570:  .byte   $1F
+
 L9571:  lda     #$00
         sta     L9706
 L9576:  lda     L9706
@@ -17329,7 +17349,7 @@ L9FC2:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
         cmp     #$03
         beq     LA022
         cmp     #$02
-L9FF1:  beq     LA001
+        beq     LA001
         cmp     #$04
         bne     L9FFE
         lda     #$80
@@ -17983,7 +18003,7 @@ LA5B4:  lda     winfoF
         sta     event_params
         MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
-LA5D2:  MGTK_RELAY_CALL MGTK::InRect, rect1
+        MGTK_RELAY_CALL MGTK::InRect, rect1
         cmp     #$80
         bne     LA5E5
         jsr     set_cursor_insertion_point_with_flag
@@ -18701,7 +18721,7 @@ LAD2A:  ldy     #$01
         lda     winfoF
         jsr     LB7B9
         lda     LAD1F
-LAD46:  bne     LAD54
+        bne     LAD54
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB16A
         jmp     LAD5D
 
