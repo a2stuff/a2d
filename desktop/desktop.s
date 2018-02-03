@@ -4666,8 +4666,20 @@ ycoord: .word   0
         event_params_xcoord := event_params::xcoord
         event_params_ycoord := event_params::ycoord
 
-        ;; When event_params_coords is used for FindControl/FindWindow
+        ;; When event_params_coords is used for FindControl/FindWindow/ScreenToWindow
 
+trackthumb_params := event_params
+trackthumb_which_ctl := trackthumb_params
+trackthumb_mousex := trackthumb_params + 1
+trackthumb_mousey := trackthumb_params + 3
+trackthumb_thumbpos := trackthumb_params + 5
+trackthumb_thumbmoved := trackthumb_params + 6
+
+updatethumb_params := event_params
+updatethumb_params_which_ctl := updatethumb_params
+updatethumb_params_thumbpos := updatethumb_params + 1
+
+screentowindow_windowx:
 findcontrol_which_ctl:
 findwindow_params_which_area:
         .byte   0
@@ -4675,6 +4687,7 @@ findcontrol_which_part:
 findwindow_params_window_id:
         .byte   0
 
+screentowindow_windowy:
 LD20F:  .byte   0
 LD210:  .byte   0
 LD211:  .byte   0
@@ -4892,7 +4905,8 @@ watch_cursor:
         .byte   px(%0000000),px(%0000000)
         .byte   5, 5
 
-LD343:  .res    191, 0
+LD343:  .res    18, 0
+LD355:  .res    173, 0
 
 path_buf0:  .res    65, 0
 path_buf1:  .res    65, 0
@@ -5101,7 +5115,8 @@ nextwinfo:   .addr   0
         DEFINE_POINT 45,70, point6
         DEFINE_POINT 0, 18, point4
         DEFINE_POINT 40,18, point7
-        .byte $28,$00,$23,$00
+        DEFINE_POINT $28, $23, pointD
+
 dialog_label_pos:
         DEFINE_POINT 40,0
 
@@ -5514,8 +5529,9 @@ LE6C1:
         .addr   winfo7title_ptr
         .addr   winfo8title_ptr
 
-LE6D1:
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+win_buf_table:                  ; ???
+        .res    8, 0
+
         DEFINE_POINT 0, 0, point9
         DEFINE_POINT 112, 0, pointA
         DEFINE_POINT 140, 0, pointB
@@ -6199,7 +6215,7 @@ L415B:  sta     desktop_active_winid
         sta     ($06),y
 L41CB:  ldx     bufnum
         dex
-        lda     LE6D1,x
+        lda     win_buf_table,x
         bpl     L41E2
         jsr     L6C19
         lda     #$00
@@ -6556,7 +6572,7 @@ L445D:  jsr     clear_selection
         lda     LE22F
         sta     selected_file_index
 L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_params_window_id
-        lda     $D20E
+        lda     findwindow_params_window_id
         sta     desktop_active_winid
         sta     bufnum
 L44B8:  jsr     DESKTOP_COPY_TO_BUF
@@ -6569,7 +6585,7 @@ L44B8:  jsr     DESKTOP_COPY_TO_BUF
         MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
         ldx     desktop_active_winid
         dex
-        lda     LE6D1,x
+        lda     win_buf_table,x
         and     #$0F
         sta     checkitem_params::menu_item
         inc     checkitem_params::menu_item
@@ -6849,9 +6865,9 @@ begin:
         jsr     set_watch_cursor
         ldx     #$FF
 L46F8:  inx
-        lda     $D355,x
+        lda     LD355,x
         sta     $220,x
-        cpx     $D355
+        cpx     LD355
         bne     L46F8
         inx
         lda     #'/'
@@ -6895,8 +6911,8 @@ L4748:  cmp     #FT_SYSTEM
 L4755:  DESKTOP_RELAY_CALL $06
         MGTK_RELAY_CALL MGTK::CloseAll
         MGTK_RELAY_CALL MGTK::SetMenu, blank_menu
-        ldx     $D355
-L4773:  lda     $D355,x
+        ldx     LD355
+L4773:  lda     LD355,x
         sta     $220,x
         dex
         bpl     L4773
@@ -6931,9 +6947,9 @@ cdate:  .word   0
 ctime:  .word   0
 .endproc
 
-L47B8:  ldx     $D355
+L47B8:  ldx     LD355
         stx     L4816
-L47BE:  lda     $D355,x
+L47BE:  lda     LD355,x
         sta     $1800,x
         dex
         bpl     L47BE
@@ -7113,7 +7129,7 @@ done:   jsr     set_pointer_cursor
 L4968:  jsr     L4AAD
         ldx     $840
 L496E:  lda     $840,x
-        sta     $D355,x
+        sta     LD355,x
         dex
         bpl     L496E
         jmp     L4A17
@@ -7121,7 +7137,7 @@ L496E:  lda     $840,x
 L497A:  jsr     L4AAD
         ldx     L0800
 L4980:  lda     L0800,x
-        sta     $D355,x
+        sta     LD355,x
         dex
         bpl     L4980
         jsr     L4A17
@@ -7202,11 +7218,11 @@ L4A0A:  ldy     #$00
         lda     ($06),y
         tay
 L4A0F:  lda     ($06),y
-        sta     $D355,y
+        sta     LD355,y
         dey
         bpl     L4A0F
-L4A17:  ldy     $D355
-L4A1A:  lda     $D355,y
+L4A17:  ldy     LD355
+L4A1A:  lda     LD355,y
         cmp     #$2F
         beq     L4A24
         dey
@@ -7217,13 +7233,13 @@ L4A24:  dey
         iny
 L4A2B:  iny
         inx
-        lda     $D355,y
+        lda     LD355,y
         sta     $D345,x
-        cpy     $D355
+        cpy     LD355
         bne     L4A2B
         stx     $D345
         lda     L4A46
-        sta     $D355
+        sta     LD355
         lda     #$00
         jmp     launch_file
 
@@ -7281,8 +7297,8 @@ L4A95:  dey
         jsr     L4D19
         rts
 
-L4AAD:  ldy     $D355
-L4AB0:  lda     $D355,y
+L4AAD:  ldy     LD355
+L4AB0:  lda     LD355,y
         sta     L0800,y
         dey
         bpl     L4AB0
@@ -7746,7 +7762,7 @@ L4E1A:  sta     L4E71
         lda     ($06),y
         tay
 L4E34:  lda     ($06),y
-        sta     $D355,y
+        sta     LD355,y
         dey
         bpl     L4E34
         lda     selected_file_index
@@ -7795,7 +7811,7 @@ L4E78:  jsr     clear_selection
         jsr     DESKTOP_COPY_TO_BUF
         ldx     desktop_active_winid
         dex
-        lda     LE6D1,x
+        lda     win_buf_table,x
         bmi     L4EB4
         DESKTOP_RELAY_CALL $07, desktop_active_winid
         lda     LDD9E
@@ -8069,7 +8085,7 @@ start:
         rts
 
 L50FF:  dex
-        lda     LE6D1,x
+        lda     win_buf_table,x
         bne     L5106
         rts
 
@@ -8088,7 +8104,7 @@ L511E:  sta     buf3len
         lda     #$00
         ldx     desktop_active_winid
         dex
-        sta     LE6D1,x
+        sta     win_buf_table,x
         jsr     L52DF
         lda     desktop_active_winid
         sta     getwinport_params2::window_id
@@ -8171,7 +8187,7 @@ L51EF:  .byte   0
 
 L51F0:  ldx     desktop_active_winid
         dex
-        sta     LE6D1,x
+        sta     win_buf_table,x
         lda     desktop_active_winid
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
@@ -8227,7 +8243,7 @@ L5265:  .byte   0
         rts
 
 L526D:  dex
-        lda     LE6D1,x
+        lda     win_buf_table,x
         cmp     #$81
         bne     L5276
         rts
@@ -8248,7 +8264,7 @@ L527D:  jsr     L52DF
         rts
 
 L528B:  dex
-        lda     LE6D1,x
+        lda     win_buf_table,x
         cmp     #$82
         bne     L5294
         rts
@@ -8269,7 +8285,7 @@ L529B:  jsr     L52DF
         rts
 
 L52A9:  dex
-        lda     LE6D1,x
+        lda     win_buf_table,x
         cmp     #$83
         bne     L52B2
         rts
@@ -8290,7 +8306,7 @@ L52B9:  jsr     L52DF
         rts
 
 L52C7:  dex
-        lda     LE6D1,x
+        lda     win_buf_table,x
         cmp     #$84
         bne     L52D0
         rts
@@ -8458,7 +8474,7 @@ L53EF:  dec     L704B
         lda     L704C,x
         cmp     desktop_active_winid
         beq     L5403
-        sta     $D20E
+        sta     findwindow_params_window_id
         jsr     handle_inactive_window_click
 L5403:  jsr     L61DC
         lda     L704B
@@ -8517,7 +8533,7 @@ L544D:
 
 L545A:  tax
         dex
-        lda     LE6D1,x
+        lda     win_buf_table,x
         bpl     L5464
         jmp     L54C5
 
@@ -8752,7 +8768,7 @@ L5661:  rts
 L566A:  ldx     desktop_active_winid
         beq     L5676
         dex
-        lda     LE6D1,x
+        lda     win_buf_table,x
         bpl     L5676
         rts
 
@@ -8868,7 +8884,7 @@ L5743:  lda     event_params_key
         ldx     #$00
 L5763:  stx     L578C
         lda     L0800,x
-        sta     $D20E
+        sta     findwindow_params_window_id
         jsr     handle_inactive_window_click
         jmp     L5732
 
@@ -8879,7 +8895,7 @@ L5772:  ldx     L578C
         dex
 L577C:  stx     L578C
         lda     L0800,x
-        sta     $D20E
+        sta     findwindow_params_window_id
         jsr     handle_inactive_window_click
         jmp     L5732
 
@@ -8967,7 +8983,7 @@ L5803:  lda     desktop_active_winid
         jsr     DESKTOP_COPY_TO_BUF
         ldx     desktop_active_winid
         dex
-        lda     LE6D1,x
+        lda     win_buf_table,x
         sta     L5B1B
         jsr     L58C3
         sta     L585F
@@ -9240,7 +9256,7 @@ L5A2F:  ldx     L704B
         lda     L704C,x
         cmp     desktop_active_winid
         beq     L5A43
-        sta     $D20E
+        sta     findwindow_params_window_id
         jsr     handle_inactive_window_click
 L5A43:  jsr     L61DC
         dec     L704B
@@ -9354,7 +9370,7 @@ handle_client_click:
         jsr     DESKTOP_COPY_TO_BUF
         ldx     desktop_active_winid
         dex
-        lda     LE6D1,x
+        lda     win_buf_table,x
         sta     L5B1B
         ldx     #$03
 L5B31:  lda     $EBFD,x
@@ -9476,9 +9492,9 @@ L5C26:  jsr     DESKTOP_COPY_FROM_BUF
         jmp     DESKTOP_COPY_TO_BUF
 
 L5C31:  lda     $D20D
-        sta     event_params
-        MGTK_RELAY_CALL MGTK::TrackThumb, event_params
-        lda     $D20E
+        sta     trackthumb_which_ctl
+        MGTK_RELAY_CALL MGTK::TrackThumb, trackthumb_params
+        lda     trackthumb_thumbmoved
         bne     L5C46
         rts
 
@@ -9489,8 +9505,8 @@ L5C46:  jsr     L5C54
         jmp     DESKTOP_COPY_TO_BUF
 
 L5C54:  lda     $D20D
-        sta     event_params+1
-        MGTK_RELAY_CALL MGTK::UpdateThumb, event_params
+        sta     updatethumb_params_thumbpos
+        MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         jsr     L6523
         jsr     L84D1
         bit     L5B1B
@@ -9684,7 +9700,7 @@ L5E28:  sta     L5E77
         lda     ($06),y
         tay
 L5E3A:  lda     ($06),y
-        sta     $D355,y
+        sta     LD355,y
         dey
         bpl     L5E3A
         lda     L5CD9
@@ -9723,7 +9739,7 @@ L5E78:  sta     L5F0A
         lda     L5F0A
         cmp     desktop_active_winid
         beq     L5E8F
-        sta     $D20E
+        sta     findwindow_params_window_id
         jsr     handle_inactive_window_click
 L5E8F:  lda     desktop_active_winid
         sta     getwinport_params2::window_id
@@ -9738,7 +9754,7 @@ L5E8F:  lda     desktop_active_winid
         lda     L5F0A
         tax
         dex
-        lda     LE6D1,x
+        lda     win_buf_table,x
         bmi     L5EBC
         jsr     L5302
 L5EBC:  lda     desktop_active_winid
@@ -9765,7 +9781,7 @@ L5ECB:  lda     ($06),y
         jsr     L78EF
         lda     #$00
         ldx     desktop_active_winid
-        sta     LE6D1-1,x
+        sta     win_buf_table-1,x
         lda     #$01
         sta     $E25B
         jsr     L52DF
@@ -9782,9 +9798,9 @@ L5F0F:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-L5F13:  lda     #<$D206
+L5F13:  lda     #<notpenXOR
         sta     $06
-        lda     #>$D206
+        lda     #>notpenXOR
         sta     $06+1
         jsr     L60D5
         ldx     #$03
@@ -9995,7 +10011,7 @@ L6112:  ldy     #$14
         sta     L619A
         ldx     desktop_active_winid
         dex
-        lda     LE6D1,x
+        lda     win_buf_table,x
         beq     L6143
         rts
 
@@ -10076,7 +10092,7 @@ L61DC:  lda     desktop_active_winid
         jsr     clear_selection
         ldx     desktop_active_winid
         dex
-        lda     LE6D1,x
+        lda     win_buf_table,x
         bmi     L6215
         lda     LDD9E
         sec
@@ -10140,7 +10156,7 @@ L6276:  ldx     desktop_active_winid
         dex
         lda     #$00
         sta     LEC26,x
-        sta     LE6D1,x
+        sta     win_buf_table,x
         MGTK_RELAY_CALL MGTK::FrontWindow, desktop_active_winid
         lda     #$00
         sta     bufnum
@@ -10597,7 +10613,7 @@ L66AA:  lda     #$01
         rts
 
 L66F2:  dex
-        lda     LE6D1,x
+        lda     win_buf_table,x
         and     #$0F
         tax
         inx
@@ -11055,7 +11071,7 @@ L6B3A:  lda     LE6BE
         ldx     bufnum
         dex
         lda     #$00
-        sta     LE6D1,x
+        sta     win_buf_table,x
         lda     $EC2E
         cmp     #$02
         bcs     L6B60
@@ -11133,7 +11149,7 @@ L6C0F:  MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
 
 L6C19:  ldx     bufnum
         dex
-        lda     LE6D1,x
+        lda     win_buf_table,x
         bmi     L6C25
         jmp     L6CCD
 
@@ -11301,7 +11317,7 @@ L6DA1:  sta     selected_file_index,x
 L6DB0:  .byte   0
 L6DB1:  ldx     desktop_active_winid
         dex
-        lda     LE6D1,x
+        lda     win_buf_table,x
         bmi     L6DC0
         jsr     L7B6B
         jmp     L6DC9
@@ -12879,7 +12895,7 @@ L7B6F:  sta     L7B63,x
         sta     L7B62
         ldx     bufnum
         dex
-        lda     LE6D1,x
+        lda     win_buf_table,x
         bpl     L7BCB
         lda     buf3len
         bne     L7BA1
@@ -13171,7 +13187,7 @@ L7E0C:  lda     LCBANK1
         lda     LCBANK1
         ldx     bufnum
         dex
-        lda     LE6D1,x
+        lda     win_buf_table,x
         cmp     #$81
         beq     L7E20
         jmp     L7EC1
@@ -15430,7 +15446,7 @@ L8FEB:  tsx
 
 L8FFF:  bit     L918A
         bpl     L9011
-        lda     $DF20
+        lda     selected_window_index
         beq     L900C
         jmp     L908C
 
@@ -16000,9 +16016,9 @@ L94A9:  lda     $220,x
         sta     LDFC9,x
         dex
         bpl     L94A9
-        lda     #<$DFC9
+        lda     #<LDFC9
         sta     L92E4
-        lda     #>$DFC9
+        lda     #>LDFC9
         sta     L92E4+1
         jsr     L953F
         lda     #$04
@@ -16041,9 +16057,9 @@ L950E:  lda     L953A,x
         bmi     L951F
 L9519:  lda     get_file_info_params5::type
         jsr     L402D
-L951F:  lda     #<$DFC5
+L951F:  lda     #<LDFC5
         sta     L92E4
-        lda     #>$DFC5
+        lda     #>LDFC5
         sta     L92E4+1
         jsr     L953F
         bne     L9534
@@ -17901,10 +17917,10 @@ LA520:  sta     dialog_param_addr
         sta     cursor_ip_flag
         lda     #$14
         sta     LD8E9
-        lda     #<$A898
-        sta     LA89A
-        lda     #>$A898
-        sta     LA89A+1
+        lda     #<rts1
+        sta     jump_relay+1
+        lda     #>rts1
+        sta     jump_relay+2
         jsr     set_cursor_pointer
 
         LA565 := *+1
@@ -17914,7 +17930,8 @@ LA520:  sta     dialog_param_addr
 ;;; ==================================================
 ;;; Message handler for OK/Cancel dialog
 
-prompt_input_loop:  lda     LD8E8
+prompt_input_loop:
+        lda     LD8E8
         beq     LA579
         dec     LD8E9
         bne     LA579
@@ -18050,7 +18067,7 @@ LA6EC:  rts
 LA6ED:  bit     LD8E8
         bmi     LA6F7
         lda     #$FF
-        jmp     LA899
+        jmp     jump_relay
 
 LA6F7:  jsr     LB9B8
         lda     #$FF
@@ -18251,8 +18268,8 @@ LA895:  lda     #$FF
 rts1:
         rts
 
-        LA89A := *+1
-LA899:  jmp     dummy0000
+jump_relay:
+        jmp     dummy0000
 
 
 ;;; ==================================================
@@ -19503,10 +19520,10 @@ skip:   dey
         asl     a
         asl     a
         clc
-        adc     $D6C1
+        adc     pointD::ycoord
         sta     dialog_label_pos+2
-        lda     $D6C2
-        adc     #$00
+        lda     pointD::ycoord+1
+        adc     #0
         sta     dialog_label_pos+3
         MGTK_RELAY_CALL MGTK::MoveTo, dialog_label_pos
         lda     $06
@@ -19840,9 +19857,9 @@ LB8F3:  .byte   0
         jsr     LBD3B
         sta     xcoord
         stx     xcoord+1
-        lda     $D6B5
+        lda     point6::ycoord
         sta     ycoord
-        lda     $D6B5+1
+        lda     point6::ycoord+1
         sta     ycoord+1
         MGTK_RELAY_CALL MGTK::MoveTo, point
         MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
@@ -19860,9 +19877,9 @@ LB92D:  MGTK_RELAY_CALL MGTK::SetTextBG, desktop_aux::LAE6D
         textptr := $6
         textlen := $8
 
-LB93B:  lda     #<$D8EF
+LB93B:  lda     #<LD8EF
         sta     textptr
-        lda     #>$D8EF
+        lda     #>LD8EF
         sta     textptr+1
         lda     LD8EE
         sta     textlen
@@ -20069,9 +20086,9 @@ LBB0B:  sta     LBB62
         inc     path_buf1
         sta     xcoord
         stx     xcoord+1
-        lda     $D6B5
+        lda     point6::ycoord
         sta     ycoord
-        lda     $D6B5+1
+        lda     point6::ycoord+1
         sta     ycoord+1
         MGTK_RELAY_CALL MGTK::MoveTo, point
         MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
@@ -20096,9 +20113,9 @@ LBB63:  lda     path_buf1
         jsr     LBD3B
         sta     xcoord
         stx     xcoord+1
-        lda     $D6B5
+        lda     point6::ycoord
         sta     ycoord
-        lda     $D6B5+1
+        lda     point6::ycoord+1
         sta     ycoord+1
         MGTK_RELAY_CALL MGTK::MoveTo, point
         MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
@@ -20134,9 +20151,9 @@ LBBBC:  ldx     path_buf1
         jsr     LBD3B
         sta     xcoord
         stx     xcoord+1
-        lda     $D6B5
+        lda     point6::ycoord
         sta     ycoord
-        lda     $D6B5+1
+        lda     point6::ycoord+1
         sta     ycoord+1
         MGTK_RELAY_CALL MGTK::MoveTo, point
         MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
@@ -20636,9 +20653,9 @@ L090F:  sta     $1F00,x
         jmp     L092F
 
 L0927:  PASCAL_STRING " Trash "
-L092F:  lda     #$00
-        sta     $DE9F
-        lda     #$01
+L092F:  lda     #0
+        sta     bufnum
+        lda     #1
         sta     buf3len
         sta     LDD9E
         jsr     DESKTOP_FIND_SPACE
