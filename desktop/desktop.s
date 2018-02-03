@@ -1269,7 +1269,7 @@ L983D:  lda     #$00
         sta     L9833
 L9845:  MGTK_CALL MGTK::PeekEvent, peekevent_params
         lda     peekevent_params::kind
-        cmp     #$04
+        cmp     #MGTK::event_kind_drag
         beq     L9857
 L9852:  lda     #$02
         jmp     L9C65
@@ -4569,7 +4569,7 @@ flag:   .byte   0
         DESKTOP_COPY_TO_BUF := DESKTOP_COPY_BUF_IMPL::to
 
 ;;; ==================================================
-;;; Assign active state to desktop_active_winid window
+;;; Assign active state to active_window_id window
 
 .proc DESKTOP_ASSIGN_STATE
         src := $6
@@ -4579,7 +4579,7 @@ flag:   .byte   0
         sta     RAMWRTON
         MGTK_CALL MGTK::GetPort, src ; grab window state
 
-        lda     desktop_active_winid   ; which desktop window?
+        lda     active_window_id   ; which desktop window?
         asl     a
         tax
         lda     win_table,x     ; window table
@@ -5630,7 +5630,7 @@ LEBFC:  .byte   0               ; flag of some sort ???
 table1: .addr   $1B00,$1B80,$1C00,$1C80,$1D00,$1D80,$1E00,$1E80,$1F00
 table2: .addr   $1B01,$1B81,$1C01,$1C81,$1D01,$1D81,$1E01,$1E81,$1F01
 
-desktop_active_winid:
+active_window_id:
         .byte   $00
 
 LEC26:
@@ -6091,7 +6091,7 @@ L4088:  jsr     reset_grafport3
         beq     L40A6
         jsr     L40E0
 L40A6:  jsr     L464E
-        jsr     get_input
+        jsr     get_event
         lda     event_params_kind
         cmp     #MGTK::event_kind_button_down
         beq     L40B7
@@ -6108,7 +6108,7 @@ L40BD:  cmp     #$03
 L40C7:  cmp     #$06
         bne     L40DC
         jsr     reset_grafport3
-        lda     desktop_active_winid
+        lda     active_window_id
         sta     L40F0
         lda     #$80
         sta     L40F1
@@ -6128,15 +6128,15 @@ L40F0:  .byte   $00
 L40F1:  .byte   $00
 redraw_windows:
         jsr     reset_grafport3
-        lda     desktop_active_winid
+        lda     active_window_id
         sta     L40F0
         lda     #$00
         sta     L40F1
-L4100:  jsr     L48F0
+L4100:  jsr     peek_event
         lda     event_params_kind
         cmp     #$06            ; ???
         bne     L412B
-        jsr     get_input
+        jsr     get_event
 L410D:  jsr     L4113
         jmp     L4100
 
@@ -6150,7 +6150,7 @@ L412B:  lda     #$00
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         lda     L40F0
-        sta     desktop_active_winid
+        sta     active_window_id
         beq     L4143
         bit     running_da_flag
         bmi     L4143
@@ -6166,7 +6166,7 @@ L4153:  lda     event_params+1
         bcc     L415B
         rts
 
-L415B:  sta     desktop_active_winid
+L415B:  sta     active_window_id
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         lda     #$80
@@ -6175,10 +6175,10 @@ L415B:  sta     desktop_active_winid
         sta     getwinport_params2::window_id
         jsr     L4505
         jsr     L78EF
-        lda     desktop_active_winid
+        lda     active_window_id
         jsr     L8855
         jsr     DESKTOP_ASSIGN_STATE
-        lda     desktop_active_winid
+        lda     active_window_id
         jsr     window_lookup
         sta     $06
         stx     $06+1
@@ -6220,7 +6220,7 @@ L41CB:  ldx     bufnum
         jsr     L6C19
         lda     #$00
         sta     L4152
-        lda     desktop_active_winid
+        lda     active_window_id
         jmp     L8874
 
 L41E2:  lda     bufnum
@@ -6252,7 +6252,7 @@ L4227:  lda     #$00
         sta     getwinport_params2::window_id
         jsr     L44F2
         jsr     L6E6E
-        lda     desktop_active_winid
+        lda     active_window_id
         jsr     L8874
         jmp     reset_grafport3
 
@@ -6267,9 +6267,9 @@ L424A:  lda     #$00
         sta     L42C3
         lda     selected_window_index
         beq     L42A5
-        cmp     desktop_active_winid
+        cmp     active_window_id
         bne     L4249
-        lda     desktop_active_winid
+        lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     L4505
         jsr     L6E8E
@@ -6510,7 +6510,7 @@ not_desktop:
 
 not_menu:
         pha                     ; which window - active or not?
-        lda     desktop_active_winid
+        lda     active_window_id
         cmp     findwindow_params_window_id
         beq     handle_active_window_click
         pla
@@ -6573,7 +6573,7 @@ L445D:  jsr     clear_selection
         sta     selected_file_index
 L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_params_window_id
         lda     findwindow_params_window_id
-        sta     desktop_active_winid
+        sta     active_window_id
         sta     bufnum
 L44B8:  jsr     DESKTOP_COPY_TO_BUF
         jsr     L6C19
@@ -6583,7 +6583,7 @@ L44B8:  jsr     DESKTOP_COPY_TO_BUF
         lda     #$00
         sta     checkitem_params::check
         MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
-        ldx     desktop_active_winid
+        ldx     active_window_id
         dex
         lda     win_buf_table,x
         and     #$0F
@@ -7067,17 +7067,20 @@ L48C2:  lda     $E196,x
         L48E4 := *+1
         jmp     dummy1234           ; self-modified
 
-get_input:
+get_event:
         MGTK_RELAY_CALL MGTK::GetEvent, event_params
         rts
 
-L48F0:  MGTK_RELAY_CALL MGTK::PeekEvent, event_params
+peek_event:
+        MGTK_RELAY_CALL MGTK::PeekEvent, event_params
         rts
 
-L48FA:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
+set_penmode_xor:
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         rts
 
-L4904:  MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
+set_penmode_copy:
+        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         rts
 
 ;;; ==================================================
@@ -7754,7 +7757,7 @@ L4E1A:  sta     L4E71
         cmp     #$02
         bcs     L4E14
         pla
-        lda     desktop_active_winid
+        lda     active_window_id
         jsr     window_address_lookup
         sta     $06
         stx     $06+1
@@ -7800,20 +7803,20 @@ L4E71:  .byte   0
 ;;; ==================================================
 
 .proc cmd_close
-        lda     desktop_active_winid
+        lda     active_window_id
         bne     L4E78
         rts
 
 L4E78:  jsr     clear_selection
         dec     $EC2E
-        lda     desktop_active_winid
+        lda     active_window_id
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
-        ldx     desktop_active_winid
+        ldx     active_window_id
         dex
         lda     win_buf_table,x
         bmi     L4EB4
-        DESKTOP_RELAY_CALL $07, desktop_active_winid
+        DESKTOP_RELAY_CALL $07, active_window_id
         lda     LDD9E
         sec
         sbc     buf3len
@@ -7839,8 +7842,8 @@ L4EC3:  sta     buf3len
         lda     #$00
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
-        MGTK_RELAY_CALL MGTK::CloseWindow, desktop_active_winid
-        ldx     desktop_active_winid
+        MGTK_RELAY_CALL MGTK::CloseWindow, active_window_id
+        ldx     active_window_id
         dex
         lda     LEC26,x
         sta     LE22F
@@ -7860,16 +7863,16 @@ L4EC3:  sta     buf3len
         sta     is_file_selected
         lda     LE22F
         sta     selected_file_index
-        ldx     desktop_active_winid
+        ldx     active_window_id
         dex
         lda     LEC26,x
         jsr     L7345
-        ldx     desktop_active_winid
+        ldx     active_window_id
         dex
         lda     #$00
         sta     LEC26,x
-        MGTK_RELAY_CALL MGTK::FrontWindow, desktop_active_winid
-        lda     desktop_active_winid
+        MGTK_RELAY_CALL MGTK::FrontWindow, active_window_id
+        lda     active_window_id
         bne     L4F3C
         DESKTOP_RELAY_CALL DESKTOP_REDRAW_ICONS
 L4F3C:  lda     #$00
@@ -7882,7 +7885,7 @@ L4F3C:  lda     #$00
 ;;; ==================================================
 
 .proc cmd_close_all
-        lda     desktop_active_winid   ; current window
+        lda     active_window_id   ; current window
         beq     done            ; nope, done!
         jsr     cmd_close       ; close it...
         jmp     cmd_close_all   ; and try again
@@ -7922,10 +7925,10 @@ ctime:  .word   0
 path_buffer:
         .res    65, 0              ; buffer is used elsewhere too
 
-start:  lda     desktop_active_winid
+start:  lda     active_window_id
         sta     L4F67
         yax_call launch_dialog, index_new_folder_dialog, L4F67
-L4FC6:  lda     desktop_active_winid
+L4FC6:  lda     active_window_id
         beq     L4FD4
         jsr     window_address_lookup
         sta     L4F68
@@ -8080,7 +8083,7 @@ start:
 ;;; ==================================================
 
 .proc cmd_view_by_icon
-        ldx     desktop_active_winid
+        ldx     active_window_id
         bne     L50FF
         rts
 
@@ -8089,7 +8092,7 @@ L50FF:  dex
         bne     L5106
         rts
 
-L5106:  lda     desktop_active_winid
+L5106:  lda     active_window_id
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         ldx     #$00
@@ -8102,22 +8105,22 @@ L5112:  cpx     buf3len
 
 L511E:  sta     buf3len
         lda     #$00
-        ldx     desktop_active_winid
+        ldx     active_window_id
         dex
         sta     win_buf_table,x
-        jsr     L52DF
-        lda     desktop_active_winid
+        jsr     update_view_menu_check
+        lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     L4505
         jsr     L6E8E
-        jsr     L4904
+        jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect_x1
-        lda     desktop_active_winid
+        lda     active_window_id
         jsr     L7D5D
         sta     L51EB
         stx     L51EC
         sty     L51ED
-        lda     desktop_active_winid
+        lda     active_window_id
         jsr     window_lookup
         sta     $06
         stx     $06+1
@@ -8134,9 +8137,9 @@ L516D:  lda     L51EB,x
         dey
         dex
         bpl     L516D
-        lda     desktop_active_winid
+        lda     active_window_id
         jsr     L763A
-        lda     desktop_active_winid
+        lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     L44F2
         jsr     L6E52
@@ -8185,26 +8188,26 @@ L51EF:  .byte   0
 
 ;;; ==================================================
 
-L51F0:  ldx     desktop_active_winid
+L51F0:  ldx     active_window_id
         dex
         sta     win_buf_table,x
-        lda     desktop_active_winid
+        lda     active_window_id
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         jsr     L7D9C
         jsr     DESKTOP_COPY_FROM_BUF
-        lda     desktop_active_winid
+        lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     L4505
         jsr     L6E8E
-        jsr     L4904
+        jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect_x1
-        lda     desktop_active_winid
+        lda     active_window_id
         jsr     L7D5D
         sta     L5263
         stx     L5264
         sty     L5265
-        lda     desktop_active_winid
+        lda     active_window_id
         jsr     window_lookup
         sta     $06
         stx     $06+1
@@ -8238,7 +8241,7 @@ L5265:  .byte   0
 ;;; ==================================================
 
 .proc cmd_view_by_name
-        ldx     desktop_active_winid
+        ldx     active_window_id
         bne     L526D
         rts
 
@@ -8251,7 +8254,7 @@ L526D:  dex
 L5276:  cmp     #$00
         bne     L527D
         jsr     L5302
-L527D:  jsr     L52DF
+L527D:  jsr     update_view_menu_check
         lda     #$81
         jmp     L51F0
 .endproc
@@ -8259,7 +8262,7 @@ L527D:  jsr     L52DF
 ;;; ==================================================
 
 .proc cmd_view_by_date
-        ldx     desktop_active_winid
+        ldx     active_window_id
         bne     L528B
         rts
 
@@ -8272,7 +8275,7 @@ L528B:  dex
 L5294:  cmp     #$00
         bne     L529B
         jsr     L5302
-L529B:  jsr     L52DF
+L529B:  jsr     update_view_menu_check
         lda     #$82
         jmp     L51F0
 .endproc
@@ -8280,7 +8283,7 @@ L529B:  jsr     L52DF
 ;;; ==================================================
 
 .proc cmd_view_by_size
-        ldx     desktop_active_winid
+        ldx     active_window_id
         bne     L52A9
         rts
 
@@ -8293,7 +8296,7 @@ L52A9:  dex
 L52B2:  cmp     #$00
         bne     L52B9
         jsr     L5302
-L52B9:  jsr     L52DF
+L52B9:  jsr     update_view_menu_check
         lda     #$83
         jmp     L51F0
 .endproc
@@ -8301,7 +8304,7 @@ L52B9:  jsr     L52DF
 ;;; ==================================================
 
 .proc cmd_view_by_type
-        ldx     desktop_active_winid
+        ldx     active_window_id
         bne     L52C7
         rts
 
@@ -8314,25 +8317,32 @@ L52C7:  dex
 L52D0:  cmp     #$00
         bne     L52D7
         jsr     L5302
-L52D7:  jsr     L52DF
+L52D7:  jsr     update_view_menu_check
         lda     #$84
         jmp     L51F0
 .endproc
 
 ;;; ==================================================
 
-L52DF:  lda     #$00
+.proc update_view_menu_check
+        ;; Uncheck last checked
+        lda     #0
         sta     checkitem_params::check
         MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
-        lda     $E25B
+
+        ;; Check the new one
+        lda     $E25B           ; index of View menu item to check
         sta     checkitem_params::menu_item
-        lda     #$01
+        lda     #1
         sta     checkitem_params::check
         MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
         rts
+.endproc
 
-L5302:  DESKTOP_RELAY_CALL $07, desktop_active_winid
-        lda     desktop_active_winid
+;;; ==================================================
+
+L5302:  DESKTOP_RELAY_CALL $07, active_window_id
+        lda     active_window_id
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         lda     LDD9E
@@ -8472,7 +8482,7 @@ L53D0:  tax
 L53EF:  dec     L704B
         ldx     L704B
         lda     L704C,x
-        cmp     desktop_active_winid
+        cmp     active_window_id
         beq     L5403
         sta     findwindow_params_window_id
         jsr     handle_inactive_window_click
@@ -8537,10 +8547,10 @@ L545A:  tax
         bpl     L5464
         jmp     L54C5
 
-L5464:  lda     desktop_active_winid
+L5464:  lda     active_window_id
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
-        lda     desktop_active_winid
+        lda     active_window_id
         jsr     window_lookup
         sta     $06
         stx     $06+1
@@ -8666,7 +8676,7 @@ L5579:  lda     #$00
         sta     L544A
         jsr     clear_selection
 L5581:  jsr     L55F0
-L5584:  jsr     get_input
+L5584:  jsr     get_event
         lda     event_params_kind
         cmp     #MGTK::event_kind_key_down
         beq     L5595
@@ -8765,14 +8775,14 @@ L5661:  rts
         lda     is_file_selected
         beq     L566A
         jsr     clear_selection
-L566A:  ldx     desktop_active_winid
+L566A:  ldx     active_window_id
         beq     L5676
         dex
         lda     win_buf_table,x
         bpl     L5676
         rts
 
-L5676:  lda     desktop_active_winid
+L5676:  lda     active_window_id
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         lda     buf3len
@@ -8787,7 +8797,7 @@ L568B:  lda     buf3,x
         bpl     L568B
         lda     buf3len
         sta     is_file_selected
-        lda     desktop_active_winid
+        lda     active_window_id
         sta     selected_window_index
         lda     selected_window_index
         sta     $E22C
@@ -8833,7 +8843,7 @@ L56F9:  sta     getwinport_params2::window_id
 ;;; Handle keyboard-based window activation
 
 .proc cmd_activate
-        lda     desktop_active_winid
+        lda     active_window_id
         bne     L5708
         rts
 
@@ -8843,7 +8853,7 @@ L5708:  sta     L0800
 L570F:  lda     LEC26,x
         beq     L5720
         inx
-        cpx     desktop_active_winid
+        cpx     active_window_id
         beq     L5721
         txa
         dex
@@ -8859,7 +8869,7 @@ L5721:  cpx     #$08
 
 L572D:  lda     #$00
         sta     L578C
-L5732:  jsr     get_input
+L5732:  jsr     get_event
         lda     event_params_kind
         cmp     #MGTK::event_kind_key_down
         beq     L5743
@@ -8907,7 +8917,7 @@ L578D:  .byte   0
 .endproc
 
 ;;; ==================================================
-;;;Initiate keyboard-based resizing
+;;; Initiate keyboard-based resizing
 
 .proc cmd_resize
         MGTK_RELAY_CALL MGTK::KeyboardMouse
@@ -8927,7 +8937,7 @@ L578D:  .byte   0
 
 .proc cmd_scroll
         jsr     L5803
-loop:   jsr     get_input
+loop:   jsr     get_event
         lda     event_params_kind
         cmp     #MGTK::event_kind_button_down
         beq     done
@@ -8978,10 +8988,10 @@ vertical:
 
 ;;; ==================================================
 
-L5803:  lda     desktop_active_winid
+L5803:  lda     active_window_id
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
-        ldx     desktop_active_winid
+        ldx     active_window_id
         dex
         lda     win_buf_table,x
         sta     L5B1B
@@ -9072,7 +9082,7 @@ L58AE:  beq     L58C1
 L58C1:  rts
 
         .byte   0
-L58C3:  lda     desktop_active_winid
+L58C3:  lda     active_window_id
         jsr     window_lookup
         sta     $06
         stx     $06+1
@@ -9092,7 +9102,7 @@ L58C3:  lda     desktop_active_winid
         pla
         rts
 
-L58E2:  lda     desktop_active_winid
+L58E2:  lda     active_window_id
         jsr     window_lookup
         sta     $06
         stx     $06+1
@@ -9254,7 +9264,7 @@ L5A2F:  ldx     L704B
         beq     L5A4C
         dex
         lda     L704C,x
-        cmp     desktop_active_winid
+        cmp     active_window_id
         beq     L5A43
         sta     findwindow_params_window_id
         jsr     handle_inactive_window_click
@@ -9364,11 +9374,12 @@ L5AD0:  .byte   0
 ;;; ==================================================
 
 L5B1B:  .byte   0
-handle_client_click:
-        lda     desktop_active_winid
+
+.proc handle_client_click
+        lda     active_window_id
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
-        ldx     desktop_active_winid
+        ldx     active_window_id
         dex
         lda     win_buf_table,x
         sta     L5B1B
@@ -9379,130 +9390,137 @@ L5B31:  lda     $EBFD,x
         bpl     L5B31
         MGTK_RELAY_CALL MGTK::FindControl, event_params_coords
         lda     findcontrol_which_ctl
-        bne     L5B4B
+        bne     L5B4B           ; ctl_not_a_control
         jmp     L5CB7
 
 L5B4B:  bit     double_click_flag
-        bmi     L5B53
-        jmp     L5C26
-
-L5B53:  cmp     #$03
-        bne     L5B58
+        bmi     :+
+        jmp     done_client_click ; ignore double click
+:       cmp     #MGTK::ctl_dead_zone
+        bne     :+
         rts
+:       cmp     #MGTK::ctl_vertical_scroll_bar
+        bne     horiz
 
-L5B58:  cmp     #$01
-        bne     L5BC1
-        lda     desktop_active_winid
+        ;; Vertical scrollbar
+        lda     active_window_id
         jsr     window_lookup
         sta     $06
         stx     $06+1
         ldy     #$05
         lda     ($06),y
         and     #$01
-        bne     L5B71
-        jmp     L5C26
-
-L5B71:  jsr     L5803
+        bne     :+
+        jmp     done_client_click
+:       jsr     L5803
         lda     $D20E
-        cmp     #$05
-        bne     L5B81
-        jsr     L5C31
-        jmp     L5C26
+        cmp     #MGTK::part_thumb
+        bne     :+
+        jsr     do_track_thumb
+        jmp     done_client_click
 
-L5B81:  cmp     #$01
-        bne     L5B92
-L5B85:  jsr     scroll_up
+:       cmp     #MGTK::part_up_arrow
+        bne     :+
+up:     jsr     scroll_up
         lda     #$01
         jsr     L5C89
-        bpl     L5B85
-        jmp     L5C26
+        bpl     up
+        jmp     done_client_click
 
-L5B92:  cmp     #$02
-        bne     L5BA3
-L5B96:  jsr     scroll_down
+:       cmp     #MGTK::part_down_arrow
+        bne     :+
+down:   jsr     scroll_down
         lda     #$02
         jsr     L5C89
-        bpl     L5B96
-        jmp     L5C26
+        bpl     down
+        jmp     done_client_click
 
-L5BA3:  cmp     #$04
-        beq     L5BB4
-L5BA7:  jsr     L638C
+:       cmp     #MGTK::part_page_down
+        beq     pgdn
+pgup:   jsr     L638C
         lda     #$03
         jsr     L5C89
-        bpl     L5BA7
-        jmp     L5C26
+        bpl     pgup
+        jmp     done_client_click
 
-L5BB4:  jsr     L63EC
+pgdn:   jsr     L63EC
         lda     #$04
         jsr     L5C89
-        bpl     L5BB4
-        jmp     L5C26
+        bpl     pgdn
+        jmp     done_client_click
 
-L5BC1:  lda     desktop_active_winid
+        ;; Horizontal scrollbar
+horiz:  lda     active_window_id
         jsr     window_lookup
         sta     $06
         stx     $06+1
         ldy     #$04
         lda     ($06),y
         and     #$01
-        bne     L5BD6
-        jmp     L5C26
-
-L5BD6:  jsr     L5803
+        bne     :+
+        jmp     done_client_click
+:       jsr     L5803
         lda     $D20E
-        cmp     #$05
-        bne     L5BE6
-        jsr     L5C31
-        jmp     L5C26
+        cmp     #MGTK::part_thumb
+        bne     :+
+        jsr     do_track_thumb
+        jmp     done_client_click
 
-L5BE6:  cmp     #$01
-        bne     L5BF7
-L5BEA:  jsr     scroll_left
+:       cmp     #MGTK::part_left_arrow
+        bne     :+
+left:   jsr     scroll_left
         lda     #$01
         jsr     L5C89
-        bpl     L5BEA
-        jmp     L5C26
+        bpl     left
+        jmp     done_client_click
 
-L5BF7:  cmp     #$02
-        bne     L5C08
-L5BFB:  jsr     scroll_right
+:       cmp     #MGTK::part_right_arrow
+        bne     :+
+rght:   jsr     scroll_right
         lda     #$02
         jsr     L5C89
-        bpl     L5BFB
-        jmp     L5C26
+        bpl     rght
+        jmp     done_client_click
 
-L5C08:  cmp     #$04
-        beq     L5C19
-L5C0C:  jsr     L6451
+:       cmp     #MGTK::part_page_right
+        beq     pgrt
+pglt:   jsr     L6451
         lda     #$03
         jsr     L5C89
-        bpl     L5C0C
-        jmp     L5C26
+        bpl     pglt
+        jmp     done_client_click
 
-L5C19:  jsr     L64B0
+pgrt:   jsr     L64B0
         lda     #$04
         jsr     L5C89
-        bpl     L5C19
-        jmp     L5C26
+        bpl     pgrt
+        jmp     done_client_click
 
-L5C26:  jsr     DESKTOP_COPY_FROM_BUF
-        lda     #$00
-        sta     bufnum
-        jmp     DESKTOP_COPY_TO_BUF
 
-L5C31:  lda     $D20D
-        sta     trackthumb_which_ctl
-        MGTK_RELAY_CALL MGTK::TrackThumb, trackthumb_params
-        lda     trackthumb_thumbmoved
-        bne     L5C46
-        rts
-
-L5C46:  jsr     L5C54
+done_client_click:
         jsr     DESKTOP_COPY_FROM_BUF
         lda     #$00
         sta     bufnum
         jmp     DESKTOP_COPY_TO_BUF
+.endproc
+
+;;; ==================================================
+
+.proc do_track_thumb
+        lda     $D20D
+        sta     trackthumb_which_ctl
+        MGTK_RELAY_CALL MGTK::TrackThumb, trackthumb_params
+        lda     trackthumb_thumbmoved
+        bne     :+
+        rts
+:       jsr     L5C54
+        jsr     DESKTOP_COPY_FROM_BUF
+        lda     #$00
+        sta     bufnum
+        jmp     DESKTOP_COPY_TO_BUF
+.endproc
+
+;;; ==================================================
 
 L5C54:  lda     $D20D
         sta     updatethumb_params_thumbpos
@@ -9512,7 +9530,7 @@ L5C54:  lda     $D20D
         bit     L5B1B
         bmi     L5C71
         jsr     L6E6E
-L5C71:  lda     desktop_active_winid
+L5C71:  lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     L44F2
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect_x1
@@ -9520,7 +9538,7 @@ L5C71:  lda     desktop_active_winid
         jmp     L6C19
 
 L5C89:  sta     L5CB6
-        jsr     L48F0
+        jsr     peek_event
         lda     event_params_kind
         cmp     #MGTK::event_kind_drag
         beq     L5C99
@@ -9543,7 +9561,7 @@ L5CB7:  bit     L5B1B
         bpl     L5CBF
         jmp     clear_selection
 
-L5CBF:  lda     desktop_active_winid
+L5CBF:  lda     active_window_id
         sta     $D20E
         DESKTOP_RELAY_CALL $09, event_params_coords
         lda     findcontrol_which_ctl
@@ -9571,16 +9589,16 @@ L5CF8:  jmp     L5D55
 L5CFB:  bit     BUTN0
         bpl     L5D08
         lda     selected_window_index
-        cmp     desktop_active_winid
+        cmp     active_window_id
         beq     L5D0B
 L5D08:  jsr     clear_selection
 L5D0B:  ldx     is_file_selected
         lda     L5CD9
         sta     selected_file_index,x
         inc     is_file_selected
-        lda     desktop_active_winid
+        lda     active_window_id
         sta     selected_window_index
-        lda     desktop_active_winid
+        lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     L44F2
         lda     L5CD9
@@ -9588,7 +9606,7 @@ L5D0B:  ldx     is_file_selected
         jsr     L8915
         jsr     L6E8E
         DESKTOP_RELAY_CALL $02, LE22F
-        lda     desktop_active_winid
+        lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     L44F2
         lda     L5CD9
@@ -9613,9 +9631,9 @@ L5D55:  lda     L5CD9
 L5D77:  lda     LEBFC
         cmp     $EBFB
         bne     L5D8E
-        lda     desktop_active_winid
+        lda     active_window_id
         jsr     L6F0D
-        lda     desktop_active_winid
+        lda     active_window_id
         jsr     L5E78
         jmp     redraw_windows_and_desktop
 
@@ -9637,7 +9655,7 @@ L5DA6:  cpx     #$02
 
 L5DAD:  cpx     #$FF
         beq     L5DF7
-        lda     desktop_active_winid
+        lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     L44F2
         jsr     L6E52
@@ -9653,7 +9671,7 @@ L5DC4:  txa
         tax
         dex
         bpl     L5DC4
-        lda     desktop_active_winid
+        lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     L44F2
         jsr     L6DB1
@@ -9692,7 +9710,7 @@ L5DFC:  lda     L5CD9           ; after a double-click (on file or folder)
 L5E27:  rts
 
 L5E28:  sta     L5E77
-        lda     desktop_active_winid
+        lda     active_window_id
         jsr     window_address_lookup
         sta     $06
         stx     $06+1
@@ -9737,16 +9755,16 @@ L5E78:  sta     L5F0A
         jsr     redraw_windows_and_desktop
         jsr     clear_selection
         lda     L5F0A
-        cmp     desktop_active_winid
+        cmp     active_window_id
         beq     L5E8F
         sta     findwindow_params_window_id
         jsr     handle_inactive_window_click
-L5E8F:  lda     desktop_active_winid
+L5E8F:  lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     L44F2
-        jsr     L4904
+        jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect_x1
-        ldx     desktop_active_winid
+        ldx     active_window_id
         dex
         lda     LEC26,x
         pha
@@ -9757,7 +9775,7 @@ L5E8F:  lda     desktop_active_winid
         lda     win_buf_table,x
         bmi     L5EBC
         jsr     L5302
-L5EBC:  lda     desktop_active_winid
+L5EBC:  lda     active_window_id
         jsr     window_address_lookup
         sta     $06
         stx     $06+1
@@ -9772,19 +9790,19 @@ L5ECB:  lda     ($06),y
         jsr     L7054
         jsr     cmd_view_by_icon::L5106
         jsr     DESKTOP_COPY_FROM_BUF
-        lda     desktop_active_winid
+        lda     active_window_id
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
-        lda     desktop_active_winid
+        lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     L4505
         jsr     L78EF
         lda     #$00
-        ldx     desktop_active_winid
+        ldx     active_window_id
         sta     win_buf_table-1,x
         lda     #$01
         sta     $E25B
-        jsr     L52DF
+        jsr     update_view_menu_check
         lda     #$00
         sta     bufnum
         jmp     DESKTOP_COPY_TO_BUF
@@ -9809,7 +9827,7 @@ L5F20:  lda     event_params_coords,x
         sta     L5F0F,x
         dex
         bpl     L5F20
-        jsr     L48F0
+        jsr     peek_event
         lda     event_params_kind
         cmp     #MGTK::event_kind_drag
         beq     L5F3F
@@ -9819,7 +9837,7 @@ L5F20:  lda     event_params_coords,x
 L5F3E:  rts
 
 L5F3F:  jsr     clear_selection
-        lda     desktop_active_winid
+        lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     L4505
         jsr     L6E8E
@@ -9830,9 +9848,9 @@ L5F50:  lda     L5F0B,x
         sta     $E234,x
         dex
         bpl     L5F50
-        jsr     L48FA
+        jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
-L5F6B:  jsr     L48F0
+L5F6B:  jsr     peek_event
         lda     event_params_kind
         cmp     #MGTK::event_kind_drag
         beq     L5FC5
@@ -9854,7 +9872,7 @@ L5F88:  txa
         inc     is_file_selected
         lda     LE22F
         sta     selected_file_index,x
-        lda     desktop_active_winid
+        lda     active_window_id
         sta     selected_window_index
 L5FB9:  lda     LE22F
         jsr     L8893
@@ -9975,13 +9993,13 @@ L60D5:  jsr     push_zp_addrs
 handle_title_click:
         jmp     L60DE
 
-L60DE:  lda     desktop_active_winid
+L60DE:  lda     active_window_id
         sta     event_params
-        MGTK_RELAY_CALL MGTK::FrontWindow, desktop_active_winid
-        lda     desktop_active_winid
+        MGTK_RELAY_CALL MGTK::FrontWindow, active_window_id
+        lda     active_window_id
         jsr     L8855
         MGTK_RELAY_CALL MGTK::DragWindow, event_params
-        lda     desktop_active_winid
+        lda     active_window_id
         jsr     window_lookup
         sta     $06
         stx     $06+1
@@ -10009,13 +10027,13 @@ L6112:  ldy     #$14
         lda     ($06),y
         sbc     L8833
         sta     L619A
-        ldx     desktop_active_winid
+        ldx     active_window_id
         dex
         lda     win_buf_table,x
         beq     L6143
         rts
 
-L6143:  lda     desktop_active_winid
+L6143:  lda     active_window_id
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         ldx     #$00
@@ -10064,11 +10082,11 @@ L6199:  .byte   0
 L619A:  .byte   0
 
 handle_resize_click:
-        lda     desktop_active_winid
+        lda     active_window_id
         sta     event_params
         MGTK_RELAY_CALL MGTK::GrowWindow, event_params
         jsr     redraw_windows_and_desktop
-        lda     desktop_active_winid
+        lda     active_window_id
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         jsr     L6E52
@@ -10080,17 +10098,17 @@ handle_resize_click:
         jmp     reset_grafport3
 
 handle_close_click:
-        lda     desktop_active_winid
+        lda     active_window_id
         MGTK_RELAY_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::goaway
         bne     L61DC
         rts
 
-L61DC:  lda     desktop_active_winid
+L61DC:  lda     active_window_id
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         jsr     clear_selection
-        ldx     desktop_active_winid
+        ldx     active_window_id
         dex
         lda     win_buf_table,x
         bmi     L6215
@@ -10098,7 +10116,7 @@ L61DC:  lda     desktop_active_winid
         sec
         sbc     buf3len
         sta     LDD9E
-        DESKTOP_RELAY_CALL $07, desktop_active_winid
+        DESKTOP_RELAY_CALL $07, active_window_id
         ldx     #$00
 L6206:  cpx     buf3len
         beq     L6215
@@ -10118,8 +10136,8 @@ L621B:  sta     buf3,x
 
 L6227:  sta     buf3len
         jsr     DESKTOP_COPY_FROM_BUF
-        MGTK_RELAY_CALL MGTK::CloseWindow, desktop_active_winid
-        ldx     desktop_active_winid
+        MGTK_RELAY_CALL MGTK::CloseWindow, active_window_id
+        ldx     active_window_id
         dex
         lda     LEC26,x
         sta     LE22F
@@ -10143,21 +10161,21 @@ L6227:  sta     buf3len
         sta     is_file_selected
         lda     LE22F
         sta     selected_file_index
-L6276:  ldx     desktop_active_winid
+L6276:  ldx     active_window_id
         dex
         lda     LEC26,x
         jsr     L7345
-        ldx     desktop_active_winid
+        ldx     active_window_id
         dex
         lda     LEC26,x
         inx
         jsr     L8B5C
-        ldx     desktop_active_winid
+        ldx     active_window_id
         dex
         lda     #$00
         sta     LEC26,x
         sta     win_buf_table,x
-        MGTK_RELAY_CALL MGTK::FrontWindow, desktop_active_winid
+        MGTK_RELAY_CALL MGTK::FrontWindow, active_window_id
         lda     #$00
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
@@ -10428,10 +10446,10 @@ L650F:  bit     L5B1B
         jsr     L6E52
 L6517:  jsr     L6523
         jsr     L7B6B
-        lda     desktop_active_winid
+        lda     active_window_id
         jmp     L7D5D
 
-L6523:  lda     desktop_active_winid
+L6523:  lda     active_window_id
         jsr     window_lookup
         clc
         adc     #$14
@@ -10446,7 +10464,7 @@ L6535:  lda     ($06),y
         bpl     L6535
         rts
 
-L653E:  lda     desktop_active_winid
+L653E:  lda     active_window_id
         jsr     window_lookup
         sta     $06
         stx     $06+1
@@ -10466,11 +10484,11 @@ L655E:  MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect_x1
         jsr     reset_grafport3
         jmp     L6C19
 
-L656D:  lda     desktop_active_winid
+L656D:  lda     active_window_id
         jsr     L7D5D
         sta     L6600
         stx     L6601
-        lda     desktop_active_winid
+        lda     active_window_id
         jsr     window_lookup
         sta     $06
         stx     $06+1
@@ -10526,10 +10544,10 @@ L6600:  .byte   0
 L6601:  .byte   0
 L6602:  .byte   0
 L6603:  .byte   0
-L6604:  lda     desktop_active_winid
+L6604:  lda     active_window_id
         jsr     L7D5D
         sty     L669F
-        lda     desktop_active_winid
+        lda     active_window_id
         jsr     window_lookup
         sta     $06
         stx     $06+1
@@ -10588,7 +10606,7 @@ L668D:  sta     event_params+1
 L669F:  .byte   0
 L66A0:  .byte   0
 L66A1:  .byte   0
-L66A2:  ldx     desktop_active_winid
+L66A2:  ldx     active_window_id
         beq     L66AA
         jmp     L66F2
 
@@ -10807,16 +10825,16 @@ L68B8:  lda     event_params_coords,x
         sta     $E234,x
         dex
         bpl     L68B8
-        jsr     L48F0
+        jsr     peek_event
         lda     event_params_kind
         cmp     #MGTK::event_kind_drag
         beq     L68CF
         rts
 
 L68CF:  MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern3
-        jsr     L48FA
+        jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
-L68E4:  jsr     L48F0
+L68E4:  jsr     peek_event
         lda     event_params_kind
         cmp     #MGTK::event_kind_drag
         beq     L6932
@@ -11000,7 +11018,7 @@ L6A95:  cmp     LEC26,x
         jmp     L6B1E
 
 L6AA0:  inx
-        cpx     desktop_active_winid
+        cpx     active_window_id
         bne     L6AA7
         rts
 
@@ -11019,7 +11037,7 @@ L6AA7:  stx     bufnum
         and     #$0F
         sta     getwinport_params2::window_id
         beq     L6AD8
-        cmp     desktop_active_winid
+        cmp     active_window_id
         bne     L6AEF
         jsr     L44F2
         lda     LE6BE
@@ -11040,7 +11058,7 @@ L6AF6:  cmp     $E1F2,x
         jsr     L7054
 L6B01:  MGTK_RELAY_CALL MGTK::SelectWindow, bufnum
         lda     bufnum
-        sta     desktop_active_winid
+        sta     active_window_id
         jsr     L6C19
         jsr     redraw_windows
         lda     #$00
@@ -11098,7 +11116,7 @@ L6B68:  lda     #$01
         and     #$0F
         sta     getwinport_params2::window_id
         beq     L6BA1
-        cmp     desktop_active_winid
+        cmp     active_window_id
         bne     L6BB8
         jsr     L44F2
         jsr     L6E8E
@@ -11115,7 +11133,7 @@ L6BB8:  jsr     L744B
         jsr     window_lookup
         ldy     #$38
         jsr     MGTK_RELAY
-        lda     desktop_active_winid
+        lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     L44F2
         jsr     L78EF
@@ -11134,7 +11152,7 @@ L6BDA:  lda     L6C0E
         jmp     L6BDA
 
 L6BF4:  lda     bufnum
-        sta     desktop_active_winid
+        sta     active_window_id
         jsr     L6DB1
         jsr     L6E6E
         jsr     DESKTOP_COPY_FROM_BUF
@@ -11272,7 +11290,7 @@ L6D31:  lda     #$00
         lda     selected_window_index
         sta     rect_E230
         beq     L6D7D
-        cmp     desktop_active_winid
+        cmp     active_window_id
         beq     L6D4D
         jsr     L8997
         lda     #$00
@@ -11315,7 +11333,7 @@ L6DA1:  sta     selected_file_index,x
         jmp     reset_grafport3
 
 L6DB0:  .byte   0
-L6DB1:  ldx     desktop_active_winid
+L6DB1:  ldx     active_window_id
         dex
         lda     win_buf_table,x
         bmi     L6DC0
@@ -11325,7 +11343,7 @@ L6DB1:  ldx     desktop_active_winid
 L6DC0:  jsr     L6E52
         jsr     L7B6B
         jsr     L6E6E
-L6DC9:  lda     desktop_active_winid
+L6DC9:  lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     L44F2
         lda     L7B5F
@@ -11720,7 +11738,7 @@ L7147:  lda     $EC2E
         dec     $EC2E
         jsr     redraw_windows_and_desktop
         jsr     L72D8
-        lda     desktop_active_winid
+        lda     active_window_id
         beq     L715F
         lda     #$03
         bne     L7161
@@ -12368,7 +12386,7 @@ L767C:  txa
         bne     L76A4
         inc     $06+1
 L76A4:  lda     bufnum
-        sta     desktop_active_winid
+        sta     active_window_id
 L76AA:  lda     L7625
         cmp     L7764
         beq     L76BB
@@ -12654,7 +12672,7 @@ L78EF:  lda     grafport2::cliprect_x1
         sta     point5::xcoord
         lda     grafport2::width+1
         sta     point5::xcoord+1
-        jsr     L48FA
+        jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::LineTo, point5
         lda     point1::ycoord
         clc
@@ -12689,7 +12707,7 @@ L798A:  MGTK_RELAY_CALL MGTK::MoveTo, items_label_pos
         bcs     L79A7
         inc     str_items       ; restore trailing s
 L79A7:  jsr     L79F7
-        ldx     desktop_active_winid
+        ldx     active_window_id
         dex
         txa
         asl     a
@@ -12703,7 +12721,7 @@ L79A7:  jsr     L79F7
         MGTK_RELAY_CALL MGTK::MoveTo, point2
         jsr     L7AD7
         addr_call draw_text2, str_k_in_disk
-        ldx     desktop_active_winid
+        ldx     active_window_id
         dex
         txa
         asl     a
@@ -13953,7 +13971,7 @@ L84DC:  lda     grafport2::width
         bne     L850E
 L850C:  lda     #$00
 L850E:  sta     L85F1
-        lda     desktop_active_winid
+        lda     active_window_id
         jsr     window_lookup
         sta     $06
         stx     $06+1
@@ -14008,7 +14026,7 @@ L8562:  lsr     L85F3
         lda     L85F2
         adc     L7B60,x
         sta     grafport2::cliprect_x1+1,x
-        lda     desktop_active_winid
+        lda     active_window_id
         jsr     L7D5D
         sta     L85F4
         stx     L85F5
@@ -14031,7 +14049,7 @@ L85C3:  lda     grafport2::cliprect_x1
         lda     grafport2::cliprect_x1+1
         adc     L85F5
         sta     grafport2::width+1
-L85D6:  lda     desktop_active_winid
+L85D6:  lda     active_window_id
         jsr     window_lookup
         sta     $06
         stx     $06+1
@@ -14087,8 +14105,7 @@ loop:   dec     counter
         dec     counter+1
         lda     counter+1
         bne     exit
-
-:       jsr     L48F0           ; ???
+:       jsr     peek_event
 
         ;; Check coords, bail if pixel delta exceeded
         jsr     check_delta
@@ -14106,12 +14123,12 @@ loop:   dec     counter
         beq     loop
         cmp     #MGTK::event_kind_button_up
         bne     :+
-        jsr     get_input
+        jsr     get_event
         jmp     loop
 :       cmp     #MGTK::event_kind_button_down
         bne     exit
 
-        jsr     get_input
+        jsr     get_event
         lda     #$00            ; double-click
         rts
 
@@ -14507,7 +14524,7 @@ L8893:  tay
         jsr     file_address_lookup
         sta     $06
         stx     $06+1
-        lda     desktop_active_winid
+        lda     active_window_id
         jsr     window_lookup
         sta     $08
         stx     $08+1
@@ -14581,7 +14598,7 @@ L8915:  tay
         jsr     file_address_lookup
         sta     $06
         stx     $06+1
-L8921:  lda     desktop_active_winid
+L8921:  lda     active_window_id
         jsr     window_lookup
         sta     $08
         stx     $08+1
@@ -15111,7 +15128,7 @@ L8D58:  lda     #$00
         sta     L8DB2
         jsr     reset_grafport3
         MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern3
-        jsr     L48FA
+        jsr     set_penmode_xor
 L8D6C:  lda     L8DB2
         cmp     #$0C
         bcs     L8D89
@@ -15159,7 +15176,7 @@ L8DB3:  lda     #$0B
         sta     L8E0F
         jsr     reset_grafport3
         MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern3
-        jsr     L48FA
+        jsr     set_penmode_xor
 L8DC7:  lda     L8E0F
         bmi     L8DE4
         beq     L8DE4

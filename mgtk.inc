@@ -543,6 +543,7 @@ area_close_box  := 5
 ctl_not_a_control               := 0
 ctl_vertical_scroll_bar         := 1
 ctl_horizontal_scroll_bar       := 2
+ctl_dead_zone                   := 3
 
 ;;; Used in FindControl
 part_up_arrow           := 1
