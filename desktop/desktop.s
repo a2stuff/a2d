@@ -3957,19 +3957,19 @@ LBC0C:  jsr     LBDE1
         bit     alert_action
         bpl     LBC42
         MGTK_RELAY2_CALL MGTK::InRect, cancel_rect
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         bne     LBC2D
         jmp     LBCE9
 
 LBC2D:  bit     alert_action
         bvs     LBC42
         MGTK_RELAY2_CALL MGTK::InRect, try_again_rect
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         bne     LBC52
         jmp     LBC6D
 
 LBC42:  MGTK_RELAY2_CALL MGTK::InRect, try_again_rect
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         bne     LBC52
         jmp     LBD65
 
@@ -3993,7 +3993,7 @@ LBC84:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
         jsr     LBDE1
         MGTK_RELAY2_CALL MGTK::MoveTo, event_params_coords
         MGTK_RELAY2_CALL MGTK::InRect, try_again_rect
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     LBCB5
         lda     LBCE8
         beq     LBCBD
@@ -4030,7 +4030,7 @@ LBD00:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
         jsr     LBDE1
         MGTK_RELAY2_CALL MGTK::MoveTo, event_params_coords
         MGTK_RELAY2_CALL MGTK::InRect, cancel_rect
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     LBD31
         lda     LBD64
         beq     LBD39
@@ -4067,7 +4067,7 @@ LBD7C:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
         jsr     LBDE1
         MGTK_RELAY2_CALL MGTK::MoveTo, event_params_coords
         MGTK_RELAY2_CALL MGTK::InRect, try_again_rect
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     LBDAD
         lda     LBDE0
         beq     LBDB5
@@ -18004,7 +18004,7 @@ LA5B4:  lda     winfoF
         MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
         MGTK_RELAY_CALL MGTK::InRect, rect1
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         bne     LA5E5
         jsr     set_cursor_insertion_point_with_flag
         jmp     LA5E8
@@ -18040,11 +18040,11 @@ LA614:  lda     winfoF
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
         bit     LD8E7
         bvc     LA63A
-        jmp     LA65E
+        jmp     check_button_yes
 
 LA63A:  MGTK_RELAY_CALL MGTK::InRect, desktop_aux::ok_button_rect
-        cmp     #$80
-        beq     LA64A
+        cmp     #MGTK::inrect_inside
+        beq     check_button_ok
         jmp     LA6C1
 
         prompt_button_ok := 0
@@ -18053,16 +18053,18 @@ LA63A:  MGTK_RELAY_CALL MGTK::InRect, desktop_aux::ok_button_rect
         prompt_button_no := 3
         prompt_button_all := 4
 
-LA64A:  jsr     set_penmode_xor2
+check_button_ok:
+        jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
         jsr     button_loop_ok
         bmi     :+
         lda     #prompt_button_ok
 :       rts
 
-LA65E:  MGTK_RELAY_CALL MGTK::InRect, desktop_aux::yes_button_rect
-        cmp     #$80
-        bne     LA67F
+check_button_yes:
+        MGTK_RELAY_CALL MGTK::InRect, desktop_aux::yes_button_rect
+        cmp     #MGTK::inrect_inside
+        bne     check_button_no
         jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::yes_button_rect
         jsr     button_loop_yes
@@ -18070,9 +18072,10 @@ LA65E:  MGTK_RELAY_CALL MGTK::InRect, desktop_aux::yes_button_rect
         lda     #prompt_button_yes
 :       rts
 
-LA67F:  MGTK_RELAY_CALL MGTK::InRect, desktop_aux::no_button_rect
-        cmp     #$80
-        bne     LA6A0
+check_button_no:
+        MGTK_RELAY_CALL MGTK::InRect, desktop_aux::no_button_rect
+        cmp     #MGTK::inrect_inside
+        bne     check_button_all
         jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::no_button_rect
         jsr     button_loop_no
@@ -18080,8 +18083,9 @@ LA67F:  MGTK_RELAY_CALL MGTK::InRect, desktop_aux::no_button_rect
         lda     #prompt_button_no
 :       rts
 
-LA6A0:  MGTK_RELAY_CALL MGTK::InRect, desktop_aux::all_button_rect
-        cmp     #$80
+check_button_all:
+        MGTK_RELAY_CALL MGTK::InRect, desktop_aux::all_button_rect
+        cmp     #MGTK::inrect_inside
         bne     LA6C1
         jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::all_button_rect
@@ -18091,12 +18095,13 @@ LA6A0:  MGTK_RELAY_CALL MGTK::InRect, desktop_aux::all_button_rect
 :       rts
 
 LA6C1:  bit     LD8E7
-        bpl     LA6C9
+        bpl     check_button_cancel
         lda     #$FF
         rts
 
-LA6C9:  MGTK_RELAY_CALL MGTK::InRect, desktop_aux::cancel_button_rect
-        cmp     #$80
+check_button_cancel:
+        MGTK_RELAY_CALL MGTK::InRect, desktop_aux::cancel_button_rect
+        cmp     #MGTK::inrect_inside
         beq     LA6D9
         jmp     LA6ED
 
@@ -19872,7 +19877,7 @@ loop:   MGTK_RELAY_CALL MGTK::GetEvent, event_params
         MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
         jsr     test_proc
-        cmp     #$80            ; inside?
+        cmp     #MGTK::inrect_inside
         beq     inside
         lda     down_flag       ; outside but was inside?
         beq     invert
@@ -19972,7 +19977,7 @@ LB9B7:  rts
 LB9B8:  MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
         MGTK_RELAY_CALL MGTK::InRect, rect1
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     LB9D8
         rts
 

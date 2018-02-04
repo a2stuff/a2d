@@ -575,6 +575,10 @@ menuopt_item_is_checked := 1 << 5
 menuopt_item_is_filler  := 1 << 6
 menuopt_disable_flag    := 1 << 7
 
+;;; Response from InRect
+inrect_inside           := $80
+inrect_outside          := $00
+
 .endscope ; MGTK
 
 ;;; ==================================================
