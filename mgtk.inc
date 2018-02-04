@@ -602,14 +602,17 @@ menuopt_disable_flag    := 1 << 7
 
 ;;; ------------------------------------
 
-.macro DEFINE_RECT left, top, right, bottom, label
+;;; Rect definition. Option fifth param gives scope.
+;;;    DEFINE_RECT 0,0,20,30
+;;;    DEFINE_RECT 0,0,20,30,rect ; rect::x1, rect::y1, rect::x2, rect::y2
+.macro DEFINE_RECT left, top, right, bottom, opt_scope
     .if .paramcount > 4
-.proc label
+.scope opt_scope
 x1:     .word   left
 y1:     .word   top
 x2:     .word   right
 y2:     .word   bottom
-.endproc
+.endscope
     .else
         .word   left
         .word   top
@@ -618,27 +621,36 @@ y2:     .word   bottom
     .endif
 .endmacro
 
-.macro DEFINE_POINT left, top, label
+;;; Point definition. Option third param gives scope.
+;;;    DEFINE_POINT 10,20
+;;;    DEFINE_POINT 10,20,pt ; pt::xcoord, pt::ycoord
+.macro DEFINE_POINT left, top, opt_scope
     .if .paramcount > 2
-.proc label
+.scope opt_scope
 xcoord: .word   left
 ycoord: .word   top
-.endproc
+.endscope
     .else
         .word   left
         .word   top
     .endif
 .endmacro
 
-.macro DEFINE_STRING str, label ; String definition, for use with TextWidth/DrawText
-        .local  data            ; Call as DEFINE_STRING "abc"
-        .local  end             ; Can include control chars by using:
-        .addr   data            ; DEFINE_STRING {"abc",$0D,"def"}
+;;; String definition w/ inline data, for use with DrawText
+;;;    DEFINE_STRING "abc"
+;;;    DEFINE_STRING {"Ring a bell",$07,"!!!"} ; control characters
+;;; Optional second param gives label to internal Pascal string
 
-.if .paramcount > 1
-label:
-.endif
-        .byte   end - data
+.macro DEFINE_STRING str, opt_label
+        .local  data
+        .local  end
+
+        .addr   data            ; textptr
+    .if .paramcount > 1
+opt_label:
+    .endif
+        .byte   end - data      ; textlen
+
 data:   .byte   str
 end:
 .endmacro

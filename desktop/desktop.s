@@ -424,30 +424,30 @@ L8C83:  .byte   $00,$00,$00,$00,$77,$30,$01
 num_vertices:   .byte   8
 lastpoly:       .byte   0       ; 0 = last poly
 vertices:
-        DEFINE_POINT 0, 0, v0
-        DEFINE_POINT 0, 0, v1
-        DEFINE_POINT 0, 0, v2
-        DEFINE_POINT 0, 0, v3
-        DEFINE_POINT 0, 0, v4
-        DEFINE_POINT 0, 0, v5
-        DEFINE_POINT 0, 0, v6
-        DEFINE_POINT 0, 0, v7
+v0:     DEFINE_POINT 0, 0, v0
+v1:     DEFINE_POINT 0, 0, v1
+v2:     DEFINE_POINT 0, 0, v2
+v3:     DEFINE_POINT 0, 0, v3
+v4:     DEFINE_POINT 0, 0, v4
+v5:     DEFINE_POINT 0, 0, v5
+v6:     DEFINE_POINT 0, 0, v6
+v7:     DEFINE_POINT 0, 0, v7
 .endproc
 
 .proc paintbits_params2
-        DEFINE_POINT 0, 0, viewloc
+viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits: .addr   0
 mapwidth: .byte   0
 reserved:       .byte 0
-        DEFINE_RECT 0,0,0,0,maprect
+maprect:        DEFINE_RECT 0,0,0,0,maprect
 .endproc
 
 .proc paintbits_params
-        DEFINE_POINT 0, 0, viewloc
+viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits: .addr   0
 mapwidth: .byte   0
 reserved:       .byte 0
-        DEFINE_RECT 0,0,0,0,maprect
+maprect:        DEFINE_RECT 0,0,0,0,maprect
 .endproc
 
 .proc paintrect_params6
@@ -3702,11 +3702,11 @@ alert_inner_frame_rect2:
         DEFINE_RECT 5, 3, 415, 52
 
 .proc grafport6
-        DEFINE_POINT $41, $57, viewloc
+viewloc:        DEFINE_POINT $41, $57, viewloc
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
-        DEFINE_RECT 0, 0, $1A4, $37, maprect
+maprect:        DEFINE_RECT 0, 0, $1A4, $37, maprect
 .endproc
 
 
@@ -3731,7 +3731,7 @@ cancel_pos:
 
         .word   $BE,$10     ; ???
 
-        DEFINE_POINT 75,29, point8
+point8: DEFINE_POINT 75,29, point8
 
 alert_action:  .byte   $00
 prompt_addr:    .addr   0
@@ -5111,11 +5111,11 @@ nextwinfo:   .addr   0
 
         ;; Coordinates for labels?
         .byte   $28,$00,$25,$00,$68,$01,$2F,$00,$2D,$00,$2E,$00
-        DEFINE_RECT 40,61,360,71, rect1
-        DEFINE_POINT 45,70, point6
-        DEFINE_POINT 0, 18, point4
-        DEFINE_POINT 40,18, point7
-        DEFINE_POINT $28, $23, pointD
+rect1:  DEFINE_RECT 40,61,360,71, rect1
+point6: DEFINE_POINT 45,70, point6
+point4: DEFINE_POINT 0, 18, point4
+point7: DEFINE_POINT 40,18, point7
+pointD: DEFINE_POINT $28, $23, pointD
 
 dialog_label_pos:
         DEFINE_POINT 40,0
@@ -5532,10 +5532,10 @@ LE6C1:
 win_buf_table:                  ; ???
         .res    8, 0
 
-        DEFINE_POINT 0, 0, point9
-        DEFINE_POINT 112, 0, pointA
-        DEFINE_POINT 140, 0, pointB
-        DEFINE_POINT 231, 0, pointC
+point9: DEFINE_POINT 0, 0, point9
+pointA: DEFINE_POINT 112, 0, pointA
+pointB: DEFINE_POINT 140, 0, pointB
+pointC: DEFINE_POINT 231, 0, pointC
 
 .proc text_buffer2
         .addr   data
@@ -5602,9 +5602,9 @@ str_items:
 items_label_pos:
         DEFINE_POINT 8, 10
 
-        DEFINE_POINT 0, 0, point1
+point1: DEFINE_POINT 0, 0, point1
 
-        DEFINE_POINT 0, 0, point5
+point5: DEFINE_POINT 0, 0, point5
 
 str_k_in_disk:
         PASCAL_STRING "K in disk"
@@ -5616,8 +5616,8 @@ str_6_spaces:
         PASCAL_STRING "      "
 
 LEBE3:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        DEFINE_POINT 0, 0, point2
-        DEFINE_POINT 0, 0, point3
+point2: DEFINE_POINT 0, 0, point2
+point3: DEFINE_POINT 0, 0, point3
 
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00
@@ -17998,7 +17998,7 @@ LA5A9:  lda     $D20E
         jmp     prompt_input_loop
 
 LA5B4:  lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         lda     winfoF
         sta     event_params
         MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
@@ -18033,7 +18033,7 @@ LA609:  lda     $D20E
         rts
 
 LA614:  lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         lda     winfoF
         sta     event_params
         MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
@@ -18047,42 +18047,48 @@ LA63A:  MGTK_RELAY_CALL MGTK::InRect, desktop_aux::ok_button_rect
         beq     LA64A
         jmp     LA6C1
 
-LA64A:  jsr     set_fill_black
+        prompt_button_ok := 0
+        prompt_button_cancel := 1
+        prompt_button_yes := 2
+        prompt_button_no := 3
+        prompt_button_all := 4
+
+LA64A:  jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
-        jsr     LB7CF
-        bmi     LA65D
-        lda     #$00
-LA65D:  rts
+        jsr     button_loop_ok
+        bmi     :+
+        lda     #prompt_button_ok
+:       rts
 
 LA65E:  MGTK_RELAY_CALL MGTK::InRect, desktop_aux::yes_button_rect
         cmp     #$80
         bne     LA67F
-        jsr     set_fill_black
+        jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::yes_button_rect
-        jsr     LB7D9
-        bmi     LA67E
-        lda     #$02
-LA67E:  rts
+        jsr     button_loop_yes
+        bmi     :+
+        lda     #prompt_button_yes
+:       rts
 
 LA67F:  MGTK_RELAY_CALL MGTK::InRect, desktop_aux::no_button_rect
         cmp     #$80
         bne     LA6A0
-        jsr     set_fill_black
+        jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::no_button_rect
-        jsr     LB7DE
-        bmi     LA69F
-        lda     #$03
-LA69F:  rts
+        jsr     button_loop_no
+        bmi     :+
+        lda     #prompt_button_no
+:       rts
 
 LA6A0:  MGTK_RELAY_CALL MGTK::InRect, desktop_aux::all_button_rect
         cmp     #$80
         bne     LA6C1
-        jsr     set_fill_black
+        jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::all_button_rect
-        jsr     LB7E3
-        bmi     LA6C0
-        lda     #$04
-LA6C0:  rts
+        jsr     button_loop_all
+        bmi     :+
+        lda     #prompt_button_all
+:       rts
 
 LA6C1:  bit     LD8E7
         bpl     LA6C9
@@ -18094,12 +18100,12 @@ LA6C9:  MGTK_RELAY_CALL MGTK::InRect, desktop_aux::cancel_button_rect
         beq     LA6D9
         jmp     LA6ED
 
-LA6D9:  jsr     set_fill_black
+LA6D9:  jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
-        jsr     LB7D4
-        bmi     LA6EC
-        lda     #$01
-LA6EC:  rts
+        jsr     button_loop_cancel
+        bmi     :+
+        lda     #prompt_button_cancel
+:       rts
 
 LA6ED:  bit     LD8E8
         bmi     LA6F7
@@ -18233,17 +18239,17 @@ LA7DD:  ldx     LD8E8
 LA7E5:  lda     #$FF
         rts
 
-LA7E8:  jsr     set_fill_black
+LA7E8:  jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::yes_button_rect
         lda     #$02
         rts
 
-LA7F7:  jsr     set_fill_black
+LA7F7:  jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::no_button_rect
         lda     #$03
         rts
 
-LA806:  jsr     set_fill_black
+LA806:  jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::all_button_rect
         lda     #$04
         rts
@@ -18281,16 +18287,16 @@ LA84E:  lda     #$FF
         rts
 
 LA851:  lda     winfoF
-        jsr     LB7B9
-        jsr     set_fill_black
+        jsr     set_port_from_window_id
+        jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
         lda     #$00
         rts
 
 LA86F:  lda     winfoF
-        jsr     LB7B9
-        jsr     set_fill_black
+        jsr     set_port_from_window_id
+        jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
         lda     #$01
@@ -18315,8 +18321,8 @@ jump_relay:
 .proc show_about_dialog
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo18
         lda     winfo18::window_id
-        jsr     LB7B9
-        jsr     set_fill_black
+        jsr     set_port_from_window_id
+        jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::about_dialog_outer_rect
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::about_dialog_inner_rect
         addr_call draw_centered_string, desktop_aux::str_about1
@@ -18403,7 +18409,7 @@ LA9B5:  ldy     #$01
         jsr     LBDC4
         jsr     LBDDF
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB0B6
         addr_call draw_text1, str_7_spaces
         addr_call draw_text1, str_files
@@ -18418,7 +18424,7 @@ LA9E6:  ldy     #$01
         jsr     LBDC4
         jsr     LBDDF
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         jsr     LBE8D
         jsr     LBE9A
         jsr     copy_dialog_param_addr_to_ptr
@@ -18454,7 +18460,7 @@ LAA5A:  jsr     reset_state
 
 LAA6A:  jsr     bell
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         axy_call draw_dialog_label, $06, desktop_aux::str_exists_prompt
         jsr     draw_yes_no_all_cancel_buttons
 LAA7F:  jsr     prompt_input_loop
@@ -18468,7 +18474,7 @@ LAA7F:  jsr     prompt_input_loop
 
 LAA9C:  jsr     bell
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         axy_call draw_dialog_label, $06, desktop_aux::str_large_prompt
         jsr     draw_ok_cancel_buttons
 LAAB1:  jsr     prompt_input_loop
@@ -18531,7 +18537,7 @@ do1:    ldy     #1
         jsr     LBDC4
         jsr     LBDDF
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB0B6
         addr_call draw_text1, str_7_spaces
         addr_call draw_text1, str_files
@@ -18546,7 +18552,7 @@ do2:    ldy     #$01
         jsr     LBDC4
         jsr     LBDDF
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         jsr     LBE8D
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$03
@@ -18570,7 +18576,7 @@ do3:    jsr     reset_state
 
 do4:    jsr     bell
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         axy_call draw_dialog_label, ptr, desktop_aux::str_ramcard_full
         jsr     draw_ok_button
 :       jsr     prompt_input_loop
@@ -18628,7 +18634,7 @@ do1:    ldy     #$01
         sta     LD90A
         jsr     LBDDF
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         lda     #$A5
         sta     dialog_label_pos
         yax_call draw_dialog_label, $01, str_7_spaces
@@ -18658,7 +18664,7 @@ do3:    jsr     reset_state
         rts
 
 do2:    lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         jsr     draw_ok_button
 :       jsr     prompt_input_loop
         bmi     :-
@@ -18719,7 +18725,7 @@ LAD2A:  ldy     #$01
         jsr     LBDC4
         jsr     LBDDF
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         lda     LAD1F
         bne     LAD54
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB16A
@@ -18739,7 +18745,7 @@ LAD6C:  ldy     #$01
         jsr     LBDC4
         jsr     LBDDF
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         jsr     LBE8D
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$03
@@ -18757,7 +18763,7 @@ LAD6C:  ldy     #$01
         rts
 
 LADBB:  lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         jsr     draw_ok_cancel_buttons
 LADC4:  jsr     prompt_input_loop
         bmi     LADC4
@@ -18776,7 +18782,7 @@ LADF5:  jsr     reset_state
         rts
 
 LAE05:  lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         axy_call draw_dialog_label, $06, desktop_aux::str_delete_locked_file
         jsr     draw_yes_no_all_cancel_buttons
 LAE17:  jsr     prompt_input_loop
@@ -18809,9 +18815,9 @@ LAE49:  lda     #$80
         lda     #$00
         jsr     LB509
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         addr_call draw_centered_string, desktop_aux::str_new_folder_title
-        jsr     set_fill_black
+        jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::FrameRect, rect1
         rts
 
@@ -18835,7 +18841,7 @@ LAE90:  lda     ($08),y
         dey
         bpl     LAE90
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         yax_call draw_dialog_label, $02, desktop_aux::str_in_colon
         lda     #$37
         sta     dialog_label_pos
@@ -18906,7 +18912,7 @@ LAF34:  lda     #$00
         eor     #$80
         jsr     LB509
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         addr_call draw_centered_string, desktop_aux::str_info_title
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$00
@@ -18934,7 +18940,7 @@ LAF9B:  yax_call draw_dialog_label, $04, desktop_aux::str_info_create
         jmp     reset_state
 
 LAFB9:  lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$00
         lda     ($06),y
@@ -19029,7 +19035,7 @@ LB068:  ldy     #$01
         jsr     LBDC4
         jsr     LBDDF
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB231
         addr_call draw_text1, str_7_spaces
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB239
@@ -19045,7 +19051,7 @@ LB0A2:  ldy     #$01
         jsr     LBDC4
         jsr     LBDDF
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         jsr     LBE8D
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$03
@@ -19063,7 +19069,7 @@ LB0A2:  ldy     #$01
         rts
 
 LB0F1:  lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         jsr     draw_ok_cancel_buttons
 LB0FA:  jsr     prompt_input_loop
         bmi     LB0FA
@@ -19121,7 +19127,7 @@ LB186:  ldy     #$01
         jsr     LBDC4
         jsr     LBDDF
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB22D
         addr_call draw_text1, str_7_spaces
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB235
@@ -19137,7 +19143,7 @@ LB1C0:  ldy     #$01
         jsr     LBDC4
         jsr     LBDDF
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         jsr     LBE8D
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$03
@@ -19155,7 +19161,7 @@ LB1C0:  ldy     #$01
         rts
 
 LB20F:  lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         jsr     draw_ok_cancel_buttons
 LB218:  jsr     prompt_input_loop
         bmi     LB218
@@ -19197,9 +19203,9 @@ LB27D:  jsr     LBD75
         lda     #$00
         jsr     LB509
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         addr_call draw_centered_string, desktop_aux::str_rename_title
-        jsr     set_fill_black
+        jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::FrameRect, rect1
         yax_call draw_dialog_label, $02, desktop_aux::str_rename_old
         lda     #$55
@@ -19230,7 +19236,7 @@ LB2ED:  lda     #$00
         lda     #$80
         sta     LD8E8
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
 LB2FD:  jsr     prompt_input_loop
         bmi     LB2FD
         bne     LB313
@@ -19259,7 +19265,7 @@ LB313:  jsr     reset_state
         MGTK_RELAY_CALL MGTK::HideCursor
         jsr     create_window_with_alert_bitmap
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         addr_call draw_centered_string, desktop_aux::str_warning
         MGTK_RELAY_CALL MGTK::ShowCursor
         jsr     copy_dialog_param_addr_to_ptr
@@ -19388,7 +19394,7 @@ set_cursor_insertion_point:
         MGTK_RELAY_CALL MGTK::ShowCursor
         rts
 
-set_fill_black:
+set_penmode_xor2:
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         rts
 
@@ -19495,8 +19501,8 @@ LB537:  jmp     reset_state
 
 LB53A:  MGTK_RELAY_CALL MGTK::OpenWindow, winfoF
         lda     winfoF
-        jsr     LB7B9
-        jsr     set_fill_black
+        jsr     set_port_from_window_id
+        jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::confirm_dialog_outer_rect
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::confirm_dialog_inner_rect
         rts
@@ -19504,10 +19510,10 @@ LB53A:  MGTK_RELAY_CALL MGTK::OpenWindow, winfoF
 create_window_with_alert_bitmap:
         MGTK_RELAY_CALL MGTK::OpenWindow, winfoF
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         jsr     set_fill_white
         MGTK_RELAY_CALL MGTK::PaintBits, alert_bitmap2_params
-        jsr     set_fill_black
+        jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::confirm_dialog_outer_rect
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::confirm_dialog_inner_rect
         rts
@@ -19600,7 +19606,7 @@ draw_all_label:
         rts
 
 draw_yes_no_all_cancel_buttons:
-        jsr     set_fill_black
+        jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::yes_button_rect
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::no_button_rect
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::all_button_rect
@@ -19622,7 +19628,7 @@ erase_yes_no_all_cancel_buttons:
         rts
 
 draw_ok_cancel_buttons:
-        jsr     set_fill_black
+        jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::ok_button_rect
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::cancel_button_rect
         jsr     draw_ok_label
@@ -19638,7 +19644,7 @@ erase_ok_cancel_buttons:
         rts
 
 draw_ok_button:
-        jsr     set_fill_black
+        jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::ok_button_rect
         jsr     draw_ok_label
         lda     #$80
@@ -19751,45 +19757,57 @@ LB7A3:  iny
 LB7B5:  dey
         jmp     LB78D
 
-LB7B9:  sta     getwinport_params2::window_id
+.proc set_port_from_window_id
+        sta     getwinport_params2::window_id
         MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
-        ldy     #$04
-        lda     #$15
-        LB7CA := *+1
-        ldx     #$D2
-        jsr     MGTK_RELAY
+        MGTK_RELAY_CALL MGTK::SetPort, grafport2
         rts
-LB7CF:  lda     #$00
-        jmp     LB7E8
+.endproc
 
-LB7D4:  lda     #$01
-        jmp     LB7E8
+;;; ==================================================
+;;; Event loop during button press - handle inverting
+;;; the text as mouse is dragged in/out, report final
+;;; click (A as passed) / cancel (A is negative)
 
-LB7D9:  lda     #$02
-        jmp     LB7E8
+button_loop_ok:
+        lda     #prompt_button_ok
+        jmp     button_event_loop
 
-LB7DE:  lda     #$03
-        jmp     LB7E8
+button_loop_cancel:
+        lda     #prompt_button_cancel
+        jmp     button_event_loop
 
-LB7E3:  lda     #$04
-        jmp     LB7E8
+button_loop_yes:
+        lda     #prompt_button_yes
+        jmp     button_event_loop
 
-LB7E8:  pha
+button_loop_no:
+        lda     #prompt_button_no
+        jmp     button_event_loop
+
+button_loop_all:
+        lda     #prompt_button_all
+        jmp     button_event_loop
+
+.proc button_event_loop
+        ;; Configure test and fill procs
+        pha
         asl     a
         asl     a
         tax
-        lda     LB808,x
-        sta     LB886
-        lda     LB808+1,x
-        sta     LB887
-        lda     LB808+2,x
-        sta     LB888
-        lda     LB808+3,x
-        sta     LB889
+        lda     test_fill_button_proc_table,x
+        sta     test_button_proc_addr
+        lda     test_fill_button_proc_table+1,x
+        sta     test_button_proc_addr+1
+        lda     test_fill_button_proc_table+2,x
+        sta     fill_button_proc_addr
+        lda     test_fill_button_proc_table+3,x
+        sta     fill_button_proc_addr+1
         pla
-        jmp     LB88A
+        jmp     event_loop
 
-LB808:  .addr   test_ok_button,fill_ok_button
+test_fill_button_proc_table:
+        .addr   test_ok_button,fill_ok_button
         .addr   test_cancel_button,fill_cancel_button
         .addr   test_yes_button,fill_yes_button
         .addr   test_no_button,fill_no_button
@@ -19835,56 +19853,63 @@ fill_all_button:
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::all_button_rect
         rts
 
-LB880:  jmp     (LB886)
+test_proc:  jmp     (test_button_proc_addr)
+fill_proc:  jmp     (fill_button_proc_addr)
 
-LB883:  jmp     (LB888)
+test_button_proc_addr:  .addr   0
+fill_button_proc_addr:  .addr   0
 
-LB886:  .byte   0
-LB887:  .byte   0
-LB888:  .byte   0
-LB889:  .byte   0
-LB88A:  sta     LB8F3
-        lda     #$00
-        sta     LB8F2
-LB892:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
+event_loop:
+        sta     click_result
+        lda     #0
+        sta     down_flag
+loop:   MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_params_kind
         cmp     #MGTK::event_kind_button_up
-        beq     LB8E3
+        beq     exit
         lda     winfoF
         sta     event_params
         MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
-        jsr     LB880
-        cmp     #$80
-        beq     LB8C9
-        lda     LB8F2
-        beq     LB8D1
-        jmp     LB892
+        jsr     test_proc
+        cmp     #$80            ; inside?
+        beq     inside
+        lda     down_flag       ; outside but was inside?
+        beq     invert
+        jmp     loop
 
-LB8C9:  lda     LB8F2
-        bne     LB8D1
-        jmp     LB892
+inside: lda     down_flag       ; already depressed?
+        bne     invert
+        jmp     loop
 
-LB8D1:  jsr     set_fill_black
-        jsr     LB883
-        lda     LB8F2
+invert: jsr     set_penmode_xor2
+        jsr     fill_proc
+        lda     down_flag
         clc
         adc     #$80
-        sta     LB8F2
-        jmp     LB892
+        sta     down_flag
+        jmp     loop
 
-LB8E3:  lda     LB8F2
-        beq     LB8EB
-        lda     #$FF
+exit:   lda     down_flag       ; was depressed?
+        beq     clicked
+        lda     #$FF            ; hi bit = cancelled
         rts
 
-LB8EB:  jsr     LB883
-        lda     LB8F3
+clicked:
+        jsr     fill_proc       ; invert one last time
+        lda     click_result    ; grab expected result
         rts
 
-LB8F2:  .byte   0
-LB8F3:  .byte   0
-        rts
+down_flag:
+        .byte   0
+
+click_result:
+        .byte   0
+
+        rts                     ; ???
+.endproc
+
+;;; ==================================================
 
 .proc LB8F5
         point := $6
@@ -19923,14 +19948,14 @@ LB93B:  lda     #<LD8EF
         MGTK_RELAY_CALL MGTK::DrawText, drawtext_params
         MGTK_RELAY_CALL MGTK::SetTextBG, desktop_aux::LAE6D
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         rts
 .endproc
 
 LB961:  lda     path_buf1
         beq     LB9B7
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         jsr     set_fill_white
         MGTK_RELAY_CALL MGTK::PaintRect, rect1
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
@@ -19941,7 +19966,7 @@ LB961:  lda     path_buf1
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
 LB9B7:  rts
 
 LB9B8:  MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
@@ -20132,7 +20157,7 @@ LBB0B:  sta     LBB62
         addr_call draw_text1, str_1_char
         addr_call draw_text1, path_buf2
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         rts
 .endproc
 
@@ -20159,7 +20184,7 @@ LBB63:  lda     path_buf1
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         rts
 .endproc
 
@@ -20197,7 +20222,7 @@ LBBBC:  ldx     path_buf1
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         rts
 .endproc
 
@@ -20227,7 +20252,7 @@ LBC2D:  dec     path_buf2
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
         lda     winfoF
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         rts
 
 LBC5E:  lda     path_buf1
