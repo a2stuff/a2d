@@ -531,6 +531,9 @@ event_kind_key_down        := 3    ; Key was pressed
 event_kind_drag            := 4    ; Mouse button still down
 event_kind_apple_key       := 5    ; Mouse button was depressed, modifier key down
 
+event_modifier_open_apple  := 1 << 0
+event_modifier_solid_apple := 1 << 1
+
 ;;; Used in FindWindow
 area_desktop    := 0
 area_menubar    := 1

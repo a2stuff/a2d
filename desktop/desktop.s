@@ -3958,10 +3958,9 @@ LBC0C:  jsr     LBDE1
         bpl     LBC42
         MGTK_RELAY2_CALL MGTK::InRect, cancel_rect
         cmp     #MGTK::inrect_inside
-        bne     LBC2D
+        bne     :+
         jmp     LBCE9
-
-LBC2D:  bit     alert_action
+:       bit     alert_action
         bvs     LBC42
         MGTK_RELAY2_CALL MGTK::InRect, try_again_rect
         cmp     #MGTK::inrect_inside
@@ -17979,11 +17978,11 @@ LA579:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_params_kind
         cmp     #MGTK::event_kind_button_down
         bne     LA58C
-        jmp     LA5EE
+        jmp     prompt_click_handler
 
 LA58C:  cmp     #MGTK::event_kind_key_down
         bne     LA593
-        jmp     LA6FD
+        jmp     prompt_key_handler
 
 LA593:  lda     LD8E8
         beq     prompt_input_loop
@@ -18013,7 +18012,10 @@ LA5E5:  jsr     set_cursor_pointer_with_flag
 LA5E8:  jsr     reset_state
         jmp     prompt_input_loop
 
-LA5EE:  MGTK_RELAY_CALL MGTK::FindWindow, event_params_coords
+;;; Click handler for prompt dialog
+
+prompt_click_handler:
+        MGTK_RELAY_CALL MGTK::FindWindow, event_params_coords
         lda     findwindow_params_which_area
         bne     LA5FF
         lda     #$FF
@@ -18045,7 +18047,7 @@ LA614:  lda     winfoF
 LA63A:  MGTK_RELAY_CALL MGTK::InRect, desktop_aux::ok_button_rect
         cmp     #MGTK::inrect_inside
         beq     check_button_ok
-        jmp     LA6C1
+        jmp     maybe_check_button_cancel
 
         prompt_button_ok := 0
         prompt_button_cancel := 1
@@ -18086,7 +18088,7 @@ check_button_no:
 check_button_all:
         MGTK_RELAY_CALL MGTK::InRect, desktop_aux::all_button_rect
         cmp     #MGTK::inrect_inside
-        bne     LA6C1
+        bne     maybe_check_button_cancel
         jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::all_button_rect
         jsr     button_loop_all
@@ -18094,7 +18096,8 @@ check_button_all:
         lda     #prompt_button_all
 :       rts
 
-LA6C1:  bit     LD8E7
+maybe_check_button_cancel:
+        bit     LD8E7
         bpl     check_button_cancel
         lda     #$FF
         rts
@@ -18102,10 +18105,9 @@ LA6C1:  bit     LD8E7
 check_button_cancel:
         MGTK_RELAY_CALL MGTK::InRect, desktop_aux::cancel_button_rect
         cmp     #MGTK::inrect_inside
-        beq     LA6D9
+        beq     :+
         jmp     LA6ED
-
-LA6D9:  jsr     set_penmode_xor2
+:       jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
         jsr     button_loop_cancel
         bmi     :+
@@ -18121,8 +18123,11 @@ LA6F7:  jsr     LB9B8
         lda     #$FF
         rts
 
-LA6FD:  lda     event_params_modifiers
-        cmp     #$2             ; closed-apple
+;;; Key handler for prompt dialog
+
+prompt_key_handler:
+        lda     event_params_modifiers
+        cmp     #MGTK::event_modifier_solid_apple
         bne     LA71A
         lda     event_params_key
         and     #$7F
