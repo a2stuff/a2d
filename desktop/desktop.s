@@ -759,6 +759,8 @@ L943E:  ldx     L8E95
 
 ;;; DESKTOP $02 IMPL
 
+        ;; Hilight icon
+
 .proc L9454
         ldx     L8E95
         beq     L9466
@@ -821,6 +823,8 @@ L949D:  ldx     L9016
 ;;; ==================================================
 
 ;;; DESKTOP $03 IMPL
+
+        ;; Unhilight icon
 
 .proc L94C0
         ldx     L8E95
@@ -1997,13 +2001,14 @@ L9EB4:  asl     a
 
         .byte   0
 L9EC2:  .byte   0
+
 L9EC3:  lda     L9015
-        bne     L9ECB
+        bne     :+
         lda     #$01
         rts
 
-L9ECB:  ldx     L9016
-        ldy     #$00
+:       ldx     L9016
+        ldy     #0
         lda     ($06),y
         jsr     LA324
         ldx     L9016
@@ -2014,7 +2019,7 @@ L9ECB:  ldx     L9016
         bne     L9EEA
         lda     #$00
         sta     L9015
-L9EEA:  ldy     #$00
+L9EEA:  ldy     #0
         lda     ($06),y
         sta     L9EC2
         DESKTOP_DIRECT_CALL $3, L9EC2
@@ -2040,6 +2045,7 @@ L9F03:  .byte   0
 L9F04:  .byte   0
 L9F05:  .byte   0
 L9F06:  .byte   0
+
 L9F07:  ldy     #$00
         lda     ($06),y
         sta     L9EFE
@@ -2056,9 +2062,9 @@ L9F10:  lda     ($06),y
         lda     L8F15+1,x
         sta     $07
         jsr     LA18A
-        lda     poly::vertices+2
+        lda     poly::v0::ycoord
         cmp     L9F05
-        lda     poly::vertices+3
+        lda     poly::v0::ycoord+1
         sbc     L9F06
         bpl     L9F8C
         lda     poly::v5::ycoord
@@ -2097,12 +2103,15 @@ L9F8C:  lda     #$00
 L9F8F:  lda     #$01
         rts
 
+;;; ==================================================
+
 L9F92:  .byte   0
 L9F93:  .byte   0
 L9F94:  .byte   0
         .byte   0
         .byte   0
         .byte   0
+
 L9F98:  lda     #$00
         sta     L9F92
         beq     L9FA4
@@ -2141,19 +2150,19 @@ L9FE4:  lda     ($06),y
         iny
         cpy     #$1D
         bne     L9FE4
-L9FEE:  lda     drawtext_params::textlen
+:       lda     drawtext_params::textlen
         sta     textwidth_params::textlen
         MGTK_CALL MGTK::TextWidth, textwidth_params
         lda     textwidth_params::result
         cmp     paintbits_params2::maprect::x2
-        bcs     LA010
+        bcs     :+
         inc     drawtext_params::textlen
         ldx     drawtext_params::textlen
         lda     #' '
         sta     text_buffer-1,x
-        jmp     L9FEE
+        jmp     :-
 
-LA010:  lsr     a
+:       lsr     a
         sta     moveto_params2::xcoord+1
         lda     paintbits_params2::maprect::x2
         lsr     a
@@ -2301,11 +2310,11 @@ LA191:  lda     ($06),y
         dey
         dex
         bpl     LA191
-        lda     poly::vertices+2
+        lda     poly::v0::ycoord
         sta     poly::v1::ycoord
-        lda     poly::vertices+3
+        lda     poly::v0::ycoord+1
         sta     poly::v1::ycoord+1
-        lda     poly::vertices
+        lda     poly::v0::xcoord
         sta     poly::v7::xcoord
         lda     poly::v0::xcoord+1
         sta     poly::v7::xcoord+1
@@ -2318,7 +2327,7 @@ LA191:  lda     ($06),y
         ldy     #$08
         lda     ($08),y
         clc
-        adc     poly::vertices
+        adc     poly::v0::xcoord
         sta     poly::v1::xcoord
         sta     poly::v2::xcoord
         iny
@@ -2329,11 +2338,11 @@ LA191:  lda     ($06),y
         ldy     #$0A
         lda     ($08),y
         clc
-        adc     poly::vertices+2
+        adc     poly::v0::ycoord
         sta     poly::v2::ycoord
         iny
         lda     ($08),y
-        adc     poly::vertices+3
+        adc     poly::v0::ycoord+1
         sta     poly::v2::ycoord+1
         lda     poly::v2::ycoord
         clc
@@ -2875,7 +2884,7 @@ LA63F:  jsr     LA18A
         sta     LA629
         sta     setportbits_params2::cliprect_y1
         sta     setportbits_params2::top
-        lda     poly::vertices+3
+        lda     poly::v0::ycoord+1
         sta     LA62A
         sta     setportbits_params2::cliprect_y1+1
         sta     setportbits_params2::top+1
