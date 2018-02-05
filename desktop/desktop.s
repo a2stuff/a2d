@@ -73,6 +73,16 @@ INVOKER_FILENAME := $280         ; File to invoke (PREFIX must be set)
     .endif
 .endmacro
 
+.macro  add16_8 aa, bb, rr
+        lda     aa
+        clc
+        adc     bb
+        sta     rr
+        lda     aa+1
+        adc     #0
+        sta     rr+1
+.endmacro
+
 .macro  sub16 aa, bb, rr
     .if (.match (.mid (0, 1, {bb}), #))
         lda     aa
@@ -2159,27 +2169,9 @@ L9FE4:  lda     ($06),y
         lda     paintbits_params2::viewloc::xcoord+1
         sbc     #$00
         sta     moveto_params2::xcoord+1
-        lda     paintbits_params2::viewloc::ycoord
-        clc
-        adc     paintbits_params2::maprect::y2
-        sta     moveto_params2::ycoord
-        lda     paintbits_params2::viewloc::ycoord+1
-        adc     #$00
-        sta     moveto_params2::ycoord+1
-        lda     moveto_params2::ycoord
-        clc
-        adc     #$01
-        sta     moveto_params2::ycoord
-        lda     moveto_params2::ycoord+1
-        adc     #$00
-        sta     moveto_params2::ycoord+1
-        lda     moveto_params2::ycoord
-        clc
-        adc     font_height
-        sta     moveto_params2::ycoord
-        lda     moveto_params2::ycoord+1
-        adc     #$00
-        sta     moveto_params2::ycoord+1
+        add16_8 paintbits_params2::viewloc::ycoord, paintbits_params2::maprect::y2, moveto_params2::ycoord
+        add16 moveto_params2::ycoord, #1, moveto_params2::ycoord
+        add16_8 moveto_params2::ycoord, font_height, moveto_params2::ycoord
         ldx     #$03
 LA06E:  lda     moveto_params2,x
         sta     L9F94,x
@@ -10249,13 +10241,7 @@ L63C1:  lda     L7B61
         ldx     L7B62
 L63C7:  sta     grafport2::cliprect_y1
         stx     grafport2::cliprect_y1+1
-        lda     grafport2::cliprect_y1
-        clc
-        adc     L63E9
-        sta     grafport2::height
-        lda     grafport2::cliprect_y1+1
-        adc     #$00
-        sta     grafport2::height+1
+        add16_8 grafport2::cliprect_y1, L63E9, grafport2::height
         jsr     L653E
         jsr     L6DB1
         jmp     L6556
@@ -10268,13 +10254,7 @@ L63EC:  jsr     L650F
         sty     L6449
         jsr     L644C
         sta     L6448
-        lda     grafport2::height
-        clc
-        adc     L6448
-        sta     L644A
-        lda     grafport2::height+1
-        adc     #$00
-        sta     L644B
+        add16_8 grafport2::height, L6448, L644A
         lda     L644A
         cmp     L7B65
         lda     L644B
@@ -11305,20 +11285,8 @@ L6E8A:  lda     #$80
         beq     L6E90
 L6E8E:  lda     #$00
 L6E90:  sta     L6EC4
-        lda     grafport2::top
-        clc
-        adc     #$0F
-        sta     grafport2::top
-        lda     grafport2::top+1
-        adc     #$00
-        sta     grafport2::top+1
-        lda     grafport2::cliprect_y1
-        clc
-        adc     #$0F
-        sta     grafport2::cliprect_y1
-        lda     grafport2::cliprect_y1+1
-        adc     #$00
-        sta     grafport2::cliprect_y1+1
+        add16 grafport2::top, #$0F, grafport2::top
+        add16 grafport2::cliprect_y1, #$0F, grafport2::cliprect_y1
         bit     L6EC4
         bmi     L6EC3
         MGTK_RELAY_CALL MGTK::SetPort, grafport2
@@ -11665,13 +11633,7 @@ L71CB:  inc     L70C3
         lda     L70C3
         cmp     L70C0
         beq     L71E7
-        lda     $08
-        clc
-        adc     L70BF
-        sta     $08
-        lda     $08+1
-        adc     #$00
-        sta     $08+1
+        add16_8 $08, L70BF, $08
         jmp     L71F7
 
 L71E7:  lda     #$00
@@ -11693,13 +11655,7 @@ L71F7:  ldx     #$00
         bne     L7212
         jmp     L71E7
 
-L7212:  lda     $08
-        clc
-        adc     L70BF
-        sta     $08
-        lda     $08+1
-        adc     #$00
-        sta     $08+1
+L7212:  add16_8 $08, L70BF, $08
         jmp     L71F7
 
 L7223:  iny
@@ -12423,13 +12379,7 @@ L7826:  lda     L762C
         lda     L762F
         cmp     L762E
         bne     L7862
-        lda     L762C
-        clc
-        adc     #$20
-        sta     L762C
-        lda     L762D
-        adc     #$00
-        sta     L762D
+        add16 L762C, #$20, L762C
         lda     L7626
         sta     L762A
         lda     L7627
@@ -12458,13 +12408,7 @@ L7870:  lda     bufnum
         dex
         lda     buf3,x
         jsr     L8893
-        lda     $06
-        clc
-        adc     #$20
-        sta     $06
-        lda     $06+1
-        adc     #$00
-        sta     $06+1
+        add16 $06, #$20, $06
         rts
 
         .byte   0
@@ -12544,13 +12488,7 @@ L78EF:  lda     grafport2::cliprect_x1
         sta     point5::ycoord+1
         MGTK_RELAY_CALL MGTK::MoveTo, point1
         MGTK_RELAY_CALL MGTK::LineTo, point5
-        lda     grafport2::cliprect_y1
-        clc
-        adc     #$0A
-        sta     items_label_pos+2
-        lda     grafport2::cliprect_y1+1
-        adc     #$00
-        sta     items_label_pos+3
+        add16 grafport2::cliprect_y1, #$0A, items_label_pos+2
         lda     buf3len
         ldx     #$00
         jsr     L7AE0
@@ -13840,13 +13778,7 @@ L8562:  lsr     L85F3
         sty     L85F6
         lda     L85F1
         beq     L85C3
-        lda     grafport2::cliprect_y1
-        clc
-        adc     L85F6
-        sta     grafport2::height
-        lda     grafport2::cliprect_y1+1
-        adc     #$00
-        sta     grafport2::height+1
+        add16_8 grafport2::cliprect_y1, L85F6, grafport2::height
         jmp     L85D6
 
 L85C3:  add16 grafport2::cliprect_x1, L85F4, grafport2::width
@@ -20805,13 +20737,7 @@ L0C96:  inc     L0D08
         sta     L0D08
         jmp     L0C0C
 
-L0CBA:  lda     $06
-        clc
-        adc     L0D06
-        sta     $06
-        lda     $06+1
-        adc     #$00
-        sta     $06+1
+L0CBA:  add16_8 $06, L0D06, $06
         jmp     L0C0C
 
 L0CCB:  MLI_RELAY_CALL CLOSE, close_params2
