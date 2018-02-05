@@ -33,6 +33,32 @@ dst:    sta     start,y         ; self-modified
         bne     src
 .endproc
 
+call_main_trampoline   := $20 ; installed on ZP, turns off auxmem and calls...
+call_main_addr         := call_main_trampoline+7 ; address patched in here
+
+;;;  Copy the following "call_main_template" routine to $20
+.scope
+        sta     RAMWRTON
+        sta     RAMRDON
+        ldx     #sizeof_routine
+loop:   lda     routine,x
+        sta     call_main_trampoline,x
+        dex
+        bpl     loop
+        jmp     call_init
+.endscope
+
+.proc routine
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     $1000  ; overwritten (in zp version)
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
+.endproc
+        sizeof_routine := * - routine ; can't .sizeof(proc) before declaration
+        ;;  https://github.com/cc65/cc
+
 .proc call_init
         ;; run the DA
         jsr     init
