@@ -162,7 +162,7 @@ data:   .res    64, 0
 params_end:
 ;;; ----------------------------------------
 
-        window_id := 100
+        da_window_id := 100
 
 .proc line_pos
 left:   .word   0
@@ -194,7 +194,7 @@ ycoord := *+2
 .endproc
 
 .proc winfo
-id:     .byte   window_id       ; window identifier
+window_id:     .byte   da_window_id       ; window identifier
 options:  .byte   MGTK::option_dialog_box
 title:  .addr   window_title
 hscroll:.byte   MGTK::scroll_option_none
@@ -211,20 +211,15 @@ maxcontwidth:     .word   default_width
 maxcontlength:     .word   default_height
 
 .proc port
-left:   .word   default_left
-top:    .word   default_top
+viewloc:        DEFINE_POINT default_left, default_top
 mapbits:   .addr   MGTK::screen_mapbits
 mapwidth: .word   MGTK::screen_mapwidth
-hoff:   .word   0
-voff:   .word   0
-width:  .word   default_width
-height: .word   default_height
+maprect:        DEFINE_RECT 0, 0, default_width, default_height
 .endproc
 
 pattern:.res    8, 0
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-xpos:   .word   0
-ypos:   .word   0
+penloc: DEFINE_POINT 0, 0
 penwidth: .byte   1
 penheight: .byte   1
 penmode:   .byte   0

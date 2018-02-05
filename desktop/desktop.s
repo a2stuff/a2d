@@ -591,35 +591,29 @@ light_pattern:
         .byte   %10111011
 L8E94:  .byte   $FF
 
-L8E95:
-        L8E96 := * + 1
-        L8E97 := * + 2
-        .res    128, 0
+;;; ==================================================
+;;; Icon (i.e. file) details
 
-L8F15:  .res    256, 0
+;;; NOTE: Trash is icon #1
 
-L9015:  .byte   $00
-L9016:  .byte   $00
-L9017:  .byte   $00
-L9018:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00
+num_icons:  .byte   0
+icon_table: .res    127, 0      ; index into icon_ptrs
+icon_ptrs:  .res    256, 0      ; addresses of icon details (in $ED00)
+
+has_highlight:                  ; 1 = has highlight, 0 = no highlight
+        .byte   0
+highlight_count:                ; number of highlighted icons
+        .byte   $00
+highlight_list:                 ; selected icons
+        .res    127, 0
+
+;;; Polygon holding the composite outlines of all icons
+;;; being dragged.
 
 drag_outline_buffer:
         .res    680, 0
+
+;;; ==================================================
 
 .proc peekevent_params
 kind:   .byte   0               ; spills into next block
@@ -788,10 +782,10 @@ ycoord: .word   0
 .proc L9419
         ldy     #$00
         lda     ($06),y
-        ldx     L8E95
+        ldx     num_icons
         beq     L9430
         dex
-L9423:  cmp     L8E96,x
+L9423:  cmp     icon_table,x
         beq     L942D
         dex
         bpl     L9423
@@ -807,15 +801,15 @@ L9430:  jsr     L943E
         lda     #$00
         rts
 
-L943E:  ldx     L8E95
-        sta     L8E96,x
-        inc     L8E95
+L943E:  ldx     num_icons
+        sta     icon_table,x
+        inc     num_icons
         asl     a
         tax
         lda     $06
-        sta     L8F15,x
+        sta     icon_ptrs,x
         lda     $07
-        sta     L8F15+1,x
+        sta     icon_ptrs+1,x
         rts
 .endproc
 
@@ -823,12 +817,12 @@ L943E:  ldx     L8E95
 ;;; HIGHLIGHT_ICON IMPL
 
 .proc HIGHLIGHT_ICON_IMPL
-        ldx     L8E95
+        ldx     num_icons
         beq     bail1
         dex
         ldy     #$00
         lda     ($06),y
-L945E:  cmp     L8E96,x
+L945E:  cmp     icon_table,x
         beq     L9469
         dex
         bpl     L945E
@@ -838,9 +832,9 @@ bail1:  lda     #$01
 
 L9469:  asl     a
         tax
-        lda     L8F15,x
+        lda     icon_ptrs,x
         sta     $06
-        lda     L8F15+1,x
+        lda     icon_ptrs+1,x
         sta     $06+1
         ldy     #$01
         lda     ($06),y
@@ -848,13 +842,13 @@ L9469:  asl     a
         lda     #2
         rts
 
-L947E:  lda     L9015
+L947E:  lda     has_highlight
         beq     L9498
         dey
         lda     ($06),y
-        ldx     L9016
+        ldx     highlight_count
         dex
-L948A:  cmp     L9017,x
+L948A:  cmp     highlight_list,x
         beq     bail3
         dex
         bpl     L948A
@@ -864,12 +858,12 @@ bail3:  lda     #3
         rts
 
 L9498:  lda     #$01
-        sta     L9015
-L949D:  ldx     L9016
+        sta     has_highlight
+L949D:  ldx     highlight_count
         ldy     #0
         lda     ($06),y
-        sta     L9017,x
-        inc     L9016
+        sta     highlight_list,x
+        inc     highlight_count
         lda     ($06),y
         ldx     #1
         jsr     LA324
@@ -888,12 +882,12 @@ L949D:  ldx     L9016
 .proc UNHIGHLIGHT_ICON_IMPL
         ptr := $06
 
-        ldx     L8E95
+        ldx     num_icons
         beq     bail1
         dex
         ldy     #$00
         lda     (ptr),y
-:       cmp     L8E96,x
+:       cmp     icon_table,x
         beq     found
         dex
         bpl     :-
@@ -903,19 +897,19 @@ bail1:  lda     #1
 
 found:  asl     a
         tax
-        lda     L8F15,x
+        lda     icon_ptrs,x
         sta     ptr
-        lda     L8F15+1,x
+        lda     icon_ptrs+1,x
         sta     ptr+1
-        lda     L9015
+        lda     has_highlight
         bne     L94E9
         jmp     done
 
-L94E9:  ldx     L9016
+L94E9:  ldx     highlight_count
         dex
         ldy     #$00
         lda     (ptr),y
-L94F1:  cmp     L9017,x
+L94F1:  cmp     highlight_list,x
         beq     L94FC
         dex
         bpl     L94F1
@@ -936,11 +930,11 @@ done:   jsr     L9F98
 
 .proc L9508
         ldy     #$00
-        ldx     L8E95
+        ldx     num_icons
         beq     L951A
         dex
         lda     ($06),y
-L9512:  cmp     L8E96,x
+L9512:  cmp     icon_table,x
         beq     L951D
         dex
         bpl     L9512
@@ -949,9 +943,9 @@ L951A:  lda     #$01
 
 L951D:  asl     a
         tax
-        lda     L8F15,x
+        lda     icon_ptrs,x
         sta     $06
-        lda     L8F15+1,x
+        lda     icon_ptrs+1,x
         sta     $06+1
         ldy     #$01
         lda     ($06),y
@@ -964,37 +958,37 @@ L9532:  jsr     calc_icon_poly
         jsr     LA39D
         ldy     #$00
         lda     ($06),y
-        ldx     L8E95
+        ldx     num_icons
         jsr     LA2E3
-        dec     L8E95
+        dec     num_icons
         lda     #$00
-        ldx     L8E95
-        sta     L8E96,x
+        ldx     num_icons
+        sta     icon_table,x
         ldy     #$01
         lda     #$00
         sta     ($06),y
-        lda     L9015
+        lda     has_highlight
         beq     L958C
-        ldx     L9016
+        ldx     highlight_count
         dex
         ldy     #$00
         lda     ($06),y
-L9566:  cmp     L9017,x
+L9566:  cmp     highlight_list,x
         beq     L9571
         dex
         bpl     L9566
         jmp     L958C
 
-L9571:  ldx     L9016
+L9571:  ldx     highlight_count
         jsr     LA324
-        dec     L9016
-        lda     L9016
+        dec     highlight_count
+        lda     highlight_count
         bne     L9584
         lda     #$00
-        sta     L9015
+        sta     has_highlight
 L9584:  lda     #$00
-        ldx     L9016
-        sta     L9017,x
+        ldx     highlight_count
+        sta     highlight_list,x
 L958C:  lda     #$00
         rts
 .endproc
@@ -1008,9 +1002,9 @@ L958C:  lda     #$00
         lda     ($06),y
         asl     a
         tax
-        lda     L8F15,x
+        lda     icon_ptrs,x
         sta     $06
-        lda     L8F15+1,x
+        lda     icon_ptrs+1,x
         sta     $07
         jmp     LA39D
 .endproc
@@ -1020,58 +1014,60 @@ L958C:  lda     #$00
 ;;; DESKTOP $05 IMPL
 
 .proc L95A2
-        jmp     L9625
+        jmp     start
 
         ;; DT_HIGHLIGHT_ICON params
-L95A5:
-L95A6 := * + 1
-        .res    128, 0
+icon:  .byte   0
+buffer: .res    127, 0
 
-L9625:  lda     HIGHLIGHT_ICON_IMPL ; ???
-        beq     L9639
-        lda     L9017
-        sta     L95A5
-        DESKTOP_DIRECT_CALL $0B, L95A5
-        jmp     L9625
+start:  lda     HIGHLIGHT_ICON_IMPL ; ???
+        beq     start2
+        lda     highlight_list
+        sta     icon
+        DESKTOP_DIRECT_CALL $0B, icon
+        jmp     start
 
-L9639:  ldx     #$7E
-        lda     #$00
-L963D:  sta     L95A6,x
+start2:
+        ;; zero out buffer
+        ldx     #$7E
+        lda     #0
+:       sta     buffer,x
         dex
-        bpl     L963D
-        ldx     #$00
-        stx     L95A5
-L9648:  lda     L8E96,x
+        bpl     :-
+        ldx     #0
+        stx     icon
+
+L9648:  lda     icon_table,x
         asl     a
         tay
-        lda     L8F15,y
+        lda     icon_ptrs,y
         sta     $08
-        lda     L8F15+1,y
+        lda     icon_ptrs+1,y
         sta     $08+1
-        ldy     #$02
+        ldy     #2
         lda     ($08),y
         and     #$0F
-        ldy     #$00
+        ldy     #0
         cmp     ($06),y
         bne     L9670
-        ldy     #$00
+        ldy     #0
         lda     ($08),y
-        ldy     L95A5
-        sta     L95A6,y
-        inc     L95A5
+        ldy     icon
+        sta     buffer,y
+        inc     icon
 L9670:  inx
-        cpx     L8E95
+        cpx     num_icons
         bne     L9648
         ldx     #$00
         txa
         pha
-L967A:  lda     L95A6,x
+L967A:  lda     buffer,x
         bne     L9681
         pla
         rts
 
-L9681:  sta     L95A5
-        DESKTOP_DIRECT_CALL DT_HIGHLIGHT_ICON, L95A5
+L9681:  sta     icon
+        DESKTOP_DIRECT_CALL DT_HIGHLIGHT_ICON, icon
         pla
         tax
         inx
@@ -1090,20 +1086,20 @@ L9681:  sta     L95A5
 L9695:  .byte   0
 L9696:  .byte   0
 
-L9697:  lda     L8E95
+L9697:  lda     num_icons
         sta     L9696
 L969D:  ldx     L9696
         cpx     #$00
         beq     L96CF
         dec     L9696
         dex
-        lda     L8E96,x
+        lda     icon_table,x
         sta     L9695
         asl     a
         tax
-        lda     L8F15,x
+        lda     icon_ptrs,x
         sta     $08
-        lda     L8F15+1,x
+        lda     icon_ptrs+1,x
         sta     $08+1
         ldy     #$02
         lda     ($08),y
@@ -1126,7 +1122,7 @@ L96CF:  lda     #$00
 L96D5:  .byte   0
 L96D6:  .byte   0
 
-L96D7:  lda     L8E95
+L96D7:  lda     num_icons
         sta     L96D6
 L96DD:  ldx     L96D6
         bne     L96E5
@@ -1135,13 +1131,13 @@ L96DD:  ldx     L96D6
 
 L96E5:  dec     L96D6
         dex
-        lda     L8E96,x
+        lda     icon_table,x
         sta     L96D5
         asl     a
         tax
-        lda     L8F15,x
+        lda     icon_ptrs,x
         sta     $08
-        lda     L8F15+1,x
+        lda     icon_ptrs+1,x
         sta     $08+1
         ldy     #$02
         lda     ($08),y
@@ -1151,38 +1147,38 @@ L96E5:  dec     L96D6
         bne     L96DD
         ldy     #$00
         lda     ($08),y
-        ldx     L8E95
+        ldx     num_icons
         jsr     LA2E3
-        dec     L8E95
+        dec     num_icons
         lda     #$00
-        ldx     L8E95
-        sta     L8E96,x
+        ldx     num_icons
+        sta     icon_table,x
         ldy     #$01
         lda     #$00
         sta     ($08),y
-        lda     L9015
+        lda     has_highlight
         beq     L9758
         ldx     #$00
         ldy     #$00
 L972B:  lda     ($08),y
-        cmp     L9017,x
+        cmp     highlight_list,x
         beq     L973B
         inx
-        cpx     L9016
+        cpx     highlight_count
         bne     L972B
         jmp     L9758
 
 L973B:  lda     ($08),y
-        ldx     L9016
+        ldx     highlight_count
         jsr     LA324
-        dec     L9016
-        lda     L9016
+        dec     highlight_count
+        lda     highlight_count
         bne     L9750
         lda     #$00
-        sta     L9015
+        sta     has_highlight
 L9750:  lda     #$00
-        ldx     L9016
-        sta     L9017,x
+        ldx     highlight_count
+        sta     highlight_list,x
 L9758:  jmp     L96DD
 .endproc
 
@@ -1201,9 +1197,9 @@ L975F:  sta     ($06),y
         bne     L975F
         ldx     #$00
         ldy     #$00
-L976B:  lda     L9017,x
+L976B:  lda     highlight_list,x
         sta     ($06),y
-        cpx     L9016
+        cpx     highlight_count
         beq     L977A
         iny
         inx
@@ -1243,7 +1239,7 @@ start:  ldy     #3
         sta     L97F5
         MGTK_CALL MGTK::MoveTo, moveto_params2
         ldx     #$00
-L97AA:  cpx     L8E95
+L97AA:  cpx     num_icons
         bne     L97B9
         ldy     #$04
         lda     #$00
@@ -1253,12 +1249,12 @@ L97AA:  cpx     L8E95
 
 L97B9:  txa
         pha
-        lda     L8E96,x
+        lda     icon_table,x
         asl     a
         tax
-        lda     L8F15,x
+        lda     icon_ptrs,x
         sta     $06
-        lda     L8F15+1,x
+        lda     icon_ptrs+1,x
         sta     $07
         ldy     #$02
         lda     ($06),y
@@ -1275,7 +1271,7 @@ L97E0:  pla
 
 inside: pla
         tax
-        lda     L8E96,x
+        lda     icon_table,x
         ldy     #$04
         sta     ($08),y
         sta     L97F6
@@ -1366,7 +1362,7 @@ L98A2:  lda     L982E
         bcs     L98AC
         jmp     L9845
 
-L98AC:  lda     L9016
+L98AC:  lda     highlight_count
         cmp     #$15
         bcc     L98B6
         jmp     L9852
@@ -1375,12 +1371,12 @@ L98B6:  lda     #<drag_outline_buffer
         sta     $08
         lda     #>drag_outline_buffer
         sta     $08+1
-        lda     L9015
+        lda     has_highlight
         bne     L98C8
         lda     #$03
         jmp     L9C65
 
-L98C8:  lda     L9017
+L98C8:  lda     highlight_list
         jsr     L9EB4
         stax    $06
         ldy     #$02
@@ -1393,9 +1389,9 @@ L98E3:  lda     grafport::cliprect,x
         sta     L9835,x
         dex
         bpl     L98E3
-        ldx     L9016
+        ldx     highlight_count
         stx     L9C74
-L98F2:  lda     L9016,x
+L98F2:  lda     highlight_count,x
         jsr     L9EB4
         stax    $06
         ldy     #$00
@@ -1409,7 +1405,7 @@ L9909:  sta     L9834
         beq     L9954
         jsr     calc_icon_poly
         lda     L9C74
-        cmp     L9016
+        cmp     highlight_count
         beq     L9936
         jsr     LA365
         lda     $08
@@ -1694,17 +1690,17 @@ L9BDC:  lda     L9832
 L9BE1:  jsr     LA365
         MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport
-        ldx     L9016
+        ldx     highlight_count
 L9BF3:  dex
         bmi     L9C18
         txa
         pha
-        lda     L9017,x
+        lda     highlight_list,x
         asl     a
         tax
-        lda     L8F15,x
+        lda     icon_ptrs,x
         sta     $06
-        lda     L8F15+1,x
+        lda     icon_ptrs+1,x
         sta     $07
         jsr     calc_icon_poly
         MGTK_CALL MGTK::SetPenMode, pencopy_2
@@ -1714,7 +1710,7 @@ L9BF3:  dex
         jmp     L9BF3
 
 L9C18:  jsr     LA382
-        ldx     L9016
+        ldx     highlight_count
         dex
         txa
         pha
@@ -1722,12 +1718,12 @@ L9C18:  jsr     LA382
         sta     $08
         lda     #>drag_outline_buffer
         sta     $08+1
-L9C29:  lda     L9017,x
+L9C29:  lda     highlight_list,x
         asl     a
         tax
-        lda     L8F15,x
+        lda     icon_ptrs,x
         sta     $06
-        lda     L8F15+1,x
+        lda     icon_ptrs+1,x
         sta     $07
         ldy     #$02
         lda     ($08),y
@@ -1941,9 +1937,9 @@ L9E2B:  DESKTOP_DIRECT_CALL DT_FIND_ICON, findwindow_params2
         bne     L9E39
         jmp     L9E97
 
-L9E39:  ldx     L9016
+L9E39:  ldx     highlight_count
         dex
-L9E3D:  cmp     L9017,x
+L9E3D:  cmp     highlight_list,x
         beq     L9E97
         dex
         bpl     L9E3D
@@ -1952,9 +1948,9 @@ L9E3D:  cmp     L9017,x
         beq     L9E6A
         asl     a
         tax
-        lda     L8F15,x
+        lda     icon_ptrs,x
         sta     $06
-        lda     L8F15+1,x
+        lda     icon_ptrs+1,x
         sta     $07
         ldy     #$02
         lda     ($06),y
@@ -1982,9 +1978,9 @@ L9E97:  MGTK_CALL MGTK::InitPort, grafport
 L9EB3:  .byte   0
 L9EB4:  asl     a
         tay
-        lda     L8F15+1,y
+        lda     icon_ptrs+1,y
         tax
-        lda     L8F15,y
+        lda     icon_ptrs,y
         rts
 .endproc
 
@@ -2002,23 +1998,23 @@ icon:   .byte   0
 
         ptr := $6
 
-start:  lda     L9015
+start:  lda     has_highlight
         bne     :+
         lda     #1
         rts
 
-:       ldx     L9016
+:       ldx     highlight_count
         ldy     #0
         lda     (ptr),y
         jsr     LA324
-        ldx     L9016
+        ldx     highlight_count
         lda     #0
-        sta     L9016,x
-        dec     L9016
-        lda     L9016
+        sta     highlight_count,x
+        dec     highlight_count
+        lda     highlight_count
         bne     L9EEA
         lda     #$00
-        sta     L9015
+        sta     has_highlight
 L9EEA:  ldy     #0
         lda     (ptr),y
         sta     icon
@@ -2050,9 +2046,9 @@ start:  ldy     #0
         lda     icon
         asl     a
         tax
-        lda     L8F15,x
+        lda     icon_ptrs,x
         sta     $06
-        lda     L8F15+1,x
+        lda     icon_ptrs+1,x
         sta     $06+1
         jsr     calc_icon_poly
 
@@ -2422,17 +2418,17 @@ LA2AA:  jsr     LA382
         rts
 
 LA2AE:  jsr     LA365
-        ldx     L8E95
+        ldx     num_icons
         dex
 LA2B5:  bmi     LA2AA
         txa
         pha
-        lda     L8E96,x
+        lda     icon_table,x
         asl     a
         tax
-        lda     L8F15,x
+        lda     icon_ptrs,x
         sta     $06
-        lda     L8F15+1,x
+        lda     icon_ptrs+1,x
         sta     $07
         ldy     #$02
         lda     ($06),y
@@ -2450,30 +2446,30 @@ LA2DD:  pla
 LA2E3:  stx     LA322
         sta     LA323
         ldx     #$00
-LA2EB:  lda     L8E96,x
+LA2EB:  lda     icon_table,x
         cmp     LA323
         beq     LA2FA
         inx
-        cpx     L8E95
+        cpx     num_icons
         bne     LA2EB
         rts
 
-LA2FA:  lda     L8E97,x
-        sta     L8E96,x
+LA2FA:  lda     icon_table+1,x
+        sta     icon_table,x
         inx
-        cpx     L8E95
+        cpx     num_icons
         bne     LA2FA
-        ldx     L8E95
+        ldx     num_icons
 LA309:  cpx     LA322
         beq     LA318
         lda     L8E94,x
-        sta     L8E95,x
+        sta     num_icons,x
         dex
         jmp     LA309
 
 LA318:  ldx     LA322
         lda     LA323
-        sta     L8E95,x
+        sta     num_icons,x
         rts
 LA322:  .byte   0
 LA323:  .byte   0
@@ -2483,30 +2479,30 @@ LA323:  .byte   0
 LA324:  stx     LA363
         sta     LA364
         ldx     #$00
-LA32C:  lda     L9017,x
+LA32C:  lda     highlight_list,x
         cmp     LA364
         beq     LA33B
         inx
-        cpx     L9016
+        cpx     highlight_count
         bne     LA32C
         rts
 
-LA33B:  lda     L9018,x
-        sta     L9017,x
+LA33B:  lda     highlight_list+1,x
+        sta     highlight_list,x
         inx
-        cpx     L9016
+        cpx     highlight_count
         bne     LA33B
-        ldx     L9016
+        ldx     highlight_count
 LA34A:  cpx     LA363
         beq     LA359
-        lda     L9015,x
-        sta     L9016,x
+        lda     has_highlight,x
+        sta     highlight_count,x
         dex
         jmp     LA34A
 
 LA359:  ldx     LA363
         lda     LA364
-        sta     L9016,x
+        sta     highlight_count,x
         rts
 LA363:  .byte   0
 LA364:  .byte   0
@@ -2636,7 +2632,7 @@ LA3FD:  jsr     LA6A3
 ;;; ==================================================
 
 LA446:  jsr     LA365
-        ldx     L8E95
+        ldx     num_icons
         dex
 LA44D:  cpx     #$FF
         bne     LA466
@@ -2651,29 +2647,29 @@ LA462:  jsr     LA382
 
 LA466:  txa
         pha
-        lda     L8E96,x
+        lda     icon_table,x
         cmp     LA3AC
         beq     LA4C5
         asl     a
         tax
-        lda     L8F15,x
+        lda     icon_ptrs,x
         sta     $08
-        lda     L8F15+1,x
+        lda     icon_ptrs+1,x
         sta     $08+1
         ldy     #$02
         lda     ($08),y
         and     #$07
         cmp     LA3AD
         bne     LA4C5
-        lda     L9015
+        lda     has_highlight
         beq     LA49D
         ldy     #$00
         lda     ($08),y
         ldx     #$00
-LA492:  cmp     L9017,x
+LA492:  cmp     highlight_list,x
         beq     LA4C5
         inx
-        cpx     L9016
+        cpx     highlight_count
         bne     LA492
 LA49D:  ldy     #$00
         lda     ($08),y
@@ -2783,9 +2779,9 @@ LA56F:  pla
         tya
         asl     a
         tax
-        lda     L8F15,x
+        lda     icon_ptrs,x
         sta     $06
-        lda     L8F15+1,x
+        lda     icon_ptrs+1,x
         sta     $07
         ldy     #$03
         lda     ($06),y
@@ -2832,9 +2828,9 @@ LA5CB:  pla
         tya
         asl     a
         tax
-        lda     L8F15,x
+        lda     icon_ptrs,x
         sta     $06
-        lda     L8F15+1,x
+        lda     icon_ptrs+1,x
         sta     $07
         ldy     #$03
         lda     ($06),y
