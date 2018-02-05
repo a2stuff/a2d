@@ -1493,13 +1493,7 @@ L99E1:  iny
         ldy     #$01
         lda     ($08),y
         beq     L99FC
-        lda     $08
-        clc
-        adc     #$22
-        sta     $08
-        lda     $08+1
-        adc     #$00
-        sta     $08+1
+        add16 $08, #$22, $08
         jmp     L9972
 
 L99FC:  MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
