@@ -7955,7 +7955,7 @@ L7ECD:  lda     #$00
         rts
 
         ;; Look at buttons (apple keys), compute modifiers in A
-        ;; (bit = button 0 / open apple, bit 1 = button 1 / closed apple)
+        ;; (bit = button 0 / open apple, bit 1 = button 1 / solid apple)
 .proc compute_modifiers
         lda     BUTN1
         asl     a

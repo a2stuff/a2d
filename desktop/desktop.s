@@ -952,7 +952,7 @@ L951D:  asl     a
         lda     L8F15,x
         sta     $06
         lda     L8F15+1,x
-        sta     $07
+        sta     $06+1
         ldy     #$01
         lda     ($06),y
         bne     L9532
@@ -2478,6 +2478,8 @@ LA318:  ldx     LA322
 LA322:  .byte   0
 LA323:  .byte   0
 
+;;; ==================================================
+
 LA324:  stx     LA363
         sta     LA364
         ldx     #$00
@@ -2509,6 +2511,8 @@ LA359:  ldx     LA363
 LA363:  .byte   0
 LA364:  .byte   0
 
+;;; ==================================================
+
 LA365:  pla
         sta     LA380
         pla
@@ -2527,6 +2531,8 @@ LA36F:  lda     $06,x
 LA380:  .byte   0
 LA381:  .byte   0
 
+;;; ==================================================
+
 LA382:  pla
         sta     LA39B
         pla
@@ -2543,6 +2549,8 @@ LA38C:  pla
         rts
 LA39B:  .byte   0
 LA39C:  .byte   0
+
+;;; ==================================================
 
 LA39D:  MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport
@@ -2586,36 +2594,46 @@ LA3B9:  ldy     #0
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         jsr     LA4CC
         jsr     LA938
-        jsr     LA41C
+        jsr     erase_icon
         jmp     LA446
 
 LA3F4:  MGTK_CALL MGTK::InitPort, grafport
         jsr     LA63F
 LA3FD:  jsr     LA6A3
-        jsr     LA411
+        jsr     erase_desktop_icon
         lda     L9F93
         bne     LA3FD
         MGTK_CALL MGTK::SetPortBits, grafport
         jmp     LA446
 
-LA411:  lda     #$00
+;;; ==================================================
+
+.proc erase_desktop_icon
+        lda     #0
         sta     LA3B7
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
-LA41C:  lda     poly::vertices+2
+        ;; fall through
+.endproc
+
+.proc erase_icon
+        lda     poly::v0::ycoord
         sta     LA3B1
-        lda     poly::vertices+3
-        sta     LA3B2
+        lda     poly::v0::ycoord+1
+        sta     LA3B1+1
         lda     poly::v6::xcoord
         sta     LA3AF
         lda     poly::v6::xcoord+1
-        sta     LA3B0
-        ldx     #$03
-LA436:  lda     poly::v4::xcoord,x
+        sta     LA3AF+1
+        ldx     #3
+:       lda     poly::v4::xcoord,x
         sta     LA3B3,x
         dex
-        bpl     LA436
+        bpl     :-
         MGTK_CALL MGTK::PaintPoly, poly
         rts
+.endproc
+
+;;; ==================================================
 
 LA446:  jsr     LA365
         ldx     L8E95
@@ -2628,6 +2646,8 @@ LA44D:  cpx     #$FF
         MGTK_CALL MGTK::SetPort, grafport4
 LA462:  jsr     LA382
         rts
+
+;;; ==================================================
 
 LA466:  txa
         pha
@@ -2855,6 +2875,8 @@ LA5CB:  pla
         jsr     LA382
         rts
 
+;;; ==================================================
+
 LA627:  .byte   $00
 LA628:  .byte   $00
 LA629:  .byte   $00
@@ -2874,7 +2896,7 @@ height: .word   0
 .endproc
 
 LA63F:  jsr     calc_icon_poly
-        lda     poly::vertices+2
+        lda     poly::v0::ycoord
         sta     LA629
         sta     setportbits_params2::cliprect_y1
         sta     setportbits_params2::top
@@ -3171,11 +3193,9 @@ LA938:  lda     grafport4::top
         MGTK_CALL MGTK::SetPort, grafport4
         rts
 
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00
+        PAD_TO $A980
 
+;;; ==================================================
 
         ;; 5.25" Floppy Disk
 floppy140_icon:
@@ -3293,7 +3313,7 @@ trash_pixels:
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
 
 label_apple:
-        PASCAL_STRING GLYPH_CAPPLE
+        PASCAL_STRING GLYPH_SAPPLE
 label_file:
         PASCAL_STRING "File"
 label_view:

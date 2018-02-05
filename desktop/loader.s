@@ -489,7 +489,7 @@ max_page:
         hbasl := $6
         screen_width := 560
 
-        ;; Test for OpenApple+ClosedApple+P
+        ;; Test for OpenApple+SolidApple+P
         pha
         lda     BUTN0
         and     BUTN1

@@ -284,7 +284,7 @@ GetEvent        := $2A
         ;; .byte kind
         ;; if kind is event_kind_key_down:
         ;;   .byte key          (ASCII code; high bit clear)
-        ;;   .byte modifiers    (0=none, 1=open-apple, 2=closed-apple, 3=both)
+        ;;   .byte modifiers    (0=none, 1=open-apple, 2=solid-apple, 3=both)
         ;; if kind otherwise:
         ;;   .word xcoord
         ;;   .word ycoord
@@ -300,7 +300,7 @@ PostEvent       := $2D          ; Set pending input kind (mouse or keyboard)
         ;; .byte kind
         ;; if kind is event_kind_key_down:
         ;;   .byte key          ASCII code; high bit clear
-        ;;   .byte modifiers    0=none, 1=open-apple, 2=closed-apple, 3=both
+        ;;   .byte modifiers    0=none, 1=open-apple, 2=solid-apple, 3=both
         ;; if kind otherwise:
         ;;   .word xcoord
         ;;   .word ycoord

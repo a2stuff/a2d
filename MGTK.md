@@ -67,7 +67,7 @@ optional _resize box_ and optional _scroll bars_.
 #### Input Loop
 
 * Call GetEvent.
-* If a key, then check modifiers (Open/Closed Apple) and key code, ignore or take action.
+* If a key, then check modifiers (Open/Solid Apple) and key code, ignore or take action.
 * If a click, call FindWindow.
 * If target id not the window id, ignore.
 * If target element is desktop or menu then ignore.

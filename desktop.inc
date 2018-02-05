@@ -148,7 +148,7 @@ GLYPH_UARROW := $0B
 GLYPH_DARROW := $0A
 GLYPH_RETURN := $0D
 GLYPH_OAPPLE := $1F
-GLYPH_CAPPLE := $1E
+GLYPH_SAPPLE := $1E
 
 ;;; Menu (by default) uses:
 ;;;   Solid Mod   $1E

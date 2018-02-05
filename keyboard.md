@@ -2,7 +2,7 @@
 
 △ = Open Apple
 
-▲ = Closed Apple
+▲ = Solid Apple
 
 ## Windows
 
