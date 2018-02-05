@@ -377,7 +377,7 @@ on_key:
 exit:
         MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::CloseWindow, winfo
-        DESKTOP_CALL DESKTOP_REDRAW_ICONS
+        DESKTOP_CALL DT_REDRAW_ICONS
         jsr     unstash_menu
         MGTK_CALL MGTK::ShowCursor
 

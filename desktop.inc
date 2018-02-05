@@ -34,9 +34,9 @@ JUMP_TABLE_CUR_WATCH    := $403C ; Changes mouse cursor to watch
 JUMP_TABLE_RESTORE_SEG  := $403F ; Restore from dynamic routine
 
 ;;; ==================================================
-;;; API Calls
+;;; API Calls (from aux memory)
 
-;;; NOTE: Some of these are used by Desk Accessories
+;;; * = Used by Desk Accessories
 
 DESKTOP    := $8E00
         ;; MLI-style call (jsr DEKSTOP ; .byte call ; .addr params)
@@ -44,15 +44,15 @@ DESKTOP    := $8E00
 
         ;; Implementation bounces to $93BC, uses jump table at $939E
 
-        ;; $02 ???
-        ;; $03 ???
+DT_HIGHLIGHT_ICON       := $02  ; { .byte icon }
+DT_UNHIGHLIGHT_ICON     := $03  ; { .byte icon }
         ;; $06 ???
-        ;; $07 ???
+DT_CLOSE_WINDOW         := $07  ; { .byte window_id }
+DT_FIND_ICON            := $09  ; { .word mousex, .word mousey, .byte result }
 
-DESKTOP_REDRAW_ICONS := $0C     ; Repaints desktop icons
+DT_REDRAW_ICONS         := $0C  ; Repaints desktop icons *
+DT_ICON_IN_RECT         := $0D  ; { .byte icon, rect bounds }
 
-        ;; $0D used at start of drag-select
-        ;; $09 at end (then another $0D)
 
 ;;; Call a DESKTOP entry point:
 ;;;     DESKTOP_CALL n                      - params is $0000

@@ -661,7 +661,7 @@ dialog_result:  .byte   0
 
 .proc destroy
         MGTK_CALL MGTK::CloseWindow, closewindow_params
-        DESKTOP_CALL DESKTOP_REDRAW_ICONS
+        DESKTOP_CALL DT_REDRAW_ICONS
 
         ;; Copy the relay routine to the zero page
         dest := $20

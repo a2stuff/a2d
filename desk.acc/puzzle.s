@@ -100,7 +100,7 @@ loop:   lda     routine,x
         bit     window_pos_flag
         bmi     skip
 
-        DESKTOP_CALL DESKTOP_REDRAW_ICONS
+        DESKTOP_CALL DT_REDRAW_ICONS
 
 skip:   lda     #0
         sta     window_pos_flag
@@ -750,7 +750,7 @@ bail:   rts
         beq     bail
 destroy:
         MGTK_CALL MGTK::CloseWindow, closewindow_params
-        DESKTOP_CALL DESKTOP_REDRAW_ICONS
+        DESKTOP_CALL DT_REDRAW_ICONS
 
         target = $20            ; copy following to ZP and run it
         ldx     #sizeof_routine

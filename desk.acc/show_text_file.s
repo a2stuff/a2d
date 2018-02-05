@@ -548,7 +548,7 @@ title:  jsr     on_title_bar_click
         beq     input_loop      ; nope
         jsr     close_file
         MGTK_CALL MGTK::CloseWindow, winfo
-        DESKTOP_CALL DESKTOP_REDRAW_ICONS
+        DESKTOP_CALL DT_REDRAW_ICONS
         rts                     ; exits input loop
 .endproc
 
@@ -943,7 +943,7 @@ end:    rts
 .endproc
 
 .proc finish_resize             ; only called from dead code
-        DESKTOP_CALL DESKTOP_REDRAW_ICONS
+        DESKTOP_CALL DT_REDRAW_ICONS
         MGTK_CALL MGTK::SetPort, winfo::port
         lda     winfo::hscroll
         ror     a               ; check if low bit (track enabled) is set

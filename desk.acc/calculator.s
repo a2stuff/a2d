@@ -105,7 +105,7 @@ call_init:
 
         bit     offscreen_flag     ; BUG: https://github.com/inexorabletash/a2d/issues/33
         bmi     skip
-        DESKTOP_CALL DESKTOP_REDRAW_ICONS
+        DESKTOP_CALL DT_REDRAW_ICONS
 
         ;; ???
 skip:   lda     #0
@@ -883,7 +883,7 @@ ignore_click:
 exit:   lda     LCBANK1
         lda     LCBANK1
         MGTK_CALL MGTK::CloseWindow, closewindow_params
-        DESKTOP_CALL DESKTOP_REDRAW_ICONS
+        DESKTOP_CALL DT_REDRAW_ICONS
         lda     ROMIN2
         MGTK_CALL MGTK::SetZP1, overwrite_zp_params
 

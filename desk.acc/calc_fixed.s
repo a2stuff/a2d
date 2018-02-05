@@ -98,7 +98,7 @@ call_init:
 
         bit     offscreen_flag ; if was offscreen, don't bother redrawing
         bmi     :+
-        DESKTOP_CALL DESKTOP_REDRAW_ICONS
+        DESKTOP_CALL DT_REDRAW_ICONS
 
         ;;  Redraw window after event_kind_drag
         lda     #da_window_id
@@ -835,7 +835,7 @@ ignore_click:
         lda     trackgoaway_params::goaway
         beq     ignore_click
 exit:   MGTK_CALL MGTK::CloseWindow, closewindow_params
-        DESKTOP_CALL DESKTOP_REDRAW_ICONS
+        DESKTOP_CALL DT_REDRAW_ICONS
         lda     ROMIN2
         MGTK_CALL MGTK::SetZP1, overwrite_zp_params
 

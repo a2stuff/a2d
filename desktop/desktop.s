@@ -627,18 +627,18 @@ notpenBIC_2:       .byte 7
         ;; DESKTOP command jump table
 L939E:  .addr   0               ; $00
         .addr   L9419           ; $01
-        .addr   L9454           ; $02
-        .addr   L94C0           ; $03
+        .addr   HIGHLIGHT_ICON_IMPL
+        .addr   UNHIGHLIGHT_ICON_IMPL
         .addr   L9508           ; $04
         .addr   L95A2           ; $05
         .addr   L9692           ; $06
-        .addr   L96D2           ; $07
+        .addr   CLOSE_WINDOW_IMPL
         .addr   L975B           ; $08
-        .addr   L977D           ; $09
+        .addr   FIND_ICON_IMPL
         .addr   L97F7           ; $0A
         .addr   L9EBE           ; $0B
-        .addr   DESKTOP_REDRAW_ICONS_IMPL ; $0C REDRAW_ICONS
-        .addr   L9EFB           ; $0D
+        .addr   REDRAW_ICONS_IMPL
+        .addr   ICON_IN_RECT_IMPL
         .addr   L958F           ; $0E
 
 .macro  DESKTOP_DIRECT_CALL    op, addr, label
@@ -756,14 +756,11 @@ L943E:  ldx     L8E95
 .endproc
 
 ;;; ==================================================
+;;; HIGHLIGHT_ICON IMPL
 
-;;; DESKTOP $02 IMPL
-
-        ;; Hilight icon
-
-.proc L9454
+.proc HIGHLIGHT_ICON_IMPL
         ldx     L8E95
-        beq     L9466
+        beq     bail1
         dex
         ldy     #$00
         lda     ($06),y
@@ -771,7 +768,8 @@ L945E:  cmp     L8E96,x
         beq     L9469
         dex
         bpl     L945E
-L9466:  lda     #$01
+
+bail1:  lda     #$01
         rts
 
 L9469:  asl     a
@@ -779,11 +777,11 @@ L9469:  asl     a
         lda     L8F15,x
         sta     $06
         lda     L8F15+1,x
-        sta     $07
+        sta     $06+1
         ldy     #$01
         lda     ($06),y
         bne     L947E
-        lda     #$02
+        lda     #2
         rts
 
 L947E:  lda     L9015
@@ -793,78 +791,78 @@ L947E:  lda     L9015
         ldx     L9016
         dex
 L948A:  cmp     L9017,x
-        beq     L9495
+        beq     bail3
         dex
         bpl     L948A
         jmp     L949D
 
-L9495:  lda     #$03
+bail3:  lda     #3
         rts
 
 L9498:  lda     #$01
         sta     L9015
 L949D:  ldx     L9016
-        ldy     #$00
+        ldy     #0
         lda     ($06),y
         sta     L9017,x
         inc     L9016
         lda     ($06),y
-        ldx     #$01
+        ldx     #1
         jsr     LA324
-        ldy     #$00
+        ldy     #0
         lda     ($06),y
-        ldx     #$01
+        ldx     #1
         jsr     LA2E3
         jsr     L9F9F
-        lda     #$00
+        lda     #0
         rts
 .endproc
 
 ;;; ==================================================
+;;; UNHILIGHT_ICON IMPL
 
-;;; DESKTOP $03 IMPL
+.proc UNHIGHLIGHT_ICON_IMPL
+        ptr := $06
 
-        ;; Unhilight icon
-
-.proc L94C0
         ldx     L8E95
-        beq     L94D2
+        beq     bail1
         dex
         ldy     #$00
-        lda     ($06),y
-L94CA:  cmp     L8E96,x
-        beq     L94D5
+        lda     (ptr),y
+:       cmp     L8E96,x
+        beq     found
         dex
-        bpl     L94CA
-L94D2:  lda     #$01
+        bpl     :-
+
+bail1:  lda     #1
         rts
 
-L94D5:  asl     a
+found:  asl     a
         tax
         lda     L8F15,x
-        sta     $06
+        sta     ptr
         lda     L8F15+1,x
-        sta     $07
+        sta     ptr+1
         lda     L9015
         bne     L94E9
-        jmp     L9502
+        jmp     done
 
 L94E9:  ldx     L9016
         dex
         ldy     #$00
-        lda     ($06),y
+        lda     (ptr),y
 L94F1:  cmp     L9017,x
         beq     L94FC
         dex
         bpl     L94F1
-        jmp     L9502
+        jmp     done
 
 L94FC:  jsr     L9F9F
-        lda     #$00
+        lda     #0
         rts
 
-L9502:  jsr     L9F98
-        lda     #$00
+done:   jsr     L9F98
+        lda     #0
         rts
 .endproc
 
@@ -897,7 +895,7 @@ L951D:  asl     a
         lda     #$02
         rts
 
-L9532:  jsr     LA18A
+L9532:  jsr     calc_icon_poly
         MGTK_CALL MGTK::SetPenMode, pencopy_2
         jsr     LA39D
         ldy     #$00
@@ -960,15 +958,16 @@ L958C:  lda     #$00
 .proc L95A2
         jmp     L9625
 
+        ;; DT_HIGHLIGHT_ICON params
 L95A5:
 L95A6 := * + 1
         .res    128, 0
 
-L9625:  lda     L9454
+L9625:  lda     HIGHLIGHT_ICON_IMPL ; ???
         beq     L9639
         lda     L9017
         sta     L95A5
-        DESKTOP_DIRECT_CALL $B, L95A5
+        DESKTOP_DIRECT_CALL $0B, L95A5
         jmp     L9625
 
 L9639:  ldx     #$7E
@@ -1008,7 +1007,7 @@ L967A:  lda     L95A6,x
         rts
 
 L9681:  sta     L95A5
-        DESKTOP_DIRECT_CALL $2, L95A5
+        DESKTOP_DIRECT_CALL DT_HIGHLIGHT_ICON, L95A5
         pla
         tax
         inx
@@ -1048,17 +1047,16 @@ L969D:  ldx     L9696
         ldy     #$00
         cmp     ($06),y
         bne     L969D
-        DESKTOP_DIRECT_CALL $4, L9695
+        DESKTOP_DIRECT_CALL $04, L9695
         jmp     L969D
 L96CF:  lda     #$00
         rts
 .endproc
 
 ;;; ==================================================
+;;; CLOSE_WINDOW IMPL
 
-;;; DESKTOP $07 IMPL
-
-.proc L96D2
+.proc CLOSE_WINDOW_IMPL
         jmp     L96D7
 
 L96D5:  .byte   0
@@ -1152,31 +1150,30 @@ L977A:  lda     #$00
 .endproc
 
 ;;; ==================================================
+;;; FIND_ICON IMPL
 
-;;; DESKTOP $09 IMPL
+.proc FIND_ICON_IMPL
+        jmp     start
 
-.proc L977D
-        jmp     L9789
+        .res    9, 0            ; ???
 
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
 
-L9789:  ldy     #$03
-L978B:  lda     ($06),y
+        coords := $6
+
+        ;; Copy coords at $6 to param block
+start:  ldy     #3
+:       lda     (coords),y
         sta     moveto_params2,y
         dey
-        bpl     L978B
+        bpl     :-
+
+        ;; Overwrite y with x ???
         lda     $06
         sta     $08
         lda     $06+1
         sta     $08+1
+
+        ;; ???
         ldy     #$05
         lda     ($06),y
         sta     L97F5
@@ -1204,15 +1201,15 @@ L97B9:  txa
         and     #$0F
         cmp     L97F5
         bne     L97E0
-        jsr     LA18A
+        jsr     calc_icon_poly
         MGTK_CALL MGTK::InPoly, poly
-        bne     L97E6
+        bne     inside
 L97E0:  pla
         tax
         inx
         jmp     L97AA
 
-L97E6:  pla
+inside: pla
         tax
         lda     L8E96,x
         ldy     #$04
@@ -1220,7 +1217,7 @@ L97E6:  pla
         sta     L97F6
         rts
 
-        rts
+        rts                     ; ???
 
         .byte   0
 L97F5:  .byte   0
@@ -1261,6 +1258,8 @@ L982C:  .byte   $00
 L982D:  .byte   $00
 L982E:  .byte   $00
 L982F:  .byte   $00
+
+        ;; DT_HIGHLIGHT_ICON params
 L9830:  .byte   $00
 L9831:  .byte   $00
 L9832:  .byte   $00
@@ -1355,9 +1354,9 @@ L98F2:  lda     L9016,x
         ldx     #$80
         stx     L9833
 L9909:  sta     L9834
-        DESKTOP_DIRECT_CALL $D, L9834
+        DESKTOP_DIRECT_CALL DT_ICON_IN_RECT, L9834
         beq     L9954
-        jsr     LA18A
+        jsr     calc_icon_poly
         lda     L9C74
         cmp     L9016
         beq     L9936
@@ -1500,14 +1499,14 @@ L9A33:  lda     findwindow_params2,x
         beq     L9A84
         lda     L9831
         sta     findwindow_params2::window_id
-        DESKTOP_DIRECT_CALL $9, findwindow_params2
+        DESKTOP_DIRECT_CALL DT_FIND_ICON, findwindow_params2
         lda     findwindow_params2::which_area
         cmp     L9830
         beq     L9A84
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
         MGTK_CALL MGTK::SetPenMode, penXOR_2
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
-        DESKTOP_DIRECT_CALL $B, L9830
+        DESKTOP_DIRECT_CALL $0B, L9830
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
         MGTK_CALL MGTK::SetPenMode, penXOR_2
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
@@ -1640,7 +1639,7 @@ L9B9C:  MGTK_CALL MGTK::FramePoly, drag_outline_buffer
 L9BA5:  MGTK_CALL MGTK::FramePoly, drag_outline_buffer
         lda     L9830
         beq     L9BB9
-        DESKTOP_DIRECT_CALL $B, L9830
+        DESKTOP_DIRECT_CALL $0B, L9830
         jmp     L9C63
 
 L9BB9:  MGTK_CALL MGTK::FindWindow, findwindow_params2
@@ -1674,7 +1673,7 @@ L9BF3:  dex
         sta     $06
         lda     L8F15+1,x
         sta     $07
-        jsr     LA18A
+        jsr     calc_icon_poly
         MGTK_CALL MGTK::SetPenMode, pencopy_2
         jsr     LA39D
         pla
@@ -1940,7 +1939,7 @@ L9E1D:  MGTK_CALL MGTK::FindWindow, findwindow_params2
         lda     findwindow_params2::which_area
         bne     L9E2B
         sta     findwindow_params2::window_id
-L9E2B:  DESKTOP_DIRECT_CALL $9, findwindow_params2
+L9E2B:  DESKTOP_DIRECT_CALL DT_FIND_ICON, findwindow_params2
         lda     findwindow_params2::which_area
         bne     L9E39
         jmp     L9E97
@@ -1972,7 +1971,7 @@ L9E6A:  sta     L9830
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
         MGTK_CALL MGTK::SetPenMode, penXOR_2
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
-        DESKTOP_DIRECT_CALL $2, L9830
+        DESKTOP_DIRECT_CALL DT_HIGHLIGHT_ICON, L9830
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
         MGTK_CALL MGTK::SetPenMode, penXOR_2
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
@@ -1994,25 +1993,29 @@ L9EB4:  asl     a
 
 ;;; ==================================================
 
-;;; DESKTOP $08 IMPL
+;;; DESKTOP $0B IMPL
 
 .proc L9EBE
-        jmp     L9EC3
+        jmp     start
 
-        .byte   0
-L9EC2:  .byte   0
+        .byte   0               ; ???
 
-L9EC3:  lda     L9015
+        ;; DT_UNHIGHLIGHT_ICON params
+icon:   .byte   0
+
+        ptr := $6
+
+start:  lda     L9015
         bne     :+
-        lda     #$01
+        lda     #1
         rts
 
 :       ldx     L9016
         ldy     #0
-        lda     ($06),y
+        lda     (ptr),y
         jsr     LA324
         ldx     L9016
-        lda     #$00
+        lda     #0
         sta     L9016,x
         dec     L9016
         lda     L9016
@@ -2020,9 +2023,9 @@ L9EC3:  lda     L9015
         lda     #$00
         sta     L9015
 L9EEA:  ldy     #0
-        lda     ($06),y
-        sta     L9EC2
-        DESKTOP_DIRECT_CALL $3, L9EC2
+        lda     (ptr),y
+        sta     icon
+        DESKTOP_DIRECT_CALL DT_UNHIGHLIGHT_ICON, icon
         lda     #0
         rts
 
@@ -2030,78 +2033,80 @@ L9EEA:  ldy     #0
 .endproc
 
 ;;; ==================================================
+;;; ICON_IN_RECT IMPL
 
-;;; DESKTOP $0D IMPL
+.proc ICON_IN_RECT_IMPL
+        jmp     start
 
-L9EFB:
-        jmp     L9F07
+icon:  .byte   0
+rect:   DEFINE_RECT 0,0,0,0,rect
 
-L9EFE:  .byte   0
-L9EFF:  .byte   0
-L9F00:  .byte   0
-L9F01:  .byte   0
-L9F02:  .byte   0
-L9F03:  .byte   0
-L9F04:  .byte   0
-L9F05:  .byte   0
-L9F06:  .byte   0
-
-L9F07:  ldy     #$00
+start:  ldy     #0
         lda     ($06),y
-        sta     L9EFE
-        ldy     #$08
-L9F10:  lda     ($06),y
-        sta     L9EFE,y
+        sta     icon
+        ldy     #8
+:       lda     ($06),y
+        sta     rect-1,y
         dey
-        bne     L9F10
-        lda     L9EFE
+        bne     :-
+
+        lda     icon
         asl     a
         tax
         lda     L8F15,x
         sta     $06
         lda     L8F15+1,x
-        sta     $07
-        jsr     LA18A
+        sta     $06+1
+        jsr     calc_icon_poly
+
         lda     poly::v0::ycoord
-        cmp     L9F05
+        cmp     rect::y2
         lda     poly::v0::ycoord+1
-        sbc     L9F06
-        bpl     L9F8C
+        sbc     rect::y2+1
+        bpl     done
+
         lda     poly::v5::ycoord
-        cmp     L9F01
+        cmp     rect::y1
         lda     poly::v5::ycoord+1
-        sbc     L9F02
-        bmi     L9F8C
+        sbc     rect::y1+1
+        bmi     done
+
         lda     poly::v5::xcoord
-        cmp     L9F03
+        cmp     rect::x2
         lda     poly::v5::xcoord+1
-        sbc     L9F04
-        bpl     L9F8C
+        sbc     rect::x2+1
+        bpl     done
+
         lda     poly::v4::xcoord
-        cmp     L9EFF
+        cmp     rect::x1
         lda     poly::v4::xcoord+1
-        sbc     L9F00
-        bmi     L9F8C
+        sbc     rect::x1+1
+        bmi     done
+
         lda     poly::v7::ycoord
-        cmp     L9F05
+        cmp     rect::y2
         lda     poly::v7::ycoord+1
-        sbc     L9F06
+        sbc     rect::y2+1
         bmi     L9F8F
+
         lda     poly::v7::xcoord
-        cmp     L9F03
+        cmp     rect::x2
         lda     poly::v7::xcoord+1
-        sbc     L9F04
-        bpl     L9F8C
+        sbc     rect::x2+1
+        bpl     done
+
         lda     poly::v2::xcoord
-        cmp     L9EFF
+        cmp     rect::x1
         lda     poly::v2::xcoord+1
-        sbc     L9F00
+        sbc     rect::x1+1
         bpl     L9F8F
-L9F8C:  lda     #$00
+
+done:   lda     #0
         rts
 
 L9F8F:  lda     #$01
         rts
+.endproc
 
 ;;; ==================================================
 
@@ -2302,7 +2307,10 @@ LA14F:  lda     paintbits_params2::viewloc::xcoord,x
         dec     paintrect_params6::bottom+1
 LA189:  rts
 
-LA18A:  jsr     LA365
+;;; ==================================================
+
+.proc calc_icon_poly
+        jsr     LA365
         ldy     #$06
         ldx     #$03
 LA191:  lda     ($06),y
@@ -2421,12 +2429,16 @@ LA256:  lsr     a
 LA2A4:  .byte   0
 LA2A5:  .byte   0
 
+.endproc
+
 ;;; ==================================================
 
-DESKTOP_REDRAW_ICONS_IMPL:
+REDRAW_ICONS_IMPL:
         jmp     LA2AE
 
+        ;; DT_UNHIGHLIGHT_ICON params
 LA2A9:  .byte   0
+
 LA2AA:  jsr     LA382
         rts
 
@@ -2450,7 +2462,7 @@ LA2B5:  bmi     LA2AA
         ldy     #$00
         lda     ($06),y
         sta     LA2A9
-        DESKTOP_DIRECT_CALL $3, LA2A9
+        DESKTOP_DIRECT_CALL DT_UNHIGHLIGHT_ICON, LA2A9
 LA2DD:  pla
         tax
         dex
@@ -2559,7 +2571,10 @@ LA39D:  MGTK_CALL MGTK::InitPort, grafport
 
 LA3AC:  .byte   0
 LA3AD:  .byte   0
+
+        ;; DT_UNHIGHLIGHT_ICON params
 LA3AE:  .byte   0
+
 LA3AF:  .byte   0
 LA3B0:  .byte   0
 LA3B1:  .byte   0
@@ -2667,10 +2682,10 @@ LA49D:  ldy     #$00
         bit     LA3B7
         bpl     LA4AC
         jsr     LA4D3
-LA4AC:  DESKTOP_DIRECT_CALL $D, LA3AE
+LA4AC:  DESKTOP_DIRECT_CALL DT_ICON_IN_RECT, LA3AE
         beq     LA4BA
 
-        DESKTOP_DIRECT_CALL $3, LA3AE
+        DESKTOP_DIRECT_CALL DT_UNHIGHLIGHT_ICON, LA3AE
 
 LA4BA:  bit     LA3B7
         bpl     LA4C5
@@ -2879,7 +2894,7 @@ width:  .word   0
 height: .word   0
 .endproc
 
-LA63F:  jsr     LA18A
+LA63F:  jsr     calc_icon_poly
         lda     poly::vertices+2
         sta     LA629
         sta     setportbits_params2::cliprect_y1
@@ -4690,6 +4705,7 @@ updatethumb_params_thumbpos := updatethumb_params + 1
 screentowindow_windowx:
 findcontrol_which_ctl:
 findwindow_params_which_area:
+findicon_which_icon:
         .byte   0
 findcontrol_which_part:
 findwindow_params_window_id:
@@ -5356,9 +5372,22 @@ LDFC9:  .res    145, 0
 
         .byte   $00,$00,$00,$00,$7F,$64,$00,$1C
         .byte   $00,$1E,$00,$32,$00,$1E,$00,$40
-        .byte   $00,$00,$00,$00,$00
+        .byte   $00
 
+        ;; DT_HIGHLIGHT_ICON params
+LE22B:
+        .byte   $00
+
+        .byte   $00,$00
+
+        ;; DT_UNHIGHLIGHT_ICON params
+LE22E:
+        .byte   $00
+
+        ;; DT_HIGHLIGHT_ICON params
+        ;; DT_UNHIGHLIGHT_ICON params
 LE22F:  .byte   0
+
 rect_E230:  DEFINE_RECT 0,0,0,0
 
         .byte   $00,$00
@@ -5524,8 +5553,11 @@ blank_dd_label:
 dummy_dd_item:
         PASCAL_STRING "Rien"    ; ???
 
+        ;; DT_UNHIGHLIGHT_ICON params
 LE6BE:
-        .byte   $00,$00,$00
+        .byte   $00
+
+        .byte   $00,$00
 
 LE6C1:
         .addr   winfo1title_ptr
@@ -6165,7 +6197,7 @@ L412B:  lda     #$00
         jsr     L4244
 L4143:  bit     L40F1
         bpl     L4151
-        DESKTOP_RELAY_CALL DESKTOP_REDRAW_ICONS
+        DESKTOP_RELAY_CALL DT_REDRAW_ICONS
 L4151:  rts
 
 L4152:  .byte   0
@@ -6248,9 +6280,9 @@ L41FE:  lda     L4241
         tax
         lda     buf3,x
         sta     LE22F
-        DESKTOP_RELAY_CALL $0D, LE22F
+        DESKTOP_RELAY_CALL DT_ICON_IN_RECT, LE22F
         beq     L4221
-        DESKTOP_RELAY_CALL $03, LE22F
+        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, LE22F
 L4221:  inc     L4241
         jmp     L41FE
 
@@ -6293,9 +6325,9 @@ L4270:  lda     L42C3
         lda     selected_file_index,x
         sta     LE22F
         jsr     L8915
-        DESKTOP_RELAY_CALL $0D, LE22F
+        DESKTOP_RELAY_CALL DT_ICON_IN_RECT, LE22F
         beq     L4296
-        DESKTOP_RELAY_CALL $03, LE22F
+        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, LE22F
 L4296:  lda     LE22F
         jsr     L8893
         inc     L42C3
@@ -6309,7 +6341,7 @@ L42A5:  lda     L42C3
         tax
         lda     selected_file_index,x
         sta     LE22F
-        DESKTOP_RELAY_CALL $03, LE22F
+        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, LE22F
         inc     L42C3
         jmp     L42A5
 
@@ -6503,8 +6535,8 @@ L43E0:  tsx
         sta     double_click_flag
         lda     #0
         sta     findwindow_params_window_id
-        DESKTOP_RELAY_CALL $09, event_params_coords ; maybe "was it an icon" ???
-        lda     findcontrol_which_ctl ; ???
+        DESKTOP_RELAY_CALL DT_FIND_ICON, event_params_coords
+        lda     findicon_which_icon
         beq     L4415
         jmp     L67D7
 
@@ -6571,7 +6603,7 @@ L445D:  jsr     clear_selection
         and     #$0F
         sta     L445C
         jsr     L8997
-        DESKTOP_RELAY_CALL $02, LE22F
+        DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, LE22F
         jsr     reset_grafport3
         lda     L445C
         sta     selected_window_index
@@ -6623,7 +6655,7 @@ reset_grafport3:
 
 .proc redraw_windows_and_desktop
         jsr     redraw_windows
-        DESKTOP_RELAY_CALL DESKTOP_REDRAW_ICONS
+        DESKTOP_RELAY_CALL DT_REDRAW_ICONS
         rts
 .endproc
 
@@ -7824,7 +7856,7 @@ L4E78:  jsr     clear_selection
         dex
         lda     win_buf_table,x
         bmi     L4EB4
-        DESKTOP_RELAY_CALL $07, active_window_id
+        DESKTOP_RELAY_CALL DT_CLOSE_WINDOW, active_window_id
         lda     LDD9E
         sec
         sbc     buf3len
@@ -7865,7 +7897,7 @@ L4EC3:  sta     buf3len
         and     #$0F
         sta     selected_window_index
         jsr     L8997
-        DESKTOP_RELAY_CALL $02, LE22F
+        DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, LE22F
         jsr     reset_grafport3
         lda     #$01
         sta     is_file_selected
@@ -7882,7 +7914,7 @@ L4EC3:  sta     buf3len
         MGTK_RELAY_CALL MGTK::FrontWindow, active_window_id
         lda     active_window_id
         bne     L4F3C
-        DESKTOP_RELAY_CALL DESKTOP_REDRAW_ICONS
+        DESKTOP_RELAY_CALL DT_REDRAW_ICONS
 L4F3C:  lda     #$00
         sta     checkitem_params::check
         MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
@@ -8178,7 +8210,7 @@ L51C0:  ldx     L51EF
         sta     LE22F
         jsr     L8915
         jsr     L6E8E
-        DESKTOP_RELAY_CALL $02, LE22F
+        DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, LE22F
         lda     LE22F
         jsr     L8893
         dec     L51EF
@@ -8349,7 +8381,7 @@ L52D7:  jsr     update_view_menu_check
 
 ;;; ==================================================
 
-L5302:  DESKTOP_RELAY_CALL $07, active_window_id
+L5302:  DESKTOP_RELAY_CALL DT_CLOSE_WINDOW, active_window_id
         lda     active_window_id
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
@@ -8576,7 +8608,7 @@ L5485:  cpx     buf3len
         lda     buf3,x
         sta     LE22F
         jsr     L8915
-        DESKTOP_RELAY_CALL $0D, LE22F
+        DESKTOP_RELAY_CALL DT_ICON_IN_RECT, LE22F
         pha
         lda     LE22F
         jsr     L8893
@@ -8748,7 +8780,7 @@ L55F0:  ldx     L544A
         jsr     L56F9
         lda     LE22F
         jsr     L8915
-L5614:  DESKTOP_RELAY_CALL $02, LE22F
+L5614:  DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, LE22F
         lda     getwinport_params2::window_id
         beq     L562B
         lda     LE22F
@@ -8816,18 +8848,18 @@ L56AB:  lda     is_file_selected
         dec     L56F8
 L56B4:  ldx     L56F8
         lda     selected_file_index,x
-        sta     $E22B
+        sta     LE22B
         jsr     file_address_lookup
         sta     $06
         stx     $06+1
         lda     $E22C
         beq     L56CF
-        lda     $E22B
+        lda     LE22B
         jsr     L8915
-L56CF:  DESKTOP_RELAY_CALL $02, $E22B
+L56CF:  DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, LE22B
         lda     $E22C
         beq     L56E3
-        lda     $E22B
+        lda     LE22B
         jsr     L8893
 L56E3:  dec     L56F8
         bpl     L56B4
@@ -9578,8 +9610,8 @@ ctl:    .byte   0
 
 :       lda     active_window_id
         sta     $D20E
-        DESKTOP_RELAY_CALL $09, event_params_coords
-        lda     findcontrol_which_ctl
+        DESKTOP_RELAY_CALL DT_FIND_ICON, event_params_coords
+        lda     findicon_which_icon
         bne     L5CDA
         jsr     L5F13
         jmp     L5DEC
@@ -9624,7 +9656,7 @@ L5D0B:  ldx     is_file_selected
         sta     LE22F
         jsr     L8915
         jsr     L6E8E
-        DESKTOP_RELAY_CALL $02, LE22F
+        DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, LE22F
         lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     L44F2
@@ -9684,8 +9716,8 @@ L5DAD:  cpx     #$FF
 L5DC4:  txa
         pha
         lda     selected_file_index,x
-        sta     $E22E
-        DESKTOP_RELAY_CALL $03, $E22E
+        sta     LE22E
+        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, LE22E
         pla
         tax
         dex
@@ -9884,9 +9916,9 @@ L5F88:  txa
         lda     buf3,x
         sta     LE22F
         jsr     L8915
-        DESKTOP_RELAY_CALL $0D, LE22F
+        DESKTOP_RELAY_CALL DT_ICON_IN_RECT, LE22F
         beq     L5FB9
-        DESKTOP_RELAY_CALL $02, LE22F
+        DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, LE22F
         ldx     is_file_selected
         inc     is_file_selected
         lda     LE22F
@@ -10135,7 +10167,7 @@ L61DC:  lda     active_window_id
         sec
         sbc     buf3len
         sta     LDD9E
-        DESKTOP_RELAY_CALL $07, active_window_id
+        DESKTOP_RELAY_CALL DT_CLOSE_WINDOW, active_window_id
         ldx     #$00
 L6206:  cpx     buf3len
         beq     L6215
@@ -10174,7 +10206,7 @@ L6227:  sta     buf3len
         and     #$0F
         sta     selected_window_index
         jsr     L8997
-        DESKTOP_RELAY_CALL $02, LE22F
+        DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, LE22F
         jsr     reset_grafport3
         lda     #$01
         sta     is_file_selected
@@ -10763,7 +10795,7 @@ L67F6:  bit     BUTN0
         bpl     L6818
         lda     selected_window_index
         bne     L6818
-        DESKTOP_RELAY_CALL $02, $D20D
+        DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, $D20D
         ldx     is_file_selected
         lda     $D20D
         sta     selected_file_index,x
@@ -10771,7 +10803,7 @@ L67F6:  bit     BUTN0
         jmp     L6834
 
 L6818:  jsr     clear_selection
-L681B:  DESKTOP_RELAY_CALL $02, $D20D
+L681B:  DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, $D20D
         lda     #$01
         sta     is_file_selected
         lda     $D20D
@@ -10825,7 +10857,7 @@ L6893:  txa
         pha
         lda     selected_file_index,x
         sta     $E22D
-        DESKTOP_RELAY_CALL $03, $E22D
+        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, $E22D
         pla
         tax
         dex
@@ -10869,9 +10901,9 @@ L6904:  txa
         pha
         lda     buf3,x
         sta     LE22F
-        DESKTOP_RELAY_CALL $0D, LE22F
+        DESKTOP_RELAY_CALL DT_ICON_IN_RECT, LE22F
         beq     L692C
-        DESKTOP_RELAY_CALL $02, LE22F
+        DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, LE22F
         ldx     is_file_selected
         inc     is_file_selected
         lda     LE22F
@@ -11061,7 +11093,7 @@ L6AA7:  stx     bufnum
         jsr     L44F2
         lda     LE6BE
         jsr     L8915
-L6AD8:  DESKTOP_RELAY_CALL $03, LE6BE
+L6AD8:  DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, LE6BE
         lda     getwinport_params2::window_id
         beq     L6AEF
         lda     LE6BE
@@ -11141,7 +11173,7 @@ L6B68:  lda     #$01
         jsr     L6E8E
         lda     LE6BE
         jsr     L8915
-L6BA1:  DESKTOP_RELAY_CALL $03, LE6BE
+L6BA1:  DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, LE6BE
         lda     getwinport_params2::window_id
         beq     L6BB8
         lda     LE6BE
@@ -11291,9 +11323,9 @@ L6D09:  txa
         pha
         lda     buf3,x
         sta     LE22F
-        DESKTOP_RELAY_CALL $0D, LE22F
+        DESKTOP_RELAY_CALL DT_ICON_IN_RECT, LE22F
         beq     L6D25
-        DESKTOP_RELAY_CALL $03, LE22F
+        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, LE22F
 L6D25:  pla
         tax
         inx
@@ -16286,8 +16318,8 @@ L969E:  lda     #$40
         jsr     L96F8
         ldx     L9706
         lda     selected_file_index,x
-        sta     $E22B
-        yax_call JT_DESKTOP_RELAY, $E, $E22B
+        sta     LE22B
+        yax_call JT_DESKTOP_RELAY, $E, LE22B
         lda     L9707
         sta     $08
         lda     L9708
