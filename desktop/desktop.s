@@ -53,6 +53,26 @@ INVOKER_FILENAME := $280         ; File to invoke (PREFIX must be set)
         jmp     target
 .endmacro
 
+.macro  add16 aa, bb, rr
+    .if (.match (.mid (0, 1, {bb}), #))
+        lda     aa
+        clc
+        adc     #<(.right (.tcount ({bb})-1, {bb}))
+        sta     rr
+        lda     aa+1
+        adc     #>(.right (.tcount ({bb})-1, {bb}))
+        sta     rr+1
+    .else
+        lda     aa
+        clc
+        adc     bb
+        sta     rr
+        lda     aa+1
+        adc     bb+1
+        sta     rr+1
+    .endif
+.endmacro
+
 .macro  sub16 aa, bb, rr
     .if (.match (.mid (0, 1, {bb}), #))
         lda     aa
@@ -1808,27 +1828,9 @@ L9CE4:  lda     #$30
         lda     #$02
         sbc     L9C8B
         sta     L9C97
-L9CF5:  lda     L9C86
-        clc
-        adc     L9C96
-        sta     L9C76
-        lda     L9C87
-        adc     L9C97
-        sta     L9C77
-        lda     L9C8A
-        clc
-        adc     L9C96
-        sta     L9C7A
-        lda     L9C8B
-        adc     L9C97
-        sta     L9C7B
-        lda     L9C8E
-        clc
-        adc     L9C96
-        sta     L9C8E
-        lda     L9C8F
-        adc     L9C97
-        sta     L9C8F
+L9CF5:  add16 L9C86, L9C96, L9C76
+        add16 L9C8A, L9C96, L9C7A
+        add16 L9C8E, L9C96, L9C8E
         lda     #$FF
         rts
 
@@ -1866,27 +1868,9 @@ L9D6B:  lda     #$BF
         lda     #$00
         sbc     L9C8D
         sta     L9C99
-L9D7C:  lda     L9C88
-        clc
-        adc     L9C98
-        sta     L9C78
-        lda     L9C89
-        adc     L9C99
-        sta     L9C79
-        lda     L9C8C
-        clc
-        adc     L9C98
-        sta     L9C7C
-        lda     L9C8D
-        adc     L9C99
-        sta     L9C7D
-        lda     L9C90
-        clc
-        adc     L9C98
-        sta     L9C90
-        lda     L9C91
-        adc     L9C99
-        sta     L9C91
+L9D7C:  add16 L9C88, L9C98, L9C78
+        add16 L9C8C, L9C98, L9C7C
+        add16 L9C90, L9C98, L9C90
         lda     #$FF
         rts
 
@@ -3114,25 +3098,13 @@ LA846:  jsr     LA382
         lda     grafport4::left+1
         adc     LA6C4
         sta     LA6C4
-        lda     LA6C5
-        clc
-        adc     grafport4::top
-        sta     LA6C5
-        lda     LA6C6
-        adc     grafport4::top+1
-        sta     LA6C6
+        add16 LA6C5, grafport4::top, LA6C5
         lda     setportbits_params2::width
         cmp     LA6C3
         lda     setportbits_params2::width+1
         sbc     LA6C4
         bmi     LA8B7
-        lda     LA6C3
-        clc
-        adc     #1
-        sta     setportbits_params2::width
-        lda     LA6C4
-        adc     #0
-        sta     setportbits_params2::width+1
+        add16 LA6C3, #1, setportbits_params2::width
         jmp     LA8D4
 
 LA8B7:  lda     grafport4::left
@@ -10240,20 +10212,8 @@ L6319:  sub16  L6383, L6385, L6383
         ror     L6389
         rts
 
-L634E:  lda     L6383
-        clc
-        adc     L6385
-        sta     L6383
-        lda     L6384
-        adc     L6386
-        sta     L6384
-        lda     L6387
-        clc
-        adc     L6389
-        sta     L6387
-        lda     L6388
-        adc     L638A
-        sta     L6388
+L634E:  add16 L6383, L6385, L6383
+        add16 L6387, L6389, L6387
         clc
         ror     L6386
         ror     L6385
@@ -10371,13 +10331,7 @@ L6484:  lda     L7B5F
         ldx     L7B60
 L648A:  sta     grafport2::cliprect_x1
         stx     grafport2::cliprect_x1+1
-        lda     grafport2::cliprect_x1
-        clc
-        adc     L64AC
-        sta     grafport2::width
-        lda     grafport2::cliprect_x1+1
-        adc     L64AD
-        sta     grafport2::width+1
+        add16 grafport2::cliprect_x1, L64AC, grafport2::width
         jsr     L653E
         jsr     L6DB1
         jmp     L6556
@@ -10389,13 +10343,7 @@ L64AF:  .byte   0
 L64B0:  jsr     L650F
         sta     L650B
         stx     L650C
-        lda     grafport2::width
-        clc
-        adc     L650B
-        sta     L650D
-        lda     grafport2::width+1
-        adc     L650C
-        sta     L650E
+        add16 grafport2::width, L650B, L650D
         lda     L650D
         cmp     L7B63
         lda     L650E
@@ -12663,13 +12611,7 @@ L7A22:  sub16  L7ADE, $EBF9, L7ADE
         bpl     L7A3A
         jmp     L7A86
 
-L7A3A:  lda     $EBE7
-        clc
-        adc     L7ADE
-        sta     point3::xcoord
-        lda     $EBE8
-        adc     L7ADF
-        sta     point3::xcoord+1
+L7A3A:  add16 $EBE7, L7ADE, point3::xcoord
         lda     L7ADF
         beq     L7A59
         lda     L7ADE
@@ -12678,13 +12620,7 @@ L7A3A:  lda     $EBE7
 L7A59:  sub16  point3::xcoord, #$0C, point3::xcoord
 L7A6A:  lsr     L7ADF
         ror     L7ADE
-        lda     LEBE3
-        clc
-        adc     L7ADE
-        sta     point2::xcoord
-        lda     $EBE4
-        adc     L7ADF
-        sta     point2::xcoord+1
+        add16 LEBE3, L7ADE, point2::xcoord
         jmp     L7A9E
 
 L7A86:  lda     LEBE3
@@ -13919,13 +13855,7 @@ L8562:  lsr     L85F3
         sta     grafport2::height+1
         jmp     L85D6
 
-L85C3:  lda     grafport2::cliprect_x1
-        clc
-        adc     L85F4
-        sta     grafport2::width
-        lda     grafport2::cliprect_x1+1
-        adc     L85F5
-        sta     grafport2::width+1
+L85C3:  add16 grafport2::cliprect_x1, L85F4, grafport2::width
 L85D6:  lda     active_window_id
         jsr     window_lookup
         sta     $06
@@ -14835,20 +14765,8 @@ L8BC1:  lda     grafport2,x
         bpl     L8BC1
         sub16  grafport2::width, grafport2::cliprect_x1, L8D54
         sub16  grafport2::height, grafport2::cliprect_y1, L8D56
-        lda     $0858
-        clc
-        adc     L8D54
-        sta     $085C
-        lda     $0859
-        adc     L8D55
-        sta     $085D
-        lda     $085A
-        clc
-        adc     L8D56
-        sta     $085E
-        lda     $085B
-        adc     L8D57
-        sta     $085F
+        add16 $0858, L8D54, $085C
+        add16 $085A, L8D56, $085E
         lda     #$00
         sta     L8D4E
         sta     L8D4F
@@ -16832,13 +16750,7 @@ L9C70:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params3
         jmp     LA39F
 
 L9C95:  sub16  file_info_params3::auxtype, file_info_params3::blocks, L9CD4
-        lda     L9CD4
-        clc
-        adc     L9CD8
-        sta     L9CD4
-        lda     L9CD5
-        adc     L9CD9
-        sta     L9CD5
+        add16 L9CD4, L9CD8, L9CD4
         lda     L9CD4
         cmp     file_info_params2::blocks
         lda     L9CD5
@@ -19818,13 +19730,7 @@ LB9D8:  jsr     LBD3B
         lda     path_buf2
         sta     ptr+2
 LBA10:  MGTK_RELAY_CALL MGTK::TextWidth, ptr
-        lda     $09
-        clc
-        adc     LBB09
-        sta     $09
-        lda     $0A
-        adc     LBB0A
-        sta     $0A
+        add16 $09, LBB09, $09
         lda     $09
         cmp     $D20D
         lda     $0A
@@ -19885,13 +19791,7 @@ LBA7C:  dey
         lda     path_buf1
         sta     textlen
 :       MGTK_RELAY_CALL MGTK::TextWidth, params
-        lda     result
-        clc
-        adc     point6::xcoord
-        sta     result
-        lda     result+1
-        adc     point6::xcoord+1
-        sta     result+1
+        add16 result, point6::xcoord, result
         lda     result
         cmp     $D20D
         lda     result+1
@@ -20787,34 +20687,10 @@ L0B09:  addr_call desktop_main::measure_text1, str_6_spaces
         txa
         adc     L0BA1
         sta     $EBF8
-        lda     $EBF5
-        clc
-        adc     $EBF7
-        sta     $EBF9
-        lda     $EBF6
-        adc     $EBF8
-        sta     $EBFA
-        lda     $EBF3
-        clc
-        adc     #$05
-        sta     LEBE3
-        lda     $EBF4
-        adc     #$00
-        sta     LEBE3+1
-        lda     LEBE3
-        clc
-        adc     $EBF5
-        sta     $EBE7
-        lda     LEBE3+1
-        adc     $EBF6
-        sta     $EBE8
-        lda     $EBE7
-        clc
-        adc     #$03
-        sta     $EBE7
-        lda     $EBE8
-        adc     #$00
-        sta     $EBE8
+        add16 $EBF5, $EBF7, $EBF9
+        add16 $EBF3, #$05, LEBE3
+        add16 LEBE3, $EBF5, $EBE7
+        add16 $EBE7, #$03, $EBE7
         jmp     L0BA2
 
 L0BA0:  .byte   0
