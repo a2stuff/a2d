@@ -1932,7 +1932,7 @@ L9E14:  bit     L9833
         rts
 
 L9E1A:  jsr     LA365
-L9E1D:  MGTK_CALL MGTK::FindWindow, findwindow_params2
+        MGTK_CALL MGTK::FindWindow, findwindow_params2
         lda     findwindow_params2::which_area
         bne     L9E2B
         sta     findwindow_params2::window_id
@@ -4594,6 +4594,9 @@ notpenOR: .byte   5
 notpenXOR: .byte   6
 notpenBIC: .byte   7
 
+;;; ============================================================
+;;; Re-use of param space
+
 .proc event_params
 kind:   .byte   0
         key := *
@@ -4632,8 +4635,8 @@ findwindow_params_window_id:
         .byte   0
 
 screentowindow_windowy:
-LD20F:  .byte   0
-LD210:  .byte   0
+        .byte   0
+        .byte   0
 LD211:  .byte   0
 
 
@@ -6533,7 +6536,7 @@ L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_params_window_id
         lda     findwindow_params_window_id
         sta     active_window_id
         sta     bufnum
-L44B8:  jsr     DESKTOP_COPY_TO_BUF
+        jsr     DESKTOP_COPY_TO_BUF
         jsr     L6C19
         lda     #$00
         sta     bufnum
@@ -6964,8 +6967,8 @@ L4859:  dey
         bne     L484B
         rts
 
-L485D:  .byte   $00
-L485E:  .byte   $E0
+L485D:  .addr   $E000
+
 L485F:  .byte   $00
 L4860:  .byte   $D0
 L4861:  .byte   $00
@@ -7305,7 +7308,6 @@ L4B15:  stax    L4B2B
 L4B27:  lda     $D3EE,x
 
         L4B2B := *+1
-        L4B2C := *+2
         sta     dummy1234,x
 
         dex
@@ -7322,7 +7324,6 @@ L4B3A:  stax    L4B50
         ldx     $D3AD
 L4B4C:  lda     $D3AD,x
         L4B50 := *+1
-        L4B51 := *+2
         sta     dummy1234,x
         dex
         bpl     L4B4C
@@ -8119,8 +8120,7 @@ L51E3:  lda     #$00
         sta     bufnum
         jmp     DESKTOP_COPY_TO_BUF
 
-L51EB:  .byte   0
-L51EC:  .byte   0
+L51EB:  .word   0
 L51ED:  .byte   0
         .byte   0
 L51EF:  .byte   0
@@ -8171,8 +8171,8 @@ L5246:  lda     L5263,x
         sta     L4152
         rts
 
-L5263:  .byte   0
-L5264:  .byte   0
+L5263:  .word   0
+
 L5265:  .byte   0
         .byte   0
 
@@ -8963,8 +8963,7 @@ L585D:  .byte   0               ; can scroll horiz?
 L585E:  .byte   0               ; can scroll vert?
 L585F:  .byte   0
 L5860:  .byte   0
-L5861:  .byte   0
-L5862:  .byte   0
+L5861:  .word   0
 
 L5863:  stx     L587D
         cmp     L587D
@@ -9899,10 +9898,8 @@ L60CB:  .byte   0
 L60CC:  .byte   0
 L60CD:  .byte   0
 L60CE:  .byte   0
-L60CF:  .byte   0
-L60D0:  .byte   0
-L60D1:  .byte   0
-L60D2:  .byte   0
+L60CF:  .word   0
+L60D1:  .word   0
 L60D3:  .byte   0
 L60D4:  .byte   0
 L60D5:  jsr     push_zp_addrs
@@ -10360,8 +10357,7 @@ L65EE:  sta     event_params+1
         MGTK_RELAY_CALL MGTK::UpdateThumb, event_params
         rts
 
-L6600:  .byte   0
-L6601:  .byte   0
+L6600:  .word   0
 L6602:  .byte   0
 L6603:  .byte   0
 L6604:  lda     active_window_id
@@ -10756,10 +10752,8 @@ L6A35:  .byte   0
 L6A36:  .byte   0
 L6A37:  .byte   0
 L6A38:  .byte   0
-L6A39:  .byte   0
-L6A3A:  .byte   0
-L6A3B:  .byte   0
-L6A3C:  .byte   0
+L6A39:  .word   0
+L6A3B:  .word   0
 L6A3D:  .byte   0
 L6A3E:  .byte   0
 L6A3F:  ldx     #$07
@@ -13704,14 +13698,12 @@ L85E4:  lda     grafport2::cliprect_x1,x
 L85F1:  .byte   0
 L85F2:  .byte   0
 L85F3:  .byte   0
-L85F4:  .byte   0
-L85F5:  .byte   0
+L85F4:  .word   0
 L85F6:  .byte   0
         .byte   0
 L85F8:  .byte   0
 L85F9:  .byte   0
-L85FA:  .byte   0
-L85FB:  .byte   0
+L85FA:  .word   0
 
 ;;; ==================================================
 ;;; Double Click Detection
@@ -14696,8 +14688,7 @@ L8D46:  jsr     L8DB3
         rts
 
 L8D4A:  .byte   0
-L8D4B:  .byte   0
-L8D4C:  .byte   0
+L8D4B:  .word   0
 L8D4D:  .byte   0
 L8D4E:  .byte   0
 L8D4F:  .byte   0
@@ -14738,7 +14729,7 @@ L8D89:  lda     L8DB2
         sbc     #$02
         bmi     L8DA7
         asl     a
-L8D92:  asl     a
+        asl     a
         asl     a
         clc
         adc     #$07
@@ -16740,10 +16731,10 @@ L9E71:  sec
 
 L9E73:  .byte   $94,$9F,$E3,$97,$2E,$A0
 L9E79:  .byte   0
-L9E7A:  .byte   0
-L9E7B:  .byte   0
+L9E7A:  .word   0
         .byte   $20
         .byte   $02
+
 L9E7E:  sta     L9E79
         lda     #<$9EB1         ; ???
         sta     L9183
@@ -16938,8 +16929,7 @@ LA04E:  .addr   LA170
         .addr   rts2
         .addr   rts2
 LA054:  .byte   0
-LA055:  .byte   0
-LA056:  .byte   0
+LA055:  .word   0
         .addr   $220
 
 LA059:  lda     #$00
@@ -19245,6 +19235,7 @@ LB76B:  .byte   0
 
 ;;; ==================================================
 
+        ;; Unreferenced ???
 LB76C:  stax    $06
         MGTK_RELAY_CALL MGTK::MoveTo, point7
         ldax    $06
@@ -19638,8 +19629,8 @@ LBAF7:  lda     $D3C1,y
 LBB05:  jsr     LB961
         rts
 
-LBB09:  .byte   0
-LBB0A:  .byte   0
+LBB09:  .word   0
+
 LBB0B:  sta     LBB62
         lda     path_buf1
         clc
