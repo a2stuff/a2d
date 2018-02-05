@@ -63,6 +63,11 @@ INVOKER_FILENAME := $280         ; File to invoke (PREFIX must be set)
     .endif
 .endmacro
 
+.macro  stax arg
+        sta     arg
+        stx     arg+1
+.endmacro
+
 .macro  add16 aa, bb, rr
     .if (.match (.mid (0, 1, {bb}), #))
         lda     aa
@@ -1303,8 +1308,7 @@ L9803:  lda     ($06),y
         jsr     LA365
         lda     L982A
         jsr     L9EB4
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #2
         lda     ($06),y
         and     #$0F
@@ -1378,8 +1382,7 @@ L98B6:  lda     #<drag_outline_buffer
 
 L98C8:  lda     L9017
         jsr     L9EB4
-        sta     $06
-        stx     $07
+        stax    $06
         ldy     #$02
         lda     ($06),y
         and     #$0F
@@ -1394,8 +1397,7 @@ L98E3:  lda     grafport::cliprect,x
         stx     L9C74
 L98F2:  lda     L9016,x
         jsr     L9EB4
-        sta     $06
-        stx     $07
+        stax    $06
         ldy     #$00
         lda     ($06),y
         cmp     #$01
@@ -3784,8 +3786,7 @@ LBA0B:  sta     grafport3_left,x
         lda     #>$B9
         sta     grafport3_height+1
         MGTK_RELAY2_CALL MGTK::SetPort, grafport3
-        lda     grafport6::viewloc::xcoord
-        ldx     grafport6::viewloc::xcoord+1
+        ldax    grafport6::viewloc::xcoord
         jsr     LBF8B
         sty     LBFCA
         sta     LBFCD
@@ -4297,8 +4298,7 @@ LBFCF:  .byte   $00
 .proc draw_pascal_string
         ptr := $06
 
-        sta     ptr
-        stx     ptr+1
+        stax    ptr
         ldy     #$00
         lda     (ptr),y         ; Check length
         beq     end
@@ -4313,8 +4313,7 @@ end:    rts
         ;; MGTK call in Y, params addr (X,A)
 .proc MGTK_RELAY2
         sty     call
-        sta     addr
-        stx     addr+1
+        stax    addr
         jsr     MGTK::MLI
 call:   .byte   0
 addr:   .addr   0
@@ -4340,8 +4339,7 @@ addr:   .addr   0
 .proc MGTK_RELAY
         .assert * = $D000, error, "Entry point mismatch"
         sty     addr-1
-        sta     addr
-        stx     addr+1
+        stax    addr
         sta     RAMRDON
         sta     RAMWRTON
         MGTK_CALL 0, 0, addr
@@ -4354,8 +4352,7 @@ addr:   .addr   0
 ;;; SET_POS with params at (X,A) followed by DRAW_TEXT call
 
 .proc SETPOS_RELAY
-        sta     addr
-        stx     addr+1
+        stax    addr
         sta     RAMRDON
         sta     RAMWRTON
         MGTK_CALL MGTK::MoveTo, 0, addr
@@ -4372,8 +4369,7 @@ addr:   .addr   0
 
 .proc DESKTOP_RELAY
         sty     addr-1
-        sta     addr
-        stx     addr+1
+        stax    addr
         sta     RAMRDON
         sta     RAMWRTON
         DESKTOP_CALL 0, 0, addr
@@ -6144,8 +6140,7 @@ L415B:  sta     active_window_id
         jsr     DESKTOP_ASSIGN_STATE
         lda     active_window_id
         jsr     window_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$16
         lda     ($06),y
         sec
@@ -6515,8 +6510,7 @@ L445D:  jsr     clear_selection
         sta     LE22F
         lda     LE22F
         jsr     file_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$01
         lda     ($06),y
         beq     L44A6
@@ -6781,8 +6775,7 @@ L46AE:  jsr     L678A
 
 MLI_RELAY:
         sty     L46CE
-        sta     L46CF
-        stx     L46CF+1
+        stax    L46CF
         php
         sei
         sta     ALTZPOFF
@@ -6956,8 +6949,7 @@ L4816:  .byte   $00
 L4817:  PASCAL_STRING "Basic.system"
         .res    30, 0
 
-L4842:  sta     $06
-        stx     $06+1
+L4842:  stax    $06
         ldy     #$00
         lda     ($06),y
         tay
@@ -7168,8 +7160,7 @@ L49E0:  jsr     L4AFD
         bne     L49FA
 L49ED:  lda     L49A5
         jsr     L4B5F
-        sta     $06
-        stx     $06+1
+        stax    $06
         jmp     L4A0A
 
 L49FA:  lda     L49A5
@@ -7227,8 +7218,7 @@ L4A5A:  lda     ($06),y
         bpl     L4A5A
         pla
         jsr     L4B5F
-        sta     $08
-        stx     $08+1
+        stax    $08
         ldy     #$00
         lda     ($08),y
         tay
@@ -7292,8 +7282,7 @@ L4ADC:  iny
         rts
 
 L4AEA:  jsr     L4B5F
-        sta     get_file_info_params3::path
-        stx     get_file_info_params3::path+1
+        stax    get_file_info_params3::path
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params3
         rts
 
@@ -7308,8 +7297,7 @@ L4AFD:  sta     ALTZPOFF
         txa
         rts
 
-L4B15:  sta     L4B2B
-        stx     L4B2C
+L4B15:  stax    L4B2B
         sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
@@ -7327,8 +7315,7 @@ L4B27:  lda     $D3EE,x
         lda     LCBANK1
         rts
 
-L4B3A:  sta     L4B50
-        stx     L4B51
+L4B3A:  stax    L4B50
         sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
@@ -7380,8 +7367,7 @@ L4B9C:  inx
         cpy     L4BB1
         bne     L4B9C
         stx     path_buffer
-        lda     #$76
-        ldx     #$4F
+        ldax    #$4F76
         rts
 
 L4BB0:  .byte   0
@@ -7695,8 +7681,7 @@ L4DF2:  txa
         pha
         lda     selected_file_index,x
         jsr     file_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$02
         lda     ($06),y
         and     #$70
@@ -7720,8 +7705,7 @@ L4E1A:  sta     L4E71
         pla
         lda     active_window_id
         jsr     window_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$00
         lda     ($06),y
         tay
@@ -7731,8 +7715,7 @@ L4E34:  lda     ($06),y
         bpl     L4E34
         lda     selected_file_index
         jsr     file_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$09
         lda     ($06),y
         tax
@@ -7809,8 +7792,7 @@ L4EC3:  sta     buf3len
         lda     LEC26,x
         sta     LE22F
         jsr     file_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$02
         lda     ($06),y
         and     #$7F
@@ -7892,8 +7874,7 @@ start:  lda     active_window_id
 L4FC6:  lda     active_window_id
         beq     L4FD4
         jsr     window_address_lookup
-        sta     L4F68
-        stx     L4F69
+        stax    L4F68
 L4FD4:  lda     #$80
         sta     L4F67
         yax_call launch_dialog, index_new_folder_dialog, L4F67
@@ -8078,13 +8059,11 @@ L511E:  sta     buf3len
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect_x1
         lda     active_window_id
         jsr     L7D5D
-        sta     L51EB
-        stx     L51EC
+        stax    L51EB
         sty     L51ED
         lda     active_window_id
         jsr     window_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$1F
         lda     #$00
 L5162:  sta     ($06),y
@@ -8165,13 +8144,11 @@ L51F0:  ldx     active_window_id
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect_x1
         lda     active_window_id
         jsr     L7D5D
-        sta     L5263
-        stx     L5264
+        stax    L5263
         sty     L5265
         lda     active_window_id
         jsr     window_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$1F
         lda     #$00
 L523B:  sta     ($06),y
@@ -8431,8 +8408,7 @@ L53D0:  tax
         jsr     L5431
         bmi     L53BA
         jsr     window_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$00
         lda     ($06),y
         tay
@@ -8513,8 +8489,7 @@ L5464:  lda     active_window_id
         jsr     DESKTOP_COPY_TO_BUF
         lda     active_window_id
         jsr     window_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$1C
 L5479:  lda     ($06),y
         sta     $E214,y
@@ -8677,8 +8652,7 @@ L55D1:  ldx     L544A
         lda     $1801,x
         sta     selected_file_index
         jsr     file_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$02
         lda     ($06),y
         and     #$0F
@@ -8691,8 +8665,7 @@ L55F0:  ldx     L544A
         lda     $1801,x
         sta     LE22F
         jsr     file_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$02
         lda     ($06),y
         and     #$0F
@@ -8711,8 +8684,7 @@ L562B:  rts
 
 L562C:  lda     LE22F
         jsr     file_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$02
         lda     ($06),y
         and     #$0F
@@ -8771,8 +8743,7 @@ L56B4:  ldx     L56F8
         lda     selected_file_index,x
         sta     LE22B
         jsr     file_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         lda     $E22C
         beq     L56CF
         lda     LE22B
@@ -8957,12 +8928,10 @@ L5803:  lda     active_window_id
         lda     win_buf_table,x
         sta     L5B1B
         jsr     L58C3
-        sta     L585F
-        stx     L5860
+        stax    L585F
         sty     L585D
         jsr     L58E2
-        sta     L5861
-        stx     L5862
+        stax    L5861
         sty     L585E
         rts
 
@@ -9043,8 +9012,7 @@ L58C1:  rts
         .byte   0
 L58C3:  lda     active_window_id
         jsr     window_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$06
         lda     ($06),y
         tax
@@ -9063,8 +9031,7 @@ L58C3:  lda     active_window_id
 
 L58E2:  lda     active_window_id
         jsr     window_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$08
         lda     ($06),y
         tax
@@ -9362,8 +9329,7 @@ L5B31:  lda     $EBFD,x
         ;; Vertical scrollbar
         lda     active_window_id
         jsr     window_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$05
         lda     ($06),y
         and     #$01
@@ -9409,8 +9375,7 @@ pgdn:   jsr     L63EC
         ;; Horizontal scrollbar
 horiz:  lda     active_window_id
         jsr     window_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$04
         lda     ($06),y
         and     #$01
@@ -9657,8 +9622,7 @@ L5DF7:  ldx     $E256
 
 L5DFC:  lda     L5CD9           ; after a double-click (on file or folder)
         jsr     file_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #2              ; byte type icon offset
         lda     ($06),y
         and     #$70            ; bits 4-6
@@ -9681,8 +9645,7 @@ L5E27:  rts
 L5E28:  sta     L5E77
         lda     active_window_id
         jsr     window_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$00
         lda     ($06),y
         tay
@@ -9692,8 +9655,7 @@ L5E3A:  lda     ($06),y
         bpl     L5E3A
         lda     L5CD9
         jsr     file_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$09
         lda     ($06),y
         tax
@@ -9746,8 +9708,7 @@ L5E8F:  lda     active_window_id
         jsr     L5302
 L5EBC:  lda     active_window_id
         jsr     window_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$00
         lda     ($06),y
         tay
@@ -9958,8 +9919,7 @@ L60DE:  lda     active_window_id
         MGTK_RELAY_CALL MGTK::DragWindow, event_params
         lda     active_window_id
         jsr     window_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$16
         lda     ($06),y
         cmp     #$19
@@ -10006,8 +9966,7 @@ L6161:  txa
         pha
         lda     buf3,x
         jsr     file_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$03
         lda     ($06),y
         clc
@@ -10099,8 +10058,7 @@ L6227:  sta     buf3len
         lda     LEC26,x
         sta     LE22F
         jsr     file_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$01
         lda     ($06),y
         and     #$0F
@@ -10235,8 +10193,7 @@ L638C:  jsr     L650F
         jmp     L63C7
 
 L63C1:  ldax    L7B61
-L63C7:  sta     grafport2::cliprect_y1
-        stx     grafport2::cliprect_y1+1
+L63C7:  stax    grafport2::cliprect_y1
         add16_8 grafport2::cliprect_y1, L63E9, grafport2::height
         jsr     L653E
         jsr     L6DB1
@@ -10260,8 +10217,7 @@ L63EC:  jsr     L650F
         jmp     L6427
 
 L6421:  ldax    L7B65
-L6427:  sta     grafport2::height
-        stx     grafport2::height+1
+L6427:  stax    grafport2::height
         lda     grafport2::height
         sec
         sbc     L6449
@@ -10283,8 +10239,7 @@ L644C:  tya
         rts
 
 L6451:  jsr     L650F
-        sta     L64AC
-        stx     L64AD
+        stax    L64AC
         sub16  grafport2::cliprect_x1, L64AC, L64AE
         lda     L64AE
         cmp     L7B5F
@@ -10295,8 +10250,7 @@ L6451:  jsr     L650F
         jmp     L648A
 
 L6484:  ldax    L7B5F
-L648A:  sta     grafport2::cliprect_x1
-        stx     grafport2::cliprect_x1+1
+L648A:  stax    grafport2::cliprect_x1
         add16 grafport2::cliprect_x1, L64AC, grafport2::width
         jsr     L653E
         jsr     L6DB1
@@ -10307,8 +10261,7 @@ L64AD:  .byte   0
 L64AE:  .byte   0
 L64AF:  .byte   0
 L64B0:  jsr     L650F
-        sta     L650B
-        stx     L650C
+        stax    L650B
         add16 grafport2::width, L650B, L650D
         lda     L650D
         cmp     L7B63
@@ -10319,8 +10272,7 @@ L64B0:  jsr     L650F
         jmp     L64E9
 
 L64E3:  ldax    L7B63
-L64E9:  sta     grafport2::width
-        stx     grafport2::width+1
+L64E9:  stax    grafport2::width
         sub16  grafport2::width, L650B, grafport2::cliprect_x1
         jsr     L653E
         jsr     L6DB1
@@ -10355,8 +10307,7 @@ L6535:  lda     ($06),y
 
 L653E:  lda     active_window_id
         jsr     window_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$23
         ldx     #$07
 L654C:  lda     grafport2::cliprect_x1,x
@@ -10375,12 +10326,10 @@ L655E:  MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect_x1
 
 L656D:  lda     active_window_id
         jsr     L7D5D
-        sta     L6600
-        stx     L6601
+        stax    L6600
         lda     active_window_id
         jsr     window_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$06
         lda     ($06),y
         tay
@@ -10420,8 +10369,7 @@ L6604:  lda     active_window_id
         sty     L669F
         lda     active_window_id
         jsr     window_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$08
         lda     ($06),y
         tay
@@ -10871,8 +10819,7 @@ L6AA7:  stx     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         lda     LE6BE
         jsr     file_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$02
         lda     ($06),y
         ora     #$80
@@ -10950,8 +10897,7 @@ L6B68:  lda     #$01
         jsr     L6C0F
         lda     LE6BE
         jsr     file_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$02
         lda     ($06),y
         ora     #$80
@@ -11320,8 +11266,7 @@ L6F22:  iny
 
 L6F31:  dey
 L6F32:  sty     L6F4A
-        lda     $06
-        ldx     $06+1
+        ldax    $06
         jsr     L6FB7
         ldax    L6F48
         ldy     L6F4A
@@ -11330,8 +11275,7 @@ L6F32:  sty     L6F4A
 L6F48:  .byte   0
 L6F49:  .byte   0
 L6F4A:  .byte   0
-L6F4B:  sta     $06
-        stx     $06+1
+L6F4B:  stax    $06
         sty     L705D
 L6F52:  lda     ($06),y
         sta     L705D,y
@@ -11361,8 +11305,7 @@ L6F64:  dec     L704B
 
 L6F8F:  rts
 
-L6F90:  sta     $0A
-        stx     $0B
+L6F90:  stax    $0A
         ldy     #$00
         lda     ($0A),y
         tay
@@ -11382,12 +11325,10 @@ L6FA9:  cpy     #$01
         dey
         rts
 
-L6FAF:  sta     $06
-        stx     $06+1
+L6FAF:  stax    $06
         lda     #$80
         bne     L6FBD
-L6FB7:  sta     $06
-        stx     $06+1
+L6FB7:  stax    $06
         lda     #$00
 L6FBD:  sta     L704A
         bit     L704A
@@ -11414,15 +11355,13 @@ L6FE4:  inc     L7049
 L6FF5:  rts
 
 L6FF6:  jsr     window_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$0A
         lda     ($06),y
         beq     L6FE4
         lda     L7049
         jsr     window_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$00
         lda     ($06),y
         tay
@@ -11923,8 +11862,7 @@ L7471:  lda     ($06),y
         jsr     push_zp_addrs
         lda     bufnum
         jsr     window_address_lookup
-        sta     $08
-        stx     $08+1
+        stax    $08
         lda     $06
         clc
         adc     #$09
@@ -11962,8 +11900,7 @@ L74D3:  tay
         tya
         pha
         jsr     window_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         pla
         asl     a
         tax
@@ -11999,8 +11936,7 @@ L7512:  lda     ($06),y
         sta     $E1B0,x
         lda     LE6BE
         jsr     file_address_lookup
-        sta     $08
-        stx     $08+1
+        stax    $08
         ldx     $E1B0
         ldy     #$09
         lda     ($08),y
@@ -12018,8 +11954,7 @@ L7548:  iny
         bne     L7548
         lda     bufnum
         jsr     window_address_lookup
-        sta     $08
-        stx     $08+1
+        stax    $08
         ldy     $E1B0
 L7561:  lda     $E1B0,y
         sta     ($08),y
@@ -12029,8 +11964,7 @@ L7569:  ldax    $08
         jsr     L87BA
         lda     bufnum
         jsr     window_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$14
         lda     bufnum
         sec
@@ -12079,8 +12013,7 @@ L75A3:  sta     ($06),y
         jsr     L7054
         lda     LE6BE
         jsr     file_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$02
         lda     ($06),y
         and     #$0F
@@ -12203,8 +12136,7 @@ L76BB:  bit     L7634
 L76C4:  jsr     L7B6B
         lda     L7621
         jsr     window_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$16
         lda     L7B65
         sec
@@ -12280,8 +12212,7 @@ L7768:  inc     LDD9E
         inc     buf3len
         sta     buf3,x
         jsr     file_address_lookup
-        sta     $08
-        stx     $08+1
+        stax    $08
         lda     LCBANK2
         lda     LCBANK2
         ldy     #$00
@@ -12573,8 +12504,7 @@ L7AD7:  addr_jump draw_text2, str_6_spaces
 
 L7ADE:  .byte   0
 L7ADF:  .byte   0
-L7AE0:  sta     L7B5B
-        stx     L7B5C
+L7AE0:  stax    L7B5B
         ldx     #$06
         lda     #$20
 L7AEA:  sta     str_6_spaces,x
@@ -12693,8 +12623,7 @@ L7BCB:  lda     buf3len
         bne     L7BEF
         lda     buf3
         jsr     file_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$06
         ldx     #$03
 L7BE0:  lda     ($06),y
@@ -12727,8 +12656,7 @@ L7C13:  sub16  L7B5F, #$32, L7B5F
 L7C36:  tax
         lda     buf3,x
         jsr     file_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$02
         lda     ($06),y
         and     #$0F
@@ -12844,8 +12772,7 @@ L7D55:  inc     L7D5B
 L7D5B:  .byte   0
 L7D5C:  .byte   0
 L7D5D:  jsr     window_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$23
         ldx     #$07
 L7D68:  lda     ($06),y
@@ -13414,8 +13341,7 @@ L8249:  lda     LDFC5,x
         rts
 
 L8253:  ldax    $EC54
-L8259:  sta     L8272
-        stx     L8273
+L8259:  stax    L8272
         jmp     L8276
 
 L8262:  .byte   $20
@@ -13657,8 +13583,7 @@ ascii_digits:
         .byte   "0123456789"
 
 .proc concatenate_date_part
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$00
         lda     ($08),y
         sta     L84D0
@@ -13701,8 +13626,7 @@ L850C:  lda     #$00
 L850E:  sta     L85F1
         lda     active_window_id
         jsr     window_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         lda     #$06
         clc
         adc     L85F1
@@ -13756,8 +13680,7 @@ L8562:  lsr     L85F3
         sta     grafport2::cliprect_x1+1,x
         lda     active_window_id
         jsr     L7D5D
-        sta     L85F4
-        stx     L85F5
+        stax    L85F4
         sty     L85F6
         lda     L85F1
         beq     L85C3
@@ -13767,8 +13690,7 @@ L8562:  lsr     L85F3
 L85C3:  add16 grafport2::cliprect_x1, L85F4, grafport2::width
 L85D6:  lda     active_window_id
         jsr     window_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$23
         ldx     #$07
 L85E4:  lda     grafport2::cliprect_x1,x
@@ -14065,8 +13987,7 @@ L877F:  .byte   0
         textptr := $6
         textlen := $8
 
-        sta     textptr
-        stx     textptr+1
+        stax    textptr
         ldy     #0
         lda     (textptr),y
         beq     exit
@@ -14086,8 +14007,7 @@ exit:   rts
         len := $8
         result := $9
 
-        sta     ptr
-        stx     ptr+1
+        stax    ptr
         ldy     #0
         lda     (ptr),y
         sta     len
@@ -14203,8 +14123,7 @@ L8855:  tay
         jsr     push_zp_addrs
         tya
         jsr     window_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldx     #$00
         ldy     #$14
 L8865:  lda     ($06),y
@@ -14220,8 +14139,7 @@ L8874:  tay
         jsr     push_zp_addrs
         tya
         jsr     window_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldx     #$00
         ldy     #$14
 L8884:  lda     L8830,x
@@ -14237,12 +14155,10 @@ L8893:  tay
         jsr     push_zp_addrs
         tya
         jsr     file_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         lda     active_window_id
         jsr     window_lookup
-        sta     $08
-        stx     $08+1
+        stax    $08
         ldy     #$17
         ldx     #$03
 L88AD:  lda     ($08),y
@@ -14311,12 +14227,10 @@ L8915:  tay
         jsr     push_zp_addrs
         tya
         jsr     file_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
 L8921:  lda     active_window_id
         jsr     window_lookup
-        sta     $08
-        stx     $08+1
+        stax    $08
         ldy     #$17
         ldx     #$03
 L892F:  lda     ($08),y
@@ -14427,8 +14341,7 @@ L89EA:  jsr     push_zp_addrs
         ldy     device_num
         sta     $E1A0,y
         jsr     file_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldx     #$00
         ldy     #$09
         lda     #$20
@@ -14608,8 +14521,7 @@ L8B3E:  lda     #$00
         sta     LEC26,x
 L8B43:  lda     LE6BE
         jsr     file_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$02
         lda     ($06),y
         and     #$7F
@@ -14622,12 +14534,10 @@ L8B5C:  ldy     #$80
         bne     L8B62
 L8B60:  ldy     #$00
 L8B62:  sty     L8D4A
-        sta     L8D4B
-        stx     L8D4C
+        stax    L8D4B
         txa
         jsr     window_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         lda     #$14
         clc
         adc     #$23
@@ -14640,8 +14550,7 @@ L8B7B:  lda     ($06),y
         bpl     L8B7B
         lda     L8D4B
         jsr     file_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$03
         lda     ($06),y
         clc
@@ -16316,8 +16225,7 @@ L993E:  lda     #$00
         sta     L9180+1
         jmp     L9BBF
 
-L995A:  sta     L9938
-        stx     L9938+1
+L995A:  stax    L9938
         lda     #$01
         sta     L9937
         jmp     L9BBF
@@ -16349,8 +16257,7 @@ L9984:  lda     #$00
         yax_call launch_dialog, index_download_dialog, L9937
         rts
 
-        sta     L9938
-        stx     L9938+1
+        stax    L9938
         lda     #$01
         sta     L9937
         yax_call launch_dialog, index_download_dialog, L9937
@@ -16853,8 +16760,7 @@ L9E7E:  sta     L9E79
         sta     L9180+1
         rts
 
-        sta     L9E7A
-        stx     L9E7B
+        stax    L9E7A
         lda     #$01
         sta     L9E79
         jmp     LA044
@@ -17070,14 +16976,12 @@ LA085:  lda     #<$A0C3
         sta     L9180+1
         rts
 
-        sta     LA055
-        stx     LA056
+        stax    LA055
         lda     #$01
         sta     LA054
         jmp     LA100
 
-        sta     LA055
-        stx     LA056
+        stax    LA055
         lda     #$01
         sta     LA054
         jmp     LA10A
@@ -17302,8 +17206,7 @@ LA2D4:  inc     LA2ED
 LA2DC:  bit     L9189
         bvc     LA2E4
         jsr     LA322
-LA2E4:  lda     LA2ED
-        ldx     LA2EE
+LA2E4:  ldax    LA2ED
         jmp     L917C
 
 LA2ED:  .byte   0
@@ -17555,8 +17458,7 @@ LA503:  .addr   show_about_dialog
 dialog_param_addr:  .addr   0
         .byte   0
 
-LA520:  sta     dialog_param_addr
-        stx     dialog_param_addr+1
+LA520:  stax    dialog_param_addr
         tya
         asl     a
         tax
@@ -19294,8 +19196,7 @@ erase_ok_button:
         textptr := $6
         textlen := $8
 
-        sta     textptr
-        stx     textptr+1
+        stax    textptr
         jsr     LBD7B
         beq     done
         sta     textlen
@@ -19314,8 +19215,7 @@ done:   rts
         str_len   := $8
         str_width := $9
 
-        sta     str             ; input is length-prefixed string
-        stx     str+1
+        stax    str             ; input is length-prefixed string
 
         jsr     LBD7B
         sta     str_len
@@ -19345,8 +19245,7 @@ LB76B:  .byte   0
 
 ;;; ==================================================
 
-LB76C:  sta     $06
-        stx     $06+1
+LB76C:  stax    $06
         MGTK_RELAY_CALL MGTK::MoveTo, point7
         ldax    $06
         jsr     draw_text1
@@ -19547,8 +19446,7 @@ click_result:
         ycoord := $8
 
         jsr     LBD3B
-        sta     xcoord
-        stx     xcoord+1
+        stax    xcoord
         lda     point6::ycoord
         sta     ycoord
         lda     point6::ycoord+1
@@ -19607,8 +19505,7 @@ LB9B8:  MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
         rts
 
 LB9D8:  jsr     LBD3B
-        sta     $06
-        stx     $06+1
+        stax    $06
         lda     $D20D
         cmp     $06
         lda     $D20E
@@ -19619,8 +19516,7 @@ LB9D8:  jsr     LBD3B
 .proc LB9EE
         ptr := $6
         jsr     LBD3B
-        sta     LBB09
-        stx     LBB0A
+        stax    LBB09
         ldx     path_buf2
         inx
         lda     #' '
@@ -19764,8 +19660,7 @@ LBB0B:  sta     LBB62
         sta     str_1_char+1
         jsr     LBD3B
         inc     path_buf1
-        sta     xcoord
-        stx     xcoord+1
+        stax    xcoord
         lda     point6::ycoord
         sta     ycoord
         lda     point6::ycoord+1
@@ -19791,8 +19686,7 @@ LBB63:  lda     path_buf1
 
         dec     path_buf1
         jsr     LBD3B
-        sta     xcoord
-        stx     xcoord+1
+        stax    xcoord
         lda     point6::ycoord
         sta     ycoord
         lda     point6::ycoord+1
@@ -19829,8 +19723,7 @@ LBBBC:  ldx     path_buf1
         dec     path_buf1
         inc     path_buf2
         jsr     LBD3B
-        sta     xcoord
-        stx     xcoord+1
+        stax    xcoord
         lda     point6::ycoord
         sta     ycoord
         lda     point6::ycoord+1
@@ -19946,8 +19839,7 @@ LBCDF:  lda     path_buf2,x
         jsr     LB961
         rts
 
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$00
         lda     ($06),y
         tay
@@ -20341,8 +20233,7 @@ L092F:  lda     #0
         sta     $EBFB
         sta     buf3
         jsr     desktop_main::file_address_lookup
-        sta     $06
-        stx     $06+1
+        stax    $06
         ldy     #$02
         lda     #$70
         sta     ($06),y
@@ -20454,12 +20345,10 @@ L0A3B:  lda     L0A92
         cmp     L0A93
         beq     L0A8F
         jsr     L0A95
-        sta     $06
-        stx     $06+1
+        stax    $06
         lda     L0A92
         jsr     L0AA2
-        sta     $08
-        stx     $08+1
+        stax    $08
         ldy     #$00
         lda     ($06),y
         tay
@@ -20472,12 +20361,10 @@ L0A59:  lda     ($06),y
         sta     ($08),y
         lda     L0A92
         jsr     L0ABC
-        sta     $06
-        stx     $06+1
+        stax    $06
         lda     L0A92
         jsr     L0AAF
-        sta     $08
-        stx     $08+1
+        stax    $08
         ldy     #$00
         lda     ($06),y
         tay
@@ -20843,8 +20730,7 @@ L0D7F:  cmp     #$0B
 L0DA2:  addr_jump L0DAD, str_ramcard_slot_x
 
 L0DA9:  ldax    #str_unidisk_xy
-L0DAD:  sta     $06
-        stx     $06+1
+L0DAD:  stax    $06
         ldy     #$00
         lda     ($06),y
         sta     L0DBE
