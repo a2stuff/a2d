@@ -53,6 +53,16 @@ INVOKER_FILENAME := $280         ; File to invoke (PREFIX must be set)
         jmp     target
 .endmacro
 
+.macro  ldax arg
+    .if (.match (.mid (0, 1, {arg}), #))
+        lda     #<(.right (.tcount ({arg})-1, {arg}))
+        ldx     #>(.right (.tcount ({arg})-1, {arg}))
+    .else
+        lda     arg
+        ldx     arg+1
+    .endif
+.endmacro
+
 .macro  add16 aa, bb, rr
     .if (.match (.mid (0, 1, {bb}), #))
         lda     aa
@@ -196,8 +206,7 @@ L8595:  .byte   $00
 L8596:  .byte   $00
 L8597:  .byte   $00
 
-        lda     #$00
-        ldx     #$00
+        ldax    #0
 L859C:  sta     $D409,x
         sta     $D401,x
         sta     $D40D
@@ -3835,8 +3844,7 @@ LBAEF:  tya
         jmp     LBB14
 
 .macro DRAW_PASCAL_STRING addr
-        lda     #<(addr)
-        ldx     #>(addr)
+        ldax    #(addr)
         jsr     draw_pascal_string
 .endmacro
 
@@ -3862,8 +3870,7 @@ LBB5C:  MGTK_RELAY2_CALL MGTK::FrameRect, try_again_rect
         MGTK_RELAY2_CALL MGTK::MoveTo, try_again_pos
         DRAW_PASCAL_STRING ok_label
 LBB75:  MGTK_RELAY2_CALL MGTK::MoveTo, point8
-        lda     prompt_addr
-        ldx     prompt_addr+1
+        ldax    prompt_addr
         jsr     draw_pascal_string
 LBB87:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
         lda     event_params_kind
@@ -4090,8 +4097,7 @@ LBE41:  lda     LBE5C
 LBE4E:  jsr     LBF52
         dex
         bne     LBE21
-        lda     LBE37
-        ldx     LBE38
+        ldax    LBE37
         rts
 
         .byte   0
@@ -4381,11 +4387,9 @@ addr:   .addr   0
 .macro DESKTOP_RELAY_CALL call, addr
         ldy     #(call)
 .if .paramcount > 1
-        lda     #<(addr)
-        ldx     #>(addr)
+        ldax    #(addr)
 .else
-        lda     #0
-        ldx     #0
+        ldax    #0
 .endif
         jsr     DESKTOP_RELAY
 .endmacro
@@ -6796,8 +6800,7 @@ L46CF:  .addr   dummy0000
 
 .macro MLI_RELAY_CALL call, addr
         ldy     #(call)
-        lda     #<(addr)
-        ldx     #>(addr)
+        ldax    #(addr)
         jsr     desktop_main::MLI_RELAY
 .endmacro
 
@@ -7573,8 +7576,7 @@ L4CF3:  iny
 :       dey
         sty     LDFC9
         addr_call L6FB7, LDFC9
-        lda     #<LDFC9
-        ldx     #>LDFC9
+        ldax    #LDFC9
         ldy     LDFC9
         jsr     L6F4B
         jmp     redraw_windows_and_desktop
@@ -7675,8 +7677,7 @@ L4DC4:  iny
 L4DD2:  dey
         sty     $E00A
         addr_call L6FB7, $E00A
-        lda     #$0A
-        ldx     #$E0
+        ldax    #$E00A
         ldy     $E00A
         jsr     L6F4B
         jmp     redraw_windows_and_desktop
@@ -8966,8 +8967,7 @@ L5803:  lda     active_window_id
         rts
 
 scroll_right:                   ; elevator right / contents left
-        lda     L585F
-        ldx     L5860
+        ldax    L585F
         jsr     L5863
         sta     L585F
         rts
@@ -8979,8 +8979,7 @@ scroll_left:                    ; elevator left / contents right
         rts
 
 scroll_down:                    ; elevator down / contents up
-        lda     L5861
-        ldx     L5862
+        ldax    L5861
         jsr     L5893
         sta     L5861
         rts
@@ -9214,8 +9213,7 @@ L5A10:  lda     ($06),y
         dec     $1F00
         lda     #$2F
         sta     $1F01
-        lda     #$00
-        ldx     #$1F
+        ldax    #$1F00
         ldy     $1F00
         jsr     L6FB7
         lda     L704B
@@ -10233,12 +10231,10 @@ L638C:  jsr     L650F
         lda     L63EB
         sbc     L7B62
         bmi     L63C1
-        lda     L63EA
-        ldx     L63EB
+        ldax    L63EA
         jmp     L63C7
 
-L63C1:  lda     L7B61
-        ldx     L7B62
+L63C1:  ldax    L7B61
 L63C7:  sta     grafport2::cliprect_y1
         stx     grafport2::cliprect_y1+1
         add16_8 grafport2::cliprect_y1, L63E9, grafport2::height
@@ -10260,12 +10256,10 @@ L63EC:  jsr     L650F
         lda     L644B
         sbc     L7B66
         bpl     L6421
-        lda     L644A
-        ldx     L644B
+        ldax    L644A
         jmp     L6427
 
-L6421:  lda     L7B65
-        ldx     L7B66
+L6421:  ldax    L7B65
 L6427:  sta     grafport2::height
         stx     grafport2::height+1
         lda     grafport2::height
@@ -10297,12 +10291,10 @@ L6451:  jsr     L650F
         lda     L64AF
         sbc     L7B60
         bmi     L6484
-        lda     L64AE
-        ldx     L64AF
+        ldax    L64AE
         jmp     L648A
 
-L6484:  lda     L7B5F
-        ldx     L7B60
+L6484:  ldax    L7B5F
 L648A:  sta     grafport2::cliprect_x1
         stx     grafport2::cliprect_x1+1
         add16 grafport2::cliprect_x1, L64AC, grafport2::width
@@ -10323,12 +10315,10 @@ L64B0:  jsr     L650F
         lda     L650E
         sbc     L7B64
         bpl     L64E3
-        lda     L650D
-        ldx     L650E
+        ldax    L650D
         jmp     L64E9
 
-L64E3:  lda     L7B63
-        ldx     L7B64
+L64E3:  ldax    L7B63
 L64E9:  sta     grafport2::width
         stx     grafport2::width+1
         sub16  grafport2::width, L650B, grafport2::cliprect_x1
@@ -10848,12 +10838,10 @@ L6A5C:  lda     ($06),y
         lda     #$2F
         sta     $0221
 
-        lda     #$20
-        ldx     #$02
+        ldax    #$220
         ldy     $220
         jsr     L6FB7
-        lda     #$20
-        ldx     #$02
+        ldax    #$220
         ldy     $220
         jmp     L6F4B
 
@@ -11335,8 +11323,7 @@ L6F32:  sty     L6F4A
         lda     $06
         ldx     $06+1
         jsr     L6FB7
-        lda     L6F48
-        ldx     L6F49
+        ldax    L6F48
         ldy     L6F4A
         jmp     L6F4B
 
@@ -12038,8 +12025,7 @@ L7561:  lda     $E1B0,y
         sta     ($08),y
         dey
         bpl     L7561
-L7569:  lda     $08
-        ldx     $08+1
+L7569:  ldax    $08
         jsr     L87BA
         lda     bufnum
         jsr     window_lookup
@@ -12237,8 +12223,7 @@ L76C4:  jsr     L7B6B
         lda     L7B64
         sbc     #$01
         bpl     L770C
-        lda     L7B63
-        ldx     L7B64
+        ldax    L7B63
         jmp     L7710
 
 L7705:  lda     #$AA
@@ -12262,8 +12247,7 @@ L7710:  ldy     #$20
         lda     L7B66
         sbc     #$00
         bpl     L7740
-        lda     L7B65
-        ldx     L7B66
+        ldax    L7B65
         jmp     L7744
 
 L7739:  lda     #$32
@@ -13429,8 +13413,7 @@ L8249:  lda     LDFC5,x
         bpl     L8249
         rts
 
-L8253:  lda     $EC54
-        ldx     $EC55
+L8253:  ldax    $EC54
 L8259:  sta     L8272
         stx     L8273
         jmp     L8276
@@ -14112,8 +14095,7 @@ exit:   rts
         bne     :+
         inc     ptr+1
 :       MGTK_RELAY_CALL MGTK::TextWidth, ptr
-        lda     result
-        ldx     result+1
+        ldax    result
         rts
 .endproc
 
@@ -15705,12 +15687,10 @@ L9469:  lda     text_buffer2::data-1,x
         bne     L9469
 L9472:  lda     selected_window_index
         bne     L9480
-        lda     get_file_info_params5::auxtype
-        ldx     get_file_info_params5::auxtype+1
+        ldax    get_file_info_params5::auxtype
         jmp     L9486
 
-L9480:  lda     get_file_info_params5::blocks
-        ldx     get_file_info_params5::blocks+1
+L9480:  ldax    get_file_info_params5::blocks
 L9486:  jsr     L4006
         jsr     L9549
         ldx     $220
@@ -18643,8 +18623,7 @@ LB01E:  .byte   0
 .proc draw_colon
         lda     #$A0
         sta     dialog_label_pos
-        lda     #<desktop_aux::str_colon
-        ldx     #>desktop_aux::str_colon
+        ldax    #desktop_aux::str_colon
         jsr     draw_dialog_label
         rts
 .endproc
@@ -19222,8 +19201,7 @@ skip:   dey
         adc     #0
         sta     dialog_label_pos+3
         MGTK_RELAY_CALL MGTK::MoveTo, dialog_label_pos
-        lda     $06
-        ldx     $06+1
+        ldax    $06
         jsr     draw_text1
         ldx     dialog_label_pos
         lda     #$28
@@ -19370,8 +19348,7 @@ LB76B:  .byte   0
 LB76C:  sta     $06
         stx     $06+1
         MGTK_RELAY_CALL MGTK::MoveTo, point7
-        lda     $06
-        ldx     $06+1
+        ldax    $06
         jsr     draw_text1
         rts
 
@@ -20014,8 +19991,7 @@ LBD33:  rts
         lda     path_buf1
         sta     textlen
         bne     :+
-        lda     point6::xcoord
-        ldx     point6::xcoord+1
+        ldax    point6::xcoord
         rts
 :       MGTK_RELAY_CALL MGTK::TextWidth, params
         lda     result
@@ -20701,8 +20677,7 @@ L0C60:  lda     ($06),y
         sta     ($08),y
         dey
         bne     L0C60
-        lda     $08
-        ldx     $08+1
+        ldax    $08
         jsr     desktop_main::L87BA
         lda     ($08),y
         tay
@@ -20867,8 +20842,7 @@ L0D7F:  cmp     #$0B
 
 L0DA2:  addr_jump L0DAD, str_ramcard_slot_x
 
-L0DA9:  lda     #<str_unidisk_xy
-        ldx     #>str_unidisk_xy
+L0DA9:  ldax    #str_unidisk_xy
 L0DAD:  sta     $06
         stx     $06+1
         ldy     #$00
