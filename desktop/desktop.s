@@ -199,10 +199,7 @@ L867B:  lda     online_params_buffer
         sta     $D464,y
         asl     a
         tax
-        lda     $F13A,x         ; ???
-        sta     $06
-        lda     $F13A+1,x
-        sta     $06+1
+        copy16  $F13A,x, $06
         ldx     #$00
         ldy     #$09
         lda     #' '
@@ -641,10 +638,7 @@ DESKTOP_DIRECT:
         lda     ($06),y
         asl     a
         tax
-        lda     L939E,x
-        sta     dispatch + 1
-        lda     L939E+1,x
-        sta     dispatch + 2
+        copy16  L939E,x, dispatch + 1
         iny
         lda     ($06),y
         tax
@@ -704,10 +698,7 @@ L943E:  ldx     num_icons
         inc     num_icons
         asl     a
         tax
-        lda     $06
-        sta     icon_ptrs,x
-        lda     $07
-        sta     icon_ptrs+1,x
+        copy16  $06, icon_ptrs,x
         rts
 .endproc
 
@@ -730,10 +721,7 @@ bail1:  lda     #1
 
 L9469:  asl     a
         tax
-        lda     icon_ptrs,x
-        sta     $06
-        lda     icon_ptrs+1,x
-        sta     $06+1
+        copy16  icon_ptrs,x, $06
         ldy     #$01
         lda     ($06),y
         bne     L947E
@@ -795,10 +783,7 @@ bail1:  lda     #1
 
 found:  asl     a
         tax
-        lda     icon_ptrs,x
-        sta     ptr
-        lda     icon_ptrs+1,x
-        sta     ptr+1
+        copy16  icon_ptrs,x, ptr
         lda     has_highlight
         bne     L94E9
         jmp     done
@@ -845,10 +830,7 @@ bail1:  lda     #1
         ;; Pointer to icon details
 found:  asl     a
         tax
-        lda     icon_ptrs,x
-        sta     ptr
-        lda     icon_ptrs+1,x
-        sta     ptr+1
+        copy16  icon_ptrs,x, ptr
         ldy     #1              ; offset 1 is ... ???
         lda     (ptr),y
         bne     :+
@@ -908,10 +890,7 @@ done:   lda     #0
         lda     ($06),y
         asl     a
         tax
-        lda     icon_ptrs,x
-        sta     $06
-        lda     icon_ptrs+1,x
-        sta     $07
+        copy16  icon_ptrs,x, $06
         jmp     LA39D
 .endproc
 
@@ -946,10 +925,7 @@ start2:
 L9648:  lda     icon_table,x
         asl     a
         tay
-        lda     icon_ptrs,y
-        sta     $08
-        lda     icon_ptrs+1,y
-        sta     $08+1
+        copy16  icon_ptrs,y, $08
         ldy     #2
         lda     ($08),y
         and     #$0F
@@ -1003,11 +979,8 @@ L969D:  ldx     L9696
         sta     L9695
         asl     a
         tax
-        lda     icon_ptrs,x
-        sta     $08
-        lda     icon_ptrs+1,x
-        sta     $08+1
-        ldy     #$02
+        copy16  icon_ptrs,x, $08
+        ldy     #2
         lda     ($08),y
         and     #$0F
         ldy     #$00
@@ -1041,10 +1014,7 @@ L96E5:  dec     L96D6
         sta     L96D5
         asl     a
         tax
-        lda     icon_ptrs,x
-        sta     $08
-        lda     icon_ptrs+1,x
-        sta     $08+1
+        copy16  icon_ptrs,x, $08
         ldy     #$02
         lda     ($08),y
         and     #$0F
@@ -1134,10 +1104,7 @@ start:  ldy     #3
         bpl     :-
 
         ;; Overwrite y with x ???
-        lda     $06
-        sta     $08
-        lda     $06+1
-        sta     $08+1
+        copy16  $06, $08
 
         ;; ???
         ldy     #$05
@@ -1158,10 +1125,7 @@ L97B9:  txa
         lda     icon_table,x
         asl     a
         tax
-        lda     icon_ptrs,x
-        sta     $06
-        lda     icon_ptrs+1,x
-        sta     $07
+        copy16  icon_ptrs,x, $06
         ldy     #$02
         lda     ($06),y
         and     #$0F
@@ -1273,10 +1237,7 @@ L98AC:  lda     highlight_count
         bcc     L98B6
         jmp     L9852
 
-L98B6:  lda     #<drag_outline_buffer
-        sta     $08
-        lda     #>drag_outline_buffer
-        sta     $08+1
+L98B6:  copy16  #drag_outline_buffer, $08
         lda     has_highlight
         bne     L98C8
         lda     #$03
@@ -1350,10 +1311,7 @@ L9961:  lda     drag_outline_buffer+2,x
         sta     L9C76,x
         dex
         bpl     L9961
-        lda     #<drag_outline_buffer
-        sta     $08
-        lda     #>drag_outline_buffer
-        sta     $08+1
+        copy16  #drag_outline_buffer, $08
 L9972:  ldy     #$02
 L9974:  lda     ($08),y
         cmp     L9C76
@@ -1532,10 +1490,7 @@ L9B48:  bit     L9C75
         jmp     L9A0E
 
 L9B52:  MGTK_CALL MGTK::FramePoly, drag_outline_buffer
-        lda     #<drag_outline_buffer
-        sta     $08
-        lda     #>drag_outline_buffer
-        sta     $08+1
+        copy16  #drag_outline_buffer, $08
 L9B60:  ldy     #$02
 L9B62:  lda     ($08),y
         clc
@@ -1604,10 +1559,7 @@ L9BF3:  dex
         lda     highlight_list,x
         asl     a
         tax
-        lda     icon_ptrs,x
-        sta     $06
-        lda     icon_ptrs+1,x
-        sta     $07
+        copy16  icon_ptrs,x, $06
         jsr     calc_icon_poly
         MGTK_CALL MGTK::SetPenMode, pencopy_2
         jsr     LA39D
@@ -1620,17 +1572,11 @@ L9C18:  jsr     pop_zp_addrs
         dex
         txa
         pha
-        lda     #<drag_outline_buffer
-        sta     $08
-        lda     #>drag_outline_buffer
-        sta     $08+1
+        copy16  #drag_outline_buffer, $08
 L9C29:  lda     highlight_list,x
         asl     a
         tax
-        lda     icon_ptrs,x
-        sta     $06
-        lda     icon_ptrs+1,x
-        sta     $07
+        copy16  icon_ptrs,x, $06
         ldy     #$02
         lda     ($08),y
         iny
@@ -1854,10 +1800,7 @@ L9E3D:  cmp     highlight_list,x
         beq     L9E6A
         asl     a
         tax
-        lda     icon_ptrs,x
-        sta     $06
-        lda     icon_ptrs+1,x
-        sta     $07
+        copy16  icon_ptrs,x, $06
         ldy     #$02
         lda     ($06),y
         and     #$0F
@@ -1952,10 +1895,7 @@ start:  ldy     #0
         lda     icon
         asl     a
         tax
-        lda     icon_ptrs,x
-        sta     $06
-        lda     icon_ptrs+1,x
-        sta     $06+1
+        copy16  icon_ptrs,x, $06
         jsr     calc_icon_poly
 
         lda     poly::v0::ycoord
@@ -2035,10 +1975,7 @@ L9FB6:  lda     ($06),y
         cpy     #$09
         bne     L9FB6
         jsr     push_zp_addrs
-        lda     paintbits_params2::mapbits
-        sta     $08
-        lda     paintbits_params2::mapbits+1
-        sta     $08+1
+        copy16  paintbits_params2::mapbits, $08
         ldy     #$0B
 L9FCF:  lda     ($08),y
         sta     paintbits_params2::mapbits,y
@@ -2199,14 +2136,8 @@ LA191:  lda     ($06),y
         dey
         dex
         bpl     LA191
-        lda     poly::v0::ycoord
-        sta     poly::v1::ycoord
-        lda     poly::v0::ycoord+1
-        sta     poly::v1::ycoord+1
-        lda     poly::v0::xcoord
-        sta     poly::v7::xcoord
-        lda     poly::v0::xcoord+1
-        sta     poly::v7::xcoord+1
+        copy16  poly::v0::ycoord, poly::v1::ycoord
+        copy16  poly::v0::xcoord, poly::v7::xcoord
         ldy     #$07
         lda     ($06),y
         sta     $08
@@ -2333,10 +2264,7 @@ LA2B5:  bmi     LA2AA
         lda     icon_table,x
         asl     a
         tax
-        lda     icon_ptrs,x
-        sta     $06
-        lda     icon_ptrs+1,x
-        sta     $07
+        copy16  icon_ptrs,x, $06
         ldy     #$02
         lda     ($06),y
         and     #$0F
@@ -2540,14 +2468,8 @@ volume:
 .endproc
 
 .proc erase_icon
-        lda     poly::v0::ycoord
-        sta     LA3B1
-        lda     poly::v0::ycoord+1
-        sta     LA3B1+1
-        lda     poly::v6::xcoord
-        sta     LA3AF
-        lda     poly::v6::xcoord+1
-        sta     LA3AF+1
+        copy16  poly::v0::ycoord, LA3B1
+        copy16  poly::v6::xcoord, LA3AF
         ldx     #3
 :       lda     poly::v4::xcoord,x
         sta     LA3B3,x
@@ -2561,46 +2483,49 @@ volume:
 
 LA446:  jsr     push_zp_addrs
         ldx     num_icons
-        dex
-LA44D:  cpx     #$FF
+        dex                     ; any icons to draw?
+LA44D:  cpx     #$FF            ; =-1
         bne     LA466
-        bit     LA3B7
-        bpl     LA462
+        bit     LA3B7           ; no, almost done
+        bpl     :+
         MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport4
-LA462:  jsr     pop_zp_addrs
+:       jsr     pop_zp_addrs
         rts
 
 ;;; ==================================================
 
-LA466:  txa
+.proc LA466
+        ptr := $8
+
+        txa
         pha
         lda     icon_table,x
         cmp     LA3AC
         beq     LA4C5
         asl     a
         tax
-        lda     icon_ptrs,x
-        sta     $08
-        lda     icon_ptrs+1,x
-        sta     $08+1
-        ldy     #$02
-        lda     ($08),y
-        and     #$07
+        copy16  icon_ptrs,x, ptr
+        ldy     #2              ; type??? offset
+        lda     (ptr),y
+        and     #$07            ; low bits
         cmp     LA3AD
         bne     LA4C5
+
+        ;; Is icon highlighted?
         lda     has_highlight
         beq     LA49D
-        ldy     #$00
-        lda     ($08),y
-        ldx     #$00
-LA492:  cmp     highlight_list,x
+        ldy     #0              ; icon num
+        lda     (ptr),y
+        ldx     #0
+:       cmp     highlight_list,x
         beq     LA4C5
         inx
         cpx     highlight_count
-        bne     LA492
-LA49D:  ldy     #$00
-        lda     ($08),y
+        bne     :-
+
+LA49D:  ldy     #0              ; icon num
+        lda     (ptr),y
         sta     LA3AE
         bit     LA3B7
         bpl     LA4AC
@@ -2618,6 +2543,9 @@ LA4C5:  pla
         tax
         dex
         jmp     LA44D
+.endproc
+
+;;; ==================================================
 
 LA4CB:  .byte   0
 
@@ -2707,10 +2635,7 @@ LA56F:  pla
         tya
         asl     a
         tax
-        lda     icon_ptrs,x
-        sta     $06
-        lda     icon_ptrs+1,x
-        sta     $07
+        copy16  icon_ptrs,x, $06
         ldy     #$03
         lda     ($06),y
         clc
@@ -2756,10 +2681,7 @@ LA5CB:  pla
         tya
         asl     a
         tax
-        lda     icon_ptrs,x
-        sta     $06
-        lda     icon_ptrs+1,x
-        sta     $07
+        copy16  icon_ptrs,x, $06
         ldy     #$03
         lda     ($06),y
         sec
@@ -3717,14 +3639,8 @@ LBA0B:  sta     grafport3_viewloc_xcoord,x
         sta     grafport3_cliprect_x1,x
         dex
         bpl     LBA0B
-        lda     #<$226
-        sta     grafport3_cliprect_x2
-        lda     #>$226
-        sta     grafport3_cliprect_x2+1
-        lda     #<$B9
-        sta     grafport3_cliprect_y2
-        lda     #>$B9
-        sta     grafport3_cliprect_y2+1
+        copy16  #$226, grafport3_cliprect_x2
+        copy16  #$B9, grafport3_cliprect_y2
         MGTK_RELAY2_CALL MGTK::SetPort, grafport3
         ldax    portmap::viewloc::xcoord
         jsr     LBF8B
@@ -3773,10 +3689,7 @@ LBAE5:  cmp     alert_table,y
 LBAEF:  tya
         asl     a
         tay
-        lda     prompt_table,y
-        sta     prompt_addr
-        lda     prompt_table+1,y
-        sta     prompt_addr+1
+        copy16  prompt_table,y, prompt_addr
         cpx     #$00
         beq     LBB0B
         txa
@@ -4038,10 +3951,7 @@ LBE4E:  jsr     LBF52
 
         .byte   0
 LBE5C:  .byte   0
-LBE5D:  lda     #$00
-        sta     LBEBC
-        lda     #$08
-        sta     LBEBC+1
+LBE5D:  copy16  #$800, LBEBC
         ldx     LBFCD
         ldy     LBFCE
         lda     #$FF
@@ -4386,10 +4296,7 @@ to:
         lda     bufnum
         asl     a               ; * 2
         tax
-        lda     table1,x        ; copy table1 entry to ptr
-        sta     ptr
-        lda     table1+1,x
-        sta     ptr+1
+        copy16  table1,x, ptr
 
         sta     RAMRDON
         sta     RAMWRTON
@@ -4409,10 +4316,7 @@ set_length:
         sta     buf3len
 
 set_copy_ptr:
-        lda     table2,x         ; copy table2 entry to ptr
-        sta     ptr
-        lda     table2+1,x
-        sta     ptr+1
+        copy16  table2,x, ptr
         bit     flag
         bmi     copy_from
 
@@ -4460,10 +4364,7 @@ flag:   .byte   0
         lda     active_window_id   ; which desktop window?
         asl     a
         tax
-        lda     win_table,x     ; window table
-        sta     dst
-        lda     win_table+1,x
-        sta     dst+1
+        copy16  win_table,x, dst
         lda     dst
         clc
         adc     #20             ; add offset
@@ -6348,10 +6249,7 @@ L43B3:  dex                     ; x has top level menu id
         clc
         adc     L43E5
         tax
-        lda     dispatch_table,x
-        sta     L43E5
-        lda     dispatch_table+1,x
-        sta     L43E5+1
+        copy16  dispatch_table,x, L43E5
         jsr     L43E0
         MGTK_RELAY_CALL MGTK::HiliteMenu, menu_click_params
         rts
@@ -6807,10 +6705,7 @@ L477F:  lda     $D345,x
         addr_call L4842, $280
         addr_call L4842, $220
         jsr     L48BE
-        lda     #<INVOKER
-        sta     reset_and_invoke_target
-        lda     #>INVOKER
-        sta     reset_and_invoke_target+1
+        copy16  #INVOKER, reset_and_invoke_target
         jmp     reset_and_invoke
 .endproc
 
@@ -7169,14 +7064,8 @@ L4A8B:  lda     $840,y
         bne     L4A8B
 L4A95:  dey
         sty     $840
-        lda     #$00
-        sta     $06
-        lda     #$08
-        sta     $06+1
-        lda     #<$840
-        sta     $08
-        lda     #>$840
-        sta     $08+1
+        copy16  #$800, $06
+        copy16  #$840, $08
         jsr     L4D19
         rts
 
@@ -8472,10 +8361,7 @@ L54F0:  ldx     L544A
 L54F3:  lda     $1801,x
         asl     a
         tay
-        lda     file_address_table,y
-        sta     $06
-        lda     file_address_table+1,y
-        sta     $06+1
+        copy16  file_address_table,y, $06
         ldy     #$06
         lda     ($06),y
         cmp     L5447
@@ -9669,10 +9555,7 @@ L5F0F:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-L5F13:  lda     #<notpenXOR
-        sta     $06
-        lda     #>notpenXOR
-        sta     $06+1
+L5F13:  copy16  #notpenXOR, $06
         jsr     L60D5
         ldx     #$03
 L5F20:  lda     event_params_coords,x
@@ -9775,18 +9658,12 @@ L602A:  lda     event_params_coords,x
         bmi     L6054
         bit     L60D3
         bpl     L6068
-L6054:  lda     event_params_xcoord
-        sta     rect_E230
-        lda     event_params_xcoord+1
-        sta     $E231
+L6054:  copy16  event_params_xcoord, rect_E230
         lda     #$80
         sta     L60D3
         jmp     L6079
 
-L6068:  lda     event_params_xcoord
-        sta     $E234
-        lda     event_params_xcoord+1
-        sta     $E235
+L6068:  copy16  event_params_xcoord, $E234
         lda     #$00
         sta     L60D3
 L6079:  lda     event_params_ycoord
@@ -9801,18 +9678,12 @@ L6079:  lda     event_params_ycoord
         bmi     L609A
         bit     L60D4
         bpl     L60AE
-L609A:  lda     event_params_ycoord
-        sta     $E232
-        lda     event_params_ycoord+1
-        sta     $E233
+L609A:  copy16  event_params_ycoord, $E232
         lda     #$80
         sta     L60D4
         jmp     L60BF
 
-L60AE:  lda     event_params_ycoord
-        sta     $E236
-        lda     event_params_ycoord+1
-        sta     $E237
+L60AE:  copy16  event_params_ycoord, $E236
         lda     #$00
         sta     L60D4
 L60BF:  MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
@@ -10629,18 +10500,12 @@ L6994:  lda     event_params_coords,x
         bmi     L69BE
         bit     L6A3D
         bpl     L69D2
-L69BE:  lda     event_params_xcoord
-        sta     rect_E230
-        lda     event_params_xcoord+1
-        sta     $E231
+L69BE:  copy16  event_params_xcoord, rect_E230
         lda     #$80
         sta     L6A3D
         jmp     L69E3
 
-L69D2:  lda     event_params_xcoord
-        sta     $E234
-        lda     event_params_xcoord+1
-        sta     $E235
+L69D2:  copy16  event_params_xcoord, $E234
         lda     #$00
         sta     L6A3D
 L69E3:  lda     event_params_ycoord
@@ -10655,18 +10520,12 @@ L69E3:  lda     event_params_ycoord
         bmi     L6A04
         bit     L6A3E
         bpl     L6A18
-L6A04:  lda     event_params_ycoord
-        sta     $E232
-        lda     event_params_ycoord+1
-        sta     $E233
+L6A04:  copy16  event_params_ycoord, $E232
         lda     #$80
         sta     L6A3E
         jmp     L6A29
 
-L6A18:  lda     event_params_ycoord
-        sta     $E236
-        lda     event_params_ycoord+1
-        sta     $E237
+L6A18:  copy16  event_params_ycoord, $E236
         lda     #$00
         sta     L6A3E
 L6A29:  MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
@@ -11431,17 +11290,11 @@ L7161:  jsr     show_warning_dialog_num
         txs
         rts
 
-L7169:  lda     L485F
-        sta     $06
-        lda     L4860
-        sta     $06+1
+L7169:  copy16  L485F, $06
         lda     $E1F1
         asl     a
         tax
-        lda     $06
-        sta     $E202,x
-        lda     $06+1
-        sta     $E203,x
+        copy16  $06, $E202,x
         ldx     $E1F1
         lda     L72A7
         sta     $E1F2,x
@@ -11459,10 +11312,7 @@ L7169:  lda     L485F
         sta     L70C4
         lda     #$00
         sta     L70C3
-        lda     #<$0C04
-        sta     $08
-        lda     #>$0C04
-        sta     $08+1
+        copy16  #$0C04, $08
         inc     $06
         lda     $06
         bne     L71BD
@@ -11482,10 +11332,7 @@ L71CB:  inc     L70C3
 
 L71E7:  lda     #$00
         sta     L70C3
-        lda     #<$0C04
-        sta     $08
-        lda     #>$0C04
-        sta     $08+1
+        copy16  #$0C04, $08
         jsr     L72CE
 L71F7:  ldx     #$00
         ldy     #$00
@@ -11562,10 +11409,7 @@ L7279:  lda     $1F00,x
         inc     $06+1
 L7293:  jmp     L71BD
 
-L7296:  lda     $06
-        sta     L485F
-        lda     $06+1
-        sta     L4860
+L7296:  copy16  $06, L485F
         jsr     L72D8
         jsr     pop_zp_addrs
         rts
@@ -11602,10 +11446,7 @@ L72EC:  MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params4
         beq     L72F8
         rts
 
-L72F8:  lda     get_file_info_params4::aux_type
-        sta     L70BD
-        lda     get_file_info_params4::aux_type+1
-        sta     L70BE
+L72F8:  copy16  get_file_info_params4::aux_type, L70BD
         sub16  get_file_info_params4::aux_type, get_file_info_params4::blocks_used, L70BB
         sub16  L70BD, L70BB, L70BD
         lsr     L70BC
@@ -11654,16 +11495,10 @@ L735C:  inx
 L7385:  lda     L7446
         asl     a
         tax
-        lda     $E202,x
-        sta     $06
-        lda     $E203,x
-        sta     $06+1
+        copy16  $E202,x, $06
         inx
         inx
-        lda     $E202,x
-        sta     $08
-        lda     $E202+1,x
-        sta     $08+1
+        copy16  $E202,x, $08
         ldy     #$00
         jsr     push_zp_addrs
 L73A5:  lda     LCBANK2
@@ -11744,10 +11579,7 @@ L744A:  .byte   0
 L744B:  lda     bufnum
         asl     a
         tax
-        lda     $E6BF,x
-        sta     $08
-        lda     $E6C0,x
-        sta     $08+1
+        copy16  $E6BF,x, $08
         ldy     #$09
         lda     ($06),y
         tay
@@ -11822,10 +11654,7 @@ L74D3:  tay
         pla
         asl     a
         tax
-        lda     $E6BF,x
-        sta     $08
-        lda     $E6C0,x
-        sta     $08+1
+        copy16  $E6BF,x, $08
         ldy     #$00
         lda     ($06),y
         clc
@@ -12022,10 +11851,7 @@ L7673:  cmp     $E1F2,x
 L767C:  txa
         asl     a
         tax
-        lda     $E202,x
-        sta     $06
-        lda     $E203,x
-        sta     $06+1
+        copy16  $E202,x, $06
         lda     LCBANK2
         lda     LCBANK2
         ldy     #$00
@@ -12249,10 +12075,7 @@ L7870:  lda     bufnum
 
 L78A1:  sta     L78EE
         jsr     push_zp_addrs
-        lda     type_table_addr
-        sta     $06
-        lda     type_table_addr+1
-        sta     $06+1
+        copy16  type_table_addr, $06
         ldy     #$00
         lda     ($06),y
         tay
@@ -12262,20 +12085,14 @@ L78B6:  lda     ($06),y
         dey
         bpl     L78B6
         ldy     #$01
-L78C2:  lda     LFB04           ; ???
-        sta     $06
-        lda     LFB04+1
-        sta     $06+1
+L78C2:  copy16  LFB04, $06
         lda     ($06),y
         sta     L7624
         dey
         tya
         asl     a
         tay
-        lda     type_icons_addr
-        sta     $06
-        lda     type_icons_addr+1
-        sta     $06+1
+        copy16  type_icons_addr, $06
         lda     ($06),y
         sta     L7622
         iny
@@ -12304,10 +12121,7 @@ L78EF:  lda     grafport2::cliprect::x1
         sta     point1::ycoord+1
         sta     $EBC5
         MGTK_RELAY_CALL MGTK::MoveTo, point1
-        lda     grafport2::cliprect::x2
-        sta     point5::xcoord
-        lda     grafport2::cliprect::x2+1
-        sta     point5::xcoord+1
+        copy16  grafport2::cliprect::x2, point5::xcoord
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::LineTo, point5
         lda     point1::ycoord
@@ -12388,14 +12202,8 @@ L7A6A:  lsr     L7ADF
         add16 LEBE3, L7ADE, point2::xcoord
         jmp     L7A9E
 
-L7A86:  lda     LEBE3
-        sta     point2::xcoord
-        lda     LEBE3+1
-        sta     point2::xcoord+1
-        lda     $EBE7
-        sta     point3::xcoord
-        lda     $EBE8
-        sta     point3::xcoord+1
+L7A86:  copy16  LEBE3, point2::xcoord
+        copy16  $EBE7, point3::xcoord
 L7A9E:  lda     point2::xcoord
         clc
         adc     grafport2::cliprect::x1
@@ -12530,10 +12338,7 @@ L7BA1:  clc
         sta     L7B65
         lda     L7D5C
         sta     L7B66
-        lda     #<$168
-        sta     L7B63
-        lda     #>$168
-        sta     L7B63+1
+        copy16  #$168, L7B63
         jmp     L7B96
 
 L7BCB:  lda     buf3len
@@ -12992,21 +12797,12 @@ L7FBB:  inc     $0805
 
         lda     LCBANK1
         lda     LCBANK1
-        lda     #$54
-        sta     point9::xcoord
-        lda     #$00
-        sta     point9::xcoord+1
-        lda     #$CB
-        sta     pointA::xcoord
-        lda     #$00
-        sta     pointA::xcoord+1
+        copy16  #$54, point9::xcoord
+        copy16  #$CB, pointA::xcoord
         lda     #$00
         sta     pointB::xcoord
         sta     pointB::xcoord+1
-        lda     #$E7
-        sta     pointC
-        lda     #$00
-        sta     pointC::xcoord+1
+        copy16  #$E7, pointC::xcoord
         lda     LCBANK2
         lda     LCBANK2
         jmp     L80F5
@@ -13015,10 +12811,7 @@ L801F:  cmp     #$84
         beq     L8024
         rts
 
-L8024:  lda     type_table_addr
-        sta     $08
-        lda     type_table_addr+1
-        sta     $08+1
+L8024:  copy16  type_table_addr, $08
         ldy     #$00
         lda     ($08),y
         sta     $0807
@@ -13352,10 +13145,7 @@ compose_date_string:
         bpl     :-
         lda     #1
         sta     text_buffer2::length
-        lda     #<text_buffer2::length
-        sta     $08
-        lda     #>text_buffer2::length
-        sta     $08+1
+        copy16  #text_buffer2::length, $8
         lda     date            ; any bits set?
         ora     date+1
         bne     prep_date_strings
@@ -13832,10 +13622,7 @@ window_address_lookup:
 ;;; ==================================================
 
 L8707:  sta     L877F
-        lda     type_table_addr
-        sta     $06
-        lda     type_table_addr+1
-        sta     $06+1
+        copy16  type_table_addr, $06
         ldy     #$00
         lda     ($06),y
         tay
@@ -13850,10 +13637,7 @@ L8726:  tya
         asl     a
         asl     a
         tay
-        lda     type_names_addr
-        sta     $06
-        lda     type_names_addr+1
-        sta     $06+1
+        copy16  type_names_addr, $06
         ldx     #$00
 L8736:  lda     ($06),y
         sta     LDFC6,x
@@ -14817,15 +14601,8 @@ restore:
         lda     pos_table+2,x
         sta     set_mark_params::position+2
 
-        lda     len_table,y
-        sta     read_params::request_count
-        lda     len_table+1,y
-        sta     read_params::request_count+1
-
-        lda     addr_table,y
-        sta     read_params::data_buffer
-        lda     addr_table+1,y
-        sta     read_params::data_buffer+1
+        copy16  len_table,y, read_params::request_count
+        copy16  addr_table,y, read_params::data_buffer
 
 open:   MLI_RELAY_CALL OPEN, open_params
         beq     :+
@@ -14924,10 +14701,7 @@ L8FA1:  jsr     L8FE1
 
 L8FA7:  asl     a
         tay
-        lda     file_address_table,y
-        sta     $06
-        lda     file_address_table+1,y
-        sta     $06+1
+        copy16  file_address_table,y, $06
         ldy     #$02
         lda     ($06),y
         rts
@@ -14979,14 +14753,8 @@ L9011:  lda     LEBFC
         and     #$7F
         asl     a
         tax
-        lda     window_address_table,x
-        sta     $08
-        lda     window_address_table+1,x
-        sta     $08+1
-        lda     #<L917B
-        sta     $06
-        lda     #>L917B
-        sta     $06+1
+        copy16  window_address_table,x, $08
+        copy16  #L917B, $06
         jsr     L91A0
         jmp     L9076
 
@@ -14995,10 +14763,7 @@ L9032:  jsr     L8FA7
         beq     L9051
         asl     a
         tax
-        lda     window_address_table,x
-        sta     $08
-        lda     window_address_table+1,x
-        sta     $08+1
+        copy16  window_address_table,x, $08
         lda     LEBFC
         jsr     L918E
         jsr     L91A0
@@ -15083,10 +14848,7 @@ L90EE:  jsr     L91F5
         beq     L9140
         jsr     L918E
         jsr     L91A0
-        lda     #$0A
-        sta     $06
-        lda     #$E0
-        sta     $06+1
+        copy16  #$E00A, $06
         ldy     #$00
         lda     ($06),y
         beq     L9114
@@ -15206,18 +14968,12 @@ L91E8:  jsr     JT_REDRAW_ALL
         yax_call JT_DESKTOP_RELAY, $C, 0
         rts
 
-L91F5:  lda     #<L9211
-        sta     $08
-        lda     #>L9211
-        sta     $08+1
+L91F5:  copy16  #L9211, $08
         lda     selected_window_index
         beq     L9210
         asl     a
         tax
-        lda     window_address_table,x
-        sta     $08
-        lda     window_address_table+1,x
-        sta     $08+1
+        copy16  window_address_table,x, $08
         lda     #$00
 L9210:  rts
 
@@ -15363,10 +15119,7 @@ L9300:  lda     selected_window_index
         beq     L9331
         asl     a
         tax
-        lda     window_address_table,x
-        sta     $08
-        lda     window_address_table+1,x
-        sta     $08+1
+        copy16  window_address_table,x, $08
         ldx     L92E6
         lda     selected_file_index,x
         jsr     L918E
@@ -15449,10 +15202,7 @@ L93DB:  ldx     L92E6
         jsr     L918E
         lda     #$01
         sta     L92E3
-        lda     $06
-        sta     L92E4
-        lda     $06+1
-        sta     L92E5
+        copy16  $06, L92E4
         jsr     L953F
         lda     #$02
         sta     L92E3
@@ -15484,7 +15234,7 @@ L942F:  lda     #$03
         lda     #$00
         sta     $220
         lda     selected_window_index
-        bne     L9472                            ; ProDOS TRM 4.4.5:
+        bne     L9472                           ; ProDOS TRM 4.4.5:
         lda     get_file_info_params5::aux_type   ; "When file information about a volume
         sec                                      ; directory is requested, the total
         sbc     get_file_info_params5::blocks_used    ; number of blocks on the volume is
@@ -15541,27 +15291,15 @@ L94A9:  lda     $220,x
         jsr     L953F
         lda     #$04
         sta     L92E3
-        lda     get_file_info_params5::create_date
-        sta     date
-        lda     get_file_info_params5::create_date+1
-        sta     date+1
+        copy16  get_file_info_params5::create_date, date
         jsr     L4009
-        lda     #<$E6EB
-        sta     L92E4
-        lda     #>$E6EB
-        sta     L92E4+1
+        copy16  #$E6EB, L92E4
         jsr     L953F
         lda     #$05
         sta     L92E3
-        lda     get_file_info_params5::mod_date
-        sta     date
-        lda     get_file_info_params5::mod_date+1
-        sta     date+1
+        copy16  get_file_info_params5::mod_date, date
         jsr     L4009
-        lda     #<$E6EB
-        sta     L92E4
-        lda     #>$E6EB
-        sta     L92E4+1
+        copy16  #$E6EB, L92E4
         jsr     L953F
         lda     #$06
         sta     L92E3
@@ -15575,10 +15313,7 @@ L950E:  lda     L953A,x
         bmi     L951F
 L9519:  lda     get_file_info_params5::file_type
         jsr     L402D
-L951F:  lda     #<LDFC5
-        sta     L92E4
-        lda     #>LDFC5
-        sta     L92E4+1
+L951F:  copy16  #LDFC5, L92E4
         jsr     L953F
         bne     L9534
 L952E:  inc     L92E6
@@ -15640,10 +15375,7 @@ L9591:  lda     selected_window_index
         beq     L95C2
         asl     a
         tax
-        lda     window_address_table,x
-        sta     $08
-        lda     window_address_table+1,x
-        sta     $08+1
+        copy16  window_address_table,x, $08
         ldx     L9706
         lda     selected_file_index,x
         jsr     L918E
@@ -15715,16 +15447,10 @@ L962F:  sty     $08
         beq     L964D
         asl     a
         tax
-        lda     window_address_table,x
-        sta     $06
-        lda     window_address_table+1,x
-        sta     $06+1
+        copy16  window_address_table,x, $06
         jmp     L9655
 
-L964D:  lda     #$05
-        sta     $06
-        lda     #$97
-        sta     $06+1
+L964D:  copy16  #$9705, $06
 L9655:  ldy     #$00
         lda     ($06),y
         tay
@@ -15762,10 +15488,7 @@ L969E:  lda     #$40
         lda     selected_file_index,x
         sta     LE22B
         yax_call JT_DESKTOP_RELAY, $E, LE22B
-        lda     L9707
-        sta     $08
-        lda     L9708
-        sta     $08+1
+        copy16  L9707, $08
         ldx     L9706
         lda     selected_file_index,x
         jsr     L918E
@@ -16132,14 +15855,8 @@ L9938:  .addr   0
 
 L993E:  lda     #$00
         sta     L9937
-        lda     #<L995A
-        sta     L917D
-        lda     #>L995A
-        sta     L917D+1
-        lda     #<L997C
-        sta     L9180
-        lda     #>L997C
-        sta     L9180+1
+        copy16  #L995A, L917D
+        copy16  #L997C, L9180
         jmp     L9BBF
 
 L995A:  stax    L9938
@@ -16163,14 +15880,8 @@ L997C:  lda     #$05
 
 L9984:  lda     #$00
         sta     L9937
-        lda     #<$99A7         ; ???
-        sta     L917D
-        lda     #>$99A7
-        sta     L917D+1
-        lda     #<$99DC         ; ???
-        sta     L9180
-        lda     #>$99DC
-        sta     L9180+1
+        copy16  #$99A7, L917D
+        copy16  #$99DC, L9180
         yax_call launch_dialog, index_download_dialog, L9937
         rts
 
@@ -16189,10 +15900,7 @@ L99C3:  lda     L9931,y
         bpl     L99C3
         lda     #$00
         sta     LA425
-        lda     #<$99EB
-        sta     L9186
-        lda     #>$99EB
-        sta     L9186+1
+        copy16  #$99EB, L9186
         rts
 
         lda     #$03
@@ -16448,10 +16156,7 @@ L9C33:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params3
         jsr     LA497
         jmp     L9C33
 
-L9C48:  lda     file_info_params3::blocks_used
-        sta     L9CD8
-        lda     file_info_params3::blocks_used+1
-        sta     L9CD9
+L9C48:  copy16  file_info_params3::blocks_used, L9CD8
 L9C54:  lda     $1FC0
         sta     L9CD6
         ldy     #$01
@@ -16576,10 +16281,7 @@ L9D9C:  lda     open_params5::ref_num
         sta     mark_params2::ref_num
         rts
 
-L9DA9:  lda     #<$0AC0
-        sta     read_params6::request_count
-        lda     #>$0AC0
-        sta     read_params6::request_count+1
+L9DA9:  copy16  #$0AC0, read_params6::request_count
 L9DB3:  yax_call JT_MLI_RELAY, READ, read_params6
         beq     L9DC8
         cmp     #$4C
@@ -16587,10 +16289,7 @@ L9DB3:  yax_call JT_MLI_RELAY, READ, read_params6
         jsr     LA49B
         jmp     L9DB3
 
-L9DC8:  lda     read_params6::trans_count
-        sta     write_params::request_count
-        lda     read_params6::trans_count+1
-        sta     write_params::request_count+1
+L9DC8:  copy16  read_params6::trans_count, write_params::request_count
         ora     read_params6::trans_count
         bne     L9DDE
 L9DD9:  lda     #$FF
@@ -16662,19 +16361,10 @@ L9E7A:  .word   0
         .byte   $02
 
 L9E7E:  sta     L9E79
-        lda     #<$9EB1         ; ???
-        sta     L9183
-        lda     #>$9EB1
-        sta     L9183+1
-        lda     #<$9EA3         ; ???
-        sta     L917D
-        lda     #>$9EA3
-        sta     L917D+1
+        copy16  #$9EB1, L9183
+        copy16  #$9EA3, L917D
         jsr     LA044
-        lda     #<$9ED3         ; ???
-        sta     L9180
-        lda     #>$9ED3
-        sta     L9180+1
+        copy16  #$9ED3, L9180
         rts
 
         stax    L9E7A
@@ -16862,34 +16552,16 @@ LA059:  lda     #$00
         sta     LA054
         bit     L918B
         bpl     LA085
-        lda     #<$A0D1
-        sta     L9183
-        lda     #>$A0D1
-        sta     L9183+1
-        lda     #<$A0B5
-        sta     L917D
-        lda     #>$A0B5
-        sta     L917D+1
+        copy16  #$A0D1, L9183
+        copy16  #$A0B5, L917D
         jsr     LA10A
-        lda     #<$A0F8
-        sta     L9180
-        lda     #>$A0F8
-        sta     L9180+1
+        copy16  #$A0F8, L9180
         rts
 
-LA085:  lda     #<$A0C3
-        sta     L9183
-        lda     #>$A0C3
-        sta     L9183+1
-        lda     #<$A0A7
-        sta     L917D
-        lda     #>$A0A7
-        sta     L917D+1
+LA085:  copy16  #$A0C3, L9183
+        copy16  #$A0A7, L917D
         jsr     LA100
-        lda     #<$A0F0
-        sta     L9180
-        lda     #>$A0F0
-        sta     L9180+1
+        copy16  #$A0F0, L9180
         rts
 
         stax    LA055
@@ -17025,19 +16697,10 @@ LA1DF:  .byte   0
 
 LA1E4:  lda     #$00
         sta     LA1DF
-        lda     #<$A220
-        sta     L9183
-        lda     #>$A220
-        sta     L9183+1
-        lda     #<$A211
-        sta     L917D
-        lda     #>$A211
-        sta     L917D+1
+        copy16  #$A220, L9183
+        copy16  #$A211, L917D
         yax_call launch_dialog, index_get_size_dialog, LA1DF
-        lda     #<$A233
-        sta     L9180
-        lda     #>$A233
-        sta     L9180+1
+        copy16  #$A233, L9180
         rts
 
         lda     #$01
@@ -17378,10 +17041,7 @@ LA520:  stax    dialog_param_addr
         tya
         asl     a
         tax
-        lda     LA503,x
-        sta     LA565
-        lda     LA503+1,x
-        sta     LA565+1
+        copy16  LA503,x, LA565
         lda     #$00
         sta     LD8EB
         sta     LD8EC
@@ -17784,15 +17444,9 @@ jump_relay:
         axy_call draw_dialog_label, $86, desktop_aux::str_about6
         axy_call draw_dialog_label, $07, desktop_aux::str_about7
         axy_call draw_dialog_label, $09, desktop_aux::str_about8
-        lda     #$36
-        sta     dialog_label_pos
-        lda     #$01
-        sta     dialog_label_pos+1
+        copy16  #$136, dialog_label_pos
         axy_call draw_dialog_label, $09, desktop_aux::str_about9
-        lda     #$28
-        sta     dialog_label_pos
-        lda     #$00
-        sta     dialog_label_pos+1
+        copy16  #$28, dialog_label_pos
 
 :       MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_params_kind
@@ -18798,10 +18452,7 @@ warning_message_table:
 ;;; ==================================================
 
 .proc copy_dialog_param_addr_to_ptr
-        lda     dialog_param_addr
-        sta     $06
-        lda     dialog_param_addr+1
-        sta     $06+1
+        copy16  dialog_param_addr, $06
         rts
 .endproc
 
@@ -19241,14 +18892,8 @@ button_loop_all:
         asl     a
         asl     a
         tax
-        lda     test_fill_button_proc_table,x
-        sta     test_button_proc_addr
-        lda     test_fill_button_proc_table+1,x
-        sta     test_button_proc_addr+1
-        lda     test_fill_button_proc_table+2,x
-        sta     fill_button_proc_addr
-        lda     test_fill_button_proc_table+3,x
-        sta     fill_button_proc_addr+1
+        copy16  test_fill_button_proc_table,x, test_button_proc_addr
+        copy16  test_fill_button_proc_table+2,x, fill_button_proc_addr
         pla
         jmp     event_loop
 
@@ -19364,10 +19009,7 @@ click_result:
 
         jsr     LBD3B
         stax    xcoord
-        lda     point6::ycoord
-        sta     ycoord
-        lda     point6::ycoord+1
-        sta     ycoord+1
+        copy16  point6::ycoord, ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, point
         MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
         bit     LD8EB
@@ -19384,10 +19026,7 @@ LB92D:  MGTK_RELAY_CALL MGTK::SetTextBG, desktop_aux::LAE6D
         textptr := $6
         textlen := $8
 
-LB93B:  lda     #<LD8EF
-        sta     textptr
-        lda     #>LD8EF
-        sta     textptr+1
+LB93B:  copy16  #LD8EF, textptr
         lda     LD8EE
         sta     textlen
         MGTK_RELAY_CALL MGTK::DrawText, drawtext_params
@@ -19439,10 +19078,7 @@ LB9D8:  jsr     LBD3B
         lda     #' '
         sta     path_buf2,x
         inc     path_buf2
-        lda     #<path_buf2
-        sta     ptr
-        lda     #>path_buf2
-        sta     ptr+1
+        copy16  #path_buf2, ptr
         lda     path_buf2
         sta     ptr+2
 LBA10:  MGTK_RELAY_CALL MGTK::TextWidth, ptr
@@ -19500,10 +19136,7 @@ LBA7C:  dey
         textlen := $8
         result  := $9
 
-        lda     #<path_buf1
-        sta     textptr
-        lda     #>path_buf1
-        sta     textptr+1
+        copy16  #path_buf1, textptr
         lda     path_buf1
         sta     textlen
 :       MGTK_RELAY_CALL MGTK::TextWidth, params
@@ -19578,10 +19211,7 @@ LBB0B:  sta     LBB62
         jsr     LBD3B
         inc     path_buf1
         stax    xcoord
-        lda     point6::ycoord
-        sta     ycoord
-        lda     point6::ycoord+1
-        sta     ycoord+1
+        copy16  point6::ycoord, ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, point
         MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
         addr_call draw_text1, str_1_char
@@ -19604,10 +19234,7 @@ LBB63:  lda     path_buf1
         dec     path_buf1
         jsr     LBD3B
         stax    xcoord
-        lda     point6::ycoord
-        sta     ycoord
-        lda     point6::ycoord+1
-        sta     ycoord+1
+        copy16  point6::ycoord, ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, point
         MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
         addr_call draw_text1, path_buf2
@@ -19641,10 +19268,7 @@ LBBBC:  ldx     path_buf1
         inc     path_buf2
         jsr     LBD3B
         stax    xcoord
-        lda     point6::ycoord
-        sta     ycoord
-        lda     point6::ycoord+1
-        sta     ycoord+1
+        copy16  point6::ycoord, ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, point
         MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
         addr_call draw_text1, path_buf2
@@ -19793,10 +19417,7 @@ LBD33:  rts
         textlen := $8
         result := $9
 
-        lda     #<$D444
-        sta     textptr
-        lda     #>$D444
-        sta     textptr+1
+        copy16  #$D444, textptr
         lda     path_buf1
         sta     textlen
         bne     :+
@@ -20091,10 +19712,7 @@ found_ram:
         MGTK_RELAY_CALL MGTK::SetCursor, watch_cursor
         MGTK_RELAY_CALL MGTK::ShowCursor
         jsr     desktop_main::push_zp_addrs
-        lda     #<$EC63
-        sta     $06
-        lda     #>$EC63
-        sta     $06+1
+        copy16  #$EC63, $06
         ldx     #$01
 L08D5:  cpx     #$7F
         bne     L08DF
@@ -20105,10 +19723,7 @@ L08DF:  txa
         pha
         asl     a
         tax
-        lda     $06
-        sta     file_address_table,x
-        lda     $06+1
-        sta     file_address_table+1,x
+        copy16  $06, file_address_table,x
         pla
         pha
         ldy     #$00
@@ -20449,10 +20064,7 @@ L0C17:  inc     L0D04
         jmp     L0C81
 
 L0C25:  inc     L0D05
-        lda     #<buf
-        sta     $08
-        lda     #>buf
-        sta     $08+1
+        copy16  #buf, $08
         lda     #$00
         sta     L0D09
         lda     apple_menu
@@ -20508,10 +20120,7 @@ L0C96:  inc     L0D08
         cmp     L0D07
         bne     L0CBA
         MLI_RELAY_CALL READ, read_params2
-        lda     #$04
-        sta     $06
-        lda     #$14
-        sta     $06+1
+        copy16  #$1404, $06
         lda     #$00
         sta     L0D08
         jmp     L0C0C
@@ -20579,10 +20188,7 @@ L0D0A:  ldy     #$00
 L0D12:  lda     L0E33
         asl     a
         tay
-        lda     $DB00,y
-        sta     $08
-        lda     $DB00+1,y
-        sta     $08+1
+        copy16  $DB00,y, $08
         ldy     L0E33
         lda     DEVLST,y
         pha
@@ -20772,10 +20378,7 @@ L0E79:  sta     L0EAF
         pha
         asl     a
         tax
-        lda     L0EB0,x
-        sta     sta_addr
-        lda     L0EB0+1,x
-        sta     sta_addr+1
+        copy16  L0EB0,x, sta_addr
         ldx     s00
         dex
         lda     L0EAE

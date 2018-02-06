@@ -137,3 +137,37 @@
         sta     rr+1
     .endif
 .endmacro
+
+;;; Copy 16-bit value
+;;;    copy16 #$1111, $2222     ; immediate
+;;;    copy16 $1111, $2222      ; absolute
+;;;    copy16 $1111,x, $2222    ; indirect load
+;;;    copy16 $1111,y, $2222    ; indirect load
+;;;    copy16 $1111, $2222,x    ; indirect store
+;;;    copy16 $1111, $2222,y    ; indirect store
+.macro copy16 arg1, arg2, arg3
+    .if (.match ({arg2}, x) .or .match ({arg2}, y))
+        ;; indexed load variant (arg2 is x or y)
+        lda     arg1,arg2
+        sta     arg3
+        lda     arg1+1,arg2
+        sta     arg3+1
+    .elseif (.match ({arg3}, x) .or .match ({arg3}, y))
+        ;; indexed store variant (arg3 is x or y)
+        lda     arg1
+        sta     arg2,arg3
+        lda     arg1+1
+        sta     arg2+1,arg3
+    .elseif (.match (.mid (0, 1, {arg1}), #))
+        ;; immediate load variant (arg1 is #nnnn)
+        lda     #<(.right (.tcount ({arg1})-1, {arg1}))
+        sta     arg2
+        lda     #>(.right (.tcount ({arg1})-1, {arg1}))
+        sta     arg2+1
+    .else
+        lda     arg1
+        sta     arg2
+        lda     arg1+1
+        sta     arg2+1
+    .endif
+.endmacro
