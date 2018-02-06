@@ -6,6 +6,7 @@
         .include "../inc/prodos.inc"
         .include "../mgtk.inc"
         .include "../desktop.inc"
+        .include "macros.inc"
 
 ;;; ==================================================
 ;;; DeskTop - the actual application
@@ -17,116 +18,15 @@ INVOKER_FILENAME := $280         ; File to invoke (PREFIX must be set)
         dummy0000 := $0000         ; overwritten by self-modified code
         dummy1234 := $1234         ; overwritten by self-modified code
 
-.macro addr_call target, addr
-        lda     #<addr
-        ldx     #>addr
-        jsr     target
-.endmacro
-.macro addr_jump target, addr
-        lda     #<addr
-        ldx     #>addr
-        jmp     target
-.endmacro
-
-.macro  axy_call target, yparam, addr
-        lda     #<addr
-        ldx     #>addr
-        ldy     #yparam
-        jsr     target
-.endmacro
-.macro  yax_call target, yparam, addr
-        ldy     #yparam
-        lda     #<addr
-        ldx     #>addr
-        jsr     target
-.endmacro
-.macro  yxa_call target, yparam, addr
-        ldy     #yparam
-        ldx     #>addr
-        lda     #<addr
-        jsr     target
-.endmacro
-.macro  yxa_jump target, yparam, addr
-        ldy     #yparam
-        ldx     #>addr
-        lda     #<addr
-        jmp     target
-.endmacro
-
-.macro  ldax arg
-    .if (.match (.mid (0, 1, {arg}), #))
-        lda     #<(.right (.tcount ({arg})-1, {arg}))
-        ldx     #>(.right (.tcount ({arg})-1, {arg}))
-    .else
-        lda     arg
-        ldx     arg+1
-    .endif
-.endmacro
-
-.macro  stax arg
-        sta     arg
-        stx     arg+1
-.endmacro
-
-.macro  add16 aa, bb, rr
-    .if (.match (.mid (0, 1, {bb}), #))
-        lda     aa
-        clc
-        adc     #<(.right (.tcount ({bb})-1, {bb}))
-        sta     rr
-        lda     aa+1
-        adc     #>(.right (.tcount ({bb})-1, {bb}))
-        sta     rr+1
-    .else
-        lda     aa
-        clc
-        adc     bb
-        sta     rr
-        lda     aa+1
-        adc     bb+1
-        sta     rr+1
-    .endif
-.endmacro
-
-.macro  add16_8 aa, bb, rr
-        lda     aa
-        clc
-        adc     bb
-        sta     rr
-        lda     aa+1
-        adc     #0
-        sta     rr+1
-.endmacro
-
-.macro  sub16 aa, bb, rr
-    .if (.match (.mid (0, 1, {bb}), #))
-        lda     aa
-        sec
-        sbc     #<(.right (.tcount ({bb})-1, {bb}))
-        sta     rr
-        lda     aa+1
-        sbc     #>(.right (.tcount ({bb})-1, {bb}))
-        sta     rr+1
-    .else
-        lda     aa
-        sec
-        sbc     bb
-        sta     rr
-        lda     aa+1
-        sbc     bb+1
-        sta     rr+1
-    .endif
-.endmacro
-
 .macro MGTK_RELAY_CALL call, addr
-.if .paramcount > 1
+    .if .paramcount > 1
         yax_call MGTK_RELAY, (call), (addr)
-.else
+    .else
         yax_call MGTK_RELAY, (call), 0
-.endif
+    .endif
 .endmacro
 
-.macro  PAD_TO addr
+.macro PAD_TO addr
         .res    addr - *, 0
 .endmacro
 
@@ -443,6 +343,7 @@ online_params_buffer:
 
 ;;; ==================================================
 
+        .assert * = $8800, error, "Entry point mismatch"
         .include "font.inc"
 
 ;;; ==================================================
@@ -470,18 +371,22 @@ L8C83:  .byte   $00,$00,$00,$00,$77,$30,$01
         PAD_TO $8E00
 
 ;;; ==================================================
+;;; Entry point for "DESKTOP"
+;;; ==================================================
 
-        ;; Entry point for "DESKTOP"
         .assert * = DESKTOP, error, "DESKTOP entry point must be at $8E00"
 
         jmp     DESKTOP_DIRECT
 
+;;; ==================================================
+
+
 .macro MGTK_RELAY2_CALL call, addr
-.if .paramcount > 1
+    .if .paramcount > 1
         yax_call MGTK_RELAY2, (call), (addr)
-.else
+    .else
         yax_call MGTK_RELAY2, (call), 0
-.endif
+    .endif
 .endmacro
 
 .proc poly
@@ -500,17 +405,17 @@ v7:     DEFINE_POINT 0, 0, v7
 
 .proc paintbits_params2
 viewloc:        DEFINE_POINT 0, 0, viewloc
-mapbits: .addr   0
-mapwidth: .byte   0
-reserved:       .byte 0
+mapbits:        .addr   0
+mapwidth:       .byte   0
+reserved:       .byte   0
 maprect:        DEFINE_RECT 0,0,0,0,maprect
 .endproc
 
 .proc paintbits_params
 viewloc:        DEFINE_POINT 0, 0, viewloc
-mapbits: .addr   0
-mapwidth: .byte   0
-reserved:       .byte 0
+mapbits:        .addr   0
+mapwidth:       .byte   0
+reserved:       .byte   0
 maprect:        DEFINE_RECT 0,0,0,0,maprect
 .endproc
 
@@ -522,15 +427,15 @@ bottom: .word   0
 .endproc
 
 .proc textwidth_params
-textptr:   .addr   text_buffer
-textlen: .byte   0
-result:  .word   0
+textptr:        .addr   text_buffer
+textlen:        .byte   0
+result: .word   0
 .endproc
-set_text_mask_params :=  textwidth_params::result + 1 ; re-used
+set_text_mask_params    := textwidth_params::result + 1  ; re-used
 
 .proc drawtext_params
-textptr:   .addr   text_buffer
-textlen: .byte   0
+textptr:        .addr   text_buffer
+textlen:        .byte   0
 .endproc
 
 text_buffer:
@@ -622,8 +527,8 @@ kind:   .byte   0               ; spills into next block
 .proc findwindow_params2
 mousex: .word   0
 mousey: .word   0
-which_area:.byte   0
-window_id:     .byte   0
+which_area:     .byte   0
+window_id:      .byte   0
 .endproc
 
         screen_width := 560
@@ -632,57 +537,59 @@ window_id:     .byte   0
 .proc grafport
 left:   .word   0
 top:    .word   0
-mapbits: .addr   MGTK::screen_mapbits
-mapwidth: .word   MGTK::screen_mapwidth
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .word   MGTK::screen_mapwidth
 cliprect:       DEFINE_RECT 0, 0, screen_width-1, screen_height-1
-penpattern:.res    8, $FF
+penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:   DEFINE_POINT 0, 0
-penwidth: .byte   1
-penheight: .byte   1
-penmode:   .byte   $96             ; ???
-textbg:  .byte   0
-fontptr:   .addr   DEFAULT_FONT
+penloc: DEFINE_POINT 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   $96     ; ???
+textbg: .byte   0
+fontptr:        .addr   DEFAULT_FONT
 .endproc
 
 .proc getwinport_params
-window_id:     .byte   0
-a_grafport:   .addr   grafport4
+window_id:      .byte   0
+a_grafport:     .addr   grafport4
 .endproc
 
 .proc grafport4
 left:   .word   0
 top:    .word   0
-mapbits: .addr   0
-mapwidth: .word   0
-cliprect_x1:   .word   0
-cliprect_y1:   .word   0
+mapbits:        .addr   0
+mapwidth:       .word   0
+cliprect_x1:    .word   0
+cliprect_y1:    .word   0
 width:  .word   0
 height: .word   0
-penpattern:.res    8, 0
+penpattern:     .res    8, 0
 colormasks:     .byte   0, 0
-penloc:   DEFINE_POINT 0, 0
-penwidth: .byte   0
-penheight: .byte   0
-penmode:   .byte   0
-textbg:  .byte   0
-fontptr:   .addr   0
+penloc: DEFINE_POINT 0, 0
+penwidth:       .byte   0
+penheight:      .byte   0
+penmode:        .byte   0
+textbg: .byte   0
+fontptr:        .addr   0
 .endproc
 
         .byte   $00,$00,$00
         .byte   $00,$FF,$80
 
         ;; Used for FILL_MODE params
-pencopy_2:.byte   0
-penOR_2:.byte   1
-penXOR_2:.byte   2
-penBIC_2:.byte   3
-notpencopy_2:.byte   4
-notpenOR_2:       .byte 5
-notpenXOR_2:       .byte 6
-notpenBIC_2:       .byte 7
+pencopy_2:      .byte   0
+penOR_2:        .byte   1
+penXOR_2:       .byte   2
+penBIC_2:       .byte   3
+notpencopy_2:   .byte   4
+notpenOR_2:     .byte   5
+notpenXOR_2:    .byte   6
+notpenBIC_2:    .byte   7
 
-        ;; DESKTOP command jump table
+;;; ==================================================
+;;; DESKTOP command jump table
+
 L939E:  .addr   0               ; $00
         .addr   L9419           ; $01
         .addr   HIGHLIGHT_ICON_IMPL
@@ -705,7 +612,8 @@ L939E:  .addr   0               ; $00
         .addr   addr
 .endmacro
 
-        ;; DESKTOP entry point (after jump)
+;;; DESKTOP entry point (after jump)
+
 DESKTOP_DIRECT:
 
         ;; Stash return value from stack, adjust by 3
@@ -1017,7 +925,7 @@ L958C:  lda     #$00
         jmp     start
 
         ;; DT_HIGHLIGHT_ICON params
-icon:  .byte   0
+icon:   .byte   0
 buffer: .res    127, 0
 
 start:  lda     HIGHLIGHT_ICON_IMPL ; ???
@@ -2031,7 +1939,7 @@ L9EEA:  ldy     #0
 .proc ICON_IN_RECT_IMPL
         jmp     start
 
-icon:  .byte   0
+icon:   .byte   0
 rect:   DEFINE_RECT 0,0,0,0,rect
 
 start:  ldy     #0
@@ -2407,6 +2315,7 @@ LA2A5:  .byte   0
 .endproc
 
 ;;; ==================================================
+;;; REDRAW_ICONS IMPL
 
 REDRAW_ICONS_IMPL:
         jmp     LA2AE
@@ -2572,15 +2481,18 @@ LA3B7:  .byte   0
 window_id:      .byte   0
 .endproc
 
-LA3B9:  ldy     #0
+.proc LA3B9
+        ldy     #0
         lda     ($06),y
         sta     LA3AC
         iny
         iny
         lda     ($06),y
-        and     #$0F
+        and     #$0F            ; type - is volume?
         sta     LA3AD
-        beq     LA3F4
+        beq     volume
+
+        ;; File (i.e. icon in window)
         lda     #$80
         sta     LA3B7
         MGTK_CALL MGTK::SetPattern, white_pattern
@@ -2593,14 +2505,17 @@ LA3B9:  ldy     #0
         jsr     erase_icon
         jmp     LA446
 
-LA3F4:  MGTK_CALL MGTK::InitPort, grafport
+        ;; Volume (i.e. icon on desktop)
+volume:
+        MGTK_CALL MGTK::InitPort, grafport
         jsr     LA63F
-LA3FD:  jsr     LA6A3
+:       jsr     LA6A3
         jsr     erase_desktop_icon
         lda     L9F93
-        bne     LA3FD
+        bne     :-
         MGTK_CALL MGTK::SetPortBits, grafport
         jmp     LA446
+.endproc
 
 ;;; ==================================================
 
@@ -4912,164 +4827,164 @@ alert_bitmap2_params:
         ;; Looks like window param blocks starting here
 
 .proc winfoF
-window_id:     .byte   $0F
-options:  .byte   MGTK::option_dialog_box
+window_id:      .byte   $0F
+options:        .byte   MGTK::option_dialog_box
 title:  .addr   0
-hscroll:.byte   MGTK::scroll_option_none
-vscroll:.byte   MGTK::scroll_option_none
-hthumbmax:  .byte   0
-hthumbpos:  .byte   0
-vthumbmax:  .byte   0
-vthumbpos:  .byte   0
+hscroll:        .byte   MGTK::scroll_option_none
+vscroll:        .byte   MGTK::scroll_option_none
+hthumbmax:      .byte   0
+hthumbpos:      .byte   0
+vthumbmax:      .byte   0
+vthumbpos:      .byte   0
 status: .byte   0
-reserved:.byte   0
-mincontwidth:     .word   $96
-maxcontwidth:     .word   $32
-mincontlength:     .word   $1F4
-maxcontlength:     .word   $8C
+reserved:       .byte   0
+mincontwidth:   .word   $96
+maxcontwidth:   .word   $32
+mincontlength:  .word   $1F4
+maxcontlength:  .word   $8C
 port:
 viewloc:        DEFINE_POINT $4B, $23
-mapbits: .addr   MGTK::screen_mapbits
-mapwidth: .word   MGTK::screen_mapwidth
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .word   MGTK::screen_mapwidth
 cliprect:       DEFINE_RECT 0, 0, $190, $64
-penpattern:.res    8, $FF
+penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:   DEFINE_POINT 0, 0
-penwidth: .byte   1
-penheight: .byte   1
-penmode:   .byte   0
-textbg:  .byte   MGTK::textbg_white
-fontptr:   .addr   DEFAULT_FONT
-nextwinfo:   .addr   0
+penloc: DEFINE_POINT 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   0
+textbg: .byte   MGTK::textbg_white
+fontptr:        .addr   DEFAULT_FONT
+nextwinfo:      .addr   0
 .endproc
 
 .proc winfo12
-window_id:     .byte   $12
-options:  .byte   MGTK::option_dialog_box
+window_id:      .byte   $12
+options:        .byte   MGTK::option_dialog_box
 title:  .addr   0
-hscroll:.byte   MGTK::scroll_option_none
-vscroll:.byte   MGTK::scroll_option_none
-hthumbmax:  .byte   0
-hthumbpos:  .byte   0
-vthumbmax:  .byte   0
-vthumbpos:  .byte   0
+hscroll:        .byte   MGTK::scroll_option_none
+vscroll:        .byte   MGTK::scroll_option_none
+hthumbmax:      .byte   0
+hthumbpos:      .byte   0
+vthumbmax:      .byte   0
+vthumbpos:      .byte   0
 status: .byte   0
-reserved:.byte   0
-mincontwidth:     .word   $96
-maxcontwidth:     .word   $32
-mincontlength:     .word   $1F4
-maxcontlength:     .word   $8C
+reserved:       .byte   0
+mincontwidth:   .word   $96
+maxcontwidth:   .word   $32
+mincontlength:  .word   $1F4
+maxcontlength:  .word   $8C
 port:
 viewloc:        DEFINE_POINT $19, $14
-mapbits: .addr   MGTK::screen_mapbits
-mapwidth: .word   MGTK::screen_mapwidth
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .word   MGTK::screen_mapwidth
 cliprect:       DEFINE_RECT 0, 0, $1F4, $99
-penpattern:.res    8, $FF
+penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:   DEFINE_POINT 0, 0
-penwidth: .byte   1
-penheight: .byte   1
-penmode:   .byte   0
-textbg:  .byte   MGTK::textbg_white
-fontptr:   .addr   DEFAULT_FONT
-nextwinfo:   .addr   0
+penloc: DEFINE_POINT 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   0
+textbg: .byte   MGTK::textbg_white
+fontptr:        .addr   DEFAULT_FONT
+nextwinfo:      .addr   0
 .endproc
 
 .proc winfo15
-window_id:     .byte   $15
-options:  .byte   MGTK::option_dialog_box
+window_id:      .byte   $15
+options:        .byte   MGTK::option_dialog_box
 title:  .addr   0
-hscroll:.byte   MGTK::scroll_option_none
-vscroll:.byte   MGTK::scroll_option_normal
-hthumbmax:  .byte   0
-hthumbpos:  .byte   0
-vthumbmax:  .byte   3
-vthumbpos:  .byte   0
+hscroll:        .byte   MGTK::scroll_option_none
+vscroll:        .byte   MGTK::scroll_option_normal
+hthumbmax:      .byte   0
+hthumbpos:      .byte   0
+vthumbmax:      .byte   3
+vthumbpos:      .byte   0
 status: .byte   0
-reserved:.byte   0
-mincontwidth:     .word   $64
-maxcontwidth:     .word   $46
-mincontlength:     .word   $64
-maxcontlength:     .word   $46
+reserved:       .byte   0
+mincontwidth:   .word   $64
+maxcontwidth:   .word   $46
+mincontlength:  .word   $64
+maxcontlength:  .word   $46
 port:
 viewloc:        DEFINE_POINT $35, $32
-mapbits: .addr   MGTK::screen_mapbits
-mapwidth: .word   MGTK::screen_mapwidth
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .word   MGTK::screen_mapwidth
 cliprect:       DEFINE_RECT 0, 0, $7D, $46
-penpattern:.res    8, $FF
+penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:   DEFINE_POINT 0, 0
-penwidth: .byte   1
-penheight: .byte   1
-penmode:   .byte   0
-textbg:  .byte   MGTK::textbg_white
-fontptr:   .addr   DEFAULT_FONT
-nextwinfo:   .addr   0
+penloc: DEFINE_POINT 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   0
+textbg: .byte   MGTK::textbg_white
+fontptr:        .addr   DEFAULT_FONT
+nextwinfo:      .addr   0
 .endproc
 
 .proc winfo18
-window_id:     .byte   $18
-options:  .byte   MGTK::option_dialog_box
+window_id:      .byte   $18
+options:        .byte   MGTK::option_dialog_box
 title:  .addr   0
-hscroll:.byte   MGTK::scroll_option_none
-vscroll:.byte   MGTK::scroll_option_none
-hthumbmax:  .byte   0
-hthumbpos:  .byte   0
-vthumbmax:  .byte   0
-vthumbpos:  .byte   0
+hscroll:        .byte   MGTK::scroll_option_none
+vscroll:        .byte   MGTK::scroll_option_none
+hthumbmax:      .byte   0
+hthumbpos:      .byte   0
+vthumbmax:      .byte   0
+vthumbpos:      .byte   0
 status: .byte   0
-reserved:.byte   0
-mincontwidth:     .word   $96
-maxcontwidth:     .word   $32
-mincontlength:     .word   $1F4
-maxcontlength:     .word   $8C
+reserved:       .byte   0
+mincontwidth:   .word   $96
+maxcontwidth:   .word   $32
+mincontlength:  .word   $1F4
+maxcontlength:  .word   $8C
 port:
 viewloc:        DEFINE_POINT $50, $28
-mapbits: .addr   MGTK::screen_mapbits
-mapwidth: .word   MGTK::screen_mapwidth
-cliprect:        DEFINE_RECT 0, 0, $190, $6E
-penpattern:.res    8, $FF
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .word   MGTK::screen_mapwidth
+cliprect:       DEFINE_RECT 0, 0, $190, $6E
+penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:   DEFINE_POINT 0, 0
-penwidth: .byte   1
-penheight: .byte   1
-penmode:   .byte   0
-textbg:  .byte   MGTK::textbg_white
-fontptr:   .addr   DEFAULT_FONT
-nextwinfo:   .addr   0
+penloc: DEFINE_POINT 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   0
+textbg: .byte   MGTK::textbg_white
+fontptr:        .addr   DEFAULT_FONT
+nextwinfo:      .addr   0
 .endproc
-        winfo18_port := winfo18::port
+winfo18_port    := winfo18::port
 
 .proc winfo1B
-window_id:     .byte   $1B
-options:  .byte   MGTK::option_dialog_box
+window_id:      .byte   $1B
+options:        .byte   MGTK::option_dialog_box
 title:  .addr   0
-hscroll:.byte   MGTK::scroll_option_none
-vscroll:.byte   MGTK::scroll_option_none
-hthumbmax:  .byte   0
-hthumbpos:  .byte   0
-vthumbmax:  .byte   0
-vthumbpos:  .byte   0
+hscroll:        .byte   MGTK::scroll_option_none
+vscroll:        .byte   MGTK::scroll_option_none
+hthumbmax:      .byte   0
+hthumbpos:      .byte   0
+vthumbmax:      .byte   0
+vthumbpos:      .byte   0
 status: .byte   0
-reserved:.byte   0
-mincontwidth:     .word   $96
-maxcontwidth:     .word   $32
-mincontlength:     .word   $1F4
-maxcontlength:     .word   $8C
+reserved:       .byte   0
+mincontwidth:   .word   $96
+maxcontwidth:   .word   $32
+mincontlength:  .word   $1F4
+maxcontlength:  .word   $8C
 port:
 viewloc:        DEFINE_POINT $69, $19
-mapbits: .addr   MGTK::screen_mapbits
-mapwidth: .word   MGTK::screen_mapwidth
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .word   MGTK::screen_mapwidth
 cliprect:       DEFINE_RECT 0, 0, $15E, $6E
-penpattern:.res    8, $FF
+penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:   DEFINE_POINT 0, 0
-penwidth: .byte   1
-penheight: .byte   1
-penmode:   .byte   0
-textbg:  .byte   MGTK::textbg_white
-fontptr:   .addr   DEFAULT_FONT
-nextwinfo:   .addr   0
+penloc: DEFINE_POINT 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   0
+textbg: .byte   MGTK::textbg_white
+fontptr:        .addr   DEFAULT_FONT
+nextwinfo:      .addr   0
 .endproc
 
         ;; Coordinates for labels?
@@ -5524,38 +5439,38 @@ data:   .res    55, 0
 
 .macro WINFO_DEFN id, label, buflabel
 .proc label
-window_id:     .byte   id
-options:  .byte   MGTK::option_go_away_box | MGTK::option_grow_box
+window_id:      .byte   id
+options:        .byte   MGTK::option_go_away_box | MGTK::option_grow_box
 title:  .addr   buflabel
-hscroll:.byte   MGTK::scroll_option_normal
-vscroll:.byte   MGTK::scroll_option_normal
-hthumbmax:  .byte   3
-hthumbpos:  .byte   0
-vthumbmax:  .byte   3
-vthumbpos:  .byte   0
+hscroll:        .byte   MGTK::scroll_option_normal
+vscroll:        .byte   MGTK::scroll_option_normal
+hthumbmax:      .byte   3
+hthumbpos:      .byte   0
+vthumbmax:      .byte   3
+vthumbpos:      .byte   0
 status: .byte   0
-reserved:.byte   0
-mincontwidth:     .word   170
-maxcontwidth:     .word   50
-mincontlength:     .word   545
-maxcontlength:     .word   175
+reserved:       .byte   0
+mincontwidth:   .word   170
+maxcontwidth:   .word   50
+mincontlength:  .word   545
+maxcontlength:  .word   175
 port:
 viewloc:        DEFINE_POINT 20, 27
-mapbits: .addr   MGTK::screen_mapbits
-mapwidth: .word   MGTK::screen_mapwidth
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .word   MGTK::screen_mapwidth
 cliprect:       DEFINE_RECT 0, 0, 440, 120
-penpattern:.res    8, $FF
+penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:   DEFINE_POINT 0, 0
-penwidth: .byte   1
-penheight: .byte   1
-penmode:   .byte   0
-textbg:  .byte   MGTK::textbg_white
-fontptr:   .addr   DEFAULT_FONT
-nextwinfo:   .addr   0
+penloc: DEFINE_POINT 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   0
+textbg: .byte   MGTK::textbg_white
+fontptr:        .addr   DEFAULT_FONT
+nextwinfo:      .addr   0
 .endproc
 
-buflabel:.res    18, 0
+buflabel:       .res    18, 0
 .endmacro
 
         WINFO_DEFN 1, winfo1, winfo1title_ptr
@@ -6823,7 +6738,7 @@ L46CF:  .addr   dummy0000
         jmp     begin
 
 .proc get_file_info_params
-params: .byte   $A
+param_count: .byte   $A
 path:   .addr   $220
 access: .byte   0
 type:   .byte   0
@@ -6909,7 +6824,7 @@ L477F:  lda     $D345,x
 ;;; ==================================================
 
 .proc get_file_info_params2
-params: .byte   $A
+param_count: .byte   $A
 path:   .addr   $1800
 access: .byte   0
 type:   .byte   0
@@ -7127,7 +7042,7 @@ L498F:  .byte   $00
 ;;; ==================================================
 
 .proc get_file_info_params3
-params: .byte   $A
+param_count: .byte   $A
 path:   .addr   $220
 access: .byte   0
 type:   .byte   0
@@ -7491,7 +7406,7 @@ close:  yxa_jump MLI_RELAY, CLOSE, close_params
 unused: .byte   0               ; ???
 
 .proc open_params
-params: .byte   3
+param_count: .byte   3
 pathname:.addr  str_desk_acc
 buffer: .addr   $1C00
 ref_num:.byte   0
@@ -7499,7 +7414,7 @@ ref_num:.byte   0
         open_params_ref_num := open_params::ref_num
 
 .proc read_params
-params: .byte   4
+param_count: .byte   4
 ref_num:.byte   0
 buffer: .addr   DA_LOAD_ADDRESS
 request:.word   DA_MAX_SIZE
@@ -7508,7 +7423,7 @@ trans:  .word   0
         read_params_ref_num := read_params::ref_num
 
 .proc close_params
-params: .byte   1
+param_count: .byte   1
 ref_num:.byte   0
 .endproc
         close_params_ref_num := close_params::ref_num
@@ -7872,7 +7787,7 @@ L4F68:  .byte   $00
 L4F69:  .byte   $00
 
 .proc create_params
-params: .byte   7
+param_count: .byte   7
 path:   .addr   path_buffer
 access: .byte   %11000011       ; destroy/rename/write/read
 type:   .byte   FT_DIRECTORY
@@ -7995,7 +7910,7 @@ quit_code:
         ;; 5C 04 D0 E0  jmp $E0D004     ; long jump
 
 .proc quit_params
-params: .byte   4
+param_count: .byte   4
         .byte   0
         .word   0
         .byte   0
@@ -11415,7 +11330,7 @@ L704C:  .byte   0
 L7054:  jmp     L70C5
 
 .proc open_params
-params: .byte   3
+param_count: .byte   3
 path:   .addr   L705D
 buffer: .addr   $800
 ref_num:.byte   0
@@ -11425,7 +11340,7 @@ L705D:  .res    64, 0
         .byte   $00
 
 .proc read_params
-params: .byte   4
+param_count: .byte   4
 ref_num:.byte   0
 buffer: .addr   $0C00
 request:.word   $200
@@ -11433,12 +11348,12 @@ trans:  .word   0
 .endproc
 
 .proc close_params
-params: .byte   1
+param_count: .byte   1
 ref_num:.byte   0
 .endproc
 
 .proc get_file_info_params4
-params: .byte   $A
+param_count: .byte   $A
 path:   .addr   L705D
 access: .byte   0
 type:   .byte   0
@@ -14317,7 +14232,7 @@ L899A:  sta     grafport5::cliprect_x1,x
 ;;; ==================================================
 
 .proc on_line_params
-params: .byte   2
+param_count: .byte   2
 unit:   .byte   0
 buffer: .addr   $800
 .endproc
@@ -14484,7 +14399,7 @@ L8AC5:  .byte   $00,$00,$00,$00,$EA,$01,$10,$00
         .byte   $28,$00,$A0,$00
 
 .proc get_prefix_params
-params: .byte   1
+param_count: .byte   1
 buffer: .addr   $4824
 .endproc
 
@@ -14853,7 +14768,7 @@ addr_table:
         .addr   $0800,$0800,$9000,$5000,$7000,$7000,$7000,$5000,$9000
 
 .proc open_params
-params: .byte   3
+param_count: .byte   3
 path:   .addr   str_desktop2
 buffer: .addr   $1C00
 ref_num:.byte   0
@@ -14863,13 +14778,13 @@ str_desktop2:
         PASCAL_STRING "DeskTop2"
 
 .proc set_mark_params
-params: .byte   2
+param_count: .byte   2
 ref_num:.byte   0
 pos:    .faraddr  0
 .endproc
 
 .proc read_params
-params: .byte   4
+param_count: .byte   4
 ref_num:.byte   0
 buffer: .addr   0
 request:.word   0
@@ -14877,7 +14792,7 @@ trans:  .word   0
 .endproc
 
 .proc close_params
-params: .byte   1
+param_count: .byte   1
 ref_num:.byte   0
 .endproc
 
@@ -15413,7 +15328,7 @@ L92C5:  .byte   $00,$00
 L92C7:  .byte   $00,$00
 
 .proc get_file_info_params5
-params: .byte   $A
+param_count: .byte   $A
 path:   .addr   $220
 access: .byte   0
 type:   .byte   0
@@ -15429,7 +15344,7 @@ ctime:  .word   0
 L92DB:  .byte   0,0
 
 .proc block_params
-params: .byte   $03
+param_count: .byte   $03
 unit_num:.byte  $0
 buffer: .addr   $0800
 block_num:.word $A
@@ -15704,7 +15619,7 @@ L9558:  lda     $E6EC,x
         rts
 
 .proc rename_params
-params: .byte   2
+param_count: .byte   2
 path:   .addr   $220
 newpath:.addr   $1FC0
 .endproc
@@ -15898,14 +15813,14 @@ L9708:  .byte   $00
 L9709:  .byte   $00
 
 .proc open_params3
-params: .byte   3
+param_count: .byte   3
 path:   .addr   $220
 buffer: .addr   $800
 ref_num:.byte   0
 .endproc
 
 .proc read_params3
-params: .byte   4
+param_count: .byte   4
 ref_num:.byte   0
 buffer: .addr   L9718
 request:.word   4
@@ -15914,12 +15829,12 @@ trans:  .word   0
 L9718:  .res    4, 0
 
 .proc close_params6
-params: .byte   1
+param_count: .byte   1
 ref_num:.byte   0
 .endproc
 
 .proc read_params4
-params: .byte   4
+param_count: .byte   4
 ref_num:.byte   0
 buffer: .addr   L97AD
 request:.word   $27
@@ -15927,7 +15842,7 @@ trans:  .word   0
 .endproc
 
 .proc read_params5
-params: .byte   4
+param_count: .byte   4
 ref_num:.byte   0
 buffer: .addr   L972E
 request:.word   5
@@ -15938,36 +15853,36 @@ L972E:  .res    5, 0
         .res    4, 0
 
 .proc close_params5
-params: .byte   1
+param_count: .byte   1
 ref_num:.byte   0
 .endproc
 
 .proc close_params3
-params: .byte   1
+param_count: .byte   1
 ref_num:.byte   0
 .endproc
 
 .proc destroy_params
-params: .byte   1
+param_count: .byte   1
 path:   .addr   $0220
 .endproc
 
 .proc open_params4
-params: .byte   3
+param_count: .byte   3
 path:   .addr   $220
 buffer: .addr   $0D00
 ref_num:.byte   0
 .endproc
 
 .proc open_params5
-params: .byte   3
+param_count: .byte   3
 path:   .addr   $1FC0
 buffer: .addr   $1100
 ref_num:.byte   0
 .endproc
 
 .proc read_params6
-params: .byte   4
+param_count: .byte   4
 ref_num:.byte   0
 buffer: .addr   $1500
 request:.word   $AC0
@@ -15975,7 +15890,7 @@ trans:  .word   0
 .endproc
 
 .proc write_params
-params: .byte   4
+param_count: .byte   4
 ref_num:.byte   0
 buffer: .addr   $1500
 request:.word   $AC0
@@ -15983,7 +15898,7 @@ trans:  .word   0
 .endproc
 
 .proc create_params3
-params: .byte   7
+param_count: .byte   7
 path:   .addr   $1FC0
 access: .byte   %11000011
 type:   .byte   0
@@ -15994,7 +15909,7 @@ ctime:  .word   0
 .endproc
 
 .proc create_params2
-params: .byte   7
+param_count: .byte   7
 path:   .addr   $1FC0
 access: .byte   0
 type:   .byte   0
@@ -16007,7 +15922,7 @@ ctime:  .word   0
         .byte   $00,$00
 
 .proc file_info_params2
-params: .byte   $A
+param_count: .byte   $A
 path:   .addr   $220
 access: .byte   0
 type:   .byte   0
@@ -16023,7 +15938,7 @@ ctime:  .word   0
         .byte   0
 
         .proc file_info_params3
-params: .byte   $A
+param_count: .byte   $A
 path:   .addr   $1FC0
 access: .byte   0
 type:   .byte   0
@@ -16039,25 +15954,25 @@ ctime:  .word   0
         .byte   0
 
 .proc set_eof_params
-params: .byte   2
+param_count: .byte   2
 ref_num:.byte   0
 eof:    .faraddr        0
 .endproc
 
 .proc mark_params
-params: .byte   2
-ref_num:.byte   0
-position:       .faraddr        0
+param_count: .byte   2
+ref_num:        .byte   0
+position:       .faraddr 0
 .endproc
 
 .proc mark_params2
-params: .byte   2
+param_count: .byte   2
 ref_num:.byte   0
 position:       .faraddr       0
 .endproc
 
 .proc on_line_params2
-params: .byte   2
+param_count: .byte   2
 unit_num:.byte  0
 buffer: .addr    $800
 .endproc
@@ -17319,7 +17234,7 @@ LA39F:  jsr     L917F
         jmp     LA3A7
 
 .proc close_params4
-params: .byte   1
+param_count: .byte   1
 ref_num:.byte   0
 .endproc
 
@@ -20430,7 +20345,7 @@ L0ABC:  jsr     desktop_main::a_times_6
         rts
 
 .proc open_params
-params: .byte   3
+param_count: .byte   3
 path:   .addr   str_selector_list
 buffer: .addr   $1000
 ref_num:.byte   0
@@ -20440,7 +20355,7 @@ str_selector_list:
         PASCAL_STRING "Selector.List"
 
 .proc read_params
-params: .byte   4
+param_count: .byte   4
 ref_num:.byte   0
 buffer: .addr   $1400
 request:.word   $400
@@ -20448,7 +20363,7 @@ trans:  .word   0
 .endproc
 
 .proc close_params
-params: .byte   1
+param_count: .byte   1
 ref_num:.byte   0
 .endproc
 
@@ -20613,7 +20528,7 @@ L0CCB:  MLI_RELAY_CALL CLOSE, close_params2
         jmp     L0D0A
 
 .proc open_params2
-params: .byte   3
+param_count: .byte   3
 path:   .addr   str_desk_acc
 buffer: .addr   $1000
 ref_num:.byte   0
@@ -20621,7 +20536,7 @@ ref_num:.byte   0
         open_params2_ref_num := open_params2::ref_num
 
 .proc read_params2
-params: .byte   4
+param_count: .byte   4
 ref_num:.byte   0
 buffer: .addr   $1400
 request:.word   $200
@@ -20630,7 +20545,7 @@ trans:  .word   0
         read_params2_ref_num := read_params2::ref_num
 
 .proc get_file_info_params
-params: .byte   $A
+param_count: .byte   $A
 path:   .addr   str_desk_acc
 access: .byte   0
 type:   .byte   0
@@ -20647,7 +20562,7 @@ ctime:  .word   0
         .byte   0
 
 .proc close_params2
-params: .byte   1
+param_count: .byte   1
 ref_num:.byte   0
 .endproc
         close_params2_ref_num := close_params2::ref_num
@@ -20888,7 +20803,7 @@ L0EB0:  .addr   s00,s01,s02,s03,s04,s05,s06
 
 
 .proc get_file_info_params2
-params: .byte   $A
+param_count: .byte   $A
 path:   .addr   desktop_main::L4862
 access: .byte   0
 type:   .byte   0
@@ -20903,7 +20818,7 @@ ctime:  .word   0
         .byte   0
 
 .proc get_prefix_params
-params: .byte   1
+param_count: .byte   1
 buffer: .addr   desktop_main::L4862
 .endproc
 
