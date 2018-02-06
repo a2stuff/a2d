@@ -2,6 +2,12 @@
 ;;; Generic Macros
 ;;; ==================================================
 
+;;; ==================================================
+;;; Pad with zeros to the given address
+
+.macro PAD_TO addr
+        .res    addr - *, 0
+.endmacro
 
 ;;; ==================================================
 ;;; Calls with one parameter (address in A,X)

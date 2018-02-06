@@ -59,19 +59,19 @@ DT_ICON_IN_RECT         := $0D  ; { .byte icon, rect bounds }
 ;;;     DESKTOP_CALL n, params_addr
 ;;;     DESKTOP_CALL m, params_addr, label  - params_addr is labeled for modifying
 
-.macro  DESKTOP_CALL    op, addr, label
-        jsr DESKTOP
-        .byte op
+.macro DESKTOP_CALL    op, addr, label
+        jsr     DESKTOP
+        .byte   op
 
-.if .paramcount > 2
-        label := *
-.endif
+    .if .paramcount > 2
+label   := *
+    .endif
 
-.if .paramcount > 1
-        .addr addr
-.else
-        .addr 0
-.endif
+    .if .paramcount > 1
+        .addr   addr
+    .else
+        .addr   0
+    .endif
 .endmacro
 
 
@@ -83,21 +83,23 @@ DT_ICON_IN_RECT         := $0D  ; { .byte icon, rect bounds }
 ;; These are DeskTop internals, but it appears there is no
 ;; API for getting the selected file.
 file_selected := $DF21  ; 0 if no selection, 1 otherwise
+
 path_index := $DF20     ; index of selected window (used to get prefix)
 path_table := $DFB3     ; window address table
 ;; each entry is 65 bytes long
 ;;      length-prefixed path string (no trailing /)
+
 file_index := $DF22     ; index of selected file (global, not w/in window)
 file_table := $DD9F     ; file address table
 ;; each entry is 27 bytes long
+;;      .byte icon      icon index
 ;;      .byte ??
-;;      .byte ??
-;;      .byte type/icon (bits 4,5,6 clear = directory)
+;;      .byte type/icon (bits 4,5,6 clear = directory; $70=trash, $80=profile, $01=folder, $11=sys, $21=bin, ???)
 ;;      .word iconx     (pixels)
 ;;      .word icony     (pixels)
-;;      .byte ??
-;;      .byte ??
-;;      .byte len, name (length-prefixed, spaces before/after; 17 byte buffer)
+;;      .addr iconbits  (addr of {mapbits, mapwidth, reserved, maprect})
+;;      .byte len       (name length + 2)
+;;      .res  17  name  (name, with a space before and after)
 
 
 ;;; ==================================================

@@ -26,10 +26,6 @@ INVOKER_FILENAME := $280         ; File to invoke (PREFIX must be set)
     .endif
 .endmacro
 
-.macro PAD_TO addr
-        .res    addr - *, 0
-.endmacro
-
 ;;; ==================================================
 ;;; Segment loaded into AUX $851F-$BFFF (follows MGTK)
 ;;; ==================================================
@@ -380,7 +376,6 @@ L8C83:  .byte   $00,$00,$00,$00,$77,$30,$01
 
 ;;; ==================================================
 
-
 .macro MGTK_RELAY2_CALL call, addr
     .if .paramcount > 1
         yax_call MGTK_RELAY2, (call), (addr)
@@ -730,7 +725,7 @@ L945E:  cmp     icon_table,x
         dex
         bpl     L945E
 
-bail1:  lda     #$01
+bail1:  lda     #1
         rts
 
 L9469:  asl     a
@@ -832,67 +827,75 @@ done:   jsr     L9F98
 ;;; DESKTOP $04 IMPL
 
 .proc L9508
-        ldy     #$00
+        ptr := $6
+
+        ;; Search for passed icon
+        ldy     #0
         ldx     num_icons
-        beq     L951A
+        beq     bail1
         dex
-        lda     ($06),y
-L9512:  cmp     icon_table,x
-        beq     L951D
+        lda     (ptr),y
+:       cmp     icon_table,x
+        beq     found
         dex
-        bpl     L9512
-L951A:  lda     #$01
+        bpl     :-
+bail1:  lda     #1
         rts
 
-L951D:  asl     a
+        ;; Pointer to icon details
+found:  asl     a
         tax
         lda     icon_ptrs,x
-        sta     $06
+        sta     ptr
         lda     icon_ptrs+1,x
-        sta     $06+1
-        ldy     #$01
-        lda     ($06),y
-        bne     L9532
-        lda     #$02
+        sta     ptr+1
+        ldy     #1              ; offset 1 is ... ???
+        lda     (ptr),y
+        bne     :+
+
+        lda     #2
         rts
 
-L9532:  jsr     calc_icon_poly
+:       jsr     calc_icon_poly
         MGTK_CALL MGTK::SetPenMode, pencopy_2
         jsr     LA39D
-        ldy     #$00
-        lda     ($06),y
+        ldy     #0
+        lda     (ptr),y
         ldx     num_icons
         jsr     LA2E3
         dec     num_icons
-        lda     #$00
+        lda     #0
         ldx     num_icons
         sta     icon_table,x
-        ldy     #$01
-        lda     #$00
-        sta     ($06),y
+        ldy     #1
+        lda     #0
+        sta     (ptr),y
         lda     has_highlight
-        beq     L958C
+        beq     done
+
         ldx     highlight_count
         dex
-        ldy     #$00
-        lda     ($06),y
+        ldy     #0
+        lda     (ptr),y
 L9566:  cmp     highlight_list,x
         beq     L9571
         dex
         bpl     L9566
-        jmp     L958C
+
+        jmp     done
 
 L9571:  ldx     highlight_count
         jsr     LA324
         dec     highlight_count
         lda     highlight_count
         bne     L9584
-        lda     #$00
+        lda     #0
         sta     has_highlight
-L9584:  lda     #$00
+L9584:  lda     #0
         ldx     highlight_count
         sta     highlight_list,x
-L958C:  lda     #$00
+
+done:   lda     #0
         rts
 .endproc
 
@@ -1204,7 +1207,7 @@ L9803:  lda     ($06),y
         dey
         cpy     #0
         bne     L9803
-        jsr     LA365
+        jsr     push_zp_addrs
         lda     L982A
         jsr     L9EB4
         stax    $06
@@ -1310,7 +1313,7 @@ L9909:  sta     L9834
         lda     L9C74
         cmp     highlight_count
         beq     L9936
-        jsr     LA365
+        jsr     push_zp_addrs
         lda     $08
         sec
         sbc     #$22
@@ -1320,7 +1323,7 @@ L9909:  sta     L9834
 L992D:  ldy     #$01
         lda     #$80
         sta     ($08),y
-        jsr     LA382
+        jsr     pop_zp_addrs
 L9936:  ldx     #$21
         ldy     #$21
 L993A:  lda     poly,x
@@ -1590,7 +1593,7 @@ L9BD4:  ora     #$80
 
 L9BDC:  lda     L9832
         beq     L9BD1
-L9BE1:  jsr     LA365
+L9BE1:  jsr     push_zp_addrs
         MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport
         ldx     highlight_count
@@ -1612,7 +1615,7 @@ L9BF3:  dex
         tax
         jmp     L9BF3
 
-L9C18:  jsr     LA382
+L9C18:  jsr     pop_zp_addrs
         ldx     highlight_count
         dex
         txa
@@ -1657,7 +1660,7 @@ L9C60:  jmp     L9C29
 
 L9C63:  lda     #$00
 L9C65:  tay
-        jsr     LA382
+        jsr     pop_zp_addrs
         tya
         tax
         ldy     #$00
@@ -1830,7 +1833,7 @@ L9E14:  bit     L9833
         bpl     L9E1A
         rts
 
-L9E1A:  jsr     LA365
+L9E1A:  jsr     push_zp_addrs
         MGTK_CALL MGTK::FindWindow, findwindow_params2
         lda     findwindow_params2::which_area
         bne     L9E2B
@@ -1875,7 +1878,7 @@ L9E97:  MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
         MGTK_CALL MGTK::SetPenMode, penXOR_2
-        jsr     LA382
+        jsr     pop_zp_addrs
         rts
 
 L9EB3:  .byte   0
@@ -2031,7 +2034,7 @@ L9FB6:  lda     ($06),y
         iny
         cpy     #$09
         bne     L9FB6
-        jsr     LA365
+        jsr     push_zp_addrs
         lda     paintbits_params2::mapbits
         sta     $08
         lda     paintbits_params2::mapbits+1
@@ -2044,7 +2047,7 @@ L9FCF:  lda     ($08),y
         bit     L9F92
         bpl     L9FDF
         jsr     LA12C
-L9FDF:  jsr     LA382
+L9FDF:  jsr     pop_zp_addrs
         ldy     #$09
 L9FE4:  lda     ($06),y
         sta     paintrect_params6::bottom,y
@@ -2188,7 +2191,7 @@ LA189:  rts
 ;;; ==================================================
 
 .proc calc_icon_poly
-        jsr     LA365
+        jsr     push_zp_addrs
         ldy     #$06
         ldx     #$03
 LA191:  lda     ($06),y
@@ -2301,7 +2304,7 @@ LA256:  lsr     a
         adc     #$00
         sta     poly::v3::xcoord+1
         sta     poly::v4::xcoord+1
-        jsr     LA382
+        jsr     pop_zp_addrs
         rts
 
 LA2A4:  .byte   0
@@ -2318,10 +2321,10 @@ REDRAW_ICONS_IMPL:
         ;; DT_UNHIGHLIGHT_ICON params
 LA2A9:  .byte   0
 
-LA2AA:  jsr     LA382
+LA2AA:  jsr     pop_zp_addrs
         rts
 
-LA2AE:  jsr     LA365
+LA2AE:  jsr     push_zp_addrs
         ldx     num_icons
         dex
 LA2B5:  bmi     LA2AA
@@ -2397,12 +2400,12 @@ LA33B:  lda     highlight_list+1,x
         cpx     highlight_count
         bne     LA33B
         ldx     highlight_count
-LA34A:  cpx     LA363
+:       cpx     LA363
         beq     LA359
         lda     has_highlight,x
         sta     highlight_count,x
         dex
-        jmp     LA34A
+        jmp     :-
 
 LA359:  ldx     LA363
         lda     LA364
@@ -2413,42 +2416,57 @@ LA364:  .byte   0
 
 ;;; ==================================================
 
-LA365:  pla
-        sta     LA380
+.proc push_zp_addrs
+        ;; save return addr
         pla
-        sta     LA381
-        ldx     #$00
-LA36F:  lda     $06,x
+        sta     stash
+        pla
+        sta     stash+1
+
+        ;; push $06...$09 to stack
+        ldx     #0
+:       lda     $06,x
         pha
         inx
-        cpx     #$04
-        bne     LA36F
-        lda     LA381
+        cpx     #4
+        bne     :-
+
+        ;; restore return addr
+        lda     stash+1
         pha
-        lda     LA380
+        lda     stash
         pha
         rts
-LA380:  .byte   0
-LA381:  .byte   0
+
+stash:  .word   0
+.endproc
 
 ;;; ==================================================
 
-LA382:  pla
-        sta     LA39B
+.proc pop_zp_addrs
+        ;; save return addr
         pla
-        sta     LA39C
-        ldx     #$03
-LA38C:  pla
+        sta     stash
+        pla
+        sta     stash+1
+
+        ;; pull $06...$09 to stack
+        ldx     #3
+:       pla
         sta     $06,x
         dex
-        bpl     LA38C
-        lda     LA39C
+        bpl     :-
+
+        ;; restore return addr
+        lda     stash+1
         pha
-        lda     LA39B
+        lda     stash
         pha
         rts
-LA39B:  .byte   0
-LA39C:  .byte   0
+
+stash:  .word   0
+
+.endproc
 
 ;;; ==================================================
 
@@ -2541,7 +2559,7 @@ volume:
 
 ;;; ==================================================
 
-LA446:  jsr     LA365
+LA446:  jsr     push_zp_addrs
         ldx     num_icons
         dex
 LA44D:  cpx     #$FF
@@ -2550,7 +2568,7 @@ LA44D:  cpx     #$FF
         bpl     LA462
         MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport4
-LA462:  jsr     LA382
+LA462:  jsr     pop_zp_addrs
         rts
 
 ;;; ==================================================
@@ -2685,7 +2703,7 @@ LA56D:  .byte   0
 LA56E:  .byte   0
 LA56F:  pla
         tay
-        jsr     LA365
+        jsr     push_zp_addrs
         tya
         asl     a
         tax
@@ -2729,12 +2747,12 @@ LA56F:  pla
         lda     ($06),y
         sbc     LA56E
         sta     ($06),y
-        jsr     LA382
+        jsr     pop_zp_addrs
         rts
 
 LA5CB:  pla
         tay
-        jsr     LA365
+        jsr     push_zp_addrs
         tya
         asl     a
         tax
@@ -2778,7 +2796,7 @@ LA5CB:  pla
         lda     ($06),y
         adc     LA56E
         sta     ($06),y
-        jsr     LA382
+        jsr     pop_zp_addrs
         rts
 
 ;;; ==================================================
@@ -2840,8 +2858,8 @@ LA6A3:  lda     #$00
 .proc findwindow_params
 mousex: .word   0
 mousey: .word   0
-which_area:.byte   0
-window_id:     .byte   0
+which_area:     .byte   0
+window_id:      .byte   0
 .endproc
 
 LA6AE:  .byte   $00
@@ -2953,7 +2971,7 @@ LA77D:  lda     LA6B3,x
         lda     findwindow_params::window_id
         sta     getwinport_params
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        jsr     LA365
+        jsr     push_zp_addrs
         MGTK_CALL MGTK::GetWinPtr, findwindow_params::window_id
         lda     LA6AE
         sta     $06
@@ -3009,7 +3027,7 @@ LA833:  bit     LA6B1
         sta     grafport4::cliprect::x2
         bcc     LA846
         inc     grafport4::cliprect::x2+1
-LA846:  jsr     LA382
+LA846:  jsr     pop_zp_addrs
         sub16 grafport4::cliprect::x2, grafport4::cliprect::x1, LA6C3
         sub16  grafport4::cliprect::y2, grafport4::cliprect::y1, LA6C5
         lda     LA6C3
@@ -3766,11 +3784,6 @@ LBAEF:  tya
         sta     alert_action
         jmp     LBB14
 
-.macro DRAW_PASCAL_STRING addr
-        ldax    #(addr)
-        jsr     draw_pascal_string
-.endmacro
-
 LBB0B:  tya
         lsr     a
         tay
@@ -3781,17 +3794,17 @@ LBB14:  MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
         bpl     LBB5C
         MGTK_RELAY2_CALL MGTK::FrameRect, cancel_rect
         MGTK_RELAY2_CALL MGTK::MoveTo, cancel_pos
-        DRAW_PASCAL_STRING cancel_label
+        addr_call draw_pascal_string, cancel_label
         bit     alert_action
         bvs     LBB5C
         MGTK_RELAY2_CALL MGTK::FrameRect, try_again_rect
         MGTK_RELAY2_CALL MGTK::MoveTo, try_again_pos
-        DRAW_PASCAL_STRING try_again_label
+        addr_call draw_pascal_string, try_again_label
         jmp     LBB75
 
 LBB5C:  MGTK_RELAY2_CALL MGTK::FrameRect, try_again_rect
         MGTK_RELAY2_CALL MGTK::MoveTo, try_again_pos
-        DRAW_PASCAL_STRING ok_label
+        addr_call draw_pascal_string, ok_label
 LBB75:  MGTK_RELAY2_CALL MGTK::MoveTo, point8
         ldax    prompt_addr
         jsr     draw_pascal_string
@@ -4304,11 +4317,11 @@ addr:   .addr   0
 
 .macro DESKTOP_RELAY_CALL call, addr
         ldy     #(call)
-.if .paramcount > 1
+    .if .paramcount > 1
         ldax    #(addr)
-.else
+    .else
         ldax    #0
-.endif
+    .endif
         jsr     DESKTOP_RELAY
 .endmacro
 
@@ -5139,7 +5152,7 @@ LDD9E:  .byte   0
         ;; Icon to File mapping table
         ;;
         ;; each entry is 27 bytes long
-        ;;      .byte ??
+        ;;      .byte icon      index
         ;;      .byte ??
         ;;      .byte type/icon (bits 4,5,6 are type)
         ;;                      $00 = directory
@@ -5149,9 +5162,9 @@ LDD9E:  .byte   0
         ;;                      $50 = text, generic
         ;;      .word iconx     (pixels)
         ;;      .word icony     (pixels)
-        ;;      .byte ??
-        ;;      .byte ??
-        ;;      .byte len, name (length-prefixed, spaces before/after; 17 byte buffer)
+        ;;      .addr iconbits  (addr of {mapbits, mapwidth, reserved, maprect})
+        ;;      .byte len       (name length + 2)
+        ;;      .res  17  name  (name, with a space before and after)
         ;;
         ;; (likely point into buffer at $ED00, which has room for 127*27)
 file_address_table:
