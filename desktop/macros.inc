@@ -171,3 +171,36 @@
         sta     arg2+1
     .endif
 .endmacro
+
+.macro cmp16 arg1, arg2, arg3
+    .if (.match ({arg2}, x) .or .match ({arg2}, y))
+        ;; indexed variant (arg2 is x or y)
+        lda     arg1,arg2
+        cmp     arg3
+        lda     arg1+1,arg2
+        sbc     arg3+1
+    .elseif (.match ({arg3}, x) .or .match ({arg3}, y))
+        ;; indexed variant (arg3 is x or y)
+        lda     arg1
+        cmp     arg2,arg3
+        lda     arg1+1
+        sbc     arg2+1,arg3
+    .elseif (.match (.mid (0, 1, {arg1}), #))
+        ;; immediate variant (arg1 is #nnnn)
+        lda     #<(.right (.tcount ({arg1})-1, {arg1}))
+        cmp     arg2
+        lda     #>(.right (.tcount ({arg1})-1, {arg1}))
+        sbc     arg2+1
+    .elseif (.match (.mid (0, 1, {arg2}), #))
+        ;; immediate variant (arg2 is #nnnn)
+        lda     arg1
+        cmp     #<(.right (.tcount ({arg2})-1, {arg2}))
+        lda     arg1+1
+        sbc     #>(.right (.tcount ({arg2})-1, {arg2}))
+    .else
+        lda     arg1
+        cmp     arg2
+        lda     arg1+1
+        sbc     arg2+1
+    .endif
+.endmacro

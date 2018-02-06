@@ -1374,7 +1374,7 @@ L99E1:  iny
         ldy     #$01
         lda     ($08),y
         beq     L99FC
-        add16 $08, #$22, $08
+        add16   $08, #$22, $08
         jmp     L9972
 
 L99FC:  MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
@@ -1417,8 +1417,8 @@ L9A33:  lda     findwindow_params2,x
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
         lda     #$00
         sta     L9830
-L9A84:  sub16 findwindow_params2::mousex, L9C8E, L9C96
-        sub16 findwindow_params2::mousey, L9C90, L9C98
+L9A84:  sub16   findwindow_params2::mousex, L9C8E, L9C96
+        sub16   findwindow_params2::mousey, L9C90, L9C98
         jsr     L9C9E
         ldx     #$00
 L9AAF:  lda     L9C7A,x
@@ -1443,10 +1443,7 @@ L9AAF:  lda     L9C7A,x
         sta     L9C75
         lda     L9C77
         bmi     L9AF7
-        lda     L9C7A
-        cmp     #$30
-        lda     L9C7B
-        sbc     #$02
+        cmp16   L9C7A, #$230
         bcs     L9AFE
         jsr     L9DFA
         jmp     L9B0E
@@ -1462,15 +1459,9 @@ L9B03:  jsr     L9DB8
         sta     L9C75
 L9B0E:  lda     L9C79
         bmi     L9B31
-        lda     L9C78
-        cmp     #$0D
-        lda     L9C79
-        sbc     #$00
+        cmp16   L9C78, #$0D
         bcc     L9B31
-        lda     L9C7C
-        cmp     #$C0
-        lda     L9C7D
-        sbc     #$00
+        cmp16   L9C7C, #$C0
         bcs     L9B38
         jsr     L9E07
         jmp     L9B48
@@ -1691,9 +1682,9 @@ L9CE4:  lda     #$30
         lda     #$02
         sbc     L9C8B
         sta     L9C97
-L9CF5:  add16 L9C86, L9C96, L9C76
-        add16 L9C8A, L9C96, L9C7A
-        add16 L9C8E, L9C96, L9C8E
+L9CF5:  add16   L9C86, L9C96, L9C76
+        add16   L9C8A, L9C96, L9C7A
+        add16   L9C8E, L9C96, L9C8E
         lda     #$FF
         rts
 
@@ -1731,9 +1722,9 @@ L9D6B:  lda     #$BF
         lda     #$00
         sbc     L9C8D
         sta     L9C99
-L9D7C:  add16 L9C88, L9C98, L9C78
-        add16 L9C8C, L9C98, L9C7C
-        add16 L9C90, L9C98, L9C90
+L9D7C:  add16   L9C88, L9C98, L9C78
+        add16   L9C8C, L9C98, L9C7C
+        add16   L9C90, L9C98, L9C90
         lda     #$FF
         rts
 
@@ -1898,46 +1889,25 @@ start:  ldy     #0
         copy16  icon_ptrs,x, $06
         jsr     calc_icon_poly
 
-        lda     poly::v0::ycoord
-        cmp     rect::y2
-        lda     poly::v0::ycoord+1
-        sbc     rect::y2+1
+        cmp16   poly::v0::ycoord, rect::y2
         bpl     done
 
-        lda     poly::v5::ycoord
-        cmp     rect::y1
-        lda     poly::v5::ycoord+1
-        sbc     rect::y1+1
+        cmp16   poly::v5::ycoord, rect::y1
         bmi     done
 
-        lda     poly::v5::xcoord
-        cmp     rect::x2
-        lda     poly::v5::xcoord+1
-        sbc     rect::x2+1
+        cmp16   poly::v5::xcoord, rect::x2
         bpl     done
 
-        lda     poly::v4::xcoord
-        cmp     rect::x1
-        lda     poly::v4::xcoord+1
-        sbc     rect::x1+1
+        cmp16   poly::v4::xcoord, rect::x1
         bmi     done
 
-        lda     poly::v7::ycoord
-        cmp     rect::y2
-        lda     poly::v7::ycoord+1
-        sbc     rect::y2+1
+        cmp16   poly::v7::ycoord, rect::y2
         bmi     L9F8F
 
-        lda     poly::v7::xcoord
-        cmp     rect::x2
-        lda     poly::v7::xcoord+1
-        sbc     rect::x2+1
+        cmp16   poly::v7::xcoord, rect::x2
         bpl     done
 
-        lda     poly::v2::xcoord
-        cmp     rect::x1
-        lda     poly::v2::xcoord+1
-        sbc     rect::x1+1
+        cmp16   poly::v2::xcoord, rect::x1
         bpl     L9F8F
 
 done:   lda     #0
@@ -2020,7 +1990,7 @@ L9FE4:  lda     ($06),y
         sbc     #$00
         sta     moveto_params2::xcoord+1
         add16_8 paintbits_params2::viewloc::ycoord, paintbits_params2::maprect::y2, moveto_params2::ycoord
-        add16 moveto_params2::ycoord, #1, moveto_params2::ycoord
+        add16   moveto_params2::ycoord, #1, moveto_params2::ycoord
         add16_8 moveto_params2::ycoord, font_height, moveto_params2::ycoord
         ldx     #$03
 LA06E:  lda     moveto_params2,x
@@ -2760,10 +2730,7 @@ LA674:  lda     poly::v4::xcoord,x
         sta     setportbits_params2::cliprect::x2,x
         dex
         bpl     LA674
-        lda     LA62B
-        cmp     #$2F
-        lda     LA62C
-        sbc     #$02
+        cmp16   LA62B, #$22F
         bmi     LA69C
         lda     #$2E
         sta     LA62B
@@ -2917,7 +2884,7 @@ LA7C8:  ldy     #$04
         lsr     a
         ora     LA6B1
         sta     LA6B1
-        sub16 grafport4::viewloc::xcoord, #2, grafport4::viewloc::xcoord
+        sub16   grafport4::viewloc::xcoord, #2, grafport4::viewloc::xcoord
         sub16   grafport4::cliprect::x1, #2, grafport4::cliprect::x1
         bit     LA6B2
         bmi     LA820
@@ -2950,8 +2917,8 @@ LA833:  bit     LA6B1
         bcc     LA846
         inc     grafport4::cliprect::x2+1
 LA846:  jsr     pop_zp_addrs
-        sub16 grafport4::cliprect::x2, grafport4::cliprect::x1, LA6C3
-        sub16  grafport4::cliprect::y2, grafport4::cliprect::y1, LA6C5
+        sub16   grafport4::cliprect::x2, grafport4::cliprect::x1, LA6C3
+        sub16   grafport4::cliprect::y2, grafport4::cliprect::y1, LA6C5
         lda     LA6C3
         clc
         adc     grafport4::viewloc::xcoord
@@ -2959,43 +2926,25 @@ LA846:  jsr     pop_zp_addrs
         lda     grafport4::viewloc::xcoord+1
         adc     LA6C4
         sta     LA6C4
-        add16 LA6C5, grafport4::viewloc::ycoord, LA6C5
-        lda     setportbits_params2::cliprect::x2
-        cmp     LA6C3
-        lda     setportbits_params2::cliprect::x2+1
-        sbc     LA6C4
+        add16   LA6C5, grafport4::viewloc::ycoord, LA6C5
+        cmp16   setportbits_params2::cliprect::x2, LA6C3
         bmi     LA8B7
-        add16 LA6C3, #1, setportbits_params2::cliprect::x2
+        add16   LA6C3, #1, setportbits_params2::cliprect::x2
         jmp     LA8D4
 
-LA8B7:  lda     grafport4::viewloc::xcoord
-        cmp     setportbits_params2::cliprect::x1
-        lda     grafport4::viewloc::xcoord+1
-        sbc     setportbits_params2::cliprect::x1+1
+LA8B7:  cmp16   grafport4::viewloc::xcoord, setportbits_params2::cliprect::x1
         bmi     LA8D4
-        lda     grafport4::viewloc::xcoord
-        sta     setportbits_params2::cliprect::x2
-        lda     grafport4::viewloc::xcoord+1
-        sta     setportbits_params2::cliprect::x2+1
+        copy16  grafport4::viewloc::xcoord, setportbits_params2::cliprect::x2
         jmp     LA6FA
 
-LA8D4:  lda     grafport4::viewloc::ycoord
-        cmp     setportbits_params2::cliprect::y1
-        lda     grafport4::viewloc::ycoord+1
-        sbc     setportbits_params2::cliprect::y1+1
+LA8D4:  cmp16   grafport4::viewloc::ycoord, setportbits_params2::cliprect::y1
         bmi     LA8F6
-        lda     grafport4::viewloc::ycoord
-        sta     setportbits_params2::cliprect::y2
-        lda     grafport4::viewloc::ycoord+1
-        sta     setportbits_params2::cliprect::y2+1
+        copy16  grafport4::viewloc::ycoord, setportbits_params2::cliprect::y2
         lda     #1
         sta     L9F93
         jmp     LA6FA
 
-LA8F6:  lda     LA6C5
-        cmp     setportbits_params2::cliprect::y2
-        lda     LA6C6
-        sbc     setportbits_params2::cliprect::y2+1
+LA8F6:  cmp16   LA6C5, setportbits_params2::cliprect::y2
         bpl     LA923
         lda     LA6C5
         clc
@@ -3908,8 +3857,8 @@ LBDDB:  lda     #$02
 ;;; ==================================================
 
 LBDE0:  .byte   0
-LBDE1:  sub16  event_params_xcoord, portmap::viewloc::xcoord, event_params_xcoord
-        sub16  event_params_ycoord, portmap::viewloc::ycoord, event_params_ycoord
+LBDE1:  sub16   event_params_xcoord, portmap::viewloc::xcoord, event_params_xcoord
+        sub16   event_params_ycoord, portmap::viewloc::ycoord, event_params_ycoord
         rts
 
 LBE08:  lda     #$00
@@ -5978,10 +5927,7 @@ L415B:  sta     active_window_id
         lda     ($06),y
         sbc     grafport2::viewloc::ycoord+1
         sta     L4243
-        lda     L4242
-        cmp     #$0F
-        lda     L4243
-        sbc     #$00
+        cmp16   L4242, #$0F
         bpl     L41CB
         jsr     L6E8A
         ldx     #$0B
@@ -9618,8 +9564,8 @@ L5FB9:  lda     LE22F
         jmp     L5F80
 
 L5FC5:  jsr     L60D5
-        sub16  event_params_xcoord, L60CF, L60CB
-        sub16  event_params_ycoord, L60D1, L60CD
+        sub16   event_params_xcoord, L60CF, L60CB
+        sub16   event_params_ycoord, L60D1, L60CD
         lda     L60CC
         bpl     L5FFE
         lda     L60CB
@@ -9646,15 +9592,9 @@ L602A:  lda     event_params_coords,x
         sta     L60CF,x
         dex
         bpl     L602A
-        lda     event_params_xcoord
-        cmp     $E234
-        lda     event_params_xcoord+1
-        sbc     $E235
+        cmp16   event_params_xcoord, $E234
         bpl     L6068
-        lda     event_params_xcoord
-        cmp     rect_E230
-        lda     event_params_xcoord+1
-        sbc     $E231
+        cmp16   event_params_xcoord, rect_E230
         bmi     L6054
         bit     L60D3
         bpl     L6068
@@ -9666,15 +9606,9 @@ L6054:  copy16  event_params_xcoord, rect_E230
 L6068:  copy16  event_params_xcoord, $E234
         lda     #$00
         sta     L60D3
-L6079:  lda     event_params_ycoord
-        cmp     $E236
-        lda     event_params_ycoord+1
-        sbc     $E237
+L6079:  cmp16   event_params_ycoord, $E236
         bpl     L60AE
-        lda     event_params_ycoord
-        cmp     $E232
-        lda     event_params_ycoord+1
-        sbc     $E233
+        cmp16   event_params_ycoord, $E232
         bmi     L609A
         bit     L60D4
         bpl     L60AE
@@ -9936,8 +9870,8 @@ L630F:  lda     L6388
         lda     #$01
 L6318:  rts
 
-L6319:  sub16  L6383, L6385, L6383
-        sub16  L6387, L6389, L6387
+L6319:  sub16   L6383, L6385, L6383
+        sub16   L6387, L6389, L6387
         clc
         ror     L6386
         ror     L6385
@@ -9946,8 +9880,8 @@ L6319:  sub16  L6383, L6385, L6383
         ror     L6389
         rts
 
-L634E:  add16 L6383, L6385, L6383
-        add16 L6387, L6389, L6387
+L634E:  add16   L6383, L6385, L6383
+        add16   L6387, L6389, L6387
         clc
         ror     L6386
         ror     L6385
@@ -9976,10 +9910,7 @@ L638C:  jsr     L650F
         lda     grafport2::cliprect::y1+1
         sbc     #$00
         sta     L63EB
-        lda     L63EA
-        cmp     L7B61
-        lda     L63EB
-        sbc     L7B62
+        cmp16   L63EA, L7B61
         bmi     L63C1
         ldax    L63EA
         jmp     L63C7
@@ -10000,10 +9931,7 @@ L63EC:  jsr     L650F
         jsr     L644C
         sta     L6448
         add16_8 grafport2::cliprect::y2, L6448, L644A
-        lda     L644A
-        cmp     L7B65
-        lda     L644B
-        sbc     L7B66
+        cmp16   L644A, L7B65
         bpl     L6421
         ldax    L644A
         jmp     L6427
@@ -10032,18 +9960,15 @@ L644C:  tya
 
 L6451:  jsr     L650F
         stax    L64AC
-        sub16  grafport2::cliprect::x1, L64AC, L64AE
-        lda     L64AE
-        cmp     L7B5F
-        lda     L64AF
-        sbc     L7B60
+        sub16   grafport2::cliprect::x1, L64AC, L64AE
+        cmp16   L64AE, L7B5F
         bmi     L6484
         ldax    L64AE
         jmp     L648A
 
 L6484:  ldax    L7B5F
 L648A:  stax    grafport2::cliprect::x1
-        add16 grafport2::cliprect::x1, L64AC, grafport2::cliprect::x2
+        add16   grafport2::cliprect::x1, L64AC, grafport2::cliprect::x2
         jsr     L653E
         jsr     L6DB1
         jmp     L6556
@@ -10054,18 +9979,15 @@ L64AE:  .byte   0
 L64AF:  .byte   0
 L64B0:  jsr     L650F
         stax    L650B
-        add16 grafport2::cliprect::x2, L650B, L650D
-        lda     L650D
-        cmp     L7B63
-        lda     L650E
-        sbc     L7B64
+        add16   grafport2::cliprect::x2, L650B, L650D
+        cmp16   L650D, L7B63
         bpl     L64E3
         ldax    L650D
         jmp     L64E9
 
 L64E3:  ldax    L7B63
 L64E9:  stax    grafport2::cliprect::x2
-        sub16  grafport2::cliprect::x2, L650B, grafport2::cliprect::x1
+        sub16   grafport2::cliprect::x2, L650B, grafport2::cliprect::x1
         jsr     L653E
         jsr     L6DB1
         jmp     L6556
@@ -10125,19 +10047,16 @@ L656D:  lda     active_window_id
         ldy     #$06
         lda     ($06),y
         tay
-        sub16  L7B63, L7B5F, L6602
-        sub16  L6602, L6600, L6602
+        sub16   L7B63, L7B5F, L6602
+        sub16   L6602, L6600, L6602
         lsr     L6603
         ror     L6602
         ldx     L6602
-        sub16  grafport2::cliprect::x1, L7B5F, L6602
+        sub16   grafport2::cliprect::x1, L7B5F, L6602
         bpl     L65D0
         lda     #$00
         beq     L65EB
-L65D0:  lda     grafport2::cliprect::x2
-        cmp     L7B63
-        lda     grafport2::cliprect::x2+1
-        sbc     L7B64
+L65D0:  cmp16   grafport2::cliprect::x2, L7B63
         bmi     L65E2
         tya
         jmp     L65EE
@@ -10164,7 +10083,7 @@ L6604:  lda     active_window_id
         ldy     #$08
         lda     ($06),y
         tay
-        sub16  L7B65, L7B61, L66A0
+        sub16   L7B65, L7B61, L66A0
         lda     L66A0
         sec
         sbc     L669F
@@ -10177,14 +10096,11 @@ L6604:  lda     active_window_id
         lsr     L66A1
         ror     L66A0
         ldx     L66A0
-        sub16  grafport2::cliprect::y1, L7B61, L66A0
+        sub16   grafport2::cliprect::y1, L7B61, L66A0
         bpl     L6669
         lda     #$00
         beq     L668A
-L6669:  lda     grafport2::cliprect::y2
-        cmp     L7B65
-        lda     grafport2::cliprect::y2+1
-        sbc     L7B66
+L6669:  cmp16   grafport2::cliprect::y2, L7B65
         bmi     L667B
         tya
         jmp     L668D
@@ -10460,8 +10376,8 @@ L692C:  pla
         inx
         jmp     L68F9
 
-L6932:  sub16  event_params_xcoord, L6A39, L6A35
-        sub16  event_params_ycoord, L6A3B, L6A37
+L6932:  sub16   event_params_xcoord, L6A39, L6A35
+        sub16   event_params_ycoord, L6A3B, L6A37
         lda     L6A36
         bpl     L6968
         lda     L6A35
@@ -10488,15 +10404,9 @@ L6994:  lda     event_params_coords,x
         sta     L6A39,x
         dex
         bpl     L6994
-        lda     event_params_xcoord
-        cmp     $E234
-        lda     event_params_xcoord+1
-        sbc     $E235
+        cmp16   event_params_xcoord, $E234
         bpl     L69D2
-        lda     event_params_xcoord
-        cmp     rect_E230
-        lda     event_params_xcoord+1
-        sbc     $E231
+        cmp16   event_params_xcoord, rect_E230
         bmi     L69BE
         bit     L6A3D
         bpl     L69D2
@@ -10508,15 +10418,9 @@ L69BE:  copy16  event_params_xcoord, rect_E230
 L69D2:  copy16  event_params_xcoord, $E234
         lda     #$00
         sta     L6A3D
-L69E3:  lda     event_params_ycoord
-        cmp     $E236
-        lda     event_params_ycoord+1
-        sbc     $E237
+L69E3:  cmp16   event_params_ycoord, $E236
         bpl     L6A18
-        lda     event_params_ycoord
-        cmp     $E232
-        lda     event_params_ycoord+1
-        sbc     $E233
+        cmp16   event_params_ycoord, $E232
         bmi     L6A04
         bit     L6A3E
         bpl     L6A18
@@ -10914,15 +10818,9 @@ L6DC0:  jsr     L6E52
 L6DC9:  lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     L44F2
-        lda     L7B5F
-        cmp     grafport2::cliprect::x1
-        lda     L7B60
-        sbc     grafport2::cliprect::x1+1
+        cmp16   L7B5F, grafport2::cliprect::x1
         bmi     L6DFE
-        lda     grafport2::cliprect::x2
-        cmp     L7B63
-        lda     grafport2::cliprect::x2+1
-        sbc     L7B64
+        cmp16   grafport2::cliprect::x2, L7B63
         bmi     L6DFE
         lda     #$02
         sta     event_params
@@ -10937,15 +10835,9 @@ L6DFE:  lda     #$02
         sta     event_params+1
         jsr     L6E48
         jsr     L656D
-L6E0E:  lda     L7B61
-        cmp     grafport2::cliprect::y1
-        lda     L7B62
-        sbc     grafport2::cliprect::y1+1
+L6E0E:  cmp16   L7B61, grafport2::cliprect::y1
         bmi     L6E38
-        lda     grafport2::cliprect::y2
-        cmp     L7B65
-        lda     grafport2::cliprect::y2+1
-        sbc     L7B66
+        cmp16   grafport2::cliprect::y2, L7B65
         bmi     L6E38
         lda     #$01
         sta     event_params
@@ -11248,7 +11140,7 @@ L70EA:  lda     $0C23,x
         inx
         cpx     #$04
         bne     L70EA
-        sub16  L485D, L485F, L72A8
+        sub16   L485D, L485F, L72A8
         ldx     #$05
 L710A:  lsr     L72A9
         ror     L72A8
@@ -11270,10 +11162,7 @@ L710A:  lsr     L72A9
         lda     L72A9
         sbc     #$00
         sta     L72A9
-        lda     L72A8
-        cmp     L70C1
-        lda     L72A9
-        sbc     L70C2
+        cmp16   L72A8, L70C1
         bcs     L7169
 L7147:  lda     $EC2E
         jsr     L8B19
@@ -11447,8 +11336,8 @@ L72EC:  MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params4
         rts
 
 L72F8:  copy16  get_file_info_params4::aux_type, L70BD
-        sub16  get_file_info_params4::aux_type, get_file_info_params4::blocks_used, L70BB
-        sub16  L70BD, L70BB, L70BD
+        sub16   get_file_info_params4::aux_type, get_file_info_params4::blocks_used, L70BB
+        sub16   L70BD, L70BB, L70BD
         lsr     L70BC
         ror     L70BB
         php
@@ -11889,15 +11778,9 @@ L76C4:  jsr     L7B6B
         lda     L7B66
         sbc     #$00
         sta     L7B66
-        lda     L7B63
-        cmp     #$AA
-        lda     L7B64
-        sbc     #$00
+        cmp16   L7B63, #$AA
         bmi     L7705
-        lda     L7B63
-        cmp     #$C2
-        lda     L7B64
-        sbc     #$01
+        cmp16   L7B63, #$1C2
         bpl     L770C
         ldax    L7B63
         jmp     L7710
@@ -11913,15 +11796,9 @@ L7710:  ldy     #$20
         txa
         iny
         sta     ($06),y
-        lda     L7B65
-        cmp     #$32
-        lda     L7B66
-        sbc     #$00
+        cmp16   L7B65, #$32
         bmi     L7739
-        lda     L7B65
-        cmp     #$6C
-        lda     L7B66
-        sbc     #$00
+        cmp16   L7B65, #$6C
         bpl     L7740
         ldax    L7B65
         jmp     L7744
@@ -12038,7 +11915,7 @@ L7826:  lda     L762C
         lda     L762F
         cmp     L762E
         bne     L7862
-        add16 L762C, #$20, L762C
+        add16   L762C, #$20, L762C
         lda     L7626
         sta     L762A
         lda     L7627
@@ -12067,7 +11944,7 @@ L7870:  lda     bufnum
         dex
         lda     buf3,x
         jsr     L8893
-        add16 $06, #$20, $06
+        add16   $06, #$20, $06
         rts
 
         .byte   0
@@ -12181,25 +12058,25 @@ L79A7:  jsr     L79F7
         addr_call draw_text2, str_k_available
         rts
 
-L79F7:  sub16  grafport2::cliprect::x2, grafport2::cliprect::x1, L7ADE
-        sub16  L7ADE, $EBF3, L7ADE
+L79F7:  sub16   grafport2::cliprect::x2, grafport2::cliprect::x1, L7ADE
+        sub16   L7ADE, $EBF3, L7ADE
         bpl     L7A22
         jmp     L7A86
 
-L7A22:  sub16  L7ADE, $EBF9, L7ADE
+L7A22:  sub16   L7ADE, $EBF9, L7ADE
         bpl     L7A3A
         jmp     L7A86
 
-L7A3A:  add16 $EBE7, L7ADE, point3::xcoord
+L7A3A:  add16   $EBE7, L7ADE, point3::xcoord
         lda     L7ADF
         beq     L7A59
         lda     L7ADE
         cmp     #$18
         bcc     L7A6A
-L7A59:  sub16  point3::xcoord, #$0C, point3::xcoord
+L7A59:  sub16   point3::xcoord, #$0C, point3::xcoord
 L7A6A:  lsr     L7ADF
         ror     L7ADE
-        add16 LEBE3, L7ADE, point2::xcoord
+        add16   LEBE3, L7ADE, point2::xcoord
         jmp     L7A9E
 
 L7A86:  copy16  LEBE3, point2::xcoord
@@ -12242,10 +12119,7 @@ L7AEA:  sta     str_6_spaces,x
         ldx     #$00
 L7AF9:  lda     #$00
         sta     L7B5D
-L7AFE:  lda     L7B5B
-        cmp     L7B53,x
-        lda     L7B5C
-        sbc     L7B54,x
+L7AFE:  cmp16   L7B5B, L7B53,x
         bpl     L7B31
         lda     L7B5D
         bne     L7B1A
@@ -12372,8 +12246,8 @@ L7C05:  lda     L7B65
         sta     L7B65
         bcc     L7C13
         inc     L7B66
-L7C13:  sub16  L7B5F, #$32, L7B5F
-        sub16  L7B61, #$0F, L7B61
+L7C13:  sub16   L7B5F, #$32, L7B5F
+        sub16   L7B61, #$0F, L7B61
         rts
 
 L7C36:  tax
@@ -12399,15 +12273,9 @@ L7C56:  lda     ($06),y
         bmi     L7C88
         bit     L7B68
         bmi     L7CCE
-        lda     L7B67
-        cmp     L7B5F
-        lda     L7B68
-        sbc     L7B60
+        cmp16   L7B67, L7B5F
         bmi     L7CCE
-        lda     L7B67
-        cmp     L7B63
-        lda     L7B68
-        sbc     L7B64
+        cmp16   L7B67, L7B63
         bpl     L7CBF
         jmp     L7CDA
 
@@ -12415,46 +12283,25 @@ L7C88:  bit     L7B68
         bmi     L7CA3
         bit     L7B64
         bmi     L7CDA
-        lda     L7B67
-        cmp     L7B63
-        lda     L7B68
-        sbc     L7B64
+        cmp16   L7B67, L7B63
         bmi     L7CDA
         jmp     L7CBF
 
-L7CA3:  lda     L7B67
-        cmp     L7B5F
-        lda     L7B68
-        sbc     L7B60
+L7CA3:  cmp16   L7B67, L7B5F
         bmi     L7CCE
-        lda     L7B67
-        cmp     L7B63
-        lda     L7B68
-        sbc     L7B64
+        cmp16   L7B67, L7B63
         bmi     L7CDA
-L7CBF:  lda     L7B67
-        sta     L7B63
-        lda     L7B68
-        sta     L7B64
+L7CBF:  copy16  L7B67, L7B63
         jmp     L7CDA
 
-L7CCE:  lda     L7B67
-        sta     L7B5F
-        lda     L7B68
-        sta     L7B60
+L7CCE:  copy16  L7B67, L7B5F
 L7CDA:  bit     L7B62
         bmi     L7D03
         bit     L7B6A
         bmi     L7D49
-        lda     L7B69
-        cmp     L7B61
-        lda     L7B6A
-        sbc     L7B62
+        cmp16   L7B69, L7B61
         bmi     L7D49
-        lda     L7B69
-        cmp     L7B65
-        lda     L7B6A
-        sbc     L7B66
+        cmp16   L7B69, L7B65
         bpl     L7D3A
         jmp     L7D55
 
@@ -12462,33 +12309,18 @@ L7D03:  bit     L7B6A
         bmi     L7D1E
         bit     L7B66
         bmi     L7D55
-        lda     L7B69
-        cmp     L7B65
-        lda     L7B6A
-        sbc     L7B66
+        cmp16   L7B69, L7B65
         bmi     L7D55
         jmp     L7D3A
 
-L7D1E:  lda     L7B69
-        cmp     L7B61
-        lda     L7B6A
-        sbc     L7B62
+L7D1E:  cmp16   L7B69, L7B61
         bmi     L7D49
-        lda     L7B69
-        cmp     L7B65
-        lda     L7B6A
-        sbc     L7B66
+        cmp16   L7B69, L7B65
         bmi     L7D55
-L7D3A:  lda     L7B69
-        sta     L7B65
-        lda     L7B6A
-        sta     L7B66
+L7D3A:  copy16  L7B69, L7B65
         jmp     L7D55
 
-L7D49:  lda     L7B69
-        sta     L7B61
-        lda     L7B6A
-        sta     L7B62
+L7D49:  copy16  L7B69, L7B61
 L7D55:  inc     L7D5B
         jmp     L7BEF
 
@@ -12993,10 +12825,7 @@ L81AC:  lda     pointC::ycoord
         sta     pointC::ycoord
         bcc     L81BB
         inc     pointC::ycoord+1
-L81BB:  lda     point9::ycoord
-        cmp     grafport2::cliprect::y2
-        lda     point9::ycoord+1
-        sbc     grafport2::cliprect::y2+1
+L81BB:  cmp16   point9::ycoord, grafport2::cliprect::y2
         bmi     L81D9
         lda     point9::ycoord
         clc
@@ -13012,10 +12841,7 @@ L81D9:  lda     point9::ycoord
         sta     point9::ycoord
         bcc     L81E8
         inc     point9::ycoord+1
-L81E8:  lda     point9::ycoord
-        cmp     grafport2::cliprect::y1
-        lda     point9::ycoord+1
-        sbc     grafport2::cliprect::y1+1
+L81E8:  cmp16   point9::ycoord, grafport2::cliprect::y1
         bpl     L81F7
         rts
 
@@ -13077,10 +12903,7 @@ L827A:  sta     text_buffer2::data-1,x
         ldx     #$00
 L828C:  lda     #$00
         sta     L8274
-L8291:  lda     L8272
-        cmp     L826A,x
-        lda     L8273
-        sbc     L826B,x
+L8291:  cmp16   L8272, L826A,x
         bpl     L82C3
         lda     L8274
         bne     L82AD
@@ -13323,8 +13146,8 @@ L84D1:  jsr     push_zp_addrs
         bit     L5B1B
         bmi     L84DC
         jsr     L6E52
-L84DC:  sub16  grafport2::cliprect::x2, grafport2::cliprect::x1, L85F8
-        sub16  grafport2::cliprect::y2, grafport2::cliprect::y1, L85FA
+L84DC:  sub16   grafport2::cliprect::x2, grafport2::cliprect::x1, L85F8
+        sub16   grafport2::cliprect::y2, grafport2::cliprect::y1, L85FA
         lda     event_params_kind
         cmp     #MGTK::event_kind_button_down
         bne     L850C
@@ -14280,16 +14103,16 @@ L8BC1:  lda     grafport2,x
         dey
         dex
         bpl     L8BC1
-        sub16  grafport2::cliprect::x2, grafport2::cliprect::x1, L8D54
-        sub16  grafport2::cliprect::y2, grafport2::cliprect::y1, L8D56
-        add16 $0858, L8D54, $085C
-        add16 $085A, L8D56, $085E
+        sub16   grafport2::cliprect::x2, grafport2::cliprect::x1, L8D54
+        sub16   grafport2::cliprect::y2, grafport2::cliprect::y1, L8D56
+        add16   $0858, L8D54, $085C
+        add16   $085A, L8D56, $085E
         lda     #$00
         sta     L8D4E
         sta     L8D4F
         sta     L8D4D
-        sub16  $0858, L0800, L8D50
-        sub16  $085A, $0802, L8D52
+        sub16   $0858, L0800, L8D50
+        sub16   $085A, $0802, L8D52
         bit     L8D51
         bpl     L8C6A
         lda     #$80
@@ -16116,11 +15939,8 @@ L9BC9:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params3
         jsr     LA497
         jmp     L9BC9
 
-L9BDA:  sub16  file_info_params3::aux_type, file_info_params3::blocks_used, L9BFF
-        lda     L9BFF
-        cmp     LA2EF
-        lda     L9C00
-        sbc     LA2F0
+L9BDA:  sub16   file_info_params3::aux_type, file_info_params3::blocks_used, L9BFF
+        cmp16   L9BFF, LA2EF
         bcs     L9BFE
         jmp     L9185
 
@@ -16184,12 +16004,9 @@ L9C70:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params3
 
         jmp     LA39F
 
-L9C95:  sub16  file_info_params3::aux_type, file_info_params3::blocks_used, L9CD4
-        add16 L9CD4, L9CD8, L9CD4
-        lda     L9CD4
-        cmp     file_info_params2::blocks_used
-        lda     L9CD5
-        sbc     file_info_params2::blocks_used+1
+L9C95:  sub16   file_info_params3::aux_type, file_info_params3::blocks_used, L9CD4
+        add16   L9CD4, L9CD8, L9CD4
+        cmp16   L9CD4, file_info_params2::blocks_used
         bcs     L9CCC
         sec
         bcs     L9CCD
@@ -16685,7 +16502,7 @@ LA1A3:  lda     #7              ; param count for SET_FILE_INFO
 
 LA1C0:  jmp     LA322
 
-LA1C3:  sub16  LA2ED, #$01, LA055
+LA1C3:  sub16   LA2ED, #$01, LA055
         bit     L918B
         bpl     LA1DC
         jmp     LA10A
@@ -16919,11 +16736,11 @@ LA3D1:  yax_call JT_MGTK_RELAY, MGTK::GetEvent, event_params
 LA3EC:  lda     #$00
 LA3EE:  rts
 
-LA3EF:  sub16  LA2ED, #$01, L9E7A
+LA3EF:  sub16   LA2ED, #$01, L9E7A
         yax_call launch_dialog, index_delete_file_dialog, L9E79
         rts
 
-LA40A:  sub16  LA2ED, #$01, L9938
+LA40A:  sub16   LA2ED, #$01, L9938
         yax_call launch_dialog, index_copy_file_dialog, L9937
         rts
 
@@ -19062,10 +18879,7 @@ LB9B8:  MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
 
 LB9D8:  jsr     LBD3B
         stax    $06
-        lda     $D20D
-        cmp     $06
-        lda     $D20E
-        sbc     $06+1
+        cmp16   $D20D, $06
         bcs     LB9EE
         jmp     LBA83
 
@@ -19082,11 +18896,8 @@ LB9D8:  jsr     LBD3B
         lda     path_buf2
         sta     ptr+2
 LBA10:  MGTK_RELAY_CALL MGTK::TextWidth, ptr
-        add16 $09, LBB09, $09
-        lda     $09
-        cmp     $D20D
-        lda     $0A
-        sbc     $D20E
+        add16   $09, LBB09, $09
+        cmp16   $09, $D20D
         bcc     LBA42
         dec     $08
         lda     $08
@@ -19141,10 +18952,7 @@ LBA7C:  dey
         sta     textlen
 :       MGTK_RELAY_CALL MGTK::TextWidth, params
         add16 result, point6::xcoord, result
-        lda     result
-        cmp     $D20D
-        lda     result+1
-        sbc     $D20E
+        cmp16   result, $D20D
         bcc     LBABF
         dec     textlen
         lda     textlen
@@ -19527,10 +19335,7 @@ LBDDF:  lda     LD909
         ldx     #$00
 LBDFE:  lda     #$00
         sta     LBE61
-LBE03:  lda     LBE5F
-        cmp     LBE57,x
-        lda     LBE5F+1
-        sbc     LBE57+1,x
+LBE03:  cmp16   LBE5F, LBE57,x
         bpl     LBE35
         lda     LBE61
         bne     LBE1F
@@ -20008,10 +19813,10 @@ L0B09:  addr_call desktop_main::measure_text1, str_6_spaces
         txa
         adc     L0BA1
         sta     $EBF8
-        add16 $EBF5, $EBF7, $EBF9
-        add16 $EBF3, #$05, LEBE3
-        add16 LEBE3, $EBF5, $EBE7
-        add16 $EBE7, #$03, $EBE7
+        add16   $EBF5, $EBF7, $EBF9
+        add16   $EBF3, #$05, LEBE3
+        add16   LEBE3, $EBF5, $EBE7
+        add16   $EBE7, #$03, $EBE7
         jmp     L0BA2
 
 L0BA0:  .byte   0
