@@ -5357,19 +5357,19 @@ str_k_available:
 str_6_spaces:
         PASCAL_STRING "      "
 
-LEBE3:  .byte   $00,$00,$00,$00
-LEBE7:  .byte   $00,$00,$00,$00
+point10:  DEFINE_POINT 0, 0, point10
+point11:  DEFINE_POINT 0, 0, point11
 point2: DEFINE_POINT 0, 0, point2
 point3: DEFINE_POINT 0, 0, point3
 
-LEBF3:  .byte   $00,$00,$00,$00
-LEBF7:  .byte   $00,$00,$00,$00
+point12:  DEFINE_POINT 0, 0, point12
+point13:  DEFINE_POINT 0, 0, point13
 
 LEBFB:  .byte   0
 
 LEBFC:  .byte   0               ; flag of some sort ???
 
-        .byte   $00,$00,$00,$00
+point14: DEFINE_POINT 0, 0
 
         ;; Used by DESKTOP_COPY_*_BUF
 table1: .addr   $1B00,$1B80,$1C00,$1C80,$1D00,$1D80,$1E00,$1E80,$1F00
@@ -9070,7 +9070,7 @@ L5B1B:  .byte   0
         lda     win_buf_table,x
         sta     L5B1B
         ldx     #$03
-L5B31:  lda     $EBFD,x
+L5B31:  lda     point14,x
         sta     event_params_coords,x
         dex
         bpl     L5B31
@@ -12017,28 +12017,28 @@ L79A7:  jsr     L79F7
         rts
 
 L79F7:  sub16   grafport2::cliprect::x2, grafport2::cliprect::x1, L7ADE
-        sub16   L7ADE, LEBF3, L7ADE
+        sub16   L7ADE, point12::xcoord, L7ADE
         bpl     L7A22
         jmp     L7A86
 
-L7A22:  sub16   L7ADE, $EBF9, L7ADE
+L7A22:  sub16   L7ADE, point13::ycoord, L7ADE
         bpl     L7A3A
         jmp     L7A86
 
-L7A3A:  add16   LEBE7, L7ADE, point3::xcoord
-        lda     L7ADF
+L7A3A:  add16   point11::xcoord, L7ADE, point3::xcoord
+        lda     L7ADE+1
         beq     L7A59
         lda     L7ADE
         cmp     #$18
         bcc     L7A6A
 L7A59:  sub16   point3::xcoord, #$0C, point3::xcoord
-L7A6A:  lsr     L7ADF
+L7A6A:  lsr     L7ADE+1
         ror     L7ADE
-        add16   LEBE3, L7ADE, point2::xcoord
+        add16   point10::xcoord, L7ADE, point2::xcoord
         jmp     L7A9E
 
-L7A86:  copy16  LEBE3, point2::xcoord
-        copy16  LEBE7, point3::xcoord
+L7A86:  copy16  point10::xcoord, point2::xcoord
+        copy16  point11::xcoord, point3::xcoord
 L7A9E:  lda     point2::xcoord
         clc
         adc     grafport2::cliprect::x1
@@ -12063,15 +12063,16 @@ L7A9E:  lda     point2::xcoord
 
 L7AD7:  addr_jump draw_text2, str_6_spaces
 
-L7ADE:  .byte   0
-L7ADF:  .byte   0
+L7ADE:  .word   0
+
 L7AE0:  stax    L7B5B
-        ldx     #$06
-        lda     #$20
-L7AEA:  sta     str_6_spaces,x
+        ldx     #6
+        lda     #' '
+:       sta     str_6_spaces,x
         dex
-        bne     L7AEA
-        lda     #$00
+        bne     :-
+
+        lda     #0
         sta     L7B5E
         ldy     #$00
         ldx     #$00
@@ -13213,7 +13214,7 @@ L85FA:  .word   0
         ldx     #3
 :       lda     event_params_coords,x
         sta     coords,x
-        sta     $EBFD,x
+        sta     point14,x
         dex
         bpl     :-
 
@@ -19751,28 +19752,28 @@ L0B09:  addr_call desktop_main::measure_text1, str_6_spaces
         addr_call desktop_main::measure_text1, str_items
         clc
         adc     L0BA0
-        sta     LEBF3
+        sta     point12::xcoord
         txa
         adc     L0BA1
-        sta     $EBF4
+        sta     point12::xcoord+1
         addr_call desktop_main::measure_text1, str_k_in_disk
         clc
         adc     L0BA0
-        sta     $EBF5
+        sta     point12::ycoord
         txa
         adc     L0BA1
-        sta     $EBF6
+        sta     point12::ycoord+1
         addr_call desktop_main::measure_text1, str_k_available
         clc
         adc     L0BA0
-        sta     LEBF7
+        sta     point13::xcoord
         txa
         adc     L0BA1
-        sta     $EBF8
-        add16   $EBF5, LEBF7, $EBF9
-        add16   LEBF3, #$05, LEBE3
-        add16   LEBE3, $EBF5, LEBE7
-        add16   LEBE7, #$03, LEBE7
+        sta     point13::xcoord+1
+        add16   point12::ycoord, point13::xcoord, point13::ycoord
+        add16   point12::xcoord, #$05, point10::xcoord
+        add16   point10::xcoord, point12::ycoord, point11::xcoord
+        add16   point11::xcoord, #$03, point11::xcoord
         jmp     L0BA2
 
 L0BA0:  .byte   0
