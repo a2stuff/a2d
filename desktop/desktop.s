@@ -184,7 +184,7 @@ L8625:  MGTK_RELAY_CALL MGTK::HiliteMenu, winfo18_port ; ???
         sta     L8737
         sty     L8738
         and     #$F0
-        sta     online_params_unit
+        sta     online_params_unit_num
         sta     ALTZPOFF
         MLI_CALL ON_LINE, online_params
         sta     ALTZPON
@@ -316,10 +316,10 @@ L873D:  DEFINE_POINT 500, 16
 
 .proc online_params
 count:  .byte   2
-unit:   .byte   $60             ; Slot 6 Drive 1
-buffer: .addr   online_params_buffer
+unit_num:       .byte   $60     ; Slot 6 Drive 1
+data_buffer:    .addr   online_params_buffer
 .endproc
-        online_params_unit := online_params::unit
+        online_params_unit_num := online_params::unit_num
 
         ;; Per ProDOS TRM this should be 256 bytes!
 online_params_buffer:
@@ -535,8 +535,7 @@ window_id:      .byte   0
         screen_height := 192
 
 .proc grafport
-left:   .word   0
-top:    .word   0
+viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
 cliprect:       DEFINE_RECT 0, 0, screen_width-1, screen_height-1
@@ -556,14 +555,10 @@ a_grafport:     .addr   grafport4
 .endproc
 
 .proc grafport4
-left:   .word   0
-top:    .word   0
+viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   0
 mapwidth:       .word   0
-cliprect_x1:    .word   0
-cliprect_y1:    .word   0
-width:  .word   0
-height: .word   0
+cliprect:       DEFINE_RECT 0, 0, 0, 0, cliprect
 penpattern:     .res    8, 0
 colormasks:     .byte   0, 0
 penloc: DEFINE_POINT 0, 0
@@ -2796,37 +2791,33 @@ LA62B:  .byte   $00
 LA62C:  .byte   $00,$00,$00
 
 .proc setportbits_params2
-left:   .word   0
-top:    .word   0
-mapbits: .addr   MGTK::screen_mapbits
-mapwidth: .word   MGTK::screen_mapwidth
-cliprect_x1:   .word   0
-cliprect_y1:   .word   0
-width:  .word   0
-height: .word   0
+viewloc:        DEFINE_POINT 0, 0, viewloc
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .word   MGTK::screen_mapwidth
+cliprect:       DEFINE_RECT 0, 0, 0, 0, cliprect
 .endproc
 
 LA63F:  jsr     calc_icon_poly
         lda     poly::v0::ycoord
         sta     LA629
-        sta     setportbits_params2::cliprect_y1
-        sta     setportbits_params2::top
+        sta     setportbits_params2::cliprect::y1
+        sta     setportbits_params2::viewloc::ycoord
         lda     poly::v0::ycoord+1
         sta     LA62A
-        sta     setportbits_params2::cliprect_y1+1
-        sta     setportbits_params2::top+1
+        sta     setportbits_params2::cliprect::y1+1
+        sta     setportbits_params2::viewloc::ycoord+1
         lda     poly::v5::xcoord
         sta     LA627
-        sta     setportbits_params2::cliprect_x1
-        sta     setportbits_params2::left
+        sta     setportbits_params2::cliprect::x1
+        sta     setportbits_params2::viewloc::xcoord
         lda     poly::v5::xcoord+1
         sta     LA628
-        sta     setportbits_params2::cliprect_x1+1
-        sta     setportbits_params2::left+1
+        sta     setportbits_params2::cliprect::x1+1
+        sta     setportbits_params2::viewloc::xcoord+1
         ldx     #$03
 LA674:  lda     poly::v4::xcoord,x
         sta     LA62B,x
-        sta     setportbits_params2::width,x
+        sta     setportbits_params2::cliprect::x2,x
         dex
         bpl     LA674
         lda     LA62B
@@ -2836,10 +2827,10 @@ LA674:  lda     poly::v4::xcoord,x
         bmi     LA69C
         lda     #$2E
         sta     LA62B
-        sta     setportbits_params2::width
+        sta     setportbits_params2::cliprect::x2
         lda     #$02
         sta     LA62C
-        sta     setportbits_params2::width+1
+        sta     setportbits_params2::cliprect::x2+1
 LA69C:  MGTK_CALL MGTK::SetPortBits, setportbits_params2
         rts
 
@@ -2880,46 +2871,46 @@ LA6C5:  .byte   $00
 LA6C6:  .byte   $00
 LA6C7:  lda     L9F93
         beq     LA6FA
-        lda     setportbits_params2::width
+        lda     setportbits_params2::cliprect::x2
         clc
         adc     #$01
-        sta     setportbits_params2::cliprect_x1
-        sta     setportbits_params2::left
-        lda     setportbits_params2::width+1
+        sta     setportbits_params2::cliprect::x1
+        sta     setportbits_params2::viewloc::xcoord
+        lda     setportbits_params2::cliprect::x2+1
         adc     #$00
-        sta     setportbits_params2::cliprect_x1+1
-        sta     setportbits_params2::left+1
+        sta     setportbits_params2::cliprect::x1+1
+        sta     setportbits_params2::viewloc::xcoord+1
         ldx     #$05
 LA6E5:  lda     LA629,x
-        sta     setportbits_params2::cliprect_y1,x
+        sta     setportbits_params2::cliprect::y1,x
         dex
         bpl     LA6E5
-        lda     setportbits_params2::cliprect_y1
-        sta     setportbits_params2::top
-        lda     setportbits_params2::cliprect_y1+1
-        sta     setportbits_params2::top+1
-LA6FA:  lda     setportbits_params2::cliprect_x1
+        lda     setportbits_params2::cliprect::y1
+        sta     setportbits_params2::viewloc::ycoord
+        lda     setportbits_params2::cliprect::y1+1
+        sta     setportbits_params2::viewloc::ycoord+1
+LA6FA:  lda     setportbits_params2::cliprect::x1
         sta     LA6B3
         sta     LA6BF
-        lda     setportbits_params2::cliprect_x1+1
+        lda     setportbits_params2::cliprect::x1+1
         sta     LA6B4
         sta     LA6C0
-        lda     setportbits_params2::cliprect_y1
+        lda     setportbits_params2::cliprect::y1
         sta     LA6B5
         sta     LA6B9
-        lda     setportbits_params2::cliprect_y1+1
+        lda     setportbits_params2::cliprect::y1+1
         sta     LA6B6
         sta     LA6BA
-        lda     setportbits_params2::width
+        lda     setportbits_params2::cliprect::x2
         sta     LA6B7
         sta     LA6BB
-        lda     setportbits_params2::width+1
+        lda     setportbits_params2::cliprect::x2+1
         sta     LA6B8
         sta     LA6BC
-        lda     setportbits_params2::height
+        lda     setportbits_params2::cliprect::y2
         sta     LA6BD
         sta     LA6C1
-        lda     setportbits_params2::height+1
+        lda     setportbits_params2::cliprect::y2+1
         sta     LA6BE
         sta     LA6C2
         lda     #$00
@@ -2930,10 +2921,10 @@ LA747:  lda     LA6B0
         lda     #$00
         sta     LA6B0
 LA753:  MGTK_CALL MGTK::SetPortBits, setportbits_params2
-        lda     setportbits_params2::width+1
+        lda     setportbits_params2::cliprect::x2+1
         cmp     LA62C
         bne     LA76F
-        lda     setportbits_params2::width
+        lda     setportbits_params2::cliprect::x2
         cmp     LA62B
         bcc     LA76F
         lda     #$00
@@ -2986,121 +2977,121 @@ LA7C8:  ldy     #$04
         lsr     a
         ora     LA6B1
         sta     LA6B1
-        sub16 grafport4::left, #2, grafport4::left
-        sub16   grafport4::cliprect_x1, #2, grafport4::cliprect_x1
+        sub16 grafport4::viewloc::xcoord, #2, grafport4::viewloc::xcoord
+        sub16   grafport4::cliprect::x1, #2, grafport4::cliprect::x1
         bit     LA6B2
         bmi     LA820
-        lda     grafport4::top
+        lda     grafport4::viewloc::ycoord
         sec
         sbc     #$0E
-        sta     grafport4::top
+        sta     grafport4::viewloc::ycoord
         bcs     LA812
-        dec     grafport4::top+1
-LA812:  lda     grafport4::cliprect_y1
+        dec     grafport4::viewloc::ycoord+1
+LA812:  lda     grafport4::cliprect::y1
         sec
         sbc     #$0E
-        sta     grafport4::cliprect_y1
+        sta     grafport4::cliprect::y1
         bcs     LA820
-        dec     grafport4::cliprect_y1+1
+        dec     grafport4::cliprect::y1+1
 LA820:  bit     LA6B1
         bpl     LA833
-        lda     grafport4::height
+        lda     grafport4::cliprect::y2
         clc
         adc     #12
-        sta     grafport4::height
+        sta     grafport4::cliprect::y2
         bcc     LA833
-        inc     grafport4::height+1
+        inc     grafport4::cliprect::y2+1
 LA833:  bit     LA6B1
         bvc     LA846
-        lda     grafport4::width
+        lda     grafport4::cliprect::x2
         clc
         adc     #20
-        sta     grafport4::width
+        sta     grafport4::cliprect::x2
         bcc     LA846
-        inc     grafport4::width+1
+        inc     grafport4::cliprect::x2+1
 LA846:  jsr     LA382
-        sub16 grafport4::width, grafport4::cliprect_x1, LA6C3
-        sub16  grafport4::height, grafport4::cliprect_y1, LA6C5
+        sub16 grafport4::cliprect::x2, grafport4::cliprect::x1, LA6C3
+        sub16  grafport4::cliprect::y2, grafport4::cliprect::y1, LA6C5
         lda     LA6C3
         clc
-        adc     grafport4::left
+        adc     grafport4::viewloc::xcoord
         sta     LA6C3
-        lda     grafport4::left+1
+        lda     grafport4::viewloc::xcoord+1
         adc     LA6C4
         sta     LA6C4
-        add16 LA6C5, grafport4::top, LA6C5
-        lda     setportbits_params2::width
+        add16 LA6C5, grafport4::viewloc::ycoord, LA6C5
+        lda     setportbits_params2::cliprect::x2
         cmp     LA6C3
-        lda     setportbits_params2::width+1
+        lda     setportbits_params2::cliprect::x2+1
         sbc     LA6C4
         bmi     LA8B7
-        add16 LA6C3, #1, setportbits_params2::width
+        add16 LA6C3, #1, setportbits_params2::cliprect::x2
         jmp     LA8D4
 
-LA8B7:  lda     grafport4::left
-        cmp     setportbits_params2::cliprect_x1
-        lda     grafport4::left+1
-        sbc     setportbits_params2::cliprect_x1+1
+LA8B7:  lda     grafport4::viewloc::xcoord
+        cmp     setportbits_params2::cliprect::x1
+        lda     grafport4::viewloc::xcoord+1
+        sbc     setportbits_params2::cliprect::x1+1
         bmi     LA8D4
-        lda     grafport4::left
-        sta     setportbits_params2::width
-        lda     grafport4::left+1
-        sta     setportbits_params2::width+1
+        lda     grafport4::viewloc::xcoord
+        sta     setportbits_params2::cliprect::x2
+        lda     grafport4::viewloc::xcoord+1
+        sta     setportbits_params2::cliprect::x2+1
         jmp     LA6FA
 
-LA8D4:  lda     grafport4::top
-        cmp     setportbits_params2::cliprect_y1
-        lda     grafport4::top+1
-        sbc     setportbits_params2::cliprect_y1+1
+LA8D4:  lda     grafport4::viewloc::ycoord
+        cmp     setportbits_params2::cliprect::y1
+        lda     grafport4::viewloc::ycoord+1
+        sbc     setportbits_params2::cliprect::y1+1
         bmi     LA8F6
-        lda     grafport4::top
-        sta     setportbits_params2::height
-        lda     grafport4::top+1
-        sta     setportbits_params2::height+1
+        lda     grafport4::viewloc::ycoord
+        sta     setportbits_params2::cliprect::y2
+        lda     grafport4::viewloc::ycoord+1
+        sta     setportbits_params2::cliprect::y2+1
         lda     #1
         sta     L9F93
         jmp     LA6FA
 
 LA8F6:  lda     LA6C5
-        cmp     setportbits_params2::height
+        cmp     setportbits_params2::cliprect::y2
         lda     LA6C6
-        sbc     setportbits_params2::height+1
+        sbc     setportbits_params2::cliprect::y2+1
         bpl     LA923
         lda     LA6C5
         clc
         adc     #2
-        sta     setportbits_params2::cliprect_y1
-        sta     setportbits_params2::top
+        sta     setportbits_params2::cliprect::y1
+        sta     setportbits_params2::viewloc::ycoord
         lda     LA6C6
         adc     #0
-        sta     setportbits_params2::cliprect_y1+1
-        sta     setportbits_params2::top+1
+        sta     setportbits_params2::cliprect::y1+1
+        sta     setportbits_params2::viewloc::ycoord+1
         lda     #1
         sta     L9F93
         jmp     LA6FA
 
-LA923:  lda     setportbits_params2::width
-        sta     setportbits_params2::cliprect_x1
-        sta     setportbits_params2::left
-        lda     setportbits_params2::width+1
-        sta     setportbits_params2::cliprect_x1+1
-        sta     setportbits_params2::left+1
+LA923:  lda     setportbits_params2::cliprect::x2
+        sta     setportbits_params2::cliprect::x1
+        sta     setportbits_params2::viewloc::xcoord
+        lda     setportbits_params2::cliprect::x2+1
+        sta     setportbits_params2::cliprect::x1+1
+        sta     setportbits_params2::viewloc::xcoord+1
         jmp     LA753
 
-LA938:  lda     grafport4::top
+LA938:  lda     grafport4::viewloc::ycoord
         clc
         adc     #15
-        sta     grafport4::top
-        lda     grafport4::top+1
+        sta     grafport4::viewloc::ycoord
+        lda     grafport4::viewloc::ycoord+1
         adc     #0
-        sta     grafport4::top+1
-        lda     grafport4::cliprect_y1
+        sta     grafport4::viewloc::ycoord+1
+        lda     grafport4::cliprect::y1
         clc
         adc     #15
-        sta     grafport4::cliprect_y1
-        lda     grafport4::cliprect_y1+1
+        sta     grafport4::cliprect::y1
+        lda     grafport4::cliprect::y1+1
         adc     #0
-        sta     grafport4::cliprect_y1+1
+        sta     grafport4::cliprect::y1+1
         MGTK_CALL MGTK::SetPort, grafport4
         rts
 
@@ -3599,7 +3590,7 @@ alert_inner_frame_rect1:
 alert_inner_frame_rect2:
         DEFINE_RECT 5, 3, 415, 52
 
-.proc grafport6
+.proc portmap
 viewloc:        DEFINE_POINT $41, $57, viewloc
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
@@ -3704,38 +3695,38 @@ start:  pha
 
         ldx     #$03
         lda     #$00
-LBA0B:  sta     grafport3_left,x
+LBA0B:  sta     grafport3_viewloc_xcoord,x
         sta     grafport3_cliprect_x1,x
         dex
         bpl     LBA0B
         lda     #<$226
-        sta     grafport3_width
+        sta     grafport3_cliprect_x2
         lda     #>$226
-        sta     grafport3_width+1
+        sta     grafport3_cliprect_x2+1
         lda     #<$B9
-        sta     grafport3_height
+        sta     grafport3_cliprect_y2
         lda     #>$B9
-        sta     grafport3_height+1
+        sta     grafport3_cliprect_y2+1
         MGTK_RELAY2_CALL MGTK::SetPort, grafport3
-        ldax    grafport6::viewloc::xcoord
+        ldax    portmap::viewloc::xcoord
         jsr     LBF8B
         sty     LBFCA
         sta     LBFCD
-        lda     grafport6::viewloc::xcoord
+        lda     portmap::viewloc::xcoord
         clc
-        adc     grafport6::maprect::x2
+        adc     portmap::maprect::x2
         pha
-        lda     grafport6::viewloc::xcoord+1
-        adc     grafport6::maprect::x2+1
+        lda     portmap::viewloc::xcoord+1
+        adc     portmap::maprect::x2+1
         tax
         pla
         jsr     LBF8B
         sty     LBFCC
         sta     LBFCE
-        lda     grafport6::viewloc::ycoord
+        lda     portmap::viewloc::ycoord
         sta     LBFC9
         clc
-        adc     grafport6::maprect::y2
+        adc     portmap::maprect::y2
         sta     LBFCB
         MGTK_RELAY2_CALL MGTK::HideCursor
         jsr     LBE08
@@ -3744,7 +3735,7 @@ LBA0B:  sta     grafport3_left,x
         MGTK_RELAY2_CALL MGTK::PaintRect, alert_rect ; alert background
         MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR ; ensures corners are inverted
         MGTK_RELAY2_CALL MGTK::FrameRect, alert_rect ; alert outline
-        MGTK_RELAY2_CALL MGTK::SetPortBits, grafport6::viewloc::xcoord
+        MGTK_RELAY2_CALL MGTK::SetPortBits, portmap::viewloc::xcoord
         MGTK_RELAY2_CALL MGTK::FrameRect, alert_inner_frame_rect1 ; inner 2x border
         MGTK_RELAY2_CALL MGTK::FrameRect, alert_inner_frame_rect2
         MGTK_RELAY2_CALL MGTK::SetPenMode, pencopy
@@ -3991,8 +3982,8 @@ LBDDB:  lda     #$02
 ;;; ==================================================
 
 LBDE0:  .byte   0
-LBDE1:  sub16  event_params_xcoord, grafport6::viewloc::xcoord, event_params_xcoord
-        sub16  event_params_ycoord, grafport6::viewloc::ycoord, event_params_ycoord
+LBDE1:  sub16  event_params_xcoord, portmap::viewloc::xcoord, event_params_xcoord
+        sub16  event_params_ycoord, portmap::viewloc::ycoord, event_params_ycoord
         rts
 
 LBE08:  lda     #$00
@@ -4568,6 +4559,7 @@ findwindow_params_window_id:
 screentowindow_windowy:
         .byte   0
         .byte   0
+
 LD211:  .byte   0
 
 
@@ -4577,64 +4569,52 @@ a_grafport:     .addr   grafport2
 .endproc
 
 .proc grafport2
-left:   .word   0
-top:    .word   0
-mapbits: .addr   0
-mapwidth: .word   0
-cliprect_x1:   .word   0
-cliprect_y1:   .word   0
-width:  .word   0
-height: .word   0
-penpattern:.res 8, 0
+viewloc:        DEFINE_POINT 0, 0, viewloc
+mapbits:        .addr   0
+mapwidth:       .word   0
+cliprect:       DEFINE_RECT 0, 0, 0, 0, cliprect
+penpattern:     .res    8, 0
 colormasks:     .byte   0, 0
-penloc:   DEFINE_POINT 0, 0
-penwidth: .byte   0
-penheight: .byte   0
-unk:    .byte   0
-textbg:  .byte   0
-fontptr:   .addr   0
+penloc: DEFINE_POINT 0, 0
+penwidth:       .byte   0
+penheight:      .byte   0
+penmode:        .byte   0
+textbg: .byte   0
+fontptr:        .addr   0
 .endproc
 
 .proc grafport3
-left:   .word   0
-top:    .word   0
-mapbits: .addr   0
-mapwidth: .word   0
-cliprect_x1:   .word   0
-cliprect_y1:   .word   0
-width:  .word   0
-height: .word   0
-penpattern:.res 8, 0
+viewloc:        DEFINE_POINT 0, 0, viewloc
+mapbits:        .addr   0
+mapwidth:       .word   0
+cliprect:       DEFINE_RECT 0, 0, 0, 0, cliprect
+penpattern:     .res    8, 0
 colormasks:     .byte   0, 0
-penloc:   DEFINE_POINT 0, 0
-penwidth: .byte   0
-penheight: .byte   0
-unk:    .byte   0
-textbg:  .byte   0
-fontptr:   .addr   0
+penloc: DEFINE_POINT 0, 0
+penwidth:       .byte   0
+penheight:      .byte   0
+penmode:        .byte   0
+textbg: .byte   0
+fontptr:        .addr   0
 .endproc
-        grafport3_left := grafport3::left
-        grafport3_cliprect_x1 := grafport3::cliprect_x1
-        grafport3_width := grafport3::width
-        grafport3_height := grafport3::height
+        grafport3_viewloc_xcoord := grafport3::viewloc::xcoord
+        grafport3_cliprect_x1 := grafport3::cliprect::x1
+        grafport3_cliprect_x2 := grafport3::cliprect::x2
+        grafport3_cliprect_y2 := grafport3::cliprect::y2
 
 .proc grafport5
-left:   .word   0
-top:    .word   0
-mapbits: .addr   MGTK::screen_mapbits
-mapwidth: .word   MGTK::screen_mapwidth
-cliprect_x1:   .word   0
-cliprect_y1:   .word   0
-width:  .word   10
-height: .word   10
-penpattern:.res    8, $FF
+viewloc:        DEFINE_POINT 0, 0, viewloc
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .word   MGTK::screen_mapwidth
+cliprect:       DEFINE_RECT 0, 0, 10, 10, cliprect
+penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc:   DEFINE_POINT 0, 0
-penwidth: .byte   1
-penheight: .byte   1
-penmode:   .byte   0
-textbg:  .byte   0
-fontptr:   .addr   DEFAULT_FONT
+penloc: DEFINE_POINT 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   0
+textbg: .byte   0
+fontptr:        .addr   DEFAULT_FONT
 .endproc
 
 
@@ -6078,11 +6058,11 @@ L415B:  sta     active_window_id
         ldy     #$16
         lda     ($06),y
         sec
-        sbc     grafport2::top
+        sbc     grafport2::viewloc::ycoord
         sta     L4242
         iny
         lda     ($06),y
-        sbc     grafport2::top+1
+        sbc     grafport2::viewloc::ycoord+1
         sta     L4243
         lda     L4242
         cmp     #$0F
@@ -6121,7 +6101,7 @@ L41E2:  lda     bufnum
         jsr     L44F2
         jsr     L6E52
         ldx     #7
-L41F0:  lda     grafport2::cliprect_x1,x
+L41F0:  lda     grafport2::cliprect::x1,x
         sta     rect_E230,x
         dex
         bpl     L41F0
@@ -6167,7 +6147,7 @@ L424A:  lda     #$00
         jsr     L4505
         jsr     L6E8E
         ldx     #7
-L4267:  lda     grafport2::cliprect_x1,x
+L4267:  lda     grafport2::cliprect::x1,x
         sta     rect_E230,x
         dex
         bpl     L4267
@@ -6738,17 +6718,17 @@ L46CF:  .addr   dummy0000
         jmp     begin
 
 .proc get_file_info_params
-param_count: .byte   $A
-path:   .addr   $220
+param_count:    .byte   $A
+pathname:       .addr   $220
 access: .byte   0
-type:   .byte   0
-auxtype:.word   0
-storage:.byte   0
-blocks: .word   0
-mdate:  .word   0
-mtime:  .word   0
-cdate:  .word   0
-ctime:  .word   0
+file_type:      .byte   0
+aux_type:       .word   0
+storage_type:   .byte   0
+blocks_used:    .word   0
+mod_date:       .word   0
+mod_time:       .word   0
+create_date:    .word   0
+create_time:    .word   0
 .endproc
 
 begin:
@@ -6775,7 +6755,7 @@ L470C:  iny
         jsr     DESKTOP_SHOW_ALERT0
         rts
 
-L472B:  lda     get_file_info_params::type
+L472B:  lda     get_file_info_params::file_type
         cmp     #FT_BASIC
         bne     L4738
         jsr     L47B8
@@ -6824,17 +6804,17 @@ L477F:  lda     $D345,x
 ;;; ==================================================
 
 .proc get_file_info_params2
-param_count: .byte   $A
-path:   .addr   $1800
+param_count:    .byte   $A
+pathname:       .addr   $1800
 access: .byte   0
-type:   .byte   0
-auxtype:.word   0
-storage:.byte   0
-blocks: .word   0
-mdate:  .word   0
-mtime:  .word   0
-cdate:  .word   0
-ctime:  .word   0
+file_type:      .byte   0
+aux_type:       .word   0
+storage_type:   .byte   0
+blocks_ysed:    .word   0
+mod_date:       .word   0
+mod_time:       .word   0
+create_date:    .word   0
+create_time:    .word   0
 .endproc
 
 L47B8:  ldx     LD355
@@ -7042,17 +7022,17 @@ L498F:  .byte   $00
 ;;; ==================================================
 
 .proc get_file_info_params3
-param_count: .byte   $A
-path:   .addr   $220
+param_count:    .byte   $A
+pathname:       .addr   $220
 access: .byte   0
-type:   .byte   0
-auxtype:.word   0
-storage:.byte   0
-blocks: .word   0
-mdate:  .word   0
-mtime:  .word   0
-cdate:  .word   0
-ctime:  .word   0
+file_type:      .byte   0
+aux_type:       .word   0
+storage_type:   .byte   0
+blocks_used:    .word   0
+mod_date:       .word   0
+mod_time:       .word   0
+create_date:    .word   0
+create_time:    .word   0
 .endproc
 
 cmd_selector_item:
@@ -7216,7 +7196,7 @@ L4ADC:  iny
         rts
 
 L4AEA:  jsr     L4B5F
-        stax    get_file_info_params3::path
+        stax    get_file_info_params3::pathname
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params3
         rts
 
@@ -7406,25 +7386,25 @@ close:  yxa_jump MLI_RELAY, CLOSE, close_params
 unused: .byte   0               ; ???
 
 .proc open_params
-param_count: .byte   3
-pathname:.addr  str_desk_acc
-buffer: .addr   $1C00
-ref_num:.byte   0
+param_count:    .byte   3
+pathname:       .addr   str_desk_acc
+io_buffer:      .addr   $1C00
+ref_num:        .byte   0
 .endproc
         open_params_ref_num := open_params::ref_num
 
 .proc read_params
-param_count: .byte   4
-ref_num:.byte   0
-buffer: .addr   DA_LOAD_ADDRESS
-request:.word   DA_MAX_SIZE
-trans:  .word   0
+param_count:    .byte   4
+ref_num:        .byte   0
+data_buffer:    .addr   DA_LOAD_ADDRESS
+request_count:  .word   DA_MAX_SIZE
+trans_count:    .word   0
 .endproc
         read_params_ref_num := read_params::ref_num
 
 .proc close_params
-param_count: .byte   1
-ref_num:.byte   0
+param_count:    .byte   1
+ref_num:        .byte   0
 .endproc
         close_params_ref_num := close_params::ref_num
 
@@ -7787,14 +7767,14 @@ L4F68:  .byte   $00
 L4F69:  .byte   $00
 
 .proc create_params
-param_count: .byte   7
-path:   .addr   path_buffer
+param_count:    .byte   7
+pathname:       .addr   path_buffer
 access: .byte   %11000011       ; destroy/rename/write/read
-type:   .byte   FT_DIRECTORY
-auxtype:.word   0
-storage:.byte   ST_LINKED_DIRECTORY
-cdate:  .word   0
-ctime:  .word   0
+file_type:      .byte   FT_DIRECTORY
+aux_type:       .word   0
+storage_type:   .byte   ST_LINKED_DIRECTORY
+create_date:    .word   0
+create_time:    .word   0
 .endproc
 
 path_buffer:
@@ -7826,7 +7806,7 @@ L4FF6:  lda     ($06),y
         bpl     L4FF6
         ldx     #$03
 :       lda     DATELO,x
-        sta     create_params::cdate,x
+        sta     create_params::create_date,x
         dex
         bpl     :-
         MLI_RELAY_CALL CREATE, create_params
@@ -7988,7 +7968,7 @@ L511E:  sta     buf3len
         jsr     L4505
         jsr     L6E8E
         jsr     set_penmode_copy
-        MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect_x1
+        MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect::x1
         lda     active_window_id
         jsr     L7D5D
         stax    L51EB
@@ -8072,7 +8052,7 @@ L51F0:  ldx     active_window_id
         jsr     L4505
         jsr     L6E8E
         jsr     set_penmode_copy
-        MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect_x1
+        MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect::x1
         lda     active_window_id
         jsr     L7D5D
         stax    L5263
@@ -9384,7 +9364,7 @@ L5C54:  lda     $D20D
 L5C71:  lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     L44F2
-        MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect_x1
+        MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect::x1
         jsr     reset_grafport3
         jmp     L6C19
 
@@ -9624,7 +9604,7 @@ L5E8F:  lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     L44F2
         jsr     set_penmode_copy
-        MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect_x1
+        MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect::x1
         ldx     active_window_id
         dex
         lda     LEC26,x
@@ -10105,11 +10085,11 @@ L638C:  jsr     L650F
         sty     L63E9
         jsr     L644C
         sta     L63E8
-        lda     grafport2::cliprect_y1
+        lda     grafport2::cliprect::y1
         sec
         sbc     L63E8
         sta     L63EA
-        lda     grafport2::cliprect_y1+1
+        lda     grafport2::cliprect::y1+1
         sbc     #$00
         sta     L63EB
         lda     L63EA
@@ -10121,8 +10101,8 @@ L638C:  jsr     L650F
         jmp     L63C7
 
 L63C1:  ldax    L7B61
-L63C7:  stax    grafport2::cliprect_y1
-        add16_8 grafport2::cliprect_y1, L63E9, grafport2::height
+L63C7:  stax    grafport2::cliprect::y1
+        add16_8 grafport2::cliprect::y1, L63E9, grafport2::cliprect::y2
         jsr     L653E
         jsr     L6DB1
         jmp     L6556
@@ -10135,7 +10115,7 @@ L63EC:  jsr     L650F
         sty     L6449
         jsr     L644C
         sta     L6448
-        add16_8 grafport2::height, L6448, L644A
+        add16_8 grafport2::cliprect::y2, L6448, L644A
         lda     L644A
         cmp     L7B65
         lda     L644B
@@ -10145,14 +10125,14 @@ L63EC:  jsr     L650F
         jmp     L6427
 
 L6421:  ldax    L7B65
-L6427:  stax    grafport2::height
-        lda     grafport2::height
+L6427:  stax    grafport2::cliprect::y2
+        lda     grafport2::cliprect::y2
         sec
         sbc     L6449
-        sta     grafport2::cliprect_y1
-        lda     grafport2::height+1
+        sta     grafport2::cliprect::y1
+        lda     grafport2::cliprect::y2+1
         sbc     #$00
-        sta     grafport2::cliprect_y1+1
+        sta     grafport2::cliprect::y1+1
         jsr     L653E
         jsr     L6DB1
         jmp     L6556
@@ -10168,7 +10148,7 @@ L644C:  tya
 
 L6451:  jsr     L650F
         stax    L64AC
-        sub16  grafport2::cliprect_x1, L64AC, L64AE
+        sub16  grafport2::cliprect::x1, L64AC, L64AE
         lda     L64AE
         cmp     L7B5F
         lda     L64AF
@@ -10178,8 +10158,8 @@ L6451:  jsr     L650F
         jmp     L648A
 
 L6484:  ldax    L7B5F
-L648A:  stax    grafport2::cliprect_x1
-        add16 grafport2::cliprect_x1, L64AC, grafport2::width
+L648A:  stax    grafport2::cliprect::x1
+        add16 grafport2::cliprect::x1, L64AC, grafport2::cliprect::x2
         jsr     L653E
         jsr     L6DB1
         jmp     L6556
@@ -10190,7 +10170,7 @@ L64AE:  .byte   0
 L64AF:  .byte   0
 L64B0:  jsr     L650F
         stax    L650B
-        add16 grafport2::width, L650B, L650D
+        add16 grafport2::cliprect::x2, L650B, L650D
         lda     L650D
         cmp     L7B63
         lda     L650E
@@ -10200,8 +10180,8 @@ L64B0:  jsr     L650F
         jmp     L64E9
 
 L64E3:  ldax    L7B63
-L64E9:  stax    grafport2::width
-        sub16  grafport2::width, L650B, grafport2::cliprect_x1
+L64E9:  stax    grafport2::cliprect::x2
+        sub16  grafport2::cliprect::x2, L650B, grafport2::cliprect::x1
         jsr     L653E
         jsr     L6DB1
         jmp     L6556
@@ -10238,7 +10218,7 @@ L653E:  lda     active_window_id
         stax    $06
         ldy     #$23
         ldx     #$07
-L654C:  lda     grafport2::cliprect_x1,x
+L654C:  lda     grafport2::cliprect::x1,x
         sta     ($06),y
         dey
         dex
@@ -10248,7 +10228,7 @@ L654C:  lda     grafport2::cliprect_x1,x
 L6556:  bit     L5B1B
         bmi     L655E
         jsr     L6E6E
-L655E:  MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect_x1
+L655E:  MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect::x1
         jsr     reset_grafport3
         jmp     L6C19
 
@@ -10266,13 +10246,13 @@ L656D:  lda     active_window_id
         lsr     L6603
         ror     L6602
         ldx     L6602
-        sub16  grafport2::cliprect_x1, L7B5F, L6602
+        sub16  grafport2::cliprect::x1, L7B5F, L6602
         bpl     L65D0
         lda     #$00
         beq     L65EB
-L65D0:  lda     grafport2::width
+L65D0:  lda     grafport2::cliprect::x2
         cmp     L7B63
-        lda     grafport2::width+1
+        lda     grafport2::cliprect::x2+1
         sbc     L7B64
         bmi     L65E2
         tya
@@ -10313,13 +10293,13 @@ L6604:  lda     active_window_id
         lsr     L66A1
         ror     L66A0
         ldx     L66A0
-        sub16  grafport2::cliprect_y1, L7B61, L66A0
+        sub16  grafport2::cliprect::y1, L7B61, L66A0
         bpl     L6669
         lda     #$00
         beq     L668A
-L6669:  lda     grafport2::height
+L6669:  lda     grafport2::cliprect::y2
         cmp     L7B65
-        lda     grafport2::height+1
+        lda     grafport2::cliprect::y2+1
         sbc     L7B66
         bmi     L667B
         tya
@@ -10967,7 +10947,7 @@ L6CCD:  lda     bufnum
 L6CDE:  jsr     L6E52
         jsr     L6E8E
         ldx     #$07
-L6CE6:  lda     grafport2::cliprect_x1,x
+L6CE6:  lda     grafport2::cliprect::x1,x
         sta     rect_E230,x
         dex
         bpl     L6CE6
@@ -11063,13 +11043,13 @@ L6DC9:  lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     L44F2
         lda     L7B5F
-        cmp     grafport2::cliprect_x1
+        cmp     grafport2::cliprect::x1
         lda     L7B60
-        sbc     grafport2::cliprect_x1+1
+        sbc     grafport2::cliprect::x1+1
         bmi     L6DFE
-        lda     grafport2::width
+        lda     grafport2::cliprect::x2
         cmp     L7B63
-        lda     grafport2::width+1
+        lda     grafport2::cliprect::x2+1
         sbc     L7B64
         bmi     L6DFE
         lda     #$02
@@ -11086,13 +11066,13 @@ L6DFE:  lda     #$02
         jsr     L6E48
         jsr     L656D
 L6E0E:  lda     L7B61
-        cmp     grafport2::cliprect_y1
+        cmp     grafport2::cliprect::y1
         lda     L7B62
-        sbc     grafport2::cliprect_y1+1
+        sbc     grafport2::cliprect::y1+1
         bmi     L6E38
-        lda     grafport2::height
+        lda     grafport2::cliprect::y2
         cmp     L7B65
-        lda     grafport2::height+1
+        lda     grafport2::cliprect::y2+1
         sbc     L7B66
         bmi     L6E38
         lda     #$01
@@ -11144,8 +11124,8 @@ L6E8A:  lda     #$80
         beq     L6E90
 L6E8E:  lda     #$00
 L6E90:  sta     L6EC4
-        add16 grafport2::top, #$0F, grafport2::top
-        add16 grafport2::cliprect_y1, #$0F, grafport2::cliprect_y1
+        add16 grafport2::viewloc::ycoord, #$0F, grafport2::viewloc::ycoord
+        add16 grafport2::cliprect::y1, #$0F, grafport2::cliprect::y1
         bit     L6EC4
         bmi     L6EC3
         MGTK_RELAY_CALL MGTK::SetPort, grafport2
@@ -11330,40 +11310,40 @@ L704C:  .byte   0
 L7054:  jmp     L70C5
 
 .proc open_params
-param_count: .byte   3
-path:   .addr   L705D
-buffer: .addr   $800
-ref_num:.byte   0
+param_count:    .byte   3
+pathname:       .addr   L705D
+io_buffer:      .addr   $800
+ref_num:        .byte   0
 .endproc
 
 L705D:  .res    64, 0
         .byte   $00
 
 .proc read_params
-param_count: .byte   4
-ref_num:.byte   0
-buffer: .addr   $0C00
-request:.word   $200
-trans:  .word   0
+param_count:    .byte   4
+ref_num:        .byte   0
+data_buffer:    .addr   $0C00
+request_count:  .word   $200
+trans_count:    .word   0
 .endproc
 
 .proc close_params
-param_count: .byte   1
-ref_num:.byte   0
+param_count:    .byte   1
+ref_num:        .byte   0
 .endproc
 
 .proc get_file_info_params4
-param_count: .byte   $A
-path:   .addr   L705D
+param_count:    .byte   $A
+pathname:       .addr   L705D
 access: .byte   0
-type:   .byte   0
-auxtype:.word   0
-storage:.byte   0
-blocks: .word   0
-mdate:  .word   0
-mtime:  .word   0
-cdate:  .word   0
-ctime:  .word   0
+file_type:      .byte   0
+aux_type:       .word   0
+storage_type:   .byte   0
+blocks_used:    .word   0
+mod_date:       .word   0
+mod_time:       .word   0
+create_date:    .word   0
+create_time:    .word   0
 .endproc
 
         .byte   0
@@ -11609,11 +11589,11 @@ L72EC:  MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params4
         beq     L72F8
         rts
 
-L72F8:  lda     get_file_info_params4::auxtype
+L72F8:  lda     get_file_info_params4::aux_type
         sta     L70BD
-        lda     get_file_info_params4::auxtype+1
+        lda     get_file_info_params4::aux_type+1
         sta     L70BE
-        sub16  get_file_info_params4::auxtype, get_file_info_params4::blocks, L70BB
+        sub16  get_file_info_params4::aux_type, get_file_info_params4::blocks_used, L70BB
         sub16  L70BD, L70BB, L70BD
         lsr     L70BC
         ror     L70BB
@@ -12292,28 +12272,28 @@ L78C2:  lda     LFB04           ; ???
         rts
 
 L78EE:  .byte   0
-L78EF:  lda     grafport2::cliprect_x1
+L78EF:  lda     grafport2::cliprect::x1
         sta     point1::xcoord           ; Directory header line (items / k in disk)
         clc
         adc     #$05
         sta     items_label_pos
-        lda     grafport2::cliprect_x1+1
+        lda     grafport2::cliprect::x1+1
         sta     point1::xcoord+1
         adc     #$00
         sta     $EBBB
-        lda     grafport2::cliprect_y1
+        lda     grafport2::cliprect::y1
         clc
         adc     #$0C
         sta     point1::ycoord
         sta     $EBC4
-        lda     grafport2::cliprect_y1+1
+        lda     grafport2::cliprect::y1+1
         adc     #$00
         sta     point1::ycoord+1
         sta     $EBC5
         MGTK_RELAY_CALL MGTK::MoveTo, point1
-        lda     grafport2::width
+        lda     grafport2::cliprect::x2
         sta     point5::xcoord
-        lda     grafport2::width+1
+        lda     grafport2::cliprect::x2+1
         sta     point5::xcoord+1
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::LineTo, point5
@@ -12328,7 +12308,7 @@ L78EF:  lda     grafport2::cliprect_x1
         sta     point5::ycoord+1
         MGTK_RELAY_CALL MGTK::MoveTo, point1
         MGTK_RELAY_CALL MGTK::LineTo, point5
-        add16 grafport2::cliprect_y1, #$0A, items_label_pos+2
+        add16 grafport2::cliprect::y1, #$0A, items_label_pos+2
         lda     buf3len
         ldx     #$00
         jsr     L7AE0
@@ -12374,7 +12354,7 @@ L79A7:  jsr     L79F7
         addr_call draw_text2, str_k_available
         rts
 
-L79F7:  sub16  grafport2::width, grafport2::cliprect_x1, L7ADE
+L79F7:  sub16  grafport2::cliprect::x2, grafport2::cliprect::x1, L7ADE
         sub16  L7ADE, $EBF3, L7ADE
         bpl     L7A22
         jmp     L7A86
@@ -12405,17 +12385,17 @@ L7A86:  lda     LEBE3
         sta     point3::xcoord+1
 L7A9E:  lda     point2::xcoord
         clc
-        adc     grafport2::cliprect_x1
+        adc     grafport2::cliprect::x1
         sta     point2::xcoord
         lda     point2::xcoord+1
-        adc     grafport2::cliprect_x1+1
+        adc     grafport2::cliprect::x1+1
         sta     point2::xcoord+1
         lda     point3::xcoord
         clc
-        adc     grafport2::cliprect_x1
+        adc     grafport2::cliprect::x1
         sta     point3::xcoord
         lda     point3::xcoord+1
-        adc     grafport2::cliprect_x1+1
+        adc     grafport2::cliprect::x1+1
         sta     point3::xcoord+1
         lda     items_label_pos+2
         sta     point2::ycoord
@@ -13208,9 +13188,9 @@ L81AC:  lda     pointC::ycoord
         bcc     L81BB
         inc     pointC::ycoord+1
 L81BB:  lda     point9::ycoord
-        cmp     grafport2::height
+        cmp     grafport2::cliprect::y2
         lda     point9::ycoord+1
-        sbc     grafport2::height+1
+        sbc     grafport2::cliprect::y2+1
         bmi     L81D9
         lda     point9::ycoord
         clc
@@ -13227,9 +13207,9 @@ L81D9:  lda     point9::ycoord
         bcc     L81E8
         inc     point9::ycoord+1
 L81E8:  lda     point9::ycoord
-        cmp     grafport2::cliprect_y1
+        cmp     grafport2::cliprect::y1
         lda     point9::ycoord+1
-        sbc     grafport2::cliprect_y1+1
+        sbc     grafport2::cliprect::y1+1
         bpl     L81F7
         rts
 
@@ -13540,8 +13520,8 @@ L84D1:  jsr     push_zp_addrs
         bit     L5B1B
         bmi     L84DC
         jsr     L6E52
-L84DC:  sub16  grafport2::width, grafport2::cliprect_x1, L85F8
-        sub16  grafport2::height, grafport2::cliprect_y1, L85FA
+L84DC:  sub16  grafport2::cliprect::x2, grafport2::cliprect::x1, L85F8
+        sub16  grafport2::cliprect::y2, grafport2::cliprect::y1, L85FA
         lda     event_params_kind
         cmp     #MGTK::event_kind_button_down
         bne     L850C
@@ -13599,26 +13579,26 @@ L8562:  lsr     L85F3
         ldx     L85F1
         clc
         adc     L7B5F,x
-        sta     grafport2::cliprect_x1,x
+        sta     grafport2::cliprect::x1,x
         lda     L85F2
         adc     L7B60,x
-        sta     grafport2::cliprect_x1+1,x
+        sta     grafport2::cliprect::x1+1,x
         lda     active_window_id
         jsr     L7D5D
         stax    L85F4
         sty     L85F6
         lda     L85F1
         beq     L85C3
-        add16_8 grafport2::cliprect_y1, L85F6, grafport2::height
+        add16_8 grafport2::cliprect::y1, L85F6, grafport2::cliprect::y2
         jmp     L85D6
 
-L85C3:  add16 grafport2::cliprect_x1, L85F4, grafport2::width
+L85C3:  add16 grafport2::cliprect::x1, L85F4, grafport2::cliprect::x2
 L85D6:  lda     active_window_id
         jsr     window_lookup
         stax    $06
         ldy     #$23
         ldx     #$07
-L85E4:  lda     grafport2::cliprect_x1,x
+L85E4:  lda     grafport2::cliprect::x1,x
         sta     ($06),y
         dey
         dex
@@ -14220,9 +14200,9 @@ L8996:  .byte   0
 
 L8997:  lda     #$00
         tax
-L899A:  sta     grafport5::cliprect_x1,x
-        sta     grafport5::left,x
-        sta     grafport5::width,x
+L899A:  sta     grafport5::cliprect::x1,x
+        sta     grafport5::viewloc::xcoord,x
+        sta     grafport5::cliprect::x2,x
         inx
         cpx     #$04
         bne     L899A
@@ -14232,16 +14212,16 @@ L899A:  sta     grafport5::cliprect_x1,x
 ;;; ==================================================
 
 .proc on_line_params
-param_count: .byte   2
-unit:   .byte   0
-buffer: .addr   $800
+param_count:    .byte   2
+unit_num:       .byte   0
+data_buffer:    .addr   $800
 .endproc
 
 .proc get_device_info
         sta     unit_number
         sty     device_num
         and     #$F0
-        sta     on_line_params::unit
+        sta     on_line_params::unit_num
         MLI_RELAY_CALL ON_LINE, on_line_params
         beq     L89DD
 L89CC:  pha
@@ -14399,8 +14379,8 @@ L8AC5:  .byte   $00,$00,$00,$00,$EA,$01,$10,$00
         .byte   $28,$00,$A0,$00
 
 .proc get_prefix_params
-param_count: .byte   1
-buffer: .addr   $4824
+param_count:    .byte   1
+data_buffer:    .addr   $4824
 .endproc
 
 L8AF4:  ldx     buf3len
@@ -14503,8 +14483,8 @@ L8BC1:  lda     grafport2,x
         dey
         dex
         bpl     L8BC1
-        sub16  grafport2::width, grafport2::cliprect_x1, L8D54
-        sub16  grafport2::height, grafport2::cliprect_y1, L8D56
+        sub16  grafport2::cliprect::x2, grafport2::cliprect::x1, L8D54
+        sub16  grafport2::cliprect::y2, grafport2::cliprect::y1, L8D56
         add16 $0858, L8D54, $085C
         add16 $085A, L8D56, $085E
         lda     #$00
@@ -14768,32 +14748,32 @@ addr_table:
         .addr   $0800,$0800,$9000,$5000,$7000,$7000,$7000,$5000,$9000
 
 .proc open_params
-param_count: .byte   3
-path:   .addr   str_desktop2
-buffer: .addr   $1C00
-ref_num:.byte   0
+param_count:    .byte   3
+pathname:       .addr   str_desktop2
+io_buffer:      .addr   $1C00
+ref_num:        .byte   0
 .endproc
 
 str_desktop2:
         PASCAL_STRING "DeskTop2"
 
 .proc set_mark_params
-param_count: .byte   2
-ref_num:.byte   0
-pos:    .faraddr  0
+param_count:    .byte   2
+ref_num:        .byte   0
+position:       .faraddr 0
 .endproc
 
 .proc read_params
-param_count: .byte   4
-ref_num:.byte   0
-buffer: .addr   0
-request:.word   0
-trans:  .word   0
+param_count:    .byte   4
+ref_num:        .byte   0
+data_buffer:    .addr   0
+request_count:  .word   0
+trans_count:    .word   0
 .endproc
 
 .proc close_params
-param_count: .byte   1
-ref_num:.byte   0
+param_count:    .byte   1
+ref_num:        .byte   0
 .endproc
 
 restore_flag:
@@ -14818,21 +14798,21 @@ restore:
         tax
 
         lda     pos_table,x
-        sta     set_mark_params::pos
+        sta     set_mark_params::position
         lda     pos_table+1,x
-        sta     set_mark_params::pos+1
+        sta     set_mark_params::position+1
         lda     pos_table+2,x
-        sta     set_mark_params::pos+2
+        sta     set_mark_params::position+2
 
         lda     len_table,y
-        sta     read_params::request
+        sta     read_params::request_count
         lda     len_table+1,y
-        sta     read_params::request+1
+        sta     read_params::request_count+1
 
         lda     addr_table,y
-        sta     read_params::buffer
+        sta     read_params::data_buffer
         lda     addr_table+1,y
-        sta     read_params::buffer+1
+        sta     read_params::data_buffer+1
 
 open:   MLI_RELAY_CALL OPEN, open_params
         beq     :+
@@ -15328,26 +15308,26 @@ L92C5:  .byte   $00,$00
 L92C7:  .byte   $00,$00
 
 .proc get_file_info_params5
-param_count: .byte   $A
-path:   .addr   $220
+param_count:    .byte   $A
+pathname:       .addr   $220
 access: .byte   0
-type:   .byte   0
-auxtype:.word   0
-storage:.byte   0
-blocks: .word   0
-mdate:  .word   0
-mtime:  .word   0
-cdate:  .word   0
-ctime:  .word   0
+file_type:      .byte   0
+aux_type:       .word   0
+storage_type:   .byte   0
+blocks_used:    .word   0
+mod_date:       .word   0
+mod_time:       .word   0
+create_date:    .word   0
+create_time:    .word   0
 .endproc
 
 L92DB:  .byte   0,0
 
 .proc block_params
-param_count: .byte   $03
-unit_num:.byte  $0
-buffer: .addr   $0800
-block_num:.word $A
+param_count:    .byte   $03
+unit_num:       .byte   $0
+data_buffer:    .addr   $0800
+block_num:      .word   $A
 .endproc
 
 L92E3:  .byte   $00
@@ -15492,12 +15472,12 @@ L942F:  lda     #$03
         sta     $220
         lda     selected_window_index
         bne     L9472                            ; ProDOS TRM 4.4.5:
-        lda     get_file_info_params5::auxtype   ; "When file information about a volume
+        lda     get_file_info_params5::aux_type   ; "When file information about a volume
         sec                                      ; directory is requested, the total
-        sbc     get_file_info_params5::blocks    ; number of blocks on the volume is
+        sbc     get_file_info_params5::blocks_used    ; number of blocks on the volume is
         pha                                      ; returned in the aux_type field and
-        lda     get_file_info_params5::auxtype+1 ; the total blocks for all files is
-        sbc     get_file_info_params5::blocks+1  ; returned in blocks_used."
+        lda     get_file_info_params5::aux_type+1 ; the total blocks for all files is
+        sbc     get_file_info_params5::blocks_used+1  ; returned in blocks_used."
         tax
         pla
         jsr     L4006
@@ -15518,10 +15498,10 @@ L9469:  lda     text_buffer2::data-1,x
         bne     L9469
 L9472:  lda     selected_window_index
         bne     L9480
-        ldax    get_file_info_params5::auxtype
+        ldax    get_file_info_params5::aux_type
         jmp     L9486
 
-L9480:  ldax    get_file_info_params5::blocks
+L9480:  ldax    get_file_info_params5::blocks_used
 L9486:  jsr     L4006
         jsr     L9549
         ldx     $220
@@ -15548,9 +15528,9 @@ L94A9:  lda     $220,x
         jsr     L953F
         lda     #$04
         sta     L92E3
-        lda     get_file_info_params5::cdate
+        lda     get_file_info_params5::create_date
         sta     date
-        lda     get_file_info_params5::cdate+1
+        lda     get_file_info_params5::create_date+1
         sta     date+1
         jsr     L4009
         lda     #<$E6EB
@@ -15560,9 +15540,9 @@ L94A9:  lda     $220,x
         jsr     L953F
         lda     #$05
         sta     L92E3
-        lda     get_file_info_params5::mdate
+        lda     get_file_info_params5::mod_date
         sta     date
-        lda     get_file_info_params5::mdate+1
+        lda     get_file_info_params5::mod_date+1
         sta     date+1
         jsr     L4009
         lda     #<$E6EB
@@ -15580,7 +15560,7 @@ L950E:  lda     L953A,x
         dex
         bpl     L950E
         bmi     L951F
-L9519:  lda     get_file_info_params5::type
+L9519:  lda     get_file_info_params5::file_type
         jsr     L402D
 L951F:  lda     #<LDFC5
         sta     L92E4
@@ -15619,9 +15599,9 @@ L9558:  lda     $E6EC,x
         rts
 
 .proc rename_params
-param_count: .byte   2
-path:   .addr   $220
-newpath:.addr   $1FC0
+param_count:    .byte   2
+pathname:       .addr   $220
+new_pathname:   .addr   $1FC0
 .endproc
 
 L956E:  .byte   0
@@ -15813,168 +15793,170 @@ L9708:  .byte   $00
 L9709:  .byte   $00
 
 .proc open_params3
-param_count: .byte   3
-path:   .addr   $220
-buffer: .addr   $800
-ref_num:.byte   0
+param_count:    .byte   3
+pathname:       .addr   $220
+io_buffer:      .addr   $800
+ref_num:        .byte   0
 .endproc
 
 .proc read_params3
-param_count: .byte   4
-ref_num:.byte   0
-buffer: .addr   L9718
-request:.word   4
-trans:  .word   0
+param_count:    .byte   4
+ref_num:        .byte   0
+data_buffer:    .addr   L9718
+request_count:  .word   4
+trans_count:    .word   0
 .endproc
+
 L9718:  .res    4, 0
 
 .proc close_params6
-param_count: .byte   1
-ref_num:.byte   0
+param_count:    .byte   1
+ref_num:        .byte   0
 .endproc
 
 .proc read_params4
-param_count: .byte   4
-ref_num:.byte   0
-buffer: .addr   L97AD
-request:.word   $27
-trans:  .word   0
+param_count:    .byte   4
+ref_num:        .byte   0
+data_buffer:    .addr   L97AD
+request_count:  .word   $27
+trans_count:    .word   0
 .endproc
 
 .proc read_params5
-param_count: .byte   4
-ref_num:.byte   0
-buffer: .addr   L972E
-request:.word   5
-trans:  .word   0
+param_count:    .byte   4
+ref_num:        .byte   0
+data_buffer:    .addr   L972E
+request_count:  .word   5
+trans_count:    .word   0
 .endproc
+
 L972E:  .res    5, 0
 
         .res    4, 0
 
 .proc close_params5
-param_count: .byte   1
-ref_num:.byte   0
+param_count:    .byte   1
+ref_num:        .byte   0
 .endproc
 
 .proc close_params3
-param_count: .byte   1
-ref_num:.byte   0
+param_count:    .byte   1
+ref_num:        .byte   0
 .endproc
 
 .proc destroy_params
-param_count: .byte   1
-path:   .addr   $0220
+param_count:    .byte   1
+pathname:       .addr   $0220
 .endproc
 
 .proc open_params4
-param_count: .byte   3
-path:   .addr   $220
-buffer: .addr   $0D00
-ref_num:.byte   0
+param_count:    .byte   3
+pathname:       .addr   $220
+io_buffer:      .addr   $0D00
+ref_num:        .byte   0
 .endproc
 
 .proc open_params5
-param_count: .byte   3
-path:   .addr   $1FC0
-buffer: .addr   $1100
-ref_num:.byte   0
+param_count:    .byte   3
+pathname:       .addr   $1FC0
+io_buffer:      .addr   $1100
+ref_num:        .byte   0
 .endproc
 
 .proc read_params6
-param_count: .byte   4
-ref_num:.byte   0
-buffer: .addr   $1500
-request:.word   $AC0
-trans:  .word   0
+param_count:    .byte   4
+ref_num:        .byte   0
+data_buffer:    .addr   $1500
+request_count:  .word   $AC0
+trans_count:    .word   0
 .endproc
 
 .proc write_params
-param_count: .byte   4
-ref_num:.byte   0
-buffer: .addr   $1500
-request:.word   $AC0
-trans:  .word   0
+param_count:    .byte   4
+ref_num:        .byte   0
+data_buffer:    .addr   $1500
+request_count:  .word   $AC0
+trans_count:    .word   0
 .endproc
 
 .proc create_params3
-param_count: .byte   7
-path:   .addr   $1FC0
+param_count:    .byte   7
+pathname:       .addr   $1FC0
 access: .byte   %11000011
-type:   .byte   0
-auxtype:.word   0
-storage:.byte   0
-cdate:  .word   0
-ctime:  .word   0
+file_type:      .byte   0
+aux_type:       .word   0
+storage_type:   .byte   0
+create_date:    .word   0
+create_time:    .word   0
 .endproc
 
 .proc create_params2
-param_count: .byte   7
-path:   .addr   $1FC0
+param_count:    .byte   7
+pathname:       .addr   $1FC0
 access: .byte   0
-type:   .byte   0
-auxtype:.word   0
-storage:.byte   0
-cdate:  .word   0
-ctime:  .word   0
+file_type:      .byte   0
+aux_type:       .word   0
+storage_type:   .byte   0
+create_date:    .word   0
+create_time:    .word   0
 .endproc
 
         .byte   $00,$00
 
 .proc file_info_params2
-param_count: .byte   $A
-path:   .addr   $220
+param_count:    .byte   $A
+pathname:       .addr   $220
 access: .byte   0
-type:   .byte   0
-auxtype:.word   0
-storage:.byte   0
-blocks: .word   0
-mdate:  .word   0
-mtime:  .word   0
-cdate:  .word   0
-ctime:  .word   0
+file_type:      .byte   0
+aux_type:       .word   0
+storage_type:   .byte   0
+blocks_used:    .word   0
+mod_date:       .word   0
+mod_time:       .word   0
+create_date:    .word   0
+create_time:    .word   0
 .endproc
 
         .byte   0
 
-        .proc file_info_params3
-param_count: .byte   $A
-path:   .addr   $1FC0
+.proc file_info_params3
+param_count:    .byte   $A
+pathname:       .addr   $1FC0
 access: .byte   0
-type:   .byte   0
-auxtype:.word   0
-storage:.byte   0
-blocks: .word   0
-mdate:  .word   0
-mtime:  .word   0
-cdate:  .word   0
-ctime:  .word   0
+file_type:      .byte   0
+aux_type:       .word   0
+storage_type:   .byte   0
+blocks_used:    .word   0
+mod_date:       .word   0
+mod_time:       .word   0
+create_date:    .word   0
+create_time:    .word   0
 .endproc
 
         .byte   0
 
 .proc set_eof_params
-param_count: .byte   2
-ref_num:.byte   0
-eof:    .faraddr        0
+param_count:    .byte   2
+ref_num:        .byte   0
+eof:    .faraddr 0
 .endproc
 
 .proc mark_params
-param_count: .byte   2
+param_count:    .byte   2
 ref_num:        .byte   0
 position:       .faraddr 0
 .endproc
 
 .proc mark_params2
-param_count: .byte   2
-ref_num:.byte   0
-position:       .faraddr       0
+param_count:    .byte   2
+ref_num:        .byte   0
+position:       .faraddr 0
 .endproc
 
 .proc on_line_params2
-param_count: .byte   2
-unit_num:.byte  0
-buffer: .addr    $800
+param_count:    .byte   2
+unit_num:       .byte   0
+data_buffer:    .addr   $800
 .endproc
 
 L97AD:  .byte   $00
@@ -16266,7 +16248,7 @@ L9A70:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         jsr     LA49B
         jmp     L9A70
 
-L9A81:  lda     file_info_params2::storage
+L9A81:  lda     file_info_params2::storage_type
         cmp     #ST_VOLUME_DIRECTORY
         beq     L9A90
         cmp     #ST_LINKED_DIRECTORY
@@ -16303,11 +16285,11 @@ L9AC8:  lda     file_info_params2,y
         dey
         cpy     #$0D
         bne     L9AC8
-        lda     create_params2::storage
+        lda     create_params2::storage_type
         cmp     #ST_VOLUME_DIRECTORY
         bne     L9AE0
         lda     #ST_LINKED_DIRECTORY
-        sta     create_params2::storage
+        sta     create_params2::storage_type
 L9AE0:  yax_call JT_MLI_RELAY, CREATE, create_params2
         beq     L9B23
         cmp     #$47
@@ -16413,7 +16395,7 @@ L9BC9:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params3
         jsr     LA497
         jmp     L9BC9
 
-L9BDA:  sub16  file_info_params3::auxtype, file_info_params3::blocks, L9BFF
+L9BDA:  sub16  file_info_params3::aux_type, file_info_params3::blocks_used, L9BFF
         lda     L9BFF
         cmp     LA2EF
         lda     L9C00
@@ -16453,9 +16435,9 @@ L9C33:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params3
         jsr     LA497
         jmp     L9C33
 
-L9C48:  lda     file_info_params3::blocks
+L9C48:  lda     file_info_params3::blocks_used
         sta     L9CD8
-        lda     file_info_params3::blocks+1
+        lda     file_info_params3::blocks_used+1
         sta     L9CD9
 L9C54:  lda     $1FC0
         sta     L9CD6
@@ -16484,12 +16466,12 @@ L9C70:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params3
 
         jmp     LA39F
 
-L9C95:  sub16  file_info_params3::auxtype, file_info_params3::blocks, L9CD4
+L9C95:  sub16  file_info_params3::aux_type, file_info_params3::blocks_used, L9CD4
         add16 L9CD4, L9CD8, L9CD4
         lda     L9CD4
-        cmp     file_info_params2::blocks
+        cmp     file_info_params2::blocks_used
         lda     L9CD5
-        sbc     file_info_params2::blocks+1
+        sbc     file_info_params2::blocks_used+1
         bcs     L9CCC
         sec
         bcs     L9CCD
@@ -16582,9 +16564,9 @@ L9D9C:  lda     open_params5::ref_num
         rts
 
 L9DA9:  lda     #<$0AC0
-        sta     read_params6::request
+        sta     read_params6::request_count
         lda     #>$0AC0
-        sta     read_params6::request+1
+        sta     read_params6::request_count+1
 L9DB3:  yax_call JT_MLI_RELAY, READ, read_params6
         beq     L9DC8
         cmp     #$4C
@@ -16592,11 +16574,11 @@ L9DB3:  yax_call JT_MLI_RELAY, READ, read_params6
         jsr     LA49B
         jmp     L9DB3
 
-L9DC8:  lda     read_params6::trans
-        sta     write_params::request
-        lda     read_params6::trans+1
-        sta     write_params::request+1
-        ora     read_params6::trans
+L9DC8:  lda     read_params6::trans_count
+        sta     write_params::request_count
+        lda     read_params6::trans_count+1
+        sta     write_params::request_count+1
+        ora     read_params6::trans_count
         bne     L9DDE
 L9DD9:  lda     #$FF
         sta     L9E18
@@ -16717,7 +16699,7 @@ L9EE3:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         jsr     LA49B
         jmp     L9EE3
 
-L9EF4:  lda     file_info_params2::storage
+L9EF4:  lda     file_info_params2::storage_type
         sta     L9F1D
         cmp     #ST_LINKED_DIRECTORY
         beq     L9F02
@@ -16798,7 +16780,7 @@ L9FAA:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         jsr     LA49B
         jmp     L9FAA
 
-L9FBB:  lda     file_info_params2::storage
+L9FBB:  lda     file_info_params2::storage_type
         cmp     #ST_LINKED_DIRECTORY
         beq     LA022
 L9FC2:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
@@ -16964,7 +16946,7 @@ LA133:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         jsr     LA49B
         jmp     LA133
 
-LA144:  lda     file_info_params2::storage
+LA144:  lda     file_info_params2::storage_type
         sta     LA169
         cmp     #ST_VOLUME_DIRECTORY
         beq     LA156
@@ -16994,7 +16976,7 @@ LA179:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         jsr     LA49B
         jmp     LA179
 
-LA18A:  lda     file_info_params2::storage
+LA18A:  lda     file_info_params2::storage_type
         cmp     #ST_VOLUME_DIRECTORY
         beq     LA1C0
         cmp     #ST_LINKED_DIRECTORY
@@ -17088,7 +17070,7 @@ LA274:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         jsr     LA49B
         jmp     LA274
 
-LA285:  lda     file_info_params2::storage
+LA285:  lda     file_info_params2::storage_type
         sta     LA2AA
         cmp     #ST_VOLUME_DIRECTORY
         beq     LA297
@@ -17116,10 +17098,10 @@ LA2AE:  bit     L9189
         bne     LA2D4
         lda     LA2EF
         clc
-        adc     file_info_params2::blocks
+        adc     file_info_params2::blocks_used
         sta     LA2EF
         lda     LA2F0
-        adc     file_info_params2::blocks+1
+        adc     file_info_params2::blocks_used+1
         sta     LA2F0
 LA2D4:  inc     LA2ED
         bne     LA2DC
@@ -17234,8 +17216,8 @@ LA39F:  jsr     L917F
         jmp     LA3A7
 
 .proc close_params4
-param_count: .byte   1
-ref_num:.byte   0
+param_count:    .byte   1
+ref_num:        .byte   0
 .endproc
 
 LA3A7:  yax_call JT_MLI_RELAY, CLOSE, close_params4
@@ -17274,7 +17256,7 @@ LA426:  jsr     LA46D
         lda     #$C3
         sta     file_info_params3::access
         jsr     LA479
-        lda     file_info_params2::type
+        lda     file_info_params2::file_type
         cmp     #$0F
         beq     LA46C
         yax_call JT_MLI_RELAY, OPEN, open_params5
@@ -20345,26 +20327,26 @@ L0ABC:  jsr     desktop_main::a_times_6
         rts
 
 .proc open_params
-param_count: .byte   3
-path:   .addr   str_selector_list
-buffer: .addr   $1000
-ref_num:.byte   0
+param_count:    .byte   3
+pathname:       .addr   str_selector_list
+io_buffer:      .addr   $1000
+ref_num:        .byte   0
 .endproc
 
 str_selector_list:
         PASCAL_STRING "Selector.List"
 
 .proc read_params
-param_count: .byte   4
-ref_num:.byte   0
-buffer: .addr   $1400
-request:.word   $400
-trans:  .word   0
+param_count:    .byte   4
+ref_num:        .byte   0
+read_buffer:    .addr   $1400
+request_count:  .word   $400
+trans_count:    .word   0
 .endproc
 
 .proc close_params
-param_count: .byte   1
-ref_num:.byte   0
+param_count:    .byte   1
+ref_num:        .byte   0
 .endproc
 
 L0AE7:  MLI_RELAY_CALL OPEN, open_params
@@ -20528,42 +20510,42 @@ L0CCB:  MLI_RELAY_CALL CLOSE, close_params2
         jmp     L0D0A
 
 .proc open_params2
-param_count: .byte   3
-path:   .addr   str_desk_acc
-buffer: .addr   $1000
-ref_num:.byte   0
+param_count:    .byte   3
+pathname:       .addr   str_desk_acc
+io_buffer:      .addr   $1000
+ref_num:        .byte   0
 .endproc
         open_params2_ref_num := open_params2::ref_num
 
 .proc read_params2
-param_count: .byte   4
-ref_num:.byte   0
-buffer: .addr   $1400
-request:.word   $200
-trans:  .word   0
+param_count:    .byte   4
+ref_num:        .byte   0
+data_buffer:    .addr   $1400
+request_count:  .word   $200
+trans_count:    .word   0
 .endproc
         read_params2_ref_num := read_params2::ref_num
 
 .proc get_file_info_params
-param_count: .byte   $A
-path:   .addr   str_desk_acc
+param_count:    .byte   $A
+pathname:       .addr   str_desk_acc
 access: .byte   0
-type:   .byte   0
-auxtype:.word   0
-storage:.byte   0
-blocks: .word   0
-mdate:  .word   0
-mtime:  .word   0
-cdate:  .word   0
-ctime:  .word   0
+file_type:      .byte   0
+aux_type:       .word   0
+storage_type:   .byte   0
+blocks_used:    .word   0
+mod_date:       .word   0
+mod_time:       .word   0
+create_date:    .word   0
+create_time:    .word   0
 .endproc
-        get_file_info_params_type := get_file_info_params::type
+        get_file_info_params_type := get_file_info_params::file_type
 
         .byte   0
 
 .proc close_params2
-param_count: .byte   1
-ref_num:.byte   0
+param_count:    .byte   1
+ref_num:        .byte   0
 .endproc
         close_params2_ref_num := close_params2::ref_num
 
@@ -20803,22 +20785,22 @@ L0EB0:  .addr   s00,s01,s02,s03,s04,s05,s06
 
 
 .proc get_file_info_params2
-param_count: .byte   $A
-path:   .addr   desktop_main::L4862
+param_count:    .byte   $A
+pathname:       .addr   desktop_main::L4862
 access: .byte   0
-type:   .byte   0
-auxtype:.word   0
-storage:.byte   0
-blocks: .word   0
-mdate:  .word   0
-mtime:  .word   0
-cdate:  .word   0
-ctime:  .word   0
+file_type:      .byte   0
+aux_type:       .word   0
+storage_type:   .byte   0
+blocks_used:    .word   0
+mod_date:       .word   0
+mod_time:       .word   0
+create_date:    .word   0
+create_time:    .word   0
 .endproc
         .byte   0
 
 .proc get_prefix_params
-param_count: .byte   1
+param_count:    .byte   1
 buffer: .addr   desktop_main::L4862
 .endproc
 
