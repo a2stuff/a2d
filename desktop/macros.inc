@@ -59,11 +59,14 @@
 ;;; ==================================================
 ;;; 16-bit pseudo-ops
 
-;;; Load A,X (immediate or absolute)
-;;;    ldax $1234
-;;;    ldax #$1234
+.define is_immediate(arg)       (.match (.mid (0, 1, {arg}), #))
+.define is_register(arg)        (.match ({arg}, x) .or .match ({arg}, y))
+
+;;; Load A,X
+;;;    ldax #$1234      ; immediate
+;;;    ldax $1234       ; absolute
 .macro ldax arg
-    .if (.match (.mid (0, 1, {arg}), #))
+    .if is_immediate {arg}
         lda     #<(.right (.tcount ({arg})-1, {arg}))
         ldx     #>(.right (.tcount ({arg})-1, {arg}))
     .else
@@ -72,18 +75,18 @@
     .endif
 .endmacro
 
-;;; Store A,X (absolute)
-;;;    stax $1234
+;;; Store A,X
+;;;    stax $1234       ; absolute
 .macro stax arg
         sta     arg
         stx     arg+1
 .endmacro
 
-;;; Add arg1 (absolute) to arg2 (immediate or absolute), store to arg3
-;;;    add16 $1111, $2222, $3333
-;;;    add16 $1111, #$2222, $3333
+;;; Add arg1 to arg2, store to arg3
+;;;    add16 $1111, $2222, $3333        ; absolute, absolute, absolute
+;;;    add16 $1111, #$2222, $3333       ; absolute, immediate, absolute
 .macro add16 aa, bb, rr
-    .if (.match (.mid (0, 1, {bb}), #))
+    .if is_immediate {bb}
         lda     aa
         clc
         adc     #<(.right (.tcount ({bb})-1, {bb}))
@@ -103,8 +106,8 @@
 .endmacro
 
 ;;; Add arg1 (absolute) to arg2 (8-bit absolute), store to arg3
-;;;    add16_8 $1111, $22, $3333
-;;;    add16_8 $1111, #$22, $3333
+;;;    add16_8 $1111, #$22, $3333       ; absolute, immediate, absolute
+;;;    add16_8 $1111, $22, $3333        ; absolute, absolute, absolute
 .macro add16_8 aa, bb, rr
         lda     aa
         clc
@@ -115,11 +118,11 @@
         sta     rr+1
 .endmacro
 
-;;; Subtract arg2 (immediate or absolute) from arg1, store to arg3
-;;;    sub16 $1111, $2222, $3333
-;;;    sub16 $1111, #$2222, $3333
+;;; Subtract arg2 from arg1, store to arg3
+;;;    sub16 $1111, #$2222, $3333       ; absolute, immediate, absolute
+;;;    sub16 $1111, $2222, $3333        ; absolute, absolute, absolute
 .macro sub16 aa, bb, rr
-    .if (.match (.mid (0, 1, {bb}), #))
+    .if is_immediate {bb}
         lda     aa
         sec
         sbc     #<(.right (.tcount ({bb})-1, {bb}))
@@ -138,27 +141,40 @@
     .endif
 .endmacro
 
+;;; Subtract arg2 from arg1, store to arg3
+;;;    sub16_8 $1111, #$22, $3333       ; absolute, immediate, absolute
+;;;    sub16_8 $1111, $22, $3333        ; absolute, absolute, absolute
+.macro sub16_8 aa, bb, rr
+        lda     aa
+        sec
+        sbc     bb
+        sta     rr
+        lda     aa+1
+        sbc     #0
+        sta     rr+1
+.endmacro
+
 ;;; Copy 16-bit value
-;;;    copy16 #$1111, $2222     ; immediate
-;;;    copy16 $1111, $2222      ; absolute
-;;;    copy16 $1111,x, $2222    ; indirect load
-;;;    copy16 $1111,y, $2222    ; indirect load
-;;;    copy16 $1111, $2222,x    ; indirect store
-;;;    copy16 $1111, $2222,y    ; indirect store
+;;;    copy16 #$1111, $2222     ; immediate, absolute
+;;;    copy16 $1111, $2222      ; absolute, absolute
+;;;    copy16 $1111,x, $2222    ; indirect load, absolute store
+;;;    copy16 $1111,y, $2222    ; indirect load, absolute store
+;;;    copy16 $1111, $2222,x    ; absolute load, indirect store
+;;;    copy16 $1111, $2222,y    ; absolute load, indirect store
 .macro copy16 arg1, arg2, arg3
-    .if (.match ({arg2}, x) .or .match ({arg2}, y))
+    .if is_register {arg2}
         ;; indexed load variant (arg2 is x or y)
         lda     arg1,arg2
         sta     arg3
         lda     arg1+1,arg2
         sta     arg3+1
-    .elseif (.match ({arg3}, x) .or .match ({arg3}, y))
+    .elseif is_register {arg3}
         ;; indexed store variant (arg3 is x or y)
         lda     arg1
         sta     arg2,arg3
         lda     arg1+1
         sta     arg2+1,arg3
-    .elseif (.match (.mid (0, 1, {arg1}), #))
+    .elseif is_immediate {arg1}
         ;; immediate load variant (arg1 is #nnnn)
         lda     #<(.right (.tcount ({arg1})-1, {arg1}))
         sta     arg2
@@ -172,26 +188,34 @@
     .endif
 .endmacro
 
+;;; Compare 16-bit values
+;;;    cmp16 #$1111, $2222     ; immediate, absolute
+;;;    cmp16 $1111, #$2222     ; absolute, immediate
+;;;    cmp16 $1111, $2222      ; absolute, absolute
+;;;    cmp16 $1111,x, $2222    ; indirect, absolute
+;;;    cmp16 $1111,y, $2222    ; indirect, absolute
+;;;    cmp16 $1111, $2222,x    ; absolute, indirect
+;;;    cmp16 $1111, $2222,y    ; absolute indirect
 .macro cmp16 arg1, arg2, arg3
-    .if (.match ({arg2}, x) .or .match ({arg2}, y))
+    .if is_register {arg2}
         ;; indexed variant (arg2 is x or y)
         lda     arg1,arg2
         cmp     arg3
         lda     arg1+1,arg2
         sbc     arg3+1
-    .elseif (.match ({arg3}, x) .or .match ({arg3}, y))
+    .elseif is_register {arg3}
         ;; indexed variant (arg3 is x or y)
         lda     arg1
         cmp     arg2,arg3
         lda     arg1+1
         sbc     arg2+1,arg3
-    .elseif (.match (.mid (0, 1, {arg1}), #))
+    .elseif is_immediate {arg1}
         ;; immediate variant (arg1 is #nnnn)
         lda     #<(.right (.tcount ({arg1})-1, {arg1}))
         cmp     arg2
         lda     #>(.right (.tcount ({arg1})-1, {arg1}))
         sbc     arg2+1
-    .elseif (.match (.mid (0, 1, {arg2}), #))
+    .elseif is_immediate {arg2}
         ;; immediate variant (arg2 is #nnnn)
         lda     arg1
         cmp     #<(.right (.tcount ({arg2})-1, {arg2}))
