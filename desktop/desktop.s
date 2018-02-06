@@ -2378,10 +2378,8 @@ LA3AD:  .byte   0
         ;; DT_UNHIGHLIGHT_ICON params
 LA3AE:  .byte   0
 
-LA3AF:  .byte   0
-LA3B0:  .byte   0
-LA3B1:  .byte   0
-LA3B2:  .byte   0
+LA3AF:  .word   0
+LA3B1:  .word   0
 LA3B3:  .byte   0
         .byte   0
         .byte   0
@@ -8717,8 +8715,7 @@ scroll_up:                      ; elevator up / contents down
 
 L585D:  .byte   0               ; can scroll horiz?
 L585E:  .byte   0               ; can scroll vert?
-L585F:  .byte   0
-L5860:  .byte   0
+L585F:  .word   0
 L5861:  .word   0
 
 L5863:  stx     L587D
@@ -9951,8 +9948,8 @@ L6427:  stax    grafport2::cliprect::y2
 
 L6448:  .byte   0
 L6449:  .byte   0
-L644A:  .byte   0
-L644B:  .byte   0
+L644A:  .word   0
+
 L644C:  tya
         sec
         sbc     #$0E
@@ -9975,8 +9972,8 @@ L648A:  stax    grafport2::cliprect::x1
 
 L64AC:  .byte   0
 L64AD:  .byte   0
-L64AE:  .byte   0
-L64AF:  .byte   0
+L64AE:  .word   0
+
 L64B0:  jsr     L650F
         stax    L650B
         add16   grafport2::cliprect::x2, L650B, L650D
@@ -9992,10 +9989,9 @@ L64E9:  stax    grafport2::cliprect::x2
         jsr     L6DB1
         jmp     L6556
 
-L650B:  .byte   0
-L650C:  .byte   0
-L650D:  .byte   0
-L650E:  .byte   0
+L650B:  .word   0
+L650D:  .word   0
+
 L650F:  bit     L5B1B
         bmi     L6517
         jsr     L6E52
@@ -14923,8 +14919,7 @@ block_num:      .word   $A
 .endproc
 
 L92E3:  .byte   $00
-L92E4:  .byte   $00
-L92E5:  .byte   $00
+L92E4:  .word   0
 L92E6:  .byte   $00
 L92E7:  lda     is_file_selected
         bne     L92ED
@@ -15946,8 +15941,8 @@ L9BDA:  sub16   file_info_params3::aux_type, file_info_params3::blocks_used, L9B
 
 L9BFE:  rts
 
-L9BFF:  .byte   0
-L9C00:  .byte   0
+L9BFF:  .word   0
+
 L9C01:  jsr     L9C1A
         bcc     L9C19
         lda     #$04
@@ -16015,8 +16010,7 @@ L9CCD:  lda     L9CD6
         sta     $1FC0
         rts
 
-L9CD4:  .byte   0
-L9CD5:  .byte   0
+L9CD4:  .word   0
 L9CD6:  .byte   0
 L9CD7:  .byte   0
 L9CD8:  .byte   0
