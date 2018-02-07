@@ -4,6 +4,7 @@
         .include "../inc/apple2.inc"
         .include "../inc/auxmem.inc"
         .include "../inc/prodos.inc"
+        .include "../macros.inc"
 
 DESKTOP_INIT    := $0800        ; init location
 L7ECA           := $7ECA        ; ???
@@ -150,10 +151,7 @@ start:  lda     ROMIN2
 :       lda     #$FF
         sta     reinstall_flag
 
-        lda     IRQ_VECTOR
-        sta     irq_saved
-        lda     IRQ_VECTOR+1
-        sta     irq_saved+1
+        copy16  IRQ_VECTOR, irq_saved
         lda     LCBANK2
         lda     LCBANK2
 
@@ -169,10 +167,7 @@ start:  lda     ROMIN2
         jmp     done_reinstall
 
 no_reinstall:
-        lda     irq_saved
-        sta     IRQ_VECTOR
-        lda     irq_saved+1
-        sta     IRQ_VECTOR+1
+        copy16  irq_saved, IRQ_VECTOR
 
 done_reinstall:
         ;; Set the prefix, read the first $400 bytes of this system
@@ -354,14 +349,8 @@ loop:   lda     segment_num
 continue:
         asl     a
         tax
-        lda     segment_addr_table,x
-        sta     read_params::buffer
-        lda     segment_addr_table+1,x
-        sta     read_params::buffer+1
-        lda     segment_size_table,x
-        sta     read_params::request
-        lda     segment_size_table+1,x
-        sta     read_params::request+1
+        copy16  segment_addr_table,x, read_params::buffer
+        copy16  segment_size_table,x, read_params::request
         php
         sei
         MLI_CALL READ, read_params

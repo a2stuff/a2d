@@ -3,6 +3,7 @@
         .include "apple2.inc"
         .include "../inc/apple2.inc"
         .include "../inc/prodos.inc"
+        .include "../macros.inc"
 
 ;;; ==================================================
 ;;; Segment loaded into MAIN $290-$3EF
@@ -97,10 +98,7 @@ open:   MLI_CALL OPEN, open_params
 
 begin:  lda     ROMIN2
 
-        lda     #<default_start_address
-        sta     jmp_addr
-        lda     #>default_start_address
-        sta     jmp_addr+1
+        copy16  #default_start_address, jmp_addr
 
         ;; clear system memory bitmap
         ldx     #BITMAP_SIZE-2
@@ -144,10 +142,7 @@ not_binary:
         bne     load_target
 
         ;; Invoke BASIC.SYSTEM as path instead.
-        lda     #<bs_path
-        sta     open_params::path
-        lda     #>bs_path
-        sta     open_params::path+1
+        copy16  #bs_path, open_params::path
 
         ;; Try opening BASIC.SYSTEM with current prefix.
 check_for_bs:
