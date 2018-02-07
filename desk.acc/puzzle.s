@@ -7,6 +7,7 @@
 
         .include "../mgtk.inc"
         .include "../desktop.inc" ; redraw icons after window move, font
+        .include "../macros.inc"
 
         .org $800
 
@@ -27,25 +28,13 @@ stash_stack:  .byte   0
 
         sta     ALTZPOFF
         lda     ROMIN2
-        lda     #<start
-        sta     STARTLO
-        lda     #>start
-        sta     STARTHI
-        lda     #<end
-        sta     ENDLO
-        lda     #>end
-        sta     ENDHI
-        lda     #<start
-        sta     DESTINATIONLO
-        lda     #>start
-        sta     DESTINATIONHI
+        copy16  #start, STARTLO
+        copy16  #end, ENDLO
+        copy16  #start, DESTINATIONLO
         sec                     ; main>aux
         jsr     AUXMOVE
 
-        lda     #<enter_da
-        sta     XFERSTARTLO
-        lda     #>enter_da
-        sta     XFERSTARTHI
+        copy16  #enter_da, XFERSTARTLO
         php
         pla
         ora     #$40            ; set overflow: use aux zp/stack
@@ -1075,21 +1064,12 @@ loop:   tya
         asl     a
         asl     a
         tax
-        lda     space_positions,x
-        sta     paintbits_params::left
-        lda     space_positions+1,x
-        sta     paintbits_params::left+1
-        lda     space_positions+2,x
-        sta     paintbits_params::top
-        lda     space_positions+3,x
-        sta     paintbits_params::top+1
+        copy16  space_positions,x, paintbits_params::left
+        copy16  space_positions+2,x, paintbits_params::top
         lda     position_table,y
         asl     a
         tax
-        lda     bitmap_table,x
-        sta     paintbits_params::mapbits
-        lda     bitmap_table+1,x
-        sta     paintbits_params::mapbits+1
+        copy16  bitmap_table,x, paintbits_params::mapbits
         MGTK_CALL MGTK::PaintBits, paintbits_params
         pla
         clc

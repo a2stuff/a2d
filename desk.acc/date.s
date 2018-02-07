@@ -7,6 +7,7 @@
 
         .include "../mgtk.inc"
         .include "../desktop.inc" ; redraw icons after window move; font; glyphs
+        .include "../macros.inc"
 
         .org $800
 
@@ -68,25 +69,14 @@ write_buffer:
         sta     datelo
         lda     DATEHI
         sta     datehi
-        lda     #<start
-        sta     STARTLO
-        lda     #>start
-        sta     STARTHI
-        lda     #<end
-        sta     ENDLO
-        lda     #>end
-        sta     ENDHI
-        lda     #<start
-        sta     DESTINATIONLO
-        lda     #>start
-        sta     DESTINATIONHI
+
+        copy16  #start, STARTLO
+        copy16  #end, ENDLO
+        copy16  #start, DESTINATIONLO
         sec
         jsr     AUXMOVE
 
-        lda     #<start
-        sta     XFERSTARTLO
-        lda     #>start
-        sta     XFERSTARTHI
+        copy16  #start, XFERSTARTLO
         php
         pla
         ora     #$40            ; set overflow: aux zp/stack
@@ -108,9 +98,9 @@ write_buffer:
         lda     write_buffer    ; Dialog committed?
         beq     skip
 
+
         ldy     #OPEN           ; open the file
-        lda     #<open_params
-        ldx     #>open_params
+        ldax    #open_params
         jsr     JUMP_TABLE_MLI
         bne     skip
 
@@ -120,19 +110,16 @@ write_buffer:
         sta     close_params::ref_num
 
         ldy     #SET_MARK       ; seek
-        lda     #<set_mark_params
-        ldx     #>set_mark_params
+        ldax    #set_mark_params
         jsr     JUMP_TABLE_MLI
         bne     close
 
         ldy     #WRITE          ; write the date
-        lda     #<write_params
-        ldx     #>write_params
+        ldax    #write_params
         jsr     JUMP_TABLE_MLI
 
 close:  ldy     #CLOSE          ; close the file
-        lda     #<close_params
-        ldx     #>close_params
+        ldax    #close_params
         jsr     JUMP_TABLE_MLI
 
 skip:   ldx     stash_stack     ; exit the DA
@@ -417,10 +404,7 @@ hit:    cmp     #MGTK::area_content
         sbc     #1
         asl     a
         tay
-        lda     hit_target_jump_table,y
-        sta     jump+1
-        lda     hit_target_jump_table+1,y
-        sta     jump+2
+        copy16  hit_target_jump_table,y, jump+1
 jump:   jmp     $1000           ; self modified
 
 hit_target_jump_table:
@@ -511,16 +495,10 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
         cmp     #up_rect_index
         beq     incr
 
-decr:   lda     #<decrement_table
-        sta     ptr
-        lda     #>decrement_table
-        sta     ptr+1
+decr:   copy16  #decrement_table, ptr
         jmp     go
 
-incr:   lda     #<increment_table
-        sta     ptr
-        lda     #>increment_table
-        sta     ptr+1
+incr:   copy16  #increment_table, ptr
 
 go:     lda     selected_field
         asl     a
@@ -627,10 +605,7 @@ decrement_year:
         str := month_string + 3
         len := 3
 
-        lda     #<str
-        sta     ptr
-        lda     #>str
-        sta     ptr+1
+        copy16  #str, ptr
 
         ldy     #len - 1
 loop:   lda     month_name_table,x
@@ -703,21 +678,12 @@ skip:   jmp     dest
 ;;; Index returned in X.
 
 .proc find_hit_target
-        lda     event_params::xcoord
-        sta     screentowindow_params::screenx
-        lda     event_params::xcoord+1
-        sta     screentowindow_params::screenx+1
-        lda     event_params::ycoord
-        sta     screentowindow_params::screeny
-        lda     event_params::ycoord+1
-        sta     screentowindow_params::screeny+1
+        copy16  event_params::xcoord, screentowindow_params::screenx
+        copy16  event_params::ycoord, screentowindow_params::screeny
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         ldx     #1
-        lda     #<first_hit_rect
-        sta     test_addr
-        lda     #>first_hit_rect
-        sta     test_addr+1
+        copy16  #first_hit_rect, test_addr
 
 loop:   txa
         pha

@@ -8,6 +8,7 @@
 
         .include "../mgtk.inc"
         .include "../desktop.inc" ; redraw icons after window move; font
+        .include "../macros.inc"
 
         .org $800
 
@@ -34,26 +35,14 @@ save_stack:  .byte   0
 
         ;; Copy the DA to AUX memory.
         lda     ROMIN2
-        lda     #<start
-        sta     STARTLO
-        lda     #>start
-        sta     STARTHI
-        lda     #<end
-        sta     ENDLO
-        lda     #>end
-        sta     ENDHI
-        lda     #<dest
-        sta     DESTINATIONLO
-        lda     #>dest
-        sta     DESTINATIONHI
+        copy16  #start, STARTLO
+        copy16  #end, ENDLO
+        copy16  #dest, DESTINATIONLO
         sec                     ; main>aux
         jsr     AUXMOVE
 
         ;; Invoke it.
-        lda     #<start
-        sta     XFERSTARTLO
-        lda     #>start
-        sta     XFERSTARTHI
+        copy16  #start, XFERSTARTLO
         php
         pla
         ora     #$40            ; set overflow: use aux zp/stack
@@ -761,15 +750,11 @@ loop:   lda     adjust_txtptr_copied-1,x
         lda     #0              ; Turn off errors
         sta     ERRFLG
 
-        lda     #<error_hook    ; set up FP error handler
-        sta     COUT_HOOK
-        lda     #>error_hook
-        sta     COUT_HOOK+1
+        copy16  #error_hook, COUT_HOOK ; set up FP error handler
 
         lda     #1
         jsr     CALL_FLOAT
-        ldx     #<farg
-        ldy     #>farg
+        ldxy    #farg
         jsr     CALL_ROUND
         lda     #0              ; set FAC to 0
         jsr     CALL_FLOAT
@@ -779,8 +764,7 @@ loop:   lda     adjust_txtptr_copied-1,x
         jsr     CALL_FMULT
         lda     #$00
         jsr     CALL_FLOAT
-        ldx     #<farg
-        ldy     #>farg
+        ldxy    #farg
         jsr     CALL_ROUND
 
         tsx
@@ -1035,14 +1019,12 @@ miss:   clc
 .proc process_key
         cmp     #'C'            ; Clear?
         bne     :+
-        ldx     #<btn_c::port
-        ldy     #>btn_c::port
+        ldxy    #btn_c::port
         lda     #'c'
         jsr     depress_button
         lda     #$00
         jsr     CALL_FLOAT
-        ldx     #<farg
-        ldy     #>farg
+        ldxy    #farg
         jsr     CALL_ROUND
         lda     #'='
         sta     calc_op
@@ -1056,8 +1038,7 @@ miss:   clc
 
 :       cmp     #'E'            ; Exponential?
         bne     try_eq
-        ldx     #<btn_e::port
-        ldy     #>btn_e::port
+        ldxy    #btn_e::port
         lda     #'e'
         jsr     depress_button
         ldy     calc_e
@@ -1077,21 +1058,18 @@ rts1:   rts
 try_eq: cmp     #'='            ; Equals?
         bne     :+
         pha
-        ldx     #<btn_eq::port
-        ldy     #>btn_eq::port
+        ldxy    #btn_eq::port
         jmp     do_op_click
 
 :       cmp     #'*'            ; Multiply?
         bne     :+
         pha
-        ldx     #<btn_mul::port
-        ldy     #>btn_mul::port
+        ldxy    #btn_mul::port
         jmp     do_op_click
 
 :       cmp     #'.'            ; Decimal?
         bne     try_add
-        ldx     #<btn_dec::port
-        ldy     #>btn_dec::port
+        ldxy    #btn_dec::port
         jsr     depress_button
         lda     calc_d
         ora     calc_e
@@ -1108,16 +1086,14 @@ rts2:   rts
 try_add:cmp     #'+'            ; Add?
         bne     :+
         pha
-        ldx     #<btn_add::port
-        ldy     #>btn_add::port
+        ldxy    #btn_add::port
         jmp     do_op_click
 
 :       cmp     #'-'            ; Subtract?
         bne     trydiv
         pha
-        ldx     #<btn_sub::port
-        ldy     #>btn_sub::port
-        lda     calc_e           ; negate vs. subtract
+        ldxy    #btn_sub::port
+        lda     calc_e          ; negate vs. subtract
         beq     :+
         lda     calc_n
         bne     :+
@@ -1134,78 +1110,67 @@ try_add:cmp     #'+'            ; Add?
 trydiv: cmp     #'/'            ; Divide?
         bne     :+
         pha
-        ldx     #<btn_div::port
-        ldy     #>btn_div::port
+        ldxy    #btn_div::port
         jmp     do_op_click
 
 :       cmp     #'0'            ; Digit 0?
         bne     :+
         pha
-        ldx     #<btn_0::port
-        ldy     #>btn_0::port
+        ldxy    #btn_0::port
         jmp     do_digit_click
 
 :       cmp     #'1'            ; Digit 1?
         bne     :+
         pha
-        ldx     #<btn_1::port
-        ldy     #>btn_1::port
+        ldxy    #btn_1::port
         jmp     do_digit_click
 
 :       cmp     #'2'            ; Digit 2?
         bne     :+
         pha
-        ldx     #<btn_2::port
-        ldy     #>btn_2::port
+        ldxy    #btn_2::port
         jmp     do_digit_click
 
 :       cmp     #'3'            ; Digit 3?
         bne     :+
         pha
-        ldx     #<btn_3::port
-        ldy     #>btn_3::port
+        ldxy    #btn_3::port
         jmp     do_digit_click
 
 :       cmp     #'4'            ; Digit 4?
         bne     :+
         pha
-        ldx     #<btn_4::port
-        ldy     #>btn_4::port
+        ldxy    #btn_4::port
         jmp     do_digit_click
 
 :       cmp     #'5'            ; Digit 5?
         bne     :+
         pha
-        ldx     #<btn_5::port
-        ldy     #>btn_5::port
+        ldxy    #btn_5::port
         jmp     do_digit_click
 
 :       cmp     #'6'            ; Digit 6?
         bne     :+
         pha
-        ldx     #<btn_6::port
-        ldy     #>btn_6::port
+        ldxy    #btn_6::port
         jmp     do_digit_click
 
 :       cmp     #'7'            ; Digit 7?
         bne     :+
         pha
-        ldx     #<btn_7::port
-        ldy     #>btn_7::port
+        ldxy    #btn_7::port
         jmp     do_digit_click
 
 :       cmp     #'8'            ; Digit 8?
         bne     :+
         pha
-        ldx     #<btn_8::port
-        ldy     #>btn_8::port
+        ldxy    #btn_8::port
         jmp     do_digit_click
 
 :       cmp     #'9'            ; Digit 9?
         bne     :+
         pha
-        ldx     #<btn_9::port
-        ldy     #>btn_9::port
+        ldxy    #btn_9::port
         jmp     do_digit_click
 
 :       cmp     #$7F            ; Delete?
@@ -1308,10 +1273,7 @@ rts3:   rts
         sta     calc_op
         jmp     reset_buffer1_and_state
 
-reparse:lda     #<text_buffer1
-        sta     TXTPTR
-        lda     #>text_buffer1
-        sta     TXTPTR+1
+reparse:copy16  #text_buffer1, TXTPTR
         jsr     adjust_txtptr
         jsr     CALL_FIN
 
@@ -1349,8 +1311,7 @@ do_op:  pla
 .endproc
 
 .proc post_op
-        ldx     #<farg          ; after the FP operation is done
-        ldy     #>farg
+        ldxy    #farg          ; after the FP operation is done
         jsr     CALL_ROUND
         jsr     CALL_FOUT            ; output as null-terminated string to FBUFFR
 
@@ -1473,8 +1434,7 @@ loop:   lda     #' '
 .proc display_buffer1
         bit     offscreen_flag
         bmi     end
-        ldx     #<text_buffer1
-        ldy     #>text_buffer1
+        ldxy    #text_buffer1
         jsr     pre_display_buffer
         MGTK_CALL MGTK::DrawText, drawtext_params1
 end:    rts
@@ -1483,8 +1443,7 @@ end:    rts
 .proc display_buffer2
         bit     offscreen_flag
         bmi     end
-        ldx     #<text_buffer2
-        ldy     #>text_buffer2
+        ldxy    #text_buffer2
         jsr     pre_display_buffer
         MGTK_CALL MGTK::DrawText, drawtext_params2
 end:    rts
@@ -1524,10 +1483,7 @@ end:    rts
         ;; Buttons
         ptr := $FA
 
-        lda     #<btn_c
-        sta     ptr
-        lda     #>btn_c
-        sta     ptr+1
+        copy16  #btn_c, ptr
 loop:   ldy     #0
         lda     (ptr),y
         beq     draw_title_bar  ; done!

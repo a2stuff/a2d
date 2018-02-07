@@ -7,6 +7,7 @@
 
         .include "../mgtk.inc"
         .include "../desktop.inc" ; get/clear selection, font
+        .include "../macros.inc"
 
         .org $800
 
@@ -215,8 +216,7 @@ white_pattern:
         da_window_id := 100
 
 L095A:  .byte   $00
-L095B:  .byte   $FA
-L095C:  .byte   $01
+L095B:  .word   $1FA
 
 .proc line_pos
 left:   .word   0
@@ -226,14 +226,11 @@ base:   .word   0
 window_width:  .word   0
 window_height: .word   0
 
-L0965:  .byte   $00
-L0966:  .byte   $00,$00
-L0968:  .byte   $00
-L0969:  .byte   $00
-L096A:  .byte   $00
-L096B:  .byte   $00
-L096C:  .byte   $00
-L096D:  .byte   $00
+L0965:  .byte   0
+L0966:  .word   0
+L0968:  .word   0
+L096A:  .word   0
+L096C:  .word   0
 
 track_scroll_delta:
         .byte   $00
@@ -369,20 +366,14 @@ abort:  rts
 
         asl     a               ; (since address table is 2 bytes wide)
         tax
-        lda     path_table,x          ; pathname ???
-        sta     src
-        lda     path_table+1,x
-        sta     src+1
+        copy16  path_table,x, src
         ldy     #0
         lda     (src),y
         tax
         inc     src
         bne     :+
         inc     src+1
-:       lda     #<(pathname::data)
-        sta     dst
-        lda     #>(pathname::data)
-        sta     dst+1
+:       copy16  #(pathname::data), dst
         jsr     copy_pathname   ; copy x bytes (src) to (dst)
 
         ;; Append separator.
@@ -398,10 +389,7 @@ abort:  rts
 :       lda     file_index      ; file index in table
         asl     a               ; (since table is 2 bytes wide)
         tax
-        lda     file_table,x
-        sta     src
-        lda     file_table+1,x
-        sta     src+1
+        copy16  file_table,x, src
 
         ;; Exit if a directory.
         ldy     #2              ; 2nd byte of entry
@@ -438,10 +426,7 @@ abort:  rts
 :       jsr     copy_pathname   ; copy x bytes (src) to (dst)
 
         ;; Clear selection (why???)
-        lda     #<JUMP_TABLE_CLEAR_SEL
-        sta     call_main_addr
-        lda     #>JUMP_TABLE_CLEAR_SEL
-        sta     call_main_addr+1
+        copy16  #JUMP_TABLE_CLEAR_SEL, call_main_addr
         jsr     call_main_trampoline
 
         jmp     open_file_and_init_window
@@ -569,10 +554,7 @@ title:  jsr     on_title_bar_click
         cmp     winfo::maprect::x2
 :       bcs     wider
 
-        lda     #<max_width
-        sta     winfo::maprect::x2
-        lda     #>max_width
-        sta     winfo::maprect::x2+1
+        copy16  #max_width, winfo::maprect::x2
         sec
         lda     winfo::maprect::x2
         sbc     window_width
@@ -599,7 +581,7 @@ enable: ora     #MGTK::scroll_option_active           ; enable scroll
         sta     $06
         lda     #>max_width
         sbc     window_width+1
-        sta     $07
+        sta     $06+1
         jsr     div_by_16
         sta     setctlmax_params::ctlmax
         lda     #MGTK::ctl_horizontal_scroll_bar
@@ -774,10 +756,7 @@ loop:   inx
         beq     end
         lda     trackthumb_params::thumbpos
         jsr     mul_by_16
-        lda     $06
-        sta     winfo::maprect::x1
-        lda     $07
-        sta     winfo::maprect::x1+1
+        copy16  $06, winfo::maprect::x1
         clc
         lda     winfo::maprect::x1
         adc     window_width
@@ -847,10 +826,7 @@ store:  sta     winfo::hthumbpos
 
         ;; Used at start of thumb event_kind_drag
 .proc do_trackthumb
-        lda     event_params::mousex
-        sta     trackthumb_params::mousex
-        lda     event_params::mousex+1
-        sta     trackthumb_params::mousex+1
+        copy16  event_params::mousex, trackthumb_params::mousex
         lda     event_params::mousey
         sta     trackthumb_params::mousey
         MGTK_CALL MGTK::TrackThumb, trackthumb_params
@@ -908,7 +884,7 @@ loop:   beq     adjust_box_height
         jsr     calc_line_position
         lda     #0
         sta     L096A
-        sta     L096B
+        sta     L096A+1
         ldx     updatethumb_params::thumbpos
 loop:   beq     end
         clc
@@ -916,7 +892,7 @@ loop:   beq     end
         adc     #5
         sta     L096A
         bcc     :+
-        inc     L096B
+        inc     L096A+1
 :       dex
         jmp     loop
 end:    rts
@@ -925,10 +901,7 @@ end:    rts
 .proc update_hscroll
         lda     #2
         sta     updatethumb_params::which_ctl
-        lda     winfo::maprect::x1
-        sta     $06
-        lda     winfo::maprect::x1+1
-        sta     $07
+        copy16  winfo::maprect::x1, $06
         jsr     div_by_16
         sta     updatethumb_params::thumbpos
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
@@ -983,15 +956,15 @@ end:    rts
         sta     L0947
         sta     line_pos::base+1
         sta     L096C
-        sta     L096D
+        sta     L096C+1
         sta     L0948
         lda     #$0A            ; line spacing = 10
         sta     line_pos::base
         jsr     L0EDB
 
 do_line:
-        lda     L096D
-        cmp     L096B
+        lda     L096C+1
+        cmp     L096A+1
         bne     :+
         lda     L096C
         cmp     L096A
@@ -1005,7 +978,7 @@ do_line:
         sta     L095B
         lda     #1
         sbc     line_pos::left+1
-        sta     L095C
+        sta     L095B+1
         jsr     find_text_run
         bcs     L0ED7
         clc
@@ -1026,12 +999,12 @@ do_line:
         lda     L096C
         cmp     L0968
         bne     :+
-        lda     L096D
-        cmp     L0969
+        lda     L096C+1
+        cmp     L0968+1
         beq     L0ED7
 :       inc     L096C
         bne     :+
-        inc     L096D
+        inc     L096C+1
 :       jmp     do_line
 
 L0ED7:  jsr     restore_proportional_font_table_if_needed
@@ -1041,14 +1014,8 @@ L0ED7:  jsr     restore_proportional_font_table_if_needed
 ;;; ==================================================
 
 .proc L0EDB                     ; ???
-        lda     #250
-        sta     L095B
-        lda     #1
-        sta     L095C
-        lda     #3
-        sta     line_pos::left
-        lda     #0
-        sta     line_pos::left+1
+        copy16  #506, L095B
+        copy16  #3, line_pos::left
         sta     L095A
         rts
 .endproc
@@ -1063,10 +1030,7 @@ L0ED7:  jsr     restore_proportional_font_table_if_needed
         sta     run_width+1
         sta     L095A
         sta     drawtext_params::textlen
-        lda     $06
-        sta     drawtext_params::textptr
-        lda     $07
-        sta     drawtext_params::textptr+1
+        copy16  $06, drawtext_params::textptr
 
 loop:   lda     L0945
         bne     more
@@ -1102,7 +1066,7 @@ more:   ldy     drawtext_params::textlen
         sta     run_width
         bcc     :+
         inc     run_width+1
-:       lda     L095C
+:       lda     L095B+1
         cmp     run_width+1
         bne     :+
         lda     L095B
@@ -1161,10 +1125,7 @@ loop:   lda     times70+1,x
         cpx     #14
         beq     done
         jmp     loop
-:       lda     times70,x
-        sta     line_pos::left
-        lda     times70+1,x
-        sta     line_pos::left+1
+:       copy16  times70,x, line_pos::left
         jmp     finish_text_run
 done:   lda     #0
         sta     L095A
@@ -1208,10 +1169,7 @@ loop:   lda     $1300,y
         bne     loop
 
         dec     drawtext_params::textptr+1
-        lda     drawtext_params::textptr
-        sta     $06
-        lda     drawtext_params::textptr+1
-        sta     $07
+        copy16  drawtext_params::textptr, $06
 
 read:   lda     #0
         sta     L0945
@@ -1226,10 +1184,7 @@ read:   lda     #0
 ;;; ==================================================
 
 .proc read_file_page
-        lda     read_params::buffer
-        sta     store+1
-        lda     read_params::buffer+1
-        sta     store+2
+        copy16  read_params::buffer, store+1
 
         lda     #' '            ; fill buffer with spaces
         ldx     #0
@@ -1285,14 +1240,11 @@ end:    rts
 ;;; ==================================================
 
 .proc calc_line_position
-        lda     winfo::maprect::y2
-        sta     L0965
-        lda     winfo::maprect::y2+1
-        sta     L0966
+        copy16  winfo::maprect::y2, L0965
 
         lda     #0
         sta     L0968
-        sta     L0969
+        sta     L0968+1
 loop:   lda     L0966
         bne     :+
         lda     L0965
@@ -1306,7 +1258,7 @@ loop:   lda     L0966
         dec     L0966
 :       inc     L0968
         bne     loop
-        inc     L0969
+        inc     L0968+1
         jmp     loop
 end:    rts
 .endproc
@@ -1338,10 +1290,7 @@ loop:   clc
 .endproc
 
 .proc redraw_screen
-        lda     #<JUMP_TABLE_REDRAW_ALL
-        sta     call_main_addr
-        lda     #>JUMP_TABLE_REDRAW_ALL
-        sta     call_main_addr+1
+        copy16  #JUMP_TABLE_REDRAW_ALL, call_main_addr
         jsr     call_main_trampoline
         rts
 .endproc

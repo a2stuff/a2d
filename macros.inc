@@ -75,6 +75,19 @@
     .endif
 .endmacro
 
+;;; Load X,Y
+;;;    ldxy #$1234      ; immediate
+;;;    ldxy $1234       ; absolute
+.macro ldxy arg
+    .if is_immediate {arg}
+        ldx     #<(.right (.tcount ({arg})-1, {arg}))
+        ldy     #>(.right (.tcount ({arg})-1, {arg}))
+    .else
+        ldx     arg
+        ldy     arg+1
+    .endif
+.endmacro
+
 ;;; Store A,X
 ;;;    stax $1234       ; absolute
 .macro stax arg

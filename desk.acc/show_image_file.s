@@ -7,6 +7,7 @@
 
         .include "../mgtk.inc"
         .include "../desktop.inc" ; get selection, font
+        .include "../macros.inc"
 
         .org $800
 
@@ -277,20 +278,14 @@ abort:  rts
 
         asl     a               ; (since address table is 2 bytes wide)
         tax
-        lda     path_table,x          ; pathname ???
-        sta     src
-        lda     path_table+1,x
-        sta     src+1
+        copy16  path_table,x, src
         ldy     #0
         lda     (src),y
         tax
         inc     src
         bne     :+
         inc     src+1
-:       lda     #<(pathname::data)
-        sta     dst
-        lda     #>(pathname::data)
-        sta     dst+1
+:       copy16  #(pathname::data), dst
         jsr     copy_pathname   ; copy x bytes (src) to (dst)
 
         ;; Append separator.
@@ -306,10 +301,7 @@ abort:  rts
 :       lda     file_index      ; file index in table
         asl     a               ; (since table is 2 bytes wide)
         tax
-        lda     file_table,x
-        sta     src
-        lda     file_table+1,x
-        sta     src+1
+        copy16  file_table,x, src
 
         ;; Exit if a directory.
         ldy     #2              ; 2nd byte of entry
@@ -536,10 +528,7 @@ done:   sta     PAGE2OFF
 .proc stash_menu
         src := $08
         dst := $06
-        lda     #<stash
-        sta     dst
-        lda     #>stash
-        sta     dst+1
+        copy16  #stash, dst
 
         sta     PAGE2ON
         jsr     inner
@@ -586,10 +575,7 @@ cloop:  lda     (src),y
 .proc unstash_menu
         src := $08
         dst := $06
-        lda     #<stash
-        sta     src
-        lda     #>stash
-        sta     src+1
+        copy16  #stash, src
 
         sta     PAGE2ON
         jsr     inner
