@@ -44,6 +44,7 @@ DESKTOP    := $8E00
 
         ;; Implementation bounces to $93BC, uses jump table at $939E
 
+DT_ADD_ICON             := $01  ; { .addr icondata }
 DT_HIGHLIGHT_ICON       := $02  ; { .byte icon }
 DT_UNHIGHLIGHT_ICON     := $03  ; { .byte icon }
         ;; $06 ???

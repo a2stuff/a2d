@@ -6,7 +6,7 @@
         .include "../inc/prodos.inc"
         .include "../mgtk.inc"
         .include "../desktop.inc"
-        .include "macros.inc"
+        .include "../macros.inc"
 
 ;;; ==================================================
 ;;; DeskTop - the actual application
@@ -216,7 +216,7 @@ L869E:  sta     ($06),y
         ldx     #$00
         ldy     #$0B
 L86B6:  lda     online_params_buffer+1,x
-        cmp     #$41
+        cmp     #$41            ; convert to lowercase ???
         bcc     L86C4
         cmp     #$5F
         bcs     L86C4
@@ -227,17 +227,18 @@ L86C4:  sta     ($06),y
         inx
         cpx     online_params_buffer
         bne     L86B6
-        ldy     #$09
+        ldy     #9
         lda     ($06),y
         clc
-        adc     #$02
+        adc     #2              ; increase length by 2 (spaces) ???
         sta     ($06),y
-        lda     L8737
+        lda     L8737           ; type?
         and     #$0F
+
         cmp     #$04
         bne     L86ED
-        ldy     #$07
-        lda     #$B4
+        ldy     #icon_entry_offset_iconbits
+        lda     #$B4            ; $14B4 ???
         sta     ($06),y
         iny
         lda     #$14
@@ -246,46 +247,46 @@ L86C4:  sta     ($06),y
 
 L86ED:  cmp     #$0B
         bne     L86FF
-        ldy     #$07
-        lda     #$70
+        ldy     #icon_entry_offset_iconbits
+        lda     #$70            ; $1470 ???
         sta     ($06),y
         iny
         lda     #$14
         sta     ($06),y
         jmp     L870A
 
-L86FF:  ldy     #$07
-        lda     #$40
+L86FF:  ldy     #icon_entry_offset_iconbits
+        lda     #$40            ; $1440 ???
         sta     ($06),y
         iny
         lda     #$14
         sta     ($06),y
-L870A:  ldy     #$02
-        lda     #$00
+
+L870A:  ldy     #icon_entry_offset_type
+        lda     #0
         sta     ($06),y
         inc     L8738
         lda     L8738
         asl     a
         asl     a
         tax
-        ldy     #$03
-L871B:  lda     L8739,x
+        ldy     #icon_entry_offset_iconx
+:       lda     L8739,x
         sta     ($06),y
         inx
         iny
-        cpy     #$07
-        bne     L871B
+        cpy     #7
+        bne     :-
         ldx     $EF8A
         dex
-        ldy     #$00
+        ldy     #0
         lda     ($06),y
         sta     $EF8B,x
         jsr     $83A5
         lda     #$00
         rts
 
-L8737:  rts
-
+L8737:  .byte   $60             ; file type ???
 L8738:  .byte   $04
 L8739:  .byte   $00,$00,$00,$00
 
@@ -411,19 +412,14 @@ reserved:       .byte   0
 maprect:        DEFINE_RECT 0,0,0,0,maprect
 .endproc
 
-.proc paintrect_params6
-left:   .word   0
-top:    .word   0
-right:  .word   0
-bottom: .word   0
-.endproc
+paintrect_params6:      DEFINE_RECT 0,0,0,0, paintrect_params6
 
 .proc textwidth_params
 textptr:        .addr   text_buffer
 textlen:        .byte   0
 result: .word   0
 .endproc
-set_text_mask_params    := textwidth_params::result + 1  ; re-used
+settextbg_params    := textwidth_params::result + 1  ; re-used
 
 .proc drawtext_params
 textptr:        .addr   text_buffer
@@ -537,7 +533,7 @@ penloc: DEFINE_POINT 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   $96     ; ???
-textbg: .byte   0
+textbg: .byte   MGTK::textbg_black
 fontptr:        .addr   DEFAULT_FONT
 .endproc
 
@@ -557,7 +553,7 @@ penloc: DEFINE_POINT 0, 0
 penwidth:       .byte   0
 penheight:      .byte   0
 penmode:        .byte   0
-textbg: .byte   0
+textbg: .byte   MGTK::textbg_black
 fontptr:        .addr   0
 .endproc
 
@@ -578,7 +574,7 @@ notpenBIC_2:    .byte   7
 ;;; DESKTOP command jump table
 
 L939E:  .addr   0               ; $00
-        .addr   L9419           ; $01
+        .addr   ADD_ICON_IMPL
         .addr   HIGHLIGHT_ICON_IMPL
         .addr   UNHIGHLIGHT_ICON_IMPL
         .addr   L9508           ; $04
@@ -668,10 +664,9 @@ ycoord: .word   0
 .endproc
 
 ;;; ==================================================
+;;; ADD_ICON IMPL
 
-;;; DESKTOP $01 IMPL
-
-.proc L9419
+.proc ADD_ICON_IMPL
         ldy     #$00
         lda     ($06),y
         ldx     num_icons
@@ -926,7 +921,7 @@ L9648:  lda     icon_table,x
         asl     a
         tay
         copy16  icon_ptrs,y, $08
-        ldy     #2
+        ldy     #icon_entry_offset_type
         lda     ($08),y
         and     #$0F
         ldy     #0
@@ -980,10 +975,10 @@ L969D:  ldx     L9696
         asl     a
         tax
         copy16  icon_ptrs,x, $08
-        ldy     #2
+        ldy     #icon_entry_offset_type
         lda     ($08),y
         and     #$0F
-        ldy     #$00
+        ldy     #0
         cmp     ($06),y
         bne     L969D
         DESKTOP_DIRECT_CALL $04, L9695
@@ -1015,7 +1010,7 @@ L96E5:  dec     L96D6
         asl     a
         tax
         copy16  icon_ptrs,x, $08
-        ldy     #$02
+        ldy     #icon_entry_offset_type
         lda     ($08),y
         and     #$0F
         ldy     #$00
@@ -1126,7 +1121,7 @@ L97B9:  txa
         asl     a
         tax
         copy16  icon_ptrs,x, $06
-        ldy     #$02
+        ldy     #icon_entry_offset_type
         lda     ($06),y
         and     #$0F
         cmp     L97F5
@@ -1158,6 +1153,7 @@ L97F6:  .byte   0
 
 ;;; DESKTOP $0A IMPL
 
+        ;; Desktop icon selection
 .proc L97F7
         ldy     #0
         lda     ($06),y
@@ -1175,7 +1171,7 @@ L9803:  lda     ($06),y
         lda     L982A
         jsr     L9EB4
         stax    $06
-        ldy     #2
+        ldy     #icon_entry_offset_type
         lda     ($06),y
         and     #$0F
         sta     L9829
@@ -1246,7 +1242,7 @@ L98B6:  copy16  #drag_outline_buffer, $08
 L98C8:  lda     highlight_list
         jsr     L9EB4
         stax    $06
-        ldy     #$02
+        ldy     #icon_entry_offset_type
         lda     ($06),y
         and     #$0F
         sta     L9832
@@ -1312,7 +1308,7 @@ L9961:  lda     drag_outline_buffer+2,x
         dex
         bpl     L9961
         copy16  #drag_outline_buffer, $08
-L9972:  ldy     #$02
+L9972:  ldy     #icon_entry_offset_type
 L9974:  lda     ($08),y
         cmp     L9C76
         iny
@@ -1482,7 +1478,7 @@ L9B48:  bit     L9C75
 
 L9B52:  MGTK_CALL MGTK::FramePoly, drag_outline_buffer
         copy16  #drag_outline_buffer, $08
-L9B60:  ldy     #$02
+L9B60:  ldy     #2
 L9B62:  lda     ($08),y
         clc
         adc     L9C96
@@ -1568,7 +1564,7 @@ L9C29:  lda     highlight_list,x
         asl     a
         tax
         copy16  icon_ptrs,x, $06
-        ldy     #$02
+        ldy     #icon_entry_offset_type
         lda     ($08),y
         iny
         sta     ($06),y
@@ -1792,7 +1788,7 @@ L9E3D:  cmp     highlight_list,x
         asl     a
         tax
         copy16  icon_ptrs,x, $06
-        ldy     #$02
+        ldy     #icon_entry_offset_type
         lda     ($06),y
         and     #$0F
         sta     L9831
@@ -1827,6 +1823,9 @@ L9EB4:  asl     a
 ;;; ==================================================
 
 ;;; DESKTOP $0B IMPL
+
+        ;; Deselect icon ???
+        ;; how is this different from UNHIGHLIGHT_ICON ???
 
 .proc L9EBE
         jmp     start
@@ -1929,38 +1928,46 @@ L9F94:  .byte   0
 L9F98:  lda     #$00
         sta     L9F92
         beq     L9FA4
+
 L9F9F:  lda     #$80
         sta     L9F92
-L9FA4:  ldy     #$02
+
+.proc L9FA4
+        ldy     #icon_entry_offset_type
         lda     ($06),y
         and     #$0F
-        bne     L9FB4
+        bne     :+
         lda     L9F92
         ora     #$40
         sta     L9F92
-L9FB4:  ldy     #$03
-L9FB6:  lda     ($06),y
-        sta     poly::v7::xcoord+1,y
+        ;; copy icon coords and bits
+:       ldy     #icon_entry_offset_iconx
+:       lda     ($06),y
+        sta     paintbits_params2::viewloc-icon_entry_offset_iconx,y
         iny
-        cpy     #$09
-        bne     L9FB6
+        cpy     #icon_entry_offset_iconx + 6 ; x/y/bits
+        bne     :-
+
         jsr     push_zp_addrs
         copy16  paintbits_params2::mapbits, $08
         ldy     #$0B
-L9FCF:  lda     ($08),y
+:       lda     ($08),y
         sta     paintbits_params2::mapbits,y
         dey
-        bpl     L9FCF
+        bpl     :-
+
         bit     L9F92
-        bpl     L9FDF
+        bpl     :+
         jsr     LA12C
-L9FDF:  jsr     pop_zp_addrs
-        ldy     #$09
-L9FE4:  lda     ($06),y
-        sta     paintrect_params6::bottom,y
+:       jsr     pop_zp_addrs
+
+        ldy     #9
+:       lda     ($06),y
+        sta     paintrect_params6::y2,y
         iny
         cpy     #$1D
-        bne     L9FE4
+        bne     :-
+
 :       lda     drawtext_params::textlen
         sta     textwidth_params::textlen
         MGTK_CALL MGTK::TextWidth, textwidth_params
@@ -1977,7 +1984,7 @@ L9FE4:  lda     ($06),y
         sta     moveto_params2::xcoord+1
         lda     paintbits_params2::maprect::x2
         lsr     a
-        sta     moveto_params2
+        sta     moveto_params2::xcoord
         lda     moveto_params2::xcoord+1
         sec
         sbc     moveto_params2::xcoord
@@ -1986,19 +1993,19 @@ L9FE4:  lda     ($06),y
         add16_8 paintbits_params2::viewloc::ycoord, paintbits_params2::maprect::y2, moveto_params2::ycoord
         add16   moveto_params2::ycoord, #1, moveto_params2::ycoord
         add16_8 moveto_params2::ycoord, font_height, moveto_params2::ycoord
-        ldx     #$03
-LA06E:  lda     moveto_params2,x
+        ldx     #3
+:       lda     moveto_params2,x
         sta     L9F94,x
         dex
-        bpl     LA06E
+        bpl     :-
         bit     L9F92
         bvc     LA097
         MGTK_CALL MGTK::InitPort, grafport
         jsr     LA63F
-LA085:  jsr     LA6A3
+:       jsr     LA6A3
         jsr     LA097
         lda     L9F93
-        bne     LA085
+        bne     :-
         MGTK_CALL MGTK::SetPortBits, grafport
         rts
 
@@ -2014,31 +2021,33 @@ LA097:  MGTK_CALL MGTK::HideCursor, DESKTOP_DIRECT ; These params should be igno
 LA0B6:  MGTK_CALL MGTK::PaintBits, paintbits_params
         MGTK_CALL MGTK::SetPenMode, penXOR_2
 LA0C2:  MGTK_CALL MGTK::PaintBits, paintbits_params2
-        ldy     #$02
+        ldy     #icon_entry_offset_type
         lda     ($06),y
         and     #$80
         beq     LA0F2
         jsr     LA14D
-        MGTK_CALL MGTK::SetPattern, dark_pattern
+        MGTK_CALL MGTK::SetPattern, dark_pattern ; shade for open volume
         bit     L9F92
         bmi     LA0E6
         MGTK_CALL MGTK::SetPenMode, penBIC_2
         beq     LA0EC
 LA0E6:  MGTK_CALL MGTK::SetPenMode, penOR_2
 LA0EC:  MGTK_CALL MGTK::PaintRect, paintrect_params6
-LA0F2:  ldx     #$03
-LA0F4:  lda     L9F94,x
+
+LA0F2:  ldx     #3
+:       lda     L9F94,x
         sta     moveto_params2,x
         dex
-        bpl     LA0F4
+        bpl     :-
+
         MGTK_CALL MGTK::MoveTo, moveto_params2
         bit     L9F92
-        bmi     LA10C
-        lda     #$7F
-        bne     LA10E
-LA10C:  lda     #$00
-LA10E:  sta     set_text_mask_params
-        MGTK_CALL MGTK::SetTextBG, set_text_mask_params
+        bmi     :+
+        lda     #MGTK::textbg_white
+        bne     setbg
+:       lda     #MGTK::textbg_black
+setbg:  sta     settextbg_params
+        MGTK_CALL MGTK::SetTextBG, settextbg_params
         lda     text_buffer+1
         and     #$DF
         sta     text_buffer+1
@@ -2046,11 +2055,12 @@ LA10E:  sta     set_text_mask_params
         MGTK_CALL MGTK::ShowCursor
         rts
 
-LA12C:  ldx     #$0F
-LA12E:  lda     paintbits_params2,x
+LA12C:  ldx     #.sizeof(paintbits_params)-1
+:       lda     paintbits_params2,x
         sta     paintbits_params,x
         dex
-        bpl     LA12E
+        bpl     :-
+
         ldy     paintbits_params::maprect::y2
 LA13A:  lda     paintbits_params::mapwidth
         clc
@@ -2066,28 +2076,29 @@ LA14D:  ldx     #$00
 LA14F:  lda     paintbits_params2::viewloc::xcoord,x
         clc
         adc     paintbits_params2::maprect::x1,x
-        sta     paintrect_params6,x
+        sta     paintrect_params6::x1,x
         lda     paintbits_params2::viewloc::xcoord+1,x
         adc     paintbits_params2::maprect::x1+1,x
-        sta     paintrect_params6::left+1,x
+        sta     paintrect_params6::x1+1,x
         lda     paintbits_params2::viewloc::xcoord,x
         clc
         adc     paintbits_params2::maprect::x2,x
-        sta     paintrect_params6::right,x
+        sta     paintrect_params6::x2,x
         lda     paintbits_params2::viewloc::xcoord+1,x
         adc     paintbits_params2::maprect::x2+1,x
-        sta     paintrect_params6::right+1,x
+        sta     paintrect_params6::x2+1,x
         inx
         inx
         cpx     #$04
         bne     LA14F
-        lda     paintrect_params6::bottom
+        lda     paintrect_params6::y2
         sec
         sbc     #$01
-        sta     paintrect_params6::bottom
+        sta     paintrect_params6::y2
         bcs     LA189
-        dec     paintrect_params6::bottom+1
+        dec     paintrect_params6::y2+1
 LA189:  rts
+.endproc
 
 ;;; ==================================================
 
@@ -2196,7 +2207,7 @@ LA256:  lsr     a
         sta     poly::v3::xcoord
         sta     poly::v4::xcoord
         lda     poly::v5::xcoord+1
-        adc     #$00
+        adc     #0
         sta     poly::v3::xcoord+1
         sta     poly::v4::xcoord+1
         jsr     pop_zp_addrs
@@ -2229,11 +2240,11 @@ LA2B5:  bmi     LA2AA
         asl     a
         tax
         copy16  icon_ptrs,x, $06
-        ldy     #$02
+        ldy     #icon_entry_offset_type
         lda     ($06),y
         and     #$0F
         bne     LA2DD
-        ldy     #$00
+        ldy     #0
         lda     ($06),y
         sta     LA2A9
         DESKTOP_DIRECT_CALL DT_UNHIGHLIGHT_ICON, LA2A9
@@ -2244,7 +2255,7 @@ LA2DD:  pla
 
 LA2E3:  stx     LA322
         sta     LA323
-        ldx     #$00
+        ldx     #0
 LA2EB:  lda     icon_table,x
         cmp     LA323
         beq     LA2FA
@@ -2277,7 +2288,7 @@ LA323:  .byte   0
 
 LA324:  stx     LA363
         sta     LA364
-        ldx     #$00
+        ldx     #0
 LA32C:  lda     highlight_list,x
         cmp     LA364
         beq     LA33B
@@ -2468,7 +2479,7 @@ LA44D:  cpx     #$FF            ; =-1
         asl     a
         tax
         copy16  icon_ptrs,x, ptr
-        ldy     #2              ; type??? offset
+        ldy     #icon_entry_offset_type
         lda     (ptr),y
         and     #$07            ; low bits
         cmp     LA3AD
@@ -3157,15 +3168,14 @@ label_get_size:
 label_rename_icon:
         PASCAL_STRING "Rename an Icon ..."
 
-
 desktop_menu:
         DEFINE_MENU_BAR 6
-        DEFINE_MENU_BAR_ITEM 1, label_apple, apple_menu
-        DEFINE_MENU_BAR_ITEM 2, label_file, file_menu
-        DEFINE_MENU_BAR_ITEM 4, label_view, view_menu
-        DEFINE_MENU_BAR_ITEM 5, label_special, special_menu
-        DEFINE_MENU_BAR_ITEM 8, label_startup, startup_menu
-        DEFINE_MENU_BAR_ITEM 3, label_selector, selector_menu
+        DEFINE_MENU_BAR_ITEM menu_id_apple, label_apple, apple_menu
+        DEFINE_MENU_BAR_ITEM menu_id_file, label_file, file_menu
+        DEFINE_MENU_BAR_ITEM menu_id_view, label_view, view_menu
+        DEFINE_MENU_BAR_ITEM menu_id_special, label_special, special_menu
+        DEFINE_MENU_BAR_ITEM menu_id_startup, label_startup, startup_menu
+        DEFINE_MENU_BAR_ITEM menu_id_selector, label_selector, selector_menu
 
 file_menu:
         DEFINE_MENU 12
@@ -4118,6 +4128,15 @@ addr:   .addr   0
 
         .org $D000
 
+;;; Constants needed in both main and aux
+
+        menu_id_apple := 1
+        menu_id_file := 2
+        menu_id_view := 4
+        menu_id_special := 5
+        menu_id_startup := 8
+        menu_id_selector := 3
+
 ;;; Various routines callable from MAIN
 
 ;;; ==================================================
@@ -4362,14 +4381,14 @@ op:     lda     dummy1234
         .assert * = $D166, error, "Segment length mismatch"
         PAD_TO $D200
 
-pencopy: .byte   0
-penOR: .byte   1
-penXOR: .byte   2
-penBIC: .byte   3
-notpencopy: .byte   4
-notpenOR: .byte   5
-notpenXOR: .byte   6
-notpenBIC: .byte   7
+pencopy:        .byte   0
+penOR:          .byte   1
+penXOR:         .byte   2
+penBIC:         .byte   3
+notpencopy:     .byte   4
+notpenOR:       .byte   5
+notpenXOR:      .byte   6
+notpenBIC:      .byte   7
 
 ;;; ============================================================
 ;;; Re-use of param space
@@ -4417,6 +4436,7 @@ screentowindow_windowy:
 
 LD211:  .byte   0
 
+;;; ============================================================
 
 .proc getwinport_params2
 window_id:     .byte   0
@@ -4434,7 +4454,7 @@ penloc: DEFINE_POINT 0, 0
 penwidth:       .byte   0
 penheight:      .byte   0
 penmode:        .byte   0
-textbg: .byte   0
+textbg: .byte   MGTK::textbg_black
 fontptr:        .addr   0
 .endproc
 
@@ -4449,7 +4469,7 @@ penloc: DEFINE_POINT 0, 0
 penwidth:       .byte   0
 penheight:      .byte   0
 penmode:        .byte   0
-textbg: .byte   0
+textbg: .byte   MGTK::textbg_black
 fontptr:        .addr   0
 .endproc
         grafport3_viewloc_xcoord := grafport3::viewloc::xcoord
@@ -4468,10 +4488,11 @@ penloc: DEFINE_POINT 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
-textbg: .byte   0
+textbg: .byte   MGTK::textbg_black
 fontptr:        .addr   DEFAULT_FONT
 .endproc
 
+;;; ============================================================
 
 white_pattern3:                 ; unused?
         .byte   %11111111
@@ -4496,15 +4517,14 @@ black_pattern3:                 ; unused?
         .byte   $FF
 
 checkerboard_pattern3:
-        .byte   px(%1010101)
-        .byte   PX(%0101010)
-        .byte   px(%1010101)
-        .byte   PX(%0101010)
-        .byte   px(%1010101)
-        .byte   PX(%0101010)
-        .byte   px(%1010101)
-        .byte   PX(%0101010)
-
+        .byte   %01010101
+        .byte   %10101010
+        .byte   %01010101
+        .byte   %10101010
+        .byte   %01010101
+        .byte   %10101010
+        .byte   %01010101
+        .byte   %10101010
         .byte   $FF
 
         ;; Copies of ROM bytes used for machine identification
@@ -4991,11 +5011,21 @@ run_list_entries:
 
 LDD9E:  .byte   0
 
+        icon_entry_offset_index := 0
+        icon_entry_offset_state := 1
+        icon_entry_offset_type  := 2
+        icon_entry_offset_iconx := 3
+        icon_entry_offset_icony := 5
+        icon_entry_offset_iconbits := 7
+        icon_entry_offset_len   := 9
+        icon_entry_offset_name  := 10
+        icon_entry_size := 27
+
         ;; Icon to File mapping table
         ;;
         ;; each entry is 27 bytes long
         ;;      .byte icon      index
-        ;;      .byte ??
+        ;;      .byte ??        state bits?
         ;;      .byte type/icon (bits 4,5,6 are type)
         ;;                      $00 = directory
         ;;                      $10 = system
@@ -7449,7 +7479,7 @@ L4DF2:  txa
         lda     selected_file_index,x
         jsr     file_address_lookup
         stax    $06
-        ldy     #$02
+        ldy     #icon_entry_offset_type
         lda     ($06),y
         and     #$70
         bne     L4E10
@@ -7560,7 +7590,7 @@ L4EC3:  sta     buf3len
         sta     LE22F
         jsr     file_address_lookup
         stax    $06
-        ldy     #$02
+        ldy     #icon_entry_offset_type
         lda     ($06),y
         and     #$7F
         sta     ($06),y
@@ -8416,7 +8446,7 @@ L55D1:  ldx     L544A
         sta     selected_file_index
         jsr     file_address_lookup
         stax    $06
-        ldy     #$02
+        ldy     #icon_entry_offset_type
         lda     ($06),y
         and     #$0F
         sta     selected_window_index
@@ -8429,7 +8459,7 @@ L55F0:  ldx     L544A
         sta     LE22F
         jsr     file_address_lookup
         stax    $06
-        ldy     #$02
+        ldy     #icon_entry_offset_type
         lda     ($06),y
         and     #$0F
         sta     getwinport_params2::window_id
@@ -8448,7 +8478,7 @@ L562B:  rts
 L562C:  lda     LE22F
         jsr     file_address_lookup
         stax    $06
-        ldy     #$02
+        ldy     #icon_entry_offset_type
         lda     ($06),y
         and     #$0F
         sta     getwinport_params2::window_id
@@ -9384,7 +9414,7 @@ L5DF7:  ldx     $E256
 L5DFC:  lda     L5CD9           ; after a double-click (on file or folder)
         jsr     file_address_lookup
         stax    $06
-        ldy     #2              ; byte type icon offset
+        ldy     #icon_entry_offset_type
         lda     ($06),y
         and     #$70            ; bits 4-6
         cmp     #$10            ; $10 = system
@@ -9795,9 +9825,9 @@ L6227:  sta     buf3len
         lda     ($06),y
         and     #$0F
         beq     L6276
-        ldy     #$02
+        ldy     #icon_entry_offset_type
         lda     ($06),y
-        and     #$7F
+        and     #$7F            ; clear high bit
         sta     ($06),y
         and     #$0F
         sta     selected_window_index
@@ -10140,27 +10170,28 @@ L66F2:  dex
         MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
         rts
 
-L670C:  lda     #$01
+L670C:  lda     #MGTK::disableitem_disable
         sta     disableitem_params::disable
-        lda     #$02
+        lda     #menu_id_file
         sta     disableitem_params::menu_id
-        lda     #$03
-        jsr     L673A
-        lda     #$05
+        lda     #3              ; > Open
+        jsr     disable_menu_item
+        lda     #menu_id_special
         sta     disableitem_params::menu_id
-        lda     #$07
-        jsr     L673A
-        lda     #$08
-        jsr     L673A
-        lda     #$0A
-        jsr     L673A
-        lda     #$0B
-        jsr     L673A
-        lda     #$0D
-        jsr     L673A
+        lda     #7              ; > Lock
+        jsr     disable_menu_item
+        lda     #8              ; > Unlock
+        jsr     disable_menu_item
+        lda     #10             ; > Get Info
+        jsr     disable_menu_item
+        lda     #11             ; > Get Size
+        jsr     disable_menu_item
+        lda     #13             ; > Rename Icon
+        jsr     disable_menu_item
         rts
 
-L673A:  sta     disableitem_params::menu_item
+disable_menu_item:
+        sta     disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
         rts
 
@@ -10486,11 +10517,11 @@ L6AA7:  stx     bufnum
         lda     LE6BE
         jsr     file_address_lookup
         stax    $06
-        ldy     #$02
+        ldy     #icon_entry_offset_type
         lda     ($06),y
-        ora     #$80
+        ora     #$80            ; set high bit
         sta     ($06),y
-        ldy     #$02
+        ldy     #icon_entry_offset_type
         lda     ($06),y
         and     #$0F
         sta     getwinport_params2::window_id
@@ -10564,11 +10595,11 @@ L6B68:  lda     #$01
         lda     LE6BE
         jsr     file_address_lookup
         stax    $06
-        ldy     #$02
+        ldy     #icon_entry_offset_type
         lda     ($06),y
         ora     #$80
         sta     ($06),y
-        ldy     #$02
+        ldy     #icon_entry_offset_type
         lda     ($06),y
         and     #$0F
         sta     getwinport_params2::window_id
@@ -11459,12 +11490,12 @@ L7471:  lda     ($06),y
         bne     L7471
         lda     #$20
         sta     ($08),y
-        ldy     #$02
+        ldy     #icon_entry_offset_type
         lda     ($08),y
         and     #$DF
         sta     ($08),y
         jsr     pop_zp_addrs
-        ldy     #$02
+        ldy     #icon_entry_offset_type
         lda     ($06),y
         and     #$0F
         bne     L74D3
@@ -11620,7 +11651,7 @@ L75A3:  sta     ($06),y
         lda     LE6BE
         jsr     file_address_lookup
         stax    $06
-        ldy     #$02
+        ldy     #icon_entry_offset_type
         lda     ($06),y
         and     #$0F
         beq     L75FA
@@ -11890,9 +11921,9 @@ L7862:  lda     L762A
         inc     L762B
 L7870:  lda     bufnum
         ora     L7624
-        ldy     #$02
+        ldy     #icon_entry_offset_type
         sta     ($08),y
-        ldy     #$07
+        ldy     #icon_entry_offset_iconbits
         lda     L7622
         sta     ($08),y
         iny
@@ -12213,7 +12244,7 @@ L7C36:  tax
         lda     buf3,x
         jsr     file_address_lookup
         stax    $06
-        ldy     #$02
+        ldy     #icon_entry_offset_type
         lda     ($06),y
         and     #$0F
         cmp     L7D5C
@@ -13920,8 +13951,8 @@ use_floppy140_icon:
         sta     ($06),y
 
 selected_device_icon:
-        ldy     #$02
-        lda     #$00
+        ldy     #icon_entry_offset_type
+        lda     #0
         sta     ($06),y
         inc     device_num
         lda     device_num
@@ -14004,7 +14035,7 @@ L8B3E:  lda     #$00
 L8B43:  lda     LE6BE
         jsr     file_address_lookup
         stax    $06
-        ldy     #$02
+        ldy     #icon_entry_offset_type
         lda     ($06),y
         and     #$7F
         sta     ($06),y
@@ -14484,7 +14515,7 @@ L8FA1:  jsr     L8FE1
 L8FA7:  asl     a
         tay
         copy16  file_address_table,y, $06
-        ldy     #$02
+        ldy     #icon_entry_offset_type
         lda     ($06),y
         rts
 
@@ -17839,7 +17870,7 @@ LAFB9:  lda     winfoF
 
 LAFE9:  addr_jump LAFF8, desktop_aux::str_no_label
 
-LAFF0:  ldy     #$02
+LAFF0:  ldy     #2
         lda     ($06),y
         tax
         dey
@@ -19528,10 +19559,10 @@ L092F:  lda     #0
         sta     buf3
         jsr     desktop_main::file_address_lookup
         stax    $06
-        ldy     #$02
-        lda     #$70
+        ldy     #icon_entry_offset_type
+        lda     #$70            ; $70 is Trash Can
         sta     ($06),y
-        ldy     #$07
+        ldy     #icon_entry_offset_iconbits
         lda     #<desktop_aux::trash_icon
         sta     ($06),y
         iny

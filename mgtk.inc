@@ -518,6 +518,7 @@ zp_preserve        := 1<<7
 ;;; Used in various state blocks
 colormask_and      := $FF
 colormask_or       := $00
+textbg_black       := $00
 textbg_white       := $7F
 
 ;;; ==================================================
@@ -577,6 +578,11 @@ menuopt_item_has_mark   := 1 << 2
 menuopt_item_is_checked := 1 << 5
 menuopt_item_is_filler  := 1 << 6
 menuopt_disable_flag    := 1 << 7
+
+disablemenu_enable      := 0
+disablemenu_disable     := 1
+disableitem_enable      := 0
+disableitem_disable     := 1
 
 ;;; Response from InRect/InPoly
 inrect_inside           := $80
