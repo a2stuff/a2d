@@ -90,7 +90,7 @@ path_table := $DFB3     ; window address table
 ;; each entry is 65 bytes long
 ;;      length-prefixed path string (no trailing /)
 
-file_index := $DF22     ; index of selected file (global, not w/in window)
+file_index := $DF22     ; indexes of selected file (global, not w/in window, up to 127)
 file_table := $DD9F     ; file address table
 ;; each entry is 27 bytes long
 ;;      .byte icon      icon index

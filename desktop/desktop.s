@@ -194,7 +194,7 @@ L8672:  pha
 L867B:  lda     online_params_buffer
         beq     L8672
         jsr     $8388      ; into dynamically loaded code???
-        jsr     DESKTOP_FIND_SPACE ; AUX > MAIN call???
+        jsr     DESKTOP_ALLOC_ICON ; AUX > MAIN call???
         ldy     L8738
         sta     $D464,y
         asl     a
@@ -290,7 +290,6 @@ L8737:  .byte   $60             ; file type ???
 L8738:  .byte   $04
 L8739:  .byte   $00,$00,$00,$00
 
-        ;; Desktop icon placements?
 L873D:  DEFINE_POINT 500, 16
         DEFINE_POINT 500, 41
         DEFINE_POINT 500, 66
@@ -4199,7 +4198,7 @@ addr:   .addr   0
 ;;; Find first 0 in AUX $1F80 ... $1F7F; if present,
 ;;; mark it 1 and return index+1 in A
 
-.proc DESKTOP_FIND_SPACE
+.proc DESKTOP_ALLOC_ICON
         sta     RAMRDON
         sta     RAMWRTON
         ldx     #0
@@ -4225,7 +4224,7 @@ loop:   lda     $1F80,x
 ;;; ==================================================
 ;;; Zero the AUX $1F80 table entry in A
 
-.proc DESKTOP_FREE_SPACE
+.proc DESKTOP_FREE_ICON
         tay
         sta     RAMRDON
         sta     RAMWRTON
@@ -5019,6 +5018,7 @@ LDD9E:  .byte   0
         icon_entry_offset_iconbits := 7
         icon_entry_offset_len   := 9
         icon_entry_offset_name  := 10
+        icon_entry_name_bufsize := 17
         icon_entry_size := 27
 
         ;; Icon to File mapping table
@@ -5043,11 +5043,18 @@ file_address_table:
         .assert * = file_table, error, "Entry point mismatch"
         .res    256, 0
 
+;;; Copy from aux memory of icon list for active window (0=desktop)
+
         ;; Used by DESKTOP_COPY_*_BUF
         .assert * = bufnum, error, "Entry point mismatch"
-bufnum: .byte   $00
+
+        ;; which window buffer (see table1, table2) is copied
+bufnum: .byte   0
+        ;; number of icons in copied window
 buf3len:.byte   0
+        ;; list of icons in copied window
 buf3:   .res    127, 0
+
 
 selected_window_index: ; index of selected window (used to get prefix)
         .assert * = path_index, error, "Entry point mismatch"
@@ -5402,6 +5409,11 @@ LEBFC:  .byte   0               ; flag of some sort ???
 point14: DEFINE_POINT 0, 0
 
         ;; Used by DESKTOP_COPY_*_BUF
+
+        ;; Each buffer is a list of icons in each window (0=desktop)
+        ;; table1 = start of buffer = icon count
+        ;; table2 = first entry in buffer (length = 127)
+
 table1: .addr   $1B00,$1B80,$1C00,$1C80,$1D00,$1D80,$1E00,$1E80,$1F00
 table2: .addr   $1B01,$1B81,$1C01,$1C81,$1D01,$1D81,$1E01,$1E81,$1F01
 
@@ -5842,7 +5854,7 @@ L4051:  cpx     buf3len
         inx
         jmp     L4051
 
-L4069:  lda     #$00
+L4069:  lda     #0
         sta     bufnum
         jsr     DESKTOP_COPY_FROM_BUF
         lda     #$00
@@ -5921,7 +5933,7 @@ L4113:  MGTK_RELAY_CALL MGTK::BeginUpdate, event_params+1
         MGTK_RELAY_CALL MGTK::EndUpdate
         rts
 
-L412B:  lda     #$00
+L412B:  lda     #0
         sta     bufnum
         jsr     DESKTOP_COPY_TO_BUF
         lda     L40F0
@@ -7566,7 +7578,7 @@ L4E78:  jsr     clear_selection
 L4EA5:  cpx     buf3len
         beq     L4EB4
         lda     buf3,x
-        jsr     DESKTOP_FREE_SPACE
+        jsr     DESKTOP_FREE_ICON
         inx
         jmp     L4EA5
 
@@ -8087,7 +8099,7 @@ L5302:  DESKTOP_RELAY_CALL DT_CLOSE_WINDOW, active_window_id
 L5320:  cpx     buf3len
         beq     L5334
         lda     buf3,x
-        jsr     DESKTOP_FREE_SPACE
+        jsr     DESKTOP_FREE_ICON
         lda     #$00
         sta     buf3,x
         inx
@@ -8861,7 +8873,7 @@ L5916:  lda     buf3,x
         sta     buf3,x
         DESKTOP_RELAY_CALL $04, LE22F
         lda     LE22F
-        jsr     DESKTOP_FREE_SPACE
+        jsr     DESKTOP_FREE_ICON
         dec     buf3len
         dec     LDD9E
         pla
@@ -9002,7 +9014,7 @@ L5A4C:  jsr     redraw_windows_and_desktop
         jsr     L8AF4
         dec     LDD9E
         lda     LE22F
-        jsr     DESKTOP_FREE_SPACE
+        jsr     DESKTOP_FREE_ICON
         jsr     reset_grafport3
         DESKTOP_RELAY_CALL $04, LE22F
 L5A7F:  lda     buf3len
@@ -9799,7 +9811,7 @@ L61DC:  lda     active_window_id
 L6206:  cpx     buf3len
         beq     L6215
         lda     buf3,x
-        jsr     DESKTOP_FREE_SPACE
+        jsr     DESKTOP_FREE_ICON
         inx
         jmp     L6206
 
@@ -11620,7 +11632,7 @@ L7569:  ldax    $08
         pla
         lsr     a
         clc
-        adc     #$1B
+        adc     #icon_entry_size
         sta     ($06),y
         iny
         lda     #$00
@@ -11732,7 +11744,7 @@ L767C:  txa
         copy16  $E202,x, $06
         lda     LCBANK2
         lda     LCBANK2
-        ldy     #$00
+        ldy     #0
         lda     ($06),y
         sta     L7764
         lda     LCBANK1
@@ -11817,7 +11829,7 @@ L7764:  .byte   $00,$00,$00
 L7767:  .byte   $14
 
 L7768:  inc     LDD9E
-        jsr     DESKTOP_FIND_SPACE
+        jsr     DESKTOP_ALLOC_ICON
         ldx     buf3len
         inc     buf3len
         sta     buf3,x
@@ -13821,10 +13833,12 @@ L899A:  sta     grafport5::cliprect::x1,x
 
 ;;; ==================================================
 
+gdi_data_buffer := $800
+
 .proc on_line_params
 param_count:    .byte   2
 unit_num:       .byte   0
-data_buffer:    .addr   $800
+data_buffer:    .addr   gdi_data_buffer
 .endproc
 
 .proc get_device_info
@@ -13833,56 +13847,66 @@ data_buffer:    .addr   $800
         and     #$F0
         sta     on_line_params::unit_num
         MLI_RELAY_CALL ON_LINE, on_line_params
-        beq     L89DD
-L89CC:  pha
+        beq     success
+
+retry:  pha
         ldy     device_num
-        lda     #$00
+        lda     #0
         sta     $E1A0,y
         dec     buf3len
         dec     LDD9E
         pla
         rts
 
-L89DD:  lda     L0800
-        and     #$0F
-        bne     L89EA
-        lda     $0801
-        jmp     L89CC
+success:
+        lda     gdi_data_buffer ; dr/slot/name_len
+        and     #$0F            ; mask off name len
+        bne     create_icon
+        lda     gdi_data_buffer+1 ; if name len is zero, second byte is error
+        jmp     retry
 
-L89EA:  jsr     push_zp_addrs
-        jsr     DESKTOP_FIND_SPACE
+create_icon:
+        icon_ptr := $6
+
+        jsr     push_zp_addrs
+        jsr     DESKTOP_ALLOC_ICON
         ldy     device_num
         sta     $E1A0,y
         jsr     file_address_lookup
-        stax    $06
-        ldx     #$00
-        ldy     #$09
-        lda     #$20
-L8A03:  sta     ($06),y
-        iny
-        inx
-        cpx     #$12
-        bne     L8A03
-        ldy     #$09
-        lda     L0800
-        and     #$0F
-        sta     L0800
-        sta     ($06),y
-        addr_call L87BA, $800
-        ldx     #$00
-        ldy     #$0B
-L8A22:  lda     $0801,x
-        sta     ($06),y
-        iny
-        inx
-        cpx     L0800
-        bne     L8A22
-        ldy     #$09
-        lda     ($06),y
-        clc
-        adc     #$02
-        sta     ($06),y
+        stax    icon_ptr
 
+        ;; Fill name with spaces
+        ldx     #0
+        ldy     #icon_entry_offset_len
+        lda     #$20            ; ??? space? shouldn't this be at +1 ?
+:       sta     (icon_ptr),y
+        iny
+        inx
+        cpx     #icon_entry_name_bufsize+1
+        bne     :-
+
+        ;; Copy name, with leading/trailing space
+        ldy     #icon_entry_offset_len
+        lda     gdi_data_buffer
+        and     #$0F
+        sta     gdi_data_buffer
+        sta     (icon_ptr),y
+        addr_call L87BA, gdi_data_buffer ; ???
+        ldx     #0
+        ldy     #icon_entry_offset_name+1 ; past leading space
+:       lda     gdi_data_buffer+1,x
+        sta     (icon_ptr),y
+        iny
+        inx
+        cpx     gdi_data_buffer
+        bne     :-
+        ldy     #icon_entry_offset_len
+        lda     (icon_ptr),y
+        clc
+        adc     #2              ; leading/trailing space
+        sta     (icon_ptr),y
+
+        ;; Figure out icon
         lda     unit_number
         cmp     #$3E            ; ??? Special case? Maybe RamWorks?
         beq     use_ramdisk_icon
@@ -13912,67 +13936,72 @@ L8A22:  lda     $0801,x
         ;; fall through...
 
 use_ramdisk_icon:
-        ldy     #7
+        ldy     #icon_entry_offset_iconbits
         lda     #<desktop_aux::ramdisk_icon
-        sta     ($06),y
+        sta     (icon_ptr),y
         iny
         lda     #>desktop_aux::ramdisk_icon
-        sta     ($06),y
+        sta     (icon_ptr),y
         jmp     selected_device_icon
 
 use_profile_icon:
-        ldy     #7
+        ldy     #icon_entry_offset_iconbits
         lda     #<desktop_aux::profile_icon
-        sta     ($06),y
+        sta     (icon_ptr),y
         iny
         lda     #>desktop_aux::profile_icon
-        sta     ($06),y
+        sta     (icon_ptr),y
         jmp     selected_device_icon
 
 use_floppy_icon:
         cmp     #$B             ; removable / 4 volumes
         bne     use_floppy140_icon
-        ldy     #7
+        ldy     #icon_entry_offset_iconbits
         lda     #<desktop_aux::floppy800_icon
-        sta     ($06),y
+        sta     (icon_ptr),y
         iny
         lda     #>desktop_aux::floppy800_icon
-        sta     ($06),y
+        sta     (icon_ptr),y
         jmp     selected_device_icon
 
 use_floppy140_icon:
         cmp     #DT_DISKII       ; 0 = Disk II
         bne     use_profile_icon ; last chance
-        ldy     #7
+        ldy     #icon_entry_offset_iconbits
         lda     #<desktop_aux::floppy140_icon
-        sta     ($06),y
+        sta     (icon_ptr),y
         iny
         lda     #>desktop_aux::floppy140_icon
-        sta     ($06),y
+        sta     (icon_ptr),y
 
 selected_device_icon:
+        ;; Assign icon type
         ldy     #icon_entry_offset_type
         lda     #0
-        sta     ($06),y
+        sta     (icon_ptr),y
         inc     device_num
+
+        ;; Assign icon coordinates
         lda     device_num
-        asl     a
+        asl     a               ; device num * 4 is coordinates index
         asl     a
         tax
-        ldy     #$03
-L8AA7:  lda     L8AC5,x
-        sta     ($06),y
+        ldy     #icon_entry_offset_iconx
+:       lda     desktop_icon_coords_table,x
+        sta     (icon_ptr),y
         inx
         iny
-        cpy     #$07
-        bne     L8AA7
+        cpy     #icon_entry_offset_iconbits
+        bne     :-
+
+        ;; Assign icon number
         ldx     buf3len
         dex
-        ldy     #$00
-        lda     ($06),y
+        ldy     #icon_entry_offset_index
+        lda     (icon_ptr),y
         sta     buf3,x
         jsr     pop_zp_addrs
-        lda     #$00
+        lda     #0
         rts
 .endproc
 
@@ -13981,12 +14010,18 @@ L8AA7:  lda     L8AC5,x
 unit_number:    .byte   0
 device_num:     .byte   0
 
-L8AC5:  .byte   $00,$00,$00,$00,$EA,$01,$10,$00
-        .byte   $EA,$01,$2D,$00,$EA,$01,$4B,$00
-        .byte   $EA,$01,$67,$00,$EA,$01,$83,$00
-        .byte   $90,$01,$A0,$00,$36,$01,$A0,$00
-        .byte   $DC,$00,$A0,$00,$82,$00,$A0,$00
-        .byte   $28,$00,$A0,$00
+desktop_icon_coords_table:
+        DEFINE_POINT 0,0
+        DEFINE_POINT $1EA,$10
+        DEFINE_POINT $1EA,$2D
+        DEFINE_POINT $1EA,$4B
+        DEFINE_POINT $1EA,$67
+        DEFINE_POINT $1EA,$83
+        DEFINE_POINT $190,$A0
+        DEFINE_POINT $136,$A0
+        DEFINE_POINT $DC,$A0
+        DEFINE_POINT $82,$A0
+        DEFINE_POINT $28,$A0
 
 .proc get_prefix_params
 param_count:    .byte   1
@@ -19526,7 +19561,7 @@ L08DF:  txa
         sta     ($06),y
         lda     $06
         clc
-        adc     #$1B
+        adc     #icon_entry_size
         sta     $06
         bcc     L0903
         inc     $06+1
@@ -19546,15 +19581,16 @@ L090F:  sta     $1F00,x
         inx
         bne     L090F
         sta     RAMWRTOFF
-        jmp     L092F
+        jmp     create_trash_icon
 
-L0927:  PASCAL_STRING " Trash "
-L092F:  lda     #0
+trash_name:  PASCAL_STRING " Trash "
+create_trash_icon:
+        lda     #0
         sta     bufnum
         lda     #1
         sta     buf3len
         sta     LDD9E
-        jsr     DESKTOP_FIND_SPACE
+        jsr     DESKTOP_ALLOC_ICON
         sta     LEBFB
         sta     buf3
         jsr     desktop_main::file_address_lookup
@@ -19570,13 +19606,13 @@ L092F:  lda     #0
         sta     ($06),y
         iny
         ldx     #$00
-L0960:  lda     L0927,x
+L0960:  lda     trash_name,x
         sta     ($06),y
         iny
         inx
-        cpx     L0927
+        cpx     trash_name
         bne     L0960
-        lda     L0927,x
+        lda     trash_name,x
         sta     ($06),y
         lda     DEVCNT
         sta     L0A01
