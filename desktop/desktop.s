@@ -4237,7 +4237,7 @@ loop:   lda     $1F80,x
 .endproc
 
 ;;; ==================================================
-;;; Copy data to/from buffers (see bufnum / buf3 / table1/2) ???
+;;; Copy data to/from buffers (see cached_window_id / cached_window_icon_list / window_icon_count_table/2) ???
 
 .proc DESKTOP_COPY_BUF_IMPL
         ptr := $6
@@ -4252,48 +4252,48 @@ to:
 :       sta     flag
         jsr     desktop_main_push_zp_addrs
 
-        lda     bufnum
+        lda     cached_window_id
         asl     a               ; * 2
         tax
-        copy16  table1,x, ptr
+        copy16  window_icon_count_table,x, ptr
 
         sta     RAMRDON
         sta     RAMWRTON
         bit     flag
         bpl     set_length
 
-        ;; assign length from buf3
-        lda     buf3len
+        ;; assign length from cached_window_icon_list
+        lda     cached_window_icon_count
         ldy     #0
         sta     (ptr),y
         jmp     set_copy_ptr
 
-        ;; assign length to buf3
+        ;; assign length to cached_window_icon_list
 set_length:
         ldy     #0
         lda     (ptr),y
-        sta     buf3len
+        sta     cached_window_icon_count
 
 set_copy_ptr:
-        copy16  table2,x, ptr
+        copy16  window_icon_list_table,x, ptr
         bit     flag
         bmi     copy_from
 
-        ;; copy into buf3
+        ;; copy into cached_window_icon_list
         ldy     #0              ; flag clear...
-:       cpy     buf3len
+:       cpy     cached_window_icon_count
         beq     done
         lda     (ptr),y
-        sta     buf3,y
+        sta     cached_window_icon_list,y
         iny
         jmp     :-
 
-        ;; copy from buf3
+        ;; copy from cached_window_icon_list
 copy_from:
         ldy     #0
-:       cpy     buf3len
+:       cpy     cached_window_icon_count
         beq     done
-        lda     buf3,y
+        lda     cached_window_icon_list,y
         sta     (ptr),y
         iny
         jmp     :-
@@ -5046,14 +5046,14 @@ file_address_table:
 ;;; Copy from aux memory of icon list for active window (0=desktop)
 
         ;; Used by DESKTOP_COPY_*_BUF
-        .assert * = bufnum, error, "Entry point mismatch"
+        .assert * = cached_window_id, error, "Entry point mismatch"
 
-        ;; which window buffer (see table1, table2) is copied
-bufnum: .byte   0
+        ;; which window buffer (see window_icon_count_table, window_icon_list_table) is copied
+cached_window_id: .byte   0
         ;; number of icons in copied window
-buf3len:.byte   0
+cached_window_icon_count:.byte   0
         ;; list of icons in copied window
-buf3:   .res    127, 0
+cached_window_icon_list:   .res    127, 0
 
 
 selected_window_index: ; index of selected window (used to get prefix)
@@ -5411,11 +5411,18 @@ point14: DEFINE_POINT 0, 0
         ;; Used by DESKTOP_COPY_*_BUF
 
         ;; Each buffer is a list of icons in each window (0=desktop)
-        ;; table1 = start of buffer = icon count
-        ;; table2 = first entry in buffer (length = 127)
+        ;; window_icon_count_table = start of buffer = icon count
+        ;; window_icon_list_table = first entry in buffer (length = 127)
 
-table1: .addr   $1B00,$1B80,$1C00,$1C80,$1D00,$1D80,$1E00,$1E80,$1F00
-table2: .addr   $1B01,$1B81,$1C01,$1C81,$1D01,$1D81,$1E01,$1E81,$1F01
+window_icon_count_table:
+        .repeat 9,i
+        .addr   $1B00 + $80 * i
+        .endrepeat
+
+window_icon_list_table:
+        .repeat 9,i
+        .addr   $1B00 + $80 * i + 1
+        .endrepeat
 
 active_window_id:
         .byte   $00
@@ -5841,11 +5848,11 @@ L4042:  cli
         lda     LCBANK1
         jsr     L4530
         ldx     #$00
-L4051:  cpx     buf3len
+L4051:  cpx     cached_window_icon_count
         beq     L4069
         txa
         pha
-        lda     buf3,x
+        lda     cached_window_icon_list,x
         jsr     file_address_lookup
         ldy     #$01
         jsr     DESKTOP_RELAY
@@ -5855,7 +5862,7 @@ L4051:  cpx     buf3len
         jmp     L4051
 
 L4069:  lda     #0
-        sta     bufnum
+        sta     cached_window_id
         jsr     DESKTOP_COPY_FROM_BUF
         lda     #$00
         sta     LD2A9
@@ -5934,7 +5941,7 @@ L4113:  MGTK_RELAY_CALL MGTK::BeginUpdate, event_params+1
         rts
 
 L412B:  lda     #0
-        sta     bufnum
+        sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         lda     L40F0
         sta     active_window_id
@@ -5954,11 +5961,11 @@ L4153:  lda     event_params+1
         rts
 
 L415B:  sta     active_window_id
-        sta     bufnum
+        sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         lda     #$80
         sta     L4152
-        lda     bufnum
+        lda     cached_window_id
         sta     getwinport_params2::window_id
         jsr     L4505
         jsr     L78EF
@@ -5996,7 +6003,7 @@ L415B:  sta     active_window_id
         dex
         lda     grafport2,x
         sta     ($06),y
-L41CB:  ldx     bufnum
+L41CB:  ldx     cached_window_id
         dex
         lda     win_buf_table,x
         bpl     L41E2
@@ -6006,7 +6013,7 @@ L41CB:  ldx     bufnum
         lda     active_window_id
         jmp     L8874
 
-L41E2:  lda     bufnum
+L41E2:  lda     cached_window_id
         sta     getwinport_params2::window_id
         jsr     L44F2
         jsr     L6E52
@@ -6018,10 +6025,10 @@ L41F0:  lda     grafport2::cliprect,x
         lda     #$00
         sta     L4241
 L41FE:  lda     L4241
-        cmp     buf3len
+        cmp     cached_window_icon_count
         beq     L4227
         tax
-        lda     buf3,x
+        lda     cached_window_icon_list,x
         sta     LE22F
         DESKTOP_RELAY_CALL DT_ICON_IN_RECT, LE22F
         beq     L4221
@@ -6031,7 +6038,7 @@ L4221:  inc     L4241
 
 L4227:  lda     #$00
         sta     L4152
-        lda     bufnum
+        lda     cached_window_id
         sta     getwinport_params2::window_id
         jsr     L44F2
         jsr     L6E6E
@@ -6353,11 +6360,11 @@ L445D:  jsr     clear_selection
 L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_params_window_id
         lda     findwindow_params_window_id
         sta     active_window_id
-        sta     bufnum
+        sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         jsr     L6C19
         lda     #$00
-        sta     bufnum
+        sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         lda     #$00
         sta     checkitem_params::check
@@ -7563,7 +7570,7 @@ L4E71:  .byte   0
 L4E78:  jsr     clear_selection
         dec     $EC2E
         lda     active_window_id
-        sta     bufnum
+        sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         ldx     active_window_id
         dex
@@ -7572,28 +7579,28 @@ L4E78:  jsr     clear_selection
         DESKTOP_RELAY_CALL DT_CLOSE_WINDOW, active_window_id
         lda     LDD9E
         sec
-        sbc     buf3len
+        sbc     cached_window_icon_count
         sta     LDD9E
         ldx     #$00
-L4EA5:  cpx     buf3len
+L4EA5:  cpx     cached_window_icon_count
         beq     L4EB4
-        lda     buf3,x
+        lda     cached_window_icon_list,x
         jsr     DESKTOP_FREE_ICON
         inx
         jmp     L4EA5
 
 L4EB4:  ldx     #$00
         txa
-L4EB7:  sta     buf3,x
-        cpx     buf3len
+L4EB7:  sta     cached_window_icon_list,x
+        cpx     cached_window_icon_count
         beq     L4EC3
         inx
         jmp     L4EB7
 
-L4EC3:  sta     buf3len
+L4EC3:  sta     cached_window_icon_count
         jsr     DESKTOP_COPY_FROM_BUF
         lda     #$00
-        sta     bufnum
+        sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         MGTK_RELAY_CALL MGTK::CloseWindow, active_window_id
         ldx     active_window_id
@@ -7844,17 +7851,17 @@ L50FF:  dex
         rts
 
 L5106:  lda     active_window_id
-        sta     bufnum
+        sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         ldx     #$00
         txa
-L5112:  cpx     buf3len
+L5112:  cpx     cached_window_icon_count
         beq     L511E
-        sta     buf3,x
+        sta     cached_window_icon_list,x
         inx
         jmp     L5112
 
-L511E:  sta     buf3len
+L511E:  sta     cached_window_icon_count
         lda     #$00
         ldx     active_window_id
         dex
@@ -7895,10 +7902,10 @@ L516D:  lda     L51EB,x
         lda     #$00
         sta     L51EF
 L518D:  lda     L51EF
-        cmp     buf3len
+        cmp     cached_window_icon_count
         beq     L51A7
         tax
-        lda     buf3,x
+        lda     cached_window_icon_list,x
         jsr     file_address_lookup
         ldy     #$01
         jsr     DESKTOP_RELAY
@@ -7925,7 +7932,7 @@ L51C0:  ldx     L51EF
         dec     L51EF
         bne     L51C0
 L51E3:  lda     #$00
-        sta     bufnum
+        sta     cached_window_id
         jmp     DESKTOP_COPY_TO_BUF
 
 L51EB:  .word   0
@@ -7940,7 +7947,7 @@ L51F0:  ldx     active_window_id
         dex
         sta     win_buf_table,x
         lda     active_window_id
-        sta     bufnum
+        sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         jsr     L7D9C
         jsr     DESKTOP_COPY_FROM_BUF
@@ -8089,25 +8096,25 @@ L52D7:  jsr     update_view_menu_check
 
 L5302:  DESKTOP_RELAY_CALL DT_CLOSE_WINDOW, active_window_id
         lda     active_window_id
-        sta     bufnum
+        sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         lda     LDD9E
         sec
-        sbc     buf3len
+        sbc     cached_window_icon_count
         sta     LDD9E
         ldx     #$00
-L5320:  cpx     buf3len
+L5320:  cpx     cached_window_icon_count
         beq     L5334
-        lda     buf3,x
+        lda     cached_window_icon_list,x
         jsr     DESKTOP_FREE_ICON
         lda     #$00
-        sta     buf3,x
+        sta     cached_window_icon_list,x
         inx
         jmp     L5320
 
 L5334:  jsr     DESKTOP_COPY_FROM_BUF
         lda     #$00
-        sta     bufnum
+        sta     cached_window_id
         jmp     DESKTOP_COPY_TO_BUF
 
 ;;; ==================================================
@@ -8293,7 +8300,7 @@ L545A:  tax
         jmp     L54C5
 
 L5464:  lda     active_window_id
-        sta     bufnum
+        sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         lda     active_window_id
         jsr     window_lookup
@@ -8305,11 +8312,11 @@ L5479:  lda     ($06),y
         cpy     #$24
         bne     L5479
         ldx     #$00
-L5485:  cpx     buf3len
+L5485:  cpx     cached_window_icon_count
         beq     L54BD
         txa
         pha
-        lda     buf3,x
+        lda     cached_window_icon_list,x
         sta     LE22F
         jsr     L8915
         DESKTOP_RELAY_CALL DT_ICON_IN_RECT, LE22F
@@ -8321,7 +8328,7 @@ L5485:  cpx     buf3len
         pla
         pha
         tax
-        lda     buf3,x
+        lda     cached_window_icon_list,x
         ldx     $1800
         sta     $1801,x
         inc     $1800
@@ -8331,19 +8338,19 @@ L54B7:  pla
         jmp     L5485
 
 L54BD:  lda     #$00
-        sta     bufnum
+        sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
 L54C5:  ldx     $1800
         ldy     #$00
-L54CA:  lda     buf3,y
+L54CA:  lda     cached_window_icon_list,y
         sta     $1801,x
         iny
         inx
-        cpy     buf3len
+        cpy     cached_window_icon_count
         bne     L54CA
         lda     $1800
         clc
-        adc     buf3len
+        adc     cached_window_icon_count
         sta     $1800
         lda     #$00
         sta     L544A
@@ -8521,19 +8528,19 @@ L566A:  ldx     active_window_id
         rts
 
 L5676:  lda     active_window_id
-        sta     bufnum
+        sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
-        lda     buf3len
+        lda     cached_window_icon_count
         bne     L5687
         jmp     L56F0
 
-L5687:  ldx     buf3len
+L5687:  ldx     cached_window_icon_count
         dex
-L568B:  lda     buf3,x
+L568B:  lda     cached_window_icon_list,x
         sta     selected_file_index,x
         dex
         bpl     L568B
-        lda     buf3len
+        lda     cached_window_icon_count
         sta     is_file_selected
         lda     active_window_id
         sta     selected_window_index
@@ -8564,7 +8571,7 @@ L56E3:  dec     L56F8
         beq     L56F0
         jsr     reset_grafport3
 L56F0:  lda     #$00
-        sta     bufnum
+        sta     cached_window_id
         jmp     DESKTOP_COPY_TO_BUF
 
 L56F8:  .byte   0
@@ -8687,7 +8694,7 @@ loop:   jsr     get_event
         bne     :+
 
 done:   lda     #$00
-        sta     bufnum
+        sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         rts
 
@@ -8726,7 +8733,7 @@ vertical:
 ;;; ==================================================
 
 L5803:  lda     active_window_id
-        sta     bufnum
+        sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         ldx     active_window_id
         dex
@@ -8856,25 +8863,25 @@ L58E2:  lda     active_window_id
 .proc cmd_check_drives
         lda     #$00
         sta     L599F
-        sta     bufnum
+        sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         jsr     cmd_close_all
         jsr     clear_selection
-        ldx     buf3len
+        ldx     cached_window_icon_count
         dex
-L5916:  lda     buf3,x
+L5916:  lda     cached_window_icon_list,x
         cmp     LEBFB
         beq     L5942
         txa
         pha
-        lda     buf3,x
+        lda     cached_window_icon_list,x
         sta     LE22F
         lda     #$00
-        sta     buf3,x
+        sta     cached_window_icon_list,x
         DESKTOP_RELAY_CALL $04, LE22F
         lda     LE22F
         jsr     DESKTOP_FREE_ICON
-        dec     buf3len
+        dec     cached_window_icon_count
         dec     LDD9E
         pla
         tax
@@ -8883,7 +8890,7 @@ L5942:  dex
         ldy     #$00
         sty     L599E
 L594A:  ldy     L599E
-        inc     buf3len
+        inc     cached_window_icon_count
         inc     LDD9E
         lda     #$00
         sta     $E1A0,y
@@ -8899,7 +8906,7 @@ L5967:  inc     L599E
         beq     L594A
         bcc     L594A
         ldx     #$00
-L5976:  cpx     buf3len
+L5976:  cpx     cached_window_icon_count
         bne     L5986
         lda     L599F
         beq     L5983
@@ -8908,7 +8915,7 @@ L5983:  jmp     DESKTOP_COPY_FROM_BUF
 
 L5986:  txa
         pha
-        lda     buf3,x
+        lda     cached_window_icon_list,x
         cmp     LEBFB
         beq     L5998
         jsr     file_address_lookup
@@ -8931,7 +8938,7 @@ L59A4:  lda     #$80
 L59A8:  lda     #$C0
 L59AA:  sta     L5AD0
         lda     #$00
-        sta     bufnum
+        sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         bit     L5AD0
         bpl     L59EA
@@ -9003,7 +9010,7 @@ L5A43:  jsr     L61DC
 L5A4C:  jsr     redraw_windows_and_desktop
         jsr     clear_selection
         lda     #$00
-        sta     bufnum
+        sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         lda     menu_click_params::item_num
         tay
@@ -9017,9 +9024,9 @@ L5A4C:  jsr     redraw_windows_and_desktop
         jsr     DESKTOP_FREE_ICON
         jsr     reset_grafport3
         DESKTOP_RELAY_CALL $04, LE22F
-L5A7F:  lda     buf3len
+L5A7F:  lda     cached_window_icon_count
         sta     L5AC6
-        inc     buf3len
+        inc     cached_window_icon_count
         inc     LDD9E
         pla
         tay
@@ -9037,12 +9044,12 @@ L5A7F:  lda     buf3len
         jsr     DESKTOP_SHOW_ALERT0
         rts
 
-L5AA9:  lda     buf3len
+L5AA9:  lda     cached_window_icon_count
         cmp     L5AC6
         beq     L5AC0
-        ldx     buf3len
+        ldx     cached_window_icon_count
         dex
-        lda     buf3,x
+        lda     cached_window_icon_list,x
         jsr     file_address_lookup
         ldy     #$01
         jsr     DESKTOP_RELAY
@@ -9105,7 +9112,7 @@ L5B1B:  .byte   0
 
 .proc handle_client_click
         lda     active_window_id
-        sta     bufnum
+        sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         ldx     active_window_id
         dex
@@ -9224,7 +9231,7 @@ pgrt:   jsr     L64B0
 done_client_click:
         jsr     DESKTOP_COPY_FROM_BUF
         lda     #$00
-        sta     bufnum
+        sta     cached_window_id
         jmp     DESKTOP_COPY_TO_BUF
 .endproc
 
@@ -9240,7 +9247,7 @@ done_client_click:
 :       jsr     L5C54
         jsr     DESKTOP_COPY_FROM_BUF
         lda     #$00
-        sta     bufnum
+        sta     cached_window_id
         jmp     DESKTOP_COPY_TO_BUF
 .endproc
 
@@ -9416,7 +9423,7 @@ L5DC4:  txa
         jsr     reset_grafport3
 L5DEC:  jsr     DESKTOP_COPY_FROM_BUF
         lda     #$00
-        sta     bufnum
+        sta     cached_window_id
         jmp     DESKTOP_COPY_TO_BUF
 
 L5DF7:  ldx     $E256
@@ -9524,7 +9531,7 @@ L5ECB:  lda     ($06),y
         jsr     cmd_view_by_icon::L5106
         jsr     DESKTOP_COPY_FROM_BUF
         lda     active_window_id
-        sta     bufnum
+        sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         lda     active_window_id
         sta     getwinport_params2::window_id
@@ -9537,7 +9544,7 @@ L5ECB:  lda     ($06),y
         sta     menu_click_params::item_num
         jsr     update_view_menu_check
         lda     #$00
-        sta     bufnum
+        sta     cached_window_id
         jmp     DESKTOP_COPY_TO_BUF
 
 L5F0A:  .byte   0
@@ -9586,13 +9593,13 @@ L5F6B:  jsr     peek_event
         beq     L5FC5
         MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
         ldx     #$00
-L5F80:  cpx     buf3len
+L5F80:  cpx     cached_window_icon_count
         bne     L5F88
         jmp     reset_grafport3
 
 L5F88:  txa
         pha
-        lda     buf3,x
+        lda     cached_window_icon_list,x
         sta     LE22F
         jsr     L8915
         DESKTOP_RELAY_CALL DT_ICON_IN_RECT, LE22F
@@ -9725,20 +9732,20 @@ L6112:  ldy     #$14
         rts
 
 L6143:  lda     active_window_id
-        sta     bufnum
+        sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         ldx     #$00
-L614E:  cpx     buf3len
+L614E:  cpx     cached_window_icon_count
         bne     L6161
         jsr     DESKTOP_COPY_FROM_BUF
         lda     #$00
-        sta     bufnum
+        sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         jmp     L6196
 
 L6161:  txa
         pha
-        lda     buf3,x
+        lda     cached_window_icon_list,x
         jsr     file_address_lookup
         stax    $06
         ldy     #$03
@@ -9777,13 +9784,13 @@ handle_resize_click:
         MGTK_RELAY_CALL MGTK::GrowWindow, event_params
         jsr     redraw_windows_and_desktop
         lda     active_window_id
-        sta     bufnum
+        sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         jsr     L6E52
         jsr     L6DB1
         jsr     L6E6E
         lda     #$00
-        sta     bufnum
+        sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         jmp     reset_grafport3
 
@@ -9795,7 +9802,7 @@ handle_close_click:
         rts
 
 L61DC:  lda     active_window_id
-        sta     bufnum
+        sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         jsr     clear_selection
         ldx     active_window_id
@@ -9804,13 +9811,13 @@ L61DC:  lda     active_window_id
         bmi     L6215
         lda     LDD9E
         sec
-        sbc     buf3len
+        sbc     cached_window_icon_count
         sta     LDD9E
         DESKTOP_RELAY_CALL DT_CLOSE_WINDOW, active_window_id
         ldx     #$00
-L6206:  cpx     buf3len
+L6206:  cpx     cached_window_icon_count
         beq     L6215
-        lda     buf3,x
+        lda     cached_window_icon_list,x
         jsr     DESKTOP_FREE_ICON
         inx
         jmp     L6206
@@ -9818,13 +9825,13 @@ L6206:  cpx     buf3len
 L6215:  dec     $EC2E
         ldx     #$00
         txa
-L621B:  sta     buf3,x
-        cpx     buf3len
+L621B:  sta     cached_window_icon_list,x
+        cpx     cached_window_icon_count
         beq     L6227
         inx
         jmp     L621B
 
-L6227:  sta     buf3len
+L6227:  sta     cached_window_icon_count
         jsr     DESKTOP_COPY_FROM_BUF
         MGTK_RELAY_CALL MGTK::CloseWindow, active_window_id
         ldx     active_window_id
@@ -9866,7 +9873,7 @@ L6276:  ldx     active_window_id
         sta     win_buf_table,x
         MGTK_RELAY_CALL MGTK::FrontWindow, active_window_id
         lda     #$00
-        sta     bufnum
+        sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         lda     #$00
         sta     checkitem_params::check
@@ -10382,7 +10389,7 @@ L68E4:  jsr     peek_event
         beq     L6932
         MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
         ldx     #$00
-L68F9:  cpx     buf3len
+L68F9:  cpx     cached_window_icon_count
         bne     L6904
         lda     #$00
         sta     selected_window_index
@@ -10390,7 +10397,7 @@ L68F9:  cpx     buf3len
 
 L6904:  txa
         pha
-        lda     buf3,x
+        lda     cached_window_icon_list,x
         sta     LE22F
         DESKTOP_RELAY_CALL DT_ICON_IN_RECT, LE22F
         beq     L692C
@@ -10524,7 +10531,7 @@ L6AA0:  inx
         bne     L6AA7
         rts
 
-L6AA7:  stx     bufnum
+L6AA7:  stx     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         lda     LE6BE
         jsr     file_address_lookup
@@ -10557,13 +10564,13 @@ L6AF6:  cmp     $E1F2,x
         dex
         bpl     L6AF6
         jsr     L7054
-L6B01:  MGTK_RELAY_CALL MGTK::SelectWindow, bufnum
-        lda     bufnum
+L6B01:  MGTK_RELAY_CALL MGTK::SelectWindow, cached_window_id
+        lda     cached_window_id
         sta     active_window_id
         jsr     L6C19
         jsr     redraw_windows
         lda     #$00
-        sta     bufnum
+        sta     cached_window_id
         jmp     DESKTOP_COPY_TO_BUF
 
 L6B1E:  lda     $EC2E
@@ -10584,10 +10591,10 @@ L6B31:  lda     LEC26,x
 L6B3A:  lda     LE6BE
         sta     LEC26,x
         inx
-        stx     bufnum
+        stx     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         inc     $EC2E
-        ldx     bufnum
+        ldx     cached_window_id
         dex
         lda     #$00
         sta     win_buf_table,x
@@ -10629,7 +10636,7 @@ L6BA1:  DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, LE6BE
         jsr     L8893
         jsr     reset_grafport3
 L6BB8:  jsr     L744B
-        lda     bufnum
+        lda     cached_window_id
         jsr     window_lookup
         ldy     #$38
         jsr     MGTK_RELAY
@@ -10641,23 +10648,23 @@ L6BB8:  jsr     L744B
         lda     #$00
         sta     L6C0E
 L6BDA:  lda     L6C0E
-        cmp     buf3len
+        cmp     cached_window_icon_count
         beq     L6BF4
         tax
-        lda     buf3,x
+        lda     cached_window_icon_list,x
         jsr     file_address_lookup
         ldy     #$01
         jsr     DESKTOP_RELAY
         inc     L6C0E
         jmp     L6BDA
 
-L6BF4:  lda     bufnum
+L6BF4:  lda     cached_window_id
         sta     active_window_id
         jsr     L6DB1
         jsr     L6E6E
         jsr     DESKTOP_COPY_FROM_BUF
         lda     #$00
-        sta     bufnum
+        sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         jmp     reset_grafport3
 
@@ -10665,26 +10672,26 @@ L6C0E:  .byte   0
 L6C0F:  MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
         rts
 
-L6C19:  ldx     bufnum
+L6C19:  ldx     cached_window_id
         dex
         lda     win_buf_table,x
         bmi     L6C25
         jmp     L6CCD
 
 L6C25:  jsr     push_zp_addrs
-        lda     bufnum
+        lda     cached_window_id
         sta     getwinport_params2::window_id
         jsr     L44F2
         bit     L4152
         bmi     L6C39
         jsr     L78EF
-L6C39:  lda     bufnum
+L6C39:  lda     cached_window_id
         sta     getwinport_params2::window_id
         jsr     L4505
         bit     L4152
         bmi     L6C4A
         jsr     L6E8E
-L6C4A:  ldx     bufnum
+L6C4A:  ldx     cached_window_id
         dex
         lda     LEC26,x
         ldx     #$00
@@ -10729,10 +10736,10 @@ L6C8F:  lda     #$10
         lda     #$00
         sta     L6CCC
 L6CB0:  lda     L6CCC
-        cmp     buf3len
+        cmp     cached_window_icon_count
         beq     L6CC5
         tax
-        lda     buf3,x
+        lda     cached_window_icon_list,x
         jsr     L813F
         inc     L6CCC
         jmp     L6CB0
@@ -10742,7 +10749,7 @@ L6CC5:  jsr     reset_grafport3
         rts
 
 L6CCC:  .byte   0
-L6CCD:  lda     bufnum
+L6CCD:  lda     cached_window_id
         sta     getwinport_params2::window_id
         jsr     L44F2
         bit     L4152
@@ -10758,11 +10765,11 @@ L6CE6:  lda     grafport2::cliprect,x
         ldx     #$00
         txa
         pha
-L6CF3:  cpx     buf3len
+L6CF3:  cpx     cached_window_icon_count
         bne     L6D09
         pla
         jsr     reset_grafport3
-        lda     bufnum
+        lda     cached_window_id
         sta     getwinport_params2::window_id
         jsr     L44F2
         jsr     L6E6E
@@ -10770,7 +10777,7 @@ L6CF3:  cpx     buf3len
 
 L6D09:  txa
         pha
-        lda     buf3,x
+        lda     cached_window_icon_list,x
         sta     LE22F
         DESKTOP_RELAY_CALL DT_ICON_IN_RECT, LE22F
         beq     L6D25
@@ -10887,10 +10894,10 @@ L6E48:  MGTK_RELAY_CALL MGTK::ActivateCtl, event_params ; ???
 L6E52:  lda     #$00
         sta     L6E6D
 L6E57:  lda     L6E6D
-        cmp     buf3len
+        cmp     cached_window_icon_count
         beq     L6E6C
         tax
-        lda     buf3,x
+        lda     cached_window_icon_list,x
         jsr     L8915
         inc     L6E6D
         jmp     L6E57
@@ -10901,10 +10908,10 @@ L6E6D:  .byte   0
 L6E6E:  lda     #$00
         sta     L6E89
 L6E73:  lda     L6E89
-        cmp     buf3len
+        cmp     cached_window_icon_count
         beq     L6E88
         tax
-        lda     buf3,x
+        lda     cached_window_icon_list,x
         jsr     L8893
         inc     L6E89
         jmp     L6E73
@@ -11478,7 +11485,7 @@ L7448:  .byte   0
 L7449:  .byte   0
 L744A:  .byte   0
 
-L744B:  lda     bufnum
+L744B:  lda     cached_window_id
         asl     a
         tax
         copy16  $E6BF,x, $08
@@ -11512,7 +11519,7 @@ L7471:  lda     ($06),y
         and     #$0F
         bne     L74D3
         jsr     push_zp_addrs
-        lda     bufnum
+        lda     cached_window_id
         jsr     window_address_lookup
         stax    $08
         lda     $06
@@ -11601,7 +11608,7 @@ L7548:  iny
         sta     $E1B0,x
         cpx     $E1B0
         bne     L7548
-        lda     bufnum
+        lda     cached_window_id
         jsr     window_address_lookup
         stax    $08
         ldy     $E1B0
@@ -11611,11 +11618,11 @@ L7561:  lda     $E1B0,y
         bpl     L7561
 L7569:  ldax    $08
         jsr     L87BA
-        lda     bufnum
+        lda     cached_window_id
         jsr     window_lookup
         stax    $06
         ldy     #$14
-        lda     bufnum
+        lda     cached_window_id
         sec
         sbc     #$01
         asl     a
@@ -11674,14 +11681,14 @@ L75A3:  sta     ($06),y
         tax
         copy16  LEB8B,x, L70BD
         copy16  LEB9B,x, L70BB
-L75FA:  ldx     bufnum
+L75FA:  ldx     cached_window_id
         dex
         txa
         asl     a
         tax
         copy16  L70BD, LEB8B,x
         copy16  L70BB, LEB9B,x
-        lda     bufnum
+        lda     cached_window_id
         jsr     L7635
         rts
 L7620:  .byte   $00
@@ -11708,7 +11715,7 @@ L7635:  pha
         lda     #$00
         beq     L7647
 L763A:  pha
-        ldx     bufnum
+        ldx     cached_window_id
         dex
         lda     LEC26,x
         sta     LE6BE
@@ -11753,7 +11760,7 @@ L767C:  txa
         lda     $06
         bne     L76A4
         inc     $06+1
-L76A4:  lda     bufnum
+L76A4:  lda     cached_window_id
         sta     active_window_id
 L76AA:  lda     L7625
         cmp     L7764
@@ -11830,9 +11837,9 @@ L7767:  .byte   $14
 
 L7768:  inc     LDD9E
         jsr     DESKTOP_ALLOC_ICON
-        ldx     buf3len
-        inc     buf3len
-        sta     buf3,x
+        ldx     cached_window_icon_count
+        inc     cached_window_icon_count
+        sta     cached_window_icon_list,x
         jsr     file_address_lookup
         stax    $08
         lda     LCBANK2
@@ -11900,7 +11907,7 @@ L7805:  lda     L762A,x
         iny
         cpx     #$04
         bne     L7805
-        lda     buf3len
+        lda     cached_window_icon_count
         cmp     L762E
         beq     L781A
         bcs     L7826
@@ -11931,7 +11938,7 @@ L7862:  lda     L762A
         sta     L762A
         bcc     L7870
         inc     L762B
-L7870:  lda     bufnum
+L7870:  lda     cached_window_id
         ora     L7624
         ldy     #icon_entry_offset_type
         sta     ($08),y
@@ -11941,9 +11948,9 @@ L7870:  lda     bufnum
         iny
         lda     L7623
         sta     ($08),y
-        ldx     buf3len
+        ldx     cached_window_icon_count
         dex
-        lda     buf3,x
+        lda     cached_window_icon_list,x
         jsr     L8893
         add16   $06, #$20, $06
         rts
@@ -12014,17 +12021,17 @@ L78EF:  lda     grafport2::cliprect::x1
         MGTK_RELAY_CALL MGTK::MoveTo, point1
         MGTK_RELAY_CALL MGTK::LineTo, point5
         add16 grafport2::cliprect::y1, #$0A, items_label_pos+2
-        lda     buf3len
+        lda     cached_window_icon_count
         ldx     #$00
         jsr     L7AE0
-        lda     buf3len
+        lda     cached_window_icon_count
         cmp     #$02
         bcs     L798A
         dec     str_items       ; remove trailing s
 L798A:  MGTK_RELAY_CALL MGTK::MoveTo, items_label_pos
         jsr     L7AD7
         addr_call draw_text2, str_items
-        lda     buf3len
+        lda     cached_window_icon_count
         cmp     #$02
         bcs     L79A7
         inc     str_items       ; restore trailing s
@@ -12188,11 +12195,11 @@ L7B6F:  sta     L7B63,x
         lda     #$7F
         sta     L7B60
         sta     L7B62
-        ldx     bufnum
+        ldx     cached_window_id
         dex
         lda     win_buf_table,x
         bpl     L7BCB
-        lda     buf3len
+        lda     cached_window_icon_count
         bne     L7BA1
 L7B96:  lda     #$00
         ldx     #$03
@@ -12217,10 +12224,10 @@ L7BA1:  clc
         copy16  #$168, L7B63
         jmp     L7B96
 
-L7BCB:  lda     buf3len
+L7BCB:  lda     cached_window_icon_count
         cmp     #$01
         bne     L7BEF
-        lda     buf3
+        lda     cached_window_icon_list
         jsr     file_address_lookup
         stax    $06
         ldy     #$06
@@ -12234,7 +12241,7 @@ L7BE0:  lda     ($06),y
         jmp     L7BF7
 
 L7BEF:  lda     L7D5B
-        cmp     buf3len
+        cmp     cached_window_icon_count
         bne     L7C36
 L7BF7:  lda     L7B63
         clc
@@ -12253,7 +12260,7 @@ L7C13:  sub16   L7B5F, #$32, L7B5F
         rts
 
 L7C36:  tax
-        lda     buf3,x
+        lda     cached_window_icon_list,x
         jsr     file_address_lookup
         stax    $06
         ldy     #icon_entry_offset_type
@@ -12367,7 +12374,7 @@ L7D9A:  .byte   0
 L7D9B:  .byte   0
 L7D9C:  jmp     L7D9F
 
-L7D9F:  ldx     bufnum
+L7D9F:  ldx     cached_window_id
         dex
         lda     LEC26,x
         ldx     #$00
@@ -12420,7 +12427,7 @@ L7E06:  inc     L0800
 
 L7E0C:  lda     LCBANK1
         lda     LCBANK1
-        ldx     bufnum
+        ldx     cached_window_id
         dex
         lda     win_buf_table,x
         cmp     #$81
@@ -12764,7 +12771,7 @@ L8124:  lda     LCBANK1
 L812B:  lda     LCBANK1
         lda     LCBANK1
         tya
-        sta     buf3,x
+        sta     cached_window_icon_list,x
         lda     LCBANK2
         lda     LCBANK2
         rts
@@ -13853,7 +13860,7 @@ retry:  pha
         ldy     device_num
         lda     #0
         sta     $E1A0,y
-        dec     buf3len
+        dec     cached_window_icon_count
         dec     LDD9E
         pla
         rts
@@ -13995,11 +14002,11 @@ selected_device_icon:
         bne     :-
 
         ;; Assign icon number
-        ldx     buf3len
+        ldx     cached_window_icon_count
         dex
         ldy     #icon_entry_offset_index
         lda     (icon_ptr),y
-        sta     buf3,x
+        sta     cached_window_icon_list,x
         jsr     pop_zp_addrs
         lda     #0
         rts
@@ -14028,23 +14035,23 @@ param_count:    .byte   1
 data_buffer:    .addr   $4824
 .endproc
 
-L8AF4:  ldx     buf3len
+L8AF4:  ldx     cached_window_icon_count
         dex
-L8AF8:  cmp     buf3,x
+L8AF8:  cmp     cached_window_icon_list,x
         beq     L8B01
         dex
         bpl     L8AF8
         rts
 
-L8B01:  lda     buf3+1,x
-        sta     buf3,x
+L8B01:  lda     cached_window_icon_list+1,x
+        sta     cached_window_icon_list,x
         inx
-        cpx     buf3len
+        cpx     cached_window_icon_count
         bne     L8B01
-        dec     buf3len
-        ldx     buf3len
+        dec     cached_window_icon_count
+        ldx     cached_window_icon_count
         lda     #$00
-        sta     buf3,x
+        sta     cached_window_icon_list,x
         rts
 
 L8B19:  jsr     push_zp_addrs
@@ -19586,13 +19593,13 @@ L090F:  sta     $1F00,x
 trash_name:  PASCAL_STRING " Trash "
 create_trash_icon:
         lda     #0
-        sta     bufnum
+        sta     cached_window_id
         lda     #1
-        sta     buf3len
+        sta     cached_window_icon_count
         sta     LDD9E
         jsr     DESKTOP_ALLOC_ICON
         sta     LEBFB
-        sta     buf3
+        sta     cached_window_icon_list
         jsr     desktop_main::file_address_lookup
         stax    $06
         ldy     #icon_entry_offset_type
@@ -20025,7 +20032,7 @@ L0D12:  lda     L0E33
         pha
         tya
         pha
-        inc     buf3len
+        inc     cached_window_icon_count
         inc     LDD9E
         lda     DEVLST,y
         jsr     desktop_main::get_device_info

@@ -22,7 +22,7 @@ The file is broken down into multiple segments:
 * segment 4: main  - A$4000-$BEFF, L$7F00, mark $00A780 (DeskTop)
 * segment 5: main  - A$0800-$0FFF, L$0800, mark $012680 (Initializer)
 * segment 6: main  - A$0290-$03EF, L$0160, mark $012E80 (Invoker)
-* segments dynamically loaded for these actions:
+* overlays dynamically loaded for these actions:
   * disk copy     - A$0800, L$0200, mark $012FE0
   * format/erase  - A$0800, L$1400, mark $0160E0
   * selector      - A$9000, L$1000, mark $0174E0
@@ -106,9 +106,14 @@ main code) are relays, buffers and resources:
 
 Interactive commands including disk copy/format/erase, file
 copy/delete, and Selector add/edit/delete/run all dynamically load
-main memory code segments into one or more of: $800-$1FFF,
+main memory code overlays into one or more of: $800-$1FFF,
 $5000-$6FFF, $7000-$77FF, and $9000-$9FFF. When complete, any original
 code above $4000 is reloaded.
+
+Aux $1B00-$1F7F holds lists of icons, one for the desktop then one for up
+to 8 windows. First byte is a count, up to 127 icon entries. Icon numbers
+map indirectly into a table at $ED00 that holds the type, coordinates, etc.
+Aux $1F80-$1FFF is a map of used/free icon numbers.
 
 ```
        Main               Aux                 ROM
@@ -132,7 +137,7 @@ $BF00 +-------------+    | App Code    |
       |             |    |             |
       |             |    |             |
 $A000 |      +------+    |             |
-      |      | Seg  |    |             |
+      |      | Ovl  |    |             |
       |      |      |    |             |
       |      |      |    |             |
 $9000 |      +------+    |             |
@@ -145,9 +150,9 @@ $851F |             |    +-------------+
       |             |    |             |
       |             |    |             |
 $7800 |      +------+    |             |
-      |      | Seg  |    |             |
+      |      | Ovl  |    |             |
 $7000 |      +------+    |             |
-      |      | Seg  |    |             |
+      |      | Ovl  |    |             |
       |      |      |    |             |
       |      |      |    |             |
       |      |      |    |             |
@@ -170,9 +175,10 @@ $4000 +-------------+    +-------------+
       |             |    |             |
       |             |    |             |
 $2000 +-------------+    +-------------+
-      | Initializer |    | Desk Acc    |
-      | & Desk Acc  |    |             |
-      | & Segments  |    |             |
+      | Initializer |    | Win/Icn Map |
+$1B00 | & Desk Acc  |    +-------------+
+      | & Overlays  |    | Desk Acc    |
+      |             |    |             |
       |             |    |             |
 $0800 +-------------+    +-------------+
       | Text        |    | Text        |
