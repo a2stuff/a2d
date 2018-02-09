@@ -2,6 +2,9 @@
 ;;; Generic Macros
 ;;; ==================================================
 
+.define is_immediate(arg)       (.match (.mid (0, 1, {arg}), #))
+.define is_register(arg)        (.match ({arg}, x) .or .match ({arg}, y))
+
 ;;; ==================================================
 ;;; Pad with zeros to the given address
 
@@ -15,6 +18,12 @@
 .macro addr_call target, addr
         lda     #<addr
         ldx     #>addr
+        jsr     target
+.endmacro
+
+.macro addr_call_indirect target, addr
+        lda     addr
+        ldx     addr+1
         jsr     target
 .endmacro
 
@@ -58,9 +67,6 @@
 
 ;;; ==================================================
 ;;; 16-bit pseudo-ops
-
-.define is_immediate(arg)       (.match (.mid (0, 1, {arg}), #))
-.define is_register(arg)        (.match ({arg}, x) .or .match ({arg}, y))
 
 ;;; Load A,X
 ;;;    ldax #$1234      ; immediate

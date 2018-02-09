@@ -81,27 +81,47 @@ label   := *
 
 ;;; NOTE: Some of these are used by Desk Accessories
 
-;; These are DeskTop internals, but it appears there is no
-;; API for getting the selected file.
+;;; These are DeskTop internals, but it appears there is no
+;;; API for getting the selected file.
 file_selected := $DF21  ; 0 if no selection, 1 otherwise
 
 path_index := $DF20     ; index of selected window (used to get prefix)
 path_table := $DFB3     ; window address table
-;; each entry is 65 bytes long
-;;      length-prefixed path string (no trailing /)
+;;; each entry is 65 bytes long
+;;;      length-prefixed path string (no trailing /)
 
 file_index := $DF22     ; indexes of selected file (global, not w/in window, up to 127)
 file_table := $DD9F     ; file address table
-;; each entry is 27 bytes long
-;;      .byte icon      icon index
-;;      .byte ??
-;;      .byte type/icon (bits 4,5,6 clear = directory; $70=trash, $80=profile, $01=folder, $11=sys, $21=bin, ???)
-;;      .word iconx     (pixels)
-;;      .word icony     (pixels)
-;;      .addr iconbits  (addr of {mapbits, mapwidth, reserved, maprect})
-;;      .byte len       (name length + 2)
-;;      .res  17  name  (name, with a space before and after)
+;;; each entry is 27 bytes long
+;;;      .byte icon      icon index
+;;;      .byte ??
+;;;      .byte type/window_id
+;;;                      (bits 0-3 window_id)
+;;;                      (bits 4,5,6)
+;;;                             000 = directory
+;;;                             001 = system
+;;;                             010 = binary
+;;;                             011 = basic
+;;;                             100 = (unused)
+;;;                             101 = text/generic
+;;;                             110 = (unused)
+;;;                             111 = trash
+;;;                      (bit 7 = open flag)
+;;;      .word iconx     (pixels)
+;;;      .word icony     (pixels)
+;;;      .addr iconbits  (addr of {mapbits, mapwidth, reserved, maprect})
+;;;      .byte len       (name length + 2)
+;;;      .res  17  name  (name, with a space before and after)
 
+icon_entry_open_mask    := %10000000
+icon_entry_type_mask    := %01110000
+icon_entry_winid_mask   := %00001111
+icon_entry_type_dir     := %00000000
+icon_entry_type_sys     := %00010000
+icon_entry_type_bin     := %00100000
+icon_entry_type_bas     := %00110000
+icon_entry_type_txt     := %01010000
+icon_entry_type_trash   := %01110000
 
 ;;; ==================================================
 ;;; Internals - Default Font
