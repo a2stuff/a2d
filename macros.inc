@@ -4,6 +4,7 @@
 
 .define is_immediate(arg)       (.match (.mid (0, 1, {arg}), #))
 .define is_register(arg)        (.match ({arg}, x) .or .match ({arg}, y))
+.define immediate_value(arg)    (.right (.tcount ({arg})-1, {arg}))
 
 ;;; ==================================================
 ;;; Pad with zeros to the given address
@@ -65,6 +66,7 @@
         jmp     target
 .endmacro
 
+
 ;;; ==================================================
 ;;; 16-bit pseudo-ops
 
@@ -73,8 +75,8 @@
 ;;;    ldax $1234       ; absolute
 .macro ldax arg
     .if is_immediate {arg}
-        lda     #<(.right (.tcount ({arg})-1, {arg}))
-        ldx     #>(.right (.tcount ({arg})-1, {arg}))
+        lda     #<immediate_value {arg}
+        ldx     #>immediate_value {arg}
     .else
         lda     arg
         ldx     arg+1
@@ -86,8 +88,8 @@
 ;;;    ldxy $1234       ; absolute
 .macro ldxy arg
     .if is_immediate {arg}
-        ldx     #<(.right (.tcount ({arg})-1, {arg}))
-        ldy     #>(.right (.tcount ({arg})-1, {arg}))
+        ldx     #<immediate_value {arg}
+        ldy     #>immediate_value {arg}
     .else
         ldx     arg
         ldy     arg+1
@@ -138,10 +140,10 @@
     .elseif is_immediate {arg2}
         lda     arg1
         clc
-        adc     #<(.right (.tcount ({arg2})-1, {arg2}))
+        adc     #<immediate_value {arg2}
         sta     arg3
         lda     arg1+1
-        adc     #>(.right (.tcount ({arg2})-1, {arg2}))
+        adc     #>immediate_value {arg2}
         sta     arg3+1
     .else
         lda     arg1
@@ -193,20 +195,20 @@
         sbc     arg2+1
         sta     arg3+1,arg4
     .elseif is_immediate {arg1}
-        lda     #<(.right (.tcount ({arg1})-1, {arg1}))
+        lda     #<immediate_value {arg1}
         sec
         sbc     arg2
         sta     arg3
-        lda     #>(.right (.tcount ({arg1})-1, {arg1}))
+        lda     #>immediate_value {arg1}
         sbc     arg2+1
         sta     arg3+1
     .elseif is_immediate {arg2}
         lda     arg1
         sec
-        sbc     #<(.right (.tcount ({arg2})-1, {arg2}))
+        sbc     #<immediate_value {arg2}
         sta     arg3
         lda     arg1+1
-        sbc     #>(.right (.tcount ({arg2})-1, {arg2}))
+        sbc     #>immediate_value {arg2}
         sta     arg3+1
     .else
         lda     arg1
@@ -254,9 +256,9 @@
         sta     arg2+1,arg3
     .elseif is_immediate {arg1}
         ;; immediate load variant (arg1 is #nnnn)
-        lda     #<(.right (.tcount ({arg1})-1, {arg1}))
+        lda     #<immediate_value {arg1}
         sta     arg2
-        lda     #>(.right (.tcount ({arg1})-1, {arg1}))
+        lda     #>immediate_value {arg1}
         sta     arg2+1
     .else
         lda     arg1
@@ -289,16 +291,16 @@
         sbc     arg2+1,arg3
     .elseif is_immediate {arg1}
         ;; immediate variant (arg1 is #nnnn)
-        lda     #<(.right (.tcount ({arg1})-1, {arg1}))
+        lda     #<immediate_value {arg1}
         cmp     arg2
-        lda     #>(.right (.tcount ({arg1})-1, {arg1}))
+        lda     #>immediate_value {arg1}
         sbc     arg2+1
     .elseif is_immediate {arg2}
         ;; immediate variant (arg2 is #nnnn)
         lda     arg1
-        cmp     #<(.right (.tcount ({arg2})-1, {arg2}))
+        cmp     #<immediate_value {arg2}
         lda     arg1+1
-        sbc     #>(.right (.tcount ({arg2})-1, {arg2}))
+        sbc     #>immediate_value {arg2}
     .else
         lda     arg1
         cmp     arg2
