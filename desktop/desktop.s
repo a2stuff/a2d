@@ -5058,9 +5058,6 @@ icon_entry_address_table:
 
 ;;; Copy from aux memory of icon list for active window (0=desktop)
 
-        ;; Used by DESKTOP_COPY_*_BUF
-        .assert * = cached_window_id, error, "Entry point mismatch"
-
         ;; which window buffer (see window_icon_count_table, window_icon_list_table) is copied
 cached_window_id: .byte   0
         ;; number of icons in copied window
@@ -5336,6 +5333,8 @@ length: .byte   0
 data:   .res    55, 0
 .endproc
 
+;;; ==================================================
+
 .macro WINFO_DEFN id, label, buflabel
 .proc label
 window_id:      .byte   id
@@ -5382,13 +5381,25 @@ buflabel:       .res    18, 0
         WINFO_DEFN 8, winfo8, winfo8title_ptr
 
 
-        ;; 8 entries; each entry is 65 bytes long
-        ;; * length-prefixed path string (no trailing /)
+;;; ==================================================
+
+;;; Window paths
+;;; 8 entries; each entry is 65 bytes long
+;;; * length-prefixed path string (no trailing /)
+;;; Windows 1...8 (since 0 is desktop)
 window_path_table:
         .res    (8*65), 0
 
-LEB8B:  .res    16, 0
-LEB9B:  .res    24, 0
+;;; Window used/free (in kilobytes)
+;;; Two tables, 8 entries each
+;;; Windows 1...8 (since 0 is desktop)
+window_k_used_table:  .res    16, 0
+window_k_free_table:  .res    16, 0
+
+        .res    8, 0            ; ???
+
+;;; ==================================================
+;;; Resources for window header (Items/k in disk/available)
 
 str_items:
         PASCAL_STRING " Items"
@@ -5396,9 +5407,8 @@ str_items:
 items_label_pos:
         DEFINE_POINT 8, 10, items_label_pos
 
-point1: DEFINE_POINT 0, 0, point1
-
-point5: DEFINE_POINT 0, 0, point5
+header_line_left: DEFINE_POINT 0, 0, header_line_left
+header_line_right:    DEFINE_POINT 0, 0, header_line_right
 
 str_k_in_disk:
         PASCAL_STRING "K in disk"
@@ -5409,28 +5419,34 @@ str_k_available:
 str_from_int:                   ; populated by int_to_string
         PASCAL_STRING "      "
 
-width_items_label_padded:       .word 0
-unused: .word   0
-point11:  DEFINE_POINT 0, 0, point11
-point2: DEFINE_POINT 0, 0, point2
-point3: DEFINE_POINT 0, 0, point3
+;;; Computed during startup
+width_items_label_padded:       .word   0
+        .word   0               ; ???
+width_left_labels:      .word   0
+        .word   0               ; ???
 
+;;; Computed when painted
+pos_k_in_disk:  DEFINE_POINT 0, 0, pos_k_in_disk
+pos_k_available:        DEFINE_POINT 0, 0, pos_k_available
+
+;;; Computed during startup
 width_items_label:      .word   0
 width_k_in_disk_label:  .word   0
 width_k_available_label:        .word   0
-width_right_labels:      .word   0
+width_right_labels:     .word   0
 
+;;; Assigned during startup
 trash_icon_num:  .byte   0
 
 LEBFC:  .byte   0               ; flag of some sort ???
 
 point14: DEFINE_POINT 0, 0
 
-        ;; Used by DESKTOP_COPY_*_BUF
+;;; ==================================================
 
-        ;; Each buffer is a list of icons in each window (0=desktop)
-        ;; window_icon_count_table = start of buffer = icon count
-        ;; window_icon_list_table = first entry in buffer (length = 127)
+;;; Each buffer is a list of icons in each window (0=desktop)
+;;; window_icon_count_table = start of buffer = icon count
+;;; window_icon_list_table = first entry in buffer (length = 127)
 
 window_icon_count_table:
         .repeat 9,i
@@ -5445,19 +5461,22 @@ window_icon_list_table:
 active_window_id:
         .byte   $00
 
-LEC26:
-        .res    52, 0
+LEC26:                          ; ???
+        .res    45, 0
+LEC53:  .byte   0
+LEC54:  .word   0
+        .res    4, 0
 
 date:  .word   0
 
-        .res    7, 0
+        .res    7, 0            ; ???
 
         .assert * = $EC63, error, "Segment length mismatch"
 
-;;; ==================================================
+;;; --------------------------------------------------
 
 icon_entries:
-        .byte   0, 0, 0, $F4, 1, $A0 ; ???
+        .byte   0, 0, 0, $F4, 1, $A0 ; overwritten ???
         PAD_TO $ED00
 
 ;;; (there's enough room here for 127 files at 27 bytes each)
@@ -5988,7 +6007,7 @@ L415B:  sta     active_window_id
         lda     cached_window_id
         sta     getwinport_params2::window_id
         jsr     L4505
-        jsr     L78EF
+        jsr     draw_window_header
         lda     active_window_id
         jsr     L8855
         jsr     DESKTOP_ASSIGN_STATE
@@ -9554,7 +9573,7 @@ L5ECB:  lda     ($06),y
         lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     L4505
-        jsr     L78EF
+        jsr     draw_window_header
         lda     #$00
         ldx     active_window_id
         sta     win_buf_table-1,x
@@ -10157,10 +10176,8 @@ L6669:  cmp16   grafport2::cliprect::y2, L7B65
         tya
         jmp     L668D
 
-L667B:  lsr     L66A1
-        ror     L66A0
-        lsr     L66A1
-        ror     L66A0
+L667B:  lsr16   L66A0
+        lsr16   L66A0
         lda     L66A0
 L668A:  jsr     L62BC
 L668D:  sta     event_params+1
@@ -10661,7 +10678,7 @@ L6BB8:  jsr     L744B
         lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     L44F2
-        jsr     L78EF
+        jsr     draw_window_header
         jsr     L6E52
         lda     #$00
         sta     L6C0E
@@ -10702,7 +10719,7 @@ L6C25:  jsr     push_zp_addrs
         jsr     L44F2
         bit     L4152
         bmi     L6C39
-        jsr     L78EF
+        jsr     draw_window_header
 L6C39:  lda     cached_window_id
         sta     getwinport_params2::window_id
         jsr     L4505
@@ -10772,7 +10789,7 @@ L6CCD:  lda     cached_window_id
         jsr     L44F2
         bit     L4152
         bmi     L6CDE
-        jsr     L78EF
+        jsr     draw_window_header
 L6CDE:  jsr     L6E52
         jsr     L6E8E
         ldx     #$07
@@ -11014,8 +11031,8 @@ L6F64:  dec     L704B
         sbc     #$01
         asl     a
         tax
-        copy16  L70BD, LEB8B,x
-        copy16  L70BB, LEB9B,x
+        copy16  L70BD, window_k_used_table,x
+        copy16  L70BB, window_k_free_table,x
         jmp     L6F64
 
 L6F8F:  rts
@@ -11188,8 +11205,7 @@ L70EA:  lda     $0C23,x
         bne     L70EA
         sub16   L485D, L485F, L72A8
         ldx     #$05
-L710A:  lsr     L72A9
-        ror     L72A8
+L710A:  lsr16   L72A8
         dex
         cpx     #$00
         bne     L710A
@@ -11378,11 +11394,9 @@ L72EC:  MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params4
 L72F8:  copy16  get_file_info_params4::aux_type, L70BD
         sub16   get_file_info_params4::aux_type, get_file_info_params4::blocks_used, L70BB
         sub16   L70BD, L70BB, L70BD
-        lsr     L70BC
-        ror     L70BB
+        lsr16   L70BB
         php
-        lsr     L70BE
-        ror     L70BD
+        lsr16   L70BD
         plp
         bcc     L7342
         inc     L70BD
@@ -11695,15 +11709,15 @@ L75A3:  sta     ($06),y
         txa
         asl     a
         tax
-        copy16  LEB8B,x, L70BD
-        copy16  LEB9B,x, L70BB
+        copy16  window_k_used_table,x, L70BD
+        copy16  window_k_free_table,x, L70BB
 L75FA:  ldx     cached_window_id
         dex
         txa
         asl     a
         tax
-        copy16  L70BD, LEB8B,x
-        copy16  L70BB, LEB9B,x
+        copy16  L70BD, window_k_used_table,x
+        copy16  L70BB, window_k_free_table,x
         lda     cached_window_id
         jsr     L7635
         rts
@@ -12018,20 +12032,20 @@ file_type:
 .endproc
 
 ;;; ==================================================
+;;; Draw header (items/k in disk/k available/lines)
 
-L78EF:
+.proc draw_window_header
+
         ;; Compute header coords
-        ;; point1 is left edge, point5 is right edge
-        ;; (and update item label pos)
 
         ;; x coords
         lda     grafport2::cliprect::x1
-        sta     point1::xcoord
+        sta     header_line_left::xcoord
         clc
         adc     #5
         sta     items_label_pos::xcoord
         lda     grafport2::cliprect::x1+1
-        sta     point1::xcoord+1
+        sta     header_line_left::xcoord+1
         adc     #0
         sta     items_label_pos::xcoord+1
 
@@ -12039,125 +12053,140 @@ L78EF:
         lda     grafport2::cliprect::y1
         clc
         adc     #12
-        sta     point1::ycoord
-        sta     point5::ycoord
+        sta     header_line_left::ycoord
+        sta     header_line_right::ycoord
         lda     grafport2::cliprect::y1+1
         adc     #0
-        sta     point1::ycoord+1
-        sta     point5::ycoord+1
+        sta     header_line_left::ycoord+1
+        sta     header_line_right::ycoord+1
 
-        ;; draw top line
-        MGTK_RELAY_CALL MGTK::MoveTo, point1
-        copy16  grafport2::cliprect::x2, point5::xcoord
+        ;; Draw top line
+        MGTK_RELAY_CALL MGTK::MoveTo, header_line_left
+        copy16  grafport2::cliprect::x2, header_line_right::xcoord
         jsr     set_penmode_xor
-        MGTK_RELAY_CALL MGTK::LineTo, point5
+        MGTK_RELAY_CALL MGTK::LineTo, header_line_right
 
-        ;; offset down by 2px
-        lda     point1::ycoord
+        ;; Offset down by 2px
+        lda     header_line_left::ycoord
         clc
         adc     #2
-        sta     point1::ycoord
-        sta     point5::ycoord
-        lda     point1::ycoord+1
+        sta     header_line_left::ycoord
+        sta     header_line_right::ycoord
+        lda     header_line_left::ycoord+1
         adc     #0
-        sta     point1::ycoord+1
-        sta     point5::ycoord+1
+        sta     header_line_left::ycoord+1
+        sta     header_line_right::ycoord+1
 
-        ;; draw bottom line
-        MGTK_RELAY_CALL MGTK::MoveTo, point1
-        MGTK_RELAY_CALL MGTK::LineTo, point5
+        ;; Draw bottom line
+        MGTK_RELAY_CALL MGTK::MoveTo, header_line_left
+        MGTK_RELAY_CALL MGTK::LineTo, header_line_right
 
-        ;; baseline for header text
+        ;; Baseline for header text
         add16 grafport2::cliprect::y1, #10, items_label_pos::ycoord
+
+        ;; Draw "XXX Items"
         lda     cached_window_icon_count
-        ldx     #$00
+        ldx     #0
         jsr     int_to_string
         lda     cached_window_icon_count
-        cmp     #2
-        bcs     L798A
+        cmp     #2              ; plural?
+        bcs     :+
         dec     str_items       ; remove trailing s
-L798A:  MGTK_RELAY_CALL MGTK::MoveTo, items_label_pos
-        jsr     L7AD7
-        addr_call draw_text2, str_items
+:       MGTK_RELAY_CALL MGTK::MoveTo, items_label_pos
+        jsr     draw_int_string
+        addr_call draw_pascal_string, str_items
         lda     cached_window_icon_count
         cmp     #2
-        bcs     L79A7
+        bcs     :+
         inc     str_items       ; restore trailing s
-L79A7:  jsr     calc_header_coords
+
+        ;; Draw "XXXK in disk"
+:       jsr     calc_header_coords
         ldx     active_window_id
-        dex
+        dex                     ; index 0 is window 1
         txa
         asl     a
         tax
-        lda     LEB8B,x
+        lda     window_k_used_table,x
         tay
-        lda     LEB8B+1,x
+        lda     window_k_used_table+1,x
         tax
         tya
         jsr     int_to_string
-        MGTK_RELAY_CALL MGTK::MoveTo, point2
-        jsr     L7AD7
-        addr_call draw_text2, str_k_in_disk
+        MGTK_RELAY_CALL MGTK::MoveTo, pos_k_in_disk
+        jsr     draw_int_string
+        addr_call draw_pascal_string, str_k_in_disk
+
+        ;; Draw "XXXK available"
         ldx     active_window_id
-        dex
+        dex                     ; index 0 is window 1
         txa
         asl     a
         tax
-        lda     LEB9B,x
+        lda     window_k_free_table,x
         tay
-        lda     LEB9B+1,x
+        lda     window_k_free_table+1,x
         tax
         tya
         jsr     int_to_string
-        MGTK_RELAY_CALL MGTK::MoveTo, point3
-        jsr     L7AD7
-        addr_call draw_text2, str_k_available
+        MGTK_RELAY_CALL MGTK::MoveTo, pos_k_available
+        jsr     draw_int_string
+        addr_call draw_pascal_string, str_k_available
         rts
 
-;;; ==================================================
+;;; --------------------------------------------------
 
 .proc calc_header_coords
+        ;; Width of window
         sub16   grafport2::cliprect::x2, grafport2::cliprect::x1, xcoord
+
+        ;; Is there room to spread things out?
         sub16   xcoord, width_items_label, xcoord
         bpl     :+
-        jmp     L7A86
-
+        jmp     skipcenter
 :       sub16   xcoord, width_right_labels, xcoord
         bpl     :+
-        jmp     L7A86
+        jmp     skipcenter
 
-:       add16   point11::xcoord, xcoord, point3::xcoord
+        ;; Yes - center "k in disk"
+:       add16   width_left_labels, xcoord, pos_k_available::xcoord
         lda     xcoord+1
-        beq     L7A59
+        beq     :+
         lda     xcoord
-        cmp     #$18
-        bcc     L7A6A
-L7A59:  sub16   point3::xcoord, #12, point3::xcoord
-L7A6A:  lsr     xcoord+1
-        ror     xcoord
-        add16   width_items_label_padded, xcoord, point2::xcoord
-        jmp     L7A9E
+        cmp     #24             ; threshold
+        bcc     nosub
+:       sub16   pos_k_available::xcoord, #12, pos_k_available::xcoord
+nosub:  lsr16   xcoord          ; divide by 2 to center
+        add16   width_items_label_padded, xcoord, pos_k_in_disk::xcoord
+        jmp     finish
 
-L7A86:  copy16  width_items_label_padded, point2::xcoord
-        copy16  point11::xcoord, point3::xcoord
-L7A9E:  add16   point2::xcoord, grafport2::cliprect::x1, point2::xcoord
-        add16   point3::xcoord, grafport2::cliprect::x1, point3::xcoord
+        ;; No - just squish things together
+skipcenter:
+        copy16  width_items_label_padded, pos_k_in_disk::xcoord
+        copy16  width_left_labels, pos_k_available::xcoord
+
+finish:
+        add16   pos_k_in_disk::xcoord, grafport2::cliprect::x1, pos_k_in_disk::xcoord
+        add16   pos_k_available::xcoord, grafport2::cliprect::x1, pos_k_available::xcoord
+
+        ;; Update y coords
         lda     items_label_pos::ycoord
-        sta     point2::ycoord
-        sta     point3::ycoord
+        sta     pos_k_in_disk::ycoord
+        sta     pos_k_available::ycoord
         lda     items_label_pos::ycoord+1
-        sta     point2::ycoord+1
-        sta     point3::ycoord+1
+        sta     pos_k_in_disk::ycoord+1
+        sta     pos_k_available::ycoord+1
+
         rts
 .endproc
 
-L7AD7:  addr_jump draw_text2, str_from_int
+draw_int_string:
+        addr_jump draw_pascal_string, str_from_int
 
 xcoord:
         .word   0
 
-;;; ==================================================
-;;; Convert A,X to decimal string
+;;; --------------------------------------------------
 
 .proc int_to_string
         stax    value
@@ -12224,6 +12253,8 @@ digit:  .byte   0            ; current digit being accumulated
 
 not_leading_zero_flag:       ; high bit set once a non-zero digit seen
         .byte   0
+
+.endproc ; int_to_string
 
 .endproc
 
@@ -12935,7 +12966,7 @@ L8228:  lda     $EC43,x
         addr_call capitalize_string, text_buffer2::length
         rts
 
-L8241:  lda     $EC53
+L8241:  lda     LEC53
         jsr     L8707
         ldx     #$04
 L8249:  lda     LDFC5,x
@@ -12944,7 +12975,7 @@ L8249:  lda     LDFC5,x
         bpl     L8249
         rts
 
-L8253:  ldax    $EC54
+L8253:  ldax    LEC54
 L8259:  stax    L8272
         jmp     L8276
 
@@ -13253,10 +13284,8 @@ L850E:  sta     L85F1
         sta     L85F2
         lda     L85F9,x
         sta     L85F3
-L8562:  lsr     L85F3
-        ror     L85F2
-        lsr     L85F3
-        ror     L85F2
+L8562:  lsr16   L85F2
+        lsr16   L85F2
         lda     L85F2
         tay
         pla
@@ -13575,7 +13604,8 @@ L877F:  .byte   0
 
 ;;; ==================================================
 ;;; Draw text, pascal string address in A,X
-.proc draw_text2
+
+.proc draw_pascal_string
         params := $6
         textptr := $6
         textlen := $8
@@ -14240,14 +14270,10 @@ L8C6A:  bit     L8D53
         inc     L8D52
         bne     L8C8C
         inc     L8D53
-L8C8C:  lsr     L8D51
-        ror     L8D50
-        lsr     L8D53
-        ror     L8D52
-        lsr     L8D55
-        ror     L8D54
-        lsr     L8D57
-        ror     L8D56
+L8C8C:  lsr16   L8D50
+        lsr16   L8D52
+        lsr16   L8D54
+        lsr16   L8D56
         lda     #$0A
         sec
         sbc     L8D4D
@@ -18561,8 +18587,7 @@ create_window_with_alert_bitmap:
         jsr     LBD7B
         sta     textlen
         MGTK_RELAY_CALL MGTK::TextWidth, textwidth_params
-        lsr     result+1
-        ror     result
+        lsr16   result
         lda     #<200
         sec
         sbc     result
@@ -18704,8 +18729,7 @@ done:   rts
         bne     :+
         inc     str_data+1
 :       MGTK_RELAY_CALL MGTK::TextWidth, str
-        lsr     str_width+1     ; divide by two
-        ror     str_width
+        lsr16   str_width       ; divide by two
         lda     #$01
         sta     LB76B
         lda     #$90
@@ -19860,7 +19884,7 @@ L0A7F:  lda     ($06),y
         inc     selector_menu
         jmp     L0A3B
 
-L0A8F:  jmp     L0B09
+L0A8F:  jmp     calc_header_item_widths
 
 L0A92:  .byte   0
 L0A93:  .byte   0
@@ -19940,7 +19964,7 @@ L0AE7:  MLI_RELAY_CALL OPEN, open_params
 
 ;;; ==================================================
 
-.proc L0B09
+.proc calc_header_item_widths
         ;; Enough space for "123456"
         addr_call desktop_main::measure_text1, str_from_int
         stax    dx
@@ -19974,8 +19998,8 @@ L0AE7:  MLI_RELAY_CALL OPEN, open_params
 
         add16   width_k_in_disk_label, width_k_available_label, width_right_labels
         add16   width_items_label, #5, width_items_label_padded
-        add16   width_items_label_padded, width_k_in_disk_label, point11::xcoord
-        add16   point11::xcoord, #3, point11::xcoord
+        add16   width_items_label_padded, width_k_in_disk_label, width_left_labels
+        add16   width_left_labels, #3, width_left_labels
         jmp     enumerate_desk_accessories
 
 dx:     .word   0

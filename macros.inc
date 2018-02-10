@@ -257,3 +257,10 @@
         sbc     arg2+1
     .endif
 .endmacro
+
+;;; Shift 16-bit values
+;;;    lsr16 $1111      ; absolute
+.macro lsr16 arg1
+        lsr     arg1+1
+        ror     arg1
+.endmacro
