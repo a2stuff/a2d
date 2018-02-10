@@ -620,13 +620,7 @@ L939E:  .addr   0               ; $00
         bne     :-
 
         ;; Point ($06) at call command
-        lda     call_params
-        clc
-        adc     #<1
-        sta     $06
-        lda     call_params+1
-        adc     #>1
-        sta     $07
+        add16   call_params, #1, $06
 
         ldy     #0
         lda     ($06),y
@@ -1655,13 +1649,7 @@ L9CAA:  lda     L9C76
         lda     #$00
         rts
 
-L9CBD:  lda     #$00
-        sec
-        sbc     L9C86
-        sta     L9C96
-        lda     #$00
-        sbc     L9C87
-        sta     L9C97
+L9CBD:  sub16   #0, L9C86, L9C96
         jmp     L9CF5
 
 L9CD1:  lda     L9C7A
@@ -1673,13 +1661,7 @@ L9CD1:  lda     L9C7A
         lda     #$00
         rts
 
-L9CE4:  lda     #$30
-        sec
-        sbc     L9C8A
-        sta     L9C96
-        lda     #$02
-        sbc     L9C8B
-        sta     L9C97
+L9CE4:  sub16   #$230, L9C8A, L9C96
 L9CF5:  add16   L9C86, L9C96, L9C76
         add16   L9C8A, L9C96, L9C7A
         add16   L9C8E, L9C96, L9C8E
@@ -1695,13 +1677,7 @@ L9D31:  lda     L9C78
         lda     #$00
         rts
 
-L9D44:  lda     #$0D
-        sec
-        sbc     L9C88
-        sta     L9C98
-        lda     #$00
-        sbc     L9C89
-        sta     L9C99
+L9D44:  sub16   #$0D, L9C88, L9C98
         jmp     L9D7C
 
 L9D58:  lda     L9C7C
@@ -1713,41 +1689,23 @@ L9D58:  lda     L9C7C
         lda     #$00
         rts
 
-L9D6B:  lda     #$BF
-        sec
-        sbc     L9C8C
-        sta     L9C98
-        lda     #$00
-        sbc     L9C8D
-        sta     L9C99
+L9D6B:  sub16   #$BF, L9C8C, L9C98
 L9D7C:  add16   L9C88, L9C98, L9C78
         add16   L9C8C, L9C98, L9C7C
         add16   L9C90, L9C98, L9C90
         lda     #$FF
         rts
 
-L9DB8:  lda     L9C86
-        sta     L9C76
-        lda     L9C87
-        sta     L9C77
-        lda     L9C8A
-        sta     L9C7A
-        lda     L9C8B
-        sta     L9C7B
-        lda     #$00
+L9DB8:  copy16  L9C86, L9C76
+        copy16  L9C8A, L9C7A
+        lda     #0
         sta     L9C96
         sta     L9C97
         rts
 
-L9DD9:  lda     L9C88
-        sta     L9C78
-        lda     L9C89
-        sta     L9C79
-        lda     L9C8C
-        sta     L9C7C
-        lda     L9C8D
-        sta     L9C7D
-        lda     #$00
+L9DD9:  copy16  L9C88, L9C78
+        copy16  L9C8C, L9C7C
+        lda     #0
         sta     L9C98
         sta     L9C99
         rts
@@ -2929,8 +2887,8 @@ LA846:  jsr     pop_zp_addrs
         adc     grafport4::viewloc::xcoord
         sta     LA6C3
         lda     grafport4::viewloc::xcoord+1
-        adc     LA6C4
-        sta     LA6C4
+        adc     LA6C3+1
+        sta     LA6C3+1
         add16   LA6C5, grafport4::viewloc::ycoord, LA6C5
         cmp16   setportbits_params2::cliprect::x2, LA6C3
         bmi     LA8B7
@@ -2956,7 +2914,7 @@ LA8F6:  cmp16   LA6C5, setportbits_params2::cliprect::y2
         adc     #2
         sta     setportbits_params2::cliprect::y1
         sta     setportbits_params2::viewloc::ycoord
-        lda     LA6C6
+        lda     LA6C5+1
         adc     #0
         sta     setportbits_params2::cliprect::y1+1
         sta     setportbits_params2::viewloc::ycoord+1
@@ -2972,20 +2930,8 @@ LA923:  lda     setportbits_params2::cliprect::x2
         sta     setportbits_params2::viewloc::xcoord+1
         jmp     LA753
 
-LA938:  lda     grafport4::viewloc::ycoord
-        clc
-        adc     #15
-        sta     grafport4::viewloc::ycoord
-        lda     grafport4::viewloc::ycoord+1
-        adc     #0
-        sta     grafport4::viewloc::ycoord+1
-        lda     grafport4::cliprect::y1
-        clc
-        adc     #15
-        sta     grafport4::cliprect::y1
-        lda     grafport4::cliprect::y1+1
-        adc     #0
-        sta     grafport4::cliprect::y1+1
+LA938:  add16   grafport4::viewloc::ycoord, #15, grafport4::viewloc::ycoord
+        add16   grafport4::cliprect::y1, #15, grafport4::cliprect::y1
         MGTK_CALL MGTK::SetPort, grafport4
         rts
 
@@ -11472,13 +11418,7 @@ L73C1:  lda     $08+1
         lda     $E1F1
         asl     a
         tax
-        lda     L485F
-        sec
-        sbc     $E202,x
-        sta     L7447
-        lda     L485F+1
-        sbc     $E203,x
-        sta     L7447+1
+        sub16   L485F, $E202,x, L7447
         inc     L7446
 L73ED:  lda     L7446
         cmp     $E1F1
@@ -11510,13 +11450,7 @@ L7429:  lda     $E1F1
         sbc     #$01
         asl     a
         tax
-        lda     $E202,x
-        clc
-        adc     L7447
-        sta     L485F
-        lda     $E203,x
-        adc     L7447+1
-        sta     L485F+1
+        add16   $E202,x, L7447, L485F
         rts
 L7445:  .byte   0
 L7446:  .byte   0
@@ -14311,40 +14245,16 @@ L8C8C:  lsr16   L8D50
         tax
         bit     L8D4E
         bpl     L8CC9
-        lda     L0800
-        sec
-        sbc     L8D50
-        sta     L0800,x
-        lda     $0801
-        sbc     L8D51
-        sta     $0801,x
+        sub16   L0800, L8D50, L0800,x
         jmp     L8CDC
 
-L8CC9:  lda     L0800
-        clc
-        adc     L8D50
-        sta     L0800,x
-        lda     $0801
-        adc     L8D51
-        sta     $0801,x
+L8CC9:  add16   L0800, L8D50, L0800,x
 L8CDC:  bit     L8D4F
         bpl     L8CF7
-        lda     $0802
-        sec
-        sbc     L8D52
-        sta     $0802,x
-        lda     $0803
-        sbc     L8D53
-        sta     $0803,x
+        sub16   $0802, L8D52, $0802,x
         jmp     L8D0A
 
-L8CF7:  lda     $0802
-        clc
-        adc     L8D52
-        sta     $0802,x
-        lda     $0803
-        adc     L8D53
-        sta     $0803,x
+L8CF7:  add16   $0802, L8D52, $0802,x
 L8D0A:  lda     L0800,x
         clc
         adc     L8D54
@@ -14352,6 +14262,7 @@ L8D0A:  lda     L0800,x
         lda     $0801,x
         adc     L8D55
         sta     $0805,x
+
         lda     $0802,x
         clc
         adc     L8D56
@@ -14359,6 +14270,7 @@ L8D0A:  lda     L0800,x
         lda     $0803,x
         adc     L8D57
         sta     $0807,x
+
         inc     L8D4D
         lda     L8D4D
         cmp     #$0A
@@ -18616,13 +18528,7 @@ create_window_with_alert_bitmap:
         sta     textlen
         MGTK_RELAY_CALL MGTK::TextWidth, textwidth_params
         lsr16   result
-        lda     #<200
-        sec
-        sbc     result
-        sta     dialog_label_pos
-        lda     #>200
-        sbc     result+1
-        sta     dialog_label_pos+1
+        sub16   #200, result, dialog_label_pos
         pla
         tay
 
@@ -19505,13 +19411,7 @@ LBE28:  sta     str_7_spaces+2,y
         jmp     LBDFE
 
 LBE35:  inc     LBE61
-        lda     LBE5F
-        sec
-        sbc     LBE57,x
-        sta     LBE5F
-        lda     LBE5F+1
-        sbc     LBE57+1,x
-        sta     LBE5F+1
+        sub16   LBE5F, LBE57,x, LBE5F
         jmp     LBE03
 
 LBE4E:  lda     LBE5F

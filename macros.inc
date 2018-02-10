@@ -104,21 +104,51 @@
 ;;; Add arg1 to arg2, store to arg3
 ;;;    add16 $1111, $2222, $3333        ; absolute, absolute, absolute
 ;;;    add16 $1111, #$2222, $3333       ; absolute, immediate, absolute
-.macro add16 aa, arg2, arg3
-    .if is_immediate {arg2}
-        lda     aa
+;;;    add16 $1111,x, $2222, $3333      ; indexed, absolute, absolute
+;;;    add16 $1111,y, $2222, $3333      ; indexed, absolute, absolute
+;;;    add16 $1111, $2222,x, $3333      ; absolute, indexed, absolute
+;;;    add16 $1111, $2222,y, $3333      ; absolute, indexed, absolute
+;;;    add16 $1111, $2222, $3333,x      ; absolute, absolute, indexed
+;;;    add16 $1111, $2222, $3333,y      ; absolute, absolute, indexed
+.macro add16 arg1, arg2, arg3, arg4
+    .if is_register {arg2}
+        lda     arg1,arg2
+        clc
+        adc     arg3
+        sta     arg4
+        lda     arg1+1,arg2
+        adc     arg3+1
+        sta     arg4+1
+    .elseif is_register {arg3}
+        lda     arg1
+        clc
+        adc     arg2,arg3
+        sta     arg4
+        lda     arg1+1
+        adc     arg2+1,arg3
+        sta     arg4+1
+    .elseif is_register {arg4}
+        lda     arg1
+        clc
+        adc     arg2
+        sta     arg3,arg4
+        lda     arg1+1
+        adc     arg2+1
+        sta     arg3+1,arg4
+    .elseif is_immediate {arg2}
+        lda     arg1
         clc
         adc     #<(.right (.tcount ({arg2})-1, {arg2}))
         sta     arg3
-        lda     aa+1
+        lda     arg1+1
         adc     #>(.right (.tcount ({arg2})-1, {arg2}))
         sta     arg3+1
     .else
-        lda     aa
+        lda     arg1
         clc
         adc     arg2
         sta     arg3
-        lda     aa+1
+        lda     arg1+1
         adc     arg2+1
         sta     arg3+1
     .endif
@@ -127,21 +157,24 @@
 ;;; Add arg1 (absolute) to arg2 (8-bit absolute), store to arg3
 ;;;    add16_8 $1111, #$22, $3333       ; absolute, immediate, absolute
 ;;;    add16_8 $1111, $22, $3333        ; absolute, absolute, absolute
-.macro add16_8 aa, arg2, arg3
-        lda     aa
+.macro add16_8 arg1, arg2, arg3
+        lda     arg1
         clc
         adc     arg2
         sta     arg3
-        lda     aa+1
+        lda     arg1+1
         adc     #0
         sta     arg3+1
 .endmacro
 
 ;;; Subtract arg2 from arg1, store to arg3
+;;;    sub16 #$1111, $2222, $3333       ; immediate, absolute, absolute
 ;;;    sub16 $1111, #$2222, $3333       ; absolute, immediate, absolute
 ;;;    sub16 $1111, $2222, $3333        ; absolute, absolute, absolute
-;;;    sub16 $1111, $2222,x $3333       ; absolute, indexed, absolute
-;;;    sub16 $1111, $2222,y $3333       ; absolute, indexed, absolute
+;;;    sub16 $1111, $2222,x, $3333      ; absolute, indexed, absolute
+;;;    sub16 $1111, $2222,y, $3333      ; absolute, indexed, absolute
+;;;    sub16 $1111, $2222, $3333,x      ; absolute, absolute, indexed
+;;;    sub16 $1111, $2222, $3333,y      ; absolute, absolute, indexed
 .macro sub16 arg1, arg2, arg3, arg4
     .if is_register {arg3}
         lda     arg1
@@ -151,6 +184,22 @@
         lda     arg1+1
         sbc     arg2+1,arg3
         sta     arg4+1
+    .elseif is_register {arg4}
+        lda     arg1
+        sec
+        sbc     arg2
+        sta     arg3,arg4
+        lda     arg1+1
+        sbc     arg2+1
+        sta     arg3+1,arg4
+    .elseif is_immediate {arg1}
+        lda     #<(.right (.tcount ({arg1})-1, {arg1}))
+        sec
+        sbc     arg2
+        sta     arg3
+        lda     #>(.right (.tcount ({arg1})-1, {arg1}))
+        sbc     arg2+1
+        sta     arg3+1
     .elseif is_immediate {arg2}
         lda     arg1
         sec
