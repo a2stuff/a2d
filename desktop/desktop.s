@@ -3513,7 +3513,7 @@ cancel_pos:
 
         .word   $BE,$10     ; ???
 
-point8: DEFINE_POINT 75,29, point8
+pos_prompt: DEFINE_POINT 75,29, pos_prompt
 
 alert_action:  .byte   $00
 prompt_addr:    .addr   0
@@ -3670,7 +3670,7 @@ LBB14:  MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
 LBB5C:  MGTK_RELAY2_CALL MGTK::FrameRect, try_again_rect
         MGTK_RELAY2_CALL MGTK::MoveTo, try_again_pos
         addr_call draw_pascal_string, ok_label
-LBB75:  MGTK_RELAY2_CALL MGTK::MoveTo, point8
+LBB75:  MGTK_RELAY2_CALL MGTK::MoveTo, pos_prompt
         addr_call_indirect draw_pascal_string, prompt_addr
 LBB87:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
         lda     event_params_kind
@@ -4156,7 +4156,7 @@ addr:   .addr   0
 ;;; ==================================================
 ;;; SET_POS with params at (X,A) followed by DRAW_TEXT call
 
-.proc SETPOS_RELAY
+.proc SETPOS_DRAWTEXT_RELAY
         stax    addr
         sta     RAMRDON
         sta     RAMWRTON
@@ -4849,7 +4849,7 @@ nextwinfo:      .addr   0
         .byte   $28,$00,$25,$00,$68,$01,$2F,$00,$2D,$00,$2E,$00
 rect1:  DEFINE_RECT 40,61,360,71, rect1
 point6: DEFINE_POINT 45,70, point6
-point4: DEFINE_POINT 0, 18, point4
+pos_dialog_title: DEFINE_POINT 0, 18, pos_dialog_title
 point7: DEFINE_POINT 40,18, point7
 pointD: DEFINE_POINT $28, $23, pointD
 
@@ -5322,10 +5322,10 @@ LE6C1:
 win_buf_table:                  ; ???
         .res    8, 0
 
-point9: DEFINE_POINT 0, 0, point9
-pointA: DEFINE_POINT 112, 0, pointA
-pointB: DEFINE_POINT 140, 0, pointB
-pointC: DEFINE_POINT 231, 0, pointC
+pos_col_name: DEFINE_POINT 0, 0, pos_col_name
+pos_col_type: DEFINE_POINT 112, 0, pos_col_type
+pos_col_size: DEFINE_POINT 140, 0, pos_col_size
+pos_col_date: DEFINE_POINT 231, 0, pos_col_date
 
 .proc text_buffer2
         .addr   data
@@ -5440,7 +5440,7 @@ trash_icon_num:  .byte   0
 
 LEBFC:  .byte   0               ; flag of some sort ???
 
-point14: DEFINE_POINT 0, 0
+saved_event_coords: DEFINE_POINT 0, 0
 
 ;;; ==================================================
 
@@ -5857,10 +5857,10 @@ L0D14           := $0D14
         ;; Entries marked with * are used by DAs
         ;; "Exported" by desktop.inc
 
-L4000:                  jmp     L4042 ; ???
+L4000:                  jmp     L4042 ; entry point
 JT_MGTK_RELAY:          jmp     MGTK_RELAY
-L4006:                  jmp     L8259 ; ???
-L4009:                  jmp     compose_date_string ; ???
+JT_SIZE_STRING:         jmp     compose_blocks_string
+JT_DATE_STRING:         jmp     compose_date_string
 L400C:                  jmp     L5E78 ; ???
 L400F:                  jmp     DESKTOP_AUXLOAD
 JT_EJECT:               jmp     cmd_eject
@@ -9155,11 +9155,14 @@ L5B1B:  .byte   0
         dex
         lda     win_buf_table,x
         sta     L5B1B
-        ldx     #$03
-L5B31:  lda     point14,x
+
+        ;; Restore event coords (following detect_double_click)
+        ldx     #3
+:       lda     saved_event_coords,x
         sta     event_params_coords,x
         dex
-        bpl     L5B31
+        bpl     :-
+
         MGTK_RELAY_CALL MGTK::FindControl, event_params_coords
         lda     findcontrol_which_ctl
         bne     :+
@@ -10758,32 +10761,38 @@ L6C5F:  txa
         inc     $E71D
         bne     L6C8F
         inc     $E71E
-L6C8F:  lda     #$10
-        sta     point9::ycoord
-        sta     pointA::ycoord
-        sta     pointB::ycoord
-        sta     pointC::ycoord
-        lda     #$00
-        sta     point9::ycoord+1
-        sta     pointA::ycoord+1
-        sta     pointB::ycoord+1
-        sta     pointC::ycoord+1
-        lda     #$00
-        sta     L6CCC
-L6CB0:  lda     L6CCC
+
+        ;; First row
+.proc L6C8F
+        lda     #16
+        sta     pos_col_name::ycoord
+        sta     pos_col_type::ycoord
+        sta     pos_col_size::ycoord
+        sta     pos_col_date::ycoord
+        lda     #0
+        sta     pos_col_name::ycoord+1
+        sta     pos_col_type::ycoord+1
+        sta     pos_col_size::ycoord+1
+        sta     pos_col_date::ycoord+1
+        lda     #0
+        sta     rows_done
+rloop:  lda     rows_done
         cmp     cached_window_icon_count
-        beq     L6CC5
+        beq     done
         tax
         lda     cached_window_icon_list,x
         jsr     L813F
-        inc     L6CCC
-        jmp     L6CB0
+        inc     rows_done
+        jmp     rloop
 
-L6CC5:  jsr     reset_grafport3
+done:   jsr     reset_grafport3
         jsr     pop_zp_addrs
         rts
 
-L6CCC:  .byte   0
+rows_done:
+        .byte   0
+.endproc
+
 L6CCD:  lda     cached_window_id
         sta     getwinport_params2::window_id
         jsr     L44F2
@@ -12178,7 +12187,7 @@ finish:
         sta     pos_k_available::ycoord+1
 
         rts
-.endproc
+.endproc ; calc_header_coords
 
 draw_int_string:
         addr_jump draw_pascal_string, str_from_int
@@ -12199,7 +12208,7 @@ xcoord:
         bne     :-
 
         lda     #0
-        sta     not_leading_zero_flag
+        sta     nonzero_flag
         ldy     #0              ; y = position in string
         ldx     #0              ; x = which power index is subtracted (*2)
 
@@ -12213,7 +12222,7 @@ sloop:  cmp16   value, powers,x
 
         lda     digit
         bne     not_pad
-        bit     not_leading_zero_flag
+        bit     nonzero_flag
         bmi     not_pad
 
         ;; Pad with space
@@ -12225,10 +12234,10 @@ not_pad:
         adc     #'0'            ; why not ORA $30 ???
         pha
         lda     #$80
-        sta     not_leading_zero_flag
+        sta     nonzero_flag
         pla
 
-        ;; Place the digit, move to next
+        ;; Place the character, move to next
 :       sta     str_from_int+2,y
         iny
         inx
@@ -12251,12 +12260,12 @@ powers: .word   10000, 1000, 100, 10
 value:  .word   0            ; remaining value as subtraction proceeds
 digit:  .byte   0            ; current digit being accumulated
 
-not_leading_zero_flag:       ; high bit set once a non-zero digit seen
+nonzero_flag:                ; high bit set once a non-zero digit seen
         .byte   0
 
 .endproc ; int_to_string
 
-.endproc
+.endproc ; draw_window_header
 
 ;;; ==================================================
 
@@ -12727,12 +12736,12 @@ L7FBB:  inc     $0805
 
         lda     LCBANK1
         lda     LCBANK1
-        copy16  #$54, point9::xcoord
-        copy16  #$CB, pointA::xcoord
+        copy16  #84, pos_col_name::xcoord
+        copy16  #203, pos_col_type::xcoord
         lda     #$00
-        sta     pointB::xcoord
-        sta     pointB::xcoord+1
-        copy16  #$E7, pointC::xcoord
+        sta     pos_col_size::xcoord
+        sta     pos_col_size::xcoord+1
+        copy16  #231, pos_col_date::xcoord
         lda     LCBANK2
         lda     LCBANK2
         jmp     L80F5
@@ -12905,54 +12914,55 @@ L8183:  sta     text_buffer2::data-1,x
         bpl     L8183
         lda     #$00
         sta     text_buffer2::length
-        lda     pointA::ycoord
+        lda     pos_col_type::ycoord
         clc
         adc     L813E
-        sta     pointA::ycoord
+        sta     pos_col_type::ycoord
         bcc     L819D
-        inc     pointA::ycoord+1
-L819D:  lda     pointB::ycoord
+        inc     pos_col_type::ycoord+1
+L819D:  lda     pos_col_size::ycoord
         clc
         adc     L813E
-        sta     pointB::ycoord
+        sta     pos_col_size::ycoord
         bcc     L81AC
-        inc     pointB::ycoord+1
-L81AC:  lda     pointC::ycoord
+        inc     pos_col_size::ycoord+1
+L81AC:  lda     pos_col_date::ycoord
         clc
         adc     L813E
-        sta     pointC::ycoord
+        sta     pos_col_date::ycoord
         bcc     L81BB
-        inc     pointC::ycoord+1
-L81BB:  cmp16   point9::ycoord, grafport2::cliprect::y2
+        inc     pos_col_date::ycoord+1
+L81BB:  cmp16   pos_col_name::ycoord, grafport2::cliprect::y2
         bmi     L81D9
-        lda     point9::ycoord
+        lda     pos_col_name::ycoord
         clc
         adc     L813E
-        sta     point9::ycoord
+        sta     pos_col_name::ycoord
         bcc     L81D8
-        inc     point9::ycoord+1
+        inc     pos_col_name::ycoord+1
 L81D8:  rts
 
-L81D9:  lda     point9::ycoord
+L81D9:  lda     pos_col_name::ycoord
         clc
         adc     L813E
-        sta     point9::ycoord
+        sta     pos_col_name::ycoord
         bcc     L81E8
-        inc     point9::ycoord+1
-L81E8:  cmp16   point9::ycoord, grafport2::cliprect::y1
+        inc     pos_col_name::ycoord+1
+L81E8:  cmp16   pos_col_name::ycoord, grafport2::cliprect::y1
         bpl     L81F7
         rts
 
-L81F7:  jsr     L821F
-        addr_call SETPOS_RELAY, point9
-        jsr     L8241
-        addr_call SETPOS_RELAY, pointA
-        jsr     L8253
-        addr_call SETPOS_RELAY, pointB
+L81F7:  jsr     prepare_col_name
+        addr_call SETPOS_DRAWTEXT_RELAY, pos_col_name
+        jsr     prepare_col_type
+        addr_call SETPOS_DRAWTEXT_RELAY, pos_col_type
+        jsr     prepare_col_size
+        addr_call SETPOS_DRAWTEXT_RELAY, pos_col_size
         jsr     compose_date_string
-        addr_jump SETPOS_RELAY, pointC
+        addr_jump SETPOS_DRAWTEXT_RELAY, pos_col_date
 
-L821F:  lda     $EC43
+.proc prepare_col_name
+        lda     $EC43
         and     #$0F
         sta     text_buffer2::length
         tax
@@ -12965,8 +12975,10 @@ L8228:  lda     $EC43,x
         inc     text_buffer2::length
         addr_call capitalize_string, text_buffer2::length
         rts
+.endproc
 
-L8241:  lda     LEC53
+.proc prepare_col_type
+        lda     LEC53
         jsr     L8707
         ldx     #$04
 L8249:  lda     LDFC5,x
@@ -12974,87 +12986,103 @@ L8249:  lda     LDFC5,x
         dex
         bpl     L8249
         rts
+.endproc
 
-L8253:  ldax    LEC54
-L8259:  stax    L8272
-        jmp     L8276
+.proc prepare_col_size
+        ldax    LEC54
+        ;; fall through
+.endproc
 
-L8262:  .byte   $20
-        .byte   "Blocks "
-L826A:  .byte   $10             ; ???
-L826B:  .byte   $27,$E8
-        .byte   $03,$64,$00,$0A,$00
-L8272:  .byte   0
-L8273:  .byte   0
-L8274:  .byte   0
-L8275:  .byte   0
+;;; ==================================================
+;;; Populate text_buffer2 with " 12345 Blocks"
 
-L8276:  ldx     #$11
+.proc compose_blocks_string
+        stax    value
+        jmp     start
+
+suffix: .byte   " Blocks "
+powers: .word   10000, 1000, 100, 10
+value:  .word   0
+digit:  .byte   0
+nonzero_flag:  .byte   0
+
+start:
+        ;; Fill buffer with spaces
+        ldx     #17
         lda     #' '
-L827A:  sta     text_buffer2::data-1,x
+:       sta     text_buffer2::data-1,x
         dex
-        bpl     L827A
-        lda     #$00
+        bpl     :-
+
+        lda     #0
         sta     text_buffer2::length
-        sta     L8275
-        ldy     #$00
-        ldx     #$00
-L828C:  lda     #$00
-        sta     L8274
-L8291:  cmp16   L8272, L826A,x
-        bpl     L82C3
-        lda     L8274
-        bne     L82AD
-        bit     L8275
-        bmi     L82AD
-        lda     #$20
-        bne     L82B6
-L82AD:  ora     #$30
+        sta     nonzero_flag
+        ldy     #0              ; y is pos in string
+        ldx     #0              ; x is power of 10 index (*2)
+loop:   lda     #0
+        sta     digit
+
+        ;; Compute the digit by repeated subtraction/increments
+sloop:  cmp16   value, powers,x
+        bpl     subtract
+        lda     digit
+        bne     not_pad
+        bit     nonzero_flag
+        bmi     not_pad
+
+        ;; Pad with space
+        lda     #' '
+        bne     :+
+
+not_pad:
+        ora     #'0'
         pha
         lda     #$80
-        sta     L8275
+        sta     nonzero_flag
         pla
-L82B6:  sta     text_buffer2::data+1,y
+
+        ;; Place the character, move to next
+:       sta     text_buffer2::data+1,y
         iny
         inx
         inx
-        cpx     #$08
-        beq     L82DC
-        jmp     L828C
+        cpx     #8              ; last power of 10? (*2)
+        beq     done
+        jmp     loop
 
-L82C3:  inc     L8274
-        lda     L8272
-        sec
-        sbc     L826A,x
-        sta     L8272
-        lda     L8273
-        sbc     L826B,x
-        sta     L8273
-        jmp     L8291
+subtract:
+        inc     digit
+        sub16   value, powers,x, value
+        jmp     sloop
 
-L82DC:  lda     L8272
-        ora     #$30
+done:   lda     value           ; handle last digit
+        ora     #'0'
         sta     text_buffer2::data+1,y
         iny
+
+        ;; Append suffix
         ldx     #0
-L82E7:  lda     L8262,x
+:       lda     suffix,x
         sta     text_buffer2::data+1,y
         iny
         inx
-        cpx     L8262
-        bne     L82E7
-        lda     L8274
-        bne     L8305
-        bit     L8275
-        bmi     L8305
-        lda     L8272
-        cmp     #2
-        bcc     L8309
-L8305:  lda     #$0D
+        cpx     suffix
+        bne     :-
+
+        ;; Singular or plural?
+        lda     digit           ; zero?
+        bne     plural
+        bit     nonzero_flag
+        bmi     plural          ; "blocks"
+        lda     value
+        cmp     #2              ; plural?
+        bcc     single
+plural: lda     #.strlen(" 12345 Blocks") ; seems off by one ???
         bne     L830B
-L8309:  lda     #$0C
+single: lda     #.strlen("     1 Block")
 L830B:  sta     text_buffer2::length
         rts
+.endproc
 
 ;;; ==================================================
 
@@ -13351,7 +13379,7 @@ L85FA:  .word   0
         ldx     #3
 :       lda     event_params_coords,x
         sta     coords,x
-        sta     point14,x
+        sta     saved_event_coords,x
         dex
         bpl     :-
 
@@ -15192,7 +15220,7 @@ L942F:  lda     #$03
         sbc     get_file_info_params5::blocks_used+1  ; returned in blocks_used."
         tax
         pla
-        jsr     L4006
+        jsr     JT_SIZE_STRING
         jsr     L9549
         ldx     #$00
 L9456:  lda     text_buffer2::data-1,x
@@ -15214,7 +15242,7 @@ L9472:  lda     selected_window_index
         jmp     L9486
 
 L9480:  ldax    get_file_info_params5::blocks_used
-L9486:  jsr     L4006
+L9486:  jsr     JT_SIZE_STRING
         jsr     L9549
         ldx     $220
         ldy     #$00
@@ -15241,13 +15269,13 @@ L94A9:  lda     $220,x
         lda     #$04
         sta     L92E3
         copy16  get_file_info_params5::create_date, date
-        jsr     L4009
+        jsr     JT_DATE_STRING
         copy16  #text_buffer2::length, L92E4
         jsr     L953F
         lda     #$05
         sta     L92E3
         copy16  get_file_info_params5::mod_date, date
-        jsr     L4009
+        jsr     JT_DATE_STRING
         copy16  #text_buffer2::length, L92E4
         jsr     L953F
         lda     #$06
@@ -17378,7 +17406,7 @@ jump_relay:
         jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::about_dialog_outer_rect
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::about_dialog_inner_rect
-        addr_call draw_centered_string, desktop_aux::str_about1
+        addr_call draw_dialog_title, desktop_aux::str_about1
         axy_call draw_dialog_label, $81, desktop_aux::str_about2
         axy_call draw_dialog_label, $82, desktop_aux::str_about3
         axy_call draw_dialog_label, $83, desktop_aux::str_about4
@@ -17440,7 +17468,7 @@ LA97A:  cmp     #$05
 LA981:  lda     #$00
         sta     LD8E8
         jsr     LB53A
-        addr_call draw_centered_string, desktop_aux::str_copy_title
+        addr_call draw_dialog_title, desktop_aux::str_copy_title
         axy_call draw_dialog_label, $01, desktop_aux::str_copy_copying
         axy_call draw_dialog_label, $02, desktop_aux::str_copy_from
         axy_call draw_dialog_label, $03, desktop_aux::str_copy_to
@@ -17568,7 +17596,7 @@ LAAB1:  jsr     prompt_input_loop
 else:   lda     #0
         sta     LD8E8
         jsr     LB53A
-        addr_call draw_centered_string, desktop_aux::str_download
+        addr_call draw_dialog_title, desktop_aux::str_download
         axy_call draw_dialog_label, $01, desktop_aux::str_copy_copying
         axy_call draw_dialog_label, $02, desktop_aux::str_copy_from
         axy_call draw_dialog_label, $03, desktop_aux::str_copy_to
@@ -17656,7 +17684,7 @@ do4:    jsr     bell
         jmp     do3
 
 else:   jsr     LB53A
-        addr_call draw_centered_string, desktop_aux::str_size_title
+        addr_call draw_dialog_title, desktop_aux::str_size_title
         axy_call draw_dialog_label, $01, desktop_aux::str_size_number
         ldy     #1
         jsr     draw_colon
@@ -17753,7 +17781,7 @@ LACFE:  sta     LAD1F
         lda     #$00
         sta     LD8E8
         jsr     LB53A
-        addr_call draw_centered_string, desktop_aux::str_delete_title
+        addr_call draw_dialog_title, desktop_aux::str_delete_title
         lda     LAD1F
         beq     LAD20
         axy_call draw_dialog_label, $04, desktop_aux::str_ok_empty
@@ -17863,7 +17891,7 @@ LAE49:  lda     #$80
         jsr     LB509
         lda     winfoF
         jsr     set_port_from_window_id
-        addr_call draw_centered_string, desktop_aux::str_new_folder_title
+        addr_call draw_dialog_title, desktop_aux::str_new_folder_title
         jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::FrameRect, rect1
         rts
@@ -17960,7 +17988,7 @@ LAF34:  lda     #$00
         jsr     LB509
         lda     winfoF
         jsr     set_port_from_window_id
-        addr_call draw_centered_string, desktop_aux::str_info_title
+        addr_call draw_dialog_title, desktop_aux::str_info_title
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$00
         lda     ($06),y
@@ -18067,7 +18095,7 @@ LB048:  cmp     #$04
 LB04F:  lda     #$00
         sta     LD8E8
         jsr     LB53A
-        addr_call draw_centered_string, desktop_aux::str_lock_title
+        addr_call draw_dialog_title, desktop_aux::str_lock_title
         yax_call draw_dialog_label, $04, desktop_aux::str_lock_ok
         rts
 
@@ -18159,7 +18187,7 @@ LB166:  cmp     #$04
 LB16D:  lda     #$00
         sta     LD8E8
         jsr     LB53A
-        addr_call draw_centered_string, desktop_aux::str_unlock_title
+        addr_call draw_dialog_title, desktop_aux::str_unlock_title
         yax_call draw_dialog_label, $04, desktop_aux::str_unlock_ok
         rts
 
@@ -18249,7 +18277,7 @@ LB27D:  jsr     LBD75
         jsr     LB509
         lda     winfoF
         jsr     set_port_from_window_id
-        addr_call draw_centered_string, desktop_aux::str_rename_title
+        addr_call draw_dialog_title, desktop_aux::str_rename_title
         jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::FrameRect, rect1
         yax_call draw_dialog_label, $02, desktop_aux::str_rename_old
@@ -18311,7 +18339,7 @@ LB313:  jsr     reset_state
         jsr     create_window_with_alert_bitmap
         lda     winfoF
         jsr     set_port_from_window_id
-        addr_call draw_centered_string, desktop_aux::str_warning
+        addr_call draw_dialog_title, desktop_aux::str_warning
         MGTK_RELAY_CALL MGTK::ShowCursor
         jsr     copy_dialog_param_addr_to_ptr
 
@@ -18715,7 +18743,7 @@ done:   rts
 
 ;;; ==================================================
 
-.proc draw_centered_string
+.proc draw_dialog_title
         str       := $6
         str_data  := $6
         str_len   := $8
@@ -18730,22 +18758,22 @@ done:   rts
         inc     str_data+1
 :       MGTK_RELAY_CALL MGTK::TextWidth, str
         lsr16   str_width       ; divide by two
-        lda     #$01
-        sta     LB76B
-        lda     #$90
-        lsr     LB76B           ; divide by two
+        lda     #>400           ; center within 400px
+        sta     hi
+        lda     #<400
+        lsr     hi              ; divide by two
         ror     a
         sec
         sbc     str_width
-        sta     point4::xcoord
-        lda     LB76B
+        sta     pos_dialog_title::xcoord
+        lda     hi
         sbc     str_width+1
-        sta     point4::xcoord+1
-        MGTK_RELAY_CALL MGTK::MoveTo, point4
+        sta     pos_dialog_title::xcoord+1
+        MGTK_RELAY_CALL MGTK::MoveTo, pos_dialog_title
         MGTK_RELAY_CALL MGTK::DrawText, str
         rts
 
-LB76B:  .byte   0
+hi:  .byte   0
 .endproc
 
 ;;; ==================================================
