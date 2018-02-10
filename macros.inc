@@ -104,73 +104,83 @@
 ;;; Add arg1 to arg2, store to arg3
 ;;;    add16 $1111, $2222, $3333        ; absolute, absolute, absolute
 ;;;    add16 $1111, #$2222, $3333       ; absolute, immediate, absolute
-.macro add16 aa, bb, rr
-    .if is_immediate {bb}
+.macro add16 aa, arg2, arg3
+    .if is_immediate {arg2}
         lda     aa
         clc
-        adc     #<(.right (.tcount ({bb})-1, {bb}))
-        sta     rr
+        adc     #<(.right (.tcount ({arg2})-1, {arg2}))
+        sta     arg3
         lda     aa+1
-        adc     #>(.right (.tcount ({bb})-1, {bb}))
-        sta     rr+1
+        adc     #>(.right (.tcount ({arg2})-1, {arg2}))
+        sta     arg3+1
     .else
         lda     aa
         clc
-        adc     bb
-        sta     rr
+        adc     arg2
+        sta     arg3
         lda     aa+1
-        adc     bb+1
-        sta     rr+1
+        adc     arg2+1
+        sta     arg3+1
     .endif
 .endmacro
 
 ;;; Add arg1 (absolute) to arg2 (8-bit absolute), store to arg3
 ;;;    add16_8 $1111, #$22, $3333       ; absolute, immediate, absolute
 ;;;    add16_8 $1111, $22, $3333        ; absolute, absolute, absolute
-.macro add16_8 aa, bb, rr
+.macro add16_8 aa, arg2, arg3
         lda     aa
         clc
-        adc     bb
-        sta     rr
+        adc     arg2
+        sta     arg3
         lda     aa+1
         adc     #0
-        sta     rr+1
+        sta     arg3+1
 .endmacro
 
 ;;; Subtract arg2 from arg1, store to arg3
 ;;;    sub16 $1111, #$2222, $3333       ; absolute, immediate, absolute
 ;;;    sub16 $1111, $2222, $3333        ; absolute, absolute, absolute
-.macro sub16 aa, bb, rr
-    .if is_immediate {bb}
-        lda     aa
+;;;    sub16 $1111, $2222,x $3333       ; absolute, indexed, absolute
+;;;    sub16 $1111, $2222,y $3333       ; absolute, indexed, absolute
+.macro sub16 arg1, arg2, arg3, arg4
+    .if is_register {arg3}
+        lda     arg1
         sec
-        sbc     #<(.right (.tcount ({bb})-1, {bb}))
-        sta     rr
-        lda     aa+1
-        sbc     #>(.right (.tcount ({bb})-1, {bb}))
-        sta     rr+1
+        sbc     arg2,arg3
+        sta     arg4
+        lda     arg1+1
+        sbc     arg2+1,arg3
+        sta     arg4+1
+    .elseif is_immediate {arg2}
+        lda     arg1
+        sec
+        sbc     #<(.right (.tcount ({arg2})-1, {arg2}))
+        sta     arg3
+        lda     arg1+1
+        sbc     #>(.right (.tcount ({arg2})-1, {arg2}))
+        sta     arg3+1
     .else
-        lda     aa
+        lda     arg1
         sec
-        sbc     bb
-        sta     rr
-        lda     aa+1
-        sbc     bb+1
-        sta     rr+1
+        sbc     arg2
+        sta     arg3
+        lda     arg1+1
+        sbc     arg2+1
+        sta     arg3+1
     .endif
 .endmacro
 
 ;;; Subtract arg2 from arg1, store to arg3
 ;;;    sub16_8 $1111, #$22, $3333       ; absolute, immediate, absolute
 ;;;    sub16_8 $1111, $22, $3333        ; absolute, absolute, absolute
-.macro sub16_8 aa, bb, rr
-        lda     aa
+.macro sub16_8 arg1, arg2, arg3
+        lda     arg1
         sec
-        sbc     bb
-        sta     rr
-        lda     aa+1
+        sbc     arg2
+        sta     arg3
+        lda     arg1+1
         sbc     #0
-        sta     rr+1
+        sta     arg3+1
 .endmacro
 
 ;;; Copy 16-bit value

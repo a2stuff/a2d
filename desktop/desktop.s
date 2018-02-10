@@ -5406,16 +5406,19 @@ str_k_in_disk:
 str_k_available:
         PASCAL_STRING "K available"
 
-str_6_spaces:
+str_from_int:                   ; populated by int_to_string
         PASCAL_STRING "      "
 
-point10:  DEFINE_POINT 0, 0, point10
+width_items_label_padded:       .word 0
+unused: .word   0
 point11:  DEFINE_POINT 0, 0, point11
 point2: DEFINE_POINT 0, 0, point2
 point3: DEFINE_POINT 0, 0, point3
 
-point12:  DEFINE_POINT 0, 0, point12
-point13:  DEFINE_POINT 0, 0, point13
+width_items_label:      .word   0
+width_k_in_disk_label:  .word   0
+width_k_available_label:        .word   0
+width_right_labels:      .word   0
 
 trash_icon_num:  .byte   0
 
@@ -12016,28 +12019,40 @@ file_type:
 
 ;;; ==================================================
 
-L78EF:  lda     grafport2::cliprect::x1
+L78EF:
+        ;; Compute header coords
+        ;; point1 is left edge, point5 is right edge
+        ;; (and update item label pos)
+
+        ;; x coords
+        lda     grafport2::cliprect::x1
         sta     point1::xcoord
         clc
-        adc     #$05
+        adc     #5
         sta     items_label_pos::xcoord
         lda     grafport2::cliprect::x1+1
         sta     point1::xcoord+1
-        adc     #$00
+        adc     #0
         sta     items_label_pos::xcoord+1
+
+        ;; y coords
         lda     grafport2::cliprect::y1
         clc
-        adc     #$0C
+        adc     #12
         sta     point1::ycoord
         sta     point5::ycoord
         lda     grafport2::cliprect::y1+1
-        adc     #$00
+        adc     #0
         sta     point1::ycoord+1
         sta     point5::ycoord+1
+
+        ;; draw top line
         MGTK_RELAY_CALL MGTK::MoveTo, point1
         copy16  grafport2::cliprect::x2, point5::xcoord
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::LineTo, point5
+
+        ;; offset down by 2px
         lda     point1::ycoord
         clc
         adc     #2
@@ -12047,24 +12062,28 @@ L78EF:  lda     grafport2::cliprect::x1
         adc     #0
         sta     point1::ycoord+1
         sta     point5::ycoord+1
+
+        ;; draw bottom line
         MGTK_RELAY_CALL MGTK::MoveTo, point1
         MGTK_RELAY_CALL MGTK::LineTo, point5
-        add16 grafport2::cliprect::y1, #$0A, items_label_pos+2
+
+        ;; baseline for header text
+        add16 grafport2::cliprect::y1, #10, items_label_pos::ycoord
         lda     cached_window_icon_count
         ldx     #$00
-        jsr     L7AE0
+        jsr     int_to_string
         lda     cached_window_icon_count
-        cmp     #$02
+        cmp     #2
         bcs     L798A
         dec     str_items       ; remove trailing s
 L798A:  MGTK_RELAY_CALL MGTK::MoveTo, items_label_pos
         jsr     L7AD7
         addr_call draw_text2, str_items
         lda     cached_window_icon_count
-        cmp     #$02
+        cmp     #2
         bcs     L79A7
         inc     str_items       ; restore trailing s
-L79A7:  jsr     L79F7
+L79A7:  jsr     calc_header_coords
         ldx     active_window_id
         dex
         txa
@@ -12075,7 +12094,7 @@ L79A7:  jsr     L79F7
         lda     LEB8B+1,x
         tax
         tya
-        jsr     L7AE0
+        jsr     int_to_string
         MGTK_RELAY_CALL MGTK::MoveTo, point2
         jsr     L7AD7
         addr_call draw_text2, str_k_in_disk
@@ -12089,117 +12108,127 @@ L79A7:  jsr     L79F7
         lda     LEB9B+1,x
         tax
         tya
-        jsr     L7AE0
+        jsr     int_to_string
         MGTK_RELAY_CALL MGTK::MoveTo, point3
         jsr     L7AD7
         addr_call draw_text2, str_k_available
         rts
 
-L79F7:  sub16   grafport2::cliprect::x2, grafport2::cliprect::x1, L7ADE
-        sub16   L7ADE, point12::xcoord, L7ADE
-        bpl     L7A22
+;;; ==================================================
+
+.proc calc_header_coords
+        sub16   grafport2::cliprect::x2, grafport2::cliprect::x1, xcoord
+        sub16   xcoord, width_items_label, xcoord
+        bpl     :+
         jmp     L7A86
 
-L7A22:  sub16   L7ADE, point13::ycoord, L7ADE
-        bpl     L7A3A
+:       sub16   xcoord, width_right_labels, xcoord
+        bpl     :+
         jmp     L7A86
 
-L7A3A:  add16   point11::xcoord, L7ADE, point3::xcoord
-        lda     L7ADE+1
+:       add16   point11::xcoord, xcoord, point3::xcoord
+        lda     xcoord+1
         beq     L7A59
-        lda     L7ADE
+        lda     xcoord
         cmp     #$18
         bcc     L7A6A
-L7A59:  sub16   point3::xcoord, #$0C, point3::xcoord
-L7A6A:  lsr     L7ADE+1
-        ror     L7ADE
-        add16   point10::xcoord, L7ADE, point2::xcoord
+L7A59:  sub16   point3::xcoord, #12, point3::xcoord
+L7A6A:  lsr     xcoord+1
+        ror     xcoord
+        add16   width_items_label_padded, xcoord, point2::xcoord
         jmp     L7A9E
 
-L7A86:  copy16  point10::xcoord, point2::xcoord
+L7A86:  copy16  width_items_label_padded, point2::xcoord
         copy16  point11::xcoord, point3::xcoord
-L7A9E:  lda     point2::xcoord
-        clc
-        adc     grafport2::cliprect::x1
-        sta     point2::xcoord
-        lda     point2::xcoord+1
-        adc     grafport2::cliprect::x1+1
-        sta     point2::xcoord+1
-        lda     point3::xcoord
-        clc
-        adc     grafport2::cliprect::x1
-        sta     point3::xcoord
-        lda     point3::xcoord+1
-        adc     grafport2::cliprect::x1+1
-        sta     point3::xcoord+1
-        lda     items_label_pos+2
+L7A9E:  add16   point2::xcoord, grafport2::cliprect::x1, point2::xcoord
+        add16   point3::xcoord, grafport2::cliprect::x1, point3::xcoord
+        lda     items_label_pos::ycoord
         sta     point2::ycoord
         sta     point3::ycoord
-        lda     items_label_pos+3
+        lda     items_label_pos::ycoord+1
         sta     point2::ycoord+1
         sta     point3::ycoord+1
         rts
+.endproc
 
-L7AD7:  addr_jump draw_text2, str_6_spaces
+L7AD7:  addr_jump draw_text2, str_from_int
 
-L7ADE:  .word   0
+xcoord:
+        .word   0
 
-L7AE0:  stax    L7B5B
+;;; ==================================================
+;;; Convert A,X to decimal string
+
+.proc int_to_string
+        stax    value
+
+        ;; Fill buffer with spaces
         ldx     #6
         lda     #' '
-:       sta     str_6_spaces,x
+:       sta     str_from_int,x
         dex
         bne     :-
 
         lda     #0
-        sta     L7B5E
-        ldy     #$00
-        ldx     #$00
-L7AF9:  lda     #$00
-        sta     L7B5D
-L7AFE:  cmp16   L7B5B, L7B53,x
-        bpl     L7B31
-        lda     L7B5D
-        bne     L7B1A
-        bit     L7B5E
-        bmi     L7B1A
-        lda     #$20
-        bne     L7B24
-L7B1A:  clc
-        adc     #$30
+        sta     not_leading_zero_flag
+        ldy     #0              ; y = position in string
+        ldx     #0              ; x = which power index is subtracted (*2)
+
+        ;; For each power of ten
+loop:   lda     #0
+        sta     digit
+
+        ;; Keep subtracting/incrementing until zero is hit
+sloop:  cmp16   value, powers,x
+        bpl     subtract
+
+        lda     digit
+        bne     not_pad
+        bit     not_leading_zero_flag
+        bmi     not_pad
+
+        ;; Pad with space
+        lda     #' '
+        bne     :+
+        ;; Convert to ASCII
+not_pad:
+        clc
+        adc     #'0'            ; why not ORA $30 ???
         pha
         lda     #$80
-        sta     L7B5E
+        sta     not_leading_zero_flag
         pla
-L7B24:  sta     str_6_spaces+2,y
+
+        ;; Place the digit, move to next
+:       sta     str_from_int+2,y
         iny
         inx
         inx
-        cpx     #$08
-        beq     L7B4A
-        jmp     L7AF9
+        cpx     #8              ; up to 4 digits (*2) via subtraction...
+        beq     done
+        jmp     loop
 
-L7B31:  inc     L7B5D
-        lda     L7B5B
-        sec
-        sbc     L7B53,x
-        sta     L7B5B
-        lda     L7B5C
-        sbc     L7B54,x
-        sta     L7B5C
-        jmp     L7AFE
+subtract:
+        inc     digit
+        sub16   value, powers,x, value
+        jmp     sloop
 
-L7B4A:  lda     L7B5B
+done:   lda     value           ; handle last digit
         ora     #'0'
-        sta     str_6_spaces+2,y
+        sta     str_from_int+2,y
         rts
 
-L7B53:  .byte   $10
-L7B54:  .byte   $27,$E8,$03,$64,$00,$0A,$00
-L7B5B:  .byte   0
-L7B5C:  .byte   0
-L7B5D:  .byte   0
-L7B5E:  .byte   0
+powers: .word   10000, 1000, 100, 10
+value:  .word   0            ; remaining value as subtraction proceeds
+digit:  .byte   0            ; current digit being accumulated
+
+not_leading_zero_flag:       ; high bit set once a non-zero digit seen
+        .byte   0
+
+.endproc
+
+;;; ==================================================
+
 L7B5F:  .byte   0
 L7B60:  .byte   0
 L7B61:  .byte   0
@@ -19909,38 +19938,48 @@ L0AE7:  MLI_RELAY_CALL OPEN, open_params
         MLI_RELAY_CALL CLOSE, close_params
         rts
 
-L0B09:  addr_call desktop_main::measure_text1, str_6_spaces
-        sta     L0BA0
-        stx     L0BA1
+;;; ==================================================
+
+.proc L0B09
+        ;; Enough space for "123456"
+        addr_call desktop_main::measure_text1, str_from_int
+        stax    dx
+
+        ;; Width of "123456 Items"
         addr_call desktop_main::measure_text1, str_items
         clc
-        adc     L0BA0
-        sta     point12::xcoord
+        adc     dx
+        sta     width_items_label
         txa
-        adc     L0BA1
-        sta     point12::xcoord+1
+        adc     dx+1
+        sta     width_items_label+1
+
+        ;; Width of "123456K in disk"
         addr_call desktop_main::measure_text1, str_k_in_disk
         clc
-        adc     L0BA0
-        sta     point12::ycoord
+        adc     dx
+        sta     width_k_in_disk_label
         txa
-        adc     L0BA1
-        sta     point12::ycoord+1
+        adc     dx+1
+        sta     width_k_in_disk_label+1
+
+        ;; Width of "123456K available"
         addr_call desktop_main::measure_text1, str_k_available
         clc
-        adc     L0BA0
-        sta     point13::xcoord
+        adc     dx
+        sta     width_k_available_label
         txa
-        adc     L0BA1
-        sta     point13::xcoord+1
-        add16   point12::ycoord, point13::xcoord, point13::ycoord
-        add16   point12::xcoord, #$05, point10::xcoord
-        add16   point10::xcoord, point12::ycoord, point11::xcoord
-        add16   point11::xcoord, #$03, point11::xcoord
+        adc     dx+1
+        sta     width_k_available_label+1
+
+        add16   width_k_in_disk_label, width_k_available_label, width_right_labels
+        add16   width_items_label, #5, width_items_label_padded
+        add16   width_items_label_padded, width_k_in_disk_label, point11::xcoord
+        add16   point11::xcoord, #3, point11::xcoord
         jmp     enumerate_desk_accessories
 
-L0BA0:  .byte   0
-L0BA1:  .byte   0
+dx:     .word   0
+.endproc
 
 ;;; ==================================================
 
@@ -19949,19 +19988,19 @@ L0BA1:  .byte   0
 
         ;; Does the directory exist?
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
-        beq     L0BB9
+        beq     :+
         jmp     L0D0A
 
-L0BB9:  lda     get_file_info_params_type
+:       lda     get_file_info_params_type
         cmp     #FT_DIRECTORY
         beq     L0BC3
         jmp     L0D0A
 
-L0BC3:  MLI_RELAY_CALL OPEN, open_params2
-        lda     open_params2_ref_num
-        sta     read_params2_ref_num
-        sta     close_params2_ref_num
-        MLI_RELAY_CALL READ, read_params2
+L0BC3:  MLI_RELAY_CALL OPEN, open_params
+        lda     open_params_ref_num
+        sta     read_params_ref_num
+        sta     close_params_ref_num
+        MLI_RELAY_CALL READ, read_params
         lda     #$00
         sta     L0D04
         sta     L0D05
@@ -20051,7 +20090,7 @@ L0C96:  inc     L0D08
         lda     L0D08
         cmp     L0D07
         bne     L0CBA
-        MLI_RELAY_CALL READ, read_params2
+        MLI_RELAY_CALL READ, read_params
         copy16  #$1404, $06
         lda     #$00
         sta     L0D08
@@ -20060,25 +20099,25 @@ L0C96:  inc     L0D08
 L0CBA:  add16_8 $06, L0D06, $06
         jmp     L0C0C
 
-L0CCB:  MLI_RELAY_CALL CLOSE, close_params2
+L0CCB:  MLI_RELAY_CALL CLOSE, close_params
         jmp     L0D0A
 
-.proc open_params2
+.proc open_params
 param_count:    .byte   3
 pathname:       .addr   str_desk_acc
 io_buffer:      .addr   $1000
 ref_num:        .byte   0
 .endproc
-        open_params2_ref_num := open_params2::ref_num
+        open_params_ref_num := open_params::ref_num
 
-.proc read_params2
+.proc read_params
 param_count:    .byte   4
 ref_num:        .byte   0
 data_buffer:    .addr   $1400
 request_count:  .word   $200
 trans_count:    .word   0
 .endproc
-        read_params2_ref_num := read_params2::ref_num
+        read_params_ref_num := read_params::ref_num
 
 .proc get_file_info_params
 param_count:    .byte   $A
@@ -20097,11 +20136,11 @@ create_time:    .word   0
 
         .byte   0
 
-.proc close_params2
+.proc close_params
 param_count:    .byte   1
 ref_num:        .byte   0
 .endproc
-        close_params2_ref_num := close_params2::ref_num
+        close_params_ref_num := close_params::ref_num
 
 str_desk_acc:
         PASCAL_STRING "Desk.acc"
