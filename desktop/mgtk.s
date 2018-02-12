@@ -1568,20 +1568,8 @@ fail:   rts
 ;;; SetPortBits
 
 SetPortBitsImpl:
-        lda     current_viewloc_x
-        sec
-        sbc     current_maprect_x1
-        sta     $F7
-        lda     current_viewloc_x+1
-        sbc     current_maprect_x1+1
-        sta     $F8
-        lda     current_viewloc_y
-        sec
-        sbc     current_maprect_y1
-        sta     $F9
-        lda     current_viewloc_y+1
-        sbc     current_maprect_y1+1
-        sta     $FA
+        sub16   current_viewloc_x, current_maprect_x1, $F7
+        sub16   current_viewloc_y, current_maprect_y1, $F9
         rts
 
 L50A9:  lda     current_maprect_x2+1
@@ -1723,13 +1711,7 @@ PaintBitsImpl:
         dex
         bpl     :-
 
-        lda     dbi_width
-        sec
-        sbc     dbi_hoff
-        sta     $82
-        lda     dbi_width+1
-        sbc     dbi_hoff+1
-        sta     $83
+        sub16   dbi_width, dbi_hoff, $82
         lda     dbi_x
         sta     dbi_hoff
 
@@ -1741,13 +1723,7 @@ PaintBitsImpl:
         adc     $83
         sta     dbi_width+1
 
-        lda     dbi_height
-        sec
-        sbc     dbi_voff
-        sta     $82
-        lda     dbi_height+1
-        sbc     dbi_voff+1
-        sta     $83
+        sub16   dbi_height, dbi_voff, $82
         lda     dbi_y
         sta     dbi_voff
         clc
@@ -2332,13 +2308,7 @@ L5606:  ldy     $04A8,x
         sta     $A2
         php
         bpl     L563F
-        lda     #$00
-        sec
-        sbc     $A1
-        sta     $A1
-        lda     #$00
-        sbc     $A2
-        sta     $A2
+        sub16   #0, $A1, $A1
 L563F:  stx     $84
         jsr     L569A
         ldx     $84
@@ -6241,21 +6211,9 @@ L7280:  tya
         bcs     L72A0
         dec     $97
 L72A0:  jsr     PaintRectImpl  ; Draw title bar stripes between close box and title
-        lda     $CB
-        clc
-        adc     #$0A
-        sta     $92
-        lda     $CC
-        adc     #$00
-        sta     $93
+        add16   $CB, #$0A, $92
         jsr     L7143
-        lda     $CB
-        sec
-        sbc     #$03
-        sta     $96
-        lda     $CC
-        sbc     #$00
-        sta     $97
+        sub16   $CB, #$03, $96
         jsr     PaintRectImpl  ; Draw title bar stripes to right of title
         MGTK_CALL MGTK::SetPattern, standard_port::penpattern
 L72C9:  jsr     next_window::L703E
@@ -7605,13 +7563,7 @@ L7CB7:  .byte   0
 L7CB8:  .byte   0
 L7CB9:  .byte   0
 
-L7CBA:  lda     L7CB6
-        sec
-        sbc     L7CB8
-        sta     $A3
-        lda     L7CB7
-        sbc     L7CB9
-        sta     $A4
+L7CBA:  sub16   L7CB6, L7CB8, $A3
         ldx     #$00
         bit     $8C
         bpl     L7CD3
