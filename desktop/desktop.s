@@ -5131,13 +5131,13 @@ LE27C:  DEFINE_MENU_SEPARATOR
 
 startup_menu:
         DEFINE_MENU 7
-        DEFINE_MENU_ITEM s00
-        DEFINE_MENU_ITEM s01
-        DEFINE_MENU_ITEM s02
-        DEFINE_MENU_ITEM s03
-        DEFINE_MENU_ITEM s04
-        DEFINE_MENU_ITEM s05
-        DEFINE_MENU_ITEM s06
+        DEFINE_MENU_ITEM startup_menu_item_1
+        DEFINE_MENU_ITEM startup_menu_item_2
+        DEFINE_MENU_ITEM startup_menu_item_3
+        DEFINE_MENU_ITEM startup_menu_item_4
+        DEFINE_MENU_ITEM startup_menu_item_5
+        DEFINE_MENU_ITEM startup_menu_item_6
+        DEFINE_MENU_ITEM startup_menu_item_7
 
 str_all:PASCAL_STRING "All"
 
@@ -5156,13 +5156,13 @@ sd11:   DEFINE_STRING "Slot    drive       ", sd11s
 sd12:   DEFINE_STRING "Slot    drive       ", sd12s
 sd13:   DEFINE_STRING "Slot    drive       ", sd13s
 
-s00:    PASCAL_STRING "Slot 0 "
-s01:    PASCAL_STRING "Slot 0 "
-s02:    PASCAL_STRING "Slot 0 "
-s03:    PASCAL_STRING "Slot 0 "
-s04:    PASCAL_STRING "Slot 0 "
-s05:    PASCAL_STRING "Slot 0 "
-s06:    PASCAL_STRING "Slot 0 "
+startup_menu_item_1:    PASCAL_STRING "Slot 0 "
+startup_menu_item_2:    PASCAL_STRING "Slot 0 "
+startup_menu_item_3:    PASCAL_STRING "Slot 0 "
+startup_menu_item_4:    PASCAL_STRING "Slot 0 "
+startup_menu_item_5:    PASCAL_STRING "Slot 0 "
+startup_menu_item_6:    PASCAL_STRING "Slot 0 "
+startup_menu_item_7:    PASCAL_STRING "Slot 0 "
 
         .addr   sd0, sd1, sd2, sd3, sd4, sd5, sd6, sd7
         .addr   sd8, sd9, sd10, sd11, sd12, sd13
@@ -9062,7 +9062,7 @@ L5AD0:  .byte   0
         clc
         adc     #6
         tax
-        lda     s00,x
+        lda     startup_menu_item_1,x
         sec
         sbc     #$30
         clc
@@ -20379,7 +20379,7 @@ L0E21:  pla
 L0E25:  lda     L0E33
         cmp     DEVCNT
         beq     L0E2F
-        bcs     L0E4C
+        bcs     populate_startup_menu
 L0E2F:  jmp     L0D12
 
 L0E32:  .byte   0
@@ -20404,59 +20404,77 @@ L0E36:  inx
 
 ;;; ==================================================
 
-L0E4C:  lda     DEVCNT
+.proc populate_startup_menu
+        lda     DEVCNT
         clc
-        adc     #$03
+        adc     #3
         sta     $E270
-        lda     #$00
-        sta     L0EAF
+
+        lda     #0
+        sta     slot
         tay
         tax
-L0E5C:  lda     DEVLST,y
-        and     #$70
-        beq     L0EA8
-        lsr     a
-        lsr     a
-        lsr     a
-        lsr     a
-        cmp     L0EAF
-        beq     L0E70
-        cmp     #$02
-        bne     L0E79
-L0E70:  cpy     DEVCNT
-        beq     L0EA8
-        iny
-        jmp     L0E5C
 
-L0E79:  sta     L0EAF
+loop:   lda     DEVLST,y
+        and     #$70            ; mask off slot
+        beq     done
+        lsr     a
+        lsr     a
+        lsr     a
+        lsr     a
+        cmp     slot            ; same as last?
+        beq     :+
+        cmp     #2              ; ???
+        bne     prepare
+:       cpy     DEVCNT
+        beq     done
+        iny
+        jmp     loop
+
+prepare:
+        sta     slot
         clc
-        adc     #$30
-        sta     L0EAE
-        txa
+        adc     #'0'
+        sta     char
+
+        txa                     ; pointer to nth sNN string
         pha
         asl     a
         tax
-        copy16  L0EB0,x, sta_addr
-        ldx     s00
+        copy16  slot_string_table,x, item_ptr
+
+        ldx     startup_menu_item_1             ; replace second-from-last char
         dex
-        lda     L0EAE
-        sta_addr := *+1
+        lda     char
+        item_ptr := *+1
         sta     dummy1234,x
+
         pla
         tax
         inx
         cpy     DEVCNT
-        beq     L0EA8
+        beq     done
         iny
-        jmp     L0E5C
+        jmp     loop
 
-L0EA8:  stx     startup_menu
+done:   stx     startup_menu
         jmp     L0EE1
 
-L0EAE:  .byte   0
-L0EAF:  .byte   0
-L0EB0:  .addr   s00,s01,s02,s03,s04,s05,s06
+char:   .byte   0
+slot:   .byte   0
 
+slot_string_table:
+        .addr   startup_menu_item_1
+        .addr   startup_menu_item_2
+        .addr   startup_menu_item_3
+        .addr   startup_menu_item_4
+        .addr   startup_menu_item_5
+        .addr   startup_menu_item_6
+        .addr   startup_menu_item_7
+
+.endproc
+
+;;; ==================================================
 
 .proc get_file_info_params2
 param_count:    .byte   $A
@@ -20480,7 +20498,8 @@ data_buffer:    .addr   desktop_main::L4862
 
 L0ED4:  PASCAL_STRING "System/Start"
 
-L0EE1:  lda     #$00
+.proc L0EE1
+        lda     #$00
         sta     desktop_main::L4861
         jsr     desktop_main::L4AFD
         cmp     #$80
@@ -20518,6 +20537,7 @@ L0F34:  MGTK_RELAY_CALL MGTK::CheckEvents
         jsr     desktop_main::disable_eject_menu_item
         jsr     desktop_main::disable_file_menu_items
         jmp     MGTK::MLI
+.endproc
 
         .assert * = $0F60, error, "Segment length mismatch"
         PAD_TO $1000
