@@ -482,7 +482,7 @@ light_pattern:
         .byte   %10111011
         .byte   %11101110
         .byte   %10111011
-L8E94:  .byte   $FF
+        .byte   $FF
 
 ;;; ==================================================
 ;;; Icon (i.e. file, volume) details
@@ -1616,12 +1616,9 @@ L9C82:  .byte   $30
 L9C83:  .byte   $02
 L9C84:  .byte   $C0
 L9C85:  .byte   $00
-L9C86:  .byte   $00
-L9C87:  .byte   $00
-L9C88:  .byte   $00
-L9C89:  .byte   $00
-L9C8A:  .byte   $00
-L9C8B:  .byte   $00
+L9C86:  .word   0
+L9C88:  .word   0
+L9C8A:  .word   0
 L9C8C:  .byte   $00
 L9C8D:  .byte   $00
 L9C8E:  .byte   $00
@@ -2232,14 +2229,14 @@ LA2FA:  lda     icon_table+1,x
         ldx     num_icons
 LA309:  cpx     LA322
         beq     LA318
-        lda     L8E94,x
-        sta     num_icons,x
+        lda     icon_table-2,x
+        sta     icon_table-1,x
         dex
         jmp     LA309
 
 LA318:  ldx     LA322
         lda     LA323
-        sta     num_icons,x
+        sta     icon_table-1,x
         rts
 LA322:  .byte   0
 LA323:  .byte   0
@@ -2714,8 +2711,7 @@ which_area:     .byte   0
 window_id:      .byte   0
 .endproc
 
-LA6AE:  .byte   $00
-LA6AF:  .byte   $00
+LA6AE:  .word   0
 LA6B0:  .byte   $00
 LA6B1:  .byte   $00
 LA6B2:  .byte   $00
@@ -2735,10 +2731,8 @@ LA6BF:  .byte   $00
 LA6C0:  .byte   $00
 LA6C1:  .byte   $00
 LA6C2:  .byte   $00
-LA6C3:  .byte   $00
-LA6C4:  .byte   $00
-LA6C5:  .byte   $00
-LA6C6:  .byte   $00
+LA6C3:  .word   0
+LA6C5:  .word   0
 LA6C7:  lda     L9F93
         beq     LA6FA
         lda     setportbits_params2::cliprect::x2
@@ -2825,11 +2819,8 @@ LA77D:  lda     LA6B3,x
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         jsr     push_zp_addrs
         MGTK_CALL MGTK::GetWinPtr, findwindow_params::window_id
-        lda     LA6AE
-        sta     $06
-        lda     LA6AF
-        sta     $07
-        ldy     #$01
+        copy16  LA6AE, $06
+        ldy     #1
         lda     ($06),y
         and     #$01
         bne     LA7C3
@@ -2837,7 +2828,7 @@ LA77D:  lda     LA6B3,x
         beq     LA7C8
 LA7C3:  lda     #$80
         sta     LA6B2
-LA7C8:  ldy     #$04
+LA7C8:  ldy     #4
         lda     ($06),y
         and     #$80
         sta     LA6B1
@@ -2853,13 +2844,13 @@ LA7C8:  ldy     #$04
         bmi     LA820
         lda     grafport4::viewloc::ycoord
         sec
-        sbc     #$0E
+        sbc     #14
         sta     grafport4::viewloc::ycoord
         bcs     LA812
         dec     grafport4::viewloc::ycoord+1
 LA812:  lda     grafport4::cliprect::y1
         sec
-        sbc     #$0E
+        sbc     #14
         sta     grafport4::cliprect::y1
         bcs     LA820
         dec     grafport4::cliprect::y1+1
@@ -11129,8 +11120,7 @@ create_time:    .word   0
 .endproc
 
         .byte   0
-L70BB:  .byte   $00
-L70BC:  .byte   $00
+L70BB:  .word   0
 L70BD:  .byte   $00
 L70BE:  .byte   $00
 L70BF:  .byte   $00
@@ -11314,8 +11304,7 @@ L7296:  copy16  $06, L485F
         jsr     pop_zp_addrs
         rts
 L72A7:  .byte   0
-L72A8:  .byte   0
-L72A9:  .byte   0
+L72A8:  .word   0
 
 L72AA:  MLI_RELAY_CALL OPEN, open_params
         beq     L72CD
@@ -11454,8 +11443,7 @@ L7429:  lda     $E1F1
         rts
 L7445:  .byte   0
 L7446:  .byte   0
-L7447:  .byte   0
-L7448:  .byte   0
+L7447:  .word   0
 L7449:  .byte   0
 L744A:  .byte   0
 
@@ -11679,8 +11667,7 @@ L762A:  .word   0
 L762C:  .word   0
 L762E:  .byte   $05
 L762F:  .byte   $00
-L7630:  .byte   $00
-L7631:  .byte   $00
+L7630:  .word   0
 L7632:  .byte   $00
 L7633:  .byte   $00
 L7634:  .byte   $00
@@ -15241,9 +15228,9 @@ pathname:       .addr   $220
 new_pathname:   .addr   $1FC0
 .endproc
 
-L956E:  .byte   0
+rename_dialog_params:
         .byte   0
-L9570:  .byte   $1F
+        .addr   $1F00
 
 L9571:  lda     #$00
         sta     L9706
@@ -15407,8 +15394,8 @@ L96EB:  lda     ($06),y
         inc     L9706
         jmp     L9576
 
-L96F8:  sta     L956E
-        yax_call launch_dialog, index_rename_dialog, L956E
+L96F8:  sta     rename_dialog_params
+        yax_call launch_dialog, index_rename_dialog, rename_dialog_params
         rts
 
 L9705:  .byte   $00
@@ -16900,9 +16887,10 @@ LA4C6:  yax_call JT_MLI_RELAY, ON_LINE, on_line_params2
         index_warning_dialog            := $C
 
 launch_dialog:
-        jmp     LA520
+        jmp     launch_dialog_impl
 
-LA503:  .addr   show_about_dialog
+dialog_proc_table:
+        .addr   show_about_dialog
         .addr   show_copy_file_dialog
         .addr   show_delete_file_dialog
         .addr   show_new_folder_dialog
@@ -16916,15 +16904,17 @@ LA503:  .addr   show_about_dialog
         .addr   show_get_size_dialog
         .addr   show_warning_dialog
 
-dialog_param_addr:  .addr   0
+dialog_param_addr:
+        .addr   0
         .byte   0
 
-LA520:  stax    dialog_param_addr
+.proc launch_dialog_impl
+        stax    dialog_param_addr
         tya
         asl     a
         tax
-        copy16  LA503,x, LA565
-        lda     #$00
+        copy16  dialog_proc_table,x, jump_addr
+        lda     #0
         sta     LD8EB
         sta     LD8EC
         sta     LD8F0
@@ -16936,14 +16926,12 @@ LA520:  stax    dialog_param_addr
         sta     cursor_ip_flag
         lda     #$14
         sta     LD8E9
-        lda     #<rts1
-        sta     jump_relay+1
-        lda     #>rts1
-        sta     jump_relay+2
+        copy16  #rts1, jump_relay+1
         jsr     set_cursor_pointer
 
-        LA565 := *+1
+        jump_addr := *+1
         jmp     dummy0000       ; self-modified
+.endproc
 
 
 ;;; ==================================================

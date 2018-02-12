@@ -7,6 +7,7 @@
         .include "../inc/mouse.inc"
         .include "../mgtk.inc"
         .include "../desktop.inc"
+        .include "../macros.inc"
 
 ;;; ==================================================
 ;;; Mouse Graphics Tool Kit
@@ -1533,8 +1534,7 @@ L5043:  jsr     L50A9
         bottom := $98
 
         jsr     L514C
-        lda     current_penloc_x
-        ldx     current_penloc_x+1
+        ldax    current_penloc_x
         cpx     left+1
         bmi     fail
         bne     :+
@@ -1546,8 +1546,7 @@ L5043:  jsr     L50A9
         cmp     right
         bcc     :+
         bne     fail
-:       lda     current_penloc_y
-        ldx     current_penloc_y+1
+:       ldax    current_penloc_y
         cpx     top+1
         bmi     fail
         bne     :+
@@ -1891,7 +1890,7 @@ L52A1:  stx     $B0
         ldy     #3              ; Copy params_addr... to $92... and $96...
 :       lda     (params_addr),y
         sta     $92,y
-L52AE:  sta     $96,y
+        sta     $96,y
         dey
         bpl     :-
 
@@ -1916,16 +1915,14 @@ L52C0:  stx     $82
         bne     L52E1
         cmp     $92
         bcs     L52E1
-L52DB:  sta     $92
-        stx     $92+1
+L52DB:  stax    $92
         bcc     L52EF
 L52E1:  cpx     $96+1
         bmi     L52EF
         bne     L52EB
         cmp     $96
         bcc     L52EF
-L52EB:  sta     $96
-        stx     $96+1
+L52EB:  stax    $96
 L52EF:  ldx     $82
         lda     (params_addr),y
         sta     $0780,x
@@ -1941,16 +1938,14 @@ L52EF:  ldx     $82
         bne     L5310
         cmp     $94
         bcs     L5310
-L530A:  sta     $94
-        stx     $94+1
+L530A:  stax    $94
         bcc     L531E
 L5310:  cpx     $98+1
         bmi     L531E
         bne     L531A
         cmp     $98
         bcc     L531E
-L531A:  sta     $98
-        stx     $98+1
+L531A:  stax    $98
 L531E:  cpx     $A8
         stx     $A8
         bmi     L5330
@@ -2511,11 +2506,9 @@ L572F:  ldx     #1
         xdelta := $A1
         ydelta := $A3
 
-        lda     xdelta
-        ldx     xdelta+1
+        ldax    xdelta
         jsr     adjust_xpos
-        lda     ydelta
-        ldx     ydelta+1
+        ldax    ydelta
         clc
         adc     current_penloc_y
         sta     current_penloc_y
@@ -2726,14 +2719,12 @@ prepare_font:
         cmp     #17             ; if height >= 17, skip this next bit
         bcs     end
 
-        lda     current_textfont
-        ldx     current_textfont+1
+        ldax    current_textfont
         clc
         adc     #3
         bcc     :+
         inx
-:       sta     glyph_widths    ; set $FB/$FC to start of widths
-        stx     glyph_widths+1
+:       stax    glyph_widths    ; set $FB/$FC to start of widths
 
         sec
         adc     glyph_last
@@ -2831,10 +2822,7 @@ L590D:  clc
         txa
         adc     current_penloc_x+1
         sta     $97
-        lda     current_penloc_x
-        sta     $92
-        lda     current_penloc_x+1
-        sta     $93
+        copy16  current_penloc_x, $92
         lda     current_penloc_y
         sta     $98
         ldx     current_penloc_y+1
@@ -2847,8 +2835,7 @@ L592D:  sec
         sbc     $FF
         bcs     L5933
         dex
-L5933:  sta     $94
-        stx     $95
+L5933:  stax    $94
         rts
 
 ;;; ==================================================
@@ -2858,8 +2845,7 @@ L5933:  sta     $94
 DrawTextImpl:
         jsr     maybe_unstash_low_zp
         jsr     measure_text
-        sta     $A4
-        stx     $A5
+        stax    $A4
         ldy     #0
         sty     $9F
         sty     $A0
@@ -2924,8 +2910,7 @@ L59A8:  lda     #0
         jsr     L59C3
         sta     LOWSCR
 L59B9:  jsr     maybe_stash_low_zp
-        lda     $A4
-        ldx     $A4+1
+        ldax    $A4
         jmp     adjust_xpos
 
 L59C3:  lda     $98
@@ -3006,7 +2991,6 @@ L5A56:  lda     hires_table_lo,y
         ora     current_mapbits+1
         sta     $21,x
 L5A65:  cpy     $98
-L5A68           := * + 1
         beq     L5A6E
         iny
         inx
@@ -3421,7 +3405,7 @@ L5DC1:  .addr   L5C7E,L5C78,L5C72,L5C6C,L5C66,L5C60,L5C5A,L5C54,L5C4E,L5C48,L5C4
 L5DE1:  .addr   L5D74,L5D68,L5D5C,L5D50,L5D44,L5D38,L5D2C,L5D20,L5D14,L5D08,L5CFC,L5CF0,L5CE4,L5CD8,L5CCC,L5CC0
 
 low_zp_stash_buffer:
-L5E01:  .byte   $00
+        .byte   $00
 L5E02:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00
 
@@ -3455,8 +3439,7 @@ loop:   lda     standard_port,x
         dex
         bpl     loop
 
-        lda     saved_port_addr
-        ldx     saved_port_addr+1
+        ldax    saved_port_addr
         jsr     assign_and_prepare_port
 
         lda     #$7F
@@ -3510,15 +3493,13 @@ table:  .byte   <(TXTCLR / 2), <(MIXCLR / 2), <(LOWSCR / 2), <(LORES / 2)
 ;;; SetPort
 
 .proc SetPortImpl
-        lda     params_addr
-        ldx     params_addr+1
+        ldax    params_addr
         ;; fall through
 .endproc
 
         ;; Call with port address in (X,A)
 assign_and_prepare_port:
-        sta     active_port
-        stx     active_port+1
+        stax    active_port
         ;; fall through
 
         ;; Initializes font (if needed), port, pattern, and fill mode
@@ -3535,8 +3516,7 @@ prepare_port:
 
 .proc GetPortImpl
         jsr     apply_port_to_active_port
-        lda     active_port
-        ldx     active_port+1
+        ldax    active_port
         ;;  fall through
 .endproc
 
@@ -3664,8 +3644,8 @@ stack_ptr_stash:
 .proc standard_port
 viewloc:        .word   0, 0
 mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .word MGTK::screen_mapwidth
-maprect:        .word 0, 0, 560-1, 192-1
+mapwidth:       .word   MGTK::screen_mapwidth
+maprect:        .word   0, 0, 560-1, 192-1
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:         .word   0, 0
@@ -3682,7 +3662,7 @@ textfont:       .addr   0
 viewloc:        .word   0, 0
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-maprect:        .word 0, 0, 560-1, 192-1
+maprect:        .word   0, 0, 560-1, 192-1
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:         .word   0, 0
@@ -3712,9 +3692,9 @@ ycoord: .word   0
 .endproc
 
 mouse_state:
-mouse_x:  .word   0
-mouse_y:  .word   0
-mouse_status:.byte   0
+mouse_x:        .word   0
+mouse_y:        .word   0
+mouse_status:   .byte   0
 
 L5FFD:  .byte   $00
 L5FFE:  .byte   $00
@@ -3770,16 +3750,13 @@ L6067:  lda     #$FF
 SetCursorImpl:
         php
         sei
-        lda     params_addr
-        ldx     params_addr+1
-        sta     active_cursor
-        stx     active_cursor+1
+        ldax    params_addr
+        stax    active_cursor
         clc
         adc     #cursor_mask_offset
         bcc     :+
         inx
-:       sta     active_cursor_mask
-        stx     active_cursor_mask+1
+:       stax    active_cursor_mask
         ldy     #cursor_hotspot_offset
         lda     (params_addr),y
         sta     cursor_hotspot_x
@@ -3955,7 +3932,6 @@ L61DE:  cpy     #$C0
         ora     #$20
         sta     $89
         sty     $85
-L61F1           := * + 1
         ldy     $82
         lda     $83
         jsr     L622A
@@ -4112,8 +4088,7 @@ L6309:  rts
 ;;; GetCursorAddr
 
 .proc GetCursorAddrImpl
-        lda     active_cursor
-        ldx     active_cursor+1
+        ldax    active_cursor
         jmp     store_xa_at_params
 .endproc
 
@@ -4438,11 +4413,8 @@ L6556:  asl     preserve_zp_flag
         sta     params_addr
         lda     L653A
         sta     params_addr+1
-        lda     active_port
-L6566           := * + 1
-        ldx     active_port+1
-L6567:  sta     $82
-        stx     $83
+        ldax    active_port
+L6567:  stax    $82
         lda     L653B
         sta     stack_ptr_stash
         ldy     #sizeof_grafport-1
@@ -4507,8 +4479,7 @@ checkerboard_pattern:
         lda     params+1
         sta     mouse_hook+1
 
-        lda     mouse_state_addr
-        ldx     mouse_state_addr+1
+        ldax    mouse_state_addr
         ldy     #2
         jmp     store_xa_at_params_y
 
@@ -4538,7 +4509,7 @@ L65D8:  php
         bmi     L65E4
 L65E1:  jsr     CheckEventsImpl
 L65E4:  jsr     L67FE
-L65E7:  bcs     L6604
+        bcs     L6604
         plp
         php
         bcc     L65F0
@@ -4765,8 +4736,7 @@ rloop:  lda     int_stash_zp,x
 ;;; GetIntHandler
 
 .proc GetIntHandlerImpl
-        lda     L6750
-        ldx     L6750+1
+        ldax    L6750
         jmp     store_xa_at_params
 
 L6750:  .addr   interrupt_handler::body
@@ -4797,7 +4767,7 @@ L6755:  .res    128, 0
         ;; called during PostEvent and a few other places
 .proc L67E4
         lda     L6753
-        cmp     #$80            ; if L675E is not $80, add $4
+        cmp     #$80            ; if L6753 is not $80, add $4
         bne     :+
         lda     #$00            ; otherwise reset to 0
         bcs     compare
@@ -4907,14 +4877,10 @@ L6859:  .byte   $01,$02
 L685B:  .byte   $1E
 L685C:  .byte   $FF,$01
 L685E:  .byte   $1D
-L685F:  .byte   $25
-L6860:  .byte   $68
-L6861:  .byte   $37
-L6862:  .byte   $68
-L6863:  .byte   $5D
-L6864:  .byte   $68
-L6865:  .byte   $5A
-L6866:  .byte   $68
+L685F:  .addr   $6825
+L6861:  .addr   $6837
+L6863:  .addr   $685D
+L6865:  .addr   $685A
 
 get_menu_count:
         lda     active_menu
@@ -4993,8 +4959,7 @@ L68E1:  lda     $BF,y
 L68EA:  sty     current_penloc_y
         ldy     #0
         sty     current_penloc_y+1
-L68F0:  sta     current_penloc_x
-        stx     current_penloc_x+1
+L68F0:  stax    current_penloc_x
         rts
 
         ;; Set fill mode to A
@@ -5013,14 +4978,12 @@ draw_text:
         ;; Prepare $A1,$A2 as params for TextWidth/DrawText call
         ;; ($A3 is length)
 prepare_text_params:
-        sta     $82
-        stx     $83
+        stax    $82
         clc
         adc     #1
         bcc     L6910
         inx
-L6910:  sta     $A1
-        stx     $A2
+L6910:  stax    $A1
         ldy     #0
         lda     ($82),y
         sta     $A3
@@ -5048,40 +5011,32 @@ SetMenuImpl:
         jsr     get_menu_count  ; into $A8
         jsr     L653C
         jsr     L657E
-        lda     L685F
-        ldx     L6860
+        ldax    L685F
         jsr     fill_and_frame_rect
 
-        lda     #$0C
-        ldx     #$00
+        ldax    #$0C
         ldy     L6822
         iny
         jsr     L68EA
         ldx     #$00
 L6957:  jsr     L6878
-        lda     current_penloc_x
-        ldx     current_penloc_x+1
-        sta     $B5
-        stx     $B6
+        ldax    current_penloc_x
+        stax    $B5
         sec
         sbc     #$08
         bcs     L6968
         dex
-L6968:  sta     $B7
-        stx     $B8
-        sta     $BB
-        stx     $BC
+L6968:  stax    $B7
+        stax    $BB
         ldx     #$00
         stx     $C5
         stx     $C6
 L6976:  jsr     L68BE
         bit     $BF
         bvs     L69B4
-        lda     $C3
-        ldx     $C3+1
+        ldax    $C3
         jsr     do_measure_text
-        sta     $82
-        stx     $83
+        stax    $82
         lda     $BF
         and     #$03
         bne     L6997
@@ -5150,21 +5105,17 @@ L6A00:  lda     $BB
         adc     #$00
         sta     $BE
         jsr     L68A9
-        lda     $B1
-        ldx     $B1+1
+        ldax    $B1
         jsr     draw_text
         jsr     L6A5C
-        lda     current_penloc_x
-        ldx     current_penloc_x+1
+        ldax    current_penloc_x
         clc
         adc     #$08
         bcc     L6A24
         inx
-L6A24:  sta     $B9
-        stx     $BA
+L6A24:  stax    $B9
         jsr     L68A9
-        lda     #<12
-        ldx     #>12
+        ldax    #12
         jsr     adjust_xpos
         ldx     $A7
         inx
@@ -5194,10 +5145,8 @@ L6A5C:  ldx     $A7
 
         ;; Fills rect (params at X,A) then inverts border
 .proc fill_and_frame_rect
-        sta     fill_params
-        stx     fill_params+1
-        sta     draw_params
-        stx     draw_params+1
+        stax    fill_params
+        stax    draw_params
         lda     #0
         jsr     set_fill_mode
         MGTK_CALL MGTK::PaintRect, 0, fill_params
@@ -5226,8 +5175,7 @@ L6A9D:  jsr     L6878
         cmp     $C7
         bne     L6ACF
         beq     L6AD9
-L6AAE:  lda     set_pos_params::xcoord
-        ldx     set_pos_params::xcoord+1
+L6AAE:  ldax    set_pos_params::xcoord
         cpx     $B8
         bcc     L6ACF
         bne     L6ABE
@@ -5279,8 +5227,7 @@ L6B06:  cmp     #$20
         lda     $BF
         and     $CA
         bne     L6B1C
-L6B16:  .byte   $E4
-L6B17:  tax
+L6B16:  cpx     $AA
         bne     L6ADE
         ldx     #$00
 L6B1C:  rts
@@ -5601,8 +5548,7 @@ L6D55:  lda     ($84),y
         bcc     L6D3E
         beq     L6D3E
         jsr     L657E
-        lda     L6861
-        ldx     L6862
+        ldax    L6861
         jsr     fill_and_frame_rect
         inc     fill_rect_params4::left
         bne     L6D7A
@@ -5630,14 +5576,12 @@ L6D94:  lda     $BF
         beq     L6DB1
         lda     $C0
         sta     L685E
-L6DB1:  lda     L6863
-        ldx     L6863+1
+L6DB1:  ldax    L6863
         jsr     draw_text
         jsr     L6A5C
 L6DBD:  lda     L681E
         jsr     L6E25
-        lda     $C3
-        ldx     $C3+1
+        ldax    $C3
         jsr     draw_text
         jsr     L6A5C
         lda     $BF
@@ -5661,8 +5605,7 @@ L6DF3:  lda     $C1
         sta     L685C
         lda     L681F
         jsr     L6E92
-        lda     L6865
-        ldx     L6865+1
+        ldax    L6865
         jsr     draw_text
         jsr     L6A5C
 L6E0A:  bit     $B0
@@ -5741,8 +5684,7 @@ bottom: .word   0
         fill_rect_params3_bottom := fill_rect_params3::bottom
 
 L6E92:  sta     $82
-        lda     $BD
-        ldx     $BE
+        ldax    $BD
         sec
         sbc     $82
         bcs     L6E9E
@@ -5957,8 +5899,7 @@ resize_box_params_addr:
 L700B:  .byte   $00
 L700C:  .byte   $00
 L700D:  .byte   $00
-L700E:  .byte   $00
-L700F:  .byte   $00
+L700E:  .word   0
 L7010:  .byte   $00
 
 L7011:  .addr   $6FD3
@@ -5969,8 +5910,7 @@ L7011:  .addr   $6FD3
         sta     $A7
         lda     L7011+1
         sta     $A7+1
-        lda     L700B
-        ldx     L700B+1
+        ldax    L700B
         bne     next_window_L7038
 end:    rts
 .endproc
@@ -5988,12 +5928,9 @@ end:    rts
         tax
         dey
         lda     ($A9),y
-L7038:  sta     L700E
-        stx     L700E+1
-L703E:  lda     L700E
-        ldx     L700E+1
-L7044:  sta     $A9
-        stx     $A9+1
+L7038:  stax    L700E
+L703E:  ldax    L700E
+L7044:  stax    $A9
         ldy     #$0B            ; copy first 12 bytes of window defintion to
 L704A:  lda     ($A9),y         ; to $AB
         sta     $AB,y
@@ -6005,8 +5942,7 @@ L7054:  lda     ($A9),y
         dey
         cpy     #$13
         bne     L7054
-L705E:  lda     $A9
-        ldx     $A9+1
+L705E:  ldax    $A9
         rts
 .endproc
         next_window_L7038 := next_window::L7038
@@ -6065,8 +6001,7 @@ L7098:  lda     $C3,x
         dex
         dex
         bpl     L7098
-L70B2:  lda     #$C7
-        ldx     #$00
+L70B2:  ldax    #$C7
         rts
 
 L70B7:  jsr     L708D
@@ -6109,14 +6044,12 @@ L70F5:  sta     $82
         dec     $CA
         bcc     L70B2
 L7104:  jsr     L70B7
-        lda     $CB
-        ldx     $CC
+        ldax    $CB
         sec
         sbc     #$14
         bcs     L7111
         dex
-L7111:  sta     $C7
-        stx     $C8
+L7111:  stax    $C7
         lda     $AC
         and     #$01
         bne     L70B2
@@ -6128,14 +6061,12 @@ L7111:  sta     $C7
         inc     $CA
         bcs     L70B2
 L7129:  jsr     L70B7
-L712C:  lda     $CD
-        ldx     $CE
+L712C:  ldax    $CD
         sec
         sbc     #$0A
         bcs     L7136
         dex
-L7136:  sta     $C9
-        stx     $CA
+L7136:  stax    $C9
         jmp     L70B2
 
 L713D:  jsr     L7104
@@ -6152,34 +6083,28 @@ L7143:  jsr     L70B7
         jmp     L70B2
 
 L7157:  jsr     L7143
-        lda     $C7
-        ldx     $C8
+        ldax    $C7
         clc
         adc     #$0C
         bcc     L7164
         inx
-L7164:  sta     $C7
-        stx     $C8
+L7164:  stax    $C7
         clc
         adc     #$0E
         bcc     L716E
         inx
-L716E:  sta     $CB
-        stx     $CC
-        lda     $C9
-        ldx     $CA
+L716E:  stax    $CB
+        ldax    $C9
         clc
         adc     #$02
         bcc     L717C
         inx
-L717C:  sta     $C9
-        stx     $CA
+L717C:  stax    $C9
         clc
         adc     L78CB
         bcc     L7187
         inx
-L7187:  sta     $CD
-        stx     $CE
+L7187:  stax    $CD
         jmp     L70B2
 
 L718E:  jsr     L70B7
@@ -6190,8 +6115,7 @@ L718E:  jsr     L70B7
         jsr     L7143
         jsr     fill_and_frame_rect
         jsr     L73BF
-        lda     $AD
-        ldx     $AD+1
+        ldax    $AD
         jsr     draw_text
 L71AA:  jsr     next_window::L703E
         bit     $B0
@@ -6258,20 +6182,17 @@ L720F:  stx     L71E4
         jsr     L7157
         jsr     L707F
         jsr     L71EE
-        lda     $C7
-        ldx     $C8
+        ldax    $C7
         sec
         sbc     #$09
         bcs     L7234
         dex
-L7234:  sta     $92
-        stx     $93
+L7234:  stax    $92
         clc
         adc     #$06
         bcc     L723E
         inx
-L723E:  sta     $96
-        stx     $97
+L723E:  stax    $96
         lda     $C9
         sta     $94
         lda     $CA
@@ -6288,8 +6209,7 @@ L7255:  lda     $AC
         jsr     L73BF
         jsr     L5907
         jsr     L71EE
-        lda     $CB
-        ldx     $CC
+        ldax    $CB
         clc
         adc     #$03
         bcc     L7271
@@ -6313,8 +6233,7 @@ L7280:  tya
         sty     $96
         ldy     $93
         sty     $97
-        sta     $92
-        stx     $93
+        stax    $92
         lda     $96
         sec
         sbc     #$0A
@@ -6350,8 +6269,7 @@ L72D5:  lda     $C7,x
         dex
         bpl     L72D5
         inc     up_scroll_params::incr
-        lda     $CD
-        ldx     $CE
+        ldax    $CD
         sec
         sbc     #$0A
         bcs     L72ED
@@ -6369,13 +6287,10 @@ L72F8:  pla
         dex
 L72FF:  pha
 L7300:  pla
-        sta     down_scroll_params::unk1
-        stx     down_scroll_params::unk2
-        lda     down_scroll_params_addr
-        ldx     down_scroll_params_addr+1
+        stax    down_scroll_params::unk1
+        ldax    down_scroll_params_addr
         jsr     L791C
-        lda     up_scroll_params_addr
-        ldx     up_scroll_params_addr+1
+        ldax    up_scroll_params_addr
         jsr     L791C
 L7319:  bit     $AF
         bpl     L7363
@@ -6386,8 +6301,7 @@ L7322:  lda     $C7,x
         sta     right_scroll_params,x
         dex
         bpl     L7322
-        lda     $CB
-        ldx     $CC
+        ldax    $CB
         sec
         sbc     #$14
         bcs     L7337
@@ -6405,13 +6319,10 @@ L7342:  pla
         dex
 L7349:  pha
 L734A:  pla
-        sta     right_scroll_params
-        stx     right_scroll_params+1
-        lda     right_scroll_params_addr
-        ldx     right_scroll_params_addr+1
+        stax    right_scroll_params
+        ldax    right_scroll_params_addr
         jsr     L791C
-        lda     left_scroll_params_addr
-        ldx     left_scroll_params_addr+1
+        ldax    left_scroll_params_addr
         jsr     L791C
 L7363:  lda     #$00
         jsr     set_fill_mode
@@ -6437,8 +6348,7 @@ L738E:  lda     $AC
         jsr     L713D
         lda     L71E4
         bne     L73A6
-        lda     #$C7
-        ldx     #$00
+        ldax    #$C7
         jsr     fill_and_frame_rect
         jmp     L73BE
 
@@ -6450,16 +6360,13 @@ L73A8:  lda     $C7,x
         bpl     L73A8
         lda     #$04
         jsr     set_fill_mode
-        lda     resize_box_params_addr
-        ldx     resize_box_params_addr+1
+        ldax    resize_box_params_addr
         jsr     L791C
 L73BE:  rts
 
-L73BF:  lda     $AD
-        ldx     $AD+1
+L73BF:  ldax    $AD
         jsr     do_measure_text
-        sta     $82
-        stx     $83
+        stax    $82
         lda     $C7
         clc
         adc     $CB
@@ -6479,16 +6386,13 @@ L73BF:  lda     $AD
         tya
         ror     a
         sta     current_penloc_x
-        lda     $CD
-        ldx     $CE
+        ldax    $CD
         sec
         sbc     #$02
         bcs     L73F0
         dex
-L73F0:  sta     current_penloc_y
-        stx     current_penloc_y+1
-        lda     $82
-        ldx     $83
+L73F0:  stax    current_penloc_y
+        ldax    $82
         rts
 
 ;;; ==================================================
@@ -6640,8 +6544,7 @@ L74F4:  ldy     #next_offset_in_window_params ; Called from elsewhere
 .proc GetWinPtrImpl
         ptr := $A9
         jsr     window_by_id_or_exit
-        lda     ptr
-        ldx     ptr+1
+        ldax    ptr
         ldy     #1
         jmp     store_xa_at_params_y
 .endproc
@@ -6677,8 +6580,7 @@ L750C:  .res    38,0
         sta     L750C+1
         jsr     L75C6
         php
-        lda     L758A
-        ldx     L758A+1
+        ldax    L758A
         jsr     assign_and_prepare_port
         asl     preserve_zp_flag
         plp
@@ -6700,10 +6602,8 @@ L758A:  .addr   L750C + 2
 
 EndUpdateImpl:
         jsr     ShowCursorImpl
-        lda     L750C
-        ldx     L750C+1
-        sta     active_port
-        stx     active_port+1
+        ldax    L750C
+        stax    active_port
         jmp     L6567
 
 ;;; ==================================================
@@ -6714,10 +6614,7 @@ EndUpdateImpl:
 GetWinPortImpl:
         jsr     apply_port_to_active_port
         jsr     window_by_id_or_exit
-        lda     $83
-        sta     params_addr
-        lda     $84
-        sta     params_addr+1
+        copy16  $83, params_addr
         ldx     #$07
 L75AC:  lda     fill_rect_params,x
         sta     $D8,x
@@ -6871,8 +6768,7 @@ end:    sta     (params_addr),y
         .byte   $00
 L769B:  .byte   $00
 L769C:  .byte   $00
-L769D:  .byte   $00
-L769E:  .byte   $00
+L769D:  .word   0
 L769F:  .byte   $00
 L76A0:  .byte   $00,$00,$00
 L76A3:  .byte   $00
@@ -7150,8 +7046,7 @@ L78A3:  jsr     L67E4
         beq     L78C9
         sta     $82
         jsr     window_by_id
-        lda     $A7
-        ldx     $A8
+        ldax    $A7
         jsr     next_window::L7044
         jmp     L78A3
 
@@ -7225,8 +7120,7 @@ L7911:  lda     $7E,y
         rts
 
         ;; Used to draw scrollbar arrows
-L791C:  sta     $82
-        stx     $83
+L791C:  stax    $82
         ldy     #$03
 L7922:  lda     #$00
         sta     $8A,y
@@ -7247,8 +7141,7 @@ L7922:  lda     #$00
         adc     $92
         bcc     L7945
         inx
-L7945:  sta     $96
-        stx     $97
+L7945:  stax    $96
         iny
         lda     ($82),y
         ldx     $95
@@ -7256,8 +7149,7 @@ L7945:  sta     $96
         adc     $94
         bcc     L7954
         inx
-L7954:  sta     $98
-        stx     $99
+L7954:  stax    $98
         iny
         lda     ($82),y
         sta     $8E
@@ -8575,8 +8467,8 @@ L839A:  lda     L7D74
         cmp     #$04
         beq     L83B3
         bit     drag_resize_flag
-        .byte   $30
-L83A5:  ora     $75AD
+        .byte   $30             ; bmi ...
+        ora     $75AD
         adc     $2FE9,x
         lda     L7D76
         sbc     #$02
