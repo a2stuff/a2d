@@ -5943,7 +5943,7 @@ L415B:  sta     active_window_id
         sta     L4152
         lda     cached_window_id
         sta     getwinport_params2::window_id
-        jsr     L4505
+        jsr     get_port2
         jsr     draw_window_header
         lda     active_window_id
         jsr     L8855
@@ -5991,7 +5991,7 @@ L41CB:  ldx     cached_window_id
 
 L41E2:  lda     cached_window_id
         sta     getwinport_params2::window_id
-        jsr     L44F2
+        jsr     get_set_port2
         jsr     L6E52
         ldx     #7
 L41F0:  lda     grafport2::cliprect,x
@@ -6016,7 +6016,7 @@ L4227:  lda     #$00
         sta     L4152
         lda     cached_window_id
         sta     getwinport_params2::window_id
-        jsr     L44F2
+        jsr     get_set_port2
         jsr     L6E6E
         lda     active_window_id
         jsr     L8874
@@ -6037,7 +6037,7 @@ L424A:  lda     #$00
         bne     L4249
         lda     active_window_id
         sta     getwinport_params2::window_id
-        jsr     L4505
+        jsr     get_port2
         jsr     L6E8E
         ldx     #7
 L4267:  lda     grafport2::cliprect,x
@@ -6359,19 +6359,24 @@ L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_params_window_id
 
 ;;; ==================================================
 
-L44F2:  MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
+.proc get_set_port2
+        MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
         MGTK_RELAY_CALL MGTK::SetPort, grafport2
         rts
+.endproc
 
-L4505:  MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
+.proc get_port2
+        MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
         rts
+.endproc
 
-        rts
+        rts                     ; ???
 
-reset_grafport3:
+.proc reset_grafport3
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
+.endproc
 
 ;;; ==================================================
 
@@ -6476,7 +6481,7 @@ L45D9:  stx     L45EC
         sta     $06+1
         lda     #0
         sta     $06
-        ldy     #$07
+        ldy     #7
         lda     ($06),y
         bne     L4627
         ldy     #$FF
@@ -6531,12 +6536,12 @@ L464E:  lda     LD343
         beq     L465E
         bit     LD343+1
         bmi     L4666
-        jsr     L67AB
+        jsr     enable_selector_menu_items
         jmp     L4666
 
 L465E:  bit     LD343+1
         bmi     L4666
-        jsr     L67A3
+        jsr     disable_selector_menu_items
 L4666:  lda     is_file_selected
         beq     L46A8
         lda     selected_window_index
@@ -6547,22 +6552,22 @@ L4666:  lda     is_file_selected
         lda     selected_file_index
         cmp     trash_icon_num
         bne     L468B
-        jsr     L678A
-        jsr     L670C
+        jsr     disable_eject_menu_item
+        jsr     disable_file_menu_items
         lda     #$00
         sta     $E26F
         rts
 
-L468B:  jsr     L6782
+L468B:  jsr     enable_eject_menu_item
         jmp     L469A
 
-L4691:  jsr     L678A
+L4691:  jsr     disable_eject_menu_item
         jmp     L469A
 
-L4697:  jsr     L6782
+L4697:  jsr     enable_eject_menu_item
 L469A:  bit     $E26F
         bmi     L46A7
-        jsr     L6747
+        jsr     enable_file_menu_items
         lda     #$80
         sta     $E26F
 L46A7:  rts
@@ -6571,8 +6576,8 @@ L46A8:  bit     $E26F
         bmi     L46AE
         rts
 
-L46AE:  jsr     L678A
-        jsr     L670C
+L46AE:  jsr     disable_eject_menu_item
+        jsr     disable_file_menu_items
         lda     #$00
         sta     $E26F
         rts
@@ -6798,13 +6803,15 @@ show_cursor:
 
 ;;; ==================================================
 
-L48BE:  ldx     $E196
+.proc L48BE
+        ldx     $E196
         inx
-L48C2:  lda     $E196,x
+:       lda     $E196,x
         sta     DEVCNT,x
         dex
-        bpl     L48C2
+        bpl     :-
         rts
+.endproc
 
 .proc show_warning_dialog_num
         sta     warning_dialog_num
@@ -7360,7 +7367,8 @@ L4CF3:  iny
 
 ;;; ==================================================
 
-L4D19:  ldy     #$00
+.proc L4D19
+        ldy     #$00
         lda     ($06),y
         tay
 L4D1E:  lda     ($06),y
@@ -7393,6 +7401,7 @@ L4D4E:  stx     LE04B
         sta     LDFC9
         dec     LDFC9
         rts
+.endproc
 
 ;;; ==================================================
 
@@ -7843,7 +7852,7 @@ L511E:  sta     cached_window_icon_count
         jsr     update_view_menu_check
         lda     active_window_id
         sta     getwinport_params2::window_id
-        jsr     L4505
+        jsr     get_port2
         jsr     L6E8E
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect::x1
@@ -7871,7 +7880,7 @@ L516D:  lda     L51EB,x
         jsr     L763A
         lda     active_window_id
         sta     getwinport_params2::window_id
-        jsr     L44F2
+        jsr     get_set_port2
         jsr     L6E52
         lda     #$00
         sta     L51EF
@@ -7917,7 +7926,8 @@ L51EF:  .byte   0
 
 ;;; ==================================================
 
-L51F0:  ldx     active_window_id
+.proc L51F0
+        ldx     active_window_id
         dex
         sta     win_buf_table,x
         lda     active_window_id
@@ -7927,7 +7937,7 @@ L51F0:  ldx     active_window_id
         jsr     DESKTOP_COPY_FROM_BUF
         lda     active_window_id
         sta     getwinport_params2::window_id
-        jsr     L4505
+        jsr     get_port2
         jsr     L6E8E
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect::x1
@@ -7964,6 +7974,7 @@ L5263:  .word   0
 
 L5265:  .byte   0
         .byte   0
+.endproc
 
 ;;; ==================================================
 
@@ -7979,9 +7990,9 @@ L526D:  dex
         rts
 
 L5276:  cmp     #$00
-        bne     L527D
-        jsr     L5302
-L527D:  jsr     update_view_menu_check
+        bne     :+
+        jsr     close_active_window
+:       jsr     update_view_menu_check
         lda     #$81
         jmp     L51F0
 .endproc
@@ -8000,9 +8011,9 @@ L528B:  dex
         rts
 
 L5294:  cmp     #$00
-        bne     L529B
-        jsr     L5302
-L529B:  jsr     update_view_menu_check
+        bne     :+
+        jsr     close_active_window
+:       jsr     update_view_menu_check
         lda     #$82
         jmp     L51F0
 .endproc
@@ -8021,9 +8032,9 @@ L52A9:  dex
         rts
 
 L52B2:  cmp     #$00
-        bne     L52B9
-        jsr     L5302
-L52B9:  jsr     update_view_menu_check
+        bne     :+
+        jsr     close_active_window
+:       jsr     update_view_menu_check
         lda     #$83
         jmp     L51F0
 .endproc
@@ -8042,9 +8053,9 @@ L52C7:  dex
         rts
 
 L52D0:  cmp     #$00
-        bne     L52D7
-        jsr     L5302
-L52D7:  jsr     update_view_menu_check
+        bne     :+
+        jsr     close_active_window
+:       jsr     update_view_menu_check
         lda     #$84
         jmp     L51F0
 .endproc
@@ -8068,7 +8079,8 @@ L52D7:  jsr     update_view_menu_check
 
 ;;; ==================================================
 
-L5302:  DESKTOP_RELAY_CALL DT_CLOSE_WINDOW, active_window_id
+.proc close_active_window
+        DESKTOP_RELAY_CALL DT_CLOSE_WINDOW, active_window_id
         lda     active_window_id
         sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
@@ -8076,20 +8088,21 @@ L5302:  DESKTOP_RELAY_CALL DT_CLOSE_WINDOW, active_window_id
         sec
         sbc     cached_window_icon_count
         sta     LDD9E
-        ldx     #$00
-L5320:  cpx     cached_window_icon_count
-        beq     L5334
+        ldx     #0
+loop:   cpx     cached_window_icon_count
+        beq     done
         lda     cached_window_icon_list,x
         jsr     DESKTOP_FREE_ICON
         lda     #$00
         sta     cached_window_icon_list,x
         inx
-        jmp     L5320
+        jmp     loop
 
-L5334:  jsr     DESKTOP_COPY_FROM_BUF
+done:   jsr     DESKTOP_COPY_FROM_BUF
         lda     #$00
         sta     cached_window_id
         jmp     DESKTOP_COPY_TO_BUF
+.endproc
 
 ;;; ==================================================
 
@@ -8212,7 +8225,7 @@ L53EF:  dec     L704B
         beq     L5403
         sta     findwindow_params_window_id
         jsr     handle_inactive_window_click
-L5403:  jsr     L61DC
+L5403:  jsr     close_window
         lda     L704B
         bne     L53EF
         jmp     L53BA
@@ -8554,7 +8567,7 @@ L56F8:  .byte   0
 ;;; ==================================================
 
 L56F9:  sta     getwinport_params2::window_id
-        jsr     L4505
+        jsr     get_port2
         jmp     L6E8E
 
 ;;; ==================================================
@@ -8706,7 +8719,8 @@ vertical:
 
 ;;; ==================================================
 
-L5803:  lda     active_window_id
+.proc L5803
+        lda     active_window_id
         sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         ldx     active_window_id
@@ -8720,6 +8734,9 @@ L5803:  lda     active_window_id
         stax    L5861
         sty     L585E
         rts
+.endproc
+
+;;; ==================================================
 
 scroll_right:                   ; elevator right / contents left
         ldax    L585F
@@ -8977,7 +8994,7 @@ L5A2F:  ldx     L704B
         beq     L5A43
         sta     findwindow_params_window_id
         jsr     handle_inactive_window_click
-L5A43:  jsr     L61DC
+L5A43:  jsr     close_window
         dec     L704B
         jmp     L5A2F
 
@@ -9230,20 +9247,22 @@ done_client_click:
 
 ;;; ==================================================
 
-L5C54:  lda     $D20D
+.proc L5C54
+        lda     $D20D
         sta     updatethumb_params_thumbpos
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         jsr     L6523
         jsr     L84D1
         bit     L5B1B
-        bmi     L5C71
+        bmi     :+
         jsr     L6E6E
-L5C71:  lda     active_window_id
+:       lda     active_window_id
         sta     getwinport_params2::window_id
-        jsr     L44F2
-        MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect::x1
+        jsr     get_set_port2
+        MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
         jsr     reset_grafport3
         jmp     L6C19
+.endproc
 
 ;;; ==================================================
 ;;; Handle mouse held down on scroll arrow/pager
@@ -9321,7 +9340,7 @@ L5D0B:  ldx     is_file_selected
         sta     selected_window_index
         lda     active_window_id
         sta     getwinport_params2::window_id
-        jsr     L44F2
+        jsr     get_set_port2
         lda     L5CD9
         sta     LE22F
         jsr     L8915
@@ -9329,7 +9348,7 @@ L5D0B:  ldx     is_file_selected
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, LE22F
         lda     active_window_id
         sta     getwinport_params2::window_id
-        jsr     L44F2
+        jsr     get_set_port2
         lda     L5CD9
         jsr     L8893
         jsr     reset_grafport3
@@ -9378,7 +9397,7 @@ L5DAD:  cpx     #$FF
         beq     L5DF7
         lda     active_window_id
         sta     getwinport_params2::window_id
-        jsr     L44F2
+        jsr     get_set_port2
         jsr     L6E52
         jsr     L6E8E
         ldx     is_file_selected
@@ -9394,7 +9413,7 @@ L5DC4:  txa
         bpl     L5DC4
         lda     active_window_id
         sta     getwinport_params2::window_id
-        jsr     L44F2
+        jsr     get_set_port2
         jsr     L6DB1
         jsr     L6E6E
         jsr     reset_grafport3
@@ -9479,7 +9498,7 @@ L5E78:  sta     L5F0A
         jsr     handle_inactive_window_click
 L5E8F:  lda     active_window_id
         sta     getwinport_params2::window_id
-        jsr     L44F2
+        jsr     get_set_port2
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect::x1
         ldx     active_window_id
@@ -9491,9 +9510,9 @@ L5E8F:  lda     active_window_id
         tax
         dex
         lda     win_buf_table,x
-        bmi     L5EBC
-        jsr     L5302
-L5EBC:  lda     active_window_id
+        bmi     :+
+        jsr     close_active_window
+:       lda     active_window_id
         jsr     window_address_lookup
         stax    $06
         ldy     #$00
@@ -9512,7 +9531,7 @@ L5ECB:  lda     ($06),y
         jsr     DESKTOP_COPY_TO_BUF
         lda     active_window_id
         sta     getwinport_params2::window_id
-        jsr     L4505
+        jsr     get_port2
         jsr     draw_window_header
         lda     #$00
         ldx     active_window_id
@@ -9553,7 +9572,7 @@ L5F3E:  rts
 L5F3F:  jsr     clear_selection
         lda     active_window_id
         sta     getwinport_params2::window_id
-        jsr     L4505
+        jsr     get_port2
         jsr     L6E8E
         ldx     #$03
 L5F50:  lda     L5F0B,x
@@ -9666,7 +9685,9 @@ L60D4:  .byte   0
 L60D5:  jsr     push_zp_addrs
         jmp     L8921
 
-handle_title_click:
+;;; ==================================================
+
+.proc handle_title_click
         jmp     L60DE
 
 L60DE:  lda     active_window_id
@@ -9755,7 +9776,11 @@ L6198:  .byte   0
 L6199:  .byte   0
 L619A:  .byte   0
 
-handle_resize_click:
+.endproc
+
+;;; ==================================================
+
+.proc handle_resize_click
         lda     active_window_id
         sta     event_params
         MGTK_RELAY_CALL MGTK::GrowWindow, event_params
@@ -9770,15 +9795,19 @@ handle_resize_click:
         sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         jmp     reset_grafport3
+.endproc
+
+;;; ==================================================
 
 handle_close_click:
         lda     active_window_id
         MGTK_RELAY_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::goaway
-        bne     L61DC
+        bne     close_window
         rts
 
-L61DC:  lda     active_window_id
+.proc close_window
+        lda     active_window_id
         sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         jsr     clear_selection
@@ -9857,8 +9886,12 @@ L6276:  ldx     active_window_id
         MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
         jsr     L66A2
         jmp     redraw_windows_and_desktop
+.endproc
 
-L62BC:  cmp     #$01
+;;; ==================================================
+
+.proc L62BC
+        cmp     #$01
         bcc     L62C2
         bne     L62C5
 L62C2:  lda     #$00
@@ -9931,6 +9964,11 @@ L6388:  .byte   0
 L6389:  .byte   0
 L638A:  .byte   0
 L638B:  .byte   0
+
+.endproc
+
+;;; ==================================================
+
 L638C:  jsr     L650F
         sty     L63E9
         jsr     L644C
@@ -10129,7 +10167,11 @@ L668D:  sta     event_params+1
 L669F:  .byte   0
 L66A0:  .byte   0
 L66A1:  .byte   0
-L66A2:  ldx     active_window_id
+
+;;; ==================================================
+
+.proc L66A2
+        ldx     active_window_id
         beq     L66AA
         jmp     L66F2
 
@@ -10163,8 +10205,13 @@ L66F2:  dex
         sta     checkitem_params::check
         MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
         rts
+.endproc
 
-L670C:  lda     #MGTK::disableitem_disable
+;;; ==================================================
+;;; Disable menu items for operating on a selected file
+
+.proc disable_file_menu_items
+        lda     #MGTK::disableitem_disable
         sta     disableitem_params::disable
         lda     #menu_id_file
         sta     disableitem_params::menu_id
@@ -10188,67 +10235,97 @@ disable_menu_item:
         sta     disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
         rts
+.endproc
 
-L6747:  lda     #$00
+;;; ==================================================
+
+.proc enable_file_menu_items
+        lda     #MGTK::disableitem_enable
         sta     disableitem_params::disable
-        lda     #$02
+        lda     #menu_id_file
         sta     disableitem_params::menu_id
-        lda     #$03
-        jsr     L6775
-        lda     #$05
+        lda     #3              ; > Open
+        jsr     enable_menu_item
+        lda     #menu_id_special
         sta     disableitem_params::menu_id
-        lda     #$07
-        jsr     L6775
-        lda     #$08
-        jsr     L6775
-        lda     #$0A
-        jsr     L6775
-        lda     #$0B
-        jsr     L6775
-        lda     #$0D
-        jsr     L6775
+        lda     #7              ; > Lock
+        jsr     enable_menu_item
+        lda     #8              ; > Unlock
+        jsr     enable_menu_item
+        lda     #10             ; > Get Info
+        jsr     enable_menu_item
+        lda     #11             ; > Get Size
+        jsr     enable_menu_item
+        lda     #13             ; > Rename Icon
+        jsr     enable_menu_item
         rts
 
-L6775:  sta     disableitem_params::menu_item
+enable_menu_item:
+        sta     disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
         rts
+.endproc
 
-L6782:  lda     #$00
-        sta     disableitem_params::disable
-        jmp     L678F
+;;; ==================================================
 
-L678A:  lda     #$01
+.proc toggle_eject_menu_item
+enable:
+        lda     #MGTK::disableitem_enable
         sta     disableitem_params::disable
-L678F:  lda     #$02
+        jmp     :+
+
+disable:
+        lda     #MGTK::disableitem_disable
+        sta     disableitem_params::disable
+
+:       lda     #menu_id_file
         sta     disableitem_params::menu_id
-        lda     #$0B
+
+        lda     #11             ; > Eject
         sta     disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
         rts
 
-L67A3:  lda     #$01
-        sta     disableitem_params::disable
-        jmp     L67B0
+.endproc
+enable_eject_menu_item := toggle_eject_menu_item::enable
+disable_eject_menu_item := toggle_eject_menu_item::disable
 
-L67AB:  lda     #$00
+;;; ==================================================
+
+.proc toggle_selector_menu_items
+disable:
+        lda     #MGTK::disableitem_disable
         sta     disableitem_params::disable
-L67B0:  lda     #$03
+        jmp     :+
+
+enable:
+        lda     #MGTK::disableitem_enable
+        sta     disableitem_params::disable
+
+:       lda     #menu_id_selector
         sta     disableitem_params::menu_id
-        lda     #$02
-        jsr     L67CA
-        lda     #$03
-        jsr     L67CA
-        lda     #$04
-        jsr     L67CA
+        lda     #2              ; > Edit
+        jsr     configure_menu_item
+        lda     #3              ; > Delete
+        jsr     configure_menu_item
+        lda     #4              ; > Run
+        jsr     configure_menu_item
         lda     #$80
         sta     LD343+1
         rts
 
-L67CA:  sta     disableitem_params::menu_item
+configure_menu_item:
+        sta     disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
         rts
+.endproc
+enable_selector_menu_items := toggle_selector_menu_items::enable
+disable_selector_menu_items := toggle_selector_menu_items::disable
 
-L67D7:  lda     is_file_selected
+;;; ==================================================
+
+.proc L67D7
+        lda     is_file_selected
         bne     L67DF
         jmp     L681B
 
@@ -10336,8 +10413,12 @@ L6893:  txa
         dex
         bpl     L6893
         rts
+.endproc
 
-L68AA:  jsr     reset_grafport3
+;;; ==================================================
+
+.proc L68AA
+        jsr     reset_grafport3
         bit     BUTN0
         bpl     L68B3
         rts
@@ -10453,7 +10534,12 @@ L6A39:  .word   0
 L6A3B:  .word   0
 L6A3D:  .byte   0
 L6A3E:  .byte   0
-L6A3F:  ldx     #$07
+.endproc
+
+;;; ==================================================
+
+.proc L6A3F
+        ldx     #$07
 L6A41:  cmp     LEC26,x
         beq     L6A80
         dex
@@ -10490,8 +10576,12 @@ L6A80:  inx
         jsr     L6F0D
         pla
         jmp     L5E78
+.endproc
 
-L6A8A:  sta     LE6BE
+;;; ==================================================
+
+.proc L6A8A
+        sta     LE6BE
         jsr     DESKTOP_COPY_FROM_BUF
         lda     LE6BE
         ldx     #$07
@@ -10522,7 +10612,7 @@ L6AA7:  stx     cached_window_id
         beq     L6AD8
         cmp     active_window_id
         bne     L6AEF
-        jsr     L44F2
+        jsr     get_set_port2
         lda     LE6BE
         jsr     L8915
 L6AD8:  DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, LE6BE
@@ -10600,7 +10690,7 @@ L6B68:  lda     #$01
         beq     L6BA1
         cmp     active_window_id
         bne     L6BB8
-        jsr     L44F2
+        jsr     get_set_port2
         jsr     L6E8E
         lda     LE6BE
         jsr     L8915
@@ -10617,7 +10707,7 @@ L6BB8:  jsr     L744B
         jsr     MGTK_RELAY
         lda     active_window_id
         sta     getwinport_params2::window_id
-        jsr     L44F2
+        jsr     get_set_port2
         jsr     draw_window_header
         jsr     L6E52
         lda     #$00
@@ -10644,10 +10734,17 @@ L6BF4:  lda     cached_window_id
         jmp     reset_grafport3
 
 L6C0E:  .byte   0
+.endproc
+
+;;; ==================================================
+
 L6C0F:  MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
         rts
 
-L6C19:  ldx     cached_window_id
+;;; ==================================================
+
+.proc L6C19
+        ldx     cached_window_id
         dex
         lda     win_buf_table,x
         bmi     L6C25
@@ -10656,13 +10753,13 @@ L6C19:  ldx     cached_window_id
 L6C25:  jsr     push_zp_addrs
         lda     cached_window_id
         sta     getwinport_params2::window_id
-        jsr     L44F2
+        jsr     get_set_port2
         bit     L4152
         bmi     L6C39
         jsr     draw_window_header
 L6C39:  lda     cached_window_id
         sta     getwinport_params2::window_id
-        jsr     L4505
+        jsr     get_port2
         bit     L4152
         bmi     L6C4A
         jsr     L6E8E
@@ -10732,7 +10829,7 @@ rows_done:
 
 L6CCD:  lda     cached_window_id
         sta     getwinport_params2::window_id
-        jsr     L44F2
+        jsr     get_set_port2
         bit     L4152
         bmi     L6CDE
         jsr     draw_window_header
@@ -10752,7 +10849,7 @@ L6CF3:  cpx     cached_window_icon_count
         jsr     reset_grafport3
         lda     cached_window_id
         sta     getwinport_params2::window_id
-        jsr     L44F2
+        jsr     get_set_port2
         jsr     L6E6E
         rts
 
@@ -10767,8 +10864,11 @@ L6D25:  pla
         tax
         inx
         jmp     L6CF3
+.endproc
 
-clear_selection:
+;;; ==================================================
+
+.proc clear_selection
         lda     is_file_selected
         bne     L6D31
         rts
@@ -10785,7 +10885,7 @@ L6D31:  lda     #$00
         sta     rect_E230
         beq     L6D56
 L6D4D:  sta     getwinport_params2::window_id
-        jsr     L44F2
+        jsr     get_set_port2
         jsr     L6E8E
 L6D56:  lda     L6DB0
         cmp     is_file_selected
@@ -10821,7 +10921,12 @@ L6DA1:  sta     selected_file_index,x
         jmp     reset_grafport3
 
 L6DB0:  .byte   0
-L6DB1:  ldx     active_window_id
+.endproc
+
+;;; ==================================================
+
+.proc L6DB1
+        ldx     active_window_id
         dex
         lda     win_buf_table,x
         bmi     L6DC0
@@ -10833,7 +10938,7 @@ L6DC0:  jsr     L6E52
         jsr     L6E6E
 L6DC9:  lda     active_window_id
         sta     getwinport_params2::window_id
-        jsr     L44F2
+        jsr     get_set_port2
         cmp16   L7B5F, grafport2::cliprect::x1
         bmi     L6DFE
         cmp16   grafport2::cliprect::x2, L7B63
@@ -10871,8 +10976,12 @@ L6E38:  lda     #$01
 
 L6E48:  MGTK_RELAY_CALL MGTK::ActivateCtl, event_params ; ???
         rts
+.endproc
 
-L6E52:  lda     #$00
+;;; ==================================================
+
+.proc L6E52
+        lda     #$00
         sta     L6E6D
 L6E57:  lda     L6E6D
         cmp     cached_window_icon_count
@@ -10886,7 +10995,12 @@ L6E57:  lda     L6E6D
 L6E6C:  rts
 
 L6E6D:  .byte   0
-L6E6E:  lda     #$00
+.endproc
+
+;;; ==================================================
+
+.proc L6E6E
+        lda     #$00
         sta     L6E89
 L6E73:  lda     L6E89
         cmp     cached_window_icon_count
@@ -10900,12 +11014,16 @@ L6E73:  lda     L6E89
 L6E88:  rts
 
 L6E89:  .byte   0
+.endproc
+
+;;; ==================================================
+
 L6E8A:  lda     #$80
         beq     L6E90
 L6E8E:  lda     #$00
 L6E90:  sta     L6EC4
-        add16 grafport2::viewloc::ycoord, #$0F, grafport2::viewloc::ycoord
-        add16 grafport2::cliprect::y1, #$0F, grafport2::cliprect::y1
+        add16 grafport2::viewloc::ycoord, #15, grafport2::viewloc::ycoord
+        add16 grafport2::cliprect::y1, #15, grafport2::cliprect::y1
         bit     L6EC4
         bmi     L6EC3
         MGTK_RELAY_CALL MGTK::SetPort, grafport2
@@ -10931,6 +11049,8 @@ L6EC5:  lda     #$00
         lda     #$80
         sta     menu_dispatch_flag
         rts
+
+;;; ==================================================
 
 L6F0D:  jsr     window_address_lookup
         sta     $06
@@ -10959,6 +11079,9 @@ L6F32:  sty     L6F4A
 L6F48:  .byte   0
 L6F49:  .byte   0
 L6F4A:  .byte   0
+
+;;; ==================================================
+
 L6F4B:  stax    $06
         sty     L705D
 L6F52:  lda     ($06),y
@@ -11080,6 +11203,9 @@ L704C:  .byte   0
         .byte   0
         .byte   0
         .byte   0
+
+;;; ==================================================
+
 L7054:  jmp     L70C5
 
 .proc open_params
@@ -11129,6 +11255,7 @@ L70C1:  .byte   $00
 L70C2:  .byte   $00
 L70C3:  .byte   $00
 L70C4:  .byte   $00
+
 L70C5:  sta     L72A7
         jsr     push_zp_addrs
         ldx     #$40
@@ -11325,15 +11452,20 @@ L72CE:  MLI_RELAY_CALL READ, read_params
 L72D8:  MLI_RELAY_CALL CLOSE, close_params
         rts
 
+;;; ==================================================
+
 L72E2:  lda     $0C04
         and     #$F0
         cmp     #$F0
         beq     L72EC
         rts
 
+
 L72EC:  MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params4
         beq     L72F8
         rts
+
+;;; ==================================================
 
 L72F8:  copy16  get_file_info_params4::aux_type, L70BD
         sub16   get_file_info_params4::aux_type, get_file_info_params4::blocks_used, L70BB
@@ -11349,7 +11481,10 @@ L72F8:  copy16  get_file_info_params4::aux_type, L70BD
 L7342:  lda     #$00
         rts
 
-L7345:  sta     L7445
+;;; ==================================================
+
+.proc L7345
+        sta     L7445
         ldx     #$00
 L734A:  lda     $E1F2,x
         cmp     L7445
@@ -11446,8 +11581,12 @@ L7446:  .byte   0
 L7447:  .word   0
 L7449:  .byte   0
 L744A:  .byte   0
+.endproc
 
-L744B:  lda     cached_window_id
+;;; ==================================================
+
+.proc L744B
+        lda     cached_window_id
         asl     a
         tax
         copy16  $E6BF,x, $08
@@ -11654,6 +11793,7 @@ L75FA:  ldx     cached_window_id
         rts
 
 L7620:  .byte   $00
+.endproc
 
 ;;; ==================================================
 ;;; Icon entry construction
@@ -20375,8 +20515,8 @@ L0F34:  MGTK_RELAY_CALL MGTK::CheckEvents
         lda     #$00
         sta     $EC25
         jsr     desktop_main::L66A2
-        jsr     desktop_main::L678A
-        jsr     desktop_main::L670C
+        jsr     desktop_main::disable_eject_menu_item
+        jsr     desktop_main::disable_file_menu_items
         jmp     MGTK::MLI
 
         .assert * = $0F60, error, "Segment length mismatch"
