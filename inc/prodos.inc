@@ -91,6 +91,12 @@ ST_LINKED_DIRECTORY     := $0D
 ST_VOLUME_DIRECTORY     := $0F
 
 ;;; ------------------------------------------------------------
+;;; Errors
+
+PDERR_PATH_NOT_FOUND    := $44
+PDERR_VOL_NOT_FOUND     := $45
+
+;;; ------------------------------------------------------------
 ;;; Macros
 
 .macro  MLI_CALL    op, addr

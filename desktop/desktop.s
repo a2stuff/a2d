@@ -13929,64 +13929,78 @@ L8884:  lda     L8830,x
         jsr     pop_zp_addrs
         rts
 
-L8893:  tay
+;;; ==================================================
+
+.proc L8893
+        entry_ptr := $6
+        winfo_ptr := $8
+
+        tay
         jsr     push_zp_addrs
         tya
         jsr     icon_entry_lookup
-        stax    $06
+        stax    entry_ptr
+
         lda     active_window_id
         jsr     window_lookup
-        stax    $08
+        stax    winfo_ptr
+
         ldy     #$17
-        ldx     #$03
-L88AD:  lda     ($08),y
+        ldx     #3
+:       lda     (winfo_ptr),y
         sta     L890D,x
         dey
         dex
-        bpl     L88AD
+        bpl     :-
+
         ldy     #$1F
-        ldx     #$03
-L88BA:  lda     ($08),y
+        ldx     #3
+:       lda     (winfo_ptr),y
         sta     L8911,x
         dey
         dex
-        bpl     L88BA
-        ldy     #$03
-        lda     ($06),y
+        bpl     :-
+
+        ldy     #3
+        lda     (entry_ptr),y
         clc
         adc     L890D
-        sta     ($06),y
+        sta     (entry_ptr),y
         iny
-        lda     ($06),y
+        lda     (entry_ptr),y
         adc     L890E
-        sta     ($06),y
+        sta     (entry_ptr),y
         iny
-        lda     ($06),y
+
+        lda     (entry_ptr),y
         clc
         adc     L890F
-        sta     ($06),y
+        sta     (entry_ptr),y
         iny
-        lda     ($06),y
+        lda     (entry_ptr),y
         adc     L8910
-        sta     ($06),y
-        ldy     #$03
-        lda     ($06),y
+        sta     (entry_ptr),y
+
+        ldy     #3
+        lda     (entry_ptr),y
         sec
         sbc     L8911
-        sta     ($06),y
+        sta     (entry_ptr),y
         iny
-        lda     ($06),y
+        lda     (entry_ptr),y
         sbc     L8912
-        sta     ($06),y
+        sta     (entry_ptr),y
         iny
-        lda     ($06),y
+
+        lda     (entry_ptr),y
         sec
         sbc     L8913
-        sta     ($06),y
+        sta     (entry_ptr),y
         iny
-        lda     ($06),y
+        lda     (entry_ptr),y
         sbc     L8914
-        sta     ($06),y
+        sta     (entry_ptr),y
+
         jsr     pop_zp_addrs
         rts
 
@@ -13999,66 +14013,76 @@ L8912:  .byte   0
 L8913:  .byte   0
 L8914:  .byte   0
 
+.endproc
+
 ;;; ==================================================
 
-L8915:  tay
+.proc L8915
+        tay
         jsr     push_zp_addrs
         tya
         jsr     icon_entry_lookup
         stax    $06
-L8921:  lda     active_window_id
+        ;; fall through
+.endproc
+
+.proc L8921
+        entry_ptr := $6
+        winfo_ptr := $8
+
+        lda     active_window_id
         jsr     window_lookup
-        stax    $08
+        stax    winfo_ptr
         ldy     #$17
         ldx     #$03
-L892F:  lda     ($08),y
+L892F:  lda     (winfo_ptr),y
         sta     L898F,x
         dey
         dex
         bpl     L892F
         ldy     #$1F
         ldx     #$03
-L893C:  lda     ($08),y
+L893C:  lda     (winfo_ptr),y
         sta     L8993,x
         dey
         dex
         bpl     L893C
         ldy     #$03
-        lda     ($06),y
+        lda     (entry_ptr),y
         sec
         sbc     L898F
-        sta     ($06),y
+        sta     (entry_ptr),y
         iny
-        lda     ($06),y
+        lda     (entry_ptr),y
         sbc     L8990
-        sta     ($06),y
+        sta     (entry_ptr),y
         iny
-        lda     ($06),y
+        lda     (entry_ptr),y
         sec
         sbc     L8991
-        sta     ($06),y
+        sta     (entry_ptr),y
         iny
-        lda     ($06),y
+        lda     (entry_ptr),y
         sbc     L8992
-        sta     ($06),y
+        sta     (entry_ptr),y
         ldy     #$03
-        lda     ($06),y
+        lda     (entry_ptr),y
         clc
         adc     L8993
-        sta     ($06),y
+        sta     (entry_ptr),y
         iny
-        lda     ($06),y
+        lda     (entry_ptr),y
         adc     L8994
-        sta     ($06),y
+        sta     (entry_ptr),y
         iny
-        lda     ($06),y
+        lda     (entry_ptr),y
         clc
         adc     L8995
-        sta     ($06),y
+        sta     (entry_ptr),y
         iny
-        lda     ($06),y
+        lda     (entry_ptr),y
         adc     L8996
-        sta     ($06),y
+        sta     (entry_ptr),y
         jsr     pop_zp_addrs
         rts
 
@@ -14070,6 +14094,7 @@ L8993:  .byte   0
 L8994:  .byte   0
 L8995:  .byte   0
 L8996:  .byte   0
+.endproc
 
 ;;; ==================================================
 
@@ -15225,7 +15250,7 @@ L9343:  lda     ($06),y
         sta     $0221
 L9356:  yax_call JT_MLI_RELAY, GET_FILE_INFO, get_file_info_params5
         beq     L9366
-        jsr     LA49B
+        jsr     show_error_alert
         beq     L9356
 L9366:  lda     selected_window_index
         beq     L9387
@@ -16040,7 +16065,7 @@ L9A60:  iny
         stx     $1FC0
 L9A70:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     L9A81
-        jsr     LA49B
+        jsr     show_error_alert
         jmp     L9A70
 
 L9A81:  lda     file_info_params2::storage_type
@@ -16111,7 +16136,7 @@ L9B14:  jsr     LA426
 
 L9B1A:  jmp     LA39F
 
-L9B1D:  jsr     LA49B
+L9B1D:  jsr     show_error_alert
         jmp     L9AE0
 
 L9B23:  lda     L9B30
@@ -16138,7 +16163,7 @@ L9B3E:  lda     L97BD
         jsr     LA2FD
 L9B48:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     L9B59
-        jsr     LA49B
+        jsr     show_error_alert
         jmp     L9B48
 
 L9B59:  jsr     LA33B
@@ -16166,7 +16191,7 @@ L9B88:  jsr     LA33B
         jsr     LA40A
 L9B91:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     L9BA2
-        jsr     LA49B
+        jsr     show_error_alert
         jmp     L9B91
 
 L9BA2:  jsr     L9C01
@@ -16187,7 +16212,7 @@ L9BBF:  yax_call launch_dialog, index_copy_file_dialog, L9937
 
 L9BC9:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params3
         beq     L9BDA
-        jsr     LA497
+        jsr     show_error_alert_dst
         jmp     L9BC9
 
 L9BDA:  sub16   file_info_params3::aux_type, file_info_params3::blocks_used, L9BFF
@@ -16214,7 +16239,7 @@ L9C19:  rts
 
 L9C1A:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     L9C2B
-        jsr     LA49B
+        jsr     show_error_alert
         jmp     L9C1A
 
 L9C2B:  lda     #$00
@@ -16224,7 +16249,7 @@ L9C33:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params3
         beq     L9C48
         cmp     #$46
         beq     L9C54
-        jsr     LA497
+        jsr     show_error_alert_dst
         jmp     L9C33
 
 L9C48:  copy16  file_info_params3::blocks_used, L9CD8
@@ -16246,7 +16271,7 @@ L9C70:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params3
         lda     L9CD6
         sta     $1FC0
         pla
-        jsr     LA497
+        jsr     show_error_alert_dst
         jmp     L9C70
 
         lda     L9CD7
@@ -16320,7 +16345,7 @@ L9D5C:  jsr     LA46D
 
 L9D62:  yax_call JT_MLI_RELAY, OPEN, open_params4
         beq     L9D73
-        jsr     LA49B
+        jsr     show_error_alert
         jmp     L9D62
 
 L9D73:  rts
@@ -16335,10 +16360,10 @@ L9D81:  yax_call JT_MLI_RELAY, OPEN, open_params5
         beq     L9D9B
         cmp     #$45
         beq     L9D96
-        jsr     LA497
+        jsr     show_error_alert_dst
         jmp     L9D81
 
-L9D96:  jsr     LA497
+L9D96:  jsr     show_error_alert_dst
         lda     #$45
 L9D9B:  rts
 
@@ -16353,7 +16378,7 @@ L9DB3:  yax_call JT_MLI_RELAY, READ, read_params6
         beq     L9DC8
         cmp     #$4C
         beq     L9DD9
-        jsr     LA49B
+        jsr     show_error_alert
         jmp     L9DB3
 
 L9DC8:  copy16  read_params6::trans_count, write_params::request_count
@@ -16366,7 +16391,7 @@ L9DDE:  yax_call JT_MLI_RELAY, GET_MARK, mark_params
 
 L9DE8:  yax_call JT_MLI_RELAY, WRITE, write_params
         beq     L9DF9
-        jsr     LA497
+        jsr     show_error_alert_dst
         jmp     L9DE8
 
 L9DF9:  yax_call JT_MLI_RELAY, GET_MARK, mark_params2
@@ -16412,7 +16437,7 @@ L9E60:  jsr     LA426
 
 L9E66:  jmp     LA39F
 
-L9E69:  jsr     LA497
+L9E69:  jsr     show_error_alert_dst
         jmp     L9E26
 
 L9E6F:  clc
@@ -16466,7 +16491,7 @@ L9EDB:  lda     #$03
         jsr     LA379
 L9EE3:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     L9EF4
-        jsr     LA49B
+        jsr     show_error_alert
         jmp     L9EE3
 
 L9EF4:  lda     file_info_params2::storage_type
@@ -16533,7 +16558,7 @@ L9F62:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
 
 L9F8D:  rts
 
-L9F8E:  jsr     LA49B
+L9F8E:  jsr     show_error_alert
         jmp     L9F29
 
         jsr     LA3D1
@@ -16547,7 +16572,7 @@ L9F9C:  jsr     LA2FD
 L9FA7:  jsr     LA2F1
 L9FAA:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     L9FBB
-        jsr     LA49B
+        jsr     show_error_alert
         jmp     L9FAA
 
 L9FBB:  lda     file_info_params2::storage_type
@@ -16586,7 +16611,7 @@ LA001:  lda     #$C3
         sta     file_info_params2
         jmp     L9FC2
 
-LA01C:  jsr     LA49B
+LA01C:  jsr     show_error_alert
         jmp     L9FC2
 
 LA022:  jmp     LA322
@@ -16600,7 +16625,7 @@ LA02E:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
         beq     LA043
         cmp     #$4E
         beq     LA043
-        jsr     LA49B
+        jsr     show_error_alert
         jmp     LA02E
 
 LA043:  rts
@@ -16695,7 +16720,7 @@ LA123:  iny
         stx     $1FC0
 LA133:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     LA144
-        jsr     LA49B
+        jsr     show_error_alert
         jmp     LA133
 
 LA144:  lda     file_info_params2::storage_type
@@ -16725,7 +16750,7 @@ LA173:  jsr     LA1C3
         jsr     LA2F1
 LA179:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     LA18A
-        jsr     LA49B
+        jsr     show_error_alert
         jmp     LA179
 
 LA18A:  lda     file_info_params2::storage_type
@@ -16747,7 +16772,7 @@ LA1A3:  lda     #7              ; param count for SET_FILE_INFO
         sta     file_info_params2
         pla
         beq     LA1C0
-        jsr     LA49B
+        jsr     show_error_alert
         jmp     LA1A3
 
 LA1C0:  jmp     LA322
@@ -16810,7 +16835,7 @@ LA26A:  sta     BITMAP,y
 LA271:  jsr     LA379
 LA274:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     LA285
-        jsr     LA49B
+        jsr     show_error_alert
         jmp     LA274
 
 LA285:  lda     file_info_params2::storage_type
@@ -17004,7 +17029,7 @@ LA426:  jsr     LA46D
         beq     LA46C
         yax_call JT_MLI_RELAY, OPEN, open_params5
         beq     LA449
-        jsr     LA497
+        jsr     show_error_alert_dst
         jmp     LA426
 
 LA449:  lda     open_params5::ref_num
@@ -17012,7 +17037,7 @@ LA449:  lda     open_params5::ref_num
         sta     close_params3::ref_num
 LA452:  yax_call JT_MLI_RELAY, SET_EOF, set_eof_params
         beq     LA463
-        jsr     LA497
+        jsr     show_error_alert_dst
         jmp     LA452
 
 LA463:  yax_call JT_MLI_RELAY, CLOSE, close_params3
@@ -17033,38 +17058,54 @@ LA479:  lda     #7              ; SET_FILE_INFO param_count
         sta     file_info_params3
         pla
         beq     LA496
-        jsr     LA497
+        jsr     show_error_alert_dst
         jmp     LA479
 
 LA496:  rts
 
-LA497:  ldx     #$80
-        bne     LA49D
-LA49B:  ldx     #$00
-LA49D:  stx     LA4C5
-        cmp     #$45
-        beq     LA4AE
-        cmp     #$44
-        beq     LA4AE
+;;; ==================================================
+
+.proc show_error_alert_impl
+
+flag_set:
+        ldx     #$80
+        bne     :+
+
+flag_clear:
+        ldx     #0
+
+:       stx     flag
+        cmp     #PDERR_VOL_NOT_FOUND ; if err is "not found"
+        beq     not_found       ; prompt specifically for src/dst disk
+        cmp     #PDERR_PATH_NOT_FOUND
+        beq     not_found
+
         jsr     JT_SHOW_ALERT0
-        bne     LA4C2
+        bne     LA4C2           ; cancel???
         rts
 
-LA4AE:  bit     LA4C5
-        bpl     LA4B8
-        lda     #$FD
-        jmp     LA4BA
+not_found:
+        bit     flag
+        bpl     :+
+        lda     #$FD            ; "Please insert destination disk"
+        jmp     show
 
-LA4B8:  lda     #$FC
-LA4BA:  jsr     JT_SHOW_ALERT0
+:       lda     #$FC            ; "Please insert source disk"
+show:   jsr     JT_SHOW_ALERT0
         bne     LA4C2
-        jmp     LA4C6
+        jmp     do_online
 
 LA4C2:  jmp     LA39F
 
-LA4C5:  .byte   0
-LA4C6:  yax_call JT_MLI_RELAY, ON_LINE, on_line_params2
+flag:   .byte   0
+
+do_online:
+        yax_call JT_MLI_RELAY, ON_LINE, on_line_params2
         rts
+
+.endproc
+        show_error_alert := show_error_alert_impl::flag_clear
+        show_error_alert_dst := show_error_alert_impl::flag_set
 
         .assert * = $A4D0, error, "Segment length mismatch"
         PAD_TO $A500

@@ -590,6 +590,24 @@ inrect_outside          := $00
 inpoly_inside           := $80
 inpoly_outside          := $00
 
+;;; ==================================================
+;;; Offsets
+
+winfo_offset_viewloc            :=  0
+winfo_offset_viewloc_xcoord     :=  0
+winfo_offset_viewloc_ycoord     :=  2
+winfo_offset_mapbits            :=  4
+winfo_offset_mapwidth           :=  6
+winfo_offset_maprect            :=  8
+winfo_offset_pattern            := 16
+winfo_offset_colormasks         := 24
+winfo_offset_penloc             := 26
+winfo_offset_penwidth           := 30
+winfo_offset_penheight          := 31
+winfo_offset_penmode            := 32
+winfo_offset_textback           := 33
+winfo_offset_textfont           := 34
+
 .endscope ; MGTK
 
 ;;; ==================================================
