@@ -4914,12 +4914,11 @@ str_2_spaces:
 
 str_files:
         PASCAL_STRING "Files"
-
-str_7_spaces:
+str_file_count:                 ; populated with number of files
         PASCAL_STRING "       "
 
-LD909:  .byte   $00
-LD90A:  .byte   $00
+file_count:
+        .word   0
 
         .byte   $00,$00,$0D
         .byte   $00,$00,$00,$00,$00,$7D,$00,$00
@@ -6101,12 +6100,12 @@ L4270:  lda     L42C3
         tax
         lda     selected_file_index,x
         sta     LE22F
-        jsr     L8915
+        jsr     icon_window_to_screen
         DESKTOP_RELAY_CALL DT_ICON_IN_RECT, LE22F
         beq     L4296
         DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, LE22F
 L4296:  lda     LE22F
-        jsr     L8893
+        jsr     icon_screen_to_window
         inc     L42C3
         jmp     L4270
 
@@ -7965,11 +7964,11 @@ L51A7:  jsr     reset_grafport3
 L51C0:  ldx     L51EF
         lda     is_file_selected,x
         sta     LE22F
-        jsr     L8915
+        jsr     icon_window_to_screen
         jsr     L6E8E
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, LE22F
         lda     LE22F
-        jsr     L8893
+        jsr     icon_screen_to_window
         dec     L51EF
         bne     L51C0
 L51E3:  lda     #$00
@@ -8363,11 +8362,11 @@ L5485:  cpx     cached_window_icon_count
         pha
         lda     cached_window_icon_list,x
         sta     LE22F
-        jsr     L8915
+        jsr     icon_window_to_screen
         DESKTOP_RELAY_CALL DT_ICON_IN_RECT, LE22F
         pha
         lda     LE22F
-        jsr     L8893
+        jsr     icon_screen_to_window
         pla
         beq     L54B7
         pla
@@ -8530,12 +8529,12 @@ L55F0:  ldx     L544A
         beq     L5614
         jsr     L56F9
         lda     LE22F
-        jsr     L8915
+        jsr     icon_window_to_screen
 L5614:  DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, LE22F
         lda     getwinport_params2::window_id
         beq     L562B
         lda     LE22F
-        jsr     L8893
+        jsr     icon_screen_to_window
         jsr     reset_grafport3
 L562B:  rts
 
@@ -8549,12 +8548,12 @@ L562C:  lda     LE22F
         beq     L564A
         jsr     L56F9
         lda     LE22F
-        jsr     L8915
+        jsr     icon_window_to_screen
 L564A:  DESKTOP_RELAY_CALL $0B, LE22F
         lda     getwinport_params2::window_id
         beq     L5661
         lda     LE22F
-        jsr     L8893
+        jsr     icon_screen_to_window
         jsr     reset_grafport3
 L5661:  rts
 .endproc
@@ -8604,12 +8603,12 @@ L56B4:  ldx     L56F8
         lda     LE22C
         beq     L56CF
         lda     LE22B
-        jsr     L8915
+        jsr     icon_window_to_screen
 L56CF:  DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, LE22B
         lda     LE22C
         beq     L56E3
         lda     LE22B
-        jsr     L8893
+        jsr     icon_screen_to_window
 L56E3:  dec     L56F8
         bpl     L56B4
         lda     selected_window_index
@@ -9401,14 +9400,14 @@ L5D0B:  ldx     is_file_selected
         jsr     get_set_port2
         lda     L5CD9
         sta     LE22F
-        jsr     L8915
+        jsr     icon_window_to_screen
         jsr     L6E8E
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, LE22F
         lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     get_set_port2
         lda     L5CD9
-        jsr     L8893
+        jsr     icon_screen_to_window
         jsr     reset_grafport3
         bit     double_click_flag
         bmi     L5D55
@@ -9655,7 +9654,7 @@ L5F88:  txa
         pha
         lda     cached_window_icon_list,x
         sta     LE22F
-        jsr     L8915
+        jsr     icon_window_to_screen
         DESKTOP_RELAY_CALL DT_ICON_IN_RECT, LE22F
         beq     L5FB9
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, LE22F
@@ -9666,7 +9665,7 @@ L5F88:  txa
         lda     active_window_id
         sta     selected_window_index
 L5FB9:  lda     LE22F
-        jsr     L8893
+        jsr     icon_screen_to_window
         pla
         tax
         inx
@@ -9741,7 +9740,7 @@ L60D1:  .word   0
 L60D3:  .byte   0
 L60D4:  .byte   0
 L60D5:  jsr     push_zp_addrs
-        jmp     L8921
+        jmp     icon_ptr_window_to_screen
 
 ;;; ==================================================
 
@@ -10672,12 +10671,12 @@ L6AA7:  stx     cached_window_id
         bne     L6AEF
         jsr     get_set_port2
         lda     LE6BE
-        jsr     L8915
+        jsr     icon_window_to_screen
 L6AD8:  DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, LE6BE
         lda     getwinport_params2::window_id
         beq     L6AEF
         lda     LE6BE
-        jsr     L8893
+        jsr     icon_screen_to_window
         jsr     reset_grafport3
 L6AEF:  lda     LE6BE
         ldx     $E1F1
@@ -10751,12 +10750,12 @@ L6B68:  lda     #$01
         jsr     get_set_port2
         jsr     L6E8E
         lda     LE6BE
-        jsr     L8915
+        jsr     icon_window_to_screen
 L6BA1:  DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, LE6BE
         lda     getwinport_params2::window_id
         beq     L6BB8
         lda     LE6BE
-        jsr     L8893
+        jsr     icon_screen_to_window
         jsr     reset_grafport3
 L6BB8:  jsr     L744B
         lda     cached_window_id
@@ -10951,10 +10950,10 @@ L6D56:  lda     L6DB0
         tax
         lda     selected_file_index,x
         sta     LE22F
-        jsr     L8915
+        jsr     icon_window_to_screen
         DESKTOP_RELAY_CALL $0B, LE22F
         lda     LE22F
-        jsr     L8893
+        jsr     icon_screen_to_window
         inc     L6DB0
         jmp     L6D56
 
@@ -11046,7 +11045,7 @@ L6E57:  lda     L6E6D
         beq     L6E6C
         tax
         lda     cached_window_icon_list,x
-        jsr     L8915
+        jsr     icon_window_to_screen
         inc     L6E6D
         jmp     L6E57
 
@@ -11065,7 +11064,7 @@ L6E73:  lda     L6E89
         beq     L6E88
         tax
         lda     cached_window_icon_list,x
-        jsr     L8893
+        jsr     icon_screen_to_window
         inc     L6E89
         jmp     L6E73
 
@@ -12107,7 +12106,7 @@ L7870:  lda     cached_window_id
         ldx     cached_window_icon_count
         dex
         lda     cached_window_icon_list,x
-        jsr     L8893
+        jsr     icon_screen_to_window
         add16   $06, #$20, $06
         rts
 
@@ -12361,7 +12360,7 @@ not_pad:
         iny
         inx
         inx
-        cpx     #8              ; up to 4 digits (*2) via subtraction...
+        cpx     #8              ; up to 4 digits (*2) via subtraction
         beq     done
         jmp     loop
 
@@ -12378,7 +12377,6 @@ done:   lda     value           ; handle last digit
 powers: .word   10000, 1000, 100, 10
 value:  .word   0            ; remaining value as subtraction proceeds
 digit:  .byte   0            ; current digit being accumulated
-
 nonzero_flag:                ; high bit set once a non-zero digit seen
         .byte   0
 
@@ -12938,7 +12936,8 @@ L809E:  inc     $0805
         sta     $0806
         jmp     L8051
 
-L80CA:  lda     #$00
+.proc L80CA
+        lda     #$00
         sta     $0804
         lda     L0800
         asl     a
@@ -12958,6 +12957,7 @@ L80CA:  lda     #$00
         adc     $0804
         sta     $06+1
         rts
+.endproc
 
 L80F5:  lda     #$00
         sta     L0800
@@ -13123,7 +13123,8 @@ suffix: .byte   " Blocks "
 powers: .word   10000, 1000, 100, 10
 value:  .word   0
 digit:  .byte   0
-nonzero_flag:  .byte   0
+nonzero_flag:
+        .byte   0
 
 start:
         ;; Fill buffer with spaces
@@ -13930,8 +13931,10 @@ L8884:  lda     L8830,x
         rts
 
 ;;; ==================================================
+;;; Convert icon's coordinates from screen to window (direction???)
+;;; (icon index in A, active window)
 
-.proc L8893
+.proc icon_screen_to_window
         entry_ptr := $6
         winfo_ptr := $8
 
@@ -13945,79 +13948,81 @@ L8884:  lda     L8830,x
         jsr     window_lookup
         stax    winfo_ptr
 
+        ;; Screen space
         ldy     #MGTK::winfo_offset_port + MGTK::grafport_offset_viewloc + 3
         ldx     #3
 :       lda     (winfo_ptr),y
-        sta     L890D,x
+        sta     pos_screen,x
         dey
         dex
         bpl     :-
 
+        ;; Window space
         ldy     #MGTK::winfo_offset_port + MGTK::grafport_offset_maprect + 3
         ldx     #3
 :       lda     (winfo_ptr),y
-        sta     L8911,x
+        sta     pos_win,x
         dey
         dex
         bpl     :-
 
-        ldy     #3
+        ;; iconx
+        ldy     #icon_entry_offset_iconx
         lda     (entry_ptr),y
         clc
-        adc     L890D
+        adc     pos_screen
         sta     (entry_ptr),y
         iny
         lda     (entry_ptr),y
-        adc     L890E
+        adc     pos_screen+1
         sta     (entry_ptr),y
         iny
 
+        ;; icony
         lda     (entry_ptr),y
         clc
-        adc     L890F
+        adc     pos_screen+2
         sta     (entry_ptr),y
         iny
         lda     (entry_ptr),y
-        adc     L8910
+        adc     pos_screen+3
         sta     (entry_ptr),y
 
-        ldy     #3
+        ;; iconx
+        ldy     #icon_entry_offset_iconx
         lda     (entry_ptr),y
         sec
-        sbc     L8911
+        sbc     pos_win
         sta     (entry_ptr),y
         iny
         lda     (entry_ptr),y
-        sbc     L8912
+        sbc     pos_win+1
         sta     (entry_ptr),y
         iny
 
+        ;; icony
         lda     (entry_ptr),y
         sec
-        sbc     L8913
+        sbc     pos_win+2
         sta     (entry_ptr),y
         iny
         lda     (entry_ptr),y
-        sbc     L8914
+        sbc     pos_win+3
         sta     (entry_ptr),y
 
         jsr     pop_zp_addrs
         rts
 
-L890D:  .byte   0
-L890E:  .byte   0
-L890F:  .byte   0
-L8910:  .byte   0
-L8911:  .byte   0
-L8912:  .byte   0
-L8913:  .byte   0
-L8914:  .byte   0
+pos_screen:     .word   0, 0
+pos_win:        .word   0, 0
 
 .endproc
 
 ;;; ==================================================
+;;; Convert icon's coordinates from window to screen (direction???)
+;;; (icon index in A, active window)
 
-.proc L8915
+.proc icon_window_to_screen
         tay
         jsr     push_zp_addrs
         tya
@@ -14026,7 +14031,10 @@ L8914:  .byte   0
         ;; fall through
 .endproc
 
-.proc L8921
+;;; Convert icon's coordinates from window to screen (direction???)
+;;; (icon entry pointer in $6, active window)
+
+.proc icon_ptr_window_to_screen
         entry_ptr := $6
         winfo_ptr := $8
 
@@ -14035,68 +14043,69 @@ L8914:  .byte   0
         stax    winfo_ptr
 
         ldy     #MGTK::winfo_offset_port + MGTK::grafport_offset_viewloc + 3
-        ldx     #$03
+        ldx     #3
 :       lda     (winfo_ptr),y
-        sta     L898F,x
+        sta     pos_screen,x
         dey
         dex
         bpl     :-
 
         ldy     #MGTK::winfo_offset_port + MGTK::grafport_offset_maprect + 3
-        ldx     #$03
+        ldx     #3
 :       lda     (winfo_ptr),y
-        sta     L8993,x
+        sta     pos_win,x
         dey
         dex
         bpl     :-
 
-        ldy     #$03
+        ;; iconx
+        ldy     #icon_entry_offset_iconx
         lda     (entry_ptr),y
         sec
-        sbc     L898F
+        sbc     pos_screen
         sta     (entry_ptr),y
         iny
         lda     (entry_ptr),y
-        sbc     L8990
+        sbc     pos_screen+1
         sta     (entry_ptr),y
         iny
+
+        ;; icony
         lda     (entry_ptr),y
         sec
-        sbc     L8991
+        sbc     pos_screen+2
         sta     (entry_ptr),y
         iny
         lda     (entry_ptr),y
-        sbc     L8992
+        sbc     pos_screen+3
         sta     (entry_ptr),y
-        ldy     #$03
+
+        ;; iconx
+        ldy     #icon_entry_offset_iconx
         lda     (entry_ptr),y
         clc
-        adc     L8993
+        adc     pos_win
         sta     (entry_ptr),y
         iny
         lda     (entry_ptr),y
-        adc     L8994
+        adc     pos_win+1
         sta     (entry_ptr),y
         iny
+
+        ;; icony
         lda     (entry_ptr),y
         clc
-        adc     L8995
+        adc     pos_win+2
         sta     (entry_ptr),y
         iny
         lda     (entry_ptr),y
-        adc     L8996
+        adc     pos_win+3
         sta     (entry_ptr),y
         jsr     pop_zp_addrs
         rts
 
-L898F:  .byte   0
-L8990:  .byte   0
-L8991:  .byte   0
-L8992:  .byte   0
-L8993:  .byte   0
-L8994:  .byte   0
-L8995:  .byte   0
-L8996:  .byte   0
+pos_screen:     .word   0, 0
+pos_win:        .word   0, 0
 .endproc
 
 ;;; ==================================================
@@ -14858,7 +14867,7 @@ L9011:  lda     LEBFC
         tax
         copy16  window_address_table,x, $08
         copy16  #L917B, $06
-        jsr     L91A0
+        jsr     join_paths
         jmp     L9076
 
 L9032:  jsr     L8FA7
@@ -14868,12 +14877,12 @@ L9032:  jsr     L8FA7
         tax
         copy16  window_address_table,x, $08
         lda     LEBFC
-        jsr     L918E
-        jsr     L91A0
+        jsr     icon_entry_name_lookup
+        jsr     join_paths
         jmp     L9076
 
 L9051:  lda     LEBFC
-        jsr     L918E
+        jsr     icon_entry_name_lookup
         ldy     #$01
         lda     #$2F
         sta     ($06),y
@@ -14949,8 +14958,8 @@ L90EE:  jsr     L91F5
         lda     selected_file_index,x
         cmp     #$01
         beq     L9140
-        jsr     L918E
-        jsr     L91A0
+        jsr     icon_entry_name_lookup
+        jsr     join_paths
         copy16  #LE00A, $06
         ldy     #$00
         lda     ($06),y
@@ -14996,7 +15005,7 @@ L9165:  jmp     L90BA
 
 L9168:  jsr     L917F
         lda     LEBFC
-        jsr     L918E
+        jsr     icon_entry_name_lookup
         ldy     #$01
         lda     #$20
         sta     ($06),y
@@ -15005,6 +15014,8 @@ L9168:  jsr     L917F
 
 L917A:  .byte   0
 L917B:  .byte   0
+
+;;; ==================================================
 
         ;; Dynamically constructed jump table???
         L917D := *+1
@@ -15022,7 +15033,12 @@ L918A:  .byte   0
 L918B:  .byte   0
 L918C:  .byte   0
 L918D:  .byte   0
-L918E:  asl     a
+
+;;; ==================================================
+;;; For icon index in A, put pointer to name in $6
+
+.proc icon_entry_name_lookup
+        asl     a
         tay
         lda     icon_entry_address_table,y
         clc
@@ -15032,36 +15048,55 @@ L918E:  asl     a
         adc     #0
         sta     $06+1
         rts
+.endproc
 
-L91A0:  ldx     #$00
-        ldy     #$00
-        lda     ($08),y
-        beq     L91B6
-        sta     L91B3
-L91AB:  iny
+;;; ==================================================
+
+.proc join_paths
+        str1 := $8
+        str2 := $6
+        buf  := LE00A
+
+        ldx     #0
+        ldy     #0
+        lda     (str1),y
+        beq     do_str2
+
+        ;; Copy $8 (str1)
+        sta     len1
+:       iny
         inx
-        lda     ($08),y
-        sta     LE00A,x
-        L91B3 := *+1
+        lda     (str1),y
+        sta     buf,x
+        len1 := *+1
         cpy     #0              ; self-modified
-        bne     L91AB
-L91B6:  inx
-        lda     #'/'
-        sta     LE00A,x
-        ldy     #$00
-        lda     ($06),y
-        beq     L91D1
-        sta     L91CE
-        iny
-L91C6:  iny
+        bne     :-
+
+do_str2:
+        ;; Add path separator
         inx
-        lda     ($06),y
-        sta     LE00A,x
-        .byte   $C0
-L91CE:  .byte   0
-        bne     L91C6
-L91D1:  stx     LE00A
+        lda     #'/'
+        sta     buf,x
+
+        ;; Append $6 (str2)
+        ldy     #0
+        lda     (str2),y
+        beq     done
+        sta     len2
+        iny
+:       iny
+        inx
+        lda     (str2),y
+        sta     buf,x
+        len2 := *+1
+        cpy     #0              ; self-modified
+        bne     :-
+
+done:   stx     buf
         rts
+.endproc
+
+;;; ==================================================
 
 L91D5:  yax_call JT_MGTK_RELAY, MGTK::InitPort, grafport3
         yax_call JT_MGTK_RELAY, MGTK::SetPort, grafport3
@@ -15224,8 +15259,8 @@ L9300:  lda     selected_window_index
         copy16  window_address_table,x, $08
         ldx     L92E6
         lda     selected_file_index,x
-        jsr     L918E
-        jsr     L91A0
+        jsr     icon_entry_name_lookup
+        jsr     join_paths
         ldy     #$00
 L931F:  lda     LE00A,y
         sta     $220,y
@@ -15241,7 +15276,7 @@ L9331:  ldx     L92E6
         bne     L933E
         jmp     L952E
 
-L933E:  jsr     L918E
+L933E:  jsr     icon_entry_name_lookup
         ldy     #$00
 L9343:  lda     ($06),y
         sta     $220,y
@@ -15301,7 +15336,7 @@ L93B8:  lda     DEVLST,y
         sta     L942E
 L93DB:  ldx     L92E6
         lda     selected_file_index,x
-        jsr     L918E
+        jsr     icon_entry_name_lookup
         lda     #$01
         sta     L92E3
         copy16  $06, L92E4
@@ -15480,8 +15515,8 @@ L9591:  lda     selected_window_index
         copy16  window_address_table,x, $08
         ldx     L9706
         lda     selected_file_index,x
-        jsr     L918E
-        jsr     L91A0
+        jsr     icon_entry_name_lookup
+        jsr     join_paths
         ldy     #$00
 L95B0:  lda     LE00A,y
         sta     $220,y
@@ -15493,7 +15528,7 @@ L95B0:  lda     LE00A,y
 
 L95C2:  ldx     L9706
         lda     selected_file_index,x
-        jsr     L918E
+        jsr     icon_entry_name_lookup
         ldy     #$00
 L95CD:  lda     ($06),y
         sta     $220,y
@@ -15505,7 +15540,7 @@ L95CD:  lda     ($06),y
         sta     $0221
 L95E0:  ldx     L9706
         lda     selected_file_index,x
-        jsr     L918E
+        jsr     icon_entry_name_lookup
         ldy     #$00
         lda     ($06),y
         tay
@@ -15532,7 +15567,7 @@ L9611:  lda     #$80
         beq     L962F
 L9618:  ldx     L9706
         lda     selected_file_index,x
-        jsr     L918E
+        jsr     icon_entry_name_lookup
         ldy     $1F12
 L9624:  lda     $1F12,y
         sta     ($06),y
@@ -15593,7 +15628,7 @@ L969E:  lda     #$40
         copy16  L9707, $08
         ldx     L9706
         lda     selected_file_index,x
-        jsr     L918E
+        jsr     icon_entry_name_lookup
         ldy     #$00
         lda     ($08),y
         clc
@@ -16887,6 +16922,7 @@ LA2ED:  .byte   0
 LA2EE:  .byte   0
 LA2EF:  .byte   0
 LA2F0:  .byte   0
+
 LA2F1:  lda     LA2ED
         bne     LA2F9
         dec     LA2EE
@@ -17617,29 +17653,29 @@ LA981:  lda     #$00
         axy_call draw_dialog_label, $04, desktop_aux::str_copy_remaining
         rts
 
-LA9B5:  ldy     #$01
+LA9B5:  ldy     #1
         lda     ($06),y
-        sta     LD909
+        sta     file_count
         iny
         lda     ($06),y
-        sta     LD90A
-        jsr     LBDC4
-        jsr     LBDDF
+        sta     file_count+1
+        jsr     adjust_str_files_suffix
+        jsr     compose_file_count_string
         lda     winfoF
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB0B6
-        addr_call draw_text1, str_7_spaces
+        addr_call draw_text1, str_file_count
         addr_call draw_text1, str_files
         rts
 
 LA9E6:  ldy     #$01
         lda     ($06),y
-        sta     LD909
+        sta     file_count
         iny
         lda     ($06),y
-        sta     LD90A
-        jsr     LBDC4
-        jsr     LBDDF
+        sta     file_count+1
+        jsr     adjust_str_files_suffix
+        jsr     compose_file_count_string
         lda     winfoF
         jsr     set_port_from_window_id
         jsr     LBE8D
@@ -17667,7 +17703,7 @@ LA9E6:  ldy     #$01
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE82
         addr_call draw_text1, path_buf1
         yax_call MGTK_RELAY, MGTK::MoveTo, desktop_aux::LB0BA
-        addr_call draw_text1, str_7_spaces
+        addr_call draw_text1, str_file_count
         rts
 
 LAA5A:  jsr     reset_state
@@ -17747,27 +17783,27 @@ else:   lda     #0
 
 do1:    ldy     #1
         lda     (ptr),y
-        sta     LD909
+        sta     file_count
         iny
         lda     (ptr),y
-        sta     LD909+1
-        jsr     LBDC4
-        jsr     LBDDF
+        sta     file_count+1
+        jsr     adjust_str_files_suffix
+        jsr     compose_file_count_string
         lda     winfoF
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB0B6
-        addr_call draw_text1, str_7_spaces
+        addr_call draw_text1, str_file_count
         addr_call draw_text1, str_files
         rts
 
 do2:    ldy     #$01
         lda     (ptr),y
-        sta     LD909
+        sta     file_count
         iny
         lda     (ptr),y
-        sta     LD90A
-        jsr     LBDC4
-        jsr     LBDDF
+        sta     file_count+1
+        jsr     adjust_str_files_suffix
+        jsr     compose_file_count_string
         lda     winfoF
         jsr     set_port_from_window_id
         jsr     LBE8D
@@ -17783,7 +17819,7 @@ do2:    ldy     #$01
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE7E
         addr_call draw_text1, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB0BA
-        addr_call draw_text1, str_7_spaces
+        addr_call draw_text1, str_file_count
         rts
 
 do3:    jsr     reset_state
@@ -17837,7 +17873,7 @@ else:   jsr     LB53A
 
 do1:    ldy     #$01
         lda     (ptr),y
-        sta     LD909
+        sta     file_count
         tax
         iny
         lda     (ptr),y
@@ -17845,16 +17881,16 @@ do1:    ldy     #$01
         stx     ptr
         ldy     #$00
         lda     (ptr),y
-        sta     LD909
+        sta     file_count
         iny
         lda     (ptr),y
-        sta     LD90A
-        jsr     LBDDF
+        sta     file_count+1
+        jsr     compose_file_count_string
         lda     winfoF
         jsr     set_port_from_window_id
         lda     #$A5
         sta     dialog_label_pos
-        yax_call draw_dialog_label, $01, str_7_spaces
+        yax_call draw_dialog_label, $01, str_file_count
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$03
         lda     (ptr),y
@@ -17865,14 +17901,14 @@ do1:    ldy     #$01
         stx     ptr
         ldy     #$00
         lda     (ptr),y
-        sta     LD909
+        sta     file_count
         iny
         lda     (ptr),y
-        sta     LD90A
-        jsr     LBDDF
+        sta     file_count+1
+        jsr     compose_file_count_string
         lda     #$A5
         sta     dialog_label_pos
-        yax_call draw_dialog_label, $02, str_7_spaces
+        yax_call draw_dialog_label, $02, str_file_count
         rts
 
 do3:    jsr     reset_state
@@ -17935,12 +17971,12 @@ LAD20:  axy_call draw_dialog_label, $04, desktop_aux::str_delete_ok
 
 LAD2A:  ldy     #$01
         lda     ($06),y
-        sta     LD909
+        sta     file_count
         iny
         lda     ($06),y
-        sta     LD90A
-        jsr     LBDC4
-        jsr     LBDDF
+        sta     file_count+1
+        jsr     adjust_str_files_suffix
+        jsr     compose_file_count_string
         lda     winfoF
         jsr     set_port_from_window_id
         lda     LAD1F
@@ -17949,18 +17985,18 @@ LAD2A:  ldy     #$01
         jmp     LAD5D
 
 LAD54:  MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB172
-LAD5D:  addr_call draw_text1, str_7_spaces
+LAD5D:  addr_call draw_text1, str_file_count
         addr_call draw_text1, str_files
         rts
 
 LAD6C:  ldy     #$01
         lda     ($06),y
-        sta     LD909
+        sta     file_count
         iny
         lda     ($06),y
-        sta     LD90A
-        jsr     LBDC4
-        jsr     LBDDF
+        sta     file_count+1
+        jsr     adjust_str_files_suffix
+        jsr     compose_file_count_string
         lda     winfoF
         jsr     set_port_from_window_id
         jsr     LBE8D
@@ -17976,7 +18012,7 @@ LAD6C:  ldy     #$01
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE7E
         addr_call draw_text1, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB16E
-        addr_call draw_text1, str_7_spaces
+        addr_call draw_text1, str_file_count
         rts
 
 LADBB:  lda     winfoF
@@ -18243,28 +18279,28 @@ LB04F:  lda     #$00
 
 LB068:  ldy     #$01
         lda     ($06),y
-        sta     LD909
+        sta     file_count
         iny
         lda     ($06),y
-        sta     LD90A
-        jsr     LBDC4
-        jsr     LBDDF
+        sta     file_count+1
+        jsr     adjust_str_files_suffix
+        jsr     compose_file_count_string
         lda     winfoF
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB231
-        addr_call draw_text1, str_7_spaces
+        addr_call draw_text1, str_file_count
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB239
         addr_call draw_text1, str_files
         rts
 
 LB0A2:  ldy     #$01
         lda     ($06),y
-        sta     LD909
+        sta     file_count
         iny
         lda     ($06),y
-        sta     LD90A
-        jsr     LBDC4
-        jsr     LBDDF
+        sta     file_count+1
+        jsr     adjust_str_files_suffix
+        jsr     compose_file_count_string
         lda     winfoF
         jsr     set_port_from_window_id
         jsr     LBE8D
@@ -18280,7 +18316,7 @@ LB0A2:  ldy     #$01
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE7E
         addr_call draw_text1, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB241
-        addr_call draw_text1, str_7_spaces
+        addr_call draw_text1, str_file_count
         rts
 
 LB0F1:  lda     winfoF
@@ -18335,28 +18371,28 @@ LB16D:  lda     #$00
 
 LB186:  ldy     #$01
         lda     ($06),y
-        sta     LD909
+        sta     file_count
         iny
         lda     ($06),y
-        sta     LD90A
-        jsr     LBDC4
-        jsr     LBDDF
+        sta     file_count+1
+        jsr     adjust_str_files_suffix
+        jsr     compose_file_count_string
         lda     winfoF
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB22D
-        addr_call draw_text1, str_7_spaces
+        addr_call draw_text1, str_file_count
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB235
         addr_call draw_text1, str_files
         rts
 
 LB1C0:  ldy     #$01
         lda     ($06),y
-        sta     LD909
+        sta     file_count
         iny
         lda     ($06),y
-        sta     LD90A
-        jsr     LBDC4
-        jsr     LBDDF
+        sta     file_count+1
+        jsr     adjust_str_files_suffix
+        jsr     compose_file_count_string
         lda     winfoF
         jsr     set_port_from_window_id
         jsr     LBE8D
@@ -18372,7 +18408,7 @@ LB1C0:  ldy     #$01
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE7E
         addr_call draw_text1, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB23D
-        addr_call draw_text1, str_7_spaces
+        addr_call draw_text1, str_file_count
         rts
 
 LB20F:  lda     winfoF
@@ -19568,91 +19604,101 @@ LBD9F:  sta     RAMRDON
         sta     RAMWRTOFF
         rts
 
-LBDB0:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-LBDC4:  ldx     str_files
-        lda     LD90A
-        bne     LBDD9
-        lda     LD909
-        cmp     #$02
-        bcs     LBDD9
-        lda     #' '
+LBDB0:  .res    20, 0
+
+;;; ==================================================
+;;; Make str_files singlular or plural based on file_count
+
+.proc adjust_str_files_suffix
+        ldx     str_files
+        lda     file_count+1         ; > 255?
+        bne     :+
+        lda     file_count
+        cmp     #2              ; > 2?
+        bcs     :+
+
+        lda     #' '            ; singlular
         sta     str_files,x
         rts
 
-LBDD9:  lda     #$73
+:       lda     #'s'            ; plural
         sta     str_files,x
         rts
+.endproc
 
-LBDDF:  lda     LD909
-        sta     LBE5F
-        lda     LD90A
-        sta     LBE5F+1
+;;; ==================================================
 
-        ldx     #7              ; does this ever get overwritten???
+.proc compose_file_count_string
+        lda     file_count
+        sta     value
+        lda     file_count+1
+        sta     value+1
+
+        ;; Init string with spaces
+        ldx     #7
         lda     #' '
-:       sta     str_7_spaces,x
+:       sta     str_file_count,x
         dex
         bne     :-
 
-        lda     #$00
-        sta     LBE62
-        ldy     #$00
-        ldx     #$00
-LBDFE:  lda     #$00
-        sta     LBE61
-LBE03:  cmp16   LBE5F, LBE57,x
-        bpl     LBE35
-        lda     LBE61
-        bne     LBE1F
-        bit     LBE62
-        bmi     LBE1F
-        lda     #$20
-        bne     LBE28
-LBE1F:  ora     #$30
+        lda     #0
+        sta     nonzero_flag
+        ldy     #0              ; y = position in string
+        ldx     #0              ; x = which power index is subtracted (*2)
+
+        ;; For each power of ten
+loop:   lda     #0
+        sta     digit
+
+        ;; Keep subtracting/incrementing until zero is hit
+sloop:  cmp16   value, powers,x
+        bpl     subtract
+
+        lda     digit
+        bne     not_pad
+        bit     nonzero_flag
+        bmi     not_pad
+
+        ;; Pad with space
+        lda     #' '
+        bne     :+
+        ;; Convert to ASCII
+not_pad:
+        ora     #'0'
         pha
         lda     #$80
-        sta     LBE62
+        sta     nonzero_flag
         pla
-LBE28:  sta     str_7_spaces+2,y
+
+        ;; Place the character, move to next
+:       sta     str_file_count+2,y
         iny
         inx
         inx
-        cpx     #$08
+        cpx     #8              ; up to 4 digits (*2) via subtraction
         beq     LBE4E
-        jmp     LBDFE
+        jmp     loop
 
-LBE35:  inc     LBE61
-        sub16   LBE5F, LBE57,x, LBE5F
-        jmp     LBE03
+subtract:
+        inc     digit
+        sub16   value, powers,x, value
+        jmp     sloop
 
-LBE4E:  lda     LBE5F
+LBE4E:  lda     value           ; handle last digit
         ora     #'0'
-        sta     str_7_spaces+2,y
+        sta     str_file_count+2,y
         rts
 
-LBE57:  .word   10000,1000,100,10
-LBE5F:  .addr   0
-LBE61:  .byte   0
-LBE62:  .byte   0
+powers: .word   10000,1000,100,10
+value:  .addr   0            ; remaining value as subtraction proceeds
+digit:  .byte   0            ; current digit being accumulated
+nonzero_flag:                ; high bit set once a non-zero digit seen
+        .byte   0
+
+.endproc
+
+;;; ==================================================
+
 LBE63:  ldy     #$00
         lda     ($06),y
         tay
