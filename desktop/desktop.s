@@ -13945,7 +13945,7 @@ L8884:  lda     L8830,x
         jsr     window_lookup
         stax    winfo_ptr
 
-        ldy     #$17
+        ldy     #MGTK::winfo_offset_port + MGTK::grafport_offset_viewloc + 3
         ldx     #3
 :       lda     (winfo_ptr),y
         sta     L890D,x
@@ -13953,7 +13953,7 @@ L8884:  lda     L8830,x
         dex
         bpl     :-
 
-        ldy     #$1F
+        ldy     #MGTK::winfo_offset_port + MGTK::grafport_offset_maprect + 3
         ldx     #3
 :       lda     (winfo_ptr),y
         sta     L8911,x
@@ -14033,20 +14033,23 @@ L8914:  .byte   0
         lda     active_window_id
         jsr     window_lookup
         stax    winfo_ptr
-        ldy     #$17
+
+        ldy     #MGTK::winfo_offset_port + MGTK::grafport_offset_viewloc + 3
         ldx     #$03
-L892F:  lda     (winfo_ptr),y
+:       lda     (winfo_ptr),y
         sta     L898F,x
         dey
         dex
-        bpl     L892F
-        ldy     #$1F
+        bpl     :-
+
+        ldy     #MGTK::winfo_offset_port + MGTK::grafport_offset_maprect + 3
         ldx     #$03
-L893C:  lda     (winfo_ptr),y
+:       lda     (winfo_ptr),y
         sta     L8993,x
         dey
         dex
-        bpl     L893C
+        bpl     :-
+
         ldy     #$03
         lda     (entry_ptr),y
         sec

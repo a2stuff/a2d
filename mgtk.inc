@@ -593,20 +593,37 @@ inpoly_outside          := $00
 ;;; ==================================================
 ;;; Offsets
 
-winfo_offset_viewloc            :=  0
-winfo_offset_viewloc_xcoord     :=  0
-winfo_offset_viewloc_ycoord     :=  2
-winfo_offset_mapbits            :=  4
-winfo_offset_mapwidth           :=  6
-winfo_offset_maprect            :=  8
-winfo_offset_pattern            := 16
-winfo_offset_colormasks         := 24
-winfo_offset_penloc             := 26
-winfo_offset_penwidth           := 30
-winfo_offset_penheight          := 31
-winfo_offset_penmode            := 32
-winfo_offset_textback           := 33
-winfo_offset_textfont           := 34
+grafport_offset_viewloc            :=  0
+grafport_offset_viewloc_xcoord     :=  0
+grafport_offset_viewloc_ycoord     :=  2
+grafport_offset_mapbits            :=  4
+grafport_offset_mapwidth           :=  6
+grafport_offset_maprect            :=  8
+grafport_offset_pattern            := 16
+grafport_offset_colormasks         := 24
+grafport_offset_penloc             := 26
+grafport_offset_penwidth           := 30
+grafport_offset_penheight          := 31
+grafport_offset_penmode            := 32
+grafport_offset_textback           := 33
+grafport_offset_textfont           := 34
+
+winfo_offset_window_id          :=  0
+winfo_offset_options            :=  1
+winfo_offset_title              :=  2
+winfo_offset_hscroll            :=  4
+winfo_offset_vscroll            :=  5
+winfo_offset_hthumbmax          :=  6
+winfo_offset_hthumbpos          :=  7
+winfo_offset_vthumbmax          :=  8
+winfo_offset_vthumbpos          :=  9
+winfo_offset_status             := 10
+winfo_offset_mincontwidth       := 12
+winfo_offset_maxcontwidth       := 14
+winfo_offset_mincontheight      := 16
+winfo_offset_maxcontheight      := 18
+winfo_offset_port               := 20
+winfo_offset_nextwinfo          := 56
 
 .endscope ; MGTK
 
