@@ -2059,36 +2059,62 @@ LA189:  rts
 
 ;;; ==================================================
 
+;;;              v0          v1
+;;;               +----------+
+;;;               |          |
+;;;               |          |
+;;;               |          |
+;;;            v7 |          | v2
+;;;      v6 +-----+          +-----+ v3
+;;;         |                      |
+;;;      v5 +----------------------+ v4
+;;;
+;;; (Label is always at least as wide as the icon)
+
 .proc calc_icon_poly
+        entry_ptr := $6
+        bitmap_ptr := $8
+
         jsr     push_zp_addrs
+
+        ;; v0 - copy from icon entry
         ldy     #icon_entry_offset_iconx+3
         ldx     #3
-LA191:  lda     ($06),y
-        sta     poly::vertices,x
+:       lda     (entry_ptr),y
+        sta     poly::v0,x
         dey
         dex
-        bpl     LA191
+        bpl     :-
+
+        ;; Top edge (v0, v1)
         copy16  poly::v0::ycoord, poly::v1::ycoord
+
+        ;; Left edge of icon (v0, v7)
         copy16  poly::v0::xcoord, poly::v7::xcoord
-        ldy     #$07
-        lda     ($06),y
-        sta     $08
+
+        ldy     #icon_entry_offset_iconbits
+        lda     (entry_ptr),y
+        sta     bitmap_ptr
         iny
-        lda     ($06),y
-        sta     $08+1
-        ldy     #$08
-        lda     ($08),y
+        lda     (entry_ptr),y
+        sta     bitmap_ptr+1
+
+        ;; Right edge of icon (v1, v2)
+        ldy     #8              ; bitmap x2
+        lda     (bitmap_ptr),y
         clc
         adc     poly::v0::xcoord
         sta     poly::v1::xcoord
         sta     poly::v2::xcoord
         iny
-        lda     ($08),y
+        lda     (bitmap_ptr),y
         adc     poly::v0::xcoord+1
         sta     poly::v1::xcoord+1
         sta     poly::v2::xcoord+1
-        ldy     #$0A
-        lda     ($08),y
+
+        ;; Bottom edge of icon (v2, v7)
+        ldy     #10             ; bitmap y2
+        lda     (bitmap_ptr),y
         clc
         adc     poly::v0::ycoord
         sta     poly::v2::ycoord
@@ -2096,66 +2122,78 @@ LA191:  lda     ($06),y
         lda     ($08),y
         adc     poly::v0::ycoord+1
         sta     poly::v2::ycoord+1
-        lda     poly::v2::ycoord
+
+        lda     poly::v2::ycoord ; 2px down
         clc
-        adc     #$02
+        adc     #2
         sta     poly::v2::ycoord
         sta     poly::v3::ycoord
         sta     poly::v6::ycoord
         sta     poly::v7::ycoord
         lda     poly::v2::ycoord+1
-        adc     #$00
+        adc     #0
         sta     poly::v2::ycoord+1
         sta     poly::v3::ycoord+1
         sta     poly::v6::ycoord+1
         sta     poly::v7::ycoord+1
+
+        ;; Bottom edge of label (v4, v5)
         lda     font_height
         clc
         adc     poly::v2::ycoord
         sta     poly::v4::ycoord
         sta     poly::v5::ycoord
         lda     poly::v2::ycoord+1
-        adc     #$00
+        adc     #0
         sta     poly::v4::ycoord+1
         sta     poly::v5::ycoord+1
-        ldy     #$1C
-        ldx     #$13
-LA22A:  lda     ($06),y
+
+        ;; Compute text width
+        ldy     #icon_entry_size+1
+        ldx     #19             ; len byte + 15 chars + 2 spaces
+:       lda     (entry_ptr),y
         sta     text_buffer-1,x
         dey
         dex
-        bpl     LA22A
-LA233:  lda     drawtext_params::textlen
+        bpl     :-
+
+        ;; Pad with spaces until it's at least as wide as the icon
+:       lda     drawtext_params::textlen
         sta     textwidth_params::textlen
         MGTK_CALL MGTK::TextWidth, textwidth_params
-        ldy     #$08
+        ldy     #8              ; bitmap x2 offset
         lda     textwidth_params::result
-        cmp     ($08),y
-        bcs     LA256
+        cmp     (bitmap_ptr),y
+        bcs     got_width
         inc     drawtext_params::textlen
         ldx     drawtext_params::textlen
         lda     #' '
         sta     text_buffer-1,x
-        jmp     LA233
+        jmp     :-
 
-LA256:  lsr     a
-        sta     LA2A5
-        lda     ($08),y
-        lsr     a
-        sta     LA2A4
-        lda     LA2A5
+got_width:
+        lsr     a               ; width / 2
+        sta     text_width
+        lda     ($08),y         ; still has bitmap x2 offset
+        lsr     a               ; / 2
+        sta     icon_width
+
+        ;; Left edge of label (v5, v6)
+        lda     text_width
         sec
-        sbc     LA2A4
-        sta     LA2A4
+        sbc     icon_width
+        sta     icon_width
         lda     poly::v0::xcoord
         sec
-        sbc     LA2A4
+        sbc     icon_width
         sta     poly::v6::xcoord
         sta     poly::v5::xcoord
         lda     poly::v0::xcoord+1
-        sbc     #$00
+        sbc     #0
         sta     poly::v6::xcoord+1
         sta     poly::v5::xcoord+1
+
+        ;; Right edge of label (v3, v4)
         inc     textwidth_params::result
         inc     textwidth_params::result
         lda     poly::v5::xcoord
@@ -2170,8 +2208,8 @@ LA256:  lsr     a
         jsr     pop_zp_addrs
         rts
 
-LA2A4:  .byte   0
-LA2A5:  .byte   0
+icon_width:  .byte   0
+text_width:  .byte   0
 
 .endproc
 
@@ -2653,12 +2691,10 @@ LA5CB:  pla
 
 ;;; ==================================================
 
-LA627:  .byte   $00
-LA628:  .byte   $00
-LA629:  .byte   $00
-LA62A:  .byte   $00
-LA62B:  .byte   $00
-LA62C:  .byte   $00,$00,$00
+LA627:  .word   0
+LA629:  .word   0
+LA62B:  .word   0
+LA62D:  .word   0
 
 .proc setportbits_params2
 viewloc:        DEFINE_POINT 0, 0, viewloc
@@ -2667,39 +2703,48 @@ mapwidth:       .word   MGTK::screen_mapwidth
 cliprect:       DEFINE_RECT 0, 0, 0, 0, cliprect
 .endproc
 
-LA63F:  jsr     calc_icon_poly
+.proc LA63F
+        jsr     calc_icon_poly
+
         lda     poly::v0::ycoord
         sta     LA629
         sta     setportbits_params2::cliprect::y1
         sta     setportbits_params2::viewloc::ycoord
         lda     poly::v0::ycoord+1
-        sta     LA62A
+        sta     LA629+1
         sta     setportbits_params2::cliprect::y1+1
         sta     setportbits_params2::viewloc::ycoord+1
+
         lda     poly::v5::xcoord
         sta     LA627
         sta     setportbits_params2::cliprect::x1
         sta     setportbits_params2::viewloc::xcoord
         lda     poly::v5::xcoord+1
-        sta     LA628
+        sta     LA627+1
         sta     setportbits_params2::cliprect::x1+1
         sta     setportbits_params2::viewloc::xcoord+1
-        ldx     #$03
-LA674:  lda     poly::v4::xcoord,x
+
+        ldx     #3
+:       lda     poly::v4::xcoord,x
         sta     LA62B,x
         sta     setportbits_params2::cliprect::x2,x
         dex
-        bpl     LA674
-        cmp16   LA62B, #$22F
-        bmi     LA69C
-        lda     #$2E
+        bpl     :-
+
+        cmp16   LA62B, #screen_width - 1
+        bmi     done
+        lda     #<(screen_width - 2)
         sta     LA62B
         sta     setportbits_params2::cliprect::x2
-        lda     #$02
-        sta     LA62C
+        lda     #>(screen_width - 2)
+        sta     LA62B+1
         sta     setportbits_params2::cliprect::x2+1
-LA69C:  MGTK_CALL MGTK::SetPortBits, setportbits_params2
+
+done:   MGTK_CALL MGTK::SetPortBits, setportbits_params2
         rts
+.endproc
+
+;;; ==================================================
 
 LA6A3:  lda     #$00
         jmp     LA6C7
@@ -2786,7 +2831,7 @@ LA747:  lda     LA6B0
         sta     LA6B0
 LA753:  MGTK_CALL MGTK::SetPortBits, setportbits_params2
         lda     setportbits_params2::cliprect::x2+1
-        cmp     LA62C
+        cmp     LA62B+1
         bne     LA76F
         lda     setportbits_params2::cliprect::x2
         cmp     LA62B
@@ -4579,7 +4624,13 @@ watch_cursor:
         .byte   5, 5
 
 LD343:  .res    18, 0
-LD355:  .res    173, 0
+LD355:  .res    88, 0
+LD3AD:  .res    65, 0
+
+LD3EE:  .res    17, 0
+LD3FF:  .byte   0
+LD400:  .byte   0
+LD401:  .byte   0
 
 path_buf0:  .res    65, 0
 path_buf1:  .res    65, 0
@@ -6771,13 +6822,8 @@ L4859:  dey
 L485D:  .addr   LE000           ; addresses or numbers???
 L485F:  .word   $D000
 
-L4861:  .byte   $00
-L4862:  .byte   $00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00
+sys_start_flag:  .byte   $00
+sys_start_path:  .res    40, 0
 
 ;;; ==================================================
 
@@ -6880,7 +6926,7 @@ L492E:  jsr     set_pointer_cursor
         bpl     done
         jsr     L4AAD
         jsr     L4A77
-        jsr     L4AFD
+        jsr     get_LD3FF
         bpl     L497A
         jsr     L8F24
         bmi     done
@@ -6947,7 +6993,7 @@ L49A6:  lda     menu_click_params::item_num
         asl     a
         bmi     L49FA
         bcc     L49E0
-        jsr     L4AFD
+        jsr     get_LD3FF
         beq     L49FA
         lda     L49A5
         jsr     L4AEA
@@ -6958,7 +7004,7 @@ L49A6:  lda     menu_click_params::item_num
         bpl     L49ED
         jmp     redraw_windows_and_desktop
 
-L49E0:  jsr     L4AFD
+L49E0:  jsr     get_LD3FF
         beq     L49FA
         lda     L49A5
         jsr     L4AEA
@@ -7057,7 +7103,7 @@ L4AB0:  lda     LD355,y
         sta     L0800,y
         dey
         bpl     L4AB0
-        addr_call L4B15, $840
+        addr_call copy_LD3EE_str, $840
         ldy     L0800
 L4AC3:  lda     L0800,y
         cmp     #$2F
@@ -7085,58 +7131,69 @@ L4AEA:  jsr     L4B5F
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params3
         rts
 
-L4AFD:  sta     ALTZPOFF
+;;; ==================================================
+
+.proc get_LD3FF
+        sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
-        lda     $D3FF
+        lda     LD3FF
         tax
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         txa
         rts
+.endproc
 
-L4B15:  stax    L4B2B
+.proc copy_LD3EE_str
+        stax    destptr
         sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
-        ldx     $D3EE
-L4B27:  lda     $D3EE,x
 
-        L4B2B := *+1
+        ldx     LD3EE
+:       lda     LD3EE,x
+        destptr := *+1
         sta     dummy1234,x
-
         dex
-        bpl     L4B27
+        bpl     :-
+
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         rts
+.endproc
 
-L4B3A:  stax    L4B50
+.proc copy_LD3AD_str
+        stax    destptr
         sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
-        ldx     $D3AD
-L4B4C:  lda     $D3AD,x
-        L4B50 := *+1
+
+        ldx     LD3AD
+:       lda     LD3AD,x
+        destptr := *+1
         sta     dummy1234,x
         dex
-        bpl     L4B4C
+        bpl     :-
+
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         rts
+.endproc
 
-L4B5F:  sta     L4BB0
-        addr_call L4B15, path_buffer
+.proc L4B5F
+        sta     L4BB0
+        addr_call copy_LD3EE_str, path_buffer
         lda     L4BB0
         jsr     a_times_6
         clc
-        adc     #$9E
+        adc     #<$DB9E
         sta     $06
         txa
-        adc     #$DB
+        adc     #>$DB9E
         sta     $06+1
         ldy     #$00
         lda     ($06),y
@@ -7144,7 +7201,7 @@ L4B5F:  sta     L4BB0
         tay
 L4B81:  lda     ($06),y
         and     #$7F
-        cmp     #$2F
+        cmp     #'/'
         beq     L4B8C
         dey
         bne     L4B81
@@ -7169,6 +7226,7 @@ L4B9C:  inx
 
 L4BB0:  .byte   0
 L4BB1:  .byte   0
+.endproc
 
 ;;; ==================================================
 
@@ -20478,8 +20536,8 @@ slot_string_table:
 
 .proc get_file_info_params2
 param_count:    .byte   $A
-pathname:       .addr   desktop_main::L4862
-access: .byte   0
+pathname:       .addr   desktop_main::sys_start_path
+access:         .byte   0
 file_type:      .byte   0
 aux_type:       .word   0
 storage_type:   .byte   0
@@ -20493,42 +20551,51 @@ create_time:    .word   0
 
 .proc get_prefix_params
 param_count:    .byte   1
-data_buffer:    .addr   desktop_main::L4862
+data_buffer:    .addr   desktop_main::sys_start_path
 .endproc
 
-L0ED4:  PASCAL_STRING "System/Start"
+str_system_start:  PASCAL_STRING "System/Start"
 
 .proc L0EE1
         lda     #$00
-        sta     desktop_main::L4861
-        jsr     desktop_main::L4AFD
+        sta     desktop_main::sys_start_flag
+        jsr     desktop_main::get_LD3FF
         cmp     #$80
         beq     L0EFE
         MLI_RELAY_CALL GET_PREFIX, get_prefix_params
-        bne     L0F34
-        dec     desktop_main::L4862
+        bne     config_toolkit
+        dec     desktop_main::sys_start_path
         jmp     L0F05
 
-L0EFE:  addr_call desktop_main::L4B3A, desktop_main::L4862
-L0F05:  ldx     desktop_main::L4862
-L0F08:  lda     desktop_main::L4862,x
+L0EFE:  addr_call desktop_main::copy_LD3AD_str, desktop_main::sys_start_path
+L0F05:  ldx     desktop_main::sys_start_path
+
+        ;; Find last /
+floop:  lda     desktop_main::sys_start_path,x
         cmp     #'/'
-        beq     L0F12
+        beq     :+
         dex
-        bne     L0F08
-L0F12:  ldy     #$00
-L0F14:  inx
+        bne     floop
+
+        ;; Replace last path segment with "System/Start"
+:       ldy     #0
+cloop:  inx
         iny
-        lda     L0ED4,y
-        sta     desktop_main::L4862,x
-        cpy     L0ED4
-        bne     L0F14
-        stx     desktop_main::L4862
+        lda     str_system_start,y
+        sta     desktop_main::sys_start_path,x
+        cpy     str_system_start
+        bne     cloop
+        stx     desktop_main::sys_start_path
+
+        ;; Does it point at anything? If so, set flag.
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params2
-        bne     L0F34
+        bne     config_toolkit
         lda     #$80
-        sta     desktop_main::L4861
-L0F34:  MGTK_RELAY_CALL MGTK::CheckEvents
+        sta     desktop_main::sys_start_flag
+
+        ;; Final MGTK configuration
+config_toolkit:
+        MGTK_RELAY_CALL MGTK::CheckEvents
         MGTK_RELAY_CALL MGTK::SetMenu, desktop_aux::desktop_menu
         MGTK_RELAY_CALL MGTK::SetCursor, pointer_cursor
         lda     #$00
