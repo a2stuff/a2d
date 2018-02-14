@@ -584,6 +584,9 @@ disablemenu_disable     := 1
 disableitem_enable      := 0
 disableitem_disable     := 1
 
+checkitem_uncheck       := 0
+checkitem_check         := 1
+
 ;;; Response from InRect/InPoly
 inrect_inside           := $80
 inrect_outside          := $00

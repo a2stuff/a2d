@@ -47,10 +47,13 @@ DESKTOP    := $8E00
 DT_ADD_ICON             := $01  ; { .addr icondata }
 DT_HIGHLIGHT_ICON       := $02  ; { .byte icon }
 DT_UNHIGHLIGHT_ICON     := $03  ; { .byte icon }
+        ;; $04 ???
+        ;; $05 ???
         ;; $06 ???
 DT_CLOSE_WINDOW         := $07  ; { .byte window_id }
 DT_FIND_ICON            := $09  ; { .word mousex, .word mousey, .byte result }
-
+        ;; $0A ???
+        ;; $0B ???
 DT_REDRAW_ICONS         := $0C  ; Repaints desktop icons *
 DT_ICON_IN_RECT         := $0D  ; { .byte icon, rect bounds }
 

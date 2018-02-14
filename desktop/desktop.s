@@ -6012,7 +6012,7 @@ L415B:  sta     active_window_id
         sta     L4243
         cmp16   L4242, #$0F
         bpl     L41CB
-        jsr     L6E8A
+        jsr     offset_grafport2
         ldx     #$0B
         ldy     #$1F
         lda     grafport2,x
@@ -6088,7 +6088,7 @@ L424A:  lda     #$00
         lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     get_port2
-        jsr     L6E8E
+        jsr     offset_grafport2_and_set
         ldx     #7
 L4267:  lda     grafport2::cliprect,x
         sta     rect_E230,x
@@ -6392,7 +6392,7 @@ L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_params_window_id
         lda     #$00
         sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
-        lda     #$00
+        lda     #MGTK::checkitem_uncheck
         sta     checkitem_params::check
         MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
         ldx     active_window_id
@@ -6401,7 +6401,7 @@ L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_params_window_id
         and     #$0F
         sta     checkitem_params::menu_item
         inc     checkitem_params::menu_item
-        lda     #$01
+        lda     #MGTK::checkitem_check
         sta     checkitem_params::check
         MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
         rts
@@ -7674,7 +7674,7 @@ L4EC3:  sta     cached_window_icon_count
         lda     active_window_id
         bne     L4F3C
         DESKTOP_RELAY_CALL DT_REDRAW_ICONS
-L4F3C:  lda     #$00
+L4F3C:  lda     #MGTK::checkitem_uncheck
         sta     checkitem_params::check
         MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
         jsr     L66A2
@@ -7910,7 +7910,7 @@ L511E:  sta     cached_window_icon_count
         lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     get_port2
-        jsr     L6E8E
+        jsr     offset_grafport2_and_set
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect::x1
         lda     active_window_id
@@ -7965,7 +7965,7 @@ L51C0:  ldx     L51EF
         lda     is_file_selected,x
         sta     LE22F
         jsr     icon_window_to_screen
-        jsr     L6E8E
+        jsr     offset_grafport2_and_set
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, LE22F
         lda     LE22F
         jsr     icon_screen_to_window
@@ -7995,7 +7995,7 @@ L51EF:  .byte   0
         lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     get_port2
-        jsr     L6E8E
+        jsr     offset_grafport2_and_set
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect::x1
         lda     active_window_id
@@ -8121,14 +8121,14 @@ L52D0:  cmp     #$00
 
 .proc update_view_menu_check
         ;; Uncheck last checked
-        lda     #0
+        lda     #MGTK::checkitem_uncheck
         sta     checkitem_params::check
         MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
 
         ;; Check the new one
         lda     menu_click_params::item_num           ; index of View menu item to check
         sta     checkitem_params::menu_item
-        lda     #1
+        lda     #MGTK::checkitem_check
         sta     checkitem_params::check
         MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
         rts
@@ -8625,7 +8625,7 @@ L56F8:  .byte   0
 
 L56F9:  sta     getwinport_params2::window_id
         jsr     get_port2
-        jmp     L6E8E
+        jmp     offset_grafport2_and_set
 
 ;;; ==================================================
 ;;; Handle keyboard-based window activation
@@ -9401,7 +9401,7 @@ L5D0B:  ldx     is_file_selected
         lda     L5CD9
         sta     LE22F
         jsr     icon_window_to_screen
-        jsr     L6E8E
+        jsr     offset_grafport2_and_set
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, LE22F
         lda     active_window_id
         sta     getwinport_params2::window_id
@@ -9456,7 +9456,7 @@ L5DAD:  cpx     #$FF
         sta     getwinport_params2::window_id
         jsr     get_set_port2
         jsr     L6E52
-        jsr     L6E8E
+        jsr     offset_grafport2_and_set
         ldx     is_file_selected
         dex
 L5DC4:  txa
@@ -9630,7 +9630,7 @@ L5F3F:  jsr     clear_selection
         lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     get_port2
-        jsr     L6E8E
+        jsr     offset_grafport2_and_set
         ldx     #$03
 L5F50:  lda     L5F0B,x
         sta     rect_E230::x1,x
@@ -9938,7 +9938,7 @@ L6276:  ldx     active_window_id
         lda     #$00
         sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
-        lda     #$00
+        lda     #MGTK::checkitem_uncheck
         sta     checkitem_params::check
         MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
         jsr     L66A2
@@ -10229,36 +10229,41 @@ L66A1:  .byte   0
 
 .proc L66A2
         ldx     active_window_id
-        beq     L66AA
-        jmp     L66F2
+        beq     disable_menu_items
+        jmp     check_menu_items
 
-L66AA:  lda     #$01
+disable_menu_items:
+        lda     #MGTK::disablemenu_disable
         sta     disablemenu_params::disable
         MGTK_RELAY_CALL MGTK::DisableMenu, disablemenu_params
-        lda     #$01
+
+        lda     #MGTK::disableitem_disable
         sta     disableitem_params::disable
-        lda     #$02
+        lda     #menu_id_file
         sta     disableitem_params::menu_id
-        lda     #$01
+        lda     #1              ; > New Folder
         sta     disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
-        lda     #$04
+        lda     #4              ; > Close
         sta     disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
-        lda     #$05
+        lda     #5              ; > Close All
         sta     disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
-        lda     #$00
+
+        lda     #0
         sta     menu_dispatch_flag
         rts
 
-L66F2:  dex
+        ;; Is this residue of a Windows menu???
+check_menu_items:
+        dex
         lda     win_buf_table,x
         and     #$0F
         tax
         inx
         stx     checkitem_params::menu_item
-        lda     #$01
+        lda     #MGTK::checkitem_check
         sta     checkitem_params::check
         MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
         rts
@@ -10723,7 +10728,7 @@ L6B3A:  lda     LE6BE
         lda     $EC2E
         cmp     #$02
         bcs     L6B60
-        jsr     L6EC5
+        jsr     enable_various_file_menu_items
         jmp     L6B68
 
 L6B60:  lda     #$00
@@ -10748,7 +10753,7 @@ L6B68:  lda     #$01
         cmp     active_window_id
         bne     L6BB8
         jsr     get_set_port2
-        jsr     L6E8E
+        jsr     offset_grafport2_and_set
         lda     LE6BE
         jsr     icon_window_to_screen
 L6BA1:  DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, LE6BE
@@ -10819,7 +10824,7 @@ L6C39:  lda     cached_window_id
         jsr     get_port2
         bit     L4152
         bmi     L6C4A
-        jsr     L6E8E
+        jsr     offset_grafport2_and_set
 L6C4A:  ldx     cached_window_id
         dex
         lda     LEC26,x
@@ -10891,7 +10896,7 @@ L6CCD:  lda     cached_window_id
         bmi     L6CDE
         jsr     draw_window_header
 L6CDE:  jsr     L6E52
-        jsr     L6E8E
+        jsr     offset_grafport2_and_set
         ldx     #$07
 L6CE6:  lda     grafport2::cliprect,x
         sta     rect_E230,x
@@ -10943,7 +10948,7 @@ L6D31:  lda     #$00
         beq     L6D56
 L6D4D:  sta     getwinport_params2::window_id
         jsr     get_set_port2
-        jsr     L6E8E
+        jsr     offset_grafport2_and_set
 L6D56:  lda     L6DB0
         cmp     is_file_selected
         beq     L6D9B
@@ -11075,37 +11080,51 @@ L6E89:  .byte   0
 
 ;;; ==================================================
 
-L6E8A:  lda     #$80
-        beq     L6E90
-L6E8E:  lda     #$00
-L6E90:  sta     L6EC4
-        add16 grafport2::viewloc::ycoord, #15, grafport2::viewloc::ycoord
-        add16 grafport2::cliprect::y1, #15, grafport2::cliprect::y1
-        bit     L6EC4
-        bmi     L6EC3
-        MGTK_RELAY_CALL MGTK::SetPort, grafport2
-L6EC3:  rts
+.proc offset_grafport2_impl
 
-L6EC4:  .byte   0
-L6EC5:  lda     #$00
+flag_clear:
+        lda     #$80
+        beq     :+
+flag_set:
+        lda     #0
+:       sta     flag
+        add16   grafport2::viewloc::ycoord, #15, grafport2::viewloc::ycoord
+        add16   grafport2::cliprect::y1, #15, grafport2::cliprect::y1
+        bit     flag
+        bmi     done
+        MGTK_RELAY_CALL MGTK::SetPort, grafport2
+done:   rts
+
+flag:   .byte   0
+.endproc
+        offset_grafport2 := offset_grafport2_impl::flag_clear
+        offset_grafport2_and_set := offset_grafport2_impl::flag_set
+
+;;; ==================================================
+
+.proc enable_various_file_menu_items
+        lda     #MGTK::disablemenu_enable
         sta     disablemenu_params::disable
         MGTK_RELAY_CALL MGTK::DisableMenu, disablemenu_params
-        lda     #$00
+
+        lda     #MGTK::disableitem_enable
         sta     disableitem_params::disable
-        lda     #$02
+        lda     #menu_id_file
         sta     disableitem_params::menu_id
-        lda     #$01
+        lda     #1              ; > New Folder
         sta     disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
-        lda     #$04
+        lda     #4              ; > Close
         sta     disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
-        lda     #$05
+        lda     #5              ; > Close All
         sta     disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
+
         lda     #$80
         sta     menu_dispatch_flag
         rts
+.endproc
 
 ;;; ==================================================
 
