@@ -587,6 +587,10 @@ disableitem_disable     := 1
 checkitem_uncheck       := 0
 checkitem_check         := 1
 
+;;; Used in ActivateCtl
+activatectl_deactivate  := 0
+activatectl_activate    := 1
+
 ;;; Response from InRect/InPoly
 inrect_inside           := $80
 inrect_outside          := $00

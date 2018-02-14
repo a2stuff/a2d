@@ -4395,6 +4395,10 @@ ycoord: .word   0
 
         ;; When event_params_coords is used for FindControl/FindWindow/ScreenToWindow
 
+activatectl_params := event_params
+activatectl_params_which_ctl := activatectl_params
+activatectl_params_activate  := activatectl_params + 1
+
 trackthumb_params := event_params
 trackthumb_which_ctl := trackthumb_params
 trackthumb_mousex := trackthumb_params + 1
@@ -6042,7 +6046,7 @@ L41CB:  ldx     cached_window_id
 L41E2:  lda     cached_window_id
         sta     getwinport_params2::window_id
         jsr     get_set_port2
-        jsr     L6E52
+        jsr     cached_icons_window_to_screen
         ldx     #7
 L41F0:  lda     grafport2::cliprect,x
         sta     rect_E230,x
@@ -6067,7 +6071,7 @@ L4227:  lda     #$00
         lda     cached_window_id
         sta     getwinport_params2::window_id
         jsr     get_set_port2
-        jsr     L6E6E
+        jsr     cached_icons_screen_to_window
         lda     active_window_id
         jsr     L8874
         jmp     reset_grafport3
@@ -7938,7 +7942,7 @@ L516D:  lda     L51EB,x
         lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     get_set_port2
-        jsr     L6E52
+        jsr     cached_icons_window_to_screen
         lda     #$00
         sta     L51EF
 L518D:  lda     L51EF
@@ -7953,9 +7957,9 @@ L518D:  lda     L51EF
         jmp     L518D
 
 L51A7:  jsr     reset_grafport3
-        jsr     L6E6E
+        jsr     cached_icons_screen_to_window
         jsr     DESKTOP_COPY_FROM_BUF
-        jsr     L6DB1
+        jsr     update_scrollbars
         lda     selected_window_index
         beq     L51E3
         lda     is_file_selected
@@ -8022,7 +8026,7 @@ L5246:  lda     L5263,x
         sta     L4152
         jsr     reset_grafport3
         jsr     L6C19
-        jsr     L6DB1
+        jsr     update_scrollbars
         lda     #$00
         sta     L4152
         rts
@@ -9312,7 +9316,7 @@ done_client_click:
         jsr     L84D1
         bit     L5B1B
         bmi     :+
-        jsr     L6E6E
+        jsr     cached_icons_screen_to_window
 :       lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     get_set_port2
@@ -9455,7 +9459,7 @@ L5DAD:  cpx     #$FF
         lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     get_set_port2
-        jsr     L6E52
+        jsr     cached_icons_window_to_screen
         jsr     offset_grafport2_and_set
         ldx     is_file_selected
         dex
@@ -9471,8 +9475,8 @@ L5DC4:  txa
         lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     get_set_port2
-        jsr     L6DB1
-        jsr     L6E6E
+        jsr     update_scrollbars
+        jsr     cached_icons_screen_to_window
         jsr     reset_grafport3
 L5DEC:  jsr     DESKTOP_COPY_FROM_BUF
         lda     #$00
@@ -9845,9 +9849,9 @@ L619A:  .byte   0
         lda     active_window_id
         sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
-        jsr     L6E52
-        jsr     L6DB1
-        jsr     L6E6E
+        jsr     cached_icons_window_to_screen
+        jsr     update_scrollbars
+        jsr     cached_icons_screen_to_window
         lda     #$00
         sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
@@ -10040,7 +10044,7 @@ L63C1:  ldax    L7B61
 L63C7:  stax    grafport2::cliprect::y1
         add16_8 grafport2::cliprect::y1, L63E9, grafport2::cliprect::y2
         jsr     L653E
-        jsr     L6DB1
+        jsr     update_scrollbars
         jmp     L6556
 
 L63E8:  .byte   0
@@ -10060,7 +10064,7 @@ L6421:  ldax    L7B65
 L6427:  stax    grafport2::cliprect::y2
         sub16_8 grafport2::cliprect::y2, L6449, grafport2::cliprect::y1
         jsr     L653E
-        jsr     L6DB1
+        jsr     update_scrollbars
         jmp     L6556
 
 L6448:  .byte   0
@@ -10084,7 +10088,7 @@ L6484:  ldax    L7B5F
 L648A:  stax    grafport2::cliprect::x1
         add16   grafport2::cliprect::x1, L64AC, grafport2::cliprect::x2
         jsr     L653E
-        jsr     L6DB1
+        jsr     update_scrollbars
         jmp     L6556
 
 L64AC:  .word   0
@@ -10102,7 +10106,7 @@ L64E3:  ldax    L7B63
 L64E9:  stax    grafport2::cliprect::x2
         sub16   grafport2::cliprect::x2, L650B, grafport2::cliprect::x1
         jsr     L653E
-        jsr     L6DB1
+        jsr     update_scrollbars
         jmp     L6556
 
 L650B:  .word   0
@@ -10110,7 +10114,7 @@ L650D:  .word   0
 
 L650F:  bit     L5B1B
         bmi     L6517
-        jsr     L6E52
+        jsr     cached_icons_window_to_screen
 L6517:  jsr     L6523
         jsr     L7B6B
         lda     active_window_id
@@ -10145,12 +10149,15 @@ L654C:  lda     grafport2::cliprect::x1,x
 
 L6556:  bit     L5B1B
         bmi     L655E
-        jsr     L6E6E
+        jsr     cached_icons_screen_to_window
 L655E:  MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect::x1
         jsr     reset_grafport3
         jmp     L6C19
 
-L656D:  lda     active_window_id
+;;; ==================================================
+
+.proc update_hthumb
+        lda     active_window_id
         jsr     L7D5D
         stax    L6600
         lda     active_window_id
@@ -10186,7 +10193,12 @@ L65EE:  sta     event_params+1
 L6600:  .word   0
 L6602:  .byte   0
 L6603:  .byte   0
-L6604:  lda     active_window_id
+.endproc
+
+;;; ==================================================
+
+.proc update_vthumb
+        lda     active_window_id
         jsr     L7D5D
         sty     L669F
         lda     active_window_id
@@ -10224,6 +10236,7 @@ L668D:  sta     event_params+1
 L669F:  .byte   0
 L66A0:  .byte   0
 L66A1:  .byte   0
+.endproc
 
 ;;; ==================================================
 
@@ -10771,7 +10784,7 @@ L6BB8:  jsr     L744B
         sta     getwinport_params2::window_id
         jsr     get_set_port2
         jsr     draw_window_header
-        jsr     L6E52
+        jsr     cached_icons_window_to_screen
         lda     #$00
         sta     L6C0E
 L6BDA:  lda     L6C0E
@@ -10787,8 +10800,8 @@ L6BDA:  lda     L6C0E
 
 L6BF4:  lda     cached_window_id
         sta     active_window_id
-        jsr     L6DB1
-        jsr     L6E6E
+        jsr     update_scrollbars
+        jsr     cached_icons_screen_to_window
         jsr     DESKTOP_COPY_FROM_BUF
         lda     #$00
         sta     cached_window_id
@@ -10895,7 +10908,7 @@ L6CCD:  lda     cached_window_id
         bit     L4152
         bmi     L6CDE
         jsr     draw_window_header
-L6CDE:  jsr     L6E52
+L6CDE:  jsr     cached_icons_window_to_screen
         jsr     offset_grafport2_and_set
         ldx     #$07
 L6CE6:  lda     grafport2::cliprect,x
@@ -10912,7 +10925,7 @@ L6CF3:  cpx     cached_window_icon_count
         lda     cached_window_id
         sta     getwinport_params2::window_id
         jsr     get_set_port2
-        jsr     L6E6E
+        jsr     cached_icons_screen_to_window
         rts
 
 L6D09:  txa
@@ -10987,7 +11000,7 @@ L6DB0:  .byte   0
 
 ;;; ==================================================
 
-.proc L6DB1
+.proc update_scrollbars
         ldx     active_window_id
         dex
         lda     win_buf_table,x
@@ -10995,87 +11008,103 @@ L6DB0:  .byte   0
         jsr     L7B6B
         jmp     L6DC9
 
-L6DC0:  jsr     L6E52
+L6DC0:  jsr     cached_icons_window_to_screen
         jsr     L7B6B
-        jsr     L6E6E
+        jsr     cached_icons_screen_to_window
 L6DC9:  lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     get_set_port2
-        cmp16   L7B5F, grafport2::cliprect::x1
-        bmi     L6DFE
-        cmp16   grafport2::cliprect::x2, L7B63
-        bmi     L6DFE
-        lda     #$02
-        sta     event_params
-        lda     #$00
-        sta     event_params+1
-        jsr     L6E48
-        jmp     L6E0E
 
-L6DFE:  lda     #$02
-        sta     event_params
-        lda     #$01
-        sta     event_params+1
-        jsr     L6E48
-        jsr     L656D
-L6E0E:  cmp16   L7B61, grafport2::cliprect::y1
-        bmi     L6E38
+        ;; check horizontal bounds
+        cmp16   L7B5F, grafport2::cliprect::x1
+        bmi     activate_hscroll
+        cmp16   grafport2::cliprect::x2, L7B63
+        bmi     activate_hscroll
+
+        ;; deactivate horizontal scrollbar
+        lda     #MGTK::ctl_horizontal_scroll_bar
+        sta     activatectl_params_which_ctl
+        lda     #MGTK::activatectl_deactivate
+        sta     activatectl_params_activate
+        jsr     activate_ctl
+
+        jmp     check_vscroll
+
+activate_hscroll:
+        ;; activate horizontal scrollbar
+        lda     #MGTK::ctl_horizontal_scroll_bar
+        sta     activatectl_params_which_ctl
+        lda     #MGTK::activatectl_activate
+        sta     activatectl_params_activate
+        jsr     activate_ctl
+        jsr     update_hthumb
+
+check_vscroll:
+        ;; check vertical bounds
+        cmp16   L7B61, grafport2::cliprect::y1
+        bmi     activate_vscroll
         cmp16   grafport2::cliprect::y2, L7B65
-        bmi     L6E38
-        lda     #$01
-        sta     event_params
-        lda     #$00
-        sta     event_params+1
-        jsr     L6E48
+        bmi     activate_vscroll
+
+        ;; deactivate vertical scrollbar
+        lda     #MGTK::ctl_vertical_scroll_bar
+        sta     activatectl_params_which_ctl
+        lda     #MGTK::activatectl_deactivate
+        sta     activatectl_params_activate
+        jsr     activate_ctl
+
         rts
 
-L6E38:  lda     #$01
-        sta     event_params
-        lda     #$01
-        sta     event_params+1
-        jsr     L6E48
-        jmp     L6604
+activate_vscroll:
+        ;; activate vertical scrollbar
+        lda     #MGTK::ctl_vertical_scroll_bar
+        sta     activatectl_params_which_ctl
+        lda     #MGTK::activatectl_activate
+        sta     activatectl_params_activate
+        jsr     activate_ctl
+        jmp     update_vthumb
 
-L6E48:  MGTK_RELAY_CALL MGTK::ActivateCtl, event_params ; ???
+activate_ctl:
+        MGTK_RELAY_CALL MGTK::ActivateCtl, activatectl_params
         rts
 .endproc
 
 ;;; ==================================================
 
-.proc L6E52
-        lda     #$00
-        sta     L6E6D
-L6E57:  lda     L6E6D
+.proc cached_icons_window_to_screen
+        lda     #0
+        sta     count
+loop:   lda     count
         cmp     cached_window_icon_count
-        beq     L6E6C
+        beq     done
         tax
         lda     cached_window_icon_list,x
         jsr     icon_window_to_screen
-        inc     L6E6D
-        jmp     L6E57
+        inc     count
+        jmp     loop
 
-L6E6C:  rts
+done:   rts
 
-L6E6D:  .byte   0
+count:  .byte   0
 .endproc
 
 ;;; ==================================================
 
-.proc L6E6E
-        lda     #$00
-        sta     L6E89
-L6E73:  lda     L6E89
+.proc cached_icons_screen_to_window
+        lda     #0
+        sta     index
+loop:   lda     index
         cmp     cached_window_icon_count
-        beq     L6E88
+        beq     done
         tax
         lda     cached_window_icon_list,x
         jsr     icon_screen_to_window
-        inc     L6E89
-        jmp     L6E73
+        inc     index
+        jmp     loop
 
-L6E88:  rts
+done:   rts
 
-L6E89:  .byte   0
+index:  .byte   0
 .endproc
 
 ;;; ==================================================
@@ -12956,7 +12985,7 @@ L809E:  inc     $0805
         jmp     L8051
 
 .proc L80CA
-        lda     #$00
+        lda     #0
         sta     $0804
         lda     L0800
         asl     a
@@ -13410,7 +13439,7 @@ L84D0:  .byte   0
 L84D1:  jsr     push_zp_addrs
         bit     L5B1B
         bmi     L84DC
-        jsr     L6E52
+        jsr     cached_icons_window_to_screen
 L84DC:  sub16   grafport2::cliprect::x2, grafport2::cliprect::x1, L85F8
         sub16   grafport2::cliprect::y2, grafport2::cliprect::y1, L85FA
         lda     event_params_kind
