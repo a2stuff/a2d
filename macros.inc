@@ -112,8 +112,28 @@
 ;;;    add16 $1111, $2222,y, $3333      ; absolute, indexed, absolute
 ;;;    add16 $1111, $2222, $3333,x      ; absolute, absolute, indexed
 ;;;    add16 $1111, $2222, $3333,y      ; absolute, absolute, indexed
-.macro add16 arg1, arg2, arg3, arg4
-    .if is_register {arg2}
+;;;    add16 $1111,x, $2222, $3333,x    ; indexed, absolute, indexed
+;;;    add16 $1111,y, $2222, $3333,y    ; indexed, absolute, indexed
+;;;    add16 $1111,x, $2222,x, $3333,x  ; indexed, indexed, indexed
+;;;    add16 $1111,y, $2222,y, $3333,y  ; indexed, indexed, indexed
+.macro add16 arg1, arg2, arg3, arg4, arg5, arg6
+    .if is_register {arg2} && is_register {arg4} && is_register {arg6}
+        lda     arg1,arg2
+        clc
+        adc     arg3,arg4
+        sta     arg5,arg6
+        lda     arg1+1,arg2
+        adc     arg3+1,arg4
+        sta     arg5+1,arg6
+    .elseif is_register {arg2} && is_register {arg5}
+        lda     arg1,arg2
+        clc
+        adc     arg3
+        sta     arg4,arg5
+        lda     arg1+1,arg2
+        adc     arg3+1
+        sta     arg4+1,arg5
+    .elseif is_register {arg2}
         lda     arg1,arg2
         clc
         adc     arg3
@@ -177,8 +197,28 @@
 ;;;    sub16 $1111, $2222,y, $3333      ; absolute, indexed, absolute
 ;;;    sub16 $1111, $2222, $3333,x      ; absolute, absolute, indexed
 ;;;    sub16 $1111, $2222, $3333,y      ; absolute, absolute, indexed
-.macro sub16 arg1, arg2, arg3, arg4
-    .if is_register {arg3}
+;;;    sub16 $1111,x, $2222,x, $3333    ; indexed, indexed, absolute
+;;;    sub16 $1111,y, $2222,y, $3333    ; indexed, indexed, absolute
+;;;    sub16 $1111,x, $2222, $3333,x    ; indexed, absolute, indexed
+;;;    sub16 $1111,y, $2222, $3333,y    ; indexed, absolute, indexed
+.macro sub16 arg1, arg2, arg3, arg4, arg5
+    .if is_register {arg2} && is_register {arg4}
+        lda     arg1,arg2
+        sec
+        sbc     arg3,arg4
+        sta     arg5
+        lda     arg1+1,arg2
+        sbc     arg3+1,arg4
+        sta     arg5+1
+    .elseif is_register {arg2} && is_register {arg5}
+        lda     arg1,arg2
+        sec
+        sbc     arg3
+        sta     arg4,arg5
+        lda     arg1+1,arg2
+        sbc     arg3+1
+        sta     arg4+1,arg5
+    .elseif is_register {arg3}
         lda     arg1
         sec
         sbc     arg2,arg3

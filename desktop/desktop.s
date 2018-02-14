@@ -1413,20 +1413,8 @@ L9A84:  sub16   findwindow_params2::mousex, L9C8E, L9C96
         sub16   findwindow_params2::mousey, L9C90, L9C98
         jsr     L9C9E
         ldx     #$00
-L9AAF:  lda     L9C7A,x
-        clc
-        adc     L9C96,x
-        sta     L9C7A,x
-        lda     L9C7B,x
-        adc     L9C97,x
-        sta     L9C7B,x
-        lda     L9C76,x
-        clc
-        adc     L9C96,x
-        sta     L9C76,x
-        lda     L9C77,x
-        adc     L9C97,x
-        sta     L9C77,x
+L9AAF:  add16   L9C7A,x, L9C96,x, L9C7A,x
+        add16   L9C76,x, L9C96,x, L9C76,x
         inx
         inx
         cpx     #$04
@@ -2030,20 +2018,8 @@ LA149:  dey
         rts
 
 LA14D:  ldx     #$00
-LA14F:  lda     paintbits_params2::viewloc::xcoord,x
-        clc
-        adc     paintbits_params2::maprect::x1,x
-        sta     paintrect_params6::x1,x
-        lda     paintbits_params2::viewloc::xcoord+1,x
-        adc     paintbits_params2::maprect::x1+1,x
-        sta     paintrect_params6::x1+1,x
-        lda     paintbits_params2::viewloc::xcoord,x
-        clc
-        adc     paintbits_params2::maprect::x2,x
-        sta     paintrect_params6::x2,x
-        lda     paintbits_params2::viewloc::xcoord+1,x
-        adc     paintbits_params2::maprect::x2+1,x
-        sta     paintrect_params6::x2+1,x
+LA14F:  add16   paintbits_params2::viewloc::xcoord,x, paintbits_params2::maprect::x1,x, paintrect_params6::x1,x
+        add16   paintbits_params2::viewloc::xcoord,x, paintbits_params2::maprect::x2,x, paintrect_params6::x2,x
         inx
         inx
         cpx     #$04
@@ -2546,20 +2522,8 @@ LA4F1:  lda     grafport4,y
         jmp     LA5CB
 
 LA506:  ldx     #$00
-LA508:  lda     poly::vertices,x
-        sec
-        sbc     LA567
-        sta     poly::vertices,x
-        lda     poly::vertices+1,x
-        sbc     LA568
-        sta     poly::vertices+1,x
-        lda     poly::vertices+2,x
-        sec
-        sbc     LA569
-        sta     poly::vertices+2,x
-        lda     poly::vertices+3,x
-        sbc     LA56A
-        sta     poly::vertices+3,x
+LA508:  sub16   poly::vertices,x, LA567, poly::vertices,x
+        sub16   poly::vertices+2,x, LA569, poly::vertices+2,x
         inx
         inx
         inx
@@ -2567,20 +2531,8 @@ LA508:  lda     poly::vertices,x
         cpx     #$20
         bne     LA508
         ldx     #$00
-LA538:  lda     poly::vertices,x
-        clc
-        adc     LA56B
-        sta     poly::vertices,x
-        lda     poly::vertices+1,x
-        adc     LA56C
-        sta     poly::vertices+1,x
-        lda     poly::vertices+2,x
-        clc
-        adc     LA56D
-        sta     poly::vertices+2,x
-        lda     poly::vertices+3,x
-        adc     LA56E
-        sta     poly::vertices+3,x
+LA538:  add16   poly::vertices,x, LA56B, poly::vertices,x
+        add16   poly::vertices+2,x, LA56D, poly::vertices+2,x
         inx
         inx
         inx
@@ -11004,14 +10956,16 @@ L6DB0:  .byte   0
         ldx     active_window_id
         dex
         lda     win_buf_table,x
-        bmi     L6DC0
+        bmi     :+
         jsr     L7B6B
-        jmp     L6DC9
+        jmp     config_port
 
-L6DC0:  jsr     cached_icons_window_to_screen
+:       jsr     cached_icons_window_to_screen
         jsr     L7B6B
         jsr     cached_icons_screen_to_window
-L6DC9:  lda     active_window_id
+
+config_port:
+        lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     get_set_port2
 
@@ -11657,20 +11611,8 @@ L73ED:  lda     L7446
 L73F8:  lda     L7446
         asl     a
         tax
-        lda     $E204,x
-        sec
-        sbc     $E202,x
-        sta     L7449
-        lda     $E205,x
-        sbc     $E203,x
-        sta     L744A
-        lda     $E200,x
-        clc
-        adc     L7449
-        sta     $E202,x
-        lda     $E201,x
-        adc     L744A
-        sta     $E203,x
+        sub16   $E204,x, $E202,x, L7449
+        add16   $E200,x, L7449, $E202,x
         inc     L7446
         jmp     L73ED
 
@@ -12438,19 +12380,24 @@ L7B5F:  .byte   0
 L7B60:  .byte   0
 L7B61:  .byte   0
 L7B62:  .byte   0
+
 L7B63:  .byte   0
 L7B64:  .byte   0
 L7B65:  .byte   0
 L7B66:  .byte   0
+
 L7B67:  .byte   0
 L7B68:  .byte   0
 L7B69:  .byte   0
 L7B6A:  .byte   0
-L7B6B:  ldx     #$03
-        lda     #$00
+
+.proc L7B6B
+        ldx     #3
+        lda     #0
 L7B6F:  sta     L7B63,x
         dex
         bpl     L7B6F
+
         sta     L7D5B
         lda     #$FF
         sta     L7B5F
@@ -12598,6 +12545,10 @@ L7D55:  inc     L7D5B
 
 L7D5B:  .byte   0
 L7D5C:  .byte   0
+.endproc
+
+;;; ==================================================
+
 L7D5D:  jsr     window_lookup
         stax    $06
         ldy     #$23
@@ -13460,21 +13411,13 @@ L850E:  sta     L85F1
         pha
         jsr     L7B6B
         ldx     L85F1
-        lda     L7B63,x
-        sec
-        sbc     L7B5F,x
-        sta     L85F2
-        lda     L7B64,x
-        sbc     L7B60,x
-        sta     L85F3
+
+        sub16   L7B63,x, L7B5F,x, L85F2
+
         ldx     L85F1
-        lda     L85F2
-        sec
-        sbc     L85F8,x
-        sta     L85F2
-        lda     L85F3
-        sbc     L85F9,x
-        sta     L85F3
+
+        sub16   L85F2, L85F8,x, L85F2
+
         bpl     L8562
         lda     L85F8,x
         sta     L85F2
@@ -13494,6 +13437,7 @@ L8562:  lsr16   L85F2
         rol     L85F2
         asl     a
         rol     L85F2
+
         ldx     L85F1
         clc
         adc     L7B5F,x
@@ -13501,6 +13445,7 @@ L8562:  lsr16   L85F2
         lda     L85F2
         adc     L7B60,x
         sta     grafport2::cliprect::x1+1,x
+
         lda     active_window_id
         jsr     L7D5D
         stax    L85F4
@@ -14525,21 +14470,9 @@ L8CDC:  bit     L8D4F
         jmp     L8D0A
 
 L8CF7:  add16   $0802, L8D52, $0802,x
-L8D0A:  lda     L0800,x
-        clc
-        adc     L8D54
-        sta     $0804,x
-        lda     $0801,x
-        adc     L8D55
-        sta     $0805,x
+L8D0A:  add16   L0800,x, L8D54, $0804,x
 
-        lda     $0802,x
-        clc
-        adc     L8D56
-        sta     $0806,x
-        lda     $0803,x
-        adc     L8D57
-        sta     $0807,x
+        add16   $0802,x, L8D56, $0806,x
 
         inc     L8D4D
         lda     L8D4D
@@ -16950,13 +16883,7 @@ LA2AE:  bit     L9189
         jsr     LA2FD
         yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         bne     LA2D4
-        lda     LA2EF
-        clc
-        adc     file_info_params2::blocks_used
-        sta     LA2EF
-        lda     LA2F0
-        adc     file_info_params2::blocks_used+1
-        sta     LA2F0
+        add16   LA2EF, file_info_params2::blocks_used, LA2EF
 LA2D4:  inc     LA2ED
         bne     LA2DC
         inc     LA2EE
@@ -18830,14 +18757,7 @@ create_window_with_alert_bitmap:
 
 :       tya
         pha
-        lda     $06
-        clc
-        adc     #$01
-
-        sta     textptr
-        lda     $06+1
-        adc     #$00
-        sta     textptr+1
+        add16   $06, #1, textptr
         jsr     LBD7B
         sta     textlen
         MGTK_RELAY_CALL MGTK::TextWidth, textwidth_params
