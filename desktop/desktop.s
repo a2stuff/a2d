@@ -5043,9 +5043,10 @@ LDFC6:  .byte   0
 LDFC7:  .byte   0
 LDFC8:  .byte   0
 
-LDFC9:  .res    55, 0
-LE000:  .res    10, 0           ; actually referenced ???
-LE00A:  .res    65, 0           ; path buffer ???
+path_buf4:
+        .res    65, 0
+path_buf3:
+        .res    65, 0
 LE04B:  .res    16, 0
 LE05B:  .byte   $00
 LE05C:  .byte   $00
@@ -5058,8 +5059,14 @@ LE061:  .byte   $00
 
 LE062:  .res    170, 0
 LE10C:  .res    138, 0
-        ;; In here, at $E196, is a device table
-LE196:  .res    132, 0
+
+LE196:  .res    10, 0          ; device table???
+devlst_copy:
+        .res    16, 0
+LE1B0:  .res    65, 0           ; path buffer?
+LE1F1:  .res    15, 0           ; length-prefixed string
+LE200:  .word   0
+LE202:  .res    24, 0           ; addr table
 
         .byte   $00,$00,$00,$00,$7F,$64,$00,$1C
         .byte   $00,$1E,$00,$32,$00,$1E,$00,$40
@@ -5079,7 +5086,7 @@ LE22E:
 
         ;; DT_HIGHLIGHT_ICON params
         ;; DT_UNHIGHLIGHT_ICON params
-LE22F:  .byte   0
+icon_param:  .byte   0
 
 rect_E230:  DEFINE_RECT 0,0,0,0, rect_E230
 
@@ -5087,7 +5094,10 @@ rect_E230:  DEFINE_RECT 0,0,0,0, rect_E230
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00
+
+LE256:
+        .byte   $00,$00,$00,$00
 
 .proc menu_click_params
 menu_id:.byte   0
@@ -5247,8 +5257,8 @@ dummy_dd_item:
         PASCAL_STRING "Rien"    ; ???
 
         ;; DT_UNHIGHLIGHT_ICON params
-LE6BE:
-        .byte   $00
+icon_params2:
+        .byte   0
 
         .byte   $00,$00
 
@@ -5404,8 +5414,8 @@ window_icon_list_table:
 active_window_id:
         .byte   $00
 
-LEC26:                          ; ???
-        .res    45, 0
+LEC26:  .res    8, 0           ; ???
+LEC2E:  .res    37, 0          ; ???
 LEC53:  .byte   0
 LEC54:  .word   0
         .res    4, 0
@@ -5893,7 +5903,7 @@ L40DC:  jmp     L4088
 
 L40DF:  .byte   $00
 L40E0:  tsx
-        stx     $E256
+        stx     LE256
         sta     menu_click_params::item_num
         jsr     L59A0
         lda     #$00
@@ -6011,10 +6021,10 @@ L41FE:  lda     L4241
         beq     L4227
         tax
         lda     cached_window_icon_list,x
-        sta     LE22F
-        DESKTOP_RELAY_CALL DT_ICON_IN_RECT, LE22F
+        sta     icon_param
+        DESKTOP_RELAY_CALL DT_ICON_IN_RECT, icon_param
         beq     L4221
-        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, LE22F
+        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, icon_param
 L4221:  inc     L4241
         jmp     L41FE
 
@@ -6055,12 +6065,12 @@ L4270:  lda     L42C3
         beq     L42A2
         tax
         lda     selected_file_index,x
-        sta     LE22F
+        sta     icon_param
         jsr     icon_window_to_screen
-        DESKTOP_RELAY_CALL DT_ICON_IN_RECT, LE22F
+        DESKTOP_RELAY_CALL DT_ICON_IN_RECT, icon_param
         beq     L4296
-        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, LE22F
-L4296:  lda     LE22F
+        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, icon_param
+L4296:  lda     icon_param
         jsr     icon_screen_to_window
         inc     L42C3
         jmp     L4270
@@ -6072,8 +6082,8 @@ L42A5:  lda     L42C3
         beq     L42A2
         tax
         lda     selected_file_index,x
-        sta     LE22F
-        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, LE22F
+        sta     icon_param
+        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, icon_param
         inc     L42C3
         jmp     L42A5
 
@@ -6240,7 +6250,7 @@ L43B3:  dex                     ; x has top level menu id
         rts
 
 L43E0:  tsx
-        stx     $E256
+        stx     LE256
         L43E5 := *+1
         jmp     dummy1234           ; self-modified
 .endproc
@@ -6254,7 +6264,7 @@ L43E0:  tsx
 
 .proc handle_click
         tsx
-        stx     $E256
+        stx     LE256
         MGTK_RELAY_CALL MGTK::FindWindow, event_params_coords
         lda     findwindow_params_which_area
         bne     not_desktop
@@ -6317,8 +6327,8 @@ L445D:  jsr     clear_selection
         ldx     $D20E
         dex
         lda     LEC26,x
-        sta     LE22F
-        lda     LE22F
+        sta     icon_param
+        lda     icon_param
         jsr     icon_entry_lookup
         stax    $06
         ldy     #$01
@@ -6331,13 +6341,13 @@ L445D:  jsr     clear_selection
         and     #$0F
         sta     L445C
         jsr     L8997
-        DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, LE22F
+        DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
         jsr     reset_grafport3
         lda     L445C
         sta     selected_window_index
         lda     #$01
         sta     is_file_selected
-        lda     LE22F
+        lda     icon_param
         sta     selected_file_index
 L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_params_window_id
         lda     findwindow_params_window_id
@@ -6774,7 +6784,7 @@ L4859:  dey
         bne     L484B
         rts
 
-L485D:  .addr   LE000           ; addresses or numbers???
+L485D:  .word   $E000
 L485F:  .word   $D000
 
 sys_start_flag:  .byte   $00
@@ -7354,7 +7364,7 @@ L4CD6:  pha
         bpl     :+
         jmp     redraw_windows_and_desktop
 
-:       addr_call L6FAF, LDFC9
+:       addr_call L6FAF, path_buf4
         beq     :+
         pha
         jsr     L6F0D
@@ -7363,17 +7373,17 @@ L4CD6:  pha
 
 :       ldy     #1
 L4CF3:  iny
-        lda     LDFC9,y
+        lda     path_buf4,y
         cmp     #'/'
         beq     :+
-        cpy     LDFC9
+        cpy     path_buf4
         bne     L4CF3
         iny
 :       dey
-        sty     LDFC9
-        addr_call L6FB7, LDFC9
-        ldax    #LDFC9
-        ldy     LDFC9
+        sty     path_buf4
+        addr_call L6FB7, path_buf4
+        ldax    #path_buf4
+        ldy     path_buf4
         jsr     L6F4B
         jmp     redraw_windows_and_desktop
 .endproc
@@ -7385,34 +7395,34 @@ L4CF3:  iny
         lda     ($06),y
         tay
 L4D1E:  lda     ($06),y
-        sta     LE00A,y
+        sta     path_buf3,y
         dey
         bpl     L4D1E
         ldy     #$00
         lda     ($08),y
         tay
 L4D2B:  lda     ($08),y
-        sta     LDFC9,y
+        sta     path_buf4,y
         dey
         bpl     L4D2B
-        addr_call L6F90, LDFC9
+        addr_call L6F90, path_buf4
         ldx     #$01
         iny
         iny
-L4D3E:  lda     LDFC9,y
+L4D3E:  lda     path_buf4,y
         sta     LE04B,x
-        cpy     LDFC9
+        cpy     path_buf4
         beq     L4D4E
         iny
         inx
         jmp     L4D3E
 
 L4D4E:  stx     LE04B
-        lda     LDFC9
+        lda     path_buf4
         sec
         sbc     LE04B
-        sta     LDFC9
-        dec     LDFC9
+        sta     path_buf4
+        dec     path_buf4
         rts
 .endproc
 
@@ -7444,7 +7454,7 @@ L4D8A:  ldy     #$00
         lda     ($06),y
         tay
 L4D8F:  lda     ($06),y
-        sta     LE00A,y
+        sta     path_buf3,y
         dey
         bpl     L4D8F
         jsr     redraw_windows_and_desktop
@@ -7455,9 +7465,9 @@ L4D9D:  pha
         bpl     L4DA7
         jmp     redraw_windows_and_desktop
 
-L4DA7:  addr_call L6F90, LE00A
-        sty     LE00A
-        addr_call L6FAF, LE00A
+L4DA7:  addr_call L6F90, path_buf3
+        sty     path_buf3
+        addr_call L6FAF, path_buf3
         beq     L4DC2
         pha
         jsr     L6F0D
@@ -7466,17 +7476,17 @@ L4DA7:  addr_call L6F90, LE00A
 
 L4DC2:  ldy     #$01
 L4DC4:  iny
-        lda     LE00A,y
+        lda     path_buf3,y
         cmp     #$2F
         beq     L4DD2
-        cpy     LE00A
+        cpy     path_buf3
         bne     L4DC4
         iny
 L4DD2:  dey
-        sty     LE00A
-        addr_call L6FB7, LE00A
-        ldax    #LE00A
-        ldy     LE00A
+        sty     path_buf3
+        addr_call L6FB7, path_buf3
+        ldax    #path_buf3
+        ldy     path_buf3
         jsr     L6F4B
         jmp     redraw_windows_and_desktop
 .endproc
@@ -7564,7 +7574,7 @@ L4E71:  .byte   0
         rts
 
 L4E78:  jsr     clear_selection
-        dec     $EC2E
+        dec     LEC2E
         lda     active_window_id
         sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
@@ -7602,7 +7612,7 @@ L4EC3:  sta     cached_window_icon_count
         ldx     active_window_id
         dex
         lda     LEC26,x
-        sta     LE22F
+        sta     icon_param
         jsr     icon_entry_lookup
         stax    $06
         ldy     #icon_entry_offset_win_type
@@ -7612,11 +7622,11 @@ L4EC3:  sta     cached_window_icon_count
         and     #icon_entry_winid_mask
         sta     selected_window_index
         jsr     L8997
-        DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, LE22F
+        DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
         jsr     reset_grafport3
         lda     #$01
         sta     is_file_selected
-        lda     LE22F
+        lda     icon_param
         sta     selected_file_index
         ldx     active_window_id
         dex
@@ -7919,11 +7929,11 @@ L51A7:  jsr     reset_grafport3
         sta     L51EF
 L51C0:  ldx     L51EF
         lda     is_file_selected,x
-        sta     LE22F
+        sta     icon_param
         jsr     icon_window_to_screen
         jsr     offset_grafport2_and_set
-        DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, LE22F
-        lda     LE22F
+        DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
+        lda     icon_param
         jsr     icon_screen_to_window
         dec     L51EF
         bne     L51C0
@@ -8317,11 +8327,11 @@ L5485:  cpx     cached_window_icon_count
         txa
         pha
         lda     cached_window_icon_list,x
-        sta     LE22F
+        sta     icon_param
         jsr     icon_window_to_screen
-        DESKTOP_RELAY_CALL DT_ICON_IN_RECT, LE22F
+        DESKTOP_RELAY_CALL DT_ICON_IN_RECT, icon_param
         pha
-        lda     LE22F
+        lda     icon_param
         jsr     icon_screen_to_window
         pla
         beq     L54B7
@@ -8475,7 +8485,7 @@ L55D1:  ldx     L544A
 
 L55F0:  ldx     L544A
         lda     $1801,x
-        sta     LE22F
+        sta     icon_param
         jsr     icon_entry_lookup
         stax    $06
         ldy     #icon_entry_offset_win_type
@@ -8484,17 +8494,17 @@ L55F0:  ldx     L544A
         sta     getwinport_params2::window_id
         beq     L5614
         jsr     L56F9
-        lda     LE22F
+        lda     icon_param
         jsr     icon_window_to_screen
-L5614:  DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, LE22F
+L5614:  DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
         lda     getwinport_params2::window_id
         beq     L562B
-        lda     LE22F
+        lda     icon_param
         jsr     icon_screen_to_window
         jsr     reset_grafport3
 L562B:  rts
 
-L562C:  lda     LE22F
+L562C:  lda     icon_param
         jsr     icon_entry_lookup
         stax    $06
         ldy     #icon_entry_offset_win_type
@@ -8503,12 +8513,12 @@ L562C:  lda     LE22F
         sta     getwinport_params2::window_id
         beq     L564A
         jsr     L56F9
-        lda     LE22F
+        lda     icon_param
         jsr     icon_window_to_screen
-L564A:  DESKTOP_RELAY_CALL $0B, LE22F
+L564A:  DESKTOP_RELAY_CALL $0B, icon_param
         lda     getwinport_params2::window_id
         beq     L5661
-        lda     LE22F
+        lda     icon_param
         jsr     icon_screen_to_window
         jsr     reset_grafport3
 L5661:  rts
@@ -8879,11 +8889,11 @@ L5916:  lda     cached_window_icon_list,x
         txa
         pha
         lda     cached_window_icon_list,x
-        sta     LE22F
+        sta     icon_param
         lda     #$00
         sta     cached_window_icon_list,x
-        DESKTOP_RELAY_CALL $04, LE22F
-        lda     LE22F
+        DESKTOP_RELAY_CALL $04, icon_param
+        lda     icon_param
         jsr     DESKTOP_FREE_ICON
         dec     cached_window_icon_count
         dec     LDD9E
@@ -8897,7 +8907,7 @@ L594A:  ldy     L599E
         inc     cached_window_icon_count
         inc     LDD9E
         lda     #$00
-        sta     $E1A0,y
+        sta     devlst_copy,y
         lda     DEVLST,y
         jsr     get_device_info
         cmp     #$57
@@ -8949,7 +8959,7 @@ L59AA:  sta     L5AD0
         bvc     L59D2
         lda     L533F
         ldy     #$0F
-L59C1:  cmp     $E1A0,y
+L59C1:  cmp     devlst_copy,y
         beq     L59C9
         dey
         bpl     L59C1
@@ -8973,7 +8983,7 @@ L59EA:  lda     menu_click_params::item_num
         sbc     #$03
         sta     menu_click_params::item_num
 L59F3:  ldy     menu_click_params::item_num
-        lda     $E1A0,y
+        lda     devlst_copy,y
         bne     L59FE
         jmp     L5A4C
 
@@ -9019,15 +9029,15 @@ L5A4C:  jsr     redraw_windows_and_desktop
         lda     menu_click_params::item_num
         tay
         pha
-        lda     $E1A0,y
-        sta     LE22F
+        lda     devlst_copy,y
+        sta     icon_param
         beq     L5A7F
         jsr     L8AF4
         dec     LDD9E
-        lda     LE22F
+        lda     icon_param
         jsr     DESKTOP_FREE_ICON
         jsr     reset_grafport3
-        DESKTOP_RELAY_CALL $04, LE22F
+        DESKTOP_RELAY_CALL $04, icon_param
 L5A7F:  lda     cached_window_icon_count
         sta     L5AC6
         inc     cached_window_icon_count
@@ -9245,7 +9255,7 @@ done_client_click:
 ;;; ==================================================
 
 .proc do_track_thumb
-        lda     $D20D
+        lda     findcontrol_which_ctl
         sta     trackthumb_which_ctl
         MGTK_RELAY_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_thumbmoved
@@ -9355,10 +9365,10 @@ L5D0B:  ldx     is_file_selected
         sta     getwinport_params2::window_id
         jsr     get_set_port2
         lda     L5CD9
-        sta     LE22F
+        sta     icon_param
         jsr     icon_window_to_screen
         jsr     offset_grafport2_and_set
-        DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, LE22F
+        DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
         lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     get_set_port2
@@ -9435,7 +9445,7 @@ L5DEC:  jsr     DESKTOP_COPY_FROM_BUF
         sta     cached_window_id
         jmp     DESKTOP_COPY_TO_BUF
 
-L5DF7:  ldx     $E256
+L5DF7:  ldx     LE256
         txs
         rts
 
@@ -9532,7 +9542,7 @@ L5E8F:  lda     active_window_id
         lda     ($06),y
         tay
 L5ECB:  lda     ($06),y
-        sta     $E1B0,y
+        sta     LE1B0,y
         dey
         bpl     L5ECB
         pla
@@ -9609,18 +9619,18 @@ L5F80:  cpx     cached_window_icon_count
 L5F88:  txa
         pha
         lda     cached_window_icon_list,x
-        sta     LE22F
+        sta     icon_param
         jsr     icon_window_to_screen
-        DESKTOP_RELAY_CALL DT_ICON_IN_RECT, LE22F
+        DESKTOP_RELAY_CALL DT_ICON_IN_RECT, icon_param
         beq     L5FB9
-        DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, LE22F
+        DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
         ldx     is_file_selected
         inc     is_file_selected
-        lda     LE22F
+        lda     icon_param
         sta     selected_file_index,x
         lda     active_window_id
         sta     selected_window_index
-L5FB9:  lda     LE22F
+L5FB9:  lda     icon_param
         jsr     icon_screen_to_window
         pla
         tax
@@ -9841,7 +9851,7 @@ L6206:  cpx     cached_window_icon_count
         inx
         jmp     L6206
 
-L6215:  dec     $EC2E
+L6215:  dec     LEC2E
         ldx     #$00
         txa
 L621B:  sta     cached_window_icon_list,x
@@ -9856,7 +9866,7 @@ L6227:  sta     cached_window_icon_count
         ldx     active_window_id
         dex
         lda     LEC26,x
-        sta     LE22F
+        sta     icon_param
         jsr     icon_entry_lookup
         stax    $06
         ldy     #$01
@@ -9870,11 +9880,11 @@ L6227:  sta     cached_window_icon_count
         and     #$0F
         sta     selected_window_index
         jsr     L8997
-        DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, LE22F
+        DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
         jsr     reset_grafport3
         lda     #$01
         sta     is_file_selected
-        lda     LE22F
+        lda     icon_param
         sta     selected_file_index
 L6276:  ldx     active_window_id
         dex
@@ -10481,13 +10491,13 @@ L68F9:  cpx     cached_window_icon_count
 L6904:  txa
         pha
         lda     cached_window_icon_list,x
-        sta     LE22F
-        DESKTOP_RELAY_CALL DT_ICON_IN_RECT, LE22F
+        sta     icon_param
+        DESKTOP_RELAY_CALL DT_ICON_IN_RECT, icon_param
         beq     L692C
-        DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, LE22F
+        DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
         ldx     is_file_selected
         inc     is_file_selected
-        lda     LE22F
+        lda     icon_param
         sta     selected_file_index,x
 L692C:  pla
         tax
@@ -10608,9 +10618,9 @@ L6A80:  inx
 ;;; ==================================================
 
 .proc L6A8A
-        sta     LE6BE
+        sta     icon_params2
         jsr     DESKTOP_COPY_FROM_BUF
-        lda     LE6BE
+        lda     icon_params2
         ldx     #$07
 L6A95:  cmp     LEC26,x
         beq     L6AA0
@@ -10625,7 +10635,7 @@ L6AA0:  inx
 
 L6AA7:  stx     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
-        lda     LE6BE
+        lda     icon_params2
         jsr     icon_entry_lookup
         stax    $06
         ldy     #icon_entry_offset_win_type
@@ -10640,18 +10650,18 @@ L6AA7:  stx     cached_window_id
         cmp     active_window_id
         bne     L6AEF
         jsr     get_set_port2
-        lda     LE6BE
+        lda     icon_params2
         jsr     icon_window_to_screen
-L6AD8:  DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, LE6BE
+L6AD8:  DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, icon_params2
         lda     getwinport_params2::window_id
         beq     L6AEF
-        lda     LE6BE
+        lda     icon_params2
         jsr     icon_screen_to_window
         jsr     reset_grafport3
-L6AEF:  lda     LE6BE
-        ldx     $E1F1
+L6AEF:  lda     icon_params2
+        ldx     LE1F1
         dex
-L6AF6:  cmp     $E1F2,x
+L6AF6:  cmp     LE1F1+1,x
         beq     L6B01
         dex
         bpl     L6AF6
@@ -10665,12 +10675,12 @@ L6B01:  MGTK_RELAY_CALL MGTK::SelectWindow, cached_window_id
         sta     cached_window_id
         jmp     DESKTOP_COPY_TO_BUF
 
-L6B1E:  lda     $EC2E
+L6B1E:  lda     LEC2E
         cmp     #$08
         bcc     L6B2F
         lda     #warning_msg_too_many_windows
         jsr     show_warning_dialog_num
-        ldx     $E256
+        ldx     LE256
         txs
         rts
 
@@ -10680,17 +10690,17 @@ L6B31:  lda     LEC26,x
         inx
         jmp     L6B31
 
-L6B3A:  lda     LE6BE
+L6B3A:  lda     icon_params2
         sta     LEC26,x
         inx
         stx     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
-        inc     $EC2E
+        inc     LEC2E
         ldx     cached_window_id
         dex
         lda     #$00
         sta     win_buf_table,x
-        lda     $EC2E
+        lda     LEC2E
         cmp     #$02
         bcs     L6B60
         jsr     enable_various_file_menu_items
@@ -10703,7 +10713,7 @@ L6B68:  lda     #$01
         sta     checkitem_params::menu_item
         sta     checkitem_params::check
         jsr     L6C0F
-        lda     LE6BE
+        lda     icon_params2
         jsr     icon_entry_lookup
         stax    $06
         ldy     #icon_entry_offset_win_type
@@ -10719,12 +10729,12 @@ L6B68:  lda     #$01
         bne     L6BB8
         jsr     get_set_port2
         jsr     offset_grafport2_and_set
-        lda     LE6BE
+        lda     icon_params2
         jsr     icon_window_to_screen
-L6BA1:  DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, LE6BE
+L6BA1:  DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, icon_params2
         lda     getwinport_params2::window_id
         beq     L6BB8
-        lda     LE6BE
+        lda     icon_params2
         jsr     icon_screen_to_window
         jsr     reset_grafport3
 L6BB8:  jsr     L744B
@@ -10794,20 +10804,20 @@ L6C4A:  ldx     cached_window_id
         dex
         lda     LEC26,x
         ldx     #$00
-L6C53:  cmp     $E1F2,x
+L6C53:  cmp     LE1F1+1,x
         beq     L6C5F
         inx
-        cpx     $E1F1
+        cpx     LE1F1
         bne     L6C53
         rts
 
 L6C5F:  txa
         asl     a
         tax
-        lda     $E202,x
+        lda     LE202,x
         sta     $E71D
         sta     $06
-        lda     $E203,x
+        lda     LE202+1,x
         sta     $E71E
         sta     $06+1
         lda     LCBANK2
@@ -10883,10 +10893,10 @@ L6CF3:  cpx     cached_window_icon_count
 L6D09:  txa
         pha
         lda     cached_window_icon_list,x
-        sta     LE22F
-        DESKTOP_RELAY_CALL DT_ICON_IN_RECT, LE22F
+        sta     icon_param
+        DESKTOP_RELAY_CALL DT_ICON_IN_RECT, icon_param
         beq     L6D25
-        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, LE22F
+        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, icon_param
 L6D25:  pla
         tax
         inx
@@ -10919,10 +10929,10 @@ L6D56:  lda     L6DB0
         beq     L6D9B
         tax
         lda     selected_file_index,x
-        sta     LE22F
+        sta     icon_param
         jsr     icon_window_to_screen
-        DESKTOP_RELAY_CALL $0B, LE22F
-        lda     LE22F
+        DESKTOP_RELAY_CALL $0B, icon_param
+        lda     icon_param
         jsr     icon_screen_to_window
         inc     L6DB0
         jmp     L6D56
@@ -10932,8 +10942,8 @@ L6D7D:  lda     L6DB0
         beq     L6D9B
         tax
         lda     selected_file_index,x
-        sta     LE22F
-        DESKTOP_RELAY_CALL $0B, LE22F
+        sta     icon_param
+        DESKTOP_RELAY_CALL $0B, icon_param
         inc     L6DB0
         jmp     L6D7D
 
@@ -11325,7 +11335,7 @@ L70C4:  .byte   $00
 L70C5:  sta     L72A7
         jsr     push_zp_addrs
         ldx     #$40
-L70CD:  lda     $E1B0,x
+L70CD:  lda     LE1B0,x
         sta     L705D,x
         dex
         bpl     L70CD
@@ -11358,9 +11368,9 @@ L710A:  lsr16   L72A8
         sub16_8 L72A8, DEVCNT, L72A8
         cmp16   L72A8, L70C1
         bcs     L7169
-L7147:  lda     $EC2E
+L7147:  lda     LEC2E
         jsr     L8B19
-        dec     $EC2E
+        dec     LEC2E
         jsr     redraw_windows_and_desktop
         jsr     L72D8
         lda     active_window_id
@@ -11369,19 +11379,19 @@ L7147:  lda     $EC2E
         bne     L7161
 L715F:  lda     #warning_msg_window_must_be_closed2
 L7161:  jsr     show_warning_dialog_num
-        ldx     $E256
+        ldx     LE256
         txs
         rts
 
 L7169:  copy16  L485F, $06
-        lda     $E1F1
+        lda     LE1F1
         asl     a
         tax
-        copy16  $06, $E202,x
-        ldx     $E1F1
+        copy16  $06, LE202,x
+        ldx     LE1F1
         lda     L72A7
-        sta     $E1F2,x
-        inc     $E1F1
+        sta     LE1F1+1,x
+        inc     LE1F1
         lda     L70C1
         pha
         lda     LCBANK2
@@ -11505,10 +11515,10 @@ L72AA:  MLI_RELAY_CALL OPEN, open_params
         jsr     L8B1F
         lda     selected_window_index
         bne     L72C9
-        lda     LE6BE
+        lda     icon_params2
         sta     L533F
         jsr     L59A8
-L72C9:  ldx     $E256
+L72C9:  ldx     LE256
         txs
 L72CD:  rts
 
@@ -11552,7 +11562,7 @@ L7342:  lda     #$00
 .proc L7345
         sta     L7445
         ldx     #$00
-L734A:  lda     $E1F2,x
+L734A:  lda     LE1F1+1,x
         cmp     L7445
         beq     L7358
         inx
@@ -11564,26 +11574,26 @@ L7358:  stx     L7446
         dex
 L735C:  inx
         lda     $E1F3,x
-        sta     $E1F2,x
-        cpx     $E1F1
+        sta     LE1F1+1,x
+        cpx     LE1F1
         bne     L735C
-        dec     $E1F1
+        dec     LE1F1
         lda     L7446
-        cmp     $E1F1
+        cmp     LE1F1
         bne     L7385
         ldx     L7446
         asl     a
         tax
-        copy16  $E202,x, L485F
+        copy16  LE202,x, L485F
         rts
 
 L7385:  lda     L7446
         asl     a
         tax
-        copy16  $E202,x, $06
+        copy16  LE202,x, $06
         inx
         inx
-        copy16  $E202,x, $08
+        copy16  LE202,x, $08
         ldy     #$00
         jsr     push_zp_addrs
 L73A5:  lda     LCBANK2
@@ -11605,30 +11615,30 @@ L73C1:  lda     $08+1
         cmp     L485F
         bne     L73A5
         jsr     pop_zp_addrs
-        lda     $E1F1
+        lda     LE1F1
         asl     a
         tax
-        sub16   L485F, $E202,x, L7447
+        sub16   L485F, LE202,x, L7447
         inc     L7446
 L73ED:  lda     L7446
-        cmp     $E1F1
+        cmp     LE1F1
         bne     L73F8
         jmp     L7429
 
 L73F8:  lda     L7446
         asl     a
         tax
-        sub16   $E204,x, $E202,x, L7449
-        add16   $E200,x, L7449, $E202,x
+        sub16   LE202+2,x, LE202,x, L7449
+        add16   LE200,x, L7449, LE202,x
         inc     L7446
         jmp     L73ED
 
-L7429:  lda     $E1F1
+L7429:  lda     LE1F1
         sec
         sbc     #$01
         asl     a
         tax
-        add16   $E202,x, L7447, L485F
+        add16   LE202,x, L7447, L485F
         rts
 L7445:  .byte   0
 L7446:  .byte   0
@@ -11702,7 +11712,7 @@ L74AD:  lda     ($06),y
         lda     ($08),y
         tay
 L74C8:  lda     ($08),y
-        sta     $E1B0,y
+        sta     LE1B0,y
         dey
         bpl     L74C8
         jmp     L7569
@@ -11728,8 +11738,8 @@ L74D3:  tay
         lda     #$40
         jsr     DESKTOP_SHOW_ALERT0
         jsr     L8B1F
-        dec     $EC2E
-        ldx     $E256
+        dec     LEC2E
+        ldx     LE256
         txs
         rts
 
@@ -11737,37 +11747,37 @@ L750D:  ldy     #$00
         lda     ($06),y
         tay
 L7512:  lda     ($06),y
-        sta     $E1B0,y
+        sta     LE1B0,y
         dey
         bpl     L7512
         lda     #$2F
         sta     $E1B1
-        inc     $E1B0
-        ldx     $E1B0
-        sta     $E1B0,x
-        lda     LE6BE
+        inc     LE1B0
+        ldx     LE1B0
+        sta     LE1B0,x
+        lda     icon_params2
         jsr     icon_entry_lookup
         stax    $08
-        ldx     $E1B0
+        ldx     LE1B0
         ldy     #$09
         lda     ($08),y
         clc
-        adc     $E1B0
-        sta     $E1B0
-        dec     $E1B0
-        dec     $E1B0
+        adc     LE1B0
+        sta     LE1B0
+        dec     LE1B0
+        dec     LE1B0
         ldy     #$0A
 L7548:  iny
         inx
         lda     ($08),y
-        sta     $E1B0,x
-        cpx     $E1B0
+        sta     LE1B0,x
+        cpx     LE1B0
         bne     L7548
         lda     cached_window_id
         jsr     window_address_lookup
         stax    $08
-        ldy     $E1B0
-L7561:  lda     $E1B0,y
+        ldy     LE1B0
+L7561:  lda     LE1B0,y
         sta     ($08),y
         dey
         bpl     L7561
@@ -11819,9 +11829,9 @@ L75A3:  sta     ($06),y
         ldy     #$09
         sta     ($06),y
         jsr     pop_zp_addrs
-        lda     LE6BE
+        lda     icon_params2
         jsr     L7054
-        lda     LE6BE
+        lda     icon_params2
         jsr     icon_entry_lookup
         stax    $06
         ldy     #icon_entry_offset_win_type
@@ -11873,7 +11883,7 @@ L763A:  pha
         ldx     cached_window_id
         dex
         lda     LEC26,x
-        sta     LE6BE
+        sta     icon_params2
         lda     #$80
 L7647:  sta     L7634
         pla
@@ -11891,10 +11901,10 @@ L7653:  lda     L7626,x
 L7666:  sta     L7630,x
         dex
         bpl     L7666
-        lda     LE6BE
-        ldx     $E1F1
+        lda     icon_params2
+        ldx     LE1F1
         dex
-L7673:  cmp     $E1F2,x
+L7673:  cmp     LE1F1+1,x
         beq     L767C
         dex
         bpl     L7673
@@ -11903,7 +11913,7 @@ L7673:  cmp     $E1F2,x
 L767C:  txa
         asl     a
         tax
-        copy16  $E202,x, $06
+        copy16  LE202,x, $06
         lda     LCBANK2
         lda     LCBANK2
         ldy     #0
@@ -11982,7 +11992,7 @@ L7744:  ldy     #$22
         sta     ($06),y
         ldy     #$08
         sta     ($06),y
-        lda     LE6BE
+        lda     icon_params2
         ldx     L7621
         jsr     L8B60
         jsr     pop_zp_addrs
@@ -12599,20 +12609,20 @@ L7D9F:  ldx     cached_window_id
         dex
         lda     LEC26,x
         ldx     #$00
-L7DA8:  cmp     $E1F2,x
+L7DA8:  cmp     LE1F1+1,x
         beq     L7DB4
         inx
-        cpx     $E1F1
+        cpx     LE1F1
         bne     L7DA8
         rts
 
 L7DB4:  txa
         asl     a
         tax
-        lda     $E202,x
+        lda     LE202,x
         sta     $06
         sta     $0801
-        lda     $E203,x
+        lda     LE202+1,x
         sta     $06+1
         sta     $0802
         lda     LCBANK2
@@ -13755,7 +13765,7 @@ L8767:  sta     LDFC8
         bne     L877B
 L8778:  clc
         adc     #$37
-L877B:  sta     LDFC9
+L877B:  sta     path_buf4
         rts
 L877F:  .byte   0
 
@@ -14151,7 +14161,7 @@ data_buffer:    .addr   gdi_data_buffer
 retry:  pha
         ldy     device_num
         lda     #0
-        sta     $E1A0,y
+        sta     devlst_copy,y
         dec     cached_window_icon_count
         dec     LDD9E
         pla
@@ -14170,7 +14180,7 @@ create_icon:
         jsr     push_zp_addrs
         jsr     DESKTOP_ALLOC_ICON
         ldy     device_num
-        sta     $E1A0,y
+        sta     devlst_copy,y
         jsr     icon_entry_lookup
         stax    icon_ptr
 
@@ -14349,14 +14359,14 @@ L8B01:  lda     cached_window_icon_list+1,x
 L8B19:  jsr     push_zp_addrs
         jmp     L8B2E
 
-L8B1F:  lda     LE6BE
+L8B1F:  lda     icon_params2
         bne     L8B25
         rts
 
 L8B25:  jsr     push_zp_addrs
-        lda     LE6BE
+        lda     icon_params2
         jsr     L7345
-L8B2E:  lda     LE6BE
+L8B2E:  lda     icon_params2
         ldx     #$07
 L8B33:  cmp     LEC26,x
         beq     L8B3E
@@ -14366,7 +14376,7 @@ L8B33:  cmp     LEC26,x
 
 L8B3E:  lda     #$00
         sta     LEC26,x
-L8B43:  lda     LE6BE
+L8B43:  lda     icon_params2
         jsr     icon_entry_lookup
         stax    $06
         ldy     #icon_entry_offset_win_type
@@ -14886,10 +14896,10 @@ L9051:  lda     LEBFC
         dey
         lda     ($06),y
         sta     L906D
-        sta     LE00A,y
+        sta     path_buf3,y
 L9066:  iny
         lda     ($06),y
-        sta     LE00A,y
+        sta     path_buf3,y
         L906D := *+1
         cpy     #$00            ; self-modified
         bne     L9066
@@ -14898,13 +14908,13 @@ L9066:  iny
         sta     ($06),y
 L9076:  ldy     #$FF
 L9078:  iny
-        lda     LE00A,y
-        sta     LDFC9,y
-        cpy     LE00A
+        lda     path_buf3,y
+        sta     path_buf4,y
+        cpy     path_buf3
         bne     L9078
-        lda     LDFC9
+        lda     path_buf4
         beq     L908C
-        dec     LDFC9
+        dec     path_buf4
 L908C:  lda     #$00
         sta     L97E4
         jsr     LA248
@@ -14957,7 +14967,7 @@ L90EE:  jsr     L91F5
         beq     L9140
         jsr     icon_entry_name_lookup
         jsr     join_paths
-        copy16  #LE00A, $06
+        copy16  #path_buf3, $06
         ldy     #$00
         lda     ($06),y
         beq     L9114
@@ -15052,7 +15062,7 @@ L918D:  .byte   0
 .proc join_paths
         str1 := $8
         str2 := $6
-        buf  := LE00A
+        buf  := path_buf3
 
         ldx     #0
         ldy     #0
@@ -15142,7 +15152,7 @@ L923E:  inc     L924A
 L924A:  .byte   0
 L924B:  sta     L9254
         ldy     #$00
-L9250:  lda     $E1A0,y
+L9250:  lda     devlst_copy,y
         .byte   $C9
 L9254:  .byte   0
         beq     L9260
@@ -15259,7 +15269,7 @@ L9300:  lda     selected_window_index
         jsr     icon_entry_name_lookup
         jsr     join_paths
         ldy     #$00
-L931F:  lda     LE00A,y
+L931F:  lda     path_buf3,y
         sta     $220,y
         iny
         cpy     $220
@@ -15316,7 +15326,7 @@ L939D:  jsr     launch_get_info_dialog
         ldx     L92E6
         lda     selected_file_index,x
         ldy     #$0F
-L93AD:  cmp     $E1A0,y
+L93AD:  cmp     devlst_copy,y
         beq     L93B8
         dey
         bpl     L93AD
@@ -15415,12 +15425,12 @@ L9491:  lda     $E6EC,y
         sta     $220
         ldx     $220
 L94A9:  lda     $220,x
-        sta     LDFC9,x
+        sta     path_buf4,x
         dex
         bpl     L94A9
-        lda     #<LDFC9
+        lda     #<path_buf4
         sta     L92E4
-        lda     #>LDFC9
+        lda     #>path_buf4
         sta     L92E4+1
         jsr     launch_get_info_dialog
         lda     #$04
@@ -15454,7 +15464,7 @@ L952E:  inc     L92E6
         jmp     L92F5
 
 L9534:  lda     #$00
-        sta     LDFC9
+        sta     path_buf4
         rts
 
 L953A:  PASCAL_STRING " VOL"
@@ -15517,7 +15527,7 @@ L9591:  lda     selected_window_index
         jsr     icon_entry_name_lookup
         jsr     join_paths
         ldy     #$00
-L95B0:  lda     LE00A,y
+L95B0:  lda     path_buf3,y
         sta     $220,y
         iny
         cpy     $220
@@ -17016,15 +17026,15 @@ LA379:  ldy     #$00
         sty     L9B32
         dey
 LA37F:  iny
-        lda     LE00A,y
+        lda     path_buf3,y
         cmp     #$2F
         bne     LA38A
         sty     L9B32
 LA38A:  sta     $220,y
-        cpy     LE00A
+        cpy     path_buf3
         bne     LA37F
-        ldy     LDFC9
-LA395:  lda     LDFC9,y
+        ldy     path_buf4
+LA395:  lda     path_buf4,y
         sta     $1FC0,y
         dey
         bpl     LA395
@@ -20561,8 +20571,8 @@ L0E34:  .byte   0
 L0E36:  inx
         lda     DEVLST+1,x
         sta     DEVLST,x
-        lda     $E1A0+1,x
-        sta     $E1A0,x
+        lda     devlst_copy+1,x
+        sta     devlst_copy,x
         cpx     DEVCNT
         bne     L0E36
         dec     DEVCNT
