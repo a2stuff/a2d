@@ -11111,33 +11111,36 @@ flag:   .byte   0
 
 ;;; ==================================================
 
-L6F0D:  jsr     window_address_lookup
-        sta     $06
-        sta     L6F48
-        stx     $06+1
-        stx     L6F49
-        ldy     #$00
-        lda     ($06),y
-        sta     L6F4A
-        iny
-L6F22:  iny
-        lda     ($06),y
-        cmp     #$2F
-        beq     L6F31
-        cpy     L6F4A
-        beq     L6F32
-        jmp     L6F22
+.proc L6F0D
+        ptr := $6
 
-L6F31:  dey
-L6F32:  sty     L6F4A
-        addr_call_indirect L6FB7, $06
-        ldax    L6F48
-        ldy     L6F4A
+        jsr     window_address_lookup
+        sta     ptr
+        sta     pathptr
+        stx     ptr+1
+        stx     pathptr+1
+        ldy     #0              ; length offset
+        lda     (ptr),y
+        sta     pathlen
+        iny
+loop:   iny                     ; start at 2nd character
+        lda     (ptr),y
+        cmp     #'/'
+        beq     found
+        cpy     pathlen
+        beq     finish
+        jmp     loop
+
+found:  dey
+finish: sty     pathlen
+        addr_call_indirect L6FB7, ptr ; ???
+        ldax    pathptr
+        ldy     pathlen
         jmp     L6F4B
 
-L6F48:  .byte   0
-L6F49:  .byte   0
-L6F4A:  .byte   0
+pathptr:        .addr   0
+pathlen:        .byte   0
+.endproc
 
 ;;; ==================================================
 
@@ -11185,11 +11188,15 @@ L6FA9:  cpy     #$01
         dey
         rts
 
+;;; ==================================================
+
 L6FAF:  stax    $06
         lda     #$80
         bne     L6FBD
+
 L6FB7:  stax    $06
         lda     #$00
+
 L6FBD:  sta     L704A
         bit     L704A
         bpl     L6FCA
@@ -12935,7 +12942,14 @@ L809E:  inc     $0805
         sta     $0806
         jmp     L8051
 
+;;; ==================================================
+
 .proc L80CA
+
+        ;; ptr = $801/$802 + ($800 * 32)
+
+        ptr := $6
+
         lda     #0
         sta     $0804
         lda     L0800
@@ -12951,12 +12965,14 @@ L809E:  inc     $0805
         rol     $0804
         clc
         adc     $0801
-        sta     $06
-        lda     $0802
+        sta     ptr
+        lda     $0801+1
         adc     $0804
-        sta     $06+1
+        sta     ptr+1
         rts
 .endproc
+
+;;; ==================================================
 
 L80F5:  lda     #$00
         sta     L0800
@@ -15282,7 +15298,7 @@ L9366:  lda     selected_window_index
         beq     L9381
         inc     L92E3
         inc     L92E3
-L9381:  jsr     L953F
+L9381:  jsr     launch_get_info_dialog
         jmp     L93DB
 
 L9387:  lda     #$81
@@ -15294,7 +15310,7 @@ L9387:  lda     #$81
         beq     L939D
         inc     L92E3
         inc     L92E3
-L939D:  jsr     L953F
+L939D:  jsr     launch_get_info_dialog
         lda     #$00
         sta     L942E
         ldx     L92E6
@@ -15321,7 +15337,7 @@ L93DB:  ldx     L92E6
         lda     #$01
         sta     L92E3
         copy16  $06, L92E4
-        jsr     L953F
+        jsr     launch_get_info_dialog
         lda     #$02
         sta     L92E3
         lda     selected_window_index
@@ -15343,7 +15359,7 @@ L9413:  lda     get_file_info_params5::access
         bne     L9428
 L9423:  lda     #$00
         sta     L92E4
-L9428:  jsr     L953F
+L9428:  jsr     launch_get_info_dialog
         jmp     L942F
 
 L942E:  .byte   0
@@ -15406,19 +15422,19 @@ L94A9:  lda     $220,x
         sta     L92E4
         lda     #>LDFC9
         sta     L92E4+1
-        jsr     L953F
+        jsr     launch_get_info_dialog
         lda     #$04
         sta     L92E3
         copy16  get_file_info_params5::create_date, date
         jsr     JT_DATE_STRING
         copy16  #text_buffer2::length, L92E4
-        jsr     L953F
+        jsr     launch_get_info_dialog
         lda     #$05
         sta     L92E3
         copy16  get_file_info_params5::mod_date, date
         jsr     JT_DATE_STRING
         copy16  #text_buffer2::length, L92E4
-        jsr     L953F
+        jsr     launch_get_info_dialog
         lda     #$06
         sta     L92E3
         lda     selected_window_index
@@ -15432,7 +15448,7 @@ L950E:  lda     L953A,x
 L9519:  lda     get_file_info_params5::file_type
         jsr     L402D
 L951F:  copy16  #LDFC5, L92E4
-        jsr     L953F
+        jsr     launch_get_info_dialog
         bne     L9534
 L952E:  inc     L92E6
         jmp     L92F5
@@ -15444,8 +15460,10 @@ L9534:  lda     #$00
 L953A:  PASCAL_STRING " VOL"
 
 
-L953F:  yax_call launch_dialog, index_get_info_dialog, L92E3
+.proc launch_get_info_dialog
+        yax_call launch_dialog, index_get_info_dialog, L92E3
         rts
+.endproc
 
 L9549:  ldx     #$00
 L954B:  lda     $E6EC,x
@@ -15906,12 +15924,12 @@ L98A2:  lda     LE05F
         sta     LE061
         jsr     L983F
         jsr     L97E5
-        jsr     LA2FD
+        jsr     append_to_path_220
         jmp     L9801
 
 L98B4:  jsr     L983F
         jsr     L992A
-        jsr     LA322
+        jsr     remove_path_segment_220
         jsr     L97F3
         jsr     L9801
         jsr     L98C9
@@ -16094,11 +16112,11 @@ L9A81:  lda     file_info_params2::storage_type
         beq     L9A90
         lda     #$00
         beq     L9A95
-L9A90:  jsr     LA2F1
+L9A90:  jsr     decrement_LA2ED
         lda     #$FF
 L9A95:  sta     L9B30
         jsr     LA40A
-        lda     LA2EE
+        lda     LA2ED+1
         bne     L9AA8
         lda     LA2ED
         bne     L9AA8
@@ -16179,7 +16197,7 @@ L9B36:  jsr     LA3D1
 L9B3E:  lda     L97BD
         cmp     #$0F
         bne     L9B88
-        jsr     LA2FD
+        jsr     append_to_path_220
 L9B48:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     L9B59
         jsr     show_error_alert
@@ -16187,8 +16205,8 @@ L9B48:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
 
 L9B59:  jsr     LA33B
         jsr     LA40A
-        jsr     LA2F1
-        lda     LA2EE
+        jsr     decrement_LA2ED
+        lda     LA2ED+1
         bne     L9B6F
         lda     LA2ED
         bne     L9B6F
@@ -16196,17 +16214,17 @@ L9B59:  jsr     LA33B
 
 L9B6F:  jsr     L9E19
         bcs     L9B7A
-        jsr     LA322
+        jsr     remove_path_segment_220
         jmp     L9BBE
 
 L9B7A:  jsr     LA360
-        jsr     LA322
+        jsr     remove_path_segment_220
         lda     #$FF
         sta     L9923
         jmp     L9BBE
 
 L9B88:  jsr     LA33B
-        jsr     LA2FD
+        jsr     append_to_path_220
         jsr     LA40A
 L9B91:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     L9BA2
@@ -16217,12 +16235,12 @@ L9BA2:  jsr     L9C01
         bcc     L9BAA
         jmp     LA39F
 
-L9BAA:  jsr     LA322
+L9BAA:  jsr     remove_path_segment_220
         jsr     L9E19
         bcs     L9BBB
-        jsr     LA2FD
+        jsr     append_to_path_220
         jsr     L9CDA
-        jsr     LA322
+        jsr     remove_path_segment_220
 L9BBB:  jsr     LA360
 L9BBE:  rts
 
@@ -16315,7 +16333,7 @@ L9CD6:  .byte   0
 L9CD7:  .byte   0
 L9CD8:  .byte   0
 L9CD9:  .byte   0
-L9CDA:  jsr     LA2F1
+L9CDA:  jsr     decrement_LA2ED
         lda     #$00
         sta     L9E17
         sta     L9E18
@@ -16537,7 +16555,7 @@ L9F1D:  .byte   0
 L9F1E:  bit     LE05C
         bmi     L9F26
         jsr     LA3EF
-L9F26:  jsr     LA2F1
+L9F26:  jsr     decrement_LA2ED
 L9F29:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
         beq     L9F8D
         cmp     #$4E
@@ -16584,11 +16602,11 @@ L9F8E:  jsr     show_error_alert
         beq     L9F9C
         jmp     LA39F
 
-L9F9C:  jsr     LA2FD
+L9F9C:  jsr     append_to_path_220
         bit     LE05C
         bmi     L9FA7
         jsr     LA3EF
-L9FA7:  jsr     LA2F1
+L9FA7:  jsr     decrement_LA2ED
 L9FAA:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     L9FBB
         jsr     show_error_alert
@@ -16633,9 +16651,9 @@ LA001:  lda     #$C3
 LA01C:  jsr     show_error_alert
         jmp     L9FC2
 
-LA022:  jmp     LA322
+LA022:  jmp     remove_path_segment_220
 
-        jsr     LA322
+        jsr     remove_path_segment_220
         lda     #$FF
         sta     L9923
         rts
@@ -16762,11 +16780,11 @@ LA158:  sta     LA168
 LA168:  .byte   0
 LA169:  .byte   0
 LA16A:  jsr     LA173
-        jmp     LA2FD
+        jmp     append_to_path_220
 
-LA170:  jsr     LA2FD
+LA170:  jsr     append_to_path_220
 LA173:  jsr     LA1C3
-        jsr     LA2F1
+        jsr     decrement_LA2ED
 LA179:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     LA18A
         jsr     show_error_alert
@@ -16794,7 +16812,7 @@ LA1A3:  lda     #7              ; param count for SET_FILE_INFO
         jsr     show_error_alert
         jmp     LA1A3
 
-LA1C0:  jmp     LA322
+LA1C0:  jmp     remove_path_segment_220
 
 LA1C3:  sub16   LA2ED, #$01, LA055
         bit     L918B
@@ -16839,11 +16857,11 @@ LA24F:  lda     LA242,y
         sta     L97DD,y
         dey
         bpl     LA24F
-        lda     #$00
+        lda     #0
         sta     LA2ED
-        sta     LA2EE
+        sta     LA2ED+1
         sta     LA2EF
-        sta     LA2F0
+        sta     LA2EF+1
         ldy     #$17
         lda     #$00
 LA26A:  sta     BITMAP,y
@@ -16880,65 +16898,83 @@ LA2AB:  jmp     LA2AE
 
 LA2AE:  bit     L9189
         bvc     LA2D4
-        jsr     LA2FD
+        jsr     append_to_path_220
         yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         bne     LA2D4
         add16   LA2EF, file_info_params2::blocks_used, LA2EF
 LA2D4:  inc     LA2ED
         bne     LA2DC
-        inc     LA2EE
+        inc     LA2ED+1
 LA2DC:  bit     L9189
         bvc     LA2E4
-        jsr     LA322
+        jsr     remove_path_segment_220
 LA2E4:  ldax    LA2ED
         jmp     L917C
 
-LA2ED:  .byte   0
-LA2EE:  .byte   0
-LA2EF:  .byte   0
-LA2F0:  .byte   0
+LA2ED:  .word   0
+LA2EF:  .word   0
 
-LA2F1:  lda     LA2ED
-        bne     LA2F9
-        dec     LA2EE
-LA2F9:  dec     LA2ED
+;;; ==================================================
+
+.proc decrement_LA2ED
+        lda     LA2ED
+        bne     :+
+        dec     LA2ED+1
+:       dec     LA2ED
+        rts
+.endproc
+
+;;; ==================================================
+;;; Append name at L97AD to path at $220
+
+.proc append_to_path_220
+        path := $220
+
+        lda     L97AD
+        bne     :+
         rts
 
-LA2FD:  lda     L97AD
-        bne     LA303
-        rts
-
-LA303:  ldx     #$00
-        ldy     $220
+:       ldx     #0
+        ldy     path
         lda     #'/'
-        sta     $0221,y
+        sta     path+1,y
+
         iny
-LA30E:  cpx     L97AD
-        bcs     LA31E
-        lda     L97AE,x
-        sta     $0221,y
+loop:   cpx     L97AD
+        bcs     done
+        lda     L97AD+1,x
+        sta     path+1,y
         inx
         iny
-        jmp     LA30E
+        jmp     loop
 
-LA31E:  sty     $220
+done:   sty     $220
         rts
+.endproc
 
-LA322:  ldx     $220
-        bne     LA328
+;;; ==================================================
+;;; Remove segment from path at $220
+
+.proc remove_path_segment_220
+        path := $220
+
+        ldx     path            ; length
+        bne     :+
         rts
-
-LA328:  lda     $220,x
-        cmp     #$2F
-        beq     LA336
+:       lda     path,x
+        cmp     #'/'
+        beq     found
         dex
-        bne     LA328
-        stx     $220
+        bne     :-
+        stx     path
         rts
 
-LA336:  dex
-        stx     $220
+found:  dex
+        stx     path
         rts
+.endproc
+
+;;; ==================================================
 
 LA33B:  lda     L97AD
         bne     LA341
@@ -17620,7 +17656,7 @@ LA97A:  cmp     #$05
 
 LA981:  lda     #$00
         sta     LD8E8
-        jsr     LB53A
+        jsr     open_dialog_window
         addr_call draw_dialog_title, desktop_aux::str_copy_title
         axy_call draw_dialog_label, $01, desktop_aux::str_copy_copying
         axy_call draw_dialog_label, $02, desktop_aux::str_copy_from
@@ -17748,7 +17784,7 @@ LAAB1:  jsr     prompt_input_loop
 
 else:   lda     #0
         sta     LD8E8
-        jsr     LB53A
+        jsr     open_dialog_window
         addr_call draw_dialog_title, desktop_aux::str_download
         axy_call draw_dialog_label, $01, desktop_aux::str_copy_copying
         axy_call draw_dialog_label, $02, desktop_aux::str_copy_from
@@ -17836,7 +17872,7 @@ do4:    jsr     bell
         bne     else
         jmp     do3
 
-else:   jsr     LB53A
+else:   jsr     open_dialog_window
         addr_call draw_dialog_title, desktop_aux::str_size_title
         axy_call draw_dialog_label, $01, desktop_aux::str_size_number
         ldy     #1
@@ -17933,7 +17969,7 @@ LACF7:  cmp     #$05
 LACFE:  sta     LAD1F
         lda     #$00
         sta     LD8E8
-        jsr     LB53A
+        jsr     open_dialog_window
         addr_call draw_dialog_title, desktop_aux::str_delete_title
         lda     LAD1F
         beq     LAD20
@@ -18077,7 +18113,7 @@ LAE90:  lda     ($08),y
         lda     #$28
         sta     dialog_label_pos
         yax_call draw_dialog_label, $04, desktop_aux::str_enter_folder_name
-        jsr     LB961
+        jsr     draw_filename_prompt
 LAEC6:  jsr     prompt_input_loop
         bmi     LAEC6
         bne     LAF16
@@ -18087,7 +18123,7 @@ LAEC6:  jsr     prompt_input_loop
         bcc     LAEE1
 LAED6:  lda     #$FB
         jsr     JT_SHOW_ALERT0
-        jsr     LB961
+        jsr     draw_filename_prompt
         jmp     LAEC6
 
 LAEE1:  lda     path_buf0
@@ -18247,7 +18283,7 @@ LB048:  cmp     #$04
 
 LB04F:  lda     #$00
         sta     LD8E8
-        jsr     LB53A
+        jsr     open_dialog_window
         addr_call draw_dialog_title, desktop_aux::str_lock_title
         yax_call draw_dialog_label, $04, desktop_aux::str_lock_ok
         rts
@@ -18339,7 +18375,7 @@ LB166:  cmp     #$04
 
 LB16D:  lda     #$00
         sta     LD8E8
-        jsr     LB53A
+        jsr     open_dialog_window
         addr_call draw_dialog_title, desktop_aux::str_unlock_title
         yax_call draw_dialog_label, $04, desktop_aux::str_unlock_ok
         rts
@@ -18454,7 +18490,7 @@ LB2CA:  lda     ($08),y
         yax_call draw_dialog_label, $04, desktop_aux::str_rename_new
         lda     #$00
         sta     path_buf1
-        jsr     LB961
+        jsr     draw_filename_prompt
         rts
 
 LB2ED:  lda     #$00
@@ -18489,7 +18525,7 @@ LB313:  jsr     reset_state
 
         ;; Create window
         MGTK_RELAY_CALL MGTK::HideCursor
-        jsr     create_window_with_alert_bitmap
+        jsr     open_alert_window
         lda     winfoF
         jsr     set_port_from_window_id
         addr_call draw_dialog_title, desktop_aux::str_warning
@@ -18708,7 +18744,7 @@ LB506:  .byte   0
 LB507:  .byte   0
 LB508:  .byte   0
 LB509:  sta     LD8E7
-        jsr     LB53A
+        jsr     open_dialog_window
         bit     LD8E7
         bvc     LB51A
         jsr     draw_yes_no_all_cancel_buttons
@@ -18722,15 +18758,17 @@ LB526:  bit     LD8E7
         jsr     draw_cancel_label
 LB537:  jmp     reset_state
 
-LB53A:  MGTK_RELAY_CALL MGTK::OpenWindow, winfoF
+.proc open_dialog_window
+        MGTK_RELAY_CALL MGTK::OpenWindow, winfoF
         lda     winfoF
         jsr     set_port_from_window_id
         jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::confirm_dialog_outer_rect
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::confirm_dialog_inner_rect
         rts
+.endproc
 
-create_window_with_alert_bitmap:
+.proc open_alert_window
         MGTK_RELAY_CALL MGTK::OpenWindow, winfoF
         lda     winfoF
         jsr     set_port_from_window_id
@@ -18740,6 +18778,7 @@ create_window_with_alert_bitmap:
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::confirm_dialog_outer_rect
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::confirm_dialog_inner_rect
         rts
+.endproc
 
 ;;; ==================================================
 
@@ -19112,7 +19151,7 @@ click_result:
         xcoord := $6
         ycoord := $8
 
-        jsr     LBD3B
+        jsr     measure_path_buf1
         stax    xcoord
         copy16  point6::ycoord, ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, point
@@ -19141,8 +19180,11 @@ LB93B:  copy16  #LD8EF, textptr
         rts
 .endproc
 
-LB961:  lda     path_buf1
-        beq     LB9B7
+;;; ==================================================
+
+.proc draw_filename_prompt
+        lda     path_buf1
+        beq     done
         lda     winfoF
         jsr     set_port_from_window_id
         jsr     set_fill_white
@@ -19156,7 +19198,10 @@ LB961:  lda     path_buf1
         addr_call draw_text1, str_2_spaces
         lda     winfoF
         jsr     set_port_from_window_id
-LB9B7:  rts
+done:   rts
+.endproc
+
+;;; ==================================================
 
 LB9B8:  MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
@@ -19165,7 +19210,7 @@ LB9B8:  MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
         beq     LB9D8
         rts
 
-LB9D8:  jsr     LBD3B
+LB9D8:  jsr     measure_path_buf1
         stax    $06
         cmp16   $D20D, $06
         bcs     LB9EE
@@ -19173,7 +19218,7 @@ LB9D8:  jsr     LBD3B
 
 .proc LB9EE
         ptr := $6
-        jsr     LBD3B
+        jsr     measure_path_buf1
         stax    LBB09
         ldx     path_buf2
         inx
@@ -19281,7 +19326,7 @@ LBAF7:  lda     $D3C1,y
         bpl     LBAF7
         lda     $08
         sta     path_buf1
-LBB05:  jsr     LB961
+LBB05:  jsr     draw_filename_prompt
         rts
 
 LBB09:  .word   0
@@ -19304,7 +19349,7 @@ LBB0B:  sta     LBB62
         inx
         sta     path_buf1,x
         sta     str_1_char+1
-        jsr     LBD3B
+        jsr     measure_path_buf1
         inc     path_buf1
         stax    xcoord
         copy16  point6::ycoord, ycoord
@@ -19328,7 +19373,7 @@ LBB63:  lda     path_buf1
         ycoord := $8
 
         dec     path_buf1
-        jsr     LBD3B
+        jsr     measure_path_buf1
         stax    xcoord
         copy16  point6::ycoord, ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, point
@@ -19362,7 +19407,7 @@ LBBBC:  ldx     path_buf1
         sta     $D486
         dec     path_buf1
         inc     path_buf2
-        jsr     LBD3B
+        jsr     measure_path_buf1
         stax    xcoord
         copy16  point6::ycoord, ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, point
@@ -19446,7 +19491,7 @@ LBCB3:  pla
         lda     #$00
         sta     path_buf1
         MGTK_RELAY_CALL MGTK::MoveTo, point6
-        jsr     LB961
+        jsr     draw_filename_prompt
         rts
 
 LBCC9:  lda     path_buf2
@@ -19473,7 +19518,7 @@ LBCDF:  lda     path_buf2,x
         lda     #$01
         sta     path_buf2
         MGTK_RELAY_CALL MGTK::MoveTo, point6
-        jsr     LB961
+        jsr     draw_filename_prompt
         rts
 
         stax    $06
@@ -19504,22 +19549,26 @@ LBD22:  ldx     path_buf1
 LBD33:  rts
 
         jsr     LBD22
-        jsr     LB961
+        jsr     draw_filename_prompt
         rts
 
-.proc LBD3B
-        params := $6
+;;; ==================================================
+;;; Compute width of path_buf1, offset point6, return x coord in (A,X)
+
+.proc measure_path_buf1
+        textwidth_params  := $6
         textptr := $6
         textlen := $8
-        result := $9
+        result  := $9
 
-        copy16  #$D444, textptr
+        copy16  #path_buf1+1, textptr
         lda     path_buf1
         sta     textlen
         bne     :+
         ldax    point6::xcoord
         rts
-:       MGTK_RELAY_CALL MGTK::TextWidth, params
+
+:       MGTK_RELAY_CALL MGTK::TextWidth, textwidth_params
         lda     result
         clc
         adc     point6::xcoord
@@ -19530,6 +19579,8 @@ LBD33:  rts
         tya
         rts
 .endproc
+
+;;; ==================================================
 
 LBD69:  lda     #$01
         sta     path_buf2
