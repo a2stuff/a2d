@@ -2619,8 +2619,7 @@ LA5CB:  pla
 
 LA627:  .word   0
 LA629:  .word   0
-LA62B:  .word   0
-LA62D:  .word   0
+LA62B:  DEFINE_POINT 0,0
 
 .proc setportbits_params2
 viewloc:        DEFINE_POINT 0, 0, viewloc
@@ -2651,7 +2650,7 @@ cliprect:       DEFINE_RECT 0, 0, 0, 0, cliprect
         sta     setportbits_params2::viewloc::xcoord+1
 
         ldx     #3
-:       lda     poly::v4::xcoord,x
+:       lda     poly::v4,x
         sta     LA62B,x
         sta     setportbits_params2::cliprect::x2,x
         dex
@@ -4302,55 +4301,68 @@ notpenXOR:      .byte   6
 notpenBIC:      .byte   7
 
 ;;; ============================================================
-;;; Re-use of param space
+;;; Re-used param space for events/queries (10 bytes)
 
-.proc event_params
-kind:   .byte   0
-        key := *
-        modifiers := *+1
-        coords := *
-xcoord: .word   0
-ycoord: .word   0
-.endproc
-        event_params_kind := event_params::kind
-        event_params_key := event_params::key
-        event_params_modifiers := event_params::modifiers
-        event_params_coords := event_params::coords
-        event_params_xcoord := event_params::xcoord
-        event_params_ycoord := event_params::ycoord
+event_params := *
+event_params_kind := event_params + 0
+event_params_key := event_params + 1
+event_params_modifiers := event_params + 2
+event_params_coords := event_params + 1
+event_params_xcoord := event_params + 1
+event_params_ycoord := event_params + 3
 
-        ;; When event_params_coords is used for FindControl/FindWindow/ScreenToWindow
-
-activatectl_params := event_params
+activatectl_params := *
 activatectl_params_which_ctl := activatectl_params
 activatectl_params_activate  := activatectl_params + 1
 
-trackthumb_params := event_params
+trackthumb_params := *
 trackthumb_which_ctl := trackthumb_params
 trackthumb_mousex := trackthumb_params + 1
 trackthumb_mousey := trackthumb_params + 3
 trackthumb_thumbpos := trackthumb_params + 5
 trackthumb_thumbmoved := trackthumb_params + 6
+        .assert trackthumb_mousex = event_params_xcoord, error, "param mismatch"
+        .assert trackthumb_mousey = event_params_ycoord, error, "param mismatch"
 
-updatethumb_params := event_params
+updatethumb_params := *
 updatethumb_params_which_ctl := updatethumb_params
 updatethumb_params_thumbpos := updatethumb_params + 1
-updatethumb_stash := * ; not part of struct
+updatethumb_stash := updatethumb_params + 5 ; not part of struct
 
-screentowindow_windowx:
-findcontrol_which_ctl:
-findwindow_params_which_area:
-findicon_which_icon:
-        .byte   0
-findcontrol_which_part:
-findwindow_params_window_id:
-        .byte   0
+screentowindow_params := *
+screentowindow_window_id := screentowindow_params + 0
+screentowindow_screenx := screentowindow_params + 1
+screentowindow_screeny := screentowindow_params + 3
+screentowindow_windowx := screentowindow_params + 5
+screentowindow_windowy := screentowindow_params + 7
+        .assert screentowindow_screenx = event_params_xcoord, error, "param mismatch"
+        .assert screentowindow_screeny = event_params_ycoord, error, "param mismatch"
 
-screentowindow_windowy:
-        .byte   0
-        .byte   0
+findwindow_params := * + 1    ; offset to x/y overlap event_params x/y
+findwindow_params_mousex := findwindow_params + 0
+findwindow_params_mousey := findwindow_params + 2
+findwindow_params_which_area := findwindow_params + 4
+findwindow_params_window_id := findwindow_params + 5
+        .assert findwindow_params_mousex = event_params_xcoord, error, "param mismatch"
+        .assert findwindow_params_mousey = event_params_ycoord, error, "param mismatch"
 
-LD211:  .byte   0
+findcontrol_params := * + 1   ; offset to x/y overlap event_params x/y
+findcontrol_params_mousex := findcontrol_params + 0
+findcontrol_params_mousey := findcontrol_params + 2
+findcontrol_which_ctl := findcontrol_params + 4
+findcontrol_which_part := findcontrol_params + 5
+        .assert findcontrol_params_mousex = event_params_xcoord, error, "param mismatch"
+        .assert findcontrol_params_mousey = event_params_ycoord, error, "param mismatch"
+
+findicon_params := * + 1      ; offset to x/y overlap event_params x/y
+findicon_params_mousex := findicon_params + 0
+findicon_params_mousey := findicon_params + 2
+findicon_which_icon := findicon_params + 4
+        .assert findicon_params_mousex = event_params_xcoord, error, "param mismatch"
+        .assert findicon_params_mousey = event_params_ycoord, error, "param mismatch"
+
+        ;; Enough space for all the param types, and then some
+        .res    10, 0
 
 ;;; ============================================================
 
@@ -10356,11 +10368,11 @@ L67F6:  bit     BUTN0
 
 L6818:  jsr     clear_selection
 L681B:  DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, $D20D
-        lda     #$01
+        lda     #1
         sta     is_file_selected
         lda     $D20D
         sta     selected_file_index
-        lda     #$00
+        lda     #0
         sta     selected_window_index
 L6834:  bit     double_click_flag
         bpl     L6880
@@ -10392,7 +10404,7 @@ L6872:  jsr     L6A3F
         jmp     redraw_windows_and_desktop
 
 L6878:  txa
-        cmp     #$02
+        cmp     #2
         bne     L688F
         jmp     redraw_windows_and_desktop
 
@@ -10426,7 +10438,7 @@ L6893:  txa
         rts
 
 L68B3:  jsr     clear_selection
-        ldx     #$03
+        ldx     #3
 L68B8:  lda     event_params_coords,x
         sta     rect_E230::x1,x
         sta     rect_E230::x2,x
@@ -10446,14 +10458,14 @@ L68E4:  jsr     peek_event
         cmp     #MGTK::event_kind_drag
         beq     L6932
         MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
-        ldx     #$00
+        ldx     #0
 L68F9:  cpx     cached_window_icon_count
-        bne     L6904
-        lda     #$00
+        bne     :+
+        lda     #0
         sta     selected_window_index
         rts
 
-L6904:  txa
+:       txa
         pha
         lda     cached_window_icon_list,x
         sta     icon_param
@@ -11246,7 +11258,8 @@ L704C:  .byte   0
 
 ;;; ==================================================
 
-L7054:  jmp     L70C5
+.proc L7054
+        jmp     L70C5
 
 .proc open_params
 param_count:    .byte   3
@@ -11255,8 +11268,7 @@ io_buffer:      .addr   $800
 ref_num:        .byte   0
 .endproc
 
-L705D:  .res    64, 0
-        .byte   $00
+L705D:  .res    65, 0
 
 .proc read_params
 param_count:    .byte   4
@@ -11287,8 +11299,7 @@ create_time:    .word   0
 
         .byte   0
 L70BB:  .word   0
-L70BD:  .byte   $00
-L70BE:  .byte   $00
+L70BD:  .word   0
 L70BF:  .byte   $00
 L70C0:  .byte   $00
 L70C1:  .byte   $00
@@ -11473,18 +11484,22 @@ L7296:  copy16  $06, L485F
 L72A7:  .byte   0
 L72A8:  .word   0
 
+;;; --------------------------------------------------
+
 L72AA:  MLI_RELAY_CALL OPEN, open_params
         beq     L72CD
         jsr     DESKTOP_SHOW_ALERT0
         jsr     L8B1F
         lda     selected_window_index
-        bne     L72C9
+        bne     :+
         lda     icon_params2
         sta     L533F
         jsr     L59A8
-L72C9:  ldx     LE256
+:       ldx     LE256
         txs
 L72CD:  rts
+
+;;; --------------------------------------------------
 
 L72CE:  MLI_RELAY_CALL READ, read_params
         rts
@@ -11492,7 +11507,7 @@ L72CE:  MLI_RELAY_CALL READ, read_params
 L72D8:  MLI_RELAY_CALL CLOSE, close_params
         rts
 
-;;; ==================================================
+;;; --------------------------------------------------
 
 L72E2:  lda     $0C04
         and     #$F0
@@ -11505,7 +11520,7 @@ L72EC:  MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params4
         beq     L72F8
         rts
 
-;;; ==================================================
+;;; --------------------------------------------------
 
 L72F8:  copy16  get_file_info_params4::aux_type, L70BD
         sub16   get_file_info_params4::aux_type, get_file_info_params4::blocks_used, L70BB
@@ -11517,8 +11532,13 @@ L72F8:  copy16  get_file_info_params4::aux_type, L70BD
         bcc     L7342
         inc     L70BD
         bne     L7342
-        inc     L70BE
+        inc     L70BD+1
 L7342:  return  #0
+.endproc
+        L70BB := L7054::L70BB
+        L70BD := L7054::L70BD
+        L705D := L7054::L705D
+        L72EC := L7054::L72EC
 
 ;;; ==================================================
 
@@ -11527,30 +11547,31 @@ L7342:  return  #0
         ldx     #$00
 L734A:  lda     LE1F1+1,x
         cmp     L7445
-        beq     L7358
+        beq     :+
         inx
         cpx     #$08
         bne     L734A
         rts
 
-L7358:  stx     L7446
+:       stx     L7446
         dex
-L735C:  inx
+:       inx
         lda     $E1F3,x
         sta     LE1F1+1,x
         cpx     LE1F1
-        bne     L735C
+        bne     :-
+
         dec     LE1F1
         lda     L7446
         cmp     LE1F1
-        bne     L7385
+        bne     :+
         ldx     L7446
         asl     a
         tax
         copy16  LE202,x, L485F
         rts
 
-L7385:  lda     L7446
+:       lda     L7446
         asl     a
         tax
         copy16  LE202,x, $06
@@ -11566,12 +11587,12 @@ L73A5:  lda     LCBANK2
         lda     LCBANK1
         lda     LCBANK1
         inc     $06
-        bne     L73BB
+        bne     :+
         inc     $06+1
-L73BB:  inc     $08
-        bne     L73C1
+:       inc     $08
+        bne     :+
         inc     $08+1
-L73C1:  lda     $08+1
+:       lda     $08+1
         cmp     L485F+1
         bne     L73A5
         lda     $08
@@ -11585,10 +11606,10 @@ L73C1:  lda     $08+1
         inc     L7446
 L73ED:  lda     L7446
         cmp     LE1F1
-        bne     L73F8
+        bne     :+
         jmp     L7429
 
-L73F8:  lda     L7446
+:       lda     L7446
         asl     a
         tax
         sub16   LE202+2,x, LE202,x, L7449
@@ -11603,6 +11624,7 @@ L7429:  lda     LE1F1
         tax
         add16   LE202,x, L7447, L485F
         rts
+
 L7445:  .byte   0
 L7446:  .byte   0
 L7447:  .word   0
@@ -11839,7 +11861,8 @@ L7632:  .byte   $00
 L7633:  .byte   $00
 L7634:  .byte   $00
 
-L7635:  pha
+.proc L7635
+        pha
         lda     #$00
         beq     L7647
 L763A:  pha
@@ -11867,13 +11890,13 @@ L7666:  sta     L7630,x
         lda     icon_params2
         ldx     LE1F1
         dex
-L7673:  cmp     LE1F1+1,x
-        beq     L767C
+:       cmp     LE1F1+1,x
+        beq     :+
         dex
-        bpl     L7673
+        bpl     :-
         rts
 
-L767C:  txa
+:       txa
         asl     a
         tax
         copy16  LE202,x, $06
@@ -11898,11 +11921,11 @@ L76AA:  lda     L7625
         jmp     L76AA
 
 L76BB:  bit     L7634
-        bpl     L76C4
+        bpl     :+
         jsr     pop_zp_addrs
         rts
 
-L76C4:  jsr     L7B6B
+:       jsr     L7B6B
         lda     L7621
         jsr     window_lookup
         stax    $06
@@ -11943,8 +11966,7 @@ L7739:  lda     #$32
         ldx     #$00
         jmp     L7744
 
-L7740:  lda     #$6C
-        ldx     #$00
+L7740:  ldax    #$6C
 L7744:  ldy     #$22
         sta     ($06),y
         txa
@@ -11960,8 +11982,12 @@ L7744:  ldy     #$22
         jsr     L8B60
         jsr     pop_zp_addrs
         rts
+
 L7764:  .byte   $00,$00,$00
 L7767:  .byte   $14
+
+.endproc
+        L763A := L7635::L763A
 
 ;;; ==================================================
 ;;; Create icon
@@ -12529,28 +12555,32 @@ L7D5C:  .byte   0
 
 ;;; ==================================================
 
-L7D5D:  jsr     window_lookup
+.proc L7D5D
+        jsr     window_lookup
         stax    $06
-        ldy     #$23
-        ldx     #$07
-L7D68:  lda     ($06),y
+
+        ldy     #35
+        ldx     #7
+:       lda     ($06),y
         sta     L7D94,x
         dey
         dex
-        bpl     L7D68
+        bpl     :-
+
         lda     L7D98
         sec
         sbc     L7D94
         pha
-        lda     L7D99
-        sbc     L7D95
+        lda     L7D98+1
+        sbc     L7D94+1
         pha
+
         lda     L7D9A
         sec
         sbc     L7D96
         pha
-        lda     L7D9B
-        sbc     L7D97
+        lda     L7D9A+1
+        sbc     L7D96+1         ; wierd - this is discarded???
         pla
         tay
         pla
@@ -12558,15 +12588,17 @@ L7D68:  lda     ($06),y
         pla
         rts
 
-L7D94:  .byte   0
-L7D95:  .byte   0
-L7D96:  .byte   0
-L7D97:  .byte   0
-L7D98:  .byte   0
-L7D99:  .byte   0
-L7D9A:  .byte   0
-L7D9B:  .byte   0
-L7D9C:  jmp     L7D9F
+L7D94:  .word   0
+L7D96:  .word   0
+L7D98:  .word   0
+L7D9A:  .word   0
+
+.endproc
+
+;;; ==================================================
+
+.proc L7D9C
+        jmp     L7D9F
 
 L7D9F:  ldx     cached_window_id
         dex
@@ -12704,6 +12736,7 @@ L7EA8:  sta     $0808,x
 L7EC1:  cmp     #$82
         beq     L7EC8
         jmp     L7F58
+.endproc
 
 L7EC8:  lda     LCBANK2
         lda     LCBANK2
@@ -14481,10 +14514,8 @@ L8D50:  .byte   0
 L8D51:  .byte   0
 L8D52:  .byte   0
 L8D53:  .byte   0
-L8D54:  .byte   0
-L8D55:  .byte   0
-L8D56:  .byte   0
-L8D57:  .byte   0
+L8D54:  .word   0
+L8D56:  .word   0
 
 ;;; ==================================================
 
