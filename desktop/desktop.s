@@ -283,8 +283,7 @@ L870A:  ldy     #icon_entry_offset_win_type
         lda     ($06),y
         sta     $EF8B,x
         jsr     $83A5
-        lda     #$00
-        rts
+        return  #0
 
 L8737:  .byte   $60             ; file type ???
 L8738:  .byte   $04
@@ -672,8 +671,7 @@ ycoord: .word   0
         dex
         bpl     :-
         bmi     proceed
-fail:   lda     #1
-        rts
+fail:   return  #1
 
 proceed:
         jsr     sub
@@ -681,8 +679,7 @@ proceed:
         lda     #1
         tay
         sta     (ptr),y
-        lda     #0
-        rts
+        return  #0
 
 sub:    ldx     num_icons       ; ???
         sta     icon_table,x
@@ -707,8 +704,7 @@ L945E:  cmp     icon_table,x
         dex
         bpl     L945E
 
-bail1:  lda     #1
-        rts
+bail1:  return  #1
 
 L9469:  asl     a
         tax
@@ -716,8 +712,7 @@ L9469:  asl     a
         ldy     #$01
         lda     ($06),y
         bne     L947E
-        lda     #2
-        rts
+        return  #2
 
 L947E:  lda     has_highlight
         beq     L9498
@@ -731,8 +726,7 @@ L948A:  cmp     highlight_list,x
         bpl     L948A
         jmp     L949D
 
-bail3:  lda     #3
-        rts
+bail3:  return  #3
 
 L9498:  lda     #$01
         sta     has_highlight
@@ -749,8 +743,7 @@ L949D:  ldx     highlight_count
         ldx     #1
         jsr     LA2E3
         jsr     L9F9F
-        lda     #0
-        rts
+        return  #0
 .endproc
 
 ;;; ==================================================
@@ -769,8 +762,7 @@ L949D:  ldx     highlight_count
         dex
         bpl     :-
 
-bail1:  lda     #1
-        rts
+bail1:  return  #1
 
 found:  asl     a
         tax
@@ -790,12 +782,10 @@ L94F1:  cmp     highlight_list,x
         jmp     done
 
 L94FC:  jsr     L9F9F
-        lda     #0
-        rts
+        return  #0
 
 done:   jsr     L9F98
-        lda     #0
-        rts
+        return  #0
 .endproc
 
 ;;; ==================================================
@@ -815,8 +805,7 @@ done:   jsr     L9F98
         beq     found
         dex
         bpl     :-
-bail1:  lda     #1
-        rts
+bail1:  return  #1
 
         ;; Pointer to icon details
 found:  asl     a
@@ -826,8 +815,7 @@ found:  asl     a
         lda     (ptr),y
         bne     :+
 
-        lda     #2
-        rts
+        return  #2
 
 :       jsr     calc_icon_poly
         MGTK_CALL MGTK::SetPenMode, pencopy_2
@@ -868,8 +856,7 @@ L9584:  lda     #0
         ldx     highlight_count
         sta     highlight_list,x
 
-done:   lda     #0
-        rts
+done:   return  #0
 .endproc
 
 ;;; ==================================================
@@ -979,8 +966,7 @@ L969D:  ldx     L9696
         bne     L969D
         DESKTOP_DIRECT_CALL $04, L9695
         jmp     L969D
-L96CF:  lda     #$00
-        rts
+L96CF:  return  #0
 .endproc
 
 ;;; ==================================================
@@ -996,8 +982,7 @@ L96D7:  lda     num_icons
         sta     L96D6
 L96DD:  ldx     L96D6
         bne     L96E5
-        lda     #$00
-        rts
+        return  #0
 
 L96E5:  dec     L96D6
         dex
@@ -1072,8 +1057,7 @@ L976B:  lda     highlight_list,x
         inx
         jmp     L976B
 
-L977A:  lda     #$00
-        rts
+L977A:  return  #0
 .endproc
 
 ;;; ==================================================
@@ -1631,8 +1615,7 @@ L9CAA:  lda     L9C76
         lda     L9C77
         cmp     L9C7F
         bne     L9CBD
-        lda     #$00
-        rts
+        return  #0
 
 L9CBD:  sub16   #0, L9C86, L9C96
         jmp     L9CF5
@@ -1643,15 +1626,13 @@ L9CD1:  lda     L9C7A
         lda     L9C7B
         cmp     L9C83
         bne     L9CE4
-        lda     #$00
-        rts
+        return  #0
 
 L9CE4:  sub16   #$230, L9C8A, L9C96
 L9CF5:  add16   L9C86, L9C96, L9C76
         add16   L9C8A, L9C96, L9C7A
         add16   L9C8E, L9C96, L9C8E
-        lda     #$FF
-        rts
+        return  #$FF
 
 L9D31:  lda     L9C78
         cmp     L9C80
@@ -1659,8 +1640,7 @@ L9D31:  lda     L9C78
         lda     L9C79
         cmp     L9C81
         bne     L9D44
-        lda     #$00
-        rts
+        return  #0
 
 L9D44:  sub16   #$0D, L9C88, L9C98
         jmp     L9D7C
@@ -1671,15 +1651,13 @@ L9D58:  lda     L9C7C
         lda     L9C7D
         cmp     L9C85
         bne     L9D6B
-        lda     #$00
-        rts
+        return  #0
 
 L9D6B:  sub16   #$BF, L9C8C, L9C98
 L9D7C:  add16   L9C88, L9C98, L9C78
         add16   L9C8C, L9C98, L9C7C
         add16   L9C90, L9C98, L9C90
-        lda     #$FF
-        rts
+        return  #$FF
 
 L9DB8:  copy16  L9C86, L9C76
         copy16  L9C8A, L9C7A
@@ -1784,8 +1762,7 @@ icon:   .byte   0
 
 start:  lda     has_highlight
         bne     :+
-        lda     #1
-        rts
+        return  #1
 
 :       ldx     highlight_count
         ldy     #0
@@ -1803,8 +1780,7 @@ L9EEA:  ldy     #0
         lda     (ptr),y
         sta     icon
         DESKTOP_DIRECT_CALL DT_UNHIGHLIGHT_ICON, icon
-        lda     #0
-        rts
+        return  #0
 
         rts
 .endproc
@@ -1854,11 +1830,9 @@ start:  ldy     #0
         cmp16   poly::v2::xcoord, rect::x1
         bpl     L9F8F
 
-done:   lda     #0
-        rts
+done:   return  #0
 
-L9F8F:  lda     #$01
-        rts
+L9F8F:  return  #1
 .endproc
 
 ;;; ==================================================
@@ -6439,8 +6413,7 @@ L456E:  lda     L45A0,x
         bne     L457C
         dex
         bne     L456E
-L4579:  lda     #$00
-        rts
+L4579:  return  #0
 
 L457C:  lda     L45A0,x
         sta     L45A9,x
@@ -6536,8 +6509,7 @@ L4629:  sta     L4638
         tay
         pla
         tax
-        lda     L4638
-        rts
+        return  L4638
 
 L4634:  jmp     ($06)
 
@@ -6831,10 +6803,7 @@ show_cursor:
         rts
 .endproc
 
-        lda     #$88
-        sta     L48E4
-        lda     #$40
-        sta     L48E4+1
+        copy16  #L4088, L48E4
 
         L48E4 := *+1
         jmp     dummy1234           ; self-modified
@@ -7285,8 +7254,7 @@ open:   yxa_call MLI_RELAY, OPEN, open_params
 :       lda     #warning_msg_insert_system_disk
         jsr     show_warning_dialog_num
         beq     open            ; ok, so try again
-        lda     #$FF            ; cancel, so fail
-        rts
+        return  #$FF            ; cancel, so fail
 
 read:   yxa_jump MLI_RELAY, READ, read_params
 
@@ -8273,8 +8241,7 @@ L5433:  cmp     LEC26,x
         beq     L543E
         dex
         bpl     L5433
-        lda     #$FF
-        rts
+        return  #$FF
 
 L543E:  inx
         txa
@@ -9297,8 +9264,7 @@ done_client_click:
         lda     event_params_kind
         cmp     #MGTK::event_kind_drag
         beq     :+
-bail:   lda     #$FF            ; high bit set = not repeating
-        rts
+bail:   return  #$FF            ; high bit set = not repeating
 
 :       MGTK_RELAY_CALL MGTK::FindControl, event_params_coords
         lda     findcontrol_which_ctl
@@ -9308,8 +9274,7 @@ bail:   lda     #$FF            ; high bit set = not repeating
         lda     findcontrol_which_part
         cmp     ctl
         bne     bail
-        lda     #0              ; high bit set = repeating
-        rts
+        return  #0              ; high bit set = repeating
 
 ctl:    .byte   0
 .endproc
@@ -9918,8 +9883,7 @@ L6276:  ldx     active_window_id
         cmp     #$01
         bcc     L62C2
         bne     L62C5
-L62C2:  lda     #$00
-        rts
+L62C2:  return  #0
 
 L62C5:  sta     L638B
         stx     L6386
@@ -10598,7 +10562,7 @@ L6A5C:  lda     ($06),y
         dey
         bpl     L6A5C
         dec     $220
-        lda     #$2F
+        lda     #'/'
         sta     $0221
 
         ldax    #$220
@@ -11266,8 +11230,7 @@ L7027:  lda     ($06),y
         inc     L704B
         jmp     L6FE4
 
-L7045:  lda     L7049
-        rts
+L7045:  return  L7049
 
 L7049:  .byte   0
 L704A:  .byte   0
@@ -11555,8 +11518,7 @@ L72F8:  copy16  get_file_info_params4::aux_type, L70BD
         inc     L70BD
         bne     L7342
         inc     L70BE
-L7342:  lda     #$00
-        rts
+L7342:  return  #0
 
 ;;; ==================================================
 
@@ -13560,11 +13522,9 @@ loop:   dec     counter
         bne     exit
 
         jsr     get_event
-        lda     #$00            ; double-click
-        rts
+        return  #0              ; double-click
 
-exit:   lda     #$FF            ; not double-click
-        rts
+exit:   return  #$FF            ; not double-click
 
         ;; Is the new coord within range of the old coord?
 .proc check_delta
@@ -13581,8 +13541,7 @@ exit:   lda     #$FF            ; not double-click
         lda     delta
         cmp     #($100 - double_click_deltax)
         bcs     check_y
-fail:   lda     #$FF
-        rts
+fail:   return  #$FF
 
         ;; is 0 < x < delta ?
 :       lda     delta
@@ -13607,8 +13566,7 @@ check_y:lda     event_params_ycoord
 :       lda     delta
         cmp     #double_click_deltay
         bcs     fail
-ok:     lda     #$00
-        rts
+ok:     return  #0
 .endproc
 
 counter:.word   0
@@ -14311,8 +14269,7 @@ selected_device_icon:
         lda     (icon_ptr),y
         sta     cached_window_icon_list,x
         jsr     pop_zp_addrs
-        lda     #0
-        rts
+        return  #0
 .endproc
 
 ;;; ==================================================
@@ -14731,8 +14688,7 @@ open:   MLI_RELAY_CALL OPEN, open_params
         ora     restore_flag    ; high bit set = no cancel
         jsr     show_warning_dialog_num
         beq     open
-        lda     #$FF            ; failed
-        rts
+        return  #$FF            ; failed
 
 :       lda     open_params::ref_num
         sta     read_params::ref_num
@@ -14781,8 +14737,7 @@ L8F3F:  lda     #$FF
         jsr     L9A0D
         jsr     L917F
 L8F4F:  jsr     L91E8
-        lda     #$00
-        rts
+        return  #0
 
         jsr     L91D5
         jmp     L8F4F
@@ -15017,8 +14972,7 @@ L9168:  jsr     L917F
         ldy     #$01
         lda     #$20
         sta     ($06),y
-        lda     #$00
-        rts
+        return  #0
 
 L917A:  .byte   0
 L917B:  .byte   0
@@ -15510,8 +15464,7 @@ L9571:  lda     #$00
 L9576:  lda     L9706
         cmp     is_file_selected
         bne     L9581
-        lda     #$00
-        rts
+        return  #0
 
 L9581:  ldx     L9706
         lda     selected_file_index,x
@@ -15585,8 +15538,7 @@ L9624:  lda     $1F12,y
         sta     ($06),y
         dey
         bpl     L9624
-        lda     #$FF
-        rts
+        return  #$FF
 
 L962F:  sty     $08
         sty     L9707
@@ -15927,11 +15879,9 @@ L987D:  inc     $E10D
         lda     LE060
         sta     read_params5::ref_num
         yax_call JT_MLI_RELAY, READ, read_params5
-L989C:  lda     #$00
-        rts
+L989C:  return  #0
 
-L989F:  lda     #$FF
-        rts
+L989F:  return  #$FF
 
 L98A2:  lda     LE05F
         sta     LE061
@@ -17059,8 +17009,7 @@ start:  yax_call JT_MLI_RELAY, CLOSE, close_params
         yax_call JT_MGTK_RELAY, MGTK::SetPort, grafport2
 :       ldx     stack_stash
         txs
-        lda     #$FF
-        rts
+        return  #$FF
 .endproc
         LA3A7 := LA3A7_impl::start
 
@@ -17302,20 +17251,17 @@ done:   jsr     reset_state
         MGTK_RELAY_CALL MGTK::FindWindow, event_params_coords
         lda     findwindow_params_which_area
         bne     :+
-        lda     #$FF
-        rts
+        return  #$FF
 :       cmp     #MGTK::area_content
         bne     :+
         jmp     content
-:       lda     #$FF
-        rts
+:       return  #$FF
 
 content:
         lda     findwindow_params_window_id
         cmp     winfoF
         beq     :+
-        lda     #$FF
-        rts
+        return  #$FF
 :       lda     winfoF
         jsr     set_port_from_window_id
         lda     winfoF
@@ -17375,8 +17321,7 @@ check_button_all:
 maybe_check_button_cancel:
         bit     LD8E7
         bpl     check_button_cancel
-        lda     #$FF
-        rts
+        return  #$FF
 
 check_button_cancel:
         MGTK_RELAY_CALL MGTK::InRect, desktop_aux::cancel_button_rect
@@ -17396,8 +17341,7 @@ LA6ED:  bit     LD8E8
         jmp     jump_relay
 
 LA6F7:  jsr     LB9B8
-        lda     #$FF
-        rts
+        return  #$FF
 .endproc
 
 ;;; Key handler for prompt dialog
@@ -17416,8 +17360,7 @@ LA710:  cmp     #KEY_RIGHT
         bne     LA717
         jmp     LA820
 
-LA717:  lda     #$FF
-        rts
+LA717:  return  #$FF
 
 LA71A:  lda     event_params_key
         and     #$7F
@@ -17524,36 +17467,30 @@ LA7D8:  ldx     path_buf1
 LA7DD:  ldx     LD8E8
         beq     LA7E5
         jsr     LBB0B
-LA7E5:  lda     #$FF
-        rts
+LA7E5:  return  #$FF
 .endproc
 
 LA7E8:  jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::yes_button_rect
-        lda     #$02
-        rts
+        return  #prompt_button_yes
 
 LA7F7:  jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::no_button_rect
-        lda     #$03
-        rts
+        return  #prompt_button_no
 
 LA806:  jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::all_button_rect
-        lda     #$04
-        rts
+        return  #prompt_button_all
 
 LA815:  lda     LD8E8
         beq     LA81D
         jsr     LBC5E
-LA81D:  lda     #$FF
-        rts
+LA81D:  return  #$FF
 
 LA820:  lda     LD8E8
         beq     LA828
         jsr     LBCC9
-LA828:  lda     #$FF
-        rts
+LA828:  return  #$FF
 
 LA82B:  lda     LD8E8
         beq     LA83B
@@ -17562,8 +17499,7 @@ LA82B:  lda     LD8E8
         jmp     L0CD7
 
 LA838:  jsr     LBBA4
-LA83B:  lda     #$FF
-        rts
+LA83B:  return  #$FF
 
 LA83E:  lda     LD8E8
         beq     LA84E
@@ -17572,30 +17508,26 @@ LA83E:  lda     LD8E8
         jmp     L0CB8
 
 LA84B:  jsr     LBC03
-LA84E:  lda     #$FF
-        rts
+LA84E:  return  #$FF
 
 LA851:  lda     winfoF
         jsr     set_port_from_window_id
         jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
-        lda     #$00
-        rts
+        return  #0
 
 LA86F:  lda     winfoF
         jsr     set_port_from_window_id
         jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
-        lda     #$01
-        rts
+        return  #1
 
 LA88D:  lda     LD8E8
         beq     LA895
         jsr     LBB63
-LA895:  lda     #$FF
-        rts
+LA895:  return  #$FF
 
 rts1:
         rts
@@ -17954,8 +17886,7 @@ do2:    lda     winfoF
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
         jsr     erase_ok_button
-        lda     #$00
-        rts
+        return  #0
 .endproc
 
 ;;; ==================================================
@@ -18167,14 +18098,12 @@ LAEFF:  inx
         stx     path_buf0
         ldy     #<path_buf0
         ldx     #>path_buf0
-        lda     #0
-        rts
+        return  #0
 
 LAF16:  jsr     reset_state
         MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
         jsr     set_cursor_pointer
-        lda     #$01
-        rts
+        return  #1
 
 ;;; ==================================================
 ;;; "Get Info" dialog
@@ -18526,14 +18455,12 @@ LB2FD:  jsr     prompt_input_loop
         jsr     LBCC9
         ldy     #$43
         ldx     #$D4
-        lda     #$00
-        rts
+        return  #0
 
 LB313:  jsr     reset_state
         MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
         jsr     set_cursor_pointer
-        lda     #$01
-        rts
+        return  #1
 
 ;;; ==================================================
 ;;; "Warning!" dialog
@@ -18715,11 +18642,9 @@ LB476:  MGTK_RELAY_CALL MGTK::PeekEvent, event_params
 LB4A7:  cmp     #$01
         bne     LB4B7
         MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        lda     #$00
-        rts
+        return  #0
 
-LB4B7:  lda     #$FF
-        rts
+LB4B7:  return  #$FF
 
 LB4BA:  lda     event_params_xcoord
         sec
@@ -18731,8 +18656,7 @@ LB4BA:  lda     event_params_xcoord
         lda     LB506
         cmp     #$FB
         bcs     LB4DD
-LB4D3:  lda     #$FF
-        rts
+LB4D3:  return  #$FF
 
 LB4D6:  lda     LB506
         cmp     #$05
@@ -18750,8 +18674,7 @@ LB4DD:  lda     event_params_ycoord
 LB4F6:  lda     LB506
         cmp     #$04
         bcs     LB4D3
-LB4FD:  lda     #$00
-        rts
+LB4FD:  return  #0
 
 LB500:  .byte   0
 LB501:  .byte   0
@@ -19146,13 +19069,11 @@ invert: jsr     set_penmode_xor2
 
 exit:   lda     down_flag       ; was depressed?
         beq     clicked
-        lda     #$FF            ; hi bit = cancelled
-        rts
+        return  #$FF            ; hi bit = cancelled
 
 clicked:
         jsr     fill_proc       ; invert one last time
-        lda     click_result    ; grab expected result
-        rts
+        return  click_result    ; grab expected result
 
 down_flag:
         .byte   0

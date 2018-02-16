@@ -14,6 +14,14 @@
 .endmacro
 
 ;;; ==================================================
+;;; Common patterns
+
+.macro  return arg
+        lda     arg
+        rts
+.endmacro
+
+;;; ==================================================
 ;;; Calls with one parameter (address in A,X)
 
 .macro addr_call target, addr
