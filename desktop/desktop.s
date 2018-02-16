@@ -4305,11 +4305,15 @@ notpenBIC:      .byte   7
 
 event_params := *
 event_params_kind := event_params + 0
+        ;; if kind is key_down
 event_params_key := event_params + 1
 event_params_modifiers := event_params + 2
+        ;; if kind is no_event, button_down/up, drag, or apple_key:
 event_params_coords := event_params + 1
 event_params_xcoord := event_params + 1
 event_params_ycoord := event_params + 3
+        ;; if kind is update:
+event_params_window_id := event_params + 1
 
 activatectl_params := *
 activatectl_params_which_ctl := activatectl_params
@@ -5047,9 +5051,11 @@ LE061:  .byte   $00
 LE062:  .res    170, 0
 LE10C:  .res    138, 0
 
-LE196:  .res    10, 0          ; device table???
+DESKTOP_DEVICELIST:
+        .res    10, 0
 devlst_copy:
         .res    16, 0
+
 LE1B0:  .res    65, 0           ; path buffer?
 LE1F1:  .res    15, 0           ; length-prefixed string
 LE200:  .word   0
@@ -5797,7 +5803,7 @@ L0D14           := $0D14
         ;; Entries marked with * are used by DAs
         ;; "Exported" by desktop.inc
 
-L4000:                  jmp     L4042 ; entry point
+JT_MAIN_LOOP:           jmp     enter_main_loop
 JT_MGTK_RELAY:          jmp     MGTK_RELAY
 JT_SIZE_STRING:         jmp     compose_blocks_string
 JT_DATE_STRING:         jmp     compose_date_string
@@ -5820,20 +5826,21 @@ JT_CUR_POINTER:         jmp     set_pointer_cursor      ; *
 JT_CUR_WATCH:           jmp     set_watch_cursor
 JT_RESTORE_SEF:         jmp     restore_dynamic_routine
 
-        ;; API entry point
-L4042:  cli
+        ;; Main Loop
+.proc enter_main_loop
+        cli
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         jsr     L4530
-        ldx     #$00
+        ldx     #0
 L4051:  cpx     cached_window_icon_count
         beq     L4069
         txa
         pha
         lda     cached_window_icon_list,x
         jsr     icon_entry_lookup
-        ldy     #$01
+        ldy     #1
         jsr     DESKTOP_RELAY
         pla
         tax
@@ -5843,50 +5850,61 @@ L4051:  cpx     cached_window_icon_count
 L4069:  lda     #0
         sta     cached_window_id
         jsr     DESKTOP_COPY_FROM_BUF
-        lda     #$00
+        lda     #0
         sta     LD2A9
         sta     double_click_flag
         sta     L40DF
         sta     $E26F
         lda     L599F
-        beq     L4088
+        beq     main_loop
         tay
         jsr     DESKTOP_SHOW_ALERT0
-L4088:  jsr     reset_grafport3
+
+        ;; Main loop
+
+main_loop:
+        jsr     reset_grafport3
         inc     L40DF
         inc     L40DF
         lda     L40DF
         cmp     machine_type
         bcc     L40A6
-        lda     #$00
+        lda     #0
         sta     L40DF
         jsr     L4563
         beq     L40A6
         jsr     L40E0
 L40A6:  jsr     L464E
+
+        ;; Get an event
         jsr     get_event
         lda     event_params_kind
+
+        ;; Is it a button-down event? (including w/ modifiers)
         cmp     #MGTK::event_kind_button_down
-        beq     L40B7
+        beq     click
         cmp     #MGTK::event_kind_apple_key
-        bne     L40BD
-L40B7:  jsr     handle_click
-        jmp     L4088
+        bne     :+
+click:  jsr     handle_click
+        jmp     main_loop
 
-L40BD:  cmp     #$03
-        bne     L40C7
-        jsr     menu_dispatch
-        jmp     L4088
+        ;; Is it a key down event?
+:       cmp     #MGTK::event_kind_key_down
+        bne     :+
+        jsr     handle_keydown
+        jmp     main_loop
 
-L40C7:  cmp     #$06
-        bne     L40DC
+        ;; Is it an update event?
+:       cmp     #MGTK::event_kind_update
+        bne     :+
         jsr     reset_grafport3
         lda     active_window_id
         sta     L40F0
         lda     #$80
         sta     L40F1
         jsr     L410D
-L40DC:  jmp     L4088
+
+:       jmp     main_loop
 
 L40DF:  .byte   $00
 L40E0:  tsx
@@ -5907,15 +5925,15 @@ redraw_windows:
         sta     L40F1
 L4100:  jsr     peek_event
         lda     event_params_kind
-        cmp     #$06            ; ???
+        cmp     #MGTK::event_kind_update
         bne     L412B
         jsr     get_event
 L410D:  jsr     L4113
         jmp     L4100
 
-L4113:  MGTK_RELAY_CALL MGTK::BeginUpdate, event_params+1
-        bne     L4151
-        jsr     L4153
+L4113:  MGTK_RELAY_CALL MGTK::BeginUpdate, event_params_window_id
+        bne     L4151           ; did not really need updating
+        jsr     update_window
         MGTK_RELAY_CALL MGTK::EndUpdate
         rts
 
@@ -5933,9 +5951,18 @@ L4143:  bit     L40F1
         DESKTOP_RELAY_CALL DT_REDRAW_ICONS
 L4151:  rts
 
+.endproc
+        main_loop := enter_main_loop::main_loop
+        redraw_windows := enter_main_loop::redraw_windows
+
+;;; ==================================================
+
+
 L4152:  .byte   0
-L4153:  lda     event_params+1
-        cmp     #$09
+
+
+update_window:  lda     event_params_window_id
+        cmp     #9              ; only handle windows 0...8
         bcc     L415B
         rts
 
@@ -6079,7 +6106,7 @@ L42C3:  .byte   $00
 ;;; ==================================================
 ;;; Menu Dispatch
 
-.proc menu_dispatch_impl
+.proc handle_keydown_impl
 
         ;; jump table for menu item handlers
 dispatch_table:
@@ -6176,7 +6203,7 @@ offset_table:
 flag:   .byte   $00
 
         ;; Handle accelerator keys
-menu_dispatch:
+handle_keydown:
         lda     event_params_modifiers
         bne     :+              ; either OA or CA ?
         jmp     menu_accelerators           ; nope
@@ -6242,9 +6269,9 @@ L43E0:  tsx
         jmp     dummy1234           ; self-modified
 .endproc
 
-        menu_dispatch := menu_dispatch_impl::menu_dispatch
-        menu_dispatch2 := menu_dispatch_impl::menu_dispatch2
-        menu_dispatch_flag := menu_dispatch_impl::flag
+        handle_keydown := handle_keydown_impl::handle_keydown
+        menu_dispatch2 := handle_keydown_impl::menu_dispatch2
+        menu_dispatch_flag := handle_keydown_impl::flag
 
 ;;; ==================================================
 ;;; Handle click
@@ -6534,13 +6561,13 @@ L463A:  .byte   $01
 L463E:  .res    16, 0
 
 L464E:  lda     LD343
-        beq     L465E
+        beq     :+
         bit     LD343+1
         bmi     L4666
         jsr     enable_selector_menu_items
         jmp     L4666
 
-L465E:  bit     LD343+1
+:       bit     LD343+1
         bmi     L4666
         jsr     disable_selector_menu_items
 L4666:  lda     is_file_selected
@@ -6548,14 +6575,14 @@ L4666:  lda     is_file_selected
         lda     selected_window_index
         bne     L4691
         lda     is_file_selected
-        cmp     #$02
+        cmp     #2
         bcs     L4697
         lda     selected_file_index
         cmp     trash_icon_num
         bne     L468B
         jsr     disable_eject_menu_item
         jsr     disable_file_menu_items
-        lda     #$00
+        lda     #0
         sta     $E26F
         rts
 
@@ -6800,9 +6827,9 @@ show_cursor:
 ;;; ==================================================
 
 .proc L48BE
-        ldx     $E196
+        ldx     DESKTOP_DEVICELIST
         inx
-:       lda     $E196,x
+:       lda     DESKTOP_DEVICELIST,x
         sta     DEVCNT,x
         dex
         bpl     :-
@@ -6815,7 +6842,7 @@ show_cursor:
         rts
 .endproc
 
-        copy16  #L4088, L48E4
+        copy16  #main_loop, L48E4
 
         L48E4 := *+1
         jmp     dummy1234           ; self-modified
@@ -6928,7 +6955,7 @@ L49A6:  lda     menu_click_params::item_num
         sec
         sbc     #$06
         sta     L49A5
-        jsr     a_times_4
+        jsr     a_times_16
         clc
         adc     #$1E
         sta     $06
@@ -6962,7 +6989,7 @@ L49ED:  lda     L49A5
         jmp     L4A0A
 
 L49FA:  lda     L49A5
-        jsr     a_times_6
+        jsr     a_times_64
         clc
         adc     #$9E
         sta     $06
@@ -7000,7 +7027,7 @@ L4A2B:  iny
 
 L4A46:  .byte   0
 L4A47:  pha
-        jsr     a_times_6
+        jsr     a_times_64
         clc
         adc     #$9E
         sta     $06
@@ -7135,7 +7162,7 @@ L4AEA:  jsr     L4B5F
         sta     L4BB0
         addr_call copy_LD3EE_str, path_buffer
         lda     L4BB0
-        jsr     a_times_6
+        jsr     a_times_64
         clc
         adc     #<$DB9E
         sta     $06
@@ -7197,7 +7224,7 @@ start:  jsr     reset_grafport3
         lda     menu_click_params::item_num           ; menu item index (1-based)
         sec
         sbc     #3              ; About and separator before first item
-        jsr     a_times_4
+        jsr     a_times_16
         clc
         adc     #<buf
         sta     ptr
@@ -13615,9 +13642,9 @@ unused: .byte   0               ; ???
 .endproc
 
 ;;; ==================================================
-;;; A = A * 4, high bits into X
+;;; A = A * 16, high bits into X
 
-.proc a_times_4
+.proc a_times_16
         ldx     #0
         stx     tmp
         asl     a
@@ -13635,9 +13662,9 @@ tmp:    .byte   0
 .endproc
 
 ;;; ==================================================
-;;; A = A * 6, high bits into X
+;;; A = A * 64, high bits into X
 
-.proc a_times_6
+.proc a_times_64
         ldx     #$00
         stx     tmp
         asl     a
@@ -19741,8 +19768,6 @@ reset_state:
 
 .proc desktop_800
 
-DESKTOP_DEVICELIST := $E196
-
         .org $800
 
 ;;; ==================================================
@@ -19953,27 +19978,27 @@ trash_name:  PASCAL_STRING " Trash "
         ;; create volume icons???
 .proc init_volumes
         lda     DEVCNT
-        sta     L0A01
-        inc     L0A01
+        sta     devcnt
+        inc     devcnt
         ldx     #0
 :       lda     DEVLST,x
         and     #%10001111      ; drive, not slot, $CnFE status
         cmp     #%10001011      ; drive 1 ... ??? $CnFE = $Bx ?
-        beq     L098E
+        beq     :+
         inx
-        cpx     L0A01
+        cpx     devcnt
         bne     :-
-        jmp     L09F5
+        jmp     done
 
-L098E:  lda     DEVLST,x
+:       lda     DEVLST,x
         stx     L09F8
         sta     L0A02
         ldx     #$11
         lda     L0A02
         and     #$80
-        beq     L09A2
+        beq     :+
         ldx     #$21
-L09A2:  stx     L09B5
+:       stx     L09B5
         lda     L0A02
         and     #$70
         lsr     a
@@ -19982,40 +20007,45 @@ L09A2:  stx     L09B5
         clc
         adc     L09B5
         sta     L09B5
+
         L09B5 := *+1
         lda     $BF00           ; self-modified
+
         sta     $06+1
         lda     #$00
         sta     $06
         ldy     #$07
         lda     ($06),y
-        bne     L09F5
+        bne     done
         ldy     #$FB
         lda     ($06),y
         and     #$7F
-        bne     L09F5
+        bne     done
         ldy     #$FF
         lda     ($06),y
         clc
         adc     #$03
         sta     $06
+
         jsr     L09F9
         .byte   0
         .addr   L09FC
-        bcs     L09F5
+
+        bcs     done
         lda     $1F00
-        cmp     #$02
-        bcs     L09F5
+        cmp     #2
+        bcs     done
         ldx     L09F8
-L09E6:  lda     DEVLST+1,x
+:       lda     DEVLST+1,x
         sta     DEVLST,x
         inx
-        cpx     L0A01
-        bne     L09E6
+        cpx     devcnt
+        bne     :-
         dec     DEVCNT
-L09F5:  jmp     L0A03
+done:   jmp     load_selector_list
 
 L09F8:  .byte   0
+
 L09F9:  jmp     ($06)
 
 L09FC:  .byte   $03
@@ -20023,55 +20053,64 @@ L09FC:  .byte   $03
         .byte   0
         .byte   $1F
         .byte   0
-L0A01:  .byte   0
+devcnt: .byte   0
 L0A02:  .byte   0
 .endproc
 
 ;;; ==================================================
 
-L0A03:  MGTK_RELAY_CALL MGTK::CheckEvents
+.proc load_selector_list
+        ptr1 := $6
+        ptr2 := $8
+
+        selector_list_io_buf := $1000
+        selector_list_data_buf := $1400
+        selector_list_data_len := $400
+
+        MGTK_RELAY_CALL MGTK::CheckEvents
         MLI_RELAY_CALL GET_PREFIX, desktop_main::get_prefix_params
         MGTK_RELAY_CALL MGTK::CheckEvents
-        lda     #$00
+        lda     #0
         sta     L0A92
-        jsr     L0AE7
-        lda     $1400
+        jsr     read_selector_list
+
+        lda     selector_list_data_buf
         clc
-        adc     $1401
+        adc     selector_list_data_buf+1
         sta     LD343
-        lda     #$00
+        lda     #0
         sta     LD343+1
-        lda     $1400
+        lda     selector_list_data_buf
         sta     L0A93
 L0A3B:  lda     L0A92
         cmp     L0A93
         beq     L0A8F
-        jsr     L0A95
-        stax    $06
+        jsr     calc_data_addr
+        stax    ptr1
         lda     L0A92
-        jsr     L0AA2
-        stax    $08
-        ldy     #$00
-        lda     ($06),y
+        jsr     calc_entry_addr
+        stax    ptr2
+        ldy     #0
+        lda     (ptr1),y
         tay
-L0A59:  lda     ($06),y
-        sta     ($08),y
+L0A59:  lda     (ptr1),y
+        sta     (ptr2),y
         dey
         bpl     L0A59
-        ldy     #$0F
-        lda     ($06),y
-        sta     ($08),y
+        ldy     #15
+        lda     (ptr1),y
+        sta     (ptr2),y
         lda     L0A92
-        jsr     L0ABC
-        stax    $06
+        jsr     calc_data_str
+        stax    ptr1
         lda     L0A92
-        jsr     L0AAF
-        stax    $08
-        ldy     #$00
-        lda     ($06),y
+        jsr     calc_entry_str
+        stax    ptr2
+        ldy     #0
+        lda     (ptr1),y
         tay
-L0A7F:  lda     ($06),y
-        sta     ($08),y
+L0A7F:  lda     (ptr1),y
+        sta     (ptr2),y
         dey
         bpl     L0A7F
         inc     L0A92
@@ -20084,19 +20123,21 @@ L0A92:  .byte   0
 L0A93:  .byte   0
         .byte   0
 
-;;; ==================================================
+;;; --------------------------------------------------
 
-L0A95:  jsr     desktop_main::a_times_4
+calc_data_addr:
+        jsr     desktop_main::a_times_16
         clc
-        adc     #<$1402
+        adc     #<(selector_list_data_buf+2)
         tay
         txa
-        adc     #>$1402
+        adc     #>(selector_list_data_buf+2)
         tax
         tya
         rts
 
-L0AA2:  jsr     desktop_main::a_times_4
+calc_entry_addr:
+        jsr     desktop_main::a_times_16
         clc
         adc     #<run_list_entries
         tay
@@ -20106,7 +20147,8 @@ L0AA2:  jsr     desktop_main::a_times_4
         tya
         rts
 
-L0AAF:  jsr     desktop_main::a_times_6
+calc_entry_str:
+        jsr     desktop_main::a_times_64
         clc
         adc     #<(run_list_entries + $80)
         tay
@@ -20116,20 +20158,23 @@ L0AAF:  jsr     desktop_main::a_times_6
         tya
         rts
 
-L0ABC:  jsr     desktop_main::a_times_6
+calc_data_str:
+        jsr     desktop_main::a_times_64
         clc
-        adc     #<$1582
+        adc     #<(selector_list_data_buf+2 + $180)
         tay
         txa
-        adc     #>$1582
+        adc     #>(selector_list_data_buf+2 + $180)
         tax
         tya
         rts
 
+;;; --------------------------------------------------
+
 .proc open_params
 param_count:    .byte   3
 pathname:       .addr   str_selector_list
-io_buffer:      .addr   $1000
+io_buffer:      .addr   selector_list_io_buf
 ref_num:        .byte   0
 .endproc
 
@@ -20139,8 +20184,8 @@ str_selector_list:
 .proc read_params
 param_count:    .byte   4
 ref_num:        .byte   0
-read_buffer:    .addr   $1400
-request_count:  .word   $400
+read_buffer:    .addr   selector_list_data_buf
+request_count:  .word   selector_list_data_len
 trans_count:    .word   0
 .endproc
 
@@ -20149,12 +20194,14 @@ param_count:    .byte   1
 ref_num:        .byte   0
 .endproc
 
-L0AE7:  MLI_RELAY_CALL OPEN, open_params
+read_selector_list:
+        MLI_RELAY_CALL OPEN, open_params
         lda     open_params::ref_num
         sta     read_params::ref_num
         MLI_RELAY_CALL READ, read_params
         MLI_RELAY_CALL CLOSE, close_params
         rts
+.endproc
 
 ;;; ==================================================
 
@@ -20374,7 +20421,8 @@ L0D09:  .byte   0
 
 ;;; ==================================================
 
-L0D0A:  ldy     #$00
+.proc L0D0A
+        ldy     #$00
         sty     desktop_main::L599F
         sty     L0E33
 L0D12:  lda     L0E33
@@ -20523,6 +20571,7 @@ L0E2F:  jmp     L0D12
 L0E32:  .byte   0
 L0E33:  .byte   0
 L0E34:  .byte   0
+.endproc
 
 ;;; ==================================================
 

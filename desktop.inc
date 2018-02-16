@@ -10,7 +10,7 @@ DA_MAX_SIZE     := $1C00 - DA_LOAD_ADDRESS
 
 ;;; * = Used by Desk Accessories
 
-JUMP_TABLE_00           := $4000 ; ???
+JUMP_TABLE_MAIN_LOOP    := $4000 ; Enter DeskTop main loop
 JUMP_TABLE_MGTK_RELAY   := $4003 ; MGTK relay call (main>aux)
 JUMP_TABLE_SIZE_STRING  := $4006 ; Compose "nnn Blocks" string into internal buffer
 JUMP_TABLE_DATE_STRING  := $4009 ; Compose date string into internal buffer
