@@ -5829,52 +5829,62 @@ JT_RESTORE_SEF:         jmp     restore_dynamic_routine
         ;; Main Loop
 .proc enter_main_loop
         cli
+
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
-        jsr     L4530
+
+        jsr     L4530           ; something with DEVLST ???
+
+        ;; Add icons (presumably desktop ones?)
         ldx     #0
-L4051:  cpx     cached_window_icon_count
-        beq     L4069
+iloop:  cpx     cached_window_icon_count
+        beq     skip
         txa
         pha
         lda     cached_window_icon_list,x
         jsr     icon_entry_lookup
-        ldy     #1
-        jsr     DESKTOP_RELAY
+        ldy     #DT_ADD_ICON
+        jsr     DESKTOP_RELAY   ; icon entry addr in A,X
         pla
         tax
         inx
-        jmp     L4051
+        jmp     iloop
 
-L4069:  lda     #0
+skip:   lda     #0
         sta     cached_window_id
         jsr     DESKTOP_COPY_FROM_BUF
+
+        ;; Clear various flags
         lda     #0
         sta     LD2A9
         sta     double_click_flag
-        sta     L40DF
+        sta     loop_counter
         sta     $E26F
-        lda     L599F
+
+        ;; Pending error message?
+        lda     pending_alert
         beq     main_loop
         tay
         jsr     DESKTOP_SHOW_ALERT0
 
         ;; Main loop
-
 main_loop:
         jsr     reset_grafport3
-        inc     L40DF
-        inc     L40DF
-        lda     L40DF
-        cmp     machine_type
-        bcc     L40A6
+
+        inc     loop_counter
+        inc     loop_counter
+        lda     loop_counter
+        cmp     machine_type    ; for per-machine timing
+        bcc     :+
         lda     #0
-        sta     L40DF
-        jsr     L4563
-        beq     L40A6
-        jsr     L40E0
-L40A6:  jsr     L464E
+        sta     loop_counter
+
+        jsr     L4563           ; called every few ticks ???
+        beq     :+
+        jsr     L40E0           ; conditionally ???
+
+:       jsr     L464E
 
         ;; Get an event
         jsr     get_event
@@ -5906,12 +5916,16 @@ click:  jsr     handle_click
 
 :       jmp     main_loop
 
-L40DF:  .byte   $00
+loop_counter:
+        .byte   0
+
+;;; --------------------------------------------------
+
 L40E0:  tsx
         stx     LE256
         sta     menu_click_params::item_num
         jsr     L59A0
-        lda     #$00
+        lda     #0
         sta     menu_click_params::item_num
         rts
 
@@ -6418,32 +6432,38 @@ L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_params_window_id
 
 ;;; ==================================================
 
-L4530:  ldx     #$00
+.proc L4530
+        ldx     #0
         ldy     DEVCNT
-L4535:  lda     DEVLST,y
+loop:   lda     DEVLST,y
         and     #$0F
-        cmp     #$0B
+        cmp     #$0B            ; RAM Disk???
         beq     L4559
-L453E:  dey
-        bpl     L4535
+next:   dey
+        bpl     loop
+
         stx     L4597
         stx     L45A0
         jsr     L45B2
         ldx     L45A0
-        beq     L4558
-L454F:  lda     L45A0,x
+        beq     done
+:       lda     L45A0,x
         sta     L45A9,x
         dex
-        bpl     L454F
-L4558:  rts
+        bpl     :-
+done:   rts
 
 L4559:  lda     DEVLST,y
         inx
         sta     L4597,x
-        bne     L453E
+        bne     next
         rts
+.endproc
 
-L4563:  lda     L45A0
+;;; ==================================================
+
+.proc L4563
+        lda     L45A0
         beq     L4579
         jsr     L45B2
         ldx     L45A0
@@ -6468,6 +6488,9 @@ L4591:  tya
         clc
         adc     #$03
         rts
+.endproc
+
+;;; ==================================================
 
         .byte   $00
 L4597:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -6476,7 +6499,13 @@ L45A0:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00
 L45A9:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00
-L45B2:  ldx     L4597
+
+;;; ==================================================
+
+        ;; Possibly SmartPort STATUS call to determine ejectability ???
+
+.proc L45B2
+        ldx     L4597
         beq     L45C6
         stx     L45A0
 L45BA:  lda     L4597,x
@@ -6552,13 +6581,18 @@ L4629:  sta     L4638
 
 L4634:  jmp     ($06)
 
-L4637:  .byte   $00
-L4638:  .byte   $00
-L4639:  .byte   $03
-L463A:  .byte   $01
+L4637:  .byte   0
+L4638:  .byte   0
+
+        ;; params for call
+L4639:  .byte   3
+L463A:  .byte   1
         .addr   L463E
         .byte   0
 L463E:  .res    16, 0
+.endproc
+
+;;; ==================================================
 
 L464E:  lda     LD343
         beq     :+
@@ -8882,8 +8916,9 @@ L58E2:  lda     active_window_id
 ;;; ==================================================
 
 .proc cmd_check_drives
-        lda     #$00
-        sta     L599F
+        lda     #0
+        sta     pending_alert
+
         sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         jsr     cmd_close_all
@@ -8919,8 +8954,8 @@ L594A:  ldy     L599E
         jsr     get_device_info
         cmp     #$57
         bne     L5967
-        lda     #$F9
-        sta     L599F
+        lda     #$F9            ; "... 2 volumes with the same name..."
+        sta     pending_alert
 L5967:  inc     L599E
         lda     L599E
         cmp     DEVCNT
@@ -8929,7 +8964,7 @@ L5967:  inc     L599E
         ldx     #$00
 L5976:  cpx     cached_window_icon_count
         bne     L5986
-        lda     L599F
+        lda     pending_alert
         beq     L5983
         jsr     DESKTOP_SHOW_ALERT0
 L5983:  jmp     DESKTOP_COPY_FROM_BUF
@@ -8951,7 +8986,10 @@ L5998:  pla
 ;;; ==================================================
 
 L599E:  .byte   0
-L599F:  .byte   0
+
+pending_alert:
+        .byte   0
+
 L59A0:  lda     #$00
         beq     L59AA
 L59A4:  lda     #$80
@@ -20422,8 +20460,8 @@ L0D09:  .byte   0
 ;;; ==================================================
 
 .proc L0D0A
-        ldy     #$00
-        sty     desktop_main::L599F
+        ldy     #0
+        sty     desktop_main::pending_alert
         sty     L0E33
 L0D12:  lda     L0E33
         asl     a
@@ -20461,8 +20499,8 @@ L0D12:  lda     L0E33
 
 L0D64:  cmp     #$57
         bne     L0D6D
-        lda     #$F9
-        sta     desktop_main::L599F
+        lda     #$F9            ; "... 2 volumes with the same name..."
+        sta     desktop_main::pending_alert
 L0D6D:  pla
         pha
         and     #$0F
