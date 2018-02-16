@@ -4361,6 +4361,7 @@ trackthumb_thumbmoved := trackthumb_params + 6
 updatethumb_params := event_params
 updatethumb_params_which_ctl := updatethumb_params
 updatethumb_params_thumbpos := updatethumb_params + 1
+updatethumb_stash := * ; not part of struct
 
 screentowindow_windowx:
 findcontrol_which_ctl:
@@ -8792,46 +8793,46 @@ L5861:  .word   0
 
 L5863:  stx     L587D
         cmp     L587D
-        beq     L587C
-        sta     $D20D
-        inc     $D20D
-        lda     #$02
-        sta     event_params
+        beq     :+
+        sta     updatethumb_stash
+        inc     updatethumb_stash
+        lda     #MGTK::ctl_horizontal_scroll_bar
+        sta     updatethumb_params_which_ctl
         jsr     L5C54
-        lda     $D20D
-L587C:  rts
+        lda     updatethumb_stash
+:       rts
 
 L587D:  .byte   0
-L587E:  beq     L5891
-        sta     $D20D
-        dec     $D20D
-        lda     #$02
-        sta     event_params
+L587E:  beq     :+
+        sta     updatethumb_stash
+        dec     updatethumb_stash
+        lda     #MGTK::ctl_horizontal_scroll_bar
+        sta     updatethumb_params_which_ctl
         jsr     L5C54
-        lda     $D20D
-L5891:  rts
+        lda     updatethumb_stash
+:       rts
 
         .byte   0
 L5893:  stx     L58AD
         cmp     L58AD
-        beq     L58AC
-        sta     $D20D
-        inc     $D20D
-        lda     #$01
-        sta     event_params
+        beq     :+
+        sta     updatethumb_stash
+        inc     updatethumb_stash
+        lda     #MGTK::ctl_vertical_scroll_bar
+        sta     updatethumb_params_which_ctl
         jsr     L5C54
-        lda     $D20D
-L58AC:  rts
+        lda     updatethumb_stash
+:       rts
 
 L58AD:  .byte   0
-L58AE:  beq     L58C1
-        sta     $D20D
-        dec     $D20D
-        lda     #$01
-        sta     event_params
+L58AE:  beq     :+
+        sta     updatethumb_stash
+        dec     updatethumb_stash
+        lda     #MGTK::ctl_vertical_scroll_bar
+        sta     updatethumb_params_which_ctl
         jsr     L5C54
-        lda     $D20D
-L58C1:  rts
+        lda     updatethumb_stash
+:       rts
 
         .byte   0
 L58C3:  lda     active_window_id
@@ -9271,7 +9272,7 @@ done_client_click:
 ;;; ==================================================
 
 .proc L5C54
-        lda     $D20D
+        lda     updatethumb_stash
         sta     updatethumb_params_thumbpos
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         jsr     L6523
@@ -14765,10 +14766,10 @@ L8F1B:  jmp     L8F5B
 L8F24:  jmp     L8F7E
 L8F27:  jmp     L8FB8
 
-L8F2A:  lda     #$00
+L8F2A:  lda     #0
         sta     L9189
         tsx
-        stx     L9188
+        stx     stack_stash
         jsr     LA248
         jsr     L993E
         jsr     LA271
@@ -14786,10 +14787,10 @@ L8F4F:  jsr     L91E8
         jsr     L91D5
         jmp     L8F4F
 
-L8F5B:  lda     #$00
+L8F5B:  lda     #0
         sta     L9189
         tsx
-        stx     L9188
+        stx     stack_stash
         jsr     LA248
         lda     #$00
         jsr     L9E7E
@@ -14805,7 +14806,7 @@ L8F7E:  lda     #$80
         lda     #$C0
         sta     L9189
         tsx
-        stx     L9188
+        stx     stack_stash
         jsr     LA248
         jsr     L9984
         jsr     LA271
@@ -14838,7 +14839,7 @@ L8FC5:  lda     LEBFC
         bne     L8FD2
 L8FD0:  lda     #$00
 L8FD2:  sta     L918A
-        lda     #$00
+        lda     #0
         sta     L9189
         jmp     L8FEB
 
@@ -14849,7 +14850,7 @@ L8FE3:  sta     L918B
         lda     #$80
         sta     L9189
 L8FEB:  tsx
-        stx     L9188
+        stx     stack_stash
         lda     #$00
         sta     LE05C
         jsr     L91D5
@@ -15034,7 +15035,9 @@ L9182:  jmp     dummy0000
         L9186 := *+1
 L9185:  jmp     dummy0000
 
-L9188:  .byte   0
+stack_stash:
+        .byte   0
+
 L9189:  .byte   0
 L918A:  .byte   0
 L918B:  .byte   0
@@ -16200,11 +16203,10 @@ L9B31:  .byte   0
 L9B32:  .byte   0
 L9B33:  jmp     LA360
 
-L9B36:  jsr     LA3D1
-        beq     L9B3E
+L9B36:  jsr     check_escape_key_down
+        beq     :+
         jmp     LA39F
-
-L9B3E:  lda     L97BD
+:       lda     L97BD
         cmp     #$0F
         bne     L9B88
         jsr     append_to_path_220
@@ -16608,11 +16610,10 @@ L9F8D:  rts
 L9F8E:  jsr     show_error_alert
         jmp     L9F29
 
-        jsr     LA3D1
-        beq     L9F9C
+        jsr     check_escape_key_down
+        beq     :+
         jmp     LA39F
-
-L9F9C:  jsr     append_to_path_220
+:       jsr     append_to_path_220
         bit     LE05C
         bmi     L9FA7
         jsr     LA3EF
@@ -16824,7 +16825,7 @@ LA1A3:  lda     #7              ; param count for SET_FILE_INFO
 
 LA1C0:  jmp     remove_path_segment_220
 
-LA1C3:  sub16   LA2ED, #$01, LA055
+LA1C3:  sub16   LA2ED, #1, LA055
         bit     L918B
         bpl     LA1DC
         jmp     LA10A
@@ -16907,18 +16908,18 @@ LA2AA:  .byte   0
 LA2AB:  jmp     LA2AE
 
 LA2AE:  bit     L9189
-        bvc     LA2D4
+        bvc     :+
         jsr     append_to_path_220
         yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
-        bne     LA2D4
+        bne     :+
         add16   LA2EF, file_info_params2::blocks_used, LA2EF
-LA2D4:  inc     LA2ED
-        bne     LA2DC
+:       inc     LA2ED
+        bne     :+
         inc     LA2ED+1
-LA2DC:  bit     L9189
-        bvc     LA2E4
+:       bit     L9189
+        bvc     :+
         jsr     remove_path_segment_220
-LA2E4:  ldax    LA2ED
+:       ldax    LA2ED
         jmp     L917C
 
 LA2ED:  .word   0
@@ -17043,33 +17044,40 @@ LA395:  lda     path_buf4,y
 LA39F:  jsr     L917F
         jmp     LA3A7
 
-.proc close_params4
+.proc LA3A7_impl
+
+.proc close_params
 param_count:    .byte   1
 ref_num:        .byte   0
 .endproc
 
-LA3A7:  yax_call JT_MLI_RELAY, CLOSE, close_params4
+start:  yax_call JT_MLI_RELAY, CLOSE, close_params
         lda     selected_window_index
-        beq     LA3CA
+        beq     :+
         sta     getwinport_params2::window_id
         yax_call JT_MGTK_RELAY, MGTK::GetWinPort, getwinport_params2
         yax_call JT_MGTK_RELAY, MGTK::SetPort, grafport2
-LA3CA:  ldx     L9188
+:       ldx     stack_stash
         txs
         lda     #$FF
         rts
+.endproc
+        LA3A7 := LA3A7_impl::start
 
-LA3D1:  yax_call JT_MGTK_RELAY, MGTK::GetEvent, event_params
+
+.proc check_escape_key_down
+        yax_call JT_MGTK_RELAY, MGTK::GetEvent, event_params
         lda     event_params_kind
         cmp     #MGTK::event_kind_key_down
-        bne     LA3EC
+        bne     nope
         lda     event_params_key
         cmp     #KEY_ESCAPE
-        bne     LA3EC
+        bne     nope
         lda     #$FF
-        bne     LA3EE
-LA3EC:  lda     #$00
-LA3EE:  rts
+        bne     done
+nope:   lda     #$00
+done:   rts
+.endproc
 
 LA3EF:  sub16   LA2ED, #$01, L9E7A
         yax_call launch_dialog, index_delete_file_dialog, L9E79
@@ -17236,37 +17244,37 @@ dialog_param_addr:
 ;;; ==================================================
 ;;; Message handler for OK/Cancel dialog
 
-prompt_input_loop:
+.proc prompt_input_loop
         lda     LD8E8
-        beq     LA579
+        beq     :+
         dec     LD8E9
-        bne     LA579
+        bne     :+
         jsr     LB8F5
         lda     #$14
         sta     LD8E9
-LA579:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
+:       MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_params_kind
         cmp     #MGTK::event_kind_button_down
-        bne     LA58C
+        bne     :+
         jmp     prompt_click_handler
 
-LA58C:  cmp     #MGTK::event_kind_key_down
-        bne     LA593
+:       cmp     #MGTK::event_kind_key_down
+        bne     :+
         jmp     prompt_key_handler
 
-LA593:  lda     LD8E8
+:       lda     LD8E8
         beq     prompt_input_loop
         MGTK_RELAY_CALL MGTK::FindWindow, event_params_coords
         lda     findwindow_params_which_area
-        bne     LA5A9
+        bne     :+
         jmp     prompt_input_loop
 
-LA5A9:  lda     $D20E
+:       lda     $D20E
         cmp     winfoF
-        beq     LA5B4
+        beq     :+
         jmp     prompt_input_loop
 
-LA5B4:  lda     winfoF
+:       lda     winfoF
         jsr     set_port_from_window_id
         lda     winfoF
         sta     event_params
@@ -17274,56 +17282,54 @@ LA5B4:  lda     winfoF
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
         MGTK_RELAY_CALL MGTK::InRect, rect1
         cmp     #MGTK::inrect_inside
-        bne     LA5E5
+        bne     out
         jsr     set_cursor_insertion_point_with_flag
-        jmp     LA5E8
-
-LA5E5:  jsr     set_cursor_pointer_with_flag
-LA5E8:  jsr     reset_state
+        jmp     done
+out:    jsr     set_cursor_pointer_with_flag
+done:   jsr     reset_state
         jmp     prompt_input_loop
+.endproc
 
 ;;; Click handler for prompt dialog
-
-prompt_click_handler:
-        MGTK_RELAY_CALL MGTK::FindWindow, event_params_coords
-        lda     findwindow_params_which_area
-        bne     LA5FF
-        lda     #$FF
-        rts
-
-LA5FF:  cmp     #$02
-        bne     LA606
-        jmp     LA609
-
-LA606:  lda     #$FF
-        rts
-
-LA609:  lda     $D20E
-        cmp     winfoF
-        beq     LA614
-        lda     #$FF
-        rts
-
-LA614:  lda     winfoF
-        jsr     set_port_from_window_id
-        lda     winfoF
-        sta     event_params
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
-        MGTK_RELAY_CALL MGTK::MoveTo, $D20D
-        bit     LD8E7
-        bvc     LA63A
-        jmp     check_button_yes
-
-LA63A:  MGTK_RELAY_CALL MGTK::InRect, desktop_aux::ok_button_rect
-        cmp     #MGTK::inrect_inside
-        beq     check_button_ok
-        jmp     maybe_check_button_cancel
 
         prompt_button_ok := 0
         prompt_button_cancel := 1
         prompt_button_yes := 2
         prompt_button_no := 3
         prompt_button_all := 4
+
+.proc prompt_click_handler
+        MGTK_RELAY_CALL MGTK::FindWindow, event_params_coords
+        lda     findwindow_params_which_area
+        bne     :+
+        lda     #$FF
+        rts
+:       cmp     #MGTK::area_content
+        bne     :+
+        jmp     content
+:       lda     #$FF
+        rts
+
+content:
+        lda     findwindow_params_window_id
+        cmp     winfoF
+        beq     :+
+        lda     #$FF
+        rts
+:       lda     winfoF
+        jsr     set_port_from_window_id
+        lda     winfoF
+        sta     event_params
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
+        MGTK_RELAY_CALL MGTK::MoveTo, $D20D
+        bit     LD8E7
+        bvc     :+
+        jmp     check_button_yes
+
+:       MGTK_RELAY_CALL MGTK::InRect, desktop_aux::ok_button_rect
+        cmp     #MGTK::inrect_inside
+        beq     check_button_ok
+        jmp     maybe_check_button_cancel
 
 check_button_ok:
         jsr     set_penmode_xor2
@@ -17392,10 +17398,11 @@ LA6ED:  bit     LD8E8
 LA6F7:  jsr     LB9B8
         lda     #$FF
         rts
+.endproc
 
 ;;; Key handler for prompt dialog
 
-prompt_key_handler:
+.proc prompt_key_handler
         lda     event_params_modifiers
         cmp     #MGTK::event_modifier_solid_apple
         bne     LA71A
@@ -17478,31 +17485,32 @@ LA77A:  bit     LD8E7
         beq     LA806
         cmp     #KEY_RETURN
         beq     LA7E8
+
 LA79B:  bit     LD8F5
         bmi     LA7C8
-        cmp     #$2E
+        cmp     #'.'
         beq     LA7D8
-        cmp     #$30
+        cmp     #'0'
         bcs     LA7AB
         jmp     LA717
 
-LA7AB:  cmp     #$7B
+LA7AB:  cmp     #'z'+1
         bcc     LA7B2
         jmp     LA717
 
-LA7B2:  cmp     #$3A
+LA7B2:  cmp     #'9'+1
         bcc     LA7D8
-        cmp     #$41
+        cmp     #'A'
         bcs     LA7BD
         jmp     LA717
 
-LA7BD:  cmp     #$5B
+LA7BD:  cmp     #'Z'+1
         bcc     LA7DD
-        cmp     #$61
+        cmp     #'a'
         bcs     LA7DD
         jmp     LA717
 
-LA7C8:  cmp     #$20
+LA7C8:  cmp     #' '
         bcs     LA7CF
         jmp     LA717
 
@@ -17518,6 +17526,7 @@ LA7DD:  ldx     LD8E8
         jsr     LBB0B
 LA7E5:  lda     #$FF
         rts
+.endproc
 
 LA7E8:  jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::yes_button_rect
