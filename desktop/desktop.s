@@ -10158,7 +10158,7 @@ L638B:  .byte   0
 L63C1:  ldax    L7B61
 L63C7:  stax    grafport2::cliprect::y1
         add16_8 grafport2::cliprect::y1, L63E9, grafport2::cliprect::y2
-        jsr     L653E
+        jsr     assign_active_window_cliprect
         jsr     update_scrollbars
         jmp     L6556
 
@@ -10184,7 +10184,7 @@ L63EA:  .word   0
 L6421:  ldax    L7B65
 L6427:  stax    grafport2::cliprect::y2
         sub16_8 grafport2::cliprect::y2, L6449, grafport2::cliprect::y1
-        jsr     L653E
+        jsr     assign_active_window_cliprect
         jsr     update_scrollbars
         jmp     L6556
 
@@ -10216,7 +10216,7 @@ L644A:  .word   0
 L6484:  ldax    L7B5F
 L648A:  stax    grafport2::cliprect::x1
         add16   grafport2::cliprect::x1, L64AC, grafport2::cliprect::x2
-        jsr     L653E
+        jsr     assign_active_window_cliprect
         jsr     update_scrollbars
         jmp     L6556
 
@@ -10226,7 +10226,8 @@ L64AE:  .word   0
 
 ;;; ==================================================
 
-L64B0:  jsr     L650F
+.proc L64B0
+        jsr     L650F
         stax    L650B
         add16   grafport2::cliprect::x2, L650B, L650D
         cmp16   L650D, L7B63
@@ -10237,22 +10238,26 @@ L64B0:  jsr     L650F
 L64E3:  ldax    L7B63
 L64E9:  stax    grafport2::cliprect::x2
         sub16   grafport2::cliprect::x2, L650B, grafport2::cliprect::x1
-        jsr     L653E
+        jsr     assign_active_window_cliprect
         jsr     update_scrollbars
         jmp     L6556
 
 L650B:  .word   0
 L650D:  .word   0
+.endproc
 
-L650F:  bit     L5B1B
-        bmi     L6517
+.proc L650F
+        bit     L5B1B
+        bmi     :+
         jsr     cached_icons_window_to_screen
-L6517:  jsr     L6523
+:       jsr     L6523
         jsr     L7B6B
         lda     active_window_id
         jmp     L7D5D
+.endproc
 
-L6523:  lda     active_window_id
+.proc L6523
+        lda     active_window_id
         jsr     window_lookup
         clc
         adc     #$14
@@ -10261,30 +10266,37 @@ L6523:  lda     active_window_id
         adc     #$00
         sta     $06+1
         ldy     #$25
-L6535:  lda     ($06),y
+:       lda     ($06),y
         sta     grafport2,y
         dey
-        bpl     L6535
+        bpl     :-
         rts
+.endproc
 
-L653E:  lda     active_window_id
+.proc assign_active_window_cliprect
+        ptr := $6
+
+        lda     active_window_id
         jsr     window_lookup
-        stax    $06
-        ldy     #$23
-        ldx     #$07
-L654C:  lda     grafport2::cliprect::x1,x
-        sta     ($06),y
+        stax    ptr
+        ldy     #MGTK::winfo_offset_port + MGTK::grafport_offset_maprect + 7
+        ldx     #7
+:       lda     grafport2::cliprect,x
+        sta     (ptr),y
         dey
         dex
-        bpl     L654C
+        bpl     :-
         rts
+.endproc
 
-L6556:  bit     L5B1B
-        bmi     L655E
+.proc L6556
+        bit     L5B1B
+        bmi     :+
         jsr     cached_icons_screen_to_window
-L655E:  MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect::x1
+:       MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect::x1
         jsr     reset_grafport3
         jmp     L6C19
+.endproc
 
 ;;; ==================================================
 
