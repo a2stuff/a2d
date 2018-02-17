@@ -6505,49 +6505,55 @@ L45A9:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         ;; Possibly SmartPort STATUS call to determine ejectability ???
 
 .proc L45B2
+        ptr := $6
+
         ldx     L4597
-        beq     L45C6
+        beq     done
         stx     L45A0
-L45BA:  lda     L4597,x
+:       lda     L4597,x
         jsr     L45C7
         sta     L45A0,x
         dex
-        bne     L45BA
-L45C6:  rts
+        bne     :-
+done:   rts
 
-L45C7:  sta     L4637
+L45C7:  sta     unit_num
         txa
         pha
         tya
         pha
+
+        ;; Compute driver address ($BFds for Slot s Drive d)
         ldx     #$11
-        lda     L4637
-        and     #$80
+        lda     unit_num
+        and     #$80            ; high bit is drive (0=D1, 1=D2)
         beq     L45D9
         ldx     #$21
-L45D9:  stx     L45EC
-        lda     L4637
+L45D9:  stx     bf_lo           ; D1=$11, D2=$21
+        lda     unit_num
         and     #$70
         lsr     a
         lsr     a
         lsr     a
         clc
-        adc     L45EC
-        sta     L45EC
-        L45EC := *+1
-        lda     $BF00           ; self-modified
-        sta     $06+1
-        lda     #0
-        sta     $06
+        adc     bf_lo
+        sta     bf_lo
+        bf_lo := *+1
+        lda     $BF00           ; self-modified to $BFds
+        sta     ptr+1
+        lda     #0              ; Bug: assumes driver is at $XX00 ???
+        sta     ptr             ; Bug: Should check driver is $Cn before continuing
         ldy     #7
-        lda     ($06),y
-        bne     L4627
+        lda     (ptr),y         ; $Cn07 == 0 for SmartPort
+        bne     notsp
+
+        ;; Locate SmartPort entry point: $Cn00 + ($CnFF) + 3
         ldy     #$FF
-        lda     ($06),y
+        lda     (ptr),y
         clc
-        adc     #$03
-        sta     $06
-        lda     L4637
+        adc     #3
+        sta     ptr
+        lda     unit_num
         pha
         rol     a
         pla
@@ -6560,36 +6566,44 @@ L45D9:  stx     L45EC
         plp
 
         adc     #1
-        sta     L463A
+        sta     status_params_unit_num
 
-        jsr     L4634
-        .byte   0               ; ???
-        .addr   L4639
+        ;; Execute SmartPort call
+        jsr     call
+        .byte   0               ; STATUS
+        .addr   status_params
 
-        lda     L463E
-        and     #$10
-        beq     L4627
+        lda     status_buffer
+        and     #$10            ; general status byte, $10 = disk in drive
+        beq     notsp
         lda     #$FF
-        bne     L4629
-L4627:  lda     #$00
-L4629:  sta     L4638
+        bne     finish
+
+notsp:  lda     #0              ; not SmartPort
+
+finish: sta     result
         pla
         tay
         pla
         tax
-        return  L4638
+        return  result
 
-L4634:  jmp     ($06)
+call:   jmp     (ptr)
 
-L4637:  .byte   0
-L4638:  .byte   0
+unit_num:
+        .byte   0
+result: .byte   0
 
         ;; params for call
-L4639:  .byte   3
-L463A:  .byte   1
-        .addr   L463E
-        .byte   0
-L463E:  .res    16, 0
+.proc status_params
+param_count:    .byte   3
+unit_num:       .byte   1
+list_ptr:       .addr   status_buffer
+status_code:    .byte   0
+.endproc
+status_params_unit_num := status_params::unit_num
+
+status_buffer:  .res    16, 0
 .endproc
 
 ;;; ==================================================
