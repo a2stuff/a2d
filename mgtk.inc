@@ -12,6 +12,47 @@ MLI     := $4000
 ;;; Graphics Primitives
 ;;; ==================================================
 
+;;; Point record:
+;;;
+;;; .word       xcoord
+;;; .word       ycoord
+
+;;; Rect record:
+;;;
+;;; .word       x1
+;;; .word       y1
+;;; .word       x2
+;;; .word       y3
+
+;;; MapInfo record:
+;;;
+;;; Point       viewloc
+;;; .addr       mapbits         screen_mapbits
+;;; .byte       mapwidth        screen_mapwidth
+;;; .byte       reserved
+;;; Rect        maprect
+
+;;; GrafPort record:
+;;;
+;;; MapInfo     mapinfo
+;;; .res 8      penpattern
+;;; .byte       colormask_and
+;;; .byte       colormask_or
+;;; Point       penloc
+;;; .byte       penwidth        horizontal pen thickness
+;;; .byte       penheight       vertical pen thickness
+;;; .byte       penmode
+;;; .byte       textback        text background
+;;; .addr       textfont
+
+;;; Polygon record:
+;;; (array of polys)
+;;; .byte       count           number of vertices in this polygon
+;;; .byte       last            high bit set if there are more polygons
+;;; Point       vertex1
+;;; Point       vertex2
+;;; ...
+
 NoOp                := $00  ; No-op
         ;; (input length 0 bytes)
 
@@ -20,174 +61,82 @@ NoOp                := $00  ; No-op
 
 InitGraf        := $01
 
-SetSwitches     := $02      ; Configure display switches
-        ;; (input length 1 byte)
-        ;; Turns on 80 col/DHR, and then:
-        ;;   bit 0: LoRes if clear, HiRes if set
-        ;;   bit 1: Page 1 if clear, Page 2 if set
-        ;;   bit 2: Full screen if clear, split screen if set
-        ;;   bit 3: Graphics if clear, text if set
+SetSwitches     := $02          ; Configure display switches
+        ;; .byte        flags   bit 0=hires, 1=page2, 2=mixed, 3=text
 
 ;;; --------------------------------------------------
 ;;; GrafPort Commands
 
-InitPort        := $03  ; Get screen state
-        ;; (input length 0 bytes)
-        ;; (output length 36 bytes)
-        ;; .word viewloc x
-        ;; .word viewloc y
-        ;; .addr mapbits        screen_mapbits
-        ;; .word mapwidth       screen_mapwidth
-        ;; .word maprect_x1
-        ;; .word maprect_y1
-        ;; .word maprect_x2     560-1
-        ;; .word maprect_y2     192-1
-        ;; .res 8 pattern
-        ;; .byte mskand         AND mask, default $FF
-        ;; .byte mskor          ORA mask, default $00
-        ;; .word xpos
-        ;; .word ypos
-        ;; .byte penwidth       horizontal pen thickness
-        ;; .byte penheight      vertical pen thickness
-        ;; .byte penmode
-        ;; .byte textback       text background
-        ;; .addr textfont
+InitPort        := $03          ; Initialize GrafPort to standard values
+        ;; (input is address of GrafPort record)
 
-SetPort   := $04          ; Set full drawing state
-        ;; (input length 36 bytes)
-        ;; .word left           pixels from screen edge
-        ;; .word top
-        ;; .addr mapbits        screen_mapbits
-        ;; .word mapwidth       screen_mapwidth
-        ;; .word maprect_x1     pixels scrolled
-        ;; .word maprect_y1
-        ;; .word maprect_x2     pixels
-        ;; .word maprect_y2
-        ;; .res 8 pattern
-        ;; .byte mskand         AND mask, default $FF
-        ;; .byte mskor          ORA mask, default $00
-        ;; .word xpos
-        ;; .word ypos
-        ;; .byte penwidth       horizontal pen thickness
-        ;; .byte penheight      vertical pen thickness
-        ;; .byte penmode
-        ;; .byte textback       text background
-        ;; .addr textfont
+SetPort         := $04          ; Set current port as specified
+        ;; (input is address of GrafPort record)
 
-GetPort         := $05          ; Get pointer to current grafport
-        ;; (input length 0 bytes)
-        ;; (output length 2 bytes)
-        ;; .addr port          (out)
+GetPort         := $05          ; Get pointer to current port
+        ;; .addr        port            (out)
 
-SetPortBits     := $06 ; Set just the drawing port, subset of full state
-        ;; (input length 16 bytes)
-        ;; .word left           pixels from screen edge
-        ;; .word top
-        ;; .addr mapbits        screen_mapbits ($2000)
-        ;; .word mapwidth       screen_mapwidth ($80)
-        ;; .word maprect_x1
-        ;; .word maprect_y1
-        ;; .word maprect_x2
-        ;; .word maprect_y2
+SetPortBits     := $06          ; Set just the mapinfo (viewloc, mapbits)
+        ;; (input is address of MapInfo record)
 
 SetPenMode      := $07          ; Set the current pen mode
-        ;; (input length 1 byte)
-        ;; .byte mode           (>=4 also sets eor mask to $7f)
-        ;;    0 = white (???)
-        ;;    2 = black (???)
+        ;; .byte        mode            pen*/notpen*
 
 SetPattern      := $08          ; Set the current pattern
-        ;; (input length 8 bytes)
-        ;; .res 8 pattern       8x8 pixel pattern for PaintRect calls
+        ;; .res 8       pattern         8x8 pixel pattern for PaintRect calls
 
 SetColorMasks   := $09          ; Set the current color masks
-        ;; (input length 2 bytes)
-        ;; .byte mskand
-        ;; .byte mskor
+        ;; .byte        and_mask
+        ;; .byte        or_mask
 
 SetPenSize      := $0A          ; Set the current pen size
-        ;; (input length 2 bytes)
-        ;; .byte penwidth       horizontal pen thickness
-        ;; .byte penheight      vertical pen thickness
+        ;; .byte        penwidth        horizontal pen thickness
+        ;; .byte        penheight       vertical pen thickness
 
 SetFont         := $0B          ; Set the current font
-        ;; (input length 2 bytes)
-        ;; .addr textfont       font definition (see below)
+        ;; .addr        textfont        font definition
 
 SetTextBG       := $0C          ; Set the current text background
-        ;; (input length 1 byte)
-        ;; .byte mask
+        ;; .byte        backcolor       0=black, $7F=white
 
 ;;; --------------------------------------------------
 ;;; Drawing Commands
 
-Move            := $0D ; Adjust start of subsequent DRAW_TEXT, DRAW_LINE
-        ;; (input length 4 bytes)
+Move            := $0D          ; Set current pen location (relative)
         ;; .word xdelta
         ;; .word ydelta
 
-MoveTo          := $0E      ; Start of subsequent DRAW_TEXT, DRAW_LINE
-        ;; (input length 4 bytes)
-        ;; .word xcoord
-        ;; .word ycoord
+MoveTo          := $0E          ; Set current pen location (absolute)
+        ;; Point        pos
 
-Line            := $0F ; Draw line (from SET_POS)
-        ;; (input length 4 bytes)
-        ;; .word xdelta         signed, delta in pixels
+Line            := $0F          ; Draw line from current pen location (relative)
+        ;; .word xdelta
         ;; .word ydelta
 
-LineTo          := $10    ; Draw line (from SET_POS)
-        ;; (input length 4 bytes)
-        ;; .word xcoord         end coords in pixels
-        ;; .word ycoord
+LineTo          := $10          ; Draw line from current pen location (absolute)
+        ;; Point        pos
 
 PaintRect       := $11          ; Fill rectangle with selected simple pattern/thickness
-        ;; (input length 8 bytes)
-        ;; .word left           (includes scroll pos)
-        ;; .word top
-        ;; .word right          pixels
-        ;; .word bottom
+        ;; Rect         rect
 
 FrameRect       := $12          ; Draw rectangle with selected simple pattern/thickness
-        ;; (input length 8 bytes)
-        ;; .word left           pixels
-        ;; .word top
-        ;; .word right
-        ;; .word bottom
+        ;; Rect         rect
 
-InRect          := $13          ; Is pos (via SET_POS) in bounds? Returns true/false in A
-        ;; (input length 8 bytes)
-        ;; .word left
-        ;; .word top
-        ;; .word right
-        ;; .word bottom
+InRect          := $13          ; Is current position in bounds? A=$80 true, 0 false
+        ;; Rect         rect
 
 PaintBits       := $14          ; Draw pattern
-        ;; (input length 16 bytes)
-        ;; .word left
-        ;; .word top
-        ;; .addr bitmap         bitmap is 7 bits per byte, 0 = black, 1 = white
-        ;; .byte stride         bitmap width in bytes
-        ;; .byte 0              ???
-        ;; .word x1             offset within bitmap definition (pixels)
-        ;; .word y1
-        ;; .word x2
-        ;; .word y2
+        ;; (input is address of MapInfo record)
 
 PaintPoly       := $15
-        ;; (input length 0 bytes)
+        ;; (input is address of Polygon record)
 
-FramePoly       := $16       ; Draw multiple closed polygons
-        ;; (input length 0 bytes)
-        ;; Address points at struct:
-        ;; .byte points         count
-        ;; .byte flag           high bit clear if this is last polygon, set if not
-        ;; .word x1, y1
-        ;; .word x2, y2
-        ;; ...
+FramePoly       := $16          ; Draw multiple closed polygons
+        ;; (input is address of Polygon record)
 
-InPoly          := $17
-        ;; (input length 0 bytes)
+InPoly          := $17          ; Is current position in bounds? A=$80 true, 0 false
+        ;; (input is address of Polygon record)
+
 
 ;;; --------------------------------------------------
 ;;; Text Commands
@@ -204,15 +153,16 @@ DrawText        := $19          ; Drawn at last SET_POS as left, baseline
 ;;; --------------------------------------------------
 ;;; Utility Commands
 
-SetZP1          := $1A  ; Configure ZP usage by API (speed vs. convenience)
-        ;; (input length 1 byte)
-        ;; .byte flag           (AWS_CZP_*; high bit set = preserve ZP during calls)
+SetZP1          := $1A  ; Configure lower half of ZP usage by API (speed vs. convenience)
+SetZP2          := $1B  ; Configure upper half ZP usage by API (speed vs. convenience)
+        ;; .byte        preserve                0=stash/no auto restore; 1=restore now and onward
 
-SetZP2          := $1B  ; Stash or restore lower 128 bytes of ZP; calls are idempotent
-        ;; (input length 1 byte)
-        ;; .byte flag           (high bit set = stash ZP, clear = unstash ZP)
-
-Version         := $1C          ; ???
+Version         := $1C          ; Get toolkit version
+        ;; .byte        (out) major
+        ;; .byte        (out) minor
+        ;; .byte        (out) patch
+        ;; .byte        (out) status
+        ;; .word        (out) number
 
 ;;; ==================================================
 ;;; Mouse Graphics Tool Kit Calls
@@ -230,7 +180,6 @@ StartDeskTop    := $1D  ; Inits state, registers interrupt handler, draws deskto
         ;; .addr        sysfontptr
         ;; .addr        savearea        buffer for saving screen data (e.g. behind menus)
         ;; .word        savesize        bytes
-        ;; .byte        ???
 
 StopDeskTop     := $1E       ; Deallocates interrupt, hides cursor
         ;; (no parameters)
@@ -249,7 +198,6 @@ ScaleMouse      := $21          ; Set mouse/screen scaling
 
 KeyboardMouse   := $22          ; Next operation will be performed by keyboard
         ;; (no parameters)
-        ;; .byte        ???
 
 GetIntHandler   := $23          ; Get address of interrupt handler
         ;; .addr handler        (out) Address of interrupt handler (after cld)
@@ -485,10 +433,9 @@ FindControl     := $48
         ;; .byte        which_ctl       ctl_*
         ;; .byte        which_part      part_*
 
-SetCtlMax       := $49        ; ???
+SetCtlMax       := $49
         ;; .byte        which_ctl       ctl_*_scroll_bar
         ;; .byte        ctlmax          maximum value
-        ;; .byte ???
 
 TrackThumb      := $4A
         ;; .byte        which_ctl       ctl_*_scroll_bar
@@ -500,7 +447,6 @@ TrackThumb      := $4A
 UpdateThumb     := $4B
         ;; .byte        which_ctl       ctl_*_scroll_bar
         ;; .byte        thumbpos        new position 0...250
-        ;; .byte ???
 
 ActivateCtl     := $4C          ; Activate/deactivate scroll bar
         ;; .byte        which_ctl       ctl_*_scroll_bar
@@ -520,8 +466,14 @@ screen_mapbits     := $2000    ; Screen address
 screen_mapwidth   := $80      ; Stride in bytes
 
 ;;; Used in SetPenMode
-pencopy          := 0
-notpenXOR             := 6
+pencopy         := 0
+penOR           := 1
+penXOR          := 2
+penBIC          := 3
+notpencopy      := 4
+notpenOR        := 5
+notpenXOR       := 6
+notpenBIC       := 7
 
 ;;; Used in SetZP1
 zp_overwrite       := 0

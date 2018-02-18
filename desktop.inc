@@ -147,18 +147,12 @@ icon_entry_type_trash   := %01110000
 DEFAULT_FONT := $8800
 
 ;;; Modified by Show Text File DA to toggle fixed width
-font_flag       := $8800 ; = $00 - if high bit set, glyphs are 2 bytes wide (???)
-font_size_count := $8801 ; = $7F - max glyph number (count is this + 1)
+font_flag       := $8800 ; = $00 - if high bit set, glyphs are 2 bytes wide
+font_last_char  := $8801 ; = $7F - max glyph number (count is this + 1)
 font_height     := $8802 ; 9 pixels
 font_width_table := $8803 ; width in pixels, indexed by ASCII code
 
 font_glyphs     := $8883 ; $80 glyphs, organized by row, 9 bytes per
-
-;;; So glyph for A $41
-;;;  width is at $8803 + $41 = $8844 which is 7
-;;;  row0 is at $8883 + $41 + (0 * $80) = $88C4 ~ $1E = %00011110
-;;;  row1 is at $8883 + $41 + (1 * $80) = $8944 ~ $33 = %00110011
-;;; etc
 
 ;;; Control Character Glyphs
 ;;;

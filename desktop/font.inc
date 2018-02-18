@@ -3,13 +3,13 @@
 
 font_definition:
         .assert * = font_flag, error, "Entry point mismatch"
-        .byte   $00
+        .byte   $00             ; type: 0=regular, $80=double-width
 
-        .assert * = font_size_count, error, "Entry point mismatch"
-        .byte   $7F
+        .assert * = font_last_char, error, "Entry point mismatch"
+        .byte   $7F             ; lastchar
 
         .assert * = font_height, error, "Entry point mismatch"
-        .byte   9
+        .byte   9               ; height
 
         .assert * = font_width_table, error, "Entry point mismatch"
         .byte   $01,$07,$07,$07,$07,$07,$01,$07
@@ -30,7 +30,18 @@ font_definition:
         .byte   $06,$06,$06,$04,$02,$04,$05,$07
 
         .assert * = font_glyphs, error, "Entry point mismatch"
-        ;; Format is: glyph0-row0, glyph1-row0, ...
+        ;; For single-width fonts:
+        ;; glyph0-row0, glyph1-row0, ...
+        ;; glyph0-row1, glyph1-row1, ...
+        ;; ...
+
+        ;; For double-width fonts (col A, B)
+        ;; glyph0-row0a, glyph1-row0a, ...
+        ;; glyph0-row0b, glyph1-row0b, ...
+        ;; glyph0-row1a, glyph1-row1a, ...
+        ;; glyph0-row1b, glyph1-row1b, ...
+        ;; ...
+
         .byte   $00,$00,$00,$3F,$77,$01,$01,$00
         .byte   $00,$7F,$00,$00,$7F,$20,$3E,$3E
         .byte   $00,$00,$3C,$00,$00,$00,$00,$00

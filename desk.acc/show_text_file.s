@@ -457,7 +457,7 @@ end:    rts
         sta     fixed_mode_flag
 
         ;; make backup of font width table; overwritten if fixed
-        ldx     font_size_count
+        ldx     font_last_char
         sta     RAMWRTOFF
 loop:   lda     font_width_table - 1,x
         sta     font_width_backup - 1,x
@@ -1331,7 +1331,7 @@ done:   rts
 .proc assign_fixed_font_width_table_if_needed
         lda     fixed_mode_flag ; if not fixed (i.e. proportional)
         beq     end             ; then exit
-        ldx     font_size_count
+        ldx     font_last_char
         lda     #7              ; 7 pixels/character
 loop:   sta     font_width_table - 1,x
         dex
