@@ -53,7 +53,7 @@ MLI     := $4000
 ;;; Point       vertex2
 ;;; ...
 
-NoOp                := $00  ; No-op
+NoOp            := $00  ; No-op
         ;; (input length 0 bytes)
 
 ;;; --------------------------------------------------
@@ -62,107 +62,107 @@ NoOp                := $00  ; No-op
 InitGraf        := $01
 
 SetSwitches     := $02          ; Configure display switches
-        ;; .byte        flags   bit 0=hires, 1=page2, 2=mixed, 3=text
+;;; .byte       flags           bit 0=hires, 1=page2, 2=mixed, 3=text
 
 ;;; --------------------------------------------------
 ;;; GrafPort Commands
 
 InitPort        := $03          ; Initialize GrafPort to standard values
-        ;; (input is address of GrafPort record)
+;;; (input is address of GrafPort record)
 
 SetPort         := $04          ; Set current port as specified
-        ;; (input is address of GrafPort record)
+;;; (input is address of GrafPort record)
 
 GetPort         := $05          ; Get pointer to current port
-        ;; .addr        port            (out)
+;;; .addr       port            (out)
 
 SetPortBits     := $06          ; Set just the mapinfo (viewloc, mapbits)
-        ;; (input is address of MapInfo record)
+;;; (input is address of MapInfo record)
 
 SetPenMode      := $07          ; Set the current pen mode
-        ;; .byte        mode            pen*/notpen*
+;;; .byte       mode            pen*/notpen*
 
 SetPattern      := $08          ; Set the current pattern
-        ;; .res 8       pattern         8x8 pixel pattern for PaintRect calls
+;;; .res 8      pattern         8x8 pixel pattern for PaintRect calls
 
 SetColorMasks   := $09          ; Set the current color masks
-        ;; .byte        and_mask
-        ;; .byte        or_mask
+;;; .byte       and_mask
+;;; .byte       or_mask
 
 SetPenSize      := $0A          ; Set the current pen size
-        ;; .byte        penwidth        horizontal pen thickness
-        ;; .byte        penheight       vertical pen thickness
+;;; .byte       penwidth        horizontal pen thickness
+;;; .byte       penheight       vertical pen thickness
 
 SetFont         := $0B          ; Set the current font
-        ;; .addr        textfont        font definition
+;;; .addr       textfont        font definition
 
 SetTextBG       := $0C          ; Set the current text background
-        ;; .byte        backcolor       0=black, $7F=white
+;;; .byte       backcolor       0=black, $7F=white
 
 ;;; --------------------------------------------------
 ;;; Drawing Commands
 
 Move            := $0D          ; Set current pen location (relative)
-        ;; .word xdelta
-        ;; .word ydelta
+;;; .word       xdelta
+;;; .word       ydelta
 
 MoveTo          := $0E          ; Set current pen location (absolute)
-        ;; Point        pos
+;;; Point        pos
 
 Line            := $0F          ; Draw line from current pen location (relative)
-        ;; .word xdelta
-        ;; .word ydelta
+;;; .word       xdelta
+;;; .word       ydelta
 
 LineTo          := $10          ; Draw line from current pen location (absolute)
-        ;; Point        pos
+;;; Point       pos
 
 PaintRect       := $11          ; Fill rectangle with selected simple pattern/thickness
-        ;; Rect         rect
+;;; Rect        rect
 
 FrameRect       := $12          ; Draw rectangle with selected simple pattern/thickness
-        ;; Rect         rect
+;;; Rect        rect
 
 InRect          := $13          ; Is current position in bounds? A=$80 true, 0 false
-        ;; Rect         rect
+;;; Rect        rect
 
 PaintBits       := $14          ; Draw pattern
-        ;; (input is address of MapInfo record)
+;;; (input is address of MapInfo record)
 
 PaintPoly       := $15
-        ;; (input is address of Polygon record)
+;;; (input is address of Polygon record)
 
 FramePoly       := $16          ; Draw multiple closed polygons
-        ;; (input is address of Polygon record)
+;;; (input is address of Polygon record)
 
 InPoly          := $17          ; Is current position in bounds? A=$80 true, 0 false
-        ;; (input is address of Polygon record)
+;;; (input is address of Polygon record)
 
 
 ;;; --------------------------------------------------
 ;;; Text Commands
 
-TextWidth       := $18         ; Measure the width of a string in pixels
-        ;; .addr data
-        ;; .byte length
-        ;; .word width          (out) result in pixels
+TextWidth       := $18          ; Measure the width of a string in pixels
+;;; .addr       data
+;;; .byte       length
+;;; .word       width           (out) result in pixels
 
 DrawText        := $19          ; Drawn at last SET_POS as left, baseline
-        ;; .addr data
-        ;; .byte length
+;;; .addr       data
+;;; .byte       length
 
 ;;; --------------------------------------------------
 ;;; Utility Commands
 
 SetZP1          := $1A  ; Configure lower half of ZP usage by API (speed vs. convenience)
 SetZP2          := $1B  ; Configure upper half ZP usage by API (speed vs. convenience)
-        ;; .byte        preserve                0=stash/no auto restore; 1=restore now and onward
+;;; .byte       preserve        0=stash/no auto restore; 1=restore now and onward
 
 Version         := $1C          ; Get toolkit version
-        ;; .byte        (out) major
-        ;; .byte        (out) minor
-        ;; .byte        (out) patch
-        ;; .byte        (out) status
-        ;; .word        (out) number
+;;; .byte       (out) major
+;;; .byte       (out) minor
+;;; .byte       (out) patch
+;;; .byte       (out) status
+;;; .word       (out) number
 
 ;;; ==================================================
 ;;; Mouse Graphics Tool Kit Calls
@@ -171,61 +171,61 @@ Version         := $1C          ; Get toolkit version
 ;;; --------------------------------------------------
 ;;; Initialization Calls
 
-StartDeskTop    := $1D  ; Inits state, registers interrupt handler, draws desktop
-        ;; .byte        machine         ROM FBB3 ($06 = IIe or later)
-        ;; .byte        subid           ROM FBC0 ($EA = IIe, $E0 = IIe enh/IIgs, $00 = IIc/IIc+)
-        ;; .byte        op_sys          0=ProDOS, 1=Pascal
-        ;; .byte        slot_num:       Mouse slot, 0 = search (will be filled in)
-        ;; .byte        use_interrupts  0=passive, 1=interrupt
-        ;; .addr        sysfontptr
-        ;; .addr        savearea        buffer for saving screen data (e.g. behind menus)
-        ;; .word        savesize        bytes
+StartDeskTop    := $1D          ; Inits state, registers interrupt handler, draws desktop
+;;; .byte       machine         ROM FBB3 ($06 = IIe or later)
+;;; .byte       subid           ROM FBC0 ($EA = IIe, $E0 = IIe enh/IIgs, $00 = IIc/IIc+)
+;;; .byte       op_sys          0=ProDOS, 1=Pascal
+;;; .byte       slot_num:       Mouse slot, 0 = search (will be filled in)
+;;; .byte       use_interrupts  0=passive, 1=interrupt
+;;; .addr       sysfontptr
+;;; .addr       savearea        buffer for saving screen data (e.g. behind menus)
+;;; .word       savesize        bytes
 
-StopDeskTop     := $1E       ; Deallocates interrupt, hides cursor
-        ;; (no parameters)
+StopDeskTop     := $1E          ; Deallocates interrupt, hides cursor
+;;; (no parameters)
 
 SetUserHook     := $1F
-        ;; .byte        hook_id         0=before, 1=after event checking
-        ;; .addr        routine_ptr     0=remove hook_id
+;;; .byte       hook_id         0=before, 1=after event checking
+;;; .addr       routine_ptr     0=remove hook_id
 
-AttachDriver     := $20           ; Install pointer driver; A=0 on success, $95 if mouse disabled
-        ;; .addr hook           Mouse hook routine to install
-        ;; .addr mouse_state    (out) Address of mouse state (.word x, y; .byte status)
+AttachDriver    := $20         ; Install pointer driver; A=0 on success, $95 if mouse disabled
+;;; .addr       hook            Mouse hook routine to install
+;;; .addr       mouse_state     (out) Address of mouse state (.word x, y; .byte status)
 
 ScaleMouse      := $21          ; Set mouse/screen scaling
-        ;; .byte        x_exponent      x-scale factor for mouse, 0...3
-        ;; .byte        y_exponent      y-scale factor for mouse, 0...3
+;;; .byte       x_exponent      x-scale factor for mouse, 0...3
+;;; .byte       y_exponent      y-scale factor for mouse, 0...3
 
 KeyboardMouse   := $22          ; Next operation will be performed by keyboard
-        ;; (no parameters)
+;;; (no parameters)
 
 GetIntHandler   := $23          ; Get address of interrupt handler
-        ;; .addr handler        (out) Address of interrupt handler (after cld)
+;;; .addr       handler         (out) Address of interrupt handler (after cld)
 
 ;;; --------------------------------------------------
 ;;; Cursor Manager Calls
 
 ;;; Cursor record:
 ;;;
-;;; .res 24 bitmap       2x12 byte bitmap (XOR'd after mask)
-;;; .res 24 mask         2x12 byte mask (OR'd with screen)
-;;; .byte hotx           hotspot coords (pixels)
-;;; .byte hoty
+;;; .res 24     bitmap          2x12 byte bitmap (XOR'd after mask)
+;;; .res 24     mask            2x12 byte mask (OR'd with screen)
+;;; .byte       hotx            hotspot coords (pixels)
+;;; .byte       hoty
 
-SetCursor  := $24               ; Set cursor definition
-        ;; (input is address of Cursor record)
+SetCursor       := $24          ; Set cursor definition
+;;; (input is address of Cursor record)
 
-ShowCursor := $25               ; Return cursor to visibility
-        ;; (no parameters)
+ShowCursor      := $25          ; Return cursor to visibility
+;;; (no parameters)
 
-HideCursor := $26               ; Cursor hidden until ShowCursor call
-        ;; (no parameters)
+HideCursor      := $26          ; Cursor hidden until ShowCursor call
+;;; (no parameters)
 
-ObscureCursor := $27            ; Cursor hidden until moved
-        ;; (no parameters)
+ObscureCursor   := $27          ; Cursor hidden until moved
+;;; (no parameters)
 
-GetCursorAddr := $28            ; Get cursor definition
-        ;; .addr definition     (out) Address of cursor record
+GetCursorAddr   := $28          ; Get cursor definition
+;;; .addr definition            (out) Address of cursor record
 
 ;;; --------------------------------------------------
 ;;; Event Manager Calls
@@ -238,232 +238,230 @@ GetCursorAddr := $28            ; Get cursor definition
 ;;;   .byte modifiers    (0=none, 1=open-apple, 2=solid-apple, 3=both)
 ;;; if kind is event_kind_update:
 ;;;   .byte window_id
-;;; if kind otherwise:
+;;; otherwise:
 ;;;   .word xcoord
 ;;;   .word ycoord
 
 CheckEvents     := $29          ; Process mouse/kbd if GetEvent will be delayed.
-        ;; (no parameters)
+;;; (no parameters)
 
 GetEvent        := $2A
-        ;; (parameter is address of Event record)
+;;; (parameter is address of Event record)
 
 FlushEvents     := $2B
-        ;; (no parameters)
+;;; (no parameters)
 
 PeekEvent       := $2C
-        ;; (parameter is address of Event record)
+;;; (parameter is address of Event record)
 
 PostEvent       := $2D          ; Post event to queue
-        ;; (parameter is address of Event record)
+;;; (parameter is address of Event record)
 
-SetKeyEvent     := $2E    ; If set, keypresses are ignored by MGTK
-        ;; .byte handle_keys           high bit set = ignore keyboard, otherwise check
+SetKeyEvent     := $2E          ; If set, keypresses are ignored by Tool Kit
+;;; .byte       handle_keys     high bit set = ignore keyboard, otherwise check
 
 ;;; --------------------------------------------------
 ;;; Menu Manager Calls
 
 ;;; Menu Bar record:
 ;;;
-;;; .word count         Number of menu bar items
+;;; .word       count           Number of menu bar items
 ;;; (array of...)
-;;; .byte menu_id       Menu identifier
-;;; .byte disabled      Flag
-;;; .addr title         Address of length-prefixed string
-;;; .addr menu          Address of Menu record
-;;; .res  6             Reserved
+;;; .byte       menu_id         Menu identifier
+;;; .byte       disabled        Flag
+;;; .addr       title           Address of length-prefixed string
+;;; .addr       menu            Address of Menu record
+;;; .res 6      reserved        Reserved
 ;;; ...
 ;;;
 ;;; Menu record:
 ;;;
-;;; .word count         Number of items in menu
+;;; .word       count           Number of items in menu
 ;;; (array of...)
-;;; .res  5             Reserved
-;;; .byte options       bit 0=OA, 1=SA, 2=mark, 5=check, 6=filler, 7=disabled
-;;; .byte mark_char     Custom mark character if mark option set
-;;; .byte char1         ASCII code of shortcut #1 (e.g. uppercase B); or 0
-;;; .byte char2         ASCII code of shortcut #2 (e.g. lowercase b, or same); or 0
-;;; .addr name          Address of length-prefixed string
+;;; .res  5     reserved        Reserved
+;;; .byte       options         bit 0=OA, 1=SA, 2=mark, 5=check, 6=filler, 7=disabled
+;;; .byte       mark_char       Custom mark character if mark option set
+;;; .byte       char1           ASCII code of shortcut #1 (e.g. uppercase B); or 0
+;;; .byte       char2           ASCII code of shortcut #2 (e.g. lowercase b, or same); or 0
+;;; .addr       name            Address of length-prefixed string
 ;;; ...
 
-
-
 InitMenu        := $2F
-        ;; .byte        solid_char      char code to use for solid apple glyph
-        ;; .byte        open_char       char code to use for open apple glyph
-        ;; .byte        check_char      char code to use for checkmark glyph
-        ;; .byte        control_char    char code to use for control key glyph
+;;; .byte       solid_char      char code to use for solid apple glyph
+;;; .byte       open_char       char code to use for open apple glyph
+;;; .byte       check_char      char code to use for checkmark glyph
+;;; .byte       control_char    char code to use for control key glyph
 
-SetMenu         := $30             ; Configure (and draw) menu
-        ;; (input is address of Menu Bar record)
+SetMenu         := $30          ; Configure (and draw) menu
+;;; (input is address of Menu Bar record)
 
-MenuSelect      := $31           ; Enter modal loop for handling mouse-down on menu bar
-        ;; .byte        menu_id        (out) Top level menu identifier, or 0 if none
-        ;; .byte        menu_item      (out) Index (1-based) of item in menu, or 0 if none
+MenuSelect      := $31          ; Enter modal loop for handling mouse-down on menu bar
+;;; .byte       menu_id         (out) Top level menu identifier, or 0 if none
+;;; .byte       menu_item       (out) Index (1-based) of item in menu, or 0 if none
 
 MenuKey         := $32          ; Find menu item corresponding to keypress
-        ;; .byte        menu_id         (out)
-        ;; .byte        menu_item       (out)
-        ;; .byte        which_key
-        ;; .byte        key_mods        bit 0=OA, bit 1=SA
+;;; .byte       menu_id         (out)
+;;; .byte       menu_item       (out)
+;;; .byte       which_key
+;;; .byte       key_mods        bit 0=OA, bit 1=SA
 
 HiliteMenu      := $33          ; Toggle highlight state of menu
-        ;; .byte        menu_id
+;;; .byte       menu_id
 
 DisableMenu     := $34
-        ;; .byte        menu_id
-        ;; .byte        disable         0=enable, 1=disable
+;;; .byte       menu_id
+;;; .byte       disable         0=enable, 1=disable
 
 DisableItem     := $35
-        ;; .byte        menu_id
-        ;; .byte        menu_item
-        ;; .byte        disable         0=enable, 1=disable
+;;; .byte       menu_id
+;;; .byte       menu_item
+;;; .byte       disable         0=enable, 1=disable
 
 CheckItem       := $36
-        ;; .byte        menu_id
-        ;; .byte        menu_item
-        ;; .byte        check           0=unchecked, 1=checked
+;;; .byte       menu_id
+;;; .byte       menu_item
+;;; .byte       check           0=unchecked, 1=checked
 
 SetMark         := $37
-        ;; .byte        menu_id
-        ;; .byte        menu_item
-        ;; .byte        set_char        0=use checkmark, 1=use mark_char
-        ;; .byte        mark_char       char code to use for mark
+;;; .byte       menu_id
+;;; .byte       menu_item
+;;; .byte       set_char        0=use checkmark, 1=use mark_char
+;;; .byte       mark_char       char code to use for mark
 
 ;;; --------------------------------------------------
 ;;; Window Manager Calls
 
 ;;; WInfo record:
 ;;;
-;;; .byte id
-;;; .byte options                option_*
-;;; .addr title
-;;; .byte hscroll                scroll_option_*
-;;; .byte vscroll                scroll_option_*
-;;; .byte hthumbmax
-;;; .byte hthumbpos
-;;; .byte vthumbmax
-;;; .byte vthumbpos
-;;; .byte status
-;;; .byte reserved
-;;; .word mincontwidth          minimum content size (horizontal)
-;;; .word maxcontwidth          maximum content size (horizontal)
-;;; .word mincontlength         minimum content size (vertical)
-;;; .word maxcontlength         maximum content size (vertical)
-;;; GrafPort windowport         GrafPort record
-;;; .addr nextwinfo             address of next lower window in stack
+;;; .byte       id
+;;; .byte       options         option_*
+;;; .addr       title
+;;; .byte       hscroll         scroll_option_*
+;;; .byte       vscroll         scroll_option_*
+;;; .byte       hthumbmax
+;;; .byte       hthumbpos
+;;; .byte       vthumbmax
+;;; .byte       vthumbpos
+;;; .byte       status
+;;; .byte       reserved
+;;; .word       mincontwidth    minimum content size (horizontal)
+;;; .word       maxcontwidth    maximum content size (horizontal)
+;;; .word       mincontlength   minimum content size (vertical)
+;;; .word       maxcontlength   maximum content size (vertical)
+;;; GrafPort    windowport      GrafPort record
+;;; .addr       nextwinfo       address of next lower window in stack
 
 OpenWindow      := $38
-        ;; (input is address of WInfo record)
+;;; (input is address of WInfo record)
 
 CloseWindow     := $39
-        ;; .byte window_id
+;;; .byte window_id
 
 CloseAll        := $3A
-        ;; (no parameters)
+;;; (no parameters)
 
 GetWinPtr       := $3B          ; Get pointer to window params by id; A=0 on success
-        ;; .byte window_id
-        ;; .addr window_ptr     (out) winfo address
+;;; .byte       window_id
+;;; .addr       window_ptr      (out) winfo address
 
 GetWinPort      := $3C          ; Get drawing state of window
-        ;; .byte window_id
-        ;; .addr port           (out) grafport address
+;;; .byte       window_id
+;;; .addr       port            (out) grafport address
 
 SetWinPort      := $3D          ; Update port of window
-        ;; .byte window_id
-        ;; .addr port           GrafPort to copy from
+;;; .byte       window_id
+;;; .addr       port            GrafPort to copy from
 
 BeginUpdate     := $3E          ; Respond to update event for window
-        ;; .byte window_id
+;;; .byte       window_id
 
 EndUpdate       := $3F
-        ;; (no paramters)
+;;; (no paramters)
 
 FindWindow      := $40
-        ;; .word        mousex          screen coordinates
-        ;; .word        mousey
-        ;; .byte        which_area      (out) area_*
-        ;; .byte        window_id       (out) of window
+;;; .word       mousex          screen coordinates
+;;; .word       mousey
+;;; .byte       which_area      (out) area_*
+;;; .byte       window_id       (out) of window
 
-FrontWindow     := $41            ; Get id of top window
-        ;; .byte        window_id       (out) window, or 0 if none
+FrontWindow     := $41          ; Get id of top window
+;;; .byte       window_id       (out) window, or 0 if none
 
-SelectWindow    := $42       ; Make window topmost
-        ;; .byte        window_id
+SelectWindow    := $42          ; Make window topmost
+;;; .byte       window_id
 
 TrackGoAway     := $43
-        ;; .byte        clicked         (out) 0 = cancelled, 1 = close
-        ;; .byte        ??              (out)
-        ;; .byte        ??              (out)
+;;; .byte       clicked         (out) 0 = cancelled, 1 = close
+;;; .byte       ??              (out)
+;;; .byte       ??              (out)
 
 DragWindow      := $44
-        ;; (input length 5 bytes)
-        ;; .byte        window_id
-        ;; .word        dragx           mouse coords
-        ;; .word        dragy
-        ;; .byte        moved           high bit set if moved, clear if not
+;;; (input length 5 bytes)
+;;; .byte       window_id
+;;; .word       dragx           mouse coords
+;;; .word       dragy
+;;; .byte       moved           high bit set if moved, clear if not
 
 GrowWindow      := $45
-        ;; .byte        window_id
-        ;; .word        mousex
-        ;; .word        mousey
-        ;; .byte        itgrew          (out) 0 = no change, 1 = moved
+;;; .byte       window_id
+;;; .word       mousex
+;;; .word       mousey
+;;; .byte       itgrew          (out) 0 = no change, 1 = moved
 
 ScreenToWindow  := $46          ; Map screen coords to client coords
-        ;; .byte window_id
-        ;; .word screenx
-        ;; .word screeny
-        ;; .word windowx        (out)
-        ;; .word windowy        (out)
+;;; .byte       window_id
+;;; .word       screenx
+;;; .word       screeny
+;;; .word       windowx         (out)
+;;; .word       windowy         (out)
 
 WindowToScreen  := $47
-        ;; .byte window_id
-        ;; .word windowx
-        ;; .word windowy
-        ;; .word screenx        (out)
-        ;; .word screeny        (out)
+;;; .byte       window_id
+;;; .word       windowx
+;;; .word       windowy
+;;; .word       screenx         (out)
+;;; .word       screeny         (out)
 
 ;;; --------------------------------------------------
 ;;; Control Manager Calls
 
 FindControl     := $48
-        ;; .word        mousex
-        ;; .word        mousey
-        ;; .byte        which_ctl       ctl_*
-        ;; .byte        which_part      part_*
+;;; .word       mousex
+;;; .word       mousey
+;;; .byte       which_ctl       ctl_*
+;;; .byte       which_part      part_*
 
 SetCtlMax       := $49
-        ;; .byte        which_ctl       ctl_*_scroll_bar
-        ;; .byte        ctlmax          maximum value
+;;; .byte       which_ctl       ctl_*_scroll_bar
+;;; .byte       ctlmax          maximum value
 
 TrackThumb      := $4A
-        ;; .byte        which_ctl       ctl_*_scroll_bar
-        ;; .word        mousex
-        ;; .word        mousey
-        ;; .byte        thumbpos        (out) 0...255
-        ;; .byte        thumbmobed      (out) 0 = no change, 1 = moved
+;;; .byte       which_ctl       ctl_*_scroll_bar
+;;; .word       mousex
+;;; .word       mousey
+;;; .byte       thumbpos        (out) 0...255
+;;; .byte       thumbmobed      (out) 0 = no change, 1 = moved
 
 UpdateThumb     := $4B
-        ;; .byte        which_ctl       ctl_*_scroll_bar
-        ;; .byte        thumbpos        new position 0...250
+;;; .byte       which_ctl       ctl_*_scroll_bar
+;;; .byte       thumbpos        new position 0...250
 
 ActivateCtl     := $4C          ; Activate/deactivate scroll bar
-        ;; .byte        which_ctl       ctl_*_scroll_bar
-        ;; .byte        activate        0=deactivate, 1=activate
+;;; .byte       which_ctl       ctl_*_scroll_bar
+;;; .byte       activate        0=deactivate, 1=activate
 
 ;;; $4D ???
-        ;; (input length: 16 bytes)
+;;; (input length: 16 bytes)
 
 ;;; $4E ???
-        ;; (input length: 2 bytes)
+;;; (input length: 2 bytes)
 
 ;;; ==================================================
 ;;; Graphics Primitives Constants
 
 ;;; Used in GetWinPort / SetPortBits
-screen_mapbits     := $2000    ; Screen address
-screen_mapwidth   := $80      ; Stride in bytes
+screen_mapbits  := $2000        ; Screen address
+screen_mapwidth := $80          ; Stride in bytes
 
 ;;; Used in SetPenMode
 pencopy         := 0
