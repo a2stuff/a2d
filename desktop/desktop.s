@@ -15742,6 +15742,7 @@ L9558:  lda     $E6EC,x
 
 ;;; ==================================================
 
+.proc L9571_impl
 .proc rename_params
 param_count:    .byte   2
 pathname:       .addr   $220
@@ -15752,7 +15753,8 @@ rename_dialog_params:
         .byte   0
         .addr   $1F00
 
-L9571:  lda     #$00
+start:
+        lda     #$00
         sta     L9706
 L9576:  lda     L9706
         cmp     is_file_selected
@@ -15921,6 +15923,10 @@ L9706:  .byte   $00
 L9707:  .byte   $00
 L9708:  .byte   $00
 L9709:  .byte   $00
+.endproc
+        L9571 := L9571_impl::start
+
+;;; ==================================================
 
 .proc open_params3
 param_count:    .byte   3
@@ -16089,13 +16095,12 @@ unit_num:       .byte   0
 data_buffer:    .addr   $800
 .endproc
 
-L97AD:  .byte   $00
-L97AE:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00
-L97BD:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+
+;;; ==================================================
+
+
+L97AD:  .res    16, 0
+L97BD:  .res    32, 0
 
 L97DD:  .addr   L9B36
 L97DF:  .addr   L9B33
@@ -16104,6 +16109,8 @@ L97E1:  .addr   rts2
 rts2:   rts
 
 L97E4:  .byte   $00
+
+
 L97E5:  ldx     $E10C
         lda     LE061
         sta     LE062,x
@@ -16118,7 +16125,8 @@ L97F3:  ldx     $E10C
         stx     $E10C
         rts
 
-L9801:  lda     #$00
+.proc L9801
+        lda     #$00
         sta     LE05F
         sta     $E10D
 L9809:  yax_call JT_MLI_RELAY, OPEN, open_params3
@@ -16139,8 +16147,10 @@ L9827:  yax_call JT_MLI_RELAY, READ, read_params3
         jmp     LA39F
 
 L983C:  jmp     L985B
+.endproc
 
-L983F:  lda     LE060
+.proc L983F
+        lda     LE060
         sta     close_params6::ref_num
 L9845:  yax_call JT_MLI_RELAY, CLOSE, close_params6
         beq     L985A
@@ -16150,8 +16160,10 @@ L9845:  yax_call JT_MLI_RELAY, CLOSE, close_params6
         jmp     LA39F
 
 L985A:  rts
+.endproc
 
-L985B:  inc     LE05F
+.proc L985B
+        inc     LE05F
         lda     LE060
         sta     read_params4::ref_num
 L9864:  yax_call JT_MLI_RELAY, READ, read_params4
@@ -16175,6 +16187,9 @@ L987D:  inc     $E10D
 L989C:  return  #0
 
 L989F:  return  #$FF
+.endproc
+
+;;; ==================================================
 
 L98A2:  lda     LE05F
         sta     LE061
@@ -17241,7 +17256,7 @@ LA341:  ldx     #$00
         iny
 LA34C:  cpx     L97AD
         bcs     LA35C
-        lda     L97AE,x
+        lda     L97AD+1,x
         sta     $1FC1,y
         inx
         iny
