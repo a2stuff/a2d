@@ -615,6 +615,7 @@ grafport_offset_penheight          := 31
 grafport_offset_penmode            := 32
 grafport_offset_textback           := 33
 grafport_offset_textfont           := 34
+grafport_size                      := 36
 
 winfo_offset_window_id          :=  0
 winfo_offset_options            :=  1
@@ -632,6 +633,7 @@ winfo_offset_mincontheight      := 16
 winfo_offset_maxcontheight      := 18
 winfo_offset_port               := 20
 winfo_offset_nextwinfo          := 56
+winfo_size                      := 58
 
 .endscope ; MGTK
 

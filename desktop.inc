@@ -95,7 +95,8 @@ path_table := $DFB3     ; window address table
 
 file_index := $DF22     ; indexes of selected file (global, not w/in window, up to 127)
 file_table := $DD9F     ; file address table
-;;; each entry is 27 bytes long
+
+;;; Icon (file/volume) entries - length 27 bytes, maximum of 127
 ;;;      .byte icon      icon index
 ;;;      .byte ??
 ;;;      .byte type/window_id
@@ -115,6 +116,19 @@ file_table := $DD9F     ; file address table
 ;;;      .addr iconbits  (addr of {mapbits, mapwidth, reserved, maprect})
 ;;;      .byte len       (name length + 2)
 ;;;      .res  17  name  (name, with a space before and after)
+
+icon_entry_offset_index         := 0
+icon_entry_offset_state         := 1
+icon_entry_offset_win_type      := 2
+icon_entry_offset_iconx         := 3
+icon_entry_offset_icony         := 5
+icon_entry_offset_iconbits      := 7
+icon_entry_offset_len           := 9
+icon_entry_offset_name          := 10
+icon_entry_name_bufsize         := 17
+icon_entry_size                 := 27
+
+max_icon_count  := 127
 
 icon_entry_open_mask    := %10000000
 icon_entry_type_mask    := %01110000

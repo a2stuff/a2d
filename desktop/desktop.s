@@ -4987,40 +4987,7 @@ run_list_entries:
 
 LDD9E:  .byte   0
 
-        icon_entry_offset_index := 0
-        icon_entry_offset_state := 1
-        icon_entry_offset_win_type  := 2
-        icon_entry_offset_iconx := 3
-        icon_entry_offset_icony := 5
-        icon_entry_offset_iconbits := 7
-        icon_entry_offset_len   := 9
-        icon_entry_offset_name  := 10
-        icon_entry_name_bufsize := 17
-        icon_entry_size := 27
-        max_icon_entry_num := 127
-
-        ;; Icon Entries
-        ;;
-        ;; each entry is 27 bytes long
-        ;;      .byte icon      index
-        ;;      .byte ??        state bits?
-        ;;      .byte type/win  (bits 0-3 are window_id, bits 4-6 are type, bit 7 = open flag)
-        ;;                      000 = directory
-        ;;                      001 = system
-        ;;                      010 = binary
-        ;;                      011 = basic
-        ;;                      100 = (unused)
-        ;;                      101 = text, src, generic
-        ;;                      110 = (unused)
-        ;;                      111 = trash
-        ;;      .word iconx     (pixels)
-        ;;      .word icony     (pixels)
-        ;;      .addr iconbits  (addr of {mapbits, mapwidth, reserved, maprect})
-        ;;      .byte len       (name length + 2)
-        ;;      .res  17  name  (name, with a space before and after)
-        ;;
-        ;; Buffer at $ED00, which has room for 127*27
-
+        ;; Pointers into icon_entries buffer
 icon_entry_address_table:
         .assert * = file_table, error, "Entry point mismatch"
         .res    256, 0
@@ -6026,7 +5993,7 @@ L415B:  sta     active_window_id
         jsr     get_port2
         jsr     draw_window_header
         lda     active_window_id
-        jsr     L8855
+        jsr     copy_window_portbits
         jsr     DESKTOP_ASSIGN_STATE
         lda     active_window_id
         jsr     window_lookup
@@ -6067,7 +6034,7 @@ L41CB:  ldx     cached_window_id
         lda     #$00
         sta     L4152
         lda     active_window_id
-        jmp     L8874
+        jmp     assign_window_portbits
 
 L41E2:  lda     cached_window_id
         sta     getwinport_params2::window_id
@@ -6101,7 +6068,7 @@ L4227:  lda     #$00
         jsr     get_set_port2
         jsr     cached_icons_screen_to_window
         lda     active_window_id
-        jsr     L8874
+        jsr     assign_window_portbits
         jmp     reset_grafport3
 
 L4241:  .byte   0
@@ -6416,7 +6383,7 @@ L445D:  jsr     clear_selection
         lda     ($06),y
         and     #$0F
         sta     L445C
-        jsr     L8997
+        jsr     zero_grafport5_coords
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
         jsr     reset_grafport3
         lda     L445C
@@ -6575,9 +6542,9 @@ L45C7:  sta     unit_num
         ldx     #$11
         lda     unit_num
         and     #$80            ; high bit is drive (0=D1, 1=D2)
-        beq     L45D9
+        beq     :+
         ldx     #$21
-L45D9:  stx     bf_lo           ; D1=$11, D2=$21
+:       stx     bf_lo           ; D1=$11, D2=$21
         lda     unit_num
         and     #$70
         lsr     a
@@ -6618,7 +6585,7 @@ L45D9:  stx     bf_lo           ; D1=$11, D2=$21
 
         ;; Execute SmartPort call
         jsr     call
-        .byte   0               ; STATUS
+        .byte   0               ; $00 = STATUS
         .addr   status_params
 
         lda     status_buffer
@@ -7734,7 +7701,7 @@ L4EC3:  sta     cached_window_icon_count
         sta     ($06),y
         and     #icon_entry_winid_mask
         sta     selected_window_index
-        jsr     L8997
+        jsr     zero_grafport5_coords
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
         jsr     reset_grafport3
         lda     #$01
@@ -9167,7 +9134,7 @@ L5A4C:  jsr     redraw_windows_and_desktop
         lda     devlst_copy,y
         sta     icon_param
         beq     L5A7F
-        jsr     L8AF4
+        jsr     remove_icon_from_window
         dec     LDD9E
         lda     icon_param
         jsr     DESKTOP_FREE_ICON
@@ -9870,7 +9837,7 @@ L60DE:  lda     active_window_id
         sta     event_params
         MGTK_RELAY_CALL MGTK::FrontWindow, active_window_id
         lda     active_window_id
-        jsr     L8855
+        jsr     copy_window_portbits
         MGTK_RELAY_CALL MGTK::DragWindow, event_params
         lda     active_window_id
         jsr     window_lookup
@@ -9882,23 +9849,26 @@ L60DE:  lda     active_window_id
         lda     #$19
         sta     ($06),y
 L6112:  ldy     #$14
+
         lda     ($06),y
         sec
-        sbc     L8830
+        sbc     port_copy+MGTK::grafport_offset_viewloc_xcoord
         sta     L6197
         iny
         lda     ($06),y
-        sbc     L8831
-        sta     L6198
+        sbc     port_copy+MGTK::grafport_offset_viewloc_xcoord+1
+        sta     L6197+1
         iny
+
         lda     ($06),y
         sec
-        sbc     L8832
+        sbc     port_copy+MGTK::grafport_offset_viewloc_ycoord
         sta     L6199
         iny
         lda     ($06),y
-        sbc     L8833
-        sta     L619A
+        sbc     port_copy+MGTK::grafport_offset_viewloc_ycoord+1
+        sta     L6199+1
+
         ldx     active_window_id
         dex
         lda     win_buf_table,x
@@ -10032,7 +10002,7 @@ L6227:  sta     cached_window_icon_count
         sta     ($06),y
         and     #$0F
         sta     selected_window_index
-        jsr     L8997
+        jsr     zero_grafport5_coords
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
         jsr     reset_grafport3
         lda     #$01
@@ -11099,7 +11069,7 @@ L6D31:  lda     #$00
         beq     L6D7D
         cmp     active_window_id
         beq     L6D4D
-        jsr     L8997
+        jsr     zero_grafport5_coords
         lda     #$00
         sta     rect_E230
         beq     L6D56
@@ -14125,42 +14095,48 @@ addr:   .addr   0
 
 ;;; ==================================================
 
-L8830:  .byte   0
-L8831:  .byte   0
-L8832:  .byte   0
-L8833:  .res    34, 0
+port_copy:
+        .res    MGTK::grafport_size+1
 
-L8855:  tay
+.proc copy_window_portbits
+        ptr := $6
+
+        tay
         jsr     push_zp_addrs
         tya
         jsr     window_lookup
-        stax    $06
-        ldx     #$00
-        ldy     #$14
-L8865:  lda     ($06),y
-        sta     L8830,x
+        stax    ptr
+        ldx     #0
+        ldy     #MGTK::winfo_offset_port
+:       lda     (ptr),y
+        sta     port_copy,x
         iny
         inx
-        cpx     #$24
-        bne     L8865
+        cpx     #MGTK::grafport_size
+        bne     :-
         jsr     pop_zp_addrs
         rts
+.endproc
 
-L8874:  tay
+.proc assign_window_portbits
+        ptr := $6
+
+        tay
         jsr     push_zp_addrs
         tya
         jsr     window_lookup
-        stax    $06
-        ldx     #$00
-        ldy     #$14
-L8884:  lda     L8830,x
-        sta     ($06),y
+        stax    ptr
+        ldx     #0
+        ldy     #MGTK::winfo_offset_port
+:       lda     port_copy,x
+        sta     (ptr),y
         iny
         inx
-        cpx     #$24
-        bne     L8884
+        cpx     #MGTK::grafport_size
+        bne     :-
         jsr     pop_zp_addrs
         rts
+.endproc
 
 ;;; ==================================================
 ;;; Convert icon's coordinates from screen to window (direction???)
@@ -14342,16 +14318,18 @@ pos_win:        .word   0, 0
 
 ;;; ==================================================
 
-L8997:  lda     #$00
+.proc zero_grafport5_coords
+        lda     #0
         tax
-L899A:  sta     grafport5::cliprect::x1,x
+:       sta     grafport5::cliprect::x1,x
         sta     grafport5::viewloc::xcoord,x
         sta     grafport5::cliprect::x2,x
         inx
-        cpx     #$04
-        bne     L899A
+        cpx     #4
+        bne     :-
         MGTK_RELAY_CALL MGTK::SetPort, grafport5
         rts
+.endproc
 
 ;;; ==================================================
 
@@ -14549,24 +14527,30 @@ param_count:    .byte   1
 data_buffer:    .addr   $4824
 .endproc
 
-L8AF4:  ldx     cached_window_icon_count
+;;; ==================================================
+
+.proc remove_icon_from_window
+        ldx     cached_window_icon_count
         dex
-L8AF8:  cmp     cached_window_icon_list,x
-        beq     L8B01
+:       cmp     cached_window_icon_list,x
+        beq     remove
         dex
-        bpl     L8AF8
+        bpl     :-
         rts
 
-L8B01:  lda     cached_window_icon_list+1,x
+remove: lda     cached_window_icon_list+1,x
         sta     cached_window_icon_list,x
         inx
         cpx     cached_window_icon_count
-        bne     L8B01
+        bne     remove
         dec     cached_window_icon_count
         ldx     cached_window_icon_count
-        lda     #$00
+        lda     #0
         sta     cached_window_icon_list,x
         rts
+.endproc
+
+;;; ==================================================
 
 L8B19:  jsr     push_zp_addrs
         jmp     L8B2E
@@ -14578,28 +14562,37 @@ L8B1F:  lda     icon_params2
 L8B25:  jsr     push_zp_addrs
         lda     icon_params2
         jsr     L7345
-L8B2E:  lda     icon_params2
-        ldx     #$07
-L8B33:  cmp     LEC26,x
-        beq     L8B3E
-        dex
-        bpl     L8B33
-        jmp     L8B43
+        ;; fall through
 
-L8B3E:  lda     #$00
+.proc L8B2E
+        ptr := $6
+
+        lda     icon_params2
+        ldx     #7              ; ???
+:       cmp     LEC26,x
+        beq     :+
+        dex
+        bpl     :-
+        jmp     skip
+
+:       lda     #0
         sta     LEC26,x
-L8B43:  lda     icon_params2
+skip:   lda     icon_params2
         jsr     icon_entry_lookup
-        stax    $06
+        stax    ptr
         ldy     #icon_entry_offset_win_type
-        lda     ($06),y
+        lda     (ptr),y
         and     #(~icon_entry_open_mask)&$FF ; clear open_flag
         sta     ($06),y
         jsr     L4244
         jsr     pop_zp_addrs
         rts
+.endproc
 
-L8B5C:  ldy     #$80
+;;; ==================================================
+
+.proc L8B5C
+        ldy     #$80
         bne     L8B62
 L8B60:  ldy     #$00
 L8B62:  sty     L8D4A
@@ -14737,10 +14730,13 @@ L8D52:  .byte   0
 L8D53:  .byte   0
 L8D54:  .word   0
 L8D56:  .word   0
+.endproc
+        L8B60 := L8B5C::L8B60
 
 ;;; ==================================================
 
-L8D58:  lda     #$00
+.proc L8D58
+        lda     #$00
         sta     L8DB2
         jsr     reset_grafport3
         MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern3
@@ -14785,10 +14781,12 @@ L8DA7:  inc     L8DB2
         rts
 
 L8DB2:  .byte   0
+.endproc
 
 ;;; ==================================================
 
-L8DB3:  lda     #$0B
+.proc L8DB3
+        lda     #$0B
         sta     L8E0F
         jsr     reset_grafport3
         MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern3
@@ -14834,6 +14832,7 @@ L8E04:  dec     L8E0F
         rts
 
 L8E0F:  .byte   0
+.endproc
 
 ;;; ==================================================
 
@@ -14962,19 +14961,23 @@ open:   MLI_RELAY_CALL OPEN, open_params
 L8F00:  jmp     L8FC5
         jmp     rts2            ; rts
         jmp     rts2            ; rts
-L8F09:  jmp     L92E7
-L8F0C:  jmp     L8F9B
-L8F0F:  jmp     L8FA1
-L8F12:  jmp     L9571
-L8F15:  jmp     L9213
-L8F18:  jmp     L8F2A
-L8F1B:  jmp     L8F5B
+L8F09:  jmp     L92E7           ; cmd_get_info
+L8F0C:  jmp     L8F9B           ; cmd_lock
+L8F0F:  jmp     L8FA1           ; cmd_unlock
+L8F12:  jmp     L9571           ; cmd_rename_icon
+L8F15:  jmp     L9213           ; cmd_eject ???
+L8F18:  jmp     L8F2A           ; cmd_copy_file ???
+L8F1B:  jmp     L8F5B           ; cmd_delete_file ???
         jmp     rts2            ; rts
         jmp     rts2            ; rts
-L8F24:  jmp     L8F7E
-L8F27:  jmp     L8FB8
+L8F24:  jmp     L8F7E           ; cmd_selector_action ???
+L8F27:  jmp     L8FB8           ; cmd_get_size
 
-L8F2A:  lda     #0
+;;; ==================================================
+
+        ;;  TODO: Break this down more?
+.proc L8F2A
+        lda     #0
         sta     L9189
         tsx
         stx     stack_stash
@@ -15062,16 +15065,16 @@ L8FEB:  tsx
         sta     LE05C
         jsr     L91D5
         lda     L9189
-        beq     L8FFF
+        beq     :+
         jmp     L908C
 
-L8FFF:  bit     L918A
+:       bit     L918A
         bpl     L9011
         lda     selected_window_index
-        beq     L900C
+        beq     :+
         jmp     L908C
 
-L900C:  pla
+:       pla
         pla
         jmp     JT_EJECT
 
@@ -15228,6 +15231,13 @@ L9168:  jsr     L917F
 
 L917A:  .byte   0
 L917B:  .byte   0
+.endproc
+        L8F5B := L8F2A::L8F5B
+        L8F7E := L8F2A::L8F7E
+        L8F9B := L8F2A::L8F9B
+        L8FA1 := L8F2A::L8FA1
+        L8FB8 := L8F2A::L8FB8
+        L8FC5 := L8F2A::L8FC5
 
 ;;; ==================================================
 
@@ -15322,7 +15332,8 @@ L91E8:  jsr     JT_REDRAW_ALL
         yax_call JT_DESKTOP_RELAY, $C, 0
         rts
 
-L91F5:  copy16  #L9211, $08
+.proc L91F5
+        copy16  #L9211, $08
         lda     selected_window_index
         beq     L9210
         asl     a
@@ -15332,79 +15343,95 @@ L91F5:  copy16  #L9211, $08
 L9210:  rts
 
 L9211:  .addr   0
+.endproc
 
-L9213:  lda     is_file_selected
-        bne     L9219
+.proc L9213
+        lda     is_file_selected
+        bne     :+
         rts
-
-L9219:  ldx     is_file_selected
+:       ldx     is_file_selected
         stx     L0800
         dex
-L9220:  lda     selected_file_index,x
+:       lda     selected_file_index,x
         sta     $0801,x
         dex
-        bpl     L9220
+        bpl     :-
+
         jsr     JT_CLEAR_SELECTION
-        ldx     #$00
-        stx     L924A
-L9231:  ldx     L924A
+        ldx     #0
+        stx     index
+loop:   ldx     index
         lda     $0801,x
         cmp     #$01
-        beq     L923E
+        beq     :+
         jsr     L924B
-L923E:  inc     L924A
-        ldx     L924A
+:       inc     index
+        ldx     index
         cpx     L0800
-        bne     L9231
+        bne     loop
         rts
 
-L924A:  .byte   0
-L924B:  sta     L9254
-        ldy     #$00
-L9250:  lda     devlst_copy,y
-        .byte   $C9
-L9254:  .byte   0
-        beq     L9260
-        cpy     DEVCNT
-        beq     L925F
-        iny
-        bne     L9250
-L925F:  rts
+index:  .byte   0
+.endproc
 
-L9260:  lda     DEVLST,y
-        sta     L92C7
+.proc L924B
+        ptr := $6
+
+        sta     compare
+        ldy     #0
+
+loop:   lda     devlst_copy,y
+
+        compare := *+1
+        cmp     #0
+
+        beq     found
+        cpy     DEVCNT
+        beq     exit
+        iny
+        bne     loop
+exit:   rts
+
+        ;; Another SmartPort call ???
+found:  lda     DEVLST,y        ;
+        sta     unit_num
+
+        ;; Compute driver address ($BFds for Slot s Drive d)
         ldx     #$11
-        lda     L92C7
-        and     #$80
-        beq     L9271
+        lda     unit_num
+        and     #$80            ; high bit is drive (0=D1, 1=D2)
+        beq     :+
         ldx     #$21
-L9271:  stx     L9284
-        lda     L92C7
+:       stx     bf_lo           ; D1=$11, D2=$21
+        lda     unit_num
         and     #$70
         lsr     a
         lsr     a
         lsr     a
         clc
-        adc     L9284
-        sta     L9284
-        L9284 := *+1
-        lda     $BF00           ; self-modified
-        sta     $06+1
-        lda     #$00
-        sta     $06
-        ldy     #$07
-        lda     ($06),y
-        bne     L925F
-        ldy     #$FB
-        lda     ($06),y
+        adc     bf_lo
+        sta     bf_lo
+        bf_lo := *+1
+        lda     $BF00           ; self-modified to $BFds
+        sta     ptr+1
+        lda     #0              ; Bug: assumes driver is at $XX00 ???
+        sta     ptr             ; Bug: Should check driver is $Cn before continuing
+        ldy     #7
+        lda     (ptr),y         ; $Cn07 == 0 for SmartPort
+        bne     exit
+
+        ldy     #$FB            ; $CnFB low bits???
+        lda     (ptr),y
         and     #$7F
-        bne     L925F
+        bne     exit
+
+        ;; Locate SmartPort entry point: $Cn00 + ($CnFF) + 3
         ldy     #$FF
-        lda     ($06),y
+        lda     (ptr),y
         clc
-        adc     #$03
-        sta     $06
-        lda     L92C7
+        adc     #3
+        sta     ptr
+        lda     unit_num
         pha
         rol     a
         pla
@@ -15415,20 +15442,28 @@ L9271:  stx     L9284
         lsr     a
         lsr     a
         plp
-        adc     #$01
-        sta     L92C1
-        jsr     L92BD
-        .byte   $04
-        .addr   L92C0
-        rts
-L92BD:  jmp     ($06)
+        adc     #1
+        sta     control_params_unit_number
 
-L92C0:  .byte   3
-L92C1:  .byte   $00
-        .addr   L92C5
-        .byte   4
-L92C5:  .byte   $00,$00
-L92C7:  .byte   $00,$00
+        jsr     call
+        .byte   $04             ; $04 = CONTROL
+        .addr   control_params
+        rts
+call:   jmp     ($06)
+
+.proc control_params
+param_count:    .byte   3
+unit_number:    .byte   $0
+control_list:   .addr   list
+control_code:   .byte   4       ; Eject disk
+.endproc
+        control_params_unit_number := control_params::unit_number
+list:   .word   0               ; 0 items in list
+unit_num:
+        .byte   0
+
+        .byte   0               ; unused???
+.endproc
 
 .proc get_file_info_params5
 param_count:    .byte   $A
@@ -20082,7 +20117,7 @@ found_ram:
         jsr     desktop_main::push_zp_addrs
         copy16  #icon_entries, ptr
         ldx     #1
-loop:   cpx     #max_icon_entry_num
+loop:   cpx     #max_icon_count
         bne     :+
         jsr     desktop_main::pop_zp_addrs
         jmp     clear_window_icon_tables
