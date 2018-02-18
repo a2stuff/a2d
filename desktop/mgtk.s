@@ -166,7 +166,7 @@ adjust_stack:                   ; Adjust stack to account for params
         pha
         lda     params_addr+1
         pha
-        bit     hide_cursor_flag
+        bit     desktop_initialized_flag
         bpl     :+
         jsr     hide_cursor
 :       pla
@@ -193,7 +193,7 @@ jump:   jsr     $FFFF           ; the actual call
 
         ;; Exposed for routines to call directly
 cleanup:
-        bit     hide_cursor_flag
+        bit     desktop_initialized_flag
         bpl     :+
         jsr     show_cursor
 
@@ -329,8 +329,8 @@ jump_table:
         ;; Initialization Calls
         .addr   StartDeskTopImpl    ; $1D StartDeskTop
         .addr   StopDeskTopImpl     ; $1E StopDeskTop
-        .addr   L64D2               ; $1F ???
-        .addr   SetUserHookImpl     ; $20 SetUserHook
+        .addr   SetUserHookImpl               ; $1F SetUserHook
+        .addr   AttachDriverImpl    ; $20 AttachDriver
         .addr   ScaleMouseImpl      ; $21 ScaleMouseImpl
         .addr   KeyboardMouse       ; $22 KeyboardMouse
         .addr   GetIntHandlerImpl   ; $23 GetIntHandler
@@ -428,7 +428,7 @@ param_lengths:
         PARAM_DEFN 12, $82, 0                ; $1D StartDeskTop
         PARAM_DEFN  0, $00, 0                ; $1E StopDeskTop
         PARAM_DEFN  3, $82, 0                ; $1F
-        PARAM_DEFN  2, $82, 0                ; $20 SetUserHook
+        PARAM_DEFN  2, $82, 0                ; $20 AttachDriver
         PARAM_DEFN  2, $82, 0                ; $21 ScaleMouse
         PARAM_DEFN  1, $82, 0                ; $22 KeyboardMouse
         PARAM_DEFN  0, $00, 0                ; $23 GetIntHandler
@@ -4096,7 +4096,7 @@ L633C:  .byte   $00
 L633D:  .byte   $00
 L633E:  .byte   $00
 
-hide_cursor_flag:
+desktop_initialized_flag:
         .byte   0
 
 L6340:  .byte   $00
@@ -4190,7 +4190,7 @@ L63E5:  lda     L6338
 
 L63F6:  stx     L6338
         lda     #$80
-        sta     hide_cursor_flag
+        sta     desktop_initialized_flag
         lda     L6338
         bne     L640D
         bit     L6339
@@ -4294,17 +4294,16 @@ L64A4:  rts
         pha
         plp
         lda     #$00
-        sta     hide_cursor_flag
+        sta     desktop_initialized_flag
         rts
 .endproc
 
 ;;; ==================================================
-
-;;; $1F IMPL
+;;; SetUserHook
 
 ;;; 3 bytes of params, copied to $82
 
-L64D2:
+SetUserHookImpl:
         lda     $82
         cmp     #$01
         bne     L64E5
@@ -4434,14 +4433,14 @@ checkerboard_pattern:
         .byte   $00
 
 ;;; ==================================================
-;;; SetUserHook
+;;; AttachDriver
 
 ;;; 2 bytes of params, copied to $82
 
-.proc SetUserHookImpl
+.proc AttachDriverImpl
         params := $82
 
-        bit     hide_cursor_flag
+        bit     desktop_initialized_flag
         bmi     fail
 
         lda     params

@@ -4495,11 +4495,16 @@ checkerboard_pattern3:
         .byte   $FF
 
         ;; Copies of ROM bytes used for machine identification
-id_byte_1:  .byte   $06             ; ROM FBB3 ($06 = IIe or later)
-id_byte_2:  .byte   $EA             ; ROM FBC0 ($EA = IIe, $E0 = IIe enh/IIgs, $00 = IIc/IIc+)
-
-        .byte   $00,$00,$00,$00,$88,$00,$08,$00
-        .byte   $13
+.proc startdesktop_params
+machine:        .byte   $06     ; ROM FBB3 ($06 = IIe or later)
+subid:          .byte   $EA     ; ROM FBC0 ($EA = IIe, $E0 = IIe enh/IIgs, $00 = IIc/IIc+)
+op_sys:         .byte   0       ; 0=ProDOS
+slot_num:       .byte   0       ; Mouse slot, 0 = search
+use_interrupts: .byte   0       ; 0=passive
+sysfontptr:     .addr   desktop_aux::font_definition
+savearea:       .addr   $0800   ; $0800 - $1AFF
+savesize:       .word   $1300
+.endproc
 
 zp_use_flag0:
         .byte   0
@@ -20047,8 +20052,8 @@ start:
         lda     LCBANK1
         lda     LCBANK1
         sta     SET80COL
-        stx     id_byte_1       ; Stash so DeskTop can check machine bytes
-        sty     id_byte_2       ; when ROM is banked out.
+        stx     startdesktop_params::machine
+        sty     startdesktop_params::subid
         cpy     #0
         beq     is_iic          ; Now identify/store specific machine type.
         bit     iigs_flag       ; (number is used in double-click timer)
@@ -20121,7 +20126,7 @@ found_ram:
 
         ;; Initialize MGTK
 .proc init_mgtk
-        MGTK_RELAY_CALL MGTK::StartDeskTop, id_byte_1
+        MGTK_RELAY_CALL MGTK::StartDeskTop, startdesktop_params
         MGTK_RELAY_CALL MGTK::SetMenu, splash_menu
         MGTK_RELAY_CALL MGTK::SetZP1, zp_use_flag0
         MGTK_RELAY_CALL MGTK::SetCursor, watch_cursor

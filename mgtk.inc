@@ -193,13 +193,11 @@ InPoly          := $17
 ;;; Text Commands
 
 TextWidth       := $18         ; Measure the width of a string in pixels
-        ;; (input length 3 bytes)
         ;; .addr data
         ;; .byte length
-        ;; .word width          result in pixels
+        ;; .word width          (out) result in pixels
 
 DrawText        := $19          ; Drawn at last SET_POS as left, baseline
-        ;; (input length 3 bytes)
         ;; .addr data
         ;; .byte length
 
@@ -224,187 +222,203 @@ Version         := $1C          ; ???
 ;;; Initialization Calls
 
 StartDeskTop    := $1D  ; Inits state, registers interrupt handler, draws desktop
-        ;; (input length 12 byte)
-        ;; ???
+        ;; .byte        machine         ROM FBB3 ($06 = IIe or later)
+        ;; .byte        subid           ROM FBC0 ($EA = IIe, $E0 = IIe enh/IIgs, $00 = IIc/IIc+)
+        ;; .byte        op_sys          0=ProDOS, 1=Pascal
+        ;; .byte        slot_num:       Mouse slot, 0 = search (will be filled in)
+        ;; .byte        use_interrupts  0=passive, 1=interrupt
+        ;; .addr        sysfontptr
+        ;; .addr        savearea        buffer for saving screen data (e.g. behind menus)
+        ;; .word        savesize        bytes
 
 StopDeskTop     := $1E       ; Deallocates interrupt, hides cursor
-        ;; (no parameters; pass $0000 as address)
+        ;; (no parameters)
 
+SetUserHook     := $1F
+        ;; .byte        hook_id         0=before, 1=after event checking
+        ;; .addr        routine_ptr     0=remove hook_id
 
-;;; $1F ???
-
-SetUserHook     := $20           ; Install mouse hook; A=0 on success, $95 if mouse disabled
-        ;; NOTE: Doesn't set the internal flag - buggy ???
-        ;; (input length 2 bytes)
-        ;; (output length 2 bytes)
+AttachDriver     := $20           ; Install pointer driver; A=0 on success, $95 if mouse disabled
         ;; .addr hook           Mouse hook routine to install
         ;; .addr mouse_state    (out) Address of mouse state (.word x, y; .byte status)
 
-ScaleMouse      := $21          ; ???
+ScaleMouse      := $21          ; Set mouse/screen scaling
+        ;; .byte        x_exponent      x-scale factor for mouse, 0...3
+        ;; .byte        y_exponent      y-scale factor for mouse, 0...3
 
-KeyboardMouse   := $22          ; ???
+KeyboardMouse   := $22          ; Next operation will be performed by keyboard
+        ;; (no parameters)
 
-GetIntHandler   := $23  ; Get address of interrupt handler
-        ;; (input length 0)
-        ;; (output length 2 bytes)
+GetIntHandler   := $23          ; Get address of interrupt handler
         ;; .addr handler        (out) Address of interrupt handler (after cld)
 
 ;;; --------------------------------------------------
 ;;; Cursor Manager Calls
 
-SetCursor  := $24          ; Set cursor definition
-        ;; (input not copied)
-        ;; .res 24 bitmap       2x12 byte bitmap
-        ;; .res 24 mask         2x12 byte mask
-        ;; .byte hotx           hotspot coords
-        ;; .byte hoty
+;;; Cursor record:
+;;;
+;;; .res 24 bitmap       2x12 byte bitmap (XOR'd after mask)
+;;; .res 24 mask         2x12 byte mask (OR'd with screen)
+;;; .byte hotx           hotspot coords (pixels)
+;;; .byte hoty
 
-ShowCursor := $25          ; Return cursor to visibility
-        ;; (no parameters; pass $0000 as address)
+SetCursor  := $24               ; Set cursor definition
+        ;; (input is address of Cursor record)
 
-HideCursor := $26          ; Cursor hidden until ShowCursor call
-        ;; (no parameters; pass $0000 as address)
+ShowCursor := $25               ; Return cursor to visibility
+        ;; (no parameters)
 
-ObscureCursor := $27         ; Cursor hidden until moved
-        ;; (no parameters; pass $0000 as address)
+HideCursor := $26               ; Cursor hidden until ShowCursor call
+        ;; (no parameters)
 
-GetCursorAddr := $28           ; Get cursor definition
-        ;; (input length 0 bytes)
-        ;; (output length 2 bytes)
-        ;; .addr definition     See SetCursor
+ObscureCursor := $27            ; Cursor hidden until moved
+        ;; (no parameters)
+
+GetCursorAddr := $28            ; Get cursor definition
+        ;; .addr definition     (out) Address of cursor record
 
 ;;; --------------------------------------------------
 ;;; Event Manager Calls
 
-CheckEvents     := $29          ; ???
+;;; Event record:
+;;;
+;;; .byte kind
+;;; if kind is event_kind_key_down:
+;;;   .byte key          (ASCII code; high bit clear)
+;;;   .byte modifiers    (0=none, 1=open-apple, 2=solid-apple, 3=both)
+;;; if kind is event_kind_update:
+;;;   .byte window_id
+;;; if kind otherwise:
+;;;   .word xcoord
+;;;   .word ycoord
+
+CheckEvents     := $29          ; Process mouse/kbd if GetEvent will be delayed.
+        ;; (no parameters)
 
 GetEvent        := $2A
-        ;; (input length 0 bytes)
-        ;; (output length 5 bytes)
-        ;; .byte kind
-        ;; if kind is event_kind_key_down:
-        ;;   .byte key          (ASCII code; high bit clear)
-        ;;   .byte modifiers    (0=none, 1=open-apple, 2=solid-apple, 3=both)
-        ;; if kind otherwise:
-        ;;   .word xcoord
-        ;;   .word ycoord
+        ;; (parameter is address of Event record)
 
 FlushEvents     := $2B
-        ;; (no parameters; pass $0000 as address)
+        ;; (no parameters)
 
 PeekEvent       := $2C
-        ;; (input length 0 bytes)
+        ;; (parameter is address of Event record)
 
-PostEvent       := $2D          ; Set pending input kind (mouse or keyboard)
-        ;; (input length 5 bytes)
-        ;; .byte kind
-        ;; if kind is event_kind_key_down:
-        ;;   .byte key          ASCII code; high bit clear
-        ;;   .byte modifiers    0=none, 1=open-apple, 2=solid-apple, 3=both
-        ;; if kind otherwise:
-        ;;   .word xcoord
-        ;;   .word ycoord
+PostEvent       := $2D          ; Post event to queue
+        ;; (parameter is address of Event record)
 
-SetKeyEvent     := $2E       ; When set, keyboard is ignored in $29 calls
-        ;; (input length 1 byte)
-        ;; .byte flag           high bit set = ignore keyboard, otherwise check
+SetKeyEvent     := $2E    ; If set, keypresses are ignored by MGTK
+        ;; .byte handle_keys           high bit set = ignore keyboard, otherwise check
 
 ;;; --------------------------------------------------
 ;;; Menu Manager Calls
 
+;;; Menu Bar record:
+;;;
+;;; .word count         Number of menu bar items
+;;; (array of...)
+;;; .byte menu_id       Menu identifier
+;;; .byte disabled      Flag
+;;; .addr title         Address of length-prefixed string
+;;; .addr menu          Address of Menu record
+;;; .res  6             Reserved
+;;; ...
+;;;
+;;; Menu record:
+;;;
+;;; .word count         Number of items in menu
+;;; (array of...)
+;;; .res  5             Reserved
+;;; .byte options       bit 0=OA, 1=SA, 2=mark, 5=check, 6=filler, 7=disabled
+;;; .byte mark_char     Custom mark character if mark option set
+;;; .byte char1         ASCII code of shortcut #1 (e.g. uppercase B); or 0
+;;; .byte char2         ASCII code of shortcut #2 (e.g. lowercase b, or same); or 0
+;;; .addr name          Address of length-prefixed string
+;;; ...
+
+
+
 InitMenu        := $2F
+        ;; .byte        solid_char      char code to use for solid apple glyph
+        ;; .byte        open_char       char code to use for open apple glyph
+        ;; .byte        check_char      char code to use for checkmark glyph
+        ;; .byte        control_char    char code to use for control key glyph
+        ;; .byte        inactive_char   (unused?)
 
 SetMenu         := $30             ; Configure (and draw) menu
-        ;; (input not copied)
-        ;; .word count          Number of top-level menus
-        ;;
-        ;; .word menu_id        Menu identifier
-        ;; .addr label          Address of pascal (length-prefixed) string
-        ;; .addr menu_defn      Address of menu definition
-        ;; .word 0,0,0          (overwritten with ???, left edge, right edge)
-        ;; ...
-        ;;
-        ;; Menu definitions are:
-        ;; .word count          Number of items in menu
-
-        ;; Menu items are:
-        ;; .word 0,0            ???
-        ;; .word has_shortcut   1 if has keyboard shortcuts, 0 otherwise
-        ;; .byte shortcut1      ASCII code of shortcut #1 (e.g. uppercase B); or 0
-        ;; .byte shortcut2      ASCII code of shortcut #2 (e.g. uppercase b, or same); or 0
-        ;; .addr label          Address of pascal (length-prefixed) string
-        ;; or for a separator:
-        ;; .word $40, $13, $0
+        ;; (input is address of Menu Bar record)
 
 MenuSelect      := $31           ; Enter modal loop for handling mouse-down on menu bar
-        ;; (input not copied)
-        ;; (output 2 bytes)
-        ;; .byte menu_id        Top level menu identifier, or 0 if none
-        ;; .byte item_num       Index (1-based) of item in menu, or 0 if none
+        ;; .byte        menu_id        (out) Top level menu identifier, or 0 if none
+        ;; .byte        menu_item      (out) Index (1-based) of item in menu, or 0 if none
 
-MenuKey         := $32
-HiliteMenu      := $33
+MenuKey         := $32          ; Find menu item corresponding to keypress
+        ;; .byte        menu_id         (out)
+        ;; .byte        menu_item       (out)
+        ;; .byte        which_key
+        ;; .byte        key_mods        bit 0=OA, bit 1=SA
+
+HiliteMenu      := $33          ; Toggle highlight state of menu
+        ;; .byte        menu_id
+
 DisableMenu     := $34
+        ;; .byte        menu_id
+        ;; .byte        disable         0=enable, 1=disable
+
 DisableItem     := $35
+        ;; .byte        menu_id
+        ;; .byte        menu_item
+        ;; .byte        disable         0=enable, 1=disable
+
 CheckItem       := $36
+        ;; .byte        menu_id
+        ;; .byte        menu_item
+        ;; .byte        check           0=unchecked, 1=checked
+
 SetMark         := $37
+        ;; .byte        menu_id
+        ;; .byte        menu_item
+        ;; .byte        set_char        0=use checkmark, 1=use mark_char
+        ;; .byte        mark_char       char code to use for mark
 
 ;;; --------------------------------------------------
 ;;; Window Manager Calls
 
+;;; WInfo record:
+;;;
+;;; .byte id
+;;; .byte options                option_*
+;;; .addr title
+;;; .byte hscroll                scroll_option_*
+;;; .byte vscroll                scroll_option_*
+;;; .byte hthumbmax
+;;; .byte hthumbpos
+;;; .byte vthumbmax
+;;; .byte vthumbpos
+;;; .byte status
+;;; .byte reserved
+;;; .word mincontwidth          minimum content size (horizontal)
+;;; .word maxcontwidth          maximum content size (horizontal)
+;;; .word mincontlength         minimum content size (vertical)
+;;; .word maxcontlength         maximum content size (vertical)
+;;; GrafPort windowport         GrafPort record
+;;; .addr nextwinfo             address of next lower window in stack
+
 OpenWindow      := $38
-        ;; (input not copied)
-        ;; .byte id
-        ;; .byte options                option_*
-        ;; .addr title
-        ;; .byte hscroll                scroll_option_*
-        ;; .byte vscroll                scroll_option_*
-        ;; .byte hsmax
-        ;; .byte hspos
-        ;; .byte vsmax
-        ;; .byte vspos
-        ;; .byte ???
-        ;; .byte ???
-        ;; .word width_a        ??? possibly size of scroll area within window of scroll area?
-        ;; .word height_a       ???
-        ;; .word width_b        (of scroll area?)
-        ;; .word height_b       (of scroll area?)
-        ;;  - next section is identical to that for SetPort
-        ;; .word left           pixels from screen edge
-        ;; .word top
-        ;; .word screen_addr
-        ;; .word screen_stride
-        ;; .word maprect_x1     pixels scrolled
-        ;; .word maprect_y1
-        ;; .word maprect_x2     pixels
-        ;; .word maprect_y2
-        ;; .res 8 pattern
-        ;; .byte mskand         AND mask, default $FF
-        ;; .byte mskor          ORA mask, default $00
-        ;; .word xpos
-        ;; .word ypos
-        ;; .byte penwidth
-        ;; .byte penheight
-        ;; .byte 0              ??? fill mode?
-        ;; .byte textback       text background
-        ;; .addr textfont
-        ;; .addr next           address of next lower window in stack (filled in by call)
+        ;; (input is address of WInfo record)
 
 CloseWindow     := $39
-        ;; (input length 1 byte)
-        ;; .byte id
+        ;; .byte window_id
 
 CloseAll        := $3A
+        ;; (no parameters)
 
-GetWinPtr       := $3B         ; Get pointer to window params by id; A=0 on success
-        ;; (input length 1 byte)
-        ;; (output length 3 bytes)
-        ;; .byte id             of window
-        ;; .addr window         (out) window params
+GetWinPtr       := $3B          ; Get pointer to window params by id; A=0 on success
+        ;; .byte window_id
+        ;; .addr window_ptr     (out) winfo address
 
-GetWinPort      := $3C     ; get drawing state of window
-        ;; (input length 3 bytes)
-        ;; .byte id             window
+GetWinPort      := $3C          ; Get drawing state of window
+        ;; .byte window_id
         ;; .addr port           port definition to populate, like SetPort
 
 SetWinPort      := $3D     ; Update port by passed window id
