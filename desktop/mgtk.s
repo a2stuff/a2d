@@ -396,9 +396,15 @@ param_lengths:
         .byte zp, ((length) | ((cursor) << 7))
 .endmacro
 
+        ;; ----------------------------------------
+        ;; Graphics Primitives
         PARAM_DEFN  0, $00, 0                ; $00 NoOp
-        PARAM_DEFN  0, $00, 0                ; $01
-        PARAM_DEFN  1, $82, 0                ; $02
+
+        ;; Initialization
+        PARAM_DEFN  0, $00, 0                ; $01 InitGraf
+        PARAM_DEFN  1, $82, 0                ; $02 SetSwitches
+
+        ;; GrafPort
         PARAM_DEFN  0, $00, 0                ; $03 InitPort
         PARAM_DEFN 36, current_grafport, 0   ; $04 SetPort
         PARAM_DEFN  0, $00, 0                ; $05 GetPort
@@ -409,6 +415,8 @@ param_lengths:
         PARAM_DEFN  2, current_pensize, 0    ; $0A SetPenSize
         PARAM_DEFN  0, $00, 0                ; $0B SetFont
         PARAM_DEFN  1, current_textback, 0   ; $0C SetTextBG
+
+        ;; Drawing
         PARAM_DEFN  4, $A1, 0                ; $0D Move
         PARAM_DEFN  4, current_penloc, 0     ; $0E MoveTo
         PARAM_DEFN  4, $A1, 1                ; $0F Line
@@ -420,29 +428,44 @@ param_lengths:
         PARAM_DEFN  0, $00, 1                ; $15 PaintPoly
         PARAM_DEFN  0, $00, 1                ; $16 FramePoly
         PARAM_DEFN  0, $00, 0                ; $17 InPoly
+
+        ;; Text
         PARAM_DEFN  3, $A1, 0                ; $18 TextWidth
         PARAM_DEFN  3, $A1, 1                ; $19 DrawText
+
+        ;; Utility
         PARAM_DEFN  1, $82, 0                ; $1A SetZP1
         PARAM_DEFN  1, $82, 0                ; $1B SetZP2
         PARAM_DEFN  0, $00, 0                ; $1C Version
+
+        ;; ----------------------------------------
+        ;; Mouse Graphics Tool Kit Calls
+
+        ;; Initialization
         PARAM_DEFN 12, $82, 0                ; $1D StartDeskTop
         PARAM_DEFN  0, $00, 0                ; $1E StopDeskTop
-        PARAM_DEFN  3, $82, 0                ; $1F
+        PARAM_DEFN  3, $82, 0                ; $1F SetUserHook
         PARAM_DEFN  2, $82, 0                ; $20 AttachDriver
         PARAM_DEFN  2, $82, 0                ; $21 ScaleMouse
         PARAM_DEFN  1, $82, 0                ; $22 KeyboardMouse
         PARAM_DEFN  0, $00, 0                ; $23 GetIntHandler
+
+        ;; Cursor Manager
         PARAM_DEFN  0, $00, 0                ; $24 SetCursor
         PARAM_DEFN  0, $00, 0                ; $25 ShowCursor
         PARAM_DEFN  0, $00, 0                ; $26 HideCursor
         PARAM_DEFN  0, $00, 0                ; $27 ObscureCursor
         PARAM_DEFN  0, $00, 0                ; $28 GetCursorAddr
+
+        ;; Event Manager
         PARAM_DEFN  0, $00, 0                ; $29 CheckEvents
         PARAM_DEFN  0, $00, 0                ; $2A GetEvent
         PARAM_DEFN  0, $00, 0                ; $2B FlushEvents
         PARAM_DEFN  0, $00, 0                ; $2C PeekEvent
         PARAM_DEFN  5, $82, 0                ; $2D PostEvent
         PARAM_DEFN  1, $82, 0                ; $2E SetKeyEvent
+
+        ;; Menu Manager
         PARAM_DEFN  4, $82, 0                ; $2F InitMenu
         PARAM_DEFN  0, $00, 0                ; $30 SetMenu
         PARAM_DEFN  0, $00, 0                ; $31 MenuSelect
@@ -452,6 +475,8 @@ param_lengths:
         PARAM_DEFN  3, $C7, 0                ; $35 DisableItem
         PARAM_DEFN  3, $C7, 0                ; $36 CheckItem
         PARAM_DEFN  4, $C7, 0                ; $37 SetMark
+
+        ;; Window Manager
         PARAM_DEFN  0, $00, 0                ; $38 OpenWindow
         PARAM_DEFN  1, $82, 0                ; $39 CloseWindow
         PARAM_DEFN  0, $00, 0                ; $3A CloseAll
@@ -468,6 +493,8 @@ param_lengths:
         PARAM_DEFN  5, $82, 0                ; $45 GrowWindow
         PARAM_DEFN  5, $82, 0                ; $46 ScreenToWindow
         PARAM_DEFN  5, $82, 0                ; $47 WindowToScreen
+
+        ;; Control Manager
         PARAM_DEFN  4, current_penloc, 0     ; $48 FindControl
         PARAM_DEFN  3, $82, 0                ; $49 SetCtlMax
         PARAM_DEFN  5, $82, 0                ; $4A TrackThumb

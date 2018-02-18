@@ -230,6 +230,7 @@ StartDeskTop    := $1D  ; Inits state, registers interrupt handler, draws deskto
         ;; .addr        sysfontptr
         ;; .addr        savearea        buffer for saving screen data (e.g. behind menus)
         ;; .word        savesize        bytes
+        ;; .byte        ???
 
 StopDeskTop     := $1E       ; Deallocates interrupt, hides cursor
         ;; (no parameters)
@@ -248,6 +249,7 @@ ScaleMouse      := $21          ; Set mouse/screen scaling
 
 KeyboardMouse   := $22          ; Next operation will be performed by keyboard
         ;; (no parameters)
+        ;; .byte        ???
 
 GetIntHandler   := $23          ; Get address of interrupt handler
         ;; .addr handler        (out) Address of interrupt handler (after cld)
@@ -343,7 +345,6 @@ InitMenu        := $2F
         ;; .byte        open_char       char code to use for open apple glyph
         ;; .byte        check_char      char code to use for checkmark glyph
         ;; .byte        control_char    char code to use for control key glyph
-        ;; .byte        inactive_char   (unused?)
 
 SetMenu         := $30             ; Configure (and draw) menu
         ;; (input is address of Menu Bar record)
@@ -419,100 +420,97 @@ GetWinPtr       := $3B          ; Get pointer to window params by id; A=0 on suc
 
 GetWinPort      := $3C          ; Get drawing state of window
         ;; .byte window_id
-        ;; .addr port           port definition to populate, like SetPort
+        ;; .addr port           (out) grafport address
 
-SetWinPort      := $3D     ; Update port by passed window id
-        ;; ** Implementation appears buggy - or maybe just really cryptic ??? **
-        ;; (input length 2 bytes)
-        ;; .byte id             window
-        ;; .byte ???
+SetWinPort      := $3D          ; Update port of window
+        ;; .byte window_id
+        ;; .addr port           GrafPort to copy from
 
-
-BeginUpdate     := $3E
-        ;; (input length 1 byte)
-        ;; .byte id
+BeginUpdate     := $3E          ; Respond to update event for window
+        ;; .byte window_id
 
 EndUpdate       := $3F
+        ;; (no paramters)
 
 FindWindow      := $40
-        ;; (input length 4 bytes)
-        ;; .word queryx         relative to screen
-        ;; .word queryy
-        ;; .byte element        (out) area_*
-        ;; .byte id             (out) of window
+        ;; .word        mousex          screen coordinates
+        ;; .word        mousey
+        ;; .byte        which_area      (out) area_*
+        ;; .byte        window_id       (out) of window
 
 FrontWindow     := $41            ; Get id of top window
-        ;; (input length 0 bytes)
-        ;; (output length 1 byte)
-        ;; .byte id             (out) window, or 0 if none
+        ;; .byte        window_id       (out) window, or 0 if none
 
 SelectWindow    := $42       ; Make window topmost
-        ;; (input length 1 byte)
-        ;; .byte id             window
+        ;; .byte        window_id
 
 TrackGoAway     := $43
-        ;; (input length 0 bytes)
-        ;; .byte clicked        (out) 0 = cancelled, 1 = clicked
-        ;; .byte ??             (out)
-        ;; .byte ??             (out)
+        ;; .byte        clicked         (out) 0 = cancelled, 1 = close
+        ;; .byte        ??              (out)
+        ;; .byte        ??              (out)
 
 DragWindow      := $44
         ;; (input length 5 bytes)
-        ;; .byte id             window
-        ;; .word xcoord         mouse coords
-        ;; .word ycoord
-        ;; .byte moved          high bit set if moved, clear if not
+        ;; .byte        window_id
+        ;; .word        dragx           mouse coords
+        ;; .word        dragy
+        ;; .byte        moved           high bit set if moved, clear if not
 
 GrowWindow      := $45
-        ;; (input length 5 bytes)
-        ;; .byte id             window
-        ;; .word xcoord         mouse coords
-        ;; .word ycoord
-        ;; .byte ??             likely: moved? 0 = no change, 1 = moved
+        ;; .byte        window_id
+        ;; .word        mousex
+        ;; .word        mousey
+        ;; .byte        itgrew          (out) 0 = no change, 1 = moved
 
 ScreenToWindow  := $46          ; Map screen coords to client coords
-        ;; (input length 5 bytes)
         ;; .byte window_id
         ;; .word screenx
         ;; .word screeny
-        ;; .word clientx
-        ;; .word clienty
+        ;; .word windowx        (out)
+        ;; .word windowy        (out)
 
 WindowToScreen  := $47
+        ;; .byte window_id
+        ;; .word windowx
+        ;; .word windowy
+        ;; .word screenx        (out)
+        ;; .word screeny        (out)
 
 ;;; --------------------------------------------------
 ;;; Control Manager Calls
 
 FindControl     := $48
-        ;; (input length 4 bytes)
-        ;; .word xcoord
-        ;; .word ycoord
-        ;; .byte part           ctl_*
-        ;; .byte scroll         part_*
+        ;; .word        mousex
+        ;; .word        mousey
+        ;; .byte        which_ctl       ctl_*
+        ;; .byte        which_part      part_*
 
 SetCtlMax       := $49        ; ???
-        ;; (input length 3 bytes)
-        ;; .byte ???            maybe part (i.e. HSCROLL or VSCROLL) ???
-        ;; .byte ???            width fraction ??
+        ;; .byte        which_ctl       ctl_*_scroll_bar
+        ;; .byte        ctlmax          maximum value
         ;; .byte ???
 
 TrackThumb      := $4A
-        ;; (input length 5 bytes)
-        ;; .byte type           ctl_horizontal_scroll_bar or ctl_vertical_scroll_bar
-        ;; .word mouse xcoord
-        ;; .word mouse ycoord
-        ;; .byte position       0...255
-        ;; .byte moved          0 = no change, 1 = moved
+        ;; .byte        which_ctl       ctl_*_scroll_bar
+        ;; .word        mousex
+        ;; .word        mousey
+        ;; .byte        thumbpos        (out) 0...255
+        ;; .byte        thumbmobed      (out) 0 = no change, 1 = moved
 
 UpdateThumb     := $4B
-        ;; (input length 3 bytes)
-        ;; .byte type           ctl_horizontal_scroll_bar or ctl_vertical_scroll_bar
-        ;; .byte pos            new position 0...250
+        ;; .byte        which_ctl       ctl_*_scroll_bar
+        ;; .byte        thumbpos        new position 0...250
         ;; .byte ???
 
-ActivateCtl     := $4C          ; ???
+ActivateCtl     := $4C          ; Activate/deactivate scroll bar
+        ;; .byte        which_ctl       ctl_*_scroll_bar
+        ;; .byte        activate        0=deactivate, 1=activate
 
-;;; $4E is last call
+;;; $4D ???
+        ;; (input length: 16 bytes)
+
+;;; $4E ???
+        ;; (input length: 2 bytes)
 
 ;;; ==================================================
 ;;; Graphics Primitives Constants
