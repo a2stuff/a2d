@@ -15364,7 +15364,7 @@ loop:   ldx     index
         lda     $0801,x
         cmp     #$01
         beq     :+
-        jsr     L924B
+        jsr     smartport_eject
 :       inc     index
         ldx     index
         cpx     L0800
@@ -15374,7 +15374,7 @@ loop:   ldx     index
 index:  .byte   0
 .endproc
 
-.proc L924B
+.proc smartport_eject
         ptr := $6
 
         sta     compare
@@ -15392,7 +15392,6 @@ loop:   lda     devlst_copy,y
         bne     loop
 exit:   rts
 
-        ;; Another SmartPort call ???
 found:  lda     DEVLST,y        ;
         sta     unit_num
 
@@ -15491,7 +15490,10 @@ block_num:      .word   $A
 L92E3:  .byte   $00
 L92E4:  .word   0
 L92E6:  .byte   $00
-L92E7:  lda     is_file_selected
+
+
+.proc L92E7
+        lda     is_file_selected
         bne     L92ED
         rts
 
@@ -15617,6 +15619,7 @@ L9428:  jsr     launch_get_info_dialog
         jmp     L942F
 
 L942E:  .byte   0
+
 L942F:  lda     #$03
         sta     L92E3
         lda     #$00
@@ -15713,7 +15716,6 @@ L9534:  lda     #$00
 
 L953A:  PASCAL_STRING " VOL"
 
-
 .proc launch_get_info_dialog
         yax_call launch_dialog, index_get_info_dialog, L92E3
         rts
@@ -15735,6 +15737,10 @@ L9558:  lda     $E6EC,x
         bne     L9558
         sty     text_buffer2::length
         rts
+.endproc
+        L92F5 := L92E7::L92F5
+
+;;; ==================================================
 
 .proc rename_params
 param_count:    .byte   2
