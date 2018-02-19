@@ -30,11 +30,11 @@ MLI     := $4000
 ;;; .addr       mapbits         screen_mapbits
 ;;; .byte       mapwidth        screen_mapwidth
 ;;; .byte       reserved
-;;; Rect        maprect
+;;; Rect        maprect         a.k.a. cliprect
 
 ;;; GrafPort record:
 ;;;
-;;; MapInfo     mapinfo
+;;; MapInfo     portmap
 ;;; .res 8      penpattern
 ;;; .byte       colormask_and
 ;;; .byte       colormask_or
@@ -45,12 +45,22 @@ MLI     := $4000
 ;;; .byte       textback        text background
 ;;; .addr       textfont
 
-;;; Polygon record:
-;;; (array of polys)
+;;; PolyList record:
+
 ;;; .byte       count           number of vertices in this polygon
 ;;; .byte       last            high bit set if there are more polygons
 ;;; Point       vertex1
 ;;; Point       vertex2
+;;; ...
+
+;;; Font record:
+;;;
+;;; .byte       fonttype        0=regular, $80=double-width
+;;; .byte       lastchar        char code of last character (usually $7F)
+;;; .byte       height          pixels (1-16)
+;;; .res N      charwidth       pixels, for each char
+;;; .res N      row0            bits
+;;; .res N      row0right       bits (double-width only)
 ;;; ...
 
 NoOp            := $00  ; No-op
@@ -129,13 +139,13 @@ PaintBits       := $14          ; Draw pattern
 ;;; (input is address of MapInfo record)
 
 PaintPoly       := $15
-;;; (input is address of Polygon record)
+;;; (input is address of PolyList record)
 
 FramePoly       := $16          ; Draw multiple closed polygons
-;;; (input is address of Polygon record)
+;;; (input is address of PolyList record)
 
 InPoly          := $17          ; Is current position in bounds? A=$80 true, 0 false
-;;; (input is address of Polygon record)
+;;; (input is address of PolyList record)
 
 
 ;;; --------------------------------------------------
@@ -232,7 +242,7 @@ GetCursorAddr   := $28          ; Get cursor definition
 
 ;;; Event record:
 ;;;
-;;; .byte kind
+;;; .byte       kind            event_kind_*
 ;;; if kind is event_kind_key_down:
 ;;;   .byte key          (ASCII code; high bit clear)
 ;;;   .byte modifiers    (0=none, 1=open-apple, 2=solid-apple, 3=both)
@@ -477,7 +487,7 @@ notpenBIC       := 7
 zp_overwrite       := 0
 zp_preserve        := 1<<7
 
-;;; Used in various state blocks
+;;; Used in GrafPorts
 colormask_and      := $FF
 colormask_or       := $00
 textbg_black       := $00
