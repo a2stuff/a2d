@@ -865,11 +865,13 @@ done:   return  #0
 ;;; DESKTOP $0E IMPL
 
 .proc L958F
+        ptr := $6
+
         ldy     #0
-        lda     ($06),y
+        lda     (ptr),y
         asl     a
         tax
-        copy16  icon_ptrs,x, $06
+        copy16  icon_ptrs,x, ptr
         jmp     LA39D
 .endproc
 
@@ -5038,16 +5040,13 @@ selected_window_index: ; index of selected window (used to get prefix)
         .assert * = path_index, error, "Entry point mismatch"
         .byte   0
 
-is_file_selected:               ; 0 if no selection, 1 otherwise
-        .assert * = file_selected, error, "Entry point mismatch"
+selected_icon_count:            ; number of selected icons
+        .assert * = selected_file_count, error, "Entry point mismatch"
         .byte   0
 
-selected_file_index:            ; index of selected icon (global, not w/in window)
-        .assert * = file_index, error, "Entry point mismatch"
-        .byte   0
-
-        .res    126, 0
-
+selected_icon_list:            ; index of selected icon (global, not w/in window)
+        .assert * = selected_file_list, error, "Entry point mismatch"
+        .res    127, 0
 
         ;; Buffer for desktop windows
 win_table:
@@ -6111,7 +6110,7 @@ L4243:  .byte   0
 ;;; ==================================================
 
 .proc L4244
-        lda     is_file_selected
+        lda     selected_icon_count
         bne     :+
 bail:   rts
 
@@ -6135,10 +6134,10 @@ bail:   rts
         bpl     :-
 
 L4270:  lda     L42C3
-        cmp     is_file_selected
+        cmp     selected_icon_count
         beq     done
         tax
-        lda     selected_file_index,x
+        lda     selected_icon_list,x
         sta     icon_param
         jsr     icon_window_to_screen
         DESKTOP_RELAY_CALL DT_ICON_IN_RECT, icon_param
@@ -6152,10 +6151,10 @@ L4270:  lda     L42C3
 done:   jmp     reset_grafport3
 
 L42A5:  lda     L42C3
-        cmp     is_file_selected
+        cmp     selected_icon_count
         beq     done
         tax
-        lda     selected_file_index,x
+        lda     selected_icon_list,x
         sta     icon_param
         DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, icon_param
         inc     L42C3
@@ -6423,9 +6422,9 @@ L445D:  jsr     clear_selection
         lda     L445C
         sta     selected_window_index
         lda     #$01
-        sta     is_file_selected
+        sta     selected_icon_count
         lda     icon_param
-        sta     selected_file_index
+        sta     selected_icon_list
 L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_params_window_id
         lda     findwindow_params_window_id
         sta     active_window_id
@@ -6668,14 +6667,14 @@ status_buffer:  .res    16, 0
 :       bit     LD343+1
         bmi     L4666
         jsr     disable_selector_menu_items
-L4666:  lda     is_file_selected
+L4666:  lda     selected_icon_count
         beq     L46A8
         lda     selected_window_index
         bne     L4691
-        lda     is_file_selected
+        lda     selected_icon_count
         cmp     #2
         bcs     L4697
-        lda     selected_file_index
+        lda     selected_icon_list
         cmp     trash_icon_num
         bne     L468B
         jsr     disable_eject_menu_item
@@ -7609,13 +7608,13 @@ L4DD2:  dey
 
 .proc cmd_open
         ldx     #$00
-L4DEC:  cpx     is_file_selected
+L4DEC:  cpx     selected_icon_count
         bne     L4DF2
         rts
 
 L4DF2:  txa
         pha
-        lda     selected_file_index,x
+        lda     selected_icon_list,x
         jsr     icon_entry_lookup
         stax    $06
         ldy     #icon_entry_offset_win_type
@@ -7635,7 +7634,7 @@ L4E14:  pla
         jmp     L4DEC
 
 L4E1A:  sta     L4E71
-        lda     is_file_selected
+        lda     selected_icon_count
         cmp     #$02
         bcs     L4E14
         pla
@@ -7649,7 +7648,7 @@ L4E34:  lda     ($06),y
         sta     LD355,y
         dey
         bpl     L4E34
-        lda     selected_file_index
+        lda     selected_icon_list
         jsr     icon_entry_lookup
         stax    $06
         ldy     #$09
@@ -7739,9 +7738,9 @@ L4EC3:  sta     cached_window_icon_count
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
         jsr     reset_grafport3
         lda     #$01
-        sta     is_file_selected
+        sta     selected_icon_count
         lda     icon_param
-        sta     selected_file_index
+        sta     selected_icon_list
         ldx     active_window_id
         dex
         lda     LEC26,x
@@ -7867,23 +7866,23 @@ L504F:  .byte   0
         beq     L5056
 L5055:  rts
 
-L5056:  lda     is_file_selected
+L5056:  lda     selected_icon_count
         beq     L5055
         cmp     #$01
         bne     L5067
-        lda     selected_file_index
+        lda     selected_icon_list
         cmp     trash_icon_num
         beq     L5055
 L5067:  lda     #$00
         tax
         tay
-L506B:  lda     selected_file_index,y
+L506B:  lda     selected_icon_list,y
         cmp     trash_icon_num
         beq     L5077
         sta     $1800,x
         inx
 L5077:  iny
-        cpy     is_file_selected
+        cpy     selected_icon_count
         bne     L506B
         dex
         stx     L5098
@@ -8038,11 +8037,11 @@ L51A7:  jsr     reset_grafport3
         jsr     update_scrollbars
         lda     selected_window_index
         beq     L51E3
-        lda     is_file_selected
+        lda     selected_icon_count
         beq     L51E3
         sta     L51EF
 L51C0:  ldx     L51EF
-        lda     is_file_selected,x
+        lda     selected_icon_count,x
         sta     icon_param
         jsr     icon_window_to_screen
         jsr     offset_grafport2_and_set
@@ -8322,20 +8321,20 @@ L5398:  lda     selected_window_index
         bne     L53B5
         ldx     #$00
         ldy     #$00
-L53A1:  lda     selected_file_index,x
+L53A1:  lda     selected_icon_list,x
         cmp     #$01
         beq     L53AC
         sta     L5428,y
         iny
 L53AC:  inx
-        cpx     selected_file_index
+        cpx     selected_icon_list
         bne     L53A1
         sty     L5427
 L53B5:  lda     #$FF
         sta     L5426
 L53BA:  inc     L5426
         lda     L5426
-        cmp     is_file_selected
+        cmp     selected_icon_count
         bne     L53D0
         lda     selected_window_index
         bne     L53CD
@@ -8343,7 +8342,7 @@ L53BA:  inc     L5426
 L53CD:  jmp     L5E78
 
 L53D0:  tax
-        lda     selected_file_index,x
+        lda     selected_icon_list,x
         jsr     L5431
         bmi     L53BA
         jsr     window_address_lookup
@@ -8585,7 +8584,7 @@ L55C8:  stx     L544A
 
 L55D1:  ldx     L544A
         lda     $1801,x
-        sta     selected_file_index
+        sta     selected_icon_list
         jsr     icon_entry_lookup
         stax    $06
         ldy     #icon_entry_offset_win_type
@@ -8593,7 +8592,7 @@ L55D1:  ldx     L544A
         and     #icon_entry_winid_mask
         sta     selected_window_index
         lda     #1
-        sta     is_file_selected
+        sta     selected_icon_count
         rts
 
 L55F0:  ldx     L544A
@@ -8640,7 +8639,7 @@ L5661:  rts
 ;;; ==================================================
 
 .proc cmd_select_all
-        lda     is_file_selected
+        lda     selected_icon_count
         beq     L566A
         jsr     clear_selection
 L566A:  ldx     active_window_id
@@ -8660,22 +8659,22 @@ L5676:  lda     active_window_id
 L5687:  ldx     cached_window_icon_count
         dex
 L568B:  lda     cached_window_icon_list,x
-        sta     selected_file_index,x
+        sta     selected_icon_list,x
         dex
         bpl     L568B
         lda     cached_window_icon_count
-        sta     is_file_selected
+        sta     selected_icon_count
         lda     active_window_id
         sta     selected_window_index
         lda     selected_window_index
         sta     LE22C
         beq     L56AB
         jsr     L56F9
-L56AB:  lda     is_file_selected
+L56AB:  lda     selected_icon_count
         sta     L56F8
         dec     L56F8
 L56B4:  ldx     L56F8
-        lda     selected_file_index,x
+        lda     selected_icon_list,x
         sta     LE22B
         jsr     icon_entry_lookup
         stax    $06
@@ -9471,11 +9470,11 @@ L5CD9:  .byte   0
 
 .proc L5CDA
         sta     L5CD9
-        ldx     is_file_selected
+        ldx     selected_icon_count
         beq     L5CFB
         dex
         lda     L5CD9
-L5CE6:  cmp     selected_file_index,x
+L5CE6:  cmp     selected_icon_list,x
         beq     L5CF0
         dex
         bpl     L5CE6
@@ -9492,10 +9491,10 @@ L5CFB:  bit     BUTN0
         cmp     active_window_id
         beq     L5D0B
 L5D08:  jsr     clear_selection
-L5D0B:  ldx     is_file_selected
+L5D0B:  ldx     selected_icon_count
         lda     L5CD9
-        sta     selected_file_index,x
-        inc     is_file_selected
+        sta     selected_icon_list,x
+        inc     selected_icon_count
         lda     active_window_id
         sta     selected_window_index
         lda     active_window_id
@@ -9560,11 +9559,11 @@ L5DAD:  cpx     #$FF
         jsr     get_set_port2
         jsr     cached_icons_window_to_screen
         jsr     offset_grafport2_and_set
-        ldx     is_file_selected
+        ldx     selected_icon_count
         dex
 L5DC4:  txa
         pha
-        lda     selected_file_index,x
+        lda     selected_icon_list,x
         sta     LE22E
         DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, LE22E
         pla
@@ -9775,10 +9774,10 @@ L5F88:  txa
         DESKTOP_RELAY_CALL DT_ICON_IN_RECT, icon_param
         beq     L5FB9
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
-        ldx     is_file_selected
-        inc     is_file_selected
+        ldx     selected_icon_count
+        inc     selected_icon_count
         lda     icon_param
-        sta     selected_file_index,x
+        sta     selected_icon_list,x
         lda     active_window_id
         sta     selected_window_index
 L5FB9:  lda     icon_param
@@ -10040,9 +10039,9 @@ L6227:  sta     cached_window_icon_count
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
         jsr     reset_grafport3
         lda     #$01
-        sta     is_file_selected
+        sta     selected_icon_count
         lda     icon_param
-        sta     selected_file_index
+        sta     selected_icon_list
 L6276:  ldx     active_window_id
         dex
         lda     LEC26,x
@@ -10548,14 +10547,14 @@ disable_selector_menu_items := toggle_selector_menu_items::disable
 ;;; ==================================================
 
 .proc L67D7
-        lda     is_file_selected
+        lda     selected_icon_count
         bne     L67DF
         jmp     L681B
 
 L67DF:  tax
         dex
         lda     $D20D
-L67E4:  cmp     selected_file_index,x
+L67E4:  cmp     selected_icon_list,x
         beq     L67EE
         dex
         bpl     L67E4
@@ -10569,18 +10568,18 @@ L67F6:  bit     BUTN0
         lda     selected_window_index
         bne     L6818
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, $D20D
-        ldx     is_file_selected
+        ldx     selected_icon_count
         lda     $D20D
-        sta     selected_file_index,x
-        inc     is_file_selected
+        sta     selected_icon_list,x
+        inc     selected_icon_count
         jmp     L6834
 
 L6818:  jsr     clear_selection
 L681B:  DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, $D20D
         lda     #1
-        sta     is_file_selected
+        sta     selected_icon_count
         lda     $D20D
-        sta     selected_file_index
+        sta     selected_icon_list
         lda     #0
         sta     selected_window_index
 L6834:  bit     double_click_flag
@@ -10624,11 +10623,11 @@ L6880:  lda     $D20D
         jsr     DESKTOP_COPY_FROM_BUF
 L688E:  rts
 
-L688F:  ldx     is_file_selected
+L688F:  ldx     selected_icon_count
         dex
 L6893:  txa
         pha
-        lda     selected_file_index,x
+        lda     selected_icon_list,x
         sta     LE22D
         DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, LE22D
         pla
@@ -10681,10 +10680,10 @@ L68F9:  cpx     cached_window_icon_count
         DESKTOP_RELAY_CALL DT_ICON_IN_RECT, icon_param
         beq     L692C
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
-        ldx     is_file_selected
-        inc     is_file_selected
+        ldx     selected_icon_count
+        inc     selected_icon_count
         lda     icon_param
-        sta     selected_file_index,x
+        sta     selected_icon_list,x
 L692C:  pla
         tax
         inx
@@ -11092,7 +11091,7 @@ L6D25:  pla
 ;;; ==================================================
 
 .proc clear_selection
-        lda     is_file_selected
+        lda     selected_icon_count
         bne     L6D31
         rts
 
@@ -11111,10 +11110,10 @@ L6D4D:  sta     getwinport_params2::window_id
         jsr     get_set_port2
         jsr     offset_grafport2_and_set
 L6D56:  lda     L6DB0
-        cmp     is_file_selected
+        cmp     selected_icon_count
         beq     L6D9B
         tax
-        lda     selected_file_index,x
+        lda     selected_icon_list,x
         sta     icon_param
         jsr     icon_window_to_screen
         DESKTOP_RELAY_CALL $0B, icon_param
@@ -11124,22 +11123,22 @@ L6D56:  lda     L6DB0
         jmp     L6D56
 
 L6D7D:  lda     L6DB0
-        cmp     is_file_selected
+        cmp     selected_icon_count
         beq     L6D9B
         tax
-        lda     selected_file_index,x
+        lda     selected_icon_list,x
         sta     icon_param
         DESKTOP_RELAY_CALL $0B, icon_param
         inc     L6DB0
         jmp     L6D7D
 
 L6D9B:  lda     #$00
-        ldx     is_file_selected
+        ldx     selected_icon_count
         dex
-L6DA1:  sta     selected_file_index,x
+L6DA1:  sta     selected_icon_list,x
         dex
         bpl     L6DA1
-        sta     is_file_selected
+        sta     selected_icon_count
         sta     selected_window_index
         jmp     reset_grafport3
 
@@ -15224,7 +15223,7 @@ L90D8:  jsr     LA241
         jmp     L90DE
 
 L90DE:  jsr     L91F5
-        lda     is_file_selected
+        lda     selected_icon_count
         bne     L90E9
         jmp     L9168
 
@@ -15232,7 +15231,7 @@ L90E9:  ldx     #$00
         stx     L917A
 L90EE:  jsr     L91F5
         ldx     L917A
-        lda     selected_file_index,x
+        lda     selected_icon_list,x
         cmp     #$01
         beq     L9140
         jsr     icon_entry_name_lookup
@@ -15266,7 +15265,7 @@ L9137:  jsr     LA271
 L913D:  jsr     LA271
 L9140:  inc     L917A
         ldx     L917A
-        cpx     is_file_selected
+        cpx     selected_icon_count
         bne     L90EE
         lda     L97E4
         bne     L9168
@@ -15405,13 +15404,13 @@ L9211:  .addr   0
 .endproc
 
 .proc L9213
-        lda     is_file_selected
+        lda     selected_icon_count
         bne     :+
         rts
-:       ldx     is_file_selected
+:       ldx     selected_icon_count
         stx     L0800
         dex
-:       lda     selected_file_index,x
+:       lda     selected_icon_list,x
         sta     $0801,x
         dex
         bpl     :-
@@ -15552,7 +15551,7 @@ L92E6:  .byte   $00
 
 
 .proc L92E7
-        lda     is_file_selected
+        lda     selected_icon_count
         bne     L92ED
         rts
 
@@ -15560,7 +15559,7 @@ L92ED:  lda     #$00
         sta     L92E6
         jsr     L91D5
 L92F5:  ldx     L92E6
-        cpx     is_file_selected
+        cpx     selected_icon_count
         bne     L9300
         jmp     L9534
 
@@ -15570,7 +15569,7 @@ L9300:  lda     selected_window_index
         tax
         copy16  window_address_table,x, $08
         ldx     L92E6
-        lda     selected_file_index,x
+        lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
         jsr     join_paths
         ldy     #$00
@@ -15583,7 +15582,7 @@ L931F:  lda     path_buf3,y
         jmp     L9356
 
 L9331:  ldx     L92E6
-        lda     selected_file_index,x
+        lda     selected_icon_list,x
         cmp     #$01
         bne     L933E
         jmp     L952E
@@ -15609,7 +15608,7 @@ L9366:  lda     selected_window_index
         lda     L92E6
         clc
         adc     #$01
-        cmp     is_file_selected
+        cmp     selected_icon_count
         beq     L9381
         inc     L92E3
         inc     L92E3
@@ -15621,7 +15620,7 @@ L9387:  lda     #$81
         lda     L92E6
         clc
         adc     #$01
-        cmp     is_file_selected
+        cmp     selected_icon_count
         beq     L939D
         inc     L92E3
         inc     L92E3
@@ -15629,7 +15628,7 @@ L939D:  jsr     launch_get_info_dialog
         lda     #$00
         sta     L942E
         ldx     L92E6
-        lda     selected_file_index,x
+        lda     selected_icon_list,x
         ldy     #$0F
 L93AD:  cmp     devlst_copy,y
         beq     L93B8
@@ -15647,7 +15646,7 @@ L93B8:  lda     DEVLST,y
         lda     #$80
         sta     L942E
 L93DB:  ldx     L92E6
-        lda     selected_file_index,x
+        lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
         lda     #$01
         sta     L92E3
@@ -15816,12 +15815,12 @@ start:
         lda     #$00
         sta     L9706
 L9576:  lda     L9706
-        cmp     is_file_selected
+        cmp     selected_icon_count
         bne     L9581
         return  #0
 
 L9581:  ldx     L9706
-        lda     selected_file_index,x
+        lda     selected_icon_list,x
         cmp     #$01
         bne     L9591
         inc     L9706
@@ -15833,7 +15832,7 @@ L9591:  lda     selected_window_index
         tax
         copy16  window_address_table,x, $08
         ldx     L9706
-        lda     selected_file_index,x
+        lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
         jsr     join_paths
         ldy     #$00
@@ -15846,7 +15845,7 @@ L95B0:  lda     path_buf3,y
         jmp     L95E0
 
 L95C2:  ldx     L9706
-        lda     selected_file_index,x
+        lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
         ldy     #$00
 L95CD:  lda     ($06),y
@@ -15858,7 +15857,7 @@ L95CD:  lda     ($06),y
         lda     #'/'
         sta     $0221
 L95E0:  ldx     L9706
-        lda     selected_file_index,x
+        lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
         ldy     #$00
         lda     ($06),y
@@ -15885,7 +15884,7 @@ L9611:  lda     #$80
         jsr     L96F8
         beq     L962F
 L9618:  ldx     L9706
-        lda     selected_file_index,x
+        lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
         ldy     $1F12
 L9624:  lda     $1F12,y
@@ -15940,12 +15939,12 @@ L9696:  lda     #$40
 L969E:  lda     #$40
         jsr     L96F8
         ldx     L9706
-        lda     selected_file_index,x
+        lda     selected_icon_list,x
         sta     LE22B
         yax_call JT_DESKTOP_RELAY, $E, LE22B
         copy16  L9707, $08
         ldx     L9706
-        lda     selected_file_index,x
+        lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
         ldy     #$00
         lda     ($08),y

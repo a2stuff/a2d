@@ -354,7 +354,7 @@ maprect:        DEFINE_RECT 0, 0, default_width, default_height
         ;; Check that an icon is selected
         lda     #0
         sta     pathname::length
-        lda     file_selected
+        lda     selected_file_count
         beq     abort           ; some file properties?
         lda     path_index      ; prefix index in table
         bne     :+
@@ -386,7 +386,7 @@ abort:  rts
         inc     dst+1
 
         ;; Get file entry.
-:       lda     file_index      ; file index in table
+:       lda     selected_file_list      ; file index in table
         asl     a               ; (since table is 2 bytes wide)
         tax
         copy16  file_table,x, src

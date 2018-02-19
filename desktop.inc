@@ -86,14 +86,14 @@ label   := *
 
 ;;; These are DeskTop internals, but it appears there is no
 ;;; API for getting the selected file.
-file_selected := $DF21  ; 0 if no selection, 1 otherwise
+selected_file_count := $DF21
 
 path_index := $DF20     ; index of selected window (used to get prefix)
 path_table := $DFB3     ; window address table
 ;;; each entry is 65 bytes long
 ;;;      length-prefixed path string (no trailing /)
 
-file_index := $DF22     ; indexes of selected file (global, not w/in window, up to 127)
+selected_file_list := $DF22     ; indexes of selected file (global, not w/in window, up to 127)
 file_table := $DD9F     ; file address table
 
 ;;; Icon (file/volume) entries - length 27 bytes, maximum of 127
