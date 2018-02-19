@@ -16285,7 +16285,7 @@ L9927:  jmp     (L97DF)
 L992A:  jmp     (L97E1)
 
 L992D:  .byte   $00,$00,$00,$00
-L9931:  .addr   L9B36
+L9931:  .addr   L9B36           ; Overlay for L97DD
         .addr   L9B33
         .addr   rts2
 
@@ -16295,19 +16295,19 @@ L9938:  .addr   0
         .addr   $1FC0
 
 .proc L993E
-        lda     #$00
+        lda     #0
         sta     L9937
         copy16  #L995A, L917D
         copy16  #L997C, L9180
         jmp     L9BBF
 
 L995A:  stax    L9938
-        lda     #$01
+        lda     #1
         sta     L9937
         jmp     L9BBF
 .endproc
 
-L9968:  ldy     #$05
+L9968:  ldy     #5
 L996A:  lda     L9931,y
         sta     L97DD,y
         dey
@@ -16317,11 +16317,11 @@ L996A:  lda     L9931,y
         sta     L918D
         rts
 
-L997C:  lda     #$05
+L997C:  lda     #5
         sta     L9937
         jmp     L9BBF
 
-L9984:  lda     #$00
+L9984:  lda     #0
         sta     L9937
         copy16  #L99A7, L917D
         copy16  #L99DC, L9180
@@ -16346,15 +16346,15 @@ L99C3:  lda     L9931,y
         copy16  #L99EB, L9186
         rts
 
-L99DC:  lda     #$03
+L99DC:  lda     #3
         sta     L9937
         yax_call launch_dialog, index_download_dialog, L9937
         rts
 
-L99EB:  lda     #$04
+L99EB:  lda     #4
         sta     L9937
         yax_call launch_dialog, index_download_dialog, L9937
-        cmp     #$02
+        cmp     #2
         bne     L99FE
         rts
 
@@ -16370,7 +16370,7 @@ L99FE:  jmp     LA39F
         beq     L9A0F
 L9A0D:  lda     #$FF
 L9A0F:  sta     L9B31
-        lda     #$02
+        lda     #2
         sta     L9937
         jsr     LA379
         bit     L9189
@@ -16463,11 +16463,11 @@ L9AE0:  yax_call JT_MLI_RELAY, CREATE, create_params2
         bne     L9B1D
         bit     L918D
         bmi     L9B14
-        lda     #$03
+        lda     #3
         sta     L9937
         jsr     L9BBF
         pha
-        lda     #$02
+        lda     #2
         sta     L9937
         pla
         cmp     #$02
@@ -16591,13 +16591,13 @@ L9BFF:  .word   0
 
 L9C01:  jsr     L9C1A
         bcc     L9C19
-        lda     #$04
+        lda     #4
         sta     L9937
         jsr     L9BBF
         beq     L9C13
         jmp     LA39F
 
-L9C13:  lda     #$03
+L9C13:  lda     #3
         sta     L9937
         sec
 L9C19:  rts
@@ -16668,7 +16668,8 @@ L9CD9:  .byte   0
 
 ;;; ==================================================
 
-L9CDA:  jsr     decrement_LA2ED
+.proc L9CDA
+        jsr     decrement_LA2ED
         lda     #$00
         sta     L9E17
         sta     L9E18
@@ -16777,7 +16778,12 @@ L9E0D:  yax_call JT_MLI_RELAY, CLOSE, close_params5
 
 L9E17:  .byte   0
 L9E18:  .byte   0
-L9E19:  ldx     #$07
+
+.endproc
+
+
+.proc L9E19
+        ldx     #$07
 L9E1B:  lda     file_info_params2,x
         sta     create_params3,x
         dex
@@ -16789,11 +16795,11 @@ L9E26:  yax_call JT_MLI_RELAY, CREATE, create_params3
         bne     L9E69
         bit     L918D
         bmi     L9E60
-        lda     #$03
+        lda     #3
         sta     L9937
         yax_call launch_dialog, index_copy_file_dialog, L9937
         pha
-        lda     #$02
+        lda     #2
         sta     L9937
         pla
         cmp     #$02
@@ -16817,12 +16823,15 @@ L9E6F:  clc
 
 L9E71:  sec
         rts
+.endproc
 
-L9E73:  .byte   $94,$9F,$E3,$97,$2E,$A0
+L9E73:  .addr   L9F94           ; Overlay for L97DD
+        .addr   rts2
+        .addr   LA02E
 L9E79:  .byte   0
 L9E7A:  .word   0
-        .byte   $20
-        .byte   $02
+
+        .addr   $220
 
 L9E7E:  sta     L9E79
         copy16  #L9EB1, L9183
@@ -16832,7 +16841,7 @@ L9E7E:  sta     L9E79
         rts
 
 L9EA3:  stax    L9E7A
-        lda     #$01
+        lda     #1
         sta     L9E79
         jmp     LA044
 
@@ -16844,7 +16853,7 @@ L9EB1:  lda     #$02
 
 L9EBE:  rts
 
-L9EBF:  ldy     #$05
+L9EBF:  ldy     #5
 L9EC1:  lda     L9E73,y
         sta     L97DD,y
         dey
@@ -16858,7 +16867,10 @@ L9ED3:  lda     #$05
         sta     L9E79
         jmp     LA044
 
-L9EDB:  lda     #$03
+;;; ==================================================
+
+.proc L9EDB
+        lda     #$03
         sta     L9E79
         jsr     LA379
 L9EE3:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
@@ -16887,6 +16899,7 @@ L9F18:  jmp     L9F1E
 
 L9F1C:  .byte   0
 L9F1D:  .byte   0
+
 L9F1E:  bit     LE05C
         bmi     L9F26
         jsr     LA3EF
@@ -16932,7 +16945,11 @@ L9F8D:  rts
 
 L9F8E:  jsr     show_error_alert
         jmp     L9F29
+.endproc
 
+;;; ==================================================
+
+.proc L9F94
         jsr     check_escape_key_down
         beq     :+
         jmp     LA39F
@@ -16991,6 +17008,9 @@ LA022:  jmp     remove_path_segment_220
         lda     #$FF
         sta     L9923
         rts
+.endproc
+
+;;; ==================================================
 
 LA02E:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
         beq     LA043
@@ -17076,7 +17096,10 @@ LA100:  yax_call launch_dialog, index_lock_dialog, LA054
 LA10A:  yax_call launch_dialog, index_unlock_dialog, LA054
         rts
 
-LA114:  lda     #$03
+;;; ==================================================
+
+.proc LA114
+        lda     #$03
         sta     LA054
         jsr     LA379
         ldx     $1FC0
@@ -17115,6 +17138,7 @@ LA168:  .byte   0
 LA169:  .byte   0
 LA16A:  jsr     LA173
         jmp     append_to_path_220
+.endproc
 
 LA170:  jsr     append_to_path_220
 LA173:  jsr     LA1C3
@@ -17184,9 +17208,12 @@ LA241:  rts
 
 LA242:  .addr   LA2AE,rts2,rts2
 
-LA248:  lda     #$00
+;;; ==================================================
+
+.proc LA248
+        lda     #$00
         sta     LA425
-        ldy     #$05
+        ldy     #5
 LA24F:  lda     LA242,y
         sta     L97DD,y
         dey
@@ -17202,8 +17229,12 @@ LA26A:  sta     BITMAP,y
         dey
         bpl     LA26A
         rts
+.endproc
 
-LA271:  jsr     LA379
+;;; ==================================================
+
+.proc LA271
+        jsr     LA379
 LA274:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     LA285
         jsr     show_error_alert
@@ -17228,6 +17259,10 @@ LA299:  sta     LA2A9
 
 LA2A9:  .byte   0
 LA2AA:  .byte   0
+.endproc
+
+;;; ==================================================
+
 LA2AB:  jmp     LA2AE
 
 LA2AE:  bit     L9189
@@ -17398,6 +17433,7 @@ start:  yax_call JT_MLI_RELAY, CLOSE, close_params
 .endproc
         LA3A7 := LA3A7_impl::start
 
+;;; ==================================================
 
 .proc check_escape_key_down
         yax_call JT_MGTK_RELAY, MGTK::GetEvent, event_params
@@ -17413,7 +17449,7 @@ nope:   lda     #$00
 done:   rts
 .endproc
 
-LA3EF:  sub16   LA2ED, #$01, L9E7A
+LA3EF:  sub16   LA2ED, #1, L9E7A
         yax_call launch_dialog, index_delete_file_dialog, L9E79
         rts
 
@@ -17422,6 +17458,8 @@ LA40A:  sub16   LA2ED, #$01, L9938
         rts
 
 LA425:  .byte   0
+
+;;; ==================================================
 
 .proc LA426
         jsr     LA46D
@@ -17946,9 +17984,9 @@ jump_relay:
         axy_call draw_dialog_label, 6 | DDL_CENTER, desktop_aux::str_about6
         axy_call draw_dialog_label, 7, desktop_aux::str_about7
         axy_call draw_dialog_label, 9, desktop_aux::str_about8
-        copy16  #$136, dialog_label_pos
+        copy16  #310, dialog_label_pos
         axy_call draw_dialog_label, 9, desktop_aux::str_about9
-        copy16  #$28, dialog_label_pos
+        copy16  #dialog_label_default_x, dialog_label_pos
 
 :       MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_params_kind
@@ -17972,32 +18010,30 @@ close:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo18
 
 ;;; ==================================================
 
-show_copy_file_dialog:
+.proc show_copy_file_dialog
+        ptr := $6
 
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #0
-        lda     ($06),y
+        lda     (ptr),y
+
         cmp     #1
-        bne     LA965
-        jmp     LA9B5
+        bne     :+
+        jmp     do1
+:       cmp     #2
+        bne     :+
+        jmp     do2
+:       cmp     #3
+        bne     :+
+        jmp     do3
+:       cmp     #4
+        bne     :+
+        jmp     do4
+:       cmp     #5
+        bne     :+
+        jmp     do5
 
-LA965:  cmp     #2
-        bne     LA96C
-        jmp     LA9E6
-
-LA96C:  cmp     #3
-        bne     LA973
-        jmp     LAA6A
-
-LA973:  cmp     #4
-        bne     LA97A
-        jmp     LAA9C
-
-LA97A:  cmp     #5
-        bne     LA981
-        jmp     LAA5A
-
-LA981:  lda     #0
+:       lda     #0
         sta     LD8E8
         jsr     open_dialog_window
         addr_call draw_dialog_title, desktop_aux::str_copy_title
@@ -18007,11 +18043,11 @@ LA981:  lda     #0
         axy_call draw_dialog_label, 4, desktop_aux::str_copy_remaining
         rts
 
-LA9B5:  ldy     #1
-        lda     ($06),y
+do1:    ldy     #1
+        lda     (ptr),y
         sta     file_count
         iny
-        lda     ($06),y
+        lda     (ptr),y
         sta     file_count+1
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
@@ -18022,11 +18058,11 @@ LA9B5:  ldy     #1
         addr_call draw_text1, str_files
         rts
 
-LA9E6:  ldy     #$01
-        lda     ($06),y
+do2:    ldy     #1
+        lda     (ptr),y
         sta     file_count
         iny
-        lda     ($06),y
+        lda     (ptr),y
         sta     file_count+1
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
@@ -18036,23 +18072,23 @@ LA9E6:  ldy     #$01
         jsr     LBE9A
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$03
-        lda     ($06),y
+        lda     (ptr),y
         tax
         iny
-        lda     ($06),y
-        sta     $06+1
-        stx     $06
+        lda     (ptr),y
+        sta     ptr+1
+        stx     ptr
         jsr     LBE63
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE7E
         addr_call draw_text1, path_buf0
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$05
-        lda     ($06),y
+        lda     (ptr),y
         tax
         iny
-        lda     ($06),y
-        sta     $06+1
-        stx     $06
+        lda     (ptr),y
+        sta     ptr+1
+        stx     ptr
         jsr     LBE78
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE82
         addr_call draw_text1, path_buf1
@@ -18060,12 +18096,12 @@ LA9E6:  ldy     #$01
         addr_call draw_text1, str_file_count
         rts
 
-LAA5A:  jsr     reset_state
+do5:    jsr     reset_state
         MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
         jsr     set_cursor_pointer
         rts
 
-LAA6A:  jsr     bell
+do3:    jsr     bell
         lda     winfoF
         jsr     set_port_from_window_id
         axy_call draw_dialog_label, 6, desktop_aux::str_exists_prompt
@@ -18079,7 +18115,7 @@ LAA7F:  jsr     prompt_input_loop
         pla
         rts
 
-LAA9C:  jsr     bell
+do4:    jsr     bell
         lda     winfoF
         jsr     set_port_from_window_id
         axy_call draw_dialog_label, 6, desktop_aux::str_large_prompt
@@ -18092,6 +18128,9 @@ LAAB1:  jsr     prompt_input_loop
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::prompt_rect
         pla
         rts
+.endproc
+
+;;; ==================================================
 
 .proc bell
         sta     ALTZPOFF
@@ -18242,7 +18281,7 @@ do1:    ldy     #$01
         jsr     compose_file_count_string
         lda     winfoF
         jsr     set_port_from_window_id
-        lda     #$A5
+        lda     #165
         sta     dialog_label_pos
         yax_call draw_dialog_label, 1, str_file_count
         jsr     copy_dialog_param_addr_to_ptr
@@ -18260,7 +18299,7 @@ do1:    ldy     #$01
         lda     (ptr),y
         sta     file_count+1
         jsr     compose_file_count_string
-        lda     #$A5
+        lda     #165
         sta     dialog_label_pos
         yax_call draw_dialog_label, 2, str_file_count
         rts
@@ -18288,27 +18327,24 @@ do2:    lda     winfoF
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$00
         lda     ($06),y
-        cmp     #$01
-        bne     LACE2
-        jmp     LAD2A
 
-LACE2:  cmp     #$02
-        bne     LACE9
-        jmp     LADBB
+        cmp     #1
+        bne     :+
+        jmp     do1
+:       cmp     #2
+        bne     :+
+        jmp     do2
+:       cmp     #3
+        bne     :+
+        jmp     do3
+:       cmp     #4
+        bne     :+
+        jmp     do4
+:       cmp     #5
+        bne     :+
+        jmp     do5
 
-LACE9:  cmp     #$03
-        bne     LACF0
-        jmp     LAD6C
-
-LACF0:  cmp     #$04
-        bne     LACF7
-        jmp     LAE05
-
-LACF7:  cmp     #$05
-        bne     LACFE
-        jmp     LADF5
-
-LACFE:  sta     LAD1F
+:       sta     LAD1F
         lda     #$00
         sta     LD8E8
         jsr     open_dialog_window
@@ -18322,7 +18358,7 @@ LAD1F:  .byte   0
 LAD20:  axy_call draw_dialog_label, 4, desktop_aux::str_delete_ok
         rts
 
-LAD2A:  ldy     #$01
+do1:    ldy     #$01
         lda     ($06),y
         sta     file_count
         iny
@@ -18342,7 +18378,7 @@ LAD5D:  addr_call draw_text1, str_file_count
         addr_call draw_text1, str_files
         rts
 
-LAD6C:  ldy     #$01
+do3:    ldy     #$01
         lda     ($06),y
         sta     file_count
         iny
@@ -18368,7 +18404,7 @@ LAD6C:  ldy     #$01
         addr_call draw_text1, str_file_count
         rts
 
-LADBB:  lda     winfoF
+do2:    lda     winfoF
         jsr     set_port_from_window_id
         jsr     draw_ok_cancel_buttons
 LADC4:  jsr     prompt_input_loop
@@ -18382,12 +18418,12 @@ LADC4:  jsr     prompt_input_loop
         lda     #$00
 LADF4:  rts
 
-LADF5:  jsr     reset_state
+do5:    jsr     reset_state
         MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
         jsr     set_cursor_pointer
         rts
 
-LAE05:  lda     winfoF
+do4:    lda     winfoF
         jsr     set_port_from_window_id
         axy_call draw_dialog_label, 6, desktop_aux::str_delete_locked_file
         jsr     draw_yes_no_all_cancel_buttons
@@ -18450,10 +18486,10 @@ LAE90:  lda     ($08),y
         lda     winfoF
         jsr     set_port_from_window_id
         yax_call draw_dialog_label, 2, desktop_aux::str_in_colon
-        lda     #$37
+        lda     #55
         sta     dialog_label_pos
         yax_call draw_dialog_label, 2, path_buf0
-        lda     #$28
+        lda     #dialog_label_default_x
         sta     dialog_label_pos
         yax_call draw_dialog_label, 4, desktop_aux::str_enter_folder_name
         jsr     draw_filename_prompt
@@ -18610,30 +18646,28 @@ row:    .byte   0
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$00
         lda     ($06),y
-        cmp     #$01
-        bne     LB03A
-        jmp     LB068
 
-LB03A:  cmp     #$02
-        bne     LB041
-        jmp     LB0F1
+        cmp     #1
+        bne     :+
+        jmp     do1
+:       cmp     #2
+        bne     :+
+        jmp     do2
+:       cmp     #3
+        bne     :+
+        jmp     do3
+:       cmp     #4
+        bne     :+
+        jmp     do4
 
-LB041:  cmp     #$03
-        bne     LB048
-        jmp     LB0A2
-
-LB048:  cmp     #$04
-        bne     LB04F
-        jmp     LB13A
-
-LB04F:  lda     #$00
+:       lda     #$00
         sta     LD8E8
         jsr     open_dialog_window
         addr_call draw_dialog_title, desktop_aux::str_lock_title
         yax_call draw_dialog_label, 4, desktop_aux::str_lock_ok
         rts
 
-LB068:  ldy     #$01
+do1:    ldy     #$01
         lda     ($06),y
         sta     file_count
         iny
@@ -18649,7 +18683,7 @@ LB068:  ldy     #$01
         addr_call draw_text1, str_files
         rts
 
-LB0A2:  ldy     #$01
+do3:    ldy     #$01
         lda     ($06),y
         sta     file_count
         iny
@@ -18675,7 +18709,7 @@ LB0A2:  ldy     #$01
         addr_call draw_text1, str_file_count
         rts
 
-LB0F1:  lda     winfoF
+do2:    lda     winfoF
         jsr     set_port_from_window_id
         jsr     draw_ok_cancel_buttons
 LB0FA:  jsr     prompt_input_loop
@@ -18690,7 +18724,7 @@ LB0FA:  jsr     prompt_input_loop
         lda     #$00
 LB139:  rts
 
-LB13A:  jsr     reset_state
+do4:    jsr     reset_state
         MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
         jsr     set_cursor_pointer
         rts
@@ -18703,30 +18737,28 @@ LB13A:  jsr     reset_state
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$00
         lda     ($06),y
-        cmp     #$01
-        bne     LB158
-        jmp     LB186
 
-LB158:  cmp     #$02
-        bne     LB15F
-        jmp     LB20F
+        cmp     #1
+        bne     :+
+        jmp     do1
+:       cmp     #2
+        bne     :+
+        jmp     do2
+:       cmp     #3
+        bne     :+
+        jmp     do3
+:       cmp     #4
+        bne     :+
+        jmp     do4
 
-LB15F:  cmp     #$03
-        bne     LB166
-        jmp     LB1C0
-
-LB166:  cmp     #$04
-        bne     LB16D
-        jmp     LB258
-
-LB16D:  lda     #$00
+:       lda     #$00
         sta     LD8E8
         jsr     open_dialog_window
         addr_call draw_dialog_title, desktop_aux::str_unlock_title
         yax_call draw_dialog_label, 4, desktop_aux::str_unlock_ok
         rts
 
-LB186:  ldy     #$01
+do1:    ldy     #$01
         lda     ($06),y
         sta     file_count
         iny
@@ -18742,7 +18774,7 @@ LB186:  ldy     #$01
         addr_call draw_text1, str_files
         rts
 
-LB1C0:  ldy     #$01
+do3:    ldy     #$01
         lda     ($06),y
         sta     file_count
         iny
@@ -18768,7 +18800,7 @@ LB1C0:  ldy     #$01
         addr_call draw_text1, str_file_count
         rts
 
-LB20F:  lda     winfoF
+do2:    lda     winfoF
         jsr     set_port_from_window_id
         jsr     draw_ok_cancel_buttons
 LB218:  jsr     prompt_input_loop
@@ -18783,7 +18815,7 @@ LB218:  jsr     prompt_input_loop
         lda     #$00
 LB257:  rts
 
-LB258:  jsr     reset_state
+do4:    jsr     reset_state
         MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
         jsr     set_cursor_pointer
         rts
@@ -18817,7 +18849,7 @@ LB27D:  jsr     LBD75
         jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::FrameRect, rect1
         yax_call draw_dialog_label, 2, desktop_aux::str_rename_old
-        lda     #$55
+        lda     #85
         sta     dialog_label_pos
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$01
@@ -19129,6 +19161,7 @@ LB537:  jmp     reset_state
 ;;; Y has row number (1, 2, ... ) with high bit to center it
 
         DDL_CENTER := $80
+
 .proc draw_dialog_label
         textwidth_params := $8
         textptr := $8
