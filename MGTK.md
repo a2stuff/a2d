@@ -7,38 +7,193 @@ This is a complex API library written by Apple circa 1985. It consists of:
 
 For the purposes of DeskTop, the entry point is fixed at $4000 AUX, called MLI-style (JSR followed by command type and address of param block).
 
-### Concepts
+---
 
-#### GrafPort
+# Graphics Primitives
 
-The _port_ block is reused in several places. It has the following structure:
+## Concepts
 
+ca65 syntax is used for primitives: `.byte`, `.word` (interpreted as 16-bit signed integer), `.addr` (16-bit address), `.res N` (N byte buffer)
+
+### Point
 ```
-  .word left           pixels from screen left edge
-  .word top            pixels from screen top edge
-  .addr addr           screen address $2000
-  .word stride         screen stride $80
-  .word hoff           pixels scrolled left
-  .word voff           pixels scrolled up
-  .word width          pixels wide
-  .word height         pixels tall
+.word       xcoord
+.word       ycoord
 ```
 
-Drawing state can be set to a port (SetPort) and then subsequent operations will occur
-within the port: they will be clipped to the bounds and the offset will be taken into account.
-For example, if hoffset is 15 and voffset is 5 then a pixel plotted at 40, 40 will appear
-at 40 - 15 = 25 pixels from the left edge and 40 - 5 = 35 pixels from the top edge.
+### Rect
+```
+.word       x1
+.word       y1
+.word       x2
+.word       y3
+```
 
-#### Pattern
-
+### Pattern
 A simple repeating 8x8 _pattern_ is defined by 8 bytes. All bits of each byte are used.
 
-#### Window Parts
+### MapInfo
+Used with GrafPorts to define offsets/clipping, and bitmaps for source data.
+```
+Point       viewloc
+.addr       mapbits         $2000 for the screen, or bitmap bits
+.byte       mapwidth        $80, or stride for bitmap
+.byte       reserved
+Rect        maprect         a.k.a. cliprect
+```
+
+### GrafPort
+There is always a current GrafPort (or "port" for short) that defines
+the destination and pen state of drawing operations.
+```
+MapInfo     portmap
+.res 8      penpattern
+.byte       colormask_and
+.byte       colormask_or
+Point       penloc
+.byte       penwidth        horizontal pen thickness
+.byte       penheight       vertical pen thickness
+.byte       penmode
+.byte       textback        text background
+.addr       textfont
+```
+
+### PolyList
+```
+.byte       count           number of vertices in this polygon
+.byte       last            high bit set if there are more polygons
+Point       vertex0
+... repeats for each vertex
+... repeats for each polygon
+```
+
+### Font
+```
+.byte       fonttype        0=regular, $80=double-width
+.byte       lastchar        char code of last character (usually $7F)
+.byte       height          pixels (1-16)
+.res N      charwidth       pixels, for each char
+.res N      row0            bits
+.res N      row0right       bits (double-width only)
+... repeats for each row
+```
+
+## Commands
+
+Includes:
+
+* Initialization
+* GrafPort - assign, update, query ports
+* Drawing - draw lines; frame, fill, and test rects and polys
+* Text - draw and measure text
+* Utility - configuration and version
+
+---
+
+# Mouse Graphics
+
+Includes:
+
+## Concepts
+
+### Cursor
+```
+.res 24     bitmap          2x12 byte bitmap (XOR'd after mask)
+.res 24     mask            2x12 byte mask (OR'd with screen)
+.byte       hotx            hotspot coords (pixels)
+.byte       hoty
+```
+
+### Event
+```
+.byte       kind            event_kind_*
+.res 4
+```
+if `kind` is `event_kind_key_down`:
+```
+.byte       kind            event_kind_*
+.byte       key             (ASCII code; high bit clear)
+.byte       modifiers       (0=none, 1=open-apple, 2=solid-apple, 3=both)
+.res 2      reserved
+```
+if `kind` is `event_kind_update:`
+```
+.byte       kind            event_kind_*
+.byte       window_id
+.res 3      reserved
+```
+otherwise:
+```
+.byte       kind            event_kind_*
+.word       mousex
+.word       mousey
+```
+
+### Menu
+
+Menu Bar record:
+```
+.word       count           Number of menu bar items
+
+.byte       menu_id         Menu identifier
+.byte       disabled        Flag
+.addr       title           Address of length-prefixed string
+.addr       menu            Address of Menu record
+.res 6      reserved        Reserved
+... repeats for each menu
+```
+
+Menu record:
+```
+.word       count           Number of items in menu
+
+.res  5     reserved        Reserved
+.byte       options         bit 0=OA, 1=SA, 2=mark, 5=check, 6=filler, 7=disabled
+.byte       mark_char       Custom mark character if mark option set
+.byte       char1           ASCII code of shortcut #1 (e.g. uppercase B); or 0
+.byte       char2           ASCII code of shortcut #2 (e.g. lowercase b, or same); or 0
+.addr       name            Address of length-prefixed string
+... repeats for each menu item
+```
+
+### Window "winfo"
+```
+.byte       id
+.byte       options         option_*
+.addr       title
+.byte       hscroll         scroll_option_*
+.byte       vscroll         scroll_option_*
+.byte       hthumbmax
+.byte       hthumbpos
+.byte       vthumbmax
+.byte       vthumbpos
+.byte       status
+.byte       reserved
+.word       mincontwidth    minimum content size (horizontal)
+.word       maxcontwidth    maximum content size (horizontal)
+.word       mincontlength   minimum content size (vertical)
+.word       maxcontlength   maximum content size (vertical)
+GrafPort    windowport      GrafPort record
+.addr       nextwinfo       address of next lower window in stack
+```
 
 Windows have a _content area_ which has the requested dimensions. Above this is an optional
 _title bar_ which in turn has an optional _close box_. Within the content area are an
 optional _resize box_ and optional _scroll bars_.
 
+
+## Commands
+
+Includes:
+
+* Initialization
+* Cursor Manager - set, show, hide
+* Event Manager - get, peek, post
+* Menu Manager - configure, enable, disable, select
+* Window Manager - open, close, drag, grow, update
+* Control Manager - scrollbars
+
+## More
 
 
 > NOTE: Movable windows must maintain an _offscreen_flag_. If a window is moved so that the
@@ -62,7 +217,7 @@ optional _resize box_ and optional _scroll bars_.
 #### Window Close
 
 * Call TrackGoAway, which enters a modal loop to handle the mouse moving out/in the box.
-* Result indicates clicked or canceled; if clicked, exit the DA, otherwise ignore.
+* Result indicates clicked or canceled
 
 #### Window Drag
 
@@ -81,10 +236,3 @@ optional _resize box_ and optional _scroll bars_.
 * Redraw window.
 
 #### Window Scroll
-
-
-### Drawing Operations
-
-
-
-### Commands
