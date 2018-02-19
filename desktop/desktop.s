@@ -41,8 +41,8 @@ INVOKER_FILENAME := $280         ; File to invoke (PREFIX must be set)
         .addr    $85E9
 
 L8522:  php
-        lda     $E904,x         ; winfo7::mapbits ???
-        sta     $09
+        lda     winfo7+MGTK::winfo_offset_port+5,x
+        sta     $08+1
         ldy     #$14
         ldx     #$00
 L852C:  lda     ($08),y
@@ -4640,7 +4640,8 @@ watch_cursor:
 
 LD343:  .res    18, 0
 LD355:  .res    88, 0
-LD3AD:  .res    65, 0
+LD3AD:  .res    19, 0
+LD3C0:  .res    46, 0
 
 LD3EE:  .res    17, 0
 LD3FF:  .byte   0
@@ -5130,7 +5131,9 @@ menu_id:.byte   0
 item_num:.byte  0
 .endproc
 
-        .byte   $00,$00,$00,$00,$00,$00
+LE25C:  .byte   0
+LE25D:  .byte   0
+        .byte   $00,$00,$00,$00
         .byte   $00,$04,$00,$00,$00
 
 .proc checkitem_params
@@ -5150,7 +5153,11 @@ menu_item:      .byte   0
 disable:        .byte   0
 .endproc
 
-        .byte   $00,$04,$00
+        .byte   $00
+
+LE270:  .byte   $04             ; number of items in startup menu?
+
+        .byte   $00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
         .addr   str_all
@@ -5309,8 +5316,12 @@ pos_col_date: DEFINE_POINT 231, 0, pos_col_date
 .proc text_buffer2
         .addr   data
 length: .byte   0
-data:   .res    55, 0
+data:   .res    49, 0
 .endproc
+
+LE71D:  .word   0
+LE71F:  .byte   0
+        .byte   0,0,0
 
 ;;; ==================================================
 
@@ -6296,11 +6307,11 @@ handle_keydown:
 
 menu_accelerators:
         lda     event_params+1
-        sta     $E25C
+        sta     LE25C
         lda     event_params+2
         beq     L43A1
-        lda     #$01
-L43A1:  sta     $E25D
+        lda     #1
+L43A1:  sta     LE25D
         MGTK_RELAY_CALL MGTK::MenuKey, menu_click_params
 
 menu_dispatch2:
@@ -8427,11 +8438,11 @@ L5464:  lda     active_window_id
         lda     active_window_id
         jsr     window_lookup
         stax    $06
-        ldy     #$1C
+        ldy     #MGTK::winfo_offset_port+MGTK::grafport_offset_maprect
 L5479:  lda     ($06),y
-        sta     $E214,y
+        sta     rect_E230-(MGTK::winfo_offset_port+MGTK::grafport_offset_maprect),y
         iny
-        cpy     #$24
+        cpy     #MGTK::winfo_offset_port+MGTK::grafport_offset_maprect+8
         bne     L5479
         ldx     #$00
 L5485:  cpx     cached_window_icon_count
@@ -11000,10 +11011,10 @@ L6C5F:  txa
         asl     a
         tax
         lda     LE202,x
-        sta     $E71D
+        sta     LE71D
         sta     $06
         lda     LE202+1,x
-        sta     $E71E
+        sta     LE71D+1
         sta     $06+1
         lda     LCBANK2
         lda     LCBANK2
@@ -11013,10 +11024,10 @@ L6C5F:  txa
         lda     LCBANK1
         lda     LCBANK1
         tya
-        sta     $E71F
-        inc     $E71D
+        sta     LE71F
+        inc     LE71D
         bne     L6C8F
-        inc     $E71E
+        inc     LE71D+1
 
         ;; First row
 .proc L6C8F
@@ -11785,7 +11796,7 @@ L734A:  lda     LE1F1+1,x
 :       stx     L7446
         dex
 :       inx
-        lda     $E1F3,x
+        lda     LE1F1+2,x
         sta     LE1F1+1,x
         cpx     LE1F1
         bne     :-
@@ -11964,8 +11975,8 @@ L7512:  lda     ($06),y
         sta     LE1B0,y
         dey
         bpl     L7512
-        lda     #$2F
-        sta     $E1B1
+        lda     #'/'
+        sta     LE1B0+1
         inc     LE1B0
         ldx     LE1B0
         sta     LE1B0,x
@@ -13273,9 +13284,9 @@ start:  ldy     #$00
         asl     a
         rol     L813C
         clc
-        adc     $E71D
+        adc     LE71D
         sta     $06
-        lda     $E71E
+        lda     LE71D+1
         adc     L813C
         sta     $06+1
         lda     LCBANK2
@@ -19707,32 +19718,32 @@ LBA7C:  dey
 
 .proc LBABF
         inc     $08
-        ldy     #$00
+        ldy     #0
         ldx     $08
 LBAC5:  cpx     path_buf1
         beq     LBAD5
         inx
         iny
         lda     path_buf1,x
-        sta     $D3C2,y
+        sta     LD3C0+2,y
         jmp     LBAC5
 
 LBAD5:  iny
-        sty     $D3C1
-        ldx     #$01
-        ldy     $D3C1
+        sty     LD3C0+1
+        ldx     #1
+        ldy     LD3C0+1
 LBADE:  cpx     path_buf2
         beq     LBAEE
         inx
         iny
         lda     path_buf2,x
-        sta     $D3C1,y
+        sta     LD3C0+1,y
         jmp     LBADE
 
-LBAEE:  sty     $D3C1
+LBAEE:  sty     LD3C0+1
         lda     LD8EF
-        sta     $D3C2
-LBAF7:  lda     $D3C1,y
+        sta     LD3C0+2
+LBAF7:  lda     LD3C0+1,y
         sta     path_buf2,y
         dey
         bpl     LBAF7
@@ -19871,13 +19882,13 @@ LBC64:  ldx     path_buf2
         cpx     #$01
         beq     LBC79
 LBC6B:  lda     path_buf2,x
-        sta     $D3C0,x
+        sta     LD3C0,x
         dex
         cpx     #$01
         bne     LBC6B
         ldx     path_buf2
 LBC79:  dex
-        stx     $D3C1
+        stx     LD3C0+1
         ldx     path_buf1
 LBC80:  lda     path_buf1,x
         sta     $D485,x
@@ -19890,12 +19901,12 @@ LBC80:  lda     path_buf1,x
         sta     path_buf2
         lda     path_buf1
         clc
-        adc     $D3C1
+        adc     LD3C0+1
         tay
         pha
-        ldx     $D3C1
+        ldx     LD3C0+1
         beq     LBCB3
-LBCA6:  lda     $D3C1,x
+LBCA6:  lda     LD3C0+1,x
         sta     path_buf2,y
         dex
         dey
@@ -21027,7 +21038,7 @@ L0E36:  inx
         lda     DEVCNT
         clc
         adc     #3
-        sta     $E270
+        sta     LE270
 
         lda     #0
         sta     slot
