@@ -3119,6 +3119,16 @@ file_menu:
         DEFINE_MENU_ITEM label_eject, 'E', 'e'
         DEFINE_MENU_ITEM label_quit, 'Q', 'q'
 
+        menu_item_id_new_folder := 1
+        menu_item_id_open       := 3
+        menu_item_id_close      := 4
+        menu_item_id_close_all  := 5
+        menu_item_id_select_all := 6
+        menu_item_id_copy_file  := 8
+        menu_item_id_delete_file := 9
+        menu_item_id_eject      := 11
+        menu_item_id_quit       := 12
+
 view_menu:
         DEFINE_MENU 5
         DEFINE_MENU_ITEM label_by_icon, 'J', 'j'
@@ -3126,6 +3136,12 @@ view_menu:
         DEFINE_MENU_ITEM label_by_date, 'T', 't'
         DEFINE_MENU_ITEM label_by_size, 'K', 'k'
         DEFINE_MENU_ITEM label_by_type, 'L', 'l'
+
+        menu_item_id_view_by_icon := 1
+        menu_item_id_view_by_name := 2
+        menu_item_id_view_by_date := 3
+        menu_item_id_view_by_size := 4
+        menu_item_id_view_by_type := 5
 
 special_menu:
         DEFINE_MENU 13
@@ -3142,6 +3158,16 @@ special_menu:
         DEFINE_MENU_ITEM label_get_size
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_rename_icon
+
+        menu_item_id_check_drives := 1
+        menu_item_id_format_disk  := 3
+        menu_item_id_erase_disk   := 4
+        menu_item_id_disk_copy    := 5
+        menu_item_id_lock         := 7
+        menu_item_id_unlock       := 8
+        menu_item_id_get_info     := 10
+        menu_item_id_get_size     := 11
+        menu_item_id_rename_icon  := 13
 
         .addr   $0000,$0000
 
@@ -6143,6 +6169,8 @@ L42C3:  .byte   0
 
 .proc handle_keydown_impl
 
+        ;; Keep in sync with desktop_aux::menu_item_id_*
+
         ;; jump table for menu item handlers
 dispatch_table:
         ;; Apple menu (1)
@@ -6212,8 +6240,8 @@ dispatch_table:
 
         ;; no menu 7 ??
         .addr   cmd_check_drives ; duplicate???
-        .addr   cmd_noop        ; --------
-        .addr   L59A0           ; ???
+        .addr   cmd_noop         ; --------
+        .addr   L59A0            ; ???
         .addr   L59A0
         .addr   L59A0
         .addr   L59A0
@@ -6278,10 +6306,10 @@ L43A1:  sta     $E25D
 
 menu_dispatch2:
         ldx     menu_click_params::menu_id
-        bne     L43B3
+        bne     :+
         rts
 
-L43B3:  dex                     ; x has top level menu id
+:       dex                     ; x has top level menu id
         lda     offset_table,x
         tax
         ldy     menu_click_params::item_num
@@ -10374,13 +10402,13 @@ disable_menu_items:
         sta     disableitem_params::disable
         lda     #menu_id_file
         sta     disableitem_params::menu_id
-        lda     #1              ; > New Folder
+        lda     #desktop_aux::menu_item_id_new_folder
         sta     disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
-        lda     #4              ; > Close
+        lda     #desktop_aux::menu_item_id_close
         sta     disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
-        lda     #5              ; > Close All
+        lda     #desktop_aux::menu_item_id_close_all
         sta     disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
 
@@ -10410,19 +10438,19 @@ check_menu_items:
         sta     disableitem_params::disable
         lda     #menu_id_file
         sta     disableitem_params::menu_id
-        lda     #3              ; > Open
+        lda     #desktop_aux::menu_item_id_open
         jsr     disable_menu_item
         lda     #menu_id_special
         sta     disableitem_params::menu_id
-        lda     #7              ; > Lock
+        lda     #desktop_aux::menu_item_id_lock
         jsr     disable_menu_item
-        lda     #8              ; > Unlock
+        lda     #desktop_aux::menu_item_id_unlock
         jsr     disable_menu_item
-        lda     #10             ; > Get Info
+        lda     #desktop_aux::menu_item_id_get_info
         jsr     disable_menu_item
-        lda     #11             ; > Get Size
+        lda     #desktop_aux::menu_item_id_get_size
         jsr     disable_menu_item
-        lda     #13             ; > Rename Icon
+        lda     #desktop_aux::menu_item_id_rename_icon
         jsr     disable_menu_item
         rts
 
@@ -10439,19 +10467,19 @@ disable_menu_item:
         sta     disableitem_params::disable
         lda     #menu_id_file
         sta     disableitem_params::menu_id
-        lda     #3              ; > Open
+        lda     #desktop_aux::menu_item_id_open
         jsr     enable_menu_item
         lda     #menu_id_special
         sta     disableitem_params::menu_id
-        lda     #7              ; > Lock
+        lda     #desktop_aux::menu_item_id_lock
         jsr     enable_menu_item
-        lda     #8              ; > Unlock
+        lda     #desktop_aux::menu_item_id_unlock
         jsr     enable_menu_item
-        lda     #10             ; > Get Info
+        lda     #desktop_aux::menu_item_id_get_info
         jsr     enable_menu_item
-        lda     #11             ; > Get Size
+        lda     #desktop_aux::menu_item_id_get_size
         jsr     enable_menu_item
-        lda     #13             ; > Rename Icon
+        lda     #desktop_aux::menu_item_id_rename_icon
         jsr     enable_menu_item
         rts
 
@@ -19584,18 +19612,20 @@ done:   rts
 
 ;;; ==================================================
 
-LB9B8:  MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
+.proc LB9B8
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
         MGTK_RELAY_CALL MGTK::InRect, rect1
         cmp     #MGTK::inrect_inside
-        beq     LB9D8
+        beq     :+
         rts
 
-LB9D8:  jsr     measure_path_buf1
+:       jsr     measure_path_buf1
         stax    $06
         cmp16   $D20D, $06
         bcs     LB9EE
         jmp     LBA83
+.endproc
 
 .proc LB9EE
         ptr := $6
@@ -19621,7 +19651,8 @@ LBA10:  MGTK_RELAY_CALL MGTK::TextWidth, ptr
         jmp     LBB05
 .endproc
 
-LBA42:  lda     $08
+.proc LBA42
+        lda     $08
         cmp     path_buf2
         bcc     LBA4F
         dec     path_buf2
@@ -19653,7 +19684,7 @@ LBA6C:  lda     path_buf2,x
 LBA7C:  dey
         sty     path_buf2
         jmp     LBB05
-
+.endproc
 
 .proc LBA83
         params := $6
@@ -19675,7 +19706,8 @@ LBA7C:  dey
         jmp     LBC5E
 .endproc
 
-LBABF:  inc     $08
+.proc LBABF
+        inc     $08
         ldy     #$00
         ldx     $08
 LBAC5:  cpx     path_buf1
@@ -19707,6 +19739,9 @@ LBAF7:  lda     $D3C1,y
         bpl     LBAF7
         lda     $08
         sta     path_buf1
+        ;; fall through
+.endproc
+
 LBB05:  jsr     draw_filename_prompt
         rts
 
@@ -20193,8 +20228,10 @@ start:
         lda     LCBANK1
         lda     LCBANK1
         sta     SET80COL
+
         stx     startdesktop_params::machine
         sty     startdesktop_params::subid
+
         cpy     #0
         beq     is_iic          ; Now identify/store specific machine type.
         bit     iigs_flag       ; (number is used in double-click timer)
@@ -21082,7 +21119,7 @@ data_buffer:    .addr   desktop_main::sys_start_path
 str_system_start:  PASCAL_STRING "System/Start"
 
 .proc L0EE1
-        lda     #$00
+        lda     #0
         sta     desktop_main::sys_start_flag
         jsr     desktop_main::get_LD3FF
         cmp     #$80
@@ -21123,7 +21160,7 @@ config_toolkit:
         MGTK_RELAY_CALL MGTK::CheckEvents
         MGTK_RELAY_CALL MGTK::SetMenu, desktop_aux::desktop_menu
         MGTK_RELAY_CALL MGTK::SetCursor, pointer_cursor
-        lda     #$00
+        lda     #0
         sta     $EC25
         jsr     desktop_main::L66A2
         jsr     desktop_main::disable_eject_menu_item
