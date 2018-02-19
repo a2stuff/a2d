@@ -63,7 +63,6 @@ save_stack:  .byte   0
 ;;; ============================================================
 
 call_init:
-        lda     ROMIN2
         jmp     init
 
         ;; Used after a event_kind_drag-and-drop is completed;
@@ -78,23 +77,17 @@ call_init:
         COPY_BYTES sizeof_routine+1, routine, zp_stash
         jsr     zp_stash
 
+        lda     LCBANK1
+        lda     LCBANK1
+
+        bit     offscreen_flag ; if was offscreen, don't bother redrawing
+        bmi     :+
+        DESKTOP_CALL DT_REDRAW_ICONS
+
         ;;  Redraw window after event_kind_drag
-        lda     ROMIN2
         lda     #da_window_id
         jsr     check_visibility_and_draw_window
 
-        ;; ???
-        lda     LCBANK1
-        lda     LCBANK1
-
-        bit     offscreen_flag     ; BUG: https://github.com/inexorabletash/a2d/issues/33
-        bmi     skip
-        DESKTOP_CALL DT_REDRAW_ICONS
-
-        ;; ???
-skip:   lda     #0
-        sta     offscreen_flag
-        lda     ROMIN2
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport
         rts
@@ -129,9 +122,10 @@ offscreen_flag:
         sta     offscreen_flag
         rts
 
-        ;; Is skipping this responsible for display redraw bug?
-        ;; https://github.com/inexorabletash/a2d/issues/34
-:       MGTK_CALL MGTK::GetWinPort, getwinport_params
+:       lda     #0
+        sta     offscreen_flag
+
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport
         lda     getwinport_params_window_id
         cmp     #da_window_id
@@ -709,35 +703,7 @@ openwindow_params_top := winfo::top
 window_title:
         PASCAL_STRING "Calc"
 
-cursor: .byte   px(%0000000),px(%0000000) ; cursor
-        .byte   px(%0100000),px(%0000000)
-        .byte   px(%0110000),px(%0000000)
-        .byte   px(%0111000),px(%0000000)
-        .byte   px(%0111100),px(%0000000)
-        .byte   px(%0111110),px(%0000000)
-        .byte   px(%0111111),px(%0000000)
-        .byte   px(%0101100),px(%0000000)
-        .byte   px(%0000110),px(%0000000)
-        .byte   px(%0000110),px(%0000000)
-        .byte   px(%0000011),px(%0000000)
-        .byte   px(%0000000),px(%0000000)
-
-        .byte   px(%1100000),px(%0000000) ; mask
-        .byte   px(%1110000),px(%0000000)
-        .byte   px(%1111000),px(%0000000)
-        .byte   px(%1111100),px(%0000000)
-        .byte   px(%1111110),px(%0000000)
-        .byte   px(%1111111),px(%0000000)
-        .byte   px(%1111111),px(%1000000)
-        .byte   px(%1111111),px(%0000000)
-        .byte   px(%0001111),px(%0000000)
-        .byte   px(%0001111),px(%0000000)
-        .byte   px(%0000111),px(%1000000)
-        .byte   px(%0000111),px(%1000000)
-
-        .byte   1, 1            ; hotspot
-
-;;; ============================================================
+;;; ==================================================
 ;;; DA Init
 
 init:   sta     ALTZPON
@@ -748,12 +714,9 @@ init:   sta     ALTZPON
         MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport     ; set clipping bounds?
         MGTK_CALL MGTK::FlushEvents
-        lda     #$01
-        sta     event_params::kind
-        MGTK_CALL MGTK::PostEvent, event_params
-        MGTK_CALL MGTK::GetEvent, event_params
-        lda     ROMIN2
+
         jsr     reset_buffer2
+
         lda     #da_window_id
         jsr     check_visibility_and_draw_window
         jsr     reset_buffers_and_display
@@ -783,19 +746,19 @@ loop:   lda     adjust_txtptr_copied-1,x
         copy16  #error_hook, COUT_HOOK ; set up FP error handler
 
         lda     #1
-        jsr     FLOAT
+        jsr     CALL_FLOAT
         ldxy    #farg
-        jsr     ROUND
+        jsr     CALL_ROUND
         lda     #0              ; set FAC to 0
-        jsr     FLOAT
-        jsr     FADD
-        jsr     FOUT
+        jsr     CALL_FLOAT
+        jsr     CALL_FADD
+        jsr     CALL_FOUT
         lda     #$07
-        jsr     FMULT
+        jsr     CALL_FMULT
         lda     #$00
-        jsr     FLOAT
+        jsr     CALL_FLOAT
         ldxy    #farg
-        jsr     ROUND
+        jsr     CALL_ROUND
 
         tsx
         stx     saved_stack
@@ -805,9 +768,6 @@ loop:   lda     adjust_txtptr_copied-1,x
         lda     #'C'
         jsr     process_key
 
-        ;; previous draws mangle the cursor (why???)
-        MGTK_CALL MGTK::SetCursor, cursor ; Why not use JUMP_TABLE_CUR_POINTER ?
-        ;; fall through
 
 ;;; ============================================================
 ;;; Input Loop
@@ -829,10 +789,7 @@ input_loop:
 ;;; On Click
 
 on_click:
-        lda     LCBANK1
-        lda     LCBANK1
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     ROMIN2
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::content
         bcc     ignore_click
@@ -855,9 +812,7 @@ ignore_click:
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::goaway
         beq     ignore_click
-exit:   lda     LCBANK1
-        lda     LCBANK1
-        MGTK_CALL MGTK::CloseWindow, closewindow_params
+exit:   MGTK_CALL MGTK::CloseWindow, closewindow_params
         DESKTOP_CALL DT_REDRAW_ICONS
         lda     ROMIN2
         MGTK_CALL MGTK::SetZP1, overwrite_zp_params
@@ -881,10 +836,7 @@ exit:   lda     LCBANK1
         bne     ignore_click
         lda     #da_window_id
         sta     dragwindow_params::window_id
-        lda     LCBANK1
-        lda     LCBANK1
         MGTK_CALL MGTK::DragWindow, dragwindow_params
-        lda     ROMIN2
         jsr     redraw_screen_and_window
         rts
 
@@ -1034,7 +986,7 @@ miss:   clc
         sec
         rts
 
-:       cpx     #col4_left-border_lt             ; col 4?
+:       cpx     #col4_left-border_lt            ; col 4?
         bcc     miss
         cpx     #col4_right+border_br - 1       ; bug in original?
         bcs     miss
@@ -1061,9 +1013,9 @@ miss:   clc
         lda     #'c'
         jsr     depress_button
         lda     #$00
-        jsr     FLOAT
+        jsr     CALL_FLOAT
         ldxy    #farg
-        jsr     ROUND
+        jsr     CALL_ROUND
         lda     #'='
         sta     calc_op
         lda     #0
@@ -1302,7 +1254,7 @@ rts3:   rts
         lda     calc_g
         bne     reparse
         lda     #$00
-        jsr     FLOAT
+        jsr     CALL_FLOAT
         jmp     do_op
 
 :       lda     calc_g
@@ -1313,7 +1265,7 @@ rts3:   rts
 
 reparse:copy16  #text_buffer1, TXTPTR
         jsr     adjust_txtptr
-        jsr     FIN
+        jsr     CALL_FIN
 
 do_op:  pla
         ldx     calc_op
@@ -1323,22 +1275,22 @@ do_op:  pla
 
         cpx     #'+'
         bne     :+
-        jsr     FADD
+        jsr     CALL_FADD
         jmp     post_op
 
 :       cpx     #'-'
         bne     :+
-        jsr     FSUB
+        jsr     CALL_FSUB
         jmp     post_op
 
 :       cpx     #'*'
         bne     :+
-        jsr     FMULT
+        jsr     CALL_FMULT
         jmp     post_op
 
 :       cpx     #'/'
         bne     :+
-        jsr     FDIV
+        jsr     CALL_FDIV
         jmp     post_op
 
 :       cpx     #'='
@@ -1349,9 +1301,9 @@ do_op:  pla
 .endproc
 
 .proc post_op
-        ldxy    #farg           ; after the FP operation is done
-        jsr     ROUND
-        jsr     FOUT            ; output as null-terminated string to FBUFFR
+        ldxy    #farg          ; after the FP operation is done
+        jsr     CALL_ROUND
+        jsr     CALL_FOUT            ; output as null-terminated string to FBUFFR
 
         ldy     #0              ; count the eize
 sloop:  lda     FBUFFR,y
@@ -1470,17 +1422,21 @@ loop:   lda     #' '
         ; fall through
 .endproc
 .proc display_buffer1
+        bit     offscreen_flag
+        bmi     end
         ldxy    #text_buffer1
         jsr     pre_display_buffer
         MGTK_CALL MGTK::DrawText, drawtext_params1
-        rts
+end:    rts
 .endproc
 
 .proc display_buffer2
+        bit     offscreen_flag
+        bmi     end
         ldxy    #text_buffer2
         jsr     pre_display_buffer
         MGTK_CALL MGTK::DrawText, drawtext_params2
-        rts
+end:    rts
 .endproc
 
 .proc pre_display_buffer
@@ -1586,10 +1542,14 @@ draw_title_bar:
         ;; Traps FP error via call to $36 from MON.COUT, resets stack
         ;; and returns to the input loop.
 .proc error_hook
+        lda     LCBANK1
+        lda     LCBANK1
         jsr     reset_buffers_and_display
+        bit     offscreen_flag
+        bmi     :+
         MGTK_CALL MGTK::MoveTo, error_pos
         MGTK_CALL MGTK::DrawText, error_string
-        jsr     reset_buffer1_and_state
+:       jsr     reset_buffer1_and_state
         lda     #'='
         sta     calc_op
         ldx     saved_stack
@@ -1622,5 +1582,93 @@ end:    rts
 .endproc
         .org save_org + .sizeof(adjust_txtptr_copied)
         sizeof_adjust_txtptr_copied := .sizeof(adjust_txtptr_copied)
+
+
+CALL_FLOAT:
+        pha
+        lda     ROMIN2
+        pla
+        jsr     FLOAT
+        pha
+        lda     LCBANK1
+        lda     LCBANK1
+        pla
+        rts
+
+CALL_FADD:
+        pha
+        lda     ROMIN2
+        pla
+        jsr     FADD
+        pha
+        lda     LCBANK1
+        lda     LCBANK1
+        pla
+        rts
+
+CALL_FSUB:
+        pha
+        lda     ROMIN2
+        jsr     FSUB
+        pha
+        lda     LCBANK1
+        lda     LCBANK1
+        pla
+        rts
+
+CALL_FMULT:
+        pha
+        lda     ROMIN2
+        pla
+        jsr     FMULT
+        pha
+        lda     LCBANK1
+        lda     LCBANK1
+        pla
+        rts
+
+CALL_FDIV:
+        pha
+        lda     ROMIN2
+        pla
+        jsr     FDIV
+        pha
+        lda     LCBANK1
+        lda     LCBANK1
+        pla
+        rts
+
+CALL_FIN:
+        pha
+        lda     ROMIN2
+        pla
+        jsr     FIN
+        pha
+        lda     LCBANK1
+        lda     LCBANK1
+        pla
+        rts
+
+CALL_FOUT:
+        pha
+        lda     ROMIN2
+        pla
+        jsr     FOUT
+        pha
+        lda     LCBANK1
+        lda     LCBANK1
+        pla
+        rts
+
+CALL_ROUND:
+        pha
+        lda     ROMIN2
+        pla
+        jsr     ROUND
+        pha
+        lda     LCBANK1
+        lda     LCBANK1
+        pla
+        rts
 
 da_end := *
