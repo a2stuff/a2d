@@ -14,7 +14,7 @@ ROMIN2          := $C082
 NEWVIDEO        := $C029        ; IIgs - new video modes
 SHADOW          := $C035        ; IIgs - inhibit shadowing
 
-AN3_ON          := $C05F        ; Le Chat Mauve
+AN3_ON          := $C05F        ; AppleColor Adapter Card / Le Chat Mauve
 AN3_OFF         := $C05E
 HR1_ON          := $C0B3
 HR1_OFF         := $C0B2
