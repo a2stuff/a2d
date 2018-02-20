@@ -129,6 +129,19 @@ otherwise:
 .word       mousey
 ```
 
+```
+event_kind_no_event        := 0    ; No mouse or keypress
+event_kind_button_down     := 1    ; Mouse button was depressed
+event_kind_button_up       := 2    ; Mouse button was released
+event_kind_key_down        := 3    ; Key was pressed
+event_kind_drag            := 4    ; Mouse button still down
+event_kind_apple_key       := 5    ; Mouse button was depressed, modifier key down
+event_kind_update          := 6    ; Window update needed
+
+event_modifier_open_apple  := 1 << 0
+event_modifier_solid_apple := 1 << 1
+```
+
 ### Menu
 
 Menu Bar record:
@@ -181,7 +194,17 @@ Windows have a _content area_ which has the requested dimensions. Above this is 
 _title bar_ which in turn has an optional _close box_. Within the content area are an
 optional _resize box_ and optional _scroll bars_.
 
+```
+option_dialog_box       := 1 << 0
+option_go_away_box      := 1 << 1
+option_grow_box         := 1 << 2
 
+scroll_option_none      := 0
+scroll_option_present   := 1 << 7
+scroll_option_thumb     := 1 << 6
+scroll_option_active    := 1 << 0
+scroll_option_normal    := scroll_option_present | scroll_option_thumb | scroll_option_active
+```
 ## Commands
 
 Includes:
@@ -195,14 +218,15 @@ Includes:
 
 ## More
 
-
 > NOTE: Movable windows must maintain an _offscreen_flag_. If a window is moved so that the
 > content area is entirely offscreen then various operations should be skipped because
 > the window's box coordinates will not be set correctly.
 
+### Use by DAs
+
 #### Input Loop
 
-* Call GetEvent.
+* Call `GetEvent`.
 * If a key, then check modifiers (Open/Solid Apple) and key code, ignore or take action.
 * If a click, call FindWindow.
 * If target id not the window id, ignore.
@@ -210,29 +234,35 @@ Includes:
 * If target element is close box then initiate [window close](#window-close).
 * If target element is title bar then initiate [window drag](#window-drag).
 * If target element is resize box then initiate [window resize](#window-resize).
-* Otherwise, it is content area; call FindControl.
+* Otherwise, it is content area; call `FindControl`.
 * If content part is a scrollbar then initiate a [scroll](#window-scroll).
 * Otherwise, handle a content click using custom logic (e.g. hit testing buttons, etc)
 
 #### Window Close
 
-* Call TrackGoAway, which enters a modal loop to handle the mouse moving out/in the box.
-* Result indicates clicked or canceled
+* Call `TrackGoAway`, which enters a modal loop to handle the mouse moving out/in the box.
+* Result indicates clicked or canceled. If canceled, return to input loop.
+* Call `CloseWindow`
 
 #### Window Drag
 
-* Call DragWindow.
-* Call JUMP_TABLE_REDRAW_ALL.
-* If _offscreen flag_ was not set, redraw desktop icons (DESKTOP_REDRAW_ICONS).
+* Call `DragWindow`, which enters a modal loop to handle the mouse moving out/in the box.
+* Result indicates moved or canceled. If canceled, return to input loop.
+* Call `JUMP_TABLE_REDRAW_ALL`.
+* If _offscreen flag_ was not set, redraw desktop icons (`DESKTOP_REDRAW_ICONS`).
 * Set _offscreen flag_ if window's `top` is greater than or equal to the screen bottom (191), clear otherwise.
 * If _offscreen flag_ is not set, redraw window.
 
 #### Window Resize
 
-* Call GrowWindow.
-* Call JUMP_TABLE_REDRAW_ALL.
-* Call DESKTOP_REDRAW_ICONS.
-* Call UpdateThumb if needed to adjust scroll bar settings. (Details TBD).
+* Call `GrowWindow`, which enters a modal loop to handle resizing.
+* Result indicates changed or canceled. If canceled, return to input loop.
+* Call `JUMP_TABLE_REDRAW_ALL`.
+* Call `DESKTOP_REDRAW_ICONS`.
+* Call `UpdateThumb` if needed to adjust scroll bar settings.
 * Redraw window.
 
 #### Window Scroll
+
+* Call `TrackThumb`, which enters a modal loop to handle dragging.
+* Redraw window.

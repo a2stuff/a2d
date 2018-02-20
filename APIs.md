@@ -93,23 +93,23 @@ absolute path (e.g. `/HD/GAMES`)
 Icon record: 27-byte structure optimized for rendering the file/volume icon.
 
 ```
-     .byte icon      icon index
-     .byte ??
-     .byte type/window_id
-                     (bits 0-3 window_id)
-                     (bits 4,5,6)
-                            000 = directory
-                            001 = system
-                            010 = binary
-                            011 = basic
-                            100 = (unused)
-                            101 = text/generic
-                            110 = (unused)
-                            111 = trash
-                     (bit 7 = open flag)
-     .word iconx     (pixels)
-     .word icony     (pixels)
-     .addr iconbits  (addr of {mapbits, mapwidth, reserved, maprect})
-     .byte len       (name length + 2)
-     .res  17  name  (name, with a space before and after)
+.byte icon      icon index
+.byte ??
+.byte type/window_id
+                (bits 0-3 window_id)
+                (bits 4,5,6)
+                       000 = directory
+                       001 = system
+                       010 = binary
+                       011 = basic
+                       100 = (unused)
+                       101 = text/generic
+                       110 = (unused)
+                       111 = trash
+                (bit 7 = open flag)
+.word iconx     (pixels)
+.word icony     (pixels)
+.addr iconbits  (addr of {mapbits, mapwidth, reserved, maprect})
+.byte len       (name length + 2)
+.res  17  name  (name, with a space before and after)
 ```
