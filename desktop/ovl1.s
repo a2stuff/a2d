@@ -9,7 +9,6 @@
         .include "../desktop.inc"
         .include "../macros.inc"
 
-L1800           := $1800
 MGTK_RELAY       := $D000
 DESKTOP_RELAY   := $D040
 
@@ -21,6 +20,8 @@ DESKTOP_RELAY   := $D040
 
 .proc disk_copy_overlay
         jmp     start
+
+        load_target := $1800
 
 ;;; ==================================================
 ;;; Menu - relocated up ot $D400
@@ -42,17 +43,36 @@ item_label:
 
 ;;; ==================================================
 
-L0842:  .byte   3
-        .addr   str_desktop2
-        .addr   $1C00
+.proc open_params
+param_count:    .byte   3
+pathname:       .addr   str_desktop2
+io_buffer:      .addr   $1C00
+ref_num:        .byte   0
+.endproc
 
-L0847:  .byte   $00,$02
-L0849:  .byte   $00,$E0,$31,$01,$04
-L084E:  .byte   $00,$00,$18,$00,$02,$00,$00,$01
-        .byte   $00
+.proc set_mark_params
+param_count:    .byte   2
+ref_num:        .byte   0
+position:       .faraddr $131E0
+.endproc
+
+.proc read_params
+param_count:    .byte   4
+ref_num:        .byte   0
+data_buffer:    .addr   load_target
+request_count:  .word   $0200
+trans_count:    .word   0
+.endproc
+
+.proc close_params
+param_count:    .byte   1
+ref_num:        .byte   0
+.endproc
 
 str_desktop2:
         PASCAL_STRING "DeskTop2"
+
+;;; ==================================================
 
         ptr := $6
 
@@ -64,10 +84,10 @@ start:  lda     #$80
 
         ;; Copy menu bar up to language card, and use it.
         ldx     #.sizeof(menu_bar)
-L0881:  lda     menu_bar,x
+:       lda     menu_bar,x
         sta     $D400,x
         dex
-        bpl     L0881
+        bpl     :-
         yax_call MGTK_RELAY, MGTK::SetMenu, menu_target
 
         ;; Clear most of the system bitmap
@@ -77,49 +97,45 @@ L0881:  lda     menu_bar,x
         dex
         bpl     :-
 
+        ;; Open self (DESKTOP2)
+        yax_call MLI_RELAY, OPEN, open_params
 
-        ldy     #$C8
-        lda     #$42
-        ldx     #$08
-        jsr     L08D3
-        lda     L0847
-        sta     L084E
-        sta     L0849
-        ldy     #$CE
-        lda     #$48
-        ldx     #$08
-        jsr     L08D3
-        ldy     #$CA
-        lda     #$4D
-        ldx     #$08
-        jsr     L08D3
-        ldy     #$CC
-        lda     #$55
-        ldx     #$08
-        jsr     L08D3
+        ;; Slurp in yet another overlay...
+        lda     open_params::ref_num
+        sta     read_params::ref_num
+        sta     set_mark_params::ref_num
+
+        yax_call MLI_RELAY, SET_MARK, set_mark_params
+        yax_call MLI_RELAY, READ, read_params
+        yax_call MLI_RELAY, CLOSE, close_params
+
+        ;; And invoke it.
         sta     ALTZPOFF
-        lda     $C082
-        jmp     L1800
+        lda     ROMIN2
+        jmp     load_target
 
-L08D3:  sty     L08E7
-        sta     L08E8
-        stx     L08E9
+;;; ==================================================
+
+.proc MLI_RELAY
+        sty     call
+        sta     params
+        stx     params+1
         php
         sei
         sta     ALTZPOFF
         lda     $C082
         jsr     MLI
-L08E7:  brk
-L08E8:  brk
-L08E9:  brk
+call:   .byte   0
+params: .addr   0
         tax
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         plp
         txa
-L08F6:  bne     L08F6
+self:   bne     self            ; hang on error?
         rts
+.endproc
 
         PAD_TO $A00
 .endproc
