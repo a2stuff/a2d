@@ -63,7 +63,7 @@ MLI     := $4000
 ;;; .res N      row0right       bits (double-width only)
 ;;; ...
 
-NoOp            := $00  ; No-op
+NoOp            := $00          ; No-op
         ;; (input length 0 bytes)
 
 ;;; --------------------------------------------------
@@ -163,8 +163,8 @@ DrawText        := $19          ; Drawn at last SET_POS as left, baseline
 ;;; --------------------------------------------------
 ;;; Utility Commands
 
-SetZP1          := $1A  ; Configure lower half of ZP usage by API (speed vs. convenience)
-SetZP2          := $1B  ; Configure upper half ZP usage by API (speed vs. convenience)
+SetZP1          := $1A          ; Configure lower half of ZP usage by API (speed vs. convenience)
+SetZP2          := $1B          ; Configure upper half ZP usage by API (speed vs. convenience)
 ;;; .byte       preserve        0=stash/no auto restore; 1=restore now and onward
 
 Version         := $1C          ; Get toolkit version
