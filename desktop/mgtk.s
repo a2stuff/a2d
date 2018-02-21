@@ -10,7 +10,7 @@
         .include "../macros.inc"
 
 ;;; ==================================================
-;;; Mouse Graphics Tool Kit
+;;; MouseGraphics ToolKit
 ;;; ==================================================
 
 .proc mgtk
@@ -324,7 +324,7 @@ jump_table:
         .addr   VersionImpl         ; $1C Version
 
         ;; ----------------------------------------
-        ;; Mouse Graphics Tool Kit
+        ;; MouseGraphics ToolKit
 
         ;; Initialization Calls
         .addr   StartDeskTopImpl    ; $1D StartDeskTop
@@ -439,7 +439,7 @@ param_lengths:
         PARAM_DEFN  0, $00, 0                ; $1C Version
 
         ;; ----------------------------------------
-        ;; Mouse Graphics Tool Kit Calls
+        ;; MouseGraphics ToolKit Calls
 
         ;; Initialization
         PARAM_DEFN 12, $82, 0                ; $1D StartDeskTop

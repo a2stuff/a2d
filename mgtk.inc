@@ -1,5 +1,5 @@
 ;;; ==================================================
-;;; Mouse Graphics Tool Kit (w/ Graphics Primitives)
+;;; MouseGraphics ToolKit (w/ Graphics Primitives)
 ;;; ==================================================
 
 .scope MGTK
@@ -175,7 +175,7 @@ Version         := $1C          ; Get toolkit version
 ;;; .word       (out) number
 
 ;;; ==================================================
-;;; Mouse Graphics Tool Kit Calls
+;;; MouseGraphics ToolKit Calls
 ;;; ==================================================
 
 ;;; --------------------------------------------------
@@ -494,7 +494,7 @@ textbg_black       := $00
 textbg_white       := $7F
 
 ;;; ==================================================
-;;; Mouse Graphics Tool Kit Constants
+;;; MouseGraphics ToolKit Constants
 
 ;;; Used in GetEvent
 event_kind_no_event        := 0    ; No mouse or keypress

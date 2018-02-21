@@ -80,7 +80,7 @@ Loaded at $800-$FFF, this does one-time initialization of the
 DeskTop. It is later overwritten when any desk accessories are
 run.
 
-### Mouse Graphics Tool Kit (MGTK)
+### MouseGraphics ToolKit (MGTK)
 
 `a2d.s`
 

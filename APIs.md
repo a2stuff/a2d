@@ -2,11 +2,11 @@
 
 There are three distinct API classes that need to be used:
 
-* Mouse Graphics Tool Kit - graphics primitives, windowing and events
+* MouseGraphics ToolKit - graphics primitives, windowing and events
 * DeskTop Jump Table - simple JSR calls starting at $4003 MAIN, no arguments
 * DeskTop API - another MLI-style interface starting at $8E00 AUX
 
-## Mouse Graphics Tool Kit
+## MouseGraphics ToolKit
 
 This is a complex API library written by Apple circa 1985. It consists of:
 
