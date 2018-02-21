@@ -19,7 +19,7 @@ function do_make {
 }
 
 function verify {
-    diff "orig/$1.bin" "$1.F1" \
+    diff "orig/$1.bin" "out/$1.F1" \
         && (cecho green "diff $1 good" ) \
         || (tput blink ; cecho red "DIFF $1 BAD" ; return 1)
 }
@@ -44,7 +44,7 @@ stats "show_text_file.s"
 stats "date.s"
 stats "puzzle.s"
 
-cat show_image_file.F1 > mount/SHOW.IMAGE.FILE.\$F1 \
+cat out/show_image_file.F1 > mount/SHOW.IMAGE.FILE.\$F1 \
     && echo "Updated mountable file (SIF)"
 
 #cat calc_fixed.F1 > mount/TEST.\$F1 \

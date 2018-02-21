@@ -19,7 +19,7 @@ function do_make {
 }
 
 function verify {
-    diff "orig/DESKTOP2_$1" "$1.built" \
+    diff "orig/DESKTOP2_$1" "out/$1.built" \
         && (cecho green "diff $1 good" ) \
         || (tput blink ; cecho red "DIFF $1 BAD" ; return 1)
 }
