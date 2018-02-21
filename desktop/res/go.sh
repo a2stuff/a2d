@@ -31,7 +31,7 @@ function stats {
 #do_make clean
 do_make all
 
-TARGETS="loader mgtk desktop invoker ovl1 ovl5 ovl6"
+TARGETS="loader mgtk desktop invoker ovl1 ovl1a ovl5 ovl6"
 
 # Verify original and output match
 echo "Verifying diffs:"

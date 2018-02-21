@@ -24,7 +24,9 @@ The file is broken down into multiple segments:
 * segment 6: main  - A$0290-$03EF, L$0160, mark $012E80 (Invoker)
 * overlays dynamically loaded for these actions:
   * disk copy     - A$0800, L$0200, mark $012FE0
-  * _(there's a $2F00 gap here; disk copy overlay itself loads A$1800,L$200,mark $131E0; rest is TBD)_
+    * which loads - A$1800, L$0200, mark $0131E0
+    * which loads - A$D000, L$2200, mark $0133E0
+    * and...      - A$0800, L$0B00, mark $0155E0
   * format/erase  - A$0800, L$1400, mark $0160E0
   * selector      - A$9000, L$1000, mark $0174E0
   * common        - A$5000, L$2000, mark $0184E0 (used by selector, copy, delete)
