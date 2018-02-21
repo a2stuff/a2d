@@ -15,24 +15,24 @@ segments swapped in dynamically.
 
 The file is broken down into multiple segments:
 
-* segment 0: load  - A$2000-$257F, L$0580, mark $000000 (Loader)
-* segment 1: aux   - A$4000-$BFFF, L$8000, mark $000580 (MGTK, DeskTop)
-* segment 2: auxlc - A$D000-$ECFF, L$1D00, mark $008580 (DeskTop)
-* segment 3: auxlc - A$FB00-$FFFF, L$0500, mark $00A280 (DeskTop)
-* segment 4: main  - A$4000-$BEFF, L$7F00, mark $00A780 (DeskTop)
-* segment 5: main  - A$0800-$0FFF, L$0800, mark $012680 (Initializer)
-* segment 6: main  - A$0290-$03EF, L$0160, mark $012E80 (Invoker)
+* segment 0: load  - A$2000-$257F, L$0580, B$000000 (Loader)
+* segment 1: aux   - A$4000-$BFFF, L$8000, B$000580 (MGTK, DeskTop)
+* segment 2: auxlc - A$D000-$ECFF, L$1D00, B$008580 (DeskTop)
+* segment 3: auxlc - A$FB00-$FFFF, L$0500, B$00A280 (DeskTop)
+* segment 4: main  - A$4000-$BEFF, L$7F00, B$00A780 (DeskTop)
+* segment 5: main  - A$0800-$0FFF, L$0800, B$012680 (Initializer)
+* segment 6: main  - A$0290-$03EF, L$0160, B$012E80 (Invoker)
 * overlays dynamically loaded for these actions:
-  * disk copy     - A$0800, L$0200, mark $012FE0
-    * which loads - A$1800, L$0200, mark $0131E0
-    * which loads - A$D000, L$2200, mark $0133E0
-    * and...      - A$0800, L$0B00, mark $0155E0
-  * format/erase  - A$0800, L$1400, mark $0160E0
-  * selector      - A$9000, L$1000, mark $0174E0
-  * common        - A$5000, L$2000, mark $0184E0 (used by selector, copy, delete)
-  * file copy     - A$7000, L$0800, mark $01A4E0
-  * file delete   - A$7000, L$0800, mark $01ACE0
-  * selector      - A$7000, L$0800, mark $01B4E0
+  * disk copy     - A$0800, L$0200, B$012FE0
+    * which loads - A$1800, L$0200, B$0131E0
+    * which loads - A$D000, L$2200, B$0133E0 (overwrites the aux LC)
+    * and...      - A$0800, L$0B00, B$0155E0
+  * format/erase  - A$0800, L$1400, B$0160E0
+  * selector      - A$9000, L$1000, B$0174E0
+  * common        - A$5000, L$2000, B$0184E0 (used by selector, copy, delete)
+  * file copy     - A$7000, L$0800, B$01A4E0
+  * file delete   - A$7000, L$0800, B$01ACE0
+  * selector      - A$7000, L$0800, B$01B4E0
 * (EOF is $01BCE0)
 
 The DeskTop segments loaded into the Aux bank switched ("language
