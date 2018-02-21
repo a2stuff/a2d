@@ -18,13 +18,6 @@ INVOKER_FILENAME := $280         ; File to invoke (PREFIX must be set)
         dummy0000 := $0000         ; overwritten by self-modified code
         dummy1234 := $1234         ; overwritten by self-modified code
 
-.macro MGTK_RELAY_CALL call, addr
-    .if .paramcount > 1
-        yax_call MGTK_RELAY, (call), (addr)
-    .else
-        yax_call MGTK_RELAY, (call), 0
-    .endif
-.endmacro
 
 ;;; ==================================================
 ;;; Segment loaded into AUX $851F-$BFFF (follows MGTK)
@@ -4111,8 +4104,9 @@ addr:   .addr   0
 
 ;;; ==================================================
 ;;; MGTK call from main>aux, call in Y, params at (X,A)
-.proc MGTK_RELAY
-        .assert * = $D000, error, "Entry point mismatch"
+
+.proc MGTK_RELAY_IMPL
+        .assert * = MGTK_RELAY, error, "Entry point mismatch"
         sty     addr-1
         stax    addr
         sta     RAMRDON
@@ -4142,7 +4136,8 @@ addr:   .addr   0
 ;;; ==================================================
 ;;; DESKTOP call from main>aux, call in Y params at (X,A)
 
-.proc DESKTOP_RELAY
+.proc DESKTOP_RELAY_IMPL
+        .assert * = DESKTOP_RELAY, error, "Entry point mismatch"
         sty     addr-1
         stax    addr
         sta     RAMRDON
@@ -4154,16 +4149,6 @@ addr:   .addr   0
         tya
         rts
 .endproc
-
-.macro DESKTOP_RELAY_CALL call, addr
-        ldy     #(call)
-    .if .paramcount > 1
-        ldax    #(addr)
-    .else
-        ldax    #0
-    .endif
-        jsr     DESKTOP_RELAY
-.endmacro
 
 ;;; ==================================================
 ;;; Used/Free icon map (Aux $1F80 - $1FFF)

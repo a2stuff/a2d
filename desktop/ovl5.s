@@ -8,9 +8,6 @@
         .include "../desktop.inc"
         .include "../macros.inc"
 
-MGTK_RELAY       := $D000
-DESKTOP_RELAY   := $D040
-
 ;;; ==================================================
 ;;; Overlay for File Copy
 ;;; ==================================================
@@ -87,11 +84,11 @@ L7052:  lda     winfo12
         addr_call L5E0A, $DA67  ; "Copy a File ..."
         addr_call L5E57, $DA77  ; "Source filename:"
         addr_call L5E6F, $DA88  ; "Destination filename:"
-        yax_call MGTK_RELAY, MGTK::SetPenMode, $D202 ; penXOR
-        yax_call MGTK_RELAY, MGTK::FrameRect, $DA9E
-        yax_call MGTK_RELAY, MGTK::FrameRect, $DAAA
-        yax_call MGTK_RELAY, MGTK::InitPort, $D239 ; grafport3
-        yax_call MGTK_RELAY, MGTK::SetPort, $D239
+        MGTK_RELAY_CALL MGTK::SetPenMode, $D202 ; penXOR
+        MGTK_RELAY_CALL MGTK::FrameRect, $DA9E
+        MGTK_RELAY_CALL MGTK::FrameRect, $DAAA
+        MGTK_RELAY_CALL MGTK::InitPort, $D239 ; grafport3
+        MGTK_RELAY_CALL MGTK::SetPort, $D239
         rts
 
 .macro entry arg1, arg2
@@ -182,7 +179,7 @@ L7156:  lda     path_buf0,x
         beq     L7162
         dex
         bne     L7156
-L7162:  ldy     #$02
+L7162:  ldy     #2
         dex
 L7165:  cpx     path_buf0
         beq     L7178
@@ -212,8 +209,8 @@ L7192:  lda     #$40
 
 L7198:  addr_call L647C, path_buf1
         bne     L7192
-        yax_call MGTK_RELAY, MGTK::CloseWindow, winfo15
-        yax_call MGTK_RELAY, MGTK::CloseWindow, winfo12
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo15
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo12
         lda     #0
         sta     $50A8
         lda     #0
@@ -231,8 +228,8 @@ L71C0:  copy16  #path_buf0, $6
 
 ;;; ==================================================
 
-L71D8:  yax_call MGTK_RELAY, MGTK::CloseWindow, winfo15
-        yax_call MGTK_RELAY, MGTK::CloseWindow, winfo12
+L71D8:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo15
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo12
         lda     #0
         sta     $D8EC
         jsr     L55BA
@@ -282,7 +279,7 @@ L7209:  lda     L709B+1,x
         bit     $D8F0
         bpl     L726D
         jsr     L5E87
-        lda     #$00
+        lda     #0
         jsr     L6227
         jsr     L5F5B
         jsr     L6161

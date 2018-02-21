@@ -9,9 +9,6 @@
         .include "../desktop.inc"
         .include "../macros.inc"
 
-MGTK_RELAY       := $D000
-DESKTOP_RELAY   := $D040
-
 ;;; ==================================================
 ;;; Overlay for Disk Copy
 ;;; ==================================================
@@ -78,9 +75,9 @@ str_desktop2:
 
 start:  lda     #$80
         sta     ptr
-        yax_call DESKTOP_RELAY, $6, $0
-        yax_call MGTK_RELAY, MGTK::CloseAll, $0
-        yax_call MGTK_RELAY, MGTK::SetZP1, ptr
+        DESKTOP_RELAY_CALL $6, $0
+        MGTK_RELAY_CALL MGTK::CloseAll, $0
+        MGTK_RELAY_CALL MGTK::SetZP1, ptr
 
         ;; Copy menu bar up to language card, and use it.
         ldx     #.sizeof(menu_bar)
@@ -88,7 +85,7 @@ start:  lda     #$80
         sta     $D400,x
         dex
         bpl     :-
-        yax_call MGTK_RELAY, MGTK::SetMenu, menu_target
+        MGTK_RELAY_CALL MGTK::SetMenu, menu_target
 
         ;; Clear most of the system bitmap
         ldx     #BITMAP_SIZE - 3

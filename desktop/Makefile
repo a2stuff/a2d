@@ -4,7 +4,7 @@ CAFLAGS = --target apple2enh --list-bytes 0
 CCFLAGS = --config asm.cfg
 
 TARGETS = loader.built mgtk.built desktop.built invoker.built \
-	ovl1.built ovl5.built
+	ovl1.built ovl5.built ovl6.built
 
 .PHONY: clean all
 all: $(TARGETS)

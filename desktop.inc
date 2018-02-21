@@ -80,6 +80,29 @@ label   := *
 
 
 ;;; ==================================================
+;;; Relays from Main to Aux (params must be in ZP or LC)
+
+MGTK_RELAY      := $D000
+DESKTOP_RELAY   := $D040
+
+.macro MGTK_RELAY_CALL call, addr
+    .if .paramcount > 1
+        yax_call        MGTK_RELAY, (call), (addr)
+    .else
+        yax_call        MGTK_RELAY, (call), 0
+    .endif
+.endmacro
+
+.macro DESKTOP_RELAY_CALL call, addr
+    .if .paramcount > 1
+        yax_call        DESKTOP_RELAY, (call), (addr)
+    .else
+        yax_call        DESKTOP_RELAY, (call), 0
+    .endif
+.endmacro
+
+
+;;; ==================================================
 ;;; Internals - Windows (paths) and Icons (files)
 
 ;;; NOTE: Some of these are used by Desk Accessories
