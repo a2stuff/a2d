@@ -39,6 +39,7 @@ for t in $TARGETS; do
     verify $t
 done;
 
+# Compute stats
 echo "Unidentified symbols:"
 for t in $TARGETS; do
     stats "$t.s"

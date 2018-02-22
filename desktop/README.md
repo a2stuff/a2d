@@ -74,7 +74,7 @@ pathname passed at $2006 (see ProDOS TLM).
 
 ### Initializer
 
-`desktop.s`
+(in `desktop.s`)
 
 Loaded at $800-$FFF, this does one-time initialization of the
 DeskTop. It is later overwritten when any desk accessories are
@@ -82,7 +82,7 @@ run.
 
 ### MouseGraphics ToolKit (MGTK)
 
-`a2d.s`
+`mgtk.s`
 
 AUX $4000-$851E is the GUI library used for the DeskTop application
 and (presumably) for disk copy and Selector apps (TBD).
@@ -196,3 +196,7 @@ $0100 +-------------+    +-------------+
       | Zero Page   |    | Zero Page   |
 $0000 +-------------+    +-------------+
 ```
+
+The Disk Copy command replaces large chunks of memory and is best
+thought of as a separate application. When exiting, the DeskTop is
+restarted from the beginning.
