@@ -22,6 +22,11 @@
         path_buf1 := $D443
         path_buf2 := $D484
 
+        grafport3 := $D239
+
+        dialog_rect1 := $DA9E
+        dialog_rect2 := $DAAA
+
 L4030           := $4030
 
 ;;; Routines in common overlay segment ($5000-$6FFF)
@@ -85,10 +90,10 @@ L7052:  lda     winfo12
         addr_call L5E57, $DA77  ; "Source filename:"
         addr_call L5E6F, $DA88  ; "Destination filename:"
         MGTK_RELAY_CALL MGTK::SetPenMode, $D202 ; penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, $DA9E
-        MGTK_RELAY_CALL MGTK::FrameRect, $DAAA
-        MGTK_RELAY_CALL MGTK::InitPort, $D239 ; grafport3
-        MGTK_RELAY_CALL MGTK::SetPort, $D239
+        MGTK_RELAY_CALL MGTK::FrameRect, dialog_rect1
+        MGTK_RELAY_CALL MGTK::FrameRect, dialog_rect2
+        MGTK_RELAY_CALL MGTK::InitPort, grafport3
+        MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
 
 .macro entry arg1, arg2

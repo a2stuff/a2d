@@ -15,6 +15,18 @@
 .proc selector_overlay
         .org $7000
 
+        winfo12 := $D5B7
+        winfo15 := $D5F1
+
+        path_buf0 := $D402
+        path_buf1 := $D443
+        path_buf2 := $D484
+
+        grafport3 := $D239
+
+        dialog_rect1 := $DA9E
+        dialog_rect2 := $DAAA
+
 L4030           := $4030
 
 L5106           := $5106
@@ -47,34 +59,32 @@ L7000:  stx     L73A9
         jsr     L7101
         jsr     L70AD
         jsr     L5E87
-        lda     $D402
+        lda     path_buf0
         beq     L7056
-        lda     #$02
-        ldx     #$D4
-        jsr     L6129
-        ldy     $D402
-L7021:  lda     $D402,y
+        addr_call L6129, path_buf0
+        ldy     path_buf0
+L7021:  lda     path_buf0,y
         sta     $5028,y
         dey
         bpl     L7021
         jsr     L5F49
-        ldy     $D402
-L7030:  lda     $D402,y
+        ldy     path_buf0
+L7030:  lda     path_buf0,y
         cmp     #$2F
         beq     L7044
         dey
         cpy     #$01
         bne     L7030
         lda     #$00
-        sta     $D402
+        sta     path_buf0
         jmp     L7056
 
 L7044:  ldx     #$00
 L7046:  iny
         inx
-        lda     $D402,y
+        lda     path_buf0,y
         sta     L709D,x
-        cpy     $D402
+        cpy     path_buf0
         bne     L7046
         stx     L709D
 L7056:  jsr     L5F5B
@@ -86,7 +96,7 @@ L7056:  jsr     L5F5B
 L706A:  jsr     L6163
         jsr     L61B1
         jsr     L606D
-        lda     $D402
+        lda     path_buf0
         bne     L707B
         jsr     L6D30
 L707B:  lda     #$01
@@ -127,7 +137,7 @@ L70B0:  lda     L7207+1,x
         sta     $D484
         lda     #$06
         sta     $D485
-        lda     $D5B7
+        lda     winfo12
         jsr     L62C8
         lda     L73A9
         jsr     L7467
@@ -145,9 +155,9 @@ L70B0:  lda     L7207+1,x
         sta     $5B25
         rts
 
-L7101:  lda     $D5B7
+L7101:  lda     winfo12
         jsr     L62C8
-        lda     $D402
+        lda     path_buf0
         beq     L7116
         addr_call L5E0A, $D729
         jmp     L711D
@@ -155,8 +165,8 @@ L7101:  lda     $D5B7
 L7116:  addr_call L5E0A, $D718
 L711D:  addr_call L5E6F, $D849
         MGTK_RELAY_CALL MGTK::SetPenMode, $D202 ; penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, $DA9E
-        MGTK_RELAY_CALL MGTK::FrameRect, $DAAA
+        MGTK_RELAY_CALL MGTK::FrameRect, dialog_rect1
+        MGTK_RELAY_CALL MGTK::FrameRect, dialog_rect2
         addr_call L5E57, $D769
         addr_call L5E6F, $D797
         MGTK_RELAY_CALL MGTK::MoveTo, $D922
@@ -179,8 +189,8 @@ L711D:  addr_call L5E6F, $D849
         MGTK_RELAY_CALL MGTK::FrameRect, $D94E
         MGTK_RELAY_CALL MGTK::FrameRect, $D956
         MGTK_RELAY_CALL MGTK::FrameRect, $D95E
-        MGTK_RELAY_CALL MGTK::InitPort, $D239
-        MGTK_RELAY_CALL MGTK::SetPort, $D239
+        MGTK_RELAY_CALL MGTK::InitPort, grafport3
+        MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
 
 ;;; ==================================================
@@ -251,9 +261,9 @@ L726D:  lda     L7232+1,x
         bne     L72BF
         lda     #$00
         sta     $D443
-        ldx     $D402
+        ldx     path_buf0
         beq     L72BF
-L72A0:  lda     $D402,x
+L72A0:  lda     path_buf0,x
         cmp     #$2F
         beq     L72AD
         dex
@@ -263,9 +273,9 @@ L72A0:  lda     $D402,x
 L72AD:  ldy     #$00
 L72AF:  iny
         inx
-        lda     $D402,x
+        lda     path_buf0,x
         sta     $D443,y
-        cpx     $D402
+        cpx     path_buf0
         bne     L72AF
         sty     $D443
 L72BF:  lda     #$01
@@ -275,7 +285,7 @@ L72BF:  lda     #$01
         jsr     L6D27
         rts
 
-        addr_call L647C, $D402
+        addr_call L647C, path_buf0
         bne     L72E2
         lda     $D443
         beq     L72E7
@@ -291,10 +301,10 @@ L72E8:  lda     #$FB
         jsr     L4030
         rts
 
-L72EE:  MGTK_RELAY_CALL MGTK::InitPort, $D239
-        MGTK_RELAY_CALL MGTK::SetPort, $D239
-        MGTK_RELAY_CALL MGTK::CloseWindow, $D5F1
-        MGTK_RELAY_CALL MGTK::CloseWindow, $D5B7
+L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
+        MGTK_RELAY_CALL MGTK::SetPort, grafport3
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo15
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo12
         sta     $D8EC
         jsr     L55BA
         lda     #$B8
@@ -308,10 +318,10 @@ L72EE:  MGTK_RELAY_CALL MGTK::InitPort, $D239
         lda     #$00
         rts
 
-        MGTK_RELAY_CALL MGTK::InitPort, $D239
-        MGTK_RELAY_CALL MGTK::SetPort, $D239
-        MGTK_RELAY_CALL MGTK::CloseWindow, $D5F1
-        MGTK_RELAY_CALL MGTK::CloseWindow, $D5B7
+        MGTK_RELAY_CALL MGTK::InitPort, grafport3
+        MGTK_RELAY_CALL MGTK::SetPort, grafport3
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo15
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo12
         lda     #$00
         sta     $D8EC
         jsr     L55BA
@@ -486,7 +496,7 @@ L74E1:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
         MGTK_RELAY_CALL MGTK::PaintRect, $D98E
         rts
 
-        lda     $D5B7
+        lda     winfo12
         jsr     L62C8
         lda     $D20A
         bne     L7500

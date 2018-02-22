@@ -4980,9 +4980,12 @@ file_count:
         PASCAL_STRING "Source filename:"
         PASCAL_STRING "Destination filename:"
 
-        .byte   $1C,$00,$71,$00,$CF,$01,$7C,$00
-        .byte   $1E,$00,$7B,$00,$1C,$00,$88,$00
-        .byte   $CF,$01,$93,$00,$1E,$00,$92,$00
+dialog_rect1:   DEFINE_RECT $1C, $71, $1CF, $7C
+        .byte   $1E,$00,$7B,$00
+dialog_rect2:   DEFINE_RECT $1C, $88, $1CF, $93
+
+
+        .byte   $1E,$00,$92,$00
 
         PASCAL_STRING "Delete a File ..."
         PASCAL_STRING "File to delete:"

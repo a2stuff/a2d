@@ -24,6 +24,9 @@
 
         grafport3 := $D239
 
+        dialog_rect1 := $DA9E
+        dialog_rect2 := $DAAA
+
 L4030   := $4030
 
 ;;; Routines in common overlay segment ($5000-$6FFF)
@@ -79,7 +82,7 @@ L704D:  lda     winfo12
         addr_call L5E0A, $DAB6  ; "Delete a File ..."
         addr_call L5E57, $DAC8  ; "File to delete:"
         MGTK_RELAY_CALL MGTK::SetPenMode, $D202 ; penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, $DA9E
+        MGTK_RELAY_CALL MGTK::FrameRect, dialog_rect1
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
