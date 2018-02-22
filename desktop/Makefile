@@ -8,7 +8,7 @@ OUTDIR = out
 HEADERS = $(wildcard ../*.inc) $(wildcard ../inc/*.inc) $(wildcard *.inc)
 
 SEGMENTS = loader mgtk desktop invoker \
-        ovl1 ovl1a ovl5 ovl6
+        ovl1 ovl1a ovl5 ovl6 ovl7
 
 EXTENSION = built
 

@@ -78,10 +78,10 @@ L704D:  lda     winfo12
         jsr     L62C8
         addr_call L5E0A, $DAB6  ; "Delete a File ..."
         addr_call L5E57, $DAC8  ; "File to delete:"
-        yax_call MGTK_RELAY, MGTK::SetPenMode, $D202 ; penXOR
-        yax_call MGTK_RELAY, MGTK::FrameRect, $DA9E
-        yax_call MGTK_RELAY, MGTK::InitPort, grafport3
-        yax_call MGTK_RELAY, MGTK::SetPort, grafport3
+        MGTK_RELAY_CALL MGTK::SetPenMode, $D202 ; penXOR
+        MGTK_RELAY_CALL MGTK::FrameRect, $DA9E
+        MGTK_RELAY_CALL MGTK::InitPort, grafport3
+        MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
 
 .macro entry arg1, arg2
@@ -112,8 +112,8 @@ L70B1:  addr_call L647C, path_buf0
         jsr     L4030
         rts
 
-L70C0:  yax_call MGTK_RELAY, MGTK::CloseWindow, winfo15
-        yax_call MGTK_RELAY, MGTK::CloseWindow, winfo12
+L70C0:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo15
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo12
         lda     #0
         sta     $D8EC
         jsr     L55BA
@@ -125,8 +125,8 @@ L70C0:  yax_call MGTK_RELAY, MGTK::CloseWindow, winfo15
 
         .byte   0
 
-L70EA:  yax_call MGTK_RELAY, MGTK::CloseWindow, winfo15
-        yax_call MGTK_RELAY, MGTK::CloseWindow, winfo12
+L70EA:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo15
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo12
         lda     #0
         sta     $D8EC
         jsr     L55BA

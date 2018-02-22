@@ -1,0 +1,520 @@
+        .setcpu "6502"
+
+        .include "apple2.inc"
+        .include "../inc/apple2.inc"
+        .include "../inc/auxmem.inc"
+        .include "../inc/prodos.inc"
+        .include "../mgtk.inc"
+        .include "../desktop.inc"
+        .include "../macros.inc"
+
+;;; ==================================================
+;;; Overlay for Selector (part of it, anyway)
+;;; ==================================================
+
+.proc selector_overlay
+        .org $7000
+
+L4030           := $4030
+
+L5106           := $5106
+L55BA           := $55BA
+L5CF7           := $5CF7
+L5DED           := $5DED
+L5E0A           := $5E0A
+L5E57           := $5E57
+L5E6F           := $5E6F
+L5E87           := $5E87
+L5F49           := $5F49
+L5F5B           := $5F5B
+L606D           := $606D
+L6129           := $6129
+L6163           := $6163
+L61B1           := $61B1
+L62C8           := $62C8
+L647C           := $647C
+L6516           := $6516
+L6586           := $6586
+L6693           := $6693
+L6D27           := $6D27
+L6D30           := $6D30
+
+;;; ==================================================
+
+L7000:  stx     L73A9
+        sty     L73AA
+        jsr     L5CF7
+        jsr     L7101
+        jsr     L70AD
+        jsr     L5E87
+        lda     $D402
+        beq     L7056
+        lda     #$02
+        ldx     #$D4
+        jsr     L6129
+        ldy     $D402
+L7021:  lda     $D402,y
+        sta     $5028,y
+        dey
+        bpl     L7021
+        jsr     L5F49
+        ldy     $D402
+L7030:  lda     $D402,y
+        cmp     #$2F
+        beq     L7044
+        dey
+        cpy     #$01
+        bne     L7030
+        lda     #$00
+        sta     $D402
+        jmp     L7056
+
+L7044:  ldx     #$00
+L7046:  iny
+        inx
+        lda     $D402,y
+        sta     L709D,x
+        cpy     $D402
+        bne     L7046
+        stx     L709D
+L7056:  jsr     L5F5B
+        lda     #$00
+        bcs     L706A
+        addr_call L6516, $709D
+        sta     $D920
+        jsr     L6586
+L706A:  jsr     L6163
+        jsr     L61B1
+        jsr     L606D
+        lda     $D402
+        bne     L707B
+        jsr     L6D30
+L707B:  lda     #$01
+        sta     $D484
+        lda     #$20
+        sta     $D485
+        jsr     L6D27
+        jsr     L6693
+        lda     #$01
+        sta     $D484
+        lda     #$20
+        sta     $D485
+        lda     #$FF
+        sta     $D8EC
+        jmp     L5106
+
+;;; ==================================================
+
+L709D:  .res 16, 0
+
+;;; ==================================================
+
+
+L70AD:  ldx     L7207
+L70B0:  lda     L7207+1,x
+        sta     $6D1E,x
+        dex
+        lda     L7207+1,x
+        sta     $6D1E,x
+        dex
+        dex
+        bpl     L70B0
+        lda     #$00
+        sta     $51AE
+        lda     #$80
+        sta     $5104
+        lda     #$01
+        sta     $D484
+        lda     #$06
+        sta     $D485
+        lda     $D5B7
+        jsr     L62C8
+        lda     L73A9
+        jsr     L7467
+        lda     L73AA
+        jsr     L747B
+        lda     #$80
+        sta     $5103
+        lda     #$AB
+        sta     $531C
+        lda     #$73
+        sta     $531D
+        lda     #$F4
+        sta     $5B24
+        lda     #$74
+        sta     $5B25
+        rts
+
+L7101:  lda     $D5B7
+        jsr     L62C8
+        lda     $D402
+        beq     L7116
+        addr_call L5E0A, $D729
+        jmp     L711D
+
+L7116:  addr_call L5E0A, $D718
+L711D:  addr_call L5E6F, $D849
+        MGTK_RELAY_CALL MGTK::SetPenMode, $D202 ; penXOR
+        MGTK_RELAY_CALL MGTK::FrameRect, $DA9E
+        MGTK_RELAY_CALL MGTK::FrameRect, $DAAA
+        addr_call L5E57, $D769
+        addr_call L5E6F, $D797
+        MGTK_RELAY_CALL MGTK::MoveTo, $D922
+        addr_call L5DED, $D7DE
+        MGTK_RELAY_CALL MGTK::MoveTo, $D926
+        addr_call L5DED, $D7F6
+        MGTK_RELAY_CALL MGTK::MoveTo, $D92A
+        addr_call L5DED, $D802
+        MGTK_RELAY_CALL MGTK::MoveTo, $D92E
+        addr_call L5DED, $D814
+        MGTK_RELAY_CALL MGTK::MoveTo, $D932
+        addr_call L5DED, $D81F
+        MGTK_RELAY_CALL MGTK::MoveTo, $D936
+        addr_call L5DED, $D830
+        MGTK_RELAY_CALL MGTK::MoveTo, $D93A
+        addr_call L5DED, $D840
+        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::FrameRect, $D93E
+        MGTK_RELAY_CALL MGTK::FrameRect, $D946
+        MGTK_RELAY_CALL MGTK::FrameRect, $D94E
+        MGTK_RELAY_CALL MGTK::FrameRect, $D956
+        MGTK_RELAY_CALL MGTK::FrameRect, $D95E
+        MGTK_RELAY_CALL MGTK::InitPort, $D239
+        MGTK_RELAY_CALL MGTK::SetPort, $D239
+        rts
+
+;;; ==================================================
+
+        .byte   $00
+
+.macro entry arg1, arg2
+        .byte   arg1
+        .addr   arg2
+.endmacro
+
+L7207:  .byte   $29
+        entry   0, $725D
+        entry   0, $732F
+        entry   0, $6593
+        entry   0, $664E
+        entry   0, $6DC2
+        entry   0, $6DD0
+        entry   0, $6E1D
+        entry   0, $69C6
+        entry   0, $6A18
+        entry   0, $6A53
+        entry   0, $6AAC
+        entry   0, $6B01
+        entry   0, $6B44
+        entry   0, $66D8
+
+L7232:  .byte   $29
+L7233:  entry   0, $72CD
+        entry   0, $736C
+        entry   0, $65F0
+        entry   0, $6693
+        entry   0, $6DC9
+        entry   0, $6DD4
+        entry   0, $6E31
+        entry   0, $6B72
+        entry   0, $6BC4
+        entry   0, $6BFF
+        entry   0, $6C58
+        entry   0, $6CAD
+        entry   0, $6CF0
+        entry   0, $684F
+
+;;; ==================================================
+
+        lda     #$01
+        sta     $D484
+        lda     #$20
+        sta     $D485
+        jsr     L6D27
+        ldx     L7232
+L726D:  lda     L7232+1,x
+        sta     $6D1E,x
+        dex
+        lda     L7232+1,x
+        sta     $6D1E,x
+        dex
+        dex
+        bpl     L726D
+        lda     #$80
+        sta     $51AE
+        sta     $5105
+        lda     $D8F0
+        sta     $D8F1
+        lda     #$00
+        sta     $D8F0
+        lda     $D443
+        bne     L72BF
+        lda     #$00
+        sta     $D443
+        ldx     $D402
+        beq     L72BF
+L72A0:  lda     $D402,x
+        cmp     #$2F
+        beq     L72AD
+        dex
+        bne     L72A0
+        jmp     L72BF
+
+L72AD:  ldy     #$00
+L72AF:  iny
+        inx
+        lda     $D402,x
+        sta     $D443,y
+        cpx     $D402
+        bne     L72AF
+        sty     $D443
+L72BF:  lda     #$01
+        sta     $D484
+        lda     #$06
+        sta     $D485
+        jsr     L6D27
+        rts
+
+        addr_call L647C, $D402
+        bne     L72E2
+        lda     $D443
+        beq     L72E7
+        cmp     #$0F
+        bcs     L72E8
+        jmp     L72EE
+
+L72E2:  lda     #$40
+        jsr     L4030
+L72E7:  rts
+
+L72E8:  lda     #$FB
+        jsr     L4030
+        rts
+
+L72EE:  MGTK_RELAY_CALL MGTK::InitPort, $D239
+        MGTK_RELAY_CALL MGTK::SetPort, $D239
+        MGTK_RELAY_CALL MGTK::CloseWindow, $D5F1
+        MGTK_RELAY_CALL MGTK::CloseWindow, $D5B7
+        sta     $D8EC
+        jsr     L55BA
+        lda     #$B8
+        sta     $5B24
+        lda     #$59
+        sta     $5B25
+        ldx     $50AA
+        txs
+        ldx     L73A9
+        ldy     L73AA
+        lda     #$00
+        rts
+
+        MGTK_RELAY_CALL MGTK::InitPort, $D239
+        MGTK_RELAY_CALL MGTK::SetPort, $D239
+        MGTK_RELAY_CALL MGTK::CloseWindow, $D5F1
+        MGTK_RELAY_CALL MGTK::CloseWindow, $D5B7
+        lda     #$00
+        sta     $D8EC
+        jsr     L55BA
+        lda     #$B8
+        sta     $5B24
+        lda     #$59
+        sta     $5B25
+        ldx     $50AA
+        txs
+        lda     #$FF
+        rts
+
+        lda     #$01
+        sta     $D484
+        lda     #$20
+        sta     $D485
+        jsr     L6D27
+        ldx     L7207
+L737C:  lda     L7207+1,x
+        sta     $6D1E,x
+        dex
+        lda     L7207+1,x
+        sta     $6D1E,x
+        dex
+        dex
+        bpl     L737C
+        lda     #$01
+        sta     $D484
+        lda     #$06
+        sta     $D485
+        jsr     L6D27
+        lda     #$00
+        sta     $5105
+        sta     $51AE
+        lda     $D8F1
+        sta     $D8F0
+        rts
+
+L73A9:  .byte   0
+L73AA:  .byte   0
+
+        MGTK_RELAY_CALL MGTK::InRect, $D966
+        cmp     #$80
+        bne     L73BB
+        jmp     L73FE
+
+L73BB:  MGTK_RELAY_CALL MGTK::InRect, $D96E
+        cmp     #$80
+        bne     L73CB
+        jmp     L7413
+
+L73CB:  MGTK_RELAY_CALL MGTK::InRect, $D976
+        cmp     #$80
+        bne     L73DB
+        jmp     L7428
+
+L73DB:  MGTK_RELAY_CALL MGTK::InRect, $D97E
+        cmp     #$80
+        bne     L73EB
+        jmp     L743D
+
+L73EB:  MGTK_RELAY_CALL MGTK::InRect, $D986
+        cmp     #$80
+        bne     L73FB
+        jmp     L7452
+
+L73FB:  lda     #$00
+        rts
+
+L73FE:  lda     L73A9
+        cmp     #1
+        beq     L7410
+        jsr     L7467
+        lda     #1
+        sta     L73A9
+        jsr     L7467
+L7410:  lda     #$FF
+        rts
+
+L7413:  lda     L73A9
+        cmp     #2
+        beq     L7425
+        jsr     L7467
+        lda     #2
+        sta     L73A9
+        jsr     L7467
+L7425:  lda     #$FF
+        rts
+
+L7428:  lda     L73AA
+        cmp     #1
+        beq     L743A
+        jsr     L747B
+        lda     #1
+        sta     L73AA
+        jsr     L747B
+L743A:  lda     #$FF
+        rts
+
+L743D:  lda     L73AA
+        cmp     #2
+        beq     L744F
+        jsr     L747B
+        lda     #2
+        sta     L73AA
+        jsr     L747B
+L744F:  lda     #$FF
+        rts
+
+L7452:  lda     L73AA
+        cmp     #3
+        beq     L7464
+        jsr     L747B
+        lda     #3
+        sta     L73AA
+        jsr     L747B
+L7464:  lda     #$FF
+        rts
+
+L7467:  cmp     #1
+        bne     L7473
+        addr_call L749B, $D93E
+        rts
+
+L7473:  addr_call L749B, $D946
+        rts
+
+L747B:  cmp     #1
+        bne     L7487
+        addr_call L749B, $D94E
+        rts
+
+L7487:  cmp     #2
+        bne     L7493
+        addr_call L749B, $D956
+        rts
+
+L7493:  addr_call L749B, $D95E
+        rts
+
+L749B:  stax    $06
+        ldy     #7
+L74A1:  lda     ($06),y
+        sta     $D98E,y
+        dey
+        bpl     L74A1
+        lda     $D98E
+        clc
+        adc     #2
+        sta     $D98E
+        bcc     L74B7
+        inc     $D98F
+L74B7:  lda     $D990
+        clc
+        adc     #2
+        sta     $D990
+        bcc     L74C5
+        inc     $D991
+L74C5:  lda     $D992
+        sec
+        sbc     #2
+        sta     $D992
+        bcs     L74D3
+        dec     $D993
+L74D3:  lda     $D994
+        sec
+        sbc     #2
+        sta     $D994
+        bcs     L74E1
+        dec     $D995
+L74E1:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::PaintRect, $D98E
+        rts
+
+        lda     $D5B7
+        jsr     L62C8
+        lda     $D20A
+        bne     L7500
+        rts
+
+L7500:  lda     $D209
+        and     #$7F
+        cmp     #'1'
+        bne     L750C
+        jmp     L73FE
+
+L750C:  cmp     #'2'
+        bne     L7513
+        jmp     L7413
+
+L7513:  cmp     #'3'
+        bne     L751A
+        jmp     L7428
+
+L751A:  cmp     #'4'
+        bne     L7521
+        jmp     L743D
+
+L7521:  cmp     #'5'
+        bne     L7528
+        jmp     L7452
+
+L7528:  rts
+
+        PAD_TO $7800
+.endproc
