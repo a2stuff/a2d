@@ -159,4 +159,8 @@ $text =~ s/
      \s+ rts \b
      /return  $1/gx;
 
+$text =~ s/
+     \b  brk \b
+     /.byte   0/gx;
+
 print $text;

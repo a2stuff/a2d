@@ -55,29 +55,18 @@ L080C:  lda     #$00
         jsr     LB509
         lda     $D57D
         jsr     LB7B9
-        lda     #$45
-        ldx     #$B2
-        jsr     LB723
-        lda     #$57
-        ldx     #$B2
-        ldy     #$01
-        jsr     LB590
+        addr_call LB723, $B245
+        axy_call LB590, $01, $B257
         jsr     L0D31
         lda     #$FF
         sta     $D887
-L0832:  lda     #$48
-        sta     $A89A
-        lda     #$0B
-        sta     $A89B
+L0832:  copy16  #$0B48, $A89A
         lda     #$80
         sta     $D8ED
 L0841:  jsr     LA567
         bmi     L0841
         pha
-        lda     #$F4
-        sta     $A89A
-        lda     #$B8
-        sta     $A89B
+        copy16  #$B8F4, $A89A
         lda     #$00
         sta     $D8F3
         sta     $D8ED
@@ -89,32 +78,17 @@ L085F:  bit     $D887
         bmi     L0832
         lda     $D57D
         jsr     LB7B9
-        ldy     #$07
-        lda     #$00
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$11
-        lda     #$6E
-        ldx     #$AE
-        jsr     MGTK_RELAY
-        ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$12
-        lda     #$AB
-        ldx     #$D6
-        jsr     MGTK_RELAY
+        MGTK_RELAY_CALL MGTK::SetPenMode, $D200
+        MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
+        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::FrameRect, $D6AB
         jsr     LBD75
         lda     #$80
         sta     $D8E8
         lda     #$00
         sta     $D8ED
         jsr     LBD69
-        lda     #$8D
-        ldx     #$B2
-        ldy     #$03
-        jsr     LB590
+        axy_call LB590, $03, $B28D
 L08A7:  jsr     LA567
         bmi     L08A7
         beq     L08B7
@@ -130,29 +104,18 @@ L08B7:  lda     $D443
         jsr     LB403
         lda     $D57D
         jsr     LB7B9
-        ldy     #$07
-        lda     #$00
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$11
-        lda     #$6E
-        ldx     #$AE
-        jsr     MGTK_RELAY
+        MGTK_RELAY_CALL MGTK::SetPenMode, $D200
+        MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
         ldx     $D887
         lda     $BF32,x
         sta     L09D8
         sta     L09D7
         lda     #$00
         sta     $D8E8
-        lda     #$AF
-        ldx     #$B2
-        ldy     #$03
-        jsr     LB590
+        axy_call LB590, $03, $B2AF
         lda     L09D7
         jsr     L1A2D
-        lda     #$09
-        ldx     #$D9
-        jsr     LB708
+        addr_call LB708, $D909
 L0902:  jsr     LA567
         bmi     L0902
         beq     L090C
@@ -160,16 +123,11 @@ L0902:  jsr     LA567
 
 L090C:  lda     $D57D
         jsr     LB7B9
-L0912:  ldy     #$07
-        lda     #$00
-        ldx     #$D2
-        jsr     MGTK_RELAY
+L0912:  MGTK_RELAY_CALL MGTK::SetPenMode, $D200
         ldy     #$11
-L091D:  lda     #$6E
-        ldx     #$AE
+L091D:  ldax    #$AE6E
         jsr     MGTK_RELAY
-L0924:  lda     #$C6
-        ldx     #$B2
+L0924:  ldax    #$B2C6
         ldy     #$01
 L092B           := * + 1
         jsr     LB590
@@ -190,17 +148,9 @@ L094D           := * + 1
         ldx     #$D2
 L0950           := * + 2
         jsr     MGTK_RELAY
-        ldy     #$11
-        lda     #$6E
-        ldx     #$AE
-        jsr     MGTK_RELAY
-        lda     #$73
-        ldx     #$B3
-        ldy     #$01
-        jsr     LB590
-        lda     #$43
-        ldx     #$D4
-        jsr     L1900
+        MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
+        axy_call LB590, $01, $B373
+        addr_call L1900, $D443
         ldx     #$43
 L096D           := * + 1
         ldy     #$D4
@@ -221,8 +171,7 @@ L0980:  cmp     #$2B
         jmp     L090C
 
 L098C:  jsr     L191B
-        lda     #$88
-        ldx     #$B3
+        ldax    #$B388
 L0994           := * + 1
         ldy     #$06
         jsr     LB590
@@ -238,10 +187,7 @@ L099B:  pha
         jmp     L090C
 
 L09AC:  jsr     L191B
-        lda     #$DE
-        ldx     #$B2
-        ldy     #$06
-        jsr     LB590
+        axy_call LB590, $06, $B2DE
 L09B8:  jsr     LA567
 L09BC           := * + 1
         bmi     L09B8
@@ -251,26 +197,20 @@ L09BC           := * + 1
 L09C2:  pha
         jsr     LB403
         jsr     LBEB1
-        ldy     #$39
-        lda     #$7D
-        ldx     #$D5
-        jsr     MGTK_RELAY
+        MGTK_RELAY_CALL MGTK::CloseWindow, $D57D
         ldx     L09D8
         pla
         rts
 
-L09D7:  brk
-L09D8:  brk
+L09D7:  .byte   0
+L09D8:  .byte   0
 L09D9:  lda     #$00
         sta     $D8E8
         jsr     LB509
         lda     $D57D
         jsr     LB7B9
-        lda     #$19
-        ldx     #$B3
-        jsr     LB723
-        lda     #$2A
-        ldx     #$B3
+        addr_call LB723, $B319
+        ldax    #$B32A
 L09F2:  ldy     #$01
         jsr     LB590
         jsr     L0D31
@@ -289,38 +229,20 @@ L0A0E:  jsr     LA567
 
 L0A18:  bit     $D887
         bmi     L0A0E
-        lda     #$98
-        sta     $A89A
-        lda     #$A8
-        sta     $A89B
+        copy16  #$A898, $A89A
         lda     $D57D
         jsr     LB7B9
-        ldy     #$07
-        lda     #$00
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$11
-        lda     #$6E
-        ldx     #$AE
-        jsr     MGTK_RELAY
-        ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$12
-        lda     #$AB
-        ldx     #$D6
-        jsr     MGTK_RELAY
+        MGTK_RELAY_CALL MGTK::SetPenMode, $D200
+        MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
+        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::FrameRect, $D6AB
         jsr     LBD75
         lda     #$80
         sta     $D8E8
         lda     #$00
         sta     $D8ED
         jsr     LBD69
-        lda     #$8D
-        ldx     #$B2
-        ldy     #$03
-        jsr     LB590
+        axy_call LB590, $03, $B28D
 L0A6A:  jsr     LA567
         bmi     L0A6A
         beq     L0A7A
@@ -336,30 +258,19 @@ L0A7F:  cmp     #$10
         jsr     LB403
         lda     $D57D
         jsr     LB7B9
-        ldy     #$07
-        lda     #$00
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$11
-        lda     #$6E
-        ldx     #$AE
-        jsr     MGTK_RELAY
+        MGTK_RELAY_CALL MGTK::SetPenMode, $D200
+        MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
         lda     #$00
         sta     $D8E8
         ldx     $D887
         lda     $BF32,x
         sta     L0B47
         sta     L0B46
-        lda     #$5D
-        ldx     #$B3
-        ldy     #$03
-        jsr     LB590
+        axy_call LB590, $03, $B35D
         lda     L0B46
         and     #$F0
         jsr     L1A2D
-        lda     #$09
-        ldx     #$D9
-        jsr     LB708
+        addr_call LB708, $D909
 L0AC7:  jsr     LA567
         bmi     L0AC7
         beq     L0AD1
@@ -367,21 +278,10 @@ L0AC7:  jsr     LA567
 
 L0AD1:  lda     $D57D
         jsr     LB7B9
-        ldy     #$07
-        lda     #$00
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$11
-        lda     #$6E
-        ldx     #$AE
-        jsr     MGTK_RELAY
-        lda     #$73
-        ldx     #$B3
-        ldy     #$01
-        jsr     LB590
-        lda     #$43
-        ldx     #$D4
-        jsr     L1900
+        MGTK_RELAY_CALL MGTK::SetPenMode, $D200
+        MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
+        axy_call LB590, $01, $B373
+        addr_call L1900, $D443
         jsr     LB3E7
         ldx     #$43
         ldy     #$D4
@@ -401,41 +301,33 @@ L0B12:  cmp     #$2B
         jmp     L0AD1
 
 L0B1E:  jsr     L191B
-        lda     #$88
-        ldx     #$B3
-        ldy     #$06
-        jsr     LB590
+        axy_call LB590, $06, $B388
 L0B2A:  jsr     LA567
         bmi     L0B2A
         beq     L0AD1
 L0B31:  pha
         jsr     LB403
         jsr     LBEB1
-        ldy     #$39
-        lda     #$7D
-        ldx     #$D5
-        jsr     MGTK_RELAY
+        MGTK_RELAY_CALL MGTK::CloseWindow, $D57D
         ldx     L0B47
         pla
         rts
 
-L0B46:  brk
-L0B47:  brk
+L0B46:  .byte   0
+L0B47:  .byte   0
         lda     $D20D
         cmp     #$28
         lda     $D20E
         sbc     #$00
         bpl     L0B57
-        lda     #$FF
-        rts
+        return  #$FF
 
 L0B57:  lda     $D20D
         cmp     #$68
         lda     $D20E
         sbc     #$01
         bcc     L0B66
-        lda     #$FF
-        rts
+        return  #$FF
 
 L0B66:  lda     $D20F
         sec
@@ -444,21 +336,16 @@ L0B66:  lda     $D20F
         lda     $D210
         sbc     #$00
         bpl     L0B79
-        lda     #$FF
-        rts
+        return  #$FF
 
 L0B79:  sta     $D210
-        lsr     $D210
-        ror     $D20F
-        lsr     $D210
-        ror     $D20F
-        lsr     $D210
-        ror     $D20F
+        lsr16    $D20F
+        lsr16    $D20F
+        lsr16    $D20F
         lda     $D20F
         cmp     #$04
         bcc     L0B98
-        lda     #$FF
-        rts
+        return  #$FF
 
 L0B98:  lda     #$02
         sta     L0C1F
@@ -487,24 +374,16 @@ L0BBB:  lda     L0C1F
         jsr     L0C20
         lda     #$FF
         sta     $D887
-L0BD9:  lda     #$FF
-        rts
+L0BD9:  return  #$FF
 
 L0BDC:  cmp     $D887
         bne     L0C04
         jsr     LB445
         bmi     L0C03
-L0BE6:  ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     MGTK_RELAY
+L0BE6:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::PaintRect, $AE20
         ldy     #$11
-        lda     #$20
-        ldx     #$AE
-        jsr     MGTK_RELAY
-        ldy     #$11
-        lda     #$20
-        ldx     #$AE
+        ldax    #$AE20
 L0C00           := * + 2
         jsr     MGTK_RELAY
 L0C01:  lda     #$00
@@ -521,8 +400,8 @@ L0C0F:  lda     L0C1E
         beq     L0BE6
         rts
 
-L0C1E:  brk
-L0C1F:  brk
+L0C1E:  .byte   0
+L0C1F:  .byte   0
 L0C20:  ldy     #$27
 L0C23           := * + 1
         sty     $D888
@@ -533,23 +412,11 @@ L0C23           := * + 1
         lsr     a
         sta     L0CA9
         beq     L0C5B
-        lda     $D888
-        clc
-        adc     #$78
-        sta     $D888
-        lda     $D889
-        adc     #$00
-        sta     $D889
+        add16   $D888, #$0078, $D888
         lda     L0CA9
         cmp     #$01
         beq     L0C5B
-        lda     $D888
-        clc
-        adc     #$78
-        sta     $D888
-        lda     $D889
-        adc     #$00
-        sta     $D889
+        add16   $D888, #$0078, $D888
 L0C5B:  asl     L0CA9
         asl     L0CA9
         txa
@@ -563,31 +430,13 @@ L0C5B:  asl     L0CA9
         sta     $D88A
         lda     #$00
         sta     $D88B
-        lda     $D888
-        clc
-        adc     #$77
-        sta     $D88C
-        lda     $D889
-        adc     #$00
-        sta     $D88D
-        lda     $D88A
-        clc
-        adc     #$07
-        sta     $D88E
-        lda     $D88B
-        adc     #$00
-        sta     $D88F
-        ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$11
-        lda     #$88
-        ldx     #$D8
-        jsr     MGTK_RELAY
+        add16   $D888, #$0077, $D88C
+        add16   $D88A, #$0007, $D88E
+        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::PaintRect, $D888
         rts
 
-L0CA9:  brk
+L0CA9:  .byte   0
 L0CAA:  lda     $D887
         bmi     L0CB7
         jsr     L0C20
@@ -608,8 +457,7 @@ L0CC1:  clc
         pla
 L0CCE:  sta     $D887
         jsr     L0C20
-L0CD4:  lda     #$FF
-        rts
+L0CD4:  return  #$FF
 
         lda     $D887
         bpl     L0CE6
@@ -628,8 +476,7 @@ L0CE6:  sec
         pla
 L0CF0:  sta     $D887
         jsr     L0C20
-L0CF6:  lda     #$FF
-        rts
+L0CF6:  return  #$FF
 
         lda     $D887
         clc
@@ -643,8 +490,7 @@ L0D06:  pha
         pla
         sta     $D887
         jsr     L0C20
-        lda     #$FF
-        rts
+        return  #$FF
 
         lda     $D887
         bmi     L0D1E
@@ -659,8 +505,7 @@ L0D23:  pha
         pla
         sta     $D887
         jsr     L0C20
-        lda     #$FF
-        rts
+        return  #$FF
 
 L0D31:  ldx     $BF31
         inx
@@ -682,8 +527,7 @@ L0D50:  cmp     #$04
         ldx     #$00
         lda     #$A0
         bne     L0D5A
-L0D5A:  sta     $D6C3
-        stx     $D6C4
+L0D5A:  stax    $D6C3
 L0D60:  lda     L0D8C
         asl     a
         tay
@@ -709,122 +553,122 @@ L0D60:  lda     L0D8C
         inc     L0D8C
         jmp     L0D3D
 
-L0D8C:  brk
-L0D8D:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+L0D8C:  .byte   0
+L0D8D:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
 L0E00:  php
         sei
         jsr     L0E3A
@@ -1234,9 +1078,9 @@ L112D:  nop
         cmp     $C08C,x
         rts
 
-        brk
-        brk
-        brk
+        .byte   0
+        .byte   0
+        .byte   0
 L113A:  ldx     #$11
 L113C:  dex
         bne     L113C
@@ -1384,16 +1228,15 @@ L1248:  .byte   $00
 L1249:  .byte   $00
 L124A:  .byte   $00
 L124B:  sty     L125F
-        sta     L1260
-        stx     L1261
+        stax    L1260
         php
         sei
         sta     ALTZPOFF
         lda     $C082
         jsr     MLI
-L125F:  brk
-L1260:  brk
-L1261:  brk
+L125F:  .byte   0
+L1260:  .byte   0
+L1261:  .byte   0
         tax
         sta     ALTZPON
         lda     LCBANK1
@@ -1444,7 +1287,7 @@ L12AD:  ldy     #$FF
 
         rts
 
-L12C0:  brk
+L12C0:  .byte   0
 L12C1:  sta     L1306
         and     #$0F
         beq     L1303
@@ -1476,13 +1319,11 @@ L12E6           := * + 1
         lda     (L0006),y
         and     #$08
         bne     L1303
-        lda     #$FF
-        rts
+        return  #$FF
 
-L1303:  lda     #$00
-        rts
+L1303:  return  #$00
 
-L1306:  brk
+L1306:  .byte   0
 L1307:  sta     L124A
         and     #$F0
         sta     L1245
@@ -1558,17 +1399,11 @@ L1394:  ldx     #$18
         ldy     #$01
 L1398:  stx     L14E3
         sty     L14E4
-        lda     #$00
-        sta     L1246
-        lda     #$15
-        sta     L1247
+        copy16  #$1500, L1246
         lda     #$00
         sta     L1248
         sta     L1249
-        ldy     #$81
-        lda     #$44
-        ldx     #$12
-        jsr     L124B
+        yax_call L124B, $81, $1244
         beq     L13BE
         jmp     L14B8
 
@@ -1576,10 +1411,7 @@ L13BE:  inc     L1248
         inc     L1247
         inc     L1247
         jsr     L14BA
-        lda     #$00
-        sta     L1246
-        lda     #$1A
-        sta     L1247
+        copy16  #$1A00, L1246
         lda     #$03
         sta     L1A02
         ldy     L14E5
@@ -1609,12 +1441,9 @@ L13ED:  lda     L14DC,y
         lda     #$04
         sta     L1A00
         jsr     L14BA
-        lsr     L14E4
-        ror     L14E3
-        lsr     L14E4
-        ror     L14E3
-        lsr     L14E4
-        ror     L14E3
+        lsr16    L14E3
+        lsr16    L14E3
+        lsr16    L14E3
         lda     L14E3
         bne     L1435
         dec     L14E4
@@ -1687,10 +1516,7 @@ L14B6:  pla
 L14B8:  sec
         rts
 
-L14BA:  ldy     #$81
-        lda     #$44
-        ldx     #$12
-        jsr     L124B
+L14BA:  yax_call L124B, $81, $1244
         bne     L14B6
         jsr     L14CC
         inc     L1248
@@ -1859,9 +1685,7 @@ L15FF:  jmp     L093F
         pha
         lda     #$FF
         pha
-        lda     #$01
-        ldx     #$00
-        jmp     LF479
+        addr_jump LF479, $0001
 
         jsr     HOME
         ldy     #$1C
@@ -1981,14 +1805,8 @@ L1787:  dec     $FFEF
         stx     L2000
         lda     L2000
         bne     L1787
-        lda     #$01
-        sta     $E0
-        lda     #$00
-        sta     $E1
-        lda     #$00
-        sta     $85
-        lda     #$A2
-        sta     $86
+        copy16  #$0001, $E0
+        copy16  #$A200, $85
         jsr     LA1BE
         inc     $E0
         lda     #$00
@@ -2153,20 +1971,20 @@ L18E0:  lda     $A029,x
         lda     $C040
         jmp     LA1EF
 
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
 L1900:  stx     $07
         sta     L0006
         ldy     #$00
@@ -2195,10 +2013,7 @@ L192E:  sta     L123F
         lda     #$00
         sta     L1242
         sta     L1243
-        ldy     #$80
-        lda     #$3E
-        ldx     #$12
-        jsr     L124B
+        yax_call L124B, $80, $123E
         bne     L1959
         lda     $1C01
         cmp     #$E0
@@ -2225,9 +2040,7 @@ L1974:  lda     $D8B8,x
         bpl     L1974
         rts
 
-L197E:  lda     #$09
-        ldx     #$D9
-        jsr     L19C8
+L197E:  addr_call L19C8, $D909
         rts
 
 L1986:  cmp     #$A5
@@ -2250,7 +2063,7 @@ L19AC:  lda     $D891,x
         bpl     L19AC
         rts
 
-        brk
+        .byte   0
 L19B7:  and     #$70
         lsr     a
         lsr     a
@@ -2266,23 +2079,11 @@ L19C1:  and     #$80
         adc     #$31
         rts
 
-L19C8:  lda     #$02
-        sta     L1242
-        lda     #$00
-        sta     L1243
-        ldy     #$80
-        lda     #$3E
-        ldx     #$12
-        jsr     L124B
+L19C8:  copy16  #$0002, L1242
+        yax_call L124B, $80, $123E
         beq     L19F7
-        lda     #$04
-        sta     $D909
-        lda     #$20
-        sta     $D90A
-        lda     #$3A
-        sta     $D90B
-        lda     #$20
-        sta     $D90C
+        copy16  #$2004, $D909
+        copy16  #$203A, $D90B
         lda     #$3F
         sta     $D90C
         rts
@@ -2306,16 +2107,11 @@ L1A04:  inc     $D909
         ldx     $D909
         lda     #$3F
 L1A22:  sta     $D909,x
-        lda     #$09
-        ldx     #$D9
-        jsr     LB781
+        addr_call LB781, $D909
         rts
 
 L1A2D:  sta     L123B
-        ldy     #$C5
-        lda     #$3A
-        ldx     #$12
-        jsr     L124B
+        yax_call L124B, $C5, $123A
         bne     L1A6D
         lda     $1C00
         and     #$0F
@@ -2334,9 +2130,7 @@ L1A46:  lda     $1C00,x
         ldx     $D909
         lda     #$3F
         sta     $D909,x
-        lda     #$09
-        ldx     #$D9
-        jsr     LB781
+        addr_call LB781, $D909
         rts
 
 L1A6D:  lda     L123B
