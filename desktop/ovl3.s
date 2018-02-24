@@ -153,8 +153,8 @@ L90F6:  jsr     L9C09
 
 L90FF:  lda     #$02
         bne     L90F6
-L9103:  brk
-L9104:  brk
+L9103:  .byte   0
+L9104:  .byte   0
 L9105:  lda     #$00
         sta     L938B
         sta     L938C
@@ -335,7 +335,7 @@ L926D:  ldy     L9104
 L927B:  jsr     LB403
         jmp     L900F
 
-L9281:  brk
+L9281:  .byte   0
 L9282:  lda     L938D
         jsr     L979D
         jsr     LB3E7
@@ -439,12 +439,12 @@ L936E:  MGTK_RELAY_CALL MGTK::InitPort, $D239
         MGTK_RELAY_CALL MGTK::CloseWindow, $D665
         rts
 
-L938A:  brk
-L938B:  brk
-L938C:  brk
-L938D:  brk
-L938E:  brk
-L938F:  brk
+L938A:  .byte   0
+L938B:  .byte   0
+L938C:  .byte   0
+L938D:  .byte   0
+L938E:  .byte   0
+L938F:  .byte   0
 L9390:  MGTK_RELAY_CALL MGTK::OpenWindow, $D665
         lda     $D665
         jsr     LB7B9
@@ -533,8 +533,8 @@ L947F:  clc
         sta     $D6C4
         rts
 
-L94A7:  brk
-L94A8:  brk
+L94A7:  .byte   0
+L94A8:  .byte   0
 L94A9:  MGTK_RELAY_CALL MGTK::MoveTo, $D708
         addr_call LB708, $AE40
         rts
@@ -582,7 +582,7 @@ L9500:  MGTK_RELAY_CALL MGTK::TextWidth, $0006
         MGTK_RELAY_CALL MGTK::DrawText, $0006
         rts
 
-L9539:  brk
+L9539:  .byte   0
 L953A:  lda     #$00
         sta     L95BF
 L953F:  MGTK_RELAY_CALL MGTK::GetEvent, $D208
@@ -620,7 +620,7 @@ L95AA:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
         MGTK_RELAY_CALL MGTK::PaintRect, $D6F8
         return  #$00
 
-L95BF:  brk
+L95BF:  .byte   0
 L95C0:  lda     #$00
         sta     L9645
 L95C5:  MGTK_RELAY_CALL MGTK::GetEvent, $D208
@@ -658,7 +658,7 @@ L9630:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
         MGTK_RELAY_CALL MGTK::PaintRect, $D700
         return  #$01
 
-L9645:  brk
+L9645:  .byte   0
 L9646:  MGTK_RELAY_CALL MGTK::GetEvent, $D208
         lda     $D208
         cmp     #$01
@@ -786,7 +786,7 @@ L9790:  lda     L938D
         sta     L938D
         rts
 
-L979C:  brk
+L979C:  .byte   0
 L979D:  bpl     L97A0
         rts
 
@@ -1025,30 +1025,30 @@ L99CD:  cpx     L938C
         bne     L99CD
 L99DC:  rts
 
-L99DD:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-L99E5:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-L99ED:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+L99DD:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+L99E5:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+L99ED:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
 L99F5:  MGTK_RELAY_CALL MGTK::SetPenMode, $D200
         MGTK_RELAY_CALL MGTK::PaintRect, $D87F
         rts
@@ -1098,7 +1098,7 @@ L9A55:  lda     $D402,y
         bpl     L9A55
         rts
 
-L9A60:  brk
+L9A60:  .byte   0
 L9A61:  sta     L9A96
         tya
         pha
@@ -1125,7 +1125,7 @@ L9A8D:  lda     $D402,y
         bpl     L9A8D
         rts
 
-L9A96:  brk
+L9A96:  .byte   0
 L9A97:  sta     L9BD4
         cmp     #$08
         bcc     L9AA1
@@ -1282,7 +1282,7 @@ L9BC1:  lda     ($08),y
         inc     L9BD4
         jmp     L9B70
 
-L9BD4:  brk
+L9BD4:  .byte   0
 L9BD5:  jsr     L9D8D
         clc
         adc     #$02
@@ -1328,21 +1328,21 @@ L9C09:  sta     $D2AC
         rts
 
         .byte   $03
-        brk
+        .byte   0
         .byte   $1C
-        brk
+        .byte   0
         php
-L9C1B:  brk
+L9C1B:  .byte   0
         .byte   $04
-L9C1D:  brk
-        brk
+L9C1D:  .byte   0
+        .byte   0
         .byte   $0C
-        brk
+        .byte   0
         php
-        brk
-        brk
+        .byte   0
+        .byte   0
         .byte   $01
-L9C25:  brk
+L9C25:  .byte   0
 L9C26:  addr_call L9E2A, $1C00
         inc     $1C00
         ldx     $1C00
@@ -1381,37 +1381,28 @@ L9C81:  yax_call L9DC9, $CD, $9C24
         rts
 
         .byte   $03
-        txs
-        .byte   $9C
-        brk
-        php
-L9C99:  brk
-L9C9A:  ora     $6553
-        jmp     (L6365)
+        .addr   $9C9A
+        .byte   0, $8
+L9C99:  .byte   0
+L9C9A:  PASCAL_STRING "Selector.List"
+        .byte   $04
+L9CA9:  .byte   0
+        .byte   0
+        .byte   $0C
+        .byte   0
+        .byte   $8
+        .byte   0
+        .byte   0
+        .byte   $04
+L9CB1:  .byte   0
+        .byte   0
+        .byte   $0C
+        .byte   0
+        .byte   $8
+        .byte   0
+        .byte   0
+        .byte   1, 0
 
-        .byte   $74
-        .byte   $6F
-        .byte   $72
-        rol     $694C
-        .byte   $73
-        .byte   $74
-        .byte   $04
-L9CA9:  brk
-        brk
-        .byte   $0C
-        brk
-        php
-        brk
-        brk
-        .byte   $04
-L9CB1:  brk
-        brk
-        .byte   $0C
-        brk
-        php
-        brk
-        brk
-        ora     ($00,x)
 L9CBA:  yax_call L9DC9, $C8, $9C94
         beq     L9CCF
         lda     #$00
@@ -1497,7 +1488,7 @@ L9D62:  lda     L9D8C
 
 L9D89:  return  #$00
 
-L9D8C:  brk
+L9D8C:  .byte   0
 L9D8D:  ldx     #$00
         stx     L9DA6
         asl     a
@@ -1511,7 +1502,7 @@ L9D8D:  ldx     #$00
         ldx     L9DA6
         rts
 
-L9DA6:  brk
+L9DA6:  .byte   0
 L9DA7:  ldx     #$00
         stx     L9DC8
         asl     a
@@ -1529,7 +1520,7 @@ L9DA7:  ldx     #$00
         ldx     L9DC8
         rts
 
-L9DC8:  brk
+L9DC8:  .byte   0
 L9DC9:  sty     L9DDD
         stax    L9DDE
         php
@@ -1537,9 +1528,9 @@ L9DC9:  sty     L9DDD
         sta     ALTZPOFF
         sta     $C082
         jsr     MLI
-L9DDD:  brk
-L9DDE:  brk
-L9DDF:  brk
+L9DDD:  .byte   0
+L9DDE:  .byte   0
+L9DDF:  .byte   0
         sta     ALTZPON
         tax
         lda     LCBANK1
@@ -1592,23 +1583,23 @@ L9E41:  .byte   $12
         rts
 
         asl     a
-L9E50:  brk
-L9E51:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+L9E50:  .byte   0
+L9E51:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
 L9E61:  jsr     L9E74
         stax    L9E50
         yax_call L9DC9, $C4, $9E4F
@@ -1649,324 +1640,9 @@ L9EAB:  inx
         ldax    #$9EC1
         rts
 
-L9EBF:  brk
-L9EC0:  brk
-L9EC1:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+L9EBF:  .byte   0
+L9EC0:  .byte   0
+L9EC1:  .byte   0
+        ;; how much is buffer, how much is padding?
+
+        PAD_TO $A000
