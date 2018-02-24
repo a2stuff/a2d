@@ -99,16 +99,10 @@ L706A:  jsr     L6163
         lda     path_buf0
         bne     L707B
         jsr     L6D30
-L707B:  lda     #$01
-        sta     $D484
-        lda     #$20
-        sta     $D485
+L707B:  copy16  #$2001, $D484
         jsr     L6D27
         jsr     L6693
-        lda     #$01
-        sta     $D484
-        lda     #$20
-        sta     $D485
+        copy16  #$2001, $D484
         lda     #$FF
         sta     $D8EC
         jmp     L5106
@@ -133,10 +127,7 @@ L70B0:  lda     L7207+1,x
         sta     $51AE
         lda     #$80
         sta     $5104
-        lda     #$01
-        sta     $D484
-        lda     #$06
-        sta     $D485
+        copy16  #$0601, $D484
         lda     winfo12
         jsr     L62C8
         lda     L73A9
@@ -236,10 +227,7 @@ L7233:  entry   0, $72CD
 
 ;;; ==================================================
 
-        lda     #$01
-        sta     $D484
-        lda     #$20
-        sta     $D485
+        copy16  #$2001, $D484
         jsr     L6D27
         ldx     L7232
 L726D:  lda     L7232+1,x
@@ -278,10 +266,7 @@ L72AF:  iny
         cpx     path_buf0
         bne     L72AF
         sty     $D443
-L72BF:  lda     #$01
-        sta     $D484
-        lda     #$06
-        sta     $D485
+L72BF:  copy16  #$0601, $D484
         jsr     L6D27
         rts
 
@@ -307,16 +292,12 @@ L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo12
         sta     $D8EC
         jsr     L55BA
-        lda     #$B8
-        sta     $5B24
-        lda     #$59
-        sta     $5B25
+        copy16  #$59B8, $5B24
         ldx     $50AA
         txs
         ldx     L73A9
         ldy     L73AA
-        lda     #$00
-        rts
+        return  #$00
 
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
@@ -325,19 +306,12 @@ L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         lda     #$00
         sta     $D8EC
         jsr     L55BA
-        lda     #$B8
-        sta     $5B24
-        lda     #$59
-        sta     $5B25
+        copy16  #$59B8, $5B24
         ldx     $50AA
         txs
-        lda     #$FF
-        rts
+        return  #$FF
 
-        lda     #$01
-        sta     $D484
-        lda     #$20
-        sta     $D485
+        copy16  #$2001, $D484
         jsr     L6D27
         ldx     L7207
 L737C:  lda     L7207+1,x
@@ -348,10 +322,7 @@ L737C:  lda     L7207+1,x
         dex
         dex
         bpl     L737C
-        lda     #$01
-        sta     $D484
-        lda     #$06
-        sta     $D485
+        copy16  #$0601, $D484
         jsr     L6D27
         lda     #$00
         sta     $5105
@@ -388,8 +359,7 @@ L73EB:  MGTK_RELAY_CALL MGTK::InRect, $D986
         bne     L73FB
         jmp     L7452
 
-L73FB:  lda     #$00
-        rts
+L73FB:  return  #$00
 
 L73FE:  lda     L73A9
         cmp     #1
@@ -398,8 +368,7 @@ L73FE:  lda     L73A9
         lda     #1
         sta     L73A9
         jsr     L7467
-L7410:  lda     #$FF
-        rts
+L7410:  return  #$FF
 
 L7413:  lda     L73A9
         cmp     #2
@@ -408,8 +377,7 @@ L7413:  lda     L73A9
         lda     #2
         sta     L73A9
         jsr     L7467
-L7425:  lda     #$FF
-        rts
+L7425:  return  #$FF
 
 L7428:  lda     L73AA
         cmp     #1
@@ -418,8 +386,7 @@ L7428:  lda     L73AA
         lda     #1
         sta     L73AA
         jsr     L747B
-L743A:  lda     #$FF
-        rts
+L743A:  return  #$FF
 
 L743D:  lda     L73AA
         cmp     #2
@@ -428,8 +395,7 @@ L743D:  lda     L73AA
         lda     #2
         sta     L73AA
         jsr     L747B
-L744F:  lda     #$FF
-        rts
+L744F:  return  #$FF
 
 L7452:  lda     L73AA
         cmp     #3
@@ -438,8 +404,7 @@ L7452:  lda     L73AA
         lda     #3
         sta     L73AA
         jsr     L747B
-L7464:  lda     #$FF
-        rts
+L7464:  return  #$FF
 
 L7467:  cmp     #1
         bne     L7473

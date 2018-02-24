@@ -135,8 +135,7 @@ L70EA:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo15
         jsr     L55BA
         ldx     $50AA
         txs
-        lda     #$FF
-        rts
+        return  #$FF
 
         PAD_TO $7800
 .endproc

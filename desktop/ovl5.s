@@ -226,8 +226,7 @@ L71C0:  copy16  #path_buf0, $6
         copy16  #path_buf1, $8
         ldx     $50AA
         txs
-        lda     #$00
-        rts
+        return  #$00
 
         .byte   0
 
@@ -240,8 +239,7 @@ L71D8:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo15
         jsr     L55BA
         ldx     $50AA
         txs
-        lda     #$FF
-        rts
+        return  #$FF
 
 ;;; ==================================================
 
