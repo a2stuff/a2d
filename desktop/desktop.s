@@ -3810,10 +3810,7 @@ LBDE1:  sub16   event_params_xcoord, portmap::viewloc::xcoord, event_params_xcoo
         rts
 
 .proc LBE08
-        lda     #$00
-        sta     LBE37
-        lda     #$08
-        sta     LBE38
+        copy16  #$0800, LBE37
         lda     LBFC9
         jsr     LBF10
         lda     LBFCB
@@ -8475,8 +8472,7 @@ L54CA:  lda     cached_window_icon_list,y
         sta     $1800
         lda     #$00
         sta     L544A
-        lda     #$FF
-        ldx     #$03
+        ldax    #$03FF
 L54EA:  sta     L5444,x
         dex
         bpl     L54EA
@@ -8530,8 +8526,7 @@ L5547:  inx
         ldx     L5449
         tya
         sta     $1801,x
-        lda     #$FF
-        ldx     #$03
+        ldax    #$03FF
 L5565:  sta     L5444,x
         dex
         bpl     L5565
@@ -10314,8 +10309,7 @@ L650D:  .word   0
         tay
         sub16   L7B63, L7B5F, L6602
         sub16   L6602, L6600, L6602
-        lsr     L6603
-        ror     L6602
+        lsr16    L6602
         ldx     L6602
         sub16   grafport2::cliprect::x1, L7B5F, L6602
         bpl     L65D0
@@ -10326,8 +10320,7 @@ L65D0:  cmp16   grafport2::cliprect::x2, L7B63
         tya
         jmp     L65EE
 
-L65E2:  lsr     L6603
-        ror     L6602
+L65E2:  lsr16    L6602
         lda     L6602
 L65EB:  jsr     L62BC
 L65EE:  sta     event_params+1
@@ -10355,10 +10348,8 @@ L6603:  .byte   0
         tay
         sub16   L7B65, L7B61, L66A0
         sub16_8 L66A0, L669F, L66A0
-        lsr     L66A1
-        ror     L66A0
-        lsr     L66A1
-        ror     L66A0
+        lsr16    L66A0
+        lsr16    L66A0
         ldx     L66A0
         sub16   grafport2::cliprect::y1, L7B61, L66A0
         bpl     L6669
@@ -12172,12 +12163,9 @@ L76BB:  bit     L7634
         ldax    L7B63
         jmp     L7710
 
-L7705:  lda     #$AA
-        ldx     #$00
-        jmp     L7710
+L7705:  addr_jump L7710, $00AA
 
-L770C:  lda     #$C2
-        ldx     #$01
+L770C:  ldax    #$01C2
 L7710:  ldy     #$20
         sta     ($06),y
         txa
@@ -12190,9 +12178,7 @@ L7710:  ldy     #$20
         ldax    L7B65
         jmp     L7744
 
-L7739:  lda     #$32
-        ldx     #$00
-        jmp     L7744
+L7739:  addr_jump L7744, $0032
 
 L7740:  ldax    #$6C
 L7744:  ldy     #$22
@@ -12645,8 +12631,7 @@ L7B6F:  sta     L7B63,x
         bpl     L7BCB
         lda     cached_window_icon_count
         bne     L7BA1
-L7B96:  lda     #$00
-        ldx     #$03
+L7B96:  ldax    #$0300
 L7B9A:  sta     L7B5F,x
         dex
         bpl     L7B9A
@@ -12890,8 +12875,7 @@ L7E0C:  lda     LCBANK1
 
 L7E20:  lda     LCBANK2
         lda     LCBANK2
-        lda     #$5A
-        ldx     #$0F
+        ldax    #$0F5A
 L7E2A:  sta     $0808,x
         dex
         bpl     L7E2A
@@ -12947,8 +12931,7 @@ L7E90:  inc     $0805
         lda     ($06),y
         ora     #$80
         sta     ($06),y
-        lda     #$5A
-        ldx     #$0F
+        ldax    #$0F5A
 L7EA8:  sta     $0808,x
         dex
         bpl     L7EA8
@@ -13974,10 +13957,7 @@ L8736:  lda     ($06),y
         stx     LDFC5
         rts
 
-L8745:  lda     #$04
-        sta     LDFC5
-        lda     #$20
-        sta     LDFC6
+L8745:  copy16  #$2004, LDFC5
         lda     #$24
         sta     LDFC7
         lda     L877F
@@ -15042,10 +15022,7 @@ L8F27:  jmp     L8FB8           ; cmd_get_size
         jsr     L993E
         jsr     LA271
         jsr     L9968
-L8F3F:  lda     #$FF
-        sta     LE05B
-        lda     #$00
-        sta     LE05C
+L8F3F:  copy16  #$00FF, LE05B
         jsr     L9A0D
         jsr     L917F
 L8F4F:  jsr     L91E8
@@ -16389,10 +16366,7 @@ L99FE:  jmp     LA39F
 ;;; ==================================================
 
 .proc L9A01
-        lda     #$80
-        sta     LE05B
-        lda     #$00
-        sta     LE05C
+        copy16  #$0080, LE05B
         beq     L9A0F
 L9A0D:  lda     #$FF
 L9A0F:  sta     L9B31
@@ -18898,10 +18872,7 @@ LB2CA:  lda     ($08),y
         jsr     draw_filename_prompt
         rts
 
-LB2ED:  lda     #$00
-        sta     LD8E7
-        lda     #$80
-        sta     LD8E8
+LB2ED:  copy16  #$8000, LD8E7
         lda     winfoF
         jsr     set_port_from_window_id
 LB2FD:  jsr     prompt_input_loop
