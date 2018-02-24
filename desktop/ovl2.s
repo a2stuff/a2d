@@ -555,120 +555,9 @@ L0D60:  lda     L0D8C
 
 L0D8C:  .byte   0
 L0D8D:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+
+        PAD_TO $E00
+
 L0E00:  php
         sei
         jsr     L0E3A
@@ -1675,8 +1564,8 @@ L15E6:  bcs     L15FF
 
 L15FF:  jmp     L093F
 
-        .byte   $26,$50,$52,$4F,$44,$4F,$53,$20
-        .byte   $20,$20,$20,$20,$20,$20,$20,$20
+        .byte   $26
+        .byte   "PRODOS         "
         .byte   $A5,$60,$85,$44,$A5,$61,$85,$45
         .byte   $6C,$48,$00,$08,$1E,$24,$3F,$45
         .byte   $47,$76,$F4,$D7,$D1,$B6,$4B,$B4
@@ -1777,19 +1666,17 @@ L16E7:  plp
         beq     L16E7
         .byte   $BD,$8C,$C0,$10,$FB,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$4C,$6E
-        .byte   $A0,$53,$4F,$53,$20,$42,$4F,$4F
-        .byte   $54,$20,$20,$31,$2E,$31,$20,$0A
-        .byte   $53,$4F,$53,$2E,$4B,$45,$52,$4E
-        .byte   $45,$4C,$20,$20,$20,$20,$20,$53
-        .byte   $4F,$53,$20,$4B,$52,$4E,$4C,$49
-        .byte   $2F,$4F,$20,$45,$52,$52,$4F,$52
-        .byte   $08,$00,$46,$49,$4C,$45,$20,$27
-        .byte   $53,$4F,$53,$2E,$4B,$45,$52,$4E
-        .byte   $45,$4C,$27,$20,$4E,$4F,$54,$20
-        .byte   $46,$4F,$55,$4E,$44,$25,$00,$49
-        .byte   $4E,$56,$41,$4C,$49,$44,$20,$4B
-        .byte   $45,$52,$4E,$45,$4C,$20,$46,$49
-        .byte   $4C,$45,$3A,$00,$00,$0C,$00,$1E
+        .byte   $A0
+        .byte   "SOS BOOT  1.1 "
+        .byte   $0A
+        .byte   "SOS.KERNEL     "
+        .byte   "SOS KRNL"
+        .byte   "I/O ERROR"
+        .byte   $08,$00
+        .byte   "FILE 'SOS.KERNEL' NOT FOUND"
+        .byte   $25,$00
+        .byte   "INVALID KERNEL FILE:"
+        .byte   $00,$00,$0C,$00,$1E
         .byte   $0E,$1E,$04,$A4,$78,$D8,$A9
         .byte   $77
         sta     $FFDF
