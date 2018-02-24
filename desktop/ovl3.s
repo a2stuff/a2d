@@ -428,33 +428,15 @@ L933F:  pha
         lda     #$07
         jsr     L403F
         jsr     L4015
-L934F:  ldy     #$03
-        lda     #$39
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$04
-        lda     #$39
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$39
-        lda     #$65
-        ldx     #$D6
-        jsr     MGTK_RELAY
+L934F:  MGTK_RELAY_CALL MGTK::InitPort, $D239
+        MGTK_RELAY_CALL MGTK::SetPort, $D239
+        MGTK_RELAY_CALL MGTK::CloseWindow, $D665
         pla
         jmp     L900F
 
-L936E:  ldy     #$03
-        lda     #$39
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$04
-        lda     #$39
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$39
-        lda     #$65
-        ldx     #$D6
-        jsr     MGTK_RELAY
+L936E:  MGTK_RELAY_CALL MGTK::InitPort, $D239
+        MGTK_RELAY_CALL MGTK::SetPort, $D239
+        MGTK_RELAY_CALL MGTK::CloseWindow, $D665
         rts
 
 L938A:  brk
@@ -463,76 +445,34 @@ L938C:  brk
 L938D:  brk
 L938E:  brk
 L938F:  brk
-L9390:  ldy     #$38
-        lda     #$65
-        ldx     #$D6
-        jsr     MGTK_RELAY
+L9390:  MGTK_RELAY_CALL MGTK::OpenWindow, $D665
         lda     $D665
         jsr     LB7B9
-        ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$12
-        lda     #$D8
-        ldx     #$D6
-        jsr     MGTK_RELAY
-        ldy     #$12
-        lda     #$E0
-        ldx     #$D6
-        jsr     MGTK_RELAY
-        ldy     #$0E
-        lda     #$E8
-        ldx     #$D6
-        jsr     MGTK_RELAY
-        ldy     #$10
-        lda     #$EC
-        ldx     #$D6
-        jsr     MGTK_RELAY
-        ldy     #$0E
-        lda     #$F0
-        ldx     #$D6
-        jsr     MGTK_RELAY
-        ldy     #$10
-        lda     #$F4
-        ldx     #$D6
-        jsr     MGTK_RELAY
-        ldy     #$07
-        lda     #$00
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$12
-        lda     #$F8
-        ldx     #$D6
-        jsr     MGTK_RELAY
-        ldy     #$12
-        lda     #$00
-        ldx     #$D7
-        jsr     MGTK_RELAY
+        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::FrameRect, $D6D8
+        MGTK_RELAY_CALL MGTK::FrameRect, $D6E0
+        MGTK_RELAY_CALL MGTK::MoveTo, $D6E8
+        MGTK_RELAY_CALL MGTK::LineTo, $D6EC
+        MGTK_RELAY_CALL MGTK::MoveTo, $D6F0
+        MGTK_RELAY_CALL MGTK::LineTo, $D6F4
+        MGTK_RELAY_CALL MGTK::SetPenMode, $D200
+        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::FrameRect, $D6F8
+        MGTK_RELAY_CALL MGTK::FrameRect, $D700
         jsr     L94A9
         jsr     L94BA
         lda     L938E
         cmp     #$02
         bne     L9417
-        lda     #$29
-        ldx     #$D7
-        jsr     L94F0
+        addr_call L94F0, $D729
         rts
 
 L9417:  cmp     #$03
         bne     L9423
-        lda     #$3B
-        ldx     #$D7
-        jsr     L94F0
+        addr_call L94F0, $D73B
         rts
 
-L9423:  lda     #$4F
-        ldx     #$D7
-        jsr     L94F0
+L9423:  addr_call L94F0, $D74F
         rts
 
 L942B:  stx     $07
@@ -576,18 +516,14 @@ L9471:  cmp     #$10
         ldx     #$00
         lda     #$73
         bne     L947F
-L947B:  lda     #$DC
-        ldx     #$00
+L947B:  ldax    #$00DC
 L947F:  clc
         adc     #$0A
         sta     $D6C3
         txa
         adc     #$00
         sta     $D6C4
-        ldy     #$0E
-        lda     #$C3
-        ldx     #$D6
-        jsr     MGTK_RELAY
+        MGTK_RELAY_CALL MGTK::MoveTo, $D6C3
         lda     $06
         ldx     $07
         jsr     L94CB
@@ -599,22 +535,12 @@ L947F:  clc
 
 L94A7:  brk
 L94A8:  brk
-L94A9:  ldy     #$0E
-        lda     #$08
-        ldx     #$D7
-        jsr     MGTK_RELAY
-        lda     #$40
-        ldx     #$AE
-        jsr     LB708
+L94A9:  MGTK_RELAY_CALL MGTK::MoveTo, $D708
+        addr_call LB708, $AE40
         rts
 
-L94BA:  ldy     #$0E
-        lda     #$0C
-        ldx     #$D7
-        jsr     MGTK_RELAY
-        lda     #$96
-        ldx     #$AE
-        jsr     LB708
+L94BA:  MGTK_RELAY_CALL MGTK::MoveTo, $D70C
+        addr_call LB708, $AE96
         rts
 
 L94CB:  sta     $06
@@ -626,14 +552,8 @@ L94D4:  lda     ($06),y
         sta     $D486,y
         dey
         bpl     L94D4
-        lda     #$87
-        sta     $D484
-        lda     #$D4
-        sta     $D485
-        ldy     #$19
-        lda     #$84
-        ldx     #$D4
-        jsr     MGTK_RELAY
+        copy16  #$D487, $D484
+        MGTK_RELAY_CALL MGTK::DrawText, $D484
         rts
 
 L94F0:  sta     $06
@@ -644,10 +564,7 @@ L94F0:  sta     $06
         inc     $06
         bne     L9500
         inc     $07
-L9500:  ldy     #$18
-        lda     #$06
-        ldx     #$00
-        jsr     MGTK_RELAY
+L9500:  MGTK_RELAY_CALL MGTK::TextWidth, $0006
         lsr     $0A
         ror     $09
         lda     #$01
@@ -661,40 +578,22 @@ L9500:  ldy     #$18
         lda     L9539
         sbc     $0A
         sta     $D6B8
-        ldy     #$0E
-        lda     #$B7
-        ldx     #$D6
-        jsr     MGTK_RELAY
-        ldy     #$19
-        lda     #$06
-        ldx     #$00
-        jsr     MGTK_RELAY
+        MGTK_RELAY_CALL MGTK::MoveTo, $D6B7
+        MGTK_RELAY_CALL MGTK::DrawText, $0006
         rts
 
 L9539:  brk
 L953A:  lda     #$00
         sta     L95BF
-L953F:  ldy     #$2A
-        lda     #$08
-        ldx     #$D2
-        jsr     MGTK_RELAY
+L953F:  MGTK_RELAY_CALL MGTK::GetEvent, $D208
         lda     $D208
         cmp     #$02
         beq     L95A2
         lda     $D665
         sta     $D208
-        ldy     #$46
-        lda     #$08
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$0E
-        lda     #$0D
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$13
-        lda     #$F8
-        ldx     #$D6
-        jsr     MGTK_RELAY
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
+        MGTK_RELAY_CALL MGTK::MoveTo, $D20D
+        MGTK_RELAY_CALL MGTK::InRect, $D6F8
         cmp     #$80
         beq     L957C
         lda     L95BF
@@ -705,14 +604,8 @@ L957C:  lda     L95BF
         bne     L9584
         jmp     L953F
 
-L9584:  ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$11
-        lda     #$F8
-        ldx     #$D6
-        jsr     MGTK_RELAY
+L9584:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::PaintRect, $D6F8
         lda     L95BF
         clc
         adc     #$80
@@ -721,44 +614,24 @@ L9584:  ldy     #$07
 
 L95A2:  lda     L95BF
         beq     L95AA
-        lda     #$FF
-        rts
+        return  #$FF
 
-L95AA:  ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$11
-        lda     #$F8
-        ldx     #$D6
-        jsr     MGTK_RELAY
-        lda     #$00
-        rts
+L95AA:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::PaintRect, $D6F8
+        return  #$00
 
 L95BF:  brk
 L95C0:  lda     #$00
         sta     L9645
-L95C5:  ldy     #$2A
-        lda     #$08
-        ldx     #$D2
-        jsr     MGTK_RELAY
+L95C5:  MGTK_RELAY_CALL MGTK::GetEvent, $D208
         lda     $D208
         cmp     #$02
         beq     L9628
         lda     $D665
         sta     $D208
-        ldy     #$46
-        lda     #$08
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$0E
-        lda     #$0D
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$13
-        lda     #$00
-        ldx     #$D7
-        jsr     MGTK_RELAY
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
+        MGTK_RELAY_CALL MGTK::MoveTo, $D20D
+        MGTK_RELAY_CALL MGTK::InRect, $D700
         cmp     #$80
         beq     L9602
         lda     L9645
@@ -769,14 +642,8 @@ L9602:  lda     L9645
         bne     L960A
         jmp     L95C5
 
-L960A:  ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$11
-        lda     #$00
-        ldx     #$D7
-        jsr     MGTK_RELAY
+L960A:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::PaintRect, $D700
         lda     L9645
         clc
         adc     #$80
@@ -785,25 +652,14 @@ L960A:  ldy     #$07
 
 L9628:  lda     L9645
         beq     L9630
-        lda     #$FF
-        rts
+        return  #$FF
 
-L9630:  ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$11
-        lda     #$00
-        ldx     #$D7
-        jsr     MGTK_RELAY
-        lda     #$01
-        rts
+L9630:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::PaintRect, $D700
+        return  #$01
 
 L9645:  brk
-L9646:  ldy     #$2A
-        lda     #$08
-        ldx     #$D2
-        jsr     MGTK_RELAY
+L9646:  MGTK_RELAY_CALL MGTK::GetEvent, $D208
         lda     $D208
         cmp     #$01
         bne     L9659
@@ -813,71 +669,41 @@ L9659:  cmp     #$03
         bne     L9646
         jmp     L9822
 
-L9660:  ldy     #$40
-        lda     #$09
-        ldx     #$D2
-        jsr     MGTK_RELAY
+L9660:  MGTK_RELAY_CALL MGTK::FindWindow, $D209
         lda     $D20D
         bne     L9671
-        lda     #$FF
-        rts
+        return  #$FF
 
 L9671:  cmp     #$02
         beq     L9678
-        lda     #$FF
-        rts
+        return  #$FF
 
 L9678:  lda     $D20E
         cmp     $D665
         beq     L9683
-        lda     #$FF
-        rts
+        return  #$FF
 
 L9683:  lda     $D665
         jsr     LB7B9
         lda     $D665
         sta     $D208
-        ldy     #$46
-        lda     #$08
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$0E
-        lda     #$0D
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$13
-        lda     #$F8
-        ldx     #$D6
-        jsr     MGTK_RELAY
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
+        MGTK_RELAY_CALL MGTK::MoveTo, $D20D
+        MGTK_RELAY_CALL MGTK::InRect, $D6F8
         cmp     #$80
         bne     L96C8
-        ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$11
-        lda     #$F8
-        ldx     #$D6
-        jsr     MGTK_RELAY
+        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::PaintRect, $D6F8
         jsr     L953A
         bmi     L96C7
         lda     #$00
 L96C7:  rts
 
-L96C8:  ldy     #$13
-        lda     #$00
-        ldx     #$D7
-        jsr     MGTK_RELAY
+L96C8:  MGTK_RELAY_CALL MGTK::InRect, $D700
         cmp     #$80
         bne     L96EF
-        ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$11
-        lda     #$00
-        ldx     #$D7
-        jsr     MGTK_RELAY
+        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::PaintRect, $D700
         jsr     L95C0
         bmi     L96EE
         lda     #$01
@@ -898,8 +724,7 @@ L96EF:  lda     $D20D
         sbc     #$00
         sta     $D210
         bpl     L9716
-        lda     #$FF
-        rts
+        return  #$FF
 
 L9716:  lda     $D20D
         cmp     #$6E
@@ -917,18 +742,14 @@ L9732:  lda     #$01
         bne     L9738
 L9736:  lda     #$00
 L9738:  pha
-        lsr     $D210
-        ror     $D20F
-        lsr     $D210
-        ror     $D20F
-        lsr     $D210
-        ror     $D20F
+        lsr16    $D20F
+        lsr16    $D20F
+        lsr16    $D20F
         lda     $D20F
         cmp     #$08
         bcc     L9756
         pla
-        lda     #$FF
-        rts
+        return  #$FF
 
 L9756:  pla
         asl     a
@@ -977,12 +798,9 @@ L97A0:  pha
         beq     L97B6
         cmp     #$01
         bne     L97B2
-        lda     #$69
-        ldx     #$00
-        jmp     L97B6
+        addr_jump L97B6, $0069
 
-L97B2:  lda     #$D2
-        ldx     #$00
+L97B2:  ldax    #$00D2
 L97B6:  clc
         adc     #$09
         sta     $D877
@@ -1009,39 +827,17 @@ L97D4:  asl     a
         lda     #$00
         adc     #$00
         sta     $D87A
-        lda     $D877
-        clc
-        adc     #$6A
-        sta     $D87B
-        lda     $D878
-        adc     #$00
-        sta     $D87C
-        lda     $D879
-        clc
-        adc     #$07
-        sta     $D87D
-        lda     $D87A
-        adc     #$00
-        sta     $D87E
-        ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$11
-        lda     #$77
-        ldx     #$D8
-        jsr     MGTK_RELAY
-        ldy     #$07
-        lda     #$00
-        ldx     #$D2
-        jsr     MGTK_RELAY
+        add16   $D877, #$006A, $D87B
+        add16   $D879, #$0007, $D87D
+        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::PaintRect, $D877
+        MGTK_RELAY_CALL MGTK::SetPenMode, $D200
         rts
 
 L9822:  lda     $D20A
         cmp     #$02
         bne     L982C
-        lda     #$FF
-        rts
+        return  #$FF
 
 L982C:  lda     $D209
         and     #$7F
@@ -1069,46 +865,19 @@ L9854:  cmp     #$0B
         bne     L985B
         jmp     L993F
 
-L985B:  lda     #$FF
-        rts
+L985B:  return  #$FF
 
-L985E:  ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$11
-        lda     #$F8
-        ldx     #$D6
-        jsr     MGTK_RELAY
-        ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$11
-        lda     #$F8
-        ldx     #$D6
-        jsr     MGTK_RELAY
-        lda     #$00
-        rts
+L985E:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::PaintRect, $D6F8
+        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::PaintRect, $D6F8
+        return  #$00
 
-L9885:  ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$11
-        lda     #$00
-        ldx     #$D7
-        jsr     MGTK_RELAY
-        ldy     #$07
-        lda     #$02
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$11
-        lda     #$00
-        ldx     #$D7
-        jsr     MGTK_RELAY
-        lda     #$01
-        rts
+L9885:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::PaintRect, $D700
+        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::PaintRect, $D700
+        return  #$01
 
 L98AC:  lda     L938B
         ora     L938C
@@ -1144,8 +913,7 @@ L98E4:  tax
 L98EE:  txa
         sta     L938D
         jsr     L979D
-L98F5:  lda     #$FF
-        rts
+L98F5:  return  #$FF
 
 L98F8:  lda     L938B
         ora     L938C
@@ -1179,8 +947,7 @@ L992B:  tax
 L9935:  txa
 L9936:  sta     L938D
         jsr     L979D
-L993C:  lda     #$FF
-        rts
+L993C:  return  #$FF
 
 L993F:  lda     L938B
         ora     L938C
@@ -1206,8 +973,7 @@ L996A:  ldx     #$18
 
 L996F:  sta     L938D
         jsr     L979D
-L9975:  lda     #$FF
-        rts
+L9975:  return  #$FF
 
 L9978:  lda     L938B
         ora     L938C
@@ -1234,8 +1000,7 @@ L99A5:  ldx     #$FF
 
 L99AA:  sta     L938D
         jsr     L979D
-L99B0:  lda     #$FF
-        rts
+L99B0:  return  #$FF
 
 L99B3:  ldx     #$17
         lda     #$FF
@@ -1284,14 +1049,8 @@ L99ED:  brk
         brk
         brk
         brk
-L99F5:  ldy     #$07
-        lda     #$00
-        ldx     #$D2
-        jsr     MGTK_RELAY
-        ldy     #$11
-        lda     #$7F
-        ldx     #$D8
-        jsr     MGTK_RELAY
+L99F5:  MGTK_RELAY_CALL MGTK::SetPenMode, $D200
+        MGTK_RELAY_CALL MGTK::PaintRect, $D87F
         rts
 
         rts
@@ -1565,10 +1324,7 @@ L9BFC:  jsr     L9DA7
         rts
 
 L9C09:  sta     $D2AC
-        ldy     #$0C
-        lda     #$AC
-        ldx     #$D2
-        jsr     LA500
+        yax_call LA500, $0C, $D2AC
         rts
 
         .byte   $03
@@ -1587,9 +1343,7 @@ L9C1D:  brk
         brk
         .byte   $01
 L9C25:  brk
-L9C26:  lda     #$00
-        ldx     #$1C
-        jsr     L9E2A
+L9C26:  addr_call L9E2A, $1C00
         inc     $1C00
         ldx     $1C00
         lda     #$2F
@@ -1603,10 +1357,7 @@ L9C3D:  inx
         cpx     L9C9A
         bne     L9C3D
         sty     $1C00
-L9C4D:  ldy     #$C8
-        lda     #$16
-        ldx     #$9C
-        jsr     L9DC9
+L9C4D:  yax_call L9DC9, $C8, $9C16
         beq     L9C60
         lda     #$00
         jsr     L9C09
@@ -1616,10 +1367,7 @@ L9C5F:  rts
 L9C60:  lda     L9C1B
         sta     L9C1D
         sta     L9C25
-L9C69:  ldy     #$CB
-        lda     #$1C
-        ldx     #$9C
-        jsr     L9DC9
+L9C69:  yax_call L9DC9, $CB, $9C1C
         beq     L9C81
         pha
         jsr     L4015
@@ -1628,14 +1376,8 @@ L9C69:  ldy     #$CB
         beq     L9C69
         jmp     L9C5F
 
-L9C81:  ldy     #$CD
-        lda     #$24
-        ldx     #$9C
-        jsr     L9DC9
-        ldy     #$CC
-        lda     #$24
-        ldx     #$9C
-        jsr     L9DC9
+L9C81:  yax_call L9DC9, $CD, $9C24
+        yax_call L9DC9, $CC, $9C24
         rts
 
         .byte   $03
@@ -1670,56 +1412,36 @@ L9CB1:  brk
         brk
         brk
         ora     ($00,x)
-L9CBA:  ldy     #$C8
-        lda     #$94
-        ldx     #$9C
-        jsr     L9DC9
+L9CBA:  yax_call L9DC9, $C8, $9C94
         beq     L9CCF
         lda     #$00
         jsr     L9C09
         beq     L9CBA
-        lda     #$FF
-        rts
+        return  #$FF
 
 L9CCF:  lda     L9C99
         sta     L9CA9
-        ldy     #$CA
-        lda     #$A8
-        ldx     #$9C
-        jsr     L9DC9
+        yax_call L9DC9, $CA, $9CA8
         bne     L9CE9
-        ldy     #$CC
-        lda     #$B8
-        ldx     #$9C
-        jsr     L9DC9
+        yax_call L9DC9, $CC, $9CB8
 L9CE9:  rts
 
-L9CEA:  ldy     #$C8
-        lda     #$94
-        ldx     #$9C
-        jsr     L9DC9
+L9CEA:  yax_call L9DC9, $C8, $9C94
         beq     L9CFF
         lda     #$00
         jsr     L9C09
         beq     L9CBA
-        lda     #$FF
-        rts
+        return  #$FF
 
 L9CFF:  lda     L9C99
         sta     L9CB1
-L9D05:  ldy     #$CB
-        lda     #$B0
-        ldx     #$9C
-        jsr     L9DC9
+L9D05:  yax_call L9DC9, $CB, $9CB0
         beq     L9D18
         jsr     L4030
         beq     L9D05
         jmp     L9D21
 
-L9D18:  ldy     #$CC
-        lda     #$B8
-        ldx     #$9C
-        jsr     L9DC9
+L9D18:  yax_call L9DC9, $CC, $9CB8
 L9D21:  rts
 
 L9D22:  jsr     L9CBA
@@ -1773,8 +1495,7 @@ L9D62:  lda     L9D8C
         inc     L9D8C
         jmp     L9D62
 
-L9D89:  lda     #$00
-        rts
+L9D89:  return  #$00
 
 L9D8C:  brk
 L9D8D:  ldx     #$00
@@ -1810,8 +1531,7 @@ L9DA7:  ldx     #$00
 
 L9DC8:  brk
 L9DC9:  sty     L9DDD
-        sta     L9DDE
-        stx     L9DDF
+        stax    L9DDE
         php
         sei
         sta     ALTZPOFF
@@ -1839,8 +1559,7 @@ L9DED:  sta     ALTZPOFF
         txa
         rts
 
-L9E05:  sta     L9E1B
-        stx     L9E1C
+L9E05:  stax    L9E1B
         sta     ALTZPOFF
         lda     $C083
         lda     $C083
@@ -1856,8 +1575,7 @@ L9E1C:  .byte   $12
         lda     LCBANK1
         rts
 
-L9E2A:  sta     L9E40
-        stx     L9E41
+L9E2A:  stax    L9E40
         sta     ALTZPOFF
         lda     $C083
         lda     $C083
@@ -1892,18 +1610,12 @@ L9E51:  brk
         brk
         brk
 L9E61:  jsr     L9E74
-        sta     L9E50
-        stx     L9E51
-        ldy     #$C4
-        lda     #$4F
-        ldx     #$9E
-        jsr     L9DC9
+        stax    L9E50
+        yax_call L9DC9, $C4, $9E4F
         rts
 
 L9E74:  sta     L9EBF
-        lda     #$C1
-        ldx     #$9E
-        jsr     L9E05
+        addr_call L9E05, $9EC1
         lda     L9EBF
         jsr     L9BE2
         sta     $06
@@ -1934,8 +1646,7 @@ L9EAB:  inx
         cpy     L9EC0
         bne     L9EAB
         stx     L9EC1
-        lda     #$C1
-        ldx     #$9E
+        ldax    #$9EC1
         rts
 
 L9EBF:  brk
