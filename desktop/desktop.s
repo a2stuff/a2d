@@ -6705,15 +6705,15 @@ L46AE:  jsr     disable_eject_menu_item
 .endproc
 
 .proc MLI_RELAY
-        sty     L46CE
-        stax    L46CF
+        sty     call
+        stax    params
         php
         sei
         sta     ALTZPOFF
         sta     ROMIN2
         jsr     MLI
-L46CE:  .byte   $00
-L46CF:  .addr   dummy0000
+call:   .byte   $00
+params: .addr   dummy0000
         sta     ALTZPON
         tax
         lda     LCBANK1

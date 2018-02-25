@@ -1355,7 +1355,7 @@ L9C3D:  inx
         cpx     L9C9A
         bne     L9C3D
         sty     $1C00
-L9C4D:  yax_call L9DC9, $C8, $9C16
+L9C4D:  yax_call MLI_RELAY, OPEN, $9C16
         beq     L9C60
         lda     #$00
         jsr     L9C09
@@ -1365,7 +1365,7 @@ L9C5F:  rts
 L9C60:  lda     L9C1B
         sta     L9C1D
         sta     L9C25
-L9C69:  yax_call L9DC9, $CB, $9C1C
+L9C69:  yax_call MLI_RELAY, WRITE, $9C1C
         beq     L9C81
         pha
         jsr     JUMP_TABLE_REDRAW_ALL
@@ -1374,8 +1374,8 @@ L9C69:  yax_call L9DC9, $CB, $9C1C
         beq     L9C69
         jmp     L9C5F
 
-L9C81:  yax_call L9DC9, $CD, $9C24
-        yax_call L9DC9, $CC, $9C24
+L9C81:  yax_call MLI_RELAY, FLUSH, $9C24
+        yax_call MLI_RELAY, CLOSE, $9C24
         rts
 
         .byte   $03
@@ -1401,7 +1401,7 @@ L9CB1:  .byte   0
         .byte   0
         .byte   1, 0
 
-L9CBA:  yax_call L9DC9, $C8, $9C94
+L9CBA:  yax_call MLI_RELAY, OPEN, $9C94
         beq     L9CCF
         lda     #$00
         jsr     L9C09
@@ -1410,12 +1410,12 @@ L9CBA:  yax_call L9DC9, $C8, $9C94
 
 L9CCF:  lda     L9C99
         sta     L9CA9
-        yax_call L9DC9, $CA, $9CA8
+        yax_call MLI_RELAY, READ, $9CA8
         bne     L9CE9
-        yax_call L9DC9, $CC, $9CB8
+        yax_call MLI_RELAY, CLOSE, $9CB8
 L9CE9:  rts
 
-L9CEA:  yax_call L9DC9, $C8, $9C94
+L9CEA:  yax_call MLI_RELAY, OPEN, $9C94
         beq     L9CFF
         lda     #$00
         jsr     L9C09
@@ -1424,13 +1424,13 @@ L9CEA:  yax_call L9DC9, $C8, $9C94
 
 L9CFF:  lda     L9C99
         sta     L9CB1
-L9D05:  yax_call L9DC9, $CB, $9CB0
+L9D05:  yax_call MLI_RELAY, WRITE, $9CB0
         beq     L9D18
         jsr     JUMP_TABLE_ALERT_0
         beq     L9D05
         jmp     L9D21
 
-L9D18:  yax_call L9DC9, $CC, $9CB8
+L9D18:  yax_call MLI_RELAY, CLOSE, $9CB8
 L9D21:  rts
 
 L9D22:  jsr     L9CBA
@@ -1519,15 +1519,17 @@ L9DA7:  ldx     #$00
         rts
 
 L9DC8:  .byte   0
-L9DC9:  sty     L9DDD
-        stax    L9DDE
+
+.proc MLI_RELAY
+        sty     call
+        stax    params
         php
         sei
         sta     ALTZPOFF
         sta     ROMIN2
         jsr     MLI
-L9DDD:  .byte   0
-L9DDE:  .addr   0
+call:   .byte   0
+params: .addr   0
         sta     ALTZPON
         tax
         lda     LCBANK1
@@ -1535,6 +1537,7 @@ L9DDE:  .addr   0
         plp
         txa
         rts
+.endproc
 
 L9DED:  sta     ALTZPOFF
         lda     $C083
@@ -1596,7 +1599,7 @@ L9E50:  .word   0
         .byte   0
 L9E61:  jsr     L9E74
         stax    L9E50
-        yax_call L9DC9, $C4, $9E4F
+        yax_call MLI_RELAY, GET_FILE_INFO, $9E4F
         rts
 
 L9E74:  sta     L9EBF

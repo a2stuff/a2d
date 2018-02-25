@@ -813,15 +813,17 @@ L597E:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
         return  #$01
 
 L5993:  .byte   0
-L5994:  sty     L59A8
-        stax    L59A9
+
+.proc MLI_RELAY
+        sty     call
+        stax    params
         php
         sei
         sta     ALTZPOFF
         lda     ROMIN2
         jsr     MLI
-L59A8:  .byte   0
-L59A9:  .addr   0
+call:   .byte   0
+params: .addr   0
         sta     ALTZPON
         tax
         lda     LCBANK1
@@ -829,6 +831,7 @@ L59A9:  .addr   0
         plp
         txa
         rts
+.endproc
 
 L59B8:  rts
 
@@ -1296,7 +1299,7 @@ L5E87:  ldx     L5027
         lda     $BF32,x
         and     #$F0
         sta     L5004
-        yax_call L5994, $C5, $5003
+        yax_call MLI_RELAY, ON_LINE, $5003
         lda     L5017
         and     #$0F
         sta     L5017
@@ -1320,7 +1323,7 @@ L5ECA:  rts
 
 L5ECB:  lda     #$00
         sta     L5F0C
-L5ED0:  yax_call L5994, $C8, $5007
+L5ED0:  yax_call MLI_RELAY, OPEN, $5007
         beq     L5EE9
         jsr     L5E87
         lda     #$FF
@@ -1331,7 +1334,7 @@ L5ED0:  yax_call L5994, $C8, $5007
 L5EE9:  lda     L500C
         sta     L500E
         sta     L5016
-        yax_call L5994, $CA, $500D
+        yax_call MLI_RELAY, READ, $500D
         beq     L5F0B
         jsr     L5E87
         lda     #$FF
@@ -1457,7 +1460,7 @@ L6007:  inc     L6069
         lda     L6068
         cmp     $177F
         bne     L6035
-L6012:  yax_call L5994, $CC, $5015
+L6012:  yax_call MLI_RELAY, CLOSE, $5015
         bit     L50A8
         bpl     L6026
         lda     L50A9
@@ -1484,7 +1487,7 @@ L6035:  lda     L6069
         sta     $07
         jmp     L5F8F
 
-L604E:  yax_call L5994, $CA, $500D
+L604E:  yax_call MLI_RELAY, READ, $500D
         copy16  #$1404, $06
         lda     #$00
         sta     L6069
