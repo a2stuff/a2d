@@ -12,8 +12,8 @@
 ;;; Overlay for File Copy
 ;;; ==================================================
 
-.proc file_copy_overlay
         .org $7000
+.proc file_copy_overlay
 
         winfo12 := $D5B7
         winfo15 := $D5F1
@@ -305,5 +305,7 @@ L7289:  sta     $D920
         jsr     L606D
 L7295:  rts
 
+;;; ==================================================
+
         PAD_TO $7800
-.endproc
+.endproc ; file_copy_overlay

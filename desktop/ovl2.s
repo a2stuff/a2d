@@ -1,4 +1,3 @@
-
         .setcpu "6502"
 
         .include "apple2.inc"
@@ -14,6 +13,7 @@
 ;;; ==================================================
 
         .org $800
+.proc format_erase_overlay
 
 ;;; Entry points in desktop_main
 prompt_input_loop       := $A567
@@ -1740,3 +1740,4 @@ L1A6D:  lda     on_line_params::unit_num
 ;;; ==================================================
 
         PAD_TO $1C00
+.endproc ; format_erase_overlay

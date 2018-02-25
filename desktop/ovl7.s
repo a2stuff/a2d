@@ -12,8 +12,8 @@
 ;;; Overlay for Selector (part of it, anyway)
 ;;; ==================================================
 
-.proc selector_overlay
         .org $7000
+.proc selector_overlay
 
         winfo12 := $D5B7
         winfo15 := $D5F1
@@ -490,5 +490,7 @@ L7521:  cmp     #'5'
 
 L7528:  rts
 
+;;; ==================================================
+
         PAD_TO $7800
-.endproc
+.endproc ; selector_overlay

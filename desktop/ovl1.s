@@ -1,4 +1,3 @@
-
         .setcpu "6502"
 
         .include "apple2.inc"
@@ -14,8 +13,8 @@
 ;;; ==================================================
 
         .org $800
-
 .proc disk_copy_overlay
+
         jmp     start
 
         load_target := $1800
@@ -134,5 +133,7 @@ self:   bne     self            ; hang on error?
         rts
 .endproc
 
+;;; ==================================================
+
         PAD_TO $A00
-.endproc
+.endproc ; disk_copy_overlay

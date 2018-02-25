@@ -1,4 +1,3 @@
-
         .setcpu "6502"
 
         .include "apple2.inc"
@@ -12,16 +11,21 @@
 ;;; ==================================================
 ;;; Overlay for Common Routines (Selector, File Copy/Delete)
 ;;; ==================================================
+
         .org $5000
+.proc common_overlay
 
         dummy1234 := $1234
 
         jmp     L50B1
 
-        .byte   $02
-L5004:  .byte   $00,$17,$50,$03,$28,$50,$00,$10
-L500C:  .byte   $00,$04
-L500E:  .byte   $00,$00,$14,$00,$02,$00,$00,$01
+L5003:  .byte   $02
+L5004:  .byte   $00,$17,$50
+L5007:  .byte   $03,$28,$50,$00,$10
+L500C:  .byte   $00
+L500D:  .byte   $04
+L500E:  .byte   $00,$00,$14,$00,$02,$00,$00
+L5015:  .byte   $01
 L5016:  .byte   $00
 L5017:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -48,6 +52,9 @@ L50A9:  .byte   $00
 L50AA:  .byte   $00
 L50AB:  .byte   $00
 L50AC:  .byte   $70,$00,$70,$00,$70
+
+;;; ==================================================
+
 L50B1:  sty     L5102
         stx     L5101
         tsx
@@ -82,11 +89,16 @@ L50FF           := * + 1
 L5100           := * + 2
         jmp     dummy1234
 
+;;; ==================================================
+
 L5101:  .byte   0
 L5102:  .byte   0
 L5103:  .byte   0
 L5104:  .byte   0
 L5105:  .byte   0
+
+;;; ==================================================
+
 L5106:  bit     $D8EC
         bpl     L5118
         dec     $D8E9
@@ -500,20 +512,22 @@ L55B0:  lda     $D20E
         pla
 L55B9:  rts
 
+;;; ==================================================
+
 L55BA:  bit     L5606
         bpl     L55DF
-        MGTK_RELAY_CALL MGTK::HideCursor, $0000
+        MGTK_RELAY_CALL MGTK::HideCursor
         MGTK_RELAY_CALL MGTK::SetCursor, $D2AD
-        MGTK_RELAY_CALL MGTK::ShowCursor, $0000
+        MGTK_RELAY_CALL MGTK::ShowCursor
         lda     #$00
         sta     L5606
 L55DF:  rts
 
 L55E0:  bit     L5606
         bmi     L5605
-        MGTK_RELAY_CALL MGTK::HideCursor, $0000
+        MGTK_RELAY_CALL MGTK::HideCursor
         MGTK_RELAY_CALL MGTK::SetCursor, $D2DF
-        MGTK_RELAY_CALL MGTK::ShowCursor, $0000
+        MGTK_RELAY_CALL MGTK::ShowCursor
         lda     #$80
         sta     L5606
 L5605:  rts
@@ -1183,7 +1197,10 @@ L5CF3:  .byte   0
 L5CF4:  .byte   0
 L5CF5:  .byte   0
 L5CF6:  .byte   0
-        MGTK_RELAY_CALL MGTK::OpenWindow, $D5B7
+
+;;; ==================================================
+
+L5CF7:  MGTK_RELAY_CALL MGTK::OpenWindow, $D5B7
         MGTK_RELAY_CALL MGTK::OpenWindow, $D5F1
         lda     $D5B7
         jsr     L62C8
@@ -1237,6 +1254,8 @@ L5DE0:  lda     ($06),y
         ldax    #$D380
         rts
 
+;;; ==================================================
+
 L5DED:  jsr     L5DD7
         sta     $06
         stx     $07
@@ -1246,10 +1265,12 @@ L5DED:  jsr     L5DD7
         inc     $06
         bne     L5E00
         inc     $07
-L5E00:  MGTK_RELAY_CALL MGTK::DrawText, $0006
+L5E00:  MGTK_RELAY_CALL MGTK::DrawText, $06
         rts
 
-        jsr     L5DD7
+;;; ==================================================
+
+L5E0A:  jsr     L5DD7
         sta     $06
         stx     $07
         ldy     #$00
@@ -1258,7 +1279,7 @@ L5E00:  MGTK_RELAY_CALL MGTK::DrawText, $0006
         inc     $06
         bne     L5E1D
         inc     $07
-L5E1D:  MGTK_RELAY_CALL MGTK::TextWidth, $0006
+L5E1D:  MGTK_RELAY_CALL MGTK::TextWidth, $06
         lsr     $0A
         ror     $09
         lda     #$01
@@ -1273,11 +1294,14 @@ L5E1D:  MGTK_RELAY_CALL MGTK::TextWidth, $0006
         sbc     $0A
         sta     $D90C
         MGTK_RELAY_CALL MGTK::MoveTo, $D90B
-        MGTK_RELAY_CALL MGTK::DrawText, $0006
+        MGTK_RELAY_CALL MGTK::DrawText, $06
         rts
 
 L5E56:  .byte   0
-        jsr     L5DD7
+
+;;; ==================================================
+
+L5E57:  jsr     L5DD7
         sta     $06
         stx     $07
         MGTK_RELAY_CALL MGTK::MoveTo, $DA55
@@ -1286,7 +1310,9 @@ L5E56:  .byte   0
         jsr     L5DED
         rts
 
-        jsr     L5DD7
+;;; ==================================================
+
+L5E6F:  jsr     L5DD7
         sta     $06
         stx     $07
         MGTK_RELAY_CALL MGTK::MoveTo, $DA59
@@ -1295,11 +1321,13 @@ L5E56:  .byte   0
         jsr     L5DED
         rts
 
+;;; ==================================================
+
 L5E87:  ldx     L5027
-        lda     $BF32,x
+        lda     DEVCNT+1,x
         and     #$F0
         sta     L5004
-        yax_call MLI_RELAY, ON_LINE, $5003
+        yax_call MLI_RELAY, ON_LINE, L5003
         lda     L5017
         and     #$0F
         sta     L5017
@@ -1309,12 +1337,12 @@ L5E87:  ldx     L5027
 
 L5EAB:  lda     #$00
         sta     L5028
-        addr_call L5F0D, $5017
+        addr_call L5F0D, L5017
         rts
 
 L5EB8:  inc     L5027
         lda     L5027
-        cmp     $BF31
+        cmp     DEVCNT
         beq     L5ECA
         bcc     L5ECA
         lda     #$00
@@ -1323,7 +1351,7 @@ L5ECA:  rts
 
 L5ECB:  lda     #$00
         sta     L5F0C
-L5ED0:  yax_call MLI_RELAY, OPEN, $5007
+L5ED0:  yax_call MLI_RELAY, OPEN, L5007
         beq     L5EE9
         jsr     L5E87
         lda     #$FF
@@ -1334,7 +1362,7 @@ L5ED0:  yax_call MLI_RELAY, OPEN, $5007
 L5EE9:  lda     L500C
         sta     L500E
         sta     L5016
-        yax_call MLI_RELAY, READ, $500D
+        yax_call MLI_RELAY, READ, L500D
         beq     L5F0B
         jsr     L5E87
         lda     #$FF
@@ -1375,6 +1403,8 @@ L5F31:  lda     ($06),y
         sta     $D920
         return  #$00
 
+;;; ==================================================
+
 L5F49:  ldx     L5028
         cpx     #$00
         beq     L5F5A
@@ -1383,6 +1413,8 @@ L5F49:  ldx     L5028
         cmp     #$2F
         bne     L5F49
 L5F5A:  rts
+
+;;; ==================================================
 
 L5F5B:  jsr     L5ECB
         lda     #$00
@@ -1460,7 +1492,7 @@ L6007:  inc     L6069
         lda     L6068
         cmp     $177F
         bne     L6035
-L6012:  yax_call MLI_RELAY, CLOSE, $5015
+L6012:  yax_call MLI_RELAY, CLOSE, L5015
         bit     L50A8
         bpl     L6026
         lda     L50A9
@@ -1487,7 +1519,7 @@ L6035:  lda     L6069
         sta     $07
         jmp     L5F8F
 
-L604E:  yax_call MLI_RELAY, READ, $500D
+L604E:  yax_call MLI_RELAY, READ, L500D
         copy16  #$1404, $06
         lda     #$00
         sta     L6069
@@ -1499,6 +1531,9 @@ L6069:  .byte   0
 L606A:  .byte   0
 L606B:  .byte   0
 L606C:  .byte   0
+
+;;; ==================================================
+
 L606D:  lda     $D5F1
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::PaintRect, $D60D
@@ -1554,11 +1589,14 @@ L60FF:  lda     L6128
         lda     $D5F1
         jsr     L62C8
 L6110:  inc     L6128
-        add16   $D919, #$0008, $D919
+        add16   $D919, #8, $D919
         jmp     L608E
 
 L6127:  .byte   0
 L6128:  .byte   0
+
+;;; ==================================================
+
 L6129:  stx     $0B
         sta     $0A
         ldy     #$00
@@ -1594,12 +1632,14 @@ L614B:  iny
 L615D:  dey
         jmp     L6135
 
+;;; ==================================================
+
 L6161:  lda     #$00
 L6163:  sta     L61B0
         lda     $177F
         cmp     #$0A
         bcs     L6181
-        copy16  #$0001, $D208
+        copy16  #1, $D208
         MGTK_RELAY_CALL MGTK::ActivateCtl, $D208
         rts
 
@@ -1618,10 +1658,13 @@ L6181:  lda     $177F
         rts
 
 L61B0:  .byte   0
+
+;;; ==================================================
+
 L61B1:  lda     $D5B7
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::PaintRect, $D9C8
-        copy16  #$5028, $06
+        copy16  #L5028, $06
         ldy     #$00
         lda     ($06),y
         sta     L6226
@@ -1653,6 +1696,9 @@ L61E6:  inx
         rts
 
 L6226:  .byte   0
+
+;;; ==================================================
+
 L6227:  sta     L6273
         clc
         adc     #$09
@@ -1716,6 +1762,9 @@ L6274:  ldx     #$00
         rts
 
 L62C7:  .byte   0
+
+;;; ==================================================
+
 L62C8:  sta     $D212
         MGTK_RELAY_CALL MGTK::GetWinPort, $D212
         MGTK_RELAY_CALL MGTK::SetPort, $D215
@@ -1851,7 +1900,10 @@ L6451:  ldx     #$00
         rts
 
 L647B:  .byte   0
-        sta     $06
+
+;;; ==================================================
+
+L647C:  sta     $06
         stx     $07
         ldy     #$01
         lda     ($06),y
@@ -1932,7 +1984,10 @@ L64F5:  lda     L6515
         jmp     L64F5
 
 L6515:  .byte   0
-        sta     $06
+
+;;; ==================================================
+
+L6516:  sta     $06
         stx     $07
         ldy     #$00
         lda     ($06),y
@@ -1984,6 +2039,8 @@ L656D:  dex
 L6575:  .byte   0
 L6576:  .res 16, 0
 
+;;; ==================================================
+
 L6586:  bpl     L658B
 L6588:  return  #$00
 
@@ -2002,7 +2059,7 @@ L658B:  cmp     #$09
         sta     $08
         lda     $DAA9
         sta     $09
-        MGTK_RELAY_CALL MGTK::MoveTo, $0006
+        MGTK_RELAY_CALL MGTK::MoveTo, $06
         bit     $D8EB
         bpl     L65C8
         MGTK_RELAY_CALL MGTK::SetTextBG, $DA5D
@@ -2015,7 +2072,7 @@ L65C8:  MGTK_RELAY_CALL MGTK::SetTextBG, $DA5E
 L65D6:  copy16  #$D8EF, $06
         lda     $D8EE
         sta     $08
-        MGTK_RELAY_CALL MGTK::DrawText, $0006
+        MGTK_RELAY_CALL MGTK::DrawText, $06
         jsr     L56E3
         rts
 
@@ -2028,7 +2085,7 @@ L65D6:  copy16  #$D8EF, $06
         sta     $08
         lda     $DAB5
         sta     $09
-        MGTK_RELAY_CALL MGTK::MoveTo, $0006
+        MGTK_RELAY_CALL MGTK::MoveTo, $06
         bit     $D8EB
         bpl     L6626
         MGTK_RELAY_CALL MGTK::SetTextBG, $DA5D
@@ -2042,7 +2099,7 @@ L6626:  MGTK_RELAY_CALL MGTK::SetTextBG, $DA5E
 L6634:  copy16  #$D8EF, $06
         lda     $D8EE
         sta     $08
-        MGTK_RELAY_CALL MGTK::DrawText, $0006
+        MGTK_RELAY_CALL MGTK::DrawText, $06
         jsr     L56E3
         rts
 
@@ -2059,7 +2116,9 @@ L6684:  addr_call L5DED, $D484
         addr_call L5DED, $D8F8
         rts
 
-        lda     $D5B7
+;;; ==================================================
+
+L6693:  lda     $D5B7
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::PaintRect, $DAAA
         MGTK_RELAY_CALL MGTK::SetPenMode, $D202
@@ -2110,7 +2169,7 @@ L672F:  jsr     L6E45
         copy16  #$D484, $06
         lda     $D484
         sta     $08
-L6751:  MGTK_RELAY_CALL MGTK::TextWidth, $0006
+L6751:  MGTK_RELAY_CALL MGTK::TextWidth, $06
         add16   $09, L684D, $09
         lda     $09
         cmp     $D20D
@@ -2160,7 +2219,7 @@ L67BD:  dey
 L67C4:  copy16  #$D402, $06
         lda     $D402
         sta     $08
-L67D1:  MGTK_RELAY_CALL MGTK::TextWidth, $0006
+L67D1:  MGTK_RELAY_CALL MGTK::TextWidth, $06
         add16   $09, $DAA6, $09
         lda     $09
         cmp     $D20D
@@ -2248,7 +2307,7 @@ L68A6:  jsr     L6E72
         copy16  #$D484, $06
         lda     $D484
         sta     $08
-L68C8:  MGTK_RELAY_CALL MGTK::TextWidth, $0006
+L68C8:  MGTK_RELAY_CALL MGTK::TextWidth, $06
         add16   $09, L69C4, $09
         lda     $09
         cmp     $D20D
@@ -2298,7 +2357,7 @@ L6934:  dey
 L693B:  copy16  #$D443, $06
         lda     $D443
         sta     $08
-L6948:  MGTK_RELAY_CALL MGTK::TextWidth, $0006
+L6948:  MGTK_RELAY_CALL MGTK::TextWidth, $06
         add16   $09, $DAB2, $09
         lda     $09
         cmp     $D20D
@@ -2371,7 +2430,7 @@ L69D5:  lda     L6A17
         sta     $09
         lda     $D5B7
         jsr     L62C8
-        MGTK_RELAY_CALL MGTK::MoveTo, $0006
+        MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call L5DED, $D8F6
         addr_call L5DED, $D484
         jsr     L6EA3
@@ -2392,7 +2451,7 @@ L6A1E:  dec     $D402
         sta     $09
         lda     $D5B7
         jsr     L62C8
-        MGTK_RELAY_CALL MGTK::MoveTo, $0006
+        MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call L5DED, $D484
         addr_call L5DED, $D8F8
         jsr     L6EA3
@@ -2424,7 +2483,7 @@ L6A6B:  ldx     $D402
         sta     $09
         lda     $D5B7
         jsr     L62C8
-        MGTK_RELAY_CALL MGTK::MoveTo, $0006
+        MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call L5DED, $D484
         addr_call L5DED, $D8F8
         jsr     L6EA3
@@ -2532,7 +2591,7 @@ L6B81:  lda     L6BC3
         sta     $09
         lda     $D5B7
         jsr     L62C8
-        MGTK_RELAY_CALL MGTK::MoveTo, $0006
+        MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call L5DED, $D8F6
         addr_call L5DED, $D484
         jsr     L6E9F
@@ -2553,7 +2612,7 @@ L6BCA:  dec     $D443
         sta     $09
         lda     $D5B7
         jsr     L62C8
-        MGTK_RELAY_CALL MGTK::MoveTo, $0006
+        MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call L5DED, $D484
         addr_call L5DED, $D8F8
         jsr     L6E9F
@@ -2585,7 +2644,7 @@ L6C17:  ldx     $D443
         sta     $09
         lda     $D5B7
         jsr     L62C8
-        MGTK_RELAY_CALL MGTK::MoveTo, $0006
+        MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call L5DED, $D484
         addr_call L5DED, $D8F8
         jsr     L6E9F
@@ -2816,7 +2875,7 @@ L6E45:  lda     #$00
         beq     L6E63
         sta     $08
         copy16  #$D403, $06
-        MGTK_RELAY_CALL MGTK::TextWidth, $0006
+        MGTK_RELAY_CALL MGTK::TextWidth, $06
 L6E63:  lda     $09
         clc
         adc     $DAA6
@@ -2834,7 +2893,7 @@ L6E72:  lda     #$00
         beq     L6E90
         sta     $08
         copy16  #$D444, $06
-        MGTK_RELAY_CALL MGTK::TextWidth, $0006
+        MGTK_RELAY_CALL MGTK::TextWidth, $06
 L6E90:  lda     $09
         clc
         adc     $DAB2
@@ -2890,7 +2949,7 @@ L6EC2:  lda     $D920
         tya
         jsr     L5F0D
 L6EFB:  addr_call L6129, $D3C1
-        addr_call L6129, $5028
+        addr_call L6129, L5028
         lda     $D3C1
         cmp     L5028
         bne     L6F26
@@ -2921,4 +2980,7 @@ L6F38:  jsr     L5F49
 L6F3C:  .byte   0
 L6F3D:  .byte   0
 
+;;; ==================================================
+
         PAD_TO $7000
+.endproc ; common_overlay

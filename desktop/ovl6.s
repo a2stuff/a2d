@@ -12,8 +12,8 @@
 ;;; Overlay for File Delete
 ;;; ==================================================
 
-.proc file_delete_overlay
         .org $7000
+.proc file_delete_overlay
 
         winfo12 := $D5B7
         winfo15 := $D5F1
@@ -135,5 +135,7 @@ L70EA:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo15
         txs
         return  #$FF
 
+;;; ==================================================
+
         PAD_TO $7800
-.endproc
+.endproc ; file_delete_overlay

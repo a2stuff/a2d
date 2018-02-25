@@ -1,4 +1,3 @@
-
         .setcpu "6502"
 
         .include "apple2.inc"
@@ -15,6 +14,7 @@
 
         .org $1800
 .proc disk_copy_overlay2
+
         jmp     start
 
 L1A39           := $1A39
@@ -280,4 +280,7 @@ L19F8:  jsr     LA83D
         bcs     L1A3B
 L19FD:  lda     $BE53
 
-.endproc
+;;; ==================================================
+
+        PAD_TO $1A00
+.endproc ; disk_copy_overlay2

@@ -1,4 +1,3 @@
-
         .setcpu "6502"
 
         .include "apple2.inc"
@@ -14,6 +13,7 @@
 ;;; ==================================================
 
         .org $9000
+.proc selector_overlay2
 
 ;;; Routines in common overlay segment ($5000-$6FFF)
 L5000                   := $5000
@@ -1642,4 +1642,7 @@ L9EC0:  .byte   0
 L9EC1:  .byte   0
         ;; how much is buffer, how much is padding?
 
+;;; ==================================================
+
         PAD_TO $A000
+.endproc ; selector_overlay2
