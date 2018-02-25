@@ -111,13 +111,12 @@ L0902:  jsr     prompt_input_loop
 
 L090C:  lda     $D57D
         jsr     set_port_from_window_id
-L0912:  MGTK_RELAY_CALL MGTK::SetPenMode, $D200
+        MGTK_RELAY_CALL MGTK::SetPenMode, $D200
         ldy     #$11
-L091D:  ldax    #$AE6E
+        ldax    #$AE6E
         jsr     MGTK_RELAY
-L0924:  ldax    #$B2C6
+        ldax    #$B2C6
         ldy     #$01
-L092B           := * + 1
         jsr     draw_dialog_label
         lda     L09D7
         jsr     L12C1
@@ -125,24 +124,19 @@ L092B           := * + 1
         bne     L0942
         jsr     set_cursor_watch
         lda     L09D7
-L093F           := * + 2
         jsr     L126F
         bcs     L099B
 L0942:  lda     $D57D
         jsr     set_port_from_window_id
         ldy     #$07
         lda     #$00
-L094D           := * + 1
         ldx     #$D2
-L0950           := * + 2
         jsr     MGTK_RELAY
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
         axy_call draw_dialog_label, $01, $B373
         addr_call L1900, $D443
         ldx     #$43
-L096D           := * + 1
         ldy     #$D4
-L096F           := * + 1
         lda     L09D7
         jsr     L1307
         pha
@@ -160,7 +154,6 @@ L0980:  cmp     #$2B
 
 L098C:  jsr     L191B
         ldax    #$B388
-L0994           := * + 1
         ldy     #$06
         jsr     draw_dialog_label
         jmp     L09B8
@@ -177,7 +170,6 @@ L099B:  pha
 L09AC:  jsr     L191B
         axy_call draw_dialog_label, $06, $B2DE
 L09B8:  jsr     prompt_input_loop
-L09BC           := * + 1
         bmi     L09B8
         bne     L09C2
         jmp     L090C
@@ -199,7 +191,7 @@ L09D9:  lda     #$00
         jsr     set_port_from_window_id
         addr_call draw_dialog_title, $B319
         ldax    #$B32A
-L09F2:  ldy     #$01
+        ldy     #$01
         jsr     draw_dialog_label
         jsr     L0D31
         lda     #$FF
@@ -241,7 +233,7 @@ L0A74:  jsr     bell
 
 L0A7A:  lda     $D443
         beq     L0A74
-L0A7F:  cmp     #$10
+        cmp     #$10
         bcs     L0A74
         jsr     set_cursor_pointer
         lda     $D57D
@@ -372,9 +364,8 @@ L0BE6:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
         MGTK_RELAY_CALL MGTK::PaintRect, $AE20
         ldy     #$11
         ldax    #$AE20
-L0C00           := * + 2
         jsr     MGTK_RELAY
-L0C01:  lda     #$00
+        lda     #$00
 L0C03:  rts
 
 L0C04:  sta     L0C1E
@@ -391,7 +382,6 @@ L0C0F:  lda     L0C1E
 L0C1E:  .byte   0
 L0C1F:  .byte   0
 L0C20:  ldy     #$27
-L0C23           := * + 1
         sty     $D888
         ldy     #$00
         sty     $D889
@@ -469,7 +459,6 @@ L0CF6:  return  #$FF
         lda     $D887
         clc
         adc     #$01
-L0D00           := * + 1
         cmp     $D890
         bcc     L0D06
         lda     #$00
@@ -1611,7 +1600,7 @@ L1917:  dey
         rts
 
 L191B:  sta     ALTZPOFF
-        lda     $C082
+        lda     ROMIN2
         jsr     BELL1
         sta     ALTZPON
         lda     LCBANK1

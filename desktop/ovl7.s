@@ -334,27 +334,27 @@ L73A9:  .byte   0
 L73AA:  .byte   0
 
         MGTK_RELAY_CALL MGTK::InRect, $D966
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         bne     L73BB
         jmp     L73FE
 
 L73BB:  MGTK_RELAY_CALL MGTK::InRect, $D96E
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         bne     L73CB
         jmp     L7413
 
 L73CB:  MGTK_RELAY_CALL MGTK::InRect, $D976
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         bne     L73DB
         jmp     L7428
 
 L73DB:  MGTK_RELAY_CALL MGTK::InRect, $D97E
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         bne     L73EB
         jmp     L743D
 
 L73EB:  MGTK_RELAY_CALL MGTK::InRect, $D986
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         bne     L73FB
         jmp     L7452
 

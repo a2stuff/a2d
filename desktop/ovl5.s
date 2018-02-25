@@ -219,8 +219,7 @@ L7198:  addr_call L647C, path_buf1
         lda     #0
         sta     $D8EC
         jsr     L55BA
-
-L71C0:  copy16  #path_buf0, $6
+        copy16  #path_buf0, $6
         copy16  #path_buf1, $8
         ldx     $50AA
         txs
@@ -244,7 +243,7 @@ L71D8:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo15
 L71F9:  lda     #1
         sta     path_buf2
         lda     #' '
-L7200:  sta     $D485
+        sta     $D485
         jsr     L6D27
         ldx     L709B
 L7209:  lda     L709B+1,x

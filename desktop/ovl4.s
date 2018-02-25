@@ -123,11 +123,11 @@ L5151:  lda     $D5B7
         bit     L51AE
         bmi     L5183
         MGTK_RELAY_CALL MGTK::InRect, $DA9E
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         bne     L5196
         beq     L5190
 L5183:  MGTK_RELAY_CALL MGTK::InRect, $DAAA
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         bne     L5196
 L5190:  jsr     L55E0
         jmp     L5199
@@ -163,7 +163,7 @@ L51D2:  lda     $D5B7
         MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
         MGTK_RELAY_CALL MGTK::InRect, $D9E0
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     L5200
         jmp     L5239
 
@@ -188,7 +188,7 @@ L5216:  lda     $D5B7
         jmp     L5308
 
 L5239:  MGTK_RELAY_CALL MGTK::InRect, $D9F0
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     L5249
         jmp     L526B
 
@@ -202,7 +202,7 @@ L5249:  bit     L5105
 L5268:  jmp     L5308
 
 L526B:  MGTK_RELAY_CALL MGTK::InRect, $D9D0
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     L527B
         jmp     L529D
 
@@ -216,7 +216,7 @@ L527B:  bit     L5105
 L529A:  jmp     L5308
 
 L529D:  MGTK_RELAY_CALL MGTK::InRect, $D9D8
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     L52AD
         jmp     L52CD
 
@@ -229,7 +229,7 @@ L52AD:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
 L52CA:  jmp     L5308
 
 L52CD:  MGTK_RELAY_CALL MGTK::InRect, $D9E8
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     L52DD
         jmp     L52FA
 
@@ -271,13 +271,7 @@ L5340:  rts
 L5341:  lda     $D5F1
         sta     $D208
         MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
-        lda     $D20F
-        clc
-        adc     $D60F
-        sta     $D20F
-        lda     $D210
-        adc     $D610
-        sta     $D210
+        add16   $D20F, $D60F, $D20F
         lsr16    $D20F
         lsr16    $D20F
         lsr16    $D20F
@@ -633,14 +627,14 @@ L56F6:  lda     #$00
         sta     L577B
 L56FB:  MGTK_RELAY_CALL MGTK::GetEvent, $D208
         lda     $D208
-        cmp     #$02
+        cmp     #MGTK::event_kind_button_up
         beq     L575E
         lda     $D5B7
         sta     $D208
         MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
         MGTK_RELAY_CALL MGTK::InRect, $D9D8
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     L5738
         lda     L577B
         beq     L5740
@@ -671,14 +665,14 @@ L577C:  lda     #$00
         sta     L5801
 L5781:  MGTK_RELAY_CALL MGTK::GetEvent, $D208
         lda     $D208
-        cmp     #$02
+        cmp     #MGTK::event_kind_button_up
         beq     L57E4
         lda     $D5B7
         sta     $D208
         MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
         MGTK_RELAY_CALL MGTK::InRect, $D9D0
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     L57BE
         lda     L5801
         beq     L57C6
@@ -709,14 +703,14 @@ L5802:  lda     #$00
         sta     L5887
 L5807:  MGTK_RELAY_CALL MGTK::GetEvent, $D208
         lda     $D208
-        cmp     #$02
+        cmp     #MGTK::event_kind_button_up
         beq     L586A
         lda     $D5B7
         sta     $D208
         MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
         MGTK_RELAY_CALL MGTK::InRect, $D9E8
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     L5844
         lda     L5887
         beq     L584C
@@ -747,14 +741,14 @@ L5888:  lda     #$00
         sta     L590D
 L588D:  MGTK_RELAY_CALL MGTK::GetEvent, $D208
         lda     $D208
-        cmp     #$02
+        cmp     #MGTK::event_kind_button_up
         beq     L58F0
         lda     $D5B7
         sta     $D208
         MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
         MGTK_RELAY_CALL MGTK::InRect, $D9E0
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     L58CA
         lda     L590D
         beq     L58D2
@@ -785,14 +779,14 @@ L590E:  lda     #$00
         sta     L5993
 L5913:  MGTK_RELAY_CALL MGTK::GetEvent, $D208
         lda     $D208
-        cmp     #$02
+        cmp     #MGTK::event_kind_button_up
         beq     L5976
         lda     $D5B7
         sta     $D208
         MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
         MGTK_RELAY_CALL MGTK::InRect, $D9F0
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     L5950
         lda     L5993
         beq     L5958
@@ -827,8 +821,7 @@ L5994:  sty     L59A8
         lda     ROMIN2
         jsr     MLI
 L59A8:  .byte   0
-L59A9:  .byte   0
-L59AA:  .byte   0
+L59A9:  .addr   0
         sta     ALTZPON
         tax
         lda     LCBANK1
@@ -2083,12 +2076,12 @@ L66C9:  addr_call L5DED, $D484
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
         MGTK_RELAY_CALL MGTK::InRect, $DA9E
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     L6719
         bit     L5104
         bpl     L6718
         MGTK_RELAY_CALL MGTK::InRect, $DAAA
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         bne     L6718
         jmp     L6D1E
 
@@ -2115,13 +2108,7 @@ L672F:  jsr     L6E45
         lda     $D484
         sta     $08
 L6751:  MGTK_RELAY_CALL MGTK::TextWidth, $0006
-        lda     $09
-        clc
-        adc     L684D
-        sta     $09
-        lda     $0A
-        adc     L684E
-        sta     $0A
+        add16   $09, L684D, $09
         lda     $09
         cmp     $D20D
         lda     $0A
@@ -2171,13 +2158,7 @@ L67C4:  copy16  #$D402, $06
         lda     $D402
         sta     $08
 L67D1:  MGTK_RELAY_CALL MGTK::TextWidth, $0006
-        lda     $09
-        clc
-        adc     $DAA6
-        sta     $09
-        lda     $0A
-        adc     $DAA7
-        sta     $0A
+        add16   $09, $DAA6, $09
         lda     $09
         cmp     $D20D
         lda     $0A
@@ -2225,8 +2206,7 @@ L6846:  jsr     L6D27
         jsr     L6EA3
         rts
 
-L684D:  .byte   0
-L684E:  .byte   0
+L684D:  .word   0
         lda     $D5B7
         sta     $D208
         MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
@@ -2234,12 +2214,12 @@ L684E:  .byte   0
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
         MGTK_RELAY_CALL MGTK::InRect, $DAAA
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     L6890
         bit     L5104
         bpl     L688F
         MGTK_RELAY_CALL MGTK::InRect, $DA9E
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         bne     L688F
         jmp     L6D21
 
@@ -2266,13 +2246,7 @@ L68A6:  jsr     L6E72
         lda     $D484
         sta     $08
 L68C8:  MGTK_RELAY_CALL MGTK::TextWidth, $0006
-        lda     $09
-        clc
-        adc     L69C4
-        sta     $09
-        lda     $0A
-        adc     L69C5
-        sta     $0A
+        add16   $09, L69C4, $09
         lda     $09
         cmp     $D20D
         lda     $0A
@@ -2322,13 +2296,7 @@ L693B:  copy16  #$D443, $06
         lda     $D443
         sta     $08
 L6948:  MGTK_RELAY_CALL MGTK::TextWidth, $0006
-        lda     $09
-        clc
-        adc     $DAB2
-        sta     $09
-        lda     $0A
-        adc     $DAB3
-        sta     $0A
+        add16   $09, $DAB2, $09
         lda     $09
         cmp     $D20D
         lda     $0A
@@ -2376,8 +2344,7 @@ L69BD:  jsr     L6D27
         jsr     L6E9F
         rts
 
-L69C4:  .byte   0
-L69C5:  .byte   0
+L69C4:  .word   0
         sta     L6A17
         lda     $D402
         clc

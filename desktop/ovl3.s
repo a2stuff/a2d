@@ -592,7 +592,7 @@ L953F:  MGTK_RELAY_CALL MGTK::GetEvent, $D208
         MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
         MGTK_RELAY_CALL MGTK::InRect, $D6F8
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     L957C
         lda     L95BF
         beq     L9584
@@ -630,7 +630,7 @@ L95C5:  MGTK_RELAY_CALL MGTK::GetEvent, $D208
         MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
         MGTK_RELAY_CALL MGTK::InRect, $D700
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     L9602
         lda     L9645
         beq     L960A
@@ -688,7 +688,7 @@ L9683:  lda     $D665
         MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
         MGTK_RELAY_CALL MGTK::MoveTo, $D20D
         MGTK_RELAY_CALL MGTK::InRect, $D6F8
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         bne     L96C8
         MGTK_RELAY_CALL MGTK::SetPenMode, $D202
         MGTK_RELAY_CALL MGTK::PaintRect, $D6F8
@@ -698,7 +698,7 @@ L9683:  lda     $D665
 L96C7:  rts
 
 L96C8:  MGTK_RELAY_CALL MGTK::InRect, $D700
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         bne     L96EF
         MGTK_RELAY_CALL MGTK::SetPenMode, $D202
         MGTK_RELAY_CALL MGTK::PaintRect, $D700
@@ -1524,11 +1524,10 @@ L9DC9:  sty     L9DDD
         php
         sei
         sta     ALTZPOFF
-        sta     $C082
+        sta     ROMIN2
         jsr     MLI
 L9DDD:  .byte   0
-L9DDE:  .byte   0
-L9DDF:  .byte   0
+L9DDE:  .addr   0
         sta     ALTZPON
         tax
         lda     LCBANK1
@@ -1555,8 +1554,7 @@ L9E05:  stax    L9E1B
         ldx     $D3EE
 L9E17:  lda     $D3EE,x
         .byte   $9D
-L9E1B:  .byte   $34
-L9E1C:  .byte   $12
+L9E1B:  .addr   $1234
         dex
         bpl     L9E17
         sta     ALTZPON
@@ -1571,8 +1569,7 @@ L9E2A:  stax    L9E40
         ldx     $D3AD
 L9E3C:  lda     $D3AD,x
         .byte   $9D
-L9E40:  .byte   $34
-L9E41:  .byte   $12
+L9E40:  .addr   $1234
         dex
         bpl     L9E3C
         sta     ALTZPON
@@ -1581,8 +1578,7 @@ L9E41:  .byte   $12
         rts
 
         asl     a
-L9E50:  .byte   0
-L9E51:  .byte   0
+L9E50:  .word   0
         .byte   0
         .byte   0
         .byte   0

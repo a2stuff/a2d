@@ -155,6 +155,32 @@ $text =~ s/
       ? "add16   $1, #\$$5$2, $3" : $&/egx;
 
 $text =~ s/
+     \b  lda \s+ ([L\$][0-9A-F]{2,4}) \n
+     \s+ clc \n
+     \s+ adc \s+ ([L\$][0-9A-F]{2,4}) \n
+     \s+ sta \s+ ([L\$][0-9A-F]{2,4}) \n
+     \s+ lda \s+ ([L\$][0-9A-F]{2,4}) \n
+     \s+ adc \s+ ([L\$][0-9A-F]{2,4}) \n
+     \s+ sta \s+ ([L\$][0-9A-F]{2,4}) \b
+     /(hex(substr($1,1)) + 1 == hex(substr($4,1))) &&
+      (hex(substr($2,1)) + 1 == hex(substr($5,1))) &&
+      (hex(substr($3,1)) + 1 == hex(substr($6,1)))
+      ? "add16   $1, $2, $3" : $&/egx;
+
+$text =~ s/
+     \b  lda \s+ ([L\$][0-9A-F]{2,4}) \n
+     \s+ sec \n
+     \s+ sbc \s+ ([L\$][0-9A-F]{2,4}) \n
+     \s+ sta \s+ ([L\$][0-9A-F]{2,4}) \n
+     \s+ lda \s+ ([L\$][0-9A-F]{2,4}) \n
+     \s+ sbc \s+ ([L\$][0-9A-F]{2,4}) \n
+     \s+ sta \s+ ([L\$][0-9A-F]{2,4}) \b
+     /(hex(substr($1,1)) + 1 == hex(substr($4,1))) &&
+      (hex(substr($2,1)) + 1 == hex(substr($5,1))) &&
+      (hex(substr($3,1)) + 1 == hex(substr($6,1)))
+      ? "sub16   $1, $2, $3" : $&/egx;
+
+$text =~ s/
      \b  lda \s+ ( (?: [L\$][0-9A-F]{2,4} ) | (?: \#\$[0-9A-F]{2} ) ) \n
      \s+ rts \b
      /return  $1/gx;
@@ -162,5 +188,10 @@ $text =~ s/
 $text =~ s/
      \b  brk \b
      /.byte   0/gx;
+
+$text =~ s/
+     \b  ( MGTK_RELAY_CALL \s+ MGTK::InRect, .* \n
+     \s+ ) cmp \s+ \#\$80 \b
+     /$1cmp     #MGTK::inrect_inside/gx;
 
 print $text;

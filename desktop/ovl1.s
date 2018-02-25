@@ -120,7 +120,7 @@ start:  lda     #$80
         php
         sei
         sta     ALTZPOFF
-        lda     $C082
+        lda     ROMIN2
         jsr     MLI
 call:   .byte   0
 params: .addr   0
