@@ -2,6 +2,9 @@
 # Build directory
 out
 
+# "Info" files guiding disassembly
+*.info
+
 # Directory mounted in Virtual ][ as a ProDOS volume
 mount
 

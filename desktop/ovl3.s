@@ -10,19 +10,21 @@
         .include "../macros.inc"
 
 ;;; ==================================================
-;;; Overlay for Disk Copy
+;;; Overlay for Selector (part of it, anyway)
 ;;; ==================================================
 
         .org $9000
 
-L5000           := $5000
-L6365           := $6365
-LA500           := $A500
-LB3E7           := $B3E7
-LB403           := $B403
-LB445           := $B445
-LB708           := $B708
-LB7B9           := $B7B9
+;;; Routines in common overlay segment ($5000-$6FFF)
+L5000                   := $5000
+
+;;; Entry points in desktop_main
+launch_dialog           := $A500
+set_cursor_watch        := $B3E7
+set_cursor_pointer      := $B403
+LB445                   := $B445 ; ???
+draw_text1              := $B708
+set_port_from_window_id := $B7B9
 
         sta     L938E
         ldx     #$FF
@@ -183,14 +185,14 @@ L913F:  cmp     #$04
 
 L9146:  lda     L938D
         jsr     L979D
-        jsr     LB3E7
+        jsr     set_cursor_watch
         lda     L938D
         jsr     L9A97
         beq     L915D
-        jsr     LB403
+        jsr     set_cursor_pointer
         jmp     L933F
 
-L915D:  jsr     LB403
+L915D:  jsr     set_cursor_pointer
         lda     #$FF
         sta     L938D
         jsr     L99F5
@@ -328,13 +330,13 @@ L926D:  ldy     L9104
         beq     L927B
         jmp     L936E
 
-L927B:  jsr     LB403
+L927B:  jsr     set_cursor_pointer
         jmp     L900F
 
 L9281:  .byte   0
 L9282:  lda     L938D
         jsr     L979D
-        jsr     LB3E7
+        jsr     set_cursor_watch
         lda     L938D
         jsr     L9BD5
         sta     $06
@@ -412,7 +414,7 @@ L931B:  iny
         lda     L938A
         sta     $D355
         jsr     JUMP_TABLE_LAUNCH_FILE
-        jsr     LB403
+        jsr     set_cursor_pointer
         lda     #$FF
         sta     L938D
         jmp     L936E
@@ -443,7 +445,7 @@ L938E:  .byte   0
 L938F:  .byte   0
 L9390:  MGTK_RELAY_CALL MGTK::OpenWindow, $D665
         lda     $D665
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, $D202
         MGTK_RELAY_CALL MGTK::FrameRect, $D6D8
         MGTK_RELAY_CALL MGTK::FrameRect, $D6E0
@@ -532,11 +534,11 @@ L947F:  clc
 L94A7:  .byte   0
 L94A8:  .byte   0
 L94A9:  MGTK_RELAY_CALL MGTK::MoveTo, $D708
-        addr_call LB708, $AE40
+        addr_call draw_text1, $AE40
         rts
 
 L94BA:  MGTK_RELAY_CALL MGTK::MoveTo, $D70C
-        addr_call LB708, $AE96
+        addr_call draw_text1, $AE96
         rts
 
 L94CB:  sta     $06
@@ -680,7 +682,7 @@ L9678:  lda     $D20E
         return  #$FF
 
 L9683:  lda     $D665
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         lda     $D665
         sta     $D208
         MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
@@ -1320,7 +1322,7 @@ L9BFC:  jsr     L9DA7
         rts
 
 L9C09:  sta     $D2AC
-        yax_call LA500, $0C, $D2AC
+        yax_call launch_dialog, $0C, $D2AC
         rts
 
         .byte   $03

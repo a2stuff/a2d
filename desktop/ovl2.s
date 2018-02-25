@@ -25,7 +25,6 @@ LB509                   := $B509 ; ???
 draw_dialog_label       := $B590
 draw_text1              := $B708
 draw_dialog_title       := $B723
-
 adjust_case             := $B781
 set_port_from_window_id := $B7B9
 LBD69                   := $BD69 ; ???

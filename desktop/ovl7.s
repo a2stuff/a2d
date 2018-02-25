@@ -27,6 +27,7 @@
         dialog_rect1 := $DA9E
         dialog_rect2 := $DAAA
 
+;;; Routines in common overlay segment ($5000-$6FFF)
 L5106           := $5106
 L55BA           := $55BA
 L5CF7           := $5CF7
