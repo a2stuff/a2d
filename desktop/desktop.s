@@ -19343,40 +19343,50 @@ LB76C:  stax    $06
         addr_call_indirect draw_text1, $06
         rts
 
-LB781:  stx     $0B
-        sta     $0A
-        ldy     #$00
-        lda     ($0A),y
+;;; ==================================================
+;;; Adjust case in a filename (input buf A,X, output buf $A)
+;;; Called from ovl2
+
+.proc adjust_case
+        ptr := $A
+
+        stx     ptr+1
+        sta     ptr
+        ldy     #0
+        lda     (ptr),y
         tay
-        bne     LB78D
+        bne     loop
         rts
+loop:   dey
+        beq     done
+        bpl     :+
+done:   rts
 
-LB78D:  dey
-        beq     LB792
-        bpl     LB793
-LB792:  rts
-
-LB793:  lda     ($0A),y
+:       lda     (ptr),y
         and     #$7F
-        cmp     #$2F
-        beq     LB79F
-        cmp     #$2E
-        bne     LB7A3
-LB79F:  dey
-        jmp     LB78D
+        cmp     #'/'
+        beq     :+
+        cmp     #'.'
+        bne     check_alpha
+:       dey
+        jmp     loop
 
-LB7A3:  iny
-        lda     ($0A),y
+check_alpha:
+        iny
+        lda     (ptr),y
         and     #$7F
-        cmp     #$41
-        bcc     LB7B5
-        cmp     #$5B
-        bcs     LB7B5
+        cmp     #'A'
+        bcc     :+
+        cmp     #'Z'+1
+        bcs     :+
         clc
-        adc     #$20
-        sta     ($0A),y
-LB7B5:  dey
-        jmp     LB78D
+        adc     #('a' - 'A')    ; Lowercase
+        sta     (ptr),y
+:       dey
+        jmp     loop
+.endproc
+
+;;; ==================================================
 
 .proc set_port_from_window_id
         sta     getwinport_params2::window_id
@@ -20123,7 +20133,7 @@ LBE68:  lda     ($06),y
         sta     path_buf0,y
         dey
         bpl     LBE68
-        addr_call LB781, path_buf0
+        addr_call adjust_case, path_buf0
         rts
 
 LBE78:  ldy     #$00
@@ -20133,7 +20143,7 @@ LBE7D:  lda     ($06),y
         sta     path_buf1,y
         dey
         bpl     LBE7D
-        addr_call LB781, path_buf1
+        addr_call adjust_case, path_buf1
         rts
 
 LBE8D:  jsr     set_fill_white

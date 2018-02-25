@@ -27,8 +27,6 @@
         dialog_rect1 := $DA9E
         dialog_rect2 := $DAAA
 
-L4030           := $4030
-
 L5106           := $5106
 L55BA           := $55BA
 L5CF7           := $5CF7
@@ -279,11 +277,11 @@ L72BF:  copy16  #$0601, $D484
         jmp     L72EE
 
 L72E2:  lda     #$40
-        jsr     L4030
+        jsr     JUMP_TABLE_ALERT_0
 L72E7:  rts
 
 L72E8:  lda     #$FB
-        jsr     L4030
+        jsr     JUMP_TABLE_ALERT_0
         rts
 
 L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3

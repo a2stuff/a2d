@@ -27,8 +27,6 @@
         dialog_rect1 := $DA9E
         dialog_rect2 := $DAAA
 
-L4030           := $4030
-
 ;;; Routines in common overlay segment ($5000-$6FFF)
 L5106           := $5106
 L55BA           := $55BA
@@ -209,7 +207,7 @@ L7178:  jsr     L6D27
 L7189:  addr_call L647C, path_buf0
         beq     L7198
 L7192:  lda     #$40
-        jsr     L4030
+        jsr     JUMP_TABLE_ALERT_0
         rts
 
 L7198:  addr_call L647C, path_buf1

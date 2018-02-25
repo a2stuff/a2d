@@ -8,10 +8,10 @@ the rest to a RAM card (if available), then invoking the main app.
 
 ## DESKTOP2.$F1
 
-This is large - 111k. It includes a loader, the DeskTop app (with both
-main memory and aux memory segments, filling everything from $4000 to
-$FFFF (except for I/O space and ProDOS), and still having more code
-segments swapped in dynamically.
+This is large - 111k. It includes a loader and the DeskTop app with
+both main memory and aux memory segments, filling everything from
+$4000 to $FFFF (except for I/O space and ProDOS), and still having
+more code segments swapped in dynamically.
 
 The file is broken down into multiple segments:
 

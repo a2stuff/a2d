@@ -27,8 +27,6 @@
         dialog_rect1 := $DA9E
         dialog_rect2 := $DAAA
 
-L4030   := $4030
-
 ;;; Routines in common overlay segment ($5000-$6FFF)
 L5106   := $5106
 L55BA   := $55BA
@@ -112,7 +110,7 @@ L7087:  entry 0, L70B1
 L70B1:  addr_call L647C, path_buf0
         beq     L70C0
         lda     #$40
-        jsr     L4030
+        jsr     JUMP_TABLE_ALERT_0
         rts
 
 L70C0:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo15

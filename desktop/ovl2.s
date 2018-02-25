@@ -15,36 +15,25 @@
 
         .org $800
 
-L0006           := $0006
-L00E8           := $00E8
-L2000           := $2000
+;;; Entry points in desktop_main
+prompt_input_loop       := $A567
+bell                    := $AACE
+set_cursor_watch        := $B3E7
+set_cursor_pointer      := $B403
+LB445                   := $B445 ; ???
+LB509                   := $B509 ; ???
+draw_dialog_label       := $B590
+draw_text1              := $B708
+draw_dialog_title       := $B723
 
-L4030           := $4030
-
-LA132           := $A132
-LA18A           := $A18A
-LA1BE           := $A1BE
-LA1D4           := $A1D4
-LA1EF           := $A1EF
-LA567           := $A567
-LAACE           := $AACE
-LB3E7           := $B3E7
-LB403           := $B403
-LB445           := $B445
-LB509           := $B509
-LB590           := $B590
-LB708           := $B708
-LB723           := $B723
-LB781           := $B781
-LB7B9           := $B7B9
-LBD69           := $BD69
-LBD75           := $BD75
-LBEB1           := $BEB1
-
-LF479           := $F479
+adjust_case             := $B781
+set_port_from_window_id := $B7B9
+LBD69                   := $BD69 ; ???
+LBD75                   := $BD75 ; ???
+reset_state             := $BEB1
 
 L0800:  pha
-        jsr     LB403
+        jsr     set_cursor_pointer
         pla
         cmp     #$04
         beq     L080C
@@ -54,16 +43,16 @@ L080C:  lda     #$00
         sta     $D8E8
         jsr     LB509
         lda     $D57D
-        jsr     LB7B9
-        addr_call LB723, $B245
-        axy_call LB590, $01, $B257
+        jsr     set_port_from_window_id
+        addr_call draw_dialog_title, $B245
+        axy_call draw_dialog_label, $01, $B257
         jsr     L0D31
         lda     #$FF
         sta     $D887
 L0832:  copy16  #$0B48, $A89A
         lda     #$80
         sta     $D8ED
-L0841:  jsr     LA567
+L0841:  jsr     prompt_input_loop
         bmi     L0841
         pha
         copy16  #$B8F4, $A89A
@@ -77,7 +66,7 @@ L0841:  jsr     LA567
 L085F:  bit     $D887
         bmi     L0832
         lda     $D57D
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, $D200
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
         MGTK_RELAY_CALL MGTK::SetPenMode, $D202
@@ -88,22 +77,22 @@ L085F:  bit     $D887
         lda     #$00
         sta     $D8ED
         jsr     LBD69
-        axy_call LB590, $03, $B28D
-L08A7:  jsr     LA567
+        axy_call draw_dialog_label, $03, $B28D
+L08A7:  jsr     prompt_input_loop
         bmi     L08A7
         beq     L08B7
         jmp     L09C2
 
-L08B1:  jsr     LAACE
+L08B1:  jsr     bell
         jmp     L08A7
 
 L08B7:  lda     $D443
         beq     L08B1
         cmp     #$10
         bcs     L08B1
-        jsr     LB403
+        jsr     set_cursor_pointer
         lda     $D57D
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, $D200
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
         ldx     $D887
@@ -112,17 +101,17 @@ L08B7:  lda     $D443
         sta     L09D7
         lda     #$00
         sta     $D8E8
-        axy_call LB590, $03, $B2AF
+        axy_call draw_dialog_label, $03, $B2AF
         lda     L09D7
         jsr     L1A2D
-        addr_call LB708, $D909
-L0902:  jsr     LA567
+        addr_call draw_text1, $D909
+L0902:  jsr     prompt_input_loop
         bmi     L0902
         beq     L090C
         jmp     L09C2
 
 L090C:  lda     $D57D
-        jsr     LB7B9
+        jsr     set_port_from_window_id
 L0912:  MGTK_RELAY_CALL MGTK::SetPenMode, $D200
         ldy     #$11
 L091D:  ldax    #$AE6E
@@ -130,18 +119,18 @@ L091D:  ldax    #$AE6E
 L0924:  ldax    #$B2C6
         ldy     #$01
 L092B           := * + 1
-        jsr     LB590
+        jsr     draw_dialog_label
         lda     L09D7
         jsr     L12C1
         and     #$FF
         bne     L0942
-        jsr     LB3E7
+        jsr     set_cursor_watch
         lda     L09D7
 L093F           := * + 2
         jsr     L126F
         bcs     L099B
 L0942:  lda     $D57D
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         ldy     #$07
         lda     #$00
 L094D           := * + 1
@@ -149,7 +138,7 @@ L094D           := * + 1
 L0950           := * + 2
         jsr     MGTK_RELAY
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
-        axy_call LB590, $01, $B373
+        axy_call draw_dialog_label, $01, $B373
         addr_call L1900, $D443
         ldx     #$43
 L096D           := * + 1
@@ -158,7 +147,7 @@ L096F           := * + 1
         lda     L09D7
         jsr     L1307
         pha
-        jsr     LB403
+        jsr     set_cursor_pointer
         pla
         bne     L0980
         lda     #$00
@@ -166,7 +155,7 @@ L096F           := * + 1
 
 L0980:  cmp     #$2B
         bne     L098C
-        jsr     L4030
+        jsr     JUMP_TABLE_ALERT_0
         bne     L09C2
         jmp     L090C
 
@@ -174,29 +163,29 @@ L098C:  jsr     L191B
         ldax    #$B388
 L0994           := * + 1
         ldy     #$06
-        jsr     LB590
+        jsr     draw_dialog_label
         jmp     L09B8
 
 L099B:  pha
-        jsr     LB403
+        jsr     set_cursor_pointer
         pla
         cmp     #$2B
         bne     L09AC
-        jsr     L4030
+        jsr     JUMP_TABLE_ALERT_0
         bne     L09C2
         jmp     L090C
 
 L09AC:  jsr     L191B
-        axy_call LB590, $06, $B2DE
-L09B8:  jsr     LA567
+        axy_call draw_dialog_label, $06, $B2DE
+L09B8:  jsr     prompt_input_loop
 L09BC           := * + 1
         bmi     L09B8
         bne     L09C2
         jmp     L090C
 
 L09C2:  pha
-        jsr     LB403
-        jsr     LBEB1
+        jsr     set_cursor_pointer
+        jsr     reset_state
         MGTK_RELAY_CALL MGTK::CloseWindow, $D57D
         ldx     L09D8
         pla
@@ -208,11 +197,11 @@ L09D9:  lda     #$00
         sta     $D8E8
         jsr     LB509
         lda     $D57D
-        jsr     LB7B9
-        addr_call LB723, $B319
+        jsr     set_port_from_window_id
+        addr_call draw_dialog_title, $B319
         ldax    #$B32A
 L09F2:  ldy     #$01
-        jsr     LB590
+        jsr     draw_dialog_label
         jsr     L0D31
         lda     #$FF
         sta     $D887
@@ -222,7 +211,7 @@ L09F2:  ldy     #$01
         sta     $A89B
         lda     #$80
         sta     $D8ED
-L0A0E:  jsr     LA567
+L0A0E:  jsr     prompt_input_loop
         bmi     L0A0E
         beq     L0A18
         jmp     L0B31
@@ -231,7 +220,7 @@ L0A18:  bit     $D887
         bmi     L0A0E
         copy16  #$A898, $A89A
         lda     $D57D
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, $D200
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
         MGTK_RELAY_CALL MGTK::SetPenMode, $D202
@@ -242,22 +231,22 @@ L0A18:  bit     $D887
         lda     #$00
         sta     $D8ED
         jsr     LBD69
-        axy_call LB590, $03, $B28D
-L0A6A:  jsr     LA567
+        axy_call draw_dialog_label, $03, $B28D
+L0A6A:  jsr     prompt_input_loop
         bmi     L0A6A
         beq     L0A7A
         jmp     L0B31
 
-L0A74:  jsr     LAACE
+L0A74:  jsr     bell
         jmp     L0A6A
 
 L0A7A:  lda     $D443
         beq     L0A74
 L0A7F:  cmp     #$10
         bcs     L0A74
-        jsr     LB403
+        jsr     set_cursor_pointer
         lda     $D57D
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, $D200
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
         lda     #$00
@@ -266,29 +255,29 @@ L0A7F:  cmp     #$10
         lda     $BF32,x
         sta     L0B47
         sta     L0B46
-        axy_call LB590, $03, $B35D
+        axy_call draw_dialog_label, $03, $B35D
         lda     L0B46
         and     #$F0
         jsr     L1A2D
-        addr_call LB708, $D909
-L0AC7:  jsr     LA567
+        addr_call draw_text1, $D909
+L0AC7:  jsr     prompt_input_loop
         bmi     L0AC7
         beq     L0AD1
         jmp     L0B31
 
 L0AD1:  lda     $D57D
-        jsr     LB7B9
+        jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, $D200
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
-        axy_call LB590, $01, $B373
+        axy_call draw_dialog_label, $01, $B373
         addr_call L1900, $D443
-        jsr     LB3E7
+        jsr     set_cursor_watch
         ldx     #$43
         ldy     #$D4
         lda     L0B46
         jsr     L1307
         pha
-        jsr     LB403
+        jsr     set_cursor_pointer
         pla
         bne     L0B12
         lda     #$00
@@ -296,18 +285,18 @@ L0AD1:  lda     $D57D
 
 L0B12:  cmp     #$2B
         bne     L0B1E
-        jsr     L4030
+        jsr     JUMP_TABLE_ALERT_0
         bne     L0B31
         jmp     L0AD1
 
 L0B1E:  jsr     L191B
-        axy_call LB590, $06, $B388
-L0B2A:  jsr     LA567
+        axy_call draw_dialog_label, $06, $B388
+L0B2A:  jsr     prompt_input_loop
         bmi     L0B2A
         beq     L0AD1
 L0B31:  pha
-        jsr     LB403
-        jsr     LBEB1
+        jsr     set_cursor_pointer
+        jsr     reset_state
         MGTK_RELAY_CALL MGTK::CloseWindow, $D57D
         ldx     L0B47
         pla
@@ -549,7 +538,7 @@ L0D60:  lda     L0D8C
         iny
         iny
         pla
-        jsr     LB590
+        jsr     draw_dialog_label
         inc     L0D8C
         jmp     L0D3D
 
@@ -1105,27 +1094,45 @@ L1226:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 L1236:  .byte   $00
 L1237:  .byte   $00
 L1238:  .byte   $00
-L1239:  .byte   $00,$02
-L123B:  .byte   $00,$00,$1C,$03
-L123F:  .byte   $00,$00,$1C
-L1242:  .byte   $00
-L1243:  .byte   $00,$03
-L1245:  .byte   $00
-L1246:  .byte   $00
-L1247:  .byte   $15
-L1248:  .byte   $00
-L1249:  .byte   $00
+L1239:  .byte   $00
+
+;;; ==================================================
+
+.proc on_line_params
+param_count:    .byte   2
+unit_num:       .byte   0
+data_buffer:    .addr   $1C00
+.endproc
+
+.proc read_block_params
+param_count:    .byte   3
+unit_num:       .byte   0
+data_buffer:    .addr   $1C00
+block_num:      .word   0
+.endproc
+
+
+.proc write_block_params
+param_count:    .byte   3
+unit_num:       .byte   0
+data_buffer:    .addr   prodos_loader_blocks
+block_num:      .word   0
+.endproc
+
 L124A:  .byte   $00
-L124B:  sty     L125F
-        stax    L1260
+
+;;; ==================================================
+
+.proc MLI_RELAY
+        sty     call
+        stax    params
         php
         sei
         sta     ALTZPOFF
-        lda     $C082
+        lda     ROMIN2
         jsr     MLI
-L125F:  .byte   0
-L1260:  .byte   0
-L1261:  .byte   0
+call:   .byte   0
+params: .addr   0
         tax
         sta     ALTZPON
         lda     LCBANK1
@@ -1133,6 +1140,9 @@ L1261:  .byte   0
         plp
         txa
         rts
+.endproc
+
+;;; ==================================================
 
 L126F:  sta     L12C0
         and     #$0F
@@ -1155,9 +1165,9 @@ L1294           := * + 1
         lda     MLI
         sta     $07
         lda     #$00
-        sta     L0006
+        sta     $06
         ldy     #$FF
-        lda     (L0006),y
+        lda     ($06),y
         beq     L12A6
         cmp     #$FF
         bne     L12AD
@@ -1166,13 +1176,13 @@ L12A6:  lda     L12C0
         rts
 
 L12AD:  ldy     #$FF
-        lda     (L0006),y
-        sta     L0006
+        lda     ($06),y
+        sta     $06
         lda     #$03
         sta     $42
         lda     L12C0
         sta     $43
-        jmp     (L0006)
+        jmp     ($06)
 
         rts
 
@@ -1198,48 +1208,51 @@ L12E6           := * + 1
         lda     MLI
         sta     $07
         lda     #$00
-        sta     L0006
+        sta     $06
         ldy     #$FF
-        lda     (L0006),y
+        lda     ($06),y
         beq     L1303
         cmp     #$FF
         beq     L1303
         ldy     #$FE
-        lda     (L0006),y
+        lda     ($06),y
         and     #$08
         bne     L1303
         return  #$FF
 
 L1303:  return  #$00
 
+;;; ==================================================
+
 L1306:  .byte   0
 L1307:  sta     L124A
         and     #$F0
-        sta     L1245
-        stx     L0006
-        sty     $07
+        sta     write_block_params::unit_num
+        stx     $06
+        sty     $06+1
         ldy     #$01
-        lda     (L0006),y
+        lda     ($06),y
         and     #$7F
-        cmp     #$2F
+        cmp     #'/'
         bne     L132C
         dey
-        lda     (L0006),y
+        lda     ($06),y
         sec
-        sbc     #$01
+        sbc     #1
         iny
-        sta     (L0006),y
-        inc     L0006
+        sta     ($06),y
+        inc     $06
         bne     L132C
-        inc     $07
-L132C:  ldy     #$00
-        lda     (L0006),y
+        inc     $06+1
+L132C:  ldy     #0
+        lda     ($06),y
         tay
-L1331:  lda     (L0006),y
+:       lda     ($06),y
         and     #$7F
         sta     L14E5,y
         dey
-        bpl     L1331
+        bpl     :-
+
         lda     L124A
         and     #$0F
         beq     L1394
@@ -1259,17 +1272,17 @@ L134D:  stx     L1360
         sta     L1360
 L1360           := * + 1
         lda     MLI
-        sta     $07
+        sta     $06+1
         lda     #$00
-        sta     L0006
+        sta     $06
         ldy     #$FF
-        lda     (L0006),y
+        lda     ($06),y
         beq     L1394
         cmp     #$FF
         beq     L1394
         ldy     #$FF
-        lda     (L0006),y
-        sta     L0006
+        lda     ($06),y
+        sta     $06
         lda     #$00
         sta     $42
         lda     L124A
@@ -1282,25 +1295,30 @@ L1360           := * + 1
         bcc     L1398
         jmp     L1483
 
-L1391:  jmp     (L0006)
+L1391:  jmp     ($06)
 
 L1394:  ldx     #$18
         ldy     #$01
 L1398:  stx     L14E3
         sty     L14E4
-        copy16  #$1500, L1246
-        lda     #$00
-        sta     L1248
-        sta     L1249
-        yax_call L124B, $81, $1244
-        beq     L13BE
-        jmp     L14B8
 
-L13BE:  inc     L1248
-        inc     L1247
-        inc     L1247
-        jsr     L14BA
-        copy16  #$1A00, L1246
+        ;; Write first block of loader
+        copy16  #prodos_loader_blocks, write_block_params::data_buffer
+        lda     #0
+        sta     write_block_params::block_num
+        sta     write_block_params::block_num+1
+        yax_call MLI_RELAY, WRITE_BLOCK, write_block_params
+        beq     :+
+        jmp     fail2
+
+        ;; Write second block of loader
+:       inc     write_block_params::block_num     ; next block needs...
+        inc     write_block_params::data_buffer+1 ; next $200 of data
+        inc     write_block_params::data_buffer+1
+        jsr     write_block_and_zero
+
+        ;; Subsequent blocks...
+        copy16  #$1A00, write_block_params::data_buffer
         lda     #$03
         sta     L1A02
         ldy     L14E5
@@ -1311,36 +1329,36 @@ L13E2:  lda     L14E5,y
         sta     L1A04,y
         dey
         bne     L13E2
-        ldy     #$08
+        ldy     #8
 L13ED:  lda     L14DC,y
         sta     L1A22,y
         dey
         bpl     L13ED
-        jsr     L14BA
+        jsr     write_block_and_zero
         lda     #$02
         sta     L1A00
         lda     #$04
         sta     L1A02
-        jsr     L14BA
+        jsr     write_block_and_zero
         lda     #$03
         sta     L1A00
         lda     #$05
         sta     L1A02
-        jsr     L14BA
+        jsr     write_block_and_zero
         lda     #$04
         sta     L1A00
-        jsr     L14BA
+        jsr     write_block_and_zero
         lsr16    L14E3
         lsr16    L14E3
         lsr16    L14E3
         lda     L14E3
-        bne     L1435
+        bne     :+
         dec     L14E4
-L1435:  dec     L14E3
+:       dec     L14E3
 L1438:  jsr     L1485
-        lda     L1249
+        lda     write_block_params::block_num+1
         bne     L146A
-        lda     L1248
+        lda     write_block_params::block_num
         cmp     #$06
         bne     L146A
         lda     #$01
@@ -1361,7 +1379,7 @@ L1462:  clc
         dex
         bne     L1462
 L1467:  sta     L1A01
-L146A:  jsr     L14BA
+L146A:  jsr     write_block_and_zero
         dec     L14E4
         dec     L14E4
         lda     L14E4
@@ -1400,26 +1418,35 @@ L14AC:  sta     $1B00,y
         sta     $1B00
 L14B5:  rts
 
-L14B6:  pla
+;;; ==================================================
+
+fail:   pla
         pla
-L14B8:  sec
+fail2:  sec
         rts
 
-L14BA:  yax_call L124B, $81, $1244
-        bne     L14B6
-        jsr     L14CC
-        inc     L1248
+;;; ==================================================
+
+.proc write_block_and_zero
+        yax_call MLI_RELAY, WRITE_BLOCK, write_block_params
+        bne     fail
+        jsr     zero_buffers
+        inc     write_block_params::block_num
         rts
 
-L14CC:  ldy     #$00
+zero_buffers:
+        ldy     #0
         tya
-L14CF:  sta     L1A00,y
+:       sta     L1A00,y
         dey
-        bne     L14CF
-L14D5:  sta     $1B00,y
+        bne     :-
+:       sta     $1B00,y
         dey
-        bne     L14D5
+        bne     :-
         rts
+.endproc
+
+;;; ==================================================
 
 L14DC:  .byte   $C3,$27,$0D,$00,$00,$06,$00
 L14E3:  .byte   $18
@@ -1427,463 +1454,159 @@ L14E4:  .byte   $01
 L14E5:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$01
-        sec
-        bcs     L1507
-        jmp     LA132
+        .byte   $00,$00,$00
 
-L1507:  stx     $43
-        cmp     #$03
-        php
-        txa
-        and     #$70
-        lsr     a
-        lsr     a
-        lsr     a
-        lsr     a
-        ora     #$C0
-        sta     $49
-        ldy     #$FF
-        sty     $48
-        plp
-        iny
-        lda     ($48),y
-        bne     L155B
-        bcs     L1531
-        lda     #$03
-        sta     L0800
-        inc     $3D
-        lda     $49
-        pha
-        lda     #$5B
-        pha
-        rts
+;;; ==================================================
+;;; ProDOS Loader
+;;; ==================================================
 
-L1531:  sta     $40
-        sta     $48
-        ldy     #$63
-L1537:  lda     ($48),y
-        sta     L0994,y
-        iny
-        cpy     #$EB
-        bne     L1537
-        ldx     #$06
-L1543:  ldy     L091D,x
-        lda     L0924,x
-        sta     L09F2,y
-        lda     L092B,x
-        sta     L0A7F,x
-        dex
-        bpl     L1543
-        lda     #$09
-        sta     $49
-        lda     #$86
-L155B:  ldy     #$00
-        cmp     #$F9
-        bcs     L1590
-        sta     $48
-        sty     $60
-        sty     $4A
-        sty     $4C
-        sty     $4E
-        sty     $47
-        iny
-        sty     $42
-        iny
-        sty     $46
-        lda     #$0C
-        sta     $61
-        sta     $4B
-L1579:  jsr     L0912
-        bcs     L15E6
-        inc     $61
-        inc     $61
-        inc     $46
-        lda     $46
-        cmp     #$06
-        bcc     L1579
-        lda     L0C00
-        ora     L0C01
-L1590:  bne     L15FF
-        lda     #$04
-        bne     L1598
-L1596:  lda     $4A
-L1598:  clc
-        adc     L0C23
-        tay
-        bcc     L15AC
-        inc     $4B
-        lda     $4B
-        lsr     a
-        bcs     L15AC
-        cmp     #$0A
-        beq     L15FF
-        ldy     #$04
-L15AC:  sty     $4A
-        lda     L0902
-        and     #$0F
-        tay
-L15B4:  lda     ($4A),y
-        cmp     L0902,y
-        bne     L1596
-        dey
-        bpl     L15B4
-        and     #$F0
-        cmp     #$20
-        bne     L15FF
-        ldy     #$10
-        lda     ($4A),y
-        cmp     #$FF
-        bne     L15FF
-        iny
-        lda     ($4A),y
-        sta     $46
-        iny
-        lda     ($4A),y
-        sta     $47
-        lda     #$00
-        sta     $4A
-        ldy     #$1E
-        sty     $4B
-        sty     $61
-        iny
-        sty     $4D
-L15E3:  jsr     L0912
-L15E6:  bcs     L15FF
-        inc     $61
-        inc     $61
-        ldy     $4E
-        inc     $4E
-        lda     ($4A),y
-        sta     $46
-        lda     ($4C),y
-        sta     $47
-        ora     ($4A),y
-        bne     L15E3
-        jmp     L2000
-
-L15FF:  jmp     L093F
-
-        .byte   $26
-        .byte   "PRODOS         "
-        .byte   $A5,$60,$85,$44,$A5,$61,$85,$45
-        .byte   $6C,$48,$00,$08,$1E,$24,$3F,$45
-        .byte   $47,$76,$F4,$D7,$D1,$B6,$4B,$B4
-        .byte   $AC,$A6,$2B,$18,$60,$4C,$BC,$09
-        .byte   $A9,$9F
-        pha
-        lda     #$FF
-        pha
-        addr_jump LF479, $0001
-
-        jsr     HOME
-        ldy     #$1C
-L1644:  lda     L0950,y
-        sta     $05AE,y
-        dey
-        bpl     L1644
-        jmp     L094D
-
+.proc prodos_loader_blocks
+        .byte   $01,$38,$B0,$03,$4C,$32,$A1,$86
+        .byte   $43,$C9,$03,$08,$8A,$29,$70,$4A
+        .byte   $4A,$4A,$4A,$09,$C0,$85,$49,$A0
+        .byte   $FF,$84,$48,$28,$C8,$B1,$48,$D0
+        .byte   $3A,$B0,$0E,$A9,$03,$8D,$00,$08
+        .byte   $E6,$3D,$A5,$49,$48,$A9,$5B,$48
+        .byte   $60,$85,$40,$85,$48,$A0,$63,$B1
+        .byte   $48,$99,$94,$09,$C8,$C0,$EB,$D0
+        .byte   $F6,$A2,$06,$BC,$1D,$09,$BD,$24
+        .byte   $09,$99,$F2,$09,$BD,$2B,$09,$9D
+        .byte   $7F,$0A,$CA,$10,$EE,$A9,$09,$85
+        .byte   $49,$A9,$86,$A0,$00,$C9,$F9,$B0
+        .byte   $2F,$85,$48,$84,$60,$84,$4A,$84
+        .byte   $4C,$84,$4E,$84,$47,$C8,$84,$42
+        .byte   $C8,$84,$46,$A9,$0C,$85,$61,$85
+        .byte   $4B,$20,$12,$09,$B0,$68,$E6,$61
+        .byte   $E6,$61,$E6,$46,$A5,$46,$C9,$06
+        .byte   $90,$EF,$AD,$00,$0C,$0D,$01,$0C
+        .byte   $D0,$6D,$A9,$04,$D0,$02,$A5,$4A
+        .byte   $18,$6D,$23,$0C,$A8,$90,$0D,$E6
+        .byte   $4B,$A5,$4B,$4A,$B0,$06,$C9,$0A
+        .byte   $F0,$55,$A0,$04,$84,$4A,$AD,$02
+        .byte   $09,$29,$0F,$A8,$B1,$4A,$D9,$02
+        .byte   $09,$D0,$DB,$88,$10,$F6,$29,$F0
+        .byte   $C9,$20,$D0,$3B,$A0,$10,$B1,$4A
+        .byte   $C9,$FF,$D0,$33,$C8,$B1,$4A,$85
+        .byte   $46,$C8,$B1,$4A,$85,$47,$A9,$00
+        .byte   $85,$4A,$A0,$1E,$84,$4B,$84,$61
+        .byte   $C8,$84,$4D,$20,$12,$09,$B0,$17
+        .byte   $E6,$61,$E6,$61,$A4,$4E,$E6,$4E
+        .byte   $B1,$4A,$85,$46,$B1,$4C,$85,$47
+        .byte   $11,$4A,$D0,$E7,$4C,$00,$20,$4C
+        .byte   $3F,$09,$26,$50,$52,$4F,$44,$4F
+        .byte   $53,$20,$20,$20,$20,$20,$20,$20
+        .byte   $20,$20,$A5,$60,$85,$44,$A5,$61
+        .byte   $85,$45,$6C,$48,$00,$08,$1E,$24
+        .byte   $3F,$45,$47,$76,$F4,$D7,$D1,$B6
+        .byte   $4B,$B4,$AC,$A6,$2B,$18,$60,$4C
+        .byte   $BC,$09,$A9,$9F,$48,$A9,$FF,$48
+        .byte   $A9,$01,$A2,$00,$4C,$79,$F4,$20
+        .byte   $58,$FC,$A0,$1C,$B9,$50,$09,$99
+        .byte   $AE,$05,$88,$10,$F7,$4C,$4D,$09
         .byte   $AA,$AA,$AA,$A0,$D5,$CE,$C1,$C2
         .byte   $CC,$C5,$A0,$D4,$CF,$A0,$CC,$CF
         .byte   $C1,$C4,$A0,$D0,$D2,$CF,$C4,$CF
         .byte   $D3,$A0,$AA,$AA,$AA,$A5,$53,$29
-        .byte   $03
-        rol     a
-        ora     $2B
-        tax
-        lda     $C080,x
-        lda     #$2C
-L167A:  ldx     #$11
-L167C:  dex
-        bne     L167C
-        sbc     #$01
-        bne     L167A
-        ldx     $2B
-        rts
+        .byte   $03,$2A,$05,$2B,$AA,$BD,$80,$C0
+        .byte   $A9,$2C,$A2,$11,$CA,$D0,$FD,$E9
+        .byte   $01,$D0,$F7,$A6,$2B,$60,$A5,$46
+        .byte   $29,$07,$C9,$04,$29,$03,$08,$0A
+        .byte   $28,$2A,$85,$3D,$A5,$47,$4A,$A5
+        .byte   $46,$6A,$4A,$4A,$85,$41,$0A,$85
+        .byte   $51,$A5,$45,$85,$27,$A6,$2B,$BD
+        .byte   $89,$C0,$20,$BC,$09,$E6,$27,$E6
+        .byte   $3D,$E6,$3D,$B0,$03,$20,$BC,$09
+        .byte   $BC,$88,$C0,$60,$A5,$40,$0A,$85
+        .byte   $53,$A9,$00,$85,$54,$A5,$53,$85
+        .byte   $50,$38,$E5,$51,$F0,$14,$B0,$04
+        .byte   $E6,$53,$90,$02,$C6,$53,$38,$20
+        .byte   $6D,$09,$A5,$50,$18,$20,$6F,$09
+        .byte   $D0,$E3,$A0,$7F,$84,$52,$08,$28
+        .byte   $38,$C6,$52,$F0,$CE,$18,$08,$88
+        .byte   $F0,$F5,$BD,$8C,$C0,$10,$FB,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $4C,$6E,$A0,$53,$4F,$53,$20,$42
+        .byte   $4F,$4F,$54,$20,$20,$31,$2E,$31
+        .byte   $20,$0A,$53,$4F,$53,$2E,$4B,$45
+        .byte   $52,$4E,$45,$4C,$20,$20,$20,$20
+        .byte   $20,$53,$4F,$53,$20,$4B,$52,$4E
+        .byte   $4C,$49,$2F,$4F,$20,$45,$52,$52
+        .byte   $4F,$52,$08,$00,$46,$49,$4C,$45
+        .byte   $20,$27,$53,$4F,$53,$2E,$4B,$45
+        .byte   $52,$4E,$45,$4C,$27,$20,$4E,$4F
+        .byte   $54,$20,$46,$4F,$55,$4E,$44,$25
+        .byte   $00,$49,$4E,$56,$41,$4C,$49,$44
+        .byte   $20,$4B,$45,$52,$4E,$45,$4C,$20
+        .byte   $46,$49,$4C,$45,$3A,$00,$00,$0C
+        .byte   $00,$1E,$0E,$1E,$04,$A4,$78,$D8
+        .byte   $A9,$77,$8D,$DF,$FF,$A2,$FB,$9A
+        .byte   $2C,$10,$C0,$A9,$40,$8D,$CA,$FF
+        .byte   $A9,$07,$8D,$EF,$FF,$A2,$00,$CE
+        .byte   $EF,$FF,$8E,$00,$20,$AD,$00,$20
+        .byte   $D0,$F5,$A9,$01,$85,$E0,$A9,$00
+        .byte   $85,$E1,$A9,$00,$85,$85,$A9,$A2
+        .byte   $85,$86,$20,$BE,$A1,$E6,$E0,$A9
+        .byte   $00,$85,$E6,$E6,$86,$E6,$86,$E6
+        .byte   $E6,$20,$BE,$A1,$A0,$02,$B1,$85
+        .byte   $85,$E0,$C8,$B1,$85,$85,$E1,$D0
+        .byte   $EA,$A5,$E0,$D0,$E6,$AD,$6C,$A0
+        .byte   $85,$E2,$AD,$6D,$A0,$85,$E3,$18
+        .byte   $A5,$E3,$69,$02,$85,$E5,$38,$A5
+        .byte   $E2,$ED,$23,$A4,$85,$E4,$A5,$E5
+        .byte   $E9,$00,$85,$E5,$A0,$00,$B1,$E2
+        .byte   $29,$0F,$CD,$11,$A0,$D0,$21,$A8
+        .byte   $B1,$E2,$D9,$11,$A0,$D0,$19,$88
+        .byte   $D0,$F6,$A0,$00,$B1,$E2,$29,$F0
+        .byte   $C9,$20,$F0,$3E,$C9,$F0,$F0,$08
+        .byte   $AE,$64,$A0,$A0,$13,$4C,$D4,$A1
+        .byte   $18,$A5,$E2,$6D,$23,$A4,$85,$E2
+        .byte   $A5,$E3,$69,$00,$85,$E3,$A5,$E4
+        .byte   $C5,$E2,$A5,$E5,$E5,$E3,$B0,$BC
+        .byte   $18,$A5,$E4,$6D,$23,$A4,$85,$E2
+        .byte   $A5,$E5,$69,$00,$85,$E3,$C6,$E6
+        .byte   $D0,$95,$AE,$4F,$A0,$A0,$1B,$4C
+        .byte   $D4,$A1,$A0,$11,$B1,$E2,$85,$E0
+        .byte   $C8,$B1,$E2,$85,$E1,$AD,$66,$A0
+        .byte   $85,$85,$AD,$67,$A0,$85,$86,$20
+        .byte   $BE,$A1,$AD,$68,$A0,$85,$85,$AD
+        .byte   $69,$A0,$85,$86,$AD,$00,$0C,$85
+        .byte   $E0,$AD,$00,$0D,$85,$E1,$20,$BE
+        .byte   $A1,$A2,$07,$BD,$00,$1E,$DD,$21
+        .byte   $A0,$F0,$08,$AE,$64,$A0,$A0,$13
+        .byte   $4C,$D4,$A1,$CA,$10,$ED,$A9,$00
+        .byte   $85,$E7,$E6,$E7,$E6,$86,$E6,$86
+        .byte   $A6,$E7,$BD,$00,$0C,$85,$E0,$BD
+        .byte   $00,$0D,$85,$E1,$A5,$E0,$D0,$04
+        .byte   $A5,$E1,$F0,$06,$20,$BE,$A1,$4C
+        .byte   $8A,$A1,$18,$AD,$6A,$A0,$6D,$08
+        .byte   $1E,$85,$E8,$AD,$6B,$A0,$6D,$09
+        .byte   $1E,$85,$E9,$6C,$E8,$00,$A9,$01
+        .byte   $85,$87,$A5,$E0,$A6,$E1,$20,$79
+        .byte   $F4,$B0,$01,$60,$AE,$32,$A0,$A0
+        .byte   $09,$4C,$D4,$A1,$84,$E7,$38,$A9
+        .byte   $28,$E5,$E7,$4A,$18,$65,$E7,$A8
+        .byte   $BD,$29,$A0,$99,$A7,$05,$CA,$88
+        .byte   $C6,$E7,$D0,$F4,$AD,$40,$C0,$4C
+        .byte   $EF,$A1,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+.endproc
+        .assert .sizeof(prodos_loader_blocks) = $400, error, "Bad data"
 
-        lda     $46
-        and     #$07
-        cmp     #$04
-        and     #$03
-        php
-        asl     a
-        plp
-        rol     a
-        sta     $3D
-        lda     $47
-        lsr     a
-        lda     $46
-        ror     a
-        lsr     a
-        lsr     a
-        sta     $41
-        asl     a
-        sta     $51
-        lda     $45
-        sta     $27
-        ldx     $2B
-        lda     $C089,x
-        jsr     L09BC
-        inc     $27
-        inc     $3D
-        inc     $3D
-        bcs     L16B8
-        jsr     L09BC
-L16B8:  ldy     $C088,x
-L16BB:  rts
+;;; ==================================================
 
-        lda     $40
-        asl     a
-        sta     $53
-        lda     #$00
-        sta     $54
-L16C5:  lda     $53
-        sta     $50
-        sec
-        sbc     $51
-        beq     L16E2
-        bcs     L16D4
-        inc     $53
-        bcc     L16D6
-L16D4:  dec     $53
-L16D6:  sec
-        jsr     L096D
-        lda     $50
-        clc
-        jsr     L096F
-        bne     L16C5
-L16E2:  ldy     #$7F
-        sty     $52
-        php
-L16E7:  plp
-        sec
-        dec     $52
-        beq     L16BB
-        clc
-        php
-        dey
-        beq     L16E7
-        .byte   $BD,$8C,$C0,$10,$FB,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$4C,$6E
-        .byte   $A0
-        .byte   "SOS BOOT  1.1 "
-        .byte   $0A
-        .byte   "SOS.KERNEL     "
-        .byte   "SOS KRNL"
-        .byte   "I/O ERROR"
-        .byte   $08,$00
-        .byte   "FILE 'SOS.KERNEL' NOT FOUND"
-        .byte   $25,$00
-        .byte   "INVALID KERNEL FILE:"
-        .byte   $00,$00,$0C,$00,$1E
-        .byte   $0E,$1E,$04,$A4,$78,$D8,$A9
-        .byte   $77
-        sta     $FFDF
-        ldx     #$FB
-        txs
-        bit     $C010
-        lda     #$40
-        sta     $FFCA
-        lda     #$07
-        sta     $FFEF
-        ldx     #$00
-L1787:  dec     $FFEF
-        stx     L2000
-        lda     L2000
-        bne     L1787
-        copy16  #$0001, $E0
-        copy16  #$A200, $85
-        jsr     LA1BE
-        inc     $E0
-        lda     #$00
-        sta     $E6
-L17AB:  inc     $86
-        inc     $86
-        inc     $E6
-        jsr     LA1BE
-        ldy     #$02
-        lda     ($85),y
-        sta     $E0
-        iny
-        lda     ($85),y
-        sta     $E1
-        bne     L17AB
-        lda     $E0
-        bne     L17AB
-        lda     $A06C
-        sta     $E2
-        lda     $A06D
-        sta     $E3
-L17CF:  clc
-        lda     $E3
-        adc     #$02
-        sta     $E5
-        sec
-        lda     $E2
-        sbc     $A423
-        sta     $E4
-        lda     $E5
-        sbc     #$00
-        sta     $E5
-L17E4:  ldy     #$00
-        lda     ($E2),y
-        and     #$0F
-        cmp     $A011
-        bne     L1810
+
+L1900:  stx     $06+1
+        sta     $06
+        ldy     #0
+        lda     ($06),y
         tay
-L17F0:  lda     ($E2),y
-        cmp     $A011,y
-        bne     L1810
-        dey
-        bne     L17F0
-        ldy     #$00
-        lda     ($E2),y
-        and     #$F0
-        cmp     #$20
-        beq     L1842
-        cmp     #$F0
-        beq     L1810
-        ldx     $A064
-        ldy     #$13
-        jmp     LA1D4
-
-L1810:  clc
-        lda     $E2
-        adc     $A423
-        sta     $E2
-        lda     $E3
-        adc     #$00
-        sta     $E3
-        lda     $E4
-        cmp     $E2
-        lda     $E5
-        sbc     $E3
-        bcs     L17E4
-        clc
-        lda     $E4
-        adc     $A423
-        sta     $E2
-        lda     $E5
-        adc     #$00
-        sta     $E3
-        dec     $E6
-        bne     L17CF
-        ldx     $A04F
-        ldy     #$1B
-        jmp     LA1D4
-
-L1842:  ldy     #$11
-        lda     ($E2),y
-        sta     $E0
-        iny
-        lda     ($E2),y
-        sta     $E1
-        lda     $A066
-        sta     $85
-        lda     $A067
-        sta     $86
-        jsr     LA1BE
-        lda     $A068
-        sta     $85
-        lda     $A069
-        sta     $86
-        lda     L0C00
-        sta     $E0
-        lda     L0D00
-        sta     $E1
-        jsr     LA1BE
-        ldx     #$07
-L1873:  lda     $1E00,x
-        cmp     $A021,x
-        beq     L1883
-        ldx     $A064
-        ldy     #$13
-        jmp     LA1D4
-
-L1883:  dex
-        bpl     L1873
-        lda     #$00
-        sta     $E7
-        inc     $E7
-        inc     $86
-        inc     $86
-        ldx     $E7
-        lda     L0C00,x
-        sta     $E0
-        lda     L0D00,x
-        sta     $E1
-        lda     $E0
-        bne     L18A4
-        lda     $E1
-        beq     L18AA
-L18A4:  jsr     LA1BE
-        jmp     LA18A
-
-L18AA:  clc
-        lda     $A06A
-        adc     $1E08
-        sta     L00E8
-        lda     $A06B
-        adc     $1E09
-        sta     $E9
-        jmp     (L00E8)
-
-        lda     #$01
-        sta     $87
-        lda     $E0
-        ldx     $E1
-        jsr     LF479
-        bcs     L18CC
-        rts
-
-L18CC:  ldx     $A032
-        ldy     #$09
-        jmp     LA1D4
-
-        sty     $E7
-        sec
-        lda     #$28
-        sbc     $E7
-        lsr     a
-        clc
-        adc     $E7
-        tay
-L18E0:  lda     $A029,x
-        sta     $05A7,y
-        dex
-        dey
-        dec     $E7
-        bne     L18E0
-        lda     $C040
-        jmp     LA1EF
-
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-L1900:  stx     $07
-        sta     L0006
-        ldy     #$00
-        lda     (L0006),y
-        tay
-L1909:  lda     (L0006),y
+L1909:  lda     ($06),y
         cmp     #$61
         bcc     L1917
         cmp     #$7B
         bcs     L1917
         and     #$DF
-        sta     (L0006),y
+        sta     ($06),y
 L1917:  dey
         bpl     L1909
         rts
@@ -1896,11 +1619,11 @@ L191B:  sta     ALTZPOFF
         lda     LCBANK1
         rts
 
-L192E:  sta     L123F
-        lda     #$00
-        sta     L1242
-        sta     L1243
-        yax_call L124B, $80, $123E
+L192E:  sta     read_block_params::unit_num
+        lda     #0
+        sta     read_block_params::block_num
+        sta     read_block_params::block_num+1
+        yax_call MLI_RELAY, READ_BLOCK, read_block_params
         bne     L1959
         lda     $1C01
         cmp     #$E0
@@ -1912,11 +1635,11 @@ L194E:  lda     $1C02
         beq     L197E
         cmp     #$60
         beq     L197E
-L1959:  lda     L123F
+L1959:  lda     read_block_params::unit_num
         jsr     L19B7
         ldx     $D8D5
         sta     $D8B8,x
-        lda     L123F
+        lda     read_block_params::unit_num
         jsr     L19C1
         ldx     $D8D6
         sta     $D8B8,x
@@ -1935,11 +1658,11 @@ L1986:  cmp     #$A5
         lda     $1C02
         cmp     #$27
         bne     L1959
-        lda     L123F
+        lda     read_block_params::unit_num
         jsr     L19B7
         ldx     $D8B6
         sta     $D891,x
-        lda     L123F
+        lda     read_block_params::unit_num
         jsr     L19C1
         ldx     $D8B7
         sta     $D891,x
@@ -1966,8 +1689,8 @@ L19C1:  and     #$80
         adc     #$31
         rts
 
-L19C8:  copy16  #$0002, L1242
-        yax_call L124B, $80, $123E
+L19C8:  copy16  #$0002, read_block_params::block_num
+        yax_call MLI_RELAY, READ_BLOCK, $123E
         beq     L19F7
         copy16  #$2004, $D909
         copy16  #$203A, $D90B
@@ -1994,11 +1717,13 @@ L1A04:  inc     $D909
         ldx     $D909
         lda     #$3F
 L1A22:  sta     $D909,x
-        addr_call LB781, $D909
+        addr_call adjust_case, $D909
         rts
 
-L1A2D:  sta     L123B
-        yax_call L124B, $C5, $123A
+;;; ==================================================
+
+L1A2D:  sta     on_line_params::unit_num
+        yax_call MLI_RELAY, ON_LINE, on_line_params
         bne     L1A6D
         lda     $1C00
         and     #$0F
@@ -2017,11 +1742,13 @@ L1A46:  lda     $1C00,x
         ldx     $D909
         lda     #$3F
         sta     $D909,x
-        addr_call LB781, $D909
+        addr_call adjust_case, $D909  ; Adjust case ("/HD/GAMES" -> "/Hd/Games")
         rts
 
-L1A6D:  lda     L123B
+L1A6D:  lda     on_line_params::unit_num
         jsr     L192E
         rts
+
+;;; ==================================================
 
         PAD_TO $1C00

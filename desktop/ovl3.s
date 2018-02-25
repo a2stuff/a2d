@@ -15,10 +15,6 @@
 
         .org $9000
 
-L4015           := $4015
-L4030           := $4030
-L4036           := $4036
-L403F           := $403F
 L5000           := $5000
 L6365           := $6365
 LA500           := $A500
@@ -50,7 +46,7 @@ L9017:  lda     $0C00
         jsr     L9DED
         cmp     #$80
         bne     L9015
-        jsr     L4015
+        jsr     JUMP_TABLE_REDRAW_ALL
         lda     #$06
         jsr     L9C09
         bne     L9015
@@ -81,8 +77,8 @@ L9052:  lda     #$00
         tya
         pha
         lda     #$07
-        jsr     L403F
-        jsr     L4015
+        jsr     JUMP_TABLE_RESTORE_SEG
+        jsr     JUMP_TABLE_REDRAW_ALL
         pla
         tay
         pla
@@ -250,8 +246,8 @@ L91BC:  clc
         tya
         pha
         lda     #$07
-        jsr     L403F
-        jsr     L4015
+        jsr     JUMP_TABLE_RESTORE_SEG
+        jsr     JUMP_TABLE_REDRAW_ALL
         pla
         tay
         pla
@@ -415,7 +411,7 @@ L931B:  iny
         stx     $D345
         lda     L938A
         sta     $D355
-        jsr     L4036
+        jsr     JUMP_TABLE_LAUNCH_FILE
         jsr     LB403
         lda     #$FF
         sta     L938D
@@ -426,8 +422,8 @@ L933F:  pha
         cmp     #$02
         bne     L934F
         lda     #$07
-        jsr     L403F
-        jsr     L4015
+        jsr     JUMP_TABLE_RESTORE_SEG
+        jsr     JUMP_TABLE_REDRAW_ALL
 L934F:  MGTK_RELAY_CALL MGTK::InitPort, $D239
         MGTK_RELAY_CALL MGTK::SetPort, $D239
         MGTK_RELAY_CALL MGTK::CloseWindow, $D665
@@ -1370,9 +1366,9 @@ L9C60:  lda     L9C1B
 L9C69:  yax_call L9DC9, $CB, $9C1C
         beq     L9C81
         pha
-        jsr     L4015
+        jsr     JUMP_TABLE_REDRAW_ALL
         pla
-        jsr     L4030
+        jsr     JUMP_TABLE_ALERT_0
         beq     L9C69
         jmp     L9C5F
 
@@ -1428,7 +1424,7 @@ L9CFF:  lda     L9C99
         sta     L9CB1
 L9D05:  yax_call L9DC9, $CB, $9CB0
         beq     L9D18
-        jsr     L4030
+        jsr     JUMP_TABLE_ALERT_0
         beq     L9D05
         jmp     L9D21
 
