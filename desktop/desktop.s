@@ -329,7 +329,7 @@ online_params_buffer:
 ;;; ==================================================
 
         .assert * = $8800, error, "Entry point mismatch"
-        .include "font.inc"
+        .include "inc/font.inc"
 
 ;;; ==================================================
 
