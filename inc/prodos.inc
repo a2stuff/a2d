@@ -115,3 +115,142 @@ end:
         .res    res - (end - data), 0
 .endif
 .endmacro
+
+
+.macro DEFINE_OPEN_PARAMS name, pn, io
+    .if .xmatch(.string(pn), "pathname")
+        ;; If 'pathname' is passed then expansion yields a circular reference.
+        .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
+    .endif
+.proc name
+param_count:    .byte   3
+pathname:       .addr   pn
+io_buffer:      .addr   io
+ref_num:        .byte   0
+.endproc
+.endmacro
+
+.macro DEFINE_READ_PARAMS name, db, rc
+.proc name
+param_count:    .byte   4
+ref_num:        .byte   0
+data_buffer:    .addr   db
+request_count:  .word   rc
+trans_count:    .word   0
+.endproc
+.endmacro
+
+.macro DEFINE_WRITE_PARAMS name, db, rc
+.proc name
+param_count:    .byte   4
+ref_num:        .byte   0
+data_buffer:    .addr   db
+request_count:  .word   rc
+trans_count:    .word   0
+.endproc
+.endmacro
+
+.macro DEFINE_CLOSE_PARAMS name
+.proc name
+param_count:    .byte   1
+ref_num:        .byte   0
+.endproc
+.endmacro
+
+.macro DEFINE_FLUSH_PARAMS name
+.proc name
+param_count:    .byte   1
+ref_num:        .byte   0
+.endproc
+.endmacro
+
+.macro DEFINE_GET_FILE_INFO_PARAMS name
+    .if .xmatch(.string(pn), "pathname")
+        ;; If 'pathname' is passed then expansion yields a circular reference.
+        .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
+    .endif
+.proc name
+param_count:    .byte  $A
+pathname:       .addr   0
+access:         .byte   0
+file_type:      .byte   0
+aux_type:       .word   0
+storage_type:   .byte   0
+blocks_used:    .word   0
+mod_date:       .word   0
+mod_time:       .word   0
+create_date:    .word   0
+create_time:    .word   0
+.endproc
+.endmacro
+
+.macro DEFINE_SET_MARK_PARAMS name, pos
+.proc name
+param_count:    .byte   2
+ref_num:        .byte   0
+position:       .faraddr pos
+.endproc
+.endmacro
+
+.macro DEFINE_ON_LINE_PARAMS name, db
+.proc name
+param_count:    .byte   2
+unit_num:       .byte   0
+data_buffer:    .addr   db
+.endproc
+.endmacro
+
+.macro DEFINE_READ_BLOCK_PARAMS name, db, bn
+.proc name
+param_count:    .byte   3
+unit_num:       .byte   0
+data_buffer:    .addr   db
+block_num:      .word   bn
+.endproc
+.endmacro
+
+
+.macro DEFINE_WRITE_BLOCK_PARAMS name, db, bn
+.proc name
+param_count:    .byte   3
+unit_num:       .byte   0
+data_buffer:    .addr   db
+block_num:      .word   bn
+.endproc
+.endmacro
+
+.macro DEFINE_ALLOC_INTERRUPT_PARAMS name, ic
+.proc alloc_interrupt_params
+param_count:    .byte   2
+int_num:        .byte   0
+int_code:       .addr   ic
+.endproc
+.endmacro
+
+.macro DEFINE_DEALLOC_INTERRUPT_PARAMS name
+.proc dealloc_interrupt_params
+param_count:    .byte   1
+int_num:        .byte   0
+.endproc
+.endmacro
+
+.macro DEFINE_QUIT_PARAMS name
+.proc name
+param_count: .byte   4
+             .byte   0
+             .word   0
+             .byte   0
+             .word   0
+.endproc
+.endmacro
+
+.macro DEFINE_SET_PREFIX_PARAMS name, pn
+    .if .xmatch(.string(pn), "pathname")
+        ;; If 'pathname' is passed then expansion yields a circular reference.
+        .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
+    .endif
+.proc prefix_params
+param_count:    .byte   1
+pathname:       .addr   pn
+.endproc
+.endmacro

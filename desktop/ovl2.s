@@ -1066,26 +1066,9 @@ L1239:  .byte   $00
 
 ;;; ==================================================
 
-.proc on_line_params
-param_count:    .byte   2
-unit_num:       .byte   0
-data_buffer:    .addr   $1C00
-.endproc
-
-.proc read_block_params
-param_count:    .byte   3
-unit_num:       .byte   0
-data_buffer:    .addr   $1C00
-block_num:      .word   0
-.endproc
-
-
-.proc write_block_params
-param_count:    .byte   3
-unit_num:       .byte   0
-data_buffer:    .addr   prodos_loader_blocks
-block_num:      .word   0
-.endproc
+        DEFINE_ON_LINE_PARAMS on_line_params, $1C00
+        DEFINE_READ_BLOCK_PARAMS read_block_params, $1C00, 0
+        DEFINE_WRITE_BLOCK_PARAMS write_block_params, prodos_loader_blocks, 0
 
 L124A:  .byte   $00
 

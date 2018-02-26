@@ -39,31 +39,10 @@ item_label:
 
 ;;; ==================================================
 
-.proc open_params
-param_count:    .byte   3
-pathname:       .addr   str_desktop2
-io_buffer:      .addr   $1C00
-ref_num:        .byte   0
-.endproc
-
-.proc set_mark_params
-param_count:    .byte   2
-ref_num:        .byte   0
-position:       .faraddr $131E0
-.endproc
-
-.proc read_params
-param_count:    .byte   4
-ref_num:        .byte   0
-data_buffer:    .addr   load_target
-request_count:  .word   $0200
-trans_count:    .word   0
-.endproc
-
-.proc close_params
-param_count:    .byte   1
-ref_num:        .byte   0
-.endproc
+        DEFINE_OPEN_PARAMS open_params, str_desktop2, $1C00
+        DEFINE_SET_MARK_PARAMS set_mark_params, $131E0
+        DEFINE_READ_PARAMS read_params, load_target, $200
+        DEFINE_CLOSE_PARAMS close_params
 
 str_desktop2:
         PASCAL_STRING "DeskTop2"

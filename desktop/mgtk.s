@@ -4252,16 +4252,8 @@ L6454:  jsr     L653F
         MGTK_CALL MGTK::PaintRect, fill_rect_params
         jmp     L6556
 
-.proc alloc_interrupt_params
-count:  .byte   2
-int_num:.byte   0
-code:   .addr   interrupt_handler
-.endproc
-
-.proc dealloc_interrupt_params
-count:  .byte   1
-int_num:.byte   0
-.endproc
+        DEFINE_ALLOC_INTERRUPT_PARAMS alloc_interrupt_params, interrupt_handler
+        DEFINE_DEALLOC_INTERRUPT_PARAMS dealloc_interrupt_params
 
 L646F:
         lda     #$00

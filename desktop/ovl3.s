@@ -1271,25 +1271,9 @@ L9C09:  sta     $D2AC
         yax_call launch_dialog, $0C, $D2AC
         rts
 
-.proc open_params
-param_count:    .byte   3
-pathname:       .addr   $1C00
-io_buffer:      .addr   $800
-ref_num:        .byte   0
-.endproc
-
-.proc write_params
-param_count:    .byte   4
-ref_num:        .byte   0
-data_buffer:    .addr   $C00
-request_count:  .word   $800
-trans_count:    .word   0
-.endproc
-
-.proc flush_close_params
-param_count:    .byte   1
-ref_num:        .byte   0
-.endproc
+        DEFINE_OPEN_PARAMS open_params, $1C00, $800
+        DEFINE_WRITE_PARAMS write_params, $C00, $800
+        DEFINE_CLOSE_PARAMS flush_close_params
 
 L9C26:  addr_call L9E2A, $1C00
         inc     $1C00
@@ -1328,35 +1312,13 @@ L9C81:  yax_call MLI_RELAY, FLUSH, flush_close_params
         yax_call MLI_RELAY, CLOSE, flush_close_params
         rts
 
-.proc open_params2
-param_count:    .byte   3
-pathname:       .addr   $9C9A
-io_buffer:      .addr   $800
-ref_num:        .byte   0
-.endproc
+        DEFINE_OPEN_PARAMS open_params2, $9C9A, $800
 
 L9C9A:  PASCAL_STRING "Selector.List"
 
-.proc read_params2
-param_count:    .byte   4
-ref_num:        .byte   0
-data_buffer:    .addr   $C00
-request_count:  .word   $800
-trans_count:    .word   0
-.endproc
-
-.proc write_params2
-param_count:    .byte   4
-ref_num:        .byte   0
-data_buffer:    .addr   $C00
-request_count:  .word   $800
-trans_count:    .word   0
-.endproc
-
-.proc close_params2
-param_count:    .byte   1
-ref_num:        .byte   0
-.endproc
+        DEFINE_READ_PARAMS read_params2, $C00, $800
+        DEFINE_WRITE_PARAMS write_params2, $C00, $800
+        DEFINE_CLOSE_PARAMS close_params2
 
 L9CBA:  yax_call MLI_RELAY, OPEN, open_params2
         beq     L9CCF
@@ -1541,19 +1503,7 @@ L9E40:  .addr   $1234
         lda     LCBANK1
         rts
 
-.proc get_file_info_params
-param_count:    .byte  $A
-pathname:       .addr   0
-access:         .byte   0
-file_type:      .byte   0
-aux_type:       .word   0
-storage_type:   .byte   0
-blocks_used:    .word   0
-mod_date:       .word   0
-mod_time:       .word   0
-create_date:    .word   0
-create_time:    .word   0
-.endproc
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params
 
 L9E61:  jsr     L9E74
         stax    get_file_info_params::pathname

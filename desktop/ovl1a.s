@@ -31,32 +31,12 @@ LAB37           := $AB37
 
 ;;; ==================================================
 
-.proc open_params
-param_count:    .byte   3
-pathname:       .addr   filename
-io_buffer:      .addr   $1C00
-ref_num:        .byte   0
-.endproc
+        DEFINE_OPEN_PARAMS open_params, filename, $1C00
 filename:   PASCAL_STRING "DeskTop2"
 
-.proc read_params
-param_count:    .byte   4
-ref_num:        .byte   0
-data_buffer:    .addr   0
-request_count:  .word   0
-trans_count:    .word   0
-.endproc
-
-.proc set_mark_params
-param_count:    .byte   2
-ref_num:        .byte   0
-position:       .faraddr $133E0
-.endproc
-
-.proc close_params
-param_count:    .byte   1
-ref_num:        .byte   0
-.endproc
+        DEFINE_READ_PARAMS read_params, 0, 0
+        DEFINE_SET_MARK_PARAMS set_mark_params, $133E0
+        DEFINE_CLOSE_PARAMS close_params
 
         .byte   $00,$00
 
