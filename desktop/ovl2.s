@@ -128,10 +128,7 @@ L090C:  lda     $D57D
         bcs     L099B
 L0942:  lda     $D57D
         jsr     set_port_from_window_id
-        ldy     #$07
-        lda     #$00
-        ldx     #$D2
-        jsr     MGTK_RELAY
+        MGTK_RELAY_CALL MGTK::SetPenMode, $D200
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
         axy_call draw_dialog_label, $01, $B373
         addr_call L1900, $D443

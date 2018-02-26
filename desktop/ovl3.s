@@ -206,8 +206,7 @@ L9174:  lda     L938D
         jsr     L936E
         lda     L938D
         jsr     L9BD5
-        sta     $06
-        stx     $07
+        stax    $06
         ldy     #$00
         lda     ($06),y
         tay
@@ -220,8 +219,7 @@ L918C:  lda     ($06),y
         sta     L9281
         lda     L938D
         jsr     L9BE2
-        sta     $06
-        stx     $07
+        stax    $06
         ldy     #$00
         lda     ($06),y
         tay
@@ -339,8 +337,7 @@ L9282:  lda     L938D
         jsr     set_cursor_watch
         lda     L938D
         jsr     L9BD5
-        sta     $06
-        stx     $07
+        stax    $06
         ldy     #$0F
         lda     ($06),y
         cmp     #$C0
@@ -355,8 +352,7 @@ L9282:  lda     L938D
         beq     L92D6
         lda     L938D
         jsr     L9BE2
-        sta     $06
-        stx     $07
+        stax    $06
         ldy     #$00
         lda     ($06),y
         tay
@@ -372,8 +368,7 @@ L92CE:  lda     L938D
         bne     L92F0
 L92D6:  lda     L938D
         jsr     L9E74
-        sta     $06
-        stx     $07
+        stax    $06
         ldy     #$00
         lda     ($06),y
         tay
@@ -385,8 +380,7 @@ L92E5:  lda     ($06),y
 
 L92F0:  lda     L938D
         jsr     L9BE2
-        sta     $06
-        stx     $07
+        stax    $06
         ldy     #$00
         lda     ($06),y
         tay
@@ -541,8 +535,7 @@ L94BA:  MGTK_RELAY_CALL MGTK::MoveTo, $D70C
         addr_call draw_text1, $AE96
         rts
 
-L94CB:  sta     $06
-        stx     $07
+L94CB:  stax    $06
         ldy     #$00
         lda     ($06),y
         tay
@@ -554,15 +547,13 @@ L94D4:  lda     ($06),y
         MGTK_RELAY_CALL MGTK::DrawText, $D484
         rts
 
-L94F0:  sta     $06
-        stx     $07
+L94F0:  stax    $06
         ldy     #$00
         lda     ($06),y
         sta     $08
         inc16   $06
-L9500:  MGTK_RELAY_CALL MGTK::TextWidth, $0006
-        lsr     $0A
-        ror     $09
+        MGTK_RELAY_CALL MGTK::TextWidth, $0006
+        lsr16    $09
         lda     #$01
         sta     L9539
         lda     #$5E
@@ -1062,12 +1053,10 @@ L9A11:  sta     L9A60
         pha
         lda     L9A60
         jsr     L9BD5
-        sta     $06
-        stx     $07
+        stax    $06
         lda     L9A60
         jsr     L9BEF
-        sta     $08
-        stx     $09
+        stax    $08
         ldy     $D443
 L9A2D:  lda     $D443,y
         sta     ($06),y
@@ -1080,12 +1069,10 @@ L9A2D:  lda     $D443,y
         sta     ($08),y
         lda     L9A60
         jsr     L9BE2
-        sta     $06
-        stx     $07
+        stax    $06
         lda     L9A60
         jsr     L9BFC
-        sta     $08
-        stx     $09
+        stax    $08
         ldy     $D402
 L9A55:  lda     $D402,y
         sta     ($06),y
@@ -1100,8 +1087,7 @@ L9A61:  sta     L9A96
         pha
         lda     L9A96
         jsr     L9BD5
-        sta     $06
-        stx     $07
+        stax    $06
         ldy     $D443
 L9A73:  lda     $D443,y
         sta     ($06),y
@@ -1112,8 +1098,7 @@ L9A73:  lda     $D443,y
         sta     ($06),y
         lda     L9A96
         jsr     L9BE2
-        sta     $06
-        stx     $07
+        stax    $06
         ldy     $D402
 L9A8D:  lda     $D402,y
         sta     ($06),y
@@ -1146,8 +1131,7 @@ L9AC0:  lda     L9BD4
         cmp     L938B
         beq     L9AA8
         jsr     L9BD5
-        sta     $06
-        stx     $07
+        stax    $06
         lda     $06
         adc     #$10
         sta     $08
@@ -1166,8 +1150,7 @@ L9AE0:  lda     ($08),y
         sta     ($06),y
         lda     L9BD4
         jsr     L9BEF
-        sta     $06
-        stx     $07
+        stax    $06
         lda     $06
         adc     #$10
         sta     $08
@@ -1186,8 +1169,7 @@ L9B08:  lda     ($08),y
         sta     ($06),y
         lda     L9BD4
         jsr     L9BE2
-        sta     $06
-        stx     $07
+        stax    $06
         lda     $06
         adc     #$40
         sta     $08
@@ -1203,8 +1185,7 @@ L9B30:  lda     ($08),y
         bpl     L9B30
         lda     L9BD4
         jsr     L9BFC
-        sta     $06
-        stx     $07
+        stax    $06
         lda     $06
         adc     #$40
         sta     $08
@@ -1240,8 +1221,7 @@ L9B70:  lda     L9BD4
 
 L9B84:  lda     L9BD4
         jsr     L9BD5
-        sta     $06
-        stx     $07
+        stax    $06
         lda     $06
         adc     #$10
         sta     $08
@@ -1257,8 +1237,7 @@ L9B9F:  lda     ($08),y
         bpl     L9B9F
         lda     L9BD4
         jsr     L9BE2
-        sta     $06
-        stx     $07
+        stax    $06
         lda     $06
         adc     #$40
         sta     $08
@@ -1604,8 +1583,7 @@ L9E74:  sta     L9EBF
         addr_call L9E05, $9EC1
         lda     L9EBF
         jsr     L9BE2
-        sta     $06
-        stx     $07
+        stax    $06
         ldy     #$00
         lda     ($06),y
         sta     L9EC0

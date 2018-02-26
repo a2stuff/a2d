@@ -1242,8 +1242,7 @@ L5DC6:  MGTK_RELAY_CALL MGTK::MoveTo, $DA40
         addr_call L5DED, $DA44
         rts
 
-L5DD7:  sta     $06
-        stx     $07
+L5DD7:  stax    $06
         ldy     #$00
         lda     ($06),y
         tay
@@ -1257,27 +1256,24 @@ L5DE0:  lda     ($06),y
 ;;; ==================================================
 
 L5DED:  jsr     L5DD7
-        sta     $06
-        stx     $07
+        stax    $06
         ldy     #$00
         lda     ($06),y
         sta     $08
         inc16   $06
-L5E00:  MGTK_RELAY_CALL MGTK::DrawText, $06
+        MGTK_RELAY_CALL MGTK::DrawText, $06
         rts
 
 ;;; ==================================================
 
 L5E0A:  jsr     L5DD7
-        sta     $06
-        stx     $07
+        stax    $06
         ldy     #$00
         lda     ($06),y
         sta     $08
         inc16   $06
-L5E1D:  MGTK_RELAY_CALL MGTK::TextWidth, $06
-        lsr     $0A
-        ror     $09
+        MGTK_RELAY_CALL MGTK::TextWidth, $06
+        lsr16    $09
         lda     #$01
         sta     L5E56
         lda     #$F4
@@ -1298,8 +1294,7 @@ L5E56:  .byte   0
 ;;; ==================================================
 
 L5E57:  jsr     L5DD7
-        sta     $06
-        stx     $07
+        stax    $06
         MGTK_RELAY_CALL MGTK::MoveTo, $DA55
         lda     $06
         ldx     $07
@@ -1309,8 +1304,7 @@ L5E57:  jsr     L5DD7
 ;;; ==================================================
 
 L5E6F:  jsr     L5DD7
-        sta     $06
-        stx     $07
+        stax    $06
         MGTK_RELAY_CALL MGTK::MoveTo, $DA59
         lda     $06
         ldx     $07
@@ -1370,8 +1364,7 @@ L5F0B:  rts
 
 L5F0C:  .byte   0
 L5F0D:  jsr     L5DD7
-        sta     $06
-        stx     $07
+        stax    $06
         ldx     L5028
         lda     #$2F
         sta     L5029,x
@@ -1899,8 +1892,7 @@ L647B:  .byte   0
 
 ;;; ==================================================
 
-L647C:  sta     $06
-        stx     $07
+L647C:  stax    $06
         ldy     #$01
         lda     ($06),y
         cmp     #$2F
@@ -1983,8 +1975,7 @@ L6515:  .byte   0
 
 ;;; ==================================================
 
-L6516:  sta     $06
-        stx     $07
+L6516:  stax    $06
         ldy     #$00
         lda     ($06),y
         tay
@@ -2049,8 +2040,7 @@ L658B:  cmp     #$09
         lda     $D5B7
         jsr     L62C8
         jsr     L6E45
-        sta     $06
-        stx     $07
+        stax    $06
         lda     $DAA8
         sta     $08
         lda     $DAA9
@@ -2075,8 +2065,7 @@ L65D6:  copy16  #$D8EF, $06
         lda     $D5B7
         jsr     L62C8
         jsr     L6E72
-        sta     $06
-        stx     $07
+        stax    $06
         lda     $DAB4
         sta     $08
         lda     $DAB5
@@ -2146,8 +2135,7 @@ L66C9:  addr_call L5DED, $D484
 L6718:  rts
 
 L6719:  jsr     L6E45
-        sta     $06
-        stx     $07
+        stax    $06
         lda     $D20D
         cmp     $06
         lda     $D20E
@@ -2284,8 +2272,7 @@ L684D:  .word   0
 L688F:  rts
 
 L6890:  jsr     L6E72
-        sta     $06
-        stx     $07
+        stax    $06
         lda     $D20D
         cmp     $06
         lda     $D20E
@@ -2418,8 +2405,7 @@ L69D5:  lda     L6A17
         sta     $D8F7
         jsr     L6E45
         inc     $D402
-        sta     $06
-        stx     $07
+        stax    $06
         lda     $DAA8
         sta     $08
         lda     $DAA9
@@ -2439,8 +2425,7 @@ L6A17:  .byte   0
 
 L6A1E:  dec     $D402
         jsr     L6E45
-        sta     $06
-        stx     $07
+        stax    $06
         lda     $DAA8
         sta     $08
         lda     $DAA9
@@ -2471,8 +2456,7 @@ L6A6B:  ldx     $D402
         dec     $D402
         inc     $D484
         jsr     L6E45
-        sta     $06
-        stx     $07
+        stax    $06
         lda     $DAA8
         sta     $08
         lda     $DAA9
@@ -2579,8 +2563,7 @@ L6B81:  lda     L6BC3
         sta     $D8F7
         jsr     L6E72
         inc     $D443
-        sta     $06
-        stx     $07
+        stax    $06
         lda     $DAB4
         sta     $08
         lda     $DAB5
@@ -2600,8 +2583,7 @@ L6BC3:  .byte   0
 
 L6BCA:  dec     $D443
         jsr     L6E72
-        sta     $06
-        stx     $07
+        stax    $06
         lda     $DAB4
         sta     $08
         lda     $DAB5
@@ -2632,8 +2614,7 @@ L6C17:  ldx     $D443
         dec     $D443
         inc     $D484
         jsr     L6E72
-        sta     $06
-        stx     $07
+        stax    $06
         lda     $DAB4
         sta     $08
         lda     $DAB5
@@ -2740,8 +2721,7 @@ L6D3F:  jmp     0
 L6D42:  jmp     0
 L6D45:  jmp     0
 
-L6D48:  sta     $06
-        stx     $07
+L6D48:  stax    $06
         ldx     $D402
         lda     #$2F
         sta     $D403,x
@@ -2763,8 +2743,7 @@ L6D62:  lda     ($06),y
         sta     $D402
         rts
 
-L6D73:  sta     $06
-        stx     $07
+L6D73:  stax    $06
         ldx     $D443
         lda     #$2F
         sta     $D444,x

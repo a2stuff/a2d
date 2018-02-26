@@ -124,14 +124,14 @@ $text =~ s/
      /ldax    #\$$2$1/gx;
 
 $text =~ s/
-     \b  sta \s+ ([L\$][0-9A-F]{4}) \n
-     \s+ stx \s+ ([L\$][0-9A-F]{4}) \b
+     \b  sta \s+ ([L\$][0-9A-F]{2,4}) \n
+     \s+ stx \s+ ([L\$][0-9A-F]{2,4}) \b
      /(hex(substr($1,1)) + 1 == hex(substr($2,1)))
       ? "stax    $1" : $&/egx;
 
 $text =~ s/
-     \b  lsr \s+ ([L\$][0-9A-F]{4}) \n
-     \s+ ror \s+ ([L\$][0-9A-F]{4}) \b
+     \b  lsr \s+ ([L\$][0-9A-F]{2,4}) \n
+     \s+ ror \s+ ([L\$][0-9A-F]{2,4}) \b
      /(hex(substr($1,1)) == hex(substr($2,1)) + 1)
       ? "lsr16    $2" : $&/egx;
 
