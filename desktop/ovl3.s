@@ -1503,7 +1503,7 @@ L9E40:  .addr   $1234
         lda     LCBANK1
         rts
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, 0
 
 L9E61:  jsr     L9E74
         stax    get_file_info_params::pathname

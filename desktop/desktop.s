@@ -299,11 +299,7 @@ L873D:  DEFINE_POINT 500, 16
         DEFINE_POINT 400, 41
         DEFINE_POINT 400, 66
 
-.proc online_params
-count:  .byte   2
-unit_num:       .byte   $60     ; Slot 6 Drive 1
-data_buffer:    .addr   online_params_buffer
-.endproc
+        DEFINE_ON_LINE_PARAMS online_params, $60, online_params_buffer ; Slot 6 Drive 1
         online_params_unit_num := online_params::unit_num
 
         ;; Per ProDOS TRM this should be 256 bytes!
@@ -6729,19 +6725,7 @@ params: .addr   dummy0000
 .proc launch_file
         jmp     begin
 
-.proc get_file_info_params
-param_count:    .byte   $A
-pathname:       .addr   $220
-access: .byte   0
-file_type:      .byte   0
-aux_type:       .word   0
-storage_type:   .byte   0
-blocks_used:    .word   0
-mod_date:       .word   0
-mod_time:       .word   0
-create_date:    .word   0
-create_time:    .word   0
-.endproc
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, $220
 
 begin:
         jsr     set_watch_cursor
@@ -6811,19 +6795,7 @@ L477F:  lda     $D345,x
 
 ;;; --------------------------------------------------
 
-.proc get_file_info_params2
-param_count:    .byte   $A
-pathname:       .addr   $1800
-access: .byte   0
-file_type:      .byte   0
-aux_type:       .word   0
-storage_type:   .byte   0
-blocks_ysed:    .word   0
-mod_date:       .word   0
-mod_time:       .word   0
-create_date:    .word   0
-create_time:    .word   0
-.endproc
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params2, $1800
 
 L47B8:  ldx     LD355
         stx     L4816
@@ -7025,19 +6997,7 @@ L498F:  .byte   $00
 
 ;;; ==================================================
 
-.proc get_file_info_params3
-param_count:    .byte   $A
-pathname:       .addr   $220
-access: .byte   0
-file_type:      .byte   0
-aux_type:       .word   0
-storage_type:   .byte   0
-blocks_used:    .word   0
-mod_date:       .word   0
-mod_time:       .word   0
-create_date:    .word   0
-create_time:    .word   0
-.endproc
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params3, $220
 
 .proc cmd_selector_item
         jmp     L49A6
@@ -7398,27 +7358,13 @@ close:  yxa_jump MLI_RELAY, CLOSE, close_params
 
 unused: .byte   0               ; ???
 
-.proc open_params
-param_count:    .byte   3
-pathname:       .addr   str_desk_acc
-io_buffer:      .addr   $1C00
-ref_num:        .byte   0
-.endproc
+        DEFINE_OPEN_PARAMS open_params, str_desk_acc, $1C00
         open_params_ref_num := open_params::ref_num
 
-.proc read_params
-param_count:    .byte   4
-ref_num:        .byte   0
-data_buffer:    .addr   DA_LOAD_ADDRESS
-request_count:  .word   DA_MAX_SIZE
-trans_count:    .word   0
-.endproc
+        DEFINE_READ_PARAMS read_params, DA_LOAD_ADDRESS, DA_MAX_SIZE
         read_params_ref_num := read_params::ref_num
 
-.proc close_params
-param_count:    .byte   1
-ref_num:        .byte   0
-.endproc
+        DEFINE_CLOSE_PARAMS close_params
         close_params_ref_num := close_params::ref_num
 
         .define prefix "Desk.acc/"
@@ -7781,16 +7727,8 @@ L4F67:  .byte   $00
 L4F68:  .byte   $00
 L4F69:  .byte   $00
 
-.proc create_params
-param_count:    .byte   7
-pathname:       .addr   path_buffer
-access: .byte   %11000011       ; destroy/rename/write/read
-file_type:      .byte   FT_DIRECTORY
-aux_type:       .word   0
-storage_type:   .byte   ST_LINKED_DIRECTORY
-create_date:    .word   0
-create_time:    .word   0
-.endproc
+        ;; access = destroy/rename/write/read
+        DEFINE_CREATE_PARAMS create_params, path_buffer, %11000011, FT_DIRECTORY,, ST_LINKED_DIRECTORY
 
 path_buffer:
         .res    65, 0              ; buffer is used elsewhere too
@@ -7901,13 +7839,7 @@ quit_code:
         ;; FB           xce             ; exchange carry/emulation (i.e. turn on 16 bit)
         ;; 5C 04 D0 E0  jmp $E0D004     ; long jump
 
-.proc quit_params
-param_count: .byte   4
-        .byte   0
-        .word   0
-        .byte   0
-        .word   0
-.endproc
+        DEFINE_QUIT_PARAMS quit_params
 
 start:
         ldx     #3
@@ -11471,41 +11403,14 @@ L704C:  .res    8
 .proc L7054
         jmp     L70C5
 
-.proc open_params
-param_count:    .byte   3
-pathname:       .addr   L705D
-io_buffer:      .addr   $800
-ref_num:        .byte   0
-.endproc
+        DEFINE_OPEN_PARAMS open_params, L705D, $800
 
 L705D:  .res    65, 0
 
-.proc read_params
-param_count:    .byte   4
-ref_num:        .byte   0
-data_buffer:    .addr   $0C00
-request_count:  .word   $200
-trans_count:    .word   0
-.endproc
+        DEFINE_READ_PARAMS read_params, $0C00, $200
+        DEFINE_CLOSE_PARAMS close_params
 
-.proc close_params
-param_count:    .byte   1
-ref_num:        .byte   0
-.endproc
-
-.proc get_file_info_params4
-param_count:    .byte   $A
-pathname:       .addr   L705D
-access: .byte   0
-file_type:      .byte   0
-aux_type:       .word   0
-storage_type:   .byte   0
-blocks_used:    .word   0
-mod_date:       .word   0
-mod_time:       .word   0
-create_date:    .word   0
-create_time:    .word   0
-.endproc
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params4, L705D
 
         .byte   0
 L70BB:  .word   0
@@ -14355,11 +14260,7 @@ pos_win:        .word   0, 0
 
 gdi_data_buffer := $800
 
-.proc on_line_params
-param_count:    .byte   2
-unit_num:       .byte   0
-data_buffer:    .addr   gdi_data_buffer
-.endproc
+        DEFINE_ON_LINE_PARAMS on_line_params,, gdi_data_buffer
 
 .proc get_device_info
         sta     unit_number
@@ -14542,10 +14443,7 @@ desktop_icon_coords_table:
         DEFINE_POINT $82,$A0
         DEFINE_POINT $28,$A0
 
-.proc get_prefix_params
-param_count:    .byte   1
-data_buffer:    .addr   $4824
-.endproc
+        DEFINE_GET_PREFIX_PARAMS get_prefix_params, $4824
 
 ;;; ==================================================
 
@@ -14888,34 +14786,15 @@ len_table:
 addr_table:
         .addr   $0800,$0800,$9000,$5000,$7000,$7000,$7000,$5000,$9000
 
-.proc open_params
-param_count:    .byte   3
-pathname:       .addr   str_desktop2
-io_buffer:      .addr   $1C00
-ref_num:        .byte   0
-.endproc
+        DEFINE_OPEN_PARAMS open_params, str_desktop2, $1C00
 
 str_desktop2:
         PASCAL_STRING "DeskTop2"
 
-.proc set_mark_params
-param_count:    .byte   2
-ref_num:        .byte   0
-position:       .faraddr 0
-.endproc
+        DEFINE_SET_MARK_PARAMS set_mark_params, 0
 
-.proc read_params
-param_count:    .byte   4
-ref_num:        .byte   0
-data_buffer:    .addr   0
-request_count:  .word   0
-trans_count:    .word   0
-.endproc
-
-.proc close_params
-param_count:    .byte   1
-ref_num:        .byte   0
-.endproc
+        DEFINE_READ_PARAMS read_params, 0, 0
+        DEFINE_CLOSE_PARAMS close_params
 
 restore_flag:
         .byte   0
@@ -15477,28 +15356,11 @@ unit_num:
         .byte   0               ; unused???
 .endproc
 
-.proc get_file_info_params5
-param_count:    .byte   $A
-pathname:       .addr   $220
-access: .byte   0
-file_type:      .byte   0
-aux_type:       .word   0
-storage_type:   .byte   0
-blocks_used:    .word   0
-mod_date:       .word   0
-mod_time:       .word   0
-create_date:    .word   0
-create_time:    .word   0
-.endproc
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params5, $220
 
 L92DB:  .byte   0,0
 
-.proc block_params
-param_count:    .byte   $03
-unit_num:       .byte   $0
-data_buffer:    .addr   $0800
-block_num:      .word   $A
-.endproc
+        DEFINE_READ_BLOCK_PARAMS block_params, $0800, $A
 
 L92E3:  .byte   $00
 L92E4:  .word   0
@@ -15756,11 +15618,8 @@ L9558:  lda     $E6EC,x
 ;;; ==================================================
 
 .proc L9571_impl
-.proc rename_params
-param_count:    .byte   2
-pathname:       .addr   $220
-new_pathname:   .addr   $1FC0
-.endproc
+
+        DEFINE_RENAME_PARAMS rename_params, $220, $1FC0
 
 rename_dialog_params:
         .byte   0
@@ -15939,172 +15798,43 @@ L9709:  .byte   $00
 
 ;;; ==================================================
 
-.proc open_params3
-param_count:    .byte   3
-pathname:       .addr   $220
-io_buffer:      .addr   $800
-ref_num:        .byte   0
-.endproc
-
-.proc read_params3
-param_count:    .byte   4
-ref_num:        .byte   0
-data_buffer:    .addr   L9718
-request_count:  .word   4
-trans_count:    .word   0
-.endproc
+        DEFINE_OPEN_PARAMS open_params3, $220, $800
+        DEFINE_READ_PARAMS read_params3, L9718, 4
 
 L9718:  .res    4, 0
 
-.proc close_params6
-param_count:    .byte   1
-ref_num:        .byte   0
-.endproc
-
-.proc read_params4
-param_count:    .byte   4
-ref_num:        .byte   0
-data_buffer:    .addr   L97AD
-request_count:  .word   $27
-trans_count:    .word   0
-.endproc
-
-.proc read_params5
-param_count:    .byte   4
-ref_num:        .byte   0
-data_buffer:    .addr   L972E
-request_count:  .word   5
-trans_count:    .word   0
-.endproc
+        DEFINE_CLOSE_PARAMS close_params6
+        DEFINE_READ_PARAMS read_params4, L97AD, $27
+        DEFINE_READ_PARAMS read_params5, L972E, 5
 
 L972E:  .res    5, 0
 
         .res    4, 0
 
-.proc close_params5
-param_count:    .byte   1
-ref_num:        .byte   0
-.endproc
-
-.proc close_params3
-param_count:    .byte   1
-ref_num:        .byte   0
-.endproc
-
-.proc destroy_params
-param_count:    .byte   1
-pathname:       .addr   $0220
-.endproc
-
-.proc open_params4
-param_count:    .byte   3
-pathname:       .addr   $220
-io_buffer:      .addr   $0D00
-ref_num:        .byte   0
-.endproc
-
-.proc open_params5
-param_count:    .byte   3
-pathname:       .addr   $1FC0
-io_buffer:      .addr   $1100
-ref_num:        .byte   0
-.endproc
-
-.proc read_params6
-param_count:    .byte   4
-ref_num:        .byte   0
-data_buffer:    .addr   $1500
-request_count:  .word   $AC0
-trans_count:    .word   0
-.endproc
-
-.proc write_params
-param_count:    .byte   4
-ref_num:        .byte   0
-data_buffer:    .addr   $1500
-request_count:  .word   $AC0
-trans_count:    .word   0
-.endproc
-
-.proc create_params3
-param_count:    .byte   7
-pathname:       .addr   $1FC0
-access: .byte   %11000011
-file_type:      .byte   0
-aux_type:       .word   0
-storage_type:   .byte   0
-create_date:    .word   0
-create_time:    .word   0
-.endproc
-
-.proc create_params2
-param_count:    .byte   7
-pathname:       .addr   $1FC0
-access: .byte   0
-file_type:      .byte   0
-aux_type:       .word   0
-storage_type:   .byte   0
-create_date:    .word   0
-create_time:    .word   0
-.endproc
+        DEFINE_CLOSE_PARAMS close_params5
+        DEFINE_CLOSE_PARAMS close_params3
+        DEFINE_DESTROY_PARAMS destroy_params, $220
+        DEFINE_OPEN_PARAMS open_params4, $220, $0D00
+        DEFINE_OPEN_PARAMS open_params5, $1FC0, $1100
+        DEFINE_READ_PARAMS read_params6, $1500, $AC0
+        DEFINE_WRITE_PARAMS write_params, $1500, $AC0
+        DEFINE_CREATE_PARAMS create_params3, $1FC0, %11000011
+        DEFINE_CREATE_PARAMS create_params2, $1FC0
 
         .byte   $00,$00
 
-.proc file_info_params2
-param_count:    .byte   $A
-pathname:       .addr   $220
-access: .byte   0
-file_type:      .byte   0
-aux_type:       .word   0
-storage_type:   .byte   0
-blocks_used:    .word   0
-mod_date:       .word   0
-mod_time:       .word   0
-create_date:    .word   0
-create_time:    .word   0
-.endproc
+        DEFINE_GET_FILE_INFO_PARAMS file_info_params2, $220
 
         .byte   0
 
-.proc file_info_params3
-param_count:    .byte   $A
-pathname:       .addr   $1FC0
-access: .byte   0
-file_type:      .byte   0
-aux_type:       .word   0
-storage_type:   .byte   0
-blocks_used:    .word   0
-mod_date:       .word   0
-mod_time:       .word   0
-create_date:    .word   0
-create_time:    .word   0
-.endproc
+        DEFINE_GET_FILE_INFO_PARAMS file_info_params3, $1FC0
 
         .byte   0
 
-.proc set_eof_params
-param_count:    .byte   2
-ref_num:        .byte   0
-eof:    .faraddr 0
-.endproc
-
-.proc mark_params
-param_count:    .byte   2
-ref_num:        .byte   0
-position:       .faraddr 0
-.endproc
-
-.proc mark_params2
-param_count:    .byte   2
-ref_num:        .byte   0
-position:       .faraddr 0
-.endproc
-
-.proc on_line_params2
-param_count:    .byte   2
-unit_num:       .byte   0
-data_buffer:    .addr   $800
-.endproc
+        DEFINE_SET_EOF_PARAMS set_eof_params, 0
+        DEFINE_SET_MARK_PARAMS mark_params, 0
+        DEFINE_SET_MARK_PARAMS mark_params2, 0
+        DEFINE_ON_LINE_PARAMS on_line_params2,, $800
 
 
 ;;; ==================================================
@@ -17391,10 +17121,7 @@ LA39F:  jsr     L917F
 
 .proc LA3A7_impl
 
-.proc close_params
-param_count:    .byte   1
-ref_num:        .byte   0
-.endproc
+        DEFINE_CLOSE_PARAMS close_params
 
 start:  yax_call JT_MLI_RELAY, CLOSE, close_params
         lda     selected_window_index
@@ -20556,28 +20283,13 @@ calc_data_str:
 
 ;;; --------------------------------------------------
 
-.proc open_params
-param_count:    .byte   3
-pathname:       .addr   str_selector_list
-io_buffer:      .addr   selector_list_io_buf
-ref_num:        .byte   0
-.endproc
+        DEFINE_OPEN_PARAMS open_params, str_selector_list, selector_list_io_buf
 
 str_selector_list:
         PASCAL_STRING "Selector.List"
 
-.proc read_params
-param_count:    .byte   4
-ref_num:        .byte   0
-read_buffer:    .addr   selector_list_data_buf
-request_count:  .word   selector_list_data_len
-trans_count:    .word   0
-.endproc
-
-.proc close_params
-param_count:    .byte   1
-ref_num:        .byte   0
-.endproc
+        DEFINE_READ_PARAMS read_params, selector_list_data_buf, selector_list_data_len
+        DEFINE_CLOSE_PARAMS close_params
 
 read_selector_list:
         MLI_RELAY_CALL OPEN, open_params
@@ -20752,44 +20464,18 @@ L0CBA:  add16_8 $06, L0D06, $06
 L0CCB:  MLI_RELAY_CALL CLOSE, close_params
         jmp     L0D0A
 
-.proc open_params
-param_count:    .byte   3
-pathname:       .addr   str_desk_acc
-io_buffer:      .addr   $1000
-ref_num:        .byte   0
-.endproc
+        DEFINE_OPEN_PARAMS open_params, str_desk_acc, $1000
         open_params_ref_num := open_params::ref_num
 
-.proc read_params
-param_count:    .byte   4
-ref_num:        .byte   0
-data_buffer:    .addr   $1400
-request_count:  .word   $200
-trans_count:    .word   0
-.endproc
+        DEFINE_READ_PARAMS read_params, $1400, $200
         read_params_ref_num := read_params::ref_num
 
-.proc get_file_info_params
-param_count:    .byte   $A
-pathname:       .addr   str_desk_acc
-access: .byte   0
-file_type:      .byte   0
-aux_type:       .word   0
-storage_type:   .byte   0
-blocks_used:    .word   0
-mod_date:       .word   0
-mod_time:       .word   0
-create_date:    .word   0
-create_time:    .word   0
-.endproc
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, str_desk_acc
         get_file_info_params_type := get_file_info_params::file_type
 
         .byte   0
 
-.proc close_params
-param_count:    .byte   1
-ref_num:        .byte   0
-.endproc
+        DEFINE_CLOSE_PARAMS close_params
         close_params_ref_num := close_params::ref_num
 
 str_desk_acc:
@@ -21048,25 +20734,10 @@ slot_string_table:
 
 ;;; ==================================================
 
-.proc get_file_info_params2
-param_count:    .byte   $A
-pathname:       .addr   desktop_main::sys_start_path
-access:         .byte   0
-file_type:      .byte   0
-aux_type:       .word   0
-storage_type:   .byte   0
-blocks_used:    .word   0
-mod_date:       .word   0
-mod_time:       .word   0
-create_date:    .word   0
-create_time:    .word   0
-.endproc
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params2, desktop_main::sys_start_path
         .byte   0
 
-.proc get_prefix_params
-param_count:    .byte   1
-data_buffer:    .addr   desktop_main::sys_start_path
-.endproc
+        DEFINE_GET_PREFIX_PARAMS get_prefix_params, desktop_main::sys_start_path
 
 str_system_start:  PASCAL_STRING "System/Start"
 

@@ -52,14 +52,14 @@ while (<STDIN>) {
             $_ .= ' ' while length($_) % $tab;
             $_ .= ':= ' . $expression . ' ';
 
-        } elsif (m/^(\.(?:end)?(?:proc|scope|macro))\s*(.*)$/) {
+        } elsif (m/^(\.(?:end)?(?:proc|scope|macro)\b)\s*(.*)$/) {
 
             # scope - flush left
             my ($opcode, $arguments) = ($1 // '', $2 // '');
 
             $_ = $opcode . ' ' . $arguments;
 
-        } elsif (m/^(\.(?:if|elseif|else|endif))\s*(.*)$/) {
+        } elsif (m/^(\.(?:if\w+|elseif|else|endif)\b)\s*(.*)$/) {
 
             # conditional - half indent left
             my ($opcode, $arguments) = ($1 // '', $2 // '');

@@ -164,14 +164,14 @@ ref_num:        .byte   0
 .endproc
 .endmacro
 
-.macro DEFINE_GET_FILE_INFO_PARAMS name
+.macro DEFINE_GET_FILE_INFO_PARAMS name, pn
     .if .xmatch(.string(pn), "pathname")
         ;; If 'pathname' is passed then expansion yields a circular reference.
         .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
     .endif
 .proc name
 param_count:    .byte  $A
-pathname:       .addr   0
+pathname:       .addr   pn
 access:         .byte   0
 file_type:      .byte   0
 aux_type:       .word   0
@@ -192,10 +192,16 @@ position:       .faraddr pos
 .endproc
 .endmacro
 
-.macro DEFINE_ON_LINE_PARAMS name, db
+.macro DEFINE_ON_LINE_PARAMS name, un, db
 .proc name
 param_count:    .byte   2
+
+    .ifnblank un
+unit_num:       .byte   un
+    .else
 unit_num:       .byte   0
+    .endif
+
 data_buffer:    .addr   db
 .endproc
 .endmacro
@@ -249,8 +255,88 @@ param_count: .byte   4
         ;; If 'pathname' is passed then expansion yields a circular reference.
         .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
     .endif
-.proc prefix_params
+.proc name
 param_count:    .byte   1
 pathname:       .addr   pn
+.endproc
+.endmacro
+
+.macro DEFINE_GET_PREFIX_PARAMS name, pn
+    .if .xmatch(.string(pn), "pathname")
+        ;; If 'pathname' is passed then expansion yields a circular reference.
+        .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
+    .endif
+.proc name
+param_count:    .byte   1
+pathname:       .addr   pn
+.endproc
+.endmacro
+
+.macro DEFINE_DESTROY_PARAMS name, pn
+    .if .xmatch(.string(pn), "pathname")
+        ;; If 'pathname' is passed then expansion yields a circular reference.
+        .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
+    .endif
+.proc name
+param_count:    .byte   1
+pathname:       .addr   pn
+.endproc
+.endmacro
+
+.macro DEFINE_CREATE_PARAMS name, pn, ac, ft, at, st
+    .if .xmatch(.string(pn), "pathname")
+        ;; If 'pathname' is passed then expansion yields a circular reference.
+        .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
+    .endif
+.proc name
+param_count:    .byte   7
+pathname:       .addr   pn
+
+    .ifnblank ac
+access: .byte   ac
+    .else
+access: .byte   0
+    .endif
+
+    .ifnblank ft
+file_type:      .byte   ft
+    .else
+file_type:      .byte   0
+    .endif
+
+    .ifnblank at
+aux_type:       .word   at
+    .else
+aux_type:       .word   0
+    .endif
+
+    .ifnblank st
+storage_type:   .byte   st
+    .else
+storage_type:   .byte   0
+    .endif
+
+create_date:    .word   0
+create_time:    .word   0
+.endproc
+.endmacro
+
+.macro DEFINE_SET_EOF_PARAMS name, eo
+.proc name
+param_count:    .byte   2
+ref_num:        .byte   0
+eof:            .faraddr eo
+.endproc
+.endmacro
+
+.macro DEFINE_RENAME_PARAMS name, pn, np
+    .if .xmatch(.string(pn), "pathname")
+        ;; If 'pathname' is passed then expansion yields a circular reference.
+        .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
+    .endif
+.proc name
+param_count:    .byte   2
+pathname:       .addr   pn
+new_pathname:   .addr   np
 .endproc
 .endmacro

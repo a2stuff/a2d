@@ -1066,7 +1066,7 @@ L1239:  .byte   $00
 
 ;;; ==================================================
 
-        DEFINE_ON_LINE_PARAMS on_line_params, $1C00
+        DEFINE_ON_LINE_PARAMS on_line_params,, $1C00
         DEFINE_READ_BLOCK_PARAMS read_block_params, $1C00, 0
         DEFINE_WRITE_BLOCK_PARAMS write_block_params, prodos_loader_blocks, 0
 
