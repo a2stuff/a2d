@@ -6923,7 +6923,7 @@ show_cursor:
         ldx     DESKTOP_DEVICELIST
         inx
 :       lda     DESKTOP_DEVICELIST,x
-        sta     DEVCNT,x
+        sta     DEVLST-1,x
         dex
         bpl     :-
         rts

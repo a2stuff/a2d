@@ -1314,7 +1314,7 @@ L5E6F:  jsr     L5DD7
 ;;; ==================================================
 
 L5E87:  ldx     L5027
-        lda     DEVCNT+1,x
+        lda     DEVLST,x
         and     #$F0
         sta     L5004
         yax_call MLI_RELAY, ON_LINE, L5003

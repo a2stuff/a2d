@@ -95,7 +95,7 @@ L08B7:  lda     $D443
         MGTK_RELAY_CALL MGTK::SetPenMode, $D200
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
         ldx     $D887
-        lda     $BF32,x
+        lda     DEVLST,x
         sta     L09D8
         sta     L09D7
         lda     #$00
@@ -193,10 +193,7 @@ L09D9:  lda     #$00
         jsr     L0D31
         lda     #$FF
         sta     $D887
-        lda     #$48
-        sta     $A89A
-        lda     #$0B
-        sta     $A89B
+        copy16  #$0B48, $A89A
         lda     #$80
         sta     $D8ED
 L0A0E:  jsr     prompt_input_loop
@@ -240,7 +237,7 @@ L0A7A:  lda     $D443
         lda     #$00
         sta     $D8E8
         ldx     $D887
-        lda     $BF32,x
+        lda     DEVLST,x
         sta     L0B47
         sta     L0B46
         axy_call draw_dialog_label, $03, $B35D
@@ -481,7 +478,7 @@ L0D23:  pha
         jsr     L0C20
         return  #$FF
 
-L0D31:  ldx     $BF31
+L0D31:  ldx     DEVCNT
         inx
         stx     $D890
         lda     #$00
