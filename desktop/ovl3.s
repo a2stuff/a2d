@@ -100,10 +100,9 @@ L9093:  copy16  $0C00, L938B
         lda     L938B
         jsr     L9A0A
         inc     $0C00
-        copy16  $DB1C, L90C6
-        .byte   $EE
-L90C6:  .byte   $34
-L90C7:  .byte   $12
+        copy16  $DB1C, @addr
+        @addr := *+1
+        inc     dummy1234
         jsr     L9CEA
         bpl     L90D0
         jmp     L9016
@@ -271,10 +270,9 @@ L9215:  lda     L938D
 L9220:  ldx     L938B
         inc     L938B
         inc     $0C00
-        copy16  $DB1C, L9236
-        .byte   $EE
-L9236:  .byte   $34
-L9237:  .byte   $12
+        copy16  $DB1C, @addr
+        @addr := *+1
+        inc     dummy1234
         txa
         jmp     L926D
 
@@ -415,6 +413,8 @@ L938C:  .byte   0
 L938D:  .byte   0
 L938E:  .byte   0
 L938F:  .byte   0
+
+
 L9390:  MGTK_RELAY_CALL MGTK::OpenWindow, $D665
         lda     $D665
         jsr     set_port_from_window_id
@@ -505,6 +505,7 @@ L947F:  clc
 
 L94A7:  .byte   0
 L94A8:  .byte   0
+
 L94A9:  MGTK_RELAY_CALL MGTK::MoveTo, $D708
         addr_call draw_text1, $AE40
         rts
@@ -530,7 +531,7 @@ L94F0:  stax    $06
         lda     ($06),y
         sta     $08
         inc16   $06
-        MGTK_RELAY_CALL MGTK::TextWidth, $0006
+        MGTK_RELAY_CALL MGTK::TextWidth, $06
         lsr16    $09
         lda     #$01
         sta     L9539
@@ -544,7 +545,7 @@ L94F0:  stax    $06
         sbc     $0A
         sta     $D6B8
         MGTK_RELAY_CALL MGTK::MoveTo, $D6B7
-        MGTK_RELAY_CALL MGTK::DrawText, $0006
+        MGTK_RELAY_CALL MGTK::DrawText, $06
         rts
 
 L9539:  .byte   0
@@ -1090,10 +1091,9 @@ L9AA1:  tax
         bne     L9AC0
 L9AA8:  dec     $0C00
         dec     L938B
-        copy16  $DB1C, L9ABB
-        .byte   $CE
-L9ABB:  .byte   $34
-L9ABC:  .byte   $12
+        copy16  $DB1C, @addr
+        @addr := *+1
+        dec     dummy1234
         jmp     L9CEA
 
 L9AC0:  lda     L9BD4
@@ -1271,22 +1271,26 @@ L9C09:  sta     $D2AC
         yax_call launch_dialog, $0C, $D2AC
         rts
 
-        .byte   $03
-        .byte   0
-        .byte   $1C
-        .byte   0
-        php
-L9C1B:  .byte   0
-        .byte   $04
-L9C1D:  .byte   0
-        .byte   0
-        .byte   $0C
-        .byte   0
-        php
-        .byte   0
-        .byte   0
-        .byte   $01
-L9C25:  .byte   0
+.proc open_params
+param_count:    .byte   3
+pathname:       .addr   $1C00
+io_buffer:      .addr   $800
+ref_num:        .byte   0
+.endproc
+
+.proc write_params
+param_count:    .byte   4
+ref_num:        .byte   0
+data_buffer:    .addr   $C00
+request_count:  .word   $800
+trans_count:    .word   0
+.endproc
+
+.proc flush_close_params
+param_count:    .byte   1
+ref_num:        .byte   0
+.endproc
+
 L9C26:  addr_call L9E2A, $1C00
         inc     $1C00
         ldx     $1C00
@@ -1301,17 +1305,17 @@ L9C3D:  inx
         cpx     L9C9A
         bne     L9C3D
         sty     $1C00
-L9C4D:  yax_call MLI_RELAY, OPEN, $9C16
+L9C4D:  yax_call MLI_RELAY, OPEN, open_params
         beq     L9C60
         lda     #$00
         jsr     L9C09
         beq     L9C4D
 L9C5F:  rts
 
-L9C60:  lda     L9C1B
-        sta     L9C1D
-        sta     L9C25
-L9C69:  yax_call MLI_RELAY, WRITE, $9C1C
+L9C60:  lda     open_params::ref_num
+        sta     write_params::ref_num
+        sta     flush_close_params::ref_num
+L9C69:  yax_call MLI_RELAY, WRITE, write_params
         beq     L9C81
         pha
         jsr     JUMP_TABLE_REDRAW_ALL
@@ -1320,63 +1324,70 @@ L9C69:  yax_call MLI_RELAY, WRITE, $9C1C
         beq     L9C69
         jmp     L9C5F
 
-L9C81:  yax_call MLI_RELAY, FLUSH, $9C24
-        yax_call MLI_RELAY, CLOSE, $9C24
+L9C81:  yax_call MLI_RELAY, FLUSH, flush_close_params
+        yax_call MLI_RELAY, CLOSE, flush_close_params
         rts
 
-        .byte   $03
-        .addr   $9C9A
-        .byte   0, $8
-L9C99:  .byte   0
-L9C9A:  PASCAL_STRING "Selector.List"
-        .byte   $04
-L9CA9:  .byte   0
-        .byte   0
-        .byte   $0C
-        .byte   0
-        .byte   $8
-        .byte   0
-        .byte   0
-        .byte   $04
-L9CB1:  .byte   0
-        .byte   0
-        .byte   $0C
-        .byte   0
-        .byte   $8
-        .byte   0
-        .byte   0
-        .byte   1, 0
+.proc open_params2
+param_count:    .byte   3
+pathname:       .addr   $9C9A
+io_buffer:      .addr   $800
+ref_num:        .byte   0
+.endproc
 
-L9CBA:  yax_call MLI_RELAY, OPEN, $9C94
+L9C9A:  PASCAL_STRING "Selector.List"
+
+.proc read_params2
+param_count:    .byte   4
+ref_num:        .byte   0
+data_buffer:    .addr   $C00
+request_count:  .word   $800
+trans_count:    .word   0
+.endproc
+
+.proc write_params2
+param_count:    .byte   4
+ref_num:        .byte   0
+data_buffer:    .addr   $C00
+request_count:  .word   $800
+trans_count:    .word   0
+.endproc
+
+.proc close_params2
+param_count:    .byte   1
+ref_num:        .byte   0
+.endproc
+
+L9CBA:  yax_call MLI_RELAY, OPEN, open_params2
         beq     L9CCF
         lda     #$00
         jsr     L9C09
         beq     L9CBA
         return  #$FF
 
-L9CCF:  lda     L9C99
-        sta     L9CA9
-        yax_call MLI_RELAY, READ, $9CA8
+L9CCF:  lda     open_params2::ref_num
+        sta     read_params2::ref_num
+        yax_call MLI_RELAY, READ, read_params2
         bne     L9CE9
-        yax_call MLI_RELAY, CLOSE, $9CB8
+        yax_call MLI_RELAY, CLOSE, close_params2
 L9CE9:  rts
 
-L9CEA:  yax_call MLI_RELAY, OPEN, $9C94
+L9CEA:  yax_call MLI_RELAY, OPEN, open_params2
         beq     L9CFF
-        lda     #$00
+        lda     #0
         jsr     L9C09
         beq     L9CBA
         return  #$FF
 
-L9CFF:  lda     L9C99
-        sta     L9CB1
-L9D05:  yax_call MLI_RELAY, WRITE, $9CB0
+L9CFF:  lda     open_params2::ref_num
+        sta     write_params2::ref_num
+L9D05:  yax_call MLI_RELAY, WRITE, write_params2
         beq     L9D18
         jsr     JUMP_TABLE_ALERT_0
         beq     L9D05
         jmp     L9D21
 
-L9D18:  yax_call MLI_RELAY, CLOSE, $9CB8
+L9D18:  yax_call MLI_RELAY, CLOSE, close_params2
 L9D21:  rts
 
 L9D22:  jsr     L9CBA
@@ -1466,6 +1477,8 @@ L9DA7:  ldx     #$00
 
 L9DC8:  .byte   0
 
+;;; ==================================================
+
 .proc MLI_RELAY
         sty     call
         stax    params
@@ -1484,6 +1497,8 @@ params: .addr   0
         txa
         rts
 .endproc
+
+;;; ==================================================
 
 L9DED:  sta     ALTZPOFF
         lda     $C083
@@ -1526,26 +1541,23 @@ L9E40:  .addr   $1234
         lda     LCBANK1
         rts
 
-        asl     a
-L9E50:  .word   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+.proc get_file_info_params
+param_count:    .byte  $A
+pathname:       .addr   0
+access:         .byte   0
+file_type:      .byte   0
+aux_type:       .word   0
+storage_type:   .byte   0
+blocks_used:    .word   0
+mod_date:       .word   0
+mod_time:       .word   0
+create_date:    .word   0
+create_time:    .word   0
+.endproc
+
 L9E61:  jsr     L9E74
-        stax    L9E50
-        yax_call MLI_RELAY, GET_FILE_INFO, $9E4F
+        stax    get_file_info_params::pathname
+        yax_call MLI_RELAY, GET_FILE_INFO, get_file_info_params
         rts
 
 L9E74:  sta     L9EBF
