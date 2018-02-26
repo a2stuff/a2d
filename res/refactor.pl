@@ -181,6 +181,23 @@ $text =~ s/
       ? "sub16   $1, $2, $3" : $&/egx;
 
 $text =~ s/
+     \b  lda \s+ ([L\$][0-9A-F]{2,4}) \n
+     \s+ cmp \s+ ([L\$][0-9A-F]{2,4}) \n
+     \s+ lda \s+ ([L\$][0-9A-F]{2,4}) \n
+     \s+ sbc \s+ ([L\$][0-9A-F]{2,4}) \b
+     /(hex(substr($1,1)) + 1 == hex(substr($3,1))) &&
+      (hex(substr($2,1)) + 1 == hex(substr($4,1)))
+      ? "cmp16   $1, $2" : $&/egx;
+
+$text =~ s/
+     \b  lda \s+ ([L\$][0-9A-F]{2,4}) \n
+     \s+ cmp \s+ \#\$([0-9A-F]{2}) \n
+     \s+ lda \s+ ([L\$][0-9A-F]{2,4}) \n
+     \s+ sbc \s+ \#\$([0-9A-F]{2}) \b
+     /(hex(substr($1,1)) + 1 == hex(substr($3,1)))
+      ? "cmp16   $1, #\$$4$2" : $&/egx;
+
+$text =~ s/
      \b  inc \s+ ([L\$][0-9A-F]{2,4}) \n
      \s+ bne \s+ (\w+) \n
      \s+ inc \s+ ([L\$][0-9A-F]{2,4}) \n

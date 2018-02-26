@@ -2136,10 +2136,7 @@ L6718:  rts
 
 L6719:  jsr     L6E45
         stax    $06
-        lda     $D20D
-        cmp     $06
-        lda     $D20E
-        sbc     $07
+        cmp16   $D20D, $06
         bcs     L672F
         jmp     L67C4
 
@@ -2155,10 +2152,7 @@ L672F:  jsr     L6E45
         sta     $08
 L6751:  MGTK_RELAY_CALL MGTK::TextWidth, $06
         add16   $09, L684D, $09
-        lda     $09
-        cmp     $D20D
-        lda     $0A
-        sbc     $D20E
+        cmp16   $09, $D20D
         bcc     L6783
         dec     $08
         lda     $08
@@ -2205,10 +2199,7 @@ L67C4:  copy16  #$D402, $06
         sta     $08
 L67D1:  MGTK_RELAY_CALL MGTK::TextWidth, $06
         add16   $09, $DAA6, $09
-        lda     $09
-        cmp     $D20D
-        lda     $0A
-        sbc     $D20E
+        cmp16   $09, $D20D
         bcc     L6800
         dec     $08
         lda     $08
@@ -2273,10 +2264,7 @@ L688F:  rts
 
 L6890:  jsr     L6E72
         stax    $06
-        lda     $D20D
-        cmp     $06
-        lda     $D20E
-        sbc     $07
+        cmp16   $D20D, $06
         bcs     L68A6
         jmp     L693B
 
@@ -2292,10 +2280,7 @@ L68A6:  jsr     L6E72
         sta     $08
 L68C8:  MGTK_RELAY_CALL MGTK::TextWidth, $06
         add16   $09, L69C4, $09
-        lda     $09
-        cmp     $D20D
-        lda     $0A
-        sbc     $D20E
+        cmp16   $09, $D20D
         bcc     L68FA
         dec     $08
         lda     $08
@@ -2342,10 +2327,7 @@ L693B:  copy16  #$D443, $06
         sta     $08
 L6948:  MGTK_RELAY_CALL MGTK::TextWidth, $06
         add16   $09, $DAB2, $09
-        lda     $09
-        cmp     $D20D
-        lda     $0A
-        sbc     $D20E
+        cmp16   $09, $D20D
         bcc     L6977
         dec     $08
         lda     $08

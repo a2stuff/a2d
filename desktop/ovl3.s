@@ -713,15 +713,9 @@ L96EF:  lda     $D20D
         bpl     L9716
         return  #$FF
 
-L9716:  lda     $D20D
-        cmp     #$6E
-        lda     $D20E
-        sbc     #$00
+L9716:  cmp16   $D20D, #$006E
         bmi     L9736
-        lda     $D20D
-        cmp     #$DC
-        lda     $D20E
-        sbc     #$00
+        cmp16   $D20D, #$00DC
         bmi     L9732
         lda     #$02
         bne     L9738

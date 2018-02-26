@@ -289,17 +289,11 @@ L0B31:  pha
 
 L0B46:  .byte   0
 L0B47:  .byte   0
-        lda     $D20D
-        cmp     #$28
-        lda     $D20E
-        sbc     #$00
+        cmp16   $D20D, #$0028
         bpl     L0B57
         return  #$FF
 
-L0B57:  lda     $D20D
-        cmp     #$68
-        lda     $D20E
-        sbc     #$01
+L0B57:  cmp16   $D20D, #$0168
         bcc     L0B66
         return  #$FF
 
@@ -323,16 +317,10 @@ L0B79:  sta     $D210
 
 L0B98:  lda     #$02
         sta     L0C1F
-        lda     $D20D
-        cmp     #$18
-        lda     $D20E
-        sbc     #$01
+        cmp16   $D20D, #$0118
         bcs     L0BBB
         dec     L0C1F
-        lda     $D20D
-        cmp     #$A0
-        lda     $D20E
-        sbc     #$00
+        cmp16   $D20D, #$00A0
         bcs     L0BBB
         dec     L0C1F
 L0BBB:  lda     L0C1F
