@@ -48,10 +48,7 @@ L9017:  lda     $0C00
         rts
 
 L903C:  ldx     #$01
-        lda     $DB1C
-        sta     L904B
-        lda     $DB1D
-        sta     L904C
+        copy16  $DB1C, L904B
         .byte   $AD
 L904B:  .byte   $34
 L904C:  .byte   $12
@@ -93,10 +90,7 @@ L9088:  sta     L9104
         bpl     L9093
         jmp     L9016
 
-L9093:  lda     $0C00
-        sta     L938B
-        lda     $0C01
-        sta     L938C
+L9093:  copy16  $0C00, L938B
         lda     L9103
         cmp     #$01
         bne     L90D3
@@ -107,10 +101,7 @@ L9093:  lda     $0C00
         lda     L938B
         jsr     L9A0A
         inc     $0C00
-        lda     $DB1C
-        sta     L90C6
-        lda     $DB1D
-        sta     L90C7
+        copy16  $DB1C, L90C6
         .byte   $EE
 L90C6:  .byte   $34
 L90C7:  .byte   $12
@@ -281,10 +272,7 @@ L9215:  lda     L938D
 L9220:  ldx     L938B
         inc     L938B
         inc     $0C00
-        lda     $DB1C
-        sta     L9236
-        lda     $DB1D
-        sta     L9237
+        copy16  $DB1C, L9236
         .byte   $EE
 L9236:  .byte   $34
 L9237:  .byte   $12
@@ -1103,10 +1091,7 @@ L9AA1:  tax
         bne     L9AC0
 L9AA8:  dec     $0C00
         dec     L938B
-        lda     $DB1C
-        sta     L9ABB
-        lda     $DB1D
-        sta     L9ABC
+        copy16  $DB1C, L9ABB
         .byte   $CE
 L9ABB:  .byte   $34
 L9ABC:  .byte   $12

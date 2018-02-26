@@ -1406,10 +1406,7 @@ L5F5B:  jsr     L5ECB
         sta     L50A9
         lda     #$01
         sta     L6069
-        lda     $1423
-        sta     L606A
-        lda     $1424
-        sta     L606B
+        copy16  $1423, L606A
         lda     $1425
         and     #$7F
         sta     $177F
@@ -2035,10 +2032,7 @@ L658B:  cmp     #$09
         jsr     L62C8
         jsr     L6E45
         stax    $06
-        lda     $DAA8
-        sta     $08
-        lda     $DAA9
-        sta     $09
+        copy16  $DAA8, $08
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         bit     $D8EB
         bpl     L65C8
@@ -2060,10 +2054,7 @@ L65D6:  copy16  #$D8EF, $06
         jsr     L62C8
         jsr     L6E72
         stax    $06
-        lda     $DAB4
-        sta     $08
-        lda     $DAB5
-        sta     $09
+        copy16  $DAB4, $08
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         bit     $D8EB
         bpl     L6626
@@ -2382,10 +2373,7 @@ L69D5:  lda     L6A17
         jsr     L6E45
         inc     $D402
         stax    $06
-        lda     $DAA8
-        sta     $08
-        lda     $DAA9
-        sta     $09
+        copy16  $DAA8, $08
         lda     $D5B7
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
@@ -2402,10 +2390,7 @@ L6A17:  .byte   0
 L6A1E:  dec     $D402
         jsr     L6E45
         stax    $06
-        lda     $DAA8
-        sta     $08
-        lda     $DAA9
-        sta     $09
+        copy16  $DAA8, $08
         lda     $D5B7
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
@@ -2433,10 +2418,7 @@ L6A6B:  ldx     $D402
         inc     $D484
         jsr     L6E45
         stax    $06
-        lda     $DAA8
-        sta     $08
-        lda     $DAA9
-        sta     $09
+        copy16  $DAA8, $08
         lda     $D5B7
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
@@ -2540,10 +2522,7 @@ L6B81:  lda     L6BC3
         jsr     L6E72
         inc     $D443
         stax    $06
-        lda     $DAB4
-        sta     $08
-        lda     $DAB5
-        sta     $09
+        copy16  $DAB4, $08
         lda     $D5B7
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
@@ -2560,10 +2539,7 @@ L6BC3:  .byte   0
 L6BCA:  dec     $D443
         jsr     L6E72
         stax    $06
-        lda     $DAB4
-        sta     $08
-        lda     $DAB5
-        sta     $09
+        copy16  $DAB4, $08
         lda     $D5B7
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
@@ -2591,10 +2567,7 @@ L6C17:  ldx     $D443
         inc     $D484
         jsr     L6E72
         stax    $06
-        lda     $DAB4
-        sta     $08
-        lda     $DAB5
-        sta     $09
+        copy16  $DAB4, $08
         lda     $D5B7
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06

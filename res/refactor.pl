@@ -144,6 +144,15 @@ $text =~ s/
 
 $text =~ s/
      \b  lda \s+ ([L\$][0-9A-F]{2,4}) \n
+     \s+ sta \s+ ([L\$][0-9A-F]{2,4}) \n
+     \s+ lda \s+ ([L\$][0-9A-F]{2,4}) \n
+     \s+ sta \s+ ([L\$][0-9A-F]{2,4}) \b
+     /(hex(substr($1,1)) + 1 == hex(substr($3,1))) &&
+      (hex(substr($2,1)) + 1 == hex(substr($4,1)))
+       ? "copy16  $1, $2" : $&/egx;
+
+$text =~ s/
+     \b  lda \s+ ([L\$][0-9A-F]{2,4}) \n
      \s+ clc \n
      \s+ adc \s+ \#\$([0-9A-F]{2}) \n
      \s+ sta \s+ ([L\$][0-9A-F]{2,4}) \n

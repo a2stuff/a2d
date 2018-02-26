@@ -7827,10 +7827,7 @@ L4FF6:  lda     ($06),y
         MLI_RELAY_CALL CREATE, create_params
         beq     L5027
         jsr     DESKTOP_SHOW_ALERT0
-        lda     L504E
-        sta     L4F68
-        lda     L504F
-        sta     L4F69
+        copy16  L504E, L4F68
         jmp     L4FC6
 
         rts
