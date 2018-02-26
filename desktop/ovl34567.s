@@ -14,6 +14,8 @@
         .addr arg2
 .endmacro
 
+        dummy1234 := $1234
+
 ;;; ==================================================
 ;;; Resources from language card area
 
@@ -37,3 +39,5 @@
         .include "ovl5.s"       ; File Copy      @ $7000-$77FF
         .include "ovl6.s"       ; File Delete    @ $7000-$77FF
         .include "ovl7.s"       ; Selector (2/2) @ $7000-$77FF
+
+        common_overlay_L5000 := common_overlay::L5000

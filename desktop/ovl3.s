@@ -48,10 +48,9 @@ L9017:  lda     $0C00
         rts
 
 L903C:  ldx     #$01
-        copy16  $DB1C, L904B
-        .byte   $AD
-L904B:  .byte   $34
-L904C:  .byte   $12
+        copy16  $DB1C, load
+        load := *+1
+        lda     dummy1234
         cmp     #$0D
         bcc     L9052
         inx
@@ -60,7 +59,7 @@ L9052:  lda     #$00
         sta     $D443
         ldy     #$03
         lda     #$02
-        jsr     common_overlay::L5000
+        jsr     common_overlay_L5000
         pha
         txa
         pha
@@ -221,7 +220,7 @@ L91BC:  clc
         adc     #$01
         tay
         lda     #$02
-        jsr     L5000
+        jsr     common_overlay_L5000
         pha
         txa
         pha

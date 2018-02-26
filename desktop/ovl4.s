@@ -9,9 +9,7 @@
         .org $5000
 .proc common_overlay
 
-        dummy1234 := $1234
-
-        jmp     L50B1
+L5000:  jmp     L50B1
 
 L5003:  .byte   $02
 L5004:  .byte   $00,$17,$50
