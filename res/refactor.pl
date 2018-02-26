@@ -181,6 +181,13 @@ $text =~ s/
       ? "sub16   $1, $2, $3" : $&/egx;
 
 $text =~ s/
+     \b  inc \s+ ([L\$][0-9A-F]{2,4}) \n
+     \s+ bne \s+ (\w+) \n
+     \s+ inc \s+ ([L\$][0-9A-F]{2,4}) \n
+\2:  /(hex(substr($1,1)) + 1 == hex(substr($3,1)))
+      ? "inc16   $1\n$2:" : $&/egx;
+
+$text =~ s/
      \b  lda \s+ ( (?: [L\$][0-9A-F]{2,4} ) | (?: \#\$[0-9A-F]{2} ) ) \n
      \s+ rts \b
      /return  $1/gx;

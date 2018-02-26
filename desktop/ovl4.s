@@ -1262,9 +1262,7 @@ L5DED:  jsr     L5DD7
         ldy     #$00
         lda     ($06),y
         sta     $08
-        inc     $06
-        bne     L5E00
-        inc     $07
+        inc16   $06
 L5E00:  MGTK_RELAY_CALL MGTK::DrawText, $06
         rts
 
@@ -1276,9 +1274,7 @@ L5E0A:  jsr     L5DD7
         ldy     #$00
         lda     ($06),y
         sta     $08
-        inc     $06
-        bne     L5E1D
-        inc     $07
+        inc16   $06
 L5E1D:  MGTK_RELAY_CALL MGTK::TextWidth, $06
         lsr     $0A
         ror     $09

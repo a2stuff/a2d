@@ -1354,10 +1354,8 @@ L4F11:  lda     $91
         bne     L4F25
         dex
         inc     $8E
-        inc     $84
-        bne     L4F23
-        inc     $85
-L4F23:  lda     $92
+        inc16   $84
+        lda     $92
 L4F25:  sta     $88
         lda     $96
         bne     L4F2E
@@ -1997,13 +1995,9 @@ ora_2_param_bytes:
         iny
         ora     (params_addr),y
         sta     $B4
-        inc     params_addr
-        bne     :+
-        inc     params_addr+1
-:       inc     params_addr
-        bne     :+
-        inc     params_addr+1
-:       ldy     #$80
+        inc16   params_addr
+        inc16   params_addr
+        ldy     #$80
 L5379:  rts
 
 ;;; ==================================================
@@ -2311,10 +2305,8 @@ L55CE:  ldx     $AC
 L55F8:  bmi     L55FD
         jmp     L553E
 
-L55FD:  inc     $A9
-        bne     L5603
-        inc     $AA
-L5603:  jmp     L54C2
+L55FD:  inc16   $A9
+        jmp     L54C2
 
 L5606:  ldy     $04A8,x
         lda     $0780,y
@@ -5546,10 +5538,8 @@ L6D55:  lda     ($84),y
         jsr     L657E
         ldax    L6861
         jsr     fill_and_frame_rect
-        inc     fill_rect_params4::left
-        bne     L6D7A
-        inc     fill_rect_params4::left+1
-L6D7A:  lda     fill_rect_params4::right
+        inc16   fill_rect_params4::left
+        lda     fill_rect_params4::right
         bne     L6D82
         dec     fill_rect_params4::right+1
 L6D82:  dec     fill_rect_params4::right
@@ -7246,10 +7236,8 @@ L7A18:  lda     $CD
         sta     $CD
         bcs     L7A23
         dec     $CE
-L7A23:  inc     $C7
-        bne     L7A29
-        inc     $C8
-L7A29:  lda     $CB
+L7A23:  inc16   $C7
+        lda     $CB
         bne     L7A2F
         dec     $CC
 L7A2F:  dec     $CB
@@ -7279,10 +7267,8 @@ L7A57:  lda     $CB
         sta     $CB
         bcs     L7A62
         dec     $CC
-L7A62:  inc     $C9
-        bne     L7A68
-        inc     $CA
-L7A68:  lda     $CD
+L7A62:  inc16   $C9
+        lda     $CD
         bne     L7A6E
         dec     $CE
 L7A6E:  dec     $CD

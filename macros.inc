@@ -363,3 +363,12 @@
         lsr     arg1+1
         ror     arg1
 .endmacro
+
+;;; Increment 16-bit value
+.macro inc16    arg
+        .local skip
+        inc     arg
+        bne     skip
+        inc     arg+1
+skip:
+.endmacro

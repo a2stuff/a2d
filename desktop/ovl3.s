@@ -559,9 +559,7 @@ L94F0:  sta     $06
         ldy     #$00
         lda     ($06),y
         sta     $08
-        inc     $06
-        bne     L9500
-        inc     $07
+        inc16   $06
 L9500:  MGTK_RELAY_CALL MGTK::TextWidth, $0006
         lsr     $0A
         ror     $09

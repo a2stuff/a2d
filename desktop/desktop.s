@@ -3830,10 +3830,8 @@ LBE34:  lda     ($06),y
 LBE37           := * + 1
 LBE38           := * + 2
         sta     dummy1234
-        inc     LBE37
-        bne     LBE41
-        inc     LBE38
-LBE41:  lda     LBE5C
+        inc16   LBE37
+        lda     LBE5C
         cmp     LBFCC
         bcs     LBE4E
         inc     LBE5C
@@ -3917,10 +3915,8 @@ LBEDD:  lda     ($06),y
         pha
 LBEEB:  pla
         sta     ($06),y
-        inc     LBEBC
-        bne     LBEF6
-        inc     LBEBC+1
-LBEF6:  lda     LBF0B
+        inc16   LBEBC
+        lda     LBF0B
         cmp     LBFCC
         bcs     LBF03
         inc     LBF0B
@@ -11749,9 +11745,7 @@ L72F8:  copy16  get_file_info_params4::aux_type, L70BD
         lsr16   L70BD
         plp
         bcc     L7342
-        inc     L70BD
-        bne     L7342
-        inc     L70BD+1
+        inc16   L70BD
 L7342:  return  #0
 .endproc
         L70BB := L7054::L70BB
@@ -11805,13 +11799,9 @@ L73A5:  lda     LCBANK2
         sta     ($06),y
         lda     LCBANK1
         lda     LCBANK1
-        inc     $06
-        bne     :+
-        inc     $06+1
-:       inc     $08
-        bne     :+
-        inc     $08+1
-:       lda     $08+1
+        inc16   $06
+        inc16   $08
+        lda     $08+1
         cmp     L485F+1
         bne     L73A5
         lda     $08
@@ -14002,10 +13992,8 @@ L877F:  .byte   0
         lda     (textptr),y
         beq     exit
         sta     textlen
-        inc     textptr
-        bne     :+
-        inc     textptr+1
-:       MGTK_RELAY_CALL MGTK::DrawText, params
+        inc16   textptr
+        MGTK_RELAY_CALL MGTK::DrawText, params
 exit:   rts
 .endproc
 
@@ -14021,10 +14009,8 @@ exit:   rts
         ldy     #0
         lda     (ptr),y
         sta     len
-        inc     ptr
-        bne     :+
-        inc     ptr+1
-:       MGTK_RELAY_CALL MGTK::TextWidth, ptr
+        inc16   ptr
+        MGTK_RELAY_CALL MGTK::TextWidth, ptr
         ldax    result
         rts
 .endproc
@@ -14699,9 +14685,7 @@ L8BC1:  lda     grafport2,x
         lda     L8D51
         eor     #$FF
         sta     L8D51
-        inc     L8D50
-        bne     L8C6A
-        inc     L8D51
+        inc16   L8D50
 L8C6A:  bit     L8D53
         bpl     L8C8C
         lda     #$80
@@ -14712,9 +14696,7 @@ L8C6A:  bit     L8D53
         lda     L8D53
         eor     #$FF
         sta     L8D53
-        inc     L8D52
-        bne     L8C8C
-        inc     L8D53
+        inc16   L8D52
 L8C8C:  lsr16   L8D50
         lsr16   L8D52
         lsr16   L8D54
@@ -15929,9 +15911,7 @@ L969E:  lda     #$40
         sta     ($06),y
         lda     ($08),y
         tay
-        inc     $06
-        bne     L96DA
-        inc     $06+1
+        inc16   $06
 L96DA:  lda     ($08),y
         sta     ($06),y
         dey
@@ -17271,10 +17251,8 @@ LA2AE:  bit     L9189
         yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         bne     :+
         add16   LA2EF, file_info_params2::blocks_used, LA2EF
-:       inc     LA2ED
-        bne     :+
-        inc     LA2ED+1
-:       bit     L9189
+:       inc16     LA2ED
+        bit     L9189
         bvc     :+
         jsr     remove_path_segment_220
 :       ldax    LA2ED
@@ -19293,10 +19271,8 @@ erase_ok_button:
         jsr     load_aux_from_ptr
         beq     done
         sta     textlen
-        inc     textptr
-        bne     :+
-        inc     textptr+1
-:       MGTK_RELAY_CALL MGTK::DrawText, params
+        inc16   textptr
+        MGTK_RELAY_CALL MGTK::DrawText, params
 done:   rts
 .endproc
 

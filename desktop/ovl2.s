@@ -950,10 +950,8 @@ L112D:  nop
 L113A:  ldx     #$11
 L113C:  dex
         bne     L113C
-        inc     $D9
-        bne     L1145
-        inc     $DA
-L1145:  sec
+        inc16   $D9
+        sec
         sbc     #$01
         bne     L113A
         rts
@@ -1229,9 +1227,7 @@ L1307:  sta     L124A
         sbc     #1
         iny
         sta     ($06),y
-        inc     $06
-        bne     L132C
-        inc     $06+1
+        inc16   $06
 L132C:  ldy     #0
         lda     ($06),y
         tay
