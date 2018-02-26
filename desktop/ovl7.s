@@ -1,12 +1,6 @@
         .setcpu "6502"
 
-        .include "apple2.inc"
-        .include "../inc/apple2.inc"
-        .include "../inc/auxmem.inc"
-        .include "../inc/prodos.inc"
-        .include "../mgtk.inc"
-        .include "../desktop.inc"
-        .include "../macros.inc"
+;;; NB: Compiled as part of ovl34567.s
 
 ;;; ==================================================
 ;;; Overlay for Selector (part of it, anyway)
@@ -15,58 +9,21 @@
         .org $7000
 .proc selector_overlay
 
-        winfo12 := $D5B7
-        winfo15 := $D5F1
-
-        path_buf0 := $D402
-        path_buf1 := $D443
-        path_buf2 := $D484
-
-        grafport3 := $D239
-
-        dialog_rect1 := $DA9E
-        dialog_rect2 := $DAAA
-
-;;; Routines in common overlay segment ($5000-$6FFF)
-L5106           := $5106
-L55BA           := $55BA
-L5CF7           := $5CF7
-L5DED           := $5DED
-L5E0A           := $5E0A
-L5E57           := $5E57
-L5E6F           := $5E6F
-L5E87           := $5E87
-L5F49           := $5F49
-L5F5B           := $5F5B
-L606D           := $606D
-L6129           := $6129
-L6163           := $6163
-L61B1           := $61B1
-L62C8           := $62C8
-L647C           := $647C
-L6516           := $6516
-L6586           := $6586
-L6693           := $6693
-L6D27           := $6D27
-L6D30           := $6D30
-
-;;; ==================================================
-
 L7000:  stx     L73A9
         sty     L73AA
-        jsr     L5CF7
+        jsr     common_overlay::L5CF7
         jsr     L7101
         jsr     L70AD
-        jsr     L5E87
+        jsr     common_overlay::L5E87
         lda     path_buf0
         beq     L7056
-        addr_call L6129, path_buf0
+        addr_call common_overlay::L6129, path_buf0
         ldy     path_buf0
 L7021:  lda     path_buf0,y
         sta     $5028,y
         dey
         bpl     L7021
-        jsr     L5F49
+        jsr     common_overlay::L5F49
         ldy     path_buf0
 L7030:  lda     path_buf0,y
         cmp     #$2F
@@ -86,25 +43,25 @@ L7046:  iny
         cpy     path_buf0
         bne     L7046
         stx     L709D
-L7056:  jsr     L5F5B
+L7056:  jsr     common_overlay::L5F5B
         lda     #$00
         bcs     L706A
-        addr_call L6516, $709D
+        addr_call common_overlay::L6516, $709D
         sta     $D920
-        jsr     L6586
-L706A:  jsr     L6163
-        jsr     L61B1
-        jsr     L606D
+        jsr     common_overlay::L6586
+L706A:  jsr     common_overlay::L6163
+        jsr     common_overlay::L61B1
+        jsr     common_overlay::L606D
         lda     path_buf0
         bne     L707B
-        jsr     L6D30
+        jsr     common_overlay::L6D30
 L707B:  copy16  #$2001, $D484
-        jsr     L6D27
-        jsr     L6693
+        jsr     common_overlay::L6D27
+        jsr     common_overlay::L6693
         copy16  #$2001, $D484
         lda     #$FF
         sta     $D8EC
-        jmp     L5106
+        jmp     common_overlay::L5106
 
 ;;; ==================================================
 
@@ -128,7 +85,7 @@ L70B0:  lda     L7207+1,x
         sta     $5104
         copy16  #$0601, $D484
         lda     winfo12
-        jsr     L62C8
+        jsr     common_overlay::L62C8
         lda     L73A9
         jsr     L7467
         lda     L73AA
@@ -146,33 +103,33 @@ L70B0:  lda     L7207+1,x
         rts
 
 L7101:  lda     winfo12
-        jsr     L62C8
+        jsr     common_overlay::L62C8
         lda     path_buf0
         beq     L7116
-        addr_call L5E0A, $D729
+        addr_call common_overlay::L5E0A, $D729
         jmp     L711D
 
-L7116:  addr_call L5E0A, $D718
-L711D:  addr_call L5E6F, $D849
+L7116:  addr_call common_overlay::L5E0A, $D718
+L711D:  addr_call common_overlay::L5E6F, $D849
         MGTK_RELAY_CALL MGTK::SetPenMode, $D202 ; penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, dialog_rect1
         MGTK_RELAY_CALL MGTK::FrameRect, dialog_rect2
-        addr_call L5E57, $D769
-        addr_call L5E6F, $D797
+        addr_call common_overlay::L5E57, $D769
+        addr_call common_overlay::L5E6F, $D797
         MGTK_RELAY_CALL MGTK::MoveTo, $D922
-        addr_call L5DED, $D7DE
+        addr_call common_overlay::L5DED, $D7DE
         MGTK_RELAY_CALL MGTK::MoveTo, $D926
-        addr_call L5DED, $D7F6
+        addr_call common_overlay::L5DED, $D7F6
         MGTK_RELAY_CALL MGTK::MoveTo, $D92A
-        addr_call L5DED, $D802
+        addr_call common_overlay::L5DED, $D802
         MGTK_RELAY_CALL MGTK::MoveTo, $D92E
-        addr_call L5DED, $D814
+        addr_call common_overlay::L5DED, $D814
         MGTK_RELAY_CALL MGTK::MoveTo, $D932
-        addr_call L5DED, $D81F
+        addr_call common_overlay::L5DED, $D81F
         MGTK_RELAY_CALL MGTK::MoveTo, $D936
-        addr_call L5DED, $D830
+        addr_call common_overlay::L5DED, $D830
         MGTK_RELAY_CALL MGTK::MoveTo, $D93A
-        addr_call L5DED, $D840
+        addr_call common_overlay::L5DED, $D840
         MGTK_RELAY_CALL MGTK::SetPenMode, $D202
         MGTK_RELAY_CALL MGTK::FrameRect, $D93E
         MGTK_RELAY_CALL MGTK::FrameRect, $D946
@@ -186,11 +143,6 @@ L711D:  addr_call L5E6F, $D849
 ;;; ==================================================
 
         .byte   $00
-
-.macro entry arg1, arg2
-        .byte   arg1
-        .addr   arg2
-.endmacro
 
 L7207:  .byte   $29
         entry   0, $725D
@@ -227,7 +179,7 @@ L7233:  entry   0, $72CD
 ;;; ==================================================
 
         copy16  #$2001, $D484
-        jsr     L6D27
+        jsr     common_overlay::L6D27
         ldx     L7232
 L726D:  lda     L7232+1,x
         sta     $6D1E,x
@@ -266,10 +218,10 @@ L72AF:  iny
         bne     L72AF
         sty     $D443
 L72BF:  copy16  #$0601, $D484
-        jsr     L6D27
+        jsr     common_overlay::L6D27
         rts
 
-        addr_call L647C, path_buf0
+        addr_call common_overlay::L647C, path_buf0
         bne     L72E2
         lda     $D443
         beq     L72E7
@@ -290,7 +242,7 @@ L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo15
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo12
         sta     $D8EC
-        jsr     L55BA
+        jsr     common_overlay::L55BA
         copy16  #$59B8, $5B24
         ldx     $50AA
         txs
@@ -304,14 +256,14 @@ L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo12
         lda     #$00
         sta     $D8EC
-        jsr     L55BA
+        jsr     common_overlay::L55BA
         copy16  #$59B8, $5B24
         ldx     $50AA
         txs
         return  #$FF
 
         copy16  #$2001, $D484
-        jsr     L6D27
+        jsr     common_overlay::L6D27
         ldx     L7207
 L737C:  lda     L7207+1,x
         sta     $6D1E,x
@@ -322,7 +274,7 @@ L737C:  lda     L7207+1,x
         dex
         bpl     L737C
         copy16  #$0601, $D484
-        jsr     L6D27
+        jsr     common_overlay::L6D27
         lda     #$00
         sta     $5105
         sta     $51AE
@@ -461,7 +413,7 @@ L74E1:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
         rts
 
         lda     winfo12
-        jsr     L62C8
+        jsr     common_overlay::L62C8
         lda     $D20A
         bne     L7500
         rts

@@ -8,7 +8,7 @@ OUTDIR = out
 HEADERS = $(wildcard ../*.inc) $(wildcard ../inc/*.inc) $(wildcard *.inc)
 
 SEGMENTS = loader mgtk desktop invoker \
-        ovl1 ovl1a ovl2 ovl3 ovl4 ovl5 ovl6 ovl7
+        ovl1 ovl1a ovl2 ovl34567
 
 TARGETS = $(patsubst %,$(OUTDIR)/%.built,$(SEGMENTS))
 

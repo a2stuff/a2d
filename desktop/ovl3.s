@@ -1,12 +1,6 @@
         .setcpu "6502"
 
-        .include "apple2.inc"
-        .include "../inc/apple2.inc"
-        .include "../inc/auxmem.inc"
-        .include "../inc/prodos.inc"
-        .include "../mgtk.inc"
-        .include "../desktop.inc"
-        .include "../macros.inc"
+;;; NB: Compiled as part of ovl34567.s
 
 ;;; ==================================================
 ;;; Overlay for Selector (part of it, anyway)
@@ -14,9 +8,6 @@
 
         .org $9000
 .proc selector_overlay2
-
-;;; Routines in common overlay segment ($5000-$6FFF)
-L5000                   := $5000
 
 ;;; Entry points in desktop_main
 launch_dialog           := $A500
@@ -72,7 +63,7 @@ L9052:  lda     #$00
         sta     $D443
         ldy     #$03
         lda     #$02
-        jsr     L5000
+        jsr     common_overlay::L5000
         pha
         txa
         pha

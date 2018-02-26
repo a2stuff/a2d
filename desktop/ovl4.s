@@ -1,12 +1,6 @@
         .setcpu "6502"
 
-        .include "apple2.inc"
-        .include "../inc/apple2.inc"
-        .include "../inc/auxmem.inc"
-        .include "../inc/prodos.inc"
-        .include "../mgtk.inc"
-        .include "../desktop.inc"
-        .include "../macros.inc"
+;;; NB: Compiled as part of ovl34567.s
 
 ;;; ==================================================
 ;;; Overlay for Common Routines (Selector, File Copy/Delete)

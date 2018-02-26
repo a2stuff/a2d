@@ -1,12 +1,6 @@
         .setcpu "6502"
 
-        .include "apple2.inc"
-        .include "../inc/apple2.inc"
-        .include "../inc/auxmem.inc"
-        .include "../inc/prodos.inc"
-        .include "../mgtk.inc"
-        .include "../desktop.inc"
-        .include "../macros.inc"
+;;; NB: Compiled as part of ovl34567.s
 
 ;;; ==================================================
 ;;; Overlay for File Copy
@@ -15,52 +9,19 @@
         .org $7000
 .proc file_copy_overlay
 
-        winfo12 := $D5B7
-        winfo15 := $D5F1
-
-        path_buf0 := $D402
-        path_buf1 := $D443
-        path_buf2 := $D484
-
-        grafport3 := $D239
-
-        dialog_rect1 := $DA9E
-        dialog_rect2 := $DAAA
-
-;;; Routines in common overlay segment ($5000-$6FFF)
-L5106           := $5106
-L55BA           := $55BA
-L5CF7           := $5CF7
-L5E0A           := $5E0A
-L5E57           := $5E57
-L5E6F           := $5E6F
-L5E87           := $5E87
-L5F49           := $5F49
-L5F5B           := $5F5B
-L606D           := $606D
-L6129           := $6129
-L6161           := $6161
-L6163           := $6163
-L61B1           := $61B1
-L6227           := $6227
-L62C8           := $62C8
-L647C           := $647C
-L6D27           := $6D27
-L6D30           := $6D30
-
-        jsr     L5CF7
+L7000:  jsr     common_overlay::L5CF7
         jsr     L7052
-        jsr     L5E87
-        jsr     L5F5B
-        jsr     L6161
-        jsr     L61B1
-        jsr     L606D
+        jsr     common_overlay::L5E87
+        jsr     common_overlay::L5F5B
+        jsr     common_overlay::L6161
+        jsr     common_overlay::L61B1
+        jsr     common_overlay::L606D
         jsr     L7026
-        jsr     L6D30
-        jsr     L6D27
+        jsr     common_overlay::L6D30
+        jsr     common_overlay::L6D27
         lda     #$FF
         sta     $D8EC
-        jmp     L5106
+        jmp     common_overlay::L5106
 
 L7026:  ldx     L709B
 L7029:  lda     L709B+1,x
@@ -83,21 +44,16 @@ L7029:  lda     L709B+1,x
         rts
 
 L7052:  lda     winfo12
-        jsr     L62C8
-        addr_call L5E0A, $DA67  ; "Copy a File ..."
-        addr_call L5E57, $DA77  ; "Source filename:"
-        addr_call L5E6F, $DA88  ; "Destination filename:"
+        jsr     common_overlay::L62C8
+        addr_call common_overlay::L5E0A, $DA67  ; "Copy a File ..."
+        addr_call common_overlay::L5E57, $DA77  ; "Source filename:"
+        addr_call common_overlay::L5E6F, $DA88  ; "Destination filename:"
         MGTK_RELAY_CALL MGTK::SetPenMode, $D202 ; penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, dialog_rect1
         MGTK_RELAY_CALL MGTK::FrameRect, dialog_rect2
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
-
-.macro entry arg1, arg2
-        .byte   arg1
-        .addr   arg2
-.endmacro
 
 L709B:  .byte   $29             ; length of following data block
         entry   0, L70F1
@@ -139,7 +95,7 @@ L70F1:  lda     #1
         sta     path_buf2
         lda     #$20
         sta     $D485
-        jsr     L6D27
+        jsr     common_overlay::L6D27
 
         ldx     L70C6
 :       lda     L70C6+1,x
@@ -158,18 +114,18 @@ L70F1:  lda     #1
         sta     $D921
         lda     #$FF
         sta     $D920
-        jsr     L5E87
-        jsr     L5F5B
-        jsr     L6161
-        jsr     L61B1
+        jsr     common_overlay::L5E87
+        jsr     common_overlay::L5F5B
+        jsr     common_overlay::L6161
+        jsr     common_overlay::L61B1
 
-        jsr     L606D
+        jsr     common_overlay::L606D
         ldx     $5028
 L7137:  lda     $5028,x
         sta     path_buf1,x
         dex
         bpl     L7137
-        addr_call L6129, path_buf1  ; path_buf1
+        addr_call common_overlay::L6129, path_buf1  ; path_buf1
         lda     #$01
         sta     path_buf2           ; path_buf2
         lda     #$06
@@ -193,7 +149,7 @@ L7165:  cpx     path_buf0
         iny
         jmp     L7165
 
-L7178:  jsr     L6D27
+L7178:  jsr     common_overlay::L6D27
         lda     $D8F0
         sta     $D8F1
         lda     $D8F2
@@ -204,13 +160,13 @@ L7178:  jsr     L6D27
 
 ;;; ==================================================
 
-L7189:  addr_call L647C, path_buf0
+L7189:  addr_call common_overlay::L647C, path_buf0
         beq     L7198
 L7192:  lda     #$40
         jsr     JUMP_TABLE_ALERT_0
         rts
 
-L7198:  addr_call L647C, path_buf1
+L7198:  addr_call common_overlay::L647C, path_buf1
         bne     L7192
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo15
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo12
@@ -218,7 +174,7 @@ L7198:  addr_call L647C, path_buf1
         sta     $50A8
         lda     #0
         sta     $D8EC
-        jsr     L55BA
+        jsr     common_overlay::L55BA
         copy16  #path_buf0, $6
         copy16  #path_buf1, $8
         ldx     $50AA
@@ -233,7 +189,7 @@ L71D8:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo15
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo12
         lda     #0
         sta     $D8EC
-        jsr     L55BA
+        jsr     common_overlay::L55BA
         ldx     $50AA
         txs
         return  #$FF
@@ -244,7 +200,7 @@ L71F9:  lda     #1
         sta     path_buf2
         lda     #' '
         sta     $D485
-        jsr     L6D27
+        jsr     common_overlay::L6D27
         ldx     L709B
 L7209:  lda     L709B+1,x
         sta     $6D1E,x
@@ -275,34 +231,34 @@ L7209:  lda     L709B+1,x
         dex
         bpl     :-
 
-        jsr     L5F49
+        jsr     common_overlay::L5F49
         bit     $D8F0
         bpl     L726D
-        jsr     L5E87
+        jsr     common_overlay::L5E87
         lda     #0
-        jsr     L6227
-        jsr     L5F5B
-        jsr     L6161
-        jsr     L61B1
-        jsr     L606D
-        jsr     L6D27
+        jsr     common_overlay::L6227
+        jsr     common_overlay::L5F5B
+        jsr     common_overlay::L6161
+        jsr     common_overlay::L61B1
+        jsr     common_overlay::L606D
+        jsr     common_overlay::L6D27
         jmp     L7295
 
 L726D:  lda     $5028
         bne     L7281
-L7272:  jsr     L5E87
+L7272:  jsr     common_overlay::L5E87
         lda     #$00
-        jsr     L6227
-        jsr     L5F5B
+        jsr     common_overlay::L6227
+        jsr     common_overlay::L5F5B
         lda     #$FF
         bne     L7289
-L7281:  jsr     L5F5B
+L7281:  jsr     common_overlay::L5F5B
         bcs     L7272
         lda     $D921
 L7289:  sta     $D920
-        jsr     L6163
-        jsr     L61B1
-        jsr     L606D
+        jsr     common_overlay::L6163
+        jsr     common_overlay::L61B1
+        jsr     common_overlay::L606D
 L7295:  rts
 
 ;;; ==================================================
