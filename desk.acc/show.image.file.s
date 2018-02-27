@@ -3,7 +3,6 @@
         .include "apple2.inc"
         .include "../inc/apple2.inc"
         .include "../inc/prodos.inc"
-        .include "../inc/auxmem.inc"
 
         .include "../mgtk.inc"
         .include "../desktop.inc" ; get selection, font
@@ -383,7 +382,7 @@ on_key:
         lda     event_params::modifiers
         bne     input_loop
         lda     event_params::key
-        cmp     #KEY_ESCAPE
+        cmp     #CHAR_ESCAPE
         beq     exit
         bne     input_loop
 

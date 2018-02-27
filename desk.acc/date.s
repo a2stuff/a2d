@@ -3,7 +3,6 @@
         .include "apple2.inc"
         .include "../inc/apple2.inc"
         .include "../inc/prodos.inc"
-        .include "../inc/auxmem.inc"
 
         .include "../mgtk.inc"
         .include "../desktop.inc" ; redraw icons after window move; font; glyphs
@@ -328,20 +327,20 @@ init_window:
         lda     event_params::modifiers
         bne     input_loop
         lda     event_params::key
-        cmp     #KEY_RETURN
+        cmp     #CHAR_RETURN
         bne     :+
         jmp     on_ok
 
-:       cmp     #KEY_ESCAPE
+:       cmp     #CHAR_ESCAPE
         bne     :+
         jmp     on_cancel
-:       cmp     #KEY_LEFT
+:       cmp     #CHAR_LEFT
         beq     on_key_left
-        cmp     #KEY_RIGHT
+        cmp     #CHAR_RIGHT
         beq     on_key_right
-        cmp     #KEY_DOWN
+        cmp     #CHAR_DOWN
         beq     on_key_down
-        cmp     #KEY_UP
+        cmp     #CHAR_UP
         bne     input_loop
 
 on_key_up:

@@ -2,7 +2,6 @@
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
-        .include "../inc/auxmem.inc"
         .include "../inc/prodos.inc"
 
         .include "../mgtk.inc"
@@ -772,7 +771,7 @@ check_key:
         lda     event_params::modifiers
         bne     :+
         lda     event_params::key
-        cmp     #KEY_ESCAPE
+        cmp     #CHAR_ESCAPE
         beq     destroy
 :       rts
 .endproc

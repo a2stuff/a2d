@@ -2,8 +2,6 @@
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
-        .include "../inc/auxmem.inc"
-        .include "../inc/applesoft.inc"
         .include "../inc/prodos.inc"
 
         .include "../mgtk.inc"
@@ -908,7 +906,7 @@ loop:   lda     routine,x
         lda     event_params::modifiers
         bne     bail
         lda     event_params::key
-        cmp     #KEY_ESCAPE
+        cmp     #CHAR_ESCAPE
         bne     trydel
         lda     calc_p
         bne     clear           ; empty state?

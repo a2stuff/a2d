@@ -2,9 +2,7 @@
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
-        .include "../inc/auxmem.inc"
         .include "../inc/prodos.inc"
-        .include "../inc/mouse.inc"
         .include "../mgtk.inc"
         .include "../desktop.inc"
         .include "../macros.inc"
@@ -8009,7 +8007,7 @@ L8056:  jsr     L7EE2
         pha
         jsr     L8035
         pla
-        cmp     #KEY_ESCAPE
+        cmp     #CHAR_ESCAPE
         bne     try_return
         lda     #0
         sta     L7D80
@@ -8019,13 +8017,13 @@ L8056:  jsr     L7EE2
         rts
 
 try_return:
-        cmp     #KEY_RETURN
+        cmp     #CHAR_RETURN
         bne     try_up
         jsr     L7E8C
         jmp     L7EAD
 
 try_up:
-        cmp     #KEY_UP
+        cmp     #CHAR_UP
         bne     try_down
 L8081:  dec     L7D7B
         bpl     L8091
@@ -8043,7 +8041,7 @@ L8091:  ldx     L7D7B
 L80A0:  jmp     L800F
 
 try_down:
-        cmp     #KEY_DOWN
+        cmp     #CHAR_DOWN
         bne     try_right
 L80A7:  inc     L7D7B
         ldx     L7D7A
@@ -8064,7 +8062,7 @@ L80BE:  ldx     L7D7B
 L80CD:  jmp     L800F
 
 try_right:
-        cmp     #KEY_RIGHT
+        cmp     #CHAR_RIGHT
         bne     try_left
         lda     #0
         sta     L7D7B
@@ -8077,7 +8075,7 @@ try_right:
 L80E8:  jmp     L800F
 
 try_left:
-        cmp     #KEY_LEFT
+        cmp     #CHAR_LEFT
         bne     nope
         lda     #0
         sta     L7D7B

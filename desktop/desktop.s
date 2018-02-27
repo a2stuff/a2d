@@ -2,7 +2,6 @@
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
-        .include "../inc/auxmem.inc"
         .include "../inc/prodos.inc"
         .include "../mgtk.inc"
         .include "../desktop.inc"
@@ -3626,7 +3625,7 @@ LBB9A:  cmp     #MGTK::event_kind_key_down
         and     #$7F
         bit     alert_action
         bpl     LBBEE
-        cmp     #KEY_ESCAPE
+        cmp     #CHAR_ESCAPE
         bne     LBBC3
         MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY2_CALL MGTK::PaintRect, cancel_rect
@@ -3648,7 +3647,7 @@ LBBE3:  cmp     #'A'
         beq     LBBCC
         jmp     LBB87
 
-LBBEE:  cmp     #KEY_RETURN
+LBBEE:  cmp     #CHAR_RETURN
         bne     LBC09
         MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY2_CALL MGTK::PaintRect, try_again_rect
@@ -8475,13 +8474,13 @@ L5584:  jsr     get_event
 
 L5595:  lda     event_params+1
         and     #$7F
-        cmp     #KEY_RETURN
+        cmp     #CHAR_RETURN
         beq     L55D1
-        cmp     #KEY_ESCAPE
+        cmp     #CHAR_ESCAPE
         beq     L55D1
-        cmp     #KEY_LEFT
+        cmp     #CHAR_LEFT
         beq     L55BE
-        cmp     #KEY_RIGHT
+        cmp     #CHAR_RIGHT
         bne     L5584
         ldx     L544A
         inx
@@ -8664,13 +8663,13 @@ L5732:  jsr     get_event
 
 L5743:  lda     event_params_key
         and     #$7F
-        cmp     #KEY_RETURN
+        cmp     #CHAR_RETURN
         beq     L578B
-        cmp     #KEY_ESCAPE
+        cmp     #CHAR_ESCAPE
         beq     L578B
-        cmp     #KEY_LEFT
+        cmp     #CHAR_LEFT
         beq     L5772
-        cmp     #KEY_RIGHT
+        cmp     #CHAR_RIGHT
         bne     L5732
         ldx     L578C
         inx
@@ -8729,9 +8728,9 @@ loop:   jsr     get_event
         cmp     #MGTK::event_kind_key_down
         bne     loop
         lda     event_params_key
-        cmp     #KEY_RETURN
+        cmp     #CHAR_RETURN
         beq     done
-        cmp     #KEY_ESCAPE
+        cmp     #CHAR_ESCAPE
         bne     :+
 
 done:   lda     #$00
@@ -8744,12 +8743,12 @@ done:   lda     #$00
         bmi     :+
         jmp     vertical
 
-:       cmp     #KEY_RIGHT
+:       cmp     #CHAR_RIGHT
         bne     :+
         jsr     scroll_right
         jmp     loop
 
-:       cmp     #KEY_LEFT
+:       cmp     #CHAR_LEFT
         bne     vertical
         jsr     scroll_left
         jmp     loop
@@ -8760,12 +8759,12 @@ vertical:
         bmi     :+
         jmp     loop
 
-:       cmp     #KEY_DOWN
+:       cmp     #CHAR_DOWN
         bne     :+
         jsr     scroll_down
         jmp     loop
 
-:       cmp     #KEY_UP
+:       cmp     #CHAR_UP
         bne     loop
         jsr     scroll_up
         jmp     loop
@@ -17143,7 +17142,7 @@ start:  yax_call JT_MLI_RELAY, CLOSE, close_params
         cmp     #MGTK::event_kind_key_down
         bne     nope
         lda     event_params_key
-        cmp     #KEY_ESCAPE
+        cmp     #CHAR_ESCAPE
         bne     nope
         lda     #$FF
         bne     done
@@ -17484,11 +17483,11 @@ LA6F7:  jsr     LB9B8
         bne     LA71A
         lda     event_params_key
         and     #$7F
-        cmp     #KEY_LEFT
+        cmp     #CHAR_LEFT
         bne     LA710
         jmp     LA815
 
-LA710:  cmp     #KEY_RIGHT
+LA710:  cmp     #CHAR_RIGHT
         bne     LA717
         jmp     LA820
 
@@ -17496,7 +17495,7 @@ LA717:  return  #$FF
 
 LA71A:  lda     event_params_key
         and     #$7F
-        cmp     #KEY_LEFT
+        cmp     #CHAR_LEFT
         bne     LA72E
         bit     LD8ED
         bpl     LA72B
@@ -17504,7 +17503,7 @@ LA71A:  lda     event_params_key
 
 LA72B:  jmp     LA82B
 
-LA72E:  cmp     #KEY_RIGHT
+LA72E:  cmp     #CHAR_RIGHT
         bne     LA73D
         bit     LD8ED
         bpl     LA73A
@@ -17512,23 +17511,23 @@ LA72E:  cmp     #KEY_RIGHT
 
 LA73A:  jmp     LA83E
 
-LA73D:  cmp     #KEY_RETURN
+LA73D:  cmp     #CHAR_RETURN
         bne     LA749
         bit     LD8E7
         bvs     LA717
         jmp     LA851
 
-LA749:  cmp     #KEY_ESCAPE
+LA749:  cmp     #CHAR_ESCAPE
         bne     LA755
         bit     LD8E7
         bmi     LA717
         jmp     LA86F
 
-LA755:  cmp     #KEY_DELETE
+LA755:  cmp     #CHAR_DELETE
         bne     LA75C
         jmp     LA88D
 
-LA75C:  cmp     #KEY_UP
+LA75C:  cmp     #CHAR_UP
         bne     LA76B
         bit     LD8ED
         bmi     LA768
@@ -17536,7 +17535,7 @@ LA75C:  cmp     #KEY_UP
 
 LA768:  jmp     L0D14
 
-LA76B:  cmp     #KEY_DOWN
+LA76B:  cmp     #CHAR_DOWN
         bne     LA77A
         bit     LD8ED
         bmi     LA777
@@ -17558,7 +17557,7 @@ LA77A:  bit     LD8E7
         beq     LA806
         cmp     #'a'
         beq     LA806
-        cmp     #KEY_RETURN
+        cmp     #CHAR_RETURN
         beq     LA7E8
 
 LA79B:  bit     LD8F5
@@ -17698,9 +17697,9 @@ jump_relay:
         bne     :-
         lda     event_params_key
         and     #$7F
-        cmp     #KEY_ESCAPE
+        cmp     #CHAR_ESCAPE
         beq     close
-        cmp     #KEY_RETURN
+        cmp     #CHAR_RETURN
         bne     :-
         jmp     close
 

@@ -2,7 +2,6 @@
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
-        .include "../inc/auxmem.inc"
         .include "../inc/prodos.inc"
         .include "../macros.inc"
 

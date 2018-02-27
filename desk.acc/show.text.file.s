@@ -1,9 +1,8 @@
         .setcpu "6502"
 
         .include "apple2.inc"
-        .include "../inc/ascii.inc"
+        .include "../inc/apple2.inc"
         .include "../inc/prodos.inc"
-        .include "../inc/auxmem.inc"
 
         .include "../mgtk.inc"
         .include "../desktop.inc" ; get/clear selection, font
@@ -1046,7 +1045,7 @@ more:   ldy     drawtext_params::textlen
         and     #$7F            ; clear high bit
         sta     ($06),y
         inc     L0945
-        cmp     #ASCII_RETURN
+        cmp     #CHAR_RETURN
         beq     finish_text_run
         cmp     #' '            ; space character
         bne     :+
@@ -1055,7 +1054,7 @@ more:   ldy     drawtext_params::textlen
         lda     L0945
         sta     L0946
         pla
-:       cmp     #ASCII_TAB
+:       cmp     #CHAR_TAB
         bne     :+
         jmp     handle_tab
 
@@ -1090,9 +1089,9 @@ more:   ldy     drawtext_params::textlen
 finish_text_run:  jsr     draw_text_run
         ldy     drawtext_params::textlen
         lda     ($06),y
-        cmp     #ASCII_TAB
+        cmp     #CHAR_TAB
         beq     tab
-        cmp     #ASCII_RETURN
+        cmp     #CHAR_RETURN
         bne     :+
 tab:    inc     drawtext_params::textlen
 :       clc
