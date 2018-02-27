@@ -161,7 +161,7 @@ L7207:  .byte   $29
         entry   0, $66D8
 
 L7232:  .byte   $29
-L7233:  entry   0, $72CD
+        entry   0, $72CD
         entry   0, $736C
         entry   0, $65F0
         entry   0, $6693
