@@ -158,41 +158,16 @@ params_start:
 
 ;;; ProDOS MLI param blocks
 
-.proc open_params
-        .byte   3               ; param_count
-        .addr   pathname        ; pathname
-        .addr   $0C00           ; io_buffer
-ref_num:.byte   0               ; ref_num
-.endproc
+        DEFINE_OPEN_PARAMS open_params, pathbuff, $C00
 
 default_buffer := $1200
 
-.proc read_params
-        .byte   4               ; param_count
-ref_num:.byte   0               ; ref_num
-buffer: .addr   default_buffer  ; data_buffer
-        .word   $100            ; request_count
-        .word   0               ; trans_count
-.endproc
+        DEFINE_READ_PARAMS read_params, default_buffer, $100
+        DEFINE_GET_EOF_PARAMS get_eof_params
+        DEFINE_SET_MARK_PARAMS set_mark_params, 0
+        DEFINE_CLOSE_PARAMS close_params
 
-.proc get_eof_params
-        .byte   2               ; param_count
-ref_num:.byte   0               ; ref_num
-        .byte   0,0,0           ; EOF (lo, mid, hi)
-.endproc
-
-.proc set_mark_params
-        .byte   2               ; param_count
-ref_num:.byte   0               ; ref_num
-        .faraddr 0              ; position (lo, mid, hi)
-.endproc
-
-.proc close_params
-        .byte   1               ; param_count
-ref_num:.byte   0               ; ref_num
-.endproc
-
-.proc pathname                 ; 1st byte is length, rest is full path
+.proc pathbuff                 ; 1st byte is length, rest is full path
 length: .byte   $00
 data:   .res    64, $00
 .endproc
@@ -352,14 +327,14 @@ maprect:        DEFINE_RECT 0, 0, default_width, default_height
 
         ;; Check that an icon is selected
         lda     #0
-        sta     pathname::length
+        sta     pathbuff::length
         lda     selected_file_count
         beq     abort           ; some file properties?
         lda     path_index      ; prefix index in table
         bne     :+
 abort:  rts
 
-        ;; Copy path (prefix) into pathname buffer.
+        ;; Copy path (prefix) into pathbuff buffer.
 :       src := $06
         dst := $08
 
@@ -372,14 +347,14 @@ abort:  rts
         inc     src
         bne     :+
         inc     src+1
-:       copy16  #(pathname::data), dst
-        jsr     copy_pathname   ; copy x bytes (src) to (dst)
+:       copy16  #(pathbuff::data), dst
+        jsr     copy_pathbuff   ; copy x bytes (src) to (dst)
 
         ;; Append separator.
         lda     #'/'
         ldy     #0
         sta     (dst),y
-        inc     pathname::length
+        inc     pathbuff::length
         inc     dst
         bne     :+
         inc     dst+1
@@ -422,7 +397,7 @@ abort:  rts
         sta     src
         bcc     :+
         inc     src+1
-:       jsr     copy_pathname   ; copy x bytes (src) to (dst)
+:       jsr     copy_pathbuff   ; copy x bytes (src) to (dst)
 
         ;; Clear selection (why???)
         copy16  #JUMP_TABLE_CLEAR_SEL, call_main_addr
@@ -430,12 +405,12 @@ abort:  rts
 
         jmp     open_file_and_init_window
 
-.proc copy_pathname             ; copy x bytes from src to dst
+.proc copy_pathbuff             ; copy x bytes from src to dst
         ldy     #0              ; incrementing path length and dst
 loop:   lda     (src),y
         sta     (dst),y
         iny
-        inc     pathname::length
+        inc     pathbuff::length
         dex
         bne     loop
         tya
@@ -944,10 +919,10 @@ end:    rts
         jsr     assign_fixed_font_width_table_if_needed
         jsr     set_file_mark
         lda     #<default_buffer
-        sta     read_params::buffer
+        sta     read_params::data_buffer
         sta     $06
         lda     #>default_buffer
-        sta     read_params::buffer+1
+        sta     read_params::data_buffer+1
         sta     $07
         lda     #0
         sta     L0945
@@ -1173,17 +1148,17 @@ loop:   lda     $1300,y
 read:   lda     #0
         sta     L0945
         jsr     read_file_page
-        lda     read_params::buffer+1
+        lda     read_params::data_buffer+1
         cmp     #>default_buffer
         bne     :+
-        inc     read_params::buffer+1
+        inc     read_params::data_buffer+1
 :       rts
 .endproc
 
 ;;; ==================================================
 
 .proc read_file_page
-        copy16  read_params::buffer, store+1
+        copy16  read_params::data_buffer, store+1
 
         lda     #' '            ; fill buffer with spaces
         ldx     #0
@@ -1203,7 +1178,7 @@ store:  sta     default_buffer,x         ; self-modified
         sta     DESTINATIONLO
         lda     #$FF
         sta     ENDLO
-        lda     read_params::buffer+1
+        lda     read_params::data_buffer+1
         sta     DESTINATIONHI
         sta     STARTHI
         sta     ENDHI

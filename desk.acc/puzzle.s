@@ -505,7 +505,7 @@ piece16:
         .byte px(%0000000),px(%0000000),px(%0000000),px(%0000000)
 
 
-.proc fill_rect_params
+.proc paintrect_params
         DEFINE_RECT 1, 0, default_width, default_height
 .endproc
 
@@ -539,7 +539,7 @@ piece16:
         .byte   $00
 
 ;; line across top of puzzle (bitmaps include bottom edges)
-.proc set_pos_params
+.proc moveto_params
 xcoord: .word   5
 ycoord: .word   2
 .endproc
@@ -977,10 +977,10 @@ after_click:
 
 draw_window:
         MGTK_CALL MGTK::SetPattern, pattern_speckles
-        MGTK_CALL MGTK::PaintRect, fill_rect_params
+        MGTK_CALL MGTK::PaintRect, paintrect_params
         MGTK_CALL MGTK::SetPattern, pattern_black
 
-        MGTK_CALL MGTK::MoveTo, set_pos_params
+        MGTK_CALL MGTK::MoveTo, moveto_params
         MGTK_CALL MGTK::Line, line_params
 
         jsr     draw_all

@@ -337,6 +337,14 @@ eof:            .faraddr eo
 .endproc
 .endmacro
 
+.macro DEFINE_GET_EOF_PARAMS name
+.proc name
+param_count:    .byte   2
+ref_num:        .byte   0
+eof:            .faraddr 0
+.endproc
+.endmacro
+
 .macro DEFINE_RENAME_PARAMS name, pn, np
     .if .xmatch(.string(pn), "pathname")
         ;; If 'pathname' is passed then expansion yields a circular reference.

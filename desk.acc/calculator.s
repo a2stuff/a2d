@@ -99,7 +99,7 @@ skip:   lda     #0
         sta     offscreen_flag
         lda     ROMIN2
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        MGTK_CALL MGTK::SetPort, port_params
+        MGTK_CALL MGTK::SetPort, grafport
         rts
 
 .proc routine
@@ -135,7 +135,7 @@ offscreen_flag:
         ;; Is skipping this responsible for display redraw bug?
         ;; https://github.com/inexorabletash/a2d/issues/34
 :       MGTK_CALL MGTK::GetWinPort, getwinport_params
-        MGTK_CALL MGTK::SetPort, port_params
+        MGTK_CALL MGTK::SetPort, grafport
         lda     getwinport_params_window_id
         cmp     #da_window_id
         bne     :+
@@ -189,7 +189,7 @@ goaway:  .byte   0
 
 .proc getwinport_params
 window_id:     .byte   0
-        .addr   port_params
+        .addr   grafport
 .endproc
         getwinport_params_window_id := getwinport_params::window_id
 
@@ -614,9 +614,8 @@ base:   .word   16
 
 farg:   .byte   $00,$00,$00,$00,$00,$00
 
-.proc title_bar_decoration      ; Params for MGTK::PaintBits
-left:   .word   115             ; overwritten
-top:    .word   $FFF7           ; overwritten
+.proc title_bar_bitmap      ; Params for MGTK::PaintBits
+viewloc:        DEFINE_POINT 115, $FFF7, viewloc
 mapbits:.addr   pixels
 mapwidth: .byte   1
 reserved:       .byte   0
@@ -630,8 +629,7 @@ pixels: .byte   px(%1000001)
         .byte   px(%1001001)
 .endproc
 
-        ;; param block for a QUERY_SCREEN and SET_STATE calls, and ref'd in GetWinPort call
-.proc port_params
+.proc grafport
 viewloc:        DEFINE_POINT 0, 0
 mapbits:   .word   0
 mapwidth: .word   0
@@ -645,7 +643,7 @@ penmode:   .byte   0
 textback:  .byte   0
 textfont:   .addr   0
 .endproc
-        .assert * - port_params = 36, error
+        .assert * - grafport = 36, error
 
         .byte   0               ; ???
 
@@ -752,8 +750,8 @@ init:   sta     ALTZPON
         lda     LCBANK1
         MGTK_CALL MGTK::SetZP1, preserve_zp_params
         MGTK_CALL MGTK::OpenWindow, winfo
-        MGTK_CALL MGTK::InitPort, port_params
-        MGTK_CALL MGTK::SetPort, port_params     ; set clipping bounds?
+        MGTK_CALL MGTK::InitPort, grafport
+        MGTK_CALL MGTK::SetPort, grafport     ; set clipping bounds?
         MGTK_CALL MGTK::FlushEvents
         lda     #$01
         sta     event_params::kind
@@ -914,7 +912,7 @@ loop:   lda     routine,x
         beq     exit            ; if so, exit DA
 clear:  lda     #'C'            ; otherwise turn Escape into Clear
 
-trydel: cmp     #$7F            ; Delete?
+trydel: cmp     #CHAR_DELETE    ; Delete?
         beq     :+
         cmp     #$60            ; lowercase range?
         bcc     :+
@@ -1572,24 +1570,24 @@ draw_title_bar:
         lda     winfo::left
         clc
         adc     #offset_left
-        sta     title_bar_decoration::left
+        sta     title_bar_bitmap::viewloc::xcoord
         bcc     :+
         inx
-:       stx     title_bar_decoration::left+1
+:       stx     title_bar_bitmap::viewloc::xcoord+1
         ldx     winfo::top+1
         lda     winfo::top
         sec
         sbc     #offset_top
-        sta     title_bar_decoration::top
+        sta     title_bar_bitmap::viewloc::ycoord
         bcs     :+
         dex
-:       stx     title_bar_decoration::top+1
+:       stx     title_bar_bitmap::viewloc::ycoord+1
         MGTK_CALL MGTK::SetPortBits, screen_port ; set clipping rect to whole screen
-        MGTK_CALL MGTK::PaintBits, title_bar_decoration     ; Draws decoration in title bar
+        MGTK_CALL MGTK::PaintBits, title_bar_bitmap     ; Draws decoration in title bar
         lda     #da_window_id
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        MGTK_CALL MGTK::SetPort, port_params
+        MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::ShowCursor
         jsr     display_buffer2
         rts

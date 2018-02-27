@@ -150,36 +150,15 @@ params_start:
 
 ;;; ProDOS MLI param blocks
 
-.proc open_params
-        .byte   3               ; param_count
-        .addr   pathname        ; pathname
-        .addr   $0C00           ; io_buffer
-ref_num:.byte   0               ; ref_num
-.endproc
-
-.proc get_eof_params
-        .byte   2               ; param_count
-ref_num:.byte   0               ; ref_num
-length: .byte   0,0,0           ; EOF (lo, mid, hi)
-.endproc
-
         hires   := $2000
         hires_size := $2000
 
-.proc read_params
-        .byte   4               ; param_count
-ref_num:.byte   0               ; ref_num
-buffer: .addr   hires           ; data_buffer
-request:.word   hires_size      ; request_count
-        .word   0               ; trans_count
-.endproc
+        DEFINE_OPEN_PARAMS open_params, pathbuff, $C00
+        DEFINE_GET_EOF_PARAMS get_eof_params
+        DEFINE_READ_PARAMS read_params, hires, hires_size
+        DEFINE_CLOSE_PARAMS close_params
 
-.proc close_params
-        .byte   1               ; param_count
-ref_num:.byte   0               ; ref_num
-.endproc
-
-.proc pathname                 ; 1st byte is length, rest is full path
+.proc pathbuff                 ; 1st byte is length, rest is full path
 length: .byte   $00
 data:   .res    64, 0
 .endproc
@@ -264,14 +243,14 @@ nextwinfo:   .addr   0
 
         ;; Check that an icon is selected
         lda     #0
-        sta     pathname::length
+        sta     pathbuff::length
         lda     selected_file_count
         beq     abort           ; some file properties?
         lda     path_index      ; prefix index in table
         bne     :+
 abort:  rts
 
-        ;; Copy path (prefix) into pathname buffer.
+        ;; Copy path (prefix) into pathbuff buffer.
 :       src := $06
         dst := $08
 
@@ -284,14 +263,14 @@ abort:  rts
         inc     src
         bne     :+
         inc     src+1
-:       copy16  #(pathname::data), dst
-        jsr     copy_pathname   ; copy x bytes (src) to (dst)
+:       copy16  #(pathbuff::data), dst
+        jsr     copy_pathbuff   ; copy x bytes (src) to (dst)
 
         ;; Append separator.
         lda     #'/'
         ldy     #0
         sta     (dst),y
-        inc     pathname::length
+        inc     pathbuff::length
         inc     dst
         bne     :+
         inc     dst+1
@@ -324,16 +303,16 @@ abort:  rts
         sta     src
         bcc     :+
         inc     src+1
-:       jsr     copy_pathname   ; copy x bytes (src) to (dst)
+:       jsr     copy_pathbuff   ; copy x bytes (src) to (dst)
 
         jmp     open_file_and_init_window
 
-.proc copy_pathname             ; copy x bytes from src to dst
+.proc copy_pathbuff             ; copy x bytes from src to dst
         ldy     #0              ; incrementing path length and dst
 loop:   lda     (src),y
         sta     (dst),y
         iny
-        inc     pathname::length
+        inc     pathbuff::length
         dex
         bne     loop
         tya
@@ -401,11 +380,11 @@ exit:
 
         ;; If bigger than $2000, assume DHR
 
-        lda     get_eof_params::length ; fancy 3-byte unsigned compare
+        lda     get_eof_params::eof ; fancy 3-byte unsigned compare
         cmp     #<(hires_size+1)
-        lda     get_eof_params::length+1
+        lda     get_eof_params::eof+1
         sbc     #>(hires_size+1)
-        lda     get_eof_params::length+2
+        lda     get_eof_params::eof+2
         sbc     #^(hires_size+1)
         bcs     dhr
 

@@ -23,31 +23,10 @@ stash_stack:  .byte   $00
 filename:
         PASCAL_STRING "MD.SYSTEM"
 
-.proc open_params
-params: .byte   3
-name:   .addr   filename
-buffer: .addr   $0900
-ref_num:.byte   0
-.endproc
-
-.proc set_mark_params
-params: .byte   2
-ref_num:.byte   0
-pos:    .byte   $03,$00,$00
-.endproc
-
-.proc write_params
-params: .byte   4
-ref_num:.byte   0
-buffer: .addr   write_buffer
-request:.word   sizeof_write_buffer
-trans:  .word   0
-.endproc
-
-.proc close_params
-params: .byte    1
-ref_num:.byte   0
-.endproc
+        DEFINE_OPEN_PARAMS open_params, filename, $900
+        DEFINE_SET_MARK_PARAMS set_mark_params, 3
+        DEFINE_WRITE_PARAMS write_params, write_buffer, sizeof_write_buffer
+        DEFINE_CLOSE_PARAMS close_params
 
 write_buffer:
         .byte   0,0
