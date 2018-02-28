@@ -9,6 +9,80 @@
         .org $5000
 .proc common_overlay
 
+;;; ============================================================
+;;; Re-used param space for events/queries
+
+pencopy         := $D200
+penOR           := $D201
+penXOR          := $D202
+penBIC          := $D203
+notpencopy      := $D204
+notpenOR        := $D205
+notpenXOR       := $D206
+notpenBIC       := $D207
+
+
+event_params := $D208
+event_params_kind := event_params + 0
+        ;; if kind is key_down
+event_params_key := event_params + 1
+event_params_modifiers := event_params + 2
+        ;; if kind is no_event, button_down/up, drag, or apple_key:
+event_params_coords := event_params + 1
+event_params_xcoord := event_params + 1
+event_params_ycoord := event_params + 3
+        ;; if kind is update:
+event_params_window_id := event_params + 1
+
+screentowindow_params := event_params
+screentowindow_window_id := screentowindow_params + 0
+screentowindow_screenx := screentowindow_params + 1
+screentowindow_screeny := screentowindow_params + 3
+screentowindow_windowx := screentowindow_params + 5
+screentowindow_windowy := screentowindow_params + 7
+        .assert screentowindow_screenx = event_params_xcoord, error, "param mismatch"
+        .assert screentowindow_screeny = event_params_ycoord, error, "param mismatch"
+
+findwindow_params := event_params + 1    ; offset to x/y overlap event_params x/y
+findwindow_params_mousex := findwindow_params + 0
+findwindow_params_mousey := findwindow_params + 2
+findwindow_params_which_area := findwindow_params + 4
+findwindow_params_window_id := findwindow_params + 5
+        .assert findwindow_params_mousex = event_params_xcoord, error, "param mismatch"
+        .assert findwindow_params_mousey = event_params_ycoord, error, "param mismatch"
+
+findcontrol_params := event_params + 1   ; offset to x/y overlap event_params x/y
+findcontrol_params_mousex := findcontrol_params + 0
+findcontrol_params_mousey := findcontrol_params + 2
+findcontrol_which_ctl := findcontrol_params + 4
+findcontrol_which_part := findcontrol_params + 5
+        .assert findcontrol_params_mousex = event_params_xcoord, error, "param mismatch"
+        .assert findcontrol_params_mousey = event_params_ycoord, error, "param mismatch"
+
+activatectl_params := event_params
+activatectl_params_which_ctl := activatectl_params
+activatectl_params_activate  := activatectl_params + 1
+
+trackthumb_params := event_params
+trackthumb_which_ctl := trackthumb_params
+trackthumb_mousex := trackthumb_params + 1
+trackthumb_mousey := trackthumb_params + 3
+trackthumb_thumbpos := trackthumb_params + 5
+trackthumb_thumbmoved := trackthumb_params + 6
+        .assert trackthumb_mousex = event_params_xcoord, error, "param mismatch"
+        .assert trackthumb_mousey = event_params_ycoord, error, "param mismatch"
+
+updatethumb_params := event_params
+updatethumb_params_which_ctl := updatethumb_params
+updatethumb_params_thumbpos := updatethumb_params + 1
+updatethumb_stash := updatethumb_params + 5 ; not part of struct
+
+;;; ============================================================
+
+
+
+
+
 L5000:  jmp     L50B1
 
 L5003:  .byte   $02
@@ -98,22 +172,21 @@ L5106:  bit     $D8EC
         jsr     L6D24
         lda     #$14
         sta     $D8E9
-L5118:  MGTK_RELAY_CALL MGTK::GetEvent, $D208
-        lda     $D208
-        cmp     #$01
-        bne     L512E
+L5118:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
+        lda     event_params_kind
+        cmp     #MGTK::event_kind_button_down
+        bne     :+
         jsr     L51AF
         jmp     L5106
 
-L512E:  cmp     #$03
-        bne     L5135
+:       cmp     #MGTK::event_kind_key_down
+        bne     :+
         jsr     L59B9
-L5135:  MGTK_RELAY_CALL MGTK::FindWindow, $D209
-        lda     $D20D
-        bne     L5146
+:       MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_params_which_area
+        bne     :+
         jmp     L5106
-
-L5146:  lda     $D20E
+:       lda     findwindow_params_window_id
         cmp     $D5B7
         beq     L5151
         jmp     L5106
@@ -121,9 +194,9 @@ L5146:  lda     $D20E
 L5151:  lda     $D5B7
         jsr     L62C8
         lda     $D5B7
-        sta     $D208
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
-        MGTK_RELAY_CALL MGTK::MoveTo, $D20D
+        sta     screentowindow_window_id
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         bit     L51AE
         bmi     L5183
         MGTK_RELAY_CALL MGTK::InRect, $DA9E
@@ -142,8 +215,8 @@ L5199:  MGTK_RELAY_CALL MGTK::InitPort, $D239
         jmp     L5106
 
 L51AE:  .byte   0
-L51AF:  MGTK_RELAY_CALL MGTK::FindWindow, $D209
-        lda     $D20D
+L51AF:  MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_params_which_area
         bne     L51BE
         rts
 
@@ -163,9 +236,9 @@ L51C7:  lda     $D20E
 L51D2:  lda     $D5B7
         jsr     L62C8
         lda     $D5B7
-        sta     $D208
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
-        MGTK_RELAY_CALL MGTK::MoveTo, $D20D
+        sta     screentowindow_window_id
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_RELAY_CALL MGTK::InRect, $D9E0
         cmp     #MGTK::inrect_inside
         beq     L5200
@@ -184,7 +257,7 @@ L5213:  jmp     L5308
 
 L5216:  lda     $D5B7
         jsr     L62C8
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9E0
         jsr     L5888
         bmi     L5213
@@ -198,7 +271,7 @@ L5239:  MGTK_RELAY_CALL MGTK::InRect, $D9F0
 
 L5249:  bit     L5105
         bmi     L5268
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9F0
         jsr     L590E
         bmi     L5268
@@ -212,7 +285,7 @@ L526B:  MGTK_RELAY_CALL MGTK::InRect, $D9D0
 
 L527B:  bit     L5105
         bmi     L529A
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9D0
         jsr     L577C
         bmi     L529A
@@ -224,7 +297,7 @@ L529D:  MGTK_RELAY_CALL MGTK::InRect, $D9D8
         beq     L52AD
         jmp     L52CD
 
-L52AD:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+L52AD:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9D8
         jsr     L56F6
         bmi     L52CA
@@ -237,7 +310,7 @@ L52CD:  MGTK_RELAY_CALL MGTK::InRect, $D9E8
         beq     L52DD
         jmp     L52FA
 
-L52DD:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+L52DD:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9E8
         jsr     L5802
         bmi     L52F7
@@ -260,10 +333,10 @@ L531B:  jsr     L59B8
 
 L531F:  bit     L5105
         bmi     L5340
-        MGTK_RELAY_CALL MGTK::FindControl, $D209
-        lda     $D20D
+        MGTK_RELAY_CALL MGTK::FindControl, findcontrol_params
+        lda     findcontrol_which_ctl
         beq     L5341
-        cmp     #$01
+        cmp     #MGTK::ctl_vertical_scroll_bar
         bne     L5340
         lda     $D5F6
         and     #$01
@@ -273,14 +346,14 @@ L531F:  bit     L5105
 L5340:  rts
 
 L5341:  lda     $D5F1
-        sta     $D208
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
-        add16   $D20F, $D60F, $D20F
-        lsr16    $D20F
-        lsr16    $D20F
-        lsr16    $D20F
+        sta     screentowindow_window_id
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
+        add16   screentowindow_windowy, $D60F, screentowindow_windowy
+        lsr16   screentowindow_windowy
+        lsr16   screentowindow_windowy
+        lsr16   screentowindow_windowy
         lda     $D920
-        cmp     $D20F
+        cmp     screentowindow_windowy
         beq     L5380
         jmp     L542F
 
@@ -293,7 +366,7 @@ L5386:  ldx     $D920
         bmi     L53B5
         lda     $D5B7
         jsr     L62C8
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9D8
         MGTK_RELAY_CALL MGTK::PaintRect, $D9D8
         jsr     L6D1E
@@ -303,15 +376,12 @@ L53B5:  and     #$7F
         pha
         lda     $D5B7
         jsr     L62C8
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9E0
         MGTK_RELAY_CALL MGTK::PaintRect, $D9E0
         lda     #$00
         sta     L542E
-        lda     #$00
-        sta     $08
-        lda     #$18
-        sta     $09
+        copy16  #$1800, $08
         pla
         asl     a
         rol     L542E
@@ -341,6 +411,7 @@ L53B5:  and     #$7F
         rts
 
 L542E:  .byte   0
+
 L542F:  lda     $D20F
         cmp     $177F
         bcc     L5438
@@ -383,18 +454,17 @@ L5481:  cmp     #$04
         bne     L5488
         jmp     L54DF
 
-L5488:  lda     #$01
-        sta     $D208
-        MGTK_RELAY_CALL MGTK::TrackThumb, $D208
-        lda     $D20E
-        bne     L549C
+L5488:  lda     #MGTK::ctl_vertical_scroll_bar
+        sta     trackthumb_params
+        MGTK_RELAY_CALL MGTK::TrackThumb, trackthumb_params
+        lda     trackthumb_thumbmoved
+        bne     :+
         rts
-
-L549C:  lda     $D20D
-        sta     $D209
-        lda     #$01
-        sta     $D208
-        MGTK_RELAY_CALL MGTK::UpdateThumb, $D208
+:       lda     trackthumb_thumbpos
+        sta     updatethumb_params_thumbpos
+        lda     #MGTK::ctl_vertical_scroll_bar
+        sta     updatethumb_params_which_ctl
+        MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         lda     $D20D
         jsr     L6227
         jsr     L606D
@@ -405,11 +475,11 @@ L54BA:  lda     $D5FA
         sbc     #$09
         bpl     L54C4
         lda     #$00
-L54C4:  sta     $D209
-        lda     #$01
-        sta     $D208
-        MGTK_RELAY_CALL MGTK::UpdateThumb, $D208
-        lda     $D209
+L54C4:  sta     updatethumb_params_thumbpos
+        lda     #MGTK::ctl_vertical_scroll_bar
+        sta     updatethumb_params_which_ctl
+        MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
+        lda     updatethumb_params_thumbpos
         jsr     L6227
         jsr     L606D
         rts
@@ -421,11 +491,11 @@ L54DF:  lda     $D5FA
         beq     L54EF
         bcc     L54EF
         lda     $177F
-L54EF:  sta     $D209
-        lda     #$01
-        sta     $D208
-        MGTK_RELAY_CALL MGTK::UpdateThumb, $D208
-        lda     $D209
+L54EF:  sta     updatethumb_params_thumbpos
+        lda     #MGTK::ctl_vertical_scroll_bar
+        sta     updatethumb_params_which_ctl
+        MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
+        lda     updatethumb_params_thumbpos
         jsr     L6227
         jsr     L606D
         rts
@@ -436,11 +506,11 @@ L550A:  lda     $D5FA
 
 L5510:  sec
         sbc     #$01
-        sta     $D209
-        lda     #$01
-        sta     $D208
-        MGTK_RELAY_CALL MGTK::UpdateThumb, $D208
-        lda     $D209
+        sta     updatethumb_params_thumbpos
+        lda     #MGTK::ctl_vertical_scroll_bar
+        sta     updatethumb_params_which_ctl
+        MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
+        lda     updatethumb_params_thumbpos
         jsr     L6227
         jsr     L606D
         jsr     L555F
@@ -453,52 +523,52 @@ L5533:  lda     $D5FA
 
 L553C:  clc
         adc     #$01
-        sta     $D209
-        lda     #$01
-        sta     $D208
-        MGTK_RELAY_CALL MGTK::UpdateThumb, $D208
-        lda     $D209
+        sta     updatethumb_params_thumbpos
+        lda     #MGTK::ctl_vertical_scroll_bar
+        sta     updatethumb_params_which_ctl
+        MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
+        lda     updatethumb_params_thumbpos
         jsr     L6227
         jsr     L606D
         jsr     L555F
         jmp     L5533
 
-L555F:  MGTK_RELAY_CALL MGTK::PeekEvent, $D208
-        lda     $D208
-        cmp     #$01
+L555F:  MGTK_RELAY_CALL MGTK::PeekEvent, event_params
+        lda     event_params_kind
+        cmp     #MGTK::event_kind_button_down
         beq     L5576
-        cmp     #$04
+        cmp     #MGTK::event_kind_drag
         beq     L5576
         pla
         pla
         rts
 
-L5576:  MGTK_RELAY_CALL MGTK::GetEvent, $D208
-        MGTK_RELAY_CALL MGTK::FindWindow, $D209
-        lda     $D20E
+L5576:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
+        MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_params_window_id
         cmp     $D5F1
-        beq     L5593
+        beq     :+
         pla
         pla
         rts
 
-L5593:  lda     $D20D
-        cmp     #$02
-        beq     L559D
+:       lda     findwindow_params_which_area
+        cmp     #MGTK::area_content
+        beq     :+
         pla
         pla
         rts
 
-L559D:  MGTK_RELAY_CALL MGTK::FindControl, $D209
-        lda     $D20D
-        cmp     #$01
-        beq     L55B0
+:       MGTK_RELAY_CALL MGTK::FindControl, findcontrol_params
+        lda     findcontrol_which_ctl
+        cmp     #MGTK::ctl_vertical_scroll_bar
+        beq     :+
         pla
         pla
         rts
 
-L55B0:  lda     $D20E
-        cmp     #$03
+:       lda     findcontrol_which_part
+        cmp     #MGTK::part_page_up
         bcc     L55B9
         pla
         pla
@@ -534,10 +604,7 @@ L5607:  ldx     $D920
         jsr     L6D30
 L5618:  lda     #$00
         sta     L565B
-        lda     #$00
-        sta     $08
-        lda     #$18
-        sta     $09
+        copy16  #$1800, $08
         pla
         asl     a
         rol     L565B
@@ -631,14 +698,14 @@ L56E3:  MGTK_RELAY_CALL MGTK::InitPort, $D239
 
 L56F6:  lda     #$00
         sta     L577B
-L56FB:  MGTK_RELAY_CALL MGTK::GetEvent, $D208
-        lda     $D208
+L56FB:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
+        lda     event_params_kind
         cmp     #MGTK::event_kind_button_up
         beq     L575E
         lda     $D5B7
-        sta     $D208
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
-        MGTK_RELAY_CALL MGTK::MoveTo, $D20D
+        sta     screentowindow_window_id
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_RELAY_CALL MGTK::InRect, $D9D8
         cmp     #MGTK::inrect_inside
         beq     L5738
@@ -650,7 +717,7 @@ L5738:  lda     L577B
         bne     L5740
         jmp     L56FB
 
-L5740:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+L5740:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9D8
         lda     L577B
         clc
@@ -662,21 +729,21 @@ L575E:  lda     L577B
         beq     L5766
         return  #$FF
 
-L5766:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+L5766:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9D8
         return  #$00
 
 L577B:  .byte   0
 L577C:  lda     #$00
         sta     L5801
-L5781:  MGTK_RELAY_CALL MGTK::GetEvent, $D208
-        lda     $D208
+L5781:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
+        lda     event_params_kind
         cmp     #MGTK::event_kind_button_up
         beq     L57E4
         lda     $D5B7
-        sta     $D208
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
-        MGTK_RELAY_CALL MGTK::MoveTo, $D20D
+        sta     screentowindow_window_id
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_RELAY_CALL MGTK::InRect, $D9D0
         cmp     #MGTK::inrect_inside
         beq     L57BE
@@ -688,7 +755,7 @@ L57BE:  lda     L5801
         bne     L57C6
         jmp     L5781
 
-L57C6:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+L57C6:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9D0
         lda     L5801
         clc
@@ -700,21 +767,21 @@ L57E4:  lda     L5801
         beq     L57EC
         return  #$FF
 
-L57EC:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+L57EC:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9D0
         return  #$00
 
 L5801:  .byte   0
 L5802:  lda     #$00
         sta     L5887
-L5807:  MGTK_RELAY_CALL MGTK::GetEvent, $D208
-        lda     $D208
+L5807:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
+        lda     event_params_kind
         cmp     #MGTK::event_kind_button_up
         beq     L586A
         lda     $D5B7
-        sta     $D208
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
-        MGTK_RELAY_CALL MGTK::MoveTo, $D20D
+        sta     screentowindow_window_id
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_RELAY_CALL MGTK::InRect, $D9E8
         cmp     #MGTK::inrect_inside
         beq     L5844
@@ -726,7 +793,7 @@ L5844:  lda     L5887
         bne     L584C
         jmp     L5807
 
-L584C:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+L584C:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9E8
         lda     L5887
         clc
@@ -738,21 +805,21 @@ L586A:  lda     L5887
         beq     L5872
         return  #$FF
 
-L5872:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+L5872:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9E8
         return  #$01
 
 L5887:  .byte   0
 L5888:  lda     #$00
         sta     L590D
-L588D:  MGTK_RELAY_CALL MGTK::GetEvent, $D208
-        lda     $D208
+L588D:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
+        lda     event_params_kind
         cmp     #MGTK::event_kind_button_up
         beq     L58F0
         lda     $D5B7
-        sta     $D208
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
-        MGTK_RELAY_CALL MGTK::MoveTo, $D20D
+        sta     screentowindow_window_id
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_RELAY_CALL MGTK::InRect, $D9E0
         cmp     #MGTK::inrect_inside
         beq     L58CA
@@ -764,7 +831,7 @@ L58CA:  lda     L590D
         bne     L58D2
         jmp     L588D
 
-L58D2:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+L58D2:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9E0
         lda     L590D
         clc
@@ -776,21 +843,21 @@ L58F0:  lda     L590D
         beq     L58F8
         return  #$FF
 
-L58F8:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+L58F8:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9E0
         return  #$00
 
 L590D:  .byte   0
 L590E:  lda     #$00
         sta     L5993
-L5913:  MGTK_RELAY_CALL MGTK::GetEvent, $D208
-        lda     $D208
+L5913:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
+        lda     event_params_kind
         cmp     #MGTK::event_kind_button_up
         beq     L5976
         lda     $D5B7
-        sta     $D208
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
-        MGTK_RELAY_CALL MGTK::MoveTo, $D20D
+        sta     screentowindow_window_id
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_RELAY_CALL MGTK::InRect, $D9F0
         cmp     #MGTK::inrect_inside
         beq     L5950
@@ -802,7 +869,7 @@ L5950:  lda     L5993
         bne     L5958
         jmp     L5913
 
-L5958:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+L5958:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9F0
         lda     L5993
         clc
@@ -814,7 +881,7 @@ L5976:  lda     L5993
         beq     L597E
         return  #$FF
 
-L597E:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+L597E:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9F0
         return  #$01
 
@@ -903,7 +970,7 @@ L5A27:  cmp     #$09
         bne     L5A52
         lda     $D5B7
         jsr     L62C8
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9F0
         MGTK_RELAY_CALL MGTK::PaintRect, $D9F0
         jsr     L565C
@@ -920,7 +987,7 @@ L5A52:  cmp     #$0F
 
 L5A64:  lda     $D5B7
         jsr     L62C8
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9E0
         MGTK_RELAY_CALL MGTK::PaintRect, $D9E0
         jsr     L5607
@@ -930,7 +997,7 @@ L5A8B:  cmp     #$03
         bne     L5AB6
         lda     $D5B7
         jsr     L62C8
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9D0
         MGTK_RELAY_CALL MGTK::PaintRect, $D9D0
         jsr     L567F
@@ -952,7 +1019,7 @@ L5AC8:  jsr     L56E3
 
 L5ACC:  lda     $D5B7
         jsr     L62C8
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9D8
         MGTK_RELAY_CALL MGTK::PaintRect, $D9D8
         jsr     L6D42
@@ -962,7 +1029,7 @@ L5ACC:  lda     $D5B7
 
 L5AF7:  lda     $D5B7
         jsr     L62C8
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9E8
         MGTK_RELAY_CALL MGTK::PaintRect, $D9E8
         jsr     L6D21
@@ -1128,7 +1195,7 @@ L5C51:  lda     $D209,x
         sta     L5CEF
 L5C60:  dec     L5CEF
         beq     L5CA6
-        MGTK_RELAY_CALL MGTK::PeekEvent, $D208
+        MGTK_RELAY_CALL MGTK::PeekEvent, event_params
         jsr     L5CA9
         bmi     L5CA6
         lda     #$FF
@@ -1141,12 +1208,12 @@ L5C60:  dec     L5CEF
         beq     L5C60
         cmp     #$02
         bne     L5C96
-        MGTK_RELAY_CALL MGTK::GetEvent, $D208
+        MGTK_RELAY_CALL MGTK::GetEvent, event_params
         jmp     L5C60
 
 L5C96:  cmp     #$01
         bne     L5CA6
-        MGTK_RELAY_CALL MGTK::GetEvent, $D208
+        MGTK_RELAY_CALL MGTK::GetEvent, event_params
         return  #$00
 
 L5CA6:  return  #$FF
@@ -1196,7 +1263,7 @@ L5CF7:  MGTK_RELAY_CALL MGTK::OpenWindow, $D5B7
         MGTK_RELAY_CALL MGTK::OpenWindow, $D5F1
         lda     $D5B7
         jsr     L62C8
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, $D9C0
         MGTK_RELAY_CALL MGTK::FrameRect, $D9D8
         MGTK_RELAY_CALL MGTK::FrameRect, $D9E0
@@ -1617,22 +1684,26 @@ L6163:  sta     L61B0
         lda     $177F
         cmp     #$0A
         bcs     L6181
-        copy16  #1, $D208
-        MGTK_RELAY_CALL MGTK::ActivateCtl, $D208
+        lda     #MGTK::ctl_vertical_scroll_bar
+        sta     activatectl_params_which_ctl
+        lda     #MGTK::activatectl_deactivate
+        sta     activatectl_params_activate
+        MGTK_RELAY_CALL MGTK::ActivateCtl, activatectl_params
         rts
 
 L6181:  lda     $177F
         sta     $D5F9
-        lda     #$01
-        sta     $D208
-        sta     $D209
-        MGTK_RELAY_CALL MGTK::ActivateCtl, $D208
+        .assert MGTK::ctl_vertical_scroll_bar = MGTK::activatectl_activate, error, "need to match"
+        lda     #MGTK::ctl_vertical_scroll_bar
+        sta     activatectl_params_which_ctl
+        sta     activatectl_params_activate
+        MGTK_RELAY_CALL MGTK::ActivateCtl, activatectl_params
         lda     L61B0
-        sta     $D209
+        sta     updatethumb_params_thumbpos
         jsr     L6227
-        lda     #$01
-        sta     $D208
-        MGTK_RELAY_CALL MGTK::UpdateThumb, $D208
+        lda     #MGTK::ctl_vertical_scroll_bar
+        sta     updatethumb_params_which_ctl
+        MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 
 L61B0:  .byte   0
@@ -1733,7 +1804,7 @@ L6274:  ldx     #$00
         sta     $D916
         lda     $D5F1
         jsr     L62C8
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D90F
         MGTK_RELAY_CALL MGTK::InitPort, $D239
         MGTK_RELAY_CALL MGTK::SetPort, $D239
@@ -1941,10 +2012,7 @@ L64E7:  rts
 
 L64E8:  lda     #$00
         sta     L6515
-        lda     #$00
-        sta     $06
-        lda     #$18
-        sta     $07
+        copy16  #$1800, $06
 L64F5:  lda     L6515
         cmp     $177F
         beq     L64E7
@@ -1974,10 +2042,7 @@ L651F:  lda     ($06),y
         bpl     L651F
         lda     #$00
         sta     L6575
-        lda     #$00
-        sta     $06
-        lda     #$18
-        sta     $07
+        copy16  #$1800, $06
 L6534:  lda     L6575
         cmp     $177F
         beq     L6564
@@ -2074,7 +2139,7 @@ L6634:  copy16  #$D8EF, $06
         lda     $D5B7
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::PaintRect, $DA9E
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, $DA9E
         MGTK_RELAY_CALL MGTK::MoveTo, $DAA6
         lda     $D402
@@ -2089,7 +2154,7 @@ L6684:  addr_call L5DED, $D484
 L6693:  lda     $D5B7
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::PaintRect, $DAAA
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, $DAAA
         MGTK_RELAY_CALL MGTK::MoveTo, $DAB2
         lda     $D443
@@ -2100,11 +2165,11 @@ L66C9:  addr_call L5DED, $D484
         rts
 
         lda     $D5B7
-        sta     $D208
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
+        sta     screentowindow_window_id
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         lda     $D5B7
         jsr     L62C8
-        MGTK_RELAY_CALL MGTK::MoveTo, $D20D
+        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_RELAY_CALL MGTK::InRect, $DA9E
         cmp     #MGTK::inrect_inside
         beq     L6719
@@ -2228,11 +2293,11 @@ L6846:  jsr     L6D27
 
 L684D:  .word   0
         lda     $D5B7
-        sta     $D208
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
+        sta     screentowindow_window_id
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         lda     $D5B7
         jsr     L62C8
-        MGTK_RELAY_CALL MGTK::MoveTo, $D20D
+        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_RELAY_CALL MGTK::InRect, $DAAA
         cmp     #MGTK::inrect_inside
         beq     L6890

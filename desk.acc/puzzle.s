@@ -860,13 +860,13 @@ nope:   clc
 
         lda     #0
         ldy     hole_y
-        beq     L0FC9
-L0FC3:  clc
+        beq     found
+:       clc
         adc     #4
         dey
-        bne     L0FC3
+        bne     :-
 
-L0FC9:  sta     draw_rc
+found:  sta     draw_rc
         clc
         adc     hole_x
         tay
