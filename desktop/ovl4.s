@@ -23,16 +23,16 @@ notpenBIC       := $D207
 
 
 event_params := $D208
-event_params_kind := event_params + 0
+event_kind := event_params + 0
         ;; if kind is key_down
-event_params_key := event_params + 1
-event_params_modifiers := event_params + 2
+event_key := event_params + 1
+event_modifiers := event_params + 2
         ;; if kind is no_event, button_down/up, drag, or apple_key:
-event_params_coords := event_params + 1
-event_params_xcoord := event_params + 1
-event_params_ycoord := event_params + 3
+event_coords := event_params + 1
+event_xcoord := event_params + 1
+event_ycoord := event_params + 3
         ;; if kind is update:
-event_params_window_id := event_params + 1
+event_window_id := event_params + 1
 
 screentowindow_params := event_params
 screentowindow_window_id := screentowindow_params + 0
@@ -40,28 +40,28 @@ screentowindow_screenx := screentowindow_params + 1
 screentowindow_screeny := screentowindow_params + 3
 screentowindow_windowx := screentowindow_params + 5
 screentowindow_windowy := screentowindow_params + 7
-        .assert screentowindow_screenx = event_params_xcoord, error, "param mismatch"
-        .assert screentowindow_screeny = event_params_ycoord, error, "param mismatch"
+        .assert screentowindow_screenx = event_xcoord, error, "param mismatch"
+        .assert screentowindow_screeny = event_ycoord, error, "param mismatch"
 
 findwindow_params := event_params + 1    ; offset to x/y overlap event_params x/y
-findwindow_params_mousex := findwindow_params + 0
-findwindow_params_mousey := findwindow_params + 2
-findwindow_params_which_area := findwindow_params + 4
-findwindow_params_window_id := findwindow_params + 5
-        .assert findwindow_params_mousex = event_params_xcoord, error, "param mismatch"
-        .assert findwindow_params_mousey = event_params_ycoord, error, "param mismatch"
+findwindow_mousex := findwindow_params + 0
+findwindow_mousey := findwindow_params + 2
+findwindow_which_area := findwindow_params + 4
+findwindow_window_id := findwindow_params + 5
+        .assert findwindow_mousex = event_xcoord, error, "param mismatch"
+        .assert findwindow_mousey = event_ycoord, error, "param mismatch"
 
 findcontrol_params := event_params + 1   ; offset to x/y overlap event_params x/y
-findcontrol_params_mousex := findcontrol_params + 0
-findcontrol_params_mousey := findcontrol_params + 2
+findcontrol_mousex := findcontrol_params + 0
+findcontrol_mousey := findcontrol_params + 2
 findcontrol_which_ctl := findcontrol_params + 4
 findcontrol_which_part := findcontrol_params + 5
-        .assert findcontrol_params_mousex = event_params_xcoord, error, "param mismatch"
-        .assert findcontrol_params_mousey = event_params_ycoord, error, "param mismatch"
+        .assert findcontrol_mousex = event_xcoord, error, "param mismatch"
+        .assert findcontrol_mousey = event_ycoord, error, "param mismatch"
 
 activatectl_params := event_params
-activatectl_params_which_ctl := activatectl_params
-activatectl_params_activate  := activatectl_params + 1
+activatectl_which_ctl := activatectl_params
+activatectl_activate  := activatectl_params + 1
 
 trackthumb_params := event_params
 trackthumb_which_ctl := trackthumb_params
@@ -69,12 +69,12 @@ trackthumb_mousex := trackthumb_params + 1
 trackthumb_mousey := trackthumb_params + 3
 trackthumb_thumbpos := trackthumb_params + 5
 trackthumb_thumbmoved := trackthumb_params + 6
-        .assert trackthumb_mousex = event_params_xcoord, error, "param mismatch"
-        .assert trackthumb_mousey = event_params_ycoord, error, "param mismatch"
+        .assert trackthumb_mousex = event_xcoord, error, "param mismatch"
+        .assert trackthumb_mousey = event_ycoord, error, "param mismatch"
 
 updatethumb_params := event_params
-updatethumb_params_which_ctl := updatethumb_params
-updatethumb_params_thumbpos := updatethumb_params + 1
+updatethumb_which_ctl := updatethumb_params
+updatethumb_thumbpos := updatethumb_params + 1
 updatethumb_stash := updatethumb_params + 5 ; not part of struct
 
 ;;; ============================================================
@@ -173,7 +173,7 @@ L5106:  bit     $D8EC
         lda     #$14
         sta     $D8E9
 L5118:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        lda     event_params_kind
+        lda     event_kind
         cmp     #MGTK::event_kind_button_down
         bne     :+
         jsr     L51AF
@@ -183,10 +183,10 @@ L5118:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         bne     :+
         jsr     L59B9
 :       MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params_which_area
+        lda     findwindow_which_area
         bne     :+
         jmp     L5106
-:       lda     findwindow_params_window_id
+:       lda     findwindow_window_id
         cmp     $D5B7
         beq     L5151
         jmp     L5106
@@ -216,7 +216,7 @@ L5199:  MGTK_RELAY_CALL MGTK::InitPort, $D239
 
 L51AE:  .byte   0
 L51AF:  MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params_which_area
+        lda     findwindow_which_area
         bne     L51BE
         rts
 
@@ -461,9 +461,9 @@ L5488:  lda     #MGTK::ctl_vertical_scroll_bar
         bne     :+
         rts
 :       lda     trackthumb_thumbpos
-        sta     updatethumb_params_thumbpos
+        sta     updatethumb_thumbpos
         lda     #MGTK::ctl_vertical_scroll_bar
-        sta     updatethumb_params_which_ctl
+        sta     updatethumb_which_ctl
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         lda     $D20D
         jsr     L6227
@@ -475,11 +475,11 @@ L54BA:  lda     $D5FA
         sbc     #$09
         bpl     L54C4
         lda     #$00
-L54C4:  sta     updatethumb_params_thumbpos
+L54C4:  sta     updatethumb_thumbpos
         lda     #MGTK::ctl_vertical_scroll_bar
-        sta     updatethumb_params_which_ctl
+        sta     updatethumb_which_ctl
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
-        lda     updatethumb_params_thumbpos
+        lda     updatethumb_thumbpos
         jsr     L6227
         jsr     L606D
         rts
@@ -491,11 +491,11 @@ L54DF:  lda     $D5FA
         beq     L54EF
         bcc     L54EF
         lda     $177F
-L54EF:  sta     updatethumb_params_thumbpos
+L54EF:  sta     updatethumb_thumbpos
         lda     #MGTK::ctl_vertical_scroll_bar
-        sta     updatethumb_params_which_ctl
+        sta     updatethumb_which_ctl
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
-        lda     updatethumb_params_thumbpos
+        lda     updatethumb_thumbpos
         jsr     L6227
         jsr     L606D
         rts
@@ -506,11 +506,11 @@ L550A:  lda     $D5FA
 
 L5510:  sec
         sbc     #$01
-        sta     updatethumb_params_thumbpos
+        sta     updatethumb_thumbpos
         lda     #MGTK::ctl_vertical_scroll_bar
-        sta     updatethumb_params_which_ctl
+        sta     updatethumb_which_ctl
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
-        lda     updatethumb_params_thumbpos
+        lda     updatethumb_thumbpos
         jsr     L6227
         jsr     L606D
         jsr     L555F
@@ -523,18 +523,18 @@ L5533:  lda     $D5FA
 
 L553C:  clc
         adc     #$01
-        sta     updatethumb_params_thumbpos
+        sta     updatethumb_thumbpos
         lda     #MGTK::ctl_vertical_scroll_bar
-        sta     updatethumb_params_which_ctl
+        sta     updatethumb_which_ctl
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
-        lda     updatethumb_params_thumbpos
+        lda     updatethumb_thumbpos
         jsr     L6227
         jsr     L606D
         jsr     L555F
         jmp     L5533
 
 L555F:  MGTK_RELAY_CALL MGTK::PeekEvent, event_params
-        lda     event_params_kind
+        lda     event_kind
         cmp     #MGTK::event_kind_button_down
         beq     L5576
         cmp     #MGTK::event_kind_drag
@@ -545,14 +545,14 @@ L555F:  MGTK_RELAY_CALL MGTK::PeekEvent, event_params
 
 L5576:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params_window_id
+        lda     findwindow_window_id
         cmp     $D5F1
         beq     :+
         pla
         pla
         rts
 
-:       lda     findwindow_params_which_area
+:       lda     findwindow_which_area
         cmp     #MGTK::area_content
         beq     :+
         pla
@@ -699,7 +699,7 @@ L56E3:  MGTK_RELAY_CALL MGTK::InitPort, $D239
 L56F6:  lda     #$00
         sta     L577B
 L56FB:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        lda     event_params_kind
+        lda     event_kind
         cmp     #MGTK::event_kind_button_up
         beq     L575E
         lda     $D5B7
@@ -737,7 +737,7 @@ L577B:  .byte   0
 L577C:  lda     #$00
         sta     L5801
 L5781:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        lda     event_params_kind
+        lda     event_kind
         cmp     #MGTK::event_kind_button_up
         beq     L57E4
         lda     $D5B7
@@ -775,7 +775,7 @@ L5801:  .byte   0
 L5802:  lda     #$00
         sta     L5887
 L5807:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        lda     event_params_kind
+        lda     event_kind
         cmp     #MGTK::event_kind_button_up
         beq     L586A
         lda     $D5B7
@@ -813,7 +813,7 @@ L5887:  .byte   0
 L5888:  lda     #$00
         sta     L590D
 L588D:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        lda     event_params_kind
+        lda     event_kind
         cmp     #MGTK::event_kind_button_up
         beq     L58F0
         lda     $D5B7
@@ -851,7 +851,7 @@ L590D:  .byte   0
 L590E:  lda     #$00
         sta     L5993
 L5913:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        lda     event_params_kind
+        lda     event_kind
         cmp     #MGTK::event_kind_button_up
         beq     L5976
         lda     $D5B7
@@ -1685,9 +1685,9 @@ L6163:  sta     L61B0
         cmp     #$0A
         bcs     L6181
         lda     #MGTK::ctl_vertical_scroll_bar
-        sta     activatectl_params_which_ctl
+        sta     activatectl_which_ctl
         lda     #MGTK::activatectl_deactivate
-        sta     activatectl_params_activate
+        sta     activatectl_activate
         MGTK_RELAY_CALL MGTK::ActivateCtl, activatectl_params
         rts
 
@@ -1695,14 +1695,14 @@ L6181:  lda     $177F
         sta     $D5F9
         .assert MGTK::ctl_vertical_scroll_bar = MGTK::activatectl_activate, error, "need to match"
         lda     #MGTK::ctl_vertical_scroll_bar
-        sta     activatectl_params_which_ctl
-        sta     activatectl_params_activate
+        sta     activatectl_which_ctl
+        sta     activatectl_activate
         MGTK_RELAY_CALL MGTK::ActivateCtl, activatectl_params
         lda     L61B0
-        sta     updatethumb_params_thumbpos
+        sta     updatethumb_thumbpos
         jsr     L6227
         lda     #MGTK::ctl_vertical_scroll_bar
-        sta     updatethumb_params_which_ctl
+        sta     updatethumb_which_ctl
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 

@@ -24,60 +24,22 @@ start:
 
         default_start_address := $2000
 
-.proc set_prefix_params
-params: .byte   1
-path:   .addr   PREFIX
-.endproc
+        DEFINE_SET_PREFIX_PARAMS set_prefix_params, PREFIX
 
 prefix_length:
         .byte   0
 
-.proc open_params
-params: .byte   3
-path:   .addr   FILENAME
-buffer: .addr   $800
-ref_num:.byte   1
-.endproc
-
-.proc read_params
-params: .byte   4
-ref_num:.byte   0
-buffer: .addr   default_start_address
-request:.word   $9F00
-trans:  .word   0
-.endproc
-
-.proc close_params
-params: .byte   1
-ref_nun:.byte   0
-.endproc
-
-.proc get_info_params
-params: .byte   $A
-path:   .addr   FILENAME
-access: .byte   0
-type:   .byte   0
-auxtype:.word   0
-storage:.byte   0
-blocks: .word   0
-mod_date:       .word 0
-mod_time:       .word 0
-create_date:    .word 0
-create_time:    .word 0
-.endproc
+        DEFINE_OPEN_PARAMS open_params, FILENAME, $800, 1
+        DEFINE_READ_PARAMS read_params, default_start_address, $9F00
+        DEFINE_CLOSE_PARAMS close_params
+        DEFINE_GET_FILE_INFO_PARAMS get_info_params, FILENAME
 
         .res    3
 
 bs_path:
         PASCAL_STRING "BASIC.SYSTEM"
 
-.proc quit_params
-params: .byte   4
-        .byte   $EE             ; nonstandard ???
-        .word   FILENAME        ; nonstandard ???
-        .byte   0
-        .word   0
-.endproc
+        DEFINE_QUIT_PARAMS quit_params, $EE, FILENAME
 
 ;;; ==================================================
 
@@ -113,7 +75,7 @@ begin:  lda     ROMIN2
         MLI_CALL GET_FILE_INFO, get_info_params
         beq     :+
         jmp     exit
-:       lda     get_info_params::type
+:       lda     get_info_params::file_type
         cmp     #FT_S16
         bne     not_s16
         jsr     update_bitmap
@@ -122,19 +84,19 @@ not_s16:
 
         cmp     #FT_BINARY
         bne     not_binary
-        lda     get_info_params::auxtype
+        lda     get_info_params::aux_type
         sta     jmp_addr
-        sta     read_params::buffer
-        lda     get_info_params::auxtype+1
+        sta     read_params::data_buffer
+        lda     get_info_params::aux_type+1
         sta     jmp_addr+1
-        sta     read_params::buffer+1
+        sta     read_params::data_buffer+1
         cmp     #$0C            ; If loading at page < $0C
         bcs     :+
         lda     #$BB            ; ... use a high address buffer ($BB)
-        sta     open_params::buffer+1
+        sta     open_params::io_buffer+1
         bne     load_target     ; always
 :       lda     #$08            ; ... otherwise a low address buffer ($08)
-        sta     open_params::buffer+1
+        sta     open_params::io_buffer+1
         bne     load_target     ; always
 not_binary:
 
@@ -142,7 +104,7 @@ not_binary:
         bne     load_target
 
         ;; Invoke BASIC.SYSTEM as path instead.
-        copy16  #bs_path, open_params::path
+        copy16  #bs_path, open_params::pathname
 
         ;; Try opening BASIC.SYSTEM with current prefix.
 check_for_bs:
@@ -180,7 +142,7 @@ do_read:
         bne     exit
 
         ;; If it's BASIC, set prefix and copy filename to interpreter buffer.
-        lda     get_info_params::type
+        lda     get_info_params::file_type
         cmp     #FT_BASIC
         bne     update_stack
         jsr     set_prefix

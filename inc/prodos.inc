@@ -125,7 +125,7 @@ end:
 .endmacro
 
 
-.macro DEFINE_OPEN_PARAMS name, pn, io
+.macro DEFINE_OPEN_PARAMS name, pn, io, rn
     .if .xmatch(.string(pn), "pathname")
         ;; If 'pathname' is passed then expansion yields a circular reference.
         .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
@@ -134,7 +134,11 @@ end:
 param_count:    .byte   3
 pathname:       .addr   pn
 io_buffer:      .addr   io
+    .ifnblank rn
+ref_num:        .byte   rn
+    .else
 ref_num:        .byte   0
+    .endif
 .endproc
 .endmacro
 
@@ -248,13 +252,21 @@ int_num:        .byte   0
 .endproc
 .endmacro
 
-.macro DEFINE_QUIT_PARAMS name
+.macro DEFINE_QUIT_PARAMS name, arg1, arg2
 .proc name
-param_count: .byte   4
-             .byte   0
-             .word   0
-             .byte   0
-             .word   0
+param_count:    .byte   4
+    .ifnblank arg1
+        .byte   arg1
+    .else
+        .byte   0
+    .endif
+    .ifnblank arg2
+        .word   arg2
+    .else
+        .word   0
+    .endif
+        .byte   0
+        .word   0
 .endproc
 .endmacro
 

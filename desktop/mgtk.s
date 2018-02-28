@@ -3512,7 +3512,7 @@ store_xa_at_params:
         ldy     #0
 
         ;; Store result (X,A) at params+Y
-store_xa_at_params_y:
+store_xa_at_y:
         sta     (params_addr),y
         txa
         iny
@@ -4160,14 +4160,14 @@ L6348:  lda     $82,x
         stx     fill_rect_params2_height
         inx
         stx     L78CD
-        stx     test_rect_params_bottom
+        stx     test_rect_bottom
         stx     test_rect_params2_top
         stx     fill_rect_params4_top
         inx
-        stx     set_port_params_top
+        stx     set_port_top
         stx     L78CF
         stx     L6594
-        stx     fill_rect_params_top
+        stx     fill_rect_top
         dex
         stx     menu_item_y_table
         clc
@@ -4426,7 +4426,7 @@ top:    .word   0
 right:  .word   559
 bottom: .word   191
 .endproc
-        fill_rect_params_top := fill_rect_params::top
+        fill_rect_top := fill_rect_params::top
 
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
@@ -4459,7 +4459,7 @@ checkerboard_pattern:
 
         ldax    mouse_state_addr
         ldy     #2
-        jmp     store_xa_at_params_y
+        jmp     store_xa_at_y
 
 fail:   lda     #$95
         jmp     exit_with_a
@@ -4813,8 +4813,8 @@ top:    .word   $ffff
 right:  .word   $230
 bottom: .word   $C
 .endproc
-        test_rect_params_top := test_rect_params::top
-        test_rect_params_bottom := test_rect_params::bottom
+        test_rect_top := test_rect_params::top
+        test_rect_bottom := test_rect_params::bottom
 
 .proc fill_rect_params2
 left:   .word   0
@@ -5857,19 +5857,19 @@ resize_box_bitmap:
         .byte   px(%1000000),px(%0000000),px(%0000001)
         .byte   px(%1111111),px(%1111111),px(%1111111)
 
-up_scroll_params_addr:
+up_scroll_addr:
         .addr   up_scroll_params
 
-down_scroll_params_addr:
+down_scroll_addr:
         .addr   down_scroll_params
 
-left_scroll_params_addr:
+left_scroll_addr:
         .addr   left_scroll_params
 
-right_scroll_params_addr:
+right_scroll_addr:
         .addr   right_scroll_params
 
-resize_box_params_addr:
+resize_box_addr:
         .addr   resize_box_params
 
 L700B:  .byte   $00
@@ -6252,9 +6252,9 @@ L72F8:  pla
 L72FF:  pha
 L7300:  pla
         stax    down_scroll_params::unk1
-        ldax    down_scroll_params_addr
+        ldax    down_scroll_addr
         jsr     L791C
-        ldax    up_scroll_params_addr
+        ldax    up_scroll_addr
         jsr     L791C
 L7319:  bit     $AF
         bpl     L7363
@@ -6284,9 +6284,9 @@ L7342:  pla
 L7349:  pha
 L734A:  pla
         stax    right_scroll_params
-        ldax    right_scroll_params_addr
+        ldax    right_scroll_addr
         jsr     L791C
-        ldax    left_scroll_params_addr
+        ldax    left_scroll_addr
         jsr     L791C
 L7363:  lda     #$00
         jsr     set_fill_mode
@@ -6324,7 +6324,7 @@ L73A8:  lda     $C7,x
         bpl     L73A8
         lda     #$04
         jsr     set_fill_mode
-        ldax    resize_box_params_addr
+        ldax    resize_box_addr
         jsr     L791C
 L73BE:  rts
 
@@ -6377,7 +6377,7 @@ L7408:  pha
         tax
         pla
         ldy     #$04
-        jmp     store_xa_at_params_y
+        jmp     store_xa_at_y
 
 L7416:  lda     #$00
         sta     L747A
@@ -6510,7 +6510,7 @@ L74F4:  ldy     #next_offset_in_window_params ; Called from elsewhere
         jsr     window_by_id_or_exit
         ldax    ptr
         ldy     #1
-        jmp     store_xa_at_params_y
+        jmp     store_xa_at_y
 .endproc
 
 ;;; ==================================================
@@ -6828,7 +6828,7 @@ L774B:  lda     ($A9),y
         cpy     #$0B
         bne     L774B
         ldx     #$00
-        stx     set_input_params_unk
+        stx     set_input_unk
         bit     drag_resize_flag
         bmi     L777D
 L775F:  lda     $B7,x
@@ -6923,7 +6923,7 @@ L77F4:  sta     L769F,x
         bpl     L77E4
         cpy     #$04
         bne     L7814
-        lda     set_input_params_unk
+        lda     set_input_unk
 L7814:  rts
 
 ;;; ==================================================
@@ -6972,10 +6972,10 @@ L7854:  lda     $C7,x
         jsr     L50A9
         ldx     #$03
 L7860:  lda     $92,x
-        sta     set_port_params_maprect,x
+        sta     set_port_maprect,x
         sta     set_port_params,x
         lda     $96,x
-        sta     set_port_params_size,x
+        sta     set_port_size,x
         dex
         bpl     L7860
         rts
@@ -6989,7 +6989,7 @@ L7872:  sta     L7010
         lda     #$00
         jsr     set_fill_mode
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
-        MGTK_CALL MGTK::PaintRect, set_port_params_maprect
+        MGTK_CALL MGTK::PaintRect, set_port_maprect
         jsr     L6553
         jsr     top_window
         beq     L78CA
@@ -7031,9 +7031,9 @@ voffset:        .word   0
 width:          .word   0
 height:         .word   0
 .endproc
-        set_port_params_top  := set_port_params::top
-        set_port_params_size := set_port_params::width
-        set_port_params_maprect  := set_port_params::hoffset ; Re-used since h/voff are 0
+        set_port_top  := set_port_params::top
+        set_port_size := set_port_params::width
+        set_port_maprect  := set_port_params::hoffset ; Re-used since h/voff are 0
 
 ;;; ==================================================
 ;;; WindowToScreen
@@ -7537,7 +7537,7 @@ L7C87:  ldx     #$01
         bne     L7C8E
         dex
 L7C8E:  ldy     #$05
-        jmp     store_xa_at_params_y
+        jmp     store_xa_at_y
 
 L7C93:  sta     $82
         sty     $83
@@ -7782,13 +7782,13 @@ L7EA3:  lda     mouse_x,x
         bpl     L7EA3
         rts
 
-L7EAD:  jsr     stash_params_addr
+L7EAD:  jsr     stash_addr
         lda     L7F2E
         sta     params_addr
         lda     L7F2F
         sta     params_addr+1
         jsr     SetCursorImpl
-        jsr     restore_params_addr
+        jsr     restore_addr
         lda     #$00
         sta     L7D74
         lda     #$40
@@ -7797,7 +7797,7 @@ L7EAD:  jsr     stash_params_addr
 
 L7ECD:  lda     #$00
         sta     L7D81
-        sta     set_input_params_unk
+        sta     set_input_unk
         rts
 
         ;; Look at buttons (apple keys), compute modifiers in A
@@ -7813,7 +7813,7 @@ L7ECD:  lda     #$00
 .endproc
 
 L7EE2:  jsr     compute_modifiers
-        sta     set_input_params_modifiers
+        sta     set_input_modifiers
 L7EE8:  clc
         lda     KBD
         bpl     L7EF4
@@ -7836,7 +7836,7 @@ L7EFB:  cmp     #$04
 
 L7F0C:  jmp     L825F
 
-L7F0F:  jsr     stash_params_addr
+L7F0F:  jsr     stash_addr
         lda     active_cursor
         sta     L7F2E
         lda     active_cursor+1
@@ -7846,26 +7846,26 @@ L7F0F:  jsr     stash_params_addr
         lda     L6066
         sta     params_addr+1
         jsr     SetCursorImpl
-        jmp     restore_params_addr
+        jmp     restore_addr
 
 L7F2E:  .byte   0
 L7F2F:  .byte   0
 
-stash_params_addr:
+stash_addr:
         lda     params_addr
-        sta     stashed_params_addr
+        sta     stashed_addr
         lda     params_addr+1
-        sta     stashed_params_addr+1
+        sta     stashed_addr+1
         rts
 
-restore_params_addr:
-        lda     stashed_params_addr
+restore_addr:
+        lda     stashed_addr
         sta     params_addr
-        lda     stashed_params_addr+1
+        lda     stashed_addr+1
         sta     params_addr+1
         rts
 
-stashed_params_addr:  .addr     0
+stashed_addr:  .addr     0
 
 L7F48:  jsr     compute_modifiers
         ror     a
@@ -8096,7 +8096,7 @@ L810F:  rts
 .endproc
 
 L8110:  sta     $C9
-        lda     set_input_params_modifiers
+        lda     set_input_modifiers
         and     #$03
         sta     $CA
         lda     L6BD9
@@ -8274,17 +8274,17 @@ L827A:  cmp     #$0D
         jmp     L7EAD
 
 L8281:  pha
-        lda     set_input_params_modifiers
+        lda     set_input_modifiers
         beq     L828C
         ora     #$80
-        sta     set_input_params_modifiers
+        sta     set_input_modifiers
 L828C:  pla
         ldx     #$C0
         stx     mouse_status
 L8292:  cmp     #$0B
         bne     L82A2
         lda     #$F8
-        bit     set_input_params_modifiers
+        bit     set_input_modifiers
         bpl     L829F
         lda     #$D0
 L829F:  jmp     L823D
@@ -8292,7 +8292,7 @@ L829F:  jmp     L823D
 L82A2:  cmp     #$0A
         bne     L82B2
         lda     #$08
-        bit     set_input_params_modifiers
+        bit     set_input_modifiers
         bpl     L82AF
         lda     #$30
 L82AF:  jmp     L823D
@@ -8303,7 +8303,7 @@ L82B2:  cmp     #$15
         bcc     L82EA
         clc
         lda     #$08
-        bit     set_input_params_modifiers
+        bit     set_input_modifiers
         bpl     L82C5
         lda     #$40
 L82C5:  adc     L7D75
@@ -8328,7 +8328,7 @@ L82ED:  cmp     #$08
         jsr     L8352
         bcc     L831A
         lda     L7D75
-        bit     set_input_params_modifiers
+        bit     set_input_modifiers
         bpl     L8303
         sbc     #$40
         jmp     L8305
@@ -8344,13 +8344,13 @@ L8305:  sta     L7D75
         sta     L7D76
 L831A:  jmp     L7E98
 
-L831D:  sta     set_input_params_key
+L831D:  sta     set_input_key
         ldx     #sizeof_grafport-1
 L8322:  lda     $A7,x
         sta     $0600,x
         dex
         bpl     L8322
-        lda     set_input_params_key
+        lda     set_input_key
         jsr     L8110
         php
         ldx     #sizeof_grafport-1
@@ -8376,9 +8376,9 @@ modifiers:
         .byte   0
 unk:    .byte   0
 .endproc
-        set_input_params_key := set_input_params::key
-        set_input_params_modifiers := set_input_params::modifiers
-        set_input_params_unk := set_input_params::unk
+        set_input_key := set_input_params::key
+        set_input_modifiers := set_input_params::modifiers
+        set_input_unk := set_input_params::unk
 
 L8352:  lda     L7D74
         cmp     #$04
@@ -8440,7 +8440,7 @@ L83B5:  jsr     L70B7
         sbc     $C8
         beq     L83C6
         ldx     #$FF
-L83C6:  bit     set_input_params_modifiers
+L83C6:  bit     set_input_modifiers
         bpl     L83D1
         cpx     #$64
         bcc     L83D7
@@ -8462,7 +8462,7 @@ L83E2:  sec
 L83E8:  sta     L769B
         bcs     L83F0
         dec     L769C
-L83F0:  inc     set_input_params_unk
+L83F0:  inc     set_input_unk
         clc
         rts
 

@@ -172,9 +172,9 @@ L8625:  MGTK_RELAY_CALL MGTK::HiliteMenu, winfo18_port ; ???
         sta     L8737
         sty     L8738
         and     #$F0
-        sta     online_params_unit_num
+        sta     on_line_unit_num
         sta     ALTZPOFF
-        MLI_CALL ON_LINE, online_params
+        MLI_CALL ON_LINE, on_line_params
         sta     ALTZPON
         beq     L867B
 L8672:  pha
@@ -183,7 +183,7 @@ L8672:  pha
         pla
         rts
 
-L867B:  lda     online_params_buffer
+L867B:  lda     on_line_buffer
         beq     L8672
         jsr     $8388      ; into dynamically loaded code???
         jsr     DESKTOP_ALLOC_ICON ; AUX > MAIN call???
@@ -201,13 +201,13 @@ L869E:  sta     ($06),y
         cpx     #$12
         bne     L869E
         ldy     #$09
-        lda     online_params_buffer
+        lda     on_line_buffer
         and     #$0F
-        sta     online_params_buffer
+        sta     on_line_buffer
         sta     ($06),y
         ldx     #$00
         ldy     #$0B
-L86B6:  lda     online_params_buffer+1,x
+L86B6:  lda     on_line_buffer+1,x
         cmp     #$41            ; convert to lowercase ???
         bcc     L86C4
         cmp     #$5F
@@ -217,7 +217,7 @@ L86B6:  lda     online_params_buffer+1,x
 L86C4:  sta     ($06),y
         iny
         inx
-        cpx     online_params_buffer
+        cpx     on_line_buffer
         bne     L86B6
         ldy     #9
         lda     ($06),y
@@ -298,11 +298,11 @@ L873D:  DEFINE_POINT 500, 16
         DEFINE_POINT 400, 41
         DEFINE_POINT 400, 66
 
-        DEFINE_ON_LINE_PARAMS online_params, $60, online_params_buffer ; Slot 6 Drive 1
-        online_params_unit_num := online_params::unit_num
+        DEFINE_ON_LINE_PARAMS on_line_params, $60, on_line_buffer ; Slot 6 Drive 1
+        on_line_unit_num := on_line_params::unit_num
 
         ;; Per ProDOS TRM this should be 256 bytes!
-online_params_buffer:
+on_line_buffer:
         .byte   $0B
         .byte   "GRAPHICS.TK",$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -3614,14 +3614,14 @@ LBB5C:  MGTK_RELAY2_CALL MGTK::FrameRect, try_again_rect
 LBB75:  MGTK_RELAY2_CALL MGTK::MoveTo, pos_prompt
         addr_call_indirect draw_pascal_string, prompt_addr
 LBB87:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
-        lda     event_params_kind
+        lda     event_kind
         cmp     #MGTK::event_kind_button_down
         bne     LBB9A
         jmp     LBC0C
 
 LBB9A:  cmp     #MGTK::event_kind_key_down
         bne     LBB87
-        lda     event_params_key
+        lda     event_key
         and     #$7F
         bit     alert_action
         bpl     LBBEE
@@ -3657,7 +3657,7 @@ LBBEE:  cmp     #CHAR_RETURN
 LBC09:  jmp     LBB87
 
 LBC0C:  jsr     LBDE1
-        MGTK_RELAY2_CALL MGTK::MoveTo, event_params_coords
+        MGTK_RELAY2_CALL MGTK::MoveTo, event_coords
         bit     alert_action
         bpl     LBC42
         MGTK_RELAY2_CALL MGTK::InRect, cancel_rect
@@ -3690,11 +3690,11 @@ LBC6D:  MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
         lda     #$00
         sta     LBCE8
 LBC84:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
-        lda     event_params_kind
+        lda     event_kind
         cmp     #MGTK::event_kind_button_up
         beq     LBCDB
         jsr     LBDE1
-        MGTK_RELAY2_CALL MGTK::MoveTo, event_params_coords
+        MGTK_RELAY2_CALL MGTK::MoveTo, event_coords
         MGTK_RELAY2_CALL MGTK::InRect, try_again_rect
         cmp     #MGTK::inrect_inside
         beq     LBCB5
@@ -3727,11 +3727,11 @@ LBCE9:  MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
         lda     #$00
         sta     LBD64
 LBD00:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
-        lda     event_params_kind
+        lda     event_kind
         cmp     #MGTK::event_kind_button_up
         beq     LBD57
         jsr     LBDE1
-        MGTK_RELAY2_CALL MGTK::MoveTo, event_params_coords
+        MGTK_RELAY2_CALL MGTK::MoveTo, event_coords
         MGTK_RELAY2_CALL MGTK::InRect, cancel_rect
         cmp     #MGTK::inrect_inside
         beq     LBD31
@@ -3764,11 +3764,11 @@ LBD65:  lda     #$00
         MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY2_CALL MGTK::PaintRect, try_again_rect
 LBD7C:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
-        lda     event_params_kind
+        lda     event_kind
         cmp     #MGTK::event_kind_button_up
         beq     LBDD3
         jsr     LBDE1
-        MGTK_RELAY2_CALL MGTK::MoveTo, event_params_coords
+        MGTK_RELAY2_CALL MGTK::MoveTo, event_coords
         MGTK_RELAY2_CALL MGTK::InRect, try_again_rect
         cmp     #MGTK::inrect_inside
         beq     LBDAD
@@ -3800,8 +3800,8 @@ LBDDB:  lda     #$02
 ;;; ==================================================
 
 LBDE0:  .byte   0
-LBDE1:  sub16   event_params_xcoord, portmap::viewloc::xcoord, event_params_xcoord
-        sub16   event_params_ycoord, portmap::viewloc::ycoord, event_params_ycoord
+LBDE1:  sub16   event_xcoord, portmap::viewloc::xcoord, event_xcoord
+        sub16   event_ycoord, portmap::viewloc::ycoord, event_ycoord
         rts
 
 .proc LBE08
@@ -4340,20 +4340,20 @@ notpenBIC:      .byte   7
 ;;; Re-used param space for events/queries (10 bytes)
 
 event_params := *
-event_params_kind := event_params + 0
+event_kind := event_params + 0
         ;; if kind is key_down
-event_params_key := event_params + 1
-event_params_modifiers := event_params + 2
+event_key := event_params + 1
+event_modifiers := event_params + 2
         ;; if kind is no_event, button_down/up, drag, or apple_key:
-event_params_coords := event_params + 1
-event_params_xcoord := event_params + 1
-event_params_ycoord := event_params + 3
+event_coords := event_params + 1
+event_xcoord := event_params + 1
+event_ycoord := event_params + 3
         ;; if kind is update:
-event_params_window_id := event_params + 1
+event_window_id := event_params + 1
 
 activatectl_params := *
-activatectl_params_which_ctl := activatectl_params
-activatectl_params_activate  := activatectl_params + 1
+activatectl_which_ctl := activatectl_params
+activatectl_activate  := activatectl_params + 1
 
 trackthumb_params := *
 trackthumb_which_ctl := trackthumb_params
@@ -4361,12 +4361,12 @@ trackthumb_mousex := trackthumb_params + 1
 trackthumb_mousey := trackthumb_params + 3
 trackthumb_thumbpos := trackthumb_params + 5
 trackthumb_thumbmoved := trackthumb_params + 6
-        .assert trackthumb_mousex = event_params_xcoord, error, "param mismatch"
-        .assert trackthumb_mousey = event_params_ycoord, error, "param mismatch"
+        .assert trackthumb_mousex = event_xcoord, error, "param mismatch"
+        .assert trackthumb_mousey = event_ycoord, error, "param mismatch"
 
 updatethumb_params := *
-updatethumb_params_which_ctl := updatethumb_params
-updatethumb_params_thumbpos := updatethumb_params + 1
+updatethumb_which_ctl := updatethumb_params
+updatethumb_thumbpos := updatethumb_params + 1
 updatethumb_stash := updatethumb_params + 5 ; not part of struct
 
 screentowindow_params := *
@@ -4375,31 +4375,31 @@ screentowindow_screenx := screentowindow_params + 1
 screentowindow_screeny := screentowindow_params + 3
 screentowindow_windowx := screentowindow_params + 5
 screentowindow_windowy := screentowindow_params + 7
-        .assert screentowindow_screenx = event_params_xcoord, error, "param mismatch"
-        .assert screentowindow_screeny = event_params_ycoord, error, "param mismatch"
+        .assert screentowindow_screenx = event_xcoord, error, "param mismatch"
+        .assert screentowindow_screeny = event_ycoord, error, "param mismatch"
 
 findwindow_params := * + 1    ; offset to x/y overlap event_params x/y
-findwindow_params_mousex := findwindow_params + 0
-findwindow_params_mousey := findwindow_params + 2
-findwindow_params_which_area := findwindow_params + 4
-findwindow_params_window_id := findwindow_params + 5
-        .assert findwindow_params_mousex = event_params_xcoord, error, "param mismatch"
-        .assert findwindow_params_mousey = event_params_ycoord, error, "param mismatch"
+findwindow_mousex := findwindow_params + 0
+findwindow_mousey := findwindow_params + 2
+findwindow_which_area := findwindow_params + 4
+findwindow_window_id := findwindow_params + 5
+        .assert findwindow_mousex = event_xcoord, error, "param mismatch"
+        .assert findwindow_mousey = event_ycoord, error, "param mismatch"
 
 findcontrol_params := * + 1   ; offset to x/y overlap event_params x/y
-findcontrol_params_mousex := findcontrol_params + 0
-findcontrol_params_mousey := findcontrol_params + 2
+findcontrol_mousex := findcontrol_params + 0
+findcontrol_mousey := findcontrol_params + 2
 findcontrol_which_ctl := findcontrol_params + 4
 findcontrol_which_part := findcontrol_params + 5
-        .assert findcontrol_params_mousex = event_params_xcoord, error, "param mismatch"
-        .assert findcontrol_params_mousey = event_params_ycoord, error, "param mismatch"
+        .assert findcontrol_mousex = event_xcoord, error, "param mismatch"
+        .assert findcontrol_mousey = event_ycoord, error, "param mismatch"
 
 findicon_params := * + 1      ; offset to x/y overlap event_params x/y
-findicon_params_mousex := findicon_params + 0
-findicon_params_mousey := findicon_params + 2
+findicon_mousex := findicon_params + 0
+findicon_mousey := findicon_params + 2
 findicon_which_icon := findicon_params + 4
-        .assert findicon_params_mousex = event_params_xcoord, error, "param mismatch"
-        .assert findicon_params_mousey = event_params_ycoord, error, "param mismatch"
+        .assert findicon_mousex = event_xcoord, error, "param mismatch"
+        .assert findicon_mousey = event_ycoord, error, "param mismatch"
 
         ;; Enough space for all the param types, and then some
         .res    10, 0
@@ -5908,7 +5908,7 @@ main_loop:
 
         ;; Get an event
         jsr     get_event
-        lda     event_params_kind
+        lda     event_kind
 
         ;; Is it a button-down event? (including w/ modifiers)
         cmp     #MGTK::event_kind_button_down
@@ -5958,14 +5958,14 @@ redraw_windows:
         lda     #$00
         sta     L40F1
 L4100:  jsr     peek_event
-        lda     event_params_kind
+        lda     event_kind
         cmp     #MGTK::event_kind_update
         bne     L412B
         jsr     get_event
 L410D:  jsr     L4113
         jmp     L4100
 
-L4113:  MGTK_RELAY_CALL MGTK::BeginUpdate, event_params_window_id
+L4113:  MGTK_RELAY_CALL MGTK::BeginUpdate, event_window_id
         bne     L4151           ; did not really need updating
         jsr     update_window
         MGTK_RELAY_CALL MGTK::EndUpdate
@@ -5996,7 +5996,7 @@ L4152:  .byte   0
 
 
 .proc update_window
-        lda     event_params_window_id
+        lda     event_window_id
         cmp     #9              ; only handle windows 0...8
         bcc     L415B
         rts
@@ -6253,7 +6253,7 @@ flag:   .byte   $00
 
         ;; Handle accelerator keys
 handle_keydown:
-        lda     event_params_modifiers
+        lda     event_modifiers
         bne     :+              ; either OA or CA ?
         jmp     menu_accelerators           ; nope
 :       cmp     #3              ; both OA + CA ?
@@ -6261,7 +6261,7 @@ handle_keydown:
         rts
 
         ;; Non-menu keys
-:       lda     event_params_key
+:       lda     event_key
         ora     #$20            ; force to lower-case
         cmp     #'h'            ; OA-H (Highlight Icon)
         bne     :+
@@ -6328,16 +6328,16 @@ L43E0:  tsx
 .proc handle_click
         tsx
         stx     LE256
-        MGTK_RELAY_CALL MGTK::FindWindow, event_params_coords
-        lda     findwindow_params_which_area
+        MGTK_RELAY_CALL MGTK::FindWindow, event_coords
+        lda     findwindow_which_area
         bne     not_desktop
 
         ;; Click on desktop
         jsr     detect_double_click
         sta     double_click_flag
         lda     #0
-        sta     findwindow_params_window_id
-        DESKTOP_RELAY_CALL DT_FIND_ICON, event_params_coords
+        sta     findwindow_window_id
+        DESKTOP_RELAY_CALL DT_FIND_ICON, event_coords
         lda     findicon_which_icon
         beq     L4415
         jmp     L67D7
@@ -6353,7 +6353,7 @@ not_desktop:
 not_menu:
         pha                     ; which window - active or not?
         lda     active_window_id
-        cmp     findwindow_params_window_id
+        cmp     findwindow_window_id
         beq     handle_active_window_click
         pla
         jmp     handle_inactive_window_click
@@ -6412,8 +6412,8 @@ L445D:  jsr     clear_selection
         sta     selected_icon_count
         lda     icon_param
         sta     selected_icon_list
-L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_params_window_id
-        lda     findwindow_params_window_id
+L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_window_id
+        lda     findwindow_window_id
         sta     active_window_id
         sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
@@ -6601,7 +6601,7 @@ L45C7:  sta     unit_num
         plp
 
         adc     #1
-        sta     status_params_unit_num
+        sta     status_unit_num
 
         ;; Execute SmartPort call
         jsr     call
@@ -6636,7 +6636,7 @@ unit_num:       .byte   1
 list_ptr:       .addr   status_buffer
 status_code:    .byte   0
 .endproc
-status_params_unit_num := status_params::unit_num
+status_unit_num := status_params::unit_num
 
 status_buffer:  .res    16, 0
 .endproc
@@ -7319,9 +7319,9 @@ nope:   dex
         ;; Load the DA
         jsr     open
         bmi     done
-        lda     open_params_ref_num
-        sta     read_params_ref_num
-        sta     close_params_ref_num
+        lda     open_ref_num
+        sta     read_ref_num
+        sta     close_ref_num
         jsr     read
         jsr     close
         lda     #$80
@@ -7358,13 +7358,13 @@ close:  yxa_jump MLI_RELAY, CLOSE, close_params
 unused: .byte   0               ; ???
 
         DEFINE_OPEN_PARAMS open_params, str_desk_acc, $1C00
-        open_params_ref_num := open_params::ref_num
+        open_ref_num := open_params::ref_num
 
         DEFINE_READ_PARAMS read_params, DA_LOAD_ADDRESS, DA_MAX_SIZE
-        read_params_ref_num := read_params::ref_num
+        read_ref_num := read_params::ref_num
 
         DEFINE_CLOSE_PARAMS close_params
-        close_params_ref_num := close_params::ref_num
+        close_ref_num := close_params::ref_num
 
         .define prefix "Desk.acc/"
 
@@ -8279,7 +8279,7 @@ L53EF:  dec     L704B
         lda     L704C,x
         cmp     active_window_id
         beq     L5403
-        sta     findwindow_params_window_id
+        sta     findwindow_window_id
         jsr     handle_inactive_window_click
 L5403:  jsr     close_window
         lda     L704B
@@ -8465,7 +8465,7 @@ L5579:  lda     #$00
         jsr     clear_selection
 L5581:  jsr     L55F0
 L5584:  jsr     get_event
-        lda     event_params_kind
+        lda     event_kind
         cmp     #MGTK::event_kind_key_down
         beq     L5595
         cmp     #MGTK::event_kind_button_down
@@ -8654,14 +8654,14 @@ L5721:  cpx     #$08
 L572D:  lda     #$00
         sta     L578C
 L5732:  jsr     get_event
-        lda     event_params_kind
+        lda     event_kind
         cmp     #MGTK::event_kind_key_down
         beq     L5743
         cmp     #MGTK::event_kind_button_down
         bne     L5732
         jmp     L578B
 
-L5743:  lda     event_params_key
+L5743:  lda     event_key
         and     #$7F
         cmp     #CHAR_RETURN
         beq     L578B
@@ -8678,7 +8678,7 @@ L5743:  lda     event_params_key
         ldx     #$00
 L5763:  stx     L578C
         lda     L0800,x
-        sta     findwindow_params_window_id
+        sta     findwindow_window_id
         jsr     handle_inactive_window_click
         jmp     L5732
 
@@ -8689,7 +8689,7 @@ L5772:  ldx     L578C
         dex
 L577C:  stx     L578C
         lda     L0800,x
-        sta     findwindow_params_window_id
+        sta     findwindow_window_id
         jsr     handle_inactive_window_click
         jmp     L5732
 
@@ -8722,12 +8722,12 @@ L578D:  .byte   0
 .proc cmd_scroll
         jsr     L5803
 loop:   jsr     get_event
-        lda     event_params_kind
+        lda     event_kind
         cmp     #MGTK::event_kind_button_down
         beq     done
         cmp     #MGTK::event_kind_key_down
         bne     loop
-        lda     event_params_key
+        lda     event_key
         cmp     #CHAR_RETURN
         beq     done
         cmp     #CHAR_ESCAPE
@@ -8827,7 +8827,7 @@ L5861:  .word   0
         sta     updatethumb_stash
         inc     updatethumb_stash
         lda     #MGTK::ctl_horizontal_scroll_bar
-        sta     updatethumb_params_which_ctl
+        sta     updatethumb_which_ctl
         jsr     L5C54
         lda     updatethumb_stash
 :       rts
@@ -8840,7 +8840,7 @@ L587D:  .byte   0
         sta     updatethumb_stash
         dec     updatethumb_stash
         lda     #MGTK::ctl_horizontal_scroll_bar
-        sta     updatethumb_params_which_ctl
+        sta     updatethumb_which_ctl
         jsr     L5C54
         lda     updatethumb_stash
 :       rts
@@ -8854,7 +8854,7 @@ L587D:  .byte   0
         sta     updatethumb_stash
         inc     updatethumb_stash
         lda     #MGTK::ctl_vertical_scroll_bar
-        sta     updatethumb_params_which_ctl
+        sta     updatethumb_which_ctl
         jsr     L5C54
         lda     updatethumb_stash
 :       rts
@@ -8867,7 +8867,7 @@ L58AD:  .byte   0
         sta     updatethumb_stash
         dec     updatethumb_stash
         lda     #MGTK::ctl_vertical_scroll_bar
-        sta     updatethumb_params_which_ctl
+        sta     updatethumb_which_ctl
         jsr     L5C54
         lda     updatethumb_stash
 :       rts
@@ -9068,7 +9068,7 @@ L5A2F:  ldx     L704B
         lda     L704C,x
         cmp     active_window_id
         beq     L5A43
-        sta     findwindow_params_window_id
+        sta     findwindow_window_id
         jsr     handle_inactive_window_click
 L5A43:  jsr     close_window
         dec     L704B
@@ -9190,11 +9190,11 @@ L5B1B:  .byte   0
         ;; Restore event coords (following detect_double_click)
         ldx     #3
 :       lda     saved_event_coords,x
-        sta     event_params_coords,x
+        sta     event_coords,x
         dex
         bpl     :-
 
-        MGTK_RELAY_CALL MGTK::FindControl, event_params_coords
+        MGTK_RELAY_CALL MGTK::FindControl, event_coords
         lda     findcontrol_which_ctl
         bne     :+
         jmp     handle_content_click ; 0 = ctl_not_a_control
@@ -9326,7 +9326,7 @@ done_client_click:
 
 .proc L5C54
         lda     updatethumb_stash
-        sta     updatethumb_params_thumbpos
+        sta     updatethumb_thumbpos
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         jsr     L6523
         jsr     L84D1
@@ -9347,12 +9347,12 @@ done_client_click:
 .proc check_control_repeat
         sta     ctl
         jsr     peek_event
-        lda     event_params_kind
+        lda     event_kind
         cmp     #MGTK::event_kind_drag
         beq     :+
 bail:   return  #$FF            ; high bit set = not repeating
 
-:       MGTK_RELAY_CALL MGTK::FindControl, event_params_coords
+:       MGTK_RELAY_CALL MGTK::FindControl, event_coords
         lda     findcontrol_which_ctl
         beq     bail
         cmp     #MGTK::ctl_dead_zone
@@ -9374,7 +9374,7 @@ ctl:    .byte   0
 
 :       lda     active_window_id
         sta     $D20E
-        DESKTOP_RELAY_CALL DT_FIND_ICON, event_params_coords
+        DESKTOP_RELAY_CALL DT_FIND_ICON, event_coords
         lda     findicon_which_icon
         bne     L5CDA
         jsr     L5F13
@@ -9577,7 +9577,7 @@ L5E77:  .byte   0
         lda     L5F0A
         cmp     active_window_id
         beq     L5E8F
-        sta     findwindow_params_window_id
+        sta     findwindow_window_id
         jsr     handle_inactive_window_click
 L5E8F:  lda     active_window_id
         sta     getwinport_params2::window_id
@@ -9646,13 +9646,13 @@ L5F0F:  .byte   0
 start:  copy16  #notpenXOR, $06
         jsr     L60D5
         ldx     #$03
-L5F20:  lda     event_params_coords,x
+L5F20:  lda     event_coords,x
         sta     L5F0B,x
         sta     L5F0F,x
         dex
         bpl     L5F20
         jsr     peek_event
-        lda     event_params_kind
+        lda     event_kind
         cmp     #MGTK::event_kind_drag
         beq     L5F3F
         bit     BUTN0
@@ -9675,7 +9675,7 @@ L5F50:  lda     L5F0B,x
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
 L5F6B:  jsr     peek_event
-        lda     event_params_kind
+        lda     event_kind
         cmp     #MGTK::event_kind_drag
         beq     L5FC5
         MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
@@ -9706,8 +9706,8 @@ L5FB9:  lda     icon_param
         jmp     L5F80
 
 L5FC5:  jsr     L60D5
-        sub16   event_params_xcoord, L60CF, L60CB
-        sub16   event_params_ycoord, L60D1, L60CD
+        sub16   event_xcoord, L60CF, L60CB
+        sub16   event_ycoord, L60D1, L60CD
         lda     L60CC
         bpl     L5FFE
         lda     L60CB
@@ -9730,36 +9730,36 @@ L600E:  lda     L60CB
 
 L601F:  MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
         ldx     #$03
-L602A:  lda     event_params_coords,x
+L602A:  lda     event_coords,x
         sta     L60CF,x
         dex
         bpl     L602A
-        cmp16   event_params_xcoord, rect_E230::x2
+        cmp16   event_xcoord, rect_E230::x2
         bpl     L6068
-        cmp16   event_params_xcoord, rect_E230::x1
+        cmp16   event_xcoord, rect_E230::x1
         bmi     L6054
         bit     L60D3
         bpl     L6068
-L6054:  copy16  event_params_xcoord, rect_E230::x1
+L6054:  copy16  event_xcoord, rect_E230::x1
         lda     #$80
         sta     L60D3
         jmp     L6079
 
-L6068:  copy16  event_params_xcoord, rect_E230::x2
+L6068:  copy16  event_xcoord, rect_E230::x2
         lda     #$00
         sta     L60D3
-L6079:  cmp16   event_params_ycoord, rect_E230::y2
+L6079:  cmp16   event_ycoord, rect_E230::y2
         bpl     L60AE
-        cmp16   event_params_ycoord, rect_E230::y1
+        cmp16   event_ycoord, rect_E230::y1
         bmi     L609A
         bit     L60D4
         bpl     L60AE
-L609A:  copy16  event_params_ycoord, rect_E230::y1
+L609A:  copy16  event_ycoord, rect_E230::y1
         lda     #$80
         sta     L60D4
         jmp     L60BF
 
-L60AE:  copy16  event_params_ycoord, rect_E230::y2
+L60AE:  copy16  event_ycoord, rect_E230::y2
         lda     #$00
         sta     L60D4
 L60BF:  MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
@@ -10561,13 +10561,13 @@ L6893:  txa
 
 L68B3:  jsr     clear_selection
         ldx     #3
-L68B8:  lda     event_params_coords,x
+L68B8:  lda     event_coords,x
         sta     rect_E230::x1,x
         sta     rect_E230::x2,x
         dex
         bpl     L68B8
         jsr     peek_event
-        lda     event_params_kind
+        lda     event_kind
         cmp     #MGTK::event_kind_drag
         beq     L68CF
         rts
@@ -10576,7 +10576,7 @@ L68CF:  MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern3
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
 L68E4:  jsr     peek_event
-        lda     event_params_kind
+        lda     event_kind
         cmp     #MGTK::event_kind_drag
         beq     L6932
         MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
@@ -10603,8 +10603,8 @@ L692C:  pla
         inx
         jmp     L68F9
 
-L6932:  sub16   event_params_xcoord, L6A39, L6A35
-        sub16   event_params_ycoord, L6A3B, L6A37
+L6932:  sub16   event_xcoord, L6A39, L6A35
+        sub16   event_ycoord, L6A3B, L6A37
         lda     L6A36
         bpl     L6968
         lda     L6A35
@@ -10627,36 +10627,36 @@ L6978:  lda     L6A35
 
 L6989:  MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
         ldx     #$03
-L6994:  lda     event_params_coords,x
+L6994:  lda     event_coords,x
         sta     L6A39,x
         dex
         bpl     L6994
-        cmp16   event_params_xcoord, rect_E230::x2
+        cmp16   event_xcoord, rect_E230::x2
         bpl     L69D2
-        cmp16   event_params_xcoord, rect_E230::x1
+        cmp16   event_xcoord, rect_E230::x1
         bmi     L69BE
         bit     L6A3D
         bpl     L69D2
-L69BE:  copy16  event_params_xcoord, rect_E230::x1
+L69BE:  copy16  event_xcoord, rect_E230::x1
         lda     #$80
         sta     L6A3D
         jmp     L69E3
 
-L69D2:  copy16  event_params_xcoord, rect_E230::x2
+L69D2:  copy16  event_xcoord, rect_E230::x2
         lda     #$00
         sta     L6A3D
-L69E3:  cmp16   event_params_ycoord, rect_E230::y2
+L69E3:  cmp16   event_ycoord, rect_E230::y2
         bpl     L6A18
-        cmp16   event_params_ycoord, rect_E230::y1
+        cmp16   event_ycoord, rect_E230::y1
         bmi     L6A04
         bit     L6A3E
         bpl     L6A18
-L6A04:  copy16  event_params_ycoord, rect_E230::y1
+L6A04:  copy16  event_ycoord, rect_E230::y1
         lda     #$80
         sta     L6A3E
         jmp     L6A29
 
-L6A18:  copy16  event_params_ycoord, rect_E230::y2
+L6A18:  copy16  event_ycoord, rect_E230::y2
         lda     #$00
         sta     L6A3E
 L6A29:  MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
@@ -11086,9 +11086,9 @@ config_port:
 
         ;; deactivate horizontal scrollbar
         lda     #MGTK::ctl_horizontal_scroll_bar
-        sta     activatectl_params_which_ctl
+        sta     activatectl_which_ctl
         lda     #MGTK::activatectl_deactivate
-        sta     activatectl_params_activate
+        sta     activatectl_activate
         jsr     activate_ctl
 
         jmp     check_vscroll
@@ -11096,9 +11096,9 @@ config_port:
 activate_hscroll:
         ;; activate horizontal scrollbar
         lda     #MGTK::ctl_horizontal_scroll_bar
-        sta     activatectl_params_which_ctl
+        sta     activatectl_which_ctl
         lda     #MGTK::activatectl_activate
-        sta     activatectl_params_activate
+        sta     activatectl_activate
         jsr     activate_ctl
         jsr     update_hthumb
 
@@ -11111,9 +11111,9 @@ check_vscroll:
 
         ;; deactivate vertical scrollbar
         lda     #MGTK::ctl_vertical_scroll_bar
-        sta     activatectl_params_which_ctl
+        sta     activatectl_which_ctl
         lda     #MGTK::activatectl_deactivate
-        sta     activatectl_params_activate
+        sta     activatectl_activate
         jsr     activate_ctl
 
         rts
@@ -11121,9 +11121,9 @@ check_vscroll:
 activate_vscroll:
         ;; activate vertical scrollbar
         lda     #MGTK::ctl_vertical_scroll_bar
-        sta     activatectl_params_which_ctl
+        sta     activatectl_which_ctl
         lda     #MGTK::activatectl_activate
-        sta     activatectl_params_activate
+        sta     activatectl_activate
         jsr     activate_ctl
         jmp     update_vthumb
 
@@ -13532,7 +13532,7 @@ L84D0:  .byte   0
         jsr     cached_icons_window_to_screen
 L84DC:  sub16   grafport2::cliprect::x2, grafport2::cliprect::x1, L85F8
         sub16   grafport2::cliprect::y2, grafport2::cliprect::y1, L85FA
-        lda     event_params_kind
+        lda     event_kind
         cmp     #MGTK::event_kind_button_down
         bne     L850C
         asl     a
@@ -13630,7 +13630,7 @@ L85FA:  .word   0
 
         ;; Stash initial coords
         ldx     #3
-:       lda     event_params_coords,x
+:       lda     event_coords,x
         sta     coords,x
         sta     saved_event_coords,x
         dex
@@ -13658,7 +13658,7 @@ loop:   dec     counter
         lda     #$FF            ; ???
         sta     unused
 
-        lda     event_params_kind
+        lda     event_kind
         sta     state           ; unused ???
 
         cmp     #MGTK::event_kind_no_event
@@ -13680,11 +13680,11 @@ exit:   return  #$FF            ; not double-click
         ;; Is the new coord within range of the old coord?
 .proc check_delta
         ;; compute x delta
-        lda     event_params_xcoord
+        lda     event_xcoord
         sec
         sbc     xcoord
         sta     delta
-        lda     event_params_xcoord+1
+        lda     event_xcoord+1
         sbc     xcoord+1
         bpl     :+
 
@@ -13700,11 +13700,11 @@ fail:   return  #$FF
         bcs     fail
 
         ;; compute y delta
-check_y:lda     event_params_ycoord
+check_y:lda     event_ycoord
         sec
         sbc     ycoord
         sta     delta
-        lda     event_params_ycoord+1
+        lda     event_ycoord+1
         sbc     ycoord+1
         bpl     :+
 
@@ -15333,7 +15333,7 @@ found:  lda     DEVLST,y        ;
         lsr     a
         plp
         adc     #1
-        sta     control_params_unit_number
+        sta     control_unit_number
 
         jsr     call
         .byte   $04             ; $04 = CONTROL
@@ -15347,7 +15347,7 @@ unit_number:    .byte   $0
 control_list:   .addr   list
 control_code:   .byte   4       ; Eject disk
 .endproc
-        control_params_unit_number := control_params::unit_number
+        control_unit_number := control_params::unit_number
 list:   .word   0               ; 0 items in list
 unit_num:
         .byte   0
@@ -17138,10 +17138,10 @@ start:  yax_call JT_MLI_RELAY, CLOSE, close_params
 
 .proc check_escape_key_down
         yax_call JT_MGTK_RELAY, MGTK::GetEvent, event_params
-        lda     event_params_kind
+        lda     event_kind
         cmp     #MGTK::event_kind_key_down
         bne     nope
-        lda     event_params_key
+        lda     event_key
         cmp     #CHAR_ESCAPE
         bne     nope
         lda     #$FF
@@ -17241,13 +17241,13 @@ not_found:
 :       lda     #$FC            ; "Please insert source disk"
 show:   jsr     JT_SHOW_ALERT0
         bne     LA4C2
-        jmp     do_online
+        jmp     do_on_line
 
 LA4C2:  jmp     LA39F
 
 flag:   .byte   0
 
-do_online:
+do_on_line:
         yax_call JT_MLI_RELAY, ON_LINE, on_line_params2
         rts
 
@@ -17333,7 +17333,7 @@ dialog_param_addr:
         lda     #$14
         sta     LD8E9
 :       MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        lda     event_params_kind
+        lda     event_kind
         cmp     #MGTK::event_kind_button_down
         bne     :+
         jmp     prompt_click_handler
@@ -17344,8 +17344,8 @@ dialog_param_addr:
 
 :       lda     LD8E8
         beq     prompt_input_loop
-        MGTK_RELAY_CALL MGTK::FindWindow, event_params_coords
-        lda     findwindow_params_which_area
+        MGTK_RELAY_CALL MGTK::FindWindow, event_coords
+        lda     findwindow_which_area
         bne     :+
         jmp     prompt_input_loop
 
@@ -17379,8 +17379,8 @@ done:   jsr     reset_state
         prompt_button_all := 4
 
 .proc prompt_click_handler
-        MGTK_RELAY_CALL MGTK::FindWindow, event_params_coords
-        lda     findwindow_params_which_area
+        MGTK_RELAY_CALL MGTK::FindWindow, event_coords
+        lda     findwindow_which_area
         bne     :+
         return  #$FF
 :       cmp     #MGTK::area_content
@@ -17389,7 +17389,7 @@ done:   jsr     reset_state
 :       return  #$FF
 
 content:
-        lda     findwindow_params_window_id
+        lda     findwindow_window_id
         cmp     winfoF
         beq     :+
         return  #$FF
@@ -17478,10 +17478,10 @@ LA6F7:  jsr     LB9B8
 ;;; Key handler for prompt dialog
 
 .proc prompt_key_handler
-        lda     event_params_modifiers
+        lda     event_modifiers
         cmp     #MGTK::event_modifier_solid_apple
         bne     LA71A
-        lda     event_params_key
+        lda     event_key
         and     #$7F
         cmp     #CHAR_LEFT
         bne     LA710
@@ -17493,7 +17493,7 @@ LA710:  cmp     #CHAR_RIGHT
 
 LA717:  return  #$FF
 
-LA71A:  lda     event_params_key
+LA71A:  lda     event_key
         and     #$7F
         cmp     #CHAR_LEFT
         bne     LA72E
@@ -17690,12 +17690,12 @@ jump_relay:
         copy16  #dialog_label_default_x, dialog_label_pos
 
 :       MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        lda     event_params_kind
+        lda     event_kind
         cmp     #MGTK::event_kind_button_down
         beq     close
         cmp     #MGTK::event_kind_key_down
         bne     :-
-        lda     event_params_key
+        lda     event_key
         and     #$7F
         cmp     #CHAR_ESCAPE
         beq     close
@@ -18734,7 +18734,7 @@ set_penmode_xor2:
         rts
 
         ldx     #$03
-LB447:  lda     event_params_coords,x
+LB447:  lda     event_coords,x
         sta     LB502,x
         dex
         bpl     LB447
@@ -18758,7 +18758,7 @@ LB476:  MGTK_RELAY_CALL MGTK::PeekEvent, event_params
         bmi     LB4B7
         lda     #$FF
         sta     LB508
-        lda     event_params_kind
+        lda     event_kind
         sta     LB507
         cmp     #MGTK::event_kind_no_event
         beq     LB45F
@@ -18776,11 +18776,11 @@ LB4A7:  cmp     #$01
 
 LB4B7:  return  #$FF
 
-LB4BA:  lda     event_params_xcoord
+LB4BA:  lda     event_xcoord
         sec
         sbc     LB502
         sta     LB506
-        lda     event_params_xcoord+1
+        lda     event_xcoord+1
         sbc     LB503
         bpl     LB4D6
         lda     LB506
@@ -18791,11 +18791,11 @@ LB4D3:  return  #$FF
 LB4D6:  lda     LB506
         cmp     #$05
         bcs     LB4D3
-LB4DD:  lda     event_params_ycoord
+LB4DD:  lda     event_ycoord
         sec
         sbc     LB504
         sta     LB506
-        lda     event_params_ycoord+1
+        lda     event_ycoord+1
         sbc     LB505
         bpl     LB4F6
         lda     LB506
@@ -19188,7 +19188,7 @@ event_loop:
         lda     #0
         sta     down_flag
 loop:   MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        lda     event_params_kind
+        lda     event_kind
         cmp     #MGTK::event_kind_button_up
         beq     exit
         lda     winfoF
@@ -20352,15 +20352,15 @@ dx:     .word   0
         beq     :+
         jmp     L0D0A
 
-:       lda     get_file_info_params_type
+:       lda     get_file_info_type
         cmp     #FT_DIRECTORY
         beq     L0BC3
         jmp     L0D0A
 
 L0BC3:  MLI_RELAY_CALL OPEN, open_params
-        lda     open_params_ref_num
-        sta     read_params_ref_num
-        sta     close_params_ref_num
+        lda     open_ref_num
+        sta     read_ref_num
+        sta     close_ref_num
         MLI_RELAY_CALL READ, read_params
         lda     #$00
         sta     L0D04
@@ -20464,18 +20464,18 @@ L0CCB:  MLI_RELAY_CALL CLOSE, close_params
         jmp     L0D0A
 
         DEFINE_OPEN_PARAMS open_params, str_desk_acc, $1000
-        open_params_ref_num := open_params::ref_num
+        open_ref_num := open_params::ref_num
 
         DEFINE_READ_PARAMS read_params, $1400, $200
-        read_params_ref_num := read_params::ref_num
+        read_ref_num := read_params::ref_num
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, str_desk_acc
-        get_file_info_params_type := get_file_info_params::file_type
+        get_file_info_type := get_file_info_params::file_type
 
         .byte   0
 
         DEFINE_CLOSE_PARAMS close_params
-        close_params_ref_num := close_params::ref_num
+        close_ref_num := close_params::ref_num
 
 str_desk_acc:
         PASCAL_STRING "Desk.acc"
