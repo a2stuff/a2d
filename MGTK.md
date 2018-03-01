@@ -31,7 +31,7 @@ ca65 syntax is used for primitives: `.byte`, `.word` (interpreted as 16-bit sign
 .word       x1
 .word       y1
 .word       x2
-.word       y3
+.word       y2
 ```
 
 ### Pattern
