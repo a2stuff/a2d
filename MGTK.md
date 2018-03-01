@@ -35,7 +35,17 @@ ca65 syntax is used for primitives: `.byte`, `.word` (interpreted as 16-bit sign
 ```
 
 ### Pattern
-A simple repeating 8x8 _pattern_ is defined by 8 bytes. All bits of each byte are used.
+A simple repeating 8x8 pattern is defined by 8 bytes. All bits of each byte are used.
+```
+.byte       row0
+.byte       row1
+.byte       row2
+.byte       row3
+.byte       row4
+.byte       row5
+.byte       row6
+.byte       row7
+```
 
 ### MapInfo
 Used with GrafPorts to define offsets/clipping, and bitmaps for source data.
