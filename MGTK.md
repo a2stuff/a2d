@@ -2,8 +2,13 @@
 
 This is a complex API library written by Apple circa 1985. It consists of:
 
-* Graphics Primitives - screen management, lines, rects, polys, text, patterns, pens
-* Mouse Graphics - windows, menus, events, cursors
+* [Graphics Primitives](#graphics-primitives) - screen management, lines, rects, polys, text, patterns, pens
+  * [Concepts](#concepts)
+  * [Commands](#commands)  
+* [Mouse Graphics](#mouse-graphics) - windows, menus, events, cursors
+  * [Concepts](#concepts-1)
+  * [Commands](#commands-1)
+  * [More](#more)
 
 For the purposes of DeskTop, the entry point is fixed at $4000 AUX, called MLI-style (JSR followed by command type and address of param block).
 
@@ -317,8 +322,6 @@ Parameters:
 ---
 
 # Mouse Graphics
-
-Includes:
 
 ## Concepts
 
