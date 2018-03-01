@@ -1,4 +1,4 @@
-# MGTK API
+# MouseGraphics ToolKit
 
 This is a complex API library written by Apple circa 1985. It consists of:
 
