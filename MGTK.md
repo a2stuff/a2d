@@ -10,7 +10,13 @@ This is a complex API library written by Apple circa 1985. It consists of:
   * [Commands](#commands-1)
   * [More](#more)
 
-For the purposes of DeskTop, the entry point is fixed at $4000 AUX, called MLI-style (JSR followed by command type and address of param block).
+For the purposes of DeskTop, the entry point is fixed at $4000 AUX, called MLI-style:
+```
+    JSR $4000
+    .byte call
+    .addr params    
+```
+Result will be in A, with Z bit set, 0 indicating success (so `BNE error` works).
 
 ca65 syntax is used for primitives: `.byte`, `.word` (interpreted as 16-bit signed integer), `.addr` (16-bit address), `.res N` (N byte buffer)
 
