@@ -12,13 +12,13 @@ This is a complex API library written by Apple circa 1985. It consists of:
 
 For the purposes of DeskTop, the entry point is fixed at $4000 AUX, called MLI-style (JSR followed by command type and address of param block).
 
+ca65 syntax is used for primitives: `.byte`, `.word` (interpreted as 16-bit signed integer), `.addr` (16-bit address), `.res N` (N byte buffer)
+
 ---
 
 # Graphics Primitives
 
 ## Concepts
-
-ca65 syntax is used for primitives: `.byte`, `.word` (interpreted as 16-bit signed integer), `.addr` (16-bit address), `.res N` (N byte buffer)
 
 ### Point
 ```
