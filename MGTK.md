@@ -782,7 +782,6 @@ Parameters:
 
 Parameters:
 ```
-(input length 5 bytes)
 .byte       window_id
 .word       dragx           mouse coords
 .word       dragy
