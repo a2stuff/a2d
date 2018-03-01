@@ -130,7 +130,7 @@ Parameters:
 ```
 
 #### SetPortBits ($06)
-Set just the mapinfo (viewloc, mapbits)
+Set just the mapinfo (viewloc, mapbits) of the current grafport.
 
 Parameters:
 ```
@@ -138,7 +138,7 @@ Parameters:
 ```
 
 #### SetPenMode ($07)
-Set the current pen mode
+Set the pen mode of the current grafport.
 
 Parameters:
 ```
@@ -146,7 +146,7 @@ Parameters:
 ```
 
 #### SetPattern ($08)
-Set the current pattern
+Set the pattern of the current grafport.
 
 Parameters:
 ```
@@ -154,7 +154,7 @@ Parameters:
 ```
 
 #### SetColorMasks ($09)
-Set the current color masks
+Set the color masks of the current grafport.
 
 Parameters:
 ```
@@ -163,7 +163,7 @@ Parameters:
 ```
 
 #### SetPenSize ($0A)
-Set the current pen size
+Set the pen size of the current grafport.
 
 Parameters:
 ```
@@ -172,7 +172,7 @@ Parameters:
 ```
 
 #### SetFont ($0B)
-Set the current font
+Set the font of the current grafport.
 
 Parameters:
 ```
@@ -180,7 +180,7 @@ Parameters:
 ```
 
 #### SetTextBG ($0C)
-Set the current text background
+Set the text background of the current grafport.
 
 Parameters:
 ```
@@ -190,7 +190,7 @@ Parameters:
 ### Drawing - draw lines; frame, fill, and test rects and polys
 
 #### Move ($0D)
-Set current pen location (relative)
+Set pen location (relative) of the current grafport.
 
 Parameters:
 ```
@@ -199,7 +199,7 @@ Parameters:
 ```
 
 #### MoveTo ($0E)
-Set current pen location (absolute)
+Set pen location (absolute) of the current grafport.
 
 Parameters:
 ```
@@ -207,7 +207,7 @@ Point        pos
 ```
 
 #### Line ($0F)
-Draw line from current pen location (relative)
+Draw line from pen location (relative) of the current grafport.
 
 Parameters:
 ```
@@ -216,7 +216,7 @@ Parameters:
 ```
 
 #### LineTo ($10)
-Draw line from current pen location (absolute)
+Draw line from pen location (absolute) of the current grafport.
 
 Parameters:
 ```
@@ -224,7 +224,7 @@ Point       pos
 ```
 
 #### PaintRect ($11)
-Fill rectangle with selected simple pattern/thickness
+Fill rectangle with pattern of the current grafport.
 
 Parameters:
 ```
@@ -232,7 +232,7 @@ Rect        rect
 ```
 
 #### FrameRect ($12)
-Draw rectangle with selected simple pattern/thickness
+Draw rectangle with pen mode/size of the current grafport.
 
 Parameters:
 ```
@@ -248,7 +248,7 @@ Rect        rect
 ```
 
 #### PaintBits ($14)
-Draw pattern
+Draw bitmap.
 
 Parameters:
 ```
@@ -256,6 +256,7 @@ Parameters:
 ```
 
 #### PaintPoly ($15)
+Fill multiple closed polygons with the pattern of the current grafport.
 
 Parameters:
 ```
@@ -263,7 +264,7 @@ Parameters:
 ```
 
 #### FramePoly ($16)
-Draw multiple closed polygons
+Draw multiple closed polygons with the pen mode/size of the current grafport.
 
 Parameters:
 ```
@@ -271,7 +272,7 @@ Parameters:
 ```
 
 #### InPoly ($17)
-Is current position in bounds? A=$80 true, 0 false
+Is pen location of the current grafport within the polygon? A=$80 true, 0 false
 
 Parameters:
 ```
@@ -292,7 +293,7 @@ Parameters:
 ```
 
 #### DrawText ($19)
-Drawn at penpos as left, baseline
+Draw string at the pen location of the current graphport (as left, baseline)
 
 Parameters:
 ```
@@ -639,7 +640,7 @@ Parameters:
 ```
 
 #### DisableMenu ($34)
-
+Disable/enable a menu. Effectively disables all items, but individual disable/enable states are restored when re-enabled.
 
 Parameters:
 ```
@@ -648,7 +649,7 @@ Parameters:
 ```
 
 #### DisableItem ($35)
-
+Disable/enable a specific item in a menu.
 
 Parameters:
 ```
@@ -658,7 +659,7 @@ Parameters:
 ```
 
 #### CheckItem ($36)
-
+Sets a specific menu item as checked.
 
 Parameters:
 ```
@@ -668,7 +669,7 @@ Parameters:
 ```
 
 #### SetMark ($37)
-
+Sets a specific menu item as using a distinct mark character when checked.
 
 Parameters:
 ```
