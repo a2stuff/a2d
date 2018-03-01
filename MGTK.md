@@ -47,7 +47,7 @@ There is always a current GrafPort (or "port" for short) that defines
 the destination and pen state of drawing operations.
 ```
 MapInfo     portmap
-.res 8      penpattern
+Pattern     penpattern
 .byte       colormask_and
 .byte       colormask_or
 Point       penloc
@@ -80,13 +80,239 @@ Point       vertex0
 
 ## Commands
 
-Includes:
+#### NoOp ($00)
+No-op
 
-* Initialization
-* GrafPort - assign, update, query ports
-* Drawing - draw lines; frame, fill, and test rects and polys
-* Text - draw and measure text
-* Utility - configuration and version
+No parameters.
+
+### Initialization
+
+#### InitGraf ($01)
+No parameters.
+
+#### SetSwitches ($02)
+Configure display switches
+
+Parameters:
+```
+ .byte       flags           bit 0=hires, 1=page2, 2=mixed, 3=text
+```
+
+### GrafPort - assign, update, query ports
+
+#### InitPort ($03)
+Initialize GrafPort to standard values
+
+Parameters:
+```
+(input is address of GrafPort record)
+```
+
+#### SetPort ($04)
+Set current port as specified
+
+Parameters:
+```
+(input is address of GrafPort record)
+```
+
+#### GetPort ($05)
+Get pointer to current port
+
+Parameters:
+```
+.addr       port            (out)
+```
+
+#### SetPortBits ($06)
+Set just the mapinfo (viewloc, mapbits)
+
+Parameters:
+```
+(input is address of MapInfo record)
+```
+
+#### SetPenMode ($07)
+Set the current pen mode
+
+Parameters:
+```
+.byte       mode            pen*/notpen*
+```
+
+#### SetPattern ($08)
+Set the current pattern
+
+Parameters:
+```
+.res 8      pattern         8x8 pixel pattern for PaintRect calls
+```
+
+#### SetColorMasks ($09)
+Set the current color masks
+
+Parameters:
+```
+.byte       and_mask
+.byte       or_mask
+```
+
+#### SetPenSize ($0A)
+Set the current pen size
+
+Parameters:
+```
+.byte       penwidth        horizontal pen thickness
+.byte       penheight       vertical pen thickness
+```
+
+#### SetFont ($0B)
+Set the current font
+
+Parameters:
+```
+.addr       textfont        font definition
+```
+
+#### SetTextBG ($0C)
+Set the current text background
+
+Parameters:
+```
+.byte       backcolor       0=black, $7F=white
+```
+
+### Drawing - draw lines; frame, fill, and test rects and polys
+
+#### Move ($0D)
+Set current pen location (relative)
+
+Parameters:
+```
+.word       xdelta
+.word       ydelta
+```
+
+#### MoveTo ($0E)
+Set current pen location (absolute)
+
+Parameters:
+```
+Point        pos
+```
+
+#### Line ($0F)
+Draw line from current pen location (relative)
+
+Parameters:
+```
+.word       xdelta
+.word       ydelta
+```
+
+#### LineTo ($10)
+Draw line from current pen location (absolute)
+
+Parameters:
+```
+Point       pos
+```
+
+#### PaintRect ($11)
+Fill rectangle with selected simple pattern/thickness
+
+Parameters:
+```
+Rect        rect
+```
+
+#### FrameRect ($12)
+Draw rectangle with selected simple pattern/thickness
+
+Parameters:
+```
+Rect        rect
+```
+
+#### InRect ($13)
+Is current position in bounds? A=$80 true, 0 false
+
+Parameters:
+```
+Rect        rect
+```
+
+#### PaintBits ($14)
+Draw pattern
+
+Parameters:
+```
+(input is address of MapInfo record)
+```
+
+#### PaintPoly ($15)
+
+Parameters:
+```
+(input is address of PolyList record)
+```
+
+#### FramePoly ($16)
+Draw multiple closed polygons
+
+Parameters:
+```
+(input is address of PolyList record)
+```
+
+#### InPoly ($17)
+Is current position in bounds? A=$80 true, 0 false
+
+Parameters:
+```
+(input is address of PolyList record)
+```
+
+### Text - draw and measure text
+
+
+#### TextWidth ($18)
+Measure the width of a string in pixels
+
+Parameters:
+```
+.addr       data
+.byte       length
+.word       width           (out) result in pixels
+```
+
+#### DrawText ($19)
+Drawn at penpos as left, baseline
+
+Parameters:
+```
+.addr       data
+.byte       length
+```
+
+### Utility - configuration and version
+
+#### SetZP1 ($1A)
+Configure lower half of ZP usage by API (speed vs. convenience)
+
+Parameters:
+```
+.byte       preserve        0=stash/no auto restore; 1=restore now and onward
+```
+
+#### SetZP2 ($1B)
+Configure upper half ZP usage by API (speed vs. convenience)
+
+Parameters:
+```
+.byte       preserve        0=stash/no auto restore; 1=restore now and onward
+```
+
 
 ---
 
@@ -207,14 +433,454 @@ scroll_option_normal    := scroll_option_present | scroll_option_thumb | scroll_
 ```
 ## Commands
 
-Includes:
+### Initialization
 
-* Initialization
-* Cursor Manager - set, show, hide
-* Event Manager - get, peek, post
-* Menu Manager - configure, enable, disable, select
-* Window Manager - open, close, drag, grow, update
-* Control Manager - scrollbars
+#### Version ($1C)
+Get toolkit version
+
+Parameters:
+```
+.byte       (out) major
+.byte       (out) minor
+.byte       (out) patch
+.byte       (out) status
+.word       (out) number
+```
+
+#### StartDeskTop ($1D)
+Inits state, registers interrupt handler, draws desktop
+
+Parameters:
+```
+.byte       machine         ROM FBB3 ($06 = IIe or later)
+.byte       subid           ROM FBC0 ($EA = IIe, $E0 = IIe enh/IIgs, $00 = IIc/IIc+)
+.byte       op_sys          0=ProDOS, 1=Pascal
+.byte       slot_num:       Mouse slot, 0 = search (will be filled in)
+.byte       use_interrupts  0=passive, 1=interrupt
+.addr       sysfontptr
+.addr       savearea        buffer for saving screen data (e.g. behind menus)
+.word       savesize        bytes
+```
+
+#### StopDeskTop ($1E)
+Deallocates interrupt, hides cursor
+
+No parameters.
+
+#### SetUserHook ($1F)
+
+
+Parameters:
+```
+.byte       hook_id         0=before, 1=after event checking
+.addr       routine_ptr     0=remove hook_id
+```
+
+#### AttachDriver ($20)
+Install pointer driver; A=0 on success, $95 if mouse disabled
+
+Parameters:
+```
+.addr       hook            Mouse hook routine to install
+.addr       mouse_state     (out) Address of mouse state (.word x, y; .byte status)
+```
+
+#### ScaleMouse ($21)
+Set mouse/screen scaling
+
+Parameters:
+```
+.byte       x_exponent      x-scale factor for mouse, 0...3
+.byte       y_exponent      y-scale factor for mouse, 0...3
+```
+
+#### KeyboardMouse ($22)
+Next operation will be performed by keyboard
+
+No parameters.
+
+#### GetIntHandler ($23)
+Get address of interrupt handler
+
+Parameters:
+```
+.addr       handler         (out) Address of interrupt handler (after cld)
+```
+
+
+### Cursor Manager - set, show, hide
+
+#### SetCursor ($24)
+Set cursor definition
+
+Parameters:
+```
+(input is address of Cursor record)
+```
+
+#### ShowCursor ($25)
+Return cursor to visibility
+
+No parameters.
+
+#### HideCursor ($26)
+Cursor hidden until ShowCursor call
+
+No parameters.
+
+#### ObscureCursor ($27)
+Cursor hidden until moved
+
+No parameters.
+
+#### GetCursorAddr ($28)
+Get cursor definition
+
+Parameters:
+```
+.addr definition            (out) Address of cursor record
+```
+
+### Event Manager - get, peek, post
+
+#### CheckEvents ($29)
+Process mouse/kbd if GetEvent will be delayed.
+
+No parameters.
+
+#### GetEvent ($2A)
+
+
+Parameters:
+```
+(parameter is address of Event record)
+```
+
+#### FlushEvents ($2B)
+
+
+No parameters.
+
+#### PeekEvent ($2C)
+
+
+Parameters:
+```
+(parameter is address of Event record)
+```
+
+#### PostEvent ($2D)
+Post event to queue
+
+Parameters:
+```
+(parameter is address of Event record)
+```
+
+#### SetKeyEvent ($2E)
+If set, keypresses are ignored by Tool Kit
+
+Parameters:
+```
+.byte       handle_keys     high bit set = ignore keyboard, otherwise check
+```
+
+
+### Menu Manager - configure, enable, disable, select
+
+#### InitMenu ($2F)
+
+
+Parameters:
+```
+.byte       solid_char      char code to use for solid apple glyph
+.byte       open_char       char code to use for open apple glyph
+.byte       check_char      char code to use for checkmark glyph
+.byte       control_char    char code to use for control key glyph
+```
+
+#### SetMenu ($30)
+Configure (and draw) menu
+
+Parameters:
+```
+(input is address of Menu Bar record)
+```
+
+#### MenuSelect ($31)
+Enter modal loop for handling mouse-down on menu bar
+
+Parameters:
+```
+.byte       menu_id         (out) Top level menu identifier, or 0 if none
+.byte       menu_item       (out) Index (1-based) of item in menu, or 0 if none
+```
+
+#### MenuKey ($32)
+Find menu item corresponding to keypress
+
+Parameters:
+```
+.byte       menu_id         (out)
+.byte       menu_item       (out)
+.byte       which_key
+.byte       key_mods        bit 0=OA, bit 1=SA
+```
+
+#### HiliteMenu ($33)
+Toggle highlight state of menu
+
+Parameters:
+```
+.byte       menu_id
+```
+
+#### DisableMenu ($34)
+
+
+Parameters:
+```
+.byte       menu_id
+.byte       disable         0=enable, 1=disable
+```
+
+#### DisableItem ($35)
+
+
+Parameters:
+```
+.byte       menu_id
+.byte       menu_item
+.byte       disable         0=enable, 1=disable
+```
+
+#### CheckItem ($36)
+
+
+Parameters:
+```
+.byte       menu_id
+.byte       menu_item
+.byte       check           0=unchecked, 1=checked
+```
+
+#### SetMark ($37)
+
+
+Parameters:
+```
+.byte       menu_id
+.byte       menu_item
+.byte       set_char        0=use checkmark, 1=use mark_char
+.byte       mark_char       char code to use for mark
+```
+
+
+### Window Manager - open, close, drag, grow, update
+
+#### OpenWindow ($38)
+
+
+Parameters:
+```
+(input is address of WInfo record)
+```
+
+#### CloseWindow ($39)
+
+
+Parameters:
+```
+.byte window_id
+```
+
+#### CloseAll ($3A)
+
+
+No parameters.
+
+#### GetWinPtr ($3B)
+Get pointer to window params by id; A=0 on success
+
+Parameters:
+```
+.byte       window_id
+.addr       window_ptr      (out) winfo address
+```
+
+#### GetWinPort ($3C)
+Get drawing state of window
+
+Parameters:
+```
+.byte       window_id
+.addr       port            (out) grafport address
+```
+
+#### SetWinPort ($3D)
+Update port of window
+
+Parameters:
+```
+.byte       window_id
+.addr       port            GrafPort to copy from
+```
+
+
+#### BeginUpdate ($3E)
+Respond to update event for window
+
+Parameters:
+```
+.byte       window_id
+```
+
+#### EndUpdate ($3F)
+
+
+No parameters.
+
+#### FindWindow ($40)
+
+
+Parameters:
+```
+.word       mousex          screen coordinates
+.word       mousey
+.byte       which_area      (out) area_*
+.byte       window_id       (out) of window
+```
+
+#### FrontWindow ($41)
+Get id of top window
+
+Parameters:
+```
+.byte       window_id       (out) window, or 0 if none
+```
+
+#### SelectWindow ($42)
+Make window topmost
+
+Parameters:
+```
+.byte       window_id
+```
+
+#### TrackGoAway ($43)
+
+
+Parameters:
+```
+.byte       clicked         (out) 0 = cancelled, 1 = close
+.byte       ??              (out)
+.byte       ??              (out)
+```
+
+#### DragWindow ($44)
+
+
+Parameters:
+```
+(input length 5 bytes)
+.byte       window_id
+.word       dragx           mouse coords
+.word       dragy
+.byte       moved           high bit set if moved, clear if not
+```
+
+
+#### GrowWindow ($45)
+
+
+Parameters:
+```
+.byte       window_id
+.word       mousex
+.word       mousey
+.byte       itgrew          (out) 0 = no change, 1 = moved
+```
+
+#### ScreenToWindow ($46)
+Map screen coords to content coords
+
+Parameters:
+```
+.byte       window_id
+.word       screenx
+.word       screeny
+.word       windowx         (out)
+.word       windowy         (out)
+```
+
+#### WindowToScreen ($47)
+Map content coords to screen coords
+
+Parameters:
+```
+.byte       window_id
+.word       windowx
+.word       windowy
+.word       screenx         (out)
+.word       screeny         (out)
+```
+
+
+### Control Manager - scrollbars
+
+#### FindControl ($48)
+
+
+Parameters:
+```
+.word       mousex
+.word       mousey
+.byte       which_ctl       ctl_*
+.byte       which_part      part_*
+```
+
+#### SetCtlMax ($49)
+
+
+Parameters:
+```
+.byte       which_ctl       ctl_*_scroll_bar
+.byte       ctlmax          maximum value
+```
+
+#### TrackThumb ($4A)
+
+
+Parameters:
+```
+.byte       which_ctl       ctl_*_scroll_bar
+.word       mousex
+.word       mousey
+.byte       thumbpos        (out) 0...255
+.byte       thumbmobed      (out) 0 = no change, 1 = moved
+```
+
+
+
+#### UpdateThumb ($4B)
+
+
+Parameters:
+```
+.byte       which_ctl       ctl_*_scroll_bar
+.byte       thumbpos        new position 0...250
+```
+
+#### ActivateCtl ($4C)
+Activate/deactivate scroll bar
+
+Parameters:
+```
+.byte       which_ctl       ctl_*_scroll_bar
+.byte       activate        0=deactivate, 1=activate
+```
+
+
 
 ## More
 
