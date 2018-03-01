@@ -64,12 +64,13 @@ MLI     := $4000
 ;;; ...
 
 NoOp            := $00          ; No-op
-        ;; (input length 0 bytes)
+;;; (no parameters)
 
 ;;; --------------------------------------------------
 ;;; Initialization Commands
 
 InitGraf        := $01
+;;; (no parameters)
 
 SetSwitches     := $02          ; Configure display switches
 ;;; .byte       flags           bit 0=hires, 1=page2, 2=mixed, 3=text
@@ -156,7 +157,7 @@ TextWidth       := $18          ; Measure the width of a string in pixels
 ;;; .byte       length
 ;;; .word       width           (out) result in pixels
 
-DrawText        := $19          ; Drawn at last SET_POS as left, baseline
+DrawText        := $19          ; Drawn at penpos as left, baseline
 ;;; .addr       data
 ;;; .byte       length
 
@@ -386,7 +387,7 @@ BeginUpdate     := $3E          ; Respond to update event for window
 ;;; .byte       window_id
 
 EndUpdate       := $3F
-;;; (no paramters)
+;;; (no parameters)
 
 FindWindow      := $40
 ;;; .word       mousex          screen coordinates
@@ -406,7 +407,6 @@ TrackGoAway     := $43
 ;;; .byte       ??              (out)
 
 DragWindow      := $44
-;;; (input length 5 bytes)
 ;;; .byte       window_id
 ;;; .word       dragx           mouse coords
 ;;; .word       dragy
@@ -418,14 +418,14 @@ GrowWindow      := $45
 ;;; .word       mousey
 ;;; .byte       itgrew          (out) 0 = no change, 1 = moved
 
-ScreenToWindow  := $46          ; Map screen coords to client coords
+ScreenToWindow  := $46          ; Map screen coords to content coords
 ;;; .byte       window_id
 ;;; .word       screenx
 ;;; .word       screeny
 ;;; .word       windowx         (out)
 ;;; .word       windowy         (out)
 
-WindowToScreen  := $47
+WindowToScreen  := $47          ; Map content coords to screen coords
 ;;; .byte       window_id
 ;;; .word       windowx
 ;;; .word       windowy
