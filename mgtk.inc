@@ -22,7 +22,7 @@ MLI     := $4000
 ;;; .word       x1
 ;;; .word       y1
 ;;; .word       x2
-;;; .word       y3
+;;; .word       y2
 
 ;;; MapInfo record:
 ;;;

@@ -79,54 +79,31 @@ updatethumb_stash := updatethumb_params + 5 ; not part of struct
 
 ;;; ============================================================
 
-
-
-
-
 L5000:  jmp     L50B1
 
-L5003:  .byte   $02
-L5004:  .byte   $00,$17,$50
-L5007:  .byte   $03,$28,$50,$00,$10
-L500C:  .byte   $00
-L500D:  .byte   $04
-L500E:  .byte   $00,$00,$14,$00,$02,$00,$00
-L5015:  .byte   $01
-L5016:  .byte   $00
-L5017:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        DEFINE_ON_LINE_PARAMS on_line_params,, on_line_buffer
+        DEFINE_OPEN_PARAMS open_params, path_buf, $1000
+        DEFINE_READ_PARAMS read_params, $1400, $200
+        DEFINE_CLOSE_PARAMS close_params
+
+on_line_buffer: .res    16, 0
 L5027:  .byte   $00
-L5028:  .byte   $00
-L5029:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00
+path_buf:       .res    128, 0
 L50A8:  .byte   $00
 L50A9:  .byte   $00
-L50AA:  .byte   $00
-L50AB:  .byte   $00
-L50AC:  .byte   $70,$00,$70,$00,$70
 
 ;;; ==================================================
 
-L50B1:  sty     L5102
-        stx     L5101
+stash_stack:    .byte   0
+routine_table:  .addr   $7000, $7000, $7000
+
+.proc L50B1
+        sty     stash_y
+        stx     stash_x
         tsx
-        stx     L50AA
+        stx     stash_stack
         pha
-        lda     #$00
+        lda     #0
         sta     L5027
         sta     L50A8
         sta     $D8EB
@@ -145,20 +122,19 @@ L50B1:  sty     L5102
         pla
         asl     a
         tax
-        lda     L50AB,x
-        sta     L50FF
-        lda     L50AC,x
-        sta     L5100
-        ldy     L5102
-        ldx     L5101
-L50FF           := * + 1
-L5100           := * + 2
+        copy16  routine_table,x, jump
+        ldy     stash_y
+        ldx     stash_x
+
+        jump := * + 1
         jmp     dummy1234
+
+stash_x:        .byte   0
+stash_y:        .byte   0
+.endproc
 
 ;;; ==================================================
 
-L5101:  .byte   0
-L5102:  .byte   0
 L5103:  .byte   0
 L5104:  .byte   0
 L5105:  .byte   0
@@ -166,13 +142,13 @@ L5105:  .byte   0
 ;;; ==================================================
 
 L5106:  bit     $D8EC
-        bpl     L5118
+        bpl     :+
         dec     $D8E9
-        bne     L5118
+        bne     :+
         jsr     L6D24
         lda     #$14
         sta     $D8E9
-L5118:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
+:       MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::event_kind_button_down
         bne     :+
@@ -648,11 +624,11 @@ L565C:  lda     #$FF
 
 L567F:  lda     #$00
         sta     L56E2
-        ldx     L5028
+        ldx     path_buf
         bne     L568C
         jmp     L56E1
 
-L568C:  lda     L5028,x
+L568C:  lda     path_buf,x
         and     #$7F
         cmp     #$2F
         beq     L569B
@@ -1375,18 +1351,18 @@ L5E6F:  jsr     L5DD7
 L5E87:  ldx     L5027
         lda     DEVLST,x
         and     #$F0
-        sta     L5004
-        yax_call MLI_RELAY, ON_LINE, L5003
-        lda     L5017
+        sta     on_line_params::unit_num
+        yax_call MLI_RELAY, ON_LINE, on_line_params
+        lda     on_line_buffer
         and     #$0F
-        sta     L5017
+        sta     on_line_buffer
         bne     L5EAB
         jsr     L5EB8
         jmp     L5E87
 
 L5EAB:  lda     #$00
-        sta     L5028
-        addr_call L5F0D, L5017
+        sta     path_buf
+        addr_call L5F0D, on_line_buffer
         rts
 
 L5EB8:  inc     L5027
@@ -1400,7 +1376,7 @@ L5ECA:  rts
 
 L5ECB:  lda     #$00
         sta     L5F0C
-L5ED0:  yax_call MLI_RELAY, OPEN, L5007
+L5ED0:  yax_call MLI_RELAY, OPEN, open_params
         beq     L5EE9
         jsr     L5E87
         lda     #$FF
@@ -1408,10 +1384,10 @@ L5ED0:  yax_call MLI_RELAY, OPEN, L5007
         sta     L5F0C
         jmp     L5ED0
 
-L5EE9:  lda     L500C
-        sta     L500E
-        sta     L5016
-        yax_call MLI_RELAY, READ, L500D
+L5EE9:  lda     open_params::ref_num
+        sta     read_params::ref_num
+        sta     close_params::ref_num
+        yax_call MLI_RELAY, READ, read_params
         beq     L5F0B
         jsr     L5E87
         lda     #$FF
@@ -1424,15 +1400,15 @@ L5F0B:  rts
 L5F0C:  .byte   0
 L5F0D:  jsr     L5DD7
         stax    $06
-        ldx     L5028
+        ldx     path_buf
         lda     #$2F
-        sta     L5029,x
-        inc     L5028
+        sta     path_buf+1,x
+        inc     path_buf
         ldy     #$00
         lda     ($06),y
         tay
         clc
-        adc     L5028
+        adc     path_buf
         cmp     #$41
         bcc     L5F2F
         return  #$FF
@@ -1440,24 +1416,24 @@ L5F0D:  jsr     L5DD7
 L5F2F:  pha
         tax
 L5F31:  lda     ($06),y
-        sta     L5028,x
+        sta     path_buf,x
         dey
         dex
-        cpx     L5028
+        cpx     path_buf
         bne     L5F31
         pla
-        sta     L5028
+        sta     path_buf
         lda     #$FF
         sta     $D920
         return  #$00
 
 ;;; ==================================================
 
-L5F49:  ldx     L5028
+L5F49:  ldx     path_buf
         cpx     #$00
         beq     L5F5A
-        dec     L5028
-        lda     L5028,x
+        dec     path_buf
+        lda     path_buf,x
         cmp     #$2F
         bne     L5F49
 L5F5A:  rts
@@ -1537,7 +1513,7 @@ L6007:  inc     L6069
         lda     L6068
         cmp     $177F
         bne     L6035
-L6012:  yax_call MLI_RELAY, CLOSE, L5015
+L6012:  yax_call MLI_RELAY, CLOSE, close_params
         bit     L50A8
         bpl     L6026
         lda     L50A9
@@ -1564,7 +1540,7 @@ L6035:  lda     L6069
         sta     $07
         jmp     L5F8F
 
-L604E:  yax_call MLI_RELAY, READ, L500D
+L604E:  yax_call MLI_RELAY, READ, read_params
         copy16  #$1404, $06
         lda     #$00
         sta     L6069
@@ -1713,7 +1689,7 @@ L61B0:  .byte   0
 L61B1:  lda     $D5B7
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::PaintRect, $D9C8
-        copy16  #L5028, $06
+        copy16  #path_buf, $06
         ldy     #$00
         lda     ($06),y
         sta     L6226
@@ -2839,16 +2815,16 @@ L6E17:  jsr     L6D27
 
 L6E1B:  .byte   0
 L6E1C:  .byte   0
-        ldx     L5028
-L6E20:  lda     L5028,x
+        ldx     path_buf
+L6E20:  lda     path_buf,x
         sta     $D402,x
         dex
         bpl     L6E20
         addr_call L6129, $D402
         rts
 
-        ldx     L5028
-L6E34:  lda     L5028,x
+        ldx     path_buf
+L6E34:  lda     path_buf,x
         sta     $D443,x
         dex
         bpl     L6E34
@@ -2936,13 +2912,13 @@ L6EC2:  lda     $D920
         tya
         jsr     L5F0D
 L6EFB:  addr_call L6129, $D3C1
-        addr_call L6129, L5028
+        addr_call L6129, path_buf
         lda     $D3C1
-        cmp     L5028
+        cmp     path_buf
         bne     L6F26
         tax
 L6F12:  lda     $D3C1,x
-        cmp     L5028,x
+        cmp     path_buf,x
         bne     L6F26
         dex
         bne     L6F12
