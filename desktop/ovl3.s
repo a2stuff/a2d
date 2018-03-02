@@ -418,15 +418,15 @@ L938F:  .byte   0
 L9390:  MGTK_RELAY_CALL MGTK::OpenWindow, $D665
         lda     $D665
         jsr     set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, $D6D8
         MGTK_RELAY_CALL MGTK::FrameRect, $D6E0
         MGTK_RELAY_CALL MGTK::MoveTo, $D6E8
         MGTK_RELAY_CALL MGTK::LineTo, $D6EC
         MGTK_RELAY_CALL MGTK::MoveTo, $D6F0
         MGTK_RELAY_CALL MGTK::LineTo, $D6F4
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D200
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, $D6F8
         MGTK_RELAY_CALL MGTK::FrameRect, $D700
         jsr     L94A9
@@ -551,14 +551,14 @@ L94F0:  stax    $06
 L9539:  .byte   0
 L953A:  lda     #$00
         sta     L95BF
-L953F:  MGTK_RELAY_CALL MGTK::GetEvent, $D208
-        lda     $D208
-        cmp     #$02
+L953F:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
+        lda     event_kind
+        cmp     #MGTK::event_kind_button_up
         beq     L95A2
         lda     $D665
-        sta     $D208
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
-        MGTK_RELAY_CALL MGTK::MoveTo, $D20D
+        sta     screentowindow_window_id
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_RELAY_CALL MGTK::InRect, $D6F8
         cmp     #MGTK::inrect_inside
         beq     L957C
@@ -570,7 +570,7 @@ L957C:  lda     L95BF
         bne     L9584
         jmp     L953F
 
-L9584:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+L9584:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D6F8
         lda     L95BF
         clc
@@ -582,21 +582,21 @@ L95A2:  lda     L95BF
         beq     L95AA
         return  #$FF
 
-L95AA:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+L95AA:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D6F8
         return  #$00
 
 L95BF:  .byte   0
 L95C0:  lda     #$00
         sta     L9645
-L95C5:  MGTK_RELAY_CALL MGTK::GetEvent, $D208
-        lda     $D208
-        cmp     #$02
+L95C5:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
+        lda     event_kind
+        cmp     #MGTK::event_kind_button_up
         beq     L9628
         lda     $D665
-        sta     $D208
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
-        MGTK_RELAY_CALL MGTK::MoveTo, $D20D
+        sta     screentowindow_window_id
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_RELAY_CALL MGTK::InRect, $D700
         cmp     #MGTK::inrect_inside
         beq     L9602
@@ -608,7 +608,7 @@ L9602:  lda     L9645
         bne     L960A
         jmp     L95C5
 
-L960A:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+L960A:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D700
         lda     L9645
         clc
@@ -620,31 +620,31 @@ L9628:  lda     L9645
         beq     L9630
         return  #$FF
 
-L9630:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+L9630:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D700
         return  #$01
 
 L9645:  .byte   0
-L9646:  MGTK_RELAY_CALL MGTK::GetEvent, $D208
-        lda     $D208
-        cmp     #$01
+L9646:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
+        lda     event_kind
+        cmp     #MGTK::event_kind_button_down
         bne     L9659
         jmp     L9660
 
-L9659:  cmp     #$03
+L9659:  cmp     #MGTK::event_kind_key_down
         bne     L9646
         jmp     L9822
 
-L9660:  MGTK_RELAY_CALL MGTK::FindWindow, $D209
-        lda     $D20D
+L9660:  MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_which_area
         bne     L9671
         return  #$FF
 
-L9671:  cmp     #$02
+L9671:  cmp     #MGTK::area_content
         beq     L9678
         return  #$FF
 
-L9678:  lda     $D20E
+L9678:  lda     findwindow_window_id
         cmp     $D665
         beq     L9683
         return  #$FF
@@ -652,13 +652,13 @@ L9678:  lda     $D20E
 L9683:  lda     $D665
         jsr     set_port_from_window_id
         lda     $D665
-        sta     $D208
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, $D208
-        MGTK_RELAY_CALL MGTK::MoveTo, $D20D
+        sta     screentowindow_window_id
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_RELAY_CALL MGTK::InRect, $D6F8
         cmp     #MGTK::inrect_inside
         bne     L96C8
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D6F8
         jsr     L953A
         bmi     L96C7
@@ -668,7 +668,7 @@ L96C7:  rts
 L96C8:  MGTK_RELAY_CALL MGTK::InRect, $D700
         cmp     #MGTK::inrect_inside
         bne     L96EF
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D700
         jsr     L95C0
         bmi     L96EE
@@ -789,9 +789,9 @@ L97D4:  asl     a
         sta     $D87A
         add16   $D877, #$006A, $D87B
         add16   $D879, #$0007, $D87D
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D877
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D200
+        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         rts
 
 L9822:  lda     $D20A
@@ -827,15 +827,15 @@ L9854:  cmp     #$0B
 
 L985B:  return  #$FF
 
-L985E:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+L985E:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D6F8
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D6F8
         return  #$00
 
-L9885:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+L9885:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D700
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D700
         return  #$01
 
@@ -1009,7 +1009,7 @@ L99ED:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-L99F5:  MGTK_RELAY_CALL MGTK::SetPenMode, $D200
+L99F5:  MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $D87F
         rts
 

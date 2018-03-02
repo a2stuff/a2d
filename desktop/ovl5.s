@@ -48,7 +48,7 @@ L7052:  lda     winfo12
         addr_call common_overlay::L5E0A, $DA67  ; "Copy a File ..."
         addr_call common_overlay::L5E57, $DA77  ; "Source filename:"
         addr_call common_overlay::L5E6F, $DA88  ; "Destination filename:"
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D202 ; penXOR
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, dialog_rect1
         MGTK_RELAY_CALL MGTK::FrameRect, dialog_rect2
         MGTK_RELAY_CALL MGTK::InitPort, grafport3

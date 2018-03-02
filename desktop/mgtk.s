@@ -14,6 +14,9 @@
 .proc mgtk
         .org $4000
 
+        screen_width := 560
+        screen_height := 192
+
 ;;; ==================================================
 
 ;;; ZP Usage
@@ -227,6 +230,13 @@ exit_with_a:
         txs
         ldy     #$FF
 rts2:   rts
+
+        ;; TODO: Macro for exit_with_a
+
+.macro exit_call arg
+        lda     #arg
+        jmp     exit_with_a
+.endmacro
 
 ;;; ==================================================
 ;;; Copy port params (36 bytes) to/from active port addr
@@ -1581,8 +1591,7 @@ L5043:  jsr     L50A9
         cmp     bottom
         bcc     :+
         bne     fail
-:       lda     #$80            ; success!
-        jmp     exit_with_a
+:       exit_call $80           ; success!
 
 fail:   rts
 .endproc
@@ -1702,8 +1711,7 @@ L514C:  sec
         bmi     L5163
         rts
 
-L5163:  lda     #$81
-        jmp     exit_with_a
+L5163:  exit_call $81
 
 ;;; ==================================================
 
@@ -2022,8 +2030,7 @@ L5390:  jsr     L5354
         bmi     L5389
         jmp     L546F
 
-L5398:  lda     #$82
-        jmp     exit_with_a
+L5398:  exit_call $82
 
 L539D:  ldy     #1
         sty     $AF
@@ -2743,8 +2750,7 @@ loop:   sta     glyph_row_lo,y
         bne     loop
         rts
 
-end:    lda     #$83
-        jmp     exit_with_a
+end:    exit_call $83
 .endproc
 
 glyph_row_lo:
@@ -3632,7 +3638,7 @@ stack_ptr_stash:
 viewloc:        .word   0, 0
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-maprect:        .word   0, 0, 560-1, 192-1
+maprect:        .word   0, 0, screen_width-1, screen_height-1
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:         .word   0, 0
@@ -3649,7 +3655,7 @@ textfont:       .addr   0
 viewloc:        .word   0, 0
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-maprect:        .word   0, 0, 560-1, 192-1
+maprect:        .word   0, 0, screen_width-1, screen_height-1
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:         .word   0, 0
@@ -4194,16 +4200,14 @@ L63D1:  ldx     L6338
         bpl     L63F6
         cpx     #$00
         bne     L63E5
-        lda     #$92
-        jmp     exit_with_a
+        exit_call $92
 
 L63E5:  lda     L6338
         and     #$7F
         beq     L63F6
         cpx     L6338
         beq     L63F6
-        lda     #$91
-        jmp     exit_with_a
+        exit_call $91
 
 L63F6:  stx     L6338
         lda     #$80
@@ -4268,16 +4272,14 @@ L6486:  lda     #$80
         sta     L6339
 L648B:  rts
 
-L648C:  lda     #$93
-        jmp     exit_with_a
+L648C:  exit_call $93
 
 L6491:
         lda     L6337
         beq     L649F
         cmp     #$01
         beq     L64A4
-        lda     #$90
-        jmp     exit_with_a
+        exit_call $90
 
 L649F:  lda     #$80
         sta     L6337
@@ -4342,8 +4344,7 @@ L64FF:  lda     #$00
         sta     L6538
         rts
 
-L6508:  lda     #$94
-        jmp     exit_with_a
+L6508:  exit_call $94
 
 L650D:  lda     L6522
         beq     L651D
@@ -4423,8 +4424,8 @@ L6594:  .byte   $0D,$00,$00,$20,$80,$00
 .proc fill_rect_params
 left:   .word   0
 top:    .word   0
-right:  .word   559
-bottom: .word   191
+right:  .word   screen_width-1
+bottom: .word   screen_height-1
 .endproc
         fill_rect_top := fill_rect_params::top
 
@@ -4461,8 +4462,7 @@ checkerboard_pattern:
         ldy     #2
         jmp     store_xa_at_y
 
-fail:   lda     #$95
-        jmp     exit_with_a
+fail:   exit_call $95
 
 mouse_state_addr:
         .addr   mouse_state
@@ -4580,8 +4580,7 @@ modifiers  := * + 3
 .proc CheckEventsImpl
         bit     L6339
         bpl     L666D
-        lda     #$97
-        jmp     exit_with_a
+        exit_call $97
 
 L666D:
         sec                     ; called from interrupt handler
@@ -5111,8 +5110,7 @@ L6A3C:  lda     #$00
         lda     L633C
         sbc     L633E
         bpl     L6A5B
-        lda     #$9C
-        jmp     exit_with_a
+        exit_call $9C
 
 L6A5B:  rts
 
@@ -5136,8 +5134,7 @@ L6A5C:  ldx     $A7
 
 L6A89:  jsr     L6A94
         bne     L6A93
-        lda     #$9A
-        jmp     exit_with_a
+        exit_call $9A
 
 L6A93:  rts
 
@@ -5289,8 +5286,7 @@ L6B9E:  rts
 
 L6B9F:  jsr     L6B96
         bne     L6B9E
-        lda     #$9B
-        jmp     exit_with_a
+        exit_call $9B
 
 ;;; ==================================================
 ;;; DisableItem
@@ -5944,8 +5940,7 @@ end:    rts
         jsr     window_by_id
         beq     nope
         rts
-nope:   lda     #$9F
-        jmp     exit_with_a
+nope:   exit_call $9F
 .endproc
 
 L707F:  MGTK_CALL MGTK::FrameRect, $C7
@@ -6434,14 +6429,12 @@ OpenWindowImpl:
         ldy     #$00
         lda     ($A9),y
         bne     L748E
-        lda     #$9E
-        jmp     exit_with_a
+        exit_call $9E
 
 L748E:  sta     $82
         jsr     window_by_id
         beq     L749A
-        lda     #$9D
-        jmp     exit_with_a
+        exit_call $9D
 
 L749A:  lda     params_addr
         sta     $A9
@@ -6554,8 +6547,7 @@ L750C:  .res    38,0
         ;; fall through
 .endproc
 
-L7585:  lda     #$A3
-        jmp     exit_with_a
+L7585:  exit_call $A3
 
 ;;; ==================================================
 ;;; EndUpdate
@@ -7313,8 +7305,7 @@ FindControlImpl:
         jsr     L653F
         jsr     top_window
         bne     L7ACE
-        lda     #$A0
-        jmp     exit_with_a
+        exit_call $A0
 
 L7ACE:  bit     $B0
         bpl     L7B15
@@ -7413,13 +7404,11 @@ L7B81:  cmp     #$02
         lda     #$00
         sta     $82
         beq     L7B90
-L7B8B:  lda     #$A4
-        jmp     exit_with_a
+L7B8B:  exit_call $A4
 
 L7B90:  jsr     top_window
         bne     L7B9A
-        lda     #$A0
-        jmp     exit_with_a
+        exit_call $A0
 
 L7B9A:  ldy     #$06
         bit     $82
@@ -7447,8 +7436,7 @@ L7BB6:  cmp     #$02
         lda     #$00
         sta     $82
         beq     L7BC5
-L7BC0:  lda     #$A4
-        jmp     exit_with_a
+L7BC0:  exit_call $A4
 
 L7BC5:  lda     $82
         sta     $8C
@@ -7460,8 +7448,7 @@ L7BCB:  lda     $83,x
         bpl     L7BCB
         jsr     top_window
         bne     L7BE0
-        lda     #$A0
-        jmp     exit_with_a
+        exit_call $A0
 
 L7BE0:  jsr     L7A73
         jsr     L653F
@@ -7619,37 +7606,39 @@ L7D1D:  sta     L7CB6
 
 ;;; 3 bytes of params, copied to $8C
 
-UpdateThumbImpl:
+.proc UpdateThumbImpl
         lda     $8C
-        cmp     #$01
-        bne     L7D30
+        cmp     #MGTK::ctl_vertical_scroll_bar
+        bne     :+
         lda     #$80
         sta     $8C
-        bne     L7D3F
-L7D30:  cmp     #$02
-        bne     L7D3A
+        bne     check_win
+
+:       cmp     #MGTK::ctl_horizontal_scroll_bar
+        bne     bad_ctl
         lda     #$00
         sta     $8C
-        beq     L7D3F
-L7D3A:  lda     #$A4
-        jmp     exit_with_a
+        beq     check_win
 
-L7D3F:  jsr     top_window
-        bne     L7D49
-        lda     #$A0
-        jmp     exit_with_a
+bad_ctl:
+        exit_call $A4
 
-L7D49:  ldy     #$07
+check_win:
+        jsr     top_window
+        bne     :+
+        exit_call $A0
+
+:       ldy     #$07
         bit     $8C
-        bpl     L7D51
+        bpl     :+
         ldy     #$09
-L7D51:  lda     $8D
+:       lda     $8D
         sta     ($A9),y
         jsr     L653C
         jsr     L657E
         jsr     L79A0
         jmp     L6553
-
+.endproc
 
 ;;; ==================================================
 ;;; KeyboardMouse
@@ -8173,15 +8162,15 @@ L8196:  sec
         cpx     #$04
         bcc     L8196
         sec
-        lda     #<(560-1)
+        lda     #<(screen_width-1)
         sbc     L769B
-        lda     #>(560-1)
+        lda     #>(screen_width-1)
         sbc     L769B+1
         bmi     L81D9
         sec
-        lda     #<(192-1)
+        lda     #<(screen_height-1)
         sbc     L769D
-        lda     #>(192-1)
+        lda     #>(screen_height-1)
         sbc     L769D+1
         bmi     L81D9
         jsr     L7E98
@@ -8200,8 +8189,7 @@ L81E4:  lda     $AC
         beq     L81F4
         lda     #$00
         sta     L7D74
-        lda     #$A1
-        jmp     exit_with_a
+        exit_call $A1
 
 L81F4:  ldx     #$00
 L81F6:  clc
@@ -8565,8 +8553,8 @@ L8431:  bit     no_mouse_flag   ; called after INITMOUSE
         jsr     call_mouse
 end:    rts
 
-clamp_x_table:  .word   560-1, 560/2-1, 560/4-1, 560/8-1
-clamp_y_table:  .word   192-1, 192/2-1, 192/4-1, 192/8-1
+clamp_x_table:  .word   screen_width-1, screen_width/2-1, screen_width/4-1, screen_width/8-1
+clamp_y_table:  .word   screen_height-1, screen_height/2-1, screen_height/4-1, screen_height/8-1
 
 .endproc
 

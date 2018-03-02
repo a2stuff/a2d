@@ -7911,7 +7911,7 @@ L511E:  sta     cached_window_icon_count
         jsr     get_port2
         jsr     offset_grafport2_and_set
         jsr     set_penmode_copy
-        MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect::x1
+        MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
         lda     active_window_id
         jsr     L7D5D
         stax    L51EB
@@ -7996,7 +7996,7 @@ L51EF:  .byte   0
         jsr     get_port2
         jsr     offset_grafport2_and_set
         jsr     set_penmode_copy
-        MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect::x1
+        MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
         lda     active_window_id
         jsr     L7D5D
         stax    L5263
@@ -9583,7 +9583,7 @@ L5E8F:  lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     get_set_port2
         jsr     set_penmode_copy
-        MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect::x1
+        MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
         ldx     active_window_id
         dex
         lda     LEC26,x
@@ -10214,7 +10214,7 @@ L650D:  .word   0
         bit     L5B1B
         bmi     :+
         jsr     cached_icons_screen_to_window
-:       MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect::x1
+:       MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
         jsr     reset_grafport3
         jmp     L6C19
 .endproc
@@ -17358,8 +17358,8 @@ dialog_param_addr:
         jsr     set_port_from_window_id
         lda     winfoF
         sta     event_params
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
-        MGTK_RELAY_CALL MGTK::MoveTo, $D20D
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_RELAY_CALL MGTK::InRect, rect1
         cmp     #MGTK::inrect_inside
         bne     out
@@ -17397,8 +17397,8 @@ content:
         jsr     set_port_from_window_id
         lda     winfoF
         sta     event_params
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
-        MGTK_RELAY_CALL MGTK::MoveTo, $D20D
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         bit     LD8E7
         bvc     :+
         jmp     check_button_yes
@@ -19193,8 +19193,8 @@ loop:   MGTK_RELAY_CALL MGTK::GetEvent, event_params
         beq     exit
         lda     winfoF
         sta     event_params
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
-        MGTK_RELAY_CALL MGTK::MoveTo, $D20D
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         jsr     test_proc
         cmp     #MGTK::inrect_inside
         beq     inside
@@ -19291,8 +19291,8 @@ done:   rts
 ;;; ==================================================
 
 .proc LB9B8
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, event_params
-        MGTK_RELAY_CALL MGTK::MoveTo, $D20D
+        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_RELAY_CALL MGTK::InRect, rect1
         cmp     #MGTK::inrect_inside
         beq     :+

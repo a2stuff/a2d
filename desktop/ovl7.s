@@ -111,7 +111,7 @@ L7101:  lda     winfo12
 
 L7116:  addr_call common_overlay::L5E0A, $D718
 L711D:  addr_call common_overlay::L5E6F, $D849
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D202 ; penXOR
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, dialog_rect1
         MGTK_RELAY_CALL MGTK::FrameRect, dialog_rect2
         addr_call common_overlay::L5E57, $D769
@@ -130,7 +130,7 @@ L711D:  addr_call common_overlay::L5E6F, $D849
         addr_call common_overlay::L5DED, $D830
         MGTK_RELAY_CALL MGTK::MoveTo, $D93A
         addr_call common_overlay::L5DED, $D840
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, $D93E
         MGTK_RELAY_CALL MGTK::FrameRect, $D946
         MGTK_RELAY_CALL MGTK::FrameRect, $D94E
@@ -408,7 +408,7 @@ L74D3:  lda     $D994
         sta     $D994
         bcs     L74E1
         dec     $D995
-L74E1:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+L74E1:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D98E
         rts
 

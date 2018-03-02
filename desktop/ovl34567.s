@@ -7,6 +7,7 @@
         .include "../mgtk.inc"
         .include "../desktop.inc"
         .include "../macros.inc"
+        .include "inc/desktoplc.inc"
 
 .macro entry arg1, arg2
         .byte arg1
@@ -14,21 +15,6 @@
 .endmacro
 
         dummy1234 := $1234
-
-;;; ==================================================
-;;; Resources from language card area
-
-        winfo12 := $D5B7
-        winfo15 := $D5F1
-
-        path_buf0 := $D402
-        path_buf1 := $D443
-        path_buf2 := $D484
-
-        grafport3 := $D239
-
-        dialog_rect1 := $DA9E
-        dialog_rect2 := $DAAA
 
 ;;; ==================================================
 ;;; Interdependent Overlays

@@ -6,6 +6,7 @@
         .include "../mgtk.inc"
         .include "../desktop.inc"
         .include "../macros.inc"
+        .include "inc/desktoplc.inc"
 
 ;;; ==================================================
 ;;; Overlay for Format/Erase
@@ -65,9 +66,9 @@ L085F:  bit     $D887
         bmi     L0832
         lda     $D57D
         jsr     set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D200
+        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, $D6AB
         jsr     LBD75
         lda     #$80
@@ -91,7 +92,7 @@ L08B7:  lda     $D443
         jsr     set_cursor_pointer
         lda     $D57D
         jsr     set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D200
+        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
         ldx     $D887
         lda     DEVLST,x
@@ -110,7 +111,7 @@ L0902:  jsr     prompt_input_loop
 
 L090C:  lda     $D57D
         jsr     set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D200
+        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         ldy     #$11
         ldax    #$AE6E
         jsr     MGTK_RELAY
@@ -127,7 +128,7 @@ L090C:  lda     $D57D
         bcs     L099B
 L0942:  lda     $D57D
         jsr     set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D200
+        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
         axy_call draw_dialog_label, $01, $B373
         addr_call L1900, $D443
@@ -205,9 +206,9 @@ L0A18:  bit     $D887
         copy16  #$A898, $A89A
         lda     $D57D
         jsr     set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D200
+        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, $D6AB
         jsr     LBD75
         lda     #$80
@@ -231,7 +232,7 @@ L0A7A:  lda     $D443
         jsr     set_cursor_pointer
         lda     $D57D
         jsr     set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D200
+        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
         lda     #$00
         sta     $D8E8
@@ -251,7 +252,7 @@ L0AC7:  jsr     prompt_input_loop
 
 L0AD1:  lda     $D57D
         jsr     set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D200
+        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
         axy_call draw_dialog_label, $01, $B373
         addr_call L1900, $D443
@@ -341,7 +342,7 @@ L0BDC:  cmp     $D887
         bne     L0C04
         jsr     LB445
         bmi     L0C03
-L0BE6:  MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+L0BE6:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $AE20
         ldy     #$11
         ldax    #$AE20
@@ -391,7 +392,7 @@ L0C5B:  asl     L0CA9
         sta     $D88B
         add16   $D888, #$0077, $D88C
         add16   $D88A, #$0007, $D88E
-        MGTK_RELAY_CALL MGTK::SetPenMode, $D202
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D888
         rts
 
