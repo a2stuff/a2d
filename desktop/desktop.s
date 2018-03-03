@@ -100,12 +100,12 @@ L8596:  .byte   $00
 L8597:  .byte   $00
 
         ldax    #0
-L859C:  sta     $D409,x
+:       sta     $D409,x
         sta     $D401,x
         sta     $D40D
         inx
         cpx     #$04
-        bne     L859C
+        bne     :-
         lda     #$0A
         sta     $D40D
         sta     $D40F
@@ -128,28 +128,28 @@ L859C:  sta     $D409,x
         txs
         rts
 
-        cmp     #$27
-        bne     L85F2
+L85E0:  cmp     #$27
+        bne     :+
         addr_call $6B17, $1B22
         ldx     $D5CA
         txs
         jmp     L8625
 
-L85F2:  cmp     #$45
-        bne     L8604
+:       cmp     #$45
+        bne     :+
         addr_call $6B17, $1B3B
         ldx     $D5CA
         txs
         jmp     L8625
 
-L8604:  cmp     #$52
-        bne     L8616
+:       cmp     #$52
+        bne     :+
         addr_call $6B17, $1B5B
         ldx     $D5CA
         txs
         jmp     L8625
 
-L8616:  cmp     #$57
+:       cmp     #$57
         bne     L8625
         addr_call $6B17, $1B7C
         ldx     $D5CA
