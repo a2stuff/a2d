@@ -10,7 +10,7 @@ HEADERS = $(wildcard ../*.inc) $(wildcard ../inc/*.inc) $(wildcard *.inc)
 SEGMENTS = loader mgtk desktop invoker \
         ovl1 ovl1a ovl2 ovl34567
 
-TARGETS = $(patsubst %,$(OUTDIR)/%.built,$(SEGMENTS))
+TARGETS = $(patsubst %,$(OUTDIR)/%.built,$(SEGMENTS)) out/sys.SYS
 
 .PHONY: clean all
 all: $(OUTDIR) $(TARGETS)
