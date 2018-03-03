@@ -18,7 +18,7 @@ while (<STDIN>) {
     ++$depth if m/\.proc/ || m/\.scope/;
     --$depth if m/\.endproc/ || m/\.endscope/;
 
-    if (m/^(L[0-9A-F]{4}):(.*)/) {
+    if (m/^(L[0-9A-F]{4})(?::|\s+:=)(.*)/) {
         my $def = $1;
         $_ = $2;
         $defs{$def} = ($defs{$def} // 0) + 1;
