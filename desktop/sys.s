@@ -2,6 +2,8 @@
 
         .org $2000
 
+        .include "../macros.inc"
+
 L0045           := $0045
 L0048           := $0048
 L00E8           := $00E8
@@ -298,10 +300,7 @@ L24B6:  sta     $C052
         lda     $BF90
         ora     $BF91
         bne     L24EB
-        lda     L2003
-        sta     $BF90
-        lda     L2004
-        sta     $BF91
+        copy16  L2003, $BF90
 L24EB:  lda     $BF98
         and     #$30
         cmp     #$30
@@ -407,9 +406,7 @@ L25BF:  lda     L237A,y
         bne     L25BF
         ldx     #$C0
         jsr     L26A5
-        lda     #$60
-        ldx     #$2B
-        jsr     L26B2
+        addr_call L26B2, $2B60
         jsr     L2AB2
         bcs     L25E4
         ldx     #$80
@@ -432,12 +429,12 @@ L25F2:  php
         .byte   $6F
         .byte   $70
 L25FB:  asl     a
-        brk
-        brk
+        .byte   0
+        .byte   0
         .byte   $C3
         .byte   $0F
-        brk
-        brk
+        .byte   0
+        .byte   0
         .byte   $0D
 L2603:  jsr     L28CD
 L2606:  jsr     MLI
@@ -515,11 +512,9 @@ L269C:  sta     $BF58,y
 L26A5:  lda     $C083
         lda     $C083
         stx     $D3FF
-        lda     $C082
-        rts
+        return  $C082
 
-L26B2:  sta     $06
-        stx     $07
+L26B2:  stax    $06
         lda     $C083
         lda     $C083
         ldy     #$00
@@ -529,11 +524,9 @@ L26C1:  lda     ($06),y
         sta     $D3EE,y
         dey
         bpl     L26C1
-        lda     $C082
-        rts
+        return  $C082
 
-L26CD:  sta     $06
-        stx     $07
+L26CD:  stax    $06
         lda     $C083
         lda     $C083
         ldy     #$00
@@ -543,364 +536,363 @@ L26DC:  lda     ($06),y
         sta     $D3AD,y
         dey
         bpl     L26DC
-        lda     $C082
-        rts
+        return  $C082
 
 L26E8:  lda     #$00
         sta     L2BE2
         jmp     L2681
 
-        brk
+        .byte   0
         ora     a:$00
-        brk
-L26F5:  brk
-L26F6:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-L2821:  brk
-L2822:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-L2831:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+        .byte   0
+L26F5:  .byte   0
+L26F6:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+L2821:  .byte   0
+L2822:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+L2831:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
 L2851:  lda     L2821
         bne     L2857
         rts
@@ -1041,18 +1033,18 @@ L2951:  rts
 
         .byte   $03
         sbc     $26,x
-        brk
+        .byte   0
         .byte   $A0
-L2957:  brk
+L2957:  .byte   0
         .byte   $04
-L2959:  brk
-        brk
+L2959:  .byte   0
+        .byte   0
         ldy     $00
         .byte   $02
-        brk
-        brk
+        .byte   0
+        .byte   0
 L2960:  .byte   $01
-L2961:  brk
+L2961:  .byte   0
 L2962:  jsr     L2A95
         cmp     #$47
         beq     L2974
@@ -1138,7 +1130,7 @@ L29F6:  lda     $06
 
 L2A0D:  jmp     L299F
 
-L2A10:  brk
+L2A10:  .byte   0
 L2A11:  jsr     MLI
         iny
         .byte   $EF
@@ -1160,10 +1152,7 @@ L2A2D:  lda     L23F4
         lda     L23FA
         sta     L2404
         sta     L23EB
-L2A3F:  lda     #$00
-        sta     L23FF
-        lda     #$7F
-        sta     L2400
+L2A3F:  copy16  #$7F00, L23FF
 L2A49:  jsr     MLI
         dex
         .byte   $FB
@@ -1174,10 +1163,7 @@ L2A49:  jsr     MLI
         jsr     L28F4
         jmp     L2A49
 
-L2A5B:  lda     L2401
-        sta     L2407
-        lda     L2402
-        sta     L2408
+L2A5B:  copy16  L2401, L2407
         ora     L2401
         beq     L2A88
 L2A6C:  jsr     MLI
@@ -1276,9 +1262,9 @@ L2B0D:  php
         .byte   $03
         .byte   $1C
         .byte   $2B
-        brk
+        .byte   0
         .byte   $10
-L2B1B:  brk
+L2B1B:  .byte   0
 L2B1C:  bpl     L2B62
         adc     $73
         .byte   $6B
@@ -1292,13 +1278,13 @@ L2B1C:  bpl     L2B62
         .byte   $4F
         bvc     L2B5E
         .byte   $04
-L2B2E:  brk
-        brk
+L2B2E:  .byte   0
+        .byte   0
         jsr     L0045
-        brk
-        brk
+        .byte   0
+        .byte   0
         .byte   $01
-L2B36:  brk
+L2B36:  .byte   0
 L2B37:  jsr     MLI
         iny
         asl     $2B,x
@@ -1310,83 +1296,81 @@ L2B48:  jsr     MLI
         .byte   $CB
         and     $D02B
         asl     $20
-        brk
+        .byte   0
         .byte   $BF
         .byte   $CC
 L2B54:  and     $2B,x
 L2B56:  rts
 
-L2B57:  lda     #$05
-        ldx     #$20
-        jsr     L26CD
+L2B57:  addr_call L26CD, $2005
 L2B5E:  rts
 
-        brk
-L2B60:  brk
-L2B61:  brk
-L2B62:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+        .byte   0
+L2B60:  .byte   0
+L2B61:  .byte   0
+L2B62:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
 L2BA1:  jsr     MLI
         iny
         rol     a
@@ -1413,46 +1397,46 @@ L2BC8:  jmp     L2000
         .byte   $03
         .byte   $3A
         .byte   $03
-        brk
+        .byte   0
         php
-        brk
+        .byte   0
         .byte   $04
-        brk
-        brk
+        .byte   0
+        .byte   0
         jsr     L9F00
-        brk
-        brk
+        .byte   0
+        .byte   0
         ora     ($00,x)
         ora     $46
         eor     #$4C
         eor     $52
-L2BE1:  brk
-L2BE2:  brk
-L2BE3:  brk
+L2BE1:  .byte   0
+L2BE2:  .byte   0
+L2BE3:  .byte   0
         .byte   $03
-L2BE5:  brk
-        brk
+L2BE5:  .byte   0
+        .byte   0
         bit     a:$00
         .byte   $03
-L2BEB:  brk
-        brk
+L2BEB:  .byte   0
+        .byte   0
         rol     a:$01
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
         ora     ($38,x)
         bcs     L2C07
         jmp     LA132
@@ -1598,10 +1582,7 @@ L2CFF:  jmp     L093F
         jsr     L2020
         jsr     L2020
         jsr     L2020
-        lda     $60
-        sta     $44
-        lda     $61
-        sta     L0045
+        copy16  $60, $44
         jmp     (L0048)
 
         php
@@ -1622,9 +1603,7 @@ L2CFF:  jmp     L093F
         pha
         lda     #$FF
         pha
-        lda     #$01
-        ldx     #$00
-        jmp     LF479
+        addr_jump LF479, $0001
 
         jsr     HOME
         ldy     #$1C
@@ -1732,15 +1711,15 @@ L2DE7:  plp
         beq     L2DE7
 L2DF2:  lda     $C08C,x
         bpl     L2DF2
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
         jmp     LA06E
 
         .byte   $53
@@ -1771,7 +1750,7 @@ L2DF2:  lda     $C08C,x
         .byte   $4F
         .byte   $52
         php
-        brk
+        .byte   0
         lsr     $49
         jmp     L2045
 
@@ -1799,10 +1778,10 @@ L2DF2:  lda     $C08C,x
         jsr     L4946
         jmp     L3A45
 
-        brk
-        brk
+        .byte   0
+        .byte   0
         .byte   $0C
-        brk
+        .byte   0
         asl     $1E0E,x
         .byte   $04
         ldy     $78
@@ -1821,14 +1800,8 @@ L2E87:  dec     $FFEF
         stx     L2000
         lda     L2000
         bne     L2E87
-        lda     #$01
-        sta     $E0
-        lda     #$00
-        sta     $E1
-        lda     #$00
-        sta     $85
-        lda     #$A2
-        sta     $86
+        copy16  #$0001, $E0
+        copy16  #$A200, $85
         jsr     LA1BE
         inc     $E0
         lda     #$00
@@ -1846,10 +1819,7 @@ L2EAB:  inc     $86
         bne     L2EAB
         lda     $E0
         bne     L2EAB
-        lda     $A06C
-        sta     $E2
-        lda     $A06D
-        sta     $E3
+        copy16  $A06C, $E2
 L2ECF:  clc
         lda     $E3
         adc     #$02
@@ -1890,10 +1860,7 @@ L2F10:  clc
         lda     $E3
         adc     #$00
         sta     $E3
-        lda     $E4
-        cmp     $E2
-        lda     $E5
-        sbc     $E3
+        cmp16   $E4, $E2
         bcs     L2EE4
         clc
         lda     $E4
@@ -1914,15 +1881,9 @@ L2F42:  ldy     #$11
         iny
         lda     ($E2),y
         sta     $E1
-        lda     $A066
-        sta     $85
-        lda     $A067
-        sta     $86
+        copy16  $A066, $85
         jsr     LA1BE
-        lda     $A068
-        sta     $85
-        lda     $A069
-        sta     $86
+        copy16  $A068, $85
         lda     $0C00
         sta     $E0
         lda     $0D00
@@ -1993,20 +1954,20 @@ L2FE0:  lda     $A029,x
         lda     $C040
         jmp     LA1EF
 
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
 L3000:  jsr     LC300
         jsr     HOME
         lda     $C083
@@ -2036,8 +1997,7 @@ L3039:  lda     L30BB
         cmp     $4400
         beq     L3071
         jsr     L37C5
-        sta     $06
-        stx     $07
+        stax    $06
         ldy     #$0F
         lda     ($06),y
         bne     L306B
@@ -2062,8 +2022,7 @@ L3076:  lda     L30BB
         clc
         adc     #$08
         jsr     L37C5
-        sta     $06
-        stx     $07
+        stax    $06
         ldy     #$0F
         lda     ($06),y
         bne     L30B2
@@ -2087,650 +2046,650 @@ L30B2:  inc     L30BB
 
 L30B8:  jmp     L3880
 
-L30BB:  brk
+L30BB:  .byte   0
         .byte   $03
         cmp     #$31
-        brk
+        .byte   0
         php
-L30C1:  brk
+L30C1:  .byte   0
         .byte   $04
-L30C3:  brk
+L30C3:  .byte   0
         dex
         bmi     L30CB
-        brk
-        brk
-        brk
-        brk
-L30CB:  brk
-        brk
-        brk
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+L30CB:  .byte   0
+        .byte   0
+        .byte   0
 L30CE:  .byte   $01
-L30CF:  brk
+L30CF:  .byte   0
         .byte   $04
-L30D1:  brk
+L30D1:  .byte   0
         bvc     L3105
         .byte   $27
-        brk
-        brk
-        brk
+        .byte   0
+        .byte   0
+        .byte   0
         .byte   $04
-L30D9:  brk
+L30D9:  .byte   0
         cpx     #$30
 L30DC:  ora     $00
-L30DE:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+L30DE:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
 L30E9:  .byte   $01
-L30EA:  brk
+L30EA:  .byte   0
 L30EB:  .byte   $01
-L30EC:  brk
+L30EC:  .byte   0
         ora     ($C9,x)
         and     ($03),y
         cmp     #$31
-        brk
+        .byte   0
         .byte   $0D
-L30F5:  brk
+L30F5:  .byte   0
         .byte   $03
         dey
         and     ($00),y
         .byte   $1C
-L30FB:  brk
+L30FB:  .byte   0
         .byte   $04
-L30FD:  brk
-        brk
+L30FD:  .byte   0
+        .byte   0
         .byte   $11
-L3100:  brk
+L3100:  .byte   0
 L3101:  .byte   $0B
-L3102:  brk
-L3103:  brk
+L3102:  .byte   0
+L3103:  .byte   0
         .byte   $04
-L3105:  brk
-        brk
+L3105:  .byte   0
+        .byte   0
         .byte   $11
-L3108:  brk
+L3108:  .byte   0
 L3109:  .byte   $0B
-L310A:  brk
-L310B:  brk
+L310A:  .byte   0
+L310B:  .byte   0
 L310C:  .byte   $07
         dey
         .byte   $31
 L310F:  .byte   $C3
-        brk
-        brk
-        brk
-L3113:  brk
-L3114:  brk
-        brk
-        brk
-        brk
+        .byte   0
+        .byte   0
+        .byte   0
+L3113:  .byte   0
+L3114:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
 L3118:  .byte   $07
         dey
         .byte   $31
-L311B:  brk
-        brk
-        brk
-        brk
-L311F:  brk
-L3120:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
+L311B:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+L311F:  .byte   0
+L3120:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
 L3126:  asl     a
         cmp     #$31
-L3129:  brk
-        brk
-        brk
-        brk
-L312D:  brk
-L312E:  brk
-L312F:  brk
-        brk
-        brk
-        brk
-        brk
-L3134:  brk
-        brk
-        brk
-        brk
-        brk
+L3129:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+L312D:  .byte   0
+L312E:  .byte   0
+L312F:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+L3134:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
 L3139:  asl     a
         dey
         .byte   $31
-L313C:  brk
-        brk
-L313E:  brk
-L313F:  brk
-        brk
-L3141:  brk
-L3142:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+L313C:  .byte   0
+        .byte   0
+L313E:  .byte   0
+L313F:  .byte   0
+        .byte   0
+L3141:  .byte   0
+L3142:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
         .byte   $02
-        brk
-        brk
-        brk
-L3150:  brk
-L3151:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-L3160:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+        .byte   0
+        .byte   0
+        .byte   0
+L3150:  .byte   0
+L3151:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+L3160:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
         rti
 
         and     $3D,x
         and     $86,x
         and     ($60),y
-        brk
-L3188:  brk
-L3189:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-L31C9:  brk
-L31CA:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-L320A:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-L324A:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-L328A:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-L329A:  brk
+        .byte   0
+L3188:  .byte   0
+L3189:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+L31C9:  .byte   0
+L31CA:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+L320A:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+L324A:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+L328A:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+L329A:  .byte   0
 L329B:  .byte   $0D
-L329C:  brk
-L329D:  brk
-L329E:  brk
-L329F:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-L3349:  brk
-L334A:  brk
+L329C:  .byte   0
+L329D:  .byte   0
+L329E:  .byte   0
+L329F:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+L3349:  .byte   0
+L334A:  .byte   0
 L334B:  ldx     L3349
         lda     L329E
         sta     L329F,x
@@ -2804,8 +2763,7 @@ L33C5:  sta     L334A
         cmp     L30DC
         rts
 
-L33E0:  lda     #$00
-        rts
+L33E0:  return  #$00
 
 L33E3:  lda     L329C
         sta     L329E
@@ -2864,14 +2822,14 @@ L3455:  lda     L329A
 L3463:  jsr     L3392
         rts
 
-L3467:  brk
+L3467:  .byte   0
 L3468:  jmp     L3540
 
 L346B:  jmp     L353D
 
 L346E:  rts
 
-L346F:  brk
+L346F:  .byte   0
         ldy     #$00
 L3472:  lda     $0200,y
         cmp     #$8D
@@ -2884,9 +2842,9 @@ L3472:  lda     $0200,y
 L3482:  sty     L31C9
         rts
 
-        brk
-        brk
-        brk
+        .byte   0
+        .byte   0
+        .byte   0
 L3489:  lda     #$FF
         sta     L353B
         jsr     L3777
@@ -2968,14 +2926,14 @@ L3522:  jsr     MLI
         beq     L3537
         jmp     L341B
 
-        brk
+        .byte   0
         rts
 
 L3537:  jmp     L3643
 
-L353A:  brk
-L353B:  brk
-L353C:  brk
+L353A:  .byte   0
+L353B:  .byte   0
+L353C:  .byte   0
 L353D:  jmp     L375E
 
 L3540:  lda     L3160
@@ -3043,10 +3001,7 @@ L35A9:  jsr     MLI
         beq     L35D7
         jmp     L3A43
 
-        lda     L3141
-        sta     L3641
-        lda     L3142
-        sta     L3642
+        copy16  L3141, L3641
 L35D7:  lda     L3188
         sta     L363F
         ldy     #$01
@@ -3065,24 +3020,9 @@ L35DF:  iny
         .byte   $03
         jmp     L3A43
 
-        lda     L313E
-        sec
-        sbc     L3141
-        sta     L363D
-        lda     L313F
-        sbc     L3142
-        sta     L363E
-        lda     L363D
-        sec
-        sbc     L3641
-        sta     L363D
-        lda     L363E
-        sbc     L3642
-        sta     L363E
-        lda     L363D
-        cmp     L312E
-        lda     L363E
-        sbc     L312F
+        sub16   L313E, L3141, L363D
+        sub16   L363D, L3641, L363D
+        cmp16   L363D, L312E
         bcs     L3635
         sec
         bcs     L3636
@@ -3091,12 +3031,12 @@ L3636:  lda     L363F
         sta     L3188
         rts
 
-L363D:  brk
-L363E:  brk
-L363F:  brk
-L3640:  brk
-L3641:  brk
-L3642:  brk
+L363D:  .byte   0
+L363E:  .byte   0
+L363F:  .byte   0
+L3640:  .byte   0
+L3641:  .byte   0
+L3642:  .byte   0
 L3643:  jsr     MLI
         iny
         beq     L3679
@@ -3115,7 +3055,7 @@ L3659:  lda     L30F5
         sta     L3105
         sta     L30EC
 L366B:  .byte   $A9
-L366C:  brk
+L366C:  .byte   0
         sta     L3100
         lda     #$0B
         sta     L3101
@@ -3128,10 +3068,7 @@ L3679:  .byte   $FC
         beq     L36AE
         jmp     L3A43
 
-        lda     L3102
-        sta     L3108
-        lda     L3103
-        sta     L3109
+        copy16  L3102, L3108
         ora     L3102
         beq     L36AE
         jsr     MLI
@@ -3181,10 +3118,10 @@ L36EA:  jsr     MLI
 
 L36F6:  rts
 
-        brk
-        brk
-        brk
-        brk
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
 L36FB:  lda     L3150
         bne     L3701
         rts
@@ -3319,15 +3256,15 @@ L37D2:  jsr     L3836
         tya
         rts
 
-        brk
-        brk
+        .byte   0
+        .byte   0
         .byte   $03
         .byte   $E7
         .byte   $37
-        brk
+        .byte   0
         rti
 
-L37E6:  brk
+L37E6:  .byte   0
         ora     $6553
         jmp     (L6365)
 
@@ -3338,13 +3275,13 @@ L37E6:  brk
         .byte   $73
         .byte   $74
         .byte   $04
-L37F6:  brk
-        brk
+L37F6:  .byte   0
+        .byte   0
         .byte   $44
-        brk
+        .byte   0
         php
-        brk
-        brk
+        .byte   0
+        .byte   0
 L37FD:  ora     ($00,x)
 L37FF:  jsr     MLI
         iny
@@ -3373,7 +3310,7 @@ L381C:  ldx     #$00
         ldx     L3835
         rts
 
-L3835:  brk
+L3835:  .byte   0
 L3836:  ldx     #$00
         stx     L3857
         asl     a
@@ -3391,23 +3328,23 @@ L3836:  ldx     #$00
         ldx     L3857
         rts
 
-L3857:  brk
+L3857:  .byte   0
         .byte   $03
         .byte   $77
         sec
-        brk
+        .byte   0
         .byte   $50
-L385D:  brk
+L385D:  .byte   0
 L385E:  .byte   $03
         ror     a:$38
         .byte   $54
-L3863:  brk
+L3863:  .byte   0
         .byte   $04
-L3865:  brk
-        brk
+L3865:  .byte   0
+        .byte   0
         jsr     L0400
-        brk
-        brk
+        .byte   0
+        .byte   0
 L386C:  ora     ($00,x)
         php
         .byte   $53
@@ -3434,7 +3371,7 @@ L3880:  jsr     MLI
         cli
         sec
         beq     L3897
-        brk
+        .byte   0
 L3897:  lda     L385D
         jmp     L38A0
 
@@ -3448,8 +3385,7 @@ L38A0:  sta     L3865
         cpy     L386C
         jmp     L2000
 
-L38B2:  sta     $06
-        stx     $07
+L38B2:  stax    $06
         ldy     #$00
         lda     ($06),y
         tay
@@ -3487,8 +3423,7 @@ L38FD:  lda     $D3EE,y
         sta     L320A,y
         dey
         bpl     L38FD
-        lda     $C082
-        rts
+        return  $C082
 
         php
         .byte   $43
@@ -3616,21 +3551,15 @@ L39EE:  jsr     HOME
         jsr     LFC24
         lda     #$00
         jsr     L3ABC
-        lda     #$0A
-        ldx     #$39
-        jsr     L3AA2
-        lda     #$C9
-        ldx     #$31
-        jsr     L3A9A
+        addr_call L3AA2, $390A
+        addr_call L3A9A, $31C9
         rts
 
 L3A0A:  lda     #$00
         jsr     LFC24
         lda     #$00
         jsr     L3ABC
-        lda     #$13
-        ldx     #$39
-        jsr     L3AA2
+        addr_call L3AA2, $3913
         jsr     L3ABF
         cmp     #$1B
         bne     L3A25
@@ -3643,8 +3572,7 @@ L3A29:  lda     #$00
 L3A2B:  jsr     LFC24
         lda     #$00
         jsr     L3ABC
-        lda     #$5C
-        ldx     #$39
+        ldax    #$395C
         .byte   $20
 L3A38:  ldx     #$3A
         jsr     L3ABF
@@ -3662,20 +3590,12 @@ L3A4D:  cmp     #$49
         jmp     L3AD2
 
 L3A57:  pha
-        lda     #$97
-        ldx     #$39
-        jsr     L3AA2
+        addr_call L3AA2, $3997
         pla
         jsr     LFDDA
-        lda     #$9F
-        ldx     #$39
-        jsr     L3AA2
-        lda     #$C9
-        ldx     #$31
-        jsr     L3A9A
-        lda     #$B6
-        ldx     #$39
-        jsr     L3AA2
+        addr_call L3AA2, $399F
+        addr_call L3A9A, $31C9
+        addr_call L3AA2, $39B6
         sta     $C010
 L3A7B:  lda     $C000
         bpl     L3A7B
@@ -3696,8 +3616,7 @@ L3A9A:  jsr     L3AA2
         lda     #$8D
         jmp     COUT
 
-L3AA2:  sta     $06
-        stx     $07
+L3AA2:  stax    $06
         ldy     #$00
         lda     ($06),y
         sta     L3AB8
@@ -3707,7 +3626,7 @@ L3AAF:  iny
         ora     #$80
         jsr     COUT
 L3AB7:  .byte   $C0
-L3AB8:  brk
+L3AB8:  .byte   0
         bne     L3AAF
 L3ABB:  rts
 
@@ -3727,7 +3646,7 @@ L3AD1:  rts
 L3AD2:  jsr     HOME
         jmp     L3880
 
-        brk
+        .byte   0
         .byte   $02
         iny
         inx
@@ -3737,10 +3656,7 @@ L3AD2:  jsr     HOME
         sta     $0200
         rts
 
-        lda     #$BD
-        sta     $BEC8
-        lda     #$BC
-        sta     $BEC9
+        copy16  #$BCBD, $BEC8
         lda     $BF30
         sta     $BEC7
         lda     #$C5
@@ -3780,22 +3696,15 @@ L3AD2:  jsr     HOME
         clc
         rts
 
-        lda     #$01
-        ldx     #$0F
+        ldax    #$0F01
         ldy     $BEBB
         cpy     #$0F
         bne     L3B58
         stx     $BEB8
 L3B58:  jsr     LB1A0
         bcs     L3B93
-        lda     #$59
-        sta     $BED7
-        lda     #$02
-        sta     $BED8
-        lda     #$2B
-        sta     $BED9
-        lda     #$00
-        sta     $BEDA
+        copy16  #$0259, $BED7
+        copy16  #$002B, $BED9
         lda     #$CA
         jsr     LBE70
         bcs     L3B93
@@ -3932,7 +3841,7 @@ L3C82:  cmp     $BC93,x
         beq     L3C8B
         dex
         bne     L3C82
-        brk
+        .byte   0
 L3C8B:  tya
         sta     $BC93,x
         lda     $BC9B,x
@@ -3940,7 +3849,7 @@ L3C8B:  tya
         lda     #$D2
         jsr     LBE70
         bcc     L3C9D
-        brk
+        .byte   0
 L3C9D:  pla
 L3C9E:  sta     $BC88
         sta     $BECF
@@ -4257,14 +4166,8 @@ L3F24:  ldx     $0329,y
         beq     L3F7D
         and     #$01
         beq     L3F3D
-        lda     $BE65
-        sta     $BE63
-        lda     $BE66
-        sta     $BE64
-L3F3D:  lda     #$EF
-        sta     $BED9
-        lda     #$00
-        sta     $BEDA
+        copy16  $BE65, $BE63
+L3F3D:  copy16  #$00EF, $BED9
         sta     $BED7
         lda     #$02
         sta     $BED8
@@ -4291,18 +4194,14 @@ L3F7D:  lda     #$0B
 L3F7F:  sec
 L3F80:  rts
 
-        lda     $BCA4
-        sta     $BCAF
-        lda     $BCA5
-        sta     $BCB0
+        copy16  $BCA4, $BCAF
         lda     #$00
         sta     $BCB1
         sta     $BCB2
         sta     $BEC8
         sta     $BEC9
         sta     $BECA
-L3F9E:  lsr     $BE66
-        ror     $BE65
+L3F9E:  lsr16   $BE65
         ldx     #$00
         bcc     L3FBF
         clc
