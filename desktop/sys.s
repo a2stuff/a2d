@@ -2,6 +2,9 @@
 
         .org $2000
 
+        .include "apple2.inc"
+        .include "../inc/apple2.inc"
+        .include "../inc/prodos.inc"
         .include "../macros.inc"
 
 L0045           := $0045
@@ -16,7 +19,7 @@ L096D           := $096D
 L096F           := $096F
 L09BC           := $09BC
 L1624           := $1624
-A2D             := $4000
+
 L400C           := $400C
 L402B           := $402B
 L402C           := $402C
@@ -46,7 +49,7 @@ L6F6E           := $6F6E
 L6F72           := $6F72
 L726F           := $726F
 L7270           := $7270
-UNKNOWN_CALL    := $8E00
+
 L9F00           := $9F00
 L9F8C           := $9F8C
 L9FAB           := $9FAB
@@ -75,38 +78,9 @@ LB666           := $B666
 LB7D0           := $B7D0
 LBE50           := $BE50
 LBE70           := $BE70
-MLI             := $BF00
-RAMRDOFF        := $C002
-RAMRDON         := $C003
-RAMWRTOFF       := $C004
-RAMWRTON        := $C005
-ALTZPOFF        := $C008
-ALTZPON         := $C009
-LCBANK1         := $C08B
-LC300           := $C300
-AUXMOVE         := $C311
-XFER            := $C314
-A2D_RELAY       := $D000
-DESKTOP_RELAY   := $D040
-FSUB            := $E7A7
-FADD            := $E7BE
-FMULT           := $E97F
-FDIV            := $EA66
-ROUND           := $EB2B
-FLOAT           := $EB93
-FIN             := $EC4A
-FOUT            := $ED34
+
 LF479           := $F479
-INIT            := $FB2F
-BELL1           := $FBDD
-LFC22           := $FC22
-LFC24           := $FC24
-HOME            := $FC58
-LFDDA           := $FDDA
-COUT            := $FDED
-SETKBD          := $FE89
-SETVID          := $FE93
-LFF69           := $FF69
+
 L2000:  jmp     L24B6
 
 L2003:  .byte   $00
@@ -965,7 +939,7 @@ L28C8:  dex
         stx     L2B60
         rts
 
-L28CD:  jsr     LC300
+L28CD:  jsr     SLOT3ENTRY
         jsr     HOME
         lda     #$50
         sec
@@ -974,7 +948,7 @@ L28CD:  jsr     LC300
         sta     $24
         lda     #$0C
         sta     $25
-        jsr     LFC22
+        jsr     VTAB
         ldy     #$00
 L28E5:  iny
         lda     L247D,y
@@ -1968,7 +1942,8 @@ L2FE0:  lda     $A029,x
         .byte   0
         .byte   0
         .byte   0
-L3000:  jsr     LC300
+
+L3000:  jsr     SLOT3ENTRY
         jsr     HOME
         lda     $C083
         lda     $C083
@@ -3548,7 +3523,7 @@ L3988:  .byte   $72
         .byte   $2E
 L39EE:  jsr     HOME
         lda     #$00
-        jsr     LFC24
+        jsr     VTABZ
         lda     #$00
         jsr     L3ABC
         addr_call L3AA2, $390A
@@ -3556,7 +3531,7 @@ L39EE:  jsr     HOME
         rts
 
 L3A0A:  lda     #$00
-        jsr     LFC24
+        jsr     VTABZ
         lda     #$00
         jsr     L3ABC
         addr_call L3AA2, $3913
@@ -3569,7 +3544,7 @@ L3A25:  jsr     HOME
         rts
 
 L3A29:  lda     #$00
-L3A2B:  jsr     LFC24
+L3A2B:  jsr     VTABZ
         lda     #$00
         jsr     L3ABC
         ldax    #$395C
@@ -3592,7 +3567,7 @@ L3A4D:  cmp     #$49
 L3A57:  pha
         addr_call L3AA2, $3997
         pla
-        jsr     LFDDA
+        jsr     PRBYTE
         addr_call L3AA2, $399F
         addr_call L3A9A, $31C9
         addr_call L3AA2, $39B6
@@ -3610,7 +3585,7 @@ L3A7B:  lda     $C000
         jsr     HOME
         jmp     L3880
 
-L3A97:  jmp     LFF69
+L3A97:  jmp     MONZ
 
 L3A9A:  jsr     L3AA2
         lda     #$8D
