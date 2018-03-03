@@ -59,12 +59,18 @@ L2005:
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00
 L2372:  .byte   $00
-L2373:  .byte   $00,$02
-L2375:  .byte   $00,$7A,$23
+L2373:  .byte   $00
+
+        DEFINE_ON_LINE_PARAMS on_line_params,, $237A
+
 L2378:  .byte   $00,$00
 L237A:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$01,$F5,$26,$01,$60,$2B,$0A
+        .byte   $00
+
+        DEFINE_GET_PREFIX_PARAMS get_prefix_params, $26F5
+        DEFINE_SET_PREFIX_PARAMS set_prefix_params, $2B60
+        .byte   $0A
         .byte   $79,$23,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$07,$60,$2B,$C3,$0F
@@ -76,10 +82,11 @@ L237A:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $28,$27,$00,$00,$00,$04,$00,$DF
         .byte   $23,$05,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00
-L23E8:  .byte   $01
-L23E9:  .byte   $00
-L23EA:  .byte   $01
-L23EB:  .byte   $00,$01,$F5,$26,$03,$F5,$26,$00
+
+        DEFINE_CLOSE_PARAMS close_params2
+        DEFINE_CLOSE_PARAMS close_params3
+
+        .byte   $01,$F5,$26,$03,$F5,$26,$00
         .byte   $0D
 L23F4:  .byte   $00,$03,$60,$2B,$00,$11
 L23FA:  .byte   $00,$04
@@ -94,9 +101,9 @@ L240B:  .byte   $07,$60,$2B,$C3,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$07,$60,$2B,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00
-L2425:  .byte   $0A,$F5,$26,$00
-L2429:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00
+
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, $26F5
+        .byte   0
         PASCAL_STRING "DESKTOP1"
         PASCAL_STRING "DESKTOP2"
         PASCAL_STRING "DESK.ACC"
@@ -133,7 +140,7 @@ L24EB:  lda     $BF98
         cmp     #$30
         beq     L2504
         ldy     #$D0
-L24F6:  lda     L2BA1,y
+L24F6:  lda     routine,y
         sta     L0300,y
         dey
         cpy     #$FF
@@ -199,20 +206,20 @@ L257A:  sta     L2BE3
         asl     a
         asl     a
         asl     a
-        sta     L2375
+        sta     on_line_params::unit_num
         sta     L2373
-        MLI_CALL ON_LINE, $2374
+        MLI_CALL ON_LINE, on_line_params
         beq     L2592
         jmp     L26E8
 
 L2592:  lda     L2373
         cmp     #$30
         beq     L25AD
-        sta     L2BE5
-        sta     L2BEB
-        MLI_CALL WRITE_BLOCK, $2BE4
+        sta     write_block_params_unit_num
+        sta     write_block_params2_unit_num
+        MLI_CALL WRITE_BLOCK, write_block_params
         bne     L25AD
-        MLI_CALL WRITE_BLOCK, $2BEA
+        MLI_CALL WRITE_BLOCK, write_block_params2
 L25AD:  lda     L237A
         and     #$0F
         tay
@@ -245,7 +252,7 @@ L25F2:  PASCAL_STRING "/DeskTop"
 L25FB:  .byte   $0A,$00,$00,$C3,$0F,$00,$00,$0D
 L2603:  .byte   $20,$CD
         plp
-        MLI_CALL GET_PREFIX, $238B
+        MLI_CALL GET_PREFIX, get_prefix_params
         beq     L2611
         jmp     L28F4
 
@@ -268,7 +275,7 @@ L262A:  iny
         sty     L2B60
         ldx     #$07
 L263C:  lda     L25FB,x
-        sta     L2425,x
+        sta     get_file_info_params,x
         dex
         cpx     #$03
         bne     L263C
@@ -301,7 +308,7 @@ L2669:  lda     ($06),y
 L2681:  lda     L2378
         beq     L268F
         sta     L2B60
-        MLI_CALL SET_PREFIX, $238E
+        MLI_CALL SET_PREFIX, set_prefix_params
 L268F:  jsr     L2B37
         jsr     L2B57
         lda     #$00
@@ -465,13 +472,13 @@ L290E:  sty     L26F5
 
 L2912:  jsr     L288F
         jsr     L2851
-        MLI_CALL GET_FILE_INFO, $2425
+        MLI_CALL GET_FILE_INFO, get_file_info_params
         beq     :+
         cmp     #$46
         beq     L294B
         jmp     L26E8
 
-:       lda     L2429
+:       lda     get_file_info_params::file_type
         sta     L2831
         cmp     #$0F
         bne     L2937
@@ -495,8 +502,9 @@ L2951:  rts
         .byte   $03,$F5,$26,$00,$A0
 L2957:  .byte   $00,$04
 L2959:  .byte   $00,$00,$A4,$00,$02,$00,$00
-L2960:  .byte   $01
-L2961:  .byte   $00
+
+        DEFINE_CLOSE_PARAMS close_params
+
 L2962:  jsr     L2A95
         cmp     #$47
         beq     L2974
@@ -507,7 +515,7 @@ L2974:  rts
 
 :       lda     L2957
         sta     L2959
-        sta     L2961
+        sta     close_params::ref_num
         MLI_CALL READ, $2958
         beq     :+
         jsr     L28F4
@@ -522,7 +530,7 @@ L2974:  rts
 L2997:  lda     $A425
         cmp     L2A10
         bne     L29B1
-L299F:  MLI_CALL CLOSE, L2960
+L299F:  MLI_CALL CLOSE, close_params
         beq     L29AA
         jmp     L28F4
 
@@ -546,11 +554,11 @@ L29BD:  lda     ($06),y
         sta     L2821,y
         jsr     L288F
         jsr     L2851
-        MLI_CALL GET_FILE_INFO, $2425
+        MLI_CALL GET_FILE_INFO, get_file_info_params
         beq     :+
         jmp     L28F4
 
-:       lda     L2429
+:       lda     get_file_info_params::file_type
         sta     L2831
         jsr     L2A95
         cmp     #$47
@@ -586,10 +594,10 @@ L2A1F:  MLI_CALL OPEN, $23F5
 
 L2A2D:  lda     L23F4
         sta     L23FC
-        sta     L23E9
+        sta     close_params2::ref_num
         lda     L23FA
         sta     L2404
-        sta     L23EB
+        sta     close_params3::ref_num
 L2A3F:  copy16  #$7F00, L23FF
 L2A49:  MLI_CALL READ, $23FB
         beq     L2A5B
@@ -612,12 +620,12 @@ L2A6C:  MLI_CALL WRITE, $2403
         lda     L240A
         cmp     #$7F
         beq     L2A3F
-L2A88:  MLI_CALL CLOSE, L23E8
-        MLI_CALL CLOSE, L23EA
+L2A88:  MLI_CALL CLOSE, close_params2
+        MLI_CALL CLOSE, close_params3
         rts
 
 L2A95:  ldx     #$07
-L2A97:  lda     L2425,x
+L2A97:  lda     get_file_info_params,x
         sta     L240B,x
         dex
         cpx     #$03
@@ -685,16 +693,17 @@ L2B2E:  .byte   0
         jsr     L0045
         .byte   0
         .byte   0
-L2B35:  .byte   $01
-L2B36:  .byte   0
+
+        DEFINE_CLOSE_PARAMS close_params4
+
 L2B37:  MLI_CALL OPEN, $2B16
         bne     L2B56
         lda     L2B1B
         sta     L2B2E
-        sta     L2B36
+        sta     close_params4::ref_num
         MLI_CALL WRITE, $2B2D
         bne     L2B56
-        MLI_CALL CLOSE, L2B35
+        MLI_CALL CLOSE, close_params4
 L2B56:  rts
 
 L2B57:  addr_call L26CD, $2005
@@ -766,32 +775,56 @@ L2B61:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-L2BA1:  MLI_CALL OPEN, $032A
-        beq     L2BAC
+
+;;; ============================================================
+        ;; Relocated to $300
+
+.proc routine
+        .org $300
+
+        sys_start := $2000
+
+        MLI_CALL OPEN, open_params
+        beq     :+
         jmp     L24A3
 
-L2BAC:  lda     $032F
-        sta     $0331
-        MLI_CALL READ, $0330
-        beq     L2BBD
+:       lda     open_params_ref_num
+        sta     read_params_ref_num
+        MLI_CALL READ, read_params
+        beq     :+
         jmp     L24A3
 
-L2BBD:  MLI_CALL CLOSE, $0338
-        beq     L2BC8
+:       MLI_CALL CLOSE, close_params
+        beq     :+
         jmp     L24A3
 
-L2BC8:  jmp     L2000
+:       jmp     sys_start
 
-        .byte   $03,$3A,$03,$00,$08,$00,$04,$00
-        .byte   $00,$20,$00,$9F,$00,$00,$01,$00
-        .byte   $05,$46,$49,$4C,$45,$52
+        DEFINE_OPEN_PARAMS open_params, filename, $800
+        open_params_ref_num := open_params::ref_num
+
+        DEFINE_READ_PARAMS read_params, sys_start, MLI - sys_start
+        read_params_ref_num := read_params::ref_num
+
+        DEFINE_CLOSE_PARAMS close_params
+
+filename:  PASCAL_STRING "FILER"
+.endproc
+
+;;; ============================================================
+
+        .org $2BE1
+
 L2BE1:  .byte   $00
 L2BE2:  .byte   $00
-L2BE3:  .byte   $00,$03
-L2BE5:  .byte   $00,$00,$2C,$00,$00,$03
-L2BEB:  .byte   $00,$00,$2E,$01,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00
+L2BE3:  .byte   $00
+
+        DEFINE_WRITE_BLOCK_PARAMS write_block_params, $2C00, 0
+        write_block_params_unit_num := write_block_params::unit_num
+        DEFINE_WRITE_BLOCK_PARAMS write_block_params2, $2E00, 1
+        write_block_params2_unit_num := write_block_params2::unit_num
+
+        PAD_TO $2C00
 
 ;;; ============================================================
         .assert * = $2C00, error, "Segment length mismatch"
