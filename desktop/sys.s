@@ -49,8 +49,6 @@ LB7D0           := $B7D0
 LBE50           := $BE50
 LBE70           := $BE70
 
-LF479           := $F479
-
 L2000:  jmp     L24B6
 
 L2003:  .word   0
@@ -202,22 +200,17 @@ L240B:  .byte   $07,$60,$2B,$C3,$00,$00,$00,$00
         .byte   $00,$00
 L2425:  .byte   $0A,$F5,$26,$00
 L2429:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$08
-        .byte   $44,$45,$53,$4B,$54,$4F,$50,$31
-        .byte   $08,$44,$45,$53,$4B,$54,$4F,$50
-        .byte   $32,$08,$44,$45,$53,$4B,$2E,$41
-        .byte   $43,$43,$0D,$53,$45,$4C,$45,$43
-        .byte   $54,$4F,$52,$2E,$4C,$49,$53,$54
-        .byte   $08,$53,$45,$4C,$45,$43,$54,$4F
-        .byte   $52,$06,$50,$52,$4F,$44,$4F,$53
+        .byte   $00,$00,$00,$00,$00,$00,$00
+        PASCAL_STRING "DESKTOP1"
+        PASCAL_STRING "DESKTOP2"
+        PASCAL_STRING "DESK.ACC"
+        PASCAL_STRING "SELECTOR.LIST"
+        PASCAL_STRING "SELECTOR"
+        PASCAL_STRING "PRODOS"
 L2471:  .byte   $38
 L2472:  .byte   $24,$41,$24,$4A,$24,$53,$24,$61
         .byte   $24,$6A,$24
-L247D:  .byte   $25,$43,$6F,$70,$79,$69,$6E,$67
-        .byte   $20,$41,$70,$70,$6C,$65,$20,$49
-        .byte   $49,$20,$44,$65,$73,$6B,$54,$6F
-        .byte   $70,$20,$69,$6E,$74,$6F,$20,$52
-        .byte   $41,$4D,$43,$61,$72,$64
+L247D:  PASCAL_STRING "Copying Apple II DeskTop into RAMCard"
 L24A3:  .byte   $60
 L24A4:  .byte   $20,$00,$03,$00
 L24A8:  .byte   $01,$03,$05,$07
@@ -358,8 +351,7 @@ L25E4:  lda     $C062
         bpl     L2603
         jmp     L26E8
 
-L25F2:  .byte   $08,$2F,$44,$65,$73,$6B,$54,$6F
-        .byte   $70
+L25F2:  PASCAL_STRING "/DeskTop"
 L25FB:  .byte   $0A,$00,$00,$C3,$0F,$00,$00,$0D
 L2603:  .byte   $20,$CD
         plp
@@ -1169,15 +1161,10 @@ L2AF3:  inx
         clc
         rts
 
-L2B0D:  .byte   $08,$44,$65,$73,$6B,$54,$6F,$70
-        .byte   $32,$03,$1C,$2B,$00,$10
-L2B1B:  .byte   $00,$10,$44,$65,$73,$6B,$54,$6F
-        .byte   $70,$2F,$44,$45
-        .byte   $53
-        .byte   $4B
-        .byte   $54
-        .byte   $4F
-        bvc     L2B5E
+L2B0D:  PASCAL_STRING "DeskTop2"
+        .byte   $03,$1C,$2B,$00,$10
+L2B1B:  .byte   $00
+        PASCAL_STRING "DeskTop/DESKTOP1"
         .byte   $04
 L2B2E:  .byte   0
         .byte   0
@@ -1203,7 +1190,7 @@ L2B37:  jsr     MLI
 L2B56:  rts
 
 L2B57:  addr_call L26CD, $2005
-L2B5E:  rts
+        rts
 
         .byte   0
 L2B60:  .byte   0
@@ -1303,465 +1290,14 @@ L2BE3:  .byte   $00,$03
 L2BE5:  .byte   $00,$00,$2C,$00,$00,$03
 L2BEB:  .byte   $00,$00,$2E,$01,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$01,$38,$B0
-        .byte   $03,$4C,$32,$A1
-        stx     $43
-        cmp     #$03
-        php
-        txa
-        and     #$70
-        lsr     a
-        lsr     a
-        lsr     a
-        lsr     a
-        ora     #$C0
-        sta     $49
-        ldy     #$FF
-        sty     L0048
-        plp
-        iny
-        lda     (L0048),y
-        bne     L2C5B
-        bcs     L2C31
-        lda     #$03
-        sta     $0800
-        inc     $3D
-        lda     $49
-        pha
-        lda     #$5B
-        pha
-        rts
+        .byte   $00,$00,$00,$00,$00
 
-L2C31:  sta     $40
-        sta     L0048
-        ldy     #$63
-L2C37:  lda     (L0048),y
-        sta     $0994,y
-        iny
-        cpy     #$EB
-        bne     L2C37
-        ldx     #$06
-L2C43:  ldy     $091D,x
-        lda     $0924,x
-        sta     $09F2,y
-        lda     $092B,x
-        sta     $0A7F,x
-        dex
-        bpl     L2C43
-        lda     #$09
-        sta     $49
-        lda     #$86
-L2C5B:  ldy     #$00
-        cmp     #$F9
-        bcs     L2C90
-        sta     L0048
-        sty     $60
-        sty     $4A
-        sty     $4C
-        sty     $4E
-        sty     $47
-        iny
-        sty     $42
-        iny
-        sty     $46
-        lda     #$0C
-        sta     $61
-        sta     $4B
-L2C79:  jsr     L0912
-        bcs     L2CE6
-        inc     $61
-        inc     $61
-        inc     $46
-        lda     $46
-        cmp     #$06
-        bcc     L2C79
-        lda     $0C00
-        ora     $0C01
-L2C90:  bne     L2CFF
-        lda     #$04
-        bne     L2C98
-L2C96:  lda     $4A
-L2C98:  clc
-        adc     $0C23
-        tay
-        bcc     L2CAC
-        inc     $4B
-        lda     $4B
-        lsr     a
-        bcs     L2CAC
-        cmp     #$0A
-        beq     L2CFF
-        ldy     #$04
-L2CAC:  sty     $4A
-        lda     $0902
-        and     #$0F
-        tay
-L2CB4:  lda     ($4A),y
-        cmp     $0902,y
-        bne     L2C96
-        dey
-        bpl     L2CB4
-        and     #$F0
-        cmp     #$20
-        bne     L2CFF
-        ldy     #$10
-        lda     ($4A),y
-        cmp     #$FF
-        bne     L2CFF
-        iny
-        lda     ($4A),y
-        sta     $46
-        iny
-        lda     ($4A),y
-        sta     $47
-        lda     #$00
-        sta     $4A
-        ldy     #$1E
-        sty     $4B
-        sty     $61
-        iny
-        sty     $4D
-L2CE3:  jsr     L0912
-L2CE6:  bcs     L2CFF
-        inc     $61
-        inc     $61
-        ldy     $4E
-        inc     $4E
-        lda     ($4A),y
-        sta     $46
-        lda     ($4C),y
-        sta     $47
-        ora     ($4A),y
-        bne     L2CE3
-        jmp     L2000
+;;; ============================================================
+        .assert * = $2C00, error, "Segment length mismatch"
+        .incbin "inc/pdload.dat"
+        .assert * = $3000, error, "Segment length mismatch"
+;;; ============================================================
 
-L2CFF:  jmp     L093F
-
-        .byte   $26,$50,$52,$4F,$44,$4F,$53,$20
-        .byte   $20,$20,$20,$20,$20,$20,$20,$20
-        copy16  $60, $44
-        jmp     (L0048)
-
-        php
-        asl     L3F24,x
-        eor     $47
-        ror     $F4,x
-        .byte   $D7
-        cmp     ($B6),y
-        .byte   $4B
-        ldy     $AC,x
-        ldx     $2B
-        clc
-        rts
-
-        jmp     L09BC
-
-        lda     #$9F
-        pha
-        lda     #$FF
-        pha
-        addr_jump LF479, $0001
-
-        jsr     HOME
-        ldy     #$1C
-L2D44:  lda     $0950,y
-        sta     $05AE,y
-        dey
-        bpl     L2D44
-        jmp     L094D
-
-        .byte   $AA,$AA,$AA,$A0,$D5,$CE,$C1,$C2
-        .byte   $CC,$C5,$A0,$D4,$CF,$A0,$CC,$CF
-        .byte   $C1,$C4,$A0,$D0,$D2,$CF,$C4,$CF
-        .byte   $D3,$A0,$AA,$AA,$AA
-        lda     $53
-        and     #$03
-        rol     a
-        ora     $2B
-        tax
-        lda     $C080,x
-        lda     #$2C
-L2D7A:  ldx     #$11
-L2D7C:  dex
-        bne     L2D7C
-        sbc     #$01
-        bne     L2D7A
-        ldx     $2B
-        rts
-
-        lda     $46
-        and     #$07
-        cmp     #$04
-        and     #$03
-        php
-        asl     a
-        plp
-        rol     a
-        sta     $3D
-        lda     $47
-        lsr     a
-        lda     $46
-        ror     a
-        lsr     a
-        lsr     a
-        sta     $41
-        asl     a
-        sta     $51
-        lda     L0045
-        sta     $27
-        ldx     $2B
-        lda     $C089,x
-        jsr     L09BC
-        inc     $27
-        inc     $3D
-        inc     $3D
-        bcs     L2DB8
-        jsr     L09BC
-L2DB8:  ldy     $C088,x
-L2DBB:  rts
-
-        lda     $40
-        asl     a
-        sta     $53
-        lda     #$00
-        sta     $54
-L2DC5:  lda     $53
-        sta     $50
-        sec
-        sbc     $51
-        beq     L2DE2
-        bcs     L2DD4
-        inc     $53
-        bcc     L2DD6
-L2DD4:  dec     $53
-L2DD6:  sec
-        jsr     L096D
-        lda     $50
-        clc
-        jsr     L096F
-        bne     L2DC5
-L2DE2:  ldy     #$7F
-        sty     $52
-        php
-L2DE7:  plp
-        sec
-        dec     $52
-        beq     L2DBB
-        clc
-        php
-        dey
-        beq     L2DE7
-L2DF2:  lda     $C08C,x
-        bpl     L2DF2
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        jmp     LA06E
-
-        .byte   $53
-        .byte   $4F,$53,$20,$42,$4F,$4F,$54,$20
-        .byte   $20,$31,$2E,$31,$20,$0A,$53,$4F
-        .byte   $53,$2E,$4B,$45,$52,$4E,$45,$4C
-        .byte   $20,$20,$20,$20,$20,$53,$4F,$53
-        .byte   $20,$4B,$52,$4E,$4C,$49,$2F,$4F
-        .byte   $20,$45,$52,$52,$4F,$52,$08,$00
-        .byte   $46,$49,$4C,$45,$20,$27,$53,$4F
-        .byte   $53,$2E,$4B,$45,$52,$4E,$45,$4C
-        .byte   $27,$20,$4E,$4F,$54,$20,$46,$4F
-        .byte   $55,$4E,$44,$25,$00,$49,$4E,$56
-        .byte   $41,$4C,$49,$44,$20,$4B,$45,$52
-        .byte   $4E,$45,$4C,$20,$46,$49,$4C,$45
-        .byte   $3A,$00,$00,$0C,$00,$1E,$0E,$1E
-        .byte   $04,$A4,$78
-        cld
-        lda     #$77
-        sta     $FFDF
-        ldx     #$FB
-        txs
-        bit     $C010
-        lda     #$40
-        sta     $FFCA
-        lda     #$07
-        sta     $FFEF
-        ldx     #$00
-L2E87:  dec     $FFEF
-        stx     L2000
-        lda     L2000
-        bne     L2E87
-        copy16  #$0001, $E0
-        copy16  #$A200, $85
-        jsr     LA1BE
-        inc     $E0
-        lda     #$00
-        sta     $E6
-L2EAB:  inc     $86
-        inc     $86
-        inc     $E6
-        jsr     LA1BE
-        ldy     #$02
-        lda     ($85),y
-        sta     $E0
-        iny
-        lda     ($85),y
-        sta     $E1
-        bne     L2EAB
-        lda     $E0
-        bne     L2EAB
-        copy16  $A06C, $E2
-L2ECF:  clc
-        lda     $E3
-        adc     #$02
-        sta     $E5
-        sec
-        lda     $E2
-        sbc     $A423
-        sta     $E4
-        lda     $E5
-        sbc     #$00
-        sta     $E5
-L2EE4:  ldy     #$00
-        lda     ($E2),y
-        and     #$0F
-        cmp     $A011
-        bne     L2F10
-        tay
-L2EF0:  lda     ($E2),y
-        cmp     $A011,y
-        bne     L2F10
-        dey
-        bne     L2EF0
-        ldy     #$00
-        lda     ($E2),y
-        and     #$F0
-        cmp     #$20
-        beq     L2F42
-        cmp     #$F0
-        beq     L2F10
-        ldx     $A064
-        ldy     #$13
-        jmp     LA1D4
-
-L2F10:  clc
-        lda     $E2
-        adc     $A423
-        sta     $E2
-        lda     $E3
-        adc     #$00
-        sta     $E3
-        cmp16   $E4, $E2
-        bcs     L2EE4
-        clc
-        lda     $E4
-        adc     $A423
-        sta     $E2
-        lda     $E5
-        adc     #$00
-        sta     $E3
-        dec     $E6
-        bne     L2ECF
-        ldx     $A04F
-        ldy     #$1B
-        jmp     LA1D4
-
-L2F42:  ldy     #$11
-        lda     ($E2),y
-        sta     $E0
-        iny
-        lda     ($E2),y
-        sta     $E1
-        copy16  $A066, $85
-        jsr     LA1BE
-        copy16  $A068, $85
-        lda     $0C00
-        sta     $E0
-        lda     $0D00
-        sta     $E1
-        jsr     LA1BE
-        ldx     #$07
-L2F73:  lda     $1E00,x
-        cmp     $A021,x
-        beq     L2F83
-        ldx     $A064
-        ldy     #$13
-        jmp     LA1D4
-
-L2F83:  dex
-        bpl     L2F73
-        lda     #$00
-        sta     $E7
-        inc     $E7
-        inc     $86
-        inc     $86
-        ldx     $E7
-        lda     $0C00,x
-        sta     $E0
-        lda     $0D00,x
-        sta     $E1
-        lda     $E0
-        bne     L2FA4
-        lda     $E1
-        beq     L2FAA
-L2FA4:  jsr     LA1BE
-        jmp     LA18A
-
-L2FAA:  clc
-        lda     $A06A
-        adc     $1E08
-        sta     L00E8
-        lda     $A06B
-        adc     $1E09
-        sta     $E9
-        jmp     (L00E8)
-
-        lda     #$01
-        sta     $87
-        lda     $E0
-        ldx     $E1
-        jsr     LF479
-        bcs     L2FCC
-        rts
-
-L2FCC:  ldx     $A032
-        ldy     #$09
-        jmp     LA1D4
-
-        sty     $E7
-        sec
-        lda     #$28
-        sbc     $E7
-        lsr     a
-        clc
-        adc     $E7
-        tay
-L2FE0:  lda     $A029,x
-        sta     $05A7,y
-        dex
-        dey
-        dec     $E7
-        bne     L2FE0
-        lda     $C040
-        jmp     LA1EF
-
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
 L3000:  jsr     SLOT3ENTRY
         jsr     HOME
         lda     $C083
@@ -3285,7 +2821,7 @@ L3F03:  lda     #$00
         bmi     L3F80
         .byte   $AD
         .byte   $57
-L3F24:  ldx     $0329,y
+        ldx     $0329,y
         beq     L3F7D
         cmp     #$03
         beq     L3F7D
