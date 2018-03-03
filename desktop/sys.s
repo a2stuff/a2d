@@ -156,7 +156,7 @@ L2517:  lda     $D100,x
         beq     L2528
 L2526:  lda     #$80
 L2528:  sta     $D3AC
-        lda     $C082
+        lda     ROMIN2
         ldx     #$00
         jsr     L26A5
         lda     #$00
@@ -201,9 +201,7 @@ L257A:  sta     L2BE3
         asl     a
         sta     L2375
         sta     L2373
-        jsr     MLI
-        cmp     $74
-        .byte   $23
+        MLI_CALL ON_LINE, $2374
         beq     L2592
         jmp     L26E8
 
@@ -212,13 +210,9 @@ L2592:  lda     L2373
         beq     L25AD
         sta     L2BE5
         sta     L2BEB
-        jsr     MLI
-        sta     ($E4,x)
-        .byte   $2B
+        MLI_CALL WRITE_BLOCK, $2BE4
         bne     L25AD
-        jsr     MLI
-        sta     ($EA,x)
-        .byte   $2B
+        MLI_CALL WRITE_BLOCK, $2BEA
 L25AD:  lda     L237A
         and     #$0F
         tay
@@ -251,10 +245,7 @@ L25F2:  PASCAL_STRING "/DeskTop"
 L25FB:  .byte   $0A,$00,$00,$C3,$0F,$00,$00,$0D
 L2603:  .byte   $20,$CD
         plp
-        jsr     MLI
-        .byte   $C7
-        .byte   $8B
-        .byte   $23
+        MLI_CALL GET_PREFIX, $238B
         beq     L2611
         jmp     L28F4
 
@@ -310,9 +301,7 @@ L2669:  lda     ($06),y
 L2681:  lda     L2378
         beq     L268F
         sta     L2B60
-        jsr     MLI
-        dec     $8E
-        .byte   $23
+        MLI_CALL SET_PREFIX, $238E
 L268F:  jsr     L2B37
         jsr     L2B57
         lda     #$00
@@ -326,7 +315,8 @@ L269C:  sta     $BF58,y
 L26A5:  lda     $C083
         lda     $C083
         stx     $D3FF
-        return  $C082
+        lda     ROMIN2
+        rts
 
 L26B2:  stax    $06
         lda     $C083
@@ -338,7 +328,8 @@ L26C1:  lda     ($06),y
         sta     $D3EE,y
         dey
         bpl     L26C1
-        return  $C082
+        lda     ROMIN2
+        rts
 
 L26CD:  stax    $06
         lda     $C083
@@ -350,7 +341,8 @@ L26DC:  lda     ($06),y
         sta     $D3AD,y
         dey
         bpl     L26DC
-        return  $C082
+        lda     ROMIN2
+        rts
 
 L26E8:  lda     #$00
         sta     L2BE2
@@ -473,15 +465,13 @@ L290E:  sty     L26F5
 
 L2912:  jsr     L288F
         jsr     L2851
-        jsr     MLI
-        cpy     $25
-        bit     $F0
-        .byte   $07
+        MLI_CALL GET_FILE_INFO, $2425
+        beq     :+
         cmp     #$46
         beq     L294B
         jmp     L26E8
 
-        lda     L2429
+:       lda     L2429
         sta     L2831
         cmp     #$0F
         bne     L2937
@@ -510,26 +500,20 @@ L2961:  .byte   $00
 L2962:  jsr     L2A95
         cmp     #$47
         beq     L2974
-        jsr     MLI
-        iny
-        .byte   $52
-        and     #$F0
-        .byte   $04
+        MLI_CALL OPEN, $2952
+        beq     :+
         jsr     L28F4
 L2974:  rts
 
-        lda     L2957
+:       lda     L2957
         sta     L2959
         sta     L2961
-        jsr     MLI
-        dex
-        cli
-        and     #$F0
-        .byte   $04
+        MLI_CALL READ, $2958
+        beq     :+
         jsr     L28F4
         rts
 
-        lda     #$00
+:       lda     #$00
         sta     L2A10
         lda     #$2B
         sta     $06
@@ -538,8 +522,7 @@ L2974:  rts
 L2997:  lda     $A425
         cmp     L2A10
         bne     L29B1
-L299F:  jsr     MLI
-        cpy     L2960
+L299F:  MLI_CALL CLOSE, $2960
         beq     L29AA
         jmp     L28F4
 
@@ -563,13 +546,11 @@ L29BD:  lda     ($06),y
         sta     L2821,y
         jsr     L288F
         jsr     L2851
-        jsr     MLI
-        cpy     $25
-        bit     $F0
-        .byte   $03
+        MLI_CALL GET_FILE_INFO, $2425
+        beq     :+
         jmp     L28F4
 
-        lda     L2429
+:       lda     L2429
         sta     L2831
         jsr     L2A95
         cmp     #$47
@@ -593,17 +574,12 @@ L29F6:  lda     $06
 L2A0D:  jmp     L299F
 
 L2A10:  .byte   0
-L2A11:  jsr     MLI
-        iny
-        .byte   $EF
-        .byte   $23
+L2A11:  MLI_CALL OPEN, $23EF
         beq     L2A1F
         jsr     L28F4
         jmp     L2A11
 
-L2A1F:  jsr     MLI
-        iny
-        sbc     $23,x
+L2A1F:  MLI_CALL OPEN, $23F5
         beq     L2A2D
         jsr     L28F4
         jmp     L2A1F
@@ -615,10 +591,7 @@ L2A2D:  lda     L23F4
         sta     L2404
         sta     L23EB
 L2A3F:  copy16  #$7F00, L23FF
-L2A49:  jsr     MLI
-        dex
-        .byte   $FB
-        .byte   $23
+L2A49:  MLI_CALL READ, $23FB
         beq     L2A5B
         cmp     #$4C
         beq     L2A88
@@ -628,25 +601,19 @@ L2A49:  jsr     MLI
 L2A5B:  copy16  L2401, L2407
         ora     L2401
         beq     L2A88
-L2A6C:  jsr     MLI
-        .byte   $CB
-        .byte   $03
-        bit     $F0
-        asl     $20
-        .byte   $F4
-        plp
+L2A6C:  MLI_CALL WRITE, $2403
+        beq     :+
+        jsr     L28F4
         jmp     L2A6C
 
-        lda     L2409
+:       lda     L2409
         cmp     #$00
         bne     L2A88
         lda     L240A
         cmp     #$7F
         beq     L2A3F
-L2A88:  jsr     MLI
-        cpy     L23E8
-        jsr     MLI
-        cpy     L23EA
+L2A88:  MLI_CALL CLOSE, L23E8
+        MLI_CALL CLOSE, L23EA
         rts
 
 L2A95:  ldx     #$07
@@ -655,10 +622,8 @@ L2A97:  lda     L2425,x
         dex
         cpx     #$03
         bne     L2A97
-        jsr     MLI
-        cpy     #$0B
-        bit     $F0
-        .byte   $07
+        MLI_CALL CREATE, $240B
+        beq     L2AB1
         cmp     #$47
         beq     L2AB1
         jsr     L28F4
@@ -694,9 +659,7 @@ L2ACC:  lda     L24A8,x
 L2AE4:  sec
         rts
 
-L2AE6:  jsr     MLI
-        .byte   $C7
-        eor     #$23
+L2AE6:  MLI_CALL GET_PREFIX, $2349
         bne     L2AE4
         ldx     $0D00
         ldy     #$00
@@ -707,9 +670,7 @@ L2AF3:  inx
         cpy     L2B0D
         bne     L2AF3
         stx     $0D00
-        jsr     MLI
-        cpy     $4C
-        .byte   $23
+        MLI_CALL GET_FILE_INFO, $234C
         beq     L2AE4
         clc
         rts
@@ -726,20 +687,14 @@ L2B2E:  .byte   0
         .byte   0
 L2B35:  .byte   $01
 L2B36:  .byte   0
-L2B37:  jsr     MLI
-        iny
-        asl     $2B,x
+L2B37:  MLI_CALL OPEN, $2B16
         bne     L2B56
         lda     L2B1B
         sta     L2B2E
         sta     L2B36
-        jsr     MLI
-        .byte   $CB
-        and     $D02B
-        asl     $20
-        .byte   0
-        .byte   $BF
-        cpy     L2B35
+        MLI_CALL WRITE, $2B2D
+        bne     L2B56
+        MLI_CALL CLOSE, L2B35
 L2B56:  rts
 
 L2B57:  addr_call L26CD, $2005
@@ -811,24 +766,17 @@ L2B61:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-L2BA1:  jsr     MLI
-        iny
-        rol     a
-        .byte   $03
+L2BA1:  MLI_CALL OPEN, $032A
         beq     L2BAC
         jmp     L24A3
 
 L2BAC:  lda     $032F
         sta     $0331
-        jsr     MLI
-        dex
-        bmi     L2BBB
+        MLI_CALL READ, $0330
         beq     L2BBD
-        .byte   $4C
-L2BBB:  .byte   $A3
-        .byte   $24
-L2BBD:  jsr     MLI
-        cpy     $0338
+        jmp     L24A3
+
+L2BBD:  MLI_CALL CLOSE, $0338
         beq     L2BC8
         jmp     L24A3
 
@@ -1063,29 +1011,23 @@ L3359:  ldx     L3349
 L3367:  lda     #$00
         sta     L329C
         sta     L334A
-        jsr     MLI
-        iny
-        ldy     $F030,x
-        .byte   $03
+        MLI_CALL OPEN, $30BC
+        beq     L337A
         jmp     L3A43
 
 L337A:  lda     L30C1
         sta     L329D
         sta     L30C3
-        jsr     MLI
-        dex
-        .byte   $C2
-        bmi     L337A
-        .byte   $03
+        MLI_CALL READ, $30C2
+        beq     :+
         jmp     L3A43
 
-        jsr     L33A4
+:       jsr     L33A4
         rts
 
 L3392:  lda     L329D
         sta     L30CF
-        jsr     MLI
-        cpy     L30CE
+        MLI_CALL CLOSE, L30CE
         beq     L33A3
         jmp     L3A43
 
@@ -1094,9 +1036,7 @@ L33A3:  rts
 L33A4:  inc     L329C
         lda     L329D
         sta     L30D1
-        jsr     MLI
-        dex
-        bne     L33E3
+        MLI_CALL READ, $30D0
         beq     L33B8
         jmp     L3A43
 
@@ -1108,14 +1048,11 @@ L33B8:  inc     L334A
 L33C5:  sta     L334A
         lda     L329D
         sta     L30D9
-        jsr     MLI
-        dex
-        cld
-        bmi     L33C5
-        .byte   $03
+        MLI_CALL READ, $30D8
+        beq     :+
         jmp     L3A43
 
-        lda     L30DE
+:       lda     L30DE
         cmp     L30DC
         rts
 
@@ -1217,9 +1154,9 @@ L34A1:  iny
         cpy     L328A
         bne     L34A1
         stx     L3188
-        jsr     MLI
-        cpy     $39
-        and     ($C9),y
+        MLI_CALL GET_FILE_INFO, $3139
+
+        .byte   $C9             ; RE-DISASM this!
         lsr     $F0
         ora     #$C9
         eor     $F0
@@ -1228,9 +1165,9 @@ L34A1:  iny
         beq     L34C4
         rts
 
-L34C4:  jsr     MLI
-        cpy     $26
-        and     ($F0),y
+L34C4:  MLI_CALL GET_FILE_INFO, $3126
+
+        .byte   $F0           ; RE-DISASM this!
         ora     ($C9),y
         eor     $F0
         .byte   $04
@@ -1272,13 +1209,11 @@ L350D:  lda     L3134,x
         bne     L3522
         lda     #$0D
         sta     L311F
-L3522:  jsr     MLI
-        cpy     #$18
-        and     ($F0),y
-        .byte   $03
+L3522:  MLI_CALL CREATE, $3118
+        beq     :+
         jmp     L3A43
 
-        lda     L353A
+:       lda     L353A
         beq     L3537
         jmp     L341B
 
@@ -1297,9 +1232,8 @@ L3540:  lda     L3160
         bne     L3574
         jsr     L36FB
         jsr     L39EE
-        jsr     MLI
-        cpy     $26
-        and     ($F0),y
+        MLI_CALL GET_FILE_INFO, $3126
+        .byte   $F0             ; RE-DISASM THIS
         ora     ($4C),y
         .byte   $43
         .byte   $3A
@@ -1318,13 +1252,11 @@ L3558:  jsr     L375E
 L3574:  jsr     L3739
         jsr     L36FB
         jsr     L39EE
-        jsr     MLI
-        cpy     $26
-        and     ($F0),y
-        .byte   $03
+        MLI_CALL GET_FILE_INFO, $3126
+        beq     :+
         jmp     L3A43
 
-        jsr     L35A9
+:       jsr     L35A9
         bcc     L3590
         jmp     L3A29
 
@@ -1340,24 +1272,20 @@ L35A4:  rts
 L35A5:  jsr     L375E
         rts
 
-L35A9:  jsr     MLI
-        cpy     $26
-        and     ($F0),y
-        .byte   $03
+L35A9:  MLI_CALL GET_FILE_INFO, $3126
+        beq     :+
         jmp     L3A43
 
-        lda     #$00
+:       lda     #$00
         sta     L3641
         sta     L3642
-        jsr     MLI
-        cpy     $39
-        and     ($F0),y
-        .byte   $07
+        MLI_CALL GET_FILE_INFO, $3139
+        beq     :+
         cmp     #$46
         beq     L35D7
         jmp     L3A43
 
-        copy16  L3141, L3641
+:       copy16  L3141, L3641
 L35D7:  lda     L3188
         sta     L363F
         ldy     #$01
@@ -1370,13 +1298,11 @@ L35DF:  iny
         tya
         sta     L3188
         sta     L3640
-        jsr     MLI
-        cpy     $39
-        and     ($F0),y
-        .byte   $03
+        MLI_CALL GET_FILE_INFO, $3139
+        beq     :+
         jmp     L3A43
 
-        sub16   L313E, L3141, L363D
+:       sub16   L313E, L3141, L363D
         sub16   L363D, L3641, L363D
         cmp16   L363D, L312E
         bcs     L3635
@@ -1392,14 +1318,10 @@ L363F:  .byte   0
 L3640:  .byte   0
 L3641:  .byte   0
 L3642:  .byte   0
-L3643:  jsr     MLI
-        iny
-        beq     L3679
+L3643:  MLI_CALL OPEN, $30F0
         beq     L364E
         jsr     L3A43
-L364E:  jsr     MLI
-        iny
-        inc     $30,x
+L364E:  MLI_CALL OPEN, $30F6
         beq     L3659
         jmp     L3A43
 
@@ -1409,40 +1331,31 @@ L3659:  lda     L30F5
         lda     L30FB
         sta     L3105
         sta     L30EC
-L366B:  .byte   $A9
-L366C:  .byte   0
+L366B:  lda     #0
         sta     L3100
         lda     #$0B
         sta     L3101
-        jsr     MLI
-        dex
-L3679:  .byte   $FC
-        bmi     L366C
-        .byte   $07
+        MLI_CALL READ, $30FC
+        beq     :+
         cmp     #$4C
         beq     L36AE
         jmp     L3A43
 
-        copy16  L3102, L3108
+:       copy16  L3102, L3108
         ora     L3102
         beq     L36AE
-        jsr     MLI
-        .byte   $CB
-        .byte   $04
-        and     ($F0),y
-        .byte   $03
+        MLI_CALL WRITE, $3104
+        beq     :+
         jmp     L3A43
 
-        lda     L310A
+:       lda     L310A
         cmp     #$00
         bne     L36AE
         lda     L310B
         cmp     #$0B
         beq     L366B
-L36AE:  jsr     MLI
-        cpy     L30EB
-        jsr     MLI
-        cpy     L30E9
+L36AE:  MLI_CALL CLOSE, $30EB
+        MLI_CALL CLOSE, $30E9
         jsr     L37AE
         jsr     L379D
         rts
@@ -1465,9 +1378,8 @@ L36D5:  lda     L3134,x
         bne     L36EA
         lda     #$0D
         sta     L3113
-L36EA:  jsr     MLI
-        cpy     #$0C
-        and     ($18),y
+L36EA:  MLI_CALL CREATE, $310C
+        clc
         beq     L36F6
         jmp     L3A43
 
@@ -1569,17 +1481,13 @@ L3793:  lda     L320A,y
 
 L379D:  lda     #$07
         sta     L3139
-        jsr     MLI
-        .byte   $C3
-        and     $A931,y
-        asl     a
+        MLI_CALL SET_FILE_INFO, $3139
+        lda     #10
         sta     L3139
         rts
 
-L37AE:  jsr     MLI
-        cpy     $26
-        and     ($D0),y
-        .byte   $0C
+L37AE:  MLI_CALL GET_FILE_INFO, $3126
+        bne     :+
         ldx     #$0A
 L37B8:  lda     L3129,x
         sta     L313C,x
@@ -1587,7 +1495,7 @@ L37B8:  lda     L3129,x
         bpl     L37B8
         rts
 
-        pla
+:       pla
         pla
         rts
 
@@ -1617,17 +1525,12 @@ L37E6:  .byte   $00
         .byte   $04
 L37F6:  .byte   $00,$00,$44,$00,$08,$00,$00
 L37FD:  .byte   $01,$00
-L37FF:  jsr     MLI
-        iny
-        sbc     ($37,x)
+L37FF:  MLI_CALL OPEN, $37E1
         bne     L381B
         lda     L37E6
         sta     L37F6
-        jsr     MLI
-        dex
-        sbc     $37,x
-        jsr     MLI
-        cpy     L37FD
+        MLI_CALL READ, $37F5
+        MLI_CALL CLOSE, $37FD
         lda     #$00
 L381B:  rts
 
@@ -1670,29 +1573,20 @@ L386C:  .byte   $01,$00
         PASCAL_STRING "Selector"
         PASCAL_STRING "DeskTop2"
 
-L3880:  jsr     MLI
-        cpy     L386C
-        jsr     MLI
-        iny
-        lsr     $F038,x
-        .byte   $0F
-        jsr     MLI
-        iny
-        cli
-        sec
+L3880:  MLI_CALL CLOSE, $386C
+        MLI_CALL OPEN, $385E
+        beq     :+
+        MLI_CALL OPEN, $3858
         beq     L3897
-        .byte   0
+        brk
+
 L3897:  lda     L385D
         jmp     L38A0
 
-        lda     L3863
+:       lda     L3863
 L38A0:  sta     L3865
-        jsr     MLI
-        dex
-        .byte   $64
-        sec
-        jsr     MLI
-        cpy     L386C
+        MLI_CALL READ, $3864
+        MLI_CALL CLOSE, $386C
         jmp     L2000
 
 L38B2:  stax    $06
@@ -1733,7 +1627,8 @@ L38FD:  lda     $D3EE,y
         sta     L320A,y
         dey
         bpl     L38FD
-        return  $C082
+        lda     ROMIN2
+        rts
 
         PASCAL_STRING "Copying:"
         PASCAL_STRING "Insert the source disk and press <Return> to continue or <ESC> to cancel"
