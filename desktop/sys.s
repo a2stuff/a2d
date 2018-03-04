@@ -51,7 +51,15 @@ L2005:
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $02,$00,$63,$23,$02,$00,$0D,$0A
+        .byte   $02,$00,$63,$23
+
+
+.proc get_prefix_params2
+param_count:    .byte   2       ; GET_PREFIX, but param_count is 2 ???
+data_buffer:    .addr   $0D00
+.endproc
+
+L234C:  .byte   $0A
         .byte   $00,$0D,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$01,$62,$23,$00,$00,$00
@@ -91,8 +99,8 @@ L237A:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         DEFINE_READ_PARAMS read_params3, $4000, $7F00
         DEFINE_WRITE_PARAMS write_params, $4000, $7F00
 
-L240B:  .byte   $07,$60,$2B,$C3,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$07,$60,$2B,$00
+        DEFINE_CREATE_PARAMS create_params, $2B60, $C3, 0, 0
+        .byte   $07,$60,$2B,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00
 
@@ -618,13 +626,14 @@ L2A88:  MLI_CALL CLOSE, close_params2
         MLI_CALL CLOSE, close_params3
         rts
 
-L2A95:  ldx     #$07
-L2A97:  lda     get_file_info_params,x
-        sta     L240B,x
+        ;; Copy file_type, aux_type, storage_type
+L2A95:  ldx     #7
+:       lda     get_file_info_params,x
+        sta     create_params,x
         dex
-        cpx     #$03
-        bne     L2A97
-        MLI_CALL CREATE, $240B
+        cpx     #3
+        bne     :-
+        MLI_CALL CREATE, create_params
         beq     L2AB1
         cmp     #$47
         beq     L2AB1
@@ -661,7 +670,7 @@ L2ACC:  lda     L24A8,x
 L2AE4:  sec
         rts
 
-L2AE6:  MLI_CALL GET_PREFIX, $2349
+L2AE6:  MLI_CALL GET_PREFIX, get_prefix_params2
         bne     L2AE4
         ldx     $0D00
         ldy     #$00
@@ -918,14 +927,11 @@ L30E0:  .byte   $00,$00,$00,$00,$00,$00
         DEFINE_READ_PARAMS read_params7, $1100, $0B00
         DEFINE_WRITE_PARAMS write_params3, $1100, $0B00
 
-L310C:  .byte   $07,$88,$31
-L310F:  .byte   $C3,$00,$00,$00
-L3113:  .byte   $00
-L3114:  .byte   $00,$00,$00,$00
-L3118:  .byte   $07,$88,$31
-L311B:  .byte   $00,$00,$00,$00
-L311F:  .byte   $00
-L3120:  .byte   $00,$00,$00,$00,$00,$00
+        DEFINE_CREATE_PARAMS create_params3, $3188, $C3
+
+        DEFINE_CREATE_PARAMS create_params2, $3188, 0
+
+L3124:  .byte   $00,$00
 L3126:  .byte   $0A,$C9,$31
 L3129:  .byte   $00,$00,$00,$00
 L312D:  .byte   $00
@@ -1176,29 +1182,31 @@ L34DD:  lda     L312D
         beq     L34EE
 L34EC:  lda     #$FF
 L34EE:  sta     L353A
-        ldy     #$07
-L34F3:  lda     L3126,y
-        sta     L3118,y
+
+        ;; copy file_type, aux_type, storage_type
+        ldy     #7
+:       lda     L3126,y
+        sta     create_params2,y
         dey
-        cpy     #$03
-        bne     L34F3
+        cpy     #3
+        bne     :-
         lda     #$C3
-        sta     L311B
+        sta     create_params2::access
         jsr     L35A9
         bcc     L350B
         jmp     L3A29
 
 L350B:  ldx     #$03
 L350D:  lda     L3134,x
-        sta     L3120,x
+        sta     create_params2::create_date,x
         dex
         bpl     L350D
-        lda     L311F
+        lda     create_params2::storage_type
         cmp     #$0F
         bne     L3522
         lda     #$0D
-        sta     L311F
-L3522:  MLI_CALL CREATE, $3118
+        sta     create_params2::storage_type
+L3522:  MLI_CALL CREATE, create_params2
         beq     :+
         jmp     L3A43
 
@@ -1344,25 +1352,26 @@ L36AE:  MLI_CALL CLOSE, close_params6
         jsr     L379D
         rts
 
-L36C1:  ldx     #$07
-L36C3:  lda     L3126,x
-        sta     L310C,x
+        ;; copy file_type, aux_type, storage_type
+L36C1:  ldx     #7
+:       lda     L3126,x
+        sta     create_params3,x
         dex
-        cpx     #$03
-        bne     L36C3
+        cpx     #3
+        bne     :-
         lda     #$C3
-        sta     L310F
+        sta     create_params3::access
         ldx     #$03
 L36D5:  lda     L3134,x
-        sta     L3114,x
+        sta     create_params3::create_date,x
         dex
         bpl     L36D5
-        lda     L3113
+        lda     create_params3::storage_type
         cmp     #$0F
         bne     L36EA
         lda     #$0D
-        sta     L3113
-L36EA:  MLI_CALL CREATE, $310C
+        sta     create_params3::storage_type
+L36EA:  MLI_CALL CREATE, create_params3
         clc
         beq     L36F6
         jmp     L3A43
@@ -1552,11 +1561,13 @@ L3836:  ldx     #$00
         rts
 
 L3857:  .byte   $00
-        DEFINE_OPEN_PARAMS open_params11, $3877, $5000
-        DEFINE_OPEN_PARAMS open_params10, $386E, $5400
+        DEFINE_OPEN_PARAMS open_params11, str_desktop2, $5000
+        DEFINE_OPEN_PARAMS open_params10, str_selector, $5400
         DEFINE_READ_PARAMS read_params9, $2000, $0400
         DEFINE_CLOSE_PARAMS close_params9
+str_selector:
         PASCAL_STRING "Selector"
+str_desktop2:
         PASCAL_STRING "DeskTop2"
 
 L3880:  MLI_CALL CLOSE, close_params9
