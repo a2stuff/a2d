@@ -103,6 +103,11 @@ ST_VOLUME_DIRECTORY     := $0F
 
 PDERR_PATH_NOT_FOUND    := $44
 PDERR_VOL_NOT_FOUND     := $45
+PDERR_FILE_NOT_FOUND    := $46
+PDERR_DUPLICATE_FILENAME:= $47
+PDERR_OVERRUN_ERROR     := $48
+PDERR_VOLUME_DIR_FULL   := $49
+PDERR_END_OF_FILE       := $4C
 
 ;;; ============================================================
 ;;; Macros

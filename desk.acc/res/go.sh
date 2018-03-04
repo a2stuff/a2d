@@ -25,7 +25,7 @@ function verify {
 }
 
 function stats {
-    echo "$1: "$(../res/stats.pl < "$1")
+    echo "$(printf '%-10s' $1)""$(../res/stats.pl < $1)"
 }
 
 function mount {

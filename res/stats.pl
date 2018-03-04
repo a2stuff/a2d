@@ -12,6 +12,7 @@ my $command = shift(@ARGV) // "";
 my %defs;
 my %refs;
 my %unscoped;
+my %raw;
 my $depth = 0;
 
 while (<STDIN>) {
@@ -25,10 +26,15 @@ while (<STDIN>) {
         $unscoped{$def} = 1 if $depth < 2;
     }
 
-    foreach my $term (split /(?<!::)\b/, $_) {
-        if ($term =~ /^L[0-9A-F]{4}$/) {
+    foreach my $term (split /[ (),+\-*\/]/, $_) {
+        $term =~ s/\s+//g;
+        next unless $term;
+        if ($term =~ m/^L[0-9A-F]{4}$/) {
             $refs{$term} = 0 unless defined $refs{$term};
             $refs{$term} += 1;
+        } elsif ($term =~ m/^\$[0-9A-F]{4}$/) {
+            $raw{$term} = 0 unless defined $raw{$term};
+            $raw{$term} += 1;
         }
     }
 }
@@ -40,6 +46,7 @@ foreach my $def (keys %defs) {
 
 my $defs = scalar(keys %defs);
 my $unscoped = scalar(keys %unscoped);
+my $raws = scalar(keys %raw);
 my $scoped = $defs - $unscoped;
 
 if ($command eq "unscoped") {
@@ -50,8 +57,13 @@ if ($command eq "unscoped") {
     foreach my $def (sort keys %defs) {
         print "$def\n" unless defined $refs{$def};
     }
+} elsif ($command eq "raw") {
+    foreach my $addr (sort keys %raw) {
+        print "$addr\n";
+    }
 } elsif ($command eq "") {
-    print "unscoped: $unscoped  scoped: $scoped  unrefed: $unrefed\n";
+    printf("unscoped: %4d  scoped: %4d  raw: %4d  unrefed: %4d\n",
+                  $unscoped, $scoped, $raws, $unrefed);
 } else {
     die "Unknown command: $command\n";
 }
