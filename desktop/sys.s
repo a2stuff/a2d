@@ -86,10 +86,10 @@ L237A:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         DEFINE_CLOSE_PARAMS close_params2
         DEFINE_CLOSE_PARAMS close_params3
 
-        .byte   $01,$F5,$26,$03,$F5,$26,$00
-        .byte   $0D
-L23F4:  .byte   $00,$03,$60,$2B,$00,$11
-L23FA:  .byte   $00,$04
+        .byte   $01,$F5,$26
+        DEFINE_OPEN_PARAMS open_params3, $26F5, $0D00
+        DEFINE_OPEN_PARAMS open_params4, $2B60, $1100
+L23FB:  .byte   $04
 L23FC:  .byte   $00,$00,$40
 L23FF:  .addr   $7F00
 L2401:  .byte   $00,$00,$04
@@ -499,8 +499,8 @@ L294B:  jsr     L2876
         jsr     L28B4
 L2951:  rts
 
-        .byte   $03,$F5,$26,$00,$A0
-L2957:  .byte   $00,$04
+        DEFINE_OPEN_PARAMS open_params2, $26F5, $A000
+L2958:  .byte   $04
 L2959:  .byte   $00,$00,$A4,$00,$02,$00,$00
 
         DEFINE_CLOSE_PARAMS close_params
@@ -508,12 +508,12 @@ L2959:  .byte   $00,$00,$A4,$00,$02,$00,$00
 L2962:  jsr     L2A95
         cmp     #$47
         beq     L2974
-        MLI_CALL OPEN, $2952
+        MLI_CALL OPEN, open_params2
         beq     :+
         jsr     L28F4
 L2974:  rts
 
-:       lda     L2957
+:       lda     open_params2::ref_num
         sta     L2959
         sta     close_params::ref_num
         MLI_CALL READ, $2958
@@ -582,20 +582,20 @@ L29F6:  lda     $06
 L2A0D:  jmp     L299F
 
 L2A10:  .byte   0
-L2A11:  MLI_CALL OPEN, $23EF
+L2A11:  MLI_CALL OPEN, open_params3
         beq     L2A1F
         jsr     L28F4
         jmp     L2A11
 
-L2A1F:  MLI_CALL OPEN, $23F5
+L2A1F:  MLI_CALL OPEN, open_params4
         beq     L2A2D
         jsr     L28F4
         jmp     L2A1F
 
-L2A2D:  lda     L23F4
+L2A2D:  lda     open_params3::ref_num
         sta     L23FC
         sta     close_params2::ref_num
-        lda     L23FA
+        lda     open_params4::ref_num
         sta     L2404
         sta     close_params3::ref_num
 L2A3F:  copy16  #$7F00, L23FF
@@ -683,10 +683,10 @@ L2AF3:  inx
         clc
         rts
 
+
 L2B0D:  PASCAL_STRING "DeskTop2"
-        .byte   $03,$1C,$2B,$00,$10
-L2B1B:  .byte   $00
-        PASCAL_STRING "DeskTop/DESKTOP1"
+        DEFINE_OPEN_PARAMS open_params5, L2B1C, $1000
+L2B1C:  PASCAL_STRING "DeskTop/DESKTOP1"
         .byte   $04
 L2B2E:  .byte   0
         .byte   0
@@ -696,9 +696,9 @@ L2B2E:  .byte   0
 
         DEFINE_CLOSE_PARAMS close_params4
 
-L2B37:  MLI_CALL OPEN, $2B16
+L2B37:  MLI_CALL OPEN, open_params5
         bne     L2B56
-        lda     L2B1B
+        lda     open_params5::ref_num
         sta     L2B2E
         sta     close_params4::ref_num
         MLI_CALL WRITE, $2B2D
@@ -910,24 +910,24 @@ L30B2:  inc     L30BB
 
 L30B8:  jmp     L3880
 
-L30BB:  .byte   $00,$03,$C9,$31,$00,$08
-L30C1:  .byte   $00,$04
+L30BB:  .byte   $00
+        DEFINE_OPEN_PARAMS open_params6, $31C9, $0800
+L30C2:  .byte   $04
 L30C3:  .byte   $00,$CA,$30,$04,$00,$00,$00,$00
         .byte   $00,$00,$00
-L30CE:  .byte   $01
-L30CF:  .byte   $00,$04
+        DEFINE_CLOSE_PARAMS close_params5
+L30D0:  .byte   $04
 L30D1:  .byte   $00,$50,$31,$27,$00,$00,$00,$04
 L30D9:  .byte   $00,$E0,$30
 L30DC:  .byte   $05,$00
 L30DE:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00
-L30E9:  .byte   $01
-L30EA:  .byte   $00
-L30EB:  .byte   $01
-L30EC:  .byte   $00,$01,$C9,$31,$03,$C9,$31,$00
-        .byte   $0D
-L30F5:  .byte   $00,$03,$88,$31,$00,$1C
-L30FB:  .byte   $00,$04
+        DEFINE_CLOSE_PARAMS close_params7
+        DEFINE_CLOSE_PARAMS close_params6
+        .byte   $01,$C9,$31
+        DEFINE_OPEN_PARAMS open_params7, $31C9, $0D00
+        DEFINE_OPEN_PARAMS open_params8, $3188, $1C00
+L30FC:  .byte   $04
 L30FD:  .byte   $00,$00,$11
 L3100:  .byte   $00
 L3101:  .byte   $0B
@@ -1044,11 +1044,11 @@ L3359:  ldx     L3349
 L3367:  lda     #$00
         sta     L329C
         sta     L334A
-        MLI_CALL OPEN, $30BC
+        MLI_CALL OPEN, open_params6
         beq     L337A
         jmp     L3A43
 
-L337A:  lda     L30C1
+L337A:  lda     open_params6::ref_num
         sta     L329D
         sta     L30C3
         MLI_CALL READ, $30C2
@@ -1059,8 +1059,8 @@ L337A:  lda     L30C1
         rts
 
 L3392:  lda     L329D
-        sta     L30CF
-        MLI_CALL CLOSE, L30CE
+        sta     close_params5::ref_num
+        MLI_CALL CLOSE, close_params5
         beq     L33A3
         jmp     L3A43
 
@@ -1345,19 +1345,19 @@ L363F:  .byte   0
 L3640:  .byte   0
 L3641:  .byte   0
 L3642:  .byte   0
-L3643:  MLI_CALL OPEN, $30F0
+L3643:  MLI_CALL OPEN, open_params7
         beq     L364E
         jsr     L3A43
-L364E:  MLI_CALL OPEN, $30F6
+L364E:  MLI_CALL OPEN, open_params8
         beq     L3659
         jmp     L3A43
 
-L3659:  lda     L30F5
+L3659:  lda     open_params7::ref_num
         sta     L30FD
-        sta     L30EA
-        lda     L30FB
+        sta     close_params7::ref_num
+        lda     open_params8::ref_num
         sta     L3105
-        sta     L30EC
+        sta     close_params6::ref_num
 L366B:  lda     #0
         sta     L3100
         lda     #$0B
@@ -1381,8 +1381,8 @@ L366B:  lda     #0
         lda     L310B
         cmp     #$0B
         beq     L366B
-L36AE:  MLI_CALL CLOSE, L30EB
-        MLI_CALL CLOSE, L30E9
+L36AE:  MLI_CALL CLOSE, close_params6
+        MLI_CALL CLOSE, close_params7
         jsr     L37AE
         jsr     L379D
         rts
@@ -1546,20 +1546,20 @@ L37D2:  jsr     L3836
         tya
         rts
 
-        .byte   $00,$00,$03,$E7,$37,$00,$40
-L37E6:  .byte   $00
-        PASCAL_STRING "Selector.List"
+        .byte   $00,$00
+        DEFINE_OPEN_PARAMS open_params9, $37E7, $4000
+L37E7:  PASCAL_STRING "Selector.List"
         .byte   $04
 L37F6:  .byte   $00,$00,$44,$00,$08,$00,$00
 
-        DEFINE_CLOSE_PARAMS L37FD
+        DEFINE_CLOSE_PARAMS close_params8
 
-L37FF:  MLI_CALL OPEN, $37E1
+L37FF:  MLI_CALL OPEN, open_params9
         bne     L381B
-        lda     L37E6
+        lda     open_params9::ref_num
         sta     L37F6
         MLI_CALL READ, $37F5
-        MLI_CALL CLOSE, L37FD
+        MLI_CALL CLOSE, close_params8
         lda     #$00
 L381B:  rts
 
@@ -1594,25 +1594,26 @@ L3836:  ldx     #$00
         ldx     L3857
         rts
 
-L3857:  .byte   $00,$03,$77,$38,$00,$50
-L385D:  .byte   $00,$03,$6E,$38,$00,$54
-L3863:  .byte   $00,$04
+L3857:  .byte   $00
+        DEFINE_OPEN_PARAMS open_params11, $3877, $5000
+        DEFINE_OPEN_PARAMS open_params10, $386E, $5400
+L3864:  .byte   $04
 L3865:  .byte   $00,$00,$20,$00,$04,$00,$00
-        DEFINE_CLOSE_PARAMS L386C
+        DEFINE_CLOSE_PARAMS close_params9
         PASCAL_STRING "Selector"
         PASCAL_STRING "DeskTop2"
 
-L3880:  MLI_CALL CLOSE, L386C
-        MLI_CALL OPEN, $385E
+L3880:  MLI_CALL CLOSE, close_params9
+        MLI_CALL OPEN, open_params10
         beq     :+
-        MLI_CALL OPEN, $3858
+        MLI_CALL OPEN, open_params11
         beq     L3897
         brk
 
-L3897:  lda     L385D
+L3897:  lda     open_params11::ref_num
         jmp     L38A0
 
-:       lda     L3863
+:       lda     open_params10::ref_num
 L38A0:  sta     L3865
         MLI_CALL READ, $3864
         MLI_CALL CLOSE, $386C
