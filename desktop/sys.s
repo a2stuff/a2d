@@ -89,10 +89,8 @@ L237A:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $01,$F5,$26
         DEFINE_OPEN_PARAMS open_params3, $26F5, $0D00
         DEFINE_OPEN_PARAMS open_params4, $2B60, $1100
-L23FB:  .byte   $04
-L23FC:  .byte   $00,$00,$40
-L23FF:  .addr   $7F00
-L2401:  .byte   $00,$00,$04
+        DEFINE_READ_PARAMS read_params3, $4000, $7F00
+L2403:  .byte   $04
 L2404:  .byte   $00,$00,$40
 L2407:  .addr   $7F00
 L2409:  .byte   $00
@@ -500,9 +498,7 @@ L294B:  jsr     L2876
 L2951:  rts
 
         DEFINE_OPEN_PARAMS open_params2, $26F5, $A000
-L2958:  .byte   $04
-L2959:  .byte   $00,$00,$A4,$00,$02,$00,$00
-
+        DEFINE_READ_PARAMS read_params2, $A400, $0200
         DEFINE_CLOSE_PARAMS close_params
 
 L2962:  jsr     L2A95
@@ -514,9 +510,9 @@ L2962:  jsr     L2A95
 L2974:  rts
 
 :       lda     open_params2::ref_num
-        sta     L2959
+        sta     read_params2::ref_num
         sta     close_params::ref_num
-        MLI_CALL READ, $2958
+        MLI_CALL READ, read_params2
         beq     :+
         jsr     L28F4
         rts
@@ -593,21 +589,21 @@ L2A1F:  MLI_CALL OPEN, open_params4
         jmp     L2A1F
 
 L2A2D:  lda     open_params3::ref_num
-        sta     L23FC
+        sta     read_params3::ref_num
         sta     close_params2::ref_num
         lda     open_params4::ref_num
         sta     L2404
         sta     close_params3::ref_num
-L2A3F:  copy16  #$7F00, L23FF
-L2A49:  MLI_CALL READ, $23FB
+L2A3F:  copy16  #$7F00, read_params3::request_count
+L2A49:  MLI_CALL READ, read_params3
         beq     L2A5B
         cmp     #$4C
         beq     L2A88
         jsr     L28F4
         jmp     L2A49
 
-L2A5B:  copy16  L2401, L2407
-        ora     L2401
+L2A5B:  copy16  read_params3::trans_count, L2407
+        ora     read_params3::trans_count
         beq     L2A88
 L2A6C:  MLI_CALL WRITE, $2403
         beq     :+
@@ -912,26 +908,21 @@ L30B8:  jmp     L3880
 
 L30BB:  .byte   $00
         DEFINE_OPEN_PARAMS open_params6, $31C9, $0800
-L30C2:  .byte   $04
-L30C3:  .byte   $00,$CA,$30,$04,$00,$00,$00,$00
+        DEFINE_READ_PARAMS read_params4, $30CA, $4
+        .byte   $00
         .byte   $00,$00,$00
         DEFINE_CLOSE_PARAMS close_params5
-L30D0:  .byte   $04
-L30D1:  .byte   $00,$50,$31,$27,$00,$00,$00,$04
-L30D9:  .byte   $00,$E0,$30
-L30DC:  .byte   $05,$00
-L30DE:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        DEFINE_READ_PARAMS read_params5, $3150, $27
+        DEFINE_READ_PARAMS read_params6, $30E0, $5
+L30E0:  .byte   $00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00
         DEFINE_CLOSE_PARAMS close_params7
         DEFINE_CLOSE_PARAMS close_params6
         .byte   $01,$C9,$31
         DEFINE_OPEN_PARAMS open_params7, $31C9, $0D00
         DEFINE_OPEN_PARAMS open_params8, $3188, $1C00
-L30FC:  .byte   $04
-L30FD:  .byte   $00,$00,$11
-L3100:  .byte   $00
-L3101:  .byte   $0B
-L3102:  .byte   $00,$00,$04
+        DEFINE_READ_PARAMS read_params7, $1100, $0B00
+L3104:  .byte   $04
 L3105:  .byte   $00,$00,$11
 L3108:  .byte   $00,$0B
 L310A:  .byte   $00
@@ -1050,8 +1041,8 @@ L3367:  lda     #$00
 
 L337A:  lda     open_params6::ref_num
         sta     L329D
-        sta     L30C3
-        MLI_CALL READ, $30C2
+        sta     read_params4::ref_num
+        MLI_CALL READ, read_params4
         beq     :+
         jmp     L3A43
 
@@ -1068,8 +1059,8 @@ L33A3:  rts
 
 L33A4:  inc     L329C
         lda     L329D
-        sta     L30D1
-        MLI_CALL READ, $30D0
+        sta     read_params5::ref_num
+        MLI_CALL READ, read_params5
         beq     L33B8
         jmp     L3A43
 
@@ -1080,13 +1071,13 @@ L33B8:  inc     L334A
         lda     #$00
         sta     L334A
         lda     L329D
-        sta     L30D9
-        MLI_CALL READ, $30D8
+        sta     read_params6::ref_num
+        MLI_CALL READ, read_params6
         beq     :+
         jmp     L3A43
 
-:       lda     L30DE
-        cmp     L30DC
+:       lda     read_params6::trans_count
+        cmp     read_params6::request_count
         rts
 
 L33E0:  return  #$00
@@ -1353,23 +1344,20 @@ L364E:  MLI_CALL OPEN, open_params8
         jmp     L3A43
 
 L3659:  lda     open_params7::ref_num
-        sta     L30FD
+        sta     read_params7::ref_num
         sta     close_params7::ref_num
         lda     open_params8::ref_num
         sta     L3105
         sta     close_params6::ref_num
-L366B:  lda     #0
-        sta     L3100
-        lda     #$0B
-        sta     L3101
-        MLI_CALL READ, $30FC
+L366B:  copy16  #$0B00, read_params7::request_count
+        MLI_CALL READ, read_params7
         beq     :+
         cmp     #$4C
         beq     L36AE
         jmp     L3A43
 
-:       copy16  L3102, L3108
-        ora     L3102
+:       copy16  read_params7::trans_count, L3108
+        ora     read_params7::trans_count
         beq     L36AE
         MLI_CALL WRITE, $3104
         beq     :+
@@ -1549,16 +1537,15 @@ L37D2:  jsr     L3836
         .byte   $00,$00
         DEFINE_OPEN_PARAMS open_params9, $37E7, $4000
 L37E7:  PASCAL_STRING "Selector.List"
-        .byte   $04
-L37F6:  .byte   $00,$00,$44,$00,$08,$00,$00
+        DEFINE_READ_PARAMS read_params8, $4400, $0800
 
         DEFINE_CLOSE_PARAMS close_params8
 
 L37FF:  MLI_CALL OPEN, open_params9
         bne     L381B
         lda     open_params9::ref_num
-        sta     L37F6
-        MLI_CALL READ, $37F5
+        sta     read_params8::ref_num
+        MLI_CALL READ, read_params8
         MLI_CALL CLOSE, close_params8
         lda     #$00
 L381B:  rts
@@ -1597,8 +1584,7 @@ L3836:  ldx     #$00
 L3857:  .byte   $00
         DEFINE_OPEN_PARAMS open_params11, $3877, $5000
         DEFINE_OPEN_PARAMS open_params10, $386E, $5400
-L3864:  .byte   $04
-L3865:  .byte   $00,$00,$20,$00,$04,$00,$00
+        DEFINE_READ_PARAMS read_params9, $2000, $0400
         DEFINE_CLOSE_PARAMS close_params9
         PASCAL_STRING "Selector"
         PASCAL_STRING "DeskTop2"
@@ -1614,8 +1600,8 @@ L3897:  lda     open_params11::ref_num
         jmp     L38A0
 
 :       lda     open_params10::ref_num
-L38A0:  sta     L3865
-        MLI_CALL READ, $3864
+L38A0:  sta     read_params9::ref_num
+        MLI_CALL READ, read_params9
         MLI_CALL CLOSE, $386C
         jmp     L2000
 
