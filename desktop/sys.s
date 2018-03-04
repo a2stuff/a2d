@@ -10,27 +10,18 @@
 ;;; ============================================================
 .proc bootstrap
 
-L0300   := $0300
+        jmp     start
 
-L2000:  jmp     L24B6
+;;; ============================================================
+;;; Data buffers and param blocks
 
 date:   .word   0               ; written into file
 
 L2005:
+        .res    832, 0
 
-        .res    256, 0
-        .res    256, 0
-        .res    256, 0
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $02,$00
-        .addr   $2363
+        .addr   L2363
 
 .proc get_prefix_params2
 param_count:    .byte   2       ; GET_PREFIX, but param_count is 2 ??? Bug???
@@ -39,16 +30,18 @@ data_buffer:    .addr   $0D00
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params4, $0D00
         .byte   $00,$01
-        .addr   $2362
-        .byte   $00,$00,$00
+        .addr   L2362
+L2362:  .byte   $00
+L2363:  .byte   $00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00
 L2372:  .byte   $00
-L2373:  .byte   $00
+unit_num:  .byte   $00
 
         DEFINE_ON_LINE_PARAMS on_line_params,, on_line_buffer
 
-L2378:  .byte   $00,$00
+L2378:  .byte   0
+L2379:  .byte   0
 
 on_line_buffer: .res 17, 0
 
@@ -56,7 +49,7 @@ on_line_buffer: .res 17, 0
         DEFINE_SET_PREFIX_PARAMS set_prefix_params, path_buf0
 
         .byte   $0A
-        .addr   $2379
+        .addr   L2379
         .byte   $00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00
@@ -66,12 +59,14 @@ on_line_buffer: .res 17, 0
         .byte   $00,$00,$03,$00,$01,$00,$00,$01
         .byte   $00,$03,$F5,$26,$00,$08,$00,$04
         .byte   $00
-        .addr   $23C9
-        .byte   $04,$00,$00,$00,$00
+        .addr   L23C9
+        .byte   $04,$00,$00,$00
+L23C9:  .byte   $00
         .byte   $00,$00,$00,$01,$00,$04,$00,$21
         .byte   $28,$27,$00,$00,$00,$04,$00
-        .addr   $23DF
-        .byte   $05,$00,$00,$00,$00,$00,$00
+        .addr   L23DF
+        .byte   $05,$00,$00,$00
+L23DF:  .byte   $00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00
 
         DEFINE_CLOSE_PARAMS close_params2
@@ -104,15 +99,22 @@ str_f6: PASCAL_STRING "PRODOS"
 L2471:  .addr str_f1,str_f2,str_f3,str_f4,str_f5,str_f6
 
 str_copying_to_ramcard:  PASCAL_STRING "Copying Apple II DeskTop into RAMCard"
-L24A3:  .byte   $60
-L24A4:  .byte   $20,$00,$03,$00
-L24A8:  .byte   $01,$03,$05,$07
+
+        ;; Jump target from filer launcher - why???
+rts1:   rts
+
+sig_bytes:      .byte   $20,$00,$03,$00
+sig_offsets:    .byte   $01,$03,$05,$07
+
 L24AC:  .byte   $00
 
         ;; Selector signature
-L24AD:  .byte   $AD,$8B,$C0,$18,$FB,$5C,$04,$D0,$E0
+selector_signature:
+        .byte   $AD,$8B,$C0,$18,$FB,$5C,$04,$D0,$E0
 
-L24B6:  sta     MIXCLR
+;;; ============================================================
+
+start:  sta     MIXCLR
         sta     HIRES
         sta     TXTCLR
         sta     CLR80VID
@@ -134,13 +136,18 @@ L24EB:  lda     MACHID
         beq     have128k
 
         ;; Relocate FILER launch routine to $300 and invoke
-        ldy     #$D0
+.scope
+        target := $300
+        length := $D0
+
+        ldy     #length
 :       lda     launch_filer,y
-        sta     L0300,y
+        sta     target,y
         dey
-        cpy     #$FF
+        cpy     #$FF            ; why not bpl ???
         bne     :-
-        jmp     L0300
+        jmp     target
+.endscope
 
 have128k:
         lda     #$00
@@ -153,7 +160,7 @@ have128k:
         ;; Check quit routine
         ldx     #$08
 :       lda     SELECTOR,x         ; Quit routine?
-        cmp     L24AD,x
+        cmp     selector_signature,x
         bne     nomatch
         dex
         bpl     :-
@@ -168,61 +175,74 @@ match:  sta     $D3AC
         lda     ROMIN2
         ldx     #$00
         jsr     L26A5
+
+        ;; Point $8 at $C100
         lda     #$00
         sta     L2BE2
         sta     $08
         lda     #$C1
-        sta     $09
-L253E:  ldx     #$00
-L2540:  lda     L24A8,x
+        sta     $08+1
+
+        ;; Check slot for signature bytes
+check_slot:
+        ldx     #0
+:       lda     sig_offsets,x   ; Check $CnXX
         tay
         lda     ($08),y
-        cmp     L24A4,x
-        bne     L255A
+        cmp     sig_bytes,x
+        bne     next_slot
         inx
-        cpx     #$04
-        bcc     L2540
+        cpx     #4              ; number of signature bytes
+        bcc     :-
+
         ldy     #$FB
-        lda     ($08),y
+        lda     ($08),y         ; Also check $CnFB for low bit
         and     #$01
-        beq     L255A
-        bne     L2576
-L255A:  inc     $09
-        lda     $09
-        cmp     #$C8
-        bcc     L253E
+        beq     next_slot
+        bne     found_slot
+
+next_slot:
+        inc     $08+1
+        lda     $08+1
+        cmp     #$C8            ; stop at $C800
+        bcc     check_slot
+
+
         ldy     DEVCNT
 L2565:  lda     DEVLST,y
         cmp     #$3E
         beq     L2572
         dey
         bpl     L2565
-        jmp     L26E8
+        jmp     fail
 
 L2572:  lda     #$03
         bne     L257A
-L2576:  lda     $09
-        and     #$0F
-L257A:  sta     L2BE3
+found_slot:
+        lda     $08+1
+        and     #$0F            ; slot # in A
+L257A:  sta     slot
+
+        ;; Synthesize unit_num, verify it's a device
         asl     a
         asl     a
         asl     a
         asl     a
         sta     on_line_params::unit_num
-        sta     L2373
+        sta     unit_num
         MLI_CALL ON_LINE, on_line_params
-        beq     L2592
-        jmp     L26E8
+        beq     :+
+        jmp     fail
 
-L2592:  lda     L2373
-        cmp     #$30
-        beq     L25AD
+:       lda     unit_num
+        cmp     #$30            ; make sure it's not slot 3 (aux)
+        beq     :+
         sta     write_block_params_unit_num
         sta     write_block_params2_unit_num
         MLI_CALL WRITE_BLOCK, write_block_params
-        bne     L25AD
+        bne     :+
         MLI_CALL WRITE_BLOCK, write_block_params2
-L25AD:  lda     on_line_buffer
+:       lda     on_line_buffer
         and     #$0F
         tay
         iny
@@ -242,18 +262,18 @@ L25BF:  lda     on_line_buffer,y
         ldx     #$80
         jsr     L26A5
         jsr     L2B57
-        jmp     L26E8
+        jmp     fail
 
 L25E4:  lda     BUTN1
         sta     L2372
         lda     BUTN0
         bpl     L2603
-        jmp     L26E8
+        jmp     fail
 
 L25F2:  PASCAL_STRING "/DeskTop"
 L25FB:  .byte   $0A,$00,$00,$C3,$0F,$00,$00,$0D
-L2603:  .byte   $20,$CD
-        plp
+
+L2603:  jsr     show_splash
         MLI_CALL GET_PREFIX, get_prefix_params
         beq     L2611
         jmp     L28F4
@@ -315,11 +335,11 @@ L268F:  jsr     L2B37
         jsr     L2B57
         lda     #$00
         sta     $C071           ; ???
-        ldy     #$17
-L269C:  sta     BITMAP,y
+        ldy     #BITMAP_SIZE-1
+:       sta     BITMAP,y
         dey
-        bpl     L269C
-        jmp     L3000
+        bpl     :-
+        jmp     part2
 
 L26A5:  lda     LCBANK2
         lda     LCBANK2
@@ -353,13 +373,11 @@ L26DC:  lda     ($06),y
         lda     ROMIN2
         rts
 
-L26E8:  lda     #$00
+fail:   lda     #$00
         sta     L2BE2
         jmp     L2681
 
-        .byte   0
-        ora     a:$00
-        .byte   0
+        .byte   0, $D, 0, 0, 0
 
 L26F5:  .res 300, 0
 
@@ -439,7 +457,8 @@ L28C8:  dex
         rts
 
         ;; Turn on 80-col mode, and draw message (centered)
-L28CD:  jsr     SLOT3ENTRY
+.proc show_splash
+        jsr     SLOT3ENTRY
         jsr     HOME
         lda     #80
         sec
@@ -450,17 +469,18 @@ L28CD:  jsr     SLOT3ENTRY
         sta     CV
         jsr     VTAB
         ldy     #0
-L28E5:  iny
+loop:   iny
         lda     str_copying_to_ramcard,y
         ora     #$80
         jsr     COUT
         cpy     str_copying_to_ramcard
-        bne     L28E5
+        bne     loop
         rts
+.endproc
 
 L28F4:  lda     #$00
         sta     L2378
-        jmp     L26E8
+        jmp     fail
 
         ldy     #$00
 L28FE:  lda     $0200,y
@@ -480,7 +500,7 @@ L2912:  jsr     L288F
         beq     :+
         cmp     #PDERR_FILE_NOT_FOUND
         beq     L294B
-        jmp     L26E8
+        jmp     fail
 
 :       lda     get_file_info_params::file_type
         sta     L2831
@@ -655,10 +675,10 @@ L2ABC:  and     #$70
         lda     #$00
         sta     $08
         ldx     #$00
-L2ACC:  lda     L24A8,x
+L2ACC:  lda     sig_offsets,x
         tay
         lda     ($08),y
-        cmp     L24A4,x
+        cmp     sig_bytes,x
         bne     L2AE4
         inx
         cpx     #$04
@@ -705,7 +725,7 @@ L2B37:  MLI_CALL OPEN, open_params5
         MLI_CALL CLOSE, close_params4
 L2B56:  rts
 
-L2B57:  addr_call L26CD, $2005
+L2B57:  addr_call L26CD, L2005
         rts
 
         .byte   0
@@ -725,17 +745,17 @@ path_buf0:
 
         MLI_CALL OPEN, open_params
         beq     :+
-        jmp     L24A3
+        jmp     rts1
 
 :       lda     open_params_ref_num
         sta     read_params_ref_num
         MLI_CALL READ, read_params
         beq     :+
-        jmp     L24A3
+        jmp     rts1
 
 :       MLI_CALL CLOSE, close_params
         beq     :+
-        jmp     L24A3
+        jmp     rts1
 
 :       jmp     sys_start
 
@@ -749,6 +769,7 @@ path_buf0:
 
 filename:  PASCAL_STRING "FILER"
 .endproc
+        .assert .sizeof(launch_filer) <= $D0, error, "Routine length exceeded"
 
 ;;; ============================================================
 
@@ -756,22 +777,29 @@ filename:  PASCAL_STRING "FILER"
 
 L2BE1:  .byte   $00
 L2BE2:  .byte   $00
-L2BE3:  .byte   $00
+slot:   .byte   $00
 
-        DEFINE_WRITE_BLOCK_PARAMS write_block_params, $2C00, 0
+        DEFINE_WRITE_BLOCK_PARAMS write_block_params, prodos_loader_blocks, 0
         write_block_params_unit_num := write_block_params::unit_num
-        DEFINE_WRITE_BLOCK_PARAMS write_block_params2, $2E00, 1
+        DEFINE_WRITE_BLOCK_PARAMS write_block_params2, prodos_loader_blocks + 512, 1
         write_block_params2_unit_num := write_block_params2::unit_num
 
         PAD_TO $2C00
 
 ;;; ============================================================
+
+prodos_loader_blocks:
         .assert * = $2C00, error, "Segment length mismatch"
         .incbin "inc/pdload.dat"
-        .assert * = $3000, error, "Segment length mismatch"
+
+.endproc ;  bootstrap
+
 ;;; ============================================================
 
-L3000:  jsr     SLOT3ENTRY
+        .assert * = $3000, error, "Segment length mismatch"
+.proc part2
+
+        jsr     SLOT3ENTRY
         jsr     HOME
         lda     LCBANK2
         lda     LCBANK2
@@ -1523,7 +1551,7 @@ L3897:  lda     open_params11::ref_num
 L38A0:  sta     read_params9::ref_num
         MLI_CALL READ, read_params9
         MLI_CALL CLOSE, close_params9
-        jmp     L2000
+        jmp     $2000
 
 L38B2:  stax    $06
         ldy     #$00
@@ -1712,17 +1740,19 @@ L3ADA:  iny
         lda     #$A2
         sta     $0200
         rts
-
-.endproc ; bootstrap
+.endproc ; part2
 
 ;;; ============================================================
 ;;; ??? Is this relocated? Part of ProDOS? RAMCard driver?
 .proc WTF
 
+        ;; Branch targets before/after this block
+L3AB7           := $3AB7
 L400C           := $400C
 L402B           := $402B
 L402C           := $402C
 
+        ;; Routines and data outside this block
 L9F8C           := $9F8C
 L9FAB           := $9FAB
 L9FB0           := $9FB0
@@ -1745,7 +1775,6 @@ LB7D0           := $B7D0
 LBE50           := $BE50
 LBE70           := $BE70
 
-        L3AB7 := $3AB7 ; This can't be right
 
         copy16  #$BCBD, $BEC8
         lda     DEVNUM
