@@ -15,6 +15,7 @@ DATELO          := $BF90        ; Date lo
 DATEHI          := $BF91        ; Date hi
 TIMELO          := $BF92        ; Time lo
 TIMEHI          := $BF93        ; Time hi
+LEVEL           := $BF94        ; File level
 MACHID          := $BF98        ; Machine ID
 
 ;;; Patch Locations
