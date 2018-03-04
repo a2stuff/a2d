@@ -7,7 +7,6 @@
         .include "../inc/prodos.inc"
         .include "../macros.inc"
 
-L0045           := $0045
 L0300           := $0300
 
 L400C           := $400C
@@ -68,7 +67,7 @@ L237A:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00
 
-        DEFINE_GET_PREFIX_PARAMS get_prefix_params, $26F5
+        DEFINE_GET_PREFIX_PARAMS get_prefix_params, L26F5
         DEFINE_SET_PREFIX_PARAMS set_prefix_params, $2B60
         .byte   $0A
         .byte   $79,$23,$00,$00,$00,$00,$00,$00
@@ -87,20 +86,17 @@ L237A:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         DEFINE_CLOSE_PARAMS close_params3
 
         .byte   $01,$F5,$26
-        DEFINE_OPEN_PARAMS open_params3, $26F5, $0D00
-        DEFINE_OPEN_PARAMS open_params4, $2B60, $1100
+        DEFINE_OPEN_PARAMS open_params3, L26F5, $0D00
+        DEFINE_OPEN_PARAMS open_params4, L2B60, $1100
         DEFINE_READ_PARAMS read_params3, $4000, $7F00
-L2403:  .byte   $04
-L2404:  .byte   $00,$00,$40
-L2407:  .addr   $7F00
-L2409:  .byte   $00
-L240A:  .byte   $00
+        DEFINE_WRITE_PARAMS write_params, $4000, $7F00
+
 L240B:  .byte   $07,$60,$2B,$C3,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$07,$60,$2B,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, $26F5
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, L26F5
         .byte   0
         PASCAL_STRING "DESKTOP1"
         PASCAL_STRING "DESKTOP2"
@@ -356,8 +352,10 @@ L26E8:  lda     #$00
         .byte   0
         ora     a:$00
         .byte   0
+
 L26F5:  .byte   0
 L26F6:  .res 299, 0
+
 L2821:  .byte   0
 L2822:  .res 15, 0
 L2831:  .res 32, 0
@@ -497,7 +495,7 @@ L294B:  jsr     L2876
         jsr     L28B4
 L2951:  rts
 
-        DEFINE_OPEN_PARAMS open_params2, $26F5, $A000
+        DEFINE_OPEN_PARAMS open_params2, L26F5, $A000
         DEFINE_READ_PARAMS read_params2, $A400, $0200
         DEFINE_CLOSE_PARAMS close_params
 
@@ -592,7 +590,7 @@ L2A2D:  lda     open_params3::ref_num
         sta     read_params3::ref_num
         sta     close_params2::ref_num
         lda     open_params4::ref_num
-        sta     L2404
+        sta     write_params::ref_num
         sta     close_params3::ref_num
 L2A3F:  copy16  #$7F00, read_params3::request_count
 L2A49:  MLI_CALL READ, read_params3
@@ -602,19 +600,19 @@ L2A49:  MLI_CALL READ, read_params3
         jsr     L28F4
         jmp     L2A49
 
-L2A5B:  copy16  read_params3::trans_count, L2407
+L2A5B:  copy16  read_params3::trans_count, write_params::request_count
         ora     read_params3::trans_count
         beq     L2A88
-L2A6C:  MLI_CALL WRITE, $2403
+L2A6C:  MLI_CALL WRITE, write_params
         beq     :+
         jsr     L28F4
         jmp     L2A6C
 
-:       lda     L2409
-        cmp     #$00
+:       lda     write_params::trans_count
+        cmp     #<$7F00
         bne     L2A88
-        lda     L240A
-        cmp     #$7F
+        lda     write_params::trans_count+1
+        cmp     #>$7F00
         beq     L2A3F
 L2A88:  MLI_CALL CLOSE, close_params2
         MLI_CALL CLOSE, close_params3
@@ -681,23 +679,19 @@ L2AF3:  inx
 
 
 L2B0D:  PASCAL_STRING "DeskTop2"
-        DEFINE_OPEN_PARAMS open_params5, L2B1C, $1000
-L2B1C:  PASCAL_STRING "DeskTop/DESKTOP1"
-        .byte   $04
-L2B2E:  .byte   0
-        .byte   0
-        jsr     L0045
-        .byte   0
-        .byte   0
+        DEFINE_OPEN_PARAMS open_params5, str_desktop1_path, $1000
+str_desktop1_path:
+        PASCAL_STRING "DeskTop/DESKTOP1"
+        DEFINE_WRITE_PARAMS write_params2, $2000, $45
 
         DEFINE_CLOSE_PARAMS close_params4
 
 L2B37:  MLI_CALL OPEN, open_params5
         bne     L2B56
         lda     open_params5::ref_num
-        sta     L2B2E
+        sta     write_params2::ref_num
         sta     close_params4::ref_num
-        MLI_CALL WRITE, $2B2D
+        MLI_CALL WRITE, write_params2
         bne     L2B56
         MLI_CALL CLOSE, close_params4
 L2B56:  rts
@@ -907,26 +901,23 @@ L30B2:  inc     L30BB
 L30B8:  jmp     L3880
 
 L30BB:  .byte   $00
-        DEFINE_OPEN_PARAMS open_params6, $31C9, $0800
+        DEFINE_OPEN_PARAMS open_params6, L31C9, $0800
         DEFINE_READ_PARAMS read_params4, $30CA, $4
         .byte   $00
         .byte   $00,$00,$00
         DEFINE_CLOSE_PARAMS close_params5
-        DEFINE_READ_PARAMS read_params5, $3150, $27
-        DEFINE_READ_PARAMS read_params6, $30E0, $5
+        DEFINE_READ_PARAMS read_params5, L3150, $27
+        DEFINE_READ_PARAMS read_params6, L30E0, $5
 L30E0:  .byte   $00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00
         DEFINE_CLOSE_PARAMS close_params7
         DEFINE_CLOSE_PARAMS close_params6
         .byte   $01,$C9,$31
-        DEFINE_OPEN_PARAMS open_params7, $31C9, $0D00
-        DEFINE_OPEN_PARAMS open_params8, $3188, $1C00
+        DEFINE_OPEN_PARAMS open_params7, L31C9, $0D00
+        DEFINE_OPEN_PARAMS open_params8, L3188, $1C00
         DEFINE_READ_PARAMS read_params7, $1100, $0B00
-L3104:  .byte   $04
-L3105:  .byte   $00,$00,$11
-L3108:  .byte   $00,$0B
-L310A:  .byte   $00
-L310B:  .byte   $00
+        DEFINE_WRITE_PARAMS write_params3, $1100, $0B00
+
 L310C:  .byte   $07,$88,$31
 L310F:  .byte   $C3,$00,$00,$00
 L3113:  .byte   $00
@@ -945,6 +936,7 @@ L313C:  .byte   $00,$00
 L313E:  .byte   $00,$00,$00
 L3141:  .byte   $00,$00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$02,$00,$00,$00
+
 L3150:  .byte   $00
 L3151:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00
@@ -953,40 +945,17 @@ L3160:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $40,$35,$3D,$35,$86,$31,$60,$00
-L3188:  .byte   $00
-L3189:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-L31C9:  .byte   $00
-L31CA:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-L320A:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-L324A:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+
+        ;; pathname buffer
+L3188:  .byte   0
+L3189:  .res    64, 0
+
+        ;; pathname buffer
+L31C9:  .byte   0
+L31CA:  .res    64, 0
+
+L320A:  .res    64, 0
+L324A:  .res    64, 0
 L328A:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
 L329A:  .byte   $00
@@ -1347,7 +1316,7 @@ L3659:  lda     open_params7::ref_num
         sta     read_params7::ref_num
         sta     close_params7::ref_num
         lda     open_params8::ref_num
-        sta     L3105
+        sta     write_params3::ref_num
         sta     close_params6::ref_num
 L366B:  copy16  #$0B00, read_params7::request_count
         MLI_CALL READ, read_params7
@@ -1356,18 +1325,18 @@ L366B:  copy16  #$0B00, read_params7::request_count
         beq     L36AE
         jmp     L3A43
 
-:       copy16  read_params7::trans_count, L3108
+:       copy16  read_params7::trans_count, write_params3::request_count
         ora     read_params7::trans_count
         beq     L36AE
-        MLI_CALL WRITE, $3104
+        MLI_CALL WRITE, write_params3
         beq     :+
         jmp     L3A43
 
-:       lda     L310A
-        cmp     #$00
+:       lda     write_params3::trans_count
+        cmp     #<$0B00
         bne     L36AE
-        lda     L310B
-        cmp     #$0B
+        lda     write_params3::trans_count+1
+        cmp     #>$0B00
         beq     L366B
 L36AE:  MLI_CALL CLOSE, close_params6
         MLI_CALL CLOSE, close_params7
@@ -1535,10 +1504,11 @@ L37D2:  jsr     L3836
         rts
 
         .byte   $00,$00
-        DEFINE_OPEN_PARAMS open_params9, $37E7, $4000
-L37E7:  PASCAL_STRING "Selector.List"
-        DEFINE_READ_PARAMS read_params8, $4400, $0800
 
+        DEFINE_OPEN_PARAMS open_params9, str_selector_list, $4000
+str_selector_list:
+        PASCAL_STRING "Selector.List"
+        DEFINE_READ_PARAMS read_params8, $4400, $0800
         DEFINE_CLOSE_PARAMS close_params8
 
 L37FF:  MLI_CALL OPEN, open_params9
@@ -1602,7 +1572,7 @@ L3897:  lda     open_params11::ref_num
 :       lda     open_params10::ref_num
 L38A0:  sta     read_params9::ref_num
         MLI_CALL READ, read_params9
-        MLI_CALL CLOSE, $386C
+        MLI_CALL CLOSE, close_params9
         jmp     L2000
 
 L38B2:  stax    $06
