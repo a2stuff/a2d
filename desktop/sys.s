@@ -295,11 +295,11 @@ L262A:  iny
         cpx     L25F2
         bne     L262A
         sty     path_buf0
-        ldx     #$07
+        ldx     #7
 L263C:  lda     L25FB,x
         sta     get_file_info_params,x
         dex
-        cpx     #$03
+        cpx     #3
         bne     L263C
         jsr     L2A95
         lda     path_buf0
@@ -331,7 +331,7 @@ L2681:  lda     L2378
         beq     L268F
         sta     path_buf0
         MLI_CALL SET_PREFIX, set_prefix_params
-L268F:  jsr     L2B37
+L268F:  jsr     write_desktop1
         jsr     L2B57
         lda     #$00
         sta     $C071           ; ???
@@ -548,7 +548,7 @@ L2974:  rts
         lda     #$2B
         sta     $06
         lda     #$A4
-        sta     $07
+        sta     $06+1
 L2997:  lda     $A425
         cmp     L2A10
         bne     L29B1
@@ -589,14 +589,8 @@ L29BD:  lda     ($06),y
 L29ED:  jsr     L2876
         jsr     L28B4
         inc     L2A10
-L29F6:  lda     $06
-        clc
-        adc     $A423
-        sta     $06
-        lda     $07
-        adc     #$00
-        sta     $07
-        lda     $07
+L29F6:  add16_8 $06, $A423, $06
+        lda     $06+1
         cmp     #$A6
         bcs     L2A0D
         jmp     L2997
@@ -665,25 +659,25 @@ L2AB2:  lda     L24AC
         bne     L2ABC
         jmp     L2AE6
 
-L2ABC:  and     #$70
+L2ABC:  and     #$70            ; Compute $Cn00
         lsr     a
         lsr     a
         lsr     a
         lsr     a
         ora     #$C0
-        sta     $09
-        lda     #$00
+        sta     $08+1
+        lda     #0
         sta     $08
-        ldx     #$00
+        ldx     #0              ; Compare signature bytes
 L2ACC:  lda     sig_offsets,x
         tay
         lda     ($08),y
         cmp     sig_bytes,x
         bne     L2AE4
         inx
-        cpx     #$04
+        cpx     #4              ; Number of signature bytes
         bcc     L2ACC
-        ldy     #$FB
+        ldy     #$FB            ; Also check $CnFB
         lda     ($08),y
         and     #$01
         bne     L2AE6
@@ -706,24 +700,30 @@ L2AF3:  inx
         clc
         rts
 
-
 L2B0D:  PASCAL_STRING "DeskTop2"
-        DEFINE_OPEN_PARAMS open_params5, str_desktop1_path, $1000
+
+;;; ============================================================
+
+.proc write_desktop1_impl
+        DEFINE_OPEN_PARAMS open_params, str_desktop1_path, $1000
 str_desktop1_path:
         PASCAL_STRING "DeskTop/DESKTOP1"
-        DEFINE_WRITE_PARAMS write_params2, $2000, $45
+        DEFINE_WRITE_PARAMS write_params, $2000, $45
+        DEFINE_CLOSE_PARAMS close_params
 
-        DEFINE_CLOSE_PARAMS close_params4
+start:  MLI_CALL OPEN, open_params
+        bne     :+
+        lda     open_params::ref_num
+        sta     write_params::ref_num
+        sta     close_params::ref_num
+        MLI_CALL WRITE, write_params
+        bne     :+
+        MLI_CALL CLOSE, close_params
+:       rts
+.endproc
+        write_desktop1 := write_desktop1_impl::start
 
-L2B37:  MLI_CALL OPEN, open_params5
-        bne     L2B56
-        lda     open_params5::ref_num
-        sta     write_params2::ref_num
-        sta     close_params4::ref_num
-        MLI_CALL WRITE, write_params2
-        bne     L2B56
-        MLI_CALL CLOSE, close_params4
-L2B56:  rts
+;;; ============================================================
 
 L2B57:  addr_call L26CD, L2005
         rts
@@ -818,7 +818,7 @@ L3023:  sta     $D395,x
         dex
         bpl     L3023
         lda     ROMIN2
-        jsr     L37FF
+        jsr     read_selector_list
         beq     L3034
         jmp     L30B8
 
@@ -889,7 +889,8 @@ L30E0:  .byte   $00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00
         DEFINE_CLOSE_PARAMS close_params7
         DEFINE_CLOSE_PARAMS close_params6
-        .byte   $01,$C9,$31
+        .byte   $01
+        .addr   path_buf2
         DEFINE_OPEN_PARAMS open_params7, path_buf2, $0D00
         DEFINE_OPEN_PARAMS open_params8, path_buf1, $1C00
         DEFINE_READ_PARAMS read_params7, $1100, $0B00
@@ -1481,20 +1482,27 @@ L37D2:  jsr     L3836
 
         .byte   $00,$00
 
-        DEFINE_OPEN_PARAMS open_params9, str_selector_list, $4000
+;;; ============================================================
+
+.proc read_selector_list_impl
+        DEFINE_OPEN_PARAMS open_params, str_selector_list, $4000
 str_selector_list:
         PASCAL_STRING "Selector.List"
-        DEFINE_READ_PARAMS read_params8, $4400, $0800
-        DEFINE_CLOSE_PARAMS close_params8
+        DEFINE_READ_PARAMS read_params, $4400, $0800
+        DEFINE_CLOSE_PARAMS close_params
 
-L37FF:  MLI_CALL OPEN, open_params9
-        bne     L381B
-        lda     open_params9::ref_num
-        sta     read_params8::ref_num
-        MLI_CALL READ, read_params8
-        MLI_CALL CLOSE, close_params8
-        lda     #$00
-L381B:  rts
+start:  MLI_CALL OPEN, open_params
+        bne     :+
+        lda     open_params::ref_num
+        sta     read_params::ref_num
+        MLI_CALL READ, read_params
+        MLI_CALL CLOSE, close_params
+        lda     #0
+:       rts
+.endproc
+        read_selector_list := read_selector_list_impl::start
+
+;;; ============================================================
 
 L381C:  ldx     #$00
         stx     L3835
