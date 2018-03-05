@@ -66,7 +66,7 @@ updatethumb_which_ctl := updatethumb_params
 updatethumb_thumbpos := updatethumb_params + 1
 updatethumb_stash := updatethumb_params + 5 ; not part of struct
 
-;;; ==================================================
+;;; ============================================================
 ;;; Resources
 
 winfo12 := $D5B7

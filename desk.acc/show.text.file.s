@@ -73,7 +73,7 @@ loop:   lda     call_main_template,x
         rts
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 ;;; ProDOS MLI calls
 
 .proc open_file
@@ -121,7 +121,7 @@ loop:   lda     call_main_template,x
         rts
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 
 ;;; Copies param blocks from Aux to Main
 .proc copy_params_aux_to_main
@@ -458,7 +458,7 @@ loop:   lda     font_width_table - 1,x
         ;; fall through
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 ;;; Main Input Loop
 
 input_loop:
@@ -498,7 +498,7 @@ input_loop:
 title:  jsr     on_title_bar_click
         jmp     input_loop
 
-;;; ==================================================
+;;; ============================================================
 ;;; Close Button
 
 .proc on_close_click
@@ -511,7 +511,7 @@ title:  jsr     on_title_bar_click
         rts                     ; exits input loop
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 ;;; Resize Handle
 
 ;;; This is dead code (no resize handle!) and may be buggy
@@ -565,7 +565,7 @@ enable: ora     #MGTK::scroll_option_active           ; enable scroll
         jmp     finish_resize
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 ;;; Client Area
 
 ;;; Non-title (client) area clicked
@@ -581,7 +581,7 @@ enable: ora     #MGTK::scroll_option_active           ; enable scroll
 end:    rts
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 ;;; Vertical Scroll Bar
 
 .proc on_vscroll_click
@@ -702,7 +702,7 @@ loop:   inx
         rts
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 ;;; Horizontal Scroll Bar
 ;;; (Unused in STF DA, so most of this is speculation)
 
@@ -795,7 +795,7 @@ store:  sta     winfo::hthumbpos
         rts
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 ;;; UI Helpers
 
         ;; Used at start of thumb event_kind_drag
@@ -910,7 +910,7 @@ end:    rts
         rts
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 ;;; Content Rendering
 
 .proc draw_content
@@ -985,7 +985,7 @@ L0ED7:  jsr     restore_proportional_font_table_if_needed
         rts
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 
 .proc L0EDB                     ; ???
         copy16  #506, L095B
@@ -994,7 +994,7 @@ L0ED7:  jsr     restore_proportional_font_table_if_needed
         rts
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 
 .proc find_text_run
         lda     #$FF
@@ -1072,7 +1072,7 @@ tab:    inc     drawtext_params::textlen
 :       clc
         rts
 
-;;; ==================================================
+;;; ============================================================
 
 L0F9B:  .byte   0
 run_width:  .word   0
@@ -1114,7 +1114,7 @@ times70:.word   70
         .word   490
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 ;;; Draw a line of content
 
 .proc draw_text_run
@@ -1128,7 +1128,7 @@ times70:.word   70
 end:    rts
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 
 .proc ensure_page_buffered
         lda     drawtext_params::textptr+1
@@ -1155,7 +1155,7 @@ read:   lda     #0
 :       rts
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 
 .proc read_file_page
         copy16  read_params::data_buffer, store+1
@@ -1211,7 +1211,7 @@ end:    rts
         ;; fall through
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 
 .proc calc_line_position
         copy16  winfo::maprect::y2, L0965
@@ -1237,7 +1237,7 @@ loop:   lda     L0966
 end:    rts
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 
 .proc div_by_16                 ; input in $06/$07, output in a
         ldx     #4
@@ -1269,7 +1269,7 @@ loop:   clc
         rts
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 ;;; Restore the font glyph width table when switching
 ;;; back to proportional mode.
 
@@ -1298,7 +1298,7 @@ loop:   clc
 done:   rts
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 ;;; Overwrite the font glyph width table (with 7s)
 ;;; when switching to fixed width mode.
 
@@ -1313,7 +1313,7 @@ loop:   sta     font_width_table - 1,x
 end:    rts
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 ;;; Title Bar (Proportional/Fixed mode button)
 
 .proc on_title_bar_click

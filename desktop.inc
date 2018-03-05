@@ -1,11 +1,11 @@
-;;; ==================================================
+;;; ============================================================
 ;;; DeskTop Internals
-;;; ==================================================
+;;; ============================================================
 
 DA_LOAD_ADDRESS := $800
 DA_MAX_SIZE     := $1C00 - DA_LOAD_ADDRESS
 
-;;; ==================================================
+;;; ============================================================
 ;;; Direct Calls (from main memory)
 
 ;;; * = Used by Desk Accessories
@@ -33,7 +33,7 @@ JUMP_TABLE_CUR_POINTER  := $4039 ; Changes mouse cursor to pointer *
 JUMP_TABLE_CUR_WATCH    := $403C ; Changes mouse cursor to watch
 JUMP_TABLE_RESTORE_SEG  := $403F ; Restore from dynamic routine
 
-;;; ==================================================
+;;; ============================================================
 ;;; API Calls (from aux memory)
 
 ;;; * = Used by Desk Accessories
@@ -79,7 +79,7 @@ label   := *
 .endmacro
 
 
-;;; ==================================================
+;;; ============================================================
 ;;; Relays from Main to Aux (params must be in ZP or LC)
 
 MGTK_RELAY      := $D000
@@ -102,7 +102,7 @@ DESKTOP_RELAY   := $D040
 .endmacro
 
 
-;;; ==================================================
+;;; ============================================================
 ;;; Internals - Windows (paths) and Icons (files)
 
 ;;; NOTE: Some of these are used by Desk Accessories
@@ -163,7 +163,7 @@ icon_entry_type_bas     := %00110000
 icon_entry_type_txt     := %01010000
 icon_entry_type_trash   := %01110000
 
-;;; ==================================================
+;;; ============================================================
 ;;; Internals - Default Font
 
 ;;; Used by DAs for window definitions

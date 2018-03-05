@@ -12,14 +12,14 @@
 
 adjust_txtptr := $B1
 
-;;; ==================================================
+;;; ============================================================
 ;;; Start of the code
 
 start:  jmp     copy2aux
 
 save_stack:  .byte   0
 
-;;; ==================================================
+;;; ============================================================
 ;;; Duplicate the DA (code and data) to AUX memory,
 ;;; then invoke the code in AUX.
 
@@ -50,7 +50,7 @@ save_stack:  .byte   0
         jmp     XFER
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 
 .proc exit_da
         lda     LCBANK1
@@ -60,7 +60,7 @@ save_stack:  .byte   0
         rts
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 
 call_init:
         lda     ROMIN2
@@ -113,7 +113,7 @@ skip:   lda     #0
         sizeof_routine := * - routine
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 
 
         ;; Set when the client area is offscreen and
@@ -143,7 +143,7 @@ offscreen_flag:
 :       rts
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 ;;; Call Params (and other data)
 
         ;; The following params blocks overlap for data re-use
@@ -201,7 +201,7 @@ flag:   .byte   MGTK::zp_preserve
 flag:   .byte   MGTK::zp_overwrite
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 ;;; Button Definitions
 
         button_width := 17
@@ -496,7 +496,7 @@ tall_button_bitmap:             ; bitmap for '+' button
         .byte   px(%1000000),px(%0000000),px(%0000000)
 
 
-;;; ==================================================
+;;; ============================================================
 ;;; Calculation state
 
 saved_stack:
@@ -509,7 +509,7 @@ calc_n: .byte   $00             ; negative?
 calc_g: .byte   $00             ; high bit set if last input digit
 calc_l: .byte   $00             ; input length
 
-;;; ==================================================
+;;; ============================================================
 ;;; Miscellaneous param blocks
 
 .proc background_box_params
@@ -742,7 +742,7 @@ cursor: .byte   px(%0000000),px(%0000000) ; cursor
 
         .byte   1, 1            ; hotspot
 
-;;; ==================================================
+;;; ============================================================
 ;;; DA Init
 
 init:   sta     ALTZPON
@@ -814,7 +814,7 @@ loop:   lda     adjust_txtptr_copied-1,x
         MGTK_CALL MGTK::SetCursor, cursor ; Why not use JUMP_TABLE_CUR_POINTER ?
         ;; fall through
 
-;;; ==================================================
+;;; ============================================================
 ;;; Input Loop
 
 input_loop:
@@ -830,7 +830,7 @@ input_loop:
         jsr     on_key_press
         jmp     input_loop
 
-;;; ==================================================
+;;; ============================================================
 ;;; On Click
 
 on_click:
@@ -897,7 +897,7 @@ loop:   lda     routine,x
         jsr     redraw_screen_and_window
         rts
 
-;;; ==================================================
+;;; ============================================================
 ;;; On Key Press
 
 .proc on_key_press
@@ -923,7 +923,7 @@ bail:
 
 rts1:  rts                     ; used by next proc
 
-;;; ==================================================
+;;; ============================================================
 ;;; Try to map a click to a button
 
 ;;; If a button was clicked, carry is set and accum has key char
@@ -1056,7 +1056,7 @@ miss:   clc
 .endproc
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 ;;; Handle Key
 
 ;;; Accumulator is set to key char. Also used by
@@ -1448,7 +1448,7 @@ done:   lda     button_state                    ; high bit set if button down
         rts
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 ;;; Value Display
 
 .proc reset_buffer1
@@ -1506,7 +1506,7 @@ loop:   lda     #' '
         rts
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 ;;; Draw the window contents (background, buttons)
 
 .proc draw_background
@@ -1560,7 +1560,7 @@ loop:   ldy     #0
         jmp     loop
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 ;;; Draw the title bar decoration
 
 draw_title_bar:

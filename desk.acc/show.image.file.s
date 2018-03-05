@@ -74,7 +74,7 @@ loop:   lda     routine,x
         rts
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 ;;; ProDOS MLI calls
 
 .proc open_file
@@ -113,7 +113,7 @@ loop:   lda     routine,x
         rts
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 
 ;;; Copies param blocks from Aux to Main
 .proc copy_params_aux_to_main
@@ -345,7 +345,7 @@ end:    rts
         ;; fall through
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 ;;; Main Input Loop
 
 .proc input_loop
@@ -420,7 +420,7 @@ close:  jsr     close_file
         rts
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 ;;; Convert single hires to double hires
 
 ;;; Assumes the image is loaded to MAIN $2000 and
@@ -491,7 +491,7 @@ done:   sta     PAGE2OFF
         rts
 .endproc
 
-;;; ==================================================
+;;; ============================================================
 ;;; Stash/Unstash Menu Bar
 
 ;;; Have not yet figured out how to force the menu to

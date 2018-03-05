@@ -8,7 +8,7 @@
 DESKTOP_INIT    := $0800        ; init location
 L7ECA           := $7ECA        ; ???
 
-;;; ==================================================
+;;; ============================================================
 ;;; Patch self in as ProDOS QUIT routine (LCBank2 $D100)
 ;;; and invoke QUIT. Note that only $200 bytes are copied.
 
@@ -35,7 +35,7 @@ loop:   lda     src,y
         DEFINE_QUIT_PARAMS quit_params
 .endproc ; install_as_quit
 
-;;; ==================================================
+;;; ============================================================
 ;;; New QUIT routine. Gets relocated to $1000 by ProDOS before
 ;;; being executed.
 
@@ -206,7 +206,7 @@ prefix_buffer:
 
 .endproc ; quit_routine
 
-;;; ==================================================
+;;; ============================================================
 ;;; This chunk is invoked at $2000 after the quit handler has been invoked
 ;;; and updated itself. Using the segment_*_tables below, this loads the
 ;;; DeskTop application into various parts of main, aux, and bank-switched
@@ -416,7 +416,7 @@ max_page:
         .res    $2200 - *,0
 .endproc ; install_segments
 
-;;; ==================================================
+;;; ============================================================
 ;;; Not sure where this could be invoked from
 
 .proc dump_screen
