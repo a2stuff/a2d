@@ -16,8 +16,12 @@ my %raw;
 my $depth = 0;
 
 while (<STDIN>) {
+    s/;.*//;
+
     ++$depth if m/\.proc/ || m/\.scope/;
     --$depth if m/\.endproc/ || m/\.endscope/;
+
+    next if m/\.assert|\.org|PAD_TO/;
 
     if (m/^(L[0-9A-F]{4})(?::|\s+:=)(.*)/) {
         my $def = $1;
@@ -30,11 +34,9 @@ while (<STDIN>) {
         $term =~ s/\s+//g;
         next unless $term;
         if ($term =~ m/^L[0-9A-F]{4}$/) {
-            $refs{$term} = 0 unless defined $refs{$term};
-            $refs{$term} += 1;
+            $refs{$term} = 1 + ($refs{$term} // 0);
         } elsif ($term =~ m/^\$[0-9A-F]{4}$/) {
-            $raw{$term} = 0 unless defined $raw{$term};
-            $raw{$term} += 1;
+            $raw{$term} = 1 + ($raw{$term} // 0);
         }
     }
 }
@@ -63,7 +65,7 @@ if ($command eq "unscoped") {
     }
 } elsif ($command eq "") {
     printf("unscoped: %4d  scoped: %4d  raw: %4d  unrefed: %4d\n",
-                  $unscoped, $scoped, $raws, $unrefed);
+           $unscoped, $scoped, $raws, $unrefed);
 } else {
     die "Unknown command: $command\n";
 }

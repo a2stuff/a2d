@@ -26,300 +26,10 @@ INVOKER_FILENAME := $280         ; File to invoke (PREFIX must be set)
         .org $851F
 
 ;;; ==================================================
-;;; This chunk of code appears to be used by one or more
-;;; of the dynamically loaded segments.
+;;; This chunk of code appears to be used by one of
+;;; the dynamically loaded segments.
 
-        .byte   $03
-        .addr    $85E9
-
-L8522:  php
-        lda     winfo7+MGTK::winfo_offset_port+5,x
-        sta     $08+1
-        ldy     #$14
-        ldx     #$00
-L852C:  lda     ($08),y
-        sta     L8590,x
-        iny
-        inx
-        cpx     #$04
-        bne     L852C
-        ldy     #$1C
-        ldx     #$00
-L853B:  lda     ($08),y
-        sta     L8594,x
-        iny
-        inx
-        cpx     #$04
-        bne     L853B
-        ldy     #$03
-        lda     ($06),y
-        sec
-        sbc     L8590
-        sta     ($06),y
-        iny
-        lda     ($06),y
-        sbc     L8591
-        sta     ($06),y
-        iny
-        lda     ($06),y
-        sec
-        sbc     L8592
-        sta     ($06),y
-        iny
-        lda     ($06),y
-        sbc     L8593
-        sta     ($06),y
-        ldy     #$03
-        lda     ($06),y
-        clc
-        adc     L8594
-        sta     ($06),y
-        iny
-        lda     ($06),y
-        adc     L8595
-        sta     ($06),y
-        iny
-        lda     ($06),y
-        clc
-        adc     L8596
-        sta     ($06),y
-        iny
-        lda     ($06),y
-        adc     L8597
-        sta     ($06),y
-        jsr     $83A5
-        rts
-
-L8590:  .byte   $24
-L8591:  .byte   $00
-L8592:  .byte   $23
-L8593:  .byte   $00
-L8594:  .byte   $00
-L8595:  .byte   $00
-L8596:  .byte   $00
-L8597:  .byte   $00
-
-        ldax    #0
-:       sta     $D409,x
-        sta     $D401,x
-        sta     $D40D
-        inx
-        cpx     #$04
-        bne     :-
-        lda     #$0A
-        sta     $D40D
-        sta     $D40F
-
-        MGTK_RELAY_CALL MGTK::SetPort, $D401
-        rts
-
-        addr_call $6B17, $1A39
-        ldx     $D5CA
-        txs
-        rts
-
-        addr_call $6B17, $1A56
-        ldx     $D5CA
-        txs
-        rts
-
-        addr_call $6B17, $1A71
-        ldx     $D5CA
-        txs
-        rts
-
-L85E0:  cmp     #$27
-        bne     :+
-        addr_call $6B17, $1B22
-        ldx     $D5CA
-        txs
-        jmp     L8625
-
-:       cmp     #$45
-        bne     :+
-        addr_call $6B17, $1B3B
-        ldx     $D5CA
-        txs
-        jmp     L8625
-
-:       cmp     #$52
-        bne     :+
-        addr_call $6B17, $1B5B
-        ldx     $D5CA
-        txs
-        jmp     L8625
-
-:       cmp     #$57
-        bne     L8625
-        addr_call $6B17, $1B7C
-        ldx     $D5CA
-        txs
-L8625:  MGTK_RELAY_CALL MGTK::HiliteMenu, winfo18_port ; ???
-        rts
-
-        addr_call $6B17, $1B9C
-        ldx     $D5CA
-        txs
-        MGTK_RELAY_CALL MGTK::HiliteMenu, winfo18_port ; ???
-        rts
-
-        addr_call $6B17, $1BBF
-        ldx     $D5CA
-        txs
-        MGTK_RELAY_CALL MGTK::HiliteMenu, winfo18_port ; ???
-        rts
-
-        sta     L8737
-        sty     L8738
-        and     #$F0
-        sta     on_line_unit_num
-        sta     ALTZPOFF
-        MLI_CALL ON_LINE, on_line_params
-        sta     ALTZPON
-        beq     L867B
-L8672:  pha
-        dec     $EF8A
-        dec     $EF88
-        pla
-        rts
-
-L867B:  lda     on_line_buffer
-        beq     L8672
-        jsr     $8388      ; into dynamically loaded code???
-        jsr     DESKTOP_ALLOC_ICON ; AUX > MAIN call???
-        ldy     L8738
-        sta     $D464,y
-        asl     a
-        tax
-        copy16  $F13A,x, $06
-        ldx     #$00
-        ldy     #$09
-        lda     #' '
-L869E:  sta     ($06),y
-        iny
-        inx
-        cpx     #$12
-        bne     L869E
-        ldy     #$09
-        lda     on_line_buffer
-        and     #$0F
-        sta     on_line_buffer
-        sta     ($06),y
-        ldx     #$00
-        ldy     #$0B
-L86B6:  lda     on_line_buffer+1,x
-        cmp     #$41            ; convert to lowercase ???
-        bcc     L86C4
-        cmp     #$5F
-        bcs     L86C4
-        clc
-        adc     #$20
-L86C4:  sta     ($06),y
-        iny
-        inx
-        cpx     on_line_buffer
-        bne     L86B6
-        ldy     #9
-        lda     ($06),y
-        clc
-        adc     #2              ; increase length by 2 (spaces) ???
-        sta     ($06),y
-        lda     L8737           ; type?
-        and     #$0F
-
-        cmp     #$04
-        bne     L86ED
-        ldy     #icon_entry_offset_iconbits
-        lda     #<$14B4            ; $14B4 ???
-        sta     ($06),y
-        iny
-        lda     #>$14B4
-        sta     ($06),y
-        jmp     L870A
-
-L86ED:  cmp     #$0B
-        bne     L86FF
-        ldy     #icon_entry_offset_iconbits
-        lda     #<$1470            ; $1470 ???
-        sta     ($06),y
-        iny
-        lda     #>$1470
-        sta     ($06),y
-        jmp     L870A
-
-L86FF:  ldy     #icon_entry_offset_iconbits
-        lda     #<$1440            ; $1440 ???
-        sta     ($06),y
-        iny
-        lda     #>$1440
-        sta     ($06),y
-
-L870A:  ldy     #icon_entry_offset_win_type
-        lda     #0
-        sta     ($06),y
-        inc     L8738
-        lda     L8738
-        asl     a
-        asl     a
-        tax
-        ldy     #icon_entry_offset_iconx
-:       lda     L8739,x
-        sta     ($06),y
-        inx
-        iny
-        cpy     #7
-        bne     :-
-        ldx     $EF8A
-        dex
-        ldy     #0
-        lda     ($06),y
-        sta     $EF8B,x
-        jsr     $83A5
-        return  #0
-
-L8737:  .byte   $60             ; file type ???
-L8738:  .byte   $04
-L8739:  .byte   $00,$00,$00,$00
-
-L873D:  DEFINE_POINT 500, 16
-        DEFINE_POINT 500, 41
-        DEFINE_POINT 500, 66
-        DEFINE_POINT 500, 91
-        DEFINE_POINT 500, 116
-
-        DEFINE_POINT 440, 16
-        DEFINE_POINT 440, 41
-        DEFINE_POINT 440, 66
-        DEFINE_POINT 440, 91
-        DEFINE_POINT 440, 116
-        DEFINE_POINT 440, 141
-
-        DEFINE_POINT 400, 16
-        DEFINE_POINT 400, 41
-        DEFINE_POINT 400, 66
-
-        DEFINE_ON_LINE_PARAMS on_line_params, $60, on_line_buffer ; Slot 6 Drive 1
-        on_line_unit_num := on_line_params::unit_num
-
-        ;; Per ProDOS TRM this should be 256 bytes!
-on_line_buffer:
-        .byte   $0B
-        .byte   "GRAPHICS.TK",$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$C8
+        .include "ovl0.inc"
 
 ;;; ==================================================
 
@@ -476,7 +186,7 @@ light_pattern:
 
 num_icons:  .byte   0
 icon_table: .res    127, 0      ; index into icon_ptrs
-icon_ptrs:  .res    256, 0      ; addresses of icon details (in $ED00)
+icon_ptrs:  .res    256, 0      ; addresses of icon details
 
 has_highlight:                  ; 1 = has highlight, 0 = no highlight
         .byte   0
@@ -4398,6 +4108,7 @@ findicon_params := * + 1      ; offset to x/y overlap event_params x/y
 findicon_mousex := findicon_params + 0
 findicon_mousey := findicon_params + 2
 findicon_which_icon := findicon_params + 4
+findicon_window_id := findicon_params + 5
         .assert findicon_mousex = event_xcoord, error, "param mismatch"
         .assert findicon_mousey = event_ycoord, error, "param mismatch"
 
@@ -4611,7 +4322,8 @@ watch_cursor:
         .byte   px(%0000000),px(%0000000)
         .byte   5, 5
 
-LD343:  .res    18, 0
+LD343:  .word   0
+buf_filename2:  .res    16, 0
 LD355:  .res    88, 0
 LD3AD:  .res    19, 0
 LD3C0:  .res    46, 0
@@ -5059,7 +4771,8 @@ LE061:  .byte   $00
 
 
 LE062:  .res    170, 0
-LE10C:  .res    138, 0
+LE10C:  .byte   0
+LE10D:  .res    137, 0
 
 DESKTOP_DEVICELIST:
         .res    10, 0
@@ -5129,7 +4842,7 @@ menu_item:      .byte   0
 disable:        .byte   0
 .endproc
 
-        .byte   $00
+LE26F:  .byte   $00
 
 LE270:  .byte   $04             ; number of items in startup menu?
 
@@ -5269,7 +4982,7 @@ dummy_dd_item:
 icon_params2:
         .byte   0
 
-        .byte   $00,$00
+LE6BF:  .word   0
 
 LE6C1:
         .addr   winfo1title_ptr
@@ -5428,7 +5141,8 @@ active_window_id:
         .byte   $00
 
 LEC26:  .res    8, 0           ; ???
-LEC2E:  .res    37, 0          ; ???
+LEC2E:  .res    21, 0          ; ???
+LEC43:  .res    16, 0          ; ???
 LEC53:  .byte   0
 LEC54:  .word   0
         .res    4, 0
@@ -5880,7 +5594,7 @@ skip:   lda     #0
         sta     LD2A9
         sta     double_click_flag
         sta     loop_counter
-        sta     $E26F
+        sta     LE26F
 
         ;; Pending error message?
         lda     pending_alert
@@ -6667,7 +6381,7 @@ L4666:  lda     selected_icon_count
         jsr     disable_eject_menu_item
         jsr     disable_file_menu_items
         lda     #0
-        sta     $E26F
+        sta     LE26F
         rts
 
 L468B:  jsr     enable_eject_menu_item
@@ -6677,21 +6391,21 @@ L4691:  jsr     disable_eject_menu_item
         jmp     L469A
 
 L4697:  jsr     enable_eject_menu_item
-L469A:  bit     $E26F
+L469A:  bit     LE26F
         bmi     L46A7
         jsr     enable_file_menu_items
         lda     #$80
-        sta     $E26F
+        sta     LE26F
 L46A7:  rts
 
-L46A8:  bit     $E26F
+L46A8:  bit     LE26F
         bmi     L46AE
         rts
 
 L46AE:  jsr     disable_eject_menu_item
         jsr     disable_file_menu_items
         lda     #$00
-        sta     $E26F
+        sta     LE26F
         rts
 .endproc
 
@@ -6740,9 +6454,9 @@ L46F8:  inx
         ldy     #$00
 L470C:  iny
         inx
-        lda     $D345,y
+        lda     buf_filename2,y
         sta     $220,x
-        cpy     $D345
+        cpy     buf_filename2
         bne     L470C
         stx     $220
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
@@ -6781,8 +6495,8 @@ L4773:  lda     LD355,x
         sta     $220,x
         dex
         bpl     L4773
-        ldx     $D345
-L477F:  lda     $D345,x
+        ldx     buf_filename2
+L477F:  lda     buf_filename2,x
         sta     INVOKER_FILENAME,x
         dex
         bpl     L477F
@@ -6840,7 +6554,7 @@ L4808:  cpx     #$01
 
 L4816:  .byte   $00
 L4817:  PASCAL_STRING "Basic.system"
-        .res    30, 0
+L4824:  .res    30, 0
 
 L4842:  stax    $06
         ldy     #$00
@@ -6857,7 +6571,7 @@ L4859:  dey
         bne     L484B
         rts
 .endproc
-
+        L4824 := launch_file::L4824
 ;;; ==================================================
 
 L485D:  .word   $E000
@@ -7068,10 +6782,10 @@ L4A24:  dey
 L4A2B:  iny
         inx
         lda     LD355,y
-        sta     $D345,x
+        sta     buf_filename2,x
         cpy     LD355
         bne     L4A2B
-        stx     $D345
+        stx     buf_filename2
         lda     L4A46
         sta     LD355
         lda     #$00
@@ -7606,7 +7320,7 @@ L4E51:  lda     ($06),y
         tax
         dex
         dex
-        stx     $D345
+        stx     buf_filename2
         lda     L4E71
         cmp     #$20
         bcc     L4E6E
@@ -8331,7 +8045,7 @@ L544A:  .byte   0
 L544D:
         lda     #$00
         sta     $1800
-        lda     $EC25
+        lda     active_window_id
         bne     L545A
         jmp     L54C5
 
@@ -9217,7 +8931,7 @@ L5B1B:  .byte   0
         bne     :+
         jmp     done_client_click
 :       jsr     L5803
-        lda     $D20E
+        lda     findcontrol_which_part
         cmp     #MGTK::part_thumb
         bne     :+
         jsr     do_track_thumb
@@ -9263,7 +8977,7 @@ horiz:  lda     active_window_id
         bne     :+
         jmp     done_client_click
 :       jsr     L5803
-        lda     $D20E
+        lda     findcontrol_which_part
         cmp     #MGTK::part_thumb
         bne     :+
         jsr     do_track_thumb
@@ -9373,8 +9087,8 @@ ctl:    .byte   0
         jmp     clear_selection
 
 :       lda     active_window_id
-        sta     $D20E
-        DESKTOP_RELAY_CALL DT_FIND_ICON, event_coords
+        sta     findicon_window_id
+        DESKTOP_RELAY_CALL DT_FIND_ICON, findicon_params
         lda     findicon_which_icon
         bne     L5CDA
         jsr     L5F13
@@ -9557,7 +9271,7 @@ L5E57:  lda     ($06),y
         tax
         dex
         dex
-        stx     $D345
+        stx     buf_filename2
         lda     L5E77
         cmp     #$20
         bcc     L5E74
@@ -10467,7 +10181,7 @@ disable_selector_menu_items := toggle_selector_menu_items::disable
 
 L67DF:  tax
         dex
-        lda     $D20D
+        lda     findicon_which_icon
 L67E4:  cmp     selected_icon_list,x
         beq     L67EE
         dex
@@ -10481,7 +10195,7 @@ L67F6:  bit     BUTN0
         bpl     L6818
         lda     selected_window_index
         bne     L6818
-        DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, $D20D
+        DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, findicon_which_icon
         ldx     selected_icon_count
         lda     $D20D
         sta     selected_icon_list,x
@@ -10489,16 +10203,16 @@ L67F6:  bit     BUTN0
         jmp     L6834
 
 L6818:  jsr     clear_selection
-L681B:  DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, $D20D
+L681B:  DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, findicon_which_icon
         lda     #1
         sta     selected_icon_count
-        lda     $D20D
+        lda     findicon_which_icon
         sta     selected_icon_list
         lda     #0
         sta     selected_window_index
 L6834:  bit     double_click_flag
         bpl     L6880
-        lda     $D20D
+        lda     findicon_which_icon
         sta     LEBFC
         DESKTOP_RELAY_CALL $0A, LEBFC
         tax
@@ -10530,7 +10244,7 @@ L6878:  txa
         bne     L688F
         jmp     redraw_windows_and_desktop
 
-L6880:  lda     $D20D
+L6880:  lda     findicon_which_icon
         cmp     trash_icon_num
         beq     L688E
         jsr     L6A8A
@@ -11748,7 +11462,7 @@ L744A:  .byte   0
         lda     cached_window_id
         asl     a
         tax
-        copy16  $E6BF,x, $08
+        copy16  LE6BF,x, $08
         ldy     #$09
         lda     ($06),y
         tay
@@ -11823,7 +11537,7 @@ L74D3:  tay
         pla
         asl     a
         tax
-        copy16  $E6BF,x, $08
+        copy16  LE6BF,x, $08
         ldy     #$00
         lda     ($06),y
         clc
@@ -13155,7 +12869,7 @@ start:  ldy     #$00
         lda     LCBANK2
         ldy     #$1F
 L8171:  lda     ($06),y
-        sta     $EC43,y
+        sta     LEC43,y
         dey
         bpl     L8171
         lda     LCBANK1
@@ -13219,16 +12933,16 @@ L81F7:  jsr     prepare_col_name
 ;;; ==================================================
 
 .proc prepare_col_name
-        lda     $EC43
+        lda     LEC43
         and     #$0F
         sta     text_buffer2::length
         tax
-loop:   lda     $EC43,x
-        sta     $E6EC,x
+loop:   lda     LEC43,x
+        sta     text_buffer2::data,x
         dex
         bne     loop
         lda     #' '
-        sta     $E6EC
+        sta     text_buffer2::data
         inc     text_buffer2::length
         addr_call capitalize_string, text_buffer2::length
         rts
@@ -14442,7 +14156,7 @@ desktop_icon_coords_table:
         DEFINE_POINT $82,$A0
         DEFINE_POINT $28,$A0
 
-        DEFINE_GET_PREFIX_PARAMS get_prefix_params, $4824
+        DEFINE_GET_PREFIX_PARAMS get_prefix_params, L4824
 
 ;;; ==================================================
 
@@ -15534,7 +15248,7 @@ L9486:  jsr     JT_SIZE_STRING
         jsr     L9549
         ldx     $220
         ldy     #$00
-L9491:  lda     $E6EC,y
+L9491:  lda     text_buffer2::data,y
         sta     $0221,x
         inx
         iny
@@ -15596,15 +15310,15 @@ L953A:  PASCAL_STRING " VOL"
 .endproc
 
 L9549:  ldx     #$00
-L954B:  lda     $E6EC,x
+L954B:  lda     text_buffer2::data,x
         cmp     #$20
         bne     L9555
         inx
         bne     L954B
 L9555:  ldy     #$00
         dex
-L9558:  lda     $E6EC,x
-        sta     $E6EC,y
+L9558:  lda     text_buffer2::data,x
+        sta     text_buffer2::data,y
         iny
         inx
         cpx     text_buffer2::length
@@ -15851,24 +15565,24 @@ rts2:   rts
 L97E4:  .byte   $00
 
 
-L97E5:  ldx     $E10C
+L97E5:  ldx     LE10C
         lda     LE061
         sta     LE062,x
         inx
-        stx     $E10C
+        stx     LE10C
         rts
 
-L97F3:  ldx     $E10C
+L97F3:  ldx     LE10C
         dex
         lda     LE062,x
         sta     LE061
-        stx     $E10C
+        stx     LE10C
         rts
 
 .proc L9801
         lda     #$00
         sta     LE05F
-        sta     $E10D
+        sta     LE10D
 L9809:  yax_call JT_MLI_RELAY, OPEN, open_params3
         beq     L981E
         ldx     #$80
@@ -15915,12 +15629,12 @@ L9864:  yax_call JT_MLI_RELAY, READ, read_params4
         beq     L9864
         jmp     LA39F
 
-L987D:  inc     $E10D
-        lda     $E10D
+L987D:  inc     LE10D
+        lda     LE10D
         cmp     LE05E
         bcc     L989C
         lda     #$00
-        sta     $E10D
+        sta     LE10D
         lda     LE060
         sta     read_params5::ref_num
         yax_call JT_MLI_RELAY, READ, read_params5
@@ -17349,7 +17063,7 @@ dialog_param_addr:
         bne     :+
         jmp     prompt_input_loop
 
-:       lda     $D20E
+:       lda     findwindow_window_id
         cmp     winfoF
         beq     :+
         jmp     prompt_input_loop
@@ -19300,7 +19014,7 @@ done:   rts
 
 :       jsr     measure_path_buf1
         stax    $06
-        cmp16   $D20D, $06
+        cmp16   screentowindow_windowx, $06
         bcs     LB9EE
         jmp     LBA83
 .endproc
@@ -20783,7 +20497,7 @@ config_toolkit:
         MGTK_RELAY_CALL MGTK::SetMenu, desktop_aux::desktop_menu
         MGTK_RELAY_CALL MGTK::SetCursor, pointer_cursor
         lda     #0
-        sta     $EC25
+        sta     active_window_id
         jsr     desktop_main::L66A2
         jsr     desktop_main::disable_eject_menu_item
         jsr     desktop_main::disable_file_menu_items
