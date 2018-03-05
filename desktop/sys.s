@@ -32,21 +32,21 @@ data_buffer:    .addr   $0D00
         .byte   $00,$01
         .addr   L2362
 L2362:  .byte   $00
-L2363:  .byte   $00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00
-L2372:  .byte   $00
-unit_num:  .byte   $00
+L2363:  .res    15, 0
+butn1:  .byte   $00
+unit_num:
+        .byte   $00
 
         DEFINE_ON_LINE_PARAMS on_line_params,, on_line_buffer
 
-L2378:  .byte   0
+copy_flag:
+        .byte   0
 L2379:  .byte   0
 
 on_line_buffer: .res 17, 0
 
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, L26F5
-        DEFINE_SET_PREFIX_PARAMS set_prefix_params, path_buf0
+        DEFINE_SET_PREFIX_PARAMS set_prefix_params, path0
 
         .byte   $0A
         .addr   L2379
@@ -75,13 +75,13 @@ L23DF:  .byte   $00,$00,$00
         .byte   $01
         .addr   L26F5
         DEFINE_OPEN_PARAMS open_params3, L26F5, $0D00
-        DEFINE_OPEN_PARAMS open_params4, path_buf0, $1100
+        DEFINE_OPEN_PARAMS open_params4, path0, $1100
         DEFINE_READ_PARAMS read_params3, $4000, $7F00
         DEFINE_WRITE_PARAMS write_params, $4000, $7F00
 
-        DEFINE_CREATE_PARAMS create_params, path_buf0, $C3, 0, 0
+        DEFINE_CREATE_PARAMS create_params, path0, %11000011, 0, 0
         .byte   $07
-        .addr   path_buf0
+        .addr   path0
         .byte   $00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00
@@ -96,9 +96,11 @@ str_f4: PASCAL_STRING "SELECTOR.LIST"
 str_f5: PASCAL_STRING "SELECTOR"
 str_f6: PASCAL_STRING "PRODOS"
 
-L2471:  .addr str_f1,str_f2,str_f3,str_f4,str_f5,str_f6
+filename_table:
+        .addr str_f1,str_f2,str_f3,str_f4,str_f5,str_f6
 
-str_copying_to_ramcard:  PASCAL_STRING "Copying Apple II DeskTop into RAMCard"
+str_copying_to_ramcard:
+        PASCAL_STRING "Copying Apple II DeskTop into RAMCard"
 
         ;; Jump target from filer launcher - why???
 rts1:   rts
@@ -177,7 +179,7 @@ match:  sta     $D3AC
         jsr     L26A5
 
         ;; Point $8 at $C100
-        lda     #$00
+        lda     #0
         sta     L2BE2
         sta     $08
         lda     #$C1
@@ -246,17 +248,17 @@ L257A:  sta     slot
         and     #$0F
         tay
         iny
-        sty     path_buf0
+        sty     path0
         lda     #'/'
         sta     on_line_buffer
-        sta     path_buf0+1
+        sta     path0+1
 L25BF:  lda     on_line_buffer,y
-        sta     path_buf0+1,y
+        sta     path0+1,y
         dey
         bne     L25BF
         ldx     #$C0
         jsr     L26A5
-        addr_call L26B2, path_buf0
+        addr_call L26B2, path0
         jsr     L2AB2
         bcs     L25E4
         ldx     #$80
@@ -265,18 +267,22 @@ L25BF:  lda     on_line_buffer,y
         jmp     fail
 
 L25E4:  lda     BUTN1
-        sta     L2372
+        sta     butn1
         lda     BUTN0
-        bpl     L2603
+        bpl     start_copy
         jmp     fail
 
-L25F2:  PASCAL_STRING "/DeskTop"
+str_slash_desktop:
+        PASCAL_STRING "/DeskTop"
+
+
 L25FB:  .byte   $0A,$00,$00,$C3,$0F,$00,$00,$0D
 
-L2603:  jsr     show_splash
+start_copy:
+        jsr     show_splash
         MLI_CALL GET_PREFIX, get_prefix_params
         beq     L2611
-        jmp     L28F4
+        jmp     fail_copy
 
 L2611:  dec     L26F5
         ldx     #$80
@@ -286,15 +292,15 @@ L261C:  lda     L26F5,y
         sta     L2005,y
         dey
         bpl     L261C
-        ldy     path_buf0
+        ldy     path0
         ldx     #$00
 L262A:  iny
         inx
-        lda     L25F2,x
-        sta     path_buf0,y
-        cpx     L25F2
+        lda     str_slash_desktop,x
+        sta     path0,y
+        cpx     str_slash_desktop
         bne     L262A
-        sty     path_buf0
+        sty     path0
         ldx     #7
 L263C:  lda     L25FB,x
         sta     get_file_info_params,x
@@ -302,34 +308,35 @@ L263C:  lda     L25FB,x
         cpx     #3
         bne     L263C
         jsr     L2A95
-        lda     path_buf0
-        sta     L2378
-        lda     #$00
-        sta     L2BE1
-L2655:  lda     L2BE1
+        lda     path0
+        sta     copy_flag
+        lda     #0
+        sta     filenum
+
+file_loop:  lda     filenum
         asl     a
         tax
-        lda     L2471,x
+        lda     filename_table,x
         sta     $06
-        lda     L2471+1,x
+        lda     filename_table+1,x
         sta     $06+1
-        ldy     #$00
+        ldy     #0
         lda     ($06),y
         tay
-L2669:  lda     ($06),y
-        sta     L2821,y
+:       lda     ($06),y
+        sta     filename_buf,y
         dey
-        bpl     L2669
+        bpl     :-
         jsr     L2912
-        inc     L2BE1
-        lda     L2BE1
+        inc     filenum
+        lda     filenum
         cmp     #$06
-        bne     L2655
-        jmp     L2681
+        bne     file_loop
+        jmp     fail2
 
-L2681:  lda     L2378
+fail2:  lda     copy_flag
         beq     L268F
-        sta     path_buf0
+        sta     path0
         MLI_CALL SET_PREFIX, set_prefix_params
 L268F:  jsr     write_desktop1
         jsr     L2B57
@@ -375,16 +382,17 @@ L26DC:  lda     ($06),y
 
 fail:   lda     #$00
         sta     L2BE2
-        jmp     L2681
+        jmp     fail2
 
         .byte   0, $D, 0, 0, 0
 
 L26F5:  .res 300, 0
 
-L2821:  .byte   0
-L2822:  .res 15, 0
+filename_buf:
+        .res 16, 0
+
 L2831:  .res 32, 0
-L2851:  lda     L2821
+L2851:  lda     filename_buf
         bne     L2857
         rts
 
@@ -393,9 +401,9 @@ L2857:  ldx     #$00
         lda     #'/'
         sta     L26F5+1,y
         iny
-L2862:  cpx     L2821
+L2862:  cpx     filename_buf
         bcs     L2872
-        lda     L2822,x
+        lda     filename_buf+1,x
         sta     L26F5+1,y
         inx
         iny
@@ -420,41 +428,51 @@ L288A:  dex
         stx     L26F5
         rts
 
-L288F:  lda     L2821
-        bne     L2895
+;;; ============================================================
+
+.proc append_filename_to_path0
+        lda     filename_buf
+        bne     :+
         rts
 
-L2895:  ldx     #$00
-        ldy     path_buf0
+:       ldx     #0
+        ldy     path0
         lda     #'/'
-        sta     path_buf0+1,y
+        sta     path0+1,y
         iny
-L28A0:  cpx     L2821
-        bcs     L28B0
-        lda     L2822,x
-        sta     path_buf0+1,y
+loop:   cpx     filename_buf
+        bcs     done
+        lda     filename_buf+1,x
+        sta     path0+1,y
         inx
         iny
-        jmp     L28A0
+        jmp     loop
 
-L28B0:  sty     path_buf0
+done:   sty     path0
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc remove_filename_from_path0
+        ldx     path0
+        bne     :+
         rts
 
-L28B4:  ldx     path_buf0
-        bne     L28BA
-        rts
-
-L28BA:  lda     path_buf0,x
+:       lda     path0,x
         cmp     #'/'
-        beq     L28C8
+        beq     done
         dex
-        bne     L28BA
-        stx     path_buf0
+        bne     :-
+        stx     path0
         rts
 
-L28C8:  dex
-        stx     path_buf0
+done:   dex
+        stx     path0
         rts
+.endproc
+
+;;; ============================================================
 
         ;; Turn on 80-col mode, and draw message (centered)
 .proc show_splash
@@ -478,9 +496,11 @@ loop:   iny
         rts
 .endproc
 
-L28F4:  lda     #$00
-        sta     L2378
+.proc fail_copy
+        lda     #0
+        sta     copy_flag
         jmp     fail
+.endproc
 
         ldy     #$00
 L28FE:  lda     $0200,y
@@ -494,7 +514,8 @@ L28FE:  lda     $0200,y
 L290E:  sty     L26F5
         rts
 
-L2912:  jsr     L288F
+.proc L2912
+        jsr     append_filename_to_path0
         jsr     L2851
         MLI_CALL GET_FILE_INFO, get_file_info_params
         beq     :+
@@ -512,16 +533,17 @@ L2912:  jsr     L288F
 L2937:  jsr     L2A95
         cmp     #PDERR_DUPLICATE_FILENAME
         bne     L2948
-        lda     L2BE1
+        lda     filenum
         bne     L294B
         pla
         pla
-        jmp     L2681
+        jmp     fail2
 
 L2948:  jsr     L2A11
 L294B:  jsr     L2876
-        jsr     L28B4
+        jsr     remove_filename_from_path0
 L2951:  rts
+.endproc
 
         DEFINE_OPEN_PARAMS open_params2, L26F5, $A000
         DEFINE_READ_PARAMS read_params2, $A400, $0200
@@ -532,7 +554,7 @@ L2962:  jsr     L2A95
         beq     L2974
         MLI_CALL OPEN, open_params2
         beq     :+
-        jsr     L28F4
+        jsr     fail_copy
 L2974:  rts
 
 :       lda     open_params2::ref_num
@@ -540,24 +562,24 @@ L2974:  rts
         sta     close_params::ref_num
         MLI_CALL READ, read_params2
         beq     :+
-        jsr     L28F4
+        jsr     fail_copy
         rts
 
 :       lda     #$00
         sta     L2A10
-        lda     #$2B
+        lda     #<$A42B
         sta     $06
-        lda     #$A4
+        lda     #>$A42B
         sta     $06+1
 L2997:  lda     $A425
         cmp     L2A10
         bne     L29B1
 L299F:  MLI_CALL CLOSE, close_params
         beq     L29AA
-        jmp     L28F4
+        jmp     fail_copy
 
 L29AA:  jsr     L2876
-        jsr     L28B4
+        jsr     remove_filename_from_path0
         rts
 
 L29B1:  ldy     #$00
@@ -568,17 +590,17 @@ L29B1:  ldy     #$00
 L29BA:  and     #$0F
         tay
 L29BD:  lda     ($06),y
-        sta     L2821,y
+        sta     filename_buf,y
         dey
         bne     L29BD
         lda     ($06),y
         and     #$0F
-        sta     L2821,y
-        jsr     L288F
+        sta     filename_buf,y
+        jsr     append_filename_to_path0
         jsr     L2851
         MLI_CALL GET_FILE_INFO, get_file_info_params
         beq     :+
-        jmp     L28F4
+        jmp     fail_copy
 
 :       lda     get_file_info_params::file_type
         sta     L2831
@@ -587,7 +609,7 @@ L29BD:  lda     ($06),y
         beq     L29ED
         jsr     L2A11
 L29ED:  jsr     L2876
-        jsr     L28B4
+        jsr     remove_filename_from_path0
         inc     L2A10
 L29F6:  add16_8 $06, $A423, $06
         lda     $06+1
@@ -600,12 +622,12 @@ L2A0D:  jmp     L299F
 L2A10:  .byte   0
 L2A11:  MLI_CALL OPEN, open_params3
         beq     L2A1F
-        jsr     L28F4
+        jsr     fail_copy
         jmp     L2A11
 
 L2A1F:  MLI_CALL OPEN, open_params4
         beq     L2A2D
-        jsr     L28F4
+        jsr     fail_copy
         jmp     L2A1F
 
 L2A2D:  lda     open_params3::ref_num
@@ -619,7 +641,7 @@ L2A49:  MLI_CALL READ, read_params3
         beq     L2A5B
         cmp     #PDERR_END_OF_FILE
         beq     L2A88
-        jsr     L28F4
+        jsr     fail_copy
         jmp     L2A49
 
 L2A5B:  copy16  read_params3::trans_count, write_params::request_count
@@ -627,7 +649,7 @@ L2A5B:  copy16  read_params3::trans_count, write_params::request_count
         beq     L2A88
 L2A6C:  MLI_CALL WRITE, write_params
         beq     :+
-        jsr     L28F4
+        jsr     fail_copy
         jmp     L2A6C
 
 :       lda     write_params::trans_count
@@ -651,7 +673,7 @@ L2A95:  ldx     #7
         beq     L2AB1
         cmp     #PDERR_DUPLICATE_FILENAME
         beq     L2AB1
-        jsr     L28F4
+        jsr     fail_copy
 L2AB1:  rts
 
 L2AB2:  lda     L24AC
@@ -687,12 +709,12 @@ L2AE4:  sec
 L2AE6:  MLI_CALL GET_PREFIX, get_prefix_params2
         bne     L2AE4
         ldx     $0D00
-        ldy     #$00
+        ldy     #0
 L2AF3:  inx
         iny
-        lda     L2B0D,y
+        lda     str_desktop2,y
         sta     $0D00,x
-        cpy     L2B0D
+        cpy     str_desktop2
         bne     L2AF3
         stx     $0D00
         MLI_CALL GET_FILE_INFO, get_file_info_params4
@@ -700,7 +722,8 @@ L2AF3:  inx
         clc
         rts
 
-L2B0D:  PASCAL_STRING "DeskTop2"
+str_desktop2:
+        PASCAL_STRING "DeskTop2"
 
 ;;; ============================================================
 
@@ -730,8 +753,7 @@ L2B57:  addr_call L26CD, L2005
 
         .byte   0
 
-path_buf0:
-        .res    65, 0
+path0:  .res    65, 0
 
 ;;; ============================================================
 ;;; Launch FILER - used if machine is not 128k
@@ -767,7 +789,8 @@ path_buf0:
 
         DEFINE_CLOSE_PARAMS close_params
 
-filename:  PASCAL_STRING "FILER"
+filename:
+        PASCAL_STRING "FILER"
 .endproc
         .assert .sizeof(launch_filer) <= $D0, error, "Routine length exceeded"
 
@@ -775,9 +798,10 @@ filename:  PASCAL_STRING "FILER"
 
         .org (saved_org + .sizeof(launch_filer))
 
-L2BE1:  .byte   $00
+filenum:
+        .byte   0               ; index of file being copied
 L2BE2:  .byte   $00
-slot:   .byte   $00
+slot:   .byte   0
 
         DEFINE_WRITE_BLOCK_PARAMS write_block_params, prodos_loader_blocks, 0
         write_block_params_unit_num := write_block_params::unit_num
@@ -797,8 +821,8 @@ prodos_loader_blocks:
 ;;; ============================================================
 
         .assert * = $3000, error, "Segment length mismatch"
-.proc part2
 
+.proc part2
         jsr     SLOT3ENTRY
         jsr     HOME
         lda     LCBANK2
@@ -808,7 +832,7 @@ prodos_loader_blocks:
         lda     ROMIN2
         pla
         bne     L3019
-        jmp     L3880
+        jmp     invoke_selector_or_desktop
 
 L3019:  lda     LCBANK2
         lda     LCBANK2
@@ -819,10 +843,10 @@ L3023:  sta     $D395,x
         bpl     L3023
         lda     ROMIN2
         jsr     read_selector_list
-        beq     L3034
+        beq     :+
         jmp     L30B8
 
-L3034:  lda     #$00
+:       lda     #0
         sta     L30BB
 L3039:  lda     L30BB
         cmp     $4400
@@ -875,37 +899,36 @@ L3076:  lda     L30BB
 L30B2:  inc     L30BB
         jmp     L3076
 
-L30B8:  jmp     L3880
+L30B8:  jmp     invoke_selector_or_desktop
 
 L30BB:  .byte   $00
-        DEFINE_OPEN_PARAMS open_params6, path_buf2, $0800
-        DEFINE_READ_PARAMS read_params4, $30CA, $4
-        .byte   $00
-        .byte   $00,$00,$00
+        DEFINE_OPEN_PARAMS open_params6, path2, $0800
+        DEFINE_READ_PARAMS read_params4, L30CA, 4
+L30CA:  .res    4, 0
         DEFINE_CLOSE_PARAMS close_params5
         DEFINE_READ_PARAMS read_params5, L3150, $27
-        DEFINE_READ_PARAMS read_params6, L30E0, $5
-L30E0:  .byte   $00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00
+        DEFINE_READ_PARAMS read_params6, L30E0, 5
+L30E0:  .res    5, 0
+        .byte   $00,$00,$00,$00
         DEFINE_CLOSE_PARAMS close_params7
         DEFINE_CLOSE_PARAMS close_params6
         .byte   $01
-        .addr   path_buf2
-        DEFINE_OPEN_PARAMS open_params7, path_buf2, $0D00
-        DEFINE_OPEN_PARAMS open_params8, path_buf1, $1C00
+        .addr   path2
+        DEFINE_OPEN_PARAMS open_params7, path2, $0D00
+        DEFINE_OPEN_PARAMS open_params8, path1, $1C00
         DEFINE_READ_PARAMS read_params7, $1100, $0B00
         DEFINE_WRITE_PARAMS write_params3, $1100, $0B00
 
-        DEFINE_CREATE_PARAMS create_params3, $3188, $C3
+        DEFINE_CREATE_PARAMS create_params3, path1, %11000011
 
-        DEFINE_CREATE_PARAMS create_params2, $3188, 0
+        DEFINE_CREATE_PARAMS create_params2, path1, 0
 
 L3124:  .byte   $00,$00
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params2, path_buf2
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params2, path2
         .byte   $00
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params3, $3188
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params3, path1
         .byte   $00,$02,$00,$00,$00
 
 L3150:  .byte   $00
@@ -917,11 +940,8 @@ L3160:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $40,$35,$3D,$35,$86,$31,$60,$00
 
-        ;; pathname buffer
-path_buf1:  .res    65, 0
-
-        ;; pathname buffer
-path_buf2:  .res    65, 0
+path1:  .res    65, 0
+path2:  .res    65, 0
 
 L320A:  .res    64, 0
 L324A:  .res    64, 0
@@ -932,28 +952,7 @@ L329B:  .byte   $0D
 L329C:  .byte   $00
 L329D:  .byte   $00
 L329E:  .byte   $00
-L329F:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00
+L329F:  .res    170, 0
 L3349:  .byte   $00
 L334A:  .byte   $00
 L334B:  ldx     L3349
@@ -1090,11 +1089,11 @@ L3472:  lda     $0200,y
         cmp     #$8D
         beq     L3482
         and     #$7F
-        sta     path_buf2+1,y
+        sta     path2+1,y
         iny
         jmp     L3472
 
-L3482:  sty     path_buf2
+L3482:  sty     path2
         rts
 
         .byte   0
@@ -1103,19 +1102,19 @@ L3482:  sty     path_buf2
 L3489:  lda     #$FF
         sta     L353B
         jsr     L3777
-        ldx     path_buf1
+        ldx     path1
         lda     #'/'
-        sta     path_buf1+1,x
-        inc     path_buf1
+        sta     path1+1,x
+        inc     path1
         ldy     #$00
-        ldx     path_buf1
+        ldx     path1
 L34A1:  iny
         inx
         lda     L328A,y
-        sta     path_buf1,x
+        sta     path1,x
         cpy     L328A
         bne     L34A1
-        stx     path_buf1
+        stx     path1
         MLI_CALL GET_FILE_INFO, get_file_info_params3
         cmp     #PDERR_FILE_NOT_FOUND
         beq     L34C4
@@ -1244,17 +1243,17 @@ L35A9:  MLI_CALL GET_FILE_INFO, get_file_info_params2
         jmp     L3A43
 
 :       copy16  get_file_info_params3::blocks_used, L3641
-L35D7:  lda     path_buf1
+L35D7:  lda     path1
         sta     L363F
         ldy     #$01
 L35DF:  iny
-        cpy     path_buf1
+        cpy     path1
         bcs     L3635
-        lda     path_buf1,y
+        lda     path1,y
         cmp     #'/'
         bne     L35DF
         tya
-        sta     path_buf1
+        sta     path1
         sta     L3640
         MLI_CALL GET_FILE_INFO, get_file_info_params3
         beq     :+
@@ -1268,7 +1267,7 @@ L35DF:  iny
         bcs     L3636
 L3635:  clc
 L3636:  lda     L363F
-        sta     path_buf1
+        sta     path1
         rts
 
 L363D:  .byte   0,0
@@ -1346,40 +1345,41 @@ L36F6:  rts
         .byte   0
         .byte   0
         .byte   0
+
 L36FB:  lda     L3150
         bne     L3701
         rts
 
 L3701:  ldx     #$00
-        ldy     path_buf2
+        ldy     path2
         lda     #'/'
-        sta     path_buf2+1,y
+        sta     path2+1,y
         iny
 L370C:  cpx     L3150
         bcs     L371C
         lda     L3151,x
-        sta     path_buf2+1,y
+        sta     path2+1,y
         inx
         iny
         jmp     L370C
 
-L371C:  sty     path_buf2
+L371C:  sty     path2
         rts
 
-L3720:  ldx     path_buf2
+L3720:  ldx     path2
         bne     L3726
         rts
 
-L3726:  lda     path_buf2,x
+L3726:  lda     path2,x
         cmp     #'/'
         beq     L3734
         dex
         bne     L3726
-        stx     path_buf2
+        stx     path2
         rts
 
 L3734:  dex
-        stx     path_buf2
+        stx     path2
         rts
 
 L3739:  lda     L3150
@@ -1387,38 +1387,38 @@ L3739:  lda     L3150
         rts
 
 L373F:  ldx     #$00
-        ldy     path_buf1
+        ldy     path1
         lda     #'/'
-        sta     path_buf1+1,y
+        sta     path1+1,y
         iny
 L374A:  cpx     L3150
         bcs     L375A
         lda     L3151,x
-        sta     path_buf1+1,y
+        sta     path1+1,y
         inx
         iny
         jmp     L374A
 
-L375A:  sty     path_buf1
+L375A:  sty     path1
         rts
 
-L375E:  ldx     path_buf1
+L375E:  ldx     path1
         bne     L3764
         rts
 
-L3764:  lda     path_buf1,x
+L3764:  lda     path1,x
         cmp     #'/'
         beq     L3772
         dex
         bne     L3764
-        stx     path_buf1
+        stx     path1
         rts
 
 L3772:  dex
-        stx     path_buf1
+        stx     path1
         rts
 
-L3777:  ldy     #$00
+L3777:  ldy     #0
         sta     L353C
         dey
 L377D:  iny
@@ -1426,12 +1426,12 @@ L377D:  iny
         cmp     #'/'
         bne     L3788
         sty     L353C
-L3788:  sta     path_buf2,y
+L3788:  sta     path2,y
         cpy     L324A
         bne     L377D
         ldy     L320A
 L3793:  lda     L320A,y
-        sta     path_buf1,y
+        sta     path1,y
         dey
         bpl     L3793
         rts
@@ -1462,20 +1462,20 @@ fail:   pla
 
 L37C5:  jsr     L381C
         clc
-        adc     #$02
+        adc     #<$4402
         tay
         txa
-        adc     #$44
+        adc     #>$4402
         tax
         tya
         rts
 
 L37D2:  jsr     L3836
         clc
-        adc     #$82
+        adc     #<$4582
         tay
         txa
-        adc     #$45
+        adc     #>$4582
         tax
         tya
         rts
@@ -1536,30 +1536,47 @@ L3836:  ldx     #$00
         rts
 
 L3857:  .byte   $00
-        DEFINE_OPEN_PARAMS open_params11, str_desktop2, $5000
-        DEFINE_OPEN_PARAMS open_params10, str_selector, $5400
-        DEFINE_READ_PARAMS read_params9, $2000, $0400
-        DEFINE_CLOSE_PARAMS close_params9
+
+;;; ============================================================
+
+.proc invoke_selector_or_desktop_impl
+        sys_start := $2000
+
+        DEFINE_OPEN_PARAMS open_desktop2_params, str_desktop2, $5000
+        DEFINE_OPEN_PARAMS open_selector_params, str_selector, $5400
+        DEFINE_READ_PARAMS read_params, sys_start, $0400
+        DEFINE_CLOSE_PARAMS close_everything_params
+
 str_selector:
         PASCAL_STRING "Selector"
 str_desktop2:
         PASCAL_STRING "DeskTop2"
 
-L3880:  MLI_CALL CLOSE, close_params9
-        MLI_CALL OPEN, open_params10
-        beq     :+
-        MLI_CALL OPEN, open_params11
-        beq     L3897
-        brk
 
-L3897:  lda     open_params11::ref_num
-        jmp     L38A0
+start:  MLI_CALL CLOSE, close_everything_params
+        MLI_CALL OPEN, open_selector_params
+        beq     selector
+        MLI_CALL OPEN, open_desktop2_params
+        beq     desktop2
 
-:       lda     open_params10::ref_num
-L38A0:  sta     read_params9::ref_num
-        MLI_CALL READ, read_params9
-        MLI_CALL CLOSE, close_params9
-        jmp     $2000
+        brk                     ; just crash
+
+desktop2:
+        lda     open_desktop2_params::ref_num
+        jmp     read
+
+selector:
+        lda     open_selector_params::ref_num
+
+
+read:   sta     read_params::ref_num
+        MLI_CALL READ, read_params
+        MLI_CALL CLOSE, close_everything_params
+        jmp     sys_start
+.endproc
+        invoke_selector_or_desktop := invoke_selector_or_desktop_impl::start
+
+;;; ============================================================
 
 L38B2:  stax    $06
         ldy     #$00
@@ -1626,7 +1643,7 @@ L39EE:  jsr     HOME
         lda     #$00
         jsr     L3ABC
         addr_call cout_string, str_copying
-        addr_call cout_string_newline, path_buf2
+        addr_call cout_string_newline, path2
         rts
 
 L3A0A:  lda     #$00
@@ -1649,14 +1666,14 @@ L3A29:  lda     #$00
         addr_call cout_string, str_not_enough
         jsr     wait_enter_escape
         jsr     HOME
-        jmp     L3880
+        jmp     invoke_selector_or_desktop
 
 L3A43:  cmp     #PDERR_OVERRUN_ERROR
-        bne     L3A4D
+        bne     :+
         jsr     L3A29
         jmp     L3AD2
 
-L3A4D:  cmp     #PDERR_VOLUME_DIR_FULL
+:       cmp     #PDERR_VOLUME_DIR_FULL
         bne     show_error
         jsr     L3A29
         jmp     L3AD2
@@ -1668,7 +1685,7 @@ L3A4D:  cmp     #PDERR_VOLUME_DIR_FULL
         pla
         jsr     PRBYTE
         addr_call cout_string, str_occured
-        addr_call cout_string_newline, path_buf2
+        addr_call cout_string_newline, path2
         addr_call cout_string, str_not_completed
 
         ;; Wait for keyboard
@@ -1684,7 +1701,7 @@ loop:   lda      KBD
         cmp     #CHAR_RETURN
         bne     loop
         jsr     HOME
-        jmp     L3880
+        jmp     invoke_selector_or_desktop
 .endproc
 
 L3A97:  jmp     MONZ
@@ -1736,7 +1753,7 @@ done:   rts
 ;;; ============================================================
 
 L3AD2:  jsr     HOME
-        jmp     L3880
+        jmp     invoke_selector_or_desktop
 
 L3AD8:  .byte   0               ; ???
         .byte   $02
