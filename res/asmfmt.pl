@@ -59,7 +59,7 @@ while (<STDIN>) {
 
             $_ = $opcode . ' ' . $arguments;
 
-        } elsif (m/^(\.(?:if\w+|elseif|else|endif)\b)\s*(.*)$/) {
+        } elsif (m/^(\.(?:if\w*|elseif|else|endif)\b)\s*(.*)$/) {
 
             # conditional - half indent left
             my ($opcode, $arguments) = ($1 // '', $2 // '');

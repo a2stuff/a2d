@@ -6975,12 +6975,7 @@ start:  jsr     reset_grafport3
         sec
         sbc     #3              ; About and separator before first item
         jsr     a_times_16
-        clc
-        adc     #<buf
-        sta     ptr
-        txa
-        adc     #>buf
-        sta     ptr+1
+        addax   #buf, ptr
 
         ;; Compute total length
         ldy     #0
@@ -14838,13 +14833,7 @@ L918D:  .byte   0
 .proc icon_entry_name_lookup
         asl     a
         tay
-        lda     icon_entry_address_table,y
-        clc
-        adc     #icon_entry_offset_len
-        sta     $06
-        lda     icon_entry_address_table+1,y
-        adc     #0
-        sta     $06+1
+        add16   icon_entry_address_table,y, #icon_entry_offset_len, $06
         rts
 .endproc
 

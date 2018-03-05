@@ -3,7 +3,9 @@
 
 ## DESKTOP.SYSTEM
 
-A short (8k) loader program. This is likely responsible for copying
+`sys.s`
+
+A short (8k) loader program. This is responsible for copying
 the rest to a RAM card (if available), then invoking the main app.
 
 ## DESKTOP2.$F1

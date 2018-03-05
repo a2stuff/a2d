@@ -2,9 +2,25 @@
 ;;; Generic Macros
 ;;; ============================================================
 
-.define is_immediate(arg)       (.match (.mid (0, 1, {arg}), #))
-.define is_register(arg)        (.match ({arg}, x) .or .match ({arg}, y))
-.define immediate_value(arg)    (.right (.tcount ({arg})-1, {arg}))
+.define _is_immediate(arg)       (.match (.mid (0, 1, {arg}), #))
+.define _is_register(arg)        (.match ({arg}, x) .or .match ({arg}, y))
+.define _immediate_value(arg)    (.right (.tcount ({arg})-1, {arg}))
+
+.macro _op_lo op, arg
+    .if _is_immediate {arg}
+        op #<_immediate_value {arg}
+    .else
+        op arg
+    .endif
+.endmacro
+
+.macro _op_hi op, arg
+    .if _is_immediate {arg}
+        op #>_immediate_value {arg}
+    .else
+        op arg+1
+    .endif
+.endmacro
 
 ;;; ============================================================
 ;;; Pad with zeros to the given address
@@ -82,26 +98,16 @@
 ;;;    ldax #$1234      ; immediate
 ;;;    ldax $1234       ; absolute
 .macro ldax arg
-    .if is_immediate {arg}
-        lda     #<immediate_value {arg}
-        ldx     #>immediate_value {arg}
-    .else
-        lda     arg
-        ldx     arg+1
-    .endif
+        _op_lo lda, {arg}
+        _op_hi ldx, {arg}
 .endmacro
 
 ;;; Load X,Y
 ;;;    ldxy #$1234      ; immediate
 ;;;    ldxy $1234       ; absolute
 .macro ldxy arg
-    .if is_immediate {arg}
-        ldx     #<immediate_value {arg}
-        ldy     #>immediate_value {arg}
-    .else
-        ldx     arg
-        ldy     arg+1
-    .endif
+        _op_lo ldx, {arg}
+        _op_hi ldy, {arg}
 .endmacro
 
 ;;; Store A,X
@@ -110,6 +116,7 @@
         sta     arg
         stx     arg+1
 .endmacro
+
 
 ;;; Add arg1 to arg2, store to arg3
 ;;;    add16 $1111, $2222, $3333        ; absolute, absolute, absolute
@@ -125,7 +132,7 @@
 ;;;    add16 $1111,x, $2222,x, $3333,x  ; indexed, indexed, indexed
 ;;;    add16 $1111,y, $2222,y, $3333,y  ; indexed, indexed, indexed
 .macro add16 arg1, arg2, arg3, arg4, arg5, arg6
-    .if is_register {arg2} && is_register {arg4} && is_register {arg6}
+    .if _is_register {arg2} && _is_register {arg4} && _is_register {arg6}
         lda     arg1,arg2
         clc
         adc     arg3,arg4
@@ -133,66 +140,59 @@
         lda     arg1+1,arg2
         adc     arg3+1,arg4
         sta     arg5+1,arg6
-    .elseif is_register {arg2} && is_register {arg5}
+    .elseif _is_register {arg2} && _is_register {arg5}
         lda     arg1,arg2
         clc
-        adc     arg3
+        _op_lo  adc, {arg3}
         sta     arg4,arg5
         lda     arg1+1,arg2
-        adc     arg3+1
+        _op_hi  adc, {arg3}
         sta     arg4+1,arg5
-    .elseif is_register {arg2}
+    .elseif _is_register {arg2}
         lda     arg1,arg2
         clc
-        adc     arg3
+        _op_lo  adc, {arg3}
         sta     arg4
         lda     arg1+1,arg2
-        adc     arg3+1
+        _op_hi  adc, {arg3}
         sta     arg4+1
-    .elseif is_register {arg3}
-        lda     arg1
+    .elseif _is_register {arg3}
+        _op_lo  lda, {arg1}
         clc
         adc     arg2,arg3
         sta     arg4
-        lda     arg1+1
+        _op_hi  lda, {arg1}
         adc     arg2+1,arg3
         sta     arg4+1
-    .elseif is_register {arg4}
-        lda     arg1
+    .elseif _is_register {arg4}
+        _op_lo  lda, {arg1}
         clc
-        adc     arg2
+        _op_lo  adc, {arg2}
         sta     arg3,arg4
-        lda     arg1+1
-        adc     arg2+1
+        _op_hi  lda, {arg1}
+        _op_hi  adc, {arg2}
         sta     arg3+1,arg4
-    .elseif is_immediate {arg2}
-        lda     arg1
-        clc
-        adc     #<immediate_value {arg2}
-        sta     arg3
-        lda     arg1+1
-        adc     #>immediate_value {arg2}
-        sta     arg3+1
     .else
-        lda     arg1
+        _op_lo lda, {arg1}
         clc
-        adc     arg2
+        _op_lo adc, {arg2}
         sta     arg3
-        lda     arg1+1
-        adc     arg2+1
+        _op_hi lda, {arg1}
+        _op_hi adc, {arg2}
         sta     arg3+1
     .endif
 .endmacro
+
 
 ;;; Add arg1 (absolute) to arg2 (8-bit absolute), store to arg3
 ;;;    add16_8 $1111, #$22, $3333       ; absolute, immediate, absolute
 ;;;    add16_8 $1111, $22, $3333        ; absolute, absolute, absolute
 .macro add16_8 arg1, arg2, arg3
-        lda     arg1
+        _op_lo  lda, {arg1}
         clc
         adc     arg2
         sta     arg3
-        lda     arg1+1
+        _op_hi  lda, {arg1}
         adc     #0
         sta     arg3+1
 .endmacro
@@ -201,24 +201,16 @@
 ;;;    addax #$1111, $3333       ; immediate, absolute
 ;;;    addax $1111, $3333        ; absolute, absolute
 .macro addax arg1, arg2
-    .if is_immediate {arg1}
         clc
-        adc     #<immediate_value {arg1}
+        _op_lo adc, {arg1}
         sta     arg2
         txa
-        adc     #>immediate_value {arg1}
+        _op_hi adc, {arg1}
         sta     arg2+1
-    .else
-        clc
-        adc     arg1
-        sta     arg2
-        txa
-        adc     arg1+1
-        sta     arg2+1
-    .endif
 .endmacro
 
 ;;; Subtract arg2 from arg1, store to arg3
+;;;    sub16 #$1111, #$2222, $3333      ; immediate, immediate, absolute
 ;;;    sub16 #$1111, $2222, $3333       ; immediate, absolute, absolute
 ;;;    sub16 $1111, #$2222, $3333       ; absolute, immediate, absolute
 ;;;    sub16 $1111, $2222, $3333        ; absolute, absolute, absolute
@@ -231,7 +223,7 @@
 ;;;    sub16 $1111,x, $2222, $3333,x    ; indexed, absolute, indexed
 ;;;    sub16 $1111,y, $2222, $3333,y    ; indexed, absolute, indexed
 .macro sub16 arg1, arg2, arg3, arg4, arg5
-    .if is_register {arg2} && is_register {arg4}
+    .if _is_register {arg2} && _is_register {arg4}
         lda     arg1,arg2
         sec
         sbc     arg3,arg4
@@ -239,66 +231,52 @@
         lda     arg1+1,arg2
         sbc     arg3+1,arg4
         sta     arg5+1
-    .elseif is_register {arg2} && is_register {arg5}
+    .elseif _is_register {arg2} && _is_register {arg5}
         lda     arg1,arg2
         sec
-        sbc     arg3
+        _op_lo  sbc, {arg3}
         sta     arg4,arg5
         lda     arg1+1,arg2
-        sbc     arg3+1
+        _op_hi  sbc, {arg3}
         sta     arg4+1,arg5
-    .elseif is_register {arg3}
-        lda     arg1
+    .elseif _is_register {arg3}
+        _op_lo  lda, {arg1}
         sec
         sbc     arg2,arg3
         sta     arg4
-        lda     arg1+1
+        _op_hi  lda, {arg1}
         sbc     arg2+1,arg3
         sta     arg4+1
-    .elseif is_register {arg4}
-        lda     arg1
+    .elseif _is_register {arg4}
+        _op_lo  lda, {arg1}
         sec
-        sbc     arg2
+        _op_lo  sbc, {arg2}
         sta     arg3,arg4
-        lda     arg1+1
-        sbc     arg2+1
+        _op_hi  lda, {arg1}
+        _op_hi  sbc, {arg2}
         sta     arg3+1,arg4
-    .elseif is_immediate {arg1}
-        lda     #<immediate_value {arg1}
-        sec
-        sbc     arg2
-        sta     arg3
-        lda     #>immediate_value {arg1}
-        sbc     arg2+1
-        sta     arg3+1
-    .elseif is_immediate {arg2}
-        lda     arg1
-        sec
-        sbc     #<immediate_value {arg2}
-        sta     arg3
-        lda     arg1+1
-        sbc     #>immediate_value {arg2}
-        sta     arg3+1
     .else
-        lda     arg1
+        _op_lo lda, {arg1}
         sec
-        sbc     arg2
+        _op_lo sbc, {arg2}
         sta     arg3
-        lda     arg1+1
-        sbc     arg2+1
+        _op_hi lda, {arg1}
+        _op_hi sbc, {arg2}
         sta     arg3+1
     .endif
 .endmacro
 
 ;;; Subtract arg2 from arg1, store to arg3
+;;;    sub16_8 #$1111, #$22, $3333      ; immediate, immediate, absolute
+;;;    sub16_8 #$1111, $22, $3333       ; immediate, absolute, absolute
 ;;;    sub16_8 $1111, #$22, $3333       ; absolute, immediate, absolute
 ;;;    sub16_8 $1111, $22, $3333        ; absolute, absolute, absolute
 .macro sub16_8 arg1, arg2, arg3
-        lda     arg1
+        _op_lo  lda, {arg1}
         sec
         sbc     arg2
         sta     arg3
-        lda     arg1+1
+        _op_hi  lda, {arg1}
         sbc     #0
         sta     arg3+1
 .endmacro
@@ -310,34 +288,31 @@
 ;;;    copy16 $1111,y, $2222    ; indirect load, absolute store
 ;;;    copy16 $1111, $2222,x    ; absolute load, indirect store
 ;;;    copy16 $1111, $2222,y    ; absolute load, indirect store
+;;;    copy16 #$1111, $2222,x   ; immediate load, indirect store
+;;;    copy16 #$1111, $2222,y   ; immediate load, indirect store
 .macro copy16 arg1, arg2, arg3
-    .if is_register {arg2}
+    .if _is_register {arg2}
         ;; indexed load variant (arg2 is x or y)
         lda     arg1,arg2
         sta     arg3
         lda     arg1+1,arg2
         sta     arg3+1
-    .elseif is_register {arg3}
+    .elseif _is_register {arg3}
         ;; indexed store variant (arg3 is x or y)
-        lda     arg1
+        _op_lo  lda, {arg1}
         sta     arg2,arg3
-        lda     arg1+1
+        _op_hi  lda, {arg1}
         sta     arg2+1,arg3
-    .elseif is_immediate {arg1}
-        ;; immediate load variant (arg1 is #nnnn)
-        lda     #<immediate_value {arg1}
-        sta     arg2
-        lda     #>immediate_value {arg1}
-        sta     arg2+1
     .else
-        lda     arg1
+        _op_lo  lda, {arg1}
         sta     arg2
-        lda     arg1+1
+        _op_hi  lda, {arg1}
         sta     arg2+1
     .endif
 .endmacro
 
 ;;; Compare 16-bit values
+;;;    cmp16 #$1111, #$2222    ; immediate, immediate (silly, but supported)
 ;;;    cmp16 #$1111, $2222     ; immediate, absolute
 ;;;    cmp16 $1111, #$2222     ; absolute, immediate
 ;;;    cmp16 $1111, $2222      ; absolute, absolute
@@ -346,35 +321,23 @@
 ;;;    cmp16 $1111, $2222,x    ; absolute, indirect
 ;;;    cmp16 $1111, $2222,y    ; absolute indirect
 .macro cmp16 arg1, arg2, arg3
-    .if is_register {arg2}
+    .if _is_register {arg2}
         ;; indexed variant (arg2 is x or y)
         lda     arg1,arg2
         cmp     arg3
         lda     arg1+1,arg2
         sbc     arg3+1
-    .elseif is_register {arg3}
+    .elseif _is_register {arg3}
         ;; indexed variant (arg3 is x or y)
         lda     arg1
         cmp     arg2,arg3
         lda     arg1+1
         sbc     arg2+1,arg3
-    .elseif is_immediate {arg1}
-        ;; immediate variant (arg1 is #nnnn)
-        lda     #<immediate_value {arg1}
-        cmp     arg2
-        lda     #>immediate_value {arg1}
-        sbc     arg2+1
-    .elseif is_immediate {arg2}
-        ;; immediate variant (arg2 is #nnnn)
-        lda     arg1
-        cmp     #<immediate_value {arg2}
-        lda     arg1+1
-        sbc     #>immediate_value {arg2}
     .else
-        lda     arg1
-        cmp     arg2
-        lda     arg1+1
-        sbc     arg2+1
+        _op_lo  lda, {arg1}
+        _op_lo  cmp, {arg2}
+        _op_hi  lda, {arg1}
+        _op_hi  sbc, {arg2}
     .endif
 .endmacro
 
