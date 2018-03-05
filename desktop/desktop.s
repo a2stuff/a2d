@@ -6101,7 +6101,7 @@ not_menu:
 
 L445C:  .byte   0
 L445D:  jsr     clear_selection
-        ldx     $D20E
+        ldx     findwindow_window_id
         dex
         lda     LEC26,x
         sta     icon_param
@@ -6722,12 +6722,7 @@ L49A6:  lda     menu_click_params::item_num
         sbc     #$06
         sta     L49A5
         jsr     a_times_16
-        clc
-        adc     #$1E
-        sta     $06
-        txa
-        adc     #$DB
-        sta     $06+1
+        addax   #run_list_entries, $06
         ldy     #$0F
         lda     ($06),y
         asl     a
@@ -6756,12 +6751,7 @@ L49ED:  lda     L49A5
 
 L49FA:  lda     L49A5
         jsr     a_times_64
-        clc
-        adc     #$9E
-        sta     $06
-        txa
-        adc     #$DB
-        sta     $06+1
+        addax   #$DB9E, $06
 L4A0A:  ldy     #$00
         lda     ($06),y
         tay
@@ -6794,12 +6784,7 @@ L4A2B:  iny
 L4A46:  .byte   0
 L4A47:  pha
         jsr     a_times_64
-        clc
-        adc     #$9E
-        sta     $06
-        txa
-        adc     #$DB
-        sta     $06+1
+        addax   #$DB9E, $06
         ldy     #$00
         lda     ($06),y
         tay
@@ -6933,12 +6918,7 @@ L4AEA:  jsr     L4B5F
         addr_call copy_LD3EE_str, path_buffer
         lda     L4BB0
         jsr     a_times_64
-        clc
-        adc     #<$DB9E
-        sta     $06
-        txa
-        adc     #>$DB9E
-        sta     $06+1
+        addax   #$DB9E, $06
         ldy     #$00
         lda     ($06),y
         sta     L4BB1
@@ -8755,12 +8735,7 @@ L59F3:  ldy     menu_click_params::item_num
         jmp     L5A4C
 
 L59FE:  jsr     icon_entry_lookup
-        clc
-        adc     #$09
-        sta     $06
-        txa
-        adc     #$00
-        sta     $06+1
+        addax   #9, $06
         ldy     #$00
         lda     ($06),y
         tay
@@ -9894,12 +9869,7 @@ L650D:  .word   0
 .proc L6523
         lda     active_window_id
         jsr     window_lookup
-        clc
-        adc     #$14
-        sta     $06
-        txa
-        adc     #$00
-        sta     $06+1
+        addax   #$14, $06
         ldy     #$25
 :       lda     ($06),y
         sta     grafport2,y
@@ -10197,7 +10167,7 @@ L67F6:  bit     BUTN0
         bne     L6818
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, findicon_which_icon
         ldx     selected_icon_count
-        lda     $D20D
+        lda     findicon_which_icon
         sta     selected_icon_list,x
         inc     selected_icon_count
         jmp     L6834
@@ -10389,23 +10359,20 @@ L6A3E:  .byte   0
 ;;; ============================================================
 
 .proc L6A3F
-        ldx     #$07
-L6A41:  cmp     LEC26,x
+        ptr := $6
+
+        ldx     #7
+:       cmp     LEC26,x
         beq     L6A80
         dex
-        bpl     L6A41
+        bpl     :-
         jsr     icon_entry_lookup
-        clc
-        adc     #$09
-        sta     $06
-        txa
-        adc     #$00
-        sta     $06+1
-        ldy     #$00
-        lda     ($06),y
+        addax   #icon_entry_offset_len, ptr
+        ldy     #0
+        lda     (ptr),y
         tay
         dey
-L6A5C:  lda     ($06),y
+L6A5C:  lda     (ptr),y
         sta     $220,y
         dey
         bpl     L6A5C
@@ -19206,13 +19173,13 @@ LBBA4:  lda     path_buf1
         cpx     #1
         beq     LBBBC
 LBBB1:  lda     path_buf2,x
-        sta     $D485,x
+        sta     path_buf2+1,x
         dex
         cpx     #1
         bne     LBBB1
 LBBBC:  ldx     path_buf1
         lda     path_buf1,x
-        sta     $D486
+        sta     path_buf2+2
         dec     path_buf1
         inc     path_buf2
         jsr     measure_path_buf1
@@ -19234,14 +19201,14 @@ LBC03:  lda     path_buf2
 
 LBC0B:  ldx     path_buf1
         inx
-        lda     $D486
+        lda     path_buf2+2
         sta     path_buf1,x
         inc     path_buf1
         ldx     path_buf2
         cpx     #$03
         bcc     LBC2D
         ldx     #$02
-LBC21:  lda     $D485,x
+LBC21:  lda     path_buf2+1,x
         sta     path_buf2,x
         inx
         cpx     path_buf2
@@ -19273,11 +19240,11 @@ LBC79:  dex
         stx     LD3C0+1
         ldx     path_buf1
 LBC80:  lda     path_buf1,x
-        sta     $D485,x
+        sta     path_buf2+1,x
         dex
         bne     LBC80
         lda     LD8EF
-        sta     $D485
+        sta     path_buf2+1
         inc     path_buf1
         lda     path_buf1
         sta     path_buf2
@@ -19393,7 +19360,7 @@ LBD33:  rts
 LBD69:  lda     #$01
         sta     path_buf2
         lda     LD8EF
-        sta     $D485
+        sta     path_buf2+1
         rts
 
 LBD75:  lda     #$00
@@ -20022,30 +19989,15 @@ read_selector_list:
 
         ;; Width of "123456 Items"
         addr_call desktop_main::measure_text1, str_items
-        clc
-        adc     dx
-        sta     width_items_label
-        txa
-        adc     dx+1
-        sta     width_items_label+1
+        addax   dx, width_items_label
 
         ;; Width of "123456K in disk"
         addr_call desktop_main::measure_text1, str_k_in_disk
-        clc
-        adc     dx
-        sta     width_k_in_disk_label
-        txa
-        adc     dx+1
-        sta     width_k_in_disk_label+1
+        addax   dx, width_k_in_disk_label
 
         ;; Width of "123456K available"
         addr_call desktop_main::measure_text1, str_k_available
-        clc
-        adc     dx
-        sta     width_k_available_label
-        txa
-        adc     dx+1
-        sta     width_k_available_label+1
+        addax   dx, width_k_available_label
 
         add16   width_k_in_disk_label, width_k_available_label, width_right_labels
         add16   width_items_label, #5, width_items_label_padded

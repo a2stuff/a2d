@@ -197,6 +197,27 @@
         sta     arg3+1
 .endmacro
 
+;;; Add A,Z to arg1 (immediate or absolute), store to arg2
+;;;    addax #$1111, $3333       ; immediate, absolute
+;;;    addax $1111, $3333        ; absolute, absolute
+.macro addax arg1, arg2
+    .if is_immediate {arg1}
+        clc
+        adc     #<immediate_value {arg1}
+        sta     arg2
+        txa
+        adc     #>immediate_value {arg1}
+        sta     arg2+1
+    .else
+        clc
+        adc     arg1
+        sta     arg2
+        txa
+        adc     arg1+1
+        sta     arg2+1
+    .endif
+.endmacro
+
 ;;; Subtract arg2 from arg1, store to arg3
 ;;;    sub16 #$1111, $2222, $3333       ; immediate, absolute, absolute
 ;;;    sub16 $1111, #$2222, $3333       ; absolute, immediate, absolute
