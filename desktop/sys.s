@@ -69,15 +69,15 @@ L23C9:  .byte   $00
 L23DF:  .byte   $00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00
 
-        DEFINE_CLOSE_PARAMS close_params2
-        DEFINE_CLOSE_PARAMS close_params3
+        DEFINE_CLOSE_PARAMS close_srcfile_params
+        DEFINE_CLOSE_PARAMS close_dstfile_params
 
         .byte   $01
         .addr   L26F5
-        DEFINE_OPEN_PARAMS open_params3, L26F5, $0D00
-        DEFINE_OPEN_PARAMS open_params4, path0, $1100
-        DEFINE_READ_PARAMS read_params3, $4000, $7F00
-        DEFINE_WRITE_PARAMS write_params, $4000, $7F00
+        DEFINE_OPEN_PARAMS open_srcfile_params, L26F5, $0D00
+        DEFINE_OPEN_PARAMS open_dstfile_params, path0, $1100
+        DEFINE_READ_PARAMS read_srcfile_params, $4000, $7F00
+        DEFINE_WRITE_PARAMS write_dstfile_params, $4000, $7F00
 
         DEFINE_CREATE_PARAMS create_params, path0, %11000011, 0, 0
         .byte   $07
@@ -89,6 +89,8 @@ L23DF:  .byte   $00,$00,$00
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, L26F5
         .byte   0
 
+
+        ;; Files/Directories to copy
 str_f1: PASCAL_STRING "DESKTOP1"
 str_f2: PASCAL_STRING "DESKTOP2"
 str_f3: PASCAL_STRING "DESK.ACC"
@@ -307,13 +309,14 @@ L263C:  lda     L25FB,x
         dex
         cpx     #3
         bne     L263C
-        jsr     L2A95
+        jsr     create_file_for_copy
         lda     path0
         sta     copy_flag
         lda     #0
         sta     filenum
 
-file_loop:  lda     filenum
+file_loop:
+        lda     filenum
         asl     a
         tax
         lda     filename_table,x
@@ -327,7 +330,7 @@ file_loop:  lda     filenum
         sta     filename_buf,y
         dey
         bpl     :-
-        jsr     L2912
+        jsr     copy_file
         inc     filenum
         lda     filenum
         cmp     #$06
@@ -360,10 +363,10 @@ L26B2:  stax    $06
         ldy     #$00
         lda     ($06),y
         tay
-L26C1:  lda     ($06),y
+:       lda     ($06),y
         sta     $D3EE,y
         dey
-        bpl     L26C1
+        bpl     :-
         lda     ROMIN2
         rts
 
@@ -373,10 +376,10 @@ L26CD:  stax    $06
         ldy     #$00
         lda     ($06),y
         tay
-L26DC:  lda     ($06),y
+:       lda     ($06),y
         sta     $D3AD,y
         dey
-        bpl     L26DC
+        bpl     :-
         lda     ROMIN2
         rts
 
@@ -496,6 +499,8 @@ loop:   iny
         rts
 .endproc
 
+;;; ============================================================
+
 .proc fail_copy
         lda     #0
         sta     copy_flag
@@ -514,7 +519,9 @@ L28FE:  lda     $0200,y
 L290E:  sty     L26F5
         rts
 
-.proc L2912
+;;; ============================================================
+
+.proc copy_file
         jsr     append_filename_to_path0
         jsr     L2851
         MLI_CALL GET_FILE_INFO, get_file_info_params
@@ -525,12 +532,12 @@ L290E:  sty     L26F5
 
 :       lda     get_file_info_params::file_type
         sta     L2831
-        cmp     #$0F
+        cmp     #FT_DIRECTORY
         bne     L2937
-        jsr     L2962
-        jmp     L2951
+        jsr     copy_directory
+        jmp     done
 
-L2937:  jsr     L2A95
+L2937:  jsr     create_file_for_copy
         cmp     #PDERR_DUPLICATE_FILENAME
         bne     L2948
         lda     filenum
@@ -539,39 +546,50 @@ L2937:  jsr     L2A95
         pla
         jmp     fail2
 
-L2948:  jsr     L2A11
+L2948:  jsr     copy_normal_file
 L294B:  jsr     L2876
         jsr     remove_filename_from_path0
-L2951:  rts
+done:   rts
 .endproc
 
-        DEFINE_OPEN_PARAMS open_params2, L26F5, $A000
-        DEFINE_READ_PARAMS read_params2, $A400, $0200
+;;; ============================================================
+
+.proc copy_directory_impl
+        ptr := $6
+
+        dir_buffer := $A400
+
+        entry_length_offset := $23
+        file_count_offset := $25
+        header_length := $2B
+
+        DEFINE_OPEN_PARAMS open_params, L26F5, $A000
+        DEFINE_READ_PARAMS read_params, dir_buffer, $0200
         DEFINE_CLOSE_PARAMS close_params
 
-L2962:  jsr     L2A95
+start:  jsr     create_file_for_copy
         cmp     #PDERR_DUPLICATE_FILENAME
         beq     L2974
-        MLI_CALL OPEN, open_params2
+        MLI_CALL OPEN, open_params
         beq     :+
         jsr     fail_copy
 L2974:  rts
 
-:       lda     open_params2::ref_num
-        sta     read_params2::ref_num
+:       lda     open_params::ref_num
+        sta     read_params::ref_num
         sta     close_params::ref_num
-        MLI_CALL READ, read_params2
+        MLI_CALL READ, read_params
         beq     :+
         jsr     fail_copy
         rts
 
 :       lda     #$00
         sta     L2A10
-        lda     #<$A42B
-        sta     $06
-        lda     #>$A42B
-        sta     $06+1
-L2997:  lda     $A425
+        lda     #<(dir_buffer + header_length)
+        sta     ptr
+        lda     #>(dir_buffer + header_length)
+        sta     ptr+1
+L2997:  lda     dir_buffer + file_count_offset
         cmp     L2A10
         bne     L29B1
 L299F:  MLI_CALL CLOSE, close_params
@@ -583,17 +601,17 @@ L29AA:  jsr     L2876
         rts
 
 L29B1:  ldy     #$00
-        lda     ($06),y
+        lda     (ptr),y
         bne     L29BA
         jmp     L29F6
 
 L29BA:  and     #$0F
         tay
-L29BD:  lda     ($06),y
+L29BD:  lda     (ptr),y
         sta     filename_buf,y
         dey
         bne     L29BD
-        lda     ($06),y
+        lda     (ptr),y
         and     #$0F
         sta     filename_buf,y
         jsr     append_filename_to_path0
@@ -604,79 +622,94 @@ L29BD:  lda     ($06),y
 
 :       lda     get_file_info_params::file_type
         sta     L2831
-        jsr     L2A95
+        jsr     create_file_for_copy
         cmp     #PDERR_DUPLICATE_FILENAME
-        beq     L29ED
-        jsr     L2A11
-L29ED:  jsr     L2876
+        beq     :+
+        jsr     copy_normal_file
+:       jsr     L2876
         jsr     remove_filename_from_path0
         inc     L2A10
-L29F6:  add16_8 $06, $A423, $06
-        lda     $06+1
-        cmp     #$A6
+L29F6:  add16_8 ptr, dir_buffer + entry_length_offset, ptr
+        lda     ptr+1
+        cmp     #>(dir_buffer + $200)
         bcs     L2A0D
         jmp     L2997
 
 L2A0D:  jmp     L299F
 
 L2A10:  .byte   0
-L2A11:  MLI_CALL OPEN, open_params3
-        beq     L2A1F
-        jsr     fail_copy
-        jmp     L2A11
+.endproc
+        copy_directory := copy_directory_impl::start
 
-L2A1F:  MLI_CALL OPEN, open_params4
-        beq     L2A2D
-        jsr     fail_copy
-        jmp     L2A1F
+;;; ============================================================
 
-L2A2D:  lda     open_params3::ref_num
-        sta     read_params3::ref_num
-        sta     close_params2::ref_num
-        lda     open_params4::ref_num
-        sta     write_params::ref_num
-        sta     close_params3::ref_num
-L2A3F:  copy16  #$7F00, read_params3::request_count
-L2A49:  MLI_CALL READ, read_params3
-        beq     L2A5B
-        cmp     #PDERR_END_OF_FILE
-        beq     L2A88
-        jsr     fail_copy
-        jmp     L2A49
-
-L2A5B:  copy16  read_params3::trans_count, write_params::request_count
-        ora     read_params3::trans_count
-        beq     L2A88
-L2A6C:  MLI_CALL WRITE, write_params
+.proc copy_normal_file
+:       MLI_CALL OPEN, open_srcfile_params
         beq     :+
         jsr     fail_copy
-        jmp     L2A6C
+        jmp     :-
 
-:       lda     write_params::trans_count
+:       MLI_CALL OPEN, open_dstfile_params
+        beq     :+
+        jsr     fail_copy
+        jmp     :-
+
+:       lda     open_srcfile_params::ref_num
+        sta     read_srcfile_params::ref_num
+        sta     close_srcfile_params::ref_num
+        lda     open_dstfile_params::ref_num
+        sta     write_dstfile_params::ref_num
+        sta     close_dstfile_params::ref_num
+
+loop:   copy16  #$7F00, read_srcfile_params::request_count
+read:   MLI_CALL READ, read_srcfile_params
+        beq     :+
+        cmp     #PDERR_END_OF_FILE
+        beq     done
+        jsr     fail_copy
+        jmp     read
+
+:       copy16  read_srcfile_params::trans_count, write_dstfile_params::request_count
+        ora     read_srcfile_params::trans_count
+        beq     done
+write:  MLI_CALL WRITE, write_dstfile_params
+        beq     :+
+        jsr     fail_copy
+        jmp     write
+
+:       lda     write_dstfile_params::trans_count
         cmp     #<$7F00
-        bne     L2A88
-        lda     write_params::trans_count+1
+        bne     done
+        lda     write_dstfile_params::trans_count+1
         cmp     #>$7F00
-        beq     L2A3F
-L2A88:  MLI_CALL CLOSE, close_params2
-        MLI_CALL CLOSE, close_params3
+        beq     loop
+done:   MLI_CALL CLOSE, close_srcfile_params
+        MLI_CALL CLOSE, close_dstfile_params
         rts
+.endproc
 
+;;; ============================================================
+
+.proc create_file_for_copy
         ;; Copy file_type, aux_type, storage_type
-L2A95:  ldx     #7
+        ldx     #7
 :       lda     get_file_info_params,x
         sta     create_params,x
         dex
         cpx     #3
         bne     :-
         MLI_CALL CREATE, create_params
-        beq     L2AB1
+        beq     :+
         cmp     #PDERR_DUPLICATE_FILENAME
-        beq     L2AB1
+        beq     :+
         jsr     fail_copy
-L2AB1:  rts
+:       rts
+.endproc
 
-L2AB2:  lda     L24AC
+;;; ============================================================
+
+.proc L2AB2
+        lda     L24AC
         cmp     #$3E
         bne     L2ABC
         jmp     L2AE6
@@ -724,6 +757,7 @@ L2AF3:  inx
 
 str_desktop2:
         PASCAL_STRING "DeskTop2"
+.endproc
 
 ;;; ============================================================
 
@@ -974,14 +1008,14 @@ L3367:  lda     #$00
         sta     L334A
         MLI_CALL OPEN, open_params6
         beq     L337A
-        jmp     L3A43
+        jmp     handle_error_code
 
 L337A:  lda     open_params6::ref_num
         sta     L329D
         sta     read_params4::ref_num
         MLI_CALL READ, read_params4
         beq     :+
-        jmp     L3A43
+        jmp     handle_error_code
 
 :       jsr     L33A4
         rts
@@ -990,7 +1024,7 @@ L3392:  lda     L329D
         sta     close_params5::ref_num
         MLI_CALL CLOSE, close_params5
         beq     L33A3
-        jmp     L3A43
+        jmp     handle_error_code
 
 L33A3:  rts
 
@@ -999,7 +1033,7 @@ L33A4:  inc     L329C
         sta     read_params5::ref_num
         MLI_CALL READ, read_params5
         beq     L33B8
-        jmp     L3A43
+        jmp     handle_error_code
 
 L33B8:  inc     L334A
         lda     L334A
@@ -1011,7 +1045,7 @@ L33B8:  inc     L334A
         sta     read_params6::ref_num
         MLI_CALL READ, read_params6
         beq     :+
-        jmp     L3A43
+        jmp     handle_error_code
 
 :       lda     read_params6::trans_count
         cmp     read_params6::request_count
@@ -1130,10 +1164,10 @@ L34C4:  MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     L34D4
         cmp     #PDERR_FILE_NOT_FOUND
         bne     L34DA
-L34D4:  jsr     L3A0A
+L34D4:  jsr     show_insert_prompt
         jmp     L34C4
 
-L34DA:  jmp     L3A43
+L34DA:  jmp     handle_error_code
 
 L34DD:  lda     get_file_info_params2::storage_type
         cmp     #$0F
@@ -1156,7 +1190,7 @@ L34EE:  sta     L353A
         sta     create_params2::access
         jsr     L35A9
         bcc     L350B
-        jmp     L3A29
+        jmp     show_no_space_prompt
 
 L350B:  ldx     #$03
 L350D:  lda     get_file_info_params2::create_date,x
@@ -1170,7 +1204,7 @@ L350D:  lda     get_file_info_params2::create_date,x
         sta     create_params2::storage_type
 L3522:  MLI_CALL CREATE, create_params2
         beq     :+
-        jmp     L3A43
+        jmp     handle_error_code
 
 :       lda     L353A
         beq     L3537
@@ -1190,10 +1224,10 @@ L3540:  lda     L3160
         cmp     #$0F
         bne     L3574
         jsr     L36FB
-        jsr     L39EE
+        jsr     show_copying_screen
         MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     L3566
-        jmp     L3A43
+        jmp     handle_error_code
 L3558:  jsr     L375E
         jsr     L3720
         lda     #$FF
@@ -1208,14 +1242,14 @@ L3566:  jsr     L3739
 
 L3574:  jsr     L3739
         jsr     L36FB
-        jsr     L39EE
+        jsr     show_copying_screen
         MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     :+
-        jmp     L3A43
+        jmp     handle_error_code
 
 :       jsr     L35A9
         bcc     L3590
-        jmp     L3A29
+        jmp     show_no_space_prompt
 
 L3590:  jsr     L3720
         jsr     L36C1
@@ -1231,7 +1265,7 @@ L35A5:  jsr     L375E
 
 L35A9:  MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     :+
-        jmp     L3A43
+        jmp     handle_error_code
 
 :       lda     #$00
         sta     L3641
@@ -1240,7 +1274,7 @@ L35A9:  MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     :+
         cmp     #PDERR_FILE_NOT_FOUND
         beq     L35D7
-        jmp     L3A43
+        jmp     handle_error_code
 
 :       copy16  get_file_info_params3::blocks_used, L3641
 L35D7:  lda     path1
@@ -1257,7 +1291,7 @@ L35DF:  iny
         sta     L3640
         MLI_CALL GET_FILE_INFO, get_file_info_params3
         beq     :+
-        jmp     L3A43
+        jmp     handle_error_code
 
 :       sub16   get_file_info_params3::aux_type, get_file_info_params3::blocks_used, L363D
         sub16   L363D, L3641, L363D
@@ -1277,10 +1311,10 @@ L3641:  .byte   0
 L3642:  .byte   0
 L3643:  MLI_CALL OPEN, open_params7
         beq     L364E
-        jsr     L3A43
+        jsr     handle_error_code
 L364E:  MLI_CALL OPEN, open_params8
         beq     L3659
-        jmp     L3A43
+        jmp     handle_error_code
 
 L3659:  lda     open_params7::ref_num
         sta     read_params7::ref_num
@@ -1294,14 +1328,14 @@ L366B:  copy16  #$0B00, read_params7::request_count
         beq     :+
         cmp     #PDERR_END_OF_FILE
         beq     L36AE
-        jmp     L3A43
+        jmp     handle_error_code
 
 :       copy16  read_params7::trans_count, write_params3::request_count
         ora     read_params7::trans_count
         beq     L36AE
         MLI_CALL WRITE, write_params3
         beq     :+
-        jmp     L3A43
+        jmp     handle_error_code
 
 :       lda     write_params3::trans_count
         cmp     #<$0B00
@@ -1337,7 +1371,7 @@ L36D5:  lda     get_file_info_params2::create_date,x
 L36EA:  MLI_CALL CREATE, create_params3
         clc
         beq     L36F6
-        jmp     L3A43
+        jmp     handle_error_code
 
 L36F6:  rts
 
@@ -1637,46 +1671,64 @@ str_occured:
 str_not_completed:
         PASCAL_STRING "The copy was not completed, press <Return> to continue."
 
-L39EE:  jsr     HOME
-        lda     #$00
+;;; ============================================================
+
+.proc show_copying_screen
+        jsr     HOME
+        lda     #0
         jsr     VTABZ
-        lda     #$00
-        jsr     L3ABC
+        lda     #0
+        jsr     set_htab
         addr_call cout_string, str_copying
         addr_call cout_string_newline, path2
         rts
+.endproc
 
-L3A0A:  lda     #$00
+;;; ============================================================
+
+.proc show_insert_prompt
+        lda     #0
         jsr     VTABZ
-        lda     #$00
-        jsr     L3ABC
+        lda     #0
+        jsr     set_htab
         addr_call cout_string, str_insert
         jsr     wait_enter_escape
         cmp     #CHAR_ESCAPE
-        bne     L3A25
-        jmp     L3AD2
+        bne     :+
+        jmp     finish_and_invoke
 
-L3A25:  jsr     HOME
+:       jsr     HOME
         rts
+.endproc
 
-L3A29:  lda     #$00
+;;; ============================================================
+
+.proc show_no_space_prompt
+        lda     #0
         jsr     VTABZ
-        lda     #$00
-        jsr     L3ABC
+        lda     #0
+        jsr     set_htab
         addr_call cout_string, str_not_enough
         jsr     wait_enter_escape
         jsr     HOME
         jmp     invoke_selector_or_desktop
+.endproc
 
-L3A43:  cmp     #PDERR_OVERRUN_ERROR
+;;; ============================================================
+
+.proc handle_error_code
+        cmp     #PDERR_OVERRUN_ERROR
         bne     :+
-        jsr     L3A29
-        jmp     L3AD2
+        jsr     show_no_space_prompt
+        jmp     finish_and_invoke
 
 :       cmp     #PDERR_VOLUME_DIR_FULL
         bne     show_error
-        jsr     L3A29
-        jmp     L3AD2
+        jsr     show_no_space_prompt
+        jmp     finish_and_invoke
+.endproc
+
+;;; ============================================================
 
 .proc show_error
         ;; Show error
@@ -1733,8 +1785,10 @@ loop:   iny
 done:   rts
 .endproc
 
-L3ABC:  sta     $24
+.proc set_htab
+        sta     CH
         rts
+.endproc
 
 ;;; ============================================================
 
@@ -1752,8 +1806,12 @@ done:   rts
 
 ;;; ============================================================
 
-L3AD2:  jsr     HOME
+.proc finish_and_invoke
+        jsr     HOME
         jmp     invoke_selector_or_desktop
+.endproc
+
+;;; ============================================================
 
 L3AD8:  .byte   0               ; ???
         .byte   $02
@@ -1761,7 +1819,7 @@ L3AD8:  .byte   0               ; ???
 L3ADA:  iny
         inx
         dec     $0200
-        bne     L3AD2
+        bne     finish_and_invoke
         lda     #$A2
         sta     $0200
         rts
