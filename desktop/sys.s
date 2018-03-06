@@ -193,7 +193,7 @@ match:  sta     $D3AC
 
         ;; Point $8 at $C100
         lda     #0
-        sta     L2BE2
+        sta     flag
         sta     $08
         lda     #$C1
         sta     $08+1
@@ -401,8 +401,8 @@ L26CD:  stax    $06
         lda     ROMIN2
         rts
 
-fail:   lda     #$00
-        sta     L2BE2
+fail:   lda     #0
+        sta     flag
         jmp     fail2
 
         .byte   0, $D, 0, 0, 0
@@ -886,7 +886,9 @@ filename:
 
 filenum:
         .byte   0               ; index of file being copied
-L2BE2:  .byte   $00
+
+flag:   .byte   0               ; written but not read ???
+
 slot:   .byte   0
 
         DEFINE_WRITE_BLOCK_PARAMS write_block_params, prodos_loader_blocks, 0
@@ -1222,9 +1224,9 @@ L34D4:  jsr     show_insert_prompt
 L34DA:  jmp     handle_error_code
 
 L34DD:  lda     get_file_info_params2::storage_type
-        cmp     #$0F
+        cmp     #ST_VOLUME_DIRECTORY
         beq     L34EC
-        cmp     #$0D
+        cmp     #ST_LINKED_DIRECTORY
         beq     L34EC
         lda     #$00
         beq     L34EE
@@ -1238,7 +1240,7 @@ L34EE:  sta     L353A
         dey
         cpy     #3
         bne     :-
-        lda     #$C3
+        lda     #%11000011
         sta     create_params2::access
         jsr     L35A9
         bcc     L350B
