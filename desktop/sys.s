@@ -271,7 +271,7 @@ L25BF:  lda     on_line_buffer,y
         bne     L25BF
         ldx     #$C0
         jsr     L26A5
-        addr_call L26B2, path0
+        addr_call copy_to_lc2_b, path0
         jsr     check_desktop2_on_device
         bcs     L25E4
         ldx     #$80
@@ -375,31 +375,41 @@ L26A5:  lda     LCBANK2
         lda     ROMIN2
         rts
 
-L26B2:  stax    $06
-        lda     LCBANK2
-        lda     LCBANK2
-        ldy     #$00
-        lda     ($06),y
-        tay
-:       lda     ($06),y
-        sta     $D3EE,y
-        dey
-        bpl     :-
-        lda     ROMIN2
-        rts
+.proc copy_to_lc2_b
+        ptr := $6
+        target := $D3EE
 
-L26CD:  stax    $06
+        stax    ptr
         lda     LCBANK2
         lda     LCBANK2
-        ldy     #$00
-        lda     ($06),y
+        ldy     #0
+        lda     (ptr),y
         tay
-:       lda     ($06),y
-        sta     $D3AD,y
+:       lda     (ptr),y
+        sta     target,y
         dey
         bpl     :-
         lda     ROMIN2
         rts
+.endproc
+
+.proc copy_to_lc2_a
+        ptr := $6
+        target := $D3AD
+
+        stax    ptr
+        lda     LCBANK2
+        lda     LCBANK2
+        ldy     #0
+        lda     (ptr),y
+        tay
+:       lda     (ptr),y
+        sta     target,y
+        dey
+        bpl     :-
+        lda     ROMIN2
+        rts
+.endproc
 
 fail:   lda     #0
         sta     flag
@@ -834,7 +844,7 @@ start:  MLI_CALL OPEN, open_params
 
 ;;; ============================================================
 
-L2B57:  addr_call L26CD, L2005
+L2B57:  addr_call copy_to_lc2_a, L2005
         rts
 
         .byte   0
@@ -914,33 +924,37 @@ prodos_loader_blocks:
 ;;; "Down load" / "At boot" to the RAMCard as well
 
 .proc part2
+
+        selector_buffer := $4400
+        selector_buflen := $800
+
         jsr     SLOT3ENTRY
         jsr     HOME
         lda     LCBANK2
         lda     LCBANK2
-        lda     $D3FF
+        lda     $D3FF           ; ??? last byte of selector routine?
         pha
         lda     ROMIN2
         pla
-        bne     L3019
+        bne     :+
         jmp     invoke_selector_or_desktop
 
-L3019:  lda     LCBANK2
+:       lda     LCBANK2
         lda     LCBANK2
         ldx     #$17
-        lda     #$00
-L3023:  sta     $D395,x
+        lda     #0
+:       sta     $D395,x
         dex
-        bpl     L3023
+        bpl     :-
         lda     ROMIN2
         jsr     read_selector_list
         beq     :+
-        jmp     L30B8
+        jmp     bail
 
 :       lda     #0
         sta     L30BB
 L3039:  lda     L30BB
-        cmp     $4400
+        cmp     selector_buffer
         beq     L3071
         jsr     L37C5
         stax    $06
@@ -963,8 +977,8 @@ L306B:  inc     L30BB
 L3071:  lda     #$00
         sta     L30BB
 L3076:  lda     L30BB
-        cmp     $4401
-        beq     L30B8
+        cmp     selector_buffer + 1
+        beq     bail
         clc
         adc     #$08
         jsr     L37C5
@@ -990,9 +1004,12 @@ L3076:  lda     L30BB
 L30B2:  inc     L30BB
         jmp     L3076
 
-L30B8:  jmp     invoke_selector_or_desktop
+bail:   jmp     invoke_selector_or_desktop
 
-L30BB:  .byte   $00
+L30BB:  .byte   0
+
+;;; ============================================================
+
         DEFINE_OPEN_PARAMS open_params6, path2, $0800
         DEFINE_READ_PARAMS read_params4, L30CA, 4
 L30CA:  .res    4, 0
@@ -1551,25 +1568,39 @@ fail:   pla
         rts
 .endproc
 
-L37C5:  jsr     L381C
-        clc
-        adc     #<$4402
-        tay
-        txa
-        adc     #>$4402
-        tax
-        tya
-        rts
+;;; ============================================================
 
-L37D2:  jsr     L3836
+.proc L37C5
+        addr := selector_buffer + $2
+
+        jsr     ax_times_16
         clc
-        adc     #<$4582
+        adc     #<addr
         tay
         txa
-        adc     #>$4582
+        adc     #>addr
         tax
         tya
         rts
+.endproc
+
+;;; ============================================================
+
+.proc L37D2
+        addr := selector_buffer + $182
+
+        jsr     ax_times_64
+        clc
+        adc     #<addr
+        tay
+        txa
+        adc     #>addr
+        tax
+        tya
+        rts
+.endproc
+
+;;; ============================================================
 
         .byte   $00,$00
 
@@ -1579,7 +1610,7 @@ L37D2:  jsr     L3836
         DEFINE_OPEN_PARAMS open_params, str_selector_list, $4000
 str_selector_list:
         PASCAL_STRING "Selector.List"
-        DEFINE_READ_PARAMS read_params, $4400, $0800
+        DEFINE_READ_PARAMS read_params, selector_buffer, selector_buflen
         DEFINE_CLOSE_PARAMS close_params
 
 start:  MLI_CALL OPEN, open_params
@@ -1595,38 +1626,37 @@ start:  MLI_CALL OPEN, open_params
 
 ;;; ============================================================
 
-L381C:  ldx     #$00
-        stx     L3835
+.proc ax_times_16
+        ldx     #0
+        stx     bits
+
+        .repeat 4
         asl     a
-        rol     L3835
-        asl     a
-        rol     L3835
-        asl     a
-        rol     L3835
-        asl     a
-        rol     L3835
-        ldx     L3835
+        rol     bits
+        .endrepeat
+
+        ldx     bits
         rts
 
-L3835:  .byte   0
-L3836:  ldx     #$00
-        stx     L3857
+bits:   .byte   0
+.endproc
+
+;;; ============================================================
+
+.proc ax_times_64
+        ldx     #0
+        stx     bits
+
+        .repeat 6
         asl     a
-        rol     L3857
-        asl     a
-        rol     L3857
-        asl     a
-        rol     L3857
-        asl     a
-        rol     L3857
-        asl     a
-        rol     L3857
-        asl     a
-        rol     L3857
-        ldx     L3857
+        rol     bits
+        .endrepeat
+
+        ldx     bits
         rts
 
-L3857:  .byte   $00
+bits:   .byte   $00
+.endproc
 
 ;;; ============================================================
 
