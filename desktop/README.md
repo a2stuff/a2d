@@ -8,6 +8,9 @@
 A short (8k) loader program. This is responsible for copying
 the rest to a RAM card (if available), then invoking the main app.
 
+NOTE: The second half may be used for "Down load", i.e. copy
+Selector entries to RAMCard as well.
+
 ## DESKTOP2.$F1
 
 This is large - 111k. It includes a loader and the DeskTop app with

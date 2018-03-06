@@ -910,6 +910,9 @@ prodos_loader_blocks:
 
         .assert * = $3000, error, "Segment length mismatch"
 
+;;; SPECULATION: This copies Selector entries marked
+;;; "Down load" / "At boot" to the RAMCard as well
+
 .proc part2
         jsr     SLOT3ENTRY
         jsr     HOME
