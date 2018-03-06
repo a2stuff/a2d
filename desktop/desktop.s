@@ -16893,9 +16893,9 @@ flag_clear:
         ldx     #0
 
 :       stx     flag
-        cmp     #PDERR_VOL_NOT_FOUND ; if err is "not found"
+        cmp     #ERR_VOL_NOT_FOUND ; if err is "not found"
         beq     not_found       ; prompt specifically for src/dst disk
-        cmp     #PDERR_PATH_NOT_FOUND
+        cmp     #ERR_PATH_NOT_FOUND
         beq     not_found
 
         jsr     JT_SHOW_ALERT0

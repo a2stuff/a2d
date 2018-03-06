@@ -33,9 +33,11 @@ data_buffer:    .addr   $0D00
         .addr   L2362
 L2362:  .byte   $00
 L2363:  .res    15, 0
-butn1:  .byte   $00
+
+butn1:  .byte   0               ; written, but not read
+
 unit_num:
-        .byte   $00
+        .byte   0
 
         DEFINE_ON_LINE_PARAMS on_line_params,, on_line_buffer
 
@@ -45,7 +47,7 @@ L2379:  .byte   0
 
 on_line_buffer: .res 17, 0
 
-        DEFINE_GET_PREFIX_PARAMS get_prefix_params, L26F5
+        DEFINE_GET_PREFIX_PARAMS get_prefix_params, buffer
         DEFINE_SET_PREFIX_PARAMS set_prefix_params, path0
 
         .byte   $0A
@@ -73,11 +75,15 @@ L23DF:  .byte   $00,$00,$00
         DEFINE_CLOSE_PARAMS close_dstfile_params
 
         .byte   $01
-        .addr   L26F5
-        DEFINE_OPEN_PARAMS open_srcfile_params, L26F5, $0D00
+        .addr   buffer
+
+        copy_buffer := $4000
+        max_copy_count := MLI - copy_buffer
+
+        DEFINE_OPEN_PARAMS open_srcfile_params, buffer, $0D00
         DEFINE_OPEN_PARAMS open_dstfile_params, path0, $1100
-        DEFINE_READ_PARAMS read_srcfile_params, $4000, $7F00
-        DEFINE_WRITE_PARAMS write_dstfile_params, $4000, $7F00
+        DEFINE_READ_PARAMS read_srcfile_params, copy_buffer, max_copy_count
+        DEFINE_WRITE_PARAMS write_dstfile_params, copy_buffer, max_copy_count
 
         DEFINE_CREATE_PARAMS create_params, path0, %11000011, 0, 0
         .byte   $07
@@ -86,7 +92,7 @@ L23DF:  .byte   $00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, L26F5
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, buffer
         .byte   0
 
 
@@ -107,10 +113,14 @@ str_copying_to_ramcard:
         ;; Jump target from filer launcher - why???
 rts1:   rts
 
-sig_bytes:      .byte   $20,$00,$03,$00
-sig_offsets:    .byte   $01,$03,$05,$07
+        ;; Signature of block storage devices ($Cn0x)
+sig_bytes:
+        .byte   $20,$00,$03,$00
+sig_offsets:
+        .byte   $01,$03,$05,$07
 
-L24AC:  .byte   $00
+active_device:
+        .byte   0
 
         ;; Selector signature
 selector_signature:
@@ -156,8 +166,9 @@ L24EB:  lda     MACHID
 have128k:
         lda     #$00
         sta     SHADOW          ; IIgs ???
-        lda     DEVNUM
-        sta     L24AC
+
+        lda     DEVNUM          ; Most recent device
+        sta     active_device
         lda     LCBANK2
         lda     LCBANK2
 
@@ -261,7 +272,7 @@ L25BF:  lda     on_line_buffer,y
         ldx     #$C0
         jsr     L26A5
         addr_call L26B2, path0
-        jsr     L2AB2
+        jsr     check_desktop2_on_device
         bcs     L25E4
         ldx     #$80
         jsr     L26A5
@@ -277,20 +288,27 @@ L25E4:  lda     BUTN1
 str_slash_desktop:
         PASCAL_STRING "/DeskTop"
 
-
-L25FB:  .byte   $0A,$00,$00,$C3,$0F,$00,$00,$0D
+        ;; Overwrite first bytes of get_file_info_params
+.proc file_info_ovl
+        .byte   $A              ; param_count
+        .addr   0               ; pathname
+        .byte   %11000011       ; access
+        .byte   FT_DIRECTORY    ; filetype
+        .word   0               ; aux_type
+        .byte   ST_LINKED_DIRECTORY ; storage_type
+.endproc
 
 start_copy:
-        jsr     show_splash
+        jsr     show_copying_screen
         MLI_CALL GET_PREFIX, get_prefix_params
         beq     L2611
         jmp     fail_copy
 
-L2611:  dec     L26F5
+L2611:  dec     buffer
         ldx     #$80
         jsr     L26A5
-        ldy     L26F5
-L261C:  lda     L26F5,y
+        ldy     buffer
+L261C:  lda     buffer,y
         sta     L2005,y
         dey
         bpl     L261C
@@ -304,7 +322,7 @@ L262A:  iny
         bne     L262A
         sty     path0
         ldx     #7
-L263C:  lda     L25FB,x
+L263C:  lda     file_info_ovl,x
         sta     get_file_info_params,x
         dex
         cpx     #3
@@ -389,47 +407,60 @@ fail:   lda     #$00
 
         .byte   0, $D, 0, 0, 0
 
-L26F5:  .res 300, 0
+        ;; Generic buffer?
+buffer: .res 300, 0
 
 filename_buf:
         .res 16, 0
 
-L2831:  .res 32, 0
-L2851:  lda     filename_buf
-        bne     L2857
+file_type:                      ; written but not read ???
+        .byte   0
+
+L2832:  .res 31, 0              ; unused ???
+
+;;; ============================================================
+
+.proc append_filename_to_buffer
+        lda     filename_buf
+        bne     :+
         rts
 
-L2857:  ldx     #$00
-        ldy     L26F5
+:       ldx     #0
+        ldy     buffer
         lda     #'/'
-        sta     L26F5+1,y
+        sta     buffer+1,y
         iny
-L2862:  cpx     filename_buf
-        bcs     L2872
+loop:   cpx     filename_buf
+        bcs     done
         lda     filename_buf+1,x
-        sta     L26F5+1,y
+        sta     buffer+1,y
         inx
         iny
-        jmp     L2862
+        jmp     loop
 
-L2872:  sty     L26F5
+done:   sty     buffer
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc remove_filename_from_buffer
+        ldx     buffer
+        bne     :+
         rts
 
-L2876:  ldx     L26F5
-        bne     L287C
-        rts
-
-L287C:  lda     L26F5,x
+:       lda     buffer,x
         cmp     #'/'
-        beq     L288A
+        beq     done
         dex
-        bne     L287C
-        stx     L26F5
+        bne     :-
+        stx     buffer
         rts
 
-L288A:  dex
-        stx     L26F5
+done:   dex
+        stx     buffer
         rts
+.endproc
 
 ;;; ============================================================
 
@@ -477,10 +508,12 @@ done:   dex
 
 ;;; ============================================================
 
-        ;; Turn on 80-col mode, and draw message (centered)
-.proc show_splash
+.proc show_copying_screen
+        ;; Turn on 80-column mode
         jsr     SLOT3ENTRY
         jsr     HOME
+
+        ;; Center string
         lda     #80
         sec
         sbc     str_copying_to_ramcard
@@ -507,47 +540,54 @@ loop:   iny
         jmp     fail
 .endproc
 
-        ldy     #$00
-L28FE:  lda     $0200,y
-        cmp     #$8D
-        beq     L290E
-        and     #$7F
-        sta     L26F5+1,y
-        iny
-        jmp     L28FE
+;;; ============================================================
+;;; Unreferenced ???
 
-L290E:  sty     L26F5
+.proc copy_input_to_buffer
+        ldy     #$00
+loop:   lda     $0200,y
+        cmp     #$80|CHAR_RETURN
+        beq     done
+        and     #$7F
+        sta     buffer+1,y
+        iny
+        jmp     loop
+
+done:   sty     buffer
         rts
+.endproc
 
 ;;; ============================================================
 
 .proc copy_file
         jsr     append_filename_to_path0
-        jsr     L2851
+        jsr     append_filename_to_buffer
         MLI_CALL GET_FILE_INFO, get_file_info_params
         beq     :+
-        cmp     #PDERR_FILE_NOT_FOUND
-        beq     L294B
+        cmp     #ERR_FILE_NOT_FOUND
+        beq     cleanup
         jmp     fail
 
 :       lda     get_file_info_params::file_type
-        sta     L2831
+        sta     file_type
         cmp     #FT_DIRECTORY
-        bne     L2937
+        bne     :+
         jsr     copy_directory
         jmp     done
 
-L2937:  jsr     create_file_for_copy
-        cmp     #PDERR_DUPLICATE_FILENAME
-        bne     L2948
+:       jsr     create_file_for_copy
+        cmp     #ERR_DUPLICATE_FILENAME
+        bne     :+
         lda     filenum
-        bne     L294B
+        bne     cleanup
         pla
         pla
         jmp     fail2
 
-L2948:  jsr     copy_normal_file
-L294B:  jsr     L2876
+:       jsr     copy_normal_file
+
+cleanup:
+        jsr     remove_filename_from_buffer
         jsr     remove_filename_from_path0
 done:   rts
 .endproc
@@ -563,17 +603,17 @@ done:   rts
         file_count_offset := $25
         header_length := $2B
 
-        DEFINE_OPEN_PARAMS open_params, L26F5, $A000
+        DEFINE_OPEN_PARAMS open_params, buffer, $A000
         DEFINE_READ_PARAMS read_params, dir_buffer, $0200
         DEFINE_CLOSE_PARAMS close_params
 
 start:  jsr     create_file_for_copy
-        cmp     #PDERR_DUPLICATE_FILENAME
-        beq     L2974
+        cmp     #ERR_DUPLICATE_FILENAME
+        beq     bail
         MLI_CALL OPEN, open_params
         beq     :+
         jsr     fail_copy
-L2974:  rts
+bail:   rts
 
 :       lda     open_params::ref_num
         sta     read_params::ref_num
@@ -583,7 +623,7 @@ L2974:  rts
         jsr     fail_copy
         rts
 
-:       lda     #$00
+:       lda     #0
         sta     L2A10
         lda     #<(dir_buffer + header_length)
         sta     ptr
@@ -593,14 +633,14 @@ L2997:  lda     dir_buffer + file_count_offset
         cmp     L2A10
         bne     L29B1
 L299F:  MLI_CALL CLOSE, close_params
-        beq     L29AA
+        beq     :+
         jmp     fail_copy
 
-L29AA:  jsr     L2876
+:       jsr     remove_filename_from_buffer
         jsr     remove_filename_from_path0
         rts
 
-L29B1:  ldy     #$00
+L29B1:  ldy     #0
         lda     (ptr),y
         bne     L29BA
         jmp     L29F6
@@ -615,18 +655,18 @@ L29BD:  lda     (ptr),y
         and     #$0F
         sta     filename_buf,y
         jsr     append_filename_to_path0
-        jsr     L2851
+        jsr     append_filename_to_buffer
         MLI_CALL GET_FILE_INFO, get_file_info_params
         beq     :+
         jmp     fail_copy
 
 :       lda     get_file_info_params::file_type
-        sta     L2831
+        sta     file_type
         jsr     create_file_for_copy
-        cmp     #PDERR_DUPLICATE_FILENAME
+        cmp     #ERR_DUPLICATE_FILENAME
         beq     :+
         jsr     copy_normal_file
-:       jsr     L2876
+:       jsr     remove_filename_from_buffer
         jsr     remove_filename_from_path0
         inc     L2A10
 L29F6:  add16_8 ptr, dir_buffer + entry_length_offset, ptr
@@ -644,11 +684,13 @@ L2A10:  .byte   0
 ;;; ============================================================
 
 .proc copy_normal_file
+        ;; Open source
 :       MLI_CALL OPEN, open_srcfile_params
         beq     :+
         jsr     fail_copy
         jmp     :-
 
+        ;; Open destination
 :       MLI_CALL OPEN, open_dstfile_params
         beq     :+
         jsr     fail_copy
@@ -661,14 +703,16 @@ L2A10:  .byte   0
         sta     write_dstfile_params::ref_num
         sta     close_dstfile_params::ref_num
 
-loop:   copy16  #$7F00, read_srcfile_params::request_count
+        ;; Read a chunk
+loop:   copy16  #max_copy_count, read_srcfile_params::request_count
 read:   MLI_CALL READ, read_srcfile_params
         beq     :+
-        cmp     #PDERR_END_OF_FILE
+        cmp     #ERR_END_OF_FILE
         beq     done
         jsr     fail_copy
         jmp     read
 
+        ;; Write the chunk
 :       copy16  read_srcfile_params::trans_count, write_dstfile_params::request_count
         ora     read_srcfile_params::trans_count
         beq     done
@@ -677,12 +721,15 @@ write:  MLI_CALL WRITE, write_dstfile_params
         jsr     fail_copy
         jmp     write
 
+        ;; More to copy?
 :       lda     write_dstfile_params::trans_count
-        cmp     #<$7F00
+        cmp     #<max_copy_count
         bne     done
         lda     write_dstfile_params::trans_count+1
-        cmp     #>$7F00
+        cmp     #>max_copy_count
         beq     loop
+
+        ;; Close source and destination
 done:   MLI_CALL CLOSE, close_srcfile_params
         MLI_CALL CLOSE, close_dstfile_params
         rts
@@ -700,7 +747,7 @@ done:   MLI_CALL CLOSE, close_srcfile_params
         bne     :-
         MLI_CALL CREATE, create_params
         beq     :+
-        cmp     #PDERR_DUPLICATE_FILENAME
+        cmp     #ERR_DUPLICATE_FILENAME
         beq     :+
         jsr     fail_copy
 :       rts
@@ -708,13 +755,14 @@ done:   MLI_CALL CLOSE, close_srcfile_params
 
 ;;; ============================================================
 
-.proc L2AB2
-        lda     L24AC
-        cmp     #$3E
-        bne     L2ABC
-        jmp     L2AE6
+.proc check_desktop2_on_device
+        lda     active_device
+        cmp     #$3E            ; ???
+        bne     :+
+        jmp     next
 
-L2ABC:  and     #$70            ; Compute $Cn00
+        ;; Check slot for signature bytes
+:       and     #$70            ; Compute $Cn00
         lsr     a
         lsr     a
         lsr     a
@@ -724,35 +772,39 @@ L2ABC:  and     #$70            ; Compute $Cn00
         lda     #0
         sta     $08
         ldx     #0              ; Compare signature bytes
-L2ACC:  lda     sig_offsets,x
+bloop:  lda     sig_offsets,x
         tay
         lda     ($08),y
         cmp     sig_bytes,x
-        bne     L2AE4
+        bne     error
         inx
         cpx     #4              ; Number of signature bytes
-        bcc     L2ACC
+        bcc     bloop
         ldy     #$FB            ; Also check $CnFB
         lda     ($08),y
         and     #$01
-        bne     L2AE6
-L2AE4:  sec
+        bne     next
+error:  sec
         rts
 
-L2AE6:  MLI_CALL GET_PREFIX, get_prefix_params2
-        bne     L2AE4
+next:   MLI_CALL GET_PREFIX, get_prefix_params2
+        bne     error
+
+        ;; Append "DeskTop2" to path at $D00
         ldx     $0D00
         ldy     #0
-L2AF3:  inx
+loop:   inx
         iny
         lda     str_desktop2,y
         sta     $0D00,x
         cpy     str_desktop2
-        bne     L2AF3
+        bne     loop
         stx     $0D00
+
+        ;; ... and get info
         MLI_CALL GET_FILE_INFO, get_file_info_params4
-        beq     L2AE4
-        clc
+        beq     error
+        clc                     ; ok
         rts
 
 str_desktop2:
@@ -1150,19 +1202,19 @@ L34A1:  iny
         bne     L34A1
         stx     path1
         MLI_CALL GET_FILE_INFO, get_file_info_params3
-        cmp     #PDERR_FILE_NOT_FOUND
+        cmp     #ERR_FILE_NOT_FOUND
         beq     L34C4
-        cmp     #PDERR_VOL_NOT_FOUND
+        cmp     #ERR_VOL_NOT_FOUND
         beq     L34C4
-        cmp     #PDERR_PATH_NOT_FOUND
+        cmp     #ERR_PATH_NOT_FOUND
         beq     L34C4
         rts
 
 L34C4:  MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     L34DD
-        cmp     #PDERR_VOL_NOT_FOUND
+        cmp     #ERR_VOL_NOT_FOUND
         beq     L34D4
-        cmp     #PDERR_FILE_NOT_FOUND
+        cmp     #ERR_FILE_NOT_FOUND
         bne     L34DA
 L34D4:  jsr     show_insert_prompt
         jmp     L34C4
@@ -1272,7 +1324,7 @@ L35A9:  MLI_CALL GET_FILE_INFO, get_file_info_params2
         sta     L3642
         MLI_CALL GET_FILE_INFO, get_file_info_params3
         beq     :+
-        cmp     #PDERR_FILE_NOT_FOUND
+        cmp     #ERR_FILE_NOT_FOUND
         beq     L35D7
         jmp     handle_error_code
 
@@ -1326,7 +1378,7 @@ L3659:  lda     open_params7::ref_num
 L366B:  copy16  #$0B00, read_params7::request_count
         MLI_CALL READ, read_params7
         beq     :+
-        cmp     #PDERR_END_OF_FILE
+        cmp     #ERR_END_OF_FILE
         beq     L36AE
         jmp     handle_error_code
 
@@ -1717,12 +1769,12 @@ str_not_completed:
 ;;; ============================================================
 
 .proc handle_error_code
-        cmp     #PDERR_OVERRUN_ERROR
+        cmp     #ERR_OVERRUN_ERROR
         bne     :+
         jsr     show_no_space_prompt
         jmp     finish_and_invoke
 
-:       cmp     #PDERR_VOLUME_DIR_FULL
+:       cmp     #ERR_VOLUME_DIR_FULL
         bne     show_error
         jsr     show_no_space_prompt
         jmp     finish_and_invoke

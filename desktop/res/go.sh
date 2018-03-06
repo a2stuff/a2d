@@ -42,7 +42,7 @@ done;
 verify "DESKTOP.SYSTEM.SYS" "sys.SYS"
 
 # Compute stats
-echo "Unidentified symbols:"
+echo "Stats:"
 for t in $SOURCES; do
     stats "$t.s"
 done;

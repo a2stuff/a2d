@@ -25,7 +25,7 @@ function verify {
 }
 
 function stats {
-    echo "$(printf '%-10s' $1)""$(../res/stats.pl < $1)"
+    echo "$(printf '%-20s' $1)""$(../res/stats.pl < $1)"
 }
 
 function mount {
@@ -46,7 +46,7 @@ verify "date"
 verify "puzzle"
 
 # Compute stats
-echo "Unidentified symbols:"
+echo "Stats:"
 stats "calculator.s"
 stats "show.text.file.s"
 stats "date.s"
