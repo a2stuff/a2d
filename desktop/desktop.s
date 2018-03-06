@@ -7416,7 +7416,7 @@ L4F68:  .byte   $00
 L4F69:  .byte   $00
 
         ;; access = destroy/rename/write/read
-        DEFINE_CREATE_PARAMS create_params, path_buffer, %11000011, FT_DIRECTORY,, ST_LINKED_DIRECTORY
+        DEFINE_CREATE_PARAMS create_params, path_buffer, ACCESS_DEFAULT, FT_DIRECTORY,, ST_LINKED_DIRECTORY
 
 path_buffer:
         .res    65, 0              ; buffer is used elsewhere too
@@ -15487,7 +15487,7 @@ L972E:  .res    5, 0
         DEFINE_OPEN_PARAMS open_params5, $1FC0, $1100
         DEFINE_READ_PARAMS read_params6, $1500, $AC0
         DEFINE_WRITE_PARAMS write_params, $1500, $AC0
-        DEFINE_CREATE_PARAMS create_params3, $1FC0, %11000011
+        DEFINE_CREATE_PARAMS create_params3, $1FC0, ACCESS_DEFAULT
         DEFINE_CREATE_PARAMS create_params2, $1FC0
 
         .byte   $00,$00
@@ -15814,7 +15814,7 @@ L9AAA:  lda     file_info_params2,y
         dey
         cpy     #$02
         bne     L9AAA
-        lda     #%11000011
+        lda     #ACCESS_DEFAULT
         sta     create_params2::access
         lda     LE05B
         beq     L9B23
@@ -16308,7 +16308,7 @@ L9F62:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         lda     file_info_params2::access
         and     #$80
         bne     L9F8D
-        lda     #$C3
+        lda     #ACCESS_DEFAULT
         sta     file_info_params2::access
         lda     #7              ; param count for SET_FILE_INFO
         sta     file_info_params2
@@ -16366,7 +16366,7 @@ L9FC2:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
         bne     LA001
 L9FFE:  jmp     LA39F
 
-LA001:  lda     #$C3
+LA001:  lda     #ACCESS_DEFAULT
         sta     file_info_params2::access
         lda     #7              ; param count for SET_FILE_INFO
         sta     file_info_params2
@@ -16531,7 +16531,7 @@ LA18A:  lda     file_info_params2::storage_type
         beq     LA1C0
         bit     L918B
         bpl     LA19E
-        lda     #%11000011
+        lda     #ACCESS_DEFAULT
         bne     LA1A0
 LA19E:  lda     #$21
 LA1A0:  sta     file_info_params2::access
@@ -16834,7 +16834,7 @@ LA425:  .byte   0
 
 .proc LA426
         jsr     LA46D
-        lda     #$C3
+        lda     #ACCESS_DEFAULT
         sta     file_info_params3::access
         jsr     LA479
         lda     file_info_params2::file_type

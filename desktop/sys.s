@@ -85,7 +85,7 @@ L23DF:  .byte   $00,$00,$00
         DEFINE_READ_PARAMS read_srcfile_params, copy_buffer, max_copy_count
         DEFINE_WRITE_PARAMS write_dstfile_params, copy_buffer, max_copy_count
 
-        DEFINE_CREATE_PARAMS create_params, path0, %11000011, 0, 0
+        DEFINE_CREATE_PARAMS create_params, path0, ACCESS_DEFAULT, 0, 0
         .byte   $07
         .addr   path0
         .byte   $00
@@ -292,7 +292,7 @@ str_slash_desktop:
 .proc file_info_ovl
         .byte   $A              ; param_count
         .addr   0               ; pathname
-        .byte   %11000011       ; access
+        .byte   ACCESS_DEFAULT       ; access
         .byte   FT_DIRECTORY    ; filetype
         .word   0               ; aux_type
         .byte   ST_LINKED_DIRECTORY ; storage_type
@@ -1007,7 +1007,7 @@ L30E0:  .res    5, 0
         DEFINE_READ_PARAMS read_params7, $1100, $0B00
         DEFINE_WRITE_PARAMS write_params3, $1100, $0B00
 
-        DEFINE_CREATE_PARAMS create_params3, path1, %11000011
+        DEFINE_CREATE_PARAMS create_params3, path1, ACCESS_DEFAULT
 
         DEFINE_CREATE_PARAMS create_params2, path1, 0
 
@@ -1240,7 +1240,7 @@ L34EE:  sta     L353A
         dey
         cpy     #3
         bne     :-
-        lda     #%11000011
+        lda     #ACCESS_DEFAULT
         sta     create_params2::access
         jsr     L35A9
         bcc     L350B
@@ -1252,9 +1252,9 @@ L350D:  lda     get_file_info_params2::create_date,x
         dex
         bpl     L350D
         lda     create_params2::storage_type
-        cmp     #$0F
+        cmp     #ST_VOLUME_DIRECTORY
         bne     L3522
-        lda     #$0D
+        lda     #ST_LINKED_DIRECTORY
         sta     create_params2::storage_type
 L3522:  MLI_CALL CREATE, create_params2
         beq     :+
@@ -1410,7 +1410,7 @@ L36C1:  ldx     #7
         dex
         cpx     #3
         bne     :-
-        lda     #$C3
+        lda     #ACCESS_DEFAULT
         sta     create_params3::access
         ldx     #$03
 L36D5:  lda     get_file_info_params2::create_date,x
@@ -1418,9 +1418,9 @@ L36D5:  lda     get_file_info_params2::create_date,x
         dex
         bpl     L36D5
         lda     create_params3::storage_type
-        cmp     #$0F
+        cmp     #ST_VOLUME_DIRECTORY
         bne     L36EA
-        lda     #$0D
+        lda     #ST_LINKED_DIRECTORY
         sta     create_params3::storage_type
 L36EA:  MLI_CALL CREATE, create_params3
         clc
