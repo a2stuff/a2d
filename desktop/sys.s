@@ -8,7 +8,7 @@
         .include "../macros.inc"
 
 ;;; ============================================================
-.proc bootstrap
+.proc copy_desktop_to_ramcard
 
         jmp     start
 
@@ -367,7 +367,7 @@ L268F:  jsr     write_desktop1
 :       sta     BITMAP,y
         dey
         bpl     :-
-        jmp     part2
+        jmp     copy_selector_entries_to_ramcard
 
 L26A5:  lda     LCBANK2
         lda     LCBANK2
@@ -914,7 +914,7 @@ prodos_loader_blocks:
         .assert * = $2C00, error, "Segment length mismatch"
         .incbin "inc/pdload.dat"
 
-.endproc ;  bootstrap
+.endproc ; copy_desktop_to_ramcard
 
 ;;; ============================================================
 
@@ -923,10 +923,22 @@ prodos_loader_blocks:
 ;;; SPECULATION: This copies Selector entries marked
 ;;; "Down load" / "At boot" to the RAMCard as well
 
-.proc part2
+.proc copy_selector_entries_to_ramcard
+
+        ;; File format:
+        ;; $  0 - number of entries (max 24?)
+        ;; $  1 - ???
+        ;; $  2 - 24 * 16-byte data entries
+        ;;   $0 - label (length-prefixed, 15 bytes)
+        ;;   $F - active_flag
+        ;; $182 - 24 * 64-byte pathname
+        ;; $782 - EOF
 
         selector_buffer := $4400
         selector_buflen := $800
+
+.proc process_selector_list
+        ptr := $6
 
         jsr     SLOT3ENTRY
         jsr     HOME
@@ -947,88 +959,107 @@ prodos_loader_blocks:
         dex
         bpl     :-
         lda     ROMIN2
+
+        ;; Load and iterate over the selector file
         jsr     read_selector_list
         beq     :+
         jmp     bail
-
 :       lda     #0
-        sta     L30BB
-L3039:  lda     L30BB
-        cmp     selector_buffer
-        beq     L3071
-        jsr     L37C5
-        stax    $06
-        ldy     #$0F
-        lda     ($06),y
-        bne     L306B
-        lda     L30BB
-        jsr     L37D2
+        sta     entry_num
+entry_loop:
+        lda     entry_num
+        cmp     selector_buffer ; done?
+        beq     done_entries
+        jsr     compute_label_addr
+        stax    ptr
+
+        ldy     #$0F            ; check active flag
+        lda     (ptr),y
+        bne     next_entry
+        lda     entry_num
+        jsr     compute_path_addr
+
         jsr     L38B2
         jsr     L3489
+
         lda     LCBANK2
         lda     LCBANK2
-        ldx     L30BB
+        ldx     entry_num
         lda     #$FF
         sta     $D395,x
         lda     ROMIN2
-L306B:  inc     L30BB
-        jmp     L3039
 
-L3071:  lda     #$00
-        sta     L30BB
-L3076:  lda     L30BB
-        cmp     selector_buffer + 1
+next_entry:
+        inc     entry_num
+        jmp     entry_loop
+done_entries:
+
+        ;; Process entries again ???
+        lda     #0
+        sta     entry_num
+
+entry_loop2:
+        lda     entry_num
+        cmp     selector_buffer + 1 ; ???
         beq     bail
         clc
-        adc     #$08
-        jsr     L37C5
-        stax    $06
+        adc     #8              ; offset by 8 ???
+        jsr     compute_label_addr
+        stax    ptr
+
         ldy     #$0F
-        lda     ($06),y
-        bne     L30B2
-        lda     L30BB
+        lda     (ptr),y         ; check active flag
+        bne     next_entry2
+        lda     entry_num
         clc
-        adc     #$08
-        jsr     L37D2
+        adc     #8
+        jsr     compute_path_addr
+
         jsr     L38B2
         jsr     L3489
+
         lda     LCBANK2
         lda     LCBANK2
-        lda     L30BB
+        lda     entry_num
         clc
-        adc     #$08
+        adc     #8
         tax
         lda     #$FF
         sta     $D395,x
         lda     ROMIN2
-L30B2:  inc     L30BB
-        jmp     L3076
+next_entry2:
+        inc     entry_num
+        jmp     entry_loop2
 
 bail:   jmp     invoke_selector_or_desktop
 
-L30BB:  .byte   0
+entry_num:
+        .byte   0
+.endproc
 
 ;;; ============================================================
 
-        DEFINE_OPEN_PARAMS open_params6, path2, $0800
-        DEFINE_READ_PARAMS read_params4, L30CA, 4
-L30CA:  .res    4, 0
+        DEFINE_OPEN_PARAMS open_path2_params, path2, $0800
+        DEFINE_READ_PARAMS read_4bytes_params, buf_4_bytes, 4
+buf_4_bytes:  .res    4, 0
         DEFINE_CLOSE_PARAMS close_params5
-        DEFINE_READ_PARAMS read_params5, L3150, $27
-        DEFINE_READ_PARAMS read_params6, L30E0, 5
-L30E0:  .res    5, 0
-        .byte   $00,$00,$00,$00
-        DEFINE_CLOSE_PARAMS close_params7
-        DEFINE_CLOSE_PARAMS close_params6
-        .byte   $01
+        DEFINE_READ_PARAMS read_39bytes_params, L3150, 39
+        DEFINE_READ_PARAMS read_5bytes_params, buf_5_bytes, 5
+buf_5_bytes:  .res    5, 0
+        .res    4, 0
+        DEFINE_CLOSE_PARAMS close_srcdir_params
+        DEFINE_CLOSE_PARAMS close_dstdir_params
+
+        .byte   1
         .addr   path2
-        DEFINE_OPEN_PARAMS open_params7, path2, $0D00
-        DEFINE_OPEN_PARAMS open_params8, path1, $1C00
-        DEFINE_READ_PARAMS read_params7, $1100, $0B00
-        DEFINE_WRITE_PARAMS write_params3, $1100, $0B00
 
-        DEFINE_CREATE_PARAMS create_params3, path1, ACCESS_DEFAULT
+        dircopy_buffer := $0B00
 
+        DEFINE_OPEN_PARAMS open_srcdir_params, path2, $0D00
+        DEFINE_OPEN_PARAMS open_dstdir_params, path1, $1C00
+        DEFINE_READ_PARAMS read_srcdir_params, $1100, dircopy_buffer
+        DEFINE_WRITE_PARAMS write_dstdir_params, $1100, dircopy_buffer
+        DEFINE_CREATE_PARAMS create_dir_params, path1, ACCESS_DEFAULT
         DEFINE_CREATE_PARAMS create_params2, path1, 0
 
 L3124:  .byte   $00,$00
@@ -1037,11 +1068,11 @@ L3124:  .byte   $00,$00
         .byte   $00
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params3, path1
+
         .byte   $00,$02,$00,$00,$00
 
-L3150:  .byte   $00
-L3151:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00
+L3150:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
 L3160:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -1053,22 +1084,26 @@ path2:  .res    65, 0
 
 L320A:  .res    64, 0
 L324A:  .res    64, 0
-L328A:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+L328A:  .res    16, 0
 L329A:  .byte   $00
 L329B:  .byte   $0D
 L329C:  .byte   $00
-L329D:  .byte   $00
+ref_num:.byte   $00
 L329E:  .byte   $00
 L329F:  .res    170, 0
 L3349:  .byte   $00
 L334A:  .byte   $00
+
+;;; ============================================================
+
 L334B:  ldx     L3349
         lda     L329E
         sta     L329F,x
         inx
         stx     L3349
         rts
+
+;;; ============================================================
 
 L3359:  ldx     L3349
         dex
@@ -1077,55 +1112,64 @@ L3359:  ldx     L3349
         stx     L3349
         rts
 
-L3367:  lda     #$00
+;;; ============================================================
+
+.proc L3367
+        lda     #$00
         sta     L329C
         sta     L334A
-        MLI_CALL OPEN, open_params6
-        beq     L337A
-        jmp     handle_error_code
-
-L337A:  lda     open_params6::ref_num
-        sta     L329D
-        sta     read_params4::ref_num
-        MLI_CALL READ, read_params4
+        MLI_CALL OPEN, open_path2_params
         beq     :+
         jmp     handle_error_code
 
+:       lda     open_path2_params::ref_num
+        sta     ref_num
+        sta     read_4bytes_params::ref_num
+        MLI_CALL READ, read_4bytes_params
+        beq     :+
+        jmp     handle_error_code
 :       jsr     L33A4
         rts
+.endproc
 
-L3392:  lda     L329D
+;;; ============================================================
+
+L3392:  lda     ref_num
         sta     close_params5::ref_num
         MLI_CALL CLOSE, close_params5
-        beq     L33A3
-        jmp     handle_error_code
-
-L33A3:  rts
-
-L33A4:  inc     L329C
-        lda     L329D
-        sta     read_params5::ref_num
-        MLI_CALL READ, read_params5
-        beq     L33B8
-        jmp     handle_error_code
-
-L33B8:  inc     L334A
-        lda     L334A
-        cmp     L329B
-        bcc     L33E0
-        lda     #$00
-        sta     L334A
-        lda     L329D
-        sta     read_params6::ref_num
-        MLI_CALL READ, read_params6
         beq     :+
         jmp     handle_error_code
+:       rts
 
-:       lda     read_params6::trans_count
-        cmp     read_params6::request_count
+;;; ============================================================
+
+.proc L33A4
+        inc     L329C
+        lda     ref_num
+        sta     read_39bytes_params::ref_num
+        MLI_CALL READ, read_39bytes_params
+        beq     :+
+        jmp     handle_error_code
+:       inc     L334A
+        lda     L334A
+        cmp     L329B
+        bcc     done
+
+        lda     #0
+        sta     L334A
+        lda     ref_num
+        sta     read_5bytes_params::ref_num
+        MLI_CALL READ, read_5bytes_params
+        beq     :+
+        jmp     handle_error_code
+:       lda     read_5bytes_params::trans_count
+        cmp     read_5bytes_params::request_count
         rts
 
-L33E0:  return  #$00
+done:   return  #0
+.endproc
+
+;;; ============================================================
 
 L33E3:  lda     L329C
         sta     L329E
@@ -1146,19 +1190,21 @@ L33F6:  jsr     L3392
 
 L340C:  lda     L329C
         cmp     L329E
-        beq     L341A
+        beq     :+
         jsr     L33A4
         jmp     L340C
+:       rts
 
-L341A:  rts
+;;; ============================================================
 
-L341B:  lda     #$00
+.proc L341B
+        lda     #$00
         sta     L329A
         jsr     L3367
-L3423:  jsr     L33A4
-        bne     L3455
+loop:   jsr     L33A4
+        bne     next
         lda     L3150
-        beq     L3423
+        beq     loop
         lda     L3150
         sta     L346F
         and     #$0F
@@ -1167,24 +1213,28 @@ L3423:  jsr     L33A4
         sta     L3467
         jsr     L3468
         lda     L3467
-        bne     L3423
+        bne     loop
         lda     L3160
         cmp     #$0F
-        bne     L3423
+        bne     loop
         jsr     L33E3
         inc     L329A
-        jmp     L3423
+        jmp     loop
 
-L3455:  lda     L329A
-        beq     L3463
+next:   lda     L329A
+        beq     done
         jsr     L33F6
         dec     L329A
-        jmp     L3423
+        jmp     loop
 
-L3463:  jsr     L3392
+done:   jsr     L3392
         rts
+.endproc
+
+;;; ============================================================
 
 L3467:  .byte   0
+
 L3468:  jmp     L3540
 
 L346B:  jmp     L353D
@@ -1192,21 +1242,22 @@ L346B:  jmp     L353D
 L346E:  rts
 
 L346F:  .byte   0
+
         ldy     #$00
 L3472:  lda     $0200,y
         cmp     #$8D
-        beq     L3482
+        beq     :+
         and     #$7F
         sta     path2+1,y
         iny
         jmp     L3472
-
-L3482:  sty     path2
+:       sty     path2
         rts
 
         .byte   0
         .byte   0
         .byte   0
+
 L3489:  lda     #$FF
         sta     L353B
         jsr     L3777
@@ -1216,12 +1267,12 @@ L3489:  lda     #$FF
         inc     path1
         ldy     #$00
         ldx     path1
-L34A1:  iny
+:       iny
         inx
         lda     L328A,y
         sta     path1,x
         cpy     L328A
-        bne     L34A1
+        bne     :-
         stx     path1
         MLI_CALL GET_FILE_INFO, get_file_info_params3
         cmp     #ERR_FILE_NOT_FOUND
@@ -1243,15 +1294,18 @@ L34D4:  jsr     show_insert_prompt
 
 L34DA:  jmp     handle_error_code
 
-L34DD:  lda     get_file_info_params2::storage_type
+;;; ============================================================
+
+.proc L34DD
+        lda     get_file_info_params2::storage_type
         cmp     #ST_VOLUME_DIRECTORY
-        beq     L34EC
+        beq     is_dir
         cmp     #ST_LINKED_DIRECTORY
-        beq     L34EC
+        beq     is_dir
         lda     #$00
-        beq     L34EE
-L34EC:  lda     #$FF
-L34EE:  sta     L353A
+        beq     :+
+is_dir: lda     #$FF
+:       sta     is_dir_flag
 
         ;; copy file_type, aux_type, storage_type
         ldy     #7
@@ -1266,33 +1320,42 @@ L34EE:  sta     L353A
         bcc     L350B
         jmp     show_no_space_prompt
 
-L350B:  ldx     #$03
-L350D:  lda     get_file_info_params2::create_date,x
+        ;; copy dates
+L350B:  ldx     #3
+:       lda     get_file_info_params2::create_date,x
         sta     create_params2::create_date,x
         dex
-        bpl     L350D
+        bpl     :-
+
+        ;; create the file
         lda     create_params2::storage_type
         cmp     #ST_VOLUME_DIRECTORY
-        bne     L3522
+        bne     :+
         lda     #ST_LINKED_DIRECTORY
         sta     create_params2::storage_type
-L3522:  MLI_CALL CREATE, create_params2
+:       MLI_CALL CREATE, create_params2
         beq     :+
         jmp     handle_error_code
 
-:       lda     L353A
-        beq     L3537
+:       lda     is_dir_flag
+        beq     do_dir
         jmp     L341B
 
         .byte   0
+
         rts
 
-L3537:  jmp     L3643
+do_dir: jmp     copy_dir
 
-L353A:  .byte   0
+is_dir_flag:
+        .byte   0
+.endproc
+
+;;; ============================================================
+
 L353B:  .byte   0
 L353C:  .byte   0
-L353D:  jmp     L375E
+L353D:  jmp     remove_filename_from_path1
 
 L3540:  lda     L3160
         cmp     #$0F
@@ -1302,19 +1365,19 @@ L3540:  lda     L3160
         MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     L3566
         jmp     handle_error_code
-L3558:  jsr     L375E
+L3558:  jsr     remove_filename_from_path1
         jsr     L3720
         lda     #$FF
         sta     L3467
         jmp     L35A4
 
-L3566:  jsr     L3739
-        jsr     L36C1
+L3566:  jsr     append_filename_to_path1
+        jsr     create_dir
         bcs     L3558
         jsr     L3720
         jmp     L35A4
 
-L3574:  jsr     L3739
+L3574:  jsr     append_filename_to_path1
         jsr     L36FB
         jsr     show_copying_screen
         MLI_CALL GET_FILE_INFO, get_file_info_params2
@@ -1326,15 +1389,15 @@ L3574:  jsr     L3739
         jmp     show_no_space_prompt
 
 L3590:  jsr     L3720
-        jsr     L36C1
+        jsr     create_dir
         bcs     L35A5
         jsr     L36FB
-        jsr     L3643
+        jsr     copy_dir
         jsr     L3720
-        jsr     L375E
+        jsr     remove_filename_from_path1
 L35A4:  rts
 
-L35A5:  jsr     L375E
+L35A5:  jsr     remove_filename_from_path1
         rts
 
 L35A9:  MLI_CALL GET_FILE_INFO, get_file_info_params2
@@ -1383,71 +1446,86 @@ L363F:  .byte   0
 L3640:  .byte   0
 L3641:  .byte   0
 L3642:  .byte   0
-L3643:  MLI_CALL OPEN, open_params7
-        beq     L364E
+
+;;; ============================================================
+
+.proc copy_dir
+        MLI_CALL OPEN, open_srcdir_params
+        beq     :+
         jsr     handle_error_code
-L364E:  MLI_CALL OPEN, open_params8
-        beq     L3659
+:       MLI_CALL OPEN, open_dstdir_params
+        beq     :+
         jmp     handle_error_code
+:       lda     open_srcdir_params::ref_num
+        sta     read_srcdir_params::ref_num
+        sta     close_srcdir_params::ref_num
+        lda     open_dstdir_params::ref_num
+        sta     write_dstdir_params::ref_num
+        sta     close_dstdir_params::ref_num
 
-L3659:  lda     open_params7::ref_num
-        sta     read_params7::ref_num
-        sta     close_params7::ref_num
-        lda     open_params8::ref_num
-        sta     write_params3::ref_num
-        sta     close_params6::ref_num
-
-L366B:  copy16  #$0B00, read_params7::request_count
-        MLI_CALL READ, read_params7
+loop:   copy16  #dircopy_buffer, read_srcdir_params::request_count
+        MLI_CALL READ, read_srcdir_params
         beq     :+
         cmp     #ERR_END_OF_FILE
-        beq     L36AE
+        beq     finish
         jmp     handle_error_code
 
-:       copy16  read_params7::trans_count, write_params3::request_count
-        ora     read_params7::trans_count
-        beq     L36AE
-        MLI_CALL WRITE, write_params3
+:       copy16  read_srcdir_params::trans_count, write_dstdir_params::request_count
+        ora     read_srcdir_params::trans_count
+        beq     finish
+        MLI_CALL WRITE, write_dstdir_params
         beq     :+
         jmp     handle_error_code
 
-:       lda     write_params3::trans_count
-        cmp     #<$0B00
-        bne     L36AE
-        lda     write_params3::trans_count+1
-        cmp     #>$0B00
-        beq     L366B
-L36AE:  MLI_CALL CLOSE, close_params6
-        MLI_CALL CLOSE, close_params7
+:       lda     write_dstdir_params::trans_count
+        cmp     #<dircopy_buffer
+        bne     finish
+        lda     write_dstdir_params::trans_count+1
+        cmp     #>dircopy_buffer
+        beq     loop
+
+finish: MLI_CALL CLOSE, close_dstdir_params
+        MLI_CALL CLOSE, close_srcdir_params
         jsr     get_file_info_and_copy
         jsr     do_set_file_info
         rts
+.endproc
 
-        ;; copy file_type, aux_type, storage_type
-L36C1:  ldx     #7
+;;; ============================================================
+
+        ;; Copy file_type, aux_type, storage_type
+.proc create_dir
+        ldx     #7
 :       lda     get_file_info_params2,x
-        sta     create_params3,x
+        sta     create_dir_params,x
         dex
         cpx     #3
         bne     :-
         lda     #ACCESS_DEFAULT
-        sta     create_params3::access
-        ldx     #$03
-L36D5:  lda     get_file_info_params2::create_date,x
-        sta     create_params3::create_date,x
-        dex
-        bpl     L36D5
-        lda     create_params3::storage_type
-        cmp     #ST_VOLUME_DIRECTORY
-        bne     L36EA
-        lda     #ST_LINKED_DIRECTORY
-        sta     create_params3::storage_type
-L36EA:  MLI_CALL CREATE, create_params3
-        clc
-        beq     L36F6
-        jmp     handle_error_code
+        sta     create_dir_params::access
 
-L36F6:  rts
+        ;; Copy dates
+        ldx     #3
+:       lda     get_file_info_params2::create_date,x
+        sta     create_dir_params::create_date,x
+        dex
+        bpl     :-
+
+        ;; Create it
+        lda     create_dir_params::storage_type
+        cmp     #ST_VOLUME_DIRECTORY
+        bne     :+
+        lda     #ST_LINKED_DIRECTORY
+        sta     create_dir_params::storage_type
+:       MLI_CALL CREATE, create_dir_params
+        clc
+        beq     :+
+        jmp     handle_error_code
+:       rts
+
+.endproc
+
+;;; ============================================================
 
         .byte   0
         .byte   0
@@ -1465,7 +1543,7 @@ L3701:  ldx     #$00
         iny
 L370C:  cpx     L3150
         bcs     L371C
-        lda     L3151,x
+        lda     L3150+1,x
         sta     path2+1,y
         inx
         iny
@@ -1490,59 +1568,75 @@ L3734:  dex
         stx     path2
         rts
 
-L3739:  lda     L3150
-        bne     L373F
+;;; ============================================================
+
+.proc append_filename_to_path1
+        lda     L3150
+        bne     :+
         rts
 
-L373F:  ldx     #$00
+:       ldx     #0
         ldy     path1
         lda     #'/'
         sta     path1+1,y
         iny
-L374A:  cpx     L3150
-        bcs     L375A
-        lda     L3151,x
+loop:   cpx     L3150
+        bcs     done
+        lda     L3150+1,x
         sta     path1+1,y
         inx
         iny
-        jmp     L374A
+        jmp     loop
 
-L375A:  sty     path1
+done:   sty     path1
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc remove_filename_from_path1
+        ldx     path1
+        bne     loop
         rts
 
-L375E:  ldx     path1
-        bne     L3764
-        rts
-
-L3764:  lda     path1,x
+loop:   lda     path1,x
         cmp     #'/'
-        beq     L3772
+        beq     done
         dex
-        bne     L3764
+        bne     loop
         stx     path1
         rts
 
-L3772:  dex
+done:   dex
         stx     path1
         rts
+.endproc
 
-L3777:  ldy     #0
+;;; ============================================================
+
+.proc L3777
+        ldy     #0
         sta     L353C
         dey
-L377D:  iny
+
+loop:   iny
         lda     L324A,y
         cmp     #'/'
-        bne     L3788
+        bne     :+
         sty     L353C
-L3788:  sta     path2,y
+:       sta     path2,y
         cpy     L324A
-        bne     L377D
+        bne     loop
+
         ldy     L320A
-L3793:  lda     L320A,y
+loop2:  lda     L320A,y
         sta     path1,y
         dey
-        bpl     L3793
+        bpl     loop2
         rts
+.endproc
+
+;;; ============================================================
 
 .proc do_set_file_info
         lda     #7              ; SET_FILE_INFO param_count
@@ -1569,8 +1663,9 @@ fail:   pla
 .endproc
 
 ;;; ============================================================
+;;; Compute first offset into selector file - A*16 + 2
 
-.proc L37C5
+.proc compute_label_addr
         addr := selector_buffer + $2
 
         jsr     ax_times_16
@@ -1585,8 +1680,9 @@ fail:   pla
 .endproc
 
 ;;; ============================================================
+;;; Compute second offset into selector file - A*64 + $182
 
-.proc L37D2
+.proc compute_path_addr
         addr := selector_buffer + $182
 
         jsr     ax_times_64
@@ -1900,6 +1996,8 @@ done:   rts
 
 ;;; ============================================================
 
+        ;; unused?
+
 L3AD8:  .byte   0               ; ???
         .byte   $02
 
@@ -1910,10 +2008,13 @@ L3ADA:  iny
         lda     #$A2
         sta     $0200
         rts
-.endproc ; part2
+
+.endproc ; copy_selector_entries_to_ramcard
 
 ;;; ============================================================
 ;;; ??? Is this relocated? Part of ProDOS? RAMCard driver?
+;;; ============================================================
+
 .proc WTF
 
         ;; Branch targets before/after this block
