@@ -8,6 +8,11 @@
 
 COUT_HOOK       := $36
 
+;;; Other Pages
+
+IN              := $200
+
+
 ;;; Soft Switches
 
 SPKR            := $C030
@@ -18,6 +23,9 @@ SHADOW          := $C035        ; IIgs - inhibit shadowing
 
 AN3_ON          := $C05F        ; AppleColor Adapter Card / Le Chat Mauve
 AN3_OFF         := $C05E
+
+RAMWORKS_BANK   := $C071        ; RAMWorks bank selection ???
+
 HR1_ON          := $C0B3
 HR1_OFF         := $C0B2
 HR2_ON          := $C0B5

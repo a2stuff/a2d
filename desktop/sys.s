@@ -23,12 +23,15 @@ L2005:
         .byte   $02,$00
         .addr   L2363
 
+        path_buf := $D00
+
 .proc get_prefix_params2
 param_count:    .byte   2       ; GET_PREFIX, but param_count is 2 ??? Bug???
-data_buffer:    .addr   $0D00
+data_buffer:    .addr   path_buf
 .endproc
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params4, $0D00
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params4, path_buf
+
         .byte   $00,$01
         .addr   L2362
 L2362:  .byte   $00
@@ -80,8 +83,10 @@ L23DF:  .byte   $00,$00,$00
         copy_buffer := $4000
         max_copy_count := MLI - copy_buffer
 
-        DEFINE_OPEN_PARAMS open_srcfile_params, buffer, $0D00
-        DEFINE_OPEN_PARAMS open_dstfile_params, path0, $1100
+        open_srcfile_io_buffer := $0D00
+        open_dstfile_io_buffer := $1100
+        DEFINE_OPEN_PARAMS open_srcfile_params, buffer, open_srcfile_io_buffer
+        DEFINE_OPEN_PARAMS open_dstfile_params, path0, open_dstfile_io_buffer
         DEFINE_READ_PARAMS read_srcfile_params, copy_buffer, max_copy_count
         DEFINE_WRITE_PARAMS write_dstfile_params, copy_buffer, max_copy_count
 
@@ -361,8 +366,10 @@ fail2:  lda     copy_flag
         MLI_CALL SET_PREFIX, set_prefix_params
 L268F:  jsr     write_desktop1
         jsr     L2B57
+
         lda     #$00
-        sta     $C071           ; ???
+        sta     RAMWORKS_BANK   ; ???
+
         ldy     #BITMAP_SIZE-1
 :       sta     BITMAP,y
         dey
@@ -426,7 +433,7 @@ filename_buf:
 file_type:                      ; written but not read ???
         .byte   0
 
-L2832:  .res 31, 0              ; unused ???
+        .res 31, 0              ; unused ???
 
 ;;; ============================================================
 
@@ -554,8 +561,8 @@ loop:   iny
 ;;; Unreferenced ???
 
 .proc copy_input_to_buffer
-        ldy     #$00
-loop:   lda     $0200,y
+        ldy     #0
+loop:   lda     IN,y
         cmp     #$80|CHAR_RETURN
         beq     done
         and     #$7F
@@ -607,14 +614,16 @@ done:   rts
 .proc copy_directory_impl
         ptr := $6
 
+        open_io_buffer := $A000
         dir_buffer := $A400
+        dir_bufsize := BLOCK_SIZE
 
         entry_length_offset := $23
         file_count_offset := $25
         header_length := $2B
 
-        DEFINE_OPEN_PARAMS open_params, buffer, $A000
-        DEFINE_READ_PARAMS read_params, dir_buffer, $0200
+        DEFINE_OPEN_PARAMS open_params, buffer, open_io_buffer
+        DEFINE_READ_PARAMS read_params, dir_buffer, dir_bufsize
         DEFINE_CLOSE_PARAMS close_params
 
 start:  jsr     create_file_for_copy
@@ -681,7 +690,7 @@ L29BD:  lda     (ptr),y
         inc     L2A10
 L29F6:  add16_8 ptr, dir_buffer + entry_length_offset, ptr
         lda     ptr+1
-        cmp     #>(dir_buffer + $200)
+        cmp     #>(dir_buffer + dir_bufsize)
         bcs     L2A0D
         jmp     L2997
 
@@ -800,16 +809,16 @@ error:  sec
 next:   MLI_CALL GET_PREFIX, get_prefix_params2
         bne     error
 
-        ;; Append "DeskTop2" to path at $D00
-        ldx     $0D00
+        ;; Append "DeskTop2" to path
+        ldx     path_buf
         ldy     #0
 loop:   inx
         iny
         lda     str_desktop2,y
-        sta     $0D00,x
+        sta     path_buf,x
         cpy     str_desktop2
         bne     loop
-        stx     $0D00
+        stx     path_buf
 
         ;; ... and get info
         MLI_CALL GET_FILE_INFO, get_file_info_params4
@@ -824,10 +833,14 @@ str_desktop2:
 ;;; ============================================================
 
 .proc write_desktop1_impl
-        DEFINE_OPEN_PARAMS open_params, str_desktop1_path, $1000
+        open_io_buffer := $1000
+        dt1_addr := $2000
+        dt1_size := $45
+
+        DEFINE_OPEN_PARAMS open_params, str_desktop1_path, open_io_buffer
 str_desktop1_path:
         PASCAL_STRING "DeskTop/DESKTOP1"
-        DEFINE_WRITE_PARAMS write_params, $2000, $45
+        DEFINE_WRITE_PARAMS write_params, dt1_addr, dt1_size
         DEFINE_CLOSE_PARAMS close_params
 
 start:  MLI_CALL OPEN, open_params
@@ -926,11 +939,11 @@ prodos_loader_blocks:
 .proc copy_selector_entries_to_ramcard
 
         ;; File format:
-        ;; $  0 - number of entries (max 24?)
-        ;; $  1 - ???
+        ;; $  0 - number of entries (0-7) in first batch (Run List???)
+        ;; $  1 - number of entries (0-15) in second batch (Other Run List???)
         ;; $  2 - 24 * 16-byte data entries
         ;;   $0 - label (length-prefixed, 15 bytes)
-        ;;   $F - active_flag
+        ;;   $F - active_flag (other flags, i.e. download on ... ?)
         ;; $182 - 24 * 64-byte pathname
         ;; $782 - EOF
 
@@ -1039,7 +1052,8 @@ entry_num:
 
 ;;; ============================================================
 
-        DEFINE_OPEN_PARAMS open_path2_params, path2, $0800
+        open_path2_io_buffer := $0800
+        DEFINE_OPEN_PARAMS open_path2_params, path2, open_path2_io_buffer
         DEFINE_READ_PARAMS read_4bytes_params, buf_4_bytes, 4
 buf_4_bytes:  .res    4, 0
         DEFINE_CLOSE_PARAMS close_params
@@ -1053,19 +1067,23 @@ buf_5_bytes:  .res    5, 0
         .byte   1
         .addr   path2
 
-        dircopy_buffer := $0B00
+        dircopy_buffer := $1100
+        dircopy_bufsize := $0B00
 
-        DEFINE_OPEN_PARAMS open_srcdir_params, path2, $0D00
-        DEFINE_OPEN_PARAMS open_dstdir_params, path1, $1C00
-        DEFINE_READ_PARAMS read_srcdir_params, $1100, dircopy_buffer
-        DEFINE_WRITE_PARAMS write_dstdir_params, $1100, dircopy_buffer
+        open_srcdir_io_buffer := $0D00
+        open_dstdir_io_buffer := $1C00
+        DEFINE_OPEN_PARAMS open_srcdir_params, path2, open_srcdir_io_buffer
+        DEFINE_OPEN_PARAMS open_dstdir_params, path1, open_dstdir_io_buffer
+        DEFINE_READ_PARAMS read_srcdir_params, dircopy_buffer, dircopy_bufsize
+        DEFINE_WRITE_PARAMS write_dstdir_params, dircopy_buffer, dircopy_bufsize
         DEFINE_CREATE_PARAMS create_dir_params, path1, ACCESS_DEFAULT
         DEFINE_CREATE_PARAMS create_params, path1, 0
 
-L3124:  .byte   $00,$00
+        .byte   0, 0
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params2, path2
-        .byte   $00
+
+        .byte   0
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params3, path1
 
@@ -1245,16 +1263,24 @@ L346E:  rts
 
 L346F:  .byte   0
 
-        ldy     #$00
-:       lda     $0200,y
-        cmp     #$8D
-        beq     :+
+;;; ============================================================
+;;; Unreferenced ???
+
+.proc copy_input_to_path2
+        ldy     #0
+loop:   lda     IN,y
+        cmp     #$80|CHAR_RETURN
+        beq     done
         and     #$7F
         sta     path2+1,y
         iny
-        jmp     :-
-:       sty     path2
+        jmp     loop
+
+done:   sty     path2
         rts
+.endproc
+
+;;; ============================================================
 
         .res    3, 0
 
@@ -1478,7 +1504,7 @@ L3641:  .word   0
         sta     write_dstdir_params::ref_num
         sta     close_dstdir_params::ref_num
 
-loop:   copy16  #dircopy_buffer, read_srcdir_params::request_count
+loop:   copy16  #dircopy_bufsize, read_srcdir_params::request_count
         MLI_CALL READ, read_srcdir_params
         beq     :+
         cmp     #ERR_END_OF_FILE
@@ -1493,10 +1519,10 @@ loop:   copy16  #dircopy_buffer, read_srcdir_params::request_count
         jmp     handle_error_code
 
 :       lda     write_dstdir_params::trans_count
-        cmp     #<dircopy_buffer
+        cmp     #<dircopy_bufsize
         bne     finish
         lda     write_dstdir_params::trans_count+1
-        cmp     #>dircopy_buffer
+        cmp     #>dircopy_bufsize
         beq     loop
 
 finish: MLI_CALL CLOSE, close_dstdir_params
@@ -1722,7 +1748,9 @@ fail:   pla
 ;;; ============================================================
 
 .proc read_selector_list_impl
-        DEFINE_OPEN_PARAMS open_params, str_selector_list, $4000
+        open_io_buffer := $4000
+
+        DEFINE_OPEN_PARAMS open_params, str_selector_list, open_io_buffer
 str_selector_list:
         PASCAL_STRING "Selector.List"
         DEFINE_READ_PARAMS read_params, selector_buffer, selector_buflen
@@ -1777,10 +1805,14 @@ bits:   .byte   $00
 
 .proc invoke_selector_or_desktop_impl
         sys_start := $2000
+        sys_size := $400
 
-        DEFINE_OPEN_PARAMS open_desktop2_params, str_desktop2, $5000
-        DEFINE_OPEN_PARAMS open_selector_params, str_selector, $5400
-        DEFINE_READ_PARAMS read_params, sys_start, $0400
+        open_dt2_io_buffer := $5000
+        open_sel_io_buffer := $5400
+
+        DEFINE_OPEN_PARAMS open_desktop2_params, str_desktop2, open_dt2_io_buffer
+        DEFINE_OPEN_PARAMS open_selector_params, str_selector, open_sel_io_buffer
+        DEFINE_READ_PARAMS read_params, sys_start, sys_size
         DEFINE_CLOSE_PARAMS close_everything_params
 
 str_selector:
