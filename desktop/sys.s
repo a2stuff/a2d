@@ -253,10 +253,10 @@ L257A:  sta     slot
         cmp     #$30            ; make sure it's not slot 3 (aux)
         beq     :+
         sta     write_block_params_unit_num
-        sta     write_block_params2_unit_num
+        sta     write_block2_params_unit_num
         MLI_CALL WRITE_BLOCK, write_block_params
         bne     :+
-        MLI_CALL WRITE_BLOCK, write_block_params2
+        MLI_CALL WRITE_BLOCK, write_block2_params
 :       lda     on_line_buffer
         and     #$0F
         tay
@@ -903,8 +903,8 @@ slot:   .byte   0
 
         DEFINE_WRITE_BLOCK_PARAMS write_block_params, prodos_loader_blocks, 0
         write_block_params_unit_num := write_block_params::unit_num
-        DEFINE_WRITE_BLOCK_PARAMS write_block_params2, prodos_loader_blocks + 512, 1
-        write_block_params2_unit_num := write_block_params2::unit_num
+        DEFINE_WRITE_BLOCK_PARAMS write_block2_params, prodos_loader_blocks + 512, 1
+        write_block2_params_unit_num := write_block2_params::unit_num
 
         PAD_TO $2C00
 
@@ -1042,8 +1042,8 @@ entry_num:
         DEFINE_OPEN_PARAMS open_path2_params, path2, $0800
         DEFINE_READ_PARAMS read_4bytes_params, buf_4_bytes, 4
 buf_4_bytes:  .res    4, 0
-        DEFINE_CLOSE_PARAMS close_params5
-        DEFINE_READ_PARAMS read_39bytes_params, L3150, 39
+        DEFINE_CLOSE_PARAMS close_params
+        DEFINE_READ_PARAMS read_39bytes_params, filename, 39
         DEFINE_READ_PARAMS read_5bytes_params, buf_5_bytes, 5
 buf_5_bytes:  .res    5, 0
         .res    4, 0
@@ -1060,7 +1060,7 @@ buf_5_bytes:  .res    5, 0
         DEFINE_READ_PARAMS read_srcdir_params, $1100, dircopy_buffer
         DEFINE_WRITE_PARAMS write_dstdir_params, $1100, dircopy_buffer
         DEFINE_CREATE_PARAMS create_dir_params, path1, ACCESS_DEFAULT
-        DEFINE_CREATE_PARAMS create_params2, path1, 0
+        DEFINE_CREATE_PARAMS create_params, path1, 0
 
 L3124:  .byte   $00,$00
 
@@ -1071,9 +1071,11 @@ L3124:  .byte   $00,$00
 
         .byte   $00,$02,$00,$00,$00
 
-L3150:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+file_info:
+filename:
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
-L3160:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+        .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -1135,8 +1137,8 @@ L3359:  ldx     L3349
 ;;; ============================================================
 
 L3392:  lda     ref_num
-        sta     close_params5::ref_num
-        MLI_CALL CLOSE, close_params5
+        sta     close_params::ref_num
+        MLI_CALL CLOSE, close_params
         beq     :+
         jmp     handle_error_code
 :       rts
@@ -1175,13 +1177,13 @@ L33E3:  lda     L329C
         sta     L329E
         jsr     L3392
         jsr     L334B
-        jsr     L36FB
+        jsr     append_filename_to_path2
         jsr     L3367
         rts
 
 L33F6:  jsr     L3392
         jsr     L346E
-        jsr     L3720
+        jsr     remove_filename_from_path2
         jsr     L3359
         jsr     L3367
         jsr     L340C
@@ -1203,18 +1205,18 @@ L340C:  lda     L329C
         jsr     L3367
 loop:   jsr     L33A4
         bne     next
-        lda     L3150
+        lda     filename
         beq     loop
-        lda     L3150
+        lda     filename
         sta     L346F
         and     #$0F
-        sta     L3150
+        sta     filename
         lda     #$00
         sta     L3467
         jsr     L3468
         lda     L3467
         bne     loop
-        lda     L3160
+        lda     file_info + 16
         cmp     #$0F
         bne     loop
         jsr     L33E3
@@ -1244,21 +1246,20 @@ L346E:  rts
 L346F:  .byte   0
 
         ldy     #$00
-L3472:  lda     $0200,y
+:       lda     $0200,y
         cmp     #$8D
         beq     :+
         and     #$7F
         sta     path2+1,y
         iny
-        jmp     L3472
+        jmp     :-
 :       sty     path2
         rts
 
-        .byte   0
-        .byte   0
-        .byte   0
+        .res    3, 0
 
-L3489:  lda     #$FF
+.proc L3489
+        lda     #$FF
         sta     L353B
         jsr     L3777
         ldx     path1
@@ -1276,28 +1277,26 @@ L3489:  lda     #$FF
         stx     path1
         MLI_CALL GET_FILE_INFO, get_file_info_params3
         cmp     #ERR_FILE_NOT_FOUND
-        beq     L34C4
+        beq     okerr
         cmp     #ERR_VOL_NOT_FOUND
-        beq     L34C4
+        beq     okerr
         cmp     #ERR_PATH_NOT_FOUND
-        beq     L34C4
+        beq     okerr
         rts
 
-L34C4:  MLI_CALL GET_FILE_INFO, get_file_info_params2
+okerr:  MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     L34DD
         cmp     #ERR_VOL_NOT_FOUND
-        beq     L34D4
+        beq     prompt
         cmp     #ERR_FILE_NOT_FOUND
-        bne     L34DA
-L34D4:  jsr     show_insert_prompt
-        jmp     L34C4
+        bne     fail
 
-L34DA:  jmp     handle_error_code
+prompt: jsr     show_insert_prompt
+        jmp     okerr
 
-;;; ============================================================
+fail:   jmp     handle_error_code
 
-.proc L34DD
-        lda     get_file_info_params2::storage_type
+L34DD:  lda     get_file_info_params2::storage_type
         cmp     #ST_VOLUME_DIRECTORY
         beq     is_dir
         cmp     #ST_LINKED_DIRECTORY
@@ -1310,12 +1309,12 @@ is_dir: lda     #$FF
         ;; copy file_type, aux_type, storage_type
         ldy     #7
 :       lda     get_file_info_params2,y
-        sta     create_params2,y
+        sta     create_params,y
         dey
         cpy     #3
         bne     :-
         lda     #ACCESS_DEFAULT
-        sta     create_params2::access
+        sta     create_params::access
         jsr     L35A9
         bcc     L350B
         jmp     show_no_space_prompt
@@ -1323,17 +1322,17 @@ is_dir: lda     #$FF
         ;; copy dates
 L350B:  ldx     #3
 :       lda     get_file_info_params2::create_date,x
-        sta     create_params2::create_date,x
+        sta     create_params::create_date,x
         dex
         bpl     :-
 
         ;; create the file
-        lda     create_params2::storage_type
+        lda     create_params::storage_type
         cmp     #ST_VOLUME_DIRECTORY
         bne     :+
         lda     #ST_LINKED_DIRECTORY
-        sta     create_params2::storage_type
-:       MLI_CALL CREATE, create_params2
+        sta     create_params::storage_type
+:       MLI_CALL CREATE, create_params
         beq     :+
         jmp     handle_error_code
 
@@ -1355,58 +1354,73 @@ is_dir_flag:
 
 L353B:  .byte   0
 L353C:  .byte   0
+
 L353D:  jmp     remove_filename_from_path1
 
-L3540:  lda     L3160
-        cmp     #$0F
-        bne     L3574
-        jsr     L36FB
+;;; ============================================================
+
+.proc L3540
+        lda     file_info + 16  ; file_type ???
+        cmp     #$0F            ; FT_DIRECTORY ???
+        bne     do_file
+
+        ;; Directory ???
+        jsr     append_filename_to_path2
         jsr     show_copying_screen
         MLI_CALL GET_FILE_INFO, get_file_info_params2
-        beq     L3566
+        beq     ok
         jmp     handle_error_code
-L3558:  jsr     remove_filename_from_path1
-        jsr     L3720
+
+onerr:  jsr     remove_filename_from_path1
+        jsr     remove_filename_from_path2
         lda     #$FF
         sta     L3467
-        jmp     L35A4
+        jmp     exit
 
-L3566:  jsr     append_filename_to_path1
+ok:     jsr     append_filename_to_path1
         jsr     create_dir
-        bcs     L3558
-        jsr     L3720
-        jmp     L35A4
+        bcs     onerr
+        jsr     remove_filename_from_path2
+        jmp     exit
 
-L3574:  jsr     append_filename_to_path1
-        jsr     L36FB
+        ;; File ???
+do_file:
+        jsr     append_filename_to_path1
+        jsr     append_filename_to_path2
         jsr     show_copying_screen
         MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     :+
         jmp     handle_error_code
 
 :       jsr     L35A9
-        bcc     L3590
+        bcc     :+
         jmp     show_no_space_prompt
 
-L3590:  jsr     L3720
+:       jsr     remove_filename_from_path2
         jsr     create_dir
-        bcs     L35A5
-        jsr     L36FB
+        bcs     cleanup
+        jsr     append_filename_to_path2
         jsr     copy_dir
-        jsr     L3720
+        jsr     remove_filename_from_path2
         jsr     remove_filename_from_path1
-L35A4:  rts
 
-L35A5:  jsr     remove_filename_from_path1
+exit:   rts
+
+cleanup:
+        jsr     remove_filename_from_path1
         rts
+.endproc
 
-L35A9:  MLI_CALL GET_FILE_INFO, get_file_info_params2
+;;; ============================================================
+
+.proc L35A9
+        MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     :+
         jmp     handle_error_code
 
-:       lda     #$00
+:       lda     #0
         sta     L3641
-        sta     L3642
+        sta     L3641+1
         MLI_CALL GET_FILE_INFO, get_file_info_params3
         beq     :+
         cmp     #ERR_FILE_NOT_FOUND
@@ -1441,11 +1455,12 @@ L3636:  lda     L363F
         sta     path1
         rts
 
-L363D:  .byte   0,0
+L363D:  .word   0
 L363F:  .byte   0
 L3640:  .byte   0
-L3641:  .byte   0
-L3642:  .byte   0
+L3641:  .word   0
+.endproc
+
 
 ;;; ============================================================
 
@@ -1493,8 +1508,8 @@ finish: MLI_CALL CLOSE, close_dstdir_params
 
 ;;; ============================================================
 
-        ;; Copy file_type, aux_type, storage_type
 .proc create_dir
+        ;; Copy file_type, aux_type, storage_type
         ldx     #7
 :       lda     get_file_info_params2,x
         sta     create_dir_params,x
@@ -1522,56 +1537,60 @@ finish: MLI_CALL CLOSE, close_dstdir_params
         beq     :+
         jmp     handle_error_code
 :       rts
-
 .endproc
 
 ;;; ============================================================
 
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+        .res    4, 0
 
-L36FB:  lda     L3150
-        bne     L3701
+;;; ============================================================
+
+.proc append_filename_to_path2
+        lda     filename
+        bne     :+
         rts
 
-L3701:  ldx     #$00
+:       ldx     #$00
         ldy     path2
         lda     #'/'
         sta     path2+1,y
         iny
-L370C:  cpx     L3150
-        bcs     L371C
-        lda     L3150+1,x
+loop:   cpx     filename
+        bcs     done
+        lda     filename+1,x
         sta     path2+1,y
         inx
         iny
-        jmp     L370C
+        jmp     loop
 
-L371C:  sty     path2
+done:   sty     path2
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc remove_filename_from_path2
+        ldx     path2
+        bne     loop
         rts
 
-L3720:  ldx     path2
-        bne     L3726
-        rts
-
-L3726:  lda     path2,x
+loop:   lda     path2,x
         cmp     #'/'
-        beq     L3734
+        beq     done
         dex
-        bne     L3726
+        bne     loop
         stx     path2
         rts
 
-L3734:  dex
+done:   dex
         stx     path2
         rts
+.endproc
 
 ;;; ============================================================
 
 .proc append_filename_to_path1
-        lda     L3150
+        lda     filename
         bne     :+
         rts
 
@@ -1580,9 +1599,9 @@ L3734:  dex
         lda     #'/'
         sta     path1+1,y
         iny
-loop:   cpx     L3150
+loop:   cpx     filename
         bcs     done
-        lda     L3150+1,x
+        lda     filename+1,x
         sta     path1+1,y
         inx
         iny
@@ -1795,11 +1814,14 @@ read:   sta     read_params::ref_num
 
 ;;; ============================================================
 
-L38B2:  stax    $06
+.proc L38B2
+        ptr := $6
+
+        stax    ptr
         ldy     #$00
-        lda     ($06),y
+        lda     (ptr),y
         tay
-L38BB:  lda     ($06),y
+L38BB:  lda     (ptr),y
         sta     L324A,y
         dey
         bpl     L38BB
@@ -1835,6 +1857,9 @@ L38FD:  lda     $D3EE,y
         bpl     L38FD
         lda     ROMIN2
         rts
+.endproc
+
+;;; ============================================================
 
 str_copying:
         PASCAL_STRING "Copying:"
@@ -1996,647 +2021,14 @@ done:   rts
 
 ;;; ============================================================
 
-        ;; unused?
-
-L3AD8:  .byte   0               ; ???
-        .byte   $02
-
-L3ADA:  iny
-        inx
-        dec     $0200
-        bne     finish_and_invoke
-        lda     #$A2
-        sta     $0200
-        rts
-
 .endproc ; copy_selector_entries_to_ramcard
 
+        .assert * = $3AD8, error, "Segment size mismatch"
+
 ;;; ============================================================
-;;; ??? Is this relocated? Part of ProDOS? RAMCard driver?
-;;; ============================================================
+;;; This is a chunk of BASIC.SYSTEM 1.1 !!
+;;; (ends up in memory at $B0D8, file offset TBD)
 
-.proc WTF
+        .incbin "inc/bs.dat"
 
-        ;; Branch targets before/after this block
-L3AB7           := $3AB7
-L400C           := $400C
-L402B           := $402B
-L402C           := $402C
-
-        ;; Routines and data outside this block
-L9F8C           := $9F8C
-L9FAB           := $9FAB
-L9FB0           := $9FB0
-LA1F5           := $A1F5
-LA24C           := $A24C
-LA62F           := $A62F
-LA66C           := $A66C
-LAB37           := $AB37
-LAD46           := $AD46
-LB1A0           := $B1A0
-LB245           := $B245
-LB2FB           := $B2FB
-LB3EB           := $B3EB
-LB41F           := $B41F
-LB462           := $B462
-LB4A5           := $B4A5
-LB522           := $B522
-LB666           := $B666
-LB7D0           := $B7D0
-LBE50           := $BE50
-LBE70           := $BE70
-
-
-        copy16  #$BCBD, $BEC8
-        lda     DEVNUM
-        sta     $BEC7
-        lda     #$C5
-        jsr     LBE70
-        bcs     L3AB7
-        lda     $BCBD
-        and     #$0F
-        tax
-        inx
-        stx     $BCBC
-        lda     #$AF
-        sta     $BCBD
-        jsr     LB7D0
-        bcs     L3AB7
-        jsr     LA66C
-        ldx     #$36
-        jsr     L9FB0
-        jsr     LAB37
-        lda     $BEB9
-        ldx     $BEBA
-        ldy     #$3D
-        jsr     LA62F
-        lda     $BEBC
-        ldx     $BEBD
-        ldy     #$26
-        jsr     LA62F
-        lda     $BEB9
-        sec
-        sbc     $BEBC
-        pha
-        lda     $BEBA
-        sbc     $BEBD
-        tax
-        pla
-        ldy     #$10
-        jsr     LA62F
-        clc
-        rts
-
-        ldax    #$0F01
-        ldy     $BEBB
-        cpy     #$0F
-        bne     L3B58
-        stx     $BEB8
-L3B58:  jsr     LB1A0
-        bcs     L3B93
-        copy16  #$0259, $BED7
-        copy16  #$002B, $BED9
-        lda     #$CA
-        jsr     LBE70
-        bcs     L3B93
-        ldx     #$03
-L3B7A:  lda     $027C,x
-        sta     $BCB7,x
-        dex
-        bpl     L3B7A
-        sta     $BED9
-        lda     #$01
-        sta     $BCBB
-        lda     #$00
-        sta     $BEC9
-        sta     $BECA
-L3B93:  rts
-
-        pha
-        lda     $BE56
-        and     #$04
-        beq     L3B9F
-        ldx     $BE6A
-L3B9F:  pla
-        cpx     $BEB8
-        bne     L3BC9
-        and     $BEB7
-        beq     L3BCD
-        lda     $BC88
-        sta     $BECF
-        lda     #$0F
-        sta     LEVEL
-        lda     #$C8
-        jsr     LBE70
-        bcs     L3BC8
-        lda     $BED0
-        sta     $BED6
-        sta     $BEDE
-        sta     $BEC7
-L3BC8:  rts
-
-L3BC9:  lda     #$0D
-        sec
-        rts
-
-L3BCD:  lda     #$0A
-        sec
-        rts
-
-L3BD1:  lda     $BEC9
-        and     #$FE
-        sta     $BEC9
-        ldy     $BCBB
-        lda     #$00
-        cpy     $BCB8
-        bcc     L3BED
-        tay
-        sty     $BCBB
-        inc     $BEC9
-L3BEA:  inc     $BEC9
-L3BED:  dey
-        clc
-        bmi     L3BF8
-        adc     $BCB7
-        bcc     L3BED
-        bcs     L3BEA
-L3BF8:  adc     #$04
-        sta     $BEC8
-        lda     #$CE
-        jsr     LBE70
-        bcs     L3C1D
-        lda     #$CA
-        jsr     LBE70
-        bcs     L3C1D
-        inc     $BCBB
-        lda     $0259
-        and     #$F0
-        beq     L3BD1
-        dec     $BCB9
-        bne     L3C1D
-        dec     $BCBA
-L3C1D:  rts
-
-        jmp     (LBE50)
-
-        jsr     LB41F
-        bcs     L3C50
-        bit     $BE4E
-        bpl     L3C4C
-        sta     $BEC7
-        lda     #$00
-        sta     $BEC8
-        sta     $BEC9
-        sta     $BECA
-        lda     #$CE
-        jsr     LBE70
-        bcs     L3C45
-        lda     $BEC7
-        bne     L3CC3
-L3C45:  pha
-        jsr     LB2FB
-        pla
-        sec
-        rts
-
-L3C4C:  lda     #$14
-        sec
-        rts
-
-L3C50:  bit     $BE43
-        bpl     L3C5A
-        jsr     LB2FB
-        bcs     L3C63
-L3C5A:  lda     $BEB8
-        cmp     #$04
-        beq     L3C65
-        lda     #$0D
-L3C63:  sec
-        rts
-
-L3C65:  jsr     LA1F5
-        bcs     L3C63
-        lda     #$00
-        sta     $BEC8
-        lda     $BC88
-        sta     $BEC9
-        ldx     $BE4D
-        beq     L3C9E
-        tay
-        txa
-        asl     a
-        asl     a
-        adc     $BC88
-        pha
-L3C82:  cmp     $BC93,x
-        beq     L3C8B
-        dex
-        bne     L3C82
-        .byte   0
-L3C8B:  tya
-        sta     $BC93,x
-        lda     $BC9B,x
-        sta     $BEC7
-        lda     #$D2
-        jsr     LBE70
-        bcc     L3C9D
-        .byte   0
-L3C9D:  pla
-L3C9E:  sta     $BC88
-        sta     $BECF
-        lda     #$00
-        sta     LEVEL
-        lda     #$C8
-        jsr     LBE70
-        bcc     L3CB7
-        pha
-        jsr     LA24C
-        pla
-        sec
-        rts
-
-L3CB7:  ldx     $BECF
-        stx     $BC9B
-        lda     $BED0
-        sta     $BCA3
-L3CC3:  sta     $BED6
-        sta     $BEC7
-        sta     $BED2
-        ldx     $BEB9
-        stx     $BE5F
-        ldx     $BEBA
-        stx     $BE60
-        jsr     LB3EB
-        lda     #$7F
-        sta     $BED3
-        lda     #$C9
-        jsr     LBE70
-        lda     $BE57
-        and     #$03
-        beq     L3CF4
-        jsr     LB522
-        bcc     L3CF4
-        jmp     LB245
-
-L3CF4:  lda     #$FF
-        sta     $BE43
-        clc
-        rts
-
-        lda     $BE43
-        bpl     L3D0B
-        sta     $BE4E
-        ldx     #$08
-        lda     $BC9B,x
-        jsr     LB4A5
-L3D0B:  rts
-
-        bcs     L3D47
-        lda     $BE56
-        and     #$01
-        bne     L3D1D
-        ldx     #$00
-        jsr     L9F8C
-        jsr     L9FAB
-L3D1D:  clc
-        rts
-
-        lda     #$00
-        beq     L3D2F
-        lda     $BE56
-        and     #$01
-        beq     L3D2F
-        jsr     LB41F
-        bcs     L3D37
-L3D2F:  sta     $BEDE
-        lda     #$CD
-        jsr     LBE70
-L3D37:  rts
-
-        php
-        jsr     LB41F
-        bcs     L3D4B
-        plp
-        lda     #$14
-        sec
-        rts
-
-L3D43:  lda     #$0D
-        sec
-        rts
-
-L3D47:  lda     #$06
-L3D49:  sec
-        rts
-
-L3D4B:  plp
-        ldx     #$00
-        ldy     #$00
-        lda     $BE57
-        and     #$10
-        bne     L3D5D
-        stx     $BE60
-        sty     $BE5F
-L3D5D:  lda     $BE56
-        and     #$04
-        eor     #$04
-        beq     L3D6B
-        lda     #$04
-        sta     $BE6A
-L3D6B:  bcc     L3D8E
-        beq     L3D47
-        sta     $BEB8
-        lda     #$C3
-        sta     $BEB7
-        ldx     $BE60
-        ldy     $BE5F
-        stx     $BEA6
-        stx     $BEBA
-        sty     $BEA5
-        sty     $BEB9
-        jsr     LAD46
-        bcs     L3D49
-L3D8E:  lda     $BEB8
-        cmp     $BE6A
-        bne     L3D43
-        cmp     #$04
-        bne     L3DAD
-        ldx     $BEBA
-        ldy     $BEB9
-        lda     $BE57
-        and     #$10
-        bne     L3DAD
-        stx     $BE60
-        sty     $BE5F
-L3DAD:  jsr     LA1F5
-        bcs     L3D49
-        lda     $BC88
-        sta     $BECF
-        lda     #$07
-        sta     LEVEL
-        lda     #$C8
-        jsr     LBE70
-        bcc     L3DCB
-        pha
-        jsr     LA24C
-        pla
-        sec
-        rts
-
-L3DCB:  lda     $BEB8
-        cmp     #$0F
-        beq     L3DD3
-        clc
-L3DD3:  lda     #$00
-        ror     a
-        sta     $BE47
-        ldx     $BE4D
-        lda     $BC88
-        sta     $BC94,x
-        lda     $BED0
-        sta     $BC9C,x
-        inc     $BE4D
-        asl     a
-        asl     a
-        asl     a
-        asl     a
-        asl     a
-        tax
-        lda     $0280
-        ora     $BE47
-        sta     $BCFE,x
-        and     #$7F
-        tay
-        cmp     #$1E
-        bcc     L3E03
-        lda     #$1D
-L3E03:  sta     $3A
-        lda     $BE5F
-        sta     $BCFF,x
-        lda     $BE60
-        sta     $BD00,x
-L3E11:  inx
-        lda     $0280,y
-        sta     $BD00,x
-        dey
-        dec     $3A
-        bne     L3E11
-        clc
-        rts
-
-        lda     $BE56
-        and     #$01
-        bne     L3E2A
-        lda     #$10
-        sec
-        rts
-
-L3E2A:  ldx     $BE4D
-        beq     L3E48
-        stx     $BE4E
-L3E32:  stx     $3B
-        lda     $BC9B,x
-        jsr     LB462
-        bne     L3E43
-        ldx     $3B
-L3E3E:  lda     $BC9B,x
-L3E41:  clc
-        rts
-
-L3E43:  ldx     $3B
-        dex
-        bne     L3E32
-L3E48:  lda     $BE43
-        bpl     L3E5E
-        lda     $BCA3
-        jsr     LB462
-        bne     L3E5E
-        lda     #$FF
-        sta     $BE4E
-        ldx     #$08
-        bne     L3E3E
-L3E5E:  lda     #$12
-        sec
-        rts
-
-        asl     a
-        asl     a
-        asl     a
-        asl     a
-        asl     a
-        tax
-        lda     $BCFE,x
-        sta     $BE47
-        and     #$7F
-        cmp     $0280
-        bne     L3E98
-        tay
-        cmp     #$1E
-        bcc     L3E7C
-        lda     #$1D
-L3E7C:  sta     $3A
-        lda     $BCFF,x
-        sta     $BCA4
-        lda     $BD00,x
-        sta     $BCA5
-L3E8A:  inx
-        lda     $0280,y
-        cmp     $BD00,x
-        bne     L3E98
-        dey
-        dec     $3A
-        bne     L3E8A
-L3E98:  rts
-
-        lda     $BE56
-        and     #$01
-        beq     L3EF2
-        jsr     LB41F
-        bcs     L3E41
-        sta     $BEDE
-        lda     $BC93,x
-        sta     $BC88
-        bit     $BE4E
-        bmi     L3ECF
-        ldy     $BE4D
-        pha
-        lda     $BC93,y
-        sta     $BC93,x
-        pla
-        sta     $BC93,y
-        lda     $BC9B,x
-        pha
-        lda     $BC9B,y
-        sta     $BC9B,x
-        pla
-        sta     $BC9B,y
-L3ECF:  lda     #$00
-        sta     LEVEL
-        lda     #$CC
-        jsr     LBE70
-        bcs     L3F02
-        jsr     LA24C
-        bit     $BE4E
-        bpl     L3EEE
-        pha
-        lda     #$00
-        sta     $BE43
-        sta     $BE4E
-        pla
-        rts
-
-L3EEE:  dec     $BE4D
-        rts
-
-L3EF2:  ldx     $BE4D
-        beq     L3F03
-        stx     $BE4E
-        lda     $BC9B,x
-        jsr     LB4A5
-        bcc     L3EF2
-L3F02:  rts
-
-L3F03:  lda     #$00
-        sta     $BEDE
-        lda     #$07
-        sta     LEVEL
-        lda     #$CC
-        jmp     LBE70
-
-        jsr     LB41F
-        bcs     L3F7F
-        sta     $BED6
-        sta     $BED2
-        bit     $BE47
-        bmi     L3F80
-        .byte   $AD
-        .byte   $57
-        ldx     $0329,y
-        beq     L3F7D
-        cmp     #$03
-        beq     L3F7D
-        and     #$01
-        beq     L3F3D
-        copy16  $BE65, $BE63
-L3F3D:  copy16  #$00EF, $BED9
-        sta     $BED7
-        lda     #$02
-        sta     $BED8
-        lda     #$7F
-        sta     $BED3
-        lda     #$C9
-        jsr     LBE70
-        bcs     L3F7F
-L3F5B:  lda     $BE63
-        ora     $BE64
-        clc
-        beq     L3F80
-        lda     #$CA
-        jsr     LBE70
-        bcs     L3F7F
-        lda     $BE63
-        sbc     #$00
-        sta     $BE63
-        lda     $BE64
-        sbc     #$00
-        sta     $BE64
-        bcs     L3F5B
-L3F7D:  lda     #$0B
-L3F7F:  sec
-L3F80:  rts
-
-        copy16  $BCA4, $BCAF
-        lda     #$00
-        sta     $BCB1
-        sta     $BCB2
-        sta     $BEC8
-        sta     $BEC9
-        sta     $BECA
-L3F9E:  lsr16   $BE65
-        ldx     #$00
-        bcc     L3FBF
-        clc
-L3FA9:  lda     $BCAF,x
-        adc     $BEC8,x
-        sta     $BEC8,x
-        inx
-        txa
-        eor     #$03
-        bne     L3FA9
-        bcs     L3FD2
-        ldx     $BCB2
-        bne     L3FD2
-L3FBF:  rol     $BCAF,x
-        inx
-        txa
-        eor     #$04
-        bne     L3FBF
-        lda     $BE65
-        ora     $BE66
-        bne     L3F9E
-        clc
-        rts
-
-L3FD2:  lda     #$02
-        sec
-        rts
-
-        jsr     LB41F
-        bcs     L402B
-        sta     $BED6
-        sta     $BEC7
-        sta     $BED2
-        bit     $BE47
-        bmi     L402C
-        jsr     LB666
-        bcs     L402B
-        ldx     #$7F
-        ldy     #$EF
-        lda     $BE57
-        and     #$10
-        beq     L400C
-        ldy     $BE5F
-        ldx     $BE60
-        .byte   $D0
-
-.endproc ; WTF
+        .assert * = $4000, error, "Segment size mismatch"
