@@ -615,9 +615,9 @@ base:   .word   16
 farg:   .byte   $00,$00,$00,$00,$00,$00
 
 .proc title_bar_bitmap      ; Params for MGTK::PaintBits
-viewloc:        DEFINE_POINT 115, $FFF7, viewloc
-mapbits:.addr   pixels
-mapwidth: .byte   1
+viewloc:        DEFINE_POINT 115, AS_WORD -9, viewloc
+mapbits:        .addr   pixels
+mapwidth:       .byte   1
 reserved:       .byte   0
 maprect:        DEFINE_RECT 0, 0, 6, 5
         ;;  (not part of struct, but not referenced outside)
@@ -631,17 +631,17 @@ pixels: .byte   px(%1000001)
 
 .proc grafport
 viewloc:        DEFINE_POINT 0, 0
-mapbits:   .word   0
-mapwidth: .word   0
+mapbits:        .word   0
+mapwidth:       .word   0
 cliprect:       DEFINE_RECT 0, 0, 0, 0
-pattern:.res    8, 0
-colormasks:      .byte  0, 0
-penloc: DEFINE_POINT 0, 0
-penwidth: .byte   0
-penheight: .byte   0
-penmode:   .byte   0
-textback:  .byte   0
-textfont:   .addr   0
+pattern:        .res    8, 0
+colormasks:     .byte   0, 0
+penloc:         DEFINE_POINT 0, 0
+penwidth:       .byte   0
+penheight:      .byte   0
+penmode:        .byte   0
+textback:       .byte   0
+textfont:       .addr   0
 .endproc
         .assert * - grafport = 36, error
 
@@ -653,14 +653,14 @@ textfont:   .addr   0
 
         ;; params for MGTK::SetPortBits when decorating title bar
 .proc screen_port
-left:   .word   0
-top:    .word   menu_bar_height
-mapbits:   .word   MGTK::screen_mapbits
-mapwidth: .word   MGTK::screen_mapwidth
-hoff:   .word   0
-voff:   .word   0
-width:  .word   screen_width - 1
-height: .word   screen_height - menu_bar_height - 2
+left:           .word   0
+top:            .word   menu_bar_height
+mapbits:        .word   MGTK::screen_mapbits
+mapwidth:       .word   MGTK::screen_mapwidth
+hoff:           .word   0
+voff:           .word   0
+width:          .word   screen_width - 1
+height:         .word   screen_height - menu_bar_height - 2
 .endproc
 
 .proc penmode_normal
@@ -679,35 +679,35 @@ penmode:   .byte   MGTK::notpenXOR
         default_top := 60
 
 .proc winfo
-window_id:     .byte   da_window_id
-options:  .byte   MGTK::option_go_away_box
-title:  .addr   window_title
-hscroll:.byte   MGTK::scroll_option_none
-vscroll:.byte   MGTK::scroll_option_none
-hthumbmax: .byte   0
-hthumbpos: .byte   0
-vthumbmax: .byte   0
-vthumbpos: .byte   0
-status: .byte   0
-reserved:       .byte 0
-mincontwidth:     .word   window_width
-mincontlength:     .word   window_height
-maxcontwidth:     .word   window_width
-maxcontlength:     .word   window_height
-left:   .word   default_left
-top:    .word   default_top
-mapbits:   .addr   MGTK::screen_mapbits
-mapwidth: .word   MGTK::screen_mapwidth
+window_id:      .byte   da_window_id
+options:        .byte   MGTK::option_go_away_box
+title:          .addr   window_title
+hscroll:        .byte   MGTK::scroll_option_none
+vscroll:        .byte   MGTK::scroll_option_none
+hthumbmax:      .byte   0
+hthumbpos:      .byte   0
+vthumbmax:      .byte   0
+vthumbpos:      .byte   0
+status:         .byte   0
+reserved:       .byte   0
+mincontwidth:   .word   window_width
+mincontlength:  .word   window_height
+maxcontwidth:   .word   window_width
+maxcontlength:  .word   window_height
+left:           .word   default_left
+top:            .word   default_top
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .word   MGTK::screen_mapwidth
 cliprect:       DEFINE_RECT 0, 0, window_width, window_height
-pattern:.res    8, $FF
+pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc: DEFINE_POINT 0, 0
-penwidth: .byte   1
-penheight: .byte   1
-penmode:   .byte   0
-textback:  .byte   $7f
-textfont:   .addr   DEFAULT_FONT
-nextwinfo:   .addr   0
+penloc:         DEFINE_POINT 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   0
+textback:       .byte   $7f
+textfont:       .addr   DEFAULT_FONT
+nextwinfo:      .addr   0
 .endproc
 openwindow_params_top := winfo::top
 
@@ -1607,11 +1607,18 @@ draw_title_bar:
 .endproc
 
         ;; Following proc is copied to $B1
+        save_org := *
 .proc adjust_txtptr_copied
+        .org $B1
+        dummy_addr := $EA60
+
 loop:   inc     TXTPTR
         bne     :+
         inc     TXTPTR+1
-:       lda     $EA60           ; this ends up being aligned on TXTPTR
+
+        .assert * + 1 = TXTPTR, error, "misaligned routine"
+:       lda     dummy_addr      ; this ends up being aligned on TXTPTR
+
         cmp     #'9'+1          ; after digits?
         bcs     end
         cmp     #' '            ; space? keep going
@@ -1622,6 +1629,7 @@ loop:   inc     TXTPTR
         sbc     #$D0            ; carry set if successful
 end:    rts
 .endproc
-        sizeof_adjust_txtptr_copied := * - adjust_txtptr_copied
+        .org save_org + .sizeof(adjust_txtptr_copied)
+        sizeof_adjust_txtptr_copied := .sizeof(adjust_txtptr_copied)
 
 da_end := *

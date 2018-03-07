@@ -144,6 +144,9 @@ end:
         ;; If 'pathname' is passed then expansion yields a circular reference.
         .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
     .endif
+    .if .xmatch(.string(io), "io_buffer")
+        .error "Can't pass 'io_buffer' label to DEFINE_*_PARAMS"
+    .endif
 .proc name
 param_count:    .byte   3
 pathname:       .addr   pn

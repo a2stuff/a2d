@@ -32,6 +32,9 @@
 ;;; ============================================================
 ;;; Common patterns
 
+.define AS_WORD(arg)        arg & $FFFF
+
+
 .macro  return arg
         lda     arg
         rts
