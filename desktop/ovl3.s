@@ -398,13 +398,13 @@ L933F:  pha
         jsr     JUMP_TABLE_REDRAW_ALL
 L934F:  MGTK_RELAY_CALL MGTK::InitPort, $D239
         MGTK_RELAY_CALL MGTK::SetPort, $D239
-        MGTK_RELAY_CALL MGTK::CloseWindow, $D665
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo1B
         pla
         jmp     L900F
 
 L936E:  MGTK_RELAY_CALL MGTK::InitPort, $D239
         MGTK_RELAY_CALL MGTK::SetPort, $D239
-        MGTK_RELAY_CALL MGTK::CloseWindow, $D665
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo1B
         rts
 
 L938A:  .byte   0
@@ -415,8 +415,8 @@ L938E:  .byte   0
 L938F:  .byte   0
 
 
-L9390:  MGTK_RELAY_CALL MGTK::OpenWindow, $D665
-        lda     $D665
+L9390:  MGTK_RELAY_CALL MGTK::OpenWindow, winfo1B
+        lda     winfo1B
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, $D6D8
@@ -555,7 +555,7 @@ L953F:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::event_kind_button_up
         beq     L95A2
-        lda     $D665
+        lda     winfo1B
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
@@ -593,7 +593,7 @@ L95C5:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::event_kind_button_up
         beq     L9628
-        lda     $D665
+        lda     winfo1B
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
@@ -645,13 +645,13 @@ L9671:  cmp     #MGTK::area_content
         return  #$FF
 
 L9678:  lda     findwindow_window_id
-        cmp     $D665
+        cmp     winfo1B
         beq     L9683
         return  #$FF
 
-L9683:  lda     $D665
+L9683:  lda     winfo1B
         jsr     set_port_from_window_id
-        lda     $D665
+        lda     winfo1B
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx

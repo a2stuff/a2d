@@ -53,7 +53,7 @@ str_desktop2:
 start:  lda     #$80
         sta     ptr
         DESKTOP_RELAY_CALL $6, $0
-        MGTK_RELAY_CALL MGTK::CloseAll, $0
+        MGTK_RELAY_CALL MGTK::CloseAll
         MGTK_RELAY_CALL MGTK::SetZP1, ptr
 
         ;; Copy menu bar up to language card, and use it.

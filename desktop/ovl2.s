@@ -41,7 +41,7 @@ L0800:  pha
 L080C:  lda     #$00
         sta     $D8E8
         jsr     LB509
-        lda     $D57D
+        lda     winfoF
         jsr     set_port_from_window_id
         addr_call draw_dialog_title, $B245
         axy_call draw_dialog_label, $01, $B257
@@ -64,7 +64,7 @@ L0841:  jsr     prompt_input_loop
 
 L085F:  bit     $D887
         bmi     L0832
-        lda     $D57D
+        lda     winfoF
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
@@ -90,7 +90,7 @@ L08B7:  lda     $D443
         cmp     #$10
         bcs     L08B1
         jsr     set_cursor_pointer
-        lda     $D57D
+        lda     winfoF
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
@@ -109,7 +109,7 @@ L0902:  jsr     prompt_input_loop
         beq     L090C
         jmp     L09C2
 
-L090C:  lda     $D57D
+L090C:  lda     winfoF
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         ldy     #$11
@@ -126,7 +126,7 @@ L090C:  lda     $D57D
         lda     L09D7
         jsr     L126F
         bcs     L099B
-L0942:  lda     $D57D
+L0942:  lda     winfoF
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
@@ -174,7 +174,7 @@ L09B8:  jsr     prompt_input_loop
 L09C2:  pha
         jsr     set_cursor_pointer
         jsr     reset_state
-        MGTK_RELAY_CALL MGTK::CloseWindow, $D57D
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
         ldx     L09D8
         pla
         rts
@@ -184,7 +184,7 @@ L09D8:  .byte   0
 L09D9:  lda     #$00
         sta     $D8E8
         jsr     LB509
-        lda     $D57D
+        lda     winfoF
         jsr     set_port_from_window_id
         addr_call draw_dialog_title, $B319
         ldax    #$B32A
@@ -204,7 +204,7 @@ L0A0E:  jsr     prompt_input_loop
 L0A18:  bit     $D887
         bmi     L0A0E
         copy16  #$A898, $A89A
-        lda     $D57D
+        lda     winfoF
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
@@ -230,7 +230,7 @@ L0A7A:  lda     $D443
         cmp     #$10
         bcs     L0A74
         jsr     set_cursor_pointer
-        lda     $D57D
+        lda     winfoF
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
@@ -250,7 +250,7 @@ L0AC7:  jsr     prompt_input_loop
         beq     L0AD1
         jmp     L0B31
 
-L0AD1:  lda     $D57D
+L0AD1:  lda     winfoF
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
@@ -282,7 +282,7 @@ L0B2A:  jsr     prompt_input_loop
 L0B31:  pha
         jsr     set_cursor_pointer
         jsr     reset_state
-        MGTK_RELAY_CALL MGTK::CloseWindow, $D57D
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
         ldx     L0B47
         pla
         rts

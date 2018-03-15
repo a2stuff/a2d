@@ -34,7 +34,7 @@ data_buffer:    .addr   path_buf
 
         .byte   $00,$01
         .addr   L2362
-L2362:  .byte   $00
+L2362:  .byte   0
 L2363:  .res    15, 0
 
 butn1:  .byte   0               ; written, but not read
@@ -193,8 +193,8 @@ nomatch:
 match:  sta     $D3AC
 
         lda     ROMIN2
-        ldx     #$00
-        jsr     L26A5
+        ldx     #0
+        jsr     stx_lc_d3ff
 
         ;; Point $8 at $C100
         lda     #0
@@ -275,13 +275,13 @@ L25BF:  lda     on_line_buffer,y
         dey
         bne     L25BF
         ldx     #$C0
-        jsr     L26A5
+        jsr     stx_lc_d3ff
         addr_call copy_to_lc2_b, path0
         jsr     check_desktop2_on_device
         bcs     L25E4
         ldx     #$80
-        jsr     L26A5
-        jsr     L2B57
+        jsr     stx_lc_d3ff
+        jsr     copy_2005_to_lc2_a
         jmp     fail
 
 L25E4:  lda     BUTN1
@@ -294,10 +294,10 @@ str_slash_desktop:
         PASCAL_STRING "/DeskTop"
 
         ;; Overwrite first bytes of get_file_info_params
-.proc file_info_ovl
+.proc dir_file_info
         .byte   $A              ; param_count
         .addr   0               ; pathname
-        .byte   ACCESS_DEFAULT       ; access
+        .byte   ACCESS_DEFAULT  ; access
         .byte   FT_DIRECTORY    ; filetype
         .word   0               ; aux_type
         .byte   ST_LINKED_DIRECTORY ; storage_type
@@ -306,32 +306,36 @@ str_slash_desktop:
 start_copy:
         jsr     show_copying_screen
         MLI_CALL GET_PREFIX, get_prefix_params
-        beq     L2611
+        beq     :+
         jmp     fail_copy
-
-L2611:  dec     buffer
+:       dec     buffer
         ldx     #$80
-        jsr     L26A5
+        jsr     stx_lc_d3ff
+
         ldy     buffer
-L261C:  lda     buffer,y
+:       lda     buffer,y
         sta     L2005,y
         dey
-        bpl     L261C
+        bpl     :-
+
         ldy     path0
-        ldx     #$00
-L262A:  iny
+        ldx     #0
+:       iny
         inx
         lda     str_slash_desktop,x
         sta     path0,y
         cpx     str_slash_desktop
-        bne     L262A
+        bne     :-
         sty     path0
+
+        ;; copy file_type, aux_type, storage_type
         ldx     #7
-L263C:  lda     file_info_ovl,x
+:       lda     dir_file_info,x
         sta     get_file_info_params,x
         dex
         cpx     #3
-        bne     L263C
+        bne     :-
+
         jsr     create_file_for_copy
         lda     path0
         sta     copy_flag
@@ -361,11 +365,11 @@ file_loop:
         jmp     fail2
 
 fail2:  lda     copy_flag
-        beq     L268F
+        beq     :+
         sta     path0
         MLI_CALL SET_PREFIX, set_prefix_params
-L268F:  jsr     write_desktop1
-        jsr     L2B57
+:       jsr     write_desktop1
+        jsr     copy_2005_to_lc2_a
 
         lda     #$00
         sta     RAMWORKS_BANK   ; ???
@@ -376,11 +380,13 @@ L268F:  jsr     write_desktop1
         bpl     :-
         jmp     copy_selector_entries_to_ramcard
 
-L26A5:  lda     LCBANK2
+.proc stx_lc_d3ff
+        lda     LCBANK2
         lda     LCBANK2
         stx     $D3FF
         lda     ROMIN2
         rts
+.endproc
 
 .proc copy_to_lc2_b
         ptr := $6
@@ -857,8 +863,10 @@ start:  MLI_CALL OPEN, open_params
 
 ;;; ============================================================
 
-L2B57:  addr_call copy_to_lc2_a, L2005
+.proc copy_2005_to_lc2_a
+        addr_call copy_to_lc2_a, L2005
         rts
+.endproc
 
         .byte   0
 
@@ -1116,21 +1124,25 @@ L334A:  .byte   $00
 
 ;;; ============================================================
 
-L334B:  ldx     L3349
+.proc L334B
+        ldx     L3349
         lda     L329E
         sta     L329F,x
         inx
         stx     L3349
         rts
+.endproc
 
 ;;; ============================================================
 
-L3359:  ldx     L3349
+.proc L3359
+        ldx     L3349
         dex
         lda     L329F,x
         sta     L329E
         stx     L3349
         rts
+.endproc
 
 ;;; ============================================================
 
@@ -1154,12 +1166,14 @@ L3359:  ldx     L3349
 
 ;;; ============================================================
 
-L3392:  lda     ref_num
+.proc L3392
+        lda     ref_num
         sta     close_params::ref_num
         MLI_CALL CLOSE, close_params
         beq     :+
         jmp     handle_error_code
 :       rts
+.endproc
 
 ;;; ============================================================
 
@@ -1191,29 +1205,35 @@ done:   return  #0
 
 ;;; ============================================================
 
-L33E3:  lda     L329C
+.proc L33E3
+        lda     L329C
         sta     L329E
         jsr     L3392
         jsr     L334B
         jsr     append_filename_to_path2
         jsr     L3367
         rts
+.endproc
 
-L33F6:  jsr     L3392
-        jsr     L346E
+.proc L33F6
+        jsr     L3392
+        jsr     noop
         jsr     remove_filename_from_path2
         jsr     L3359
         jsr     L3367
         jsr     L340C
-        jsr     L346B
+        jsr     remove_filename_from_path1_alt2
         rts
+.endproc
 
-L340C:  lda     L329C
+.proc L340C
+        lda     L329C
         cmp     L329E
         beq     :+
         jsr     L33A4
         jmp     L340C
 :       rts
+.endproc
 
 ;;; ============================================================
 
@@ -1231,7 +1251,7 @@ loop:   jsr     L33A4
         sta     filename
         lda     #$00
         sta     L3467
-        jsr     L3468
+        jsr     do_copy_alt
         lda     L3467
         bne     loop
         lda     file_info + 16
@@ -1255,11 +1275,13 @@ done:   jsr     L3392
 
 L3467:  .byte   0
 
-L3468:  jmp     L3540
+do_copy_alt:
+        jmp     do_copy
 
-L346B:  jmp     L353D
+remove_filename_from_path1_alt2:
+        jmp     remove_filename_from_path1_alt
 
-L346E:  rts
+noop:   rts
 
 L346F:  .byte   0
 
@@ -1381,11 +1403,12 @@ is_dir_flag:
 L353B:  .byte   0
 L353C:  .byte   0
 
-L353D:  jmp     remove_filename_from_path1
+remove_filename_from_path1_alt:
+        jmp     remove_filename_from_path1
 
 ;;; ============================================================
 
-.proc L3540
+.proc do_copy
         lda     file_info + 16  ; file_type ???
         cmp     #$0F            ; FT_DIRECTORY ???
         bne     do_file
@@ -1982,21 +2005,22 @@ str_not_completed:
 
         ;; Wait for keyboard
         sta     KBDSTRB
-loop:   lda      KBD
+loop:   lda     KBD
         bpl     loop
         and     #$7F
         sta     KBDSTRB
         cmp     #'M'
-        beq     L3A97
+        beq     monitor
         cmp     #'m'
-        beq     L3A97
+        beq     monitor
         cmp     #CHAR_RETURN
         bne     loop
         jsr     HOME
         jmp     invoke_selector_or_desktop
 .endproc
 
-L3A97:  jmp     MONZ
+monitor:
+        jmp     MONZ
 
 ;;; ============================================================
 
