@@ -43,7 +43,7 @@ L7029:  lda     L709B+1,x
         sta     $D485
         rts
 
-L7052:  lda     winfo12
+L7052:  lda     winfo_entrydlg
         jsr     common_overlay::L62C8
         addr_call common_overlay::L5E0A, $DA67  ; "Copy a File ..."
         addr_call common_overlay::L5E57, $DA77  ; "Source filename:"
@@ -169,7 +169,7 @@ L7192:  lda     #$40
 L7198:  addr_call common_overlay::L647C, path_buf1
         bne     L7192
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo12
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
         lda     #0
         sta     $50A8
         lda     #0
@@ -186,7 +186,7 @@ L7198:  addr_call common_overlay::L647C, path_buf1
 ;;; ============================================================
 
 L71D8:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo12
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
         lda     #0
         sta     $D8EC
         jsr     common_overlay::L55BA

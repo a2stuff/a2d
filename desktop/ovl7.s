@@ -84,7 +84,7 @@ L70B0:  lda     L7207+1,x
         lda     #$80
         sta     $5104
         copy16  #$0601, $D484
-        lda     winfo12
+        lda     winfo_entrydlg
         jsr     common_overlay::L62C8
         lda     L73A9
         jsr     L7467
@@ -102,7 +102,7 @@ L70B0:  lda     L7207+1,x
         sta     $5B25
         rts
 
-L7101:  lda     winfo12
+L7101:  lda     winfo_entrydlg
         jsr     common_overlay::L62C8
         lda     path_buf0
         beq     L7116
@@ -240,7 +240,7 @@ L72E8:  lda     #$FB
 L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo12
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
         sta     $D8EC
         jsr     common_overlay::L55BA
         copy16  #$59B8, $5B24
@@ -253,7 +253,7 @@ L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo12
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
         lda     #$00
         sta     $D8EC
         jsr     common_overlay::L55BA
@@ -412,7 +412,7 @@ L74E1:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D98E
         rts
 
-        lda     winfo12
+        lda     winfo_entrydlg
         jsr     common_overlay::L62C8
         lda     $D20A
         bne     L7500

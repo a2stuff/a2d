@@ -95,13 +95,13 @@ L5106:  bit     $D8EC
         bne     :+
         jmp     L5106
 :       lda     findwindow_window_id
-        cmp     $D5B7
+        cmp     winfo_entrydlg
         beq     L5151
         jmp     L5106
 
-L5151:  lda     $D5B7
+L5151:  lda     winfo_entrydlg
         jsr     L62C8
-        lda     $D5B7
+        lda     winfo_entrydlg
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
@@ -137,13 +137,13 @@ L51BE:  cmp     #$02
 L51C6:  rts
 
 L51C7:  lda     $D20E
-        cmp     $D5B7
+        cmp     winfo_entrydlg
         beq     L51D2
         jmp     L531F
 
-L51D2:  lda     $D5B7
+L51D2:  lda     winfo_entrydlg
         jsr     L62C8
-        lda     $D5B7
+        lda     winfo_entrydlg
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
@@ -163,7 +163,7 @@ L520D:  tax
         bmi     L5216
 L5213:  jmp     L5308
 
-L5216:  lda     $D5B7
+L5216:  lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9E0
@@ -253,7 +253,7 @@ L531F:  bit     L5105
 
 L5340:  rts
 
-L5341:  lda     $D5F1
+L5341:  lda     winfo_entrydlg_file_picker
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         add16   screentowindow_windowy, $D60F, screentowindow_windowy
@@ -272,7 +272,7 @@ L5380:  jsr     L5C4F
 L5386:  ldx     $D920
         lda     $1780,x
         bmi     L53B5
-        lda     $D5B7
+        lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9D8
@@ -282,7 +282,7 @@ L5386:  ldx     $D920
 
 L53B5:  and     #$7F
         pha
-        lda     $D5B7
+        lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9E0
@@ -454,7 +454,7 @@ L555F:  MGTK_RELAY_CALL MGTK::PeekEvent, event_params
 L5576:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_window_id
-        cmp     $D5F1
+        cmp     winfo_entrydlg_file_picker
         beq     :+
         pla
         pla
@@ -610,7 +610,7 @@ L56FB:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::event_kind_button_up
         beq     L575E
-        lda     $D5B7
+        lda     winfo_entrydlg
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
@@ -648,7 +648,7 @@ L5781:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::event_kind_button_up
         beq     L57E4
-        lda     $D5B7
+        lda     winfo_entrydlg
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
@@ -686,7 +686,7 @@ L5807:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::event_kind_button_up
         beq     L586A
-        lda     $D5B7
+        lda     winfo_entrydlg
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
@@ -724,7 +724,7 @@ L588D:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::event_kind_button_up
         beq     L58F0
-        lda     $D5B7
+        lda     winfo_entrydlg
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
@@ -762,7 +762,7 @@ L5913:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::event_kind_button_up
         beq     L5976
-        lda     $D5B7
+        lda     winfo_entrydlg
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
@@ -876,7 +876,7 @@ L5A1F:  bit     L5105
 
 L5A27:  cmp     #CHAR_TAB
         bne     L5A52
-        lda     $D5B7
+        lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9F0
@@ -893,7 +893,7 @@ L5A52:  cmp     #$0F
         bmi     L5A64
         jmp     L5AC8
 
-L5A64:  lda     $D5B7
+L5A64:  lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9E0
@@ -903,7 +903,7 @@ L5A64:  lda     $D5B7
 
 L5A8B:  cmp     #$03
         bne     L5AB6
-        lda     $D5B7
+        lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9D0
@@ -925,7 +925,7 @@ L5AC4:  jsr     L6D33
 L5AC8:  jsr     L56E3
         rts
 
-L5ACC:  lda     $D5B7
+L5ACC:  lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9D8
@@ -935,7 +935,7 @@ L5ACC:  lda     $D5B7
         jsr     L56E3
         rts
 
-L5AF7:  lda     $D5B7
+L5AF7:  lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D9E8
@@ -1167,9 +1167,9 @@ L5CF6:  .byte   0
 
 ;;; ============================================================
 
-L5CF7:  MGTK_RELAY_CALL MGTK::OpenWindow, $D5B7
-        MGTK_RELAY_CALL MGTK::OpenWindow, $D5F1
-        lda     $D5B7
+L5CF7:  MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entrydlg
+        MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entrydlg_file_picker
+        lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, $D9C0
@@ -1487,7 +1487,7 @@ L606C:  .byte   0
 
 ;;; ============================================================
 
-L606D:  lda     $D5F1
+L606D:  lda     winfo_entrydlg_file_picker
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::PaintRect, $D60D
         lda     #$10
@@ -1539,7 +1539,7 @@ L60FF:  lda     L6128
         cmp     $D920
         bne     L6110
         jsr     L6274
-        lda     $D5F1
+        lda     winfo_entrydlg_file_picker
         jsr     L62C8
 L6110:  inc     L6128
         add16   $D919, #8, $D919
@@ -1618,7 +1618,7 @@ L61B0:  .byte   0
 
 ;;; ============================================================
 
-L61B1:  lda     $D5B7
+L61B1:  lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::PaintRect, $D9C8
         copy16  #path_buf, $06
@@ -1710,7 +1710,7 @@ L6274:  ldx     #$00
         lda     L62C7
         adc     #$00
         sta     $D916
-        lda     $D5F1
+        lda     winfo_entrydlg_file_picker
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D90F
@@ -1999,7 +1999,7 @@ L658B:  cmp     #$09
         sbc     #$08
         rts
 
-        lda     $D5B7
+        lda     winfo_entrydlg
         jsr     L62C8
         jsr     L6E45
         stax    $06
@@ -2021,7 +2021,7 @@ L65D6:  copy16  #$D8EF, $06
         jsr     L56E3
         rts
 
-        lda     $D5B7
+        lda     winfo_entrydlg
         jsr     L62C8
         jsr     L6E72
         stax    $06
@@ -2044,7 +2044,7 @@ L6634:  copy16  #$D8EF, $06
         jsr     L56E3
         rts
 
-        lda     $D5B7
+        lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::PaintRect, $DA9E
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
@@ -2059,7 +2059,7 @@ L6684:  addr_call L5DED, $D484
 
 ;;; ============================================================
 
-L6693:  lda     $D5B7
+L6693:  lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::PaintRect, $DAAA
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
@@ -2072,10 +2072,10 @@ L66C9:  addr_call L5DED, $D484
         addr_call L5DED, $D8F8
         rts
 
-        lda     $D5B7
+        lda     winfo_entrydlg
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        lda     $D5B7
+        lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_RELAY_CALL MGTK::InRect, $DA9E
@@ -2200,10 +2200,10 @@ L6846:  jsr     L6D27
         rts
 
 L684D:  .word   0
-        lda     $D5B7
+        lda     winfo_entrydlg
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        lda     $D5B7
+        lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_RELAY_CALL MGTK::InRect, $DAAA
@@ -2345,7 +2345,7 @@ L69D5:  lda     L6A17
         inc     $D402
         stax    $06
         copy16  $DAA8, $08
-        lda     $D5B7
+        lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call L5DED, $D8F6
@@ -2362,7 +2362,7 @@ L6A1E:  dec     $D402
         jsr     L6E45
         stax    $06
         copy16  $DAA8, $08
-        lda     $D5B7
+        lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call L5DED, $D484
@@ -2390,7 +2390,7 @@ L6A6B:  ldx     $D402
         jsr     L6E45
         stax    $06
         copy16  $DAA8, $08
-        lda     $D5B7
+        lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call L5DED, $D484
@@ -2418,7 +2418,7 @@ L6ACA:  lda     $D485,x
         cpx     $D484
         bne     L6ACA
 L6AD6:  dec     $D484
-        lda     $D5B7
+        lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $DAA6
         addr_call L5DED, $D402
@@ -2494,7 +2494,7 @@ L6B81:  lda     L6BC3
         inc     $D443
         stax    $06
         copy16  $DAB4, $08
-        lda     $D5B7
+        lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call L5DED, $D8F6
@@ -2511,7 +2511,7 @@ L6BCA:  dec     $D443
         jsr     L6E72
         stax    $06
         copy16  $DAB4, $08
-        lda     $D5B7
+        lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call L5DED, $D484
@@ -2539,7 +2539,7 @@ L6C17:  ldx     $D443
         jsr     L6E72
         stax    $06
         copy16  $DAB4, $08
-        lda     $D5B7
+        lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call L5DED, $D484
@@ -2567,7 +2567,7 @@ L6C76:  lda     $D485,x
         cpx     $D484
         bne     L6C76
 L6C82:  dec     $D484
-        lda     $D5B7
+        lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $DAB2
         addr_call L5DED, $D443

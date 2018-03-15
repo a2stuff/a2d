@@ -41,7 +41,7 @@ L7029:  lda     L7087,x
         sta     path_buf2+1     ; ???
         rts
 
-L704D:  lda     winfo12
+L704D:  lda     winfo_entrydlg
         jsr     common_overlay::L62C8
         addr_call common_overlay::L5E0A, $DAB6  ; "Delete a File ..."
         addr_call common_overlay::L5E57, $DAC8  ; "File to delete:"
@@ -75,7 +75,7 @@ L70B1:  addr_call common_overlay::L647C, path_buf0
         rts
 
 L70C0:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo12
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
         lda     #0
         sta     $D8EC
         jsr     common_overlay::L55BA
@@ -88,7 +88,7 @@ L70C0:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
         .byte   0
 
 L70EA:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo12
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
         lda     #0
         sta     $D8EC
         jsr     common_overlay::L55BA

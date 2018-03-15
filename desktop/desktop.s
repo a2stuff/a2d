@@ -17,6 +17,8 @@ INVOKER_FILENAME := $280         ; File to invoke (PREFIX must be set)
         dummy0000 := $0000         ; overwritten by self-modified code
         dummy1234 := $1234         ; overwritten by self-modified code
 
+        screen_width := 560
+        screen_height := 192
 
 ;;; ============================================================
 ;;; Segment loaded into AUX $851F-$BFFF (follows MGTK)
@@ -213,9 +215,6 @@ mousey: .word   0
 which_area:     .byte   0
 window_id:      .byte   0
 .endproc
-
-        screen_width := 560
-        screen_height := 192
 
 .proc grafport
 viewloc:        DEFINE_POINT 0, 0, viewloc
@@ -4405,7 +4404,9 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endproc
 
-.proc winfo12
+;;; Dialog used for Selector > Add/Edit an Entry...
+
+.proc winfo_entrydlg
 window_id:      .byte   $12
 options:        .byte   MGTK::option_dialog_box
 title:          .addr   0
@@ -4436,6 +4437,8 @@ textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endproc
+
+;;; File picker within Add/Edit an Entry dialog
 
 .proc winfo_entrydlg_file_picker
 window_id:      .byte   $15
@@ -4469,7 +4472,11 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endproc
 
-.proc winfo18
+;;; "About Apple II Desktop" Dialog
+
+.proc winfo_about_dialog
+        width := 400
+
 window_id:      .byte   $18
 options:        .byte   MGTK::option_dialog_box
 title:          .addr   0
@@ -4486,10 +4493,10 @@ maxcontwidth:   .word   50
 mincontlength:  .word   500
 maxcontlength:  .word   140
 port:
-viewloc:        DEFINE_POINT 80, 40
+viewloc:        DEFINE_POINT (screen_width - width) / 2, 40
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-cliprect:       DEFINE_RECT 0, 0, 400, 110
+cliprect:       DEFINE_RECT 0, 0, width, 110
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:         DEFINE_POINT 0, 0
@@ -4500,9 +4507,13 @@ textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endproc
-winfo18_port    := winfo18::port
+winfo_about_dialog_port    := winfo_about_dialog::port
 
-.proc winfo1B
+;;; Dialog used for Edit/Delete/Run an Entry ...
+
+.proc winfo_entry_picker
+        width := 350
+
 window_id:      .byte   $1B
 options:        .byte   MGTK::option_dialog_box
 title:          .addr   0
@@ -4519,10 +4530,10 @@ maxcontwidth:   .word   50
 mincontlength:  .word   500
 maxcontlength:  .word   140
 port:
-viewloc:        DEFINE_POINT 105, 25
+viewloc:        DEFINE_POINT (screen_width - width) / 2, 25
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-cliprect:       DEFINE_RECT 0, 0, 350, 110
+cliprect:       DEFINE_RECT 0, 0, width, 110
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:         DEFINE_POINT 0, 0
@@ -17341,8 +17352,8 @@ jump_relay:
 ;;; "About" dialog
 
 .proc show_about_dialog
-        MGTK_RELAY_CALL MGTK::OpenWindow, winfo18
-        lda     winfo18::window_id
+        MGTK_RELAY_CALL MGTK::OpenWindow, winfo_about_dialog
+        lda     winfo_about_dialog::window_id
         jsr     set_port_from_window_id
         jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::about_dialog_outer_rect
@@ -17373,7 +17384,7 @@ jump_relay:
         bne     :-
         jmp     close
 
-close:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo18
+close:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_about_dialog
         jsr     reset_state
         jsr     set_cursor_pointer_with_flag
         rts

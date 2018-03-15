@@ -398,13 +398,13 @@ L933F:  pha
         jsr     JUMP_TABLE_REDRAW_ALL
 L934F:  MGTK_RELAY_CALL MGTK::InitPort, $D239
         MGTK_RELAY_CALL MGTK::SetPort, $D239
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo1B
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entry_picker
         pla
         jmp     L900F
 
 L936E:  MGTK_RELAY_CALL MGTK::InitPort, $D239
         MGTK_RELAY_CALL MGTK::SetPort, $D239
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo1B
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entry_picker
         rts
 
 L938A:  .byte   0
@@ -415,8 +415,8 @@ L938E:  .byte   0
 L938F:  .byte   0
 
 
-L9390:  MGTK_RELAY_CALL MGTK::OpenWindow, winfo1B
-        lda     winfo1B
+L9390:  MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entry_picker
+        lda     winfo_entry_picker
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, $D6D8
@@ -555,7 +555,7 @@ L953F:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::event_kind_button_up
         beq     L95A2
-        lda     winfo1B
+        lda     winfo_entry_picker
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
@@ -593,7 +593,7 @@ L95C5:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::event_kind_button_up
         beq     L9628
-        lda     winfo1B
+        lda     winfo_entry_picker
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
@@ -645,13 +645,13 @@ L9671:  cmp     #MGTK::area_content
         return  #$FF
 
 L9678:  lda     findwindow_window_id
-        cmp     winfo1B
+        cmp     winfo_entry_picker
         beq     L9683
         return  #$FF
 
-L9683:  lda     winfo1B
+L9683:  lda     winfo_entry_picker
         jsr     set_port_from_window_id
-        lda     winfo1B
+        lda     winfo_entry_picker
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
