@@ -816,31 +816,31 @@ params: .addr   0
 
 L59B8:  rts
 
-L59B9:  lda     $D20A
+L59B9:  lda     event_modifiers
         beq     L59F7
-        lda     $D209
+        lda     event_key
         and     #$7F
-        cmp     #$08
+        cmp     #CHAR_LEFT
         bne     L59CA
         jmp     L6D3F
 
-L59CA:  cmp     #$15
+L59CA:  cmp     #CHAR_RIGHT
         bne     L59D1
         jmp     L6D42
 
 L59D1:  bit     L5105
         bmi     L59E4
-        cmp     #$0A
+        cmp     #CHAR_DOWN
         bne     L59DD
         jmp     L5C0E
 
-L59DD:  cmp     #$0B
+L59DD:  cmp     #CHAR_UP
         bne     L59E4
         jmp     L5BF6
 
-L59E4:  cmp     #$30
+L59E4:  cmp     #'0'
         bcc     L59EF
-        cmp     #$3A
+        cmp     #'9'+1
         bcs     L59EF
         jmp     L5B23
 
@@ -848,25 +848,25 @@ L59EF:  bit     L5105
         bmi     L5A4F
         jmp     L5B70
 
-L59F7:  lda     $D209
+L59F7:  lda     event_key
         and     #$7F
-        cmp     #$08
+        cmp     #CHAR_LEFT
         bne     L5A03
         jmp     L6D39
 
-L5A03:  cmp     #$15
+L5A03:  cmp     #CHAR_RIGHT
         bne     L5A0A
         jmp     L6D3C
 
-L5A0A:  cmp     #$0D
+L5A0A:  cmp     #CHAR_RETURN
         bne     L5A11
         jmp     L5ACC
 
-L5A11:  cmp     #$1B
+L5A11:  cmp     #CHAR_ESCAPE
         bne     L5A18
         jmp     L5AF7
 
-L5A18:  cmp     #$7F
+L5A18:  cmp     #CHAR_DELETE
         bne     L5A1F
         jmp     L5B1F
 
@@ -874,7 +874,7 @@ L5A1F:  bit     L5105
         bpl     L5A27
         jmp     L5AC4
 
-L5A27:  cmp     #$09
+L5A27:  cmp     #CHAR_TAB
         bne     L5A52
         lda     $D5B7
         jsr     L62C8

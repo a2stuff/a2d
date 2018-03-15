@@ -794,38 +794,39 @@ L97D4:  asl     a
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         rts
 
-L9822:  lda     $D20A
-        cmp     #$02
-        bne     L982C
+        ;; key down handler
+L9822:  lda     event_modifiers
+        cmp     #MGTK::event_modifier_solid_apple
+        bne     :+
         return  #$FF
-
-L982C:  lda     $D209
+:       lda     event_key
         and     #$7F
-        cmp     #$08
-        bne     L9838
+
+        cmp     #CHAR_LEFT
+        bne     :+
         jmp     L98F8
 
-L9838:  cmp     #$15
-        bne     L983F
+:       cmp     #CHAR_RIGHT
+        bne     :+
         jmp     L98AC
 
-L983F:  cmp     #$0D
-        bne     L9846
+:       cmp     #CHAR_RETURN
+        bne     :+
         jmp     L985E
 
-L9846:  cmp     #$1B
-        bne     L984D
+:       cmp     #CHAR_ESCAPE
+        bne     :+
         jmp     L9885
 
-L984D:  cmp     #$0A
-        bne     L9854
+:       cmp     #CHAR_DOWN
+        bne     :+
         jmp     L9978
 
-L9854:  cmp     #$0B
-        bne     L985B
+:       cmp     #CHAR_UP
+        bne     :+
         jmp     L993F
 
-L985B:  return  #$FF
+:       return  #$FF
 
 L985E:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D6F8

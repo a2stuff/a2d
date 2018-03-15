@@ -168,7 +168,7 @@ L7192:  lda     #$40
 
 L7198:  addr_call common_overlay::L647C, path_buf1
         bne     L7192
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo15
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo12
         lda     #0
         sta     $50A8
@@ -185,7 +185,7 @@ L7198:  addr_call common_overlay::L647C, path_buf1
 
 ;;; ============================================================
 
-L71D8:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo15
+L71D8:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo12
         lda     #0
         sta     $D8EC

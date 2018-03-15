@@ -71,7 +71,7 @@ updatethumb_stash := updatethumb_params + 5 ; not part of struct
 
 winfoF  := $D57D
 winfo12 := $D5B7
-winfo15 := $D5F1
+winfo_entrydlg_file_picker := $D5F1
 winfo1B := $D665
 
 path_buf0 := $D402

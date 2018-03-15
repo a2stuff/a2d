@@ -239,7 +239,7 @@ L72E8:  lda     #$FB
 
 L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo15
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo12
         sta     $D8EC
         jsr     common_overlay::L55BA
@@ -252,7 +252,7 @@ L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
 
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo15
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo12
         lda     #$00
         sta     $D8EC

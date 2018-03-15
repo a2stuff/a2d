@@ -4437,7 +4437,7 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endproc
 
-.proc winfo15
+.proc winfo_entrydlg_file_picker
 window_id:      .byte   $15
 options:        .byte   MGTK::option_dialog_box
 title:  .addr   0
@@ -4449,15 +4449,15 @@ vthumbmax:      .byte   3
 vthumbpos:      .byte   0
 status: .byte   0
 reserved:       .byte   0
-mincontwidth:   .word   $64
-maxcontwidth:   .word   $46
-mincontlength:  .word   $64
-maxcontlength:  .word   $46
+mincontwidth:   .word   100
+maxcontwidth:   .word   70
+mincontlength:  .word   100
+maxcontlength:  .word   70
 port:
-viewloc:        DEFINE_POINT $35, $32
+viewloc:        DEFINE_POINT 53, 50
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-cliprect:       DEFINE_RECT 0, 0, $7D, $46
+cliprect:       DEFINE_RECT 0, 0, 125, 70
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc: DEFINE_POINT 0, 0
@@ -4481,15 +4481,15 @@ vthumbmax:      .byte   0
 vthumbpos:      .byte   0
 status: .byte   0
 reserved:       .byte   0
-mincontwidth:   .word   $96
-maxcontwidth:   .word   $32
-mincontlength:  .word   $1F4
-maxcontlength:  .word   $8C
+mincontwidth:   .word   150
+maxcontwidth:   .word   50
+mincontlength:  .word   500
+maxcontlength:  .word   140
 port:
-viewloc:        DEFINE_POINT $50, $28
+viewloc:        DEFINE_POINT 80, 40
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-cliprect:       DEFINE_RECT 0, 0, $190, $6E
+cliprect:       DEFINE_RECT 0, 0, 400, 110
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc: DEFINE_POINT 0, 0
@@ -4514,15 +4514,15 @@ vthumbmax:      .byte   0
 vthumbpos:      .byte   0
 status: .byte   0
 reserved:       .byte   0
-mincontwidth:   .word   $96
-maxcontwidth:   .word   $32
-mincontlength:  .word   $1F4
-maxcontlength:  .word   $8C
+mincontwidth:   .word   150
+maxcontwidth:   .word   50
+mincontlength:  .word   500
+maxcontlength:  .word   140
 port:
-viewloc:        DEFINE_POINT $69, $19
+viewloc:        DEFINE_POINT 105, 25
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-cliprect:       DEFINE_RECT 0, 0, $15E, $6E
+cliprect:       DEFINE_RECT 0, 0, 350, 110
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc: DEFINE_POINT 0, 0
@@ -4540,7 +4540,7 @@ rect1:  DEFINE_RECT 40,61,360,71, rect1
 point6: DEFINE_POINT 45,70, point6
 pos_dialog_title: DEFINE_POINT 0, 18, pos_dialog_title
 point7: DEFINE_POINT 40,18, point7
-pointD: DEFINE_POINT $28, $23, pointD
+pointD: DEFINE_POINT 40, 35, pointD
 
         dialog_label_default_x := 40
 dialog_label_pos:
@@ -4551,7 +4551,7 @@ dialog_label_pos:
         .addr   MGTK::screen_mapbits
         .byte   MGTK::screen_mapwidth
         .byte   0
-        DEFINE_RECT 0, 0, $166, $64
+        DEFINE_RECT 0, 0, 358, 100
 .endproc
 
         ;; ???

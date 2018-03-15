@@ -74,7 +74,7 @@ L70B1:  addr_call common_overlay::L647C, path_buf0
         jsr     JUMP_TABLE_ALERT_0
         rts
 
-L70C0:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo15
+L70C0:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo12
         lda     #0
         sta     $D8EC
@@ -87,7 +87,7 @@ L70C0:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo15
 
         .byte   0
 
-L70EA:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo15
+L70EA:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo12
         lda     #0
         sta     $D8EC
