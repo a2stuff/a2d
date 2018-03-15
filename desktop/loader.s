@@ -429,7 +429,8 @@ max_page:
         ESC     := $1B
 
         hbasl := $6
-        screen_width := 560
+        screen_width  := 560
+        screen_height := 192
 
         ;; Test for OpenApple+SolidApple+P
         pha
@@ -567,7 +568,7 @@ loop:   jsr     send_row
 
         lda     y_coord
         sta     y_row
-        cmp     #192            ; screen height in pixels
+        cmp     #screen_height
         bcc     loop
 
         ;; Finish up

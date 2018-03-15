@@ -6212,9 +6212,9 @@ L7280:  tya
         bcs     L72A0
         dec     $97
 L72A0:  jsr     PaintRectImpl  ; Draw title bar stripes between close box and title
-        add16   $CB, #$0A, $92
+        add16   $CB, #10, $92
         jsr     L7143
-        sub16   $CB, #$03, $96
+        sub16   $CB, #3, $96
         jsr     PaintRectImpl  ; Draw title bar stripes to right of title
         MGTK_CALL MGTK::SetPattern, standard_port::penpattern
 L72C9:  jsr     next_window::L703E

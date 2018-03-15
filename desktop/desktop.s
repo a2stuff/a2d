@@ -1051,7 +1051,7 @@ L99E1:  iny
         ldy     #1
         lda     ($08),y
         beq     L99FC
-        add16   $08, #$22, $08
+        add16   $08, #34, $08
         jmp     L9972
 
 L99FC:  MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
@@ -1108,7 +1108,7 @@ L9AAF:  add16   L9C7A,x, L9C96,x, L9C7A,x
         sta     L9C75
         lda     L9C77
         bmi     L9AF7
-        cmp16   L9C7A, #$230
+        cmp16   L9C7A, #screen_width
         bcs     L9AFE
         jsr     L9DFA
         jmp     L9B0E
@@ -1124,9 +1124,9 @@ L9B03:  jsr     L9DB8
         sta     L9C75
 L9B0E:  lda     L9C79
         bmi     L9B31
-        cmp16   L9C78, #$0D
+        cmp16   L9C78, #13
         bcc     L9B31
-        cmp16   L9C7C, #$C0
+        cmp16   L9C7C, #screen_height
         bcs     L9B38
         jsr     L9E07
         jmp     L9B48
@@ -1329,7 +1329,7 @@ L9CD1:  lda     L9C7A
         bne     L9CE4
         return  #0
 
-L9CE4:  sub16   #$230, L9C8A, L9C96
+L9CE4:  sub16   #screen_width, L9C8A, L9C96
 L9CF5:  add16   L9C86, L9C96, L9C76
         add16   L9C8A, L9C96, L9C7A
         add16   L9C8E, L9C96, L9C8E
@@ -1343,7 +1343,7 @@ L9D31:  lda     L9C78
         bne     L9D44
         return  #0
 
-L9D44:  sub16   #$0D, L9C88, L9C98
+L9D44:  sub16   #13, L9C88, L9C98
         jmp     L9D7C
 
 L9D58:  lda     L9C7C
@@ -1354,7 +1354,7 @@ L9D58:  lda     L9C7C
         bne     L9D6B
         return  #0
 
-L9D6B:  sub16   #$BF, L9C8C, L9C98
+L9D6B:  sub16   #screen_height-1, L9C8C, L9C98
 L9D7C:  add16   L9C88, L9C98, L9C78
         add16   L9C8C, L9C98, L9C7C
         add16   L9C90, L9C98, L9C90
@@ -3124,7 +3124,7 @@ alert_bitmap:
         .addr   alert_bitmap    ; mapbits
         .byte   7               ; mapwidth
         .byte   0               ; reserved
-        DEFINE_RECT 0, 0, $24, $17 ; maprect
+        DEFINE_RECT 0, 0, 36, 23 ; maprect
 .endproc
 
 alert_rect:
@@ -3135,11 +3135,11 @@ alert_inner_frame_rect2:
         DEFINE_RECT 5, 3, 415, 52
 
 .proc portmap
-viewloc:        DEFINE_POINT $41, $57, viewloc
+viewloc:        DEFINE_POINT 65, 87, viewloc
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0, 0, $1A4, $37, maprect
+maprect:        DEFINE_RECT 0, 0, 420, 55, maprect
 .endproc
 
 
@@ -4369,38 +4369,38 @@ alert_bitmap2_params:
         .addr   alert_bitmap2   ; mapbits
         .byte   7               ; mapwidth
         .byte   0               ; reserved
-        DEFINE_RECT 0, 0, $24, $17 ; maprect
+        DEFINE_RECT 0, 0, 36, 23 ; maprect
 
         ;; Looks like window param blocks starting here
 
 .proc winfoF
 window_id:      .byte   $0F
 options:        .byte   MGTK::option_dialog_box
-title:  .addr   0
+title:          .addr   0
 hscroll:        .byte   MGTK::scroll_option_none
 vscroll:        .byte   MGTK::scroll_option_none
 hthumbmax:      .byte   0
 hthumbpos:      .byte   0
 vthumbmax:      .byte   0
 vthumbpos:      .byte   0
-status: .byte   0
+status:         .byte   0
 reserved:       .byte   0
-mincontwidth:   .word   $96
-maxcontwidth:   .word   $32
-mincontlength:  .word   $1F4
-maxcontlength:  .word   $8C
+mincontwidth:   .word   150
+maxcontwidth:   .word   50
+mincontlength:  .word   500
+maxcontlength:  .word   140
 port:
-viewloc:        DEFINE_POINT $4B, $23
+viewloc:        DEFINE_POINT 75, 35
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-cliprect:       DEFINE_RECT 0, 0, $190, $64
+cliprect:       DEFINE_RECT 0, 0, 400, 100
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc: DEFINE_POINT 0, 0
+penloc:         DEFINE_POINT 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
-textbg: .byte   MGTK::textbg_white
+textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endproc
@@ -4408,31 +4408,31 @@ nextwinfo:      .addr   0
 .proc winfo12
 window_id:      .byte   $12
 options:        .byte   MGTK::option_dialog_box
-title:  .addr   0
+title:          .addr   0
 hscroll:        .byte   MGTK::scroll_option_none
 vscroll:        .byte   MGTK::scroll_option_none
 hthumbmax:      .byte   0
 hthumbpos:      .byte   0
 vthumbmax:      .byte   0
 vthumbpos:      .byte   0
-status: .byte   0
+status:         .byte   0
 reserved:       .byte   0
-mincontwidth:   .word   $96
-maxcontwidth:   .word   $32
-mincontlength:  .word   $1F4
-maxcontlength:  .word   $8C
+mincontwidth:   .word   150
+maxcontwidth:   .word   50
+mincontlength:  .word   500
+maxcontlength:  .word   140
 port:
-viewloc:        DEFINE_POINT $19, $14
+viewloc:        DEFINE_POINT 25, 20
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-cliprect:       DEFINE_RECT 0, 0, $1F4, $99
+cliprect:       DEFINE_RECT 0, 0, 500, 153
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc: DEFINE_POINT 0, 0
+penloc:         DEFINE_POINT 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
-textbg: .byte   MGTK::textbg_white
+textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endproc
@@ -4440,14 +4440,14 @@ nextwinfo:      .addr   0
 .proc winfo_entrydlg_file_picker
 window_id:      .byte   $15
 options:        .byte   MGTK::option_dialog_box
-title:  .addr   0
+title:          .addr   0
 hscroll:        .byte   MGTK::scroll_option_none
 vscroll:        .byte   MGTK::scroll_option_normal
 hthumbmax:      .byte   0
 hthumbpos:      .byte   0
 vthumbmax:      .byte   3
 vthumbpos:      .byte   0
-status: .byte   0
+status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   100
 maxcontwidth:   .word   70
@@ -4460,11 +4460,11 @@ mapwidth:       .word   MGTK::screen_mapwidth
 cliprect:       DEFINE_RECT 0, 0, 125, 70
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc: DEFINE_POINT 0, 0
+penloc:         DEFINE_POINT 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
-textbg: .byte   MGTK::textbg_white
+textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endproc
@@ -4472,14 +4472,14 @@ nextwinfo:      .addr   0
 .proc winfo18
 window_id:      .byte   $18
 options:        .byte   MGTK::option_dialog_box
-title:  .addr   0
+title:          .addr   0
 hscroll:        .byte   MGTK::scroll_option_none
 vscroll:        .byte   MGTK::scroll_option_none
 hthumbmax:      .byte   0
 hthumbpos:      .byte   0
 vthumbmax:      .byte   0
 vthumbpos:      .byte   0
-status: .byte   0
+status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   150
 maxcontwidth:   .word   50
@@ -4492,11 +4492,11 @@ mapwidth:       .word   MGTK::screen_mapwidth
 cliprect:       DEFINE_RECT 0, 0, 400, 110
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc: DEFINE_POINT 0, 0
+penloc:         DEFINE_POINT 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
-textbg: .byte   MGTK::textbg_white
+textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endproc
@@ -4505,14 +4505,14 @@ winfo18_port    := winfo18::port
 .proc winfo1B
 window_id:      .byte   $1B
 options:        .byte   MGTK::option_dialog_box
-title:  .addr   0
+title:          .addr   0
 hscroll:        .byte   MGTK::scroll_option_none
 vscroll:        .byte   MGTK::scroll_option_none
 hthumbmax:      .byte   0
 hthumbpos:      .byte   0
 vthumbmax:      .byte   0
 vthumbpos:      .byte   0
-status: .byte   0
+status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   150
 maxcontwidth:   .word   50
@@ -4525,11 +4525,11 @@ mapwidth:       .word   MGTK::screen_mapwidth
 cliprect:       DEFINE_RECT 0, 0, 350, 110
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc: DEFINE_POINT 0, 0
+penloc:         DEFINE_POINT 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
-textbg: .byte   MGTK::textbg_white
+textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endproc
@@ -4680,9 +4680,9 @@ file_count:
         PASCAL_STRING "Source filename:"
         PASCAL_STRING "Destination filename:"
 
-dialog_rect1:   DEFINE_RECT $1C, $71, $1CF, $7C
+dialog_rect1:   DEFINE_RECT 28, 113, 463, 124
         .byte   $1E,$00,$7B,$00
-dialog_rect2:   DEFINE_RECT $1C, $88, $1CF, $93
+dialog_rect2:   DEFINE_RECT 28, 136, 463, 147
 
 
         .byte   $1E,$00,$92,$00
@@ -5739,7 +5739,7 @@ L415B:  sta     active_window_id
         lda     ($06),y
         sbc     grafport2::viewloc::ycoord+1
         sta     L4243
-        cmp16   L4242, #$0F
+        cmp16   L4242, #15
         bpl     L41CB
         jsr     offset_grafport2
         ldx     #$0B
@@ -11723,9 +11723,9 @@ L76BB:  bit     L7634
         lda     L7B66
         sbc     #$00
         sta     L7B66
-        cmp16   L7B63, #$AA
+        cmp16   L7B63, #170
         bmi     L7705
-        cmp16   L7B63, #$1C2
+        cmp16   L7B63, #450
         bpl     L770C
         ldax    L7B63
         jmp     L7710
@@ -11738,9 +11738,9 @@ L7710:  ldy     #$20
         txa
         iny
         sta     ($06),y
-        cmp16   L7B65, #$32
+        cmp16   L7B65, #50
         bmi     L7739
-        cmp16   L7B65, #$6C
+        cmp16   L7B65, #108
         bpl     L7740
         ldax    L7B65
         jmp     L7744
@@ -11858,7 +11858,7 @@ L7826:  copy16  L762C, L7632
         lda     L762F
         cmp     L762E
         bne     L7862
-        add16   L762C, #$20, L762C
+        add16   L762C, #32, L762C
         copy16  L7626, L762A
         lda     #$00
         sta     L762F
@@ -11884,7 +11884,7 @@ L7870:  lda     cached_window_id
         dex
         lda     cached_window_icon_list,x
         jsr     icon_screen_to_window
-        add16   $06, #$20, $06
+        add16   $06, #32, $06
         rts
 
         .byte   0
@@ -12251,8 +12251,8 @@ L7C05:  lda     L7B65
         sta     L7B65
         bcc     L7C13
         inc     L7B66
-L7C13:  sub16   L7B5F, #$32, L7B5F
-        sub16   L7B61, #$0F, L7B61
+L7C13:  sub16   L7B5F, #50, L7B5F
+        sub16   L7B61, #15, L7B61
         rts
 
 L7C36:  tax
@@ -14107,16 +14107,16 @@ device_num:     .byte   0
 
 desktop_icon_coords_table:
         DEFINE_POINT 0,0
-        DEFINE_POINT $1EA,$10
-        DEFINE_POINT $1EA,$2D
-        DEFINE_POINT $1EA,$4B
-        DEFINE_POINT $1EA,$67
-        DEFINE_POINT $1EA,$83
-        DEFINE_POINT $190,$A0
-        DEFINE_POINT $136,$A0
-        DEFINE_POINT $DC,$A0
-        DEFINE_POINT $82,$A0
-        DEFINE_POINT $28,$A0
+        DEFINE_POINT 490,16
+        DEFINE_POINT 490,45
+        DEFINE_POINT 490,75
+        DEFINE_POINT 490,103
+        DEFINE_POINT 490,131
+        DEFINE_POINT 400,160
+        DEFINE_POINT 310,160
+        DEFINE_POINT 220,160
+        DEFINE_POINT 130,160
+        DEFINE_POINT 40,160
 
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, L4824
 
@@ -16824,7 +16824,7 @@ LA3EF:  sub16   LA2ED, #1, L9E7A
         yax_call launch_dialog, index_delete_file_dialog, L9E79
         rts
 
-LA40A:  sub16   LA2ED, #$01, L9938
+LA40A:  sub16   LA2ED, #1, L9938
         yax_call launch_dialog, index_copy_file_dialog, L9937
         rts
 
