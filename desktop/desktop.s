@@ -4372,7 +4372,7 @@ alert_bitmap2_params:
 
         ;; Looks like window param blocks starting here
 
-.proc winfoF
+.proc winfo_alert_dialog
 window_id:      .byte   $0F
 options:        .byte   MGTK::option_dialog_box
 title:          .addr   0
@@ -17031,13 +17031,13 @@ dialog_param_addr:
         jmp     prompt_input_loop
 
 :       lda     findwindow_window_id
-        cmp     winfoF
+        cmp     winfo_alert_dialog
         beq     :+
         jmp     prompt_input_loop
 
-:       lda     winfoF
+:       lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        lda     winfoF
+        lda     winfo_alert_dialog
         sta     event_params
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
@@ -17071,12 +17071,12 @@ done:   jsr     reset_state
 
 content:
         lda     findwindow_window_id
-        cmp     winfoF
+        cmp     winfo_alert_dialog
         beq     :+
         return  #$FF
-:       lda     winfoF
+:       lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        lda     winfoF
+        lda     winfo_alert_dialog
         sta     event_params
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
@@ -17322,14 +17322,14 @@ LA83E:  lda     LD8E8
 LA84B:  jsr     LBC03
 LA84E:  return  #$FF
 
-LA851:  lda     winfoF
+LA851:  lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
         return  #0
 
-LA86F:  lda     winfoF
+LA86F:  lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
@@ -17433,7 +17433,7 @@ do1:    ldy     #1
         sta     file_count+1
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfoF
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB0B6
         addr_call draw_text1, str_file_count
@@ -17448,7 +17448,7 @@ do2:    ldy     #1
         sta     file_count+1
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfoF
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         jsr     LBE8D
         jsr     LBE9A
@@ -17479,12 +17479,12 @@ do2:    ldy     #1
         rts
 
 do5:    jsr     reset_state
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_alert_dialog
         jsr     set_cursor_pointer
         rts
 
 do3:    jsr     bell
-        lda     winfoF
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         axy_call draw_dialog_label, 6, desktop_aux::str_exists_prompt
         jsr     draw_yes_no_all_cancel_buttons
@@ -17498,7 +17498,7 @@ LAA7F:  jsr     prompt_input_loop
         rts
 
 do4:    jsr     bell
-        lda     winfoF
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         axy_call draw_dialog_label, 6, desktop_aux::str_large_prompt
         jsr     draw_ok_cancel_buttons
@@ -17564,7 +17564,7 @@ do1:    ldy     #1
         sta     file_count+1
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfoF
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB0B6
         addr_call draw_text1, str_file_count
@@ -17579,7 +17579,7 @@ do2:    ldy     #$01
         sta     file_count+1
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfoF
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         jsr     LBE8D
         jsr     copy_dialog_param_addr_to_ptr
@@ -17598,12 +17598,12 @@ do2:    ldy     #$01
         rts
 
 do3:    jsr     reset_state
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_alert_dialog
         jsr     set_cursor_pointer
         rts
 
 do4:    jsr     bell
-        lda     winfoF
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         axy_call draw_dialog_label, 6, desktop_aux::str_ramcard_full
         jsr     draw_ok_button
@@ -17661,7 +17661,7 @@ do1:    ldy     #$01
         lda     (ptr),y
         sta     file_count+1
         jsr     compose_file_count_string
-        lda     winfoF
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         lda     #165
         sta     dialog_label_pos
@@ -17687,11 +17687,11 @@ do1:    ldy     #$01
         rts
 
 do3:    jsr     reset_state
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_alert_dialog
         jsr     set_cursor_pointer
         rts
 
-do2:    lda     winfoF
+do2:    lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         jsr     draw_ok_button
 :       jsr     prompt_input_loop
@@ -17748,7 +17748,7 @@ do1:    ldy     #$01
         sta     file_count+1
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfoF
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         lda     LAD1F
         bne     LAD54
@@ -17768,7 +17768,7 @@ do3:    ldy     #$01
         sta     file_count+1
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfoF
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         jsr     LBE8D
         jsr     copy_dialog_param_addr_to_ptr
@@ -17786,7 +17786,7 @@ do3:    ldy     #$01
         addr_call draw_text1, str_file_count
         rts
 
-do2:    lda     winfoF
+do2:    lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         jsr     draw_ok_cancel_buttons
 LADC4:  jsr     prompt_input_loop
@@ -17801,11 +17801,11 @@ LADC4:  jsr     prompt_input_loop
 LADF4:  rts
 
 do5:    jsr     reset_state
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_alert_dialog
         jsr     set_cursor_pointer
         rts
 
-do4:    lda     winfoF
+do4:    lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         axy_call draw_dialog_label, 6, desktop_aux::str_delete_locked_file
         jsr     draw_yes_no_all_cancel_buttons
@@ -17839,7 +17839,7 @@ LAE49:  lda     #$80
         jsr     LBD69
         lda     #$00
         jsr     LB509
-        lda     winfoF
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         addr_call draw_dialog_title, desktop_aux::str_new_folder_title
         jsr     set_penmode_xor2
@@ -17865,7 +17865,7 @@ LAE90:  lda     ($08),y
         sta     path_buf0,y
         dey
         bpl     LAE90
-        lda     winfoF
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         yax_call draw_dialog_label, 2, desktop_aux::str_in_colon
         lda     #55
@@ -17912,7 +17912,7 @@ LAEFF:  inx
         return  #0
 
 LAF16:  jsr     reset_state
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_alert_dialog
         jsr     set_cursor_pointer
         return  #1
 .endproc
@@ -17937,7 +17937,7 @@ LAF34:  lda     #$00
         ror     a
         eor     #$80
         jsr     LB509
-        lda     winfoF
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         addr_call draw_dialog_title, desktop_aux::str_info_title
         jsr     copy_dialog_param_addr_to_ptr
@@ -17965,7 +17965,7 @@ LAF9B:  yax_call draw_dialog_label, 4, desktop_aux::str_info_create
         yax_call draw_dialog_label, 6, desktop_aux::str_info_type
         jmp     reset_state
 
-LAFB9:  lda     winfoF
+LAFB9:  lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #0
@@ -18002,7 +18002,7 @@ LAFF8:  ldy     row
 
         pha
         jsr     reset_state
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_alert_dialog
         jsr     set_cursor_pointer_with_flag
         pla
         rts
@@ -18057,7 +18057,7 @@ do1:    ldy     #$01
         sta     file_count+1
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfoF
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB231
         addr_call draw_text1, str_file_count
@@ -18073,7 +18073,7 @@ do3:    ldy     #$01
         sta     file_count+1
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfoF
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         jsr     LBE8D
         jsr     copy_dialog_param_addr_to_ptr
@@ -18091,7 +18091,7 @@ do3:    ldy     #$01
         addr_call draw_text1, str_file_count
         rts
 
-do2:    lda     winfoF
+do2:    lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         jsr     draw_ok_cancel_buttons
 LB0FA:  jsr     prompt_input_loop
@@ -18107,7 +18107,7 @@ LB0FA:  jsr     prompt_input_loop
 LB139:  rts
 
 do4:    jsr     reset_state
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_alert_dialog
         jsr     set_cursor_pointer
         rts
 .endproc
@@ -18148,7 +18148,7 @@ do1:    ldy     #$01
         sta     file_count+1
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfoF
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB22D
         addr_call draw_text1, str_file_count
@@ -18164,7 +18164,7 @@ do3:    ldy     #$01
         sta     file_count+1
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
-        lda     winfoF
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         jsr     LBE8D
         jsr     copy_dialog_param_addr_to_ptr
@@ -18182,7 +18182,7 @@ do3:    ldy     #$01
         addr_call draw_text1, str_file_count
         rts
 
-do2:    lda     winfoF
+do2:    lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         jsr     draw_ok_cancel_buttons
 LB218:  jsr     prompt_input_loop
@@ -18198,7 +18198,7 @@ LB218:  jsr     prompt_input_loop
 LB257:  rts
 
 do4:    jsr     reset_state
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_alert_dialog
         jsr     set_cursor_pointer
         rts
 .endproc
@@ -18225,7 +18225,7 @@ LB27D:  jsr     LBD75
         jsr     LBD69
         lda     #$00
         jsr     LB509
-        lda     winfoF
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         addr_call draw_dialog_title, desktop_aux::str_rename_title
         jsr     set_penmode_xor2
@@ -18255,7 +18255,7 @@ LB2CA:  lda     ($08),y
         rts
 
 LB2ED:  copy16  #$8000, LD8E7
-        lda     winfoF
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
 LB2FD:  jsr     prompt_input_loop
         bmi     LB2FD
@@ -18268,7 +18268,7 @@ LB2FD:  jsr     prompt_input_loop
         return  #0
 
 LB313:  jsr     reset_state
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_alert_dialog
         jsr     set_cursor_pointer
         return  #1
 .endproc
@@ -18283,7 +18283,7 @@ LB313:  jsr     reset_state
         ;; Create window
         MGTK_RELAY_CALL MGTK::HideCursor
         jsr     open_alert_window
-        lda     winfoF
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         addr_call draw_dialog_title, desktop_aux::str_warning
         MGTK_RELAY_CALL MGTK::ShowCursor
@@ -18338,7 +18338,7 @@ draw_string:
 
         pha
         jsr     reset_state
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfoF
+        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_alert_dialog
         jsr     set_cursor_pointer
         pla
         rts
@@ -18512,8 +18512,8 @@ LB526:  bit     LD8E7
 LB537:  jmp     reset_state
 
 .proc open_dialog_window
-        MGTK_RELAY_CALL MGTK::OpenWindow, winfoF
-        lda     winfoF
+        MGTK_RELAY_CALL MGTK::OpenWindow, winfo_alert_dialog
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::confirm_dialog_outer_rect
@@ -18522,8 +18522,8 @@ LB537:  jmp     reset_state
 .endproc
 
 .proc open_alert_window
-        MGTK_RELAY_CALL MGTK::OpenWindow, winfoF
-        lda     winfoF
+        MGTK_RELAY_CALL MGTK::OpenWindow, winfo_alert_dialog
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         jsr     set_fill_white
         MGTK_RELAY_CALL MGTK::PaintBits, alert_bitmap2_params
@@ -18872,7 +18872,7 @@ loop:   MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::event_kind_button_up
         beq     exit
-        lda     winfoF
+        lda     winfo_alert_dialog
         sta     event_params
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
@@ -18943,7 +18943,7 @@ LB93B:  copy16  #LD8EF, textptr
         sta     textlen
         MGTK_RELAY_CALL MGTK::DrawText, drawtext_params
         MGTK_RELAY_CALL MGTK::SetTextBG, desktop_aux::LAE6D
-        lda     winfoF
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         rts
 .endproc
@@ -18953,7 +18953,7 @@ LB93B:  copy16  #LD8EF, textptr
 .proc draw_filename_prompt
         lda     path_buf1
         beq     done
-        lda     winfoF
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         jsr     set_fill_white
         MGTK_RELAY_CALL MGTK::PaintRect, rect1
@@ -18964,7 +18964,7 @@ LB93B:  copy16  #LD8EF, textptr
         addr_call draw_text1, path_buf1
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
-        lda     winfoF
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
 done:   rts
 .endproc
@@ -19132,7 +19132,7 @@ LBB0B:  sta     LBB62
         MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
         addr_call draw_text1, str_1_char
         addr_call draw_text1, path_buf2
-        lda     winfoF
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         rts
 .endproc
@@ -19155,7 +19155,7 @@ LBB63:  lda     path_buf1
         MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
-        lda     winfoF
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         rts
 .endproc
@@ -19189,7 +19189,7 @@ LBBBC:  ldx     path_buf1
         MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
-        lda     winfoF
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         rts
 .endproc
@@ -19219,7 +19219,7 @@ LBC2D:  dec     path_buf2
         addr_call draw_text1, path_buf1
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
-        lda     winfoF
+        lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         rts
 

@@ -69,7 +69,7 @@ updatethumb_stash := updatethumb_params + 5 ; not part of struct
 ;;; ============================================================
 ;;; Resources
 
-winfoF  := $D57D
+winfo_alert_dialog  := $D57D
 winfo_entrydlg := $D5B7
 winfo_entrydlg_file_picker := $D5F1
 winfo_entry_picker := $D665
