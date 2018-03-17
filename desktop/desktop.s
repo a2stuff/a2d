@@ -336,7 +336,7 @@ dispatch:
         jsr     dummy0000
 
         tay
-        ldx     #$03
+        ldx     #3
 L9409:  pla
         sta     $06,x
         dex
@@ -395,7 +395,7 @@ sub:    ldx     num_icons       ; ???
         ldx     num_icons
         beq     bail1
         dex
-        ldy     #$00
+        ldy     #0
         lda     ($06),y
 L945E:  cmp     icon_table,x
         beq     L9469
@@ -407,7 +407,7 @@ bail1:  return  #1
 L9469:  asl     a
         tax
         copy16  icon_ptrs,x, $06
-        ldy     #$01
+        ldy     #1
         lda     ($06),y
         bne     L947E
         return  #2
@@ -426,7 +426,7 @@ L948A:  cmp     highlight_list,x
 
 bail3:  return  #3
 
-L9498:  lda     #$01
+L9498:  lda     #1
         sta     has_highlight
 L949D:  ldx     highlight_count
         ldy     #0
@@ -618,7 +618,7 @@ L9648:  lda     icon_table,x
 L9670:  inx
         cpx     num_icons
         bne     L9648
-        ldx     #$00
+        ldx     #0
         txa
         pha
 L967A:  lda     buffer,x
@@ -649,7 +649,7 @@ L9696:  .byte   0
 L9697:  lda     num_icons
         sta     L9696
 L969D:  ldx     L9696
-        cpx     #$00
+        cpx     #0
         beq     L96CF
         dec     L9696
         dex
@@ -702,7 +702,7 @@ L96E5:  dec     L96D6
         ldx     num_icons
         jsr     LA2E3
         dec     num_icons
-        lda     #$00
+        lda     #0
         ldx     num_icons
         sta     icon_table,x
         ldy     #1
@@ -710,7 +710,7 @@ L96E5:  dec     L96D6
         sta     ($08),y
         lda     has_highlight
         beq     L9758
-        ldx     #$00
+        ldx     #0
         ldy     #0
 L972B:  lda     ($08),y
         cmp     highlight_list,x
@@ -726,9 +726,9 @@ L973B:  lda     ($08),y
         dec     highlight_count
         lda     highlight_count
         bne     L9750
-        lda     #$00
+        lda     #0
         sta     has_highlight
-L9750:  lda     #$00
+L9750:  lda     #0
         ldx     highlight_count
         sta     highlight_list,x
 L9758:  jmp     L96DD
@@ -739,7 +739,7 @@ L9758:  jmp     L96DD
 ;;; DESKTOP $08 IMPL
 
 .proc L975B
-        ldx     #$00
+        ldx     #0
         txa
         tay
 L975F:  sta     ($06),y
@@ -782,7 +782,7 @@ start:  ldy     #3
         copy16  $06, $08
 
         ;; ???
-        ldy     #$05
+        ldy     #5
         lda     ($06),y
         sta     L97F5
         MGTK_CALL MGTK::MoveTo, moveto_params2
@@ -909,17 +909,17 @@ L98A2:  lda     L982E
         jmp     L9845
 
 L98AC:  lda     highlight_count
-        cmp     #$15
-        bcc     L98B6
+        cmp     #$15            ; max number of draggable items?
+        bcc     :+
         jmp     L9852
 
-L98B6:  copy16  #drag_outline_buffer, $08
+:       copy16  #drag_outline_buffer, $08
         lda     has_highlight
-        bne     L98C8
+        bne     :+
         lda     #$03
         jmp     L9C65
 
-L98C8:  lda     highlight_list
+:       lda     highlight_list
         jsr     L9EB4
         stax    $06
         ldy     #icon_entry_offset_win_type
@@ -927,7 +927,7 @@ L98C8:  lda     highlight_list
         and     #icon_entry_winid_mask
         sta     L9832
         MGTK_CALL MGTK::InitPort, grafport
-        ldx     #$07
+        ldx     #7
 L98E3:  lda     grafport::cliprect,x
         sta     L9835,x
         dex
@@ -968,7 +968,7 @@ L993A:  lda     poly,x
         dey
         dex
         bpl     L993A
-        lda     #$08
+        lda     #8
         ldy     #0
         sta     ($08),y
         lda     $08
@@ -982,7 +982,7 @@ L9954:  dec     L9C74
         ldx     L9C74
         jmp     L98F2
 
-L995F:  ldx     #$07
+L995F:  ldx     #7
 L9961:  lda     drag_outline_buffer+2,x
         sta     L9C76,x
         dex
@@ -1071,7 +1071,7 @@ L9A20:  lda     findwindow_params2,x
         jsr     L9E14
         jmp     L9A0E
 
-L9A31:  ldx     #$03
+L9A31:  ldx     #3
 L9A33:  lda     findwindow_params2,x
         sta     L9C92,x
         dex
@@ -1091,19 +1091,19 @@ L9A33:  lda     findwindow_params2,x
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
         MGTK_CALL MGTK::SetPenMode, penXOR_2
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
-        lda     #$00
+        lda     #0
         sta     L9830
 L9A84:  sub16   findwindow_params2::mousex, L9C8E, L9C96
         sub16   findwindow_params2::mousey, L9C90, L9C98
         jsr     L9C9E
-        ldx     #$00
+        ldx     #0
 L9AAF:  add16   L9C7A,x, L9C96,x, L9C7A,x
         add16   L9C76,x, L9C96,x, L9C76,x
         inx
         inx
-        cpx     #$04
+        cpx     #4
         bne     L9AAF
-        lda     #$00
+        lda     #0
         sta     L9C75
         lda     L9C77
         bmi     L9AF7
@@ -1259,7 +1259,7 @@ L9C29:  lda     highlight_list,x
         inc     $08+1
 L9C60:  jmp     L9C29
 
-L9C63:  lda     #$00
+L9C63:  lda     #0
 L9C65:  tay
         jsr     pop_zp_addrs
         tya
@@ -1302,7 +1302,7 @@ L9C96:  .byte   $00
 L9C97:  .byte   $00
 L9C98:  .byte   $00
 L9C99:  .byte   $00,$00,$00,$00,$00
-L9C9E:  ldx     #$07
+L9C9E:  ldx     #7
 L9CA0:  lda     L9C76,x
         sta     L9C86,x
         dex
@@ -1406,7 +1406,7 @@ L9E3D:  cmp     highlight_list,x
         dex
         bpl     L9E3D
         sta     L9EB3
-        cmp     #$01
+        cmp     #1
         beq     L9E6A
         asl     a
         tax
@@ -1474,7 +1474,7 @@ start:  lda     has_highlight
         dec     highlight_count
         lda     highlight_count
         bne     L9EEA
-        lda     #$00
+        lda     #0
         sta     has_highlight
 L9EEA:  ldy     #0
         lda     (ptr),y
@@ -1544,7 +1544,7 @@ L9F94:  .byte   0
         .byte   0
         .byte   0
 
-L9F98:  lda     #$00
+L9F98:  lda     #0
         sta     L9F92
         beq     L9FA4
 
@@ -1569,7 +1569,7 @@ L9F9F:  lda     #$80
 
         jsr     push_zp_addrs
         copy16  paintbits_params2::mapbits, $08
-        ldy     #$0B
+        ldy     #11
 :       lda     ($08),y
         sta     paintbits_params2::mapbits,y
         dey
@@ -1691,16 +1691,16 @@ LA149:  dey
         bpl     LA13A
         rts
 
-LA14D:  ldx     #$00
+LA14D:  ldx     #0
 LA14F:  add16   paintbits_params2::viewloc::xcoord,x, paintbits_params2::maprect::x1,x, paintrect_params6::x1,x
         add16   paintbits_params2::viewloc::xcoord,x, paintbits_params2::maprect::x2,x, paintrect_params6::x2,x
         inx
         inx
-        cpx     #$04
+        cpx     #4
         bne     LA14F
         lda     paintrect_params6::y2
         sec
-        sbc     #$01
+        sbc     #1
         sta     paintrect_params6::y2
         bcs     LA189
         dec     paintrect_params6::y2+1
@@ -2187,42 +2187,42 @@ LA4D3:  pha
         jmp     LA4E2
 
 LA4DC:  pha
-        lda     #$00
+        lda     #0
         sta     LA4CB
-LA4E2:  ldy     #$00
+LA4E2:  ldy     #0
 LA4E4:  lda     grafport4,y
         sta     LA567,y
         iny
-        cpy     #$04
+        cpy     #4
         bne     LA4E4
-        ldy     #$08
+        ldy     #8
 LA4F1:  lda     grafport4,y
         sta     LA567-4,y
         iny
-        cpy     #$0C
+        cpy     #12
         bne     LA4F1
         bit     LA4CB
         bmi     LA506
         bvc     LA56F
         jmp     LA5CB
 
-LA506:  ldx     #$00
+LA506:  ldx     #0
 LA508:  sub16   poly::vertices,x, LA567, poly::vertices,x
         sub16   poly::vertices+2,x, LA569, poly::vertices+2,x
         inx
         inx
         inx
         inx
-        cpx     #$20
+        cpx     #32
         bne     LA508
-        ldx     #$00
+        ldx     #0
 LA538:  add16   poly::vertices,x, LA56B, poly::vertices,x
         add16   poly::vertices+2,x, LA56D, poly::vertices+2,x
         inx
         inx
         inx
         inx
-        cpx     #$20
+        cpx     #32
         bne     LA538
         rts
 
@@ -2241,7 +2241,7 @@ LA56F:  pla
         asl     a
         tax
         copy16  icon_ptrs,x, $06
-        ldy     #$03
+        ldy     #3
         lda     ($06),y
         clc
         adc     LA567
@@ -2259,7 +2259,7 @@ LA56F:  pla
         lda     ($06),y
         adc     LA56A
         sta     ($06),y
-        ldy     #$03
+        ldy     #3
         lda     ($06),y
         sec
         sbc     LA56B
@@ -2287,7 +2287,7 @@ LA5CB:  pla
         asl     a
         tax
         copy16  icon_ptrs,x, $06
-        ldy     #$03
+        ldy     #3
         lda     ($06),y
         sec
         sbc     LA567
@@ -2305,7 +2305,7 @@ LA5CB:  pla
         lda     ($06),y
         sbc     LA56A
         sta     ($06),y
-        ldy     #$03
+        ldy     #3
         lda     ($06),y
         clc
         adc     LA56B
@@ -2419,14 +2419,14 @@ LA6C7:  lda     L9F93
         beq     LA6FA
         lda     setportbits_params2::cliprect::x2
         clc
-        adc     #$01
+        adc     #1
         sta     setportbits_params2::cliprect::x1
         sta     setportbits_params2::viewloc::xcoord
         lda     setportbits_params2::cliprect::x2+1
-        adc     #$00
+        adc     #0
         sta     setportbits_params2::cliprect::x1+1
         sta     setportbits_params2::viewloc::xcoord+1
-        ldx     #$05
+        ldx     #5
 LA6E5:  lda     LA629,x
         sta     setportbits_params2::cliprect::y1,x
         dex
@@ -2459,12 +2459,12 @@ LA6FA:  lda     setportbits_params2::cliprect::x1
         lda     setportbits_params2::cliprect::y2+1
         sta     LA6BE
         sta     LA6C2
-        lda     #$00
+        lda     #0
         sta     LA6B0
 LA747:  lda     LA6B0
-        cmp     #$04
+        cmp     #4
         bne     LA775
-        lda     #$00
+        lda     #0
         sta     LA6B0
 LA753:  MGTK_CALL MGTK::SetPortBits, setportbits_params2
         lda     setportbits_params2::cliprect::x2+1
@@ -2477,7 +2477,7 @@ LA753:  MGTK_CALL MGTK::SetPortBits, setportbits_params2
         sta     L9F93
         rts
 
-LA76F:  lda     #$01
+LA76F:  lda     #1
         sta     L9F93
         rts
 
@@ -2490,7 +2490,7 @@ LA77D:  lda     LA6B3,x
         sta     findwindow_params,y
         iny
         inx
-        cpy     #$04
+        cpy     #4
         bne     LA77D
         inc     LA6B0
         MGTK_CALL MGTK::FindWindow, findwindow_params
@@ -3352,7 +3352,7 @@ LBBCC:  MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
 
 LBBE3:  cmp     #'A'
         beq     LBBCC
-        cmp     #$0D
+        cmp     #CHAR_RETURN
         beq     LBBCC
         jmp     LBB87
 

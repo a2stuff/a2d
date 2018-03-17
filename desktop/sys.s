@@ -147,9 +147,9 @@ start:  sta     MIXCLR
 
         lda     DATELO          ; Any date set?
         ora     DATEHI
-        bne     L24EB
+        bne     :+
         copy16  date, DATELO    ; Copy timestamp embedded in this file
-L24EB:  lda     MACHID
+:       lda     MACHID
         and     #$30            ; bits 4,5 set = 128k
         cmp     #$30
         beq     have128k
@@ -229,19 +229,19 @@ next_slot:
 
 
         ldy     DEVCNT
-L2565:  lda     DEVLST,y
+:       lda     DEVLST,y
         cmp     #$3E
-        beq     L2572
+        beq     :+
         dey
-        bpl     L2565
+        bpl     :-
         jmp     fail
 
-L2572:  lda     #$03
-        bne     L257A
+:       lda     #$03
+        bne     :+
 found_slot:
         lda     $08+1
         and     #$0F            ; slot # in A
-L257A:  sta     slot
+:       sta     slot
 
         ;; Synthesize unit_num, verify it's a device
         asl     a
@@ -265,26 +265,28 @@ L257A:  sta     slot
 :       lda     on_line_buffer
         and     #$0F
         tay
+
         iny
         sty     path0
         lda     #'/'
         sta     on_line_buffer
         sta     path0+1
-L25BF:  lda     on_line_buffer,y
+:       lda     on_line_buffer,y
         sta     path0+1,y
         dey
-        bne     L25BF
+        bne     :-
+
         ldx     #$C0
         jsr     stx_lc_d3ff
         addr_call copy_to_lc2_b, path0
         jsr     check_desktop2_on_device
-        bcs     L25E4
+        bcs     :+
         ldx     #$80
         jsr     stx_lc_d3ff
         jsr     copy_2005_to_lc2_a
         jmp     fail
 
-L25E4:  lda     BUTN1
+:       lda     BUTN1
         sta     butn1
         lda     BUTN0
         bpl     start_copy
@@ -667,15 +669,16 @@ L299F:  MLI_CALL CLOSE, close_params
 
 L29B1:  ldy     #0
         lda     (ptr),y
-        bne     L29BA
+        bne     :+
         jmp     L29F6
 
-L29BA:  and     #$0F
+:       and     #$0F
+
         tay
-L29BD:  lda     (ptr),y
+:       lda     (ptr),y
         sta     filename_buf,y
         dey
-        bne     L29BD
+        bne     :-
         lda     (ptr),y
         and     #$0F
         sta     filename_buf,y
@@ -697,10 +700,10 @@ L29BD:  lda     (ptr),y
 L29F6:  add16_8 ptr, dir_buffer + entry_length_offset, ptr
         lda     ptr+1
         cmp     #>(dir_buffer + dir_bufsize)
-        bcs     L2A0D
+        bcs     :+
         jmp     L2997
 
-L2A0D:  jmp     L299F
+:       jmp     L299F
 
 L2A10:  .byte   0
 .endproc
@@ -1364,11 +1367,11 @@ is_dir: lda     #$FF
         lda     #ACCESS_DEFAULT
         sta     create_params::access
         jsr     L35A9
-        bcc     L350B
+        bcc     :+
         jmp     show_no_space_prompt
 
         ;; copy dates
-L350B:  ldx     #3
+:       ldx     #3
 :       lda     get_file_info_params2::create_date,x
         sta     create_params::create_date,x
         dex
@@ -1498,9 +1501,9 @@ L35DF:  iny
         cmp16   L363D, get_file_info_params2::blocks_used
         bcs     L3635
         sec
-        bcs     L3636
+        bcs     :+
 L3635:  clc
-L3636:  lda     L363F
+:       lda     L363F
         sta     path1
         rts
 
@@ -1875,41 +1878,47 @@ read:   sta     read_params::ref_num
         stax    ptr
         ldy     #$00
         lda     (ptr),y
+
         tay
-L38BB:  lda     (ptr),y
+:       lda     (ptr),y
         sta     L324A,y
         dey
-        bpl     L38BB
+        bpl     :-
+
         ldy     L324A
-L38C6:  lda     L324A,y
+:       lda     L324A,y
         and     #$7F
         cmp     #'/'
         beq     L38D2
         dey
-        bne     L38C6
+        bne     :-
+
 L38D2:  dey
         sty     L324A
 L38D6:  lda     L324A,y
         and     #$7F
         cmp     #'/'
-        beq     L38E2
+        beq     :+
         dey
         bpl     L38D6
-L38E2:  ldx     #$00
-L38E4:  iny
+
+:       ldx     #$00
+:       iny
         inx
         lda     L324A,y
         sta     L328A,x
         cpy     L324A
-        bne     L38E4
+        bne     :-
+
         stx     L328A
         lda     LCBANK2
         lda     LCBANK2
+
         ldy     $D3EE
-L38FD:  lda     $D3EE,y
+:       lda     $D3EE,y
         sta     L320A,y
         dey
-        bpl     L38FD
+        bpl     :-
         lda     ROMIN2
         rts
 .endproc
