@@ -4,7 +4,7 @@ This is a complex API library written by Apple circa 1985. It consists of:
 
 * [Graphics Primitives](#graphics-primitives) - screen management, lines, rects, polys, text, patterns, pens
   * [Concepts](#concepts)
-  * [Commands](#commands)  
+  * [Commands](#commands)
 * [Mouse Graphics](#mouse-graphics) - windows, menus, events, cursors
   * [Concepts](#concepts-1)
   * [Commands](#commands-1)
@@ -14,7 +14,7 @@ For the purposes of DeskTop, the entry point is fixed at $4000 AUX, called MLI-s
 ```
     JSR $4000
     .byte call
-    .addr params    
+    .addr params
 ```
 Result will be in A, with Z bit set, 0 indicating success (so `BNE error` works).
 
@@ -609,7 +609,8 @@ Parameters:
 ### Menu Manager - configure, enable, disable, select
 
 #### InitMenu ($2F)
-
+Configure characters used for menu glyphs. Optional. The defaults
+are solid=$1E, open=$1F, check=$1D, control=$01.
 
 Parameters:
 ```
@@ -903,51 +904,125 @@ Parameters:
 
 ## More
 
-> NOTE: Movable windows must maintain an _offscreen_flag_. If a window is moved so that the
+> NOTE: Movable DA windows must maintain an _offscreen_flag_. If a window is moved so that the
 > content area is entirely offscreen then various operations should be skipped because
 > the window's box coordinates will not be set correctly.
+> TODO: Figure out if this is just a bug in the DAs.
 
-### Use by DAs
+### Application Use
 
-#### Input Loop
+#### Initialization
 
-* Call `GetEvent`.
-* If a key, then check modifiers (Open/Solid Apple) and key code, ignore or take action.
-* If a click, call FindWindow.
-* If target id not the window id, ignore.
-* If target element is desktop or menu then ignore.
-* If target element is close box then initiate [window close](#window-close).
-* If target element is title bar then initiate [window drag](#window-drag).
-* If target element is resize box then initiate [window resize](#window-resize).
-* Otherwise, it is content area; call `FindControl`.
-* If content part is a scrollbar then initiate a [scroll](#window-scroll).
-* Otherwise, handle a content click using custom logic (e.g. hit testing buttons, etc)
+* `StartDeskTop`
+* `InitMenu` (if necessary; the defaults are sensible)
+* `SetMenu`
+* Run main loop until quit
+* `StopDeskTop`
 
-#### Window Close
 
-* Call `TrackGoAway`, which enters a modal loop to handle the mouse moving out/in the box.
-* Result indicates clicked or canceled. If canceled, return to input loop.
-* Call `CloseWindow`
+#### Main Loop
 
-#### Window Drag
+* `GetEvent`
+* If `event_kind_button_down`:
+   * `FindWindow` to figure out what was clicked
+   * If `area_desktop` - ignore
+   * If `area_menubar` - handle menu
+   * If `area_dragbar` - [handle window drag](#handle-window-drag)
+   * If `area_grow_box` - [handle window resize](#handle-window-resize)
+   * If `area_close_box` - [handle window close](#handle-window-close)
+   * If `area_content`:
+     * `FindControl`
+     * If `ctl_*_scroll_bar` - [handle scrolling](#handle-scrolling)
+     * If `ctl_dead_zone` - ignore
+     * If `ctl_not_a_control`:
+       * If not topmost:
+         * `SelectWindow`
+       * Otherwise, handle content click per app
+* If `event_kind_key_down`:
+  * TODO
+* If `event_kind_drag`:
+  * TODO
+* If `event_kind_apple_key`:
+  * TODO
+* If `event_kind_update`:
+   * [Redraw](#redraw-window) contents of `window_id`
 
-* Call `DragWindow`, which enters a modal loop to handle the mouse moving out/in the box.
-* Result indicates moved or canceled. If canceled, return to input loop.
-* Call `JUMP_TABLE_REDRAW_ALL`.
-* If _offscreen flag_ was not set, redraw desktop icons (`DESKTOP_REDRAW_ICONS`).
-* Set _offscreen flag_ if window's `top` is greater than or equal to the screen bottom (191), clear otherwise.
-* If _offscreen flag_ is not set, redraw window.
 
-#### Window Resize
+#### Redraw window
 
-* Call `GrowWindow`, which enters a modal loop to handle resizing.
-* Result indicates changed or canceled. If canceled, return to input loop.
-* Call `JUMP_TABLE_REDRAW_ALL`.
-* Call `DESKTOP_REDRAW_ICONS`.
-* Call `UpdateThumb` if needed to adjust scroll bar settings.
-* Redraw window.
+* `GetWinPort` - get pointer to window's port
+* `SetPort` - make it current
+* `HideCursor` - if multiple drawing calls will be made
+* ... draw ...
+* `ShowCursor` - if needed
+* `SetWinPort` - save attributes if desired
 
-#### Window Scroll
 
-* Call `TrackThumb`, which enters a modal loop to handle dragging.
-* Redraw window.
+#### Handle Menu
+
+* `MenuSelect` to initiate menu modal loop
+* Dispatch for `menu_id` and `menu_item` (0 if cancelled)
+* `HiliteMenu` to toggle state back off when done
+
+
+#### Handle Window Drag
+
+* `SelectWindow` to make topmost if necessary
+* `DragWindow` to initiate drag modal loop
+* [Handle update events](#handle-update-events)
+* [Redraw](#redraw-window) window content if not moved and was made topmost
+* If canceled - done
+* For DeskTop DAs:
+  * Call `JUMP_TABLE_REDRAW_ALL`.
+  * If _offscreen flag_ was not set, redraw desktop icons (`DESKTOP_REDRAW_ICONS`).
+  * Set _offscreen flag_ if window's `top` is greater than or equal to the screen bottom (191), clear otherwise.
+  * If _offscreen flag_ is not set, redraw window.
+
+
+#### Handle Window Close
+
+* `TrackGoAway` to initiate modal close loop
+* If canceled - done
+* `CloseWindow`
+
+
+#### Handle Scrolling
+
+* If `part_thumb`:
+  * `TrackThumb` to initiate modal scroll loop
+  * If thumb did not move - done
+  * [Redraw](#redraw-window) window content
+  * `UpdateThumb`
+* If `part_page_*`:
+  * Scroll by a "page"
+  * [Redraw](#redraw-window) window content
+  * `UpdateThumb`
+* If `part_*_arrow`:
+  * Scroll by a "line"
+  * [Redraw](#redraw-window) window content
+  * `UpdateThumb`
+
+
+#### Handle Window Resize
+
+* `GrowWindow` to initiate modal resize loop
+* If canceled - done
+* `UpdateThumb` if needed to adjust scroll bars
+* [Redraw](#redraw-window) window content
+* For DeskTop DAs:
+  * Call `JUMP_TABLE_REDRAW_ALL`.
+  * Call `DESKTOP_REDRAW_ICONS`.
+
+
+#### Handle Update Events
+
+* Repeat:
+  * `PeekEvent`
+  * If not `event_kind_update` - exit these steps
+  * Otherwise:
+    * `GetEvent`
+    * `BeginUpdate`
+    * If error, continue
+    * Otherwise:
+      * [Redraw](#redraw-window) `window_id`'s content
+      * `EndUpdate`
