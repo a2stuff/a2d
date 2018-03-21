@@ -865,11 +865,16 @@ hires_table_hi:
         vid_addr          := $84        ; pointer to video memory
         left_char         := $86        ; offset of leftmost coordinate in chars (0-39)
         bits_addr         := $8E        ; pointer to pattern/bitmap
+        width_mod14       := $87        ; width of rectangle mod 14
         left_sidemask     := $88        ; bitmask applied to clip left edge of rect
         right_sidemask    := $89        ; bitmask applied to clip right edge of rect
+        src_y_coord       := $8C
 
         src_mapwidth      := $90        ; source stride; $80 = DHGR layout
         width_char        := $91        ; width of rectangle in chars
+
+        left_masks_table  := $92        ; bitmasks for left edge indexed by page (0=main, 1=aux)
+        right_masks_table := $96        ; bitmasks for right edge indexed by page (0=main, 1=aux)
 
         top               := $94        ; top/starting/current y-coordinate
         bottom            := $98        ; bottom/ending/maximum y-coordinate
@@ -1029,7 +1034,6 @@ load_addr       := *+1
 .proc dhgr_get_srcbits
         index       := $81
         src_char    := $8A        ; char offset within source line
-        src_y_coord := $8C
 
         ldy     src_y_coord
         inc     src_y_coord
@@ -1231,6 +1235,7 @@ next_line_jmp_addr := *+1
         clc
         adc     left_char
         sta     vid_addr
+
         ldy     #1                      ; aux mem
         jsr     dhgr_fill_line
         ldy     #0                      ; main mem
@@ -1242,16 +1247,16 @@ next_line_jmp_addr := *+1
         ;; Fill one line in either main or aux screen memory.
 
 .proc dhgr_fill_line
-        left_masks_table  := $92        ; bitmasks for left edge indexed by page (0=main, 1=aux)
-        right_masks_table := $96        ; bitmasks for right edge indexed by page (0=main, 1=aux)
-
         sta     LOWSCR,y
+
         lda     left_masks_table,y
         ora     #$80
         sta     left_sidemask
+
         lda     right_masks_table,y
         ora     #$80
         sta     right_sidemask
+
         ldy     width_char
         ;; Fall-through
 .endproc
@@ -1292,7 +1297,7 @@ fill_mode_table_onechar:
 ;;; ============================================================
 ;;; SetPenMode
 
-SetPenModeImpl:
+.proc SetPenModeImpl
         lda     current_penmode
         ldx     #0
         cmp     #4
@@ -1300,102 +1305,124 @@ SetPenModeImpl:
         ldx     #$7F
 :       stx     fill_eor_mask
         rts
+.endproc
 
         ;; Called from PaintRect, DrawText, etc to configure
         ;; fill routines from mode.
-set_up_fill_mode:
+
+.proc set_up_fill_mode
+        x1      := $92
+        x2      := $96
+
+        x1_char := $86
+        x2_char := $82
+
         lda     x_offset
         clc
-        adc     $96
-        sta     $96
-        lda     $F8
-        adc     $96+1
-        sta     $96+1
-        lda     $F8+1
+        adc     x2
+        sta     x2
+        lda     x_offset+1
+        adc     x2+1
+        sta     x2+1
+
+        lda     y_offset
         clc
-        adc     $98
-        sta     $98
-        lda     $FA
-        adc     $98+1
-        sta     $98+1
+        adc     bottom
+        sta     bottom
+        lda     y_offset+1
+        adc     bottom+1
+        sta     bottom+1
+
         lda     x_offset
         clc
-        adc     $92
-        sta     $92
-        lda     $F8
-        adc     $92+1
-        sta     $92+1
-        lda     $F8+1
+        adc     x1
+        sta     x1
+        lda     x_offset+1
+        adc     x1+1
+        sta     x1+1
+
+        lda     y_offset
         clc
         adc     top
         sta     top
-        lda     $FA
+        lda     y_offset+1
         adc     top+1
         sta     top+1
-        lsr     $97
-        beq     :+
-        jmp     L4E79
 
-:       lda     $96
+        lsr     x2+1
+        beq     :+
+        jmp     rl_ge256
+
+:       lda     x2
         ror     a
         tax
         lda     div7_table,x
         ldy     mod7_table,x
-L4E01:  sta     $82
+
+set_x2_char:
+        sta     x2_char
         tya
         rol     a
         tay
         lda     aux_right_masks,y
-        sta     $97
+        sta     right_masks_table+1
         lda     main_right_masks,y
-        sta     $96
-        lsr     $93
-        bne     L4E68
-        lda     $92
+        sta     right_masks_table
+
+        lsr     x1+1
+        bne     ll_ge256
+        lda     x1
         ror     a
         tax
         lda     div7_table,x
         ldy     mod7_table,x
-L4E1E:  sta     $86
+
+set_x1_char:
+        sta     x1_char
         tya
         rol     a
         tay
-        sty     $87
+        sty     width_mod14
         lda     aux_left_masks,y
-        sta     $93
+        sta     left_masks_table+1
         lda     main_left_masks,y
-        sta     $92
-        lda     $82
+        sta     left_masks_table
+        lda     x2_char
         sec
-        sbc     $86
-L4E34:  sta     $91
+        sbc     x1_char
+
+set_width:                                      ; Set width for destination.
+        sta     width_char
         pha
         lda     current_penmode
         asl     a
         tax
         pla
-        bne     L4E5B
-        lda     $93
-        and     $97
-        sta     $93
-        sta     $97
-        lda     $92
-        and     $96
-        sta     $92
-        sta     $96
+        bne     :+                              ; Check if one or more than one is needed
+
+        lda     left_masks_table+1              ; Only one char is needed, so combine
+        and     right_masks_table+1             ; the left and right masks and use the
+        sta     left_masks_table+1              ; one-char fill subroutine.
+        sta     right_masks_table+1
+        lda     left_masks_table
+        and     right_masks_table
+        sta     left_masks_table
+        sta     right_masks_table
+
         lda     fill_mode_table_onechar,x
         sta     fillmode_jmp+1
         lda     fill_mode_table_onechar+1,x
         sta     fillmode_jmp+2
         rts
 
-L4E5B:  lda     fill_mode_table,x
+:       lda     fill_mode_table,x
         sta     fillmode_jmp+1
         lda     fill_mode_table+1,x
         sta     fillmode_jmp+2
         rts
 
-L4E68:  lda     $92
+ll_ge256:                               ; Divmod for left limit >= 256
+        lda     x1
         ror     a
         tax
         php
@@ -1404,21 +1431,26 @@ L4E68:  lda     $92
         adc     #$24
         plp
         ldy     mod7_table+4,x
-        bpl     L4E1E
-L4E79:  lda     $96
-        ror     a
-        tax
-        php
-        lda     div7_table+4,x
-        clc
-        adc     #$24
-        plp
-        ldy     mod7_table+4,x
-        bmi     L4E8D
-        jmp     L4E01
+        bpl     set_x1_char
 
-L4E8D:  lsr     a
-        bne     L4E9A
+rl_ge256:                               ; Divmod for right limit >= 256
+        lda     x2
+        ror     a
+        tax
+        php
+        lda     div7_table+4,x
+        clc
+        adc     #$24
+        plp
+        ldy     mod7_table+4,x
+        bmi     divmod7
+        jmp     set_x2_char
+.endproc
+
+
+.proc divmod7
+        lsr     a
+        bne     :+
         txa
         ror     a
         tax
@@ -1426,7 +1458,7 @@ L4E8D:  lsr     a
         ldy     mod7_table,x
         rts
 
-L4E9A:  txa
+:       txa
         ror     a
         tax
         php
@@ -1436,93 +1468,130 @@ L4E9A:  txa
         plp
         ldy     mod7_table+4,x
         rts
+.endproc
 
-L4EA9:  lda     $86
+
+        ;; Set up destination (for either on-screen or off-screen bitmap.)
+
+.proc set_up_dest
+        DEST_NDBM       := 0            ; draw to off-screen bitmap
+        DEST_DHGR       := 1            ; draw to DHGR screen
+
+        lda     left_char
         ldx     top
         ldy     current_mapwidth
-        jsr     L4F6D
+        jsr     ndbm_calc_dest
         clc
         adc     current_mapbits
-        sta     $84
+        sta     vid_addr
         tya
         adc     current_mapbits+1
-        sta     $85
-        lda     #$02
+        sta     vid_addr+1
+
+        lda     #2*DEST_DHGR
         tax
         tay
         bit     current_mapwidth
-        bmi     L4EE9
-        lda     #$01
-        sta     $8E
-        lda     #$06
-        sta     $8F
-        jsr     L4F11
+        bmi     on_screen               ; negative for on-screen destination
+
+        lda     #<bitmap_buffer
+        sta     bits_addr
+        lda     #>bitmap_buffer
+        sta     bits_addr+1
+
+        jsr     ndbm_fix_width
         txa
         inx
         stx     src_width_char
-        jsr     L4E34
-        lda     L4F31
+        jsr     set_up_fill_mode::set_width
+
+        lda     shift_line_jmp_addr
         sta     dhgr_get_srcbits::shift_bits_jmp_addr
-        lda     L4F31+1
+        lda     shift_line_jmp_addr+1
         sta     dhgr_get_srcbits::shift_bits_jmp_addr+1
-        lda     #0
-        ldx     #0
-        ldy     #0
-L4EE9:  pha
-        lda     L4F37,x
+        lda     #2*DEST_NDBM
+        ldx     #2*DEST_NDBM
+        ldy     #2*DEST_NDBM
+
+on_screen:
+        pha
+        lda     next_line_table,x
         sta     dhgr_start_fill::next_line_jmp_addr
-        lda     L4F37+1,x
+        lda     next_line_table+1,x
         sta     dhgr_start_fill::next_line_jmp_addr+1
         pla
         tax
-        lda     L4F33,x
-        sta     start_fill_jmp_addr
-        lda     L4F33+1,x
-        sta     start_fill_jmp_addr+1
-        lda     L4F3B,y
+        lda     start_fill_table,x
+        sta     start_fill_jmp+1
+        lda     start_fill_table+1,x
+        sta     start_fill_jmp+2
+        lda     shift_line_table,y
         sta     dhgr_shift_bits::shift_line_jmp_addr
-        lda     L4F3B+1,y
+        lda     shift_line_table+1,y
         sta     dhgr_shift_bits::shift_line_jmp_addr+1
         rts
+.endproc
 
-L4F11:  lda     $91
+
+        ;; Fix up the width and masks for an off-screen destination,
+
+ndbm_fix_width:
+        lda     width_char
         asl     a
         tax
         inx
-        lda     $93
-        bne     L4F25
+
+        lda     left_masks_table+1
+        bne     :+
         dex
-        inc     $8E
-        inc16   $84
-        lda     $92
-L4F25:  sta     $88
-        lda     $96
-        bne     L4F2E
+        inc     bits_addr
+        inc16   vid_addr
+        lda     left_masks_table
+:       sta     left_sidemask
+
+        lda     right_masks_table
+        bne     :+
         dex
-        lda     $97
-L4F2E:  sta     $89
+        lda     right_masks_table+1
+:       sta     right_sidemask
         rts
 
-L4F31:  .addr   shift_line_jmp
-L4F33:  .addr   ndbm_start_fill, dhgr_start_fill
-L4F37:  .addr   ndbm_next_line, dhgr_next_line
-L4F3B:  .addr   ndbm_next_line, dhgr_shift_line
+;;              DEST_NDBM        DEST_DHGR
+shift_line_jmp_addr:
+        .addr   shift_line_jmp
 
-L4F3F:  ldx     $8C
-        ldy     $90
-        bmi     L4F48
-        jsr     L4F70
-L4F48:  clc
-        adc     $8E
+start_fill_table:
+        .addr   ndbm_start_fill, dhgr_start_fill
+next_line_table:
+        .addr   ndbm_next_line,  dhgr_next_line
+shift_line_table:
+        .addr   ndbm_next_line,  dhgr_shift_line
+
+
+        ;; Set source for bitmap transfer (either on-screen or off-screen bitmap.)
+
+.proc set_up_source
+        SRC_NDBM        := 0
+        SRC_DHGR        := 1
+
+        ldx     src_y_coord
+        ldy     src_mapwidth
+        bmi     :+
+        jsr     ndbm_calc_off
+
+:       clc
+        adc     bits_addr
         sta     ndbm_get_srcbits::load_addr
         tya
-        adc     $8F
+        adc     bits_addr+1
         sta     ndbm_get_srcbits::load_addr+1
-        ldx     #$02
-        bit     $90
-        bmi     L4F5C
-        ldx     #$00
-L4F5C:  lda     get_srcbits_table,x
+
+        ldx     #2*SRC_DHGR
+        bit     src_mapwidth
+        bmi     :+
+
+        ldx     #2*SRC_NDBM
+:       lda     get_srcbits_table,x
         sta     fill_next_line::get_srcbits_jmp_addr
         lda     get_srcbits_table+1,x
         sta     fill_next_line::get_srcbits_jmp_addr+1
@@ -1531,28 +1600,42 @@ L4F5C:  lda     get_srcbits_table,x
 ;;              SRC_NDBM           SRC_DHGR
 get_srcbits_table:
         .addr   ndbm_get_srcbits,  dhgr_get_srcbits
+.endproc
 
-L4F6D:  bmi     L4F8E
+
+        ;; Calculate destination for off-screen bitmap.
+
+.proc ndbm_calc_dest
+        bmi     on_screen        ; do nothing for on-screen destination
         asl     a
-L4F70:  stx     $82
+
+calc_off:
+        stx     $82
         sty     $83
-        ldx     #$08
-L4F76:  lsr     $83
-        bcc     L4F7D
+        ldx     #8
+loop:   lsr     $83
+        bcc     :+
         clc
         adc     $82
-L4F7D:  ror     a
-        ror     $84
+:       ror     a
+        ror     vid_addr
         dex
-        bne     L4F76
+        bne     loop
+
         sty     $82
         tay
-        lda     $84
+        lda     vid_addr
         sec
         sbc     $82
-        bcs     L4F8E
+        bcs     on_screen
         dey
-L4F8E:  rts
+on_screen:
+        rts
+.endproc
+
+
+ndbm_calc_off := ndbm_calc_dest::calc_off
+
 
 ;;; ============================================================
 ;;; SetPattern
@@ -1681,7 +1764,7 @@ PaintRectImpl:
 L5043:  jsr     L50A9
         bcc     L5015
         jsr     set_up_fill_mode
-        jsr     L4EA9
+        jsr     set_up_dest
         jmp     do_fill
 
 ;;; ============================================================
@@ -1944,7 +2027,7 @@ L51D7:  sta     L5169
         tax
         tya
         adc     $8B
-        jsr     L4E8D
+        jsr     divmod7
         sta     $8A
         tya
         rol     a
@@ -1959,8 +2042,8 @@ L520E:  stx     dhgr_get_srcbits::offset1_addr
         sta     $9B
         lda     $8A
         rol     a
-        jsr     L4F3F
-        jsr     L4EA9
+        jsr     set_up_source
+        jsr     set_up_dest
         lda     #$01
         sta     $8E
         lda     #$06
@@ -2998,7 +3081,7 @@ L596B:  sta     $9B
         iny
         bne     L595C
 L5972:  jsr     set_up_fill_mode
-        jsr     L4EA9
+        jsr     set_up_dest
         lda     $87
         clc
         adc     $9B
@@ -3923,7 +4006,7 @@ draw_cursor:
         ldy     mod7_table+124,x ; ???
         lda     #$FF
         bmi     L60E4
-L60E1:  jsr     L4E8D
+L60E1:  jsr     divmod7
 L60E4:  sta     $82
         tya
         rol     a
@@ -5178,7 +5261,7 @@ L69B4:  ldx     $A9
         iny
         iny
         iny
-        jsr     L4F70
+        jsr     ndbm_calc_off
         pha
         lda     $C5
         sta     $A1
@@ -5194,7 +5277,7 @@ L69B4:  ldx     $A9
         iny
         pla
         tax
-        jsr     L4F70
+        jsr     ndbm_calc_off
         sta     L6924
         sty     L6925
         sec
