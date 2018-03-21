@@ -46,7 +46,7 @@
         ;;  $F2-$F3      - textfont
 
         ;;  $F4-$F5      - Active port (???)
-        ;;  $F6-$FA      - ???
+        ;;  $F6-$FA      - fill_eor_mask/x_offset/y_offset
         ;;  $FB-$FC      - glyph widths
         ;;  $FD          - glyph flag (if set, stride is 2x???)
         ;;  $FE          - last glyph index (count is this + 1)
@@ -86,6 +86,8 @@
         active_port    := $F4  ; address of live port block
 
         fill_eor_mask   := $F6
+        x_offset        := $F7
+        y_offset        := $F9
 
         glyph_widths    := $FB  ; address
         glyph_flag      := $FD  ;
@@ -858,107 +860,112 @@ hires_table_hi:
 ;;; Routines called during PaintRect etc based on
 ;;; current_penmode
 
-.proc fillmode0
-        lda     ($84),y
-        eor     ($8E),y
+        vid_addr          := $84        ; pointer to video memory
+        bits_addr         := $8E        ; pointer to pattern/bitmap
+        left_sidemask     := $88        ; bitmask applied to clip left edge of rect
+        right_sidemask    := $89        ; bitmask applied to clip right edge of rect
+
+.proc fillmode_copy
+        lda     (vid_addr),y
+        eor     (bits_addr),y
         eor     fill_eor_mask
-        and     $89
-        eor     ($84),y
+        and     right_sidemask
+        eor     (vid_addr),y
         bcc     :+
-loop:   lda     ($8E),y
+loop:   lda     (bits_addr),y
         eor     fill_eor_mask
 :       and     current_colormask_and
         ora     current_colormasks_or
-        sta     ($84),y
+        sta     (vid_addr),y
         dey
         bne     loop
 .endproc
-.proc fillmode0a
-        lda     ($84),y
-        eor     ($8E),y
+.proc fillmode_copy_onechar
+        lda     (vid_addr),y
+        eor     (bits_addr),y
         eor     fill_eor_mask
-        and     $88
-        eor     ($84),y
+        and     left_sidemask
+        eor     (vid_addr),y
         and     current_colormask_and
         ora     current_colormasks_or
-        sta     ($84),y
+        sta     (vid_addr),y
         rts
 .endproc
 
-.proc fillmode1
-        lda     ($8E),y
+.proc fillmode_or
+        lda     (bits_addr),y
         eor     fill_eor_mask
-        and     $89
+        and     right_sidemask
         bcc     :+
-loop:   lda     ($8E),y
+loop:   lda     (bits_addr),y
         eor     fill_eor_mask
-:       ora     ($84),y
+:       ora     (vid_addr),y
         and     current_colormask_and
         ora     current_colormasks_or
-        sta     ($84),y
+        sta     (vid_addr),y
         dey
         bne     loop
 .endproc
-.proc fillmode1a
-        lda     ($8E),y
+.proc fillmode_or_onechar
+        lda     (bits_addr),y
         eor     fill_eor_mask
-        and     $88
-        ora     ($84),y
+        and     left_sidemask
+        ora     (vid_addr),y
         and     current_colormask_and
         ora     current_colormasks_or
-        sta     ($84),y
+        sta     (vid_addr),y
         rts
 .endproc
 
-.proc fillmode2
-        lda     ($8E),y
+.proc fillmode2_xor
+        lda     (bits_addr),y
         eor     fill_eor_mask
-        and     $89
+        and     right_sidemask
         bcc     :+
-loop:   lda     ($8E),y
+loop:   lda     (bits_addr),y
         eor     fill_eor_mask
-:       eor     ($84),y
+:       eor     (vid_addr),y
         and     current_colormask_and
         ora     current_colormasks_or
-        sta     ($84),y
+        sta     (vid_addr),y
         dey
         bne     loop
 .endproc
-.proc fillmode2a
-        lda     ($8E),y
+.proc fillmode2_xor_onechar
+        lda     (bits_addr),y
         eor     fill_eor_mask
-        and     $88
-        eor     ($84),y
+        and     left_sidemask
+        eor     (vid_addr),y
         and     current_colormask_and
         ora     current_colormasks_or
-        sta     ($84),y
+        sta     (vid_addr),y
         rts
 .endproc
 
-.proc fillmode3
-        lda     ($8E),y
+.proc fillmode_bic
+        lda     (bits_addr),y
         eor     fill_eor_mask
-        and     $89
+        and     right_sidemask
         bcc     :+
-loop:   lda     ($8E),y
+loop:   lda     (bits_addr),y
         eor     fill_eor_mask
 :       eor     #$FF
-        and     ($84),y
+        and     (vid_addr),y
         and     current_colormask_and
         ora     current_colormasks_or
-        sta     ($84),y
+        sta     (vid_addr),y
         dey
         bne     loop
 .endproc
-.proc fillmode3a
-        lda     ($8E),y
+.proc fillmode_bic_onechar
+        lda     (bits_addr),y
         eor     fill_eor_mask
-        and     $88
+        and     left_sidemask
         eor     #$FF
-        and     ($84),y
+        and     (vid_addr),y
         and     current_colormask_and
         ora     current_colormasks_or
-        sta     ($84),y
+        sta     (vid_addr),y
         rts
 .endproc
 
@@ -1136,7 +1143,7 @@ L4D54:  sta     LOWSCR,y
         ora     #$80
         sta     $89
         ldy     $91
-L4D67:  jmp     fillmode0       ; modified with fillmode routine
+L4D67:  jmp     fillmode_copy       ; modified with fillmode routine
 
 L4D6A:  .byte   $FB
 L4D6B:
@@ -1150,13 +1157,16 @@ L4D81:  .byte   $7F,$7E,$7C,$78,$70,$60,$40,$00
         .byte   $00,$00,$00,$00,$00,$00
 
         ;; Tables used for fill modes
-fill_mode_table:
-        .addr   fillmode0,fillmode1,fillmode2,fillmode3
-        .addr   fillmode0,fillmode1,fillmode2,fillmode3
 
-fill_mode_table_a:
-        .addr   fillmode0a,fillmode1a,fillmode2a,fillmode3a
-        .addr   fillmode0a,fillmode1a,fillmode2a,fillmode3a
+        ; Fill routines that handle >1 char between left and right limits.
+fill_mode_table:
+        .addr   fillmode_copy,fillmode_or,fillmode2_xor,fillmode_bic
+        .addr   fillmode_copy,fillmode_or,fillmode2_xor,fillmode_bic
+
+        ; Fill routines that handle only 1 char.
+fill_mode_table_onechar:
+        .addr   fillmode_copy_onechar,fillmode_or_onechar,fillmode2_xor_onechar,fillmode_bic_onechar
+        .addr   fillmode_copy_onechar,fillmode_or_onechar,fillmode2_xor_onechar,fillmode_bic_onechar
 
 ;;; ============================================================
 ;;; SetPenMode
@@ -1173,7 +1183,7 @@ SetPenModeImpl:
         ;; Called from PaintRect, DrawText, etc to configure
         ;; fill routines from mode.
 set_up_fill_mode:
-        lda     $F7
+        lda     x_offset
         clc
         adc     $96
         sta     $96
@@ -1187,7 +1197,7 @@ set_up_fill_mode:
         lda     $FA
         adc     $98+1
         sta     $98+1
-        lda     $F7
+        lda     x_offset
         clc
         adc     $92
         sta     $92
@@ -1252,9 +1262,9 @@ L4E34:  sta     $91
         and     $96
         sta     $92
         sta     $96
-        lda     fill_mode_table_a,x
+        lda     fill_mode_table_onechar,x
         sta     L4D67+1
-        lda     fill_mode_table_a+1,x
+        lda     fill_mode_table_onechar+1,x
         sta     L4D67+2
         rts
 
@@ -1428,7 +1438,7 @@ L4F8E:  rts
 SetPatternImpl:
         lda     #$00
         sta     $8E
-        lda     $F9
+        lda     y_offset
         and     #$07
         lsr     a
         ror     $8E
@@ -1437,7 +1447,7 @@ SetPatternImpl:
         adc     #$04
         sta     $8F
         ldx     #$07
-L4FA3:  lda     $F7
+L4FA3:  lda     x_offset
         and     #$07
         tay
         lda     current_penpattern,x
@@ -1600,8 +1610,8 @@ fail:   rts
 ;;; SetPortBits
 
 SetPortBitsImpl:
-        sub16   current_viewloc_x, current_maprect_x1, $F7
-        sub16   current_viewloc_y, current_maprect_y1, $F9
+        sub16   current_viewloc_x, current_maprect_x1, x_offset
+        sub16   current_viewloc_y, current_maprect_y1, y_offset
         rts
 
 L50A9:  lda     current_maprect_x2+1
