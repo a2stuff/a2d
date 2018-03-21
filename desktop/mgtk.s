@@ -860,10 +860,27 @@ hires_table_hi:
 ;;; Routines called during PaintRect etc based on
 ;;; current_penmode
 
+        ;; ZP usage
+        src_addr          := $82        ; pointer to source bitmap
         vid_addr          := $84        ; pointer to video memory
+        left_char         := $86        ; offset of leftmost coordinate in chars (0-39)
         bits_addr         := $8E        ; pointer to pattern/bitmap
         left_sidemask     := $88        ; bitmask applied to clip left edge of rect
         right_sidemask    := $89        ; bitmask applied to clip right edge of rect
+
+        src_mapwidth      := $90        ; source stride; $80 = DHGR layout
+        width_char        := $91        ; width of rectangle in chars
+
+        top               := $94        ; top/starting/current y-coordinate
+        bottom            := $98        ; bottom/ending/maximum y-coordinate
+
+
+        ;; Text page usage (main/aux)
+        pattern_buffer  := $0400        ; buffer for currently selected pattern (page-aligned)
+        bitmap_buffer   := $0601        ; scratchpad area for drawing bitmaps/patterns
+
+        .assert <pattern_buffer = 0, error, "pattern_buffer must be page-aligned"
+
 
 .proc fillmode_copy
         lda     (vid_addr),y
@@ -969,192 +986,296 @@ loop:   lda     (bits_addr),y
         rts
 .endproc
 
-L4C41:  cpx     $98
-        beq     L4C49
+
+        ;; Main fill loop.
+
+.proc fill_next_line
+        cpx     bottom                  ; fill done?
+        beq     :+
         inx
-L4C46:
-L4C47           := * + 1
-L4C48           := * + 2
-        jmp     L4CFB
 
-L4C49:  rts
+get_srcbits_jmp:
+get_srcbits_jmp_addr := *+1
+        jmp     start_fill_jmp          ; patched to *_get_srcbits if there
+                                        ; is a source bitmap
+:       rts
+.endproc
 
-        lda     L4C5B
-        adc     $90
-        sta     L4C5B
-        bcc     L4C57
-        inc     L4C5C
-L4C57:  ldy     L5168
-L4C5A:
-L4C5B           := * + 1
-L4C5C           := * + 2
-        lda     $FFFF,y
+        ;; Copy a line of source data from a non-display bitmap buffer to
+        ;; the staging buffer at $0601.
+
+.proc ndbm_get_srcbits
+        lda     load_addr
+        adc     src_mapwidth
+        sta     load_addr
+        bcc     :+
+        inc     load_addr+1
+
+:       ldy     src_width_char
+
+loop:
+load_addr       := *+1
+        lda     $FFFF,y                 ; off-screen BMP will be patched here
         and     #$7F
-        sta     $0601,y
+        sta     bitmap_buffer,y
         dey
-        bpl     L4C5A
-        bmi     L4C9F
-L4C67:  ldy     $8C
-        inc     $8C
+        bpl     loop
+        bmi     shift_bits_clc_jmp
+.endproc
+
+        ;; Copy a line of source data from the DHGR screen to the staging
+        ;; buffer at $0601.
+
+.proc dhgr_get_srcbits
+        index       := $81
+        src_char    := $8A        ; char offset within source line
+        src_y_coord := $8C
+
+        ldy     src_y_coord
+        inc     src_y_coord
         lda     hires_table_hi,y
         ora     $80
-        sta     $83
+        sta     src_addr+1
         lda     hires_table_lo,y
-        adc     $8A
-        sta     $82
-L4C79:  stx     $81
+        adc     src_char
+        sta     src_addr
+
+get_bits:
+        stx     index
         ldy     #0
         ldx     #0
-L4C7F:  sta     HISCR
-        lda     ($82),y
+loop:   sta     HISCR
+        lda     (src_addr),y
         and     #$7F
         sta     LOWSCR
-L4C8A           := * + 1
-        sta     $0601,x
-        lda     ($82),y
+
+offset1_addr    := *+1
+        sta     bitmap_buffer,x
+        lda     (src_addr),y
         and     #$7F
-L4C91           := * + 1
-        sta     $0602,x
+
+offset2_addr    := *+1
+        sta     bitmap_buffer+1,x
         iny
         inx
         inx
-        cpx     L5168
-        bcc     L4C7F
-        beq     L4C7F
-        ldx     $81
-L4C9F:  clc
-L4CA1           := * + 1
-L4CA2           := * + 2
-        jmp     L4CBE
+        cpx     src_width_char
+        bcc     loop
+        beq     loop
+        ldx     index
 
-L4CA3:  stx     $82
-        ldy     L5168
+shift_bits_clc_jmp:
+        clc
+
+shift_bits_jmp:
+shift_bits_jmp_addr := *+1
+        jmp     shift_line_jmp          ; patched to dhgr_shift_bits when needed
+.endproc
+
+
+shift_bits_clc_jmp := dhgr_get_srcbits::shift_bits_clc_jmp
+
+
+        ;; Subprocedure used to shift bitmap data by a number of bits.
+
+.proc dhgr_shift_bits
+        index   := $82
+
+        stx     index
+        ldy     src_width_char
         lda     #$00
-L4CAA:  ldx     $0601,y
-L4CAE           := * + 1
-L4CAF           := * + 2
+loop:   ldx     bitmap_buffer,y
+
+shift_main_addr := *+1
         ora     shift_1_main,x
-L4CB1           := * + 1
-        sta     $0602,y
-L4CB4           := * + 1
-L4CB5           := * + 2
+offset2_addr := *+1
+        sta     bitmap_buffer+1,y
+shift_aux_addr := *+1
         lda     shift_1_aux,x
         dey
-        bpl     L4CAA
-L4CBA           := * + 1
-        sta     $0601
-        ldx     $82
-L4CBE:
-L4CBF           := * + 1
-L4CC0           := * + 2
-        jmp     L4D38
+        bpl     loop
+offset1_addr := *+1
+        sta     bitmap_buffer
+        ldx     index
 
-L4CC1:  stx     $82
+shift_line_jmp:
+shift_line_jmp_addr := *+1
+        jmp     dhgr_next_line          ; patched to dhgr_shift_line when needed
+.endproc
+
+
+shift_line_jmp := dhgr_shift_bits::shift_line_jmp
+
+
+        ;; Subprocedure used to shift bitmap data by an integral number of
+        ;; chars.
+
+.proc dhgr_shift_line
+        index   := $82
+
+        stx     index
         ldx     #0
         ldy     #0
-L4CC7:
-L4CC8           := * + 1
-        lda     $0601,x
+loop:
+offset1_addr := *+1
+        lda     bitmap_buffer,x
         sta     HISCR
-        sta     $0601,y
+        sta     bitmap_buffer,y
         sta     LOWSCR
-L4CD4           := * + 1
-        lda     $0602,x
-        sta     $0601,y
+
+offset2_addr := *+1
+        lda     bitmap_buffer+1,x
+        sta     bitmap_buffer,y
         inx
         inx
         iny
-        cpy     $91
-        bcc     L4CC7
-        beq     L4CC7
-        ldx     $82
-        jmp     L4D38
+        cpy     width_char
+        bcc     loop
+        beq     loop
 
-L4CE7:  ldx     $94
+        ldx     index
+        jmp     dhgr_next_line
+.endproc
+
+
+        ;; Entry point to start bit blit operation.
+
+.proc bit_blit
+        ldx     top
         clc
-        jmp     L4C46
+        jmp     fill_next_line::get_srcbits_jmp
+.endproc
 
-L4CED:  ldx     L4D6A
-        stx     L4C47
-        ldx     L4D6B
-        stx     L4C48
-        ldx     $94
-L4CFB:
-L4CFC           := * + 1
-L4CFD           := * + 2
-        jmp     L4D11
 
-L4CFE:
-        txa
-        ror     a
-        ror     a
-        ror     a
-        and     #$C0
-        ora     $86
-        sta     $82
-        lda     #$04
-        adc     #$00
-        sta     $83
-        jmp     L4C79
+        ;; Entry point to start fill after fill mode and destination have
+        ;; been set.
 
-L4D11:  txa
+.proc do_fill
+        ldx     no_srcbits_addr                         ; Disable srcbits fetching
+        stx     fill_next_line::get_srcbits_jmp_addr    ; for fill operation.
+        ldx     no_srcbits_addr+1
+        stx     fill_next_line::get_srcbits_jmp_addr+1
+
+        ldx     top
+        ;; Fall-through
+.endproc
+
+start_fill_jmp:
+start_fill_jmp_addr := *+1
+        jmp     dhgr_start_fill         ; patched to *_start_fill
+
+
+        ;; Start a fill targeting a non-display bitmap (NDBM)
+
+.proc ndbm_start_fill
+        txa                     ; pattern y-offset
         ror     a
         ror     a
         ror     a
-        and     #$C0
-        ora     $86
-        sta     $8E
-        lda     #$04
+        and     #$C0            ; to high 2 bits
+        ora     left_char
+        sta     src_addr
+
+        lda     #>pattern_buffer
         adc     #0
-        sta     $8F
-L4D22           := * + 1
-L4D23           := * + 2
-        jmp     L4D38
+        sta     src_addr+1
+        jmp     dhgr_get_srcbits::get_bits
+.endproc
 
-L4D24:  lda     $84
+
+        ;; Start a fill targeting the DHGR screen.
+
+.proc dhgr_start_fill
+        txa                     ; pattern y-offset
+        ror     a
+        ror     a
+        ror     a
+        and     #$C0            ; to high 2 bits
+        ora     left_char
+        sta     bits_addr
+
+        lda     #>pattern_buffer
+        adc     #0
+        sta     bits_addr+1
+
+next_line_jmp_addr := *+1
+        jmp     dhgr_next_line
+.endproc
+
+
+        ;; Advance to the next line and fill (non-display bitmap
+        ;; destination.)
+
+.proc ndbm_next_line
+        lda     vid_addr
         clc
         adc     current_mapwidth
-        sta     $84
-        bcc     L4D30
-        inc     $85
+        sta     vid_addr
+        bcc     :+
+        inc     vid_addr+1
         clc
-L4D30:  ldy     $91
-        jsr     L4D67
-        jmp     L4C41
+:       ldy     width_char
 
-L4D38:  lda     hires_table_hi,x
+        jsr     fillmode_jmp
+        jmp     fill_next_line
+.endproc
+
+
+        ;; Set vid_addr for the next line and fill (DHGR destination.)
+
+.proc dhgr_next_line
+        lda     hires_table_hi,x
         ora     current_mapbits+1
-        sta     $85
+        sta     vid_addr+1
         lda     hires_table_lo,x
         clc
-        adc     $86
-        sta     $84
-        ldy     #1
-        jsr     L4D54
-        ldy     #0
-        jsr     L4D54
-        jmp     L4C41
+        adc     left_char
+        sta     vid_addr
+        ldy     #1                      ; aux mem
+        jsr     dhgr_fill_line
+        ldy     #0                      ; main mem
+        jsr     dhgr_fill_line
+        jmp     fill_next_line
+.endproc
 
-L4D54:  sta     LOWSCR,y
-        lda     $92,y
+
+        ;; Fill one line in either main or aux screen memory.
+
+.proc dhgr_fill_line
+        left_masks_table  := $92        ; bitmasks for left edge indexed by page (0=main, 1=aux)
+        right_masks_table := $96        ; bitmasks for right edge indexed by page (0=main, 1=aux)
+
+        sta     LOWSCR,y
+        lda     left_masks_table,y
         ora     #$80
-        sta     $88
-        lda     $96,y
+        sta     left_sidemask
+        lda     right_masks_table,y
         ora     #$80
-        sta     $89
-        ldy     $91
-L4D67:  jmp     fillmode_copy       ; modified with fillmode routine
+        sta     right_sidemask
+        ldy     width_char
+        ;; Fall-through
+.endproc
 
-L4D6A:  .byte   $FB
-L4D6B:
-L4D6C           := * + 1
-        jmp     $0000
+fillmode_jmp:
+        jmp     fillmode_copy       ; modified with fillmode routine
 
-        .byte   $00,$00,$00,$00,$00
-L4D73:  .byte   $01,$03,$07,$0F,$1F,$3F,$7F
-L4D7A:  .byte   $7F,$7F,$7F,$7F,$7F,$7F,$7F
-L4D81:  .byte   $7F,$7E,$7C,$78,$70,$60,$40,$00
-        .byte   $00,$00,$00,$00,$00,$00
+
+        ;; Address of jump used when drawing from a pattern rather than
+        ;; source data bits.
+no_srcbits_addr:
+        .addr   start_fill_jmp
+
+main_right_masks:
+        .byte   $00,$00,$00,$00,$00,$00,$00
+aux_right_masks:
+        .byte   $01,$03,$07,$0F,$1F,$3F,$7F
+
+main_left_masks:
+        .byte   $7F,$7F,$7F,$7F,$7F,$7F,$7F
+aux_left_masks:
+        .byte   $7F,$7E,$7C,$78,$70,$60,$40
+        .byte   $00,$00,$00,$00,$00,$00,$00
+
 
         ;; Tables used for fill modes
 
@@ -1206,11 +1327,11 @@ set_up_fill_mode:
         sta     $92+1
         lda     $F8+1
         clc
-        adc     $94
-        sta     $94
+        adc     top
+        sta     top
         lda     $FA
-        adc     $94+1
-        sta     $94+1
+        adc     top+1
+        sta     top+1
         lsr     $97
         beq     :+
         jmp     L4E79
@@ -1224,9 +1345,9 @@ L4E01:  sta     $82
         tya
         rol     a
         tay
-        lda     L4D73,y
+        lda     aux_right_masks,y
         sta     $97
-        lda     L4D6C,y
+        lda     main_right_masks,y
         sta     $96
         lsr     $93
         bne     L4E68
@@ -1240,9 +1361,9 @@ L4E1E:  sta     $86
         rol     a
         tay
         sty     $87
-        lda     L4D81,y
+        lda     aux_left_masks,y
         sta     $93
-        lda     L4D7A,y
+        lda     main_left_masks,y
         sta     $92
         lda     $82
         sec
@@ -1263,15 +1384,15 @@ L4E34:  sta     $91
         sta     $92
         sta     $96
         lda     fill_mode_table_onechar,x
-        sta     L4D67+1
+        sta     fillmode_jmp+1
         lda     fill_mode_table_onechar+1,x
-        sta     L4D67+2
+        sta     fillmode_jmp+2
         rts
 
 L4E5B:  lda     fill_mode_table,x
-        sta     L4D67+1
+        sta     fillmode_jmp+1
         lda     fill_mode_table+1,x
-        sta     L4D67+2
+        sta     fillmode_jmp+2
         rts
 
 L4E68:  lda     $92
@@ -1317,7 +1438,7 @@ L4E9A:  txa
         rts
 
 L4EA9:  lda     $86
-        ldx     $94
+        ldx     top
         ldy     current_mapwidth
         jsr     L4F6D
         clc
@@ -1338,30 +1459,30 @@ L4EA9:  lda     $86
         jsr     L4F11
         txa
         inx
-        stx     L5168
+        stx     src_width_char
         jsr     L4E34
         lda     L4F31
-        sta     L4CA1
+        sta     dhgr_get_srcbits::shift_bits_jmp_addr
         lda     L4F31+1
-        sta     L4CA2
+        sta     dhgr_get_srcbits::shift_bits_jmp_addr+1
         lda     #0
         ldx     #0
         ldy     #0
 L4EE9:  pha
         lda     L4F37,x
-        sta     L4D22
+        sta     dhgr_start_fill::next_line_jmp_addr
         lda     L4F37+1,x
-        sta     L4D23
+        sta     dhgr_start_fill::next_line_jmp_addr+1
         pla
         tax
         lda     L4F33,x
-        sta     L4CFC
+        sta     start_fill_jmp_addr
         lda     L4F33+1,x
-        sta     L4CFD
+        sta     start_fill_jmp_addr+1
         lda     L4F3B,y
-        sta     L4CBF
+        sta     dhgr_shift_bits::shift_line_jmp_addr
         lda     L4F3B+1,y
-        sta     L4CC0
+        sta     dhgr_shift_bits::shift_line_jmp_addr+1
         rts
 
 L4F11:  lda     $91
@@ -1382,10 +1503,10 @@ L4F25:  sta     $88
 L4F2E:  sta     $89
         rts
 
-L4F31:  .addr   L4CBE
-L4F33:  .addr   L4CFE,L4D11
-L4F37:  .addr   L4D24,L4D38
-L4F3B:  .addr   L4D24,L4CC1
+L4F31:  .addr   shift_line_jmp
+L4F33:  .addr   ndbm_start_fill, dhgr_start_fill
+L4F37:  .addr   ndbm_next_line, dhgr_next_line
+L4F3B:  .addr   ndbm_next_line, dhgr_shift_line
 
 L4F3F:  ldx     $8C
         ldy     $90
@@ -1393,22 +1514,23 @@ L4F3F:  ldx     $8C
         jsr     L4F70
 L4F48:  clc
         adc     $8E
-        sta     L4C5B
+        sta     ndbm_get_srcbits::load_addr
         tya
         adc     $8F
-        sta     L4C5C
+        sta     ndbm_get_srcbits::load_addr+1
         ldx     #$02
         bit     $90
         bmi     L4F5C
         ldx     #$00
-L4F5C:  lda     L4F69,x
-        sta     L4C47
-        lda     L4F6A,x
-        sta     L4C48
+L4F5C:  lda     get_srcbits_table,x
+        sta     fill_next_line::get_srcbits_jmp_addr
+        lda     get_srcbits_table+1,x
+        sta     fill_next_line::get_srcbits_jmp_addr+1
         rts
 
-L4F69:  lsr     a
-L4F6A:  jmp     L4C67
+;;              SRC_NDBM           SRC_DHGR
+get_srcbits_table:
+        .addr   ndbm_get_srcbits,  dhgr_get_srcbits
 
 L4F6D:  bmi     L4F8E
         asl     a
@@ -1497,9 +1619,7 @@ L4FE4:  .byte   0
 FrameRectImpl:
 
         left   := $9F
-        top    := $A1
         right  := $A3
-        bottom := $A5
 
         ldy     #$03
 L4FE7:  ldx     #$07
@@ -1562,7 +1682,7 @@ L5043:  jsr     L50A9
         bcc     L5015
         jsr     set_up_fill_mode
         jsr     L4EA9
-        jmp     L4CED
+        jmp     do_fill
 
 ;;; ============================================================
 ;;; InRect
@@ -1572,9 +1692,7 @@ L5043:  jsr     L50A9
 .proc InRectImpl
 
         left   := $92
-        top    := $94
         right  := $96
-        bottom := $98
 
         jsr     L514C
         ldax    current_penloc_x
@@ -1727,7 +1845,9 @@ L5163:  exit_call $81
 
 ;;; 16 bytes of params, copied to $8A
 
-L5168:  .byte   0
+src_width_char:
+        .res    1          ; width of source data in chars
+
 L5169:  .byte   0
 
 PaintBitsImpl:
@@ -1802,7 +1922,7 @@ L51D1:  ldx     $96
         beq     L51D7
         adc     #1
 L51D7:  sta     L5169
-        sta     L5168
+        sta     src_width_char
         lda     #2
         sta     $81
         lda     #0
@@ -1833,9 +1953,9 @@ L51D7:  sta     L5169
         bcc     L520E
         dex
         sbc     #7
-L520E:  stx     L4C8A
+L520E:  stx     dhgr_get_srcbits::offset1_addr
         inx
-        stx     L4C91
+        stx     dhgr_get_srcbits::offset2_addr
         sta     $9B
         lda     $8A
         rol     a
@@ -1852,15 +1972,15 @@ L520E:  stx     L4C8A
         bcc     L5234
         sta     $87
         dex
-L5234:  stx     L4CC8
+L5234:  stx     dhgr_shift_line::offset1_addr
         inx
-        stx     L4CD4
+        stx     dhgr_shift_line::offset2_addr
         lda     $87
         sec
         sbc     $9B
         bcs     L5249
         adc     #7
-        inc     L5168
+        inc     src_width_char
         dec     $81
 L5249:  tay
         bne     L5250
@@ -1870,25 +1990,27 @@ L5250:  tya
         asl     a
         tay
         lda     shift_table_main,y
-        sta     L4CAE
+        sta     dhgr_shift_bits::shift_main_addr
         lda     shift_table_main+1,y
-        sta     L4CAF
+        sta     dhgr_shift_bits::shift_main_addr+1
+
         lda     shift_table_aux,y
-        sta     L4CB4
+        sta     dhgr_shift_bits::shift_aux_addr
         lda     shift_table_aux+1,y
-        sta     L4CB5
+        sta     dhgr_shift_bits::shift_aux_addr+1
+
         ldy     $81
-        sty     L4CB1
+        sty     dhgr_shift_bits::offset2_addr
         dey
-        sty     L4CBA
+        sty     dhgr_shift_bits::offset1_addr
         ldx     #2
 L5276:  lda     L5285,x
-        sta     L4CA1
+        sta     dhgr_get_srcbits::shift_bits_jmp_addr
         lda     L5285+1,x
-        sta     L4CA2
-        jmp     L4CE7
+        sta     dhgr_get_srcbits::shift_bits_jmp_addr+1
+        jmp     bit_blit
 
-L5285:  .addr   L4CBE,L4CA3
+L5285:  .addr   shift_line_jmp, dhgr_shift_bits
 
         shift_table_aux := *-2
         .addr   shift_1_aux,shift_2_aux,shift_3_aux
