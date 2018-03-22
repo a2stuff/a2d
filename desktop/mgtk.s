@@ -1316,37 +1316,11 @@ fill_mode_table_onechar:
         x1_char := $86
         x2_char := $82
 
-        lda     x_offset
-        clc
-        adc     x2
-        sta     x2
-        lda     x_offset+1
-        adc     x2+1
-        sta     x2+1
+        add16   x_offset, x2, x2
+        add16   y_offset, bottom, bottom
 
-        lda     y_offset
-        clc
-        adc     bottom
-        sta     bottom
-        lda     y_offset+1
-        adc     bottom+1
-        sta     bottom+1
-
-        lda     x_offset
-        clc
-        adc     x1
-        sta     x1
-        lda     x_offset+1
-        adc     x1+1
-        sta     x1+1
-
-        lda     y_offset
-        clc
-        adc     top
-        sta     top
-        lda     y_offset+1
-        adc     top+1
-        sta     top+1
+        add16   x_offset, x1, x1
+        add16   y_offset, top, top
 
         lsr     x2+1
         beq     :+
@@ -2043,10 +2017,7 @@ L520E:  stx     dhgr_get_srcbits::offset1_addr
         rol     a
         jsr     set_up_source
         jsr     set_up_dest
-        lda     #$01
-        sta     $8E
-        lda     #$06
-        sta     $8F
+        copy16  #$0601, $8E
         ldx     #$01
         lda     $87
         sec
@@ -4358,14 +4329,8 @@ L6348:  lda     $82,x
         sta     standard_port::textfont
         lda     $88
         sta     standard_port::textfont+1
-        lda     $89
-        sta     L6835
-        lda     $8A
-        sta     L6836
-        lda     $8B
-        sta     L633B
-        lda     $8C
-        sta     L633C
+        copy16  $89, L6835
+        copy16  $8B, L633B
         jsr     L646F
         jsr     L6491
         ldy     #$02
@@ -4398,16 +4363,10 @@ L63AC:  txa
         sta     menu_item_y_table,y
         cpy     #$0E
         bcc     L63AC
-        lda     #$01
-        sta     L5FFD
-        lda     #$00
-        sta     L5FFE
+        copy16  #$0001, L5FFD
         bit     L6336
         bvs     L63D1
-        lda     #$02
-        sta     L5FFD
-        lda     #$01
-        sta     L5FFE
+        copy16  #$0102, L5FFD
 L63D1:  ldx     L6338
         jsr     find_mouse
         bit     L6338
@@ -5181,8 +5140,7 @@ L6910:  stax    $A1
         rts
 
 L691B:  MGTK_CALL MGTK::GetEvent, $82
-        lda     $82
-        rts
+        return  $82
 
 ;;; ============================================================
 ;;; SetMenu
@@ -5246,10 +5204,7 @@ L69A3:  sec
         lda     $83
         sbc     $C6
         bmi     L69B4
-        lda     $82
-        sta     $C5
-        lda     $83
-        sta     $C6
+        copy16  $82, $C5
 L69B4:  ldx     $A9
         inx
         cpx     $AA
@@ -5262,14 +5217,8 @@ L69B4:  ldx     $A9
         iny
         jsr     ndbm_calc_off
         pha
-        lda     $C5
-        sta     $A1
-        lda     $C6
-        sta     $A2
-        lda     #$07
-        sta     $A3
-        lda     #$00
-        sta     $A4
+        copy16  $C5, $A1
+        copy16  #$0007, $A3
         jsr     L5698
         ldy     $A1
         iny
@@ -5284,10 +5233,7 @@ L69B4:  ldx     $A9
         tya
         sbc     L633E
         bmi     L6A00
-        lda     L6924
-        sta     L633D
-        lda     L6925
-        sta     L633E
+        copy16  L6924, L633D
 L6A00:  lda     $BB
         clc
         adc     $C5
@@ -5382,11 +5328,9 @@ L6ACF:  ldx     $A7
         inx
         cpx     $A8
         bne     L6A9D
-        lda     #$00
-        rts
+        return  #$00
 
-L6AD9:  lda     $AF
-        rts
+L6AD9:  return  $AF
 
 L6ADC:  ldx     #$00
 L6ADE:  jsr     L68BE
@@ -5644,10 +5588,7 @@ L6C98:  lda     $BC
         sec
         sbc     $82
         sta     $90
-        lda     L6835
-        sta     $8E
-        lda     L6836
-        sta     $8F
+        copy16  L6835, $8E
         ldy     $AA
         ldx     menu_item_y_table,y ; ???
         inx
@@ -5917,26 +5858,14 @@ loop:   lda     params,x
         lda     ($82),y
         bmi     :+
 
-        lda     #$02
-        sta     L681D
-        lda     #$09
-        sta     L681E
-        lda     #$10
-        sta     L681F
-        lda     #$09
-        sta     L6820
+        copy16  #$0902, L681D
+        copy16  #$0910, L681F
         lda     #$1E
         sta     L6821
         bne     end
 
-:       lda     #$02
-        sta     L681D
-        lda     #$10
-        sta     L681E
-        lda     #$1E
-        sta     L681F
-        lda     #$10
-        sta     L6820
+:       copy16  #$1002, L681D
+        copy16  #$101E, L681F
         lda     #$33
         sta     L6821
 end:    rts
@@ -6351,11 +6280,9 @@ L71EE:  jsr     L7157
 L71FE:  MGTK_CALL MGTK::SetPattern, stripes_pattern_alt
         rts
 
-L7205:  lda     #$01
-        ldx     #$00
+L7205:  ldax    #$0001
         beq     L720F
-L720B:  lda     #$03
-        ldx     #$01
+L720B:  ldax    #$0103
 L720F:  stx     L71E4
         jsr     set_fill_mode
         lda     $AC
@@ -6378,14 +6305,8 @@ L7234:  stax    $92
         bcc     L723E
         inx
 L723E:  stax    $96
-        lda     $C9
-        sta     $94
-        lda     $CA
-        sta     $95
-        lda     $CD
-        sta     $98
-        lda     $CE
-        sta     $99
+        copy16  $C9, $94
+        copy16  $CD, $98
         jsr     PaintRectImpl  ; draws title bar stripes to left of close box
 L7255:  lda     $AC
         and     #$01
@@ -7748,13 +7669,7 @@ L7C93:  sta     $82
         sty     $85
         txa
         beq     L7CB5
-L7CA2:  lda     $82
-        clc
-        adc     $84
-        sta     $84
-        lda     $83
-        adc     $85
-        sta     $85
+L7CA2:  add16   $82, $84, $84
         bcc     L7CB2
         iny
 L7CB2:  dex
@@ -7871,10 +7786,7 @@ KeyboardMouse:
 ;;; 2 bytes of params, copied to $82
 
 L7D69:
-        lda     $82
-        sta     L7D7A
-        lda     $83
-        sta     L7D7B
+        copy16  $82, L7D7A
         rts
 
 L7D74:  .byte   $00
@@ -8706,10 +8618,7 @@ L840D:  sec
 ;;; clamp is to fractions of screen (0 = full, 1 = 1/2, 2 = 1/4, 3 = 1/8) (why???)
 
 .proc ScaleMouseImpl
-        lda     $82
-        sta     L5FFD
-        lda     $83
-        sta     L5FFE
+        copy16  $82, L5FFD
 
 L8431:  bit     no_mouse_flag   ; called after INITMOUSE
         bmi     end
@@ -8836,11 +8745,9 @@ found:  ldy     #INITMOUSE
         asl     a
         asl     a
         sta     mouse_operand
-        lda     #$00
-        rts
+        return  #$00
 
-nope:   lda     #$80
-        rts
+nope:   return  #$80
 .endproc
 .endproc
 
