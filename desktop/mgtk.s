@@ -1264,7 +1264,6 @@ next_line_jmp_addr := *+1
 fillmode_jmp:
         jmp     fillmode_copy       ; modified with fillmode routine
 
-
         ;; Address of jump used when drawing from a pattern rather than
         ;; source data bits.
 no_srcbits_addr:
