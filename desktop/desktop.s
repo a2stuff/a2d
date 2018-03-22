@@ -5534,7 +5534,7 @@ JT_MGTK_RELAY:          jmp     MGTK_RELAY
 JT_SIZE_STRING:         jmp     compose_blocks_string
 JT_DATE_STRING:         jmp     compose_date_string
 L400C:                  jmp     L5E78 ; ???
-L400F:                  jmp     DESKTOP_AUXLOAD
+JT_AUXLOAD:             jmp     DESKTOP_AUXLOAD
 JT_EJECT:               jmp     cmd_eject
 JT_REDRAW_ALL:          jmp     redraw_windows          ; *
 JT_DESKTOP_RELAY:       jmp     DESKTOP_RELAY
@@ -5703,7 +5703,7 @@ L4152:  .byte   0
 
 .proc update_window
         lda     event_window_id
-        cmp     #9              ; only handle windows 0...8
+        cmp     #9              ; only handle windows 1...8
         bcc     L415B
         rts
 
@@ -5953,7 +5953,7 @@ dispatch_table:
 
         ;; indexed by menu id-1
 offset_table:
-        .byte   $00,$14,$2C,$46,$50,$50,$6A,$7E,$8C
+        .byte   0,20,44,70,80,80,106,126,140
 
 flag:   .byte   $00
 
@@ -8300,9 +8300,11 @@ L56F8:  .byte   0
 
 ;;; ============================================================
 
-L56F9:  sta     getwinport_params2::window_id
+.proc L56F9
+        sta     getwinport_params2::window_id
         jsr     get_port2
         jmp     offset_grafport2_and_set
+.endproc
 
 ;;; ============================================================
 ;;; Handle keyboard-based window activation
@@ -10475,11 +10477,11 @@ L6B3A:  lda     icon_params2
 
 L6B60:  lda     #$00
         sta     checkitem_params::check
-        jsr     L6C0F
+        jsr     check_item
 L6B68:  lda     #$01
         sta     checkitem_params::menu_item
         sta     checkitem_params::check
-        jsr     L6C0F
+        jsr     check_item
         lda     icon_params2
         jsr     icon_entry_lookup
         stax    $06
@@ -10542,8 +10544,10 @@ L6C0E:  .byte   0
 
 ;;; ============================================================
 
-L6C0F:  MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
+.proc check_item
+        MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
         rts
+.endproc
 
 ;;; ============================================================
 
@@ -14178,23 +14182,25 @@ skip:   lda     icon_params2
 
 .proc L8B5C
         ldy     #$80
-        bne     L8B62
+        bne     :+
 L8B60:  ldy     #$00
-L8B62:  sty     L8D4A
+:       sty     L8D4A
         stax    L8D4B
         txa
         jsr     window_lookup
         stax    $06
+
         lda     #$14
         clc
         adc     #$23
         tay
         ldx     #$23
-L8B7B:  lda     ($06),y
+:       lda     ($06),y
         sta     grafport2,x
         dey
         dex
-        bpl     L8B7B
+        bpl     :-
+
         lda     L8D4B
         jsr     icon_entry_lookup
         stax    $06
@@ -14271,11 +14277,12 @@ L8C8C:  lsr16   L8D50
         asl     a
         tax
         bit     L8D4E
-        bpl     L8CC9
+        bpl     :+
         sub16   L0800, L8D50, L0800,x
         jmp     L8CDC
 
-L8CC9:  add16   L0800, L8D50, L0800,x
+:       add16   L0800, L8D50, L0800,x
+
 L8CDC:  bit     L8D4F
         bpl     L8CF7
         sub16   $0802, L8D52, $0802,x
@@ -14328,15 +14335,17 @@ L8D6C:  lda     L8DB2
         asl     a
         asl     a
         asl     a
+
         clc
-        adc     #$07
+        adc     #7
         tax
         ldy     #7
-L8D7C:  lda     L0800,x
+:       lda     L0800,x
         sta     rect_E230,y
         dex
         dey
-        bpl     L8D7C
+        bpl     :-
+
         jsr     draw_rect_E230
 L8D89:  lda     L8DB2
         sec
@@ -14372,7 +14381,8 @@ L8DB2:  .byte   0
         jsr     reset_grafport3
         MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern3
         jsr     set_penmode_xor
-L8DC7:  lda     L8E0F
+
+loop:   lda     L8E0F
         bmi     L8DE4
         beq     L8DE4
         asl     a
@@ -14381,12 +14391,14 @@ L8DC7:  lda     L8E0F
         clc
         adc     #$07
         tax
+
         ldy     #7
-L8DD7:  lda     L0800,x
+:       lda     L0800,x
         sta     rect_E230,y
         dex
         dey
-        bpl     L8DD7
+        bpl     :-
+
         jsr     draw_rect_E230
 L8DE4:  lda     L8E0F
         clc
@@ -14409,7 +14421,7 @@ L8DF7:  lda     L0800,x
 L8E04:  dec     L8E0F
         lda     L8E0F
         cmp     #$FD
-        bne     L8DC7
+        bne     loop
         rts
 
 L8E0F:  .byte   0
