@@ -40,7 +40,7 @@ INVOKER_FILENAME := $280         ; File to invoke (PREFIX must be set)
 
 ;;; ============================================================
 
-        .assert * = $8D02, error, "Segment length mismatch"
+        .assert * = $8D03, error, "Segment length mismatch"
         PAD_TO $8E00
 
 ;;; ============================================================
