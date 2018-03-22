@@ -5553,7 +5553,7 @@ JT_MGTK_RELAY:          jmp     MGTK_RELAY
 JT_SIZE_STRING:         jmp     compose_blocks_string
 JT_DATE_STRING:         jmp     compose_date_string
 L400C:                  jmp     L5E78 ; ???
-L400F:                  jmp     DESKTOP_AUXLOAD
+JT_AUXLOAD:             jmp     DESKTOP_AUXLOAD
 JT_EJECT:               jmp     cmd_eject
 JT_REDRAW_ALL:          jmp     redraw_windows          ; *
 JT_DESKTOP_RELAY:       jmp     DESKTOP_RELAY
@@ -5722,7 +5722,7 @@ L4152:  .byte   0
 
 .proc update_window
         lda     event_window_id
-        cmp     #9              ; only handle windows 0...8
+        cmp     #9              ; only handle windows 1...8
         bcc     L415B
         rts
 
@@ -5972,7 +5972,7 @@ dispatch_table:
 
         ;; indexed by menu id-1
 offset_table:
-        .byte   $00,$14,$2C,$46,$50,$50,$6A,$7E,$8C
+        .byte   0,20,44,70,80,80,106,126,140
 
 flag:   .byte   $00
 

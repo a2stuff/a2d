@@ -923,7 +923,7 @@ Parameters:
 #### Main Loop
 
 * `GetEvent`
-* If `event_kind_button_down`:
+* If `event_kind_button_down` or `event_kind_apple_key`:
    * `FindWindow` to figure out what was clicked
    * If `area_desktop` - ignore
    * If `area_menubar` - handle menu
@@ -938,11 +938,8 @@ Parameters:
        * If not topmost:
          * `SelectWindow`
        * Otherwise, handle content click per app
-* If `event_kind_key_down`:
-  * TODO
+* If `event_kind_key_down` - [handle key](#handle-key)
 * If `event_kind_drag`:
-  * TODO
-* If `event_kind_apple_key`:
   * TODO
 * If `event_kind_update`:
    * [Redraw](#redraw-window) contents of `window_id`
@@ -958,10 +955,21 @@ Parameters:
 * `SetWinPort` - save attributes if desired
 
 
+#### Handle Key
+
+* `MenuKey`
+* If `menu_id` is not 0:
+  * Dispatch for `menu_id` and `menu_item`
+  * `HiliteMenu` to toggle state back off when done
+* Otherwise:
+  * handle key press per app
+
+
 #### Handle Menu
 
 * `MenuSelect` to initiate menu modal loop
-* Dispatch for `menu_id` and `menu_item` (0 if cancelled)
+* If `menu_id` is 0, done
+* Dispatch for `menu_id` and `menu_item`
 * `HiliteMenu` to toggle state back off when done
 
 
