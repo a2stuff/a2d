@@ -6,9 +6,10 @@ syntax details.
 
 ## Formatting
 
-* Tabs, not spaces
-* Tab stops are 8 characters (Emacs asm-mode default)
+* Spaces, not tabs
+* "Tab" stops for alignment are 8 characters (Emacs asm-mode default)
 * `res/asmfmt.pl` can be used for formatting
+* No trailing whitespace
 
 
 ## Assembly
