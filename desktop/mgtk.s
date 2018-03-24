@@ -48,7 +48,7 @@
         ;;  $F4-$F5      - Active port (???)
         ;;  $F6-$FA      - fill_eor_mask/x_offset/y_offset
         ;;  $FB-$FC      - glyph widths
-        ;;  $FD          - glyph flag (if set, stride is 2x???)
+        ;;  $FD          - font type (0=regular, $80=double width)
         ;;  $FE          - last glyph index (count is this + 1)
         ;;  $FF          - glyph height
 
@@ -76,11 +76,8 @@
         current_textback          := $F1
         current_textfont          := $F2
 
-        sizeof_window_params := $3A
-
-        sizeof_grafport    := 36
-        port_offset_in_window_params := $14
-        next_offset_in_window_params := $38
+        port_offset_in_winfo := $14
+        next_offset_in_winfo := $38
 
         active_port     := $F4  ; address of live port block
 
@@ -89,7 +86,7 @@
         y_offset        := $F9
 
         glyph_widths    := $FB  ; address
-        glyph_flag      := $FD  ;
+        glyph_type      := $FD  ; 0=regular, $80=double width
         glyph_last      := $FE  ; last glyph index
         glyph_height_p  := $FF  ; glyph height
 
@@ -241,7 +238,7 @@ rts2:   rts
 ;;; Copy port params (36 bytes) to/from active port addr
 
 .proc apply_active_port_to_port
-        ldy     #sizeof_grafport-1
+        ldy     #MGTK::grafport_size-1
 :       lda     (active_port),y
         sta     current_grafport,y
         dey
@@ -250,7 +247,7 @@ rts2:   rts
 .endproc
 
 .proc apply_port_to_active_port
-        ldy     #sizeof_grafport-1
+        ldy     #MGTK::grafport_size-1
 :       lda     current_grafport,y
         sta     (active_port),y
         dey
@@ -2887,7 +2884,7 @@ L5852:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
         ;; Compute addresses of each row of the glyphs.
 prepare_font:
-        ldy     #0              ; copy first 3 bytes of font defn ($00 ??, $7F ??, height) to $FD-$FF
+        ldy     #0              ; copy first 3 bytes of font defn (type, lastchar, height) to $FD-$FF
 :       lda     (current_textfont),y
         sta     $FD,y
         iny
@@ -2921,7 +2918,7 @@ loop:   sta     glyph_row_lo,y
         bcc     :+
         inx
 
-:       bit     glyph_flag   ; if flag is set, double the offset (???)
+:       bit     glyph_type   ; ($80 = double width, so double the offset)
         bpl     :+
 
         sec
@@ -3609,7 +3606,7 @@ L5E42:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         jsr     SetSwitchesImpl
 
         ;; Initialize port
-        ldx     #sizeof_grafport-1
+        ldx     #MGTK::grafport_size-1
 loop:   lda     standard_port,x
         sta     $8A,x
         sta     current_grafport,x
@@ -3713,7 +3710,7 @@ store_xa_at_y:
 ;;; InitPort
 
 .proc InitPortImpl
-        ldy     #sizeof_grafport-1 ; Store 36 bytes at params
+        ldy     #MGTK::grafport_size-1 ; Store 36 bytes at params
 loop:   lda     standard_port,y
         sta     (params_addr),y
         dey
@@ -4568,7 +4565,7 @@ L6556:  asl     preserve_zp_flag
 L6567:  stax    $82
         lda     L653B
         sta     stack_ptr_stash
-        ldy     #sizeof_grafport-1
+        ldy     #MGTK::grafport_size-1
 L6573:  lda     ($82),y
         sta     current_grafport,y
         dey
@@ -6036,7 +6033,7 @@ end:    rts
         sta     $A7
         lda     $A9+1
         sta     $A7+1
-        ldy     #next_offset_in_window_params+1
+        ldy     #next_offset_in_winfo+1
         lda     ($A9),y
         beq     top_window::end  ; if high byte is 0, end of chain
         tax
@@ -6050,7 +6047,7 @@ L704A:  lda     ($A9),y         ; to $AB
         sta     $AB,y
         dey
         bpl     L704A
-        ldy     #sizeof_grafport-1
+        ldy     #MGTK::grafport_size-1
 L7054:  lda     ($A9),y
         sta     $A3,y
         dey
@@ -6594,7 +6591,7 @@ SelectWindowImpl:
         rts
 
 L74BA:  jsr     L74F4
-L74BD:  ldy     #next_offset_in_window_params ; Called from elsewhere
+L74BD:  ldy     #next_offset_in_winfo ; Called from elsewhere
         lda     L700B
         sta     ($A9),y
         iny
@@ -6619,7 +6616,7 @@ L74DE:  pla
         jsr     L718E
         jmp     L6553
 
-L74F4:  ldy     #next_offset_in_window_params ; Called from elsewhere
+L74F4:  ldy     #next_offset_in_winfo ; Called from elsewhere
         lda     ($A9),y
         sta     ($A7),y
         iny
@@ -6712,7 +6709,7 @@ L75AC:  lda     fill_rect_params,x
         bpl     L75AC
         jsr     L75C6
         bcc     L7585
-        ldy     #sizeof_grafport-1
+        ldy     #MGTK::grafport_size-1
 L75BB:  lda     current_grafport,y
         sta     (params_addr),y
         dey
@@ -6788,11 +6785,11 @@ L75EA:  lda     $92,x
         jsr     window_by_id_or_exit
         lda     ptr
         clc
-        adc     #port_offset_in_window_params
+        adc     #port_offset_in_winfo
         sta     ptr
         bcc     :+
         inc     ptr+1
-:       ldy     #sizeof_grafport-1
+:       ldy     #MGTK::grafport_size-1
 loop:   lda     ($82),y
         sta     ($A9),y
         dey
@@ -8492,7 +8489,7 @@ L8305:  sta     kbd_mouse_x
 L831A:  jmp     L7E98
 
 L831D:  sta     set_input_key
-        ldx     #sizeof_grafport-1
+        ldx     #MGTK::grafport_size-1
 L8322:  lda     $A7,x
         sta     $0600,x
         dex
@@ -8500,7 +8497,7 @@ L8322:  lda     $A7,x
         lda     set_input_key
         jsr     L8110
         php
-        ldx     #sizeof_grafport-1
+        ldx     #MGTK::grafport_size-1
 L8333:  lda     $0600,x
         sta     $A7,x
         dex
