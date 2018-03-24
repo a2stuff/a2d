@@ -3870,8 +3870,8 @@ mouse_x:        .word   0
 mouse_y:        .word   0
 mouse_status:   .byte   0
 
-L5FFD:  .byte   $00
-L5FFE:  .byte   $00
+mouse_scale_x:  .byte   $00
+mouse_scale_y:  .byte   $00
 
 mouse_hooked_flag:              ; High bit set if mouse is "hooked", and calls
         .byte   0               ; bypassed; never appears to be set.
@@ -4214,7 +4214,7 @@ L6293:  lda     mouse_x,x
         jsr     update_cursor
 L629F:  bit     no_mouse_flag
         bmi     L62A7
-        jsr     L62BA
+        jsr     read_mouse_pos
 L62A7:  bit     no_mouse_flag
         bpl     L62B1
         lda     #$00
@@ -4224,10 +4224,14 @@ L62B1:  lda     kbd_mouse_state
         jsr     L7EF5
 rts4:   rts
 
-L62BA:  ldy     #READMOUSE
+;;; ============================================================
+
+.proc read_mouse_pos
+        ldy     #READMOUSE
         jsr     call_mouse
         bit     mouse_hooked_flag
-        bmi     L62D9
+        bmi     do_scale_x
+
         ldx     mouse_firmware_hi
         lda     MOUSE_X_LO,x
         sta     mouse_x
@@ -4235,28 +4239,37 @@ L62BA:  ldy     #READMOUSE
         sta     mouse_x+1
         lda     MOUSE_Y_LO,x
         sta     mouse_y
-L62D9:  ldy     L5FFD
-        beq     L62EF
-L62DE:  lda     mouse_x
+
+        ;; Scale X
+do_scale_x:
+        ldy     mouse_scale_x
+        beq     do_scale_y
+:       lda     mouse_x
         asl     a
         sta     mouse_x
         lda     mouse_x+1
         rol     a
         sta     mouse_x+1
         dey
-        bne     L62DE
-L62EF:  ldy     L5FFE
-        beq     L62FE
+        bne     :-
+
+        ;; Scale Y
+do_scale_y:
+        ldy     mouse_scale_y
+        beq     done_scaling
         lda     mouse_y
-L62F7:  asl     a
+:       asl     a
         dey
-        bne     L62F7
+        bne     :-
         sta     mouse_y
-L62FE:  bit     mouse_hooked_flag
-        bmi     L6309
+
+done_scaling:
+        bit     mouse_hooked_flag
+        bmi     done
         lda     MOUSE_STATUS,x
         sta     mouse_status
-L6309:  rts
+done:   rts
+.endproc
 
 ;;; ============================================================
 ;;; GetCursorAddr
@@ -4359,10 +4372,16 @@ L63AC:  txa
         sta     menu_item_y_table,y
         cpy     #$0E
         bcc     L63AC
-        copy16  #$0001, L5FFD
+        lda     #1
+        sta     mouse_scale_x
+        lda     #0
+        sta     mouse_scale_y
         bit     L6336
         bvs     L63D1
-        copy16  #$0102, L5FFD
+        lda     #2
+        sta     mouse_scale_x
+        lda     #1
+        sta     mouse_scale_y
 L63D1:  ldx     L6338
         jsr     find_mouse
         bit     L6338
@@ -7812,8 +7831,9 @@ menu_index:
 menu_item_index:
         .byte   0
 
-other_mouse_x:  .word   0
-other_mouse_y:  .byte   0
+saved_mouse_pos:
+saved_mouse_x:  .word   0
+saved_mouse_y:  .byte   0
 
 L7D7F:  .byte   $00
 L7D80:  .byte   $00
@@ -7879,23 +7899,26 @@ not_hooked:
 
 ;;; ============================================================
 
-L7E5D:  ldx     other_mouse_x
-        ldy     other_mouse_x+1
-        lda     other_mouse_y
+.proc restore_mouse_pos
+        ldx     saved_mouse_x
+        ldy     saved_mouse_x+1
+        lda     saved_mouse_y
         jmp     set_mouse_pos
+.endproc
 
-set_mouse_pos_from_kbd_mouse:
+.proc set_mouse_pos_from_kbd_mouse
         ldx     kbd_mouse_x
         ldy     kbd_mouse_x+1
         lda     kbd_mouse_y
         jmp     set_mouse_pos
+.endproc
 
 L7E75:  bcc     L7E7D
-        ldx     L5FFD
+        ldx     mouse_scale_x
         bne     L7E82
 L7E7C:  rts
 
-L7E7D:  ldx     L5FFE
+L7E7D:  ldx     mouse_scale_y
         beq     L7E7C
 L7E82:  pha
         tya
@@ -7917,13 +7940,15 @@ L7E8E:  lda     kbd_mouse_x,x
 L7E98:  jsr     L7E8C
         jmp     set_mouse_pos_from_kbd_mouse
 
-L7E9E:  jsr     L62BA
-        ldx     #$02
-L7EA3:  lda     mouse_x,x
-        sta     other_mouse_x,x
+.proc save_mouse_pos
+        jsr     read_mouse_pos
+        ldx     #2
+:       lda     mouse_x,x
+        sta     saved_mouse_pos,x
         dex
-        bpl     L7EA3
+        bpl     :-
         rts
+.endproc
 
 L7EAD:  jsr     stash_addr
         lda     L7F2E
@@ -7936,7 +7961,7 @@ L7EAD:  jsr     stash_addr
         sta     kbd_mouse_state
         lda     #$40
         sta     mouse_status
-        jmp     L7E5D
+        jmp     restore_mouse_pos
 
 L7ECD:  lda     #$00
         sta     L7D81
@@ -8091,7 +8116,7 @@ L7FDE:  jmp     L7E8C
 
 L7FE1:  php
         sei
-        jsr     L7E9E
+        jsr     save_mouse_pos
         lda     #$01
         sta     kbd_mouse_state
         jsr     L800F
@@ -8292,7 +8317,7 @@ L816F:  sta     L6BD9
 
 L817C:  php
         sei
-        jsr     L7E9E
+        jsr     save_mouse_pos
         lda     #$80
         sta     mouse_status
         jsr     L70B7
@@ -8648,12 +8673,16 @@ L840D:  sec
 ;;; clamp is to fractions of screen (0 = full, 1 = 1/2, 2 = 1/4, 3 = 1/8) (why???)
 
 .proc ScaleMouseImpl
-        copy16  $82, L5FFD
+        params := $82
+        lda     params+0
+        sta     mouse_scale_x
+        lda     params+1
+        sta     mouse_scale_y
 
 L8431:  bit     no_mouse_flag   ; called after INITMOUSE
         bmi     end
 
-        lda     L5FFD
+        lda     mouse_scale_x
         asl     a
         tay
         lda     #0
@@ -8681,7 +8710,7 @@ L8431:  bit     no_mouse_flag   ; called after INITMOUSE
         ldy     #CLAMPMOUSE
         jsr     call_mouse
 
-        lda     L5FFE
+        lda     mouse_scale_y
         asl     a
         tay
         lda     #0
