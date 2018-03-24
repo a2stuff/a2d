@@ -82,8 +82,7 @@
         port_offset_in_window_params := $14
         next_offset_in_window_params := $38
 
-        active          := $F4
-        active_port    := $F4  ; address of live port block
+        active_port     := $F4  ; address of live port block
 
         fill_eor_mask   := $F6
         x_offset        := $F7
@@ -114,7 +113,7 @@
         bpl     :-
         ldx     #$0B
 :       lda     active_saved,x
-        sta     active,x
+        sta     active_port,x
         dex
         bpl     :-
         jsr     apply_active_port_to_port
@@ -139,10 +138,7 @@ adjust_stack:                   ; Adjust stack to account for params
         lda     (params_addr),y
         asl     a
         tax
-        lda     jump_table,x
-        sta     jump+1
-        lda     jump_table+1,x
-        sta     jump+2
+        copy16  jump_table,x, jump_addr
 
         iny                     ; Point params_addr at params
         lda     (params_addr),y
@@ -192,6 +188,7 @@ store:  sta     $FF,y           ; self modified
         dey
         bpl     :-
 
+        jump_addr := *+1
 jump:   jsr     $FFFF           ; the actual call
 
         ;; Exposed for routines to call directly
@@ -204,7 +201,7 @@ cleanup:
         bpl     exit_with_0
         jsr     apply_port_to_active_port
         ldx     #$0B
-:       lda     active,x
+:       lda     active_port,x
         sta     active_saved,x
         dex
         bpl     :-
@@ -395,8 +392,10 @@ jump_table:
         .addr   TrackThumbImpl      ; $4A TrackThumb
         .addr   UpdateThumbImpl     ; $4B UpdateThumb
         .addr   ActivateCtlImpl     ; $4C ActivateCtl
+
+        ;; Extra Calls
         .addr   L51B3               ; $4D ???
-        .addr   L7D69               ; $4E ???
+        .addr   SetMenuSelection    ; $4E SetMenuSelection
 
         ;; Entry point param lengths
         ;; (length, ZP destination, hide cursor flag)
@@ -4194,7 +4193,7 @@ L6263:  rts
 L6264:  .byte   0
 L6265:  bit     L6339
         bpl     L627C
-        lda     L7D74
+        lda     kbd_mouse_state
         bne     L627C
         dec     L6264
         lda     L6264
@@ -4223,7 +4222,7 @@ L62A7:  bit     no_mouse_flag
         bpl     L62B1
         lda     #$00
         sta     mouse_status
-L62B1:  lda     L7D74
+L62B1:  lda     kbd_mouse_state
         beq     rts4
         jsr     L7EF5
 rts4:   rts
@@ -4699,7 +4698,7 @@ PostEventImpl:
         ldx     $83
         ldy     $84
         lda     $85
-        jsr     L7E19
+        jsr     set_mouse_pos
 L6626:  jsr     L67E4
         bcs     L663F
         tax
@@ -4779,7 +4778,7 @@ L666D:
         bmi     end             ; minus = is down
         bit     check_kbd_flag
         bpl     L66B9
-        lda     L7D74
+        lda     kbd_mouse_state
         bne     L66B9
 
         lda     KBD
@@ -5260,9 +5259,9 @@ L6A24:  stax    $B9
         beq     L6A3C
         jmp     L6957
 
-L6A3C:  lda     #$00
-        sta     L7D7A
-        sta     L7D7B
+L6A3C:  lda     #0
+        sta     menu_index
+        sta     menu_item_index
         jsr     L6553
         sec
         lda     L633B
@@ -5499,7 +5498,7 @@ MenuSelectImpl:
         jsr     get_menu_count
         jsr     L653F
         jsr     L657E
-        bit     L7D74
+        bit     kbd_mouse_state
         bpl     L6BF2
         jsr     L7FE1
         jmp     L6C23
@@ -5537,9 +5536,9 @@ L6C40:  jsr     L6556
         ldx     L6BDA
         beq     L6C55
         lda     L6BD9
-        ldy     $A7
-        sty     L7D7A
-        stx     L7D7B
+        ldy     $A7             ; ???
+        sty     menu_index
+        stx     menu_item_index
 L6C55:  jmp     store_xa_at_params
 
 L6C58:  jsr     L6EA1
@@ -6895,7 +6894,7 @@ L76B6:  lda     $83,x
         dex
         bpl     L76B6
         jsr     window_by_id_or_exit
-        bit     L7D74
+        bit     kbd_mouse_state
         bpl     L76D1
         jsr     L817C
 L76D1:  jsr     L653C
@@ -7776,7 +7775,7 @@ check_win:
 
 KeyboardMouse:
         lda     #$80
-        sta     L7D74
+        sta     kbd_mouse_state
         jmp     FlushEventsImpl
 
 ;;; ============================================================
@@ -7785,24 +7784,45 @@ KeyboardMouse:
 
 ;;; 2 bytes of params, copied to $82
 
-L7D69:
-        copy16  $82, L7D7A
-        rts
+.proc SetMenuSelection
+        params := $82
 
-L7D74:  .byte   $00
-L7D75:  .byte   $00
-L7D76:  .byte   $00
-L7D77:  .byte   $00,$00
+        lda     params+0
+        sta     menu_index
+
+        lda     params+1
+        sta     menu_item_index
+
+        rts
+.endproc
+
+;;; ============================================================
+
+        ;; Set to $80 by KeyboardMouse call; also set to $04,
+        ;; $01 elsewhere.
+kbd_mouse_state:
+        .byte   0
+
+kbd_mouse_x:  .word     0
+kbd_mouse_y:  .word     0
+
 L7D79:  .byte   $00
-L7D7A:  .byte   $00
-L7D7B:  .byte   $00
-L7D7C:  .byte   $00
-L7D7D:  .byte   $00
-L7D7E:  .byte   $00
+
+        ;; Currently selected menu/menu item. Note that menu is index,
+        ;; not ID from menu definition.
+menu_index:
+        .byte   0
+menu_item_index:
+        .byte   0
+
+other_mouse_x:  .word   0
+other_mouse_y:  .byte   0
+
 L7D7F:  .byte   $00
 L7D80:  .byte   $00
 L7D81:  .byte   $00
 L7D82:  .byte   $00
+
 L7D83:  ldx     #$7F
 L7D85:  lda     $80,x
         sta     L7D99,x
@@ -7819,10 +7839,15 @@ L7D90:  lda     L7D99,x
 
 L7D99:  .res    128, 0
 
-L7E19:  bit     mouse_hooked_flag
-        bmi     L7E49
+;;; ============================================================
+;;; X = xlo, Y = xhi, A = y
+
+
+.proc set_mouse_pos
+        bit     mouse_hooked_flag
+        bmi     no_firmware
         bit     no_mouse_flag
-        bmi     L7E49
+        bmi     no_firmware
         pha
         txa
         sec
@@ -7842,25 +7867,31 @@ L7E19:  bit     mouse_hooked_flag
         ldy     #POSMOUSE
         jmp     call_mouse
 
-L7E49:  stx     mouse_x
+no_firmware:
+        stx     mouse_x
         sty     mouse_x+1
         sta     mouse_y
         bit     mouse_hooked_flag
-        bpl     L7E5C
+        bpl     not_hooked
         ldy     #POSMOUSE
         jmp     call_mouse
 
-L7E5C:  rts
+not_hooked:
+        rts
+.endproc
 
-L7E5D:  ldx     L7D7C
-        ldy     L7D7D
-        lda     L7D7E
-        jmp     L7E19
+;;; ============================================================
 
-L7E69:  ldx     L7D75
-        ldy     L7D76
-        lda     L7D77
-        jmp     L7E19
+L7E5D:  ldx     other_mouse_x
+        ldy     other_mouse_x+1
+        lda     other_mouse_y
+        jmp     set_mouse_pos
+
+set_mouse_pos_from_kbd_mouse:
+        ldx     kbd_mouse_x
+        ldy     kbd_mouse_x+1
+        lda     kbd_mouse_y
+        jmp     set_mouse_pos
 
 L7E75:  bcc     L7E7D
         ldx     L5FFD
@@ -7880,19 +7911,19 @@ L7E82:  pha
         rts
 
 L7E8C:  ldx     #$02
-L7E8E:  lda     L7D75,x
+L7E8E:  lda     kbd_mouse_x,x
         sta     mouse_x,x
         dex
         bpl     L7E8E
         rts
 
 L7E98:  jsr     L7E8C
-        jmp     L7E69
+        jmp     set_mouse_pos_from_kbd_mouse
 
 L7E9E:  jsr     L62BA
         ldx     #$02
 L7EA3:  lda     mouse_x,x
-        sta     L7D7C,x
+        sta     other_mouse_x,x
         dex
         bpl     L7EA3
         rts
@@ -7905,7 +7936,7 @@ L7EAD:  jsr     stash_addr
         jsr     SetCursorImpl
         jsr     restore_addr
         lda     #$00
-        sta     L7D74
+        sta     kbd_mouse_state
         lda     #$40
         sta     mouse_status
         jmp     L7E5D
@@ -7937,14 +7968,14 @@ L7EE8:  clc
         sec
 L7EF4:  rts
 
-L7EF5:  lda     L7D74
+L7EF5:  lda     kbd_mouse_state
         bne     L7EFB
         rts
 
 L7EFB:  cmp     #$04
         beq     L7F48
         jsr     L7FB4
-        lda     L7D74
+        lda     kbd_mouse_state
         cmp     #$01
         bne     L7F0C
         jmp     L804D
@@ -7997,7 +8028,7 @@ L7F48:  jsr     compute_modifiers
 L7F63:  jmp     L7E98
 
 L7F66:  pha
-        lda     L7D74
+        lda     kbd_mouse_state
         bne     L7FA3
         pla
         cmp     #$03
@@ -8005,7 +8036,7 @@ L7F66:  pha
         bit     mouse_status
         bmi     L7FA2
         lda     #$04
-        sta     L7D74
+        sta     kbd_mouse_state
         ldx     #$0A
 L7F7D:  lda     SPKR            ; Beep?
         ldy     #$00
@@ -8021,7 +8052,7 @@ L7F88:  jsr     compute_modifiers
         sta     L7D82
         ldx     #$02
 L7F99:  lda     set_pos_params,x
-        sta     L7D75,x
+        sta     kbd_mouse_x,x
         dex
         bpl     L7F99
 L7FA2:  rts
@@ -8032,7 +8063,7 @@ L7FA3:  cmp     #$04
         and     #$01
         bne     L7FB1
         lda     #$00
-        sta     L7D74
+        sta     kbd_mouse_state
 L7FB1:  rts
 
 L7FB2:  pla
@@ -8040,9 +8071,9 @@ L7FB2:  pla
 
 L7FB4:  bit     mouse_status
         bpl     L7FC1
-        lda     #$00
-        sta     L7D74
-        jmp     L7E69
+        lda     #0
+        sta     kbd_mouse_state
+        jmp     set_mouse_pos_from_kbd_mouse
 
 L7FC1:  lda     mouse_status
         pha
@@ -8053,7 +8084,7 @@ L7FC1:  lda     mouse_status
         beq     L7FDE
         ldx     #$02
 L7FD1:  lda     mouse_x,x
-        sta     L7D75,x
+        sta     kbd_mouse_x,x
         dex
         bpl     L7FD1
         stx     L7D79
@@ -8065,34 +8096,36 @@ L7FE1:  php
         sei
         jsr     L7E9E
         lda     #$01
-        sta     L7D74
+        sta     kbd_mouse_state
         jsr     L800F
         lda     #$80
         sta     mouse_status
         jsr     L7F0F
-        ldx     L7D7A
+        ldx     menu_index
         jsr     L6878
         lda     $AF
         sta     L6BD9
         jsr     L6D26
-        lda     L7D7B
+        lda     menu_item_index
         sta     L6BDA
         jsr     L6EAA
         plp
         rts
 
-L800F:  ldx     L7D7A
+L800F:  ldx     menu_index
         jsr     L6878
+
         clc
         lda     $B7
         adc     #$05
-        sta     L7D75
+        sta     kbd_mouse_x
         lda     $B8
         adc     #$00
-        sta     L7D76
-        ldy     L7D7B
+        sta     kbd_mouse_x+1
+
+        ldy     menu_item_index
         lda     menu_item_y_table,y
-        sta     L7D77
+        sta     kbd_mouse_y
         lda     #$C0
         sta     mouse_status
         jmp     L7E98
@@ -8100,10 +8133,10 @@ L800F:  ldx     L7D7A
 L8035:  bit     L7D79
         bpl     L804C
         lda     L6BDA
-        sta     L7D7B
+        sta     menu_item_index
         ldx     L6BD9
         dex
-        stx     L7D7A
+        stx     menu_index
         lda     #$00
         sta     L7D79
 L804C:  rts
@@ -8140,13 +8173,13 @@ try_return:
 try_up:
         cmp     #CHAR_UP
         bne     try_down
-L8081:  dec     L7D7B
+L8081:  dec     menu_item_index
         bpl     L8091
-        ldx     L7D7A
+        ldx     menu_index
         jsr     L6878
         ldx     $AA
-        stx     L7D7B
-L8091:  ldx     L7D7B
+        stx     menu_item_index
+L8091:  ldx     menu_item_index
         beq     L80A0
         dex
         jsr     L68BE
@@ -8158,16 +8191,16 @@ L80A0:  jmp     L800F
 try_down:
         cmp     #CHAR_DOWN
         bne     try_right
-L80A7:  inc     L7D7B
-        ldx     L7D7A
+L80A7:  inc     menu_item_index
+        ldx     menu_index
         jsr     L6878
-        lda     L7D7B
+        lda     menu_item_index
         cmp     $AA
         bcc     L80BE
         beq     L80BE
         lda     #0
-        sta     L7D7B
-L80BE:  ldx     L7D7B
+        sta     menu_item_index
+L80BE:  ldx     menu_item_index
         beq     L80CD
         dex
         jsr     L68BE
@@ -8180,27 +8213,27 @@ try_right:
         cmp     #CHAR_RIGHT
         bne     try_left
         lda     #0
-        sta     L7D7B
-        inc     L7D7A
-        lda     L7D7A
+        sta     menu_item_index
+        inc     menu_index
+        lda     menu_index
         cmp     $A8
         bcc     L80E8
         lda     #$00
-        sta     L7D7A
+        sta     menu_index
 L80E8:  jmp     L800F
 
 try_left:
         cmp     #CHAR_LEFT
         bne     nope
         lda     #0
-        sta     L7D7B
-        dec     L7D7A
+        sta     menu_item_index
+        dec     menu_index
         bmi     L80FC
         jmp     L800F
 
 L80FC:  ldx     $A8
         dex
-        stx     L7D7A
+        stx     menu_index
         jmp     L800F
 
 nope:   jsr     L8110
@@ -8275,12 +8308,12 @@ L817C:  php
 L8196:  sec
         lda     $CB,x
         sbc     #$04
-        sta     L7D75,x
+        sta     kbd_mouse_x,x
         sta     L769B,x
         sta     L769F,x
         lda     $CC,x
         sbc     #$00
-        sta     L7D76,x
+        sta     kbd_mouse_x+1,x
         sta     L769C,x
         sta     L76A0,x
         inx
@@ -8305,7 +8338,7 @@ L8196:  sec
         rts
 
 L81D9:  lda     #$00
-        sta     L7D74
+        sta     kbd_mouse_state
         lda     #$A2
         plp
         jmp     exit_with_a
@@ -8314,7 +8347,7 @@ L81E4:  lda     $AC
         and     #$01
         beq     L81F4
         lda     #$00
-        sta     L7D74
+        sta     kbd_mouse_state
         exit_call $A1
 
 L81F4:  ldx     #$00
@@ -8326,23 +8359,23 @@ L81F6:  clc
         jmp     L8204
 
 L8202:  adc     #$05
-L8204:  sta     L7D75,x
+L8204:  sta     kbd_mouse_x,x
         sta     L769B,x
         sta     L769F,x
         lda     $C8,x
         adc     #$00
-        sta     L7D76,x
+        sta     kbd_mouse_x+1,x
         sta     L769C,x
         sta     L76A0,x
         inx
         inx
         cpx     #$04
         bcc     L81F6
-        bit     L7D76
+        bit     kbd_mouse_x+1
         bpl     L8235
         ldx     #$01
         lda     #$00
-L8229:  sta     L7D75,x
+L8229:  sta     kbd_mouse_x,x
         sta     L769B,x
         sta     L769F,x
         dex
@@ -8354,20 +8387,20 @@ L8235:  jsr     L7E98
 
 L823D:  php
         clc
-        adc     L7D77
-        sta     L7D77
+        adc     kbd_mouse_y
+        sta     kbd_mouse_y
         plp
         bpl     L8254
         cmp     #$C0
         bcc     L8251
         lda     #$00
-        sta     L7D77
+        sta     kbd_mouse_y
 L8251:  jmp     L7E98
 
 L8254:  cmp     #$C0
         bcc     L8251
         lda     #$BF
-        sta     L7D77
+        sta     kbd_mouse_y
         bne     L8251
 L825F:  jsr     L7D83
         jsr     L8268
@@ -8420,42 +8453,42 @@ L82B2:  cmp     #$15
         bit     set_input_modifiers
         bpl     L82C5
         lda     #$40
-L82C5:  adc     L7D75
-        sta     L7D75
-        lda     L7D76
+L82C5:  adc     kbd_mouse_x
+        sta     kbd_mouse_x
+        lda     kbd_mouse_x+1
         adc     #$00
-        sta     L7D76
+        sta     kbd_mouse_x+1
         sec
-        lda     L7D75
+        lda     kbd_mouse_x
         sbc     #$2F
-        lda     L7D76
+        lda     kbd_mouse_x+1
         sbc     #$02
         bmi     L82EA
         lda     #$02
-        sta     L7D76
+        sta     kbd_mouse_x+1
         lda     #$2F
-        sta     L7D75
+        sta     kbd_mouse_x
 L82EA:  jmp     L7E98
 
 L82ED:  cmp     #$08
         bne     L831D
         jsr     L8352
         bcc     L831A
-        lda     L7D75
+        lda     kbd_mouse_x
         bit     set_input_modifiers
         bpl     L8303
         sbc     #$40
         jmp     L8305
 
 L8303:  sbc     #$08
-L8305:  sta     L7D75
-        lda     L7D76
+L8305:  sta     kbd_mouse_x
+        lda     kbd_mouse_x+1
         sbc     #$00
-        sta     L7D76
+        sta     kbd_mouse_x+1
         bpl     L831A
         lda     #$00
-        sta     L7D75
-        sta     L7D76
+        sta     kbd_mouse_x
+        sta     kbd_mouse_x+1
 L831A:  jmp     L7E98
 
 L831D:  sta     set_input_key
@@ -8494,12 +8527,12 @@ unk:    .byte   0
         set_input_modifiers := set_input_params::modifiers
         set_input_unk := set_input_params::unk
 
-L8352:  lda     L7D74
+L8352:  lda     kbd_mouse_state
         cmp     #$04
         beq     L8368
-        lda     L7D75
+        lda     kbd_mouse_x
         bne     L8368
-        lda     L7D76
+        lda     kbd_mouse_x+1
         bne     L8368
         bit     drag_resize_flag
         bpl     L836A
@@ -8531,14 +8564,14 @@ L838D:  adc     L769B
 L8398:  clc
         rts
 
-L839A:  lda     L7D74
+L839A:  lda     kbd_mouse_state
         cmp     #$04
         beq     L83B3
         bit     drag_resize_flag
         .byte   $30             ; bmi ...
         ora     $75AD
         adc     $2FE9,x
-        lda     L7D76
+        lda     kbd_mouse_x+1
         sbc     #$02
         beq     L83B5
         sec
@@ -8585,7 +8618,7 @@ L83F6:  lda     #$80
         sta     L83F5
 L83FB:  rts
 
-L83FC:  bit     L7D74
+L83FC:  bit     kbd_mouse_state
         bpl     L83FB
         bit     L83F5
         bpl     L83FB
@@ -8596,10 +8629,10 @@ L83FC:  bit     L7D74
 L840D:  sec
         lda     $CB,x
         sbc     #$04
-        sta     L7D75,x
+        sta     kbd_mouse_x,x
         lda     $CC,x
         sbc     #$00
-        sta     L7D76,x
+        sta     kbd_mouse_x+1,x
         inx
         inx
         cpx     #$04
