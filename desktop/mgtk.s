@@ -28,8 +28,8 @@
 
         ;; $A8          - Menu count
 
-        ;; $A9-$AA      - Address of current window
-        ;; $AB-...      - Copy of current window params (first 12 bytes)
+        ;; $A9-$AA      - Address of current winfo
+        ;; $AB-...      - Copy of first 12 bytes of current winfo
 
         ;; $D0-$F3      - Current GrafPort
         ;;  $D0-$DF      - portmap
@@ -75,9 +75,6 @@
         current_penmode           := $F0
         current_textback          := $F1
         current_textfont          := $F2
-
-        port_offset_in_winfo := $14
-        next_offset_in_winfo := $38
 
         active_port     := $F4  ; address of live port block
 
@@ -6046,13 +6043,13 @@ end:    rts
 .endproc
 
         ;; Look up next window in chain. $A9/$AA will point at
-        ;; window params block (also returned in X,A).
+        ;; winfo (also returned in X,A).
 .proc next_window
         lda     $A9
         sta     $A7
         lda     $A9+1
         sta     $A7+1
-        ldy     #next_offset_in_winfo+1
+        ldy     #MGTK::winfo_offset_nextwinfo+1
         lda     ($A9),y
         beq     top_window::end  ; if high byte is 0, end of chain
         tax
@@ -6078,7 +6075,7 @@ L705E:  ldax    $A9
         next_window_L7038 := next_window::L7038
 
         ;; Look up window state by id (in $82); $A9/$AA will point at
-        ;; window params (also X,A).
+        ;; winfo (also X,A).
 .proc window_by_id
         jsr     top_window
         beq     end
@@ -6091,7 +6088,7 @@ end:    rts
 .endproc
 
         ;; Look up window state by id (in $82); $A9/$AA will point at
-        ;; window params (also X,A).
+        ;; winfo (also X,A).
         ;; This will exit the MGTK call directly (restoring stack, etc)
         ;; if the window is not found.
 .proc window_by_id_or_exit
@@ -6610,7 +6607,7 @@ SelectWindowImpl:
         rts
 
 L74BA:  jsr     L74F4
-L74BD:  ldy     #next_offset_in_winfo ; Called from elsewhere
+L74BD:  ldy     #MGTK::winfo_offset_nextwinfo ; Called from elsewhere
         lda     L700B
         sta     ($A9),y
         iny
@@ -6635,7 +6632,7 @@ L74DE:  pla
         jsr     L718E
         jmp     L6553
 
-L74F4:  ldy     #next_offset_in_winfo ; Called from elsewhere
+L74F4:  ldy     #MGTK::winfo_offset_nextwinfo ; Called from elsewhere
         lda     ($A9),y
         sta     ($A7),y
         iny
@@ -6804,7 +6801,7 @@ L75EA:  lda     $92,x
         jsr     window_by_id_or_exit
         lda     ptr
         clc
-        adc     #port_offset_in_winfo
+        adc     #MGTK::winfo_offset_port
         sta     ptr
         bcc     :+
         inc     ptr+1
