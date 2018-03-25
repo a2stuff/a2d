@@ -87,6 +87,7 @@
         glyph_last      := $FE  ; last glyph index
         glyph_height_p  := $FF  ; glyph height
 
+
 ;;; ============================================================
 ;;; MGTK
 
@@ -388,8 +389,8 @@ jump_table:
         .addr   ActivateCtlImpl     ; $4C ActivateCtl
 
         ;; Extra Calls
-        .addr   L51B3               ; $4D ???
-        .addr   SetMenuSelection    ; $4E SetMenuSelection
+        .addr   BitBltImpl          ; $4D BitBlt
+        .addr   SetMenuSelectionImpl; $4E SetMenuSelection
 
         ;; Entry point param lengths
         ;; (length, ZP destination, hide cursor flag)
@@ -856,7 +857,7 @@ hires_table_hi:
         ;; ZP usage
         src_addr          := $82        ; pointer to source bitmap
         vid_addr          := $84        ; pointer to video memory
-        left_char         := $86        ; offset of leftmost coordinate in chars (0-39)
+        left_bytes        := $86        ; offset of leftmost coordinate in chars (0-39)
         bits_addr         := $8E        ; pointer to pattern/bitmap
         width_mod14       := $87        ; width of rectangle mod 14
         left_sidemask     := $88        ; bitmask applied to clip left edge of rect
@@ -864,18 +865,31 @@ hires_table_hi:
         src_y_coord       := $8C
 
         src_mapwidth      := $90        ; source stride; $80 = DHGR layout
-        width_char        := $91        ; width of rectangle in chars
+        width_bytes       := $91        ; width of rectangle in chars
 
         left_masks_table  := $92        ; bitmasks for left edge indexed by page (0=main, 1=aux)
         right_masks_table := $96        ; bitmasks for right edge indexed by page (0=main, 1=aux)
 
         top               := $94        ; top/starting/current y-coordinate
         bottom            := $98        ; bottom/ending/maximum y-coordinate
-
+        left              := $92
+        right             := $96
 
         ;; Text page usage (main/aux)
         pattern_buffer  := $0400        ; buffer for currently selected pattern (page-aligned)
         bitmap_buffer   := $0601        ; scratchpad area for drawing bitmaps/patterns
+
+        poly_maxima_links := $0428
+        poly_maxima_slope0 := $0528
+        poly_maxima_slope1 := $04E8
+        poly_maxima_slope2 := $0568
+        poly_maxima_slope3 := $05A8
+
+        poly_xl_buffer  := $0700
+        poly_xh_buffer  := $073C
+        poly_yl_buffer  := $0780
+        poly_yh_buffer  := $07BC
+
 
         .assert <pattern_buffer = 0, error, "pattern_buffer must be page-aligned"
 
@@ -1009,7 +1023,7 @@ get_srcbits_jmp_addr := *+1
         bcc     :+
         inc     load_addr+1
 
-:       ldy     src_width_char
+:       ldy     src_width_bytes
 
 loop:
 load_addr       := *+1
@@ -1025,8 +1039,8 @@ load_addr       := *+1
         ;; buffer at $0601.
 
 .proc dhgr_get_srcbits
-        index       := $81
-        src_char    := $8A        ; char offset within source line
+        index         := $81
+        src_byte_off  := $8A        ; char offset within source line
 
         ldy     src_y_coord
         inc     src_y_coord
@@ -1034,7 +1048,7 @@ load_addr       := *+1
         ora     $80
         sta     src_addr+1
         lda     hires_table_lo,y
-        adc     src_char
+        adc     src_byte_off
         sta     src_addr
 
 get_bits:
@@ -1056,7 +1070,7 @@ offset2_addr    := *+1
         iny
         inx
         inx
-        cpx     src_width_char
+        cpx     src_width_bytes
         bcc     loop
         beq     loop
         ldx     index
@@ -1079,7 +1093,7 @@ shift_bits_clc_jmp := dhgr_get_srcbits::shift_bits_clc_jmp
         index   := $82
 
         stx     index
-        ldy     src_width_char
+        ldy     src_width_bytes
         lda     #$00
 loop:   ldx     bitmap_buffer,y
 
@@ -1126,7 +1140,7 @@ offset2_addr := *+1
         inx
         inx
         iny
-        cpy     width_char
+        cpy     width_bytes
         bcc     loop
         beq     loop
 
@@ -1170,7 +1184,7 @@ start_fill_jmp_addr := *+1
         ror     a
         ror     a
         and     #$C0            ; to high 2 bits
-        ora     left_char
+        ora     left_bytes
         sta     src_addr
 
         lda     #>pattern_buffer
@@ -1188,7 +1202,7 @@ start_fill_jmp_addr := *+1
         ror     a
         ror     a
         and     #$C0            ; to high 2 bits
-        ora     left_char
+        ora     left_bytes
         sta     bits_addr
 
         lda     #>pattern_buffer
@@ -1211,7 +1225,7 @@ next_line_jmp_addr := *+1
         bcc     :+
         inc     vid_addr+1
         clc
-:       ldy     width_char
+:       ldy     width_bytes
 
         jsr     fillmode_jmp
         jmp     fill_next_line
@@ -1226,7 +1240,7 @@ next_line_jmp_addr := *+1
         sta     vid_addr+1
         lda     hires_table_lo,x
         clc
-        adc     left_char
+        adc     left_bytes
         sta     vid_addr
 
         ldy     #1                      ; aux mem
@@ -1250,7 +1264,7 @@ next_line_jmp_addr := *+1
         ora     #$80
         sta     right_sidemask
 
-        ldy     width_char
+        ldy     width_bytes
         ;; Fall-through
 .endproc
 
@@ -1306,8 +1320,8 @@ fill_mode_table_onechar:
         x1      := $92
         x2      := $96
 
-        x1_char := $86
-        x2_char := $82
+        x1_bytes := $86
+        x2_bytes := $82
 
         add16   x_offset, x2, x2
         add16   y_offset, bottom, bottom
@@ -1325,8 +1339,8 @@ fill_mode_table_onechar:
         lda     div7_table,x
         ldy     mod7_table,x
 
-set_x2_char:
-        sta     x2_char
+set_x2_bytes:
+        sta     x2_bytes
         tya
         rol     a
         tay
@@ -1343,8 +1357,8 @@ set_x2_char:
         lda     div7_table,x
         ldy     mod7_table,x
 
-set_x1_char:
-        sta     x1_char
+set_x1_bytes:
+        sta     x1_bytes
         tya
         rol     a
         tay
@@ -1353,12 +1367,12 @@ set_x1_char:
         sta     left_masks_table+1
         lda     main_left_masks,y
         sta     left_masks_table
-        lda     x2_char
+        lda     x2_bytes
         sec
-        sbc     x1_char
+        sbc     x1_bytes
 
 set_width:                                      ; Set width for destination.
-        sta     width_char
+        sta     width_bytes
         pha
         lda     current_penmode
         asl     a
@@ -1397,7 +1411,7 @@ ll_ge256:                               ; Divmod for left limit >= 256
         adc     #$24
         plp
         ldy     mod7_table+4,x
-        bpl     set_x1_char
+        bpl     set_x1_bytes
 
 rl_ge256:                               ; Divmod for right limit >= 256
         lda     x2
@@ -1410,7 +1424,7 @@ rl_ge256:                               ; Divmod for right limit >= 256
         plp
         ldy     mod7_table+4,x
         bmi     divmod7
-        jmp     set_x2_char
+        jmp     set_x2_bytes
 .endproc
 
 
@@ -1439,11 +1453,11 @@ rl_ge256:                               ; Divmod for right limit >= 256
 
         ;; Set up destination (for either on-screen or off-screen bitmap.)
 
-.proc set_up_dest
+.proc set_dest
         DEST_NDBM       := 0            ; draw to off-screen bitmap
         DEST_DHGR       := 1            ; draw to DHGR screen
 
-        lda     left_char
+        lda     left_bytes
         ldx     top
         ldy     current_mapwidth
         jsr     ndbm_calc_dest
@@ -1468,7 +1482,7 @@ rl_ge256:                               ; Divmod for right limit >= 256
         jsr     ndbm_fix_width
         txa
         inx
-        stx     src_width_char
+        stx     src_width_bytes
         jsr     set_up_fill_mode::set_width
 
         lda     shift_line_jmp_addr
@@ -1502,7 +1516,7 @@ on_screen:
         ;; Fix up the width and masks for an off-screen destination,
 
 ndbm_fix_width:
-        lda     width_char
+        lda     width_bytes
         asl     a
         tax
         inx
@@ -1536,7 +1550,7 @@ shift_line_table:
 
         ;; Set source for bitmap transfer (either on-screen or off-screen bitmap.)
 
-.proc set_up_source
+.proc set_source
         SRC_NDBM        := 0
         SRC_DHGR        := 1
 
@@ -1606,169 +1620,193 @@ ndbm_calc_off := ndbm_calc_dest::calc_off
 ;;; ============================================================
 ;;; SetPattern
 
-SetPatternImpl:
-        lda     #$00
-        sta     $8E
+;; Expands the pattern to 8 rows of DHGR-style bitmaps at
+;; $0400, $0440, $0480, $04C0, $0500, $0540, $0580, $05C0
+;; (using both main and aux mem.)
+
+.proc SetPatternImpl
+        lda     #<pattern_buffer
+        sta     bits_addr
+
         lda     y_offset
-        and     #$07
+        and     #7
         lsr     a
-        ror     $8E
+        ror     bits_addr
         lsr     a
-        ror     $8E
-        adc     #$04
-        sta     $8F
-        ldx     #$07
-L4FA3:  lda     x_offset
-        and     #$07
+        ror     bits_addr
+        adc     #>pattern_buffer
+        sta     bits_addr+1
+
+        ldx     #7
+loop:   lda     x_offset
+        and     #7
         tay
+
         lda     current_penpattern,x
-L4FAA:  dey
-        bmi     L4FB2
+:       dey
+        bmi     :+
         cmp     #$80
         rol     a
-        bne     L4FAA
-L4FB2:  ldy     #$27
-L4FB4:  pha
+        bne     :-
+
+:       ldy     #$27
+:       pha
         lsr     a
         sta     LOWSCR
-        sta     ($8E),y
+        sta     (bits_addr),y
         pla
         ror     a
         pha
         lsr     a
         sta     HISCR
-        sta     ($8E),y
+        sta     (bits_addr),y
         pla
         ror     a
         dey
-        bpl     L4FB4
-        lda     $8E
+        bpl     :-
+
+        lda     bits_addr
         sec
         sbc     #$40
-        sta     $8E
-        bcs     L4FDD
-        ldy     $8F
+        sta     bits_addr
+        bcs     next
+
+        ldy     bits_addr+1
         dey
-        cpy     #$04
-        bcs     L4FDB
-        ldy     #$05
-L4FDB:  sty     $8F
-L4FDD:  dex
-        bpl     L4FA3
+        cpy     #>pattern_buffer
+        bcs     :+
+        ldy     #>pattern_buffer+1
+:       sty     bits_addr+1
+
+next:   dex
+        bpl     loop
         sta     LOWSCR
         rts
+.endproc
+
 
 ;;; ============================================================
 ;;; FrameRect
 
-;;; 4 bytes of params, copied to $9F
+;;; 8 bytes of params, copied to $9F
 
-L4FE4:  .byte   0
+frect_ctr:  .byte   0
 
-FrameRectImpl:
-
+.proc FrameRectImpl
         left   := $9F
+        top    := $A1
         right  := $A3
+        bottom := $A5
 
-        ldy     #$03
-L4FE7:  ldx     #$07
-L4FE9:  lda     $9F,x
-        sta     $92,x
+        ldy     #3
+rloop:  ldx     #7
+:       lda     left,x
+        sta     left_masks_table,x
         dex
-        bpl     L4FE9
-        ldx     L5016,y
-        lda     $9F,x
+        bpl     :-
+        ldx     rect_sides,y
+        lda     left,x
         pha
         lda     $A0,x
-        ldx     L501A,y
+        ldx     rect_coords,y
         sta     $93,x
         pla
-        sta     $92,x
-        sty     L4FE4
-        jsr     L501E
-        ldy     L4FE4
+        sta     left_masks_table,x
+        sty     frect_ctr
+        jsr     draw_line
+        ldy     frect_ctr
         dey
-        bpl     L4FE7
-        ldx     #$03
-L500E:  lda     $9F,x
+        bpl     rloop
+        ldx     #3
+:       lda     left,x
         sta     current_penloc,x
         dex
-        bpl     L500E
-L5015:  rts
+        bpl     :-
+.endproc
+prts:   rts
 
-L5016:  .byte   $00,$02,$04,$06
-L501A:  .byte   $04,$06,$00,$02
+rect_sides:
+        .byte   0,2,4,6
+rect_coords:
+        .byte   4,6,0,2
 
-L501E:  lda     current_penwidth    ; Also: draw horizontal line $92 to $96 at $98
+.proc draw_line
+        x2      := right
+
+        lda     current_penwidth    ; Also: draw horizontal line $92 to $96 at $98
         sec
         sbc     #1
         cmp     #$FF
-        beq     L5015
-        adc     $96
-        sta     $96
-        bcc     L502F
-        inc     $96+1
+        beq     prts
+        adc     x2
+        sta     x2
+        bcc     :+
+        inc     x2+1
 
-L502F:  lda     current_penheight
+:       lda     current_penheight
         sec
         sbc     #1
         cmp     #$FF
-        beq     L5015
-        adc     $98
-        sta     $98
+        beq     prts
+        adc     bottom
+        sta     bottom
         bcc     PaintRectImpl
-        inc     $98+1
+        inc     bottom+1
         ;; Fall through...
+.endproc
+
 
 ;;; ============================================================
 ;;; PaintRect
 
-;;; 4 bytes of params, copied to $92
+;;; 8 bytes of params, copied to $92
 
-PaintRectImpl:
-        jsr     L514C
-L5043:  jsr     L50A9
-        bcc     L5015
+.proc PaintRectImpl
+        jsr     check_rect
+do_paint:
+        jsr     clip_rect
+        bcc     prts
         jsr     set_up_fill_mode
-        jsr     set_up_dest
+        jsr     set_dest
         jmp     do_fill
+.endproc
+
 
 ;;; ============================================================
 ;;; InRect
 
-;;; 4 bytes of params, copied to $92
+;;; 8 bytes of params, copied to $92
 
 .proc InRectImpl
-
-        left   := $92
-        right  := $96
-
-        jsr     L514C
+        jsr     check_rect
         ldax    current_penloc_x
         cpx     left+1
         bmi     fail
         bne     :+
         cmp     left
         bcc     fail
+
 :       cpx     right+1
         bmi     :+
         bne     fail
         cmp     right
         bcc     :+
         bne     fail
+
 :       ldax    current_penloc_y
         cpx     top+1
         bmi     fail
         bne     :+
         cmp     top
         bcc     fail
+
 :       cpx     bottom+1
         bmi     :+
         bne     fail
         cmp     bottom
         bcc     :+
         bne     fail
-:       exit_call $80           ; success!
+:       exit_call MGTK::error_in_object           ; success!
 
 fail:   rts
 .endproc
@@ -1776,125 +1814,151 @@ fail:   rts
 ;;; ============================================================
 ;;; SetPortBits
 
-SetPortBitsImpl:
+.proc SetPortBitsImpl
         sub16   current_viewloc_x, current_maprect_x1, x_offset
         sub16   current_viewloc_y, current_maprect_y1, y_offset
         rts
+.endproc
 
-L50A9:  lda     current_maprect_x2+1
-        cmp     $92+1
-        bmi     L50B7
-        bne     L50B9
+
+        clipped_left := $9B        ; number of bits clipped off left side
+        clipped_top := $9D         ; number of bits clipped off top side
+
+
+.proc clip_rect
+        lda     current_maprect_x2+1
+        cmp     left+1
+        bmi     fail
+        bne     in_left
         lda     current_maprect_x2
-        cmp     $92
-        bcs     L50B9
-L50B7:  clc
-L50B8:  rts
+        cmp     left
+        bcs     in_left
+fail:   clc
+fail2:  rts
 
-L50B9:  lda     $96+1
+in_left:
+        lda     right+1
         cmp     current_maprect_x1+1
-        bmi     L50B7
-        bne     L50C7
-        lda     $96
+        bmi     fail
+        bne     in_right
+        lda     right
         cmp     current_maprect_x1
-        bcc     L50B8
-L50C7:  lda     current_maprect_y2+1
-        cmp     $94+1
-        bmi     L50B7
-        bne     L50D5
+        bcc     fail2
+
+in_right:
+        lda     current_maprect_y2+1
+        cmp     top+1
+        bmi     fail
+        bne     in_bottom
         lda     current_maprect_y2
-        cmp     $94
-        bcc     L50B8
-L50D5:  lda     $98+1
+        cmp     top
+        bcc     fail2
+
+in_bottom:
+        lda     bottom+1
         cmp     current_maprect_y1+1
-        bmi     L50B7
-        bne     L50E3
-        lda     $98
+        bmi     fail
+        bne     in_top
+        lda     bottom
         cmp     current_maprect_y1
-        bcc     L50B8
-L50E3:  ldy     #$00
-        lda     $92
+        bcc     fail2
+
+in_top: ldy     #0
+        lda     left
         sec
         sbc     current_maprect_x1
         tax
-        lda     $92+1
+        lda     left+1
         sbc     current_maprect_x1+1
-        bpl     L50FE
-        stx     $9B
-        sta     $9C
+        bpl     :+
+
+        stx     clipped_left
+        sta     clipped_left+1
         lda     current_maprect_x1
-        sta     $92
+        sta     left
         lda     current_maprect_x1+1
-        sta     $92+1
+        sta     left+1
         iny
-L50FE:  lda     current_maprect_x2
+
+:       lda     current_maprect_x2
         sec
-        sbc     $96
+        sbc     right
         tax
         lda     current_maprect_x2+1
-        sbc     $96+1
-        bpl     L5116
+        sbc     right+1
+        bpl     :+
+
         lda     current_maprect_x2
-        sta     $96
+        sta     right
         lda     current_maprect_x2+1
-        sta     $96+1
+        sta     right+1
         tya
         ora     #$04
         tay
-L5116:  lda     $94
+
+:       lda     top
         sec
         sbc     current_maprect_y1
         tax
-        lda     $94+1
+        lda     top+1
         sbc     current_maprect_y1+1
-        bpl     L5130
-        stx     $9D
-        sta     $9E
+        bpl     :+
+
+        stx     clipped_top
+        sta     clipped_top+1
         lda     current_maprect_y1
-        sta     $94
+        sta     top
         lda     current_maprect_y1+1
-        sta     $94+1
+        sta     top+1
         iny
         iny
-L5130:  lda     current_maprect_y2
+
+:       lda     current_maprect_y2
         sec
-        sbc     $98
+        sbc     bottom
         tax
         lda     current_maprect_y2+1
-        sbc     $98+1
-        bpl     L5148
+        sbc     bottom+1
+        bpl     :+
         lda     current_maprect_y2
-        sta     $98
+        sta     bottom
         lda     current_maprect_y2+1
-        sta     $98+1
+        sta     bottom+1
         tya
         ora     #$08
         tay
-L5148:  sty     $9A
+
+:       sty     $9A
         sec
         rts
+.endproc
 
-L514C:  sec
-        lda     $96
-        sbc     $92
-        lda     $96+1
-        sbc     $92+1
-        bmi     L5163
+
+.proc check_rect
         sec
-        lda     $98
-        sbc     $94
-        lda     $98+1
-        sbc     $94+1
-        bmi     L5163
+        lda     right
+        sbc     left
+        lda     right+1
+        sbc     left+1
+        bmi     bad_rect
+        sec
+        lda     bottom
+        sbc     top
+        lda     bottom+1
+        sbc     top+1
+        bmi     bad_rect
         rts
 
-L5163:  exit_call $81
+bad_rect:
+        exit_call MGTK::error_empty_object
+.endproc
+
 
 ;;; ============================================================
 
 ;;; 16 bytes of params, copied to $8A
 
-src_width_char:
+src_width_bytes:
         .res    1          ; width of source data in chars
 
 L5169:  .byte   0
@@ -1903,15 +1967,18 @@ PaintBitsImpl:
 
         dbi_left   := $8A
         dbi_top    := $8C
-        dbi_bitmap := $8E
-        dbi_stride := $90
-        dbi_hoff   := $92
-        dbi_voff   := $94
-        dbi_width  := $96
-        dbi_height := $98
+        dbi_bitmap := $8E     ; aka bits_addr
+        dbi_stride := $90     ; aka src_mapwidth
+        dbi_hoff   := $92     ; aka left
+        dbi_voff   := $94     ; aka top
+        dbi_width  := $96     ; aka right
+        dbi_height := $98     ; aka bottom
 
         dbi_x      := $9B
         dbi_y      := $9D
+
+        offset     := $82
+
 
         ldx     #3         ; copy left/top to $9B/$9D
 :       lda     dbi_left,x ; and hoff/voff to $8A/$8C (overwriting left/top)
@@ -1921,142 +1988,166 @@ PaintBitsImpl:
         dex
         bpl     :-
 
-        sub16   dbi_width, dbi_hoff, $82
+        sub16   dbi_width, dbi_hoff, offset
         lda     dbi_x
-        sta     dbi_hoff
+        sta     left
 
         clc
-        adc     $82
-        sta     dbi_width
+        adc     offset
+        sta     right
         lda     dbi_x+1
-        sta     dbi_hoff+1
-        adc     $83
-        sta     dbi_width+1
+        sta     left+1
+        adc     offset+1
+        sta     right+1
 
-        sub16   dbi_height, dbi_voff, $82
+        sub16   dbi_height, dbi_voff, offset
         lda     dbi_y
-        sta     dbi_voff
+        sta     top
         clc
-        adc     $82
-        sta     dbi_height
+        adc     offset
+        sta     bottom
         lda     dbi_y+1
-        sta     dbi_voff+1
-        adc     $83
-        sta     dbi_height+1
-        ;; fall through
+        sta     top+1
+        adc     offset+1
+        sta     bottom+1
+        ;; fall through to BitBlt
 
 ;;; ============================================================
 
-;;; $4D IMPL
+;;; $4D BitBlt
 
 ;;; 16 bytes of params, copied to $8A
 
-L51B3:  lda     #0
-        sta     $9B
-        sta     $9C
-        sta     $9D
-        lda     $8F
+        src_byte_off      := $8A        ; char offset within source line
+        bit_offset        := $9B
+        shift_bytes       := $81
+
+.proc BitBltImpl
+        lda     #0
+        sta     clipped_left
+        sta     clipped_left+1
+        sta     clipped_top
+
+        lda     bits_addr+1
         sta     $80
-        jsr     L50A9
-        bcs     L51C5
+
+        jsr     clip_rect
+        bcs     :+
         rts
 
-L51C5:  jsr     set_up_fill_mode
-        lda     $91
+:       jsr     set_up_fill_mode
+        lda     width_bytes
         asl     a
-        ldx     $93
-        beq     L51D1
+        ldx     left_masks_table+1      ; need left mask on aux?
+        beq     :+
         adc     #1
-L51D1:  ldx     $96
-        beq     L51D7
+:       ldx     right_masks_table       ; need right mask on main?
+        beq     :+
         adc     #1
-L51D7:  sta     L5169
-        sta     src_width_char
+:       sta     L5169
+        sta     src_width_bytes         ; adjusted width in chars
+
         lda     #2
-        sta     $81
-        lda     #0
-        sec
-        sbc     $9D
+        sta     shift_bytes
+        lda     #0                      ; Calculate starting Y-coordinate
+        sec                             ;  = dbi_top - clipped_top
+        sbc     clipped_top
         clc
-        adc     $8C
-        sta     $8C
-        lda     #0
-        sec
-        sbc     $9B
+        adc     dbi_top
+        sta     dbi_top
+
+        lda     #0                      ; Calculate starting X-coordinate
+        sec                             ;  = dbi_left - clipped_left
+        sbc     clipped_left
         tax
         lda     #0
-        sbc     $9C
+        sbc     clipped_left+1
         tay
+
         txa
         clc
-        adc     $8A
+        adc     dbi_left
         tax
         tya
-        adc     $8B
+        adc     dbi_left+1
+
         jsr     divmod7
-        sta     $8A
-        tya
+        sta     src_byte_off
+        tya                             ; bit offset between src and dest
         rol     a
         cmp     #7
         ldx     #1
-        bcc     L520E
+        bcc     :+
         dex
         sbc     #7
-L520E:  stx     dhgr_get_srcbits::offset1_addr
+
+:       stx     dhgr_get_srcbits::offset1_addr
         inx
         stx     dhgr_get_srcbits::offset2_addr
-        sta     $9B
-        lda     $8A
+        sta     bit_offset
+
+        lda     src_byte_off
         rol     a
-        jsr     set_up_source
-        jsr     set_up_dest
-        copy16  #$0601, $8E
-        ldx     #$01
-        lda     $87
+
+        jsr     set_source
+        jsr     set_dest
+        copy16  #bitmap_buffer, bits_addr
+        ldx     #1
+        lda     width_mod14
+
         sec
-        sbc     #$07
-        bcc     L5234
-        sta     $87
+        sbc     #7
+        bcc     :+
+        sta     width_mod14
         dex
-L5234:  stx     dhgr_shift_line::offset1_addr
+:       stx     dhgr_shift_line::offset1_addr
         inx
         stx     dhgr_shift_line::offset2_addr
-        lda     $87
+
+        lda     width_mod14
         sec
-        sbc     $9B
-        bcs     L5249
+        sbc     bit_offset
+        bcs     :+
         adc     #7
-        inc     src_width_char
-        dec     $81
-L5249:  tay
-        bne     L5250
-        ldx     #0
-        beq     L5276
-L5250:  tya
+        inc     src_width_bytes
+        dec     shift_bytes
+:       tay                                     ; check if bit shift required
+        bne     :+
+        ldx     #2*BITS_NO_BITSHIFT
+        beq     no_bitshift
+
+:       tya
         asl     a
         tay
         lda     shift_table_main,y
         sta     dhgr_shift_bits::shift_main_addr
         lda     shift_table_main+1,y
         sta     dhgr_shift_bits::shift_main_addr+1
-
         lda     shift_table_aux,y
         sta     dhgr_shift_bits::shift_aux_addr
         lda     shift_table_aux+1,y
         sta     dhgr_shift_bits::shift_aux_addr+1
-
-        ldy     $81
+        ldy     shift_bytes
         sty     dhgr_shift_bits::offset2_addr
         dey
         sty     dhgr_shift_bits::offset1_addr
-        ldx     #2
-L5276:  lda     L5285,x
+
+        ldx     #2*BITS_BITSHIFT
+no_bitshift:
+        lda     shift_bits_table,x
         sta     dhgr_get_srcbits::shift_bits_jmp_addr
-        lda     L5285+1,x
+        lda     shift_bits_table+1,x
         sta     dhgr_get_srcbits::shift_bits_jmp_addr+1
         jmp     bit_blit
 
-L5285:  .addr   shift_line_jmp, dhgr_shift_bits
+BITS_NO_BITSHIFT := 0
+BITS_BITSHIFT := 1
+
+;;              BITS_NO_BITSHIFT   BITS_BITSHIFT
+shift_bits_table:
+        .addr   shift_line_jmp,    dhgr_shift_bits
+.endproc
+
 
         shift_table_aux := *-2
         .addr   shift_1_aux,shift_2_aux,shift_3_aux
@@ -2067,101 +2158,134 @@ L5285:  .addr   shift_line_jmp, dhgr_shift_bits
         .addr   shift_4_main,shift_5_main,shift_6_main
 
 
-L52A1:  stx     $B0
-        asl     a
-        asl     a
-        sta     $B3
+        vertices_count   := $B4
+        poly_oper        := $BA       ; positive = paint; negative = test
 
+.proc load_poly
+        point_index      := $82
+        vertices_length  := $B3
+
+        max_poly_points  := 60
+
+        stx     $B0
+        asl     a
+        asl     a               ; # of vertices * 4 = length
+        sta     vertices_length
+
+        ;; Initialize rect to first point of polygon.
         ldy     #3              ; Copy params_addr... to $92... and $96...
 :       lda     (params_addr),y
-        sta     $92,y
-        sta     $96,y
+        sta     left,y
+        sta     right,y
         dey
         bpl     :-
 
-        lda     $94             ; y coord
+        lda     top             ; y coord
         sta     $A7
-        lda     $94+1
+        lda     top+1
         sta     $A7+1
+
         ldy     #0
         stx     $AE
-L52C0:  stx     $82
+loop:   stx     point_index
+
         lda     (params_addr),y
-        sta     $0700,x
+        sta     poly_xl_buffer,x
         pha
         iny
         lda     (params_addr),y
-        sta     $073C,x
+        sta     poly_xh_buffer,x
         tax
         pla
         iny
-        cpx     $92+1
-        bmi     L52DB
-        bne     L52E1
-        cmp     $92
-        bcs     L52E1
-L52DB:  stax    $92
-        bcc     L52EF
-L52E1:  cpx     $96+1
-        bmi     L52EF
-        bne     L52EB
-        cmp     $96
-        bcc     L52EF
-L52EB:  stax    $96
-L52EF:  ldx     $82
+
+        cpx     left+1
+        bmi     :+
+        bne     in_left
+        cmp     left
+        bcs     in_left
+
+:       stax    left
+        bcc     in_right
+
+in_left:
+        cpx     right+1
+        bmi     in_right
+        bne     :+
+        cmp     right
+        bcc     in_right
+
+:       stax    right
+
+in_right:
+        ldx     point_index
         lda     (params_addr),y
-        sta     $0780,x
+        sta     poly_yl_buffer,x
         pha
         iny
         lda     (params_addr),y
-        sta     $07BC,x
+        sta     poly_yh_buffer,x
         tax
         pla
         iny
-        cpx     $94+1
-        bmi     L530A
-        bne     L5310
-        cmp     $94
-        bcs     L5310
-L530A:  stax    $94
-        bcc     L531E
-L5310:  cpx     $98+1
-        bmi     L531E
-        bne     L531A
-        cmp     $98
-        bcc     L531E
-L531A:  stax    $98
-L531E:  cpx     $A8
+
+        cpx     top+1
+        bmi     :+
+        bne     in_top
+        cmp     top
+        bcs     in_top
+
+:       stax    top
+        bcc     in_bottom
+
+in_top: cpx     bottom+1
+        bmi     in_bottom
+        bne     :+
+        cmp     bottom
+        bcc     in_bottom
+
+:       stax    bottom
+
+in_bottom:
+        cpx     $A8
         stx     $A8
         bmi     L5330
         bne     L532C
         cmp     $A7
         bcc     L5330
         beq     L5330
-L532C:  ldx     $82
+
+L532C:  ldx     point_index
         stx     $AE
+
 L5330:  sta     $A7
-        ldx     $82
+
+        ldx     point_index
         inx
-        cpx     #$3C
-        beq     L5398
-        cpy     $B3
-        bcc     L52C0
-        lda     $94
-        cmp     $98
-        bne     L5349
-        lda     $94+1
-        cmp     $98+1
-        beq     L5398
-L5349:  stx     $B3
-        bit     $BA
-        bpl     L5351
+        cpx     #max_poly_points
+        beq     bad_poly
+        cpy     vertices_length
+        bcc     loop
+
+        lda     top
+        cmp     bottom
+        bne     :+
+        lda     top+1
+        cmp     bottom+1
+        beq     bad_poly
+
+:       stx     $B3
+        bit     poly_oper
+        bpl     :+
         sec
         rts
 
-L5351:  jmp     L50A9
+:       jmp     clip_rect
+.endproc
 
-L5354:  lda     $B4
+
+.proc next_poly
+        lda     vertices_count
         bpl     L5379
         asl     a
         asl     a
@@ -2169,7 +2293,8 @@ L5354:  lda     $B4
         sta     params_addr
         bcc     ora_2_param_bytes
         inc     params_addr+1
-
+        ;; Fall-through
+.endproc
 
         ;; ORAs together first two bytes at (params_addr) and stores
         ;; in $B4, then advances params_addr
@@ -2178,7 +2303,7 @@ ora_2_param_bytes:
         lda     (params_addr),y
         iny
         ora     (params_addr),y
-        sta     $B4
+        sta     vertices_count
         inc16   params_addr
         inc16   params_addr
         ldy     #$80
@@ -2196,195 +2321,249 @@ InPolyImpl:
 
         ;; also called from the end of LineToImpl
 
-PaintPolyImpl:  lda     #$00
-L5380:  sta     $BA
+        num_maxima       := $AD
+        max_num_maxima   := 8
+
+.proc PaintPolyImpl
+
+        lda     #$00
+L5380:  sta     poly_oper
         ldx     #0
-        stx     $AD
+        stx     num_maxima
         jsr     ora_2_param_bytes
-L5389:  jsr     L52A1
-        bcs     L539D
+
+loop:   jsr     load_poly
+        bcs     process_poly
         ldx     $B0
-L5390:  jsr     L5354
-        bmi     L5389
-        jmp     L546F
+next:   jsr     next_poly
+        bmi     loop
 
-L5398:  exit_call $82
+        jmp     fill_polys
 
-L539D:  ldy     #1
-        sty     $AF
-        ldy     $AE
-        cpy     $B0
-        bne     L53A9
-        ldy     $B3
-L53A9:  dey
-        sty     $AB
+bad_poly:
+        exit_call MGTK::error_bad_object
+.endproc
+
+
+        current_vertex := $AC
+
+        poly_maxima_yl_table := $05E8
+
+.proc process_poly
+        ldy     #1
+        sty     $AF              ; do 2 iterations of the following loop
+
+        ldy     $AE              ; starting vertex
+        cpy     $B0              ; lowest vertex
+        bne     :+
+        ldy     $B3              ; highest vertex
+:       dey
+        sty     $AB              ; one before starting vertex
+
         php
-L53AD:  sty     $AC
+L53AD:  sty     current_vertex   ; current vertex
         iny
         cpy     $B3
-        bne     L53B6
+        bne     :+
         ldy     $B0
-L53B6:  sty     $AA
-        cpy     $AE
-        bne     L53BE
-        dec     $AF
-L53BE:  lda     $0780,y
-        ldx     $07BC,y
+
+:       sty     $AA              ; next vertex
+        cpy     $AE              ; have we come around complete circle?
+        bne     :+
+        dec     $AF              ; this completes one loop
+
+:       lda     poly_yl_buffer,y
+        ldx     poly_yh_buffer,y
         stx     $83
-L53C6:  sty     $A9
-        iny
+L53C6:  sty     $A9              ; starting from next vertex, search ahead
+        iny                      ; for a subsequent vertex with differing y
         cpy     $B3
-        bne     L53CF
+        bne     :+
         ldy     $B0
-L53CF:  cmp     $0780,y
-        bne     L53DB
-        ldx     $07BC,y
+:
+        cmp     poly_yl_buffer,y
+        bne     :+
+        ldx     poly_yh_buffer,y
         cpx     $83
         beq     L53C6
-L53DB:  ldx     $AB
+
+:       ldx     $AB              ; find y difference with current vertex
         sec
-        sbc     $0780,x
+        sbc     poly_yl_buffer,x
         lda     $83
-        sbc     $07BC,x
+        sbc     poly_yh_buffer,x
         bmi     L5448
-        lda     $A9
+
+        lda     $A9              ; vertex before new vertex
         plp
-        bmi     L53F8
+        bmi     :+
         tay
-        sta     $0680,x
+        sta     $0680,x          ; link current vertex -> vertex before new vertex
         lda     $AA
-        sta     $06BC,x
+        sta     $06BC,x          ; link current vertex -> next vertex
         bpl     L545D
-L53F8:  ldx     $AD
-        cpx     #$10
-        bcs     L5398
-        sta     $0468,x
+
+:       ldx     num_maxima
+        cpx     #2*max_num_maxima        ; too many maxima points (documented limitation)
+        bcs     bad_poly
+
+        sta     $0468,x          ; vertex before new vertex
         lda     $AA
-        sta     $04A8,x
+        sta     $04A8,x          ; current vertex
+
         ldy     $AB
         lda     $0680,y
         sta     $0469,x
         lda     $06BC,y
         sta     $04A9,x
-        lda     $0780,y
-        sta     $05E8,x
-        sta     $05E9,x
-        lda     $07BC,y
-        sta     low_zp_stash_buffer,x
-        sta     L5E02,x
-        lda     $0700,y
-        sta     L5E32,x
-        lda     $073C,y
-        sta     L5E42,x
-        ldy     $AC
-        lda     $0700,y
-        sta     L5E31,x
-        lda     $073C,y
-        sta     L5E41,x
+
+        lda     poly_yl_buffer,y
+        sta     poly_maxima_yl_table,x
+        sta     poly_maxima_yl_table+1,x
+
+        lda     poly_yh_buffer,y
+        sta     poly_maxima_yh_table,x
+        sta     poly_maxima_yh_table+1,x
+
+        lda     poly_xl_buffer,y
+        sta     poly_maxima_xl_table+1,x
+        lda     poly_xh_buffer,y
+        sta     poly_maxima_xh_table+1,x
+
+        ldy     current_vertex
+        lda     poly_xl_buffer,y
+        sta     poly_maxima_xl_table,x
+        lda     poly_xh_buffer,y
+        sta     poly_maxima_xh_table,x
         inx
         inx
-        stx     $AD
+        stx     num_maxima
         ldy     $A9
         bpl     L545D
+
 L5448:  plp
-        bmi     L5450
+        bmi     :+
         lda     #$80
-        sta     $0680,x
-L5450:  ldy     $AA
+        sta     $0680,x             ; link current vertex -> #$80
+:       ldy     $AA
         txa
-        sta     $0680,y
-        lda     $AC
+        sta     $0680,y             ; link next vertex -> current vertex
+        lda     current_vertex
         sta     $06BC,y
-        lda     #$80
+        lda     #$80                ; set negative flag so next iteration captures a maxima
+
 L545D:  php
         sty     $AB
         ldy     $A9
         bit     $AF
-        bmi     L5469
+        bmi     :+
         jmp     L53AD
 
-L5469:  plp
+:       plp
         ldx     $B3
-        jmp     L5390
+        jmp     PaintPolyImpl::next
+.endproc
 
-L546F:  ldx     #$00
-        stx     $B1
+
+        scan_y       := $A9
+        lr_flag      := $AB
+        start_maxima := $B1
+
+.proc fill_polys
+        ldx     #0
+        stx     start_maxima
         lda     #$80
-        sta     $0428
+        sta     poly_maxima_links
         sta     $B2
-L547A:  inx
-        cpx     $AD
-        bcc     L5482
-        beq     L54B2
+
+loop:   inx
+        cpx     num_maxima
+        bcc     :+
+        beq     links_done
         rts
 
-L5482:  lda     $B1
-L5484:  tay
-        lda     $05E8,x
-        cmp     $05E8,y
-        bcs     L54A2
-        tya
-        sta     $0428,x
-        cpy     $B1
-        beq     L549E
+:       lda     start_maxima
+next_link:
+        tay
+        lda     poly_maxima_yl_table,x
+        cmp     poly_maxima_yl_table,y
+        bcs     x_ge_y
+        tya                            ; poly_maxima_y[xReg] < poly_maxima_y[yReg]
+        sta     poly_maxima_links,x    ; then xReg linked to yReg
+        cpy     start_maxima
+        beq     :+                     ; if yReg was the start, set the start to xReg
         ldy     $82
         txa
-        sta     $0428,y
-        jmp     L547A
+        sta     poly_maxima_links,y    ; else $82 linked to xReg
+        jmp     loop
 
-L549E:  stx     $B1
-        bcs     L547A
-L54A2:  sty     $82
-        lda     $0428,y
-        bpl     L5484
-        sta     $0428,x
+:       stx     start_maxima           ; set start to xReg
+        bcs     loop                   ; always
+
+x_ge_y: sty     $82                    ; poly_maxima_y[xReg] >= poly_maxima_y[yReg]
+        lda     poly_maxima_links,y
+        bpl     next_link              ; if yReg was the end
+        sta     poly_maxima_links,x    ; then set xReg as end
         txa
-        sta     $0428,y
-        bpl     L547A
-L54B2:  ldx     $B1
-        lda     $05E8,x
-        sta     $A9
-        sta     $94
-        lda     low_zp_stash_buffer,x
-        sta     $AA
-        sta     $95
-L54C2:  ldx     $B1
+        sta     poly_maxima_links,y    ; and link yReg to xReg
+        bpl     loop                   ; always
+links_done:
+
+        ldx     start_maxima
+        lda     poly_maxima_yl_table,x
+        sta     scan_y
+        sta     top
+        lda     poly_maxima_yh_table,x
+        sta     scan_y+1
+        sta     top+1
+
+scan_loop:
+        ldx     start_maxima
         bmi     L5534
-L54C6:  lda     $05E8,x
-        cmp     $A9
+scan_next:
+        lda     poly_maxima_yl_table,x
+        cmp     scan_y
         bne     L5532
-        lda     low_zp_stash_buffer,x
-        cmp     $AA
+        lda     poly_maxima_yh_table,x
+        cmp     scan_y+1
         bne     L5532
-        lda     $0428,x
+
+        lda     poly_maxima_links,x
         sta     $82
-        jsr     L5606
+        jsr     calc_slope
+
         lda     $B2
         bmi     L5517
+
 L54E0:  tay
-        lda     L5E41,x
-        cmp     L5E41,y
+        lda     poly_maxima_xh_table,x
+        cmp     poly_maxima_xh_table,y
         bmi     L5520
-        bne     L5507
-        lda     L5E31,x
-        cmp     L5E31,y
+        bne     :+
+
+        lda     poly_maxima_xl_table,x
+        cmp     poly_maxima_xl_table,y
         bcc     L5520
-        bne     L5507
-        lda     L5E11,x
-        cmp     L5E11,y
+        bne     :+
+
+        lda     poly_maxima_x_frach,x
+        cmp     poly_maxima_x_frach,y
         bcc     L5520
-        bne     L5507
-        lda     L5E21,x
-        cmp     L5E21,y
+        bne     :+
+
+        lda     poly_maxima_x_fracl,x
+        cmp     poly_maxima_x_fracl,y
         bcc     L5520
-L5507:  sty     $83
-        lda     $0428,y
+
+:       sty     $83
+        lda     poly_maxima_links,y
         bpl     L54E0
-        sta     $0428,x
+        sta     poly_maxima_links,x
         txa
-        sta     $0428,y
+        sta     poly_maxima_links,y
         bpl     L552E
-L5517:  sta     $0428,x
+
+L5517:  sta     poly_maxima_links,x
         stx     $B2
         jmp     L552E
 
@@ -2393,225 +2572,286 @@ L551F:  rts
 L5520:  tya
         cpy     $B2
         beq     L5517
-        sta     $0428,x
+        sta     poly_maxima_links,x
         txa
         ldy     $83
-        sta     $0428,y
+        sta     poly_maxima_links,y
+
 L552E:  ldx     $82
-        bpl     L54C6
+        bpl     scan_next
+
 L5532:  stx     $B1
-L5534:  lda     #$00
-        sta     $AB
+L5534:  lda     #0
+        sta     lr_flag
+
         lda     $B2
         sta     $83
         bmi     L551F
-L553E:  tax
-        lda     $A9
-        cmp     $05E8,x
-        bne     L5584
-        lda     $AA
-        cmp     low_zp_stash_buffer,x
-        bne     L5584
+
+scan_loop2:
+        tax
+        lda     scan_y
+        cmp     poly_maxima_yl_table,x
+        bne     scan_point
+        lda     scan_y+1
+        cmp     poly_maxima_yh_table,x
+        bne     scan_point
+
         ldy     $0468,x
         lda     $0680,y
-        bpl     L556C
+        bpl     shift_point
+
         cpx     $B2
-        beq     L5564
+        beq     :+
+
         ldy     $83
-        lda     $0428,x
-        sta     $0428,y
-        jmp     L55F8
+        lda     poly_maxima_links,x
+        sta     poly_maxima_links,y
+        jmp     scan_next_link
 
-L5564:  lda     $0428,x
+:       lda     poly_maxima_links,x
         sta     $B2
-        jmp     L55F8
+        jmp     scan_next_link
 
-L556C:  sta     $0468,x
-        lda     $0700,y
-        sta     L5E31,x
-        lda     $073C,y
-        sta     L5E41,x
+shift_point:
+        sta     $0468,x
+        lda     poly_xl_buffer,y
+        sta     poly_maxima_xl_table,x
+        lda     poly_xh_buffer,y
+        sta     poly_maxima_xh_table,x
         lda     $06BC,y
         sta     $04A8,x
-        jsr     L5606
-L5584:  stx     $AC
-        ldy     L5E41,x
-        lda     L5E31,x
+
+        jsr     calc_slope
+
+scan_point:
+        stx     current_vertex
+        ldy     poly_maxima_xh_table,x
+        lda     poly_maxima_xl_table,x
         tax
-        lda     $AB
+
+        lda     lr_flag            ; alternate flag left/right
         eor     #$FF
-        sta     $AB
-        bpl     L559B
-        stx     $92
-        sty     $93
-        bmi     L55CE
-L559B:  stx     $96
-        sty     $97
-        cpy     $93
-        bmi     L55A9
-        bne     L55B5
-        cpx     $92
-        bcs     L55B5
-L55A9:  lda     $92
-        stx     $92
-        sta     $96
-        lda     $93
-        sty     $93
-        sta     $97
-L55B5:  lda     $A9
-        sta     $94
-        sta     $98
-        lda     $AA
-        sta     $95
-        sta     $99
-        bit     $BA
-        bpl     L55CB
+        sta     lr_flag
+        bpl     :+
+
+        stx     left
+        sty     left+1
+        bmi     skip_rect
+
+:       stx     right
+        sty     right+1
+
+        cpy     left+1
+        bmi     :+
+        bne     no_swap_lr
+        cpx     left
+        bcs     no_swap_lr
+
+:       lda     left
+        stx     left
+        sta     right
+        lda     left+1
+        sty     left+1
+        sta     right+1
+
+no_swap_lr:
+        lda     scan_y
+        sta     top
+        sta     bottom
+        lda     scan_y+1
+        sta     top+1
+        sta     bottom+1
+
+        bit     poly_oper
+        bpl     do_paint
+
         jsr     InRectImpl
-        jmp     L55CE
+        jmp     skip_rect
 
-L55CB:  jsr     L5043
-L55CE:  ldx     $AC
-        lda     L5E21,x
+do_paint:
+        jsr     PaintRectImpl::do_paint
+
+skip_rect:
+        ldx     current_vertex
+
+        lda     poly_maxima_x_fracl,x
         clc
-        adc     $0528,x
-        sta     L5E21,x
-        lda     L5E11,x
-        adc     $04E8,x
-        sta     L5E11,x
-        lda     L5E31,x
-        adc     $0568,x
-        sta     L5E31,x
-        lda     L5E41,x
-        adc     $05A8,x
-        sta     L5E41,x
-        lda     $0428,x
-L55F8:  bmi     L55FD
-        jmp     L553E
+        adc     poly_maxima_slope0,x
+        sta     poly_maxima_x_fracl,x
+        lda     poly_maxima_x_frach,x
+        adc     poly_maxima_slope1,x
+        sta     poly_maxima_x_frach,x
 
-L55FD:  inc16   $A9
-        jmp     L54C2
+        lda     poly_maxima_xl_table,x
+        adc     poly_maxima_slope2,x
+        sta     poly_maxima_xl_table,x
+        lda     poly_maxima_xh_table,x
+        adc     poly_maxima_slope3,x
+        sta     poly_maxima_xh_table,x
 
-L5606:  ldy     $04A8,x
-        lda     $0780,y
-        sta     $05E8,x
+        lda     poly_maxima_links,x
+scan_next_link:
+        bmi     :+
+        jmp     scan_loop2
+
+:       inc16   scan_y
+        jmp     scan_loop
+.endproc
+
+
+.proc calc_slope
+	index   := $84
+
+        ldy     $04A8,x
+
+        lda     poly_yl_buffer,y
+        sta     poly_maxima_yl_table,x
         sec
-        sbc     $A9
-        sta     $A3
-        lda     $07BC,y
-        sta     low_zp_stash_buffer,x
-        sbc     $AA
-        sta     $A4
-        lda     $0700,y
+        sbc     scan_y
+        sta     <fixed_div_divisor
+        lda     poly_yh_buffer,y
+        sta     poly_maxima_yh_table,x
+        sbc     scan_y+1
+        sta     <fixed_div_divisor+1
+
+        lda     poly_xl_buffer,y
         sec
-        sbc     L5E31,x
-        sta     $A1
-        lda     $073C,y
-        sbc     L5E41,x
-        sta     $A2
+        sbc     poly_maxima_xl_table,x
+        sta     <fixed_div_dividend
+        lda     poly_xh_buffer,y
+        sbc     poly_maxima_xh_table,x
+        sta     <fixed_div_dividend+1
+
         php
-        bpl     L563F
-        sub16   #0, $A1, $A1
-L563F:  stx     $84
-        jsr     L569A
-        ldx     $84
+        bpl     :+
+        sub16   #0, <fixed_div_dividend, <fixed_div_dividend
+
+:       stx     index
+        jsr     fixed_div2
+        ldx     index
         plp
-        bpl     L5662
-        lda     #$00
-        sec
-        sbc     $9F
-        sta     $9F
+        bpl     :+
+
+        sub16   #0, <fixed_div_quotient, <fixed_div_quotient
         lda     #0
-        sbc     $A0
-        sta     $A0
+        sbc     <fixed_div_quotient+2
+        sta     <fixed_div_quotient+2
         lda     #0
-        sbc     $A1
-        sta     $A1
-        lda     #0
-        sbc     $A2
-        sta     $A2
-L5662:  lda     $A2
-        sta     $05A8,x
+        sbc     <fixed_div_quotient+3
+        sta     <fixed_div_quotient+3
+
+:       lda     <fixed_div_quotient+3
+        sta     poly_maxima_slope3,x
         cmp     #$80
         ror     a
         pha
-        lda     $A1
-        sta     $0568,x
+        lda     <fixed_div_quotient+2
+        sta     poly_maxima_slope2,x
         ror     a
         pha
-        lda     $A0
-        sta     $04E8,x
+        lda     <fixed_div_quotient+1
+        sta     poly_maxima_slope1,x
         ror     a
         pha
-        lda     $9F
-        sta     $0528,x
+        lda     <fixed_div_quotient
+        sta     poly_maxima_slope0,x
         ror     a
-        sta     L5E21,x
+        sta     poly_maxima_x_fracl,x
         pla
         clc
         adc     #$80
-        sta     L5E11,x
-        pla
-        adc     L5E31,x
-        sta     L5E31,x
-        pla
-        adc     L5E41,x
-        sta     L5E41,x
-        rts
+        sta     poly_maxima_x_frach,x
 
-L5698:  lda     $A2
-L569A:  ora     $A1
-        bne     L56A8
-        sta     $9F
-        sta     $A0
-        sta     $A1
-        sta     $A2
-        beq     L56D5
-L56A8:  ldy     #$20
-        lda     #$00
-        sta     $9F
-        sta     $A0
-        sta     $A5
-        sta     $A6
-L56B4:  asl     $9F
-        rol     $A0
-        rol     $A1
-        rol     $A2
-        rol     $A5
-        rol     $A6
-        lda     $A5
+        pla
+        adc     poly_maxima_xl_table,x
+        sta     poly_maxima_xl_table,x
+        pla
+        adc     poly_maxima_xh_table,x
+        sta     poly_maxima_xh_table,x
+        rts
+.endproc
+
+L5380 := PaintPolyImpl::L5380
+bad_poly := PaintPolyImpl::bad_poly
+
+
+.proc fixed_div
+        dividend   := $A1       ; 16.0 format
+        divisor    := $A3       ; 16.0 format
+        quotient   := $9F       ; 16.16 format
+        temp       := $A5
+
+        lda     dividend+1
+entry2: ora     dividend
+        bne     :+
+
+        sta     quotient
+        sta     quotient+1
+        sta     dividend
+        sta     dividend+1
+        beq     done            ; always
+
+:       ldy     #32
+        lda     #0
+        sta     quotient
+        sta     quotient+1
+        sta     temp
+        sta     temp+1
+
+loop:   asl     quotient
+        rol     quotient+1
+        rol     dividend
+        rol     dividend+1
+        rol     temp
+        rol     temp+1
+
+        lda     temp
         sec
-        sbc     $A3
+        sbc     divisor
         tax
-        lda     $A6
-        sbc     $A4
-        bcc     L56D2
-        stx     $A5
-        sta     $A6
-        inc     $9F
-L56D2:  dey
-        bne     L56B4
-L56D5:  rts
+        lda     temp+1
+        sbc     divisor+1
+        bcc     :+
+        stx     temp
+        sta     temp+1
+        inc     quotient
+:
+        dey
+        bne     loop
+
+done:   rts
+.endproc
+
+fixed_div2 := fixed_div::entry2
+
+fixed_div_dividend   := fixed_div::dividend
+fixed_div_divisor    := fixed_div::divisor
+fixed_div_quotient   := fixed_div::quotient
+
 
 ;;; ============================================================
 ;;; FramePoly
 
 .proc FramePolyImpl
         lda     #0
-        sta     $BA
+        sta     poly_oper
         jsr     ora_2_param_bytes
 
         ptr := $B7
         draw_line_params := $92
 
-L56DD:  lda     params_addr
+poly_loop:
+        lda     params_addr
         sta     ptr
         lda     params_addr+1
         sta     ptr+1
-        lda     $B4             ; ORAd param bytes
+
+        lda     vertices_count             ; ORAd param bytes
         sta     $B6
         ldx     #0
-        jsr     L52A1           ; ???
-        bcc     L572F
+        jsr     load_poly
+        bcc     next
 
         lda     $B3
         sta     $B5             ; loop counter
@@ -2656,16 +2896,16 @@ endloop:
 
         ;; Handle multiple segments, e.g. when drawing outlines for multi icons?
 
-L572F:  ldx     #1
+next:   ldx     #1
 :       lda     ptr,x
         sta     $80,x
         lda     $B5,x
         sta     $B3,x
         dex
         bpl     :-
-        jsr     L5354           ; ???
-        bmi     L56DD
 
+        jsr     next_poly           ; Advance to next polygon in list
+        bmi     poly_loop
         rts
 .endproc
 
@@ -2745,42 +2985,44 @@ loop:   lda     xdelta,x
         y2      := pt2+2
 
         ldx     #3
-L5778:  lda     current_penloc,x     ; move pos to $96, assign params to pos
+:       lda     current_penloc,x     ; move pos to $96, assign params to pos
         sta     pt2,x
         lda     pt1,x
         sta     current_penloc,x
         dex
-        bpl     L5778
+        bpl     :-
 
         ;; Called from elsewhere; draw $92,$94 to $96,$98; values modified
 L5783:
         lda     y2+1
         cmp     y1+1
-        bmi     L57B0
+        bmi     swap_start_end
         bne     L57BF
         lda     y2
         cmp     y1
-        bcc     L57B0
+        bcc     swap_start_end
         bne     L57BF
 
         ;; y1 == y2
         lda     x1
         ldx     x1+1
         cpx     x2+1
-        bmi     L57AD
-        bne     L57A1
+        bmi     draw_line_jmp
+        bne     :+
         cmp     x2
-        bcc     L57AD
+        bcc     draw_line_jmp
 
-L57A1:  ldy     x2              ; swap so x1 < x2
+:       ldy     x2              ; swap so x1 < x2
         sta     x2
         sty     x1
         ldy     x2+1
         stx     x2+1
         sty     x1+1
-L57AD:  jmp     L501E
+draw_line_jmp:
+        jmp     draw_line
 
-L57B0:  ldx     #3              ; Swap start/end
+swap_start_end:
+        ldx     #3              ; Swap start/end
 :       lda     $92,x
         tay
         lda     $96,x
@@ -2798,75 +3040,88 @@ L57BF:  ldx     current_penwidth
         lda     #0
         sta     $A1
         sta     $A3
-        lda     $92
-        ldx     $93
-        cpx     $97
+
+        lda     x1
+        ldx     x1+1
+        cpx     x2+1
         bmi     L57E9
         bne     L57E1
-        cmp     $96
+        cmp     x2
         bcc     L57E9
         bne     L57E1
-        jmp     L501E
+        jmp     draw_line
 
 L57E1:  lda     $A1
         ldx     $A2
         sta     $A2
         stx     $A1
-L57E9:  ldy     #5
+
+L57E9:  ldy     #5                ; do 6 points
 L57EB:  sty     $82
-        ldx     L583E,y
+        ldx     pt_offsets,y
         ldy     #3
-L57F2:  lda     $92,x
+:       lda     pt1,x
         sta     $83,y
         dex
         dey
-        bpl     L57F2
+        bpl     :-
+
         ldy     $82
         ldx     L5844,y
         lda     $A1,x
         clc
         adc     $83
         sta     $83
-        bcc     L580B
+        bcc     :+
         inc     $84
-L580B:  ldx     L584A,y
+:
+        ldx     L584A,y
         lda     $A3,x
         clc
         adc     $85
         sta     $85
-        bcc     L5819
+        bcc     :+
         inc     $86
-L5819:  tya
+:
+        tya
         asl     a
         asl     a
         tay
+
         ldx     #0
-L581F:  lda     $83,x
-        sta     L5852,y
+:       lda     $83,x
+        sta     paint_poly_points,y
         iny
         inx
         cpx     #4
-        bne     L581F
+        bne     :-
+
         ldy     $82
         dey
         bpl     L57EB
-        lda     L583C
+
+        lda     paint_poly_params_addr
         sta     params_addr
-        lda     L583C+1
+        lda     paint_poly_params_addr+1
         sta     params_addr+1
         jmp     PaintPolyImpl
 
-L583C:  .addr   L5850
+paint_poly_params_addr:
+        .addr   paint_poly_params
 
-L583E:  .byte   $03,$03,$07,$07,$07,$03
+;;       Points  0  1  2  3  4  5
+pt_offsets:
+        .byte    3, 3, 7, 7, 7, 3
 L5844:  .byte   $00,$00,$00,$01,$01,$01
 L584A:  .byte   $00,$01,$01,$01,$00,$00
 
         ;; params for a $15 call
-L5850:  .byte   $06,$00
-L5852:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+paint_poly_params:
+        .byte   6         ; number of points
+        .byte   0
+paint_poly_points:
+        .res    4*6       ; points
+
 .endproc
         DRAW_LINE_ABS_IMPL_L5783 := LineToImpl::L5783
 
@@ -2928,7 +3183,7 @@ loop:   sta     glyph_row_lo,y
         bne     loop
         rts
 
-end:    exit_call $83
+end:    exit_call MGTK::error_font_too_big
 .endproc
 
 glyph_row_lo:
@@ -3023,7 +3278,7 @@ DrawTextImpl:
         sty     $9B
         sty     $9D
         jsr     L5907
-        jsr     L50A9
+        jsr     clip_rect
         bcc     L59B9
         tya
         ror     a
@@ -3044,7 +3299,7 @@ L596B:  sta     $9B
         iny
         bne     L595C
 L5972:  jsr     set_up_fill_mode
-        jsr     set_up_dest
+        jsr     set_dest
         lda     $87
         clc
         adc     $9B
@@ -3576,22 +3831,21 @@ L5DC1:  .addr   L5C7E,L5C78,L5C72,L5C6C,L5C66,L5C60,L5C5A,L5C54,L5C4E,L5C48,L5C4
 L5DE1:  .addr   L5D74,L5D68,L5D5C,L5D50,L5D44,L5D38,L5D2C,L5D20,L5D14,L5D08,L5CFC,L5CF0,L5CE4,L5CD8,L5CCC,L5CC0
 
 low_zp_stash_buffer:
-        .byte   $00
-L5E02:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00
+poly_maxima_yh_table:
+        .res    16
 
-L5E11:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+poly_maxima_x_frach:
+        .res    16
 
-L5E21:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
+poly_maxima_x_fracl:
+        .res    16
 
-L5E31:  .byte   $00
-L5E32:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00
-L5E41:  .byte   $00
-L5E42:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00
+poly_maxima_xl_table:
+        .res    16
+
+poly_maxima_xh_table:
+        .res    16
+
 
 ;;; ============================================================
 ;;; InitGraf
@@ -3989,9 +4243,9 @@ L60EE:  tay
         sta     L6164
         lda     shift_table_main+1,y
         sta     L6165
-        lda     L5285+2,y
+        lda     shift_table_aux,y
         sta     L616A
-        lda     L5285+3,y
+        lda     shift_table_aux+1,y
         sta     L616B
         ldx     #$03
 L6116:  lda     $82,x
@@ -4385,7 +4639,7 @@ L63D1:  ldx     L6338
         bpl     L63F6
         cpx     #$00
         bne     L63E5
-        exit_call $92
+        exit_call MGTK::error_no_mouse
 
 L63E5:  lda     L6338
         and     #$7F
@@ -4529,7 +4783,7 @@ L64FF:  lda     #$00
         sta     L6538
         rts
 
-L6508:  exit_call $94
+L6508:  exit_call MGTK::error_invalid_hook
 
 L650D:  lda     L6522
         beq     L651D
@@ -4647,7 +4901,7 @@ checkerboard_pattern:
         ldy     #2
         jmp     store_xa_at_y
 
-fail:   exit_call $95
+fail:   exit_call MGTK::error_desktop_not_initialized
 
 mouse_state_addr:
         .addr   mouse_state
@@ -4765,7 +5019,7 @@ modifiers  := * + 3
 .proc CheckEventsImpl
         bit     L6339
         bpl     L666D
-        exit_call $97
+        exit_call MGTK::error_irq_in_use
 
 L666D:
         sec                     ; called from interrupt handler
@@ -5092,7 +5346,7 @@ L68B5:  lda     $BA,y
         bne     L68B5
         rts
 
-L68BE:  stx     $A9
+L68BE:  stx     scan_y
         lda     #$06
         clc
 L68C3:  dex
@@ -5217,7 +5471,7 @@ L69A3:  sec
         sbc     $C6
         bmi     L69B4
         copy16  $82, $C5
-L69B4:  ldx     $A9
+L69B4:  ldx     scan_y
         inx
         cpx     $AA
         bne     L6976
@@ -5229,9 +5483,11 @@ L69B4:  ldx     $A9
         iny
         jsr     ndbm_calc_off
         pha
-        copy16  $C5, $A1
-        copy16  #$0007, $A3
-        jsr     L5698
+
+        copy16  $C5, fixed_div::dividend
+        copy16  #7, fixed_div::divisor
+        jsr     fixed_div
+
         ldy     $A1
         iny
         iny
@@ -6095,7 +6351,7 @@ end:    rts
         jsr     window_by_id
         beq     nope
         rts
-nope:   exit_call $9F
+nope:   exit_call MGTK::error_window_not_found
 .endproc
 
 L707F:  MGTK_CALL MGTK::FrameRect, $C7
@@ -6576,12 +6832,12 @@ OpenWindowImpl:
         ldy     #$00
         lda     ($A9),y
         bne     L748E
-        exit_call $9E
+        exit_call MGTK::error_window_id_required
 
 L748E:  sta     $82
         jsr     window_by_id
         beq     L749A
-        exit_call $9D
+        exit_call MGTK::error_window_already_exists
 
 L749A:  lda     params_addr
         sta     $A9
@@ -6740,7 +6996,7 @@ L75CB:  lda     #$00
         sta     $92,x
         dex
         bpl     L75CB
-        jsr     L50A9
+        jsr     clip_rect
         bcs     L75DC
         rts
 
@@ -7108,7 +7364,7 @@ L7854:  lda     $C7,x
         sta     $92,x
         dex
         bpl     L7854
-        jsr     L50A9
+        jsr     clip_rect
         ldx     #$03
 L7860:  lda     $92,x
         sta     set_port_maprect,x
@@ -7259,7 +7515,7 @@ L7954:  stax    $98
         iny
         lda     ($82),y
         sta     $8F
-        jmp     L51B3
+        jmp     BitBltImpl
 
 ;;; ============================================================
 ;;; ActivateCtl
@@ -7405,7 +7661,7 @@ L7A70:  jmp     L70B2
 
 L7A73:  jsr     L79F1
         jsr     L7CE3
-        jsr     L5698
+        jsr     fixed_div
         lda     $A1
         pha
         jsr     L7CFB
@@ -7452,7 +7708,7 @@ FindControlImpl:
         jsr     L653F
         jsr     top_window
         bne     L7ACE
-        exit_call $A0
+        exit_call MGTK::error_no_active_window
 
 L7ACE:  bit     $B0
         bpl     L7B15
@@ -7555,7 +7811,7 @@ L7B8B:  exit_call $A4
 
 L7B90:  jsr     top_window
         bne     L7B9A
-        exit_call $A0
+        exit_call MGTK::error_no_active_window
 
 L7B9A:  ldy     #$06
         bit     $82
@@ -7595,7 +7851,7 @@ L7BCB:  lda     $83,x
         bpl     L7BCB
         jsr     top_window
         bne     L7BE0
-        exit_call $A0
+        exit_call MGTK::error_no_active_window
 
 L7BE0:  jsr     L7A73
         jsr     L653F
@@ -7657,7 +7913,7 @@ L7C66:  jsr     HideCursorImpl
         jsr     L707F
         jsr     L6553
         jsr     L7CBA
-        jsr     L5698
+        jsr     fixed_div
         ldx     $A1
         jsr     L7CE3
         lda     $A3
@@ -7693,18 +7949,18 @@ L7CB7:  .byte   0
 L7CB8:  .byte   0
 L7CB9:  .byte   0
 
-L7CBA:  sub16   L7CB6, L7CB8, $A3
+L7CBA:  sub16   L7CB6, L7CB8, fixed_div::divisor
         ldx     #$00
         bit     $8C
         bpl     L7CD3
-        ldx     #$02
+        ldx     #2
 L7CD3:  lda     $C7,x
         sec
         sbc     L7CB8
-        sta     $A1
+        sta     fixed_div::dividend
         lda     $C8,x
         sbc     L7CB9
-        sta     $A2
+        sta     fixed_div::dividend+1
         rts
 
 L7CE3:  ldy     #$06
@@ -7767,7 +8023,7 @@ bad_ctl:
 check_win:
         jsr     top_window
         bne     :+
-        exit_call $A0
+        exit_call MGTK::error_no_active_window
 
 :       ldy     #$07
         bit     $8C
@@ -7797,7 +8053,7 @@ KeyboardMouse:
 
 ;;; 2 bytes of params, copied to $82
 
-.proc SetMenuSelection
+.proc SetMenuSelectionImpl
         params := $82
 
         lda     params+0
