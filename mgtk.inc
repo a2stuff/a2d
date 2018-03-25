@@ -607,6 +607,24 @@ winfo_offset_port               := 20
 winfo_offset_nextwinfo          := 56
 winfo_size                      := 58
 
+
+;;; Errors
+
+error_in_object := $80
+error_empty_object := $81
+error_bad_object := $82
+error_font_too_big := $83
+
+error_no_mouse := $92
+error_invalid_hook := $94
+error_desktop_not_initialized := $95
+error_irq_in_use := $97
+error_window_already_exists := $9D
+error_window_id_required := $9E
+error_window_not_found := $9F
+error_no_active_window := $A0
+
+
 .endscope ; MGTK
 
 ;;; ============================================================
