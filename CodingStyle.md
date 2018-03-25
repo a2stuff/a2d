@@ -66,7 +66,7 @@ cases, e.g. `HideCursor`, `HideCursorImpl`, etc.
    * Define local variables (e.g. `ptr := $06`)
    * Define offsets, constants, etc.
    * Use math where necessary (e.g. `ldy #offset2 - offset1`)
-
+   * Use `.sizeof()` (or math if needed) rather than hardcoding sizes
 
 ## Structure
 
@@ -140,3 +140,24 @@ result:         .word   0
 Currently, only MGTK constants are wrapped in a `.scope` to provide
 a namespace. We may want to do that for ProDOS and DeskTop stuff as
 well in the future.
+
+
+## Self-modifying code
+
+* Add a label for the value being modified (byte or address)
+
+```
+        sta     jump_addr
+        stx     jump_addr+1
+        jump_addr := *+1
+        jmp     $0000
+```
+```
+        sty     count
+        ldy     #0
+:       sta     table,y
+        iny
+        count := *+1
+        cpy     #count
+        bne     :-
+```
