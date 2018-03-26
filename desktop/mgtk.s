@@ -503,8 +503,10 @@ param_lengths:
         PARAM_DEFN  5, $82, 0                ; $4A TrackThumb
         PARAM_DEFN  3, $8C, 0                ; $4B UpdateThumb
         PARAM_DEFN  2, $8C, 0                ; $4C ActivateCtl
-        PARAM_DEFN 16, $8A, 0                ; $4D
-        PARAM_DEFN  2, $82, 0                ; $4E
+
+        ;; Extra Calls
+        PARAM_DEFN 16, $8A, 0                ; $4D ???
+        PARAM_DEFN  2, $82, 0                ; $4E SetMenuSelection
 
 ;;; ============================================================
 ;;; Pre-Shift Tables
@@ -4496,19 +4498,12 @@ L6573:  lda     ($82),y
         bpl     L6573
         jmp     prepare_port
 
-L657E:  lda     L6586
-        ldx     L6587
+L657E:  ldax    L6586
         bne     L6567
-L6586:
-L6587           := * + 1
-L6588           := * + 2
-        asl     $205F,x         ; this looks like incorrect disassembly ???
-        ror     $2065,x
-        .byte   0
-        rti
+L6586:  .addr   standard_port
 
-        .byte   $06
-        .addr   L6592
+L6588:  jsr     L657E
+        MGTK_CALL MGTK::SetPortBits, L6592
         rts
 
 L6592:  .byte   $00,$00
@@ -8357,11 +8352,11 @@ L839A:  lda     kbd_mouse_state
         cmp     #$04
         beq     L83B3
         bit     drag_resize_flag
-        .byte   $30             ; bmi ...
-        ora     $75AD
-        adc     $2FE9,x
+        bmi     L83B3
+        lda     kbd_mouse_x
+        sbc     #<(screen_width-1)
         lda     kbd_mouse_x+1
-        sbc     #$02
+        sbc     #>(screen_width-1)
         beq     L83B5
         sec
 L83B3:  sec
