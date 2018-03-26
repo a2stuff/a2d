@@ -2668,13 +2668,7 @@ L572F:  ldx     #1
         ydelta := $A2
 
         ldx     #2              ; Convert relative x/y to absolute x/y at $92,$94
-loop:   lda     xdelta,x
-        clc
-        adc     current_penloc_x,x
-        sta     $92,x
-        lda     xdelta+1,x
-        adc     current_penloc_x+1,x
-        sta     $93,x
+loop:   add16   xdelta,x, current_penloc_x,x, $92,x
         dex
         dex
         bpl     loop
@@ -5150,13 +5144,7 @@ L69B4:  ldx     $A9
         sbc     L633E
         bmi     L6A00
         copy16  L6924, L633D
-L6A00:  lda     $BB
-        clc
-        adc     $C5
-        sta     $BD
-        lda     $BC
-        adc     #$00
-        sta     $BE
+L6A00:  add16_8 $BB, $C5, $BD
         jsr     L68A9
         ldax    $B1
         jsr     draw_text
@@ -5682,20 +5670,8 @@ L6E36:  ldx     $A9
         inc     fill_rect_params3_top
         lda     menu_item_y_table+1,x
         sta     fill_rect_params3_bottom
-        clc
-        lda     $BB
-        adc     #$05
-        sta     fill_rect_params3_left
-        lda     $BC
-        adc     #$00
-        sta     fill_rect_params3_left+1
-        sec
-        lda     $BD
-        sbc     #$05
-        sta     fill_rect_params3_right
-        lda     $BE
-        sbc     #$00
-        sta     fill_rect_params3_right+1
+        add16lc $BB, #5, fill_rect_params3_left
+        sub16lc $BD, #5, fill_rect_params3_right
         MGTK_CALL MGTK::SetPattern, light_speckle_pattern
         lda     #$01
         jsr     set_fill_mode
@@ -6837,13 +6813,7 @@ L774B:  lda     ($A9),y
         stx     set_input_unk
         bit     drag_resize_flag
         bmi     L777D
-L775F:  lda     $B7,x
-        clc
-        adc     L76A3,x
-        sta     $B7,x
-        lda     $B8,x
-        adc     L76A4,x
-        sta     $B8,x
+L775F:  add16   $B7,x, L76A3,x, $B7,x
         inx
         inx
         cpx     #$04
@@ -6856,33 +6826,17 @@ L777C:  rts
 
 L777D:  lda     #$00
         sta     L83F5
-L7782:  clc
-        lda     $C3,x
-        adc     L76A3,x
-        sta     $C3,x
-        lda     $C4,x
-        adc     L76A4,x
-        sta     $C4,x
-        sec
-        lda     $C3,x
-        sbc     $BF,x
-        sta     $82
-        lda     $C4,x
-        sbc     $C0,x
-        sta     $83
+L7782:  add16lc $C3,x, L76A3,x, $C3,x
+        sub16lc $C3,x, $BF,x, $82
+
         sec
         lda     $82
         sbc     $C7,x
         lda     $83
         sbc     $C8,x
         bpl     L77BC
-        clc
-        lda     $C7,x
-        adc     $BF,x
-        sta     $C3,x
-        lda     $C8,x
-        adc     $C0,x
-        sta     $C4,x
+
+        add16lc $C7,x, $BF,x, $C3,x
         jsr     L83F6
         jmp     L77D7
 
@@ -6892,13 +6846,7 @@ L77BC:  sec
         lda     $CC,x
         sbc     $83
         bpl     L77D7
-        clc
-        lda     $CB,x
-        adc     $BF,x
-        sta     $C3,x
-        lda     $CC,x
-        adc     $C0,x
-        sta     $C4,x
+        add16lc $CB,x, $BF,x, $C3,x
         jsr     L83F6
 L77D7:  inx
         inx
@@ -7050,13 +6998,7 @@ height:         .word   0
 .proc WindowToScreenImpl
         jsr     window_by_id_or_exit
         ldx     #2
-loop:   lda     $83,x
-        clc
-        adc     $B7,x
-        sta     $83,x
-        lda     $84,x
-        adc     $B8,x
-        sta     $84,x
+loop:   add16   $83,x, $B7,x, $83,x
         dex
         dex
         bpl     loop
@@ -7071,13 +7013,7 @@ loop:   lda     $83,x
 ScreenToWindowImpl:
         jsr     window_by_id_or_exit
         ldx     #$02
-L78FE:  lda     $83,x
-        sec
-        sbc     $B7,x
-        sta     $83,x
-        lda     $84,x
-        sbc     $B8,x
-        sta     $84,x
+L78FE:  sub16   $83,x, $B7,x, $83,x
         dex
         dex
         bpl     L78FE
@@ -7294,13 +7230,7 @@ L7A94:  sta     $82
         ldx     #$02
         lda     #$0C
 L7AA4:  pha
-        lda     $C7,x
-        clc
-        adc     $82
-        sta     $C7,x
-        lda     $C8,x
-        adc     $83
-        sta     $C8,x
+        add16   $C7,x, $82, $C7,x
         pla
         clc
         adc     $C7,x
@@ -7565,13 +7495,7 @@ L7CBA:  sub16   L7CB6, L7CB8, $A3
         bit     $8C
         bpl     L7CD3
         ldx     #$02
-L7CD3:  lda     $C7,x
-        sec
-        sbc     L7CB8
-        sta     $A1
-        lda     $C8,x
-        sbc     L7CB9
-        sta     $A2
+L7CD3:  sub16   $C7,x, L7CB8, $A1
         rts
 
 L7CE3:  ldy     #$06
@@ -7986,13 +7910,7 @@ L7FE1:  php
 L800F:  ldx     menu_index
         jsr     L6878
 
-        clc
-        lda     $B7
-        adc     #$05
-        sta     kbd_mouse_x
-        lda     $B8
-        adc     #$00
-        sta     kbd_mouse_x+1
+        add16lc $B7, #5, kbd_mouse_x
 
         ldy     menu_item_index
         lda     menu_item_y_table,y
@@ -8497,13 +8415,7 @@ L83FC:  bit     kbd_mouse_state
         php
         sei
         ldx     #$00
-L840D:  sec
-        lda     $CB,x
-        sbc     #$04
-        sta     kbd_mouse_x,x
-        lda     $CC,x
-        sbc     #$00
-        sta     kbd_mouse_x+1,x
+L840D:  sub16lc $CB,x, #4, kbd_mouse_x,x
         inx
         inx
         cpx     #$04

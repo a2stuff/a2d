@@ -120,6 +120,153 @@
         stx     arg+1
 .endmacro
 
+;;; Core for add16/sub16
+.macro _addsub16 op, opc, arg1, arg2, arg3, arg4, arg5, arg6
+    .if _is_register {arg2} && _is_register {arg4} && _is_register {arg6}
+        ;; xxx16 $1111,x, $2222,x, $3333,x
+        lda     arg1,arg2
+        opc
+        op      arg3,arg4
+        sta     arg5,arg6
+        lda     arg1+1,arg2
+        op      arg3+1,arg4
+        sta     arg5+1,arg6
+    .elseif _is_register {arg2} && _is_register {arg4}
+        ;; xxx16 $1111,x, $2222,x, $3333
+        lda     arg1,arg2
+        opc
+        op      arg3,arg4
+        sta     arg5
+        lda     arg1+1,arg2
+        op      arg3+1,arg4
+        sta     arg5+1
+    .elseif _is_register {arg2} && _is_register {arg5}
+        ;; xxx16 $1111,x, $2222, $3333,x
+        ;; xxx16 $1111,x, #$2222, $3333,x
+        lda     arg1,arg2
+        opc
+        _op_lo  op, {arg3}
+        sta     arg4,arg5
+        lda     arg1+1,arg2
+        _op_hi  op, {arg3}
+        sta     arg4+1,arg5
+    .elseif _is_register {arg2}
+        ;; xxx16 $1111,x, $2222, $3333
+        ;; xxx16 $1111,x, #$2222, $3333
+        lda     arg1,arg2
+        opc
+        _op_lo  op, {arg3}
+        sta     arg4
+        lda     arg1+1,arg2
+        _op_hi  op, {arg3}
+        sta     arg4+1
+    .elseif _is_register {arg3}
+        ;; xxx16 $1111, $2222,x $3333
+        ;; xxx16 #$1111, $2222,x $3333
+        _op_lo  lda, {arg1}
+        opc
+        op      arg2,arg3
+        sta     arg4
+        _op_hi  lda, {arg1}
+        op      arg2+1,arg3
+        sta     arg4+1
+    .elseif _is_register {arg4}
+        ;; xxx16 $1111, $2222, $3333,x
+        ;; xxx16 #$1111, $2222, $3333,x
+        ;; xxx16 $1111, #$2222, $3333,x
+        ;; xxx16 #$1111, #$2222, $3333,x
+        _op_lo  lda, {arg1}
+        opc
+        _op_lo  op, {arg2}
+        sta     arg3,arg4
+        _op_hi  lda, {arg1}
+        _op_hi  op, {arg2}
+        sta     arg3+1,arg4
+    .else
+        ;; xxx16 $1111, $2222, $3333
+        ;; xxx16 #$1111, $2222, $3333
+        ;; xxx16 $1111, #$2222, $3333
+        ;; xxx16 #$1111, #$2222, $3333
+        _op_lo lda, {arg1}
+        opc
+        _op_lo op, {arg2}
+        sta     arg3
+        _op_hi lda, {arg1}
+        _op_hi op, {arg2}
+        sta     arg3+1
+    .endif
+.endmacro
+
+;;; Core for add16/sub16, with leading carry operation
+.macro _addsub16lc op, opc, arg1, arg2, arg3, arg4, arg5, arg6
+        opc
+    .if _is_register {arg2} && _is_register {arg4} && _is_register {arg6}
+        ;; xxx16 $1111,x, $2222,x, $3333,x
+        lda     arg1,arg2
+        op      arg3,arg4
+        sta     arg5,arg6
+        lda     arg1+1,arg2
+        op      arg3+1,arg4
+        sta     arg5+1,arg6
+    .elseif _is_register {arg2} && _is_register {arg4}
+        ;; xxx16 $1111,x, $2222,x, $3333
+        lda     arg1,arg2
+        op      arg3,arg4
+        sta     arg5
+        lda     arg1+1,arg2
+        op      arg3+1,arg4
+        sta     arg5+1
+    .elseif _is_register {arg2} && _is_register {arg5}
+        ;; xxx16 $1111,x, $2222, $3333,x
+        ;; xxx16 $1111,x, #$2222, $3333,x
+        lda     arg1,arg2
+        _op_lo  op, {arg3}
+        sta     arg4,arg5
+        lda     arg1+1,arg2
+        _op_hi  op, {arg3}
+        sta     arg4+1,arg5
+    .elseif _is_register {arg2}
+        ;; xxx16 $1111,x, $2222, $3333
+        ;; xxx16 $1111,x, #$2222, $3333
+        lda     arg1,arg2
+        _op_lo  op, {arg3}
+        sta     arg4
+        lda     arg1+1,arg2
+        _op_hi  op, {arg3}
+        sta     arg4+1
+    .elseif _is_register {arg3}
+        ;; xxx16 $1111, $2222,x $3333
+        ;; xxx16 #$1111, $2222,x $3333
+        _op_lo  lda, {arg1}
+        op      arg2,arg3
+        sta     arg4
+        _op_hi  lda, {arg1}
+        op      arg2+1,arg3
+        sta     arg4+1
+    .elseif _is_register {arg4}
+        ;; xxx16 $1111, $2222, $3333,x
+        ;; xxx16 #$1111, $2222, $3333,x
+        ;; xxx16 $1111, #$2222, $3333,x
+        ;; xxx16 #$1111, #$2222, $3333,x
+        _op_lo  lda, {arg1}
+        _op_lo  op, {arg2}
+        sta     arg3,arg4
+        _op_hi  lda, {arg1}
+        _op_hi  op, {arg2}
+        sta     arg3+1,arg4
+    .else
+        ;; xxx16 $1111, $2222, $3333
+        ;; xxx16 #$1111, $2222, $3333
+        ;; xxx16 $1111, #$2222, $3333
+        ;; xxx16 #$1111, #$2222, $3333
+        _op_lo lda, {arg1}
+        _op_lo op, {arg2}
+        sta     arg3
+        _op_hi lda, {arg1}
+        _op_hi op, {arg2}
+        sta     arg3+1
+    .endif
+.endmacro
 
 ;;; Add arg1 to arg2, store to arg3
 ;;;    add16 $1111, $2222, $3333        ; absolute, absolute, absolute
@@ -130,55 +277,11 @@
 ;;;    add16 $1111,x, $2222, $3333,x    ; indexed, absolute, indexed
 ;;;    add16 $1111,x, $2222,x, $3333,x  ; indexed, indexed, indexed
 .macro add16 arg1, arg2, arg3, arg4, arg5, arg6
-    .if _is_register {arg2} && _is_register {arg4} && _is_register {arg6}
-        lda     arg1,arg2
-        clc
-        adc     arg3,arg4
-        sta     arg5,arg6
-        lda     arg1+1,arg2
-        adc     arg3+1,arg4
-        sta     arg5+1,arg6
-    .elseif _is_register {arg2} && _is_register {arg5}
-        lda     arg1,arg2
-        clc
-        _op_lo  adc, {arg3}
-        sta     arg4,arg5
-        lda     arg1+1,arg2
-        _op_hi  adc, {arg3}
-        sta     arg4+1,arg5
-    .elseif _is_register {arg2}
-        lda     arg1,arg2
-        clc
-        _op_lo  adc, {arg3}
-        sta     arg4
-        lda     arg1+1,arg2
-        _op_hi  adc, {arg3}
-        sta     arg4+1
-    .elseif _is_register {arg3}
-        _op_lo  lda, {arg1}
-        clc
-        adc     arg2,arg3
-        sta     arg4
-        _op_hi  lda, {arg1}
-        adc     arg2+1,arg3
-        sta     arg4+1
-    .elseif _is_register {arg4}
-        _op_lo  lda, {arg1}
-        clc
-        _op_lo  adc, {arg2}
-        sta     arg3,arg4
-        _op_hi  lda, {arg1}
-        _op_hi  adc, {arg2}
-        sta     arg3+1,arg4
-    .else
-        _op_lo lda, {arg1}
-        clc
-        _op_lo adc, {arg2}
-        sta     arg3
-        _op_hi lda, {arg1}
-        _op_hi adc, {arg2}
-        sta     arg3+1
-    .endif
+    _addsub16 adc, clc, arg1, arg2, arg3, arg4, arg5, arg6
+.endmacro
+;;; (as above, but clc precedes first lda)
+.macro add16lc arg1, arg2, arg3, arg4, arg5, arg6
+    _addsub16lc adc, clc, arg1, arg2, arg3, arg4, arg5, arg6
 .endmacro
 
 
@@ -218,55 +321,11 @@
 ;;;    sub16 $1111,x, $2222, $3333,x    ; indexed, absolute, indexed
 ;;;    sub16 $1111,x, $2222,x $3333,x   ; indexed, indexed, indexed
 .macro sub16 arg1, arg2, arg3, arg4, arg5, arg6
-    .if _is_register {arg2} && _is_register {arg4} && _is_register {arg6}
-        lda     arg1,arg2
-        sec
-        sbc     arg3,arg4
-        sta     arg5,arg6
-        lda     arg1+1,arg2
-        sbc     arg3+1,arg4
-        sta     arg5+1,arg6
-    .elseif _is_register {arg2} && _is_register {arg4}
-        lda     arg1,arg2
-        sec
-        sbc     arg3,arg4
-        sta     arg5
-        lda     arg1+1,arg2
-        sbc     arg3+1,arg4
-        sta     arg5+1
-    .elseif _is_register {arg2} && _is_register {arg5}
-        lda     arg1,arg2
-        sec
-        _op_lo  sbc, {arg3}
-        sta     arg4,arg5
-        lda     arg1+1,arg2
-        _op_hi  sbc, {arg3}
-        sta     arg4+1,arg5
-    .elseif _is_register {arg3}
-        _op_lo  lda, {arg1}
-        sec
-        sbc     arg2,arg3
-        sta     arg4
-        _op_hi  lda, {arg1}
-        sbc     arg2+1,arg3
-        sta     arg4+1
-    .elseif _is_register {arg4}
-        _op_lo  lda, {arg1}
-        sec
-        _op_lo  sbc, {arg2}
-        sta     arg3,arg4
-        _op_hi  lda, {arg1}
-        _op_hi  sbc, {arg2}
-        sta     arg3+1,arg4
-    .else
-        _op_lo lda, {arg1}
-        sec
-        _op_lo sbc, {arg2}
-        sta     arg3
-        _op_hi lda, {arg1}
-        _op_hi sbc, {arg2}
-        sta     arg3+1
-    .endif
+    _addsub16 sbc, sec, arg1, arg2, arg3, arg4, arg5, arg6
+.endmacro
+;;; (as above, but sec precedes first lda)
+.macro sub16lc arg1, arg2, arg3, arg4, arg5, arg6
+    _addsub16lc sbc, sec, arg1, arg2, arg3, arg4, arg5, arg6
 .endmacro
 
 ;;; Subtract arg2 from arg1, store to arg3
