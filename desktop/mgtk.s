@@ -504,8 +504,10 @@ param_lengths:
         PARAM_DEFN  5, $82, 0                ; $4A TrackThumb
         PARAM_DEFN  3, $8C, 0                ; $4B UpdateThumb
         PARAM_DEFN  2, $8C, 0                ; $4C ActivateCtl
-        PARAM_DEFN 16, $8A, 0                ; $4D
-        PARAM_DEFN  2, $82, 0                ; $4E
+
+        ;; Extra Calls
+        PARAM_DEFN 16, $8A, 0                ; $4D ???
+        PARAM_DEFN  2, $82, 0                ; $4E SetMenuSelection
 
 ;;; ============================================================
 ;;; Pre-Shift Tables
@@ -1389,16 +1391,10 @@ set_width:                                      ; Set width for destination.
         sta     left_masks_table
         sta     right_masks_table
 
-        lda     fill_mode_table_onechar,x
-        sta     fillmode_jmp+1
-        lda     fill_mode_table_onechar+1,x
-        sta     fillmode_jmp+2
+        copy16  fill_mode_table_onechar,x, fillmode_jmp+1
         rts
 
-:       lda     fill_mode_table,x
-        sta     fillmode_jmp+1
-        lda     fill_mode_table+1,x
-        sta     fillmode_jmp+2
+:       copy16  fill_mode_table,x, fillmode_jmp+1
         rts
 
 ll_ge256:                               ; Divmod for left limit >= 256
@@ -1474,10 +1470,7 @@ rl_ge256:                               ; Divmod for right limit >= 256
         bit     current_mapwidth
         bmi     on_screen               ; negative for on-screen destination
 
-        lda     #<bitmap_buffer
-        sta     bits_addr
-        lda     #>bitmap_buffer
-        sta     bits_addr+1
+        copy16  #bitmap_buffer, bits_addr
 
         jsr     ndbm_fix_width
         txa
@@ -1485,10 +1478,7 @@ rl_ge256:                               ; Divmod for right limit >= 256
         stx     src_width_bytes
         jsr     set_up_fill_mode::set_width
 
-        lda     shift_line_jmp_addr
-        sta     dhgr_get_srcbits::shift_bits_jmp_addr
-        lda     shift_line_jmp_addr+1
-        sta     dhgr_get_srcbits::shift_bits_jmp_addr+1
+        copy16  shift_line_jmp_addr, dhgr_get_srcbits::shift_bits_jmp_addr
         lda     #2*DEST_NDBM
         ldx     #2*DEST_NDBM
         ldy     #2*DEST_NDBM
@@ -1501,14 +1491,8 @@ on_screen:
         sta     dhgr_start_fill::next_line_jmp_addr+1
         pla
         tax
-        lda     start_fill_table,x
-        sta     start_fill_jmp+1
-        lda     start_fill_table+1,x
-        sta     start_fill_jmp+2
-        lda     shift_line_table,y
-        sta     dhgr_shift_bits::shift_line_jmp_addr
-        lda     shift_line_table+1,y
-        sta     dhgr_shift_bits::shift_line_jmp_addr+1
+        copy16  start_fill_table,x, start_fill_jmp+1
+        copy16  shift_line_table,y, dhgr_shift_bits::shift_line_jmp_addr
         rts
 .endproc
 
@@ -1571,10 +1555,7 @@ shift_line_table:
         bmi     :+
 
         ldx     #2*SRC_NDBM
-:       lda     get_srcbits_table,x
-        sta     fill_next_line::get_srcbits_jmp_addr
-        lda     get_srcbits_table+1,x
-        sta     fill_next_line::get_srcbits_jmp_addr+1
+:       copy16  get_srcbits_table,x, fill_next_line::get_srcbits_jmp_addr
         rts
 
 ;;              SRC_NDBM           SRC_DHGR
@@ -1874,10 +1855,7 @@ in_top: ldy     #0
 
         stx     clipped_left
         sta     clipped_left+1
-        lda     current_maprect_x1
-        sta     left
-        lda     current_maprect_x1+1
-        sta     left+1
+        copy16  current_maprect_x1, left
         iny
 
 :       lda     current_maprect_x2
@@ -1888,10 +1866,7 @@ in_top: ldy     #0
         sbc     right+1
         bpl     :+
 
-        lda     current_maprect_x2
-        sta     right
-        lda     current_maprect_x2+1
-        sta     right+1
+        copy16  current_maprect_x2, right
         tya
         ora     #$04
         tay
@@ -1906,10 +1881,7 @@ in_top: ldy     #0
 
         stx     clipped_top
         sta     clipped_top+1
-        lda     current_maprect_y1
-        sta     top
-        lda     current_maprect_y1+1
-        sta     top+1
+        copy16  current_maprect_y1, top
         iny
         iny
 
@@ -1920,10 +1892,7 @@ in_top: ldy     #0
         lda     current_maprect_y2+1
         sbc     bottom+1
         bpl     :+
-        lda     current_maprect_y2
-        sta     bottom
-        lda     current_maprect_y2+1
-        sta     bottom+1
+        copy16  current_maprect_y2, bottom
         tya
         ora     #$08
         tay
@@ -2119,14 +2088,10 @@ PaintBitsImpl:
 :       tya
         asl     a
         tay
-        lda     shift_table_main,y
-        sta     dhgr_shift_bits::shift_main_addr
-        lda     shift_table_main+1,y
-        sta     dhgr_shift_bits::shift_main_addr+1
-        lda     shift_table_aux,y
-        sta     dhgr_shift_bits::shift_aux_addr
-        lda     shift_table_aux+1,y
-        sta     dhgr_shift_bits::shift_aux_addr+1
+        copy16  shift_table_main,y, dhgr_shift_bits::shift_main_addr
+
+        copy16  shift_table_aux,y, dhgr_shift_bits::shift_aux_addr
+
         ldy     shift_bytes
         sty     dhgr_shift_bits::offset2_addr
         dey
@@ -2134,10 +2099,7 @@ PaintBitsImpl:
 
         ldx     #2*BITS_BITSHIFT
 no_bitshift:
-        lda     shift_bits_table,x
-        sta     dhgr_get_srcbits::shift_bits_jmp_addr
-        lda     shift_bits_table+1,x
-        sta     dhgr_get_srcbits::shift_bits_jmp_addr+1
+        copy16  shift_bits_table,x, dhgr_get_srcbits::shift_bits_jmp_addr
         jmp     bit_blit
 
 BITS_NO_BITSHIFT := 0
@@ -2180,11 +2142,7 @@ shift_bits_table:
         dey
         bpl     :-
 
-        lda     top             ; y coord
-        sta     $A7
-        lda     top+1
-        sta     $A7+1
-
+        copy16  top, $A7        ; y coord
         ldy     #0
         stx     $AE
 loop:   stx     point_index
@@ -2842,10 +2800,7 @@ fixed_div_quotient   := fixed_div::quotient
         draw_line_params := $92
 
 poly_loop:
-        lda     params_addr
-        sta     ptr
-        lda     params_addr+1
-        sta     ptr+1
+        copy16  params_addr, ptr
 
         lda     vertices_count             ; ORAd param bytes
         sta     $B6
@@ -2952,13 +2907,7 @@ next:   ldx     #1
         ydelta := $A2
 
         ldx     #2              ; Convert relative x/y to absolute x/y at $92,$94
-loop:   lda     xdelta,x
-        clc
-        adc     current_penloc_x,x
-        sta     $92,x
-        lda     xdelta+1,x
-        adc     current_penloc_x+1,x
-        sta     $93,x
+loop:   add16   xdelta,x, current_penloc_x,x, $92,x
         dex
         dex
         bpl     loop
@@ -3099,11 +3048,7 @@ L57EB:  sty     $82
         ldy     $82
         dey
         bpl     L57EB
-
-        lda     paint_poly_params_addr
-        sta     params_addr
-        lda     paint_poly_params_addr+1
-        sta     params_addr+1
+        copy16  paint_poly_params_addr, params_addr
         jmp     PaintPolyImpl
 
 paint_poly_params_addr:
@@ -3115,7 +3060,7 @@ pt_offsets:
 L5844:  .byte   $00,$00,$00,$01,$01,$01
 L584A:  .byte   $00,$01,$01,$01,$00,$00
 
-        ;; params for a $15 call
+        ;; params for a PaintPoly call
 paint_poly_params:
         .byte   6         ; number of points
         .byte   0
@@ -3129,10 +3074,7 @@ paint_poly_points:
 ;;; SetFont
 
 .proc SetFontImpl
-        lda     params_addr     ; set font to passed address
-        sta     current_textfont
-        lda     params_addr+1
-        sta     current_textfont+1
+        copy16  params_addr, current_textfont ; set font to passed address
 
         ;; Compute addresses of each row of the glyphs.
 prepare_font:
@@ -3268,10 +3210,14 @@ L5933:  stax    $94
 
 ;;; 3 bytes of params, copied to $A1
 
-DrawTextImpl:
+.proc DrawTextImpl
+        text_addr := $A1        ; param
+        text_len  := $A3        ; param
+        text_width := $A4       ; computed
+
         jsr     maybe_unstash_low_zp
         jsr     measure_text
-        stax    $A4
+        stax    text_width
         ldy     #0
         sty     $9F
         sty     $A0
@@ -3286,7 +3232,7 @@ DrawTextImpl:
         ldy     #0
         ldx     $9C
 L595C:  sty     $9F
-        lda     ($A1),y
+        lda     (text_addr),y
         tay
         lda     (glyph_widths),y
         clc
@@ -3336,7 +3282,7 @@ L59A8:  lda     #0
         jsr     L59C3
         sta     LOWSCR
 L59B9:  jsr     maybe_stash_low_zp
-        ldax    $A4
+        ldax    text_width
         jmp     adjust_xpos
 
 L59C3:  lda     $98
@@ -3344,22 +3290,10 @@ L59C3:  lda     $98
         sbc     $94
         asl     a
         tax
-        lda     L5D81,x
-        sta     L5B02
-        lda     L5D81+1,x
-        sta     L5B03
-        lda     L5DA1,x
-        sta     L5A95
-        lda     L5DA1+1,x
-        sta     L5A96
-        lda     L5DC1,x
-        sta     L5C22
-        lda     L5DC1+1,x
-        sta     L5C23
-        lda     L5DE1,x
-        sta     L5CBE
-        lda     L5DE1+1,x
-        sta     L5CBF
+        copy16  L5D81,x, L5B02
+        copy16  L5DA1,x, L5A95
+        copy16  L5DC1,x, L5C22
+        copy16  L5DE1,x, L5CBE
         txa
         lsr     a
         tax
@@ -3432,7 +3366,7 @@ L5A72:  sta     $0000,x
         lda     #$80
         sta     $42
         ldy     $9F
-L5A81:  lda     ($A1),y
+L5A81:  lda     (text_addr),y
         tay
         bit     $81
         bpl     L5A8B
@@ -3444,7 +3378,6 @@ L5A8B:  tax
         ldy     $87
         bne     L5AEA
 L5A95           := * + 1
-L5A96           := * + 2
         jmp     L5A97
 
 L5A97:  lda     $FFFF,x
@@ -3484,16 +3417,9 @@ L5AE7:  jmp     L5BD4
 L5AEA:  tya
         asl     a
         tay
-        lda     shift_table_aux,y
-        sta     $40
-        lda     shift_table_aux+1,y
-        sta     $40+1
-        lda     shift_table_main,y
-        sta     $42
-        lda     shift_table_main+1,y
-        sta     $42+1
+        copy16  shift_table_aux,y, $40
+        copy16  shift_table_main,y, $42
 L5B02           := * + 1
-L5B03           := * + 2
         jmp     L5B04
 
 L5B04:  ldy     $FFFF,x         ; All of these $FFFFs are modified
@@ -3616,7 +3542,7 @@ L5BF6:  clc
         bcs     L5C0D
         sta     $87
 L5BFF:  ldy     $9F
-        cpy     $A3
+        cpy     text_len
         beq     L5C08
         jmp     L5A81
 
@@ -3635,8 +3561,7 @@ L5C18:  bmi     L5C84
         jmp     L5CB5
 
 L5C21:
-L5C22           := * + 1
-L5C23           := * + 2
+        L5C22 := * + 1
         jmp     L5C24
 
 
@@ -3722,7 +3647,6 @@ L5CB5:  ldx     $9C
 L5CB9:  ora     #$80
         sta     $80
 L5CBE           := * + 1
-L5CBF           := * + 2
         jmp     L5CC0
 
 ;;; Per JB: "looks like the quickdraw slow-path draw clipped pattern slab"
@@ -3829,6 +3753,9 @@ L5D81:  .addr   L5BC7,L5BBA,L5BAD,L5BA0,L5B93,L5B86,L5B79,L5B6C,L5B5F,L5B52,L5B4
 L5DA1:  .addr   L5AE2,L5ADD,L5AD8,L5AD3,L5ACE,L5AC9,L5AC4,L5ABF,L5ABA,L5AB5,L5AB0,L5AAB,L5AA6,L5AA1,L5A9C,L5A97
 L5DC1:  .addr   L5C7E,L5C78,L5C72,L5C6C,L5C66,L5C60,L5C5A,L5C54,L5C4E,L5C48,L5C42,L5C3C,L5C36,L5C30,L5C2A,L5C24
 L5DE1:  .addr   L5D74,L5D68,L5D5C,L5D50,L5D44,L5D38,L5D2C,L5D20,L5D14,L5D08,L5CFC,L5CF0,L5CE4,L5CD8,L5CCC,L5CC0
+.endproc
+
+;;; ============================================================
 
 low_zp_stash_buffer:
 poly_maxima_yh_table:
@@ -4145,23 +4072,20 @@ L600B:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00
-L602F:  .byte   $00,$00,$00,$00,$00,$00,$02,$00
+L602F:  .byte   $00,$00,$00,$00
+L6033:  .byte   $00,$00,$02,$00
         .byte   $06,$00,$0E,$00,$1E,$00,$3E,$00
         .byte   $7E,$00,$1A,$00,$30,$00,$30,$00
         .byte   $60,$00,$00,$00,$03,$00,$07,$00
         .byte   $0F,$00,$1F,$00,$3F,$00,$7F,$00
         .byte   $7F,$01,$7F,$00,$78,$00,$78,$00
         .byte   $70,$01,$70,$01,$01,$01
-L6065:  .byte   $33
-L6066:  .byte   $60
+L6065:  .addr   L6033
 L6067:  lda     #$FF
         sta     cursor_count
         lda     #0
         sta     cursor_flag
-        lda     L6065
-        sta     params_addr
-        lda     L6066
-        sta     params_addr+1
+        copy16  L6065, params_addr
         ;; fall through
 
 ;;; ============================================================
@@ -4239,14 +4163,8 @@ L60EE:  tay
         tya
         asl     a
         tay
-        lda     shift_table_main,y
-        sta     L6164
-        lda     shift_table_main+1,y
-        sta     L6165
-        lda     shift_table_aux,y
-        sta     L616A
-        lda     shift_table_aux+1,y
-        sta     L616B
+        copy16  shift_table_main,y, L6164
+        copy16  shift_table_aux,y, L616A
         ldx     #$03
 L6116:  lda     $82,x
         sta     L602F,x
@@ -4287,11 +4205,9 @@ active_cursor_mask      := * + 1
         ldy     #$05
 L6160:  ldx     L6004,y
 L6164           := * + 1
-L6165           := * + 2
         ora     $FF80,x
         sta     L6005,y
 L616A           := * + 1
-L616B           := * + 2
         lda     $FF00,x
         dey
         bne     L6160
@@ -4585,10 +4501,7 @@ L6348:  lda     $82,x
         bpl     L6348
         lda     #$7F
         sta     standard_port::textback
-        lda     $87
-        sta     standard_port::textfont
-        lda     $88
-        sta     standard_port::textfont+1
+        copy16  $87, standard_port::textfont
         copy16  $89, L6835
         copy16  $8B, L633B
         jsr     L646F
@@ -4811,15 +4724,11 @@ L6534:  jmp     (L6537)
 
 L6537:  .byte   $00
 L6538:  .byte   $00
-L6539:  .byte   $00
-L653A:  .byte   $00
+L6539:  .word   0
 L653B:  .byte   $00
 
 L653C:  jsr     HideCursorImpl
-L653F:  lda     params_addr
-        sta     L6539
-        lda     params_addr+1
-        sta     L653A
+L653F:  copy16  params_addr, L6539
         lda     stack_ptr_stash
         sta     L653B
         lsr     preserve_zp_flag
@@ -4827,10 +4736,7 @@ L653F:  lda     params_addr
 
 L6553:  jsr     ShowCursorImpl
 L6556:  asl     preserve_zp_flag
-        lda     L6539
-        sta     params_addr
-        lda     L653A
-        sta     params_addr+1
+        copy16  L6539, params_addr
         ldax    active_port
 L6567:  stax    $82
         lda     L653B
@@ -4842,19 +4748,12 @@ L6573:  lda     ($82),y
         bpl     L6573
         jmp     prepare_port
 
-L657E:  lda     L6586
-        ldx     L6587
+L657E:  ldax    L6586
         bne     L6567
-L6586:
-L6587           := * + 1
-L6588           := * + 2
-        asl     $205F,x
-        ror     $2065,x
-        .byte   0
-        rti
+L6586:  .addr   standard_port
 
-        .byte   $06
-        .addr   L6592
+L6588:  jsr     L657E
+        MGTK_CALL MGTK::SetPortBits, L6592
         rts
 
 L6592:  .byte   $00,$00
@@ -4892,10 +4791,7 @@ checkerboard_pattern:
         bit     desktop_initialized_flag
         bmi     fail
 
-        lda     params
-        sta     mouse_hook
-        lda     params+1
-        sta     mouse_hook+1
+        copy16  params, mouse_hook
 
         ldax    mouse_state_addr
         ldy     #2
@@ -5262,8 +5158,7 @@ height: .word   11
 .endproc
         fill_rect_params2_height := fill_rect_params2::height
 
-L6835:  .byte   $00
-L6836:  .byte   $00
+L6835:  .word   0
 
 .proc test_rect_params2
 left:   .word   0
@@ -5299,10 +5194,7 @@ L6863:  .addr   $685D
 L6865:  .addr   $685A
 
 get_menu_count:
-        lda     active_menu
-        sta     $82
-        lda     active_menu+1
-        sta     $83
+        copy16  active_menu, $82
         ldy     #0
         lda     ($82),y
         sta     $A8
@@ -5418,10 +5310,7 @@ SetMenuImpl:
         lda     #$00
         sta     L633D
         sta     L633E
-        lda     params_addr
-        sta     active_menu
-        lda     params_addr+1
-        sta     active_menu+1
+        copy16  params_addr, active_menu
 
         jsr     get_menu_count  ; into $A8
         jsr     L653C
@@ -5502,13 +5391,7 @@ L69B4:  ldx     scan_y
         sbc     L633E
         bmi     L6A00
         copy16  L6924, L633D
-L6A00:  lda     $BB
-        clc
-        adc     $C5
-        sta     $BD
-        lda     $BC
-        adc     #$00
-        sta     $BE
+L6A00:  add16_8 $BB, $C5, $BD
         jsr     L68A9
         ldax    $B1
         jsr     draw_text
@@ -6034,20 +5917,8 @@ L6E36:  ldx     $A9
         inc     fill_rect_params3_top
         lda     menu_item_y_table+1,x
         sta     fill_rect_params3_bottom
-        clc
-        lda     $BB
-        adc     #$05
-        sta     fill_rect_params3_left
-        lda     $BC
-        adc     #$00
-        sta     fill_rect_params3_left+1
-        sec
-        lda     $BD
-        sbc     #$05
-        sta     fill_rect_params3_right
-        lda     $BE
-        sbc     #$00
-        sta     fill_rect_params3_right+1
+        add16lc $BB, #5, fill_rect_params3_left
+        sub16lc $BD, #5, fill_rect_params3_right
         MGTK_CALL MGTK::SetPattern, light_speckle_pattern
         lda     #$01
         jsr     set_fill_mode
@@ -6118,10 +5989,7 @@ loop:   lda     params,x
         dex
         bpl     loop
 
-        lda     standard_port::textfont
-        sta     params
-        lda     standard_port::textfont+1
-        sta     params+1
+        copy16  standard_port::textfont, params
         ldy     #0
         lda     ($82),y
         bmi     :+
@@ -6289,10 +6157,7 @@ L7011:  .addr   $6FD3
 
         ;; Start window enumeration at top ???
 .proc top_window
-        lda     L7011
-        sta     $A7
-        lda     L7011+1
-        sta     $A7+1
+        copy16  L7011, $A7
         ldax    L700B
         bne     next_window_L7038
 end:    rts
@@ -6301,10 +6166,7 @@ end:    rts
         ;; Look up next window in chain. $A9/$AA will point at
         ;; winfo (also returned in X,A).
 .proc next_window
-        lda     $A9
-        sta     $A7
-        lda     $A9+1
-        sta     $A7+1
+        copy16  $A9, $A7
         ldy     #MGTK::winfo_offset_nextwinfo+1
         lda     ($A9),y
         beq     top_window::end  ; if high byte is 0, end of chain
@@ -6825,10 +6687,7 @@ L7476:  lda     #$02
 
 L747A:  .byte   0
 OpenWindowImpl:
-        lda     params_addr
-        sta     $A9
-        lda     params_addr+1
-        sta     $AA
+        copy16  params_addr, $A9
         ldy     #$00
         lda     ($A9),y
         bne     L748E
@@ -6839,10 +6698,7 @@ L748E:  sta     $82
         beq     L749A
         exit_call MGTK::error_window_already_exists
 
-L749A:  lda     params_addr
-        sta     $A9
-        lda     params_addr+1
-        sta     $AA
+L749A:  copy16  params_addr, $A9
         ldy     #$0A
         lda     ($A9),y
         ora     #$80
@@ -6934,10 +6790,7 @@ L750C:  .res    38,0
         bne     :+
         MGTK_CALL MGTK::SetPortBits, set_port_params
 :       jsr     next_window::L703E
-        lda     active_port
-        sta     L750C
-        lda     active_port+1
-        sta     L750C+1
+        copy16  active_port, L750C
         jsr     L75C6
         php
         ldax    L758A
@@ -7007,31 +6860,12 @@ L75DE:  lda     ($A9),y
         cpy     #$38
         bne     L75DE
         ldx     #$02
-L75EA:  lda     $92,x
-        sta     $D0,x
-        lda     $93,x
-        sta     $D1,x
-        lda     $96,x
-        sec
-        sbc     $92,x
-        sta     $82,x
-        lda     $97,x
-        sbc     $93,x
-        sta     $83,x
-        lda     $D8,x
-        sec
-        sbc     $9B,x
-        sta     $D8,x
-        lda     $D9,x
-        sbc     $9C,x
-        sta     $D9,x
-        lda     $D8,x
-        clc
-        adc     $82,x
-        sta     $DC,x
-        lda     $D9,x
-        adc     $83,x
-        sta     $DD,x
+L75EA:  copy16  $92,x, $D0,x
+
+        sub16   $96,x, $92,x, $82,x
+        sub16   $D8,x, $9B,x, $D8,x
+        add16   $D8,x, $82,x, $DC,x
+
         dex
         dex
         bpl     L75EA
@@ -7226,13 +7060,7 @@ L774B:  lda     ($A9),y
         stx     set_input_unk
         bit     drag_resize_flag
         bmi     L777D
-L775F:  lda     $B7,x
-        clc
-        adc     L76A3,x
-        sta     $B7,x
-        lda     $B8,x
-        adc     L76A4,x
-        sta     $B8,x
+L775F:  add16   $B7,x, L76A3,x, $B7,x
         inx
         inx
         cpx     #$04
@@ -7245,33 +7073,17 @@ L777C:  rts
 
 L777D:  lda     #$00
         sta     L83F5
-L7782:  clc
-        lda     $C3,x
-        adc     L76A3,x
-        sta     $C3,x
-        lda     $C4,x
-        adc     L76A4,x
-        sta     $C4,x
-        sec
-        lda     $C3,x
-        sbc     $BF,x
-        sta     $82
-        lda     $C4,x
-        sbc     $C0,x
-        sta     $83
+L7782:  add16lc $C3,x, L76A3,x, $C3,x
+        sub16lc $C3,x, $BF,x, $82
+
         sec
         lda     $82
         sbc     $C7,x
         lda     $83
         sbc     $C8,x
         bpl     L77BC
-        clc
-        lda     $C7,x
-        adc     $BF,x
-        sta     $C3,x
-        lda     $C8,x
-        adc     $C0,x
-        sta     $C4,x
+
+        add16lc $C7,x, $BF,x, $C3,x
         jsr     L83F6
         jmp     L77D7
 
@@ -7281,13 +7093,7 @@ L77BC:  sec
         lda     $CC,x
         sbc     $83
         bpl     L77D7
-        clc
-        lda     $CB,x
-        adc     $BF,x
-        sta     $C3,x
-        lda     $CC,x
-        adc     $C0,x
-        sta     $C4,x
+        add16lc $CB,x, $BF,x, $C3,x
         jsr     L83F6
 L77D7:  inx
         inx
@@ -7439,13 +7245,7 @@ height:         .word   0
 .proc WindowToScreenImpl
         jsr     window_by_id_or_exit
         ldx     #2
-loop:   lda     $83,x
-        clc
-        adc     $B7,x
-        sta     $83,x
-        lda     $84,x
-        adc     $B8,x
-        sta     $84,x
+loop:   add16   $83,x, $B7,x, $83,x
         dex
         dex
         bpl     loop
@@ -7460,13 +7260,7 @@ loop:   lda     $83,x
 ScreenToWindowImpl:
         jsr     window_by_id_or_exit
         ldx     #$02
-L78FE:  lda     $83,x
-        sec
-        sbc     $B7,x
-        sta     $83,x
-        lda     $84,x
-        sbc     $B8,x
-        sta     $84,x
+L78FE:  sub16   $83,x, $B7,x, $83,x
         dex
         dex
         bpl     L78FE
@@ -7683,13 +7477,7 @@ L7A94:  sta     $82
         ldx     #$02
         lda     #$0C
 L7AA4:  pha
-        lda     $C7,x
-        clc
-        adc     $82
-        sta     $C7,x
-        lda     $C8,x
-        adc     $83
-        sta     $C8,x
+        add16   $C7,x, $82, $C7,x
         pla
         clc
         adc     $C7,x
@@ -7954,13 +7742,7 @@ L7CBA:  sub16   L7CB6, L7CB8, fixed_div::divisor
         bit     $8C
         bpl     L7CD3
         ldx     #2
-L7CD3:  lda     $C7,x
-        sec
-        sbc     L7CB8
-        sta     fixed_div::dividend
-        lda     $C8,x
-        sbc     L7CB9
-        sta     fixed_div::dividend+1
+L7CD3:  sub16   $C7,x, L7CB8, fixed_div:dividend
         rts
 
 L7CE3:  ldy     #$06
@@ -8204,10 +7986,7 @@ L7E98:  jsr     L7E8C
 .endproc
 
 L7EAD:  jsr     stash_addr
-        lda     L7F2E
-        sta     params_addr
-        lda     L7F2F
-        sta     params_addr+1
+        copy16  L7F2E, params_addr
         jsr     SetCursorImpl
         jsr     restore_addr
         lda     #$00
@@ -8258,14 +8037,8 @@ L7EFB:  cmp     #$04
 L7F0C:  jmp     L825F
 
 L7F0F:  jsr     stash_addr
-        lda     active_cursor
-        sta     L7F2E
-        lda     active_cursor+1
-        sta     L7F2F
-        lda     L6065
-        sta     params_addr
-        lda     L6066
-        sta     params_addr+1
+        copy16  active_cursor, L7F2E
+        copy16  L6065, params_addr
         jsr     SetCursorImpl
         jmp     restore_addr
 
@@ -8273,17 +8046,11 @@ L7F2E:  .byte   0
 L7F2F:  .byte   0
 
 stash_addr:
-        lda     params_addr
-        sta     stashed_addr
-        lda     params_addr+1
-        sta     stashed_addr+1
+        copy16  params_addr, stashed_addr
         rts
 
 restore_addr:
-        lda     stashed_addr
-        sta     params_addr
-        lda     stashed_addr+1
-        sta     params_addr+1
+        copy16  stashed_addr, params_addr
         rts
 
 stashed_addr:  .addr     0
@@ -8390,13 +8157,7 @@ L7FE1:  php
 L800F:  ldx     menu_index
         jsr     L6878
 
-        clc
-        lda     $B7
-        adc     #$05
-        sta     kbd_mouse_x
-        lda     $B8
-        adc     #$00
-        sta     kbd_mouse_x+1
+        add16lc $B7, #5, kbd_mouse_x
 
         ldy     menu_item_index
         lda     menu_item_y_table,y
@@ -8843,11 +8604,11 @@ L839A:  lda     kbd_mouse_state
         cmp     #$04
         beq     L83B3
         bit     drag_resize_flag
-        .byte   $30             ; bmi ...
-        ora     $75AD
-        adc     $2FE9,x
+        bmi     L83B3
+        lda     kbd_mouse_x
+        sbc     #<(screen_width-1)
         lda     kbd_mouse_x+1
-        sbc     #$02
+        sbc     #>(screen_width-1)
         beq     L83B5
         sec
 L83B3:  sec
@@ -8901,13 +8662,7 @@ L83FC:  bit     kbd_mouse_state
         php
         sei
         ldx     #$00
-L840D:  sec
-        lda     $CB,x
-        sbc     #$04
-        sta     kbd_mouse_x,x
-        lda     $CC,x
-        sbc     #$00
-        sta     kbd_mouse_x+1,x
+L840D:  sub16lc $CB,x, #4, kbd_mouse_x,x
         inx
         inx
         cpx     #$04
