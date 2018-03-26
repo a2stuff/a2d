@@ -125,15 +125,10 @@
 ;;;    add16 $1111, $2222, $3333        ; absolute, absolute, absolute
 ;;;    add16 $1111, #$2222, $3333       ; absolute, immediate, absolute
 ;;;    add16 $1111,x, $2222, $3333      ; indexed, absolute, absolute
-;;;    add16 $1111,y, $2222, $3333      ; indexed, absolute, absolute
 ;;;    add16 $1111, $2222,x, $3333      ; absolute, indexed, absolute
-;;;    add16 $1111, $2222,y, $3333      ; absolute, indexed, absolute
 ;;;    add16 $1111, $2222, $3333,x      ; absolute, absolute, indexed
-;;;    add16 $1111, $2222, $3333,y      ; absolute, absolute, indexed
 ;;;    add16 $1111,x, $2222, $3333,x    ; indexed, absolute, indexed
-;;;    add16 $1111,y, $2222, $3333,y    ; indexed, absolute, indexed
 ;;;    add16 $1111,x, $2222,x, $3333,x  ; indexed, indexed, indexed
-;;;    add16 $1111,y, $2222,y, $3333,y  ; indexed, indexed, indexed
 .macro add16 arg1, arg2, arg3, arg4, arg5, arg6
     .if _is_register {arg2} && _is_register {arg4} && _is_register {arg6}
         lda     arg1,arg2
@@ -218,15 +213,20 @@
 ;;;    sub16 $1111, #$2222, $3333       ; absolute, immediate, absolute
 ;;;    sub16 $1111, $2222, $3333        ; absolute, absolute, absolute
 ;;;    sub16 $1111, $2222,x, $3333      ; absolute, indexed, absolute
-;;;    sub16 $1111, $2222,y, $3333      ; absolute, indexed, absolute
 ;;;    sub16 $1111, $2222, $3333,x      ; absolute, absolute, indexed
-;;;    sub16 $1111, $2222, $3333,y      ; absolute, absolute, indexed
 ;;;    sub16 $1111,x, $2222,x, $3333    ; indexed, indexed, absolute
-;;;    sub16 $1111,y, $2222,y, $3333    ; indexed, indexed, absolute
 ;;;    sub16 $1111,x, $2222, $3333,x    ; indexed, absolute, indexed
-;;;    sub16 $1111,y, $2222, $3333,y    ; indexed, absolute, indexed
-.macro sub16 arg1, arg2, arg3, arg4, arg5
-    .if _is_register {arg2} && _is_register {arg4}
+;;;    sub16 $1111,x, $2222,x $3333,x   ; indexed, indexed, indexed
+.macro sub16 arg1, arg2, arg3, arg4, arg5, arg6
+    .if _is_register {arg2} && _is_register {arg4} && _is_register {arg6}
+        lda     arg1,arg2
+        sec
+        sbc     arg3,arg4
+        sta     arg5,arg6
+        lda     arg1+1,arg2
+        sbc     arg3+1,arg4
+        sta     arg5+1,arg6
+    .elseif _is_register {arg2} && _is_register {arg4}
         lda     arg1,arg2
         sec
         sbc     arg3,arg4
@@ -288,13 +288,17 @@
 ;;;    copy16 #$1111, $2222     ; immediate, absolute
 ;;;    copy16 $1111, $2222      ; absolute, absolute
 ;;;    copy16 $1111,x, $2222    ; indirect load, absolute store
-;;;    copy16 $1111,y, $2222    ; indirect load, absolute store
 ;;;    copy16 $1111, $2222,x    ; absolute load, indirect store
-;;;    copy16 $1111, $2222,y    ; absolute load, indirect store
+;;;    copy16 $1111,x $2222,x   ; indirect load, indirect store
 ;;;    copy16 #$1111, $2222,x   ; immediate load, indirect store
-;;;    copy16 #$1111, $2222,y   ; immediate load, indirect store
-.macro copy16 arg1, arg2, arg3
-    .if _is_register {arg2}
+.macro copy16 arg1, arg2, arg3, arg4
+    .if _is_register {arg2} && _is_register {arg4}
+        ;; indexed load/indexed store
+        lda     arg1,arg2
+        sta     arg3,arg4
+        lda     arg1+1,arg2
+        sta     arg3+1,arg4
+    .elseif _is_register {arg2}
         ;; indexed load variant (arg2 is x or y)
         lda     arg1,arg2
         sta     arg3
@@ -320,9 +324,7 @@
 ;;;    cmp16 $1111, #$2222     ; absolute, immediate
 ;;;    cmp16 $1111, $2222      ; absolute, absolute
 ;;;    cmp16 $1111,x, $2222    ; indirect, absolute
-;;;    cmp16 $1111,y, $2222    ; indirect, absolute
 ;;;    cmp16 $1111, $2222,x    ; absolute, indirect
-;;;    cmp16 $1111, $2222,y    ; absolute indirect
 .macro cmp16 arg1, arg2, arg3
     .if _is_register {arg2}
         ;; indexed variant (arg2 is x or y)

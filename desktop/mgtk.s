@@ -1375,16 +1375,10 @@ set_width:                                      ; Set width for destination.
         sta     left_masks_table
         sta     right_masks_table
 
-        lda     fill_mode_table_onechar,x
-        sta     fillmode_jmp+1
-        lda     fill_mode_table_onechar+1,x
-        sta     fillmode_jmp+2
+        copy16  fill_mode_table_onechar,x, fillmode_jmp+1
         rts
 
-:       lda     fill_mode_table,x
-        sta     fillmode_jmp+1
-        lda     fill_mode_table+1,x
-        sta     fillmode_jmp+2
+:       copy16  fill_mode_table,x, fillmode_jmp+1
         rts
 
 ll_ge256:                               ; Divmod for left limit >= 256
@@ -1460,10 +1454,7 @@ rl_ge256:                               ; Divmod for right limit >= 256
         bit     current_mapwidth
         bmi     on_screen               ; negative for on-screen destination
 
-        lda     #<bitmap_buffer
-        sta     bits_addr
-        lda     #>bitmap_buffer
-        sta     bits_addr+1
+        copy16  #bitmap_buffer, bits_addr
 
         jsr     ndbm_fix_width
         txa
@@ -1471,10 +1462,7 @@ rl_ge256:                               ; Divmod for right limit >= 256
         stx     src_width_char
         jsr     set_up_fill_mode::set_width
 
-        lda     shift_line_jmp_addr
-        sta     dhgr_get_srcbits::shift_bits_jmp_addr
-        lda     shift_line_jmp_addr+1
-        sta     dhgr_get_srcbits::shift_bits_jmp_addr+1
+        copy16  shift_line_jmp_addr, dhgr_get_srcbits::shift_bits_jmp_addr
         lda     #2*DEST_NDBM
         ldx     #2*DEST_NDBM
         ldy     #2*DEST_NDBM
@@ -1487,14 +1475,8 @@ on_screen:
         sta     dhgr_start_fill::next_line_jmp_addr+1
         pla
         tax
-        lda     start_fill_table,x
-        sta     start_fill_jmp+1
-        lda     start_fill_table+1,x
-        sta     start_fill_jmp+2
-        lda     shift_line_table,y
-        sta     dhgr_shift_bits::shift_line_jmp_addr
-        lda     shift_line_table+1,y
-        sta     dhgr_shift_bits::shift_line_jmp_addr+1
+        copy16  start_fill_table,x, start_fill_jmp+1
+        copy16  shift_line_table,y, dhgr_shift_bits::shift_line_jmp_addr
         rts
 .endproc
 
@@ -1557,10 +1539,7 @@ shift_line_table:
         bmi     :+
 
         ldx     #2*SRC_NDBM
-:       lda     get_srcbits_table,x
-        sta     fill_next_line::get_srcbits_jmp_addr
-        lda     get_srcbits_table+1,x
-        sta     fill_next_line::get_srcbits_jmp_addr+1
+:       copy16  get_srcbits_table,x, fill_next_line::get_srcbits_jmp_addr
         rts
 
 ;;              SRC_NDBM           SRC_DHGR
@@ -1822,10 +1801,7 @@ L50E3:  ldy     #$00
         bpl     L50FE
         stx     $9B
         sta     $9C
-        lda     current_maprect_x1
-        sta     $92
-        lda     current_maprect_x1+1
-        sta     $92+1
+        copy16  current_maprect_x1, $92
         iny
 L50FE:  lda     current_maprect_x2
         sec
@@ -1834,10 +1810,7 @@ L50FE:  lda     current_maprect_x2
         lda     current_maprect_x2+1
         sbc     $96+1
         bpl     L5116
-        lda     current_maprect_x2
-        sta     $96
-        lda     current_maprect_x2+1
-        sta     $96+1
+        copy16  current_maprect_x2, $96
         tya
         ora     #$04
         tay
@@ -1850,10 +1823,7 @@ L5116:  lda     $94
         bpl     L5130
         stx     $9D
         sta     $9E
-        lda     current_maprect_y1
-        sta     $94
-        lda     current_maprect_y1+1
-        sta     $94+1
+        copy16  current_maprect_y1, $94
         iny
         iny
 L5130:  lda     current_maprect_y2
@@ -1863,10 +1833,7 @@ L5130:  lda     current_maprect_y2
         lda     current_maprect_y2+1
         sbc     $98+1
         bpl     L5148
-        lda     current_maprect_y2
-        sta     $98
-        lda     current_maprect_y2+1
-        sta     $98+1
+        copy16  current_maprect_y2, $98
         tya
         ora     #$08
         tay
@@ -2035,25 +2002,16 @@ L5249:  tay
 L5250:  tya
         asl     a
         tay
-        lda     shift_table_main,y
-        sta     dhgr_shift_bits::shift_main_addr
-        lda     shift_table_main+1,y
-        sta     dhgr_shift_bits::shift_main_addr+1
+        copy16  shift_table_main,y, dhgr_shift_bits::shift_main_addr
 
-        lda     shift_table_aux,y
-        sta     dhgr_shift_bits::shift_aux_addr
-        lda     shift_table_aux+1,y
-        sta     dhgr_shift_bits::shift_aux_addr+1
+        copy16  shift_table_aux,y, dhgr_shift_bits::shift_aux_addr
 
         ldy     $81
         sty     dhgr_shift_bits::offset2_addr
         dey
         sty     dhgr_shift_bits::offset1_addr
         ldx     #2
-L5276:  lda     L5285,x
-        sta     dhgr_get_srcbits::shift_bits_jmp_addr
-        lda     L5285+1,x
-        sta     dhgr_get_srcbits::shift_bits_jmp_addr+1
+L5276:  copy16  L5285,x, dhgr_get_srcbits::shift_bits_jmp_addr
         jmp     bit_blit
 
 L5285:  .addr   shift_line_jmp, dhgr_shift_bits
@@ -2079,10 +2037,7 @@ L52A1:  stx     $B0
         dey
         bpl     :-
 
-        lda     $94             ; y coord
-        sta     $A7
-        lda     $94+1
-        sta     $A7+1
+        copy16  $94, $A7        ; y coord
         ldy     #0
         stx     $AE
 L52C0:  stx     $82
@@ -2501,6 +2456,7 @@ L5606:  ldy     $04A8,x
         sta     low_zp_stash_buffer,x
         sbc     $AA
         sta     $A4
+
         lda     $0700,y
         sec
         sbc     L5E31,x
@@ -2508,6 +2464,7 @@ L5606:  ldy     $04A8,x
         lda     $073C,y
         sbc     L5E41,x
         sta     $A2
+
         php
         bpl     L563F
         sub16   #0, $A1, $A1
@@ -2516,7 +2473,8 @@ L563F:  stx     $84
         ldx     $84
         plp
         bpl     L5662
-        lda     #$00
+
+        lda     #0              ; 32-bit negation of $9F..$A2
         sec
         sbc     $9F
         sta     $9F
@@ -2529,6 +2487,7 @@ L563F:  stx     $84
         lda     #0
         sbc     $A2
         sta     $A2
+
 L5662:  lda     $A2
         sta     $05A8,x
         cmp     #$80
@@ -2603,10 +2562,7 @@ L56D5:  rts
         ptr := $B7
         draw_line_params := $92
 
-L56DD:  lda     params_addr
-        sta     ptr
-        lda     params_addr+1
-        sta     ptr+1
+L56DD:  copy16  params_addr, ptr
         lda     $B4             ; ORAd param bytes
         sta     $B6
         ldx     #0
@@ -2850,10 +2806,7 @@ L581F:  lda     $83,x
         ldy     $82
         dey
         bpl     L57EB
-        lda     L583C
-        sta     params_addr
-        lda     L583C+1
-        sta     params_addr+1
+        copy16  L583C, params_addr
         jmp     PaintPolyImpl
 
 L583C:  .addr   L5850
@@ -2862,7 +2815,7 @@ L583E:  .byte   $03,$03,$07,$07,$07,$03
 L5844:  .byte   $00,$00,$00,$01,$01,$01
 L584A:  .byte   $00,$01,$01,$01,$00,$00
 
-        ;; params for a $15 call
+        ;; params for a PaintPoly call
 L5850:  .byte   $06,$00
 L5852:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -2874,10 +2827,7 @@ L5852:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 ;;; SetFont
 
 .proc SetFontImpl
-        lda     params_addr     ; set font to passed address
-        sta     current_textfont
-        lda     params_addr+1
-        sta     current_textfont+1
+        copy16  params_addr, current_textfont ; set font to passed address
 
         ;; Compute addresses of each row of the glyphs.
 prepare_font:
@@ -3013,10 +2963,14 @@ L5933:  stax    $94
 
 ;;; 3 bytes of params, copied to $A1
 
-DrawTextImpl:
+.proc DrawTextImpl
+        text_addr := $A1        ; param
+        text_len  := $A3        ; param
+        text_width := $A4       ; computed
+
         jsr     maybe_unstash_low_zp
         jsr     measure_text
-        stax    $A4
+        stax    text_width
         ldy     #0
         sty     $9F
         sty     $A0
@@ -3031,7 +2985,7 @@ DrawTextImpl:
         ldy     #0
         ldx     $9C
 L595C:  sty     $9F
-        lda     ($A1),y
+        lda     (text_addr),y
         tay
         lda     (glyph_widths),y
         clc
@@ -3081,7 +3035,7 @@ L59A8:  lda     #0
         jsr     L59C3
         sta     LOWSCR
 L59B9:  jsr     maybe_stash_low_zp
-        ldax    $A4
+        ldax    text_width
         jmp     adjust_xpos
 
 L59C3:  lda     $98
@@ -3089,22 +3043,10 @@ L59C3:  lda     $98
         sbc     $94
         asl     a
         tax
-        lda     L5D81,x
-        sta     L5B02
-        lda     L5D81+1,x
-        sta     L5B03
-        lda     L5DA1,x
-        sta     L5A95
-        lda     L5DA1+1,x
-        sta     L5A96
-        lda     L5DC1,x
-        sta     L5C22
-        lda     L5DC1+1,x
-        sta     L5C23
-        lda     L5DE1,x
-        sta     L5CBE
-        lda     L5DE1+1,x
-        sta     L5CBF
+        copy16  L5D81,x, L5B02
+        copy16  L5DA1,x, L5A95
+        copy16  L5DC1,x, L5C22
+        copy16  L5DE1,x, L5CBE
         txa
         lsr     a
         tax
@@ -3177,7 +3119,7 @@ L5A72:  sta     $0000,x
         lda     #$80
         sta     $42
         ldy     $9F
-L5A81:  lda     ($A1),y
+L5A81:  lda     (text_addr),y
         tay
         bit     $81
         bpl     L5A8B
@@ -3189,7 +3131,6 @@ L5A8B:  tax
         ldy     $87
         bne     L5AEA
 L5A95           := * + 1
-L5A96           := * + 2
         jmp     L5A97
 
 L5A97:  lda     $FFFF,x
@@ -3229,16 +3170,9 @@ L5AE7:  jmp     L5BD4
 L5AEA:  tya
         asl     a
         tay
-        lda     shift_table_aux,y
-        sta     $40
-        lda     shift_table_aux+1,y
-        sta     $40+1
-        lda     shift_table_main,y
-        sta     $42
-        lda     shift_table_main+1,y
-        sta     $42+1
+        copy16  shift_table_aux,y, $40
+        copy16  shift_table_main,y, $42
 L5B02           := * + 1
-L5B03           := * + 2
         jmp     L5B04
 
 L5B04:  ldy     $FFFF,x         ; All of these $FFFFs are modified
@@ -3361,7 +3295,7 @@ L5BF6:  clc
         bcs     L5C0D
         sta     $87
 L5BFF:  ldy     $9F
-        cpy     $A3
+        cpy     text_len
         beq     L5C08
         jmp     L5A81
 
@@ -3380,8 +3314,7 @@ L5C18:  bmi     L5C84
         jmp     L5CB5
 
 L5C21:
-L5C22           := * + 1
-L5C23           := * + 2
+        L5C22 := * + 1
         jmp     L5C24
 
 
@@ -3467,7 +3400,6 @@ L5CB5:  ldx     $9C
 L5CB9:  ora     #$80
         sta     $80
 L5CBE           := * + 1
-L5CBF           := * + 2
         jmp     L5CC0
 
 ;;; Per JB: "looks like the quickdraw slow-path draw clipped pattern slab"
@@ -3574,6 +3506,9 @@ L5D81:  .addr   L5BC7,L5BBA,L5BAD,L5BA0,L5B93,L5B86,L5B79,L5B6C,L5B5F,L5B52,L5B4
 L5DA1:  .addr   L5AE2,L5ADD,L5AD8,L5AD3,L5ACE,L5AC9,L5AC4,L5ABF,L5ABA,L5AB5,L5AB0,L5AAB,L5AA6,L5AA1,L5A9C,L5A97
 L5DC1:  .addr   L5C7E,L5C78,L5C72,L5C6C,L5C66,L5C60,L5C5A,L5C54,L5C4E,L5C48,L5C42,L5C3C,L5C36,L5C30,L5C2A,L5C24
 L5DE1:  .addr   L5D74,L5D68,L5D5C,L5D50,L5D44,L5D38,L5D2C,L5D20,L5D14,L5D08,L5CFC,L5CF0,L5CE4,L5CD8,L5CCC,L5CC0
+.endproc
+
+;;; ============================================================
 
 low_zp_stash_buffer:
         .byte   $00
@@ -3891,23 +3826,20 @@ L600B:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00
-L602F:  .byte   $00,$00,$00,$00,$00,$00,$02,$00
+L602F:  .byte   $00,$00,$00,$00
+L6033:  .byte   $00,$00,$02,$00
         .byte   $06,$00,$0E,$00,$1E,$00,$3E,$00
         .byte   $7E,$00,$1A,$00,$30,$00,$30,$00
         .byte   $60,$00,$00,$00,$03,$00,$07,$00
         .byte   $0F,$00,$1F,$00,$3F,$00,$7F,$00
         .byte   $7F,$01,$7F,$00,$78,$00,$78,$00
         .byte   $70,$01,$70,$01,$01,$01
-L6065:  .byte   $33
-L6066:  .byte   $60
+L6065:  .addr   L6033
 L6067:  lda     #$FF
         sta     cursor_count
         lda     #0
         sta     cursor_flag
-        lda     L6065
-        sta     params_addr
-        lda     L6066
-        sta     params_addr+1
+        copy16  L6065, params_addr
         ;; fall through
 
 ;;; ============================================================
@@ -3985,14 +3917,8 @@ L60EE:  tay
         tya
         asl     a
         tay
-        lda     shift_table_main,y
-        sta     L6164
-        lda     shift_table_main+1,y
-        sta     L6165
-        lda     L5285+2,y
-        sta     L616A
-        lda     L5285+3,y
-        sta     L616B
+        copy16  shift_table_main,y, L6164
+        copy16  L5285+2,y, L616A
         ldx     #$03
 L6116:  lda     $82,x
         sta     L602F,x
@@ -4033,11 +3959,9 @@ active_cursor_mask      := * + 1
         ldy     #$05
 L6160:  ldx     L6004,y
 L6164           := * + 1
-L6165           := * + 2
         ora     $FF80,x
         sta     L6005,y
 L616A           := * + 1
-L616B           := * + 2
         lda     $FF00,x
         dey
         bne     L6160
@@ -4331,10 +4255,7 @@ L6348:  lda     $82,x
         bpl     L6348
         lda     #$7F
         sta     standard_port::textback
-        lda     $87
-        sta     standard_port::textfont
-        lda     $88
-        sta     standard_port::textfont+1
+        copy16  $87, standard_port::textfont
         copy16  $89, L6835
         copy16  $8B, L633B
         jsr     L646F
@@ -4557,15 +4478,11 @@ L6534:  jmp     (L6537)
 
 L6537:  .byte   $00
 L6538:  .byte   $00
-L6539:  .byte   $00
-L653A:  .byte   $00
+L6539:  .word   0
 L653B:  .byte   $00
 
 L653C:  jsr     HideCursorImpl
-L653F:  lda     params_addr
-        sta     L6539
-        lda     params_addr+1
-        sta     L653A
+L653F:  copy16  params_addr, L6539
         lda     stack_ptr_stash
         sta     L653B
         lsr     preserve_zp_flag
@@ -4573,10 +4490,7 @@ L653F:  lda     params_addr
 
 L6553:  jsr     ShowCursorImpl
 L6556:  asl     preserve_zp_flag
-        lda     L6539
-        sta     params_addr
-        lda     L653A
-        sta     params_addr+1
+        copy16  L6539, params_addr
         ldax    active_port
 L6567:  stax    $82
         lda     L653B
@@ -4594,7 +4508,7 @@ L657E:  lda     L6586
 L6586:
 L6587           := * + 1
 L6588           := * + 2
-        asl     $205F,x
+        asl     $205F,x         ; this looks like incorrect disassembly ???
         ror     $2065,x
         .byte   0
         rti
@@ -4638,10 +4552,7 @@ checkerboard_pattern:
         bit     desktop_initialized_flag
         bmi     fail
 
-        lda     params
-        sta     mouse_hook
-        lda     params+1
-        sta     mouse_hook+1
+        copy16  params, mouse_hook
 
         ldax    mouse_state_addr
         ldy     #2
@@ -5008,8 +4919,7 @@ height: .word   11
 .endproc
         fill_rect_params2_height := fill_rect_params2::height
 
-L6835:  .byte   $00
-L6836:  .byte   $00
+L6835:  .word   0
 
 .proc test_rect_params2
 left:   .word   0
@@ -5045,10 +4955,7 @@ L6863:  .addr   $685D
 L6865:  .addr   $685A
 
 get_menu_count:
-        lda     active_menu
-        sta     $82
-        lda     active_menu+1
-        sta     $83
+        copy16  active_menu, $82
         ldy     #0
         lda     ($82),y
         sta     $A8
@@ -5164,10 +5071,7 @@ SetMenuImpl:
         lda     #$00
         sta     L633D
         sta     L633E
-        lda     params_addr
-        sta     active_menu
-        lda     params_addr+1
-        sta     active_menu+1
+        copy16  params_addr, active_menu
 
         jsr     get_menu_count  ; into $A8
         jsr     L653C
@@ -5862,10 +5766,7 @@ loop:   lda     params,x
         dex
         bpl     loop
 
-        lda     standard_port::textfont
-        sta     params
-        lda     standard_port::textfont+1
-        sta     params+1
+        copy16  standard_port::textfont, params
         ldy     #0
         lda     ($82),y
         bmi     :+
@@ -6033,10 +5934,7 @@ L7011:  .addr   $6FD3
 
         ;; Start window enumeration at top ???
 .proc top_window
-        lda     L7011
-        sta     $A7
-        lda     L7011+1
-        sta     $A7+1
+        copy16  L7011, $A7
         ldax    L700B
         bne     next_window_L7038
 end:    rts
@@ -6045,10 +5943,7 @@ end:    rts
         ;; Look up next window in chain. $A9/$AA will point at
         ;; winfo (also returned in X,A).
 .proc next_window
-        lda     $A9
-        sta     $A7
-        lda     $A9+1
-        sta     $A7+1
+        copy16  $A9, $A7
         ldy     #MGTK::winfo_offset_nextwinfo+1
         lda     ($A9),y
         beq     top_window::end  ; if high byte is 0, end of chain
@@ -6569,10 +6464,7 @@ L7476:  lda     #$02
 
 L747A:  .byte   0
 OpenWindowImpl:
-        lda     params_addr
-        sta     $A9
-        lda     params_addr+1
-        sta     $AA
+        copy16  params_addr, $A9
         ldy     #$00
         lda     ($A9),y
         bne     L748E
@@ -6583,10 +6475,7 @@ L748E:  sta     $82
         beq     L749A
         exit_call $9D
 
-L749A:  lda     params_addr
-        sta     $A9
-        lda     params_addr+1
-        sta     $AA
+L749A:  copy16  params_addr, $A9
         ldy     #$0A
         lda     ($A9),y
         ora     #$80
@@ -6678,10 +6567,7 @@ L750C:  .res    38,0
         bne     :+
         MGTK_CALL MGTK::SetPortBits, set_port_params
 :       jsr     next_window::L703E
-        lda     active_port
-        sta     L750C
-        lda     active_port+1
-        sta     L750C+1
+        copy16  active_port, L750C
         jsr     L75C6
         php
         ldax    L758A
@@ -6751,31 +6637,12 @@ L75DE:  lda     ($A9),y
         cpy     #$38
         bne     L75DE
         ldx     #$02
-L75EA:  lda     $92,x
-        sta     $D0,x
-        lda     $93,x
-        sta     $D1,x
-        lda     $96,x
-        sec
-        sbc     $92,x
-        sta     $82,x
-        lda     $97,x
-        sbc     $93,x
-        sta     $83,x
-        lda     $D8,x
-        sec
-        sbc     $9B,x
-        sta     $D8,x
-        lda     $D9,x
-        sbc     $9C,x
-        sta     $D9,x
-        lda     $D8,x
-        clc
-        adc     $82,x
-        sta     $DC,x
-        lda     $D9,x
-        adc     $83,x
-        sta     $DD,x
+L75EA:  copy16  $92,x, $D0,x
+
+        sub16   $96,x, $92,x, $82,x
+        sub16   $D8,x, $9B,x, $D8,x
+        add16   $D8,x, $82,x, $DC,x
+
         dex
         dex
         bpl     L75EA
@@ -7948,10 +7815,7 @@ L7E98:  jsr     L7E8C
 .endproc
 
 L7EAD:  jsr     stash_addr
-        lda     L7F2E
-        sta     params_addr
-        lda     L7F2F
-        sta     params_addr+1
+        copy16  L7F2E, params_addr
         jsr     SetCursorImpl
         jsr     restore_addr
         lda     #$00
@@ -8002,14 +7866,8 @@ L7EFB:  cmp     #$04
 L7F0C:  jmp     L825F
 
 L7F0F:  jsr     stash_addr
-        lda     active_cursor
-        sta     L7F2E
-        lda     active_cursor+1
-        sta     L7F2F
-        lda     L6065
-        sta     params_addr
-        lda     L6066
-        sta     params_addr+1
+        copy16  active_cursor, L7F2E
+        copy16  L6065, params_addr
         jsr     SetCursorImpl
         jmp     restore_addr
 
@@ -8017,17 +7875,11 @@ L7F2E:  .byte   0
 L7F2F:  .byte   0
 
 stash_addr:
-        lda     params_addr
-        sta     stashed_addr
-        lda     params_addr+1
-        sta     stashed_addr+1
+        copy16  params_addr, stashed_addr
         rts
 
 restore_addr:
-        lda     stashed_addr
-        sta     params_addr
-        lda     stashed_addr+1
-        sta     params_addr+1
+        copy16  stashed_addr, params_addr
         rts
 
 stashed_addr:  .addr     0
