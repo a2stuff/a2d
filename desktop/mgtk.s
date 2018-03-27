@@ -882,10 +882,16 @@ hires_table_hi:
         bitmap_buffer   := $0601        ; scratchpad area for drawing bitmaps/patterns
 
         poly_maxima_links := $0428
+        poly_maxima_prev_vertex := $0468
+        poly_maxima_next_vertex := $04A8
         poly_maxima_slope0 := $0528
         poly_maxima_slope1 := $04E8
         poly_maxima_slope2 := $0568
         poly_maxima_slope3 := $05A8
+        poly_maxima_yl_table := $05E8
+
+        poly_vertex_prev_link := $0680
+        poly_vertex_next_link := $06BC
 
         poly_xl_buffer  := $0700
         poly_xh_buffer  := $073C
@@ -2120,19 +2126,25 @@ shift_bits_table:
         .addr   shift_4_main,shift_5_main,shift_6_main
 
 
+        vertex_limit     := $B3
         vertices_count   := $B4
         poly_oper        := $BA       ; positive = paint; negative = test
+        start_index      := $AE
+
+        poly_oper_paint  := $00
+        poly_oper_test   := $80
+
 
 .proc load_poly
         point_index      := $82
-        vertices_length  := $B3
+        low_point        := $A7
 
         max_poly_points  := 60
 
         stx     $B0
         asl     a
         asl     a               ; # of vertices * 4 = length
-        sta     vertices_length
+        sta     vertex_limit
 
         ;; Initialize rect to first point of polygon.
         ldy     #3              ; Copy params_addr... to $92... and $96...
@@ -2142,9 +2154,10 @@ shift_bits_table:
         dey
         bpl     :-
 
-        copy16  top, $A7        ; y coord
+        copy16  top, low_point  ; y coord
+
         ldy     #0
-        stx     $AE
+        stx     start_index
 loop:   stx     point_index
 
         lda     (params_addr),y
@@ -2205,24 +2218,25 @@ in_top: cpx     bottom+1
 :       stax    bottom
 
 in_bottom:
-        cpx     $A8
-        stx     $A8
-        bmi     L5330
-        bne     L532C
-        cmp     $A7
-        bcc     L5330
-        beq     L5330
+        cpx     low_point+1
+        stx     low_point+1
+        bmi     set_low_point
+        bne     :+
+        cmp     low_point
+        bcc     set_low_point
+        beq     set_low_point
 
-L532C:  ldx     point_index
-        stx     $AE
+:       ldx     point_index
+        stx     start_index
 
-L5330:  sta     $A7
+set_low_point:
+        sta     low_point
 
         ldx     point_index
         inx
         cpx     #max_poly_points
         beq     bad_poly
-        cpy     vertices_length
+        cpy     vertex_limit
         bcc     loop
 
         lda     top
@@ -2232,7 +2246,7 @@ L5330:  sta     $A7
         cmp     bottom+1
         beq     bad_poly
 
-:       stx     $B3
+:       stx     vertex_limit
         bit     poly_oper
         bpl     :+
         sec
@@ -2244,7 +2258,7 @@ L5330:  sta     $A7
 
 .proc next_poly
         lda     vertices_count
-        bpl     L5379
+        bpl     orts
         asl     a
         asl     a
         adc     params_addr
@@ -2265,14 +2279,14 @@ ora_2_param_bytes:
         inc16   params_addr
         inc16   params_addr
         ldy     #$80
-L5379:  rts
+orts:   rts
 
 ;;; ============================================================
 ;;; InPoly
 
 InPolyImpl:
-        lda     #$80
-        bne     L5380
+        lda     #poly_oper_test
+        bne     PaintPolyImpl_entry2
 
 ;;; ============================================================
 ;;; PaintPoly
@@ -2282,17 +2296,20 @@ InPolyImpl:
         num_maxima       := $AD
         max_num_maxima   := 8
 
+        low_vertex       := $B0
+
+
 .proc PaintPolyImpl
 
-        lda     #$00
-L5380:  sta     poly_oper
+        lda     #poly_oper_paint
+entry2: sta     poly_oper
         ldx     #0
         stx     num_maxima
         jsr     ora_2_param_bytes
 
 loop:   jsr     load_poly
         bcs     process_poly
-        ldx     $B0
+        ldx     low_vertex
 next:   jsr     next_poly
         bmi     loop
 
@@ -2303,77 +2320,82 @@ bad_poly:
 .endproc
 
 
+        temp_yh        := $83
+        next_vertex    := $AA
         current_vertex := $AC
+        loop_ctr       := $AF
 
-        poly_maxima_yl_table := $05E8
 
 .proc process_poly
         ldy     #1
-        sty     $AF              ; do 2 iterations of the following loop
+        sty     loop_ctr         ; do 2 iterations of the following loop
 
-        ldy     $AE              ; starting vertex
-        cpy     $B0              ; lowest vertex
+        ldy     start_index      ; starting vertex
+        cpy     low_vertex       ; lowest vertex
         bne     :+
-        ldy     $B3              ; highest vertex
+        ldy     vertex_limit     ; highest vertex
 :       dey
         sty     $AB              ; one before starting vertex
 
         php
-L53AD:  sty     current_vertex   ; current vertex
+loop:   sty     current_vertex   ; current vertex
         iny
-        cpy     $B3
+        cpy     vertex_limit
         bne     :+
-        ldy     $B0
+        ldy     low_vertex
 
-:       sty     $AA              ; next vertex
-        cpy     $AE              ; have we come around complete circle?
+:       sty     next_vertex      ; next vertex
+        cpy     start_index      ; have we come around complete circle?
         bne     :+
-        dec     $AF              ; this completes one loop
+        dec     loop_ctr         ; this completes one loop
 
 :       lda     poly_yl_buffer,y
         ldx     poly_yh_buffer,y
-        stx     $83
-L53C6:  sty     $A9              ; starting from next vertex, search ahead
+        stx     temp_yh
+vloop:  sty     $A9              ; starting from next vertex, search ahead
         iny                      ; for a subsequent vertex with differing y
-        cpy     $B3
+        cpy     vertex_limit
         bne     :+
-        ldy     $B0
+        ldy     low_vertex
 :
         cmp     poly_yl_buffer,y
         bne     :+
         ldx     poly_yh_buffer,y
-        cpx     $83
-        beq     L53C6
+        cpx     temp_yh
+        beq     vloop
 
 :       ldx     $AB              ; find y difference with current vertex
         sec
         sbc     poly_yl_buffer,x
-        lda     $83
+        lda     temp_yh
         sbc     poly_yh_buffer,x
-        bmi     L5448
+        bmi     y_less
 
         lda     $A9              ; vertex before new vertex
-        plp
-        bmi     :+
-        tay
-        sta     $0680,x          ; link current vertex -> vertex before new vertex
-        lda     $AA
-        sta     $06BC,x          ; link current vertex -> next vertex
-        bpl     L545D
 
-:       ldx     num_maxima
-        cpx     #2*max_num_maxima        ; too many maxima points (documented limitation)
+        plp                      ; check maxima flag
+        bmi     new_maxima       ; if set, go create new maxima
+
+        tay
+        sta     poly_vertex_prev_link,x   ; link current vertex -> vertex before new vertex
+        lda     next_vertex
+        sta     poly_vertex_next_link,x   ; link current vertex -> next vertex
+        bpl     next
+
+new_maxima:
+        ldx     num_maxima
+        cpx     #2*max_num_maxima         ; too many maxima points (documented limitation)
         bcs     bad_poly
 
-        sta     $0468,x          ; vertex before new vertex
-        lda     $AA
-        sta     $04A8,x          ; current vertex
+        sta     poly_maxima_prev_vertex,x ; vertex before new vertex
+        lda     next_vertex
+        sta     poly_maxima_next_vertex,x ; current vertex
 
         ldy     $AB
-        lda     $0680,y
-        sta     $0469,x
-        lda     $06BC,y
-        sta     $04A9,x
+        lda     poly_vertex_prev_link,y
+        sta     poly_maxima_prev_vertex+1,x
+        lda     poly_vertex_next_link,y
+        sta     poly_maxima_next_vertex+1,x
 
         lda     poly_yl_buffer,y
         sta     poly_maxima_yl_table,x
@@ -2397,28 +2419,29 @@ L53C6:  sty     $A9              ; starting from next vertex, search ahead
         inx
         stx     num_maxima
         ldy     $A9
-        bpl     L545D
+        bpl     next
 
-L5448:  plp
+y_less: plp                         ; check maxima flag
         bmi     :+
         lda     #$80
-        sta     $0680,x             ; link current vertex -> #$80
-:       ldy     $AA
+        sta     poly_vertex_prev_link,x             ; link current vertex -> #$80
+
+:       ldy     next_vertex
         txa
-        sta     $0680,y             ; link next vertex -> current vertex
+        sta     poly_vertex_prev_link,y             ; link next vertex -> current vertex
         lda     current_vertex
-        sta     $06BC,y
+        sta     poly_vertex_next_link,y
         lda     #$80                ; set negative flag so next iteration captures a maxima
 
-L545D:  php
+next:   php
         sty     $AB
         ldy     $A9
-        bit     $AF
+        bit     loop_ctr
         bmi     :+
-        jmp     L53AD
+        jmp     loop
 
 :       plp
-        ldx     $B3
+        ldx     vertex_limit
         jmp     PaintPolyImpl::next
 .endproc
 
@@ -2525,7 +2548,7 @@ L5517:  sta     poly_maxima_links,x
         stx     $B2
         jmp     L552E
 
-L551F:  rts
+done:   rts
 
 L5520:  tya
         cpy     $B2
@@ -2544,7 +2567,7 @@ L5534:  lda     #0
 
         lda     $B2
         sta     $83
-        bmi     L551F
+        bmi     done
 
 scan_loop2:
         tax
@@ -2555,8 +2578,8 @@ scan_loop2:
         cmp     poly_maxima_yh_table,x
         bne     scan_point
 
-        ldy     $0468,x
-        lda     $0680,y
+        ldy     poly_maxima_prev_vertex,x
+        lda     poly_vertex_prev_link,y
         bpl     shift_point
 
         cpx     $B2
@@ -2572,13 +2595,13 @@ scan_loop2:
         jmp     scan_next_link
 
 shift_point:
-        sta     $0468,x
+        sta     poly_maxima_prev_vertex,x
         lda     poly_xl_buffer,y
         sta     poly_maxima_xl_table,x
         lda     poly_xh_buffer,y
         sta     poly_maxima_xh_table,x
-        lda     $06BC,y
-        sta     $04A8,x
+        lda     poly_vertex_next_link,y
+        sta     poly_maxima_next_vertex,x
 
         jsr     calc_slope
 
@@ -2661,7 +2684,7 @@ scan_next_link:
 .proc calc_slope
 	index   := $84
 
-        ldy     $04A8,x
+        ldy     poly_maxima_next_vertex,x
 
         lda     poly_yl_buffer,y
         sta     poly_maxima_yl_table,x
@@ -2730,7 +2753,7 @@ scan_next_link:
         rts
 .endproc
 
-L5380 := PaintPolyImpl::L5380
+PaintPolyImpl_entry2 := PaintPolyImpl::entry2
 bad_poly := PaintPolyImpl::bad_poly
 
 
@@ -2933,6 +2956,10 @@ loop:   add16   xdelta,x, current_penloc_x,x, $92,x
         x2      := pt2
         y2      := pt2+2
 
+        loop_ctr := $82
+        temp_pt  := $83
+
+
         ldx     #3
 :       lda     current_penloc,x     ; move pos to $96, assign params to pos
         sta     pt2,x
@@ -2972,12 +2999,12 @@ draw_line_jmp:
 
 swap_start_end:
         ldx     #3              ; Swap start/end
-:       lda     $92,x
+:       lda     pt1,x
         tay
-        lda     $96,x
-        sta     $92,x
+        lda     pt2,x
+        sta     pt1,x
         tya
-        sta     $96,x
+        sta     pt2,x
         dex
         bpl     :-
 
@@ -3006,31 +3033,31 @@ L57E1:  lda     $A1
         stx     $A1
 
 L57E9:  ldy     #5                ; do 6 points
-L57EB:  sty     $82
-        ldx     pt_offsets,y
+loop:   sty     loop_ctr
+        ldx     pt_offsets,y      ; offset into the pt1,pt2 structure
         ldy     #3
 :       lda     pt1,x
-        sta     $83,y
+        sta     temp_pt,y
         dex
         dey
         bpl     :-
 
-        ldy     $82
-        ldx     L5844,y
+        ldy     loop_ctr
+        ldx     penwidth_flags,y  ; when =1, will add the current_penwidth
         lda     $A1,x
         clc
-        adc     $83
-        sta     $83
+        adc     temp_pt
+        sta     temp_pt
         bcc     :+
-        inc     $84
+        inc     temp_pt+1
 :
-        ldx     L584A,y
+        ldx     penheight_flags,y ; when =2, will add the current_penheight
         lda     $A3,x
         clc
-        adc     $85
-        sta     $85
+        adc     temp_pt+2
+        sta     temp_pt+2
         bcc     :+
-        inc     $86
+        inc     temp_pt+3
 :
         tya
         asl     a
@@ -3038,16 +3065,17 @@ L57EB:  sty     $82
         tay
 
         ldx     #0
-:       lda     $83,x
+:       lda     temp_pt,x
         sta     paint_poly_points,y
         iny
         inx
         cpx     #4
         bne     :-
 
-        ldy     $82
+        ldy     loop_ctr
         dey
-        bpl     L57EB
+        bpl     loop
+
         copy16  paint_poly_params_addr, params_addr
         jmp     PaintPolyImpl
 
@@ -3057,8 +3085,10 @@ paint_poly_params_addr:
 ;;       Points  0  1  2  3  4  5
 pt_offsets:
         .byte    3, 3, 7, 7, 7, 3
-L5844:  .byte   $00,$00,$00,$01,$01,$01
-L584A:  .byte   $00,$01,$01,$01,$00,$00
+penwidth_flags:
+        .byte    0, 0, 0, 1, 1, 1
+penheight_flags:
+        .byte    0, 1, 1, 1, 0, 0
 
         ;; params for a PaintPoly call
 paint_poly_params:
@@ -7742,7 +7772,7 @@ L7CBA:  sub16   L7CB6, L7CB8, fixed_div::divisor
         bit     $8C
         bpl     L7CD3
         ldx     #2
-L7CD3:  sub16   $C7,x, L7CB8, fixed_div:dividend
+L7CD3:  sub16   $C7,x, L7CB8, fixed_div::dividend
         rts
 
 L7CE3:  ldy     #$06
