@@ -857,25 +857,29 @@ hires_table_hi:
 ;;; current_penmode
 
         ;; ZP usage
-        src_addr          := $82        ; pointer to source bitmap
-        vid_addr          := $84        ; pointer to video memory
-        left_bytes        := $86        ; offset of leftmost coordinate in chars (0-39)
-        bits_addr         := $8E        ; pointer to pattern/bitmap
-        width_mod14       := $87        ; width of rectangle mod 14
-        left_sidemask     := $88        ; bitmask applied to clip left edge of rect
-        right_sidemask    := $89        ; bitmask applied to clip right edge of rect
-        src_y_coord       := $8C
+        src_addr             := $82        ; pointer to source bitmap
+        vid_addr             := $84        ; pointer to video memory
+        left_bytes           := $86        ; offset of leftmost coordinate in chars (0-39)
+        bits_addr            := $8E        ; pointer to pattern/bitmap
+        width_mod14          := $87        ; width of rectangle mod 14
+        left_sidemask        := $88        ; bitmask applied to clip left edge of rect
+        right_sidemask       := $89        ; bitmask applied to clip right edge of rect
+        src_y_coord          := $8C
 
-        src_mapwidth      := $90        ; source stride; $80 = DHGR layout
-        width_bytes       := $91        ; width of rectangle in chars
+        src_mapwidth         := $90        ; source stride; $80 = DHGR layout
+        width_bytes          := $91        ; width of rectangle in chars
 
-        left_masks_table  := $92        ; bitmasks for left edge indexed by page (0=main, 1=aux)
-        right_masks_table := $96        ; bitmasks for right edge indexed by page (0=main, 1=aux)
+        left_masks_table     := $92        ; bitmasks for left edge indexed by page (0=main, 1=aux)
+        right_masks_table    := $96        ; bitmasks for right edge indexed by page (0=main, 1=aux)
 
-        top               := $94        ; top/starting/current y-coordinate
-        bottom            := $98        ; bottom/ending/maximum y-coordinate
-        left              := $92
-        right             := $96
+        top                  := $94        ; top/starting/current y-coordinate
+        bottom               := $98        ; bottom/ending/maximum y-coordinate
+        left                 := $92
+        right                := $96
+
+        fixed_div_dividend   := $A1        ; parameters used by fixed_div proc
+        fixed_div_divisor    := $A3
+        fixed_div_quotient   := $9F
 
         ;; Text page usage (main/aux)
         pattern_buffer  := $0400        ; buffer for currently selected pattern (page-aligned)
@@ -2682,7 +2686,7 @@ scan_next_link:
 
 
 .proc calc_slope
-	index   := $84
+        index   := $84
 
         ldy     poly_maxima_next_vertex,x
 
@@ -2706,7 +2710,7 @@ scan_next_link:
 
         php
         bpl     :+
-        sub16   #0, <fixed_div_dividend, <fixed_div_dividend
+        sub16   #0, fixed_div_dividend, fixed_div_dividend
 
 :       stx     index
         jsr     fixed_div2
@@ -2714,28 +2718,28 @@ scan_next_link:
         plp
         bpl     :+
 
-        sub16   #0, <fixed_div_quotient, <fixed_div_quotient
+        sub16   #0, fixed_div_quotient, fixed_div_quotient
         lda     #0
-        sbc     <fixed_div_quotient+2
-        sta     <fixed_div_quotient+2
+        sbc     fixed_div_quotient+2
+        sta     fixed_div_quotient+2
         lda     #0
-        sbc     <fixed_div_quotient+3
-        sta     <fixed_div_quotient+3
+        sbc     fixed_div_quotient+3
+        sta     fixed_div_quotient+3
 
-:       lda     <fixed_div_quotient+3
+:       lda     fixed_div_quotient+3
         sta     poly_maxima_slope3,x
         cmp     #$80
         ror     a
         pha
-        lda     <fixed_div_quotient+2
+        lda     fixed_div_quotient+2
         sta     poly_maxima_slope2,x
         ror     a
         pha
-        lda     <fixed_div_quotient+1
+        lda     fixed_div_quotient+1
         sta     poly_maxima_slope1,x
         ror     a
         pha
-        lda     <fixed_div_quotient
+        lda     fixed_div_quotient
         sta     poly_maxima_slope0,x
         ror     a
         sta     poly_maxima_x_fracl,x
@@ -2806,9 +2810,6 @@ done:   rts
 
 fixed_div2 := fixed_div::entry2
 
-fixed_div_dividend   := fixed_div::dividend
-fixed_div_divisor    := fixed_div::divisor
-fixed_div_quotient   := fixed_div::quotient
 
 
 ;;; ============================================================
