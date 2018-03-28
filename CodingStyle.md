@@ -87,7 +87,7 @@ cases, e.g. `HideCursor`, `HideCursorImpl`, etc.
 .endproc
 ```
 
-* Try to encapssulate locally used data as much as possible.
+* Try to encapsulate locally used data as much as possible.
 
 ```asm
 .proc some_routine
