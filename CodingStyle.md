@@ -24,7 +24,14 @@ syntax details.
 * End-of-line comments: `;` at a tab stop or aligned with nearby code
 * Indented stand-alone comments: `;;` at first tab stop (8 chars)
 * Major comments: `;;;` at start of line
-
+* Use `?` for questions in comment text, `???` for questions about the code:
+```asm
+         lda     value
+         cmp     #limit    ; less than the limit?
+         bcc     less      ; yes, so go do that
+         
+         rol     $1234     ; what does this do ???
+```
 
 ## Naming
 
@@ -42,7 +49,7 @@ cases, e.g. `HideCursor`, `HideCursorImpl`, etc.
 * **Do** make use of [unnamed labels](http://cc65.github.io/doc/ca65.html#ss6.6) for
    local loops and forward branches to avoid pointless names. Only use one level.
 
-```
+```asm
         ;; Copy the thing
         ldy     #7
 :       lda     (src),y
@@ -72,7 +79,7 @@ cases, e.g. `HideCursor`, `HideCursorImpl`, etc.
 
 * Delimit code blocks with `.proc`:
 
-```
+```asm
 .proc some_routine
         lda     $06
         rol
@@ -80,9 +87,9 @@ cases, e.g. `HideCursor`, `HideCursorImpl`, etc.
 .endproc
 ```
 
-* Try to encapssulate locally used data as much as possible.
+* Try to encapsulate locally used data as much as possible.
 
-```
+```asm
 .proc some_routine
         ptr := $06
         lda     ptr
@@ -95,7 +102,7 @@ stash:  .byte   0
 
 * Use `impl` if the entry point is not at the start:
 
-```
+```asm
 .proc some_routine_impl
 stash:  .byte   0
 
@@ -124,7 +131,7 @@ Parameter blocks are used for ProDOS MLI calls and MGTK calls.
 
 * Wrap param data in `.proc` blocks:
 
-```
+```asm
 .proc textwidth_params
 textptr:        .addr   text_buffer
 textlen:        .byte   0
@@ -146,13 +153,13 @@ well in the future.
 
 * Add a label for the value being modified (byte or address)
 
-```
+```asm
         sta     jump_addr
         stx     jump_addr+1
         jump_addr := *+1
         jmp     $0000
 ```
-```
+```asm
         sty     count
         ldy     #0
 :       sta     table,y
