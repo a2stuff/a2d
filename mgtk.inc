@@ -610,7 +610,6 @@ winfo_size                      := 58
 
 ;;; Errors
 
-error_in_object := $80
 error_empty_object := $81
 error_bad_object := $82
 error_font_too_big := $83
