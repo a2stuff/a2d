@@ -3076,287 +3076,21 @@ LE942:  .byte   0
 LE943:  .byte   0
 
         PASCAL_STRING "Insert source disk and click OK."
-        .byte   $25, $49
-        ror     $6573
-        .byte   $72
-        .byte   $74
-        jsr     L6564
-        .byte   $73
-        .byte   $74
-        adc     #$6E
-        adc     ($74,x)
-        adc     #$6F
-        ror     $6420
-        adc     #$73
-        .byte   $6B
-        .byte   $20
-        .byte   $61
-        ror     $2064
-        .byte   $63
-        jmp     (L6369)
-
-        .byte   $6B
-        jsr     L4B4F
-        .byte   $2E
-LE98B:  ora     $44,x
-        .byte   $6F
-        jsr     L6F79
-        adc     $20,x
-        .byte   $77
-        adc     ($6E,x)
-        .byte   $74
-        jsr     L6F74
-        jsr     L7265
-        adc     ($73,x)
-        .byte   $65
-LE9A0:  jsr     L0000
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        and     #$54
-        pla
-        adc     $20
-        .byte   $64
-        adc     $73
-        .byte   $74
-        adc     #$6E
-        adc     ($74,x)
-        adc     #$6F
-        ror     $6420
-        adc     #$73
-        .byte   $6B
-        jsr     L6163
-        ror     L6F6E
-        .byte   $74
-        jsr     L6562
-        jsr     L6F66
-        .byte   $72
-        adc     $7461
-        adc     $64
-        jsr     L1721
-        eor     $72
-        .byte   $72
-        .byte   $6F
-        .byte   $72
-        jsr     L7564
-        .byte   $72
-        adc     #$6E
-        .byte   $67
-        jsr     L6F66
-        .byte   $72
-        adc     $7461
-        adc     #$6E
-        .byte   $67
-        rol     $542B
-        pla
-        adc     $20
-        .byte   $64
-        adc     $73
-        .byte   $74
-        adc     #$6E
-        adc     ($74,x)
-        adc     #$6F
-        ror     $7620
-        .byte   $6F
-        jmp     (L6D75)
-
-        adc     $20
-        adc     #$73
-        jsr     L7277
-        adc     #$74
-        adc     $20
-        bvs     LEA8A
-        .byte   $6F
-        .byte   $74
-        adc     $63
-        .byte   $74
-        adc     $64
-        .byte   $20
-        .byte   $21
-LEA21:  ora     $44,x
-        .byte   $6F
-        jsr     L6F79
-        adc     $20,x
-        .byte   $77
-        adc     ($6E,x)
-        .byte   $74
-        jsr     L6F74
-        jsr     L7265
-        adc     ($73,x)
-        .byte   $65
-LEA36:  jsr     L0000
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-LEA49:  .byte   $33
-        .byte   $44
-        .byte   $6F
-        jsr     L6F79
-        adc     $20,x
-        .byte   $77
-        adc     ($6E,x)
-        .byte   $74
-        jsr     L6F74
-        jsr     L6520
-        .byte   $72
-        adc     ($73,x)
-        adc     $20
-        jsr     L6874
-        adc     $20
-        .byte   $64
-        adc     #$73
-        .byte   $6B
-        jsr     L6E69
-        jsr     L6C73
-        .byte   $6F
-        .byte   $74
-        jsr     L2020
-        .byte   $64
-        .byte   $72
-        adc     #$76
-        adc     $20
-        jsr     L3F20
-LEA7D:  and     ($44),y
-        .byte   $6F
-        jsr     L6F79
-        adc     $20,x
-        .byte   $77
-        adc     ($6E,x)
-        .byte   $74
-        .byte   $20
-LEA8A:  .byte   $74
-        .byte   $6F
-        jsr     L7265
-        adc     ($73,x)
-        adc     $20
-        .byte   $74
-        pla
-        adc     $20
-        .byte   $64
-        adc     #$73
-        .byte   $6B
-        jsr     L6E69
-        jsr     L6C73
-        .byte   $6F
-        .byte   $74
-        jsr     L2020
-        .byte   $64
-        .byte   $72
-        adc     #$76
-        adc     $20
-        jsr     L3F20
-        clc
-        .byte   $54
-        pla
-        adc     $20
-        .byte   $63
-        .byte   $6F
-        bvs     LEB31
-        jsr     L6177
-        .byte   $73
-        jsr     L7573
-        .byte   $63
-        .byte   $63
-        adc     $73
-        .byte   $73
-        ror     $75
-        jmp     (L1B2E)
-
-        .byte   $54
-        pla
-        adc     $20
-        .byte   $63
-        .byte   $6F
-        bvs     LEB4A
-        jsr     L6177
-        .byte   $73
-        jsr     L6F6E
-        .byte   $74
-        jsr     L6F63
-        adc     $6C70
-        adc     $74
-        adc     $64
-        rol     $492D
-        ror     $6573
-        .byte   $72
-        .byte   $74
-        jsr     L6F73
-        adc     $72,x
-        .byte   $63
-        adc     $20
-        .byte   $64
-        adc     #$73
-        .byte   $6B
-        jsr     L726F
-        jsr     L7270
-        adc     $73
-        .byte   $73
-        jsr     L7345
-        .byte   $63
-        adc     ($70,x)
-        adc     $20
-        .byte   $74
-        .byte   $6F
-        jsr     L6163
-        ror     $6563
-        jmp     (L322E)
-
-        eor     #$6E
-        .byte   $73
-        adc     $72
-        .byte   $74
-        jsr     L6564
-        .byte   $73
-        .byte   $74
-        adc     #$6E
-        adc     ($74,x)
-        adc     #$6F
-        ror     $6420
-        adc     #$73
-        .byte   $6B
-        .byte   $20
-        .byte   $6F
-        .byte   $72
-        jsr     L7270
-        .byte   $65
-LEB31:  .byte   $73
-        .byte   $73
-        jsr     L7345
-        .byte   $63
-        adc     ($70,x)
-        adc     $20
-        .byte   $74
-        .byte   $6F
-        jsr     L6163
-        ror     $6563
-        .byte   $6C
-        .byte   $2E
+        PASCAL_STRING "Insert destination disk and click OK."
+LE98B:  PASCAL_STRING "Do you want to erase "
+LE9A0 := *-1
+        .res    18, 0
+        PASCAL_STRING "The destination disk cannot be formated !"
+        PASCAL_STRING "Error during formating."
+        PASCAL_STRING "The destination volume is write protected !"
+        PASCAL_STRING "Do you want to erase "
+        .res    18, 0
+LEA49:  PASCAL_STRING "Do you want to  erase  the disk in slot   drive   ?"
+LEA7D:  PASCAL_STRING "Do you want to erase the disk in slot   drive   ?"
+        PASCAL_STRING "The copy was successful."
+        PASCAL_STRING "The copy was not completed."
+        PASCAL_STRING "Insert source disk or press Escape to cancel."
+        PASCAL_STRING "Insert destination disk or press Escape to cancel."
 LEB45:  .byte   $20
 LEB46:  .byte   $3F
 LEB47:  .byte   $29
@@ -3365,16 +3099,7 @@ LEB49:  .byte   $27
 LEB4A:  .byte   $2F
 LEB4B:  .byte   $17
 LEB4C:  .byte   $15
-LEB4D:  .byte   0
-        ora     ($02,x)
-        .byte   $03
-        .byte   $04
-        ora     L0006
-        .byte   $07
-        php
-        ora     #$0A
-        .byte   $0B
-        .byte   $0C
+LEB4D:  .byte   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
 LEB5A:  .byte   $44
 LEB5B:  sbc     #$65
         sbc     #$8B
@@ -3865,22 +3590,22 @@ LF119:  stx     L0006
         pha
         tay
 LF123:  lda     (L0006),y
-        sta     LEA36,y
+        sta     $EA36,y
         dey
         bne     LF123
         pla
         clc
         adc     LEB4C
-        sta     LEA21
+        sta     $EA21
         tay
-        inc     LEA21
-        inc     LEA21
+        inc     $EA21
+        inc     $EA21
         lda     LEB45
         iny
-        sta     LEA21,y
+        sta     $EA21,y
         lda     LEB46
         iny
-        sta     LEA21,y
+        sta     $EA21,y
         rts
 
 LF149:  txa
