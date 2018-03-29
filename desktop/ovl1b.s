@@ -137,7 +137,7 @@ LD01E:  .byte   0
         .byte   $02
         .byte   0
         .byte   $7F
-        bne     LD087
+        bne     $D087
         bne     LD02A
 LD02A:  .byte   0
         .byte   0
@@ -157,7 +157,6 @@ LD02A:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-DESKTOP_RELAY:
         .byte   0
         .byte   0
         .byte   0
@@ -206,102 +205,19 @@ LD061:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-        ora     $04D1,x
-        lsr     $69
-        jmp     (L0A65)
+        .addr   $D11D
 
-        lsr     $61
-LD087:  .byte   $63
-        adc     #$6C
-        adc     #$74
-        adc     #$65
-        .byte   $73
-        .byte   $1C
-        eor     ($70,x)
-        bvs     LD100
-        adc     $20
-        eor     #$49
-        jsr     L6544
-        .byte   $73
-        .byte   $6B
-        .byte   $54
-        .byte   $6F
-        bvs     LD0C1
-        ror     $65,x
-        .byte   $72
-        .byte   $73
-        adc     #$6F
-        ror     $3120
-        rol     $0131
-        jsr     L4324
-        .byte   $6F
-        bvs     LD12C
-        .byte   $72
-        adc     #$67
-        pla
-        .byte   $74
-        jsr     L7041
-        bvs     LD129
-        adc     $20
-        .byte   $43
-        .byte   $6F
-LD0C1:  adc     $7570
-        .byte   $74
-        adc     $72
-        jsr     L6E49
-        .byte   $63
-        rol     $202C
-        and     ($39),y
-        sec
-        rol     $20,x
-        bit     $43
-        .byte   $6F
-        bvs     LD151
-        .byte   $72
-        adc     #$67
-        pla
-        .byte   $74
-        jsr     L6556
-        .byte   $72
-        .byte   $73
-        adc     #$6F
-        ror     $5320
-        .byte   $6F
-        ror     $74
-        bit     $3120
-        and     $3538,y
-        jsr     L202D
-        and     ($39),y
-        sec
-        rol     $20,x
-        .byte   $13
-        eor     ($6C,x)
-        jmp     (L5220)
+        PASCAL_STRING "File"
+        PASCAL_STRING "Facilities"
+        PASCAL_STRING "Apple II DeskTop version 1.1"
+        PASCAL_STRING " "
+        PASCAL_STRING "Copyright Apple Computer Inc., 1986 "
+        PASCAL_STRING "Copyright Version Soft, 1985 - 1986 "
+        PASCAL_STRING "All Rights reserved"
+        PASCAL_STRING "Quit"
+        PASCAL_STRING "Quick Copy "
+        PASCAL_STRING "Disk Copy "
 
-        adc     #$67
-LD100:  pla
-        .byte   $74
-        .byte   $73
-        jsr     L6572
-        .byte   $73
-        adc     $72
-        ror     $65,x
-        .byte   $64
-        .byte   $04
-        eor     ($75),y
-        adc     #$74
-        .byte   $0B
-        eor     ($75),y
-        adc     #$63
-        .byte   $6B
-        jsr     L6F43
-        bvs     LD195
-        jsr     L440A
-        adc     #$73
-        .byte   $6B
-        jsr     L6F43
-        bvs     LD1A0
-        .byte   $20
         .byte   $03
 LD129:  .byte   0
         .byte   $03
@@ -343,7 +259,7 @@ LD135:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-LD151:  .byte   0
+        .byte   0
         .byte   0
         .byte   0
         .byte   0
@@ -3158,24 +3074,9 @@ LE939:  ora     $2F00,y
 LE941:  .byte   0
 LE942:  .byte   0
 LE943:  .byte   0
-        jsr     L6E49
-        .byte   $73
-        adc     $72
-        .byte   $74
-        jsr     L6F73
-        adc     $72,x
-        .byte   $63
-        adc     $20
-        .byte   $64
-        adc     #$73
-        .byte   $6B
-        jsr     L6E61
-        .byte   $64
-        jsr     L6C63
-        adc     #$63
-        .byte   $6B
-        jsr     L4B4F
-        rol     $4925
+
+        PASCAL_STRING "Insert source disk and click OK."
+        .byte   $25, $49
         ror     $6573
         .byte   $72
         .byte   $74
