@@ -89,6 +89,8 @@ Point       vertex0
 ```
 
 ### Font
+This is a MousePaint-compatible font. Single- and double-width fonts are
+supported; max height is 16 pixels.
 ```
 .byte       fonttype        0=regular, $80=double-width
 .byte       lastchar        char code of last character (usually $7F)
