@@ -1,26 +1,12 @@
-; da65 V2.16 - Git f5e9b401
-; Created:    2018-02-22 08:22:52
-; Input file: orig/ovl1c
-; Page:       1
-
-
         .setcpu "6502"
 
+        .include "apple2.inc"
+        .include "../macros.inc"
+        .include "../mgtk.inc"
+        .include "../inc/apple2.inc"
+        .include "../inc/prodos.inc"
+
 L0006           := $0006
-MGTK            := $4000
-UNKNOWN_CALL    := $8E00
-MLI             := $BF00
-RAMRDOFF        := $C002
-RAMRDON         := $C003
-RAMWRTOFF       := $C004
-RAMWRTON        := $C005
-ALTZPOFF        := $C008
-ALTZPON         := $C009
-LCBANK1         := $C08B
-AUXMOVE         := $C311
-XFER            := $C314
-MGTK_RELAY      := $D000
-DESKTOP_RELAY   := $D040
 LDAEE           := $DAEE
 LDB55           := $DB55
 LDBE0           := $DBE0
@@ -31,21 +17,11 @@ LE137           := $E137
 LE6AB           := $E6AB
 LE6FD           := $E6FD
 LE766           := $E766
-FSUB            := $E7A7
 LE7A8           := $E7A8
-FADD            := $E7BE
-FMULT           := $E97F
-FDIV            := $EA66
-ROUND           := $EB2B
-FLOAT           := $EB93
-FIN             := $EC4A
-FOUT            := $ED34
-INIT            := $FB2F
-BELL1           := $FBDD
-HOME            := $FC58
-COUT            := $FDED
-SETKBD          := $FE89
-SETVID          := $FE93
+
+
+        .org $800
+
 L0800:  php
         sei
         jsr     L083A
@@ -457,15 +433,13 @@ L0B2D:  nop
         cmp     $C08C,x
         rts
 
-        brk
-        brk
-        brk
+        .byte   0
+        .byte   0
+        .byte   0
 L0B3A:  ldx     #$11
 L0B3C:  dex
         bne     L0B3C
-        inc     $D9
-        bne     L0B45
-        inc     $DA
+        inc16   $D9
 L0B45:  sec
         sbc     #$01
         bne     L0B3A
@@ -587,76 +561,75 @@ L0C1F:  .byte   $0E
 L0C20:  .byte   $1B
 L0C21:  .byte   $03
 L0C22:  .byte   $10
-L0C23:  brk
-L0C24:  brk
-L0C25:  brk
-L0C26:  brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-L0C36:  brk
-L0C37:  brk
-L0C38:  brk
-L0C39:  brk
+L0C23:  .byte   0
+L0C24:  .byte   0
+L0C25:  .byte   0
+L0C26:  .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+L0C36:  .byte   0
+L0C37:  .byte   0
+L0C38:  .byte   0
+L0C39:  .byte   0
         .byte   $04
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
         .byte   $02
-        brk
-        brk
+        .byte   0
+        .byte   0
         .byte   $13
         .byte   $02
-        brk
+        .byte   0
         eor     #$0C
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
         .byte   $03
-L0C5A:  brk
-L0C5B:  brk
+L0C5A:  .byte   0
+L0C5B:  .byte   0
 L0C5C:  .byte   $1C
-L0C5D:  brk
-L0C5E:  brk
+L0C5D:  .byte   0
+L0C5E:  .byte   0
 L0C5F:  sty     L0C73
-        sta     L0C74
-        stx     L0C75
+        stax    L0C74
         php
         sei
         sta     ALTZPOFF
         lda     $C082
         jsr     MLI
-L0C73:  brk
-L0C74:  brk
-L0C75:  brk
+L0C73:  .byte   0
+L0C74:  .byte   0
+L0C75:  .byte   0
         tax
         sta     ALTZPON
         lda     LCBANK1
@@ -713,7 +686,7 @@ L0CD3:  lda     L0CEC
 
         rts
 
-L0CEC:  brk
+L0CEC:  .byte   0
         sta     L0D24
         jsr     L0D26
         ldy     #$07
@@ -740,12 +713,12 @@ L0D19:  rts
 L0D1A:  jmp     (L0006)
 
         .byte   $03
-L0D1E:  brk
+L0D1E:  .byte   0
         .byte   $22
         ora     a:$04
-        brk
-L0D24:  brk
-        brk
+        .byte   0
+L0D24:  .byte   0
+        .byte   0
 L0D26:  sta     L0D50
         ldx     #$11
         lda     L0D50
@@ -762,14 +735,14 @@ L0D34:  stx     L0D47
         adc     L0D47
         sta     L0D47
         .byte   $AD
-L0D47:  brk
+L0D47:  .byte   0
         .byte   $BF
         sta     $07
         lda     #$00
         sta     L0006
         rts
 
-L0D50:  brk
+L0D50:  .byte   0
 L0D51:  pha
         rol     a
         pla
@@ -805,12 +778,8 @@ L0D8A:  lda     #$81
         sta     $D44D
         rts
 
-L0D90:  lda     #$00
-        ldx     #$13
-        jsr     LDE9F
-        lda     #$00
-        ldx     #$13
-        jsr     LE0FE
+L0D90:  addr_call LDE9F, $1300
+        addr_call LE0FE, $1300
         lda     #$C0
         sta     $D44D
         rts
@@ -833,16 +802,10 @@ L0DA4:  cmp     #$A5
         sta     L0EB0
         lda     $D408,x
         sta     L0EB1
-        lsr     L0EB1
-        ror     L0EB0
-        lsr     L0EB1
-        ror     L0EB0
-        lsr     L0EB1
-        ror     L0EB0
-        lda     L0EB0
-        sta     $D427
-        lda     L0EB1
-        sta     $D428
+        lsr16   L0EB0
+        lsr16   L0EB0
+        lsr16   L0EB0
+        copy16  L0EB0, $D427
         bit     $D44D
         bmi     L0DF6
         lda     $D451
@@ -896,20 +859,14 @@ L0E47:  lda     L0006
         jsr     L1133
         rts
 
-L0E4D:  lda     #$06
-        sta     L0C5D
-        lda     #$00
-        sta     L0C5E
+L0E4D:  copy16  #$0006, L0C5D
         ldx     $D417
         lda     $D3F7,x
         sta     L0C5A
-        lda     #$00
-        sta     L0C5B
-        lda     #$14
-        sta     L0C5C
+        copy16  #$1400, L0C5B
         jsr     L12AF
         beq     L0E70
-        brk
+        .byte   0
 L0E70:  lda     L0EB0
         sec
         sbc     #$00
@@ -925,23 +882,17 @@ L0E87:  lda     L0EB0
         bne     L0E8D
         rts
 
-L0E8D:  lda     L0C5B
-        clc
-        adc     #$00
-        sta     L0C5B
-        lda     L0C5C
-        adc     #$02
-        sta     L0C5C
+L0E8D:  add16   L0C5B, #$0200, L0C5B
         inc     L0C5D
         lda     L0C5C
         jsr     L1133
         jsr     L12AF
         beq     L0EAD
-        brk
+        .byte   0
 L0EAD:  jmp     L0E70
 
-L0EB0:  brk
-L0EB1:  brk
+L0EB0:  .byte   0
+L0EB1:  .byte   0
         and     #$F0
         sta     L0ED6
         ldx     $BF31
@@ -951,25 +902,20 @@ L0EBA:  lda     $BF32,x
         beq     L0ECA
         dex
         bpl     L0EBA
-L0EC7:  lda     #$00
-        rts
+L0EC7:  return  #$00
 
 L0ECA:  lda     $BF32,x
         and     #$0F
         cmp     #$0B
         bne     L0EC7
-        lda     #$80
-        rts
+        return  #$80
 
-L0ED6:  brk
+L0ED6:  .byte   0
         bit     $C010
         sta     L0FE6
         and     #$FF
         bpl     L0EFF
-        lda     $D424
-        sta     $D421
-        lda     $D425
-        sta     $D422
+        copy16  $D424, $D421
         lda     $D426
         sta     $D423
         ldx     $D418
@@ -977,10 +923,7 @@ L0ED6:  brk
         sta     L0C5A
         jmp     L0F1A
 
-L0EFF:  lda     $D421
-        sta     $D424
-        lda     $D422
-        sta     $D425
+L0EFF:  copy16  $D421, $D424
         lda     $D423
         sta     $D426
         ldx     $D417
@@ -1009,8 +952,7 @@ L0F37:  bit     L0FE4
         beq     L0F6C
 L0F4C:  ldy     #$80
         sty     L0FE4
-L0F51:  sta     L0FE7
-        stx     L0FE8
+L0F51:  stax    L0FE7
         jsr     L0FE9
         bcc     L0F72
         bne     L0F62
@@ -1019,17 +961,13 @@ L0F51:  sta     L0FE7
 L0F62:  ldy     #$80
         sty     L0FE5
         bne     L0F72
-L0F69:  lda     #$80
-        rts
+L0F69:  return  #$80
 
-L0F6C:  lda     #$00
-        rts
+L0F6C:  return  #$00
 
-L0F6F:  lda     #$01
-        rts
+L0F6F:  return  #$01
 
-L0F72:  sta     L0C5D
-        stx     L0C5E
+L0F72:  stax    L0C5D
         ldx     L0FE8
         lda     L0FE7
         ldy     $D41F
@@ -1081,11 +1019,11 @@ L0FD9:  jsr     L123F
 
 L0FE1:  jmp     L0F6F
 
-L0FE4:  brk
-L0FE5:  brk
-L0FE6:  brk
-L0FE7:  brk
-L0FE8:  brk
+L0FE4:  .byte   0
+L0FE5:  .byte   0
+L0FE6:  .byte   0
+L0FE7:  .byte   0
+L0FE8:  .byte   0
 L0FE9:  jsr     L102A
         cpy     #$00
         bne     L0FF6
@@ -1109,9 +1047,7 @@ L1009:  clc
 
 L100B:  lda     #$07
         sta     $D423
-        inc     $D421
-        bne     L1018
-        inc     $D422
+        inc16   $D421
 L1018:  lda     $D422
         cmp     $D428
         bne     L1009
@@ -1160,7 +1096,7 @@ L1051:  lda     $D422
         pla
         rts
 
-L1076:  brk
+L1076:  .byte   0
 L1077:  .byte   $07
         asl     $05
         .byte   $04
@@ -1221,8 +1157,7 @@ L10D4:  asl     a
         clc
         adc     L10F3,x
         tax
-        lda     #$00
-        rts
+        return  #$00
 
 L10E3:  cmp     #$20
         bcs     L10ED
@@ -1238,7 +1173,7 @@ L10F3:  asl     L0A0C
         php
         asl     $04
         .byte   $02
-        brk
+        .byte   0
         lda     #$14
         sta     L0006
         lda     #$00
@@ -1255,7 +1190,7 @@ L1104:  lda     L0006
         bcc     L1104
         rts
 
-L111E:  brk
+L111E:  .byte   0
 L111F:  jsr     L1149
         tay
         sec
@@ -1300,8 +1235,7 @@ L1158:  .byte   $07
         .byte   $03
         .byte   $02
         ora     ($00,x)
-L1160:  sta     L0C5B
-        stx     L0C5C
+L1160:  stax    L0C5B
 L1166:  jsr     L12AF
         beq     L1174
         ldx     #$00
@@ -1315,18 +1249,14 @@ L1175:  sta     L0006
         stx     $07
         stx     $09
         inc     $09
-        lda     #$00
-        sta     L0C5B
-        lda     #$1C
-        sta     L0C5C
+        copy16  #$1C00, L0C5B
 L1189:  jsr     L12AF
         beq     L119A
         ldx     #$00
         jsr     LE6FD
         beq     L119A
         bpl     L1189
-        lda     #$80
-        rts
+        return  #$80
 
 L119A:  ldy     #$FF
         iny
@@ -1336,18 +1266,14 @@ L119D:  lda     $1C00,y
         sta     ($08),y
         iny
         bne     L119D
-        lda     #$00
-        rts
+        return  #$00
 
 L11AD:  sta     L0006
         sta     $08
         stx     $07
         stx     $09
         inc     $09
-        lda     #$00
-        sta     L0C5B
-        lda     #$1C
-        sta     L0C5C
+        copy16  #$1C00, L0C5B
 L11C1:  jsr     L12AF
         beq     L11D8
         ldx     #$00
@@ -1356,8 +1282,7 @@ L11C1:  jsr     L12AF
         bpl     L11C1
         lda     LCBANK1
         lda     LCBANK1
-        lda     #$80
-        rts
+        return  #$80
 
 L11D8:  lda     $C083
         lda     $C083
@@ -1371,11 +1296,9 @@ L11E1:  lda     $1C00,y
         bne     L11E1
         lda     LCBANK1
         lda     LCBANK1
-        lda     #$00
-        rts
+        return  #$00
 
-L11F7:  sta     L0C5B
-        stx     L0C5C
+L11F7:  stax    L0C5B
 L11FD:  jsr     L12A5
         beq     L120B
         ldx     #$80
@@ -1389,10 +1312,7 @@ L120C:  sta     L0006
         stx     $07
         stx     $09
         inc     $09
-        lda     #$00
-        sta     L0C5B
-        lda     #$1C
-        sta     L0C5C
+        copy16  #$1C00, L0C5B
         ldy     #$FF
         iny
 L1223:  lda     (L0006),y
@@ -1416,10 +1336,7 @@ L123F:  bit     $C083
         stx     $07
         stx     $09
         inc     $09
-        lda     #$00
-        sta     L0C5B
-        lda     #$1C
-        sta     L0C5C
+        copy16  #$1C00, L0C5B
         ldy     #$FF
         iny
 L125C:  lda     (L0006),y
@@ -1446,34 +1363,22 @@ L127D:  rts
         lda     LCBANK1
         rts
 
-        ldy     #$C5
-        lda     #$41
-        ldx     #$0C
-        jsr     L0C5F
+        yax_call L0C5F, $C5, $0C41
         rts
 
-        ldy     #$C5
-        lda     #$45
-        ldx     #$0C
-        jsr     L0C5F
+        yax_call L0C5F, $C5, $0C45
         rts
 
-L12A5:  ldy     #$81
-        lda     #$59
-        ldx     #$0C
-        jsr     L0C5F
+L12A5:  yax_call L0C5F, $81, $0C59
         rts
 
-L12AF:  ldy     #$80
-        lda     #$59
-        ldx     #$0C
-        jsr     L0C5F
+L12AF:  yax_call L0C5F, $80, $0C59
         rts
 
-L12B9:  brk
+L12B9:  .byte   0
         .byte   $3C
-        brk
-        brk
+        .byte   0
+        .byte   0
         .byte   $FF
         .byte   $FF
         .byte   $FF
@@ -1482,23 +1387,23 @@ L12B9:  brk
         .byte   $FF
         .byte   $FF
         inc     a:$00,x
-        brk
-        brk
+        .byte   0
+        .byte   0
         .byte   $0F
         .byte   $FF
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
-        brk
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
         .byte   $FF
         .byte   $FF
         .byte   $FF
-        brk
-        brk
-        brk
+        .byte   0
+        .byte   0
+        .byte   0
         .byte   $7F
         .byte   $FF
         lda     $D133
@@ -1515,7 +1420,4 @@ L12ED:  rts
         lda     $D18D
         sta     $D12D
         jsr     LE137
-        ldy     #$46
-        lda     #$2D
-        ldx     #$D1
-        jsr     LDBE0
+        yax_call LDBE0, $46, $D12D
