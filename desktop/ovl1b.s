@@ -3,6 +3,7 @@
         .include "apple2.inc"
         .include "../macros.inc"
         .include "../mgtk.inc"
+        .include "../desktop.inc"
         .include "../inc/apple2.inc"
         .include "../inc/prodos.inc"
 
@@ -107,7 +108,7 @@ L7573           := $7573
 
         jmp     LD5E1
 
-        .byte   0
+LD003:  .byte   0
         ora     ($02,x)
         .byte   $03
         .byte   $04
@@ -200,12 +201,12 @@ LD061:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-        ora     ($D1),y
+        .addr   str_quick_copy
         .byte   0
         .byte   0
         .byte   0
         .byte   0
-        .addr   $D11D
+        .addr   str_disk_copy
 
         PASCAL_STRING "File"
         PASCAL_STRING "Facilities"
@@ -215,7 +216,11 @@ LD061:  .byte   0
         PASCAL_STRING "Copyright Version Soft, 1985 - 1986 "
         PASCAL_STRING "All Rights reserved"
         PASCAL_STRING "Quit"
+
+str_quick_copy:
         PASCAL_STRING "Quick Copy "
+
+str_disk_copy:
         PASCAL_STRING "Disk Copy "
 
         .byte   $03
@@ -450,14 +455,10 @@ LD208:  .byte   0
         .byte   $63
         ora     ($64,x)
         .byte   0
-        .byte   $0F
-        .byte   $4F
-        .byte   $4B
-        jsr     L2020
-        jsr     L2020
-        jsr     L2020
-        jsr     L2020
-        ora     a:$D7
+
+str_ok_label:
+        PASCAL_STRING {"OK            ",CHAR_RETURN}
+        .byte   $D7, 0
         .byte   $64
         .byte   0
 LD249:  .byte   0
@@ -485,131 +486,30 @@ LD24A:  .byte   0
         .byte   0
         .byte   $44
         .byte   0
-        asl     L6552
-        adc     ($64,x)
-        jsr     L7244
-        adc     #$76
-        adc     $20
-        jsr     L4420
-        .byte   $12
-        jsr     L2020
-        jsr     L4420
-        adc     #$73
-        .byte   $6B
-        jsr     L6F43
-        bvs     LD300
-        jsr     L2020
-        jsr     L5110
-        adc     $69,x
-        .byte   $63
-        .byte   $6B
-        jsr     L6F43
-        bvs     LD30F
-        jsr     L2020
-        jsr     L2020
-        ora     ($53),y
-        jmp     (L746F)
 
-        bit     L4420
-        .byte   $72
-        adc     #$76
-        adc     $2C
-        jsr     L614E
-        adc     $1265
-        .byte   $53
-        adc     $6C
-        adc     $63
-        .byte   $74
-        jsr     L6F73
-        adc     $72,x
-        .byte   $63
-        adc     $20
-        .byte   $64
-        adc     #$73
-        .byte   $6B
-        .byte   $17
-        .byte   $53
-        adc     $6C
-        adc     $63
-        .byte   $74
-        jsr     L6564
-        .byte   $73
-        .byte   $74
-        adc     #$6E
-        adc     ($74,x)
-        adc     #$6F
-        ror     $6420
-        adc     #$73
-        .byte   $6B
-        clc
-        lsr     $6F
-        .byte   $72
-        adc     $7461
-        .byte   $74
-        adc     #$6E
-        .byte   $67
-        jsr     L6874
-        adc     $20
-        .byte   $64
-        adc     #$73
-        .byte   $6B
-        jsr     L2E2E
-        rol     $0F2E
-        .byte   $57
-        .byte   $72
-        adc     #$74
-        adc     #$6E
-        .byte   $67
-        jsr     L2E2E
-        rol     L202E
-LD300:  jsr     L1020
-        .byte   $52
-        adc     $61
-        .byte   $64
-        adc     #$6E
-        .byte   $67
-        jsr     L2E2E
-        .byte   $2E
-        .byte   $2E
-LD30F:  jsr     L2020
-        .byte   $20
-LD313:  .byte   $07
-        eor     $6E,x
-        .byte   $6B
-        ror     $776F
-        ror     $533D
-        adc     $6C
-        adc     $63
-        .byte   $74
-        jsr     L7551
-        adc     #$74
-        jsr     L7266
-        .byte   $6F
-        adc     $7420
-        pla
-        adc     $20
-        ror     $69
-        jmp     (L2065)
-
-        adc     $6E65
-        adc     $20,x
-        plp
-        .byte   $1F
-        eor     ($29),y
-        jsr     L6F74
-        jsr     L6F67
-        jsr     L6162
-        .byte   $63
-        .byte   $6B
-        jsr     L6F74
-        jsr     L6874
-        adc     $20
-        .byte   $44
-        adc     $73
-        .byte   $6B
-        .byte   $54
-        .byte   $6F
-        bvs     LD35A
+str_read_drive:
+        PASCAL_STRING "Read Drive   D"
+str_disk_copy_padded:
+        PASCAL_STRING "     Disk Copy    "
+str_quick_copy_padded:
+        PASCAL_STRING "Quick Copy      "
+str_slot_drive_name:
+        PASCAL_STRING "Slot, Drive, Name"
+str_select_source:
+        PASCAL_STRING "Select source disk"
+str_select_destination:
+        PASCAL_STRING "Select destination disk"
+str_formatting:
+        PASCAL_STRING "Formatting the disk ...."
+str_writing:
+        PASCAL_STRING "Writing ....   "
+str_reading:
+        PASCAL_STRING "Reading ....    "
+str_unknown:
+        PASCAL_STRING "Unknown"
+str_select_quit:
+        PASCAL_STRING {"Select Quit from the file menu (",GLYPH_OAPPLE,"Q) to go back to the DeskTop"}
+        .byte   0
 LD35A:  .byte   $7F
         .byte   0
         .byte   0
@@ -800,10 +700,9 @@ LD408:  .byte   0
         .byte   0
 LD417:  .byte   0
 LD418:  .byte   0
-        .byte   $01
-LD41A:  .byte   0
-        .byte   $01
-LD41C:  .byte   0
+
+str_d:  PASCAL_STRING 0
+str_s:  PASCAL_STRING 0
 LD41D:  .byte   0
 LD41E:  .byte   0
         .byte   0
@@ -829,24 +728,7 @@ LD429:  .byte   0
         ora     $C300,x
         .byte   0
         adc     L0000
-LD43A:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+LD43A:  .res 18, 0
 LD44C:  .byte   0
 LD44D:  .byte   0
 LD44E:  .byte   0
@@ -854,13 +736,8 @@ LD44E:  .byte   0
         .byte   0
 LD451:  .byte   0
         ora     (L0000,x)
-        .byte   $02
-        .byte   $20
-        .byte   $20
-LD457:  .byte   $07
-        .byte   $20
-LD459:  jsr     L2020
-        jsr     L2020
+str_2_spaces:   PASCAL_STRING "  "
+str_7_spaces:   PASCAL_STRING "       "
         bit     $7D01
         .byte   0
         bit     $8701
@@ -902,138 +779,45 @@ LD48A:  .byte   0
         .byte   $5A
         .byte   0
 LD497:  asl     a
-LD498:  asl     $420D
-        jmp     (L636F)
+LD498:  .byte   $e
 
-        .byte   $6B
-        .byte   $73
-        jsr     L6552
-        adc     ($64,x)
-        .byte   $3A
-        jsr     L4210
-        jmp     (L636F)
+str_blocks_read:
+        PASCAL_STRING "Blocks Read: "
+str_blocks_written:
+        PASCAL_STRING "Blocks Written: "
+str_blocks_to_transfer:
+        PASCAL_STRING "Blocks to transfer: "
+str_source:
+        PASCAL_STRING "Source "
+str_destination:
+        PASCAL_STRING "Destination "
+str_slot:
+        PASCAL_STRING "Slot "
+str_drive:
+        PASCAL_STRING "  Drive "
 
-        .byte   $6B
-        .byte   $73
-        jsr     L7257
-        adc     #$74
-        .byte   $74
-        adc     $6E
-        .byte   $3A
-        jsr     L4214
-        jmp     (L636F)
+str_dos33_s_d:
+        PASCAL_STRING "DOS 3.3 S , D  "
 
-        .byte   $6B
-        .byte   $73
-        jsr     L6F74
-        jsr     L7274
-        adc     ($6E,x)
-        .byte   $73
-        ror     $65
-        .byte   $72
-        .byte   $3A
-        jsr     L5307
-        .byte   $6F
-        adc     $72,x
-        .byte   $63
-        adc     $20
-        .byte   $0C
-        .byte   $44
-        adc     $73
-        .byte   $74
-        adc     #$6E
-        adc     ($74,x)
-        adc     #$6F
-        ror     $0520
-        .byte   $53
-        jmp     (L746F)
+str_dos33_disk_copy:
+        PASCAL_STRING "DOS 3.3 disk copy"
 
-        jsr     L2008
-        jsr     L7244
-        adc     #$76
-        adc     $20
-LD4F1:  .byte   $0F
-        .byte   $44
-        .byte   $4F
-        .byte   $53
-        jsr     L2E33
-        .byte   $33
-        jsr     L2053
-        bit     L4420
-        jsr     L1120
-        .byte   $44
-        .byte   $4F
-        .byte   $53
-        jsr     L2E33
-        .byte   $33
-        jsr     L6964
-        .byte   $73
-        .byte   $6B
-        jsr     L6F63
-        bvs     LD58C
-        bpl     LD565
-        adc     ($73,x)
-        .byte   $63
-        adc     ($6C,x)
-        jsr     L6964
-        .byte   $73
-        .byte   $6B
-        jsr     L6F63
-        bvs     LD59D
-        bpl     LD576
-        .byte   $72
-        .byte   $6F
-        .byte   $44
-        .byte   $4F
-        .byte   $53
-        jsr     L6964
-        .byte   $73
-        .byte   $6B
-        jsr     L6F63
-        bvs     LD5AE
-        .byte   $12
-        jsr     L5345
-        .byte   $43
-        jsr     L7473
-        .byte   $6F
-        bvs     LD560
-        .byte   $74
-        pla
-        adc     $20
-        .byte   $63
-        .byte   $6F
-        bvs     LD5C1
-        ora     $7245,y
-        .byte   $72
-        .byte   $6F
-        .byte   $72
-        jsr     L6877
-        adc     $6E
-        jsr     L7277
-        adc     #$74
-        adc     #$6E
-        .byte   $67
-        jsr     L6C62
-        .byte   $6F
-        .byte   $63
-LD560:  .byte   $6B
-        jsr     L4519
-        .byte   $72
-LD565:  .byte   $72
-        .byte   $6F
-        .byte   $72
-        jsr     L6877
-        adc     $6E
-        jsr     L6572
-        adc     ($64,x)
-        adc     #$6E
-        .byte   $67
-        .byte   $20
-LD576:  .byte   $62
-        jmp     (L636F)
+str_pascal_disk_copy:
+        PASCAL_STRING "Pascal disk copy"
 
-        .byte   $6B
-        jsr     L0000
+str_prodos_disk_copy:
+        PASCAL_STRING "ProDOS disk copy"
+
+str_escape_stop_copy:
+        PASCAL_STRING " ESC stop the copy"
+
+str_error_writing:
+        PASCAL_STRING "Error when writing block "
+
+str_error_reading:
+        PASCAL_STRING "Error when reading block "
+
+        .byte   0, 0
         .byte   $02
         .byte   0
         asl     L0000
@@ -1172,14 +956,14 @@ LD687:  lda     LD363
         sta     LD417
         lda     LD1C7
         jsr     LE137
-        yax_call LDBE0, $07, $D003
+        yax_call LDBE0, $07, LD003
         yax_call LDBE0, $11, $D1E3
         lda     LD18D
         jsr     LE137
-        yax_call LDBE0, $07, $D003
+        yax_call LDBE0, $07, LD003
         yax_call LDBE0, $11, $D255
         yax_call LDBE0, $0E, $D251
-        addr_call LE09A, $D2C1
+        addr_call LE09A, str_select_destination
         jsr     LE559
         jsr     LE2B1
 LD6E6:  jsr     LD986
@@ -1197,7 +981,7 @@ LD6F9:  lda     LD363
         sta     LD44C
         lda     LD18D
         jsr     LE137
-        yax_call LDBE0, $07, $D003
+        yax_call LDBE0, $07, LD003
         yax_call LDBE0, $11, $D211
         yax_call LDBE0, $39, $D1C7
         yax_call LDBE0, $11, $D432
@@ -1221,7 +1005,7 @@ LD740:  lda     #$00
 
 LD763:  lda     LD18D
         jsr     LE137
-        yax_call LDBE0, $07, $D003
+        yax_call LDBE0, $07, LD003
         yax_call LDBE0, $11, $D42A
         jmp     LD734
 
@@ -1335,7 +1119,7 @@ LD852:  ldx     LD418
         jmp     LD61C
 
 LD87C:  yax_call LDBE0, $0E, $D25D
-        addr_call LE09A, $D2D9
+        addr_call LE09A, str_formatting
         jsr     L0CAF
         bcc     LD8A9
         cmp     #$2B
@@ -1352,7 +1136,7 @@ LD89F:  lda     #$05
 
 LD8A9:  lda     LD18D
         jsr     LE137
-        yax_call LDBE0, $07, $D003
+        yax_call LDBE0, $07, LD003
         yax_call LDBE0, $11, $D211
         lda     LD417
         cmp     LD418
@@ -1489,7 +1273,7 @@ LD9D5:  lda     LD12F
 LD9E6:  lda     #$01
         sta     LD12F
         copy16  LD12E, LD00E
-        yax_call LDBE0, $32, $D00C
+        yax_call LDBE0, $32, LD00C
 LDA00:  ldx     LD00C
         bne     LDA06
         rts
@@ -1511,7 +1295,7 @@ LDA06:  dex
         lda     LD9C2,x
         sta     LDA3B
         jsr     LDA35
-        yax_call LDBE0, $33, $D00C
+        yax_call LDBE0, $33, LD00C
         jmp     LD986
 
 LDA35:  tsx
@@ -1535,7 +1319,7 @@ LDA42:  lda     #$00
         sta     LD451
         lda     LD18D
         jsr     LE137
-        addr_call LE0B4, $D28B
+        addr_call LE0B4, str_quick_copy_padded
         rts
 
         lda     LD451
@@ -1561,7 +1345,7 @@ LDAB1:  yax_call LDBE0, $40, $D12E
 
 LDAC0:  cmp     #$01
         bne     LDAD0
-        yax_call LDBE0, $31, $D00C
+        yax_call LDBE0, $31, LD00C
         jmp     LDA00
 
 LDAD0:  cmp     #$02
@@ -1859,14 +1643,14 @@ LDE4D:  cmp     #$A5
         clc
         adc     #$30
         ldx     LD497
-        sta     LD4F1,x
+        sta     str_dos33_s_d,x
         lda     $0C5A
         and     #$80
         asl     a
         rol     a
         adc     #$31
         ldx     LD498
-        sta     LD4F1,x
+        sta     str_dos33_s_d,x
         lda     LD375
         asl     a
         asl     a
@@ -1874,13 +1658,13 @@ LDE4D:  cmp     #$A5
         asl     a
         tay
         ldx     #$00
-LDE83:  lda     LD4F1,x
+LDE83:  lda     str_dos33_s_d,x
         sta     LD377,y
         iny
         inx
-        cpx     LD4F1
+        cpx     str_dos33_s_d
         bne     LDE83
-        lda     LD4F1,x
+        lda     str_dos33_s_d,x
         sta     LD377,y
         lda     #$43
         sta     $0300
@@ -1926,7 +1710,7 @@ LDEE6:  lda     #$3A
 LDEEB:  stax    LDF6F
         ldx     #$07
         lda     #$20
-LDEF5:  sta     LD457,x
+LDEF5:  sta     str_7_spaces,x
         dex
         bne     LDEF5
         lda     #$00
@@ -1957,7 +1741,7 @@ LDF31:  pha
         lda     #$80
         sta     LDF72
         pla
-LDF38:  sta     LD459,y
+LDF38:  sta     str_7_spaces+2,y
         iny
         inx
         inx
@@ -1977,7 +1761,7 @@ LDF45:  inc     LDF71
 
 LDF5E:  lda     LDF6F
         ora     #$30
-        sta     LD459,y
+        sta     str_7_spaces+2,y
         rts
 
 LDF67:  .byte   $10
@@ -2028,12 +1812,12 @@ LDFA0:  yax_call LDBE0, $38, $D18D
 
 LDFDD:  lda     LD18D
         jsr     LE137
-        yax_call LDBE0, $07, $D003
+        yax_call LDBE0, $07, LD003
         yax_call LDBE0, $11, $D211
         yax_call LDBE0, $11, $D219
         lda     LD451
         bne     LE00D
-        addr_call LE0B4, $D28B
+        addr_call LE0B4, str_quick_copy_padded
         jmp     LE014
 
 LE00D:  addr_call LE0B4, $D278
@@ -2043,21 +1827,21 @@ LE014:  yax_call LDBE0, $07, $D005
         jsr     LE078
         jsr     LE089
         yax_call LDBE0, $0E, $D24D
-        addr_call LE09A, $D29C
+        addr_call LE09A, str_slot_drive_name
         yax_call LDBE0, $0E, $D251
-        addr_call LE09A, $D2AE
+        addr_call LE09A, str_select_source
         yax_call LDBE0, $0E, $D47F
-        addr_call LE09A, $D31B
+        addr_call LE09A, str_select_quit
         yax_call LDBE0, $03, $D137
         yax_call LDBE0, $04, $D137
         rts
 
 LE078:  yax_call LDBE0, $0E, $D231
-        addr_call LE09A, $D235
+        addr_call LE09A, str_ok_label
         rts
 
 LE089:  yax_call LDBE0, $0E, $D245
-        addr_call LE09A, $D269
+        addr_call LE09A, str_read_drive
         rts
 
 LE09A:  stax    $0A
@@ -2211,13 +1995,13 @@ LE1EA:  lda     LD375
         asl     a
         tay
         ldx     #$00
-LE1F4:  lda     LD313,x
+LE1F4:  lda     str_unknown,x
         sta     LD377,y
         iny
         inx
-        cpx     LD313
+        cpx     str_unknown
         bne     LE1F4
-        lda     LD313,x
+        lda     str_unknown,x
         sta     LD377,y
 LE207:  inc     LD375
         jmp     LE255
@@ -2362,9 +2146,9 @@ LE31B:  sta     LE399
         lsr     a
         lsr     a
         clc
-        adc     #$30
-        sta     LD41C
-        addr_call LE09A, $D41B
+        adc     #'0'
+        sta     str_s + 1
+        addr_call LE09A, str_s
         lda     #$28
         sta     LD36D
         yax_call LDBE0, $0E, $D36D
@@ -2374,9 +2158,9 @@ LE31B:  sta     LE399
         asl     a
         rol     a
         clc
-        adc     #$31
-        sta     LD41A
-        addr_call LE09A, $D419
+        adc     #'1'
+        sta     str_d + 1
+        addr_call LE09A, str_d
         lda     #$41
         sta     LD36D
         yax_call LDBE0, $0E, $D36D
@@ -2545,13 +2329,13 @@ LE483:  .byte   0
 LE491:  lda     LD18D
         jsr     LE137
         yax_call LDBE0, $0E, $D261
-        addr_call LE09A, $D2F2
+        addr_call LE09A, str_writing
         rts
 
 LE4A8:  lda     LD18D
         jsr     LE137
         yax_call LDBE0, $0E, $D265
-        addr_call LE09A, $D302
+        addr_call LE09A, str_reading
         rts
 
 LE4BF:  lda     LD18D
@@ -2564,13 +2348,13 @@ LE4BF:  lda     LD18D
         lda     LD407,y
         jsr     LDEEB
         yax_call LDBE0, $0E, $D467
-        addr_call LE09A, $D4B8
-        addr_call LE09A, $D457
+        addr_call LE09A, str_blocks_to_transfer
+        addr_call LE09A, str_7_spaces
         rts
 
 LE4EC:  jsr     LE522
         yax_call LDBE0, $0E, $D45F
-        addr_call LE09A, $D499
+        addr_call LE09A, str_blocks_read
         .byte   $A9
 LE500:  .byte   $57
         ldx     #$D4
@@ -2579,8 +2363,8 @@ LE500:  .byte   $57
 
 LE507:  jsr     LE522
         yax_call LDBE0, $0E, $D463
-        addr_call LE09A, $D4A7
-        addr_call LE09A, $D457
+        addr_call LE09A, str_blocks_written
+        addr_call LE09A, str_7_spaces
         rts
 
 LE522:  lda     LD18D
@@ -2615,7 +2399,7 @@ LE558:  .byte   0
 LE559:  lda     LD18D
         jsr     LE137
         yax_call LDBE0, $0E, $D46B
-        addr_call LE09A, $D4CD
+        addr_call LE09A, str_source
         ldx     LD417
         lda     LD3F7,x
         and     #$70
@@ -2624,8 +2408,8 @@ LE559:  lda     LD18D
         lsr     a
         lsr     a
         clc
-        adc     #$30
-        sta     LD41C
+        adc     #'0'
+        sta     str_s + 1
         ldx     LD417
         lda     LD3F7,x
         and     #$80
@@ -2633,13 +2417,13 @@ LE559:  lda     LD18D
         rol     a
         rol     a
         clc
-        adc     #$31
-        sta     LD41A
+        adc     #'1'
+        sta     str_d + 1
         yax_call LDBE0, $0E, $D46F
-        addr_call LE09A, $D4E2
-        addr_call LE09A, $D41B
-        addr_call LE09A, $D4E8
-        addr_call LE09A, $D419
+        addr_call LE09A, str_slot
+        addr_call LE09A, str_s
+        addr_call LE09A, str_drive
+        addr_call LE09A, str_d
         bit     LD44D
         bpl     LE5C6
         bvc     LE5C5
@@ -2648,19 +2432,19 @@ LE559:  lda     LD18D
         beq     LE5C6
 LE5C5:  rts
 
-LE5C6:  addr_call LE09A, $D454
+LE5C6:  addr_call LE09A, str_2_spaces
         ldx     $1300
 LE5D0:  lda     $1300,x
         sta     LD43A,x
         dex
         bpl     LE5D0
-        addr_call LE09A, $D43A
+        addr_call LE09A, LD43A
         rts
 
 LE5E1:  lda     LD18D
         jsr     LE137
         yax_call LDBE0, $0E, $D473
-        addr_call LE09A, $D4D5
+        addr_call LE09A, str_destination
         ldx     LD418
         lda     LD3F7,x
         and     #$70
@@ -2669,21 +2453,21 @@ LE5E1:  lda     LD18D
         lsr     a
         lsr     a
         clc
-        adc     #$30
-        sta     LD41C
+        adc     #'0'
+        sta     str_s + 1
         ldx     LD418
         lda     LD3F7,x
         and     #$80
         asl     a
         rol     a
         clc
-        adc     #$31
-        sta     LD41A
+        adc     #'1'
+        sta     str_d + 1
         yax_call LDBE0, $0E, $D477
-        addr_call LE09A, $D4E2
-        addr_call LE09A, $D41B
-        addr_call LE09A, $D4E8
-        addr_call LE09A, $D419
+        addr_call LE09A, str_slot
+        addr_call LE09A, str_s
+        addr_call LE09A, str_drive
+        addr_call LE09A, str_d
         rts
 
 LE63F:  lda     LD18D
@@ -2691,17 +2475,17 @@ LE63F:  lda     LD18D
         yax_call LDBE0, $0E, $D47B
         bit     LD44D
         bmi     LE65B
-        addr_call LE09A, $D524
+        addr_call LE09A, str_prodos_disk_copy
         rts
 
 LE65B:  bvs     LE665
-        addr_call LE09A, $D501
+        addr_call LE09A, str_dos33_disk_copy
         rts
 
 LE665:  lda     LD44D
         and     #$0F
         bne     LE673
-        addr_call LE09A, $D513
+        addr_call LE09A, str_pascal_disk_copy
 LE673:  rts
 
 LE674:  lda     LD44D
@@ -2709,14 +2493,14 @@ LE674:  lda     LD44D
         beq     LE693
         lda     LD18D
         jsr     LE137
-        yax_call LDBE0, $07, $D003
+        yax_call LDBE0, $07, LD003
         yax_call LDBE0, $11, $D483
 LE693:  rts
 
 LE694:  lda     LD18D
         jsr     LE137
         yax_call LDBE0, $0E, $D48B
-        addr_call LE09A, $D535
+        addr_call LE09A, str_escape_stop_copy
         rts
 
         lda     LD18D
@@ -2732,7 +2516,7 @@ LE6BB:  dec     LE6FB
         beq     LE6DE
 LE6D5:  yax_call LDBE0, $0C, $D359
 LE6DE:  yax_call LDBE0, $0E, $D48B
-        addr_call LE09A, $D535
+        addr_call LE09A, str_escape_stop_copy
         jmp     LE6BB
 
 LE6F1:  yax_call LDBE0, $0C, $D35A
@@ -2762,13 +2546,13 @@ LE71A:  jsr     L127E
         lda     LE765
         bne     LE74B
         yax_call LDBE0, $0E, $D493
-        addr_call LE09A, $D562
-        addr_call LE09A, $D457
+        addr_call LE09A, str_error_reading
+        addr_call LE09A, str_7_spaces
         return  #$00
 
 LE74B:  yax_call LDBE0, $0E, $D48F
-        addr_call LE09A, $D548
-        addr_call LE09A, $D457
+        addr_call LE09A, str_error_writing
+        addr_call LE09A, str_7_spaces
         return  #$00
 
 LE765:  .byte   0
@@ -3134,14 +2918,14 @@ LEB84:  stax    LEB81
         ldax    #$D137
         jsr     LDBE0
         yax_call LDBE0, $04, $D137
-        yax_call LDBE0, $07, $D003
+        yax_call LDBE0, $07, LD003
         yax_call LDBE0, $11, $E89F
         jsr     LF0DF
         yax_call LDBE0, $12, $E89F
         yax_call LDBE0, $06, $E8B7
         yax_call LDBE0, $12, $E8A7
         yax_call LDBE0, $12, $E8AF
-        yax_call LDBE0, $07, $D003
+        yax_call LDBE0, $07, LD003
         yax_call LDBE0, $26, $0000
         yax_call LDBE0, $14, $E88F
         yax_call LDBE0, $25, $0000
@@ -3361,7 +3145,7 @@ LEE67:  jmp     LED35
 
 LEE6A:  pha
         yax_call LDBE0, $06, $E8C7
-        yax_call LDBE0, $07, $D003
+        yax_call LDBE0, $07, LD003
         yax_call LDBE0, $11, $E89F
         pla
         rts
