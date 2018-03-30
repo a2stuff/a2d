@@ -861,7 +861,7 @@ hires_table_hi:
         vid_addr             := $84        ; pointer to video memory
         left_bytes           := $86        ; offset of leftmost coordinate in chars (0-39)
         bits_addr            := $8E        ; pointer to pattern/bitmap
-        width_mod14          := $87        ; width of rectangle mod 14
+        left_mod14           := $87        ; starting x-coordinate mod 14
         left_sidemask        := $88        ; bitmask applied to clip left edge of rect
         right_sidemask       := $89        ; bitmask applied to clip right edge of rect
         src_y_coord          := $8C
@@ -1374,7 +1374,7 @@ set_x1_bytes:
         tya
         rol     a
         tay
-        sty     width_mod14
+        sty     left_mod14
         lda     aux_left_masks,y
         sta     left_masks_table+1
         lda     main_left_masks,y
@@ -1797,7 +1797,7 @@ do_paint:
         cmp     bottom
         bcc     :+
         bne     fail
-:       exit_call MGTK::error_in_object           ; success!
+:       exit_call MGTK::inrect_inside           ; success!
 
 fail:   rts
 .endproc
@@ -2072,18 +2072,18 @@ PaintBitsImpl:
         jsr     set_dest
         copy16  #bitmap_buffer, bits_addr
         ldx     #1
-        lda     width_mod14
+        lda     left_mod14
 
         sec
         sbc     #7
         bcc     :+
-        sta     width_mod14
+        sta     left_mod14
         dex
 :       stx     dhgr_shift_line::offset1_addr
         inx
         stx     dhgr_shift_line::offset2_addr
 
-        lda     width_mod14
+        lda     left_mod14
         sec
         sbc     bit_offset
         bcs     :+
@@ -3104,6 +3104,8 @@ paint_poly_points:
 ;;; ============================================================
 ;;; SetFont
 
+.define max_font_height 16
+
 .proc SetFontImpl
         copy16  params_addr, current_textfont ; set font to passed address
 
@@ -3116,7 +3118,7 @@ prepare_font:
         cpy     #3
         bne     :-
 
-        cmp     #17             ; if height >= 17, skip this next bit
+        cmp     #max_font_height+1       ; if height >= 17, skip this next bit
         bcs     end
 
         ldax    current_textfont
@@ -3211,120 +3213,182 @@ loop:   sty     accum+1
 
 ;;; ============================================================
 
-L5907:  sec
+        ;; Turn the current penloc into left, right, top, and bottom.
+        ;;
+        ;; Inputs:
+        ;;    A = width
+        ;;    $FF = height
+        ;;
+.proc penloc_to_bounds
+        sec
         sbc     #1
-        bcs     L590D
+        bcs     :+
         dex
-L590D:  clc
+:       clc
         adc     current_penloc_x
-        sta     $96
+        sta     right
         txa
         adc     current_penloc_x+1
-        sta     $97
-        copy16  current_penloc_x, $92
+        sta     right+1
+
+        copy16  current_penloc_x, left
+
         lda     current_penloc_y
-        sta     $98
+        sta     bottom
         ldx     current_penloc_y+1
-        stx     $99
+        stx     bottom+1
         clc
         adc     #1
-        bcc     L592D
+        bcc     :+
         inx
-L592D:  sec
-        sbc     $FF
-        bcs     L5933
+:       sec
+        sbc     glyph_height_p
+        bcs     :+
         dex
-L5933:  stax    $94
+:       stax    top
         rts
+.endproc
 
 ;;; ============================================================
 
 ;;; 3 bytes of params, copied to $A1
 
 .proc DrawTextImpl
+        text_bits_buf := $00
+        vid_addrs_table := $20
+
+        shift_aux_ptr := $40
+        shift_main_ptr := $42
+
+        blit_mask := $80
+        doublewidth_flag := $81
+
+        remaining_width := $9A
+        vid_page := $9C
+        text_index := $9F
         text_addr := $A1        ; param
         text_len  := $A3        ; param
         text_width := $A4       ; computed
 
+
         jsr     maybe_unstash_low_zp
         jsr     measure_text
         stax    text_width
+
         ldy     #0
-        sty     $9F
+        sty     text_index
         sty     $A0
-        sty     $9B
-        sty     $9D
-        jsr     L5907
+        sty     clipped_left
+        sty     clipped_top
+        jsr     penloc_to_bounds
         jsr     clip_rect
-        bcc     L59B9
+        bcc     text_clipped
+
         tya
         ror     a
-        bcc     L5972
+        bcc     no_left_clip
+
         ldy     #0
-        ldx     $9C
-L595C:  sty     $9F
+        ldx     vid_page
+left_clip_loop:
+        sty     text_index
         lda     (text_addr),y
         tay
         lda     (glyph_widths),y
         clc
-        adc     $9B
-        bcc     L596B
+        adc     clipped_left             ; exit loop when first partially or
+        bcc     :+                       ; fully visible glyph is found
         inx
-        beq     L5972
-L596B:  sta     $9B
-        ldy     $9F
+        beq     no_left_clip
+:       sta     clipped_left
+        ldy     text_index
         iny
-        bne     L595C
-L5972:  jsr     set_up_fill_mode
+        bne     left_clip_loop
+
+no_left_clip:
+        jsr     set_up_fill_mode
         jsr     set_dest
-        lda     $87
+
+        lda     left_mod14
         clc
-        adc     $9B
-        bpl     L5985
-        inc     $91
+        adc     clipped_left
+        bpl     :+
+        inc     width_bytes
         dec     $A0
-        adc     #$0E
-L5985:  sta     $87
-        lda     $91
-        inc     $91
+        adc     #14
+:       sta     left_mod14
+
+        lda     width_bytes
+        inc     width_bytes
         ldy     current_mapwidth
-        bpl     L599F
+        bpl     text_clip_ndbm
+
+        ;; For an on-screen destination, width_bytes is set up for the
+        ;; pattern blitter, which thinks in terms of double (main & aux)
+        ;; transfers. We actually want single transfers here, so we need to
+        ;; double it and restore the carry.
         asl     a
         tax
-        lda     $87
+        lda     left_mod14
         cmp     #7
-        bcs     L5998
+        bcs     :+
         inx
-L5998:  lda     $96
-        beq     L599D
+:       lda     right
+        beq     :+
         inx
-L599D:  stx     $91
-L599F:  lda     $87
+:       stx     width_bytes
+
+text_clip_ndbm:
+        lda     left_mod14
         sec
         sbc     #7
-        bcc     L59A8
-        sta     $87
-L59A8:  lda     #0
-        rol     a
-        eor     #1
-        sta     $9C
+        bcc     :+
+        sta     left_mod14
+:
+        lda     #0
+        rol     a              ; if left_mod14 was >= 7, then A=1 else A=0
+        eor     #1             ; if left_mod14 <7, then A=1 (aux) else A=0 (main)
+        sta     vid_page
         tax
-        sta     LOWSCR,x
-        jsr     L59C3
+        sta     LOWSCR,x       ; set starting page
+        jsr     do_draw
         sta     LOWSCR
-L59B9:  jsr     maybe_stash_low_zp
+
+text_clipped:
+        jsr     maybe_stash_low_zp
         ldax    text_width
         jmp     adjust_xpos
 
-L59C3:  lda     $98
+
+do_draw:
+        lda     bottom
         sec
-        sbc     $94
+        sbc     top
         asl     a
         tax
-        copy16  L5D81,x, L5B02
-        copy16  L5DA1,x, L5A95
-        copy16  L5DC1,x, L5C22
-        copy16  L5DE1,x, L5CBE
+
+        ;; Calculate offsets to the draw and blit routines so that they draw
+        ;; the exact number of needed lines.
+        lda     shifted_draw_line_table,x
+        sta     shifted_draw_jmp_addr
+        lda     shifted_draw_line_table+1,x
+        sta     shifted_draw_jmp_addr+1
+
+        lda     unshifted_draw_line_table,x
+        sta     unshifted_draw_jmp_addr
+        lda     unshifted_draw_line_table+1,x
+        sta     unshifted_draw_jmp_addr+1
+
+        lda     unmasked_blit_line_table,x
+        sta     unmasked_blit_jmp_addr
+        lda     unmasked_blit_line_table+1,x
+        sta     unmasked_blit_jmp_addr+1
+
+        lda     masked_blit_line_table,x
+        sta     masked_blit_jmp_addr
+        lda     masked_blit_line_table+1,x
+        sta     masked_blit_jmp_addr+1
+
         txa
         lsr     a
         tax
@@ -3332,458 +3396,333 @@ L59C3:  lda     $98
         stx     $80
         stx     $81
         lda     #0
-        sbc     $9D
-        sta     $9D
+        sbc     clipped_top
+        sta     clipped_top
         tay
-        ldx     #$C3
+
+        ldx     #15*shifted_draw_line_size
         sec
-L5A0C:  lda     glyph_row_lo,y
-        sta     L5B04+1,x
+
+:       lda     glyph_row_lo,y
+        sta     shifted_draw_linemax+1,x
         lda     glyph_row_hi,y
-        sta     L5B04+2,x
+        sta     shifted_draw_linemax+2,x
         txa
-        sbc     #$0D
+        sbc     #shifted_draw_line_size
         tax
         iny
         dec     $80
-        bpl     L5A0C
-        ldy     $9D
-        ldx     #$4B
+        bpl     :-
+
+        ldy     clipped_top
+        ldx     #15*unshifted_draw_line_size
         sec
-L5A26:  lda     glyph_row_lo,y
-        sta     L5A97+1,x
+:       lda     glyph_row_lo,y
+        sta     unshifted_draw_linemax+1,x
         lda     glyph_row_hi,y
-        sta     L5A97+2,x
+        sta     unshifted_draw_linemax+2,x
         txa
-        sbc     #$05
+        sbc     #unshifted_draw_line_size
         tax
         iny
         dec     $81
-        bpl     L5A26
-        ldy     $94
-        ldx     #$00
-L5A3F:  bit     current_mapwidth
-        bmi     L5A56
-        lda     $84
+        bpl     :-
+
+        ldy     top
+        ldx     #0
+
+        ;; Populate the pointers in vid_addrs_table for the lines we are
+        ;; going to be drawing to.
+text_dest_loop:
+        bit     current_mapwidth
+        bmi     text_dest_dhgr
+
+        lda     vid_addr
         clc
         adc     current_mapwidth
-        sta     $84
-        sta     $20,x
-        lda     $85
-        adc     #$00
-        sta     $85
-        sta     $21,x
-        bne     L5A65
-L5A56:  lda     hires_table_lo,y
+        sta     vid_addr
+        sta     vid_addrs_table,x
+
+        lda     vid_addr+1
+        adc     #0
+        sta     vid_addr+1
+        sta     vid_addrs_table+1,x
+        bne     text_dest_next
+
+text_dest_dhgr:
+        lda     hires_table_lo,y
         clc
-        adc     $86
-        sta     $20,x
+        adc     left_bytes
+        sta     vid_addrs_table,x
+
         lda     hires_table_hi,y
         ora     current_mapbits+1
-        sta     $21,x
-L5A65:  cpy     $98
-        beq     L5A6E
+        sta     vid_addrs_table+1,x
+
+text_dest_next:
+        cpy     bottom
+        beq     :+
         iny
         inx
         inx
-        bne     L5A3F
-L5A6E:  ldx     #$0F
-        lda     #$00
-L5A72:  sta     $0000,x
+        bne     text_dest_loop
+:
+
+        ldx     #15
+        lda     #0
+:       sta     text_bits_buf,x
         dex
-        bpl     L5A72
-        sta     $81
-        sta     $40
+        bpl     :-
+        sta     doublewidth_flag
+        sta     shift_aux_ptr               ; zero
         lda     #$80
-        sta     $42
-        ldy     $9F
-L5A81:  lda     (text_addr),y
+        sta     shift_main_ptr
+
+        ldy     text_index
+next_glyph:
+        lda     (text_addr),y
         tay
-        bit     $81
-        bpl     L5A8B
+
+        bit     doublewidth_flag
+        bpl     :+
         sec
-        adc     $FE
-L5A8B:  tax
+        adc     glyph_last
+:
+        tax
         lda     (glyph_widths),y
-        beq     L5AE7
-        ldy     $87
-        bne     L5AEA
-L5A95           := * + 1
-        jmp     L5A97
+        beq     zero_width_glyph
 
-L5A97:  lda     $FFFF,x
-        sta     $0F
-L5A9C:  lda     $FFFF,x
-        sta     $0E
-L5AA1:  lda     $FFFF,x
-        sta     $0D
-L5AA6:  lda     $FFFF,x
-        sta     $0C
-L5AAB:  lda     $FFFF,x
-        sta     $0B
-L5AB0:  lda     $FFFF,x
-        sta     $0A
-L5AB5:  lda     $FFFF,x
-        sta     $09
-L5ABA:  lda     $FFFF,x
-        sta     $08
-L5ABF:  lda     $FFFF,x
-        sta     $07
-L5AC4:  lda     $FFFF,x
-        sta     $06
-L5AC9:  lda     $FFFF,x
-        sta     $05
-L5ACE:  lda     $FFFF,x
-        sta     $04
-L5AD3:  lda     $FFFF,x
-        sta     $03
-L5AD8:  lda     $FFFF,x
-        sta     $02
-L5ADD:  lda     $FFFF,x
-        sta     $01
-L5AE2:  lda     $FFFF,x
-        sta     $0000
-L5AE7:  jmp     L5BD4
+        ldy     left_mod14
+        bne     shifted_draw
 
-L5AEA:  tya
+        ;; Transfer one column of one glyph into the text_bits_buf[0..15]
+
+unshifted_draw_jmp_addr := *+1
+        jmp     unshifted_draw_linemax           ; patched to jump into following block
+
+
+        ;; Unrolled loop from max_font_height-1 down to 0
+unshifted_draw_linemax:
+        .repeat max_font_height, line
+        .ident (.sprintf ("unshifted_draw_line_%d", max_font_height-line-1)):
+:       lda     $FFFF,x
+        sta     text_bits_buf+max_font_height-line-1
+
+        .ifndef unshifted_draw_line_size
+        unshifted_draw_line_size := * - :-
+        .else
+        .assert unshifted_draw_line_size = * - :-, error, "unshifted_draw_line_size inconsistent"
+        .endif
+
+        .endrepeat
+
+
+zero_width_glyph:
+        jmp     do_blit
+
+
+        ;; Transfer one column of one glyph, shifting it into
+        ;; text_bits_buf[0..15] and text_bits_buf[16..31] by left_mod14 bits.
+
+shifted_draw:
+        tya
         asl     a
         tay
-        copy16  shift_table_aux,y, $40
-        copy16  shift_table_main,y, $42
-L5B02           := * + 1
-        jmp     L5B04
+        copy16  shift_table_aux,y, shift_aux_ptr
+        copy16  shift_table_main,y, shift_main_ptr
 
-L5B04:  ldy     $FFFF,x         ; All of these $FFFFs are modified
-        lda     ($42),y
-        sta     $1F
-        lda     ($40),y
-        ora     $0F
-        sta     $0F
-L5B11:  ldy     $FFFF,x
-        lda     ($42),y
-        sta     $1E
-        lda     ($40),y
-        ora     $0E
-        sta     $0E
-L5B1E:  ldy     $FFFF,x
-        lda     ($42),y
-        sta     $1D
-        lda     ($40),y
-        ora     $0D
-        sta     $0D
-L5B2B:  ldy     $FFFF,x
-        lda     ($42),y
-        sta     $1C
-        lda     ($40),y
-        ora     $0C
-        sta     $0C
-L5B38:  ldy     $FFFF,x
-        lda     ($42),y
-        sta     $1B
-        lda     ($40),y
-        ora     $0B
-        sta     $0B
-L5B45:  ldy     $FFFF,x
-        lda     ($42),y
-        sta     $1A
-        lda     ($40),y
-        ora     $0A
-        sta     $0A
-L5B52:  ldy     $FFFF,x
-        lda     ($42),y
-        sta     $19
-        lda     ($40),y
-        ora     $09
-        sta     $09
-L5B5F:  ldy     $FFFF,x
-        lda     ($42),y
-        sta     $18
-        lda     ($40),y
-        ora     $08
-        sta     $08
-L5B6C:  ldy     $FFFF,x
-        lda     ($42),y
-        sta     $17
-        lda     ($40),y
-        ora     $07
-        sta     $07
-L5B79:  ldy     $FFFF,x
-        lda     ($42),y
-        sta     $16
-        lda     ($40),y
-        ora     $06
-        sta     $06
-L5B86:  ldy     $FFFF,x
-        lda     ($42),y
-        sta     $15
-        lda     ($40),y
-        ora     $05
-        sta     $05
-L5B93:  ldy     $FFFF,x
-        lda     ($42),y
-        sta     $14
-        lda     ($40),y
-        ora     $04
-        sta     $04
-L5BA0:  ldy     $FFFF,x
-        lda     ($42),y
-        sta     $13
-        lda     ($40),y
-        ora     $03
-        sta     $03
-L5BAD:  ldy     $FFFF,x
-        lda     ($42),y
-        sta     $12
-        lda     ($40),y
-        ora     $02
-        sta     $02
-L5BBA:  ldy     $FFFF,x
-        lda     ($42),y
-        sta     $11
-        lda     ($40),y
-        ora     $01
-        sta     $01
-L5BC7:  ldy     $FFFF,x
-        lda     ($42),y
-        sta     $10
-        lda     ($40),y
-        ora     $0000
-        sta     $0000
-L5BD4:  bit     $81
-        bpl     L5BE2
-        inc     $9F
-        lda     #$00
-        sta     $81
-        lda     $9A
-        bne     L5BF6
-L5BE2:  txa
+shifted_draw_jmp_addr := *+1
+        jmp     shifted_draw_linemax      ; patched to jump into following block
+
+
+        ;; Unrolled loop from max_font_height-1 down to 0
+shifted_draw_linemax:
+        .repeat max_font_height, line
+        .ident (.sprintf ("shifted_draw_line_%d", max_font_height-line-1)):
+
+:       ldy     $FFFF,x             ; All of these $FFFFs are modified
+        lda     (shift_main_ptr),y
+        sta     text_bits_buf+16+max_font_height-line-1
+        lda     (shift_aux_ptr),y
+        ora     text_bits_buf+max_font_height-line-1
+        sta     text_bits_buf+max_font_height-line-1
+
+        .ifndef shifted_draw_line_size
+        shifted_draw_line_size := * - :-
+        .else
+        .assert shifted_draw_line_size = * - :-, error, "shifted_draw_line_size inconsistent"
+        .endif
+
+        .endrepeat
+
+
+do_blit:
+        bit     doublewidth_flag
+        bpl     :+
+
+        inc     text_index             ; completed a double-width glyph
+        lda     #0
+        sta     doublewidth_flag
+        lda     remaining_width
+        bne     advance_x              ; always
+
+:       txa
         tay
         lda     (glyph_widths),y
-        cmp     #$08
-        bcs     L5BEE
-        inc     $9F
-        bcc     L5BF6
-L5BEE:  sbc     #$07
-        sta     $9A
-        ror     $81
-        lda     #$07
-L5BF6:  clc
-        adc     $87
-        cmp     #$07
-        bcs     L5C0D
-        sta     $87
-L5BFF:  ldy     $9F
+        cmp     #8
+        bcs     :+
+        inc     text_index             ; completed a single-width glyph
+        bcc     advance_x
+
+:       sbc     #7
+        sta     remaining_width
+        ror     doublewidth_flag       ; will set to negative
+        lda     #7                     ; did the first 7 pixels of a
+                                       ; double-width glyph
+advance_x:
+        clc
+        adc     left_mod14
+        cmp     #7
+        bcs     advance_byte
+        sta     left_mod14
+
+L5BFF:  ldy     text_index
         cpy     text_len
-        beq     L5C08
-        jmp     L5A81
+        beq     :+
+        jmp     next_glyph
 
-L5C08:  ldy     $A0
-        jmp     L5CB5
+:       ldy     $A0
+        jmp     last_blit
 
-L5C0D:  sbc     #$07
-        sta     $87
+advance_byte:
+        sbc     #7
+        sta     left_mod14
+
         ldy     $A0
-        bne     L5C18
-        jmp     L5CA2
+        bne     :+
+        jmp     first_blit
 
-L5C18:  bmi     L5C84
-        dec     $91
-        bne     L5C21
-        jmp     L5CB5
+:       bmi     L5C84
+        dec     width_bytes
+        bne     unmasked_blit
+        jmp     last_blit
 
-L5C21:
-        L5C22 := * + 1
-        jmp     L5C24
+unmasked_blit:
+unmasked_blit_jmp_addr := *+1
+        jmp     unmasked_blit_linemax        ; patched to jump into block below
 
 
 ;;; Per JB: "looks like the quickdraw fast-path draw unclipped pattern slab"
 
-L5C24:  lda     $0F
+        ;; Unrolled loop from max_font_height-1 down to 0
+unmasked_blit_linemax:
+        .repeat max_font_height, line
+        .ident (.sprintf ("unmasked_blit_line_%d", max_font_height-line-1)):
+:       lda     text_bits_buf+max_font_height-line-1
         eor     current_textback
-        sta     ($3E),y
-L5C2A:  lda     $0E
-        eor     current_textback
-        sta     ($3C),y
-L5C30:  lda     $0D
-        eor     current_textback
-        sta     ($3A),y
-L5C36:  lda     $0C
-        eor     current_textback
-        sta     ($38),y
-L5C3C:  lda     $0B
-        eor     current_textback
-        sta     ($36),y
-L5C42:  lda     $0A
-        eor     current_textback
-        sta     ($34),y
-L5C48:  lda     $09
-        eor     current_textback
-        sta     ($32),y
-L5C4E:  lda     $08
-        eor     current_textback
-        sta     ($30),y
-L5C54:  lda     $07
-        eor     current_textback
-        sta     ($2E),y
-L5C5A:  lda     $06
-        eor     current_textback
-        sta     ($2C),y
-L5C60:  lda     $05
-        eor     current_textback
-        sta     ($2A),y
-L5C66:  lda     $04
-        eor     current_textback
-        sta     ($28),y
-L5C6C:  lda     $03
-        eor     current_textback
-        sta     ($26),y
-L5C72:  lda     $02
-        eor     current_textback
-        sta     ($24),y
-L5C78:  lda     $01
-        eor     current_textback
-        sta     ($22),y
-L5C7E:  lda     $00
-        eor     current_textback
-        sta     ($20),y
+        sta     (vid_addrs_table + 2*(max_font_height-line-1)),y
+
+        .ifndef unmasked_blit_line_size
+        unmasked_blit_line_size := * - :-
+        .else
+        .assert unmasked_blit_line_size = * - :-, error, "unmasked_blit_line_size inconsistent"
+        .endif
+
+        .endrepeat
+
+
 L5C84:  bit     current_mapwidth
-        bpl     L5C94
-        lda     $9C
-        eor     #$01
+        bpl     text_ndbm
+        lda     vid_page
+        eor     #1
         tax
-        sta     $9C
+        sta     vid_page
         sta     LOWSCR,x
-        beq     L5C96
-L5C94:  inc     $A0
-L5C96:  ldx     #$0F
-L5C98:  lda     $10,x
-        sta     $0000,x
+        beq     :+
+text_ndbm:
+        inc     $A0
+:
+        ldx     #15
+:       lda     text_bits_buf+16,x
+        sta     text_bits_buf,x
         dex
-        bpl     L5C98
+        bpl     :-
         jmp     L5BFF
 
-L5CA2:  ldx     $9C
-        lda     $92,x
-        dec     $91
-        beq     L5CB0
-        jsr     L5CB9
+
+        ;; This is the first (left-most) blit, so it needs masks. If this is
+        ;; also the last blit, apply the right mask as well.
+first_blit:
+        ldx     vid_page
+        lda     left_masks_table,x
+        dec     width_bytes
+        beq     single_byte_blit
+
+        jsr     masked_blit
         jmp     L5C84
 
-L5CB0:  and     $96,x
-        bne     L5CB9
+single_byte_blit:                      ; a single byte length blit; i.e. start
+        and     right_masks_table,x    ; and end bytes are the same
+        bne     masked_blit
         rts
 
-L5CB5:  ldx     $9C
-        lda     $96,x
-L5CB9:  ora     #$80
-        sta     $80
-L5CBE           := * + 1
-        jmp     L5CC0
+
+        ;; This is the last (right-most) blit, so we have to set up masking.
+last_blit:
+        ldx     vid_page
+        lda     right_masks_table,x
+masked_blit:
+        ora     #$80
+        sta     blit_mask
+
+masked_blit_jmp_addr := *+1
+        jmp     masked_blit_linemax
+
 
 ;;; Per JB: "looks like the quickdraw slow-path draw clipped pattern slab"
 
-L5CC0:  lda     $0F
+        ;; Unrolled loop from max_font_height-1 down to 0
+masked_blit_linemax:
+        .repeat max_font_height, line
+        .ident (.sprintf ("masked_blit_line_%d", max_font_height-line-1)):
+:       lda     text_bits_buf+max_font_height-line-1
         eor     current_textback
-        eor     ($3E),y
-        and     $80
-        eor     ($3E),y
-        sta     ($3E),y
-L5CCC:  lda     $0E
-        eor     current_textback
-        eor     ($3C),y
-        and     $80
-        eor     ($3C),y
-        sta     ($3C),y
-L5CD8:  lda     $0D
-        eor     current_textback
-        eor     ($3A),y
-        and     $80
-        eor     ($3A),y
-        sta     ($3A),y
-L5CE4:  lda     $0C
-        eor     current_textback
-        eor     ($38),y
-        and     $80
-        eor     ($38),y
-        sta     ($38),y
-L5CF0:  lda     $0B
-        eor     current_textback
-        eor     ($36),y
-        and     $80
-        eor     ($36),y
-        sta     ($36),y
-L5CFC:  lda     $0A
-        eor     current_textback
-        eor     ($34),y
-        and     $80
-        eor     ($34),y
-        sta     ($34),y
-L5D08:  lda     $09
-        eor     current_textback
-        eor     ($32),y
-        and     $80
-        eor     ($32),y
-        sta     ($32),y
-L5D14:  lda     $08
-        eor     current_textback
-        eor     ($30),y
-        and     $80
-        eor     ($30),y
-        sta     ($30),y
-L5D20:  lda     $07
-        eor     current_textback
-        eor     ($2E),y
-        and     $80
-        eor     ($2E),y
-        sta     ($2E),y
-L5D2C:  lda     $06
-        eor     current_textback
-        eor     ($2C),y
-        and     $80
-        eor     ($2C),y
-        sta     ($2C),y
-L5D38:  lda     $05
-        eor     current_textback
-        eor     ($2A),y
-        and     $80
-        eor     ($2A),y
-        sta     ($2A),y
-L5D44:  lda     $04
-        eor     current_textback
-        eor     ($28),y
-        and     $80
-        eor     ($28),y
-        sta     ($28),y
-L5D50:  lda     $03
-        eor     current_textback
-        eor     ($26),y
-        and     $80
-        eor     ($26),y
-        sta     ($26),y
-L5D5C:  lda     $02
-        eor     current_textback
-        eor     ($24),y
-        and     $80
-        eor     ($24),y
-        sta     ($24),y
-L5D68:  lda     $01
-        eor     current_textback
-        eor     ($22),y
-        and     $80
-        eor     ($22),y
-        sta     ($22),y
-L5D74:  lda     $00
-        eor     current_textback
-        eor     ($20),y
-        and     $80
-        eor     ($20),y
-        sta     ($20),y
+        eor     (vid_addrs_table + 2*(max_font_height-line-1)),y
+        and     blit_mask
+        eor     (vid_addrs_table + 2*(max_font_height-line-1)),y
+        sta     (vid_addrs_table + 2*(max_font_height-line-1)),y
+
+        .ifndef masked_blit_line_size
+        masked_blit_line_size := * - :-
+        .else
+        .assert masked_blit_line_size = * - :-, error, "masked_blit_line_size inconsistent"
+        .endif
+
+        .endrepeat
+
         rts
 
-L5D81:  .addr   L5BC7,L5BBA,L5BAD,L5BA0,L5B93,L5B86,L5B79,L5B6C,L5B5F,L5B52,L5B45,L5B38,L5B2B,L5B1E,L5B11,L5B04
-L5DA1:  .addr   L5AE2,L5ADD,L5AD8,L5AD3,L5ACE,L5AC9,L5AC4,L5ABF,L5ABA,L5AB5,L5AB0,L5AAB,L5AA6,L5AA1,L5A9C,L5A97
-L5DC1:  .addr   L5C7E,L5C78,L5C72,L5C6C,L5C66,L5C60,L5C5A,L5C54,L5C4E,L5C48,L5C42,L5C3C,L5C36,L5C30,L5C2A,L5C24
-L5DE1:  .addr   L5D74,L5D68,L5D5C,L5D50,L5D44,L5D38,L5D2C,L5D20,L5D14,L5D08,L5CFC,L5CF0,L5CE4,L5CD8,L5CCC,L5CC0
+
+shifted_draw_line_table:
+        .repeat max_font_height, line
+        .addr   .ident (.sprintf ("shifted_draw_line_%d", line))
+        .endrepeat
+
+unshifted_draw_line_table:
+        .repeat max_font_height, line
+        .addr   .ident (.sprintf ("unshifted_draw_line_%d", line))
+        .endrepeat
+
+unmasked_blit_line_table:
+        .repeat max_font_height, line
+        .addr   .ident (.sprintf ("unmasked_blit_line_%d", line))
+        .endrepeat
+
+masked_blit_line_table:
+        .repeat max_font_height, line
+        .addr   .ident (.sprintf ("masked_blit_line_%d", line))
+        .endrepeat
+
 .endproc
 
 ;;; ============================================================
@@ -6474,7 +6413,7 @@ L7255:  lda     $AC
         bne     L72C9
         jsr     L7143
         jsr     L73BF
-        jsr     L5907
+        jsr     penloc_to_bounds
         jsr     L71EE
         ldax    $CB
         clc
