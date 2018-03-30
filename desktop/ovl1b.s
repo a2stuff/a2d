@@ -103,6 +103,9 @@ L7551           := $7551
 L7564           := $7564
 L7573           := $7573
 
+.macro MGTK_RELAY_CALL2 call, params
+        yax_call MGTK_RELAY2, call, params
+.endmacro
 
         .org $D000
 
@@ -117,8 +120,7 @@ LD003:  .byte   0
 LD00B:  .byte   0
 LD00C:  .byte   0
 LD00D:  .byte   0
-LD00E:  .byte   0
-LD00F:  .byte   0
+LD00E:  .word   0
         .byte   0
         .byte   0
         .byte   0
@@ -231,12 +233,11 @@ LD12C:  .byte   0
 LD12D:  .byte   0
 LD12E:  .byte   0
 LD12F:  .byte   0
-LD130:  .byte   0
-LD131:  .byte   0
+LD130:  .word   0
 LD132:  .byte   0
 LD133:  .byte   0
 LD134:  .byte   0
-LD135:  .byte   0
+        .byte   0
         .byte   0
         .byte   0
         .byte   0
@@ -328,7 +329,7 @@ LD18D:  ora     ($01,x)
         .byte   0
         .byte   0
         .byte   0
-LD195:  .byte   0
+        .byte   0
         .byte   0
         .byte   0
         .byte   0
@@ -337,7 +338,7 @@ LD195:  .byte   0
         .byte   0
         .byte   $F4
         ora     ($8C,x)
-LD1A0:  .byte   0
+        .byte   0
         ora     $1400,y
         .byte   0
         .byte   0
@@ -458,6 +459,7 @@ LD208:  .byte   0
 
 str_ok_label:
         PASCAL_STRING {"OK            ",CHAR_RETURN}
+
         .byte   $D7, 0
         .byte   $64
         .byte   0
@@ -510,7 +512,7 @@ str_unknown:
 str_select_quit:
         PASCAL_STRING {"Select Quit from the file menu (",GLYPH_OAPPLE,"Q) to go back to the DeskTop"}
         .byte   0
-LD35A:  .byte   $7F
+        .byte   $7F
         .byte   0
         .byte   0
 LD35D:  .byte   0
@@ -827,7 +829,7 @@ str_error_reading:
         .byte   0
         .byte   $1A
         .byte   0
-LD58C:  bmi     LD58E
+        bmi     LD58E
 LD58E:  bmi     LD590
 LD590:  rts
 
@@ -843,7 +845,7 @@ LD590:  rts
         .byte   $1F
         .byte   0
         .byte   $3F
-LD59D:  .byte   0
+        .byte   0
         .byte   $7F
         .byte   0
         .byte   $7F
@@ -876,7 +878,7 @@ LD5AE:  .byte   0
         .byte   $7C
         .byte   $03
         .byte   $7C
-LD5C1:  .byte   $03
+        .byte   $03
         .byte   0
         .byte   0
         .byte   0
@@ -904,13 +906,13 @@ LD5C1:  .byte   $03
         ora     $05
 LD5E0:  .byte   0
 LD5E1:  jsr     LDF73
-        yax_call LDBE0, $30, $D015
+        MGTK_RELAY_CALL2 $30, $D015
         jsr     LDDE0
         copy16  #$0101, LD12B
-        yax_call LDBE0, $36, $D12A
+        MGTK_RELAY_CALL2 $36, $D12A
         lda     #$01
         sta     LD129
-        yax_call LDBE0, $34, $D128
+        MGTK_RELAY_CALL2 $34, $D128
         lda     #$00
         sta     LD451
         sta     LD5E0
@@ -925,12 +927,12 @@ LD61C:  lda     #$00
         sta     LD44D
         lda     #$00
         sta     LD129
-        yax_call LDBE0, $34, $D128
+        MGTK_RELAY_CALL2 $34, $D128
         lda     #$01
         sta     LD12C
-        yax_call LDBE0, $36, $D12A
+        MGTK_RELAY_CALL2 $36, $D12A
         jsr     LDFDD
-        yax_call LDBE0, $38, $D1C7
+        MGTK_RELAY_CALL2 $38, $D1C7
         lda     #$00
         sta     LD429
         lda     #$FF
@@ -944,32 +946,32 @@ LD66E:  jsr     LE28D
 LD674:  jsr     LD986
         bmi     LD674
         beq     LD687
-        yax_call LDBE0, $39, $D1C7
+        MGTK_RELAY_CALL2 $39, $D1C7
         jmp     LD61C
 
 LD687:  lda     LD363
         bmi     LD674
         lda     #$01
         sta     LD129
-        yax_call LDBE0, $34, $D128
+        MGTK_RELAY_CALL2 $34, $D128
         lda     LD363
         sta     LD417
         lda     LD1C7
         jsr     LE137
-        yax_call LDBE0, $07, LD003
-        yax_call LDBE0, $11, $D1E3
+        MGTK_RELAY_CALL2 $07, LD003
+        MGTK_RELAY_CALL2 $11, $D1E3
         lda     LD18D
         jsr     LE137
-        yax_call LDBE0, $07, LD003
-        yax_call LDBE0, $11, $D255
-        yax_call LDBE0, $0E, $D251
+        MGTK_RELAY_CALL2 $07, LD003
+        MGTK_RELAY_CALL2 $11, $D255
+        MGTK_RELAY_CALL2 $0E, $D251
         addr_call LE09A, str_select_destination
         jsr     LE559
         jsr     LE2B1
 LD6E6:  jsr     LD986
         bmi     LD6E6
         beq     LD6F9
-        yax_call LDBE0, $39, $D1C7
+        MGTK_RELAY_CALL2 $39, $D1C7
         jmp     LD61C
 
 LD6F9:  lda     LD363
@@ -981,10 +983,10 @@ LD6F9:  lda     LD363
         sta     LD44C
         lda     LD18D
         jsr     LE137
-        yax_call LDBE0, $07, LD003
-        yax_call LDBE0, $11, $D211
-        yax_call LDBE0, $39, $D1C7
-        yax_call LDBE0, $11, $D432
+        MGTK_RELAY_CALL2 $07, LD003
+        MGTK_RELAY_CALL2 $11, $D211
+        MGTK_RELAY_CALL2 $39, $D1C7
+        MGTK_RELAY_CALL2 $11, $D432
 LD734:  addr_call LEB84, $0000
         beq     LD740
         jmp     LD61C
@@ -1005,8 +1007,8 @@ LD740:  lda     #$00
 
 LD763:  lda     LD18D
         jsr     LE137
-        yax_call LDBE0, $07, LD003
-        yax_call LDBE0, $11, $D42A
+        MGTK_RELAY_CALL2 $07, LD003
+        MGTK_RELAY_CALL2 $11, $D42A
         jmp     LD734
 
 LD77E:  lda     $1300
@@ -1118,7 +1120,7 @@ LD852:  ldx     LD418
         jsr     LEB84
         jmp     LD61C
 
-LD87C:  yax_call LDBE0, $0E, $D25D
+LD87C:  MGTK_RELAY_CALL2 $0E, $D25D
         addr_call LE09A, str_formatting
         jsr     L0CAF
         bcc     LD8A9
@@ -1136,8 +1138,8 @@ LD89F:  lda     #$05
 
 LD8A9:  lda     LD18D
         jsr     LE137
-        yax_call LDBE0, $07, LD003
-        yax_call LDBE0, $11, $D211
+        MGTK_RELAY_CALL2 $07, LD003
+        MGTK_RELAY_CALL2 $11, $D211
         lda     LD417
         cmp     LD418
         bne     LD8DF
@@ -1225,15 +1227,15 @@ LD97A:  jsr     L10FB
         jmp     LD61C
 
         .byte   0
-LD986:  yax_call LDBE0, $03, $D137
-        yax_call LDBE0, $04, $D137
+LD986:  MGTK_RELAY_CALL2 $03, $D137
+        MGTK_RELAY_CALL2 $04, $D137
 LD998:  bit     LD368
         bpl     LD9A7
         dec     LD367
         bne     LD9A7
         lda     #$00
         sta     LD368
-LD9A7:  yax_call LDBE0, $2A, $D12D
+LD9A7:  MGTK_RELAY_CALL2 $2A, $D12D
         lda     LD12D
         cmp     #$01
         bne     LD9BA
@@ -1273,7 +1275,7 @@ LD9D5:  lda     LD12F
 LD9E6:  lda     #$01
         sta     LD12F
         copy16  LD12E, LD00E
-        yax_call LDBE0, $32, LD00C
+        MGTK_RELAY_CALL2 $32, LD00C
 LDA00:  ldx     LD00C
         bne     LDA06
         rts
@@ -1295,7 +1297,7 @@ LDA06:  dex
         lda     LD9C2,x
         sta     LDA3B
         jsr     LDA35
-        yax_call LDBE0, $33, LD00C
+        MGTK_RELAY_CALL2 $33, LD00C
         jmp     LD986
 
 LDA35:  tsx
@@ -1309,12 +1311,12 @@ LDA3B:  .byte   $12
 
 LDA42:  lda     #$00
         sta     LD12C
-        yax_call LDBE0, $36, $D12A
+        MGTK_RELAY_CALL2 $36, $D12A
         lda     LD451
         sta     LD12B
         lda     #$01
         sta     LD12C
-        yax_call LDBE0, $36, $D12A
+        MGTK_RELAY_CALL2 $36, $D12A
         lda     #$00
         sta     LD451
         lda     LD18D
@@ -1328,9 +1330,9 @@ LDA42:  lda     #$00
 
 LDA7D:  lda     #$00
         sta     LD12C
-        yax_call LDBE0, $36, $D12A
+        MGTK_RELAY_CALL2 $36, $D12A
         copy16  #$0102, LD12B
-        yax_call LDBE0, $36, $D12A
+        MGTK_RELAY_CALL2 $36, $D12A
         lda     #$01
         sta     LD451
         lda     LD18D
@@ -1338,14 +1340,14 @@ LDA7D:  lda     #$00
         addr_call LE0B4, $D278
         rts
 
-LDAB1:  yax_call LDBE0, $40, $D12E
+LDAB1:  MGTK_RELAY_CALL2 $40, $D12E
         lda     LD132
         bne     LDAC0
         rts
 
 LDAC0:  cmp     #$01
         bne     LDAD0
-        yax_call LDBE0, $31, LD00C
+        MGTK_RELAY_CALL2 $31, LD00C
         jmp     LDA00
 
 LDAD0:  cmp     #$02
@@ -1368,23 +1370,23 @@ LDAED:  rts
 LDAEE:  lda     LD18D
         sta     LD12D
         jsr     LE137
-        yax_call LDBE0, $46, $D12D
-        yax_call LDBE0, $0E, $D132
-        yax_call LDBE0, $13, $D221
+        MGTK_RELAY_CALL2 $46, $D12D
+        MGTK_RELAY_CALL2 $0E, $D132
+        MGTK_RELAY_CALL2 $13, $D221
         cmp     #$80
         beq     LDB19
         jmp     LDB2F
 
-LDB19:  yax_call LDBE0, $07, $D005
-        yax_call LDBE0, $11, $D221
+LDB19:  MGTK_RELAY_CALL2 $07, $D005
+        MGTK_RELAY_CALL2 $11, $D221
         jsr     LDD38
         rts
 
-LDB2F:  yax_call LDBE0, $13, $D229
+LDB2F:  MGTK_RELAY_CALL2 $13, $D229
         cmp     #$80
         bne     LDB52
-        yax_call LDBE0, $07, $D005
-        yax_call LDBE0, $11, $D229
+        MGTK_RELAY_CALL2 $07, $D005
+        MGTK_RELAY_CALL2 $11, $D229
         jsr     LDCAC
         rts
 
@@ -1393,8 +1395,8 @@ LDB52:  return  #$FF
 LDB55:  lda     LD1C7
         sta     LD12D
         jsr     LE137
-        yax_call LDBE0, $46, $D12D
-        yax_call LDBE0, $0E, $D132
+        MGTK_RELAY_CALL2 $46, $D12D
+        MGTK_RELAY_CALL2 $0E, $D132
         lsr16   LD134
         lsr16   LD134
         lsr16   LD134
@@ -1411,9 +1413,9 @@ LDB98:  cmp     LD363
         bne     LDBCD
         bit     LD368
         bpl     LDBC0
-        yax_call LDBE0, $07, $D005
-        yax_call LDBE0, $11, $D221
-        yax_call LDBE0, $11, $D221
+        MGTK_RELAY_CALL2 $07, $D005
+        MGTK_RELAY_CALL2 $11, $D221
+        MGTK_RELAY_CALL2 $11, $D221
         return  #$00
 
 LDBC0:  lda     #$FF
@@ -1431,17 +1433,18 @@ LDBD6:  pla
         jsr     LE14D
         jmp     LDBC0
 
-LDBE0:  sty     LDBF2
+.proc MGTK_RELAY2
+        sty     LDBF2
         stax    LDBF3
         sta     RAMRDON
         sta     RAMWRTON
         jsr     MGTK::MLI
 LDBF2:  .byte   0
-LDBF3:  .byte   0
-LDBF4:  .byte   0
+LDBF3:  .addr   0
         sta     RAMRDOFF
         sta     RAMWRTOFF
         rts
+.endproc
 
 LDBFC:  lda     LD12E
         and     #$7F
@@ -1451,18 +1454,18 @@ LDBFC:  lda     LD12E
         bne     LDC2D
 LDC09:  lda     LD18D
         jsr     LE137
-        yax_call LDBE0, $07, $D005
-        yax_call LDBE0, $11, $D229
-        yax_call LDBE0, $11, $D229
+        MGTK_RELAY_CALL2 $07, $D005
+        MGTK_RELAY_CALL2 $11, $D229
+        MGTK_RELAY_CALL2 $11, $D229
         return  #$01
 
 LDC2D:  cmp     #$0D
         bne     LDC55
         lda     LD18D
         jsr     LE137
-        yax_call LDBE0, $07, $D005
-        yax_call LDBE0, $11, $D221
-        yax_call LDBE0, $11, $D221
+        MGTK_RELAY_CALL2 $07, $D005
+        MGTK_RELAY_CALL2 $11, $D221
+        MGTK_RELAY_CALL2 $11, $D221
         return  #$00
 
 LDC55:  bit     LD44C
@@ -1503,15 +1506,15 @@ LDCA9:  return  #$FF
 
 LDCAC:  lda     #$00
         sta     LDD37
-LDCB1:  yax_call LDBE0, $2A, $D12D
+LDCB1:  MGTK_RELAY_CALL2 $2A, $D12D
         lda     LD12D
         cmp     #$02
         beq     LDD14
         lda     LD18D
         sta     LD12D
-        yax_call LDBE0, $46, $D12D
-        yax_call LDBE0, $0E, $D132
-        yax_call LDBE0, $13, $D229
+        MGTK_RELAY_CALL2 $46, $D12D
+        MGTK_RELAY_CALL2 $0E, $D132
+        MGTK_RELAY_CALL2 $13, $D229
         cmp     #$80
         beq     LDCEE
         lda     LDD37
@@ -1522,8 +1525,8 @@ LDCEE:  lda     LDD37
         bne     LDCF6
         jmp     LDCB1
 
-LDCF6:  yax_call LDBE0, $07, $D005
-        yax_call LDBE0, $11, $D229
+LDCF6:  MGTK_RELAY_CALL2 $07, $D005
+        MGTK_RELAY_CALL2 $11, $D229
         lda     LDD37
         clc
         adc     #$80
@@ -1536,22 +1539,22 @@ LDD14:  lda     LDD37
 
 LDD1C:  lda     LD18D
         jsr     LE137
-        yax_call LDBE0, $07, $D005
-        yax_call LDBE0, $11, $D229
+        MGTK_RELAY_CALL2 $07, $D005
+        MGTK_RELAY_CALL2 $11, $D229
         return  #$01
 
 LDD37:  .byte   0
 LDD38:  lda     #$00
         sta     LDDC3
-LDD3D:  yax_call LDBE0, $2A, $D12D
+LDD3D:  MGTK_RELAY_CALL2 $2A, $D12D
         lda     LD12D
         cmp     #$02
         beq     LDDA0
         lda     LD18D
         sta     LD12D
-        yax_call LDBE0, $46, $D12D
-        yax_call LDBE0, $0E, $D132
-        yax_call LDBE0, $13, $D221
+        MGTK_RELAY_CALL2 $46, $D12D
+        MGTK_RELAY_CALL2 $0E, $D132
+        MGTK_RELAY_CALL2 $13, $D221
         cmp     #$80
         beq     LDD7A
         lda     LDDC3
@@ -1562,8 +1565,8 @@ LDD7A:  lda     LDDC3
         bne     LDD82
         jmp     LDD3D
 
-LDD82:  yax_call LDBE0, $07, $D005
-        yax_call LDBE0, $11, $D221
+LDD82:  MGTK_RELAY_CALL2 $07, $D005
+        MGTK_RELAY_CALL2 $11, $D221
         lda     LDDC3
         clc
         adc     #$80
@@ -1576,19 +1579,19 @@ LDDA0:  lda     LDDC3
 
 LDDA8:  lda     LD18D
         jsr     LE137
-        yax_call LDBE0, $07, $D005
-        yax_call LDBE0, $11, $D221
+        MGTK_RELAY_CALL2 $07, $D005
+        MGTK_RELAY_CALL2 $11, $D221
         return  #$00
 
 LDDC3:  .byte   0
-        yax_call LDBE0, $26, $0000
-        yax_call LDBE0, $24, $D5AE
-        yax_call LDBE0, $25, $0000
+        MGTK_RELAY_CALL2 $26, $0000
+        MGTK_RELAY_CALL2 $24, LD5AE
+        MGTK_RELAY_CALL2 $25, $0000
         rts
 
-LDDE0:  yax_call LDBE0, $26, $0000
-        yax_call LDBE0, $24, $D57C
-        yax_call LDBE0, $25, $0000
+LDDE0:  MGTK_RELAY_CALL2 $26, $0000
+        MGTK_RELAY_CALL2 $24, $D57C
+        MGTK_RELAY_CALL2 $25, $0000
         rts
 
 LDDFC:  sta     $0C5A
@@ -1800,47 +1803,47 @@ LDF90:  dec     $BF31
         sta     $BF32,x
         rts
 
-LDFA0:  yax_call LDBE0, $38, $D18D
+LDFA0:  MGTK_RELAY_CALL2 $38, $D18D
         lda     LD18D
         jsr     LE137
-        yax_call LDBE0, $07, $D005
-        yax_call LDBE0, $12, $D201
-        yax_call LDBE0, $12, $D209
-        yax_call LDBE0, $03, $D137
-        yax_call LDBE0, $04, $D137
+        MGTK_RELAY_CALL2 $07, $D005
+        MGTK_RELAY_CALL2 $12, $D201
+        MGTK_RELAY_CALL2 $12, $D209
+        MGTK_RELAY_CALL2 $03, $D137
+        MGTK_RELAY_CALL2 $04, $D137
         rts
 
 LDFDD:  lda     LD18D
         jsr     LE137
-        yax_call LDBE0, $07, LD003
-        yax_call LDBE0, $11, $D211
-        yax_call LDBE0, $11, $D219
+        MGTK_RELAY_CALL2 $07, LD003
+        MGTK_RELAY_CALL2 $11, $D211
+        MGTK_RELAY_CALL2 $11, $D219
         lda     LD451
         bne     LE00D
         addr_call LE0B4, str_quick_copy_padded
         jmp     LE014
 
 LE00D:  addr_call LE0B4, $D278
-LE014:  yax_call LDBE0, $07, $D005
-        yax_call LDBE0, $12, $D221
-        yax_call LDBE0, $12, $D229
+LE014:  MGTK_RELAY_CALL2 $07, $D005
+        MGTK_RELAY_CALL2 $12, $D221
+        MGTK_RELAY_CALL2 $12, $D229
         jsr     LE078
         jsr     LE089
-        yax_call LDBE0, $0E, $D24D
+        MGTK_RELAY_CALL2 $0E, $D24D
         addr_call LE09A, str_slot_drive_name
-        yax_call LDBE0, $0E, $D251
+        MGTK_RELAY_CALL2 $0E, $D251
         addr_call LE09A, str_select_source
-        yax_call LDBE0, $0E, $D47F
+        MGTK_RELAY_CALL2 $0E, $D47F
         addr_call LE09A, str_select_quit
-        yax_call LDBE0, $03, $D137
-        yax_call LDBE0, $04, $D137
+        MGTK_RELAY_CALL2 $03, $D137
+        MGTK_RELAY_CALL2 $04, $D137
         rts
 
-LE078:  yax_call LDBE0, $0E, $D231
+LE078:  MGTK_RELAY_CALL2 $0E, $D231
         addr_call LE09A, str_ok_label
         rts
 
-LE089:  yax_call LDBE0, $0E, $D245
+LE089:  MGTK_RELAY_CALL2 $0E, $D245
         addr_call LE09A, str_read_drive
         rts
 
@@ -1849,7 +1852,7 @@ LE09A:  stax    $0A
         lda     ($0A),y
         sta     $0C
         inc16   $0A
-LE0AA:  yax_call LDBE0, $19, $000A
+        MGTK_RELAY_CALL2 $19, $000A
         rts
 
 LE0B4:  stax    L0006
@@ -1857,7 +1860,7 @@ LE0B4:  stax    L0006
         lda     (L0006),y
         sta     $08
         inc16   L0006
-LE0C4:  yax_call LDBE0, $18, $0006
+        MGTK_RELAY_CALL2 $18, $0006
         lsr16   $09
         lda     #$01
         sta     LE0FD
@@ -1870,8 +1873,8 @@ LE0C4:  yax_call LDBE0, $18, $0006
         lda     LE0FD
         sbc     $0A
         sta     LD24A
-        yax_call LDBE0, $0E, $D249
-        yax_call LDBE0, $19, $0006
+        MGTK_RELAY_CALL2 $0E, $D249
+        MGTK_RELAY_CALL2 $19, $0006
         rts
 
 LE0FD:  .byte   0
@@ -1912,8 +1915,8 @@ LE132:  dey
 
         .byte   0
 LE137:  sta     LD15B
-        yax_call LDBE0, $3C, $D15B
-        yax_call LDBE0, $04, $D15E
+        MGTK_RELAY_CALL2 $3C, $D15B
+        MGTK_RELAY_CALL2 $04, $D15E
         rts
 
 LE14D:  asl     a
@@ -1923,8 +1926,8 @@ LE14D:  asl     a
         clc
         adc     #$07
         sta     LD361
-        yax_call LDBE0, $07, $D005
-        yax_call LDBE0, $11, $D35B
+        MGTK_RELAY_CALL2 $07, $D005
+        MGTK_RELAY_CALL2 $11, $D35B
         rts
 
 LE16C:  lda     #$00
@@ -2137,7 +2140,7 @@ LE319:  .byte   0
 LE31B:  sta     LE399
         lda     #$08
         sta     LD36D
-        yax_call LDBE0, $0E, $D36D
+        MGTK_RELAY_CALL2 $0E, $D36D
         ldx     LE399
         lda     LD3F7,x
         and     #$70
@@ -2151,7 +2154,7 @@ LE31B:  sta     LE399
         addr_call LE09A, str_s
         lda     #$28
         sta     LD36D
-        yax_call LDBE0, $0E, $D36D
+        MGTK_RELAY_CALL2 $0E, $D36D
         ldx     LE399
         lda     LD3F7,x
         and     #$80
@@ -2163,7 +2166,7 @@ LE31B:  sta     LE399
         addr_call LE09A, str_d
         lda     #$41
         sta     LD36D
-        yax_call LDBE0, $0E, $D36D
+        MGTK_RELAY_CALL2 $0E, $D36D
         lda     LE399
         asl     a
         asl     a
@@ -2328,13 +2331,13 @@ LE483:  .byte   0
         .byte   0
 LE491:  lda     LD18D
         jsr     LE137
-        yax_call LDBE0, $0E, $D261
+        MGTK_RELAY_CALL2 $0E, $D261
         addr_call LE09A, str_writing
         rts
 
 LE4A8:  lda     LD18D
         jsr     LE137
-        yax_call LDBE0, $0E, $D265
+        MGTK_RELAY_CALL2 $0E, $D265
         addr_call LE09A, str_reading
         rts
 
@@ -2347,13 +2350,13 @@ LE4BF:  lda     LD18D
         tax
         lda     LD407,y
         jsr     LDEEB
-        yax_call LDBE0, $0E, $D467
+        MGTK_RELAY_CALL2 $0E, $D467
         addr_call LE09A, str_blocks_to_transfer
         addr_call LE09A, str_7_spaces
         rts
 
 LE4EC:  jsr     LE522
-        yax_call LDBE0, $0E, $D45F
+        MGTK_RELAY_CALL2 $0E, $D45F
         addr_call LE09A, str_blocks_read
         .byte   $A9
 LE500:  .byte   $57
@@ -2362,7 +2365,7 @@ LE500:  .byte   $57
         rts
 
 LE507:  jsr     LE522
-        yax_call LDBE0, $0E, $D463
+        MGTK_RELAY_CALL2 $0E, $D463
         addr_call LE09A, str_blocks_written
         addr_call LE09A, str_7_spaces
         rts
@@ -2398,7 +2401,7 @@ LE550:  .byte   $07
 LE558:  .byte   0
 LE559:  lda     LD18D
         jsr     LE137
-        yax_call LDBE0, $0E, $D46B
+        MGTK_RELAY_CALL2 $0E, $D46B
         addr_call LE09A, str_source
         ldx     LD417
         lda     LD3F7,x
@@ -2419,7 +2422,7 @@ LE559:  lda     LD18D
         clc
         adc     #'1'
         sta     str_d + 1
-        yax_call LDBE0, $0E, $D46F
+        MGTK_RELAY_CALL2 $0E, $D46F
         addr_call LE09A, str_slot
         addr_call LE09A, str_s
         addr_call LE09A, str_drive
@@ -2443,7 +2446,7 @@ LE5D0:  lda     $1300,x
 
 LE5E1:  lda     LD18D
         jsr     LE137
-        yax_call LDBE0, $0E, $D473
+        MGTK_RELAY_CALL2 $0E, $D473
         addr_call LE09A, str_destination
         ldx     LD418
         lda     LD3F7,x
@@ -2463,7 +2466,7 @@ LE5E1:  lda     LD18D
         clc
         adc     #'1'
         sta     str_d + 1
-        yax_call LDBE0, $0E, $D477
+        MGTK_RELAY_CALL2 $0E, $D477
         addr_call LE09A, str_slot
         addr_call LE09A, str_s
         addr_call LE09A, str_drive
@@ -2472,7 +2475,7 @@ LE5E1:  lda     LD18D
 
 LE63F:  lda     LD18D
         jsr     LE137
-        yax_call LDBE0, $0E, $D47B
+        MGTK_RELAY_CALL2 $0E, $D47B
         bit     LD44D
         bmi     LE65B
         addr_call LE09A, str_prodos_disk_copy
@@ -2493,13 +2496,13 @@ LE674:  lda     LD44D
         beq     LE693
         lda     LD18D
         jsr     LE137
-        yax_call LDBE0, $07, LD003
-        yax_call LDBE0, $11, $D483
+        MGTK_RELAY_CALL2 $07, LD003
+        MGTK_RELAY_CALL2 $11, $D483
 LE693:  rts
 
 LE694:  lda     LD18D
         jsr     LE137
-        yax_call LDBE0, $0E, $D48B
+        MGTK_RELAY_CALL2 $0E, $D48B
         addr_call LE09A, str_escape_stop_copy
         rts
 
@@ -2512,14 +2515,14 @@ LE6BB:  dec     LE6FB
         eor     #$80
         sta     LE6FC
         beq     LE6D5
-        yax_call LDBE0, $0C, $D35A
+        MGTK_RELAY_CALL2 $0C, $D35A
         beq     LE6DE
-LE6D5:  yax_call LDBE0, $0C, $D359
-LE6DE:  yax_call LDBE0, $0E, $D48B
+LE6D5:  MGTK_RELAY_CALL2 $0C, $D359
+LE6DE:  MGTK_RELAY_CALL2 $0E, $D48B
         addr_call LE09A, str_escape_stop_copy
         jmp     LE6BB
 
-LE6F1:  yax_call LDBE0, $0C, $D35A
+LE6F1:  MGTK_RELAY_CALL2 $0C, $D35A
         rts
 
 LE6FB:  .byte   0
@@ -2545,12 +2548,12 @@ LE71A:  jsr     L127E
         jsr     LDEEB
         lda     LE765
         bne     LE74B
-        yax_call LDBE0, $0E, $D493
+        MGTK_RELAY_CALL2 $0E, $D493
         addr_call LE09A, str_error_reading
         addr_call LE09A, str_7_spaces
         return  #$00
 
-LE74B:  yax_call LDBE0, $0E, $D48F
+LE74B:  MGTK_RELAY_CALL2 $0E, $D48F
         addr_call LE09A, str_error_writing
         addr_call LE09A, str_7_spaces
         return  #$00
@@ -2766,9 +2769,9 @@ LE810:  .byte   0
         ora     ($34,x)
         .byte   0
 LE8B7:  .byte   $41
-LE8B8:  .byte   0
+        .byte   0
 LE8B9:  .byte   $2D
-LE8BA:  .byte   0
+        .byte   0
         .byte   0
         jsr     L0080
         .byte   0
@@ -2916,19 +2919,19 @@ LEB84:  stax    LEB81
         sty     LEB83
         ldy     #$03
         ldax    #$D137
-        jsr     LDBE0
-        yax_call LDBE0, $04, $D137
-        yax_call LDBE0, $07, LD003
-        yax_call LDBE0, $11, $E89F
+        jsr     MGTK_RELAY2
+        MGTK_RELAY_CALL2 $04, $D137
+        MGTK_RELAY_CALL2 $07, LD003
+        MGTK_RELAY_CALL2 $11, $E89F
         jsr     LF0DF
-        yax_call LDBE0, $12, $E89F
-        yax_call LDBE0, $06, $E8B7
-        yax_call LDBE0, $12, $E8A7
-        yax_call LDBE0, $12, $E8AF
-        yax_call LDBE0, $07, LD003
-        yax_call LDBE0, $26, $0000
-        yax_call LDBE0, $14, $E88F
-        yax_call LDBE0, $25, $0000
+        MGTK_RELAY_CALL2 $12, $E89F
+        MGTK_RELAY_CALL2 $06, $E8B7
+        MGTK_RELAY_CALL2 $12, $E8A7
+        MGTK_RELAY_CALL2 $12, $E8AF
+        MGTK_RELAY_CALL2 $07, LD003
+        MGTK_RELAY_CALL2 $26, $0000
+        MGTK_RELAY_CALL2 $14, $E88F
+        MGTK_RELAY_CALL2 $25, $0000
         lda     #$00
         sta     LD41E
         lda     LEB81
@@ -2998,31 +3001,31 @@ LEC6C:  tya
 LEC8C:  jsr     LF0DF
         bit     LE941
         bpl     LED0A
-        yax_call LDBE0, $12, $E931
-        yax_call LDBE0, $0E, $E939
+        MGTK_RELAY_CALL2 $12, $E931
+        MGTK_RELAY_CALL2 $0E, $E939
         addr_call LE09A, $E8E7
         bit     LE941
         bvs     LED0A
         lda     LE941
         and     #$0F
         beq     LECEE
-        yax_call LDBE0, $12, $E90D
-        yax_call LDBE0, $0E, $E915
+        MGTK_RELAY_CALL2 $12, $E90D
+        MGTK_RELAY_CALL2 $0E, $E915
         addr_call LE09A, $E906
-        yax_call LDBE0, $12, $E919
-        yax_call LDBE0, $0E, $E921
+        MGTK_RELAY_CALL2 $12, $E919
+        MGTK_RELAY_CALL2 $0E, $E921
         addr_call LE09A, $E90A
         jmp     LED23
 
-LECEE:  yax_call LDBE0, $12, $E925
-        yax_call LDBE0, $0E, $E92D
+LECEE:  MGTK_RELAY_CALL2 $12, $E925
+        MGTK_RELAY_CALL2 $0E, $E92D
         addr_call LE09A, $E8F6
         jmp     LED23
 
-LED0A:  yax_call LDBE0, $12, $E925
-        yax_call LDBE0, $0E, $E92D
+LED0A:  MGTK_RELAY_CALL2 $12, $E925
+        MGTK_RELAY_CALL2 $0E, $E92D
         addr_call LE09A, $E8D7
-LED23:  yax_call LDBE0, $0E, $E93D
+LED23:  MGTK_RELAY_CALL2 $0E, $E93D
         lda     LE942
         ldx     LE943
         .byte   $20
@@ -3036,7 +3039,7 @@ LED35:  bit     LD41E
 
 LED42:  jmp     LED79
 
-        yax_call LDBE0, $2A, $D12D
+        MGTK_RELAY_CALL2 $2A, $D12D
         lda     LD12D
         cmp     #$01
         bne     LED58
@@ -3053,7 +3056,7 @@ LED58:  cmp     #$03
 LED69:  cmp     #$1B
         bne     LED7E
         jsr     LF0DF
-        yax_call LDBE0, $11, $E931
+        MGTK_RELAY_CALL2 $11, $E931
 LED79:  lda     #$01
         jmp     LEE6A
 
@@ -3075,12 +3078,12 @@ LED7E:  bit     LE941
         jmp     LED35
 
 LED9F:  jsr     LF0DF
-        yax_call LDBE0, $11, $E919
+        MGTK_RELAY_CALL2 $11, $E919
         lda     #$03
         jmp     LEE6A
 
 LEDB0:  jsr     LF0DF
-        yax_call LDBE0, $11, $E90D
+        MGTK_RELAY_CALL2 $11, $E90D
         lda     #$02
         jmp     LEE6A
 
@@ -3088,7 +3091,7 @@ LEDC1:  pla
         cmp     #$61
         bne     LEDD7
 LEDC6:  jsr     LF0DF
-        yax_call LDBE0, $11, $E925
+        MGTK_RELAY_CALL2 $11, $E925
         lda     #$00
         jmp     LEE6A
 
@@ -3101,17 +3104,17 @@ LEDD7:  cmp     #$41
 LEDE2:  cmp     #$0D
         bne     LEDF7
         jsr     LF0DF
-        yax_call LDBE0, $11, $E925
+        MGTK_RELAY_CALL2 $11, $E925
 LEDF2:  lda     #$00
         jmp     LEE6A
 
 LEDF7:  jmp     LED35
 
 LEDFA:  jsr     LF0B8
-        yax_call LDBE0, $0E, $D12E
+        MGTK_RELAY_CALL2 $0E, $D12E
         bit     LE941
         bpl     LEE57
-        yax_call LDBE0, $13, $E931
+        MGTK_RELAY_CALL2 $13, $E931
         cmp     #$80
         bne     LEE1B
         jmp     LEEF8
@@ -3121,22 +3124,22 @@ LEE1B:  bit     LE941
         lda     LE941
         and     #$0F
         beq     LEE47
-        yax_call LDBE0, $13, $E919
+        MGTK_RELAY_CALL2 $13, $E919
         cmp     #$80
         bne     LEE37
         jmp     LEFD8
 
-LEE37:  yax_call LDBE0, $13, $E90D
+LEE37:  MGTK_RELAY_CALL2 $13, $E90D
         cmp     #$80
         bne     LEE67
         jmp     LF048
 
-LEE47:  yax_call LDBE0, $13, $E925
+LEE47:  MGTK_RELAY_CALL2 $13, $E925
         cmp     #$80
         bne     LEE67
         jmp     LEE88
 
-LEE57:  yax_call LDBE0, $13, $E925
+LEE57:  MGTK_RELAY_CALL2 $13, $E925
         cmp     #$80
         bne     LEE67
         jmp     LEF68
@@ -3144,23 +3147,23 @@ LEE57:  yax_call LDBE0, $13, $E925
 LEE67:  jmp     LED35
 
 LEE6A:  pha
-        yax_call LDBE0, $06, $E8C7
-        yax_call LDBE0, $07, LD003
-        yax_call LDBE0, $11, $E89F
+        MGTK_RELAY_CALL2 $06, $E8C7
+        MGTK_RELAY_CALL2 $07, LD003
+        MGTK_RELAY_CALL2 $11, $E89F
         pla
         rts
 
 LEE88:  jsr     LF0DF
-        yax_call LDBE0, $11, $E925
+        MGTK_RELAY_CALL2 $11, $E925
         lda     #$00
         sta     LEEF7
-LEE99:  yax_call LDBE0, $2A, $D12D
+LEE99:  MGTK_RELAY_CALL2 $2A, $D12D
         lda     LD12D
         cmp     #$02
         beq     LEEEA
         jsr     LF0B8
-        yax_call LDBE0, $0E, $D12E
-        yax_call LDBE0, $13, $E925
+        MGTK_RELAY_CALL2 $0E, $D12E
+        MGTK_RELAY_CALL2 $13, $E925
         cmp     #$80
         beq     LEECA
         lda     LEEF7
@@ -3172,7 +3175,7 @@ LEECA:  lda     LEEF7
         jmp     LEE99
 
 LEED2:  jsr     LF0DF
-        yax_call LDBE0, $11, $E925
+        MGTK_RELAY_CALL2 $11, $E925
         lda     LEEF7
         clc
         adc     #$80
@@ -3188,16 +3191,16 @@ LEEF2:  lda     #$00
 
 LEEF7:  .byte   0
 LEEF8:  jsr     LF0DF
-        yax_call LDBE0, $11, $E931
+        MGTK_RELAY_CALL2 $11, $E931
         lda     #$00
         sta     LEF67
-LEF09:  yax_call LDBE0, $2A, $D12D
+LEF09:  MGTK_RELAY_CALL2 $2A, $D12D
         lda     LD12D
         cmp     #$02
         beq     LEF5A
         jsr     LF0B8
-        yax_call LDBE0, $0E, $D12E
-        yax_call LDBE0, $13, $E931
+        MGTK_RELAY_CALL2 $0E, $D12E
+        MGTK_RELAY_CALL2 $13, $E931
         cmp     #$80
         beq     LEF3A
         lda     LEF67
@@ -3209,7 +3212,7 @@ LEF3A:  lda     LEF67
         jmp     LEF09
 
 LEF42:  jsr     LF0DF
-        yax_call LDBE0, $11, $E931
+        MGTK_RELAY_CALL2 $11, $E931
         lda     LEF67
         clc
         adc     #$80
@@ -3227,14 +3230,14 @@ LEF67:  .byte   0
 LEF68:  lda     #$00
         sta     LEFD7
         jsr     LF0DF
-        yax_call LDBE0, $11, $E925
-LEF79:  yax_call LDBE0, $2A, $D12D
+        MGTK_RELAY_CALL2 $11, $E925
+LEF79:  MGTK_RELAY_CALL2 $2A, $D12D
         lda     LD12D
         cmp     #$02
         beq     LEFCA
         jsr     LF0B8
-        yax_call LDBE0, $0E, $D12E
-        yax_call LDBE0, $13, $E925
+        MGTK_RELAY_CALL2 $0E, $D12E
+        MGTK_RELAY_CALL2 $13, $E925
         cmp     #$80
         beq     LEFAA
         lda     LEFD7
@@ -3246,7 +3249,7 @@ LEFAA:  lda     LEFD7
         jmp     LEF79
 
 LEFB2:  jsr     LF0DF
-        yax_call LDBE0, $11, $E925
+        MGTK_RELAY_CALL2 $11, $E925
         lda     LEFD7
         clc
         adc     #$80
@@ -3264,14 +3267,14 @@ LEFD7:  .byte   0
 LEFD8:  lda     #$00
         sta     LF047
         jsr     LF0DF
-        yax_call LDBE0, $11, $E919
-LEFE9:  yax_call LDBE0, $2A, $D12D
+        MGTK_RELAY_CALL2 $11, $E919
+LEFE9:  MGTK_RELAY_CALL2 $2A, $D12D
         lda     LD12D
         cmp     #$02
         beq     LF03A
         jsr     LF0B8
-        yax_call LDBE0, $0E, $D12E
-        yax_call LDBE0, $13, $E919
+        MGTK_RELAY_CALL2 $0E, $D12E
+        MGTK_RELAY_CALL2 $13, $E919
         cmp     #$80
         beq     LF01A
         lda     LF047
@@ -3283,7 +3286,7 @@ LF01A:  lda     LF047
 LF01F:  jmp     LEFE9
 
 LF022:  jsr     LF0DF
-        yax_call LDBE0, $11, $E919
+        MGTK_RELAY_CALL2 $11, $E919
         lda     LF047
         clc
         adc     #$80
@@ -3301,14 +3304,14 @@ LF047:  .byte   0
 LF048:  lda     #$00
         sta     LF0B7
         jsr     LF0DF
-        yax_call LDBE0, $11, $E90D
-LF059:  yax_call LDBE0, $2A, $D12D
+        MGTK_RELAY_CALL2 $11, $E90D
+LF059:  MGTK_RELAY_CALL2 $2A, $D12D
         lda     LD12D
         cmp     #$02
         beq     LF0AA
         jsr     LF0B8
-        yax_call LDBE0, $0E, $D12E
-        yax_call LDBE0, $13, $E90D
+        MGTK_RELAY_CALL2 $0E, $D12E
+        MGTK_RELAY_CALL2 $13, $E90D
         cmp     #$80
         beq     LF08A
         lda     LF0B7
@@ -3320,7 +3323,7 @@ LF08A:  lda     LF0B7
         jmp     LF059
 
 LF092:  jsr     LF0DF
-        yax_call LDBE0, $11, $E90D
+        MGTK_RELAY_CALL2 $11, $E90D
         lda     LF0B7
         clc
         adc     #$80
@@ -3339,7 +3342,7 @@ LF0B8:  sub16   LD12E, LE8B7, LD12E
         sub16   LD130, LE8B9, LD130
         rts
 
-LF0DF:  yax_call LDBE0, $07, $D005
+LF0DF:  MGTK_RELAY_CALL2 $07, $D005
         rts
 
 LF0E9:  stx     L0006
@@ -3449,7 +3452,7 @@ LF192:  lda     LD41D
         lda     $0C4A
         cmp     #$52
         beq     LF1C9
-        yax_call LDBE0, $2A, $D12D
+        MGTK_RELAY_CALL2 $2A, $D12D
         lda     LD12D
         cmp     #$03
         bne     LF192
