@@ -2,7 +2,6 @@
 
         .include "apple2.inc"
         .include "../macros.inc"
-        .include "../mgtk.inc"
         .include "../inc/apple2.inc"
         .include "../inc/prodos.inc"
 
@@ -625,7 +624,7 @@ L0C5F:  sty     L0C73
         php
         sei
         sta     ALTZPOFF
-        lda     $C082
+        lda     ROMIN2
         jsr     MLI
 L0C73:  .byte   0
 L0C74:  .byte   0
@@ -642,7 +641,7 @@ L0C75:  .byte   0
 
         jsr     LDF94
         sta     ALTZPOFF
-        lda     $C082
+        lda     ROMIN2
         sta     $C05F
         sta     $C050
         sta     $C00C
@@ -1356,7 +1355,7 @@ L126F:  jsr     L12A5
 L127D:  rts
 
         sta     ALTZPOFF
-        sta     $C082
+        sta     ROMIN2
         jsr     BELL1
         sta     ALTZPON
         lda     LCBANK1
