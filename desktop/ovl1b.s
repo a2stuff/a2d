@@ -2623,33 +2623,23 @@ LE810:  .byte   0
         .byte   $9F
         ora     ($34,x)
         .byte   0
-LE8B7:  .byte   $41
-        .byte   0
-LE8B9:  .byte   $2D
-        .byte   0
-        .byte   0
-        jsr     L0080
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        ldy     $01
-        .byte   $37
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        jsr     L0080
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   $2F
-        .byte   $02
-        .byte   $BF
-        .byte   0
+
+
+.proc portbits1
+viewloc:        DEFINE_POINT 65, 45, viewloc
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved:       .byte   0
+maprect:        DEFINE_RECT 0, 0, 420, 55
+.endproc
+
+.proc portbits2
+viewloc:        DEFINE_POINT 0, 0
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved:       .byte   0
+maprect:        DEFINE_RECT 0, 0, $22F, $BF
+.endproc
 
 str_ok_btn:
         PASCAL_STRING {"OK            ",GLYPH_RETURN}
@@ -2745,7 +2735,7 @@ LEB84:  stax    LEB81
         MGTK_RELAY_CALL2 MGTK::PaintRect, $E89F
         jsr     LF0DF
         MGTK_RELAY_CALL2 MGTK::FrameRect, $E89F
-        MGTK_RELAY_CALL2 MGTK::SetPortBits, $E8B7
+        MGTK_RELAY_CALL2 MGTK::SetPortBits, portbits1
         MGTK_RELAY_CALL2 MGTK::FrameRect, $E8A7
         MGTK_RELAY_CALL2 MGTK::FrameRect, $E8AF
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
@@ -2967,7 +2957,7 @@ LEE57:  MGTK_RELAY_CALL2 MGTK::InRect, LE925
 LEE67:  jmp     LED35
 
 LEE6A:  pha
-        MGTK_RELAY_CALL2 MGTK::SetPortBits, $E8C7
+        MGTK_RELAY_CALL2 MGTK::SetPortBits, portbits2
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL2 MGTK::PaintRect, $E89F
         pla
@@ -3158,8 +3148,8 @@ LF0B2:  lda     #$02
         jmp     LEE6A
 
 LF0B7:  .byte   0
-LF0B8:  sub16   event_xcoord, LE8B7, event_xcoord
-        sub16   event_ycoord, LE8B9, event_ycoord
+LF0B8:  sub16   event_xcoord, portbits1::viewloc::xcoord, event_xcoord
+        sub16   event_ycoord, portbits1::viewloc::ycoord, event_ycoord
         rts
 
 LF0DF:  MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
