@@ -583,52 +583,31 @@ L0C36:  .byte   0
 L0C37:  .byte   0
 L0C38:  .byte   0
 L0C39:  .byte   0
-        .byte   $04
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   $02
-        .byte   0
-        .byte   0
-        .byte   $13
-        .byte   $02
-        .byte   0
-        eor     #$0C
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   $03
-L0C5A:  .byte   0
-L0C5B:  .byte   0
-L0C5C:  .byte   $1C
-L0C5D:  .byte   0
-L0C5E:  .byte   0
-L0C5F:  sty     L0C73
-        stax    L0C74
+
+;;; ============================================================
+
+        DEFINE_QUIT_PARAMS quit_params
+
+        DEFINE_ON_LINE_PARAMS on_line_params2,, $1300
+
+        DEFINE_ON_LINE_PARAMS on_line_params,, on_line_buffer
+on_line_buffer:
+        .res    16, 0
+
+        DEFINE_READ_BLOCK_PARAMS block_params, $1C00, 0
+
+;;; ============================================================
+
+.proc MLI_RELAY
+        sty     call
+        stax    params
         php
         sei
         sta     ALTZPOFF
         lda     ROMIN2
         jsr     MLI
-L0C73:  .byte   0
-L0C74:  .byte   0
-L0C75:  .byte   0
+call:   .byte   0
+params: .addr   0
         tax
         sta     ALTZPON
         lda     LCBANK1
@@ -636,25 +615,30 @@ L0C75:  .byte   0
         plp
         txa
         rts
+.endproc
+
+;;; ============================================================
 
         rts
+
+;;; ============================================================
 
         jsr     LDF94
         sta     ALTZPOFF
         lda     ROMIN2
-        sta     $C05F
-        sta     $C050
-        sta     $C00C
-        sta     $C00F
-        sta     $C000
+        sta     DHIRESOFF
+        sta     TXTCLR
+        sta     CLR80VID
+        sta     SETALTCHAR
+        sta     CLR80COL
         jsr     SETVID
         jsr     SETKBD
         jsr     INIT
         jsr     HOME
-        jsr     MLI
-        adc     $3A
-        .byte   $0C
+        MLI_CALL QUIT, quit_params
         rts
+
+;;; ============================================================
 
         ldx     $D418
         lda     $D3F7,x
@@ -686,6 +670,9 @@ L0CD3:  lda     L0CEC
         rts
 
 L0CEC:  .byte   0
+
+;;; ============================================================
+
         sta     L0D24
         jsr     L0D26
         ldy     #$07
@@ -757,10 +744,10 @@ L0D51:  pha
 
         ldx     $D417
         lda     $D3F7,x
-        sta     L0C5A
+        sta     block_params::unit_num
         lda     #$00
-        sta     L0C5D
-        sta     L0C5E
+        sta     block_params::block_num
+        sta     block_params::block_num+1
         jsr     L12AF
         bne     L0D8A
         lda     $1C01
@@ -858,11 +845,11 @@ L0E47:  lda     L0006
         jsr     L1133
         rts
 
-L0E4D:  copy16  #$0006, L0C5D
+L0E4D:  copy16  #$0006, block_params::block_num
         ldx     $D417
         lda     $D3F7,x
-        sta     L0C5A
-        copy16  #$1400, L0C5B
+        sta     block_params::unit_num
+        copy16  #$1400, block_params::data_buffer
         jsr     L12AF
         beq     L0E70
         .byte   0
@@ -881,9 +868,10 @@ L0E87:  lda     L0EB0
         bne     L0E8D
         rts
 
-L0E8D:  add16   L0C5B, #$0200, L0C5B
-        inc     L0C5D
-        lda     L0C5C
+L0E8D:  add16   block_params::data_buffer, #$0200, block_params::data_buffer
+
+        inc     block_params::block_num
+        lda     block_params::data_buffer+1
         jsr     L1133
         jsr     L12AF
         beq     L0EAD
@@ -894,8 +882,8 @@ L0EB0:  .byte   0
 L0EB1:  .byte   0
         and     #$F0
         sta     L0ED6
-        ldx     $BF31
-L0EBA:  lda     $BF32,x
+        ldx     DEVCNT
+L0EBA:  lda     DEVLST,x
         and     #$F0
         cmp     L0ED6
         beq     L0ECA
@@ -903,7 +891,7 @@ L0EBA:  lda     $BF32,x
         bpl     L0EBA
 L0EC7:  return  #$00
 
-L0ECA:  lda     $BF32,x
+L0ECA:  lda     DEVLST,x
         and     #$0F
         cmp     #$0B
         bne     L0EC7
@@ -919,7 +907,7 @@ L0ED6:  .byte   0
         sta     $D423
         ldx     $D418
         lda     $D3F7,x
-        sta     L0C5A
+        sta     block_params::unit_num
         jmp     L0F1A
 
 L0EFF:  copy16  $D421, $D424
@@ -927,7 +915,7 @@ L0EFF:  copy16  $D421, $D424
         sta     $D426
         ldx     $D417
         lda     $D3F7,x
-        sta     L0C5A
+        sta     block_params::unit_num
 L0F1A:  lda     #$07
         sta     $D420
         lda     #$00
@@ -966,7 +954,7 @@ L0F6C:  return  #$00
 
 L0F6F:  return  #$01
 
-L0F72:  stax    L0C5D
+L0F72:  stax    block_params::block_num
         ldx     L0FE8
         lda     L0FE7
         ldy     $D41F
@@ -1234,7 +1222,7 @@ L1158:  .byte   $07
         .byte   $03
         .byte   $02
         ora     ($00,x)
-L1160:  stax    L0C5B
+L1160:  stax    block_params::data_buffer
 L1166:  jsr     L12AF
         beq     L1174
         ldx     #$00
@@ -1248,7 +1236,7 @@ L1175:  sta     L0006
         stx     $07
         stx     $09
         inc     $09
-        copy16  #$1C00, L0C5B
+        copy16  #$1C00, block_params::data_buffer
 L1189:  jsr     L12AF
         beq     L119A
         ldx     #$00
@@ -1272,7 +1260,7 @@ L11AD:  sta     L0006
         stx     $07
         stx     $09
         inc     $09
-        copy16  #$1C00, L0C5B
+        copy16  #$1C00, block_params::data_buffer
 L11C1:  jsr     L12AF
         beq     L11D8
         ldx     #$00
@@ -1297,7 +1285,7 @@ L11E1:  lda     $1C00,y
         lda     LCBANK1
         return  #$00
 
-L11F7:  stax    L0C5B
+L11F7:  stax    block_params::data_buffer
 L11FD:  jsr     L12A5
         beq     L120B
         ldx     #$80
@@ -1311,7 +1299,7 @@ L120C:  sta     L0006
         stx     $07
         stx     $09
         inc     $09
-        copy16  #$1C00, L0C5B
+        copy16  #$1C00, block_params::data_buffer
         ldy     #$FF
         iny
 L1223:  lda     (L0006),y
@@ -1335,7 +1323,7 @@ L123F:  bit     $C083
         stx     $07
         stx     $09
         inc     $09
-        copy16  #$1C00, L0C5B
+        copy16  #$1C00, block_params::data_buffer
         ldy     #$FF
         iny
 L125C:  lda     (L0006),y
@@ -1362,16 +1350,16 @@ L127D:  rts
         lda     LCBANK1
         rts
 
-        yax_call L0C5F, $C5, $0C41
+        yax_call MLI_RELAY, ON_LINE, on_line_params2
         rts
 
-        yax_call L0C5F, $C5, $0C45
+        yax_call MLI_RELAY, ON_LINE, on_line_params
         rts
 
-L12A5:  yax_call L0C5F, $81, $0C59
+L12A5:  yax_call MLI_RELAY, WRITE_BLOCK, block_params
         rts
 
-L12AF:  yax_call L0C5F, $80, $0C59
+L12AF:  yax_call MLI_RELAY, READ_BLOCK, block_params
         rts
 
 L12B9:  .byte   0
