@@ -22,7 +22,7 @@ while (<STDIN>) {
     --$depth if m/\.endproc/ || m/\.endscope/;
 
     next if m/\.assert|\.org|PAD_TO/;
-    s/:= \$[0-9A-F]+//; # trust assignments of absolutes
+    s/\b[^L]\w+ := \$[0-9A-F]+//; # trust assignments of absolutes
 
     if (m/^(L[0-9A-F]{4})(?::|\s+:=)(.*)/) {
         my $def = $1;

@@ -18,8 +18,22 @@ LE6FD           := $E6FD
 LE766           := $E766
 LE7A8           := $E7A8
 
+;;; Disk II / IWM I/O locations ($C0nX, n = slot + 8)
+;;; c/o http://archive.li/ewHUL
+PHASE0  := $C080                ; Stepper motor phase 0
+PHASE1  := $C082                ; Stepper motor phase 1
+PHASE2  := $C084                ; Stepper motor phase 2
+PHASE3  := $C086                ; Stepper motor phase 3
+DISABLE := $C088                ; Turn disk drive off
+ENABLE  := $C089                ; Turn disk drive on
+SELECT  := $C08A                ; Select drive 1 or 2 (at addr+1)
+Q6      := $C08C                ;
+CHECKWP := $C08D                ;
+Q7      := $C08E                ;
+WRMODE  := $C08F                ; Turn on write mode
 
         .org $800
+
 
 L0800:  php
         sei
@@ -46,17 +60,17 @@ L0821:  sec
         rts
 
 L0823:  asl     a
-        asl     L0C24
-        sta     L0C36
+        asl     current_track
+        sta     seltrack_track
         txa
         lsr     a
         lsr     a
         lsr     a
         lsr     a
         tay
-        lda     L0C36
-        jsr     L09C6
-        lsr     L0C24
+        lda     seltrack_track
+        jsr     select_track
+        lsr     current_track
         rts
 
 L083A:  tax
@@ -67,16 +81,16 @@ L083A:  tax
         rol     a
         lda     #$00
         rol     a
-        bne     L0850
-        lda     $C08A,x
+        bne     :+
+        lda     SELECT,x        ; Select drive 1 or 2
         jmp     L0853
 
-L0850:  lda     LCBANK1,x
-L0853:  lda     $C089,x
+:       lda     LCBANK1,x
+L0853:  lda     ENABLE,x        ; Turn drive on
         lda     #$D7
         sta     $DA
         lda     #$50
-        sta     L0C24
+        sta     current_track
         lda     #$00
         jsr     L0823
 L0864:  lda     $DA
@@ -98,11 +112,11 @@ L0882:  lda     $D1
         ldx     L0C23
         jsr     L0823
         ldx     L0C23
-        lda     $C08D,x
-        lda     $C08E,x
+        lda     CHECKWP,x       ; Check write protect
+        lda     Q7,x
         tay
-        lda     $C08E,x
-        lda     $C08C,x
+        lda     Q7,x            ; Activate read mode
+        lda     Q6,x
         tya
         bpl     L08A2
         lda     #$02
@@ -150,126 +164,145 @@ L08DB:  ldx     L0C23
         lda     #$00
 L08F9:  pha
         ldx     L0C23
-        lda     $C088,x
+        lda     DISABLE,x       ; Turn drive off
         lda     #$00
         jsr     L0823
         pla
         rts
 
-L0907:  ldy     #$20
+;;; ============================================================
+
+.proc L0907
+        ldy     #$20
 L0909:  dey
-        beq     L0968
-L090C:  lda     $C08C,x
-        bpl     L090C
+        beq     return_with_carry_set
+:       lda     Q6,x
+        bpl     :-
+
 L0911:  eor     #$D5
         bne     L0909
         nop
-L0916:  lda     $C08C,x
-        bpl     L0916
+:       lda     Q6,x
+        bpl     :-
         cmp     #$AA
         bne     L0911
         ldy     #$56
-L0921:  lda     $C08C,x
-        bpl     L0921
+:       lda     Q6,x
+        bpl     :-
         cmp     #$AD
         bne     L0911
+
         lda     #$00
 L092C:  dey
         sty     $D5
-L092F:  lda     $C08C,x
-        bpl     L092F
+:       lda     Q6,x
+        bpl     :-
         cmp     #$96
-        bne     L0968
+        bne     return_with_carry_set
         ldy     $D5
         bne     L092C
+
 L093C:  sty     $D5
-L093E:  lda     $C08C,x
-        bpl     L093E
+:       lda     Q6,x
+        bpl     :-
         cmp     #$96
-        bne     L0968
+        bne     return_with_carry_set
         ldy     $D5
         iny
         bne     L093C
-L094C:  lda     $C08C,x
-        bpl     L094C
+
+:       lda     Q6,x
+        bpl     :-
         cmp     #$96
-        bne     L0968
-L0955:  lda     $C08C,x
-        bpl     L0955
+        bne     return_with_carry_set
+:       lda     Q6,x
+        bpl     :-
         cmp     #$DE
-        bne     L0968
+        bne     return_with_carry_set
         nop
-L095F:  lda     $C08C,x
-        bpl     L095F
+:       lda     Q6,x
+        bpl     :-
         cmp     #$AA
-        beq     L09C4
-L0968:  sec
+        beq     return_with_carry_clear
+.endproc
+return_with_carry_set:
+        sec
         rts
 
-L096A:  ldy     #$FC
+.proc L096A
+        ldy     #$FC
         sty     $DC
 L096E:  iny
-        bne     L0975
+        bne     :+
         inc     $DC
-        beq     L0968
-L0975:  lda     $C08C,x
-        bpl     L0975
+        beq     return_with_carry_set
+:       lda     Q6,x
+        bpl     :-
+
 L097A:  cmp     #$D5
         bne     L096E
         nop
-L097F:  lda     $C08C,x
-        bpl     L097F
+:       lda     Q6,x
+        bpl     :-
         cmp     #$AA
         bne     L097A
         ldy     #$03
-L098A:  lda     $C08C,x
-        bpl     L098A
+:       lda     Q6,x
+        bpl     :-
         cmp     #$96
         bne     L097A
+
         lda     #$00
 L0995:  sta     $DB
-L0997:  lda     $C08C,x
-        bpl     L0997
+:       lda     Q6,x
+        bpl     :-
         rol     a
         sta     $DD
-L099F:  lda     $C08C,x
-        bpl     L099F
+:       lda     Q6,x
+        bpl     :-
         and     $DD
         sta     $D7,y
         eor     $DB
         dey
         bpl     L0995
+
         tay
-        bne     L0968
-L09B1:  lda     $C08C,x
-        bpl     L09B1
+        bne     return_with_carry_set
+:       lda     Q6,x
+        bpl     :-
         cmp     #$DE
-        bne     L0968
+        bne     return_with_carry_set
         nop
-L09BB:  lda     $C08C,x
-        bpl     L09BB
+:       lda     Q6,x
+        bpl     :-
         cmp     #$AA
-        bne     L0968
-L09C4:  clc
+        bne     return_with_carry_set
+.endproc
+return_with_carry_clear:
+        clc
         rts
 
-L09C6:  stx     L0C37
-        sta     L0C36
-        cmp     L0C24
-        beq     L0A2D
+;;; ============================================================
+;;; Move head to track - A = track, X = slot * 16
+
+.proc select_track
+        stx     seltrack_slot
+        sta     seltrack_track
+        cmp     current_track
+        beq     done
         lda     #$00
         sta     L0C38
-L09D6:  lda     L0C24
+L09D6:  lda     current_track
         sta     L0C39
         sec
-        sbc     L0C36
+        sbc     seltrack_track
         beq     L0A19
         bcs     L09EB
         eor     #$FF
-        inc     L0C24
+        inc     current_track
         bcc     L09F0
 L09EB:  adc     #$FE
-        dec     L0C24
+        dec     current_track
 L09F0:  cmp     L0C38
         bcc     L09F8
         lda     L0C38
@@ -282,45 +315,48 @@ L09FD:  sec
         jsr     L0B3A
         lda     L0C39
         clc
-        .byte   $20
-L0A0C:  jsr     $B90A
-        .byte   $57
-        .byte   $0B
+        jsr     motor
+        lda     L0B57,y
         jsr     L0B3A
         inc     L0C38
         bne     L09D6
 L0A19:  jsr     L0B3A
         clc
-L0A1D:  lda     L0C24
-L0A20:  and     #$03
+L0A1D:  lda     current_track
+
+motor:  and     #$03            ; PHASE0 + 2 * phase
         rol     a
-        ora     L0C37
+        ora     seltrack_slot
         tax
-        lda     $C080,x
-        ldx     L0C37
-L0A2D:  rts
+        lda     PHASE0,x
+        ldx     seltrack_slot
+
+done:   rts
+.endproc
+
+;;; ============================================================
 
 L0A2E:  jsr     L0C0E
-        lda     $C08D,x
-        lda     $C08E,x
+        lda     CHECKWP,x       ; Check write protect
+        lda     Q7,x
         lda     #$FF
-        sta     $C08F,x
-        cmp     $C08C,x
+        sta     WRMODE,x        ; Write
+        cmp     Q6,x
         pha
         pla
         nop
         ldy     #$04
 L0A44:  pha
         pla
-        jsr     L0AA5
+        jsr     write2
         dey
         bne     L0A44
         lda     #$D5
-        jsr     L0AA4
+        jsr     write
         lda     #$AA
-        jsr     L0AA4
+        jsr     write
         lda     #$AD
-        jsr     L0AA4
+        jsr     write
         ldy     #$56
         nop
         nop
@@ -331,7 +367,7 @@ L0A65:  nop
         nop
         lda     #$96
         sta     $C08D,x
-        cmp     $C08C,x
+        cmp     Q6,x
         dey
         bne     L0A62
         bit     $00
@@ -339,30 +375,33 @@ L0A65:  nop
 L0A75:  jsr     L0C0E
         lda     #$96
         sta     $C08D,x
-        cmp     $C08C,x
+        cmp     Q6,x
         lda     #$96
         nop
         iny
         bne     L0A75
-        jsr     L0AA4
+        jsr     write
         lda     #$DE
-        jsr     L0AA4
+        jsr     write
         lda     #$AA
-        jsr     L0AA4
+        jsr     write
         lda     #$EB
-        jsr     L0AA4
+        jsr     write
         lda     #$FF
-        jsr     L0AA4
+        jsr     write
         lda     $C08E,x
-        lda     $C08C,x
+        lda     Q6,x
         rts
 
-L0AA4:  nop
-L0AA5:  pha
+;;; Write, with appropriate cycle counts
+write:  nop
+write2: pha
         pla
         sta     $C08D,x
-        cmp     $C08C,x
+        cmp     Q6,x
         rts
+
+;;; ============================================================
 
 L0AAE:  sec
         lda     $C08D,x
@@ -370,13 +409,13 @@ L0AAE:  sec
         bmi     L0B15
         lda     #$FF
         sta     $C08F,x
-        cmp     $C08C,x
+        cmp     Q6,x
         pha
         pla
 L0AC1:  jsr     L0B1B
         jsr     L0B1B
         sta     $C08D,x
-        cmp     $C08C,x
+        cmp     Q6,x
         nop
         dey
         bne     L0AC1
@@ -399,7 +438,7 @@ L0AC1:  jsr     L0B1B
         lsr     a
         ora     $D0
         sta     $C08D,x
-        lda     $C08C,x
+        lda     Q6,x
         pla
         ora     #$AA
         jsr     L0B2C
@@ -411,14 +450,16 @@ L0AC1:  jsr     L0B1B
         jsr     L0B2D
         clc
 L0B15:  lda     $C08E,x
-        lda     $C08C,x
+        lda     Q6,x
 L0B1B:  rts
+
+;;; ============================================================
 
 L0B1C:  pha
         lsr     a
         ora     $D0
         sta     $C08D,x
-        cmp     $C08C,x
+        cmp     Q6,x
         pla
         nop
         nop
@@ -429,37 +470,27 @@ L0B2D:  nop
         pha
         pla
         sta     $C08D,x
-        cmp     $C08C,x
+        cmp     Q6,x
         rts
 
         .byte   0
         .byte   0
         .byte   0
-L0B3A:  ldx     #$11
-L0B3C:  dex
-        bne     L0B3C
+
+.proc L0B3A
+start:  ldx     #$11
+:       dex
+        bne     :-
         inc16   $D9
-L0B45:  sec
-        sbc     #$01
-        bne     L0B3A
+        sec
+        sbc     #1
+        bne     start
         rts
+.endproc
 
-L0B4B:  ora     ($30,x)
-        plp
-        bit     $20
-        asl     $1C1D,x
-        .byte   $1C
-        .byte   $1C
-        .byte   $1C
-        .byte   $1C
-L0B57:  bvs     L0B85
-        rol     $22
-        .byte   $1F
-        asl     $1C1D,x
-        .byte   $1C
-        .byte   $1C
-        .byte   $1C
-        .byte   $1C
+L0B4B:  .byte   $01, $30, $28, $24, $20, $1E, $1D, $1C, $1C, $1C, $1C, $1C
+L0B57:  .byte   $70, $2C, $26, $22, $1F, $1E, $1D, $1C, $1C, $1C, $1C, $1C
+
 L0B63:  lda     L0C21
         sta     $D6
 L0B68:  ldy     #$80
@@ -561,7 +592,10 @@ L0C20:  .byte   $1B
 L0C21:  .byte   $03
 L0C22:  .byte   $10
 L0C23:  .byte   0
-L0C24:  .byte   0
+
+current_track:
+        .byte   0
+
 L0C25:  .byte   0
 L0C26:  .byte   0
         .byte   0
@@ -579,56 +613,39 @@ L0C26:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-L0C36:  .byte   0
-L0C37:  .byte   0
+
+seltrack_track:
+        .byte   0
+seltrack_slot:
+        .byte   0
+
 L0C38:  .byte   0
 L0C39:  .byte   0
-        .byte   $04
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   $02
-        .byte   0
-        .byte   0
-        .byte   $13
-        .byte   $02
-        .byte   0
-        eor     #$0C
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   $03
-L0C5A:  .byte   0
-L0C5B:  .byte   0
-L0C5C:  .byte   $1C
-L0C5D:  .byte   0
-L0C5E:  .byte   0
-L0C5F:  sty     L0C73
-        stax    L0C74
+
+;;; ============================================================
+
+        DEFINE_QUIT_PARAMS quit_params
+
+        DEFINE_ON_LINE_PARAMS on_line_params2,, $1300
+
+        DEFINE_ON_LINE_PARAMS on_line_params,, on_line_buffer
+on_line_buffer:
+        .res    16, 0
+
+        DEFINE_READ_BLOCK_PARAMS block_params, $1C00, 0
+
+;;; ============================================================
+
+.proc MLI_RELAY
+        sty     call
+        stax    params
         php
         sei
         sta     ALTZPOFF
         lda     ROMIN2
         jsr     MLI
-L0C73:  .byte   0
-L0C74:  .byte   0
-L0C75:  .byte   0
+call:   .byte   0
+params: .addr   0
         tax
         sta     ALTZPON
         lda     LCBANK1
@@ -636,25 +653,30 @@ L0C75:  .byte   0
         plp
         txa
         rts
+.endproc
+
+;;; ============================================================
 
         rts
+
+;;; ============================================================
 
         jsr     LDF94
         sta     ALTZPOFF
         lda     ROMIN2
-        sta     $C05F
-        sta     $C050
-        sta     $C00C
-        sta     $C00F
-        sta     $C000
+        sta     DHIRESOFF
+        sta     TXTCLR
+        sta     CLR80VID
+        sta     SETALTCHAR
+        sta     CLR80COL
         jsr     SETVID
         jsr     SETKBD
         jsr     INIT
         jsr     HOME
-        jsr     MLI
-        adc     $3A
-        .byte   $0C
+        MLI_CALL QUIT, quit_params
         rts
+
+;;; ============================================================
 
         ldx     $D418
         lda     $D3F7,x
@@ -686,6 +708,9 @@ L0CD3:  lda     L0CEC
         rts
 
 L0CEC:  .byte   0
+
+;;; ============================================================
+
         sta     L0D24
         jsr     L0D26
         ldy     #$07
@@ -757,10 +782,10 @@ L0D51:  pha
 
         ldx     $D417
         lda     $D3F7,x
-        sta     L0C5A
+        sta     block_params::unit_num
         lda     #$00
-        sta     L0C5D
-        sta     L0C5E
+        sta     block_params::block_num
+        sta     block_params::block_num+1
         jsr     L12AF
         bne     L0D8A
         lda     $1C01
@@ -858,11 +883,11 @@ L0E47:  lda     L0006
         jsr     L1133
         rts
 
-L0E4D:  copy16  #$0006, L0C5D
+L0E4D:  copy16  #$0006, block_params::block_num
         ldx     $D417
         lda     $D3F7,x
-        sta     L0C5A
-        copy16  #$1400, L0C5B
+        sta     block_params::unit_num
+        copy16  #$1400, block_params::data_buffer
         jsr     L12AF
         beq     L0E70
         .byte   0
@@ -881,9 +906,10 @@ L0E87:  lda     L0EB0
         bne     L0E8D
         rts
 
-L0E8D:  add16   L0C5B, #$0200, L0C5B
-        inc     L0C5D
-        lda     L0C5C
+L0E8D:  add16   block_params::data_buffer, #$0200, block_params::data_buffer
+
+        inc     block_params::block_num
+        lda     block_params::data_buffer+1
         jsr     L1133
         jsr     L12AF
         beq     L0EAD
@@ -894,8 +920,8 @@ L0EB0:  .byte   0
 L0EB1:  .byte   0
         and     #$F0
         sta     L0ED6
-        ldx     $BF31
-L0EBA:  lda     $BF32,x
+        ldx     DEVCNT
+L0EBA:  lda     DEVLST,x
         and     #$F0
         cmp     L0ED6
         beq     L0ECA
@@ -903,7 +929,7 @@ L0EBA:  lda     $BF32,x
         bpl     L0EBA
 L0EC7:  return  #$00
 
-L0ECA:  lda     $BF32,x
+L0ECA:  lda     DEVLST,x
         and     #$0F
         cmp     #$0B
         bne     L0EC7
@@ -919,7 +945,7 @@ L0ED6:  .byte   0
         sta     $D423
         ldx     $D418
         lda     $D3F7,x
-        sta     L0C5A
+        sta     block_params::unit_num
         jmp     L0F1A
 
 L0EFF:  copy16  $D421, $D424
@@ -927,7 +953,7 @@ L0EFF:  copy16  $D421, $D424
         sta     $D426
         ldx     $D417
         lda     $D3F7,x
-        sta     L0C5A
+        sta     block_params::unit_num
 L0F1A:  lda     #$07
         sta     $D420
         lda     #$00
@@ -966,7 +992,7 @@ L0F6C:  return  #$00
 
 L0F6F:  return  #$01
 
-L0F72:  stax    L0C5D
+L0F72:  stax    block_params::block_num
         ldx     L0FE8
         lda     L0FE7
         ldy     $D41F
@@ -1168,11 +1194,9 @@ L10ED:  sec
         sbc     #$13
         jmp     L10D4
 
-L10F3:  asl     L0A0C
-        php
-        asl     $04
-        .byte   $02
-        .byte   0
+L10F3:
+        .byte   $0E, $0C, $0A, $08, $06, $04, $02, $00
+
         lda     #$14
         sta     L0006
         lda     #$00
@@ -1234,7 +1258,7 @@ L1158:  .byte   $07
         .byte   $03
         .byte   $02
         ora     ($00,x)
-L1160:  stax    L0C5B
+L1160:  stax    block_params::data_buffer
 L1166:  jsr     L12AF
         beq     L1174
         ldx     #$00
@@ -1248,7 +1272,7 @@ L1175:  sta     L0006
         stx     $07
         stx     $09
         inc     $09
-        copy16  #$1C00, L0C5B
+        copy16  #$1C00, block_params::data_buffer
 L1189:  jsr     L12AF
         beq     L119A
         ldx     #$00
@@ -1272,7 +1296,7 @@ L11AD:  sta     L0006
         stx     $07
         stx     $09
         inc     $09
-        copy16  #$1C00, L0C5B
+        copy16  #$1C00, block_params::data_buffer
 L11C1:  jsr     L12AF
         beq     L11D8
         ldx     #$00
@@ -1297,7 +1321,7 @@ L11E1:  lda     $1C00,y
         lda     LCBANK1
         return  #$00
 
-L11F7:  stax    L0C5B
+L11F7:  stax    block_params::data_buffer
 L11FD:  jsr     L12A5
         beq     L120B
         ldx     #$80
@@ -1311,7 +1335,7 @@ L120C:  sta     L0006
         stx     $07
         stx     $09
         inc     $09
-        copy16  #$1C00, L0C5B
+        copy16  #$1C00, block_params::data_buffer
         ldy     #$FF
         iny
 L1223:  lda     (L0006),y
@@ -1335,7 +1359,7 @@ L123F:  bit     $C083
         stx     $07
         stx     $09
         inc     $09
-        copy16  #$1C00, L0C5B
+        copy16  #$1C00, block_params::data_buffer
         ldy     #$FF
         iny
 L125C:  lda     (L0006),y
@@ -1362,16 +1386,16 @@ L127D:  rts
         lda     LCBANK1
         rts
 
-        yax_call L0C5F, $C5, $0C41
+        yax_call MLI_RELAY, ON_LINE, on_line_params2
         rts
 
-        yax_call L0C5F, $C5, $0C45
+        yax_call MLI_RELAY, ON_LINE, on_line_params
         rts
 
-L12A5:  yax_call L0C5F, $81, $0C59
+L12A5:  yax_call MLI_RELAY, WRITE_BLOCK, block_params
         rts
 
-L12AF:  yax_call L0C5F, $80, $0C59
+L12AF:  yax_call MLI_RELAY, READ_BLOCK, block_params
         rts
 
 L12B9:  .byte   0

@@ -9,8 +9,6 @@
 
 L0000           := $0000
 L0080           := $0080
-L0720           := $0720
-L0A65           := $0A65
 L0CAF           := $0CAF
 L0CED           := $0CED
 L0D26           := $0D26
@@ -19,87 +17,13 @@ L0D5F           := $0D5F
 L0DB5           := $0DB5
 L0EB2           := $0EB2
 L0ED7           := $0ED7
-L1020           := $1020
 L10FB           := $10FB
-L1120           := $1120
 L127E           := $127E
 L1291           := $1291
 L129B           := $129B
 L12A5           := $12A5
 L12AF           := $12AF
-L1521           := $1521
-L1721           := $1721
-L1B2E           := $1B2E
-L2008           := $2008
-L2020           := $2020
-L202D           := $202D
-L202E           := $202E
-L2053           := $2053
-L2065           := $2065
-L2E2E           := $2E2E
-L2E33           := $2E33
-L322E           := $322E
-L3F20           := $3F20
-L4210           := $4210
-L4214           := $4214
-L4324           := $4324
-L440A           := $440A
-L4420           := $4420
-L4519           := $4519
-L4520           := $4520
-L4B4F           := $4B4F
-L5110           := $5110
 L51ED           := $51ED
-L5220           := $5220
-L5307           := $5307
-L5345           := $5345
-L5507           := $5507
-L614E           := $614E
-L6162           := $6162
-L6163           := $6163
-L6177           := $6177
-L6369           := $6369
-L636F           := $636F
-L6520           := $6520
-L6544           := $6544
-L6552           := $6552
-L6556           := $6556
-L6562           := $6562
-L6564           := $6564
-L6572           := $6572
-L6874           := $6874
-L6877           := $6877
-L6964           := $6964
-L6C62           := $6C62
-L6C63           := $6C63
-L6C73           := $6C73
-L6D75           := $6D75
-L6E49           := $6E49
-L6E61           := $6E61
-L6E69           := $6E69
-L6F43           := $6F43
-L6F63           := $6F63
-L6F66           := $6F66
-L6F67           := $6F67
-L6F6E           := $6F6E
-L6F73           := $6F73
-L6F74           := $6F74
-L6F79           := $6F79
-L7041           := $7041
-L7244           := $7244
-L7257           := $7257
-L7265           := $7265
-L7266           := $7266
-L726F           := $726F
-L7270           := $7270
-L7274           := $7274
-L7277           := $7277
-L7345           := $7345
-L746F           := $746F
-L7473           := $7473
-L7551           := $7551
-L7564           := $7564
-L7573           := $7573
 
 .macro MGTK_RELAY_CALL2 call, params
     .if .paramcount > 1
@@ -260,43 +184,13 @@ LD134:  .byte   0
 
 grafport:  .res MGTK::grafport_size, 0
 
-LD15B:  .byte   0
-        lsr     a:$D1,x
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+.proc getwinport_params
+window_id:      .byte   0
+port:           .addr   grafport_win
+.endproc
+
+grafport_win:  .res    MGTK::grafport_size, 0
+
         asl     $EA
         .byte   0
         .byte   0
@@ -307,105 +201,74 @@ LD15B:  .byte   0
         php
         .byte   0
         php
-LD18D:  ora     ($01,x)
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        stx     L0000,y
-        .byte   $32
-        .byte   0
-        .byte   $F4
-        ora     ($8C,x)
-        .byte   0
-        ora     $1400,y
-        .byte   0
-        .byte   0
-        jsr     L0080
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   $F4
-        ora     ($96,x)
-        .byte   0
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        ora     ($01,x)
-        .byte   0
-        .byte   $7F
-        .byte   0
-        dey
-        .byte   0
-        .byte   0
 
-winfo:  .byte   $02
-        ora     (L0000,x)
-        .byte   0
-        .byte   0
-        .byte   $80
-        .byte   0
-        .byte   0
-        .byte   $03
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   $64
-        .byte   0
-        .byte   $32
-        .byte   0
-        stx     L0000,y
-        stx     L0000,y
-        and     $3200
-        .byte   0
-        .byte   0
-        jsr     L0080
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        stx     L0000,y
-        lsr     L0000
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        ora     ($01,x)
-        .byte   0
-        .byte   $7F
-        .byte   0
-        dey
-        .byte   0
-LD200:  .byte   0
-        .byte   $04
+
+
+.proc winfo_dialog
+window_id:      .byte   1
+options:        .byte   MGTK::option_dialog_box
+title:          .addr   0
+hscroll:        .byte   MGTK::scroll_option_none
+vscroll:        .byte   MGTK::scroll_option_none
+hthumbmax:      .byte   0
+hthumbpos:      .byte   0
+vthumbmax:      .byte   0
+vthumbpos:      .byte   0
+status:         .byte   0
+reserved:       .byte   0
+mincontwidth:   .word   150
+maxcontwidth:   .word   50
+mincontlength:  .word   500
+maxcontlength:  .word   140
+port:
+viewloc:        DEFINE_POINT 25, 20
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .word   MGTK::screen_mapwidth
+cliprect:       DEFINE_RECT 0, 0, 500, 150
+penpattern:     .res    8, $FF
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+penloc:         DEFINE_POINT 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   0
+textbg:         .byte   MGTK::textbg_white
+fontptr:        .addr   DEFAULT_FONT
+nextwinfo:      .addr   0
+.endproc
+
+.proc winfo_drive_select
+window_id:      .byte   $02
+options:        .byte   MGTK::option_dialog_box
+title:          .addr   0
+hscroll:        .byte   MGTK::scroll_option_none
+vscroll:        .byte   MGTK::scroll_option_present
+hthumbmax:      .byte   0
+hthumbpos:      .byte   0
+vthumbmax:      .byte   3
+vthumbpos:      .byte   0
+status:         .byte   0
+reserved:       .byte   0
+mincontwidth:   .word   100
+maxcontwidth:   .word   50
+mincontlength:  .word   150
+maxcontlength:  .word   150
+port:
+viewloc:        DEFINE_POINT 45, 50
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .word   MGTK::screen_mapwidth
+cliprect:       DEFINE_RECT 0, 0, 150, 70
+penpattern:     .res    8, $FF
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+penloc:         DEFINE_POINT 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   0
+textbg:         .byte   MGTK::textbg_white
+fontptr:        .addr   DEFAULT_FONT
+nextwinfo:      .addr   0
+.endproc
+
+LD201:  .byte   $04
         .byte   0
         .byte   $02
         .byte   0
@@ -462,7 +325,7 @@ LD24A:  .byte   0
         asl     $2601
         .byte   0
         ldy     $01
-        rol     LD200
+        .byte   $2E, 0, $D2
         .byte   0
         .byte   $44
         .byte   0
@@ -918,7 +781,7 @@ LD61C:  lda     #$00
         sta     LD12C
         MGTK_RELAY_CALL2 MGTK::CheckItem, checkitem_params
         jsr     LDFDD
-        MGTK_RELAY_CALL2 MGTK::OpenWindow, winfo
+        MGTK_RELAY_CALL2 MGTK::OpenWindow, winfo_drive_select
         lda     #$00
         sta     LD429
         lda     #$FF
@@ -932,7 +795,7 @@ LD66E:  jsr     LE28D
 LD674:  jsr     LD986
         bmi     LD674
         beq     LD687
-        MGTK_RELAY_CALL2 MGTK::CloseWindow, winfo
+        MGTK_RELAY_CALL2 MGTK::CloseWindow, winfo_drive_select
         jmp     LD61C
 
 LD687:  lda     LD363
@@ -942,22 +805,22 @@ LD687:  lda     LD363
         MGTK_RELAY_CALL2 MGTK::DisableMenu, disablemenu_params
         lda     LD363
         sta     LD417
-        lda     winfo
+        lda     winfo_drive_select
         jsr     LE137
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL2 MGTK::PaintRect, $D1E3
-        lda     LD18D
+        lda     winfo_dialog::window_id
         jsr     LE137
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL2 MGTK::PaintRect, $D255
         MGTK_RELAY_CALL2 MGTK::MoveTo, $D251
-        addr_call LE09A, str_select_destination
+        addr_call draw_text, str_select_destination
         jsr     LE559
         jsr     LE2B1
 LD6E6:  jsr     LD986
         bmi     LD6E6
         beq     LD6F9
-        MGTK_RELAY_CALL2 MGTK::CloseWindow, winfo
+        MGTK_RELAY_CALL2 MGTK::CloseWindow, winfo_drive_select
         jmp     LD61C
 
 LD6F9:  lda     LD363
@@ -967,11 +830,11 @@ LD6F9:  lda     LD363
         sta     LD418
         lda     #$00
         sta     LD44C
-        lda     LD18D
+        lda     winfo_dialog::window_id
         jsr     LE137
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL2 MGTK::PaintRect, $D211
-        MGTK_RELAY_CALL2 MGTK::CloseWindow, winfo
+        MGTK_RELAY_CALL2 MGTK::CloseWindow, winfo_drive_select
         MGTK_RELAY_CALL2 MGTK::PaintRect, $D432
 LD734:  addr_call LEB84, $0000
         beq     LD740
@@ -991,7 +854,7 @@ LD740:  lda     #$00
         jsr     LE559
         jmp     LD7AD
 
-LD763:  lda     LD18D
+LD763:  lda     winfo_dialog::window_id
         jsr     LE137
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL2 MGTK::PaintRect, $D42A
@@ -1107,7 +970,7 @@ LD852:  ldx     LD418
         jmp     LD61C
 
 LD87C:  MGTK_RELAY_CALL2 MGTK::MoveTo, $D25D
-        addr_call LE09A, str_formatting
+        addr_call draw_text, str_formatting
         jsr     L0CAF
         bcc     LD8A9
         cmp     #$2B
@@ -1122,7 +985,7 @@ LD89F:  lda     #$05
         beq     LD852
         jmp     LD61C
 
-LD8A9:  lda     LD18D
+LD8A9:  lda     winfo_dialog::window_id
         jsr     LE137
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL2 MGTK::PaintRect, $D211
@@ -1231,31 +1094,22 @@ LD9BA:  cmp     #MGTK::event_kind_key_down
         bne     LD998
         jmp     LD9D5
 
-LD9C1:  .byte   $83
-LD9C2:  .byte   $0C
-        .byte   $83
-        .byte   $0C
-        .byte   $83
-        .byte   $0C
-        .byte   $83
-        .byte   $0C
-        .byte   $83
-        .byte   $0C
-        sty     $0C
-        .byte   $3C
-        .byte   $DA
-        .byte   $77
-        .byte   $DA
-LD9D1:  .byte   0
-        asl     a
-        .byte   $0C
-        .byte   $10
+LD9C1:  .addr   $0C83
+        .addr   $0C83
+        .addr   $0C83
+        .addr   $0C83
+        .addr   $0C83
+        .addr   $0C84
+        .addr   $DA3C
+        .addr   $DA77
+
+LD9D1:  .byte   0, $A, $C, $10
 
 LD9D5:  lda     event_modifiers
         bne     LD9E6
         lda     event_key
         and     #$7F
-        cmp     #$1B
+        cmp     #CHAR_ESCAPE
         beq     LD9E6
         jmp     LDBFC
 
@@ -1277,24 +1131,20 @@ LDA06:  dex
         dey
         tya
         asl     a
-        sta     LDA3A
+        sta     jump_addr
         txa
         clc
-        adc     LDA3A
+        adc     jump_addr
         tax
-        lda     LD9C1,x
-        sta     LDA3A
-        lda     LD9C2,x
-        sta     LDA3B
+        copy16  LD9C1,x, jump_addr
         jsr     LDA35
         MGTK_RELAY_CALL2 MGTK::HiliteMenu, hilitemenu_params
         jmp     LD986
 
 LDA35:  tsx
         stx     LD00B
-        .byte   $4C
-LDA3A:  .byte   $34
-LDA3B:  .byte   $12
+        jump_addr := *+1
+        jmp     $1234
         lda     LD451
         bne     LDA42
         rts
@@ -1309,7 +1159,7 @@ LDA42:  lda     #$00
         MGTK_RELAY_CALL2 MGTK::CheckItem, checkitem_params
         lda     #$00
         sta     LD451
-        lda     LD18D
+        lda     winfo_dialog::window_id
         jsr     LE137
         addr_call LE0B4, str_quick_copy_padded
         rts
@@ -1325,7 +1175,7 @@ LDA7D:  lda     #$00
         MGTK_RELAY_CALL2 MGTK::CheckItem, checkitem_params
         lda     #$01
         sta     LD451
-        lda     LD18D
+        lda     winfo_dialog::window_id
         jsr     LE137
         addr_call LE0B4, $D278
         rts
@@ -1347,23 +1197,23 @@ LDAD0:  cmp     #$02
 LDAD7:  return  #$FF
 
 LDADA:  lda     LD133
-        cmp     LD18D
+        cmp     winfo_dialog::window_id
         bne     LDAE5
         jmp     LDAEE
 
-LDAE5:  cmp     winfo
+LDAE5:  cmp     winfo_drive_select
         bne     LDAED
         jmp     LDB55
 
 LDAED:  rts
 
-LDAEE:  lda     LD18D
+LDAEE:  lda     winfo_dialog::window_id
         sta     screentowindow_window_id
         jsr     LE137
         MGTK_RELAY_CALL2 MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL2 MGTK::MoveTo, screentowindow_windowx
         MGTK_RELAY_CALL2 MGTK::InRect, $D221
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     LDB19
         jmp     LDB2F
 
@@ -1373,7 +1223,7 @@ LDB19:  MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
         rts
 
 LDB2F:  MGTK_RELAY_CALL2 MGTK::InRect, $D229
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         bne     LDB52
         MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL2 MGTK::PaintRect, $D229
@@ -1382,7 +1232,7 @@ LDB2F:  MGTK_RELAY_CALL2 MGTK::InRect, $D229
 
 LDB52:  return  #$FF
 
-LDB55:  lda     winfo
+LDB55:  lda     winfo_drive_select
         sta     screentowindow_window_id
         jsr     LE137
         MGTK_RELAY_CALL2 MGTK::ScreenToWindow, screentowindow_params
@@ -1442,16 +1292,16 @@ LDBFC:  lda     event_key
         beq     LDC09
         cmp     #'d'
         bne     LDC2D
-LDC09:  lda     LD18D
+LDC09:  lda     winfo_dialog::window_id
         jsr     LE137
         MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL2 MGTK::PaintRect, $D229
         MGTK_RELAY_CALL2 MGTK::PaintRect, $D229
         return  #$01
 
-LDC2D:  cmp     #$0D
+LDC2D:  cmp     #CHAR_RETURN
         bne     LDC55
-        lda     LD18D
+        lda     winfo_dialog::window_id
         jsr     LE137
         MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL2 MGTK::PaintRect, $D221
@@ -1462,9 +1312,9 @@ LDC55:  bit     LD44C
         bmi     LDC5D
         jmp     LDCA9
 
-LDC5D:  cmp     #$0A
+LDC5D:  cmp     #CHAR_DOWN
         bne     LDC85
-        lda     winfo
+        lda     winfo_drive_select
         jsr     LE137
         lda     LD363
         bmi     LDC6F
@@ -1478,9 +1328,9 @@ LDC6F:  inc     LD363
 LDC7F:  jsr     LE14D
         jmp     LDCA9
 
-LDC85:  cmp     #$0B
+LDC85:  cmp     #CHAR_UP
         bne     LDCA9
-        lda     winfo
+        lda     winfo_drive_select
         jsr     LE137
         lda     LD363
         bmi     LDC9C
@@ -1500,12 +1350,12 @@ LDCB1:  MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::event_kind_button_up
         beq     LDD14
-        lda     LD18D
+        lda     winfo_dialog::window_id
         sta     screentowindow_window_id
         MGTK_RELAY_CALL2 MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL2 MGTK::MoveTo, screentowindow_windowx
         MGTK_RELAY_CALL2 MGTK::InRect, $D229
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     LDCEE
         lda     LDD37
         beq     LDCF6
@@ -1527,7 +1377,7 @@ LDD14:  lda     LDD37
         beq     LDD1C
         return  #$FF
 
-LDD1C:  lda     LD18D
+LDD1C:  lda     winfo_dialog::window_id
         jsr     LE137
         MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL2 MGTK::PaintRect, $D229
@@ -1540,12 +1390,12 @@ LDD3D:  MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::event_kind_button_up
         beq     LDDA0
-        lda     LD18D
+        lda     winfo_dialog::window_id
         sta     screentowindow_window_id
         MGTK_RELAY_CALL2 MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL2 MGTK::MoveTo, screentowindow_windowx
         MGTK_RELAY_CALL2 MGTK::InRect, $D221
-        cmp     #$80
+        cmp     #MGTK::inrect_inside
         beq     LDD7A
         lda     LDDC3
         beq     LDD82
@@ -1567,7 +1417,7 @@ LDDA0:  lda     LDDC3
         beq     LDDA8
         return  #$FF
 
-LDDA8:  lda     LD18D
+LDDA8:  lda     winfo_dialog::window_id
         jsr     LE137
         MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL2 MGTK::PaintRect, $D221
@@ -1793,8 +1643,8 @@ LDF90:  dec     $BF31
         sta     $BF32,x
         rts
 
-LDFA0:  MGTK_RELAY_CALL2 MGTK::OpenWindow, $D18D
-        lda     LD18D
+LDFA0:  MGTK_RELAY_CALL2 MGTK::OpenWindow, winfo_dialog
+        lda     winfo_dialog::window_id
         jsr     LE137
         MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL2 MGTK::FrameRect, $D201
@@ -1804,7 +1654,7 @@ LDFA0:  MGTK_RELAY_CALL2 MGTK::OpenWindow, $D18D
         MGTK_RELAY_CALL2 MGTK::SetPort, grafport
         rts
 
-LDFDD:  lda     LD18D
+LDFDD:  lda     winfo_dialog::window_id
         jsr     LE137
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL2 MGTK::PaintRect, $D211
@@ -1821,31 +1671,35 @@ LE014:  MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
         jsr     LE078
         jsr     LE089
         MGTK_RELAY_CALL2 MGTK::MoveTo, $D24D
-        addr_call LE09A, str_slot_drive_name
+        addr_call draw_text, str_slot_drive_name
         MGTK_RELAY_CALL2 MGTK::MoveTo, $D251
-        addr_call LE09A, str_select_source
+        addr_call draw_text, str_select_source
         MGTK_RELAY_CALL2 MGTK::MoveTo, $D47F
-        addr_call LE09A, str_select_quit
+        addr_call draw_text, str_select_quit
 
         MGTK_RELAY_CALL2 MGTK::InitPort, grafport
         MGTK_RELAY_CALL2 MGTK::SetPort, grafport
         rts
 
 LE078:  MGTK_RELAY_CALL2 MGTK::MoveTo, $D231
-        addr_call LE09A, str_ok_label
+        addr_call draw_text, str_ok_label
         rts
 
 LE089:  MGTK_RELAY_CALL2 MGTK::MoveTo, $D245
-        addr_call LE09A, str_read_drive
+        addr_call draw_text, str_read_drive
         rts
 
-LE09A:  stax    $0A
+.proc draw_text
+        ptr := $0A
+
+        stax    ptr
         ldy     #$00
-        lda     ($0A),y
-        sta     $0C
-        inc16   $0A
-        MGTK_RELAY_CALL2 MGTK::DrawText, $000A
+        lda     (ptr),y
+        sta     ptr+2
+        inc16   ptr
+        MGTK_RELAY_CALL2 MGTK::DrawText, ptr
         rts
+.endproc
 
 LE0B4:  stax    $06
         ldy     #$00
@@ -1885,9 +1739,9 @@ LE10F:  rts
 
 LE110:  lda     ($0A),y
         and     #$7F
-        cmp     #$2F
+        cmp     #'/'
         beq     LE11C
-        cmp     #$2E
+        cmp     #'.'
         bne     LE120
 LE11C:  dey
         jmp     LE10A
@@ -1895,20 +1749,20 @@ LE11C:  dey
 LE120:  iny
         lda     ($0A),y
         and     #$7F
-        cmp     #$41
+        cmp     #'A'
         bcc     LE132
-        cmp     #$5B
+        cmp     #'Z'+1
         bcs     LE132
         clc
-        adc     #$20
+        adc     #('a' - 'A')
         sta     ($0A),y
 LE132:  dey
         jmp     LE10A
 
         .byte   0
-LE137:  sta     LD15B
-        MGTK_RELAY_CALL2 MGTK::GetWinPort, $D15B
-        MGTK_RELAY_CALL2 MGTK::SetPort, $D15E
+LE137:  sta     getwinport_params::window_id
+        MGTK_RELAY_CALL2 MGTK::GetWinPort, getwinport_params
+        MGTK_RELAY_CALL2 MGTK::SetPort, grafport_win
         rts
 
 LE14D:  asl     a
@@ -2069,7 +1923,7 @@ LE285:  jsr     LE265
         rts
 
 LE28C:  .byte   0
-LE28D:  lda     winfo
+LE28D:  lda     winfo_drive_select
         jsr     LE137
         lda     #$00
         sta     LE2B0
@@ -2084,7 +1938,7 @@ LE298:  lda     LE2B0
         rts
 
 LE2B0:  .byte   0
-LE2B1:  lda     winfo
+LE2B1:  lda     winfo_drive_select
         jsr     LE137
         lda     LD363
         asl     a
@@ -2143,7 +1997,7 @@ LE31B:  sta     LE399
         clc
         adc     #'0'
         sta     str_s + 1
-        addr_call LE09A, str_s
+        addr_call draw_text, str_s
         lda     #$28
         sta     LD36D
         MGTK_RELAY_CALL2 MGTK::MoveTo, $D36D
@@ -2155,7 +2009,7 @@ LE31B:  sta     LE399
         clc
         adc     #'1'
         sta     str_d + 1
-        addr_call LE09A, str_d
+        addr_call draw_text, str_d
         lda     #$41
         sta     LD36D
         MGTK_RELAY_CALL2 MGTK::MoveTo, $D36D
@@ -2175,7 +2029,7 @@ LE31B:  sta     LE399
         jsr     LE0FE
         lda     $06
         ldx     $07
-        jsr     LE09A
+        jsr     draw_text
         rts
 
 LE399:  .byte   0
@@ -2321,19 +2175,19 @@ LE483:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-LE491:  lda     LD18D
+LE491:  lda     winfo_dialog::window_id
         jsr     LE137
         MGTK_RELAY_CALL2 MGTK::MoveTo, $D261
-        addr_call LE09A, str_writing
+        addr_call draw_text, str_writing
         rts
 
-LE4A8:  lda     LD18D
+LE4A8:  lda     winfo_dialog::window_id
         jsr     LE137
         MGTK_RELAY_CALL2 MGTK::MoveTo, $D265
-        addr_call LE09A, str_reading
+        addr_call draw_text, str_reading
         rts
 
-LE4BF:  lda     LD18D
+LE4BF:  lda     winfo_dialog::window_id
         jsr     LE137
         lda     LD417
         asl     a
@@ -2343,26 +2197,26 @@ LE4BF:  lda     LD18D
         lda     LD407,y
         jsr     LDEEB
         MGTK_RELAY_CALL2 MGTK::MoveTo, $D467
-        addr_call LE09A, str_blocks_to_transfer
-        addr_call LE09A, str_7_spaces
+        addr_call draw_text, str_blocks_to_transfer
+        addr_call draw_text, str_7_spaces
         rts
 
 LE4EC:  jsr     LE522
         MGTK_RELAY_CALL2 MGTK::MoveTo, $D45F
-        addr_call LE09A, str_blocks_read
+        addr_call draw_text, str_blocks_read
         .byte   $A9
 LE500:  .byte   $57
         ldx     #$D4
-        jsr     LE09A
+        jsr     draw_text
         rts
 
 LE507:  jsr     LE522
         MGTK_RELAY_CALL2 MGTK::MoveTo, $D463
-        addr_call LE09A, str_blocks_written
-        addr_call LE09A, str_7_spaces
+        addr_call draw_text, str_blocks_written
+        addr_call draw_text, str_7_spaces
         rts
 
-LE522:  lda     LD18D
+LE522:  lda     winfo_dialog::window_id
         jsr     LE137
         lda     LD422
         sta     LE558
@@ -2391,10 +2245,10 @@ LE550:  .byte   $07
         .byte   $02
         ora     (L0000,x)
 LE558:  .byte   0
-LE559:  lda     LD18D
+LE559:  lda     winfo_dialog::window_id
         jsr     LE137
         MGTK_RELAY_CALL2 MGTK::MoveTo, $D46B
-        addr_call LE09A, str_source
+        addr_call draw_text, str_source
         ldx     LD417
         lda     LD3F7,x
         and     #$70
@@ -2415,10 +2269,10 @@ LE559:  lda     LD18D
         adc     #'1'
         sta     str_d + 1
         MGTK_RELAY_CALL2 MGTK::MoveTo, $D46F
-        addr_call LE09A, str_slot
-        addr_call LE09A, str_s
-        addr_call LE09A, str_drive
-        addr_call LE09A, str_d
+        addr_call draw_text, str_slot
+        addr_call draw_text, str_s
+        addr_call draw_text, str_drive
+        addr_call draw_text, str_d
         bit     LD44D
         bpl     LE5C6
         bvc     LE5C5
@@ -2427,19 +2281,19 @@ LE559:  lda     LD18D
         beq     LE5C6
 LE5C5:  rts
 
-LE5C6:  addr_call LE09A, str_2_spaces
+LE5C6:  addr_call draw_text, str_2_spaces
         ldx     $1300
 LE5D0:  lda     $1300,x
         sta     LD43A,x
         dex
         bpl     LE5D0
-        addr_call LE09A, LD43A
+        addr_call draw_text, LD43A
         rts
 
-LE5E1:  lda     LD18D
+LE5E1:  lda     winfo_dialog::window_id
         jsr     LE137
         MGTK_RELAY_CALL2 MGTK::MoveTo, $D473
-        addr_call LE09A, str_destination
+        addr_call draw_text, str_destination
         ldx     LD418
         lda     LD3F7,x
         and     #$70
@@ -2459,46 +2313,46 @@ LE5E1:  lda     LD18D
         adc     #'1'
         sta     str_d + 1
         MGTK_RELAY_CALL2 MGTK::MoveTo, $D477
-        addr_call LE09A, str_slot
-        addr_call LE09A, str_s
-        addr_call LE09A, str_drive
-        addr_call LE09A, str_d
+        addr_call draw_text, str_slot
+        addr_call draw_text, str_s
+        addr_call draw_text, str_drive
+        addr_call draw_text, str_d
         rts
 
-LE63F:  lda     LD18D
+LE63F:  lda     winfo_dialog::window_id
         jsr     LE137
         MGTK_RELAY_CALL2 MGTK::MoveTo, $D47B
         bit     LD44D
         bmi     LE65B
-        addr_call LE09A, str_prodos_disk_copy
+        addr_call draw_text, str_prodos_disk_copy
         rts
 
 LE65B:  bvs     LE665
-        addr_call LE09A, str_dos33_disk_copy
+        addr_call draw_text, str_dos33_disk_copy
         rts
 
 LE665:  lda     LD44D
         and     #$0F
         bne     LE673
-        addr_call LE09A, str_pascal_disk_copy
+        addr_call draw_text, str_pascal_disk_copy
 LE673:  rts
 
 LE674:  lda     LD44D
         cmp     #$C0
         beq     LE693
-        lda     LD18D
+        lda     winfo_dialog::window_id
         jsr     LE137
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL2 MGTK::PaintRect, $D483
 LE693:  rts
 
-LE694:  lda     LD18D
+LE694:  lda     winfo_dialog::window_id
         jsr     LE137
         MGTK_RELAY_CALL2 MGTK::MoveTo, $D48B
-        addr_call LE09A, str_escape_stop_copy
+        addr_call draw_text, str_escape_stop_copy
         rts
 
-        lda     LD18D
+        lda     winfo_dialog::window_id
         jsr     LE137
         copy16  #$800A, LE6FB
 LE6BB:  dec     LE6FB
@@ -2511,7 +2365,7 @@ LE6BB:  dec     LE6FB
         beq     LE6DE
 LE6D5:  MGTK_RELAY_CALL2 MGTK::SetTextBG, $D359
 LE6DE:  MGTK_RELAY_CALL2 MGTK::MoveTo, $D48B
-        addr_call LE09A, str_escape_stop_copy
+        addr_call draw_text, str_escape_stop_copy
         jmp     LE6BB
 
 LE6F1:  MGTK_RELAY_CALL2 MGTK::SetTextBG, $D35A
@@ -2533,7 +2387,7 @@ LE714:  jsr     L10FB
         return  #$80
 
 LE71A:  jsr     L127E
-        lda     LD18D
+        lda     winfo_dialog::window_id
         jsr     LE137
         lda     $0C5D
         ldx     $0C5E
@@ -2541,13 +2395,13 @@ LE71A:  jsr     L127E
         lda     LE765
         bne     LE74B
         MGTK_RELAY_CALL2 MGTK::MoveTo, $D493
-        addr_call LE09A, str_error_reading
-        addr_call LE09A, str_7_spaces
+        addr_call draw_text, str_error_reading
+        addr_call draw_text, str_7_spaces
         return  #$00
 
 LE74B:  MGTK_RELAY_CALL2 MGTK::MoveTo, $D48F
-        addr_call LE09A, str_error_writing
-        addr_call LE09A, str_7_spaces
+        addr_call draw_text, str_error_writing
+        addr_call draw_text, str_7_spaces
         return  #$00
 
 LE765:  .byte   0
@@ -2760,96 +2614,53 @@ LE810:  .byte   0
         .byte   $9F
         ora     ($34,x)
         .byte   0
-LE8B7:  .byte   $41
-        .byte   0
-LE8B9:  .byte   $2D
-        .byte   0
-        .byte   0
-        jsr     L0080
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        ldy     $01
-        .byte   $37
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        jsr     L0080
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   $2F
-        .byte   $02
-        .byte   $BF
-        .byte   0
-        .byte   $0F
-        .byte   $4F
-        .byte   $4B
-        jsr     L2020
-        jsr     L2020
-        jsr     L2020
-        jsr     L2020
-        ora     $430E
-        adc     ($6E,x)
-        .byte   $63
-        adc     $6C
-        jsr     L2020
-        jsr     L4520
-        .byte   $73
-        .byte   $63
-        .byte   $0F
-        .byte   $54
-        .byte   $72
-        adc     $4120,y
-        .byte   $67
-        adc     ($69,x)
-        ror     L2020
-        jsr     L2020
-        eor     ($03,x)
-        eor     $7365,y
-        .byte   $02
-        lsr     $FA6F
-        .byte   0
-        and     L0000
-        bit     $3001
-        .byte   0
-        .byte   $FF
-        .byte   0
-        .byte   $2F
-        .byte   0
-        lsr     $2501,x
-        .byte   0
-        bcc     LE920
-        .byte   $30
-LE920:  .byte   0
-        .byte   $63
-        ora     ($2F,x)
-        .byte   0
-        bit     $2501
-        .byte   0
-        bcc     LE92C
-        .byte   $30
-LE92C:  .byte   0
-        and     ($01),y
-        .byte   $2F
-        .byte   0
-        .byte   $14
-        .byte   0
-        and     L0000
-        sei
-        .byte   0
-        bmi     LE939
-LE939:  ora     $2F00,y
-        .byte   0
-        .byte   $64
-        .byte   0
-        clc
-        .byte   0
+
+
+.proc portbits1
+viewloc:        DEFINE_POINT 65, 45, viewloc
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved:       .byte   0
+maprect:        DEFINE_RECT 0, 0, 420, 55
+.endproc
+
+.proc portbits2
+viewloc:        DEFINE_POINT 0, 0
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved:       .byte   0
+maprect:        DEFINE_RECT 0, 0, $22F, $BF
+.endproc
+
+str_ok_btn:
+        PASCAL_STRING {"OK            ",GLYPH_RETURN}
+
+str_cancel_btn:
+        PASCAL_STRING "Cancel     Esc"
+
+str_try_again_btn:
+        PASCAL_STRING "Try Again     A"
+
+str_yes_btn:
+        PASCAL_STRING "Yes"
+
+str_no_btn:
+        PASCAL_STRING "No"
+
+yes_rect:  DEFINE_RECT 250, 37, 300, 48
+yes_pos:  DEFINE_POINT 255, 47
+
+no_rect:  DEFINE_RECT 350, 37, 400, 48
+no_pos:  DEFINE_POINT 355, 47
+
+ok_try_again_rect:  DEFINE_RECT 300, 37, 400, 48
+ok_try_again_pos:  DEFINE_POINT 305, 47
+
+cancel_rect:  DEFINE_RECT 20, 37, 120, 48
+cancel_pos:  DEFINE_POINT 25, 47
+
+LE93D:  DEFINE_POINT 100, 24
+
 LE941:  .byte   0
 LE942:  .byte   0
 LE943:  .byte   0
@@ -2915,7 +2726,7 @@ LEB84:  stax    LEB81
         MGTK_RELAY_CALL2 MGTK::PaintRect, $E89F
         jsr     LF0DF
         MGTK_RELAY_CALL2 MGTK::FrameRect, $E89F
-        MGTK_RELAY_CALL2 MGTK::SetPortBits, $E8B7
+        MGTK_RELAY_CALL2 MGTK::SetPortBits, portbits1
         MGTK_RELAY_CALL2 MGTK::FrameRect, $E8A7
         MGTK_RELAY_CALL2 MGTK::FrameRect, $E8AF
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
@@ -2990,37 +2801,38 @@ LEC6C:  tya
 
 LEC8C:  jsr     LF0DF
         bit     LE941
-        bpl     LED0A
-        MGTK_RELAY_CALL2 MGTK::FrameRect, $E931
-        MGTK_RELAY_CALL2 MGTK::MoveTo, $E939
-        addr_call LE09A, $E8E7
+        bpl     draw_ok_btn
+        MGTK_RELAY_CALL2 MGTK::FrameRect, cancel_rect
+        MGTK_RELAY_CALL2 MGTK::MoveTo, cancel_pos
+        addr_call draw_text, str_cancel_btn
         bit     LE941
-        bvs     LED0A
+        bvs     draw_ok_btn
         lda     LE941
         and     #$0F
-        beq     LECEE
-        MGTK_RELAY_CALL2 MGTK::FrameRect, $E90D
-        MGTK_RELAY_CALL2 MGTK::MoveTo, $E915
-        addr_call LE09A, $E906
-        MGTK_RELAY_CALL2 MGTK::FrameRect, $E919
-        MGTK_RELAY_CALL2 MGTK::MoveTo, $E921
-        addr_call LE09A, $E90A
+        beq     draw_try_again_btn
+
+        MGTK_RELAY_CALL2 MGTK::FrameRect, yes_rect
+        MGTK_RELAY_CALL2 MGTK::MoveTo, yes_pos
+        addr_call draw_text, str_yes_btn
+
+        MGTK_RELAY_CALL2 MGTK::FrameRect, no_rect
+        MGTK_RELAY_CALL2 MGTK::MoveTo, no_pos
+        addr_call draw_text, str_no_btn
         jmp     LED23
 
-LECEE:  MGTK_RELAY_CALL2 MGTK::FrameRect, $E925
-        MGTK_RELAY_CALL2 MGTK::MoveTo, $E92D
-        addr_call LE09A, $E8F6
+draw_try_again_btn:
+        MGTK_RELAY_CALL2 MGTK::FrameRect, ok_try_again_rect
+        MGTK_RELAY_CALL2 MGTK::MoveTo, ok_try_again_pos
+        addr_call draw_text, str_try_again_btn
         jmp     LED23
 
-LED0A:  MGTK_RELAY_CALL2 MGTK::FrameRect, $E925
-        MGTK_RELAY_CALL2 MGTK::MoveTo, $E92D
-        addr_call LE09A, $E8D7
-LED23:  MGTK_RELAY_CALL2 MGTK::MoveTo, $E93D
-        lda     LE942
-        ldx     LE943
-        .byte   $20
-        txs
-        .byte   $E0
+draw_ok_btn:
+        MGTK_RELAY_CALL2 MGTK::FrameRect, ok_try_again_rect
+        MGTK_RELAY_CALL2 MGTK::MoveTo, ok_try_again_pos
+        addr_call draw_text, str_ok_btn
+
+LED23:  MGTK_RELAY_CALL2 MGTK::MoveTo, LE93D
+        addr_call_indirect draw_text, LE942
 LED35:  bit     LD41E
         bpl     $ED45
         jsr     LF192
@@ -3046,7 +2858,7 @@ LED58:  cmp     #MGTK::event_kind_key_down
 LED69:  cmp     #CHAR_ESCAPE
         bne     LED7E
         jsr     LF0DF
-        MGTK_RELAY_CALL2 MGTK::PaintRect, $E931
+        MGTK_RELAY_CALL2 MGTK::PaintRect, cancel_rect
 LED79:  lda     #$01
         jmp     LEE6A
 
@@ -3057,23 +2869,23 @@ LED7E:  bit     LE941
         and     #$0F
         beq     LEDC1
         pla
-        cmp     #$4E
+        cmp     #'N'
         beq     LED9F
-        cmp     #$6E
+        cmp     #'n'
         beq     LED9F
-        cmp     #$59
+        cmp     #'Y'
         beq     LEDB0
-        cmp     #$79
+        cmp     #'y'
         beq     LEDB0
         jmp     LED35
 
 LED9F:  jsr     LF0DF
-        MGTK_RELAY_CALL2 MGTK::PaintRect, $E919
+        MGTK_RELAY_CALL2 MGTK::PaintRect, no_rect
         lda     #$03
         jmp     LEE6A
 
 LEDB0:  jsr     LF0DF
-        MGTK_RELAY_CALL2 MGTK::PaintRect, $E90D
+        MGTK_RELAY_CALL2 MGTK::PaintRect, yes_rect
         lda     #$02
         jmp     LEE6A
 
@@ -3081,7 +2893,7 @@ LEDC1:  pla
         cmp     #$61
         bne     LEDD7
 LEDC6:  jsr     LF0DF
-        MGTK_RELAY_CALL2 MGTK::PaintRect, $E925
+        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_try_again_rect
         lda     #$00
         jmp     LEE6A
 
@@ -3094,7 +2906,7 @@ LEDD7:  cmp     #$41
 LEDE2:  cmp     #$0D
         bne     LEDF7
         jsr     LF0DF
-        MGTK_RELAY_CALL2 MGTK::PaintRect, $E925
+        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_try_again_rect
 LEDF2:  lda     #$00
         jmp     LEE6A
 
@@ -3104,8 +2916,8 @@ LEDFA:  jsr     LF0B8
         MGTK_RELAY_CALL2 MGTK::MoveTo, event_coords
         bit     LE941
         bpl     LEE57
-        MGTK_RELAY_CALL2 MGTK::InRect, $E931
-        cmp     #$80
+        MGTK_RELAY_CALL2 MGTK::InRect, cancel_rect
+        cmp     #MGTK::inrect_inside
         bne     LEE1B
         jmp     LEEF8
 
@@ -3114,37 +2926,37 @@ LEE1B:  bit     LE941
         lda     LE941
         and     #$0F
         beq     LEE47
-        MGTK_RELAY_CALL2 MGTK::InRect, $E919
-        cmp     #$80
+        MGTK_RELAY_CALL2 MGTK::InRect, no_rect
+        cmp     #MGTK::inrect_inside
         bne     LEE37
         jmp     LEFD8
 
-LEE37:  MGTK_RELAY_CALL2 MGTK::InRect, $E90D
-        cmp     #$80
+LEE37:  MGTK_RELAY_CALL2 MGTK::InRect, yes_rect
+        cmp     #MGTK::inrect_inside
         bne     LEE67
         jmp     LF048
 
-LEE47:  MGTK_RELAY_CALL2 MGTK::InRect, $E925
-        cmp     #$80
+LEE47:  MGTK_RELAY_CALL2 MGTK::InRect, ok_try_again_rect
+        cmp     #MGTK::inrect_inside
         bne     LEE67
         jmp     LEE88
 
-LEE57:  MGTK_RELAY_CALL2 MGTK::InRect, $E925
-        cmp     #$80
+LEE57:  MGTK_RELAY_CALL2 MGTK::InRect, ok_try_again_rect
+        cmp     #MGTK::inrect_inside
         bne     LEE67
         jmp     LEF68
 
 LEE67:  jmp     LED35
 
 LEE6A:  pha
-        MGTK_RELAY_CALL2 MGTK::SetPortBits, $E8C7
+        MGTK_RELAY_CALL2 MGTK::SetPortBits, portbits2
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL2 MGTK::PaintRect, $E89F
         pla
         rts
 
 LEE88:  jsr     LF0DF
-        MGTK_RELAY_CALL2 MGTK::PaintRect, $E925
+        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_try_again_rect
         lda     #$00
         sta     LEEF7
 LEE99:  MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
@@ -3153,8 +2965,8 @@ LEE99:  MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         beq     LEEEA
         jsr     LF0B8
         MGTK_RELAY_CALL2 MGTK::MoveTo, event_coords
-        MGTK_RELAY_CALL2 MGTK::InRect, $E925
-        cmp     #$80
+        MGTK_RELAY_CALL2 MGTK::InRect, ok_try_again_rect
+        cmp     #MGTK::inrect_inside
         beq     LEECA
         lda     LEEF7
         beq     LEED2
@@ -3165,7 +2977,7 @@ LEECA:  lda     LEEF7
         jmp     LEE99
 
 LEED2:  jsr     LF0DF
-        MGTK_RELAY_CALL2 MGTK::PaintRect, $E925
+        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_try_again_rect
         lda     LEEF7
         clc
         adc     #$80
@@ -3181,7 +2993,7 @@ LEEF2:  lda     #$00
 
 LEEF7:  .byte   0
 LEEF8:  jsr     LF0DF
-        MGTK_RELAY_CALL2 MGTK::PaintRect, $E931
+        MGTK_RELAY_CALL2 MGTK::PaintRect, cancel_rect
         lda     #$00
         sta     LEF67
 LEF09:  MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
@@ -3190,8 +3002,8 @@ LEF09:  MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         beq     LEF5A
         jsr     LF0B8
         MGTK_RELAY_CALL2 MGTK::MoveTo, event_coords
-        MGTK_RELAY_CALL2 MGTK::InRect, $E931
-        cmp     #$80
+        MGTK_RELAY_CALL2 MGTK::InRect, cancel_rect
+        cmp     #MGTK::inrect_inside
         beq     LEF3A
         lda     LEF67
         beq     LEF42
@@ -3202,7 +3014,7 @@ LEF3A:  lda     LEF67
         jmp     LEF09
 
 LEF42:  jsr     LF0DF
-        MGTK_RELAY_CALL2 MGTK::PaintRect, $E931
+        MGTK_RELAY_CALL2 MGTK::PaintRect, cancel_rect
         lda     LEF67
         clc
         adc     #$80
@@ -3220,15 +3032,15 @@ LEF67:  .byte   0
 LEF68:  lda     #$00
         sta     LEFD7
         jsr     LF0DF
-        MGTK_RELAY_CALL2 MGTK::PaintRect, $E925
+        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_try_again_rect
 LEF79:  MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::event_kind_button_up
         beq     LEFCA
         jsr     LF0B8
         MGTK_RELAY_CALL2 MGTK::MoveTo, event_coords
-        MGTK_RELAY_CALL2 MGTK::InRect, $E925
-        cmp     #$80
+        MGTK_RELAY_CALL2 MGTK::InRect, ok_try_again_rect
+        cmp     #MGTK::inrect_inside
         beq     LEFAA
         lda     LEFD7
         beq     LEFB2
@@ -3239,7 +3051,7 @@ LEFAA:  lda     LEFD7
         jmp     LEF79
 
 LEFB2:  jsr     LF0DF
-        MGTK_RELAY_CALL2 MGTK::PaintRect, $E925
+        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_try_again_rect
         lda     LEFD7
         clc
         adc     #$80
@@ -3257,15 +3069,15 @@ LEFD7:  .byte   0
 LEFD8:  lda     #$00
         sta     LF047
         jsr     LF0DF
-        MGTK_RELAY_CALL2 MGTK::PaintRect, $E919
+        MGTK_RELAY_CALL2 MGTK::PaintRect, no_rect
 LEFE9:  MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::event_kind_button_up
         beq     LF03A
         jsr     LF0B8
         MGTK_RELAY_CALL2 MGTK::MoveTo, event_coords
-        MGTK_RELAY_CALL2 MGTK::InRect, $E919
-        cmp     #$80
+        MGTK_RELAY_CALL2 MGTK::InRect, no_rect
+        cmp     #MGTK::inrect_inside
         beq     LF01A
         lda     LF047
         beq     LF022
@@ -3276,7 +3088,7 @@ LF01A:  lda     LF047
 LF01F:  jmp     LEFE9
 
 LF022:  jsr     LF0DF
-        MGTK_RELAY_CALL2 MGTK::PaintRect, $E919
+        MGTK_RELAY_CALL2 MGTK::PaintRect, no_rect
         lda     LF047
         clc
         adc     #$80
@@ -3294,15 +3106,15 @@ LF047:  .byte   0
 LF048:  lda     #$00
         sta     LF0B7
         jsr     LF0DF
-        MGTK_RELAY_CALL2 MGTK::PaintRect, $E90D
+        MGTK_RELAY_CALL2 MGTK::PaintRect, yes_rect
 LF059:  MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::event_kind_button_up
         beq     LF0AA
         jsr     LF0B8
         MGTK_RELAY_CALL2 MGTK::MoveTo, event_coords
-        MGTK_RELAY_CALL2 MGTK::InRect, $E90D
-        cmp     #$80
+        MGTK_RELAY_CALL2 MGTK::InRect, yes_rect
+        cmp     #MGTK::inrect_inside
         beq     LF08A
         lda     LF0B7
         beq     LF092
@@ -3313,7 +3125,7 @@ LF08A:  lda     LF0B7
         jmp     LF059
 
 LF092:  jsr     LF0DF
-        MGTK_RELAY_CALL2 MGTK::PaintRect, $E90D
+        MGTK_RELAY_CALL2 MGTK::PaintRect, yes_rect
         lda     LF0B7
         clc
         adc     #$80
@@ -3328,8 +3140,8 @@ LF0B2:  lda     #$02
         jmp     LEE6A
 
 LF0B7:  .byte   0
-LF0B8:  sub16   event_xcoord, LE8B7, event_xcoord
-        sub16   event_ycoord, LE8B9, event_ycoord
+LF0B8:  sub16   event_xcoord, portbits1::viewloc::xcoord, event_xcoord
+        sub16   event_ycoord, portbits1::viewloc::ycoord, event_ycoord
         rts
 
 LF0DF:  MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
