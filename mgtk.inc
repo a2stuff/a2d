@@ -607,6 +607,21 @@ winfo_offset_port               := 20
 winfo_offset_nextwinfo          := 56
 winfo_size                      := 58
 
+short_event_size                := 4        ; events that don't have mouse coordinates
+event_size                      := 5        ; any kind of event
+
+cursor_height                   := 12
+cursor_width                    := 2
+
+cursor_offset_mask              := cursor_width * cursor_height
+cursor_offset_hotspot           := 2 * cursor_width * cursor_height
+cursor_size                     := cursor_offset_hotspot + 2
+
+font_offset_fonttype            := 0
+font_offset_lastchar            := 1
+font_offset_height              := 2
+font_offset_charwidth           := 3
+
 
 ;;; Errors
 
@@ -614,10 +629,14 @@ error_empty_object := $81
 error_bad_object := $82
 error_font_too_big := $83
 
+error_invalid_op_sys := $90
 error_no_mouse := $92
+error_invalid_irq_setting := $93
 error_invalid_hook := $94
 error_desktop_not_initialized := $95
 error_irq_in_use := $97
+error_invalid_event := $98
+error_event_buffer_full := $99
 error_window_already_exists := $9D
 error_window_id_required := $9E
 error_window_not_found := $9F
