@@ -26,13 +26,23 @@ PHASE2  := $C084                ; Stepper motor phase 2
 PHASE3  := $C086                ; Stepper motor phase 3
 DISABLE := $C088                ; Turn disk drive off
 ENABLE  := $C089                ; Turn disk drive on
-SELECT  := $C08A                ; Select drive 1 or 2 (at addr+1)
-Q6      := $C08C                ;
-CHECKWP := $C08D                ;
-Q7      := $C08E                ;
+SELECT  := $C08A                ; Select drive 1 or 2
+SELECT1 := $C08A                ; Select drive 1
+SELECT2 := $C08B                ; Select drive 1
+XMIT    := $C08C                ; Get/set bits to/from disk
+TESTWP  := $C08D                ; Test WP mode (then WPRES has result)
+DATA    := $C08D                ; Write data to buffer (then XMIT to send)
+WPRES   := $C08E                ; WP mode test result
+RDMODE  := $C08E                ; Turn off write mode
 WRMODE  := $C08F                ; Turn on write mode
 
         .org $800
+
+
+.macro exit_with_result arg
+        lda     #arg
+        jmp     exit
+.endmacro
 
 
 L0800:  php
@@ -112,42 +122,38 @@ L0882:  lda     $D1
         ldx     L0C23
         jsr     L0823
         ldx     L0C23
-        lda     CHECKWP,x       ; Check write protect
-        lda     Q7,x
+        lda     TESTWP,x        ; Check write protect???
+        lda     WPRES,x
         tay
-        lda     Q7,x            ; Activate read mode
-        lda     Q6,x
+        lda     RDMODE,x        ; Activate read mode
+        lda     XMIT,x
         tya
-        bpl     L08A2
-        lda     #$02
-        jmp     L08F9
+        bpl     :+              ; WP mode?
+        exit_with_result 2      ; Yes
 
-L08A2:  jsr     L0B63
+:       jsr     L0B63
         bcc     L08B5
         lda     #$01
         ldy     $D4
         cpy     L0C1F
         bcs     L08B2
-        lda     #$04
-L08B2:  jmp     L08F9
+        lda     #4
+L08B2:  jmp     exit
 
 L08B5:  ldy     $D4
         cpy     L0C1F
         bcs     L08C1
-        lda     #$04
-        jmp     L08F9
+        exit_with_result 4
 
 L08C1:  cpy     L0C20
         bcc     L08CB
-        lda     #$03
-        jmp     L08F9
+        exit_with_result 3
 
 L08CB:  lda     L0C22
         sta     L0C25
 L08D1:  dec     L0C25
         bne     L08DB
-        lda     #$01
-        jmp     L08F9
+        exit_with_result 1
 
 L08DB:  ldx     L0C23
         jsr     L096A
@@ -161,14 +167,19 @@ L08DB:  ldx     L0C23
         lda     $D1
         cmp     #$23
         bcc     L0882
-        lda     #$00
-L08F9:  pha
+
+        lda     #0
+        ;; fall through
+
+.proc exit
+        pha
         ldx     L0C23
         lda     DISABLE,x       ; Turn drive off
-        lda     #$00
+        lda     #0
         jsr     L0823
         pla
         rts
+.endproc
 
 ;;; ============================================================
 
@@ -176,18 +187,18 @@ L08F9:  pha
         ldy     #$20
 L0909:  dey
         beq     return_with_carry_set
-:       lda     Q6,x
+:       lda     XMIT,x
         bpl     :-
 
 L0911:  eor     #$D5
         bne     L0909
         nop
-:       lda     Q6,x
+:       lda     XMIT,x
         bpl     :-
         cmp     #$AA
         bne     L0911
         ldy     #$56
-:       lda     Q6,x
+:       lda     XMIT,x
         bpl     :-
         cmp     #$AD
         bne     L0911
@@ -195,7 +206,7 @@ L0911:  eor     #$D5
         lda     #$00
 L092C:  dey
         sty     $D5
-:       lda     Q6,x
+:       lda     XMIT,x
         bpl     :-
         cmp     #$96
         bne     return_with_carry_set
@@ -203,7 +214,7 @@ L092C:  dey
         bne     L092C
 
 L093C:  sty     $D5
-:       lda     Q6,x
+:       lda     XMIT,x
         bpl     :-
         cmp     #$96
         bne     return_with_carry_set
@@ -211,16 +222,16 @@ L093C:  sty     $D5
         iny
         bne     L093C
 
-:       lda     Q6,x
+:       lda     XMIT,x
         bpl     :-
         cmp     #$96
         bne     return_with_carry_set
-:       lda     Q6,x
+:       lda     XMIT,x
         bpl     :-
         cmp     #$DE
         bne     return_with_carry_set
         nop
-:       lda     Q6,x
+:       lda     XMIT,x
         bpl     :-
         cmp     #$AA
         beq     return_with_carry_clear
@@ -236,29 +247,29 @@ L096E:  iny
         bne     :+
         inc     $DC
         beq     return_with_carry_set
-:       lda     Q6,x
+:       lda     XMIT,x
         bpl     :-
 
 L097A:  cmp     #$D5
         bne     L096E
         nop
-:       lda     Q6,x
+:       lda     XMIT,x
         bpl     :-
         cmp     #$AA
         bne     L097A
         ldy     #$03
-:       lda     Q6,x
+:       lda     XMIT,x
         bpl     :-
         cmp     #$96
         bne     L097A
 
         lda     #$00
 L0995:  sta     $DB
-:       lda     Q6,x
+:       lda     XMIT,x
         bpl     :-
         rol     a
         sta     $DD
-:       lda     Q6,x
+:       lda     XMIT,x
         bpl     :-
         and     $DD
         sta     $D7,y
@@ -268,12 +279,12 @@ L0995:  sta     $DB
 
         tay
         bne     return_with_carry_set
-:       lda     Q6,x
+:       lda     XMIT,x
         bpl     :-
         cmp     #$DE
         bne     return_with_carry_set
         nop
-:       lda     Q6,x
+:       lda     XMIT,x
         bpl     :-
         cmp     #$AA
         bne     return_with_carry_set
@@ -337,12 +348,12 @@ done:   rts
 ;;; ============================================================
 
 L0A2E:  jsr     L0C0E
-        lda     CHECKWP,x       ; Check write protect
-        lda     Q7,x
+        lda     TESTWP,x        ; Check write protect ???
+        lda     WPRES,x
         lda     #$FF
-        sta     WRMODE,x        ; Write
-        cmp     Q6,x
-        pha
+        sta     WRMODE,x        ; Turn on write mode
+        cmp     XMIT,x          ; Start sending bits to disk
+        pha                     ; 32 cycles...
         pla
         nop
         ldy     #$04
@@ -366,16 +377,16 @@ L0A62:  jsr     L0C0E
 L0A65:  nop
         nop
         lda     #$96
-        sta     $C08D,x
-        cmp     Q6,x
+        sta     DATA,x
+        cmp     XMIT,x
         dey
         bne     L0A62
         bit     $00
         nop
 L0A75:  jsr     L0C0E
         lda     #$96
-        sta     $C08D,x
-        cmp     Q6,x
+        sta     DATA,x
+        cmp     XMIT,x
         lda     #$96
         nop
         iny
@@ -389,36 +400,37 @@ L0A75:  jsr     L0C0E
         jsr     write
         lda     #$FF
         jsr     write
-        lda     $C08E,x
-        lda     Q6,x
+        lda     RDMODE,x        ; Turn off write mode
+        lda     XMIT,x
         rts
 
 ;;; Write, with appropriate cycle counts
 write:  nop
 write2: pha
         pla
-        sta     $C08D,x
-        cmp     Q6,x
+        sta     DATA,x
+        cmp     XMIT,x
         rts
 
 ;;; ============================================================
 
-L0AAE:  sec
-        lda     $C08D,x
-        lda     $C08E,x
+.proc L0AAE
+        sec
+        lda     TESTWP,x        ; Check write protect
+        lda     WPRES,x
         bmi     L0B15
         lda     #$FF
-        sta     $C08F,x
-        cmp     Q6,x
-        pha
+        sta     WRMODE,x        ; Turn on write mode
+        cmp     XMIT,x          ; Start sending bits to disk
+        pha                     ; 32 cycles...
         pla
-L0AC1:  jsr     L0B1B
-        jsr     L0B1B
-        sta     $C08D,x
-        cmp     Q6,x
+loop:   jsr     rts1
+        jsr     rts1
+        sta     DATA,x
+        cmp     XMIT,x
         nop
         dey
-        bne     L0AC1
+        bne     loop
         lda     #$D5
         jsr     L0B2D
         lda     #$AA
@@ -437,8 +449,8 @@ L0AC1:  jsr     L0B1B
         pha
         lsr     a
         ora     $D0
-        sta     $C08D,x
-        lda     Q6,x
+        sta     DATA,x
+        lda     XMIT,x
         pla
         ora     #$AA
         jsr     L0B2C
@@ -449,17 +461,18 @@ L0AC1:  jsr     L0B1B
         lda     #$EB
         jsr     L0B2D
         clc
-L0B15:  lda     $C08E,x
-        lda     Q6,x
-L0B1B:  rts
+L0B15:  lda     RDMODE,x        ; Turn off write mode
+        lda     XMIT,x
+rts1:   rts
+.endproc
 
 ;;; ============================================================
 
 L0B1C:  pha
         lsr     a
         ora     $D0
-        sta     $C08D,x
-        cmp     Q6,x
+        sta     DATA,x
+        cmp     XMIT,x
         pla
         nop
         nop
@@ -469,8 +482,8 @@ L0B2C:  nop
 L0B2D:  nop
         pha
         pla
-        sta     $C08D,x
-        cmp     Q6,x
+        sta     DATA,x
+        cmp     XMIT,x
         rts
 
         .byte   0
@@ -506,8 +519,7 @@ L0B73:  ldx     L0C23
 
 L0B7E:  ldx     L0C23
         jsr     L0A2E
-        .byte   $E6
-L0B85:  .byte   $D2
+        inc     $D2
         lda     $D2
         cmp     #$10
         bcc     L0B71
@@ -1409,7 +1421,9 @@ L12B9:  .byte   0
         .byte   $FF
         .byte   $FF
         .byte   $FF
-        inc     a:$00,x
+        .byte   $FE
+        .byte   0
+        .byte   0
         .byte   0
         .byte   0
         .byte   $0F
@@ -1429,16 +1443,15 @@ L12B9:  .byte   0
         .byte   0
         .byte   $7F
         .byte   $FF
-        lda     $D133
+
+L12DA:  lda     $D133
         cmp     $D18D
-        bne     L12E5
+        bne     :+
         jmp     LDAEE
-
-L12E5:  cmp     $D1C7
-        bne     L12ED
+:       cmp     $D1C7
+        bne     :+
         jmp     LDB55
-
-L12ED:  rts
+:       rts
 
         lda     $D18D
         sta     $D12D
