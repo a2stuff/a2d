@@ -40,6 +40,7 @@ HR3_OFF         := $C0B6
 
 ;;; Monitor
 INIT            := $FB2F
+VERSION         := $FBB3
 BELL1           := $FBDD
 VTAB            := $FC22
 VTABZ           := $FC24
@@ -49,6 +50,8 @@ COUT            := $FDED
 SETKBD          := $FE89
 SETVID          := $FE93
 MONZ            := $FF69
+
+F8VERSION       := $06
 
 ;;; Miscellaneous
 IRQ_VECTOR      := $3FE

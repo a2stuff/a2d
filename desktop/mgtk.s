@@ -331,7 +331,7 @@ jump_table:
         ;; Initialization Calls
         .addr   StartDeskTopImpl    ; $1D StartDeskTop
         .addr   StopDeskTopImpl     ; $1E StopDeskTop
-        .addr   SetUserHookImpl               ; $1F SetUserHook
+        .addr   SetUserHookImpl     ; $1F SetUserHook
         .addr   AttachDriverImpl    ; $20 AttachDriver
         .addr   ScaleMouseImpl      ; $21 ScaleMouseImpl
         .addr   KeyboardMouse       ; $22 KeyboardMouse
@@ -3400,7 +3400,7 @@ do_draw:
         sta     clipped_top
         tay
 
-        ldx     #15*shifted_draw_line_size
+        ldx     #(max_font_height-1)*shifted_draw_line_size
         sec
 
 :       lda     glyph_row_lo,y
@@ -3415,7 +3415,7 @@ do_draw:
         bpl     :-
 
         ldy     clipped_top
-        ldx     #15*unshifted_draw_line_size
+        ldx     #(max_font_height-1)*unshifted_draw_line_size
         sec
 :       lda     glyph_row_lo,y
         sta     unshifted_draw_linemax+1,x
@@ -3602,7 +3602,7 @@ advance_byte:
         bne     :+
         jmp     first_blit
 
-:       bmi     L5C84
+:       bmi     next_byte
         dec     width_bytes
         bne     unmasked_blit
         jmp     last_blit
@@ -3631,8 +3631,10 @@ unmasked_blit_linemax:
         .endrepeat
 
 
-L5C84:  bit     current_mapwidth
+next_byte:
+        bit     current_mapwidth
         bpl     text_ndbm
+
         lda     vid_page
         eor     #1
         tax
@@ -3659,7 +3661,7 @@ first_blit:
         beq     single_byte_blit
 
         jsr     masked_blit
-        jmp     L5C84
+        jmp     next_byte
 
 single_byte_blit:                      ; a single byte length blit; i.e. start
         and     right_masks_table,x    ; and end bytes are the same
@@ -4016,7 +4018,7 @@ ycoord: .word   0
 mouse_state:
 mouse_x:        .word   0
 mouse_y:        .word   0
-mouse_status:   .byte   0
+mouse_status:   .byte   0       ; bit 7 = is down, bit 6 = was down, still down
 
 mouse_scale_x:  .byte   $00
 mouse_scale_y:  .byte   $00
@@ -4030,53 +4032,80 @@ mouse_hook:
 cursor_hotspot_x:  .byte   $00
 cursor_hotspot_y:  .byte   $00
 
-L6004:  .byte   $00
-L6005:  .byte   $00
-L6006:  .byte   $00
-L6007:  .byte   $00
-L6008:  .byte   $00
-L6009:  .byte   $00
-L600A:  .byte   $00
-L600B:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00
-L602F:  .byte   $00,$00,$00,$00
-L6033:  .byte   $00,$00,$02,$00
-        .byte   $06,$00,$0E,$00,$1E,$00,$3E,$00
-        .byte   $7E,$00,$1A,$00,$30,$00,$30,$00
-        .byte   $60,$00,$00,$00,$03,$00,$07,$00
-        .byte   $0F,$00,$1F,$00,$3F,$00,$7F,$00
-        .byte   $7F,$01,$7F,$00,$78,$00,$78,$00
-        .byte   $70,$01,$70,$01,$01,$01
-L6065:  .addr   L6033
-L6067:  lda     #$FF
+cursor_mod7:
+        .res    1
+
+cursor_bits:
+        .res    3
+cursor_mask:
+        .res    3
+
+cursor_savebits:
+        .res    3*MGTK::cursor_height           ; Saved 3 screen bytes per row.
+
+cursor_data:
+        .res    4                               ; Saved values of cursor_char..cursor_y2.
+
+pointer_cursor:
+        .byte   px(%0000000),px(%0000000)
+        .byte   px(%0100000),px(%0000000)
+        .byte   px(%0110000),px(%0000000)
+        .byte   px(%0111000),px(%0000000)
+        .byte   px(%0111100),px(%0000000)
+        .byte   px(%0111110),px(%0000000)
+        .byte   px(%0111111),px(%0000000)
+        .byte   px(%0101100),px(%0000000)
+        .byte   px(%0000110),px(%0000000)
+        .byte   px(%0000110),px(%0000000)
+        .byte   px(%0000011),px(%0000000)
+
+        .byte   px(%0000000),px(%0000000)
+        .byte   px(%1100000),px(%0000000)
+        .byte   px(%1110000),px(%0000000)
+        .byte   px(%1111000),px(%0000000)
+        .byte   px(%1111100),px(%0000000)
+        .byte   px(%1111110),px(%0000000)
+        .byte   px(%1111111),px(%0000000)
+        .byte   px(%1111111),px(%1000000)
+        .byte   px(%1111111),px(%0000000)
+        .byte   px(%0001111),px(%0000000)
+        .byte   px(%0001111),px(%0000000)
+        .byte   px(%0000111),px(%1000000)
+        .byte   px(%0000111),px(%1000000)
+
+        .byte   1,1
+
+pointer_cursor_addr:
+        .addr   pointer_cursor
+
+.proc set_pointer_cursor
+        lda     #$FF
         sta     cursor_count
         lda     #0
         sta     cursor_flag
-        copy16  L6065, params_addr
+        lda     pointer_cursor_addr
+        sta     params_addr
+        lda     pointer_cursor_addr+1
+        sta     params_addr+1
         ;; fall through
+.endproc
 
 ;;; ============================================================
 ;;; SetCursor
 
-        cursor_height := 12
-        cursor_width  := 2
-        cursor_mask_offset := cursor_width * cursor_height
-        cursor_hotspot_offset := 2 * cursor_width * cursor_height
 
-SetCursorImpl:
+.proc SetCursorImpl
         php
         sei
         ldax    params_addr
         stax    active_cursor
         clc
-        adc     #cursor_mask_offset
+        adc     #MGTK::cursor_offset_mask
         bcc     :+
         inx
 :       stax    active_cursor_mask
-        ldy     #cursor_hotspot_offset
+
+        ldy     #MGTK::cursor_offset_hotspot
         lda     (params_addr),y
         sta     cursor_hotspot_x
         iny
@@ -4085,199 +4114,258 @@ SetCursorImpl:
         jsr     restore_cursor_background
         jsr     draw_cursor
         plp
-L60A7:  rts
+.endproc
+srts:   rts
 
-update_cursor:
+
+        cursor_bytes      := $82
+        cursor_softswitch := $83
+        cursor_y1         := $84
+        cursor_y2         := $85
+
+        vid_ptr           := $88
+
+.proc update_cursor
         lda     cursor_count           ; hidden? if so, skip
-        bne     L60A7
+        bne     srts
         bit     cursor_flag
-        bmi     L60A7
+        bmi     srts
+        ;; Fall-through
+.endproc
 
-draw_cursor:
-        lda     #$00
+.proc draw_cursor
+        lda     #0
         sta     cursor_count
         sta     cursor_flag
+
         lda     set_pos_params::ycoord
         clc
         sbc     cursor_hotspot_y
-        sta     $84
+        sta     cursor_y1
         clc
-        adc     #$0C
-        sta     $85
+        adc     #MGTK::cursor_height
+        sta     cursor_y2
+
         lda     set_pos_params::xcoord
         sec
         sbc     cursor_hotspot_x
         tax
         lda     set_pos_params::xcoord+1
-        sbc     #$00
-        bpl     L60E1
-        txa
-        ror     a
-        tax
-        ldy     mod7_table+124,x ; ???
-        lda     #$FF
-        bmi     L60E4
-L60E1:  jsr     divmod7
-L60E4:  sta     $82
+        sbc     #0
+        bpl     :+
+
+        txa                            ; X-coord is negative: X-reg = X-coord + 256
+        ror     a                      ; Will shift in zero:  X-reg = X-coord/2 + 128
+        tax                            ; Negative mod7 table starts at 252 (since 252%7 = 0), and goes backwards
+        ldy     mod7_table+252-128,x   ; Index (X-coord / 2 = X-reg - 128) relative to mod7_table+252
+        lda     #$FF                   ; Char index = -1
+        bmi     set_divmod
+
+:       jsr     divmod7
+set_divmod:
+        sta     cursor_bytes            ; char index in line
+
         tya
         rol     a
-        cmp     #$07
-        bcc     L60EE
-        sbc     #$07
-L60EE:  tay
-        lda     #$2A
-        rol     a
-        eor     #$01
-        sta     $83
-        sty     L6004
+        cmp     #7
+        bcc     :+
+        sbc     #7
+:       tay
+
+        lda     #<LOWSCR/2
+        rol     a                      ; if mod >= 7, then will be HISCR, else LOWSCR
+        eor     #1
+        sta     cursor_softswitch      ; $C0xx softswitch index
+
+        sty     cursor_mod7
         tya
         asl     a
         tay
-        copy16  shift_table_main,y, L6164
-        copy16  shift_table_aux,y, L616A
-        ldx     #$03
-L6116:  lda     $82,x
-        sta     L602F,x
-        dex
-        bpl     L6116
-        ldx     #$17
-        stx     $86
-        ldx     #$23
-        ldy     $85
-L6126:  cpy     #$C0
-        bcc     L612D
-        jmp     L61B9
+        copy16  shift_table_main,y, cursor_shift_main_addr
+        copy16  shift_table_aux,y, cursor_shift_aux_addr
 
-L612D:  lda     hires_table_lo,y
-        sta     $88
+        ldx     #3
+:       lda     cursor_bytes,x
+        sta     cursor_data,x
+        dex
+        bpl     :-
+
+        ldx     #$17
+        stx     left_bytes
+        ldx     #$23
+        ldy     cursor_y2
+dloop:  cpy     #192
+        bcc     :+
+        jmp     drnext
+
+:       lda     hires_table_lo,y
+        sta     vid_ptr
         lda     hires_table_hi,y
         ora     #$20
-        sta     $89
-        sty     $85
-        stx     $87
-        ldy     $86
+        sta     vid_ptr+1
+        sty     cursor_y2
+        stx     left_mod14
+
+        ldy     left_bytes
         ldx     #$01
-L6141:
+:
 active_cursor           := * + 1
         lda     $FFFF,y
-        sta     L6005,x
+        sta     cursor_bits,x
 active_cursor_mask      := * + 1
         lda     $FFFF,y
-        sta     L6008,x
+        sta     cursor_mask,x
         dey
         dex
-        bpl     L6141
-        lda     #$00
-        sta     L6007
-        sta     L600A
-        ldy     L6004
-        beq     L6172
-        ldy     #$05
-L6160:  ldx     L6004,y
-L6164           := * + 1
+        bpl     :-
+        lda     #0
+        sta     cursor_bits+2
+        sta     cursor_mask+2
+
+        ldy     cursor_mod7
+        beq     no_shift
+
+        ldy     #5
+:       ldx     cursor_bits-1,y
+
+cursor_shift_main_addr           := * + 1
         ora     $FF80,x
-        sta     L6005,y
-L616A           := * + 1
+        sta     cursor_bits,y
+
+cursor_shift_aux_addr           := * + 1
         lda     $FF00,x
         dey
-        bne     L6160
-        sta     L6005
-L6172:  ldx     $87
-        ldy     $82
-        lda     $83
-        jsr     L622A
-        bcs     L618D
-        lda     ($88),y
-        sta     L600B,x
-        lda     L6008
-        ora     ($88),y
-        eor     L6005
-        sta     ($88),y
+        bne     :-
+        sta     cursor_bits
+
+no_shift:
+        ldx     left_mod14
+        ldy     cursor_bytes
+        lda     cursor_softswitch
+        jsr     set_switch
+        bcs     :+
+
+        lda     (vid_ptr),y
+        sta     cursor_savebits,x
+
+        lda     cursor_mask
+        ora     (vid_ptr),y
+        eor     cursor_bits
+        sta     (vid_ptr),y
         dex
-L618D:  jsr     L6220
-        bcs     L61A2
-        lda     ($88),y
-        sta     L600B,x
-        lda     L6009
-        ora     ($88),y
-        eor     L6006
-        sta     ($88),y
+:
+        jsr     switch_page
+        bcs     :+
+
+        lda     (vid_ptr),y
+        sta     cursor_savebits,x
+        lda     cursor_mask+1
+
+        ora     (vid_ptr),y
+        eor     cursor_bits+1
+        sta     (vid_ptr),y
         dex
-L61A2:  jsr     L6220
-        bcs     L61B7
-        lda     ($88),y
-        sta     L600B,x
-        lda     L600A
-        ora     ($88),y
-        eor     L6007
-        sta     ($88),y
+:
+        jsr     switch_page
+        bcs     :+
+
+        lda     (vid_ptr),y
+        sta     cursor_savebits,x
+
+        lda     cursor_mask+2
+        ora     (vid_ptr),y
+        eor     cursor_bits+2
+        sta     (vid_ptr),y
         dex
-L61B7:  ldy     $85
-L61B9:  dec     $86
-        dec     $86
+:
+        ldy     cursor_y2
+drnext:
+        dec     left_bytes
+        dec     left_bytes
         dey
-        cpy     $84
-        beq     L621C
-        jmp     L6126
+        cpy     cursor_y1
+        beq     lowscr_rts
+        jmp     dloop
+.endproc
+drts:   rts
 
-L61C5:  rts
+active_cursor        := draw_cursor::active_cursor
+active_cursor_mask   := draw_cursor::active_cursor_mask
 
-restore_cursor_background:
+
+.proc restore_cursor_background
         lda     cursor_count           ; already hidden?
-        bne     L61C5
+        bne     drts
         bit     cursor_flag
-        bmi     L61C5
+        bmi     drts
 
-        ldx     #$03
-L61D2:  lda     L602F,x
-        sta     $82,x
+        ldx     #3
+:       lda     cursor_data,x
+        sta     cursor_bytes,x
         dex
-        bpl     L61D2
+        bpl     :-
+
         ldx     #$23
-        ldy     $85
-L61DE:  cpy     #$C0
-        bcs     L6217
+        ldy     cursor_y2
+cloop:  cpy     #192
+        bcs     cnext
+
         lda     hires_table_lo,y
-        sta     $88
+        sta     vid_ptr
         lda     hires_table_hi,y
         ora     #$20
-        sta     $89
-        sty     $85
-        ldy     $82
-        lda     $83
-        jsr     L622A
-        bcs     L61FF
-        lda     L600B,x
-        sta     ($88),y
+        sta     vid_ptr+1
+        sty     cursor_y2
+
+        ldy     cursor_bytes
+        lda     cursor_softswitch
+        jsr     set_switch
+        bcs     :+
+        lda     cursor_savebits,x
+        sta     (vid_ptr),y
         dex
-L61FF:  jsr     L6220
-        bcs     L620A
-        lda     L600B,x
-        sta     ($88),y
+:
+        jsr     switch_page
+        bcs     :+
+        lda     cursor_savebits,x
+        sta     (vid_ptr),y
         dex
-L620A:  jsr     L6220
-        bcs     L6215
-        lda     L600B,x
-        sta     ($88),y
+:
+        jsr     switch_page
+        bcs     :+
+        lda     cursor_savebits,x
+        sta     (vid_ptr),y
         dex
-L6215:  ldy     $85
-L6217:  dey
-        cpy     $84
-        bne     L61DE
-L621C:  sta     LOWSCR
+:
+        ldy     cursor_y2
+cnext:  dey
+        cpy     cursor_y1
+        bne     cloop
+.endproc
+lowscr_rts:
+        sta     LOWSCR
         rts
 
-L6220:  lda     L622E
-        eor     #$01
-        cmp     #$54
-        beq     L622A
-        iny
-L622A:  sta     L622E
 
-        L622E := *+1
+.proc switch_page
+        lda     set_switch_sta_addr
+        eor     #1
+        cmp     #<LOWSCR
+        beq     set_switch
+        iny
+        ;; Fall through
+.endproc
+
+.proc set_switch
+        sta     switch_sta_addr
+switch_sta_addr := *+1
         sta     $C0FF
         cpy     #$28
         rts
+.endproc
+
+set_switch_sta_addr := set_switch::switch_sta_addr
+
 
 ;;; ============================================================
 ;;; ShowCursor
@@ -4314,51 +4402,64 @@ done:   plp
 ;;; ============================================================
 ;;; HideCursor
 
-HideCursorImpl:
+.proc HideCursorImpl
         php
         sei
         jsr     restore_cursor_background
         dec     cursor_count
         plp
-L6263:  rts
+.endproc
+mrts:   rts
 
 ;;; ============================================================
 
-L6264:  .byte   0
-L6265:  bit     L6339
-        bpl     L627C
+cursor_throttle:
+        .byte   0
+
+.proc move_cursor
+        bit     use_interrupts
+        bpl     :+
+
         lda     kbd_mouse_state
-        bne     L627C
-        dec     L6264
-        lda     L6264
-        bpl     L6263
-        lda     #$02
-        sta     L6264
-L627C:  ldx     #2
-L627E:  lda     mouse_x,x
+        bne     :+
+        dec     cursor_throttle
+        lda     cursor_throttle
+        bpl     mrts
+        lda     #2
+        sta     cursor_throttle
+
+:       ldx     #2
+:       lda     mouse_x,x
         cmp     set_pos_params,x
-        bne     L628B
+        bne     mouse_moved
         dex
-        bpl     L627E
-        bmi     L629F
-L628B:  jsr     restore_cursor_background
+        bpl     :-
+        bmi     no_move
+
+mouse_moved:
+        jsr     restore_cursor_background
         ldx     #2
         stx     cursor_flag
-L6293:  lda     mouse_x,x
+:       lda     mouse_x,x
         sta     set_pos_params,x
         dex
-        bpl     L6293
+        bpl     :-
         jsr     update_cursor
-L629F:  bit     no_mouse_flag
-        bmi     L62A7
+
+no_move:
+        bit     no_mouse_flag
+        bmi     :+
         jsr     read_mouse_pos
-L62A7:  bit     no_mouse_flag
-        bpl     L62B1
-        lda     #$00
+
+:       bit     no_mouse_flag
+        bpl     :+
+        lda     #0
         sta     mouse_status
-L62B1:  lda     kbd_mouse_state
+
+:       lda     kbd_mouse_state
         beq     rts4
         jsr     L7EF5
+.endproc
 rts4:   rts
 
 ;;; ============================================================
@@ -4420,6 +4521,8 @@ done:   rts
 
         ;; Call mouse firmware, operation in Y, param in A
 .proc call_mouse
+        proc_ptr          := $88
+
         bit     no_mouse_flag
         bmi     rts4
 
@@ -4427,185 +4530,250 @@ done:   rts
         bmi     hooked
         pha
         ldx     mouse_firmware_hi
-        stx     $89
+        stx     proc_ptr+1
         lda     #$00
-        sta     $88
-        lda     ($88),y
+        sta     proc_ptr
+        lda     (proc_ptr),y
         sta     $88
         pla
         ldy     mouse_operand
-        jmp     ($88)
+        jmp     (proc_ptr)
 
 hooked: jmp     (mouse_hook)
 .endproc
 
-L6335:  .byte   $00
-L6336:  .byte   $00
-L6337:  .byte   $00
-L6338:  .byte   $00
-L6339:  .byte   $00
-L633A:  .byte   $00
-L633B:  .byte   $00
-L633C:  .byte   $00
-L633D:  .byte   $00
-L633E:  .byte   $00
+
+;;; Init parameters
+
+machid: .byte   0
+subid:  .byte   0
+op_sys: .byte   $00
+slot_num:
+        .byte   $00
+use_interrupts:
+        .byte   $00
+
+always_handle_irq:
+        .byte   $00
+
+savebehind_size:
+        .res    2
+savebehind_usage:
+        .res    2
 
 desktop_initialized_flag:
         .byte   0
 
-L6340:  .byte   $00
+save_p_reg:
+        .byte   $00
+
 
 ;;; ============================================================
 ;;; StartDeskTop
 
 ;;; 12 bytes of params, copied to $82
 
-StartDeskTopImpl:
+.proc StartDeskTopImpl
+        PARAM_BLOCK params, $82
+machine:    .res 1
+subid:      .res 1
+op_sys:     .res 1
+slot_num:   .res 1
+use_irq:    .res 1
+sysfontptr: .res 2
+savearea:   .res 2
+savesize:   .res 2
+        END_PARAM_BLOCK
+
+
         php
         pla
-        sta     L6340
-        ldx     #$04
-L6348:  lda     $82,x
-        sta     L6335,x
+        sta     save_p_reg
+
+        ldx     #4
+:       lda     params::machine,x
+        sta     machid,x
         dex
-        bpl     L6348
+        bpl     :-
+
         lda     #$7F
         sta     standard_port::textback
-        copy16  $87, standard_port::textfont
-        copy16  $89, L6835
-        copy16  $8B, L633B
-        jsr     L646F
-        jsr     L6491
-        ldy     #$02
-        lda     ($87),y
+
+        copy16  params::sysfontptr, standard_port::textfont
+        copy16  params::savearea, savebehind_buffer
+        copy16  params::savesize, savebehind_size
+
+        jsr     set_irq_mode
+        jsr     set_op_sys
+
+        ldy     #MGTK::font_offset_height
+        lda     (params::sysfontptr),y
         tax
-        stx     L6822
+        stx     sysfont_height
         dex
-        stx     L78CB
+        stx     goaway_height                 ; goaway height = font height - 1
         inx
         inx
         inx
-        stx     fill_rect_params2_height
+        stx     fill_rect_params2_height      ; menu bar height = font height + 2
+
         inx
-        stx     L78CD
+        stx     wintitle_height               ; win title height = font height + 3
+
         stx     test_rect_bottom
         stx     test_rect_params2_top
         stx     fill_rect_params4_top
-        inx
+
+        inx                                   ; font height + 4: top of desktop area
         stx     set_port_top
-        stx     L78CF
-        stx     L6594
+        stx     winframe_top
+        stx     desktop_port_y
         stx     fill_rect_top
+
         dex
         stx     menu_item_y_table
+
         clc
         ldy     #$00
-L63AC:  txa
+:       txa
         adc     menu_item_y_table,y
         iny
         sta     menu_item_y_table,y
-        cpy     #$0E
-        bcc     L63AC
+        cpy     #menu_item_y_table_end - menu_item_y_table-1
+        bcc     :-
+
         lda     #1
         sta     mouse_scale_x
         lda     #0
         sta     mouse_scale_y
-        bit     L6336
-        bvs     L63D1
-        lda     #2
+
+        bit     subid
+        bvs     :+
+
+        lda     #2                       ; default scaling for IIc/IIc+
         sta     mouse_scale_x
         lda     #1
         sta     mouse_scale_y
-L63D1:  ldx     L6338
+:
+        ldx     slot_num
         jsr     find_mouse
-        bit     L6338
-        bpl     L63F6
-        cpx     #$00
-        bne     L63E5
+
+        bit     slot_num
+        bpl     found_mouse
+        cpx     #0
+        bne     :+
         exit_call MGTK::error_no_mouse
 
-L63E5:  lda     L6338
+:       lda     slot_num
         and     #$7F
-        beq     L63F6
-        cpx     L6338
-        beq     L63F6
+        beq     found_mouse
+        cpx     slot_num
+        beq     found_mouse
         exit_call $91
 
-L63F6:  stx     L6338
+found_mouse:
+        stx     slot_num
+
         lda     #$80
         sta     desktop_initialized_flag
-        lda     L6338
-        bne     L640D
-        bit     L6339
-        bpl     L640D
-        lda     #$00
-        sta     L6339
-L640D:  ldy     #$03
-        lda     L6338
+
+        lda     slot_num
+        bne     no_mouse
+        bit     use_interrupts
+        bpl     no_mouse
+        lda     #0
+        sta     use_interrupts
+no_mouse:
+
+        ldy     #params::slot_num - params::start
+        lda     slot_num
         sta     (params_addr),y
         iny
-        lda     L6339
+        lda     use_interrupts
         sta     (params_addr),y
-        bit     L6339
-        bpl     L642A
-        bit     L6337
-        bpl     L642A
+        bit     use_interrupts
+        bpl     no_irq
+        bit     op_sys
+        bpl     no_irq
+
         MLI_CALL ALLOC_INTERRUPT, alloc_interrupt_params
-L642A:  lda     $FBB3
+
+no_irq: lda     VERSION
         pha
-        lda     #$06
-        sta     $FBB3
+
+        lda     #F8VERSION           ; F8 ROM IIe ID byte
+        sta     VERSION
+
         ldy     #SETMOUSE
-        lda     #$01
-        bit     L6339
-        bpl     L643F
+        lda     #1
+
+        bit     use_interrupts
+        bpl     :+
         cli
-        ora     #$08
-L643F:  jsr     call_mouse
+        ora     #8
+:       jsr     call_mouse
+
         pla
-        sta     $FBB3
+        sta     VERSION
+
         jsr     InitGrafImpl
-        jsr     L6067
+        jsr     set_pointer_cursor
         jsr     FlushEventsImpl
-        lda     #$00
-        sta     L700C
-L6454:  jsr     L653F
-        jsr     L6588
+
+        lda     #0
+        sta     current_window+1
+
+reset_desktop:
+        jsr     save_params_and_stack
+        jsr     set_desktop_port
+
         ;; Fills the desktop background on startup (menu left black)
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
         MGTK_CALL MGTK::PaintRect, fill_rect_params
-        jmp     L6556
+        jmp     restore_params_active_port
+.endproc
 
         DEFINE_ALLOC_INTERRUPT_PARAMS alloc_interrupt_params, interrupt_handler
         DEFINE_DEALLOC_INTERRUPT_PARAMS dealloc_interrupt_params
 
-L646F:
-        lda     #$00
-        sta     L633A
-        lda     L6339
-        beq     L648B
-        cmp     #$01
-        beq     L6486
-        cmp     #$03
-        bne     L648C
+
+.proc set_irq_mode
+        lda     #0
+        sta     always_handle_irq
+
+        lda     use_interrupts
+        beq     irts
+
+        cmp     #1
+        beq     irq_on
+        cmp     #3
+        bne     irq_err
+
         lda     #$80
-        sta     L633A
-L6486:  lda     #$80
-        sta     L6339
-L648B:  rts
+        sta     always_handle_irq
+irq_on:
+        lda     #$80
+        sta     use_interrupts
+irts:   rts
 
-L648C:  exit_call $93
+irq_err:
+        exit_call MGTK::error_invalid_irq_setting
+.endproc
 
-L6491:
-        lda     L6337
-        beq     L649F
-        cmp     #$01
-        beq     L64A4
-        exit_call $90
+.proc set_op_sys
+        lda     op_sys
+        beq     is_prodos
+        cmp     #1
+        beq     is_pascal
 
-L649F:  lda     #$80
-        sta     L6337
-L64A4:  rts
+        exit_call MGTK::error_invalid_op_sys
+
+is_prodos:
+        lda     #$80
+        sta     op_sys
+is_pascal:
+        rts
+.endproc
 
 ;;; ============================================================
 ;;; StopDeskTop
@@ -4616,17 +4784,19 @@ L64A4:  rts
         jsr     call_mouse
         ldy     #SERVEMOUSE
         jsr     call_mouse
-        bit     L6339
+        bit     use_interrupts
+
         bpl     :+
-        bit     L6337
+        bit     op_sys
         bpl     :+
         lda     alloc_interrupt_params::int_num
         sta     dealloc_interrupt_params::int_num
         MLI_CALL DEALLOC_INTERRUPT, dealloc_interrupt_params
-:       lda     L6340
+:
+        lda     save_p_reg
         pha
         plp
-        lda     #$00
+        lda     #0
         sta     desktop_initialized_flag
         rts
 .endproc
@@ -4636,98 +4806,153 @@ L64A4:  rts
 
 ;;; 3 bytes of params, copied to $82
 
-SetUserHookImpl:
+.proc SetUserHookImpl
         lda     $82
-        cmp     #$01
-        bne     L64E5
+        cmp     #1
+        bne     :+
+
         lda     $84
-        bne     L64F6
-        sta     L6522
+        bne     clear_before_events_hook
+        sta     before_events_hook+1
         lda     $83
-        sta     L6521
+        sta     before_events_hook
         rts
 
-L64E5:  cmp     #$02
-        bne     L6508
+:       cmp     #2
+        bne     invalid_hook
+
         lda     $84
-        bne     L64FF
-        sta     L6538
+        bne     clear_after_events_hook
+        sta     after_events_hook+1
         lda     $83
-        sta     L6537
+        sta     after_events_hook
         rts
 
-L64F6:  lda     #$00
-        sta     L6521
-        sta     L6522
+clear_before_events_hook:
+        lda     #0
+        sta     before_events_hook
+        sta     before_events_hook+1
         rts
 
-L64FF:  lda     #$00
-        sta     L6537
-        sta     L6538
+clear_after_events_hook:
+        lda     #0
+        sta     after_events_hook
+        sta     after_events_hook+1
         rts
 
-L6508:  exit_call MGTK::error_invalid_hook
+invalid_hook:
+        exit_call MGTK::error_invalid_hook
+.endproc
 
-L650D:  lda     L6522
-        beq     L651D
-        jsr     L653F
-        jsr     L651E
+
+.proc call_before_events_hook
+        lda     before_events_hook+1
+        beq     :+
+        jsr     save_params_and_stack
+
+        jsr     before_events_hook_jmp
         php
-        jsr     L6556
+        jsr     restore_params_active_port
         plp
-L651D:  rts
+:       rts
 
-L651E:  jmp     (L6521)
+before_events_hook_jmp:
+        jmp     (before_events_hook)
+.endproc
 
-L6521:  .byte   0
-L6522:  .byte   0
-L6523:  lda     L6538
-        beq     L6533
-        jsr     L653F
-        jsr     L6534
+
+before_events_hook:
+        .res    2
+
+
+.proc call_after_events_hook
+        lda     after_events_hook+1
+        beq     :+
+        jsr     save_params_and_stack
+
+        jsr     after_events_hook_jmp
         php
-        jsr     L6556
+        jsr     restore_params_active_port
         plp
-L6533:  rts
+:       rts
 
-L6534:  jmp     (L6537)
+after_events_hook_jmp:
+        jmp     (after_events_hook)
+.endproc
 
-L6537:  .byte   $00
-L6538:  .byte   $00
-L6539:  .word   0
-L653B:  .byte   $00
+
+after_events_hook:
+        .res    2
+
+
+params_addr_save:
+        .res    2
+
+stack_ptr_save:
+        .res    1
+
 
 L653C:  jsr     HideCursorImpl
-L653F:  copy16  params_addr, L6539
+        ;; Fall-through
+
+.proc save_params_and_stack
+        copy16  params_addr, params_addr_save
         lda     stack_ptr_stash
-        sta     L653B
+        sta     stack_ptr_save
         lsr     preserve_zp_flag
         rts
+.endproc
+
 
 L6553:  jsr     ShowCursorImpl
-L6556:  asl     preserve_zp_flag
-        copy16  L6539, params_addr
+        ;; Fall-through
+
+.proc restore_params_active_port
+        asl     preserve_zp_flag
+        copy16  params_addr_save, params_addr
         ldax    active_port
-L6567:  stax    $82
-        lda     L653B
+        ;; Fall-through
+.endproc
+
+.proc set_and_prepare_port
+        stax    $82
+        lda     stack_ptr_save
         sta     stack_ptr_stash
+
         ldy     #MGTK::grafport_size-1
-L6573:  lda     ($82),y
+:       lda     ($82),y
         sta     current_grafport,y
         dey
-        bpl     L6573
+        bpl     :-
         jmp     prepare_port
+.endproc
 
-L657E:  ldax    L6586
-        bne     L6567
-L6586:  .addr   standard_port
 
-L6588:  jsr     L657E
-        MGTK_CALL MGTK::SetPortBits, L6592
+.proc set_standard_port
+        ldax    standard_port_addr
+        bne     set_and_prepare_port                  ; always
+.endproc
+
+standard_port_addr:
+        .addr   standard_port
+
+
+.proc set_desktop_port
+        jsr     set_standard_port
+        MGTK_CALL MGTK::SetPortBits, desktop_port_bits
         rts
 
-L6592:  .byte   $00,$00
-L6594:  .byte   $0D,$00,$00,$20,$80,$00
+desktop_port_bits:
+        .word   0               ; viewloc x
+port_y:
+        .word   13              ; viewloc y = font height + 4
+        .word   $2000           ; mapbits
+        .byte   $80             ; mapwidth
+        .res    1               ; reserved
+.endproc
+
+desktop_port_y := set_desktop_port::port_y
+
 
 .proc fill_rect_params
 left:   .word   0
@@ -4776,94 +5001,134 @@ mouse_state_addr:
 ;;; ============================================================
 ;;; PeekEvent
 
-PeekEventImpl:
+.proc PeekEventImpl
         clc
-        bcc     L65D8
+        bcc     GetEventImpl_peek_entry
+.endproc
+
 
 ;;; ============================================================
 ;;; GetEvent
 
-GetEventImpl:
+.proc GetEventImpl
         sec
-L65D8:  php
-        bit     L6339
-        bpl     L65E1
+peek_entry:
+        php
+        bit     use_interrupts
+        bpl     :+
         sei
-        bmi     L65E4
-L65E1:  jsr     CheckEventsImpl
-L65E4:  jsr     L67FE
-        bcs     L6604
+        bmi     no_check
+
+:       jsr     CheckEventsImpl
+
+no_check:
+        jsr     next_event
+        bcs     no_event
+
         plp
         php
-        bcc     L65F0
-        sta     L6752
-L65F0:  tax
+        bcc     :+              ; skip advancing tail mark if in peek mode
+        sta     eventbuf_tail
+
+:       tax
         ldy     #0              ; Store 5 bytes at params
-L65F3:  lda     L6754,x
+:       lda     eventbuf,x
         sta     (params_addr),y
         inx
         iny
         cpy     #4
-        bne     L65F3
-        lda     #$00
+        bne     :-
+        lda     #0
         sta     (params_addr),y
-        beq     L6607
-L6604:  jsr     L6645
-L6607:  plp
-        bit     L6339
-        bpl     L660E
+        beq     ret
+
+no_event:
+        jsr     return_move_event
+
+ret:    plp
+        bit     use_interrupts
+        bpl     :+
         cli
-L660E:  rts
+:       rts
+.endproc
+
+GetEventImpl_peek_entry := GetEventImpl::peek_entry
+
 
 ;;; ============================================================
 
 ;;; 5 bytes of params, copied to $82
 
-PostEventImpl:
+.proc PostEventImpl
+        PARAM_BLOCK params, $82
+kind:   .byte    0
+xcoord: .word    0           ; also used for key/modifiers/window id
+ycoord: .word    0
+        END_PARAM_BLOCK
+
         php
         sei
-        lda     $82
-        bmi     L6626
-        cmp     #$06
-        bcs     L663B
-        cmp     #$03
-        beq     L6626
-        ldx     $83
-        ldy     $84
-        lda     $85
+        lda     params::kind
+        bmi     event_ok
+
+        cmp     #MGTK::event_kind_update
+        bcs     bad_event
+        cmp     #MGTK::event_kind_key_down
+        beq     event_ok
+
+        ldx     params::xcoord
+        ldy     params::xcoord+1
+        lda     params::ycoord
         jsr     set_mouse_pos
-L6626:  jsr     L67E4
-        bcs     L663F
+
+event_ok:
+        jsr     put_event
+        bcs     no_room
         tax
-        ldy     #$00
-L662E:  lda     (params_addr),y
-        sta     L6754,x
+
+        ldy     #0
+:       lda     (params_addr),y
+        sta     eventbuf,x
         inx
         iny
-        cpy     #$04
-        bne     L662E
+        cpy     #MGTK::short_event_size
+        bne     :-
+
         plp
         rts
 
-L663B:  lda     #$98
-        bmi     L6641
-L663F:  lda     #$99
-L6641:  plp
-        jmp     exit_with_a
+bad_event:
+        lda     #MGTK::error_invalid_event
+        bmi     error_return
 
-L6645:  lda     #0
+no_room:
+        lda     #MGTK::error_event_buffer_full
+error_return:
+        plp
+        jmp     exit_with_a
+.endproc
+
+
+        ;; Return a no_event (if mouse up) or drag event (if mouse down)
+        ;; and report the current mouse position.
+.proc return_move_event
+        lda     #MGTK::event_kind_no_event
+
         bit     mouse_status
-        bpl     L664E
-        lda     #4
-L664E:  ldy     #0
+        bpl     :+
+        lda     #MGTK::event_kind_drag
+
+:       ldy     #0
         sta     (params_addr),y         ; Store 5 bytes at params
         iny
-L6653:  lda     cursor_count,y
+:       lda     set_pos_params-1,y
         sta     (params_addr),y
         iny
-        cpy     #$05
-        bne     L6653
+        cpy     #MGTK::event_size
+        bne     :-
         rts
+.endproc
+
 
 ;;; ============================================================
 ;;; CheckEvents
@@ -4883,13 +5148,13 @@ modifiers  := * + 3
 .endproc
 
 .proc CheckEventsImpl
-        bit     L6339
-        bpl     L666D
+        bit     use_interrupts
+        bpl     irq_entry
         exit_call MGTK::error_irq_in_use
 
-L666D:
+irq_entry:
         sec                     ; called from interrupt handler
-        jsr     L650D
+        jsr     call_before_events_hook
         bcc     end
 
         lda     BUTN1           ; Look at buttons (apple keys), compute modifiers
@@ -4900,19 +5165,19 @@ L666D:
         rol     a
         sta     input::modifiers
 
-        jsr     L7F66
-        jsr     L6265
+        jsr     activate_keyboard_mouse    ; check if keyboard mouse should be started
+        jsr     move_cursor
         lda     mouse_status    ; bit 7 = is down, bit 6 = was down, still down
         asl     a
         eor     mouse_status
-        bmi     L66B9           ; minus = (is down & !was down)
+        bmi     :+              ; minus = (is down & !was down)
 
         bit     mouse_status
         bmi     end             ; minus = is down
         bit     check_kbd_flag
-        bpl     L66B9
+        bpl     :+
         lda     kbd_mouse_state
-        bne     L66B9
+        bne     :+
 
         lda     KBD
         bpl     end             ; no key
@@ -4924,9 +5189,9 @@ L666D:
         sta     input::kmods
         lda     #MGTK::event_kind_key_down
         sta     input::state
-        bne     L66D8
+        bne     put_key_event   ; always
 
-L66B9:  bcc     up
+:       bcc     up
         lda     input::modifiers
         beq     :+
         lda     #MGTK::event_kind_apple_key
@@ -4946,17 +5211,18 @@ set_state:
         dex
         bpl     :-
 
-L66D8:  jsr     L67E4
+put_key_event:
+        jsr     put_event
         tax
         ldy     #$00
 L66DE:  lda     input,y
-        sta     L6754,x
+        sta     eventbuf,x
         inx
         iny
         cpy     #$04
         bne     L66DE
 
-end:    jmp     L6523
+end:    jmp     call_after_events_hook
 .endproc
 
 ;;; ============================================================
@@ -4990,9 +5256,9 @@ sloop:  lda     $82,x
         ldy     #SERVEMOUSE
         jsr     call_mouse
         bcs     :+
-        jsr     CheckEventsImpl::L666D
+        jsr     CheckEventsImpl::irq_entry
         clc
-:       bit     L633A
+:       bit     always_handle_irq
         bpl     :+
         clc                     ; carry clear if interrupt handled
 
@@ -5018,10 +5284,11 @@ rloop:  lda     int_stash_zp,x
 ;;; GetIntHandler
 
 .proc GetIntHandlerImpl
-        ldax    L6750
+        ldax    int_handler_addr
         jmp     store_xa_at_params
 
-L6750:  .addr   interrupt_handler::body
+int_handler_addr:
+        .addr   interrupt_handler::body
 .endproc
 
 ;;; ============================================================
@@ -5030,36 +5297,38 @@ L6750:  .addr   interrupt_handler::body
 ;;; This is called during init by the DAs, just before
 ;;; entering the input loop.
 
-L6752:  .byte   0
-L6753:  .byte   0
+eventbuf_tail:  .byte   0
+eventbuf_head:  .byte   0
 
-L6754:  .byte   $00
-L6755:  .res    128, 0
-        .byte   $00,$00,$00
+        eventbuf_size := 33             ; max # of events in queue
+
+eventbuf:
+        .res    eventbuf_size*MGTK::short_event_size
+
 
 .proc FlushEventsImpl
         php
         sei
         lda     #0
-        sta     L6752
-        sta     L6753
+        sta     eventbuf_tail
+        sta     eventbuf_head
         plp
         rts
 .endproc
         ;; called during PostEvent and a few other places
-.proc L67E4
-        lda     L6753
-        cmp     #$80            ; if L6753 is not $80, add $4
-        bne     :+
-        lda     #$00            ; otherwise reset to 0
+.proc put_event
+        lda     eventbuf_head
+        cmp     #(eventbuf_size-1)*MGTK::short_event_size
+        bne     :+                      ; if head is not at end, advance
+        lda     #0                      ; otherwise reset to 0
         bcs     compare
 :       clc
-        adc     #$04
+        adc     #MGTK::short_event_size
 
 compare:
-        cmp     L6752           ; did L6753 catch up with L6752?
+        cmp     eventbuf_tail           ; did head catch up with tail?
         beq     rts_with_carry_set
-        sta     L6753           ; nope, maybe next time
+        sta     eventbuf_head           ; nope, maybe next time
         clc
         rts
 .endproc
@@ -5069,17 +5338,21 @@ rts_with_carry_set:
         rts
 
         ;; called during GetEvent
-L67FE:  lda     L6752           ; equal?
-        cmp     L6753
+.proc next_event
+        lda     eventbuf_tail           ; equal?
+        cmp     eventbuf_head
         beq     rts_with_carry_set
         cmp     #$80
-        bne     L680E
+        bne     :+
         lda     #0
-        bcs     L6811
-L680E:  clc
-        adc     #$04
-L6811:  clc
+        bcs     ret                     ; always
+
+:       clc
+        adc     #MGTK::short_event_size
+ret:    clc
         rts
+.endproc
+
 
 ;;; ============================================================
 ;;; SetKeyEvent
@@ -5105,7 +5378,7 @@ L681E:  .byte   $09
 L681F:  .byte   $10
 L6820:  .byte   $09
 L6821:  .byte   $1E
-L6822:  .byte   $00
+sysfont_height:  .byte   $00
 
 active_menu:
         .addr   0
@@ -5128,7 +5401,8 @@ height: .word   11
 .endproc
         fill_rect_params2_height := fill_rect_params2::height
 
-L6835:  .word   0
+savebehind_buffer:
+        .word   0
 
 .proc test_rect_params2
 left:   .word   0
@@ -5150,11 +5424,17 @@ menu_item_y_table:
         .repeat 15, i
         .byte   12 + 12 * i
         .endrepeat
+menu_item_y_table_end:
 
-L6856:  .byte   $1E
-L6857:  .byte   $1F
-L6858:  .byte   $1D
-L6859:  .byte   $01,$02
+solid_apple_glyph:
+        .byte   $1E
+open_apple_glyph:
+        .byte   $1F
+checkmark_glyph:
+        .byte   $1D
+controlkey_glyph:
+        .byte   $01,$02
+
 L685B:  .byte   $1E
 L685C:  .byte   $FF,$01
 L685E:  .byte   $1D
@@ -5234,11 +5514,14 @@ L68E1:  lda     $BF,y
         bpl     L68E1
         rts
 
-L68EA:  sty     current_penloc_y
+        ;; Set penloc to X=AX, Y=Y
+.proc set_penloc
+        sty     current_penloc_y
         ldy     #0
         sty     current_penloc_y+1
-L68F0:  stax    current_penloc_x
+set_x:  stax    current_penloc_x
         rts
+.endproc
 
         ;; Set fill mode to A
 set_fill_mode:
@@ -5278,20 +5561,20 @@ L6925:  .byte   0
 
 SetMenuImpl:
         lda     #$00
-        sta     L633D
-        sta     L633E
+        sta     savebehind_usage
+        sta     savebehind_usage+1
         copy16  params_addr, active_menu
 
         jsr     get_menu_count  ; into $A8
         jsr     L653C
-        jsr     L657E
+        jsr     set_standard_port
         ldax    L685F
         jsr     fill_and_frame_rect
 
         ldax    #$0C
-        ldy     L6822
+        ldy     sysfont_height
         iny
-        jsr     L68EA
+        jsr     set_penloc
         ldx     #$00
 L6957:  jsr     L6878
         ldax    current_penloc_x
@@ -5336,7 +5619,7 @@ L69B4:  ldx     scan_y
         bne     L6976
         lda     $AA
         tax
-        ldy     L6822
+        ldy     sysfont_height
         iny
         iny
         iny
@@ -5356,11 +5639,13 @@ L69B4:  ldx     scan_y
         sta     L6924
         sty     L6925
         sec
-        sbc     L633D
+        sbc     savebehind_usage
         tya
-        sbc     L633E
+        sbc     savebehind_usage+1
         bmi     L6A00
-        copy16  L6924, L633D
+
+        copy16  L6924, savebehind_usage
+
 L6A00:  add16_8 $BB, $C5, $BD
         jsr     L68A9
         ldax    $B1
@@ -5384,12 +5669,13 @@ L6A24:  stax    $B9
 L6A3C:  lda     #0
         sta     menu_index
         sta     menu_item_index
+
         jsr     L6553
         sec
-        lda     L633B
-        sbc     L633D
-        lda     L633C
-        sbc     L633E
+        lda     savebehind_size
+        sbc     savebehind_usage
+        lda     savebehind_size+1
+        sbc     savebehind_usage+1
         bpl     L6A5B
         exit_call $9C
 
@@ -5498,7 +5784,7 @@ HiliteMenuImpl:
         sta     $C7
 L6B26:  jsr     L6A89
 L6B29:  jsr     L653C
-        jsr     L657E
+        jsr     set_standard_port
         jsr     L6B35
         jmp     L6553
 
@@ -5618,8 +5904,8 @@ L6BDA:  .byte   0
 MenuSelectImpl:
         jsr     L7ECD
         jsr     get_menu_count
-        jsr     L653F
-        jsr     L657E
+        jsr     save_params_and_stack
+        jsr     set_standard_port
         bit     kbd_mouse_state
         bpl     L6BF2
         jsr     L7FE1
@@ -5651,9 +5937,9 @@ L6C2C:  lda     L6BDA
         jmp     L6C40
 
 L6C37:  jsr     HideCursorImpl
-        jsr     L657E
+        jsr     set_standard_port
         jsr     L6CF4
-L6C40:  jsr     L6556
+L6C40:  jsr     restore_params_active_port
         lda     #$00
         ldx     L6BDA
         beq     L6C55
@@ -5709,14 +5995,14 @@ L6C98:  lda     $BC
         sec
         sbc     $82
         sta     $90
-        copy16  L6835, $8E
+        copy16  savebehind_buffer, $8E
         ldy     $AA
         ldx     menu_item_y_table,y ; ???
         inx
         stx     $83
         stx     fill_rect_params4::bottom
         stx     test_rect_params2::bottom
-        ldx     L6822
+        ldx     sysfont_height
         inx
         inx
         inx
@@ -5797,7 +6083,7 @@ L6D55:  lda     ($84),y
         cpx     $83
         bcc     L6D3E
         beq     L6D3E
-        jsr     L657E
+        jsr     set_standard_port
         ldax    L6861
         jsr     fill_and_frame_rect
         inc16   fill_rect_params4::left
@@ -5815,9 +6101,11 @@ L6D8A:  jsr     L68BE
 L6D94:  lda     $BF
         and     #$20
         beq     L6DBD
+
         lda     L681D
         jsr     L6E25
-        lda     L6858
+
+        lda     checkmark_glyph
         sta     L685E
         lda     $BF
         and     #$04
@@ -5837,17 +6125,17 @@ L6DBD:  lda     L681E
         bne     L6DE0
         lda     $C1
         beq     L6E0A
-        lda     L6859
+        lda     controlkey_glyph
         sta     L685B
         jmp     L6E0A
 
 L6DE0:  cmp     #$01
         bne     L6DED
-        lda     L6857
+        lda     open_apple_glyph
         sta     L685B
         jmp     L6DF3
 
-L6DED:  lda     L6856
+L6DED:  lda     solid_apple_glyph
         sta     L685B
 L6DF3:  lda     $C1
         sta     L685C
@@ -5877,9 +6165,9 @@ L6E25:  ldx     $A9
         ldx     $BC
         clc
         adc     $BB
-        bcc     L6E33
+        bcc     :+
         inx
-L6E33:  jmp     L68EA
+:       jmp     set_penloc
 
 L6E36:  ldx     $A9
         lda     menu_item_y_table,x
@@ -5925,7 +6213,7 @@ L6E92:  sta     $82
         sbc     $82
         bcs     L6E9E
         dex
-L6E9E:  jmp     L68F0
+L6E9E:  jmp     set_penloc::set_x
 
 L6EA1:  jsr     L6EAA
         lda     #$00
@@ -5955,14 +6243,14 @@ L6EAA:  ldx     L6BDA
 
         ldx     #3
 loop:   lda     params,x
-        sta     L6856,x
+        sta     solid_apple_glyph,x
         dex
         bpl     loop
 
         copy16  standard_port::textfont, params
         ldy     #0
-        lda     ($82),y
-        bmi     :+
+        lda     (params),y
+        bmi     :+                    ; branch if double-width font
 
         copy16  #$0902, L681D
         copy16  #$0910, L681F
@@ -6117,8 +6405,8 @@ right_scroll_addr:
 resize_box_addr:
         .addr   resize_box_params
 
-L700B:  .byte   $00
-L700C:  .byte   $00
+current_window:
+        .res    2
 L700D:  .byte   $00
 L700E:  .word   0
 L7010:  .byte   $00
@@ -6128,7 +6416,7 @@ L7011:  .addr   $6FD3
         ;; Start window enumeration at top ???
 .proc top_window
         copy16  L7011, $A7
-        ldax    L700B
+        ldax    current_window
         bne     next_window_L7038
 end:    rts
 .endproc
@@ -6248,7 +6536,7 @@ L70E3:  clc
 L70EC:  lda     #$01
         and     $AC
         bne     L70F5
-        lda     L78CF
+        lda     winframe_top
 L70F5:  sta     $82
         lda     $C9
         sec
@@ -6269,7 +6557,7 @@ L7111:  stax    $C7
         bne     L70B2
         lda     $C9
         clc
-        adc     L78CD
+        adc     wintitle_height
         sta     $C9
         bcc     L70B2
         inc     $CA
@@ -6289,7 +6577,7 @@ L713D:  jsr     L7104
 L7143:  jsr     L70B7
         lda     $C9
         clc
-        adc     L78CD
+        adc     wintitle_height
         sta     $CD
         lda     $CA
         adc     #$00
@@ -6315,7 +6603,7 @@ L716E:  stax    $CB
         inx
 L717C:  stax    $C9
         clc
-        adc     L78CB
+        adc     goaway_height
         bcc     L7187
         inx
 L7187:  stax    $CD
@@ -6351,7 +6639,7 @@ L71D3:  jsr     next_window::L703E
         lda     $AB
         cmp     L700D
         bne     L71E3
-        jsr     L6588
+        jsr     set_desktop_port
         jmp     L720B
 
 L71E3:  rts
@@ -6594,7 +6882,7 @@ L73F0:  stax    current_penloc_y
 ;;; 4 bytes of params, copied to current_penloc
 
 FindWindowImpl:
-        jsr     L653F
+        jsr     save_params_and_stack
         MGTK_CALL MGTK::InRect, test_rect_params
         beq     L7416
         lda     #$01
@@ -6602,7 +6890,7 @@ L7406:  ldx     #$00
 L7408:  pha
         txa
         pha
-        jsr     L6556
+        jsr     restore_params_active_port
         pla
         tax
         pla
@@ -6682,32 +6970,32 @@ L749A:  copy16  params_addr, $A9
 
 SelectWindowImpl:
         jsr     window_by_id_or_exit
-        cmp     L700B
+        cmp     current_window
         bne     L74BA
-        cpx     L700C
+        cpx     current_window+1
         bne     L74BA
         rts
 
 L74BA:  jsr     L74F4
 L74BD:  ldy     #MGTK::winfo_offset_nextwinfo ; Called from elsewhere
-        lda     L700B
+        lda     current_window
         sta     ($A9),y
         iny
-        lda     L700C
+        lda     current_window+1
         sta     ($A9),y
         lda     $A9
         pha
         lda     $AA
         pha
         jsr     L653C
-        jsr     L6588
+        jsr     set_desktop_port
         jsr     top_window
         beq     L74DE
         jsr     L7205
 L74DE:  pla
-        sta     L700C
+        sta     current_window+1
         pla
-        sta     L700B
+        sta     current_window
         jsr     top_window
         lda     $AB
         sta     L700D
@@ -6750,12 +7038,12 @@ L750C:  .res    38,0
         inc     L7871
 
 :       jsr     L653C
-        jsr     L6588
+        jsr     set_desktop_port
         lda     L7871
         bne     :+
         MGTK_CALL MGTK::SetPortBits, set_port_params
 :       jsr     L718E
-        jsr     L6588
+        jsr     set_desktop_port
         lda     L7871
         bne     :+
         MGTK_CALL MGTK::SetPortBits, set_port_params
@@ -6786,7 +7074,7 @@ EndUpdateImpl:
         jsr     ShowCursorImpl
         ldax    L750C
         stax    active_port
-        jmp     L6567
+        jmp     set_and_prepare_port
 
 ;;; ============================================================
 ;;; GetWinPort
@@ -6897,8 +7185,8 @@ in_close_box:  .byte   0
         jsr     top_window
         beq     end
         jsr     L7157
-        jsr     L653F
-        jsr     L6588
+        jsr     save_params_and_stack
+        jsr     set_desktop_port
         lda     #$80
 toggle: sta     in_close_box
         lda     #$02
@@ -6917,7 +7205,7 @@ loop:   jsr     L691B
         eor     #$80
         jmp     toggle
 
-L768B:  jsr     L6556
+L768B:  jsr     restore_params_active_port
         ldy     #$00
         lda     in_close_box
         beq     end
@@ -7131,9 +7419,9 @@ CloseAllImpl:
         jsr     L74F4
         jmp     CloseAllImpl
 
-L7849:  jmp     L6454
+L7849:  jmp     StartDeskTopImpl::reset_desktop
 
-L784C:  jsr     L6588
+L784C:  jsr     set_desktop_port
         jsr     L70B7
         ldx     #$07
 L7854:  lda     $C7,x
@@ -7169,13 +7457,13 @@ L7872:  sta     L7010
         jsr     FlushEventsImpl
 L789E:  jsr     next_window
         bne     L789E
-L78A3:  jsr     L67E4
+L78A3:  jsr     put_event
         bcs     L78C9
         tax
         lda     #$06
-        sta     L6754,x
+        sta     eventbuf,x
         lda     $AB
-        sta     L6755,x
+        sta     eventbuf+1,x
         lda     $AB
         cmp     L700D
         beq     L78C9
@@ -7188,9 +7476,9 @@ L78A3:  jsr     L67E4
 L78C9:  plp
 L78CA:  rts
 
-L78CB:  .byte   $08,$00
-L78CD:  .byte   $0C,$00
-L78CF:  .byte   $0D,$00
+goaway_height:  .word   8       ; font height - 1
+wintitle_height:.word  12       ; font height + 3
+winframe_top:   .word  13       ; font height + 4
 
 .proc set_port_params
 left:           .word   0
@@ -7319,7 +7607,7 @@ L7990:  eor     $8D
 
 L79A0:  bne     L79AF
         jsr     L79F1
-        jsr     L657E
+        jsr     set_standard_port
         MGTK_CALL MGTK::PaintRect, $C7
         rts
 
@@ -7331,7 +7619,7 @@ L79B7:  rts
 
 L79B8:  bit     $B0
         bpl     L79B7
-L79BC:  jsr     L657E
+L79BC:  jsr     set_standard_port
         jsr     L79F1
         MGTK_CALL MGTK::SetPattern, light_speckles_pattern
         MGTK_CALL MGTK::PaintRect, $C7
@@ -7463,7 +7751,7 @@ L7AA4:  pha
 ;;; 4 bytes of params, copied to current_penloc
 
 FindControlImpl:
-        jsr     L653F
+        jsr     save_params_and_stack
         jsr     top_window
         bne     L7ACE
         exit_call MGTK::error_no_active_window
@@ -7612,8 +7900,8 @@ L7BCB:  lda     $83,x
         exit_call MGTK::error_no_active_window
 
 L7BE0:  jsr     L7A73
-        jsr     L653F
-        jsr     L6588
+        jsr     save_params_and_stack
+        jsr     set_desktop_port
         lda     #$02
         jsr     set_fill_mode
         MGTK_CALL MGTK::SetPattern, light_speckles_pattern
@@ -7784,7 +8072,7 @@ check_win:
 :       lda     $8D
         sta     ($A9),y
         jsr     L653C
-        jsr     L657E
+        jsr     set_standard_port
         jsr     L79A0
         jmp     L6553
 .endproc
@@ -8008,7 +8296,7 @@ L7F0C:  jmp     L825F
 
 L7F0F:  jsr     stash_addr
         copy16  active_cursor, L7F2E
-        copy16  L6065, params_addr
+        copy16  pointer_cursor_addr, params_addr
         jsr     SetCursorImpl
         jmp     restore_addr
 
@@ -8039,47 +8327,58 @@ L7F48:  jsr     compute_modifiers
 
 L7F63:  jmp     L7E98
 
-L7F66:  pha
+
+.proc activate_keyboard_mouse
+        pha                    ; save modifiers
         lda     kbd_mouse_state
-        bne     L7FA3
+        bne     in_kbd_mouse   ; branch away if keyboard mouse is active
         pla
-        cmp     #$03
-        bne     L7FA2
+        cmp     #3             ; open apple+solid apple
+        bne     ret
         bit     mouse_status
-        bmi     L7FA2
-        lda     #$04
+        bmi     ret            ; branch away if button is down
+
+        lda     #4
         sta     kbd_mouse_state
-        ldx     #$0A
-L7F7D:  lda     SPKR            ; Beep?
-        ldy     #$00
-L7F82:  dey
-        bne     L7F82
+
+        ldx     #10
+beeploop:
+        lda     SPKR            ; Beep?
+        ldy     #0
+:       dey
+        bne     :-
         dex
-        bpl     L7F7D
-L7F88:  jsr     compute_modifiers
+        bpl     beeploop
+
+waitloop:
+        jsr     compute_modifiers
         cmp     #3
-        beq     L7F88
+        beq     waitloop        ; wait for user to release OA+SA
         sta     input::modifiers
-        lda     #$00
+
+        lda     #0
         sta     L7D82
-        ldx     #$02
-L7F99:  lda     set_pos_params,x
+        ldx     #2
+:       lda     set_pos_params,x
         sta     kbd_mouse_x,x
         dex
-        bpl     L7F99
-L7FA2:  rts
+        bpl     :-
+ret:    rts
 
-L7FA3:  cmp     #$04
-        bne     L7FB2
+in_kbd_mouse:
+        cmp     #4
+        bne     pla_ret
         pla
-        and     #$01
-        bne     L7FB1
-        lda     #$00
+        and     #1                ; modifiers
+        bne     :+
+        lda     #0
         sta     kbd_mouse_state
-L7FB1:  rts
+:       rts
 
-L7FB2:  pla
+pla_ret:pla
         rts
+.endproc
+
 
 L7FB4:  bit     mouse_status
         bpl     L7FC1
@@ -8288,7 +8587,7 @@ L8149:  php
         lda     L7D80
         sta     $C8
         sta     L6BDA
-        jsr     L6556
+        jsr     restore_params_active_port
         lda     L7D7F
         beq     L816F
         jsr     HiliteMenuImpl

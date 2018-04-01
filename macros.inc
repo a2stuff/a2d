@@ -420,3 +420,35 @@
         inc     arg+1
 skip:
 .endmacro
+
+;;; Helper macros to set up a scoped block of parameters at a pre-determined
+;;; address.
+;;;
+;;; Note: to use this macro, your cfg must have a BSS segment:
+;;;     (BSS: load = BSS, type = bss)
+;;;
+;;; Example:
+;;;    .proc my_function
+;;;            PARAM_BLOCK params, $82
+;;;    arg1:   .res    1
+;;;    arg2:   .res    2
+;;;    arg3:   .res    2
+;;;            END_PARAM_BLOCK
+;;;
+;;;            lda     params::arg1         ; equiv. to lda $82
+;;;            lda     params::arg2         ; equiv. to lda $83
+;;;            lda     params::arg3         ; equiv. to lda $85
+;;;
+.macro PARAM_BLOCK name, addr
+        .scope  name
+        .pushseg
+        .bss
+        .feature org_per_seg
+        .org    addr
+start:
+.endmacro
+
+.macro END_PARAM_BLOCK
+        .popseg
+        .endscope
+.endmacro
