@@ -322,12 +322,12 @@ L09F8:  cmp     #$0C
         tay
 L09FD:  sec
         jsr     L0A1D
-        lda     L0B4B,y
+        lda     phase_on_table,y
         jsr     L0B3A
         lda     L0C39
         clc
         jsr     motor
-        lda     L0B57,y
+        lda     phase_off_table,y
         jsr     L0B3A
         inc     L0C38
         bne     L09D6
@@ -347,21 +347,26 @@ done:   rts
 
 ;;; ============================================================
 
-L0A2E:  jsr     L0C0E
+.proc format_sector
+        jsr     rts2
         lda     TESTWP,x        ; Check write protect ???
         lda     WPRES,x
-        lda     #$FF
+
+        lda     #$FF            ; Self-sync data
         sta     WRMODE,x        ; Turn on write mode
         cmp     XMIT,x          ; Start sending bits to disk
         pha                     ; 32 cycles...
         pla
         nop
-        ldy     #$04
-L0A44:  pha
+        ldy     #4
+
+sync:   pha
         pla
         jsr     write2
         dey
-        bne     L0A44
+        bne     sync
+
+        ;; Address marks
         lda     #$D5
         jsr     write
         lda     #$AA
@@ -372,25 +377,31 @@ L0A44:  pha
         nop
         nop
         nop
-        bne     L0A65
-L0A62:  jsr     L0C0E
-L0A65:  nop
+        bne     :+
+
+        ;; Data
+loop:   jsr     rts2
+:       nop
         nop
         lda     #$96
         sta     DATA,x
         cmp     XMIT,x
         dey
-        bne     L0A62
+        bne     loop
+
+        ;; Checksum
         bit     $00
         nop
-L0A75:  jsr     L0C0E
+check:  jsr     rts2
         lda     #$96
         sta     DATA,x
         cmp     XMIT,x
         lda     #$96
         nop
         iny
-        bne     L0A75
+        bne     check
+
+        ;; Slip marks
         jsr     write
         lda     #$DE
         jsr     write
@@ -404,13 +415,14 @@ L0A75:  jsr     L0C0E
         lda     XMIT,x
         rts
 
-;;; Write, with appropriate cycle counts
+        ;; Write with appropriate cycle counts
 write:  nop
 write2: pha
         pla
         sta     DATA,x
         cmp     XMIT,x
         rts
+.endproc
 
 ;;; ============================================================
 
@@ -501,8 +513,9 @@ start:  ldx     #$11
         rts
 .endproc
 
-L0B4B:  .byte   $01, $30, $28, $24, $20, $1E, $1D, $1C, $1C, $1C, $1C, $1C
-L0B57:  .byte   $70, $2C, $26, $22, $1F, $1E, $1D, $1C, $1C, $1C, $1C, $1C
+;;; Timing (100-usecs)
+phase_on_table:  .byte   $01, $30, $28, $24, $20, $1E, $1D, $1C, $1C, $1C, $1C, $1C
+phase_off_table: .byte   $70, $2C, $26, $22, $1F, $1E, $1D, $1C, $1C, $1C, $1C, $1C
 
 L0B63:  lda     L0C21
         sta     $D6
@@ -515,10 +528,10 @@ L0B71:  ldy     $D4
 L0B73:  ldx     L0C23
         jsr     L0AAE
         bcc     L0B7E
-        jmp     L0C0E
+        jmp     rts2
 
 L0B7E:  ldx     L0C23
-        jsr     L0A2E
+        jsr     format_sector
         inc     $D2
         lda     $D2
         cmp     #$10
@@ -534,8 +547,8 @@ L0B96:  sta     L0C26,y
         sec
         sbc     #$05
         tay
-L0BA2:  jsr     L0C0E
-        jsr     L0C0E
+L0BA2:  jsr     rts2
+        jsr     rts2
         pha
         pla
         nop
@@ -589,11 +602,11 @@ L0BFA:  ldx     L0C23
 L0C08:  dec     L0C25
         bne     L0BFA
         sec
-L0C0E:  rts
+rts2:   rts
 
 L0C0F:  ldx     #$D6
-L0C11:  jsr     L0C0E
-        jsr     L0C0E
+L0C11:  jsr     rts2
+        jsr     rts2
         bit     $00
         dex
         bne     L0C11
@@ -722,63 +735,84 @@ L0CD3:  lda     L0CEC
 L0CEC:  .byte   0
 
 ;;; ============================================================
+;;; Eject Disk via SmartPort
 
+.proc eject_disk
         sta     L0D24
-        jsr     L0D26
-        ldy     #$07
-        lda     (L0006),y
-        bne     L0D19
+        jsr     L0D26           ; Point $06 at $Cn00
+
+        ldy     #$07            ; Check firmware bytes
+        lda     (L0006),y       ; $Cn07 = $00 ??
+        bne     done
+
         ldy     #$FB
-        lda     (L0006),y
+        lda     (L0006),y       ; $CnFB = $7F ??
         and     #$7F
-        bne     L0D19
+        bne     done
+
         ldy     #$FF
         lda     (L0006),y
         clc
-        adc     #$03
+        adc     #3        ; Locate dispatch routine (offset $CnFF + 3)
         sta     L0006
+
         lda     L0D24
         jsr     L0D51
-        sta     L0D1E
-        jsr     L0D1A
-        .byte   $04
-        .byte   $1D
-        .byte   $0D
-L0D19:  rts
+        sta     control_params_unit_number
 
-L0D1A:  jmp     (L0006)
+        ;; Do SmartPort call
+        jsr     smartport_call
+        .byte   $04             ; SmartPort: CONTROL
+        .addr   $0D1D
 
-        .byte   $03
-L0D1E:  .byte   0
-        .byte   $22
-        ora     a:$04
-        .byte   0
+done:   rts
+
+smartport_call:
+        jmp     (L0006)
+
+.proc control_params
+param_count:    .byte   3
+unit_number:    .byte   0
+control_list:   .addr   L0D22
+control_code:   .byte   $04     ; Control Code: Eject disk
+.endproc
+control_params_unit_number := control_params::unit_number
+
+L0D22:  .byte   0, 0
 L0D24:  .byte   0
         .byte   0
+
+.endproc
+
+;;; ============================================================
+
 L0D26:  sta     L0D50
         ldx     #$11
         lda     L0D50
         and     #$80
         beq     L0D34
         ldx     #$21
-L0D34:  stx     L0D47
+L0D34:  stx     load_addr
         lda     L0D50
         and     #$70
         lsr     a
         lsr     a
         lsr     a
         clc
-        adc     L0D47
-        sta     L0D47
-        .byte   $AD
-L0D47:  .byte   0
-        .byte   $BF
+        adc     load_addr
+        sta     load_addr
+
+        load_addr := * + 1
+        lda     $BF00           ; self-modified
         sta     $07
         lda     #$00
         sta     L0006
         rts
 
 L0D50:  .byte   0
+
+;;; ============================================================
+
 L0D51:  pha
         rol     a
         pla
@@ -792,7 +826,9 @@ L0D51:  pha
         adc     #$01
         rts
 
-        ldx     $D417
+;;; ============================================================
+
+L0D5F:  ldx     $D417
         lda     $D3F7,x
         sta     block_params::unit_num
         lda     #$00
@@ -829,7 +865,9 @@ L0DA4:  cmp     #$A5
         sta     $D44D
         rts
 
-        lda     #$14
+;;; ============================================================
+
+L0DB5:  lda     #$14
         jsr     L1133
         lda     $D417
         asl     a
@@ -930,7 +968,11 @@ L0EAD:  jmp     L0E70
 
 L0EB0:  .byte   0
 L0EB1:  .byte   0
-        and     #$F0
+
+
+;;; ============================================================
+
+L0EB2:  and     #$F0
         sta     L0ED6
         ldx     DEVCNT
 L0EBA:  lda     DEVLST,x
@@ -948,7 +990,10 @@ L0ECA:  lda     DEVLST,x
         return  #$80
 
 L0ED6:  .byte   0
-        bit     $C010
+
+;;; ============================================================
+
+L0ED7:  bit     $C010
         sta     L0FE6
         and     #$FF
         bpl     L0EFF
@@ -1209,7 +1254,9 @@ L10ED:  sec
 L10F3:
         .byte   $0E, $0C, $0A, $08, $06, $04, $02, $00
 
-        lda     #$14
+;;; ============================================================
+
+L10FB:  lda     #$14
         sta     L0006
         lda     #$00
         sta     L111E
@@ -1390,7 +1437,9 @@ L126F:  jsr     L12A5
         bpl     L126F
 L127D:  rts
 
-        sta     ALTZPOFF
+;;; ============================================================
+
+L127E:  sta     ALTZPOFF
         sta     ROMIN2
         jsr     BELL1
         sta     ALTZPON
@@ -1398,10 +1447,10 @@ L127D:  rts
         lda     LCBANK1
         rts
 
-        yax_call MLI_RELAY, ON_LINE, on_line_params2
+L1291:  yax_call MLI_RELAY, ON_LINE, on_line_params2
         rts
 
-        yax_call MLI_RELAY, ON_LINE, on_line_params
+L129B:  yax_call MLI_RELAY, ON_LINE, on_line_params
         rts
 
 L12A5:  yax_call MLI_RELAY, WRITE_BLOCK, block_params
@@ -1409,6 +1458,8 @@ L12A5:  yax_call MLI_RELAY, WRITE_BLOCK, block_params
 
 L12AF:  yax_call MLI_RELAY, READ_BLOCK, block_params
         rts
+
+;;; ============================================================
 
 L12B9:  .byte   0
         .byte   $3C
