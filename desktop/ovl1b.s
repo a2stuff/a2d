@@ -10,7 +10,7 @@
 L0000           := $0000
 L0080           := $0080
 L0CAF           := $0CAF
-L0CED           := $0CED
+eject_disk      := $0CED
 L0D26           := $0D26
 L0D51           := $0D51
 L0D5F           := $0D5F
@@ -995,7 +995,7 @@ LD8A9:  lda     winfo_dialog::window_id
         tax
         lda     LD3F7,x
         pha
-        jsr     L0CED
+        jsr     eject_disk
         pla
         tay
         ldx     #$80
@@ -1026,7 +1026,7 @@ LD8FB:  jsr     LE4A8
         tax
         lda     LD3F7,x
         pha
-        jsr     L0CED
+        jsr     eject_disk
         pla
         tay
         ldx     #$80
@@ -1047,7 +1047,7 @@ LD928:  jsr     LE491
         tax
         lda     LD3F7,x
         pha
-        jsr     L0CED
+        jsr     eject_disk
         pla
         tay
         ldx     #$80
@@ -1060,12 +1060,12 @@ LD955:  jsr     LE507
         jsr     L10FB
         ldx     LD417
         lda     LD3F7,x
-        jsr     L0CED
+        jsr     eject_disk
         ldx     LD418
         cpx     LD417
         beq     LD972
         lda     LD3F7,x
-        jsr     L0CED
+        jsr     eject_disk
 LD972:  lda     #$09
         jsr     LEB84
         jmp     LD61C
