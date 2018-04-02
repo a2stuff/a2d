@@ -1551,7 +1551,7 @@ shift_line_table:
         ldx     src_y_coord
         ldy     src_mapwidth
         bmi     :+
-        jsr     ndbm_calc_off
+        jsr     mult_x_y
 
 :       clc
         adc     bits_addr
@@ -1580,7 +1580,7 @@ get_srcbits_table:
         bmi     on_screen        ; do nothing for on-screen destination
         asl     a
 
-calc_off:
+mult_x_y:
         stx     $82
         sty     $83
         ldx     #8
@@ -1605,7 +1605,7 @@ on_screen:
 .endproc
 
 
-ndbm_calc_off := ndbm_calc_dest::calc_off
+mult_x_y := ndbm_calc_dest::mult_x_y
 
 
 ;;; ============================================================
@@ -4685,7 +4685,7 @@ found_mouse:
         sta     use_interrupts
 no_mouse:
 
-        ldy     #params::slot_num - params::start
+        ldy     #params::slot_num - params
         lda     slot_num
         sta     (params_addr),y
         iny
@@ -4892,8 +4892,10 @@ stack_ptr_save:
         .res    1
 
 
-L653C:  jsr     HideCursorImpl
+.proc hide_cursor_save_params
+        jsr     HideCursorImpl
         ;; Fall-through
+.endproc
 
 .proc save_params_and_stack
         copy16  params_addr, params_addr_save
@@ -4904,8 +4906,10 @@ L653C:  jsr     HideCursorImpl
 .endproc
 
 
-L6553:  jsr     ShowCursorImpl
+.proc show_cursor_and_restore
+        jsr     ShowCursorImpl
         ;; Fall-through
+.endproc
 
 .proc restore_params_active_port
         asl     preserve_zp_flag
@@ -5102,7 +5106,7 @@ bad_event:
         bmi     error_return
 
 no_room:
-        lda     #MGTK::error_event_buffer_full
+        lda     #MGTK::error_event_queue_full
 error_return:
         plp
         jmp     exit_with_a
@@ -5372,17 +5376,18 @@ check_kbd_flag:  .byte   $80
 
 ;;; ============================================================
 
+;;; Menu drawing metrics
 
-L681D:  .byte   $02
-L681E:  .byte   $09
-L681F:  .byte   $10
-L6820:  .byte   $09
-L6821:  .byte   $1E
-sysfont_height:  .byte   $00
+offset_checkmark:   .byte   2
+offset_text:        .byte   9
+offset_shortcut:    .byte   16
+shortcut_x_adj:     .byte   9
+non_shortcut_x_adj: .byte   30
+sysfont_height:     .byte   0
+
 
 active_menu:
         .addr   0
-
 
 .proc test_rect_params
 left:   .word   $ffff
@@ -5433,86 +5438,160 @@ open_apple_glyph:
 checkmark_glyph:
         .byte   $1D
 controlkey_glyph:
-        .byte   $01,$02
+        .byte   $01
 
-L685B:  .byte   $1E
-L685C:  .byte   $FF,$01
-L685E:  .byte   $1D
-L685F:  .addr   $6825
-L6861:  .addr   $6837
-L6863:  .addr   $685D
-L6865:  .addr   $685A
+shortcut_text:
+        .byte   2              ; length
+        .byte   $1E
+        .byte   $FF
 
-get_menu_count:
+mark_text:
+        .byte   1              ; length
+        .byte   $1D
+
+test_rect_params_addr:
+        .addr   test_rect_params
+
+test_rect_params2_addr:
+        .addr   test_rect_params2
+
+mark_text_addr:
+        .addr   mark_text
+
+shortcut_text_addr:
+        .addr   shortcut_text
+
+
+        menu_index        := $A7
+        menu_count        := $A8
+        menu_item_index   := $A9
+        menu_item_count   := $AA
+        menu_ptr          := $AB
+        menu_item_ptr     := $AD
+
+
+        PARAM_BLOCK curmenu, $AF
+        ;; Public members
+menu_id:    .byte  0
+disabled:   .byte  0
+title:      .addr  0
+menu_items: .addr  0
+
+        ;; Reserved area in menu
+x_penloc:  .word   0
+x_min:     .word   0
+x_max:     .word   0
+        END_PARAM_BLOCK
+
+
+        PARAM_BLOCK curmenuinfo, $BB
+        ;; Reserved area before first menu item
+x_min:     .word   0
+x_max:     .word   0
+        END_PARAM_BLOCK
+
+
+        PARAM_BLOCK curmenuitem, $BF
+        ;; Public members
+options:   .byte   0
+mark_char: .byte   0
+shortcut1: .byte   0
+shortcut2: .byte   0
+name:      .addr   0
+        END_PARAM_BLOCK
+
+
+.proc get_menu_count
         copy16  active_menu, $82
         ldy     #0
         lda     ($82),y
-        sta     $A8
+        sta     menu_count
         rts
+.endproc
 
-L6878:  stx     $A7
-        lda     #$02
+
+.proc get_menu
+        stx     menu_index
+        lda     #2
         clc
-L687D:  dex
-        bmi     L6884
-        adc     #$0C
-        bne     L687D
-L6884:  adc     active_menu
-        sta     $AB
+:       dex
+        bmi     :+
+        adc     #12
+        bne     :-
+
+:       adc     active_menu
+        sta     menu_ptr
         lda     active_menu+1
-        adc     #$00
-        sta     $AC
-        ldy     #$0B
-L6892:  lda     ($AB),y
-        sta     $AF,y
-        dey
-        bpl     L6892
-        ldy     #$05
-L689C:  lda     ($B3),y
-        sta     $BA,y
-        dey
-        bne     L689C
-        lda     ($B3),y
-        sta     $AA
-        rts
+        adc     #0
+        sta     menu_ptr+1
 
-L68A9:  ldy     #$0B
-L68AB:  lda     $AF,y
-        sta     ($AB),y
+        ldy     #MGTK::menu_size-1
+:       lda     (menu_ptr),y
+        sta     curmenu,y
         dey
-        bpl     L68AB
-        ldy     #$05
-L68B5:  lda     $BA,y
-        sta     ($B3),y
-        dey
-        bne     L68B5
-        rts
+        bpl     :-
 
-L68BE:  stx     scan_y
-        lda     #$06
+        ldy     #MGTK::menu_item_size-1
+:       lda     (curmenu::menu_items),y
+        sta     curmenuinfo-1,y
+        dey
+        bne     :-
+
+        lda     (curmenu::menu_items),y
+        sta     menu_item_count
+        rts
+.endproc
+
+
+.proc put_menu
+        ldy     #MGTK::menu_size-1
+:       lda     curmenu,y
+        sta     (menu_ptr),y
+        dey
+        bpl     :-
+
+        ldy     #MGTK::menu_item_size-1
+:       lda     curmenuinfo-1,y
+        sta     (curmenu::menu_items),y
+        dey
+        bne     :-
+        rts
+.endproc
+
+
+.proc get_menu_item
+        stx     menu_item_index
+        lda     #MGTK::menu_item_size
         clc
-L68C3:  dex
-        bmi     L68CA
-        adc     #$06
-        bne     L68C3
-L68CA:  adc     $B3
-        sta     $AD
-        lda     $B4
-        adc     #$00
-        sta     $AE
-        ldy     #$05
-L68D6:  lda     ($AD),y
-        sta     $BF,y
-        dey
-        bpl     L68D6
-        rts
+:       dex
+        bmi     :+
+        adc     #MGTK::menu_item_size
+        bne     :-
+:
+        adc     curmenu::menu_items
+        sta     menu_item_ptr
+        lda     curmenu::menu_items+1
+        adc     #0
+        sta     menu_item_ptr+1
 
-L68DF:  ldy     #$05
-L68E1:  lda     $BF,y
-        sta     ($AD),y
+        ldy     #MGTK::menu_item_size-1
+:       lda     (menu_item_ptr),y
+        sta     curmenuitem,y
         dey
-        bpl     L68E1
+        bpl     :-
         rts
+.endproc
+
+
+.proc put_menu_item
+        ldy     #MGTK::menu_item_size-1
+:       lda     curmenuitem,y
+        sta     (menu_item_ptr),y
+        dey
+        bpl     :-
+        rts
+.endproc
+
 
         ;; Set penloc to X=AX, Y=Y
 .proc set_penloc
@@ -5524,286 +5603,380 @@ set_x:  stax    current_penloc_x
 .endproc
 
         ;; Set fill mode to A
-set_fill_mode:
+.proc set_fill_mode
         sta     current_penmode
         jmp     SetPenModeImpl
+.endproc
 
-do_measure_text:
+.proc do_measure_text
         jsr     prepare_text_params
         jmp     measure_text
+.endproc
 
-draw_text:
+.proc draw_text
         jsr     prepare_text_params
         jmp     DrawTextImpl
+.endproc
 
         ;; Prepare $A1,$A2 as params for TextWidth/DrawText call
         ;; ($A3 is length)
-prepare_text_params:
-        stax    $82
+.proc prepare_text_params
+        temp_ptr := $82
+
+        stax    temp_ptr
         clc
         adc     #1
-        bcc     L6910
+        bcc     :+
         inx
-L6910:  stax    $A1
+:       stax    measure_text::data
         ldy     #0
-        lda     ($82),y
-        sta     $A3
+        lda     (temp_ptr),y
+        sta     measure_text::length
         rts
+.endproc
 
-L691B:  MGTK_CALL MGTK::GetEvent, $82
-        return  $82
+.proc get_and_return_event
+        PARAM_BLOCK event, $82
+kind:      .byte   0
+mouse_pos:
+mouse_x:   .word  0
+mouse_y:   .word  0        
+        END_PARAM_BLOCK
+
+        MGTK_CALL MGTK::GetEvent, event
+        return  event
+.endproc
+
 
 ;;; ============================================================
 ;;; SetMenu
 
-L6924:  .byte   0
-L6925:  .byte   0
+need_savebehind:
+        .res    2
 
-SetMenuImpl:
-        lda     #$00
+.proc SetMenuImpl
+        temp      := $82
+        max_width := $C5
+
+        lda     #0
         sta     savebehind_usage
         sta     savebehind_usage+1
         copy16  params_addr, active_menu
 
-        jsr     get_menu_count  ; into $A8
-        jsr     L653C
+        jsr     get_menu_count  ; into menu_count
+        jsr     hide_cursor_save_params
         jsr     set_standard_port
-        ldax    L685F
+
+        ldax    test_rect_params_addr
         jsr     fill_and_frame_rect
 
-        ldax    #$0C
+        ldax    #12
         ldy     sysfont_height
         iny
         jsr     set_penloc
-        ldx     #$00
-L6957:  jsr     L6878
+
+        ldx     #0
+menuloop:
+        jsr     get_menu
         ldax    current_penloc_x
-        stax    $B5
+        stax    curmenu::x_penloc
+
         sec
-        sbc     #$08
-        bcs     L6968
+        sbc     #8
+        bcs     :+
         dex
-L6968:  stax    $B7
-        stax    $BB
-        ldx     #$00
-        stx     $C5
-        stx     $C6
-L6976:  jsr     L68BE
-        bit     $BF
-        bvs     L69B4
-        ldax    $C3
+:       stax    curmenu::x_min
+        stax    curmenuinfo::x_min
+
+        ldx     #0
+        stx     max_width
+        stx     max_width+1
+
+itemloop:
+        jsr     get_menu_item
+        bit     curmenuitem::options
+        bvs     filler                  ; bit 6 - is filler
+
+        ldax    curmenuitem::name
         jsr     do_measure_text
-        stax    $82
-        lda     $BF
-        and     #$03
-        bne     L6997
-        lda     $C1
-        bne     L6997
-        lda     L6820
-        bne     L699A
-L6997:  lda     L6821
-L699A:  clc
-        adc     $82
-        sta     $82
-        bcc     L69A3
-        inc     $83
-L69A3:  sec
-        sbc     $C5
-        lda     $83
-        sbc     $C6
-        bmi     L69B4
-        copy16  $82, $C5
-L69B4:  ldx     scan_y
+        stax    temp
+
+        lda     curmenuitem::options
+        and     #3                      ; OA+SA
+        bne     :+
+        lda     curmenuitem::shortcut1
+        bne     :+
+        lda     shortcut_x_adj
+        bne     has_shortcut
+
+:       lda     non_shortcut_x_adj
+has_shortcut:
+        clc
+        adc     temp
+        sta     temp
+        bcc     :+
+        inc     temp+1
+:
+        sec
+        sbc     max_width
+        lda     temp+1
+        sbc     max_width+1
+        bmi     :+
+        copy16  temp, max_width          ; calculate max width
+:
+filler: ldx     menu_item_index
         inx
-        cpx     $AA
-        bne     L6976
-        lda     $AA
+        cpx     menu_item_count
+        bne     itemloop
+
+        lda     menu_item_count
         tax
         ldy     sysfont_height
         iny
         iny
         iny
-        jsr     ndbm_calc_off
+        jsr     mult_x_y                ; num items * (sysfont_height+3)
         pha
 
-        copy16  $C5, fixed_div::dividend
+        copy16  max_width, fixed_div::dividend
         copy16  #7, fixed_div::divisor
-        jsr     fixed_div
+        jsr     fixed_div               ; max width / 7
 
-        ldy     $A1
+        ldy     fixed_div::quotient+2
         iny
         iny
         pla
         tax
-        jsr     ndbm_calc_off
-        sta     L6924
-        sty     L6925
+        jsr     mult_x_y                ; total height * ((max width / 7)+2)
+
+        sta     need_savebehind
+        sty     need_savebehind+1
         sec
         sbc     savebehind_usage
         tya
         sbc     savebehind_usage+1
-        bmi     L6A00
+        bmi     :+
+        copy16  need_savebehind, savebehind_usage     ; calculate max savebehind data needed
 
-        copy16  L6924, savebehind_usage
+:       add16_8 curmenuinfo::x_min, max_width, curmenuinfo::x_max
 
-L6A00:  add16_8 $BB, $C5, $BD
-        jsr     L68A9
-        ldax    $B1
+        jsr     put_menu
+
+        ldax    curmenu::title
         jsr     draw_text
-        jsr     L6A5C
+        jsr     get_menu_and_menu_item
+
         ldax    current_penloc_x
         clc
-        adc     #$08
-        bcc     L6A24
+        adc     #8
+        bcc     :+
         inx
-L6A24:  stax    $B9
-        jsr     L68A9
+:       stax    curmenu::x_max
+
+        jsr     put_menu
+
         ldax    #12
         jsr     adjust_xpos
-        ldx     $A7
+
+        ldx     menu_index
         inx
-        cpx     $A8
-        beq     L6A3C
-        jmp     L6957
+        cpx     menu_count
+        beq     :+
+        jmp     menuloop
 
-L6A3C:  lda     #0
-        sta     menu_index
-        sta     menu_item_index
+:       lda     #0
+        sta     sel_menu_index
+        sta     sel_menu_item_index
 
-        jsr     L6553
+        jsr     show_cursor_and_restore
         sec
         lda     savebehind_size
         sbc     savebehind_usage
         lda     savebehind_size+1
         sbc     savebehind_usage+1
-        bpl     L6A5B
-        exit_call $9C
+        bpl     :+
+        exit_call MGTK::error_insufficient_savebehind_area
 
-L6A5B:  rts
+:       rts
+.endproc
 
-L6A5C:  ldx     $A7
-        jsr     L6878
-        ldx     $A9
-        jmp     L68BE
+
+.proc get_menu_and_menu_item
+        ldx     menu_index
+        jsr     get_menu
+
+        ldx     menu_item_index
+        jmp     get_menu_item
+.endproc
+
 
         ;; Fills rect (params at X,A) then inverts border
 .proc fill_and_frame_rect
         stax    fill_params
         stax    draw_params
-        lda     #0
+        lda     #MGTK::pencopy
         jsr     set_fill_mode
         MGTK_CALL MGTK::PaintRect, 0, fill_params
-        lda     #4
+        lda     #MGTK::notpencopy
         jsr     set_fill_mode
         MGTK_CALL MGTK::FrameRect, 0, draw_params
         rts
 .endproc
 
-L6A89:  jsr     L6A94
-        bne     L6A93
-        exit_call $9A
 
-L6A93:  rts
+.proc find_menu_by_id_or_fail
+        jsr     find_menu_by_id
+        bne     :+
+        exit_call MGTK::error_menu_not_found
+:       rts
+.endproc
 
-L6A94:  lda     #$00
-L6A96:  sta     $C6
+
+        find_mode             := $C6
+
+        find_mode_by_id       := $00        ; find menu/menu item by id
+        find_menu_id          := $C7
+        find_menu_item_id     := $C8
+
+        find_mode_by_coord    := $80        ; find menu by x-coord/menu item by y-coord
+                                            ; coordinate is in set_pos_params
+
+        find_mode_by_shortcut := $C0        ; find menu and menu item by shortcut key
+        find_shortcut         := $C9
+        find_options          := $CA
+
+
+.proc find_menu_by_id
+        lda     #find_mode_by_id
+find_menu:
+        sta     find_mode
+
         jsr     get_menu_count
-        ldx     #$00
-L6A9D:  jsr     L6878
-        bit     $C6
-        bvs     L6ACA
-        bmi     L6AAE
-        lda     $AF
-        cmp     $C7
-        bne     L6ACF
-        beq     L6AD9
-L6AAE:  ldax    set_pos_params::xcoord
-        cpx     $B8
-        bcc     L6ACF
-        bne     L6ABE
-        cmp     $B7
-        bcc     L6ACF
-L6ABE:  cpx     $BA
-        bcc     L6AD9
-        bne     L6ACF
-        cmp     $B9
-        bcc     L6AD9
-        bcs     L6ACF
-L6ACA:  jsr     L6ADC
-        bne     L6AD9
-L6ACF:  ldx     $A7
-        inx
-        cpx     $A8
-        bne     L6A9D
-        return  #$00
+        ldx     #0
+loop:   jsr     get_menu
+        bit     find_mode
+        bvs     find_menu_item_mode
+        bmi     :+
 
-L6AD9:  return  $AF
+        lda     curmenu::menu_id          ; search by menu id
+        cmp     find_menu_id
+        bne     next
+        beq     found
 
-L6ADC:  ldx     #$00
-L6ADE:  jsr     L68BE
-        ldx     $A9
+:       ldax    set_pos_params::xcoord    ; search by x coordinate bounds
+        cpx     curmenu::x_min+1
+        bcc     next
+        bne     :+
+        cmp     curmenu::x_min
+        bcc     next
+:       cpx     curmenu::x_max+1
+        bcc     found
+        bne     next
+        cmp     curmenu::x_max
+        bcc     found
+        bcs     next
+
+find_menu_item_mode:
+        jsr     find_menu_item
+        bne     found
+
+next:   ldx     menu_index
         inx
-        bit     $C6
-        bvs     L6AFA
-        bmi     L6AF0
-        cpx     $C8
-        bne     L6B16
-        beq     L6B1C
-L6AF0:  lda     menu_item_y_table,x
+        cpx     menu_count
+        bne     loop
+        return  #0
+
+found:  return  curmenu::menu_id
+.endproc
+
+find_menu := find_menu_by_id::find_menu
+
+
+.proc find_menu_item
+        ldx     #0
+loop:   jsr     get_menu_item
+        ldx     menu_item_index
+        inx
+        bit     find_mode
+        bvs     find_by_shortcut
+        bmi     :+
+
+        cpx     find_menu_item_id
+        bne     next
+        beq     found
+
+:       lda     menu_item_y_table,x
         cmp     set_pos_params::ycoord
-        bcs     L6B1C
-        bcc     L6B16
-L6AFA:  lda     $C9
+        bcs     found
+        bcc     next
+
+find_by_shortcut:
+        lda     find_shortcut
         and     #$7F
-        cmp     $C1
-        beq     L6B06
-        cmp     $C2
-        bne     L6B16
-L6B06:  cmp     #$20
-        bcc     L6B1C
-        lda     $BF
+        cmp     curmenuitem::shortcut1
+        beq     :+
+        cmp     curmenuitem::shortcut2
+        bne     next
+
+:       cmp     #$20             ; is control char
+        bcc     found
+        lda     curmenuitem::options
         and     #$C0
-        bne     L6B16
-        lda     $BF
-        and     $CA
-        bne     L6B1C
-L6B16:  cpx     $AA
-        bne     L6ADE
-        ldx     #$00
-L6B1C:  rts
+        bne     next
+
+        lda     curmenuitem::options
+        and     find_options
+        bne     found
+
+next:   cpx     menu_item_count
+        bne     loop
+        ldx     #0
+found:  rts
+.endproc
+
 
 ;;; ============================================================
 ;;; HiliteMenu
 
 ;;; 2 bytes of params, copied to $C7
 
-HiliteMenuImpl:
-        lda     $C7
-        bne     L6B26
-        lda     L6BD9
-        sta     $C7
-L6B26:  jsr     L6A89
-L6B29:  jsr     L653C
+.proc HiliteMenuImpl
+        menu_param := $C7
+
+        lda     menu_param
+        bne     :+
+        lda     cur_open_menu
+        sta     menu_param
+
+:       jsr     find_menu_by_id_or_fail
+
+do_hilite:
+        jsr     hide_cursor_save_params
         jsr     set_standard_port
-        jsr     L6B35
-        jmp     L6553
+        jsr     hilite_menu
+        jmp     show_cursor_and_restore
+.endproc
 
         ;; Highlight/Unhighlight top level menu item
-.proc L6B35
-        ldx     #$01
-loop:   lda     $B7,x
+.proc hilite_menu
+        ldx     #1
+loop:   lda     curmenu::x_min,x
         sta     fill_rect_params2::left,x
-        lda     $B9,x
+        lda     curmenu::x_max,x
         sta     fill_rect_params2::width,x
-        lda     $BB,x
+
+        lda     curmenuinfo::x_min,x
         sta     test_rect_params2::left,x
         sta     fill_rect_params4::left,x
-        lda     $BD,x
+
+        lda     curmenuinfo::x_max,x
         sta     test_rect_params2::right,x
         sta     fill_rect_params4::right,x
+
         dex
         bpl     loop
-        lda     #$02
+
+        lda     #MGTK::penXOR
         jsr     set_fill_mode
         MGTK_CALL MGTK::PaintRect, fill_rect_params2
         rts
@@ -5814,194 +5987,289 @@ loop:   lda     $B7,x
 
 ;;; 4 bytes of params, copied to $C7
 
-MenuKeyImpl:
-        lda     $C9
-        cmp     #$1B            ; Menu height?
-        bne     L6B70
-        lda     $CA
-        bne     L6B70
+.proc MenuKeyImpl
+        PARAM_BLOCK params, $C7
+menu_id:   .byte   0
+menu_item: .byte   0
+which_key: .byte   0
+key_mods:  .byte   0
+        END_PARAM_BLOCK
+
+
+        lda     params::which_key
+        cmp     #$1B                     ; escape key
+        bne     :+
+
+        lda     params::key_mods
+        bne     :+
         jsr     KeyboardMouse
         jmp     MenuSelectImpl
 
-L6B70:  lda     #$C0
-        jsr     L6A96
-        beq     L6B88
-        lda     $B0
-        bmi     L6B88
-        lda     $BF
-        and     #$C0
-        bne     L6B88
-        lda     $AF
-        sta     L6BD9
-        bne     L6B8B
-L6B88:  lda     #$00
+
+:       lda     #find_mode_by_shortcut
+        jsr     find_menu
+        beq     not_found
+
+        lda     curmenu::disabled
+        bmi     not_found
+
+        lda     curmenuitem::options
+        and     #MGTK::menuopt_disable_flag | MGTK::menuopt_item_is_filler
+        bne     not_found
+
+        lda     curmenu::menu_id
+        sta     cur_open_menu
+        bne     found
+
+not_found:
+        lda     #0
         tax
-L6B8B:  ldy     #$00
+found:  ldy     #0
         sta     (params_addr),y
         iny
         txa
         sta     (params_addr),y
-        bne     L6B29
+        bne     HiliteMenuImpl::do_hilite
         rts
+.endproc
 
-L6B96:  jsr     L6A89
-        jsr     L6ADC
-        cpx     #$00
-L6B9E:  rts
 
-L6B9F:  jsr     L6B96
-        bne     L6B9E
-        exit_call $9B
+.proc find_menu_and_menu_item
+        jsr     find_menu_by_id_or_fail
+        jsr     find_menu_item
+        cpx     #0
+.endproc
+rrts:   rts
+
+.proc find_menu_item_or_fail
+        jsr     find_menu_and_menu_item
+        bne     rrts
+        exit_call MGTK::error_menu_item_not_found
+.endproc
+
 
 ;;; ============================================================
 ;;; DisableItem
 
 ;;; 3 bytes of params, copied to $C7
 
-DisableItemImpl:
-        jsr     L6B9F
-        asl     $BF
-        ror     $C9
-        ror     $BF
-        jmp     L68DF
+.proc DisableItemImpl
+        PARAM_BLOCK params, $C7
+menu_id:   .byte   0
+menu_item: .byte   0
+disable:   .byte   0
+        END_PARAM_BLOCK
+
+
+        jsr     find_menu_item_or_fail
+
+        asl     curmenuitem::options
+        ror     params::disable
+        ror     curmenuitem::options
+
+        jmp     put_menu_item
+.endproc
 
 ;;; ============================================================
 ;;; CheckItem
 
 ;;; 3 bytes of params, copied to $C7
 
-CheckItemImpl:
-        jsr     L6B9F
-        lda     $C9
-        beq     L6BC2
-        lda     #$20
-        ora     $BF
-        bne     L6BC6
-L6BC2:  lda     #$DF
-        and     $BF
-L6BC6:  sta     $BF
-        jmp     L68DF
+.proc CheckItemImpl
+        PARAM_BLOCK params, $C7
+menu_id:   .byte   0
+menu_item: .byte   0
+check:     .byte   0
+        END_PARAM_BLOCK
+
+
+        jsr     find_menu_item_or_fail
+
+        lda     params::check
+        beq     :+
+        lda     #MGTK::menuopt_item_is_checked
+        ora     curmenuitem::options
+        bne     set_options            ; always
+
+:       lda     #$FF^MGTK::menuopt_item_is_checked
+        and     curmenuitem::options
+set_options:
+        sta     curmenuitem::options
+        jmp     put_menu_item
+.endproc
 
 ;;; ============================================================
 ;;; DisableMenu
 
 ;;; 2 bytes of params, copied to $C7
 
-DisableMenuImpl:
-        jsr     L6A89
-        asl     $B0
-        ror     $C8
-        ror     $B0
-        ldx     $A7
-        jmp     L68A9
+.proc DisableMenuImpl
+        PARAM_BLOCK params, $C7
+menu_id:   .byte   0
+disable:   .byte   0
+        END_PARAM_BLOCK
+
+
+        jsr     find_menu_by_id_or_fail
+
+        asl     curmenu::disabled
+        ror     params::disable
+        ror     curmenu::disabled
+
+        ldx     menu_index
+        jmp     put_menu
+.endproc
 
 ;;; ============================================================
 ;;; MenuSelect
 
-L6BD9:  .byte   0
-L6BDA:  .byte   0
+cur_open_menu:
+        .byte   0
 
-MenuSelectImpl:
+cur_hilited_menu_item:
+        .byte   0
+
+.proc MenuSelectImpl
+        PARAM_BLOCK params, $C7
+menu_id:   .byte   0
+menu_item: .byte   0
+        END_PARAM_BLOCK
+
+
         jsr     L7ECD
+
         jsr     get_menu_count
         jsr     save_params_and_stack
         jsr     set_standard_port
         bit     kbd_mouse_state
-        bpl     L6BF2
+        bpl     :+
         jsr     L7FE1
-        jmp     L6C23
+        jmp     in_menu
 
-L6BF2:  lda     #0
-        sta     L6BD9
-        sta     L6BDA
-        jsr     L691B
-L6BFD:  bit     L7D81
-        bpl     L6C05
+:       lda     #0
+        sta     cur_open_menu
+        sta     cur_hilited_menu_item
+        jsr     get_and_return_event
+event_loop:
+        bit     L7D81
+        bpl     :+
         jmp     L8149
 
-L6C05:  MGTK_CALL MGTK::MoveTo, $83
-        MGTK_CALL MGTK::InRect, test_rect_params
-        bne     L6C58
-        lda     L6BD9
-        beq     L6C23
-        MGTK_CALL MGTK::InRect, test_rect_params2
-        bne     L6C73
-        jsr     L6EA1
-L6C23:  jsr     L691B
-        beq     L6C2C
-        cmp     #$02
-        bne     L6BFD
-L6C2C:  lda     L6BDA
-        bne     L6C37
-        jsr     L6D23
-        jmp     L6C40
+:       MGTK_CALL MGTK::MoveTo, get_and_return_event::event::mouse_pos
+        MGTK_CALL MGTK::InRect, test_rect_params      ; test in menu bar
+        bne     in_menu_bar
+        lda     cur_open_menu
+        beq     in_menu
 
-L6C37:  jsr     HideCursorImpl
+        MGTK_CALL MGTK::InRect, test_rect_params2     ; test in menu
+        bne     in_menu_item
+        jsr     unhilite_cur_menu_item
+
+in_menu:jsr     get_and_return_event
+        beq     :+
+        cmp     #MGTK::event_kind_button_up
+        bne     event_loop
+
+:       lda     cur_hilited_menu_item
+        bne     :+
+        jsr     hide_menu
+        jmp     restore
+
+:       jsr     HideCursorImpl
         jsr     set_standard_port
-        jsr     L6CF4
-L6C40:  jsr     restore_params_active_port
-        lda     #$00
-        ldx     L6BDA
-        beq     L6C55
-        lda     L6BD9
-        ldy     $A7             ; ???
-        sty     menu_index
-        stx     menu_item_index
-L6C55:  jmp     store_xa_at_params
+        jsr     restore_menu_savebehind
 
-L6C58:  jsr     L6EA1
-        lda     #$80
-        jsr     L6A96
-        cmp     L6BD9
-        beq     L6C23
+restore:jsr     restore_params_active_port
+        lda     #0
+
+        ldx     cur_hilited_menu_item
+        beq     :+
+
+        lda     cur_open_menu
+        ldy     menu_index             ; ???
+        sty     sel_menu_index
+        stx     sel_menu_item_index
+
+:       jmp     store_xa_at_params
+
+
+in_menu_bar:
+        jsr     unhilite_cur_menu_item
+
+        lda     #find_mode_by_coord
+        jsr     find_menu
+
+        cmp     cur_open_menu
+        beq     in_menu
         pha
-        jsr     L6D23
+        jsr     hide_menu
         pla
-        sta     L6BD9
-        jsr     L6D26
-        jmp     L6C23
+        sta     cur_open_menu
 
-L6C73:  lda     #$80
-        sta     $C6
-        jsr     L6ADC
-        cpx     L6BDA
-        beq     L6C23
-        lda     $B0
-        ora     $BF
-        and     #$C0
-        beq     L6C89
-        ldx     #$00
-L6C89:  txa
+        jsr     draw_menu
+        jmp     in_menu
+
+
+in_menu_item:
+        lda     #find_mode_by_coord
+        sta     find_mode
+        jsr     find_menu_item
+        cpx     cur_hilited_menu_item
+        beq     in_menu
+
+        lda     curmenu::disabled
+        ora     curmenuitem::options
+        and     #MGTK::menuopt_disable_flag | MGTK::menuopt_item_is_filler
+        beq     :+
+
+        ldx     #0
+:       txa
         pha
-        jsr     L6EAA
+        jsr     hilite_menu_item
         pla
-        sta     L6BDA
-        jsr     L6EAA
-        jmp     L6C23
+        sta     cur_hilited_menu_item
+        jsr     hilite_menu_item
 
-L6C98:  lda     $BC
+        jmp     in_menu
+.endproc
+
+
+        savebehind_left_bytes := $82
+        savebehind_bottom := $83
+
+        savebehind_buf_addr := $8E
+        savebehind_vid_addr := $84
+        savebehind_mapwidth := $90
+
+
+.proc set_up_savebehind
+        lda     curmenuinfo::x_min+1
         lsr     a
-        lda     $BB
+        lda     curmenuinfo::x_min
         ror     a
         tax
         lda     div7_table,x
-        sta     $82
-        lda     $BE
+        sta     savebehind_left_bytes
+
+        lda     curmenuinfo::x_max+1
         lsr     a
-        lda     $BD
+        lda     curmenuinfo::x_max
         ror     a
         tax
         lda     div7_table,x
         sec
-        sbc     $82
-        sta     $90
-        copy16  savebehind_buffer, $8E
-        ldy     $AA
+        sbc     savebehind_left_bytes
+        sta     savebehind_mapwidth
+
+        copy16  savebehind_buffer, savebehind_buf_addr
+
+        ldy     menu_item_count
         ldx     menu_item_y_table,y ; ???
         inx
-        stx     $83
+        stx     savebehind_bottom
         stx     fill_rect_params4::bottom
         stx     test_rect_params2::bottom
+
         ldx     sysfont_height
         inx
         inx
@@ -6009,182 +6277,243 @@ L6C98:  lda     $BC
         stx     fill_rect_params4::top
         stx     test_rect_params2::top
         rts
+.endproc
 
-L6CD8:  lda     hires_table_lo,x
+
+.proc savebehind_get_vidaddr
+        lda     hires_table_lo,x
         clc
-        adc     $82
-        sta     $84
+        adc     savebehind_left_bytes
+        sta     savebehind_vid_addr
         lda     hires_table_hi,x
         ora     #$20
-        sta     $85
+        sta     savebehind_vid_addr+1
         rts
+.endproc
 
-L6CE8:  lda     $8E
+
+.proc savebehind_next_line
+        lda     savebehind_buf_addr
         sec
-        adc     $90
-        sta     $8E
-        bcc     L6CF3
-        inc     $8F
-L6CF3:  rts
+        adc     savebehind_mapwidth
+        sta     savebehind_buf_addr
+        bcc     :+
+        inc     savebehind_buf_addr+1
+:       rts
+.endproc
 
-L6CF4:  jsr     L6C98
-L6CF7:  jsr     L6CD8
+
+.proc restore_menu_savebehind
+        jsr     set_up_savebehind
+loop:   jsr     savebehind_get_vidaddr
         sta     HISCR
-        ldy     $90
-L6CFF:  lda     ($8E),y
-        sta     ($84),y
+
+        ldy     savebehind_mapwidth
+:       lda     (savebehind_buf_addr),y
+        sta     (savebehind_vid_addr),y
         dey
-        bpl     L6CFF
-        jsr     L6CE8
+        bpl     :-
+        jsr     savebehind_next_line
         sta     LOWSCR
-        ldy     $90
-L6D0E:  lda     ($8E),y
-        sta     ($84),y
+
+        ldy     savebehind_mapwidth
+:       lda     (savebehind_buf_addr),y
+        sta     (savebehind_vid_addr),y
         dey
-        bpl     L6D0E
-        jsr     L6CE8
+        bpl     :-
+        jsr     savebehind_next_line
+
         inx
-        cpx     $83
-        bcc     L6CF7
-        beq     L6CF7
+        cpx     savebehind_bottom
+        bcc     loop
+        beq     loop
         jmp     ShowCursorImpl
+.endproc
 
-L6D22:  rts
 
-L6D23:  clc
-        bcc     L6D27
-L6D26:  sec
-L6D27:  lda     L6BD9
-        beq     L6D22
+dmrts:  rts
+
+
+.proc hide_menu
+        clc
+        bcc     draw_menu_draw_or_hide
+.endproc
+
+
+.proc draw_menu
+        sec
+draw_or_hide:
+        lda     cur_open_menu
+        beq     dmrts
         php
-        sta     $C7
-        jsr     L6A94
+
+        sta     find_menu_id
+        jsr     find_menu_by_id
         jsr     HideCursorImpl
-        jsr     L6B35
+        jsr     hilite_menu
+
         plp
-        bcc     L6CF4
-        jsr     L6C98
-L6D3E:  jsr     L6CD8
+        bcc     restore_menu_savebehind
+
+        jsr     set_up_savebehind
+saveloop:
+        jsr     savebehind_get_vidaddr
         sta     HISCR
-        ldy     $90
-L6D46:  lda     ($84),y
-        sta     ($8E),y
+
+        ldy     savebehind_mapwidth
+:       lda     (savebehind_vid_addr),y
+        sta     (savebehind_buf_addr),y
         dey
-        bpl     L6D46
-        jsr     L6CE8
+        bpl     :-
+        jsr     savebehind_next_line
         sta     LOWSCR
-        ldy     $90
-L6D55:  lda     ($84),y
-        sta     ($8E),y
+
+        ldy     savebehind_mapwidth
+:       lda     (savebehind_vid_addr),y
+        sta     (savebehind_buf_addr),y
         dey
-        bpl     L6D55
-        jsr     L6CE8
+        bpl     :-
+        jsr     savebehind_next_line
+
         inx
-        cpx     $83
-        bcc     L6D3E
-        beq     L6D3E
+        cpx     savebehind_bottom
+        bcc     saveloop
+        beq     saveloop
+
         jsr     set_standard_port
-        ldax    L6861
+
+        ldax    test_rect_params2_addr
         jsr     fill_and_frame_rect
         inc16   fill_rect_params4::left
         lda     fill_rect_params4::right
-        bne     L6D82
+        bne     :+
         dec     fill_rect_params4::right+1
-L6D82:  dec     fill_rect_params4::right
-        jsr     L6A5C
-        ldx     #$00
-L6D8A:  jsr     L68BE
-        bit     $BF
-        bvc     L6D94
-        jmp     L6E18
+:       dec     fill_rect_params4::right
 
-L6D94:  lda     $BF
-        and     #$20
-        beq     L6DBD
+        jsr     get_menu_and_menu_item
 
-        lda     L681D
-        jsr     L6E25
+        ldx     #0
+loop:   jsr     get_menu_item
+        bit     curmenuitem::options
+        bvc     :+
+        jmp     next
+
+:       lda     curmenuitem::options
+        and     #MGTK::menuopt_item_is_checked
+        beq     no_mark
+
+        lda     offset_checkmark
+        jsr     moveto_menuitem
 
         lda     checkmark_glyph
-        sta     L685E
-        lda     $BF
-        and     #$04
-        beq     L6DB1
-        lda     $C0
-        sta     L685E
-L6DB1:  ldax    L6863
+        sta     mark_text+1
+
+        lda     curmenuitem::options
+        and     #MGTK::menuopt_item_has_mark
+        beq     :+
+        lda     curmenuitem::mark_char
+        sta     mark_text+1
+
+:       ldax    mark_text_addr
         jsr     draw_text
-        jsr     L6A5C
-L6DBD:  lda     L681E
-        jsr     L6E25
-        ldax    $C3
+        jsr     get_menu_and_menu_item
+
+no_mark:
+        lda     offset_text
+        jsr     moveto_menuitem
+
+        ldax    curmenuitem::name
         jsr     draw_text
-        jsr     L6A5C
-        lda     $BF
-        and     #$03
-        bne     L6DE0
-        lda     $C1
-        beq     L6E0A
+
+        jsr     get_menu_and_menu_item
+        lda     curmenuitem::options
+        and     #MGTK::menuopt_open_apple | MGTK::menuopt_solid_apple
+        bne     oa_sa
+
+        lda     curmenuitem::shortcut1
+        beq     no_shortcut
+
         lda     controlkey_glyph
-        sta     L685B
-        jmp     L6E0A
+        sta     shortcut_text+1
+        jmp     no_shortcut
 
-L6DE0:  cmp     #$01
-        bne     L6DED
+oa_sa:  cmp     #MGTK::menuopt_open_apple
+        bne     :+
         lda     open_apple_glyph
-        sta     L685B
-        jmp     L6DF3
+        sta     shortcut_text+1
+        jmp     shortcut
 
-L6DED:  lda     solid_apple_glyph
-        sta     L685B
-L6DF3:  lda     $C1
-        sta     L685C
-        lda     L681F
-        jsr     L6E92
-        ldax    L6865
+:       lda     solid_apple_glyph
+        sta     shortcut_text+1
+
+shortcut:
+        lda     curmenuitem::shortcut1
+        sta     shortcut_text+2
+
+        lda     offset_shortcut
+        jsr     moveto_fromright
+
+        ldax    shortcut_text_addr
         jsr     draw_text
-        jsr     L6A5C
-L6E0A:  bit     $B0
-        bmi     L6E12
-        bit     $BF
-        bpl     L6E18
-L6E12:  jsr     L6E36
-        jmp     L6E18
+        jsr     get_menu_and_menu_item
 
-L6E18:  ldx     $A9
+no_shortcut:
+        bit     curmenu::disabled
+        bmi     :+
+        bit     curmenuitem::options
+        bpl     next
+
+:       jsr     dim_menuitem
+        jmp     next                   ; useless jmp ???
+
+next:   ldx     menu_item_index
         inx
-        cpx     $AA
-        beq     L6E22
-        jmp     L6D8A
+        cpx     menu_item_count
+        beq     :+
+        jmp     loop
+:       jmp     ShowCursorImpl
+.endproc
 
-L6E22:  jmp     ShowCursorImpl
 
-L6E25:  ldx     $A9
+.proc moveto_menuitem
+        ldx     menu_item_index
         ldy     menu_item_y_table+1,x ; ???
         dey
-        ldx     $BC
+        ldx     curmenuinfo::x_min+1
         clc
-        adc     $BB
+        adc     curmenuinfo::x_min
         bcc     :+
         inx
 :       jmp     set_penloc
+.endproc
 
-L6E36:  ldx     $A9
+
+.proc dim_menuitem
+        ldx     menu_item_index
         lda     menu_item_y_table,x
         sta     fill_rect_params3_top
         inc     fill_rect_params3_top
         lda     menu_item_y_table+1,x
         sta     fill_rect_params3_bottom
-        add16lc $BB, #5, fill_rect_params3_left
-        sub16lc $BD, #5, fill_rect_params3_right
+
+        add16lc curmenuinfo::x_min, #5, fill_rect_params3_left
+        sub16lc curmenuinfo::x_max, #5, fill_rect_params3_right
+
         MGTK_CALL MGTK::SetPattern, light_speckle_pattern
-        lda     #$01
+
+        lda     #MGTK::penOR
         jsr     set_fill_mode
+
         MGTK_CALL MGTK::PaintRect, fill_rect_params3
         MGTK_CALL MGTK::SetPattern, standard_port::penpattern
-        lda     #$02
+
+        lda     #MGTK::penXOR
         jsr     set_fill_mode
         rts
+.endproc
+
+draw_menu_draw_or_hide := draw_menu::draw_or_hide
+
 
 light_speckle_pattern:
         .byte   %10001000
@@ -6207,31 +6536,40 @@ bottom: .word   0
         fill_rect_params3_right := fill_rect_params3::right
         fill_rect_params3_bottom := fill_rect_params3::bottom
 
-L6E92:  sta     $82
-        ldax    $BD
+
+        ;; Move to the given distance from the right side of the menu.
+.proc moveto_fromright
+        sta     $82
+        ldax    curmenuinfo::x_max
         sec
         sbc     $82
-        bcs     L6E9E
+        bcs     :+
         dex
-L6E9E:  jmp     set_penloc::set_x
+:       jmp     set_penloc::set_x
+.endproc
 
-L6EA1:  jsr     L6EAA
-        lda     #$00
-        sta     L6BDA
-L6EA9:  rts
+.proc unhilite_cur_menu_item
+        jsr     hilite_menu_item
+        lda     #0
+        sta     cur_hilited_menu_item
+.endproc
+hmrts:  rts
 
-L6EAA:  ldx     L6BDA
-        beq     L6EA9
-        ldy     fill_rect_params4::bottom+1,x ; ???
+.proc hilite_menu_item
+        ldx     cur_hilited_menu_item
+        beq     hmrts
+        ldy     menu_item_y_table-1,x
         iny
         sty     fill_rect_params4::top
         ldy     menu_item_y_table,x
         sty     fill_rect_params4::bottom
         jsr     HideCursorImpl
-        lda     #$02
+
+        lda     #MGTK::penXOR
         jsr     set_fill_mode
         MGTK_CALL MGTK::PaintRect, fill_rect_params4
         jmp     ShowCursorImpl
+.endproc
 
 ;;; ============================================================
 ;;; InitMenu
@@ -6252,16 +6590,28 @@ loop:   lda     params,x
         lda     (params),y
         bmi     :+                    ; branch if double-width font
 
-        copy16  #$0902, L681D
-        copy16  #$0910, L681F
-        lda     #$1E
-        sta     L6821
+        lda     #2
+        sta     offset_checkmark
+        lda     #9
+        sta     offset_text
+        lda     #16
+        sta     offset_shortcut
+        lda     #9
+        sta     shortcut_x_adj
+        lda     #30
+        sta     non_shortcut_x_adj
         bne     end
 
-:       copy16  #$1002, L681D
-        copy16  #$101E, L681F
-        lda     #$33
-        sta     L6821
+:       lda     #2
+        sta     offset_checkmark
+        lda     #16
+        sta     offset_text
+        lda     #30
+        sta     offset_shortcut
+        lda     #16
+        sta     shortcut_x_adj
+        lda     #51
+        sta     non_shortcut_x_adj
 end:    rts
 .endproc
 
@@ -6270,21 +6620,34 @@ end:    rts
 
 ;;; 4 bytes of params, copied to $C7
 
-SetMarkImpl:
-        jsr     L6B9F
-        lda     $C9
-        beq     L6F30
-        lda     #$04
-        ora     $BF
-        sta     $BF
-        lda     $CA
-        sta     $C0
-        jmp     L68DF
+.proc SetMarkImpl
+        PARAM_BLOCK params, $C7
+menu_id:   .byte   0
+menu_item: .byte   0
+set_char:  .byte   0
+mark_char: .byte   0
+        END_PARAM_BLOCK
 
-L6F30:  lda     #$FB
-        and     $BF
-        sta     $BF
-        jmp     L68DF
+
+        jsr     find_menu_item_or_fail
+
+        lda     params::set_char
+        beq     :+
+
+        lda     #MGTK::menuopt_item_has_mark
+        ora     curmenuitem::options
+        sta     curmenuitem::options
+
+        lda     params::mark_char
+        sta     curmenuitem::mark_char
+        jmp     put_menu_item
+
+:       lda     #$FF^MGTK::menuopt_item_has_mark
+        and     curmenuitem::options
+        sta     curmenuitem::options
+        jmp     put_menu_item
+.endproc
+
 
 .proc up_scroll_params
         .byte   $00,$00
@@ -6987,7 +7350,7 @@ L74BD:  ldy     #MGTK::winfo_offset_nextwinfo ; Called from elsewhere
         pha
         lda     $AA
         pha
-        jsr     L653C
+        jsr     hide_cursor_save_params
         jsr     set_desktop_port
         jsr     top_window
         beq     L74DE
@@ -7000,7 +7363,7 @@ L74DE:  pla
         lda     $AB
         sta     L700D
         jsr     L718E
-        jmp     L6553
+        jmp     show_cursor_and_restore
 
 L74F4:  ldy     #MGTK::winfo_offset_nextwinfo ; Called from elsewhere
         lda     ($A9),y
@@ -7037,7 +7400,7 @@ L750C:  .res    38,0
         bne     :+
         inc     L7871
 
-:       jsr     L653C
+:       jsr     hide_cursor_save_params
         jsr     set_desktop_port
         lda     L7871
         bne     :+
@@ -7194,7 +7557,7 @@ toggle: sta     in_close_box
         jsr     HideCursorImpl
         MGTK_CALL MGTK::PaintRect, $C7
         jsr     ShowCursorImpl
-loop:   jsr     L691B
+loop:   jsr     get_and_return_event
         cmp     #$02
         beq     L768B
         MGTK_CALL MGTK::MoveTo, set_pos_params
@@ -7258,7 +7621,7 @@ L76B6:  lda     $83,x
         bit     kbd_mouse_state
         bpl     L76D1
         jsr     L817C
-L76D1:  jsr     L653C
+L76D1:  jsr     hide_cursor_save_params
         jsr     L784C
         lda     #$02
         jsr     set_fill_mode
@@ -7268,7 +7631,7 @@ L76E2:  jsr     next_window::L703E
         jsr     L70B7
         jsr     L707F
         jsr     ShowCursorImpl
-L76F1:  jsr     L691B
+L76F1:  jsr     get_and_return_event
         cmp     #$02
         bne     L773B
         jsr     L707F
@@ -7279,7 +7642,7 @@ L7702:  lda     L76A3,x
         bne     L7714
         dex
         bpl     L7702
-L770A:  jsr     L6553
+L770A:  jsr     show_cursor_and_restore
         lda     #$00
 L770F:  ldy     #$05
         sta     (params_addr),y
@@ -7294,11 +7657,11 @@ L7716:  lda     $A3,y
         jsr     HideCursorImpl
         lda     $AB
         jsr     L7872
-        jsr     L653C
+        jsr     hide_cursor_save_params
         bit     L7D81
         bvc     L7733
         jsr     L8347
-L7733:  jsr     L6553
+L7733:  jsr     show_cursor_and_restore
         lda     #$80
         jmp     L770F
 
@@ -7392,7 +7755,7 @@ L7814:  rts
 
 .proc CloseWindowImpl
         jsr     window_by_id_or_exit
-        jsr     L653C
+        jsr     hide_cursor_save_params
         jsr     L784C
         jsr     L74F4
         ldy     #$0A
@@ -7449,7 +7812,7 @@ L7872:  sta     L7010
         jsr     set_fill_mode
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
         MGTK_CALL MGTK::PaintRect, set_port_maprect
-        jsr     L6553
+        jsr     show_cursor_and_restore
         jsr     top_window
         beq     L78CA
         php
@@ -7588,7 +7951,7 @@ L7971:  cmp     #$02
         beq     L797C
 L797B:  rts
 
-L797C:  jsr     L653C
+L797C:  jsr     hide_cursor_save_params
         jsr     top_window
         bit     $8C
         bpl     L798C
@@ -7603,7 +7966,7 @@ L7990:  eor     $8D
         sta     ($A9),y
         lda     $8D
         jsr     L79A0
-        jmp     L6553
+        jmp     show_cursor_and_restore
 
 L79A0:  bne     L79AF
         jsr     L79F1
@@ -7908,7 +8271,7 @@ L7BE0:  jsr     L7A73
         jsr     HideCursorImpl
 L7BF7:  jsr     L707F
         jsr     ShowCursorImpl
-L7BFD:  jsr     L691B
+L7BFD:  jsr     get_and_return_event
         cmp     #$02
         beq     L7C66
         jsr     L77E0
@@ -7957,7 +8320,7 @@ L7C53:  sta     $C8,x
 
 L7C66:  jsr     HideCursorImpl
         jsr     L707F
-        jsr     L6553
+        jsr     show_cursor_and_restore
         jsr     L7CBA
         jsr     fixed_div
         ldx     $A1
@@ -8071,10 +8434,10 @@ check_win:
         ldy     #$09
 :       lda     $8D
         sta     ($A9),y
-        jsr     L653C
+        jsr     hide_cursor_save_params
         jsr     set_standard_port
         jsr     L79A0
-        jmp     L6553
+        jmp     show_cursor_and_restore
 .endproc
 
 ;;; ============================================================
@@ -8097,10 +8460,10 @@ KeyboardMouse:
         params := $82
 
         lda     params+0
-        sta     menu_index
+        sta     sel_menu_index
 
         lda     params+1
-        sta     menu_item_index
+        sta     sel_menu_item_index
 
         rts
 .endproc
@@ -8119,9 +8482,9 @@ L7D79:  .byte   $00
 
         ;; Currently selected menu/menu item. Note that menu is index,
         ;; not ID from menu definition.
-menu_index:
+sel_menu_index:
         .byte   0
-menu_item_index:
+sel_menu_item_index:
         .byte   0
 
 saved_mouse_pos:
@@ -8253,10 +8616,12 @@ L7EAD:  jsr     stash_addr
         sta     mouse_status
         jmp     restore_mouse_pos
 
-L7ECD:  lda     #$00
+.proc L7ECD
+        lda     #$00
         sta     L7D81
         sta     set_input_unk
         rts
+.endproc
 
         ;; Look at buttons (apple keys), compute modifiers in A
         ;; (bit = button 0 / open apple, bit 1 = button 1 / solid apple)
@@ -8412,23 +8777,23 @@ L7FE1:  php
         lda     #$80
         sta     mouse_status
         jsr     L7F0F
-        ldx     menu_index
-        jsr     L6878
+        ldx     sel_menu_index
+        jsr     get_menu
         lda     $AF
-        sta     L6BD9
-        jsr     L6D26
-        lda     menu_item_index
-        sta     L6BDA
-        jsr     L6EAA
+        sta     cur_open_menu
+        jsr     draw_menu
+        lda     sel_menu_item_index
+        sta     cur_hilited_menu_item
+        jsr     hilite_menu_item
         plp
         rts
 
-L800F:  ldx     menu_index
-        jsr     L6878
+L800F:  ldx     sel_menu_index
+        jsr     get_menu
 
         add16lc $B7, #5, kbd_mouse_x
 
-        ldy     menu_item_index
+        ldy     sel_menu_item_index
         lda     menu_item_y_table,y
         sta     kbd_mouse_y
         lda     #$C0
@@ -8437,11 +8802,11 @@ L800F:  ldx     menu_index
 
 L8035:  bit     L7D79
         bpl     L804C
-        lda     L6BDA
-        sta     menu_item_index
-        ldx     L6BD9
+        lda     cur_hilited_menu_item
+        sta     sel_menu_item_index
+        ldx     cur_open_menu
         dex
-        stx     menu_index
+        stx     sel_menu_index
         lda     #$00
         sta     L7D79
 L804C:  rts
@@ -8478,16 +8843,16 @@ try_return:
 try_up:
         cmp     #CHAR_UP
         bne     try_down
-L8081:  dec     menu_item_index
+L8081:  dec     sel_menu_item_index
         bpl     L8091
-        ldx     menu_index
-        jsr     L6878
+        ldx     sel_menu_index
+        jsr     get_menu
         ldx     $AA
-        stx     menu_item_index
-L8091:  ldx     menu_item_index
+        stx     sel_menu_item_index
+L8091:  ldx     sel_menu_item_index
         beq     L80A0
         dex
-        jsr     L68BE
+        jsr     get_menu_item
         lda     $BF
         and     #$C0
         bne     L8081
@@ -8496,19 +8861,19 @@ L80A0:  jmp     L800F
 try_down:
         cmp     #CHAR_DOWN
         bne     try_right
-L80A7:  inc     menu_item_index
-        ldx     menu_index
-        jsr     L6878
-        lda     menu_item_index
+L80A7:  inc     sel_menu_item_index
+        ldx     sel_menu_index
+        jsr     get_menu
+        lda     sel_menu_item_index
         cmp     $AA
         bcc     L80BE
         beq     L80BE
         lda     #0
-        sta     menu_item_index
-L80BE:  ldx     menu_item_index
+        sta     sel_menu_item_index
+L80BE:  ldx     sel_menu_item_index
         beq     L80CD
         dex
-        jsr     L68BE
+        jsr     get_menu_item
         lda     $BF
         and     #$C0
         bne     L80A7
@@ -8518,27 +8883,27 @@ try_right:
         cmp     #CHAR_RIGHT
         bne     try_left
         lda     #0
-        sta     menu_item_index
-        inc     menu_index
-        lda     menu_index
-        cmp     $A8
+        sta     sel_menu_item_index
+        inc     sel_menu_index
+        lda     sel_menu_index
+        cmp     menu_count
         bcc     L80E8
         lda     #$00
-        sta     menu_index
+        sta     sel_menu_index
 L80E8:  jmp     L800F
 
 try_left:
         cmp     #CHAR_LEFT
         bne     nope
         lda     #0
-        sta     menu_item_index
-        dec     menu_index
+        sta     sel_menu_item_index
+        dec     sel_menu_index
         bmi     L80FC
         jmp     L800F
 
-L80FC:  ldx     $A8
+L80FC:  ldx     menu_count
         dex
-        stx     menu_index
+        stx     sel_menu_index
         jmp     L800F
 
 nope:   jsr     L8110
@@ -8552,12 +8917,12 @@ L8110:  sta     $C9
         lda     set_input_modifiers
         and     #$03
         sta     $CA
-        lda     L6BD9
+        lda     cur_open_menu
         pha
-        lda     L6BDA
+        lda     cur_hilited_menu_item
         pha
         lda     #$C0
-        jsr     L6A96
+        jsr     find_menu
         beq     L813D
         stx     L7D80
         lda     $B0
@@ -8571,30 +8936,30 @@ L8110:  sta     $C9
         bcs     L813E
 L813D:  clc
 L813E:  pla
-        sta     L6BDA
+        sta     cur_hilited_menu_item
         pla
-        sta     L6BD9
+        sta     cur_open_menu
         sta     $C7
         rts
 
 L8149:  php
         sei
-        jsr     L6D23
+        jsr     hide_menu
         jsr     L7EAD
         lda     L7D7F
         sta     $C7
-        sta     L6BD9
+        sta     cur_open_menu
         lda     L7D80
         sta     $C8
-        sta     L6BDA
+        sta     cur_hilited_menu_item
         jsr     restore_params_active_port
         lda     L7D7F
         beq     L816F
         jsr     HiliteMenuImpl
         lda     L7D7F
-L816F:  sta     L6BD9
+L816F:  sta     cur_open_menu
         ldx     L7D80
-        stx     L6BDA
+        stx     cur_hilited_menu_item
         plp
         jmp     store_xa_at_params
 

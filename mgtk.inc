@@ -287,9 +287,9 @@ SetKeyEvent     := $2E          ; If set, keypresses are ignored by Tool Kit
 ;;;
 ;;; Menu record:
 ;;;
-;;; .word       count           Number of items in menu
-;;; (array of...)
+;;; .byte       count           Number of items in menu
 ;;; .res  5     reserved        Reserved
+;;; (array of...)
 ;;; .byte       options         bit 0=OA, 1=SA, 2=mark, 5=check, 6=filler, 7=disabled
 ;;; .byte       mark_char       Custom mark character if mark option set
 ;;; .byte       char1           ASCII code of shortcut #1 (e.g. uppercase B); or 0
@@ -607,6 +607,10 @@ winfo_offset_port               := 20
 winfo_offset_nextwinfo          := 56
 winfo_size                      := 58
 
+menu_size                       := 12
+
+menu_item_size                  := 6
+
 short_event_size                := 4        ; events that don't have mouse coordinates
 event_size                      := 5        ; any kind of event
 
@@ -636,7 +640,10 @@ error_invalid_hook := $94
 error_desktop_not_initialized := $95
 error_irq_in_use := $97
 error_invalid_event := $98
-error_event_buffer_full := $99
+error_event_queue_full := $99
+error_menu_not_found := $9A
+error_menu_item_not_found := $9B
+error_insufficient_savebehind_area := $9C
 error_window_already_exists := $9D
 error_window_id_required := $9E
 error_window_not_found := $9F

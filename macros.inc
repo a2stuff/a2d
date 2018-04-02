@@ -440,6 +440,7 @@ skip:
 ;;;            lda     params::arg3         ; equiv. to lda $85
 ;;;
 .macro PARAM_BLOCK name, addr
+        name := addr
         .scope  name
         .pushseg
         .bss
