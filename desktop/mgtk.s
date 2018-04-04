@@ -8361,11 +8361,11 @@ windowy:        .word   0       ; out
 .endproc
 
 .proc copy_map_results
-        ldy     #params::windowx - params
-:       lda     params + (params::screenx - params::windowx),y
+        ldy     #ScreenToWindowImpl::params::windowx - ScreenToWindowImpl::params
+:       lda     ScreenToWindowImpl::params + (ScreenToWindowImpl::params::screenx - ScreenToWindowImpl::params::windowx),y
         sta     (params_addr),y
         iny
-        cpy     #params::size      ; results are 2 words (x, y) at params_addr+5
+        cpy     #ScreenToWindowImpl::params::size      ; results are 2 words (x, y) at params_addr+5
         bne     :-
         rts
 .endproc
