@@ -8333,8 +8333,7 @@ loop:   add16   params::windowx,x, current_winport::viewloc,x, params::windowx,x
         dex
         dex
         bpl     loop
-
-        bmi     ScreenToWindowImpl_transfer_out     ; always
+        bmi     copy_map_results                  ; always
 .endproc
 
 ;;; ============================================================
@@ -8358,18 +8357,20 @@ windowy:        .word   0       ; out
         dex
         dex
         bpl     :-
+        ;; fall through
+.endproc
 
-transfer_out:
+.proc copy_map_results
         ldy     #params::windowx - params
 :       lda     params + (params::screenx - params::windowx),y
         sta     (params_addr),y
         iny
-        cpy     #params::size
+        cpy     #params::size      ; results are 2 words (x, y) at params_addr+5
         bne     :-
         rts
 .endproc
 
-ScreenToWindowImpl_transfer_out := ScreenToWindowImpl::transfer_out
+;;; ============================================================
 
 
         ;; Used to draw scrollbar arrows and resize box
