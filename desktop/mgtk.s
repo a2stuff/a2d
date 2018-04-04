@@ -506,7 +506,7 @@ param_lengths:
         PARAM_DEFN  2, $8C, 0                ; $4C ActivateCtl
 
         ;; Extra Calls
-        PARAM_DEFN 16, $8A, 0                ; $4D ???
+        PARAM_DEFN 16, $8A, 0                ; $4D BitBlt
         PARAM_DEFN  2, $82, 0                ; $4E SetMenuSelection
 
 ;;; ============================================================
@@ -1942,7 +1942,7 @@ src_width_bytes:
 
 L5169:  .byte   0
 
-PaintBitsImpl:
+.proc PaintBitsImpl
 
         dbi_left   := $8A
         dbi_top    := $8C
@@ -1990,6 +1990,7 @@ PaintBitsImpl:
         adc     offset+1
         sta     bottom+1
         ;; fall through to BitBlt
+.endproc
 
 ;;; ============================================================
 
@@ -2032,8 +2033,8 @@ PaintBitsImpl:
         sec                             ;  = dbi_top - clipped_top
         sbc     clipped_top
         clc
-        adc     dbi_top
-        sta     dbi_top
+        adc     PaintBitsImpl::dbi_top
+        sta     PaintBitsImpl::dbi_top
 
         lda     #0                      ; Calculate starting X-coordinate
         sec                             ;  = dbi_left - clipped_left
@@ -2045,10 +2046,10 @@ PaintBitsImpl:
 
         txa
         clc
-        adc     dbi_left
+        adc     PaintBitsImpl::dbi_left
         tax
         tya
-        adc     dbi_left+1
+        adc     PaintBitsImpl::dbi_left+1
 
         jsr     divmod7
         sta     src_byte_off
@@ -4996,7 +4997,7 @@ checkerboard_pattern:
         ldy     #2
         jmp     store_xa_at_y
 
-fail:   exit_call MGTK::error_desktop_not_initialized
+fail:   exit_call MGTK::error_desktop_already_initialized
 
 mouse_state_addr:
         .addr   mouse_state
@@ -5307,6 +5308,13 @@ eventbuf_head:  .byte   0
         eventbuf_size := 33             ; max # of events in queue
 
 eventbuf:
+        .scope  eventbuf
+        kind      := *
+        key       := *+1
+        modifiers := *+2
+        window_id := *+1
+        .endscope
+
         .res    eventbuf_size*MGTK::short_event_size
 
 
@@ -5640,7 +5648,7 @@ set_x:  stax    current_penloc_x
 kind:      .byte   0
 mouse_pos:
 mouse_x:   .word  0
-mouse_y:   .word  0        
+mouse_y:   .word  0
         END_PARAM_BLOCK
 
         MGTK_CALL MGTK::GetEvent, event
@@ -6151,7 +6159,7 @@ menu_item: .byte   0
         sta     cur_hilited_menu_item
         jsr     get_and_return_event
 event_loop:
-        bit     L7D81
+        bit     movement_cancel
         bpl     :+
         jmp     L8149
 
@@ -6649,37 +6657,44 @@ mark_char: .byte   0
 .endproc
 
 
+icon_offset_pos    := 0
+icon_offset_width  := 4
+icon_offset_height := 5
+icon_offset_bits   := 6
+
+
 .proc up_scroll_params
-        .byte   $00,$00
-incr:   .byte   $00,$00
-        .byte   $13,$0A
+xcoord: .res    2
+ycoord: .res    2
+        .byte   19,10
         .addr   up_scroll_bitmap
 .endproc
 
 .proc down_scroll_params
-        .byte   $00,$00
-unk1:   .byte   $00
-unk2:   .byte   $00
-        .byte   $13,$0A
+xcoord: .res    2
+ycoord: .res    2
+        .byte   19,10
         .addr   down_scroll_bitmap
 .endproc
 
 .proc left_scroll_params
-        .byte   $00,$00,$00,$00
-        .byte   $14,$09
+xcoord: .res    2
+ycoord: .res    2
+        .byte   20,9
         .addr   left_scroll_bitmap
 .endproc
 
 .proc right_scroll_params
-        .byte   $00
-        .byte   $00,$00,$00
-        .byte   $12,$09
+xcoord: .res    2
+ycoord: .res    2
+        .byte   18,9
         .addr   right_scroll_bitmap
 .endproc
 
 .proc resize_box_params
-        .byte   $00,$00,$00,$00
-        .byte   $14,$0A
+xcoord: .res    2
+ycoord: .res    2
+        .byte   20,10
         .addr   resize_box_bitmap
 .endproc
 
@@ -6737,7 +6752,7 @@ right_scroll_bitmap:
         .byte   px(%1000000),px(%0011110),px(%0000000)
         .byte   px(%1000000),px(%0011000),px(%0000000)
 
-L6FDF:  .byte   0
+L6FDF:  .byte   0         ; ???
 
         ;; Resize Box
 resize_box_bitmap:
@@ -6769,58 +6784,133 @@ resize_box_addr:
         .addr   resize_box_params
 
 current_window:
-        .res    2
-L700D:  .byte   $00
-L700E:  .word   0
-L7010:  .byte   $00
+        .word   0
 
-L7011:  .addr   $6FD3
+sel_window_id:
+        .byte   0
+
+found_window:
+        .word   0
+
+target_window_id:
+        .byte   0
+
+        ;; The root window is not a real window, but a structure whose
+        ;; nextwinfo field lines up with current_window.
+root_window_addr:
+        .addr   current_window - MGTK::winfo_offset_nextwinfo
+
+
+        which_control        := $8C
+        which_control_horiz  := $00
+        which_control_vert   := $80
+
+        previous_window      := $A7
+        window               := $A9
+
+
+        ;; First 12 bytes of winfo only
+        PARAM_BLOCK current_winfo, $AB
+id:        .byte   0
+options:   .byte   0
+title:     .addr   0
+hscroll:   .byte   0
+vscroll:   .byte   0
+hthumbmax: .byte   0
+hthumbpos: .byte   0
+vthumbmax: .byte   0
+vthumbpos: .byte   0
+status:    .byte   0
+reserved:  .byte   0
+        END_PARAM_BLOCK
+
+
+        ;; First 16 bytes of win's grafport only
+        PARAM_BLOCK current_winport, $B7
+.proc viewloc
+xcoord:    .word   0
+ycoord:    .word   0
+.endproc
+
+mapbits:   .addr   0
+mapwidth:  .byte   0
+           .byte   0
+
+.proc maprect
+x1:        .word   0
+y1:        .word   0
+x2:        .word   0
+y2:        .word   0
+.endproc
+        END_PARAM_BLOCK
+
+
+        PARAM_BLOCK winrect, $C7
+x1:        .word   0
+y1:        .word   0
+x2:        .word   0
+y2:        .word   0
+        END_PARAM_BLOCK
+
 
         ;; Start window enumeration at top ???
 .proc top_window
-        copy16  L7011, $A7
+        copy16  root_window_addr, previous_window
         ldax    current_window
-        bne     next_window_L7038
+        bne     set_found_window
 end:    rts
 .endproc
 
         ;; Look up next window in chain. $A9/$AA will point at
-        ;; winfo (also returned in X,A).
+        ;; window params block (also returned in X,A).
 .proc next_window
-        copy16  $A9, $A7
+        copy16  window, previous_window
         ldy     #MGTK::winfo_offset_nextwinfo+1
-        lda     ($A9),y
+        lda     (window),y
         beq     top_window::end  ; if high byte is 0, end of chain
         tax
         dey
-        lda     ($A9),y
-L7038:  stax    L700E
-L703E:  ldax    L700E
-L7044:  stax    $A9
-        ldy     #$0B            ; copy first 12 bytes of window defintion to
-L704A:  lda     ($A9),y         ; to $AB
-        sta     $AB,y
+        lda     (window),y
+set_found_window:
+        stax    found_window
+        ;; Fall-through
+.endproc
+
+        ;; Load/refresh the ZP window data areas at $AB and $B7.
+.proc get_window
+        ldax    found_window
+get_from_ax:
+        stax    window
+
+        ldy     #11             ; copy first 12 bytes of window defintion to
+:       lda     (window),y         ; to $AB
+        sta     current_winfo,y
         dey
-        bpl     L704A
-        ldy     #MGTK::grafport_size-1
-L7054:  lda     ($A9),y
-        sta     $A3,y
+        bpl     :-
+
+        ; copy first 16 bytes of grafport to $B7
+        ldy     #MGTK::winfo_offset_port + MGTK::grafport_offset_pattern-1
+:       lda     (window),y
+        sta     current_winport - MGTK::winfo_offset_port,y
         dey
-        cpy     #$13
-        bne     L7054
-L705E:  ldax    $A9
+        cpy     #MGTK::winfo_offset_port-1
+        bne     :-
+
+return_window:
+        ldax    window
         rts
 .endproc
-        next_window_L7038 := next_window::L7038
+        set_found_window := next_window::set_found_window
+
 
         ;; Look up window state by id (in $82); $A9/$AA will point at
         ;; winfo (also X,A).
 .proc window_by_id
         jsr     top_window
         beq     end
-loop:   lda     $AB
+loop:   lda     current_winfo::id
         cmp     $82
-        beq     next_window::L705E
+        beq     get_window::return_window
         jsr     next_window
         bne     loop
 end:    rts
@@ -6837,178 +6927,250 @@ end:    rts
 nope:   exit_call MGTK::error_window_not_found
 .endproc
 
-L707F:  MGTK_CALL MGTK::FrameRect, $C7
+
+frame_winrect:
+        MGTK_CALL MGTK::FrameRect, winrect
         rts
 
-L7086:  MGTK_CALL MGTK::InRect, $C7
+in_winrect:
+        MGTK_CALL MGTK::InRect, winrect
         rts
 
-L708D:  ldx     #$03
-L708F:  lda     $B7,x
-        sta     $C7,x
+        ;; Retrieve the rectangle of the current window and put it in winrect.
+        ;;
+        ;; The rectangle is defined by placing the top-left corner at the viewloc
+        ;; of the window and setting the width and height matching the width
+        ;; and height of the maprect of the window's port.
+        ;;
+.proc get_winrect
+        ldx     #3
+:       lda     current_winport::viewloc,x ; copy viewloc to left/top of winrect
+        sta     winrect,x
         dex
-        bpl     L708F
-        ldx     #$02
-L7098:  lda     $C3,x
+        bpl     :-
+
+        ldx     #2
+:       lda     current_winport::maprect::x2,x ; x2/y2
         sec
-        sbc     $BF,x
+        sbc     current_winport::maprect::x1,x ; x1/y1
         tay
-        lda     $C4,x
-        sbc     $C0,x
+        lda     current_winport::maprect::x2+1,x
+        sbc     current_winport::maprect::x1+1,x
         pha
+
         tya
         clc
-        adc     $C7,x
-        sta     $CB,x
+        adc     winrect::x1,x   ; x1/y1
+        sta     winrect::x2,x   ; x2/y2
         pla
-        adc     $C8,x
-        sta     $CC,x
+        adc     winrect::x1+1,x
+        sta     winrect::x2+1,x
         dex
         dex
-        bpl     L7098
-L70B2:  ldax    #$C7
+        bpl     :-
+        ;; Fall-through
+.endproc
+return_winrect:
+        ldax    #winrect
         rts
 
-L70B7:  jsr     L708D
-        lda     $C7
-        bne     L70C0
-        dec     $C8
-L70C0:  dec     $C7
-        bit     $B0
-        bmi     L70D0
-        lda     $AC
-        and     #$04
-        bne     L70D0
+
+        ;; Return the window's rect including framing: title bar and scroll
+        ;; bars.
+.proc get_winframerect
+        jsr     get_winrect
+        lda     winrect
+        bne     :+
+        dec     winrect+1
+:       dec     winrect
+
+        bit     current_winfo::vscroll
+        bmi     vert_scroll
+
+        lda     current_winfo::options
+        and     #MGTK::option_grow_box
+        bne     vert_scroll
         lda     #$01
-        bne     L70D2
-L70D0:  lda     #$15
-L70D2:  clc
-        adc     $CB
-        sta     $CB
-        bcc     L70DB
-        inc     $CC
-L70DB:  lda     #$01
-        bit     $AF
-        bpl     L70E3
+        bne     :+
+
+vert_scroll:
+        lda     #$15
+:       clc
+        adc     winrect::x2
+        sta     winrect::x2
+        bcc     :+
+        inc     winrect::x2+1
+:       lda     #1
+
+        bit     current_winfo::hscroll
+        bpl     :+
+
         lda     #$0B
-L70E3:  clc
-        adc     $CD
-        sta     $CD
-        bcc     L70EC
-        inc     $CE
-L70EC:  lda     #$01
-        and     $AC
-        bne     L70F5
+:       clc
+        adc     winrect::y2
+        sta     winrect::y2
+        bcc     :+
+        inc     winrect::y2+1
+:
+        lda     #MGTK::option_dialog_box
+        and     current_winfo::options
+        bne     :+
         lda     winframe_top
-L70F5:  sta     $82
-        lda     $C9
+:       sta     $82
+
+        lda     winrect::y1
         sec
         sbc     $82
-        sta     $C9
-        bcs     L70B2
-        dec     $CA
-        bcc     L70B2
-L7104:  jsr     L70B7
-        ldax    $CB
+        sta     winrect::y1
+        bcs     return_winrect
+        dec     winrect::y1+1
+        bcc     return_winrect
+.endproc
+
+
+.proc get_win_vertscrollrect
+        jsr     get_winframerect
+        ldax    winrect::x2
         sec
         sbc     #$14
-        bcs     L7111
+        bcs     :+
         dex
-L7111:  stax    $C7
-        lda     $AC
-        and     #$01
-        bne     L70B2
-        lda     $C9
+:       stax    winrect::x1
+
+        lda     current_winfo::options
+        and     #MGTK::option_dialog_box
+        bne     return_winrect
+
+        lda     winrect::y1
         clc
         adc     wintitle_height
-        sta     $C9
-        bcc     L70B2
-        inc     $CA
-        bcs     L70B2
-L7129:  jsr     L70B7
-L712C:  ldax    $CD
+        sta     winrect::y1
+        bcc     return_winrect
+        inc     winrect::y1+1
+        bcs     return_winrect
+.endproc
+
+
+.proc get_win_horizscrollrect
+        jsr     get_winframerect
+get_rect:
+        ldax    winrect::y2
         sec
         sbc     #$0A
-        bcs     L7136
+        bcs     :+
         dex
-L7136:  stax    $C9
-        jmp     L70B2
+:       stax    winrect::y1
+        jmp     return_winrect
+.endproc
 
-L713D:  jsr     L7104
-        jmp     L712C
 
-L7143:  jsr     L70B7
-        lda     $C9
+.proc get_win_growboxrect
+        jsr     get_win_vertscrollrect
+        jmp     get_win_horizscrollrect::get_rect
+.endproc
+
+
+.proc get_wintitlebar_rect
+        jsr     get_winframerect
+
+        lda     winrect::y1
         clc
         adc     wintitle_height
-        sta     $CD
-        lda     $CA
-        adc     #$00
-        sta     $CE
-        jmp     L70B2
+        sta     winrect::y2
+        lda     winrect::y1+1
+        adc     #0
+        sta     winrect::y2+1
 
-L7157:  jsr     L7143
-        ldax    $C7
+        jmp     return_winrect
+.endproc
+
+
+.proc get_wingoaway_rect
+        jsr     get_wintitlebar_rect
+
+        ldax    winrect::x1
         clc
-        adc     #$0C
-        bcc     L7164
+        adc     #12
+        bcc     :+
         inx
-L7164:  stax    $C7
+:       stax    winrect::x1
         clc
-        adc     #$0E
-        bcc     L716E
+        adc     #14
+        bcc     :+
         inx
-L716E:  stax    $CB
-        ldax    $C9
+:       stax    winrect::x2
+
+        ldax    winrect::y1
         clc
-        adc     #$02
-        bcc     L717C
+        adc     #2
+        bcc     :+
         inx
-L717C:  stax    $C9
+:       stax    winrect::y1
         clc
         adc     goaway_height
-        bcc     L7187
+        bcc     :+
         inx
-L7187:  stax    $CD
-        jmp     L70B2
+:       stax    winrect::y2
 
-L718E:  jsr     L70B7
+        jmp     return_winrect
+.endproc
+
+
+.proc draw_window
+        jsr     get_winframerect
         jsr     fill_and_frame_rect
-        lda     $AC
-        and     #$01
-        bne     L71AA
-        jsr     L7143
+
+        lda     current_winfo::options
+        and     #MGTK::option_dialog_box
+        bne     no_titlebar
+
+        jsr     get_wintitlebar_rect
         jsr     fill_and_frame_rect
-        jsr     L73BF
-        ldax    $AD
+        jsr     center_title_text
+
+        ldax    current_winfo::title
         jsr     draw_text
-L71AA:  jsr     next_window::L703E
-        bit     $B0
-        bpl     L71B7
-        jsr     L7104
-        jsr     L707F
-L71B7:  bit     $AF
-        bpl     L71C1
-        jsr     L7129
-        jsr     L707F
-L71C1:  lda     $AC
-        and     #$04
-        beq     L71D3
-        jsr     L713D
-        jsr     L707F
-        jsr     L7104
-        jsr     L707F
-L71D3:  jsr     next_window::L703E
-        lda     $AB
-        cmp     L700D
-        bne     L71E3
-        jsr     set_desktop_port
-        jmp     L720B
 
-L71E3:  rts
+no_titlebar:
+        jsr     get_window
+
+        bit     current_winfo::vscroll
+        bpl     no_vert_scroll
+
+        jsr     get_win_vertscrollrect
+        jsr     frame_winrect
+
+no_vert_scroll:
+        bit     current_winfo::hscroll
+        bpl     :+
+
+        jsr     get_win_horizscrollrect
+        jsr     frame_winrect
+
+:       lda     current_winfo::options
+        and     #MGTK::option_grow_box
+        beq     :+
+
+        jsr     get_win_growboxrect
+        jsr     frame_winrect
+        jsr     get_win_vertscrollrect
+        jsr     frame_winrect
+
+:       jsr     get_window
+
+        lda     current_winfo::id
+        cmp     sel_window_id
+        bne     :+
+
+        jsr     set_desktop_port
+        jmp     draw_winframe
+:       rts
+.endproc
 
         ;;  Drawing title bar, maybe?
-L71E4:  .byte   $01
+draw_erase_mode:
+        .byte   1
+
 stripes_pattern:
 stripes_pattern_alt := *+1
         .byte   %11111111
@@ -7021,208 +7183,280 @@ stripes_pattern_alt := *+1
         .byte   %00000000
         .byte   %11111111
 
-L71EE:  jsr     L7157
-        lda     $C9
-        and     #$01
-        beq     L71FE
+
+.proc set_stripes_pattern
+        jsr     get_wingoaway_rect
+        lda     winrect::y1
+        and     #1
+        beq     :+
         MGTK_CALL MGTK::SetPattern, stripes_pattern
         rts
 
-L71FE:  MGTK_CALL MGTK::SetPattern, stripes_pattern_alt
+:       MGTK_CALL MGTK::SetPattern, stripes_pattern_alt
         rts
+.endproc
 
-L7205:  ldax    #$0001
-        beq     L720F
-L720B:  ldax    #$0103
-L720F:  stx     L71E4
+
+.proc erase_winframe
+        lda     #MGTK::penOR
+        ldx     #0
+        beq     :+
+.endproc
+
+.proc draw_winframe
+        lda     #MGTK::penBIC
+        ldx     #1
+
+:       stx     draw_erase_mode
         jsr     set_fill_mode
-        lda     $AC
-        and     #$02
-        beq     L7255
-        lda     $AC
-        and     #$01
-        bne     L7255
-        jsr     L7157
-        jsr     L707F
-        jsr     L71EE
-        ldax    $C7
+
+        lda     current_winfo::options
+        and     #MGTK::option_go_away_box
+        beq     no_goaway
+
+        lda     current_winfo::options
+        and     #MGTK::option_dialog_box
+        bne     no_goaway
+
+        jsr     get_wingoaway_rect
+        jsr     frame_winrect
+        jsr     set_stripes_pattern
+
+        ldax    winrect::x1
         sec
-        sbc     #$09
-        bcs     L7234
+        sbc     #9
+        bcs     :+
         dex
-L7234:  stax    $92
+:       stax    left
+
         clc
-        adc     #$06
-        bcc     L723E
+        adc     #6
+        bcc     :+
         inx
-L723E:  stax    $96
-        copy16  $C9, $94
-        copy16  $CD, $98
+:       stax    right
+
+        copy16  winrect::y1, top
+        copy16  winrect::y2, bottom
+
         jsr     PaintRectImpl  ; draws title bar stripes to left of close box
-L7255:  lda     $AC
-        and     #$01
-        bne     L72C9
-        jsr     L7143
-        jsr     L73BF
+
+no_goaway:
+        lda     current_winfo::options
+        and     #MGTK::option_dialog_box
+        bne     no_titlebar
+
+        jsr     get_wintitlebar_rect
+        jsr     center_title_text
         jsr     penloc_to_bounds
-        jsr     L71EE
-        ldax    $CB
+        jsr     set_stripes_pattern
+
+        ldax    winrect::x2
         clc
-        adc     #$03
-        bcc     L7271
+        adc     #3
+        bcc     :+
         inx
-L7271:  tay
-        lda     $AC
-        and     #$02
-        bne     L7280
+:       tay
+
+        lda     current_winfo::options
+        and     #MGTK::option_go_away_box
+        bne     has_goaway
+
         tya
         sec
         sbc     #$1A
-        bcs     L727F
+        bcs     :+
         dex
-L727F:  tay
-L7280:  tya
-        ldy     $96
-        sty     $CB
-        ldy     $97
-        sty     $CC
-        ldy     $92
-        sty     $96
-        ldy     $93
-        sty     $97
-        stax    $92
-        lda     $96
+:       tay
+
+has_goaway:
+        tya
+        ldy     right
+        sty     winrect::x2
+        ldy     right+1
+        sty     winrect::x2+1
+
+        ldy     left
+        sty     right
+        ldy     left+1
+        sty     right+1
+
+        stax    left
+
+        lda     right
         sec
-        sbc     #$0A
-        sta     $96
-        bcs     L72A0
-        dec     $97
-L72A0:  jsr     PaintRectImpl  ; Draw title bar stripes between close box and title
-        add16   $CB, #10, $92
-        jsr     L7143
-        sub16   $CB, #3, $96
+        sbc     #10
+        sta     right
+        bcs     :+
+        dec     right+1
+
+:       jsr     PaintRectImpl  ; Draw title bar stripes between close box and title
+        add16   winrect::x2, #10, left
+
+        jsr     get_wintitlebar_rect
+        sub16   winrect::x2, #3, right
+
         jsr     PaintRectImpl  ; Draw title bar stripes to right of title
         MGTK_CALL MGTK::SetPattern, standard_port::penpattern
-L72C9:  jsr     next_window::L703E
-        bit     $B0
-        bpl     L7319
-        jsr     L7104
-        ldx     #$03
-L72D5:  lda     $C7,x
+
+no_titlebar:
+        jsr     get_window
+
+        bit     current_winfo::vscroll
+        bpl     no_vscroll
+
+        jsr     get_win_vertscrollrect
+        ldx     #3
+:       lda     winrect,x
         sta     up_scroll_params,x
         sta     down_scroll_params,x
         dex
-        bpl     L72D5
-        inc     up_scroll_params::incr
-        ldax    $CD
+        bpl     :-
+
+        inc     up_scroll_params::ycoord
+        ldax    winrect::y2
         sec
         sbc     #$0A
-        bcs     L72ED
+        bcs     :+
         dex
-L72ED:  pha
-        lda     $AC
-        and     #$04
-        bne     L72F8
-        bit     $AF
-        bpl     L7300
-L72F8:  pla
+:
+        pha
+        lda     current_winfo::options
+        and     #MGTK::option_grow_box
+        bne     :+
+
+        bit     current_winfo::hscroll
+        bpl     no_hscroll
+
+:       pla
         sec
         sbc     #$0B
-        bcs     L72FF
+        bcs     :+
         dex
-L72FF:  pha
-L7300:  pla
-        stax    down_scroll_params::unk1
+:       pha
+
+no_hscroll:
+        pla
+        stax    down_scroll_params::ycoord
+
         ldax    down_scroll_addr
-        jsr     L791C
+        jsr     draw_icon
+
         ldax    up_scroll_addr
-        jsr     L791C
-L7319:  bit     $AF
-        bpl     L7363
-        jsr     L7129
-        ldx     #$03
-L7322:  lda     $C7,x
+        jsr     draw_icon
+
+no_vscroll:
+        bit     current_winfo::hscroll
+        bpl     no_hscrollbar
+
+        jsr     get_win_horizscrollrect
+        ldx     #3
+:       lda     winrect,x
         sta     left_scroll_params,x
         sta     right_scroll_params,x
         dex
-        bpl     L7322
-        ldax    $CB
+        bpl     :-
+
+        ldax    winrect::x2
         sec
         sbc     #$14
-        bcs     L7337
+        bcs     :+
         dex
-L7337:  pha
-        lda     $AC
-        and     #$04
-        bne     L7342
-        bit     $B0
-        bpl     L734A
-L7342:  pla
+:
+        pha
+        lda     current_winfo::options
+        and     #MGTK::option_grow_box
+        bne     :+
+
+        bit     current_winfo::vscroll
+        bpl     no_vscroll2
+
+:       pla
         sec
         sbc     #$15
-        bcs     L7349
+        bcs     :+
         dex
-L7349:  pha
-L734A:  pla
+:       pha
+
+no_vscroll2:
+        pla
         stax    right_scroll_params
+
         ldax    right_scroll_addr
-        jsr     L791C
+        jsr     draw_icon
+
         ldax    left_scroll_addr
-        jsr     L791C
-L7363:  lda     #$00
+        jsr     draw_icon
+
+no_hscrollbar:
+        lda     #MGTK::pencopy
         jsr     set_fill_mode
-        lda     $B0
+
+        lda     current_winfo::vscroll
         and     #$01
-        beq     L737B
-        lda     #$80
-        sta     $8C
-        lda     L71E4
-        jsr     L79A0
-        jsr     next_window::L703E
-L737B:  lda     $AF
+        beq     :+
+
+        lda     #which_control_vert
+        sta     which_control
+        lda     draw_erase_mode
+        jsr     draw_or_erase_scrollbar
+        jsr     get_window
+
+:       lda     current_winfo::hscroll
         and     #$01
-        beq     L738E
-        lda     #$00
-        sta     $8C
-        lda     L71E4
-        jsr     L79A0
-        jsr     next_window::L703E
-L738E:  lda     $AC
-        and     #$04
-        beq     L73BE
-        jsr     L713D
-        lda     L71E4
-        bne     L73A6
-        ldax    #$C7
+        beq     :+
+
+        lda     #which_control_horiz
+        sta     which_control
+        lda     draw_erase_mode
+        jsr     draw_or_erase_scrollbar
+        jsr     get_window
+
+:       lda     current_winfo::options
+        and     #MGTK::option_grow_box
+        beq     ret
+
+        jsr     get_win_growboxrect
+        lda     draw_erase_mode
+        bne     draw_resize
+        ldax    #winrect
         jsr     fill_and_frame_rect
-        jmp     L73BE
+        jmp     ret
 
         ;; Draw resize box
-L73A6:  ldx     #$03
-L73A8:  lda     $C7,x
+draw_resize:
+        ldx     #3
+:       lda     winrect,x
         sta     resize_box_params,x
         dex
-        bpl     L73A8
-        lda     #$04
+        bpl     :-
+
+        lda     #MGTK::notpencopy
         jsr     set_fill_mode
         ldax    resize_box_addr
-        jsr     L791C
-L73BE:  rts
+        jsr     draw_icon
+ret:    rts
+.endproc
 
-L73BF:  ldax    $AD
+
+.proc center_title_text
+        ldax    current_winfo::title
         jsr     do_measure_text
         stax    $82
-        lda     $C7
+
+        lda     winrect::x1
         clc
-        adc     $CB
+        adc     winrect::x2
         tay
-        lda     $C8
-        adc     $CC
+
+        lda     winrect::x1+1
+        adc     winrect::x2+1
         tax
+
         tya
         sec
         sbc     $82
         tay
+
         txa
         sbc     $83
         cmp     #$80
@@ -7231,147 +7465,205 @@ L73BF:  ldax    $AD
         tya
         ror     a
         sta     current_penloc_x
-        ldax    $CD
+
+        ldax    winrect::y2
         sec
-        sbc     #$02
-        bcs     L73F0
+        sbc     #2
+        bcs     :+
         dex
-L73F0:  stax    current_penloc_y
+:       stax    current_penloc_y
+
         ldax    $82
         rts
+.endproc
 
 ;;; ============================================================
 
 ;;; 4 bytes of params, copied to current_penloc
 
-FindWindowImpl:
+.proc FindWindowImpl
+        PARAM_BLOCK params, $EA
+mousex:     .word   0
+mousey:     .word   0
+which_area: .byte   0
+window_id:  .byte   0
+        END_PARAM_BLOCK
+
         jsr     save_params_and_stack
-        MGTK_CALL MGTK::InRect, test_rect_params
-        beq     L7416
-        lda     #$01
-L7406:  ldx     #$00
-L7408:  pha
+
+        MGTK_CALL MGTK::InRect, test_rect_params ; check if in menubar
+        beq     not_menubar
+
+        lda     #MGTK::area_menubar
+return_no_window:
+        ldx     #0
+return_result:
+        pha
         txa
         pha
         jsr     restore_params_active_port
         pla
         tax
         pla
-        ldy     #$04
+        ldy     #params::which_area - params
         jmp     store_xa_at_y
 
-L7416:  lda     #$00
-        sta     L747A
+not_menubar:
+        lda     #0              ; first window we see is the selected one
+        sta     not_selected
+
         jsr     top_window
-        beq     L7430
-L7420:  jsr     L70B7
-        jsr     L7086
-        bne     L7434
+        beq     no_windows
+
+loop:   jsr     get_winframerect
+        jsr     in_winrect
+        bne     in_window
+
         jsr     next_window
-        stx     L747A
-        bne     L7420
-L7430:  lda     #$00
-        beq     L7406
-L7434:  lda     $AC
-        and     #$01
-        bne     L745D
-        jsr     L7143
-        jsr     L7086
-        beq     L745D
-        lda     L747A
-        bne     L7459
-        lda     $AC
-        and     #$02
-        beq     L7459
-        jsr     L7157
-        jsr     L7086
-        beq     L7459
-        lda     #$05
-        bne     L7472
-L7459:  lda     #$03
-        bne     L7472
-L745D:  lda     L747A
-        bne     L7476
-        lda     $AC
-        and     #$04
-        beq     L7476
-        jsr     L713D
-        jsr     L7086
-        beq     L7476
-        lda     #$04
-L7472:  ldx     $AB
-        bne     L7408
-L7476:  lda     #$02
-        bne     L7472
+        stx     not_selected    ; set to non-zero for subsequent windows
+        bne     loop
+
+no_windows:
+        lda     #MGTK::area_desktop
+        beq     return_no_window
+
+in_window:
+        lda     current_winfo::options
+        and     #MGTK::option_dialog_box
+        bne     in_content
+
+        jsr     get_wintitlebar_rect
+        jsr     in_winrect
+        beq     in_content
+
+        lda     not_selected
+        bne     :+
+
+        lda     current_winfo::options
+        and     #MGTK::option_go_away_box
+        beq     :+
+
+        jsr     get_wingoaway_rect
+        jsr     in_winrect
+        beq     :+
+        lda     #MGTK::area_close_box
+        bne     return_window
+
+:       lda     #MGTK::area_dragbar
+        bne     return_window
+
+in_content:
+        lda     not_selected
+        bne     :+
+
+        lda     current_winfo::options
+        and     #MGTK::option_grow_box
+        beq     :+
+
+        jsr     get_win_growboxrect
+        jsr     in_winrect
+        beq     :+
+        lda     #MGTK::area_grow_box
+return_window:
+        ldx     current_winfo::id
+        bne     return_result
+
+:       lda     #MGTK::area_content
+        bne     return_window
+
+not_selected:
+        .byte   0
+
+.endproc
 
 ;;; ============================================================
+;;; OpenWindow
 
-L747A:  .byte   0
-OpenWindowImpl:
-        copy16  params_addr, $A9
-        ldy     #$00
-        lda     ($A9),y
-        bne     L748E
+;;; params points to a winfo structure
+
+.proc OpenWindowImpl
+        win_id := $82
+
+        copy16  params_addr, window
+
+        ldy     #MGTK::winfo_offset_window_id
+        lda     (window),y
+        bne     :+
         exit_call MGTK::error_window_id_required
 
-L748E:  sta     $82
+:       sta     win_id
         jsr     window_by_id
-        beq     L749A
+        beq     :+
         exit_call MGTK::error_window_already_exists
 
-L749A:  copy16  params_addr, $A9
-        ldy     #$0A
-        lda     ($A9),y
+:       copy16  params_addr, window
+
+        ldy     #MGTK::winfo_offset_status
+        lda     (window),y
         ora     #$80
-        sta     ($A9),y
-        bmi     L74BD
+        sta     (window),y
+        bmi     do_select_win
+.endproc
+
 
 ;;; ============================================================
 ;;; SelectWindow
 
 ;;; 1 byte of params, copied to $82
 
-SelectWindowImpl:
+.proc SelectWindowImpl
         jsr     window_by_id_or_exit
         cmp     current_window
-        bne     L74BA
+        bne     :+
         cpx     current_window+1
-        bne     L74BA
+        bne     :+
         rts
 
-L74BA:  jsr     L74F4
-L74BD:  ldy     #MGTK::winfo_offset_nextwinfo ; Called from elsewhere
+:       jsr     link_window
+do_select_win:
+        ldy     #MGTK::winfo_offset_nextwinfo
         lda     current_window
-        sta     ($A9),y
+        sta     (window),y
         iny
         lda     current_window+1
-        sta     ($A9),y
-        lda     $A9
+        sta     (window),y
+
+        lda     window
         pha
-        lda     $AA
+        lda     window+1
         pha
         jsr     hide_cursor_save_params
         jsr     set_desktop_port
+
         jsr     top_window
-        beq     L74DE
-        jsr     L7205
-L74DE:  pla
+        beq     :+
+        jsr     erase_winframe
+:       pla
         sta     current_window+1
         pla
         sta     current_window
-        jsr     top_window
-        lda     $AB
-        sta     L700D
-        jsr     L718E
-        jmp     show_cursor_and_restore
 
-L74F4:  ldy     #MGTK::winfo_offset_nextwinfo ; Called from elsewhere
-        lda     ($A9),y
-        sta     ($A7),y
+        jsr     top_window
+        lda     current_winfo::id
+        sta     sel_window_id
+
+        jsr     draw_window
+        jmp     show_cursor_and_restore
+.endproc
+
+do_select_win   := SelectWindowImpl::do_select_win
+
+
+.proc link_window
+        ldy     #MGTK::winfo_offset_nextwinfo
+        lda     (window),y
+        sta     (previous_window),y
         iny
-        lda     ($A9),y
-        sta     ($A7),y
+        lda     (window),y
+        sta     (previous_window),y
         rts
+.endproc
+
 
 ;;; ============================================================
 ;;; GetWinPtr
@@ -7380,6 +7672,7 @@ L74F4:  ldy     #MGTK::winfo_offset_nextwinfo ; Called from elsewhere
 
 .proc GetWinPtrImpl
         ptr := $A9
+
         jsr     window_by_id_or_exit
         ldax    ptr
         ldy     #1
@@ -7391,31 +7684,40 @@ L74F4:  ldy     #MGTK::winfo_offset_nextwinfo ; Called from elsewhere
 
 ;;; 1 byte of params, copied to $82
 
-L750C:  .res    38,0
+previous_port:
+        .res    2
+
+update_port:
+        .res    MGTK::grafport_size
 
 .proc BeginUpdateImpl
         jsr     window_by_id_or_exit
-        lda     $AB
-        cmp     L7010
+
+        lda     current_winfo::id
+        cmp     target_window_id
         bne     :+
-        inc     L7871
+        inc     matched_target
 
 :       jsr     hide_cursor_save_params
         jsr     set_desktop_port
-        lda     L7871
+        lda     matched_target
         bne     :+
         MGTK_CALL MGTK::SetPortBits, set_port_params
-:       jsr     L718E
+
+:       jsr     draw_window
         jsr     set_desktop_port
-        lda     L7871
+        lda     matched_target
         bne     :+
         MGTK_CALL MGTK::SetPortBits, set_port_params
-:       jsr     next_window::L703E
-        copy16  active_port, L750C
-        jsr     L75C6
+
+:       jsr     get_window
+        copy16  active_port, previous_port
+
+        jsr     prepare_winport
         php
-        ldax    L758A
+        ldax    update_port_addr
         jsr     assign_and_prepare_port
+
         asl     preserve_zp_flag
         plp
         bcc     :+
@@ -7424,74 +7726,118 @@ L750C:  .res    38,0
         ;; fall through
 .endproc
 
-L7585:  exit_call $A3
+err_obscured:
+        exit_call MGTK::error_window_obscured
 
 ;;; ============================================================
 ;;; EndUpdate
 
 ;;; 1 byte of params, copied to $82
 
-L758A:  .addr   L750C + 2
+update_port_addr:
+        .addr   update_port
 
-EndUpdateImpl:
+.proc EndUpdateImpl
         jsr     ShowCursorImpl
-        ldax    L750C
+
+        ldax    previous_port
         stax    active_port
         jmp     set_and_prepare_port
+.endproc
 
 ;;; ============================================================
 ;;; GetWinPort
 
 ;;; 3 bytes of params, copied to $82
 
-GetWinPortImpl:
+.proc GetWinPortImpl
+        PARAM_BLOCK params, $82
+win_id:   .byte   0
+win_port: .addr   0
+        END_PARAM_BLOCK
+
+
         jsr     apply_port_to_active_port
+
         jsr     window_by_id_or_exit
-        copy16  $83, params_addr
-        ldx     #$07
-L75AC:  lda     fill_rect_params,x
-        sta     $D8,x
+        copy16  params::win_port, params_addr
+
+        ldx     #7
+:       lda     fill_rect_params,x
+        sta     current_maprect_x1,x
         dex
-        bpl     L75AC
-        jsr     L75C6
-        bcc     L7585
+        bpl     :-
+        jsr     prepare_winport
+        bcc     err_obscured
+
         ldy     #MGTK::grafport_size-1
-L75BB:  lda     current_grafport,y
+:       lda     current_grafport,y
         sta     (params_addr),y
         dey
-        bpl     L75BB
-        jmp     apply_active_port_to_port
+        bpl     :-
 
-L75C6:  jsr     L708D
-        ldx     #$07
-L75CB:  lda     #$00
-        sta     $9B,x
-        lda     $C7,x
-        sta     $92,x
+        jmp     apply_active_port_to_port
+.endproc
+
+
+.proc prepare_winport
+        jsr     get_winrect
+
+        ldx     #7
+:       lda     #0
+        sta     clipped_left,x
+        lda     winrect,x
+        sta     left,x
         dex
-        bpl     L75CB
+        bpl     :-
+
         jsr     clip_rect
-        bcs     L75DC
+        bcs     :+
         rts
 
-L75DC:  ldy     #$14
-L75DE:  lda     ($A9),y
-        sta     $BC,y
+        ;; Load window's grafport into current_grafport.
+:       ldy     #MGTK::winfo_offset_port
+:       lda     (window),y
+        sta     current_grafport - MGTK::winfo_offset_port,y
         iny
-        cpy     #$38
-        bne     L75DE
-        ldx     #$02
-L75EA:  copy16  $92,x, $D0,x
+        cpy     #MGTK::winfo_offset_port + MGTK::grafport_size
+        bne     :-
 
-        sub16   $96,x, $92,x, $82,x
-        sub16   $D8,x, $9B,x, $D8,x
-        add16   $D8,x, $82,x, $DC,x
+        ldx     #2
+:       lda     left,x
+        sta     current_viewloc_x,x
+        lda     left+1,x
+        sta     current_viewloc_x+1,x
+        lda     right,x
+        sec
+        sbc     left,x
+        sta     $82,x
+        lda     right+1,x
+        sbc     left+1,x
+        sta     $83,x
+
+        lda     current_maprect_x1,x
+        sec
+        sbc     clipped_left,x
+        sta     current_maprect_x1,x
+        lda     current_maprect_x1+1,x
+        sbc     clipped_left+1,x
+        sta     current_maprect_x1+1,x
+
+        lda     current_maprect_x1,x
+        clc
+        adc     $82,x
+        sta     current_maprect_x2,x
+        lda     current_maprect_x1+1,x
+        adc     $83,x
+        sta     current_maprect_x2+1,x
 
         dex
         dex
-        bpl     L75EA
+        bpl     :-
         sec
         rts
+.endproc
 
 ;;; ============================================================
 ;;; SetWinPort
@@ -7507,7 +7853,7 @@ L75EA:  copy16  $92,x, $D0,x
         ;; of the drawing port (from |pattern| to |font|)
 
 .proc SetWinPortImpl
-        ptr := $A9
+        ptr := window
 
         jsr     window_by_id_or_exit
         lda     ptr
@@ -7516,9 +7862,10 @@ L75EA:  copy16  $92,x, $D0,x
         sta     ptr
         bcc     :+
         inc     ptr+1
+
 :       ldy     #MGTK::grafport_size-1
 loop:   lda     ($82),y
-        sta     ($A9),y
+        sta     (ptr),y
         dey
         cpy     #$10
         bcs     loop
@@ -7531,8 +7878,9 @@ loop:   lda     ($82),y
 .proc FrontWindowImpl
         jsr     top_window
         beq     nope
-        lda     $AB
+        lda     current_winfo::id
         bne     :+
+
 nope:   lda     #0
 :       ldy     #0
         sta     (params_addr),y
@@ -7547,32 +7895,38 @@ in_close_box:  .byte   0
 .proc TrackGoAwayImpl
         jsr     top_window
         beq     end
-        jsr     L7157
+
+        jsr     get_wingoaway_rect
         jsr     save_params_and_stack
         jsr     set_desktop_port
+
         lda     #$80
 toggle: sta     in_close_box
-        lda     #$02
+
+        lda     #MGTK::penXOR
         jsr     set_fill_mode
+
         jsr     HideCursorImpl
-        MGTK_CALL MGTK::PaintRect, $C7
+        MGTK_CALL MGTK::PaintRect, winrect
         jsr     ShowCursorImpl
+
 loop:   jsr     get_and_return_event
-        cmp     #$02
-        beq     L768B
+        cmp     #MGTK::event_kind_button_up
+        beq     :+
+
         MGTK_CALL MGTK::MoveTo, set_pos_params
-        jsr     L7086
+        jsr     in_winrect
         eor     in_close_box
         bpl     loop
         lda     in_close_box
         eor     #$80
         jmp     toggle
 
-L768B:  jsr     restore_params_active_port
-        ldy     #$00
+:       jsr     restore_params_active_port
+        ldy     #0
         lda     in_close_box
         beq     end
-        lda     #$01
+        lda     #1
 end:    sta     (params_addr),y
         rts
 .endproc
@@ -7580,13 +7934,21 @@ end:    sta     (params_addr),y
 ;;; ============================================================
 
         .byte   $00
-L769B:  .byte   $00
-L769C:  .byte   $00
-L769D:  .word   0
-L769F:  .byte   $00
-L76A0:  .byte   $00,$00,$00
-L76A3:  .byte   $00
-L76A4:  .byte   $00,$00,$00
+
+.proc drag_initialpos
+xcoord: .res    2
+ycoord: .res    2
+.endproc
+
+.proc drag_curpos
+xcoord: .res    2
+ycoord: .res    2
+.endproc
+
+.proc drag_delta
+xdelta: .res    2
+ydelta: .res    2
+.endproc
 
         ;; High bit set if window is being resized, clear if moved.
 drag_resize_flag:
@@ -7598,155 +7960,218 @@ drag_resize_flag:
 
 GrowWindowImpl:
         lda     #$80
-        bmi     L76AE
+        bmi     DragWindowImpl_drag_or_grow
 
 ;;; ============================================================
 
 ;;; 5 bytes of params, copied to $82
 
-DragWindowImpl:
-        lda     #$00
+.proc DragWindowImpl
+        PARAM_BLOCK params, $82
+window_id: .byte   0
+dragx:     .word   0
+dragy:     .word   0
+moved:     .byte   0
+        END_PARAM_BLOCK
 
-L76AE:  sta     drag_resize_flag
+
+        lda     #0
+drag_or_grow:
+        sta     drag_resize_flag
         jsr     L7ECD
-        ldx     #$03
-L76B6:  lda     $83,x
-        sta     L769B,x
-        sta     L769F,x
-        lda     #$00
-        sta     L76A3,x
+
+        ldx     #3
+:       lda     params::dragx,x
+        sta     drag_initialpos,x
+        sta     drag_curpos,x
+        lda     #0
+        sta     drag_delta,x
         dex
-        bpl     L76B6
+        bpl     :-
+
         jsr     window_by_id_or_exit
+
         bit     kbd_mouse_state
-        bpl     L76D1
+        bpl     :+
         jsr     L817C
-L76D1:  jsr     hide_cursor_save_params
-        jsr     L784C
-        lda     #$02
+
+:       jsr     hide_cursor_save_params
+        jsr     winframe_to_set_port
+
+        lda     #MGTK::penXOR
         jsr     set_fill_mode
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
-L76E2:  jsr     next_window::L703E
-        jsr     L7749
-        jsr     L70B7
-        jsr     L707F
+
+loop:   jsr     get_window
+        jsr     update_win_for_drag
+
+        jsr     get_winframerect
+        jsr     frame_winrect
         jsr     ShowCursorImpl
-L76F1:  jsr     get_and_return_event
-        cmp     #$02
-        bne     L773B
-        jsr     L707F
-        bit     L7D81
-        bmi     L770A
-        ldx     #$03
-L7702:  lda     L76A3,x
-        bne     L7714
+
+no_change:
+        jsr     get_and_return_event
+        cmp     #MGTK::event_kind_button_up
+        bne     dragging
+
+        jsr     frame_winrect
+
+        bit     movement_cancel
+        bmi     cancelled
+
+        ldx     #3
+:       lda     drag_delta,x
+        bne     changed
         dex
-        bpl     L7702
-L770A:  jsr     show_cursor_and_restore
-        lda     #$00
-L770F:  ldy     #$05
+        bpl     :-
+
+cancelled:
+        jsr     show_cursor_and_restore
+        lda     #0
+return_moved:
+        ldy     #params::moved - params
         sta     (params_addr),y
         rts
 
-L7714:  ldy     #$14
-L7716:  lda     $A3,y
-        sta     ($A9),y
+changed:
+        ldy     #MGTK::winfo_offset_port
+:       lda     current_winport - MGTK::winfo_offset_port,y
+        sta     (window),y
         iny
-        cpy     #$24
-        bne     L7716
+        cpy     #MGTK::winfo_offset_port + 16
+        bne     :-
         jsr     HideCursorImpl
-        lda     $AB
-        jsr     L7872
+
+        lda     current_winfo::id
+        jsr     erase_window
         jsr     hide_cursor_save_params
-        bit     L7D81
-        bvc     L7733
+
+        bit     movement_cancel
+        bvc     :+
         jsr     L8347
-L7733:  jsr     show_cursor_and_restore
+
+:       jsr     show_cursor_and_restore
         lda     #$80
-        jmp     L770F
+        jmp     return_moved
 
-L773B:  jsr     L77E0
-        beq     L76F1
+dragging:
+        jsr     check_if_changed
+        beq     no_change
+
         jsr     HideCursorImpl
-        jsr     L707F
-        jmp     L76E2
+        jsr     frame_winrect
+        jmp     loop
+.endproc
 
-L7749:  ldy     #$13
-L774B:  lda     ($A9),y
-        sta     $BB,y
+
+.proc update_win_for_drag
+        win_width := $82
+
+        PARAM_BLOCK content, $C7
+minwidth:  .word  0
+minheight: .word  0
+maxwidth:  .word  0
+maxheight: .word  0
+        END_PARAM_BLOCK
+
+
+        ;; Copy mincontwidth..maxcontheight from the window to content
+        ldy     #MGTK::winfo_offset_port-1
+:       lda     (window),y
+        sta     content - MGTK::winfo_offset_mincontwidth,y
         dey
-        cpy     #$0B
-        bne     L774B
-        ldx     #$00
+        cpy     #MGTK::winfo_offset_mincontwidth-1
+        bne     :-
+
+        ldx     #0
         stx     set_input_unk
         bit     drag_resize_flag
-        bmi     L777D
-L775F:  add16   $B7,x, L76A3,x, $B7,x
+        bmi     grow
+
+:       add16   current_winport::viewloc::xcoord,x, drag_delta,x, current_winport::viewloc::xcoord,x
         inx
         inx
-        cpx     #$04
-        bne     L775F
+        cpx     #4
+        bne     :-
+
         lda     #$12
-        cmp     $B9
-        bcc     L777C
-        sta     $B9
-L777C:  rts
+        cmp     current_winport::viewloc::ycoord
+        bcc     :+
+        sta     current_winport::viewloc::ycoord
+:       rts
 
-L777D:  lda     #$00
+grow:   lda     #0
         sta     L83F5
-L7782:  add16lc $C3,x, L76A3,x, $C3,x
-        sub16lc $C3,x, $BF,x, $82
+loop:   add16lc current_winport::maprect::x2,x, drag_delta,x, current_winport::maprect::x2,x
+        sub16lc current_winport::maprect::x2,x, current_winport::maprect::x1,x, win_width
 
         sec
-        lda     $82
-        sbc     $C7,x
-        lda     $83
-        sbc     $C8,x
-        bpl     L77BC
+        lda     win_width
+        sbc     content::minwidth,x
+        lda     win_width+1
+        sbc     content::minwidth+1,x
+        bpl     :+
 
-        add16lc $C7,x, $BF,x, $C3,x
+        add16lc content::minwidth,x, current_winport::maprect::x1,x, current_winport::maprect::x2,x
         jsr     L83F6
-        jmp     L77D7
+        jmp     next
 
-L77BC:  sec
-        lda     $CB,x
-        sbc     $82
-        lda     $CC,x
-        sbc     $83
-        bpl     L77D7
-        add16lc $CB,x, $BF,x, $C3,x
+:       sec
+        lda     content::maxwidth,x
+        sbc     win_width
+        lda     content::maxwidth+1,x
+        sbc     win_width+1
+        bpl     next
+
+        add16lc content::maxwidth,x, current_winport::maprect::x1,x, current_winport::maprect::x2,x
         jsr     L83F6
-L77D7:  inx
+
+next:   inx
         inx
-        cpx     #$04
-        bne     L7782
+        cpx     #4
+        bne     loop
         jmp     L83FC
+.endproc
 
-L77E0:  ldx     #$02
-        ldy     #$00
-L77E4:  lda     $84,x
-        cmp     L76A0,x
-        bne     L77EC
+
+        ;; Return with Z=1 if the drag position was not changed, or Z=0
+        ;; if the drag position was changed or set_input_unk is set.
+.proc check_if_changed
+        ldx     #2
+        ldy     #0
+
+loop:   lda     get_and_return_event::event::mouse_pos+1,x
+        cmp     drag_curpos+1,x
+        bne     :+
         iny
-L77EC:  lda     $83,x
-        cmp     L769F,x
-        bne     L77F4
+:
+        lda     get_and_return_event::event::mouse_pos,x
+        cmp     drag_curpos,x
+        bne     :+
         iny
-L77F4:  sta     L769F,x
+:       sta     drag_curpos,x
+
         sec
-        sbc     L769B,x
-        sta     L76A3,x
-        lda     $84,x
-        sta     L76A0,x
-        sbc     L769C,x
-        sta     L76A4,x
+        sbc     drag_initialpos,x
+        sta     drag_delta,x
+
+        lda     get_and_return_event::event::mouse_pos+1,x
+        sta     drag_curpos+1,x
+        sbc     drag_initialpos+1,x
+        sta     drag_delta+1,x
+
         dex
         dex
-        bpl     L77E4
-        cpy     #$04
-        bne     L7814
+        bpl     loop
+
+        cpy     #4
+        bne     :+
         lda     set_input_unk
-L7814:  rts
+:       rts
+.endproc
+
+DragWindowImpl_drag_or_grow := DragWindowImpl::drag_or_grow
+
 
 ;;; ============================================================
 ;;; CloseWindow
@@ -7755,89 +8180,118 @@ L7814:  rts
 
 .proc CloseWindowImpl
         jsr     window_by_id_or_exit
+
         jsr     hide_cursor_save_params
-        jsr     L784C
-        jsr     L74F4
-        ldy     #$0A
-        lda     ($A9),y
+
+        jsr     winframe_to_set_port
+        jsr     link_window
+
+        ldy     #MGTK::winfo_offset_status
+        lda     (window),y
         and     #$7F
-        sta     ($A9),y
+        sta     (window),y
+
         jsr     top_window
-        lda     $AB
-        sta     L700D
-        lda     #$00
-        jmp     L7872
+        lda     current_winfo::id
+        sta     sel_window_id
+        lda     #0
+        jmp     erase_window
 .endproc
 
 ;;; ============================================================
 ;;; CloseAll
 
-CloseAllImpl:
+.proc CloseAllImpl
         jsr     top_window
-        beq     L7849
-        ldy     #$0A
-        lda     ($A9),y
+        beq     :+
+
+        ldy     #MGTK::winfo_offset_status
+        lda     (window),y
         and     #$7F
-        sta     ($A9),y
-        jsr     L74F4
+        sta     (window),y
+        jsr     link_window
+
         jmp     CloseAllImpl
+:       jmp     StartDeskTopImpl::reset_desktop
+.endproc
 
-L7849:  jmp     StartDeskTopImpl::reset_desktop
 
-L784C:  jsr     set_desktop_port
-        jsr     L70B7
-        ldx     #$07
-L7854:  lda     $C7,x
-        sta     $92,x
+.proc winframe_to_set_port
+        jsr     set_desktop_port
+        jsr     get_winframerect
+
+        ldx     #7
+:       lda     winrect,x
+        sta     left,x
         dex
-        bpl     L7854
+        bpl     :-
         jsr     clip_rect
-        ldx     #$03
-L7860:  lda     $92,x
+
+        ldx     #3
+:       lda     left,x
         sta     set_port_maprect,x
         sta     set_port_params,x
-        lda     $96,x
+        lda     right,x
         sta     set_port_size,x
         dex
-        bpl     L7860
+        bpl     :-
+
         rts
+.endproc
+
+
+matched_target:
+        .byte   0
 
         ;; Erases window after destruction
-L7871:  .byte   0
-L7872:  sta     L7010
-        lda     #$00
-        sta     L7871
+.proc erase_window
+        sta     target_window_id
+        lda     #0
+        sta     matched_target
         MGTK_CALL MGTK::SetPortBits, set_port_params
-        lda     #$00
+
+        lda     #MGTK::pencopy
         jsr     set_fill_mode
+
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
         MGTK_CALL MGTK::PaintRect, set_port_maprect
+
         jsr     show_cursor_and_restore
         jsr     top_window
-        beq     L78CA
+        beq     ret
+
         php
         sei
         jsr     FlushEventsImpl
-L789E:  jsr     next_window
-        bne     L789E
-L78A3:  jsr     put_event
-        bcs     L78C9
+
+:       jsr     next_window
+        bne     :-
+
+loop:   jsr     put_event
+        bcs     plp_ret
         tax
-        lda     #$06
-        sta     eventbuf,x
-        lda     $AB
-        sta     eventbuf+1,x
-        lda     $AB
-        cmp     L700D
-        beq     L78C9
+
+        lda     #MGTK::event_kind_update
+        sta     eventbuf::kind,x
+        lda     current_winfo::id
+        sta     eventbuf::window_id,x
+
+        lda     current_winfo::id
+        cmp     sel_window_id
+        beq     plp_ret
+
         sta     $82
         jsr     window_by_id
-        ldax    $A7
-        jsr     next_window::L7044
-        jmp     L78A3
 
-L78C9:  plp
-L78CA:  rts
+        ldax    previous_window
+        jsr     get_window::get_from_ax
+        jmp     loop
+
+plp_ret:
+        plp
+ret:    rts
+.endproc
+
 
 goaway_height:  .word   8       ; font height - 1
 wintitle_height:.word  12       ; font height + 3
@@ -7864,13 +8318,23 @@ height:         .word   0
         ;; $85/$86 += $B9/$BA
 
 .proc WindowToScreenImpl
+        PARAM_BLOCK params, $82
+window_id:      .byte   0
+windowx:        .word   0
+windowy:        .word   0
+screenx:        .word   0       ; out
+screeny:        .word   0       ; out
+        END_PARAM_BLOCK
+
         jsr     window_by_id_or_exit
+
         ldx     #2
-loop:   add16   $83,x, $B7,x, $83,x
+loop:   add16   params::windowx,x, current_winport::viewloc,x, params::windowx,x
         dex
         dex
         bpl     loop
-        bmi     L790F
+
+        bmi     ScreenToWindowImpl_transfer_out     ; always
 .endproc
 
 ;;; ============================================================
@@ -7878,125 +8342,179 @@ loop:   add16   $83,x, $B7,x, $83,x
 
 ;;; 5 bytes of params, copied to $82
 
-ScreenToWindowImpl:
+.proc ScreenToWindowImpl
+        PARAM_BLOCK params, $82
+window_id:      .byte   0
+screenx:        .word   0
+screeny:        .word   0
+windowx:        .word   0       ; out
+windowy:        .word   0       ; out
+        END_PARAM_BLOCK
+
         jsr     window_by_id_or_exit
-        ldx     #$02
-L78FE:  sub16   $83,x, $B7,x, $83,x
+
+        ldx     #2
+:       sub16   params::screenx,x, current_winport::viewloc,x, params::screenx,x
         dex
         dex
-        bpl     L78FE
-L790F:  ldy     #$05
-L7911:  lda     $7E,y
+        bpl     :-
+
+transfer_out:
+        ldy     #params::windowx - params
+:       lda     params + (params::screenx - params::windowx),y
         sta     (params_addr),y
         iny
-        cpy     #$09
-        bne     L7911
+        cpy     #params::size
+        bne     :-
         rts
+.endproc
 
-        ;; Used to draw scrollbar arrows
-L791C:  stax    $82
-        ldy     #$03
-L7922:  lda     #$00
-        sta     $8A,y
-        lda     ($82),y
-        sta     $92,y
+ScreenToWindowImpl_transfer_out := ScreenToWindowImpl::transfer_out
+
+
+        ;; Used to draw scrollbar arrows and resize box
+.proc draw_icon
+        icon_ptr := $82
+
+        stax    icon_ptr
+        ldy     #3
+
+:       lda     #0
+        sta     PaintBitsImpl::dbi_left,y
+        lda     (icon_ptr),y
+        sta     left,y
         dey
-        bpl     L7922
+        bpl     :-
+
         iny
-        sty     $91
-        ldy     #$04
-        lda     ($82),y
+        sty     $91             ; zero
+
+        ldy     #icon_offset_width
+        lda     (icon_ptr),y
         tax
         lda     div7_table+7,x
-        sta     $90
+        sta     src_mapwidth
+
         txa
-        ldx     $93
+        ldx     left+1
         clc
-        adc     $92
-        bcc     L7945
+        adc     left
+        bcc     :+
         inx
-L7945:  stax    $96
+:       stax    right
+
         iny
-        lda     ($82),y
-        ldx     $95
+        lda     (icon_ptr),y    ; height
+        ldx     top+1
         clc
-        adc     $94
-        bcc     L7954
+        adc     top
+        bcc     :+
         inx
-L7954:  stax    $98
+:       stax    bottom
+
         iny
-        lda     ($82),y
-        sta     $8E
+        lda     (icon_ptr),y
+        sta     bits_addr
         iny
-        lda     ($82),y
-        sta     $8F
+        lda     (icon_ptr),y
+        sta     bits_addr+1
         jmp     BitBltImpl
+.endproc
 
 ;;; ============================================================
 ;;; ActivateCtl
 
 ;;; 2 bytes of params, copied to $8C
 
-ActivateCtlImpl:
-        lda     $8C
-        cmp     #$01
-        bne     L7971
-        lda     #$80
-        sta     $8C
-        bne     L797C
-L7971:  cmp     #$02
-        bne     L797B
-        lda     #$00
-        sta     $8C
-        beq     L797C
-L797B:  rts
+.proc ActivateCtlImpl
+        PARAM_BLOCK params, $8C
+which_ctl: .byte   0
+activate:  .byte   0
+        END_PARAM_BLOCK
 
-L797C:  jsr     hide_cursor_save_params
+
+        lda     which_control
+        cmp     #MGTK::ctl_vertical_scroll_bar
+        bne     :+
+
+        lda     #which_control_vert
+        sta     which_control
+        bne     activate
+
+:       cmp     #MGTK::ctl_horizontal_scroll_bar
+        bne     ret
+
+        lda     #which_control_horiz
+        sta     which_control
+        beq     activate
+ret:    rts
+
+activate:
+        jsr     hide_cursor_save_params
         jsr     top_window
-        bit     $8C
-        bpl     L798C
-        lda     $B0
-        ldy     #$05
-        bne     L7990
-L798C:  lda     $AF
-        ldy     #$04
-L7990:  eor     $8D
-        and     #$01
-        eor     ($A9),y
-        sta     ($A9),y
-        lda     $8D
-        jsr     L79A0
-        jmp     show_cursor_and_restore
 
-L79A0:  bne     L79AF
-        jsr     L79F1
+        bit     which_control
+        bpl     :+
+
+        lda     current_winfo::vscroll
+        ldy     #MGTK::winfo_offset_vscroll
+        bne     toggle
+
+:       lda     current_winfo::hscroll
+        ldy     #MGTK::winfo_offset_hscroll
+
+toggle: eor     params::activate
+        and     #1
+        eor     (window),y
+        sta     (window),y
+
+        lda     params::activate
+        jsr     draw_or_erase_scrollbar
+        jmp     show_cursor_and_restore
+.endproc
+
+
+.proc draw_or_erase_scrollbar
+        bne     do_draw
+
+        jsr     get_scrollbar_scroll_area
         jsr     set_standard_port
-        MGTK_CALL MGTK::PaintRect, $C7
+        MGTK_CALL MGTK::PaintRect, winrect
         rts
 
-L79AF:  bit     $8C
-        bmi     L79B8
-        bit     $AF
-        bmi     L79BC
-L79B7:  rts
+do_draw:
+        bit     which_control
+        bmi     vert_scrollbar
+        bit     current_winfo::hscroll
+        bmi     has_scroll
+ret:    rts
 
-L79B8:  bit     $B0
-        bpl     L79B7
-L79BC:  jsr     set_standard_port
-        jsr     L79F1
+vert_scrollbar:
+        bit     current_winfo::vscroll
+        bpl     ret
+has_scroll:
+        jsr     set_standard_port
+        jsr     get_scrollbar_scroll_area
+
         MGTK_CALL MGTK::SetPattern, light_speckles_pattern
-        MGTK_CALL MGTK::PaintRect, $C7
+        MGTK_CALL MGTK::PaintRect, winrect
         MGTK_CALL MGTK::SetPattern, standard_port::penpattern
-        bit     $8C
-        bmi     L79DD
-        bit     $AF
-        bvs     L79E1
-L79DC:  rts
 
-L79DD:  bit     $B0
-        bvc     L79DC
-L79E1:  jsr     L7A73
+        bit     which_control
+        bmi     vert_thumb
+
+        bit     current_winfo::hscroll
+        bvs     has_thumb
+ret2:   rts
+
+vert_thumb:
+        bit     current_winfo::vscroll
+        bvc     ret2
+has_thumb:
+        jsr     get_thumb_rect
         jmp     fill_and_frame_rect
+.endproc
+
 
 light_speckles_pattern:
         .byte   %11011101
@@ -8010,396 +8528,555 @@ light_speckles_pattern:
 
         .byte   $00,$00
 
-L79F1:  bit     $8C
-        bpl     L7A34
-        jsr     L7104
-        lda     $C9
+
+.proc get_scrollbar_scroll_area
+        bit     which_control
+        bpl     horiz
+
+        jsr     get_win_vertscrollrect
+        lda     winrect::y1
         clc
         adc     #$0C
-        sta     $C9
-        bcc     L7A03
-        inc     $CA
-L7A03:  lda     $CD
+        sta     winrect::y1
+        bcc     :+
+        inc     winrect::y1+1
+:
+        lda     winrect::y2
         sec
         sbc     #$0B
-        sta     $CD
-        bcs     L7A0E
-        dec     $CE
-L7A0E:  lda     $AC
-        and     #$04
-        bne     L7A18
-        bit     $AF
-        bpl     L7A23
-L7A18:  lda     $CD
-        sec
-        sbc     #$0B
-        sta     $CD
-        bcs     L7A23
-        dec     $CE
-L7A23:  inc16   $C7
-        lda     $CB
-        bne     L7A2F
-        dec     $CC
-L7A2F:  dec     $CB
-        jmp     L7A70
+        sta     winrect::y2
+        bcs     :+
+        dec     winrect::y2+1
+:
+        lda     current_winfo::options
+        and     #MGTK::option_grow_box
+        bne     :+
 
-L7A34:  jsr     L7129
-        lda     $C7
+        bit     current_winfo::hscroll
+        bpl     v_noscroll
+
+:       lda     winrect::y2
+        sec
+        sbc     #$0B
+        sta     winrect::y2
+        bcs     :+
+        dec     winrect::y2+1
+:
+v_noscroll:
+        inc16   winrect::x1
+        lda     winrect::x2
+        bne     :+
+        dec     winrect::x2+1
+:       dec     winrect::x2
+        jmp     return_winrect_jmp
+
+
+horiz:  jsr     get_win_horizscrollrect
+        lda     winrect::x1
         clc
         adc     #$15
-        sta     $C7
-        bcc     L7A42
-        inc     $C8
-L7A42:  lda     $CB
+        sta     winrect::x1
+        bcc     :+
+        inc     winrect::x1+1
+:
+        lda     winrect::x2
         sec
         sbc     #$15
-        sta     $CB
-        bcs     L7A4D
-        dec     $CC
-L7A4D:  lda     $AC
-        and     #$04
-        bne     L7A57
-        bit     $B0
-        bpl     L7A62
-L7A57:  lda     $CB
-        sec
-        sbc     #$15
-        sta     $CB
-        bcs     L7A62
-        dec     $CC
-L7A62:  inc16   $C9
-        lda     $CD
-        bne     L7A6E
-        dec     $CE
-L7A6E:  dec     $CD
-L7A70:  jmp     L70B2
+        sta     winrect::x2
+        bcs     :+
+        dec     winrect::x2+1
+:
+        lda     current_winfo::options
+        and     #MGTK::option_grow_box
+        bne     :+
 
-L7A73:  jsr     L79F1
-        jsr     L7CE3
+        bit     current_winfo::vscroll
+        bpl     h_novscroll
+
+:       lda     winrect::x2
+        sec
+        sbc     #$15
+        sta     winrect::x2
+        bcs     h_novscroll
+        dec     winrect::x2+1
+
+h_novscroll:
+        inc16   winrect::y1
+
+        lda     winrect::y2
+        bne     :+
+        dec     winrect::y2+1
+:       dec     winrect::y2
+
+return_winrect_jmp:
+        jmp     return_winrect
+.endproc
+
+
+        thumb_max := $A3
+        thumb_pos := $A1
+
+        xthumb_width := 20
+        ythumb_height := 12
+
+
+.proc get_thumb_rect
+        thumb_coord := $82
+
+        jsr     get_scrollbar_scroll_area
+
+        jsr     get_thumb_vals
         jsr     fixed_div
-        lda     $A1
+
+        lda     fixed_div_quotient+2
         pha
-        jsr     L7CFB
-        jsr     L7CBA
+        jsr     calc_ctl_bounds
+        jsr     set_up_thumb_division
         pla
         tax
-        lda     $A3
-        ldy     $A4
-        cpx     #$01
-        beq     L7A94
-        ldx     $A0
-        jsr     L7C93
-L7A94:  sta     $82
-        sty     $83
-        ldx     #$00
-        lda     #$14
-        bit     $8C
-        bpl     L7AA4
-        ldx     #$02
-        lda     #$0C
-L7AA4:  pha
-        add16   $C7,x, $82, $C7,x
+
+        lda     thumb_max
+        ldy     thumb_max+1
+
+        cpx     #1              ; 100%
+        beq     :+
+
+        ldx     fixed_div_quotient+1 ; fractional part
+        jsr     get_thumb_coord
+
+:       sta     thumb_coord
+        sty     thumb_coord+1
+
+        ldx     #0              ; x-coords
+        lda     #xthumb_width
+
+        bit     which_control
+        bpl     :+
+
+        ldx     #2              ; y-coords
+        lda     #ythumb_height
+:       pha
+        add16   winrect,x, thumb_coord, winrect,x
         pla
         clc
-        adc     $C7,x
-        sta     $CB,x
-        lda     $C8,x
-        adc     #$00
-        sta     $CC,x
-        jmp     L70B2
+        adc     winrect::x1,x
+        sta     winrect::x2,x
+        lda     winrect::x1+1,x
+        adc     #0
+        sta     winrect::x2+1,x
+        jmp     return_winrect
+.endproc
 
 ;;; ============================================================
 ;;; FindControl
 
 ;;; 4 bytes of params, copied to current_penloc
 
-FindControlImpl:
+.proc FindControlImpl
         jsr     save_params_and_stack
+
         jsr     top_window
-        bne     L7ACE
+        bne     :+
         exit_call MGTK::error_no_active_window
 
-L7ACE:  bit     $B0
-        bpl     L7B15
-        jsr     L7104
-        jsr     L7086
-        beq     L7B15
-        ldx     #$00
-        lda     $B0
+:       bit     current_winfo::vscroll
+        bpl     no_vscroll
+
+        jsr     get_win_vertscrollrect
+        jsr     in_winrect
+        beq     no_vscroll
+
+        ldx     #0
+        lda     current_winfo::vscroll
         and     #$01
-        beq     L7B11
-        lda     #$80
-        sta     $8C
-        jsr     L79F1
-        jsr     L7086
-        beq     L7AFE
-        bit     $B0
-        bcs     L7B70
-        jsr     L7A73
-        jsr     L7086
-        beq     L7B02
-        ldx     #$05
-        bne     L7B11
-L7AFE:  lda     #$01
-        bne     L7B04
-L7B02:  lda     #$03
-L7B04:  pha
-        jsr     L7A73
+        beq     vscrollbar
+
+        lda     #which_control_vert
+        sta     which_control
+
+        jsr     get_scrollbar_scroll_area
+        jsr     in_winrect
+        beq     in_arrows
+
+        bit     current_winfo::vscroll
+        bcs     return_dead_zone ; never ???
+
+        jsr     get_thumb_rect
+        jsr     in_winrect
+        beq     no_thumb
+
+        ldx     #MGTK::part_thumb
+        bne     vscrollbar
+
+in_arrows:
+        lda     #MGTK::part_up_arrow
+        bne     :+
+
+no_thumb:
+        lda     #MGTK::part_page_up
+:       pha
+        jsr     get_thumb_rect
         pla
         tax
         lda     current_penloc_y
-        cmp     $C9
-        bcc     L7B11
-        inx
-L7B11:  lda     #$01
-        bne     L7B72
-L7B15:  bit     $AF
-        bpl     L7B64
-        jsr     L7129
-        jsr     L7086
-        beq     L7B64
-        ldx     #$00
-        lda     $AF
+        cmp     winrect::y1
+        bcc     :+
+        inx                     ; part_down_arrow / part_page_down
+:
+vscrollbar:
+        lda     #MGTK::ctl_vertical_scroll_bar
+        bne     return_result
+
+no_vscroll:
+        bit     current_winfo::hscroll
+        bpl     no_hscroll
+
+        jsr     get_win_horizscrollrect
+        jsr     in_winrect
+        beq     no_hscroll
+
+        ldx     #0
+        lda     current_winfo::hscroll
         and     #$01
-        beq     L7B60
-        lda     #$00
-        sta     $8C
-        jsr     L79F1
-        jsr     L7086
-        beq     L7B45
-        bit     $AF
-        bvc     L7B70
-        jsr     L7A73
-        jsr     L7086
-        beq     L7B49
-        ldx     #$05
-        bne     L7B60
-L7B45:  lda     #$01
-        bne     L7B4B
-L7B49:  lda     #$03
-L7B4B:  pha
-        jsr     L7A73
+        beq     hscrollbar
+
+        lda     #which_control_horiz
+        sta     which_control
+
+        jsr     get_scrollbar_scroll_area
+        jsr     in_winrect
+        beq     in_harrows
+
+        bit     current_winfo::hscroll
+        bvc     return_dead_zone
+
+        jsr     get_thumb_rect
+        jsr     in_winrect
+        beq     no_hthumb
+
+        ldx     #MGTK::part_thumb
+        bne     hscrollbar
+
+in_harrows:
+        lda     #MGTK::part_left_arrow
+        bne     :+
+
+no_hthumb:
+        lda     #MGTK::part_page_left
+:       pha
+        jsr     get_thumb_rect
         pla
         tax
         lda     current_penloc_x+1
-        cmp     $C8
-        bcc     L7B60
-        bne     L7B5F
+        cmp     winrect::x1+1
+        bcc     hscrollbar
+        bne     :+
         lda     current_penloc_x
-        cmp     $C7
-        bcc     L7B60
-L7B5F:  inx
-L7B60:  lda     #$02
-        bne     L7B72
-L7B64:  jsr     L708D
-        jsr     L7086
-        beq     L7B70
-        lda     #$00
-        beq     L7B72
-L7B70:  lda     #$03
-L7B72:  jmp     L7408
+        cmp     winrect::x1
+        bcc     hscrollbar
+:       inx
+
+hscrollbar:
+        lda     #MGTK::ctl_horizontal_scroll_bar
+        bne     return_result
+
+no_hscroll:
+        jsr     get_winrect
+        jsr     in_winrect
+        beq     return_dead_zone
+
+        lda     #MGTK::ctl_not_a_control
+        beq     return_result
+
+return_dead_zone:
+        lda     #MGTK::ctl_dead_zone
+return_result:
+        jmp     FindWindowImpl::return_result
+.endproc
+
 
 ;;; ============================================================
 ;;; SetCtlMax
 
 ;;; 3 bytes of params, copied to $82
 
-SetCtlMaxImpl:
-        lda     $82
-        cmp     #$01
-        bne     L7B81
-        lda     #$80
-        sta     $82
-        bne     L7B90
-L7B81:  cmp     #$02
-        bne     L7B8B
-        lda     #$00
-        sta     $82
-        beq     L7B90
-L7B8B:  exit_call $A4
+.proc SetCtlMaxImpl
+        PARAM_BLOCK params, $82
+which_ctl: .byte  0
+ctlmax:    .byte  0
+        END_PARAM_BLOCK
 
-L7B90:  jsr     top_window
-        bne     L7B9A
+        lda     params::which_ctl
+        cmp     #MGTK::ctl_vertical_scroll_bar
+        bne     :+
+        lda     #$80
+        sta     params::which_ctl
+        bne     got_ctl        ; always
+
+:       cmp     #MGTK::ctl_horizontal_scroll_bar
+        bne     :+
+        lda     #$00
+        sta     params::which_ctl
+        beq     got_ctl        ; always
+
+:       exit_call MGTK::error_control_not_found
+
+got_ctl:
+        jsr     top_window
+        bne     :+
+
         exit_call MGTK::error_no_active_window
 
-L7B9A:  ldy     #$06
-        bit     $82
-        bpl     L7BA2
-        ldy     #$08
-L7BA2:  lda     $83
-        sta     ($A9),y
-        sta     $AB,y
+:       ldy     #MGTK::winfo_offset_hthumbmax
+        bit     params::which_ctl
+        bpl     :+
+
+        ldy     #MGTK::winfo_offset_vthumbmax
+:       lda     params::ctlmax
+        sta     (window),y
+        sta     current_winfo,y
         rts
+.endproc
 
 ;;; ============================================================
 ;;; TrackThumb
 
 ;;; 5 bytes of params, copied to $82
 
-TrackThumbImpl:
-        lda     $82
-        cmp     #$01
-        bne     L7BB6
-        lda     #$80
-        sta     $82
-        bne     L7BC5
-L7BB6:  cmp     #$02
-        bne     L7BC0
-        lda     #$00
-        sta     $82
-        beq     L7BC5
-L7BC0:  exit_call $A4
+.proc TrackThumbImpl
+        PARAM_BLOCK params, $82
+which_ctl:  .byte   0
+mouse_pos:
+mousex:     .word   0
+mousey:     .word   0
+thumbpos:   .byte   0
+thumbmoved: .byte   0
+        END_PARAM_BLOCK
 
-L7BC5:  lda     $82
-        sta     $8C
-        ldx     #$03
-L7BCB:  lda     $83,x
-        sta     L769B,x
-        sta     L769F,x
+
+        lda     params::which_ctl
+        cmp     #MGTK::ctl_vertical_scroll_bar
+        bne     :+
+
+        lda     #which_control_vert
+        sta     params::which_ctl
+        bne     got_ctl                    ; always
+
+:       cmp     #MGTK::ctl_horizontal_scroll_bar
+        bne     :+
+
+        lda     #which_control_horiz
+        sta     params::which_ctl
+        beq     got_ctl                    ; always
+
+:       exit_call MGTK::error_control_not_found
+
+got_ctl:lda     params::which_ctl
+        sta     which_control
+
+        ldx     #3
+:       lda     params::mouse_pos,x
+        sta     drag_initialpos,x
+        sta     drag_curpos,x
         dex
-        bpl     L7BCB
+        bpl     :-
+
         jsr     top_window
-        bne     L7BE0
+        bne     :+
         exit_call MGTK::error_no_active_window
 
-L7BE0:  jsr     L7A73
+:       jsr     get_thumb_rect
         jsr     save_params_and_stack
         jsr     set_desktop_port
-        lda     #$02
+
+        lda     #MGTK::penXOR
         jsr     set_fill_mode
         MGTK_CALL MGTK::SetPattern, light_speckles_pattern
+
         jsr     HideCursorImpl
-L7BF7:  jsr     L707F
+drag_loop:
+        jsr     frame_winrect
         jsr     ShowCursorImpl
-L7BFD:  jsr     get_and_return_event
-        cmp     #$02
-        beq     L7C66
-        jsr     L77E0
-        beq     L7BFD
+
+no_change:
+        jsr     get_and_return_event
+        cmp     #MGTK::event_kind_button_up
+        beq     drag_done
+
+        jsr     check_if_changed
+        beq     no_change
+
         jsr     HideCursorImpl
-        jsr     L707F
+        jsr     frame_winrect
+
         jsr     top_window
-        jsr     L7A73
-        ldx     #$00
-        lda     #$14
-        bit     $8C
-        bpl     L7C21
-        ldx     #$02
-        lda     #$0C
-L7C21:  sta     $82
-        lda     $C7,x
+        jsr     get_thumb_rect
+
+        ldx     #0
+        lda     #xthumb_width
+
+        bit     which_control
+        bpl     :+
+
+        ldx     #2
+        lda     #ythumb_height
+
+:       sta     $82
+
+        lda     winrect,x
         clc
-        adc     L76A3,x
+        adc     drag_delta,x
         tay
-        lda     $C8,x
-        adc     L76A4,x
-        cmp     L7CB9
-        bcc     L7C3B
+        lda     winrect+1,x
+        adc     drag_delta+1,x
+        cmp     ctl_bound1+1
+        bcc     :+
         bne     L7C41
-        cpy     L7CB8
+        cpy     ctl_bound1
         bcs     L7C41
-L7C3B:  lda     L7CB9
-        ldy     L7CB8
-L7C41:  cmp     L7CB7
+
+:       lda     ctl_bound1+1
+        ldy     ctl_bound1
+
+L7C41:  cmp     ctl_bound2+1
         bcc     L7C53
-        bne     L7C4D
-        cpy     L7CB6
+        bne     :+
+        cpy     ctl_bound2
         bcc     L7C53
-L7C4D:  lda     L7CB7
-        ldy     L7CB6
-L7C53:  sta     $C8,x
+
+:       lda     ctl_bound2+1
+        ldy     ctl_bound2
+
+L7C53:  sta     winrect+1,x
         tya
-        sta     $C7,x
+        sta     winrect,x
         clc
         adc     $82
-        sta     $CB,x
-        lda     $C8,x
-        adc     #$00
-        sta     $CC,x
-        jmp     L7BF7
+        sta     winrect::x2,x
+        lda     winrect+1,x
+        adc     #0
+        sta     winrect::x2+1,x
+        jmp     drag_loop
 
-L7C66:  jsr     HideCursorImpl
-        jsr     L707F
+drag_done:
+        jsr     HideCursorImpl
+        jsr     frame_winrect
         jsr     show_cursor_and_restore
-        jsr     L7CBA
-        jsr     fixed_div
-        ldx     $A1
-        jsr     L7CE3
-        lda     $A3
-        ldy     #$00
-        cpx     #$01
-        bcs     L7C87
-        ldx     $A0
-        jsr     L7C93
-L7C87:  ldx     #$01
-        cmp     $A1
-        bne     L7C8E
-        dex
-L7C8E:  ldy     #$05
-        jmp     store_xa_at_y
 
-L7C93:  sta     $82
+        jsr     set_up_thumb_division
+
+        jsr     fixed_div
+        ldx     fixed_div::quotient+2
+
+        jsr     get_thumb_vals
+
+        lda     fixed_div::divisor
+        ldy     #$00
+        cpx     #1
+        bcs     :+
+
+        ldx     $A0
+        jsr     get_thumb_coord
+
+:       ldx     #$01
+        cmp     $A1
+        bne     :+
+        dex
+
+:       ldy     #params::thumbpos - params
+        jmp     store_xa_at_y
+.endproc
+
+
+.proc get_thumb_coord
+        sta     $82
         sty     $83
+
         lda     #$80
         sta     $84
         ldy     #$00
         sty     $85
+
         txa
-        beq     L7CB5
-L7CA2:  add16   $82, $84, $84
-        bcc     L7CB2
+        beq     ret
+loop:   add16   $82, $84, $84
+        bcc     :+
         iny
-L7CB2:  dex
-        bne     L7CA2
-L7CB5:  rts
+:       dex
+        bne     loop
+ret:    rts
+.endproc
 
-L7CB6:  .byte   0
-L7CB7:  .byte   0
-L7CB8:  .byte   0
-L7CB9:  .byte   0
 
-L7CBA:  sub16   L7CB6, L7CB8, fixed_div::divisor
-        ldx     #$00
-        bit     $8C
-        bpl     L7CD3
+ctl_bound2:
+        .res 2
+ctl_bound1:
+        .res 2
+
+
+.proc set_up_thumb_division
+        sub16   ctl_bound2, ctl_bound1, fixed_div::divisor
+        ldx     #0
+        bit     which_control
+        bpl     :+
+
         ldx     #2
-L7CD3:  sub16   $C7,x, L7CB8, fixed_div::dividend
+:       sub16   winrect,x, ctl_bound1, fixed_div::dividend
         rts
+.endproc
 
-L7CE3:  ldy     #$06
-        bit     $8C
-        bpl     L7CEB
-        ldy     #$08
-L7CEB:  lda     ($A9),y
-        sta     $A3
+
+.proc get_thumb_vals
+        ldy     #MGTK::winfo_offset_hthumbmax
+
+        bit     which_control
+        bpl     is_horiz
+
+        ldy     #MGTK::winfo_offset_vthumbmax
+is_horiz:
+        lda     (window),y
+        sta     thumb_max
         iny
-        lda     ($A9),y
-        sta     $A1
-        lda     #$00
-        sta     $A2
-        sta     $A4
-        rts
+        lda     (window),y
+        sta     thumb_pos
 
-L7CFB:  ldx     #$00
-        lda     #$14
-        bit     $8C
-        bpl     L7D07
-        ldx     #$02
-        lda     #$0C
-L7D07:  sta     $82
-        lda     $C7,x
-        ldy     $C8,x
-        sta     L7CB8
-        sty     L7CB9
-        lda     $CB,x
-        ldy     $CC,x
-        sec
-        sbc     $82
-        bcs     L7D1D
-        dey
-L7D1D:  sta     L7CB6
-        sty     L7CB7
+        lda     #0
+        sta     thumb_pos+1
+        sta     thumb_max+1
         rts
+.endproc
+
+
+.proc calc_ctl_bounds
+        offset := $82
+
+        ldx     #0
+        lda     #xthumb_width
+
+        bit     which_control
+        bpl     :+
+
+        ldx     #2
+        lda     #ythumb_height
+:
+        sta     offset
+
+        lda     winrect::x1,x
+        ldy     winrect::x1+1,x
+        sta     ctl_bound1
+        sty     ctl_bound1+1
+
+        lda     winrect::x2,x
+        ldy     winrect::x2+1,x
+        sec
+        sbc     offset
+        bcs     :+
+        dey
+:       sta     ctl_bound2
+        sty     ctl_bound2+1
+        rts
+.endproc
+
 
 ;;; ============================================================
 ;;; UpdateThumb
@@ -8407,36 +9084,44 @@ L7D1D:  sta     L7CB6
 ;;; 3 bytes of params, copied to $8C
 
 .proc UpdateThumbImpl
-        lda     $8C
+        PARAM_BLOCK params, $8C
+which_ctl:  .byte   0
+thumbpos:   .byte   0
+        END_PARAM_BLOCK
+
+
+        lda     which_control
         cmp     #MGTK::ctl_vertical_scroll_bar
         bne     :+
-        lda     #$80
-        sta     $8C
+        lda     #which_control_vert
+        sta     which_control
         bne     check_win
 
 :       cmp     #MGTK::ctl_horizontal_scroll_bar
         bne     bad_ctl
-        lda     #$00
-        sta     $8C
+        lda     #which_control_horiz
+        sta     which_control
         beq     check_win
 
 bad_ctl:
-        exit_call $A4
+        exit_call MGTK::error_control_not_found
 
 check_win:
         jsr     top_window
         bne     :+
         exit_call MGTK::error_no_active_window
 
-:       ldy     #$07
-        bit     $8C
+:       ldy     #MGTK::winfo_offset_hthumbpos
+        bit     which_control
         bpl     :+
-        ldy     #$09
-:       lda     $8D
-        sta     ($A9),y
+
+        ldy     #MGTK::winfo_offset_vthumbpos
+:       lda     params::thumbpos
+        sta     (window),y
+
         jsr     hide_cursor_save_params
         jsr     set_standard_port
-        jsr     L79A0
+        jsr     draw_or_erase_scrollbar
         jmp     show_cursor_and_restore
 .endproc
 
@@ -8445,14 +9130,15 @@ check_win:
 
 ;;; 1 byte of params, copied to $82
 
-KeyboardMouse:
+.proc KeyboardMouse
         lda     #$80
         sta     kbd_mouse_state
         jmp     FlushEventsImpl
+.endproc
 
 ;;; ============================================================
 
-;;; $4E IMPL
+;;; $4E SetMenuSelection
 
 ;;; 2 bytes of params, copied to $82
 
@@ -8493,7 +9179,7 @@ saved_mouse_y:  .byte   0
 
 L7D7F:  .byte   $00
 L7D80:  .byte   $00
-L7D81:  .byte   $00
+movement_cancel:  .byte   $00
 L7D82:  .byte   $00
 
 L7D83:  ldx     #$7F
@@ -8617,8 +9303,8 @@ L7EAD:  jsr     stash_addr
         jmp     restore_mouse_pos
 
 .proc L7ECD
-        lda     #$00
-        sta     L7D81
+        lda     #0
+        sta     movement_cancel
         sta     set_input_unk
         rts
 .endproc
@@ -8694,14 +9380,14 @@ L7F63:  jmp     L7E98
 
 
 .proc activate_keyboard_mouse
-        pha                    ; save modifiers
+        pha                     ; save modifiers
         lda     kbd_mouse_state
-        bne     in_kbd_mouse   ; branch away if keyboard mouse is active
+        bne     in_kbd_mouse    ; branch away if keyboard mouse is active
         pla
-        cmp     #3             ; open apple+solid apple
+        cmp     #3              ; open apple+solid apple
         bne     ret
         bit     mouse_status
-        bmi     ret            ; branch away if button is down
+        bmi     ret             ; branch away if button is down
 
         lda     #4
         sta     kbd_mouse_state
@@ -8734,13 +9420,14 @@ in_kbd_mouse:
         cmp     #4
         bne     pla_ret
         pla
-        and     #1                ; modifiers
+        and     #1              ; modifiers
         bne     :+
         lda     #0
         sta     kbd_mouse_state
 :       rts
 
-pla_ret:pla
+pla_ret:
+        pla
         rts
 .endproc
 
@@ -8831,7 +9518,7 @@ L8056:  jsr     L7EE2
         sta     L7D80
         sta     L7D7F
         lda     #$80
-        sta     L7D81
+        sta     movement_cancel
         rts
 
 try_return:
@@ -8909,7 +9596,7 @@ L80FC:  ldx     menu_count
 nope:   jsr     L8110
         bcc     L810F
         lda     #$80
-        sta     L7D81
+        sta     movement_cancel
 L810F:  rts
 .endproc
 
@@ -8968,7 +9655,7 @@ L817C:  php
         jsr     save_mouse_pos
         lda     #$80
         sta     mouse_status
-        jsr     L70B7
+        jsr     get_winframerect
         bit     drag_resize_flag
         bpl     L81E4
         lda     $AC
@@ -8979,28 +9666,30 @@ L8196:  sec
         lda     $CB,x
         sbc     #$04
         sta     kbd_mouse_x,x
-        sta     L769B,x
-        sta     L769F,x
+        sta     drag_initialpos,x
+        sta     drag_curpos,x
         lda     $CC,x
         sbc     #$00
         sta     kbd_mouse_x+1,x
-        sta     L769C,x
-        sta     L76A0,x
+        sta     drag_initialpos+1,x
+        sta     drag_curpos+1,x
         inx
         inx
         cpx     #$04
         bcc     L8196
+
         sec
         lda     #<(screen_width-1)
-        sbc     L769B
+        sbc     drag_initialpos::xcoord
         lda     #>(screen_width-1)
-        sbc     L769B+1
+        sbc     drag_initialpos::xcoord+1
         bmi     L81D9
+
         sec
         lda     #<(screen_height-1)
-        sbc     L769D
+        sbc     drag_initialpos::ycoord
         lda     #>(screen_height-1)
-        sbc     L769D+1
+        sbc     drag_initialpos::ycoord+1
         bmi     L81D9
         jsr     L7E98
         jsr     L7F0F
@@ -9030,13 +9719,13 @@ L81F6:  clc
 
 L8202:  adc     #$05
 L8204:  sta     kbd_mouse_x,x
-        sta     L769B,x
-        sta     L769F,x
+        sta     drag_initialpos,x
+        sta     drag_curpos,x
         lda     $C8,x
         adc     #$00
         sta     kbd_mouse_x+1,x
-        sta     L769C,x
-        sta     L76A0,x
+        sta     drag_initialpos+1,x
+        sta     drag_curpos+1,x
         inx
         inx
         cpx     #$04
@@ -9046,8 +9735,8 @@ L8204:  sta     kbd_mouse_x,x
         ldx     #$01
         lda     #$00
 L8229:  sta     kbd_mouse_x,x
-        sta     L769B,x
-        sta     L769F,x
+        sta     drag_initialpos,x
+        sta     drag_curpos,x
         dex
         bpl     L8229
 L8235:  jsr     L7E98
@@ -9083,7 +9772,7 @@ L8268:  jsr     L7EE2
 L826E:  cmp     #$1B
         bne     L827A
         lda     #$80
-        sta     L7D81
+        sta     movement_cancel
         jmp     L7EAD
 
 L827A:  cmp     #$0D
@@ -9178,7 +9867,7 @@ L8333:  lda     $0600,x
         plp
         bcc     L8346
         lda     #$40
-        sta     L7D81
+        sta     movement_cancel
         jmp     L7EAD
 
 L8346:  rts
@@ -9209,7 +9898,7 @@ L8352:  lda     kbd_mouse_state
 L8368:  sec
         rts
 
-L836A:  jsr     L70B7
+L836A:  jsr     get_winframerect
         lda     $CC
         bne     L8380
         lda     #$09
@@ -9227,10 +9916,10 @@ L8380:  inc     set_input_params::unk
         bit     set_input_params::modifiers
         bpl     L838D
         lda     #$40
-L838D:  adc     L769B
-        sta     L769B
+L838D:  adc     drag_initialpos
+        sta     drag_initialpos
         bcc     L8398
-        inc     L769C
+        inc     drag_initialpos+1
 L8398:  clc
         rts
 
@@ -9248,7 +9937,7 @@ L839A:  lda     kbd_mouse_state
 L83B3:  sec
         rts
 
-L83B5:  jsr     L70B7
+L83B5:  jsr     get_winframerect
         sec
         lda     #$2F
         sbc     $C7
@@ -9269,16 +9958,16 @@ L83D7:  clc
         rts
 
 L83D9:  sec
-        lda     L769B
+        lda     drag_initialpos
         sbc     #$40
         jmp     L83E8
 
 L83E2:  sec
-        lda     L769B
+        lda     drag_initialpos
         sbc     #$08
-L83E8:  sta     L769B
+L83E8:  sta     drag_initialpos
         bcs     L83F0
-        dec     L769C
+        dec     drag_initialpos+1
 L83F0:  inc     set_input_unk
         clc
         rts
@@ -9288,22 +9977,27 @@ L83F6:  lda     #$80
         sta     L83F5
 L83FB:  rts
 
-L83FC:  bit     kbd_mouse_state
+.proc L83FC
+        bit     kbd_mouse_state
         bpl     L83FB
+
         bit     L83F5
         bpl     L83FB
-        jsr     L70B7
+
+        jsr     get_winframerect
         php
         sei
         ldx     #$00
-L840D:  sub16lc $CB,x, #4, kbd_mouse_x,x
+:       sub16lc $CB,x, #4, kbd_mouse_x,x
         inx
         inx
-        cpx     #$04
-        bcc     L840D
+        cpx     #4
+        bcc     :-
+
         jsr     L7E98
         plp
         rts
+.endproc
 
 ;;; ============================================================
 ;;; ScaleMouse

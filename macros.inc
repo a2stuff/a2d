@@ -450,6 +450,7 @@ start:
 .endmacro
 
 .macro END_PARAM_BLOCK
+        size := * - start
         .popseg
         .endscope
 .endmacro
