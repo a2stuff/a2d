@@ -186,7 +186,7 @@ StartDeskTop    := $1D          ; Inits state, registers interrupt handler, draw
 ;;; .byte       machine         ROM FBB3 ($06 = IIe or later)
 ;;; .byte       subid           ROM FBC0 ($EA = IIe, $E0 = IIe enh/IIgs, $00 = IIc/IIc+)
 ;;; .byte       op_sys          0=ProDOS, 1=Pascal
-;;; .byte       slot_num:       Mouse slot, 0 = search (will be filled in)
+;;; .byte       slot_num        Mouse slot, 0 = search (will be filled in)
 ;;; .byte       use_interrupts  0=passive, 1=interrupt
 ;;; .addr       sysfontptr
 ;;; .addr       savearea        buffer for saving screen data (e.g. behind menus)
@@ -356,8 +356,8 @@ SetMark         := $37
 ;;; .byte       status
 ;;; .byte       reserved
 ;;; .word       mincontwidth    minimum content size (horizontal)
-;;; .word       maxcontwidth    maximum content size (horizontal)
 ;;; .word       mincontlength   minimum content size (vertical)
+;;; .word       maxcontwidth    maximum content size (horizontal)
 ;;; .word       maxcontlength   maximum content size (vertical)
 ;;; GrafPort    windowport      GrafPort record
 ;;; .addr       nextwinfo       address of next lower window in stack
@@ -403,8 +403,6 @@ SelectWindow    := $42          ; Make window topmost
 
 TrackGoAway     := $43
 ;;; .byte       clicked         (out) 0 = cancelled, 1 = close
-;;; .byte       ??              (out)
-;;; .byte       ??              (out)
 
 DragWindow      := $44
 ;;; .byte       window_id
@@ -450,7 +448,7 @@ TrackThumb      := $4A
 ;;; .word       mousex
 ;;; .word       mousey
 ;;; .byte       thumbpos        (out) 0...255
-;;; .byte       thumbmobed      (out) 0 = no change, 1 = moved
+;;; .byte       thumbmoved      (out) 0 = no change, 1 = moved
 
 UpdateThumb     := $4B
 ;;; .byte       which_ctl       ctl_*_scroll_bar
@@ -600,8 +598,8 @@ winfo_offset_vthumbmax          :=  8
 winfo_offset_vthumbpos          :=  9
 winfo_offset_status             := 10
 winfo_offset_mincontwidth       := 12
-winfo_offset_maxcontwidth       := 14
-winfo_offset_mincontheight      := 16
+winfo_offset_mincontheight      := 14
+winfo_offset_maxcontwidth       := 16
 winfo_offset_maxcontheight      := 18
 winfo_offset_port               := 20
 winfo_offset_nextwinfo          := 56
@@ -637,7 +635,7 @@ error_invalid_op_sys := $90
 error_no_mouse := $92
 error_invalid_irq_setting := $93
 error_invalid_hook := $94
-error_desktop_not_initialized := $95
+error_desktop_already_initialized := $95
 error_irq_in_use := $97
 error_invalid_event := $98
 error_event_queue_full := $99
@@ -648,6 +646,8 @@ error_window_already_exists := $9D
 error_window_id_required := $9E
 error_window_not_found := $9F
 error_no_active_window := $A0
+error_window_obscured := $A3
+error_control_not_found := $A4
 
 
 .endscope ; MGTK
