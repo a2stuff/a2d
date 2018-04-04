@@ -17,6 +17,8 @@ TIMELO          := $BF92        ; Time lo
 TIMEHI          := $BF93        ; Time hi
 LEVEL           := $BF94        ; File level
 MACHID          := $BF98        ; Machine ID
+IVERSION        := $BFFD        ; Interpreter Version
+KVERSION        := $BFFF        ; ProDOS Kernel Version
 
 ;;; Patch Locations
 SELECTOR        := $D100

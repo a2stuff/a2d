@@ -808,7 +808,7 @@ Parameters:
 .byte       window_id
 .word       dragx           mouse coords
 .word       dragy
-.byte       moved           high bit set if moved, clear if not
+.byte       moved           (out) high bit set if moved, clear if not
 ```
 
 
@@ -881,7 +881,6 @@ Parameters:
 .byte       thumbpos        (out) 0...255
 .byte       thumbmobed      (out) 0 = no change, 1 = moved
 ```
-
 
 
 #### UpdateThumb ($4B)

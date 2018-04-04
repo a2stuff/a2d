@@ -5640,7 +5640,7 @@ set_x:  stax    current_penloc_x
 kind:      .byte   0
 mouse_pos:
 mouse_x:   .word  0
-mouse_y:   .word  0        
+mouse_y:   .word  0
         END_PARAM_BLOCK
 
         MGTK_CALL MGTK::GetEvent, event
@@ -7870,7 +7870,7 @@ loop:   add16   $83,x, $B7,x, $83,x
         dex
         dex
         bpl     loop
-        bmi     L790F
+        bmi     copy_map_results
 .endproc
 
 ;;; ============================================================
@@ -7878,20 +7878,27 @@ loop:   add16   $83,x, $B7,x, $83,x
 
 ;;; 5 bytes of params, copied to $82
 
-ScreenToWindowImpl:
+.proc ScreenToWindowImpl
         jsr     window_by_id_or_exit
         ldx     #$02
-L78FE:  sub16   $83,x, $B7,x, $83,x
+loop:   sub16   $83,x, $B7,x, $83,x
         dex
         dex
-        bpl     L78FE
-L790F:  ldy     #$05
-L7911:  lda     $7E,y
+        bpl     loop
+        ;; fall through
+.endproc
+
+.proc copy_map_results
+        ldy     #5
+loop:   lda     $7E,y
         sta     (params_addr),y
         iny
-        cpy     #$09
-        bne     L7911
+        cpy     #9              ; results are 2 words (x, y) at params_addr+5
+        bne     loop
         rts
+.endproc
+
+;;; ============================================================
 
         ;; Used to draw scrollbar arrows
 L791C:  stax    $82
