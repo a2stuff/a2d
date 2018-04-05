@@ -289,6 +289,45 @@ ycoord          := * + 2
         .res    4
 .endproc
 
+.proc findwindow_params
+mousex:         .word   0
+mousey:         .word   0
+which_area:     .byte   0
+window_id:      .byte   0
+.endproc
+
+.proc trackgoaway_params
+clicked:        .byte   0
+.endproc
+
+.proc dragwindow_params
+window_id:      .byte   0
+dragx:          .word   0
+dragy:          .word   0
+moved:          .byte   0
+.endproc
+
+.proc winport_params
+window_id:      .byte   da_window_id
+port:           .addr   grafport
+.endproc
+
+.proc grafport
+viewloc:        DEFINE_POINT 0, 0
+mapbits:        .word   0
+mapwidth:       .word   0
+cliprect:       DEFINE_RECT 0, 0, 0, 0
+pattern:        .res    8, 0
+colormasks:     .byte   0, 0
+penloc:         DEFINE_POINT 0, 0
+penwidth:       .byte   0
+penheight:      .byte   0
+penmode:        .byte   0
+textback:       .byte   0
+textfont:       .addr   0
+.endproc
+
+
 ;;; ============================================================
 
 ;;; Per Tech Note: Apple II Miscellaneous #7: Apple II Family Identification
@@ -447,23 +486,89 @@ done:   rts
         jsr     update_version_string
 
         MGTK_CALL MGTK::OpenWindow, winfo
-        MGTK_CALL MGTK::FlushEvents
-
         jsr     draw_window
+        MGTK_CALL MGTK::FlushEvents
+        ;; fall through
+.endproc
 
-input_loop:
+.proc input_loop
         MGTK_CALL MGTK::GetEvent, event_params
+        bne     exit
         lda     event_params::kind
         cmp     #MGTK::event_kind_button_down ; was clicked?
-        beq     exit
+        beq     handle_down
         cmp     #MGTK::event_kind_key_down  ; any key?
-        beq     exit
-        bne     input_loop
+        beq     handle_key
+        jmp     input_loop
+.endproc
 
-exit:
+.proc exit
         MGTK_CALL MGTK::CloseWindow, winfo
         DESKTOP_CALL DT_REDRAW_ICONS
         rts                     ; exits input loop
+.endproc
+
+;;; ============================================================
+
+.proc handle_key
+        lda     event_params::key
+        cmp     #CHAR_ESCAPE
+        beq     exit
+        jmp     input_loop
+.endproc
+
+;;; ============================================================
+
+.proc handle_down
+        copy16  event_params::xcoord, findwindow_params::mousex
+        copy16  event_params::ycoord, findwindow_params::mousey
+        MGTK_CALL MGTK::FindWindow, findwindow_params
+        bne     exit
+        lda     findwindow_params::window_id
+        cmp     winfo::window_id
+        bne     input_loop
+        lda     findwindow_params::which_area
+        cmp     #MGTK::area_close_box
+        beq     handle_close
+        cmp     #MGTK::area_dragbar
+        beq     handle_drag
+        jmp     input_loop
+.endproc
+
+;;; ============================================================
+
+.proc handle_close
+        MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
+        lda     trackgoaway_params::clicked
+        beq     input_loop
+        bne     exit
+.endproc
+
+;;; ============================================================
+
+.proc handle_drag
+        copy    winfo::window_id, dragwindow_params::window_id
+        copy16  event_params::xcoord, dragwindow_params::dragx
+        copy16  event_params::ycoord, dragwindow_params::dragy
+        MGTK_CALL MGTK::DragWindow, dragwindow_params
+        lda     dragwindow_params::moved
+        bpl     :+
+
+        ;; Draw DeskTop's windows
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_REDRAW_ALL
+        sta     RAMRDON
+        sta     RAMWRTON
+
+        ;; Draw DA's window
+        jsr     draw_window
+
+        ;; Draw DeskTop icons
+        DESKTOP_CALL DT_REDRAW_ICONS
+
+:       jmp     input_loop
+
 .endproc
 
 
@@ -472,8 +577,13 @@ exit:
 .proc draw_window
         ptr := $06
 
+        MGTK_CALL MGTK::GetWinPort, winport_params
+        cmp     #MGTK::error_window_obscured
+        bne     :+
+        rts
+
+:       MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
-        MGTK_CALL MGTK::SetPort, winfo::port
 
         copy16  pix_ptr, bits_addr
         MGTK_CALL MGTK::PaintBits, $0000, bits_addr

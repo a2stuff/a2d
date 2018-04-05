@@ -35,9 +35,15 @@
 .define AS_WORD(arg)        arg & $FFFF
 
 
-.macro  return arg
+.macro return arg
         lda     arg
         rts
+.endmacro
+
+
+.macro copy arg1, arg2
+        lda     arg1
+        sta     arg2
 .endmacro
 
 ;;; ============================================================
