@@ -86,15 +86,15 @@ nextwinfo:      .addr   0
 str_title:
         PASCAL_STRING "About this Apple II"
 
-.proc apple_iie_bitmap
+.proc iie_bitmap
 viewloc:        DEFINE_POINT 40, 5
-mapbits:        .addr   apple_iie_bits
+mapbits:        .addr   iie_bits
 mapwidth:       .byte   8
 reserved:       .res    1
 maprect:        DEFINE_RECT 0, 0, 50, 25
 .endproc
 
-apple_iie_bits:
+iie_bits:
         .byte   px(%1111111),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0111111),px(%1111111)
         .byte   px(%1111110),px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%0011111),px(%1111111)
         .byte   px(%1111110),px(%0110000),px(%0000000),px(%0000000),px(%0000000),px(%0111111),px(%0011111),px(%1111111)
@@ -123,15 +123,15 @@ apple_iie_bits:
         .byte   px(%1111000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000111),px(%1111111)
 
 
-.proc apple_iic_bitmap
+.proc iic_bitmap
 viewloc:        DEFINE_POINT 40, 5
-mapbits:        .addr   apple_iic_bits
+mapbits:        .addr   iic_bits
 mapwidth:       .byte   6
 reserved:       .res    1
 maprect:        DEFINE_RECT 0, 0, 41, 27
 .endproc
 
-apple_iic_bits:
+iic_bits:
         .byte   px(%1111100),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0011111)
         .byte   px(%1111001),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1001111)
         .byte   px(%1111001),px(%1100000),px(%0000000),px(%0000000),px(%0000011),px(%1001111)
@@ -161,6 +161,41 @@ apple_iic_bits:
         .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
         .byte   px(%1000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000001)
 
+.proc iigs_bitmap
+viewloc:        DEFINE_POINT 40, 5
+mapbits:        .addr   iigs_bits
+mapwidth:       .byte   6
+reserved:       .res    1
+maprect:        DEFINE_RECT 0, 0, 38, 25
+.endproc
+
+iigs_bits:
+        .byte   px(%1000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0011111)
+        .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1001111)
+        .byte   px(%0011000),px(%0000000),px(%0000000),px(%0000000),px(%0000001),px(%1001111)
+        .byte   px(%0011001),px(%1111111),px(%1111111),px(%1111111),px(%1111001),px(%1001111)
+        .byte   px(%0011001),px(%1001100),px(%1100110),px(%0111111),px(%1111001),px(%1001111)
+        .byte   px(%0011001),px(%1111111),px(%1111111),px(%1111111),px(%1111001),px(%1001111)
+        .byte   px(%0011001),px(%1001100),px(%1111111),px(%1111111),px(%1111001),px(%1001111)
+        .byte   px(%0011001),px(%1111111),px(%1111111),px(%1111111),px(%1111001),px(%1001111)
+        .byte   px(%0011001),px(%1001111),px(%1111111),px(%1111111),px(%1111001),px(%1001111)
+        .byte   px(%0011001),px(%1111111),px(%1111111),px(%1111111),px(%1111001),px(%1001111)
+        .byte   px(%0011001),px(%1111111),px(%1111111),px(%1111111),px(%1111001),px(%1001111)
+        .byte   px(%0011001),px(%1111111),px(%1111111),px(%1111111),px(%1111001),px(%1001111)
+        .byte   px(%0011001),px(%1111111),px(%1111111),px(%1111111),px(%1111001),px(%1001111)
+        .byte   px(%0011000),px(%0000000),px(%0000000),px(%0000000),px(%0000001),px(%1001111)
+        .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1001111)
+        .byte   px(%1000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0011111)
+        .byte   px(%1100111),px(%1111111),px(%1111111),px(%1111111),px(%1111110),px(%0111111)
+        .byte   px(%1100111),px(%1111111),px(%1111111),px(%1111111),px(%1111110),px(%0111111)
+        .byte   px(%1100111),px(%1111111),px(%1111111),px(%1111111),px(%1111110),px(%0111111)
+        .byte   px(%1100111),px(%1111111),px(%1111111),px(%1111111),px(%1111110),px(%0111111)
+        .byte   px(%1100110),px(%0110000),px(%0011111),px(%1111111),px(%1111110),px(%0111111)
+        .byte   px(%1100111),px(%1111111),px(%1111111),px(%1111111),px(%1111110),px(%0111111)
+        .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0111111)
+        .byte   px(%1100111),px(%1111111),px(%1111111),px(%1111111),px(%1111110),px(%0111111)
+        .byte   px(%1100111),px(%1111111),px(%1111111),px(%1111111),px(%1111110),px(%0111111)
+        .byte   px(%1110000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%1111111)
 
 ;;; ============================================================
 
@@ -283,16 +318,16 @@ iiplus_or_iii:
 
 
 ii:     copy16  #str_ii, str_ptr
-        copy16  #apple_iie_bitmap, pix_ptr
+        copy16  #iie_bitmap, pix_ptr
         jmp     done
 
 iiplus: copy16  #str_iiplus, str_ptr
-        copy16  #apple_iie_bitmap, pix_ptr
+        copy16  #iie_bitmap, pix_ptr
         jmp     done
 
 iii:
         copy16  #str_iii, str_ptr
-        copy16  #apple_iie_bitmap, pix_ptr ; TODO: Apple /// icon
+        copy16  #iie_bitmap, pix_ptr ; TODO: Apple /// icon
         jmp     done
 
 iie_or_iigs:
@@ -300,7 +335,7 @@ iie_or_iigs:
         jsr     $FE1F
         bcc     iigs
         copy16  #str_iie_enhanced, str_ptr
-        copy16  #apple_iie_bitmap, pix_ptr
+        copy16  #iie_bitmap, pix_ptr
         jmp     done
 
 iic_or_iic_plus:
@@ -310,21 +345,21 @@ iic_or_iic_plus:
         bcs     iic_plus
 
 iie:    copy16  #str_iie, str_ptr
-        copy16  #apple_iie_bitmap, pix_ptr
+        copy16  #iie_bitmap, pix_ptr
         jmp     done
 
 iic:
         copy16  #str_iic, str_ptr
-        copy16  #apple_iic_bitmap, pix_ptr
+        copy16  #iic_bitmap, pix_ptr
         jmp     done
 
 iic_plus:
         copy16  #str_iic_plus, str_ptr
-        copy16  #apple_iic_bitmap, pix_ptr
+        copy16  #iic_bitmap, pix_ptr
         jmp     done
 
 iigs:   copy16  #str_iigs, str_ptr
-        copy16  #apple_iie_bitmap, pix_ptr ; TODO: Apple IIgs icon
+        copy16  #iigs_bitmap, pix_ptr
         jmp     done
 
 done:
