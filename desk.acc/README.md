@@ -1,13 +1,14 @@
 Disassembly of the desk accessories:
 
-* [Show Text File](show_text_file.s) - in progress! 95% complete
+* [Show Text File](show.text.file.s) - in progress! 95% complete
 * [Calculator](calculator.s) - in progress! 99% complete
 * [Date](date.s) - in progress! 99% complete
 * [Puzzle](puzzle.s) - in progress! 99% complete
 * Sort Directory - _not started_
 
 New desk accessories:
-* [Show Image File](show_image_file.s) - complete!
+* [Show Image File](show.image.file.s) - complete!
+* [This Apple](this.apple.s) - complete!
 
 ## Desk Accessory Details
 
@@ -20,31 +21,22 @@ New desk accessories:
 
 * `Makefile` - cleans/builds targets
 * `orig/*.bin` - original binary (type $F1, start $800)
-* `infos/*.info` - da65 "info" file - used to inform disassembly
 * `*.s` - source (originally generated using da65, now modified)
 
 ## Build Instructions
 
 On Unix-like systems (including Mac OS X) `make all` should build
-build the desk accessory files (original and new) and output
-files with a `.F1` suffix, representing the $F1 file type required.
+build the desk accessory files (original and new) into `out/`
+output with a `.$F1` suffix, representing the $F1 file type required.
 
 For the original DAs, the `.F1` and `.bin` files can be compared
 using `diff` to ensure that no changes have been introduced by the
 disassembly process.
 
-Tips:
-
-* While I'm disassembling (i.e. guessing what entry points do
-   and what parameters are, converting .word to .byte, etc) I
-   leave this running in another window:
-
-   `while true; do clear; res/go.sh; sleep 1; done`
-
 
 ## Install Instructions
 
-Transfer the `.F1` files to your Apple (real or virtual) ensuring you:
+Transfer the `.$F1` files to your Apple (real or virtual) ensuring you:
 
 * Drop the suffix
 * Replace `.` in the name with spaces
@@ -57,6 +49,8 @@ ProDOS drive; I copy one of the original DAs into the folder which
 gives it the $F1 filetype as a suffix and start address as an invisible
 resource stream. I then unmount the folder, overwrite the DA with
 a newly built one, and remount the folder.
+
+This is done by the `res/go.sh` script.
 
 Finally:
 
