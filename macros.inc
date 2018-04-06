@@ -418,6 +418,12 @@
         ror     arg1
 .endmacro
 
+;;;    asl16 $1111      ; absolute
+.macro asl16 arg1
+        asl     arg1
+        rol     arg1+1
+.endmacro
+
 ;;; Increment 16-bit value
 .macro inc16    arg
         .local skip

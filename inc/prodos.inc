@@ -17,6 +17,7 @@ TIMELO          := $BF92        ; Time lo
 TIMEHI          := $BF93        ; Time hi
 LEVEL           := $BF94        ; File level
 MACHID          := $BF98        ; Machine ID
+SLTBYT          := $BF99        ; '1' bits indicate rom in slot (bit#)
 IVERSION        := $BFFD        ; Interpreter Version
 KVERSION        := $BFFF        ; ProDOS Kernel Version
 

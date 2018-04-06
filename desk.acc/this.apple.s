@@ -87,7 +87,7 @@ str_title:
         PASCAL_STRING "About this Apple II"
 
 .proc iie_bitmap
-viewloc:        DEFINE_POINT 40, 5
+viewloc:        DEFINE_POINT 59, 5
 mapbits:        .addr   iie_bits
 mapwidth:       .byte   8
 reserved:       .res    1
@@ -95,7 +95,7 @@ maprect:        DEFINE_RECT 0, 0, 50, 25
 .endproc
 
 .proc iic_bitmap
-viewloc:        DEFINE_POINT 44, 4
+viewloc:        DEFINE_POINT 64, 4
 mapbits:        .addr   iic_bits
 mapwidth:       .byte   6
 reserved:       .res    1
@@ -103,7 +103,7 @@ maprect:        DEFINE_RECT 0, 0, 41, 27
 .endproc
 
 .proc iigs_bitmap
-viewloc:        DEFINE_POINT 46, 5
+viewloc:        DEFINE_POINT 65, 5
 mapbits:        .addr   iigs_bits
 mapwidth:       .byte   6
 reserved:       .res    1
@@ -111,7 +111,7 @@ maprect:        DEFINE_RECT 0, 0, 38, 25
 .endproc
 
 .proc iii_bitmap
-viewloc:        DEFINE_POINT 38, 5
+viewloc:        DEFINE_POINT 57, 5
 mapbits:        .addr   iii_bits
 mapwidth:       .byte   8
 reserved:       .res    1
@@ -266,6 +266,14 @@ str_prodos_version:
 str_slot_n:
         PASCAL_STRING "Slot 0:   "
 
+str_memory_prefix:
+        PASCAL_STRING "Memory: "
+
+str_memory_suffix:
+        PASCAL_STRING "K"
+
+memory:.word    0
+
 ;;; ============================================================
 
 str_diskii:     PASCAL_STRING "Disk II"
@@ -288,6 +296,7 @@ str_audio:      PASCAL_STRING "Audio Card"
 str_storage:    PASCAL_STRING "Mass Storage"
 str_network:    PASCAL_STRING "Network Card"
 str_unknown:    PASCAL_STRING "(unknown)"
+str_empty:      PASCAL_STRING "(empty)"
 
 ;;; ============================================================
 
@@ -310,8 +319,9 @@ slot_pos_table:
 
 ;;; ============================================================
 
-model_pos:      DEFINE_POINT 150, 15
-pdver_pos:      DEFINE_POINT 150, 30
+model_pos:      DEFINE_POINT 150, 12
+pdver_pos:      DEFINE_POINT 150, 23
+mem_pos:        DEFINE_POINT 150, 34
 
 .proc event_params
 kind:  .byte   0
@@ -446,6 +456,7 @@ done:
 .endproc
 
 
+
 ;;; ============================================================
 
 ;;; KVERSION Table
@@ -521,6 +532,7 @@ done:   rts
 
         jsr     identify_model
         jsr     update_version_string
+        jsr     update_memory_string
 
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     draw_window
@@ -635,9 +647,15 @@ done:   rts
         MGTK_CALL MGTK::MoveTo, line1
         MGTK_CALL MGTK::LineTo, line2
 
+        MGTK_CALL MGTK::MoveTo, mem_pos
+        addr_call draw_pascal_string, str_memory_prefix
+        addr_call draw_pascal_string, str_from_int
+        addr_call draw_pascal_string, str_memory_suffix
 
         lda     #7
         sta     slot
+        lda     #1<<7
+        sta     mask
 
 loop:   lda     slot
         asl
@@ -649,10 +667,23 @@ loop:   lda     slot
         adc     #'0'
         sta     str_slot_n + 6
         addr_call draw_pascal_string, str_slot_n
-        lda     slot
+
+        ;; Check ProDOS slot bit mask
+        sta     RAMRDOFF
+        lda     SLTBYT
+        sta     RAMRDON
+        and     mask
+        bne     check
+
+        ldax    #str_empty
+        jsr     draw_pascal_string
+        jmp     next
+
+check:  lda     slot
         jsr     probe_slot
         jsr     draw_pascal_string
 
+next:   lsr     mask
         dec     slot
         bne     loop
 
@@ -660,6 +691,7 @@ loop:   lda     slot
         rts
 
 slot:   .byte   0
+mask:   .byte   0
 .endproc
 
 
@@ -855,6 +887,71 @@ notpas:
 .endproc
 
 ;;; ============================================================
+;;; Update str_memory with memory count in kilobytes
+
+.proc update_memory_string
+        copy16  #0, memory
+        jsr     check_ramworks_memory
+        sty     memory          ; Y is number of 64k banks
+        cpy     #0              ; 0 means 256 banks
+        bne     :+
+        inc     memory+1
+:       inc16   memory          ; Main 64k memory
+        asl16   memory          ; * 64
+        asl16   memory
+        asl16   memory
+        asl16   memory
+        asl16   memory
+        asl16   memory
+        ldax    memory
+        jsr     int_to_string
+.endproc
+
+;;; ============================================================
+;;; Calculate RamWorks memory; returns number of banks in Y
+;;; (256 banks = 0)
+;;; Inspired by "gid" comp.sys.apple2.programmer
+
+.proc check_ramworks_memory
+        ;; Run from clone in main memory
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+
+        ;; Assumes ALTZPON on entry/exit
+        RWBANK  := $C073
+
+        ;; Try to store sentinels in each bank (descending)
+        ldy     #0
+:       sty     RWBANK          ; select bank
+        sty     $00             ; sentinel: $00 = bank
+        tya
+        eor     #$FF
+        sta     $01             ; sentinel: $01 = ~bank
+        dey
+        bne     :-
+
+        ;; Check each bank for sentinels (ascending)
+:       sty     RWBANK
+        cpy     $00             ; sentinel: $00 = bank ?
+        bne     done
+        tya
+        eor     #$FF
+        cmp     $01             ; sentinel: $01 = ~bank?
+        bne     done
+        iny
+        bne     :-
+
+        ;; Switch back to RW bank 0 (normal aux memory)
+done:   lda     #0
+        sta     RWBANK
+
+        ;; Back to executing from aux memory
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
+.endproc
+
+;;; ============================================================
 
 .proc draw_pascal_string
         params := $6
@@ -869,4 +966,75 @@ notpas:
         inc16   textptr
         MGTK_CALL MGTK::DrawText, params
 exit:   rts
+.endproc
+
+;;; ============================================================
+
+str_from_int:
+        PASCAL_STRING "000000"
+
+.proc int_to_string
+        stax    value
+
+        ;; Fill buffer with spaces
+        ldx     #6
+        lda     #' '
+:       sta     str_from_int,x
+        dex
+        bne     :-
+
+        lda     #0
+        sta     nonzero_flag
+        ldy     #0              ; y = position in string
+        ldx     #0              ; x = which power index is subtracted (*2)
+
+        ;; For each power of ten
+loop:   lda     #0
+        sta     digit
+
+        ;; Keep subtracting/incrementing until zero is hit
+sloop:  cmp16   value, powers,x
+        bpl     subtract
+
+        lda     digit
+        bne     not_pad
+        bit     nonzero_flag
+        bmi     not_pad
+
+        ;; Pad with space
+        lda     #' '
+        bne     :+
+        ;; Convert to ASCII
+not_pad:
+        clc
+        adc     #'0'            ; why not ORA $30 ???
+        pha
+        lda     #$80
+        sta     nonzero_flag
+        pla
+
+        ;; Place the character, move to next
+:       sta     str_from_int+2,y
+        iny
+        inx
+        inx
+        cpx     #8              ; up to 4 digits (*2) via subtraction
+        beq     done
+        jmp     loop
+
+subtract:
+        inc     digit
+        sub16   value, powers,x, value
+        jmp     sloop
+
+done:   lda     value           ; handle last digit
+        ora     #'0'
+        sta     str_from_int+2,y
+        rts
+
+powers: .word   10000, 1000, 100, 10
+value:  .word   0            ; remaining value as subtraction proceeds
+digit:  .byte   0            ; current digit being accumulated
+nonzero_flag:                ; high bit set once a non-zero digit seen
+        .byte   0
 .endproc
