@@ -13,11 +13,11 @@
 
 entry:
 
-;;; Copy $800 through $13FF (the DA) to AUX
+;;; Copy $800 through $14FF (the DA) to AUX
 .scope
         lda     ROMIN2
         copy16  #$0800, STARTLO
-        copy16  #$13FF, ENDLO
+        copy16  #da_end, ENDLO
         copy16  #$0800, DESTINATIONLO
         sec                     ; main>aux
         jsr     AUXMOVE
@@ -116,6 +116,14 @@ mapbits:        .addr   iii_bits
 mapwidth:       .byte   8
 reserved:       .res    1
 maprect:        DEFINE_RECT 0, 0, 54, 24
+.endproc
+
+.proc iie_card_bitmap
+viewloc:        DEFINE_POINT 56, 5
+mapbits:        .addr   iie_card_bits
+mapwidth:       .byte   8
+reserved:       .res    1
+maprect:        DEFINE_RECT 0, 0, 55, 21
 .endproc
 
 iie_bits:
@@ -232,7 +240,29 @@ iii_bits:
         .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1110011)
         .byte   px(%1000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000111)
 
-
+iie_card_bits:
+        .byte   px(%1110000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000111),px(%1111111)
+        .byte   px(%1100001),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1100111),px(%1111111)
+        .byte   px(%1100001),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1100111),px(%1100111),px(%1111111)
+        .byte   px(%1100001),px(%1111111),px(%1111111),px(%1111000),px(%0000011),px(%1100111),px(%1100111),px(%1100111)
+        .byte   px(%1100001),px(%1000111),px(%1100110),px(%0111000),px(%0000011),px(%1111111),px(%1100111),px(%1100111)
+        .byte   px(%1100001),px(%1000111),px(%1100110),px(%0111000),px(%0000011),px(%1111111),px(%1100111),px(%1100111)
+        .byte   px(%1110011),px(%1111111),px(%1100110),px(%0111000),px(%0000011),px(%1111111),px(%1100111),px(%1100111)
+        .byte   px(%1110011),px(%0000111),px(%1111111),px(%1111000),px(%0000011),px(%1100000),px(%1100110),px(%0100100)
+        .byte   px(%1110011),px(%0000111),px(%1000011),px(%1111111),px(%1111111),px(%1100000),px(%1100111),px(%0000001)
+        .byte   px(%1110011),px(%0000111),px(%1000011),px(%1111111),px(%1111111),px(%1100000),px(%1100111),px(%1000011)
+        .byte   px(%1110011),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1100111),px(%1100111)
+        .byte   px(%1110000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
+        .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111111),px(%1111100),px(%0000000),px(%0000000),px(%0011100)
+        .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
+        .byte   px(%1110011),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1100111)
+        .byte   px(%1110000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000111)
 
 ;;; ============================================================
 
@@ -434,15 +464,13 @@ iie_or_iigs:
         sec
         jsr     $FE1F
         bcc     iigs
-        copy16  #iie_bitmap, pix_ptr ; TODO: Macintosh LC icon
+        
         lda     $FBDD
         cmp     #$02
         beq     iie_card
+        copy16  #iie_bitmap, pix_ptr ; TODO: Macintosh LC icon
         copy16  #str_iie_enhanced, str_ptr
-        .pushcpu
-        .setcpu "65C02"
-        bra     done ; Enhanced IIe always has a 65C02
-        .popcpu
+        jmp     done
         
 iic_or_iic_plus:
         lda     $FBBF
@@ -453,32 +481,21 @@ iic_or_iic_plus:
 iic:
         copy16  #str_iic, str_ptr
         copy16  #iic_bitmap, pix_ptr
-        .pushcpu
-        .setcpu "65C02"
-        bra     done ; //c always has a 65C02
-        .popcpu
+        jmp     done
 
 iic_plus:
         copy16  #str_iic_plus, str_ptr
         copy16  #iic_bitmap, pix_ptr
-        .pushcpu
-        .setcpu "65C02"
-        bra     done ; IIc Plus always has a 65C02
-        .popcpu
+        jmp     done
 
 iie_card:
+        copy16  #iie_card_bitmap, pix_ptr
         copy16  #str_iie_card, str_ptr
-        .pushcpu
-        .setcpu "65C02"
-        bra     done ; IIe Card always has a 65C02
-        .popcpu      
+        jmp     done
 
 iigs:   copy16  #str_iigs, str_ptr
         copy16  #iigs_bitmap, pix_ptr
-        .pushcpu
-        .setcpu "65816"
-        bra     done ; IIgs always has a 65816
-        .popcpu
+        jmp     done
 
 done:
         ;; Read from LC RAM
@@ -1095,4 +1112,5 @@ p6502:  result  str_6502
 p658xx: result  str_658xx
 .endproc
 
-.assert * < $1400, error, "DA too big"
+da_end  = *
+.assert * < $1B00, error, "DA too big"
