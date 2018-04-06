@@ -8,7 +8,7 @@ This is a complex API library written by Apple circa 1985. It consists of:
 * [Mouse Graphics](#mouse-graphics) - windows, menus, events, cursors
   * [Concepts](#concepts-1)
   * [Commands](#commands-1)
-  * [More](#more)
+* [Creating Applications and DeskTop Desk Accessories](#creating-applications-and-desktop-desk-accessories)
 
 For the purposes of DeskTop, the entry point is fixed at $4000 AUX, called MLI-style:
 ```
@@ -732,13 +732,16 @@ Parameters:
 ```
 
 #### GetWinPort ($3C)
-Get drawing state of window
+Populate GrafPort with current drawing state of window, clipped if the window is partially offscreen.
 
 Parameters:
 ```
 .byte       window_id
-.addr       port            (out) grafport address
+.addr       port            address of GrafPort to populate
 ```
+
+Returns `error_window_obscured` if the content area of the window is completely offscreen and drawing should be skipped. (The port rect will be invalid.)
+
 
 #### SetWinPort ($3D)
 Update port of window
@@ -901,16 +904,11 @@ Parameters:
 .byte       activate        0=deactivate, 1=activate
 ```
 
-
-
-## More
-
-> NOTE: Movable DA windows must maintain an _offscreen_flag_. If a window is moved so that the
-> content area is entirely offscreen then various operations should be skipped because
-> the window's box coordinates will not be set correctly.
-> TODO: Figure out if this is just a bug in the DAs.
+# Creating Applications and DeskTop Desk Accessories
 
 ### Application Use
+
+_Notes specific to DeskTop Desk Accessories (DA) are included where usage notable differs._
 
 #### Initialization
 
@@ -948,12 +946,13 @@ Parameters:
 
 #### Redraw window
 
-* `GetWinPort` - get pointer to window's port
+* `GetWinPort` - populate a local GrafPort with an appropriately clipped port
+* if `error_window_obscured` is returned, abort these steps (port will be invalid)
 * `SetPort` - make it current
-* `HideCursor` - if multiple drawing calls will be made
+* optional: `HideCursor` - if multiple drawing calls will be made
 * ... draw ...
-* `ShowCursor` - if needed
-* `SetWinPort` - save attributes if desired
+* optional: `ShowCursor` - if it was hidden above
+* optional: `SetWinPort` - save changed attributes (penpos, etc) if desired
 
 
 #### Handle Key
@@ -965,6 +964,8 @@ Parameters:
 * Otherwise:
   * handle key press per app
 
+_DA specific: Menus are not supported in DAs, so the first steps here can be skipped._
+
 
 #### Handle Menu
 
@@ -973,6 +974,8 @@ Parameters:
 * Dispatch for `menu_id` and `menu_item`
 * `HiliteMenu` to toggle state back off when done
 
+_DA specific: Menus are not supported in DAs._
+
 
 #### Handle Window Drag
 
@@ -980,12 +983,14 @@ Parameters:
 * `DragWindow` to initiate drag modal loop
 * [Handle update events](#handle-update-events)
 * [Redraw](#redraw-window) window content if not moved and was made topmost
-* If canceled - done
-* For DeskTop DAs:
-  * Call `JUMP_TABLE_REDRAW_ALL`.
-  * If _offscreen flag_ was not set, redraw desktop icons (`DESKTOP_REDRAW_ICONS`).
-  * Set _offscreen flag_ if window's `top` is greater than or equal to the screen bottom (191), clear otherwise.
-  * If _offscreen flag_ is not set, redraw window.
+
+_DA specific: Use the following steps instead:_
+
+* `DragWindow` to initiate drag modal loop
+* If not `moved` - done
+* Call `JUMP_TABLE_REDRAW_ALL` so DeskTop can redraw its windows
+* [Redraw](#redraw-window) window content
+* Call `DESKTOP_REDRAW_ICONS` so DeskTop can redraw the desktop (volume) icons
 
 
 #### Handle Window Close
@@ -1018,9 +1023,12 @@ Parameters:
 * If canceled - done
 * `UpdateThumb` if needed to adjust scroll bars
 * [Redraw](#redraw-window) window content
-* For DeskTop DAs:
-  * Call `JUMP_TABLE_REDRAW_ALL`.
-  * Call `DESKTOP_REDRAW_ICONS`.
+
+_DA specific:_
+
+In addition to the above steps:
+* Call `JUMP_TABLE_REDRAW_ALL` _before_ redrawing the DA window.
+* Call `DESKTOP_REDRAW_ICONS` _after_ redrawing the DA window.
 
 
 #### Handle Update Events
@@ -1035,3 +1043,5 @@ Parameters:
     * Otherwise:
       * [Redraw](#redraw-window) `window_id`'s content
       * `EndUpdate`
+
+_DA specific: Update events are not used._
