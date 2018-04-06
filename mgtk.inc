@@ -375,9 +375,9 @@ GetWinPtr       := $3B          ; Get pointer to window params by id; A=0 on suc
 ;;; .byte       window_id
 ;;; .addr       window_ptr      (out) winfo address
 
-GetWinPort      := $3C          ; Get drawing state of window
+GetWinPort      := $3C          ; Get drawing state of window (possibly clipped)
 ;;; .byte       window_id
-;;; .addr       port            (out) grafport address
+;;; .addr       port            address of grafport to populate
 
 SetWinPort      := $3D          ; Update port of window
 ;;; .byte       window_id
