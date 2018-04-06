@@ -251,6 +251,9 @@ str_iie:
 str_iie_enhanced:
         PASCAL_STRING "Apple IIe (enhanced)"
 
+str_iie_card:
+        PASCAL_STRING "Apple IIe Card"
+
 str_iic:
         PASCAL_STRING "Apple IIc"
 
@@ -297,6 +300,13 @@ str_storage:    PASCAL_STRING "Mass Storage"
 str_network:    PASCAL_STRING "Network Card"
 str_unknown:    PASCAL_STRING "(unknown)"
 str_empty:      PASCAL_STRING "(empty)"
+
+;;; ============================================================
+
+str_cpu_prefix: PASCAL_STRING "  CPU: "
+str_6502:       PASCAL_STRING "6502"
+str_65C02:      PASCAL_STRING "65C02"
+str_658xx:      PASCAL_STRING "658xx"
 
 ;;; ============================================================
 
@@ -394,7 +404,7 @@ textfont:       .addr   0
         beq     iie
         cmp     #$E0
         beq     iie_or_iigs
-        bne     iic_or_iic_plus
+        jmp     iic_or_iic_plus
 
 iiplus_or_iii:
         lda     $FB1E
@@ -416,37 +426,59 @@ iii:
         copy16  #iie_bitmap, pix_ptr ; TODO: Apple /// icon
         jmp     done
 
+iie:    copy16  #str_iie, str_ptr
+        copy16  #iie_bitmap, pix_ptr
+        jmp     done  
+
 iie_or_iigs:
         sec
         jsr     $FE1F
         bcc     iigs
+        copy16  #iie_bitmap, pix_ptr ; TODO: Macintosh LC icon
+        lda     $FBDD
+        cmp     #$02
+        beq     iie_card
         copy16  #str_iie_enhanced, str_ptr
-        copy16  #iie_bitmap, pix_ptr
-        jmp     done
-
+        .pushcpu
+        .setcpu "65C02"
+        bra     done ; Enhanced IIe always has a 65C02
+        .popcpu
+        
 iic_or_iic_plus:
         lda     $FBBF
         cmp     #$05
         bcc     iic
         bcs     iic_plus
 
-iie:    copy16  #str_iie, str_ptr
-        copy16  #iie_bitmap, pix_ptr
-        jmp     done
-
 iic:
         copy16  #str_iic, str_ptr
         copy16  #iic_bitmap, pix_ptr
-        jmp     done
+        .pushcpu
+        .setcpu "65C02"
+        bra     done ; //c always has a 65C02
+        .popcpu
 
 iic_plus:
         copy16  #str_iic_plus, str_ptr
         copy16  #iic_bitmap, pix_ptr
-        jmp     done
+        .pushcpu
+        .setcpu "65C02"
+        bra     done ; IIc Plus always has a 65C02
+        .popcpu
+
+iie_card:
+        copy16  #str_iie_card, str_ptr
+        .pushcpu
+        .setcpu "65C02"
+        bra     done ; IIe Card always has a 65C02
+        .popcpu      
 
 iigs:   copy16  #str_iigs, str_ptr
         copy16  #iigs_bitmap, pix_ptr
-        jmp     done
+        .pushcpu
+        .setcpu "65816"
+        bra     done ; IIgs always has a 65816
+        .popcpu
 
 done:
         ;; Read from LC RAM
@@ -651,6 +683,9 @@ done:   rts
         addr_call draw_pascal_string, str_memory_prefix
         addr_call draw_pascal_string, str_from_int
         addr_call draw_pascal_string, str_memory_suffix
+        addr_call draw_pascal_string, str_cpu_prefix
+        jsr     cpuid
+        jsr     draw_pascal_string
 
         lda     #7
         sta     slot
@@ -1038,3 +1073,26 @@ digit:  .byte   0            ; current digit being accumulated
 nonzero_flag:                ; high bit set once a non-zero digit seen
         .byte   0
 .endproc
+
+;;; ============================================================
+
+.proc   cpuid
+        sed
+        lda     #$99
+        clc
+        adc     #$01
+        cld
+        bmi     p6502
+        clc
+        .pushcpu
+        .setcpu "65816"
+        sep     #%00000001    ; two-byte NOP on 65C02
+        .popcpu
+        bcs     p658xx
+        ; 65C02
+        result  str_65C02
+p6502:  result  str_6502
+p658xx: result  str_658xx
+.endproc
+
+.assert * < $1400, error, "DA too big"
