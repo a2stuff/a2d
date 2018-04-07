@@ -418,8 +418,26 @@ textfont:       .addr   0
 
 
 ;;; ============================================================
-
 ;;; Per Tech Note: Apple II Miscellaneous #7: Apple II Family Identification
+
+.scope model
+        ii           := 0
+        iiplus       := 1
+        iie          := 2
+        iie_enhanced := 3
+        iic          := 4
+        iic_plus     := 5
+        iigs         := 6
+        iie_card     := 7
+        iii          := 8
+.endscope
+
+model_str_table:
+        .addr   str_ii, str_iiplus, str_iie, str_iie_enhanced
+        .addr   str_iic, str_iic_plus, str_iigs, str_iie_card, str_iii
+model_pix_table:
+        .addr   iie_bitmap, iie_bitmap, iie_bitmap, iie_bitmap
+        .addr   iic_bitmap, iic_bitmap, iigs_bitmap, iie_card_bitmap, iii_bitmap
 
 .proc identify_model
         ;; Read from ROM
@@ -436,7 +454,7 @@ textfont:       .addr   0
         beq     iie
         cmp     #$E0
         beq     iie_or_iigs
-        jmp     iic_or_iic_plus
+        bne     iic_or_iic_plus
 
 iiplus_or_iii:
         lda     $FB1E
@@ -444,23 +462,17 @@ iiplus_or_iii:
         beq     iiplus
         bne     iii
 
+ii:     lda     #model::ii
+        bpl     done
 
-ii:     copy16  #str_ii, model_str_ptr
-        copy16  #iie_bitmap, model_pix_ptr
-        jmp     done
+iiplus: lda     #model::iiplus
+        bpl     done
 
-iiplus: copy16  #str_iiplus, model_str_ptr
-        copy16  #iie_bitmap, model_pix_ptr
-        jmp     done
+iii:    lda     #model::iii
+        bpl     done
 
-iii:
-        copy16  #str_iii, model_str_ptr
-        copy16  #iii_bitmap, model_pix_ptr
-        jmp     done
-
-iie:    copy16  #str_iie, model_str_ptr
-        copy16  #iie_bitmap, model_pix_ptr
-        jmp     done
+iie:    lda     #model::iie
+        bpl     done
 
 iie_or_iigs:
         sec
@@ -470,36 +482,33 @@ iie_or_iigs:
         lda     $FBDD
         cmp     #$02
         beq     iie_card
-        copy16  #iie_bitmap, model_pix_ptr
-        copy16  #str_iie_enhanced, model_str_ptr
-        jmp     done
+iie_e:  lda     #model::iie_enhanced
+        bpl     done
 
 iic_or_iic_plus:
         lda     $FBBF
         cmp     #$05
-        bcc     iic
         bcs     iic_plus
-
-iic:
-        copy16  #str_iic, model_str_ptr
-        copy16  #iic_bitmap, model_pix_ptr
-        jmp     done
+iic:    lda     #model::iic
+        bpl     done
 
 iic_plus:
-        copy16  #str_iic_plus, model_str_ptr
-        copy16  #iic_bitmap, model_pix_ptr
-        jmp     done
+        lda     #model::iic_plus
+        bpl     done
 
 iie_card:
-        copy16  #iie_card_bitmap, model_pix_ptr
-        copy16  #str_iie_card, model_str_ptr
-        jmp     done
+        lda     #model::iie_card
+        bpl     done
 
-iigs:   copy16  #str_iigs, model_str_ptr
-        copy16  #iigs_bitmap, model_pix_ptr
-        jmp     done
+iigs:   lda     #model::iigs
+        ;; fall through...
 
 done:
+        asl
+        tax
+        copy16  model_str_table,x, model_str_ptr
+        copy16  model_pix_table,x, model_pix_ptr
+
         ;; Read from LC RAM
         lda     LCBANK1
         lda     LCBANK1
