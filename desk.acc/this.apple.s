@@ -13,7 +13,7 @@
 
 entry:
 
-;;; Copy $800 through $14FF (the DA) to AUX
+;;; Copy the DA to AUX for easy bank switching
 .scope
         lda     ROMIN2
         copy16  #$0800, STARTLO
@@ -40,8 +40,8 @@ entry:
         rts
 .endscope
 
-
 ;;; ============================================================
+
 screen_width    := 560
 screen_height   := 192
 
@@ -85,6 +85,8 @@ nextwinfo:      .addr   0
 
 str_title:
         PASCAL_STRING "About this Apple II"
+
+;;; ============================================================
 
 .proc iie_bitmap
 viewloc:        DEFINE_POINT 59, 5
@@ -340,8 +342,8 @@ str_658xx:      PASCAL_STRING "658xx"
 
 ;;; ============================================================
 
-str_ptr:        .addr   0
-pix_ptr:        .addr   0
+model_str_ptr:        .addr   0
+model_pix_ptr:        .addr   0
 
 line1:  DEFINE_POINT 0, 37
 line2:  DEFINE_POINT da_width, 37
@@ -443,35 +445,35 @@ iiplus_or_iii:
         bne     iii
 
 
-ii:     copy16  #str_ii, str_ptr
-        copy16  #iie_bitmap, pix_ptr
+ii:     copy16  #str_ii, model_str_ptr
+        copy16  #iie_bitmap, model_pix_ptr
         jmp     done
 
-iiplus: copy16  #str_iiplus, str_ptr
-        copy16  #iie_bitmap, pix_ptr
+iiplus: copy16  #str_iiplus, model_str_ptr
+        copy16  #iie_bitmap, model_pix_ptr
         jmp     done
 
 iii:
-        copy16  #str_iii, str_ptr
-        copy16  #iie_bitmap, pix_ptr ; TODO: Apple /// icon
+        copy16  #str_iii, model_str_ptr
+        copy16  #iii_bitmap, model_pix_ptr
         jmp     done
 
-iie:    copy16  #str_iie, str_ptr
-        copy16  #iie_bitmap, pix_ptr
-        jmp     done  
+iie:    copy16  #str_iie, model_str_ptr
+        copy16  #iie_bitmap, model_pix_ptr
+        jmp     done
 
 iie_or_iigs:
         sec
         jsr     $FE1F
         bcc     iigs
-        
+
         lda     $FBDD
         cmp     #$02
         beq     iie_card
-        copy16  #iie_bitmap, pix_ptr ; TODO: Macintosh LC icon
-        copy16  #str_iie_enhanced, str_ptr
+        copy16  #iie_bitmap, model_pix_ptr
+        copy16  #str_iie_enhanced, model_str_ptr
         jmp     done
-        
+
 iic_or_iic_plus:
         lda     $FBBF
         cmp     #$05
@@ -479,22 +481,22 @@ iic_or_iic_plus:
         bcs     iic_plus
 
 iic:
-        copy16  #str_iic, str_ptr
-        copy16  #iic_bitmap, pix_ptr
+        copy16  #str_iic, model_str_ptr
+        copy16  #iic_bitmap, model_pix_ptr
         jmp     done
 
 iic_plus:
-        copy16  #str_iic_plus, str_ptr
-        copy16  #iic_bitmap, pix_ptr
+        copy16  #str_iic_plus, model_str_ptr
+        copy16  #iic_bitmap, model_pix_ptr
         jmp     done
 
 iie_card:
-        copy16  #iie_card_bitmap, pix_ptr
-        copy16  #str_iie_card, str_ptr
+        copy16  #iie_card_bitmap, model_pix_ptr
+        copy16  #str_iie_card, model_str_ptr
         jmp     done
 
-iigs:   copy16  #str_iigs, str_ptr
-        copy16  #iigs_bitmap, pix_ptr
+iigs:   copy16  #str_iigs, model_str_ptr
+        copy16  #iigs_bitmap, model_pix_ptr
         jmp     done
 
 done:
@@ -521,7 +523,7 @@ done:
 ;;; $23         2.0.3
 ;;; $24         2.4.x
 
-.proc update_version_string
+.proc identify_prodos_version
         ;; Read ProDOS version field from global page in main
         sta     RAMRDOFF
         sta     RAMWRTOFF
@@ -580,8 +582,8 @@ done:   rts
         lda     LCBANK1
 
         jsr     identify_model
-        jsr     update_version_string
-        jsr     update_memory_string
+        jsr     identify_prodos_version
+        jsr     identify_memory
 
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     draw_window
@@ -669,7 +671,6 @@ done:   rts
 
 .endproc
 
-
 ;;; ============================================================
 
 .proc draw_window
@@ -683,11 +684,11 @@ done:   rts
 :       MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
 
-        copy16  pix_ptr, bits_addr
+        copy16  model_pix_ptr, bits_addr
         MGTK_CALL MGTK::PaintBits, $0000, bits_addr
 
         MGTK_CALL MGTK::MoveTo, model_pos
-        ldax    str_ptr
+        ldax    model_str_ptr
         jsr     draw_pascal_string
 
         MGTK_CALL MGTK::MoveTo, pdver_pos
@@ -745,7 +746,6 @@ next:   lsr     mask
 slot:   .byte   0
 mask:   .byte   0
 .endproc
-
 
 
 ;;; ============================================================
@@ -941,7 +941,7 @@ notpas:
 ;;; ============================================================
 ;;; Update str_memory with memory count in kilobytes
 
-.proc update_memory_string
+.proc identify_memory
         copy16  #0, memory
         jsr     check_ramworks_memory
         sty     memory          ; Y is number of 64k banks
@@ -1092,8 +1092,9 @@ nonzero_flag:                ; high bit set once a non-zero digit seen
 .endproc
 
 ;;; ============================================================
+;;; Identify CPU - string pointer returned in A,X
 
-.proc   cpuid
+.proc cpuid
         sed
         lda     #$99
         clc
@@ -1112,5 +1113,9 @@ p6502:  result  str_6502
 p658xx: result  str_658xx
 .endproc
 
+;;; ============================================================
+
 da_end  = *
 .assert * < $1B00, error, "DA too big"
+        ;; I/O Buffer starts at MAIN $1C00
+        ;; ... but icon tables start at AUX $1B00
