@@ -13,11 +13,11 @@
 
 entry:
 
-;;; Copy $800 through $13FF (the DA) to AUX
+;;; Copy $800 through $14FF (the DA) to AUX
 .scope
         lda     ROMIN2
         copy16  #$0800, STARTLO
-        copy16  #$13FF, ENDLO
+        copy16  #da_end, ENDLO
         copy16  #$0800, DESTINATIONLO
         sec                     ; main>aux
         jsr     AUXMOVE
@@ -116,6 +116,14 @@ mapbits:        .addr   iii_bits
 mapwidth:       .byte   8
 reserved:       .res    1
 maprect:        DEFINE_RECT 0, 0, 54, 24
+.endproc
+
+.proc iie_card_bitmap
+viewloc:        DEFINE_POINT 56, 5
+mapbits:        .addr   iie_card_bits
+mapwidth:       .byte   8
+reserved:       .res    1
+maprect:        DEFINE_RECT 0, 0, 55, 21
 .endproc
 
 iie_bits:
@@ -232,7 +240,29 @@ iii_bits:
         .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1110011)
         .byte   px(%1000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000111)
 
-
+iie_card_bits:
+        .byte   px(%1110000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000111),px(%1111111)
+        .byte   px(%1100001),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1100111),px(%1111111)
+        .byte   px(%1100001),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1100111),px(%1100111),px(%1111111)
+        .byte   px(%1100001),px(%1111111),px(%1111111),px(%1111000),px(%0000011),px(%1100111),px(%1100111),px(%1100111)
+        .byte   px(%1100001),px(%1000111),px(%1100110),px(%0111000),px(%0000011),px(%1111111),px(%1100111),px(%1100111)
+        .byte   px(%1100001),px(%1000111),px(%1100110),px(%0111000),px(%0000011),px(%1111111),px(%1100111),px(%1100111)
+        .byte   px(%1110011),px(%1111111),px(%1100110),px(%0111000),px(%0000011),px(%1111111),px(%1100111),px(%1100111)
+        .byte   px(%1110011),px(%0000111),px(%1111111),px(%1111000),px(%0000011),px(%1100000),px(%1100110),px(%0100100)
+        .byte   px(%1110011),px(%0000111),px(%1000011),px(%1111111),px(%1111111),px(%1100000),px(%1100111),px(%0000001)
+        .byte   px(%1110011),px(%0000111),px(%1000011),px(%1111111),px(%1111111),px(%1100000),px(%1100111),px(%1000011)
+        .byte   px(%1110011),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1100111),px(%1100111)
+        .byte   px(%1110000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
+        .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111111),px(%1111100),px(%0000000),px(%0000000),px(%0011100)
+        .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
+        .byte   px(%1110011),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1100111)
+        .byte   px(%1110000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000111)
 
 ;;; ============================================================
 
@@ -250,6 +280,9 @@ str_iie:
 
 str_iie_enhanced:
         PASCAL_STRING "Apple IIe (enhanced)"
+
+str_iie_card:
+        PASCAL_STRING "Apple IIe Card"
 
 str_iic:
         PASCAL_STRING "Apple IIc"
@@ -297,6 +330,13 @@ str_storage:    PASCAL_STRING "Mass Storage"
 str_network:    PASCAL_STRING "Network Card"
 str_unknown:    PASCAL_STRING "(unknown)"
 str_empty:      PASCAL_STRING "(empty)"
+
+;;; ============================================================
+
+str_cpu_prefix: PASCAL_STRING "  CPU: "
+str_6502:       PASCAL_STRING "6502"
+str_65C02:      PASCAL_STRING "65C02"
+str_658xx:      PASCAL_STRING "658xx"
 
 ;;; ============================================================
 
@@ -394,7 +434,7 @@ textfont:       .addr   0
         beq     iie
         cmp     #$E0
         beq     iie_or_iigs
-        bne     iic_or_iic_plus
+        jmp     iic_or_iic_plus
 
 iiplus_or_iii:
         lda     $FB1E
@@ -416,23 +456,27 @@ iii:
         copy16  #iie_bitmap, pix_ptr ; TODO: Apple /// icon
         jmp     done
 
+iie:    copy16  #str_iie, str_ptr
+        copy16  #iie_bitmap, pix_ptr
+        jmp     done  
+
 iie_or_iigs:
         sec
         jsr     $FE1F
         bcc     iigs
+        
+        lda     $FBDD
+        cmp     #$02
+        beq     iie_card
+        copy16  #iie_bitmap, pix_ptr ; TODO: Macintosh LC icon
         copy16  #str_iie_enhanced, str_ptr
-        copy16  #iie_bitmap, pix_ptr
         jmp     done
-
+        
 iic_or_iic_plus:
         lda     $FBBF
         cmp     #$05
         bcc     iic
         bcs     iic_plus
-
-iie:    copy16  #str_iie, str_ptr
-        copy16  #iie_bitmap, pix_ptr
-        jmp     done
 
 iic:
         copy16  #str_iic, str_ptr
@@ -442,6 +486,11 @@ iic:
 iic_plus:
         copy16  #str_iic_plus, str_ptr
         copy16  #iic_bitmap, pix_ptr
+        jmp     done
+
+iie_card:
+        copy16  #iie_card_bitmap, pix_ptr
+        copy16  #str_iie_card, str_ptr
         jmp     done
 
 iigs:   copy16  #str_iigs, str_ptr
@@ -651,6 +700,9 @@ done:   rts
         addr_call draw_pascal_string, str_memory_prefix
         addr_call draw_pascal_string, str_from_int
         addr_call draw_pascal_string, str_memory_suffix
+        addr_call draw_pascal_string, str_cpu_prefix
+        jsr     cpuid
+        jsr     draw_pascal_string
 
         lda     #7
         sta     slot
@@ -1038,3 +1090,27 @@ digit:  .byte   0            ; current digit being accumulated
 nonzero_flag:                ; high bit set once a non-zero digit seen
         .byte   0
 .endproc
+
+;;; ============================================================
+
+.proc   cpuid
+        sed
+        lda     #$99
+        clc
+        adc     #$01
+        cld
+        bmi     p6502
+        clc
+        .pushcpu
+        .setcpu "65816"
+        sep     #%00000001    ; two-byte NOP on 65C02
+        .popcpu
+        bcs     p658xx
+        ; 65C02
+        result  str_65C02
+p6502:  result  str_6502
+p658xx: result  str_658xx
+.endproc
+
+da_end  = *
+.assert * < $1B00, error, "DA too big"
