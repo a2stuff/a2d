@@ -4,6 +4,8 @@
 
 DA_LOAD_ADDRESS := $800
 DA_MAX_SIZE     := $1C00 - DA_LOAD_ADDRESS
+        ;; I/O Buffer starts at MAIN $1C00
+        ;; (but icon tables start at AUX $1B00)
 
 ;;; ============================================================
 ;;; Direct Calls (from main memory)

@@ -19,6 +19,5 @@ Contributions welcome! Preliminaries:
    * Bug fixes will alter the binary, so should occur in branches. There's a `fixes` branch with some already.
 1. Add new Desk Accessories
    * List of ideas in the [issue tracker](https://github.com/inexorabletash/a2d/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3A%22Desk+Accessories%22+label%3Aenhancement-for-new)
-   * An ["About this Apple II"](https://github.com/inexorabletash/a2d/issues/29) DA that does a slot scan would be very useful.
    * An ["Eyes"](https://github.com/inexorabletash/a2d/issues/53) DA would be a cool, quick demo.
    * A ["Control Panel"](https://github.com/inexorabletash/a2d/issues?q=is%3Aissue+is%3Aopen+label%3A%22Control+Panel+DA+Fodder%22) DA would be really neat.

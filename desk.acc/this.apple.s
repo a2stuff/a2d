@@ -13,11 +13,11 @@
 
 entry:
 
-;;; Copy $800 through $13FF (the DA) to AUX
+;;; Copy the DA to AUX for easy bank switching
 .scope
         lda     ROMIN2
         copy16  #$0800, STARTLO
-        copy16  #$13FF, ENDLO
+        copy16  #da_end, ENDLO
         copy16  #$0800, DESTINATIONLO
         sec                     ; main>aux
         jsr     AUXMOVE
@@ -40,8 +40,8 @@ entry:
         rts
 .endscope
 
-
 ;;; ============================================================
+
 screen_width    := 560
 screen_height   := 192
 
@@ -86,8 +86,10 @@ nextwinfo:      .addr   0
 str_title:
         PASCAL_STRING "About this Apple II"
 
+;;; ============================================================
+
 .proc iie_bitmap
-viewloc:        DEFINE_POINT 40, 5
+viewloc:        DEFINE_POINT 59, 5
 mapbits:        .addr   iie_bits
 mapwidth:       .byte   8
 reserved:       .res    1
@@ -95,7 +97,7 @@ maprect:        DEFINE_RECT 0, 0, 50, 25
 .endproc
 
 .proc iic_bitmap
-viewloc:        DEFINE_POINT 44, 4
+viewloc:        DEFINE_POINT 64, 4
 mapbits:        .addr   iic_bits
 mapwidth:       .byte   6
 reserved:       .res    1
@@ -103,7 +105,7 @@ maprect:        DEFINE_RECT 0, 0, 41, 27
 .endproc
 
 .proc iigs_bitmap
-viewloc:        DEFINE_POINT 46, 5
+viewloc:        DEFINE_POINT 65, 5
 mapbits:        .addr   iigs_bits
 mapwidth:       .byte   6
 reserved:       .res    1
@@ -111,11 +113,19 @@ maprect:        DEFINE_RECT 0, 0, 38, 25
 .endproc
 
 .proc iii_bitmap
-viewloc:        DEFINE_POINT 38, 5
+viewloc:        DEFINE_POINT 57, 5
 mapbits:        .addr   iii_bits
 mapwidth:       .byte   8
 reserved:       .res    1
 maprect:        DEFINE_RECT 0, 0, 54, 24
+.endproc
+
+.proc iie_card_bitmap
+viewloc:        DEFINE_POINT 56, 5
+mapbits:        .addr   iie_card_bits
+mapwidth:       .byte   8
+reserved:       .res    1
+maprect:        DEFINE_RECT 0, 0, 55, 21
 .endproc
 
 iie_bits:
@@ -232,7 +242,29 @@ iii_bits:
         .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1110011)
         .byte   px(%1000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000111)
 
-
+iie_card_bits:
+        .byte   px(%1110000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000111),px(%1111111)
+        .byte   px(%1100001),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1100111),px(%1111111)
+        .byte   px(%1100001),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1100111),px(%1100111),px(%1111111)
+        .byte   px(%1100001),px(%1111111),px(%1111111),px(%1111000),px(%0000011),px(%1100111),px(%1100111),px(%1100111)
+        .byte   px(%1100001),px(%1000111),px(%1100110),px(%0111000),px(%0000011),px(%1111111),px(%1100111),px(%1100111)
+        .byte   px(%1100001),px(%1000111),px(%1100110),px(%0111000),px(%0000011),px(%1111111),px(%1100111),px(%1100111)
+        .byte   px(%1110011),px(%1111111),px(%1100110),px(%0111000),px(%0000011),px(%1111111),px(%1100111),px(%1100111)
+        .byte   px(%1110011),px(%0000111),px(%1111111),px(%1111000),px(%0000011),px(%1100000),px(%1100110),px(%0100100)
+        .byte   px(%1110011),px(%0000111),px(%1000011),px(%1111111),px(%1111111),px(%1100000),px(%1100111),px(%0000001)
+        .byte   px(%1110011),px(%0000111),px(%1000011),px(%1111111),px(%1111111),px(%1100000),px(%1100111),px(%1000011)
+        .byte   px(%1110011),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1100111),px(%1100111)
+        .byte   px(%1110000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
+        .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111111),px(%1111100),px(%0000000),px(%0000000),px(%0011100)
+        .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
+        .byte   px(%1110011),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1100111)
+        .byte   px(%1110000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000111)
 
 ;;; ============================================================
 
@@ -251,6 +283,9 @@ str_iie:
 str_iie_enhanced:
         PASCAL_STRING "Apple IIe (enhanced)"
 
+str_iie_card:
+        PASCAL_STRING "Apple IIe Card"
+
 str_iic:
         PASCAL_STRING "Apple IIc"
 
@@ -265,6 +300,14 @@ str_prodos_version:
 
 str_slot_n:
         PASCAL_STRING "Slot 0:   "
+
+str_memory_prefix:
+        PASCAL_STRING "Memory: "
+
+str_memory_suffix:
+        PASCAL_STRING "K"
+
+memory:.word    0
 
 ;;; ============================================================
 
@@ -288,11 +331,19 @@ str_audio:      PASCAL_STRING "Audio Card"
 str_storage:    PASCAL_STRING "Mass Storage"
 str_network:    PASCAL_STRING "Network Card"
 str_unknown:    PASCAL_STRING "(unknown)"
+str_empty:      PASCAL_STRING "(empty)"
 
 ;;; ============================================================
 
-str_ptr:        .addr   0
-pix_ptr:        .addr   0
+str_cpu_prefix: PASCAL_STRING "  CPU: "
+str_6502:       PASCAL_STRING "6502"
+str_65C02:      PASCAL_STRING "65C02"
+str_658xx:      PASCAL_STRING "658xx"
+
+;;; ============================================================
+
+model_str_ptr:        .addr   0
+model_pix_ptr:        .addr   0
 
 line1:  DEFINE_POINT 0, 37
 line2:  DEFINE_POINT da_width, 37
@@ -310,8 +361,9 @@ slot_pos_table:
 
 ;;; ============================================================
 
-model_pos:      DEFINE_POINT 150, 15
-pdver_pos:      DEFINE_POINT 150, 30
+model_pos:      DEFINE_POINT 150, 12
+pdver_pos:      DEFINE_POINT 150, 23
+mem_pos:        DEFINE_POINT 150, 34
 
 .proc event_params
 kind:  .byte   0
@@ -366,8 +418,26 @@ textfont:       .addr   0
 
 
 ;;; ============================================================
-
 ;;; Per Tech Note: Apple II Miscellaneous #7: Apple II Family Identification
+
+.scope model
+        ii           := 0
+        iiplus       := 1
+        iie          := 2
+        iie_enhanced := 3
+        iic          := 4
+        iic_plus     := 5
+        iigs         := 6
+        iie_card     := 7
+        iii          := 8
+.endscope
+
+model_str_table:
+        .addr   str_ii, str_iiplus, str_iie, str_iie_enhanced
+        .addr   str_iic, str_iic_plus, str_iigs, str_iie_card, str_iii
+model_pix_table:
+        .addr   iie_bitmap, iie_bitmap, iie_bitmap, iie_bitmap
+        .addr   iic_bitmap, iic_bitmap, iigs_bitmap, iie_card_bitmap, iii_bitmap
 
 .proc identify_model
         ;; Read from ROM
@@ -392,58 +462,59 @@ iiplus_or_iii:
         beq     iiplus
         bne     iii
 
+ii:     lda     #model::ii
+        bpl     done
 
-ii:     copy16  #str_ii, str_ptr
-        copy16  #iie_bitmap, pix_ptr
-        jmp     done
+iiplus: lda     #model::iiplus
+        bpl     done
 
-iiplus: copy16  #str_iiplus, str_ptr
-        copy16  #iie_bitmap, pix_ptr
-        jmp     done
+iii:    lda     #model::iii
+        bpl     done
 
-iii:
-        copy16  #str_iii, str_ptr
-        copy16  #iie_bitmap, pix_ptr ; TODO: Apple /// icon
-        jmp     done
+iie:    lda     #model::iie
+        bpl     done
 
 iie_or_iigs:
         sec
         jsr     $FE1F
         bcc     iigs
-        copy16  #str_iie_enhanced, str_ptr
-        copy16  #iie_bitmap, pix_ptr
-        jmp     done
+
+        lda     $FBDD
+        cmp     #$02
+        beq     iie_card
+iie_e:  lda     #model::iie_enhanced
+        bpl     done
 
 iic_or_iic_plus:
         lda     $FBBF
         cmp     #$05
-        bcc     iic
         bcs     iic_plus
-
-iie:    copy16  #str_iie, str_ptr
-        copy16  #iie_bitmap, pix_ptr
-        jmp     done
-
-iic:
-        copy16  #str_iic, str_ptr
-        copy16  #iic_bitmap, pix_ptr
-        jmp     done
+iic:    lda     #model::iic
+        bpl     done
 
 iic_plus:
-        copy16  #str_iic_plus, str_ptr
-        copy16  #iic_bitmap, pix_ptr
-        jmp     done
+        lda     #model::iic_plus
+        bpl     done
 
-iigs:   copy16  #str_iigs, str_ptr
-        copy16  #iigs_bitmap, pix_ptr
-        jmp     done
+iie_card:
+        lda     #model::iie_card
+        bpl     done
+
+iigs:   lda     #model::iigs
+        ;; fall through...
 
 done:
+        asl
+        tax
+        copy16  model_str_table,x, model_str_ptr
+        copy16  model_pix_table,x, model_pix_ptr
+
         ;; Read from LC RAM
         lda     LCBANK1
         lda     LCBANK1
         rts
 .endproc
+
 
 
 ;;; ============================================================
@@ -461,7 +532,7 @@ done:
 ;;; $23         2.0.3
 ;;; $24         2.4.x
 
-.proc update_version_string
+.proc identify_prodos_version
         ;; Read ProDOS version field from global page in main
         sta     RAMRDOFF
         sta     RAMWRTOFF
@@ -520,7 +591,8 @@ done:   rts
         lda     LCBANK1
 
         jsr     identify_model
-        jsr     update_version_string
+        jsr     identify_prodos_version
+        jsr     identify_memory
 
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     draw_window
@@ -608,7 +680,6 @@ done:   rts
 
 .endproc
 
-
 ;;; ============================================================
 
 .proc draw_window
@@ -622,11 +693,11 @@ done:   rts
 :       MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
 
-        copy16  pix_ptr, bits_addr
+        copy16  model_pix_ptr, bits_addr
         MGTK_CALL MGTK::PaintBits, $0000, bits_addr
 
         MGTK_CALL MGTK::MoveTo, model_pos
-        ldax    str_ptr
+        ldax    model_str_ptr
         jsr     draw_pascal_string
 
         MGTK_CALL MGTK::MoveTo, pdver_pos
@@ -635,9 +706,18 @@ done:   rts
         MGTK_CALL MGTK::MoveTo, line1
         MGTK_CALL MGTK::LineTo, line2
 
+        MGTK_CALL MGTK::MoveTo, mem_pos
+        addr_call draw_pascal_string, str_memory_prefix
+        addr_call draw_pascal_string, str_from_int
+        addr_call draw_pascal_string, str_memory_suffix
+        addr_call draw_pascal_string, str_cpu_prefix
+        jsr     cpuid
+        jsr     draw_pascal_string
 
         lda     #7
         sta     slot
+        lda     #1<<7
+        sta     mask
 
 loop:   lda     slot
         asl
@@ -649,10 +729,23 @@ loop:   lda     slot
         adc     #'0'
         sta     str_slot_n + 6
         addr_call draw_pascal_string, str_slot_n
-        lda     slot
+
+        ;; Check ProDOS slot bit mask
+        sta     RAMRDOFF
+        lda     SLTBYT
+        sta     RAMRDON
+        and     mask
+        bne     check
+
+        ldax    #str_empty
+        jsr     draw_pascal_string
+        jmp     next
+
+check:  lda     slot
         jsr     probe_slot
         jsr     draw_pascal_string
 
+next:   lsr     mask
         dec     slot
         bne     loop
 
@@ -660,8 +753,8 @@ loop:   lda     slot
         rts
 
 slot:   .byte   0
+mask:   .byte   0
 .endproc
-
 
 
 ;;; ============================================================
@@ -855,6 +948,71 @@ notpas:
 .endproc
 
 ;;; ============================================================
+;;; Update str_memory with memory count in kilobytes
+
+.proc identify_memory
+        copy16  #0, memory
+        jsr     check_ramworks_memory
+        sty     memory          ; Y is number of 64k banks
+        cpy     #0              ; 0 means 256 banks
+        bne     :+
+        inc     memory+1
+:       inc16   memory          ; Main 64k memory
+        asl16   memory          ; * 64
+        asl16   memory
+        asl16   memory
+        asl16   memory
+        asl16   memory
+        asl16   memory
+        ldax    memory
+        jsr     int_to_string
+.endproc
+
+;;; ============================================================
+;;; Calculate RamWorks memory; returns number of banks in Y
+;;; (256 banks = 0)
+;;; Inspired by "gid" comp.sys.apple2.programmer
+
+.proc check_ramworks_memory
+        ;; Run from clone in main memory
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+
+        ;; Assumes ALTZPON on entry/exit
+        RWBANK  := $C073
+
+        ;; Try to store sentinels in each bank (descending)
+        ldy     #0
+:       sty     RWBANK          ; select bank
+        sty     $00             ; sentinel: $00 = bank
+        tya
+        eor     #$FF
+        sta     $01             ; sentinel: $01 = ~bank
+        dey
+        bne     :-
+
+        ;; Check each bank for sentinels (ascending)
+:       sty     RWBANK
+        cpy     $00             ; sentinel: $00 = bank ?
+        bne     done
+        tya
+        eor     #$FF
+        cmp     $01             ; sentinel: $01 = ~bank?
+        bne     done
+        iny
+        bne     :-
+
+        ;; Switch back to RW bank 0 (normal aux memory)
+done:   lda     #0
+        sta     RWBANK
+
+        ;; Back to executing from aux memory
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
+.endproc
+
+;;; ============================================================
 
 .proc draw_pascal_string
         params := $6
@@ -870,3 +1028,103 @@ notpas:
         MGTK_CALL MGTK::DrawText, params
 exit:   rts
 .endproc
+
+;;; ============================================================
+
+str_from_int:
+        PASCAL_STRING "000000"
+
+.proc int_to_string
+        stax    value
+
+        ;; Fill buffer with spaces
+        ldx     #6
+        lda     #' '
+:       sta     str_from_int,x
+        dex
+        bne     :-
+
+        lda     #0
+        sta     nonzero_flag
+        ldy     #0              ; y = position in string
+        ldx     #0              ; x = which power index is subtracted (*2)
+
+        ;; For each power of ten
+loop:   lda     #0
+        sta     digit
+
+        ;; Keep subtracting/incrementing until zero is hit
+sloop:  cmp16   value, powers,x
+        bpl     subtract
+
+        lda     digit
+        bne     not_pad
+        bit     nonzero_flag
+        bmi     not_pad
+
+        ;; Pad with space
+        lda     #' '
+        bne     :+
+        ;; Convert to ASCII
+not_pad:
+        clc
+        adc     #'0'            ; why not ORA $30 ???
+        pha
+        lda     #$80
+        sta     nonzero_flag
+        pla
+
+        ;; Place the character, move to next
+:       sta     str_from_int+2,y
+        iny
+        inx
+        inx
+        cpx     #8              ; up to 4 digits (*2) via subtraction
+        beq     done
+        jmp     loop
+
+subtract:
+        inc     digit
+        sub16   value, powers,x, value
+        jmp     sloop
+
+done:   lda     value           ; handle last digit
+        ora     #'0'
+        sta     str_from_int+2,y
+        rts
+
+powers: .word   10000, 1000, 100, 10
+value:  .word   0            ; remaining value as subtraction proceeds
+digit:  .byte   0            ; current digit being accumulated
+nonzero_flag:                ; high bit set once a non-zero digit seen
+        .byte   0
+.endproc
+
+;;; ============================================================
+;;; Identify CPU - string pointer returned in A,X
+
+.proc cpuid
+        sed
+        lda     #$99
+        clc
+        adc     #$01
+        cld
+        bmi     p6502
+        clc
+        .pushcpu
+        .setcpu "65816"
+        sep     #%00000001    ; two-byte NOP on 65C02
+        .popcpu
+        bcs     p658xx
+        ; 65C02
+        result  str_65C02
+p6502:  result  str_6502
+p658xx: result  str_658xx
+.endproc
+
+;;; ============================================================
+
+da_end  = *
+.assert * < $1B00, error, "DA too big"
+        ;; I/O Buffer starts at MAIN $1C00
+        ;; ... but icon tables start at AUX $1B00
