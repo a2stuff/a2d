@@ -1023,36 +1023,49 @@ notpas:
 ;;; ============================================================
 ;;; Calculate RamWorks memory; returns number of banks in Y
 ;;; (256 banks = 0)
-;;; Inspired by "gid" comp.sys.apple2.programmer
+;;; non-destructive version
+;;; note the bus floats for RamWorks RAM when the bank has no RAM.
+;;; RamWorks-style cards are not guaranteed to have contiguous banks.
+;;; a user can install 64Kb or 256Kb chips in a physical bank, in the
+;;; former case, a gap in banks will appear.  Additionally, the piggy
+;;; back cards may not have contiguous banks depending on capacity
+;;; and installed chips.
+;;; AE RamWorks cards can only support 8M max (banks $00-$7F), but
+;;; the various emulators support 16M max (banks $00-$FF).
 
 .proc check_ramworks_memory
         ;; Run from clone in main memory
+        php
+        sei     ; don't let interrupts happen while the memory map is munged
+
         sta     RAMRDOFF
         sta     RAMWRTOFF
 
         ;; Assumes ALTZPON on entry/exit
         RWBANK  := $C073
 
-        ;; Try to store sentinels in each bank (descending)
-        ldy     #0
-:       sty     RWBANK          ; select bank
-        sty     $00             ; sentinel: $00 = bank
-        tya
-        eor     #$FF
-        sta     $01             ; sentinel: $01 = ~bank
-        dey
-        bne     :-
-
-        ;; Check each bank for sentinels (ascending)
-:       sty     RWBANK
-        cpy     $00             ; sentinel: $00 = bank ?
-        bne     done
-        tya
-        eor     #$FF
-        cmp     $01             ; sentinel: $01 = ~bank?
-        bne     done
-        iny
-        bne     :-
+        ldx     #0              ; bank we are checking
+        ldy     #0              ; bank count
+:       stx     RWBANK          ; select bank
+        lda     $00             ; save existing data
+        pha                     ; on stack 
+        lda     $01
+        pha
+        txa                     ; bank number as first check byte
+        sta     $00
+        cmp     $00
+        bne     :+
+        eor     #$FF            ; bank complement as secondary check byte
+        sta     $01
+        cmp     $01
+        bne     :+
+        iny                     ; found a bank, count it
+:       pla                     ; restore saved data
+        sta     $01
+        pla
+        sta     $00
+        inx                     ; next bank
+        bne     :--             ; if we hit 256 banks, make sure we exit
 
         ;; Switch back to RW bank 0 (normal aux memory)
 done:   lda     #0
@@ -1061,6 +1074,7 @@ done:   lda     #0
         ;; Back to executing from aux memory
         sta     RAMRDON
         sta     RAMWRTON
+        plp                     ; restore interrupt state
         rts
 .endproc
 
