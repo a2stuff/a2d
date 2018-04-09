@@ -72,7 +72,7 @@ viewloc:        DEFINE_POINT da_left, da_top
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
 maprect:        DEFINE_RECT 0, 0, da_width, da_height
-pattern:        .res    8, 0
+pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:          DEFINE_POINT 0, 0
 penwidth:       .byte   1
@@ -478,6 +478,7 @@ textfont:       .addr   0
         iie_card     := 7
         iii          := 8
         laser128     := 9
+        LAST         := 10
 .endscope
 
 model_str_table:
@@ -675,7 +676,9 @@ done:   rts
         lda     event_params::key
         cmp     #CHAR_ESCAPE
         beq     exit
-        jmp     input_loop
+        cmp     #'E'
+        bne     input_loop
+        jmp     handle_egg
 .endproc
 
 ;;; ============================================================
@@ -734,6 +737,42 @@ done:   rts
 
 ;;; ============================================================
 
+.proc handle_egg
+        lda     egg
+        asl
+        tax
+        copy16  model_str_table,x, model_str_ptr
+        copy16  model_pix_table,x, model_pix_ptr
+
+        inc     egg
+        lda     egg
+        cmp     #model::LAST
+        bne     :+
+        lda     #0
+        sta     egg
+
+:       jsr     clear_window
+        jsr     draw_window
+done:   jmp     input_loop
+
+egg:    .byte   0
+.endproc
+
+;;; ============================================================
+
+.proc clear_window
+        MGTK_CALL MGTK::GetWinPort, winport_params
+        cmp     #MGTK::error_window_obscured
+        bne     :+
+        rts
+
+:       MGTK_CALL MGTK::SetPort, grafport
+        MGTK_CALL MGTK::PaintRect, grafport::cliprect
+        rts
+.endproc
+
+;;; ============================================================
+
 .proc draw_window
         ptr := $06
 
@@ -755,6 +794,7 @@ done:   rts
         MGTK_CALL MGTK::MoveTo, pdver_pos
         addr_call draw_pascal_string, str_prodos_version
 
+        MGTK_CALL MGTK::SetPenMode, penmode
         MGTK_CALL MGTK::MoveTo, line1
         MGTK_CALL MGTK::LineTo, line2
 
@@ -806,6 +846,7 @@ next:   lsr     mask
 
 slot:   .byte   0
 mask:   .byte   0
+penmode:.byte   MGTK::notpencopy
 .endproc
 
 
