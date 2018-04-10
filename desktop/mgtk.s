@@ -879,7 +879,7 @@ hires_table_hi:
 
         fixed_div_dividend   := $A1        ; parameters used by fixed_div proc
         fixed_div_divisor    := $A3
-        fixed_div_quotient   := $9F
+        fixed_div_quotient   := $9F        ; fixed 16.16 format
 
         ;; Text page usage (main/aux)
         pattern_buffer  := $0400        ; buffer for currently selected pattern (page-aligned)
@@ -1940,7 +1940,8 @@ bad_rect:
 src_width_bytes:
         .res    1          ; width of source data in chars
 
-L5169:  .byte   0
+unused_width:
+        .res    1          ; holds the width of data, but is not used ???
 
 .proc PaintBitsImpl
 
@@ -2024,7 +2025,7 @@ L5169:  .byte   0
 :       ldx     right_masks_table       ; need right mask on main?
         beq     :+
         adc     #1
-:       sta     L5169
+:       sta     unused_width
         sta     src_width_bytes         ; adjusted width in chars
 
         lda     #2
@@ -2849,7 +2850,7 @@ loop:   dec     $B5
         inx
         cpx     #8
         bne     :-
-        jsr     DRAW_LINE_ABS_IMPL_L5783
+        jsr     DRAW_LINE_ABS_IMPL_do_draw_line
 
         lda     $B9
         clc
@@ -2872,7 +2873,7 @@ endloop:
         sta     current_penloc,y
         dey
         bpl     :-
-        jsr     DRAW_LINE_ABS_IMPL_L5783
+        jsr     DRAW_LINE_ABS_IMPL_do_draw_line
 
         ;; Handle multiple segments, e.g. when drawing outlines for multi icons?
 
@@ -2971,7 +2972,7 @@ loop:   add16   xdelta,x, current_penloc_x,x, $92,x
         bpl     :-
 
         ;; Called from elsewhere; draw $92,$94 to $96,$98; values modified
-L5783:
+do_draw_line:
         lda     y2+1
         cmp     y1+1
         bmi     swap_start_end
@@ -3100,7 +3101,7 @@ paint_poly_points:
         .res    4*6       ; points
 
 .endproc
-        DRAW_LINE_ABS_IMPL_L5783 := LineToImpl::L5783
+        DRAW_LINE_ABS_IMPL_do_draw_line := LineToImpl::do_draw_line
 
 ;;; ============================================================
 ;;; SetFont
@@ -4459,7 +4460,7 @@ no_move:
 
 :       lda     kbd_mouse_state
         beq     rts4
-        jsr     L7EF5
+        jsr     handle_keyboard_mouse
 .endproc
 rts4:   rts
 
@@ -4535,7 +4536,7 @@ done:   rts
         lda     #$00
         sta     proc_ptr
         lda     (proc_ptr),y
-        sta     $88
+        sta     proc_ptr
         pla
         ldy     mouse_operand
         jmp     (proc_ptr)
@@ -5219,13 +5220,13 @@ set_state:
 put_key_event:
         jsr     put_event
         tax
-        ldy     #$00
-L66DE:  lda     input,y
+        ldy     #0
+:       lda     input,y
         sta     eventbuf,x
         inx
         iny
-        cpy     #$04
-        bne     L66DE
+        cpy     #MGTK::short_event_size
+        bne     :-
 
 end:    jmp     call_after_events_hook
 .endproc
@@ -5929,7 +5930,7 @@ find_by_shortcut:
 :       cmp     #$20             ; is control char
         bcc     found
         lda     curmenuitem::options
-        and     #$C0
+        and     #MGTK::menuopt_disable_flag | MGTK::menuopt_item_is_filler
         bne     next
 
         lda     curmenuitem::options
@@ -6144,14 +6145,15 @@ menu_item: .byte   0
         END_PARAM_BLOCK
 
 
-        jsr     L7ECD
+        jsr     kbd_mouse_init_tracking
 
         jsr     get_menu_count
         jsr     save_params_and_stack
         jsr     set_standard_port
+
         bit     kbd_mouse_state
         bpl     :+
-        jsr     L7FE1
+        jsr     kbd_menu_select
         jmp     in_menu
 
 :       lda     #0
@@ -6161,7 +6163,7 @@ menu_item: .byte   0
 event_loop:
         bit     movement_cancel
         bpl     :+
-        jmp     L8149
+        jmp     kbd_menu_return
 
 :       MGTK_CALL MGTK::MoveTo, get_and_return_event::event::mouse_pos
         MGTK_CALL MGTK::InRect, test_rect_params      ; test in menu bar
@@ -6752,7 +6754,7 @@ right_scroll_bitmap:
         .byte   px(%1000000),px(%0011110),px(%0000000)
         .byte   px(%1000000),px(%0011000),px(%0000000)
 
-L6FDF:  .byte   0         ; ???
+        .byte   0         ; unreferenced ???
 
         ;; Resize Box
 resize_box_bitmap:
@@ -7978,7 +7980,7 @@ moved:     .byte   0
         lda     #0
 drag_or_grow:
         sta     drag_resize_flag
-        jsr     L7ECD
+        jsr     kbd_mouse_init_tracking
 
         ldx     #3
 :       lda     params::dragx,x
@@ -7993,7 +7995,7 @@ drag_or_grow:
 
         bit     kbd_mouse_state
         bpl     :+
-        jsr     L817C
+        jsr     kbd_win_drag_or_grow
 
 :       jsr     hide_cursor_save_params
         jsr     winframe_to_set_port
@@ -8048,7 +8050,7 @@ changed:
 
         bit     movement_cancel
         bvc     :+
-        jsr     L8347
+        jsr     set_input
 
 :       jsr     show_cursor_and_restore
         lda     #$80
@@ -8084,7 +8086,7 @@ maxheight: .word  0
         bne     :-
 
         ldx     #0
-        stx     set_input_unk
+        stx     force_tracking_change
         bit     drag_resize_flag
         bmi     grow
 
@@ -8101,7 +8103,7 @@ maxheight: .word  0
 :       rts
 
 grow:   lda     #0
-        sta     L83F5
+        sta     grew_flag
 loop:   add16lc current_winport::maprect::x2,x, drag_delta,x, current_winport::maprect::x2,x
         sub16lc current_winport::maprect::x2,x, current_winport::maprect::x1,x, win_width
 
@@ -8113,7 +8115,7 @@ loop:   add16lc current_winport::maprect::x2,x, drag_delta,x, current_winport::m
         bpl     :+
 
         add16lc content::minwidth,x, current_winport::maprect::x1,x, current_winport::maprect::x2,x
-        jsr     L83F6
+        jsr     set_grew_flag
         jmp     next
 
 :       sec
@@ -8124,18 +8126,18 @@ loop:   add16lc current_winport::maprect::x2,x, drag_delta,x, current_winport::m
         bpl     next
 
         add16lc content::maxwidth,x, current_winport::maprect::x1,x, current_winport::maprect::x2,x
-        jsr     L83F6
+        jsr     set_grew_flag
 
 next:   inx
         inx
         cpx     #4
         bne     loop
-        jmp     L83FC
+        jmp     finish_grow
 .endproc
 
 
         ;; Return with Z=1 if the drag position was not changed, or Z=0
-        ;; if the drag position was changed or set_input_unk is set.
+        ;; if the drag position was changed or force_tracking_change is set.
 .proc check_if_changed
         ldx     #2
         ldy     #0
@@ -8166,7 +8168,7 @@ loop:   lda     get_and_return_event::event::mouse_pos+1,x
 
         cpy     #4
         bne     :+
-        lda     set_input_unk
+        lda     force_tracking_change
 :       rts
 .endproc
 
@@ -8629,7 +8631,7 @@ return_winrect_jmp:
         jsr     get_thumb_vals
         jsr     fixed_div
 
-        lda     fixed_div_quotient+2
+        lda     fixed_div_quotient+2    ; 8.0 integral part
         pha
         jsr     calc_ctl_bounds
         jsr     set_up_thumb_division
@@ -8642,7 +8644,7 @@ return_winrect_jmp:
         cpx     #1              ; 100%
         beq     :+
 
-        ldx     fixed_div_quotient+1 ; fractional part
+        ldx     fixed_div_quotient+1    ; 0.8 fractional part
         jsr     get_thumb_coord
 
 :       sta     thumb_coord
@@ -8854,6 +8856,8 @@ thumbpos:   .byte   0
 thumbmoved: .byte   0
         END_PARAM_BLOCK
 
+        thumb_dim := $82
+
 
         lda     params::which_ctl
         cmp     #MGTK::ctl_vertical_scroll_bar
@@ -8922,7 +8926,7 @@ no_change:
         ldx     #2
         lda     #ythumb_height
 
-:       sta     $82
+:       sta     thumb_dim
 
         lda     winrect,x
         clc
@@ -8932,27 +8936,29 @@ no_change:
         adc     drag_delta+1,x
         cmp     ctl_bound1+1
         bcc     :+
-        bne     L7C41
+        bne     in_bound1
         cpy     ctl_bound1
-        bcs     L7C41
+        bcs     in_bound1
 
 :       lda     ctl_bound1+1
         ldy     ctl_bound1
 
-L7C41:  cmp     ctl_bound2+1
-        bcc     L7C53
+in_bound1:
+        cmp     ctl_bound2+1
+        bcc     in_bound2
         bne     :+
         cpy     ctl_bound2
-        bcc     L7C53
+        bcc     in_bound2
 
 :       lda     ctl_bound2+1
         ldy     ctl_bound2
 
-L7C53:  sta     winrect+1,x
+in_bound2:
+        sta     winrect+1,x
         tya
         sta     winrect,x
         clc
-        adc     $82
+        adc     thumb_dim
         sta     winrect::x2,x
         lda     winrect+1,x
         adc     #0
@@ -8967,20 +8973,20 @@ drag_done:
         jsr     set_up_thumb_division
 
         jsr     fixed_div
-        ldx     fixed_div::quotient+2
+        ldx     fixed_div::quotient+2    ; 8.0 integral part
 
         jsr     get_thumb_vals
 
         lda     fixed_div::divisor
-        ldy     #$00
+        ldy     #0
         cpx     #1
         bcs     :+
 
-        ldx     $A0
+        ldx     fixed_div_quotient+1     ; 0.8 fractional part
         jsr     get_thumb_coord
 
-:       ldx     #$01
-        cmp     $A1
+:       ldx     #1
+        cmp     fixed_div_quotient+2
         bne     :+
         dex
 
@@ -8989,22 +8995,36 @@ drag_done:
 .endproc
 
 
+        ;; Calculates the thumb coordinates given the maximum position
+        ;; and current fraction.
+        ;;
+        ;; Inputs:
+        ;;    A,Y = maximum position of thumb in 16.0 format
+        ;;    X   = fraction in fixed 0.8 format
+        ;;
+        ;; Outputs:
+        ;;    A,Y = current position of thumb in 16.0 format
+        ;;          (= maximum position * fraction)
+        ;;
 .proc get_thumb_coord
-        sta     $82
-        sty     $83
+        increment := $82
+        accum     := $84
 
-        lda     #$80
-        sta     $84
+        sta     increment       ; fixed 8.8 = max position/256
+        sty     increment+1
+
+        lda     #$80            ; fixed 8.8 = 1/2
+        sta     accum
         ldy     #$00
-        sty     $85
+        sty     accum+1
 
-        txa
+        txa                     ; fixed 8.0 = fraction*256
         beq     ret
-loop:   add16   $82, $84, $84
+loop:   add16   increment, accum, accum ; returning with A=high byte of accum
         bcc     :+
         iny
-:       dex
-        bne     loop
+:       dex                     ; (accum low),A,Y is in fixed 16.8
+        bne     loop            ; return A,Y
 ret:    rts
 .endproc
 
@@ -9015,6 +9035,8 @@ ctl_bound1:
         .res 2
 
 
+        ;; Set fixed_div::divisor and fixed_div::dividend up for the
+        ;; proportion calculation for the control in which_control.
 .proc set_up_thumb_division
         sub16   ctl_bound2, ctl_bound1, fixed_div::divisor
         ldx     #0
@@ -9027,6 +9049,8 @@ ctl_bound1:
 .endproc
 
 
+        ;; Set thumb_max and thumb_pos according to the control indicated
+        ;; in which_control.
 .proc get_thumb_vals
         ldy     #MGTK::winfo_offset_hthumbmax
 
@@ -9162,10 +9186,15 @@ check_win:
 kbd_mouse_state:
         .byte   0
 
+kbd_mouse_state_menu := 1
+kbd_mouse_state_mousekeys := 4
+
+
 kbd_mouse_x:  .word     0
 kbd_mouse_y:  .word     0
 
-L7D79:  .byte   $00
+kbd_menu_select_flag:
+        .byte   0
 
         ;; Currently selected menu/menu item. Note that menu is index,
         ;; not ID from menu definition.
@@ -9178,26 +9207,34 @@ saved_mouse_pos:
 saved_mouse_x:  .word   0
 saved_mouse_y:  .byte   0
 
-L7D7F:  .byte   $00
-L7D80:  .byte   $00
+kbd_menu:  .byte   $00
+kbd_menu_item:  .byte   $00
 movement_cancel:  .byte   $00
-L7D82:  .byte   $00
+kbd_mouse_status:  .byte   $00
 
-L7D83:  ldx     #$7F
-L7D85:  lda     $80,x
-        sta     L7D99,x
+.proc kbd_mouse_save_zp
+        ldx     #$7F
+:       lda     $80,x
+        sta     kbd_mouse_zp_stash,x
         dex
-        bpl     L7D85
+        bpl     :-
         rts
+.endproc
 
-L7D8E:  ldx     #$7F
-L7D90:  lda     L7D99,x
+
+.proc kbd_mouse_restore_zp
+        ldx     #$7F
+:       lda     kbd_mouse_zp_stash,x
         sta     $80,x
         dex
-        bpl     L7D90
+        bpl     :-
         rts
+.endproc
 
-L7D99:  .res    128, 0
+
+kbd_mouse_zp_stash:
+        .res    128
+
 
 ;;; ============================================================
 ;;; X = xlo, Y = xhi, A = y
@@ -9208,22 +9245,27 @@ L7D99:  .res    128, 0
         bmi     no_firmware
         bit     no_mouse_flag
         bmi     no_firmware
+
         pha
         txa
         sec
-        jsr     L7E75
+        jsr     scale_mouse_coord
+
         ldx     mouse_firmware_hi
         sta     MOUSE_X_LO,x
         tya
         sta     MOUSE_X_HI,x
+
         pla
         ldy     #$00
         clc
-        jsr     L7E75
+        jsr     scale_mouse_coord
+
         ldx     mouse_firmware_hi
         sta     MOUSE_Y_LO,x
         tya
         sta     MOUSE_Y_HI,x
+
         ldy     #POSMOUSE
         jmp     call_mouse
 
@@ -9256,32 +9298,43 @@ not_hooked:
         jmp     set_mouse_pos
 .endproc
 
-L7E75:  bcc     L7E7D
-        ldx     mouse_scale_x
-        bne     L7E82
-L7E7C:  rts
 
-L7E7D:  ldx     mouse_scale_y
-        beq     L7E7C
-L7E82:  pha
+.proc scale_mouse_coord
+        bcc     scale_y
+        ldx     mouse_scale_x
+        bne     :+
+ret:    rts
+
+scale_y:
+        ldx     mouse_scale_y
+        beq     ret
+
+:       pha
         tya
         lsr     a
         tay
         pla
         ror     a
         dex
-        bne     L7E82
+        bne     :-
         rts
+.endproc
 
-L7E8C:  ldx     #$02
-L7E8E:  lda     kbd_mouse_x,x
+
+.proc kbd_mouse_to_mouse
+        ldx     #2
+:       lda     kbd_mouse_x,x
         sta     mouse_x,x
         dex
-        bpl     L7E8E
+        bpl     :-
         rts
+.endproc
 
-L7E98:  jsr     L7E8C
+.proc position_kbd_mouse
+        jsr     kbd_mouse_to_mouse
         jmp     set_mouse_pos_from_kbd_mouse
+.endproc
+
 
 .proc save_mouse_pos
         jsr     read_mouse_pos
@@ -9293,25 +9346,28 @@ L7E98:  jsr     L7E8C
         rts
 .endproc
 
-L7EAD:  jsr     stash_addr
-        copy16  L7F2E, params_addr
+.proc restore_cursor
+        jsr     stash_addr
+        copy16  kbd_mouse_cursor_stash, params_addr
         jsr     SetCursorImpl
         jsr     restore_addr
-        lda     #$00
+
+        lda     #0
         sta     kbd_mouse_state
         lda     #$40
         sta     mouse_status
         jmp     restore_mouse_pos
+.endproc
 
-.proc L7ECD
+.proc kbd_mouse_init_tracking
         lda     #0
         sta     movement_cancel
-        sta     set_input_unk
+        sta     force_tracking_change
         rts
 .endproc
 
         ;; Look at buttons (apple keys), compute modifiers in A
-        ;; (bit = button 0 / open apple, bit 1 = button 1 / solid apple)
+        ;; (bit 0 = button 0 / open apple, bit 1 = button 1 / solid apple)
 .proc compute_modifiers
         lda     BUTN1
         asl     a
@@ -9322,38 +9378,50 @@ L7EAD:  jsr     stash_addr
         rts
 .endproc
 
-L7EE2:  jsr     compute_modifiers
+
+.proc get_key
+        jsr     compute_modifiers
         sta     set_input_modifiers
-L7EE8:  clc
+no_modifiers:
+        clc
         lda     KBD
-        bpl     L7EF4
+        bpl     :+
         stx     KBDSTRB
         and     #$7F
         sec
-L7EF4:  rts
+:       rts
+.endproc
 
-L7EF5:  lda     kbd_mouse_state
-        bne     L7EFB
+
+.proc handle_keyboard_mouse
+        lda     kbd_mouse_state
+        bne     :+
         rts
 
-L7EFB:  cmp     #$04
-        beq     L7F48
-        jsr     L7FB4
+:       cmp     #kbd_mouse_state_mousekeys
+        beq     kbd_mouse_mousekeys
+
+        jsr     kbd_mouse_sync_cursor
+
         lda     kbd_mouse_state
-        cmp     #$01
-        bne     L7F0C
-        jmp     L804D
+        cmp     #kbd_mouse_state_menu
+        bne     :+
+        jmp     kbd_mouse_do_menu
 
-L7F0C:  jmp     L825F
+:       jmp     kbd_mouse_do_window
+.endproc
 
-L7F0F:  jsr     stash_addr
-        copy16  active_cursor, L7F2E
+
+.proc stash_cursor
+        jsr     stash_addr
+        copy16  active_cursor, kbd_mouse_cursor_stash
         copy16  pointer_cursor_addr, params_addr
         jsr     SetCursorImpl
         jmp     restore_addr
+.endproc
 
-L7F2E:  .byte   0
-L7F2F:  .byte   0
+kbd_mouse_cursor_stash:
+        .res    2
 
 stash_addr:
         copy16  params_addr, stashed_addr
@@ -9365,19 +9433,23 @@ restore_addr:
 
 stashed_addr:  .addr     0
 
-L7F48:  jsr     compute_modifiers
-        ror     a
-        ror     a
-        ror     L7D82
-        lda     L7D82
+
+.proc kbd_mouse_mousekeys
+        jsr     compute_modifiers ; C=_ A=____ __SO
+        ror     a                 ; C=O A=____ ___S
+        ror     a                 ; C=S A=O___ ____
+        ror     kbd_mouse_status  ; shift solid apple into bit 7 of kbd_mouse_status
+        lda     kbd_mouse_status  ; becomes mouse button
         sta     mouse_status
         lda     #0
         sta     input::modifiers
-        jsr     L7EE8
-        bcc     L7F63
-        jmp     L8292
 
-L7F63:  jmp     L7E98
+        jsr     get_key::no_modifiers
+        bcc     :+
+        jmp     mousekeys_input
+
+:       jmp     position_kbd_mouse
+.endproc
 
 
 .proc activate_keyboard_mouse
@@ -9395,7 +9467,7 @@ L7F63:  jmp     L7E98
 
         ldx     #10
 beeploop:
-        lda     SPKR            ; Beep?
+        lda     SPKR            ; Beep
         ldy     #0
 :       dey
         bne     :-
@@ -9409,7 +9481,7 @@ waitloop:
         sta     input::modifiers
 
         lda     #0
-        sta     L7D82
+        sta     kbd_mouse_status ; reset mouse button status
         ldx     #2
 :       lda     set_pos_params,x
         sta     kbd_mouse_x,x
@@ -9418,7 +9490,7 @@ waitloop:
 ret:    rts
 
 in_kbd_mouse:
-        cmp     #4
+        cmp     #kbd_mouse_state_mousekeys
         bne     pla_ret
         pla
         and     #1              ; modifiers
@@ -9433,91 +9505,114 @@ pla_ret:
 .endproc
 
 
-L7FB4:  bit     mouse_status
-        bpl     L7FC1
+.proc kbd_mouse_sync_cursor
+        bit     mouse_status
+        bpl     :+
+
         lda     #0
         sta     kbd_mouse_state
         jmp     set_mouse_pos_from_kbd_mouse
 
-L7FC1:  lda     mouse_status
+:       lda     mouse_status
         pha
         lda     #$C0
         sta     mouse_status
         pla
         and     #$20
-        beq     L7FDE
-        ldx     #$02
-L7FD1:  lda     mouse_x,x
+        beq     kbd_mouse_to_mouse_jmp
+
+        ldx     #2
+:       lda     mouse_x,x
         sta     kbd_mouse_x,x
         dex
-        bpl     L7FD1
-        stx     L7D79
+        bpl     :-
+
+        stx     kbd_menu_select_flag           ; =$ff
         rts
 
-L7FDE:  jmp     L7E8C
+kbd_mouse_to_mouse_jmp:
+        jmp     kbd_mouse_to_mouse
+.endproc
 
-L7FE1:  php
+
+.proc kbd_menu_select
+        php
         sei
         jsr     save_mouse_pos
-        lda     #$01
+
+        lda     #kbd_mouse_state_menu
         sta     kbd_mouse_state
-        jsr     L800F
+
+        jsr     position_menu_item
+
         lda     #$80
         sta     mouse_status
-        jsr     L7F0F
+        jsr     stash_cursor
         ldx     sel_menu_index
         jsr     get_menu
-        lda     $AF
+
+        lda     curmenu::menu_id
         sta     cur_open_menu
         jsr     draw_menu
+
         lda     sel_menu_item_index
         sta     cur_hilited_menu_item
         jsr     hilite_menu_item
         plp
         rts
 
-L800F:  ldx     sel_menu_index
+position_menu_item:
+        ldx     sel_menu_index
         jsr     get_menu
 
-        add16lc $B7, #5, kbd_mouse_x
+        add16lc curmenu::x_min, #5, kbd_mouse_x
 
         ldy     sel_menu_item_index
         lda     menu_item_y_table,y
         sta     kbd_mouse_y
         lda     #$C0
         sta     mouse_status
-        jmp     L7E98
+        jmp     position_kbd_mouse
+.endproc
 
-L8035:  bit     L7D79
-        bpl     L804C
+
+.proc kbd_menu_select_item
+        bit     kbd_menu_select_flag
+        bpl     :+
+
         lda     cur_hilited_menu_item
         sta     sel_menu_item_index
         ldx     cur_open_menu
         dex
         stx     sel_menu_index
-        lda     #$00
-        sta     L7D79
-L804C:  rts
 
-L804D:  jsr     L7D83
-        jsr     L8056
-        jmp     L7D8E
+        lda     #0
+        sta     kbd_menu_select_flag
+:       rts
+.endproc
 
-L8056:  jsr     L7EE2
+
+.proc kbd_mouse_do_menu
+        jsr     kbd_mouse_save_zp
+        jsr     :+
+        jmp     kbd_mouse_restore_zp
+
+:       jsr     get_key
         bcs     handle_menu_key
         rts
-
+.endproc
 
         ;; Keyboard navigation of menu
 .proc handle_menu_key
         pha
-        jsr     L8035
+        jsr     kbd_menu_select_item
         pla
         cmp     #CHAR_ESCAPE
         bne     try_return
+
         lda     #0
-        sta     L7D80
-        sta     L7D7F
+        sta     kbd_menu_item
+        sta     kbd_menu
         lda     #$80
         sta     movement_cancel
         rts
@@ -9525,477 +9620,591 @@ L8056:  jsr     L7EE2
 try_return:
         cmp     #CHAR_RETURN
         bne     try_up
-        jsr     L7E8C
-        jmp     L7EAD
+        jsr     kbd_mouse_to_mouse
+        jmp     restore_cursor
 
 try_up:
         cmp     #CHAR_UP
         bne     try_down
-L8081:  dec     sel_menu_item_index
-        bpl     L8091
+
+uploop: dec     sel_menu_item_index
+        bpl     :+
+
         ldx     sel_menu_index
         jsr     get_menu
-        ldx     $AA
+        ldx     menu_item_count
         stx     sel_menu_item_index
-L8091:  ldx     sel_menu_item_index
-        beq     L80A0
+
+:       ldx     sel_menu_item_index
+        beq     :+
         dex
         jsr     get_menu_item
-        lda     $BF
-        and     #$C0
-        bne     L8081
-L80A0:  jmp     L800F
+
+        lda     curmenuitem::options
+        and     #MGTK::menuopt_disable_flag | MGTK::menuopt_item_is_filler
+        bne     uploop
+
+:       jmp     kbd_menu_select::position_menu_item
 
 try_down:
         cmp     #CHAR_DOWN
         bne     try_right
-L80A7:  inc     sel_menu_item_index
+
+downloop:
+        inc     sel_menu_item_index
+
         ldx     sel_menu_index
         jsr     get_menu
         lda     sel_menu_item_index
-        cmp     $AA
-        bcc     L80BE
-        beq     L80BE
+        cmp     menu_item_count
+        bcc     :+
+        beq     :+
+
         lda     #0
         sta     sel_menu_item_index
-L80BE:  ldx     sel_menu_item_index
-        beq     L80CD
+:       ldx     sel_menu_item_index
+        beq     :+
         dex
         jsr     get_menu_item
-        lda     $BF
-        and     #$C0
-        bne     L80A7
-L80CD:  jmp     L800F
+        lda     curmenuitem::options
+        and     #MGTK::menuopt_disable_flag | MGTK::menuopt_item_is_filler
+        bne     downloop
+
+:       jmp     kbd_menu_select::position_menu_item
 
 try_right:
         cmp     #CHAR_RIGHT
         bne     try_left
+
         lda     #0
         sta     sel_menu_item_index
         inc     sel_menu_index
+
         lda     sel_menu_index
         cmp     menu_count
-        bcc     L80E8
-        lda     #$00
+        bcc     :+
+
+        lda     #0
         sta     sel_menu_index
-L80E8:  jmp     L800F
+:       jmp     kbd_menu_select::position_menu_item
 
 try_left:
         cmp     #CHAR_LEFT
         bne     nope
+
         lda     #0
         sta     sel_menu_item_index
         dec     sel_menu_index
-        bmi     L80FC
-        jmp     L800F
+        bmi     :+
+        jmp     kbd_menu_select::position_menu_item
 
-L80FC:  ldx     menu_count
+:       ldx     menu_count
         dex
         stx     sel_menu_index
-        jmp     L800F
+        jmp     kbd_menu_select::position_menu_item
 
-nope:   jsr     L8110
-        bcc     L810F
+nope:   jsr     kbd_menu_by_shortcut
+        bcc     :+
+
         lda     #$80
         sta     movement_cancel
-L810F:  rts
+:       rts
 .endproc
 
-L8110:  sta     $C9
+.proc kbd_menu_by_shortcut
+        sta     find_shortcut
         lda     set_input_modifiers
-        and     #$03
-        sta     $CA
+        and     #3
+        sta     find_options
+
         lda     cur_open_menu
         pha
         lda     cur_hilited_menu_item
         pha
-        lda     #$C0
+
+        lda     #find_mode_by_shortcut
         jsr     find_menu
-        beq     L813D
-        stx     L7D80
-        lda     $B0
-        bmi     L813D
-        lda     $BF
-        and     #$C0
-        bne     L813D
-        lda     $AF
-        sta     L7D7F
+        beq     fail
+
+        stx     kbd_menu_item
+        lda     curmenu::disabled
+        bmi     fail
+
+        lda     curmenuitem::options
+        and     #MGTK::menuopt_disable_flag | MGTK::menuopt_item_is_filler
+        bne     fail
+
+        lda     curmenu::menu_id
+        sta     kbd_menu
         sec
-        bcs     L813E
-L813D:  clc
-L813E:  pla
+        bcs     :+
+
+fail:   clc
+:       pla
         sta     cur_hilited_menu_item
         pla
         sta     cur_open_menu
-        sta     $C7
+        sta     find_menu_id
         rts
+.endproc
 
-L8149:  php
+
+.proc kbd_menu_return
+        php
         sei
         jsr     hide_menu
-        jsr     L7EAD
-        lda     L7D7F
-        sta     $C7
+        jsr     restore_cursor
+
+        lda     kbd_menu
+        sta     MenuSelectImpl::params::menu_id
         sta     cur_open_menu
-        lda     L7D80
-        sta     $C8
+
+        lda     kbd_menu_item
+        sta     MenuSelectImpl::params::menu_item
         sta     cur_hilited_menu_item
+
         jsr     restore_params_active_port
-        lda     L7D7F
-        beq     L816F
+        lda     kbd_menu
+        beq     :+
         jsr     HiliteMenuImpl
-        lda     L7D7F
-L816F:  sta     cur_open_menu
-        ldx     L7D80
+
+        lda     kbd_menu
+:       sta     cur_open_menu
+        ldx     kbd_menu_item
         stx     cur_hilited_menu_item
         plp
         jmp     store_xa_at_params
+.endproc
 
-L817C:  php
+
+.proc kbd_win_drag_or_grow
+        php
         sei
         jsr     save_mouse_pos
         lda     #$80
         sta     mouse_status
+
         jsr     get_winframerect
         bit     drag_resize_flag
-        bpl     L81E4
-        lda     $AC
-        and     #$04
-        beq     L81D9
-        ldx     #$00
-L8196:  sec
-        lda     $CB,x
-        sbc     #$04
+        bpl     do_drag
+
+        lda     current_winfo::options
+        and     #MGTK::option_grow_box
+        beq     no_grow
+
+        ldx     #0
+:       sec
+        lda     winrect::x2,x
+        sbc     #4
         sta     kbd_mouse_x,x
         sta     drag_initialpos,x
         sta     drag_curpos,x
-        lda     $CC,x
-        sbc     #$00
+
+        lda     winrect::x2+1,x
+        sbc     #0
         sta     kbd_mouse_x+1,x
         sta     drag_initialpos+1,x
         sta     drag_curpos+1,x
+
         inx
         inx
-        cpx     #$04
-        bcc     L8196
+        cpx     #4
+        bcc     :-
 
         sec
         lda     #<(screen_width-1)
         sbc     drag_initialpos::xcoord
         lda     #>(screen_width-1)
         sbc     drag_initialpos::xcoord+1
-        bmi     L81D9
+        bmi     no_grow
 
         sec
         lda     #<(screen_height-1)
         sbc     drag_initialpos::ycoord
         lda     #>(screen_height-1)
         sbc     drag_initialpos::ycoord+1
-        bmi     L81D9
-        jsr     L7E98
-        jsr     L7F0F
+        bmi     no_grow
+        jsr     position_kbd_mouse
+        jsr     stash_cursor
         plp
         rts
 
-L81D9:  lda     #$00
+no_grow:
+        lda     #0
         sta     kbd_mouse_state
-        lda     #$A2
+        lda     #MGTK::error_window_not_resizable
         plp
         jmp     exit_with_a
 
-L81E4:  lda     $AC
-        and     #$01
-        beq     L81F4
-        lda     #$00
+do_drag:
+        lda     current_winfo::options
+        and     #MGTK::option_dialog_box
+        beq     no_dialog
+
+        lda     #0
         sta     kbd_mouse_state
-        exit_call $A1
+        exit_call MGTK::error_window_not_draggable
 
-L81F4:  ldx     #$00
-L81F6:  clc
-        lda     $C7,x
-        cpx     #$02
-        beq     L8202
+no_dialog:
+        ldx     #0
+dragloop:
+        clc
+        lda     winrect::x1,x
+        cpx     #2
+        beq     is_y
         adc     #$23
-        jmp     L8204
+        jmp     :+
 
-L8202:  adc     #$05
-L8204:  sta     kbd_mouse_x,x
+is_y:   adc     #5
+:       sta     kbd_mouse_x,x
         sta     drag_initialpos,x
         sta     drag_curpos,x
-        lda     $C8,x
-        adc     #$00
+
+        lda     winrect::x1+1,x
+        adc     #0
         sta     kbd_mouse_x+1,x
         sta     drag_initialpos+1,x
         sta     drag_curpos+1,x
         inx
         inx
-        cpx     #$04
-        bcc     L81F6
+        cpx     #4
+        bcc     dragloop
+
         bit     kbd_mouse_x+1
-        bpl     L8235
-        ldx     #$01
-        lda     #$00
-L8229:  sta     kbd_mouse_x,x
+        bpl     xpositive
+
+        ldx     #1
+        lda     #0
+:       sta     kbd_mouse_x,x
         sta     drag_initialpos,x
         sta     drag_curpos,x
         dex
-        bpl     L8229
-L8235:  jsr     L7E98
-        jsr     L7F0F
+        bpl     :-
+
+xpositive:
+        jsr     position_kbd_mouse
+        jsr     stash_cursor
         plp
         rts
+.endproc
 
-L823D:  php
+
+.proc kbd_mouse_add_to_y
+        php
         clc
         adc     kbd_mouse_y
         sta     kbd_mouse_y
         plp
-        bpl     L8254
-        cmp     #$C0
-        bcc     L8251
-        lda     #$00
+        bpl     yclamp
+        cmp     #<screen_height
+        bcc     :+
+        lda     #0
         sta     kbd_mouse_y
-L8251:  jmp     L7E98
+:       jmp     position_kbd_mouse
 
-L8254:  cmp     #$C0
-        bcc     L8251
-        lda     #$BF
+yclamp: cmp     #<screen_height
+        bcc     :-
+        lda     #<(screen_height-1)
         sta     kbd_mouse_y
-        bne     L8251
-L825F:  jsr     L7D83
-        jsr     L8268
-        jmp     L7D8E
+        bne     :-                  ; always
+.endproc
 
-L8268:  jsr     L7EE2
-        bcs     L826E
+
+.proc kbd_mouse_do_window
+        jsr     kbd_mouse_save_zp
+        jsr     :+
+        jmp     kbd_mouse_restore_zp
+
+:       jsr     get_key
+        bcs     :+
         rts
 
-L826E:  cmp     #$1B
-        bne     L827A
+:       cmp     #CHAR_ESCAPE
+        bne     :+
+
         lda     #$80
         sta     movement_cancel
-        jmp     L7EAD
+        jmp     restore_cursor
 
-L827A:  cmp     #$0D
-        bne     L8281
-        jmp     L7EAD
+:       cmp     #CHAR_RETURN
+        bne     :+
+        jmp     restore_cursor
 
-L8281:  pha
+:       pha
         lda     set_input_modifiers
-        beq     L828C
+        beq     :+
         ora     #$80
         sta     set_input_modifiers
-L828C:  pla
+:       pla
         ldx     #$C0
         stx     mouse_status
-L8292:  cmp     #$0B
-        bne     L82A2
-        lda     #$F8
-        bit     set_input_modifiers
-        bpl     L829F
-        lda     #$D0
-L829F:  jmp     L823D
+        ;; Fall-through
+.endproc
 
-L82A2:  cmp     #$0A
-        bne     L82B2
-        lda     #$08
-        bit     set_input_modifiers
-        bpl     L82AF
-        lda     #$30
-L82AF:  jmp     L823D
+.proc mousekeys_input
+        cmp     #CHAR_UP
+        bne     not_up
 
-L82B2:  cmp     #$15
-        bne     L82ED
-        jsr     L839A
-        bcc     L82EA
+        lda     #256-8
+        bit     set_input_modifiers
+        bpl     :+
+        lda     #256-48
+:       jmp     kbd_mouse_add_to_y
+
+not_up:
+        cmp     #CHAR_DOWN
+        bne     not_down
+
+        lda     #8
+        bit     set_input_modifiers
+        bpl     :+
+        lda     #48
+:       jmp     kbd_mouse_add_to_y
+
+not_down:
+        cmp     #CHAR_RIGHT
+        bne     not_right
+
+        jsr     kbd_mouse_check_xmax
+        bcc     out_of_bounds
+
         clc
-        lda     #$08
+        lda     #8
         bit     set_input_modifiers
-        bpl     L82C5
-        lda     #$40
-L82C5:  adc     kbd_mouse_x
+        bpl     :+
+        lda     #64
+
+:       adc     kbd_mouse_x
         sta     kbd_mouse_x
         lda     kbd_mouse_x+1
-        adc     #$00
+        adc     #0
         sta     kbd_mouse_x+1
         sec
         lda     kbd_mouse_x
-        sbc     #$2F
+        sbc     #<(screen_width-1)
         lda     kbd_mouse_x+1
-        sbc     #$02
-        bmi     L82EA
-        lda     #$02
-        sta     kbd_mouse_x+1
-        lda     #$2F
-        sta     kbd_mouse_x
-L82EA:  jmp     L7E98
+        sbc     #>(screen_width-1)
+        bmi     out_of_bounds
 
-L82ED:  cmp     #$08
-        bne     L831D
-        jsr     L8352
-        bcc     L831A
+        lda     #>(screen_width-1)
+        sta     kbd_mouse_x+1
+        lda     #<(screen_width-1)
+        sta     kbd_mouse_x
+out_of_bounds:
+        jmp     position_kbd_mouse
+
+not_right:
+        cmp     #CHAR_LEFT
+        bne     not_left
+
+        jsr     kbd_mouse_check_xmin
+        bcc     out_of_boundsl
+
         lda     kbd_mouse_x
         bit     set_input_modifiers
-        bpl     L8303
-        sbc     #$40
-        jmp     L8305
+        bpl     :+
+        sbc     #64
+        jmp     move_left
 
-L8303:  sbc     #$08
-L8305:  sta     kbd_mouse_x
+:       sbc     #8
+move_left:
+        sta     kbd_mouse_x
         lda     kbd_mouse_x+1
-        sbc     #$00
+        sbc     #0
         sta     kbd_mouse_x+1
-        bpl     L831A
-        lda     #$00
+        bpl     out_of_boundsl
+
+        lda     #0
         sta     kbd_mouse_x
         sta     kbd_mouse_x+1
-L831A:  jmp     L7E98
+out_of_boundsl:
+        jmp     position_kbd_mouse
 
-L831D:  sta     set_input_key
+not_left:
+        sta     set_input_key
+
         ldx     #MGTK::grafport_size-1
-L8322:  lda     $A7,x
+:       lda     $A7,x
         sta     $0600,x
         dex
-        bpl     L8322
+        bpl     :-
+
         lda     set_input_key
-        jsr     L8110
+        jsr     kbd_menu_by_shortcut
         php
+
         ldx     #MGTK::grafport_size-1
-L8333:  lda     $0600,x
+:       lda     $0600,x
         sta     $A7,x
         dex
-        bpl     L8333
+        bpl     :-
+
         plp
-        bcc     L8346
+        bcc     :+
+
         lda     #$40
         sta     movement_cancel
-        jmp     L7EAD
+        jmp     restore_cursor
 
-L8346:  rts
+:       rts
+.endproc
 
-L8347:  MGTK_CALL MGTK::PostEvent, set_input_params
+
+.proc set_input
+        MGTK_CALL MGTK::PostEvent, set_input_params
         rts
+.endproc
 
 .proc set_input_params          ; 1 byte shorter than normal, since KEY
 state:  .byte   MGTK::event_kind_key_down
 key:    .byte   0
 modifiers:
         .byte   0
-unk:    .byte   0
 .endproc
         set_input_key := set_input_params::key
         set_input_modifiers := set_input_params::modifiers
-        set_input_unk := set_input_params::unk
 
-L8352:  lda     kbd_mouse_state
-        cmp     #$04
-        beq     L8368
+        ;; Set to true to force the return value of check_if_changed to true
+        ;; during a tracking operation.
+force_tracking_change:
+        .byte   0
+
+
+.proc kbd_mouse_check_xmin
+        lda     kbd_mouse_state
+        cmp     #kbd_mouse_state_mousekeys
+        beq     ret_ok
+
         lda     kbd_mouse_x
-        bne     L8368
+        bne     ret_ok
         lda     kbd_mouse_x+1
-        bne     L8368
+        bne     ret_ok
+
         bit     drag_resize_flag
-        bpl     L836A
-L8368:  sec
+        bpl     :+
+ret_ok: sec
         rts
 
-L836A:  jsr     get_winframerect
-        lda     $CC
-        bne     L8380
-        lda     #$09
+:       jsr     get_winframerect
+        lda     winrect::x2+1
+        bne     min_ok
+        lda     #9
         bit     set_input_params::modifiers
-        bpl     L837A
-        lda     #$41
-L837A:  cmp     $CB
-        bcc     L8380
+        bpl     :+
+
+        lda     #65
+:       cmp     winrect::x2
+        bcc     min_ok
         clc
         rts
 
-L8380:  inc     set_input_params::unk
+min_ok: inc     force_tracking_change
+
         clc
-        lda     #$08
+        lda     #8
         bit     set_input_params::modifiers
-        bpl     L838D
-        lda     #$40
-L838D:  adc     drag_initialpos
+        bpl     :+
+        lda     #64
+
+:       adc     drag_initialpos
         sta     drag_initialpos
-        bcc     L8398
+        bcc     :+
         inc     drag_initialpos+1
-L8398:  clc
+:       clc
         rts
+.endproc
 
-L839A:  lda     kbd_mouse_state
-        cmp     #$04
-        beq     L83B3
+
+.proc kbd_mouse_check_xmax
+        lda     kbd_mouse_state
+        cmp     #kbd_mouse_state_mousekeys
+        beq     :+
+
         bit     drag_resize_flag
-        bmi     L83B3
+        bmi     :+
+
         lda     kbd_mouse_x
         sbc     #<(screen_width-1)
         lda     kbd_mouse_x+1
         sbc     #>(screen_width-1)
-        beq     L83B5
+        beq     is_max
         sec
-L83B3:  sec
+
+:       sec
         rts
 
-L83B5:  jsr     get_winframerect
+is_max: jsr     get_winframerect
         sec
-        lda     #$2F
-        sbc     $C7
+        lda     #<(screen_width-1)
+        sbc     winrect::x1
         tax
-        lda     #$02
-        sbc     $C8
-        beq     L83C6
-        ldx     #$FF
-L83C6:  bit     set_input_modifiers
-        bpl     L83D1
-        cpx     #$64
-        bcc     L83D7
-        bcs     L83D9
-L83D1:  cpx     #$2C
-        bcc     L83D7
-        bcs     L83E2
-L83D7:  clc
-        rts
+        lda     #>(screen_width-1)
+        sbc     winrect::x1+1
+        beq     :+
 
-L83D9:  sec
-        lda     drag_initialpos
-        sbc     #$40
-        jmp     L83E8
+        ldx     #256-1
+:       bit     set_input_modifiers
+        bpl     :+
 
-L83E2:  sec
-        lda     drag_initialpos
-        sbc     #$08
-L83E8:  sta     drag_initialpos
-        bcs     L83F0
-        dec     drag_initialpos+1
-L83F0:  inc     set_input_unk
+        cpx     #100
+        bcc     clc_rts
+        bcs     ge_100
+
+:       cpx     #44
+        bcc     clc_rts
+        bcs     in_range
+
+clc_rts:
         clc
         rts
 
-L83F5:  .byte   0
-L83F6:  lda     #$80
-        sta     L83F5
-L83FB:  rts
+ge_100: sec
+        lda     drag_initialpos
+        sbc     #64
+        jmp     :+
 
-.proc L83FC
+in_range:
+        sec
+        lda     drag_initialpos
+        sbc     #8
+:       sta     drag_initialpos
+        bcs     :+
+        dec     drag_initialpos+1
+:
+        inc     force_tracking_change
+        clc
+        rts
+.endproc
+
+
+grew_flag:
+        .byte   0
+
+.proc set_grew_flag
+        lda     #$80
+        sta     grew_flag
+grts:   rts
+.endproc
+
+
+.proc finish_grow
         bit     kbd_mouse_state
-        bpl     L83FB
+        bpl     set_grew_flag::grts
 
-        bit     L83F5
-        bpl     L83FB
+        bit     grew_flag
+        bpl     set_grew_flag::grts
 
         jsr     get_winframerect
         php
         sei
-        ldx     #$00
-:       sub16lc $CB,x, #4, kbd_mouse_x,x
+        ldx     #0
+:       sub16lc winrect::x2,x, #4, kbd_mouse_x,x
         inx
         inx
         cpx     #4
         bcc     :-
 
-        jsr     L7E98
+        jsr     position_kbd_mouse
         plp
         rts
 .endproc
@@ -10016,7 +10225,8 @@ L83FB:  rts
         lda     params+1
         sta     mouse_scale_y
 
-L8431:  bit     no_mouse_flag   ; called after INITMOUSE
+set_clamps:
+        bit     no_mouse_flag   ; called after INITMOUSE
         bmi     end
 
         lda     mouse_scale_x
@@ -10107,7 +10317,7 @@ loop:   txa
 
 found:  ldy     #INITMOUSE
         jsr     call_mouse
-        jsr     ScaleMouseImpl::L8431
+        jsr     ScaleMouseImpl::set_clamps
         ldy     #HOMEMOUSE
         jsr     call_mouse
         lda     mouse_firmware_hi
