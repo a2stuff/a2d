@@ -1064,8 +1064,7 @@ notpas:
 ;;; ============================================================
 ;;; Calculate RamWorks memory; returns number of banks in Y
 ;;; (256 banks = 0)
-;;; non-destructive version
-;;; note the bus floats for RamWorks RAM when the bank has no RAM.
+;;; Note the bus floats for RamWorks RAM when the bank has no RAM.
 ;;; RamWorks-style cards are not guaranteed to have contiguous banks.
 ;;; a user can install 64Kb or 256Kb chips in a physical bank, in the
 ;;; former case, a gap in banks will appear.  Additionally, the piggy
@@ -1087,9 +1086,9 @@ notpas:
 
         ldx     #0              ; bank we are checking
         ldy     #0              ; bank count
-:       stx     RWBANK          ; select bank
+loop:   stx     RWBANK          ; select bank
         lda     $00             ; save existing data
-        pha                     ; on stack 
+        pha                     ; on stack
         lda     $01
         pha
         txa                     ; bank number as first check byte
@@ -1106,7 +1105,7 @@ notpas:
         pla
         sta     $00
         inx                     ; next bank
-        bne     :--             ; if we hit 256 banks, make sure we exit
+        bne     loop            ; if we hit 256 banks, make sure we exit
 
         ;; Switch back to RW bank 0 (normal aux memory)
 done:   lda     #0
