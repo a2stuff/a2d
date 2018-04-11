@@ -1,0 +1,15 @@
+sudo: enabled
+os: osx
+language: c
+
+install:
+  - git clone https://github.com/cc65/cc65 /tmp/cc65 &&
+    make -C /tmp/cc65 bin apple2 apple2enh &&
+    /tmp/cc65/bin/cc65 --version
+
+script:
+  - cd desktop
+  - res/go.sh
+  - cd ..
+  - cd desk.acc
+  - res/go.sh
