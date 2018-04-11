@@ -14,6 +14,7 @@ Contributions welcome! Preliminaries:
    * The core bits of DeskTop.
    * The various overlays.
    * The DiskCopy overlay is basically a stand-alone app. Could be fun.
+1. Disassembly of [Selector](https://github.com/inexorabletash/a2d/issues/63)
 1. Bug fixes
    * Try and tackle some of the bugs in the [issue tracker](https://github.com/inexorabletash/a2d/issues?q=is%3Aissue+is%3Aopen+label%3Abug-in-original).
    * Bug fixes will alter the binary, so should occur in branches. There's a `fixes` branch with some already.
