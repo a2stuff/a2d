@@ -1,5 +1,7 @@
 # A2D
 
+[![Build Status](https://travis-ci.org/inexorabletash/a2d.svg?branch=master)](https://travis-ci.org/inexorabletash/a2d)
+
 Work-in-Progress disassembly of Apple II Desktop (a.k.a. A2.Desktop)
 
 ## Background
