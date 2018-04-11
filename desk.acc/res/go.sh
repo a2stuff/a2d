@@ -53,6 +53,8 @@ stats "date.s"
 stats "puzzle.s"
 
 # Mountable directory
-echo "Copying files to mount/"
-mount 'show.image.file.$F1'
-mount 'this.apple.$F1'
+if [ -d mount ]; then
+    echo "Copying files to mount/"
+    mount 'show.image.file.$F1'
+    mount 'this.apple.$F1'
+fi
