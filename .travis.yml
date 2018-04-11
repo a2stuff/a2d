@@ -8,9 +8,7 @@ install:
     /tmp/cc65/bin/cc65 --version
 
 script:
-  - MAKE_FLAGS="CC65=/tmp/cc65/bin"
-  - cd desktop
-  - res/go.sh
-  - cd ..
-  - cd desk.acc
-  - res/go.sh
+  - cd desktop &&
+    MAKE_FLAGS="CC65=/tmp/cc65/bin" res/go.sh &&
+    cd ../desk.acc &&
+    MAKE_FLAGS="CC65=/tmp/cc65/bin" res/go.sh
