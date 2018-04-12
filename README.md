@@ -46,3 +46,4 @@ target the ca65 macro assembler. Cross-development on modern systems will be ass
 
 Discussions should be polite, respectful and inclusive, and focus on the code.
 Harassment will not be tolerated. Keep comments constructive.
+Please read the full [Code of Conduct](CODE_OF_CONDUCT.md).
