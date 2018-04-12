@@ -2,7 +2,8 @@
 
 Contributions welcome! Preliminaries:
 
-* Please re-read the [README](README.md) and pay attention to the Code of Conduct.
+* Please review the [README](README.md).
+* Read and adhere to the [Code of Conduct](CODE_OF_CONDUCT.md).
 * Read the [Coding Style](CodingStyle.md) guide.
 
 ## Sub-Projects
