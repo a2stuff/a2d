@@ -646,6 +646,8 @@ error_window_already_exists := $9D
 error_window_id_required := $9E
 error_window_not_found := $9F
 error_no_active_window := $A0
+error_window_not_draggable := $A1
+error_window_not_resizable := $A2
 error_window_obscured := $A3
 error_control_not_found := $A4
 

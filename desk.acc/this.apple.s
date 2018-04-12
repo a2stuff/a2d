@@ -465,7 +465,26 @@ textfont:       .addr   0
 
 
 ;;; ============================================================
-;;; Per Tech Note: Apple II Miscellaneous #7: Apple II Family Identification
+;;; Per Tech Note: Apple II Miscellaneous #7: Apple II Family Identification,
+;;; and c/o JohnMBrooks
+
+;;; Machine                    $FBB3    $FB1E    $FBC0    $FBDD    $FBBE    $FBBF
+;;; -----------------------------------------------------------------------------
+;;; Apple ][                    $38     [$AD]    [$60]                      [$2F]
+;;; Apple ][+                   $EA      $AD     [$EA]                      [$EA]
+;;; Apple /// (emulation)       $EA      $8A
+;;; Apple IIe                   $06     [$AD]     $E0                       [$00]
+;;; Apple IIe (enhanced)        $06     [$AD]     $E0                       [$00]
+;;; Apple IIe Option Card       $06     [$AD]     $E0      $02      $00
+;;; Apple IIc                   $06               $00                        $FF
+;;; Apple IIc (3.5 ROM)         $06               $00                        $00
+;;; Apple IIc (Org. Mem. Exp.)  $06               $00                        $03
+;;; Apple IIc (Rev. Mem. Exp.)  $06               $00                        $04
+;;; Apple IIc Plus              $06               $00                        $05
+;;; Apple IIgs                  $06     [$4C]     $E0  (and SEC, JSR $FE1F, CC=IIgs)
+;;; Laser 128                   $06      $AC     [$E0]
+;;;
+;;; (Values in [] are for reference, not needed for compatibility check)
 
 .scope model
         ii           := 0
@@ -495,69 +514,55 @@ model_pix_table:
         ;; Read from ROM
         lda     ROMIN2
 
+        ;; ][, ][+ or ///
         lda     $FBB3
         cmp     #$38
-        beq     ii
-        cmp     #$EA
-        beq     iiplus_or_iii
-
-        lda     $FBC0
-        cmp     #$EA
-        beq     iie
-        cmp     #$E0
-        beq     iie_or_iigs
-        bne     iic_or_iic_plus
-
-iiplus_or_iii:
+        bne     :+
+        lda     #model::ii
+        bpl     done
+:       cmp     #$EA
+        bne     iie_or_later
         lda     $FB1E
         cmp     #$AD
-        beq     iiplus
-        bne     iii
-
-ii:     lda     #model::ii
+        bne     :+
+        lda     #model::iiplus
+        bpl     done
+:       lda     #model::iii
         bpl     done
 
-iiplus: lda     #model::iiplus
-        bpl     done
+iie_or_later:
+        lda     $FBC0
+        beq     iic_or_plus
 
-iii:    lda     #model::iii
+        ;; IIe, IIe card, IIgs or Laser 128
+        lda     $FB1E
+        cmp     #$AC
+        bne     :+
+        lda     #model::laser128
         bpl     done
-
-iie:    lda     #model::iie
-        bpl     done
-
-iie_or_iigs:
-        ;; TODO: Identify Laser 128
-        sec
+:       sec
         jsr     $FE1F
-        bcc     iigs
-
-        lda     $FBDD
+        bcs     :+
+        lda     #model::iigs
+        bpl     done
+:       lda     $FBDD
         cmp     #$02
-        beq     iie_card
-iie_e:  lda     #model::iie_enhanced
-        bpl     done
-
-iic_or_iic_plus:
-        lda     $FBBF
-        cmp     #$05
-        bcs     iic_plus
-iic:    lda     #model::iic
-        bpl     done
-
-iic_plus:
-        lda     #model::iic_plus
-        bpl     done
-
-iie_card:
+        bne     :+
         lda     #model::iie_card
         bpl     done
+:       lda     #model::iie
+        bpl     done
 
-iigs:   lda     #model::iigs
+iic_or_plus:
+        lda     $FBBF
+        cmp     #5
+        bne     :+
+        lda     #model::iic
+        bpl     done
+:       lda     #model::iic_plus
         ;; fall through...
 
-done:
-        asl
+done:   asl
         tax
         copy16  model_str_table,x, model_str_ptr
         copy16  model_pix_table,x, model_pix_ptr
@@ -1064,8 +1069,7 @@ notpas:
 ;;; ============================================================
 ;;; Calculate RamWorks memory; returns number of banks in Y
 ;;; (256 banks = 0)
-;;; non-destructive version
-;;; note the bus floats for RamWorks RAM when the bank has no RAM.
+;;; Note the bus floats for RamWorks RAM when the bank has no RAM.
 ;;; RamWorks-style cards are not guaranteed to have contiguous banks.
 ;;; a user can install 64Kb or 256Kb chips in a physical bank, in the
 ;;; former case, a gap in banks will appear.  Additionally, the piggy
@@ -1087,9 +1091,9 @@ notpas:
 
         ldx     #0              ; bank we are checking
         ldy     #0              ; bank count
-:       stx     RWBANK          ; select bank
+loop:   stx     RWBANK          ; select bank
         lda     $00             ; save existing data
-        pha                     ; on stack 
+        pha                     ; on stack
         lda     $01
         pha
         txa                     ; bank number as first check byte
@@ -1106,7 +1110,7 @@ notpas:
         pla
         sta     $00
         inx                     ; next bank
-        bne     :--             ; if we hit 256 banks, make sure we exit
+        bne     loop            ; if we hit 256 banks, make sure we exit
 
         ;; Switch back to RW bank 0 (normal aux memory)
 done:   lda     #0

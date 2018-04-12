@@ -2,7 +2,9 @@
 
 # stats.pl < source.s            -- dump stats
 # stats.pl unscoped < source.s   -- list Lxxxx symbols not within 2 scopes
-# stats.pl single < source.s     -- list Lxxxx symbols with no references
+# stats.pl scoped < source.s     -- list Lxxxx symbols within 2 scopes
+# stats.pl raw < source.s        -- list $xxxx usage
+# stats.pl unrefed < source.s    -- list Lxxxx symbols with no references
 
 use strict;
 use warnings;
@@ -11,6 +13,7 @@ my $command = shift(@ARGV) // "";
 
 my %defs;
 my %refs;
+my %scoped;
 my %unscoped;
 my %raw;
 my $depth = 0;
@@ -29,6 +32,7 @@ while (<STDIN>) {
         $_ = $2;
         $defs{$def} = ($defs{$def} // 0) + 1;
         $unscoped{$def} = 1 if $depth < 2;
+        $scoped{$def} = 1 if $depth >= 2;
     }
 
     foreach my $term (split /[ (),+\-*\/]/, $_) {
@@ -50,10 +54,14 @@ foreach my $def (keys %defs) {
 my $defs = scalar(keys %defs);
 my $unscoped = scalar(keys %unscoped);
 my $raws = scalar(keys %raw);
-my $scoped = $defs - $unscoped;
+my $scoped = scalar(keys %scoped);
 
 if ($command eq "unscoped") {
     foreach my $def (sort keys %unscoped) {
+        print "$def\n";
+    }
+} elsif ($command eq "scoped") {
+    foreach my $def (sort keys %scoped) {
         print "$def\n";
     }
 } elsif ($command eq "unrefed") {
