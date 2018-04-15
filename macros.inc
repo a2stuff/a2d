@@ -111,6 +111,14 @@
         _op_hi ldx, {arg}
 .endmacro
 
+;;; Load A,Y
+;;;    lday #$1234      ; immediate
+;;;    lday $1234       ; absolute
+.macro lday arg
+        _op_lo lda, {arg}
+        _op_hi ldy, {arg}
+.endmacro
+
 ;;; Load X,Y
 ;;;    ldxy #$1234      ; immediate
 ;;;    ldxy $1234       ; absolute

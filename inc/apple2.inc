@@ -67,20 +67,68 @@ ID_BYTE_FE1F    := $FE1F        ; RTS ($60) on pre-IIgs
 
 ;;; Zero Page
 
+LINNUM          := $50          ; Line number, unsigned word
 ERRFLG          := $D8
 TXTPTR          := $B8
+FAC             := $9D
 
 ;;; Entry Points
-FSUB            := $E7A7
-FADD            := $E7BE
-FMULT           := $E97F
-FDIV            := $EA66
-ROUND           := $EB2B        ; Round FAC, store at (y,x)
-FLOAT           := $EB93        ; A as signed byte into FAC
+GIVAYF          := $E2F2        ; FAC from signed integer in (Y,A)
+CONINT          := $E6FB        ; FAC = X as unsigned byte
+GETADR          := $E752        ; FAC to unsigned integer in LINNUM
+FADDH           := $E7A0        ; Add 0.5 to FAC
+FSUB            := $E7A7        ; FAC = (Y,A) - FAC
+FSUBT           := $E7AA        ; FAC = ARG - FAC
+FADD            := $E7BE        ; FAC = (Y,A) + FAC
+FADDT           := $E7C1        ; FAC = ARG + FAC
+ZERO_FAC        := $E84E        ; FAC = 0
+LOG             := $E941        ; FAC = LOG(FAC)
+FMULT           := $E97F        ; FAC = (Y,A) * FAC
+FMULTT          := $E982        ; FAC = ARG * FAC
+DIV10           := $EA55        ; FAC = FAC / 10
+FDIV            := $EA66        ; FAC = (Y,A) / FAC
+FDIVT           := $EA69        ; FAC = ARG / FAC
+LOAD_ARG        := $EAE3        ; ARG = (Y,A)
+MOVFM           := $EAF9        ; FAC = (Y,A)
+LOAD_FAC        := $EAF9        ; FAC = (Y,A)
+MOVMF           := $EB2B        ; (Y,X) = FAC
+ROUND           := $EB2B        ; Round FAC, store at (Y,X)
+ARG_TO_FAC      := $EB53        ; ARG = FAC
+FAC_TO_ARG_R    := $EB63        ; FAC = ARG, rounded
+SGN             := $EB90        ; FAC = SGN(FAC)
+FLOAT           := $EB93        ; FAC = A as signed byte
+FLOAT1          := $EB9B        ; FAC from unsigned integer in FAC+1,2 eX
+FLOAT2          := $EBA0        ; FAC from unsigned integer in FAC+1,2 eX, carry set = positive
+ABS             := $EBAF        ; FAC = ABS(FAC)
+FCOMP           := $EBB2        ; FAC <=> (Y,A), result in A
+QINT            := $EBF2        ; FAC to signed integer in FAC+1...FAC+4 (e < 32)
+INT             := $EC23        ; FAC = INT(FAC)
 FIN             := $EC4A        ; Parse TEXTPTR to FAC (first char in A, C set if digit)
-FOUT            := $ED34        ; FAC as string to FBUFFR
+FOUT            := $ED34        ; FAC as string to FBUFFR (trashes FAC)
+SQR             := $EE8D        ; FAC = SQR(FAC)
+NEGOP           := $EED0        ; FAC = -FAC
+EXP             := $EF09        ; FAC = EXP(FAC)
+RND             := $EFAE        ; FAC = RND(FAC)
+COS             := $EFEA        ; FAC = COS(FAC)
+SIN             := $EFF1        ; FAC = SIN(FAC)
+TAN             := $F03A        ; FAC = SIN(FAC)
+ATN             := $F09E        ; FAC = ATN(FAC)
 
+;;; Constants
+CON_ONE         := $E913        ; 1
+CON_SQR_HALF    := $E92D        ; SQR(1/2)
+CON_SQR_TWO     := $E932        ; SQR(2)
+CON_NEG_HALF    := $E937        ; -1/2
+CON_LOG_TWO     := $E93C        ; LOG(2)
+CON_TEN         := $E950        ; 10
+CON_BILLION     := $ED14        ; 1E9
+CON_HALF        := $EE64        ; 1/2
+CON_LOG2_E      := $EEDB        ; Log(E) base 2 ????
+CON_HALF_PI     := $F063        ; pi/2
+CON_TWO_PI      := $F06B        ; pi/*2
+CON_QUARTER     := $F070        ; 1/4
 
+;;; Other
 FBUFFR          := $100
 
 

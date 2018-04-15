@@ -7,7 +7,7 @@ OUTDIR = out
 
 HEADERS = $(wildcard ../*.inc) $(wildcard ../inc/*.inc) $(wildcard *.inc)
 
-DAS = calculator show.text.file date puzzle show.image.file this.apple
+DAS = calculator show.text.file date puzzle show.image.file this.apple eyes
 
 TARGETS = $(patsubst %,$(OUTDIR)/%.$$F1,$(DAS))
 
