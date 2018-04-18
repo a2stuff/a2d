@@ -69,15 +69,15 @@ vthumbmax:      .byte   32
 vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
-mincontwidth:   .word   da_width
-mincontlength:  .word   da_height
-maxcontwidth:   .word   da_width
-maxcontlength:  .word   da_height
+mincontwidth:   .word   screen_width / 5
+mincontlength:  .word   screen_height / 5
+maxcontwidth:   .word   screen_width
+maxcontlength:  .word   screen_height
 port:
 viewloc:        DEFINE_POINT da_left, da_top
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-maprect:        DEFINE_RECT 0, 0, da_width, da_height
+maprect:        DEFINE_RECT 0, 0, da_width, da_height, maprect
 pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:          DEFINE_POINT 0, 0
@@ -160,6 +160,30 @@ textback:       .byte   0
 textfont:       .addr   0
 .endproc
 
+grow_box_width := 17
+grow_box_height := 7
+
+.proc grow_box_params
+viewloc:        DEFINE_POINT 0, 0, viewloc
+mapbits:        .addr   grow_box_bitmap
+mapwidth:       .byte   3
+reserved:       .byte   0
+cliprect:       DEFINE_RECT 2, 2, 19, 9
+.endproc
+
+grow_box_bitmap:
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1000000),px(%0000000),px(%0000001)
+        .byte   px(%1001111),px(%1111110),px(%0000001)
+        .byte   px(%1001100),px(%0000111),px(%1111001)
+        .byte   px(%1001100),px(%0000110),px(%0011001)
+        .byte   px(%1001100),px(%0000110),px(%0011001)
+        .byte   px(%1001111),px(%1111110),px(%0011001)
+        .byte   px(%1000011),px(%0000000),px(%0011001)
+        .byte   px(%1000011),px(%1111111),px(%1111001)
+        .byte   px(%1000000),px(%0000000),px(%0000001)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+
 ;;; ============================================================
 
 .proc init
@@ -218,7 +242,10 @@ textfont:       .addr   0
         beq     handle_close
         cmp     #MGTK::area_dragbar
         beq     handle_drag
-        jmp     input_loop
+        cmp     #MGTK::area_content
+        bne     :+
+        jmp     handle_grow
+:       jmp     input_loop
 .endproc
 
 ;;; ============================================================
@@ -270,7 +297,7 @@ done:   jmp     input_loop
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
         MGTK_CALL MGTK::DragWindow, dragwindow_params
-        lda     dragwindow_params::moved
+common: lda     dragwindow_params::moved
         bpl     :+
 
         ;; Draw DeskTop's windows
@@ -291,6 +318,32 @@ done:   jmp     input_loop
 
 :       jmp     input_loop
 
+.endproc
+
+;;; ============================================================
+
+.proc handle_grow
+        ;; Is the hit within the grow box area?
+        copy16  event_params::xcoord, screentowindow_params::screen::xcoord
+        copy16  event_params::ycoord, screentowindow_params::screen::ycoord
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        sub16   winfo::maprect::x2, mx, tmpw
+        cmp16   #grow_box_width, tmpw
+        bcc     nope
+        sub16   winfo::maprect::y2, my, tmpw
+        cmp16   #grow_box_height, tmpw
+        bcc     nope
+
+        ;; Initiate the grow... re-using the drag logic
+        copy    winfo::window_id, dragwindow_params::window_id
+        copy16  event_params::xcoord, dragwindow_params::dragx
+        copy16  event_params::ycoord, dragwindow_params::dragy
+        MGTK_CALL MGTK::GrowWindow, dragwindow_params
+        jmp     handle_drag::common
+
+nope:   jmp     input_loop
+
+tmpw:   .word   0
 .endproc
 
 ;;; ============================================================
@@ -328,17 +381,14 @@ pos_r:        DEFINE_POINT 0, 0, pos_r
 ;;; ============================================================
 
 .proc draw_window
-        ptr := $06
-
-        ;; Defer until we have mouse coords
-        lda     has_last_coords
-        bne     :+
-        rts
-:
-
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, winport_params
         cmp     #MGTK::error_window_obscured
+        bne     :+
+        rts
+:
+        ;; Defer until we have mouse coords
+        lda     has_last_coords
         bne     :+
         rts
 :
@@ -346,19 +396,33 @@ pos_r:        DEFINE_POINT 0, 0, pos_r
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
 
+        copy16  winfo::maprect::x2, rx ; width / 4
+        lsr16 rx
+        lsr16 rx
+        copy16  winfo::maprect::y2, ry ; height / 2
+        lsr16 ry
+
         lda     has_drawn_outline
-        bne     erase_pupils
-        inc     has_drawn_outline
+        beq     :+
+        jmp     erase_pupils
+:       inc     has_drawn_outline
+
+        ;; Draw resize box
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        sub16   winfo::maprect::x2, #grow_box_width, grow_box_params::viewloc::xcoord
+        sub16   winfo::maprect::y2, #grow_box_height, grow_box_params::viewloc::ycoord
+        MGTK_CALL MGTK::PaintBits, grow_box_params
 
         ;; Draw outline
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::SetPenSize, outline_pensize
 
-        copy16  #da_width/4, cx
-        copy16  #da_height/2, cy
+        copy16  rx, cx
+        copy16  ry, cy
         jsr draw_outline
-        copy16  #da_width * 3/4, cx
-        copy16  #da_height/2, cy
+
+        add16   rx, cx, cx
+        add16   rx, cx, cx
         jsr draw_outline
 
         ;; Skip erasing pupils if we're redrawing
@@ -377,16 +441,16 @@ draw_pupils:
         MGTK_CALL MGTK::SetPenMode, penxor
         MGTK_CALL MGTK::SetPenSize, pupil_pensize
 
-        copy16  #da_width/4, cx
-        copy16  #da_height/2, cy
+        copy16  rx, cx
+        copy16  ry, cy
         jsr     compute_pupil_pos
         sub16  ppx, #pupilw/2, pos_l::xcoord
         sub16  ppy, #pupilh/2, pos_l::ycoord
         MGTK_CALL MGTK::MoveTo, pos_l
         MGTK_CALL MGTK::LineTo, pos_l
 
-        copy16  #da_width*3/4, cx
-        copy16  #da_height/2, cy
+        add16   rx, cx, cx
+        add16   rx, cx, cx
         jsr     compute_pupil_pos
         sub16  ppx, #pupilw/2, pos_r::xcoord
         sub16  ppy, #pupilh/2, pos_r::ycoord
@@ -395,13 +459,15 @@ draw_pupils:
 
         MGTK_CALL MGTK::ShowCursor
 done:   rts
+
+tmpw:   .word   0
 .endproc
 
 ;;; ============================================================
 ;;; Common input params
 
-rx:     .word   da_width/4
-ry:     .word   da_height/2
+rx:     .word   0
+ry:     .word   0
 
 cx:     .word   0
 cy:     .word   0
