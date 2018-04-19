@@ -71,6 +71,7 @@ LINNUM          := $50          ; Line number, unsigned word
 ERRFLG          := $D8
 TXTPTR          := $B8
 FAC             := $9D
+SHIFT_SIGN_EXT  := $A4          ; Zero before using FP ops
 
 ;;; Entry Points
 GIVAYF          := $E2F2        ; FAC from signed integer in (Y,A)

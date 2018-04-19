@@ -36,6 +36,8 @@ entry:
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
+
+        ;; back to main for exit
         sta     RAMRDOFF
         sta     RAMWRTOFF
         rts
@@ -191,7 +193,11 @@ grow_box_bitmap:
         lda     LCBANK1
         lda     LCBANK1
 
+        ;; Don't let MGTK smash zero page
         MGTK_CALL MGTK::SetZP1, preserve_zp_params
+        lda     #0
+        sta     SHIFT_SIGN_EXT  ; Must zero before using FP ops
+
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     draw_window
         MGTK_CALL MGTK::FlushEvents
