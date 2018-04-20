@@ -44,6 +44,7 @@ verify "calculator"
 verify "show.text.file"
 verify "date"
 verify "puzzle"
+verify "sort.directory"
 
 # Compute stats
 echo "Stats:"
@@ -51,6 +52,7 @@ stats "calculator.s"
 stats "show.text.file.s"
 stats "date.s"
 stats "puzzle.s"
+stats "sort.directory.s"
 
 # Mountable directory
 if [ -d mount ]; then

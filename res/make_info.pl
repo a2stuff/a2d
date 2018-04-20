@@ -9,7 +9,7 @@ print <<"END_HEADER";
 GLOBAL {
   STARTADDR       \$$org;
   PAGELENGTH      0;                  # No paging
-  CPU             "65C02";
+  CPU             "6502";
 };
 END_HEADER
 
