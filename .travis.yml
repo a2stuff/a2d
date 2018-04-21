@@ -5,7 +5,7 @@ language: c
 install:
   - git clone https://github.com/cc65/cc65 /tmp/cc65 &&
     make -C /tmp/cc65 ca65 ld65 &&
-    /tmp/cc65/bin/cc65 --version
+    /tmp/cc65/bin/ca65 --version
 
   - git clone https://github.com/mach-kernel/cadius /tmp/cadius &&
     make -C /tmp/cadius
