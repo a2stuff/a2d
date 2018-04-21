@@ -7,8 +7,13 @@ install:
     make -C /tmp/cc65 bin apple2 apple2enh &&
     /tmp/cc65/bin/cc65 --version
 
+  - git clone https://github.com/mach-kernel/cadius /tmp/cadius &&
+    make -C /tmp/cadius
+
 script:
-  - cd desktop &&
-    MAKE_FLAGS="CC65=/tmp/cc65/bin" res/go.sh &&
-    cd ../desk.acc &&
+  - cd $TRAVIS_BUILD_DIR/desktop &&
     MAKE_FLAGS="CC65=/tmp/cc65/bin" res/go.sh
+
+  - cd $TRAVIS_BUILD_DIR/desk.acc &&
+    MAKE_FLAGS="CC65=/tmp/cc65/bin" res/go.sh &&
+    CADIUS="/tmp/cadius/bin/release/cadius" res/package.sh
