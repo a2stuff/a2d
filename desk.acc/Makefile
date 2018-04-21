@@ -35,7 +35,7 @@ $(OUTDIR)/%.built: $(OUTDIR)/%.o asm.cfg
 # Desk Accessories .$F1
 $(OUTDIR)/%.$$F1: $(OUTDIR)/%.o
 	$(CC65)/ld65 $(CCFLAGS) -o '$@' $<
-	xattr -w prodos.AuxType '@' '$@'
+	xattr -wx prodos.AuxType '40 06' '$@'
 
 # System Files .SYS
 $(OUTDIR)/%.SYS: $(OUTDIR)/%.o
