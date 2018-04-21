@@ -34,42 +34,18 @@ For the original DAs, the `.$F1` and `.bin` files can be compared
 using `diff` to ensure that no changes have been introduced by the
 disassembly process.
 
+With `desk.acc` as the current directory, run `res/go.sh` to automatically
+verify that the files are unchanged from the original, and also generate
+semi-useful stats showing disassembly progress.
 
-## Install Instructions
+## Getting The DAs Onto Your Apple II
 
-Transfer the `.$F1` files to your Apple (real or virtual) ensuring you:
+There are a handful of approaches for getting the files on your real
+or virtual Apple.
 
-* Drop the suffix
-* Replace `.` in the name with spaces
-* Ensure they have ProDOS file type `$F1`
-* Ensure they have start address `$800`
+### Create a Disk Image
 
-The last two are tricky, and depend on how you're copying the files.
-My process is to use Virtual ]\[ on my Mac and mount a folder as a
-ProDOS drive; I copy one of the original DAs into the folder which
-gives it the $F1 filetype as a suffix and start address as an invisible
-resource stream. I then unmount the folder, overwrite the DA with
-a newly built one, and remount the folder.
-
-This is done by the `res/go.sh` script.
-
-Finally:
-
-* Drop the files into your `A2.DESKTOP\DESK.ACC` folder
-* Restart so A2D picks up the new DA
-
-Tips:
-
-* You can use the Sort Directory DA to order the files, which controls
-    the menu order:
-  * Open the `A2.DESKTOP\DESK.ACC` folder
-  * Press Open-Apple and click on each file in the desired order
-  * Select Sort Directory from the Apple menu, and verify the order
-  * Restart
-
-## Package Instructions
-
-To produce a ProDOS disk image with the , install and build the
+To produce a ProDOS disk image with the DA files, install and build the
 [Cadius](https://github.com/mach-kernel/cadius) tool:
 
 ```
@@ -83,5 +59,49 @@ Then from the `desk.acc/` directory, run: `go/package.sh`
 This will generate: `desk.acc/out/DeskAccessories.2mg`
 
 Mount this disk image in your emulator, or transfer it to a real floppy
-with [ADTPro](http://adtpro.com/), then follow the last steps of the 
-install instructions above.
+with [ADTPro](http://adtpro.com/), then follow the install instructions
+below.
+
+### Mounting Folder via the Virtual ]\[ Emulator
+
+If you use [Virtual \]\[](http://www.virtualii.com/) as your emulator,
+you can skip creating a disk image.
+
+With `desk.acc` as your current directory, create a `mount` folder,
+run the `res/go.sh` script, and the built files will automatically be
+copied in. Then run Virtual ]\[ and use the **Media** > **Mount Folder
+as ProDOS Disk...** menu item. A new ProDOS volume called `/MOUNT` will
+be available.
+
+### Other
+
+If you need to copy the files some other way (e.g. via 
+[CiderPress](http://a2ciderpress.com/)), you need to do the following:
+
+Transfer the `.$F1` files in the `out` directory, ensuring you:
+
+* Drop the suffix
+* Replace `.` in the name with spaces
+* Ensure they have ProDOS file type `$F1`
+* Ensure they have start address `$800`
+* Ensure they have auxtype `$0640` (to match the originals)
+
+The last three are tricky, and depend on how you're copying the files.
+
+## Install Instructions
+
+Once you have the files accessible on your Apple:
+
+* Copy the files into your `A2.DESKTOP\DESK.ACC` folder (using A2D or any other tool)
+* Restart so A2D picks up the new DA
+
+Tips:
+
+* You can use the Sort Directory DA to order the files, which controls
+    the menu order:
+  * Open the `A2.DESKTOP\DESK.ACC` folder
+  * Hold Open-Apple and click on each file in the desired order
+  * Select Sort Directory from the Apple menu, and verify the order
+  * Restart
+  
+  
