@@ -441,6 +441,15 @@
 skip:
 .endmacro
 
+;;; Decrement 16-bit value
+.macro dec16    arg
+        .local skip
+        lda     arg
+        bne     skip
+        dec     arg+1
+skip:   dec     arg
+.endmacro
+
 ;;; Helper macros to set up a scoped block of parameters at a pre-determined
 ;;; address.
 ;;;
@@ -462,15 +471,16 @@ skip:
 .macro PARAM_BLOCK name, addr
         name := addr
         .scope  name
+        saved_org := *
         .pushseg
         .bss
-        .feature org_per_seg
         .org    addr
-start:
+        start := *
 .endmacro
 
 .macro END_PARAM_BLOCK
         size := * - start
         .popseg
+        .org saved_org
         .endscope
 .endmacro
