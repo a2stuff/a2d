@@ -12,7 +12,7 @@ DAS="calculator show.text.file date puzzle sort.directory \
 
 PACKDIR="out/package"
 FINFO="$PACKDIR/_FileInformation.txt"
-IMGFILE="out/DeskAccessories.2mg"
+IMGFILE="out/DeskAccessories.po"
 VOLNAME="DESK.ACC"
 
 mkdir -p "$PACKDIR"
@@ -29,9 +29,7 @@ done
 
 # Create a new disk image.
 
-# TODO: Make images 143KB once issue is fixed:
-# https://github.com/mach-kernel/cadius/issues/22
-$CADIUS CREATEVOLUME $IMGFILE $VOLNAME 800KB
+$CADIUS CREATEVOLUME $IMGFILE $VOLNAME 143KB
 
 # Add the files into the disk image.
 

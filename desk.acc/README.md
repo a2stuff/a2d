@@ -56,7 +56,7 @@ CADIUS=/tmp/cadius/bin/release/cadius
 
 Then from the `desk.acc/` directory, run: `go/package.sh`
 
-This will generate: `desk.acc/out/DeskAccessories.2mg`
+This will generate: `desk.acc/out/DeskAccessories.po`
 
 Mount this disk image in your emulator, or transfer it to a real floppy
 with [ADTPro](http://adtpro.com/), then follow the install instructions
@@ -75,7 +75,7 @@ be available.
 
 ### Other
 
-If you need to copy the files some other way (e.g. via 
+If you need to copy the files some other way (e.g. via
 [CiderPress](http://a2ciderpress.com/)), you need to do the following:
 
 Transfer the `.$F1` files in the `out` directory, ensuring you:
@@ -103,5 +103,3 @@ Tips:
   * Hold Open-Apple and click on each file in the desired order
   * Select Sort Directory from the Apple menu, and verify the order
   * Restart
-  
-  
