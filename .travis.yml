@@ -26,4 +26,3 @@ deploy:
   skip_cleanup: true
   on:
     tags: true
-    repo: inexorabletash/a2d
