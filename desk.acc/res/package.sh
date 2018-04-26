@@ -7,8 +7,7 @@ set -e
 
 CADIUS="${CADIUS:-$HOME/dev/cadius/bin/release/cadius}"
 
-DAS="calculator show.text.file date puzzle sort.directory \
-    show.image.file this.apple eyes"
+DAS=$(cat TARGETS)
 
 PACKDIR="out/package"
 FINFO="$PACKDIR/_FileInformation.txt"

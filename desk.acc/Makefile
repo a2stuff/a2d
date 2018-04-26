@@ -7,8 +7,7 @@ OUTDIR = out
 
 HEADERS = $(wildcard ../*.inc) $(wildcard ../inc/*.inc) $(wildcard *.inc)
 
-DAS = calculator show.text.file date puzzle sort.directory \
-	show.image.file this.apple eyes
+DAS = $(shell cat TARGETS)
 
 TARGETS = $(patsubst %,$(OUTDIR)/%.built,$(DAS))
 

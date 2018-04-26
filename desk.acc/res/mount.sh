@@ -26,6 +26,6 @@ function mount {
 
 mkdir -p mount
 echo "Copying files to mount/"
-mount 'show.image.file'
-mount 'this.apple'
-mount 'eyes'
+for file in $(cat TARGETS); do
+    mount "$file"
+done
