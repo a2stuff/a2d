@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Run this from the desk.acc directory
+
 set -e
 
 function cecho {
@@ -19,20 +21,13 @@ function do_make {
 }
 
 function verify {
-    diff "orig/$1.bin" "out/$1.\$F1" \
+    diff "orig/$1.bin" "out/$1.built" \
         && (cecho green "diff $1 good" ) \
         || (tput blink ; cecho red "DIFF $1 BAD" ; return 1)
 }
 
 function stats {
     echo "$(printf '%-20s' $1)""$(../res/stats.pl < $1)"
-}
-
-function mount {
-    uppercase=$(echo "$1" | tr /a-z/ /A-Z/)
-    cp "out/$1" "mount/$uppercase" \
-        && (cecho green "mounted $uppercase" ) \
-        || (cecho red "failed to mount $uppercase" ; return 1)
 }
 
 #do_make clean
@@ -54,10 +49,7 @@ stats "date.s"
 stats "puzzle.s"
 stats "sort.directory.s"
 
-# Mountable directory
+# Mountable directory for Virtual ][
 if [ -d mount ]; then
-    echo "Copying files to mount/"
-    mount 'show.image.file.$F1'
-    mount 'this.apple.$F1'
-    mount 'eyes.$F1'
+    res/mount.sh
 fi

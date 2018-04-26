@@ -24,7 +24,7 @@ echo "" > "$FINFO"
 for file in $DAS; do
     ucfile=$(echo $file | tr a-z A-Z)
     echo "$ucfile=Type(F1),AuxType(0640),VersionCreate(00),MinVersion(B9),Access(E3),FolderInfo1(000000000000000000000000000000000000),FolderInfo2(000000000000000000000000000000000000)" >> "$FINFO"
-    cp "out/$file.\$F1" "out/package/$ucfile"
+    cp "out/$file.built" "out/package/$ucfile"
 done
 
 # Create a new disk image.

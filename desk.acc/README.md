@@ -28,9 +28,9 @@ New desk accessories:
 
 On Unix-like systems (including Mac OS X) `make all` should build
 build the desk accessory files (original and new) into `out/`
-output with a `.$F1` suffix, representing the $F1 file type required.
+output with a `.built` suffix.
 
-For the original DAs, the `.$F1` and `.bin` files can be compared
+For the original DAs, the `.built` and `.bin` files can be compared
 using `diff` to ensure that no changes have been introduced by the
 disassembly process.
 
@@ -67,21 +67,25 @@ below.
 If you use [Virtual \]\[](http://www.virtualii.com/) as your emulator,
 you can skip creating a disk image.
 
-With `desk.acc` as your current directory, create a `mount` folder,
-run the `res/go.sh` script, and the built files will automatically be
-copied in. Then run Virtual ]\[ and use the **Media** > **Mount Folder
-as ProDOS Disk...** menu item. A new ProDOS volume called `/MOUNT` will
-be available.
+With `desk.acc` as your current directory, run the `res/mount.sh`
+script. This will create a `desk.acc/mount` folder and the built files
+will automatically be copied in. Then run Virtual ]\[ and use the
+**Media** > **Mount Folder as ProDOS Disk...** menu item, then select
+the `desk.acc/mount` folder. A new ProDOS volume called `/MOUNT` will
+be available. (Tip: use the **Special** > **Check Drives** command in
+A2D to make it appear.)
+
+(The `res/go.sh` script will helpfully run `res/mount.sh`
+automatically if the `mount` folder already exists.)
 
 ### Other
 
 If you need to copy the files some other way (e.g. via
 [CiderPress](http://a2ciderpress.com/)), you need to do the following:
 
-Transfer the `.$F1` files in the `out` directory, ensuring you:
+Transfer the `.built` files in the `out` directory, ensuring you:
 
-* Drop the suffix
-* Replace `.` in the name with spaces
+* Drop the `.built` suffix
 * Ensure they have ProDOS file type `$F1`
 * Ensure they have start address `$800`
 * Ensure they have auxtype `$0640` (to match the originals)
