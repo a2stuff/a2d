@@ -92,14 +92,14 @@ The last three are tricky, and depend on how you're copying the files.
 
 Once you have the files accessible on your Apple:
 
-* Copy the files into your `A2.DESKTOP\DESK.ACC` folder (using A2D or any other tool)
+* Copy the files into your `A2.DESKTOP/DESK.ACC` folder (using A2D or any other tool)
 * Restart so A2D picks up the new DA
 
 Tips:
 
 * You can use the Sort Directory DA to order the files, which controls
     the menu order:
-  * Open the `A2.DESKTOP\DESK.ACC` folder
+  * Open the `A2.DESKTOP/DESK.ACC` folder
   * Hold Open-Apple and click on each file in the desired order
   * Select Sort Directory from the Apple menu, and verify the order
   * Restart
