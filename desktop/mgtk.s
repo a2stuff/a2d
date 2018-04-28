@@ -3791,13 +3791,15 @@ saved_port_addr:
 ;;;   bit 3: Graphics if clear, text if set
 
 .proc SetSwitchesImpl
-        param := $82
+        PARAM_BLOCK params, $82
+switches:       .res 1
+        END_PARAM_BLOCK
 
         lda     DHIRESON        ; enable dhr graphics
         sta     SET80VID
 
         ldx     #3
-loop:   lsr     param           ; shift low bit into carry
+loop:   lsr     params::switches ; shift low bit into carry
         lda     table,x
         rol     a
         tay                     ; y = table[x] * 2 + carry
@@ -3876,9 +3878,11 @@ rts3:   rts
 ;;; 1 byte of params, copied to $82
 
 .proc SetZP1Impl
-        param := $82
+        PARAM_BLOCK params, $82
+flag:   .res 1
+        END_PARAM_BLOCK
 
-        lda     param
+        lda     params::flag
         cmp     preserve_zp_flag
         beq     rts3
         sta     preserve_zp_flag
@@ -3895,7 +3899,11 @@ rts3:   rts
 ;;; If high bit clear unstash ZP $00-$43 from buffer if not already unstashed.
 
 .proc SetZP2Impl
-        lda     $82
+        PARAM_BLOCK params, $82
+flag:   .res 1
+        END_PARAM_BLOCK
+
+        lda     params::flag
         cmp     low_zp_stash_flag
         beq     rts3
         sta     low_zp_stash_flag
@@ -4809,24 +4817,29 @@ is_pascal:
 ;;; 3 bytes of params, copied to $82
 
 .proc SetUserHookImpl
-        lda     $82
+        PARAM_BLOCK params, $82
+hook_id:        .res 1
+routine_ptr:    .res 2
+        END_PARAM_BLOCK
+
+        lda     params::hook_id
         cmp     #1
         bne     :+
 
-        lda     $84
+        lda     params::routine_ptr+1
         bne     clear_before_events_hook
         sta     before_events_hook+1
-        lda     $83
+        lda     params::routine_ptr
         sta     before_events_hook
         rts
 
 :       cmp     #2
         bne     invalid_hook
 
-        lda     $84
+        lda     params::routine_ptr+1
         bne     clear_after_events_hook
         sta     after_events_hook+1
-        lda     $83
+        lda     params::routine_ptr
         sta     after_events_hook
         rts
 
@@ -4987,12 +5000,15 @@ checkerboard_pattern:
 ;;; 2 bytes of params, copied to $82
 
 .proc AttachDriverImpl
-        params := $82
+        PARAM_BLOCK params, $82
+hook:        .res 2
+mouse_state: .res 2
+        END_PARAM_BLOCK
 
         bit     desktop_initialized_flag
         bmi     fail
 
-        copy16  params, mouse_hook
+        copy16  params::hook, mouse_hook
 
         ldax    mouse_state_addr
         ldy     #2
@@ -5440,6 +5456,7 @@ menu_item_y_table:
         .endrepeat
 menu_item_y_table_end:
 
+menu_glyphs:
 solid_apple_glyph:
         .byte   $1E
 open_apple_glyph:
@@ -6587,11 +6604,16 @@ hmrts:  rts
 ;;; 4 bytes of params, copied to $82
 
 .proc InitMenuImpl
-        params := $82
+        PARAM_BLOCK params, $82
+solid_char:     .res    1
+open_char:      .res    1
+check_char:     .res    1
+control_char:   .res    1
+        END_PARAM_BLOCK
 
         ldx     #3
 loop:   lda     params,x
-        sta     solid_apple_glyph,x
+        sta     menu_glyphs,x
         dex
         bpl     loop
 
@@ -7670,7 +7692,7 @@ do_select_win   := SelectWindowImpl::do_select_win
 ;;; ============================================================
 ;;; GetWinPtr
 
-;;; 1 byte of params, copied to $C7
+;;; 1 byte of params, copied to $82
 
 .proc GetWinPtrImpl
         ptr := $A9
@@ -7975,7 +7997,6 @@ dragx:     .word   0
 dragy:     .word   0
 moved:     .byte   0
         END_PARAM_BLOCK
-
 
         lda     #0
 drag_or_grow:
@@ -9168,12 +9189,15 @@ check_win:
 ;;; 2 bytes of params, copied to $82
 
 .proc SetMenuSelectionImpl
-        params := $82
+        PARAM_BLOCK params, $82
+menu_index:             .res 1
+menu_item_index:        .res 1
+        END_PARAM_BLOCK
 
-        lda     params+0
+        lda     params::menu_index
         sta     sel_menu_index
 
-        lda     params+1
+        lda     params::menu_item_index
         sta     sel_menu_item_index
 
         rts
@@ -10219,10 +10243,14 @@ grts:   rts
 ;;; clamp is to fractions of screen (0 = full, 1 = 1/2, 2 = 1/4, 3 = 1/8) (why???)
 
 .proc ScaleMouseImpl
-        params := $82
-        lda     params+0
+        PARAM_BLOCK params, $82
+x_exponent:     .res 1
+y_exponent:     .res 1
+        END_PARAM_BLOCK
+
+        lda     params::x_exponent
         sta     mouse_scale_x
-        lda     params+1
+        lda     params::y_exponent
         sta     mouse_scale_y
 
 set_clamps:
