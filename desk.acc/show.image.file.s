@@ -608,13 +608,12 @@ cloop:  lda     (src),y
 
 .proc set_color_mode
         ;; AppleColor Card - Mode 2 (Color 140x192)
-        sta     CLR80VID
-        lda     AN3_OFF
-        lda     AN3_ON
-        lda     AN3_OFF
-        lda     AN3_ON
-        lda     AN3_OFF
         sta     SET80VID
+        lda     AN3_OFF
+        lda     AN3_ON
+        lda     AN3_OFF
+        lda     AN3_ON
+        lda     AN3_OFF
 
         ;; Apple IIgs - DHR Color
         jsr     test_iigs
@@ -626,7 +625,7 @@ done:   rts
 .endproc
 
 .proc set_bw_mode
-        ;; AppleColor Card - Mode 1 (Color 560x192)
+        ;; AppleColor Card - Mode 1 (Monochrome 560x192)
         sta     CLR80VID
         lda     AN3_OFF
         lda     AN3_ON
