@@ -337,11 +337,13 @@ end:    rts
         jsr     stash_menu
         MGTK_CALL MGTK::OpenWindow, winfo
         MGTK_CALL MGTK::SetPort, winfo::port
+        jsr     set_color_mode
         jsr     show_file
         MGTK_CALL MGTK::ShowCursor
 
         MGTK_CALL MGTK::FlushEvents
         MGTK_CALL MGTK::ObscureCursor
+
         ;; fall through
 .endproc
 
@@ -366,6 +368,7 @@ on_key:
         bne     input_loop
 
 exit:
+        jsr     set_bw_mode
         MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::CloseWindow, winfo
         DESKTOP_CALL DT_REDRAW_ICONS
@@ -594,6 +597,60 @@ cloop:  lda     (src),y
         inc
         cmp     #rows
         bcc     rloop
+        rts
+.endproc
+
+;;; ============================================================
+;;; Color/B&W Toggle
+
+;;; TODO: Also consider Le Chat Mauve BW560 mode.
+;;; https://github.com/inexorabletash/a2d/issues/41
+
+.proc set_color_mode
+        ;; AppleColor Card - Mode 2 (Color 140x192)
+        sta     CLR80VID
+        lda     AN3_OFF
+        lda     AN3_ON
+        lda     AN3_OFF
+        lda     AN3_ON
+        lda     AN3_OFF
+        sta     SET80VID
+
+        ;; Apple IIgs - DHR Color
+        jsr     test_iigs
+        bcs     done
+        lda     #%00000000
+        sta     NEWVIDEO
+
+done:   rts
+.endproc
+
+.proc set_bw_mode
+        ;; AppleColor Card - Mode 1 (Color 560x192)
+        sta     CLR80VID
+        lda     AN3_OFF
+        lda     AN3_ON
+        lda     AN3_OFF
+        lda     AN3_ON
+        sta     SET80VID
+        lda     AN3_OFF
+
+        ;; Apple IIgs - DHR B&W
+        jsr     test_iigs
+        bcs     done
+        lda     #%00100000
+        sta     NEWVIDEO
+
+done:   rts
+.endproc
+
+;;; Returns with carry clear if IIgs, set otherwise.
+.proc test_iigs
+        lda     ROMIN2
+        sec
+        jsr     $FE1F
+        lda     LCBANK1
+        lda     LCBANK1
         rts
 .endproc
 

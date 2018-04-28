@@ -19,6 +19,11 @@ SPKR            := $C030
 ROMIN2          := $C082
 
 NEWVIDEO        := $C029        ; IIgs - new video modes
+        ;; Bit 7 = 1 = Enable Super-Hi-Res
+        ;; Bit 6 = 1 = Linearize SHR
+        ;; Bit 5 = 0 = Color DHR, 1 = B/W DHR
+        ;; Bits 4-0 must be 0
+
 SHADOW          := $C035        ; IIgs - inhibit shadowing
 
 AN3_ON          := $C05F        ; AppleColor Adapter Card / Le Chat Mauve
