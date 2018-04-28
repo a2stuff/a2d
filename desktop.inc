@@ -21,7 +21,7 @@ JUMP_TABLE_0F           := $400F ; Auxload
 JUMP_TABLE_EJECT        := $4012 ; Eject command
 JUMP_TABLE_REDRAW_ALL   := $4015 ; Redraw all windows (e.g. after a drag) *
 JUMP_TABLE_DESKTOP_RELAY:= $4018 ; DESKTOP relay call (main>aux)
-JUMP_TABLE_LOAD_SEG     := $401B ; Load dynamic routine
+JUMP_TABLE_LOAD_OVL     := $401B ; Load overlay routine
 JUMP_TABLE_CLEAR_SEL    := $401E ; Clear DeskTop selection *
 JUMP_TABLE_MLI          := $4021 ; ProDOS MLI call (Y=call, X,A=params addr) *
 JUMP_TABLE_COPY_TO_BUF  := $4024 ; Copy to buffer
@@ -33,7 +33,7 @@ JUMP_TABLE_ALERT_X      := $4033 ; Show alert X
 JUMP_TABLE_LAUNCH_FILE  := $4036 ; Launch file
 JUMP_TABLE_CUR_POINTER  := $4039 ; Changes mouse cursor to pointer *
 JUMP_TABLE_CUR_WATCH    := $403C ; Changes mouse cursor to watch
-JUMP_TABLE_RESTORE_SEG  := $403F ; Restore from dynamic routine
+JUMP_TABLE_RESTORE_OVL  := $403F ; Restore from overlay routine
 
 ;;; ============================================================
 ;;; API Calls (from aux memory)

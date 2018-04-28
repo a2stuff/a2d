@@ -11,12 +11,7 @@ New desk accessories:
 * [This Apple](this.apple.s) - complete!
 * [Eyes](eyes.s) - complete!
 
-## Desk Accessory Details
-
-* Loaded at $800 through (at least) $14FF
-* Copy themselves from Main into Aux memory (same location)
-* Can call into ProDOS MLI and MGTK/A2D entry points ($4000, etc)
-* See [API.md](API.md) for programming details
+See [API.md](API.md) for programming details
 
 ## Files
 
@@ -62,7 +57,7 @@ Mount this disk image in your emulator, or transfer it to a real floppy
 with [ADTPro](http://adtpro.com/), then follow the install instructions
 below.
 
-### Mounting Folder via the Virtual ]\[ Emulator
+### Mount Folder in Virtual ]\[
 
 If you use [Virtual \]\[](http://www.virtualii.com/) as your emulator,
 you can skip creating a disk image.
@@ -87,7 +82,7 @@ Transfer the `.built` files in the `out` directory, ensuring you:
 
 * Drop the `.built` suffix
 * Ensure they have ProDOS file type `$F1`
-* Ensure they have start address `$800`
+* Ensure they have start address `$0800`
 * Ensure they have auxtype `$0640` (to match the originals)
 
 The last three are tricky, and depend on how you're copying the files.

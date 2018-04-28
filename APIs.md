@@ -6,6 +6,11 @@ There are three distinct API classes that need to be used:
 * DeskTop Jump Table - simple JSR calls starting at $4003 MAIN, no arguments
 * DeskTop API - another MLI-style interface starting at $8E00 AUX
 
+In addition, some DeskTop data structures can be accessed directly.
+
+
+<!-- ============================================================ -->
+
 ## MouseGraphics ToolKit
 
 This is a complex API library written by Apple circa 1985. It consists of:
@@ -17,60 +22,161 @@ Entry point is fixed at $4000 AUX, called MLI-style (JSR followed by command typ
 
 See [MGTK.md](MGTK.md) for further documentation.
 
+<!-- ============================================================ -->
+
 ## DeskTop Jump Table
 
-Call from MAIN (RAMRDOFF/RAMWRTOFF). Call style:
-
+Call from MAIN (RAMRDOFF/RAMWRTOFF); AUX language card RAM must be banked in. Call style:
 ```
    jsr $xxxx
 ```
+Some calls take parameters in registers.
 
-> NOTE: Most of these calls have not been identified yet.
+> NOTE: Not all of the calls have been identified.
+> Routines marked with * are used by Desk Accessories.
 
-#### JUMP_TABLE_REDRAW_ALL ($4015)
+#### `JUMP_TABLE_MAIN_LOOP` ($4000)
 
-Redraws all DeskTop windows. Required after a drag or resize. Follow with DESKTOP_REDRAW_ICONS call.
+Enter DeskTop main loop
 
-#### JUMP_TABLE_CLEAR_SEL ($401E)
+#### `JUMP_TABLE_MGTK_RELAY` ($4003)
+
+MGTK relay call (main>aux)
+
+#### `JUMP_TABLE_SIZE_STRING` ($4006)
+
+Compose "nnn Blocks" string into internal buffer
+
+#### `JUMP_TABLE_DATE_STRING` ($4009)
+
+Compose date string into internal buffer
+
+#### `JUMP_TABLE_0C` ($400C)
+
+???
+
+#### `JUMP_TABLE_0F` ($400F)
+
+Auxload
+
+#### `JUMP_TABLE_EJECT` ($4012)
+
+Eject command
+
+#### `JUMP_TABLE_REDRAW_ALL` ($4015) *
+
+Redraws all DeskTop windows. Required after a drag or resize.
+Follow with `DT_REDRAW_ICONS` call.
+
+#### `JUMP_TABLE_DESKTOP_RELAY` ($4018)
+
+DESKTOP relay call (main>aux)
+
+#### `JUMP_TABLE_LOAD_OVL` ($401B)
+
+Load overlay routine
+
+#### `JUMP_TABLE_CLEAR_SEL` ($401E) *
 
 Deselect all DeskTop icons (volumes/files).
 
-#### JUMP_TABLE_CUR_POINTER ($4039)
+#### `JUMP_TABLE_MLI` ($4021)
 
-Changes mouse cursor to the default pointer. Note that bitmap is in the language card memory so it must be swapped in.
+ProDOS MLI call (Y=call, X,A=params addr) *
 
-#### JUMP_TABLE_CUR_WATCH ($403C)
+#### `JUMP_TABLE_COPY_TO_BUF` ($4024)
 
-Changes mouse cursor to a watch. Note that bitmap is in the language card memory so it must be swapped in.
+Copy to buffer
+
+#### `JUMP_TABLE_COPY_FROM_BUF:=` ($4027)
+
+Copy from buffer
+
+#### `JUMP_TABLE_NOOP` ($402A)
+
+No-Op command (RTS)
+
+#### `JUMP_TABLE_2D` ($402D)
+
+??? (Draw type/size/date in non-icon views?)
+
+#### `JUMP_TABLE_ALERT_0` ($4030)
+
+Show alert 0
+
+#### `JUMP_TABLE_ALERT_X` ($4033)
+
+Show alert X
+
+#### `JUMP_TABLE_LAUNCH_FILE` ($4036)
+
+Launch file
+
+#### `JUMP_TABLE_CUR_POINTER` ($4039) *
+
+Changes mouse cursor to pointer.
+
+#### `JUMP_TABLE_CUR_WATCH` ($403C)
+
+Changes mouse cursor to watch.
+
+#### `JUMP_TABLE_RESTORE_OVL` ($403F)
+
+Restore from overlay routine
+
+<!-- ============================================================ -->
 
 ## DeskTop API
 
 Call from AUX (RAMRDON/RAMWRTON). Call style:
-
 ```
    jsr $8E00
    .byte command
    .addr params
 ```
 
-> NOTE: Only a single call has been identified so far.
+> NOTE: Only some of the calls have been identified.
 
 Commands:
 
-#### DESKTOP_REDRAW_ICONS ($0C)
+### `DT_ADD_ICON` ($01)
+
+Parameters: { addr icondata }
+
+### `DT_HIGHLIGHT_ICON` ($02)
+
+Parameters: { byte icon }
+
+### `DT_UNHIGHLIGHT_ICON` ($03)
+
+Parameters: { byte icon }
+
+### `DT_CLOSE_WINDOW` ($07)
+
+Parameters: { byte window_id }
+
+### `DT_FIND_ICON` ($09)
+
+Parameters: { word mousex, word mousey, (out) byte result }
+
+### `DT_REDRAW_ICONS` ($0C)
 
 Parameters: none (pass $0000 as address)
 
-Redraws the icons on the desktop (mounted volumes, trash). This call is required in these cases:
+Redraws the icons on the desktop (mounted volumes, trash). This call
+is required after destroying, moving, or resizing a window.
 
-* After destroying a window (CloseWindow)
-* After repainting the desktop (JUMP_TABLE_REDRAW_ALL) following a drag (DragWindow)
-* After repainting the desktop (JUMP_TABLE_REDRAW_ALL) following a resize (GrowWindow)
+### `DT_ICON_IN_RECT` ($0D)
+
+Parameters: { byte icon, rect bounds }
+
+<!-- ============================================================ -->
 
 ## DeskTop Data Structures
 
-DeskTop's state - windows, icons - is accessible indirectly via APIs,
-and data structures can be accessed directly.
+DeskTop's state - selection, windows, icons - is only partially accessible
+via APIs. Operations such as opening the selected file requires accessing
+internal data structures directly.
 
 ### Selection
 
