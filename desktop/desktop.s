@@ -36,7 +36,8 @@ INVOKER_FILENAME := $280         ; File to invoke (PREFIX must be set)
 ;;; ============================================================
 
         .assert * = $8800, error, "Entry point mismatch"
-        .include "inc/font.inc"
+font_definition:
+        .incbin "../fonts/A2D.FONT"
 
 ;;; ============================================================
 

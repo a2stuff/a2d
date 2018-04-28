@@ -3,7 +3,7 @@
 # Input: HCRG-style Font (768 bytes)
 # Output: MGTK font definition
 
-# Usage: perl convert.pl < font_data > font.inc
+# Usage: perl convert.pl < font_data > font.bin
 
 use strict;
 use warnings;
@@ -24,27 +24,19 @@ for (my $i = 0; $i < $NCHARS - $NCCS; ++$i) {
 
 my @out;
 
-push @out, 0x00;
-push @out, 0x7f;
+push @out, 0x00; # single width
+push @out, 0x7f; # last character
 push @out, 8; # height
 
-# widths
+# compute glyph widths
 for (my $i = 0; $i < $NCHARS; ++$i) {
 
     my @bytes = map { ord($_) & 0x7f } split('', $chars[$i]);
-
 
     my $bits = 0;
     for (my $b = 0; $b < 8; ++$b) {
         $bits = $bits | $bytes[$b];
     }
-
-    #while ($bits && (($bits & 0x1) == 0)) {
-    #    $bits = $bits >> 1;
-    #    for (my $b = 0; $b < 8; ++$b) {
-    #        $bytes[$b] = $bytes[$b] >> 1;
-    #    }
-    #}
 
     $chars[$i] = join('', map { chr } @bytes);
 
@@ -56,22 +48,21 @@ for (my $i = 0; $i < $NCHARS; ++$i) {
         $bits >= (1<<2) ? 3 :
         $bits >= (1<<1) ? 2 : 1;
 
-    $w = 7;
-
     push @out, $w;
 }
 
 # bits
 for (my $b = 0; $b < 8; ++$b) {
     for (my $i = 0; $i < $NCHARS; ++$i) {
-        #print $i, " - ", length($chars[$i]), "\n";
         push @out, ord(substr($chars[$i], $b, 1));
     }
 }
 
-# output for ca65
-while (scalar @out) {
-    my @chunk = splice(@out, 0, 8);
-    @chunk = map { sprintf('$%02x', $_) } @chunk;
-    print "        .byte     " . join(',', @chunk) . "\n";
-}
+# source output for ca65
+#while (scalar @out) {
+#    my @chunk = splice(@out, 0, 8);
+#    @chunk = map { sprintf('$%02x', $_) } @chunk;
+#    print "        .byte     " . join(',', @chunk) . "\n";
+#}
+
+print join('', map { chr($_) } @out);
