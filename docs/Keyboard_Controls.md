@@ -1,5 +1,8 @@
 # Keyboard Control
 
+It is possible to execute nearly every function in Apple II DeskTop
+with the keyboard.
+
 △ = Open Apple
 
 ▲ = Solid Apple

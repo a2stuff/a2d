@@ -36,7 +36,8 @@ INVOKER_FILENAME := $280         ; File to invoke (PREFIX must be set)
 ;;; ============================================================
 
         .assert * = $8800, error, "Entry point mismatch"
-        .include "inc/font.inc"
+font_definition:
+        .incbin "../fonts/A2D.FONT"
 
 ;;; ============================================================
 
@@ -5538,7 +5539,7 @@ JT_AUXLOAD:             jmp     DESKTOP_AUXLOAD
 JT_EJECT:               jmp     cmd_eject
 JT_REDRAW_ALL:          jmp     redraw_windows          ; *
 JT_DESKTOP_RELAY:       jmp     DESKTOP_RELAY
-JT_LOAD_SEG:            jmp     load_dynamic_routine
+JT_LOAD_OVL:            jmp     load_dynamic_routine
 JT_CLEAR_SELECTION:     jmp     clear_selection         ; *
 JT_MLI_RELAY:           jmp     MLI_RELAY               ; *
 JT_COPY_TO_BUF:         jmp     DESKTOP_COPY_TO_BUF

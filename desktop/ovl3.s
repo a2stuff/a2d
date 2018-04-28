@@ -66,7 +66,7 @@ L9052:  lda     #$00
         tya
         pha
         lda     #$07
-        jsr     JUMP_TABLE_RESTORE_SEG
+        jsr     JUMP_TABLE_RESTORE_OVL
         jsr     JUMP_TABLE_REDRAW_ALL
         pla
         tay
@@ -226,7 +226,7 @@ L91BC:  clc
         tya
         pha
         lda     #$07
-        jsr     JUMP_TABLE_RESTORE_SEG
+        jsr     JUMP_TABLE_RESTORE_OVL
         jsr     JUMP_TABLE_REDRAW_ALL
         pla
         tay
@@ -394,7 +394,7 @@ L933F:  pha
         cmp     #$02
         bne     L934F
         lda     #$07
-        jsr     JUMP_TABLE_RESTORE_SEG
+        jsr     JUMP_TABLE_RESTORE_OVL
         jsr     JUMP_TABLE_REDRAW_ALL
 L934F:  MGTK_RELAY_CALL MGTK::InitPort, $D239
         MGTK_RELAY_CALL MGTK::SetPort, $D239

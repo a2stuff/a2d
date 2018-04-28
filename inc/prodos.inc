@@ -121,6 +121,77 @@ ERR_VOLUME_DIR_FULL   := $49
 ERR_END_OF_FILE       := $4C
 
 ;;; ============================================================
+;;; Directory Structures
+;;; ============================================================
+
+STORAGE_TYPE_MASK       := $F0
+NAME_LENGTH_MASK        := $0F
+
+;;; Volume Directory Header structure
+.struct VolumeDirectoryHeader
+        prev_block      .word
+        next_block      .word
+        storage_type_name_length        .byte
+        file_name       .byte 15
+        reserved        .byte 8
+        creation_date   .word
+        creation_time   .word
+        version         .byte
+        min_version     .byte
+        access          .byte
+        entry_length    .byte
+        entries_per_block       .byte
+        file_count      .word
+        ;; same through here ---------
+        bit_map_pointer .word
+        total_blocks    .word
+.endstruct
+        .assert .sizeof(VolumeDirectoryHeader) = $2B, error, "incorrect struct size"
+
+;;; Subdirectory Header structure
+.struct SubdirectoryHeader
+        prev_block      .word
+        next_block      .word
+        storage_type_name_length        .byte
+        file_name       .byte 15
+        reserved        .byte 8
+        creation_date   .word
+        creation_time   .word
+        version         .byte
+        min_version     .byte
+        access          .byte
+        entry_length    .byte
+        entries_per_block       .byte
+        file_count      .word
+        ;; same through here ---------
+        parent_pointer .word
+        parent_entry_number .byte
+        parent_entry_length .byte
+.endstruct
+        .assert .sizeof(SubdirectoryHeader) = $2B, error, "incorrect struct size"
+
+;; File Entry structure
+.struct FileEntry
+        storage_type_name_length        .byte
+        file_name       .byte 15
+        file_type       .byte
+        key_pointer     .word
+        blocks_used     .word
+        eof             .faraddr
+        creation_date   .word
+        creation_time   .word
+        version         .byte
+        min_version     .byte
+        access          .byte
+        aux_type        .word
+        mod_date        .word
+        mod_time        .word
+        header_pointer  .word
+.endstruct
+        .assert .sizeof(FileEntry) = $27, error, "incorrect struct size"
+
+
+;;; ============================================================
 ;;; Macros
 ;;; ============================================================
 

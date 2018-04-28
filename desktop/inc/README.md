@@ -1,7 +1,3 @@
-## `font.inc`
-
-Font definition, per MouseGraphics ToolKit
-
 ## `desktoplc.inc`
 
 Header defining various resources in the language card area, used by

@@ -111,6 +111,14 @@
         _op_hi ldx, {arg}
 .endmacro
 
+;;; Load A,Y
+;;;    lday #$1234      ; immediate
+;;;    lday $1234       ; absolute
+.macro lday arg
+        _op_lo lda, {arg}
+        _op_hi ldy, {arg}
+.endmacro
+
 ;;; Load X,Y
 ;;;    ldxy #$1234      ; immediate
 ;;;    ldxy $1234       ; absolute
@@ -433,6 +441,15 @@
 skip:
 .endmacro
 
+;;; Decrement 16-bit value
+.macro dec16    arg
+        .local skip
+        lda     arg
+        bne     skip
+        dec     arg+1
+skip:   dec     arg
+.endmacro
+
 ;;; Helper macros to set up a scoped block of parameters at a pre-determined
 ;;; address.
 ;;;
@@ -454,15 +471,16 @@ skip:
 .macro PARAM_BLOCK name, addr
         name := addr
         .scope  name
+        saved_org := *
         .pushseg
         .bss
-        .feature org_per_seg
         .org    addr
-start:
+        start := *
 .endmacro
 
 .macro END_PARAM_BLOCK
         size := * - start
         .popseg
+        .org saved_org
         .endscope
 .endmacro

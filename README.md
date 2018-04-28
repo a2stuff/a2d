@@ -1,20 +1,20 @@
-# A2D
+# Apple II DeskTop
 
 [![Build Status](https://travis-ci.org/inexorabletash/a2d.svg?branch=master)](https://travis-ci.org/inexorabletash/a2d)
 
-Work-in-Progress disassembly of Apple II Desktop (a.k.a. A2.Desktop)
+Work-in-Progress disassembly of Apple II Desktop (a.k.a. MouseDesk)
 
 ## Background
 
-A2.Desktop started its life as "Mousedesk" by Version Soft, as a mouse-driven
-Mac-like "Finder" GUI application for 8-bit Apples with 128k of memory
-(Enhanced Apple //e, Apple //c) using double-hires monochrome graphics
-(560x192) and the ProDOS operating system.
+Apple II Desktop started its life as "MouseDesk" by Version Soft. It
+is a mouse-driven Mac-like "Finder" GUI application for 8-bit Apples
+with 128k of memory (Enhanced Apple //e, Apple //c) using double-hires
+monochrome graphics (560x192) and the ProDOS operating system.
 
-Although the history is sketchy, it appears that Apple Computer licensed
-(or acquired) the software, and released it - rebranded as Apple II Desktop -
-as the initial system software for the Apple IIgs before 16-bit GS/OS
-replaced it. The rebranded version still functions on 8-bit Apples.
+Apple Computer acquired the software and released it - rebranded as
+Apple II Desktop - as the initial system software for the Apple IIgs
+before 16-bit GS/OS replaced it. The rebranded version still functions
+on 8-bit Apples.
 
 Overview: http://toastytech.com/guis/a2desk.html
 
