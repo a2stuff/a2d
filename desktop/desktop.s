@@ -7513,11 +7513,18 @@ stack_data:
         .addr   $DEAF,$DEAD     ; ???
 
 quit_code:
-        .byte   $18,$FB,$5C,$04,$D0,$E0
-        ;; 65816 code:
-        ;; 18           clc             ; clear carry
-        ;; FB           xce             ; exchange carry/emulation (i.e. turn on 16 bit)
-        ;; 5C 04 D0 E0  jmp $E0D004     ; long jump
+        ;;; note that GS/OS GQUIT is called by ProDOS at $E0D000
+        ;;; to quit back to GS/OS.
+        ;;; since DeskTop pre-dates GS/OS, it's likely that this does
+        ;;; a similar function for ProDOS 16.
+        ;;; with GS/OS 5 and 6, this code potentially messes up
+        ;;; the shadow register, $C035
+        .pushcpu
+        .setcpu "65816"
+        clc
+        xce                             ; enter native mode
+        jmp     $E0D004                 ; ProDOS 8->16 QUIT, presumably
+        .popcpu
 
         DEFINE_QUIT_PARAMS quit_params
 
