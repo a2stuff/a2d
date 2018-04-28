@@ -1077,8 +1077,14 @@ notpas:
 ;;; and installed chips.
 ;;; AE RamWorks cards can only support 8M max (banks $00-$7F), but
 ;;; the various emulators support 16M max (banks $00-$FF).
-
+;;;
+;;; If RamWorks is not present, bank switching is a no-op and the
+;;; same regular 64Kb AUX bank is present throughout the test, so
+;;; we also need to distinguish that case.
 .proc check_ramworks_memory
+        sigb0   := $00
+        sigb1   := $01
+
         ;; Run from clone in main memory
         php
         sei     ; don't let interrupts happen while the memory map is munged
@@ -1090,34 +1096,73 @@ notpas:
         RWBANK  := $C073
 
         ldx     #0              ; bank we are checking
-        ldy     #0              ; bank count
+        ldy     #0              ; populated bank count
 loop:   stx     RWBANK          ; select bank
-        lda     $00             ; save existing data
+        lda     sigb0           ; save existing data
         pha                     ; on stack
-        lda     $01
+        lda     sigb1
         pha
         txa                     ; bank number as first check byte
-        sta     $00
-        cmp     $00
+        sta     sigb0
+        cmp     sigb0
         bne     :+
         eor     #$FF            ; bank complement as secondary check byte
-        sta     $01
-        cmp     $01
+        sta     sigb1
+        cmp     sigb1
         bne     :+
         iny                     ; found a bank, count it
 :       pla                     ; restore saved data
-        sta     $01
+        sta     sigb1
         pla
-        sta     $00
+        sta     sigb0
         inx                     ; next bank
         bne     loop            ; if we hit 256 banks, make sure we exit
 
         ;; Switch back to RW bank 0 (normal aux memory)
-done:   lda     #0
+        lda     #0
         sta     RWBANK
 
+        ;; --------------------------------------------------
+
+        ;; Y=0 means either 256 populated banks, or that there was
+        ;; never a RawWorks card present and RWBANK is a no-op.
+        cpy     #0
+        bne     done
+
+        ;; Disambiguate these cases by writing to banks 0 and 1
+        ;; and testing that they work. We know that bank 1 is
+        ;; not an unpopulated RW bank.
+
+        lda     sigb0           ; Write signature to bank 0
+        pha
+        lda     #0
+        sta     sigb0
+
+        lda     #1              ; Write signature to bank 1
+        sta     RWBANK
+        lda     sigb0
+        pha
+        lda     #1
+        sta     sigb0
+
+        lda     #0              ; Check signature in bank 0
+        sta     RWBANK
+        cmp     sigb0           ; If we don't see bank 0 signature
+        beq     :+              ; then this was all a sham; set Y
+        iny                     ; to 1 bank, i.e. normal AUX memory.
+
+:       lda     #1              ; Restore bank 1
+        sta     RWBANK
+        pla
+        sta     sigb0
+
+        lda     #0              ; Restore bank 0
+        sta     RWBANK
+        pla
+        sta     sigb0
+
         ;; Back to executing from aux memory
-        sta     RAMRDON
+done:   sta     RAMRDON
         sta     RAMWRTON
         plp                     ; restore interrupt state
         rts
