@@ -5391,10 +5391,12 @@ ret:    clc
 check_kbd_flag:  .byte   $80
 
 .proc SetKeyEventImpl
-        params := $82
+        PARAM_BLOCK params, $82
+handle_keys:    .res    1
+        END_PARAM_BLOCK
 
         asl     check_kbd_flag
-        ror     params
+        ror     params::handle_keys
         ror     check_kbd_flag
         rts
 .endproc
@@ -6021,16 +6023,14 @@ which_key: .byte   0
 key_mods:  .byte   0
         END_PARAM_BLOCK
 
-
         lda     params::which_key
-        cmp     #$1B                     ; escape key
+        cmp     #CHAR_ESCAPE
         bne     :+
 
         lda     params::key_mods
         bne     :+
         jsr     KeyboardMouse
         jmp     MenuSelectImpl
-
 
 :       lda     #find_mode_by_shortcut
         jsr     find_menu
