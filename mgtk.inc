@@ -571,6 +571,14 @@ inpoly_outside          := $00
 ;;; ============================================================
 ;;; Offsets
 
+mapinfo_offset_viewloc            :=  0
+mapinfo_offset_viewloc_xcoord     :=  0
+mapinfo_offset_viewloc_ycoord     :=  2
+mapinfo_offset_mapbits            :=  4
+mapinfo_offset_mapwidth           :=  6
+mapinfo_offset_maprect            :=  8
+mapinfo_size                      := 16
+
 grafport_offset_viewloc            :=  0
 grafport_offset_viewloc_xcoord     :=  0
 grafport_offset_viewloc_ycoord     :=  2

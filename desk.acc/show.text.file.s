@@ -10,6 +10,11 @@
 
         .org $800
 
+        dummy1000 := $1000
+
+
+
+
 start:  jmp     copy2aux
 
 save_stack:.byte   0
@@ -51,7 +56,7 @@ loop:   lda     call_main_template,x
 .proc call_main_template
         sta     RAMRDOFF
         sta     RAMWRTOFF
-        jsr     $1000           ; overwritten (in zp version)
+        jsr     dummy1000       ; overwritten (in zp version)
         sta     RAMRDON
         sta     RAMWRTON
         rts
@@ -158,19 +163,17 @@ params_start:
 
 ;;; ProDOS MLI param blocks
 
-        DEFINE_OPEN_PARAMS open_params, pathbuff, $C00
+io_buf          := $0C00
+default_buffer  := $1200
+read_length     := $0100
 
-default_buffer := $1200
-
-        DEFINE_READ_PARAMS read_params, default_buffer, $100
+        DEFINE_OPEN_PARAMS open_params, pathbuf, io_buf
+        DEFINE_READ_PARAMS read_params, default_buffer, read_length
         DEFINE_GET_EOF_PARAMS get_eof_params
         DEFINE_SET_MARK_PARAMS set_mark_params, 0
         DEFINE_CLOSE_PARAMS close_params
 
-.proc pathbuff                 ; 1st byte is length, rest is full path
-length: .byte   $00
-data:   .res    64, $00
-.endproc
+pathbuf:        .res    65, 0
 
 L0945:  .byte   $00
 L0946:  .byte   $00
@@ -189,8 +192,11 @@ white_pattern:
 
         da_window_id := 100
 
+        line_spacing := 10
+        right_const := 506
+
 L095A:  .byte   $00
-L095B:  .word   $1FA
+L095B:  .word   right_const
 
 .proc line_pos
 left:   .word   0
@@ -200,9 +206,9 @@ base:   .word   0
 window_width:  .word   0
 window_height: .word   0
 
-L0965:  .byte   0
-L0966:  .word   0
-L0968:  .word   0
+y_remaining:  .word   0
+unused: .byte   0
+line_count:  .word   0
 L096A:  .word   0
 L096C:  .word   0
 
@@ -231,23 +237,23 @@ mousey: .word   0
 it_grew:        .byte   0
 .endproc
 
-.proc trackgoaway_params          ; queried after close clicked to see if aborted/finished
-goaway:  .byte   0               ; 0 = aborted, 1 = clicked
+.proc trackgoaway_params ; queried after close clicked to see if aborted/finished
+goaway: .byte   0        ; 0 = aborted, 1 = clicked
 .endproc
 
         .byte   0,0             ; ???
 
-.proc findcontrol_params       ; queried after a client click to identify target
+.proc findcontrol_params        ; queried after a client click to identify target
 mousex: .word   0
 mousey: .word   0
-which_ctl:   .byte   0               ; 0 = client, 1 = vscroll, 2 = hscroll
-which_part: .byte   0               ; 1 = up, 2 = down, 3 = above, 4 = below, 5 = thumb
+which_ctl:      .byte   0       ; 0 = client, 1 = vscroll, 2 = hscroll
+which_part:     .byte   0       ; 1 = up, 2 = down, 3 = above, 4 = below, 5 = thumb
 .endproc
 
         ;; param block used in dead code (resize?)
 .proc setctlmax_params
-which_ctl:   .byte   0
-ctlmax:  .byte   0
+which_ctl:      .byte   0
+ctlmax:         .byte   0
         ;; needs one more byte?
 .endproc
 
@@ -266,8 +272,8 @@ thumbmoved:  .byte   0               ; 0 if not moved, 1 if moved
 .endproc
 
 .proc drawtext_params
-textptr:   .addr   0               ; address
-textlen:    .byte   0               ; length
+textptr:        .addr   0       ; address
+textlen:        .byte   0       ; length
 .endproc
 
         default_width := 512
@@ -276,45 +282,43 @@ textlen:    .byte   0               ; length
         default_top := 28
 
 .proc winfo
-window_id:     .byte   da_window_id       ; window identifier
-options:  .byte   MGTK::option_go_away_box; window flags (2=include close port)
-title:  .addr   $1000           ; overwritten to point at filename
-hscroll:.byte   MGTK::scroll_option_none
-vscroll:.byte   MGTK::scroll_option_normal
-hthumbmax:  .byte   32
-hthumbpos:  .byte   0
-vthumbmax:  .byte   255
-vthumbpos:  .byte   0
-status: .byte   0
+window_id:      .byte   da_window_id ; window identifier
+options:        .byte   MGTK::option_go_away_box ; window flags (2=include close port)
+title:          .addr   dummy1000 ; overwritten to point at filename
+hscroll:        .byte   MGTK::scroll_option_none
+vscroll:        .byte   MGTK::scroll_option_normal
+hthumbmax:      .byte   32
+hthumbpos:      .byte   0
+vthumbmax:      .byte   255
+vthumbpos:      .byte   0
+status:         .byte   0
 reserved:       .byte   0
-mincontwidth:     .word   200
-mincontlength:     .word   51
-maxcontwidth:     .word   default_width
-maxcontlength:     .word   default_height
-
+mincontwidth:   .word   200
+mincontlength:  .word   51
+maxcontwidth:   .word   default_width
+maxcontlength:  .word   default_height
 port:
-        DEFINE_POINT default_left, default_top, viewloc
-mapbits:   .addr   MGTK::screen_mapbits
-mapwidth: .word   MGTK::screen_mapwidth
-        DEFINE_RECT 0, 0, default_width, default_height, maprect
-
-pattern:.res    8, $00
-colormasks:      .byte MGTK::colormask_and, MGTK::colormask_or
-penloc: DEFINE_POINT 0, 0
-penwidth: .byte   1
-penheight: .byte   1
-penmode:   .byte   0
-textback:  .byte   $7F
-textfont:   .addr   DEFAULT_FONT
-
-nextwinfo:   .addr   0
+viewloc:        DEFINE_POINT default_left, default_top, viewloc
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .word   MGTK::screen_mapwidth
+maprect:        DEFINE_RECT 0, 0, default_width, default_height, maprect
+pattern:        .res    8, $00
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+penloc:         DEFINE_POINT 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   0
+textback:       .byte   $7F
+textfont:       .addr   DEFAULT_FONT
+nextwinfo:      .addr   0
 .endproc
+
 
         ;; gets copied over winfo::port after mode is drawn
 .proc default_port
-viewloc:        DEFINE_POINT   default_left, default_top
-mapbits:   .word   MGTK::screen_mapbits
-mapwidth: .word   MGTK::screen_mapwidth
+viewloc:        DEFINE_POINT default_left, default_top
+mapbits:        .word   MGTK::screen_mapbits
+mapwidth:       .word   MGTK::screen_mapwidth
 maprect:        DEFINE_RECT 0, 0, default_width, default_height
 .endproc
 
@@ -327,14 +331,14 @@ maprect:        DEFINE_RECT 0, 0, default_width, default_height
 
         ;; Check that an icon is selected
         lda     #0
-        sta     pathbuff::length
+        sta     pathbuf
         lda     selected_file_count
         beq     abort           ; some file properties?
         lda     path_index      ; prefix index in table
         bne     :+
 abort:  rts
 
-        ;; Copy path (prefix) into pathbuff buffer.
+        ;; Copy path (prefix) into pathbuf.
 :       src := $06
         dst := $08
 
@@ -347,14 +351,14 @@ abort:  rts
         inc     src
         bne     :+
         inc     src+1
-:       copy16  #(pathbuff::data), dst
-        jsr     copy_pathbuff   ; copy x bytes (src) to (dst)
+:       copy16  #pathbuf+1, dst
+        jsr     copy_pathbuf   ; copy x bytes (src) to (dst)
 
         ;; Append separator.
         lda     #'/'
         ldy     #0
         sta     (dst),y
-        inc     pathbuff::length
+        inc     pathbuf
         inc     dst
         bne     :+
         inc     dst+1
@@ -397,7 +401,7 @@ abort:  rts
         sta     src
         bcc     :+
         inc     src+1
-:       jsr     copy_pathbuff   ; copy x bytes (src) to (dst)
+:       jsr     copy_pathbuf    ; copy x bytes (src) to (dst)
 
         ;; Clear selection (why???)
         copy16  #JUMP_TABLE_CLEAR_SEL, call_main_addr
@@ -405,12 +409,12 @@ abort:  rts
 
         jmp     open_file_and_init_window
 
-.proc copy_pathbuff             ; copy x bytes from src to dst
+.proc copy_pathbuf              ; copy x bytes from src to dst
         ldy     #0              ; incrementing path length and dst
 loop:   lda     (src),y
         sta     (dst),y
         iny
-        inc     pathbuff::length
+        inc     pathbuf
         dex
         bne     loop
         tya
@@ -549,13 +553,16 @@ wider:  lda     winfo::hscroll
 enable: ora     #MGTK::scroll_option_active           ; enable scroll
 
 :       sta     winfo::hscroll
+
+        val := $06
+
         sec
         lda     #<max_width
         sbc     window_width
-        sta     $06
+        sta     val
         lda     #>max_width
         sbc     window_width+1
-        sta     $06+1
+        sta     val+1
         jsr     div_by_16
         sta     setctlmax_params::ctlmax
         lda     #MGTK::ctl_horizontal_scroll_bar
@@ -691,7 +698,7 @@ end:    rts
 .endproc
 
 .proc calc_track_scroll_delta
-        lda     window_height   ; ceil(??? / 50)
+        lda     window_height   ; ceil(height / 50)
         ldx     #0
 loop:   inx
         sec
@@ -728,9 +735,12 @@ loop:   inx
         jsr     do_trackthumb
         lda     trackthumb_params::thumbmoved
         beq     end
+
+        res := $06
         lda     trackthumb_params::thumbpos
         jsr     mul_by_16
-        copy16  $06, winfo::maprect::x1
+        copy16  res, winfo::maprect::x1
+
         clc
         lda     winfo::maprect::x1
         adc     window_width
@@ -817,14 +827,16 @@ store:  sta     winfo::hthumbpos
 
 ;;; only used from hscroll code?
 .proc adjust_box_width
+
+        res := $06
         lda     winfo::hthumbpos
         jsr     mul_by_16
         clc
-        lda     $06
+        lda     res
         sta     winfo::maprect::x1
         adc     window_width
         sta     winfo::maprect::x2
-        lda     $07
+        lda     res+1
         sta     winfo::maprect::x1+1
         adc     window_width+1
         sta     winfo::maprect::x2+1
@@ -875,7 +887,9 @@ end:    rts
 .proc update_hscroll
         lda     #2
         sta     updatethumb_params::which_ctl
-        copy16  winfo::maprect::x1, $06
+
+        val := $06
+        copy16  winfo::maprect::x1, val
         jsr     div_by_16
         sta     updatethumb_params::thumbpos
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
@@ -914,16 +928,18 @@ end:    rts
 ;;; Content Rendering
 
 .proc draw_content
+        ptr := $06
+
         lda     #0
         sta     L0949
         jsr     assign_fixed_font_width_table_if_needed
         jsr     set_file_mark
         lda     #<default_buffer
         sta     read_params::data_buffer
-        sta     $06
+        sta     ptr
         lda     #>default_buffer
         sta     read_params::data_buffer+1
-        sta     $07
+        sta     ptr+1
         lda     #0
         sta     L0945
         sta     L0946
@@ -932,9 +948,9 @@ end:    rts
         sta     L096C
         sta     L096C+1
         sta     L0948
-        lda     #$0A            ; line spacing = 10
+        lda     #line_spacing
         sta     line_pos::base
-        jsr     L0EDB
+        jsr     reset_line
 
 do_line:
         lda     L096C+1
@@ -954,41 +970,41 @@ do_line:
         sbc     line_pos::left+1
         sta     L095B+1
         jsr     find_text_run
-        bcs     L0ED7
+        bcs     done
         clc
         lda     drawtext_params::textlen
-        adc     $06
-        sta     $06
+        adc     ptr
+        sta     ptr
         bcc     :+
-        inc     $07
+        inc     ptr+1
 :       lda     L095A
         bne     do_line
         clc
         lda     line_pos::base
-        adc     #$0A            ; line spacing = 10
+        adc     #line_spacing
         sta     line_pos::base
         bcc     :+
         inc     line_pos::base+1
-:       jsr     L0EDB
+:       jsr     reset_line
         lda     L096C
-        cmp     L0968
+        cmp     line_count
         bne     :+
         lda     L096C+1
-        cmp     L0968+1
-        beq     L0ED7
+        cmp     line_count+1
+        beq     done
 :       inc     L096C
         bne     :+
         inc     L096C+1
 :       jmp     do_line
 
-L0ED7:  jsr     restore_proportional_font_table_if_needed
+done:   jsr     restore_proportional_font_table_if_needed
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc L0EDB                     ; ???
-        copy16  #506, L095B
+.proc reset_line
+        copy16  #right_const, L095B
         copy16  #3, line_pos::left
         sta     L095A
         rts
@@ -997,6 +1013,8 @@ L0ED7:  jsr     restore_proportional_font_table_if_needed
 ;;; ============================================================
 
 .proc find_text_run
+        ptr := $06
+
         lda     #$FF
         sta     L0F9B
         lda     #0
@@ -1004,7 +1022,7 @@ L0ED7:  jsr     restore_proportional_font_table_if_needed
         sta     run_width+1
         sta     L095A
         sta     drawtext_params::textlen
-        copy16  $06, drawtext_params::textptr
+        copy16  ptr, drawtext_params::textptr
 
 loop:   lda     L0945
         bne     more
@@ -1016,9 +1034,9 @@ loop:   lda     L0945
 
 :       jsr     ensure_page_buffered
 more:   ldy     drawtext_params::textlen
-        lda     ($06),y
+        lda     (ptr),y
         and     #$7F            ; clear high bit
-        sta     ($06),y
+        sta     (ptr),y
         inc     L0945
         cmp     #CHAR_RETURN
         beq     finish_text_run
@@ -1061,9 +1079,12 @@ more:   ldy     drawtext_params::textlen
         ;; fall through
 .endproc
 
-finish_text_run:  jsr     draw_text_run
+.proc finish_text_run
+        ptr := $06
+
+        jsr     draw_text_run
         ldy     drawtext_params::textlen
-        lda     ($06),y
+        lda     (ptr),y
         cmp     #CHAR_TAB
         beq     tab
         cmp     #CHAR_RETURN
@@ -1071,6 +1092,7 @@ finish_text_run:  jsr     draw_text_run
 tab:    inc     drawtext_params::textlen
 :       clc
         rts
+.endproc
 
 ;;; ============================================================
 
@@ -1131,10 +1153,13 @@ end:    rts
 ;;; ============================================================
 
 .proc ensure_page_buffered
+        ptr := $06
+
         lda     drawtext_params::textptr+1
         cmp     #>default_buffer
         beq     read
 
+        ;; TODO: Where does $1300 come from ???
         ;; copy a page of characters from $1300 to the buffer
         ldy     #0
 loop:   lda     $1300,y
@@ -1143,7 +1168,7 @@ loop:   lda     $1300,y
         bne     loop
 
         dec     drawtext_params::textptr+1
-        copy16  drawtext_params::textptr, $06
+        copy16  drawtext_params::textptr, ptr
 
 read:   lda     #0
         sta     L0945
@@ -1158,17 +1183,19 @@ read:   lda     #0
 ;;; ============================================================
 
 .proc read_file_page
-        copy16  read_params::data_buffer, store+1
+        copy16  read_params::data_buffer, store_addr
 
         lda     #' '            ; fill buffer with spaces
         ldx     #0
         sta     RAMWRTOFF
+
+        store_addr := *+1
 store:  sta     default_buffer,x         ; self-modified
         inx
         bne     store
 
         sta     RAMWRTON        ; read file chunk
-        lda     #$00
+        lda     #0
         sta     L0947
         jsr     read_file
 
@@ -1187,10 +1214,10 @@ store:  sta     default_buffer,x         ; self-modified
         pla
 
         beq     end
-        cmp     #$4C            ; ???
+        cmp     #ERR_END_OF_FILE
         beq     done
-        brk                     ; ????
-done:   lda     #$01
+        brk                     ; crash on other error
+done:   lda     #1
         sta     L0947
 end:    rts
 .endproc
@@ -1214,50 +1241,57 @@ end:    rts
 ;;; ============================================================
 
 .proc calc_line_position
-        copy16  winfo::maprect::y2, L0965
+        copy16  winfo::maprect::y2, y_remaining
 
         lda     #0
-        sta     L0968
-        sta     L0968+1
-loop:   lda     L0966
+        sta     line_count
+        sta     line_count+1
+
+loop:   lda     y_remaining+1
         bne     :+
-        lda     L0965
-        cmp     #$0A            ; line spacing = 10
+        lda     y_remaining
+        cmp     #line_spacing
         bcc     end
+
 :       sec
-        lda     L0965
-        sbc     #$0A            ; line spacing = 10
-        sta     L0965
+        lda     y_remaining
+        sbc     #line_spacing
+        sta     y_remaining
         bcs     :+
-        dec     L0966
-:       inc     L0968
+        dec     y_remaining+1
+:       inc     line_count
         bne     loop
-        inc     L0968+1
+        inc     line_count+1
         jmp     loop
+
 end:    rts
 .endproc
 
 ;;; ============================================================
 
 .proc div_by_16                 ; input in $06/$07, output in a
+        val := $06
+
         ldx     #4
 loop:   clc
-        ror     $07
-        ror     $06
+        ror     val+1
+        ror     val
         dex
         bne     loop
-        lda     $06
+        lda     val
         rts
 .endproc
 
 .proc mul_by_16                 ; input in a, output in $06/$07
-        sta     $06
+        res := $06
+
+        sta     res
         lda     #0
-        sta     $07
+        sta     res+1
         ldx     #4
 loop:   clc
-        rol     $06
-        rol     $07
+        rol     res
+        rol     res+1
         dex
         bne     loop
         rts
@@ -1318,10 +1352,10 @@ end:    rts
 
 .proc on_title_bar_click
         lda     event_params::mousex+1           ; mouse x high byte?
-        cmp     mode_box_left+1
+        cmp     mode_mapinfo_viewloc_xcoord+1
         bne     :+
         lda     event_params::mousex
-        cmp     mode_box_left
+        cmp     mode_mapinfo_viewloc_xcoord
 :       bcc     ignore
 
         ;; Toggle the state and redraw
@@ -1346,18 +1380,15 @@ fixed_str:      DEFINE_STRING "Fixed        "
 prop_str:       DEFINE_STRING "Proportional"
         label_width := 50
         title_bar_height := 12
-.proc mode_box                  ; bounding port for mode label
-left:   .word   0
-top:    .word   0
-mapbits:   .word   MGTK::screen_mapbits
-mapwidth: .word   MGTK::screen_mapwidth
-hoff:   .word   0
-voff:   .word   0
-width:  .word   80
-height: .word   10
+
+.proc mode_mapinfo                  ; bounding port for mode label
+viewloc:        DEFINE_POINT 0, 0, viewloc
+mapbits:        .word   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved:       .byte   0
+maprect:        DEFINE_RECT 0, 0, 80, 10, maprect
 .endproc
-mode_box_left := mode_box::left ; forward refs to mode_box::left don't work?
-        ;; https://github.com/cc65/cc65/issues/479
+mode_mapinfo_viewloc_xcoord := mode_mapinfo::viewloc::xcoord
 
 .proc mode_pos
 left:   .word   0               ; horizontal text offset
@@ -1368,7 +1399,7 @@ base:   .word   10              ; vertical text offset (to baseline)
         sec
         lda     winfo::viewloc::ycoord
         sbc     #title_bar_height
-        sta     mode_box::top
+        sta     mode_mapinfo::viewloc::ycoord
         clc
         lda     winfo::viewloc::xcoord
         adc     window_width
@@ -1379,15 +1410,15 @@ base:   .word   10              ; vertical text offset (to baseline)
         sec
         pla
         sbc     #<label_width
-        sta     mode_box::left
+        sta     mode_mapinfo::viewloc::xcoord
         txa
         sbc     #>label_width
-        sta     mode_box::left+1
+        sta     mode_mapinfo::viewloc::xcoord+1
         ;; fall through...
 .endproc
 
 .proc draw_mode
-        MGTK_CALL MGTK::SetPortBits, mode_box
+        MGTK_CALL MGTK::SetPortBits, mode_mapinfo
         MGTK_CALL MGTK::MoveTo, mode_pos
         lda     fixed_mode_flag
         beq     else            ; is proportional?
@@ -1395,7 +1426,7 @@ base:   .word   10              ; vertical text offset (to baseline)
         jmp     endif
 else:   MGTK_CALL MGTK::DrawText, prop_str
 
-endif:  ldx     #$0F
+endif:  ldx     #MGTK::mapinfo_size - 1
 loop:   lda     default_port,x
         sta     winfo::port,x
         dex
