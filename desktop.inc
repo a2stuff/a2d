@@ -201,6 +201,9 @@ font_glyphs     := $8883 ; $80 glyphs, organized by row, 9 bytes per
 ;;; $0E = (C)                  $1E = solid apple  (MT:@)
 ;;; $0F = (R)                  $1F = open apple   (MT:A)
 
+GLYPH_FOLDERL := $01
+GLYPH_FOLDERR := $02
+
 GLYPH_LARROW := $09
 GLYPH_RARROW := $15
 GLYPH_UARROW := $0B

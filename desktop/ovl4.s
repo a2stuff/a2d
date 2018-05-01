@@ -1190,23 +1190,23 @@ L5CF7:  MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entrydlg
         rts
 
 L5D82:  MGTK_RELAY_CALL MGTK::MoveTo, $DA03
-        addr_call L5DED, $DA07
+        addr_call L5DED, $DA07  ; "OK"
         rts
 
 L5D93:  MGTK_RELAY_CALL MGTK::MoveTo, $DA21
-        addr_call L5DED, $DA25
+        addr_call L5DED, $DA25  ; "Open"
         rts
 
 L5DA4:  MGTK_RELAY_CALL MGTK::MoveTo, $DA17
-        addr_call L5DED, $DA1B
+        addr_call L5DED, $DA1B  ; "Close"
         rts
 
 L5DB5:  MGTK_RELAY_CALL MGTK::MoveTo, $DA2A
-        addr_call L5DED, $DA2E
+        addr_call L5DED, $DA2E  ; "Cancel"
         rts
 
 L5DC6:  MGTK_RELAY_CALL MGTK::MoveTo, $DA40
-        addr_call L5DED, $DA44
+        addr_call L5DED, $DA44  ; "Change Drive"
         rts
 
 L5DD7:  stax    $06
@@ -1263,8 +1263,7 @@ L5E56:  .byte   0
 L5E57:  jsr     L5DD7
         stax    $06
         MGTK_RELAY_CALL MGTK::MoveTo, $DA55
-        lda     $06
-        ldx     $07
+        ldax    $06
         jsr     L5DED
         rts
 
@@ -1273,8 +1272,7 @@ L5E57:  jsr     L5DD7
 L5E6F:  jsr     L5DD7
         stax    $06
         MGTK_RELAY_CALL MGTK::MoveTo, $DA59
-        lda     $06
-        ldx     $07
+        ldax    $06
         jsr     L5DED
         rts
 
@@ -1532,7 +1530,7 @@ L60A9:  MGTK_RELAY_CALL MGTK::MoveTo, $D917
         lda     #$01
         sta     $D917
         MGTK_RELAY_CALL MGTK::MoveTo, $D917
-        addr_call L5DED, $D91D
+        addr_call L5DED, $D91D  ; Folder glyphs
         lda     #$10
         sta     $D917
 L60FF:  lda     L6128
@@ -1646,7 +1644,7 @@ L61E6:  inx
         stx     $0220
         addr_call L6129, $0220
         MGTK_RELAY_CALL MGTK::MoveTo, $DA51
-        addr_call L5DED, $DA5F
+        addr_call L5DED, $DA5F  ; " Disk: "
         addr_call L5DED, $0220
         MGTK_RELAY_CALL MGTK::InitPort, $D239
         MGTK_RELAY_CALL MGTK::SetPort, $D239
@@ -2052,9 +2050,9 @@ L6634:  copy16  #$D8EF, $06
         MGTK_RELAY_CALL MGTK::MoveTo, $DAA6
         lda     $D402
         beq     L6684
-        addr_call L5DED, $D402
-L6684:  addr_call L5DED, $D484
-        addr_call L5DED, $D8F8
+        addr_call L5DED, path_buf0
+L6684:  addr_call L5DED, path_buf2
+        addr_call L5DED, $D8F8  ; "  "
         rts
 
 ;;; ============================================================
@@ -2067,9 +2065,9 @@ L6693:  lda     winfo_entrydlg
         MGTK_RELAY_CALL MGTK::MoveTo, $DAB2
         lda     $D443
         beq     L66C9
-        addr_call L5DED, $D443
-L66C9:  addr_call L5DED, $D484
-        addr_call L5DED, $D8F8
+        addr_call L5DED, path_buf1
+L66C9:  addr_call L5DED, path_buf2
+        addr_call L5DED, $D8F8  ; "  "
         rts
 
         lda     winfo_entrydlg
@@ -2348,8 +2346,8 @@ L69D5:  lda     L6A17
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
-        addr_call L5DED, $D8F6
-        addr_call L5DED, $D484
+        addr_call L5DED, $D8F6  ; null char
+        addr_call L5DED, path_buf2
         jsr     L6EA3
         rts
 
@@ -2365,8 +2363,8 @@ L6A1E:  dec     $D402
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
-        addr_call L5DED, $D484
-        addr_call L5DED, $D8F8
+        addr_call L5DED, path_buf2
+        addr_call L5DED, $D8F8  ; "  "
         jsr     L6EA3
         rts
 
@@ -2393,8 +2391,8 @@ L6A6B:  ldx     $D402
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
-        addr_call L5DED, $D484
-        addr_call L5DED, $D8F8
+        addr_call L5DED, path_buf2
+        addr_call L5DED, $D8F8  ; "  "
         jsr     L6EA3
         rts
 
@@ -2421,9 +2419,9 @@ L6AD6:  dec     $D484
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $DAA6
-        addr_call L5DED, $D402
-        addr_call L5DED, $D484
-        addr_call L5DED, $D8F8
+        addr_call L5DED, path_buf0
+        addr_call L5DED, path_buf2
+        addr_call L5DED, $D8F8  ; "  "
         jsr     L6EA3
         rts
 
@@ -2497,8 +2495,8 @@ L6B81:  lda     L6BC3
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
-        addr_call L5DED, $D8F6
-        addr_call L5DED, $D484
+        addr_call L5DED, $D8F6  ; null char
+        addr_call L5DED, path_buf2
         jsr     L6E9F
         rts
 
@@ -2514,8 +2512,8 @@ L6BCA:  dec     $D443
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
-        addr_call L5DED, $D484
-        addr_call L5DED, $D8F8
+        addr_call L5DED, path_buf2
+        addr_call L5DED, $D8F8  ; "  "
         jsr     L6E9F
         rts
 
@@ -2542,8 +2540,8 @@ L6C17:  ldx     $D443
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
-        addr_call L5DED, $D484
-        addr_call L5DED, $D8F8
+        addr_call L5DED, path_buf2
+        addr_call L5DED, $D8F8  ; "  "
         jsr     L6E9F
         rts
 
@@ -2570,9 +2568,9 @@ L6C82:  dec     $D484
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $DAB2
-        addr_call L5DED, $D443
-        addr_call L5DED, $D484
-        addr_call L5DED, $D8F8
+        addr_call L5DED, path_buf1
+        addr_call L5DED, path_buf2
+        addr_call L5DED, $D8F8  ; "  "
         jsr     L6E9F
         rts
 

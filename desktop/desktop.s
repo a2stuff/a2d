@@ -4565,7 +4565,7 @@ LD760:  PASCAL_STRING "Run list"
         PASCAL_STRING {GLYPH_OAPPLE,"3 at first boot"}
         PASCAL_STRING {GLYPH_OAPPLE,"4 at first use"}
         PASCAL_STRING {GLYPH_OAPPLE,"5 never"}
-        PASCAL_STRING "Enter the full pathname of the run list file:"
+        PASCAL_STRING "Enter the full pathname of the run list file:" ; Duplicate ???
 
         .byte   $00,$00,$00,$00,$00,$00,$00
         .byte   $00,$06,$00,$17,$00,$58,$01,$57
@@ -4617,8 +4617,11 @@ file_count:
 
         .byte   $00,$00,$0D
         .byte   $00,$00,$00,$00,$00,$7D,$00,$00
-        .byte   $00,$02,$00,$00,$00,$00,$00,$02
-        .byte   $01,$02,$00,$00,$57,$01,$28,$00
+        .byte   $00,$02,$00,$00,$00,$00,$00
+
+        PASCAL_STRING {GLYPH_FOLDERL,GLYPH_FOLDERR}
+
+        .byte   $00,$00,$57,$01,$28,$00
         .byte   $6B,$01,$30,$00,$6B,$01,$38,$00
         .byte   $57,$01,$4B,$00,$6B,$01,$53,$00
         .byte   $6B,$01,$5B,$00,$6B,$01,$63,$00

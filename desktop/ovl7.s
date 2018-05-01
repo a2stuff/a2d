@@ -26,7 +26,7 @@ L7021:  lda     path_buf0,y
         jsr     common_overlay::L5F49
         ldy     path_buf0
 L7030:  lda     path_buf0,y
-        cmp     #$2F
+        cmp     #'/'
         beq     L7044
         dey
         cpy     #$01
@@ -106,30 +106,30 @@ L7101:  lda     winfo_entrydlg
         jsr     common_overlay::L62C8
         lda     path_buf0
         beq     L7116
-        addr_call common_overlay::L5E0A, $D729
+        addr_call common_overlay::L5E0A, $D729 ; "Edit an Entry ..."
         jmp     L711D
 
-L7116:  addr_call common_overlay::L5E0A, $D718
-L711D:  addr_call common_overlay::L5E6F, $D849
+L7116:  addr_call common_overlay::L5E0A, $D718 ; "Add an Entry ..."
+L711D:  addr_call common_overlay::L5E6F, $D849 ; "Enter the full pathname of the run list file:"
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, dialog_rect1
         MGTK_RELAY_CALL MGTK::FrameRect, dialog_rect2
-        addr_call common_overlay::L5E57, $D769
-        addr_call common_overlay::L5E6F, $D797
+        addr_call common_overlay::L5E57, $D769 ; "Enter the full pathname of the run list file:"
+        addr_call common_overlay::L5E6F, $D797 ; "Enter the name ... you wish to appear..."
         MGTK_RELAY_CALL MGTK::MoveTo, $D922
-        addr_call common_overlay::L5DED, $D7DE
+        addr_call common_overlay::L5DED, $D7DE ; "Add a new entry to the:"
         MGTK_RELAY_CALL MGTK::MoveTo, $D926
-        addr_call common_overlay::L5DED, $D7F6
+        addr_call common_overlay::L5DED, $D7F6 ; "1 Run list"
         MGTK_RELAY_CALL MGTK::MoveTo, $D92A
-        addr_call common_overlay::L5DED, $D802
+        addr_call common_overlay::L5DED, $D802 ; "2 Other Run list"
         MGTK_RELAY_CALL MGTK::MoveTo, $D92E
-        addr_call common_overlay::L5DED, $D814
+        addr_call common_overlay::L5DED, $D814 ; "Down load:"
         MGTK_RELAY_CALL MGTK::MoveTo, $D932
-        addr_call common_overlay::L5DED, $D81F
+        addr_call common_overlay::L5DED, $D81F ; "3 At first boot"
         MGTK_RELAY_CALL MGTK::MoveTo, $D936
-        addr_call common_overlay::L5DED, $D830
+        addr_call common_overlay::L5DED, $D830 ; "4 At first use"
         MGTK_RELAY_CALL MGTK::MoveTo, $D93A
-        addr_call common_overlay::L5DED, $D840
+        addr_call common_overlay::L5DED, $D840 ; "5 Never"
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, $D93E
         MGTK_RELAY_CALL MGTK::FrameRect, $D946
