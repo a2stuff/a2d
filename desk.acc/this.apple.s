@@ -1098,10 +1098,8 @@ notpas:
         ldx     #0              ; bank we are checking
         ldy     #0              ; populated bank count
 loop:   stx     RWBANK          ; select bank
-        lda     sigb0           ; save existing data
-        pha                     ; on stack
-        lda     sigb1
-        pha
+        copy    sigb0, stash0   ; save existing data
+        copy    sigb1, stash1
         txa                     ; bank number as first check byte
         sta     sigb0
         cmp     sigb0
@@ -1111,10 +1109,8 @@ loop:   stx     RWBANK          ; select bank
         cmp     sigb1
         bne     :+
         iny                     ; found a bank, count it
-:       pla                     ; restore saved data
-        sta     sigb1
-        pla
-        sta     sigb0
+        copy    stash1, sigb1
+        copy    stash0, sigb0
         inx                     ; next bank
         bne     loop            ; if we hit 256 banks, make sure we exit
 
@@ -1133,17 +1129,13 @@ loop:   stx     RWBANK          ; select bank
         ;; and testing that they work. We know that bank 1 is
         ;; not an unpopulated RW bank.
 
-        lda     sigb0           ; Write signature to bank 0
-        pha
-        lda     #0
-        sta     sigb0
+        copy    sigb0, stash0   ; Write signature to bank 0
+        copy    #0, sigb0
 
         lda     #1              ; Write signature to bank 1
         sta     RWBANK
-        lda     sigb0
-        pha
-        lda     #1
-        sta     sigb0
+        copy    sigb0, stash1
+        copy    #1, sigb0
 
         lda     #0              ; Check signature in bank 0
         sta     RWBANK
@@ -1153,19 +1145,20 @@ loop:   stx     RWBANK          ; select bank
 
 :       lda     #1              ; Restore bank 1
         sta     RWBANK
-        pla
-        sta     sigb0
+        copy    stash1, sigb0
 
         lda     #0              ; Restore bank 0
         sta     RWBANK
-        pla
-        sta     sigb0
+        copy    stash0, sigb0
 
         ;; Back to executing from aux memory
 done:   sta     RAMRDON
         sta     RAMWRTON
         plp                     ; restore interrupt state
         rts
+
+stash0: .byte   0
+stash1: .byte   0
 .endproc
 
 ;;; ============================================================
