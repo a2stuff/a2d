@@ -1068,8 +1068,9 @@ notpas:
 
 ;;; ============================================================
 ;;; Calculate RamWorks memory; returns number of banks in Y
-;;; (256 banks = 0)
-;;; Note the bus floats for RamWorks RAM when the bank has no RAM.
+;;; (256 banks = 0, since there must be at least 1)
+;;; Note the bus floats for RamWorks RAM when the bank has no RAM,
+;;; or bank selection may wrap to an earlier bank.
 ;;; RamWorks-style cards are not guaranteed to have contiguous banks.
 ;;; a user can install 64Kb or 256Kb chips in a physical bank, in the
 ;;; former case, a gap in banks will appear.  Additionally, the piggy
@@ -1079,11 +1080,16 @@ notpas:
 ;;; the various emulators support 16M max (banks $00-$FF).
 ;;;
 ;;; If RamWorks is not present, bank switching is a no-op and the
-;;; same regular 64Kb AUX bank is present throughout the test, so
-;;; we also need to distinguish that case.
+;;; same regular 64Kb AUX bank is present throughout the test; this
+;;; will be handled by an invalid signature check for other banks.
 .proc check_ramworks_memory
         sigb0   := $00
         sigb1   := $01
+
+        ;; DAs are loaded with $1C00 as the io_buffer, so
+        ;; $1C00-$1FFF MAIN is free.
+        buf0    := $1C00
+        buf1    := $1D00
 
         ;; Run from clone in main memory
         php
@@ -1095,70 +1101,45 @@ notpas:
         ;; Assumes ALTZPON on entry/exit
         RWBANK  := $C073
 
+        ;; Iterate downwards (in case unpopulated banks wrap to earlier ones),
+        ;; saving bytes and marking each bank.
+        ldx     #255            ; bank we are checking
+:       stx     RWBANK
+        copy    sigb0, buf0,x   ; preserve bytes
+        copy    sigb1, buf1,x
+        txa                     ; bank num as first signature
+        sta     sigb0
+        eor     #$FF            ; complement as second signature
+        sta     sigb1
+        dex
+        cpx     #255
+        bne     :-
+
+        ;; Iterate upwards, tallying and restoring valid banks.
         ldx     #0              ; bank we are checking
         ldy     #0              ; populated bank count
 loop:   stx     RWBANK          ; select bank
-        copy    sigb0, stash0   ; save existing data
-        copy    sigb1, stash1
-        txa                     ; bank number as first check byte
-        sta     sigb0
-        cmp     sigb0
-        bne     :+
-        eor     #$FF            ; bank complement as secondary check byte
-        sta     sigb1
-        cmp     sigb1
-        bne     :+
-        iny                     ; found a bank, count it
-        copy    stash1, sigb1
-        copy    stash0, sigb0
-        inx                     ; next bank
+        txa
+        cmp     sigb0           ; verify first signature
+        bne     next
+        eor     #$FF
+        cmp     sigb1           ; verify second signature
+        bne     next
+        iny                     ; match - count it, and restore
+        copy    buf0,x, sigb0
+        copy    buf1,x, sigb1
+next:   inx                     ; next bank
         bne     loop            ; if we hit 256 banks, make sure we exit
 
         ;; Switch back to RW bank 0 (normal aux memory)
         lda     #0
         sta     RWBANK
 
-        ;; --------------------------------------------------
-
-        ;; Y=0 means either 256 populated banks, or that there was
-        ;; never a RawWorks card present and RWBANK is a no-op.
-        cpy     #0
-        bne     done
-
-        ;; Disambiguate these cases by writing to banks 0 and 1
-        ;; and testing that they work. We know that bank 1 is
-        ;; not an unpopulated RW bank.
-
-        copy    sigb0, stash0   ; Write signature to bank 0
-        copy    #0, sigb0
-
-        lda     #1              ; Write signature to bank 1
-        sta     RWBANK
-        copy    sigb0, stash1
-        copy    #1, sigb0
-
-        lda     #0              ; Check signature in bank 0
-        sta     RWBANK
-        cmp     sigb0           ; If we don't see bank 0 signature
-        beq     :+              ; then this was all a sham; set Y
-        iny                     ; to 1 bank, i.e. normal AUX memory.
-
-:       lda     #1              ; Restore bank 1
-        sta     RWBANK
-        copy    stash1, sigb0
-
-        lda     #0              ; Restore bank 0
-        sta     RWBANK
-        copy    stash0, sigb0
-
         ;; Back to executing from aux memory
-done:   sta     RAMRDON
+        sta     RAMRDON
         sta     RAMWRTON
         plp                     ; restore interrupt state
         rts
-
-stash0: .byte   0
-stash1: .byte   0
 .endproc
 
 ;;; ============================================================

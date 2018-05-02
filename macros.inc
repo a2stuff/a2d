@@ -41,9 +41,23 @@
 .endmacro
 
 
-.macro copy arg1, arg2
+.macro copy arg1, arg2, arg3, arg4
+    .if _is_register {arg2} && _is_register {arg4}
+        ;; indexed load/indexed store
+        lda     arg1,arg2
+        sta     arg3,arg4
+    .elseif _is_register {arg2}
+        ;; indexed load variant (arg2 is x or y)
+        lda     arg1,arg2
+        sta     arg3
+    .elseif _is_register {arg3}
+        ;; indexed store variant (arg3 is x or y)
+        lda     arg1
+        sta     arg2,arg3
+    .else
         lda     arg1
         sta     arg2
+    .endif
 .endmacro
 
 ;;; ============================================================
