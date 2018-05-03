@@ -42,9 +42,6 @@ entry:
 
 ;;; ============================================================
 
-screen_width    := 560
-screen_height   := 192
-
 da_window_id    := 60
 da_width        := 400
 da_height       := 118
@@ -1088,8 +1085,8 @@ notpas:
 
         ;; DAs are loaded with $1C00 as the io_buffer, so
         ;; $1C00-$1FFF MAIN is free.
-        buf0    := $1C00
-        buf1    := $1D00
+        buf0    := DA_IO_BUFFER
+        buf1    := DA_IO_BUFFER + $100
 
         ;; Run from clone in main memory
         php

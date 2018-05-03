@@ -13,6 +13,11 @@
         dummy1000 := $1000
 
 
+;;; Modified to toggle fixed width
+font_type       := DEFAULT_FONT+0
+font_last_char  := DEFAULT_FONT+1
+font_height     := DEFAULT_FONT+2
+font_width_table := DEFAULT_FONT+3 ; width in pixels, indexed by ASCII code
 
 
 start:  jmp     copy2aux

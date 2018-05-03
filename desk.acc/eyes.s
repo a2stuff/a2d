@@ -45,9 +45,6 @@ entry:
 
 ;;; ============================================================
 
-screen_width    := 560
-screen_height   := 192
-
 da_window_id    := 60
 da_width        := screen_width / 3
 da_height       := screen_height / 3

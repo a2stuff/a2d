@@ -2,10 +2,19 @@
 ;;; DeskTop Internals
 ;;; ============================================================
 
-DA_LOAD_ADDRESS := $800
-DA_MAX_SIZE     := $1C00 - DA_LOAD_ADDRESS
-        ;; I/O Buffer starts at MAIN $1C00
-        ;; (but icon tables start at AUX $1B00)
+screen_width    := 560
+screen_height   := 192
+
+;;; ============================================================
+
+INVOKER                 := $290 ; Invoke other programs
+INVOKER_FILENAME        := $280 ; File to invoke (PREFIX must be set)
+
+DA_LOAD_ADDRESS := $800         ; Loaded into MAIN
+DA_IO_BUFFER    := $1C00        ; ...through $1FFF
+DA_MAX_SIZE     := DA_IO_BUFFER - DA_LOAD_ADDRESS
+        ;; Can't load DA past I/O Buffer at MAIN $1C00,
+        ;; but icon tables start at AUX $1B00 so can't clone there.
 
 ;;; ============================================================
 ;;; Direct Calls (from main memory)
@@ -170,14 +179,6 @@ icon_entry_type_trash   := %01110000
 
 ;;; Used by DAs for window definitions
 DEFAULT_FONT := $8800
-
-;;; Modified by Show Text File DA to toggle fixed width
-font_flag       := $8800 ; = $00 - if high bit set, glyphs are 2 bytes wide
-font_last_char  := $8801 ; = $7F - max glyph number (count is this + 1)
-font_height     := $8802 ; 9 pixels
-font_width_table := $8803 ; width in pixels, indexed by ASCII code
-
-font_glyphs     := $8883 ; $80 glyphs, organized by row, 9 bytes per
 
 ;;; Control Character Glyphs
 ;;;

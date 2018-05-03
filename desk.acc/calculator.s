@@ -648,8 +648,6 @@ textfont:       .addr   0
         .byte   0               ; ???
 
         menu_bar_height := 13
-        screen_width    := 560
-        screen_height   := 192
 
         ;; params for MGTK::SetPortBits when decorating title bar
 .proc screen_port
