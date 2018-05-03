@@ -18,24 +18,6 @@ LE6FD           := $E6FD
 LE766           := $E766
 LE7A8           := $E7A8
 
-;;; Disk II / IWM I/O locations ($C0nX, n = slot + 8)
-;;; c/o http://archive.li/ewHUL
-PHASE0  := $C080                ; Stepper motor phase 0
-PHASE1  := $C082                ; Stepper motor phase 1
-PHASE2  := $C084                ; Stepper motor phase 2
-PHASE3  := $C086                ; Stepper motor phase 3
-DISABLE := $C088                ; Turn disk drive off
-ENABLE  := $C089                ; Turn disk drive on
-SELECT  := $C08A                ; Select drive 1 or 2
-SELECT1 := $C08A                ; Select drive 1
-SELECT2 := $C08B                ; Select drive 1
-XMIT    := $C08C                ; Get/set bits to/from disk
-TESTWP  := $C08D                ; Test WP mode (then WPRES has result)
-DATA    := $C08D                ; Write data to buffer (then XMIT to send)
-WPRES   := $C08E                ; WP mode test result
-RDMODE  := $C08E                ; Turn off write mode
-WRMODE  := $C08F                ; Turn on write mode
-
         .org $800
 
 
@@ -1366,8 +1348,8 @@ L11C1:  jsr     L12AF
         lda     LCBANK1
         return  #$80
 
-L11D8:  lda     $C083
-        lda     $C083
+L11D8:  lda     LCBANK2
+        lda     LCBANK2
         ldy     #$FF
         iny
 L11E1:  lda     $1C00,y
@@ -1411,8 +1393,8 @@ L1230:  jsr     L12A5
         bpl     L1230
 L123E:  rts
 
-L123F:  bit     $C083
-        bit     $C083
+L123F:  bit     LCBANK2
+        bit     LCBANK2
         sta     L0006
         sta     $08
         stx     $07

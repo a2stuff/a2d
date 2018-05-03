@@ -40,7 +40,7 @@ L7029:  lda     L709B+1,x
         lda     #$01
         sta     path_buf2
         lda     #$06
-        sta     $D485
+        sta     path_buf2+1
         rts
 
 L7052:  lda     winfo_entrydlg
@@ -94,7 +94,7 @@ L70C6:  .byte   $29             ; length of following data block
 L70F1:  lda     #1
         sta     path_buf2
         lda     #$20
-        sta     $D485
+        sta     path_buf2+1
         jsr     common_overlay::L6D27
 
         ldx     L70C6
@@ -129,7 +129,7 @@ L7137:  lda     $5028,x
         lda     #$01
         sta     path_buf2           ; path_buf2
         lda     #$06
-        sta     $D485
+        sta     path_buf2+1
         ldx     path_buf0
         beq     L7178
 L7156:  lda     path_buf0,x
@@ -174,7 +174,7 @@ L7198:  addr_call common_overlay::L647C, path_buf1
         sta     $50A8
         lda     #0
         sta     $D8EC
-        jsr     common_overlay::L55BA
+        jsr     common_overlay::set_cursor_pointer
         copy16  #path_buf0, $6
         copy16  #path_buf1, $8
         ldx     $50AA
@@ -189,7 +189,7 @@ L71D8:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
         lda     #0
         sta     $D8EC
-        jsr     common_overlay::L55BA
+        jsr     common_overlay::set_cursor_pointer
         ldx     $50AA
         txs
         return  #$FF
@@ -199,7 +199,7 @@ L71D8:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
 L71F9:  lda     #1
         sta     path_buf2
         lda     #' '
-        sta     $D485
+        sta     path_buf2+1
         jsr     common_overlay::L6D27
         ldx     L709B
 L7209:  lda     L709B+1,x
@@ -213,7 +213,7 @@ L7209:  lda     L709B+1,x
         lda     #$01
         sta     path_buf2
         lda     #$06
-        sta     $D485
+        sta     path_buf2+1
         lda     #$00
         sta     $50A8
         lda     #$FF

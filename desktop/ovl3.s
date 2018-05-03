@@ -33,9 +33,9 @@ L9016:  rts
 L9017:  lda     $0C00
         clc
         adc     $0C01
-        sta     $D343
+        sta     LD343
         lda     #$00
-        sta     $D344
+        sta     LD343+1
         jsr     L9DED
         cmp     #$80
         bne     L9015
@@ -333,7 +333,7 @@ L9282:  lda     L938D
         lda     ($06),y
         tay
 L92C1:  lda     ($06),y
-        sta     $D355,y
+        sta     LD355,y
         dey
         bpl     L92C1
         lda     #$FF
@@ -349,7 +349,7 @@ L92D6:  lda     L938D
         lda     ($06),y
         tay
 L92E5:  lda     ($06),y
-        sta     $D355,y
+        sta     LD355,y
         dey
         bpl     L92E5
         jmp     L9307
@@ -361,11 +361,11 @@ L92F0:  lda     L938D
         lda     ($06),y
         tay
 L92FF:  lda     ($06),y
-        sta     $D355,y
+        sta     LD355,y
         dey
         bpl     L92FF
-L9307:  ldy     $D355
-L930A:  lda     $D355,y
+L9307:  ldy     LD355
+L930A:  lda     LD355,y
         cmp     #$2F
         beq     L9314
         dey
@@ -376,13 +376,13 @@ L9314:  dey
         ldx     #$00
 L931B:  iny
         inx
-        lda     $D355,y
-        sta     $D345,x
-        cpy     $D355
+        lda     LD355,y
+        sta     buf_filename2,x
+        cpy     LD355
         bne     L931B
-        stx     $D345
+        stx     buf_filename2
         lda     L938A
-        sta     $D355
+        sta     LD355
         jsr     JUMP_TABLE_LAUNCH_FILE
         jsr     set_cursor_pointer
         lda     #$FF
@@ -519,7 +519,7 @@ L94CB:  stax    $06
         lda     ($06),y
         tay
 L94D4:  lda     ($06),y
-        sta     $D486,y
+        sta     path_buf2+2,y
         dey
         bpl     L94D4
         copy16  #$D487, path_buf2
@@ -1268,8 +1268,8 @@ L9BFC:  jsr     L9DA7
         tya
         rts
 
-L9C09:  sta     $D2AC
-        yax_call launch_dialog, $0C, $D2AC
+L9C09:  sta     warning_dialog_num
+        yax_call launch_dialog, $0C, warning_dialog_num
         rts
 
         DEFINE_OPEN_PARAMS open_params, $1C00, $800
@@ -1464,9 +1464,9 @@ params: .addr   0
 ;;; ============================================================
 
 L9DED:  sta     ALTZPOFF
-        lda     $C083
-        lda     $C083
-        lda     $D3FF
+        lda     LCBANK2
+        lda     LCBANK2
+        lda     LD3FF
         tax
         sta     ALTZPON
         lda     LCBANK1
@@ -1476,10 +1476,10 @@ L9DED:  sta     ALTZPOFF
 
 L9E05:  stax    L9E1B
         sta     ALTZPOFF
-        lda     $C083
-        lda     $C083
-        ldx     $D3EE
-L9E17:  lda     $D3EE,x
+        lda     LCBANK2
+        lda     LCBANK2
+        ldx     LD3EE
+L9E17:  lda     LD3EE,x
         .byte   $9D
 L9E1B:  .addr   $1234
         dex
@@ -1491,10 +1491,10 @@ L9E1B:  .addr   $1234
 
 L9E2A:  stax    L9E40
         sta     ALTZPOFF
-        lda     $C083
-        lda     $C083
-        ldx     $D3AD
-L9E3C:  lda     $D3AD,x
+        lda     LCBANK2
+        lda     LCBANK2
+        ldx     LD3AD
+L9E3C:  lda     LD3AD,x
         .byte   $9D
 L9E40:  .addr   $1234
         dex

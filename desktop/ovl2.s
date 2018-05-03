@@ -564,11 +564,11 @@ L0E3A:  tax
         lda     #$00
         rol     a
         bne     L0E50
-        lda     $C08A,x
+        lda     SELECT,x
         jmp     L0E53
 
 L0E50:  lda     LCBANK1,x
-L0E53:  lda     $C089,x
+L0E53:  lda     ENABLE,x
         lda     #$D7
         sta     $DA
         lda     #$50
@@ -594,11 +594,11 @@ L0E82:  lda     $D1
         ldx     L1223
         jsr     L0E23
         ldx     L1223
-        lda     $C08D,x
-        lda     $C08E,x
+        lda     DATA,x
+        lda     RDMODE,x
         tay
-        lda     $C08E,x
-        lda     $C08C,x
+        lda     RDMODE,x
+        lda     XMIT,x
         tya
         bpl     L0EA2
         lda     #$02
@@ -646,7 +646,7 @@ L0EDB:  ldx     L1223
         lda     #$00
 L0EF9:  pha
         ldx     L1223
-        lda     $C088,x
+        lda     DISABLE,x
         lda     #$00
         jsr     L0E23
         pla
@@ -655,47 +655,47 @@ L0EF9:  pha
 L0F07:  ldy     #$20
 L0F09:  dey
         beq     L0F68
-L0F0C:  lda     $C08C,x
+L0F0C:  lda     XMIT,x
         bpl     L0F0C
 L0F11:  eor     #$D5
         bne     L0F09
         nop
-L0F16:  lda     $C08C,x
+L0F16:  lda     XMIT,x
         bpl     L0F16
         cmp     #$AA
         bne     L0F11
         ldy     #$56
-L0F21:  lda     $C08C,x
+L0F21:  lda     XMIT,x
         bpl     L0F21
         cmp     #$AD
         bne     L0F11
         lda     #$00
 L0F2C:  dey
         sty     $D5
-L0F2F:  lda     $C08C,x
+L0F2F:  lda     XMIT,x
         bpl     L0F2F
         cmp     #$96
         bne     L0F68
         ldy     $D5
         bne     L0F2C
 L0F3C:  sty     $D5
-L0F3E:  lda     $C08C,x
+L0F3E:  lda     XMIT,x
         bpl     L0F3E
         cmp     #$96
         bne     L0F68
         ldy     $D5
         iny
         bne     L0F3C
-L0F4C:  lda     $C08C,x
+L0F4C:  lda     XMIT,x
         bpl     L0F4C
         cmp     #$96
         bne     L0F68
-L0F55:  lda     $C08C,x
+L0F55:  lda     XMIT,x
         bpl     L0F55
         cmp     #$DE
         bne     L0F68
         nop
-L0F5F:  lda     $C08C,x
+L0F5F:  lda     XMIT,x
         bpl     L0F5F
         cmp     #$AA
         beq     L0FC4
@@ -708,27 +708,27 @@ L0F6E:  iny
         bne     L0F75
         inc     $DC
         beq     L0F68
-L0F75:  lda     $C08C,x
+L0F75:  lda     XMIT,x
         bpl     L0F75
 L0F7A:  cmp     #$D5
         bne     L0F6E
         nop
-L0F7F:  lda     $C08C,x
+L0F7F:  lda     XMIT,x
         bpl     L0F7F
         cmp     #$AA
         bne     L0F7A
         ldy     #$03
-L0F8A:  lda     $C08C,x
+L0F8A:  lda     XMIT,x
         bpl     L0F8A
         cmp     #$96
         bne     L0F7A
         lda     #$00
 L0F95:  sta     $DB
-L0F97:  lda     $C08C,x
+L0F97:  lda     XMIT,x
         bpl     L0F97
         rol     a
         sta     $DD
-L0F9F:  lda     $C08C,x
+L0F9F:  lda     XMIT,x
         bpl     L0F9F
         and     $DD
         sta     $D7,y
@@ -737,12 +737,12 @@ L0F9F:  lda     $C08C,x
         bpl     L0F95
         tay
         bne     L0F68
-L0FB1:  lda     $C08C,x
+L0FB1:  lda     XMIT,x
         bpl     L0FB1
         cmp     #$DE
         bne     L0F68
         nop
-L0FBB:  lda     $C08C,x
+L0FBB:  lda     XMIT,x
         bpl     L0FBB
         cmp     #$AA
         bne     L0F68
@@ -790,16 +790,16 @@ L1020:  and     #$03
         rol     a
         ora     L1237
         tax
-        lda     $C080,x
+        lda     PHASE0,x
         ldx     L1237
 L102D:  rts
 
 L102E:  jsr     L120E
-        lda     $C08D,x
-        lda     $C08E,x
+        lda     DATA,x
+        lda     RDMODE,x
         lda     #$FF
-        sta     $C08F,x
-        cmp     $C08C,x
+        sta     WRMODE,x
+        cmp     XMIT,x
         pha
         pla
         nop
@@ -824,16 +824,16 @@ L1062:  jsr     L120E
 L1065:  nop
         nop
         lda     #$96
-        sta     $C08D,x
-        cmp     $C08C,x
+        sta     DATA,x
+        cmp     XMIT,x
         dey
         bne     L1062
         bit     $00
         nop
 L1075:  jsr     L120E
         lda     #$96
-        sta     $C08D,x
-        cmp     $C08C,x
+        sta     DATA,x
+        cmp     XMIT,x
         lda     #$96
         nop
         iny
@@ -847,30 +847,30 @@ L1075:  jsr     L120E
         jsr     L10A4
         lda     #$FF
         jsr     L10A4
-        lda     $C08E,x
-        lda     $C08C,x
+        lda     RDMODE,x
+        lda     XMIT,x
         rts
 
 L10A4:  nop
 L10A5:  pha
         pla
-        sta     $C08D,x
-        cmp     $C08C,x
+        sta     DATA,x
+        cmp     XMIT,x
         rts
 
 L10AE:  sec
-        lda     $C08D,x
-        lda     $C08E,x
+        lda     DATA,x
+        lda     RDMODE,x
         bmi     L1115
         lda     #$FF
-        sta     $C08F,x
-        cmp     $C08C,x
+        sta     WRMODE,x
+        cmp     XMIT,x
         pha
         pla
 L10C1:  jsr     L111B
         jsr     L111B
-        sta     $C08D,x
-        cmp     $C08C,x
+        sta     DATA,x
+        cmp     XMIT,x
         nop
         dey
         bne     L10C1
@@ -892,8 +892,8 @@ L10C1:  jsr     L111B
         pha
         lsr     a
         ora     $D0
-        sta     $C08D,x
-        lda     $C08C,x
+        sta     DATA,x
+        lda     XMIT,x
         pla
         ora     #$AA
         jsr     L112C
@@ -904,15 +904,15 @@ L10C1:  jsr     L111B
         lda     #$EB
         jsr     L112D
         clc
-L1115:  lda     $C08E,x
-        lda     $C08C,x
+L1115:  lda     RDMODE,x
+        lda     XMIT,x
 L111B:  rts
 
 L111C:  pha
         lsr     a
         ora     $D0
-        sta     $C08D,x
-        cmp     $C08C,x
+        sta     DATA,x
+        cmp     XMIT,x
         pla
         nop
         nop
@@ -922,8 +922,8 @@ L112C:  nop
 L112D:  nop
         pha
         pla
-        sta     $C08D,x
-        cmp     $C08C,x
+        sta     DATA,x
+        cmp     XMIT,x
         rts
 
         .byte   0

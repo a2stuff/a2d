@@ -242,7 +242,7 @@ L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
         sta     $D8EC
-        jsr     common_overlay::L55BA
+        jsr     common_overlay::set_cursor_pointer
         copy16  #$59B8, $5B24
         ldx     $50AA
         txs
@@ -256,7 +256,7 @@ L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
         lda     #$00
         sta     $D8EC
-        jsr     common_overlay::L55BA
+        jsr     common_overlay::set_cursor_pointer
         copy16  #$59B8, $5B24
         ldx     $50AA
         txs

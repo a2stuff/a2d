@@ -181,6 +181,28 @@ XFERSTARTHI     := $03EE
 
 
 ;;; ============================================================
+;;; Disk II / IWM I/O locations
+;;; ============================================================
+
+;;; $C0nX, n = slot + 8 -- c/o http://archive.li/ewHUL
+PHASE0  := $C080                ; Stepper motor phase 0
+PHASE1  := $C082                ; Stepper motor phase 1
+PHASE2  := $C084                ; Stepper motor phase 2
+PHASE3  := $C086                ; Stepper motor phase 3
+DISABLE := $C088                ; Turn disk drive off
+ENABLE  := $C089                ; Turn disk drive on
+SELECT  := $C08A                ; Select drive 1 or 2
+SELECT1 := $C08A                ; Select drive 1
+SELECT2 := $C08B                ; Select drive 2
+XMIT    := $C08C                ; Get/set bits to/from disk
+TESTWP  := $C08D                ; Test WP mode (then WPRES has result)
+DATA    := $C08D                ; Write data to buffer (then XMIT to send)
+WPRES   := $C08E                ; WP mode test result
+RDMODE  := $C08E                ; Turn off write mode
+WRMODE  := $C08F                ; Turn on write mode
+
+
+;;; ============================================================
 ;;; Mouse Peripheral Card
 ;;; ============================================================
 

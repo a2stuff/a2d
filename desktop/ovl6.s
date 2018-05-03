@@ -78,7 +78,7 @@ L70C0:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
         lda     #0
         sta     $D8EC
-        jsr     common_overlay::L55BA
+        jsr     common_overlay::set_cursor_pointer
         copy16  #path_buf0, $6
         ldx     $50AA
         txs
@@ -91,7 +91,7 @@ L70EA:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
         lda     #0
         sta     $D8EC
-        jsr     common_overlay::L55BA
+        jsr     common_overlay::set_cursor_pointer
         ldx     $50AA
         txs
         return  #$FF

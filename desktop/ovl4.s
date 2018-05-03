@@ -43,7 +43,7 @@ routine_table:  .addr   $7000, $7000, $7000
         sta     $D8F0
         sta     $D8F1
         sta     $D8F2
-        sta     L5606
+        sta     cursor_ip_flag
         sta     L5104
         sta     L5103
         sta     L5105
@@ -114,12 +114,12 @@ L5151:  lda     winfo_entrydlg
 L5183:  MGTK_RELAY_CALL MGTK::InRect, dialog_rect2
         cmp     #MGTK::inrect_inside
         bne     L5196
-L5190:  jsr     L55E0
+L5190:  jsr     set_cursor_insertion
         jmp     L5199
 
-L5196:  jsr     L55BA
-L5199:  MGTK_RELAY_CALL MGTK::InitPort, $D239
-        MGTK_RELAY_CALL MGTK::SetPort, $D239
+L5196:  jsr     set_cursor_pointer
+L5199:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
+        MGTK_RELAY_CALL MGTK::SetPort, grafport3
         jmp     L5106
 
 L51AE:  .byte   0
@@ -232,7 +232,7 @@ L52FA:  bit     L5103
 L5304:  jsr     L6D45
         rts
 
-L5308:  MGTK_RELAY_CALL MGTK::InitPort, $D239
+L5308:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport2
         rts
 
@@ -246,7 +246,7 @@ L531F:  bit     L5105
         beq     L5341
         cmp     #MGTK::ctl_vertical_scroll_bar
         bne     L5340
-        lda     $D5F6
+        lda     winfo_entrydlg_file_picker + MGTK::winfo_offset_vscroll
         and     #$01
         beq     L5340
         jmp     L5469
@@ -314,7 +314,7 @@ L53B5:  and     #$7F
         jsr     L6227
         jsr     L61B1
         jsr     L606D
-        MGTK_RELAY_CALL MGTK::InitPort, $D239
+        MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport2
         rts
 
@@ -378,7 +378,7 @@ L5488:  lda     #MGTK::ctl_vertical_scroll_bar
         jsr     L606D
         rts
 
-L54BA:  lda     $D5FA
+L54BA:  lda     winfo_entrydlg_file_picker + MGTK::winfo_offset_vthumbpos
         sec
         sbc     #$09
         bpl     L54C4
@@ -392,7 +392,7 @@ L54C4:  sta     updatethumb_thumbpos
         jsr     L606D
         rts
 
-L54DF:  lda     $D5FA
+L54DF:  lda     winfo_entrydlg_file_picker + MGTK::winfo_offset_vthumbpos
         clc
         adc     #$09
         cmp     $177F
@@ -408,7 +408,7 @@ L54EF:  sta     updatethumb_thumbpos
         jsr     L606D
         rts
 
-L550A:  lda     $D5FA
+L550A:  lda     winfo_entrydlg_file_picker + MGTK::winfo_offset_vthumbpos
         bne     L5510
         rts
 
@@ -424,8 +424,8 @@ L5510:  sec
         jsr     L555F
         jmp     L550A
 
-L5533:  lda     $D5FA
-        cmp     $D5F9
+L5533:  lda     winfo_entrydlg_file_picker + MGTK::winfo_offset_vthumbpos
+        cmp     winfo_entrydlg_file_picker + MGTK::winfo_offset_vthumbmax
         bne     L553C
         rts
 
@@ -484,25 +484,33 @@ L55B9:  rts
 
 ;;; ============================================================
 
-L55BA:  bit     L5606
-        bpl     L55DF
+.proc set_cursor_pointer
+        bit     cursor_ip_flag
+        bpl     done
         MGTK_RELAY_CALL MGTK::HideCursor
-        MGTK_RELAY_CALL MGTK::SetCursor, $D2AD
+        MGTK_RELAY_CALL MGTK::SetCursor, pointer_cursor
         MGTK_RELAY_CALL MGTK::ShowCursor
         lda     #$00
-        sta     L5606
-L55DF:  rts
+        sta     cursor_ip_flag
+done:   rts
+.endproc
 
-L55E0:  bit     L5606
-        bmi     L5605
+.proc set_cursor_insertion
+        bit     cursor_ip_flag
+        bmi     done
         MGTK_RELAY_CALL MGTK::HideCursor
-        MGTK_RELAY_CALL MGTK::SetCursor, $D2DF
+        MGTK_RELAY_CALL MGTK::SetCursor, insertion_point_cursor
         MGTK_RELAY_CALL MGTK::ShowCursor
         lda     #$80
-        sta     L5606
-L5605:  rts
+        sta     cursor_ip_flag
+done:   rts
+.endproc
 
-L5606:  .byte   0
+cursor_ip_flag:                 ; high bit set when cursor is IP
+        .byte   0
+
+;;; ============================================================
+
 L5607:  ldx     $D920
         lda     $1780,x
         and     #$7F
@@ -600,8 +608,8 @@ L56DC:  lda     #$FF
 L56E1:  rts
 
 L56E2:  .byte   0
-L56E3:  MGTK_RELAY_CALL MGTK::InitPort, $D239
-        MGTK_RELAY_CALL MGTK::SetPort, $D239
+L56E3:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
+        MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
 
 L56F6:  lda     #$00
@@ -1099,7 +1107,7 @@ L5C51:  lda     $D209,x
         sta     L5CF0,x
         dex
         bpl     L5C51
-        lda     $D2AB
+        lda     machine_type
         sta     L5CEF
 L5C60:  dec     L5CEF
         beq     L5CA6
@@ -1185,8 +1193,8 @@ L5CF7:  MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entrydlg
         jsr     L5DC6
         MGTK_RELAY_CALL MGTK::MoveTo, $D9F8
         MGTK_RELAY_CALL MGTK::LineTo, $D9FC
-        MGTK_RELAY_CALL MGTK::InitPort, $D239
-        MGTK_RELAY_CALL MGTK::SetPort, $D239
+        MGTK_RELAY_CALL MGTK::InitPort, grafport3
+        MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
 
 L5D82:  MGTK_RELAY_CALL MGTK::MoveTo, ok_button_pos
@@ -1498,8 +1506,8 @@ L606D:  lda     winfo_entrydlg_file_picker
 L608E:  lda     L6128
         cmp     $177F
         bne     L60A9
-        MGTK_RELAY_CALL MGTK::InitPort, $D239
-        MGTK_RELAY_CALL MGTK::SetPort, $D239
+        MGTK_RELAY_CALL MGTK::InitPort, grafport3
+        MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
 
 L60A9:  MGTK_RELAY_CALL MGTK::MoveTo, $D917
@@ -1598,7 +1606,7 @@ L6163:  sta     L61B0
         rts
 
 L6181:  lda     $177F
-        sta     $D5F9
+        sta     winfo_entrydlg_file_picker + MGTK::winfo_offset_vthumbmax
         .assert MGTK::ctl_vertical_scroll_bar = MGTK::activatectl_activate, error, "need to match"
         lda     #MGTK::ctl_vertical_scroll_bar
         sta     activatectl_which_ctl
@@ -1646,8 +1654,8 @@ L61E6:  inx
         MGTK_RELAY_CALL MGTK::MoveTo, $DA51
         addr_call L5DED, disk_label
         addr_call L5DED, $0220
-        MGTK_RELAY_CALL MGTK::InitPort, $D239
-        MGTK_RELAY_CALL MGTK::SetPort, $D239
+        MGTK_RELAY_CALL MGTK::InitPort, grafport3
+        MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
 
 L6226:  .byte   0
@@ -1712,16 +1720,16 @@ L6274:  ldx     #$00
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $D90F
-        MGTK_RELAY_CALL MGTK::InitPort, $D239
-        MGTK_RELAY_CALL MGTK::SetPort, $D239
+        MGTK_RELAY_CALL MGTK::InitPort, grafport3
+        MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
 
 L62C7:  .byte   0
 
 ;;; ============================================================
 
-L62C8:  sta     $D212
-        MGTK_RELAY_CALL MGTK::GetWinPort, $D212
+L62C8:  sta     getwinport_params2 ; window_id
+        MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
         MGTK_RELAY_CALL MGTK::SetPort, grafport2
         rts
 
@@ -2376,13 +2384,13 @@ L6A59:  ldx     path_buf2
         cpx     #$01
         beq     L6A6B
 L6A60:  lda     path_buf2,x
-        sta     $D485,x
+        sta     path_buf2+1,x
         dex
         cpx     #$01
         bne     L6A60
 L6A6B:  ldx     path_buf0
         lda     path_buf0,x
-        sta     $D486
+        sta     path_buf2+2
         dec     path_buf0
         inc     path_buf2
         jsr     L6E45
@@ -2403,14 +2411,14 @@ L6A6B:  ldx     path_buf0
 
 L6AB4:  ldx     path_buf0
         inx
-        lda     $D486
+        lda     path_buf2+2
         sta     path_buf0,x
         inc     path_buf0
         ldx     path_buf2
         cpx     #$03
         bcc     L6AD6
         ldx     #$02
-L6ACA:  lda     $D485,x
+L6ACA:  lda     path_buf2+1,x
         sta     path_buf2,x
         inx
         cpx     path_buf2
@@ -2442,14 +2450,14 @@ L6B13:  iny
         bne     L6B13
 L6B20:  sty     path_buf0
 L6B23:  lda     path_buf0,y
-        sta     $D485,y
+        sta     path_buf2+1,y
         dey
         bne     L6B23
         ldx     path_buf0
         inx
         stx     path_buf2
         lda     #$06
-        sta     $D485
+        sta     path_buf2+1
         lda     #$00
         sta     path_buf0
         jsr     L6D27
@@ -2525,13 +2533,13 @@ L6C05:  ldx     path_buf2
         cpx     #$01
         beq     L6C17
 L6C0C:  lda     path_buf2,x
-        sta     $D485,x
+        sta     path_buf2+1,x
         dex
         cpx     #$01
         bne     L6C0C
 L6C17:  ldx     path_buf1
         lda     path_buf1,x
-        sta     $D486
+        sta     path_buf2+2
         dec     path_buf1
         inc     path_buf2
         jsr     L6E72
@@ -2552,14 +2560,14 @@ L6C17:  ldx     path_buf1
 
 L6C60:  ldx     path_buf1
         inx
-        lda     $D486
+        lda     path_buf2+2
         sta     path_buf1,x
         inc     path_buf1
         ldx     path_buf2
         cpx     #$03
         bcc     L6C82
         ldx     #$02
-L6C76:  lda     $D485,x
+L6C76:  lda     path_buf2+1,x
         sta     path_buf2,x
         inx
         cpx     path_buf2
@@ -2591,14 +2599,14 @@ L6CBF:  iny
         bne     L6CBF
 L6CCC:  sty     path_buf1
 L6CCF:  lda     path_buf1,y
-        sta     $D485,y
+        sta     path_buf2+1,y
         dey
         bne     L6CCF
         ldx     path_buf1
         inx
         stx     path_buf2
         lda     #$06
-        sta     $D485
+        sta     path_buf2+1
         lda     #$00
         sta     path_buf1
         jsr     L6D27
@@ -2642,7 +2650,7 @@ L6D45:  jmp     0
 L6D48:  stax    $06
         ldx     path_buf0
         lda     #$2F
-        sta     $D403,x
+        sta     path_buf0+1,x
         inc     path_buf0
         ldy     #$00
         lda     ($06),y
@@ -2664,7 +2672,7 @@ L6D62:  lda     ($06),y
 L6D73:  stax    $06
         ldx     path_buf1
         lda     #$2F
-        sta     $D444,x
+        sta     path_buf1+1,x
         inc     path_buf1
         ldy     #$00
         lda     ($06),y
@@ -2767,7 +2775,7 @@ L6E45:  lda     #$00
         lda     path_buf0
         beq     L6E63
         sta     $08
-        copy16  #$D403, $06
+        copy16  #path_buf0+1, $06
         MGTK_RELAY_CALL MGTK::TextWidth, $06
 L6E63:  lda     $09
         clc
@@ -2785,7 +2793,7 @@ L6E72:  lda     #$00
         lda     path_buf1
         beq     L6E90
         sta     $08
-        copy16  #$D444, $06
+        copy16  #path_buf1+1, $06
         MGTK_RELAY_CALL MGTK::TextWidth, $06
 L6E90:  lda     $09
         clc
