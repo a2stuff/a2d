@@ -23,6 +23,25 @@
 .endmacro
 
 ;;; ============================================================
+;;; Length-prefixed string
+;;;
+;;; Can include control chars by using:
+;;;
+;;; PASCAL_STRING {"abc",$0D,"def"}
+
+.macro PASCAL_STRING str,res
+        .local  data
+        .local  end
+        .byte   end - data
+data:   .byte   str
+end:
+.if     .paramcount > 1
+        .res    res - (end - data), 0
+.endif
+.endmacro
+
+
+;;; ============================================================
 ;;; Pad with zeros to the given address
 
 .macro PAD_TO addr

@@ -201,18 +201,6 @@ NAME_LENGTH_MASK        := $0F
         .addr addr
 .endmacro
 
-.macro PASCAL_STRING str,res    ; Length-prefixed string
-        .local  data            ; Can include control chars by using:
-        .local  end             ; PASCAL_STRING {"abc",$0D,"def"}
-        .byte   end - data
-data:   .byte   str
-end:
-.if     .paramcount > 1
-        .res    res - (end - data), 0
-.endif
-.endmacro
-
-
 .macro DEFINE_OPEN_PARAMS name, pn, io, rn
     .if .xmatch(.string(pn), "pathname")
         ;; If 'pathname' is passed then expansion yields a circular reference.
