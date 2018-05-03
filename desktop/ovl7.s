@@ -55,10 +55,10 @@ L706A:  jsr     common_overlay::L6163
         lda     path_buf0
         bne     L707B
         jsr     common_overlay::L6D30
-L707B:  copy16  #$2001, $D484
+L707B:  copy16  #$2001, path_buf2
         jsr     common_overlay::L6D27
         jsr     common_overlay::L6693
-        copy16  #$2001, $D484
+        copy16  #$2001, path_buf2
         lda     #$FF
         sta     $D8EC
         jmp     common_overlay::L5106
@@ -83,7 +83,7 @@ L70B0:  lda     L7207+1,x
         sta     $51AE
         lda     #$80
         sta     $5104
-        copy16  #$0601, $D484
+        copy16  #$0601, path_buf2
         lda     winfo_entrydlg
         jsr     common_overlay::L62C8
         lda     L73A9
@@ -106,30 +106,30 @@ L7101:  lda     winfo_entrydlg
         jsr     common_overlay::L62C8
         lda     path_buf0
         beq     L7116
-        addr_call common_overlay::L5E0A, $D729 ; "Edit an Entry ..."
+        addr_call common_overlay::L5E0A, edit_an_entry_label
         jmp     L711D
 
-L7116:  addr_call common_overlay::L5E0A, $D718 ; "Add an Entry ..."
-L711D:  addr_call common_overlay::L5E6F, $D849 ; "Enter the full pathname of the run list file:"
+L7116:  addr_call common_overlay::L5E0A, add_an_entry_label
+L711D:  addr_call common_overlay::L5E6F, enter_the_full_pathname_label2
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, dialog_rect1
         MGTK_RELAY_CALL MGTK::FrameRect, dialog_rect2
-        addr_call common_overlay::L5E57, $D769 ; "Enter the full pathname of the run list file:"
-        addr_call common_overlay::L5E6F, $D797 ; "Enter the name ... you wish to appear..."
+        addr_call common_overlay::L5E57, enter_the_full_pathname_label1
+        addr_call common_overlay::L5E6F, enter_the_name_to_appear_label
         MGTK_RELAY_CALL MGTK::MoveTo, $D922
-        addr_call common_overlay::L5DED, $D7DE ; "Add a new entry to the:"
+        addr_call common_overlay::L5DED, add_a_new_entry_to_label
         MGTK_RELAY_CALL MGTK::MoveTo, $D926
-        addr_call common_overlay::L5DED, $D7F6 ; "1 Run list"
+        addr_call common_overlay::L5DED, run_list_label
         MGTK_RELAY_CALL MGTK::MoveTo, $D92A
-        addr_call common_overlay::L5DED, $D802 ; "2 Other Run list"
+        addr_call common_overlay::L5DED, other_run_list_label
         MGTK_RELAY_CALL MGTK::MoveTo, $D92E
-        addr_call common_overlay::L5DED, $D814 ; "Down load:"
+        addr_call common_overlay::L5DED, down_load_label
         MGTK_RELAY_CALL MGTK::MoveTo, $D932
-        addr_call common_overlay::L5DED, $D81F ; "3 At first boot"
+        addr_call common_overlay::L5DED, at_first_boot_label
         MGTK_RELAY_CALL MGTK::MoveTo, $D936
-        addr_call common_overlay::L5DED, $D830 ; "4 At first use"
+        addr_call common_overlay::L5DED, at_first_use_label
         MGTK_RELAY_CALL MGTK::MoveTo, $D93A
-        addr_call common_overlay::L5DED, $D840 ; "5 Never"
+        addr_call common_overlay::L5DED, never_label
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, $D93E
         MGTK_RELAY_CALL MGTK::FrameRect, $D946
@@ -178,7 +178,7 @@ L7232:  .byte   $29
 
 ;;; ============================================================
 
-        copy16  #$2001, $D484
+        copy16  #$2001, path_buf2
         jsr     common_overlay::L6D27
         ldx     L7232
 L726D:  lda     L7232+1,x
@@ -196,10 +196,10 @@ L726D:  lda     L7232+1,x
         sta     $D8F1
         lda     #$00
         sta     $D8F0
-        lda     $D443
+        lda     path_buf1
         bne     L72BF
         lda     #$00
-        sta     $D443
+        sta     path_buf1
         ldx     path_buf0
         beq     L72BF
 L72A0:  lda     path_buf0,x
@@ -213,17 +213,17 @@ L72AD:  ldy     #$00
 L72AF:  iny
         inx
         lda     path_buf0,x
-        sta     $D443,y
+        sta     path_buf1,y
         cpx     path_buf0
         bne     L72AF
-        sty     $D443
-L72BF:  copy16  #$0601, $D484
+        sty     path_buf1
+L72BF:  copy16  #$0601, path_buf2
         jsr     common_overlay::L6D27
         rts
 
         addr_call common_overlay::L647C, path_buf0
         bne     L72E2
-        lda     $D443
+        lda     path_buf1
         beq     L72E7
         cmp     #$0F
         bcs     L72E8
@@ -262,7 +262,7 @@ L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         txs
         return  #$FF
 
-        copy16  #$2001, $D484
+        copy16  #$2001, path_buf2
         jsr     common_overlay::L6D27
         ldx     L7207
 L737C:  lda     L7207+1,x
@@ -273,7 +273,7 @@ L737C:  lda     L7207+1,x
         dex
         dex
         bpl     L737C
-        copy16  #$0601, $D484
+        copy16  #$0601, path_buf2
         jsr     common_overlay::L6D27
         lda     #$00
         sta     $5105

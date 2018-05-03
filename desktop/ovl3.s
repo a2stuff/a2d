@@ -55,8 +55,8 @@ L903C:  ldx     #$01
         bcc     L9052
         inx
 L9052:  lda     #$00
-        sta     $D402
-        sta     $D443
+        sta     path_buf0
+        sta     path_buf1
         ldy     #$03
         lda     #$02
         jsr     common_overlay_L5000
@@ -191,7 +191,7 @@ L9174:  lda     L938D
         lda     ($06),y
         tay
 L918C:  lda     ($06),y
-        sta     $D443,y
+        sta     path_buf1,y
         dey
         bpl     L918C
         ldy     #$0F
@@ -204,7 +204,7 @@ L918C:  lda     ($06),y
         lda     ($06),y
         tay
 L91AA:  lda     ($06),y
-        sta     $D402,y
+        sta     path_buf0,y
         dey
         bpl     L91AA
         ldx     #$01
@@ -396,14 +396,14 @@ L933F:  pha
         lda     #$07
         jsr     JUMP_TABLE_RESTORE_OVL
         jsr     JUMP_TABLE_REDRAW_ALL
-L934F:  MGTK_RELAY_CALL MGTK::InitPort, $D239
-        MGTK_RELAY_CALL MGTK::SetPort, $D239
+L934F:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
+        MGTK_RELAY_CALL MGTK::SetPort, grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entry_picker
         pla
         jmp     L900F
 
-L936E:  MGTK_RELAY_CALL MGTK::InitPort, $D239
-        MGTK_RELAY_CALL MGTK::SetPort, $D239
+L936E:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
+        MGTK_RELAY_CALL MGTK::SetPort, grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entry_picker
         rts
 
@@ -522,8 +522,8 @@ L94D4:  lda     ($06),y
         sta     $D486,y
         dey
         bpl     L94D4
-        copy16  #$D487, $D484
-        MGTK_RELAY_CALL MGTK::DrawText, $D484
+        copy16  #$D487, path_buf2
+        MGTK_RELAY_CALL MGTK::DrawText, path_buf2
         rts
 
 L94F0:  stax    $06
@@ -1031,8 +1031,8 @@ L9A11:  sta     L9A60
         lda     L9A60
         jsr     L9BEF
         stax    $08
-        ldy     $D443
-L9A2D:  lda     $D443,y
+        ldy     path_buf1
+L9A2D:  lda     path_buf1,y
         sta     ($06),y
         sta     ($08),y
         dey
@@ -1047,8 +1047,8 @@ L9A2D:  lda     $D443,y
         lda     L9A60
         jsr     L9BFC
         stax    $08
-        ldy     $D402
-L9A55:  lda     $D402,y
+        ldy     path_buf0
+L9A55:  lda     path_buf0,y
         sta     ($06),y
         sta     ($08),y
         dey
@@ -1062,8 +1062,8 @@ L9A61:  sta     L9A96
         lda     L9A96
         jsr     L9BD5
         stax    $06
-        ldy     $D443
-L9A73:  lda     $D443,y
+        ldy     path_buf1
+L9A73:  lda     path_buf1,y
         sta     ($06),y
         dey
         bpl     L9A73
@@ -1073,8 +1073,8 @@ L9A73:  lda     $D443,y
         lda     L9A96
         jsr     L9BE2
         stax    $06
-        ldy     $D402
-L9A8D:  lda     $D402,y
+        ldy     path_buf0
+L9A8D:  lda     path_buf0,y
         sta     ($06),y
         dey
         bpl     L9A8D

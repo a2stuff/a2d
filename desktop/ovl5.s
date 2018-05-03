@@ -45,9 +45,9 @@ L7029:  lda     L709B+1,x
 
 L7052:  lda     winfo_entrydlg
         jsr     common_overlay::L62C8
-        addr_call common_overlay::L5E0A, $DA67  ; "Copy a File ..."
-        addr_call common_overlay::L5E57, $DA77  ; "Source filename:"
-        addr_call common_overlay::L5E6F, $DA88  ; "Destination filename:"
+        addr_call common_overlay::L5E0A, copy_a_file_label
+        addr_call common_overlay::L5E57, source_filename_label
+        addr_call common_overlay::L5E6F, destination_filename_label
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, dialog_rect1
         MGTK_RELAY_CALL MGTK::FrameRect, dialog_rect2

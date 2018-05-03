@@ -85,7 +85,7 @@ L08A7:  jsr     prompt_input_loop
 L08B1:  jsr     bell
         jmp     L08A7
 
-L08B7:  lda     $D443
+L08B7:  lda     path_buf1
         beq     L08B1
         cmp     #$10
         bcs     L08B1
@@ -131,7 +131,7 @@ L0942:  lda     winfo_alert_dialog
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
         axy_call draw_dialog_label, $01, $B373
-        addr_call L1900, $D443
+        addr_call L1900, path_buf1
         ldx     #$43
         ldy     #$D4
         lda     L09D7
@@ -225,7 +225,7 @@ L0A6A:  jsr     prompt_input_loop
 L0A74:  jsr     bell
         jmp     L0A6A
 
-L0A7A:  lda     $D443
+L0A7A:  lda     path_buf1
         beq     L0A74
         cmp     #$10
         bcs     L0A74
@@ -255,7 +255,7 @@ L0AD1:  lda     winfo_alert_dialog
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
         axy_call draw_dialog_label, $01, $B373
-        addr_call L1900, $D443
+        addr_call L1900, path_buf1
         jsr     set_cursor_watch
         ldx     #$43
         ldy     #$D4
@@ -1460,13 +1460,13 @@ L194E:  lda     $1C02
 L1959:  lda     read_block_params::unit_num
         jsr     L19B7
         ldx     $D8D5
-        sta     $D8B8,x
+        sta     the_disk_in_slot_label,x
         lda     read_block_params::unit_num
         jsr     L19C1
         ldx     $D8D6
-        sta     $D8B8,x
-        ldx     $D8B8
-L1974:  lda     $D8B8,x
+        sta     the_disk_in_slot_label,x
+        ldx     the_disk_in_slot_label
+L1974:  lda     the_disk_in_slot_label,x
         sta     $D909,x
         dex
         bpl     L1974
@@ -1483,13 +1483,13 @@ L1986:  cmp     #$A5
         lda     read_block_params::unit_num
         jsr     L19B7
         ldx     $D8B6
-        sta     $D891,x
+        sta     the_dos_33_disk_label,x
         lda     read_block_params::unit_num
         jsr     L19C1
         ldx     $D8B7
-        sta     $D891,x
-        ldx     $D891
-L19AC:  lda     $D891,x
+        sta     the_dos_33_disk_label,x
+        ldx     the_dos_33_disk_label
+L19AC:  lda     the_dos_33_disk_label,x
         sta     $D909,x
         dex
         bpl     L19AC

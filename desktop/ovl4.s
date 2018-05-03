@@ -107,11 +107,11 @@ L5151:  lda     winfo_entrydlg
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         bit     L51AE
         bmi     L5183
-        MGTK_RELAY_CALL MGTK::InRect, $DA9E
+        MGTK_RELAY_CALL MGTK::InRect, dialog_rect1
         cmp     #MGTK::inrect_inside
         bne     L5196
         beq     L5190
-L5183:  MGTK_RELAY_CALL MGTK::InRect, $DAAA
+L5183:  MGTK_RELAY_CALL MGTK::InRect, dialog_rect2
         cmp     #MGTK::inrect_inside
         bne     L5196
 L5190:  jsr     L55E0
@@ -233,7 +233,7 @@ L5304:  jsr     L6D45
         rts
 
 L5308:  MGTK_RELAY_CALL MGTK::InitPort, $D239
-        MGTK_RELAY_CALL MGTK::SetPort, $D215
+        MGTK_RELAY_CALL MGTK::SetPort, grafport2
         rts
 
 L531B:  jsr     L59B8
@@ -315,7 +315,7 @@ L53B5:  and     #$7F
         jsr     L61B1
         jsr     L606D
         MGTK_RELAY_CALL MGTK::InitPort, $D239
-        MGTK_RELAY_CALL MGTK::SetPort, $D215
+        MGTK_RELAY_CALL MGTK::SetPort, grafport2
         rts
 
 L542E:  .byte   0
@@ -1090,7 +1090,7 @@ L5C2F:  sta     $D920
         jsr     L6586
         jsr     L6163
         jsr     L606D
-        copy16  #$2001, $D484
+        copy16  #$2001, path_buf2
         jsr     L6D27
         rts
 
@@ -1189,24 +1189,24 @@ L5CF7:  MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entrydlg
         MGTK_RELAY_CALL MGTK::SetPort, $D239
         rts
 
-L5D82:  MGTK_RELAY_CALL MGTK::MoveTo, $DA03
-        addr_call L5DED, $DA07  ; "OK"
+L5D82:  MGTK_RELAY_CALL MGTK::MoveTo, ok_button_pos
+        addr_call L5DED, ok_button_label
         rts
 
-L5D93:  MGTK_RELAY_CALL MGTK::MoveTo, $DA21
-        addr_call L5DED, $DA25  ; "Open"
+L5D93:  MGTK_RELAY_CALL MGTK::MoveTo, open_button_pos
+        addr_call L5DED, open_button_label
         rts
 
-L5DA4:  MGTK_RELAY_CALL MGTK::MoveTo, $DA17
-        addr_call L5DED, $DA1B  ; "Close"
+L5DA4:  MGTK_RELAY_CALL MGTK::MoveTo, close_button_pos
+        addr_call L5DED, close_button_label
         rts
 
-L5DB5:  MGTK_RELAY_CALL MGTK::MoveTo, $DA2A
-        addr_call L5DED, $DA2E  ; "Cancel"
+L5DB5:  MGTK_RELAY_CALL MGTK::MoveTo, cancel_button_pos
+        addr_call L5DED, cancel_button_label
         rts
 
-L5DC6:  MGTK_RELAY_CALL MGTK::MoveTo, $DA40
-        addr_call L5DED, $DA44  ; "Change Drive"
+L5DC6:  MGTK_RELAY_CALL MGTK::MoveTo, change_drive_button_pos
+        addr_call L5DED, change_drive_button_label
         rts
 
 L5DD7:  stax    $06
@@ -1262,7 +1262,7 @@ L5E56:  .byte   0
 
 L5E57:  jsr     L5DD7
         stax    $06
-        MGTK_RELAY_CALL MGTK::MoveTo, $DA55
+        MGTK_RELAY_CALL MGTK::MoveTo, pos1
         ldax    $06
         jsr     L5DED
         rts
@@ -1271,7 +1271,7 @@ L5E57:  jsr     L5DD7
 
 L5E6F:  jsr     L5DD7
         stax    $06
-        MGTK_RELAY_CALL MGTK::MoveTo, $DA59
+        MGTK_RELAY_CALL MGTK::MoveTo, pos2
         ldax    $06
         jsr     L5DED
         rts
@@ -1530,7 +1530,7 @@ L60A9:  MGTK_RELAY_CALL MGTK::MoveTo, $D917
         lda     #$01
         sta     $D917
         MGTK_RELAY_CALL MGTK::MoveTo, $D917
-        addr_call L5DED, $D91D  ; Folder glyphs
+        addr_call L5DED, str_folder
         lda     #$10
         sta     $D917
 L60FF:  lda     L6128
@@ -1644,7 +1644,7 @@ L61E6:  inx
         stx     $0220
         addr_call L6129, $0220
         MGTK_RELAY_CALL MGTK::MoveTo, $DA51
-        addr_call L5DED, $DA5F  ; " Disk: "
+        addr_call L5DED, disk_label
         addr_call L5DED, $0220
         MGTK_RELAY_CALL MGTK::InitPort, $D239
         MGTK_RELAY_CALL MGTK::SetPort, $D239
@@ -1722,7 +1722,7 @@ L62C7:  .byte   0
 
 L62C8:  sta     $D212
         MGTK_RELAY_CALL MGTK::GetWinPort, $D212
-        MGTK_RELAY_CALL MGTK::SetPort, $D215
+        MGTK_RELAY_CALL MGTK::SetPort, grafport2
         rts
 
 L62DE:  ldax    #$0F5A
@@ -2001,15 +2001,15 @@ L658B:  cmp     #$09
         jsr     L62C8
         jsr     L6E45
         stax    $06
-        copy16  $DAA8, $08
+        copy16  path_pos1+2, $08
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         bit     $D8EB
         bpl     L65C8
-        MGTK_RELAY_CALL MGTK::SetTextBG, $DA5D
+        MGTK_RELAY_CALL MGTK::SetTextBG, textbg1
         lda     #$00
         sta     $D8EB
         beq     L65D6
-L65C8:  MGTK_RELAY_CALL MGTK::SetTextBG, $DA5E
+L65C8:  MGTK_RELAY_CALL MGTK::SetTextBG, textbg2
         lda     #$FF
         sta     $D8EB
 L65D6:  copy16  #$D8EF, $06
@@ -2023,16 +2023,16 @@ L65D6:  copy16  #$D8EF, $06
         jsr     L62C8
         jsr     L6E72
         stax    $06
-        copy16  $DAB4, $08
+        copy16  path_pos2+2, $08
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         bit     $D8EB
         bpl     L6626
-        MGTK_RELAY_CALL MGTK::SetTextBG, $DA5D
+        MGTK_RELAY_CALL MGTK::SetTextBG, textbg1
         lda     #$00
         sta     $D8EB
         jmp     L6634
 
-L6626:  MGTK_RELAY_CALL MGTK::SetTextBG, $DA5E
+L6626:  MGTK_RELAY_CALL MGTK::SetTextBG, textbg2
         lda     #$FF
         sta     $D8EB
 L6634:  copy16  #$D8EF, $06
@@ -2044,30 +2044,30 @@ L6634:  copy16  #$D8EF, $06
 
         lda     winfo_entrydlg
         jsr     L62C8
-        MGTK_RELAY_CALL MGTK::PaintRect, $DA9E
+        MGTK_RELAY_CALL MGTK::PaintRect, dialog_rect1
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, $DA9E
-        MGTK_RELAY_CALL MGTK::MoveTo, $DAA6
-        lda     $D402
+        MGTK_RELAY_CALL MGTK::FrameRect, dialog_rect1
+        MGTK_RELAY_CALL MGTK::MoveTo, path_pos1
+        lda     path_buf0
         beq     L6684
         addr_call L5DED, path_buf0
 L6684:  addr_call L5DED, path_buf2
-        addr_call L5DED, $D8F8  ; "  "
+        addr_call L5DED, str_2_spaces
         rts
 
 ;;; ============================================================
 
 L6693:  lda     winfo_entrydlg
         jsr     L62C8
-        MGTK_RELAY_CALL MGTK::PaintRect, $DAAA
+        MGTK_RELAY_CALL MGTK::PaintRect, dialog_rect2
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, $DAAA
-        MGTK_RELAY_CALL MGTK::MoveTo, $DAB2
-        lda     $D443
+        MGTK_RELAY_CALL MGTK::FrameRect, dialog_rect2
+        MGTK_RELAY_CALL MGTK::MoveTo, path_pos2
+        lda     path_buf1
         beq     L66C9
         addr_call L5DED, path_buf1
 L66C9:  addr_call L5DED, path_buf2
-        addr_call L5DED, $D8F8  ; "  "
+        addr_call L5DED, str_2_spaces
         rts
 
         lda     winfo_entrydlg
@@ -2076,12 +2076,12 @@ L66C9:  addr_call L5DED, path_buf2
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, $DA9E
+        MGTK_RELAY_CALL MGTK::InRect, dialog_rect1
         cmp     #MGTK::inrect_inside
         beq     L6719
         bit     L5104
         bpl     L6718
-        MGTK_RELAY_CALL MGTK::InRect, $DAAA
+        MGTK_RELAY_CALL MGTK::InRect, dialog_rect2
         cmp     #MGTK::inrect_inside
         bne     L6718
         jmp     L6D1E
@@ -2096,13 +2096,13 @@ L6719:  jsr     L6E45
 
 L672F:  jsr     L6E45
         stax    L684D
-        ldx     $D484
+        ldx     path_buf2
         inx
         lda     #$20
-        sta     $D484,x
-        inc     $D484
-        copy16  #$D484, $06
-        lda     $D484
+        sta     path_buf2,x
+        inc     path_buf2
+        copy16  #path_buf2, $06
+        lda     path_buf2
         sta     $08
 L6751:  MGTK_RELAY_CALL MGTK::TextWidth, $06
         add16   $09, L684D, $09
@@ -2112,47 +2112,47 @@ L6751:  MGTK_RELAY_CALL MGTK::TextWidth, $06
         lda     $08
         cmp     #$01
         bne     L6751
-        dec     $D484
+        dec     path_buf2
         jmp     L6846
 
 L6783:  lda     $08
-        cmp     $D484
+        cmp     path_buf2
         bcc     L6790
-        dec     $D484
+        dec     path_buf2
         jmp     L6B44
 
 L6790:  ldx     #$02
-        ldy     $D402
+        ldy     path_buf0
         iny
-L6796:  lda     $D484,x
-        sta     $D402,y
+L6796:  lda     path_buf2,x
+        sta     path_buf0,y
         cpx     $08
         beq     L67A5
         iny
         inx
         jmp     L6796
 
-L67A5:  sty     $D402
+L67A5:  sty     path_buf0
         ldy     #$02
         ldx     $08
         inx
-L67AD:  lda     $D484,x
-        sta     $D484,y
-        cpx     $D484
+L67AD:  lda     path_buf2,x
+        sta     path_buf2,y
+        cpx     path_buf2
         beq     L67BD
         iny
         inx
         jmp     L67AD
 
 L67BD:  dey
-        sty     $D484
+        sty     path_buf2
         jmp     L6846
 
-L67C4:  copy16  #$D402, $06
-        lda     $D402
+L67C4:  copy16  #path_buf0, $06
+        lda     path_buf0
         sta     $08
 L67D1:  MGTK_RELAY_CALL MGTK::TextWidth, $06
-        add16   $09, $DAA6, $09
+        add16   $09, path_pos1, $09
         cmp16   $09, $D20D
         bcc     L6800
         dec     $08
@@ -2164,11 +2164,11 @@ L67D1:  MGTK_RELAY_CALL MGTK::TextWidth, $06
 L6800:  inc     $08
         ldy     #$00
         ldx     $08
-L6806:  cpx     $D402
+L6806:  cpx     path_buf0
         beq     L6816
         inx
         iny
-        lda     $D402,x
+        lda     path_buf0,x
         sta     $D3C2,y
         jmp     L6806
 
@@ -2176,11 +2176,11 @@ L6816:  iny
         sty     $D3C1
         ldx     #$01
         ldy     $D3C1
-L681F:  cpx     $D484
+L681F:  cpx     path_buf2
         beq     L682F
         inx
         iny
-        lda     $D484,x
+        lda     path_buf2,x
         sta     $D3C1,y
         jmp     L681F
 
@@ -2188,11 +2188,11 @@ L682F:  sty     $D3C1
         lda     $D8EF
         sta     $D3C2
 L6838:  lda     $D3C1,y
-        sta     $D484,y
+        sta     path_buf2,y
         dey
         bpl     L6838
         lda     $08
-        sta     $D402
+        sta     path_buf0
 L6846:  jsr     L6D27
         jsr     L6EA3
         rts
@@ -2204,12 +2204,12 @@ L684D:  .word   0
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, $DAAA
+        MGTK_RELAY_CALL MGTK::InRect, dialog_rect2
         cmp     #MGTK::inrect_inside
         beq     L6890
         bit     L5104
         bpl     L688F
-        MGTK_RELAY_CALL MGTK::InRect, $DA9E
+        MGTK_RELAY_CALL MGTK::InRect, dialog_rect1
         cmp     #MGTK::inrect_inside
         bne     L688F
         jmp     L6D21
@@ -2224,13 +2224,13 @@ L6890:  jsr     L6E72
 
 L68A6:  jsr     L6E72
         stax    L69C4
-        ldx     $D484
+        ldx     path_buf2
         inx
         lda     #$20
-        sta     $D484,x
-        inc     $D484
-        copy16  #$D484, $06
-        lda     $D484
+        sta     path_buf2,x
+        inc     path_buf2
+        copy16  #path_buf2, $06
+        lda     path_buf2
         sta     $08
 L68C8:  MGTK_RELAY_CALL MGTK::TextWidth, $06
         add16   $09, L69C4, $09
@@ -2240,47 +2240,47 @@ L68C8:  MGTK_RELAY_CALL MGTK::TextWidth, $06
         lda     $08
         cmp     #$01
         bne     L68C8
-        dec     $D484
+        dec     path_buf2
         jmp     L69BD
 
 L68FA:  lda     $08
-        cmp     $D484
+        cmp     path_buf2
         bcc     L6907
-        dec     $D484
+        dec     path_buf2
         jmp     L6CF0
 
 L6907:  ldx     #$02
-        ldy     $D443
+        ldy     path_buf1
         iny
-L690D:  lda     $D484,x
-        sta     $D443,y
+L690D:  lda     path_buf2,x
+        sta     path_buf1,y
         cpx     $08
         beq     L691C
         iny
         inx
         jmp     L690D
 
-L691C:  sty     $D443
+L691C:  sty     path_buf1
         ldy     #$02
         ldx     $08
         inx
-L6924:  lda     $D484,x
-        sta     $D484,y
-        cpx     $D484
+L6924:  lda     path_buf2,x
+        sta     path_buf2,y
+        cpx     path_buf2
         beq     L6934
         iny
         inx
         jmp     L6924
 
 L6934:  dey
-        sty     $D484
+        sty     path_buf2
         jmp     L69BD
 
-L693B:  copy16  #$D443, $06
-        lda     $D443
+L693B:  copy16  #path_buf1, $06
+        lda     path_buf1
         sta     $08
 L6948:  MGTK_RELAY_CALL MGTK::TextWidth, $06
-        add16   $09, $DAB2, $09
+        add16   $09, path_pos2, $09
         cmp16   $09, $D20D
         bcc     L6977
         dec     $08
@@ -2292,11 +2292,11 @@ L6948:  MGTK_RELAY_CALL MGTK::TextWidth, $06
 L6977:  inc     $08
         ldy     #$00
         ldx     $08
-L697D:  cpx     $D443
+L697D:  cpx     path_buf1
         beq     L698D
         inx
         iny
-        lda     $D443,x
+        lda     path_buf1,x
         sta     $D3C2,y
         jmp     L697D
 
@@ -2304,11 +2304,11 @@ L698D:  iny
         sty     $D3C1
         ldx     #$01
         ldy     $D3C1
-L6996:  cpx     $D484
+L6996:  cpx     path_buf2
         beq     L69A6
         inx
         iny
-        lda     $D484,x
+        lda     path_buf2,x
         sta     $D3C1,y
         jmp     L6996
 
@@ -2316,33 +2316,33 @@ L69A6:  sty     $D3C1
         lda     $D8EF
         sta     $D3C2
 L69AF:  lda     $D3C1,y
-        sta     $D484,y
+        sta     path_buf2,y
         dey
         bpl     L69AF
         lda     $08
-        sta     $D443
+        sta     path_buf1
 L69BD:  jsr     L6D27
         jsr     L6E9F
         rts
 
 L69C4:  .word   0
         sta     L6A17
-        lda     $D402
+        lda     path_buf0
         clc
-        adc     $D484
+        adc     path_buf2
         cmp     #$3F
         bcc     L69D5
         rts
 
 L69D5:  lda     L6A17
-        ldx     $D402
+        ldx     path_buf0
         inx
-        sta     $D402,x
+        sta     path_buf0,x
         sta     $D8F7
         jsr     L6E45
-        inc     $D402
+        inc     path_buf0
         stax    $06
-        copy16  $DAA8, $08
+        copy16  path_pos1+2, $08
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
@@ -2352,144 +2352,144 @@ L69D5:  lda     L6A17
         rts
 
 L6A17:  .byte   0
-        lda     $D402
+        lda     path_buf0
         bne     L6A1E
         rts
 
-L6A1E:  dec     $D402
+L6A1E:  dec     path_buf0
         jsr     L6E45
         stax    $06
-        copy16  $DAA8, $08
+        copy16  path_pos1+2, $08
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call L5DED, path_buf2
-        addr_call L5DED, $D8F8  ; "  "
+        addr_call L5DED, str_2_spaces
         jsr     L6EA3
         rts
 
-        lda     $D402
+        lda     path_buf0
         bne     L6A59
         rts
 
-L6A59:  ldx     $D484
+L6A59:  ldx     path_buf2
         cpx     #$01
         beq     L6A6B
-L6A60:  lda     $D484,x
+L6A60:  lda     path_buf2,x
         sta     $D485,x
         dex
         cpx     #$01
         bne     L6A60
-L6A6B:  ldx     $D402
-        lda     $D402,x
+L6A6B:  ldx     path_buf0
+        lda     path_buf0,x
         sta     $D486
-        dec     $D402
-        inc     $D484
+        dec     path_buf0
+        inc     path_buf2
         jsr     L6E45
         stax    $06
-        copy16  $DAA8, $08
+        copy16  path_pos1+2, $08
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call L5DED, path_buf2
-        addr_call L5DED, $D8F8  ; "  "
+        addr_call L5DED, str_2_spaces
         jsr     L6EA3
         rts
 
-        lda     $D484
+        lda     path_buf2
         cmp     #$02
         bcs     L6AB4
         rts
 
-L6AB4:  ldx     $D402
+L6AB4:  ldx     path_buf0
         inx
         lda     $D486
-        sta     $D402,x
-        inc     $D402
-        ldx     $D484
+        sta     path_buf0,x
+        inc     path_buf0
+        ldx     path_buf2
         cpx     #$03
         bcc     L6AD6
         ldx     #$02
 L6ACA:  lda     $D485,x
-        sta     $D484,x
+        sta     path_buf2,x
         inx
-        cpx     $D484
+        cpx     path_buf2
         bne     L6ACA
-L6AD6:  dec     $D484
+L6AD6:  dec     path_buf2
         lda     winfo_entrydlg
         jsr     L62C8
-        MGTK_RELAY_CALL MGTK::MoveTo, $DAA6
+        MGTK_RELAY_CALL MGTK::MoveTo, path_pos1
         addr_call L5DED, path_buf0
         addr_call L5DED, path_buf2
-        addr_call L5DED, $D8F8  ; "  "
+        addr_call L5DED, str_2_spaces
         jsr     L6EA3
         rts
 
-L6B01:  lda     $D402
+L6B01:  lda     path_buf0
         bne     L6B07
         rts
 
-L6B07:  ldy     $D402
-        lda     $D484
+L6B07:  ldy     path_buf0
+        lda     path_buf2
         cmp     #$02
         bcc     L6B20
         ldx     #$01
 L6B13:  iny
         inx
-        lda     $D484,x
-        sta     $D402,y
-        cpx     $D484
+        lda     path_buf2,x
+        sta     path_buf0,y
+        cpx     path_buf2
         bne     L6B13
-L6B20:  sty     $D402
-L6B23:  lda     $D402,y
+L6B20:  sty     path_buf0
+L6B23:  lda     path_buf0,y
         sta     $D485,y
         dey
         bne     L6B23
-        ldx     $D402
+        ldx     path_buf0
         inx
-        stx     $D484
+        stx     path_buf2
         lda     #$06
         sta     $D485
         lda     #$00
-        sta     $D402
+        sta     path_buf0
         jsr     L6D27
         jsr     L6EA3
         rts
 
-L6B44:  lda     $D484
+L6B44:  lda     path_buf2
         cmp     #$02
         bcs     L6B4C
         rts
 
 L6B4C:  ldx     #$01
-        ldy     $D402
+        ldy     path_buf0
 L6B51:  inx
         iny
-        lda     $D484,x
-        sta     $D402,y
-        cpx     $D484
+        lda     path_buf2,x
+        sta     path_buf0,y
+        cpx     path_buf2
         bne     L6B51
-        sty     $D402
-        copy16  #$0601, $D484
+        sty     path_buf0
+        copy16  #$0601, path_buf2
         jsr     L6D27
         jsr     L6EA3
         rts
 
         sta     L6BC3
-        lda     $D443
+        lda     path_buf1
         clc
-        adc     $D484
+        adc     path_buf2
         cmp     #$3F
         bcc     L6B81
         rts
 
 L6B81:  lda     L6BC3
-        ldx     $D443
+        ldx     path_buf1
         inx
-        sta     $D443,x
+        sta     path_buf1,x
         sta     $D8F7
         jsr     L6E72
-        inc     $D443
+        inc     path_buf1
         stax    $06
         copy16  $DAB4, $08
         lda     winfo_entrydlg
@@ -2501,11 +2501,11 @@ L6B81:  lda     L6BC3
         rts
 
 L6BC3:  .byte   0
-        lda     $D443
+        lda     path_buf1
         bne     L6BCA
         rts
 
-L6BCA:  dec     $D443
+L6BCA:  dec     path_buf1
         jsr     L6E72
         stax    $06
         copy16  $DAB4, $08
@@ -2513,27 +2513,27 @@ L6BCA:  dec     $D443
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call L5DED, path_buf2
-        addr_call L5DED, $D8F8  ; "  "
+        addr_call L5DED, str_2_spaces
         jsr     L6E9F
         rts
 
-        lda     $D443
+        lda     path_buf1
         bne     L6C05
         rts
 
-L6C05:  ldx     $D484
+L6C05:  ldx     path_buf2
         cpx     #$01
         beq     L6C17
-L6C0C:  lda     $D484,x
+L6C0C:  lda     path_buf2,x
         sta     $D485,x
         dex
         cpx     #$01
         bne     L6C0C
-L6C17:  ldx     $D443
-        lda     $D443,x
+L6C17:  ldx     path_buf1
+        lda     path_buf1,x
         sta     $D486
-        dec     $D443
-        inc     $D484
+        dec     path_buf1
+        inc     path_buf2
         jsr     L6E72
         stax    $06
         copy16  $DAB4, $08
@@ -2541,85 +2541,85 @@ L6C17:  ldx     $D443
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call L5DED, path_buf2
-        addr_call L5DED, $D8F8  ; "  "
+        addr_call L5DED, str_2_spaces
         jsr     L6E9F
         rts
 
-        lda     $D484
+        lda     path_buf2
         cmp     #$02
         bcs     L6C60
         rts
 
-L6C60:  ldx     $D443
+L6C60:  ldx     path_buf1
         inx
         lda     $D486
-        sta     $D443,x
-        inc     $D443
-        ldx     $D484
+        sta     path_buf1,x
+        inc     path_buf1
+        ldx     path_buf2
         cpx     #$03
         bcc     L6C82
         ldx     #$02
 L6C76:  lda     $D485,x
-        sta     $D484,x
+        sta     path_buf2,x
         inx
-        cpx     $D484
+        cpx     path_buf2
         bne     L6C76
-L6C82:  dec     $D484
+L6C82:  dec     path_buf2
         lda     winfo_entrydlg
         jsr     L62C8
-        MGTK_RELAY_CALL MGTK::MoveTo, $DAB2
+        MGTK_RELAY_CALL MGTK::MoveTo, path_pos2
         addr_call L5DED, path_buf1
         addr_call L5DED, path_buf2
-        addr_call L5DED, $D8F8  ; "  "
+        addr_call L5DED, str_2_spaces
         jsr     L6E9F
         rts
 
-L6CAD:  lda     $D443
+L6CAD:  lda     path_buf1
         bne     L6CB3
         rts
 
-L6CB3:  ldy     $D443
-        lda     $D484
+L6CB3:  ldy     path_buf1
+        lda     path_buf2
         cmp     #$02
         bcc     L6CCC
         ldx     #$01
 L6CBF:  iny
         inx
-        lda     $D484,x
-        sta     $D443,y
-        cpx     $D484
+        lda     path_buf2,x
+        sta     path_buf1,y
+        cpx     path_buf2
         bne     L6CBF
-L6CCC:  sty     $D443
-L6CCF:  lda     $D443,y
+L6CCC:  sty     path_buf1
+L6CCF:  lda     path_buf1,y
         sta     $D485,y
         dey
         bne     L6CCF
-        ldx     $D443
+        ldx     path_buf1
         inx
-        stx     $D484
+        stx     path_buf2
         lda     #$06
         sta     $D485
         lda     #$00
-        sta     $D443
+        sta     path_buf1
         jsr     L6D27
         jsr     L6E9F
         rts
 
-L6CF0:  lda     $D484
+L6CF0:  lda     path_buf2
         cmp     #$02
         bcs     L6CF8
         rts
 
 L6CF8:  ldx     #$01
-        ldy     $D443
+        ldy     path_buf1
 L6CFD:  inx
         iny
-        lda     $D484,x
-        sta     $D443,y
-        cpx     $D484
+        lda     path_buf2,x
+        sta     path_buf1,y
+        cpx     path_buf2
         bne     L6CFD
-        sty     $D443
-        copy16  #$0601, $D484
+        sty     path_buf1
+        copy16  #$0601, path_buf2
         jsr     L6D27
         jsr     L6E9F
         rts
@@ -2640,63 +2640,63 @@ L6D42:  jmp     0
 L6D45:  jmp     0
 
 L6D48:  stax    $06
-        ldx     $D402
+        ldx     path_buf0
         lda     #$2F
         sta     $D403,x
-        inc     $D402
+        inc     path_buf0
         ldy     #$00
         lda     ($06),y
         tay
         clc
-        adc     $D402
+        adc     path_buf0
         pha
         tax
 L6D62:  lda     ($06),y
-        sta     $D402,x
+        sta     path_buf0,x
         dey
         dex
-        cpx     $D402
+        cpx     path_buf0
         bne     L6D62
         pla
-        sta     $D402
+        sta     path_buf0
         rts
 
 L6D73:  stax    $06
-        ldx     $D443
+        ldx     path_buf1
         lda     #$2F
         sta     $D444,x
-        inc     $D443
+        inc     path_buf1
         ldy     #$00
         lda     ($06),y
         tay
         clc
-        adc     $D443
+        adc     path_buf1
         pha
         tax
 L6D8D:  lda     ($06),y
-        sta     $D443,x
+        sta     path_buf1,x
         dey
         dex
-        cpx     $D443
+        cpx     path_buf1
         bne     L6D8D
         pla
-        sta     $D443
+        sta     path_buf1
         rts
 
-L6D9E:  ldx     $D402
+L6D9E:  ldx     path_buf0
         cpx     #$00
         beq     L6DAF
-        dec     $D402
-        lda     $D402,x
+        dec     path_buf0
+        lda     path_buf0,x
         cmp     #$2F
         bne     L6D9E
 L6DAF:  rts
 
-L6DB0:  ldx     $D443
+L6DB0:  ldx     path_buf1
         cpx     #$00
         beq     L6DC1
-        dec     $D443
-        lda     $D443,x
+        dec     path_buf1
+        lda     path_buf1,x
         cmp     #$2F
         bne     L6DB0
 L6DC1:  rts
@@ -2747,34 +2747,34 @@ L6E1B:  .byte   0
 L6E1C:  .byte   0
         ldx     path_buf
 L6E20:  lda     path_buf,x
-        sta     $D402,x
+        sta     path_buf0,x
         dex
         bpl     L6E20
-        addr_call L6129, $D402
+        addr_call L6129, path_buf0
         rts
 
         ldx     path_buf
 L6E34:  lda     path_buf,x
-        sta     $D443,x
+        sta     path_buf1,x
         dex
         bpl     L6E34
-        addr_call L6129, $D443
+        addr_call L6129, path_buf1
         rts
 
 L6E45:  lda     #$00
         sta     $09
         sta     $0A
-        lda     $D402
+        lda     path_buf0
         beq     L6E63
         sta     $08
         copy16  #$D403, $06
         MGTK_RELAY_CALL MGTK::TextWidth, $06
 L6E63:  lda     $09
         clc
-        adc     $DAA6
+        adc     path_pos1
         tay
         lda     $0A
-        adc     $DAA7
+        adc     path_pos1+1
         tax
         tya
         rts
@@ -2782,17 +2782,17 @@ L6E63:  lda     $09
 L6E72:  lda     #$00
         sta     $09
         sta     $0A
-        lda     $D443
+        lda     path_buf1
         beq     L6E90
         sta     $08
         copy16  #$D444, $06
         MGTK_RELAY_CALL MGTK::TextWidth, $06
 L6E90:  lda     $09
         clc
-        adc     $DAB2
+        adc     path_pos2
         tay
         lda     $0A
-        adc     $DAB3
+        adc     path_pos2+1
         tax
         tya
         rts
@@ -2801,15 +2801,15 @@ L6E9F:  lda     #$FF
         bmi     L6EA5
 L6EA3:  lda     #$00
 L6EA5:  bmi     L6EB6
-        ldx     $D402
-L6EAA:  lda     $D402,x
+        ldx     path_buf0
+L6EAA:  lda     path_buf0,x
         sta     $D3C1,x
         dex
         bpl     L6EAA
         jmp     L6EC2
 
-L6EB6:  ldx     $D443
-L6EB9:  lda     $D443,x
+L6EB6:  ldx     path_buf1
+L6EB9:  lda     path_buf1,x
         sta     $D3C1,x
         dex
         bpl     L6EB9

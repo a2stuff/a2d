@@ -43,8 +43,8 @@ L7029:  lda     L7087,x
 
 L704D:  lda     winfo_entrydlg
         jsr     common_overlay::L62C8
-        addr_call common_overlay::L5E0A, $DAB6  ; "Delete a File ..."
-        addr_call common_overlay::L5E57, $DAC8  ; "File to delete:"
+        addr_call common_overlay::L5E0A, delete_a_file_label
+        addr_call common_overlay::L5E57, file_to_delete_label
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, dialog_rect1
         MGTK_RELAY_CALL MGTK::InitPort, grafport3

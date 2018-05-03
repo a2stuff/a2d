@@ -1,4 +1,4 @@
-        .setcpu "6502"
+       .setcpu "6502"
 
         .include "apple2.inc"
         .include "../macros.inc"

@@ -532,33 +532,51 @@ dialog_label_pos:
         ;; ???
         .byte   $00,$04,$00,$02,$00,$5A,$01,$6C,$00,$05,$00,$03,$00,$59,$01,$6B,$00,$06,$00,$16,$00,$58,$01,$16,$00,$06,$00,$59,$00,$58,$01,$59,$00,$D2,$00,$5C,$00,$36,$01,$67,$00,$28,$00,$5C,$00,$8C,$00,$67,$00,$D7,$00,$66,$00,$2D,$00,$66,$00,$82,$00,$07,$00,$DC,$00,$13,$00
 
-LD718:  PASCAL_STRING "Add an Entry ..."
-LD729:  PASCAL_STRING "Edit an Entry ..."
-LD73B:  PASCAL_STRING "Delete an Entry ..."
-LD74F:  PASCAL_STRING "Run an Entry ..."
-
+add_an_entry_label:
+        PASCAL_STRING "Add an Entry ..."
+edit_an_entry_label:
+        PASCAL_STRING "Edit an Entry ..."
+delete_an_entry_label:
+        PASCAL_STRING "Delete an Entry ..."
+run_an_entry_label:
+        PASCAL_STRING "Run an Entry ..."
 
 LD760:  PASCAL_STRING "Run list"
+
+enter_the_full_pathname_label1:
         PASCAL_STRING "Enter the full pathname of the run list file:"
+enter_the_name_to_appear_label:
         PASCAL_STRING "Enter the name (14 characters max)  you wish to appear in the run list"
+
+add_a_new_entry_to_label:
         PASCAL_STRING "Add a new entry to the:"
+run_list_label:
         PASCAL_STRING {GLYPH_OAPPLE,"1 Run list"}
+other_run_list_label:
         PASCAL_STRING {GLYPH_OAPPLE,"2 Other Run list"}
+down_load_label:
         PASCAL_STRING "Down load:"
+at_first_boot_label:
         PASCAL_STRING {GLYPH_OAPPLE,"3 at first boot"}
+at_first_use_label:
         PASCAL_STRING {GLYPH_OAPPLE,"4 at first use"}
+never_label:
         PASCAL_STRING {GLYPH_OAPPLE,"5 never"}
-        PASCAL_STRING "Enter the full pathname of the run list file:" ; Duplicate ???
+
+enter_the_full_pathname_label2:
+        PASCAL_STRING "Enter the full pathname of the run list file:"
 
         .byte   $00,$00,$00,$00,$00,$00,$00
         .byte   $00,$06,$00,$17,$00,$58,$01,$57
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00
 
+the_dos_33_disk_label:
         PASCAL_STRING "the DOS 3.3 disk in slot   drive   ?"
 
         .byte   $1A,$22
 
+the_disk_in_slot_label:
         PASCAL_STRING "the disk in slot   drive   ?"
 
         .byte   $12
@@ -602,6 +620,7 @@ file_count:
         .byte   $00,$00,$00,$00,$00,$7D,$00,$00
         .byte   $00,$02,$00,$00,$00,$00,$00
 
+str_folder:
         PASCAL_STRING {GLYPH_FOLDERL,GLYPH_FOLDERR}
 
         .byte   $00,$00,$57,$01,$28,$00
@@ -634,39 +653,66 @@ file_count:
         .byte   $29,$00,$43,$01,$1E,$00,$43,$01
         .byte   $64,$00,$81,$D3,$00
 
-        .word   $C6,$63
+ok_button_pos:
+        .word   198,99
+ok_button_label:
         PASCAL_STRING {"OK            ",GLYPH_RETURN}
 
-        .word   $C6,$44
+close_button_pos:
+        .word   198,68
+close_button_label:
         PASCAL_STRING "Close"
 
-        .word   $C6,$36
+open_button_pos:
+        .word   198,54
+open_button_label:
         PASCAL_STRING "Open"
 
-        .word   $C6,$53
+cancel_button_pos:
+        .word   198,83
+cancel_button_label:
         PASCAL_STRING "Cancel        Esc"
 
-        .word   $C6,$28
+change_drive_button_pos:
+        .word   198,40
+change_drive_button_label:
         PASCAL_STRING "Change Drive"
 
-        .byte   $1C,$00,$19,$00,$1C
-        .byte   $00,$70,$00,$1C,$00,$87,$00,$00
+disk_label_pos:
+        DEFINE_POINT   28,25
+
+pos1:
+        DEFINE_POINT   28,112
+pos2:
+        DEFINE_POINT   28,135
+
+textbg1:
+        .byte   $00
+textbg2:
         .byte   $7F
 
+disk_label:
         PASCAL_STRING " Disk: "
 
+copy_a_file_label:
         PASCAL_STRING "Copy a File ..."
+
+source_filename_label:
         PASCAL_STRING "Source filename:"
+
+destination_filename_label:
         PASCAL_STRING "Destination filename:"
 
 dialog_rect1:   DEFINE_RECT 28, 113, 463, 124
-        .byte   $1E,$00,$7B,$00
+path_pos1:      DEFINE_POINT 30,123
+
 dialog_rect2:   DEFINE_RECT 28, 136, 463, 147
+path_pos2:      DEFINE_POINT 30,146
 
-
-        .byte   $1E,$00,$92,$00
-
+delete_a_file_label:
         PASCAL_STRING "Delete a File ..."
+
+file_to_delete_label:
         PASCAL_STRING "File to delete:"
 
         .assert * = $DAD8, error, "Segment length mismatch"
@@ -997,14 +1043,14 @@ LE71F:  .byte   0
 .proc label
 window_id:      .byte   id
 options:        .byte   MGTK::option_go_away_box | MGTK::option_grow_box
-title:  .addr   buflabel
+title:          .addr   buflabel
 hscroll:        .byte   MGTK::scroll_option_normal
 vscroll:        .byte   MGTK::scroll_option_normal
 hthumbmax:      .byte   3
 hthumbpos:      .byte   0
 vthumbmax:      .byte   3
 vthumbpos:      .byte   0
-status: .byte   0
+status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   170
 maxcontwidth:   .word   50
@@ -1017,11 +1063,11 @@ mapwidth:       .word   MGTK::screen_mapwidth
 cliprect:       DEFINE_RECT 0, 0, 440, 120
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-penloc: DEFINE_POINT 0, 0
+penloc:         DEFINE_POINT 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
-textbg: .byte   MGTK::textbg_white
+textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endproc
