@@ -6,7 +6,7 @@
         .include "../mgtk.inc"
         .include "../desktop.inc"
         .include "../macros.inc"
-        .include "inc/desktoplc.inc"
+        .include "out/desktop_res.inc"
 
 ;;; ============================================================
 ;;; Overlay for Format/Erase

@@ -7,7 +7,7 @@
         .include "../mgtk.inc"
         .include "../desktop.inc"
         .include "../macros.inc"
-        .include "inc/desktoplc.inc"
+        .include "out/desktop_res.inc"
 
 .macro entry arg1, arg2
         .byte arg1
