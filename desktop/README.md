@@ -21,11 +21,11 @@ more code segments swapped in dynamically.
 The file is broken down into multiple segments:
 
 * segment 0: load  - A$2000-$257F, L$0580, B$000000 (`loader.s`; Loader)
-* segment 1: aux   - A$4000-$BFFF, L$8000, B$000580 (`mgtk.s`, `desktop.s`; MGTK, DeskTop)
-* segment 2: auxlc - A$D000-$ECFF, L$1D00, B$008580 (`desktop.s`; DeskTop)
-* segment 3: auxlc - A$FB00-$FFFF, L$0500, B$00A280 (`desktop.s`; DeskTop)
-* segment 4: main  - A$4000-$BEFF, L$7F00, B$00A780 (`desktop.s`; DeskTop)
-* segment 5: main  - A$0800-$0FFF, L$0800, B$012680 (`desktop.s`; Initializer)
+* segment 1: aux   - A$4000-$BFFF, L$8000, B$000580 (`mgtk.s`, `desktop_aux.s`; MGTK, DeskTop)
+* segment 2: auxlc - A$D000-$ECFF, L$1D00, B$008580 (`desktop_res.s`; DeskTop)
+* segment 3: auxlc - A$FB00-$FFFF, L$0500, B$00A280 (`desktop_res.s`; DeskTop)
+* segment 4: main  - A$4000-$BEFF, L$7F00, B$00A780 (`desktop_main.s`; DeskTop)
+* segment 5: main  - A$0800-$0FFF, L$0800, B$012680 (`desktop_main.s`; Initializer)
 * segment 6: main  - A$0290-$03EF, L$0160, B$012E80 (`invoker.s`; Invoker)
 * overlays dynamically loaded for these actions:
   * disk copy     - A$0800-$09FF, L$0200, B$012FE0 (`ovl1.s`)
@@ -79,7 +79,7 @@ pathname passed at $2006 (see ProDOS TLM).
 
 ### Initializer
 
-(in `desktop.s`)
+(in `desktop_main.s`)
 
 Loaded at $800-$FFF, this does one-time initialization of the
 DeskTop. It is later overwritten when any desk accessories are
@@ -99,7 +99,10 @@ data.
 
 ### "DeskTop" Application
 
-`desktop.s`
+`desktop.s` which pulls in:
+* `desktop_aux.s`
+* `desktop_lc.s` (which pulls in `desktop_res.s`)
+* `desktop_main.s`
 
 DeskTop application code is in the lower 48k of both Aux and Main:
 
