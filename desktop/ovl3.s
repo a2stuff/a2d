@@ -419,15 +419,15 @@ L9390:  MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entry_picker
         lda     winfo_entry_picker
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, $D6D8
-        MGTK_RELAY_CALL MGTK::FrameRect, $D6E0
-        MGTK_RELAY_CALL MGTK::MoveTo, $D6E8
-        MGTK_RELAY_CALL MGTK::LineTo, $D6EC
-        MGTK_RELAY_CALL MGTK::MoveTo, $D6F0
-        MGTK_RELAY_CALL MGTK::LineTo, $D6F4
+        MGTK_RELAY_CALL MGTK::FrameRect, rect_D6D8
+        MGTK_RELAY_CALL MGTK::FrameRect, rect_D6E0
+        MGTK_RELAY_CALL MGTK::MoveTo, pos_D6E8
+        MGTK_RELAY_CALL MGTK::LineTo, pos_D6EC
+        MGTK_RELAY_CALL MGTK::MoveTo, pos_D6F0
+        MGTK_RELAY_CALL MGTK::LineTo, pos_D6F4
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, $D6F8
+        MGTK_RELAY_CALL MGTK::FrameRect, rect_D6F8
         MGTK_RELAY_CALL MGTK::FrameRect, rect_D700
         jsr     L94A9
         jsr     L94BA
@@ -559,7 +559,7 @@ L953F:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, $D6F8
+        MGTK_RELAY_CALL MGTK::InRect, rect_D6F8
         cmp     #MGTK::inrect_inside
         beq     L957C
         lda     L95BF
@@ -571,7 +571,7 @@ L957C:  lda     L95BF
         jmp     L953F
 
 L9584:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, $D6F8
+        MGTK_RELAY_CALL MGTK::PaintRect, rect_D6F8
         lda     L95BF
         clc
         adc     #$80
@@ -583,7 +583,7 @@ L95A2:  lda     L95BF
         return  #$FF
 
 L95AA:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, $D6F8
+        MGTK_RELAY_CALL MGTK::PaintRect, rect_D6F8
         return  #$00
 
 L95BF:  .byte   0
@@ -655,11 +655,11 @@ L9683:  lda     winfo_entry_picker
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, $D6F8
+        MGTK_RELAY_CALL MGTK::InRect, rect_D6F8
         cmp     #MGTK::inrect_inside
         bne     L96C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, $D6F8
+        MGTK_RELAY_CALL MGTK::PaintRect, rect_D6F8
         jsr     L953A
         bmi     L96C7
         lda     #$00
@@ -829,9 +829,9 @@ L9822:  lda     event_modifiers
 :       return  #$FF
 
 L985E:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, $D6F8
+        MGTK_RELAY_CALL MGTK::PaintRect, rect_D6F8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, $D6F8
+        MGTK_RELAY_CALL MGTK::PaintRect, rect_D6F8
         return  #$00
 
 L9885:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR

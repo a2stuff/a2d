@@ -99,15 +99,15 @@ data.
 
 ### "DeskTop" Application
 
-`desktop.s` which pulls in:
+`desktop.s` which includes in:
 * `desktop_aux.s`
 * `desktop_lc.s` (which pulls in `desktop_res.s`)
 * `desktop_main.s`
 
 DeskTop application code is in the lower 48k of both Aux and Main:
 
-* Aux $851F-$BFFF - sitting above the GUI library
-* Main $4000-$BEFF
+* Aux $851F-$BFFF - sitting above the GUI library (`desktop_aux.s`)
+* Main $4000-$BEFF (`desktop_main.s`)
 
 ...and in the Aux language card area (accessible from both aux and
 main code) are relays, buffers and resources:
@@ -117,6 +117,11 @@ main code) are relays, buffers and resources:
 * Aux $FB00-$FFFF - more resources (file types, icons)
 
 ($C000-$CFFF is reserved for I/O, and main $BF page and language card is ProDOS)
+
+`desktop_res.s` defines these common resources. It is built as part of
+`desktop.s`. Early in the build process it is also built as part of
+`desktop_res_build.s` which is processed to produce `out/desktop_res.inc`,
+which is used by the overlay sources.
 
 Aux $1B00-$1F7F holds lists of icons, one for the desktop then one for up
 to 8 windows. First byte is a count, up to 127 icon entries. Icon numbers

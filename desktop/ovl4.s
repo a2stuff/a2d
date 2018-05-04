@@ -246,7 +246,7 @@ L531F:  bit     L5105
         beq     L5341
         cmp     #MGTK::ctl_vertical_scroll_bar
         bne     L5340
-        lda     winfo_entrydlg_file_picker + MGTK::winfo_offset_vscroll
+        lda     winfo_entrydlg_file_picker_vscroll
         and     #$01
         beq     L5340
         jmp     L5469
@@ -378,7 +378,7 @@ L5488:  lda     #MGTK::ctl_vertical_scroll_bar
         jsr     L606D
         rts
 
-L54BA:  lda     winfo_entrydlg_file_picker + MGTK::winfo_offset_vthumbpos
+L54BA:  lda     winfo_entrydlg_file_picker_vthumbpos
         sec
         sbc     #$09
         bpl     L54C4
@@ -392,7 +392,7 @@ L54C4:  sta     updatethumb_thumbpos
         jsr     L606D
         rts
 
-L54DF:  lda     winfo_entrydlg_file_picker + MGTK::winfo_offset_vthumbpos
+L54DF:  lda     winfo_entrydlg_file_picker_vthumbpos
         clc
         adc     #$09
         cmp     $177F
@@ -408,7 +408,7 @@ L54EF:  sta     updatethumb_thumbpos
         jsr     L606D
         rts
 
-L550A:  lda     winfo_entrydlg_file_picker + MGTK::winfo_offset_vthumbpos
+L550A:  lda     winfo_entrydlg_file_picker_vthumbpos
         bne     L5510
         rts
 
@@ -424,8 +424,8 @@ L5510:  sec
         jsr     L555F
         jmp     L550A
 
-L5533:  lda     winfo_entrydlg_file_picker + MGTK::winfo_offset_vthumbpos
-        cmp     winfo_entrydlg_file_picker + MGTK::winfo_offset_vthumbmax
+L5533:  lda     winfo_entrydlg_file_picker_vthumbpos
+        cmp     winfo_entrydlg_file_picker_vthumbmax
         bne     L553C
         rts
 
@@ -1606,7 +1606,7 @@ L6163:  sta     L61B0
         rts
 
 L6181:  lda     $177F
-        sta     winfo_entrydlg_file_picker + MGTK::winfo_offset_vthumbmax
+        sta     winfo_entrydlg_file_picker_vthumbmax
         .assert MGTK::ctl_vertical_scroll_bar = MGTK::activatectl_activate, error, "need to match"
         lda     #MGTK::ctl_vertical_scroll_bar
         sta     activatectl_which_ctl

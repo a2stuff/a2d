@@ -25,7 +25,7 @@ clean:
 	rm -f $(OUTDIR)/*.built
 	rm -f $(OUTDIR)/*.sys
 
-$(OUTDIR)/desktop_res.inc: desktop_res.s desktop_res_builder.s
+$(OUTDIR)/desktop_res.inc: desktop_res.s desktop_res_builder.s res/build_res_inc.pl
 	$(CC65)/ca65 $(CAFLAGS) --listing $(OUTDIR)/desktop_res.list -o $@ desktop_res_builder.s
 	cat $(OUTDIR)/desktop_res.list | res/build_res_inc.pl > $@
 

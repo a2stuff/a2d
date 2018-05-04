@@ -530,7 +530,27 @@ dialog_label_pos:
 .endproc
 
         ;; ???
-        .byte   $00,$04,$00,$02,$00,$5A,$01,$6C,$00,$05,$00,$03,$00,$59,$01,$6B,$00,$06,$00,$16,$00,$58,$01,$16,$00,$06,$00,$59,$00,$58,$01,$59,$00,$D2,$00,$5C,$00,$36,$01,$67,$00
+        .byte   $00
+
+rect_D6D8:
+        DEFINE_RECT 4,2,346,108
+rect_D6E0:
+        DEFINE_RECT 5,3,345,107
+
+        ;; Line endpoints
+pos_D6E8:
+        DEFINE_POINT 6,22
+pos_D6EC:
+        DEFINE_POINT 344,22
+
+        ;; Line endpoints
+pos_D6F0:
+        DEFINE_POINT 6,89
+pos_D6F4:
+        DEFINE_POINT 344,89
+
+rect_D6F8:
+        DEFINE_RECT 210,92,310,103
 
 rect_D700:
         DEFINE_RECT 40,92,140,103
@@ -574,8 +594,11 @@ enter_the_full_pathname_label2:
 
         .byte   $00,$00,$00,$00,$00,$00,$00
         .byte   $00,$06,$00,$17,$00,$58,$01,$57
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00
+        .byte   $00,$00
+
+rect_D888:
+        DEFINE_RECT 0,0,0,0
+        .byte   0
 
 the_dos_33_disk_label:
         PASCAL_STRING "the DOS 3.3 disk in slot   drive   ?"

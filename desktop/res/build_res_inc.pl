@@ -25,23 +25,24 @@ while (<STDIN>) {
         next;
     }
 
-    next if $proc;
-
     if ($line =~ m/^(\S+)\s*:=\s*(.*)/) {
         my ($symbol, $value) = ($1, $2);
         next if $value =~ m/::/;
         $value =~ s/\*/\$$addr/; # foo := * + 2
+        $symbol = $proc . '_' . $symbol if $proc;
         push @equates, [$symbol, $value];
         next;
     }
 
     if ($line =~ m/^(\S+):/) {
-        push @symbols, [$1, $addr];
+        my ($symbol) = ($1);
+        $symbol = $proc . '_' . $symbol if $proc;
+        push @symbols, [$symbol, $addr];
     }
 }
 
 foreach my $pair (@symbols) {
-    printf "%-24s := \$%s\n", @$pair[0], @$pair[1];
+    printf "%-30s := \$%s\n", @$pair[0], @$pair[1];
 }
 
 foreach my $pair (@equates) {

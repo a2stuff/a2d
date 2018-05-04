@@ -364,19 +364,19 @@ L0C0F:  lda     L0C1E
 L0C1E:  .byte   0
 L0C1F:  .byte   0
 L0C20:  ldy     #$27
-        sty     $D888
+        sty     rect_D888
         ldy     #$00
-        sty     $D889
+        sty     rect_D888+1
         tax
         lsr     a
         lsr     a
         sta     L0CA9
         beq     L0C5B
-        add16   $D888, #$0078, $D888
+        add16   rect_D888, #$0078, rect_D888
         lda     L0CA9
         cmp     #$01
         beq     L0C5B
-        add16   $D888, #$0078, $D888
+        add16   rect_D888, #$0078, rect_D888
 L0C5B:  asl     L0CA9
         asl     L0CA9
         txa
@@ -387,13 +387,13 @@ L0C5B:  asl     L0CA9
         asl     a
         clc
         adc     #$2B
-        sta     $D88A
+        sta     rect_D888+2
         lda     #$00
-        sta     $D88B
-        add16   $D888, #$0077, $D88C
-        add16   $D88A, #$0007, $D88E
+        sta     rect_D888+3
+        add16   rect_D888, #$0077, rect_D888+4
+        add16   rect_D888+2, #$0007, rect_D888+6
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, $D888
+        MGTK_RELAY_CALL MGTK::PaintRect, rect_D888
         rts
 
 L0CA9:  .byte   0
