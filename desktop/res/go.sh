@@ -25,15 +25,15 @@ function verify {
 }
 
 function stats {
-    echo "$(printf '%-10s' $1)""$(../res/stats.pl < $1)"
+    echo "$(printf '%-15s' $1)""$(../res/stats.pl < $1)"
 }
 
 #do_make clean
 do_make all
 
-COMMON="loader mgtk desktop invoker ovl1 ovl1a ovl1b ovl1c ovl2"
-TARGETS="$COMMON ovl34567"
-SOURCES="sys $COMMON ovl3 ovl4 ovl5 ovl6 ovl7"
+COMMON="loader mgtk invoker ovl1 ovl1a ovl1b ovl1c ovl2"
+TARGETS="desktop $COMMON ovl34567"
+SOURCES="sys desktop_main desktop_res desktop_aux $COMMON ovl3 ovl4 ovl5 ovl6 ovl7"
 
 # Verify original and output match
 echo "Verifying diffs:"

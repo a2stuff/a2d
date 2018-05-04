@@ -434,20 +434,20 @@ L9390:  MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entry_picker
         lda     L938E
         cmp     #$02
         bne     L9417
-        addr_call L94F0, $D729
+        addr_call L94F0, edit_an_entry_label
         rts
 
 L9417:  cmp     #$03
         bne     L9423
-        addr_call L94F0, $D73B
+        addr_call L94F0, delete_an_entry_label
         rts
 
-L9423:  addr_call L94F0, $D74F
+L9423:  addr_call L94F0, run_an_entry_label
         rts
 
 L942B:  stx     $07
         sta     $06
-        lda     $D6C3
+        lda     dialog_label_pos
         sta     L94A8
         tya
         pha
@@ -471,10 +471,10 @@ L9448:  ldx     #$00
         rol     L94A7
         clc
         adc     #$20
-        sta     $D6C5
+        sta     dialog_label_pos+2
         lda     L94A7
-        adc     #$00
-        sta     $D6C6
+        adc     #0
+        sta     dialog_label_pos+3
         pla
         cmp     #$08
         bcs     L9471
@@ -489,18 +489,18 @@ L9471:  cmp     #$10
 L947B:  ldax    #$00DC
 L947F:  clc
         adc     #$0A
-        sta     $D6C3
+        sta     dialog_label_pos
         txa
         adc     #$00
-        sta     $D6C4
-        MGTK_RELAY_CALL MGTK::MoveTo, $D6C3
+        sta     dialog_label_pos+1
+        MGTK_RELAY_CALL MGTK::MoveTo, dialog_label_pos
         lda     $06
         ldx     $07
         jsr     L94CB
         lda     L94A8
-        sta     $D6C3
-        lda     #$00
-        sta     $D6C4
+        sta     dialog_label_pos
+        lda     #0
+        sta     dialog_label_pos+1
         rts
 
 L94A7:  .byte   0
@@ -540,11 +540,11 @@ L94F0:  stax    $06
         ror     a
         sec
         sbc     $09
-        sta     $D6B7
+        sta     pos_dialog_title
         lda     L9539
         sbc     $0A
-        sta     $D6B8
-        MGTK_RELAY_CALL MGTK::MoveTo, $D6B7
+        sta     pos_dialog_title+1
+        MGTK_RELAY_CALL MGTK::MoveTo, pos_dialog_title
         MGTK_RELAY_CALL MGTK::DrawText, $06
         rts
 

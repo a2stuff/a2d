@@ -69,7 +69,7 @@ L085F:  bit     $D887
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, $D6AB
+        MGTK_RELAY_CALL MGTK::FrameRect, rect1
         jsr     LBD75
         lda     #$80
         sta     $D8E8
@@ -209,7 +209,7 @@ L0A18:  bit     $D887
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, $D6AB
+        MGTK_RELAY_CALL MGTK::FrameRect, rect1
         jsr     LBD75
         lda     #$80
         sta     $D8E8
@@ -486,13 +486,13 @@ L0D50:  cmp     #$04
         ldx     #$00
         lda     #$A0
         bne     L0D5A
-L0D5A:  stax    $D6C3
+L0D5A:  stax    dialog_label_pos
 L0D60:  lda     L0D8C
         asl     a
         tay
-        lda     $DB01,y
+        lda     slot_drive_string_table+1,y
         tax
-        lda     $DB00,y
+        lda     slot_drive_string_table,y
         pha
         lda     L0D8C
         lsr     a

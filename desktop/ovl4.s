@@ -38,8 +38,8 @@ routine_table:  .addr   $7000, $7000, $7000
         lda     #0
         sta     L5027
         sta     L50A8
-        sta     $D8EB
-        sta     $D8EC
+        sta     LD8EB
+        sta     LD8EC
         sta     $D8F0
         sta     $D8F1
         sta     $D8F2
@@ -73,7 +73,7 @@ L5105:  .byte   0
 
 ;;; ============================================================
 
-L5106:  bit     $D8EC
+L5106:  bit     LD8EC
         bpl     :+
         dec     $D8E9
         bne     :+
@@ -1651,7 +1651,7 @@ L61E6:  inx
         bne     L61E6
         stx     $0220
         addr_call L6129, $0220
-        MGTK_RELAY_CALL MGTK::MoveTo, $DA51
+        MGTK_RELAY_CALL MGTK::MoveTo, disk_label_pos
         addr_call L5DED, disk_label
         addr_call L5DED, $0220
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
@@ -2011,15 +2011,15 @@ L658B:  cmp     #$09
         stax    $06
         copy16  path_pos1+2, $08
         MGTK_RELAY_CALL MGTK::MoveTo, $06
-        bit     $D8EB
+        bit     LD8EB
         bpl     L65C8
         MGTK_RELAY_CALL MGTK::SetTextBG, textbg1
         lda     #$00
-        sta     $D8EB
+        sta     LD8EB
         beq     L65D6
 L65C8:  MGTK_RELAY_CALL MGTK::SetTextBG, textbg2
         lda     #$FF
-        sta     $D8EB
+        sta     LD8EB
 L65D6:  copy16  #$D8EF, $06
         lda     $D8EE
         sta     $08
@@ -2033,16 +2033,16 @@ L65D6:  copy16  #$D8EF, $06
         stax    $06
         copy16  path_pos2+2, $08
         MGTK_RELAY_CALL MGTK::MoveTo, $06
-        bit     $D8EB
+        bit     LD8EB
         bpl     L6626
         MGTK_RELAY_CALL MGTK::SetTextBG, textbg1
         lda     #$00
-        sta     $D8EB
+        sta     LD8EB
         jmp     L6634
 
 L6626:  MGTK_RELAY_CALL MGTK::SetTextBG, textbg2
         lda     #$FF
-        sta     $D8EB
+        sta     LD8EB
 L6634:  copy16  #$D8EF, $06
         lda     $D8EE
         sta     $08
@@ -2346,7 +2346,7 @@ L69D5:  lda     L6A17
         ldx     path_buf0
         inx
         sta     path_buf0,x
-        sta     $D8F7
+        sta     str_1_char+1
         jsr     L6E45
         inc     path_buf0
         stax    $06
@@ -2354,7 +2354,7 @@ L69D5:  lda     L6A17
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
-        addr_call L5DED, $D8F6  ; null char
+        addr_call L5DED, str_1_char
         addr_call L5DED, path_buf2
         jsr     L6EA3
         rts
@@ -2495,15 +2495,15 @@ L6B81:  lda     L6BC3
         ldx     path_buf1
         inx
         sta     path_buf1,x
-        sta     $D8F7
+        sta     str_1_char+1
         jsr     L6E72
         inc     path_buf1
         stax    $06
-        copy16  $DAB4, $08
+        copy16  path_pos2+2, $08
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
-        addr_call L5DED, $D8F6  ; null char
+        addr_call L5DED, str_1_char
         addr_call L5DED, path_buf2
         jsr     L6E9F
         rts
@@ -2516,7 +2516,7 @@ L6BC3:  .byte   0
 L6BCA:  dec     path_buf1
         jsr     L6E72
         stax    $06
-        copy16  $DAB4, $08
+        copy16  path_pos2+2, $08
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
@@ -2544,7 +2544,7 @@ L6C17:  ldx     path_buf1
         inc     path_buf2
         jsr     L6E72
         stax    $06
-        copy16  $DAB4, $08
+        copy16  path_pos2+2, $08
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06

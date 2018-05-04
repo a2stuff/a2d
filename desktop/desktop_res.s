@@ -720,6 +720,7 @@ file_to_delete_label:
 
 ;;; ============================================================
 
+slot_drive_string_table:
         .addr   sd0s, sd1s, sd2s, sd3s, sd4s, sd5s, sd6s
         .addr   sd7s, sd8s, sd9s, sd10s, sd11s, sd12s, sd13s
 

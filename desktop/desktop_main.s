@@ -14673,7 +14673,7 @@ L0D09:  .byte   0
 L0D12:  lda     L0E33
         asl     a
         tay
-        copy16  $DB00,y, $08
+        copy16  slot_drive_string_table,y, $08
         ldy     L0E33
         lda     DEVLST,y
         pha
