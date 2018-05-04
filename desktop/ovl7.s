@@ -285,27 +285,27 @@ L737C:  lda     L7207+1,x
 L73A9:  .byte   0
 L73AA:  .byte   0
 
-        MGTK_RELAY_CALL MGTK::InRect, $D966
+        MGTK_RELAY_CALL MGTK::InRect, rect_D966
         cmp     #MGTK::inrect_inside
         bne     L73BB
         jmp     L73FE
 
-L73BB:  MGTK_RELAY_CALL MGTK::InRect, $D96E
+L73BB:  MGTK_RELAY_CALL MGTK::InRect, rect_D96E
         cmp     #MGTK::inrect_inside
         bne     L73CB
         jmp     L7413
 
-L73CB:  MGTK_RELAY_CALL MGTK::InRect, $D976
+L73CB:  MGTK_RELAY_CALL MGTK::InRect, rect_D976
         cmp     #MGTK::inrect_inside
         bne     L73DB
         jmp     L7428
 
-L73DB:  MGTK_RELAY_CALL MGTK::InRect, $D97E
+L73DB:  MGTK_RELAY_CALL MGTK::InRect, rect_D97E
         cmp     #MGTK::inrect_inside
         bne     L73EB
         jmp     L743D
 
-L73EB:  MGTK_RELAY_CALL MGTK::InRect, $D986
+L73EB:  MGTK_RELAY_CALL MGTK::InRect, rect_D986
         cmp     #MGTK::inrect_inside
         bne     L73FB
         jmp     L7452
@@ -381,13 +381,13 @@ L7493:  addr_call L749B, $D95E
 L749B:  stax    $06
         ldy     #7
 L74A1:  lda     ($06),y
-        sta     $D98E,y
+        sta     rect_D98E,y
         dey
         bpl     L74A1
-        lda     $D98E
+        lda     rect_D98E
         clc
         adc     #2
-        sta     $D98E
+        sta     rect_D98E
         bcc     L74B7
         inc     $D98F
 L74B7:  lda     $D990
@@ -409,7 +409,7 @@ L74D3:  lda     $D994
         bcs     L74E1
         dec     $D995
 L74E1:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, $D98E
+        MGTK_RELAY_CALL MGTK::PaintRect, rect_D98E
         rts
 
         lda     winfo_entrydlg

@@ -428,7 +428,7 @@ L9390:  MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entry_picker
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, $D6F8
-        MGTK_RELAY_CALL MGTK::FrameRect, $D700
+        MGTK_RELAY_CALL MGTK::FrameRect, rect_D700
         jsr     L94A9
         jsr     L94BA
         lda     L938E
@@ -597,7 +597,7 @@ L95C5:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, $D700
+        MGTK_RELAY_CALL MGTK::InRect, rect_D700
         cmp     #MGTK::inrect_inside
         beq     L9602
         lda     L9645
@@ -609,7 +609,7 @@ L9602:  lda     L9645
         jmp     L95C5
 
 L960A:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, $D700
+        MGTK_RELAY_CALL MGTK::PaintRect, rect_D700
         lda     L9645
         clc
         adc     #$80
@@ -621,7 +621,7 @@ L9628:  lda     L9645
         return  #$FF
 
 L9630:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, $D700
+        MGTK_RELAY_CALL MGTK::PaintRect, rect_D700
         return  #$01
 
 L9645:  .byte   0
@@ -665,11 +665,11 @@ L9683:  lda     winfo_entry_picker
         lda     #$00
 L96C7:  rts
 
-L96C8:  MGTK_RELAY_CALL MGTK::InRect, $D700
+L96C8:  MGTK_RELAY_CALL MGTK::InRect, rect_D700
         cmp     #MGTK::inrect_inside
         bne     L96EF
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, $D700
+        MGTK_RELAY_CALL MGTK::PaintRect, rect_D700
         jsr     L95C0
         bmi     L96EE
         lda     #$01
@@ -835,9 +835,9 @@ L985E:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         return  #$00
 
 L9885:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, $D700
+        MGTK_RELAY_CALL MGTK::PaintRect, rect_D700
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, $D700
+        MGTK_RELAY_CALL MGTK::PaintRect, rect_D700
         return  #$01
 
 L98AC:  lda     L938B
