@@ -763,10 +763,10 @@ L97A0:  pha
 L97B2:  ldax    #$00D2
 L97B6:  clc
         adc     #$09
-        sta     $D877
+        sta     rect_D877
         txa
         adc     #$00
-        sta     $D878
+        sta     rect_D877+1
         pla
         cmp     #$08
         bcc     L97D4
@@ -783,14 +783,14 @@ L97D4:  asl     a
         asl     a
         clc
         adc     #$18
-        sta     $D879
+        sta     rect_D877+2
         lda     #$00
         adc     #$00
-        sta     $D87A
-        add16   $D877, #$006A, $D87B
-        add16   $D879, #$0007, $D87D
+        sta     rect_D877+3
+        add16   rect_D877, #106, rect_D877+4
+        add16   rect_D877+2, #7, rect_D877+6
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, $D877
+        MGTK_RELAY_CALL MGTK::PaintRect, rect_D877
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         rts
 
@@ -1011,7 +1011,7 @@ L99ED:  .byte   0
         .byte   0
         .byte   0
 L99F5:  MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, $D87F
+        MGTK_RELAY_CALL MGTK::PaintRect, rect_D87F
         rts
 
         rts

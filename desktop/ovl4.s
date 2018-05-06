@@ -1191,8 +1191,8 @@ L5CF7:  MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entrydlg
         jsr     L5DA4
         jsr     L5DB5
         jsr     L5DC6
-        MGTK_RELAY_CALL MGTK::MoveTo, $D9F8
-        MGTK_RELAY_CALL MGTK::LineTo, $D9FC
+        MGTK_RELAY_CALL MGTK::MoveTo, pos_D9F8
+        MGTK_RELAY_CALL MGTK::LineTo, pos_D9FC
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
@@ -1495,7 +1495,7 @@ L606C:  .byte   0
 
 L606D:  lda     winfo_entrydlg_file_picker
         jsr     L62C8
-        MGTK_RELAY_CALL MGTK::PaintRect, $D60D
+        MGTK_RELAY_CALL MGTK::PaintRect, winfo_entrydlg_file_picker_cliprect
         lda     #$10
         sta     $D917
         lda     #$08
@@ -1719,7 +1719,7 @@ L6274:  ldx     #$00
         lda     winfo_entrydlg_file_picker
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, $D90F
+        MGTK_RELAY_CALL MGTK::PaintRect, rect_D90F
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts

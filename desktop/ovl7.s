@@ -131,11 +131,11 @@ L711D:  addr_call common_overlay::L5E6F, enter_the_full_pathname_label2
         MGTK_RELAY_CALL MGTK::MoveTo, $D93A
         addr_call common_overlay::L5DED, never_label
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, $D93E
-        MGTK_RELAY_CALL MGTK::FrameRect, $D946
-        MGTK_RELAY_CALL MGTK::FrameRect, $D94E
-        MGTK_RELAY_CALL MGTK::FrameRect, $D956
-        MGTK_RELAY_CALL MGTK::FrameRect, $D95E
+        MGTK_RELAY_CALL MGTK::FrameRect, rect_D93E
+        MGTK_RELAY_CALL MGTK::FrameRect, rect_D946
+        MGTK_RELAY_CALL MGTK::FrameRect, rect_D94E
+        MGTK_RELAY_CALL MGTK::FrameRect, rect_D956
+        MGTK_RELAY_CALL MGTK::FrameRect, rect_D95E
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts

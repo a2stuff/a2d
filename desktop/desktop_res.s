@@ -592,9 +592,12 @@ never_label:
 enter_the_full_pathname_label2:
         PASCAL_STRING "Enter the full pathname of the run list file:"
 
-        .byte   $00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$06,$00,$17,$00,$58,$01,$57
-        .byte   $00,$00
+rect_D877:
+        DEFINE_RECT 0,0,0,0
+
+rect_D87F:
+        DEFINE_RECT 6,23,344,87
+        .byte   0
 
 rect_D888:
         DEFINE_RECT 0,0,0,0
@@ -645,9 +648,11 @@ str_file_count:                 ; populated with number of files
 file_count:
         .word   0
 
-        .byte   $00,$00,$0D
-        .byte   $00,$00,$00,$00,$00,$7D,$00,$00
-        .byte   $00,$02,$00,$00,$00,$00,$00
+        .byte   $00,$00,$0D,$00
+
+rect_D90F:
+        DEFINE_RECT 0,0,125,0
+        .byte   $02,$00,$00,$00,$00,$00
 
 str_folder:
         PASCAL_STRING {GLYPH_FOLDERL,GLYPH_FOLDERR}
@@ -656,11 +661,21 @@ str_folder:
         .byte   $6B,$01,$30,$00,$6B,$01,$38,$00
         .byte   $57,$01,$4B,$00,$6B,$01,$53,$00
         .byte   $6B,$01,$5B,$00,$6B,$01,$63,$00
-        .byte   $5A,$01,$29,$00,$64,$01,$2F,$00
-        .byte   $5A,$01,$31,$00,$64,$01,$37,$00
-        .byte   $5A,$01,$4C,$00,$64,$01,$52,$00
-        .byte   $5A,$01,$54,$00,$64,$01,$5A,$00
-        .byte   $5A,$01,$5C,$00,$64,$01,$62,$00
+
+rect_D93E:
+        DEFINE_RECT 346,41,356,47
+
+rect_D946:
+        DEFINE_RECT 346,49,356,55
+
+rect_D94E:
+        DEFINE_RECT 346,76,356,82
+
+rect_D956:
+        DEFINE_RECT 346,84,356,90
+
+rect_D95E:
+        DEFINE_RECT 346,92,356,98
 
 rect_D966:
         DEFINE_RECT 346,41,480,48
@@ -708,8 +723,13 @@ rect_D9E8:
 
 rect_D9F0:  DEFINE_RECT 193,30,293,41
 
-        .byte   $43,$01,$1E,$00,$43,$01
-        .byte   $64,$00,$81,$D3,$00
+        ;; Endpoints of a line
+pos_D9F8:
+        DEFINE_POINT   323,30
+pos_D9FC:
+        DEFINE_POINT   323,100
+
+        .byte   $81,$D3,$00
 
 ok_button_pos:
         .word   198,99
