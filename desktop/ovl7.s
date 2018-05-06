@@ -412,13 +412,13 @@ L74E1:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, rect_D98E
         rts
 
-        lda     winfo_entrydlg
+L74F4:  lda     winfo_entrydlg
         jsr     common_overlay::L62C8
-        lda     $D20A
+        lda     event_modifiers
         bne     L7500
         rts
 
-L7500:  lda     $D209
+L7500:  lda     event_key
         and     #$7F
         cmp     #'1'
         bne     L750C

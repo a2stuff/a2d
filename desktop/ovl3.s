@@ -675,26 +675,14 @@ L96C8:  MGTK_RELAY_CALL MGTK::InRect, rect_D700
         lda     #$01
 L96EE:  rts
 
-L96EF:  lda     $D20D
-        sec
-        sbc     #$0A
-        sta     $D20D
-        lda     $D20E
-        sbc     #$00
-        sta     $D20E
-        lda     $D20F
-        sec
-        sbc     #$19
-        sta     $D20F
-        lda     $D210
-        sbc     #$00
-        sta     $D210
+L96EF:  sub16   screentowindow_windowx, #10, screentowindow_windowx
+        sub16   screentowindow_windowy, #25, screentowindow_windowy
         bpl     L9716
         return  #$FF
 
-L9716:  cmp16   $D20D, #$006E
+L9716:  cmp16   screentowindow_windowx, #110
         bmi     L9736
-        cmp16   $D20D, #$00DC
+        cmp16   screentowindow_windowx, #220
         bmi     L9732
         lda     #$02
         bne     L9738
@@ -702,11 +690,11 @@ L9732:  lda     #$01
         bne     L9738
 L9736:  lda     #$00
 L9738:  pha
-        lsr16    $D20F
-        lsr16    $D20F
-        lsr16    $D20F
-        lda     $D20F
-        cmp     #$08
+        lsr16   screentowindow_windowy
+        lsr16   screentowindow_windowy
+        lsr16   screentowindow_windowy
+        lda     screentowindow_windowy
+        cmp     #8
         bcc     L9756
         pla
         return  #$FF
@@ -716,7 +704,7 @@ L9756:  pla
         asl     a
         asl     a
         clc
-        adc     $D20F
+        adc     screentowindow_windowy
         sta     L979C
         cmp     #$08
         bcs     L9782

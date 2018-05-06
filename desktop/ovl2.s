@@ -17,6 +17,7 @@
 
 ;;; Entry points in desktop_main
 prompt_input_loop       := $A567
+jump_relay              := $A899
 bell                    := $AACE
 set_cursor_watch        := $B3E7
 set_cursor_pointer      := $B403
@@ -48,13 +49,13 @@ L080C:  lda     #$00
         jsr     L0D31
         lda     #$FF
         sta     $D887
-L0832:  copy16  #$0B48, $A89A
+L0832:  copy16  #L0B48, jump_relay+1
         lda     #$80
         sta     $D8ED
 L0841:  jsr     prompt_input_loop
         bmi     L0841
         pha
-        copy16  #$B8F4, $A89A
+        copy16  #$B8F4, jump_relay+1
         lda     #$00
         sta     $D8F3
         sta     $D8ED
@@ -193,7 +194,7 @@ L09D9:  lda     #$00
         jsr     L0D31
         lda     #$FF
         sta     $D887
-        copy16  #$0B48, $A89A
+        copy16  #L0B48, jump_relay+1
         lda     #$80
         sta     $D8ED
 L0A0E:  jsr     prompt_input_loop
@@ -203,7 +204,7 @@ L0A0E:  jsr     prompt_input_loop
 
 L0A18:  bit     $D887
         bmi     L0A0E
-        copy16  #$A898, $A89A
+        copy16  #$A898, jump_relay+1
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
@@ -289,45 +290,45 @@ L0B31:  pha
 
 L0B46:  .byte   0
 L0B47:  .byte   0
-        cmp16   $D20D, #$0028
-        bpl     L0B57
-        return  #$FF
 
-L0B57:  cmp16   $D20D, #$0168
-        bcc     L0B66
-        return  #$FF
+;;; ============================================================
 
-L0B66:  lda     $D20F
+L0B48:  cmp16   screentowindow_windowx, #40
+        bpl     :+
+        return  #$FF
+:       cmp16   screentowindow_windowx, #360
+        bcc     :+
+        return  #$FF
+:       lda     screentowindow_windowy
         sec
-        sbc     #$2B
-        sta     $D20F
-        lda     $D210
-        sbc     #$00
-        bpl     L0B79
+        sbc     #43
+        sta     screentowindow_windowy
+        lda     screentowindow_windowy+1
+        sbc     #0
+        bpl     :+
         return  #$FF
-
-L0B79:  sta     $D210
-        lsr16    $D20F
-        lsr16    $D20F
-        lsr16    $D20F
-        lda     $D20F
+:       sta     screentowindow_windowy+1
+        lsr16    screentowindow_windowy
+        lsr16    screentowindow_windowy
+        lsr16    screentowindow_windowy
+        lda     screentowindow_windowy
         cmp     #$04
         bcc     L0B98
         return  #$FF
 
 L0B98:  lda     #$02
         sta     L0C1F
-        cmp16   $D20D, #$0118
+        cmp16   screentowindow_windowx, #280
         bcs     L0BBB
         dec     L0C1F
-        cmp16   $D20D, #$00A0
+        cmp16   screentowindow_windowx, #160
         bcs     L0BBB
         dec     L0C1F
 L0BBB:  lda     L0C1F
         asl     a
         asl     a
         clc
-        adc     $D20F
+        adc     screentowindow_windowy
         cmp     $D890
         bcc     L0BDC
         lda     $D887
