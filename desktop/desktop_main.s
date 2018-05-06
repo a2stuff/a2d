@@ -13509,7 +13509,7 @@ done:   rts
         sta     ptr+2
 LBA10:  MGTK_RELAY_CALL MGTK::TextWidth, ptr
         add16   $09, LBB09, $09
-        cmp16   $09, $D20D
+        cmp16   $09, screentowindow_windowx
         bcc     LBA42
         dec     $08
         lda     $08
@@ -13565,7 +13565,7 @@ LBA7C:  dey
         sta     textlen
 :       MGTK_RELAY_CALL MGTK::TextWidth, params
         add16 result, point6::xcoord, result
-        cmp16   result, $D20D
+        cmp16   result, screentowindow_windowx
         bcc     LBABF
         dec     textlen
         lda     textlen

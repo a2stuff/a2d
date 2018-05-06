@@ -128,15 +128,15 @@ L51AF:  MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
         bne     L51BE
         rts
 
-L51BE:  cmp     #$02
-        bne     L51C6
+L51BE:  cmp     #MGTK::area_content
+        bne     :+
         jmp     L51C7
 
-        rts
+        rts                     ; ???
 
-L51C6:  rts
+:       rts
 
-L51C7:  lda     $D20E
+L51C7:  lda     findwindow_window_id
         cmp     winfo_entrydlg
         beq     L51D2
         jmp     L531F
@@ -320,7 +320,7 @@ L53B5:  and     #$7F
 
 L542E:  .byte   0
 
-L542F:  lda     $D20F
+L542F:  lda     screentowindow_windowy
         cmp     $177F
         bcc     L5438
         rts
@@ -330,7 +330,7 @@ L5438:  lda     $D920
         jsr     L6D2A
         lda     $D920
         jsr     L6274
-L5446:  lda     $D20F
+L5446:  lda     screentowindow_windowy
         sta     $D920
         bit     $D8F0
         bpl     L5457
@@ -345,20 +345,20 @@ L5457:  lda     $D920
 
 L5468:  rts
 
-L5469:  lda     $D20E
-        cmp     #$01
+L5469:  lda     findcontrol_which_part
+        cmp     #MGTK::part_up_arrow
         bne     L5473
         jmp     L550A
 
-L5473:  cmp     #$02
+L5473:  cmp     #MGTK::part_down_arrow
         bne     L547A
         jmp     L5533
 
-L547A:  cmp     #$03
+L547A:  cmp     #MGTK::part_page_up
         bne     L5481
         jmp     L54BA
 
-L5481:  cmp     #$04
+L5481:  cmp     #MGTK::part_page_down
         bne     L5488
         jmp     L54DF
 
@@ -373,7 +373,7 @@ L5488:  lda     #MGTK::ctl_vertical_scroll_bar
         lda     #MGTK::ctl_vertical_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
-        lda     $D20D
+        lda     updatethumb_stash
         jsr     L6227
         jsr     L606D
         rts
@@ -1103,7 +1103,7 @@ L5C2F:  sta     $D920
         rts
 
 L5C4F:  ldx     #$03
-L5C51:  lda     $D209,x
+L5C51:  lda     screentowindow_screenx,x
         sta     L5CF0,x
         dex
         bpl     L5C51
@@ -1116,29 +1116,29 @@ L5C60:  dec     L5CEF
         bmi     L5CA6
         lda     #$FF
         sta     L5CF6
-        lda     $D208
+        lda     event_kind
         sta     L5CF5
-        cmp     #$00
+        cmp     #MGTK::event_kind_no_event
         beq     L5C60
-        cmp     #$04
+        cmp     #MGTK::event_kind_drag
         beq     L5C60
-        cmp     #$02
+        cmp     #MGTK::event_kind_button_up
         bne     L5C96
         MGTK_RELAY_CALL MGTK::GetEvent, event_params
         jmp     L5C60
 
-L5C96:  cmp     #$01
+L5C96:  cmp     #MGTK::event_kind_button_down
         bne     L5CA6
         MGTK_RELAY_CALL MGTK::GetEvent, event_params
         return  #$00
 
 L5CA6:  return  #$FF
 
-L5CA9:  lda     $D209
+L5CA9:  lda     event_xcoord
         sec
         sbc     L5CF0
         sta     L5CF4
-        lda     $D20A
+        lda     event_xcoord+1
         sbc     L5CF1
         bpl     L5CC5
         lda     L5CF4
@@ -1149,11 +1149,11 @@ L5CC2:  return  #$FF
 L5CC5:  lda     L5CF4
         cmp     #$05
         bcs     L5CC2
-L5CCC:  lda     $D20B
+L5CCC:  lda     event_ycoord
         sec
         sbc     L5CF2
         sta     L5CF4
-        lda     $D20C
+        lda     event_ycoord+1
         sbc     L5CF3
         bpl     L5CE5
         lda     L5CF4
@@ -2098,7 +2098,7 @@ L6718:  rts
 
 L6719:  jsr     L6E45
         stax    $06
-        cmp16   $D20D, $06
+        cmp16   screentowindow_windowx, $06
         bcs     L672F
         jmp     L67C4
 
@@ -2106,7 +2106,7 @@ L672F:  jsr     L6E45
         stax    L684D
         ldx     path_buf2
         inx
-        lda     #$20
+        lda     #' '
         sta     path_buf2,x
         inc     path_buf2
         copy16  #path_buf2, $06
@@ -2114,7 +2114,7 @@ L672F:  jsr     L6E45
         sta     $08
 L6751:  MGTK_RELAY_CALL MGTK::TextWidth, $06
         add16   $09, L684D, $09
-        cmp16   $09, $D20D
+        cmp16   $09, screentowindow_windowx
         bcc     L6783
         dec     $08
         lda     $08
@@ -2161,7 +2161,7 @@ L67C4:  copy16  #path_buf0, $06
         sta     $08
 L67D1:  MGTK_RELAY_CALL MGTK::TextWidth, $06
         add16   $09, path_pos1, $09
-        cmp16   $09, $D20D
+        cmp16   $09, screentowindow_windowx
         bcc     L6800
         dec     $08
         lda     $08
@@ -2226,7 +2226,7 @@ L688F:  rts
 
 L6890:  jsr     L6E72
         stax    $06
-        cmp16   $D20D, $06
+        cmp16   screentowindow_windowx, $06
         bcs     L68A6
         jmp     L693B
 
@@ -2242,7 +2242,7 @@ L68A6:  jsr     L6E72
         sta     $08
 L68C8:  MGTK_RELAY_CALL MGTK::TextWidth, $06
         add16   $09, L69C4, $09
-        cmp16   $09, $D20D
+        cmp16   $09, screentowindow_windowx
         bcc     L68FA
         dec     $08
         lda     $08
@@ -2289,7 +2289,7 @@ L693B:  copy16  #path_buf1, $06
         sta     $08
 L6948:  MGTK_RELAY_CALL MGTK::TextWidth, $06
         add16   $09, path_pos2, $09
-        cmp16   $09, $D20D
+        cmp16   $09, screentowindow_windowx
         bcc     L6977
         dec     $08
         lda     $08
