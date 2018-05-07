@@ -29,7 +29,7 @@ The file is broken down into multiple segments:
 | DeskTop       | B$008580    | Aux LC | A$D000-$ECFF | L$1D00 | `desktop_res.s`           |
 | DeskTop       | B$00A280    | Aux LC | A$FB00-$FFFF | L$0500 | `desktop_res.s`           |
 | DeskTop       | B$00A780    | Main   | A$4000-$BEFF | L$7F00 | `desktop_main.s`          |
-| Initializer   | B$012680    | Main   | A$0800-$0FFF | L$0800 | `desktop_main.s`          | 
+| Initializer   | B$012680    | Main   | A$0800-$0FFF | L$0800 | `desktop_main.s`          |
 | Invoker       | B$012E80    | Main   | A$0290-$03EF | L$0160 | `invoker.s`               |
 | Disk Copy 1/4 | B$012FE0    | Main   | A$0800-$09FF | L$0200 | `ovl1.s`                  |
 | Disk Copy 2/4 | B$0131E0    | Main   | A$1800-$19FF | L$0200 | `ovl1a.s`                 |
@@ -226,6 +226,14 @@ $0100 +-------------+    +-------------+
 $0000 +-------------+    +-------------+
 ```
 
+#### Disk Copy Overlay
+
 The Disk Copy command replaces large chunks of memory and is best
-thought of as a separate application. When exiting, the DeskTop is
-restarted from the beginning.
+thought of as a separate application.
+
+The first part (`ovl1.s`) loads into main memory the other overlays,
+but in turn it loads a second short ($200-byte) overlay (`ovl1a.s`).
+This then loads a replacement for the resources in the aux language
+card area (`ovl1b.s`) and another block of code in main memory
+(`ovl1c.s`). When exiting, the DeskTop is restarted from the
+beginning.
