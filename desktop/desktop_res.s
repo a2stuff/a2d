@@ -555,7 +555,10 @@ rect_D6F8:
 rect_D700:
         DEFINE_RECT 40,92,140,103
 
-        .word   215,102,45,102
+pos_D708:
+        DEFINE_POINT 215,102
+pos_D70C:
+        DEFINE_POINT 45,102
         .word   130,7,220,19
 
 add_an_entry_label:
@@ -605,14 +608,17 @@ rect_D888:
 
 the_dos_33_disk_label:
         PASCAL_STRING "the DOS 3.3 disk in slot   drive   ?"
-
-        .byte   $1A,$22
+the_dos_33_disk_slot_char_offset:
+        .byte   26
+the_dos_33_disk_drive_char_offset:
+        .byte   34
 
 the_disk_in_slot_label:
         PASCAL_STRING "the disk in slot   drive   ?"
-
-        .byte   $12
-        .byte   $1A
+the_disk_in_slot_slot_char_offset:
+        .byte   18
+the_disk_in_slot_drive_char_offset:
+        .byte   26
 
 buf_filename:
         .res    16, 0
@@ -648,19 +654,36 @@ str_file_count:                 ; populated with number of files
 file_count:
         .word   0
 
-        .byte   $00,$00,$0D,$00
+pos_D90B:
+        DEFINE_POINT 0,13
 
 rect_D90F:
         DEFINE_RECT 0,0,125,0
-        .byte   $02,$00,$00,$00,$00,$00
+
+pos_D917:
+        DEFINE_POINT 2,0
+
+        .byte   $00,$00
 
 str_folder:
         PASCAL_STRING {GLYPH_FOLDERL,GLYPH_FOLDERR}
 
-        .byte   $00,$00,$57,$01,$28,$00
-        .byte   $6B,$01,$30,$00,$6B,$01,$38,$00
-        .byte   $57,$01,$4B,$00,$6B,$01,$53,$00
-        .byte   $6B,$01,$5B,$00,$6B,$01,$63,$00
+        .byte   $00,$00
+
+pos_D922:
+        DEFINE_POINT 343,40
+pos_D926:
+        DEFINE_POINT 363,48
+pos_D92A:
+        DEFINE_POINT 363,56
+pos_D92E:
+        DEFINE_POINT 343,75
+pos_D932:
+        DEFINE_POINT 363,83
+pos_D936:
+        DEFINE_POINT 363,91
+pos_D93A:
+        DEFINE_POINT 363,99
 
 rect_D93E:
         DEFINE_RECT 346,41,356,47

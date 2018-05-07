@@ -506,11 +506,11 @@ L947F:  clc
 L94A7:  .byte   0
 L94A8:  .byte   0
 
-L94A9:  MGTK_RELAY_CALL MGTK::MoveTo, $D708
+L94A9:  MGTK_RELAY_CALL MGTK::MoveTo, pos_D708
         addr_call draw_text1, $AE40
         rts
 
-L94BA:  MGTK_RELAY_CALL MGTK::MoveTo, $D70C
+L94BA:  MGTK_RELAY_CALL MGTK::MoveTo, pos_D70C
         addr_call draw_text1, $AE96
         rts
 

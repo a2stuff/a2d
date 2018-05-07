@@ -1460,11 +1460,11 @@ L194E:  lda     $1C02
         beq     L197E
 L1959:  lda     read_block_params::unit_num
         jsr     L19B7
-        ldx     $D8D5
+        ldx     the_disk_in_slot_slot_char_offset
         sta     the_disk_in_slot_label,x
         lda     read_block_params::unit_num
         jsr     L19C1
-        ldx     $D8D6
+        ldx     the_disk_in_slot_drive_char_offset
         sta     the_disk_in_slot_label,x
         ldx     the_disk_in_slot_label
 L1974:  lda     the_disk_in_slot_label,x
@@ -1483,11 +1483,11 @@ L1986:  cmp     #$A5
         bne     L1959
         lda     read_block_params::unit_num
         jsr     L19B7
-        ldx     $D8B6
+        ldx     the_dos_33_disk_slot_char_offset
         sta     the_dos_33_disk_label,x
         lda     read_block_params::unit_num
         jsr     L19C1
-        ldx     $D8B7
+        ldx     the_dos_33_disk_drive_char_offset
         sta     the_dos_33_disk_label,x
         ldx     the_dos_33_disk_label
 L19AC:  lda     the_dos_33_disk_label,x
@@ -1516,9 +1516,9 @@ L19C8:  copy16  #$0002, read_block_params::block_num
         yax_call MLI_RELAY, READ_BLOCK, $123E
         beq     L19F7
         copy16  #$2004, $D909
-        copy16  #$203A, $D90B
+        copy16  #$203A, pos_D90B
         lda     #$3F
-        sta     $D90C
+        sta     pos_D90B+1
         rts
 
 L19F7:  lda     $1C06

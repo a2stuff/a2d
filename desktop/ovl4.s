@@ -256,7 +256,7 @@ L5340:  rts
 L5341:  lda     winfo_entrydlg_file_picker
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        add16   screentowindow_windowy, $D60F, screentowindow_windowy
+        add16   screentowindow_windowy, winfo_entrydlg_file_picker_cliprect+2, screentowindow_windowy
         lsr16   screentowindow_windowy
         lsr16   screentowindow_windowy
         lsr16   screentowindow_windowy
@@ -1256,11 +1256,11 @@ L5E0A:  jsr     L5DD7
         ror     a
         sec
         sbc     $09
-        sta     $D90B
+        sta     pos_D90B
         lda     L5E56
         sbc     $0A
-        sta     $D90C
-        MGTK_RELAY_CALL MGTK::MoveTo, $D90B
+        sta     pos_D90B+1
+        MGTK_RELAY_CALL MGTK::MoveTo, pos_D90B
         MGTK_RELAY_CALL MGTK::DrawText, $06
         rts
 
@@ -1497,11 +1497,11 @@ L606D:  lda     winfo_entrydlg_file_picker
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::PaintRect, winfo_entrydlg_file_picker_cliprect
         lda     #$10
-        sta     $D917
+        sta     pos_D917
         lda     #$08
-        sta     $D919
+        sta     pos_D917+2
         lda     #$00
-        sta     $D91A
+        sta     pos_D917+3
         sta     L6128
 L608E:  lda     L6128
         cmp     $177F
@@ -1510,7 +1510,7 @@ L608E:  lda     L6128
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
 
-L60A9:  MGTK_RELAY_CALL MGTK::MoveTo, $D917
+L60A9:  MGTK_RELAY_CALL MGTK::MoveTo, pos_D917
         ldx     L6128
         lda     $1780,x
         and     #$7F
@@ -1536,11 +1536,11 @@ L60A9:  MGTK_RELAY_CALL MGTK::MoveTo, $D917
         lda     $1780,x
         bpl     L60FF
         lda     #$01
-        sta     $D917
-        MGTK_RELAY_CALL MGTK::MoveTo, $D917
+        sta     pos_D917
+        MGTK_RELAY_CALL MGTK::MoveTo, pos_D917
         addr_call L5DED, str_folder
         lda     #$10
-        sta     $D917
+        sta     pos_D917
 L60FF:  lda     L6128
         cmp     $D920
         bne     L6110
@@ -1548,7 +1548,7 @@ L60FF:  lda     L6128
         lda     winfo_entrydlg_file_picker
         jsr     L62C8
 L6110:  inc     L6128
-        add16   $D919, #8, $D919
+        add16   pos_D917+2, #8, pos_D917+2
         jmp     L608E
 
 L6127:  .byte   0
@@ -1687,19 +1687,21 @@ L624A:  ldx     #$00
         rol     L6273
         asl     a
         rol     L6273
-        sta     $D60F
+        sta     winfo_entrydlg_file_picker_cliprect+2
         ldx     L6273
-        stx     $D610
+        stx     winfo_entrydlg_file_picker_cliprect+3
         clc
-        adc     #$46
-        sta     $D613
+        adc     #70
+        sta     winfo_entrydlg_file_picker_cliprect+6
         lda     L6273
-        adc     #$00
-        sta     $D614
+        adc     #0
+        sta     winfo_entrydlg_file_picker_cliprect+7
         rts
 
 L6273:  .byte   0
-L6274:  ldx     #$00
+
+
+L6274:  ldx     #0
         stx     L62C7
         asl     a
         rol     L62C7
@@ -1707,15 +1709,15 @@ L6274:  ldx     #$00
         rol     L62C7
         asl     a
         rol     L62C7
-        sta     $D911
+        sta     rect_D90F+2
         ldx     L62C7
-        stx     $D912
+        stx     rect_D90F+3
         clc
-        adc     #$07
-        sta     $D915
+        adc     #7
+        sta     rect_D90F+6
         lda     L62C7
-        adc     #$00
-        sta     $D916
+        adc     #0
+        sta     rect_D90F+7
         lda     winfo_entrydlg_file_picker
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
