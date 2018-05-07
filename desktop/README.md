@@ -7,9 +7,11 @@
 
 A short (8k) loader program. This is responsible for copying
 the rest to a RAM card (if available), then invoking the main app.
+The second half is used to "Down load", i.e. copy
+Selector entries to RAMCard on first boot.
 
-NOTE: The second half may be used for "Down load", i.e. copy
-Selector entries to RAMCard as well.
+The file is present in the original distribution as `DESKTOP1` but
+is renamed `DESKTOP.SYSTEM` in many disk images to be launched at boot.
 
 ## DESKTOP2.$F1
 
@@ -20,25 +22,27 @@ more code segments swapped in dynamically.
 
 The file is broken down into multiple segments:
 
-* segment 0: load  - A$2000-$257F, L$0580, B$000000 (`loader.s`; Loader)
-* segment 1: aux   - A$4000-$BFFF, L$8000, B$000580 (`mgtk.s`, `desktop_aux.s`; MGTK, DeskTop)
-* segment 2: auxlc - A$D000-$ECFF, L$1D00, B$008580 (`desktop_res.s`; DeskTop)
-* segment 3: auxlc - A$FB00-$FFFF, L$0500, B$00A280 (`desktop_res.s`; DeskTop)
-* segment 4: main  - A$4000-$BEFF, L$7F00, B$00A780 (`desktop_main.s`; DeskTop)
-* segment 5: main  - A$0800-$0FFF, L$0800, B$012680 (`desktop_main.s`; Initializer)
-* segment 6: main  - A$0290-$03EF, L$0160, B$012E80 (`invoker.s`; Invoker)
-* overlays dynamically loaded for these actions:
-  * disk copy     - A$0800-$09FF, L$0200, B$012FE0 (`ovl1.s`)
-    * which loads - A$1800-$19FF, L$0200, B$0131E0 (`ovl1a.s`)
-    * which loads - A$D000-$F1FF, L$2200, B$0133E0 (`ovl1b.s`; overwrites the aux LC)
-    * and...      - A$0800-$12FF, L$0B00, B$0155E0 (`ovl1c.s`)
-  * format/erase  - A$0800-$1BFF, L$1400, B$0160E0 (`ovl2.s`)
-  * selector      - A$9000-$9FFF, L$1000, B$0174E0 (`ovl3.s`)
-  * common        - A$5000-$6FFF, L$2000, B$0184E0 (`ovl4.s`; used by selector, copy, delete)
-  * file copy     - A$7000-$77FF, L$0800, B$01A4E0 (`ovl5.s`)
-  * file delete   - A$7000-$77FF, L$0800, B$01ACE0 (`ovl6.s`)
-  * selector      - A$7000-$77FF, L$0800, B$01B4E0 (`ovl7.s`)
-* (EOF is $01BCE0)
+| Purpose       | File Offset | Bank   | Address      | Length | Sources                   |
+|---------------|-------------|--------|--------------|--------|---------------------------|
+| Loader        | B$000000    | Main   | A$2000-$257F | L$0580 | `loader.s`                |
+| MGTK/DeskTop  | B$000580    | Aux    | A$4000-$BFFF | L$8000 | `mgtk.s`, `desktop_aux.s` |
+| DeskTop       | B$008580    | Aux LC | A$D000-$ECFF | L$1D00 | `desktop_res.s`           |
+| DeskTop       | B$00A280    | Aux LC | A$FB00-$FFFF | L$0500 | `desktop_res.s`           |
+| DeskTop       | B$00A780    | Main   | A$4000-$BEFF | L$7F00 | `desktop_main.s`          |
+| Initializer   | B$012680    | Main   | A$0800-$0FFF | L$0800 | `desktop_main.s`          | 
+| Invoker       | B$012E80    | Main   | A$0290-$03EF | L$0160 | `invoker.s`               |
+| Disk Copy 1/4 | B$012FE0    | Main   | A$0800-$09FF | L$0200 | `ovl1.s`                  |
+| Disk Copy 2/4 | B$0131E0    | Main   | A$1800-$19FF | L$0200 | `ovl1a.s`                 |
+| Disk Copy 3/4 | B$0133E0    | Aux LC | A$D000-$F1FF | L$2200 | `ovl1b.s`                 |
+| Disk Copy 4/4 | B$0155E0    | Main   | A$0800-$12FF | L$0B00 | `ovl1c.s`                 |
+| Format/Erase  | B$0160E0    | Main   | A$0800-$1BFF | L$1400 | `ovl2.s`                  |
+| Selector 1/2  | B$0174E0    | Main   | A$9000-$9FFF | L$1000 | `ovl3.s`                  |
+| Common        | B$0184E0    | Main   | A$5000-$6FFF | L$2000 | `ovl4.s`                  |
+| File Copy     | B$01A4E0    | Main   | A$7000-$77FF | L$0800 | `ovl5.s`                  |
+| File Delete   | B$01ACE0    | Main   | A$7000-$77FF | L$0800 | `ovl6.s`                  |
+| Selector 2/2  | B$01B4E0    | Main   | A$7000-$77FF | L$0800 | `ovl7.s`                  |
+
+(EOF is $01BCE0)
 
 The DeskTop segments loaded into the Aux bank switched ("language
 card") memory can be used from both main and aux, so contain relay
