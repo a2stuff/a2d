@@ -107,11 +107,11 @@ L5151:  lda     winfo_entrydlg
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         bit     L51AE
         bmi     L5183
-        MGTK_RELAY_CALL MGTK::InRect, dialog_rect1
+        MGTK_RELAY_CALL MGTK::InRect, common_input1_rect
         cmp     #MGTK::inrect_inside
         bne     L5196
         beq     L5190
-L5183:  MGTK_RELAY_CALL MGTK::InRect, dialog_rect2
+L5183:  MGTK_RELAY_CALL MGTK::InRect, common_input2_rect
         cmp     #MGTK::inrect_inside
         bne     L5196
 L5190:  jsr     set_cursor_insertion
@@ -147,7 +147,7 @@ L51D2:  lda     winfo_entrydlg
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, rect_D9E0
+        MGTK_RELAY_CALL MGTK::InRect, common_open_button_rect
         cmp     #MGTK::inrect_inside
         beq     L5200
         jmp     L5239
@@ -166,13 +166,13 @@ L5213:  jmp     L5308
 L5216:  lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9E0
+        MGTK_RELAY_CALL MGTK::PaintRect, common_open_button_rect
         jsr     L5888
         bmi     L5213
         jsr     L5607
         jmp     L5308
 
-L5239:  MGTK_RELAY_CALL MGTK::InRect, rect_D9F0
+L5239:  MGTK_RELAY_CALL MGTK::InRect, common_change_drive_button_rect
         cmp     #MGTK::inrect_inside
         beq     L5249
         jmp     L526B
@@ -180,13 +180,13 @@ L5239:  MGTK_RELAY_CALL MGTK::InRect, rect_D9F0
 L5249:  bit     L5105
         bmi     L5268
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9F0
+        MGTK_RELAY_CALL MGTK::PaintRect, common_change_drive_button_rect
         jsr     L590E
         bmi     L5268
         jsr     L565C
 L5268:  jmp     L5308
 
-L526B:  MGTK_RELAY_CALL MGTK::InRect, rect_D9D0
+L526B:  MGTK_RELAY_CALL MGTK::InRect, common_close_button_rect
         cmp     #MGTK::inrect_inside
         beq     L527B
         jmp     L529D
@@ -194,32 +194,32 @@ L526B:  MGTK_RELAY_CALL MGTK::InRect, rect_D9D0
 L527B:  bit     L5105
         bmi     L529A
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9D0
+        MGTK_RELAY_CALL MGTK::PaintRect, common_close_button_rect
         jsr     L577C
         bmi     L529A
         jsr     L567F
 L529A:  jmp     L5308
 
-L529D:  MGTK_RELAY_CALL MGTK::InRect, rect_D9D8
+L529D:  MGTK_RELAY_CALL MGTK::InRect, common_ok_button_rect
         cmp     #MGTK::inrect_inside
         beq     L52AD
         jmp     L52CD
 
 L52AD:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9D8
+        MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
         jsr     L56F6
         bmi     L52CA
         jsr     L6D42
         jsr     L6D1E
 L52CA:  jmp     L5308
 
-L52CD:  MGTK_RELAY_CALL MGTK::InRect, rect_D9E8
+L52CD:  MGTK_RELAY_CALL MGTK::InRect, common_cancel_button_rect
         cmp     #MGTK::inrect_inside
         beq     L52DD
         jmp     L52FA
 
 L52DD:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9E8
+        MGTK_RELAY_CALL MGTK::PaintRect, common_cancel_button_rect
         jsr     L5802
         bmi     L52F7
         jsr     L6D21
@@ -275,8 +275,8 @@ L5386:  ldx     $D920
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9D8
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9D8
+        MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
         jsr     L6D1E
         jmp     L5340
 
@@ -285,8 +285,8 @@ L53B5:  and     #$7F
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9E0
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9E0
+        MGTK_RELAY_CALL MGTK::PaintRect, common_open_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, common_open_button_rect
         lda     #$00
         sta     L542E
         copy16  #$1800, $08
@@ -622,7 +622,7 @@ L56FB:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, rect_D9D8
+        MGTK_RELAY_CALL MGTK::InRect, common_ok_button_rect
         cmp     #MGTK::inrect_inside
         beq     L5738
         lda     L577B
@@ -634,7 +634,7 @@ L5738:  lda     L577B
         jmp     L56FB
 
 L5740:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9D8
+        MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
         lda     L577B
         clc
         adc     #$80
@@ -646,7 +646,7 @@ L575E:  lda     L577B
         return  #$FF
 
 L5766:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9D8
+        MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
         return  #$00
 
 L577B:  .byte   0
@@ -660,7 +660,7 @@ L5781:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, rect_D9D0
+        MGTK_RELAY_CALL MGTK::InRect, common_close_button_rect
         cmp     #MGTK::inrect_inside
         beq     L57BE
         lda     L5801
@@ -672,7 +672,7 @@ L57BE:  lda     L5801
         jmp     L5781
 
 L57C6:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9D0
+        MGTK_RELAY_CALL MGTK::PaintRect, common_close_button_rect
         lda     L5801
         clc
         adc     #$80
@@ -684,7 +684,7 @@ L57E4:  lda     L5801
         return  #$FF
 
 L57EC:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9D0
+        MGTK_RELAY_CALL MGTK::PaintRect, common_close_button_rect
         return  #$00
 
 L5801:  .byte   0
@@ -698,7 +698,7 @@ L5807:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, rect_D9E8
+        MGTK_RELAY_CALL MGTK::InRect, common_cancel_button_rect
         cmp     #MGTK::inrect_inside
         beq     L5844
         lda     L5887
@@ -710,7 +710,7 @@ L5844:  lda     L5887
         jmp     L5807
 
 L584C:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9E8
+        MGTK_RELAY_CALL MGTK::PaintRect, common_cancel_button_rect
         lda     L5887
         clc
         adc     #$80
@@ -722,7 +722,7 @@ L586A:  lda     L5887
         return  #$FF
 
 L5872:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9E8
+        MGTK_RELAY_CALL MGTK::PaintRect, common_cancel_button_rect
         return  #$01
 
 L5887:  .byte   0
@@ -736,7 +736,7 @@ L588D:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, rect_D9E0
+        MGTK_RELAY_CALL MGTK::InRect, common_open_button_rect
         cmp     #MGTK::inrect_inside
         beq     L58CA
         lda     L590D
@@ -748,7 +748,7 @@ L58CA:  lda     L590D
         jmp     L588D
 
 L58D2:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9E0
+        MGTK_RELAY_CALL MGTK::PaintRect, common_open_button_rect
         lda     L590D
         clc
         adc     #$80
@@ -760,7 +760,7 @@ L58F0:  lda     L590D
         return  #$FF
 
 L58F8:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9E0
+        MGTK_RELAY_CALL MGTK::PaintRect, common_open_button_rect
         return  #$00
 
 L590D:  .byte   0
@@ -774,7 +774,7 @@ L5913:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, rect_D9F0
+        MGTK_RELAY_CALL MGTK::InRect, common_change_drive_button_rect
         cmp     #MGTK::inrect_inside
         beq     L5950
         lda     L5993
@@ -786,7 +786,7 @@ L5950:  lda     L5993
         jmp     L5913
 
 L5958:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9F0
+        MGTK_RELAY_CALL MGTK::PaintRect, common_change_drive_button_rect
         lda     L5993
         clc
         adc     #$80
@@ -798,7 +798,7 @@ L5976:  lda     L5993
         return  #$FF
 
 L597E:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9F0
+        MGTK_RELAY_CALL MGTK::PaintRect, common_change_drive_button_rect
         return  #$01
 
 L5993:  .byte   0
@@ -887,8 +887,8 @@ L5A27:  cmp     #CHAR_TAB
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9F0
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9F0
+        MGTK_RELAY_CALL MGTK::PaintRect, common_change_drive_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, common_change_drive_button_rect
         jsr     L565C
 L5A4F:  jmp     L5AC8
 
@@ -904,8 +904,8 @@ L5A52:  cmp     #$0F
 L5A64:  lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9E0
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9E0
+        MGTK_RELAY_CALL MGTK::PaintRect, common_open_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, common_open_button_rect
         jsr     L5607
         jmp     L5AC8
 
@@ -914,8 +914,8 @@ L5A8B:  cmp     #$03
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9D0
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9D0
+        MGTK_RELAY_CALL MGTK::PaintRect, common_close_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, common_close_button_rect
         jsr     L567F
         jmp     L5AC8
 
@@ -936,8 +936,8 @@ L5AC8:  jsr     L56E3
 L5ACC:  lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9D8
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9D8
+        MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
         jsr     L6D42
         jsr     L6D1E
         jsr     L56E3
@@ -946,8 +946,8 @@ L5ACC:  lda     winfo_entrydlg
 L5AF7:  lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9E8
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D9E8
+        MGTK_RELAY_CALL MGTK::PaintRect, common_cancel_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, common_cancel_button_rect
         jsr     L6D21
         jsr     L56E3
         rts
@@ -1098,16 +1098,20 @@ L5C2F:  sta     $D920
         jsr     L6586
         jsr     L6163
         jsr     L606D
-        copy16  #$2001, path_buf2
+
+        copy    #1, path_buf2
+        copy    #' ', path_buf2+1
+
         jsr     L6D27
         rts
 
-L5C4F:  ldx     #$03
-L5C51:  lda     screentowindow_screenx,x
+L5C4F:  ldx     #3
+:       lda     screentowindow_screenx,x
         sta     L5CF0,x
         dex
-        bpl     L5C51
-        lda     machine_type
+        bpl     :-
+
+        lda     machine_type    ; Timer for insertion point blink
         sta     L5CEF
 L5C60:  dec     L5CEF
         beq     L5CA6
@@ -1175,62 +1179,76 @@ L5CF6:  .byte   0
 
 ;;; ============================================================
 
-L5CF7:  MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entrydlg
+.proc create_common_dialog
+        MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entrydlg
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entrydlg_file_picker
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_D9C0
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_D9D8
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_D9E0
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_D9D0
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_D9E8
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_D9F0
-        jsr     L5D82
-        jsr     L5D93
-        jsr     L5DA4
-        jsr     L5DB5
-        jsr     L5DC6
-        MGTK_RELAY_CALL MGTK::MoveTo, pos_D9F8
-        MGTK_RELAY_CALL MGTK::LineTo, pos_D9FC
+        MGTK_RELAY_CALL MGTK::FrameRect, common_dialog_frame_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, common_ok_button_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, common_open_button_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, common_close_button_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, common_cancel_button_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, common_change_drive_button_rect
+        jsr     draw_ok_button_label
+        jsr     draw_open_button_label
+        jsr     draw_close_button_label
+        jsr     draw_cancel_button_label
+        jsr     draw_change_drive_button_label
+        MGTK_RELAY_CALL MGTK::MoveTo, common_dialog_sep_start
+        MGTK_RELAY_CALL MGTK::LineTo, common_dialog_sep_end
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
+.endproc
 
-L5D82:  MGTK_RELAY_CALL MGTK::MoveTo, ok_button_pos
-        addr_call L5DED, ok_button_label
+draw_ok_button_label:
+        MGTK_RELAY_CALL MGTK::MoveTo, ok_button_pos
+        addr_call draw_string, ok_button_label
         rts
 
-L5D93:  MGTK_RELAY_CALL MGTK::MoveTo, open_button_pos
-        addr_call L5DED, open_button_label
+draw_open_button_label:
+        MGTK_RELAY_CALL MGTK::MoveTo, open_button_pos
+        addr_call draw_string, open_button_label
         rts
 
-L5DA4:  MGTK_RELAY_CALL MGTK::MoveTo, close_button_pos
-        addr_call L5DED, close_button_label
+draw_close_button_label:
+        MGTK_RELAY_CALL MGTK::MoveTo, close_button_pos
+        addr_call draw_string, close_button_label
         rts
 
-L5DB5:  MGTK_RELAY_CALL MGTK::MoveTo, cancel_button_pos
-        addr_call L5DED, cancel_button_label
+draw_cancel_button_label:
+        MGTK_RELAY_CALL MGTK::MoveTo, cancel_button_pos
+        addr_call draw_string, cancel_button_label
         rts
 
-L5DC6:  MGTK_RELAY_CALL MGTK::MoveTo, change_drive_button_pos
-        addr_call L5DED, change_drive_button_label
-        rts
-
-L5DD7:  stax    $06
-        ldy     #$00
-        lda     ($06),y
-        tay
-L5DE0:  lda     ($06),y
-        sta     $D380,y
-        dey
-        bpl     L5DE0
-        ldax    #$D380
+draw_change_drive_button_label:
+        MGTK_RELAY_CALL MGTK::MoveTo, change_drive_button_pos
+        addr_call draw_string, change_drive_button_label
         rts
 
 ;;; ============================================================
 
-L5DED:  jsr     L5DD7
+.proc copy_string_to_lcbuf
+        ptr := $06
+
+        stax    ptr
+        ldy     #0
+        lda     (ptr),y
+        tay
+:       lda     (ptr),y
+        sta     temp_string_buf,y
+        dey
+        bpl     :-
+        ldax    #temp_string_buf
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc draw_string
+        jsr     copy_string_to_lcbuf
         stax    $06
         ldy     #$00
         lda     ($06),y
@@ -1238,10 +1256,12 @@ L5DED:  jsr     L5DD7
         inc16   $06
         MGTK_RELAY_CALL MGTK::DrawText, $06
         rts
+.endproc
 
 ;;; ============================================================
 
-L5E0A:  jsr     L5DD7
+.proc L5E0A
+        jsr     copy_string_to_lcbuf
         stax    $06
         ldy     #$00
         lda     ($06),y
@@ -1265,23 +1285,24 @@ L5E0A:  jsr     L5DD7
         rts
 
 L5E56:  .byte   0
+.endproc
 
 ;;; ============================================================
 
-L5E57:  jsr     L5DD7
+L5E57:  jsr     copy_string_to_lcbuf
         stax    $06
-        MGTK_RELAY_CALL MGTK::MoveTo, pos1
+        MGTK_RELAY_CALL MGTK::MoveTo, common_input1_label_pos
         ldax    $06
-        jsr     L5DED
+        jsr     draw_string
         rts
 
 ;;; ============================================================
 
-L5E6F:  jsr     L5DD7
+L5E6F:  jsr     copy_string_to_lcbuf
         stax    $06
-        MGTK_RELAY_CALL MGTK::MoveTo, pos2
+        MGTK_RELAY_CALL MGTK::MoveTo, common_input2_label_pos
         ldax    $06
-        jsr     L5DED
+        jsr     draw_string
         rts
 
 ;;; ============================================================
@@ -1336,18 +1357,18 @@ L5EE9:  lda     open_params::ref_num
 L5F0B:  rts
 
 L5F0C:  .byte   0
-L5F0D:  jsr     L5DD7
+L5F0D:  jsr     copy_string_to_lcbuf
         stax    $06
         ldx     path_buf
-        lda     #$2F
+        lda     #'/'
         sta     path_buf+1,x
         inc     path_buf
-        ldy     #$00
+        ldy     #0
         lda     ($06),y
         tay
         clc
         adc     path_buf
-        cmp     #$41
+        cmp     #'A'
         bcc     L5F2F
         return  #$FF
 
@@ -1531,14 +1552,14 @@ L60A9:  MGTK_RELAY_CALL MGTK::MoveTo, pos_D917
         adc     #$18
         tax
         tya
-        jsr     L5DED
+        jsr     draw_string
         ldx     L6128
         lda     $1780,x
         bpl     L60FF
         lda     #$01
         sta     pos_D917
         MGTK_RELAY_CALL MGTK::MoveTo, pos_D917
-        addr_call L5DED, str_folder
+        addr_call draw_string, str_folder
         lda     #$10
         sta     pos_D917
 L60FF:  lda     L6128
@@ -1652,8 +1673,8 @@ L61E6:  inx
         stx     $0220
         addr_call L6129, $0220
         MGTK_RELAY_CALL MGTK::MoveTo, disk_label_pos
-        addr_call L5DED, disk_label
-        addr_call L5DED, $0220
+        addr_call draw_string, disk_label
+        addr_call draw_string, $0220
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
@@ -2011,7 +2032,7 @@ L658B:  cmp     #$09
         jsr     L62C8
         jsr     L6E45
         stax    $06
-        copy16  path_pos1+2, $08
+        copy16  common_input1_textpos+2, $08
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         bit     LD8EB
         bpl     L65C8
@@ -2033,7 +2054,7 @@ L65D6:  copy16  #$D8EF, $06
         jsr     L62C8
         jsr     L6E72
         stax    $06
-        copy16  path_pos2+2, $08
+        copy16  common_input2_textpos+2, $08
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         bit     LD8EB
         bpl     L6626
@@ -2054,30 +2075,30 @@ L6634:  copy16  #$D8EF, $06
 
         lda     winfo_entrydlg
         jsr     L62C8
-        MGTK_RELAY_CALL MGTK::PaintRect, dialog_rect1
+        MGTK_RELAY_CALL MGTK::PaintRect, common_input1_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, dialog_rect1
-        MGTK_RELAY_CALL MGTK::MoveTo, path_pos1
+        MGTK_RELAY_CALL MGTK::FrameRect, common_input1_rect
+        MGTK_RELAY_CALL MGTK::MoveTo, common_input1_textpos
         lda     path_buf0
         beq     L6684
-        addr_call L5DED, path_buf0
-L6684:  addr_call L5DED, path_buf2
-        addr_call L5DED, str_2_spaces
+        addr_call draw_string, path_buf0
+L6684:  addr_call draw_string, path_buf2
+        addr_call draw_string, str_2_spaces
         rts
 
 ;;; ============================================================
 
 L6693:  lda     winfo_entrydlg
         jsr     L62C8
-        MGTK_RELAY_CALL MGTK::PaintRect, dialog_rect2
+        MGTK_RELAY_CALL MGTK::PaintRect, common_input2_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, dialog_rect2
-        MGTK_RELAY_CALL MGTK::MoveTo, path_pos2
+        MGTK_RELAY_CALL MGTK::FrameRect, common_input2_rect
+        MGTK_RELAY_CALL MGTK::MoveTo, common_input2_textpos
         lda     path_buf1
         beq     L66C9
-        addr_call L5DED, path_buf1
-L66C9:  addr_call L5DED, path_buf2
-        addr_call L5DED, str_2_spaces
+        addr_call draw_string, path_buf1
+L66C9:  addr_call draw_string, path_buf2
+        addr_call draw_string, str_2_spaces
         rts
 
         lda     winfo_entrydlg
@@ -2086,12 +2107,12 @@ L66C9:  addr_call L5DED, path_buf2
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, dialog_rect1
+        MGTK_RELAY_CALL MGTK::InRect, common_input1_rect
         cmp     #MGTK::inrect_inside
         beq     L6719
         bit     L5104
         bpl     L6718
-        MGTK_RELAY_CALL MGTK::InRect, dialog_rect2
+        MGTK_RELAY_CALL MGTK::InRect, common_input2_rect
         cmp     #MGTK::inrect_inside
         bne     L6718
         jmp     L6D1E
@@ -2162,7 +2183,7 @@ L67C4:  copy16  #path_buf0, $06
         lda     path_buf0
         sta     $08
 L67D1:  MGTK_RELAY_CALL MGTK::TextWidth, $06
-        add16   $09, path_pos1, $09
+        add16   $09, common_input1_textpos, $09
         cmp16   $09, screentowindow_windowx
         bcc     L6800
         dec     $08
@@ -2214,12 +2235,12 @@ L684D:  .word   0
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, dialog_rect2
+        MGTK_RELAY_CALL MGTK::InRect, common_input2_rect
         cmp     #MGTK::inrect_inside
         beq     L6890
         bit     L5104
         bpl     L688F
-        MGTK_RELAY_CALL MGTK::InRect, dialog_rect1
+        MGTK_RELAY_CALL MGTK::InRect, common_input1_rect
         cmp     #MGTK::inrect_inside
         bne     L688F
         jmp     L6D21
@@ -2236,7 +2257,7 @@ L68A6:  jsr     L6E72
         stax    L69C4
         ldx     path_buf2
         inx
-        lda     #$20
+        lda     #' '
         sta     path_buf2,x
         inc     path_buf2
         copy16  #path_buf2, $06
@@ -2290,7 +2311,7 @@ L693B:  copy16  #path_buf1, $06
         lda     path_buf1
         sta     $08
 L6948:  MGTK_RELAY_CALL MGTK::TextWidth, $06
-        add16   $09, path_pos2, $09
+        add16   $09, common_input2_textpos, $09
         cmp16   $09, screentowindow_windowx
         bcc     L6977
         dec     $08
@@ -2352,12 +2373,12 @@ L69D5:  lda     L6A17
         jsr     L6E45
         inc     path_buf0
         stax    $06
-        copy16  path_pos1+2, $08
+        copy16  common_input1_textpos+2, $08
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
-        addr_call L5DED, str_1_char
-        addr_call L5DED, path_buf2
+        addr_call draw_string, str_1_char
+        addr_call draw_string, path_buf2
         jsr     L6EA3
         rts
 
@@ -2369,12 +2390,12 @@ L6A17:  .byte   0
 L6A1E:  dec     path_buf0
         jsr     L6E45
         stax    $06
-        copy16  path_pos1+2, $08
+        copy16  common_input1_textpos+2, $08
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
-        addr_call L5DED, path_buf2
-        addr_call L5DED, str_2_spaces
+        addr_call draw_string, path_buf2
+        addr_call draw_string, str_2_spaces
         jsr     L6EA3
         rts
 
@@ -2397,12 +2418,12 @@ L6A6B:  ldx     path_buf0
         inc     path_buf2
         jsr     L6E45
         stax    $06
-        copy16  path_pos1+2, $08
+        copy16  common_input1_textpos+2, $08
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
-        addr_call L5DED, path_buf2
-        addr_call L5DED, str_2_spaces
+        addr_call draw_string, path_buf2
+        addr_call draw_string, str_2_spaces
         jsr     L6EA3
         rts
 
@@ -2428,10 +2449,10 @@ L6ACA:  lda     path_buf2+1,x
 L6AD6:  dec     path_buf2
         lda     winfo_entrydlg
         jsr     L62C8
-        MGTK_RELAY_CALL MGTK::MoveTo, path_pos1
-        addr_call L5DED, path_buf0
-        addr_call L5DED, path_buf2
-        addr_call L5DED, str_2_spaces
+        MGTK_RELAY_CALL MGTK::MoveTo, common_input1_textpos
+        addr_call draw_string, path_buf0
+        addr_call draw_string, path_buf2
+        addr_call draw_string, str_2_spaces
         jsr     L6EA3
         rts
 
@@ -2458,7 +2479,7 @@ L6B23:  lda     path_buf0,y
         ldx     path_buf0
         inx
         stx     path_buf2
-        lda     #$06
+        lda     #GLYPH_INSPT
         sta     path_buf2+1
         lda     #$00
         sta     path_buf0
@@ -2480,7 +2501,8 @@ L6B51:  inx
         cpx     path_buf2
         bne     L6B51
         sty     path_buf0
-        copy16  #$0601, path_buf2
+        copy    #1, path_buf2
+        copy    #GLYPH_INSPT, path_buf2+1
         jsr     L6D27
         jsr     L6EA3
         rts
@@ -2501,12 +2523,12 @@ L6B81:  lda     L6BC3
         jsr     L6E72
         inc     path_buf1
         stax    $06
-        copy16  path_pos2+2, $08
+        copy16  common_input2_textpos+2, $08
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
-        addr_call L5DED, str_1_char
-        addr_call L5DED, path_buf2
+        addr_call draw_string, str_1_char
+        addr_call draw_string, path_buf2
         jsr     L6E9F
         rts
 
@@ -2518,12 +2540,12 @@ L6BC3:  .byte   0
 L6BCA:  dec     path_buf1
         jsr     L6E72
         stax    $06
-        copy16  path_pos2+2, $08
+        copy16  common_input2_textpos+2, $08
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
-        addr_call L5DED, path_buf2
-        addr_call L5DED, str_2_spaces
+        addr_call draw_string, path_buf2
+        addr_call draw_string, str_2_spaces
         jsr     L6E9F
         rts
 
@@ -2546,12 +2568,12 @@ L6C17:  ldx     path_buf1
         inc     path_buf2
         jsr     L6E72
         stax    $06
-        copy16  path_pos2+2, $08
+        copy16  common_input2_textpos+2, $08
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::MoveTo, $06
-        addr_call L5DED, path_buf2
-        addr_call L5DED, str_2_spaces
+        addr_call draw_string, path_buf2
+        addr_call draw_string, str_2_spaces
         jsr     L6E9F
         rts
 
@@ -2577,10 +2599,10 @@ L6C76:  lda     path_buf2+1,x
 L6C82:  dec     path_buf2
         lda     winfo_entrydlg
         jsr     L62C8
-        MGTK_RELAY_CALL MGTK::MoveTo, path_pos2
-        addr_call L5DED, path_buf1
-        addr_call L5DED, path_buf2
-        addr_call L5DED, str_2_spaces
+        MGTK_RELAY_CALL MGTK::MoveTo, common_input2_textpos
+        addr_call draw_string, path_buf1
+        addr_call draw_string, path_buf2
+        addr_call draw_string, str_2_spaces
         jsr     L6E9F
         rts
 
@@ -2607,7 +2629,7 @@ L6CCF:  lda     path_buf1,y
         ldx     path_buf1
         inx
         stx     path_buf2
-        lda     #$06
+        lda     #GLYPH_INSPT
         sta     path_buf2+1
         lda     #$00
         sta     path_buf1
@@ -2629,7 +2651,8 @@ L6CFD:  inx
         cpx     path_buf2
         bne     L6CFD
         sty     path_buf1
-        copy16  #$0601, path_buf2
+        copy    #1, path_buf2
+        copy    #GLYPH_INSPT, path_buf2+1
         jsr     L6D27
         jsr     L6E9F
         rts
@@ -2781,10 +2804,10 @@ L6E45:  lda     #$00
         MGTK_RELAY_CALL MGTK::TextWidth, $06
 L6E63:  lda     $09
         clc
-        adc     path_pos1
+        adc     common_input1_textpos
         tay
         lda     $0A
-        adc     path_pos1+1
+        adc     common_input1_textpos+1
         tax
         tya
         rts
@@ -2799,10 +2822,10 @@ L6E72:  lda     #$00
         MGTK_RELAY_CALL MGTK::TextWidth, $06
 L6E90:  lda     $09
         clc
-        adc     path_pos2
+        adc     common_input2_textpos
         tay
         lda     $0A
-        adc     path_pos2+1
+        adc     common_input2_textpos+1
         tax
         tya
         rts

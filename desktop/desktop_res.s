@@ -287,7 +287,11 @@ watch_cursor:
 
 LD343:  .word   0
 buf_filename2:  .res    16, 0
-LD355:  .res    88, 0
+LD355:  .res    43, 0
+
+temp_string_buf:
+        .res    45, 0
+
 LD3AD:  .res    19, 0
 LD3C0:  .res    46, 0
 
@@ -296,10 +300,15 @@ LD3FF:  .byte   0
 LD400:  .byte   0
 LD401:  .byte   0
 
+;;; In common dialog (copy/edit file, add/edit selector entry):
+;;; * path_buf0 has the contents of the top input field
+;;; * path_buf1 has the contents of the bottom input field
+;;; * path_buf2 has the contents of the focused field after insertion point
+;;;   (May have leading caret glyph $06)
+
 path_buf0:  .res    65, 0
 path_buf1:  .res    65, 0
 path_buf2:  .res    65, 0
-
 
 alert_bitmap2:
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
@@ -725,32 +734,32 @@ rect_D98E:
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00
 
-rect_D9C0:
+common_dialog_frame_rect:
         DEFINE_RECT 4,2,496,151
 
 rect_D9C8:
         DEFINE_RECT 27,16,174,26
 
-rect_D9D0:
+common_close_button_rect:
         DEFINE_RECT 193,58,293,69
 
 
-rect_D9D8:
+common_ok_button_rect:
         DEFINE_RECT 193,89,293,100
 
-rect_D9E0:
+common_open_button_rect:
         DEFINE_RECT 193,44,293,55
 
-rect_D9E8:
+common_cancel_button_rect:
         DEFINE_RECT 193,73,293,84
 
-rect_D9F0:  DEFINE_RECT 193,30,293,41
+common_change_drive_button_rect:
+        DEFINE_RECT 193,30,293,41
 
-        ;; Endpoints of a line
-pos_D9F8:
-        DEFINE_POINT   323,30
-pos_D9FC:
-        DEFINE_POINT   323,100
+common_dialog_sep_start:
+        DEFINE_POINT 323,30
+common_dialog_sep_end:
+        DEFINE_POINT 323,100
 
         .byte   $81,$D3,$00
 
@@ -782,9 +791,9 @@ change_drive_button_label:
 disk_label_pos:
         DEFINE_POINT   28,25
 
-pos1:
+common_input1_label_pos:
         DEFINE_POINT   28,112
-pos2:
+common_input2_label_pos:
         DEFINE_POINT   28,135
 
 textbg1:
@@ -804,11 +813,11 @@ source_filename_label:
 destination_filename_label:
         PASCAL_STRING "Destination filename:"
 
-dialog_rect1:   DEFINE_RECT 28, 113, 463, 124
-path_pos1:      DEFINE_POINT 30,123
+common_input1_rect:   DEFINE_RECT 28, 113, 463, 124
+common_input1_textpos:      DEFINE_POINT 30,123
 
-dialog_rect2:   DEFINE_RECT 28, 136, 463, 147
-path_pos2:      DEFINE_POINT 30,146
+common_input2_rect:   DEFINE_RECT 28, 136, 463, 147
+common_input2_textpos:      DEFINE_POINT 30,146
 
 delete_a_file_label:
         PASCAL_STRING "Delete a File ..."

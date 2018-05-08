@@ -9,7 +9,7 @@
         .org $7000
 .proc file_copy_overlay
 
-L7000:  jsr     common_overlay::L5CF7
+L7000:  jsr     common_overlay::create_common_dialog
         jsr     L7052
         jsr     common_overlay::L5E87
         jsr     common_overlay::L5F5B
@@ -49,8 +49,8 @@ L7052:  lda     winfo_entrydlg
         addr_call common_overlay::L5E57, source_filename_label
         addr_call common_overlay::L5E6F, destination_filename_label
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, dialog_rect1
-        MGTK_RELAY_CALL MGTK::FrameRect, dialog_rect2
+        MGTK_RELAY_CALL MGTK::FrameRect, common_input1_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, common_input2_rect
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts

@@ -9,7 +9,7 @@
         .org $7000
 .proc file_delete_overlay
 
-L7000:  jsr     common_overlay::L5CF7
+L7000:  jsr     common_overlay::create_common_dialog
         jsr     L704D
         jsr     common_overlay::L5E87
         jsr     common_overlay::L5F5B
@@ -46,7 +46,7 @@ L704D:  lda     winfo_entrydlg
         addr_call common_overlay::L5E0A, delete_a_file_label
         addr_call common_overlay::L5E57, file_to_delete_label
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, dialog_rect1
+        MGTK_RELAY_CALL MGTK::FrameRect, common_input1_rect
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
