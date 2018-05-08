@@ -11553,7 +11553,7 @@ dialog_param_addr:
         sta     event_params
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, rect1
+        MGTK_RELAY_CALL MGTK::InRect, name_input_rect
         cmp     #MGTK::inrect_inside
         bne     out
         jsr     set_cursor_insertion_point_with_flag
@@ -12355,7 +12355,7 @@ LAE49:  lda     #$80
         jsr     set_port_from_window_id
         addr_call draw_dialog_title, desktop_aux::str_new_folder_title
         jsr     set_penmode_xor2
-        MGTK_RELAY_CALL MGTK::FrameRect, rect1
+        MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         rts
 
 LAE70:  lda     #$80
@@ -12741,7 +12741,7 @@ LB27D:  jsr     LBD75
         jsr     set_port_from_window_id
         addr_call draw_dialog_title, desktop_aux::str_rename_title
         jsr     set_penmode_xor2
-        MGTK_RELAY_CALL MGTK::FrameRect, rect1
+        MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         yax_call draw_dialog_label, 2, desktop_aux::str_rename_old
         lda     #85
         sta     dialog_label_pos
@@ -13467,7 +13467,7 @@ click_result:
 
         jsr     measure_path_buf1
         stax    xcoord
-        copy16  point6::ycoord, ycoord
+        copy16  name_input_textpos::ycoord, ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, point
         MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
         bit     LD8EB
@@ -13502,10 +13502,10 @@ LB93B:  copy16  #LD8EF, textptr
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         jsr     set_fill_white
-        MGTK_RELAY_CALL MGTK::PaintRect, rect1
+        MGTK_RELAY_CALL MGTK::PaintRect, name_input_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, rect1
-        MGTK_RELAY_CALL MGTK::MoveTo, point6
+        MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
+        MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
         MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
         addr_call draw_text1, path_buf1
         addr_call draw_text1, path_buf2
@@ -13520,7 +13520,7 @@ done:   rts
 .proc LB9B8
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, rect1
+        MGTK_RELAY_CALL MGTK::InRect, name_input_rect
         cmp     #MGTK::inrect_inside
         beq     :+
         rts
@@ -13601,7 +13601,7 @@ LBA7C:  dey
         lda     path_buf1
         sta     textlen
 :       MGTK_RELAY_CALL MGTK::TextWidth, params
-        add16 result, point6::xcoord, result
+        add16 result, name_input_textpos::xcoord, result
         cmp16   result, screentowindow_windowx
         bcc     LBABF
         dec     textlen
@@ -13673,7 +13673,7 @@ LBB0B:  sta     LBB62
         jsr     measure_path_buf1
         inc     path_buf1
         stax    xcoord
-        copy16  point6::ycoord, ycoord
+        copy16  name_input_textpos::ycoord, ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, point
         MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
         addr_call draw_text1, str_1_char
@@ -13696,7 +13696,7 @@ LBB63:  lda     path_buf1
         dec     path_buf1
         jsr     measure_path_buf1
         stax    xcoord
-        copy16  point6::ycoord, ycoord
+        copy16  name_input_textpos::ycoord, ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, point
         MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
         addr_call draw_text1, path_buf2
@@ -13730,7 +13730,7 @@ LBBBC:  ldx     path_buf1
         inc     path_buf2
         jsr     measure_path_buf1
         stax    xcoord
-        copy16  point6::ycoord, ycoord
+        copy16  name_input_textpos::ycoord, ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, point
         MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
         addr_call draw_text1, path_buf2
@@ -13760,7 +13760,7 @@ LBC21:  lda     path_buf2+1,x
         cpx     path_buf2
         bne     LBC21
 LBC2D:  dec     path_buf2
-        MGTK_RELAY_CALL MGTK::MoveTo, point6
+        MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
         MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
         addr_call draw_text1, path_buf1
         addr_call draw_text1, path_buf2
@@ -13811,7 +13811,7 @@ LBCB3:  pla
         sta     path_buf2
         lda     #$00
         sta     path_buf1
-        MGTK_RELAY_CALL MGTK::MoveTo, point6
+        MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
         jsr     draw_filename_prompt
         rts
 
@@ -13838,7 +13838,7 @@ LBCDF:  lda     path_buf2,x
         sta     path_buf1
         lda     #$01
         sta     path_buf2
-        MGTK_RELAY_CALL MGTK::MoveTo, point6
+        MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
         jsr     draw_filename_prompt
         rts
 
@@ -13874,7 +13874,7 @@ LBD33:  rts
         rts
 
 ;;; ============================================================
-;;; Compute width of path_buf1, offset point6, return x coord in (A,X)
+;;; Compute width of path_buf1, offset name_input_textpos, return x coord in (A,X)
 
 .proc measure_path_buf1
         textwidth_params  := $6
@@ -13886,16 +13886,16 @@ LBD33:  rts
         lda     path_buf1
         sta     textlen
         bne     :+
-        ldax    point6::xcoord
+        ldax    name_input_textpos::xcoord
         rts
 
 :       MGTK_RELAY_CALL MGTK::TextWidth, textwidth_params
         lda     result
         clc
-        adc     point6::xcoord
+        adc     name_input_textpos::xcoord
         tay
         lda     result+1
-        adc     point6::xcoord+1
+        adc     name_input_textpos::xcoord+1
         tax
         tya
         rts

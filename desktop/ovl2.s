@@ -70,7 +70,7 @@ L085F:  bit     $D887
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, rect1
+        MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         jsr     LBD75
         lda     #$80
         sta     $D8E8
@@ -210,7 +210,7 @@ L0A18:  bit     $D887
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, rect1
+        MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         jsr     LBD75
         lda     #$80
         sta     $D8E8

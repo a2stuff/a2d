@@ -520,11 +520,13 @@ nextwinfo:      .addr   0
 
         ;; Coordinates for labels?
         .byte   $28,$00,$25,$00,$68,$01,$2F,$00,$2D,$00,$2E,$00
-rect1:  DEFINE_RECT 40,61,360,71, rect1
-point6: DEFINE_POINT 45,70, point6
+
+name_input_rect:  DEFINE_RECT 40,61,360,71, name_input_rect
+name_input_textpos: DEFINE_POINT 45,70, name_input_textpos
 pos_dialog_title: DEFINE_POINT 0, 18, pos_dialog_title
+
 point7: DEFINE_POINT 40,18, point7
-pointD: DEFINE_POINT 40, 35, pointD
+pointD: DEFINE_POINT 40,35, pointD
 
         dialog_label_default_x := 40
 dialog_label_pos:
