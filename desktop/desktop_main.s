@@ -7837,6 +7837,7 @@ loop:   dec     counter
         dec     counter+1
         lda     counter+1
         bne     exit
+
 :       jsr     peek_event
 
         ;; Check coords, bail if pixel delta exceeded
@@ -7847,7 +7848,7 @@ loop:   dec     counter
         sta     unused
 
         lda     event_kind
-        sta     state           ; unused ???
+        sta     kind            ; unused ???
 
         cmp     #MGTK::event_kind_no_event
         beq     loop
@@ -7855,8 +7856,10 @@ loop:   dec     counter
         beq     loop
         cmp     #MGTK::event_kind_button_up
         bne     :+
+
         jsr     get_event
         jmp     loop
+
 :       cmp     #MGTK::event_kind_button_down
         bne     exit
 
@@ -7888,7 +7891,8 @@ fail:   return  #$FF
         bcs     fail
 
         ;; compute y delta
-check_y:lda     event_ycoord
+check_y:
+        lda     event_ycoord
         sec
         sbc     ycoord
         sta     delta
@@ -7908,16 +7912,15 @@ check_y:lda     event_ycoord
 ok:     return  #0
 .endproc
 
-counter:.word   0
-
+counter:
+        .word   0
 coords:
 xcoord: .word   0
 ycoord: .word   0
-
 delta:  .byte   0
-state:  .byte   0               ; unused?
-unused: .byte   0               ; ???
 
+kind:   .byte   0               ; unused
+unused: .byte   0               ; unused
 .endproc
 
 ;;; ============================================================
@@ -12923,88 +12926,122 @@ set_penmode_xor2:
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         rts
 
-        ldx     #$03
-LB447:  lda     event_coords,x
-        sta     LB502,x
+        ;; Another double-click timer?
+.proc LB554
+        double_click_deltax := 5
+        double_click_deltay := 4
+
+        ldx     #3
+:       lda     event_coords,x
+        sta     coords,x
         dex
-        bpl     LB447
-        lda     #$00
-        sta     LB501
+        bpl     :-
+
+        lda     #0
+        sta     counter+1
         lda     machine_type
         asl     a
-        sta     LB500
-        rol     LB501
-LB45F:  dec     LB500
-        lda     LB500
+        sta     counter
+        rol     counter+1
+
+        ;; Decrement counter, bail if time delta exceeded
+loop:   dec     counter
+        lda     counter
         cmp     #$FF
-        bne     LB46C
-        dec     LB501
-LB46C:  lda     LB501
-        bne     LB476
-        lda     LB500
-        beq     LB4B7
-LB476:  MGTK_RELAY_CALL MGTK::PeekEvent, event_params
-        jsr     LB4BA
-        bmi     LB4B7
-        lda     #$FF
-        sta     LB508
-        lda     event_kind
-        sta     LB507
+        bne     :+
+        dec     counter+1
+:       lda     counter+1
+        bne     :+
+        lda     counter
+        beq     exit
+
+:       MGTK_RELAY_CALL MGTK::PeekEvent, event_params
+
+        ;; Check coords, bail if pixel delta exceeded
+        jsr     check_delta
+        bmi     exit            ; moved past delta; no double-click
+
+        lda     #$FF            ; ???
+        sta     unused
+
+        lda     event_kind      ; unused ???
+        sta     kind
+
         cmp     #MGTK::event_kind_no_event
-        beq     LB45F
+        beq     loop
         cmp     #MGTK::event_kind_drag
-        beq     LB45F
+        beq     loop
         cmp     #MGTK::event_kind_button_up
-        bne     LB4A7
+        bne     :+
+
         MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        jmp     LB45F
+        jmp     loop
 
-LB4A7:  cmp     #$01
-        bne     LB4B7
+:       cmp     #MGTK::event_kind_button_down
+        bne     exit
+
         MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        return  #0
+        return  #0              ; double-click
 
-LB4B7:  return  #$FF
+exit:   return  #$FF            ; not double-click
 
-LB4BA:  lda     event_xcoord
+        ;; Is the new coord within range of the old coord?
+.proc check_delta
+        ;; compute x delta
+        lda     event_xcoord
         sec
-        sbc     LB502
-        sta     LB506
+        sbc     xcoord
+        sta     delta
         lda     event_xcoord+1
-        sbc     LB503
-        bpl     LB4D6
-        lda     LB506
-        cmp     #$FB
-        bcs     LB4DD
-LB4D3:  return  #$FF
+        sbc     xcoord+1
+        bpl     :+
 
-LB4D6:  lda     LB506
-        cmp     #$05
-        bcs     LB4D3
-LB4DD:  lda     event_ycoord
+        ;; is -delta < x < 0 ?
+        lda     delta
+        cmp     #($100 - double_click_deltax)
+        bcs     check_y
+fail:   return  #$FF
+
+        ;; is 0 < x < delta ?
+:       lda     delta
+        cmp     #double_click_deltax
+        bcs     fail
+
+        ;; compute y delta
+check_y:
+        lda     event_ycoord
         sec
-        sbc     LB504
-        sta     LB506
+        sbc     ycoord
+        sta     delta
         lda     event_ycoord+1
-        sbc     LB505
-        bpl     LB4F6
-        lda     LB506
-        cmp     #$FC
-        bcs     LB4FD
-LB4F6:  lda     LB506
-        cmp     #$04
-        bcs     LB4D3
-LB4FD:  return  #0
+        sbc     ycoord+1
+        bpl     :+
 
-LB500:  .byte   0
-LB501:  .byte   0
-LB502:  .byte   0
-LB503:  .byte   0
-LB504:  .byte   0
-LB505:  .byte   0
-LB506:  .byte   0
-LB507:  .byte   0
-LB508:  .byte   0
+        ;; is -delta < y < 0 ?
+        lda     delta
+        cmp     #($100 - double_click_deltay)
+        bcs     ok
+
+        ;; is 0 < y < delta ?
+:       lda     delta
+        cmp     #double_click_deltay
+        bcs     fail
+ok:     return  #0
+.endproc
+
+counter:
+        .word   0
+coords:
+xcoord: .word   0
+ycoord: .word   0
+delta:  .byte   0
+
+kind:   .byte   0               ; unused
+unused: .byte   0               ; unused
+.endproc
+
+;;; ============================================================
+
 LB509:  sta     LD8E7
         jsr     open_dialog_window
         bit     LD8E7

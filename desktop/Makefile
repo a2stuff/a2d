@@ -29,6 +29,9 @@ $(OUTDIR)/desktop_res.inc: desktop_res.s desktop_res_builder.s res/build_res_inc
 	$(CC65)/ca65 $(CAFLAGS) --listing $(OUTDIR)/desktop_res.list -o $@ desktop_res_builder.s
 	cat $(OUTDIR)/desktop_res.list | res/build_res_inc.pl > $@
 
+$(OUTDIR)/desktop.o: desktop.s $(HEADERS) desktop_aux.s desktop_lc.s desktop_main.s desktop_res.s
+	$(CC65)/ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
+
 $(OUTDIR)/ovl34567.o: ovl34567.s $(HEADERS) ovl3.s ovl4.s ovl5.s ovl6.s ovl7.s
 	$(CC65)/ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 

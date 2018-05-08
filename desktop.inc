@@ -193,7 +193,7 @@ DEFAULT_FONT := $8800
 ;;; $05 = pointer      (MT:B)  $15 = rarrow       (MT:U)
 ;;; $06 = vbar         (MT:_)  $16 = tri
 ;;; $07 = hbar         (MT:S)  $17 = open circ
-;;; $08 = larrow               $18 = close        (MT:])
+;;; $08 = larrow       (MT:H)  $18 = close        (MT:])
 ;;; $09 = left box             $19 = gray odd     (MT:W)
 ;;; $0A = darrow       (MT:J)  $1A = gray even    (MT:V)
 ;;; $0B = uarrow       (MT:K)  $1B = solid circ
