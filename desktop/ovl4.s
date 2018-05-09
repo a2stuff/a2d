@@ -38,7 +38,7 @@ routine_table:  .addr   $7000, $7000, $7000
         lda     #0
         sta     L5027
         sta     L50A8
-        sta     LD8EB
+        sta     prompt_ip_flag
         sta     LD8EC
         sta     $D8F0
         sta     $D8F1
@@ -1112,8 +1112,8 @@ L5C4F:  ldx     #3
         bpl     :-
 
         lda     machine_type    ; Timer for insertion point blink
-        sta     L5CEF
-L5C60:  dec     L5CEF
+        sta     ip_blink_counter
+L5C60:  dec     ip_blink_counter
         beq     L5CA6
         MGTK_RELAY_CALL MGTK::PeekEvent, event_params
         jsr     L5CA9
@@ -1168,7 +1168,9 @@ L5CE5:  lda     L5CF4
         bcs     L5CC2
 L5CEC:  return  #$00
 
-L5CEF:  .byte   0
+ip_blink_counter:
+        .byte   0
+
 L5CF0:  .byte   0
 L5CF1:  .byte   0
 L5CF2:  .byte   0
@@ -2034,15 +2036,15 @@ L658B:  cmp     #$09
         stax    $06
         copy16  common_input1_textpos+2, $08
         MGTK_RELAY_CALL MGTK::MoveTo, $06
-        bit     LD8EB
+        bit     prompt_ip_flag
         bpl     L65C8
         MGTK_RELAY_CALL MGTK::SetTextBG, textbg1
         lda     #$00
-        sta     LD8EB
+        sta     prompt_ip_flag
         beq     L65D6
 L65C8:  MGTK_RELAY_CALL MGTK::SetTextBG, textbg2
         lda     #$FF
-        sta     LD8EB
+        sta     prompt_ip_flag
 L65D6:  copy16  #$D8EF, $06
         lda     $D8EE
         sta     $08
@@ -2056,16 +2058,16 @@ L65D6:  copy16  #$D8EF, $06
         stax    $06
         copy16  common_input2_textpos+2, $08
         MGTK_RELAY_CALL MGTK::MoveTo, $06
-        bit     LD8EB
+        bit     prompt_ip_flag
         bpl     L6626
         MGTK_RELAY_CALL MGTK::SetTextBG, textbg1
         lda     #$00
-        sta     LD8EB
+        sta     prompt_ip_flag
         jmp     L6634
 
 L6626:  MGTK_RELAY_CALL MGTK::SetTextBG, textbg2
         lda     #$FF
-        sta     LD8EB
+        sta     prompt_ip_flag
 L6634:  copy16  #$D8EF, $06
         lda     $D8EE
         sta     $08

@@ -25,16 +25,16 @@ for (my $i = 0; $i < $num; ++$i) {
     $chars[$i] = '';
 }
 
-# Skip widths
+my @widths;
 for (my $i = 0; $i < $num; ++$i) {
-    read(STDIN, $b, 1);
+    push @widths, getbyte();
 }
 
 for (my $row = 0; $row < $height; ++$row) {
     for (my $col = 0; $col < $cols; ++$col) {
         for (my $c = 0; $c < $num; ++$c) {
             my $bits = sprintf("%07b", getbyte());
-            $bits =~ tr/01/ #/;
+            $bits =~ tr/01/.#/;
             $bits = reverse $bits;
 
             $chars[$c] .= $bits;
@@ -45,7 +45,13 @@ for (my $row = 0; $row < $height; ++$row) {
     }
 }
 
+for (my $i = 0; $i < $num; ++$i) {
+    $chars[$i] =
+        join("\n",
+             map { substr($_, 0, $widths[$i]) }
+             split("\n", $chars[$i]));
+}
 
 for (my $i = 0; $i < $num; ++$i) {
-    print "== 0x".sprintf("%02x",$i)." ==\n$chars[$i]";
+    print "== 0x".sprintf("%02x",$i)." ==\n$chars[$i]\n";
 }

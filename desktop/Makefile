@@ -5,7 +5,7 @@ CCFLAGS = --config asm.cfg
 
 OUTDIR = out
 
-HEADERS = $(wildcard ../*.inc) $(wildcard ../inc/*.inc) $(wildcard *.inc) $(OUTDIR)/desktop_res.inc
+HEADERS = $(wildcard ../*.inc) $(wildcard ../inc/*.inc) $(wildcard *.inc)
 
 SEGMENTS = loader mgtk desktop invoker \
         ovl1 ovl1a ovl1b ovl1c ovl2 ovl34567
@@ -32,10 +32,10 @@ $(OUTDIR)/desktop_res.inc: desktop_res.s desktop_res_builder.s res/build_res_inc
 $(OUTDIR)/desktop.o: desktop.s $(HEADERS) desktop_aux.s desktop_lc.s desktop_main.s desktop_res.s
 	$(CC65)/ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
-$(OUTDIR)/ovl34567.o: ovl34567.s $(HEADERS) ovl3.s ovl4.s ovl5.s ovl6.s ovl7.s
+$(OUTDIR)/ovl34567.o: ovl34567.s $(HEADERS) $(OUTDIR)/desktop_res.inc ovl3.s ovl4.s ovl5.s ovl6.s ovl7.s
 	$(CC65)/ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
-$(OUTDIR)/%.o: %.s $(HEADERS)
+$(OUTDIR)/%.o: %.s $(HEADERS) $(OUTDIR)/desktop_res.inc
 	$(CC65)/ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
 # Built DeskTop segments

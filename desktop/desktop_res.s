@@ -532,7 +532,7 @@ pointD: DEFINE_POINT 40,35, pointD
 dialog_label_pos:
         DEFINE_POINT dialog_label_default_x,0, dialog_label_pos
 
-.proc setportbits_params3
+.proc name_input_mapinfo
         DEFINE_POINT 75, 35
         .addr   MGTK::screen_mapbits
         .byte   MGTK::screen_mapwidth
@@ -635,14 +635,25 @@ buf_filename:
         .res    16, 0
 
 LD8E7:  .byte   0
-LD8E8:  .byte   0
-LD8E9:  .byte   $14
+has_input_field_flag:
+        .byte   0
+
+
+        prompt_insertion_point_blink_count := $14
+
+prompt_ip_counter:
+        .byte   prompt_insertion_point_blink_count
+
         .byte   $00
-LD8EB:  .byte   0
+
+prompt_ip_flag:
+        .byte   0
+
 LD8EC:  .byte   0
 LD8ED:  .byte   0
-LD8EE:  .byte   1
-LD8EF:  .byte   6
+
+str_insertion_point:
+        PASCAL_STRING {GLYPH_INSPT}
 
 LD8F0:  .byte   0
 LD8F1:  .byte   0
@@ -651,9 +662,13 @@ LD8F3:  .byte   0
 LD8F4:  .byte   0
 LD8F5:  .byte   0
 
+        ;; Used to draw/clear insertion point; overwritten with char
+        ;; to right of insertion point as needed.
 str_1_char:
         PASCAL_STRING {0}
 
+        ;; Used as suffix for text being edited to account for insertion
+        ;; point adding extra width.
 str_2_spaces:
         PASCAL_STRING "  "
 

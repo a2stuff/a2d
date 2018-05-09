@@ -2864,8 +2864,8 @@ all_label_pos:  DEFINE_POINT 325,91
         .byte   $1C,$00,$70,$00
         .byte   $1C,$00,$87,$00
 
-LAE6C:  .byte   $00             ; text mask
-LAE6D:  .byte   $7F             ; text mask
+textbg_black:  .byte   $00
+textbg_white:  .byte   $7F
 
 press_ok_to_rect:  DEFINE_RECT 39,25,360,80
 prompt_rect:  DEFINE_RECT 40,60,360,80

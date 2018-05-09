@@ -115,7 +115,8 @@ main_loop:
         lda     #0
         sta     loop_counter
 
-        jsr     L4563           ; called every few ticks ???
+        ;; Poll drives for updates
+        jsr     L4563
         beq     :+
         jsr     L40E0           ; conditionally ???
 
@@ -694,7 +695,7 @@ next:   dey
 
         stx     L4597
         stx     L45A0
-        jsr     L45B2
+        jsr     poll_drive
         ldx     L45A0
         beq     done
 :       lda     L45A0,x
@@ -712,17 +713,19 @@ L4559:  lda     DEVLST,y
 
 ;;; ============================================================
 
+;;; Determine ejectability?
+
 .proc L4563
         lda     L45A0
-        beq     L4579
-        jsr     L45B2
+        beq     done
+        jsr     poll_drive
         ldx     L45A0
 L456E:  lda     L45A0,x
         cmp     L45A9,x
         bne     L457C
         dex
         bne     L456E
-L4579:  return  #0
+done:   return  #0
 
 L457C:  lda     L45A0,x
         sta     L45A9,x
@@ -754,7 +757,9 @@ L45A9:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
         ;; Possibly SmartPort STATUS call to determine ejectability ???
 
-.proc L45B2
+        ;; Called in a polling loop - checking drive status?
+
+.proc poll_drive
         ptr := $6
 
         ldx     L4597
@@ -11494,18 +11499,21 @@ dialog_param_addr:
         asl     a
         tax
         copy16  dialog_proc_table,x, jump_addr
+
         lda     #0
-        sta     LD8EB
+        sta     prompt_ip_flag
         sta     LD8EC
         sta     LD8F0
         sta     LD8F1
         sta     LD8F2
-        sta     LD8E8
+        sta     has_input_field_flag
         sta     LD8F5
         sta     LD8ED
         sta     cursor_ip_flag
-        lda     #$14
-        sta     LD8E9
+
+        lda     #prompt_insertion_point_blink_count
+        sta     prompt_ip_counter
+
         copy16  #rts1, jump_relay+1
         jsr     set_cursor_pointer
 
@@ -11518,13 +11526,17 @@ dialog_param_addr:
 ;;; Message handler for OK/Cancel dialog
 
 .proc prompt_input_loop
-        lda     LD8E8
+        lda     has_input_field_flag
         beq     :+
-        dec     LD8E9
+
+        ;; Blink the insertion point
+        dec     prompt_ip_counter
         bne     :+
-        jsr     LB8F5
-        lda     #$14
-        sta     LD8E9
+        jsr     redraw_prompt_insertion_point
+        lda     #prompt_insertion_point_blink_count
+        sta     prompt_ip_counter
+
+        ;; Dispatch event types - mouse down, key press
 :       MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::event_kind_button_down
@@ -11535,8 +11547,11 @@ dialog_param_addr:
         bne     :+
         jmp     prompt_key_handler
 
-:       lda     LD8E8
+        ;; Does the dialog have an input field?
+:       lda     has_input_field_flag
         beq     prompt_input_loop
+
+        ;; Check if mouse is over input field, change cursor appropriately.
         MGTK_RELAY_CALL MGTK::FindWindow, event_coords
         lda     findwindow_which_area
         bne     :+
@@ -11547,7 +11562,7 @@ dialog_param_addr:
         beq     :+
         jmp     prompt_input_loop
 
-:       lda     winfo_alert_dialog
+:       lda     winfo_alert_dialog ; Is over this window... but where?
         jsr     set_port_from_window_id
         lda     winfo_alert_dialog
         sta     event_params
@@ -11559,7 +11574,7 @@ dialog_param_addr:
         jsr     set_cursor_insertion_point_with_flag
         jmp     done
 out:    jsr     set_cursor_pointer_with_flag
-done:   jsr     reset_state
+done:   jsr     reset_grafport3a
         jmp     prompt_input_loop
 .endproc
 
@@ -11659,7 +11674,7 @@ check_button_cancel:
         lda     #prompt_button_cancel
 :       rts
 
-LA6ED:  bit     LD8E8
+LA6ED:  bit     has_input_field_flag
         bmi     LA6F7
         lda     #$FF
         jmp     jump_relay
@@ -11788,7 +11803,7 @@ LA7CF:  cmp     #$7E
 
 LA7D8:  ldx     path_buf1
         beq     LA7E5
-LA7DD:  ldx     LD8E8
+LA7DD:  ldx     has_input_field_flag
         beq     LA7E5
         jsr     LBB0B
 LA7E5:  return  #$FF
@@ -11806,17 +11821,17 @@ LA806:  jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::all_button_rect
         return  #prompt_button_all
 
-LA815:  lda     LD8E8
+LA815:  lda     has_input_field_flag
         beq     LA81D
         jsr     LBC5E
 LA81D:  return  #$FF
 
-LA820:  lda     LD8E8
+LA820:  lda     has_input_field_flag
         beq     LA828
         jsr     LBCC9
 LA828:  return  #$FF
 
-LA82B:  lda     LD8E8
+LA82B:  lda     has_input_field_flag
         beq     LA83B
         bit     LD8ED
         bpl     LA838
@@ -11825,7 +11840,7 @@ LA82B:  lda     LD8E8
 LA838:  jsr     LBBA4
 LA83B:  return  #$FF
 
-LA83E:  lda     LD8E8
+LA83E:  lda     has_input_field_flag
         beq     LA84E
         bit     LD8ED
         bpl     LA84B
@@ -11848,7 +11863,7 @@ LA86F:  lda     winfo_alert_dialog
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
         return  #1
 
-LA88D:  lda     LD8E8
+LA88D:  lda     has_input_field_flag
         beq     LA895
         jsr     LBB63
 LA895:  return  #$FF
@@ -11897,7 +11912,7 @@ jump_relay:
         jmp     close
 
 close:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_about_dialog
-        jsr     reset_state
+        jsr     reset_grafport3a
         jsr     set_cursor_pointer_with_flag
         rts
 .endproc
@@ -11928,7 +11943,7 @@ close:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_about_dialog
         jmp     do5
 
 :       lda     #0
-        sta     LD8E8
+        sta     has_input_field_flag
         jsr     open_dialog_window
         addr_call draw_dialog_title, desktop_aux::str_copy_title
         axy_call draw_dialog_label, 1, desktop_aux::str_copy_copying
@@ -11990,7 +12005,7 @@ do2:    ldy     #1
         addr_call draw_text1, str_file_count
         rts
 
-do5:    jsr     reset_state
+do5:    jsr     reset_grafport3a
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_alert_dialog
         jsr     set_cursor_pointer
         rts
@@ -12059,7 +12074,7 @@ LAAB1:  jsr     prompt_input_loop
         jmp     do4
 
 else:   lda     #0
-        sta     LD8E8
+        sta     has_input_field_flag
         jsr     open_dialog_window
         addr_call draw_dialog_title, desktop_aux::str_download
         axy_call draw_dialog_label, 1, desktop_aux::str_copy_copying
@@ -12109,7 +12124,7 @@ do2:    ldy     #$01
         addr_call draw_text1, str_file_count
         rts
 
-do3:    jsr     reset_state
+do3:    jsr     reset_grafport3a
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_alert_dialog
         jsr     set_cursor_pointer
         rts
@@ -12198,7 +12213,7 @@ do1:    ldy     #$01
         yax_call draw_dialog_label, 2, str_file_count
         rts
 
-do3:    jsr     reset_state
+do3:    jsr     reset_grafport3a
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_alert_dialog
         jsr     set_cursor_pointer
         rts
@@ -12240,7 +12255,7 @@ do2:    lda     winfo_alert_dialog
 
 :       sta     LAD1F
         lda     #$00
-        sta     LD8E8
+        sta     has_input_field_flag
         jsr     open_dialog_window
         addr_call draw_dialog_title, desktop_aux::str_delete_title
         lda     LAD1F
@@ -12312,7 +12327,7 @@ LADC4:  jsr     prompt_input_loop
         lda     #$00
 LADF4:  rts
 
-do5:    jsr     reset_state
+do5:    jsr     reset_grafport3a
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_alert_dialog
         jsr     set_cursor_pointer
         rts
@@ -12347,7 +12362,7 @@ LAE42:  cmp     #$40
         jmp     LAF16
 
 LAE49:  lda     #$80
-        sta     LD8E8
+        sta     has_input_field_flag
         jsr     LBD69
         lda     #$00
         jsr     LB509
@@ -12359,7 +12374,7 @@ LAE49:  lda     #$80
         rts
 
 LAE70:  lda     #$80
-        sta     LD8E8
+        sta     has_input_field_flag
         lda     #$00
         sta     LD8E7
         jsr     LBD75
@@ -12423,7 +12438,7 @@ LAEFF:  inx
         ldx     #>path_buf0
         return  #0
 
-LAF16:  jsr     reset_state
+LAF16:  jsr     reset_grafport3a
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_alert_dialog
         jsr     set_cursor_pointer
         return  #1
@@ -12442,7 +12457,7 @@ LAF16:  jsr     reset_state
         jmp     LAFB9
 
 LAF34:  lda     #$00
-        sta     LD8E8
+        sta     has_input_field_flag
         lda     (ptr),y
         lsr     a
         lsr     a
@@ -12475,7 +12490,7 @@ LAF92:  yax_call draw_dialog_label, 3, desktop_aux::str_info_size
 LAF9B:  yax_call draw_dialog_label, 4, desktop_aux::str_info_create
         yax_call draw_dialog_label, 5, desktop_aux::str_info_mod
         yax_call draw_dialog_label, 6, desktop_aux::str_info_type
-        jmp     reset_state
+        jmp     reset_grafport3a
 
 LAFB9:  lda     winfo_alert_dialog
         jsr     set_port_from_window_id
@@ -12513,7 +12528,7 @@ LAFF8:  ldy     row
         bmi     :-
 
         pha
-        jsr     reset_state
+        jsr     reset_grafport3a
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_alert_dialog
         jsr     set_cursor_pointer_with_flag
         pla
@@ -12555,7 +12570,7 @@ row:    .byte   0
         jmp     do4
 
 :       lda     #$00
-        sta     LD8E8
+        sta     has_input_field_flag
         jsr     open_dialog_window
         addr_call draw_dialog_title, desktop_aux::str_lock_title
         yax_call draw_dialog_label, 4, desktop_aux::str_lock_ok
@@ -12618,7 +12633,7 @@ LB0FA:  jsr     prompt_input_loop
         lda     #$00
 LB139:  rts
 
-do4:    jsr     reset_state
+do4:    jsr     reset_grafport3a
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_alert_dialog
         jsr     set_cursor_pointer
         rts
@@ -12646,7 +12661,7 @@ do4:    jsr     reset_state
         jmp     do4
 
 :       lda     #$00
-        sta     LD8E8
+        sta     has_input_field_flag
         jsr     open_dialog_window
         addr_call draw_dialog_title, desktop_aux::str_unlock_title
         yax_call draw_dialog_label, 4, desktop_aux::str_unlock_ok
@@ -12709,7 +12724,7 @@ LB218:  jsr     prompt_input_loop
         lda     #$00
 LB257:  rts
 
-do4:    jsr     reset_state
+do4:    jsr     reset_grafport3a
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_alert_dialog
         jsr     set_cursor_pointer
         rts
@@ -12733,7 +12748,7 @@ LB276:  cmp     #$40
 LB27D:  jsr     LBD75
         jsr     copy_dialog_param_addr_to_ptr
         lda     #$80
-        sta     LD8E8
+        sta     has_input_field_flag
         jsr     LBD69
         lda     #$00
         jsr     LB509
@@ -12779,7 +12794,7 @@ LB2FD:  jsr     prompt_input_loop
         ldx     #$D4
         return  #0
 
-LB313:  jsr     reset_state
+LB313:  jsr     reset_grafport3a
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_alert_dialog
         jsr     set_cursor_pointer
         return  #1
@@ -12849,7 +12864,7 @@ draw_string:
         bmi     :-
 
         pha
-        jsr     reset_state
+        jsr     reset_grafport3a
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_alert_dialog
         jsr     set_cursor_pointer
         pla
@@ -13055,7 +13070,7 @@ LB526:  bit     LD8E7
         bmi     LB537
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::cancel_button_rect
         jsr     draw_cancel_label
-LB537:  jmp     reset_state
+LB537:  jmp     reset_grafport3a
 
 .proc open_dialog_window
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_alert_dialog
@@ -13460,7 +13475,7 @@ click_result:
 
 ;;; ============================================================
 
-.proc LB8F5
+.proc redraw_prompt_insertion_point
         point := $6
         xcoord := $6
         ycoord := $8
@@ -13469,26 +13484,30 @@ click_result:
         stax    xcoord
         copy16  name_input_textpos::ycoord, ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, point
-        MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
-        bit     LD8EB
-        bpl     LB92D
-        MGTK_RELAY_CALL MGTK::SetTextBG, desktop_aux::LAE6C
+        MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
+        bit     prompt_ip_flag
+        bpl     set_flag
+
+clear_flag:
+        MGTK_RELAY_CALL MGTK::SetTextBG, desktop_aux::textbg_black
         lda     #$00
-        sta     LD8EB
-        beq     LB93B
-LB92D:  MGTK_RELAY_CALL MGTK::SetTextBG, desktop_aux::LAE6D
+        sta     prompt_ip_flag
+        beq     draw
+
+set_flag:
+        MGTK_RELAY_CALL MGTK::SetTextBG, desktop_aux::textbg_white
         lda     #$FF
-        sta     LD8EB
+        sta     prompt_ip_flag
 
         drawtext_params := $6
         textptr := $6
         textlen := $8
 
-LB93B:  copy16  #LD8EF, textptr
-        lda     LD8EE
+draw:   copy16  #str_insertion_point+1, textptr
+        lda     str_insertion_point
         sta     textlen
         MGTK_RELAY_CALL MGTK::DrawText, drawtext_params
-        MGTK_RELAY_CALL MGTK::SetTextBG, desktop_aux::LAE6D
+        MGTK_RELAY_CALL MGTK::SetTextBG, desktop_aux::textbg_white
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         rts
@@ -13506,7 +13525,7 @@ LB93B:  copy16  #LD8EF, textptr
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
-        MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
+        MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
         addr_call draw_text1, path_buf1
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
@@ -13636,7 +13655,7 @@ LBADE:  cpx     path_buf2
         jmp     LBADE
 
 LBAEE:  sty     LD3C0+1
-        lda     LD8EF
+        lda     str_insertion_point+1
         sta     LD3C0+2
 LBAF7:  lda     LD3C0+1,y
         sta     path_buf2,y
@@ -13675,7 +13694,7 @@ LBB0B:  sta     LBB62
         stax    xcoord
         copy16  name_input_textpos::ycoord, ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, point
-        MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
+        MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
         addr_call draw_text1, str_1_char
         addr_call draw_text1, path_buf2
         lda     winfo_alert_dialog
@@ -13698,7 +13717,7 @@ LBB63:  lda     path_buf1
         stax    xcoord
         copy16  name_input_textpos::ycoord, ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, point
-        MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
+        MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
         lda     winfo_alert_dialog
@@ -13732,7 +13751,7 @@ LBBBC:  ldx     path_buf1
         stax    xcoord
         copy16  name_input_textpos::ycoord, ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, point
-        MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
+        MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
         lda     winfo_alert_dialog
@@ -13761,7 +13780,7 @@ LBC21:  lda     path_buf2+1,x
         bne     LBC21
 LBC2D:  dec     path_buf2
         MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
-        MGTK_RELAY_CALL MGTK::SetPortBits, setportbits_params3
+        MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
         addr_call draw_text1, path_buf1
         addr_call draw_text1, path_buf2
         addr_call draw_text1, str_2_spaces
@@ -13789,7 +13808,7 @@ LBC80:  lda     path_buf1,x
         sta     path_buf2+1,x
         dex
         bne     LBC80
-        lda     LD8EF
+        lda     str_insertion_point+1
         sta     path_buf2+1
         inc     path_buf1
         lda     path_buf1
@@ -13903,9 +13922,9 @@ LBD33:  rts
 
 ;;; ============================================================
 
-LBD69:  lda     #$01
+LBD69:  lda     #1
         sta     path_buf2
-        lda     LD8EF
+        lda     str_insertion_point+1
         sta     path_buf2+1
         rts
 
@@ -14084,7 +14103,7 @@ set_fill_white:
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         rts
 
-reset_state:
+reset_grafport3a:
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
