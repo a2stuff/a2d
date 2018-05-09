@@ -28,6 +28,8 @@ New desk accessories:
   * Visual distractions.
 * [Melt](melt.s)
   * Visual distractions.
+* [Find Files](find.files.s)
+  * Search a directory and descendants for filenames. Use ? and * as wildcards.
 
 Note that the new desk accessories require an updated version of Apple II DeskTop and **will not work** with DeskTop 1.1 or MouseDesk.
 

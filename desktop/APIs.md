@@ -190,7 +190,15 @@ Output: A,X = address of path (length-prefixed).
 
 Toggle hilite on last clicked menu. This should be used by a desk accessory that repaints the entire screen including the menu bar, since when the desk accessory exits the menu used to invoke it (Apple or File) will toggle.
 
+#### `JUMP_TABLE_ADJUST_FILEENTRY` ($405D) *
 
+Adjust case in FileEntry structure. If GS/OS filename bits are set, those are used. If the file type is an AppleWorks file, the auxtype bits are used. Otherwise, case is inferred.
+
+Input: A,X = FileEntry structure.
+
+#### `JUMP_TABLE_CUR_IBEAM` ($4060) *
+
+Changes mouse cursor to I-beam.
 
 
 <!-- ============================================================ -->

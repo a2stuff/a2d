@@ -62,7 +62,7 @@ JUMP_TABLE_ALERT_0      := $4030 ; Show alert (A=err code, default options)
 JUMP_TABLE_ALERT_X      := $4033 ; Show alert X (A=err code, X=options)
 JUMP_TABLE_LAUNCH_FILE  := $4036 ; Launch file
 JUMP_TABLE_CUR_POINTER  := $4039 ; Changes mouse cursor to pointer *
-JUMP_TABLE_CUR_WATCH    := $403C ; Changes mouse cursor to watch
+JUMP_TABLE_CUR_WATCH    := $403C ; Changes mouse cursor to watch *
 JUMP_TABLE_RESTORE_OVL  := $403F ; Restore from overlay routine
 JUMP_TABLE_COLOR_MODE   := $4042 ; Set DHR color mode (IIgs, AppleColor, Le Chat Mauve) *
 JUMP_TABLE_MONO_MODE    := $4045 ; Set DHR mono mode (IIgs, AppleColor, Le Chat Mauve) *
@@ -73,6 +73,9 @@ JUMP_TABLE_GET_SEL_ICON := $4051 ; Get selected IconEntry address (in: A=index, 
 JUMP_TABLE_GET_SEL_WIN  := $4054 ; Get window containing selection (out: A=window_id, 0 if none) *
 JUMP_TABLE_GET_WIN_PATH := $4057 ; Get path to window (in: A=window_id; out: A,X=path address) *
 JUMP_TABLE_HILITE_MENU  := $405A ; Toggle hilite on last clicked menu *
+JUMP_TABLE_ADJUST_FILEENTRY := $405D ; Adjust case in FileEntry structure (in: A,X=FileEntry) *
+JUMP_TABLE_CUR_IBEAM    := $4060 ; Changes mouse cursor to I-beam *
+
 
 ;;; ============================================================
 ;;; Overlay routines, for JUMP_TABLE_LOAD_OVL

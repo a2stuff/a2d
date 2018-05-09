@@ -19,7 +19,7 @@ dst_path_buf   := $1FC0
         ;; "Exported" by desktop.inc
 
 JT_MAIN_LOOP:           jmp     main_loop
-JT_MGTK_RELAY:          jmp     MGTK_RELAY
+JT_MGTK_RELAY:          jmp     MGTK_RELAY              ; *
 JT_SIZE_STRING:         jmp     compose_blocks_string
 JT_DATE_STRING:         jmp     compose_date_string
 JT_SELECT_WINDOW:       jmp     select_and_refresh_window
@@ -28,17 +28,17 @@ JT_EJECT:               jmp     cmd_eject
 JT_REDRAW_WINDOWS:      jmp     redraw_windows          ; *
 JT_ITK_RELAY:           jmp     ITK_RELAY
 JT_LOAD_OVL:            jmp     load_dynamic_routine
-JT_CLEAR_SELECTION:     jmp     clear_selection         ; *
+JT_CLEAR_SELECTION:     jmp     clear_selection
 JT_MLI_RELAY:           jmp     MLI_RELAY               ; *
 JT_COPY_TO_BUF:         jmp     LoadWindowIconTable
 JT_COPY_FROM_BUF:       jmp     StoreWindowIconTable
 JT_NOOP:                jmp     cmd_noop
 JT_FILE_TYPE_STRING:    jmp     compose_file_type_string
 JT_SHOW_ALERT0:         jmp     ShowAlert
-JT_SHOW_ALERT:          jmp     ShowAlertOption
+JT_SHOW_ALERT:          jmp     ShowAlertOption         ; *
 JT_LAUNCH_FILE:         jmp     launch_file
 JT_CUR_POINTER:         jmp     set_cursor_pointer      ; *
-JT_CUR_WATCH:           jmp     set_cursor_watch
+JT_CUR_WATCH:           jmp     set_cursor_watch        ; *
 JT_RESTORE_OVL:         jmp     restore_dynamic_routine
 JT_COLOR_MODE:          jmp     set_color_mode          ; *
 JT_MONO_MODE:           jmp     set_mono_mode           ; *
@@ -49,8 +49,10 @@ JT_GET_SEL_ICON:        jmp     get_selected_icon       ; *
 JT_GET_SEL_WIN:         jmp     get_selection_window    ; *
 JT_GET_WIN_PATH:        jmp     get_window_path         ; *
 JT_HILITE_MENU:         jmp     toggle_menu_hilite      ; *
+JT_ADJUST_FILEENTRY:    jmp     adjust_fileentry_case   ; *
+JT_CUR_IBEAM:           jmp     set_cursor_ibeam        ; *
         .assert JUMP_TABLE_MAIN_LOOP = JT_MAIN_LOOP, error, "Jump table mismatch"
-        .assert JUMP_TABLE_REDRAW_ALL = JT_REDRAW_ALL, error, "Jump table mismatch"
+        .assert JUMP_TABLE_CUR_IBEAM = JT_CUR_IBEAM, error, "Jump table mismatch"
 
         ;; Main Loop
 .proc main_loop
@@ -1551,12 +1553,13 @@ prefix_length:
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, path
 
 str_desk_acc:
-        PASCAL_STRING "Desk.acc/"
+        PASCAL_STRING "Desk.Acc/"
 
 start:  jsr     reset_main_grafport
         jsr     set_cursor_watch
 
         ;; Get current prefix
+        ;; TODO: Case adjust this?
         MLI_RELAY_CALL GET_PREFIX, get_prefix_params
 
         ;; Find DA name
