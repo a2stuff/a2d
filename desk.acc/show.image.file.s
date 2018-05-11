@@ -619,7 +619,8 @@ cloop:  lda     (src),y
         ;; Apple IIgs - DHR Color
         jsr     test_iigs
         bcs     done
-        lda     #%00000000
+        lda     NEWVIDEO
+        and     #<~(1<<5)        ; Color
         sta     NEWVIDEO
 
 done:   rts
@@ -638,7 +639,8 @@ done:   rts
         ;; Apple IIgs - DHR B&W
         jsr     test_iigs
         bcs     done
-        lda     #%00100000
+        lda     NEWVIDEO
+        ora     #(1<<5)         ; B&W
         sta     NEWVIDEO
 
 done:   rts
