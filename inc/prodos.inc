@@ -331,16 +331,16 @@ int_num:        .byte   0
 .endproc
 .endmacro
 
-.macro DEFINE_QUIT_PARAMS name, arg1, arg2
+.macro DEFINE_QUIT_PARAMS name, ext, pathname
 .proc name
 param_count:    .byte   4
-    .ifnblank arg1
-        .byte   arg1
+    .ifnblank ext
+        .byte   ext
     .else
         .byte   0
     .endif
-    .ifnblank arg2
-        .word   arg2
+    .ifnblank pathname
+        .word   pathname
     .else
         .word   0
     .endif

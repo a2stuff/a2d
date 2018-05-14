@@ -39,6 +39,7 @@ prefix_length:
 bs_path:
         PASCAL_STRING "BASIC.SYSTEM"
 
+        ;; $EE = extended call signature for IIgs/GS/OS variation.
         DEFINE_QUIT_PARAMS quit_params, $EE, FILENAME
 
 ;;; ============================================================
