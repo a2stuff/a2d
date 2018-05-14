@@ -1520,11 +1520,11 @@ L606D:  lda     winfo_entrydlg_file_picker
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::PaintRect, winfo_entrydlg_file_picker_cliprect
         lda     #$10
-        sta     pos_D917
+        sta     picker_entry_pos
         lda     #$08
-        sta     pos_D917+2
+        sta     picker_entry_pos+2
         lda     #$00
-        sta     pos_D917+3
+        sta     picker_entry_pos+3
         sta     L6128
 L608E:  lda     L6128
         cmp     $177F
@@ -1533,7 +1533,7 @@ L608E:  lda     L6128
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
 
-L60A9:  MGTK_RELAY_CALL MGTK::MoveTo, pos_D917
+L60A9:  MGTK_RELAY_CALL MGTK::MoveTo, picker_entry_pos
         ldx     L6128
         lda     $1780,x
         and     #$7F
@@ -1559,11 +1559,11 @@ L60A9:  MGTK_RELAY_CALL MGTK::MoveTo, pos_D917
         lda     $1780,x
         bpl     L60FF
         lda     #$01
-        sta     pos_D917
-        MGTK_RELAY_CALL MGTK::MoveTo, pos_D917
+        sta     picker_entry_pos
+        MGTK_RELAY_CALL MGTK::MoveTo, picker_entry_pos
         addr_call draw_string, str_folder
         lda     #$10
-        sta     pos_D917
+        sta     picker_entry_pos
 L60FF:  lda     L6128
         cmp     $D920
         bne     L6110
@@ -1571,7 +1571,7 @@ L60FF:  lda     L6128
         lda     winfo_entrydlg_file_picker
         jsr     L62C8
 L6110:  inc     L6128
-        add16   pos_D917+2, #8, pos_D917+2
+        add16   picker_entry_pos+2, #8, picker_entry_pos+2
         jmp     L608E
 
 L6127:  .byte   0

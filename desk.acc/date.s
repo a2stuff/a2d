@@ -233,14 +233,14 @@ vthumbpos:  .byte   0
 status:     .byte       0
 reserved:       .byte   0
 mincontwidth:     .word   100
-maxcontwidth:     .word   100
-mincontlength:     .word   $1F4
-maxcontlength:     .word   $1F4
+mincontlength:     .word   100
+maxcontwidth:     .word   500
+maxcontlength:     .word   500
 port:
 viewloc:        DEFINE_POINT 180, 50
 mapbits:   .addr   MGTK::screen_mapbits
 mapwidth: .word   MGTK::screen_mapwidth
-cliprect:       DEFINE_RECT 0, 0, $C7, $40
+cliprect:       DEFINE_RECT 0, 0, 199, 64
 pattern:.res    8,$00
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc: DEFINE_POINT 0, 0

@@ -431,8 +431,8 @@ Menu record:
 .byte       status
 .byte       reserved
 .word       mincontwidth    minimum content size (horizontal)
-.word       maxcontwidth    maximum content size (horizontal)
 .word       mincontlength   minimum content size (vertical)
+.word       maxcontwidth    maximum content size (horizontal)
 .word       maxcontlength   maximum content size (vertical)
 GrafPort    windowport      GrafPort record
 .addr       nextwinfo       address of next lower window in stack

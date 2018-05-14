@@ -217,8 +217,8 @@ vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   150
-maxcontwidth:   .word   50
-mincontlength:  .word   500
+mincontlength:  .word   50
+maxcontwidth:   .word   500
 maxcontlength:  .word   140
 port:
 viewloc:        DEFINE_POINT 25, 20
@@ -249,8 +249,8 @@ vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   100
-maxcontwidth:   .word   50
-mincontlength:  .word   150
+mincontlength:  .word   50
+maxcontwidth:   .word   150
 maxcontlength:  .word   150
 port:
 viewloc:        DEFINE_POINT 45, 50

@@ -112,6 +112,16 @@ DESKTOP_RELAY   := $D040
     .endif
 .endmacro
 
+;;; ============================================================
+;;; Internals
+
+;;; Set to specific machine type; used for insertion point blinking
+;;; and double-click timing.
+;;; //e  - $96
+;;; //c  - $FA
+;;; IIgs - $FD
+
+machine_speed := $D2AB
 
 ;;; ============================================================
 ;;; Internals - Windows (paths) and Icons (files)
@@ -205,6 +215,7 @@ DEFAULT_FONT := $8800
 GLYPH_FOLDERL := $01
 GLYPH_FOLDERR := $02
 
+GLYPH_SPC     := $00
 GLYPH_INSPT   := $06
 
 GLYPH_LARROW := $09

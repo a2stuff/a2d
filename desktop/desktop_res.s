@@ -358,8 +358,8 @@ vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   150
-maxcontwidth:   .word   50
-mincontlength:  .word   500
+mincontlength:  .word   50
+maxcontwidth:   .word   500
 maxcontlength:  .word   140
 port:
 viewloc:        DEFINE_POINT 75, 35
@@ -392,8 +392,8 @@ vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   150
-maxcontwidth:   .word   50
-mincontlength:  .word   500
+mincontlength:  .word   50
+maxcontwidth:   .word   500
 maxcontlength:  .word   140
 port:
 viewloc:        DEFINE_POINT 25, 20
@@ -426,8 +426,8 @@ vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   100
-maxcontwidth:   .word   70
-mincontlength:  .word   100
+mincontlength:  .word   70
+maxcontwidth:   .word   100
 maxcontlength:  .word   70
 port:
 viewloc:        DEFINE_POINT 53, 50
@@ -462,8 +462,8 @@ vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   150
-maxcontwidth:   .word   50
-mincontlength:  .word   500
+mincontlength:  .word   50
+maxcontwidth:   .word   500
 maxcontlength:  .word   140
 port:
 viewloc:        DEFINE_POINT (screen_width - width) / 2, 40
@@ -499,8 +499,8 @@ vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   150
-maxcontwidth:   .word   50
-mincontlength:  .word   500
+mincontlength:  .word   50
+maxcontwidth:   .word   500
 maxcontlength:  .word   140
 port:
 viewloc:        DEFINE_POINT (screen_width - width) / 2, 25
@@ -686,7 +686,7 @@ pos_D90B:
 rect_D90F:
         DEFINE_RECT 0,0,125,0
 
-pos_D917:
+picker_entry_pos:
         DEFINE_POINT 2,0
 
         .byte   $00,$00
@@ -1181,8 +1181,8 @@ vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   170
-maxcontwidth:   .word   50
-mincontlength:  .word   545
+mincontlength:  .word   50
+maxcontwidth:   .word   545
 maxcontlength:  .word   175
 port:
 viewloc:        DEFINE_POINT 20, 27
