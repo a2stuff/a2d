@@ -1,3 +1,12 @@
+;;; ============================================================
+;;; DeskTop - Resources
+;;;
+;;; Compiled as part of desktop.s via desktop_lc.s
+;;;
+;;; Also compiled via desktop_res_builder.s to extract
+;;; addresses and build desktop_res.inc used by overlays
+;;; ============================================================
+
         .assert * = $D200, error, "Addr mismatch"
 
 pencopy:        .byte   0

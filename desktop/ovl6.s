@@ -11,24 +11,24 @@
 
 L7000:  jsr     common_overlay::create_common_dialog
         jsr     L704D
-        jsr     common_overlay::L5E87
+        jsr     common_overlay::device_on_line
         jsr     common_overlay::L5F5B
         jsr     common_overlay::L6161
         jsr     common_overlay::L61B1
         jsr     common_overlay::L606D
         jsr     L7026
-        jsr     common_overlay::L6D30
-        jsr     common_overlay::L6D27
+        jsr     common_overlay::jt_06
+        jsr     common_overlay::jt_03
         lda     #$FF
         sta     $D8EC
         jmp     common_overlay::L5106
 
-L7026:  ldx     L7086
-L7029:  lda     L7087,x
-        sta     $6D1E,x
+L7026:  ldx     jump_table_entries
+L7029:  lda     jump_table_entries+1,x
+        sta     common_overlay::jump_table,x
         dex
-        lda     L7087,x
-        sta     $6D1E,x
+        lda     jump_table_entries+1,x
+        sta     common_overlay::jump_table,x
         dex
         dex
         bpl     L7029
@@ -45,27 +45,28 @@ L704D:  lda     winfo_entrydlg
         jsr     common_overlay::L62C8
         addr_call common_overlay::L5E0A, delete_a_file_label
         addr_call common_overlay::L5E57, file_to_delete_label
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; penXOR
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, common_input1_rect
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
 
-L7086:  .byte $29               ; length of the following data block
-L7087:  entry 0, L70B1
-        entry 0, L70EA
-        entry 0, $6593
-        entry 0, $664E
-        entry 0, $6DC2
-        entry 0, $6DD0
-        entry 0, $6E1D
-        entry 0, $69C6
-        entry 0, $6A18
-        entry 0, $6A53
-        entry 0, $6AAC
-        entry 0, $6B01
-        entry 0, $6B44
-        entry 0, $66D8
+jump_table_entries:
+        .byte $29               ; length of the following data block
+        jump_table_entry L70B1
+        jump_table_entry L70EA
+        jump_table_entry $6593
+        jump_table_entry $664E
+        jump_table_entry $6DC2
+        jump_table_entry $6DD0
+        jump_table_entry $6E1D
+        jump_table_entry $69C6
+        jump_table_entry $6A18
+        jump_table_entry $6A53
+        jump_table_entry $6AAC
+        jump_table_entry $6B01
+        jump_table_entry $6B44
+        jump_table_entry $66D8
 
 
 L70B1:  addr_call common_overlay::L647C, path_buf0

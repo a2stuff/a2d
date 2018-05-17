@@ -11,24 +11,24 @@
 
 L7000:  jsr     common_overlay::create_common_dialog
         jsr     L7052
-        jsr     common_overlay::L5E87
+        jsr     common_overlay::device_on_line
         jsr     common_overlay::L5F5B
         jsr     common_overlay::L6161
         jsr     common_overlay::L61B1
         jsr     common_overlay::L606D
         jsr     L7026
-        jsr     common_overlay::L6D30
-        jsr     common_overlay::L6D27
+        jsr     common_overlay::jt_06
+        jsr     common_overlay::jt_03
         lda     #$FF
         sta     $D8EC
         jmp     common_overlay::L5106
 
-L7026:  ldx     L709B
-L7029:  lda     L709B+1,x
-        sta     $6D1E,x
+L7026:  ldx     jump_table_entries
+L7029:  lda     jump_table_entries+1,x
+        sta     common_overlay::jump_table,x
         dex
-        lda     L709B+1,x
-        sta     $6D1E,x
+        lda     jump_table_entries+1,x
+        sta     common_overlay::jump_table,x
         dex
         dex
         bpl     L7029
@@ -55,39 +55,39 @@ L7052:  lda     winfo_entrydlg
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
 
-L709B:  .byte   $29             ; length of following data block
-        entry   0, L70F1
-        entry   0, L71D8
+jump_table_entries:
+        .byte   $29             ; length of following data block
+        jump_table_entry L70F1
+        jump_table_entry L71D8
+        jump_table_entry $6593
+        jump_table_entry $664E
+        jump_table_entry $6DC2
+        jump_table_entry $6DD0
+        jump_table_entry $6E1D
+        jump_table_entry $69C6
+        jump_table_entry $6A18
+        jump_table_entry $6A53
+        jump_table_entry $6AAC
+        jump_table_entry $6B01
+        jump_table_entry $6B44
+        jump_table_entry $66D8
 
-        entry   0, $6593
-        entry   0, $664E
-        entry   0, $6DC2
-        entry   0, $6DD0
-        entry   0, $6E1D
-        entry   0, $69C6
-        entry   0, $6A18
-        entry   0, $6A53
-        entry   0, $6AAC
-        entry   0, $6B01
-        entry   0, $6B44
-        entry   0, $66D8
-
-L70C6:  .byte   $29             ; length of following data block
-        entry   0, L7189
-        entry   0, L71F9
-
-        entry   0, $65F0
-        entry   0, $6693
-        entry   0, $6DC9
-        entry   0, $6DD4
-        entry   0, $6E31
-        entry   0, $6B72
-        entry   0, $6BC4
-        entry   0, $6BFF
-        entry   0, $6C58
-        entry   0, $6CAD
-        entry   0, $6CF0
-        entry   0, $684F
+jump_table2_entries:
+        .byte   $29        ; length of following data block
+        jump_table_entry L7189
+        jump_table_entry L71F9
+        jump_table_entry $65F0
+        jump_table_entry $6693
+        jump_table_entry $6DC9
+        jump_table_entry $6DD4
+        jump_table_entry $6E31
+        jump_table_entry $6B72
+        jump_table_entry $6BC4
+        jump_table_entry $6BFF
+        jump_table_entry $6C58
+        jump_table_entry $6CAD
+        jump_table_entry $6CF0
+        jump_table_entry $684F
 
 ;;; ============================================================
 
@@ -95,13 +95,13 @@ L70F1:  lda     #1
         sta     path_buf2
         lda     #$20
         sta     path_buf2+1
-        jsr     common_overlay::L6D27
+        jsr     common_overlay::jt_03
 
-        ldx     L70C6
-:       lda     L70C6+1,x
+        ldx     jump_table2_entries
+:       lda     jump_table2_entries+1,x
         sta     $6D1E,x
         dex
-        lda     L70C6+1,x
+        lda     jump_table2_entries+1,x
         sta     $6D1E,x
         dex
         dex
@@ -114,7 +114,7 @@ L70F1:  lda     #1
         sta     $D921
         lda     #$FF
         sta     $D920
-        jsr     common_overlay::L5E87
+        jsr     common_overlay::device_on_line
         jsr     common_overlay::L5F5B
         jsr     common_overlay::L6161
         jsr     common_overlay::L61B1
@@ -149,7 +149,7 @@ L7165:  cpx     path_buf0
         iny
         jmp     L7165
 
-L7178:  jsr     common_overlay::L6D27
+L7178:  jsr     common_overlay::jt_03
         lda     $D8F0
         sta     $D8F1
         lda     $D8F2
@@ -200,12 +200,12 @@ L71F9:  lda     #1
         sta     path_buf2
         lda     #' '
         sta     path_buf2+1
-        jsr     common_overlay::L6D27
-        ldx     L709B
-L7209:  lda     L709B+1,x
+        jsr     common_overlay::jt_03
+        ldx     jump_table_entries
+L7209:  lda     jump_table_entries+1,x
         sta     $6D1E,x
         dex
-        lda     L709B+1,x
+        lda     jump_table_entries+1,x
         sta     $6D1E,x
         dex
         dex
@@ -234,19 +234,19 @@ L7209:  lda     L709B+1,x
         jsr     common_overlay::L5F49
         bit     $D8F0
         bpl     L726D
-        jsr     common_overlay::L5E87
+        jsr     common_overlay::device_on_line
         lda     #0
         jsr     common_overlay::L6227
         jsr     common_overlay::L5F5B
         jsr     common_overlay::L6161
         jsr     common_overlay::L61B1
         jsr     common_overlay::L606D
-        jsr     common_overlay::L6D27
+        jsr     common_overlay::jt_03
         jmp     L7295
 
 L726D:  lda     $5028
         bne     L7281
-L7272:  jsr     common_overlay::L5E87
+L7272:  jsr     common_overlay::device_on_line
         lda     #$00
         jsr     common_overlay::L6227
         jsr     common_overlay::L5F5B

@@ -9,9 +9,9 @@
         .include "../macros.inc"
         .include "out/desktop_res.inc"
 
-.macro entry arg1, arg2
-        .byte arg1
-        .addr arg2
+.macro jump_table_entry addr
+        .byte 0
+        .addr addr
 .endmacro
 
         dummy1234 := $1234

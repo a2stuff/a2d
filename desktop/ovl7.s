@@ -14,7 +14,7 @@ L7000:  stx     L73A9
         jsr     common_overlay::create_common_dialog
         jsr     L7101
         jsr     L70AD
-        jsr     common_overlay::L5E87
+        jsr     common_overlay::device_on_line
         lda     path_buf0
         beq     L7056
         addr_call common_overlay::L6129, path_buf0
@@ -54,9 +54,9 @@ L706A:  jsr     common_overlay::L6163
         jsr     common_overlay::L606D
         lda     path_buf0
         bne     L707B
-        jsr     common_overlay::L6D30
+        jsr     common_overlay::jt_06
 L707B:  copy16  #$2001, path_buf2
-        jsr     common_overlay::L6D27
+        jsr     common_overlay::jt_03
         jsr     common_overlay::L6693
         copy16  #$2001, path_buf2
         lda     #$FF
@@ -70,12 +70,12 @@ L709D:  .res 16, 0
 ;;; ============================================================
 
 
-L70AD:  ldx     L7207
-L70B0:  lda     L7207+1,x
-        sta     $6D1E,x
+L70AD:  ldx     jump_table_entries
+L70B0:  lda     jump_table_entries+1,x
+        sta     common_overlay::jump_table,x
         dex
-        lda     L7207+1,x
-        sta     $6D1E,x
+        lda     jump_table_entries+1,x
+        sta     common_overlay::jump_table,x
         dex
         dex
         bpl     L70B0
@@ -144,47 +144,47 @@ L711D:  addr_call common_overlay::L5E6F, enter_the_full_pathname_label2
 
         .byte   $00
 
-L7207:  .byte   $29
-        entry   0, $725D
-        entry   0, $732F
-        entry   0, $6593
-        entry   0, $664E
-        entry   0, $6DC2
-        entry   0, $6DD0
-        entry   0, $6E1D
-        entry   0, $69C6
-        entry   0, $6A18
-        entry   0, $6A53
-        entry   0, $6AAC
-        entry   0, $6B01
-        entry   0, $6B44
-        entry   0, $66D8
+jump_table_entries:  .byte   $29
+        jump_table_entry $725D
+        jump_table_entry $732F
+        jump_table_entry $6593
+        jump_table_entry $664E
+        jump_table_entry $6DC2
+        jump_table_entry $6DD0
+        jump_table_entry $6E1D
+        jump_table_entry $69C6
+        jump_table_entry $6A18
+        jump_table_entry $6A53
+        jump_table_entry $6AAC
+        jump_table_entry $6B01
+        jump_table_entry $6B44
+        jump_table_entry $66D8
 
-L7232:  .byte   $29
-        entry   0, $72CD
-        entry   0, $736C
-        entry   0, $65F0
-        entry   0, $6693
-        entry   0, $6DC9
-        entry   0, $6DD4
-        entry   0, $6E31
-        entry   0, $6B72
-        entry   0, $6BC4
-        entry   0, $6BFF
-        entry   0, $6C58
-        entry   0, $6CAD
-        entry   0, $6CF0
-        entry   0, $684F
+jump_table2_entries:  .byte   $29
+        jump_table_entry $72CD
+        jump_table_entry $736C
+        jump_table_entry $65F0
+        jump_table_entry $6693
+        jump_table_entry $6DC9
+        jump_table_entry $6DD4
+        jump_table_entry $6E31
+        jump_table_entry $6B72
+        jump_table_entry $6BC4
+        jump_table_entry $6BFF
+        jump_table_entry $6C58
+        jump_table_entry $6CAD
+        jump_table_entry $6CF0
+        jump_table_entry $684F
 
 ;;; ============================================================
 
         copy16  #$2001, path_buf2
-        jsr     common_overlay::L6D27
-        ldx     L7232
-L726D:  lda     L7232+1,x
+        jsr     common_overlay::jt_03
+        ldx     jump_table2_entries
+L726D:  lda     jump_table2_entries+1,x
         sta     $6D1E,x
         dex
-        lda     L7232+1,x
+        lda     jump_table2_entries+1,x
         sta     $6D1E,x
         dex
         dex
@@ -218,7 +218,7 @@ L72AF:  iny
         bne     L72AF
         sty     path_buf1
 L72BF:  copy16  #$0601, path_buf2
-        jsr     common_overlay::L6D27
+        jsr     common_overlay::jt_03
         rts
 
         addr_call common_overlay::L647C, path_buf0
@@ -263,18 +263,18 @@ L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         return  #$FF
 
         copy16  #$2001, path_buf2
-        jsr     common_overlay::L6D27
-        ldx     L7207
-L737C:  lda     L7207+1,x
+        jsr     common_overlay::jt_03
+        ldx     jump_table_entries
+L737C:  lda     jump_table_entries+1,x
         sta     $6D1E,x
         dex
-        lda     L7207+1,x
+        lda     jump_table_entries+1,x
         sta     $6D1E,x
         dex
         dex
         bpl     L737C
         copy16  #$0601, path_buf2
-        jsr     common_overlay::L6D27
+        jsr     common_overlay::jt_03
         lda     #$00
         sta     $5105
         sta     $51AE

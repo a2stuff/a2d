@@ -19,7 +19,7 @@ L5000:  jmp     L50B1
         DEFINE_CLOSE_PARAMS close_params
 
 on_line_buffer: .res    16, 0
-L5027:  .byte   $00
+device_num:  .byte   $00        ; next device number to try
 path_buf:       .res    128, 0
 L50A8:  .byte   $00
 L50A9:  .byte   $00
@@ -36,7 +36,7 @@ routine_table:  .addr   $7000, $7000, $7000
         stx     stash_stack
         pha
         lda     #0
-        sta     L5027
+        sta     device_num
         sta     L50A8
         sta     prompt_ip_flag
         sta     LD8EC
@@ -77,7 +77,7 @@ L5106:  bit     LD8EC
         bpl     :+
         dec     $D8E9
         bne     :+
-        jsr     L6D24
+        jsr     jt_02
         lda     #$14
         sta     $D8E9
 :       MGTK_RELAY_CALL MGTK::GetEvent, event_params
@@ -209,8 +209,8 @@ L52AD:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
         jsr     L56F6
         bmi     L52CA
-        jsr     L6D42
-        jsr     L6D1E
+        jsr     jt_12
+        jsr     jt_00
 L52CA:  jmp     L5308
 
 L52CD:  MGTK_RELAY_CALL MGTK::InRect, common_cancel_button_rect
@@ -222,14 +222,14 @@ L52DD:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_cancel_button_rect
         jsr     L5802
         bmi     L52F7
-        jsr     L6D21
+        jsr     jt_01
 L52F7:  jmp     L5308
 
 L52FA:  bit     L5103
         bpl     L5304
         jsr     L531B
         bmi     L5308
-L5304:  jsr     L6D45
+L5304:  jsr     jt_13
         rts
 
 L5308:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
@@ -277,7 +277,7 @@ L5386:  ldx     $D920
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
-        jsr     L6D1E
+        jsr     jt_00
         jmp     L5340
 
 L53B5:  and     #$7F
@@ -327,18 +327,18 @@ L542F:  lda     screentowindow_windowy
 
 L5438:  lda     $D920
         bmi     L5446
-        jsr     L6D2A
+        jsr     jt_04
         lda     $D920
         jsr     L6274
 L5446:  lda     screentowindow_windowy
         sta     $D920
         bit     $D8F0
         bpl     L5457
-        jsr     L6D30
-        jsr     L6D27
+        jsr     jt_06
+        jsr     jt_03
 L5457:  lda     $D920
         jsr     L6274
-        jsr     L6D2D
+        jsr     jt_05
         jsr     L5C4F
         bmi     L5468
         jmp     L5386
@@ -517,7 +517,7 @@ L5607:  ldx     $D920
         pha
         bit     $D8F0
         bpl     L5618
-        jsr     L6D30
+        jsr     jt_06
 L5618:  lda     #$00
         sta     L565B
         copy16  #$1800, $08
@@ -550,16 +550,16 @@ L5618:  lda     #$00
 L565B:  .byte   0
 L565C:  lda     #$FF
         sta     $D920
-        jsr     L5EB8
-        jsr     L5E87
+        jsr     inc_device_num
+        jsr     device_on_line
         jsr     L5F5B
         jsr     L6161
         lda     #$00
         jsr     L6227
         jsr     L61B1
         jsr     L606D
-        jsr     L6D30
-        jsr     L6D27
+        jsr     jt_06
+        jsr     jt_03
         rts
 
 L567F:  lda     #$00
@@ -595,14 +595,14 @@ L56A2:  jsr     L5F49
         sta     $D920
         bit     L56E2
         bmi     L56D6
-        jsr     L6D2A
+        jsr     jt_04
         lda     $D920
         bmi     L56DC
-        jsr     L6D2A
+        jsr     jt_04
         jmp     L56DC
 
-L56D6:  jsr     L6D30
-        jsr     L6D27
+L56D6:  jsr     jt_06
+        jsr     jt_03
 L56DC:  lda     #$FF
         sta     $D920
 L56E1:  rts
@@ -830,11 +830,11 @@ L59B9:  lda     event_modifiers
         and     #$7F
         cmp     #CHAR_LEFT
         bne     L59CA
-        jmp     L6D3F
+        jmp     jt_11
 
 L59CA:  cmp     #CHAR_RIGHT
         bne     L59D1
-        jmp     L6D42
+        jmp     jt_12
 
 L59D1:  bit     L5105
         bmi     L59E4
@@ -860,11 +860,11 @@ L59F7:  lda     event_key
         and     #$7F
         cmp     #CHAR_LEFT
         bne     L5A03
-        jmp     L6D39
+        jmp     jt_09
 
 L5A03:  cmp     #CHAR_RIGHT
         bne     L5A0A
-        jmp     L6D3C
+        jmp     jt_10
 
 L5A0A:  cmp     #CHAR_RETURN
         bne     L5A11
@@ -927,7 +927,7 @@ L5ABD:  cmp     #$0B
         bne     L5AC4
         jmp     L5B4C
 
-L5AC4:  jsr     L6D33
+L5AC4:  jsr     jt_07
         rts
 
 L5AC8:  jsr     L56E3
@@ -938,8 +938,8 @@ L5ACC:  lda     winfo_entrydlg
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
-        jsr     L6D42
-        jsr     L6D1E
+        jsr     jt_12
+        jsr     jt_00
         jsr     L56E3
         rts
 
@@ -948,11 +948,11 @@ L5AF7:  lda     winfo_entrydlg
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_cancel_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, common_cancel_button_rect
-        jsr     L6D21
+        jsr     jt_01
         jsr     L56E3
         rts
 
-L5B1F:  jsr     L6D36
+L5B1F:  jsr     jt_08
         rts
 
 L5B23:  jmp     L59B8
@@ -968,7 +968,7 @@ L5B26:  lda     $177F
 L5B37:  rts
 
 L5B38:  jsr     L6274
-        jsr     L6D2A
+        jsr     jt_04
         inc     $D920
         lda     $D920
         jmp     L5C2F
@@ -984,7 +984,7 @@ L5B4C:  lda     $177F
 L5B58:  rts
 
 L5B59:  jsr     L6274
-        jsr     L6D2A
+        jsr     jt_04
         dec     $D920
         lda     $D920
         jmp     L5C2F
@@ -1013,7 +1013,7 @@ L5B83:  jsr     L5B9D
         lda     $D920
         bmi     L5B99
         jsr     L6274
-        jsr     L6D2A
+        jsr     jt_04
 L5B99:  pla
         jmp     L5C2F
 
@@ -1070,7 +1070,7 @@ L5BF6:  lda     $177F
 L5C02:  rts
 
 L5C03:  jsr     L6274
-        jsr     L6D2A
+        jsr     jt_04
 L5C09:  lda     #$00
         jmp     L5C2F
 
@@ -1086,14 +1086,14 @@ L5C1E:  rts
 L5C1F:  dex
         txa
         jsr     L6274
-        jsr     L6D2A
+        jsr     jt_04
 L5C27:  ldx     $177F
         dex
         txa
         jmp     L5C2F
 
 L5C2F:  sta     $D920
-        jsr     L6D2D
+        jsr     jt_05
         lda     $D920
         jsr     L6586
         jsr     L6163
@@ -1102,7 +1102,7 @@ L5C2F:  sta     $D920
         copy    #1, path_buf2
         copy    #' ', path_buf2+1
 
-        jsr     L6D27
+        jsr     jt_03
         rts
 
 L5C4F:  ldx     #3
@@ -1309,7 +1309,8 @@ L5E6F:  jsr     copy_string_to_lcbuf
 
 ;;; ============================================================
 
-L5E87:  ldx     L5027
+.proc device_on_line
+:       ldx     device_num
         lda     DEVLST,x
         and     #$F0
         sta     on_line_params::unit_num
@@ -1317,29 +1318,37 @@ L5E87:  ldx     L5027
         lda     on_line_buffer
         and     #$0F
         sta     on_line_buffer
-        bne     L5EAB
-        jsr     L5EB8
-        jmp     L5E87
+        bne     found
+        jsr     inc_device_num
+        jmp     :-
 
-L5EAB:  lda     #$00
+found:  lda     #0
         sta     path_buf
         addr_call L5F0D, on_line_buffer
         rts
+.endproc
 
-L5EB8:  inc     L5027
-        lda     L5027
+;;; ============================================================
+
+.proc inc_device_num
+        inc     device_num
+        lda     device_num
         cmp     DEVCNT
-        beq     L5ECA
-        bcc     L5ECA
-        lda     #$00
-        sta     L5027
-L5ECA:  rts
+        beq     :+
+        bcc     :+
+        lda     #0
+        sta     device_num
+:       rts
+.endproc
+
+;;; ============================================================
+
 
 L5ECB:  lda     #$00
         sta     L5F0C
 L5ED0:  yax_call MLI_RELAY, OPEN, open_params
         beq     L5EE9
-        jsr     L5E87
+        jsr     device_on_line
         lda     #$FF
         sta     $D920
         sta     L5F0C
@@ -1350,7 +1359,7 @@ L5EE9:  lda     open_params::ref_num
         sta     close_params::ref_num
         yax_call MLI_RELAY, READ, read_params
         beq     L5F0B
-        jsr     L5E87
+        jsr     device_on_line
         lda     #$FF
         sta     $D920
         sta     L5F0C
@@ -2117,7 +2126,7 @@ L66C9:  addr_call draw_string, path_buf2
         MGTK_RELAY_CALL MGTK::InRect, common_input2_rect
         cmp     #MGTK::inrect_inside
         bne     L6718
-        jmp     L6D1E
+        jmp     jt_00
 
 L6718:  rts
 
@@ -2226,7 +2235,7 @@ L6838:  lda     $D3C1,y
         bpl     L6838
         lda     $08
         sta     path_buf0
-L6846:  jsr     L6D27
+L6846:  jsr     jt_03
         jsr     L6EA3
         rts
 
@@ -2245,7 +2254,7 @@ L684D:  .word   0
         MGTK_RELAY_CALL MGTK::InRect, common_input1_rect
         cmp     #MGTK::inrect_inside
         bne     L688F
-        jmp     L6D21
+        jmp     jt_01
 
 L688F:  rts
 
@@ -2354,7 +2363,7 @@ L69AF:  lda     $D3C1,y
         bpl     L69AF
         lda     $08
         sta     path_buf1
-L69BD:  jsr     L6D27
+L69BD:  jsr     jt_03
         jsr     L6E9F
         rts
 
@@ -2485,7 +2494,7 @@ L6B23:  lda     path_buf0,y
         sta     path_buf2+1
         lda     #$00
         sta     path_buf0
-        jsr     L6D27
+        jsr     jt_03
         jsr     L6EA3
         rts
 
@@ -2505,7 +2514,7 @@ L6B51:  inx
         sty     path_buf0
         copy    #1, path_buf2
         copy    #GLYPH_INSPT, path_buf2+1
-        jsr     L6D27
+        jsr     jt_03
         jsr     L6EA3
         rts
 
@@ -2635,7 +2644,7 @@ L6CCF:  lda     path_buf1,y
         sta     path_buf2+1
         lda     #$00
         sta     path_buf1
-        jsr     L6D27
+        jsr     jt_03
         jsr     L6E9F
         rts
 
@@ -2655,24 +2664,25 @@ L6CFD:  inx
         sty     path_buf1
         copy    #1, path_buf2
         copy    #GLYPH_INSPT, path_buf2+1
-        jsr     L6D27
+        jsr     jt_03
         jsr     L6E9F
         rts
 
-L6D1E:  jmp     0
-L6D21:  jmp     0
-L6D24:  jmp     0
-L6D27:  jmp     0
-L6D2A:  jmp     0
-L6D2D:  jmp     0
-L6D30:  jmp     0
-L6D33:  jmp     0
-L6D36:  jmp     0
-L6D39:  jmp     0
-L6D3C:  jmp     0
-L6D3F:  jmp     0
-L6D42:  jmp     0
-L6D45:  jmp     0
+jump_table:
+jt_00:  jmp     0
+jt_01:  jmp     0
+jt_02:  jmp     0
+jt_03:  jmp     0
+jt_04:  jmp     0
+jt_05:  jmp     0
+jt_06:  jmp     0
+jt_07:  jmp     0
+jt_08:  jmp     0
+jt_09:  jmp     0
+jt_10:  jmp     0
+jt_11:  jmp     0
+jt_12:  jmp     0
+jt_13:  jmp     0
 
 L6D48:  stax    $06
         ldx     path_buf0
@@ -2737,11 +2747,11 @@ L6DB0:  ldx     path_buf1
 L6DC1:  rts
 
         jsr     L6D9E
-        jsr     L6D27
+        jsr     jt_03
         rts
 
         jsr     L6DB0
-        jsr     L6D27
+        jsr     jt_03
         rts
 
         lda     #$00
@@ -2775,7 +2785,7 @@ L6DD6:  sta     L6E1C
         jmp     L6E17
 
 L6E14:  jsr     L6D48
-L6E17:  jsr     L6D27
+L6E17:  jsr     jt_03
         rts
 
 L6E1B:  .byte   0

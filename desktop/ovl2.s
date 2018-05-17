@@ -16,6 +16,7 @@
 .proc format_erase_overlay
 
 ;;; Entry points in desktop_main
+.scope desktop_main
 prompt_input_loop       := $A567
 jump_relay              := $A899
 bell                    := $AACE
@@ -31,9 +32,10 @@ set_port_from_window_id := $B7B9
 LBD69                   := $BD69 ; ???
 LBD75                   := $BD75 ; ???
 reset_state             := $BEB1
+.endscope
 
 L0800:  pha
-        jsr     set_cursor_pointer
+        jsr     desktop_main::set_cursor_pointer
         pla
         cmp     #$04
         beq     L080C
@@ -41,21 +43,21 @@ L0800:  pha
 
 L080C:  lda     #$00
         sta     $D8E8
-        jsr     LB509
+        jsr     desktop_main::LB509
         lda     winfo_alert_dialog
-        jsr     set_port_from_window_id
-        addr_call draw_dialog_title, $B245
-        axy_call draw_dialog_label, $01, $B257
+        jsr     desktop_main::set_port_from_window_id
+        addr_call desktop_main::draw_dialog_title, $B245
+        axy_call desktop_main::draw_dialog_label, $01, $B257
         jsr     L0D31
         lda     #$FF
         sta     $D887
-L0832:  copy16  #L0B48, jump_relay+1
+L0832:  copy16  #L0B48, desktop_main::jump_relay+1
         lda     #$80
         sta     $D8ED
-L0841:  jsr     prompt_input_loop
+L0841:  jsr     desktop_main::prompt_input_loop
         bmi     L0841
         pha
-        copy16  #$B8F4, jump_relay+1
+        copy16  #$B8F4, desktop_main::jump_relay+1
         lda     #$00
         sta     $D8F3
         sta     $D8ED
@@ -66,33 +68,33 @@ L0841:  jsr     prompt_input_loop
 L085F:  bit     $D887
         bmi     L0832
         lda     winfo_alert_dialog
-        jsr     set_port_from_window_id
+        jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
-        jsr     LBD75
+        jsr     desktop_main::LBD75
         lda     #$80
         sta     $D8E8
         lda     #$00
         sta     $D8ED
-        jsr     LBD69
-        axy_call draw_dialog_label, $03, $B28D
-L08A7:  jsr     prompt_input_loop
+        jsr     desktop_main::LBD69
+        axy_call desktop_main::draw_dialog_label, $03, $B28D
+L08A7:  jsr     desktop_main::prompt_input_loop
         bmi     L08A7
         beq     L08B7
         jmp     L09C2
 
-L08B1:  jsr     bell
+L08B1:  jsr     desktop_main::bell
         jmp     L08A7
 
 L08B7:  lda     path_buf1
         beq     L08B1
         cmp     #$10
         bcs     L08B1
-        jsr     set_cursor_pointer
+        jsr     desktop_main::set_cursor_pointer
         lda     winfo_alert_dialog
-        jsr     set_port_from_window_id
+        jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
         ldx     $D887
@@ -101,44 +103,44 @@ L08B7:  lda     path_buf1
         sta     L09D7
         lda     #$00
         sta     $D8E8
-        axy_call draw_dialog_label, $03, $B2AF
+        axy_call desktop_main::draw_dialog_label, $03, $B2AF
         lda     L09D7
         jsr     L1A2D
-        addr_call draw_text1, $D909
-L0902:  jsr     prompt_input_loop
+        addr_call desktop_main::draw_text1, $D909
+L0902:  jsr     desktop_main::prompt_input_loop
         bmi     L0902
         beq     L090C
         jmp     L09C2
 
 L090C:  lda     winfo_alert_dialog
-        jsr     set_port_from_window_id
+        jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         ldy     #$11
         ldax    #$AE6E
         jsr     MGTK_RELAY
         ldax    #$B2C6
         ldy     #$01
-        jsr     draw_dialog_label
+        jsr     desktop_main::draw_dialog_label
         lda     L09D7
         jsr     L12C1
         and     #$FF
         bne     L0942
-        jsr     set_cursor_watch
+        jsr     desktop_main::set_cursor_watch
         lda     L09D7
         jsr     L126F
         bcs     L099B
 L0942:  lda     winfo_alert_dialog
-        jsr     set_port_from_window_id
+        jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
-        axy_call draw_dialog_label, $01, $B373
+        axy_call desktop_main::draw_dialog_label, $01, $B373
         addr_call L1900, path_buf1
         ldx     #$43
         ldy     #$D4
         lda     L09D7
         jsr     L1307
         pha
-        jsr     set_cursor_pointer
+        jsr     desktop_main::set_cursor_pointer
         pla
         bne     L0980
         lda     #$00
@@ -153,11 +155,11 @@ L0980:  cmp     #$2B
 L098C:  jsr     L191B
         ldax    #$B388
         ldy     #$06
-        jsr     draw_dialog_label
+        jsr     desktop_main::draw_dialog_label
         jmp     L09B8
 
 L099B:  pha
-        jsr     set_cursor_pointer
+        jsr     desktop_main::set_cursor_pointer
         pla
         cmp     #$2B
         bne     L09AC
@@ -166,15 +168,15 @@ L099B:  pha
         jmp     L090C
 
 L09AC:  jsr     L191B
-        axy_call draw_dialog_label, $06, $B2DE
-L09B8:  jsr     prompt_input_loop
+        axy_call desktop_main::draw_dialog_label, $06, $B2DE
+L09B8:  jsr     desktop_main::prompt_input_loop
         bmi     L09B8
         bne     L09C2
         jmp     L090C
 
 L09C2:  pha
-        jsr     set_cursor_pointer
-        jsr     reset_state
+        jsr     desktop_main::set_cursor_pointer
+        jsr     desktop_main::reset_state
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_alert_dialog
         ldx     L09D8
         pla
@@ -184,55 +186,55 @@ L09D7:  .byte   0
 L09D8:  .byte   0
 L09D9:  lda     #$00
         sta     $D8E8
-        jsr     LB509
+        jsr     desktop_main::LB509
         lda     winfo_alert_dialog
-        jsr     set_port_from_window_id
-        addr_call draw_dialog_title, $B319
+        jsr     desktop_main::set_port_from_window_id
+        addr_call desktop_main::draw_dialog_title, $B319
         ldax    #$B32A
         ldy     #$01
-        jsr     draw_dialog_label
+        jsr     desktop_main::draw_dialog_label
         jsr     L0D31
         lda     #$FF
         sta     $D887
-        copy16  #L0B48, jump_relay+1
+        copy16  #L0B48, desktop_main::jump_relay+1
         lda     #$80
         sta     $D8ED
-L0A0E:  jsr     prompt_input_loop
+L0A0E:  jsr     desktop_main::prompt_input_loop
         bmi     L0A0E
         beq     L0A18
         jmp     L0B31
 
 L0A18:  bit     $D887
         bmi     L0A0E
-        copy16  #$A898, jump_relay+1
+        copy16  #$A898, desktop_main::jump_relay+1
         lda     winfo_alert_dialog
-        jsr     set_port_from_window_id
+        jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
-        jsr     LBD75
+        jsr     desktop_main::LBD75
         lda     #$80
         sta     $D8E8
         lda     #$00
         sta     $D8ED
-        jsr     LBD69
-        axy_call draw_dialog_label, $03, $B28D
-L0A6A:  jsr     prompt_input_loop
+        jsr     desktop_main::LBD69
+        axy_call desktop_main::draw_dialog_label, $03, $B28D
+L0A6A:  jsr     desktop_main::prompt_input_loop
         bmi     L0A6A
         beq     L0A7A
         jmp     L0B31
 
-L0A74:  jsr     bell
+L0A74:  jsr     desktop_main::bell
         jmp     L0A6A
 
 L0A7A:  lda     path_buf1
         beq     L0A74
         cmp     #$10
         bcs     L0A74
-        jsr     set_cursor_pointer
+        jsr     desktop_main::set_cursor_pointer
         lda     winfo_alert_dialog
-        jsr     set_port_from_window_id
+        jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
         lda     #$00
@@ -241,29 +243,29 @@ L0A7A:  lda     path_buf1
         lda     DEVLST,x
         sta     L0B47
         sta     L0B46
-        axy_call draw_dialog_label, $03, $B35D
+        axy_call desktop_main::draw_dialog_label, $03, $B35D
         lda     L0B46
         and     #$F0
         jsr     L1A2D
-        addr_call draw_text1, $D909
-L0AC7:  jsr     prompt_input_loop
+        addr_call desktop_main::draw_text1, $D909
+L0AC7:  jsr     desktop_main::prompt_input_loop
         bmi     L0AC7
         beq     L0AD1
         jmp     L0B31
 
 L0AD1:  lda     winfo_alert_dialog
-        jsr     set_port_from_window_id
+        jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
-        axy_call draw_dialog_label, $01, $B373
+        axy_call desktop_main::draw_dialog_label, $01, $B373
         addr_call L1900, path_buf1
-        jsr     set_cursor_watch
+        jsr     desktop_main::set_cursor_watch
         ldx     #$43
         ldy     #$D4
         lda     L0B46
         jsr     L1307
         pha
-        jsr     set_cursor_pointer
+        jsr     desktop_main::set_cursor_pointer
         pla
         bne     L0B12
         lda     #$00
@@ -276,13 +278,13 @@ L0B12:  cmp     #$2B
         jmp     L0AD1
 
 L0B1E:  jsr     L191B
-        axy_call draw_dialog_label, $06, $B388
-L0B2A:  jsr     prompt_input_loop
+        axy_call desktop_main::draw_dialog_label, $06, $B388
+L0B2A:  jsr     desktop_main::prompt_input_loop
         bmi     L0B2A
         beq     L0AD1
 L0B31:  pha
-        jsr     set_cursor_pointer
-        jsr     reset_state
+        jsr     desktop_main::set_cursor_pointer
+        jsr     desktop_main::reset_state
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_alert_dialog
         ldx     L0B47
         pla
@@ -341,7 +343,7 @@ L0BD9:  return  #$FF
 
 L0BDC:  cmp     $D887
         bne     L0C04
-        jsr     LB445
+        jsr     desktop_main::LB445
         bmi     L0C03
 L0BE6:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, $AE20
@@ -358,7 +360,7 @@ L0C04:  sta     L0C1E
 L0C0F:  lda     L0C1E
         sta     $D887
         jsr     L0C20
-        jsr     LB445
+        jsr     desktop_main::LB445
         beq     L0BE6
         rts
 
@@ -509,7 +511,7 @@ L0D60:  lda     L0D8C
         iny
         iny
         pla
-        jsr     draw_dialog_label
+        jsr     desktop_main::draw_dialog_label
         inc     L0D8C
         jmp     L0D3D
 
@@ -1540,7 +1542,7 @@ L1A04:  inc     $D909
         ldx     $D909
         lda     #$3F
 L1A22:  sta     $D909,x
-        addr_call adjust_case, $D909
+        addr_call desktop_main::adjust_case, $D909
         rts
 
 ;;; ============================================================
@@ -1565,7 +1567,7 @@ L1A46:  lda     $1C00,x
         ldx     $D909
         lda     #$3F
         sta     $D909,x
-        addr_call adjust_case, $D909  ; Adjust case ("/HD/GAMES" -> "/Hd/Games")
+        addr_call desktop_main::adjust_case, $D909  ; Adjust case ("/HD/GAMES" -> "/Hd/Games")
         rts
 
 L1A6D:  lda     on_line_params::unit_num
