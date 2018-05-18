@@ -44,7 +44,7 @@ L7029:  lda     jump_table_entries+1,x
         rts
 
 L7052:  lda     winfo_entrydlg
-        jsr     common_overlay::L62C8
+        jsr     common_overlay::set_port_for_window
         addr_call common_overlay::L5E0A, copy_a_file_label
         addr_call common_overlay::L5E57, source_filename_label
         addr_call common_overlay::L5E6F, destination_filename_label

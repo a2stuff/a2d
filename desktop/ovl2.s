@@ -115,9 +115,7 @@ L0902:  jsr     desktop_main::prompt_input_loop
 L090C:  lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        ldy     #$11
-        ldax    #$AE6E
-        jsr     MGTK_RELAY
+        MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
         ldax    #$B2C6
         ldy     #$01
         jsr     desktop_main::draw_dialog_label
@@ -345,11 +343,9 @@ L0BDC:  cmp     $D887
         bne     L0C04
         jsr     desktop_main::LB445
         bmi     L0C03
-L0BE6:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
+L0BE6:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_RELAY_CALL MGTK::PaintRect, $AE20
-        ldy     #$11
-        ldax    #$AE20
-        jsr     MGTK_RELAY
+        MGTK_RELAY_CALL MGTK::PaintRect, $AE20
         lda     #$00
 L0C03:  rts
 

@@ -85,7 +85,7 @@ L70B0:  lda     jump_table_entries+1,x
         sta     $5104
         copy16  #$0601, path_buf2
         lda     winfo_entrydlg
-        jsr     common_overlay::L62C8
+        jsr     common_overlay::set_port_for_window
         lda     L73A9
         jsr     L7467
         lda     L73AA
@@ -103,7 +103,7 @@ L70B0:  lda     jump_table_entries+1,x
         rts
 
 L7101:  lda     winfo_entrydlg
-        jsr     common_overlay::L62C8
+        jsr     common_overlay::set_port_for_window
         lda     path_buf0
         beq     L7116
         addr_call common_overlay::L5E0A, edit_an_entry_label
@@ -287,30 +287,25 @@ L73AA:  .byte   0
 
         MGTK_RELAY_CALL MGTK::InRect, rect_D966
         cmp     #MGTK::inrect_inside
-        bne     L73BB
+        bne     :+
         jmp     L73FE
-
-L73BB:  MGTK_RELAY_CALL MGTK::InRect, rect_D96E
+:       MGTK_RELAY_CALL MGTK::InRect, rect_D96E
         cmp     #MGTK::inrect_inside
-        bne     L73CB
+        bne     :+
         jmp     L7413
-
-L73CB:  MGTK_RELAY_CALL MGTK::InRect, rect_D976
+:       MGTK_RELAY_CALL MGTK::InRect, rect_D976
         cmp     #MGTK::inrect_inside
-        bne     L73DB
+        bne     :+
         jmp     L7428
-
-L73DB:  MGTK_RELAY_CALL MGTK::InRect, rect_D97E
+:       MGTK_RELAY_CALL MGTK::InRect, rect_D97E
         cmp     #MGTK::inrect_inside
-        bne     L73EB
+        bne     :+
         jmp     L743D
-
-L73EB:  MGTK_RELAY_CALL MGTK::InRect, rect_D986
+:       MGTK_RELAY_CALL MGTK::InRect, rect_D986
         cmp     #MGTK::inrect_inside
-        bne     L73FB
+        bne     :+
         jmp     L7452
-
-L73FB:  return  #$00
+:       return  #0
 
 L73FE:  lda     L73A9
         cmp     #1
@@ -413,7 +408,7 @@ L74E1:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         rts
 
 L74F4:  lda     winfo_entrydlg
-        jsr     common_overlay::L62C8
+        jsr     common_overlay::set_port_for_window
         lda     event_modifiers
         bne     L7500
         rts

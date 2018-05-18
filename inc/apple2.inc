@@ -249,11 +249,13 @@ MOUSE_MODE      := $0738
 ;;; Character Constants (Screen/Key Codes)
 ;;; ============================================================
 
+CHAR_CTRL_C     := $03
 CHAR_LEFT       := $08
 CHAR_TAB        := $09
 CHAR_DOWN       := $0A
 CHAR_UP         := $0B
 CHAR_RETURN     := $0D
+CHAR_CTRL_O     := $0F
 CHAR_RIGHT      := $15
 CHAR_ESCAPE     := $1B
 CHAR_DELETE     := $7F

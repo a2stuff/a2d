@@ -100,7 +100,7 @@ L5106:  bit     LD8EC
         jmp     L5106
 
 L5151:  lda     winfo_entrydlg
-        jsr     L62C8
+        jsr     set_port_for_window
         lda     winfo_entrydlg
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -142,7 +142,7 @@ L51C7:  lda     findwindow_window_id
         jmp     L531F
 
 L51D2:  lda     winfo_entrydlg
-        jsr     L62C8
+        jsr     set_port_for_window
         lda     winfo_entrydlg
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -164,7 +164,7 @@ L520D:  tax
 L5213:  jmp     L5308
 
 L5216:  lda     winfo_entrydlg
-        jsr     L62C8
+        jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_open_button_rect
         jsr     track_open_button_click
@@ -273,7 +273,7 @@ L5386:  ldx     $D920
         lda     $1780,x
         bmi     L53B5
         lda     winfo_entrydlg
-        jsr     L62C8
+        jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
@@ -283,7 +283,7 @@ L5386:  ldx     $D920
 L53B5:  and     #$7F
         pha
         lda     winfo_entrydlg
-        jsr     L62C8
+        jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_open_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, common_open_button_rect
@@ -926,14 +926,14 @@ L59F7:  lda     event_key
 L5A27:  cmp     #CHAR_TAB
         bne     L5A52
         lda     winfo_entrydlg
-        jsr     L62C8
+        jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_change_drive_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, common_change_drive_button_rect
         jsr     L565C
 L5A4F:  jmp     L5AC8
 
-L5A52:  cmp     #$0F            ; Ctrl+O - Open
+L5A52:  cmp     #CHAR_CTRL_O    ; Open
         bne     L5A8B
         lda     $D920
         bmi     L5AC8
@@ -942,17 +942,17 @@ L5A52:  cmp     #$0F            ; Ctrl+O - Open
         bmi     :+
         jmp     L5AC8
 :       lda     winfo_entrydlg
-        jsr     L62C8
+        jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_open_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, common_open_button_rect
         jsr     L5607
         jmp     L5AC8
 
-L5A8B:  cmp     #$03            ; Ctrl+C - Close
+L5A8B:  cmp     #CHAR_CTRL_C    ; Close
         bne     :+
         lda     winfo_entrydlg
-        jsr     L62C8
+        jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_close_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, common_close_button_rect
@@ -975,8 +975,8 @@ L5AC8:  jsr     L56E3
 
 key_return:
         lda     winfo_entrydlg
-        jsr     L62C8
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
+        jsr     set_port_for_window
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
         jsr     jt_12
@@ -986,8 +986,8 @@ key_return:
 
 key_escape:
         lda     winfo_entrydlg
-        jsr     L62C8
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
+        jsr     set_port_for_window
+        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_RELAY_CALL MGTK::PaintRect, common_cancel_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, common_cancel_button_rect
         jsr     jt_01
@@ -1249,7 +1249,7 @@ L5CF6:  .byte   0
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entrydlg
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entrydlg_file_picker
         lda     winfo_entrydlg
-        jsr     L62C8
+        jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, common_dialog_frame_rect
         MGTK_RELAY_CALL MGTK::FrameRect, common_ok_button_rect
@@ -1590,7 +1590,7 @@ L606C:  .byte   0
 ;;; ============================================================
 
 L606D:  lda     winfo_entrydlg_file_picker
-        jsr     L62C8
+        jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::PaintRect, winfo_entrydlg_file_picker_cliprect
         lda     #$10
         sta     picker_entry_pos
@@ -1642,7 +1642,7 @@ L60FF:  lda     L6128
         bne     L6110
         jsr     L6274
         lda     winfo_entrydlg_file_picker
-        jsr     L62C8
+        jsr     set_port_for_window
 L6110:  inc     L6128
         add16   picker_entry_pos+2, #8, picker_entry_pos+2
         jmp     L608E
@@ -1721,7 +1721,7 @@ L61B0:  .byte   0
 ;;; ============================================================
 
 L61B1:  lda     winfo_entrydlg
-        jsr     L62C8
+        jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::PaintRect, rect_D9C8
         copy16  #path_buf, $06
         ldy     #$00
@@ -1815,7 +1815,7 @@ L6274:  ldx     #0
         adc     #0
         sta     rect_D90F+7
         lda     winfo_entrydlg_file_picker
-        jsr     L62C8
+        jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, rect_D90F
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
@@ -1826,10 +1826,14 @@ L62C7:  .byte   0
 
 ;;; ============================================================
 
-L62C8:  sta     getwinport_params2 ; window_id
+.proc set_port_for_window
+        sta     getwinport_params2_window_id
         MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
         MGTK_RELAY_CALL MGTK::SetPort, grafport2
         rts
+.endproc
+
+;;; ============================================================
 
 L62DE:  ldax    #$0F5A
 L62E2:  sta     L63C2,x
@@ -2104,7 +2108,7 @@ L658B:  cmp     #$09
         rts
 
         lda     winfo_entrydlg
-        jsr     L62C8
+        jsr     set_port_for_window
         jsr     L6E45
         stax    $06
         copy16  common_input1_textpos+2, $08
@@ -2126,7 +2130,7 @@ L65D6:  copy16  #$D8EF, $06
         rts
 
         lda     winfo_entrydlg
-        jsr     L62C8
+        jsr     set_port_for_window
         jsr     L6E72
         stax    $06
         copy16  common_input2_textpos+2, $08
@@ -2149,7 +2153,7 @@ L6634:  copy16  #$D8EF, $06
         rts
 
         lda     winfo_entrydlg
-        jsr     L62C8
+        jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::PaintRect, common_input1_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, common_input1_rect
@@ -2164,7 +2168,7 @@ L6684:  addr_call draw_string, path_buf2
 ;;; ============================================================
 
 L6693:  lda     winfo_entrydlg
-        jsr     L62C8
+        jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::PaintRect, common_input2_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, common_input2_rect
@@ -2180,7 +2184,7 @@ L66C9:  addr_call draw_string, path_buf2
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         lda     winfo_entrydlg
-        jsr     L62C8
+        jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_RELAY_CALL MGTK::InRect, common_input1_rect
         cmp     #MGTK::inrect_inside
@@ -2308,7 +2312,7 @@ L684D:  .word   0
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         lda     winfo_entrydlg
-        jsr     L62C8
+        jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
         MGTK_RELAY_CALL MGTK::InRect, common_input2_rect
         cmp     #MGTK::inrect_inside
@@ -2450,7 +2454,7 @@ L69D5:  lda     L6A17
         stax    $06
         copy16  common_input1_textpos+2, $08
         lda     winfo_entrydlg
-        jsr     L62C8
+        jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call draw_string, str_1_char
         addr_call draw_string, path_buf2
@@ -2467,7 +2471,7 @@ L6A1E:  dec     path_buf0
         stax    $06
         copy16  common_input1_textpos+2, $08
         lda     winfo_entrydlg
-        jsr     L62C8
+        jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call draw_string, path_buf2
         addr_call draw_string, str_2_spaces
@@ -2495,7 +2499,7 @@ L6A6B:  ldx     path_buf0
         stax    $06
         copy16  common_input1_textpos+2, $08
         lda     winfo_entrydlg
-        jsr     L62C8
+        jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call draw_string, path_buf2
         addr_call draw_string, str_2_spaces
@@ -2523,7 +2527,7 @@ L6ACA:  lda     path_buf2+1,x
         bne     L6ACA
 L6AD6:  dec     path_buf2
         lda     winfo_entrydlg
-        jsr     L62C8
+        jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, common_input1_textpos
         addr_call draw_string, path_buf0
         addr_call draw_string, path_buf2
@@ -2600,7 +2604,7 @@ L6B81:  lda     L6BC3
         stax    $06
         copy16  common_input2_textpos+2, $08
         lda     winfo_entrydlg
-        jsr     L62C8
+        jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call draw_string, str_1_char
         addr_call draw_string, path_buf2
@@ -2617,7 +2621,7 @@ L6BCA:  dec     path_buf1
         stax    $06
         copy16  common_input2_textpos+2, $08
         lda     winfo_entrydlg
-        jsr     L62C8
+        jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call draw_string, path_buf2
         addr_call draw_string, str_2_spaces
@@ -2645,7 +2649,7 @@ L6C17:  ldx     path_buf1
         stax    $06
         copy16  common_input2_textpos+2, $08
         lda     winfo_entrydlg
-        jsr     L62C8
+        jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, $06
         addr_call draw_string, path_buf2
         addr_call draw_string, str_2_spaces
@@ -2673,7 +2677,7 @@ L6C76:  lda     path_buf2+1,x
         bne     L6C76
 L6C82:  dec     path_buf2
         lda     winfo_entrydlg
-        jsr     L62C8
+        jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::MoveTo, common_input2_textpos
         addr_call draw_string, path_buf1
         addr_call draw_string, path_buf2
