@@ -47,8 +47,8 @@ routine_table:  .addr   $7000, $7000, $7000
         sta     L5104
         sta     L5103
         sta     L5105
-        lda     #$14
-        sta     $D8E9
+        lda     #prompt_insertion_point_blink_count
+        sta     prompt_ip_counter
         lda     #$FF
         sta     $D920
         pla
@@ -66,20 +66,21 @@ stash_y:        .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Flags set by invoker to alter behavior
 
-L5103:  .byte   0
-L5104:  .byte   0
-L5105:  .byte   0
+L5103:  .byte   0               ; ??? something before jt_13 invoked
+L5104:  .byte   0               ; ??? something about inputs
+L5105:  .byte   0               ; ??? something about the picker
 
 ;;; ============================================================
 
 L5106:  bit     LD8EC
         bpl     :+
-        dec     $D8E9
+        dec     prompt_ip_counter
         bne     :+
         jsr     jt_02
-        lda     #$14
-        sta     $D8E9
+        lda     #prompt_insertion_point_blink_count
+        sta     prompt_ip_counter
 :       MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::event_kind_button_down
@@ -123,17 +124,17 @@ L5199:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         jmp     L5106
 
 L51AE:  .byte   0
+
+;;; ============================================================
+
 L51AF:  MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_which_area
-        bne     L51BE
+        bne     :+
         rts
-
-L51BE:  cmp     #MGTK::area_content
+:       cmp     #MGTK::area_content
         bne     :+
         jmp     L51C7
-
         rts                     ; ???
-
 :       rts
 
 L51C7:  lda     findwindow_window_id
@@ -147,21 +148,25 @@ L51D2:  lda     winfo_entrydlg
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
+
+        ;; In open button?
+.proc check_open_button
         MGTK_RELAY_CALL MGTK::InRect, common_open_button_rect
         cmp     #MGTK::inrect_inside
-        beq     L5200
-        jmp     L5239
+        beq     clicked
+        jmp     check_change_drive_button
 
-L5200:  bit     L5105
+clicked:
+        bit     L5105
         bmi     L520A
         lda     $D920
         bpl     L520D
-L520A:  jmp     L5308
+L520A:  jmp     set_up_ports
 
 L520D:  tax
         lda     $1780,x
         bmi     L5216
-L5213:  jmp     L5308
+L5213:  jmp     set_up_ports
 
 L5216:  lda     winfo_entrydlg
         jsr     set_port_for_window
@@ -170,69 +175,77 @@ L5216:  lda     winfo_entrydlg
         jsr     track_open_button_click
         bmi     L5213
         jsr     L5607
-        jmp     L5308
+        jmp     set_up_ports
+.endproc
 
-L5239:  MGTK_RELAY_CALL MGTK::InRect, common_change_drive_button_rect
+.proc check_change_drive_button
+        MGTK_RELAY_CALL MGTK::InRect, common_change_drive_button_rect
         cmp     #MGTK::inrect_inside
-        beq     L5249
-        jmp     L526B
-
-L5249:  bit     L5105
+        beq     :+
+        jmp     check_close_button
+:       bit     L5105
         bmi     L5268
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_change_drive_button_rect
         jsr     track_change_drive_button_click
         bmi     L5268
         jsr     L565C
-L5268:  jmp     L5308
+L5268:  jmp     set_up_ports
+.endproc
 
-L526B:  MGTK_RELAY_CALL MGTK::InRect, common_close_button_rect
+.proc check_close_button
+        MGTK_RELAY_CALL MGTK::InRect, common_close_button_rect
         cmp     #MGTK::inrect_inside
-        beq     L527B
-        jmp     L529D
-
-L527B:  bit     L5105
+        beq     :+
+        jmp     check_ok_button
+:       bit     L5105
         bmi     L529A
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_close_button_rect
         jsr     track_close_button_click
         bmi     L529A
         jsr     L567F
-L529A:  jmp     L5308
+L529A:  jmp     set_up_ports
+.endproc
 
-L529D:  MGTK_RELAY_CALL MGTK::InRect, common_ok_button_rect
+.proc check_ok_button
+        MGTK_RELAY_CALL MGTK::InRect, common_ok_button_rect
         cmp     #MGTK::inrect_inside
-        beq     L52AD
-        jmp     L52CD
-
-L52AD:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
+        beq     :+
+        jmp     check_cancel_button
+:       MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
         jsr     track_ok_button_click
         bmi     L52CA
         jsr     jt_12
         jsr     jt_00
-L52CA:  jmp     L5308
+L52CA:  jmp     set_up_ports
+.endproc
 
-L52CD:  MGTK_RELAY_CALL MGTK::InRect, common_cancel_button_rect
+.proc check_cancel_button
+        MGTK_RELAY_CALL MGTK::InRect, common_cancel_button_rect
         cmp     #MGTK::inrect_inside
-        beq     L52DD
-        jmp     L52FA
-
-L52DD:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
+        beq     :+
+        jmp     check_other_click
+:       MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_cancel_button_rect
         jsr     track_cancel_button_click
         bmi     L52F7
         jsr     jt_01
-L52F7:  jmp     L5308
+L52F7:  jmp     set_up_ports
+.endproc
 
-L52FA:  bit     L5103
-        bpl     L5304
+.proc check_other_click
+        bit     L5103
+        bpl     :+
         jsr     L531B
-        bmi     L5308
-L5304:  jsr     jt_13
+        bmi     set_up_ports
+:       jsr     jt_13
         rts
+.endproc
 
-L5308:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
+set_up_ports:
+        MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport2
         rts
 
@@ -571,7 +584,7 @@ L567F:  lda     #$00
 
 L568C:  lda     path_buf,x
         and     #$7F
-        cmp     #$2F
+        cmp     #'/'
         beq     L569B
         dex
         bpl     L568C
@@ -1468,7 +1481,7 @@ L5F49:  ldx     path_buf
         beq     L5F5A
         dec     path_buf
         lda     path_buf,x
-        cmp     #$2F
+        cmp     #'/'
         bne     L5F49
 L5F5A:  rts
 
@@ -1652,40 +1665,41 @@ L6128:  .byte   0
 
 ;;; ============================================================
 
-L6129:  stx     $0B
+.proc adjust_filename_case
+        stx     $0A+1
         sta     $0A
-        ldy     #$00
+        ldy     #0
         lda     ($0A),y
         tay
-        bne     L6135
+        bne     loop
         rts
 
-L6135:  dey
-        beq     L613A
-        bpl     L613B
-L613A:  rts
+loop:   dey
+        beq     done
+        bpl     :+
+done:   rts
+:       lda     ($0A),y
+        and     #$7F            ; convert to ASCII
+        cmp     #'/'
+        beq     next
+        cmp     #'.'
+        bne     check
+next:   dey
+        jmp     loop
 
-L613B:  lda     ($0A),y
-        and     #$7F
-        cmp     #$2F
-        beq     L6147
-        cmp     #$2E
-        bne     L614B
-L6147:  dey
-        jmp     L6135
-
-L614B:  iny
+check:  iny
         lda     ($0A),y
         and     #$7F
-        cmp     #$41
+        cmp     #'A'
         bcc     L615D
-        cmp     #$5B
+        cmp     #'Z'+1
         bcs     L615D
         clc
-        adc     #$20
+        adc     #$20            ; convert to lower case
         sta     ($0A),y
 L615D:  dey
-        jmp     L6135
+        jmp     loop
+.endproc
 
 ;;; ============================================================
 
@@ -1730,7 +1744,7 @@ L61B1:  lda     winfo_entrydlg
         iny
 L61D0:  iny
         lda     ($06),y
-        cmp     #$2F
+        cmp     #'/'
         beq     L61DE
         cpy     L6226
         bne     L61D0
@@ -1746,7 +1760,7 @@ L61E6:  inx
         cpy     L6226
         bne     L61E6
         stx     $0220
-        addr_call L6129, $0220
+        addr_call adjust_filename_case, $0220
         MGTK_RELAY_CALL MGTK::MoveTo, disk_label_pos
         addr_call draw_string, disk_label
         addr_call draw_string, $0220
@@ -1971,7 +1985,7 @@ L647B:  .byte   0
 L647C:  stax    $06
         ldy     #$01
         lda     ($06),y
-        cmp     #$2F
+        cmp     #'/'
         bne     L64DE
         dey
         lda     ($06),y
@@ -1979,12 +1993,12 @@ L647C:  stax    $06
         bcc     L64DE
         tay
         lda     ($06),y
-        cmp     #$2F
+        cmp     #'/'
         beq     L64DE
         ldx     #$00
         stx     L64E1
 L649B:  lda     ($06),y
-        cmp     #$2F
+        cmp     #'/'
         beq     L64AB
         inx
         cpx     #$10
@@ -2001,19 +2015,19 @@ L64B3:  ldy     #$00
         tay
 L64B8:  lda     ($06),y
         and     #$7F
-        cmp     #$2E
+        cmp     #'.'
         beq     L64D8
-        cmp     #$2F
+        cmp     #'/'
         bcc     L64DE
-        cmp     #$3A
+        cmp     #'9'+1
         bcc     L64D8
-        cmp     #$41
+        cmp     #'A'
         bcc     L64DE
-        cmp     #$5B
+        cmp     #'Z'+1
         bcc     L64D8
-        cmp     #$61
+        cmp     #'a'
         bcc     L64DE
-        cmp     #$7B
+        cmp     #'z'+1
         bcs     L64DE
 L64D8:  dey
         bne     L64B8
@@ -2034,7 +2048,7 @@ L64F5:  lda     L6515
         beq     L64E7
         lda     $06
         ldx     $07
-        jsr     L6129
+        jsr     adjust_filename_case
         inc     L6515
         lda     $06
         clc
@@ -2737,24 +2751,24 @@ L6CFD:  inx
         rts
 
 jump_table:
-jt_00:  jmp     0
-jt_01:  jmp     0
-jt_02:  jmp     0
+jt_00:  jmp     0               ; ok button ???
+jt_01:  jmp     0               ; cancel button ???
+jt_02:  jmp     0               ; input loop
 jt_03:  jmp     0
 jt_04:  jmp     0
 jt_05:  jmp     0
 jt_06:  jmp     0
 jt_07:  jmp     0
-jt_08:  jmp     0
-jt_09:  jmp     0
-jt_10:  jmp     0
-jt_11:  jmp     0
-jt_12:  jmp     0
-jt_13:  jmp     0
+jt_08:  jmp     0               ; delete key ???
+jt_09:  jmp     0               ; left key ???
+jt_10:  jmp     0               ; right key ???
+jt_11:  jmp     0               ; meta-left key ???
+jt_12:  jmp     0               ; meta-right key ???
+jt_13:  jmp     0               ; click handler ???
 
 L6D48:  stax    $06
         ldx     path_buf0
-        lda     #$2F
+        lda     #'/'
         sta     path_buf0+1,x
         inc     path_buf0
         ldy     #$00
@@ -2776,7 +2790,7 @@ L6D62:  lda     ($06),y
 
 L6D73:  stax    $06
         ldx     path_buf1
-        lda     #$2F
+        lda     #'/'
         sta     path_buf1+1,x
         inc     path_buf1
         ldy     #$00
@@ -2801,7 +2815,7 @@ L6D9E:  ldx     path_buf0
         beq     L6DAF
         dec     path_buf0
         lda     path_buf0,x
-        cmp     #$2F
+        cmp     #'/'
         bne     L6D9E
 L6DAF:  rts
 
@@ -2810,7 +2824,7 @@ L6DB0:  ldx     path_buf1
         beq     L6DC1
         dec     path_buf1
         lda     path_buf1,x
-        cmp     #$2F
+        cmp     #'/'
         bne     L6DB0
 L6DC1:  rts
 
@@ -2863,7 +2877,7 @@ L6E20:  lda     path_buf,x
         sta     path_buf0,x
         dex
         bpl     L6E20
-        addr_call L6129, path_buf0
+        addr_call adjust_filename_case, path_buf0
         rts
 
         ldx     path_buf
@@ -2871,7 +2885,7 @@ L6E34:  lda     path_buf,x
         sta     path_buf1,x
         dex
         bpl     L6E34
-        addr_call L6129, path_buf1
+        addr_call adjust_filename_case, path_buf1
         rts
 
 L6E45:  lda     #$00
@@ -2954,8 +2968,8 @@ L6EC2:  lda     $D920
         tax
         tya
         jsr     L5F0D
-L6EFB:  addr_call L6129, $D3C1
-        addr_call L6129, path_buf
+L6EFB:  addr_call adjust_filename_case, $D3C1
+        addr_call adjust_filename_case, path_buf
         lda     $D3C1
         cmp     path_buf
         bne     L6F26

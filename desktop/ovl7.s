@@ -17,7 +17,7 @@ L7000:  stx     L73A9
         jsr     common_overlay::device_on_line
         lda     path_buf0
         beq     L7056
-        addr_call common_overlay::L6129, path_buf0
+        addr_call common_overlay::adjust_filename_case, path_buf0
         ldy     path_buf0
 L7021:  lda     path_buf0,y
         sta     $5028,y

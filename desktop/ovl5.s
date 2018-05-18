@@ -125,7 +125,7 @@ L7137:  lda     $5028,x
         sta     path_buf1,x
         dex
         bpl     L7137
-        addr_call common_overlay::L6129, path_buf1  ; path_buf1
+        addr_call common_overlay::adjust_filename_case, path_buf1  ; path_buf1
         lda     #$01
         sta     path_buf2           ; path_buf2
         lda     #$06
