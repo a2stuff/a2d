@@ -167,7 +167,7 @@ L5216:  lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_open_button_rect
-        jsr     L5888
+        jsr     track_open_button_click
         bmi     L5213
         jsr     L5607
         jmp     L5308
@@ -181,7 +181,7 @@ L5249:  bit     L5105
         bmi     L5268
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_change_drive_button_rect
-        jsr     L590E
+        jsr     track_change_drive_button_click
         bmi     L5268
         jsr     L565C
 L5268:  jmp     L5308
@@ -195,7 +195,7 @@ L527B:  bit     L5105
         bmi     L529A
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_close_button_rect
-        jsr     L577C
+        jsr     track_close_button_click
         bmi     L529A
         jsr     L567F
 L529A:  jmp     L5308
@@ -207,7 +207,7 @@ L529D:  MGTK_RELAY_CALL MGTK::InRect, common_ok_button_rect
 
 L52AD:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
-        jsr     L56F6
+        jsr     track_ok_button_click
         bmi     L52CA
         jsr     jt_12
         jsr     jt_00
@@ -220,7 +220,7 @@ L52CD:  MGTK_RELAY_CALL MGTK::InRect, common_cancel_button_rect
 
 L52DD:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_cancel_button_rect
-        jsr     L5802
+        jsr     track_cancel_button_click
         bmi     L52F7
         jsr     jt_01
 L52F7:  jmp     L5308
@@ -548,6 +548,7 @@ L5618:  lda     #$00
         rts
 
 L565B:  .byte   0
+
 L565C:  lda     #$FF
         sta     $D920
         jsr     inc_device_num
@@ -608,11 +609,15 @@ L56DC:  lda     #$FF
 L56E1:  rts
 
 L56E2:  .byte   0
+
 L56E3:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
 
-L56F6:  lda     #$00
+;;; ============================================================
+
+.proc track_ok_button_click
+        lda     #$00
         sta     L577B
 L56FB:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
@@ -650,7 +655,12 @@ L5766:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         return  #$00
 
 L577B:  .byte   0
-L577C:  lda     #$00
+.endproc
+
+;;; ============================================================
+
+.proc track_close_button_click
+        lda     #$00
         sta     L5801
 L5781:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
@@ -688,7 +698,12 @@ L57EC:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         return  #$00
 
 L5801:  .byte   0
-L5802:  lda     #$00
+.endproc
+
+;;; ============================================================
+
+.proc track_cancel_button_click
+        lda     #$00
         sta     L5887
 L5807:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
@@ -726,7 +741,12 @@ L5872:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         return  #$01
 
 L5887:  .byte   0
-L5888:  lda     #$00
+.endproc
+
+;;; ============================================================
+
+.proc track_open_button_click
+        lda     #$00
         sta     L590D
 L588D:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
@@ -764,7 +784,12 @@ L58F8:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         return  #$00
 
 L590D:  .byte   0
-L590E:  lda     #$00
+.endproc
+
+;;; ============================================================
+
+.proc track_change_drive_button_click
+        lda     #$00
         sta     L5993
 L5913:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
@@ -802,6 +827,9 @@ L597E:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         return  #$01
 
 L5993:  .byte   0
+.endproc
+
+;;; ============================================================
 
 .proc MLI_RELAY
         sty     call
@@ -822,63 +850,76 @@ params: .addr   0
         rts
 .endproc
 
+;;; ============================================================
+
 L59B8:  rts
 
-L59B9:  lda     event_modifiers
+;;; ============================================================
+;;; Key handler
+
+.proc L59B9
+        lda     event_modifiers
         beq     L59F7
+
+        ;; With modifiers
         lda     event_key
         and     #$7F
+
         cmp     #CHAR_LEFT
-        bne     L59CA
-        jmp     jt_11
+        bne     :+
+        jmp     jt_11           ; start of line
 
-L59CA:  cmp     #CHAR_RIGHT
-        bne     L59D1
-        jmp     jt_12
+:       cmp     #CHAR_RIGHT
+        bne     :+
+        jmp     jt_12           ; end of line
 
-L59D1:  bit     L5105
+:       bit     L5105
         bmi     L59E4
         cmp     #CHAR_DOWN
-        bne     L59DD
-        jmp     L5C0E
+        bne     :+
+        jmp     scroll_list_bottom ; end of list
 
-L59DD:  cmp     #CHAR_UP
+:       cmp     #CHAR_UP
         bne     L59E4
-        jmp     L5BF6
+        jmp     scroll_list_top ; start of list
 
 L59E4:  cmp     #'0'
-        bcc     L59EF
+        bcc     :+
         cmp     #'9'+1
-        bcs     L59EF
-        jmp     L5B23
+        bcs     :+
+        jmp     key_meta_digit
 
-L59EF:  bit     L5105
+:       bit     L5105
         bmi     L5A4F
         jmp     L5B70
 
+;;; ============================================================
+;;; Key - without modifiers
+
 L59F7:  lda     event_key
         and     #$7F
+
         cmp     #CHAR_LEFT
-        bne     L5A03
+        bne     :+
         jmp     jt_09
 
-L5A03:  cmp     #CHAR_RIGHT
-        bne     L5A0A
+:       cmp     #CHAR_RIGHT
+        bne     :+
         jmp     jt_10
 
-L5A0A:  cmp     #CHAR_RETURN
-        bne     L5A11
-        jmp     L5ACC
+:       cmp     #CHAR_RETURN
+        bne     :+
+        jmp     key_return
 
-L5A11:  cmp     #CHAR_ESCAPE
-        bne     L5A18
-        jmp     L5AF7
+:       cmp     #CHAR_ESCAPE
+        bne     :+
+        jmp     key_escape
 
-L5A18:  cmp     #CHAR_DELETE
-        bne     L5A1F
-        jmp     L5B1F
+:       cmp     #CHAR_DELETE
+        bne     :+
+        jmp     key_delete
 
-L5A1F:  bit     L5105
+:       bit     L5105
         bpl     L5A27
         jmp     L5AC4
 
@@ -892,16 +933,15 @@ L5A27:  cmp     #CHAR_TAB
         jsr     L565C
 L5A4F:  jmp     L5AC8
 
-L5A52:  cmp     #$0F
+L5A52:  cmp     #$0F            ; Ctrl+O - Open
         bne     L5A8B
         lda     $D920
         bmi     L5AC8
         tax
         lda     $1780,x
-        bmi     L5A64
+        bmi     :+
         jmp     L5AC8
-
-L5A64:  lda     winfo_entrydlg
+:       lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_open_button_rect
@@ -909,8 +949,8 @@ L5A64:  lda     winfo_entrydlg
         jsr     L5607
         jmp     L5AC8
 
-L5A8B:  cmp     #$03
-        bne     L5AB6
+L5A8B:  cmp     #$03            ; Ctrl+C - Close
+        bne     :+
         lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
@@ -919,13 +959,13 @@ L5A8B:  cmp     #$03
         jsr     L567F
         jmp     L5AC8
 
-L5AB6:  cmp     #$0A
-        bne     L5ABD
-        jmp     L5B26
+:       cmp     #CHAR_DOWN
+        bne     :+
+        jmp     key_down
 
-L5ABD:  cmp     #$0B
+:       cmp     #CHAR_UP
         bne     L5AC4
-        jmp     L5B4C
+        jmp     key_up
 
 L5AC4:  jsr     jt_07
         rts
@@ -933,7 +973,8 @@ L5AC4:  jsr     jt_07
 L5AC8:  jsr     L56E3
         rts
 
-L5ACC:  lda     winfo_entrydlg
+key_return:
+        lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
@@ -943,7 +984,8 @@ L5ACC:  lda     winfo_entrydlg
         jsr     L56E3
         rts
 
-L5AF7:  lda     winfo_entrydlg
+key_escape:
+        lda     winfo_entrydlg
         jsr     L62C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_cancel_button_rect
@@ -952,12 +994,15 @@ L5AF7:  lda     winfo_entrydlg
         jsr     L56E3
         rts
 
-L5B1F:  jsr     jt_08
+key_delete:
+        jsr     jt_08
         rts
 
-L5B23:  jmp     L59B8
+key_meta_digit:
+        jmp     L59B8
 
-L5B26:  lda     $177F
+.proc key_down
+        lda     $177F
         beq     L5B37
         lda     $D920
         bmi     L5B47
@@ -971,12 +1016,14 @@ L5B38:  jsr     L6274
         jsr     jt_04
         inc     $D920
         lda     $D920
-        jmp     L5C2F
+        jmp     update_list_selection
 
-L5B47:  lda     #$00
-        jmp     L5C2F
+L5B47:  lda     #0
+        jmp     update_list_selection
+.endproc
 
-L5B4C:  lda     $177F
+.proc key_up
+        lda     $177F
         beq     L5B58
         lda     $D920
         bmi     L5B68
@@ -987,44 +1034,45 @@ L5B59:  jsr     L6274
         jsr     jt_04
         dec     $D920
         lda     $D920
-        jmp     L5C2F
+        jmp     update_list_selection
 
 L5B68:  ldx     $177F
         dex
         txa
-        jmp     L5C2F
+        jmp     update_list_selection
+.endproc
 
-L5B70:  cmp     #$41
-        bcs     L5B75
-L5B74:  rts
-
-L5B75:  cmp     #$5B
+L5B70:  cmp     #'A'            ; upper alpha?
+        bcs     :+
+done:   rts
+:       cmp     #'Z'+1
         bcc     L5B83
-        cmp     #$61
-        bcc     L5B74
-        cmp     #$7B
-        bcs     L5B74
-        and     #$5F
+        cmp     #'a'            ; Lower alpha?
+        bcc     done
+        cmp     #'z'+1
+        bcs     done
+        and     #$5F            ; convert lowercase to upperase
+
 L5B83:  jsr     L5B9D
-        bmi     L5B74
+        bmi     done
         cmp     $D920
-        beq     L5B74
+        beq     done
         pha
         lda     $D920
         bmi     L5B99
         jsr     L6274
         jsr     jt_04
 L5B99:  pla
-        jmp     L5C2F
+        jmp     update_list_selection
 
 L5B9D:  sta     L5BF5
-        lda     #$00
+        lda     #0
         sta     L5BF3
 L5BA5:  lda     L5BF3
         cmp     $177F
         beq     L5BC4
         jsr     L5BCB
-        ldy     #$01
+        ldy     #1
         lda     ($06),y
         cmp     L5BF5
         bcc     L5BBE
@@ -1062,7 +1110,12 @@ L5BCB:  tax
 L5BF3:  .byte   0
 L5BF4:  .byte   0
 L5BF5:  .byte   0
-L5BF6:  lda     $177F
+.endproc
+
+;;; ============================================================
+
+.proc scroll_list_top
+        lda     $177F
         beq     L5C02
         lda     $D920
         bmi     L5C09
@@ -1072,9 +1125,11 @@ L5C02:  rts
 L5C03:  jsr     L6274
         jsr     jt_04
 L5C09:  lda     #$00
-        jmp     L5C2F
+        jmp     update_list_selection
+.endproc
 
-L5C0E:  lda     $177F
+.proc scroll_list_bottom
+        lda     $177F
         beq     L5C1E
         ldx     $D920
         bmi     L5C27
@@ -1090,9 +1145,13 @@ L5C1F:  dex
 L5C27:  ldx     $177F
         dex
         txa
-        jmp     L5C2F
+        jmp     update_list_selection
+.endproc
 
-L5C2F:  sta     $D920
+;;; ============================================================
+
+.proc update_list_selection
+        sta     $D920
         jsr     jt_05
         lda     $D920
         jsr     L6586
@@ -1104,8 +1163,12 @@ L5C2F:  sta     $D920
 
         jsr     jt_03
         rts
+.endproc
 
-L5C4F:  ldx     #3
+;;; ============================================================
+
+.proc L5C4F
+        ldx     #3
 :       lda     screentowindow_screenx,x
         sta     L5CF0,x
         dex
@@ -1178,6 +1241,7 @@ L5CF3:  .byte   0
 L5CF4:  .byte   0
 L5CF5:  .byte   0
 L5CF6:  .byte   0
+.endproc
 
 ;;; ============================================================
 
