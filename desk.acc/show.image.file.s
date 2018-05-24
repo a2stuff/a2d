@@ -240,6 +240,9 @@ nextwinfo:   .addr   0
         lda     LCBANK1
         lda     LCBANK1
 
+        lda     #0
+        sta     mode
+
         ;; Get filename by checking DeskTop selected window/icon
 
         ;; Check that an icon is selected
@@ -366,7 +369,10 @@ on_key:
         lda     event_params::key
         cmp     #CHAR_ESCAPE
         beq     exit
-        bne     input_loop
+        cmp     #' '
+        bne     :+
+        jsr     toggle_mode
+:       jmp     input_loop
 
 exit:
         jsr     set_bw_mode
@@ -604,7 +610,20 @@ cloop:  lda     (src),y
 ;;; ============================================================
 ;;; Color/B&W Toggle
 
+mode:   .byte   0               ; 0 = B&W, $80 = color
+
+.proc toggle_mode
+        lda     mode
+        bne     set_bw_mode
+        ;; fall through
+.endproc
+
 .proc set_color_mode
+        lda     mode
+        bne     done
+        lda     #$80
+        sta     mode
+
         ;; AppleColor Card - Mode 2 (Color 140x192)
         sta     SET80VID
         lda     AN3_OFF
@@ -629,6 +648,11 @@ done:   rts
 .endproc
 
 .proc set_bw_mode
+        lda     mode
+        beq     done
+        lda     #0
+        sta     mode
+
         ;; AppleColor Card - Mode 1 (Monochrome 560x192)
         sta     CLR80VID
         lda     AN3_OFF
