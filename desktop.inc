@@ -58,9 +58,9 @@ DESKTOP    := $8E00
 DT_ADD_ICON             := $01  ; { .addr icondata }
 DT_HIGHLIGHT_ICON       := $02  ; { .byte icon }
 DT_UNHIGHLIGHT_ICON     := $03  ; { .byte icon }
-        ;; $04 ???
+DT_UNHIGHLIGHT_ICON2    := $04  ; { .byte icon }
         ;; $05 ???
-        ;; $06 ???
+DT_UNHIGHLIGHT_ALL      := $06
 DT_CLOSE_WINDOW         := $07  ; { .byte window_id }
 DT_FIND_ICON            := $09  ; { .word mousex, .word mousey, .byte result }
         ;; $0A ???
@@ -142,7 +142,7 @@ file_table := $DD9F     ; file address table
 
 ;;; Icon (file/volume) entries - length 27 bytes, maximum of 127
 ;;;      .byte icon      icon index
-;;;      .byte ??
+;;;      .byte state     (
 ;;;      .byte type/window_id
 ;;;                      (bits 0-3 window_id)
 ;;;                      (bits 4,5,6)

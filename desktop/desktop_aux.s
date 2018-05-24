@@ -239,9 +239,9 @@ desktop_jump_table:
         .addr   ADD_ICON_IMPL
         .addr   HIGHLIGHT_ICON_IMPL
         .addr   UNHIGHLIGHT_ICON_IMPL
-        .addr   L9508           ; $04
+        .addr   UNHIGHLIGHT_ICON2_IMPL
         .addr   L95A2           ; $05
-        .addr   L9692           ; $06
+        .addr   UNHIGHLIGHT_ALL_IMPL
         .addr   CLOSE_WINDOW_IMPL
         .addr   L975B           ; $08
         .addr   FIND_ICON_IMPL
@@ -369,18 +369,20 @@ L945E:  cmp     icon_table,x
         dex
         bpl     L945E
 
-bail1:  return  #1
+bail1:  return  #1              ; Not found
 
 L9469:  asl     a
         tax
         copy16  icon_ptrs,x, $06
-        ldy     #1
+        ldy     #icon_entry_offset_state
         lda     ($06),y
-        bne     L947E
+        bne     L947E           ; Already set ??? Routine semantics are incorrect ???
         return  #2
 
 L947E:  lda     has_highlight
         beq     L9498
+
+        ;; Already in highlight list?
         dey
         lda     ($06),y
         ldx     highlight_count
@@ -391,15 +393,18 @@ L948A:  cmp     highlight_list,x
         bpl     L948A
         jmp     L949D
 
-bail3:  return  #3
+bail3:  return  #3              ; Already in list
 
 L9498:  lda     #1
         sta     has_highlight
+
+        ;; Append to highlight list
 L949D:  ldx     highlight_count
         ldy     #0
         lda     ($06),y
         sta     highlight_list,x
         inc     highlight_count
+
         lda     ($06),y
         ldx     #1
         jsr     LA324
@@ -408,7 +413,7 @@ L949D:  ldx     highlight_count
         ldx     #1
         jsr     LA2E3
         jsr     L9F9F
-        return  #0
+        return  #0              ; Highlighted
 .endproc
 
 ;;; ============================================================
@@ -417,6 +422,7 @@ L949D:  ldx     highlight_count
 .proc UNHIGHLIGHT_ICON_IMPL
         ptr := $06
 
+        ;; Find icon by number
         ldx     num_icons
         beq     bail1
         dex
@@ -427,14 +433,15 @@ L949D:  ldx     highlight_count
         dex
         bpl     :-
 
-bail1:  return  #1
+bail1:  return  #1              ; Not found
 
+        ;; Pointer to icon details
 found:  asl     a
         tax
         copy16  icon_ptrs,x, ptr
         lda     has_highlight
         bne     L94E9
-        jmp     done
+        jmp     done            ; Already unhighlighted
 
 L94E9:  ldx     highlight_count
         dex
@@ -454,13 +461,12 @@ done:   jsr     L9F98
 .endproc
 
 ;;; ============================================================
+;;; UNHIGHLIGHT_ICON2_IMPL
 
-;;; DESKTOP $04 IMPL
-
-.proc L9508
+.proc UNHIGHLIGHT_ICON2_IMPL
         ptr := $6
 
-        ;; Search for passed icon
+        ;; Find icon by number
         ldy     #0
         ldx     num_icons
         beq     bail1
@@ -470,18 +476,20 @@ done:   jsr     L9F98
         beq     found
         dex
         bpl     :-
-bail1:  return  #1
+
+bail1:  return  #1              ; Not found
 
         ;; Pointer to icon details
 found:  asl     a
         tax
         copy16  icon_ptrs,x, ptr
-        ldy     #1              ; offset 1 is ... ???
+        ldy     #icon_entry_offset_state
         lda     (ptr),y
         bne     :+
 
-        return  #2
+        return  #2              ; Not highlighted
 
+        ;; Unhighlight
 :       jsr     calc_icon_poly
         MGTK_CALL MGTK::SetPenMode, pencopy_2
         jsr     LA39D
@@ -493,7 +501,7 @@ found:  asl     a
         lda     #0
         ldx     num_icons
         sta     icon_table,x
-        ldy     #1
+        ldy     #icon_entry_offset_state
         lda     #0
         sta     (ptr),y
         lda     has_highlight
@@ -521,7 +529,7 @@ L9584:  lda     #0
         ldx     highlight_count
         sta     highlight_list,x
 
-done:   return  #0
+done:   return  #0              ; Unhighlighted
 .endproc
 
 ;;; ============================================================
@@ -604,10 +612,9 @@ L9681:  sta     icon
 .endproc
 
 ;;; ============================================================
+;;; UNHIGHLIGHT_ALL_IMPL
 
-;;; DESKTOP $06 IMPL
-
-.proc L9692
+.proc UNHIGHLIGHT_ALL_IMPL
         jmp     L9697
 
 L9695:  .byte   0
@@ -631,7 +638,7 @@ L969D:  ldx     L9696
         ldy     #0
         cmp     ($06),y
         bne     L969D
-        DESKTOP_DIRECT_CALL $04, L9695
+        DESKTOP_DIRECT_CALL DT_UNHIGHLIGHT_ICON2, L9695
         jmp     L969D
 L96CF:  return  #0
 .endproc
@@ -672,7 +679,7 @@ L96E5:  dec     L96D6
         lda     #0
         ldx     num_icons
         sta     icon_table,x
-        ldy     #1
+        ldy     #icon_entry_offset_state
         lda     #0
         sta     ($08),y
         lda     has_highlight
@@ -924,8 +931,8 @@ L9909:  sta     L9834
         sta     $08
         bcs     L992D
         dec     $08+1
-L992D:  ldy     #1
-        lda     #$80
+L992D:  ldy     #icon_entry_offset_state
+        lda     #$80            ; Highlighted
         sta     ($08),y
         jsr     pop_zp_addrs
 L9936:  ldx     #$21
@@ -1014,7 +1021,7 @@ L99C7:  dey
 L99E1:  iny
         cpy     #$22
         bne     L9974
-        ldy     #1
+        ldy     #icon_entry_offset_state
         lda     ($08),y
         beq     L99FC
         add16   $08, #34, $08
@@ -1134,7 +1141,7 @@ L9B62:  lda     ($08),y
         iny
         cpy     #$22
         bne     L9B62
-        ldy     #1
+        ldy     #icon_entry_offset_state
         lda     ($08),y
         beq     L9B9C
         lda     $08
