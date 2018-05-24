@@ -14179,19 +14179,23 @@ iigs_flag:                      ; High bit set if IIgs detected.
 ;;; ============================================================
 
 .proc init_video
+        ;;  AppleColor Card - Mode 1 (Monochrome 560x192)
         sta     CLR80VID
-        sta     DHIRESON
-        sta     DHIRESOFF
-        sta     DHIRESON        ; For good measure???
-        sta     DHIRESOFF
+        sta     AN3_OFF
+        sta     AN3_ON
+        sta     AN3_OFF
+        sta     AN3_ON
         sta     SET80VID
-        sta     DHIRESON        ; Also AN3_OFF
-        sta     HR2_ON          ; For Le Chat Mauve: 560 B&W mode
+        sta     AN3_OFF
+
+        ;; Le Chat Mauve - BW560 mode
+        ;; (AN3 off, HR1 off, HR2 on, HR3 on)
+        sta     HR2_ON
         sta     HR3_ON
-        bit     iigs_flag
-        bpl     end
 
         ;; Force B&W mode on the IIgs
+        bit     iigs_flag
+        bpl     end
         lda     NEWVIDEO
         ora     #(1<<5)         ; B&W
         sta     NEWVIDEO

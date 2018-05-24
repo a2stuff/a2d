@@ -604,9 +604,6 @@ cloop:  lda     (src),y
 ;;; ============================================================
 ;;; Color/B&W Toggle
 
-;;; TODO: Also consider Le Chat Mauve BW560 mode.
-;;; https://github.com/inexorabletash/a2d/issues/41
-
 .proc set_color_mode
         ;; AppleColor Card - Mode 2 (Color 140x192)
         sta     SET80VID
@@ -615,6 +612,11 @@ cloop:  lda     (src),y
         lda     AN3_OFF
         lda     AN3_ON
         lda     AN3_OFF
+
+        ;; Le Chat Mauve - COL140 mode
+        ;; (AN3 off, HR1 off, HR2 off, HR3 off)
+        sta     HR2_OFF
+        sta     HR3_OFF
 
         ;; Apple IIgs - DHR Color
         jsr     test_iigs
@@ -635,6 +637,11 @@ done:   rts
         lda     AN3_ON
         sta     SET80VID
         lda     AN3_OFF
+
+        ;; Le Chat Mauve - BW560 mode
+        ;; (AN3 off, HR1 off, HR2 on, HR3 on)
+        sta     HR2_ON
+        sta     HR3_ON
 
         ;; Apple IIgs - DHR B&W
         jsr     test_iigs
