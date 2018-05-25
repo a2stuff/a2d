@@ -3142,7 +3142,7 @@ L5916:  lda     cached_window_icon_list,x
         sta     icon_param
         lda     #$00
         sta     cached_window_icon_list,x
-        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON2, icon_param
+        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, icon_param
         lda     icon_param
         jsr     DESKTOP_FREE_ICON
         dec     cached_window_icon_count
@@ -3289,7 +3289,7 @@ L5A4C:  jsr     redraw_windows_and_desktop
         lda     icon_param
         jsr     DESKTOP_FREE_ICON
         jsr     reset_grafport3
-        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON2, icon_param
+        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, icon_param
 L5A7F:  lda     cached_window_icon_count
         sta     L5AC6
         inc     cached_window_icon_count

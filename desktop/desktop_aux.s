@@ -239,8 +239,8 @@ desktop_jump_table:
         .addr   ADD_ICON_IMPL
         .addr   HIGHLIGHT_ICON_IMPL
         .addr   REDRAW_ICON_IMPL
-        .addr   UNHIGHLIGHT_ICON2_IMPL
-        .addr   L95A2           ; $05
+        .addr   UNHIGHLIGHT_ICON_IMPL
+        .addr   HIGHLIGHT_ALL_IMPL
         .addr   UNHIGHLIGHT_ALL_IMPL
         .addr   CLOSE_WINDOW_IMPL
         .addr   GET_HIGHLIGHTED_IMPL
@@ -324,10 +324,12 @@ ycoord: .word   0
 ;;; ADD_ICON IMPL
 
 .proc ADD_ICON_IMPL
-        ptr := $6
+        PARAM_BLOCK params, $06
+ptr_icon:       .addr   0
+        END_PARAM_BLOCK
 
         ldy     #0
-        lda     (ptr),y
+        lda     (params::ptr_icon),y
         ldx     num_icons
         beq     proceed
         dex
@@ -343,7 +345,7 @@ proceed:
         jsr     L9F98
         lda     #1
         tay
-        sta     (ptr),y
+        sta     (params::ptr_icon),y
         return  #0
 
 sub:    ldx     num_icons       ; ???
@@ -351,7 +353,7 @@ sub:    ldx     num_icons       ; ???
         inc     num_icons
         asl     a
         tax
-        copy16  ptr, icon_ptrs,x
+        copy16  params::ptr_icon, icon_ptrs,x
         rts
 .endproc
 
@@ -359,11 +361,16 @@ sub:    ldx     num_icons       ; ???
 ;;; HIGHLIGHT_ICON IMPL
 
 .proc HIGHLIGHT_ICON_IMPL
+        PARAM_BLOCK params, $06
+ptr_icon:       .addr   0
+        END_PARAM_BLOCK
+        ptr := $06              ; Overwrites param
+
         ldx     num_icons
         beq     bail1
         dex
         ldy     #0
-        lda     ($06),y
+        lda     (params::ptr_icon),y
 L945E:  cmp     icon_table,x
         beq     L9469
         dex
@@ -373,9 +380,9 @@ bail1:  return  #1              ; Not found
 
 L9469:  asl     a
         tax
-        copy16  icon_ptrs,x, $06
+        copy16  icon_ptrs,x, ptr
         ldy     #icon_entry_offset_state
-        lda     ($06),y
+        lda     (ptr),y
         bne     L947E           ; Already set ??? Routine semantics are incorrect ???
         return  #2
 
@@ -384,7 +391,7 @@ L947E:  lda     has_highlight
 
         ;; Already in highlight list?
         dey
-        lda     ($06),y
+        lda     (ptr),y
         ldx     highlight_count
         dex
 L948A:  cmp     highlight_list,x
@@ -401,15 +408,15 @@ L9498:  lda     #1
         ;; Append to highlight list
 L949D:  ldx     highlight_count
         ldy     #0
-        lda     ($06),y
+        lda     (ptr),y
         sta     highlight_list,x
         inc     highlight_count
 
-        lda     ($06),y         ; icon num
-        ldx     #1              ; new position
+        lda     (ptr),y ; icon num
+        ldx     #1                   ; new position
         jsr     change_highlight_index
         ldy     #0
-        lda     ($06),y
+        lda     (ptr),y
         ldx     #1
         jsr     LA2E3
         jsr     L9F9F
@@ -420,14 +427,17 @@ L949D:  ldx     highlight_count
 ;;; REDRAW_ICON IMPL
 
 .proc REDRAW_ICON_IMPL
-        ptr := $06
+        PARAM_BLOCK params, $06
+ptr_icon:       .addr   0
+        END_PARAM_BLOCK
+        ptr := $06              ; Overwrites param
 
         ;; Find icon by number
         ldx     num_icons
         beq     bail1
         dex
         ldy     #0
-        lda     (ptr),y
+        lda     (params::ptr_icon),y
 :       cmp     icon_table,x
         beq     found
         dex
@@ -464,17 +474,20 @@ done:   jsr     L9F98
 .endproc
 
 ;;; ============================================================
-;;; UNHIGHLIGHT_ICON2 IMPL
+;;; UNHIGHLIGHT_ICON IMPL
 
-.proc UNHIGHLIGHT_ICON2_IMPL
-        ptr := $6
+.proc UNHIGHLIGHT_ICON_IMPL
+        PARAM_BLOCK params, $06
+ptr_icon:       .addr   0
+        END_PARAM_BLOCK
+        ptr := $06              ; Overwrites param
 
         ;; Find icon by number
         ldy     #0
         ldx     num_icons
         beq     bail1
         dex
-        lda     (ptr),y
+        lda     (params::ptr_icon),y
 :       cmp     icon_table,x
         beq     found
         dex
@@ -551,14 +564,23 @@ done:   return  #0              ; Unhighlighted
 .endproc
 
 ;;; ============================================================
+;;; HIGHLIGHT_ALL IMPL
 
-;;; DESKTOP $05 IMPL
+;;; Highlight all icons in the specified window.
+;;; (Unused?)
 
-.proc L95A2
+.proc HIGHLIGHT_ALL_IMPL
         jmp     start
+
+        PARAM_BLOCK params, $06
+ptr_window_id:      .addr    0
+        END_PARAM_BLOCK
+
+        ptr := $08
 
         ;; DT_HIGHLIGHT_ICON params
 icon:   .byte   0
+
 buffer: .res    127, 0
 
 start:  lda     HIGHLIGHT_ICON_IMPL ; ???
@@ -569,8 +591,8 @@ start:  lda     HIGHLIGHT_ICON_IMPL ; ???
         jmp     start
 
 start2:
-        ;; zero out buffer
-        ldx     #$7E
+        ;; Zero out buffer
+        ldx     #$7E            ; 127 icons
         lda     #0
 :       sta     buffer,x
         dex
@@ -578,40 +600,48 @@ start2:
         ldx     #0
         stx     icon
 
-L9648:  lda     icon_table,x
+        ;; Walk through icons, find ones in the same window
+        ;; as the entry at ($06).
+loop:   lda     icon_table,x
         asl     a
         tay
-        copy16  icon_ptrs,y, $08
+        copy16  icon_ptrs,y, ptr
         ldy     #icon_entry_offset_win_type
-        lda     ($08),y
+        lda     (ptr),y
         and     #icon_entry_winid_mask
         ldy     #0
-        cmp     ($06),y
-        bne     L9670
+        cmp     (params::ptr_window_id),y
+        bne     :+
+
+        ;; Append icon number to buffer.
         ldy     #0
-        lda     ($08),y
+        lda     (ptr),y
         ldy     icon
         sta     buffer,y
         inc     icon
-L9670:  inx
+
+:       inx
         cpx     num_icons
-        bne     L9648
+        bne     loop
+
         ldx     #0
         txa
         pha
-L967A:  lda     buffer,x
-        bne     L9681
+
+        ;; Highlight all the icons.
+loop2:  lda     buffer,x
+        bne     :+
         pla
         rts
 
-L9681:  sta     icon
+:       sta     icon
         DESKTOP_DIRECT_CALL DT_HIGHLIGHT_ICON, icon
         pla
         tax
         inx
         txa
         pha
-        jmp     L967A
+        jmp     loop2
 .endproc
 
 ;;; ============================================================
@@ -641,7 +671,7 @@ L969D:  ldx     L9696
         ldy     #0
         cmp     ($06),y
         bne     L969D
-        DESKTOP_DIRECT_CALL DT_UNHIGHLIGHT_ICON2, L9695
+        DESKTOP_DIRECT_CALL DT_UNHIGHLIGHT_ICON, L9695
         jmp     L969D
 L96CF:  return  #0
 .endproc
