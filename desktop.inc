@@ -57,17 +57,18 @@ DESKTOP    := $8E00
 
 DT_ADD_ICON             := $01  ; { .addr icondata }
 DT_HIGHLIGHT_ICON       := $02  ; { .byte icon }
-DT_UNHIGHLIGHT_ICON     := $03  ; { .byte icon }
+DT_REDRAW_ICON          := $03  ; { .addr icondata }
 DT_UNHIGHLIGHT_ICON2    := $04  ; { .byte icon }
         ;; $05 ???
 DT_UNHIGHLIGHT_ALL      := $06
 DT_CLOSE_WINDOW         := $07  ; { .byte window_id }
+DT_GET_HIGHLIGHTED      := $08  ; { .res 20 }
 DT_FIND_ICON            := $09  ; { .word mousex, .word mousey, .byte result }
         ;; $0A ???
         ;; $0B ???
 DT_REDRAW_ICONS         := $0C  ; Repaints desktop icons *
 DT_ICON_IN_RECT         := $0D  ; { .byte icon, rect bounds }
-
+        ;; $0E ???
 
 ;;; Call a DESKTOP entry point:
 ;;;     DESKTOP_CALL n                      - params is $0000

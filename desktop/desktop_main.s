@@ -291,7 +291,7 @@ L41FE:  lda     L4241
         sta     icon_param
         DESKTOP_RELAY_CALL DT_ICON_IN_RECT, icon_param
         beq     :+
-        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, icon_param
+        DESKTOP_RELAY_CALL DT_REDRAW_ICON, icon_param
 :       inc     L4241
         jmp     L41FE
 
@@ -345,7 +345,7 @@ L4270:  lda     L42C3
         jsr     icon_window_to_screen
         DESKTOP_RELAY_CALL DT_ICON_IN_RECT, icon_param
         beq     :+
-        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, icon_param
+        DESKTOP_RELAY_CALL DT_REDRAW_ICON, icon_param
 :       lda     icon_param
         jsr     icon_screen_to_window
         inc     L42C3
@@ -359,7 +359,7 @@ L42A5:  lda     L42C3
         tax
         lda     selected_icon_list,x
         sta     icon_param
-        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, icon_param
+        DESKTOP_RELAY_CALL DT_REDRAW_ICON, icon_param
         inc     L42C3
         jmp     L42A5
 
@@ -3682,7 +3682,7 @@ L5DC4:  txa
         pha
         lda     selected_icon_list,x
         sta     LE22E
-        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, LE22E
+        DESKTOP_RELAY_CALL DT_REDRAW_ICON, LE22E
         pla
         tax
         dex
@@ -4737,7 +4737,7 @@ L6893:  txa
         pha
         lda     selected_icon_list,x
         sta     LE22D
-        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, LE22D
+        DESKTOP_RELAY_CALL DT_REDRAW_ICON, LE22D
         pla
         tax
         dex
@@ -4942,7 +4942,7 @@ L6AA7:  stx     cached_window_id
         jsr     get_set_port2
         lda     icon_params2
         jsr     icon_window_to_screen
-L6AD8:  DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, icon_params2
+L6AD8:  DESKTOP_RELAY_CALL DT_REDRAW_ICON, icon_params2
         lda     getwinport_params2::window_id
         beq     L6AEF
         lda     icon_params2
@@ -5021,7 +5021,7 @@ L6B68:  lda     #$01
         jsr     offset_grafport2_and_set
         lda     icon_params2
         jsr     icon_window_to_screen
-L6BA1:  DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, icon_params2
+L6BA1:  DESKTOP_RELAY_CALL DT_REDRAW_ICON, icon_params2
         lda     getwinport_params2::window_id
         beq     L6BB8
         lda     icon_params2
@@ -5188,7 +5188,7 @@ L6D09:  txa
         sta     icon_param
         DESKTOP_RELAY_CALL DT_ICON_IN_RECT, icon_param
         beq     L6D25
-        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, icon_param
+        DESKTOP_RELAY_CALL DT_REDRAW_ICON, icon_param
 L6D25:  pla
         tax
         inx

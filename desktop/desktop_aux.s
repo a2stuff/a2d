@@ -160,7 +160,7 @@ icon_ptrs:  .res    256, 0      ; addresses of icon details
 has_highlight:                  ; 1 = has highlight, 0 = no highlight
         .byte   0
 highlight_count:                ; number of highlighted icons
-        .byte   $00
+        .byte   0
 highlight_list:                 ; selected icons
         .res    127, 0
 
@@ -238,12 +238,12 @@ desktop_jump_table:
         .addr   0               ; $00
         .addr   ADD_ICON_IMPL
         .addr   HIGHLIGHT_ICON_IMPL
-        .addr   UNHIGHLIGHT_ICON_IMPL
+        .addr   REDRAW_ICON_IMPL
         .addr   UNHIGHLIGHT_ICON2_IMPL
         .addr   L95A2           ; $05
         .addr   UNHIGHLIGHT_ALL_IMPL
         .addr   CLOSE_WINDOW_IMPL
-        .addr   L975B           ; $08
+        .addr   GET_HIGHLIGHTED_IMPL
         .addr   FIND_ICON_IMPL
         .addr   L97F7           ; $0A
         .addr   L9EBE           ; $0B
@@ -405,9 +405,9 @@ L949D:  ldx     highlight_count
         sta     highlight_list,x
         inc     highlight_count
 
-        lda     ($06),y
-        ldx     #1
-        jsr     LA324
+        lda     ($06),y         ; icon num
+        ldx     #1              ; new position
+        jsr     change_highlight_index
         ldy     #0
         lda     ($06),y
         ldx     #1
@@ -417,9 +417,9 @@ L949D:  ldx     highlight_count
 .endproc
 
 ;;; ============================================================
-;;; UNHILIGHT_ICON IMPL
+;;; REDRAW_ICON IMPL
 
-.proc UNHIGHLIGHT_ICON_IMPL
+.proc REDRAW_ICON_IMPL
         ptr := $06
 
         ;; Find icon by number
@@ -439,21 +439,24 @@ bail1:  return  #1              ; Not found
 found:  asl     a
         tax
         copy16  icon_ptrs,x, ptr
-        lda     has_highlight
-        bne     L94E9
-        jmp     done            ; Already unhighlighted
 
-L94E9:  ldx     highlight_count
+        lda     has_highlight   ; Anything highlighted?
+        bne     :+
+        jmp     done
+
+:       ldx     highlight_count
         dex
         ldy     #0
         lda     (ptr),y
-L94F1:  cmp     highlight_list,x
-        beq     L94FC
+
+        ;; Find in highlight list
+:       cmp     highlight_list,x
+        beq     found2
         dex
-        bpl     L94F1
+        bpl     :-
         jmp     done
 
-L94FC:  jsr     L9F9F
+found2: jsr     L9F9F
         return  #0
 
 done:   jsr     L9F98
@@ -461,7 +464,7 @@ done:   jsr     L9F98
 .endproc
 
 ;;; ============================================================
-;;; UNHIGHLIGHT_ICON2_IMPL
+;;; UNHIGHLIGHT_ICON2 IMPL
 
 .proc UNHIGHLIGHT_ICON2_IMPL
         ptr := $6
@@ -518,8 +521,8 @@ L9566:  cmp     highlight_list,x
 
         jmp     done
 
-L9571:  ldx     highlight_count
-        jsr     LA324
+L9571:  ldx     highlight_count ; new position
+        jsr     change_highlight_index
         dec     highlight_count
         lda     highlight_count
         bne     L9584
@@ -612,7 +615,7 @@ L9681:  sta     icon
 .endproc
 
 ;;; ============================================================
-;;; UNHIGHLIGHT_ALL_IMPL
+;;; UNHIGHLIGHT_ALL IMPL
 
 .proc UNHIGHLIGHT_ALL_IMPL
         jmp     L9697
@@ -694,9 +697,9 @@ L972B:  lda     ($08),y
         bne     L972B
         jmp     L9758
 
-L973B:  lda     ($08),y
-        ldx     highlight_count
-        jsr     LA324
+L973B:  lda     ($08),y         ; icon num
+        ldx     highlight_count ; new position
+        jsr     change_highlight_index
         dec     highlight_count
         lda     highlight_count
         bne     L9750
@@ -709,29 +712,31 @@ L9758:  jmp     L96DD
 .endproc
 
 ;;; ============================================================
+;;; GET_HIGHLIGHTED IMPL
 
-;;; DESKTOP $08 IMPL
+;;; Copies first 20 highlighted icon numbers to ($06)
 
-.proc L975B
+.proc GET_HIGHLIGHTED_IMPL
         ldx     #0
         txa
         tay
-L975F:  sta     ($06),y
+:       sta     ($06),y
         iny
         inx
-        cpx     #$14
-        bne     L975F
+        cpx     #20             ; 20 items
+        bne     :-
+
         ldx     #0
         ldy     #0
-L976B:  lda     highlight_list,x
+:       lda     highlight_list,x
         sta     ($06),y
         cpx     highlight_count
-        beq     L977A
+        beq     done
         iny
         inx
-        jmp     L976B
+        jmp     :-
 
-L977A:  return  #0
+done:   return  #0
 .endproc
 
 ;;; ============================================================
@@ -1422,42 +1427,48 @@ L9EB4:  asl     a
 ;;; DESKTOP $0B IMPL
 
         ;; Deselect icon ???
-        ;; how is this different from UNHIGHLIGHT_ICON ???
 
 .proc L9EBE
         jmp     start
 
         .byte   0               ; ???
 
-        ;; DT_UNHIGHLIGHT_ICON params
+        ;; DT_REDRAW_ICON params
 icon:   .byte   0
 
         ptr := $6
 
 start:  lda     has_highlight
         bne     :+
-        return  #1
+        return  #1              ; No selection
 
-:       ldx     highlight_count
+        ;; Move it to the end of the highlight list
+:       ldx     highlight_count ; new position
         ldy     #0
-        lda     (ptr),y
-        jsr     LA324
+        lda     (ptr),y         ; icon num
+        jsr     change_highlight_index
+
+        ;; Remove it from the list
         ldx     highlight_count
         lda     #0
         sta     highlight_count,x
         dec     highlight_count
+
+        ;; Update flag
         lda     highlight_count
-        bne     L9EEA
+        bne     :+
         lda     #0
         sta     has_highlight
-L9EEA:  ldy     #0
+
+        ;; Redraw
+:       ldy     #0
         lda     (ptr),y
         sta     icon
-        DESKTOP_DIRECT_CALL DT_UNHIGHLIGHT_ICON, icon
+        DESKTOP_DIRECT_CALL DT_REDRAW_ICON, icon
         return  #0
-
-        rts
 .endproc
+
+        rts                     ; unused
 
 ;;; ============================================================
 ;;; ICON_IN_RECT IMPL
@@ -1843,7 +1854,7 @@ text_width:  .byte   0
 .proc REDRAW_ICONS_IMPL
         jmp     LA2AE
 
-        ;; DT_UNHIGHLIGHT_ICON params
+        ;; DT_REDAW_ICON params
 LA2A9:  .byte   0
 
 LA2AA:  jsr     pop_zp_addrs
@@ -1866,7 +1877,7 @@ LA2B5:  bmi     LA2AA
         ldy     #0
         lda     ($06),y
         sta     LA2A9
-        DESKTOP_DIRECT_CALL DT_UNHIGHLIGHT_ICON, LA2A9
+        DESKTOP_DIRECT_CALL DT_REDRAW_ICON, LA2A9
 LA2DD:  pla
         tax
         dex
@@ -1909,42 +1920,47 @@ LA323:  .byte   0
 .endproc
 
 ;;; ============================================================
+;;; A = icon number to move
+;;; X = position in highlight list
 
-.proc LA324
-        stx     LA363
-        sta     LA364
+.proc change_highlight_index
+        stx     new_pos
+        sta     icon_num
+
+        ;; Find position of icon A in highlight list
         ldx     #0
 :       lda     highlight_list,x
-        cmp     LA364
-        beq     LA33B
+        cmp     icon_num
+        beq     :+
         inx
         cpx     highlight_count
         bne     :-
         rts
-.endproc
 
-.proc LA33B
-        lda     highlight_list+1,x
+        ;; Shift items down
+:       lda     highlight_list+1,x
         sta     highlight_list,x
         inx
         cpx     highlight_count
-        bne     LA33B
+        bne     :-
+
+        ;; Shift items up
         ldx     highlight_count
-:       cpx     LA363
+:       cpx     new_pos
         beq     LA359
-        lda     has_highlight,x
-        sta     highlight_count,x
+        lda     highlight_list-2,x
+        sta     highlight_list-1,x
         dex
         jmp     :-
 
-LA359:  ldx     LA363
-        lda     LA364
-        sta     highlight_count,x
+LA359:  ldx     new_pos
+        lda     icon_num
+        sta     highlight_list-1,x
         rts
-.endproc
 
-LA363:  .byte   0
-LA364:  .byte   0
+new_pos:        .byte   0
+icon_num:       .byte   0
+.endproc
 
 ;;; ============================================================
 
@@ -2009,7 +2025,7 @@ LA39D:  MGTK_CALL MGTK::InitPort, grafport
 LA3AC:  .byte   0
 LA3AD:  .byte   0
 
-        ;; DT_UNHIGHLIGHT_ICON params
+        ;; DT_REDRAW_ICON params
 LA3AE:  .byte   0
 
 LA3AF:  .word   0
@@ -2087,7 +2103,10 @@ LA446:  jsr     push_zp_addrs
         ldx     num_icons
         dex                     ; any icons to draw?
 
-LA44D:  cpx     #$FF            ; =-1
+.proc LA44D
+        ptr := $8
+
+        cpx     #$FF            ; =-1
         bne     LA466
         bit     LA3B7           ; no, almost done
         bpl     :+
@@ -2096,12 +2115,7 @@ LA44D:  cpx     #$FF            ; =-1
 :       jsr     pop_zp_addrs
         rts
 
-;;; ============================================================
-
-.proc LA466
-        ptr := $8
-
-        txa
+LA466:  txa
         pha
         lda     icon_table,x
         cmp     LA3AC
@@ -2136,7 +2150,7 @@ LA49D:  ldy     #0              ; icon num
 LA4AC:  DESKTOP_DIRECT_CALL DT_ICON_IN_RECT, LA3AE
         beq     LA4BA
 
-        DESKTOP_DIRECT_CALL DT_UNHIGHLIGHT_ICON, LA3AE
+        DESKTOP_DIRECT_CALL DT_REDRAW_ICON, LA3AE
 
 LA4BA:  bit     LA3B7
         bpl     LA4C5
