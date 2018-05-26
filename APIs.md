@@ -135,6 +135,8 @@ Call from AUX (RAMRDON/RAMWRTON). Call style:
    .addr params
 ```
 
+Return value in A, 0=success.
+
 > NOTE: Only some of the calls have been identified.
 
 Commands:
@@ -143,32 +145,77 @@ Commands:
 
 Parameters: { addr icondata }
 
+Inserts an icon record into the table.
+
 ### `DT_HIGHLIGHT_ICON` ($02)
 
 Parameters: { byte icon }
 
-### `DT_UNHIGHLIGHT_ICON` ($03)
+Highlights (selects) an icon by number.
+
+### `DT_REDRAW_ICON` ($03)
 
 Parameters: { byte icon }
+
+Redraws an icon by number.
+
+### `DT_HIGHLIGHT_ICON` ($04)
+
+Parameters: { byte icon }
+
+Unhighlights (deselects) an icon by number.
+
+### `DT_HIGHLIGHT_ALL` ($05)
+
+Parameters: { byte window_id }
+
+Highlights (selects) all icons in a window.
+
+### `DT_UNHIGHLIGHT_ALL` ($06)
+
+Parameters: _N/A_
+
+Unhighlights (deselects) all icons.
 
 ### `DT_CLOSE_WINDOW` ($07)
 
 Parameters: { byte window_id }
 
+Closes the specified window.
+
+### `DT_GET_HIGHLIGHTED` ($08)
+
+Parameters: { .res 20 }
+
+Copies the numbers of the first 20 selected icons to the given buffer.
+
 ### `DT_FIND_ICON` ($09)
 
 Parameters: { word mousex, word mousey, (out) byte result }
+
+Find the icon number at the given coordinates.
 
 ### `DT_REDRAW_ICONS` ($0C)
 
 Parameters: none (pass $0000 as address)
 
 Redraws the icons on the desktop (mounted volumes, trash). This call
-is required after destroying, moving, or resizing a window.
+is required after destroying, moving, or resizing a desk accessory window.
 
 ### `DT_ICON_IN_RECT` ($0D)
 
 Parameters: { byte icon, rect bounds }
+
+Tests to see if the given icon (by number) overlaps the passed rect.
+
+### `DT_REDRAW_ICON_IDX` ($0E)
+
+Parameters: { byte icon_index }
+
+Redraws the icon at the given index in the icon list. Note that this
+is not the same as the icon number.
+
+
 
 <!-- ============================================================ -->
 
