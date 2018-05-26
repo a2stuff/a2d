@@ -182,14 +182,14 @@ LD134:  .byte   0
         .byte   0
         .byte   0
 
-grafport:  .res MGTK::grafport_size, 0
+grafport:  .res .sizeof(MGTK::GrafPort), 0
 
 .proc getwinport_params
 window_id:      .byte   0
 port:           .addr   grafport_win
 .endproc
 
-grafport_win:  .res    MGTK::grafport_size, 0
+grafport_win:  .res    .sizeof(MGTK::GrafPort), 0
 
         asl     $EA
         .byte   0

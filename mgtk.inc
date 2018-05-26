@@ -571,29 +571,45 @@ inpoly_outside          := $00
 ;;; ============================================================
 ;;; Offsets
 
-mapinfo_offset_viewloc            :=  0
-mapinfo_offset_viewloc_xcoord     :=  0
-mapinfo_offset_viewloc_ycoord     :=  2
-mapinfo_offset_mapbits            :=  4
-mapinfo_offset_mapwidth           :=  6
-mapinfo_offset_maprect            :=  8
-mapinfo_size                      := 16
+.struct Point
+        xcoord  .word
+        ycoord  .word
+.endstruct
 
-grafport_offset_viewloc            :=  0
-grafport_offset_viewloc_xcoord     :=  0
-grafport_offset_viewloc_ycoord     :=  2
-grafport_offset_mapbits            :=  4
-grafport_offset_mapwidth           :=  6
-grafport_offset_maprect            :=  8
-grafport_offset_pattern            := 16
-grafport_offset_colormasks         := 24
-grafport_offset_penloc             := 26
-grafport_offset_penwidth           := 30
-grafport_offset_penheight          := 31
-grafport_offset_penmode            := 32
-grafport_offset_textback           := 33
-grafport_offset_textfont           := 34
-grafport_size                      := 36
+.struct Rect
+        x1      .word
+        y1      .word
+        x2      .word
+        y2      .word
+.endstruct
+
+.struct Pattern
+        bits    .res 8
+.endstruct
+
+.struct MapInfo
+        viewloc         .tag Point
+	mapbits         .word
+	mapwidth        .byte
+        reserved        .byte
+	maprect         .tag Rect
+.endstruct
+
+.struct GrafPort
+        viewloc         .tag Point
+        mapbits         .addr
+        mapwidth        .byte
+        reserved        .byte
+        maprect         .tag Rect
+        pattern         .tag Pattern
+        colormasks      .byte 2
+        penloc          .tag Point
+        penwidth        .byte
+        penheight       .byte
+        penmode         .byte
+        textback        .byte
+        textfont        .addr
+.endstruct
 
 winfo_offset_window_id          :=  0
 winfo_offset_options            :=  1

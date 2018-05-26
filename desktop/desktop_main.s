@@ -2549,11 +2549,11 @@ L5464:  lda     active_window_id
         lda     active_window_id
         jsr     window_lookup
         stax    $06
-        ldy     #MGTK::winfo_offset_port+MGTK::grafport_offset_maprect
+        ldy     #MGTK::winfo_offset_port+MGTK::GrafPort::maprect
 L5479:  lda     ($06),y
-        sta     rect_E230-(MGTK::winfo_offset_port+MGTK::grafport_offset_maprect),y
+        sta     rect_E230-(MGTK::winfo_offset_port+MGTK::GrafPort::maprect),y
         iny
-        cpy     #MGTK::winfo_offset_port+MGTK::grafport_offset_maprect+8
+        cpy     #MGTK::winfo_offset_port+MGTK::GrafPort::maprect+8
         bne     L5479
         ldx     #$00
 L5485:  cpx     cached_window_icon_count
@@ -4002,21 +4002,21 @@ L6112:  ldy     #$14
 
         lda     ($06),y
         sec
-        sbc     port_copy+MGTK::grafport_offset_viewloc_xcoord
+        sbc     port_copy+MGTK::GrafPort::viewloc+MGTK::Point::xcoord
         sta     L6197
         iny
         lda     ($06),y
-        sbc     port_copy+MGTK::grafport_offset_viewloc_xcoord+1
+        sbc     port_copy+MGTK::GrafPort::viewloc+MGTK::Point::xcoord+1
         sta     L6197+1
         iny
 
         lda     ($06),y
         sec
-        sbc     port_copy+MGTK::grafport_offset_viewloc_ycoord
+        sbc     port_copy+MGTK::GrafPort::viewloc+MGTK::Point::ycoord
         sta     L6199
         iny
         lda     ($06),y
-        sbc     port_copy+MGTK::grafport_offset_viewloc_ycoord+1
+        sbc     port_copy+MGTK::GrafPort::viewloc+MGTK::Point::ycoord+1
         sta     L6199+1
 
         ldx     active_window_id
@@ -4394,7 +4394,7 @@ L650D:  .word   0
         lda     active_window_id
         jsr     window_lookup
         stax    ptr
-        ldy     #MGTK::winfo_offset_port + MGTK::grafport_offset_maprect + 7
+        ldy     #MGTK::winfo_offset_port + MGTK::GrafPort::maprect + 7
         ldx     #7
 :       lda     grafport2::cliprect,x
         sta     (ptr),y
@@ -8216,7 +8216,7 @@ addr:   .addr   0
 ;;; ============================================================
 
 port_copy:
-        .res    MGTK::grafport_size+1
+        .res    .sizeof(MGTK::GrafPort)+1
 
 .proc copy_window_portbits
         ptr := $6
@@ -8232,7 +8232,7 @@ port_copy:
         sta     port_copy,x
         iny
         inx
-        cpx     #MGTK::grafport_size
+        cpx     #.sizeof(MGTK::GrafPort)
         bne     :-
         jsr     pop_zp_addrs
         rts
@@ -8252,7 +8252,7 @@ port_copy:
         sta     (ptr),y
         iny
         inx
-        cpx     #MGTK::grafport_size
+        cpx     #.sizeof(MGTK::GrafPort)
         bne     :-
         jsr     pop_zp_addrs
         rts
@@ -8277,7 +8277,7 @@ port_copy:
         stax    winfo_ptr
 
         ;; Screen space
-        ldy     #MGTK::winfo_offset_port + MGTK::grafport_offset_viewloc + 3
+        ldy     #MGTK::winfo_offset_port + MGTK::GrafPort::viewloc + 3
         ldx     #3
 :       lda     (winfo_ptr),y
         sta     pos_screen,x
@@ -8286,7 +8286,7 @@ port_copy:
         bpl     :-
 
         ;; Window space
-        ldy     #MGTK::winfo_offset_port + MGTK::grafport_offset_maprect + 3
+        ldy     #MGTK::winfo_offset_port + MGTK::GrafPort::maprect + 3
         ldx     #3
 :       lda     (winfo_ptr),y
         sta     pos_win,x
@@ -8370,7 +8370,7 @@ pos_win:        .word   0, 0
         jsr     window_lookup
         stax    winfo_ptr
 
-        ldy     #MGTK::winfo_offset_port + MGTK::grafport_offset_viewloc + 3
+        ldy     #MGTK::winfo_offset_port + MGTK::GrafPort::viewloc + 3
         ldx     #3
 :       lda     (winfo_ptr),y
         sta     pos_screen,x
@@ -8378,7 +8378,7 @@ pos_win:        .word   0, 0
         dex
         bpl     :-
 
-        ldy     #MGTK::winfo_offset_port + MGTK::grafport_offset_maprect + 3
+        ldy     #MGTK::winfo_offset_port + MGTK::GrafPort::maprect + 3
         ldx     #3
 :       lda     (winfo_ptr),y
         sta     pos_win,x

@@ -236,7 +236,7 @@ rts2:   rts
 ;;; Copy port params (36 bytes) to/from active port addr
 
 .proc apply_active_port_to_port
-        ldy     #MGTK::grafport_size-1
+        ldy     #.sizeof(MGTK::GrafPort)-1
 :       lda     (active_port),y
         sta     current_grafport,y
         dey
@@ -245,7 +245,7 @@ rts2:   rts
 .endproc
 
 .proc apply_port_to_active_port
-        ldy     #MGTK::grafport_size-1
+        ldy     #.sizeof(MGTK::GrafPort)-1
 :       lda     current_grafport,y
         sta     (active_port),y
         dey
@@ -3758,7 +3758,7 @@ poly_maxima_xh_table:
         jsr     SetSwitchesImpl
 
         ;; Initialize port
-        ldx     #MGTK::grafport_size-1
+        ldx     #.sizeof(MGTK::GrafPort)-1
 loop:   lda     standard_port,x
         sta     $8A,x
         sta     current_grafport,x
@@ -3864,7 +3864,7 @@ store_xa_at_y:
 ;;; InitPort
 
 .proc InitPortImpl
-        ldy     #MGTK::grafport_size-1 ; Store 36 bytes at params
+        ldy     #.sizeof(MGTK::GrafPort)-1 ; Store 36 bytes at params
 loop:   lda     standard_port,y
         sta     (params_addr),y
         dey
@@ -4938,7 +4938,7 @@ stack_ptr_save:
         lda     stack_ptr_save
         sta     stack_ptr_stash
 
-        ldy     #MGTK::grafport_size-1
+        ldy     #.sizeof(MGTK::GrafPort)-1
 :       lda     ($82),y
         sta     current_grafport,y
         dey
@@ -6913,7 +6913,7 @@ get_from_ax:
         bpl     :-
 
         ; copy first 16 bytes of grafport to $B7
-        ldy     #MGTK::winfo_offset_port + MGTK::grafport_offset_pattern-1
+        ldy     #MGTK::winfo_offset_port + MGTK::GrafPort::pattern-1
 :       lda     (window),y
         sta     current_winport - MGTK::winfo_offset_port,y
         dey
@@ -7712,7 +7712,7 @@ previous_port:
         .res    2
 
 update_port:
-        .res    MGTK::grafport_size
+        .res    .sizeof(MGTK::GrafPort)
 
 .proc BeginUpdateImpl
         jsr     window_by_id_or_exit
@@ -7794,7 +7794,7 @@ win_port: .addr   0
         jsr     prepare_winport
         bcc     err_obscured
 
-        ldy     #MGTK::grafport_size-1
+        ldy     #.sizeof(MGTK::GrafPort)-1
 :       lda     current_grafport,y
         sta     (params_addr),y
         dey
@@ -7824,7 +7824,7 @@ win_port: .addr   0
 :       lda     (window),y
         sta     current_grafport - MGTK::winfo_offset_port,y
         iny
-        cpy     #MGTK::winfo_offset_port + MGTK::grafport_size
+        cpy     #MGTK::winfo_offset_port + .sizeof(MGTK::GrafPort)
         bne     :-
 
         ldx     #2
@@ -7887,7 +7887,7 @@ win_port: .addr   0
         bcc     :+
         inc     ptr+1
 
-:       ldy     #MGTK::grafport_size-1
+:       ldy     #.sizeof(MGTK::GrafPort)-1
 loop:   lda     ($82),y
         sta     (ptr),y
         dey
@@ -10047,7 +10047,7 @@ out_of_boundsl:
 not_left:
         sta     set_input_key
 
-        ldx     #MGTK::grafport_size-1
+        ldx     #.sizeof(MGTK::GrafPort)-1
 :       lda     $A7,x
         sta     $0600,x
         dex
@@ -10057,7 +10057,7 @@ not_left:
         jsr     kbd_menu_by_shortcut
         php
 
-        ldx     #MGTK::grafport_size-1
+        ldx     #.sizeof(MGTK::GrafPort)-1
 :       lda     $0600,x
         sta     $A7,x
         dex

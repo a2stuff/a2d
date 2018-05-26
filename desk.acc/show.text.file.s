@@ -1432,7 +1432,7 @@ base:   .word   10              ; vertical text offset (to baseline)
         jmp     endif
 else:   MGTK_CALL MGTK::DrawText, prop_str
 
-endif:  ldx     #MGTK::mapinfo_size - 1
+endif:  ldx     #.sizeof(MGTK::MapInfo) - 1
 loop:   lda     default_port,x
         sta     winfo::port,x
         dex
