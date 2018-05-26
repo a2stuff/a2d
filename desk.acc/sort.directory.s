@@ -465,7 +465,7 @@ L0B72:  lda     selected_file_count
         beq     L0B7F
         lda     path_index
         beq     L0B7F
-        jmp     L0BF5
+        jmp     compare_selection_orders
 
 L0B7F:
         ldax    ptr2
@@ -549,115 +549,122 @@ type:   .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Compare selection order of icons; order returned in carry.
+;;; Handles either icon being not selected.
 
-.proc L0BF5
+.proc compare_selection_orders
+        entry_ptr := $10
+        filename  := $06
+        filename2 := $08
+
         ldx     selected_file_count
-L0BF8:  dex
+loop:   dex
         bmi     L0C4A
+
+        ;; Look up next icon, compare length.
         lda     selected_file_list,x
         asl     a
         tay
-        add16   file_table,y, #9, $10
-        ldy     #$00
-        lda     ($10),y
+        add16   file_table,y, #IconEntry::len, entry_ptr
+        ldy     #0
+        lda     (entry_ptr),y
         sec
-        sbc     #$02
-        sta     L0C24
-        inc16   $10
-        lda     ($06),y
-        and     #$0F
+        sbc     #2              ; remove leading/trailing space
+        sta     cmp_len
+        inc16   entry_ptr       ; points at start of name
 
-        L0C24 := *+1
-        cmp     #$0
-
-        bne     L0BF8
-        sta     L0C47
-L0C2A:  iny
-        lda     ($10),y
-        and     #CHAR_MASK
-        cmp     #'a'
-        bcc     L0C35
-        and     #CASE_MASK            ; make upper-case
-L0C35:  sta     L0C43
-        lda     ($06),y
-        and     #CHAR_MASK
-        cmp     #'a'
-        bcc     L0C42
-        and     #CASE_MASK            ; make upper-case
-
-        L0C43 := *+1
-L0C42:  cmp     #0
-
-        bne     L0BF8
-
-        L0C47 := *+1
-        cpy     #0
-
-        bne     L0C2A
-L0C4A:  stx     L0CBC
-        ldx     selected_file_count
-L0C50:  dex
-        bmi     L0CA2
-        lda     selected_file_list,x
-        asl     a
-        tay
-
-        add16   file_table,y, #9, $10
-
-        ldy     #$00
-        lda     ($10),y
-        sec
-        sbc     #$02
-        sta     L0C7C
-        inc16   $10
-        lda     ($08),y
-        and     #$0F
-
-        L0C7C := *+1
+        lda     (filename),y
+        and     #NAME_LENGTH_MASK
+        cmp_len := *+1
         cmp     #0
+        bne     loop            ; lengths don't match, so not a match
 
-        bne     L0C50
-        sta     L0C9F
-L0C82:  iny
-        lda     ($10),y
+        ;; Bytewise compare names.
+        sta     cpy_len
+next:   iny                     ; skip leading space
+        lda     (entry_ptr),y
         and     #CHAR_MASK
         cmp     #'a'
-        bcc     L0C8D
-        and     #CASE_MASK
-L0C8D:  sta     L0C9B
-        lda     ($08),y
+        bcc     :+
+        and     #CASE_MASK      ; make upper-case
+:       sta     cmp_char
+        lda     (filename),y
         and     #CHAR_MASK
         cmp     #'a'
-        bcc     L0C9A
-        and     #CASE_MASK
-
-        L0C9B := *+1
-L0C9A:  cmp     #0
-
-        bne     L0C50
-
-        L0C9F := *+1
+        bcc     :+
+        and     #CASE_MASK      ; make upper-case
+        cmp_char := *+1
+:       cmp     #0
+        bne     loop            ; no match - try next icon
+        cpy_len := *+1
         cpy     #0
+        bne     next
 
-        bne     L0C82
-L0CA2:  stx     L0CBD
-        lda     L0CBC
-        and     L0CBD
-        cmp     #$FF
-        beq     L0CBA
-        lda     L0CBD
-        cmp     L0CBC
-        beq     L0CBA
-        rts
+L0C4A:  stx     match           ; match, or $FF if none
 
+        ldx     selected_file_count
+loop2:  dex
+        bmi     L0CA2
+
+        ;; Look up next icon, compare length.
+        lda     selected_file_list,x
+        asl     a
+        tay
+        add16   file_table,y, #IconEntry::len, entry_ptr
+        ldy     #0
+        lda     (entry_ptr),y   ; len
+        sec
+        sbc     #2              ; remove leading/trailing space
+        sta     cmp_len2
+        inc16   entry_ptr       ; points at start of name
+
+        lda     (filename2),y
+        and     #NAME_LENGTH_MASK
+        cmp_len2 := *+1
+        cmp     #0
+        bne     loop2            ; lengths don't match, so not a match
+
+        ;; Bytewise compare names.
+        sta     cpy_len2
+next2:  iny
+        lda     (entry_ptr),y
+        and     #CHAR_MASK
+        cmp     #'a'
+        bcc     :+
+        and     #CASE_MASK      ; make upper-case
+:       sta     cmp_char2
+        lda     (filename2),y
+        and     #CHAR_MASK
+        cmp     #'a'
+        bcc     :+
+        and     #CASE_MASK      ; make upper-case
+        cmp_char2 := *+1
+:       cmp     #0
+        bne     loop2           ; no match - try next icon
+        cpy_len2 := *+1
+        cpy     #0
+        bne     next2
+
+L0CA2:  stx     match2          ; match, or $FF if none
+
+        lda     match
+        and     match2
+        cmp     #$FF            ; if either didn't match
+        beq     clear
+        lda     match2
+        cmp     match
+        beq     clear           ; if they're the same
+        rts                     ; otherwise carry is order
+
+        ;; No match
         sec
         rts
 
-L0CBA:  clc
+clear:  clc
         rts
 
-L0CBC:  .byte   0
-L0CBD:  .byte   0
+match:  .byte   0
+match2: .byte   0
 .endproc
 
 ;;; ============================================================

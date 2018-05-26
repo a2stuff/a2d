@@ -8613,7 +8613,7 @@ selected_device_icon:
         ;; Assign icon number
         ldx     cached_window_icon_count
         dex
-        ldy     #IconEntry::index
+        ldy     #IconEntry::id
         lda     (icon_ptr),y
         sta     cached_window_icon_list,x
         jsr     pop_zp_addrs

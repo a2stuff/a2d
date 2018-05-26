@@ -166,7 +166,7 @@ file_table := $DD9F     ; file address table
 ;;;      .res  17  name  (name, with a space before and after)
 
 .struct IconEntry
-        index           .byte
+        id              .byte
         state           .byte
         win_type        .byte
         iconx           .word

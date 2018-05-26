@@ -412,13 +412,15 @@ L949D:  ldx     highlight_count
         sta     highlight_list,x
         inc     highlight_count
 
-        lda     (ptr),y ; icon num
-        ldx     #1                   ; new position
+        lda     (ptr),y         ; icon num
+        ldx     #1              ; new position
         jsr     change_highlight_index
-        ldy     #0
-        lda     (ptr),y
-        ldx     #1
-        jsr     LA2E3
+
+        ldy     #IconEntry::id
+        lda     (ptr),y         ; icon num
+        ldx     #1              ; new position
+        jsr     change_icon_index
+
         jsr     L9F9F
         return  #0              ; Highlighted
 .endproc
@@ -509,10 +511,12 @@ found:  asl     a
 :       jsr     calc_icon_poly
         MGTK_CALL MGTK::SetPenMode, pencopy_2
         jsr     draw_icon
-        ldy     #0
-        lda     (ptr),y
-        ldx     num_icons
-        jsr     LA2E3
+
+        ldy     #IconEntry::id
+        lda     (ptr),y         ; icon num
+        ldx     num_icons       ; new position
+        jsr     change_icon_index
+
         dec     num_icons
         lda     #0
         ldx     num_icons
@@ -616,7 +620,7 @@ loop:   lda     icon_table,x
         bne     :+
 
         ;; Append icon number to buffer.
-        ldy     #0
+        ldy     #IconEntry::id
         lda     (ptr),y
         ldy     icon
         sta     buffer,y
@@ -706,10 +710,13 @@ L96E5:  dec     L96D6
         ldy     #0
         cmp     ($06),y
         bne     L96DD
-        ldy     #0
-        lda     ($08),y
-        ldx     num_icons
-        jsr     LA2E3
+
+        ;; Move to end of icon list
+        ldy     #IconEntry::id
+        lda     ($08),y         ; icon num
+        ldx     num_icons       ; icon index
+        jsr     change_icon_index
+
         dec     num_icons
         lda     #0
         ldx     num_icons
@@ -851,13 +858,15 @@ L97F6:  .byte   0
         sta     L982A
         tya
         sta     ($06),y
+
         ldy     #4
-L9803:  lda     ($06),y
+:       lda     ($06),y
         sta     L9C8D,y
         sta     L9C91,y
         dey
         cpy     #0
-        bne     L9803
+        bne     :-
+
         jsr     push_zp_addrs
         lda     L982A
         jsr     L9EB4
@@ -962,29 +971,33 @@ L9909:  sta     L9834
         cmp     highlight_count
         beq     L9936
         jsr     push_zp_addrs
+
         lda     $08
         sec
-        sbc     #$22
+        sbc     #icon_poly_size
         sta     $08
         bcs     L992D
         dec     $08+1
+
 L992D:  ldy     #IconEntry::state
         lda     #$80            ; Highlighted
         sta     ($08),y
         jsr     pop_zp_addrs
-L9936:  ldx     #$21
-        ldy     #$21
+L9936:  ldx     #icon_poly_size-1
+        ldy     #icon_poly_size-1
+
 L993A:  lda     poly,x
         sta     ($08),y
         dey
         dex
         bpl     L993A
+
         lda     #8
         ldy     #0
         sta     ($08),y
         lda     $08
         clc
-        adc     #$22
+        adc     #icon_poly_size
         sta     $08
         bcc     L9954
         inc     $08+1
@@ -1056,12 +1069,12 @@ L99C7:  dey
         sta     L9C7C
         iny
 L99E1:  iny
-        cpy     #$22
+        cpy     #icon_poly_size
         bne     L9974
         ldy     #IconEntry::state
         lda     ($08),y
         beq     L99FC
-        add16   $08, #34, $08
+        add16   $08, #icon_poly_size, $08
         jmp     L9972
 
 L99FC:  MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
@@ -1176,14 +1189,14 @@ L9B62:  lda     ($08),y
         adc     L9C99
         sta     ($08),y
         iny
-        cpy     #$22
+        cpy     #icon_poly_size
         bne     L9B62
         ldy     #IconEntry::state
         lda     ($08),y
         beq     L9B9C
         lda     $08
         clc
-        adc     #$22
+        adc     #icon_poly_size
         sta     $08
         bcc     L9B99
         inc     $08+1
@@ -1264,7 +1277,7 @@ L9C29:  lda     highlight_list,x
         pha
         lda     $08
         clc
-        adc     #$22
+        adc     #icon_poly_size
         sta     $08
         bcc     L9C60
         inc     $08+1
@@ -1476,7 +1489,7 @@ start:  lda     has_highlight
 
         ;; Move it to the end of the highlight list
 :       ldx     highlight_count ; new position
-        ldy     #0
+        ldy     #IconEntry::id
         lda     (ptr),y         ; icon num
         jsr     change_highlight_index
 
@@ -1738,6 +1751,8 @@ LA189:  rts
 ;;;
 ;;; (Label is always at least as wide as the icon)
 
+icon_poly_size := (8 * .sizeof(MGTK::Point)) + 2
+
 .proc calc_icon_poly
         entry_ptr := $6
         bitmap_ptr := $8
@@ -1917,38 +1932,47 @@ LA2DD:  pla
 .endproc
 
 ;;; ============================================================
+;;; A = icon number to move
+;;; X = position in highlight list
 
-.proc LA2E3
-        stx     LA322
-        sta     LA323
+.proc change_icon_index
+        stx     new_pos
+        sta     icon_num
+
+        ;; Find position of icon in icon table
         ldx     #0
-LA2EB:  lda     icon_table,x
-        cmp     LA323
-        beq     LA2FA
+:       lda     icon_table,x
+        cmp     icon_num
+        beq     :+
         inx
         cpx     num_icons
-        bne     LA2EB
+        bne     :-
         rts
 
-LA2FA:  lda     icon_table+1,x
+        ;; Shift items down
+:       lda     icon_table+1,x
         sta     icon_table,x
         inx
         cpx     num_icons
-        bne     LA2FA
+        bne     :-
+
+        ;; Shift items up
         ldx     num_icons
-LA309:  cpx     LA322
-        beq     LA318
+:       cpx     new_pos
+        beq     place
         lda     icon_table-2,x
         sta     icon_table-1,x
         dex
-        jmp     LA309
+        jmp     :-
 
-LA318:  ldx     LA322
-        lda     LA323
+        ;; Place at new position
+place:  ldx     new_pos
+        lda     icon_num
         sta     icon_table-1,x
         rts
-LA322:  .byte   0
-LA323:  .byte   0
+
+new_pos:        .byte   0
+icon_num:       .byte   0
 .endproc
 
 ;;; ============================================================
@@ -1959,7 +1983,7 @@ LA323:  .byte   0
         stx     new_pos
         sta     icon_num
 
-        ;; Find position of icon A in highlight list
+        ;; Find position of icon in highlight list
         ldx     #0
 :       lda     highlight_list,x
         cmp     icon_num
@@ -1979,13 +2003,14 @@ LA323:  .byte   0
         ;; Shift items up
         ldx     highlight_count
 :       cpx     new_pos
-        beq     LA359
+        beq     place
         lda     highlight_list-2,x
         sta     highlight_list-1,x
         dex
         jmp     :-
 
-LA359:  ldx     new_pos
+        ;; Place at new position
+place:  ldx     new_pos
         lda     icon_num
         sta     highlight_list-1,x
         rts
@@ -2165,7 +2190,7 @@ LA466:  txa
         ;; Is icon highlighted?
         lda     has_highlight
         beq     LA49D
-        ldy     #0              ; icon num
+        ldy     #IconEntry::id ; icon num
         lda     (ptr),y
         ldx     #0
 :       cmp     highlight_list,x
@@ -2174,7 +2199,7 @@ LA466:  txa
         cpx     highlight_count
         bne     :-
 
-LA49D:  ldy     #0              ; icon num
+LA49D:  ldy     #IconEntry::id ; icon num
         lda     (ptr),y
         sta     LA3AE
         bit     LA3B7
@@ -3263,8 +3288,8 @@ LBA0B:  sta     grafport3_viewloc_xcoord,x
         sta     grafport3_cliprect_x1,x
         dex
         bpl     LBA0B
-        copy16  #$226, grafport3_cliprect_x2
-        copy16  #$B9, grafport3_cliprect_y2
+        copy16  #550, grafport3_cliprect_x2
+        copy16  #185, grafport3_cliprect_y2
         MGTK_RELAY2_CALL MGTK::SetPort, grafport3
         addr_call_indirect LBF8B, portmap::viewloc::xcoord
         sty     LBFCA
@@ -3308,12 +3333,12 @@ LBAE5:  cmp     alert_table,y
         beq     LBAEF
         dey
         bpl     LBAE5
-        ldy     #$00
+        ldy     #0
 LBAEF:  tya
         asl     a
         tay
         copy16  prompt_table,y, prompt_addr
-        cpx     #$00
+        cpx     #0
         beq     LBB0B
         txa
         and     #$FE
@@ -3359,7 +3384,7 @@ LBB9A:  cmp     #MGTK::event_kind_key_down
         bne     LBBC3
         MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY2_CALL MGTK::PaintRect, cancel_rect
-        lda     #$01
+        lda     #1
         jmp     LBC55
 
 LBBC3:  bit     alert_action
@@ -3368,7 +3393,7 @@ LBBC3:  bit     alert_action
         bne     LBBE3
 LBBCC:  MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY2_CALL MGTK::PaintRect, try_again_rect
-        lda     #$00
+        lda     #0
         jmp     LBC55
 
 LBBE3:  cmp     #'A'
@@ -3381,7 +3406,7 @@ LBBEE:  cmp     #CHAR_RETURN
         bne     LBC09
         MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY2_CALL MGTK::PaintRect, try_again_rect
-        lda     #$02
+        lda     #2
         jmp     LBC55
 
 LBC09:  jmp     LBB87
@@ -3417,7 +3442,7 @@ LBC55:  pha
 
 LBC6D:  MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY2_CALL MGTK::PaintRect, try_again_rect
-        lda     #$00
+        lda     #0
         sta     LBCE8
 LBC84:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
         lda     event_kind
@@ -3448,13 +3473,13 @@ LBCDB:  lda     LBCE8
         beq     LBCE3
         jmp     LBB87
 
-LBCE3:  lda     #$00
+LBCE3:  lda     #0
         jmp     LBC55
 
 LBCE8:  .byte   0
 LBCE9:  MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY2_CALL MGTK::PaintRect, cancel_rect
-        lda     #$00
+        lda     #0
         sta     LBD64
 LBD00:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
         lda     event_kind
@@ -3485,11 +3510,11 @@ LBD57:  lda     LBD64
         beq     LBD5F
         jmp     LBB87
 
-LBD5F:  lda     #$01
+LBD5F:  lda     #1
         jmp     LBC55
 
 LBD64:  .byte   0
-LBD65:  lda     #$00
+LBD65:  lda     #0
         sta     LBDE0
         MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY2_CALL MGTK::PaintRect, try_again_rect
@@ -3522,7 +3547,7 @@ LBDD3:  lda     LBDE0
         beq     LBDDB
         jmp     LBB87
 
-LBDDB:  lda     #$02
+LBDDB:  lda     #2
         jmp     LBC55
 .endproc
         show_alert_dialog := show_alert_dialog_impl::start
@@ -3576,7 +3601,7 @@ LBE5C:  .byte   0
         ldx     LBFCD
         ldy     LBFCE
         lda     #$FF
-        cpx     #$00
+        cpx     #0
         beq     LBE78
 LBE73:  clc
         rol     a
@@ -3776,7 +3801,7 @@ LBFCF:  .byte   $00
         ptr := $06
 
         stax    ptr
-        ldy     #$00
+        ldy     #0
         lda     (ptr),y         ; Check length
         beq     end
         sta     ptr+2
