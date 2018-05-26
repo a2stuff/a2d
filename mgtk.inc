@@ -12,38 +12,47 @@ MLI     := $4000
 ;;; Graphics Primitives
 ;;; ============================================================
 
-;;; Point record:
-;;;
-;;; .word       xcoord
-;;; .word       ycoord
+.struct Point
+        xcoord  .word
+        ycoord  .word
+.endstruct
 
-;;; Rect record:
-;;;
-;;; .word       x1
-;;; .word       y1
-;;; .word       x2
-;;; .word       y2
+.struct Rect
+        x1      .word
+        y1      .word
+        x2      .word
+        y2      .word
+.endstruct
 
-;;; MapInfo record:
-;;;
-;;; Point       viewloc
-;;; .addr       mapbits         screen_mapbits
-;;; .byte       mapwidth        screen_mapwidth
-;;; .byte       reserved
-;;; Rect        maprect         a.k.a. cliprect
+.struct Pattern
+        bits    .res 8
+.endstruct
 
-;;; GrafPort record:
-;;;
-;;; MapInfo     portmap
-;;; .res 8      penpattern
-;;; .byte       colormask_and
-;;; .byte       colormask_or
-;;; Point       penloc
-;;; .byte       penwidth        horizontal pen thickness
-;;; .byte       penheight       vertical pen thickness
-;;; .byte       penmode
-;;; .byte       textback        text background
-;;; .addr       textfont
+.struct MapInfo
+        viewloc         .tag Point
+        mapbits         .word   ; screen_mapbits for windows
+        mapwidth        .byte   ; screen_mapwidth for windows
+        reserved        .byte
+        maprect         .tag Rect ; a.k.a. cliprect
+.endstruct
+
+.struct GrafPort
+        ;; MapInfo
+        viewloc         .tag Point
+        mapbits         .addr
+        mapwidth        .byte
+        reserved        .byte
+        maprect         .tag Rect
+
+        pattern         .tag Pattern
+        colormasks      .byte 2 ; colormask_and, colormask_or
+        penloc          .tag Point
+        penwidth        .byte   ; horizontal pen thickness
+        penheight       .byte   ; vertical pen thickness
+        penmode         .byte
+        textback        .byte   ; text background
+        textfont        .addr
+.endstruct
 
 ;;; PolyList record:
 
@@ -53,15 +62,14 @@ MLI     := $4000
 ;;; Point       vertex2
 ;;; ...
 
-;;; Font record:
-;;;
-;;; .byte       fonttype        0=regular, $80=double-width
-;;; .byte       lastchar        char code of last character (usually $7F)
-;;; .byte       height          pixels (1-16)
-;;; .res N      charwidth       pixels, for each char
-;;; .res N      row0            bits
-;;; .res N      row0right       bits (double-width only)
-;;; ...
+.struct Font
+        fonttype        .byte   ; 0=regular, $80=double-width
+        lastchar        .byte   ; char code of last character (usually $7F)
+        height          .byte   ; pixels (1-16)
+        ;; charwidth    .res N    pixels, for each char
+        ;; row0         .res N    bits
+        ;; row0right    .res N    bits (double-width only)
+.endstruct
 
 NoOp            := $00          ; No-op
 ;;; (no parameters)
@@ -218,10 +226,15 @@ GetIntHandler   := $23          ; Get address of interrupt handler
 
 ;;; Cursor record:
 ;;;
-;;; .res 24     bitmap          2x12 byte bitmap (XOR'd after mask)
-;;; .res 24     mask            2x12 byte mask (OR'd with screen)
-;;; .byte       hotx            hotspot coords (pixels)
-;;; .byte       hoty
+
+cursor_height                   := 12
+cursor_width                    := 2
+
+.struct Cursor
+        bits    .byte   24      ; 2x12 byte bitmap (XOR'd after mask)
+        mask    .byte   24      ; 2x12 byte mask (OR'd with screen)
+        hotspot .byte   2       ; x, y - hotspot coords (pixels)
+.endstruct
 
 SetCursor       := $24          ; Set cursor definition
 ;;; (input is address of Cursor record)
@@ -278,24 +291,29 @@ SetKeyEvent     := $2E          ; If set, keypresses are ignored by Tool Kit
 ;;;
 ;;; .word       count           Number of menu bar items
 ;;; (array of...)
-;;; .byte       menu_id         Menu identifier
-;;; .byte       disabled        Flag
-;;; .addr       title           Address of length-prefixed string
-;;; .addr       menu            Address of Menu record
-;;; .res 6      reserved        Reserved
-;;; ...
-;;;
+
+.struct MenuBarItem
+        menu_id         .byte   ; Menu identifier
+        disabled        .byte   ; Flag
+        title           .addr   ; Address of length-prefixed string
+        menu            .addr   ; Address of Menu record
+        reserved        .res 6  ; Reserved
+.endstruct
+
+
 ;;; Menu record:
 ;;;
 ;;; .byte       count           Number of items in menu
 ;;; .res  5     reserved        Reserved
 ;;; (array of...)
-;;; .byte       options         bit 0=OA, 1=SA, 2=mark, 5=check, 6=filler, 7=disabled
-;;; .byte       mark_char       Custom mark character if mark option set
-;;; .byte       char1           ASCII code of shortcut #1 (e.g. uppercase B); or 0
-;;; .byte       char2           ASCII code of shortcut #2 (e.g. lowercase b, or same); or 0
-;;; .addr       name            Address of length-prefixed string
-;;; ...
+
+.struct MenuItem
+        options         .byte ; bit 0=OA, 1=SA, 2=mark, 5=check, 6=filler, 7=disabled
+        mark_char       .byte ; Custom mark character if mark option set
+        char1           .byte ; ASCII code of shortcut #1 (e.g. uppercase B); or 0
+        char2           .byte ; ASCII code of shortcut #2 (e.g. lowercase b, or same); or 0
+        name            .addr ; Address of length-prefixed string
+.endstruct
 
 InitMenu        := $2F
 ;;; .byte       solid_char      char code to use for solid apple glyph
@@ -342,28 +360,28 @@ SetMark         := $37
 ;;; --------------------------------------------------
 ;;; Window Manager Calls
 
-;;; WInfo record:
-;;;
-;;; .byte       id
-;;; .byte       options         option_*
-;;; .addr       title
-;;; .byte       hscroll         scroll_option_*
-;;; .byte       vscroll         scroll_option_*
-;;; .byte       hthumbmax
-;;; .byte       hthumbpos
-;;; .byte       vthumbmax
-;;; .byte       vthumbpos
-;;; .byte       status
-;;; .byte       reserved
-;;; .word       mincontwidth    minimum content size (horizontal)
-;;; .word       mincontlength   minimum content size (vertical)
-;;; .word       maxcontwidth    maximum content size (horizontal)
-;;; .word       maxcontlength   maximum content size (vertical)
-;;; GrafPort    windowport      GrafPort record
-;;; .addr       nextwinfo       address of next lower window in stack
+.struct Winfo
+        window_id          .byte
+        options            .byte ; option_*
+        title              .addr
+        hscroll            .byte ; scroll_option_*
+        vscroll            .byte ; scroll_option_*
+        hthumbmax          .byte
+        hthumbpos          .byte
+        vthumbmax          .byte
+        vthumbpos          .byte
+        status             .byte
+        reserved           .byte
+        mincontwidth       .word ; minimum content size (horizontal)
+        mincontheight      .word ; minimum content size (vertical)
+        maxcontwidth       .word ; maximum content size (horizontal)
+        maxcontheight      .word ; maximum content size (vertical)
+        port               .tag GrafPort
+        nextwinfo          .addr ; address of next lower window in stack
+.endstruct
 
 OpenWindow      := $38
-;;; (input is address of WInfo record)
+;;; (input is address of Winfo record)
 
 CloseWindow     := $39
 ;;; .byte window_id
@@ -571,86 +589,10 @@ inpoly_outside          := $00
 ;;; ============================================================
 ;;; Offsets
 
-.struct Point
-        xcoord  .word
-        ycoord  .word
-.endstruct
-
-.struct Rect
-        x1      .word
-        y1      .word
-        x2      .word
-        y2      .word
-.endstruct
-
-.struct Pattern
-        bits    .res 8
-.endstruct
-
-.struct MapInfo
-        viewloc         .tag Point
-        mapbits         .word
-        mapwidth        .byte
-        reserved        .byte
-        maprect         .tag Rect
-.endstruct
-
-.struct GrafPort
-        viewloc         .tag Point
-        mapbits         .addr
-        mapwidth        .byte
-        reserved        .byte
-        maprect         .tag Rect
-        pattern         .tag Pattern
-        colormasks      .byte 2
-        penloc          .tag Point
-        penwidth        .byte
-        penheight       .byte
-        penmode         .byte
-        textback        .byte
-        textfont        .addr
-.endstruct
-
-.struct Winfo
-        window_id          .byte
-        options            .byte
-        title              .addr
-        hscroll            .byte
-        vscroll            .byte
-        hthumbmax          .byte
-        hthumbpos          .byte
-        vthumbmax          .byte
-        vthumbpos          .byte
-        status             .byte
-        reserved           .byte
-        mincontwidth       .word
-        mincontheight      .word
-        maxcontwidth       .word
-        maxcontheight      .word
-        port               .tag GrafPort
-        nextwinfo          .addr
-.endstruct
-
-menu_size                       := 12
-
-menu_item_size                  := 6
-
 short_event_size                := 4        ; events that don't have mouse coordinates
 event_size                      := 5        ; any kind of event
 
-cursor_height                   := 12
-cursor_width                    := 2
-
-cursor_offset_mask              := cursor_width * cursor_height
-cursor_offset_hotspot           := 2 * cursor_width * cursor_height
-cursor_size                     := cursor_offset_hotspot + 2
-
-font_offset_fonttype            := 0
-font_offset_lastchar            := 1
-font_offset_height              := 2
-font_offset_charwidth           := 3
-
-
+;;; ============================================================
 ;;; Errors
 
 error_empty_object := $81

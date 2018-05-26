@@ -4110,12 +4110,12 @@ pointer_cursor_addr:
         ldax    params_addr
         stax    active_cursor
         clc
-        adc     #MGTK::cursor_offset_mask
+        adc     #MGTK::Cursor::mask
         bcc     :+
         inx
 :       stax    active_cursor_mask
 
-        ldy     #MGTK::cursor_offset_hotspot
+        ldy     #MGTK::Cursor::hotspot
         lda     (params_addr),y
         sta     cursor_hotspot_x
         iny
@@ -4616,7 +4616,7 @@ savesize:   .res 2
         jsr     set_irq_mode
         jsr     set_op_sys
 
-        ldy     #MGTK::font_offset_height
+        ldy     #MGTK::Font::height
         lda     (params::sysfontptr),y
         tax
         stx     sysfont_height
@@ -5553,13 +5553,13 @@ name:      .addr   0
         adc     #0
         sta     menu_ptr+1
 
-        ldy     #MGTK::menu_size-1
+        ldy     #.sizeof(MGTK::MenuBarItem)-1
 :       lda     (menu_ptr),y
         sta     curmenu,y
         dey
         bpl     :-
 
-        ldy     #MGTK::menu_item_size-1
+        ldy     #.sizeof(MGTK::MenuItem)-1
 :       lda     (curmenu::menu_items),y
         sta     curmenuinfo-1,y
         dey
@@ -5572,13 +5572,13 @@ name:      .addr   0
 
 
 .proc put_menu
-        ldy     #MGTK::menu_size-1
+        ldy     #.sizeof(MGTK::MenuBarItem)-1
 :       lda     curmenu,y
         sta     (menu_ptr),y
         dey
         bpl     :-
 
-        ldy     #MGTK::menu_item_size-1
+        ldy     #.sizeof(MGTK::MenuItem)-1
 :       lda     curmenuinfo-1,y
         sta     (curmenu::menu_items),y
         dey
@@ -5589,11 +5589,11 @@ name:      .addr   0
 
 .proc get_menu_item
         stx     menu_item_index
-        lda     #MGTK::menu_item_size
+        lda     #.sizeof(MGTK::MenuItem)
         clc
 :       dex
         bmi     :+
-        adc     #MGTK::menu_item_size
+        adc     #.sizeof(MGTK::MenuItem)
         bne     :-
 :
         adc     curmenu::menu_items
@@ -5602,7 +5602,7 @@ name:      .addr   0
         adc     #0
         sta     menu_item_ptr+1
 
-        ldy     #MGTK::menu_item_size-1
+        ldy     #.sizeof(MGTK::MenuItem)-1
 :       lda     (menu_item_ptr),y
         sta     curmenuitem,y
         dey
@@ -5612,7 +5612,7 @@ name:      .addr   0
 
 
 .proc put_menu_item
-        ldy     #MGTK::menu_item_size-1
+        ldy     #.sizeof(MGTK::MenuItem)-1
 :       lda     curmenuitem,y
         sta     (menu_item_ptr),y
         dey
