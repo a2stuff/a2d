@@ -249,7 +249,7 @@ desktop_jump_table:
         .addr   L9EBE           ; $0B
         .addr   REDRAW_ICONS_IMPL
         .addr   ICON_IN_RECT_IMPL
-        .addr   L958F           ; $0E
+        .addr   REDRAW_ICON_IDX_IMPL
 
 .macro  DESKTOP_DIRECT_CALL    op, addr, label
         jsr DESKTOP_DIRECT
@@ -381,7 +381,7 @@ bail1:  return  #1              ; Not found
 L9469:  asl     a
         tax
         copy16  icon_ptrs,x, ptr
-        ldy     #icon_entry_offset_state
+        ldy     #IconEntry::state
         lda     (ptr),y
         bne     L947E           ; Already set ??? Routine semantics are incorrect ???
         return  #2
@@ -499,7 +499,7 @@ bail1:  return  #1              ; Not found
 found:  asl     a
         tax
         copy16  icon_ptrs,x, ptr
-        ldy     #icon_entry_offset_state
+        ldy     #IconEntry::state
         lda     (ptr),y
         bne     :+
 
@@ -508,7 +508,7 @@ found:  asl     a
         ;; Unhighlight
 :       jsr     calc_icon_poly
         MGTK_CALL MGTK::SetPenMode, pencopy_2
-        jsr     LA39D
+        jsr     draw_icon
         ldy     #0
         lda     (ptr),y
         ldx     num_icons
@@ -517,7 +517,7 @@ found:  asl     a
         lda     #0
         ldx     num_icons
         sta     icon_table,x
-        ldy     #icon_entry_offset_state
+        ldy     #IconEntry::state
         lda     #0
         sta     (ptr),y
         lda     has_highlight
@@ -549,18 +549,20 @@ done:   return  #0              ; Unhighlighted
 .endproc
 
 ;;; ============================================================
+;;; REDRAW_ICON_IDX IMPL
 
-;;; DESKTOP $0E IMPL
-
-.proc L958F
-        ptr := $6
+.proc REDRAW_ICON_IDX_IMPL
+        PARAM_BLOCK params, $06
+ptr_icon_idx:   .addr   0
+        END_PARAM_BLOCK
+        ptr := $06              ; Overwrites param
 
         ldy     #0
-        lda     (ptr),y
+        lda     (params::ptr_icon_idx),y
         asl     a
         tax
         copy16  icon_ptrs,x, ptr
-        jmp     LA39D
+        jmp     draw_icon
 .endproc
 
 ;;; ============================================================
@@ -592,7 +594,7 @@ start:  lda     HIGHLIGHT_ICON_IMPL ; ???
 
 start2:
         ;; Zero out buffer
-        ldx     #$7E            ; 127 icons
+        ldx     #max_icon_count-1
         lda     #0
 :       sta     buffer,x
         dex
@@ -606,7 +608,7 @@ loop:   lda     icon_table,x
         asl     a
         tay
         copy16  icon_ptrs,y, ptr
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     (ptr),y
         and     #icon_entry_winid_mask
         ldy     #0
@@ -665,7 +667,7 @@ L969D:  ldx     L9696
         asl     a
         tax
         copy16  icon_ptrs,x, $08
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     ($08),y
         and     #icon_entry_winid_mask
         ldy     #0
@@ -698,7 +700,7 @@ L96E5:  dec     L96D6
         asl     a
         tax
         copy16  icon_ptrs,x, $08
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     ($08),y
         and     #icon_entry_winid_mask
         ldy     #0
@@ -712,7 +714,7 @@ L96E5:  dec     L96D6
         lda     #0
         ldx     num_icons
         sta     icon_table,x
-        ldy     #icon_entry_offset_state
+        ldy     #IconEntry::state
         lda     #0
         sta     ($08),y
         lda     has_highlight
@@ -810,7 +812,7 @@ L97B9:  txa
         asl     a
         tax
         copy16  icon_ptrs,x, $06
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_winid_mask
         cmp     L97F5
@@ -860,7 +862,7 @@ L9803:  lda     ($06),y
         lda     L982A
         jsr     L9EB4
         stax    $06
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_winid_mask
         sta     L9829
@@ -931,7 +933,7 @@ L98AC:  lda     highlight_count
 :       lda     highlight_list
         jsr     L9EB4
         stax    $06
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_winid_mask
         sta     L9832
@@ -966,7 +968,7 @@ L9909:  sta     L9834
         sta     $08
         bcs     L992D
         dec     $08+1
-L992D:  ldy     #icon_entry_offset_state
+L992D:  ldy     #IconEntry::state
         lda     #$80            ; Highlighted
         sta     ($08),y
         jsr     pop_zp_addrs
@@ -997,7 +999,7 @@ L9961:  lda     drag_outline_buffer+2,x
         dex
         bpl     L9961
         copy16  #drag_outline_buffer, $08
-L9972:  ldy     #icon_entry_offset_win_type
+L9972:  ldy     #IconEntry::win_type
 L9974:  lda     ($08),y
         cmp     L9C76
         iny
@@ -1056,7 +1058,7 @@ L99C7:  dey
 L99E1:  iny
         cpy     #$22
         bne     L9974
-        ldy     #icon_entry_offset_state
+        ldy     #IconEntry::state
         lda     ($08),y
         beq     L99FC
         add16   $08, #34, $08
@@ -1176,7 +1178,7 @@ L9B62:  lda     ($08),y
         iny
         cpy     #$22
         bne     L9B62
-        ldy     #icon_entry_offset_state
+        ldy     #IconEntry::state
         lda     ($08),y
         beq     L9B9C
         lda     $08
@@ -1226,7 +1228,7 @@ L9BF3:  dex
         copy16  icon_ptrs,x, $06
         jsr     calc_icon_poly
         MGTK_CALL MGTK::SetPenMode, pencopy_2
-        jsr     LA39D
+        jsr     draw_icon
         pla
         tax
         jmp     L9BF3
@@ -1241,7 +1243,7 @@ L9C29:  lda     highlight_list,x
         asl     a
         tax
         copy16  icon_ptrs,x, $06
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     ($08),y
         iny
         sta     ($06),y
@@ -1420,7 +1422,7 @@ L9E3D:  cmp     highlight_list,x
         asl     a
         tax
         copy16  icon_ptrs,x, $06
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_winid_mask
         sta     L9831
@@ -1567,7 +1569,7 @@ L9F9F:  lda     #$80
         sta     L9F92
 
 .proc L9FA4
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_winid_mask
         bne     :+
@@ -1575,11 +1577,11 @@ L9F9F:  lda     #$80
         ora     #$40
         sta     L9F92
         ;; copy icon coords and bits
-:       ldy     #icon_entry_offset_iconx
+:       ldy     #IconEntry::iconx
 :       lda     ($06),y
-        sta     paintbits_params2::viewloc-icon_entry_offset_iconx,y
+        sta     paintbits_params2::viewloc-IconEntry::iconx,y
         iny
-        cpy     #icon_entry_offset_iconx + 6 ; x/y/bits
+        cpy     #IconEntry::iconx + 6 ; x/y/bits
         bne     :-
 
         jsr     push_zp_addrs
@@ -1655,7 +1657,7 @@ LA097:  MGTK_CALL MGTK::HideCursor, DESKTOP_DIRECT ; These params should be igno
 LA0B6:  MGTK_CALL MGTK::PaintBits, paintbits_params
         MGTK_CALL MGTK::SetPenMode, penXOR_2
 LA0C2:  MGTK_CALL MGTK::PaintBits, paintbits_params2
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_open_mask
         beq     LA0F2
@@ -1743,7 +1745,7 @@ LA189:  rts
         jsr     push_zp_addrs
 
         ;; v0 - copy from icon entry
-        ldy     #icon_entry_offset_iconx+3
+        ldy     #IconEntry::iconx+3
         ldx     #3
 :       lda     (entry_ptr),y
         sta     poly::v0,x
@@ -1757,7 +1759,7 @@ LA189:  rts
         ;; Left edge of icon (v0, v7)
         copy16  poly::v0::xcoord, poly::v7::xcoord
 
-        ldy     #icon_entry_offset_iconbits
+        ldy     #IconEntry::iconbits
         lda     (entry_ptr),y
         sta     bitmap_ptr
         iny
@@ -1814,7 +1816,7 @@ LA189:  rts
         sta     poly::v5::ycoord+1
 
         ;; Compute text width
-        ldy     #icon_entry_size+1
+        ldy     #.sizeof(IconEntry)+1
         ldx     #19             ; len byte + 15 chars + 2 spaces
 :       lda     (entry_ptr),y
         sta     text_buffer-1,x
@@ -1900,7 +1902,7 @@ LA2B5:  bmi     LA2AA
         asl     a
         tax
         copy16  icon_ptrs,x, $06
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_winid_mask
         bne     LA2DD
@@ -2048,7 +2050,8 @@ stash:  .word   0
 
 ;;; ============================================================
 
-LA39D:  MGTK_CALL MGTK::InitPort, grafport
+draw_icon:
+        MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport
         jmp     LA3B9
 
@@ -2153,7 +2156,7 @@ LA466:  txa
         asl     a
         tax
         copy16  icon_ptrs,x, ptr
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     (ptr),y
         and     #$07            ; window_id
         cmp     LA3AD

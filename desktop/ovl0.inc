@@ -202,7 +202,7 @@ L86C4:  sta     ($06),y
 
         cmp     #$04
         bne     L86ED
-        ldy     #icon_entry_offset_iconbits
+        ldy     #IconEntry::iconbits
         lda     #<$14B4            ; $14B4 ???
         sta     ($06),y
         iny
@@ -212,7 +212,7 @@ L86C4:  sta     ($06),y
 
 L86ED:  cmp     #$0B
         bne     L86FF
-        ldy     #icon_entry_offset_iconbits
+        ldy     #IconEntry::iconbits
         lda     #<$1470            ; $1470 ???
         sta     ($06),y
         iny
@@ -220,14 +220,14 @@ L86ED:  cmp     #$0B
         sta     ($06),y
         jmp     L870A
 
-L86FF:  ldy     #icon_entry_offset_iconbits
+L86FF:  ldy     #IconEntry::iconbits
         lda     #<$1440            ; $1440 ???
         sta     ($06),y
         iny
         lda     #>$1440
         sta     ($06),y
 
-L870A:  ldy     #icon_entry_offset_win_type
+L870A:  ldy     #IconEntry::win_type
         lda     #0
         sta     ($06),y
         inc     L8738
@@ -235,7 +235,7 @@ L870A:  ldy     #icon_entry_offset_win_type
         asl     a
         asl     a
         tax
-        ldy     #icon_entry_offset_iconx
+        ldy     #IconEntry::iconx
 :       lda     L8739,x
         sta     ($06),y
         inx

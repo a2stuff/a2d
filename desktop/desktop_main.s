@@ -1749,7 +1749,7 @@ L4DF2:  txa
         lda     selected_icon_list,x
         jsr     icon_entry_lookup
         stax    $06
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_type_mask
         bne     L4E10
@@ -1860,7 +1860,7 @@ L4EC3:  sta     cached_window_icon_count
         sta     icon_param
         jsr     icon_entry_lookup
         stax    $06
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     ($06),y
         and     #(~icon_entry_open_mask)&$FF ; clear open_flag
         sta     ($06),y
@@ -2707,7 +2707,7 @@ L55D1:  ldx     L544A
         sta     selected_icon_list
         jsr     icon_entry_lookup
         stax    $06
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_winid_mask
         sta     selected_window_index
@@ -2720,7 +2720,7 @@ L55F0:  ldx     L544A
         sta     icon_param
         jsr     icon_entry_lookup
         stax    $06
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_winid_mask
         sta     getwinport_params2::window_id
@@ -2739,7 +2739,7 @@ L562B:  rts
 L562C:  lda     icon_param
         jsr     icon_entry_lookup
         stax    $06
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_winid_mask
         sta     getwinport_params2::window_id
@@ -3705,7 +3705,7 @@ L5DF7:  ldx     LE256
 L5DFC:  lda     L5CD9           ; after a double-click (on file or folder)
         jsr     icon_entry_lookup
         stax    $06
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_type_mask
         cmp     #icon_entry_type_sys
@@ -4146,7 +4146,7 @@ L6227:  sta     cached_window_icon_count
         lda     ($06),y
         and     #$0F
         beq     L6276
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     ($06),y
         and     #(~icon_entry_open_mask)&$FF ; clear open_flag
         sta     ($06),y
@@ -4877,7 +4877,7 @@ L6A3E:  .byte   0
         dex
         bpl     :-
         jsr     icon_entry_lookup
-        addax   #icon_entry_offset_len, ptr
+        addax   #IconEntry::len, ptr
         ldy     #0
         lda     (ptr),y
         tay
@@ -4928,11 +4928,11 @@ L6AA7:  stx     cached_window_id
         lda     icon_params2
         jsr     icon_entry_lookup
         stax    $06
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     ($06),y
         ora     #icon_entry_open_mask ; set open_flag
         sta     ($06),y
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_winid_mask
         sta     getwinport_params2::window_id
@@ -5006,11 +5006,11 @@ L6B68:  lda     #$01
         lda     icon_params2
         jsr     icon_entry_lookup
         stax    $06
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     ($06),y
         ora     #icon_entry_open_mask ; set open_flag
         sta     ($06),y
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_winid_mask
         sta     getwinport_params2::window_id
@@ -5962,12 +5962,12 @@ L7471:  lda     ($06),y
         bne     L7471
         lda     #$20
         sta     ($08),y
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     ($08),y
         and     #%11011111       ; ???
         sta     ($08),y
         jsr     pop_zp_addrs
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_winid_mask
         bne     L74D3
@@ -6091,7 +6091,7 @@ L7569:  addr_call_indirect capitalize_string, $08
         pla
         lsr     a
         clc
-        adc     #icon_entry_size
+        adc     #.sizeof(IconEntry)
         sta     ($06),y
         iny
         lda     #$00
@@ -6122,7 +6122,7 @@ L75A3:  sta     ($06),y
         lda     icon_params2
         jsr     icon_entry_lookup
         stax    $06
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_winid_mask
         beq     L75FA
@@ -6347,7 +6347,7 @@ L77DA:  tay
         ;; L7624 = icon type
         jsr     find_icon_details_for_file_type
         addr_call capitalize_string, $1800
-        ldy     #icon_entry_offset_len
+        ldy     #IconEntry::len
         ldx     #0
 L77F0:  lda     $1800,x
         sta     ($08),y
@@ -6389,9 +6389,9 @@ L7862:  lda     L762A
         inc     L762A+1
 L7870:  lda     cached_window_id
         ora     L7624
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         sta     ($08),y
-        ldy     #icon_entry_offset_iconbits
+        ldy     #IconEntry::iconbits
         lda     L7622
         sta     ($08),y
         iny
@@ -6776,7 +6776,7 @@ L7C36:  tax
         lda     cached_window_icon_list,x
         jsr     icon_entry_lookup
         stax    $06
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_winid_mask
         cmp     L7D5C
@@ -8295,7 +8295,7 @@ port_copy:
         bpl     :-
 
         ;; iconx
-        ldy     #icon_entry_offset_iconx
+        ldy     #IconEntry::iconx
         lda     (entry_ptr),y
         clc
         adc     pos_screen
@@ -8317,7 +8317,7 @@ port_copy:
         sta     (entry_ptr),y
 
         ;; iconx
-        ldy     #icon_entry_offset_iconx
+        ldy     #IconEntry::iconx
         lda     (entry_ptr),y
         sec
         sbc     pos_win
@@ -8387,7 +8387,7 @@ pos_win:        .word   0, 0
         bpl     :-
 
         ;; iconx
-        ldy     #icon_entry_offset_iconx
+        ldy     #IconEntry::iconx
         lda     (entry_ptr),y
         sec
         sbc     pos_screen
@@ -8409,7 +8409,7 @@ pos_win:        .word   0, 0
         sta     (entry_ptr),y
 
         ;; iconx
-        ldy     #icon_entry_offset_iconx
+        ldy     #IconEntry::iconx
         lda     (entry_ptr),y
         clc
         adc     pos_win
@@ -8493,30 +8493,30 @@ create_icon:
 
         ;; Fill name with spaces
         ldx     #0
-        ldy     #icon_entry_offset_len
+        ldy     #IconEntry::len
         lda     #$20            ; ??? space? shouldn't this be at +1 ?
 :       sta     (icon_ptr),y
         iny
         inx
-        cpx     #icon_entry_name_bufsize+1
+        cpx     #.sizeof(IconEntry::name)+1
         bne     :-
 
         ;; Copy name, with leading/trailing space
-        ldy     #icon_entry_offset_len
+        ldy     #IconEntry::len
         lda     gdi_data_buffer
         and     #$0F
         sta     gdi_data_buffer
         sta     (icon_ptr),y
         addr_call capitalize_string, gdi_data_buffer ; ???
         ldx     #0
-        ldy     #icon_entry_offset_name+1 ; past leading space
+        ldy     #IconEntry::name+1 ; past leading space
 :       lda     gdi_data_buffer+1,x
         sta     (icon_ptr),y
         iny
         inx
         cpx     gdi_data_buffer
         bne     :-
-        ldy     #icon_entry_offset_len
+        ldy     #IconEntry::len
         lda     (icon_ptr),y
         clc
         adc     #2              ; leading/trailing space
@@ -8552,7 +8552,7 @@ create_icon:
         ;; fall through...
 
 use_ramdisk_icon:
-        ldy     #icon_entry_offset_iconbits
+        ldy     #IconEntry::iconbits
         lda     #<desktop_aux::ramdisk_icon
         sta     (icon_ptr),y
         iny
@@ -8561,7 +8561,7 @@ use_ramdisk_icon:
         jmp     selected_device_icon
 
 use_profile_icon:
-        ldy     #icon_entry_offset_iconbits
+        ldy     #IconEntry::iconbits
         lda     #<desktop_aux::profile_icon
         sta     (icon_ptr),y
         iny
@@ -8572,7 +8572,7 @@ use_profile_icon:
 use_floppy_icon:
         cmp     #$B             ; removable / 4 volumes
         bne     use_floppy140_icon
-        ldy     #icon_entry_offset_iconbits
+        ldy     #IconEntry::iconbits
         lda     #<desktop_aux::floppy800_icon
         sta     (icon_ptr),y
         iny
@@ -8583,7 +8583,7 @@ use_floppy_icon:
 use_floppy140_icon:
         cmp     #DT_DISKII       ; 0 = Disk II
         bne     use_profile_icon ; last chance
-        ldy     #icon_entry_offset_iconbits
+        ldy     #IconEntry::iconbits
         lda     #<desktop_aux::floppy140_icon
         sta     (icon_ptr),y
         iny
@@ -8592,7 +8592,7 @@ use_floppy140_icon:
 
 selected_device_icon:
         ;; Assign icon type
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     #0
         sta     (icon_ptr),y
         inc     device_num
@@ -8602,18 +8602,18 @@ selected_device_icon:
         asl     a               ; device num * 4 is coordinates index
         asl     a
         tax
-        ldy     #icon_entry_offset_iconx
+        ldy     #IconEntry::iconx
 :       lda     desktop_icon_coords_table,x
         sta     (icon_ptr),y
         inx
         iny
-        cpy     #icon_entry_offset_iconbits
+        cpy     #IconEntry::iconbits
         bne     :-
 
         ;; Assign icon number
         ldx     cached_window_icon_count
         dex
-        ldy     #icon_entry_offset_index
+        ldy     #IconEntry::index
         lda     (icon_ptr),y
         sta     cached_window_icon_list,x
         jsr     pop_zp_addrs
@@ -8693,7 +8693,7 @@ L8B25:  jsr     push_zp_addrs
 skip:   lda     icon_params2
         jsr     icon_entry_lookup
         stax    ptr
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     (ptr),y
         and     #(~icon_entry_open_mask)&$FF ; clear open_flag
         sta     ($06),y
@@ -9127,7 +9127,7 @@ L8FA1:  jsr     L8FE1
 L8FA7:  asl     a
         tay
         copy16  icon_entry_address_table,y, $06
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     ($06),y
         rts
 
@@ -9361,7 +9361,7 @@ L918D:  .byte   0
 .proc icon_entry_name_lookup
         asl     a
         tay
-        add16   icon_entry_address_table,y, #icon_entry_offset_len, $06
+        add16   icon_entry_address_table,y, #IconEntry::len, $06
         rts
 .endproc
 
@@ -14267,7 +14267,7 @@ loop:   cpx     #max_icon_count
         sta     (ptr),y
         lda     ptr
         clc
-        adc     #icon_entry_size
+        adc     #.sizeof(IconEntry)
         sta     ptr
         bcc     :+
         inc     ptr+1
@@ -14312,10 +14312,10 @@ trash_name:  PASCAL_STRING " Trash "
         sta     cached_window_icon_list
         jsr     desktop_main::icon_entry_lookup
         stax    ptr
-        ldy     #icon_entry_offset_win_type
+        ldy     #IconEntry::win_type
         lda     #icon_entry_type_trash
         sta     (ptr),y
-        ldy     #icon_entry_offset_iconbits
+        ldy     #IconEntry::iconbits
         lda     #<desktop_aux::trash_icon
         sta     (ptr),y
         iny

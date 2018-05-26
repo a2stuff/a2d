@@ -59,7 +59,7 @@ DT_ADD_ICON             := $01  ; { .addr icondata }
 DT_HIGHLIGHT_ICON       := $02  ; { .byte icon }
 DT_REDRAW_ICON          := $03  ; { .byte icon }
 DT_UNHIGHLIGHT_ICON     := $04  ; { .byte icon }
-        ;; $05 ???
+DT_HIGHLIGHT_ALL        := $05  ; { .byte window_id }
 DT_UNHIGHLIGHT_ALL      := $06
 DT_CLOSE_WINDOW         := $07  ; { .byte window_id }
 DT_GET_HIGHLIGHTED      := $08  ; { .res 20 }
@@ -68,7 +68,10 @@ DT_FIND_ICON            := $09  ; { .word mousex, .word mousey, .byte result }
         ;; $0B ???
 DT_REDRAW_ICONS         := $0C  ; Repaints desktop icons *
 DT_ICON_IN_RECT         := $0D  ; { .byte icon, rect bounds }
-        ;; $0E ???
+DT_REDRAW_ICON_IDX      := $0E  ; { .byte icon_index }
+
+;;; `icon` is the icon number, i.e. first field in icon entry
+;;; `icon_index` is the index in the icon table
 
 ;;; Call a DESKTOP entry point:
 ;;;     DESKTOP_CALL n                      - params is $0000
@@ -143,7 +146,7 @@ file_table := $DD9F     ; file address table
 
 ;;; Icon (file/volume) entries - length 27 bytes, maximum of 127
 ;;;      .byte icon      icon index
-;;;      .byte state     (
+;;;      .byte state     $80 = highlighted, 0 = otherwise
 ;;;      .byte type/window_id
 ;;;                      (bits 0-3 window_id)
 ;;;                      (bits 4,5,6)
@@ -162,16 +165,16 @@ file_table := $DD9F     ; file address table
 ;;;      .byte len       (name length + 2)
 ;;;      .res  17  name  (name, with a space before and after)
 
-icon_entry_offset_index         := 0
-icon_entry_offset_state         := 1
-icon_entry_offset_win_type      := 2
-icon_entry_offset_iconx         := 3
-icon_entry_offset_icony         := 5
-icon_entry_offset_iconbits      := 7
-icon_entry_offset_len           := 9
-icon_entry_offset_name          := 10
-icon_entry_name_bufsize         := 17
-icon_entry_size                 := 27
+.struct IconEntry
+        index           .byte
+        state           .byte
+        win_type        .byte
+        iconx           .word
+        icony           .word
+        iconbits        .addr
+        len             .byte
+        name            .res 17 ; 15 chars plus leading/trailing spaces
+.endstruct
 
 max_icon_count  := 127
 

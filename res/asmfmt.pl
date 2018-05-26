@@ -52,7 +52,7 @@ while (<STDIN>) {
             $_ .= ' ' while length($_) % $tab;
             $_ .= ':= ' . $expression . ' ';
 
-        } elsif (m/^(\.(?:end)?(?:proc|scope|macro)\b)\s*(.*)$/) {
+        } elsif (m/^(\.(?:end)?(?:proc|scope|macro|struct)\b)\s*(.*)$/) {
 
             # scope - flush left
             my ($opcode, $arguments) = ($1 // '', $2 // '');
