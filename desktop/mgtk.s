@@ -6822,7 +6822,7 @@ target_window_id:
         ;; The root window is not a real window, but a structure whose
         ;; nextwinfo field lines up with current_window.
 root_window_addr:
-        .addr   current_window - MGTK::winfo_offset_nextwinfo
+        .addr   current_window - MGTK::Winfo::nextwinfo
 
 
         which_control        := $8C
@@ -6889,7 +6889,7 @@ end:    rts
         ;; window params block (also returned in X,A).
 .proc next_window
         copy16  window, previous_window
-        ldy     #MGTK::winfo_offset_nextwinfo+1
+        ldy     #MGTK::Winfo::nextwinfo+1
         lda     (window),y
         beq     top_window::end  ; if high byte is 0, end of chain
         tax
@@ -6913,11 +6913,11 @@ get_from_ax:
         bpl     :-
 
         ; copy first 16 bytes of grafport to $B7
-        ldy     #MGTK::winfo_offset_port + MGTK::GrafPort::pattern-1
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::pattern-1
 :       lda     (window),y
-        sta     current_winport - MGTK::winfo_offset_port,y
+        sta     current_winport - MGTK::Winfo::port,y
         dey
-        cpy     #MGTK::winfo_offset_port-1
+        cpy     #MGTK::Winfo::port-1
         bne     :-
 
 return_window:
@@ -7610,7 +7610,7 @@ not_selected:
 
         copy16  params_addr, window
 
-        ldy     #MGTK::winfo_offset_window_id
+        ldy     #MGTK::Winfo::window_id
         lda     (window),y
         bne     :+
         exit_call MGTK::error_window_id_required
@@ -7622,7 +7622,7 @@ not_selected:
 
 :       copy16  params_addr, window
 
-        ldy     #MGTK::winfo_offset_status
+        ldy     #MGTK::Winfo::status
         lda     (window),y
         ora     #$80
         sta     (window),y
@@ -7645,7 +7645,7 @@ not_selected:
 
 :       jsr     link_window
 do_select_win:
-        ldy     #MGTK::winfo_offset_nextwinfo
+        ldy     #MGTK::Winfo::nextwinfo
         lda     current_window
         sta     (window),y
         iny
@@ -7679,7 +7679,7 @@ do_select_win   := SelectWindowImpl::do_select_win
 
 
 .proc link_window
-        ldy     #MGTK::winfo_offset_nextwinfo
+        ldy     #MGTK::Winfo::nextwinfo
         lda     (window),y
         sta     (previous_window),y
         iny
@@ -7820,11 +7820,11 @@ win_port: .addr   0
         rts
 
         ;; Load window's grafport into current_grafport.
-:       ldy     #MGTK::winfo_offset_port
+:       ldy     #MGTK::Winfo::port
 :       lda     (window),y
-        sta     current_grafport - MGTK::winfo_offset_port,y
+        sta     current_grafport - MGTK::Winfo::port,y
         iny
-        cpy     #MGTK::winfo_offset_port + .sizeof(MGTK::GrafPort)
+        cpy     #MGTK::Winfo::port + .sizeof(MGTK::GrafPort)
         bne     :-
 
         ldx     #2
@@ -7882,7 +7882,7 @@ win_port: .addr   0
         jsr     window_by_id_or_exit
         lda     ptr
         clc
-        adc     #MGTK::winfo_offset_port
+        adc     #MGTK::Winfo::port
         sta     ptr
         bcc     :+
         inc     ptr+1
@@ -8057,11 +8057,11 @@ return_moved:
         rts
 
 changed:
-        ldy     #MGTK::winfo_offset_port
-:       lda     current_winport - MGTK::winfo_offset_port,y
+        ldy     #MGTK::Winfo::port
+:       lda     current_winport - MGTK::Winfo::port,y
         sta     (window),y
         iny
-        cpy     #MGTK::winfo_offset_port + 16
+        cpy     #MGTK::Winfo::port + 16
         bne     :-
         jsr     HideCursorImpl
 
@@ -8099,11 +8099,11 @@ maxheight: .word  0
 
 
         ;; Copy mincontwidth..maxcontheight from the window to content
-        ldy     #MGTK::winfo_offset_port-1
+        ldy     #MGTK::Winfo::port-1
 :       lda     (window),y
-        sta     content - MGTK::winfo_offset_mincontwidth,y
+        sta     content - MGTK::Winfo::mincontwidth,y
         dey
-        cpy     #MGTK::winfo_offset_mincontwidth-1
+        cpy     #MGTK::Winfo::mincontwidth-1
         bne     :-
 
         ldx     #0
@@ -8209,7 +8209,7 @@ DragWindowImpl_drag_or_grow := DragWindowImpl::drag_or_grow
         jsr     winframe_to_set_port
         jsr     link_window
 
-        ldy     #MGTK::winfo_offset_status
+        ldy     #MGTK::Winfo::status
         lda     (window),y
         and     #$7F
         sta     (window),y
@@ -8228,7 +8228,7 @@ DragWindowImpl_drag_or_grow := DragWindowImpl::drag_or_grow
         jsr     top_window
         beq     :+
 
-        ldy     #MGTK::winfo_offset_status
+        ldy     #MGTK::Winfo::status
         lda     (window),y
         and     #$7F
         sta     (window),y
@@ -8481,11 +8481,11 @@ activate:
         bpl     :+
 
         lda     current_winfo::vscroll
-        ldy     #MGTK::winfo_offset_vscroll
+        ldy     #MGTK::Winfo::vscroll
         bne     toggle
 
 :       lda     current_winfo::hscroll
-        ldy     #MGTK::winfo_offset_hscroll
+        ldy     #MGTK::Winfo::hscroll
 
 toggle: eor     params::activate
         and     #1
@@ -8851,11 +8851,11 @@ got_ctl:
 
         exit_call MGTK::error_no_active_window
 
-:       ldy     #MGTK::winfo_offset_hthumbmax
+:       ldy     #MGTK::Winfo::hthumbmax
         bit     params::which_ctl
         bpl     :+
 
-        ldy     #MGTK::winfo_offset_vthumbmax
+        ldy     #MGTK::Winfo::vthumbmax
 :       lda     params::ctlmax
         sta     (window),y
         sta     current_winfo,y
@@ -9073,12 +9073,12 @@ ctl_bound1:
         ;; Set thumb_max and thumb_pos according to the control indicated
         ;; in which_control.
 .proc get_thumb_vals
-        ldy     #MGTK::winfo_offset_hthumbmax
+        ldy     #MGTK::Winfo::hthumbmax
 
         bit     which_control
         bpl     is_horiz
 
-        ldy     #MGTK::winfo_offset_vthumbmax
+        ldy     #MGTK::Winfo::vthumbmax
 is_horiz:
         lda     (window),y
         sta     thumb_max
@@ -9157,11 +9157,11 @@ check_win:
         bne     :+
         exit_call MGTK::error_no_active_window
 
-:       ldy     #MGTK::winfo_offset_hthumbpos
+:       ldy     #MGTK::Winfo::hthumbpos
         bit     which_control
         bpl     :+
 
-        ldy     #MGTK::winfo_offset_vthumbpos
+        ldy     #MGTK::Winfo::vthumbpos
 :       lda     params::thumbpos
         sta     (window),y
 

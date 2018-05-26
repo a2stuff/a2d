@@ -6,7 +6,7 @@
         .addr    $85E9
 
 L8522:  php
-        lda     winfo7+MGTK::winfo_offset_port+5,x
+        lda     winfo7+MGTK::Winfo::port+5,x
         sta     $08+1
         ldy     #$14
         ldx     #$00

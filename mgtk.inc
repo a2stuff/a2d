@@ -589,10 +589,10 @@ inpoly_outside          := $00
 
 .struct MapInfo
         viewloc         .tag Point
-	mapbits         .word
-	mapwidth        .byte
+        mapbits         .word
+        mapwidth        .byte
         reserved        .byte
-	maprect         .tag Rect
+        maprect         .tag Rect
 .endstruct
 
 .struct GrafPort
@@ -611,23 +611,25 @@ inpoly_outside          := $00
         textfont        .addr
 .endstruct
 
-winfo_offset_window_id          :=  0
-winfo_offset_options            :=  1
-winfo_offset_title              :=  2
-winfo_offset_hscroll            :=  4
-winfo_offset_vscroll            :=  5
-winfo_offset_hthumbmax          :=  6
-winfo_offset_hthumbpos          :=  7
-winfo_offset_vthumbmax          :=  8
-winfo_offset_vthumbpos          :=  9
-winfo_offset_status             := 10
-winfo_offset_mincontwidth       := 12
-winfo_offset_mincontheight      := 14
-winfo_offset_maxcontwidth       := 16
-winfo_offset_maxcontheight      := 18
-winfo_offset_port               := 20
-winfo_offset_nextwinfo          := 56
-winfo_size                      := 58
+.struct Winfo
+        window_id          .byte
+        options            .byte
+        title              .addr
+        hscroll            .byte
+        vscroll            .byte
+        hthumbmax          .byte
+        hthumbpos          .byte
+        vthumbmax          .byte
+        vthumbpos          .byte
+        status             .byte
+        reserved           .byte
+        mincontwidth       .word
+        mincontheight      .word
+        maxcontwidth       .word
+        maxcontheight      .word
+        port               .tag GrafPort
+        nextwinfo          .addr
+.endstruct
 
 menu_size                       := 12
 

@@ -5,7 +5,7 @@ use warnings;
 
 sub nospace($) {
     my ($s) = @_;
-    $s =~ s/ //g;
+    $s =~ s/\s//g;
     return $s;
 }
 
@@ -93,7 +93,7 @@ while (<STDIN>) {
 
     $_ =~ s/\s+$//; # trim right
 
-    die unless nospace($_) eq nospace($orig);
+    die "Mismatch:\n> $orig\n<$_\n"unless nospace($_) eq nospace($orig);
 
     print $_, "\n";
 }

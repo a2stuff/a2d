@@ -2549,11 +2549,11 @@ L5464:  lda     active_window_id
         lda     active_window_id
         jsr     window_lookup
         stax    $06
-        ldy     #MGTK::winfo_offset_port+MGTK::GrafPort::maprect
+        ldy     #MGTK::Winfo::port+MGTK::GrafPort::maprect
 L5479:  lda     ($06),y
-        sta     rect_E230-(MGTK::winfo_offset_port+MGTK::GrafPort::maprect),y
+        sta     rect_E230-(MGTK::Winfo::port+MGTK::GrafPort::maprect),y
         iny
-        cpy     #MGTK::winfo_offset_port+MGTK::GrafPort::maprect+8
+        cpy     #MGTK::Winfo::port+MGTK::GrafPort::maprect+8
         bne     L5479
         ldx     #$00
 L5485:  cpx     cached_window_icon_count
@@ -4394,7 +4394,7 @@ L650D:  .word   0
         lda     active_window_id
         jsr     window_lookup
         stax    ptr
-        ldy     #MGTK::winfo_offset_port + MGTK::GrafPort::maprect + 7
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + 7
         ldx     #7
 :       lda     grafport2::cliprect,x
         sta     (ptr),y
@@ -8227,7 +8227,7 @@ port_copy:
         jsr     window_lookup
         stax    ptr
         ldx     #0
-        ldy     #MGTK::winfo_offset_port
+        ldy     #MGTK::Winfo::port
 :       lda     (ptr),y
         sta     port_copy,x
         iny
@@ -8247,7 +8247,7 @@ port_copy:
         jsr     window_lookup
         stax    ptr
         ldx     #0
-        ldy     #MGTK::winfo_offset_port
+        ldy     #MGTK::Winfo::port
 :       lda     port_copy,x
         sta     (ptr),y
         iny
@@ -8277,7 +8277,7 @@ port_copy:
         stax    winfo_ptr
 
         ;; Screen space
-        ldy     #MGTK::winfo_offset_port + MGTK::GrafPort::viewloc + 3
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + 3
         ldx     #3
 :       lda     (winfo_ptr),y
         sta     pos_screen,x
@@ -8286,7 +8286,7 @@ port_copy:
         bpl     :-
 
         ;; Window space
-        ldy     #MGTK::winfo_offset_port + MGTK::GrafPort::maprect + 3
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + 3
         ldx     #3
 :       lda     (winfo_ptr),y
         sta     pos_win,x
@@ -8370,7 +8370,7 @@ pos_win:        .word   0, 0
         jsr     window_lookup
         stax    winfo_ptr
 
-        ldy     #MGTK::winfo_offset_port + MGTK::GrafPort::viewloc + 3
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + 3
         ldx     #3
 :       lda     (winfo_ptr),y
         sta     pos_screen,x
@@ -8378,7 +8378,7 @@ pos_win:        .word   0, 0
         dex
         bpl     :-
 
-        ldy     #MGTK::winfo_offset_port + MGTK::GrafPort::maprect + 3
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + 3
         ldx     #3
 :       lda     (winfo_ptr),y
         sta     pos_win,x
