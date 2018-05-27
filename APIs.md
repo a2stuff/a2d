@@ -159,11 +159,11 @@ Parameters: { byte icon }
 
 Redraws an icon by number.
 
-### `DT_HIGHLIGHT_ICON` ($04)
+### `DT_REMOVE_ICON` ($04)
 
 Parameters: { byte icon }
 
-Unhighlights (deselects) an icon by number.
+Removes an icon by number.
 
 ### `DT_HIGHLIGHT_ALL` ($05)
 
@@ -194,6 +194,13 @@ Copies the numbers of the first 20 selected icons to the given buffer.
 Parameters: { word mousex, word mousey, (out) byte result }
 
 Find the icon number at the given coordinates.
+
+### `DT_UNHIGHLIGHT_ICON` ($0B)
+
+Parameters: { addr iconentry }
+
+Unhighlights the specified icon. Note that the address of the icon
+entry is passed, not the number.
 
 ### `DT_REDRAW_ICONS` ($0C)
 

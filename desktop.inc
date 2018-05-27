@@ -58,14 +58,14 @@ DESKTOP    := $8E00
 DT_ADD_ICON             := $01  ; { .addr icondata }
 DT_HIGHLIGHT_ICON       := $02  ; { .byte icon }
 DT_REDRAW_ICON          := $03  ; { .byte icon }
-DT_UNHIGHLIGHT_ICON     := $04  ; { .byte icon }
+DT_REMOVE_ICON          := $04  ; { .byte icon }
 DT_HIGHLIGHT_ALL        := $05  ; { .byte window_id }
 DT_UNHIGHLIGHT_ALL      := $06
 DT_CLOSE_WINDOW         := $07  ; { .byte window_id }
 DT_GET_HIGHLIGHTED      := $08  ; { .res 20 }
 DT_FIND_ICON            := $09  ; { .word mousex, .word mousey, .byte result }
         ;; $0A ???
-        ;; $0B ???
+DT_UNHIGHLIGHT_ICON     := $0B  ; { .addr iconentry }
 DT_REDRAW_ICONS         := $0C  ; Repaints desktop icons *
 DT_ICON_IN_RECT         := $0D  ; { .byte icon, rect bounds }
 DT_REDRAW_ICON_IDX      := $0E  ; { .byte icon_index }

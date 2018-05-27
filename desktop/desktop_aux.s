@@ -235,18 +235,18 @@ notpenBIC_2:    .byte   7
 ;;; DESKTOP command jump table
 
 desktop_jump_table:
-        .addr   0               ; $00
+        .addr   0
         .addr   ADD_ICON_IMPL
         .addr   HIGHLIGHT_ICON_IMPL
         .addr   REDRAW_ICON_IMPL
-        .addr   UNHIGHLIGHT_ICON_IMPL
+        .addr   REMOVE_ICON_IMPL
         .addr   HIGHLIGHT_ALL_IMPL
         .addr   UNHIGHLIGHT_ALL_IMPL
         .addr   CLOSE_WINDOW_IMPL
         .addr   GET_HIGHLIGHTED_IMPL
         .addr   FIND_ICON_IMPL
         .addr   L97F7           ; $0A
-        .addr   L9EBE           ; $0B
+        .addr   UNHIGHLIGHT_ICON_IMPL
         .addr   REDRAW_ICONS_IMPL
         .addr   ICON_IN_RECT_IMPL
         .addr   REDRAW_ICON_IDX_IMPL
@@ -476,9 +476,11 @@ done:   jsr     L9F98
 .endproc
 
 ;;; ============================================================
-;;; UNHIGHLIGHT_ICON IMPL
+;;; REMOVE_ICON IMPL
 
-.proc UNHIGHLIGHT_ICON_IMPL
+;;; param is pointer to icon number
+
+.proc REMOVE_ICON_IMPL
         PARAM_BLOCK params, $06
 ptr_icon:       .addr   0
         END_PARAM_BLOCK
@@ -512,40 +514,48 @@ found:  asl     a
         MGTK_CALL MGTK::SetPenMode, pencopy_2
         jsr     draw_icon
 
+        ;; Move it to the end of the icon list
         ldy     #IconEntry::id
         lda     (ptr),y         ; icon num
         ldx     num_icons       ; new position
         jsr     change_icon_index
 
+        ;; Remove it from the list
         dec     num_icons
         lda     #0
         ldx     num_icons
         sta     icon_table,x
+
+        ;; Clear its flag
         ldy     #IconEntry::state
         lda     #0
         sta     (ptr),y
+
         lda     has_highlight
         beq     done
 
+        ;; Find it in the highlight list
         ldx     highlight_count
         dex
         ldy     #0
         lda     (ptr),y
-L9566:  cmp     highlight_list,x
-        beq     L9571
+:       cmp     highlight_list,x
+        beq     found2
         dex
-        bpl     L9566
+        bpl     :-
+        jmp     done            ; not found
 
-        jmp     done
-
-L9571:  ldx     highlight_count ; new position
+        ;; Move it to the end of the highlight list
+found2: ldx     highlight_count ; new position
         jsr     change_highlight_index
+
+        ;; Remove it from the highloight list and update flag
         dec     highlight_count
         lda     highlight_count
-        bne     L9584
+        bne     :+
         lda     #0
         sta     has_highlight
-L9584:  lda     #0
+:       lda     #0
         ldx     highlight_count
         sta     highlight_list,x
 
@@ -677,7 +687,7 @@ L969D:  ldx     L9696
         ldy     #0
         cmp     ($06),y
         bne     L969D
-        DESKTOP_DIRECT_CALL DT_UNHIGHLIGHT_ICON, L9695
+        DESKTOP_DIRECT_CALL DT_REMOVE_ICON, L9695
         jmp     L969D
 L96CF:  return  #0
 .endproc
@@ -1468,20 +1478,23 @@ L9EB4:  asl     a
 .endproc
 
 ;;; ============================================================
+;;; UNHIGHLIGHT_ICON IMPL
 
-;;; DESKTOP $0B IMPL
+;;; param is pointer to icon entry
 
-        ;; Deselect icon ???
+.proc UNHIGHLIGHT_ICON_IMPL
+        PARAM_BLOCK params, $06
+ptr_iconent:    .addr   0
+        END_PARAM_BLOCK
+        ptr := $06              ; Overwrites param
 
-.proc L9EBE
+
         jmp     start
 
         .byte   0               ; ???
 
         ;; DT_REDRAW_ICON params
 icon:   .byte   0
-
-        ptr := $6
 
 start:  lda     has_highlight
         bne     :+
@@ -1490,16 +1503,14 @@ start:  lda     has_highlight
         ;; Move it to the end of the highlight list
 :       ldx     highlight_count ; new position
         ldy     #IconEntry::id
-        lda     (ptr),y         ; icon num
+        lda     (params::ptr_iconent),y         ; icon num
         jsr     change_highlight_index
 
-        ;; Remove it from the list
+        ;; Remove it from the highlight list and update flag
         ldx     highlight_count
         lda     #0
         sta     highlight_count,x
         dec     highlight_count
-
-        ;; Update flag
         lda     highlight_count
         bne     :+
         lda     #0
@@ -1507,7 +1518,7 @@ start:  lda     has_highlight
 
         ;; Redraw
 :       ldy     #0
-        lda     (ptr),y
+        lda     (params::ptr_iconent),y
         sta     icon
         DESKTOP_DIRECT_CALL DT_REDRAW_ICON, icon
         return  #0
