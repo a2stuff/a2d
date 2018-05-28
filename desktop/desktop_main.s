@@ -2747,7 +2747,7 @@ L562C:  lda     icon_param
         jsr     L56F9
         lda     icon_param
         jsr     icon_window_to_screen
-L564A:  DESKTOP_RELAY_CALL $0B, icon_param
+L564A:  DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, icon_param
         lda     getwinport_params2::window_id
         beq     L5661
         lda     icon_param
@@ -4657,7 +4657,7 @@ disable_selector_menu_items := toggle_selector_menu_items::disable
 .proc L67D7
         lda     selected_icon_count
         bne     L67DF
-        jmp     L681B
+        jmp     set_selection
 
 L67DF:  tax
         dex
@@ -4672,9 +4672,11 @@ L67EE:  bit     double_click_flag
         jmp     L6880
 
 L67F6:  bit     BUTN0
-        bpl     L6818
+        bpl     replace_selection
+
+        ;; Add clicked icon to selection
         lda     selected_window_index
-        bne     L6818
+        bne     replace_selection
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, findicon_which_icon
         ldx     selected_icon_count
         lda     findicon_which_icon
@@ -4682,14 +4684,21 @@ L67F6:  bit     BUTN0
         inc     selected_icon_count
         jmp     L6834
 
-L6818:  jsr     clear_selection
-L681B:  DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, findicon_which_icon
+        ;; Replace selection with clicked icon
+replace_selection:
+        jsr     clear_selection
+
+        ;; Set selection to clicked icon
+set_selection:
+        DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, findicon_which_icon
         lda     #1
         sta     selected_icon_count
         lda     findicon_which_icon
         sta     selected_icon_list
         lda     #0
         sta     selected_window_index
+
+
 L6834:  bit     double_click_flag
         bpl     L6880
         lda     findicon_which_icon
@@ -5223,7 +5232,7 @@ L6D56:  lda     L6DB0
         lda     selected_icon_list,x
         sta     icon_param
         jsr     icon_window_to_screen
-        DESKTOP_RELAY_CALL $0B, icon_param
+        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, icon_param
         lda     icon_param
         jsr     icon_screen_to_window
         inc     L6DB0
@@ -5235,7 +5244,7 @@ L6D7D:  lda     L6DB0
         tax
         lda     selected_icon_list,x
         sta     icon_param
-        DESKTOP_RELAY_CALL $0B, icon_param
+        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, icon_param
         inc     L6DB0
         jmp     L6D7D
 

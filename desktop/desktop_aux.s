@@ -603,7 +603,7 @@ start:  lda     HIGHLIGHT_ICON_IMPL ; ???
         beq     start2
         lda     highlight_list
         sta     icon
-        DESKTOP_DIRECT_CALL $0B, icon
+        DESKTOP_DIRECT_CALL DT_UNHIGHLIGHT_ICON, icon
         jmp     start
 
 start2:
@@ -861,41 +861,44 @@ L97F6:  .byte   0
 
 ;;; DESKTOP $0A IMPL
 
+
         ;; Desktop icon selection
 .proc L97F7
-        ldy     #0
+        ldy     #IconEntry::id
         lda     ($06),y
-        sta     L982A
+        sta     icon_id
         tya
         sta     ($06),y
 
         ldy     #4
 :       lda     ($06),y
         sta     L9C8D,y
-        sta     L9C91,y
+        sta     L9C92-1,y       ; ???
         dey
         cpy     #0
         bne     :-
 
         jsr     push_zp_addrs
-        lda     L982A
+        lda     icon_id
         jsr     L9EB4
         stax    $06
         ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_winid_mask
-        sta     L9829
-        jmp     L983D
+        sta     win_id
+        jmp     L983D           ; skip over data
 
-L9829:  .byte   $00
-L982A:  .byte   $00,$00
-L982C:  .byte   $00
-L982D:  .byte   $00
-L982E:  .byte   $00
-L982F:  .byte   $00
+win_id: .byte   $00             ; written but not read
+
+icon_id:
+        .byte   $00
+
+        .byte   $00             ; unused ???
+deltax: .word   0
+deltay: .word   0
 
         ;; DT_HIGHLIGHT_ICON params
-L9830:  .byte   $00
+highlight_icon_id:  .byte   $00
 
 L9831:  .byte   $00
 L9832:  .byte   $00
@@ -904,50 +907,58 @@ L9834:  .byte   $00
 L9835:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
 L983D:  lda     #0
-        sta     L9830
+        sta     highlight_icon_id
         sta     L9833
-L9845:  MGTK_CALL MGTK::PeekEvent, peekevent_params
+
+peek_loop:
+        MGTK_CALL MGTK::PeekEvent, peekevent_params
         lda     peekevent_params::kind
         cmp     #MGTK::event_kind_drag
         beq     L9857
-L9852:  lda     #$02
-        jmp     L9C65
+L9852:  lda     #2              ; return value
+        jmp     just_select
 
-L9857:  sub16   findwindow_params2::mousex, L9C8E, L982C
-        sub16   findwindow_params2::mousey, L9C90, L982E
+        ;; Compute mouse delta
+L9857:  sub16   findwindow_params2::mousex, L9C8E, deltax
+        sub16   findwindow_params2::mousey, L9C90, deltay
 
-        lda     L982D
-        bpl     L988C
-        lda     L982C
-        cmp     #$FB
-        bcc     L98AC
-        jmp     L9893
+        drag_delta := 5
 
-L988C:  lda     L982C
-        cmp     #$05
-        bcs     L98AC
-L9893:  lda     L982F
-        bpl     L98A2
-        lda     L982E
-        cmp     #$FB
-        bcc     L98AC
-        jmp     L9845
+        ;; compare x delta
+        lda     deltax+1
+        bpl     x_lo
+        lda     deltax
+        cmp     #($100 - drag_delta)
+        bcc     is_drag
+        jmp     check_deltay
+x_lo:   lda     deltax
+        cmp     #drag_delta
+        bcs     is_drag
 
-L98A2:  lda     L982E
-        cmp     #$05
-        bcs     L98AC
-        jmp     L9845
+        ;; compare y delta
+check_deltay:
+        lda     deltay+1
+        bpl     y_lo
+        lda     deltay
+        cmp     #($100 - drag_delta)
+        bcc     is_drag
+        jmp     peek_loop
+y_lo:   lda     deltay
+        cmp     #drag_delta
+        bcs     is_drag
+        jmp     peek_loop
 
-L98AC:  lda     highlight_count
+is_drag:
+        lda     highlight_count
         cmp     #$15            ; max number of draggable items?
         bcc     :+
-        jmp     L9852
+        jmp     L9852           ; too many
 
 :       copy16  #drag_outline_buffer, $08
         lda     has_highlight
         bne     :+
-        lda     #$03
-        jmp     L9C65
+        lda     #3              ; return value
+        jmp     just_select
 
 :       lda     highlight_list
         jsr     L9EB4
@@ -1027,10 +1038,10 @@ L9974:  lda     ($08),y
         cmp     L9C76
         iny
         lda     ($08),y
-        sbc     L9C77
+        sbc     L9C76+1
         bcs     L9990
         lda     ($08),y
-        sta     L9C77
+        sta     L9C76+1
         dey
         lda     ($08),y
         sta     L9C76
@@ -1042,10 +1053,10 @@ L9990:  dey
         cmp     L9C7A
         iny
         lda     ($08),y
-        sbc     L9C7B
+        sbc     L9C7A+1
         bcc     L99AA
         lda     ($08),y
-        sta     L9C7B
+        sta     L9C7A+1
         dey
         lda     ($08),y
         sta     L9C7A
@@ -1055,10 +1066,10 @@ L99AA:  iny
         cmp     L9C78
         iny
         lda     ($08),y
-        sbc     L9C79
+        sbc     L9C78+1
         bcs     L99C7
         lda     ($08),y
-        sta     L9C79
+        sta     L9C78+1
         dey
         lda     ($08),y
         sta     L9C78
@@ -1070,10 +1081,10 @@ L99C7:  dey
         cmp     L9C7C
         iny
         lda     ($08),y
-        sbc     L9C7D
+        sbc     L9C7C+1
         bcc     L99E1
         lda     ($08),y
-        sta     L9C7D
+        sta     L9C7C+1
         dey
         lda     ($08),y
         sta     L9C7C
@@ -1110,23 +1121,23 @@ L9A33:  lda     findwindow_params2,x
         sta     L9C92,x
         dex
         bpl     L9A33
-        lda     L9830
+        lda     highlight_icon_id
         beq     L9A84
         lda     L9831
         sta     findwindow_params2::window_id
         DESKTOP_DIRECT_CALL DT_FIND_ICON, findwindow_params2
         lda     findwindow_params2::which_area
-        cmp     L9830
+        cmp     highlight_icon_id
         beq     L9A84
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
         MGTK_CALL MGTK::SetPenMode, penXOR_2
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
-        DESKTOP_DIRECT_CALL $0B, L9830
+        DESKTOP_DIRECT_CALL DT_UNHIGHLIGHT_ICON, highlight_icon_id
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
         MGTK_CALL MGTK::SetPenMode, penXOR_2
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
         lda     #0
-        sta     L9830
+        sta     highlight_icon_id
 L9A84:  sub16   findwindow_params2::mousex, L9C8E, L9C96
         sub16   findwindow_params2::mousey, L9C90, L9C98
         jsr     L9C9E
@@ -1139,7 +1150,7 @@ L9AAF:  add16   L9C7A,x, L9C96,x, L9C7A,x
         bne     L9AAF
         lda     #0
         sta     L9C75
-        lda     L9C77
+        lda     L9C76+1
         bmi     L9AF7
         cmp16   L9C7A, #screen_width
         bcs     L9AFE
@@ -1155,7 +1166,7 @@ L9B03:  jsr     L9DB8
         lda     L9C75
         ora     #$80
         sta     L9C75
-L9B0E:  lda     L9C79
+L9B0E:  lda     L9C78+1
         bmi     L9B31
         cmp16   L9C78, #13
         bcc     L9B31
@@ -1187,7 +1198,7 @@ L9B62:  lda     ($08),y
         sta     ($08),y
         iny
         lda     ($08),y
-        adc     L9C97
+        adc     L9C96+1
         sta     ($08),y
         iny
         lda     ($08),y
@@ -1196,7 +1207,7 @@ L9B62:  lda     ($08),y
         sta     ($08),y
         iny
         lda     ($08),y
-        adc     L9C99
+        adc     L9C98+1
         sta     ($08),y
         iny
         cpy     #icon_poly_size
@@ -1216,9 +1227,9 @@ L9B9C:  MGTK_CALL MGTK::FramePoly, drag_outline_buffer
         jmp     L9A0E
 
 L9BA5:  MGTK_CALL MGTK::FramePoly, drag_outline_buffer
-        lda     L9830
+        lda     highlight_icon_id
         beq     L9BB9
-        DESKTOP_DIRECT_CALL $0B, L9830
+        DESKTOP_DIRECT_CALL DT_UNHIGHLIGHT_ICON, highlight_icon_id
         jmp     L9C63
 
 L9BB9:  MGTK_CALL MGTK::FindWindow, findwindow_params2
@@ -1232,7 +1243,7 @@ L9BB9:  MGTK_CALL MGTK::FindWindow, findwindow_params2
 L9BD1:  jmp     L9852
 
 L9BD4:  ora     #$80
-        sta     L9830
+        sta     highlight_icon_id
         jmp     L9C63
 
 L9BDC:  lda     L9832
@@ -1294,48 +1305,42 @@ L9C29:  lda     highlight_list,x
 L9C60:  jmp     L9C29
 
 L9C63:  lda     #0
-L9C65:  tay
+
+just_select:                    ; ???
+        tay
         jsr     pop_zp_addrs
         tya
         tax
         ldy     #0
-        lda     L9830
+        lda     highlight_icon_id
         sta     ($06),y
         txa
         rts
 
 L9C74:  .byte   $00
 L9C75:  .byte   $00
-L9C76:  .byte   $00
-L9C77:  .byte   $00
-L9C78:  .byte   $00
-L9C79:  .byte   $00
-L9C7A:  .byte   $00
-L9C7B:  .byte   $00
-L9C7C:  .byte   $00
-L9C7D:  .byte   $00
-L9C7E:  .byte   $00
-L9C7F:  .byte   $00
-L9C80:  .byte   $0D
-L9C81:  .byte   $00
-L9C82:  .byte   $30
-L9C83:  .byte   $02
-L9C84:  .byte   $C0
-L9C85:  .byte   $00
+L9C76:  .word   0
+L9C78:  .word   0
+L9C7A:  .word   0
+L9C7C:  .word   0
+L9C7E:  .word   0
+L9C80:  .word   13
+L9C82:  .word   screen_width
+L9C84:  .word   screen_height
 L9C86:  .word   0
 L9C88:  .word   0
 L9C8A:  .word   0
 L9C8C:  .byte   $00
-L9C8D:  .byte   $00
-L9C8E:  .byte   $00
-L9C8F:  .byte   $00
-L9C90:  .byte   $00
-L9C91:  .byte   $00
-L9C92:  .byte   $00,$00,$00,$00
-L9C96:  .byte   $00
-L9C97:  .byte   $00
-L9C98:  .byte   $00
-L9C99:  .byte   $00,$00,$00,$00,$00
+
+L9C8D:  .byte   0
+L9C8E:  .word   0
+L9C90:  .word   0
+
+L9C92:  .res    4
+L9C96:  .word   0
+L9C98:  .word   0
+        .byte   $00,$00,$00,$00
+
 L9C9E:  ldx     #7
 L9CA0:  lda     L9C76,x
         sta     L9C86,x
@@ -1346,8 +1351,8 @@ L9CA0:  lda     L9C76,x
 L9CAA:  lda     L9C76
         cmp     L9C7E
         bne     L9CBD
-        lda     L9C77
-        cmp     L9C7F
+        lda     L9C76+1
+        cmp     L9C7E+1
         bne     L9CBD
         return  #0
 
@@ -1357,8 +1362,8 @@ L9CBD:  sub16   #0, L9C86, L9C96
 L9CD1:  lda     L9C7A
         cmp     L9C82
         bne     L9CE4
-        lda     L9C7B
-        cmp     L9C83
+        lda     L9C7A+1
+        cmp     L9C82+1
         bne     L9CE4
         return  #0
 
@@ -1371,8 +1376,8 @@ L9CF5:  add16   L9C86, L9C96, L9C76
 L9D31:  lda     L9C78
         cmp     L9C80
         bne     L9D44
-        lda     L9C79
-        cmp     L9C81
+        lda     L9C78+1
+        cmp     L9C80+1
         bne     L9D44
         return  #0
 
@@ -1382,8 +1387,8 @@ L9D44:  sub16   #13, L9C88, L9C98
 L9D58:  lda     L9C7C
         cmp     L9C84
         bne     L9D6B
-        lda     L9C7D
-        cmp     L9C85
+        lda     L9C7C+1
+        cmp     L9C84+1
         bne     L9D6B
         return  #0
 
@@ -1397,24 +1402,24 @@ L9DB8:  copy16  L9C86, L9C76
         copy16  L9C8A, L9C7A
         lda     #0
         sta     L9C96
-        sta     L9C97
+        sta     L9C96+1
         rts
 
 L9DD9:  copy16  L9C88, L9C78
         copy16  L9C8C, L9C7C
         lda     #0
         sta     L9C98
-        sta     L9C99
+        sta     L9C98+1
         rts
 
 L9DFA:  lda     findwindow_params2::mousex+1
-        sta     L9C8F
+        sta     L9C8E+1
         lda     findwindow_params2::mousex
         sta     L9C8E
         rts
 
 L9E07:  lda     findwindow_params2::mousey+1
-        sta     L9C91
+        sta     L9C90+1
         lda     findwindow_params2::mousey
         sta     L9C90
         rts
@@ -1453,11 +1458,11 @@ L9E3D:  cmp     highlight_list,x
         and     #$70            ; type
         bne     L9E97
         lda     L9EB3
-L9E6A:  sta     L9830
+L9E6A:  sta     highlight_icon_id
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
         MGTK_CALL MGTK::SetPenMode, penXOR_2
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
-        DESKTOP_DIRECT_CALL DT_HIGHLIGHT_ICON, L9830
+        DESKTOP_DIRECT_CALL DT_HIGHLIGHT_ICON, highlight_icon_id
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
         MGTK_CALL MGTK::SetPenMode, penXOR_2
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer

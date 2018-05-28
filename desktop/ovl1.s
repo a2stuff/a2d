@@ -52,7 +52,7 @@ str_desktop2:
 
 start:  lda     #$80
         sta     ptr
-        DESKTOP_RELAY_CALL $6, $0
+        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ALL
         MGTK_RELAY_CALL MGTK::CloseAll
         MGTK_RELAY_CALL MGTK::SetZP1, ptr
 
