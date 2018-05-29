@@ -275,7 +275,7 @@ L41E2:  lda     cached_window_id
         jsr     get_set_port2
         jsr     cached_icons_window_to_screen
 
-        ldx     #7
+        ldx     #.sizeof(MGTK::Rect)-1
 :       lda     grafport2::cliprect,x
         sta     rect_E230,x
         dex
@@ -330,7 +330,7 @@ bail:   rts
         jsr     get_port2
         jsr     offset_grafport2_and_set
 
-        ldx     #7
+        ldx     #.sizeof(MGTK::Rect)-1
 :       lda     grafport2::cliprect,x
         sta     rect_E230,x
         dex
@@ -1067,11 +1067,11 @@ L4842:  stax    $06
         lda     ($06),y
         tay
 L484B:  lda     ($06),y
-        cmp     #$61
+        cmp     #'a'
         bcc     L4859
-        cmp     #$7B
+        cmp     #'z'+1
         bcs     L4859
-        and     #$DF
+        and     #$DF            ; make upper-case
         sta     ($06),y
 L4859:  dey
         bne     L484B
@@ -8890,12 +8890,14 @@ L8D89:  lda     L8DB2
         clc
         adc     #$07
         tax
-        ldy     #7
-L8D9A:  lda     L0800,x
+
+        ldy     #.sizeof(MGTK::Rect)-1
+:       lda     L0800,x
         sta     rect_E230,y
         dex
         dey
-        bpl     L8D9A
+        bpl     :-
+
         jsr     draw_rect_E230
 L8DA7:  inc     L8DB2
         lda     L8DB2
@@ -8925,7 +8927,7 @@ loop:   lda     L8E0F
         adc     #$07
         tax
 
-        ldy     #7
+        ldy     #.sizeof(MGTK::Rect)-1
 :       lda     L0800,x
         sta     rect_E230,y
         dex
@@ -8944,12 +8946,14 @@ L8DE4:  lda     L8E0F
         clc
         adc     #$07
         tax
-        ldy     #7
-L8DF7:  lda     L0800,x
+
+        ldy     #.sizeof(MGTK::Rect)-1
+:       lda     L0800,x
         sta     rect_E230,y
         dex
         dey
-        bpl     L8DF7
+        bpl     :-
+
         jsr     draw_rect_E230
 L8E04:  dec     L8E0F
         lda     L8E0F

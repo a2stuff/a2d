@@ -915,7 +915,9 @@ peek_loop:
         lda     peekevent_params::kind
         cmp     #MGTK::event_kind_drag
         beq     L9857
-L9852:  lda     #2              ; return value
+
+ignore_drag:
+        lda     #2              ; return value
         jmp     just_select
 
         ;; Compute mouse delta
@@ -948,12 +950,14 @@ y_lo:   lda     deltay
         bcs     is_drag
         jmp     peek_loop
 
+        ;; Meets the threshold - it is a drag, not just a click.
 is_drag:
         lda     highlight_count
         cmp     #$15            ; max number of draggable items?
         bcc     :+
-        jmp     L9852           ; too many
+        jmp     ignore_drag     ; too many
 
+        ;; Was there a selection?
 :       copy16  #drag_outline_buffer, $08
         lda     has_highlight
         bne     :+
@@ -968,7 +972,7 @@ is_drag:
         and     #icon_entry_winid_mask
         sta     L9832
         MGTK_CALL MGTK::InitPort, grafport
-        ldx     #7
+        ldx     #.sizeof(MGTK::Rect)-1
 L98E3:  lda     grafport::cliprect,x
         sta     L9835,x
         dex
@@ -1028,12 +1032,14 @@ L9954:  dec     L9C74
         jmp     L98F2
 
 L995F:  ldx     #7
-L9961:  lda     drag_outline_buffer+2,x
+:       lda     drag_outline_buffer+2,x
         sta     L9C76,x
         dex
-        bpl     L9961
+        bpl     :-
+
         copy16  #drag_outline_buffer, $08
-L9972:  ldy     #IconEntry::win_type
+L9972:  ldy     #2
+
 L9974:  lda     ($08),y
         cmp     L9C76
         iny
@@ -1055,12 +1061,14 @@ L9990:  dey
         lda     ($08),y
         sbc     L9C7A+1
         bcc     L99AA
+
         lda     ($08),y
         sta     L9C7A+1
         dey
         lda     ($08),y
         sta     L9C7A
         iny
+
 L99AA:  iny
         lda     ($08),y
         cmp     L9C78
@@ -1068,6 +1076,7 @@ L99AA:  iny
         lda     ($08),y
         sbc     L9C78+1
         bcs     L99C7
+
         lda     ($08),y
         sta     L9C78+1
         dey
@@ -1083,12 +1092,14 @@ L99C7:  dey
         lda     ($08),y
         sbc     L9C7C+1
         bcc     L99E1
+
         lda     ($08),y
         sta     L9C7C+1
         dey
         lda     ($08),y
         sta     L9C7C
         iny
+
 L99E1:  iny
         cpy     #icon_poly_size
         bne     L9974
@@ -1240,7 +1251,7 @@ L9BB9:  MGTK_CALL MGTK::FindWindow, findwindow_params2
         bmi     L9BDC
         lda     findwindow_params2::window_id
         bne     L9BD4
-L9BD1:  jmp     L9852
+L9BD1:  jmp     ignore_drag
 
 L9BD4:  ora     #$80
         sta     highlight_icon_id
@@ -1325,8 +1336,8 @@ L9C7A:  .word   0
 L9C7C:  .word   0
 L9C7E:  .word   0
 L9C80:  .word   13
-L9C82:  .word   screen_width
-L9C84:  .word   screen_height
+const_screen_width:  .word   screen_width
+const_screen_height:  .word   screen_height
 L9C86:  .word   0
 L9C88:  .word   0
 L9C8A:  .word   0
@@ -1341,11 +1352,11 @@ L9C96:  .word   0
 L9C98:  .word   0
         .byte   $00,$00,$00,$00
 
-L9C9E:  ldx     #7
-L9CA0:  lda     L9C76,x
+L9C9E:  ldx     #.sizeof(MGTK::Rect)-1
+:       lda     L9C76,x
         sta     L9C86,x
         dex
-        bpl     L9CA0
+        bpl     :-
         rts
 
 L9CAA:  lda     L9C76
@@ -1360,10 +1371,10 @@ L9CBD:  sub16   #0, L9C86, L9C96
         jmp     L9CF5
 
 L9CD1:  lda     L9C7A
-        cmp     L9C82
+        cmp     const_screen_width
         bne     L9CE4
         lda     L9C7A+1
-        cmp     L9C82+1
+        cmp     const_screen_width+1
         bne     L9CE4
         return  #0
 
@@ -1385,10 +1396,10 @@ L9D44:  sub16   #13, L9C88, L9C98
         jmp     L9D7C
 
 L9D58:  lda     L9C7C
-        cmp     L9C84
+        cmp     const_screen_height
         bne     L9D6B
         lda     L9C7C+1
-        cmp     L9C84+1
+        cmp     const_screen_height+1
         bne     L9D6B
         return  #0
 
@@ -1455,7 +1466,7 @@ L9E3D:  cmp     highlight_list,x
         and     #icon_entry_winid_mask
         sta     L9831
         lda     ($06),y
-        and     #$70            ; type
+        and     #icon_entry_type_mask
         bne     L9E97
         lda     L9EB3
 L9E6A:  sta     highlight_icon_id
@@ -3594,7 +3605,6 @@ LBE27:  lda     LBE5C
         sta     PAGE2ON         ; aux $2000-$3FFF
 LBE34:  lda     ($06),y
 LBE37           := * + 1
-LBE38           := * + 2
         sta     dummy1234
         inc16   LBE37
         lda     LBE5C
