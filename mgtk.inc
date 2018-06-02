@@ -66,7 +66,7 @@ MLI     := $4000
         fonttype        .byte   ; 0=regular, $80=double-width
         lastchar        .byte   ; char code of last character (usually $7F)
         height          .byte   ; pixels (1-16)
-        ;; charwidth    .res N    pixels, for each char
+        charwidth       .byte   ; pixels, for each char
         ;; row0         .res N    bits
         ;; row0right    .res N    bits (double-width only)
 .endstruct

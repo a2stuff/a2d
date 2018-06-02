@@ -14,13 +14,6 @@
         dummy1000 := $1000
 
 
-;;; Modified to toggle fixed width
-font_type       := DEFAULT_FONT+0
-font_last_char  := DEFAULT_FONT+1
-font_height     := DEFAULT_FONT+2
-font_width_table := DEFAULT_FONT+3 ; width in pixels, indexed by ASCII code
-
-
 start:  jmp     copy2aux
 
 save_stack:.byte   0
@@ -441,9 +434,9 @@ end:    rts
         sta     fixed_mode_flag
 
         ;; make backup of font width table; overwritten if fixed
-        ldx     font_last_char
+        ldx     DEFAULT_FONT + MGTK::Font::lastchar
         sta     RAMWRTOFF
-loop:   lda     font_width_table - 1,x
+loop:   lda     DEFAULT_FONT + MGTK::Font::charwidth - 1,x
         sta     font_width_backup - 1,x
         dex
         bne     loop
@@ -1058,7 +1051,7 @@ more:   ldy     drawtext_params::textlen
         jmp     handle_tab
 
 :       tay
-        lda     font_width_table,y
+        lda     DEFAULT_FONT + MGTK::Font::charwidth,y
         clc
         adc     run_width
         sta     run_width
@@ -1319,7 +1312,7 @@ loop:   clc
 
         start := font_width_backup
         end   := font_width_backup + $7E
-        dest  := font_width_table
+        dest  := DEFAULT_FONT + MGTK::Font::charwidth
 
         lda     #<start
         sta     STARTLO
@@ -1345,9 +1338,9 @@ done:   rts
 .proc assign_fixed_font_width_table_if_needed
         lda     fixed_mode_flag ; if not fixed (i.e. proportional)
         beq     end             ; then exit
-        ldx     font_last_char
+        ldx     DEFAULT_FONT + MGTK::Font::lastchar
         lda     #7              ; 7 pixels/character
-loop:   sta     font_width_table - 1,x
+loop:   sta     DEFAULT_FONT + MGTK::Font::charwidth - 1,x
         dex
         bne     loop
 end:    rts
