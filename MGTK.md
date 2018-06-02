@@ -908,7 +908,7 @@ Parameters:
 
 ### Application Use
 
-_Notes specific to DeskTop Desk Accessories (DA) are included where usage notable differs._
+_Notes specific to DeskTop Desk Accessories (DA) are included where usage differs._
 
 #### Initialization
 

@@ -20,7 +20,7 @@ Contributions welcome! Preliminaries:
    * Try and tackle some of the bugs in the [issue tracker](https://github.com/inexorabletash/a2d/issues?q=is%3Aissue+is%3Aopen+label%3Abug-in-original).
    * Bug fixes will alter the binary, so should occur in branches. There's a `fixes` branch with some already.
 1. Add new Desk Accessories
-   * List of ideas in the [issue tracker](https://github.com/inexorabletash/a2d/issues?q=is%3Aissue+is%3Aopen+label%3A%22feature+request%22)
+   * List of ideas in the [issue tracker](https://github.com/inexorabletash/a2d/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3A%22Desk+Accessories%22+label%3A%22feature+request%22)
 
 ## DeskTop Disassembly Burn-Down
 
@@ -50,8 +50,8 @@ invoker.s      unscoped:    0  scoped:    0  raw:    2  unrefed:    0
     produced by da65 which are _not_ in _two_ nested scopes. A scope is
     used for the overall structure of a module, and a nested scope
     is used for procedures. This counts labels which are not in either,
-    and thus may likely have some affinity for a particular address
-    and can't be safely moved.
+    and thus may have some affinity for a particular address
+    and therefore can't be safely moved.
 
 * **scoped** counts the number of auto-generated labels like `L1234`
     produced by da65 which _are_ inside two nested scopes. Once a label

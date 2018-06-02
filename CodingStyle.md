@@ -29,7 +29,7 @@ syntax details.
          lda     value
          cmp     #limit    ; less than the limit?
          bcc     less      ; yes, so go do that
-         
+
          rol     $1234     ; what does this do ???
 ```
 
@@ -72,6 +72,7 @@ cases, e.g. `HideCursor`, `HideCursorImpl`, etc.
 * Avoid magic numbers where possible:
    * Define local variables (e.g. `ptr := $06`)
    * Define offsets, constants, etc.
+   * Use `.struct` definitions to define offsets into structures
    * Use math where necessary (e.g. `ldy #offset2 - offset1`)
    * Use `.sizeof()` (or math if needed) rather than hardcoding sizes
 

@@ -4,9 +4,10 @@ Disassembly of the original desk accessories:
 * [Date](date.s) - complete!
 * [Puzzle](puzzle.s) - complete!
 * [Show Text File](show.text.file.s) - in progress! 95% complete
-* [Sort Directory](sort.directory.s) - in progress! 40% complete
+* [Sort Directory](sort.directory.s) - in progress! 60% complete
 
 New desk accessories:
+
 * [Show Image File](show.image.file.s) - complete!
 * [This Apple](this.apple.s) - complete!
 * [Eyes](eyes.s) - complete!
@@ -22,7 +23,7 @@ See [API.md](API.md) for programming details
 ## Build Instructions
 
 On Unix-like systems (including Mac OS X) `make all` should build
-build the desk accessory files (original and new) into `out/`
+the desk accessory files (original and new) into `out/`
 output with a `.built` suffix.
 
 For the original DAs, the `.built` and `.bin` files can be compared

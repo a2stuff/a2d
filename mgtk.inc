@@ -25,13 +25,20 @@ MLI     := $4000
 .endstruct
 
 .struct Pattern
-        bits    .res 8
+        row0    .byte
+        row1    .byte
+        row2    .byte
+        row3    .byte
+        row4    .byte
+        row5    .byte
+        row6    .byte
+        row7    .byte
 .endstruct
 
 .struct MapInfo
         viewloc         .tag Point
-        mapbits         .word   ; screen_mapbits for windows
-        mapwidth        .byte   ; screen_mapwidth for windows
+        mapbits         .word   ; screen_mapbits=$2000 for windows, or bitmap bits
+        mapwidth        .byte   ; screen_mapwidth=$80 for windows, or stride for bitmap
         reserved        .byte
         maprect         .tag Rect ; a.k.a. cliprect
 .endstruct
