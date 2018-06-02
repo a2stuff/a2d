@@ -1041,12 +1041,12 @@ loop:   lda     L0945
 :       jsr     ensure_page_buffered
 more:   ldy     drawtext_params::textlen
         lda     (ptr),y
-        and     #$7F            ; clear high bit
+        and     #CHAR_MASK
         sta     (ptr),y
         inc     L0945
         cmp     #CHAR_RETURN
         beq     finish_text_run
-        cmp     #' '            ; space character
+        cmp     #' '
         bne     :+
         sty     L0F9B
         pha

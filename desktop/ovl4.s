@@ -583,7 +583,7 @@ L567F:  lda     #$00
         jmp     L56E1
 
 L568C:  lda     path_buf,x
-        and     #$7F
+        and     #CHAR_MASK
         cmp     #'/'
         beq     L569B
         dex
@@ -876,7 +876,7 @@ L59B8:  rts
 
         ;; With modifiers
         lda     event_key
-        and     #$7F
+        and     #CHAR_MASK
 
         cmp     #CHAR_LEFT
         bne     :+
@@ -910,7 +910,7 @@ L59E4:  cmp     #'0'
 ;;; Key - without modifiers
 
 L59F7:  lda     event_key
-        and     #$7F
+        and     #CHAR_MASK
 
         cmp     #CHAR_LEFT
         bne     :+
@@ -1679,7 +1679,7 @@ loop:   dey
         bpl     :+
 done:   rts
 :       lda     ($0A),y
-        and     #$7F            ; convert to ASCII
+        and     #CHAR_MASK      ; convert to ASCII
         cmp     #'/'
         beq     next
         cmp     #'.'
@@ -1689,7 +1689,7 @@ next:   dey
 
 check:  iny
         lda     ($0A),y
-        and     #$7F
+        and     #CHAR_MASK
         cmp     #'A'
         bcc     L615D
         cmp     #'Z'+1
@@ -2014,7 +2014,7 @@ L64B3:  ldy     #$00
         lda     ($06),y
         tay
 L64B8:  lda     ($06),y
-        and     #$7F
+        and     #CHAR_MASK
         cmp     #'.'
         beq     L64D8
         cmp     #'/'

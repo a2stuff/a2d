@@ -788,7 +788,7 @@ L9822:  lda     event_modifiers
         bne     :+
         return  #$FF
 :       lda     event_key
-        and     #$7F
+        and     #CHAR_MASK
 
         cmp     #CHAR_LEFT
         bne     :+
@@ -1509,15 +1509,15 @@ L9E74:  sta     L9EBF
         sta     L9EC0
         tay
 L9E90:  lda     ($06),y
-        and     #$7F
-        cmp     #$2F
+        and     #CHAR_MASK
+        cmp     #'/'
         beq     L9E9B
         dey
         bne     L9E90
 L9E9B:  dey
 L9E9C:  lda     ($06),y
-        and     #$7F
-        cmp     #$2F
+        and     #CHAR_MASK
+        cmp     #'/'
         beq     L9EA7
         dey
         bne     L9E9C

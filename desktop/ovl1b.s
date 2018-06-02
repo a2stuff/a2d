@@ -1108,7 +1108,7 @@ LD9D1:  .byte   0, $A, $C, $10
 LD9D5:  lda     event_modifiers
         bne     LD9E6
         lda     event_key
-        and     #$7F
+        and     #CHAR_MASK
         cmp     #CHAR_ESCAPE
         beq     LD9E6
         jmp     LDBFC
@@ -1287,7 +1287,7 @@ LDBF3:  .addr   0
 .endproc
 
 LDBFC:  lda     event_key
-        and     #$7F
+        and     #CHAR_MASK
         cmp     #'D'
         beq     LDC09
         cmp     #'d'
@@ -1738,7 +1738,7 @@ LE10A:  dey
 LE10F:  rts
 
 LE110:  lda     ($0A),y
-        and     #$7F
+        and     #CHAR_MASK
         cmp     #'/'
         beq     LE11C
         cmp     #'.'
@@ -1748,7 +1748,7 @@ LE11C:  dey
 
 LE120:  iny
         lda     ($0A),y
-        and     #$7F
+        and     #CHAR_MASK
         cmp     #'A'
         bcc     LE132
         cmp     #'Z'+1
@@ -2850,7 +2850,7 @@ LED42:  jmp     LED79
 LED58:  cmp     #MGTK::event_kind_key_down
         bne     LED35
         lda     event_key
-        and     #$7F
+        and     #CHAR_MASK
         bit     LE941
         bmi     LED69
         jmp     LEDE2

@@ -249,6 +249,9 @@ MOUSE_MODE      := $0738
 ;;; Character Constants (Screen/Key Codes)
 ;;; ============================================================
 
+CHAR_MASK       := $7F
+CASE_MASK       := $DF
+
 CHAR_CTRL_C     := $03
 CHAR_LEFT       := $08
 CHAR_TAB        := $09

@@ -1218,7 +1218,7 @@ trydiv: cmp     #'/'            ; Divide?
         ldxy    #btn_9::port
         jmp     do_digit_click
 
-:       cmp     #$7F            ; Delete?
+:       cmp     #CHAR_DELETE    ; Delete?
         bne     end
         ldy     calc_l
         beq     end

@@ -414,7 +414,7 @@ L74F4:  lda     winfo_entrydlg
         rts
 
 L7500:  lda     event_key
-        and     #$7F
+        and     #CHAR_MASK
         cmp     #'1'
         bne     L750C
         jmp     L73FE

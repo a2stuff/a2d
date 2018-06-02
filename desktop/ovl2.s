@@ -1182,7 +1182,7 @@ L1307:  sta     L124A
         sty     $06+1
         ldy     #$01
         lda     ($06),y
-        and     #$7F
+        and     #CHAR_MASK
         cmp     #'/'
         bne     L132C
         dey
@@ -1196,7 +1196,7 @@ L132C:  ldy     #0
         lda     ($06),y
         tay
 :       lda     ($06),y
-        and     #$7F
+        and     #CHAR_MASK
         sta     L14E5,y
         dey
         bpl     :-
@@ -1422,11 +1422,11 @@ L1900:  stx     $06+1
         lda     ($06),y
         tay
 L1909:  lda     ($06),y
-        cmp     #$61
+        cmp     #'a'
         bcc     L1917
-        cmp     #$7B
+        cmp     #'z'+1
         bcs     L1917
-        and     #$DF
+        and     #CASE_MASK
         sta     ($06),y
 L1917:  dey
         bpl     L1909

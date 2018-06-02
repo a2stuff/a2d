@@ -1071,7 +1071,7 @@ L484B:  lda     ($06),y
         bcc     L4859
         cmp     #'z'+1
         bcs     L4859
-        and     #$DF            ; make upper-case
+        and     #CASE_MASK
         sta     ($06),y
 L4859:  dey
         bne     L484B
@@ -1430,15 +1430,15 @@ L4AEA:  jsr     L4B5F
         sta     L4BB1
         tay
 L4B81:  lda     ($06),y
-        and     #$7F
+        and     #CHAR_MASK
         cmp     #'/'
         beq     L4B8C
         dey
         bne     L4B81
 L4B8C:  dey
 L4B8D:  lda     ($06),y
-        and     #$7F
-        cmp     #$2F
+        and     #CHAR_MASK
+        cmp     #'/'
         beq     L4B98
         dey
         bne     L4B8D
@@ -2675,7 +2675,7 @@ L5584:  jsr     get_event
         jmp     L55D1
 
 L5595:  lda     event_params+1
-        and     #$7F
+        and     #CHAR_MASK
         cmp     #CHAR_RETURN
         beq     L55D1
         cmp     #CHAR_ESCAPE
@@ -2866,7 +2866,7 @@ L5732:  jsr     get_event
         jmp     L578B
 
 L5743:  lda     event_key
-        and     #$7F
+        and     #CHAR_MASK
         cmp     #CHAR_RETURN
         beq     L578B
         cmp     #CHAR_ESCAPE
@@ -8141,7 +8141,7 @@ done:   rts
 
         ;; Ignore punctuation
 :       lda     (ptr),y
-        and     #$7F
+        and     #CHAR_MASK
         cmp     #'/'
         beq     skip
         cmp     #' '
@@ -8154,7 +8154,7 @@ skip:   dey
         ;; Look at previous character - is it a letter?
 check:  iny
         lda     (ptr),y
-        and     #$7F
+        and     #CHAR_MASK
         cmp     #'A'
         bcc     :+
         cmp     #'Z' + 1
@@ -11703,7 +11703,7 @@ LA6F7:  jsr     LB9B8
         cmp     #MGTK::event_modifier_solid_apple
         bne     LA71A
         lda     event_key
-        and     #$7F
+        and     #CHAR_MASK
         cmp     #CHAR_LEFT
         bne     LA710
         jmp     LA815
@@ -11715,7 +11715,7 @@ LA710:  cmp     #CHAR_RIGHT
 LA717:  return  #$FF
 
 LA71A:  lda     event_key
-        and     #$7F
+        and     #CHAR_MASK
         cmp     #CHAR_LEFT
         bne     LA72E
         bit     LD8ED
@@ -11917,7 +11917,7 @@ jump_relay:
         cmp     #MGTK::event_kind_key_down
         bne     :-
         lda     event_key
-        and     #$7F
+        and     #CHAR_MASK
         cmp     #CHAR_ESCAPE
         beq     close
         cmp     #CHAR_RETURN
@@ -13317,7 +13317,7 @@ loop:   dey
 done:   rts
 
 :       lda     (ptr),y
-        and     #$7F
+        and     #CHAR_MASK
         cmp     #'/'
         beq     :+
         cmp     #'.'
@@ -13328,7 +13328,7 @@ done:   rts
 check_alpha:
         iny
         lda     (ptr),y
-        and     #$7F
+        and     #CHAR_MASK
         cmp     #'A'
         bcc     :+
         cmp     #'Z'+1

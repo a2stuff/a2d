@@ -133,7 +133,7 @@ L7137:  lda     $5028,x
         ldx     path_buf0
         beq     L7178
 L7156:  lda     path_buf0,x
-        and     #$7F
+        and     #CHAR_MASK
         cmp     #'/'
         beq     L7162
         dex

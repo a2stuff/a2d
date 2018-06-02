@@ -5203,7 +5203,7 @@ irq_entry:
 
         lda     KBD
         bpl     end             ; no key
-        and     #$7F
+        and     #CHAR_MASK
         sta     input::key
         bit     KBDSTRB         ; clear strobe
 
@@ -5940,7 +5940,7 @@ loop:   jsr     get_menu_item
 
 find_by_shortcut:
         lda     find_shortcut
-        and     #$7F
+        and     #CHAR_MASK
         cmp     curmenuitem::shortcut1
         beq     :+
         cmp     curmenuitem::shortcut2
@@ -9411,7 +9411,7 @@ no_modifiers:
         lda     KBD
         bpl     :+
         stx     KBDSTRB
-        and     #$7F
+        and     #CHAR_MASK
         sec
 :       rts
 .endproc

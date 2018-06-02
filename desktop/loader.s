@@ -187,7 +187,7 @@ prompt_for_system_disk:
 wait:   sta     KBDSTRB
 :       lda     KBD
         bpl     :-
-        and     #$7F
+        and     #CHAR_MASK
         cmp     #$0D            ; Return
         bne     wait
         jmp     start

@@ -573,7 +573,7 @@ loop:   iny
 loop:   lda     IN,y
         cmp     #$80|CHAR_RETURN
         beq     done
-        and     #$7F
+        and     #CHAR_MASK
         sta     buffer+1,y
         iny
         jmp     loop
@@ -1296,7 +1296,7 @@ L346F:  .byte   0
 loop:   lda     IN,y
         cmp     #$80|CHAR_RETURN
         beq     done
-        and     #$7F
+        and     #CHAR_MASK
         sta     path2+1,y
         iny
         jmp     loop
@@ -1887,7 +1887,7 @@ read:   sta     read_params::ref_num
 
         ldy     L324A
 :       lda     L324A,y
-        and     #$7F
+        and     #CHAR_MASK
         cmp     #'/'
         beq     L38D2
         dey
@@ -1896,7 +1896,7 @@ read:   sta     read_params::ref_num
 L38D2:  dey
         sty     L324A
 L38D6:  lda     L324A,y
-        and     #$7F
+        and     #CHAR_MASK
         cmp     #'/'
         beq     :+
         dey
@@ -2016,7 +2016,7 @@ str_not_completed:
         sta     KBDSTRB
 loop:   lda     KBD
         bpl     loop
-        and     #$7F
+        and     #CHAR_MASK
         sta     KBDSTRB
         cmp     #'M'
         beq     monitor
@@ -2069,7 +2069,7 @@ done:   rts
         lda     KBD
         bpl     wait_enter_escape
         sta     KBDSTRB
-        and     #$7F
+        and     #CHAR_MASK
         cmp     #CHAR_ESCAPE
         beq     done
         cmp     #CHAR_RETURN

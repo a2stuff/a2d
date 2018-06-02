@@ -12,9 +12,8 @@
         .org $800
 
 
-CHAR_MASK       := $7F
-CASE_MASK       := $DF
-
+dir_data_buffer     := $0E00
+dir_data_buffer_len := $0E00
 
 ;;; ============================================================
 
@@ -139,8 +138,8 @@ on_line_buffer:
         .byte   0
 
         io_buf := $1C00
-        buffer := $0E00
-        buffer_len := $0E00
+        buffer := dir_data_buffer
+        buffer_len := dir_data_buffer_len
 
         DEFINE_OPEN_PARAMS open_params, path_buf, io_buf
         DEFINE_READ_PARAMS read_params, buffer, buffer_len
@@ -366,14 +365,14 @@ L0AE5:  return  #$FF
 ;;; ============================================================
 
 .proc L0AE8
-        lda     #$00
+        lda     #0
         sta     L0B15
         jsr     L0B40
         jsr     L0B16
 L0AF3:  copy16  $06, $08
         jsr     L0B16
         bcs     L0B0F
-        jsr     L0B5E
+        jsr     compare_file_entries
         bcc     L0AF3
         jsr     swap_entries
         lda     #$FF
@@ -420,9 +419,9 @@ rtcs:   sec
 
 ;;; ============================================================
 
-L0B40:  lda     #$01
+L0B40:  lda     #1
         sta     L0AAF
-        copy16  #$0E04, $06
+        copy16  #dir_data_buffer + 4, $06
         rts
 
 ;;; ============================================================
@@ -445,30 +444,33 @@ loop:   lda     (ptr1),y
 .endproc
 
 ;;; ============================================================
+;;; Compare file entries ($06, $08); order returned in carry.
 
-.proc L0B5E
+;;; Uses compare_selection_orders, compare_file_entry_names,
+;;; and compare_entry_types_and_names as appropriate.
+
+.proc compare_file_entries
         ptr1 := $06
         ptr2 := $08
 
         ldy     #0
         lda     (ptr1),y
         and     #STORAGE_TYPE_MASK ; Active file entry?
-        bne     L0B69
+        bne     :+
         jmp     rtcc
 
-L0B69:  lda     (ptr2),y
+:       lda     (ptr2),y
         and     #STORAGE_TYPE_MASK ; Active file entry?
-        bne     L0B72
+        bne     :+
         jmp     rtcs
 
-L0B72:  lda     selected_file_count
-        beq     L0B7F
+:       lda     selected_file_count
+        beq     :+
         lda     path_index
-        beq     L0B7F
+        beq     :+
         jmp     compare_selection_orders
 
-L0B7F:
-        ldax    ptr2
+:       ldax    ptr2
         jsr     check_system_file
         bcc     rtcc
 
@@ -559,7 +561,7 @@ type:   .byte   0
 
         ldx     selected_file_count
 loop:   dex
-        bmi     L0C4A
+        bmi     done1
 
         ;; Look up next icon, compare length.
         lda     selected_file_list,x
@@ -600,11 +602,11 @@ next:   iny                     ; skip leading space
         cpy     #0
         bne     next
 
-L0C4A:  stx     match           ; match, or $FF if none
+done1:  stx     match           ; match, or $FF if none
 
         ldx     selected_file_count
 loop2:  dex
-        bmi     L0CA2
+        bmi     done2
 
         ;; Look up next icon, compare length.
         lda     selected_file_list,x
@@ -645,7 +647,7 @@ next2:  iny
         cpy     #0
         bne     next2
 
-L0CA2:  stx     match2          ; match, or $FF if none
+done2:  stx     match2          ; match, or $FF if none
 
         lda     match
         and     match2

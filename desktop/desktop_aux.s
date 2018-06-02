@@ -3404,7 +3404,7 @@ LBB87:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
 LBB9A:  cmp     #MGTK::event_kind_key_down
         bne     LBB87
         lda     event_key
-        and     #$7F
+        and     #CHAR_MASK
         bit     alert_action
         bpl     LBBEE
         cmp     #CHAR_ESCAPE
