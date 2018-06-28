@@ -374,6 +374,7 @@ str_modem:      PASCAL_STRING "Modem"
 str_audio:      PASCAL_STRING "Audio Card"
 str_storage:    PASCAL_STRING "Mass Storage"
 str_network:    PASCAL_STRING "Network Card"
+str_mockingboard: PASCAL_STRING "Mockingboard"
 str_unknown:    PASCAL_STRING "(unknown)"
 str_empty:      PASCAL_STRING "(empty)"
 
@@ -1039,7 +1040,40 @@ notpas:
         bne     :+
         result  str_network
 :
+        jsr     detect_mockingboard
+        bcc     :+
+        result  str_mockingboard
+:
         result  str_unknown
+.endproc
+
+
+;;; Detect Mockingboard
+;;; Assumes $06 points at $Cn00, returns carry set if found
+
+.proc detect_mockingboard
+        ptr := $06
+        tmp := $08
+
+        ldy     #4              ; $Cn04
+        ldx     #2              ; try 2 times
+
+loop:   lda     (ptr),Y         ; 6522 Low-Order Counter
+        sta     tmp             ; read 8 cycles apart
+        lda     (ptr),Y
+
+        sec                     ; compare counter offset
+        sbc     tmp
+        cmp     #($100 - 8)
+        bne     fail
+        dex
+        bne     loop
+
+found:  sec
+        rts
+
+fail:   clc
+        rts
 .endproc
 
 ;;; ============================================================
