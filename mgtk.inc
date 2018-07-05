@@ -261,17 +261,24 @@ GetCursorAddr   := $28          ; Get cursor definition
 ;;; --------------------------------------------------
 ;;; Event Manager Calls
 
-;;; Event record:
-;;;
-;;; .byte       kind            event_kind_*
-;;; if kind is event_kind_key_down:
-;;;   .byte key          (ASCII code; high bit clear)
-;;;   .byte modifiers    (0=none, 1=open-apple, 2=solid-apple, 3=both)
-;;; if kind is event_kind_update:
-;;;   .byte window_id
-;;; otherwise:
-;;;   .word xcoord
-;;;   .word ycoord
+.struct Event
+        kind    .byte           ; event_kind_*
+    .union
+      .struct                   ; event_kind_down
+        key     .byte           ; ASCII code; high bit clear
+        modifiers .byte         ; 0=none, 1=open-apple, 2=solid-apple, 3=both
+      .endstruct
+
+      .struct                   ; event_kind_update
+        window_id .byte
+      .endstruct
+
+      .struct                   ; otherwise
+        xcoord  .word
+        ycoord  .word
+      .endstruct
+    .endunion
+.endstruct
 
 CheckEvents     := $29          ; Process mouse/kbd if GetEvent will be delayed.
 ;;; (no parameters)

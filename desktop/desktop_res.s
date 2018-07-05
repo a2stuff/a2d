@@ -34,11 +34,11 @@ event_ycoord := event_params + 3
 event_window_id := event_params + 1
 
 activatectl_params := *
-activatectl_which_ctl := activatectl_params
+activatectl_which_ctl := activatectl_params + 0
 activatectl_activate  := activatectl_params + 1
 
 trackthumb_params := *
-trackthumb_which_ctl := trackthumb_params
+trackthumb_which_ctl := trackthumb_params + 0
 trackthumb_mousex := trackthumb_params + 1
 trackthumb_mousey := trackthumb_params + 3
 trackthumb_thumbpos := trackthumb_params + 5

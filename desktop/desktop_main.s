@@ -491,9 +491,9 @@ handle_keydown:
         jmp     cmd_scroll
 
 menu_accelerators:
-        lda     event_params+1
+        lda     event_key
         sta     LE25C
-        lda     event_params+2
+        lda     event_modifiers
         beq     L43A1
         lda     #1
 L43A1:  sta     LE25D
@@ -2667,7 +2667,7 @@ L5584:  jsr     get_event
         bne     L5584
         jmp     L55D1
 
-L5595:  lda     event_params+1
+L5595:  lda     event_params+MGTK::Event::key
         and     #CHAR_MASK
         cmp     #CHAR_RETURN
         beq     L55D1
@@ -4405,10 +4405,10 @@ L65D0:  cmp16   grafport2::cliprect::x2, L7B63
 L65E2:  lsr16    L6602
         lda     L6602
 L65EB:  jsr     L62BC
-L65EE:  sta     event_params+1
-        lda     #$02
-        sta     event_params
-        MGTK_RELAY_CALL MGTK::UpdateThumb, event_params
+L65EE:  sta     updatethumb_thumbpos
+        lda     #MGTK::ctl_horizontal_scroll_bar
+        sta     updatethumb_which_ctl
+        MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 
 L6600:  .word   0
@@ -4446,10 +4446,10 @@ L667B:  lsr16   L66A0
         lsr16   L66A0
         lda     L66A0
 L668A:  jsr     L62BC
-L668D:  sta     event_params+1
-        lda     #$01
-        sta     event_params
-        MGTK_RELAY_CALL MGTK::UpdateThumb, event_params
+L668D:  sta     updatethumb_thumbpos
+        lda     #MGTK::ctl_vertical_scroll_bar
+        sta     updatethumb_which_ctl
+        MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 
 L669F:  .byte   0
