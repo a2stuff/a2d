@@ -233,14 +233,7 @@ L415B:  sta     active_window_id
         jsr     window_lookup
         stax    $06
         ldy     #$16
-        lda     ($06),y
-        sec
-        sbc     grafport2::viewloc::ycoord
-        sta     L4242
-        iny
-        lda     ($06),y
-        sbc     grafport2::viewloc::ycoord+1
-        sta     L4243
+        sub16in ($06),y, grafport2::viewloc::ycoord, L4242
         cmp16   L4242, #15
         bpl     L41CB
         jsr     offset_grafport2
@@ -4000,24 +3993,9 @@ L60DE:  lda     active_window_id
         sta     ($06),y
 L6112:  ldy     #$14
 
-        lda     ($06),y
-        sec
-        sbc     port_copy+MGTK::GrafPort::viewloc+MGTK::Point::xcoord
-        sta     L6197
+        sub16in ($06),y, port_copy+MGTK::GrafPort::viewloc+MGTK::Point::xcoord, L6197
         iny
-        lda     ($06),y
-        sbc     port_copy+MGTK::GrafPort::viewloc+MGTK::Point::xcoord+1
-        sta     L6197+1
-        iny
-
-        lda     ($06),y
-        sec
-        sbc     port_copy+MGTK::GrafPort::viewloc+MGTK::Point::ycoord
-        sta     L6199
-        iny
-        lda     ($06),y
-        sbc     port_copy+MGTK::GrafPort::viewloc+MGTK::Point::ycoord+1
-        sta     L6199+1
+        sub16in ($06),y, port_copy+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, L6199
 
         ldx     active_window_id
         dex
@@ -4043,23 +4021,9 @@ L6161:  txa
         jsr     icon_entry_lookup
         stax    $06
         ldy     #$03
-        lda     ($06),y
-        clc
-        adc     L6197
-        sta     ($06),y
+        add16in ($06),y, L6197, ($06),y
         iny
-        lda     ($06),y
-        adc     L6198
-        sta     ($06),y
-        iny
-        lda     ($06),y
-        clc
-        adc     L6199
-        sta     ($06),y
-        iny
-        lda     ($06),y
-        adc     L619A
-        sta     ($06),y
+        add16in ($06),y, L6199, ($06),y
         pla
         tax
         inx
@@ -8305,47 +8269,19 @@ port_copy:
 
         ;; iconx
         ldy     #IconEntry::iconx
-        lda     (entry_ptr),y
-        clc
-        adc     pos_screen
-        sta     (entry_ptr),y
-        iny
-        lda     (entry_ptr),y
-        adc     pos_screen+1
-        sta     (entry_ptr),y
+        add16in (entry_ptr),y, pos_screen, (entry_ptr),y
         iny
 
         ;; icony
-        lda     (entry_ptr),y
-        clc
-        adc     pos_screen+2
-        sta     (entry_ptr),y
-        iny
-        lda     (entry_ptr),y
-        adc     pos_screen+3
-        sta     (entry_ptr),y
+        add16in (entry_ptr),y, pos_screen+2, (entry_ptr),y
 
         ;; iconx
         ldy     #IconEntry::iconx
-        lda     (entry_ptr),y
-        sec
-        sbc     pos_win
-        sta     (entry_ptr),y
-        iny
-        lda     (entry_ptr),y
-        sbc     pos_win+1
-        sta     (entry_ptr),y
+        sub16in (entry_ptr),y, pos_win, (entry_ptr),y
         iny
 
         ;; icony
-        lda     (entry_ptr),y
-        sec
-        sbc     pos_win+2
-        sta     (entry_ptr),y
-        iny
-        lda     (entry_ptr),y
-        sbc     pos_win+3
-        sta     (entry_ptr),y
+        sub16in (entry_ptr),y, pos_win+2, (entry_ptr),y
 
         jsr     pop_zp_addrs
         rts
@@ -8397,47 +8333,19 @@ pos_win:        .word   0, 0
 
         ;; iconx
         ldy     #IconEntry::iconx
-        lda     (entry_ptr),y
-        sec
-        sbc     pos_screen
-        sta     (entry_ptr),y
-        iny
-        lda     (entry_ptr),y
-        sbc     pos_screen+1
-        sta     (entry_ptr),y
+        sub16in (entry_ptr),y, pos_screen, (entry_ptr),y
         iny
 
         ;; icony
-        lda     (entry_ptr),y
-        sec
-        sbc     pos_screen+2
-        sta     (entry_ptr),y
-        iny
-        lda     (entry_ptr),y
-        sbc     pos_screen+3
-        sta     (entry_ptr),y
+        sub16in (entry_ptr),y, pos_screen+2, (entry_ptr),y
 
         ;; iconx
         ldy     #IconEntry::iconx
-        lda     (entry_ptr),y
-        clc
-        adc     pos_win
-        sta     (entry_ptr),y
-        iny
-        lda     (entry_ptr),y
-        adc     pos_win+1
-        sta     (entry_ptr),y
+        add16in (entry_ptr),y, pos_win, (entry_ptr),y
         iny
 
         ;; icony
-        lda     (entry_ptr),y
-        clc
-        adc     pos_win+2
-        sta     (entry_ptr),y
-        iny
-        lda     (entry_ptr),y
-        adc     pos_win+3
-        sta     (entry_ptr),y
+        add16in (entry_ptr),y, pos_win+2, (entry_ptr),y
         jsr     pop_zp_addrs
         rts
 

@@ -1203,23 +1203,9 @@ L9B48:  bit     L9C75
 L9B52:  MGTK_CALL MGTK::FramePoly, drag_outline_buffer
         copy16  #drag_outline_buffer, $08
 L9B60:  ldy     #2
-L9B62:  lda     ($08),y
-        clc
-        adc     L9C96
-        sta     ($08),y
+L9B62:  add16in ($08),y, L9C96, ($08),y
         iny
-        lda     ($08),y
-        adc     L9C96+1
-        sta     ($08),y
-        iny
-        lda     ($08),y
-        clc
-        adc     L9C98
-        sta     ($08),y
-        iny
-        lda     ($08),y
-        adc     L9C98+1
-        sta     ($08),y
+        add16in ($08),y, L9C98, ($08),y
         iny
         cpy     #icon_poly_size
         bne     L9B62
@@ -1823,14 +1809,7 @@ icon_poly_size := (8 * .sizeof(MGTK::Point)) + 2
 
         ;; Bottom edge of icon (v2, v7)
         ldy     #10             ; bitmap y2
-        lda     (bitmap_ptr),y
-        clc
-        adc     poly::v0::ycoord
-        sta     poly::v2::ycoord
-        iny
-        lda     ($08),y
-        adc     poly::v0::ycoord+1
-        sta     poly::v2::ycoord+1
+        add16in (bitmap_ptr),y, poly::v0::ycoord, poly::v2::ycoord
 
         lda     poly::v2::ycoord ; 2px down
         clc
@@ -2315,41 +2294,13 @@ LA56F:  pla
         tax
         copy16  icon_ptrs,x, $06
         ldy     #3
-        lda     ($06),y
-        clc
-        adc     LA567
-        sta     ($06),y
+        add16in ($06),y, LA567, ($06),y
         iny
-        lda     ($06),y
-        adc     LA568
-        sta     ($06),y
-        iny
-        lda     ($06),y
-        clc
-        adc     LA569
-        sta     ($06),y
-        iny
-        lda     ($06),y
-        adc     LA56A
-        sta     ($06),y
+        add16in ($06),y, LA569, ($06),y
         ldy     #3
-        lda     ($06),y
-        sec
-        sbc     LA56B
-        sta     ($06),y
+        sub16in ($06),y, LA56B, ($06),y
         iny
-        lda     ($06),y
-        sbc     LA56C
-        sta     ($06),y
-        iny
-        lda     ($06),y
-        sec
-        sbc     LA56D
-        sta     ($06),y
-        iny
-        lda     ($06),y
-        sbc     LA56E
-        sta     ($06),y
+        sub16in ($06),y, LA56D, ($06),y
         jsr     pop_zp_addrs
         rts
 
@@ -2361,41 +2312,13 @@ LA5CB:  pla
         tax
         copy16  icon_ptrs,x, $06
         ldy     #3
-        lda     ($06),y
-        sec
-        sbc     LA567
-        sta     ($06),y
+        sub16in ($06),y, LA567, ($06),y
         iny
-        lda     ($06),y
-        sbc     LA568
-        sta     ($06),y
-        iny
-        lda     ($06),y
-        sec
-        sbc     LA569
-        sta     ($06),y
-        iny
-        lda     ($06),y
-        sbc     LA56A
-        sta     ($06),y
+        sub16in ($06),y, LA569, ($06),y
         ldy     #3
-        lda     ($06),y
-        clc
-        adc     LA56B
-        sta     ($06),y
+        add16in ($06),y, LA56B, ($06),y
         iny
-        lda     ($06),y
-        adc     LA56C
-        sta     ($06),y
-        iny
-        lda     ($06),y
-        clc
-        adc     LA56D
-        sta     ($06),y
-        iny
-        lda     ($06),y
-        adc     LA56E
-        sta     ($06),y
+        add16in ($06),y, LA56D, ($06),y
         jsr     pop_zp_addrs
         rts
 

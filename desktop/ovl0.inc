@@ -25,41 +25,13 @@ L853B:  lda     ($08),y
         cpx     #$04
         bne     L853B
         ldy     #$03
-        lda     ($06),y
-        sec
-        sbc     L8590
-        sta     ($06),y
+        sub16in ($06),y, L8590, ($06),y
         iny
-        lda     ($06),y
-        sbc     L8591
-        sta     ($06),y
-        iny
-        lda     ($06),y
-        sec
-        sbc     L8592
-        sta     ($06),y
-        iny
-        lda     ($06),y
-        sbc     L8593
-        sta     ($06),y
+        sub16in ($06),y, L8592, ($06),y
         ldy     #$03
-        lda     ($06),y
-        clc
-        adc     L8594
-        sta     ($06),y
+        add16in ($06),y, L8594, ($06),y
         iny
-        lda     ($06),y
-        adc     L8595
-        sta     ($06),y
-        iny
-        lda     ($06),y
-        clc
-        adc     L8596
-        sta     ($06),y
-        iny
-        lda     ($06),y
-        adc     L8597
-        sta     ($06),y
+        add16in ($06),y, L8596, ($06),y
         jsr     $83A5
         rts
 
