@@ -1666,10 +1666,12 @@ L6128:  .byte   0
 ;;; ============================================================
 
 .proc adjust_filename_case
-        stx     $0A+1
-        sta     $0A
+        ptr := $A
+
+        stx     ptr+1
+        sta     ptr
         ldy     #0
-        lda     ($0A),y
+        lda     (ptr),y
         tay
         bne     loop
         rts
@@ -1678,26 +1680,28 @@ loop:   dey
         beq     done
         bpl     :+
 done:   rts
-:       lda     ($0A),y
+
+:       lda     (ptr),y
         and     #CHAR_MASK      ; convert to ASCII
         cmp     #'/'
         beq     next
         cmp     #'.'
-        bne     check
+        bne     check_alpha
 next:   dey
         jmp     loop
 
-check:  iny
-        lda     ($0A),y
+check_alpha:
+        iny
+        lda     (ptr),y
         and     #CHAR_MASK
         cmp     #'A'
-        bcc     L615D
+        bcc     :+
         cmp     #'Z'+1
-        bcs     L615D
+        bcs     :+
         clc
-        adc     #$20            ; convert to lower case
-        sta     ($0A),y
-L615D:  dey
+        adc     #('a' - 'A')    ; convert to lower case
+        sta     (ptr),y
+:       dey
         jmp     loop
 .endproc
 

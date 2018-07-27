@@ -874,7 +874,7 @@ LD77E:  lda     $1300
 LD798:  lda     $1300
         and     #$0F
         sta     $1300
-        addr_call LE0FE, $1300
+        addr_call adjust_case, $1300
         jsr     LE674
         jsr     LE559
 LD7AD:  lda     LD417
@@ -935,7 +935,7 @@ LD817:  lda     $1300
         jmp     LD83C
 
 LD82C:  sta     $1300
-        addr_call LE0FE, $1300
+        addr_call adjust_case, $1300
         ldx     #$00
         ldy     #$13
         lda     #$02
@@ -1724,40 +1724,50 @@ LE0B4:  stax    $06
         rts
 
 LE0FD:  .byte   0
-LE0FE:  stx     $0B
-        sta     $0A
-        ldy     #$00
-        lda     ($0A),y
+
+;;; ============================================================
+
+.proc adjust_case
+        ptr := $A
+
+        stx     ptr+1
+        sta     ptr
+        ldy     #0
+        lda     (ptr),y
         tay
-        bne     LE10A
+        bne     next
         rts
 
-LE10A:  dey
-        beq     LE10F
-        bpl     LE110
-LE10F:  rts
+next:   dey
+        beq     done
+        bpl     :+
+done:   rts
 
-LE110:  lda     ($0A),y
-        and     #CHAR_MASK
+:       lda     (ptr),y
+        and     #CHAR_MASK      ; convert to ASCII
         cmp     #'/'
-        beq     LE11C
+        beq     skip
         cmp     #'.'
-        bne     LE120
-LE11C:  dey
-        jmp     LE10A
+        bne     check_alpha
+skip:   dey
+        jmp     next
 
-LE120:  iny
-        lda     ($0A),y
+check_alpha:
+        iny
+        lda     (ptr),y
         and     #CHAR_MASK
         cmp     #'A'
-        bcc     LE132
+        bcc     :+
         cmp     #'Z'+1
-        bcs     LE132
+        bcs     :+
         clc
-        adc     #('a' - 'A')
-        sta     ($0A),y
-LE132:  dey
-        jmp     LE10A
+        adc     #('a' - 'A')    ; convert to lower case
+        sta     (ptr),y
+:       dey
+        jmp     next
+.endproc
+
+;;; ============================================================
 
         .byte   0
 LE137:  sta     getwinport_params::window_id
@@ -2026,7 +2036,7 @@ LE31B:  sta     LE399
         sta     $07
         lda     $06
         ldx     $07
-        jsr     LE0FE
+        jsr     adjust_case
         lda     $06
         ldx     $07
         jsr     draw_text

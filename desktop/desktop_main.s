@@ -8103,30 +8103,27 @@ next:   dey
         bpl     :+
 done:   rts
 
-        ;; Ignore punctuation
 :       lda     (ptr),y
-        and     #CHAR_MASK
+        and     #CHAR_MASK      ; convert to ASCII
         cmp     #'/'
         beq     skip
-        cmp     #' '
-        beq     skip
+        cmp     #' '            ; (these two lines are not present
+        beq     skip            ; in most filename case adjust procs)
         cmp     #'.'
-        bne     check
+        bne     check_alpha
 skip:   dey
         jmp     next
 
-        ;; Look at previous character - is it a letter?
-check:  iny
+check_alpha:
+        iny
         lda     (ptr),y
         and     #CHAR_MASK
         cmp     #'A'
         bcc     :+
-        cmp     #'Z' + 1
+        cmp     #'Z'+1
         bcs     :+
-
-        ;; Yes - uppercase it.
         clc
-        adc     #$20
+        adc     #('a' - 'A')    ; convert to lower case
         sta     (ptr),y
 :       dey
         jmp     next
@@ -13219,18 +13216,19 @@ LB76C:  stax    $06
         tay
         bne     loop
         rts
+
 loop:   dey
         beq     done
         bpl     :+
 done:   rts
 
 :       lda     (ptr),y
-        and     #CHAR_MASK
+        and     #CHAR_MASK      ; convert to ASCII
         cmp     #'/'
-        beq     :+
+        beq     next
         cmp     #'.'
         bne     check_alpha
-:       dey
+next:   dey
         jmp     loop
 
 check_alpha:
@@ -13242,7 +13240,7 @@ check_alpha:
         cmp     #'Z'+1
         bcs     :+
         clc
-        adc     #('a' - 'A')    ; Lowercase
+        adc     #('a' - 'A')    ; convert to lower case
         sta     (ptr),y
 :       dey
         jmp     loop
