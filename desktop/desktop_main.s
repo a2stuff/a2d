@@ -2141,8 +2141,8 @@ L518D:  lda     L51EF
         tax
         lda     cached_window_icon_list,x
         jsr     icon_entry_lookup
-        ldy     #$01
-        jsr     DESKTOP_RELAY
+        ldy     #DT_ADD_ICON
+        jsr     DESKTOP_RELAY   ; icon entry addr in A,X
         inc     L51EF
         jmp     L518D
 
@@ -3176,8 +3176,8 @@ L5986:  txa
         cmp     trash_icon_num
         beq     L5998
         jsr     icon_entry_lookup
-        ldy     #$01
-        jsr     DESKTOP_RELAY
+        ldy     #DT_ADD_ICON
+        jsr     DESKTOP_RELAY   ; icon entry addr in A,X
 L5998:  pla
         tax
         inx
@@ -3310,8 +3310,8 @@ L5AA9:  lda     cached_window_icon_count
         dex
         lda     cached_window_icon_list,x
         jsr     icon_entry_lookup
-        ldy     #$01
-        jsr     DESKTOP_RELAY
+        ldy     #DT_ADD_ICON
+        jsr     DESKTOP_RELAY   ; icon entry addr in A,X
 L5AC0:  jsr     DESKTOP_COPY_FROM_BUF
         jmp     redraw_windows_and_desktop
 
@@ -5018,8 +5018,8 @@ L6BDA:  lda     L6C0E
         tax
         lda     cached_window_icon_list,x
         jsr     icon_entry_lookup
-        ldy     #$01
-        jsr     DESKTOP_RELAY
+        ldy     #DT_ADD_ICON
+        jsr     DESKTOP_RELAY   ; icon entry addr in A,X
         inc     L6C0E
         jmp     L6BDA
 
@@ -5967,7 +5967,7 @@ L74AD:  lda     ($06),y
         sbc     #$01
         sta     ($08),y
         ldy     #$01
-        lda     #$2F
+        lda     #'/'
         sta     ($08),y
         ldy     #$00
         lda     ($08),y
@@ -6264,80 +6264,104 @@ L7767:  .byte   $14
 ;;; Create icon
 
 .proc L7768
+        file_entry := $6
+        icon_entry := $8
+        name_tmp := $1800
+
         inc     LDD9E
         jsr     DESKTOP_ALLOC_ICON
         ldx     cached_window_icon_count
         inc     cached_window_icon_count
         sta     cached_window_icon_list,x
         jsr     icon_entry_lookup
-        stax    $08
+        stax    icon_entry
         lda     LCBANK2
         lda     LCBANK2
-        ldy     #$00
-        lda     ($06),y
-        sta     $1800
+
+        ;; Copy the name (offset by 2 for count and leading space)
+        ldy     #FileEntry::storage_type_name_length
+        lda     (file_entry),y  ; assumes storage type is 0 ???
+        sta     name_tmp
         iny
-        ldx     #$00
-L778E:  lda     ($06),y
-        sta     $1802,x
+        ldx     #0
+:       lda     (file_entry),y
+        sta     name_tmp+2,x
         inx
         iny
-        cpx     $1800
-        bne     L778E
-        inc     $1800
-        inc     $1800
-        lda     #$20
-        sta     $1801
-        ldx     $1800
-        sta     $1800,x
-        ldy     #$10
-        lda     ($06),y
-        cmp     #$B3
-        beq     L77CC
-        cmp     #$FF
-        bne     L77DA
-        ldy     #$00
-        lda     ($06),y
-        tay
-        ldx     L77D0
-L77BF:  lda     ($06),y
-        cmp     L77D0,x
-        bne     L77D8
-        dey
-        beq     L77D8
-        dex
-        bne     L77BF
-L77CC:  lda     #$01
-        bne     L77DA
-L77D0:  PASCAL_STRING ".SYSTEM"
+        cpx     name_tmp
+        bne     :-
 
-L77D8:  lda     #$FF
-L77DA:  tay
+        inc     name_tmp        ; length += 2 for leading/trailing spaces
+        inc     name_tmp
+        lda     #' '            ; leading space
+        sta     name_tmp+1
+        ldx     name_tmp
+        sta     name_tmp,x      ; trailing space
+
+        ;; Check file type
+        ldy     #FileEntry::file_type
+        lda     (file_entry),y
+        cmp     #FT_S16         ; IIgs System?
+        beq     is_app
+        cmp     #FT_SYSTEM      ; Other system?
+        bne     got_type        ; nope
+
+        ;; Distinguish *.SYSTEM files as apps (use $01) from other
+        ;; type=SYS files (use $FF).
+        ldy     #FileEntry::storage_type_name_length
+        lda     (file_entry),y
+        tay
+        ldx     str_sys_suffix
+:       lda     (file_entry),y
+        cmp     str_sys_suffix,x
+        bne     not_app
+        dey
+        beq     not_app
+        dex
+        bne     :-
+
+is_app:
+        lda     #$01            ; TODO: Define a symbol for this.
+        bne     got_type
+
+str_sys_suffix:
+        PASCAL_STRING ".SYSTEM"
+
+not_app:
+        lda     #$FF
+
+got_type:
+        tay
+
+        ;; Figure out icon type
         lda     LCBANK1
         lda     LCBANK1
         tya
         ;; L7622/3 = icon bits addr
         ;; L7624 = icon type
         jsr     find_icon_details_for_file_type
-        addr_call capitalize_string, $1800
+        addr_call capitalize_string, name_tmp
         ldy     #IconEntry::len
         ldx     #0
-L77F0:  lda     $1800,x
-        sta     ($08),y
+L77F0:  lda     name_tmp,x
+        sta     (icon_entry),y
         iny
         inx
-        cpx     $1800
+        cpx     name_tmp
         bne     L77F0
-        lda     $1800,x
-        sta     ($08),y
-        ldx     #$00
-        ldy     #$03
-L7805:  lda     L762A,x
-        sta     ($08),y
+        lda     name_tmp,x
+        sta     (icon_entry),y
+
+        ;; Assign location
+        ldx     #0
+        ldy     #IconEntry::iconx
+:       lda     L762A,x
+        sta     (icon_entry),y
         inx
         iny
         cpx     #$04
-        bne     L7805
+        bne     :-
+
         lda     cached_window_icon_count
         cmp     L762E
         beq     L781A
@@ -6363,18 +6387,18 @@ L7862:  lda     L762A
 L7870:  lda     cached_window_id
         ora     L7624
         ldy     #IconEntry::win_type
-        sta     ($08),y
+        sta     (icon_entry),y
         ldy     #IconEntry::iconbits
         lda     L7622
-        sta     ($08),y
+        sta     (icon_entry),y
         iny
         lda     L7622+1
-        sta     ($08),y
+        sta     (icon_entry),y
         ldx     cached_window_icon_count
         dex
         lda     cached_window_icon_list,x
         jsr     icon_screen_to_window
-        add16   $06, #32, $06
+        add16   file_entry, #32, file_entry
         rts
 
         .byte   0
@@ -9115,7 +9139,7 @@ L9032:  jsr     L8FA7
 L9051:  lda     LEBFC
         jsr     icon_entry_name_lookup
         ldy     #$01
-        lda     #$2F
+        lda     #'/'
         sta     ($06),y
         dey
         lda     ($06),y
@@ -9128,7 +9152,7 @@ L9066:  iny
         cpy     #$00            ; self-modified
         bne     L9066
         ldy     #$01
-        lda     #$20
+        lda     #' '
         sta     ($06),y
 L9076:  ldy     #$FF
 L9078:  iny
@@ -9238,7 +9262,7 @@ L9168:  jsr     L917F
         lda     LEBFC
         jsr     icon_entry_name_lookup
         ldy     #$01
-        lda     #$20
+        lda     #' '
         sta     ($06),y
         return  #0
 
@@ -11895,8 +11919,8 @@ do2:    ldy     #1
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        jsr     LBE8D
-        jsr     LBE9A
+        jsr     paint_rectAE86_white
+        jsr     paint_rectAE8E_white
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$03
         lda     (ptr),y
@@ -11905,7 +11929,7 @@ do2:    ldy     #1
         lda     (ptr),y
         sta     ptr+1
         stx     ptr
-        jsr     LBE63
+        jsr     copy_name_to_buf0_adjust_case
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE7E
         addr_call draw_text1, path_buf0
         jsr     copy_dialog_param_addr_to_ptr
@@ -11916,7 +11940,7 @@ do2:    ldy     #1
         lda     (ptr),y
         sta     ptr+1
         stx     ptr
-        jsr     LBE78
+        jsr     copy_name_to_buf1_adjust_case
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE82
         addr_call draw_text1, path_buf1
         yax_call MGTK_RELAY, MGTK::MoveTo, desktop_aux::LB0BA
@@ -12026,7 +12050,7 @@ do2:    ldy     #$01
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        jsr     LBE8D
+        jsr     paint_rectAE86_white
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$03
         lda     (ptr),y
@@ -12035,7 +12059,7 @@ do2:    ldy     #$01
         lda     (ptr),y
         sta     ptr+1
         stx     ptr
-        jsr     LBE63
+        jsr     copy_name_to_buf0_adjust_case
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE7E
         addr_call draw_text1, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB0BA
@@ -12215,7 +12239,7 @@ do3:    ldy     #$01
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        jsr     LBE8D
+        jsr     paint_rectAE86_white
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$03
         lda     ($06),y
@@ -12224,7 +12248,7 @@ do3:    ldy     #$01
         lda     ($06),y
         sta     $06+1
         stx     $06
-        jsr     LBE63
+        jsr     copy_name_to_buf0_adjust_case
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE7E
         addr_call draw_text1, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB16E
@@ -12520,7 +12544,7 @@ do3:    ldy     #$01
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        jsr     LBE8D
+        jsr     paint_rectAE86_white
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$03
         lda     ($06),y
@@ -12529,7 +12553,7 @@ do3:    ldy     #$01
         lda     ($06),y
         sta     $06+1
         stx     $06
-        jsr     LBE63
+        jsr     copy_name_to_buf0_adjust_case
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE7E
         addr_call draw_text1, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB241
@@ -12611,7 +12635,7 @@ do3:    ldy     #$01
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        jsr     LBE8D
+        jsr     paint_rectAE86_white
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$03
         lda     ($06),y
@@ -12620,7 +12644,7 @@ do3:    ldy     #$01
         lda     ($06),y
         sta     $06+1
         stx     $06
-        jsr     LBE63
+        jsr     copy_name_to_buf0_adjust_case
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE7E
         addr_call draw_text1, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB23D
@@ -13990,31 +14014,43 @@ nonzero_flag:                ; high bit set once a non-zero digit seen
 
 ;;; ============================================================
 
-LBE63:  ldy     #$00
-        lda     ($06),y
+.proc copy_name_to_buf0_adjust_case
+        ptr := $6
+
+        ldy     #0
+        lda     (ptr),y
         tay
-LBE68:  lda     ($06),y
+:       lda     (ptr),y
         sta     path_buf0,y
         dey
-        bpl     LBE68
+        bpl     :-
         addr_call adjust_case, path_buf0
         rts
+.endproc
 
-LBE78:  ldy     #$00
-        lda     ($06),y
+.proc copy_name_to_buf1_adjust_case
+        ptr := $6
+
+        ldy     #0
+        lda     (ptr),y
         tay
-LBE7D:  lda     ($06),y
+:       lda     (ptr),y
         sta     path_buf1,y
         dey
-        bpl     LBE7D
+        bpl     :-
         addr_call adjust_case, path_buf1
         rts
+.endproc
 
-LBE8D:  jsr     set_fill_white
+;;; ============================================================
+
+paint_rectAE86_white:
+        jsr     set_fill_white
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::LAE86
         rts
 
-LBE9A:  jsr     set_fill_white
+paint_rectAE8E_white:
+        jsr     set_fill_white
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::LAE8E
         rts
 
