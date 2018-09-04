@@ -40,6 +40,7 @@ echo "Verifying diffs:"
 for t in $TARGETS; do
     verify "DESKTOP2_$t" "$t.built"
 done;
+verify "DESKTOP2.\$F1" "DESKTOP2.built"
 verify "DESKTOP.SYSTEM.SYS" "sys.SYS"
 
 # Compute stats
