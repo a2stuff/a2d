@@ -14380,15 +14380,19 @@ iigs_flag:                      ; High bit set if IIgs detected.
         sta     SET80VID
         sta     AN3_OFF
 
+        ;; IIgs ?
+        bit     iigs_flag
+        bmi     iigs
+
         ;; Le Chat Mauve - BW560 mode
         ;; (AN3 off, HR1 off, HR2 on, HR3 on)
+        ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
         sta     HR2_ON
         sta     HR3_ON
+        bmi     end
 
         ;; Force B&W mode on the IIgs
-        bit     iigs_flag
-        bpl     end
-        lda     NEWVIDEO
+iigs:   lda     NEWVIDEO
         ora     #(1<<5)         ; B&W
         sta     NEWVIDEO
         ;; fall through
@@ -15302,7 +15306,6 @@ config_toolkit:
         jmp     MGTK::MLI
 .endproc
 
-        .assert * = $0F60, error, "Segment length mismatch"
         PAD_TO $1000
 
 .endproc ; desktop_800
