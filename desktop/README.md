@@ -1,19 +1,5 @@
 
-# DeskTop diassembly notes
-
-## DESKTOP.SYSTEM
-
-`sys.s`
-
-A short (8k) loader program. This is responsible for copying
-the rest to a RAM card (if available), then invoking the main app.
-The second half is used to "Down load", i.e. copy
-Selector entries to RAMCard on first boot.
-
-The file is present in the original distribution as `DESKTOP1` but
-is renamed `DESKTOP.SYSTEM` in many disk images to be launched at boot.
-
-## DESKTOP2.$F1
+# DeskTop diassembly notes - DESKTOP2.$F1
 
 This is large - 111k. It includes a loader and the DeskTop app with
 both main memory and aux memory segments, filling everything from

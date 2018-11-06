@@ -37,7 +37,6 @@ modify. Here's a snapshot of the output for some files:
 
 ```
 Stats:
-sys.s          unscoped:   20  scoped:   15  raw:    4  unrefed:    0
 desktop_main.s unscoped:  246  scoped: 1109  raw:   60  unrefed:   29
 desktop_res.s  unscoped:   64  scoped:    0  raw:    4  unrefed:   64
 desktop_aux.s  unscoped:   83  scoped:  301  raw:    2  unrefed:   32

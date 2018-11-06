@@ -7,6 +7,9 @@ install:
   make -C /tmp/cc65 ca65 ld65
 
 script:
+- cd $TRAVIS_BUILD_DIR/desktop.system &&
+  MAKE_FLAGS="CC65=/tmp/cc65/bin" res/go.sh
+
 - cd $TRAVIS_BUILD_DIR/desktop &&
   MAKE_FLAGS="CC65=/tmp/cc65/bin" res/go.sh
 

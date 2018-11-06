@@ -5,11 +5,9 @@ CCFLAGS = --config apple2-asm.cfg
 
 OUTDIR = out
 
-HEADERS = $(wildcard ../*.inc) $(wildcard ../inc/*.inc) $(wildcard *.inc)
+HEADERS = $(wildcard ../*.inc)
 
-DAS = $(shell cat TARGETS)
-
-TARGETS = $(patsubst %,$(OUTDIR)/%.built,$(DAS))
+TARGETS = $(OUTDIR)/desktop.system.SYS
 
 .PHONY: clean all
 all: $(OUTDIR) $(TARGETS)
@@ -20,12 +18,14 @@ $(OUTDIR):
 clean:
 	rm -f $(OUTDIR)/*.o
 	rm -f $(OUTDIR)/*.list
+	rm -f $(OUTDIR)/*.inc
 	rm -f $(OUTDIR)/*.built
-	rm -f $(OUTDIR)/*.sys
+	rm -f $(OUTDIR)/*.SYS
 
 $(OUTDIR)/%.o: %.s $(HEADERS)
 	$(CC65)/ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
-# Desk Accessory Files
-$(OUTDIR)/%.built: $(OUTDIR)/%.o
+# System Files .SYS
+$(OUTDIR)/%.SYS: $(OUTDIR)/%.o
 	$(CC65)/ld65 $(CCFLAGS) -o '$@' $<
+	xattr -wx prodos.AuxType '00 20' $@

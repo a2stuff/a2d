@@ -1409,7 +1409,7 @@ L14E5:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 ;;; ============================================================
 
 .proc prodos_loader_blocks
-        .incbin "inc/pdload.dat"
+        .incbin "../inc/pdload.dat"
 .endproc
         .assert .sizeof(prodos_loader_blocks) = $400, error, "Bad data"
 

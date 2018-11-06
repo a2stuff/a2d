@@ -936,7 +936,7 @@ slot:   .byte   0
 
 prodos_loader_blocks:
         .assert * = $2C00, error, "Segment length mismatch"
-        .incbin "inc/pdload.dat"
+        .incbin "../inc/pdload.dat"
 
 .endproc ; copy_desktop_to_ramcard
 

@@ -22,7 +22,7 @@ DESKTOP.SYSTEM=Type(FF),AuxType(0),VersionCreate(00),MinVersion(B9),Access(E3),F
 DESKTOP2=Type(F1),AuxType(0),VersionCreate(00),MinVersion(B9),Access(E3),FolderInfo1(000000000000000000000000000000000000),FolderInfo2(000000000000000000000000000000000000)
 EOF
 
-cp "out/sys.SYS" "$PACKDIR/DESKTOP.SYSTEM"
+cp "../desktop.system/out/desktop.system.SYS" "$PACKDIR/DESKTOP.SYSTEM"
 cp "out/DESKTOP2.built" "$PACKDIR/DESKTOP2"
 
 # Create a new disk image.

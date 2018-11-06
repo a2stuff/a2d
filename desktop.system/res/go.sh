@@ -31,16 +31,11 @@ function stats {
 #do_make clean
 do_make all
 
-COMMON="loader mgtk invoker ovl1 ovl1a ovl1b ovl1c ovl2"
-TARGETS="desktop $COMMON ovl34567"
-SOURCES="desktop_main desktop_res desktop_aux $COMMON ovl3 ovl4 ovl5 ovl6 ovl7"
+SOURCES="desktop.system"
 
 # Verify original and output match
 echo "Verifying diffs:"
-for t in $TARGETS; do
-    verify "DESKTOP2_$t" "$t.built"
-done;
-verify "DESKTOP2.\$F1" "DESKTOP2.built"
+verify "DESKTOP.SYSTEM.SYS" "desktop.system.SYS"
 
 # Compute stats
 echo "Stats:"

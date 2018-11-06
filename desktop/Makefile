@@ -10,7 +10,7 @@ HEADERS = $(wildcard ../*.inc) $(wildcard ../inc/*.inc) $(wildcard *.inc)
 SEGMENTS = loader mgtk desktop invoker \
         ovl1 ovl1a ovl1b ovl1c ovl2 ovl34567
 
-TARGETS = $(OUTDIR)/DESKTOP2.built $(OUTDIR)/sys.SYS
+TARGETS = $(OUTDIR)/DESKTOP2.built
 
 .PHONY: clean all
 all: $(OUTDIR) $(TARGETS)
@@ -45,8 +45,3 @@ $(OUTDIR)/%.built: $(OUTDIR)/%.o asm.cfg
 # DeskTop combined
 $(OUTDIR)/DESKTOP2.built: $(patsubst %,$(OUTDIR)/%.built,$(SEGMENTS))
 	cat $(patsubst %,$(OUTDIR)/%.built,$(SEGMENTS)) > $@
-
-# System Files .SYS
-$(OUTDIR)/%.SYS: $(OUTDIR)/%.o
-	$(CC65)/ld65 $(CCFLAGS) -o '$@' $<
-	xattr -wx prodos.AuxType '00 20' $@
