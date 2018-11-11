@@ -513,6 +513,40 @@ end:
     .endif
 .endmacro
 
+;;; Copy 16-bit value, indexed indirect, y register incremented
+;;;    copy16in #$1111, ($2222),y   ; immediate load, indexed indirect store
+;;;    copy16in $1111, ($2222),y    ; absolute load, indexed indirect store
+;;;    copy16in ($1111),y, $2222    ; indexed indirect load, absolute store
+;;;    copy16in ($1111),y ($2222),y ; indexed indirect load, indexed indirect store
+.macro copy16in arg1, arg2, arg3, arg4
+    .if _is_y_register {arg2} && _is_y_register {arg4}
+        ;; copy16in ($1111),y, ($2222),y
+        lda     (arg1),y
+        sta     (arg3),y
+        iny
+        lda     (arg1),y
+        sta     (arg3),y
+    .elseif _is_y_register {arg2}
+        ;; copy16in ($1111),y, $2222
+        lda     (arg1),y
+        sta     arg3
+        iny
+        lda     (arg1),y
+        sta     arg3+1
+    .elseif _is_y_register {arg3}
+        ;; copy16in #$1111, ($2222),y
+        ;; copy16in $1111, ($2222),y
+        _op_lo  lda, {arg1}
+        sta     (arg2),y
+        iny
+        _op_hi  lda, {arg1}
+        sta     (arg2),y
+    .else
+        .error "Indirect indexed required at least one use of y reg"
+    .endif
+.endmacro
+
+
 ;;; Compare 16-bit values
 ;;;    cmp16 #$1111, #$2222    ; immediate, immediate (silly, but supported)
 ;;;    cmp16 #$1111, $2222     ; immediate, absolute

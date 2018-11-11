@@ -1788,11 +1788,7 @@ icon_poly_size := (8 * .sizeof(MGTK::Point)) + 2
         copy16  poly::v0::xcoord, poly::v7::xcoord
 
         ldy     #IconEntry::iconbits
-        lda     (entry_ptr),y
-        sta     bitmap_ptr
-        iny
-        lda     (entry_ptr),y
-        sta     bitmap_ptr+1
+        copy16in (entry_ptr),y, bitmap_ptr
 
         ;; Right edge of icon (v1, v2)
         ldy     #8              ; bitmap x2

@@ -261,11 +261,7 @@ L09E7:  jsr     L0B16
         and     #STORAGE_TYPE_MASK
         beq     L09E7
         ldy     #SubdirectoryHeader::file_count
-        lda     ($06),y
-        sta     L0A95
-        iny
-        lda     ($06),y
-        sta     L0A95+1
+        copy16in ($06),y, L0A95
         jsr     L0AE8
         lda     unit_num
         sta     block_params::unit_num
@@ -300,11 +296,7 @@ L0A4B:  jsr     L0B16
         cmp     #(ST_LINKED_DIRECTORY << 4)
         bne     L0A4B
         ldy     #$11
-        lda     ($06),y
-        sta     block_params::block_num
-        iny
-        lda     ($06),y
-        sta     block_params::block_num+1
+        copy16in ($06),y, block_params::block_num
         jsr     read_block
         bne     L0A8F
         lda     $07

@@ -6389,11 +6389,7 @@ L7870:  lda     cached_window_id
         ldy     #IconEntry::win_type
         sta     (icon_entry),y
         ldy     #IconEntry::iconbits
-        lda     L7622
-        sta     (icon_entry),y
-        iny
-        lda     L7622+1
-        sta     (icon_entry),y
+        copy16in L7622, (icon_entry),y
         ldx     cached_window_icon_count
         dex
         lda     cached_window_icon_list,x
@@ -6437,11 +6433,7 @@ found:
 
         ;; Look up icon definition
         copy16  type_icons_addr, ptr
-        lda     (ptr),y
-        sta     L7622
-        iny
-        lda     (ptr),y
-        sta     L7622+1
+        copy16in (ptr),y, L7622
         jsr     pop_zp_addrs
         rts
 
@@ -7121,11 +7113,7 @@ L7F92:  dey
         cmp     $0808
         beq     L7F9C
         bcc     L7FAD
-L7F9C:  lda     ($06),y
-        sta     $0808
-        iny
-        lda     ($06),y
-        sta     $0809
+L7F9C:  copy16in ($06),y, $0808
         lda     L0800
         sta     $0806
 L7FAD:  inc     L0800
@@ -8491,42 +8479,26 @@ create_icon:
 
 use_ramdisk_icon:
         ldy     #IconEntry::iconbits
-        lda     #<desktop_aux::ramdisk_icon
-        sta     (icon_ptr),y
-        iny
-        lda     #>desktop_aux::ramdisk_icon
-        sta     (icon_ptr),y
+        copy16in #desktop_aux::ramdisk_icon, (icon_ptr),y
         jmp     selected_device_icon
 
 use_profile_icon:
         ldy     #IconEntry::iconbits
-        lda     #<desktop_aux::profile_icon
-        sta     (icon_ptr),y
-        iny
-        lda     #>desktop_aux::profile_icon
-        sta     (icon_ptr),y
+        copy16in #desktop_aux::profile_icon, (icon_ptr),y
         jmp     selected_device_icon
 
 use_floppy_icon:
         cmp     #$B             ; removable / 4 volumes
         bne     use_floppy140_icon
         ldy     #IconEntry::iconbits
-        lda     #<desktop_aux::floppy800_icon
-        sta     (icon_ptr),y
-        iny
-        lda     #>desktop_aux::floppy800_icon
-        sta     (icon_ptr),y
+        copy16in #desktop_aux::floppy800_icon, (icon_ptr),y
         jmp     selected_device_icon
 
 use_floppy140_icon:
         cmp     #DT_DISKII       ; 0 = Disk II
         bne     use_profile_icon ; last chance
         ldy     #IconEntry::iconbits
-        lda     #<desktop_aux::floppy140_icon
-        sta     (icon_ptr),y
-        iny
-        lda     #>desktop_aux::floppy140_icon
-        sta     (icon_ptr),y
+        copy16in #desktop_aux::floppy140_icon, (icon_ptr),y
 
 selected_device_icon:
         ;; Assign icon type
@@ -11895,11 +11867,7 @@ close:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_about_dialog
         rts
 
 do1:    ldy     #1
-        lda     (ptr),y
-        sta     file_count
-        iny
-        lda     (ptr),y
-        sta     file_count+1
+        copy16in (ptr),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
@@ -11910,11 +11878,7 @@ do1:    ldy     #1
         rts
 
 do2:    ldy     #1
-        lda     (ptr),y
-        sta     file_count
-        iny
-        lda     (ptr),y
-        sta     file_count+1
+        copy16in (ptr),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
@@ -12026,11 +11990,7 @@ else:   lda     #0
         rts
 
 do1:    ldy     #1
-        lda     (ptr),y
-        sta     file_count
-        iny
-        lda     (ptr),y
-        sta     file_count+1
+        copy16in (ptr),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
@@ -12041,11 +12001,7 @@ do1:    ldy     #1
         rts
 
 do2:    ldy     #$01
-        lda     (ptr),y
-        sta     file_count
-        iny
-        lda     (ptr),y
-        sta     file_count+1
+        copy16in (ptr),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
@@ -12124,11 +12080,7 @@ do1:    ldy     #$01
         sta     ptr+1
         stx     ptr
         ldy     #$00
-        lda     (ptr),y
-        sta     file_count
-        iny
-        lda     (ptr),y
-        sta     file_count+1
+        copy16in (ptr),y, file_count
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
@@ -12144,11 +12096,7 @@ do1:    ldy     #$01
         sta     ptr+1
         stx     ptr
         ldy     #$00
-        lda     (ptr),y
-        sta     file_count
-        iny
-        lda     (ptr),y
-        sta     file_count+1
+        copy16in (ptr),y, file_count
         jsr     compose_file_count_string
         lda     #165
         sta     dialog_label_pos
@@ -12210,11 +12158,7 @@ LAD20:  axy_call draw_dialog_label, 4, desktop_aux::str_delete_ok
         rts
 
 do1:    ldy     #$01
-        lda     ($06),y
-        sta     file_count
-        iny
-        lda     ($06),y
-        sta     file_count+1
+        copy16in ($06),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
@@ -12230,11 +12174,7 @@ LAD5D:  addr_call draw_text1, str_file_count
         rts
 
 do3:    ldy     #$01
-        lda     ($06),y
-        sta     file_count
-        iny
-        lda     ($06),y
-        sta     file_count+1
+        copy16in ($06),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
@@ -12322,11 +12262,7 @@ LAE70:  lda     #$80
         jsr     LBD75
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$01
-        lda     ($06),y
-        sta     $08
-        iny
-        lda     ($06),y
-        sta     $08+1
+        copy16in ($06),y, $08
         ldy     #$00
         lda     ($08),y
         tay
@@ -12519,11 +12455,7 @@ row:    .byte   0
         rts
 
 do1:    ldy     #$01
-        lda     ($06),y
-        sta     file_count
-        iny
-        lda     ($06),y
-        sta     file_count+1
+        copy16in ($06),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
@@ -12535,11 +12467,7 @@ do1:    ldy     #$01
         rts
 
 do3:    ldy     #$01
-        lda     ($06),y
-        sta     file_count
-        iny
-        lda     ($06),y
-        sta     file_count+1
+        copy16in ($06),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
@@ -12610,11 +12538,7 @@ do4:    jsr     reset_grafport3a
         rts
 
 do1:    ldy     #$01
-        lda     ($06),y
-        sta     file_count
-        iny
-        lda     ($06),y
-        sta     file_count+1
+        copy16in ($06),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
@@ -12626,11 +12550,7 @@ do1:    ldy     #$01
         rts
 
 do3:    ldy     #$01
-        lda     ($06),y
-        sta     file_count
-        iny
-        lda     ($06),y
-        sta     file_count+1
+        copy16in ($06),y, file_count
         jsr     adjust_str_files_suffix
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
@@ -12704,11 +12624,7 @@ LB27D:  jsr     LBD75
         sta     dialog_label_pos
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$01
-        lda     ($06),y
-        sta     $08
-        iny
-        lda     ($06),y
-        sta     $08+1
+        copy16in ($06),y, $08
         ldy     #$00
         lda     ($08),y
         tay
@@ -14271,11 +14187,7 @@ trash_name:  PASCAL_STRING " Trash "
         lda     #icon_entry_type_trash
         sta     (ptr),y
         ldy     #IconEntry::iconbits
-        lda     #<desktop_aux::trash_icon
-        sta     (ptr),y
-        iny
-        lda     #>desktop_aux::trash_icon
-        sta     (ptr),y
+        copy16in #desktop_aux::trash_icon, (ptr),y
         iny
         ldx     #0
 :       lda     trash_name,x

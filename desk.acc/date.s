@@ -482,11 +482,7 @@ incr:   copy16  #increment_table, ptr
 go:     lda     selected_field
         asl     a
         tay
-        lda     (ptr),y
-        sta     gosub+1
-        iny
-        lda     (ptr),y
-        sta     gosub+2
+        copy16in (ptr),y, gosub+1
 
 gosub:  jsr     $1000           ; self modified
         MGTK_CALL MGTK::SetTextBG, settextbg_params
