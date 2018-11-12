@@ -6,9 +6,12 @@
 
 ;;; Entry point / Global Page
 MLI             := $BF00        ; Entry point
+DATETIME        := $BF06        ; JMP to clock routine
+DEVADR          := $BF10        ; Device driver addresses ($BF10-$BF2F)
+NODEV           := $BF10        ; "No Device Connected" entry (slot 0)
 DEVNUM          := $BF30        ; Most recent accessed device
 DEVCNT          := $BF31        ; Number of on-line devices minus 1
-DEVLST          := $BF32        ; Up to 14 units
+DEVLST          := $BF32        ; Up to 14 units ($BF32-$BF3F)
 BITMAP          := $BF58        ; System memory bitmap
 BITMAP_SIZE     := $18          ; Bits for pages $00 to $BF
 DATELO          := $BF90        ; Date lo

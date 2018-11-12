@@ -8391,8 +8391,8 @@ gdi_data_buffer := $800
         MLI_RELAY_CALL ON_LINE, on_line_params
         beq     success
 
-retry:  pha
-        ldy     device_num
+error:  pha                     ; save error
+        ldy     device_num      ; remove unit from list
         lda     #0
         sta     devlst_copy,y
         dec     cached_window_icon_count
@@ -8405,7 +8405,7 @@ success:
         and     #$0F            ; mask off name len
         bne     create_icon
         lda     gdi_data_buffer+1 ; if name len is zero, second byte is error
-        jmp     retry
+        jmp     error
 
 create_icon:
         icon_ptr := $6
@@ -8419,8 +8419,8 @@ create_icon:
 
         ;; Fill name with spaces
         ldx     #0
-        ldy     #IconEntry::len
-        lda     #$20            ; ??? space? shouldn't this be at +1 ?
+        ldy     #IconEntry::name-1 ; why -1 ???
+        lda     #' '
 :       sta     (icon_ptr),y
         iny
         inx
@@ -8472,8 +8472,8 @@ create_icon:
         ora     #$C0
         sta     load_CxFB
         load_CxFB := *+2
-        lda     $C7FB           ; self-modified $Cx7B
-        and     #$01            ; $Cx7B bit 1 = ProFile, apparently???
+        lda     $C7FB           ; self-modified $CxFB
+        and     #$01            ; $CxFB bit 1 = ProFile, apparently???
         beq     use_profile_icon
         ;; fall through...
 
