@@ -8749,6 +8749,9 @@ selected_device_icon:
         sta     (icon_ptr),y
         inc     device_num
 
+        ;; TODO: Center icon horizontally
+        ;; (Currently, left edges are aligned)
+
         ;; Assign icon coordinates
         lda     device_num
         asl     a               ; device num * 4 is coordinates index

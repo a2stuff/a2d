@@ -781,6 +781,4 @@ end:
 
 ;;; Define pattern for PaintBits - low 7 bits are reversed
 ;;; e.g. .byte px(%1000000)
-;;; px() has high bit clear, PX() has high bit set
 .define px(bits) (((bits&$40)>>6)|((bits&$20)>>4)|((bits&$10)>>2)|(bits&$8)|((bits&$4)<<2)|((bits&$2)<<4)|((bits&$1)<<6))
-.define PX(bits) (((bits&$40)>>6)|((bits&$20)>>4)|((bits&$10)>>2)|(bits&$8)|((bits&$4)<<2)|((bits&$2)<<4)|((bits&$1)<<6)|$80)
