@@ -17,3 +17,8 @@ echo "Stats:"
 for t in $SOURCES; do
     stats "$t.s"
 done;
+
+# Mountable directory for Virtual ][
+if [ -d mount ]; then
+    res/mount.sh
+fi

@@ -124,6 +124,7 @@ label_facilities:
 
 label_desktop:
         PASCAL_STRING .sprintf("Apple II DeskTop version %d.%d",::VERSION_MAJOR,::VERSION_MINOR)
+
 label_blank:
         PASCAL_STRING " "
 label_copyright1:
