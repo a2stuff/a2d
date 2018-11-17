@@ -21,7 +21,7 @@ do_make all
 # Verify original and output match
 echo "Verifying diffs:"
 cecho yellow "calculator N/A - patches applied"
-verify "show.text.file"
+cecho yellow "show.text.file N/A - patches applied"
 verify "date"
 verify "puzzle"
 verify "sort.directory"

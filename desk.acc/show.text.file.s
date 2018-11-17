@@ -215,9 +215,17 @@ fixed_mode_flag:
 
 .proc event_params
 kind:  .byte   0
-coords:                         ; spills into target query
-mousex: .word   0
-mousey: .word   0
+
+;;; if state is MGTK::event_kind_key_down
+key             := *
+modifiers       := *+1
+
+;;; otherwise
+coords  := *
+mousex  := *                      ; spills into target query
+mousey  := *+2
+
+        .res    4               ; space for both
 .endproc
 
 .proc findwindow_params
@@ -463,7 +471,9 @@ loop:   lda     DEFAULT_FONT + MGTK::Font::charwidth - 1,x
 input_loop:
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params
-        cmp     #1              ; was clicked?
+        cmp     #MGTK::event_kind_key_down    ; key?
+        beq     on_key_down
+        cmp     #MGTK::event_kind_button_down ; was clicked?
         bne     input_loop      ; nope, keep waiting
 
         MGTK_CALL MGTK::FindWindow, event_params::coords
@@ -497,13 +507,60 @@ input_loop:
 title:  jsr     on_title_bar_click
         jmp     input_loop
 
+
+;;; ============================================================
+;;; Key
+
+.proc on_key_down
+:       lda     event_params::modifiers
+        beq     no_mod
+
+        ;; Modifiers
+        ;; TODO: Should Apple-Up/Down be Page Up/Down or Home/End?
+        lda     event_params::key
+
+        cmp     #CHAR_DOWN
+        bne     :+
+        jsr     page_down
+        jmp     input_loop
+
+:       cmp     #CHAR_UP
+        bne     :+
+        jsr     page_up
+
+:       jmp     input_loop
+
+        ;; No modifiers
+no_mod:
+        lda     event_params::key
+
+        cmp     #CHAR_ESCAPE
+        bne     :+
+        jmp     do_close
+
+:       cmp     #CHAR_DOWN
+        bne     :+
+        jsr     scroll_down
+        jmp     input_loop
+
+:       cmp     #CHAR_UP
+        bne     :+
+        jsr     scroll_up
+
+:       jmp     input_loop
+.endproc
+
 ;;; ============================================================
 ;;; Close Button
 
 .proc on_close_click
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::goaway ; did click complete?
-        beq     input_loop      ; nope
+        bne     do_close        ; yes
+        jmp     input_loop      ; no
+.endproc
+
+.proc do_close
         jsr     close_file
         MGTK_CALL MGTK::CloseWindow, winfo
         DESKTOP_CALL DT_REDRAW_ICONS
@@ -623,7 +680,14 @@ end:    rts
 .endproc
 
 .proc on_vscroll_above_click
-loop:   lda     winfo::vthumbpos
+loop:   jsr     page_up
+        jsr     check_button_release
+        bcc     loop            ; repeat while button down
+end:    rts
+.endproc
+
+.proc page_up
+        lda     winfo::vthumbpos
         beq     end
         jsr     calc_track_scroll_delta
         sec
@@ -633,25 +697,37 @@ loop:   lda     winfo::vthumbpos
         lda     #0              ; underflow
 store:  sta     updatethumb_params::thumbpos
         jsr     update_scroll_pos
-        bcc     loop            ; repeat while button down
 end:    rts
 .endproc
 
 .proc on_vscroll_up_click
-loop :  lda     winfo::vthumbpos
+loop:   jsr     scroll_up
+        jsr     check_button_release
+        bcc     loop            ; repeat while button down
+end:    rts
+.endproc
+
+.proc scroll_up
+        lda     winfo::vthumbpos
         beq     end
         sec
         sbc     #1
         sta     updatethumb_params::thumbpos
         jsr     update_scroll_pos
-        bcc     loop            ; repeat while button down
 end:    rts
 .endproc
 
 vscroll_max := $FA
 
 .proc on_vscroll_below_click
-loop:   lda     winfo::vthumbpos
+loop:   jsr     page_down
+        jsr     check_button_release
+        bcc     loop            ; repeat while button down
+end:    rts
+.endproc
+
+.proc page_down
+        lda     winfo::vthumbpos
         cmp     #vscroll_max    ; pos == max ?
         beq     end
         jsr     calc_track_scroll_delta
@@ -665,19 +741,24 @@ overflow:
         lda     #vscroll_max    ; set to max
 store:  sta     updatethumb_params::thumbpos
         jsr     update_scroll_pos
-        bcc     loop            ; repeat while button down
 end:    rts
 .endproc
 
 .proc on_vscroll_down_click
-loop:   lda     winfo::vthumbpos
+loop:   jsr     scroll_down
+        jsr     check_button_release
+        bcc     loop            ; repeat while button down
+end:    rts
+.endproc
+
+.proc scroll_down
+        lda     winfo::vthumbpos
         cmp     #vscroll_max
         beq     end
         clc
         adc     #1
         sta     updatethumb_params::thumbpos
         jsr     update_scroll_pos
-        bcc     loop            ; repeat while button down
 end:    rts
 .endproc
 
@@ -685,6 +766,10 @@ end:    rts
         jsr     update_voffset
         jsr     update_vscroll
         jsr     draw_content
+        rts
+.endproc
+
+.proc check_button_release
         jsr     was_button_released
         clc
         bne     end
