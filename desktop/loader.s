@@ -412,8 +412,7 @@ max_page:
         .byte   0
 .endproc
 
-        ;; Padding
-        .res    $2200 - *,0
+        PAD_TO $2200
 .endproc ; install_segments
 
 ;;; ============================================================
@@ -648,8 +647,7 @@ restore_state:
 invoke_slot1:
         jmp     SLOT1
 
-        ;; Padding
-        .res    $400 - *, 0
+        PAD_TO $400
 .endproc ; dump_screen
 
         .assert .sizeof(install_as_quit) + .sizeof(quit_routine) + .sizeof(install_segments) + .sizeof(dump_screen) = $580, error, "Size mismatch"
