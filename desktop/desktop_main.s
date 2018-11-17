@@ -2094,23 +2094,13 @@ start:
 
         ;; Restore machine to text state
         sta     ALTZPOFF
-        lda     ROMIN2
-        jsr     SETVID
-        jsr     SETKBD
-        jsr     INIT
-        jsr     HOME
-        sta     TXTSET
-        sta     LOWSCR
-        sta     LORES
-        sta     MIXCLR
-        sta     DHIRESOFF
-        sta     CLRALTCHAR
-        sta     CLR80VID
-        sta     CLR80COL
+        jsr     exit_dhr_mode
 
         MLI_CALL QUIT, quit_params
 .endproc
         cmd_quit := cmd_quit_impl::start
+
+        PAD_TO $50F9            ; Maintain previous addresses
 
 ;;; ============================================================
 
@@ -3390,19 +3380,7 @@ L5AD0:  .byte   0
         ;; also invoked by launcher code
 .proc reset_and_invoke
         sta     ALTZPOFF
-        lda     ROMIN2
-        jsr     SETVID
-        jsr     SETKBD
-        jsr     INIT
-        jsr     HOME
-        sta     TXTSET
-        sta     LOWSCR
-        sta     LORES
-        sta     MIXCLR
-        sta     DHIRESOFF
-        sta     CLRALTCHAR
-        sta     CLR80VID
-        sta     CLR80COL
+        jsr     exit_dhr_mode
 
         ;; also used by launcher code
         target := *+1
@@ -3410,6 +3388,7 @@ L5AD0:  .byte   0
 .endproc
         reset_and_invoke_target := reset_and_invoke::target
 
+        PAD_TO $5B1B            ; Maintain previous addresses
 
 ;;; ============================================================
 
@@ -14304,6 +14283,36 @@ reset_grafport3a:
         rts
 
         .assert * = $BEC4, error, "Segment length mismatch"
+
+;;; ============================================================
+;;; Invoked when exiting or launching another program.
+
+.proc exit_dhr_mode
+        lda     ROMIN2
+        jsr     SETVID
+        jsr     SETKBD
+        jsr     INIT
+        jsr     HOME
+        sta     TXTSET
+        sta     LOWSCR
+        sta     LORES
+        sta     MIXCLR
+        sta     DHIRESOFF
+        sta     CLRALTCHAR
+        sta     CLR80VID
+        sta     CLR80COL
+
+        ;; On IIgs (only), restore DHR Color mode
+        sec
+        jsr     ID_BYTE_FE1F
+        bcs     done
+        lda     NEWVIDEO
+        ora     #<~(1<<5)       ; Color
+        sta     NEWVIDEO
+
+done:   rts
+.endproc
+
         PAD_TO $BF00
 
 .endproc ; desktop_main
@@ -14392,7 +14401,7 @@ iigs_flag:                      ; High bit set if IIgs detected.
         ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
         sta     HR2_ON
         sta     HR3_ON
-        bmi     end
+        bpl     end
 
         ;; Force B&W mode on the IIgs
 iigs:   lda     NEWVIDEO
