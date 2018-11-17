@@ -333,7 +333,7 @@ L9282:  lda     L938D
         lda     ($06),y
         tay
 L92C1:  lda     ($06),y
-        sta     LD355,y
+        sta     buf_win_path,y
         dey
         bpl     L92C1
         lda     #$FF
@@ -349,7 +349,7 @@ L92D6:  lda     L938D
         lda     ($06),y
         tay
 L92E5:  lda     ($06),y
-        sta     LD355,y
+        sta     buf_win_path,y
         dey
         bpl     L92E5
         jmp     L9307
@@ -361,11 +361,11 @@ L92F0:  lda     L938D
         lda     ($06),y
         tay
 L92FF:  lda     ($06),y
-        sta     LD355,y
+        sta     buf_win_path,y
         dey
         bpl     L92FF
-L9307:  ldy     LD355
-L930A:  lda     LD355,y
+L9307:  ldy     buf_win_path
+L930A:  lda     buf_win_path,y
         cmp     #$2F
         beq     L9314
         dey
@@ -376,13 +376,13 @@ L9314:  dey
         ldx     #$00
 L931B:  iny
         inx
-        lda     LD355,y
+        lda     buf_win_path,y
         sta     buf_filename2,x
-        cpy     LD355
+        cpy     buf_win_path
         bne     L931B
         stx     buf_filename2
         lda     L938A
-        sta     LD355
+        sta     buf_win_path
         jsr     JUMP_TABLE_LAUNCH_FILE
         jsr     set_cursor_pointer
         lda     #$FF

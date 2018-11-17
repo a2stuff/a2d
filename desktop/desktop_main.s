@@ -16,6 +16,8 @@ L0CD7           := $0CD7
 L0CF9           := $0CF9
 L0D14           := $0D14
 
+path_buf_main   := $1FC0
+
         dynamic_routine_800  := $0800
         dynamic_routine_5000 := $5000
         dynamic_routine_7000 := $7000
@@ -237,6 +239,7 @@ L415B:  sta     active_window_id
         cmp16   L4242, #15
         bpl     L41CB
         jsr     offset_grafport2
+
         ldx     #$0B
         ldy     #$1F
         lda     grafport2,x
@@ -245,6 +248,7 @@ L415B:  sta     active_window_id
         dex
         lda     grafport2,x
         sta     ($06),y
+
         ldx     #$03
         ldy     #$17
         lda     grafport2,x
@@ -253,6 +257,7 @@ L415B:  sta     active_window_id
         dex
         lda     grafport2,x
         sta     ($06),y
+
 L41CB:  ldx     cached_window_id
         dex
         lda     win_buf_table,x
@@ -494,9 +499,9 @@ menu_accelerators:
         lda     event_key
         sta     LE25C
         lda     event_modifiers
-        beq     L43A1
+        beq     :+
         lda     #1
-L43A1:  sta     LE25D
+:       sta     LE25D
         MGTK_RELAY_CALL MGTK::MenuKey, menu_click_params
 
 menu_dispatch2:
@@ -511,19 +516,20 @@ menu_dispatch2:
         dey
         tya
         asl     a
-        sta     L43E5
+        sta     proc_addr
         txa
         clc
-        adc     L43E5
+        adc     proc_addr
         tax
-        copy16  dispatch_table,x, L43E5
-        jsr     L43E0
+        copy16  dispatch_table,x, proc_addr
+        jsr     call_proc
         MGTK_RELAY_CALL MGTK::HiliteMenu, menu_click_params
         rts
 
-L43E0:  tsx
+call_proc:
+        tsx
         stx     LE256
-        L43E5 := *+1
+        proc_addr := *+1
         jmp     dummy1234           ; self-modified
 .endproc
 
@@ -548,10 +554,10 @@ L43E0:  tsx
         sta     findwindow_window_id
         DESKTOP_RELAY_CALL DT_FIND_ICON, event_coords
         lda     findicon_which_icon
-        beq     L4415
+        beq     :+
         jmp     L67D7
 
-L4415:  jmp     L68AA
+:       jmp     L68AA
 
 not_desktop:
         cmp     #MGTK::area_menubar  ; menu?
@@ -592,24 +598,27 @@ not_menu:
 ;;; ============================================================
 
 .proc handle_inactive_window_click
-        jmp     L445D
+        ptr := $6
+
+        jmp     start
 
 L445C:  .byte   0
-L445D:  jsr     clear_selection
+
+start:  jsr     clear_selection
         ldx     findwindow_window_id
         dex
         lda     LEC26,x
         sta     icon_param
         lda     icon_param
         jsr     icon_entry_lookup
-        stax    $06
-        ldy     #$01
-        lda     ($06),y
+        stax    ptr
+        ldy     #1
+        lda     (ptr),y
         beq     L44A6
         ora     #$80
-        sta     ($06),y
+        sta     (ptr),y
         iny
-        lda     ($06),y
+        lda     (ptr),y
         and     #$0F
         sta     L445C
         jsr     zero_grafport5_coords
@@ -617,7 +626,7 @@ L445D:  jsr     clear_selection
         jsr     reset_grafport3
         lda     L445C
         sta     selected_window_index
-        lda     #$01
+        lda     #1
         sta     selected_icon_count
         lda     icon_param
         sta     selected_icon_list
@@ -627,7 +636,7 @@ L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_window_id
         sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         jsr     L6C19
-        lda     #$00
+        lda     #0
         sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         lda     #MGTK::checkitem_uncheck
@@ -691,10 +700,12 @@ next:   dey
         jsr     poll_drive
         ldx     L45A0
         beq     done
+
 :       lda     L45A0,x
         sta     L45A9,x
         dex
         bpl     :-
+
 done:   rts
 
 L4559:  lda     DEVLST,y
@@ -941,22 +952,25 @@ params: .addr   dummy0000
 
 begin:
         jsr     set_watch_cursor
+
         ldx     #$FF
-L46F8:  inx
-        lda     LD355,x
+:       inx
+        lda     buf_win_path,x
         sta     $220,x
-        cpx     LD355
-        bne     L46F8
+        cpx     buf_win_path
+        bne     :-
+
         inx
         lda     #'/'
         sta     $220,x
         ldy     #$00
-L470C:  iny
+:       iny
         inx
         lda     buf_filename2,y
         sta     $220,x
         cpy     buf_filename2
-        bne     L470C
+        bne     :-
+
         stx     $220
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
         beq     L472B
@@ -989,16 +1003,16 @@ L4748:  cmp     #FT_SYSTEM
 L4755:  DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ALL
         MGTK_RELAY_CALL MGTK::CloseAll
         MGTK_RELAY_CALL MGTK::SetMenu, blank_menu
-        ldx     LD355
-L4773:  lda     LD355,x
+        ldx     buf_win_path
+:       lda     buf_win_path,x
         sta     $220,x
         dex
-        bpl     L4773
+        bpl     :-
         ldx     buf_filename2
-L477F:  lda     buf_filename2,x
+:       lda     buf_filename2,x
         sta     INVOKER_FILENAME,x
         dex
-        bpl     L477F
+        bpl     :-
         addr_call L4842, $280
         addr_call L4842, $220
         jsr     L48BE
@@ -1009,12 +1023,13 @@ L477F:  lda     buf_filename2,x
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params2, $1800
 
-L47B8:  ldx     LD355
+L47B8:  ldx     buf_win_path
         stx     L4816
-L47BE:  lda     LD355,x
+:       lda     buf_win_path,x
         sta     $1800,x
         dex
-        bpl     L47BE
+        bpl     :-
+
         inc     $1800
         ldx     $1800
         lda     #'/'
@@ -1034,11 +1049,12 @@ L47D7:  inx
 
 L47F3:  ldx     L4816
 L47F6:  lda     $1800,x
-        cmp     #$2F
+        cmp     #'/'
         beq     L4808
         dex
         bne     L47F6
 L4800:  lda     #$FE
+
 L4802:  jsr     DESKTOP_SHOW_ALERT0
         pla
         pla
@@ -1189,7 +1205,7 @@ done:   jsr     set_pointer_cursor
 L4968:  jsr     L4AAD
         ldx     $840
 L496E:  lda     $840,x
-        sta     LD355,x
+        sta     buf_win_path,x
         dex
         bpl     L496E
         jmp     L4A17
@@ -1197,7 +1213,7 @@ L496E:  lda     $840,x
 L497A:  jsr     L4AAD
         ldx     L0800
 L4980:  lda     L0800,x
-        sta     LD355,x
+        sta     buf_win_path,x
         dex
         bpl     L4980
         jsr     L4A17
@@ -1255,12 +1271,12 @@ L4A0A:  ldy     #$00
         lda     ($06),y
         tay
 L4A0F:  lda     ($06),y
-        sta     LD355,y
+        sta     buf_win_path,y
         dey
         bpl     L4A0F
-L4A17:  ldy     LD355
-L4A1A:  lda     LD355,y
-        cmp     #$2F
+L4A17:  ldy     buf_win_path
+L4A1A:  lda     buf_win_path,y
+        cmp     #'/'
         beq     L4A24
         dey
         bpl     L4A1A
@@ -1270,13 +1286,13 @@ L4A24:  dey
         iny
 L4A2B:  iny
         inx
-        lda     LD355,y
+        lda     buf_win_path,y
         sta     buf_filename2,x
-        cpy     LD355
+        cpy     buf_win_path
         bne     L4A2B
         stx     buf_filename2
         lda     L4A46
-        sta     LD355
+        sta     buf_win_path
         lda     #$00
         jmp     launch_file
 
@@ -1303,7 +1319,7 @@ L4A6F:  lda     ($08),y
         bpl     L4A6F
 L4A77:  ldy     L0800
 L4A7A:  lda     L0800,y
-        cmp     #$2F
+        cmp     #'/'
         beq     L4A84
         dey
         bne     L4A7A
@@ -1311,7 +1327,7 @@ L4A84:  dey
         sty     L0800
         ldy     $840
 L4A8B:  lda     $840,y
-        cmp     #$2F
+        cmp     #'/'
         beq     L4A95
         dey
         bne     L4A8B
@@ -1322,21 +1338,21 @@ L4A95:  dey
         jsr     L4D19
         rts
 
-L4AAD:  ldy     LD355
-L4AB0:  lda     LD355,y
+L4AAD:  ldy     buf_win_path
+L4AB0:  lda     buf_win_path,y
         sta     L0800,y
         dey
         bpl     L4AB0
         addr_call copy_LD3EE_str, $840
         ldy     L0800
 L4AC3:  lda     L0800,y
-        cmp     #$2F
+        cmp     #'/'
         beq     L4ACD
         dey
         bne     L4AC3
 L4ACD:  dey
 L4ACE:  lda     L0800,y
-        cmp     #$2F
+        cmp     #'/'
         beq     L4AD8
         dey
         bne     L4ACE
@@ -1629,33 +1645,37 @@ L4CF3:  iny
 ;;; ============================================================
 
 .proc L4D19
-        ldy     #$00
+
+        ldy     #0
         lda     ($06),y
         tay
-L4D1E:  lda     ($06),y
+:       lda     ($06),y
         sta     path_buf3,y
         dey
-        bpl     L4D1E
-        ldy     #$00
+        bpl     :-
+
+        ldy     #0
         lda     ($08),y
         tay
-L4D2B:  lda     ($08),y
+:       lda     ($08),y
         sta     path_buf4,y
         dey
-        bpl     L4D2B
+        bpl     :-
+
         addr_call L6F90, path_buf4
+
         ldx     #$01
         iny
         iny
-L4D3E:  lda     path_buf4,y
+:       lda     path_buf4,y
         sta     LE04B,x
         cpy     path_buf4
-        beq     L4D4E
+        beq     :+
         iny
         inx
-        jmp     L4D3E
+        jmp     :-
 
-L4D4E:  stx     LE04B
+:       stx     LE04B
         lda     path_buf4
         sec
         sbc     LE04B
@@ -1685,25 +1705,26 @@ L4D4E:  stx     LE04B
         jsr     restore_dynamic_routine
         jsr     set_pointer_cursor
         pla
-        bpl     L4D8A
+        bpl     :+
         jmp     L4D9D
 
-L4D8A:  ldy     #$00
+:       ldy     #0
         lda     ($06),y
         tay
-L4D8F:  lda     ($06),y
+:       lda     ($06),y
         sta     path_buf3,y
         dey
-        bpl     L4D8F
+        bpl     :-
+
         jsr     redraw_windows_and_desktop
         jsr     L8F1B
 L4D9D:  pha
         jsr     set_pointer_cursor
         pla
-        bpl     L4DA7
+        bpl     :+
         jmp     redraw_windows_and_desktop
 
-L4DA7:  addr_call L6F90, path_buf3
+:       addr_call L6F90, path_buf3
         sty     path_buf3
         addr_call L6FAF, path_buf3
         beq     L4DC2
@@ -1712,15 +1733,15 @@ L4DA7:  addr_call L6F90, path_buf3
         pla
         jmp     L5E78
 
-L4DC2:  ldy     #$01
-L4DC4:  iny
+L4DC2:  ldy     #1
+:       iny
         lda     path_buf3,y
-        cmp     #$2F
-        beq     L4DD2
+        cmp     #'/'
+        beq     :+
         cpy     path_buf3
-        bne     L4DC4
+        bne     :-
         iny
-L4DD2:  dey
+:       dey
         sty     path_buf3
         addr_call L6FB7, path_buf3
         ldax    #path_buf3
@@ -1770,7 +1791,7 @@ L4E1A:  sta     L4E71
         lda     ($06),y
         tay
 L4E34:  lda     ($06),y
-        sta     LD355,y
+        sta     buf_win_path,y
         dey
         bpl     L4E34
         lda     selected_icon_list
@@ -3247,7 +3268,7 @@ L5A10:  lda     ($06),y
         dey
         bpl     L5A10
         dec     $1F00
-        lda     #$2F
+        lda     #'/'
         sta     $1F01
         ldax    #$1F00
         ldy     $1F00
@@ -3295,7 +3316,7 @@ L5A7F:  lda     cached_window_icon_count
         bmi     L5AA9
         and     #$FF
         beq     L5AA9
-        cmp     #$2F
+        cmp     #'/'
         beq     L5AA9
         pha
         jsr     DESKTOP_COPY_FROM_BUF
@@ -3725,7 +3746,7 @@ L5E28:  sta     L5E77
         lda     ($06),y
         tay
 L5E3A:  lda     ($06),y
-        sta     LD355,y
+        sta     buf_win_path,y
         dey
         bpl     L5E3A
         lda     L5CD9
@@ -9730,7 +9751,7 @@ L9558:  lda     text_buffer2::data,x
 
 .proc L9571_impl
 
-        DEFINE_RENAME_PARAMS rename_params, $220, $1FC0
+        DEFINE_RENAME_PARAMS rename_params, $220, path_buf_main
 
 rename_dialog_params:
         .byte   0
@@ -9834,23 +9855,23 @@ L9655:  ldy     #$00
         lda     ($06),y
         tay
 L965A:  lda     ($06),y
-        sta     $1FC0,y
+        sta     path_buf_main,y
         dey
         bpl     L965A
-        inc     $1FC0
-        ldx     $1FC0
+        inc     path_buf_main
+        ldx     path_buf_main
         lda     #'/'
-        sta     $1FC0,x
+        sta     path_buf_main,x
         ldy     #$00
         lda     ($08),y
         sta     L9709
 L9674:  inx
         iny
         lda     ($08),y
-        sta     $1FC0,x
+        sta     path_buf_main,x
         cpy     L9709
         bne     L9674
-        stx     $1FC0
+        stx     path_buf_main
         yax_call JT_MLI_RELAY, RENAME, rename_params
         beq     L969E
         jsr     JT_SHOW_ALERT0
@@ -9926,11 +9947,11 @@ L972E:  .res    5, 0
         DEFINE_CLOSE_PARAMS close_params3
         DEFINE_DESTROY_PARAMS destroy_params, $220
         DEFINE_OPEN_PARAMS open_params4, $220, $0D00
-        DEFINE_OPEN_PARAMS open_params5, $1FC0, $1100
+        DEFINE_OPEN_PARAMS open_params5, path_buf_main, $1100
         DEFINE_READ_PARAMS read_params6, $1500, $AC0
         DEFINE_WRITE_PARAMS write_params, $1500, $AC0
-        DEFINE_CREATE_PARAMS create_params3, $1FC0, ACCESS_DEFAULT
-        DEFINE_CREATE_PARAMS create_params2, $1FC0
+        DEFINE_CREATE_PARAMS create_params3, path_buf_main, ACCESS_DEFAULT
+        DEFINE_CREATE_PARAMS create_params2, path_buf_main
 
         .byte   $00,$00
 
@@ -9938,7 +9959,7 @@ L972E:  .res    5, 0
 
         .byte   0
 
-        DEFINE_GET_FILE_INFO_PARAMS file_info_params3, $1FC0
+        DEFINE_GET_FILE_INFO_PARAMS file_info_params3, path_buf_main
 
         .byte   0
 
@@ -10113,7 +10134,7 @@ L9931:  .addr   L9B36           ; Overlay for L97DD
 L9937:  .byte   0
 L9938:  .addr   0
         .addr   $220
-        .addr   $1FC0
+        .addr   path_buf_main
 
 .proc L993E
         lda     #0
@@ -10203,31 +10224,31 @@ L9A22:  bit     LE05B
         bne     L9A36
         jmp     L9B28
 
-L9A36:  ldx     $1FC0
+L9A36:  ldx     path_buf_main
         ldy     L9B32
         dey
 L9A3D:  iny
         inx
         lda     $220,y
-        sta     $1FC0,x
+        sta     path_buf_main,x
         cpy     $220
         bne     L9A3D
-        stx     $1FC0
+        stx     path_buf_main
         jmp     L9A70
 
-L9A50:  ldx     $1FC0
+L9A50:  ldx     path_buf_main
         lda     #'/'
-        sta     $1FC1,x
-        inc     $1FC0
+        sta     path_buf_main+1,x
+        inc     path_buf_main
         ldy     #$00
-        ldx     $1FC0
+        ldx     path_buf_main
 L9A60:  iny
         inx
         lda     LE04B,y
-        sta     $1FC0,x
+        sta     path_buf_main,x
         cpy     LE04B
         bne     L9A60
-        stx     $1FC0
+        stx     path_buf_main
 L9A70:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     L9A81
         jsr     show_error_alert
@@ -10439,29 +10460,29 @@ L9C33:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params3
         jmp     L9C33
 
 L9C48:  copy16  file_info_params3::blocks_used, L9CD8
-L9C54:  lda     $1FC0
+L9C54:  lda     path_buf_main
         sta     L9CD6
         ldy     #$01
 L9C5C:  iny
-        cpy     $1FC0
+        cpy     path_buf_main
         bcs     L9CCC
-        lda     $1FC0,y
-        cmp     #$2F
+        lda     path_buf_main,y
+        cmp     #'/'
         bne     L9C5C
         tya
-        sta     $1FC0
+        sta     path_buf_main
         sta     L9CD7
 L9C70:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params3
         beq     L9C95
         pha
         lda     L9CD6
-        sta     $1FC0
+        sta     path_buf_main
         pla
         jsr     show_error_alert_dst
         jmp     L9C70
 
         lda     L9CD7
-        sta     $1FC0
+        sta     path_buf_main
         jmp     L9C70
 
         jmp     LA39F
@@ -10474,7 +10495,7 @@ L9C95:  sub16   file_info_params3::aux_type, file_info_params3::blocks_used, L9C
         bcs     L9CCD
 L9CCC:  clc
 L9CCD:  lda     L9CD6
-        sta     $1FC0
+        sta     path_buf_main
         rts
 
 L9CD4:  .word   0
@@ -10920,16 +10941,16 @@ LA10A:  yax_call launch_dialog, index_unlock_dialog, LA054
         lda     #$03
         sta     LA054
         jsr     LA379
-        ldx     $1FC0
+        ldx     path_buf_main
         ldy     L9B32
         dey
 LA123:  iny
         inx
         lda     $220,y
-        sta     $1FC0,x
+        sta     path_buf_main,x
         cpy     $220
         bne     LA123
-        stx     $1FC0
+        stx     path_buf_main
 LA133:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     LA144
         jsr     show_error_alert
@@ -11167,39 +11188,39 @@ found:  dex
         rts
 
 LA341:  ldx     #$00
-        ldy     $1FC0
+        ldy     path_buf_main
         lda     #'/'
-        sta     $1FC1,y
+        sta     path_buf_main+1,y
         iny
 LA34C:  cpx     L97AD
         bcs     LA35C
         lda     L97AD+1,x
-        sta     $1FC1,y
+        sta     path_buf_main+1,y
         inx
         iny
         jmp     LA34C
 
-LA35C:  sty     $1FC0
+LA35C:  sty     path_buf_main
         rts
 .endproc
 
 ;;; ============================================================
 
 .proc LA360
-        ldx     $1FC0
+        ldx     path_buf_main
         bne     LA366
         rts
 
-LA366:  lda     $1FC0,x
-        cmp     #$2F
+LA366:  lda     path_buf_main,x
+        cmp     #'/'
         beq     LA374
         dex
         bne     LA366
-        stx     $1FC0
+        stx     path_buf_main
         rts
 
 LA374:  dex
-        stx     $1FC0
+        stx     path_buf_main
         rts
 .endproc
 
@@ -11211,7 +11232,7 @@ LA374:  dex
         dey
 LA37F:  iny
         lda     path_buf3,y
-        cmp     #$2F
+        cmp     #'/'
         bne     LA38A
         sty     L9B32
 LA38A:  sta     $220,y
@@ -11219,7 +11240,7 @@ LA38A:  sta     $220,y
         bne     LA37F
         ldy     path_buf4
 LA395:  lda     path_buf4,y
-        sta     $1FC0,y
+        sta     path_buf_main,y
         dey
         bpl     LA395
         rts
@@ -13743,7 +13764,7 @@ LBD22:  ldx     path_buf1
         beq     LBD33
         dec     path_buf1
         lda     path_buf1,x
-        cmp     #$2F
+        cmp     #'/'
         bne     LBD22
 LBD33:  rts
 
@@ -14706,10 +14727,10 @@ L0DC2:  pla
 L0DEC:  ldy     #$0E
         bne     L0DFA
 L0DF0:  cmp     #$0B
-        bne     L0DF8
+        bne     :+
         ldy     #$0F
         bne     L0DFA
-L0DF8:  ldy     #$06
+:       ldy     #$06
 L0DFA:  txa
         sta     ($08),y
         lda     L0E32

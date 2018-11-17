@@ -296,7 +296,7 @@ watch_cursor:
 
 LD343:  .word   0
 buf_filename2:  .res    16, 0
-LD355:  .res    43, 0
+buf_win_path:   .res    43, 0
 
 temp_string_buf:
         .res    45, 0
