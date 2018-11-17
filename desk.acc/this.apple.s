@@ -539,7 +539,7 @@ iie_or_later:
         lda     #model::laser128
         bpl     done
 :       sec
-        jsr     $FE1F
+        jsr     ID_BYTE_FE1F
         bcs     :+
         lda     #model::iigs
         bpl     done

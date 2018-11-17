@@ -37,7 +37,7 @@ dst:    sta     start,y         ; self-modified
 call_main_trampoline   := $20 ; installed on ZP, turns off auxmem and calls...
 call_main_addr         := call_main_trampoline+7 ; address patched in here
 
-;;;  Copy the following "call_main_template" routine to $20
+;;; Copy the following "call_main_template" routine to $20
 .scope
         sta     RAMWRTON
         sta     RAMRDON
@@ -632,15 +632,19 @@ mode:   .byte   0               ; 0 = B&W, $80 = color
         lda     AN3_ON
         lda     AN3_OFF
 
+        ;; IIgs?
+        jsr     test_iigs
+        bcc     iigs
+
         ;; Le Chat Mauve - COL140 mode
         ;; (AN3 off, HR1 off, HR2 off, HR3 off)
+        ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
         sta     HR2_OFF
         sta     HR3_OFF
+        bcs     done
 
         ;; Apple IIgs - DHR Color
-        jsr     test_iigs
-        bcs     done
-        lda     NEWVIDEO
+iigs:   lda     NEWVIDEO
         and     #<~(1<<5)        ; Color
         sta     NEWVIDEO
 
@@ -662,15 +666,19 @@ done:   rts
         sta     SET80VID
         lda     AN3_OFF
 
+        ;; IIgs?
+        jsr     test_iigs
+        bcc     iigs
+
         ;; Le Chat Mauve - BW560 mode
         ;; (AN3 off, HR1 off, HR2 on, HR3 on)
+        ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
         sta     HR2_ON
         sta     HR3_ON
+        bcs     done
 
         ;; Apple IIgs - DHR B&W
-        jsr     test_iigs
-        bcs     done
-        lda     NEWVIDEO
+iigs:   lda     NEWVIDEO
         ora     #(1<<5)         ; B&W
         sta     NEWVIDEO
 
@@ -681,7 +689,7 @@ done:   rts
 .proc test_iigs
         lda     ROMIN2
         sec
-        jsr     $FE1F
+        jsr     ID_BYTE_FE1F
         lda     LCBANK1
         lda     LCBANK1
         rts
