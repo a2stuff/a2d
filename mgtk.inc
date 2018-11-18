@@ -527,60 +527,74 @@ textbg_white       := $7F
 ;;; MouseGraphics ToolKit Constants
 
 ;;; Used in GetEvent
-event_kind_no_event        := 0    ; No mouse or keypress
-event_kind_button_down     := 1    ; Mouse button was depressed
-event_kind_button_up       := 2    ; Mouse button was released
-event_kind_key_down        := 3    ; Key was pressed
-event_kind_drag            := 4    ; Mouse button still down
-event_kind_apple_key       := 5    ; Mouse button was depressed, modifier key down
-event_kind_update          := 6    ; Window update needed
+.enum EventKind
+        no_event        = 0     ; No mouse or keypress
+        button_down     = 1     ; Mouse button was depressed
+        button_up       = 2     ; Mouse button was released
+        key_down        = 3     ; Key was pressed
+        drag            = 4     ; Mouse button still down
+        apple_key       = 5     ; Mouse button was depressed, modifier key down
+        update          = 6     ; Window update needed
+.endenum
 
 event_modifier_open_apple  := 1 << 0
 event_modifier_solid_apple := 1 << 1
 
 ;;; Used in FindWindow
-area_desktop    := 0
-area_menubar    := 1
-area_content    := 2            ; Includes scroll bars
-area_dragbar    := 3
-area_grow_box   := 4
-area_close_box  := 5
+.enum Area
+        desktop         = 0
+        menubar         = 1
+        content         = 2             ; Includes scroll bars
+        dragbar         = 3
+        grow_box        = 4
+        close_box       = 5
+.endenum
 
 ;;; Used in FindControl, TrackThumb, UpdateThumb
-ctl_not_a_control               := 0
-ctl_vertical_scroll_bar         := 1
-ctl_horizontal_scroll_bar       := 2
-ctl_dead_zone                   := 3
+.enum Ctl
+        not_a_control           = 0
+        vertical_scroll_bar     = 1
+        horizontal_scroll_bar   = 2
+        dead_zone               = 3
+.endenum
 
 ;;; Used in FindControl
-part_up_arrow           := 1
-part_left_arrow         := 1
-part_down_arrow         := 2
-part_right_arrow        := 2
-part_page_up            := 3
-part_page_left          := 3
-part_page_down          := 4
-part_page_right         := 4
-part_thumb              := 5
+.enum Part
+        up_arrow        = 1
+        left_arrow      = 1
+        down_arrow      = 2
+        right_arrow     = 2
+        page_up         = 3
+        page_left       = 3
+        page_down       = 4
+        page_right      = 4
+        thumb           = 5
+.endenum
 
 ;;; Used in OpenWindow
-option_dialog_box       := 1 << 0
-option_go_away_box      := 1 << 1
-option_grow_box         := 1 << 2
+.enum Option
+	dialog_box       = 1 << 0
+	go_away_box      = 1 << 1
+	grow_box         = 1 << 2
+.endenum
 
-scroll_option_none      := 0
-scroll_option_present   := 1 << 7
-scroll_option_thumb     := 1 << 6
-scroll_option_active    := 1 << 0
-scroll_option_normal    := scroll_option_present | scroll_option_thumb | scroll_option_active
+.enum Scroll
+	option_none      = 0
+	option_present   = 1 << 7
+	option_thumb     = 1 << 6
+	option_active    = 1 << 0
+	option_normal    = Scroll::option_present | Scroll::option_thumb | Scroll::option_active
+.endenum
 
 ;;; Used in menu structs
-menuopt_open_apple      := 1 << 0
-menuopt_solid_apple     := 1 << 1
-menuopt_item_has_mark   := 1 << 2
-menuopt_item_is_checked := 1 << 5
-menuopt_item_is_filler  := 1 << 6
-menuopt_disable_flag    := 1 << 7
+.enum MenuOpt
+	open_apple      = 1 << 0
+	solid_apple     = 1 << 1
+	item_has_mark   = 1 << 2
+	item_is_checked = 1 << 5
+	item_is_filler  = 1 << 6
+	disable_flag    = 1 << 7
+.endenum
 
 disablemenu_enable      := 0
 disablemenu_disable     := 1
@@ -609,30 +623,31 @@ event_size                      := 5        ; any kind of event
 ;;; ============================================================
 ;;; Errors
 
-error_empty_object := $81
-error_bad_object := $82
-error_font_too_big := $83
+.enum Error
+        empty_object    = $81
+        bad_object      = $82
+        font_too_big    = $83
 
-error_invalid_op_sys := $90
-error_no_mouse := $92
-error_invalid_irq_setting := $93
-error_invalid_hook := $94
-error_desktop_already_initialized := $95
-error_irq_in_use := $97
-error_invalid_event := $98
-error_event_queue_full := $99
-error_menu_not_found := $9A
-error_menu_item_not_found := $9B
-error_insufficient_savebehind_area := $9C
-error_window_already_exists := $9D
-error_window_id_required := $9E
-error_window_not_found := $9F
-error_no_active_window := $A0
-error_window_not_draggable := $A1
-error_window_not_resizable := $A2
-error_window_obscured := $A3
-error_control_not_found := $A4
-
+        invalid_op_sys          = $90
+        no_mouse                = $92
+        invalid_irq_setting     = $93
+        invalid_hook            = $94
+        desktop_already_initialized     = $95
+        irq_in_use              = $97
+        invalid_event           = $98
+        event_queue_full        = $99
+        menu_not_found          = $9A
+        menu_item_not_found     = $9B
+        insufficient_savebehind_area    = $9C
+        window_already_exists   = $9D
+        window_id_required      = $9E
+        window_not_found        = $9F
+        no_active_window        = $A0
+        window_not_draggable    = $A1
+        window_not_resizable    = $A2
+        window_obscured         = $A3
+        control_not_found       = $A4
+.endenum
 
 .endscope ; MGTK
 
@@ -737,7 +752,7 @@ end:
 .macro DEFINE_MENU_ITEM saddr, shortcut1, shortcut2
         .if .paramcount > 1
 
-        .byte   MGTK::menuopt_open_apple ; option byte
+        .byte   MGTK::MenuOpt::open_apple ; option byte
         .byte   0               ; mark_char
         .byte   shortcut1       ; char1
         .byte   shortcut2       ; char2
@@ -755,7 +770,7 @@ end:
 .endmacro
 
 .macro DEFINE_MENU_SEPARATOR
-        .byte   MGTK::menuopt_item_is_filler ; option byte
+        .byte   MGTK::MenuOpt::item_is_filler ; option byte
         .byte   0                       ; mark_char
         .byte   19                      ; char1 - Ctrl+S for separator ???
         .byte   0                       ; char2

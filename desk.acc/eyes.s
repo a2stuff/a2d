@@ -57,10 +57,10 @@ str_title:
 
 .proc winfo
 window_id:      .byte   da_window_id
-options:        .byte   MGTK::option_go_away_box
+options:        .byte   MGTK::Option::go_away_box
 title:          .addr   str_title
-hscroll:        .byte   MGTK::scroll_option_none
-vscroll:        .byte   MGTK::scroll_option_none
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_none
 hthumbmax:      .byte   32
 hthumbpos:      .byte   0
 vthumbmax:      .byte   32
@@ -92,10 +92,10 @@ nextwinfo:      .addr   0
 
 .proc event_params
 kind:  .byte   0
-;;; event_kind_key_down
+;;; EventKind::key_down
 key             := *
 modifiers       := * + 1
-;;; event_kind_update
+;;; EventKind::update
 window_id       := *
 ;;; otherwise
 xcoord          := *
@@ -204,11 +204,11 @@ grow_box_bitmap:
         MGTK_CALL MGTK::GetEvent, event_params
         bne     exit
         lda     event_params::kind
-        cmp     #MGTK::event_kind_button_down
+        cmp     #MGTK::EventKind::button_down
         beq     handle_down
-        cmp     #MGTK::event_kind_key_down
+        cmp     #MGTK::EventKind::key_down
         beq     handle_key
-        cmp     #MGTK::event_kind_no_event
+        cmp     #MGTK::EventKind::no_event
         beq     handle_no_event
         jmp     input_loop
 .endproc
@@ -240,11 +240,11 @@ grow_box_bitmap:
         cmp     winfo::window_id
         bne     input_loop
         lda     findwindow_params::which_area
-        cmp     #MGTK::area_close_box
+        cmp     #MGTK::Area::close_box
         beq     handle_close
-        cmp     #MGTK::area_dragbar
+        cmp     #MGTK::Area::dragbar
         beq     handle_drag
-        cmp     #MGTK::area_content
+        cmp     #MGTK::Area::content
         bne     :+
         jmp     handle_grow
 :       jmp     input_loop
@@ -385,7 +385,7 @@ pos_r:        DEFINE_POINT 0, 0, pos_r
 .proc draw_window
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, winport_params
-        cmp     #MGTK::error_window_obscured
+        cmp     #MGTK::Error::window_obscured
         bne     :+
         rts
 :

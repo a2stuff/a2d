@@ -222,10 +222,10 @@ penmode:   .byte   $02             ; this should be normal, but we do inverts ??
 
 .proc winfo
 window_id:     .byte   da_window_id
-options:.byte   MGTK::option_dialog_box
+options:.byte   MGTK::Option::dialog_box
 title:  .addr   0
-hscroll:.byte   MGTK::scroll_option_none
-vscroll:.byte   MGTK::scroll_option_none
+hscroll:.byte   MGTK::Scroll::option_none
+vscroll:.byte   MGTK::Scroll::option_none
 hthumbmax:  .byte   0
 hthumbpos:  .byte   0
 vthumbmax:  .byte   0
@@ -294,12 +294,12 @@ init_window:
 .proc input_loop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-        cmp     #MGTK::event_kind_button_down
+        cmp     #MGTK::EventKind::button_down
         bne     :+
         jsr     on_click
         jmp     input_loop
 
-:       cmp     #MGTK::event_kind_key_down
+:       cmp     #MGTK::EventKind::key_down
         bne     input_loop
 .endproc
 
@@ -373,7 +373,7 @@ update_selection:
         bne     hit
 miss:   rts
 
-hit:    cmp     #MGTK::area_content
+hit:    cmp     #MGTK::Area::content
         bne     miss
         jsr     find_hit_target
         cpx     #0
@@ -450,7 +450,7 @@ on_field_click:
         stx     hit_rect_index
 loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
         lda     event_params::kind
-        cmp     #MGTK::event_kind_button_up
+        cmp     #MGTK::EventKind::button_up
         beq     :+
         jsr     do_inc_or_dec
         jmp     loop

@@ -678,10 +678,10 @@ penmode:   .byte   MGTK::notpenXOR
 
 .proc winfo
 window_id:      .byte   da_window_id
-options:        .byte   MGTK::option_go_away_box
+options:        .byte   MGTK::Option::go_away_box
 title:          .addr   window_title
-hscroll:        .byte   MGTK::scroll_option_none
-vscroll:        .byte   MGTK::scroll_option_none
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_none
 hthumbmax:      .byte   0
 hthumbpos:      .byte   0
 vthumbmax:      .byte   0
@@ -818,12 +818,12 @@ loop:   lda     adjust_txtptr_copied-1,x
 input_loop:
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-        cmp     #MGTK::event_kind_button_down
+        cmp     #MGTK::EventKind::button_down
         bne     :+
         jsr     on_click
         jmp     input_loop
 
-:       cmp     #MGTK::event_kind_key_down
+:       cmp     #MGTK::EventKind::key_down
         bne     input_loop
         jsr     on_key_press
         jmp     input_loop
@@ -837,7 +837,7 @@ on_click:
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     ROMIN2
         lda     findwindow_params::which_area
-        cmp     #MGTK::area_content
+        cmp     #MGTK::Area::content
         bcc     ignore_click
         lda     findwindow_params::window_id
         cmp     #da_window_id      ; This window?
@@ -847,13 +847,13 @@ ignore_click:
         rts
 
 :       lda     findwindow_params::which_area
-        cmp     #MGTK::area_content ; Client area?
+        cmp     #MGTK::Area::content ; Client area?
         bne     :+
         jsr     map_click_to_button ; try to translate click into key
         bcc     ignore_click
         jmp     process_key
 
-:       cmp     #MGTK::area_close_box ; Close box?
+:       cmp     #MGTK::Area::close_box ; Close box?
         bne     :+
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::goaway
@@ -884,7 +884,7 @@ loop:   lda     routine,x
         sizeof_routine := * - routine       ; Can't use .sizeof before the .proc definition
 .endproc
 
-:       cmp     #MGTK::area_dragbar ; Title bar?
+:       cmp     #MGTK::Area::dragbar ; Title bar?
         bne     ignore_click
         lda     #da_window_id
         sta     dragwindow_params::window_id
@@ -1414,7 +1414,7 @@ invert:  MGTK_CALL MGTK::PaintRect, 0, invert_addr ; Inverts port
 check_button:
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-        cmp     #MGTK::event_kind_drag ; Button down?
+        cmp     #MGTK::EventKind::drag ; Button down?
         bne     done            ; Nope, done immediately
         lda     #da_window_id
         sta     screentowindow_params::window_id

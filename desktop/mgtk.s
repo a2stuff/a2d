@@ -1929,7 +1929,7 @@ in_top: ldy     #0
         rts
 
 bad_rect:
-        exit_call MGTK::error_empty_object
+        exit_call MGTK::Error::empty_object
 .endproc
 
 
@@ -2322,7 +2322,7 @@ next:   jsr     next_poly
         jmp     fill_polys
 
 bad_poly:
-        exit_call MGTK::error_bad_object
+        exit_call MGTK::Error::bad_object
 .endproc
 
 
@@ -3160,7 +3160,7 @@ loop:   sta     glyph_row_lo,y
         bne     loop
         rts
 
-end:    exit_call MGTK::error_font_too_big
+end:    exit_call MGTK::Error::font_too_big
 .endproc
 
 glyph_row_lo:
@@ -4672,7 +4672,7 @@ savesize:   .res 2
         bpl     found_mouse
         cpx     #0
         bne     :+
-        exit_call MGTK::error_no_mouse
+        exit_call MGTK::Error::no_mouse
 
 :       lda     slot_num
         and     #$7F
@@ -4767,7 +4767,7 @@ irq_on:
 irts:   rts
 
 irq_err:
-        exit_call MGTK::error_invalid_irq_setting
+        exit_call MGTK::Error::invalid_irq_setting
 .endproc
 
 .proc set_op_sys
@@ -4776,7 +4776,7 @@ irq_err:
         cmp     #1
         beq     is_pascal
 
-        exit_call MGTK::error_invalid_op_sys
+        exit_call MGTK::Error::invalid_op_sys
 
 is_prodos:
         lda     #$80
@@ -4856,7 +4856,7 @@ clear_after_events_hook:
         rts
 
 invalid_hook:
-        exit_call MGTK::error_invalid_hook
+        exit_call MGTK::Error::invalid_hook
 .endproc
 
 
@@ -5014,7 +5014,7 @@ mouse_state: .res 2
         ldy     #2
         jmp     store_xa_at_y
 
-fail:   exit_call MGTK::error_desktop_already_initialized
+fail:   exit_call MGTK::Error::desktop_already_initialized
 
 mouse_state_addr:
         .addr   mouse_state
@@ -5093,9 +5093,9 @@ ycoord: .word    0
         lda     params::kind
         bmi     event_ok
 
-        cmp     #MGTK::event_kind_update
+        cmp     #MGTK::EventKind::update
         bcs     bad_event
-        cmp     #MGTK::event_kind_key_down
+        cmp     #MGTK::EventKind::key_down
         beq     event_ok
 
         ldx     params::xcoord
@@ -5120,11 +5120,11 @@ event_ok:
         rts
 
 bad_event:
-        lda     #MGTK::error_invalid_event
+        lda     #MGTK::Error::invalid_event
         bmi     error_return
 
 no_room:
-        lda     #MGTK::error_event_queue_full
+        lda     #MGTK::Error::event_queue_full
 error_return:
         plp
         jmp     exit_with_a
@@ -5134,11 +5134,11 @@ error_return:
         ;; Return a no_event (if mouse up) or drag event (if mouse down)
         ;; and report the current mouse position.
 .proc return_move_event
-        lda     #MGTK::event_kind_no_event
+        lda     #MGTK::EventKind::no_event
 
         bit     mouse_status
         bpl     :+
-        lda     #MGTK::event_kind_drag
+        lda     #MGTK::EventKind::drag
 
 :       ldy     #0
         sta     (params_addr),y         ; Store 5 bytes at params
@@ -5172,7 +5172,7 @@ modifiers  := * + 3
 .proc CheckEventsImpl
         bit     use_interrupts
         bpl     irq_entry
-        exit_call MGTK::error_irq_in_use
+        exit_call MGTK::Error::irq_in_use
 
 irq_entry:
         sec                     ; called from interrupt handler
@@ -5209,20 +5209,20 @@ irq_entry:
 
         lda     input::modifiers
         sta     input::kmods
-        lda     #MGTK::event_kind_key_down
+        lda     #MGTK::EventKind::key_down
         sta     input::state
         bne     put_key_event   ; always
 
 :       bcc     up
         lda     input::modifiers
         beq     :+
-        lda     #MGTK::event_kind_apple_key
+        lda     #MGTK::EventKind::apple_key
         bne     set_state
 
-:       lda     #MGTK::event_kind_button_down
+:       lda     #MGTK::EventKind::button_down
         bne     set_state
 
-up:     lda     #MGTK::event_kind_button_up
+up:     lda     #MGTK::EventKind::button_up
 
 set_state:
         sta     input::state
@@ -5823,7 +5823,7 @@ filler: ldx     menu_item_index
         lda     savebehind_size+1
         sbc     savebehind_usage+1
         bpl     :+
-        exit_call MGTK::error_insufficient_savebehind_area
+        exit_call MGTK::Error::insufficient_savebehind_area
 
 :       rts
 .endproc
@@ -5855,7 +5855,7 @@ filler: ldx     menu_item_index
 .proc find_menu_by_id_or_fail
         jsr     find_menu_by_id
         bne     :+
-        exit_call MGTK::error_menu_not_found
+        exit_call MGTK::Error::menu_not_found
 :       rts
 .endproc
 
@@ -5949,7 +5949,7 @@ find_by_shortcut:
 :       cmp     #$20             ; is control char
         bcc     found
         lda     curmenuitem::options
-        and     #MGTK::menuopt_disable_flag | MGTK::menuopt_item_is_filler
+        and     #MGTK::MenuOpt::disable_flag | MGTK::MenuOpt::item_is_filler
         bne     next
 
         lda     curmenuitem::options
@@ -6040,7 +6040,7 @@ key_mods:  .byte   0
         bmi     not_found
 
         lda     curmenuitem::options
-        and     #MGTK::menuopt_disable_flag | MGTK::menuopt_item_is_filler
+        and     #MGTK::MenuOpt::disable_flag | MGTK::MenuOpt::item_is_filler
         bne     not_found
 
         lda     curmenu::menu_id
@@ -6070,7 +6070,7 @@ rrts:   rts
 .proc find_menu_item_or_fail
         jsr     find_menu_and_menu_item
         bne     rrts
-        exit_call MGTK::error_menu_item_not_found
+        exit_call MGTK::Error::menu_item_not_found
 .endproc
 
 
@@ -6113,11 +6113,11 @@ check:     .byte   0
 
         lda     params::check
         beq     :+
-        lda     #MGTK::menuopt_item_is_checked
+        lda     #MGTK::MenuOpt::item_is_checked
         ora     curmenuitem::options
         bne     set_options            ; always
 
-:       lda     #$FF^MGTK::menuopt_item_is_checked
+:       lda     #$FF^MGTK::MenuOpt::item_is_checked
         and     curmenuitem::options
 set_options:
         sta     curmenuitem::options
@@ -6194,7 +6194,7 @@ event_loop:
 
 in_menu:jsr     get_and_return_event
         beq     :+
-        cmp     #MGTK::event_kind_button_up
+        cmp     #MGTK::EventKind::button_up
         bne     event_loop
 
 :       lda     cur_hilited_menu_item
@@ -6246,7 +6246,7 @@ in_menu_item:
 
         lda     curmenu::disabled
         ora     curmenuitem::options
-        and     #MGTK::menuopt_disable_flag | MGTK::menuopt_item_is_filler
+        and     #MGTK::MenuOpt::disable_flag | MGTK::MenuOpt::item_is_filler
         beq     :+
 
         ldx     #0
@@ -6426,7 +6426,7 @@ loop:   jsr     get_menu_item
         jmp     next
 
 :       lda     curmenuitem::options
-        and     #MGTK::menuopt_item_is_checked
+        and     #MGTK::MenuOpt::item_is_checked
         beq     no_mark
 
         lda     offset_checkmark
@@ -6436,7 +6436,7 @@ loop:   jsr     get_menu_item
         sta     mark_text+1
 
         lda     curmenuitem::options
-        and     #MGTK::menuopt_item_has_mark
+        and     #MGTK::MenuOpt::item_has_mark
         beq     :+
         lda     curmenuitem::mark_char
         sta     mark_text+1
@@ -6454,7 +6454,7 @@ no_mark:
 
         jsr     get_menu_and_menu_item
         lda     curmenuitem::options
-        and     #MGTK::menuopt_open_apple | MGTK::menuopt_solid_apple
+        and     #MGTK::MenuOpt::open_apple | MGTK::MenuOpt::solid_apple
         bne     oa_sa
 
         lda     curmenuitem::shortcut1
@@ -6464,7 +6464,7 @@ no_mark:
         sta     shortcut_text+1
         jmp     no_shortcut
 
-oa_sa:  cmp     #MGTK::menuopt_open_apple
+oa_sa:  cmp     #MGTK::MenuOpt::open_apple
         bne     :+
         lda     open_apple_glyph
         sta     shortcut_text+1
@@ -6666,7 +6666,7 @@ mark_char: .byte   0
         lda     params::set_char
         beq     :+
 
-        lda     #MGTK::menuopt_item_has_mark
+        lda     #MGTK::MenuOpt::item_has_mark
         ora     curmenuitem::options
         sta     curmenuitem::options
 
@@ -6674,7 +6674,7 @@ mark_char: .byte   0
         sta     curmenuitem::mark_char
         jmp     put_menu_item
 
-:       lda     #$FF^MGTK::menuopt_item_has_mark
+:       lda     #$FF^MGTK::MenuOpt::item_has_mark
         and     curmenuitem::options
         sta     curmenuitem::options
         jmp     put_menu_item
@@ -6948,7 +6948,7 @@ end:    rts
         jsr     window_by_id
         beq     nope
         rts
-nope:   exit_call MGTK::error_window_not_found
+nope:   exit_call MGTK::Error::window_not_found
 .endproc
 
 
@@ -7012,7 +7012,7 @@ return_winrect:
         bmi     vert_scroll
 
         lda     current_winfo::options
-        and     #MGTK::option_grow_box
+        and     #MGTK::Option::grow_box
         bne     vert_scroll
         lda     #$01
         bne     :+
@@ -7036,7 +7036,7 @@ vert_scroll:
         bcc     :+
         inc     winrect::y2+1
 :
-        lda     #MGTK::option_dialog_box
+        lda     #MGTK::Option::dialog_box
         and     current_winfo::options
         bne     :+
         lda     winframe_top
@@ -7062,7 +7062,7 @@ vert_scroll:
 :       stax    winrect::x1
 
         lda     current_winfo::options
-        and     #MGTK::option_dialog_box
+        and     #MGTK::Option::dialog_box
         bne     return_winrect
 
         lda     winrect::y1
@@ -7145,7 +7145,7 @@ get_rect:
         jsr     fill_and_frame_rect
 
         lda     current_winfo::options
-        and     #MGTK::option_dialog_box
+        and     #MGTK::Option::dialog_box
         bne     no_titlebar
 
         jsr     get_wintitlebar_rect
@@ -7172,7 +7172,7 @@ no_vert_scroll:
         jsr     frame_winrect
 
 :       lda     current_winfo::options
-        and     #MGTK::option_grow_box
+        and     #MGTK::Option::grow_box
         beq     :+
 
         jsr     get_win_growboxrect
@@ -7235,11 +7235,11 @@ stripes_pattern_alt := *+1
         jsr     set_fill_mode
 
         lda     current_winfo::options
-        and     #MGTK::option_go_away_box
+        and     #MGTK::Option::go_away_box
         beq     no_goaway
 
         lda     current_winfo::options
-        and     #MGTK::option_dialog_box
+        and     #MGTK::Option::dialog_box
         bne     no_goaway
 
         jsr     get_wingoaway_rect
@@ -7266,7 +7266,7 @@ stripes_pattern_alt := *+1
 
 no_goaway:
         lda     current_winfo::options
-        and     #MGTK::option_dialog_box
+        and     #MGTK::Option::dialog_box
         bne     no_titlebar
 
         jsr     get_wintitlebar_rect
@@ -7282,7 +7282,7 @@ no_goaway:
 :       tay
 
         lda     current_winfo::options
-        and     #MGTK::option_go_away_box
+        and     #MGTK::Option::go_away_box
         bne     has_goaway
 
         tya
@@ -7345,7 +7345,7 @@ no_titlebar:
 :
         pha
         lda     current_winfo::options
-        and     #MGTK::option_grow_box
+        and     #MGTK::Option::grow_box
         bne     :+
 
         bit     current_winfo::hscroll
@@ -7388,7 +7388,7 @@ no_vscroll:
 :
         pha
         lda     current_winfo::options
-        and     #MGTK::option_grow_box
+        and     #MGTK::Option::grow_box
         bne     :+
 
         bit     current_winfo::vscroll
@@ -7436,7 +7436,7 @@ no_hscrollbar:
         jsr     get_window
 
 :       lda     current_winfo::options
-        and     #MGTK::option_grow_box
+        and     #MGTK::Option::grow_box
         beq     ret
 
         jsr     get_win_growboxrect
@@ -7518,7 +7518,7 @@ window_id:  .byte   0
         MGTK_CALL MGTK::InRect, test_rect_params ; check if in menubar
         beq     not_menubar
 
-        lda     #MGTK::area_menubar
+        lda     #MGTK::Area::menubar
 return_no_window:
         ldx     #0
 return_result:
@@ -7548,12 +7548,12 @@ loop:   jsr     get_winframerect
         bne     loop
 
 no_windows:
-        lda     #MGTK::area_desktop
+        lda     #MGTK::Area::desktop
         beq     return_no_window
 
 in_window:
         lda     current_winfo::options
-        and     #MGTK::option_dialog_box
+        and     #MGTK::Option::dialog_box
         bne     in_content
 
         jsr     get_wintitlebar_rect
@@ -7564,16 +7564,16 @@ in_window:
         bne     :+
 
         lda     current_winfo::options
-        and     #MGTK::option_go_away_box
+        and     #MGTK::Option::go_away_box
         beq     :+
 
         jsr     get_wingoaway_rect
         jsr     in_winrect
         beq     :+
-        lda     #MGTK::area_close_box
+        lda     #MGTK::Area::close_box
         bne     return_window
 
-:       lda     #MGTK::area_dragbar
+:       lda     #MGTK::Area::dragbar
         bne     return_window
 
 in_content:
@@ -7581,18 +7581,18 @@ in_content:
         bne     :+
 
         lda     current_winfo::options
-        and     #MGTK::option_grow_box
+        and     #MGTK::Option::grow_box
         beq     :+
 
         jsr     get_win_growboxrect
         jsr     in_winrect
         beq     :+
-        lda     #MGTK::area_grow_box
+        lda     #MGTK::Area::grow_box
 return_window:
         ldx     current_winfo::id
         bne     return_result
 
-:       lda     #MGTK::area_content
+:       lda     #MGTK::Area::content
         bne     return_window
 
 not_selected:
@@ -7613,12 +7613,12 @@ not_selected:
         ldy     #MGTK::Winfo::window_id
         lda     (window),y
         bne     :+
-        exit_call MGTK::error_window_id_required
+        exit_call MGTK::Error::window_id_required
 
 :       sta     win_id
         jsr     window_by_id
         beq     :+
-        exit_call MGTK::error_window_already_exists
+        exit_call MGTK::Error::window_already_exists
 
 :       copy16  params_addr, window
 
@@ -7751,7 +7751,7 @@ update_port:
 .endproc
 
 err_obscured:
-        exit_call MGTK::error_window_obscured
+        exit_call MGTK::Error::window_obscured
 
 ;;; ============================================================
 ;;; EndUpdate
@@ -7935,7 +7935,7 @@ toggle: sta     in_close_box
         jsr     ShowCursorImpl
 
 loop:   jsr     get_and_return_event
-        cmp     #MGTK::event_kind_button_up
+        cmp     #MGTK::EventKind::button_up
         beq     :+
 
         MGTK_CALL MGTK::MoveTo, set_pos_params
@@ -8034,7 +8034,7 @@ loop:   jsr     get_window
 
 no_change:
         jsr     get_and_return_event
-        cmp     #MGTK::event_kind_button_up
+        cmp     #MGTK::EventKind::button_up
         bne     dragging
 
         jsr     frame_winrect
@@ -8294,7 +8294,7 @@ loop:   jsr     put_event
         bcs     plp_ret
         tax
 
-        lda     #MGTK::event_kind_update
+        lda     #MGTK::EventKind::update
         sta     eventbuf::kind,x
         lda     current_winfo::id
         sta     eventbuf::window_id,x
@@ -8458,14 +8458,14 @@ activate:  .byte   0
 
 
         lda     which_control
-        cmp     #MGTK::ctl_vertical_scroll_bar
+        cmp     #MGTK::Ctl::vertical_scroll_bar
         bne     :+
 
         lda     #which_control_vert
         sta     which_control
         bne     activate
 
-:       cmp     #MGTK::ctl_horizontal_scroll_bar
+:       cmp     #MGTK::Ctl::horizontal_scroll_bar
         bne     ret
 
         lda     #which_control_horiz
@@ -8573,7 +8573,7 @@ light_speckles_pattern:
         dec     winrect::y2+1
 :
         lda     current_winfo::options
-        and     #MGTK::option_grow_box
+        and     #MGTK::Option::grow_box
         bne     :+
 
         bit     current_winfo::hscroll
@@ -8611,7 +8611,7 @@ horiz:  jsr     get_win_horizscrollrect
         dec     winrect::x2+1
 :
         lda     current_winfo::options
-        and     #MGTK::option_grow_box
+        and     #MGTK::Option::grow_box
         bne     :+
 
         bit     current_winfo::vscroll
@@ -8701,7 +8701,7 @@ return_winrect_jmp:
 
         jsr     top_window
         bne     :+
-        exit_call MGTK::error_no_active_window
+        exit_call MGTK::Error::no_active_window
 
 :       bit     current_winfo::vscroll
         bpl     no_vscroll
@@ -8729,15 +8729,15 @@ return_winrect_jmp:
         jsr     in_winrect
         beq     no_thumb
 
-        ldx     #MGTK::part_thumb
+        ldx     #MGTK::Part::thumb
         bne     vscrollbar
 
 in_arrows:
-        lda     #MGTK::part_up_arrow
+        lda     #MGTK::Part::up_arrow
         bne     :+
 
 no_thumb:
-        lda     #MGTK::part_page_up
+        lda     #MGTK::Part::page_up
 :       pha
         jsr     get_thumb_rect
         pla
@@ -8748,7 +8748,7 @@ no_thumb:
         inx                     ; part_down_arrow / part_page_down
 :
 vscrollbar:
-        lda     #MGTK::ctl_vertical_scroll_bar
+        lda     #MGTK::Ctl::vertical_scroll_bar
         bne     return_result
 
 no_vscroll:
@@ -8778,15 +8778,15 @@ no_vscroll:
         jsr     in_winrect
         beq     no_hthumb
 
-        ldx     #MGTK::part_thumb
+        ldx     #MGTK::Part::thumb
         bne     hscrollbar
 
 in_harrows:
-        lda     #MGTK::part_left_arrow
+        lda     #MGTK::Part::left_arrow
         bne     :+
 
 no_hthumb:
-        lda     #MGTK::part_page_left
+        lda     #MGTK::Part::page_left
 :       pha
         jsr     get_thumb_rect
         pla
@@ -8801,7 +8801,7 @@ no_hthumb:
 :       inx
 
 hscrollbar:
-        lda     #MGTK::ctl_horizontal_scroll_bar
+        lda     #MGTK::Ctl::horizontal_scroll_bar
         bne     return_result
 
 no_hscroll:
@@ -8809,11 +8809,11 @@ no_hscroll:
         jsr     in_winrect
         beq     return_dead_zone
 
-        lda     #MGTK::ctl_not_a_control
+        lda     #MGTK::Ctl::not_a_control
         beq     return_result
 
 return_dead_zone:
-        lda     #MGTK::ctl_dead_zone
+        lda     #MGTK::Ctl::dead_zone
 return_result:
         jmp     FindWindowImpl::return_result
 .endproc
@@ -8831,25 +8831,25 @@ ctlmax:    .byte  0
         END_PARAM_BLOCK
 
         lda     params::which_ctl
-        cmp     #MGTK::ctl_vertical_scroll_bar
+        cmp     #MGTK::Ctl::vertical_scroll_bar
         bne     :+
         lda     #$80
         sta     params::which_ctl
         bne     got_ctl        ; always
 
-:       cmp     #MGTK::ctl_horizontal_scroll_bar
+:       cmp     #MGTK::Ctl::horizontal_scroll_bar
         bne     :+
         lda     #$00
         sta     params::which_ctl
         beq     got_ctl        ; always
 
-:       exit_call MGTK::error_control_not_found
+:       exit_call MGTK::Error::control_not_found
 
 got_ctl:
         jsr     top_window
         bne     :+
 
-        exit_call MGTK::error_no_active_window
+        exit_call MGTK::Error::no_active_window
 
 :       ldy     #MGTK::Winfo::hthumbmax
         bit     params::which_ctl
@@ -8881,21 +8881,21 @@ thumbmoved: .byte   0
 
 
         lda     params::which_ctl
-        cmp     #MGTK::ctl_vertical_scroll_bar
+        cmp     #MGTK::Ctl::vertical_scroll_bar
         bne     :+
 
         lda     #which_control_vert
         sta     params::which_ctl
         bne     got_ctl                    ; always
 
-:       cmp     #MGTK::ctl_horizontal_scroll_bar
+:       cmp     #MGTK::Ctl::horizontal_scroll_bar
         bne     :+
 
         lda     #which_control_horiz
         sta     params::which_ctl
         beq     got_ctl                    ; always
 
-:       exit_call MGTK::error_control_not_found
+:       exit_call MGTK::Error::control_not_found
 
 got_ctl:lda     params::which_ctl
         sta     which_control
@@ -8909,7 +8909,7 @@ got_ctl:lda     params::which_ctl
 
         jsr     top_window
         bne     :+
-        exit_call MGTK::error_no_active_window
+        exit_call MGTK::Error::no_active_window
 
 :       jsr     get_thumb_rect
         jsr     save_params_and_stack
@@ -8926,7 +8926,7 @@ drag_loop:
 
 no_change:
         jsr     get_and_return_event
-        cmp     #MGTK::event_kind_button_up
+        cmp     #MGTK::EventKind::button_up
         beq     drag_done
 
         jsr     check_if_changed
@@ -9137,25 +9137,25 @@ thumbpos:   .byte   0
 
 
         lda     which_control
-        cmp     #MGTK::ctl_vertical_scroll_bar
+        cmp     #MGTK::Ctl::vertical_scroll_bar
         bne     :+
         lda     #which_control_vert
         sta     which_control
         bne     check_win
 
-:       cmp     #MGTK::ctl_horizontal_scroll_bar
+:       cmp     #MGTK::Ctl::horizontal_scroll_bar
         bne     bad_ctl
         lda     #which_control_horiz
         sta     which_control
         beq     check_win
 
 bad_ctl:
-        exit_call MGTK::error_control_not_found
+        exit_call MGTK::Error::control_not_found
 
 check_win:
         jsr     top_window
         bne     :+
-        exit_call MGTK::error_no_active_window
+        exit_call MGTK::Error::no_active_window
 
 :       ldy     #MGTK::Winfo::hthumbpos
         bit     which_control
@@ -9665,7 +9665,7 @@ uploop: dec     sel_menu_item_index
         jsr     get_menu_item
 
         lda     curmenuitem::options
-        and     #MGTK::menuopt_disable_flag | MGTK::menuopt_item_is_filler
+        and     #MGTK::MenuOpt::disable_flag | MGTK::MenuOpt::item_is_filler
         bne     uploop
 
 :       jmp     kbd_menu_select::position_menu_item
@@ -9691,7 +9691,7 @@ downloop:
         dex
         jsr     get_menu_item
         lda     curmenuitem::options
-        and     #MGTK::menuopt_disable_flag | MGTK::menuopt_item_is_filler
+        and     #MGTK::MenuOpt::disable_flag | MGTK::MenuOpt::item_is_filler
         bne     downloop
 
 :       jmp     kbd_menu_select::position_menu_item
@@ -9755,7 +9755,7 @@ nope:   jsr     kbd_menu_by_shortcut
         bmi     fail
 
         lda     curmenuitem::options
-        and     #MGTK::menuopt_disable_flag | MGTK::menuopt_item_is_filler
+        and     #MGTK::MenuOpt::disable_flag | MGTK::MenuOpt::item_is_filler
         bne     fail
 
         lda     curmenu::menu_id
@@ -9813,7 +9813,7 @@ fail:   clc
         bpl     do_drag
 
         lda     current_winfo::options
-        and     #MGTK::option_grow_box
+        and     #MGTK::Option::grow_box
         beq     no_grow
 
         ldx     #0
@@ -9856,18 +9856,18 @@ fail:   clc
 no_grow:
         lda     #0
         sta     kbd_mouse_state
-        lda     #MGTK::error_window_not_resizable
+        lda     #MGTK::Error::window_not_resizable
         plp
         jmp     exit_with_a
 
 do_drag:
         lda     current_winfo::options
-        and     #MGTK::option_dialog_box
+        and     #MGTK::Option::dialog_box
         beq     no_dialog
 
         lda     #0
         sta     kbd_mouse_state
-        exit_call MGTK::error_window_not_draggable
+        exit_call MGTK::Error::window_not_draggable
 
 no_dialog:
         ldx     #0
@@ -10080,7 +10080,7 @@ not_left:
 .endproc
 
 .proc set_input_params          ; 1 byte shorter than normal, since KEY
-state:  .byte   MGTK::event_kind_key_down
+state:  .byte   MGTK::EventKind::key_down
 key:    .byte   0
 modifiers:
         .byte   0

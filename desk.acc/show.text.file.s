@@ -282,10 +282,10 @@ textlen:        .byte   0       ; length
 
 .proc winfo
 window_id:      .byte   da_window_id ; window identifier
-options:        .byte   MGTK::option_go_away_box ; window flags (2=include close port)
+options:        .byte   MGTK::Option::go_away_box ; window flags (2=include close port)
 title:          .addr   dummy1000 ; overwritten to point at filename
-hscroll:        .byte   MGTK::scroll_option_none
-vscroll:        .byte   MGTK::scroll_option_normal
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_normal
 hthumbmax:      .byte   32
 hthumbpos:      .byte   0
 vthumbmax:      .byte   255
@@ -477,7 +477,7 @@ input_loop:
 
         ;; which part of the window?
         lda     findwindow_params::which_area
-        cmp     #MGTK::area_close_box
+        cmp     #MGTK::Area::close_box
         beq     on_close_click
 
         ;; title and resize clicks need mouse location
@@ -491,9 +491,9 @@ input_loop:
         stx     growwindow_params::mousey
         stx     findcontrol_params::mousey
 
-        cmp     #MGTK::area_dragbar
+        cmp     #MGTK::Area::dragbar
         beq     title
-        cmp     #MGTK::area_grow_box ; not enabled, so this will never match
+        cmp     #MGTK::Area::grow_box ; not enabled, so this will never match
         beq     input_loop
         jsr     on_client_click
         jmp     input_loop
@@ -546,10 +546,10 @@ wider:  lda     winfo::hscroll
         ldx     window_width+1
         cpx     #>max_width
         bne     enable
-        and     #(<~MGTK::scroll_option_active)       ; disable scroll
+        and     #(<~MGTK::Scroll::option_active)       ; disable scroll
         jmp     :+
 
-enable: ora     #MGTK::scroll_option_active           ; enable scroll
+enable: ora     #MGTK::Scroll::option_active           ; enable scroll
 
 :       sta     winfo::hscroll
 
@@ -564,7 +564,7 @@ enable: ora     #MGTK::scroll_option_active           ; enable scroll
         sta     val+1
         jsr     div_by_16
         sta     setctlmax_params::ctlmax
-        lda     #MGTK::ctl_horizontal_scroll_bar
+        lda     #MGTK::Ctl::horizontal_scroll_bar
         sta     setctlmax_params::which_ctl
         MGTK_CALL MGTK::SetCtlMax, setctlmax_params ; change to clamped size ???
         jsr     calc_and_draw_mode
@@ -579,9 +579,9 @@ enable: ora     #MGTK::scroll_option_active           ; enable scroll
         ;; On one of the scroll bars?
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
-        cmp     #MGTK::ctl_vertical_scroll_bar
+        cmp     #MGTK::Ctl::vertical_scroll_bar
         beq     on_vscroll_click
-        cmp     #MGTK::ctl_horizontal_scroll_bar
+        cmp     #MGTK::Ctl::horizontal_scroll_bar
         bne     end
         jmp     on_hscroll_click
 end:    rts
@@ -591,19 +591,19 @@ end:    rts
 ;;; Vertical Scroll Bar
 
 .proc on_vscroll_click
-        lda     #MGTK::ctl_vertical_scroll_bar
+        lda     #MGTK::Ctl::vertical_scroll_bar
         sta     trackthumb_params::which_ctl
         sta     updatethumb_params::which_ctl
         lda     findcontrol_params::which_part
-        cmp     #MGTK::part_thumb
+        cmp     #MGTK::Part::thumb
         beq     on_vscroll_thumb_click
-        cmp     #MGTK::part_page_down
+        cmp     #MGTK::Part::page_down
         beq     on_vscroll_below_click
-        cmp     #MGTK::part_page_up
+        cmp     #MGTK::Part::page_up
         beq     on_vscroll_above_click
-        cmp     #MGTK::part_up_arrow
+        cmp     #MGTK::Part::up_arrow
         beq     on_vscroll_up_click
-        cmp     #MGTK::part_down_arrow
+        cmp     #MGTK::Part::down_arrow
         bne     end
         jmp     on_vscroll_down_click
 end:    rts
@@ -713,19 +713,19 @@ loop:   inx
 ;;; (Unused in STF DA, so most of this is speculation)
 
 .proc on_hscroll_click
-        lda     #MGTK::ctl_horizontal_scroll_bar
+        lda     #MGTK::Ctl::horizontal_scroll_bar
         sta     trackthumb_params::which_ctl
         sta     updatethumb_params::which_ctl
         lda     findcontrol_params::which_part
-        cmp     #MGTK::part_thumb
+        cmp     #MGTK::Part::thumb
         beq     on_hscroll_thumb_click
-        cmp     #MGTK::part_page_right
+        cmp     #MGTK::Part::page_right
         beq     on_hscroll_after_click
-        cmp     #MGTK::part_page_left
+        cmp     #MGTK::Part::page_left
         beq     on_hscroll_before_click
-        cmp     #MGTK::part_left_arrow
+        cmp     #MGTK::Part::left_arrow
         beq     on_hscroll_left_click
-        cmp     #MGTK::part_right_arrow
+        cmp     #MGTK::Part::right_arrow
         beq     on_hscroll_right_click
         rts
 .endproc
@@ -807,7 +807,7 @@ store:  sta     winfo::hthumbpos
 ;;; ============================================================
 ;;; UI Helpers
 
-        ;; Used at start of thumb event_kind_drag
+        ;; Used at start of thumb EventKind::drag
 .proc do_trackthumb
         copy16  event_params::mousex, trackthumb_params::mousex
         lda     event_params::mousey

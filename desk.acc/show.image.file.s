@@ -179,7 +179,7 @@ base:   .word   0
 .proc event_params             ; queried to track mouse-up
 kind:  .byte   $00
 
-;;; if state is MGTK::event_kind_key_down
+;;; if state is MGTK::EventKind::key_down
 key    := *
 modifiers := *+1
 
@@ -201,10 +201,10 @@ ycoord := *+2
 
 .proc winfo
 window_id:     .byte   da_window_id       ; window identifier
-options:  .byte   MGTK::option_dialog_box
+options:  .byte   MGTK::Option::dialog_box
 title:  .addr   window_title
-hscroll:.byte   MGTK::scroll_option_none
-vscroll:.byte   MGTK::scroll_option_none
+hscroll:.byte   MGTK::Scroll::option_none
+vscroll:.byte   MGTK::Scroll::option_none
 hthumbmax:  .byte   32
 hthumbpos:  .byte   0
 vthumbmax:  .byte   32
@@ -357,9 +357,9 @@ end:    rts
 .proc input_loop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-        cmp     #MGTK::event_kind_button_down ; was clicked?
+        cmp     #MGTK::EventKind::button_down ; was clicked?
         beq     exit
-        cmp     #MGTK::event_kind_key_down  ; any key?
+        cmp     #MGTK::EventKind::key_down  ; any key?
         beq     on_key
         bne     input_loop
 

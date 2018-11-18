@@ -913,7 +913,7 @@ L983D:  lda     #0
 peek_loop:
         MGTK_CALL MGTK::PeekEvent, peekevent_params
         lda     peekevent_params::kind
-        cmp     #MGTK::event_kind_drag
+        cmp     #MGTK::EventKind::drag
         beq     L9857
 
 ignore_drag:
@@ -1114,7 +1114,7 @@ L99FC:  MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
 L9A0E:  MGTK_CALL MGTK::PeekEvent, peekevent_params
         lda     peekevent_params::kind
-        cmp     #MGTK::event_kind_drag
+        cmp     #MGTK::EventKind::drag
         beq     L9A1E
         jmp     L9BA5
 
@@ -1764,7 +1764,7 @@ LA189:  rts
 ;;;
 ;;; (Label is always at least as wide as the icon)
 
-icon_poly_size := (8 * .sizeof(MGTK::Point)) + 2
+icon_poly_size = (8 * .sizeof(MGTK::Point)) + 2
 
 .proc calc_icon_poly
         entry_ptr := $6
@@ -3316,11 +3316,11 @@ LBB75:  MGTK_RELAY2_CALL MGTK::MoveTo, pos_prompt
         addr_call_indirect draw_pascal_string, prompt_addr
 LBB87:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_button_down
+        cmp     #MGTK::EventKind::button_down
         bne     LBB9A
         jmp     LBC0C
 
-LBB9A:  cmp     #MGTK::event_kind_key_down
+LBB9A:  cmp     #MGTK::EventKind::key_down
         bne     LBB87
         lda     event_key
         and     #CHAR_MASK
@@ -3392,7 +3392,7 @@ LBC6D:  MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
         sta     LBCE8
 LBC84:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_button_up
+        cmp     #MGTK::EventKind::button_up
         beq     LBCDB
         jsr     LBDE1
         MGTK_RELAY2_CALL MGTK::MoveTo, event_coords
@@ -3429,7 +3429,7 @@ LBCE9:  MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
         sta     LBD64
 LBD00:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_button_up
+        cmp     #MGTK::EventKind::button_up
         beq     LBD57
         jsr     LBDE1
         MGTK_RELAY2_CALL MGTK::MoveTo, event_coords
@@ -3466,7 +3466,7 @@ LBD65:  lda     #0
         MGTK_RELAY2_CALL MGTK::PaintRect, try_again_rect
 LBD7C:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_button_up
+        cmp     #MGTK::EventKind::button_up
         beq     LBDD3
         jsr     LBDE1
         MGTK_RELAY2_CALL MGTK::MoveTo, event_coords

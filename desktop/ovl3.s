@@ -553,7 +553,7 @@ L953A:  lda     #$00
         sta     L95BF
 L953F:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_button_up
+        cmp     #MGTK::EventKind::button_up
         beq     L95A2
         lda     winfo_entry_picker
         sta     screentowindow_window_id
@@ -591,7 +591,7 @@ L95C0:  lda     #$00
         sta     L9645
 L95C5:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_button_up
+        cmp     #MGTK::EventKind::button_up
         beq     L9628
         lda     winfo_entry_picker
         sta     screentowindow_window_id
@@ -627,11 +627,11 @@ L9630:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
 L9645:  .byte   0
 L9646:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_button_down
+        cmp     #MGTK::EventKind::button_down
         bne     L9659
         jmp     L9660
 
-L9659:  cmp     #MGTK::event_kind_key_down
+L9659:  cmp     #MGTK::EventKind::key_down
         bne     L9646
         jmp     L9822
 
@@ -640,7 +640,7 @@ L9660:  MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
         bne     L9671
         return  #$FF
 
-L9671:  cmp     #MGTK::area_content
+L9671:  cmp     #MGTK::Area::content
         beq     L9678
         return  #$FF
 

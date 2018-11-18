@@ -206,10 +206,10 @@ grafport_win:  .res    .sizeof(MGTK::GrafPort), 0
 
 .proc winfo_dialog
 window_id:      .byte   1
-options:        .byte   MGTK::option_dialog_box
+options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
-hscroll:        .byte   MGTK::scroll_option_none
-vscroll:        .byte   MGTK::scroll_option_none
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_none
 hthumbmax:      .byte   0
 hthumbpos:      .byte   0
 vthumbmax:      .byte   0
@@ -238,10 +238,10 @@ nextwinfo:      .addr   0
 
 .proc winfo_drive_select
 window_id:      .byte   $02
-options:        .byte   MGTK::option_dialog_box
+options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
-hscroll:        .byte   MGTK::scroll_option_none
-vscroll:        .byte   MGTK::scroll_option_present
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_present
 hthumbmax:      .byte   0
 hthumbpos:      .byte   0
 vthumbmax:      .byte   3
@@ -1086,11 +1086,11 @@ LD998:  bit     LD368
         sta     LD368
 LD9A7:  MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_button_down
+        cmp     #MGTK::EventKind::button_down
         bne     LD9BA
         jmp     LDAB1
 
-LD9BA:  cmp     #MGTK::event_kind_key_down
+LD9BA:  cmp     #MGTK::EventKind::key_down
         bne     LD998
         jmp     LD9D5
 
@@ -1348,7 +1348,7 @@ LDCAC:  lda     #$00
         sta     LDD37
 LDCB1:  MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_button_up
+        cmp     #MGTK::EventKind::button_up
         beq     LDD14
         lda     winfo_dialog::window_id
         sta     screentowindow_window_id
@@ -1388,7 +1388,7 @@ LDD38:  lda     #$00
         sta     LDDC3
 LDD3D:  MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_button_up
+        cmp     #MGTK::EventKind::button_up
         beq     LDDA0
         lda     winfo_dialog::window_id
         sta     screentowindow_window_id
@@ -2853,11 +2853,11 @@ LED42:  jmp     LED79
 
         MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_button_down
+        cmp     #MGTK::EventKind::button_down
         bne     LED58
         jmp     LEDFA
 
-LED58:  cmp     #MGTK::event_kind_key_down
+LED58:  cmp     #MGTK::EventKind::key_down
         bne     LED35
         lda     event_key
         and     #CHAR_MASK
@@ -2971,7 +2971,7 @@ LEE88:  jsr     LF0DF
         sta     LEEF7
 LEE99:  MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_button_up
+        cmp     #MGTK::EventKind::button_up
         beq     LEEEA
         jsr     LF0B8
         MGTK_RELAY_CALL2 MGTK::MoveTo, event_coords
@@ -3008,7 +3008,7 @@ LEEF8:  jsr     LF0DF
         sta     LEF67
 LEF09:  MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_button_up
+        cmp     #MGTK::EventKind::button_up
         beq     LEF5A
         jsr     LF0B8
         MGTK_RELAY_CALL2 MGTK::MoveTo, event_coords
@@ -3045,7 +3045,7 @@ LEF68:  lda     #$00
         MGTK_RELAY_CALL2 MGTK::PaintRect, ok_try_again_rect
 LEF79:  MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_button_up
+        cmp     #MGTK::EventKind::button_up
         beq     LEFCA
         jsr     LF0B8
         MGTK_RELAY_CALL2 MGTK::MoveTo, event_coords
@@ -3082,7 +3082,7 @@ LEFD8:  lda     #$00
         MGTK_RELAY_CALL2 MGTK::PaintRect, no_rect
 LEFE9:  MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_button_up
+        cmp     #MGTK::EventKind::button_up
         beq     LF03A
         jsr     LF0B8
         MGTK_RELAY_CALL2 MGTK::MoveTo, event_coords
@@ -3119,7 +3119,7 @@ LF048:  lda     #$00
         MGTK_RELAY_CALL2 MGTK::PaintRect, yes_rect
 LF059:  MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_button_up
+        cmp     #MGTK::EventKind::button_up
         beq     LF0AA
         jsr     LF0B8
         MGTK_RELAY_CALL2 MGTK::MoveTo, event_coords
@@ -3266,7 +3266,7 @@ LF192:  lda     LD41D
         beq     LF1C9
         MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_key_down
+        cmp     #MGTK::EventKind::key_down
         bne     LF192
         lda     event_key
         cmp     #CHAR_ESCAPE

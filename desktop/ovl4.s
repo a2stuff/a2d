@@ -83,12 +83,12 @@ L5106:  bit     LD8EC
         sta     prompt_ip_counter
 :       MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_button_down
+        cmp     #MGTK::EventKind::button_down
         bne     :+
         jsr     L51AF
         jmp     L5106
 
-:       cmp     #MGTK::event_kind_key_down
+:       cmp     #MGTK::EventKind::key_down
         bne     :+
         jsr     L59B9
 :       MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
@@ -131,7 +131,7 @@ L51AF:  MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_which_area
         bne     :+
         rts
-:       cmp     #MGTK::area_content
+:       cmp     #MGTK::Area::content
         bne     :+
         jmp     L51C7
         rts                     ; ???
@@ -257,7 +257,7 @@ L531F:  bit     L5105
         MGTK_RELAY_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_which_ctl
         beq     L5341
-        cmp     #MGTK::ctl_vertical_scroll_bar
+        cmp     #MGTK::Ctl::vertical_scroll_bar
         bne     L5340
         lda     winfo_entrydlg_file_picker_vscroll
         and     #$01
@@ -359,23 +359,23 @@ L5457:  lda     $D920
 L5468:  rts
 
 L5469:  lda     findcontrol_which_part
-        cmp     #MGTK::part_up_arrow
+        cmp     #MGTK::Part::up_arrow
         bne     L5473
         jmp     L550A
 
-L5473:  cmp     #MGTK::part_down_arrow
+L5473:  cmp     #MGTK::Part::down_arrow
         bne     L547A
         jmp     L5533
 
-L547A:  cmp     #MGTK::part_page_up
+L547A:  cmp     #MGTK::Part::page_up
         bne     L5481
         jmp     L54BA
 
-L5481:  cmp     #MGTK::part_page_down
+L5481:  cmp     #MGTK::Part::page_down
         bne     L5488
         jmp     L54DF
 
-L5488:  lda     #MGTK::ctl_vertical_scroll_bar
+L5488:  lda     #MGTK::Ctl::vertical_scroll_bar
         sta     trackthumb_params
         MGTK_RELAY_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_thumbmoved
@@ -383,7 +383,7 @@ L5488:  lda     #MGTK::ctl_vertical_scroll_bar
         rts
 :       lda     trackthumb_thumbpos
         sta     updatethumb_thumbpos
-        lda     #MGTK::ctl_vertical_scroll_bar
+        lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_stash
@@ -397,7 +397,7 @@ L54BA:  lda     winfo_entrydlg_file_picker_vthumbpos
         bpl     L54C4
         lda     #$00
 L54C4:  sta     updatethumb_thumbpos
-        lda     #MGTK::ctl_vertical_scroll_bar
+        lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_thumbpos
@@ -413,7 +413,7 @@ L54DF:  lda     winfo_entrydlg_file_picker_vthumbpos
         bcc     L54EF
         lda     $177F
 L54EF:  sta     updatethumb_thumbpos
-        lda     #MGTK::ctl_vertical_scroll_bar
+        lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_thumbpos
@@ -428,7 +428,7 @@ L550A:  lda     winfo_entrydlg_file_picker_vthumbpos
 L5510:  sec
         sbc     #$01
         sta     updatethumb_thumbpos
-        lda     #MGTK::ctl_vertical_scroll_bar
+        lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_thumbpos
@@ -445,7 +445,7 @@ L5533:  lda     winfo_entrydlg_file_picker_vthumbpos
 L553C:  clc
         adc     #$01
         sta     updatethumb_thumbpos
-        lda     #MGTK::ctl_vertical_scroll_bar
+        lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_thumbpos
@@ -456,9 +456,9 @@ L553C:  clc
 
 L555F:  MGTK_RELAY_CALL MGTK::PeekEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_button_down
+        cmp     #MGTK::EventKind::button_down
         beq     L5576
-        cmp     #MGTK::event_kind_drag
+        cmp     #MGTK::EventKind::drag
         beq     L5576
         pla
         pla
@@ -474,7 +474,7 @@ L5576:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         rts
 
 :       lda     findwindow_which_area
-        cmp     #MGTK::area_content
+        cmp     #MGTK::Area::content
         beq     :+
         pla
         pla
@@ -482,14 +482,14 @@ L5576:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
 
 :       MGTK_RELAY_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_which_ctl
-        cmp     #MGTK::ctl_vertical_scroll_bar
+        cmp     #MGTK::Ctl::vertical_scroll_bar
         beq     :+
         pla
         pla
         rts
 
 :       lda     findcontrol_which_part
-        cmp     #MGTK::part_page_up
+        cmp     #MGTK::Part::page_up
         bcc     L55B9
         pla
         pla
@@ -634,7 +634,7 @@ L56E3:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         sta     L577B
 L56FB:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_button_up
+        cmp     #MGTK::EventKind::button_up
         beq     L575E
         lda     winfo_entrydlg
         sta     screentowindow_window_id
@@ -677,7 +677,7 @@ L577B:  .byte   0
         sta     L5801
 L5781:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_button_up
+        cmp     #MGTK::EventKind::button_up
         beq     L57E4
         lda     winfo_entrydlg
         sta     screentowindow_window_id
@@ -720,7 +720,7 @@ L5801:  .byte   0
         sta     L5887
 L5807:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_button_up
+        cmp     #MGTK::EventKind::button_up
         beq     L586A
         lda     winfo_entrydlg
         sta     screentowindow_window_id
@@ -763,7 +763,7 @@ L5887:  .byte   0
         sta     L590D
 L588D:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_button_up
+        cmp     #MGTK::EventKind::button_up
         beq     L58F0
         lda     winfo_entrydlg
         sta     screentowindow_window_id
@@ -806,7 +806,7 @@ L590D:  .byte   0
         sta     L5993
 L5913:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_button_up
+        cmp     #MGTK::EventKind::button_up
         beq     L5976
         lda     winfo_entrydlg
         sta     screentowindow_window_id
@@ -1198,16 +1198,16 @@ L5C60:  dec     ip_blink_counter
         sta     L5CF6
         lda     event_kind
         sta     L5CF5
-        cmp     #MGTK::event_kind_no_event
+        cmp     #MGTK::EventKind::no_event
         beq     L5C60
-        cmp     #MGTK::event_kind_drag
+        cmp     #MGTK::EventKind::drag
         beq     L5C60
-        cmp     #MGTK::event_kind_button_up
+        cmp     #MGTK::EventKind::button_up
         bne     L5C96
         MGTK_RELAY_CALL MGTK::GetEvent, event_params
         jmp     L5C60
 
-L5C96:  cmp     #MGTK::event_kind_button_down
+L5C96:  cmp     #MGTK::EventKind::button_down
         bne     L5CA6
         MGTK_RELAY_CALL MGTK::GetEvent, event_params
         return  #$00
@@ -1712,7 +1712,7 @@ L6163:  sta     L61B0
         lda     $177F
         cmp     #$0A
         bcs     L6181
-        lda     #MGTK::ctl_vertical_scroll_bar
+        lda     #MGTK::Ctl::vertical_scroll_bar
         sta     activatectl_which_ctl
         lda     #MGTK::activatectl_deactivate
         sta     activatectl_activate
@@ -1721,15 +1721,15 @@ L6163:  sta     L61B0
 
 L6181:  lda     $177F
         sta     winfo_entrydlg_file_picker_vthumbmax
-        .assert MGTK::ctl_vertical_scroll_bar = MGTK::activatectl_activate, error, "need to match"
-        lda     #MGTK::ctl_vertical_scroll_bar
+        .assert MGTK::Ctl::vertical_scroll_bar = MGTK::activatectl_activate, error, "need to match"
+        lda     #MGTK::Ctl::vertical_scroll_bar
         sta     activatectl_which_ctl
         sta     activatectl_activate
         MGTK_RELAY_CALL MGTK::ActivateCtl, activatectl_params
         lda     L61B0
         sta     updatethumb_thumbpos
         jsr     L6227
-        lda     #MGTK::ctl_vertical_scroll_bar
+        lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         rts

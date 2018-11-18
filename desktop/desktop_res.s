@@ -356,10 +356,10 @@ alert_bitmap2_params:
 
 .proc winfo_alert_dialog
 window_id:      .byte   $0F
-options:        .byte   MGTK::option_dialog_box
+options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
-hscroll:        .byte   MGTK::scroll_option_none
-vscroll:        .byte   MGTK::scroll_option_none
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_none
 hthumbmax:      .byte   0
 hthumbpos:      .byte   0
 vthumbmax:      .byte   0
@@ -390,10 +390,10 @@ nextwinfo:      .addr   0
 
 .proc winfo_entrydlg
 window_id:      .byte   $12
-options:        .byte   MGTK::option_dialog_box
+options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
-hscroll:        .byte   MGTK::scroll_option_none
-vscroll:        .byte   MGTK::scroll_option_none
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_none
 hthumbmax:      .byte   0
 hthumbpos:      .byte   0
 vthumbmax:      .byte   0
@@ -424,10 +424,10 @@ nextwinfo:      .addr   0
 
 .proc winfo_entrydlg_file_picker
 window_id:      .byte   $15
-options:        .byte   MGTK::option_dialog_box
+options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
-hscroll:        .byte   MGTK::scroll_option_none
-vscroll:        .byte   MGTK::scroll_option_normal
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_normal
 hthumbmax:      .byte   0
 hthumbpos:      .byte   0
 vthumbmax:      .byte   3
@@ -460,10 +460,10 @@ nextwinfo:      .addr   0
         width := 400
 
 window_id:      .byte   $18
-options:        .byte   MGTK::option_dialog_box
+options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
-hscroll:        .byte   MGTK::scroll_option_none
-vscroll:        .byte   MGTK::scroll_option_none
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_none
 hthumbmax:      .byte   0
 hthumbpos:      .byte   0
 vthumbmax:      .byte   0
@@ -497,10 +497,10 @@ winfo_about_dialog_port    := winfo_about_dialog::port
         width := 350
 
 window_id:      .byte   $1B
-options:        .byte   MGTK::option_dialog_box
+options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
-hscroll:        .byte   MGTK::scroll_option_none
-vscroll:        .byte   MGTK::scroll_option_none
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_none
 hthumbmax:      .byte   0
 hthumbpos:      .byte   0
 vthumbmax:      .byte   0
@@ -1175,10 +1175,10 @@ LE71F:  .byte   0
 .macro WINFO_DEFN id, label, buflabel
 .proc label
 window_id:      .byte   id
-options:        .byte   MGTK::option_go_away_box | MGTK::option_grow_box
+options:        .byte   MGTK::Option::go_away_box | MGTK::Option::grow_box
 title:          .addr   buflabel
-hscroll:        .byte   MGTK::scroll_option_normal
-vscroll:        .byte   MGTK::scroll_option_normal
+hscroll:        .byte   MGTK::Scroll::option_normal
+vscroll:        .byte   MGTK::Scroll::option_normal
 hthumbmax:      .byte   3
 hthumbpos:      .byte   0
 vthumbmax:      .byte   3

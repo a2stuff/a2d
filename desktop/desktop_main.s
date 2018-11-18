@@ -9,6 +9,7 @@
 ;;; ============================================================
 
 .proc desktop_main
+
 L0020           := $0020
 L0800           := $0800
 L0CB8           := $0CB8
@@ -129,21 +130,21 @@ main_loop:
         lda     event_kind
 
         ;; Is it a button-down event? (including w/ modifiers)
-        cmp     #MGTK::event_kind_button_down
+        cmp     #MGTK::EventKind::button_down
         beq     click
-        cmp     #MGTK::event_kind_apple_key
+        cmp     #MGTK::EventKind::apple_key
         bne     :+
 click:  jsr     handle_click
         jmp     main_loop
 
         ;; Is it a key down event?
-:       cmp     #MGTK::event_kind_key_down
+:       cmp     #MGTK::EventKind::key_down
         bne     :+
         jsr     handle_keydown
         jmp     main_loop
 
         ;; Is it an update event?
-:       cmp     #MGTK::event_kind_update
+:       cmp     #MGTK::EventKind::update
         bne     :+
         jsr     reset_grafport3
         lda     active_window_id
@@ -177,7 +178,7 @@ redraw_windows:
         sta     L40F1
 L4100:  jsr     peek_event
         lda     event_kind
-        cmp     #MGTK::event_kind_update
+        cmp     #MGTK::EventKind::update
         bne     L412B
         jsr     get_event
 L410D:  jsr     L4113
@@ -376,7 +377,7 @@ dispatch_table:
         ;; Apple menu (1)
         .addr   cmd_about
         .addr   cmd_noop        ; --------
-        .repeat 8 ; max_desk_acc_count - TODO: Why can't const be used here?
+        .repeat ::max_desk_acc_count
         .addr   cmd_deskacc
         .endrepeat
 
@@ -555,7 +556,7 @@ call_proc:
 :       jmp     L68AA
 
 not_desktop:
-        cmp     #MGTK::area_menubar  ; menu?
+        cmp     #MGTK::Area::menubar  ; menu?
         bne     not_menu
         MGTK_RELAY_CALL MGTK::MenuSelect, menu_click_params
         jmp     menu_dispatch2
@@ -573,18 +574,18 @@ not_menu:
 
 .proc handle_active_window_click
         pla
-        cmp     #MGTK::area_content
+        cmp     #MGTK::Area::content
         bne     :+
         jsr     detect_double_click
         sta     double_click_flag
         jmp     handle_client_click
-:       cmp     #MGTK::area_dragbar
+:       cmp     #MGTK::Area::dragbar
         bne     :+
         jmp     handle_title_click
-:       cmp     #MGTK::area_grow_box
+:       cmp     #MGTK::Area::grow_box
         bne     :+
         jmp     handle_resize_click
-:       cmp     #MGTK::area_close_box
+:       cmp     #MGTK::Area::close_box
         bne     :+
         jmp     handle_close_click
 :       rts
@@ -2677,9 +2678,9 @@ L5579:  lda     #$00
 L5581:  jsr     L55F0
 L5584:  jsr     get_event
         lda     event_kind
-        cmp     #MGTK::event_kind_key_down
+        cmp     #MGTK::EventKind::key_down
         beq     L5595
-        cmp     #MGTK::event_kind_button_down
+        cmp     #MGTK::EventKind::button_down
         bne     L5584
         jmp     L55D1
 
@@ -2868,9 +2869,9 @@ L572D:  lda     #$00
         sta     L578C
 L5732:  jsr     get_event
         lda     event_kind
-        cmp     #MGTK::event_kind_key_down
+        cmp     #MGTK::EventKind::key_down
         beq     L5743
-        cmp     #MGTK::event_kind_button_down
+        cmp     #MGTK::EventKind::button_down
         bne     L5732
         jmp     L578B
 
@@ -2936,9 +2937,9 @@ L578D:  .byte   0
         jsr     L5803
 loop:   jsr     get_event
         lda     event_kind
-        cmp     #MGTK::event_kind_button_down
+        cmp     #MGTK::EventKind::button_down
         beq     done
-        cmp     #MGTK::event_kind_key_down
+        cmp     #MGTK::EventKind::key_down
         bne     loop
         lda     event_key
         cmp     #CHAR_RETURN
@@ -3039,7 +3040,7 @@ L5861:  .word   0
         beq     :+
         sta     updatethumb_stash
         inc     updatethumb_stash
-        lda     #MGTK::ctl_horizontal_scroll_bar
+        lda     #MGTK::Ctl::horizontal_scroll_bar
         sta     updatethumb_which_ctl
         jsr     L5C54
         lda     updatethumb_stash
@@ -3052,7 +3053,7 @@ L587D:  .byte   0
         beq     :+
         sta     updatethumb_stash
         dec     updatethumb_stash
-        lda     #MGTK::ctl_horizontal_scroll_bar
+        lda     #MGTK::Ctl::horizontal_scroll_bar
         sta     updatethumb_which_ctl
         jsr     L5C54
         lda     updatethumb_stash
@@ -3066,7 +3067,7 @@ L587D:  .byte   0
         beq     :+
         sta     updatethumb_stash
         inc     updatethumb_stash
-        lda     #MGTK::ctl_vertical_scroll_bar
+        lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         jsr     L5C54
         lda     updatethumb_stash
@@ -3079,7 +3080,7 @@ L58AD:  .byte   0
         beq     :+
         sta     updatethumb_stash
         dec     updatethumb_stash
-        lda     #MGTK::ctl_vertical_scroll_bar
+        lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         jsr     L5C54
         lda     updatethumb_stash
@@ -3409,10 +3410,10 @@ L5B1B:  .byte   0
 :       bit     double_click_flag
         bmi     :+
         jmp     done_client_click ; ignore double click
-:       cmp     #MGTK::ctl_dead_zone
+:       cmp     #MGTK::Ctl::dead_zone
         bne     :+
         rts
-:       cmp     #MGTK::ctl_vertical_scroll_bar
+:       cmp     #MGTK::Ctl::vertical_scroll_bar
         bne     horiz
 
         ;; Vertical scrollbar
@@ -3426,37 +3427,37 @@ L5B1B:  .byte   0
         jmp     done_client_click
 :       jsr     L5803
         lda     findcontrol_which_part
-        cmp     #MGTK::part_thumb
+        cmp     #MGTK::Part::thumb
         bne     :+
         jsr     do_track_thumb
         jmp     done_client_click
 
-:       cmp     #MGTK::part_up_arrow
+:       cmp     #MGTK::Part::up_arrow
         bne     :+
 up:     jsr     scroll_up
-        lda     #MGTK::part_up_arrow
+        lda     #MGTK::Part::up_arrow
         jsr     check_control_repeat
         bpl     up
         jmp     done_client_click
 
-:       cmp     #MGTK::part_down_arrow
+:       cmp     #MGTK::Part::down_arrow
         bne     :+
 down:   jsr     scroll_down
-        lda     #MGTK::part_down_arrow
+        lda     #MGTK::Part::down_arrow
         jsr     check_control_repeat
         bpl     down
         jmp     done_client_click
 
-:       cmp     #MGTK::part_page_down
+:       cmp     #MGTK::Part::page_down
         beq     pgdn
 pgup:   jsr     L638C
-        lda     #MGTK::part_page_up
+        lda     #MGTK::Part::page_up
         jsr     check_control_repeat
         bpl     pgup
         jmp     done_client_click
 
 pgdn:   jsr     L63EC
-        lda     #MGTK::part_page_down
+        lda     #MGTK::Part::page_down
         jsr     check_control_repeat
         bpl     pgdn
         jmp     done_client_click
@@ -3472,37 +3473,37 @@ horiz:  lda     active_window_id
         jmp     done_client_click
 :       jsr     L5803
         lda     findcontrol_which_part
-        cmp     #MGTK::part_thumb
+        cmp     #MGTK::Part::thumb
         bne     :+
         jsr     do_track_thumb
         jmp     done_client_click
 
-:       cmp     #MGTK::part_left_arrow
+:       cmp     #MGTK::Part::left_arrow
         bne     :+
 left:   jsr     scroll_left
-        lda     #MGTK::part_left_arrow
+        lda     #MGTK::Part::left_arrow
         jsr     check_control_repeat
         bpl     left
         jmp     done_client_click
 
-:       cmp     #MGTK::part_right_arrow
+:       cmp     #MGTK::Part::right_arrow
         bne     :+
 rght:   jsr     scroll_right
-        lda     #MGTK::part_right_arrow
+        lda     #MGTK::Part::right_arrow
         jsr     check_control_repeat
         bpl     rght
         jmp     done_client_click
 
-:       cmp     #MGTK::part_page_right
+:       cmp     #MGTK::Part::page_right
         beq     pgrt
 pglt:   jsr     L6451
-        lda     #MGTK::part_page_left
+        lda     #MGTK::Part::page_left
         jsr     check_control_repeat
         bpl     pglt
         jmp     done_client_click
 
 pgrt:   jsr     L64B0
-        lda     #MGTK::part_page_right
+        lda     #MGTK::Part::page_right
         jsr     check_control_repeat
         bpl     pgrt
         jmp     done_client_click
@@ -3556,14 +3557,14 @@ done_client_click:
         sta     ctl
         jsr     peek_event
         lda     event_kind
-        cmp     #MGTK::event_kind_drag
+        cmp     #MGTK::EventKind::drag
         beq     :+
 bail:   return  #$FF            ; high bit set = not repeating
 
 :       MGTK_RELAY_CALL MGTK::FindControl, event_coords
         lda     findcontrol_which_ctl
         beq     bail
-        cmp     #MGTK::ctl_dead_zone
+        cmp     #MGTK::Ctl::dead_zone
         beq     bail
         lda     findcontrol_which_part
         cmp     ctl
@@ -3861,7 +3862,7 @@ L5F20:  lda     event_coords,x
         bpl     L5F20
         jsr     peek_event
         lda     event_kind
-        cmp     #MGTK::event_kind_drag
+        cmp     #MGTK::EventKind::drag
         beq     L5F3F
         bit     BUTN0
         bmi     L5F3E
@@ -3884,7 +3885,7 @@ L5F50:  lda     L5F0B,x
         MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
 L5F6B:  jsr     peek_event
         lda     event_kind
-        cmp     #MGTK::event_kind_drag
+        cmp     #MGTK::EventKind::drag
         beq     L5FC5
         MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
         ldx     #$00
@@ -4422,7 +4423,7 @@ L65E2:  lsr16    L6602
         lda     L6602
 L65EB:  jsr     L62BC
 L65EE:  sta     updatethumb_thumbpos
-        lda     #MGTK::ctl_horizontal_scroll_bar
+        lda     #MGTK::Ctl::horizontal_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         rts
@@ -4463,7 +4464,7 @@ L667B:  lsr16   L66A0
         lda     L66A0
 L668A:  jsr     L62BC
 L668D:  sta     updatethumb_thumbpos
-        lda     #MGTK::ctl_vertical_scroll_bar
+        lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         rts
@@ -4751,7 +4752,7 @@ L68B8:  lda     event_coords,x
         bpl     L68B8
         jsr     peek_event
         lda     event_kind
-        cmp     #MGTK::event_kind_drag
+        cmp     #MGTK::EventKind::drag
         beq     L68CF
         rts
 
@@ -4760,7 +4761,7 @@ L68CF:  MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern3
         MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
 L68E4:  jsr     peek_event
         lda     event_kind
-        cmp     #MGTK::event_kind_drag
+        cmp     #MGTK::EventKind::drag
         beq     L6932
         MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
         ldx     #0
@@ -5267,7 +5268,7 @@ config_port:
         bmi     activate_hscroll
 
         ;; deactivate horizontal scrollbar
-        lda     #MGTK::ctl_horizontal_scroll_bar
+        lda     #MGTK::Ctl::horizontal_scroll_bar
         sta     activatectl_which_ctl
         lda     #MGTK::activatectl_deactivate
         sta     activatectl_activate
@@ -5277,7 +5278,7 @@ config_port:
 
 activate_hscroll:
         ;; activate horizontal scrollbar
-        lda     #MGTK::ctl_horizontal_scroll_bar
+        lda     #MGTK::Ctl::horizontal_scroll_bar
         sta     activatectl_which_ctl
         lda     #MGTK::activatectl_activate
         sta     activatectl_activate
@@ -5292,7 +5293,7 @@ check_vscroll:
         bmi     activate_vscroll
 
         ;; deactivate vertical scrollbar
-        lda     #MGTK::ctl_vertical_scroll_bar
+        lda     #MGTK::Ctl::vertical_scroll_bar
         sta     activatectl_which_ctl
         lda     #MGTK::activatectl_deactivate
         sta     activatectl_activate
@@ -5302,7 +5303,7 @@ check_vscroll:
 
 activate_vscroll:
         ;; activate vertical scrollbar
-        lda     #MGTK::ctl_vertical_scroll_bar
+        lda     #MGTK::Ctl::vertical_scroll_bar
         sta     activatectl_which_ctl
         lda     #MGTK::activatectl_activate
         sta     activatectl_activate
@@ -7727,7 +7728,7 @@ L84D0:  .byte   0
 L84DC:  sub16   grafport2::cliprect::x2, grafport2::cliprect::x1, L85F8
         sub16   grafport2::cliprect::y2, grafport2::cliprect::y1, L85FA
         lda     event_kind
-        cmp     #MGTK::event_kind_button_down
+        cmp     #MGTK::EventKind::button_down
         bne     L850C
         asl     a
         bne     L850E
@@ -7856,17 +7857,17 @@ loop:   dec     counter
         lda     event_kind
         sta     kind            ; unused ???
 
-        cmp     #MGTK::event_kind_no_event
+        cmp     #MGTK::EventKind::no_event
         beq     loop
-        cmp     #MGTK::event_kind_drag
+        cmp     #MGTK::EventKind::drag
         beq     loop
-        cmp     #MGTK::event_kind_button_up
+        cmp     #MGTK::EventKind::button_up
         bne     :+
 
         jsr     get_event
         jmp     loop
 
-:       cmp     #MGTK::event_kind_button_down
+:       cmp     #MGTK::EventKind::button_down
         bne     exit
 
         jsr     get_event
@@ -11267,7 +11268,7 @@ start:  yax_call JT_MLI_RELAY, CLOSE, close_params
 .proc check_escape_key_down
         yax_call JT_MGTK_RELAY, MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_key_down
+        cmp     #MGTK::EventKind::key_down
         bne     nope
         lda     event_key
         cmp     #CHAR_ESCAPE
@@ -11469,11 +11470,11 @@ dialog_param_addr:
         ;; Dispatch event types - mouse down, key press
 :       MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_button_down
+        cmp     #MGTK::EventKind::button_down
         bne     :+
         jmp     prompt_click_handler
 
-:       cmp     #MGTK::event_kind_key_down
+:       cmp     #MGTK::EventKind::key_down
         bne     :+
         jmp     prompt_key_handler
 
@@ -11521,7 +11522,7 @@ done:   jsr     reset_grafport3a
         lda     findwindow_which_area
         bne     :+
         return  #$FF
-:       cmp     #MGTK::area_content
+:       cmp     #MGTK::Area::content
         bne     :+
         jmp     content
 :       return  #$FF
@@ -11829,9 +11830,9 @@ jump_relay:
 
 :       MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_button_down
+        cmp     #MGTK::EventKind::button_down
         beq     close
-        cmp     #MGTK::event_kind_key_down
+        cmp     #MGTK::EventKind::key_down
         bne     :-
         lda     event_key
         and     #CHAR_MASK
@@ -12856,17 +12857,17 @@ loop:   dec     counter
         lda     event_kind      ; unused ???
         sta     kind
 
-        cmp     #MGTK::event_kind_no_event
+        cmp     #MGTK::EventKind::no_event
         beq     loop
-        cmp     #MGTK::event_kind_drag
+        cmp     #MGTK::EventKind::drag
         beq     loop
-        cmp     #MGTK::event_kind_button_up
+        cmp     #MGTK::EventKind::button_up
         bne     :+
 
         MGTK_RELAY_CALL MGTK::GetEvent, event_params
         jmp     loop
 
-:       cmp     #MGTK::event_kind_button_down
+:       cmp     #MGTK::EventKind::button_down
         bne     exit
 
         MGTK_RELAY_CALL MGTK::GetEvent, event_params
@@ -13306,7 +13307,7 @@ event_loop:
         sta     down_flag
 loop:   MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
-        cmp     #MGTK::event_kind_button_up
+        cmp     #MGTK::EventKind::button_up
         beq     exit
         lda     winfo_alert_dialog
         sta     event_params

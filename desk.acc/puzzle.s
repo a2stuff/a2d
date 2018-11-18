@@ -67,7 +67,7 @@ stash_stack:  .byte   0
         da_window_id := 51
 
 ;;; ============================================================
-;;; Redraw the screen (all windows) after a event_kind_drag
+;;; Redraw the screen (all windows) after a EventKind::drag
 
 .proc redraw_screen
 
@@ -590,10 +590,10 @@ setport_params:
 
 .proc winfo
 window_id:     .byte   da_window_id
-options:  .byte   MGTK::option_go_away_box
+options:  .byte   MGTK::Option::go_away_box
 title:  .addr   name
-hscroll:.byte   MGTK::scroll_option_none
-vscroll:.byte   MGTK::scroll_option_none
+hscroll:.byte   MGTK::Scroll::option_none
+vscroll:.byte   MGTK::Scroll::option_none
 hthumbmax:  .byte   0
 hthumbpos:  .byte   0
 vthumbmax:  .byte   0
@@ -700,13 +700,13 @@ ploop:  lda     position_table+1,y
 .proc input_loop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-        cmp     #MGTK::event_kind_button_down
+        cmp     #MGTK::EventKind::button_down
         bne     :+
         jsr     on_click
         jmp     input_loop
 
         ;; key?
-:       cmp     #MGTK::event_kind_key_down
+:       cmp     #MGTK::EventKind::key_down
         bne     input_loop
         jsr     check_key
         jmp     input_loop
@@ -722,14 +722,14 @@ on_click:
 bail:   rts
 
         ;; client area?
-:       cmp     #MGTK::area_content
+:       cmp     #MGTK::Area::content
         bne     :+
         jsr     find_click_piece
         bcc     bail
         jmp     process_click
 
         ;; close port?
-:       cmp     #MGTK::area_close_box
+:       cmp     #MGTK::Area::close_box
         bne     check_title
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::goaway
@@ -755,7 +755,7 @@ loop:   lda     routine,x
 
         ;; title bar?
 check_title:
-        cmp     #MGTK::area_dragbar
+        cmp     #MGTK::Area::dragbar
         bne     bail
         lda     #da_window_id
         sta     dragwindow_params::window_id
