@@ -1106,19 +1106,15 @@ apple_menu:
         DEFINE_MENU 1
         DEFINE_MENU_ITEM label_about
         DEFINE_MENU_SEPARATOR
-        DEFINE_MENU_ITEM buf + 0 * $10
-        DEFINE_MENU_ITEM buf + 1 * $10
-        DEFINE_MENU_ITEM buf + 2 * $10
-        DEFINE_MENU_ITEM buf + 3 * $10
-        DEFINE_MENU_ITEM buf + 4 * $10
-        DEFINE_MENU_ITEM buf + 5 * $10
-        DEFINE_MENU_ITEM buf + 6 * $10
-        DEFINE_MENU_ITEM buf + 7 * $10
+        .repeat max_desk_acc_count, i
+        DEFINE_MENU_ITEM desk_acc_names + i * 16
+        .endrepeat
 
 label_about:
         PASCAL_STRING "About Apple II DeskTop ... "
 
-buf:    .res    $80, 0
+desk_acc_names:
+        .res    max_desk_acc_count * 16, 0
 
 splash_menu:
         DEFINE_MENU_BAR 1

@@ -376,14 +376,9 @@ dispatch_table:
         ;; Apple menu (1)
         .addr   cmd_about
         .addr   cmd_noop        ; --------
+        .repeat 8 ; max_desk_acc_count - TODO: Why can't const be used here?
         .addr   cmd_deskacc
-        .addr   cmd_deskacc
-        .addr   cmd_deskacc
-        .addr   cmd_deskacc
-        .addr   cmd_deskacc
-        .addr   cmd_deskacc
-        .addr   cmd_deskacc
-        .addr   cmd_deskacc
+        .endrepeat
 
         ;; File menu (2)
         .addr   cmd_new_folder
@@ -1490,7 +1485,7 @@ start:  jsr     reset_grafport3
         sec
         sbc     #3              ; About and separator before first item
         jsr     a_times_16
-        addax   #buf, ptr
+        addax   #desk_acc_names, ptr
 
         ;; Compute total length
         ldy     #0
@@ -14470,6 +14465,8 @@ dx:     .word   0
 .proc enumerate_desk_accessories
         MGTK_RELAY_CALL MGTK::CheckEvents ; ???
 
+        read_dir_buffer := $1400
+
         ;; Does the directory exist?
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
         beq     :+
@@ -14477,119 +14474,139 @@ dx:     .word   0
 
 :       lda     get_file_info_type
         cmp     #FT_DIRECTORY
-        beq     L0BC3
+        beq     open_dir
         jmp     L0D0A
 
-L0BC3:  MLI_RELAY_CALL OPEN, open_params
+open_dir:
+        MLI_RELAY_CALL OPEN, open_params
         lda     open_ref_num
         sta     read_ref_num
         sta     close_ref_num
         MLI_RELAY_CALL READ, read_params
-        lda     #$00
-        sta     L0D04
-        sta     L0D05
-        lda     #$01
-        sta     L0D08
-        lda     $1425
+
+        lda     #0
+        sta     entry_num
+        sta     desk_acc_num
+
+        lda     #1              ; First block has header instead of entry
+        sta     entry_in_block
+
+        lda     read_dir_buffer + SubdirectoryHeader::file_count
         and     #$7F
-        sta     L0D03
-        lda     #$02
-        sta     apple_menu
-        lda     $1424
-        sta     L0D07
-        lda     $1423
-        sta     L0D06
-        lda     #$2B
-        sta     $06
-        lda     #$14
-        sta     $06+1
-L0C0C:  ldy     #$00
-        lda     ($06),y
-        and     #$0F
-        bne     L0C17
-        jmp     L0C81
+        sta     file_count
 
-L0C17:  inc     L0D04
-        ldy     #$10
-        lda     ($06),y
-        cmp     #$F1
-        beq     L0C25
-        jmp     L0C81
+        lda     #2
+        sta     apple_menu      ; "About..." and separator
 
-L0C25:  inc     L0D05
-        copy16  #buf, $08
-        lda     #$00
-        sta     L0D09
-        lda     apple_menu
+        lda     read_dir_buffer + SubdirectoryHeader::entries_per_block
+        sta     entries_per_block
+        lda     read_dir_buffer + SubdirectoryHeader::entry_length
+        sta     entry_length
+
+        dir_ptr := $06
+        da_ptr := $08
+
+        copy16  #read_dir_buffer + .sizeof(SubdirectoryHeader), dir_ptr
+
+process_block:
+        ldy     #FileEntry::storage_type_name_length
+        lda     (dir_ptr),y
+        and     #NAME_LENGTH_MASK
+        bne     :+
+        jmp     next_entry
+
+:       inc     entry_num
+        ldy     #FileEntry::file_type
+        lda     (dir_ptr),y
+        cmp     #DA_FILE_TYPE
+        beq     is_da
+        jmp     next_entry
+
+        ;; Compute slot in DA name table
+is_da:  inc     desk_acc_num
+        copy16  #desk_acc_names, da_ptr
+        lda     #0
+        sta     ptr_calc_hi
+        lda     apple_menu      ; num menu items
         sec
-        sbc     #$02
+        sbc     #2              ; ignore "About..." and separator
         asl     a
-        rol     L0D09
+        rol     ptr_calc_hi
         asl     a
-        rol     L0D09
+        rol     ptr_calc_hi
         asl     a
-        rol     L0D09
+        rol     ptr_calc_hi
         asl     a
-        rol     L0D09
+        rol     ptr_calc_hi
         clc
-        adc     $08
-        sta     $08
-        lda     L0D09
-        adc     $08+1
-        sta     $08+1
-        ldy     #$00
-        lda     ($06),y
-        and     #$0F
-        sta     ($08),y
+        adc     da_ptr
+        sta     da_ptr
+        lda     ptr_calc_hi
+        adc     da_ptr+1
+        sta     da_ptr+1
+
+        ;; Copy name
+        ldy     #FileEntry::storage_type_name_length
+        lda     (dir_ptr),y
+        and     #NAME_LENGTH_MASK
+        sta     (da_ptr),y
         tay
-L0C60:  lda     ($06),y
-        sta     ($08),y
+:       lda     (dir_ptr),y
+        sta     (da_ptr),y
         dey
-        bne     L0C60
-        addr_call_indirect desktop_main::capitalize_string, $08
+        bne     :-
+
+        addr_call_indirect desktop_main::capitalize_string, da_ptr
 
         ;; Convert periods to spaces
-        lda     ($08),y
+        lda     (da_ptr),y
         tay
-L0C71:  lda     ($08),y
+loop:   lda     (da_ptr),y
         cmp     #'.'
-        bne     L0C7B
+        bne     :+
         lda     #' '
-        sta     ($08),y
-L0C7B:  dey
+        sta     (da_ptr),y
+:       dey
 
-        bne     L0C71
-        inc     apple_menu
-L0C81:  lda     L0D05
-        cmp     #$08
-        bcc     L0C8B
-        jmp     L0CCB
+        bne     loop
+        inc     apple_menu      ; number of menu items
 
-L0C8B:  lda     L0D04
-        cmp     L0D03
-        bne     L0C96
-        jmp     L0CCB
+next_entry:
+        ;; Room for more DAs?
+        lda     desk_acc_num
+        cmp     #max_desk_acc_count
+        bcc     :+
+        jmp     close_dir
 
-L0C96:  inc     L0D08
-        lda     L0D08
-        cmp     L0D07
-        bne     L0CBA
+        ;; Any more entries in dir?
+:       lda     entry_num
+        cmp     file_count
+        bne     :+
+        jmp     close_dir
+
+        ;; Any more entries in block?
+:       inc     entry_in_block
+        lda     entry_in_block
+        cmp     entries_per_block
+        bne     :+
         MLI_RELAY_CALL READ, read_params
-        copy16  #$1404, $06
-        lda     #$00
-        sta     L0D08
-        jmp     L0C0C
+        copy16  #read_dir_buffer + 4, dir_ptr
 
-L0CBA:  add16_8 $06, L0D06, $06
-        jmp     L0C0C
+        lda     #0
+        sta     entry_in_block
+        jmp     process_block
 
-L0CCB:  MLI_RELAY_CALL CLOSE, close_params
+:       add16_8 dir_ptr, entry_length, dir_ptr
+        jmp     process_block
+
+close_dir:
+        MLI_RELAY_CALL CLOSE, close_params
         jmp     L0D0A
 
         DEFINE_OPEN_PARAMS open_params, str_desk_acc, $1000
         open_ref_num := open_params::ref_num
 
-        DEFINE_READ_PARAMS read_params, $1400, $200
+        DEFINE_READ_PARAMS read_params, read_dir_buffer, BLOCK_SIZE
         read_ref_num := read_params::ref_num
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, str_desk_acc
@@ -14603,13 +14620,13 @@ L0CCB:  MLI_RELAY_CALL CLOSE, close_params
 str_desk_acc:
         PASCAL_STRING "Desk.acc"
 
-L0D03:  .byte   0
-L0D04:  .byte   0
-L0D05:  .byte   0
-L0D06:  .byte   0
-L0D07:  .byte   0
-L0D08:  .byte   0
-L0D09:  .byte   0
+file_count:     .byte   0
+entry_num:      .byte   0
+desk_acc_num:   .byte   0
+entry_length:   .byte   0
+entries_per_block:      .byte   0
+entry_in_block: .byte   0
+ptr_calc_hi:    .byte   0
 .endproc
 
 ;;; ============================================================
