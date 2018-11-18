@@ -1303,7 +1303,7 @@ end:    jsr     display_buffer1
         stxy    restore_addr
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        cmp     #MGTK::error_window_obscured
+        cmp     #MGTK::Error::window_obscured
         bne     :+
         rts
 :       MGTK_CALL MGTK::SetPort, grafport
@@ -1384,7 +1384,7 @@ loop:   lda     #' '
 .endproc
 .proc display_buffer1
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        cmp     #MGTK::error_window_obscured
+        cmp     #MGTK::Error::window_obscured
         beq     end
         MGTK_CALL MGTK::SetPort, grafport
         ldxy    #text_buffer1
@@ -1395,7 +1395,7 @@ end:    rts
 
 .proc display_buffer2
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        cmp     #MGTK::error_window_obscured
+        cmp     #MGTK::Error::window_obscured
         beq     end
         MGTK_CALL MGTK::SetPort, grafport
         ldxy    #text_buffer2
@@ -1423,7 +1423,7 @@ end:    rts
 
 .proc draw_content
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        cmp     #MGTK::error_window_obscured
+        cmp     #MGTK::Error::window_obscured
         bne     :+
         rts
 :       MGTK_CALL MGTK::SetPort, grafport
@@ -1511,7 +1511,7 @@ draw_title_bar:
         jsr     reset_buffers_and_display
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        cmp     #MGTK::error_window_obscured
+        cmp     #MGTK::Error::window_obscured
         beq     :+
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::MoveTo, error_pos

@@ -216,7 +216,7 @@ fixed_mode_flag:
 .proc event_params
 kind:  .byte   0
 
-;;; if state is MGTK::event_kind_key_down
+;;; if state is MGTK::EventKind::key_down
 key             := *
 modifiers       := *+1
 
@@ -471,9 +471,9 @@ loop:   lda     DEFAULT_FONT + MGTK::Font::charwidth - 1,x
 input_loop:
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params
-        cmp     #MGTK::event_kind_key_down    ; key?
+        cmp     #MGTK::EventKind::key_down    ; key?
         beq     on_key_down
-        cmp     #MGTK::event_kind_button_down ; was clicked?
+        cmp     #MGTK::EventKind::button_down ; was clicked?
         bne     input_loop      ; nope, keep waiting
 
         MGTK_CALL MGTK::FindWindow, event_params::coords
