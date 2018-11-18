@@ -13,7 +13,7 @@
 launch_dialog           := $A500
 set_cursor_watch        := $B3E7
 set_cursor_pointer      := $B403
-LB445                   := $B445 ; ???
+detect_double_click2    := $B445
 draw_text1              := $B708
 set_port_from_window_id := $B7B9
 
@@ -717,7 +717,7 @@ L976A:  cmp     L938D
         lda     L979C
         sta     L938D
         jsr     L979D
-L977E:  jsr     LB445
+L977E:  jsr     detect_double_click2
         rts
 
 L9782:  sec

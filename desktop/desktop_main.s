@@ -11403,6 +11403,7 @@ do_on_line:
         index_warning_dialog            := $C
 
 launch_dialog:
+        .assert * = $A500, error, "Entry point used by overlay"
         jmp     launch_dialog_impl
 
 dialog_proc_table:
@@ -11457,6 +11458,7 @@ dialog_param_addr:
 ;;; Message handler for OK/Cancel dialog
 
 .proc prompt_input_loop
+        .assert * = $A567, error, "Entry point used by overlay"
         lda     has_input_field_flag
         beq     :+
 
@@ -11803,6 +11805,7 @@ rts1:
         rts
 
 jump_relay:
+        .assert * = $A899, error, "Entry point used by overlay"
         jmp     dummy0000
 
 
@@ -11965,6 +11968,7 @@ LAAB1:  jsr     prompt_input_loop
 ;;; ============================================================
 
 .proc bell
+        .assert * = $AACE, error, "Entry point used by overlay"
         sta     ALTZPOFF
         sta     ROMIN2
         jsr     BELL1
@@ -12262,7 +12266,7 @@ LAE42:  cmp     #$40
 
 LAE49:  lda     #$80
         sta     has_input_field_flag
-        jsr     LBD69
+        jsr     clear_path_buf2
         lda     #$00
         jsr     LB509
         lda     winfo_alert_dialog
@@ -12276,7 +12280,7 @@ LAE70:  lda     #$80
         sta     has_input_field_flag
         lda     #$00
         sta     LD8E7
-        jsr     LBD75
+        jsr     clear_path_buf1
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$01
         copy16in ($06),y, $08
@@ -12624,11 +12628,11 @@ LB276:  cmp     #$40
         bne     LB27D
         jmp     LB313
 
-LB27D:  jsr     LBD75
+LB27D:  jsr     clear_path_buf1
         jsr     copy_dialog_param_addr_to_ptr
         lda     #$80
         sta     has_input_field_flag
-        jsr     LBD69
+        jsr     clear_path_buf2
         lda     #$00
         jsr     LB509
         lda     winfo_alert_dialog
@@ -12794,30 +12798,40 @@ warning_message_table:
 cursor_ip_flag:                 ; high bit set if IP, clear if pointer
         .byte   0
 
-set_cursor_watch:
+.proc set_cursor_watch
+        .assert * = $B3E7, error, "Entry point used by overlay"
         MGTK_RELAY_CALL MGTK::HideCursor
         MGTK_RELAY_CALL MGTK::SetCursor, watch_cursor
         MGTK_RELAY_CALL MGTK::ShowCursor
         rts
+.endproc
 
-set_cursor_pointer:
+.proc set_cursor_pointer
+        .assert * = $B403, error, "Entry point used by overlay"
         MGTK_RELAY_CALL MGTK::HideCursor
         MGTK_RELAY_CALL MGTK::SetCursor, pointer_cursor
         MGTK_RELAY_CALL MGTK::ShowCursor
         rts
+.endproc
 
-set_cursor_insertion_point:
+.proc set_cursor_insertion_point
         MGTK_RELAY_CALL MGTK::HideCursor
         MGTK_RELAY_CALL MGTK::SetCursor, insertion_point_cursor
         MGTK_RELAY_CALL MGTK::ShowCursor
         rts
+.endproc
 
 set_penmode_xor2:
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         rts
 
-        ;; Another double-click timer?
-.proc LB554
+;;; ============================================================
+;;; Double Click Detection (#2 ???)
+;;; Returns with A=0 if double click, A=$FF otherwise.
+
+.proc detect_double_click2
+        .assert * = $B445, error, "Entry point used by overlay"
+
         double_click_deltax := 5
         double_click_deltay := 4
 
@@ -12932,7 +12946,9 @@ unused: .byte   0               ; unused
 
 ;;; ============================================================
 
-LB509:  sta     LD8E7
+LB509:
+        .assert * = $B509, error, "Entry point used by overlay"
+        sta     LD8E7
         jsr     open_dialog_window
         bit     LD8E7
         bvc     LB51A
@@ -12978,6 +12994,8 @@ LB537:  jmp     reset_grafport3a
         DDL_CENTER := $80
 
 .proc draw_dialog_label
+        .assert * = $B590, error, "Entry point used by overlay"
+
         textwidth_params := $8
         textptr := $8
         textlen := $A
@@ -13103,6 +13121,7 @@ erase_ok_button:
 ;;; ============================================================
 
 .proc draw_text1
+        .assert * = $B708, error, "Entry point used by overlay"
         params := $6
         textptr := $6
         textlen := $8
@@ -13119,6 +13138,8 @@ done:   rts
 ;;; ============================================================
 
 .proc draw_dialog_title
+        .assert * = $B723, error, "Entry point used by overlay"
+
         str       := $6
         str_data  := $6
         str_len   := $8
@@ -13164,6 +13185,8 @@ LB76C:  stax    $06
 ;;; Called from ovl2
 
 .proc adjust_case
+        .assert * = $B781, error, "Entry point used by overlay"
+
         ptr := $A
 
         stx     ptr+1
@@ -13206,6 +13229,7 @@ check_alpha:
 ;;; ============================================================
 
 .proc set_port_from_window_id
+        .assert * = $B7B9, error, "Entry point used by overlay"
         sta     getwinport_params2::window_id
         MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
         MGTK_RELAY_CALL MGTK::SetPort, grafport2
@@ -13798,15 +13822,25 @@ LBD33:  rts
 
 ;;; ============================================================
 
-LBD69:  lda     #1
+.proc clear_path_buf2
+        .assert * = $BD69, error, "Entry point used by overlay"
+
+        lda     #1              ; length
         sta     path_buf2
-        lda     str_insertion_point+1
+        lda     str_insertion_point+1 ; IP character
         sta     path_buf2+1
         rts
+.endproc
 
-LBD75:  lda     #$00
+.proc clear_path_buf1
+        .assert * = $BD75, error, "Entry point used by overlay"
+
+        lda     #0              ; length
         sta     path_buf1
         rts
+.endproc
+
+;;; ============================================================
 
 .proc load_aux_from_ptr
         target          := $20
@@ -13992,6 +14026,8 @@ set_fill_white:
         rts
 
 reset_grafport3a:
+        .assert * = $BEB1, error, "Entry point used by overlay"
+
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts

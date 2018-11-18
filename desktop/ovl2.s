@@ -22,15 +22,15 @@ jump_relay              := $A899
 bell                    := $AACE
 set_cursor_watch        := $B3E7
 set_cursor_pointer      := $B403
-LB445                   := $B445 ; ???
+detect_double_click2    := $B445
 LB509                   := $B509 ; ???
 draw_dialog_label       := $B590
 draw_text1              := $B708
 draw_dialog_title       := $B723
 adjust_case             := $B781
 set_port_from_window_id := $B7B9
-LBD69                   := $BD69 ; ???
-LBD75                   := $BD75 ; ???
+clear_path_buf2         := $BD69 ; ???
+clear_path_buf1         := $BD75 ; ???
 reset_state             := $BEB1
 .endscope
 
@@ -73,12 +73,12 @@ L085F:  bit     $D887
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
-        jsr     desktop_main::LBD75
+        jsr     desktop_main::clear_path_buf1
         lda     #$80
         sta     $D8E8
         lda     #$00
         sta     $D8ED
-        jsr     desktop_main::LBD69
+        jsr     desktop_main::clear_path_buf2
         axy_call desktop_main::draw_dialog_label, $03, $B28D
 L08A7:  jsr     desktop_main::prompt_input_loop
         bmi     L08A7
@@ -211,12 +211,12 @@ L0A18:  bit     $D887
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
-        jsr     desktop_main::LBD75
+        jsr     desktop_main::clear_path_buf1
         lda     #$80
         sta     $D8E8
         lda     #$00
         sta     $D8ED
-        jsr     desktop_main::LBD69
+        jsr     desktop_main::clear_path_buf2
         axy_call desktop_main::draw_dialog_label, $03, $B28D
 L0A6A:  jsr     desktop_main::prompt_input_loop
         bmi     L0A6A
@@ -341,7 +341,7 @@ L0BD9:  return  #$FF
 
 L0BDC:  cmp     $D887
         bne     L0C04
-        jsr     desktop_main::LB445
+        jsr     desktop_main::detect_double_click2
         bmi     L0C03
 L0BE6:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_RELAY_CALL MGTK::PaintRect, $AE20
@@ -356,7 +356,7 @@ L0C04:  sta     L0C1E
 L0C0F:  lda     L0C1E
         sta     $D887
         jsr     L0C20
-        jsr     desktop_main::LB445
+        jsr     desktop_main::detect_double_click2
         beq     L0BE6
         rts
 
