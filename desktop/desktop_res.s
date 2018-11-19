@@ -1135,7 +1135,7 @@ dummy_dd_menu:
         DEFINE_MENU_ITEM dummy_dd_item
 
 splash_menu_label:
-        PASCAL_STRING "Apple II DeskTop Version 1.1"
+        PASCAL_STRING .sprintf("Apple II DeskTop Version %d.%d",::VERSION_MAJOR,::VERSION_MINOR)
 
 blank_dd_label:
         PASCAL_STRING " "

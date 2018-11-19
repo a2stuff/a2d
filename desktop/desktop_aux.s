@@ -2923,7 +2923,7 @@ str_about5:  PASCAL_STRING "Authors: Stephane Cavril, Bernard Gallet, Henri Lami
 str_about6:  PASCAL_STRING "Richard Danais and Luc Barthelet"
 str_about7:  PASCAL_STRING "With thanks to: A. Gerard, J. Gerber, P. Pahl, J. Bernard"
 str_about8:  PASCAL_STRING "November 26, 1986"
-str_about9:  PASCAL_STRING "Version 1.1"
+str_about9:  PASCAL_STRING .sprintf("Version %d.%d",::VERSION_MAJOR,::VERSION_MINOR)
 
         ;; "Copy File" dialog strings
 str_copy_title:

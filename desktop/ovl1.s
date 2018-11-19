@@ -31,7 +31,7 @@ menu:   DEFINE_MENU 1
         DEFINE_MENU_ITEM menu_target + (item_label - menu_bar)
 
 menu_label:
-        PASCAL_STRING "       Disk copy version 1.1   "
+        PASCAL_STRING .sprintf("       Disk copy version %d.%d   ",::VERSION_MAJOR,::VERSION_MINOR)
 item_label:
         PASCAL_STRING "Rien"
 .endproc

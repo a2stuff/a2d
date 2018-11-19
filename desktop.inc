@@ -7,6 +7,9 @@ screen_height   := 192
 
 ;;; ============================================================
 
+VERSION_MAJOR = 1
+VERSION_MINOR = 1
+
 DA_FILE_TYPE    := $F1
 
 max_desk_acc_count = 8
