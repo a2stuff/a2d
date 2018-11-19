@@ -620,10 +620,14 @@ rect_D877:
 
 rect_D87F:
         DEFINE_RECT 6,23,344,87
+
+LD887:
         .byte   0
 
 rect_D888:
         DEFINE_RECT 0,0,0,0
+
+LD890:
         .byte   0
 
 the_dos_33_disk_label:
@@ -659,7 +663,8 @@ prompt_ip_flag:
         .byte   0
 
 LD8EC:  .byte   0
-LD8ED:  .byte   0
+use_ovl2_handler_flag:
+        .byte   0
 
 str_insertion_point:
         PASCAL_STRING {GLYPH_INSPT}
@@ -686,6 +691,7 @@ str_files:
 str_file_count:                 ; populated with number of files
         PASCAL_STRING "       "
 
+        ;; This location also used as path buffer by ovl2
 file_count:
         .word   0
 

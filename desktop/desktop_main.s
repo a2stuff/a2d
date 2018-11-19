@@ -11440,7 +11440,7 @@ dialog_param_addr:
         sta     LD8F2
         sta     has_input_field_flag
         sta     LD8F5
-        sta     LD8ED
+        sta     use_ovl2_handler_flag
         sta     cursor_ip_flag
 
         lda     #prompt_insertion_point_blink_count
@@ -11638,19 +11638,19 @@ LA71A:  lda     event_key
         and     #CHAR_MASK
         cmp     #CHAR_LEFT
         bne     LA72E
-        bit     LD8ED
-        bpl     LA72B
+        bit     use_ovl2_handler_flag
+        bpl     :+
         jmp     L0CB8
 
-LA72B:  jmp     LA82B
+:       jmp     LA82B
 
 LA72E:  cmp     #CHAR_RIGHT
         bne     LA73D
-        bit     LD8ED
-        bpl     LA73A
+        bit     use_ovl2_handler_flag
+        bpl     :+
         jmp     L0CD7
 
-LA73A:  jmp     LA83E
+:       jmp     LA83E
 
 LA73D:  cmp     #CHAR_RETURN
         bne     LA749
@@ -11670,7 +11670,7 @@ LA755:  cmp     #CHAR_DELETE
 
 LA75C:  cmp     #CHAR_UP
         bne     LA76B
-        bit     LD8ED
+        bit     use_ovl2_handler_flag
         bmi     LA768
         jmp     LA717
 
@@ -11678,7 +11678,7 @@ LA768:  jmp     L0D14
 
 LA76B:  cmp     #CHAR_DOWN
         bne     LA77A
-        bit     LD8ED
+        bit     use_ovl2_handler_flag
         bmi     LA777
         jmp     LA717
 
@@ -11766,7 +11766,7 @@ LA828:  return  #$FF
 
 LA82B:  lda     has_input_field_flag
         beq     LA83B
-        bit     LD8ED
+        bit     use_ovl2_handler_flag
         bpl     LA838
         jmp     L0CD7
 
@@ -11775,7 +11775,7 @@ LA83B:  return  #$FF
 
 LA83E:  lda     has_input_field_flag
         beq     LA84E
-        bit     LD8ED
+        bit     use_ovl2_handler_flag
         bpl     LA84B
         jmp     L0CB8
 

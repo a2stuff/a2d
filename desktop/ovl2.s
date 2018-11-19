@@ -42,7 +42,7 @@ L0800:  pha
         jmp     L09D9
 
 L080C:  lda     #$00
-        sta     $D8E8
+        sta     has_input_field_flag
         jsr     desktop_main::LB509
         lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
@@ -50,22 +50,22 @@ L080C:  lda     #$00
         axy_call desktop_main::draw_dialog_label, $01, $B257
         jsr     L0D31
         lda     #$FF
-        sta     $D887
+        sta     LD887
 L0832:  copy16  #L0B48, desktop_main::jump_relay+1
         lda     #$80
-        sta     $D8ED
+        sta     use_ovl2_handler_flag
 L0841:  jsr     desktop_main::prompt_input_loop
         bmi     L0841
         pha
         copy16  #$B8F4, desktop_main::jump_relay+1
         lda     #$00
-        sta     $D8F3
-        sta     $D8ED
+        sta     LD8F3
+        sta     use_ovl2_handler_flag
         pla
         beq     L085F
         jmp     L09C2
 
-L085F:  bit     $D887
+L085F:  bit     LD887
         bmi     L0832
         lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
@@ -75,9 +75,9 @@ L085F:  bit     $D887
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         jsr     desktop_main::clear_path_buf1
         lda     #$80
-        sta     $D8E8
+        sta     has_input_field_flag
         lda     #$00
-        sta     $D8ED
+        sta     use_ovl2_handler_flag
         jsr     desktop_main::clear_path_buf2
         axy_call desktop_main::draw_dialog_label, $03, $B28D
 L08A7:  jsr     desktop_main::prompt_input_loop
@@ -97,16 +97,16 @@ L08B7:  lda     path_buf1
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
-        ldx     $D887
+        ldx     LD887
         lda     DEVLST,x
         sta     L09D8
         sta     L09D7
         lda     #$00
-        sta     $D8E8
+        sta     has_input_field_flag
         axy_call desktop_main::draw_dialog_label, $03, $B2AF
         lda     L09D7
         jsr     L1A2D
-        addr_call desktop_main::draw_text1, $D909
+        addr_call desktop_main::draw_text1, file_count
 L0902:  jsr     desktop_main::prompt_input_loop
         bmi     L0902
         beq     L090C
@@ -183,7 +183,7 @@ L09C2:  pha
 L09D7:  .byte   0
 L09D8:  .byte   0
 L09D9:  lda     #$00
-        sta     $D8E8
+        sta     has_input_field_flag
         jsr     desktop_main::LB509
         lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
@@ -193,16 +193,16 @@ L09D9:  lda     #$00
         jsr     desktop_main::draw_dialog_label
         jsr     L0D31
         lda     #$FF
-        sta     $D887
+        sta     LD887
         copy16  #L0B48, desktop_main::jump_relay+1
         lda     #$80
-        sta     $D8ED
+        sta     use_ovl2_handler_flag
 L0A0E:  jsr     desktop_main::prompt_input_loop
         bmi     L0A0E
         beq     L0A18
         jmp     L0B31
 
-L0A18:  bit     $D887
+L0A18:  bit     LD887
         bmi     L0A0E
         copy16  #$A898, desktop_main::jump_relay+1
         lda     winfo_alert_dialog
@@ -213,9 +213,9 @@ L0A18:  bit     $D887
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         jsr     desktop_main::clear_path_buf1
         lda     #$80
-        sta     $D8E8
+        sta     has_input_field_flag
         lda     #$00
-        sta     $D8ED
+        sta     use_ovl2_handler_flag
         jsr     desktop_main::clear_path_buf2
         axy_call desktop_main::draw_dialog_label, $03, $B28D
 L0A6A:  jsr     desktop_main::prompt_input_loop
@@ -236,8 +236,8 @@ L0A7A:  lda     path_buf1
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
         lda     #$00
-        sta     $D8E8
-        ldx     $D887
+        sta     has_input_field_flag
+        ldx     LD887
         lda     DEVLST,x
         sta     L0B47
         sta     L0B46
@@ -245,7 +245,7 @@ L0A7A:  lda     path_buf1
         lda     L0B46
         and     #$F0
         jsr     L1A2D
-        addr_call desktop_main::draw_text1, $D909
+        addr_call desktop_main::draw_text1, file_count
 L0AC7:  jsr     desktop_main::prompt_input_loop
         bmi     L0AC7
         beq     L0AD1
@@ -329,17 +329,17 @@ L0BBB:  lda     L0C1F
         asl     a
         clc
         adc     screentowindow_windowy
-        cmp     $D890
+        cmp     LD890
         bcc     L0BDC
-        lda     $D887
+        lda     LD887
         bmi     L0BD9
-        lda     $D887
+        lda     LD887
         jsr     L0C20
         lda     #$FF
-        sta     $D887
+        sta     LD887
 L0BD9:  return  #$FF
 
-L0BDC:  cmp     $D887
+L0BDC:  cmp     LD887
         bne     L0C04
         jsr     desktop_main::detect_double_click2
         bmi     L0C03
@@ -350,11 +350,11 @@ L0BE6:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; flash the button
 L0C03:  rts
 
 L0C04:  sta     L0C1E
-        lda     $D887
+        lda     LD887
         bmi     L0C0F
         jsr     L0C20
 L0C0F:  lda     L0C1E
-        sta     $D887
+        sta     LD887
         jsr     L0C20
         jsr     desktop_main::detect_double_click2
         beq     L0BE6
@@ -396,31 +396,31 @@ L0C5B:  asl     L0CA9
         rts
 
 L0CA9:  .byte   0
-L0CAA:  lda     $D887
+L0CAA:  lda     LD887
         bmi     L0CB7
         jsr     L0C20
         lda     #$FF
-        sta     $D887
+        sta     LD887
 L0CB7:  rts
 
-        lda     $D887
+        lda     LD887
         bpl     L0CC1
         lda     #$00
         beq     L0CCE
 L0CC1:  clc
         adc     #$04
-        cmp     $D890
+        cmp     LD890
         bcs     L0CD4
         pha
         jsr     L0CAA
         pla
-L0CCE:  sta     $D887
+L0CCE:  sta     LD887
         jsr     L0C20
 L0CD4:  return  #$FF
 
-        lda     $D887
+        lda     LD887
         bpl     L0CE6
-        lda     $D890
+        lda     LD890
         lsr     a
         lsr     a
         asl     a
@@ -433,45 +433,45 @@ L0CE6:  sec
         pha
         jsr     L0CAA
         pla
-L0CF0:  sta     $D887
+L0CF0:  sta     LD887
         jsr     L0C20
 L0CF6:  return  #$FF
 
-        lda     $D887
+        lda     LD887
         clc
         adc     #$01
-        cmp     $D890
+        cmp     LD890
         bcc     L0D06
         lda     #$00
 L0D06:  pha
         jsr     L0CAA
         pla
-        sta     $D887
+        sta     LD887
         jsr     L0C20
         return  #$FF
 
-        lda     $D887
+        lda     LD887
         bmi     L0D1E
         sec
         sbc     #$01
         bpl     L0D23
-L0D1E:  ldx     $D890
+L0D1E:  ldx     LD890
         dex
         txa
 L0D23:  pha
         jsr     L0CAA
         pla
-        sta     $D887
+        sta     LD887
         jsr     L0C20
         return  #$FF
 
 L0D31:  ldx     DEVCNT
         inx
-        stx     $D890
+        stx     LD890
         lda     #$00
         sta     L0D8C
 L0D3D:  lda     L0D8C
-        cmp     $D890
+        cmp     LD890
         bne     L0D46
         rts
 
@@ -940,7 +940,7 @@ L113C:  dex
 L114B:  ora     ($30,x)
         plp
         bit     $20
-        asl     $1C1D,x
+        asl     read_buffer + $1D,x
         .byte   $1C
         .byte   $1C
         .byte   $1C
@@ -948,7 +948,7 @@ L114B:  ora     ($30,x)
 L1157:  bvs     L1185
         rol     $22
         .byte   $1F
-        asl     $1C1D,x
+        asl     read_buffer + $1D,x
         .byte   $1C
         .byte   $1C
         .byte   $1C
@@ -1065,8 +1065,10 @@ L1239:  .byte   $00
 
 ;;; ============================================================
 
+        read_buffer := $1C00
+
         DEFINE_ON_LINE_PARAMS on_line_params,, $1C00
-        DEFINE_READ_BLOCK_PARAMS read_block_params, $1C00, 0
+        DEFINE_READ_BLOCK_PARAMS read_block_params, read_buffer, 0
         DEFINE_WRITE_BLOCK_PARAMS write_block_params, prodos_loader_blocks, 0
 
 L124A:  .byte   $00
@@ -1446,12 +1448,12 @@ L192E:  sta     read_block_params::unit_num
         sta     read_block_params::block_num+1
         yax_call MLI_RELAY, READ_BLOCK, read_block_params
         bne     L1959
-        lda     $1C01
+        lda     read_buffer + 1
         cmp     #$E0
         beq     L194E
         jmp     L1986
 
-L194E:  lda     $1C02
+L194E:  lda     read_buffer + 2
         cmp     #$70
         beq     L197E
         cmp     #$60
@@ -1466,17 +1468,17 @@ L1959:  lda     read_block_params::unit_num
         sta     the_disk_in_slot_label,x
         ldx     the_disk_in_slot_label
 L1974:  lda     the_disk_in_slot_label,x
-        sta     $D909,x
+        sta     file_count,x
         dex
         bpl     L1974
         rts
 
-L197E:  addr_call L19C8, $D909
+L197E:  addr_call L19C8, file_count
         rts
 
 L1986:  cmp     #$A5
         bne     L1959
-        lda     $1C02
+        lda     read_buffer + 2
         cmp     #$27
         bne     L1959
         lda     read_block_params::unit_num
@@ -1489,7 +1491,7 @@ L1986:  cmp     #$A5
         sta     the_dos_33_disk_label,x
         ldx     the_dos_33_disk_label
 L19AC:  lda     the_dos_33_disk_label,x
-        sta     $D909,x
+        sta     file_count,x
         dex
         bpl     L19AC
         rts
@@ -1511,34 +1513,34 @@ L19C1:  and     #$80
         rts
 
 L19C8:  copy16  #$0002, read_block_params::block_num
-        yax_call MLI_RELAY, READ_BLOCK, $123E
+        yax_call MLI_RELAY, READ_BLOCK, read_block_params
         beq     L19F7
-        copy16  #$2004, $D909
+        copy16  #$2004, file_count
         copy16  #$203A, pos_D90B
         lda     #$3F
         sta     pos_D90B+1
         rts
 
-L19F7:  lda     $1C06
+L19F7:  lda     read_buffer + 6
         tax
-L19FB:  lda     $1C06,x
+L19FB:  lda     read_buffer + 6,x
 L1A00           := * + 2
-        sta     $D909,x
+        sta     file_count,x
 L1A01:  dex
 L1A02:  bpl     L19FB
-L1A04:  inc     $D909
-        ldx     $D909
+L1A04:  inc     file_count
+        ldx     file_count
         lda     #$3A
-        sta     $D909,x
-        inc     $D909
-        ldx     $D909
+        sta     file_count,x
+        inc     file_count
+        ldx     file_count
         lda     #$20
-        sta     $D909,x
-        inc     $D909
-        ldx     $D909
+        sta     file_count,x
+        inc     file_count
+        ldx     file_count
         lda     #$3F
-L1A22:  sta     $D909,x
-        addr_call desktop_main::adjust_case, $D909
+L1A22:  sta     file_count,x
+        addr_call desktop_main::adjust_case, file_count
         rts
 
 ;;; ============================================================
@@ -1546,24 +1548,24 @@ L1A22:  sta     $D909,x
 L1A2D:  sta     on_line_params::unit_num
         yax_call MLI_RELAY, ON_LINE, on_line_params
         bne     L1A6D
-        lda     $1C00
+        lda     read_buffer
         and     #$0F
         beq     L1A6D
-        sta     $1C00
+        sta     read_buffer
         tax
-L1A46:  lda     $1C00,x
-        sta     $D909,x
+L1A46:  lda     read_buffer,x
+        sta     file_count,x
         dex
         bpl     L1A46
-        inc     $D909
-        ldx     $D909
+        inc     file_count
+        ldx     file_count
         lda     #$20
-        sta     $D909,x
-        inc     $D909
-        ldx     $D909
+        sta     file_count,x
+        inc     file_count
+        ldx     file_count
         lda     #$3F
-        sta     $D909,x
-        addr_call desktop_main::adjust_case, $D909  ; Adjust case ("/HD/GAMES" -> "/Hd/Games")
+        sta     file_count,x
+        addr_call desktop_main::adjust_case, file_count  ; Adjust case ("/HD/GAMES" -> "/Hd/Games")
         rts
 
 L1A6D:  lda     on_line_params::unit_num
