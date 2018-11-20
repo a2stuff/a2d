@@ -1,38 +1,9 @@
-        .setcpu "6502"
-
-        .include "apple2.inc"
-        .include "../inc/apple2.inc"
-        .include "../inc/prodos.inc"
-        .include "../mgtk.inc"
-        .include "../desktop.inc"
-        .include "../macros.inc"
-        .include "out/desktop_res.inc"
-
 ;;; ============================================================
 ;;; Overlay for Format/Erase
 ;;; ============================================================
 
-        .org $800
 .proc format_erase_overlay
-
-;;; Entry points in desktop_main
-.scope desktop_main
-prompt_input_loop       := $A567
-jump_relay              := $A899
-bell                    := $AACE
-set_cursor_watch        := $B3E7
-set_cursor_pointer      := $B403
-detect_double_click2    := $B445
-LB509                   := $B509 ; ???
-draw_dialog_label       := $B590
-draw_text1              := $B708
-draw_dialog_title       := $B723
-adjust_case             := $B781
-set_port_from_window_id := $B7B9
-clear_path_buf2         := $BD69 ; ???
-clear_path_buf1         := $BD75 ; ???
-reset_state             := $BEB1
-.endscope
+        .org $800
 
 L0800:  pha
         jsr     desktop_main::set_cursor_pointer
@@ -174,7 +145,7 @@ L09B8:  jsr     desktop_main::prompt_input_loop
 
 L09C2:  pha
         jsr     desktop_main::set_cursor_pointer
-        jsr     desktop_main::reset_state
+        jsr     desktop_main::reset_grafport3a
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_alert_dialog
         ldx     L09D8
         pla
@@ -282,7 +253,7 @@ L0B2A:  jsr     desktop_main::prompt_input_loop
         beq     L0AD1
 L0B31:  pha
         jsr     desktop_main::set_cursor_pointer
-        jsr     desktop_main::reset_state
+        jsr     desktop_main::reset_grafport3a
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_alert_dialog
         ldx     L0B47
         pla

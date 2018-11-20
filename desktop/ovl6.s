@@ -1,13 +1,9 @@
-        .setcpu "6502"
-
-;;; NB: Compiled as part of ovl34567.s
-
 ;;; ============================================================
 ;;; Overlay for File Delete
 ;;; ============================================================
 
-        .org $7000
 .proc file_delete_overlay
+        .org $7000
 
 L7000:  jsr     common_overlay::create_common_dialog
         jsr     L704D

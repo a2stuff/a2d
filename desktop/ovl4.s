@@ -1,13 +1,9 @@
-        .setcpu "6502"
-
-;;; NB: Compiled as part of ovl34567.s
-
 ;;; ============================================================
 ;;; Overlay for Common Routines (Selector, File Copy/Delete)
 ;;; ============================================================
 
-        .org $5000
 .proc common_overlay
+        .org $5000
 
 ;;; ============================================================
 
@@ -259,7 +255,7 @@ L531F:  bit     L5105
         beq     L5341
         cmp     #MGTK::Ctl::vertical_scroll_bar
         bne     L5340
-        lda     winfo_entrydlg_file_picker_vscroll
+        lda     winfo_entrydlg_file_picker::vscroll
         and     #$01
         beq     L5340
         jmp     L5469
@@ -269,7 +265,7 @@ L5340:  rts
 L5341:  lda     winfo_entrydlg_file_picker
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        add16   screentowindow_windowy, winfo_entrydlg_file_picker_cliprect+2, screentowindow_windowy
+        add16   screentowindow_windowy, winfo_entrydlg_file_picker::cliprect+2, screentowindow_windowy
         lsr16   screentowindow_windowy
         lsr16   screentowindow_windowy
         lsr16   screentowindow_windowy
@@ -391,7 +387,7 @@ L5488:  lda     #MGTK::Ctl::vertical_scroll_bar
         jsr     L606D
         rts
 
-L54BA:  lda     winfo_entrydlg_file_picker_vthumbpos
+L54BA:  lda     winfo_entrydlg_file_picker::vthumbpos
         sec
         sbc     #$09
         bpl     L54C4
@@ -405,7 +401,7 @@ L54C4:  sta     updatethumb_thumbpos
         jsr     L606D
         rts
 
-L54DF:  lda     winfo_entrydlg_file_picker_vthumbpos
+L54DF:  lda     winfo_entrydlg_file_picker::vthumbpos
         clc
         adc     #$09
         cmp     $177F
@@ -421,7 +417,7 @@ L54EF:  sta     updatethumb_thumbpos
         jsr     L606D
         rts
 
-L550A:  lda     winfo_entrydlg_file_picker_vthumbpos
+L550A:  lda     winfo_entrydlg_file_picker::vthumbpos
         bne     L5510
         rts
 
@@ -437,8 +433,8 @@ L5510:  sec
         jsr     L555F
         jmp     L550A
 
-L5533:  lda     winfo_entrydlg_file_picker_vthumbpos
-        cmp     winfo_entrydlg_file_picker_vthumbmax
+L5533:  lda     winfo_entrydlg_file_picker::vthumbpos
+        cmp     winfo_entrydlg_file_picker::vthumbmax
         bne     L553C
         rts
 
@@ -1604,7 +1600,7 @@ L606C:  .byte   0
 
 L606D:  lda     winfo_entrydlg_file_picker
         jsr     set_port_for_window
-        MGTK_RELAY_CALL MGTK::PaintRect, winfo_entrydlg_file_picker_cliprect
+        MGTK_RELAY_CALL MGTK::PaintRect, winfo_entrydlg_file_picker::cliprect
         lda     #$10
         sta     picker_entry_pos
         lda     #$08
@@ -1720,7 +1716,7 @@ L6163:  sta     L61B0
         rts
 
 L6181:  lda     $177F
-        sta     winfo_entrydlg_file_picker_vthumbmax
+        sta     winfo_entrydlg_file_picker::vthumbmax
         .assert MGTK::Ctl::vertical_scroll_bar = MGTK::activatectl_activate, error, "need to match"
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     activatectl_which_ctl
@@ -1801,15 +1797,15 @@ L624A:  ldx     #$00
         rol     L6273
         asl     a
         rol     L6273
-        sta     winfo_entrydlg_file_picker_cliprect+2
+        sta     winfo_entrydlg_file_picker::cliprect+2
         ldx     L6273
-        stx     winfo_entrydlg_file_picker_cliprect+3
+        stx     winfo_entrydlg_file_picker::cliprect+3
         clc
         adc     #70
-        sta     winfo_entrydlg_file_picker_cliprect+6
+        sta     winfo_entrydlg_file_picker::cliprect+6
         lda     L6273
         adc     #0
-        sta     winfo_entrydlg_file_picker_cliprect+7
+        sta     winfo_entrydlg_file_picker::cliprect+7
         rts
 
 L6273:  .byte   0
@@ -1845,7 +1841,7 @@ L62C7:  .byte   0
 ;;; ============================================================
 
 .proc set_port_for_window
-        sta     getwinport_params2_window_id
+        sta     getwinport_params2::window_id
         MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
         MGTK_RELAY_CALL MGTK::SetPort, grafport2
         rts

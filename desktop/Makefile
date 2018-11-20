@@ -7,8 +7,7 @@ OUTDIR = out
 
 HEADERS = $(wildcard ../*.inc) $(wildcard ../inc/*.inc) $(wildcard *.inc)
 
-SEGMENTS = loader mgtk desktop invoker \
-        ovl1 ovl1a ovl1b ovl1c ovl2 ovl34567
+SEGMENTS = loader mgtk desktop
 
 TARGETS = $(OUTDIR)/DESKTOP2.built
 
@@ -25,17 +24,10 @@ clean:
 	rm -f $(OUTDIR)/*.built
 	rm -f $(OUTDIR)/*.sys
 
-$(OUTDIR)/desktop_res.inc: desktop_res.s desktop_res_builder.s res/build_res_inc.pl
-	$(CC65)/ca65 $(CAFLAGS) --listing $(OUTDIR)/desktop_res.list -o $@ desktop_res_builder.s
-	cat $(OUTDIR)/desktop_res.list | res/build_res_inc.pl > $@
-
-$(OUTDIR)/desktop.o: desktop.s $(HEADERS) desktop_aux.s desktop_lc.s desktop_main.s desktop_res.s
+$(OUTDIR)/desktop.o: desktop.s $(HEADERS) desktop_* ovl*.s
 	$(CC65)/ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
-$(OUTDIR)/ovl34567.o: ovl34567.s $(HEADERS) $(OUTDIR)/desktop_res.inc ovl3.s ovl4.s ovl5.s ovl6.s ovl7.s
-	$(CC65)/ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
-
-$(OUTDIR)/%.o: %.s $(HEADERS) $(OUTDIR)/desktop_res.inc
+$(OUTDIR)/%.o: %.s $(HEADERS)
 	$(CC65)/ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
 # Built DeskTop segments

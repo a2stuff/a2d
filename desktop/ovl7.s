@@ -1,13 +1,9 @@
-        .setcpu "6502"
-
-;;; NB: Compiled as part of ovl34567.s
-
 ;;; ============================================================
 ;;; Overlay for Selector (part of it, anyway)
 ;;; ============================================================
 
-        .org $7000
 .proc selector_overlay
+        .org $7000
 
 L7000:  stx     L73A9
         sty     L73AA

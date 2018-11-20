@@ -1,11 +1,9 @@
-       .setcpu "6502"
+;;; ============================================================
+;;; Overlay for Disk Copy - $D000 - $F1FF (file 3/4)
+;;; ============================================================
 
-        .include "apple2.inc"
-        .include "../macros.inc"
-        .include "../mgtk.inc"
-        .include "../desktop.inc"
-        .include "../inc/apple2.inc"
-        .include "../inc/prodos.inc"
+.proc disk_copy_overlay3
+        .org $D000
 
 L0000           := $0000
 L0080           := $0080
@@ -32,8 +30,6 @@ L51ED           := $51ED
         yax_call MGTK_RELAY2, call, 0
     .endif
 .endmacro
-
-        .org $D000
 
         jmp     LD5E1
 
@@ -3304,3 +3300,5 @@ LF1F5:  pla
         lda     $C000
         .byte   $2C
         .byte   $10
+
+.endproc

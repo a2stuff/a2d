@@ -1,18 +1,9 @@
-        .setcpu "6502"
-
-        .include "apple2.inc"
-        .include "../inc/apple2.inc"
-        .include "../inc/prodos.inc"
-        .include "../mgtk.inc"
-        .include "../desktop.inc"
-        .include "../macros.inc"
-
 ;;; ============================================================
-;;; Overlay for Disk Copy
+;;; Overlay for Disk Copy - $0800 - $09FF (file 1/4)
 ;;; ============================================================
 
-        .org $800
 .proc disk_copy_overlay
+        .org $800
 
         jmp     start
 

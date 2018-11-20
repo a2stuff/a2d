@@ -1,9 +1,9 @@
-        .setcpu "6502"
+;;; ============================================================
+;;; Overlay for Disk Copy - $0800 - $12FF (file 4/4)
+;;; ============================================================
 
-        .include "apple2.inc"
-        .include "../macros.inc"
-        .include "../inc/apple2.inc"
-        .include "../inc/prodos.inc"
+.proc disk_copy_overlay4
+        .org $800
 
 L0006           := $0006
 LDAEE           := $DAEE
@@ -17,8 +17,6 @@ LE6AB           := $E6AB
 LE6FD           := $E6FD
 LE766           := $E766
 LE7A8           := $E7A8
-
-        .org $800
 
 
 .macro exit_with_result arg
@@ -1490,3 +1488,5 @@ L12DA:  lda     $D133
         sta     $D12D
         jsr     LE137
         yax_call LDBE0, $46, $D12D
+
+.endproc

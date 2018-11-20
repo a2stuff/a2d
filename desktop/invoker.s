@@ -1,9 +1,3 @@
-        .setcpu "6502"
-
-        .include "apple2.inc"
-        .include "../inc/apple2.inc"
-        .include "../inc/prodos.inc"
-        .include "../macros.inc"
 
 ;;; ============================================================
 ;;; Segment loaded into MAIN $290-$3EF

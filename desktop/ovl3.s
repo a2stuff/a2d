@@ -1,21 +1,9 @@
-        .setcpu "6502"
-
-;;; NB: Compiled as part of ovl34567.s
-
 ;;; ============================================================
 ;;; Overlay for Selector (part of it, anyway)
 ;;; ============================================================
 
-        .org $9000
 .proc selector_overlay2
-
-;;; Entry points in desktop_main
-launch_dialog           := $A500
-set_cursor_watch        := $B3E7
-set_cursor_pointer      := $B403
-detect_double_click2    := $B445
-draw_text1              := $B708
-set_port_from_window_id := $B7B9
+        .org $9000
 
         sta     L938E
         ldx     #$FF
@@ -165,14 +153,14 @@ L913F:  cmp     #$04
 
 L9146:  lda     L938D
         jsr     L979D
-        jsr     set_cursor_watch
+        jsr     desktop_main::set_cursor_watch
         lda     L938D
         jsr     L9A97
         beq     L915D
-        jsr     set_cursor_pointer
+        jsr     desktop_main::set_cursor_pointer
         jmp     L933F
 
-L915D:  jsr     set_cursor_pointer
+L915D:  jsr     desktop_main::set_cursor_pointer
         lda     #$FF
         sta     L938D
         jsr     L99F5
@@ -304,13 +292,13 @@ L926D:  ldy     L9104
         beq     L927B
         jmp     L936E
 
-L927B:  jsr     set_cursor_pointer
+L927B:  jsr     desktop_main::set_cursor_pointer
         jmp     L900F
 
 L9281:  .byte   0
 L9282:  lda     L938D
         jsr     L979D
-        jsr     set_cursor_watch
+        jsr     desktop_main::set_cursor_watch
         lda     L938D
         jsr     L9BD5
         stax    $06
@@ -384,7 +372,7 @@ L931B:  iny
         lda     L938A
         sta     buf_win_path
         jsr     JUMP_TABLE_LAUNCH_FILE
-        jsr     set_cursor_pointer
+        jsr     desktop_main::set_cursor_pointer
         lda     #$FF
         sta     L938D
         jmp     L936E
@@ -417,7 +405,7 @@ L938F:  .byte   0
 
 L9390:  MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entry_picker
         lda     winfo_entry_picker
-        jsr     set_port_from_window_id
+        jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, rect_D6D8
         MGTK_RELAY_CALL MGTK::FrameRect, rect_D6E0
@@ -507,11 +495,11 @@ L94A7:  .byte   0
 L94A8:  .byte   0
 
 L94A9:  MGTK_RELAY_CALL MGTK::MoveTo, pos_D708
-        addr_call draw_text1, $AE40
+        addr_call desktop_main::draw_text1, $AE40
         rts
 
 L94BA:  MGTK_RELAY_CALL MGTK::MoveTo, pos_D70C
-        addr_call draw_text1, $AE96
+        addr_call desktop_main::draw_text1, $AE96
         rts
 
 L94CB:  stax    $06
@@ -650,7 +638,7 @@ L9678:  lda     findwindow_window_id
         return  #$FF
 
 L9683:  lda     winfo_entry_picker
-        jsr     set_port_from_window_id
+        jsr     desktop_main::set_port_from_window_id
         lda     winfo_entry_picker
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -717,7 +705,7 @@ L976A:  cmp     L938D
         lda     L979C
         sta     L938D
         jsr     L979D
-L977E:  jsr     detect_double_click2
+L977E:  jsr     desktop_main::detect_double_click2
         rts
 
 L9782:  sec
@@ -1257,7 +1245,7 @@ L9BFC:  jsr     L9DA7
         rts
 
 L9C09:  sta     warning_dialog_num
-        yax_call launch_dialog, $0C, warning_dialog_num
+        yax_call desktop_main::launch_dialog, $0C, warning_dialog_num
         rts
 
         DEFINE_OPEN_PARAMS open_params, $1C00, $800
