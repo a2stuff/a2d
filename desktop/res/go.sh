@@ -5,6 +5,10 @@
 set -e
 source "../res/util.sh"
 
+function stats {
+    echo "$(printf '%-15s' $1)""$(../res/stats.pl < $1)"
+}
+
 #do_make clean
 do_make all
 
