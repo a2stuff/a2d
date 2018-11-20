@@ -22,7 +22,7 @@ do_make all
 echo "Verifying diffs:"
 cecho yellow "calculator N/A - patches applied"
 cecho yellow "show.text.file N/A - patches applied"
-verify "date"
+cecho yellow "date N/A - patches applied"
 verify "puzzle"
 verify "sort.directory"
 

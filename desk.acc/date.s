@@ -22,7 +22,7 @@ stash_stack:  .byte   $00
 ;;; MLI Call Param Blocks
 
 filename:
-        PASCAL_STRING "MD.SYSTEM"
+        PASCAL_STRING "DESKTOP.SYSTEM"
 
         DEFINE_OPEN_PARAMS open_params, filename, $900
         DEFINE_SET_MARK_PARAMS set_mark_params, 3
@@ -66,7 +66,7 @@ write_buffer:
 .endproc
 
 ;;; ============================================================
-;;; Write date into MD.SYSTEM file and exit the DA
+;;; Write date into DESKTOP.SYSTEM file and exit the DA
 
 .proc save_date_and_exit
         sta     ALTZPON
