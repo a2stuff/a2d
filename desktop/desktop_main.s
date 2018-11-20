@@ -464,9 +464,9 @@ flag:   .byte   $00
         ;; Handle accelerator keys
 handle_keydown:
         lda     event_modifiers
-        bne     :+              ; either OA or CA ?
+        bne     :+              ; either OA or SA ?
         jmp     menu_accelerators           ; nope
-:       cmp     #3              ; both OA + CA ?
+:       cmp     #3              ; both OA + SA ?
         bne     :+              ; nope
         rts
 

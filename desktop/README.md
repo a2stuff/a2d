@@ -53,7 +53,7 @@ moving them to the appropriate destination in aux/banked/main memory.
 There's fourth chunk of code, which expects to live at $280 so it
 can't co-exist with the Invoker; it may be temporary code, as there is
 no sign that it is ever moved into place. It's also unclear how it
-would be hooked in. The routine detects OA+CA+P and prints the DHR
+would be hooked in. The routine detects OA+SA+P and prints the DHR
 screen to an ImageWriter II printer attached to Slot 1. (This may have
 been used to produce screenshots during development for manuals.)
 
