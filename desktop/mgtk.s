@@ -436,7 +436,7 @@ param_lengths:
         PARAM_DEFN  3, $82, 0                ; $1F SetUserHook
         PARAM_DEFN  2, $82, 0                ; $20 AttachDriver
         PARAM_DEFN  2, $82, 0                ; $21 ScaleMouse
-        PARAM_DEFN  1, $82, 0                ; $22 KeyboardMouse
+        PARAM_DEFN  0, $00, 0                ; $22 KeyboardMouse
         PARAM_DEFN  0, $00, 0                ; $23 GetIntHandler
 
         ;; Cursor Manager
@@ -485,9 +485,9 @@ param_lengths:
 
         ;; Control Manager
         PARAM_DEFN  4, current_penloc, 0     ; $48 FindControl
-        PARAM_DEFN  3, $82, 0                ; $49 SetCtlMax
+        PARAM_DEFN  2, $82, 0                ; $49 SetCtlMax
         PARAM_DEFN  5, $82, 0                ; $4A TrackThumb
-        PARAM_DEFN  3, $8C, 0                ; $4B UpdateThumb
+        PARAM_DEFN  2, $8C, 0                ; $4B UpdateThumb
         PARAM_DEFN  2, $8C, 0                ; $4C ActivateCtl
 
         ;; Extra Calls
