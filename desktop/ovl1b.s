@@ -1633,7 +1633,7 @@ LDF81:  lda     $BF33,x
 LDF90:  dec     $BF31
         rts
 
-        inc     $BF31
+LDF94:  inc     $BF31
         ldx     $BF31
         lda     #$BF
         sta     $BF32,x
@@ -2358,7 +2358,7 @@ LE694:  lda     winfo_dialog::window_id
         addr_call draw_text, str_escape_stop_copy
         rts
 
-        lda     winfo_dialog::window_id
+LE6AB:  lda     winfo_dialog::window_id
         jsr     LE137
         copy16  #$800A, LE6FB
 LE6BB:  dec     LE6FB
@@ -2380,7 +2380,8 @@ LE6F1:  MGTK_RELAY_CALL2 MGTK::SetTextBG, $D35A
 LE6FB:  .byte   0
 LE6FC:  .byte   0
 LE6FD:  stx     LE765
-        cmp     #$2B
+
+LE766:  cmp     #$2B
         bne     LE71A
         jsr     L127E
         lda     #$05
@@ -2440,7 +2441,7 @@ LE792:  lda     $1C00,y
         lda     #$00
         rts
 
-        sta     $06
+LE7A8:  sta     $06
         sta     $08
         stx     $07
         stx     $09

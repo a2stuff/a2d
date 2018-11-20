@@ -5,20 +5,6 @@
 .proc disk_copy_overlay4
         .org $800
 
-L0006           := $0006
-LDAEE           := $DAEE
-LDB55           := $DB55
-LDBE0           := $DBE0
-LDE9F           := $DE9F
-LDF94           := $DF94
-LE0FE           := $E0FE
-LE137           := $E137
-LE6AB           := $E6AB
-LE6FD           := $E6FD
-LE766           := $E766
-LE7A8           := $E7A8
-
-
 .macro exit_with_result arg
         lda     #arg
         jmp     exit
@@ -666,7 +652,7 @@ params: .addr   0
 
 ;;; ============================================================
 
-        jsr     LDF94
+        jsr     disk_copy_overlay3::LDF94
         sta     ALTZPOFF
         lda     ROMIN2
         sta     DHIRESOFF
@@ -691,7 +677,7 @@ params: .addr   0
         lda     $D3F7,x
         jsr     L0D26
         ldy     #$FF
-        lda     (L0006),y
+        lda     ($06),y
         beq     L0CCC
         cmp     #$FF
         bne     L0CD3
@@ -702,13 +688,13 @@ L0CCC:  lda     L0CEC
 L0CD3:  lda     L0CEC
         jsr     L0D26
         ldy     #$FF
-        lda     (L0006),y
-        sta     L0006
+        lda     ($06),y
+        sta     $06
         lda     #$03
         sta     $42
         lda     L0CEC
         sta     $43
-        jmp     (L0006)
+        jmp     ($06)
 
         rts
 
@@ -722,19 +708,19 @@ L0CEC:  .byte   0
         jsr     L0D26           ; Point $06 at $Cn00
 
         ldy     #$07            ; Check firmware bytes
-        lda     (L0006),y       ; $Cn07 = $00 ??
+        lda     ($06),y       ; $Cn07 = $00 ??
         bne     done
 
         ldy     #$FB
-        lda     (L0006),y       ; $CnFB = $7F ??
+        lda     ($06),y       ; $CnFB = $7F ??
         and     #$7F
         bne     done
 
         ldy     #$FF
-        lda     (L0006),y
+        lda     ($06),y
         clc
         adc     #3        ; Locate dispatch routine (offset $CnFF + 3)
-        sta     L0006
+        sta     $06
 
         lda     L0D24
         jsr     L0D51
@@ -748,7 +734,7 @@ L0CEC:  .byte   0
 done:   rts
 
 smartport_call:
-        jmp     (L0006)
+        jmp     ($06)
 
 .proc control_params
 param_count:    .byte   3
@@ -786,7 +772,7 @@ L0D34:  stx     load_addr
         lda     $BF00           ; self-modified
         sta     $07
         lda     #$00
-        sta     L0006
+        sta     $06
         rts
 
 L0D50:  .byte   0
@@ -830,8 +816,8 @@ L0D8A:  lda     #$81
         sta     $D44D
         rts
 
-L0D90:  addr_call LDE9F, $1300
-        addr_call LE0FE, $1300
+L0D90:  addr_call disk_copy_overlay3::LDE9F, $1300
+        addr_call disk_copy_overlay3::adjust_case, $1300
         lda     #$C0
         sta     $D44D
         rts
@@ -869,37 +855,37 @@ L0DB5:  lda     #$14
 L0DF6:  lda     #$FF
         clc
         adc     $D427
-        sta     L0006
+        sta     $06
         lda     #$13
         adc     $D428
         sta     $07
         ldy     #$00
 L0E07:  lda     #$00
-        sta     (L0006),y
-        dec     L0006
-        lda     L0006
+        sta     ($06),y
+        dec     $06
+        lda     $06
         cmp     #$FF
         bne     L0E15
         dec     $07
 L0E15:  lda     $07
         cmp     #$14
         bne     L0E07
-        lda     L0006
+        lda     $06
         cmp     #$00
         bne     L0E07
         lda     #$00
-        sta     (L0006),y
+        sta     ($06),y
         lda     $D428
         cmp     #$02
         bcs     L0E2D
         rts
 
 L0E2D:  lda     #$14
-        sta     L0006
+        sta     $06
         lda     $D428
         pha
-L0E35:  inc     L0006
-        inc     L0006
+L0E35:  inc     $06
+        inc     $06
         pla
         sec
         sbc     #$02
@@ -909,7 +895,7 @@ L0E35:  inc     L0006
         jmp     L0E35
 
 L0E46:  pla
-L0E47:  lda     L0006
+L0E47:  lda     $06
         jsr     L1133
         rts
 
@@ -1000,7 +986,7 @@ L0F1A:  lda     #$07
 L0F2A:  lda     $C000
         cmp     #$9B
         bne     L0F37
-        jsr     LE6AB
+        jsr     disk_copy_overlay3::LE6AB
         jmp     L0F6F
 
 L0F37:  bit     L0FE4
@@ -1061,11 +1047,11 @@ L0FAF:  jsr     L120C
 
 L0FB7:  bit     L0FE6
         bmi     L0FC4
-        jsr     LE766
+        jsr     disk_copy_overlay3::LE766
         bmi     L0F6F
         jmp     L0F2A
 
-L0FC4:  jsr     LE7A8
+L0FC4:  jsr     disk_copy_overlay3::LE7A8
         bmi     L0F6F
         jmp     L0F2A
 
@@ -1122,12 +1108,12 @@ L1018:  lda     $D422
 L102A:  lda     #$00
         clc
         adc     $D421
-        sta     L0006
+        sta     $06
         lda     #$14
         adc     $D422
         sta     $07
         ldy     #$00
-        lda     (L0006),y
+        lda     ($06),y
         ldx     $D423
         cpx     #$00
         beq     L1048
@@ -1237,13 +1223,13 @@ L10F3:
 ;;; ============================================================
 
 L10FB:  lda     #$14
-        sta     L0006
+        sta     $06
         lda     #$00
         sta     L111E
-L1104:  lda     L0006
+L1104:  lda     $06
         jsr     L111F
-        inc     L0006
-        inc     L0006
+        inc     $06
+        inc     $06
         inc     L111E
         inc     L111E
         lda     L111E
@@ -1301,12 +1287,12 @@ L1160:  stax    block_params::data_buffer
 L1166:  jsr     L12AF
         beq     L1174
         ldx     #$00
-        jsr     LE6FD
+        jsr     disk_copy_overlay3::LE6FD
         bmi     L1174
         bne     L1166
 L1174:  rts
 
-L1175:  sta     L0006
+L1175:  sta     $06
         sta     $08
         stx     $07
         stx     $09
@@ -1315,7 +1301,7 @@ L1175:  sta     L0006
 L1189:  jsr     L12AF
         beq     L119A
         ldx     #$00
-        jsr     LE6FD
+        jsr     disk_copy_overlay3::LE6FD
         beq     L119A
         bpl     L1189
         return  #$80
@@ -1323,14 +1309,14 @@ L1189:  jsr     L12AF
 L119A:  ldy     #$FF
         iny
 L119D:  lda     $1C00,y
-        sta     (L0006),y
+        sta     ($06),y
         lda     $1D00,y
         sta     ($08),y
         iny
         bne     L119D
         return  #$00
 
-L11AD:  sta     L0006
+L11AD:  sta     $06
         sta     $08
         stx     $07
         stx     $09
@@ -1339,7 +1325,7 @@ L11AD:  sta     L0006
 L11C1:  jsr     L12AF
         beq     L11D8
         ldx     #$00
-        jsr     LE6FD
+        jsr     disk_copy_overlay3::LE6FD
         beq     L11D8
         bpl     L11C1
         lda     LCBANK1
@@ -1351,7 +1337,7 @@ L11D8:  lda     LCBANK2
         ldy     #$FF
         iny
 L11E1:  lda     $1C00,y
-        sta     (L0006),y
+        sta     ($06),y
         lda     $1D00,y
         sta     ($08),y
         iny
@@ -1364,12 +1350,12 @@ L11F7:  stax    block_params::data_buffer
 L11FD:  jsr     L12A5
         beq     L120B
         ldx     #$80
-        jsr     LE6FD
+        jsr     disk_copy_overlay3::LE6FD
         beq     L120B
         bpl     L11FD
 L120B:  rts
 
-L120C:  sta     L0006
+L120C:  sta     $06
         sta     $08
         stx     $07
         stx     $09
@@ -1377,7 +1363,7 @@ L120C:  sta     L0006
         copy16  #$1C00, block_params::data_buffer
         ldy     #$FF
         iny
-L1223:  lda     (L0006),y
+L1223:  lda     ($06),y
         sta     $1C00,y
         lda     ($08),y
         sta     $1D00,y
@@ -1386,14 +1372,14 @@ L1223:  lda     (L0006),y
 L1230:  jsr     L12A5
         beq     L123E
         ldx     #$80
-        jsr     LE6FD
+        jsr     disk_copy_overlay3::LE6FD
         beq     L123E
         bpl     L1230
 L123E:  rts
 
 L123F:  bit     LCBANK2
         bit     LCBANK2
-        sta     L0006
+        sta     $06
         sta     $08
         stx     $07
         stx     $09
@@ -1401,7 +1387,7 @@ L123F:  bit     LCBANK2
         copy16  #$1C00, block_params::data_buffer
         ldy     #$FF
         iny
-L125C:  lda     (L0006),y
+L125C:  lda     ($06),y
         sta     $1C00,y
         lda     ($08),y
         sta     $1D00,y
@@ -1412,7 +1398,7 @@ L125C:  lda     (L0006),y
 L126F:  jsr     L12A5
         beq     L127D
         ldx     #$80
-        jsr     LE6FD
+        jsr     disk_copy_overlay3::LE6FD
         beq     L127D
         bpl     L126F
 L127D:  rts
@@ -1478,15 +1464,15 @@ L12B9:  .byte   0
 L12DA:  lda     $D133
         cmp     $D18D
         bne     :+
-        jmp     LDAEE
+        jmp     disk_copy_overlay3::LDAEE
 :       cmp     $D1C7
         bne     :+
-        jmp     LDB55
+        jmp     disk_copy_overlay3::LDB55
 :       rts
 
         lda     $D18D
         sta     $D12D
-        jsr     LE137
-        yax_call LDBE0, $46, $D12D
+        jsr     disk_copy_overlay3::LE137
+        yax_call disk_copy_overlay3::MGTK_RELAY2, MGTK::ScreenToWindow, $D12D
 
 .endproc
