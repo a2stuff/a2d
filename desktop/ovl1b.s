@@ -2381,7 +2381,7 @@ LE6FB:  .byte   0
 LE6FC:  .byte   0
 LE6FD:  stx     LE765
 
-LE766:  cmp     #$2B
+        cmp     #$2B
         bne     LE71A
         jsr     L127E
         lda     #$05
@@ -2412,7 +2412,7 @@ LE74B:  MGTK_RELAY_CALL2 MGTK::MoveTo, $D48F
         return  #$00
 
 LE765:  .byte   0
-        sta     $06
+LE766:  sta     $06
         sta     $08
         stx     $07
         stx     $09
