@@ -252,25 +252,26 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endproc
 
-rect_D201:      DEFINE_RECT 4, 2, 496, 148
-rect_D209:      DEFINE_RECT 5, 3, 495, 147
+rect_outer_frame:      DEFINE_RECT 4, 2, 496, 148
+rect_inner_frame:      DEFINE_RECT 5, 3, 495, 147
 rect_D211:      DEFINE_RECT 6, 20, 494, 102
 rect_D219:      DEFINE_RECT 6, 103, 494, 145
 rect_D221:      DEFINE_RECT 350, 90, 450, 101
 rect_D229:      DEFINE_RECT 210, 90, 310, 101
-point_D231:     DEFINE_POINT 355, 100
+point_ok_label:     DEFINE_POINT 355, 100
 
 str_ok_label:
         PASCAL_STRING {"OK            ",CHAR_RETURN}
 
-point_D245:     DEFINE_POINT 215, 100
+;;; Label positions
+point_read_drive:     DEFINE_POINT 215, 100
 point_D249:     DEFINE_POINT 0, 15
-point_D24D:     DEFINE_POINT 20, 28
-point_D251:     DEFINE_POINT 270, 46
+point_slot_drive_name:     DEFINE_POINT 20, 28
+point_select_source:     DEFINE_POINT 270, 46
 rect_D255:      DEFINE_RECT 270, 38, 420, 46
-point_D25D:     DEFINE_POINT 210, 68
-point_D261:     DEFINE_POINT 210, 68
-point_D265:     DEFINE_POINT 210, 68
+point_formatting:     DEFINE_POINT 210, 68
+point_writing:     DEFINE_POINT 210, 68
+point_reading:     DEFINE_POINT 210, 68
 
 str_read_drive:
         PASCAL_STRING "Read Drive   D"
@@ -360,19 +361,20 @@ LD451:  .byte   0, 1, 0
 str_2_spaces:   PASCAL_STRING "  "
 str_7_spaces:   PASCAL_STRING "       "
 
-point_D45F:     DEFINE_POINT 300, 125
-point_D463:     DEFINE_POINT 300, 135
-point_D467:     DEFINE_POINT 300, 115
-point_D46B:     DEFINE_POINT 40, 125
-point_D46F:     DEFINE_POINT 110, 125
-point_D473:     DEFINE_POINT 40, 135
-point_D477:     DEFINE_POINT 110, 135
-point_D47B:     DEFINE_POINT 40, 115
-point_D47F:     DEFINE_POINT 20, 145
+;;; Label positions
+point_blocks_read:     DEFINE_POINT 300, 125
+point_blocks_written:     DEFINE_POINT 300, 135
+point_source:     DEFINE_POINT 300, 115
+point_source2:     DEFINE_POINT 40, 125
+point_slot_drive:     DEFINE_POINT 110, 125
+point_destination:     DEFINE_POINT 40, 135
+point_slot_drive2:     DEFINE_POINT 110, 135
+point_disk_copy:     DEFINE_POINT 40, 115
+point_select_quit:     DEFINE_POINT 20, 145
 rect_D483:      DEFINE_RECT 20, 136, 400, 145
-point_D48B:     DEFINE_POINT 300, 145
-point_D48F:     DEFINE_POINT 40, 100
-point_D493:     DEFINE_POINT 40, 90
+point_escape_stop_copy:     DEFINE_POINT 300, 145
+point_error_writing:     DEFINE_POINT 40, 100
+point_error_reading:     DEFINE_POINT 40, 90
 
 slot_char:      .byte   10
 drive_char:     .byte   14
@@ -533,7 +535,7 @@ LD687:  lda     LD363
         jsr     LE137
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D255
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D251
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_select_source
         addr_call draw_text, str_select_destination
         jsr     LE559
         jsr     LE2B1
@@ -689,7 +691,7 @@ LD852:  ldx     LD418
         jsr     LEB84
         jmp     LD61C
 
-LD87C:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_D25D
+LD87C:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_formatting
         addr_call draw_text, str_formatting
         jsr     L0CAF
         bcc     LD8A9
@@ -1378,8 +1380,8 @@ LDFA0:  MGTK_RELAY_CALL2 MGTK::OpenWindow, winfo_dialog
         lda     winfo_dialog::window_id
         jsr     LE137
         MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL2 MGTK::FrameRect, rect_D201
-        MGTK_RELAY_CALL2 MGTK::FrameRect, rect_D209
+        MGTK_RELAY_CALL2 MGTK::FrameRect, rect_outer_frame
+        MGTK_RELAY_CALL2 MGTK::FrameRect, rect_inner_frame
 
         MGTK_RELAY_CALL2 MGTK::InitPort, grafport
         MGTK_RELAY_CALL2 MGTK::SetPort, grafport
@@ -1401,22 +1403,22 @@ LE014:  MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL2 MGTK::FrameRect, rect_D229
         jsr     LE078
         jsr     LE089
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D24D
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_slot_drive_name
         addr_call draw_text, str_slot_drive_name
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D251
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_select_source
         addr_call draw_text, str_select_source
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D47F
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_select_quit
         addr_call draw_text, str_select_quit
 
         MGTK_RELAY_CALL2 MGTK::InitPort, grafport
         MGTK_RELAY_CALL2 MGTK::SetPort, grafport
         rts
 
-LE078:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_D231
+LE078:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_ok_label
         addr_call draw_text, str_ok_label
         rts
 
-LE089:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_D245
+LE089:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_read_drive
         addr_call draw_text, str_read_drive
         rts
 
@@ -1921,13 +1923,13 @@ LE483:  .byte   0
 
 LE491:  lda     winfo_dialog::window_id
         jsr     LE137
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D261
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_writing
         addr_call draw_text, str_writing
         rts
 
 LE4A8:  lda     winfo_dialog::window_id
         jsr     LE137
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D265
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_reading
         addr_call draw_text, str_reading
         rts
 
@@ -1940,13 +1942,13 @@ LE4BF:  lda     winfo_dialog::window_id
         tax
         lda     LD407,y
         jsr     LDEEB
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D467
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_source
         addr_call draw_text, str_blocks_to_transfer
         addr_call draw_text, str_7_spaces
         rts
 
 LE4EC:  jsr     LE522
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D45F
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_blocks_read
         addr_call draw_text, str_blocks_read
         .byte   $A9
 LE500:  .byte   $57
@@ -1955,7 +1957,7 @@ LE500:  .byte   $57
         rts
 
 LE507:  jsr     LE522
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D463
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_blocks_written
         addr_call draw_text, str_blocks_written
         addr_call draw_text, str_7_spaces
         rts
@@ -1991,7 +1993,7 @@ LE550:  .byte   $07
 LE558:  .byte   0
 LE559:  lda     winfo_dialog::window_id
         jsr     LE137
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D46B
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_source2
         addr_call draw_text, str_source
         ldx     LD417
         lda     LD3F7,x
@@ -2012,7 +2014,7 @@ LE559:  lda     winfo_dialog::window_id
         clc
         adc     #'1'
         sta     str_d + 1
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D46F
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_slot_drive
         addr_call draw_text, str_slot
         addr_call draw_text, str_s
         addr_call draw_text, str_drive
@@ -2036,7 +2038,7 @@ LE5D0:  lda     $1300,x
 
 LE5E1:  lda     winfo_dialog::window_id
         jsr     LE137
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D473
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_destination
         addr_call draw_text, str_destination
         ldx     LD418
         lda     LD3F7,x
@@ -2056,7 +2058,7 @@ LE5E1:  lda     winfo_dialog::window_id
         clc
         adc     #'1'
         sta     str_d + 1
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D477
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_slot_drive2
         addr_call draw_text, str_slot
         addr_call draw_text, str_s
         addr_call draw_text, str_drive
@@ -2065,7 +2067,7 @@ LE5E1:  lda     winfo_dialog::window_id
 
 LE63F:  lda     winfo_dialog::window_id
         jsr     LE137
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D47B
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_disk_copy
         bit     LD44D
         bmi     LE65B
         addr_call draw_text, str_prodos_disk_copy
@@ -2092,7 +2094,7 @@ LE693:  rts
 
 LE694:  lda     winfo_dialog::window_id
         jsr     LE137
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D48B
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_escape_stop_copy
         addr_call draw_text, str_escape_stop_copy
         rts
 
@@ -2108,7 +2110,7 @@ LE6BB:  dec     LE6FB
         MGTK_RELAY_CALL2 MGTK::SetTextBG, bg_white
         beq     LE6DE
 LE6D5:  MGTK_RELAY_CALL2 MGTK::SetTextBG, bg_black
-LE6DE:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_D48B
+LE6DE:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_escape_stop_copy
         addr_call draw_text, str_escape_stop_copy
         jmp     LE6BB
 
@@ -2139,12 +2141,12 @@ LE71A:  jsr     L127E
         jsr     LDEEB
         lda     LE765
         bne     LE74B
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D493
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_error_reading
         addr_call draw_text, str_error_reading
         addr_call draw_text, str_7_spaces
         return  #$00
 
-LE74B:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_D48F
+LE74B:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_error_writing
         addr_call draw_text, str_error_writing
         addr_call draw_text, str_7_spaces
         return  #$00
@@ -2292,47 +2294,60 @@ cancel_pos:  DEFINE_POINT 25, 47
 LE93D:  DEFINE_POINT 100, 24
 
 LE941:  .byte   0
-LE942:  .byte   0
-LE943:  .byte   0
+LE942:  .addr   0
 
-LE944:  PASCAL_STRING "Insert source disk and click OK."
-LE965:  PASCAL_STRING "Insert destination disk and click OK."
-LE98B:  PASCAL_STRING "Do you want to erase "
-LE9A0 := *-1
+str_insert_source:
+        PASCAL_STRING "Insert source disk and click OK."
+str_insert_dest:
+        PASCAL_STRING "Insert destination disk and click OK."
+str_confirm_erase0:
+        PASCAL_STRING "Do you want to erase "
+LE9A1:  .res    18, 0
+str_dest_format_fail:
+        PASCAL_STRING "The destination disk cannot be formated !"
+str_format_error:
+        PASCAL_STRING "Error during formating."
+str_dest_protected:
+        PASCAL_STRING "The destination volume is write protected !"
+str_confirm_erase1:
+        PASCAL_STRING "Do you want to erase "
         .res    18, 0
-LE9B3:  PASCAL_STRING "The destination disk cannot be formated !"
-LE9DD:  PASCAL_STRING "Error during formating."
-LE9F5:  PASCAL_STRING "The destination volume is write protected !"
-LEA21:  PASCAL_STRING "Do you want to erase "
-        .res    18, 0
-LEA49:  PASCAL_STRING "Do you want to  erase  the disk in slot   drive   ?"
-LEA7D:  PASCAL_STRING "Do you want to erase the disk in slot   drive   ?"
-LEAAF:  PASCAL_STRING "The copy was successful."
-LEAC8:  PASCAL_STRING "The copy was not completed."
-LEAE4:  PASCAL_STRING "Insert source disk or press Escape to cancel."
-LEB12:  PASCAL_STRING "Insert destination disk or press Escape to cancel."
+str_confirm_erase2:
+        PASCAL_STRING "Do you want to  erase  the disk in slot   drive   ?"
+str_confirm_erase3:
+        PASCAL_STRING "Do you want to erase the disk in slot   drive   ?"
+str_copy_success:
+        PASCAL_STRING "The copy was successful."
+str_copy_fail:
+        PASCAL_STRING "The copy was not completed."
+str_insert_source_or_cancel:
+        PASCAL_STRING "Insert source disk or press Escape to cancel."
+str_insert_dest_or_cancel:
+        PASCAL_STRING "Insert destination disk or press Escape to cancel."
 
-LEB45:  .byte   $20
-LEB46:  .byte   $3F
+char_space:
+        .byte   ' '
+char_question_mark:
+        .byte   '?'
 
-slot_char_LEA49:  .byte   $29
-drive_char_LEA49:  .byte   $31
+slot_char_str_confirm_erase2:   .byte   41
+drive_char_str_confirm_erase2:  .byte   49
 
-slot_char_LEA7D:  .byte   $27
-drive_char_LEA7D:  .byte   $2F
+slot_char_str_confirm_erase3:   .byte   39
+drive_char_str_confirm_erase3:  .byte   47
 
-LEB4B:  .byte   $17
-LEB4C:  .byte   $15
+len_confirm_erase0:  .byte   23
+len_confirm_erase1:  .byte   21
 
 LEB4D:  .byte   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
 
-LEB5A:  .addr   LE944, LE965
-        .addr   LE98B, LE9B3
-        .addr   LE9DD, LE9F5
-        .addr   LEA21, LEA49
-        .addr   LEA7D, LEAAF
-        .addr   LEAC8, LEAE4
-        .addr   LEB12
+LEB5A:  .addr   str_insert_source, str_insert_dest
+        .addr   str_confirm_erase0, str_dest_format_fail
+        .addr   str_format_error, str_dest_protected
+        .addr   str_confirm_erase1, str_confirm_erase2
+        .addr   str_confirm_erase3, str_copy_success
+        .addr   str_copy_fail, str_insert_source_or_cancel
+        .addr   str_insert_dest_or_cancel
 
 LEB74:  .byte   $C0, $C0, $81, $00, $80, $80, $81, $81
         .byte   $81, $00, $00, $00, $00
@@ -2411,7 +2426,7 @@ LEC6C:  tya
         lda     LEB5A,y
         sta     LE942
         lda     LEB5A+1,y
-        sta     LE943
+        sta     LE942+1
         tya
         lsr     a
         tay
@@ -2456,14 +2471,14 @@ draw_ok_btn:
 LED23:  MGTK_RELAY_CALL2 MGTK::MoveTo, LE93D
         addr_call_indirect draw_text, LE942
 LED35:  bit     LD41E
-        bpl     $ED45
+        bpl     LED45
         jsr     LF192
         bne     LED42
         jmp     LEDF2
 
 LED42:  jmp     LED79
 
-        MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
+LED45:  MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
         bne     LED58
@@ -2776,22 +2791,22 @@ LF0E9:  stx     $06
         pha
         tay
 LF0F3:  lda     ($06),y
-        sta     LE9A0,y
+        sta     LE9A1-1,y
         dey
         bne     LF0F3
         pla
         clc
-        adc     LEB4B
-        sta     LE98B
+        adc     len_confirm_erase0
+        sta     str_confirm_erase0
         tay
-        inc     LE98B
-        inc     LE98B
-        lda     LEB45
+        inc     str_confirm_erase0
+        inc     str_confirm_erase0
+        lda     char_space
         iny
-        sta     LE98B,y
-        lda     LEB46
+        sta     str_confirm_erase0,y
+        lda     char_question_mark
         iny
-        sta     LE98B,y
+        sta     str_confirm_erase0,y
         rts
 
 LF119:  stx     $06
@@ -2806,17 +2821,17 @@ LF123:  lda     ($06),y
         bne     LF123
         pla
         clc
-        adc     LEB4C
-        sta     $EA21
+        adc     len_confirm_erase1
+        sta     str_confirm_erase1
         tay
-        inc     $EA21
-        inc     $EA21
-        lda     LEB45
+        inc     str_confirm_erase1
+        inc     str_confirm_erase1
+        lda     char_space
         iny
-        sta     $EA21,y
-        lda     LEB46
+        sta     str_confirm_erase1,y
+        lda     char_question_mark
         iny
-        sta     $EA21,y
+        sta     str_confirm_erase1,y
         rts
 
 LF149:  txa
@@ -2827,15 +2842,15 @@ LF149:  txa
         lsr     a
         clc
         adc     #'0'
-        ldy     slot_char_LEA49
-        sta     LEA49,y
+        ldy     slot_char_str_confirm_erase2
+        sta     str_confirm_erase2,y
         txa
         and     #$80
         asl     a
         rol     a
         adc     #$31
-        ldy     drive_char_LEA49
-        sta     LEA49,y
+        ldy     drive_char_str_confirm_erase2
+        sta     str_confirm_erase2,y
         rts
 
 LF167:  txa
@@ -2846,15 +2861,15 @@ LF167:  txa
         lsr     a
         clc
         adc     #'0'
-        ldy     slot_char_LEA7D
-        sta     LEA7D,y
+        ldy     slot_char_str_confirm_erase3
+        sta     str_confirm_erase3,y
         txa
         and     #$80
         asl     a
         rol     a
         adc     #$31
-        ldy     drive_char_LEA7D
-        sta     LEA7D,y
+        ldy     drive_char_str_confirm_erase3
+        sta     str_confirm_erase3,y
         rts
 
 LF185:  sty     LD41D
