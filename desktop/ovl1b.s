@@ -1215,7 +1215,7 @@ LDE4D:  cmp     #$A5
         lsr     a
         lsr     a
         clc
-        adc     #$30
+        adc     #'0'
         ldx     slot_char
         sta     str_dos33_s_d,x
         lda     $0C5A
@@ -1310,7 +1310,7 @@ LDF25:  cmp     #$0A
         adc     #$37
         jmp     LDF31
 
-LDF2F:  adc     #$30
+LDF2F:  adc     #'0'
 LDF31:  pha
         lda     #$80
         sta     LDF72
@@ -1334,7 +1334,7 @@ LDF45:  inc     LDF71
         jmp     LDF09
 
 LDF5E:  lda     LDF6F
-        ora     #$30
+        ora     #'0'
         sta     str_7_spaces+2,y
         rts
 
@@ -2208,137 +2208,43 @@ LE7D8:  jsr     L12A5
         bpl     LE7D8
 LE7E6:  rts
 
-bitmap: .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   $FE, $1F, $00
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   $FE, $1F, $00
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   $FE, $1F, $00
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   $FE, $1F, $00
-        .byte   $FF
-        .byte   $FF
-        .byte   0
-        .byte   0
-        .byte   $1E, $1F, $40
-        .byte   $07
-        .byte   $F0, 00
-        .byte   0
-        .byte   $1E, $1F, $60, $03, $60
+alert_bitmap:
+        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),px(%0000000),PX(%1111111),PX(%1111111),px(%0000000),px(%0000000)
+        .byte   px(%0111100),px(%1111100),px(%0000001),px(%1110000),PX(%0000111),px(%0000000),px(%0000000)
+        .byte   px(%0111100),px(%1111100),px(%0000011),px(%1100000),px(%0000011),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),PX(%0000111),PX(%1100111),px(%1111001),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),PX(%0001111),PX(%1100111),px(%1111001),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),PX(%0011111),PX(%1111111),px(%1111001),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),PX(%0011111),PX(%1111111),px(%1110011),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),PX(%0011111),PX(%1111111),PX(%1100111),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),PX(%0011111),PX(%1111111),PX(%1001111),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),PX(%0011111),PX(%1111111),PX(%0011111),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),PX(%0011111),px(%1111110),PX(%0111111),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),PX(%0011111),px(%1111100),PX(%1111111),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1111100),PX(%0011111),px(%1111100),PX(%1111111),px(%0000000),px(%0000000)
+        .byte   px(%0111110),px(%0000000),PX(%0111111),PX(%1111111),PX(%1111111),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1100000),PX(%1111111),px(%1111100),PX(%1111111),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1100001),PX(%1111111),PX(%1111111),PX(%1111111),px(%0000000),px(%0000000)
+        .byte   px(%0111000),px(%0000011),PX(%1111111),PX(%1111111),px(%1111110),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
+        .byte   PX(%0111111),px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
+        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
 
-        .byte   0
-        .byte   0
-        .byte   $FE, $1f, $F0
-        .byte   $F3
-        .byte   $4F
-        .byte   0
-        .byte   0
-        .byte   $FE, $1F, $F8
-        .byte   $F3
-        .byte   $4F
-        .byte   0
-        .byte   0
-        .byte   $FE, $1F, $FC
-        .byte   $FF
-        .byte   $4F
-        .byte   0
-        .byte   0
-        .byte   $FE, $1F, $FC
-        .byte   $FF
-        .byte   $67
-        .byte   0
-        .byte   0
-        .byte   $FE, $1F, $FC
-        .byte   $FF
-        .byte   $F3
-        .byte   0
-        .byte   0
-        .byte   $FE, $1F, $FC
-        .byte   $FF
-        .byte   $F9, $00, $00
-        .byte   $FE, $1F, $FC
-        .byte   $FF
-        .byte   $FC
-        .byte   0
-        .byte   0
-        .byte   $FE, $1F, $FC
-        .byte   $3F
-        .byte   $FE, $00, $00
-        .byte   $FE, $1F, $FC
-        .byte   $1F
-        .byte   $FF
-        .byte   0
-        .byte   0
-        .byte   $FE, $1F, $FC
-        .byte   $1F
-        .byte   $FF
-        .byte   0
-        .byte   0
-        .byte   $3E, $00, $FE
-        .byte   $FF
-        .byte   $FF
-        .byte   0
-        .byte   0
-        .byte   $FE, $03, $FF
-        .byte   $1F
-        .byte   $FF
-        .byte   0
-        .byte   0
-        .byte   $FE, $43, $FF
-        .byte   $FF
-        .byte   $FF
-        .byte   0
-        .byte   0
-        .byte   $0E, $60, $FF
-        .byte   $FF
-        .byte   $3F
-        .byte   0
-        .byte   0
-        .byte   $FE, $03, $00
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   $FE, $03, $00
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-
-.proc bits_E88F
-viewloc:        DEFINE_POINT $14, $08
-mapbits:        .addr   bitmap
-mapwidth:       .byte   $07
+.proc alert_bitmap_mapinfo
+viewloc:        DEFINE_POINT 20, 8
+mapbits:        .addr   alert_bitmap
+mapwidth:       .byte   7
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0, 0, $24, $17
+maprect:        DEFINE_RECT 0, 0, 36, 23
 .endproc
 
 rect_E89F:      DEFINE_RECT 65, 45, 485, 100
 rect_E8A7:      DEFINE_RECT 4, 2, 416, 53
 rect_E8AF:      DEFINE_RECT 5, 3, 415, 52
-
 
 .proc portbits1
 viewloc:        DEFINE_POINT 65, 45, viewloc
@@ -2353,7 +2259,7 @@ viewloc:        DEFINE_POINT 0, 0
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
-maprect:        DEFINE_RECT 0, 0, $22F, $BF
+maprect:        DEFINE_RECT 0, 0, 559, 191
 .endproc
 
 str_ok_btn:
@@ -2389,59 +2295,51 @@ LE941:  .byte   0
 LE942:  .byte   0
 LE943:  .byte   0
 
-        PASCAL_STRING "Insert source disk and click OK."
-        PASCAL_STRING "Insert destination disk and click OK."
+LE944:  PASCAL_STRING "Insert source disk and click OK."
+LE965:  PASCAL_STRING "Insert destination disk and click OK."
 LE98B:  PASCAL_STRING "Do you want to erase "
 LE9A0 := *-1
         .res    18, 0
-        PASCAL_STRING "The destination disk cannot be formated !"
-        PASCAL_STRING "Error during formating."
-        PASCAL_STRING "The destination volume is write protected !"
-        PASCAL_STRING "Do you want to erase "
+LE9B3:  PASCAL_STRING "The destination disk cannot be formated !"
+LE9DD:  PASCAL_STRING "Error during formating."
+LE9F5:  PASCAL_STRING "The destination volume is write protected !"
+LEA21:  PASCAL_STRING "Do you want to erase "
         .res    18, 0
 LEA49:  PASCAL_STRING "Do you want to  erase  the disk in slot   drive   ?"
 LEA7D:  PASCAL_STRING "Do you want to erase the disk in slot   drive   ?"
-        PASCAL_STRING "The copy was successful."
-        PASCAL_STRING "The copy was not completed."
-        PASCAL_STRING "Insert source disk or press Escape to cancel."
-        PASCAL_STRING "Insert destination disk or press Escape to cancel."
+LEAAF:  PASCAL_STRING "The copy was successful."
+LEAC8:  PASCAL_STRING "The copy was not completed."
+LEAE4:  PASCAL_STRING "Insert source disk or press Escape to cancel."
+LEB12:  PASCAL_STRING "Insert destination disk or press Escape to cancel."
+
 LEB45:  .byte   $20
 LEB46:  .byte   $3F
-LEB47:  .byte   $29
-LEB48:  .byte   $31
-LEB49:  .byte   $27
-LEB4A:  .byte   $2F
+
+slot_char_LEA49:  .byte   $29
+drive_char_LEA49:  .byte   $31
+
+slot_char_LEA7D:  .byte   $27
+drive_char_LEA7D:  .byte   $2F
+
 LEB4B:  .byte   $17
 LEB4C:  .byte   $15
+
 LEB4D:  .byte   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
-LEB5A:  .byte   $44
-LEB5B:  sbc     #$65
-        sbc     #$8B
-        sbc     #$B3
-        sbc     #$DD
-        sbc     #$F5
-        sbc     #$21
-        nop
-        eor     #$EA
-        adc     $AFEA,x
-        nop
-        iny
-        nop
-        cpx     $EA
-        .byte   $12
-        .byte   $EB
-LEB74:  cpy     #$C0
-        sta     ($0000,x)
-        .byte   $80
-        .byte   $80
-        sta     ($81,x)
-        sta     ($0000,x)
-        .byte   0
-        .byte   0
-        .byte   0
-LEB81:  .byte   0
-LEB82:  .byte   0
+
+LEB5A:  .addr   LE944, LE965
+        .addr   LE98B, LE9B3
+        .addr   LE9DD, LE9F5
+        .addr   LEA21, LEA49
+        .addr   LEA7D, LEAAF
+        .addr   LEAC8, LEAE4
+        .addr   LEB12
+
+LEB74:  .byte   $C0, $C0, $81, $00, $80, $80, $81, $81
+        .byte   $81, $00, $00, $00, $00
+
+LEB81:  .addr   0
 LEB83:  .byte   0
+
 LEB84:  stax    LEB81
         sty     LEB83
         MGTK_RELAY_CALL2 MGTK::InitPort, grafport
@@ -2455,14 +2353,14 @@ LEB84:  stax    LEB81
         MGTK_RELAY_CALL2 MGTK::FrameRect, rect_E8AF
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL2 MGTK::HideCursor
-        MGTK_RELAY_CALL2 MGTK::PaintBits, bits_E88F
+        MGTK_RELAY_CALL2 MGTK::PaintBits, alert_bitmap_mapinfo
         MGTK_RELAY_CALL2 MGTK::ShowCursor
         lda     #$00
         sta     LD41E
         lda     LEB81
         jsr     LF1CC
         ldy     LEB83
-        ldx     LEB82
+        ldx     LEB81+1
         lda     LEB81
         bne     LEC1F
         cpx     #$00
@@ -2512,7 +2410,7 @@ LEC6C:  tya
         tay
         lda     LEB5A,y
         sta     LE942
-        lda     LEB5B,y
+        lda     LEB5A+1,y
         sta     LE943
         tya
         lsr     a
@@ -2928,15 +2826,15 @@ LF149:  txa
         lsr     a
         lsr     a
         clc
-        adc     #$30
-        ldy     LEB47
+        adc     #'0'
+        ldy     slot_char_LEA49
         sta     LEA49,y
         txa
         and     #$80
         asl     a
         rol     a
         adc     #$31
-        ldy     LEB48
+        ldy     drive_char_LEA49
         sta     LEA49,y
         rts
 
@@ -2947,15 +2845,15 @@ LF167:  txa
         lsr     a
         lsr     a
         clc
-        adc     #$30
-        ldy     LEB49
+        adc     #'0'
+        ldy     slot_char_LEA7D
         sta     LEA7D,y
         txa
         and     #$80
         asl     a
         rol     a
         adc     #$31
-        ldy     LEB4A
+        ldy     drive_char_LEA7D
         sta     LEA7D,y
         rts
 
