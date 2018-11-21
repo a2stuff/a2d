@@ -185,6 +185,7 @@ port:           .addr   grafport_win
 
 grafport_win:  .res    .sizeof(MGTK::GrafPort), 0
 
+        ;; Rest of a winfo???
         .byte   $06, $EA, 0, 0, 0, 0, $88, 0, $08, 0, $08
 
 .proc winfo_dialog
@@ -294,15 +295,14 @@ str_unknown:
 str_select_quit:
         PASCAL_STRING {"Select Quit from the file menu (",GLYPH_OAPPLE,"Q) to go back to the DeskTop"}
 
+bg_black:
         .byte   0
+bg_white:
         .byte   $7F
-        .byte   0
-        .byte   0
-LD35D:  .byte   0
-        .byte   0
-        stx     $0000,y
-LD361:  .byte   0
-        .byte   0
+
+rect_D35B: DEFINE_RECT 0, 0, $96, 0, rect_D35B
+
+        ;; TODO: Identify data
 LD363:  .byte   0
         .byte   0
         .byte   0
@@ -313,20 +313,20 @@ LD368:  .byte   0
         .byte   0
         .byte   0
         .byte   0
-LD36D:  .byte   0
-        .byte   0
-LD36F:  .byte   0
-        .byte   0
+
+point_D36D:  DEFINE_POINT 0, 0, point_D36D
         .byte   0
         .byte   0
         .byte   $47
         .byte   0
 LD375:  .byte   0
 LD376:  .byte   0
+
 LD377:  .res    128, 0
 LD3F7:  .res    8, 0
 LD3FF:  .res    8, 0
 LD407:  .res    16, 0
+
 LD417:  .byte   0
 LD418:  .byte   0
 
@@ -345,71 +345,37 @@ LD423:  .byte   0
         .byte   0
         .byte   0
 LD429:  .byte   0
-        .byte   $12
-        .byte   0
-        .byte   $14
-        .byte   0
-        nop
-        ora     ($58,x)
-        .byte   0
-        .byte   $13
-        .byte   0
-        ora     $C300,x
-        .byte   0
-        adc     $0000
+
+rect_D42A:      DEFINE_RECT 18, 20, 490, 88
+rect_D432:      DEFINE_RECT 19, 29, 195, 101
+
 LD43A:  .res 18, 0
 LD44C:  .byte   0
 LD44D:  .byte   0
 LD44E:  .byte   0
         .byte   0
         .byte   0
-LD451:  .byte   0
-        ora     ($0000,x)
+LD451:  .byte   0, 1, 0
+
 str_2_spaces:   PASCAL_STRING "  "
 str_7_spaces:   PASCAL_STRING "       "
-        bit     $7D01
-        .byte   0
-        bit     $8701
-        .byte   0
-        bit     $7301
-        .byte   0
-        plp
-        .byte   0
-        adc     $6E00,x
-        .byte   0
-        adc     $2800,x
-        .byte   0
-        .byte   $87
-        .byte   0
-        ror     $8700
-        .byte   0
-        plp
-        .byte   0
-        .byte   $73
-        .byte   0
-        .byte   $14
-        .byte   0
-        sta     ($0000),y
-        .byte   $14
-        .byte   0
-        dey
-        .byte   0
-        bcc     LD48A
-        .byte   $91
-LD48A:  .byte   0
-        bit     $9101
-        .byte   0
-        plp
-        .byte   0
-        .byte   $64
-        .byte   0
-        plp
-        .byte   0
-        .byte   $5A
-        .byte   0
 
-slot_char:  .byte   10
-drive_char:  .byte   14
+point_D45F:     DEFINE_POINT 300, 125
+point_D463:     DEFINE_POINT 300, 135
+point_D467:     DEFINE_POINT 300, 115
+point_D46B:     DEFINE_POINT 40, 125
+point_D46F:     DEFINE_POINT 110, 125
+point_D473:     DEFINE_POINT 40, 135
+point_D477:     DEFINE_POINT 110, 135
+point_D47B:     DEFINE_POINT 40, 115
+point_D47F:     DEFINE_POINT 20, 145
+rect_D483:      DEFINE_RECT 20, 136, 400, 145
+point_D48B:     DEFINE_POINT 300, 145
+point_D48F:     DEFINE_POINT 40, 100
+point_D493:     DEFINE_POINT 40, 90
+
+slot_char:      .byte   10
+drive_char:     .byte   14
 
 str_blocks_read:
         PASCAL_STRING "Blocks Read: "
@@ -450,101 +416,67 @@ str_error_reading:
 ;;; ============================================================
 
         ;; cursor definition - pointer
-cursor_D57C:
-        .byte   0, 0
-        .byte   $02
-        .byte   0
-        asl     $0000
-        asl     $1E00
-        .byte   0
-        rol     $7E00,x
-        .byte   0
-        .byte   $1A
-        .byte   0
-        bmi     LD58E
-LD58E:  bmi     LD590
-LD590:  rts
-
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   $03
-        .byte   0
-        .byte   $07
-        .byte   0
-        .byte   $0F
-        .byte   0
-        .byte   $1F
-        .byte   0
-        .byte   $3F
-        .byte   0
-        .byte   $7F
-        .byte   0
-        .byte   $7F
-        ora     ($7F,x)
-        .byte   0
-        sei
-        .byte   0
-        sei
-        .byte   0
-        bvs     LD5AB
-        .byte   $70
-LD5AB:  ora     ($01,x)
-        .byte   $01
+pointer_cursor:
+        .byte   px(%0000000),px(%0000000)
+        .byte   px(%0100000),px(%0000000)
+        .byte   px(%0110000),px(%0000000)
+        .byte   px(%0111000),px(%0000000)
+        .byte   px(%0111100),px(%0000000)
+        .byte   px(%0111110),px(%0000000)
+        .byte   px(%0111111),px(%0000000)
+        .byte   px(%0101100),px(%0000000)
+        .byte   px(%0000110),px(%0000000)
+        .byte   px(%0000110),px(%0000000)
+        .byte   px(%0000011),px(%0000000)
+        .byte   px(%0000000),px(%0000000)
+        .byte   px(%1100000),px(%0000000)
+        .byte   px(%1110000),px(%0000000)
+        .byte   px(%1111000),px(%0000000)
+        .byte   px(%1111100),px(%0000000)
+        .byte   px(%1111110),px(%0000000)
+        .byte   px(%1111111),px(%0000000)
+        .byte   px(%1111111),px(%1000000)
+        .byte   px(%1111111),px(%0000000)
+        .byte   px(%0001111),px(%0000000)
+        .byte   px(%0001111),px(%0000000)
+        .byte   px(%0000111),px(%1000000)
+        .byte   px(%0000111),px(%1000000)
+        .byte   1,1
 
         ;; Cursor definition - watch
-cursor_D5AE:  .byte   0
-        .byte   0
-        .byte   $7C
-        .byte   $03
-        .byte   $7C
-        .byte   $03
-        .byte   $02
-        .byte   $04
-        .byte   $42
-        .byte   $04
-        .byte   $32
-        .byte   $0C
-        .byte   $02
-        .byte   $04
-        .byte   $02
-        .byte   $04
-        .byte   $7C
-        .byte   $03
-        .byte   $7C
-        .byte   $03
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   $7C
-        .byte   $03
-        ror     $7E07,x
-        .byte   $07
-        .byte   $7F
-        .byte   $0F
-        .byte   $7F
-        .byte   $0F
-        .byte   $7F
-        .byte   $1F
-        .byte   $7F
-        .byte   $0F
-        .byte   $7F
-        .byte   $0F
-        ror     $7E07,x
-        .byte   $07
-        .byte   $7C
-        .byte   $03
-        .byte   0
-        .byte   0
-        ora     $05
+watch_cursor:
+        .byte   px(%0000000),px(%0000000)
+        .byte   px(%0011111),px(%1100000)
+        .byte   px(%0011111),px(%1100000)
+        .byte   px(%0100000),px(%0010000)
+        .byte   px(%0100001),px(%0010000)
+        .byte   px(%0100110),px(%0011000)
+        .byte   px(%0100000),px(%0010000)
+        .byte   px(%0100000),px(%0010000)
+        .byte   px(%0011111),px(%1100000)
+        .byte   px(%0011111),px(%1100000)
+        .byte   px(%0000000),px(%0000000)
+        .byte   px(%0000000),px(%0000000)
+        .byte   px(%0011111),px(%1100000)
+        .byte   px(%0111111),px(%1110000)
+        .byte   px(%0111111),px(%1110000)
+        .byte   px(%1111111),px(%1111000)
+        .byte   px(%1111111),px(%1111000)
+        .byte   px(%1111111),px(%1111100)
+        .byte   px(%1111111),px(%1111000)
+        .byte   px(%1111111),px(%1111000)
+        .byte   px(%0111111),px(%1110000)
+        .byte   px(%0111111),px(%1110000)
+        .byte   px(%0011111),px(%1100000)
+        .byte   px(%0000000),px(%0000000)
+        .byte   5, 5
 
 ;;; ============================================================
 
 LD5E0:  .byte   0
 LD5E1:  jsr     LDF73
         MGTK_RELAY_CALL2 MGTK::SetMenu, menu_definition
-        jsr     LDDE0
+        jsr     set_cursor_pointer
         copy16  #$0101, LD12B
         MGTK_RELAY_CALL2 MGTK::CheckItem, checkitem_params
         lda     #$01
@@ -596,7 +528,7 @@ LD687:  lda     LD363
         lda     winfo_drive_select
         jsr     LE137
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL2 MGTK::PaintRect, $D1E3
+        MGTK_RELAY_CALL2 MGTK::PaintRect, winfo_drive_select::cliprect
         lda     winfo_dialog::window_id
         jsr     LE137
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
@@ -623,7 +555,7 @@ LD6F9:  lda     LD363
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D211
         MGTK_RELAY_CALL2 MGTK::CloseWindow, winfo_drive_select
-        MGTK_RELAY_CALL2 MGTK::PaintRect, $D432
+        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D432
 LD734:  addr_call LEB84, $0000
         beq     LD740
         jmp     LD61C
@@ -645,7 +577,7 @@ LD740:  lda     #$00
 LD763:  lda     winfo_dialog::window_id
         jsr     LE137
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL2 MGTK::PaintRect, $D42A
+        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D42A
         jmp     LD734
 
 LD77E:  lda     $1300
@@ -1212,15 +1144,26 @@ LDDA8:  lda     winfo_dialog::window_id
         return  #$00
 
 LDDC3:  .byte   0
-        MGTK_RELAY_CALL2 MGTK::HideCursor
-        MGTK_RELAY_CALL2 MGTK::SetCursor, cursor_D5AE
-        MGTK_RELAY_CALL2 MGTK::ShowCursor
-        rts
 
-LDDE0:  MGTK_RELAY_CALL2 MGTK::HideCursor
-        MGTK_RELAY_CALL2 MGTK::SetCursor, cursor_D57C
+;;; ============================================================
+
+.proc set_cursor_watch
+        MGTK_RELAY_CALL2 MGTK::HideCursor
+        MGTK_RELAY_CALL2 MGTK::SetCursor, watch_cursor
         MGTK_RELAY_CALL2 MGTK::ShowCursor
         rts
+.endproc
+
+;;; ============================================================
+
+.proc set_cursor_pointer
+        MGTK_RELAY_CALL2 MGTK::HideCursor
+        MGTK_RELAY_CALL2 MGTK::SetCursor, pointer_cursor
+        MGTK_RELAY_CALL2 MGTK::ShowCursor
+        rts
+.endproc
+
+;;; ============================================================
 
 LDDFC:  sta     $0C5A
         lda     #$00
@@ -1249,10 +1192,10 @@ LDE31:  lda     LD375
         asl     a
         asl     a
         clc
-        adc     #$77
+        adc     #<LD377
         tay
-        lda     #$D3
-        adc     #$00
+        lda     #>LD377
+        adc     #0
         tax
         tya
         jsr     LDE9F
@@ -1462,7 +1405,7 @@ LE014:  MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
         addr_call draw_text, str_slot_drive_name
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_D251
         addr_call draw_text, str_select_source
-        MGTK_RELAY_CALL2 MGTK::MoveTo, $D47F
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D47F
         addr_call draw_text, str_select_quit
 
         MGTK_RELAY_CALL2 MGTK::InitPort, grafport
@@ -1563,15 +1506,15 @@ LE137:  sta     getwinport_params::window_id
         MGTK_RELAY_CALL2 MGTK::SetPort, grafport_win
         rts
 
-LE14D:  asl     a
+LE14D:  asl     a               ; * 8
         asl     a
         asl     a
-        sta     LD35D
+        sta     rect_D35B::y1
         clc
-        adc     #$07
-        sta     LD361
+        adc     #7
+        sta     rect_D35B::y2
         MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL2 MGTK::PaintRect, $D35B
+        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D35B
         rts
 
 LE16C:  lda     #$00
@@ -1782,9 +1725,9 @@ LE318:  .byte   0
 LE319:  .byte   0
         .byte   0
 LE31B:  sta     LE399
-        lda     #$08
-        sta     LD36D
-        MGTK_RELAY_CALL2 MGTK::MoveTo, $D36D
+        lda     #8
+        sta     point_D36D::xcoord
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D36D
         ldx     LE399
         lda     LD3F7,x
         and     #$70
@@ -1796,9 +1739,9 @@ LE31B:  sta     LE399
         adc     #'0'
         sta     str_s + 1
         addr_call draw_text, str_s
-        lda     #$28
-        sta     LD36D
-        MGTK_RELAY_CALL2 MGTK::MoveTo, $D36D
+        lda     #40
+        sta     point_D36D::xcoord
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D36D
         ldx     LE399
         lda     LD3F7,x
         and     #$80
@@ -1808,9 +1751,9 @@ LE31B:  sta     LE399
         adc     #'1'
         sta     str_d + 1
         addr_call draw_text, str_d
-        lda     #$41
-        sta     LD36D
-        MGTK_RELAY_CALL2 MGTK::MoveTo, $D36D
+        lda     #65
+        sta     point_D36D::xcoord
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D36D
         lda     LE399
         asl     a
         asl     a
@@ -1834,8 +1777,8 @@ LE399:  .byte   0
 LE39A:  asl     a
         asl     a
         asl     a
-        adc     #$08
-        sta     LD36F
+        adc     #8
+        sta     point_D36D::ycoord
         rts
 
 LE3A3:  lda     #$00
@@ -1938,7 +1881,7 @@ LE44A:  ldy     #$FF
         and     #$F0
         jsr     L0D51
         sta     LE47D
-        jsr     LE477
+        jsr     indirect_jump
         .byte   0
         .byte   $7C
         cpx     $68
@@ -1950,13 +1893,15 @@ LE44A:  ldy     #$FF
         sta     LD407+1,x
         rts
 
-LE477:  jmp     ($06)
+indirect_jump:
+        jmp     ($06)
 
+        ;; TODO: Identify data
         .byte   0
         .byte   0
         .byte   $03
-LE47D:  ora     ($81,x)
-        cpx     $0000
+LE47D:  .byte   1, $81
+        .byte   $E4, 0
         .byte   0
 LE482:  .byte   0
 LE483:  .byte   0
@@ -1973,6 +1918,7 @@ LE483:  .byte   0
         .byte   0
         .byte   0
         .byte   0
+
 LE491:  lda     winfo_dialog::window_id
         jsr     LE137
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_D261
@@ -1994,13 +1940,13 @@ LE4BF:  lda     winfo_dialog::window_id
         tax
         lda     LD407,y
         jsr     LDEEB
-        MGTK_RELAY_CALL2 MGTK::MoveTo, $D467
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D467
         addr_call draw_text, str_blocks_to_transfer
         addr_call draw_text, str_7_spaces
         rts
 
 LE4EC:  jsr     LE522
-        MGTK_RELAY_CALL2 MGTK::MoveTo, $D45F
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D45F
         addr_call draw_text, str_blocks_read
         .byte   $A9
 LE500:  .byte   $57
@@ -2009,7 +1955,7 @@ LE500:  .byte   $57
         rts
 
 LE507:  jsr     LE522
-        MGTK_RELAY_CALL2 MGTK::MoveTo, $D463
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D463
         addr_call draw_text, str_blocks_written
         addr_call draw_text, str_7_spaces
         rts
@@ -2045,7 +1991,7 @@ LE550:  .byte   $07
 LE558:  .byte   0
 LE559:  lda     winfo_dialog::window_id
         jsr     LE137
-        MGTK_RELAY_CALL2 MGTK::MoveTo, $D46B
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D46B
         addr_call draw_text, str_source
         ldx     LD417
         lda     LD3F7,x
@@ -2066,7 +2012,7 @@ LE559:  lda     winfo_dialog::window_id
         clc
         adc     #'1'
         sta     str_d + 1
-        MGTK_RELAY_CALL2 MGTK::MoveTo, $D46F
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D46F
         addr_call draw_text, str_slot
         addr_call draw_text, str_s
         addr_call draw_text, str_drive
@@ -2090,7 +2036,7 @@ LE5D0:  lda     $1300,x
 
 LE5E1:  lda     winfo_dialog::window_id
         jsr     LE137
-        MGTK_RELAY_CALL2 MGTK::MoveTo, $D473
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D473
         addr_call draw_text, str_destination
         ldx     LD418
         lda     LD3F7,x
@@ -2110,7 +2056,7 @@ LE5E1:  lda     winfo_dialog::window_id
         clc
         adc     #'1'
         sta     str_d + 1
-        MGTK_RELAY_CALL2 MGTK::MoveTo, $D477
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D477
         addr_call draw_text, str_slot
         addr_call draw_text, str_s
         addr_call draw_text, str_drive
@@ -2119,7 +2065,7 @@ LE5E1:  lda     winfo_dialog::window_id
 
 LE63F:  lda     winfo_dialog::window_id
         jsr     LE137
-        MGTK_RELAY_CALL2 MGTK::MoveTo, $D47B
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D47B
         bit     LD44D
         bmi     LE65B
         addr_call draw_text, str_prodos_disk_copy
@@ -2141,12 +2087,12 @@ LE674:  lda     LD44D
         lda     winfo_dialog::window_id
         jsr     LE137
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL2 MGTK::PaintRect, $D483
+        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D483
 LE693:  rts
 
 LE694:  lda     winfo_dialog::window_id
         jsr     LE137
-        MGTK_RELAY_CALL2 MGTK::MoveTo, $D48B
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D48B
         addr_call draw_text, str_escape_stop_copy
         rts
 
@@ -2159,14 +2105,14 @@ LE6BB:  dec     LE6FB
         eor     #$80
         sta     LE6FC
         beq     LE6D5
-        MGTK_RELAY_CALL2 MGTK::SetTextBG, $D35A
+        MGTK_RELAY_CALL2 MGTK::SetTextBG, bg_white
         beq     LE6DE
-LE6D5:  MGTK_RELAY_CALL2 MGTK::SetTextBG, $D359
-LE6DE:  MGTK_RELAY_CALL2 MGTK::MoveTo, $D48B
+LE6D5:  MGTK_RELAY_CALL2 MGTK::SetTextBG, bg_black
+LE6DE:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_D48B
         addr_call draw_text, str_escape_stop_copy
         jmp     LE6BB
 
-LE6F1:  MGTK_RELAY_CALL2 MGTK::SetTextBG, $D35A
+LE6F1:  MGTK_RELAY_CALL2 MGTK::SetTextBG, bg_white
         rts
 
 LE6FB:  .byte   0
@@ -2193,12 +2139,12 @@ LE71A:  jsr     L127E
         jsr     LDEEB
         lda     LE765
         bne     LE74B
-        MGTK_RELAY_CALL2 MGTK::MoveTo, $D493
+        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D493
         addr_call draw_text, str_error_reading
         addr_call draw_text, str_7_spaces
         return  #$00
 
-LE74B:  MGTK_RELAY_CALL2 MGTK::MoveTo, $D48F
+LE74B:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_D48F
         addr_call draw_text, str_error_writing
         addr_call draw_text, str_7_spaces
         return  #$00
@@ -2262,157 +2208,136 @@ LE7D8:  jsr     L12A5
         bpl     LE7D8
 LE7E6:  rts
 
+bitmap: .byte   0
         .byte   0
         .byte   0
         .byte   0
         .byte   0
         .byte   0
         .byte   0
-        .byte   0
-        inc     a:$1F,x
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        inc     a:$1F,x
+        .byte   $FE, $1F, $00
         .byte   0
         .byte   0
         .byte   0
         .byte   0
-        inc     a:$1F,x
+        .byte   $FE, $1F, $00
         .byte   0
         .byte   0
         .byte   0
         .byte   0
-        inc     a:$1F,x
+        .byte   $FE, $1F, $00
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   0
+        .byte   $FE, $1F, $00
         .byte   $FF
         .byte   $FF
         .byte   0
         .byte   0
-        asl     $401F,x
+        .byte   $1E, $1F, $40
         .byte   $07
-        beq     LE810
-LE810:  .byte   0
-        asl     $601F,x
-        .byte   $03
-        rts
+        .byte   $F0, 00
+        .byte   0
+        .byte   $1E, $1F, $60, $03, $60
 
         .byte   0
         .byte   0
-        inc     LF01F,x
+        .byte   $FE, $1f, $F0
         .byte   $F3
         .byte   $4F
         .byte   0
         .byte   0
-        inc     $F81F,x
+        .byte   $FE, $1F, $F8
         .byte   $F3
         .byte   $4F
         .byte   0
         .byte   0
-        inc     $FC1F,x
+        .byte   $FE, $1F, $FC
         .byte   $FF
         .byte   $4F
         .byte   0
         .byte   0
-        inc     $FC1F,x
+        .byte   $FE, $1F, $FC
         .byte   $FF
         .byte   $67
         .byte   0
         .byte   0
-        inc     $FC1F,x
+        .byte   $FE, $1F, $FC
         .byte   $FF
         .byte   $F3
         .byte   0
         .byte   0
-        inc     $FC1F,x
+        .byte   $FE, $1F, $FC
         .byte   $FF
-        sbc     $0000,y
-        inc     $FC1F,x
+        .byte   $F9, $00, $00
+        .byte   $FE, $1F, $FC
         .byte   $FF
         .byte   $FC
         .byte   0
         .byte   0
-        inc     $FC1F,x
+        .byte   $FE, $1F, $FC
         .byte   $3F
-        inc     a:$0000,x
-        inc     $FC1F,x
+        .byte   $FE, $00, $00
+        .byte   $FE, $1F, $FC
         .byte   $1F
         .byte   $FF
         .byte   0
         .byte   0
-        inc     $FC1F,x
+        .byte   $FE, $1F, $FC
         .byte   $1F
         .byte   $FF
         .byte   0
         .byte   0
-        rol     $FE00,x
+        .byte   $3E, $00, $FE
         .byte   $FF
         .byte   $FF
         .byte   0
         .byte   0
-        inc     $FF03,x
+        .byte   $FE, $03, $FF
         .byte   $1F
         .byte   $FF
         .byte   0
         .byte   0
-        inc     $FF43,x
+        .byte   $FE, $43, $FF
         .byte   $FF
         .byte   $FF
         .byte   0
         .byte   0
-        asl     $FF60
+        .byte   $0E, $60, $FF
         .byte   $FF
         .byte   $3F
         .byte   0
         .byte   0
-        inc     a:$03,x
+        .byte   $FE, $03, $00
         .byte   0
         .byte   0
         .byte   0
         .byte   0
-        inc     a:$03,x
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+        .byte   $FE, $03, $00
         .byte   0
         .byte   0
         .byte   0
         .byte   0
         .byte   0
         .byte   0
-        .byte   $14
-        .byte   0
-        php
-        .byte   0
-        .byte   $E7
-        .byte   $E7
-        .byte   $07
         .byte   0
         .byte   0
         .byte   0
         .byte   0
         .byte   0
-        bit     $0000
-        .byte   $17
-        .byte   0
-        eor     ($0000,x)
-        and     LE500
-        ora     ($64,x)
-        .byte   0
-        .byte   $04
-        .byte   0
-        .byte   $02
-        .byte   0
-        ldy     #$01
-        and     $0000,x
-        ora     $0000
-        .byte   $03
-        .byte   0
-        .byte   $9F
-        ora     ($34,x)
-        .byte   0
+
+.proc bits_E88F
+viewloc:        DEFINE_POINT $14, $08
+mapbits:        .addr   bitmap
+mapwidth:       .byte   $07
+reserved:       .byte   0
+maprect:        DEFINE_RECT 0, 0, $24, $17
+.endproc
+
+rect_E89F:      DEFINE_RECT 65, 45, 485, 100
+rect_E8A7:      DEFINE_RECT 4, 2, 416, 53
+rect_E8AF:      DEFINE_RECT 5, 3, 415, 52
 
 
 .proc portbits1
@@ -2522,15 +2447,15 @@ LEB84:  stax    LEB81
         MGTK_RELAY_CALL2 MGTK::InitPort, grafport
         MGTK_RELAY_CALL2 MGTK::SetPort, grafport
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL2 MGTK::PaintRect, $E89F
+        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_E89F
         jsr     LF0DF
-        MGTK_RELAY_CALL2 MGTK::FrameRect, $E89F
+        MGTK_RELAY_CALL2 MGTK::FrameRect, rect_E89F
         MGTK_RELAY_CALL2 MGTK::SetPortBits, portbits1
-        MGTK_RELAY_CALL2 MGTK::FrameRect, $E8A7
-        MGTK_RELAY_CALL2 MGTK::FrameRect, $E8AF
+        MGTK_RELAY_CALL2 MGTK::FrameRect, rect_E8A7
+        MGTK_RELAY_CALL2 MGTK::FrameRect, rect_E8AF
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL2 MGTK::HideCursor
-        MGTK_RELAY_CALL2 MGTK::PaintBits, $E88F
+        MGTK_RELAY_CALL2 MGTK::PaintBits, bits_E88F
         MGTK_RELAY_CALL2 MGTK::ShowCursor
         lda     #$00
         sta     LD41E
