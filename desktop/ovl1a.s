@@ -7,18 +7,6 @@
 
         jmp     start
 
-L1A39           := $1A39
-L1A3B           := $1A3B
-LA798           := $A798
-LA839           := $A839
-LA83D           := $A83D
-LA8E8           := $A8E8
-LA960           := $A960
-LAA00           := $AA00
-LAA1B           := $AA1B
-LAA3A           := $AA3A
-LAB37           := $AB37
-
 ;;; ============================================================
 
         DEFINE_OPEN_PARAMS open_params, filename, $1C00
@@ -145,110 +133,10 @@ self:   bne     self            ; hang if fails
 
 ;;; ============================================================
 
-        tax
-        bne     L192C
-        bcc     L1998
-        lda     $BE54
-        lsr     a
-        bcs     L1962
-L192C:  jmp     LA839
+;;; Padded with a chunk of BASIC.SYSTEM 1.1
+;;; (Loaded at: $A721 - $A7FF; file offset $1120)
 
-        lda     $BE53
-        cmp     #$06
-        bne     L192C
-        jmp     LA798
-
-        jsr     LAA1B
-        beq     L192C
-        cmp     #$41
-        beq     L198C
-        jsr     LAB37
-        sty     $BCAD
-        ldy     #$13
-        sty     $BCAE
-        ldy     #$40
-        sty     $BE56
-        jsr     LA960
-        bcs     L1961
-        lda     $BE6B
-        cmp     #$08
-        bcc     L1991
-L195E:  lda     #$02
-        sec
-L1961:  rts
-
-L1962:  lsr     a
-        bcc     L1987
-        jsr     LAA3A
-        beq     L192C
-        dex
-        lda     #$82
-        sta     $BCA9
-        ldy     #$01
-        jsr     LAA00
-        dey
-        dey
-        sty     $0280
-        lda     #$03
-        sta     $BE56
-        dex
-        jsr     LAA3A
-        bne     L192C
-        bcc     L1998
-L1987:  jsr     LAA3A
-        beq     L192C
-L198C:  jsr     LA8E8
-        bcs     L1961
-L1991:  jsr     LAA3A
-        bne     L192C
-        bcs     L1987
-L1998:  lda     $BE61
-        beq     L195E
-        cmp     #$08
-        bcs     L195E
-        lda     $BE62
-        beq     L195E
-        cmp     #$03
-        bcs     L195E
-        lda     $BE54
-        and     #$21
-        lsr     a
-        beq     L19BB
-        lda     $BE42
-        bne     L19BB
-        lda     #$0F
-        sec
-        rts
-
-L19BB:  bcc     L19FD
-        lda     $BE55
-        and     #$04
-        beq     L19FD
-        lda     $BE56
-        lsr     a
-        bcs     L19D3
-        lda     $BE54
-        and     #$90
-        beq     L1A39
-        bpl     L19FD
-L19D3:  lda     $BCBD
-        eor     #$2F
-        beq     L19DF
-        lda     $BF9A
-        beq     L19F8
-L19DF:  lda     $BE57
-        and     #$04
-        beq     L19FD
-        bcs     L19F8
-        lda     #$00
-        sta     $BCBC
-        sta     $BCBD
-        lda     #$01
-        ora     $BE56
-        sta     $BE56
-L19F8:  jsr     LA83D
-        bcs     L1A3B
-L19FD:  lda     $BE53
+        .incbin "inc/bs.dat"
 
 ;;; ============================================================
 

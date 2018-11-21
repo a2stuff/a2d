@@ -1,6 +1,5 @@
-## `desktoplc.inc`
+## `bs.dat`
 
-Header defining various resources in the language card area, used by
-overlays.
+Chunk of BASIC.SYSTEM 1.1 found padding out the binary.
 
-TODO: Make the linker take care of this, use exports/imports instead.
+(Loaded at: $A721 - $A7FF; file offset $1120)
