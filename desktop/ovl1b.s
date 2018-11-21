@@ -1140,7 +1140,7 @@ LDA06:  dex
 LDA35:  tsx
         stx     LD00B
         jump_addr := *+1
-        jmp     $1234
+        jmp     dummy1234
         lda     LD451
         bne     LDA42
         rts
@@ -1615,28 +1615,28 @@ LDF6F:  .byte   0
 LDF70:  .byte   0
 LDF71:  .byte   0
 LDF72:  .byte   0
-LDF73:  ldx     $BF31
-LDF76:  lda     $BF32,x
+LDF73:  ldx     DEVCNT
+LDF76:  lda     DEVLST,x
         cmp     #$BF
         beq     LDF81
         dex
         bpl     LDF76
         rts
 
-LDF81:  lda     $BF33,x
-        sta     $BF32,x
-        cpx     $BF31
+LDF81:  lda     DEVLST+1,x
+        sta     DEVLST,x
+        cpx     DEVCNT
         beq     LDF90
         inx
         jmp     LDF81
 
-LDF90:  dec     $BF31
+LDF90:  dec     DEVCNT
         rts
 
-LDF94:  inc     $BF31
-        ldx     $BF31
+LDF94:  inc     DEVCNT
+        ldx     DEVCNT
         lda     #$BF
-        sta     $BF32,x
+        sta     DEVLST,x
         rts
 
 LDFA0:  MGTK_RELAY_CALL2 MGTK::OpenWindow, winfo_dialog
@@ -1908,8 +1908,8 @@ LE263:  .byte   0
 LE264:  .byte   0
 LE265:  and     #$F0
         sta     LE28C
-        ldx     $BF31
-LE26D:  lda     $BF32,x
+        ldx     DEVCNT
+LE26D:  lda     DEVLST,x
         and     #$F0
         cmp     LE28C
         beq     LE27C
@@ -1918,14 +1918,14 @@ LE26D:  lda     $BF32,x
 LE27A:  sec
         rts
 
-LE27C:  lda     $BF32,x
+LE27C:  lda     DEVLST,x
         and     #$0F
         bne     LE27A
         clc
         rts
 
 LE285:  jsr     LE265
-        lda     $BF32,x
+        lda     DEVLST,x
         rts
 
 LE28C:  .byte   0
