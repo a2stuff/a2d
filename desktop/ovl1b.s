@@ -5,21 +5,26 @@
 .proc disk_copy_overlay3
         .org $D000
 
-L0CAF           := $0CAF
+.scope disk_copy_overlay4
+L0CAF   := $0CAF
 eject_disk      := $0CED
-L0D26           := $0D26
-L0D51           := $0D51
-L0D5F           := $0D5F
-L0DB5           := $0DB5
-L0EB2           := $0EB2
-L0ED7           := $0ED7
-L10FB           := $10FB
-L127E           := $127E
-L1291           := $1291
-L129B           := $129B
-L12A5           := $12A5
-L12AF           := $12AF
-L51ED           := $51ED
+L0D26   := $0D26
+L0D51   := $0D51
+L0D5F   := $0D5F
+L0DB5   := $0DB5
+L0EB2   := $0EB2
+L0ED7   := $0ED7
+L10FB   := $10FB
+L127E   := $127E
+L1291   := $1291
+L129B   := $129B
+L12A5   := $12A5
+L12AF   := $12AF
+.endscope
+
+        ;; Where is this coming from ???
+        L51ED   := $51ED
+
 
 .macro MGTK_RELAY_CALL2 call, params
     .if .paramcount > 1
@@ -567,11 +572,11 @@ LD740:  lda     #$00
         ldx     LD417
         lda     LD3F7,x
         sta     $0C42
-        jsr     L1291
+        jsr     disk_copy_overlay4::L1291
         beq     LD77E
         cmp     #$52
         bne     LD763
-        jsr     L0D5F
+        jsr     disk_copy_overlay4::L0D5F
         jsr     LE674
         jsr     LE559
         jmp     LD7AD
@@ -588,7 +593,7 @@ LD77E:  lda     $1300
         lda     $1301
         cmp     #$52
         bne     LD763
-        jsr     L0D5F
+        jsr     disk_copy_overlay4::L0D5F
         jsr     LE674
         jsr     LE559
         jmp     LD7AD
@@ -615,7 +620,7 @@ LD7AD:  lda     LD417
 LD7CC:  ldx     LD418
         lda     LD3F7,x
         sta     $0C42
-        jsr     L1291
+        jsr     disk_copy_overlay4::L1291
         beq     LD7E1
         cmp     #$52
         beq     LD7F2
@@ -634,7 +639,7 @@ LD7F2:  ldx     LD418
         and     #$0F
         beq     LD817
         lda     LD3F7,x
-        jsr     L0D26
+        jsr     disk_copy_overlay4::L0D26
         ldy     #$FF
         lda     ($06),y
         beq     LD817
@@ -677,7 +682,7 @@ LD852:  ldx     LD418
         and     #$0F
         beq     LD87C
         lda     LD3F7,x
-        jsr     L0D26
+        jsr     disk_copy_overlay4::L0D26
         ldy     #$FE
         lda     ($06),y
         and     #$08
@@ -693,7 +698,7 @@ LD852:  ldx     LD418
 
 LD87C:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_formatting
         addr_call draw_text, str_formatting
-        jsr     L0CAF
+        jsr     disk_copy_overlay4::L0CAF
         bcc     LD8A9
         cmp     #$2B
         beq     LD89F
@@ -717,7 +722,7 @@ LD8A9:  lda     winfo_dialog::window_id
         tax
         lda     LD3F7,x
         pha
-        jsr     eject_disk
+        jsr     disk_copy_overlay4::eject_disk
         pla
         tay
         ldx     #$80
@@ -726,7 +731,7 @@ LD8A9:  lda     winfo_dialog::window_id
         beq     LD8DF
         jmp     LD61C
 
-LD8DF:  jsr     L0DB5
+LD8DF:  jsr     disk_copy_overlay4::L0DB5
         lda     #$00
         sta     LD421
         sta     LD422
@@ -738,7 +743,7 @@ LD8DF:  jsr     L0DB5
         jsr     LE694
 LD8FB:  jsr     LE4A8
         lda     #$00
-        jsr     L0ED7
+        jsr     disk_copy_overlay4::L0ED7
         cmp     #$01
         beq     LD97A
         jsr     LE4EC
@@ -748,7 +753,7 @@ LD8FB:  jsr     LE4A8
         tax
         lda     LD3F7,x
         pha
-        jsr     eject_disk
+        jsr     disk_copy_overlay4::eject_disk
         pla
         tay
         ldx     #$80
@@ -759,7 +764,7 @@ LD8FB:  jsr     LE4A8
 
 LD928:  jsr     LE491
         lda     #$80
-        jsr     L0ED7
+        jsr     disk_copy_overlay4::L0ED7
         bmi     LD955
         bne     LD97A
         jsr     LE507
@@ -769,7 +774,7 @@ LD928:  jsr     LE491
         tax
         lda     LD3F7,x
         pha
-        jsr     eject_disk
+        jsr     disk_copy_overlay4::eject_disk
         pla
         tay
         ldx     #$80
@@ -779,20 +784,20 @@ LD928:  jsr     LE491
         jmp     LD61C
 
 LD955:  jsr     LE507
-        jsr     L10FB
+        jsr     disk_copy_overlay4::L10FB
         ldx     LD417
         lda     LD3F7,x
-        jsr     eject_disk
+        jsr     disk_copy_overlay4::eject_disk
         ldx     LD418
         cpx     LD417
         beq     LD972
         lda     LD3F7,x
-        jsr     eject_disk
+        jsr     disk_copy_overlay4::eject_disk
 LD972:  lda     #$09
         jsr     LEB84
         jmp     LD61C
 
-LD97A:  jsr     L10FB
+LD97A:  jsr     disk_copy_overlay4::L10FB
         lda     #$0A
         jsr     LEB84
         jmp     LD61C
@@ -1172,7 +1177,7 @@ LDDFC:  sta     $0C5A
         sta     $0C5D
         sta     $0C5E
         copy16  #$1C00, $0C5B
-        jsr     L12AF
+        jsr     disk_copy_overlay4::L12AF
         beq     LDE19
         return  #$FF
 
@@ -1249,7 +1254,7 @@ LDE83:  lda     str_dos33_s_d,x
         .byte   0
 LDE9F:  stax    $06
         copy16  #$0002, $0C5D
-        jsr     L12AF
+        jsr     disk_copy_overlay4::L12AF
         beq     LDEBE
         ldy     #$00
         lda     #$01
@@ -1522,7 +1527,7 @@ LE14D:  asl     a               ; * 8
 LE16C:  lda     #$00
         sta     LD44E
         sta     $0C42
-        jsr     L1291
+        jsr     disk_copy_overlay4::L1291
         beq     LE17A
         .byte   0
 LE17A:  lda     #$00
@@ -1800,7 +1805,7 @@ LE3B8:  pha
         beq     LE3CC
         lda     LD3F7,x
         and     #$F0
-        jsr     L0D26
+        jsr     disk_copy_overlay4::L0D26
         jmp     LE3DA
 
 LE3CC:  pla
@@ -1881,7 +1886,7 @@ LE44A:  ldy     #$FF
         tax
         lda     LD3F7,x
         and     #$F0
-        jsr     L0D51
+        jsr     disk_copy_overlay4::L0D51
         sta     LE47D
         jsr     indirect_jump
         .byte   0
@@ -2123,17 +2128,17 @@ LE6FD:  stx     LE765
 
         cmp     #$2B
         bne     LE71A
-        jsr     L127E
+        jsr     disk_copy_overlay4::L127E
         lda     #$05
         jsr     LEB84
         bne     LE714
         jsr     LE491
         return  #$01
 
-LE714:  jsr     L10FB
+LE714:  jsr     disk_copy_overlay4::L10FB
         return  #$80
 
-LE71A:  jsr     L127E
+LE71A:  jsr     disk_copy_overlay4::L127E
         lda     winfo_dialog::window_id
         jsr     LE137
         lda     $0C5D
@@ -2158,7 +2163,7 @@ LE766:  sta     $06
         stx     $09
         inc     $09
         copy16  #$1C00, $0C5B
-LE77A:  jsr     L12AF
+LE77A:  jsr     disk_copy_overlay4::L12AF
         beq     LE789
         ldx     #$00
         jsr     LE6FD
@@ -2202,7 +2207,7 @@ LE7C5:  lda     ($06),y
         bne     LE7C5
         sta     RAMRDOFF
         sta     RAMWRTOFF
-LE7D8:  jsr     L12A5
+LE7D8:  jsr     disk_copy_overlay4::L12A5
         beq     LE7E6
         ldx     #$80
         jsr     LE6FD
@@ -2874,14 +2879,14 @@ LF167:  txa
 
 LF185:  sty     LD41D
         tya
-        jsr     L0EB2
+        jsr     disk_copy_overlay4::L0EB2
         beq     LF191
         sta     LD41E
 LF191:  rts
 
 LF192:  lda     LD41D
         sta     $0C46
-        jsr     L129B
+        jsr     disk_copy_overlay4::L129B
         beq     LF1C9
         cmp     #$52
         beq     LF1C9
@@ -2906,7 +2911,7 @@ LF1CC:  cmp     #$03
         bcc     LF1D7
         cmp     #$06
         bcs     LF1D7
-        jsr     L127E
+        jsr     disk_copy_overlay4::L127E
 LF1D7:  rts
 
         tya
