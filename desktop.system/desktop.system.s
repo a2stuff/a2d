@@ -2098,10 +2098,6 @@ done:   rts
 
         .assert * = $3AD8, error, "Segment size mismatch"
 
-;;; ============================================================
-;;; This is a chunk of BASIC.SYSTEM 1.1 !!
-;;; (ends up in memory at $B0D8, file offset TBD)
-
-        .incbin "inc/bs.dat"
+        PAD_TO $4000
 
         .assert * = $4000, error, "Segment size mismatch"

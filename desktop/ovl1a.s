@@ -133,13 +133,6 @@ self:   bne     self            ; hang if fails
 
 ;;; ============================================================
 
-;;; Padded with a chunk of BASIC.SYSTEM 1.1
-;;; (Loaded at: $A721 - $A7FF; file offset $1120)
-
-        .incbin "inc/bs.dat"
-
-;;; ============================================================
-
         PAD_TO $1A00
 
 .endproc ; disk_copy_overlay2

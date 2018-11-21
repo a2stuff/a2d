@@ -1476,13 +1476,7 @@ L12B9:  .byte   0
 
 ;;; ============================================================
 
-;;; Padding: this is a random chunk of overlay part 2 ($DADA)
-
-        .byte   $AD, $33, $D1, $CD, $8D, $D1, $D0, $03
-        .byte   $4C, $EE, $DA, $CD, $C7, $D1, $D0, $03
-        .byte   $4C, $55, $DB, $60, $AD, $8D, $D1, $8D
-        .byte   $2D, $D1, $20, $37, $E1, $A0, $46, $A9
-        .byte   $2D, $A2, $D1, $20, $E0, $DB
+        PAD_TO $1300
 
         .assert * = $1300, error, "Segment length mismatch"
 
