@@ -2593,8 +2593,8 @@ LED58:  cmp     #MGTK::EventKind::key_down
         bne     :+
         jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, cancel_rect
-LED79:  lda     #$01
-        jmp     LEE6A
+LED79:  lda     #1
+        jmp     clear_and_return_value
 
 :       bit     message_flags
         bvs     LEDE2
@@ -2615,21 +2615,21 @@ LED79:  lda     #$01
 
 do_no:  jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, no_rect
-        lda     #$03
-        jmp     LEE6A
+        lda     #3
+        jmp     clear_and_return_value
 
 do_yes: jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, yes_rect
-        lda     #$02
-        jmp     LEE6A
+        lda     #2
+        jmp     clear_and_return_value
 
 LEDC1:  pla
         cmp     #'a'
         bne     LEDD7
 LEDC6:  jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, ok_try_again_rect
-        lda     #$00
-        jmp     LEE6A
+        lda     #0
+        jmp     clear_and_return_value
 
 LEDD7:  cmp     #'A'
         beq     LEDC6
@@ -2641,8 +2641,8 @@ LEDE2:  cmp     #CHAR_RETURN
         bne     LEDF7
         jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, ok_try_again_rect
-LEDF2:  lda     #$00
-        jmp     LEE6A
+LEDF2:  lda     #0
+        jmp     clear_and_return_value
 
 LEDF7:  jmp     input_loop
 
@@ -2685,7 +2685,8 @@ LEE67:  jmp     input_loop
 
 ;;; ============================================================
 
-LEE6A:  pha
+clear_and_return_value:
+        pha
         MGTK_RELAY_CALL2 MGTK::SetPortBits, portbits2
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL2 MGTK::PaintRect, rect_E89F
@@ -2728,8 +2729,8 @@ LEEEA:  lda     ok_button_state_flag
         beq     LEEF2
         jmp     input_loop
 
-LEEF2:  lda     #$00
-        jmp     LEE6A
+LEEF2:  lda     #0
+        jmp     clear_and_return_value
 
 ok_button_state_flag:
         .byte   0
@@ -2771,8 +2772,8 @@ LEF5A:  lda     cancel_button_state_flag
         beq     LEF62
         jmp     input_loop
 
-LEF62:  lda     #$01
-        jmp     LEE6A
+LEF62:  lda     #1
+        jmp     clear_and_return_value
 
 cancel_button_state_flag:
         .byte   0
@@ -2814,8 +2815,8 @@ LEFCA:  lda     try_again_button_state_flag
         beq     LEFD2
         jmp     input_loop
 
-LEFD2:  lda     #$00
-        jmp     LEE6A
+LEFD2:  lda     #0
+        jmp     clear_and_return_value
 
 try_again_button_state_flag:
         .byte   0
@@ -2857,8 +2858,8 @@ LF03A:  lda     no_button_state_flag
         beq     LF042
         jmp     input_loop
 
-LF042:  lda     #$03
-        jmp     LEE6A
+LF042:  lda     #3
+        jmp     clear_and_return_value
 
 no_button_state_flag:
         .byte   0
@@ -2900,8 +2901,8 @@ LF0AA:  lda     yes_button_state_flag
         beq     LF0B2
         jmp     input_loop
 
-LF0B2:  lda     #$02
-        jmp     LEE6A
+LF0B2:  lda     #2
+        jmp     clear_and_return_value
 
 yes_button_state_flag:
         .byte   0
