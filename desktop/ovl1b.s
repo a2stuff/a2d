@@ -572,7 +572,7 @@ LD6F9:  lda     LD363
         MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D211
         MGTK_RELAY_CALL2 MGTK::CloseWindow, winfo_drive_select
         MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D432
-LD734:  addr_call LEB84, $0000
+LD734:  addr_call show_alert_dialog, $0000 ; Insert Source
         beq     LD740
         jmp     LD61C
 
@@ -621,8 +621,10 @@ LD7AD:  lda     LD417
         lda     LD3F7,x
         tay
         ldx     #$00
-        lda     #$01
-        jsr     LEB84
+
+        lda     #1              ; Insert Destination
+        jsr     show_alert_dialog
+
         beq     LD7CC
         jmp     LD61C
 
@@ -674,8 +676,9 @@ LD82C:  sta     $1300
         addr_call adjust_case, $1300
         ldx     #$00
         ldy     #$13
-        lda     #$02
-LD83C:  jsr     LEB84
+
+        lda     #2              ; Confirm Erase
+LD83C:  jsr     show_alert_dialog
         cmp     #$01
         beq     LD847
         cmp     #$02
@@ -701,8 +704,9 @@ LD852:  ldx     LD418
         beq     LD87C
         cmp     #$FF
         beq     LD87C
-        lda     #$03
-        jsr     LEB84
+
+        lda     #3              ; Destination format failed
+        jsr     show_alert_dialog
         jmp     LD61C
 
 LD87C:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_formatting
@@ -711,13 +715,14 @@ LD87C:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_formatting
         bcc     LD8A9
         cmp     #$2B
         beq     LD89F
-        lda     #$04
-        jsr     LEB84
+
+        lda     #4              ; Format error
+        jsr     show_alert_dialog
         beq     LD852
         jmp     LD61C
 
-LD89F:  lda     #$05
-        jsr     LEB84
+LD89F:  lda     #5              ; Destination protected
+        jsr     show_alert_dialog
         beq     LD852
         jmp     LD61C
 
@@ -735,8 +740,8 @@ LD8A9:  lda     winfo_dialog::window_id
         pla
         tay
         ldx     #$80
-        lda     #$00
-        jsr     LEB84
+        lda     #0              ; Insert source
+        jsr     show_alert_dialog
         beq     LD8DF
         jmp     LD61C
 
@@ -766,8 +771,8 @@ LD8FB:  jsr     LE4A8
         pla
         tay
         ldx     #$80
-        lda     #$01
-        jsr     LEB84
+        lda     #1              ; Insert destination
+        jsr     show_alert_dialog
         beq     LD928
         jmp     LD61C
 
@@ -787,8 +792,8 @@ LD928:  jsr     LE491
         pla
         tay
         ldx     #$80
-        lda     #$00
-        jsr     LEB84
+        lda     #0              ; Insert source
+        jsr     show_alert_dialog
         beq     LD8FB
         jmp     LD61C
 
@@ -802,13 +807,13 @@ LD955:  jsr     LE507
         beq     :+
         lda     LD3F7,x
         jsr     disk_copy_overlay4::eject_disk
-:       lda     #$09
-        jsr     LEB84
+:       lda     #9              ; Copy success
+        jsr     show_alert_dialog
         jmp     LD61C
 
 LD97A:  jsr     disk_copy_overlay4::L10FB
-        lda     #$0A
-        jsr     LEB84
+        lda     #10             ; Copy failed
+        jsr     show_alert_dialog
         jmp     LD61C
 
         .byte   0
@@ -956,7 +961,7 @@ LDAEE:  lda     winfo_dialog::window_id
 
 LDB19:  MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL2 MGTK::PaintRect, rect_ok_button
-        jsr     LDD38
+        jsr     handle_ok_button_down
         rts
 
 LDB2F:  MGTK_RELAY_CALL2 MGTK::InRect, rect_read_drive
@@ -964,7 +969,7 @@ LDB2F:  MGTK_RELAY_CALL2 MGTK::InRect, rect_read_drive
         bne     LDB52
         MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL2 MGTK::PaintRect, rect_read_drive
-        jsr     LDCAC
+        jsr     handle_read_drive_button_down
         rts
 
 LDB52:  return  #$FF
@@ -1087,9 +1092,12 @@ LDCA3:  lda     LD363
 
 LDCA9:  return  #$FF
 
-LDCAC:  lda     #$00
-        sta     LDD37
-LDCB1:  MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
+;;; ============================================================
+
+.proc handle_read_drive_button_down
+        lda     #$00
+        sta     state
+loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_up
         beq     LDD14
@@ -1100,23 +1108,23 @@ LDCB1:  MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         MGTK_RELAY_CALL2 MGTK::InRect, rect_read_drive
         cmp     #MGTK::inrect_inside
         beq     LDCEE
-        lda     LDD37
+        lda     state
         beq     LDCF6
-        jmp     LDCB1
+        jmp     loop
 
-LDCEE:  lda     LDD37
+LDCEE:  lda     state
         bne     LDCF6
-        jmp     LDCB1
+        jmp     loop
 
 LDCF6:  MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL2 MGTK::PaintRect, rect_read_drive
-        lda     LDD37
+        lda     state
         clc
         adc     #$80
-        sta     LDD37
-        jmp     LDCB1
+        sta     state
+        jmp     loop
 
-LDD14:  lda     LDD37
+LDD14:  lda     state
         beq     LDD1C
         return  #$FF
 
@@ -1126,10 +1134,15 @@ LDD1C:  lda     winfo_dialog::window_id
         MGTK_RELAY_CALL2 MGTK::PaintRect, rect_read_drive
         return  #$01
 
-LDD37:  .byte   0
-LDD38:  lda     #$00
-        sta     LDDC3
-LDD3D:  MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
+state:  .byte   0
+.endproc
+
+;;; ============================================================
+
+.proc handle_ok_button_down
+        lda     #$00
+        sta     state
+loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_up
         beq     LDDA0
@@ -1140,23 +1153,23 @@ LDD3D:  MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         MGTK_RELAY_CALL2 MGTK::InRect, rect_ok_button
         cmp     #MGTK::inrect_inside
         beq     LDD7A
-        lda     LDDC3
+        lda     state
         beq     LDD82
-        jmp     LDD3D
+        jmp     loop
 
-LDD7A:  lda     LDDC3
+LDD7A:  lda     state
         bne     LDD82
-        jmp     LDD3D
+        jmp     loop
 
 LDD82:  MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL2 MGTK::PaintRect, rect_ok_button
-        lda     LDDC3
+        lda     state
         clc
         adc     #$80
-        sta     LDDC3
-        jmp     LDD3D
+        sta     state
+        jmp     loop
 
-LDDA0:  lda     LDDC3
+LDDA0:  lda     state
         beq     LDDA8
         return  #$FF
 
@@ -1166,7 +1179,8 @@ LDDA8:  lda     winfo_dialog::window_id
         MGTK_RELAY_CALL2 MGTK::PaintRect, rect_ok_button
         return  #$00
 
-LDDC3:  .byte   0
+state:  .byte   0
+.endproc
 
 ;;; ============================================================
 
@@ -2179,8 +2193,8 @@ LE6FD:  stx     LE765
         cmp     #$2B
         bne     LE71A
         jsr     disk_copy_overlay4::L127E
-        lda     #$05
-        jsr     LEB84
+        lda     #5              ; Destination protected
+        jsr     show_alert_dialog
         bne     LE714
         jsr     LE491
         return  #$01
@@ -2264,6 +2278,8 @@ LE7D8:  jsr     disk_copy_overlay4::L12A5
         beq     LE7E6
         bpl     LE7D8
 LE7E6:  rts
+
+.proc alert_dialog
 
 alert_bitmap:
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
@@ -2447,7 +2463,8 @@ message_flags_table:
 LEB81:  .addr   0
 LEB83:  .byte   0
 
-LEB84:  stax    LEB81
+show_alert_dialog:
+        stax    LEB81
         sty     LEB83
         MGTK_RELAY_CALL2 MGTK::InitPort, grafport
         MGTK_RELAY_CALL2 MGTK::SetPort, grafport
@@ -2699,7 +2716,7 @@ clear_and_return_value:
         jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, ok_try_again_rect
         lda     #$00
-        sta     ok_button_state_flag
+        sta     state
 loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_up
@@ -2709,30 +2726,30 @@ loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         MGTK_RELAY_CALL2 MGTK::InRect, ok_try_again_rect
         cmp     #MGTK::inrect_inside
         beq     LEECA
-        lda     ok_button_state_flag
+        lda     state
         beq     LEED2
         jmp     loop
 
-LEECA:  lda     ok_button_state_flag
+LEECA:  lda     state
         bne     LEED2
         jmp     loop
 
 LEED2:  jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, ok_try_again_rect
-        lda     ok_button_state_flag
+        lda     state
         clc
         adc     #$80
-        sta     ok_button_state_flag
+        sta     state
         jmp     loop
 
-LEEEA:  lda     ok_button_state_flag
+LEEEA:  lda     state
         beq     LEEF2
         jmp     input_loop
 
 LEEF2:  lda     #0
         jmp     clear_and_return_value
 
-ok_button_state_flag:
+state:
         .byte   0
 .endproc
 
@@ -2742,7 +2759,7 @@ ok_button_state_flag:
         jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, cancel_rect
         lda     #$00
-        sta     cancel_button_state_flag
+        sta     state
 loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_up
@@ -2752,30 +2769,30 @@ loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         MGTK_RELAY_CALL2 MGTK::InRect, cancel_rect
         cmp     #MGTK::inrect_inside
         beq     LEF3A
-        lda     cancel_button_state_flag
+        lda     state
         beq     LEF42
         jmp     loop
 
-LEF3A:  lda     cancel_button_state_flag
+LEF3A:  lda     state
         bne     LEF42
         jmp     loop
 
 LEF42:  jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, cancel_rect
-        lda     cancel_button_state_flag
+        lda     state
         clc
         adc     #$80
-        sta     cancel_button_state_flag
+        sta     state
         jmp     loop
 
-LEF5A:  lda     cancel_button_state_flag
+LEF5A:  lda     state
         beq     LEF62
         jmp     input_loop
 
 LEF62:  lda     #1
         jmp     clear_and_return_value
 
-cancel_button_state_flag:
+state:
         .byte   0
 .endproc
 
@@ -2783,7 +2800,7 @@ cancel_button_state_flag:
 
 .proc handle_ok_try_again_button_down2
         lda     #$00
-        sta     try_again_button_state_flag
+        sta     state
         jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, ok_try_again_rect
 loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
@@ -2795,30 +2812,30 @@ loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         MGTK_RELAY_CALL2 MGTK::InRect, ok_try_again_rect
         cmp     #MGTK::inrect_inside
         beq     LEFAA
-        lda     try_again_button_state_flag
+        lda     state
         beq     LEFB2
         jmp     loop
 
-LEFAA:  lda     try_again_button_state_flag
+LEFAA:  lda     state
         bne     LEFB2
         jmp     loop
 
 LEFB2:  jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, ok_try_again_rect
-        lda     try_again_button_state_flag
+        lda     state
         clc
         adc     #$80
-        sta     try_again_button_state_flag
+        sta     state
         jmp     loop
 
-LEFCA:  lda     try_again_button_state_flag
+LEFCA:  lda     state
         beq     LEFD2
         jmp     input_loop
 
 LEFD2:  lda     #0
         jmp     clear_and_return_value
 
-try_again_button_state_flag:
+state:
         .byte   0
 .endproc
 
@@ -2826,7 +2843,7 @@ try_again_button_state_flag:
 
 .proc handle_no_button_down
         lda     #$00
-        sta     no_button_state_flag
+        sta     state
         jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, no_rect
 loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
@@ -2838,30 +2855,30 @@ loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         MGTK_RELAY_CALL2 MGTK::InRect, no_rect
         cmp     #MGTK::inrect_inside
         beq     LF01A
-        lda     no_button_state_flag
+        lda     state
         beq     LF022
         jmp     loop
 
-LF01A:  lda     no_button_state_flag
+LF01A:  lda     state
         bne     LF022
-LF01F:  jmp     loop
+        jmp     loop
 
 LF022:  jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, no_rect
-        lda     no_button_state_flag
+        lda     state
         clc
         adc     #$80
-        sta     no_button_state_flag
+        sta     state
         jmp     loop
 
-LF03A:  lda     no_button_state_flag
+LF03A:  lda     state
         beq     LF042
         jmp     input_loop
 
 LF042:  lda     #3
         jmp     clear_and_return_value
 
-no_button_state_flag:
+state:
         .byte   0
 .endproc
 
@@ -2869,7 +2886,7 @@ no_button_state_flag:
 
 .proc handle_yes_button_down
         lda     #$00
-        sta     yes_button_state_flag
+        sta     state
         jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, yes_rect
 loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
@@ -2881,30 +2898,30 @@ loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
         MGTK_RELAY_CALL2 MGTK::InRect, yes_rect
         cmp     #MGTK::inrect_inside
         beq     LF08A
-        lda     yes_button_state_flag
+        lda     state
         beq     LF092
         jmp     loop
 
-LF08A:  lda     yes_button_state_flag
+LF08A:  lda     state
         bne     LF092
         jmp     loop
 
 LF092:  jsr     set_pen_xor
         MGTK_RELAY_CALL2 MGTK::PaintRect, yes_rect
-        lda     yes_button_state_flag
+        lda     state
         clc
         adc     #$80
-        sta     yes_button_state_flag
+        sta     state
         jmp     loop
 
-LF0AA:  lda     yes_button_state_flag
+LF0AA:  lda     state
         beq     LF0B2
         jmp     input_loop
 
 LF0B2:  lda     #2
         jmp     clear_and_return_value
 
-yes_button_state_flag:
+state:
         .byte   0
 .endproc
 
@@ -3068,6 +3085,10 @@ LF1CC:  cmp     #$03
         bcs     LF1D7
         jsr     disk_copy_overlay4::L127E
 LF1D7:  rts
+
+.endproc
+
+show_alert_dialog := alert_dialog::show_alert_dialog
 
 ;;; ============================================================
 
