@@ -655,7 +655,7 @@ just_rts:
 ;;; Quit back to ProDOS (which will launch DeskTop)
 
 .proc quit
-        jsr     disk_copy_overlay3::LDF94
+        jsr     disk_copy_overlay3::restore_ram_disk
         sta     ALTZPOFF
         lda     ROMIN2
         sta     DHIRESOFF
@@ -852,7 +852,7 @@ L0DB5:  lda     #$14
         copy16  L0EB0, disk_copy_overlay3::LD427
         bit     disk_copy_overlay3::LD44D
         bmi     L0DF6
-        lda     disk_copy_overlay3::LD451
+        lda     disk_copy_overlay3::quick_copy_flag
         bne     L0DF6
         jmp     L0E4D
 
