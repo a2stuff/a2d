@@ -373,7 +373,7 @@ quick_copy_flag:  .byte   0
         .byte   1, 0
 
 str_2_spaces:   PASCAL_STRING "  "
-str_7_spaces:   PASCAL_STRING "       "
+str_number:     PASCAL_STRING "       " ; filled in by string_to_number
 
 ;;; Label positions
 point_blocks_read:     DEFINE_POINT 300, 125
@@ -829,7 +829,7 @@ LD998:  bit     LD368
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
         bne     LD9BA
-        jmp     LDAB1
+        jmp     handle_button_down
 
 LD9BA:  cmp     #MGTK::EventKind::key_down
         bne     LD998
@@ -861,7 +861,7 @@ LD9E6:  lda     #$01
         lda     event_modifiers
         sta     menukey_params::key_mods
         MGTK_RELAY_CALL2 MGTK::MenuKey, menukey_params
-LDA00:  ldx     menukey_params::menu_id
+handle_menu_selection:  ldx     menukey_params::menu_id
         bne     LDA06
         rts
 
@@ -922,59 +922,62 @@ LDA7D:  lda     #$00
         addr_call draw_title_text, str_disk_copy_padded
         rts
 
-LDAB1:  MGTK_RELAY_CALL2 MGTK::FindWindow, event_xcoord
+handle_button_down:
+        MGTK_RELAY_CALL2 MGTK::FindWindow, event_xcoord
         lda     findwindow_which_area
-        bne     LDAC0
-        rts
-
-LDAC0:  cmp     #$01
-        bne     LDAD0
+        bne     :+
+        rts                     ; desktop - ignore
+:       cmp     #MGTK::Area::menubar
+        bne     :+
         MGTK_RELAY_CALL2 MGTK::MenuSelect, menuselect_params
-        jmp     LDA00
+        jmp     handle_menu_selection
+:       cmp     #MGTK::Area::content
+        bne     :+
+        jmp     handle_content_button_down
+:       return  #$FF
 
-LDAD0:  cmp     #$02
-        bne     LDAD7
-        jmp     LDADA
-
-LDAD7:  return  #$FF
-
-LDADA:  lda     LD133
+handle_content_button_down:
+        lda     LD133
         cmp     winfo_dialog::window_id
-        bne     LDAE5
-        jmp     LDAEE
+        bne     check_drive_select
+        jmp     handle_dialog_button_down
 
-LDAE5:  cmp     winfo_drive_select
-        bne     LDAED
-        jmp     LDB55
+check_drive_select:
+        cmp     winfo_drive_select
+        bne     :+
+        jmp     handle_drive_select_button_down
+:       rts
 
-LDAED:  rts
-
-LDAEE:  lda     winfo_dialog::window_id
+handle_dialog_button_down:
+        lda     winfo_dialog::window_id
         sta     screentowindow_window_id
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL2 MGTK::MoveTo, screentowindow_windowx
+
+check_ok_button:
         MGTK_RELAY_CALL2 MGTK::InRect, rect_ok_button
         cmp     #MGTK::inrect_inside
-        beq     LDB19
-        jmp     LDB2F
-
-LDB19:  MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
+        beq     :+
+        jmp     check_read_drive_button
+:       MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL2 MGTK::PaintRect, rect_ok_button
         jsr     handle_ok_button_down
         rts
 
-LDB2F:  MGTK_RELAY_CALL2 MGTK::InRect, rect_read_drive
+check_read_drive_button:
+        MGTK_RELAY_CALL2 MGTK::InRect, rect_read_drive
         cmp     #MGTK::inrect_inside
-        bne     LDB52
+        bne     :+
         MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL2 MGTK::PaintRect, rect_read_drive
         jsr     handle_read_drive_button_down
         rts
 
-LDB52:  return  #$FF
+:       return  #$FF
 
-LDB55:  lda     winfo_drive_select
+handle_drive_select_button_down:
+        lda     winfo_drive_select
         sta     screentowindow_window_id
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::ScreenToWindow, screentowindow_params
@@ -1322,7 +1325,7 @@ LDEE6:  lda     #$3A
         stax    number
         ldx     #7
         lda     #' '
-:       sta     str_7_spaces,x
+:       sta     str_number,x
         dex
         bne     :-
 
@@ -1353,7 +1356,7 @@ LDF31:  pha
         lda     #$80
         sta     LDF72
         pla
-LDF38:  sta     str_7_spaces+2,y
+LDF38:  sta     str_number+2,y
         iny
         inx
         inx
@@ -1367,7 +1370,7 @@ LDF45:  inc     LDF71
 
 LDF5E:  lda     number
         ora     #'0'
-        sta     str_7_spaces+2,y
+        sta     str_number+2,y
         rts
 
 tens_table:
@@ -2017,7 +2020,7 @@ LE4BF:  lda     winfo_dialog::window_id
         jsr     number_to_string
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_source
         addr_call draw_text, str_blocks_to_transfer
-        addr_call draw_text, str_7_spaces
+        addr_call draw_text, str_number
         rts
 
 LE4EC:  jsr     LE522
@@ -2032,7 +2035,7 @@ LE500:  .byte   $57
 LE507:  jsr     LE522
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_blocks_written
         addr_call draw_text, str_blocks_written
-        addr_call draw_text, str_7_spaces
+        addr_call draw_text, str_number
         rts
 
 LE522:  lda     winfo_dialog::window_id
@@ -2212,12 +2215,12 @@ LE71A:  jsr     disk_copy_overlay4::L127E
         bne     LE74B
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_error_reading
         addr_call draw_text, str_error_reading
-        addr_call draw_text, str_7_spaces
+        addr_call draw_text, str_number
         return  #$00
 
 LE74B:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_error_writing
         addr_call draw_text, str_error_writing
-        addr_call draw_text, str_7_spaces
+        addr_call draw_text, str_number
         return  #$00
 
 LE765:  .byte   0
@@ -2278,6 +2281,8 @@ LE7D8:  jsr     disk_copy_overlay4::L12A5
         beq     LE7E6
         bpl     LE7D8
 LE7E6:  rts
+
+;;; ============================================================
 
 .proc alert_dialog
 
