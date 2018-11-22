@@ -1461,18 +1461,16 @@ L12B9:  .byte   0
         .byte   $7F
         .byte   $FF
 
-L12DA:  lda     $D133
-        cmp     $D18D
-        bne     :+
-        jmp     disk_copy_overlay3::LDAEE
-:       cmp     $D1C7
-        bne     :+
-        jmp     disk_copy_overlay3::LDB55
-:       rts
+;;; ============================================================
 
-        lda     $D18D
-        sta     $D12D
-        jsr     disk_copy_overlay3::LE137
-        yax_call disk_copy_overlay3::MGTK_RELAY2, MGTK::ScreenToWindow, $D12D
+;;; Padding: this is a random chunk of overlay part 2 ($DADA)
+
+        .byte   $AD, $33, $D1, $CD, $8D, $D1, $D0, $03
+        .byte   $4C, $EE, $DA, $CD, $C7, $D1, $D0, $03
+        .byte   $4C, $55, $DB, $60, $AD, $8D, $D1, $8D
+        .byte   $2D, $D1, $20, $37, $E1, $A0, $46, $A9
+        .byte   $2D, $A2, $D1, $20, $E0, $DB
+
+        .assert * = $1300, error, "Segment length mismatch"
 
 .endproc

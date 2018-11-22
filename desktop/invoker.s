@@ -172,5 +172,6 @@ update_bitmap:
 exit:   rts
 
         ;; Pad to $160 bytes
-        .res    $160 - (* - start), 0
+        PAD_TO $3F0
+
 .endproc ; invoker

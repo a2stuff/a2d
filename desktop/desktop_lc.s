@@ -260,6 +260,5 @@ op:     lda     dummy1234
 
         .include "desktop_res.s"
 
-
         .assert * = $FFBA, error, "Segment length mismatch"
         PAD_TO $10000

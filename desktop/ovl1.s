@@ -105,4 +105,5 @@ self:   bne     self            ; hang on error?
 ;;; ============================================================
 
         PAD_TO $A00
+
 .endproc ; disk_copy_overlay

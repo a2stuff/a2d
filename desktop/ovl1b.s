@@ -827,8 +827,8 @@ LD9C1:  .addr   $0C83
         .addr   $0C83
         .addr   $0C83
         .addr   $0C84
-        .addr   $DA3C
-        .addr   $DA77
+        .addr   LDA3C
+        .addr   LDA77
 
 LD9D1:  .byte   0, $A, $C, $10
 
@@ -872,7 +872,8 @@ LDA35:  tsx
         stx     LD00B
         jump_addr := *+1
         jmp     dummy1234
-        lda     LD451
+
+LDA3C:  lda     LD451
         bne     LDA42
         rts
 
@@ -891,7 +892,7 @@ LDA42:  lda     #$00
         addr_call LE0B4, str_quick_copy_padded
         rts
 
-        lda     LD451
+LDA77:  lda     LD451
         beq     LDA7D
         rts
 
@@ -1989,12 +1990,8 @@ LE522:  lda     winfo_dialog::window_id
         jsr     LDEEB
         rts
 
-LE550:  .byte   $07
-        asl     $05
-        .byte   $04
-        .byte   $03
-        .byte   $02
-        ora     ($0000,x)
+LE550:  .byte   7,6,5,4,3,2,1,0
+
 LE558:  .byte   0
 LE559:  lda     winfo_dialog::window_id
         jsr     LE137
@@ -2914,27 +2911,37 @@ LF1CC:  cmp     #$03
         jsr     disk_copy_overlay4::L127E
 LF1D7:  rts
 
+;;; ============================================================
+
+;;; Padding ???
+
+.scope
         tya
         lsr     a
-        bcs     LF1DF
+        bcs     :+
         bit     $C055
-LF1DF:  tay
+:       tay
         lda     ($28),y
         pha
         cmp     #$E0
-        bcc     LF1E9
+        bcc     :+
         sbc     #$20
-LF1E9:  and     #$3F
+:       and     #$3F
         sta     ($28),y
         lda     $C000
-        bmi     LF1F5
+        bmi     :+
         jmp     L51ED
 
-LF1F5:  pla
+:       pla
         sta     ($28),y
         bit     $C054
         lda     $C000
         .byte   $2C
         .byte   $10
+.endscope
+
+;;; ============================================================
+
+        PAD_TO $F200
 
 .endproc

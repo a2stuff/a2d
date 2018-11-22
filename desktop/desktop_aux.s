@@ -3768,5 +3768,7 @@ addr:   .addr   0
 .endproc
 
         .assert * = $BFFC, error, "Segment length mismatch"
+
         PAD_TO $C000
+
 .endproc ; desktop_aux

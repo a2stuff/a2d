@@ -141,4 +141,5 @@ self:   bne     self            ; hang if fails
 ;;; ============================================================
 
         PAD_TO $1A00
+
 .endproc ; disk_copy_overlay2

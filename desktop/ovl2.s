@@ -1546,4 +1546,5 @@ L1A6D:  lda     on_line_params::unit_num
 ;;; ============================================================
 
         PAD_TO $1C00
+
 .endproc ; format_erase_overlay
