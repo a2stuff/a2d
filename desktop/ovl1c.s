@@ -648,10 +648,13 @@ params: .addr   0
 
 ;;; ============================================================
 
+just_rts:
         rts
 
 ;;; ============================================================
+;;; Quit back to ProDOS (which will launch DeskTop)
 
+.proc quit
         jsr     disk_copy_overlay3::LDF94
         sta     ALTZPOFF
         lda     ROMIN2
@@ -666,15 +669,16 @@ params: .addr   0
         jsr     HOME
         MLI_CALL QUIT, quit_params
         rts
+.endproc
 
 ;;; ============================================================
 
-        ldx     $D418
-        lda     $D3F7,x
+        ldx     disk_copy_overlay3::LD418
+        lda     disk_copy_overlay3::LD3F7,x
         sta     L0CEC
         and     #$0F
         beq     L0CCC
-        lda     $D3F7,x
+        lda     disk_copy_overlay3::LD3F7,x
         jsr     L0D26
         ldy     #$FF
         lda     ($06),y
@@ -769,7 +773,7 @@ L0D34:  stx     load_addr
         sta     load_addr
 
         load_addr := * + 1
-        lda     $BF00           ; self-modified
+        lda     MLI             ; self-modified
         sta     $07
         lda     #$00
         sta     $06
@@ -794,15 +798,15 @@ L0D51:  pha
 
 ;;; ============================================================
 
-L0D5F:  ldx     $D417
-        lda     $D3F7,x
+L0D5F:  ldx     disk_copy_overlay3::LD417
+        lda     disk_copy_overlay3::LD3F7,x
         sta     block_params::unit_num
         lda     #$00
         sta     block_params::block_num
         sta     block_params::block_num+1
         jsr     L12AF
         bne     L0D8A
-        lda     $1C01
+        lda     $1C00+1
         cmp     #$E0
         beq     L0D7F
         jmp     L0DA4
@@ -813,13 +817,13 @@ L0D7F:  lda     $1C02
         cmp     #$60
         beq     L0D90
 L0D8A:  lda     #$81
-        sta     $D44D
+        sta     disk_copy_overlay3::LD44D
         rts
 
 L0D90:  addr_call disk_copy_overlay3::LDE9F, $1300
         addr_call disk_copy_overlay3::adjust_case, $1300
         lda     #$C0
-        sta     $D44D
+        sta     disk_copy_overlay3::LD44D
         rts
 
 L0DA4:  cmp     #$A5
@@ -828,36 +832,36 @@ L0DA4:  cmp     #$A5
         cmp     #$27
         bne     L0D8A
         lda     #$80
-        sta     $D44D
+        sta     disk_copy_overlay3::LD44D
         rts
 
 ;;; ============================================================
 
 L0DB5:  lda     #$14
         jsr     L1133
-        lda     $D417
+        lda     disk_copy_overlay3::LD417
         asl     a
         tax
-        lda     $D407,x
+        lda     disk_copy_overlay3::LD407,x
         sta     L0EB0
-        lda     $D408,x
+        lda     disk_copy_overlay3::LD407+1,x
         sta     L0EB1
         lsr16   L0EB0
         lsr16   L0EB0
         lsr16   L0EB0
-        copy16  L0EB0, $D427
-        bit     $D44D
+        copy16  L0EB0, disk_copy_overlay3::LD427
+        bit     disk_copy_overlay3::LD44D
         bmi     L0DF6
-        lda     $D451
+        lda     disk_copy_overlay3::LD451
         bne     L0DF6
         jmp     L0E4D
 
 L0DF6:  lda     #$FF
         clc
-        adc     $D427
+        adc     disk_copy_overlay3::LD427
         sta     $06
         lda     #$13
-        adc     $D428
+        adc     disk_copy_overlay3::LD427+1
         sta     $07
         ldy     #$00
 L0E07:  lda     #$00
@@ -875,14 +879,14 @@ L0E15:  lda     $07
         bne     L0E07
         lda     #$00
         sta     ($06),y
-        lda     $D428
+        lda     disk_copy_overlay3::LD427+1
         cmp     #$02
         bcs     L0E2D
         rts
 
 L0E2D:  lda     #$14
         sta     $06
-        lda     $D428
+        lda     disk_copy_overlay3::LD427+1
         pha
 L0E35:  inc     $06
         inc     $06
@@ -899,9 +903,9 @@ L0E47:  lda     $06
         jsr     L1133
         rts
 
-L0E4D:  copy16  #$0006, block_params::block_num
-        ldx     $D417
-        lda     $D3F7,x
+L0E4D:  copy16  #6, block_params::block_num
+        ldx     disk_copy_overlay3::LD417
+        lda     disk_copy_overlay3::LD3F7,x
         sta     block_params::unit_num
         copy16  #$1400, block_params::data_buffer
         jsr     L12AF
@@ -959,32 +963,32 @@ L0ED6:  .byte   0
 
 ;;; ============================================================
 
-L0ED7:  bit     $C010
+L0ED7:  bit     KBDSTRB
         sta     L0FE6
         and     #$FF
         bpl     L0EFF
-        copy16  $D424, $D421
-        lda     $D426
-        sta     $D423
-        ldx     $D418
-        lda     $D3F7,x
+        copy16  disk_copy_overlay3::LD424, disk_copy_overlay3::LD421
+        lda     disk_copy_overlay3::LD426
+        sta     disk_copy_overlay3::LD423
+        ldx     disk_copy_overlay3::LD418
+        lda     disk_copy_overlay3::LD3F7,x
         sta     block_params::unit_num
         jmp     L0F1A
 
-L0EFF:  copy16  $D421, $D424
-        lda     $D423
-        sta     $D426
-        ldx     $D417
-        lda     $D3F7,x
+L0EFF:  copy16  disk_copy_overlay3::LD421, disk_copy_overlay3::LD424
+        lda     disk_copy_overlay3::LD423
+        sta     disk_copy_overlay3::LD426
+        ldx     disk_copy_overlay3::LD417
+        lda     disk_copy_overlay3::LD3F7,x
         sta     block_params::unit_num
 L0F1A:  lda     #$07
-        sta     $D420
+        sta     disk_copy_overlay3::LD420
         lda     #$00
-        sta     $D41F
+        sta     disk_copy_overlay3::LD41F
         sta     L0FE4
         sta     L0FE5
-L0F2A:  lda     $C000
-        cmp     #$9B
+L0F2A:  lda     KBD
+        cmp     #(CHAR_ESCAPE | $80)
         bne     L0F37
         jsr     disk_copy_overlay3::LE6AB
         jmp     L0F6F
@@ -1018,7 +1022,7 @@ L0F6F:  return  #$01
 L0F72:  stax    block_params::block_num
         ldx     L0FE8
         lda     L0FE7
-        ldy     $D41F
+        ldy     disk_copy_overlay3::LD41F
         cpy     #$10
         bcs     L0F9A
         bit     L0FE6
@@ -1086,35 +1090,35 @@ L0FF6:  jsr     L0FFF
         tax
         rts
 
-L0FFF:  dec     $D423
-        lda     $D423
+L0FFF:  dec     disk_copy_overlay3::LD423
+        lda     disk_copy_overlay3::LD423
         cmp     #$FF
         beq     L100B
 L1009:  clc
         rts
 
 L100B:  lda     #$07
-        sta     $D423
-        inc16   $D421
-L1018:  lda     $D422
-        cmp     $D428
+        sta     disk_copy_overlay3::LD423
+        inc16   disk_copy_overlay3::LD421
+L1018:  lda     disk_copy_overlay3::LD421+1
+        cmp     disk_copy_overlay3::LD427+1
         bne     L1009
-        lda     $D421
-        cmp     $D427
+        lda     disk_copy_overlay3::LD421
+        cmp     disk_copy_overlay3::LD427
         bne     L1009
         sec
         rts
 
 L102A:  lda     #$00
         clc
-        adc     $D421
+        adc     disk_copy_overlay3::LD421
         sta     $06
         lda     #$14
-        adc     $D422
+        adc     disk_copy_overlay3::LD421+1
         sta     $07
         ldy     #$00
         lda     ($06),y
-        ldx     $D423
+        ldx     disk_copy_overlay3::LD423
         cpx     #$00
         beq     L1048
 L1044:  lsr     a
@@ -1125,16 +1129,16 @@ L1048:  and     #$01
         tay
         beq     L1051
 L104F:  ldy     #$FF
-L1051:  lda     $D422
+L1051:  lda     disk_copy_overlay3::LD421+1
         sta     L1076
-        lda     $D421
+        lda     disk_copy_overlay3::LD421
         asl     a
         rol     L1076
         asl     a
         rol     L1076
         asl     a
         rol     L1076
-        ldx     $D423
+        ldx     disk_copy_overlay3::LD423
         clc
         adc     L1077,x
         pha
@@ -1165,25 +1169,25 @@ L108C:  jsr     L1095
         tax
         rts
 
-L1095:  dec     $D420
-        lda     $D420
+L1095:  dec     disk_copy_overlay3::LD420
+        lda     disk_copy_overlay3::LD420
         cmp     #$FF
         beq     L10A1
 L109F:  clc
         rts
 
 L10A1:  lda     #$07
-        sta     $D420
-        inc     $D41F
-        lda     $D41F
+        sta     disk_copy_overlay3::LD420
+        inc     disk_copy_overlay3::LD41F
+        lda     disk_copy_overlay3::LD41F
         cmp     #$21
         bcc     L109F
         sec
         rts
 
-L10B2:  ldx     $D41F
+L10B2:  ldx     disk_copy_overlay3::LD41F
         lda     L12B9,x
-        ldx     $D420
+        ldx     disk_copy_overlay3::LD420
         cpx     #$00
         beq     L10C3
 L10BF:  lsr     a
@@ -1194,14 +1198,14 @@ L10C3:  and     #$01
         ldy     #$00
         beq     L10CD
 L10CB:  ldy     #$FF
-L10CD:  lda     $D41F
+L10CD:  lda     disk_copy_overlay3::LD41F
         cmp     #$10
         bcs     L10E3
 L10D4:  asl     a
         asl     a
         asl     a
         asl     a
-        ldx     $D420
+        ldx     disk_copy_overlay3::LD420
         clc
         adc     L10F3,x
         tax
@@ -1233,7 +1237,7 @@ L1104:  lda     $06
         inc     L111E
         inc     L111E
         lda     L111E
-        cmp     $D428
+        cmp     disk_copy_overlay3::LD427+1
         beq     L1104
         bcc     L1104
         rts

@@ -6,6 +6,21 @@
         .org $D000
 
 .scope disk_copy_overlay4
+.scope on_line_params2
+unit_num        := $0C42
+.endscope
+.scope on_line_params
+unit_num        := $0C46
+.endscope
+        on_line_buffer := $0C49
+.scope block_params
+unit_num       := $0C5A
+data_buffer    := $0C5B
+block_num      := $0C5D
+.endscope
+
+just_rts        := $0C83
+quit    := $0C84
 L0CAF   := $0CAF
 eject_disk      := $0CED
 L0D26   := $0D26
@@ -21,10 +36,6 @@ L129B   := $129B
 L12A5   := $12A5
 L12AF   := $12AF
 .endscope
-
-        ;; Where is this coming from ???
-        L51ED   := $51ED
-
 
 .macro MGTK_RELAY_CALL2 call, params
     .if .paramcount > 1
@@ -340,16 +351,13 @@ str_d:  PASCAL_STRING 0
 str_s:  PASCAL_STRING 0
 LD41D:  .byte   0
 LD41E:  .byte   0
-        .byte   0
-        .byte   0
-LD421:  .byte   0
-LD422:  .byte   0
+LD41F:  .byte   0
+LD420:  .byte   0
+LD421:  .word   0
 LD423:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+LD424:  .word   0
+LD426:  .byte   0
+LD427:  .word   0
 LD429:  .byte   0
 
 rect_D42A:      DEFINE_RECT 18, 20, 490, 88
@@ -571,7 +579,7 @@ LD740:  lda     #$00
         sta     LD44D
         ldx     LD417
         lda     LD3F7,x
-        sta     $0C42
+        sta     disk_copy_overlay4::on_line_params2::unit_num
         jsr     disk_copy_overlay4::L1291
         beq     LD77E
         cmp     #$52
@@ -619,7 +627,7 @@ LD7AD:  lda     LD417
 
 LD7CC:  ldx     LD418
         lda     LD3F7,x
-        sta     $0C42
+        sta     disk_copy_overlay4::on_line_params2::unit_num
         jsr     disk_copy_overlay4::L1291
         beq     LD7E1
         cmp     #$52
@@ -734,7 +742,7 @@ LD8A9:  lda     winfo_dialog::window_id
 LD8DF:  jsr     disk_copy_overlay4::L0DB5
         lda     #$00
         sta     LD421
-        sta     LD422
+        sta     LD421+1
         lda     #$07
         sta     LD423
         jsr     LE4BF
@@ -821,12 +829,12 @@ LD9BA:  cmp     #MGTK::EventKind::key_down
         bne     LD998
         jmp     LD9D5
 
-LD9C1:  .addr   $0C83
-        .addr   $0C83
-        .addr   $0C83
-        .addr   $0C83
-        .addr   $0C83
-        .addr   $0C84
+LD9C1:  .addr   disk_copy_overlay4::just_rts
+        .addr   disk_copy_overlay4::just_rts
+        .addr   disk_copy_overlay4::just_rts
+        .addr   disk_copy_overlay4::just_rts
+        .addr   disk_copy_overlay4::just_rts
+        .addr   disk_copy_overlay4::quit
         .addr   LDA3C
         .addr   LDA77
 
@@ -1173,11 +1181,11 @@ LDDC3:  .byte   0
 
 ;;; ============================================================
 
-LDDFC:  sta     $0C5A
+LDDFC:  sta     disk_copy_overlay4::block_params::unit_num
         lda     #$00
-        sta     $0C5D
-        sta     $0C5E
-        copy16  #$1C00, $0C5B
+        sta     disk_copy_overlay4::block_params::block_num
+        sta     disk_copy_overlay4::block_params::block_num+1
+        copy16  #$1C00, disk_copy_overlay4::block_params::data_buffer
         jsr     disk_copy_overlay4::L12AF
         beq     LDE19
         return  #$FF
@@ -1216,7 +1224,7 @@ LDE4D:  cmp     #$A5
         lda     $1C02
         cmp     #$27
         bne     LDE2E
-        lda     $0C5A
+        lda     disk_copy_overlay4::block_params::unit_num
         and     #$70
         lsr     a
         lsr     a
@@ -1226,7 +1234,7 @@ LDE4D:  cmp     #$A5
         adc     #'0'
         ldx     slot_char
         sta     str_dos33_s_d,x
-        lda     $0C5A
+        lda     disk_copy_overlay4::block_params::unit_num
         and     #$80
         asl     a
         rol     a
@@ -1254,7 +1262,7 @@ LDE83:  lda     str_dos33_s_d,x
 
         .byte   0
 LDE9F:  stax    $06
-        copy16  #$0002, $0C5D
+        copy16  #$0002, disk_copy_overlay4::block_params::block_num
         jsr     disk_copy_overlay4::L12AF
         beq     LDEBE
         ldy     #$00
@@ -1527,7 +1535,7 @@ LE14D:  asl     a               ; * 8
 
 LE16C:  lda     #$00
         sta     LD44E
-        sta     $0C42
+        sta     disk_copy_overlay4::on_line_params2::unit_num
         jsr     disk_copy_overlay4::L1291
         beq     LE17A
         .byte   0
@@ -1970,7 +1978,7 @@ LE507:  jsr     LE522
 
 LE522:  lda     winfo_dialog::window_id
         jsr     LE137
-        lda     LD422
+        lda     LD421+1
         sta     LE558
         lda     LD421
         asl     a
@@ -2138,8 +2146,8 @@ LE714:  jsr     disk_copy_overlay4::L10FB
 LE71A:  jsr     disk_copy_overlay4::L127E
         lda     winfo_dialog::window_id
         jsr     LE137
-        lda     $0C5D
-        ldx     $0C5E
+        lda     disk_copy_overlay4::block_params::block_num
+        ldx     disk_copy_overlay4::block_params::block_num+1
         jsr     LDEEB
         lda     LE765
         bne     LE74B
@@ -2159,7 +2167,7 @@ LE766:  sta     $06
         stx     $07
         stx     $09
         inc     $09
-        copy16  #$1C00, $0C5B
+        copy16  #$1C00, disk_copy_overlay4::block_params::data_buffer
 LE77A:  jsr     disk_copy_overlay4::L12AF
         beq     LE789
         ldx     #$00
@@ -2188,7 +2196,7 @@ LE7A8:  sta     $06
         stx     $07
         stx     $09
         inc     $09
-        copy16  #$1C00, $0C5B
+        copy16  #$1C00, disk_copy_overlay4::block_params::data_buffer
         .byte   $8D
         .byte   $03
         cpy     #$8D
@@ -2882,15 +2890,15 @@ LF185:  sty     LD41D
 LF191:  rts
 
 LF192:  lda     LD41D
-        sta     $0C46
+        sta     disk_copy_overlay4::on_line_params::unit_num
         jsr     disk_copy_overlay4::L129B
         beq     LF1C9
         cmp     #$52
         beq     LF1C9
-        lda     $0C49
+        lda     disk_copy_overlay4::on_line_buffer
         and     #$0F
         bne     LF1C9
-        lda     $0C4A
+        lda     disk_copy_overlay4::on_line_buffer+1
         cmp     #$52
         beq     LF1C9
         MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
@@ -2930,7 +2938,7 @@ LF1D7:  rts
         sta     ($28),y
         lda     $C000
         bmi     :+
-        jmp     L51ED
+        jmp     $51ED
 
 :       pla
         sta     ($28),y
