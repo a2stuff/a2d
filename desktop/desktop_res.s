@@ -709,7 +709,8 @@ picker_entry_pos:
 str_folder:
         PASCAL_STRING {GLYPH_FOLDERL,GLYPH_FOLDERR}
 
-LD920:  .byte   $00,$00
+LD920:  .byte   0
+LD921:  .byte   0
 
 pos_D922:
         DEFINE_POINT 343,40
