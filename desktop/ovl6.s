@@ -30,7 +30,7 @@ L7029:  lda     jump_table_entries+1,x
         bpl     L7029
         lda     #$00
         sta     path_buf0
-        sta     $51AE
+        sta     common_overlay::L51AE
         lda     #$01
         sta     path_buf2
         lda     #$06
@@ -51,18 +51,18 @@ jump_table_entries:
         .byte $29               ; length of the following data block
         jump_table_entry L70B1
         jump_table_entry L70EA
-        jump_table_entry $6593
-        jump_table_entry $664E
-        jump_table_entry $6DC2
-        jump_table_entry $6DD0
-        jump_table_entry $6E1D
-        jump_table_entry $69C6
-        jump_table_entry $6A18
-        jump_table_entry $6A53
-        jump_table_entry $6AAC
-        jump_table_entry $6B01
-        jump_table_entry $6B44
-        jump_table_entry $66D8
+        jump_table_entry common_overlay::L6593
+        jump_table_entry common_overlay::L664E
+        jump_table_entry common_overlay::L6DC2
+        jump_table_entry common_overlay::L6DD0
+        jump_table_entry common_overlay::L6E1D
+        jump_table_entry common_overlay::L69C6
+        jump_table_entry common_overlay::L6A18
+        jump_table_entry common_overlay::L6A53
+        jump_table_entry common_overlay::L6AAC
+        jump_table_entry common_overlay::L6B01
+        jump_table_entry common_overlay::L6B44
+        jump_table_entry common_overlay::L66D8
 
 
 L70B1:  addr_call common_overlay::L647C, path_buf0
@@ -74,10 +74,10 @@ L70B1:  addr_call common_overlay::L647C, path_buf0
 L70C0:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
         lda     #0
-        sta     $D8EC
+        sta     LD8EC
         jsr     common_overlay::set_cursor_pointer
         copy16  #path_buf0, $6
-        ldx     $50AA
+        ldx     common_overlay::stash_stack
         txs
         lda     #0
         rts
@@ -89,7 +89,7 @@ L70EA:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
         lda     #0
         sta     $D8EC
         jsr     common_overlay::set_cursor_pointer
-        ldx     $50AA
+        ldx     common_overlay::stash_stack
         txs
         return  #$FF
 

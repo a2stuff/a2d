@@ -36,7 +36,7 @@ L9017:  lda     $0C00
         rts
 
 L903C:  ldx     #$01
-        copy16  $DB1C, load
+        copy16  selector_menu_addr, load
         load := *+1
         lda     dummy1234
         cmp     #$0D
@@ -88,7 +88,7 @@ L9093:  copy16  $0C00, L938B
         lda     L938B
         jsr     L9A0A
         inc     $0C00
-        copy16  $DB1C, @addr
+        copy16  selector_menu_addr, @addr
         @addr := *+1
         inc     dummy1234
         jsr     L9CEA
@@ -258,7 +258,7 @@ L9215:  lda     L938D
 L9220:  ldx     L938B
         inc     L938B
         inc     $0C00
-        copy16  $DB1C, @addr
+        copy16  selector_menu_addr, @addr
         @addr := *+1
         inc     dummy1234
         txa
@@ -495,11 +495,11 @@ L94A7:  .byte   0
 L94A8:  .byte   0
 
 L94A9:  MGTK_RELAY_CALL MGTK::MoveTo, pos_D708
-        addr_call desktop_main::draw_text1, $AE40
+        addr_call desktop_main::draw_text1, desktop_aux::str_ok_label
         rts
 
 L94BA:  MGTK_RELAY_CALL MGTK::MoveTo, pos_D70C
-        addr_call desktop_main::draw_text1, $AE96
+        addr_call desktop_main::draw_text1, desktop_aux::str_cancel_label
         rts
 
 L94CB:  stax    $06
@@ -510,7 +510,7 @@ L94D4:  lda     ($06),y
         sta     path_buf2+2,y
         dey
         bpl     L94D4
-        copy16  #$D487, path_buf2
+        copy16  #path_buf2+3, path_buf2
         MGTK_RELAY_CALL MGTK::DrawText, path_buf2
         rts
 
@@ -1068,7 +1068,7 @@ L9AA1:  tax
         bne     L9AC0
 L9AA8:  dec     $0C00
         dec     L938B
-        copy16  $DB1C, @addr
+        copy16  selector_menu_addr, @addr
         @addr := *+1
         dec     dummy1234
         jmp     L9CEA
@@ -1289,7 +1289,7 @@ L9C81:  yax_call MLI_RELAY, FLUSH, flush_close_params
         yax_call MLI_RELAY, CLOSE, flush_close_params
         rts
 
-        DEFINE_OPEN_PARAMS open_params2, $9C9A, $800
+        DEFINE_OPEN_PARAMS open_params2, L9C9A, $800
 
 L9C9A:  PASCAL_STRING "Selector.List"
 
@@ -1456,8 +1456,8 @@ L9E05:  stax    L9E1B
         lda     LCBANK2
         ldx     LD3EE
 L9E17:  lda     LD3EE,x
-        .byte   $9D
-L9E1B:  .addr   $1234
+L9E1B   := *+1
+        sta     dummy1234,x
         dex
         bpl     L9E17
         sta     ALTZPON
@@ -1471,8 +1471,8 @@ L9E2A:  stax    L9E40
         lda     LCBANK2
         ldx     LD3AD
 L9E3C:  lda     LD3AD,x
-        .byte   $9D
-L9E40:  .addr   $1234
+L9E40   := *+1
+        sta     dummy1234,x
         dex
         bpl     L9E3C
         sta     ALTZPON
@@ -1488,7 +1488,7 @@ L9E61:  jsr     L9E74
         rts
 
 L9E74:  sta     L9EBF
-        addr_call L9E05, $9EC1
+        addr_call L9E05, L9EC1
         lda     L9EBF
         jsr     L9BE2
         stax    $06
@@ -1518,13 +1518,12 @@ L9EAB:  inx
         cpy     L9EC0
         bne     L9EAB
         stx     L9EC1
-        ldax    #$9EC1
+        ldax    #L9EC1
         rts
 
 L9EBF:  .byte   0
 L9EC0:  .byte   0
 L9EC1:  .byte   0
-        ;; how much is buffer, how much is padding?
 
 ;;; ============================================================
 
