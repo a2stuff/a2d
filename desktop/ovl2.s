@@ -5,6 +5,8 @@
 .proc format_erase_overlay
         .org $800
 
+        block_buffer := $1A00
+
 L0800:  pha
         jsr     desktop_main::set_cursor_pointer
         pla
@@ -41,7 +43,7 @@ L085F:  bit     LD887
         lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         jsr     desktop_main::clear_path_buf1
@@ -67,7 +69,7 @@ L08B7:  lda     path_buf1
         lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
         ldx     LD887
         lda     DEVLST,x
         sta     L09D8
@@ -86,7 +88,7 @@ L0902:  jsr     desktop_main::prompt_input_loop
 L090C:  lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
         ldax    #desktop_aux::LB2C6
         ldy     #$01
         jsr     desktop_main::draw_dialog_label
@@ -101,7 +103,7 @@ L090C:  lda     winfo_alert_dialog
 L0942:  lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
         axy_call desktop_main::draw_dialog_label, $01, desktop_aux::LB373
         addr_call L1900, path_buf1
         ldx     #$43
@@ -179,7 +181,7 @@ L0A18:  bit     LD887
         lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         jsr     desktop_main::clear_path_buf1
@@ -205,7 +207,7 @@ L0A7A:  lda     path_buf1
         lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
         lda     #$00
         sta     has_input_field_flag
         ldx     LD887
@@ -225,7 +227,7 @@ L0AC7:  jsr     desktop_main::prompt_input_loop
 L0AD1:  lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
         axy_call desktop_main::draw_dialog_label, $01, desktop_aux::LB373
         addr_call L1900, path_buf1
         jsr     desktop_main::set_cursor_watch
@@ -1239,35 +1241,35 @@ L1398:  stx     L14E3
         jsr     write_block_and_zero
 
         ;; Subsequent blocks...
-        copy16  #$1A00, write_block_params::data_buffer
+        copy16  #block_buffer, write_block_params::data_buffer
         lda     #$03
-        sta     L1A02
+        sta     block_buffer+$02
         ldy     L14E5
         tya
         ora     #$F0
-        sta     L1A04
+        sta     block_buffer+$04
 L13E2:  lda     L14E5,y
-        sta     L1A04,y
+        sta     block_buffer+$04,y
         dey
         bne     L13E2
         ldy     #8
 L13ED:  lda     L14DC,y
-        sta     L1A22,y
+        sta     block_buffer+$22,y
         dey
         bpl     L13ED
         jsr     write_block_and_zero
         lda     #$02
-        sta     L1A00
+        sta     block_buffer
         lda     #$04
-        sta     L1A02
+        sta     block_buffer+$02
         jsr     write_block_and_zero
         lda     #$03
-        sta     L1A00
+        sta     block_buffer
         lda     #$05
-        sta     L1A02
+        sta     block_buffer+$02
         jsr     write_block_and_zero
         lda     #$04
-        sta     L1A00
+        sta     block_buffer
         jsr     write_block_and_zero
         lsr16    L14E3
         lsr16    L14E3
@@ -1283,12 +1285,12 @@ L1438:  jsr     L1485
         cmp     #$06
         bne     L146A
         lda     #$01
-        sta     L1A00
+        sta     block_buffer
         lda     L14E4
         cmp     #$02
         bcc     L146A
         lda     #$00
-        sta     L1A00
+        sta     block_buffer
         lda     L14E4
         lsr     a
         tax
@@ -1299,7 +1301,7 @@ L1462:  clc
         rol     a
         dex
         bne     L1462
-L1467:  sta     L1A01
+L1467:  sta     block_buffer+$01
 L146A:  jsr     write_block_and_zero
         dec     L14E4
         dec     L14E4
@@ -1322,10 +1324,10 @@ L1485:  ldy     L14E4
         bne     L1491
 L148E:  ldy     L14E3
 L1491:  lda     #$FF
-L1493:  sta     L1A00,y
+L1493:  sta     block_buffer,y
         dey
         bne     L1493
-        sta     L1A00
+        sta     block_buffer
         ldy     L14E4
         beq     L14B5
         cpy     #$02
@@ -1333,10 +1335,10 @@ L1493:  sta     L1A00,y
         ldy     #$FF
         bne     L14AC
 L14A9:  ldy     L14E3
-L14AC:  sta     $1B00,y
+L14AC:  sta     block_buffer+$100,y
         dey
         bne     L14AC
-        sta     $1B00
+        sta     block_buffer+$100
 L14B5:  rts
 
 ;;; ============================================================
@@ -1358,10 +1360,10 @@ fail2:  sec
 zero_buffers:
         ldy     #0
         tya
-:       sta     L1A00,y
+:       sta     block_buffer,y
         dey
         bne     :-
-:       sta     $1B00,y
+:       sta     block_buffer+$100,y
         dey
         bne     :-
         rts
@@ -1493,14 +1495,15 @@ L19C8:  copy16  #$0002, read_block_params::block_num
         copy    #'?', ovl2_path_buf+3
         rts
 
+        ;; This straddles $1A00 which is the block buffer ($1A00-$1BFF) ???
+
 L19F7:  lda     read_buffer + 6
         tax
 L19FB:  lda     read_buffer + 6,x
-L1A00           := * + 2
         sta     ovl2_path_buf,x
-L1A01:  dex
-L1A02:  bpl     L19FB
-L1A04:  inc     ovl2_path_buf
+        dex
+        bpl     L19FB
+        inc     ovl2_path_buf
         ldx     ovl2_path_buf
         lda     #':'
         sta     ovl2_path_buf,x
