@@ -3006,18 +3006,18 @@ LB239:  DEFINE_POINT 185,59
 LB23D:  DEFINE_POINT 205,59
 LB241:  DEFINE_POINT 195,59
 
-LB245:  PASCAL_STRING "Format a Disk ..."
-LB257:  PASCAL_STRING "Select the location where the disk is to be formatted"
-LB28D:  PASCAL_STRING "Enter the name of the new volume:"
-LB2AF:  PASCAL_STRING "Do you want to format "
-LB2C6:  PASCAL_STRING "Formatting the disk...."
-LB2DE:  PASCAL_STRING "Formatting error. Check drive, then click OK to try again."
+str_format_disk:  PASCAL_STRING "Format a Disk ..."
+str_select_format:  PASCAL_STRING "Select the location where the disk is to be formatted"
+str_new_volume:  PASCAL_STRING "Enter the name of the new volume:"
+str_confirm_format:  PASCAL_STRING "Do you want to format "
+str_formatting:  PASCAL_STRING "Formatting the disk...."
+str_formatting_error:  PASCAL_STRING "Formatting error. Check drive, then click OK to try again."
 
-LB319:  PASCAL_STRING "Erase a Disk ..."
-LB32A:  PASCAL_STRING "Select the location where the disk is to be erased"
-LB35D:  PASCAL_STRING "Do you want to erase "
-LB373:  PASCAL_STRING "Erasing the disk...."
-LB388:  PASCAL_STRING "Erasing error. Check drive, then click OK to try again."
+str_erase_disk:  PASCAL_STRING "Erase a Disk ..."
+str_select_erase:  PASCAL_STRING "Select the location where the disk is to be erased"
+str_confirm_erase:  PASCAL_STRING "Do you want to erase "
+str_erasing:  PASCAL_STRING "Erasing the disk...."
+str_erasing_error:  PASCAL_STRING "Erasing error. Check drive, then click OK to try again."
 
         ;; "Unlock File" dialog strings
 str_unlock_title:

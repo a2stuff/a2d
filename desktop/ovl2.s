@@ -14,19 +14,19 @@ L0800:  pha
         beq     L080C
         jmp     L09D9
 
-L080C:  lda     #$00
-        sta     has_input_field_flag
+;;; ============================================================
+;;; Format Disk
+
+L080C:  copy    #$00, has_input_field_flag
         jsr     desktop_main::LB509
         lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
-        addr_call desktop_main::draw_dialog_title, desktop_aux::LB245
-        axy_call desktop_main::draw_dialog_label, $01, desktop_aux::LB257
+        addr_call desktop_main::draw_dialog_title, desktop_aux::str_format_disk
+        axy_call desktop_main::draw_dialog_label, 1, desktop_aux::str_select_format
         jsr     L0D31
-        lda     #$FF
-        sta     LD887
+        copy    #$FF, LD887
 L0832:  copy16  #L0B48, desktop_main::jump_relay+1
-        lda     #$80
-        sta     use_ovl2_handler_flag
+        copy    #$80, use_ovl2_handler_flag
 L0841:  jsr     desktop_main::prompt_input_loop
         bmi     L0841
         pha
@@ -47,12 +47,10 @@ L085F:  bit     LD887
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         jsr     desktop_main::clear_path_buf1
-        lda     #$80
-        sta     has_input_field_flag
-        lda     #$00
-        sta     use_ovl2_handler_flag
+        copy    #$80, has_input_field_flag
+        copy    #$00, use_ovl2_handler_flag
         jsr     desktop_main::clear_path_buf2
-        axy_call desktop_main::draw_dialog_label, $03, desktop_aux::LB28D
+        axy_call desktop_main::draw_dialog_label, 3, desktop_aux::str_new_volume
 L08A7:  jsr     desktop_main::prompt_input_loop
         bmi     L08A7
         beq     L08B7
@@ -76,7 +74,7 @@ L08B7:  lda     path_buf1
         sta     L09D7
         lda     #$00
         sta     has_input_field_flag
-        axy_call desktop_main::draw_dialog_label, $03, desktop_aux::LB2AF
+        axy_call desktop_main::draw_dialog_label, 3, desktop_aux::str_confirm_format
         lda     L09D7
         jsr     L1A2D
         addr_call desktop_main::draw_text1, ovl2_path_buf
@@ -89,9 +87,7 @@ L090C:  lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
-        ldax    #desktop_aux::LB2C6
-        ldy     #$01
-        jsr     desktop_main::draw_dialog_label
+        axy_call desktop_main::draw_dialog_label, 1, desktop_aux::str_formatting
         lda     L09D7
         jsr     L12C1
         and     #$FF
@@ -104,10 +100,9 @@ L0942:  lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
-        axy_call desktop_main::draw_dialog_label, $01, desktop_aux::LB373
+        axy_call desktop_main::draw_dialog_label, 1, desktop_aux::str_erasing
         addr_call L1900, path_buf1
-        ldx     #$43
-        ldy     #$D4
+        ldxy    #path_buf1
         lda     L09D7
         jsr     L1307
         pha
@@ -124,9 +119,7 @@ L0980:  cmp     #$2B
         jmp     L090C
 
 L098C:  jsr     L191B
-        ldax    #desktop_aux::LB388
-        ldy     #$06
-        jsr     desktop_main::draw_dialog_label
+        axy_call desktop_main::draw_dialog_label, 6, desktop_aux::str_erasing_error
         jmp     L09B8
 
 L099B:  pha
@@ -139,7 +132,7 @@ L099B:  pha
         jmp     L090C
 
 L09AC:  jsr     L191B
-        axy_call desktop_main::draw_dialog_label, $06, desktop_aux::LB2DE
+        axy_call desktop_main::draw_dialog_label, 6, desktop_aux::str_formatting_error
 L09B8:  jsr     desktop_main::prompt_input_loop
         bmi     L09B8
         bne     L09C2
@@ -155,21 +148,21 @@ L09C2:  pha
 
 L09D7:  .byte   0
 L09D8:  .byte   0
+
+;;; ============================================================
+;;; Erase Disk
+
 L09D9:  lda     #$00
         sta     has_input_field_flag
         jsr     desktop_main::LB509
         lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
-        addr_call desktop_main::draw_dialog_title, desktop_aux::LB319
-        ldax    #desktop_aux::LB32A
-        ldy     #$01
-        jsr     desktop_main::draw_dialog_label
+        addr_call desktop_main::draw_dialog_title, desktop_aux::str_erase_disk
+        axy_call desktop_main::draw_dialog_label, 1, desktop_aux::str_select_erase
         jsr     L0D31
-        lda     #$FF
-        sta     LD887
+        copy    #$FF, LD887
         copy16  #L0B48, desktop_main::jump_relay+1
-        lda     #$80
-        sta     use_ovl2_handler_flag
+        copy    #$80, use_ovl2_handler_flag
 L0A0E:  jsr     desktop_main::prompt_input_loop
         bmi     L0A0E
         beq     L0A18
@@ -185,12 +178,10 @@ L0A18:  bit     LD887
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         jsr     desktop_main::clear_path_buf1
-        lda     #$80
-        sta     has_input_field_flag
-        lda     #$00
-        sta     use_ovl2_handler_flag
+        copy    #$80, has_input_field_flag
+        copy    #$00, use_ovl2_handler_flag
         jsr     desktop_main::clear_path_buf2
-        axy_call desktop_main::draw_dialog_label, $03, desktop_aux::LB28D
+        axy_call desktop_main::draw_dialog_label, 3, desktop_aux::str_new_volume
 L0A6A:  jsr     desktop_main::prompt_input_loop
         bmi     L0A6A
         beq     L0A7A
@@ -208,13 +199,12 @@ L0A7A:  lda     path_buf1
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
-        lda     #$00
-        sta     has_input_field_flag
+        copy    #$00, has_input_field_flag
         ldx     LD887
         lda     DEVLST,x
         sta     L0B47
         sta     L0B46
-        axy_call desktop_main::draw_dialog_label, $03, desktop_aux::LB35D
+        axy_call desktop_main::draw_dialog_label, 3, desktop_aux::str_confirm_erase
         lda     L0B46
         and     #$F0
         jsr     L1A2D
@@ -228,11 +218,10 @@ L0AD1:  lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
-        axy_call desktop_main::draw_dialog_label, $01, desktop_aux::LB373
+        axy_call desktop_main::draw_dialog_label, 1, desktop_aux::str_erasing
         addr_call L1900, path_buf1
         jsr     desktop_main::set_cursor_watch
-        ldx     #$43
-        ldy     #$D4
+        ldxy    #path_buf1
         lda     L0B46
         jsr     L1307
         pha
@@ -249,7 +238,7 @@ L0B12:  cmp     #$2B
         jmp     L0AD1
 
 L0B1E:  jsr     L191B
-        axy_call desktop_main::draw_dialog_label, $06, desktop_aux::LB388
+        axy_call desktop_main::draw_dialog_label, 6, desktop_aux::str_erasing_error
 L0B2A:  jsr     desktop_main::prompt_input_loop
         bmi     L0B2A
         beq     L0AD1
@@ -281,16 +270,15 @@ L0B48:  cmp16   screentowindow_windowx, #40
         bpl     :+
         return  #$FF
 :       sta     screentowindow_windowy+1
-        lsr16    screentowindow_windowy
-        lsr16    screentowindow_windowy
-        lsr16    screentowindow_windowy
+        lsr16   screentowindow_windowy
+        lsr16   screentowindow_windowy
+        lsr16   screentowindow_windowy
         lda     screentowindow_windowy
         cmp     #$04
         bcc     L0B98
         return  #$FF
 
-L0B98:  lda     #$02
-        sta     L0C1F
+L0B98:  copy    #$02, L0C1F
         cmp16   screentowindow_windowx, #280
         bcs     L0BBB
         dec     L0C1F
@@ -372,8 +360,7 @@ L0CA9:  .byte   0
 L0CAA:  lda     LD887
         bmi     L0CB7
         jsr     L0C20
-        lda     #$FF
-        sta     LD887
+        copy    #$FF, LD887
 L0CB7:  rts
 
         lda     LD887
@@ -541,21 +528,17 @@ L0E3A:  tax
 
 L0E50:  lda     LCBANK1,x
 L0E53:  lda     ENABLE,x
-        lda     #$D7
-        sta     $DA
-        lda     #$50
-        sta     L1224
-        lda     #$00
+        copy    #$D7, $DA
+        copy    #$50, L1224
+        lda     #0
         jsr     L0E23
 L0E64:  lda     $DA
         beq     L0E6E
         jsr     L113A
         jmp     L0E64
 
-L0E6E:  lda     #$01
-        sta     $D3
-        lda     #$AA
-        sta     $D0
+L0E6E:  copy    #$01, $D3
+        copy    #$AA, $D0
         lda     L1220
         clc
         adc     #$02
@@ -918,6 +901,7 @@ L114B:  ora     ($30,x)
         .byte   $1C
         .byte   $1C
         .byte   $1C
+
 L1157:  bvs     L1185
         rol     $22
         .byte   $1F
@@ -926,6 +910,7 @@ L1157:  bvs     L1185
         .byte   $1C
         .byte   $1C
         .byte   $1C
+
 L1163:  lda     L1221
         sta     $D6
 L1168:  ldy     #$80
@@ -1258,22 +1243,21 @@ L13ED:  lda     L14DC,y
         dey
         bpl     L13ED
         jsr     write_block_and_zero
-        lda     #$02
-        sta     block_buffer
-        lda     #$04
-        sta     block_buffer+$02
+
+        copy    #$02, block_buffer
+        copy    #$04, block_buffer+$02
         jsr     write_block_and_zero
-        lda     #$03
-        sta     block_buffer
-        lda     #$05
-        sta     block_buffer+$02
+
+        copy    #$03, block_buffer
+        copy    #$05, block_buffer+$02
         jsr     write_block_and_zero
-        lda     #$04
-        sta     block_buffer
+
+        copy    #$04, block_buffer
         jsr     write_block_and_zero
-        lsr16    L14E3
-        lsr16    L14E3
-        lsr16    L14E3
+
+        lsr16   L14E3           ; / 8
+        lsr16   L14E3
+        lsr16   L14E3
         lda     L14E3
         bne     :+
         dec     L14E4
@@ -1284,13 +1268,11 @@ L1438:  jsr     L1485
         lda     write_block_params::block_num
         cmp     #$06
         bne     L146A
-        lda     #$01
-        sta     block_buffer
+        copy    #$01, block_buffer
         lda     L14E4
         cmp     #$02
         bcc     L146A
-        lda     #$00
-        sta     block_buffer
+        copy    #$00, block_buffer
         lda     L14E4
         lsr     a
         tax
