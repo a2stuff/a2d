@@ -893,23 +893,11 @@ L113C:  dex
         bne     L113A
         rts
 
-L114B:  ora     ($30,x)
-        plp
-        bit     $20
-        asl     read_buffer + $1D,x
-        .byte   $1C
-        .byte   $1C
-        .byte   $1C
-        .byte   $1C
+L114B:  .byte   $01, $30, $28, $24, $20, $1E, $1D, $1C
+        .byte   $1C, $1C, $1C, $1C
 
-L1157:  bvs     L1185
-        rol     $22
-        .byte   $1F
-        asl     read_buffer + $1D,x
-        .byte   $1C
-        .byte   $1C
-        .byte   $1C
-        .byte   $1C
+L1157:  .byte   $70, $2C, $26, $22, $1F, $1E, $1D, $1C
+        .byte   $1C, $1C, $1C, $1C
 
 L1163:  lda     L1221
         sta     $D6
@@ -926,8 +914,7 @@ L1173:  ldx     L1223
 
 L117E:  ldx     L1223
         jsr     L102E
-        .byte   $E6
-L1185:  .byte   $D2
+        inc     $D2
         lda     $D2
         cmp     #$10
         bcc     L1171
