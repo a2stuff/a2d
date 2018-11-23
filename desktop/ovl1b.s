@@ -144,14 +144,16 @@ label_disk_copy:
 
 ;;; ============================================================
 
-disablemenu_params:
-        .byte   3
-LD129:  .byte   0
+.proc disablemenu_params
+menu_id:        .byte   3
+disable:        .byte   0
+.endproc
 
-checkitem_params:
-        .byte   3
-LD12B:  .byte   0
-LD12C:  .byte   0
+.proc checkitem_params
+menu_id:        .byte   3
+menu_item:      .byte   0
+check:          .byte   0
+.endproc
 
 event_params := *
         event_kind := event_params + 0
@@ -497,10 +499,10 @@ LD5E0:  .byte   0
 LD5E1:  jsr     remove_ram_disk
         MGTK_RELAY_CALL2 MGTK::SetMenu, menu_definition
         jsr     set_cursor_pointer
-        copy16  #$0101, LD12B
+        copy    #1, checkitem_params::menu_item
+        copy    #1, checkitem_params::check
         MGTK_RELAY_CALL2 MGTK::CheckItem, checkitem_params
-        lda     #$01
-        sta     LD129
+        copy    #1, disablemenu_params::disable
         MGTK_RELAY_CALL2 MGTK::DisableMenu, disablemenu_params
         lda     #$00
         sta     quick_copy_flag
@@ -514,11 +516,10 @@ LD61C:  lda     #$00
         sta     current_drive_selection
         lda     #$81
         sta     LD44D
-        lda     #$00
-        sta     LD129
+        copy    #0, disablemenu_params::disable
         MGTK_RELAY_CALL2 MGTK::DisableMenu, disablemenu_params
-        lda     #$01
-        sta     LD12C
+        lda     #1
+        sta     checkitem_params::check
         MGTK_RELAY_CALL2 MGTK::CheckItem, checkitem_params
         jsr     draw_dialog
         MGTK_RELAY_CALL2 MGTK::OpenWindow, winfo_drive_select
@@ -540,8 +541,7 @@ LD674:  jsr     LD986
 
 LD687:  lda     current_drive_selection
         bmi     LD674
-        lda     #$01
-        sta     LD129
+        copy    #1, disablemenu_params::disable
         MGTK_RELAY_CALL2 MGTK::DisableMenu, disablemenu_params
         lda     current_drive_selection
         sta     source_drive_index
@@ -903,16 +903,12 @@ cmd_quick_copy:
         bne     LDA42
         rts
 
-LDA42:  lda     #$00
-        sta     LD12C
+LDA42:  copy    #0, checkitem_params::check
         MGTK_RELAY_CALL2 MGTK::CheckItem, checkitem_params
-        lda     quick_copy_flag
-        sta     LD12B
-        lda     #$01
-        sta     LD12C
+        copy    quick_copy_flag, checkitem_params::menu_item
+        copy    #1, checkitem_params::check
         MGTK_RELAY_CALL2 MGTK::CheckItem, checkitem_params
-        lda     #$00
-        sta     quick_copy_flag
+        copy    #0, quick_copy_flag
         lda     winfo_dialog::window_id
         jsr     set_win_port
         addr_call draw_title_text, str_quick_copy_padded
@@ -923,13 +919,12 @@ cmd_disk_copy:
         beq     LDA7D
         rts
 
-LDA7D:  lda     #$00
-        sta     LD12C
+LDA7D:  copy    #0, checkitem_params::check
         MGTK_RELAY_CALL2 MGTK::CheckItem, checkitem_params
-        copy16  #$0102, LD12B
+        copy    #2, checkitem_params::menu_item
+        copy    #1, checkitem_params::check
         MGTK_RELAY_CALL2 MGTK::CheckItem, checkitem_params
-        lda     #$01
-        sta     quick_copy_flag
+        copy    #1, quick_copy_flag
         lda     winfo_dialog::window_id
         jsr     set_win_port
         addr_call draw_title_text, str_disk_copy_padded
