@@ -104,7 +104,7 @@ L70F1:  lda     #1
         bpl     :-
 
         lda     #$80
-        sta     $50A8
+        sta     common_overlay::L50A8
         sta     $51AE
         lda     $D920
         sta     $D921
@@ -116,8 +116,8 @@ L70F1:  lda     #1
         jsr     common_overlay::L61B1
 
         jsr     common_overlay::L606D
-        ldx     $5028
-L7137:  lda     $5028,x
+        ldx     common_overlay::path_buf
+L7137:  lda     common_overlay::path_buf,x
         sta     path_buf1,x
         dex
         bpl     L7137
@@ -167,7 +167,7 @@ L7198:  addr_call common_overlay::L647C, path_buf1
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
         lda     #0
-        sta     $50A8
+        sta     common_overlay::L50A8
         lda     #0
         sta     $D8EC
         jsr     common_overlay::set_cursor_pointer
@@ -211,7 +211,7 @@ L7209:  lda     jump_table_entries+1,x
         lda     #$06
         sta     path_buf2+1
         lda     #$00
-        sta     $50A8
+        sta     common_overlay::L50A8
         lda     #$FF
         sta     $D920
         lda     #$00
@@ -223,7 +223,7 @@ L7209:  lda     jump_table_entries+1,x
 
         ldx     path_buf0
 :       lda     path_buf0,x
-        sta     $5028,x
+        sta     common_overlay::path_buf,x
         dex
         bpl     :-
 
@@ -240,7 +240,7 @@ L7209:  lda     jump_table_entries+1,x
         jsr     common_overlay::jt_03
         jmp     L7295
 
-L726D:  lda     $5028
+L726D:  lda     common_overlay::path_buf
         bne     L7281
 L7272:  jsr     common_overlay::device_on_line
         lda     #$00

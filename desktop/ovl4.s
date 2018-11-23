@@ -861,6 +861,7 @@ params: .addr   0
 
 ;;; ============================================================
 
+just_rts:
 L59B8:  rts
 
 ;;; ============================================================
@@ -2121,7 +2122,7 @@ L658B:  cmp     #$09
         sbc     #$08
         rts
 
-        lda     winfo_entrydlg
+L6593:  lda     winfo_entrydlg
         jsr     set_port_for_window
         jsr     L6E45
         stax    $06
@@ -2143,7 +2144,7 @@ L65D6:  copy16  #$D8EF, $06
         jsr     L56E3
         rts
 
-        lda     winfo_entrydlg
+L65F0:  lda     winfo_entrydlg
         jsr     set_port_for_window
         jsr     L6E72
         stax    $06
@@ -2166,7 +2167,7 @@ L6634:  copy16  #$D8EF, $06
         jsr     L56E3
         rts
 
-        lda     winfo_entrydlg
+L664E:  lda     winfo_entrydlg
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::PaintRect, common_input1_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
@@ -2194,7 +2195,7 @@ L66C9:  addr_call draw_string, path_buf2
         addr_call draw_string, str_2_spaces
         rts
 
-        lda     winfo_entrydlg
+L66D8:  lda     winfo_entrydlg
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         lda     winfo_entrydlg
@@ -2322,7 +2323,7 @@ L6846:  jsr     jt_03
         rts
 
 L684D:  .word   0
-        lda     winfo_entrydlg
+L684F:  lda     winfo_entrydlg
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         lda     winfo_entrydlg
@@ -2450,7 +2451,7 @@ L69BD:  jsr     jt_03
         rts
 
 L69C4:  .word   0
-        sta     L6A17
+L69C6:  sta     L6A17
         lda     path_buf0
         clc
         adc     path_buf2
@@ -2476,7 +2477,7 @@ L69D5:  lda     L6A17
         rts
 
 L6A17:  .byte   0
-        lda     path_buf0
+L6A18:  lda     path_buf0
         bne     L6A1E
         rts
 
@@ -2492,7 +2493,7 @@ L6A1E:  dec     path_buf0
         jsr     L6EA3
         rts
 
-        lda     path_buf0
+L6A53:  lda     path_buf0
         bne     L6A59
         rts
 
@@ -2520,7 +2521,7 @@ L6A6B:  ldx     path_buf0
         jsr     L6EA3
         rts
 
-        lda     path_buf2
+L6AAC:  lda     path_buf2
         cmp     #$02
         bcs     L6AB4
         rts
@@ -2600,7 +2601,7 @@ L6B51:  inx
         jsr     L6EA3
         rts
 
-        sta     L6BC3
+L6B72:  sta     L6BC3
         lda     path_buf1
         clc
         adc     path_buf2
@@ -2626,7 +2627,7 @@ L6B81:  lda     L6BC3
         rts
 
 L6BC3:  .byte   0
-        lda     path_buf1
+L6BC4:  lda     path_buf1
         bne     L6BCA
         rts
 
@@ -2642,7 +2643,7 @@ L6BCA:  dec     path_buf1
         jsr     L6E9F
         rts
 
-        lda     path_buf1
+L6BFF:  lda     path_buf1
         bne     L6C05
         rts
 
@@ -2670,7 +2671,7 @@ L6C17:  ldx     path_buf1
         jsr     L6E9F
         rts
 
-        lda     path_buf2
+L6C58:  lda     path_buf2
         cmp     #$02
         bcs     L6C60
         rts
@@ -2828,17 +2829,17 @@ L6DB0:  ldx     path_buf1
         bne     L6DB0
 L6DC1:  rts
 
-        jsr     L6D9E
+L6DC2:  jsr     L6D9E
         jsr     jt_03
         rts
 
-        jsr     L6DB0
+L6DC9:  jsr     L6DB0
         jsr     jt_03
         rts
 
-        lda     #$00
+L6DD0:  lda     #$00
         beq     L6DD6
-        lda     #$80
+L6DD4:  lda     #$80
 L6DD6:  sta     L6E1C
         copy16  #$1800, $06
         ldx     $D920
@@ -2872,7 +2873,7 @@ L6E17:  jsr     jt_03
 
 L6E1B:  .byte   0
 L6E1C:  .byte   0
-        ldx     path_buf
+L6E1D:  ldx     path_buf
 L6E20:  lda     path_buf,x
         sta     path_buf0,x
         dex
@@ -2880,11 +2881,11 @@ L6E20:  lda     path_buf,x
         addr_call adjust_filename_case, path_buf0
         rts
 
-        ldx     path_buf
-L6E34:  lda     path_buf,x
+L6E31:  ldx     path_buf
+:       lda     path_buf,x
         sta     path_buf1,x
         dex
-        bpl     L6E34
+        bpl     :-
         addr_call adjust_filename_case, path_buf1
         rts
 

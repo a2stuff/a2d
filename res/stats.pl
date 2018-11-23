@@ -35,7 +35,7 @@ while (<STDIN>) {
         $scoped{$def} = 1 if $depth >= 2;
     }
 
-    foreach my $term (split /[ (),+\-*\/]/, $_) {
+    foreach my $term (split /[ (),+\-*\/<>#:]/, $_) {
         $term =~ s/\s+//g;
         next unless $term;
         if ($term =~ m/^L[0-9A-F]{4}$/) {

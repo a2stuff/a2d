@@ -16,7 +16,7 @@ L7000:  stx     L73A9
         addr_call common_overlay::adjust_filename_case, path_buf0
         ldy     path_buf0
 L7021:  lda     path_buf0,y
-        sta     $5028,y
+        sta     common_overlay::path_buf,y
         dey
         bpl     L7021
         jsr     common_overlay::L5F49
@@ -42,8 +42,8 @@ L7046:  iny
 L7056:  jsr     common_overlay::L5F5B
         lda     #$00
         bcs     L706A
-        addr_call common_overlay::L6516, $709D
-        sta     $D920
+        addr_call common_overlay::L6516, L709D
+        sta     LD920
         jsr     common_overlay::L6586
 L706A:  jsr     common_overlay::L6163
         jsr     common_overlay::L61B1
@@ -56,7 +56,7 @@ L707B:  copy16  #$2001, path_buf2
         jsr     common_overlay::L6693
         copy16  #$2001, path_buf2
         lda     #$FF
-        sta     $D8EC
+        sta     LD8EC
         jmp     common_overlay::L5106
 
 ;;; ============================================================
@@ -76,9 +76,9 @@ L70B0:  lda     jump_table_entries+1,x
         dex
         bpl     L70B0
         lda     #$00
-        sta     $51AE
+        sta     common_overlay::L51AE
         lda     #$80
-        sta     $5104
+        sta     common_overlay::L5104
         copy16  #$0601, path_buf2
         lda     winfo_entrydlg
         jsr     common_overlay::set_port_for_window
@@ -87,15 +87,9 @@ L70B0:  lda     jump_table_entries+1,x
         lda     L73AA
         jsr     L747B
         lda     #$80
-        sta     $5103
-        lda     #$AB
-        sta     $531C
-        lda     #$73
-        sta     $531D
-        lda     #$F4
-        sta     $5B24
-        lda     #$74
-        sta     $5B25
+        sta     common_overlay::L5103
+        copy16  #L73AB, common_overlay::L531B+1
+        copy16  #L74F4, common_overlay::L59B9::key_meta_digit+1
         rts
 
 L7101:  lda     winfo_entrydlg
@@ -141,57 +135,57 @@ L711D:  addr_call common_overlay::L5E6F, enter_the_full_pathname_label2
         .byte   $00
 
 jump_table_entries:  .byte   $29
-        jump_table_entry $725D
-        jump_table_entry $732F
-        jump_table_entry $6593
-        jump_table_entry $664E
-        jump_table_entry $6DC2
-        jump_table_entry $6DD0
-        jump_table_entry $6E1D
-        jump_table_entry $69C6
-        jump_table_entry $6A18
-        jump_table_entry $6A53
-        jump_table_entry $6AAC
-        jump_table_entry $6B01
-        jump_table_entry $6B44
-        jump_table_entry $66D8
+        jump_table_entry L725D
+        jump_table_entry L732F
+        jump_table_entry common_overlay::L6593
+        jump_table_entry common_overlay::L664E
+        jump_table_entry common_overlay::L6DC2
+        jump_table_entry common_overlay::L6DD0
+        jump_table_entry common_overlay::L6E1D
+        jump_table_entry common_overlay::L69C6
+        jump_table_entry common_overlay::L6A18
+        jump_table_entry common_overlay::L6A53
+        jump_table_entry common_overlay::L6AAC
+        jump_table_entry common_overlay::L6B01
+        jump_table_entry common_overlay::L6B44
+        jump_table_entry common_overlay::L66D8
 
 jump_table2_entries:  .byte   $29
-        jump_table_entry $72CD
-        jump_table_entry $736C
-        jump_table_entry $65F0
-        jump_table_entry $6693
-        jump_table_entry $6DC9
-        jump_table_entry $6DD4
-        jump_table_entry $6E31
-        jump_table_entry $6B72
-        jump_table_entry $6BC4
-        jump_table_entry $6BFF
-        jump_table_entry $6C58
-        jump_table_entry $6CAD
-        jump_table_entry $6CF0
-        jump_table_entry $684F
+        jump_table_entry L72CD
+        jump_table_entry L736C
+        jump_table_entry common_overlay::L65F0
+        jump_table_entry common_overlay::L6693
+        jump_table_entry common_overlay::L6DC9
+        jump_table_entry common_overlay::L6DD4
+        jump_table_entry common_overlay::L6E31
+        jump_table_entry common_overlay::L6B72
+        jump_table_entry common_overlay::L6BC4
+        jump_table_entry common_overlay::L6BFF
+        jump_table_entry common_overlay::L6C58
+        jump_table_entry common_overlay::L6CAD
+        jump_table_entry common_overlay::L6CF0
+        jump_table_entry common_overlay::L684F
 
 ;;; ============================================================
 
-        copy16  #$2001, path_buf2
+L725D:  copy16  #$2001, path_buf2
         jsr     common_overlay::jt_03
         ldx     jump_table2_entries
 L726D:  lda     jump_table2_entries+1,x
-        sta     $6D1E,x
+        sta     common_overlay::jump_table,x
         dex
         lda     jump_table2_entries+1,x
-        sta     $6D1E,x
+        sta     common_overlay::jump_table,x
         dex
         dex
         bpl     L726D
         lda     #$80
-        sta     $51AE
-        sta     $5105
-        lda     $D8F0
-        sta     $D8F1
+        sta     common_overlay::L51AE
+        sta     common_overlay::L5105
+        lda     LD8F0
+        sta     LD8F1
         lda     #$00
-        sta     $D8F0
+        sta     LD8F0
         lda     path_buf1
         bne     L72BF
         lda     #$00
@@ -217,7 +211,7 @@ L72BF:  copy16  #$0601, path_buf2
         jsr     common_overlay::jt_03
         rts
 
-        addr_call common_overlay::L647C, path_buf0
+L72CD:  addr_call common_overlay::L647C, path_buf0
         bne     L72E2
         lda     path_buf1
         beq     L72E7
@@ -237,51 +231,51 @@ L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
-        sta     $D8EC
+        sta     LD8EC
         jsr     common_overlay::set_cursor_pointer
-        copy16  #$59B8, $5B24
-        ldx     $50AA
+        copy16  #common_overlay::just_rts, common_overlay::L59B9::key_meta_digit+1
+        ldx     common_overlay::stash_stack
         txs
         ldx     L73A9
         ldy     L73AA
         return  #$00
 
-        MGTK_RELAY_CALL MGTK::InitPort, grafport3
+L732F:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
         lda     #$00
-        sta     $D8EC
+        sta     LD8EC
         jsr     common_overlay::set_cursor_pointer
-        copy16  #$59B8, $5B24
-        ldx     $50AA
+        copy16  #common_overlay::just_rts, common_overlay::L59B9::key_meta_digit+1
+        ldx     common_overlay::stash_stack
         txs
         return  #$FF
 
-        copy16  #$2001, path_buf2
+L736C:  copy16  #$2001, path_buf2
         jsr     common_overlay::jt_03
         ldx     jump_table_entries
 L737C:  lda     jump_table_entries+1,x
-        sta     $6D1E,x
+        sta     common_overlay::jump_table,x
         dex
         lda     jump_table_entries+1,x
-        sta     $6D1E,x
+        sta     common_overlay::jump_table,x
         dex
         dex
         bpl     L737C
         copy16  #$0601, path_buf2
         jsr     common_overlay::jt_03
         lda     #$00
-        sta     $5105
-        sta     $51AE
-        lda     $D8F1
-        sta     $D8F0
+        sta     common_overlay::L5105
+        sta     common_overlay::L51AE
+        lda     LD8F1
+        sta     LD8F0
         rts
 
 L73A9:  .byte   0
 L73AA:  .byte   0
 
-        MGTK_RELAY_CALL MGTK::InRect, rect_D966
+L73AB:  MGTK_RELAY_CALL MGTK::InRect, rect_D966
         cmp     #MGTK::inrect_inside
         bne     :+
         jmp     L73FE
@@ -350,58 +344,73 @@ L7464:  return  #$FF
 
 L7467:  cmp     #1
         bne     L7473
-        addr_call L749B, $D93E
+        addr_call draw_inset_rect, rect_D93E
         rts
 
-L7473:  addr_call L749B, $D946
+L7473:  addr_call draw_inset_rect, rect_D946
         rts
 
 L747B:  cmp     #1
         bne     L7487
-        addr_call L749B, $D94E
+        addr_call draw_inset_rect, rect_D94E
         rts
 
 L7487:  cmp     #2
         bne     L7493
-        addr_call L749B, $D956
+        addr_call draw_inset_rect, rect_D956
         rts
 
-L7493:  addr_call L749B, $D95E
+L7493:  addr_call draw_inset_rect, rect_D95E
         rts
 
-L749B:  stax    $06
-        ldy     #7
-L74A1:  lda     ($06),y
-        sta     rect_D98E,y
+;;; ============================================================
+;;; Draw rect inset by 2px. Pointer to Rect in A,X.
+
+.proc draw_inset_rect
+        ptr := $06
+
+        ;; Copy to scratch rect
+        stax    ptr
+        ldy     #.sizeof(MGTK::Rect)-1
+:       lda     (ptr),y
+        sta     rect_scratch,y
         dey
-        bpl     L74A1
-        lda     rect_D98E
+        bpl     :-
+
+        lda     rect_scratch::x1
         clc
         adc     #2
-        sta     rect_D98E
-        bcc     L74B7
-        inc     $D98F
-L74B7:  lda     $D990
+        sta     rect_scratch::x1
+        bcc     :+
+        inc     rect_scratch::x1+1
+
+:       lda     rect_scratch::y1
         clc
         adc     #2
-        sta     $D990
-        bcc     L74C5
-        inc     $D991
-L74C5:  lda     $D992
+        sta     rect_scratch::y1
+        bcc     :+
+        inc     rect_scratch::y1+1
+
+:       lda     rect_scratch::x2
         sec
         sbc     #2
-        sta     $D992
-        bcs     L74D3
-        dec     $D993
-L74D3:  lda     $D994
+        sta     rect_scratch::x2
+        bcs     :+
+        dec     rect_scratch::x2+1
+
+:       lda     rect_scratch::y2
         sec
         sbc     #2
-        sta     $D994
-        bcs     L74E1
-        dec     $D995
-L74E1:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D98E
+        sta     rect_scratch::y2
+        bcs     :+
+        dec     rect_scratch::y2+1
+
+:       MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
+        MGTK_RELAY_CALL MGTK::PaintRect, rect_scratch
         rts
+.endproc
+
+;;; ============================================================
 
 L74F4:  lda     winfo_entrydlg
         jsr     common_overlay::set_port_for_window
