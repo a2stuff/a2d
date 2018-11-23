@@ -17,8 +17,8 @@ L080C:  lda     #$00
         jsr     desktop_main::LB509
         lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
-        addr_call desktop_main::draw_dialog_title, $B245
-        axy_call desktop_main::draw_dialog_label, $01, $B257
+        addr_call desktop_main::draw_dialog_title, desktop_aux::LB245
+        axy_call desktop_main::draw_dialog_label, $01, desktop_aux::LB257
         jsr     L0D31
         lda     #$FF
         sta     LD887
@@ -50,7 +50,7 @@ L085F:  bit     LD887
         lda     #$00
         sta     use_ovl2_handler_flag
         jsr     desktop_main::clear_path_buf2
-        axy_call desktop_main::draw_dialog_label, $03, $B28D
+        axy_call desktop_main::draw_dialog_label, $03, desktop_aux::LB28D
 L08A7:  jsr     desktop_main::prompt_input_loop
         bmi     L08A7
         beq     L08B7
@@ -74,7 +74,7 @@ L08B7:  lda     path_buf1
         sta     L09D7
         lda     #$00
         sta     has_input_field_flag
-        axy_call desktop_main::draw_dialog_label, $03, $B2AF
+        axy_call desktop_main::draw_dialog_label, $03, desktop_aux::LB2AF
         lda     L09D7
         jsr     L1A2D
         addr_call desktop_main::draw_text1, file_count
@@ -87,7 +87,7 @@ L090C:  lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
-        ldax    #$B2C6
+        ldax    #desktop_aux::LB2C6
         ldy     #$01
         jsr     desktop_main::draw_dialog_label
         lda     L09D7
@@ -102,7 +102,7 @@ L0942:  lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
-        axy_call desktop_main::draw_dialog_label, $01, $B373
+        axy_call desktop_main::draw_dialog_label, $01, desktop_aux::LB373
         addr_call L1900, path_buf1
         ldx     #$43
         ldy     #$D4
@@ -122,7 +122,7 @@ L0980:  cmp     #$2B
         jmp     L090C
 
 L098C:  jsr     L191B
-        ldax    #$B388
+        ldax    #desktop_aux::LB388
         ldy     #$06
         jsr     desktop_main::draw_dialog_label
         jmp     L09B8
@@ -137,7 +137,7 @@ L099B:  pha
         jmp     L090C
 
 L09AC:  jsr     L191B
-        axy_call desktop_main::draw_dialog_label, $06, $B2DE
+        axy_call desktop_main::draw_dialog_label, $06, desktop_aux::LB2DE
 L09B8:  jsr     desktop_main::prompt_input_loop
         bmi     L09B8
         bne     L09C2
@@ -158,8 +158,8 @@ L09D9:  lda     #$00
         jsr     desktop_main::LB509
         lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
-        addr_call desktop_main::draw_dialog_title, $B319
-        ldax    #$B32A
+        addr_call desktop_main::draw_dialog_title, desktop_aux::LB319
+        ldax    #desktop_aux::LB32A
         ldy     #$01
         jsr     desktop_main::draw_dialog_label
         jsr     L0D31
@@ -188,7 +188,7 @@ L0A18:  bit     LD887
         lda     #$00
         sta     use_ovl2_handler_flag
         jsr     desktop_main::clear_path_buf2
-        axy_call desktop_main::draw_dialog_label, $03, $B28D
+        axy_call desktop_main::draw_dialog_label, $03, desktop_aux::LB28D
 L0A6A:  jsr     desktop_main::prompt_input_loop
         bmi     L0A6A
         beq     L0A7A
@@ -212,7 +212,7 @@ L0A7A:  lda     path_buf1
         lda     DEVLST,x
         sta     L0B47
         sta     L0B46
-        axy_call desktop_main::draw_dialog_label, $03, $B35D
+        axy_call desktop_main::draw_dialog_label, $03, desktop_aux::LB35D
         lda     L0B46
         and     #$F0
         jsr     L1A2D
@@ -226,7 +226,7 @@ L0AD1:  lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, $AE6E
-        axy_call desktop_main::draw_dialog_label, $01, $B373
+        axy_call desktop_main::draw_dialog_label, $01, desktop_aux::LB373
         addr_call L1900, path_buf1
         jsr     desktop_main::set_cursor_watch
         ldx     #$43
@@ -247,7 +247,7 @@ L0B12:  cmp     #$2B
         jmp     L0AD1
 
 L0B1E:  jsr     L191B
-        axy_call desktop_main::draw_dialog_label, $06, $B388
+        axy_call desktop_main::draw_dialog_label, $06, desktop_aux::LB388
 L0B2A:  jsr     desktop_main::prompt_input_loop
         bmi     L0B2A
         beq     L0AD1

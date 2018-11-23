@@ -2274,14 +2274,11 @@ LA538:  add16   poly::vertices,x, LA56B, poly::vertices,x
         bne     LA538
         rts
 
-LA567:  .byte   0
-LA568:  .byte   0
-LA569:  .byte   0
-LA56A:  .byte   0
-LA56B:  .byte   0
-LA56C:  .byte   0
-LA56D:  .byte   0
-LA56E:  .byte   0
+LA567:  .word   0
+LA569:  .word   0
+LA56B:  .word   0
+LA56D:  .word   0
+
 LA56F:  pla
         tay
         jsr     push_zp_addrs

@@ -305,8 +305,7 @@ L4227:  lda     #$00
         jmp     reset_grafport3
 
 L4241:  .byte   0
-L4242:  .byte   0
-L4243:  .byte   0
+L4242:  .word   0
 .endproc
 
 ;;; ============================================================
@@ -1928,8 +1927,7 @@ fail:   rts
 .proc cmd_new_folder_impl
 
 L4F67:  .byte   $00
-L4F68:  .byte   $00
-L4F69:  .byte   $00
+L4F68:  .word   0
 
         ;; access = destroy/rename/write/read
         DEFINE_CREATE_PARAMS create_params, path_buffer, ACCESS_DEFAULT, FT_DIRECTORY,, ST_LINKED_DIRECTORY
@@ -4048,10 +4046,8 @@ L6161:  txa
 
 L6196:  rts
 
-L6197:  .byte   0
-L6198:  .byte   0
-L6199:  .byte   0
-L619A:  .byte   0
+L6197:  .word   0
+L6199:  .word   0
 
 .endproc
 
@@ -4429,8 +4425,7 @@ L65EE:  sta     updatethumb_thumbpos
         rts
 
 L6600:  .word   0
-L6602:  .byte   0
-L6603:  .byte   0
+L6602:  .word   0
 .endproc
 
 ;;; ============================================================
@@ -4470,8 +4465,7 @@ L668D:  sta     updatethumb_thumbpos
         rts
 
 L669F:  .byte   0
-L66A0:  .byte   0
-L66A1:  .byte   0
+L66A0:  .word   0
 .endproc
 
 ;;; ============================================================
@@ -5921,8 +5915,7 @@ L7429:  lda     LE1F1
 L7445:  .byte   0
 L7446:  .byte   0
 L7447:  .word   0
-L7449:  .byte   0
-L744A:  .byte   0
+L7449:  .word   0
 .endproc
 
 ;;; ============================================================
@@ -6150,8 +6143,7 @@ L762C:  .word   0
 L762E:  .byte   $05
 L762F:  .byte   $00
 L7630:  .word   0
-L7632:  .byte   $00
-L7633:  .byte   $00
+L7632:  .word   0
 L7634:  .byte   $00
 
 .proc L7635
