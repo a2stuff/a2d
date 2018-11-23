@@ -59,7 +59,7 @@ notpenOR:       .byte   5
 notpenXOR:      .byte   6
 notpenBIC:      .byte   7
 
-LD00B:  .byte   0
+stack_stash:  .byte   0
 
 .proc hilitemenu_params
 menu_id   := * + 0
@@ -839,40 +839,46 @@ LD9BA:  cmp     #MGTK::EventKind::key_down
         bne     LD998
         jmp     LD9D5
 
-LD9C1:  .addr   disk_copy_overlay4::just_rts
+menu_command_table:
+        ;; Apple menu
         .addr   disk_copy_overlay4::just_rts
         .addr   disk_copy_overlay4::just_rts
         .addr   disk_copy_overlay4::just_rts
         .addr   disk_copy_overlay4::just_rts
+        .addr   disk_copy_overlay4::just_rts
+        ;; File menu
         .addr   disk_copy_overlay4::quit
-        .addr   LDA3C
-        .addr   LDA77
+        ;; Facilities menu
+        .addr   cmd_quick_copy
+        .addr   cmd_disk_copy
 
-LD9D1:  .byte   0, $A, $C, $10
+menu_offset_table:
+        .byte   0, 5*2, 6*2, 8*2
 
 LD9D5:  lda     event_modifiers
-        bne     LD9E6
+        bne     :+
         lda     event_key
         and     #CHAR_MASK
         cmp     #CHAR_ESCAPE
-        beq     LD9E6
+        beq     :+
         jmp     LDBFC
-
-LD9E6:  lda     #$01
+        ;; Keyboard-based menu selection
+:       lda     #1
         sta     LD12F
         lda     event_key
         sta     menukey_params::which_key
         lda     event_modifiers
         sta     menukey_params::key_mods
         MGTK_RELAY_CALL2 MGTK::MenuKey, menukey_params
-handle_menu_selection:  ldx     menukey_params::menu_id
-        bne     LDA06
+handle_menu_selection:
+        ldx     menuselect_params::menu_id
+        bne     :+
         rts
-
-LDA06:  dex
-        lda     LD9D1,x
+        ;; Compute offset into command table - menu offset + item offset
+:       dex
+        lda     menu_offset_table,x
         tax
-        ldy     $D00D
+        ldy     menuselect_params::menu_item
         dey
         tya
         asl     a
@@ -881,17 +887,19 @@ LDA06:  dex
         clc
         adc     jump_addr
         tax
-        copy16  LD9C1,x, jump_addr
-        jsr     LDA35
+        copy16  menu_command_table,x, jump_addr
+        jsr     do_jump
         MGTK_RELAY_CALL2 MGTK::HiliteMenu, hilitemenu_params
         jmp     LD986
 
-LDA35:  tsx
-        stx     LD00B
+do_jump:
+        tsx
+        stx     stack_stash
         jump_addr := *+1
         jmp     dummy1234
 
-LDA3C:  lda     quick_copy_flag
+cmd_quick_copy:
+        lda     quick_copy_flag
         bne     LDA42
         rts
 
@@ -910,7 +918,8 @@ LDA42:  lda     #$00
         addr_call draw_title_text, str_quick_copy_padded
         rts
 
-LDA77:  lda     quick_copy_flag
+cmd_disk_copy:
+        lda     quick_copy_flag
         beq     LDA7D
         rts
 
