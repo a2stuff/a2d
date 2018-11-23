@@ -51,10 +51,12 @@ L706A:  jsr     common_overlay::L6163
         lda     path_buf0
         bne     L707B
         jsr     common_overlay::jt_06
-L707B:  copy16  #$2001, path_buf2
+L707B:  copy    #1, path_buf2
+        copy    #' ', path_buf2+1
         jsr     common_overlay::jt_03
         jsr     common_overlay::L6693
-        copy16  #$2001, path_buf2
+        copy    #1, path_buf2
+        copy    #' ', path_buf2+1
         lda     #$FF
         sta     LD8EC
         jmp     common_overlay::L5106
@@ -79,7 +81,8 @@ L70B0:  lda     jump_table_entries+1,x
         sta     common_overlay::L51AE
         lda     #$80
         sta     common_overlay::L5104
-        copy16  #$0601, path_buf2
+        copy    #1, path_buf2
+        copy    #GLYPH_INSPT, path_buf2+1
         lda     winfo_entrydlg
         jsr     common_overlay::set_port_for_window
         lda     L73A9
@@ -168,7 +171,8 @@ jump_table2_entries:  .byte   $29
 
 ;;; ============================================================
 
-L725D:  copy16  #$2001, path_buf2
+L725D:  copy    #1, path_buf2
+        copy    #' ', path_buf2+1
         jsr     common_overlay::jt_03
         ldx     jump_table2_entries
 L726D:  lda     jump_table2_entries+1,x
@@ -207,7 +211,8 @@ L72AF:  iny
         cpx     path_buf0
         bne     L72AF
         sty     path_buf1
-L72BF:  copy16  #$0601, path_buf2
+L72BF:  copy    #1, path_buf2
+        copy    #GLYPH_INSPT, path_buf2+1
         jsr     common_overlay::jt_03
         rts
 
@@ -233,7 +238,7 @@ L72EE:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
         sta     LD8EC
         jsr     common_overlay::set_cursor_pointer
-        copy16  #common_overlay::just_rts, common_overlay::L59B9::key_meta_digit+1
+        copy16  #common_overlay::noop, common_overlay::L59B9::key_meta_digit+1
         ldx     common_overlay::stash_stack
         txs
         ldx     L73A9
@@ -247,12 +252,13 @@ L732F:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
         lda     #$00
         sta     LD8EC
         jsr     common_overlay::set_cursor_pointer
-        copy16  #common_overlay::just_rts, common_overlay::L59B9::key_meta_digit+1
+        copy16  #common_overlay::noop, common_overlay::L59B9::key_meta_digit+1
         ldx     common_overlay::stash_stack
         txs
         return  #$FF
 
-L736C:  copy16  #$2001, path_buf2
+L736C:  copy    #1, path_buf2
+        copy    #' ', path_buf2+1
         jsr     common_overlay::jt_03
         ldx     jump_table_entries
 L737C:  lda     jump_table_entries+1,x
@@ -263,7 +269,8 @@ L737C:  lda     jump_table_entries+1,x
         dex
         dex
         bpl     L737C
-        copy16  #$0601, path_buf2
+        copy    #1, path_buf2
+        copy    #GLYPH_INSPT, path_buf2+1
         jsr     common_overlay::jt_03
         lda     #$00
         sta     common_overlay::L5105

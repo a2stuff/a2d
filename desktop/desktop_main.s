@@ -3263,7 +3263,7 @@ L5A10:  lda     ($06),y
         bpl     L5A10
         dec     $1F00
         lda     #'/'
-        sta     $1F01
+        sta     $1F00+1
         ldax    #$1F00
         ldy     $1F00
         jsr     L6FB7
@@ -4872,7 +4872,7 @@ L6A5C:  lda     (ptr),y
         bpl     L6A5C
         dec     $220
         lda     #'/'
-        sta     $0221
+        sta     $0220+1
 
         ldax    #$220
         ldy     $220
@@ -8038,9 +8038,9 @@ L8736:  lda     ($06),y
         stx     LDFC5
         rts
 
-L8745:  copy16  #$2004, LDFC5
-        lda     #$24
-        sta     LDFC7
+L8745:  copy    #4, LDFC5
+        copy    #' ', LDFC6
+        copy    #'$', LDFC7
         lda     L877F
         lsr     a
         lsr     a
@@ -9533,7 +9533,7 @@ L9343:  lda     ($06),y
         bne     L9343
         dec     $220
         lda     #'/'
-        sta     $0221
+        sta     $0220+1
 L9356:  yax_call JT_MLI_RELAY, GET_FILE_INFO, get_file_info_params5
         beq     L9366
         jsr     show_error_alert
@@ -9656,7 +9656,7 @@ L9486:  jsr     JT_SIZE_STRING
         ldx     $220
         ldy     #$00
 L9491:  lda     text_buffer2::data,y
-        sta     $0221,x
+        sta     $0220+1,x
         inx
         iny
         cpy     text_buffer2::length
@@ -9789,7 +9789,7 @@ L95CD:  lda     ($06),y
         bne     L95CD
         dec     $220
         lda     #'/'
-        sta     $0221
+        sta     $0220+1
 L95E0:  ldx     L9706
         lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
@@ -9808,7 +9808,7 @@ L95EE:  lda     ($06),y
         sbc     #$02
         sta     $1F00
 L9602:  lda     ($06),y
-        sta     $1EFF,y
+        sta     $1F00-1,y
         dey
         cpy     #$01
         bne     L9602
@@ -13362,7 +13362,10 @@ down_flag:
 click_result:
         .byte   0
 
-        rts                     ; ???
+.endproc
+
+.proc noop
+        rts
 .endproc
 
 ;;; ============================================================
@@ -13531,25 +13534,25 @@ LBAC5:  cpx     path_buf1
         inx
         iny
         lda     path_buf1,x
-        sta     LD3C0+2,y
+        sta     LD3C1+1,y
         jmp     LBAC5
 
 LBAD5:  iny
-        sty     LD3C0+1
+        sty     LD3C1
         ldx     #1
-        ldy     LD3C0+1
+        ldy     LD3C1
 LBADE:  cpx     path_buf2
         beq     LBAEE
         inx
         iny
         lda     path_buf2,x
-        sta     LD3C0+1,y
+        sta     LD3C1,y
         jmp     LBADE
 
-LBAEE:  sty     LD3C0+1
+LBAEE:  sty     LD3C1
         lda     str_insertion_point+1
-        sta     LD3C0+2
-LBAF7:  lda     LD3C0+1,y
+        sta     LD3C1+1
+LBAF7:  lda     LD3C1,y
         sta     path_buf2,y
         dey
         bpl     LBAF7
@@ -13688,13 +13691,13 @@ LBC64:  ldx     path_buf2
         cpx     #$01
         beq     LBC79
 LBC6B:  lda     path_buf2,x
-        sta     LD3C0,x
+        sta     LD3C1-1,x
         dex
         cpx     #$01
         bne     LBC6B
         ldx     path_buf2
 LBC79:  dex
-        stx     LD3C0+1
+        stx     LD3C1
         ldx     path_buf1
 LBC80:  lda     path_buf1,x
         sta     path_buf2+1,x
@@ -13707,12 +13710,12 @@ LBC80:  lda     path_buf1,x
         sta     path_buf2
         lda     path_buf1
         clc
-        adc     LD3C0+1
+        adc     LD3C1
         tay
         pha
-        ldx     LD3C0+1
+        ldx     LD3C1
         beq     LBCB3
-LBCA6:  lda     LD3C0+1,x
+LBCA6:  lda     LD3C1,x
         sta     path_buf2,y
         dex
         dey

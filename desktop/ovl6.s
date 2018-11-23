@@ -16,7 +16,7 @@ L7000:  jsr     common_overlay::create_common_dialog
         jsr     common_overlay::jt_06
         jsr     common_overlay::jt_03
         lda     #$FF
-        sta     $D8EC
+        sta     LD8EC
         jmp     common_overlay::L5106
 
 L7026:  ldx     jump_table_entries
@@ -87,7 +87,7 @@ L70C0:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
 L70EA:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
         lda     #0
-        sta     $D8EC
+        sta     LD8EC
         jsr     common_overlay::set_cursor_pointer
         ldx     common_overlay::stash_stack
         txs

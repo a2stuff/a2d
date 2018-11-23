@@ -36,9 +36,9 @@ routine_table:  .addr   $7000, $7000, $7000
         sta     L50A8
         sta     prompt_ip_flag
         sta     LD8EC
-        sta     $D8F0
-        sta     $D8F1
-        sta     $D8F2
+        sta     LD8F0
+        sta     LD8F1
+        sta     LD8F2
         sta     cursor_ip_flag
         sta     L5104
         sta     L5103
@@ -46,7 +46,7 @@ routine_table:  .addr   $7000, $7000, $7000
         lda     #prompt_insertion_point_blink_count
         sta     prompt_ip_counter
         lda     #$FF
-        sta     $D920
+        sta     LD920
         pla
         asl     a
         tax
@@ -155,7 +155,7 @@ L51D2:  lda     winfo_entrydlg
 clicked:
         bit     L5105
         bmi     L520A
-        lda     $D920
+        lda     LD920
         bpl     L520D
 L520A:  jmp     set_up_ports
 
@@ -245,7 +245,7 @@ set_up_ports:
         MGTK_RELAY_CALL MGTK::SetPort, grafport2
         rts
 
-L531B:  jsr     L59B8
+L531B:  jsr     noop
         rts
 
 L531F:  bit     L5105
@@ -269,7 +269,7 @@ L5341:  lda     winfo_entrydlg_file_picker
         lsr16   screentowindow_windowy
         lsr16   screentowindow_windowy
         lsr16   screentowindow_windowy
-        lda     $D920
+        lda     LD920
         cmp     screentowindow_windowy
         beq     L5380
         jmp     L542F
@@ -278,7 +278,7 @@ L5380:  jsr     L5C4F
         beq     L5386
         rts
 
-L5386:  ldx     $D920
+L5386:  ldx     LD920
         lda     $1780,x
         bmi     L53B5
         lda     winfo_entrydlg
@@ -334,18 +334,18 @@ L542F:  lda     screentowindow_windowy
         bcc     L5438
         rts
 
-L5438:  lda     $D920
+L5438:  lda     LD920
         bmi     L5446
         jsr     jt_04
-        lda     $D920
+        lda     LD920
         jsr     L6274
 L5446:  lda     screentowindow_windowy
-        sta     $D920
-        bit     $D8F0
+        sta     LD920
+        bit     LD8F0
         bpl     L5457
         jsr     jt_06
         jsr     jt_03
-L5457:  lda     $D920
+L5457:  lda     LD920
         jsr     L6274
         jsr     jt_05
         jsr     L5C4F
@@ -520,11 +520,11 @@ cursor_ip_flag:                 ; high bit set when cursor is IP
 
 ;;; ============================================================
 
-L5607:  ldx     $D920
+L5607:  ldx     LD920
         lda     $1780,x
         and     #$7F
         pha
-        bit     $D8F0
+        bit     LD8F0
         bpl     L5618
         jsr     jt_06
 L5618:  lda     #$00
@@ -559,7 +559,7 @@ L5618:  lda     #$00
 L565B:  .byte   0
 
 L565C:  lda     #$FF
-        sta     $D920
+        sta     LD920
         jsr     inc_device_num
         jsr     device_on_line
         jsr     L5F5B
@@ -591,10 +591,10 @@ L569B:  cpx     #$01
         jmp     L56E1
 
 L56A2:  jsr     L5F49
-        lda     $D920
+        lda     LD920
         pha
         lda     #$FF
-        sta     $D920
+        sta     LD920
         jsr     L5F5B
         jsr     L6161
         lda     #$00
@@ -602,11 +602,11 @@ L56A2:  jsr     L5F49
         jsr     L61B1
         jsr     L606D
         pla
-        sta     $D920
+        sta     LD920
         bit     L56E2
         bmi     L56D6
         jsr     jt_04
-        lda     $D920
+        lda     LD920
         bmi     L56DC
         jsr     jt_04
         jmp     L56DC
@@ -614,7 +614,7 @@ L56A2:  jsr     L5F49
 L56D6:  jsr     jt_06
         jsr     jt_03
 L56DC:  lda     #$FF
-        sta     $D920
+        sta     LD920
 L56E1:  rts
 
 L56E2:  .byte   0
@@ -861,8 +861,9 @@ params: .addr   0
 
 ;;; ============================================================
 
-just_rts:
-L59B8:  rts
+.proc noop
+        rts
+.endproc
 
 ;;; ============================================================
 ;;; Key handler
@@ -945,7 +946,7 @@ L5A4F:  jmp     L5AC8
 
 L5A52:  cmp     #CHAR_CTRL_O    ; Open
         bne     L5A8B
-        lda     $D920
+        lda     LD920
         bmi     L5AC8
         tax
         lda     $1780,x
@@ -1009,12 +1010,12 @@ key_delete:
         rts
 
 key_meta_digit:
-        jmp     L59B8
+        jmp     noop
 
 .proc key_down
         lda     $177F
         beq     L5B37
-        lda     $D920
+        lda     LD920
         bmi     L5B47
         tax
         inx
@@ -1024,8 +1025,8 @@ L5B37:  rts
 
 L5B38:  jsr     L6274
         jsr     jt_04
-        inc     $D920
-        lda     $D920
+        inc     LD920
+        lda     LD920
         jmp     update_list_selection
 
 L5B47:  lda     #0
@@ -1035,15 +1036,15 @@ L5B47:  lda     #0
 .proc key_up
         lda     $177F
         beq     L5B58
-        lda     $D920
+        lda     LD920
         bmi     L5B68
         bne     L5B59
 L5B58:  rts
 
 L5B59:  jsr     L6274
         jsr     jt_04
-        dec     $D920
-        lda     $D920
+        dec     LD920
+        lda     LD920
         jmp     update_list_selection
 
 L5B68:  ldx     $177F
@@ -1065,10 +1066,10 @@ done:   rts
 
 L5B83:  jsr     L5B9D
         bmi     done
-        cmp     $D920
+        cmp     LD920
         beq     done
         pha
-        lda     $D920
+        lda     LD920
         bmi     L5B99
         jsr     L6274
         jsr     jt_04
@@ -1127,7 +1128,7 @@ L5BF5:  .byte   0
 .proc scroll_list_top
         lda     $177F
         beq     L5C02
-        lda     $D920
+        lda     LD920
         bmi     L5C09
         bne     L5C03
 L5C02:  rts
@@ -1141,7 +1142,7 @@ L5C09:  lda     #$00
 .proc scroll_list_bottom
         lda     $177F
         beq     L5C1E
-        ldx     $D920
+        ldx     LD920
         bmi     L5C27
         inx
         cpx     $177F
@@ -1161,9 +1162,9 @@ L5C27:  ldx     $177F
 ;;; ============================================================
 
 .proc update_list_selection
-        sta     $D920
+        sta     LD920
         jsr     jt_05
-        lda     $D920
+        lda     LD920
         jsr     L6586
         jsr     L6163
         jsr     L606D
@@ -1424,7 +1425,7 @@ L5ED0:  yax_call MLI_RELAY, OPEN, open_params
         beq     L5EE9
         jsr     device_on_line
         lda     #$FF
-        sta     $D920
+        sta     LD920
         sta     L5F0C
         jmp     L5ED0
 
@@ -1435,7 +1436,7 @@ L5EE9:  lda     open_params::ref_num
         beq     L5F0B
         jsr     device_on_line
         lda     #$FF
-        sta     $D920
+        sta     LD920
         sta     L5F0C
         jmp     L5ED0
 
@@ -1468,7 +1469,7 @@ L5F31:  lda     ($06),y
         pla
         sta     path_buf
         lda     #$FF
-        sta     $D920
+        sta     LD920
         return  #$00
 
 ;;; ============================================================
@@ -1648,7 +1649,7 @@ L60A9:  MGTK_RELAY_CALL MGTK::MoveTo, picker_entry_pos
         lda     #$10
         sta     picker_entry_pos
 L60FF:  lda     L6128
-        cmp     $D920
+        cmp     LD920
         bne     L6110
         jsr     L6274
         lda     winfo_entrydlg_file_picker
@@ -2137,8 +2138,8 @@ L6593:  lda     winfo_entrydlg
 L65C8:  MGTK_RELAY_CALL MGTK::SetTextBG, textbg2
         lda     #$FF
         sta     prompt_ip_flag
-L65D6:  copy16  #$D8EF, $06
-        lda     $D8EE
+L65D6:  copy16  #str_insertion_point+1, $06
+        lda     str_insertion_point
         sta     $08
         MGTK_RELAY_CALL MGTK::DrawText, $06
         jsr     L56E3
@@ -2160,8 +2161,8 @@ L65F0:  lda     winfo_entrydlg
 L6626:  MGTK_RELAY_CALL MGTK::SetTextBG, textbg2
         lda     #$FF
         sta     prompt_ip_flag
-L6634:  copy16  #$D8EF, $06
-        lda     $D8EE
+L6634:  copy16  #str_insertion_point+1, $06
+        lda     str_insertion_point
         sta     $08
         MGTK_RELAY_CALL MGTK::DrawText, $06
         jsr     L56E3
@@ -2294,25 +2295,25 @@ L6806:  cpx     path_buf0
         inx
         iny
         lda     path_buf0,x
-        sta     $D3C2,y
+        sta     LD3C1+1,y
         jmp     L6806
 
 L6816:  iny
-        sty     $D3C1
+        sty     LD3C1
         ldx     #$01
-        ldy     $D3C1
+        ldy     LD3C1
 L681F:  cpx     path_buf2
         beq     L682F
         inx
         iny
         lda     path_buf2,x
-        sta     $D3C1,y
+        sta     LD3C1,y
         jmp     L681F
 
-L682F:  sty     $D3C1
-        lda     $D8EF
-        sta     $D3C2
-L6838:  lda     $D3C1,y
+L682F:  sty     LD3C1
+        lda     str_insertion_point+1
+        sta     LD3C1+1
+L6838:  lda     LD3C1,y
         sta     path_buf2,y
         dey
         bpl     L6838
@@ -2422,25 +2423,25 @@ L697D:  cpx     path_buf1
         inx
         iny
         lda     path_buf1,x
-        sta     $D3C2,y
+        sta     LD3C1+1,y
         jmp     L697D
 
 L698D:  iny
-        sty     $D3C1
+        sty     LD3C1
         ldx     #$01
-        ldy     $D3C1
+        ldy     LD3C1
 L6996:  cpx     path_buf2
         beq     L69A6
         inx
         iny
         lda     path_buf2,x
-        sta     $D3C1,y
+        sta     LD3C1,y
         jmp     L6996
 
-L69A6:  sty     $D3C1
-        lda     $D8EF
-        sta     $D3C2
-L69AF:  lda     $D3C1,y
+L69A6:  sty     LD3C1
+        lda     str_insertion_point+1
+        sta     LD3C1+1
+L69AF:  lda     LD3C1,y
         sta     path_buf2,y
         dey
         bpl     L69AF
@@ -2842,7 +2843,7 @@ L6DD0:  lda     #$00
 L6DD4:  lda     #$80
 L6DD6:  sta     L6E1C
         copy16  #$1800, $06
-        ldx     $D920
+        ldx     LD920
         lda     $1780,x
         and     #$7F
         ldx     #$00
@@ -2931,17 +2932,17 @@ L6EA3:  lda     #$00
 L6EA5:  bmi     L6EB6
         ldx     path_buf0
 L6EAA:  lda     path_buf0,x
-        sta     $D3C1,x
+        sta     LD3C1,x
         dex
         bpl     L6EAA
         jmp     L6EC2
 
 L6EB6:  ldx     path_buf1
 L6EB9:  lda     path_buf1,x
-        sta     $D3C1,x
+        sta     LD3C1,x
         dex
         bpl     L6EB9
-L6EC2:  lda     $D920
+L6EC2:  lda     LD920
         sta     L6F3D
         bmi     L6EFB
         ldx     #$00
@@ -2969,29 +2970,29 @@ L6EC2:  lda     $D920
         tax
         tya
         jsr     L5F0D
-L6EFB:  addr_call adjust_filename_case, $D3C1
+L6EFB:  addr_call adjust_filename_case, LD3C1
         addr_call adjust_filename_case, path_buf
-        lda     $D3C1
+        lda     LD3C1
         cmp     path_buf
         bne     L6F26
         tax
-L6F12:  lda     $D3C1,x
+L6F12:  lda     LD3C1,x
         cmp     path_buf,x
         bne     L6F26
         dex
         bne     L6F12
         lda     #$00
-        sta     $D8F0
+        sta     LD8F0
         jsr     L6F2F
         rts
 
 L6F26:  lda     #$FF
-        sta     $D8F0
+        sta     LD8F0
         jsr     L6F2F
         rts
 
 L6F2F:  lda     L6F3D
-        sta     $D920
+        sta     LD920
         bpl     L6F38
         rts
 

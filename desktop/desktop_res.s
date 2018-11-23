@@ -301,8 +301,8 @@ buf_win_path:   .res    43, 0
 temp_string_buf:
         .res    45, 0
 
-LD3AD:  .res    19, 0
-LD3C0:  .res    46, 0
+LD3AD:  .res    20, 0
+LD3C1:  .res    45, 0
 
 LD3EE:  .res    17, 0
 LD3FF:  .byte   0
@@ -692,6 +692,8 @@ str_file_count:                 ; populated with number of files
         PASCAL_STRING "       "
 
         ;; This location also used as path buffer by ovl2
+ovl2_path_buf:
+
 file_count:
         .word   0
 

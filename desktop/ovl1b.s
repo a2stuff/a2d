@@ -19,7 +19,7 @@ data_buffer    := $0C5B
 block_num      := $0C5D
 .endscope
 
-just_rts        := $0C83
+noop        := $0C83
 quit    := $0C84
 L0CAF   := $0CAF
 eject_disk      := $0CED
@@ -841,11 +841,11 @@ LD9BA:  cmp     #MGTK::EventKind::key_down
 
 menu_command_table:
         ;; Apple menu
-        .addr   disk_copy_overlay4::just_rts
-        .addr   disk_copy_overlay4::just_rts
-        .addr   disk_copy_overlay4::just_rts
-        .addr   disk_copy_overlay4::just_rts
-        .addr   disk_copy_overlay4::just_rts
+        .addr   disk_copy_overlay4::noop
+        .addr   disk_copy_overlay4::noop
+        .addr   disk_copy_overlay4::noop
+        .addr   disk_copy_overlay4::noop
+        .addr   disk_copy_overlay4::noop
         ;; File menu
         .addr   disk_copy_overlay4::quit
         ;; Facilities menu

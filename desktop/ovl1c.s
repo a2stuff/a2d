@@ -648,8 +648,9 @@ params: .addr   0
 
 ;;; ============================================================
 
-just_rts:
+.proc noop
         rts
+.endproc
 
 ;;; ============================================================
 ;;; Quit back to ProDOS (which will launch DeskTop)
@@ -1100,7 +1101,7 @@ L1009:  clc
 L100B:  lda     #$07
         sta     disk_copy_overlay3::LD423
         inc16   disk_copy_overlay3::LD421
-L1018:  lda     disk_copy_overlay3::LD421+1
+        lda     disk_copy_overlay3::LD421+1
         cmp     disk_copy_overlay3::LD427+1
         bne     L1009
         lda     disk_copy_overlay3::LD421

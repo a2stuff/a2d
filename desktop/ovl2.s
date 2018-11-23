@@ -28,7 +28,7 @@ L0832:  copy16  #L0B48, desktop_main::jump_relay+1
 L0841:  jsr     desktop_main::prompt_input_loop
         bmi     L0841
         pha
-        copy16  #$B8F4, desktop_main::jump_relay+1
+        copy16  #desktop_main::noop, desktop_main::jump_relay+1
         lda     #$00
         sta     LD8F3
         sta     use_ovl2_handler_flag
@@ -77,7 +77,7 @@ L08B7:  lda     path_buf1
         axy_call desktop_main::draw_dialog_label, $03, desktop_aux::LB2AF
         lda     L09D7
         jsr     L1A2D
-        addr_call desktop_main::draw_text1, file_count
+        addr_call desktop_main::draw_text1, ovl2_path_buf
 L0902:  jsr     desktop_main::prompt_input_loop
         bmi     L0902
         beq     L090C
@@ -216,7 +216,7 @@ L0A7A:  lda     path_buf1
         lda     L0B46
         and     #$F0
         jsr     L1A2D
-        addr_call desktop_main::draw_text1, file_count
+        addr_call desktop_main::draw_text1, ovl2_path_buf
 L0AC7:  jsr     desktop_main::prompt_input_loop
         bmi     L0AC7
         beq     L0AD1
@@ -315,8 +315,8 @@ L0BDC:  cmp     LD887
         jsr     desktop_main::detect_double_click2
         bmi     L0C03
 L0BE6:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; flash the button
-        MGTK_RELAY_CALL MGTK::PaintRect, $AE20
-        MGTK_RELAY_CALL MGTK::PaintRect, $AE20
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
         lda     #$00
 L0C03:  rts
 
@@ -1439,12 +1439,12 @@ L1959:  lda     read_block_params::unit_num
         sta     the_disk_in_slot_label,x
         ldx     the_disk_in_slot_label
 L1974:  lda     the_disk_in_slot_label,x
-        sta     file_count,x
+        sta     ovl2_path_buf,x
         dex
         bpl     L1974
         rts
 
-L197E:  addr_call L19C8, file_count
+L197E:  addr_call L19C8, ovl2_path_buf
         rts
 
 L1986:  cmp     #$A5
@@ -1462,7 +1462,7 @@ L1986:  cmp     #$A5
         sta     the_dos_33_disk_label,x
         ldx     the_dos_33_disk_label
 L19AC:  lda     the_dos_33_disk_label,x
-        sta     file_count,x
+        sta     ovl2_path_buf,x
         dex
         bpl     L19AC
         rts
@@ -1486,62 +1486,66 @@ L19C1:  and     #$80
 L19C8:  copy16  #$0002, read_block_params::block_num
         yax_call MLI_RELAY, READ_BLOCK, read_block_params
         beq     L19F7
-        copy16  #$2004, file_count
-        copy16  #$203A, pos_D90B
-        lda     #$3F
-        sta     pos_D90B+1
+        copy    #4, ovl2_path_buf
+        copy    #' ', ovl2_path_buf+1
+        copy    #':', ovl2_path_buf+2
+        copy    #' ', ovl2_path_buf+3 ; Overwritten ???
+        copy    #'?', ovl2_path_buf+3
         rts
 
 L19F7:  lda     read_buffer + 6
         tax
 L19FB:  lda     read_buffer + 6,x
 L1A00           := * + 2
-        sta     file_count,x
+        sta     ovl2_path_buf,x
 L1A01:  dex
 L1A02:  bpl     L19FB
-L1A04:  inc     file_count
-        ldx     file_count
-        lda     #$3A
-        sta     file_count,x
-        inc     file_count
-        ldx     file_count
-        lda     #$20
-        sta     file_count,x
-        inc     file_count
-        ldx     file_count
-        lda     #$3F
-L1A22:  sta     file_count,x
-        addr_call desktop_main::adjust_case, file_count
+L1A04:  inc     ovl2_path_buf
+        ldx     ovl2_path_buf
+        lda     #':'
+        sta     ovl2_path_buf,x
+        inc     ovl2_path_buf
+        ldx     ovl2_path_buf
+        lda     #' '
+        sta     ovl2_path_buf,x
+        inc     ovl2_path_buf
+        ldx     ovl2_path_buf
+        lda     #'?'
+L1A22:  sta     ovl2_path_buf,x
+        addr_call desktop_main::adjust_case, ovl2_path_buf
         rts
 
 ;;; ============================================================
 
-L1A2D:  sta     on_line_params::unit_num
+.proc L1A2D
+        sta     on_line_params::unit_num
         yax_call MLI_RELAY, ON_LINE, on_line_params
         bne     L1A6D
         lda     read_buffer
-        and     #$0F
+        and     #$0F            ; mask off name length
         beq     L1A6D
         sta     read_buffer
         tax
-L1A46:  lda     read_buffer,x
-        sta     file_count,x
+:       lda     read_buffer,x
+        sta     ovl2_path_buf,x
         dex
-        bpl     L1A46
-        inc     file_count
-        ldx     file_count
-        lda     #$20
-        sta     file_count,x
-        inc     file_count
-        ldx     file_count
+        bpl     :-
+
+        inc     ovl2_path_buf
+        ldx     ovl2_path_buf
+        lda     #' '
+        sta     ovl2_path_buf,x
+        inc     ovl2_path_buf
+        ldx     ovl2_path_buf
         lda     #$3F
-        sta     file_count,x
-        addr_call desktop_main::adjust_case, file_count  ; Adjust case ("/HD/GAMES" -> "/Hd/Games")
+        sta     ovl2_path_buf,x
+        addr_call desktop_main::adjust_case, ovl2_path_buf  ; Adjust case ("/HD/GAMES" -> "/Hd/Games")
         rts
 
 L1A6D:  lda     on_line_params::unit_num
         jsr     L192E
         rts
+.endproc
 
 ;;; ============================================================
 
