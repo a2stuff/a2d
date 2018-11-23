@@ -673,12 +673,12 @@ just_rts:
 
 ;;; ============================================================
 
-        ldx     disk_copy_overlay3::LD418
-        lda     disk_copy_overlay3::LD3F7,x
+        ldx     disk_copy_overlay3::dest_drive_index
+        lda     disk_copy_overlay3::drive_unitnum_table,x
         sta     L0CEC
         and     #$0F
         beq     L0CCC
-        lda     disk_copy_overlay3::LD3F7,x
+        lda     disk_copy_overlay3::drive_unitnum_table,x
         jsr     L0D26
         ldy     #$FF
         lda     ($06),y
@@ -798,8 +798,8 @@ L0D51:  pha
 
 ;;; ============================================================
 
-L0D5F:  ldx     disk_copy_overlay3::LD417
-        lda     disk_copy_overlay3::LD3F7,x
+L0D5F:  ldx     disk_copy_overlay3::source_drive_index
+        lda     disk_copy_overlay3::drive_unitnum_table,x
         sta     block_params::unit_num
         lda     #$00
         sta     block_params::block_num
@@ -839,7 +839,7 @@ L0DA4:  cmp     #$A5
 
 L0DB5:  lda     #$14
         jsr     L1133
-        lda     disk_copy_overlay3::LD417
+        lda     disk_copy_overlay3::source_drive_index
         asl     a
         tax
         lda     disk_copy_overlay3::LD407,x
@@ -904,8 +904,8 @@ L0E47:  lda     $06
         rts
 
 L0E4D:  copy16  #6, block_params::block_num
-        ldx     disk_copy_overlay3::LD417
-        lda     disk_copy_overlay3::LD3F7,x
+        ldx     disk_copy_overlay3::source_drive_index
+        lda     disk_copy_overlay3::drive_unitnum_table,x
         sta     block_params::unit_num
         copy16  #$1400, block_params::data_buffer
         jsr     L12AF
@@ -970,16 +970,16 @@ L0ED7:  bit     KBDSTRB
         copy16  disk_copy_overlay3::LD424, disk_copy_overlay3::LD421
         lda     disk_copy_overlay3::LD426
         sta     disk_copy_overlay3::LD423
-        ldx     disk_copy_overlay3::LD418
-        lda     disk_copy_overlay3::LD3F7,x
+        ldx     disk_copy_overlay3::dest_drive_index
+        lda     disk_copy_overlay3::drive_unitnum_table,x
         sta     block_params::unit_num
         jmp     L0F1A
 
 L0EFF:  copy16  disk_copy_overlay3::LD421, disk_copy_overlay3::LD424
         lda     disk_copy_overlay3::LD423
         sta     disk_copy_overlay3::LD426
-        ldx     disk_copy_overlay3::LD417
-        lda     disk_copy_overlay3::LD3F7,x
+        ldx     disk_copy_overlay3::source_drive_index
+        lda     disk_copy_overlay3::drive_unitnum_table,x
         sta     block_params::unit_num
 L0F1A:  lda     #$07
         sta     disk_copy_overlay3::LD420

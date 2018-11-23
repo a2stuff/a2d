@@ -188,7 +188,7 @@ LD12F:  .byte   0
 
 LD133:  .byte   0
 
-LD134:  .byte   0
+        .byte   0
         .byte   0
         .byte   0
 
@@ -319,8 +319,9 @@ bg_white:
 
 rect_D35B: DEFINE_RECT 0, 0, 150, 0, rect_D35B
 
-        ;; TODO: Identify data
-LD363:  .byte   0
+
+current_drive_selection:        ; $FF if no selection
+        .byte   0
         .byte   0
         .byte   0
         .byte   0
@@ -336,16 +337,19 @@ point_D36D:  DEFINE_POINT 0, 0, point_D36D
         .byte   0
         .byte   $47
         .byte   0
-LD375:  .byte   0
+
+num_drives:
+        .byte   0
+
 LD376:  .byte   0
 
 LD377:  .res    128, 0
-LD3F7:  .res    8, 0
+drive_unitnum_table:  .res    8, 0
 LD3FF:  .res    8, 0
 LD407:  .res    16, 0
 
-LD417:  .byte   0
-LD418:  .byte   0
+source_drive_index:  .byte   0
+dest_drive_index:  .byte   0
 
 str_d:  PASCAL_STRING 0
 str_s:  PASCAL_STRING 0
@@ -507,7 +511,7 @@ LD61C:  lda     #$00
         sta     LD368
         sta     LD44C
         lda     #$FF
-        sta     LD363
+        sta     current_drive_selection
         lda     #$81
         sta     LD44D
         lda     #$00
@@ -534,13 +538,13 @@ LD674:  jsr     LD986
         MGTK_RELAY_CALL2 MGTK::CloseWindow, winfo_drive_select
         jmp     LD61C
 
-LD687:  lda     LD363
+LD687:  lda     current_drive_selection
         bmi     LD674
         lda     #$01
         sta     LD129
         MGTK_RELAY_CALL2 MGTK::DisableMenu, disablemenu_params
-        lda     LD363
-        sta     LD417
+        lda     current_drive_selection
+        sta     source_drive_index
         lda     winfo_drive_select
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
@@ -559,11 +563,11 @@ LD6E6:  jsr     LD986
         MGTK_RELAY_CALL2 MGTK::CloseWindow, winfo_drive_select
         jmp     LD61C
 
-LD6F9:  lda     LD363
+LD6F9:  lda     current_drive_selection
         bmi     LD6E6
         tax
         lda     LD3FF,x
-        sta     LD418
+        sta     dest_drive_index
         lda     #$00
         sta     LD44C
         lda     winfo_dialog::window_id
@@ -578,8 +582,8 @@ LD734:  addr_call show_alert_dialog, $0000 ; Insert Source
 
 LD740:  lda     #$00
         sta     LD44D
-        ldx     LD417
-        lda     LD3F7,x
+        ldx     source_drive_index
+        lda     drive_unitnum_table,x
         sta     disk_copy_overlay4::on_line_params2::unit_num
         jsr     disk_copy_overlay4::L1291
         beq     LD77E
@@ -613,12 +617,12 @@ LD798:  lda     $1300
         addr_call adjust_case, $1300
         jsr     LE674
         jsr     LE559
-LD7AD:  lda     LD417
+LD7AD:  lda     source_drive_index
         jsr     LE3B8
         jsr     LE5E1
         jsr     LE63F
-        ldx     LD418
-        lda     LD3F7,x
+        ldx     dest_drive_index
+        lda     drive_unitnum_table,x
         tay
         ldx     #$00
 
@@ -628,8 +632,8 @@ LD7AD:  lda     LD417
         beq     LD7CC
         jmp     LD61C
 
-LD7CC:  ldx     LD418
-        lda     LD3F7,x
+LD7CC:  ldx     dest_drive_index
+        lda     drive_unitnum_table,x
         sta     disk_copy_overlay4::on_line_params2::unit_num
         jsr     disk_copy_overlay4::L1291
         beq     LD7E1
@@ -645,11 +649,11 @@ LD7E1:  lda     $1300
         beq     LD7F2
         jmp     LD852
 
-LD7F2:  ldx     LD418
-        lda     LD3F7,x
+LD7F2:  ldx     dest_drive_index
+        lda     drive_unitnum_table,x
         and     #$0F
         beq     LD817
-        lda     LD3F7,x
+        lda     drive_unitnum_table,x
         jsr     disk_copy_overlay4::L0D26
         ldy     #$FF
         lda     ($06),y
@@ -665,8 +669,8 @@ LD7F2:  ldx     LD418
 LD817:  lda     $1300
         and     #$0F
         bne     LD82C
-        ldx     LD418
-        lda     LD3F7,x
+        ldx     dest_drive_index
+        lda     drive_unitnum_table,x
         and     #$F0
         tax
         lda     #$07
@@ -689,11 +693,11 @@ LD84A:  lda     quick_copy_flag
         bne     LD852
         jmp     LD8A9
 
-LD852:  ldx     LD418
-        lda     LD3F7,x
+LD852:  ldx     dest_drive_index
+        lda     drive_unitnum_table,x
         and     #$0F
         beq     LD87C
-        lda     LD3F7,x
+        lda     drive_unitnum_table,x
         jsr     disk_copy_overlay4::L0D26
         ldy     #$FE
         lda     ($06),y
@@ -730,11 +734,11 @@ LD8A9:  lda     winfo_dialog::window_id
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D211
-        lda     LD417
-        cmp     LD418
+        lda     source_drive_index
+        cmp     dest_drive_index
         bne     LD8DF
         tax
-        lda     LD3F7,x
+        lda     drive_unitnum_table,x
         pha
         jsr     disk_copy_overlay4::eject_disk
         pla
@@ -761,11 +765,11 @@ LD8FB:  jsr     LE4A8
         cmp     #$01
         beq     LD97A
         jsr     LE4EC
-        lda     LD417
-        cmp     LD418
+        lda     source_drive_index
+        cmp     dest_drive_index
         bne     LD928
         tax
-        lda     LD3F7,x
+        lda     drive_unitnum_table,x
         pha
         jsr     disk_copy_overlay4::eject_disk
         pla
@@ -782,11 +786,11 @@ LD928:  jsr     LE491
         bmi     LD955
         bne     LD97A
         jsr     LE507
-        lda     LD417
-        cmp     LD418
+        lda     source_drive_index
+        cmp     dest_drive_index
         bne     LD8FB
         tax
-        lda     LD3F7,x
+        lda     drive_unitnum_table,x
         pha
         jsr     disk_copy_overlay4::eject_disk
         pla
@@ -799,13 +803,13 @@ LD928:  jsr     LE491
 
 LD955:  jsr     LE507
         jsr     disk_copy_overlay4::L10FB
-        ldx     LD417
-        lda     LD3F7,x
+        ldx     source_drive_index
+        lda     drive_unitnum_table,x
         jsr     disk_copy_overlay4::eject_disk
-        ldx     LD418
-        cpx     LD417
+        ldx     dest_drive_index
+        cpx     source_drive_index
         beq     :+
-        lda     LD3F7,x
+        lda     drive_unitnum_table,x
         jsr     disk_copy_overlay4::eject_disk
 :       lda     #9              ; Copy success
         jsr     show_alert_dialog
@@ -982,19 +986,19 @@ handle_drive_select_button_down:
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL2 MGTK::MoveTo, screentowindow_windowx
-        lsr16   screentowindow_windowy
+        lsr16   screentowindow_windowy ; / 8
         lsr16   screentowindow_windowy
         lsr16   screentowindow_windowy
         lda     screentowindow_windowy
-        cmp     LD375
+        cmp     num_drives
         bcc     LDB98
-        lda     LD363
+        lda     current_drive_selection
         jsr     highlight_row
         lda     #$FF
-        sta     LD363
+        sta     current_drive_selection           ; $FF if no selection?
         jmp     LDBCA
 
-LDB98:  cmp     LD363
+LDB98:  cmp     current_drive_selection
         bne     LDBCD
         bit     LD368
         bpl     LDBC0
@@ -1010,11 +1014,11 @@ LDBC0:  lda     #$FF
 LDBCA:  return  #$FF
 
 LDBCD:  pha
-        lda     LD363
+        lda     current_drive_selection
         bmi     LDBD6
         jsr     highlight_row
 LDBD6:  pla
-        sta     LD363
+        sta     current_drive_selection
         jsr     highlight_row
         jmp     LDBC0
 
@@ -1062,15 +1066,15 @@ LDC55:  bit     LD44C
         bne     check_up
         lda     winfo_drive_select
         jsr     set_win_port
-        lda     LD363
+        lda     current_drive_selection
         bmi     LDC6F
         jsr     highlight_row
-LDC6F:  inc     LD363
-        lda     LD363
-        cmp     LD375
+LDC6F:  inc     current_drive_selection
+        lda     current_drive_selection
+        cmp     num_drives
         bcc     LDC7F
         lda     #$00
-        sta     LD363
+        sta     current_drive_selection
 LDC7F:  jsr     highlight_row
         jmp     LDCA9
 .endproc
@@ -1080,15 +1084,15 @@ LDC7F:  jsr     highlight_row
         bne     LDCA9
         lda     winfo_drive_select
         jsr     set_win_port
-        lda     LD363
+        lda     current_drive_selection
         bmi     LDC9C
         jsr     highlight_row
-        dec     LD363
+        dec     current_drive_selection
         bpl     LDCA3
-LDC9C:  ldx     LD375
+LDC9C:  ldx     num_drives
         dex
-        stx     LD363
-LDCA3:  lda     LD363
+        stx     current_drive_selection
+LDCA3:  lda     current_drive_selection
         jsr     highlight_row
         ;; fall through
 .endproc
@@ -1226,7 +1230,7 @@ LDE23:  lda     $1C02
         beq     LDE31
 LDE2E:  return  #$FF
 
-LDE31:  lda     LD375
+LDE31:  lda     num_drives
         asl     a
         asl     a
         asl     a
@@ -1265,7 +1269,7 @@ LDE4D:  cmp     #$A5
         adc     #$31
         ldx     drive_char
         sta     str_dos33_s_d,x
-        lda     LD375
+        lda     num_drives
         asl     a
         asl     a
         asl     a
@@ -1603,7 +1607,7 @@ LE16C:  lda     #$00
         .byte   0
 LE17A:  lda     #$00
         sta     LE263
-        sta     LD375
+        sta     num_drives
 LE182:  lda     #$13
         sta     $07
         lda     #$00
@@ -1647,16 +1651,16 @@ LE1CD:  pha
         ldy     #$00
         lda     ($06),y
         jsr     LE285
-        ldx     LD375
-        sta     LD3F7,x
+        ldx     num_drives
+        sta     drive_unitnum_table,x
         pla
         cmp     #$52
         bne     LE1EA
-        lda     LD3F7,x
+        lda     drive_unitnum_table,x
         and     #$F0
         jsr     LDDFC
         beq     LE207
-LE1EA:  lda     LD375
+LE1EA:  lda     num_drives
         asl     a
         asl     a
         asl     a
@@ -1671,10 +1675,10 @@ LE1F4:  lda     str_unknown,x
         bne     LE1F4
         lda     str_unknown,x
         sta     LD377,y
-LE207:  inc     LD375
+LE207:  inc     num_drives
         jmp     LE255
 
-LE20D:  ldx     LD375
+LE20D:  ldx     num_drives
         ldy     #$00
         lda     ($06),y
         and     #$70
@@ -1685,9 +1689,9 @@ LE20D:  ldx     LD375
 LE21D:  ldy     #$00
         lda     ($06),y
         jsr     LE285
-        ldx     LD375
-        sta     LD3F7,x
-        lda     LD375
+        ldx     num_drives
+        sta     drive_unitnum_table,x
+        lda     num_drives
         asl     a
         asl     a
         asl     a
@@ -1708,7 +1712,7 @@ LE23E:  inx
 
 LE24D:  lda     ($06),y
         sta     LD377,x
-        inc     LD375
+        inc     num_drives
 LE255:  inc     LE263
         lda     LE263
         cmp     #$08
@@ -1752,24 +1756,24 @@ LE298:  lda     LE2B0
         jsr     LE31B
         inc     LE2B0
         lda     LE2B0
-        cmp     LD375
+        cmp     num_drives
         bne     LE298
         rts
 
 LE2B0:  .byte   0
 LE2B1:  lda     winfo_drive_select
         jsr     set_win_port
-        lda     LD363
+        lda     current_drive_selection
         asl     a
         tax
         lda     LD407,x
         sta     LE318
         lda     LD407+1,x
-        sta     LE319
-        lda     LD375
+        sta     LE318+1
+        lda     num_drives
         sta     LD376
         lda     #$00
-        sta     LD375
+        sta     num_drives
         sta     LE317
 LE2D6:  lda     LE317
         asl     a
@@ -1778,16 +1782,16 @@ LE2D6:  lda     LE317
         cmp     LE318
         bne     LE303
         lda     LD407+1,x
-        cmp     LE319
+        cmp     LE318+1
         bne     LE303
         lda     LE317
-        ldx     LD375
+        ldx     num_drives
         sta     LD3FF,x
-        lda     LD375
+        lda     num_drives
         jsr     LE39A
         lda     LE317
         jsr     LE31B
-        inc     LD375
+        inc     num_drives
 LE303:  inc     LE317
         lda     LE317
         cmp     LD376
@@ -1795,19 +1799,18 @@ LE303:  inc     LE317
         jmp     LE2D6
 
 LE311:  lda     #$FF
-        sta     LD363
+        sta     current_drive_selection
         rts
 
 LE317:  .byte   0
-LE318:  .byte   0
-LE319:  .byte   0
+LE318:  .addr   0
         .byte   0
 LE31B:  sta     LE399
         lda     #8
         sta     point_D36D::xcoord
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_D36D
         ldx     LE399
-        lda     LD3F7,x
+        lda     drive_unitnum_table,x
         and     #$70
         lsr     a
         lsr     a
@@ -1821,7 +1824,7 @@ LE31B:  sta     LE399
         sta     point_D36D::xcoord
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_D36D
         ldx     LE399
-        lda     LD3F7,x
+        lda     drive_unitnum_table,x
         and     #$80
         asl     a
         rol     a
@@ -1864,17 +1867,17 @@ LE3A3:  lda     #$00
 LE3A8:  jsr     LE3B8
         inc     LE3B7
         lda     LE3B7
-        cmp     LD375
+        cmp     num_drives
         bne     LE3A8
         rts
 
 LE3B7:  .byte   0
 LE3B8:  pha
         tax
-        lda     LD3F7,x
+        lda     drive_unitnum_table,x
         and     #$0F
         beq     LE3CC
-        lda     LD3F7,x
+        lda     drive_unitnum_table,x
         and     #$F0
         jsr     disk_copy_overlay4::L0D26
         jmp     LE3DA
@@ -1929,7 +1932,7 @@ LE415:  ldy     #$FF
         pla
         pha
         tax
-        lda     LD3F7,x
+        lda     drive_unitnum_table,x
         and     #$F0
         sta     $43
         jsr     LE445
@@ -1955,7 +1958,7 @@ LE44A:  ldy     #$FF
         pla
         pha
         tax
-        lda     LD3F7,x
+        lda     drive_unitnum_table,x
         and     #$F0
         jsr     disk_copy_overlay4::L0D51
         sta     LE47D
@@ -2011,7 +2014,7 @@ LE4A8:  lda     winfo_dialog::window_id
 
 LE4BF:  lda     winfo_dialog::window_id
         jsr     set_win_port
-        lda     LD417
+        lda     source_drive_index
         asl     a
         tay
         lda     LD407+1,y
@@ -2026,10 +2029,7 @@ LE4BF:  lda     winfo_dialog::window_id
 LE4EC:  jsr     LE522
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_blocks_read
         addr_call draw_text, str_blocks_read
-        .byte   $A9
-LE500:  .byte   $57
-        ldx     #$D4
-        jsr     draw_text
+        addr_call draw_text, str_number
         rts
 
 LE507:  jsr     LE522
@@ -2067,8 +2067,8 @@ LE559:  lda     winfo_dialog::window_id
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_source2
         addr_call draw_text, str_source
-        ldx     LD417
-        lda     LD3F7,x
+        ldx     source_drive_index
+        lda     drive_unitnum_table,x
         and     #$70
         lsr     a
         lsr     a
@@ -2077,8 +2077,8 @@ LE559:  lda     winfo_dialog::window_id
         clc
         adc     #'0'
         sta     str_s + 1
-        ldx     LD417
-        lda     LD3F7,x
+        ldx     source_drive_index
+        lda     drive_unitnum_table,x
         and     #$80
         clc
         rol     a
@@ -2112,8 +2112,8 @@ LE5E1:  lda     winfo_dialog::window_id
         jsr     set_win_port
         MGTK_RELAY_CALL2 MGTK::MoveTo, point_destination
         addr_call draw_text, str_destination
-        ldx     LD418
-        lda     LD3F7,x
+        ldx     dest_drive_index
+        lda     drive_unitnum_table,x
         and     #$70
         lsr     a
         lsr     a
@@ -2122,8 +2122,8 @@ LE5E1:  lda     winfo_dialog::window_id
         clc
         adc     #'0'
         sta     str_s + 1
-        ldx     LD418
-        lda     LD3F7,x
+        ldx     dest_drive_index
+        lda     drive_unitnum_table,x
         and     #$80
         asl     a
         rol     a
