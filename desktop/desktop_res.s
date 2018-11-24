@@ -946,9 +946,12 @@ LE062:  .res    170, 0
 LE10C:  .byte   0
 LE10D:  .res    137, 0
 
-DESKTOP_DEVICELIST:
+        ;; Backup copy of DEVLST made before detaching ramdisk
+devlst_backup:
         .res    10, 0
-devlst_copy:
+
+        ;; index is device number (in DEVLST), value is icon number
+device_to_icon_map:
         .res    16, 0
 
 LE1B0:  .res    65, 0           ; path buffer?

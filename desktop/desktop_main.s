@@ -967,7 +967,7 @@ L4755:  DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ALL
         bpl     :-
         addr_call L4842, $280
         addr_call L4842, $220
-        jsr     L48BE
+        jsr     restore_device_list
         copy16  #INVOKER, reset_and_invoke_target
         jmp     reset_and_invoke
 
@@ -1068,10 +1068,10 @@ show_cursor:
 
 ;;; ============================================================
 
-.proc L48BE
-        ldx     DESKTOP_DEVICELIST
+.proc restore_device_list
+        ldx     devlst_backup
         inx
-:       lda     DESKTOP_DEVICELIST,x
+:       lda     devlst_backup,x
         sta     DEVLST-1,x
         dex
         bpl     :-
@@ -3124,7 +3124,7 @@ L594A:  ldy     L599E
         inc     cached_window_icon_count
         inc     LDD9E
         lda     #$00
-        sta     devlst_copy,y
+        sta     device_to_icon_map,y
         lda     DEVLST,y
         jsr     create_volume_icon
         cmp     #ERR_DUPLICATE_VOLUME
@@ -3183,7 +3183,7 @@ L59A8:  lda     #$C0
         bvc     L59D2
         lda     L533F
         ldy     #$0F
-L59C1:  cmp     devlst_copy,y
+L59C1:  cmp     device_to_icon_map,y
         beq     L59C9
         dey
         bpl     L59C1
@@ -3207,7 +3207,7 @@ L59EA:  lda     menu_click_params::item_num
         sbc     #$03
         sta     menu_click_params::item_num
 L59F3:  ldy     menu_click_params::item_num
-        lda     devlst_copy,y
+        lda     device_to_icon_map,y
         bne     L59FE
         jmp     L5A4C
 
@@ -3248,7 +3248,7 @@ L5A4C:  jsr     redraw_windows_and_desktop
         lda     menu_click_params::item_num
         tay
         pha
-        lda     devlst_copy,y
+        lda     device_to_icon_map,y
         sta     icon_param
         beq     L5A7F
         jsr     remove_icon_from_window
@@ -8371,7 +8371,7 @@ pos_win:        .word   0, 0
 error:  pha                     ; save error
         ldy     device_num      ; remove unit from list
         lda     #0
-        sta     devlst_copy,y
+        sta     device_to_icon_map,y
         dec     cached_window_icon_count
         dec     LDD9E
         pla
@@ -8390,7 +8390,7 @@ create_icon:
         jsr     push_zp_addrs
         jsr     DESKTOP_ALLOC_ICON
         ldy     device_num
-        sta     devlst_copy,y
+        sta     device_to_icon_map,y
         jsr     icon_entry_lookup
         stax    icon_ptr
 
@@ -9369,7 +9369,7 @@ index:  .byte   0
         sta     compare
         ldy     #0
 
-loop:   lda     devlst_copy,y
+loop:   lda     device_to_icon_map,y
 
         compare := *+1
         cmp     #0
@@ -9546,7 +9546,7 @@ L939D:  jsr     launch_get_info_dialog
         ldx     L92E6
         lda     selected_icon_list,x
         ldy     #$0F
-L93AD:  cmp     devlst_copy,y
+L93AD:  cmp     device_to_icon_map,y
         beq     L93B8
         dey
         bpl     L93AD
@@ -14081,15 +14081,18 @@ end:
 
 ;;; ============================================================
 
-.proc detach_ramdisk
+.proc backup_device_list
         ;; Make a copy of the original device list
         ldx     DEVCNT
         inx
 :       lda     DEVLST-1,x
-        sta     DESKTOP_DEVICELIST,x
+        sta     devlst_backup,x
         dex
         bpl     :-
+        ;; fall through
+.endproc
 
+.proc detach_ramdisk
         ;; Look for /RAM
         ldx     DEVCNT
 :       lda     DEVLST,x
@@ -14128,7 +14131,7 @@ found_ram:
 loop:   cpx     #max_icon_count
         bne     :+
         jsr     desktop_main::pop_zp_addrs
-        jmp     clear_window_icon_tables
+        jmp     end
 :       txa
         pha
         asl     a
@@ -14151,6 +14154,7 @@ loop:   cpx     #max_icon_count
         tax
         inx
         jmp     loop
+end:
 .endproc
 
 ;;; ============================================================
@@ -14283,7 +14287,7 @@ trash_name:  PASCAL_STRING " Trash "
         cpx     devcnt
         bne     :-
         dec     DEVCNT
-done:   jmp     load_selector_list
+done:   jmp     end
 
 L09F8:  .byte   0
 
@@ -14300,6 +14304,8 @@ smartport_params:
 
 devcnt: .byte   0
 L0A02:  .byte   0
+
+end:
 .endproc
 
 ;;; ============================================================
@@ -14456,9 +14462,11 @@ read_selector_list:
         add16   width_items_label, #5, width_items_label_padded
         add16   width_items_label_padded, width_k_in_disk_label, width_left_labels
         add16   width_left_labels, #3, width_left_labels
-        jmp     enumerate_desk_accessories
+        jmp     end
 
 dx:     .word   0
+
+end:
 .endproc
 
 ;;; ============================================================
@@ -14602,7 +14610,7 @@ next_entry:
 
 close_dir:
         MLI_RELAY_CALL CLOSE, close_params
-        jmp     populate_volume_icons
+        jmp     end
 
         DEFINE_OPEN_PARAMS open_params, str_desk_acc, $1000
         open_ref_num := open_params::ref_num
@@ -14628,6 +14636,8 @@ entry_length:   .byte   0
 entries_per_block:      .byte   0
 entry_in_block: .byte   0
 ptr_calc_hi:    .byte   0
+
+end:
 .endproc
 
 ;;; ============================================================
@@ -14638,7 +14648,9 @@ ptr_calc_hi:    .byte   0
         ldy     #0
         sty     desktop_main::pending_alert
         sty     volume_num
-L0D12:  lda     volume_num
+
+process_volume:
+        lda     volume_num
         asl     a
         tay
         copy16  slot_drive_string_table,y, $08
@@ -14695,8 +14707,8 @@ L0D7F:  cmp     #$0B
         lsr     a
         lsr     a
         ora     #$C0
-        sta     L0D96
-        L0D96 := *+2
+        sta     slot_msb
+        slot_msb := *+2
         lda     $C7FB           ; self-modified
         and     #$01
         bne     L0DA2
@@ -14705,6 +14717,7 @@ L0D7F:  cmp     #$0B
 L0DA2:  addr_jump L0DAD, str_ramcard_slot_x
 
 L0DA9:  ldax    #str_unidisk_xy
+
 L0DAD:  stax    $06
         ldy     #$00
         lda     ($06),y
@@ -14778,7 +14791,7 @@ next:   lda     volume_num
         cmp     DEVCNT
         beq     L0E2F
         bcs     populate_startup_menu
-L0E2F:  jmp     L0D12
+L0E2F:  jmp     process_volume
 
 L0E32:  .byte   0
 volume_num:  .byte   0
@@ -14793,8 +14806,8 @@ L0E34:  .byte   0
 L0E36:  inx
         lda     DEVLST+1,x
         sta     DEVLST,x
-        lda     devlst_copy+1,x
-        sta     devlst_copy,x
+        lda     device_to_icon_map+1,x
+        sta     device_to_icon_map,x
         cpx     DEVCNT
         bne     L0E36
         dec     DEVCNT
@@ -14857,7 +14870,7 @@ prepare:
         jmp     loop
 
 done:   stx     startup_menu
-        jmp     L0EE1
+        jmp     final_setup
 
 char:   .byte   0
 slot:   .byte   0
@@ -14882,7 +14895,7 @@ slot_string_table:
 
 str_system_start:  PASCAL_STRING "System/Start"
 
-.proc L0EE1
+.proc final_setup
         lda     #0
         sta     desktop_main::sys_start_flag
         jsr     desktop_main::get_LD3FF
