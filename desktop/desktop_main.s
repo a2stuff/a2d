@@ -92,8 +92,7 @@ iloop:  cpx     cached_window_icon_count
         inx
         jmp     iloop
 
-skip:   lda     #0
-        sta     cached_window_id
+skip:   copy    #0, cached_window_id
         jsr     DESKTOP_COPY_FROM_BUF
 
         ;; Clear various flags
@@ -118,8 +117,7 @@ main_loop:
         lda     loop_counter
         cmp     machine_type    ; for per-machine timing
         bcc     :+
-        lda     #0
-        sta     loop_counter
+        copy    #0, loop_counter
 
         ;; Poll drives for updates
         jsr     L4563
@@ -150,10 +148,8 @@ click:  jsr     handle_click
 :       cmp     #MGTK::EventKind::update
         bne     :+
         jsr     reset_grafport3
-        lda     active_window_id
-        sta     L40F0
-        lda     #$80
-        sta     L40F1
+        copy    active_window_id, L40F0
+        copy    #$80, L40F1
         jsr     L410D
 
 :       jmp     main_loop
@@ -167,18 +163,15 @@ L40E0:  tsx
         stx     LE256
         sta     menu_click_params::item_num
         jsr     L59A0
-        lda     #0
-        sta     menu_click_params::item_num
+        copy    #0, menu_click_params::item_num
         rts
 
 L40F0:  .byte   $00
 L40F1:  .byte   $00
 redraw_windows:
         jsr     reset_grafport3
-        lda     active_window_id
-        sta     L40F0
-        lda     #$00
-        sta     L40F1
+        copy    active_window_id, L40F0
+        copy    #$00, L40F1
 L4100:  jsr     peek_event
         lda     event_kind
         cmp     #MGTK::EventKind::update
@@ -193,8 +186,7 @@ L4113:  MGTK_RELAY_CALL MGTK::BeginUpdate, event_window_id
         MGTK_RELAY_CALL MGTK::EndUpdate
         rts
 
-L412B:  lda     #0
-        sta     cached_window_id
+L412B:  copy    #0, cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         lda     L40F0
         sta     active_window_id
@@ -226,10 +218,8 @@ L4152:  .byte   0
 L415B:  sta     active_window_id
         sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
-        lda     #$80
-        sta     L4152
-        lda     cached_window_id
-        sta     getwinport_params2::window_id
+        copy    #$80, L4152
+        copy    cached_window_id, getwinport_params2::window_id
         jsr     get_port2
         jsr     draw_window_header
         lda     active_window_id
@@ -246,61 +236,50 @@ L415B:  sta     active_window_id
 
         ldx     #$0B
         ldy     #$1F
-        lda     grafport2,x
-        sta     ($06),y
+        copy    grafport2,x, ($06),y
         dey
         dex
-        lda     grafport2,x
-        sta     ($06),y
+        copy    grafport2,x, ($06),y
 
         ldx     #$03
         ldy     #$17
-        lda     grafport2,x
-        sta     ($06),y
+        copy    grafport2,x, ($06),y
         dey
         dex
-        lda     grafport2,x
-        sta     ($06),y
+        copy    grafport2,x, ($06),y
 
 L41CB:  ldx     cached_window_id
         dex
         lda     win_buf_table,x
         bpl     L41E2
         jsr     L6C19
-        lda     #$00
-        sta     L4152
+        copy    #$00, L4152
         lda     active_window_id
         jmp     assign_window_portbits
 
-L41E2:  lda     cached_window_id
-        sta     getwinport_params2::window_id
+L41E2:  copy    cached_window_id, getwinport_params2::window_id
         jsr     get_set_port2
         jsr     cached_icons_window_to_screen
 
         ldx     #.sizeof(MGTK::Rect)-1
-:       lda     grafport2::cliprect,x
-        sta     rect_E230,x
+:       copy    grafport2::cliprect,x, rect_E230,x
         dex
         bpl     :-
 
-        lda     #0
-        sta     L4241
+        copy    #0, L4241
 L41FE:  lda     L4241
         cmp     cached_window_icon_count
         beq     L4227
         tax
-        lda     cached_window_icon_list,x
-        sta     icon_param
+        copy    cached_window_icon_list,x, icon_param
         DESKTOP_RELAY_CALL DT_ICON_IN_RECT, icon_param
         beq     :+
         DESKTOP_RELAY_CALL DT_REDRAW_ICON, icon_param
 :       inc     L4241
         jmp     L41FE
 
-L4227:  lda     #$00
-        sta     L4152
-        lda     cached_window_id
-        sta     getwinport_params2::window_id
+L4227:  copy    #$00, L4152
+        copy    cached_window_id, getwinport_params2::window_id
         jsr     get_set_port2
         jsr     cached_icons_screen_to_window
         lda     active_window_id
@@ -318,22 +297,19 @@ L4242:  .word   0
         bne     :+
 bail:   rts
 
-:       lda     #0
-        sta     L42C3
+:       copy    #0, L42C3
 
         lda     selected_window_index
         beq     L42A5
         cmp     active_window_id
         bne     bail
 
-        lda     active_window_id
-        sta     getwinport_params2::window_id
+        copy    active_window_id, getwinport_params2::window_id
         jsr     get_port2
         jsr     offset_grafport2_and_set
 
         ldx     #.sizeof(MGTK::Rect)-1
-:       lda     grafport2::cliprect,x
-        sta     rect_E230,x
+:       copy    grafport2::cliprect,x, rect_E230,x
         dex
         bpl     :-
 
@@ -341,8 +317,7 @@ L4270:  lda     L42C3
         cmp     selected_icon_count
         beq     done
         tax
-        lda     selected_icon_list,x
-        sta     icon_param
+        copy    selected_icon_list,x, icon_param
         jsr     icon_window_to_screen
         DESKTOP_RELAY_CALL DT_ICON_IN_RECT, icon_param
         beq     :+
@@ -358,8 +333,7 @@ L42A5:  lda     L42C3
         cmp     selected_icon_count
         beq     done
         tax
-        lda     selected_icon_list,x
-        sta     icon_param
+        copy    selected_icon_list,x, icon_param
         DESKTOP_RELAY_CALL DT_REDRAW_ICON, icon_param
         inc     L42C3
         jmp     L42A5
@@ -494,8 +468,7 @@ handle_keydown:
         jmp     cmd_scroll
 
 menu_accelerators:
-        lda     event_key
-        sta     LE25C
+        copy    event_key, LE25C
         lda     event_modifiers
         beq     :+
         lda     #1
@@ -548,8 +521,7 @@ call_proc:
         ;; Click on desktop
         jsr     detect_double_click
         sta     double_click_flag
-        lda     #0
-        sta     findwindow_window_id
+        copy    #0, findwindow_window_id
         DESKTOP_RELAY_CALL DT_FIND_ICON, event_coords
         lda     findicon_which_icon
         beq     :+
@@ -605,8 +577,7 @@ L445C:  .byte   0
 start:  jsr     clear_selection
         ldx     findwindow_window_id
         dex
-        lda     LEC26,x
-        sta     icon_param
+        copy    LEC26,x, icon_param
         lda     icon_param
         jsr     icon_entry_lookup
         stax    ptr
@@ -622,23 +593,17 @@ start:  jsr     clear_selection
         jsr     zero_grafport5_coords
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
         jsr     reset_grafport3
-        lda     L445C
-        sta     selected_window_index
-        lda     #1
-        sta     selected_icon_count
-        lda     icon_param
-        sta     selected_icon_list
+        copy    L445C, selected_window_index
+        copy    #1, selected_icon_count
+        copy    icon_param, selected_icon_list
 L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_window_id
-        lda     findwindow_window_id
-        sta     active_window_id
+        copy    findwindow_window_id, active_window_id
         sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         jsr     L6C19
-        lda     #0
-        sta     cached_window_id
+        copy    #0, cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
-        lda     #MGTK::checkitem_uncheck
-        sta     checkitem_params::check
+        copy    #MGTK::checkitem_uncheck, checkitem_params::check
         MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
         ldx     active_window_id
         dex
@@ -646,8 +611,7 @@ L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_window_id
         and     #$0F
         sta     checkitem_params::menu_item
         inc     checkitem_params::menu_item
-        lda     #MGTK::checkitem_check
-        sta     checkitem_params::check
+        copy    #MGTK::checkitem_check, checkitem_params::check
         MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
         rts
 .endproc
@@ -699,8 +663,7 @@ next:   dey
         ldx     L45A0
         beq     done
 
-:       lda     L45A0,x
-        sta     L45A9,x
+:       copy    L45A0,x, L45A9,x
         dex
         bpl     :-
 
@@ -729,8 +692,7 @@ L456E:  lda     L45A0,x
         bne     L456E
 done:   return  #0
 
-L457C:  lda     L45A0,x
-        sta     L45A9,x
+L457C:  copy    L45A0,x, L45A9,x
         lda     L4597,x
         ldy     DEVCNT
 L4588:  cmp     DEVLST,y
@@ -888,8 +850,7 @@ L4666:  lda     selected_icon_count
         bne     L468B
         jsr     disable_eject_menu_item
         jsr     disable_file_menu_items
-        lda     #0
-        sta     LE26F
+        copy    #0, LE26F
         rts
 
 L468B:  jsr     enable_eject_menu_item
@@ -902,8 +863,7 @@ L4697:  jsr     enable_eject_menu_item
 L469A:  bit     LE26F
         bmi     L46A7
         jsr     enable_file_menu_items
-        lda     #$80
-        sta     LE26F
+        copy    #$80, LE26F
 L46A7:  rts
 
 L46A8:  bit     LE26F
@@ -912,8 +872,7 @@ L46A8:  bit     LE26F
 
 L46AE:  jsr     disable_eject_menu_item
         jsr     disable_file_menu_items
-        lda     #$00
-        sta     LE26F
+        copy    #$00, LE26F
         rts
 .endproc
 
@@ -953,19 +912,16 @@ begin:
 
         ldx     #$FF
 :       inx
-        lda     buf_win_path,x
-        sta     $220,x
+        copy    buf_win_path,x, $220,x
         cpx     buf_win_path
         bne     :-
 
         inx
-        lda     #'/'
-        sta     $220,x
+        copy    #'/', $220,x
         ldy     #$00
 :       iny
         inx
-        lda     buf_filename2,y
-        sta     $220,x
+        copy    buf_filename2,y, $220,x
         cpy     buf_filename2
         bne     :-
 
@@ -1002,13 +958,11 @@ L4755:  DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ALL
         MGTK_RELAY_CALL MGTK::CloseAll
         MGTK_RELAY_CALL MGTK::SetMenu, blank_menu
         ldx     buf_win_path
-:       lda     buf_win_path,x
-        sta     $220,x
+:       copy    buf_win_path,x, $220,x
         dex
         bpl     :-
         ldx     buf_filename2
-:       lda     buf_filename2,x
-        sta     INVOKER_FILENAME,x
+:       copy    buf_filename2,x, INVOKER_FILENAME,x
         dex
         bpl     :-
         addr_call L4842, $280
@@ -1023,21 +977,18 @@ L4755:  DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ALL
 
 L47B8:  ldx     buf_win_path
         stx     L4816
-:       lda     buf_win_path,x
-        sta     $1800,x
+:       copy    buf_win_path,x, $1800,x
         dex
         bpl     :-
 
         inc     $1800
         ldx     $1800
-        lda     #'/'
-        sta     $1800,x
+        copy    #'/', $1800,x
 L47D2:  ldx     $1800
         ldy     #$00
 L47D7:  inx
         iny
-        lda     L4817,y
-        sta     $1800,x
+        copy    L4817,y, $1800,x
         cpy     L4817
         bne     L47D7
         stx     $1800
@@ -5442,12 +5393,12 @@ pathlen:        .byte   0
         ptr := $6
 
         stax    ptr
-        sty     L705D
+        sty     vol_info_path_buf
 L6F52:  lda     (ptr),y
-        sta     L705D,y
+        sta     vol_info_path_buf,y
         dey
         bne     L6F52
-        jsr     L72EC
+        jsr     get_vol_free_used
         bne     L6F8F
         lda     L704B
         beq     L6F8F
@@ -5459,8 +5410,8 @@ L6F64:  dec     L704B
         sbc     #1
         asl     a
         tax
-        copy16  L70BD, window_k_used_table,x
-        copy16  L70BB, window_k_free_table,x
+        copy16  vol_kb_used, window_k_used_table,x
+        copy16  vol_kb_free, window_k_free_table,x
         jmp     L6F64
 
 L6F8F:  rts
@@ -5585,20 +5536,22 @@ L704C:  .res    8
 ;;; ============================================================
 
 .proc L7054
-        jmp     L70C5
+        jmp     start
 
-        DEFINE_OPEN_PARAMS open_params, L705D, $800
+        DEFINE_OPEN_PARAMS open_params, vol_info_path_buf, $800
 
-L705D:  .res    65, 0
+vol_info_path_buf:
+        .res    65, 0
 
         DEFINE_READ_PARAMS read_params, $0C00, $200
         DEFINE_CLOSE_PARAMS close_params
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params4, L705D
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params4, vol_info_path_buf
 
         .byte   0
-L70BB:  .word   0
-L70BD:  .word   0
+vol_kb_free:  .word   0
+vol_kb_used:  .word   0
+
 L70BF:  .byte   $00
 L70C0:  .byte   $00
 L70C1:  .byte   $00
@@ -5606,26 +5559,28 @@ L70C2:  .byte   $00
 L70C3:  .byte   $00
 L70C4:  .byte   $00
 
-.proc L70C5
+.proc start
         sta     L72A7
         jsr     push_zp_addrs
         ldx     #$40
 L70CD:  lda     LE1B0,x
-        sta     L705D,x
+        sta     vol_info_path_buf,x
         dex
         bpl     L70CD
-        jsr     L72AA
+        jsr     do_open
         lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
-        jsr     L72CE
+        jsr     do_read
         jsr     L72E2
-        ldx     #$00
-L70EA:  lda     $0C23,x
+
+        ldx     #0
+:       lda     $0C23,x         ; ???
         sta     L70BF,x
         inx
-        cpx     #$04
-        bne     L70EA
+        cpx     #4
+        bne     :-
+
         sub16   L485D, L485F, L72A8
         ldx     #$05
 L710A:  lsr16   L72A8
@@ -5647,7 +5602,7 @@ L7147:  lda     LEC2E
         jsr     L8B19
         dec     LEC2E
         jsr     redraw_windows_and_desktop
-        jsr     L72D8
+        jsr     do_close
         lda     active_window_id
         beq     L715F
         lda     #$03
@@ -5701,7 +5656,7 @@ L71CB:  inc     L70C3
 L71E7:  lda     #$00
         sta     L70C3
         copy16  #$0C04, $08
-        jsr     L72CE
+        jsr     do_read
 L71F7:  ldx     #$00
         ldy     #$00
         lda     ($08),y
@@ -5778,7 +5733,7 @@ L7279:  lda     $1F00,x
 L7293:  jmp     L71BD
 
 L7296:  copy16  $06, L485F
-        jsr     L72D8
+        jsr     do_close
         jsr     pop_zp_addrs
         rts
 L72A7:  .byte   0
@@ -5787,8 +5742,9 @@ L72A8:  .word   0
 
 ;;; --------------------------------------------------
 
-L72AA:  MLI_RELAY_CALL OPEN, open_params
-        beq     L72CD
+.proc do_open
+        MLI_RELAY_CALL OPEN, open_params
+        beq     done
         jsr     DESKTOP_SHOW_ALERT0
         jsr     L8B1F
         lda     selected_window_index
@@ -5798,14 +5754,17 @@ L72AA:  MLI_RELAY_CALL OPEN, open_params
         jsr     L59A8
 :       ldx     LE256
         txs
-L72CD:  rts
+done:   rts
+.endproc
 
 ;;; --------------------------------------------------
 
-L72CE:  MLI_RELAY_CALL READ, read_params
+do_read:
+        MLI_RELAY_CALL READ, read_params
         rts
 
-L72D8:  MLI_RELAY_CALL CLOSE, close_params
+do_close:
+        MLI_RELAY_CALL CLOSE, close_params
         rts
 
 ;;; --------------------------------------------------
@@ -5813,31 +5772,31 @@ L72D8:  MLI_RELAY_CALL CLOSE, close_params
 L72E2:  lda     $0C04
         and     #$F0
         cmp     #$F0
-        beq     L72EC
+        beq     get_vol_free_used
         rts
 
 
-L72EC:  MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params4
-        beq     L72F8
+get_vol_free_used:  MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params4
+        beq     :+
         rts
 
-;;; --------------------------------------------------
-
-L72F8:  copy16  get_file_info_params4::aux_type, L70BD
-        sub16   get_file_info_params4::aux_type, get_file_info_params4::blocks_used, L70BB
-        sub16   L70BD, L70BB, L70BD
-        lsr16   L70BB
+        ;; aux = total blocks
+:       copy16  get_file_info_params4::aux_type, vol_kb_used
+        ;; total - used = free
+        sub16   get_file_info_params4::aux_type, get_file_info_params4::blocks_used, vol_kb_free
+        sub16   vol_kb_used, vol_kb_free, vol_kb_used ; total - free = used
+        lsr16   vol_kb_free
         php
-        lsr16   L70BD
+        lsr16   vol_kb_used
         plp
-        bcc     L7342
-        inc16   L70BD
-L7342:  return  #0
+        bcc     :+
+        inc16   vol_kb_used
+:       return  #0
 .endproc
-        L70BB := L7054::L70BB
-        L70BD := L7054::L70BD
-        L705D := L7054::L705D
-        L72EC := L7054::L72EC
+        vol_kb_free := L7054::vol_kb_free
+        vol_kb_used := L7054::vol_kb_used
+        vol_info_path_buf := L7054::vol_info_path_buf
+        get_vol_free_used := L7054::get_vol_free_used
 
 ;;; ============================================================
 
@@ -6122,15 +6081,15 @@ L75A3:  sta     ($06),y
         txa
         asl     a
         tax
-        copy16  window_k_used_table,x, L70BD
-        copy16  window_k_free_table,x, L70BB
+        copy16  window_k_used_table,x, vol_kb_used
+        copy16  window_k_free_table,x, vol_kb_free
 L75FA:  ldx     cached_window_id
         dex
         txa
         asl     a
         tax
-        copy16  L70BD, window_k_used_table,x
-        copy16  L70BB, window_k_free_table,x
+        copy16  vol_kb_used, window_k_used_table,x
+        copy16  vol_kb_free, window_k_free_table,x
         lda     cached_window_id
         jsr     L7635
         rts
@@ -14272,59 +14231,65 @@ trash_name:  PASCAL_STRING " Trash "
 
         ;; create volume icons???
 .proc init_volumes
+        ptr := $06
+
         lda     DEVCNT
         sta     devcnt
         inc     devcnt
         ldx     #0
 :       lda     DEVLST,x
         and     #%10001111      ; drive, not slot, $CnFE status
-        cmp     #%10001011      ; drive 1 ... ??? $CnFE = $Bx ?
+        cmp     #%10001011      ; drive 2 ... ??? $CnFE = $Bx ?
         beq     :+
         inx
         cpx     devcnt
         bne     :-
         jmp     done
 
-:       lda     DEVLST,x
+:       lda     DEVLST,x        ; unit_num
         stx     L09F8
         sta     L0A02
-        ldx     #$11
+        ldx     #$11            ; LSB DEVADR for slot 1, drive 1
         lda     L0A02
-        and     #$80
+        and     #$80            ; drive 2?
         beq     :+
-        ldx     #$21
-:       stx     L09B5
-        lda     L0A02
-        and     #$70
+        ldx     #$21            ; LSB DEVADR for slot 1, drive 2
+:       stx     addr_lsb
+        lda     L0A02           ; unit_num (again)
+        and     #$70            ; slot number
         lsr     a
         lsr     a
         lsr     a
         clc
-        adc     L09B5
-        sta     L09B5
+        adc     addr_lsb
+        sta     addr_lsb
 
-        L09B5 := *+1
-        lda     $BF00           ; self-modified
+        addr_lsb := *+1
+        lda     MLI             ; self-modified
 
-        sta     $06+1
-        lda     #$00
-        sta     $06
-        ldy     #$07
-        lda     ($06),y
+        sta     ptr+1           ; $Cn firmware address
+        lda     #$00            ; BUG: assumes device has firmware driver!
+        sta     ptr
+
+        ldy     #$07            ; $Cn07 is $00 = SmartPort
+        lda     (ptr),y
         bne     done
-        ldy     #$FB
-        lda     ($06),y
+
+        ldy     #$FB            ; Secondary check???
+        lda     (ptr),y
         and     #$7F
         bne     done
-        ldy     #$FF
-        lda     ($06),y
-        clc
-        adc     #$03
-        sta     $06
 
-        jsr     L09F9
+        ldy     #$FF            ; If SmartPort, $Cn00 + ($CnFF) + 3 is
+        lda     (ptr),y         ; entry point
+        clc
+        adc     #3
+        sta     ptr
+
+        ;; SmartPort call
+        jsr     smartport_call
         .byte   0
-        .addr   L09FC
+        .addr   smartport_params
 
         bcs     done
         lda     $1F00
@@ -14341,13 +14306,17 @@ done:   jmp     load_selector_list
 
 L09F8:  .byte   0
 
-L09F9:  jmp     ($06)
+smartport_call:
+        jmp     (ptr)
 
-L09FC:  .byte   $03
+
+smartport_params:
+        .byte   $03
         .byte   0
         .byte   0
         .byte   $1F
         .byte   0
+
 devcnt: .byte   0
 L0A02:  .byte   0
 .endproc
