@@ -8638,35 +8638,30 @@ create_icon:
         jsr     icon_entry_lookup
         stax    icon_ptr
 
-        ;; Fill name with spaces
-        ldx     #0
-        ldy     #IconEntry::name-1 ; why -1 ???
-        lda     #' '
-:       sta     (icon_ptr),y
-        iny
-        inx
-        cpx     #.sizeof(IconEntry::name)+1
-        bne     :-
-
         ;; Copy name, with leading/trailing space
-        ldy     #IconEntry::len
         lda     cvi_data_buffer
         and     #$0F
         sta     cvi_data_buffer
-        sta     (icon_ptr),y
-        addr_call capitalize_string, cvi_data_buffer ; ???
+        addr_call capitalize_string, cvi_data_buffer
+
+        ldy     #IconEntry::name
+        copy    #' ', (icon_ptr),y ; leading space
+        iny
+
         ldx     #0
-        ldy     #IconEntry::name+1 ; past leading space
 :       lda     cvi_data_buffer+1,x
         sta     (icon_ptr),y
         iny
         inx
         cpx     cvi_data_buffer
         bne     :-
+
+        copy    #' ', (icon_ptr),y ; trailing space
+
+        inx                     ; for leading/trailing space
+        inx
+        txa
         ldy     #IconEntry::len
-        lda     (icon_ptr),y
-        clc
-        adc     #2              ; leading/trailing space
         sta     (icon_ptr),y
 
         ;; Figure out icon
@@ -8771,6 +8766,12 @@ desktop_icon_coords_table:
         DEFINE_POINT 220,160
         DEFINE_POINT 130,160
         DEFINE_POINT 40,160
+        DEFINE_POINT 400,131
+        DEFINE_POINT 310,131
+        DEFINE_POINT 220,131
+        ;; Maximum of 13 devices:
+        ;; 7 slots * 2 drives = 14 (size of DEVLST)
+        ;; ... but RAM in Slot 3 Drive 2 is disconnected.
 
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, prefix_buffer
 
@@ -9225,7 +9226,6 @@ open:   MLI_RELAY_CALL OPEN, open_params
         MLI_RELAY_CALL CLOSE, close_params
         rts
 
-        .assert * = $8EFB, error, "Segment length mismatch"
         PAD_TO $8F00
 
 .endproc
