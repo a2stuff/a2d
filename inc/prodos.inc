@@ -115,6 +115,7 @@ ST_VOLUME_DIRECTORY     := $0F
 ;;; Errors
 ;;; ============================================================
 
+ERR_INVALID_REFERENCE := $43
 ERR_PATH_NOT_FOUND    := $44
 ERR_VOL_NOT_FOUND     := $45
 ERR_FILE_NOT_FOUND    := $46
@@ -122,6 +123,7 @@ ERR_DUPLICATE_FILENAME:= $47
 ERR_OVERRUN_ERROR     := $48
 ERR_VOLUME_DIR_FULL   := $49
 ERR_END_OF_FILE       := $4C
+ERR_ACCESS_ERROR      := $4E
 
 ;;; ============================================================
 ;;; Directory Structures

@@ -8859,11 +8859,11 @@ L8E0F:  .byte   0
 ;;; Routines are:
 ;;;  0 = disk copy                - A$ 800,L$ 200
 ;;;  1 = format/erase disk        - A$ 800,L$1400 call w/ A = 4 = format, A = 5 = erase
-;;;  2 = part of selector actions - A$9000,L$1000
-;;;  3 = common routines          - A$5000,L$2000
+;;;  2 = selector actions (all)   - A$9000,L$1000
+;;;  3 = common file dialog       - A$5000,L$2000
 ;;;  4 = part of copy file        - A$7000,L$ 800
 ;;;  5 = part of delete file      - A$7000,L$ 800
-;;;  6 = part of selector actions - L$7000,L$ 800
+;;;  6 = selector add/edit        - L$7000,L$ 800
 ;;;  7 = restore 1                - A$5000,L$2800 (restore $5000...$77FF)
 ;;;  8 = restore 2                - A$9000,L$1000 (restore $9000...$9FFF)
 ;;;
@@ -8954,8 +8954,8 @@ jt_lock:        jmp     do_lock ; cmd_lock
 jt_unlock:      jmp     do_unlock ; cmd_unlock
 jt_rename_icon: jmp     do_rename_icon ; cmd_rename_icon
 jt_eject:       jmp     do_eject ; cmd_eject ???
-jt_copy_file:   jmp     do_copy_file ; cmd_copy_file ???
-jt_delete_file: jmp     do_delete_file ; cmd_delete_file ???
+jt_copy_file:   jmp     do_copy_file ; cmd_copy_file
+jt_delete_file: jmp     do_delete_file ; cmd_delete_file
         jmp     rts2            ; rts
         jmp     rts2            ; rts
 L8F24:  jmp     L8F7E           ; cmd_selector_action ???
@@ -10394,20 +10394,18 @@ L9BFF:  .word   0
 
 ;;; ============================================================
 
-L9C01:  jsr     L9C1A
-        bcc     L9C19
+.proc L9C01
+        jsr     L9C1A
+        bcc     done
         lda     #4
         sta     L9937
         jsr     L9BBF
-        beq     L9C13
+        beq     :+
         jmp     LA39F
-
-L9C13:  lda     #3
+:       lda     #3
         sta     L9937
         sec
-L9C19:  rts
-
-;;; ============================================================
+done:   rts
 
 .proc L9C1A
         yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
@@ -10469,6 +10467,7 @@ L9CD6:  .byte   0
 L9CD7:  .byte   0
 L9CD8:  .byte   0
 L9CD9:  .byte   0
+.endproc
 .endproc
 
 ;;; ============================================================
@@ -10632,13 +10631,14 @@ L9E71:  sec
 
 L9E73:  .addr   L9F94           ; Overlay for L97DD
         .addr   rts2
-        .addr   LA02E
+        .addr   destroy_with_retry
 L9E79:  .byte   0
 L9E7A:  .word   0
 
         .addr   $220
 
-L9E7E:  sta     L9E79
+.proc L9E7E
+        sta     L9E79
         copy16  #L9EB1, L9183
         copy16  #L9EA3, L917D
         jsr     LA044
@@ -10657,20 +10657,27 @@ L9EB1:  lda     #$02
         jmp     LA39F
 
 L9EBE:  rts
+.endproc
 
-L9EBF:  ldy     #5
-L9EC1:  lda     L9E73,y
+;;; ============================================================
+
+.proc L9EBF
+        ldy     #5
+:       lda     L9E73,y
         sta     L97DD,y
         dey
-        bpl     L9EC1
+        bpl     :-
         lda     #$00
         sta     LA425
         sta     L918D
         rts
+.endproc
 
-L9ED3:  lda     #$05
+.proc L9ED3
+        lda     #$05
         sta     L9E79
         jmp     LA044
+.endproc
 
 ;;; ============================================================
 
@@ -10817,14 +10824,15 @@ LA022:  jmp     remove_path_segment_220
 
 ;;; ============================================================
 
-LA02E:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
-        beq     LA043
-        cmp     #$4E
-        beq     LA043
+.proc destroy_with_retry
+retry:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
+        beq     done
+        cmp     #ERR_ACCESS_ERROR
+        beq     done
         jsr     show_error_alert
-        jmp     LA02E
-
-LA043:  rts
+        jmp     retry
+done:   rts
+.endproc
 
 LA044:  yax_call launch_dialog, index_delete_file_dialog, L9E79
         rts
@@ -10878,14 +10886,16 @@ LA0D1:  lda     #$02
 
 LA0DE:  rts
 
-LA0DF:  lda     #$00
+.proc LA0DF
+        lda     #$00
         sta     LA425
         ldy     #$05
-LA0E6:  lda     LA04E,y
+:       lda     LA04E,y
         sta     L97DD,y
         dey
-        bpl     LA0E6
+        bpl     :-
         rts
+.endproc
 
 LA0F0:  lda     #$04
         sta     LA054
