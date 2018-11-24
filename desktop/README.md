@@ -125,9 +125,49 @@ as windows are opened and closed.
 
 Interactive commands including disk copy/format/erase, file
 copy/delete, and Selector add/edit/delete/run all dynamically load
-main memory code overlays into one or more of: $800-$1BFF,
-$5000-$6FFF, $7000-$77FF, and $9000-$9FFF. When complete, any original
-code above $4000 is reloaded.
+main memory code overlays. When complete, any original code above
+$4000 is reloaded (unless a full restart is required.)
+
+Several of the overlays also use a common file selector dialog overlay
+`ovl4.s` ($5000-$6FFF).
+
+#### Disk Copy Overlay
+
+The Disk Copy command replaces large chunks of memory and is best
+thought of as a separate application.
+
+The first part (`ovl1.s`, $800-$9FF) loads into main memory the other
+overlays, but in turn it loads a second short ($200-byte) overlay
+(`ovl1a.s`, $1800-$19FF). This then loads a replacement for the
+resources in the aux language card area (`ovl1b.s`, Aux LC
+$D000-$F1FF) and another block of code in main memory (`ovl1c.s`, Main
+$0800-$12FF). When exiting, the DeskTop is restarted from the
+beginning.
+
+#### Disk Format/Disk Erase
+
+Simple overlay: `ovl2.s`, loaded into Main A$0800-$1BFF.
+
+#### Selector - Delete Entry / Run Entry
+
+Simple overlay: `ovl3.s` ($9000-$9FFF).
+
+#### Selector - Add Entry / Edit Entry
+
+Also uses `ovl3.s` ($9000-$9FFF) but additionally uses overlay
+`ovl7.s` ($7000-$77FF) and the file selector dialog `ovl4.s`
+($5000-$6FFF).
+
+#### File Copy
+
+Overlay `ovl5.s` ($7000-$77FF), uses file selector dialog `ovl4.s`
+($5000-$6FFF).
+
+#### File Delete
+
+Overlay `ovl6.s` ($7000-$77FF), uses file selector dialog `ovl4.s`
+($5000-$6FFF).
+
 
 ## Memory Map
 
@@ -212,14 +252,4 @@ $0100 +-------------+       +-------------+
 $0000 +-------------+       +-------------+
 ```
 
-#### Disk Copy Overlay
-
-The Disk Copy command replaces large chunks of memory and is best
-thought of as a separate application.
-
-The first part (`ovl1.s`) loads into main memory the other overlays,
-but in turn it loads a second short ($200-byte) overlay (`ovl1a.s`).
-This then loads a replacement for the resources in the aux language
-card area (`ovl1b.s`) and another block of code in main memory
-(`ovl1c.s`). When exiting, the DeskTop is restarted from the
-beginning.
+Memory use by the Disk Copy overlay is not shown.
