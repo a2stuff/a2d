@@ -1037,13 +1037,13 @@ get_srcbits_jmp_addr := *+1
 
 :       ldy     src_width_bytes
 
-loop:
+:
 load_addr       := *+1
         lda     $FFFF,y                 ; off-screen BMP will be patched here
         and     #$7F
         sta     bitmap_buffer,y
         dey
-        bpl     loop
+        bpl     :-
         bmi     shift_bits_clc_jmp
 .endproc
 

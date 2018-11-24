@@ -763,17 +763,17 @@ L0D26:  sta     L0D50
         and     #$80
         beq     L0D34
         ldx     #$21
-L0D34:  stx     load_addr
+L0D34:  stx     @load_addr
         lda     L0D50
         and     #$70
         lsr     a
         lsr     a
         lsr     a
         clc
-        adc     load_addr
-        sta     load_addr
+        adc     @load_addr
+        sta     @load_addr
 
-        load_addr := * + 1
+        @load_addr := *+1
         lda     MLI             ; self-modified
         sta     $07
         lda     #$00

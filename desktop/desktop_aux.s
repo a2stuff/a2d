@@ -3503,7 +3503,7 @@ LBDE1:  sub16   event_xcoord, portmap::viewloc::xcoord, event_xcoord
         rts
 
 .proc LBE08
-        copy16  #$0800, LBE37
+        copy16  #$0800, addr
         lda     LBFC9
         jsr     LBF10
         lda     LBFCB
@@ -3520,9 +3520,9 @@ LBE27:  lda     LBE5C
         bcs     LBE34
         sta     PAGE2ON         ; aux $2000-$3FFF
 LBE34:  lda     ($06),y
-LBE37           := * + 1
+        addr := *+1
         sta     dummy1234
-        inc16   LBE37
+        inc16   addr
         lda     LBE5C
         cmp     LBFCC
         bcs     LBE4E
@@ -3531,7 +3531,7 @@ LBE37           := * + 1
 LBE4E:  jsr     LBF52
         dex
         bne     LBE21
-        ldax    LBE37
+        ldax    addr
         rts
 
         .byte   0
@@ -3539,7 +3539,7 @@ LBE5C:  .byte   0
 .endproc
 
 .proc LBE5D
-        copy16  #$800, LBEBC
+        copy16  #$800, addr
         ldx     LBFCD
         ldy     LBFCE
         lda     #$FF
@@ -3580,7 +3580,7 @@ LBEAE:  lda     LBF0B
         bcs     :+
         sta     PAGE2ON         ; aux $2000-$3FFF
 
-        LBEBC := *+1
+        addr := *+1
 :       lda     $0800           ; self-modified
 
         pha
@@ -3607,7 +3607,7 @@ LBEDD:  lda     ($06),y
         pha
 LBEEB:  pla
         sta     ($06),y
-        inc16   LBEBC
+        inc16   addr
         lda     LBF0B
         cmp     LBFCC
         bcs     LBF03

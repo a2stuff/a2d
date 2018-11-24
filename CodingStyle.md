@@ -152,20 +152,23 @@ well in the future.
 
 ## Self-modifying code
 
-* Add a label for the value being modified (byte or address)
+* Add a label for the value being modified (byte or address). Use
+   [cheap local labels](https://cc65.github.io/doc/ca65.html#ss6.5) via the
+   `@`-prefix where possible so make self-modification references more
+   visible.
 
 ```asm
-        sta     jump_addr
-        stx     jump_addr+1
-        jump_addr := *+1
+        sta     @jump_addr
+        stx     @jump_addr+1
+        @jump_addr := *+1
         jmp     $0000
 ```
 ```asm
-        sty     count
+        sty     @count
         ldy     #0
 :       sta     table,y
         iny
-        count := *+1
-        cpy     #count
+        @count := *+1
+        cpy     #00
         bne     :-
 ```

@@ -36,8 +36,8 @@ L9017:  lda     $0C00
         rts
 
 L903C:  ldx     #$01
-        copy16  selector_menu_addr, load
-        load := *+1
+        copy16  selector_menu_addr, @load
+        @load := *+1
         lda     dummy1234
         cmp     #$0D
         bcc     L9052
@@ -1450,31 +1450,31 @@ L9DED:  sta     ALTZPOFF
         txa
         rts
 
-L9E05:  stax    L9E1B
+L9E05:  stax    @addr
         sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
         ldx     LD3EE
-L9E17:  lda     LD3EE,x
-L9E1B   := *+1
+:       lda     LD3EE,x
+        @addr := *+1
         sta     dummy1234,x
         dex
-        bpl     L9E17
+        bpl     :-
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         rts
 
-L9E2A:  stax    L9E40
+L9E2A:  stax    @addr
         sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
         ldx     LD3AD
-L9E3C:  lda     LD3AD,x
-L9E40   := *+1
+:       lda     LD3AD,x
+        @addr := *+1
         sta     dummy1234,x
         dex
-        bpl     L9E3C
+        bpl     :-
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1

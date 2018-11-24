@@ -2046,15 +2046,15 @@ monitor:
         stax    ptr
         ldy     #0
         lda     (ptr),y
-        sta     len
+        sta     @len
         beq     done
-loop:   iny
+:       iny
         lda     ($06),y
         ora     #$80
         jsr     COUT
-        len := *+1
+        @len := *+1
         cpy     #0              ; self-modified
-        bne     loop
+        bne     :-
 done:   rts
 .endproc
 

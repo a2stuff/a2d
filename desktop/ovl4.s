@@ -50,11 +50,11 @@ routine_table:  .addr   $7000, $7000, $7000
         pla
         asl     a
         tax
-        copy16  routine_table,x, jump
+        copy16  routine_table,x, @jump
         ldy     stash_y
         ldx     stash_x
 
-        jump := * + 1
+        @jump := *+1
         jmp     dummy1234
 
 stash_x:        .byte   0

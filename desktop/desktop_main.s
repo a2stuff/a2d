@@ -748,16 +748,16 @@ L45C7:  sta     unit_num
         and     #$80            ; high bit is drive (0=D1, 1=D2)
         beq     :+
         ldx     #$21
-:       stx     bf_lo           ; D1=$11, D2=$21
+:       stx     @bf_lsb         ; D1=$11, D2=$21
         lda     unit_num
         and     #$70
         lsr     a
         lsr     a
         lsr     a
         clc
-        adc     bf_lo
-        sta     bf_lo
-        bf_lo := *+1
+        adc     @bf_lsb
+        sta     @bf_lsb
+        @bf_lsb := *+1
         lda     $BF00           ; self-modified to $BFds
         sta     ptr+1
         lda     #0              ; Bug: assumes driver is at $XX00 ???
@@ -1345,14 +1345,14 @@ L4AEA:  jsr     L4B5F
 .endproc
 
 .proc copy_LD3EE_str
-        stax    destptr
+        stax    @destptr
         sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
 
         ldx     LD3EE
 :       lda     LD3EE,x
-        destptr := *+1
+        @destptr := *+1
         sta     dummy1234,x
         dex
         bpl     :-
@@ -1364,14 +1364,14 @@ L4AEA:  jsr     L4B5F
 .endproc
 
 .proc copy_LD3AD_str
-        stax    destptr
+        stax    @destptr
         sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
 
         ldx     LD3AD
 :       lda     LD3AD,x
-        destptr := *+1
+        @destptr := *+1
         sta     dummy1234,x
         dex
         bpl     :-
@@ -7660,7 +7660,7 @@ ascii_digits:
         adc     ($06),y
         sta     ($08),y
         lda     ($06),y
-        sta     compare_y
+        sta     @compare_y
 :       inc     L84D0
         iny
         lda     ($06),y
@@ -7668,7 +7668,7 @@ ascii_digits:
         ldy     L84D0
         sta     ($08),y
         ldy     L84CF
-        compare_y := *+1
+        @compare_y := *+1
         cpy     #0              ; self-modified
         bcc     :-
         rts
@@ -8447,8 +8447,8 @@ create_icon:
         lsr     a
         lsr     a
         ora     #$C0
-        sta     load_CxFB
-        load_CxFB := *+2
+        sta     @load_CxFB
+        @load_CxFB := *+2
         lda     $C7FB           ; self-modified $CxFB
         and     #$01            ; $CxFB bit 1 = ProFile, apparently???
         beq     use_profile_icon
@@ -9098,14 +9098,14 @@ L9051:  lda     LEBFC
         sta     ($06),y
         dey
         lda     ($06),y
-        sta     L906D
+        sta     @compare
         sta     path_buf3,y
-L9066:  iny
+:       iny
         lda     ($06),y
         sta     path_buf3,y
-        L906D := *+1
+        @compare := *+1
         cpy     #$00            ; self-modified
-        bne     L9066
+        bne     :-
         ldy     #$01
         lda     #' '
         sta     ($06),y
@@ -9276,12 +9276,12 @@ L918D:  .byte   0
         beq     do_str2
 
         ;; Copy $8 (str1)
-        sta     len1
+        sta     @len
 :       iny
         inx
         lda     (str1),y
         sta     buf,x
-        len1 := *+1
+        @len := *+1
         cpy     #0              ; self-modified
         bne     :-
 
@@ -9295,13 +9295,13 @@ do_str2:
         ldy     #0
         lda     (str2),y
         beq     done
-        sta     len2
+        sta     @len
         iny
 :       iny
         inx
         lda     (str2),y
         sta     buf,x
-        len2 := *+1
+        @len := *+1
         cpy     #0              ; self-modified
         bne     :-
 
@@ -9366,19 +9366,19 @@ index:  .byte   0
 .proc smartport_eject
         ptr := $6
 
-        sta     compare
+        sta     @compare
         ldy     #0
 
-loop:   lda     device_to_icon_map,y
+:       lda     device_to_icon_map,y
 
-        compare := *+1
+        @compare := *+1
         cmp     #0
 
         beq     found
         cpy     DEVCNT
         beq     exit
         iny
-        bne     loop
+        bne     :-
 exit:   rts
 
 found:  lda     DEVLST,y        ;
@@ -9390,16 +9390,16 @@ found:  lda     DEVLST,y        ;
         and     #$80            ; high bit is drive (0=D1, 1=D2)
         beq     :+
         ldx     #$21
-:       stx     bf_lo           ; D1=$11, D2=$21
+:       stx     @bf_lsb         ; D1=$11, D2=$21
         lda     unit_num
         and     #$70
         lsr     a
         lsr     a
         lsr     a
         clc
-        adc     bf_lo
-        sta     bf_lo
-        bf_lo := *+1
+        adc     @bf_lsb
+        sta     @bf_lsb
+        @bf_lsb := *+1
         lda     $BF00           ; self-modified to $BFds
         sta     ptr+1
         lda     #0              ; Bug: assumes driver is at $XX00 ???
@@ -11407,7 +11407,7 @@ dialog_param_addr:
         tya
         asl     a
         tax
-        copy16  dialog_proc_table,x, jump_addr
+        copy16  dialog_proc_table,x, @jump_addr
 
         lda     #0
         sta     prompt_ip_flag
@@ -11425,7 +11425,7 @@ dialog_param_addr:
         copy16  #rts1, jump_relay+1
         jsr     set_cursor_pointer
 
-        jump_addr := *+1
+        @jump_addr := *+1
         jmp     dummy0000       ; self-modified
 .endproc
 
@@ -14239,17 +14239,17 @@ trash_name:  PASCAL_STRING " Trash "
         and     #$80            ; drive 2?
         beq     :+
         ldx     #$21            ; LSB DEVADR for slot 1, drive 2
-:       stx     addr_lsb
+:       stx     @addr_lsb
         lda     L0A02           ; unit_num (again)
         and     #$70            ; slot number
         lsr     a
         lsr     a
         lsr     a
         clc
-        adc     addr_lsb
-        sta     addr_lsb
+        adc     @addr_lsb
+        sta     @addr_lsb
 
-        addr_lsb := *+1
+        @addr_lsb := *+1
         lda     MLI             ; self-modified
 
         sta     ptr+1           ; $Cn firmware address
@@ -14707,8 +14707,8 @@ L0D7F:  cmp     #$0B
         lsr     a
         lsr     a
         ora     #$C0
-        sta     slot_msb
-        slot_msb := *+2
+        sta     @slot_msb
+        @slot_msb := *+2
         lda     $C7FB           ; self-modified
         and     #$01
         bne     L0DA2
@@ -14721,13 +14721,13 @@ L0DA9:  ldax    #str_unidisk_xy
 L0DAD:  stax    $06
         ldy     #$00
         lda     ($06),y
-        sta     L0DBE
-L0DB8:  iny
+        sta     @compare
+:       iny
         lda     ($06),y
         sta     ($08),y
-        L0DBE := *+1
+        @compare := *+1
         cpy     #0
-        bne     L0DB8
+        bne     :-
         tay
 L0DC2:  pla
         pha
@@ -14749,8 +14749,8 @@ L0DC2:  pla
         lsr     a
         lsr     a
         ora     #$C0
-        sta     L0DE3
-        L0DE3 := *+2
+        sta     @msb
+        @msb := *+2
         lda     $C7FB           ; self-modified
         and     #$01
         bne     L0DEC
@@ -14853,12 +14853,12 @@ prepare:
         pha
         asl     a
         tax
-        copy16  slot_string_table,x, item_ptr
+        copy16  slot_string_table,x, @item_ptr
 
         ldx     startup_menu_item_1             ; replace second-from-last char
         dex
         lda     char
-        item_ptr := *+1
+        @item_ptr := *+1
         sta     dummy1234,x
 
         pla

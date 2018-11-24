@@ -1182,13 +1182,13 @@ read:   lda     #0
 ;;; ============================================================
 
 .proc read_file_page
-        copy16  read_params::data_buffer, store_addr
+        copy16  read_params::data_buffer, @store_addr
 
         lda     #' '            ; fill buffer with spaces
         ldx     #0
         sta     RAMWRTOFF
 
-        store_addr := *+1
+        @store_addr := *+1
 store:  sta     default_buffer,x         ; self-modified
         inx
         bne     store

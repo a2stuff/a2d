@@ -1050,16 +1050,16 @@ L126F:  sta     L12C0
         and     #$80
         beq     L1281
         ldx     #$21
-L1281:  stx     L1294
+L1281:  stx     @lsb
         lda     L12C0
         and     #$70
         lsr     a
         lsr     a
         lsr     a
         clc
-        adc     L1294
-        sta     L1294
-L1294           := * + 1
+        adc     @lsb
+        sta     @lsb
+        @lsb := *+1
         lda     MLI
         sta     $07
         lda     #$00
@@ -1093,16 +1093,16 @@ L12C1:  sta     L1306
         and     #$80
         beq     L12D3
         ldx     #$21
-L12D3:  stx     L12E6
+L12D3:  stx     @lsb
         lda     L1306
         and     #$70
         lsr     a
         lsr     a
         lsr     a
         clc
-        adc     L12E6
-        sta     L12E6
-L12E6           := * + 1
+        adc     @lsb
+        sta     @lsb
+        @lsb := *+1
         lda     MLI
         sta     $07
         lda     #$00
@@ -1157,16 +1157,16 @@ L132C:  ldy     #0
         and     #$80
         beq     L134D
         ldx     #$21
-L134D:  stx     L1360
+L134D:  stx     @lsb
         lda     L124A
         and     #$70
         lsr     a
         lsr     a
         lsr     a
         clc
-        adc     L1360
-        sta     L1360
-L1360           := * + 1
+        adc     @lsb
+        sta     @lsb
+        @lsb := *+1
         lda     MLI
         sta     $06+1
         lda     #$00
