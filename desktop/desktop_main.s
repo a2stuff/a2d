@@ -3127,11 +3127,11 @@ L594A:  ldy     L599E
         sta     devlst_copy,y
         lda     DEVLST,y
         jsr     create_volume_icon
-        cmp     #$57
-        bne     L5967
+        cmp     #ERR_DUPLICATE_VOLUME
+        bne     :+
         lda     #$F9            ; "... 2 volumes with the same name..."
         sta     pending_alert
-L5967:  inc     L599E
+:       inc     L599E
         lda     L599E
         cmp     DEVCNT
         beq     L594A
@@ -14208,8 +14208,10 @@ trash_name:  PASCAL_STRING " Trash "
 
 ;;; ============================================================
 
-        ;; create volume icons???
-.proc init_volumes
+;;; This removes particular devices from the device list.
+;;; TODO: Figure out what/why ???
+
+.proc filter_volumes
         ptr := $06
 
         lda     DEVCNT
@@ -14469,12 +14471,12 @@ dx:     .word   0
         ;; Does the directory exist?
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
         beq     :+
-        jmp     L0D0A
+        jmp     populate_volume_icons
 
 :       lda     get_file_info_type
         cmp     #FT_DIRECTORY
         beq     open_dir
-        jmp     L0D0A
+        jmp     populate_volume_icons
 
 open_dir:
         MLI_RELAY_CALL OPEN, open_params
@@ -14600,7 +14602,7 @@ next_entry:
 
 close_dir:
         MLI_RELAY_CALL CLOSE, close_params
-        jmp     L0D0A
+        jmp     populate_volume_icons
 
         DEFINE_OPEN_PARAMS open_params, str_desk_acc, $1000
         open_ref_num := open_params::ref_num
@@ -14630,15 +14632,17 @@ ptr_calc_hi:    .byte   0
 
 ;;; ============================================================
 
-.proc L0D0A
+;;; TODO: Dedupe with cmd_check_drives
+
+.proc populate_volume_icons
         ldy     #0
         sty     desktop_main::pending_alert
-        sty     L0E33
-L0D12:  lda     L0E33
+        sty     volume_num
+L0D12:  lda     volume_num
         asl     a
         tay
         copy16  slot_drive_string_table,y, $08
-        ldy     L0E33
+        ldy     volume_num
         lda     DEVLST,y
         pha
         txa
@@ -14660,19 +14664,18 @@ L0D12:  lda     L0E33
         lda     L0E34
         cmp     #$28
         bne     L0D64
-        ldy     L0E33
+        ldy     volume_num
         lda     DEVLST,y
         and     #$0F
-        beq     L0D6D
-        ldx     L0E33
+        beq     ok
+        ldx     volume_num
         jsr     remove_device
-        jmp     L0E25
-
-L0D64:  cmp     #$57
-        bne     L0D6D
+        jmp     next
+L0D64:  cmp     #ERR_DUPLICATE_VOLUME
+        bne     ok
         lda     #$F9            ; "... 2 volumes with the same name..."
         sta     desktop_main::pending_alert
-L0D6D:  pla
+ok:     pla
         pha
         and     #$0F
         sta     L0E32
@@ -14770,15 +14773,15 @@ L0E1C:  ldy     #$11
         pla
 L0E1F:  sta     ($08),y
 L0E21:  pla
-        inc     L0E33
-L0E25:  lda     L0E33
+        inc     volume_num
+next:   lda     volume_num
         cmp     DEVCNT
         beq     L0E2F
         bcs     populate_startup_menu
 L0E2F:  jmp     L0D12
 
 L0E32:  .byte   0
-L0E33:  .byte   0
+volume_num:  .byte   0
 L0E34:  .byte   0
 .endproc
 
