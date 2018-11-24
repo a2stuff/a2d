@@ -304,11 +304,11 @@ dispatch:
 
         tay
         ldx     #3
-L9409:  pla
+:       pla
         sta     $06,x
         dex
         cpx     #$FF
-        bne     L9409
+        bne     :-
         tya
         rts
 
@@ -371,22 +371,22 @@ ptr_icon:       .addr   0
         dex
         ldy     #0
         lda     (params::ptr_icon),y
-L945E:  cmp     icon_table,x
-        beq     L9469
+:       cmp     icon_table,x
+        beq     :+
         dex
-        bpl     L945E
+        bpl     :-
 
 bail1:  return  #1              ; Not found
 
-L9469:  asl     a
+:       asl     a
         tax
         copy16  icon_ptrs,x, ptr
         ldy     #IconEntry::state
         lda     (ptr),y
-        bne     L947E           ; Already set ??? Routine semantics are incorrect ???
+        bne     :+           ; Already set ??? Routine semantics are incorrect ???
         return  #2
 
-L947E:  lda     has_highlight
+:       lda     has_highlight
         beq     L9498
 
         ;; Already in highlight list?
@@ -394,10 +394,10 @@ L947E:  lda     has_highlight
         lda     (ptr),y
         ldx     highlight_count
         dex
-L948A:  cmp     highlight_list,x
+:       cmp     highlight_list,x
         beq     bail3
         dex
-        bpl     L948A
+        bpl     :-
         jmp     L949D
 
 bail3:  return  #3              ; Already in list

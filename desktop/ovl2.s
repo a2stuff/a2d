@@ -26,14 +26,14 @@ L080C:  copy    #$00, has_input_field_flag
         jsr     L0D31
         copy    #$FF, LD887
 L0832:  copy16  #L0B48, desktop_main::jump_relay+1
-        copy    #$80, use_ovl2_handler_flag
+        copy    #$80, format_erase_overlay_flag
 L0841:  jsr     desktop_main::prompt_input_loop
         bmi     L0841
         pha
         copy16  #desktop_main::noop, desktop_main::jump_relay+1
         lda     #$00
         sta     LD8F3
-        sta     use_ovl2_handler_flag
+        sta     format_erase_overlay_flag
         pla
         beq     L085F
         jmp     L09C2
@@ -48,7 +48,7 @@ L085F:  bit     LD887
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         jsr     desktop_main::clear_path_buf1
         copy    #$80, has_input_field_flag
-        copy    #$00, use_ovl2_handler_flag
+        copy    #$00, format_erase_overlay_flag
         jsr     desktop_main::clear_path_buf2
         axy_call desktop_main::draw_dialog_label, 3, desktop_aux::str_new_volume
 L08A7:  jsr     desktop_main::prompt_input_loop
@@ -162,7 +162,7 @@ L09D9:  lda     #$00
         jsr     L0D31
         copy    #$FF, LD887
         copy16  #L0B48, desktop_main::jump_relay+1
-        copy    #$80, use_ovl2_handler_flag
+        copy    #$80, format_erase_overlay_flag
 L0A0E:  jsr     desktop_main::prompt_input_loop
         bmi     L0A0E
         beq     L0A18
@@ -179,7 +179,7 @@ L0A18:  bit     LD887
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         jsr     desktop_main::clear_path_buf1
         copy    #$80, has_input_field_flag
-        copy    #$00, use_ovl2_handler_flag
+        copy    #$00, format_erase_overlay_flag
         jsr     desktop_main::clear_path_buf2
         axy_call desktop_main::draw_dialog_label, 3, desktop_aux::str_new_volume
 L0A6A:  jsr     desktop_main::prompt_input_loop
@@ -363,7 +363,8 @@ L0CAA:  lda     LD887
         copy    #$FF, LD887
 L0CB7:  rts
 
-        lda     LD887
+        ;; Called from desktop_main
+L0CB8:  lda     LD887
         bpl     L0CC1
         lda     #$00
         beq     L0CCE

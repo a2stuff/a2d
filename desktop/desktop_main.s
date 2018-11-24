@@ -12,10 +12,13 @@
 
 L0020           := $0020
 L0800           := $0800
+
+.scope format_erase_overlay
 L0CB8           := $0CB8
 L0CD7           := $0CD7
 L0CF9           := $0CF9
 L0D14           := $0D14
+.endscope
 
 path_buf_main   := $1FC0
 
@@ -1165,8 +1168,8 @@ set_penmode_copy:
         jsr     load_dynamic_routine
         bmi     done
         lda     menu_click_params::item_num
-        cmp     #$03
-        bcs     L492E
+        cmp     #3              ; 1 = Add, 2 = Edit (need more overlays)
+        bcs     :+              ; 3 = Delete, 4 = Run (can skip)
         lda     #dynamic_routine_selector2
         jsr     load_dynamic_routine
         bmi     done
@@ -1174,25 +1177,30 @@ set_penmode_copy:
         jsr     load_dynamic_routine
         bmi     done
 
-L492E:  jsr     set_pointer_cursor
+:       jsr     set_pointer_cursor
+        ;; Invoke routine
         lda     menu_click_params::item_num
         jsr     dynamic_routine_9000
-        sta     L498F
+        sta     result
         jsr     set_watch_cursor
+        ;; Restore from overlays
         lda     #dynamic_routine_restore9000
         jsr     restore_dynamic_routine
+
         lda     menu_click_params::item_num
-        cmp     #$04
+        cmp     #4              ; 4 = Run ?
         bne     done
-        lda     L498F
+
+        lda     result
         bpl     done
         jsr     L4AAD
         jsr     L4A77
         jsr     get_LD3FF
         bpl     L497A
-        jsr     L8F24
+        jsr     L8F24           ; Condition for this ???
         bmi     done
         jsr     L4968
+
 done:   jsr     set_pointer_cursor
         jsr     redraw_windows_and_desktop
         rts
@@ -1214,7 +1222,7 @@ L4980:  lda     L0800,x
         jsr     L4A17
         jmp     done
 
-L498F:  .byte   $00
+result: .byte   0
 .endproc
 
 
@@ -1606,7 +1614,7 @@ running_da_flag:
 
 L4CCD:  jsr     L4D19
         jsr     redraw_windows_and_desktop
-        jsr     L8F18
+        jsr     jt_copy_file
 L4CD6:  pha
         jsr     set_pointer_cursor
         pla
@@ -1712,7 +1720,7 @@ L4CF3:  iny
         bpl     :-
 
         jsr     redraw_windows_and_desktop
-        jsr     L8F1B
+        jsr     jt_delete_file
 L4D9D:  pha
         jsr     set_pointer_cursor
         pla
@@ -2015,7 +2023,7 @@ L5077:  iny
         bne     L506B
         dex
         stx     L5098
-        jsr     L8F15
+        jsr     jt_eject
 L5084:  ldx     L5098
         lda     $1800,x
         sta     L533F
@@ -2412,35 +2420,35 @@ done:   jmp     redraw_windows_and_desktop
 ;;; ============================================================
 
 .proc cmd_get_info
-        jsr     L8F09
+        jsr     jt_get_info
         jmp     redraw_windows_and_desktop
 .endproc
 
 ;;; ============================================================
 
 .proc cmd_get_size
-        jsr     L8F27
+        jsr     jt_get_size
         jmp     redraw_windows_and_desktop
 .endproc
 
 ;;; ============================================================
 
 .proc cmd_unlock
-        jsr     L8F0F
+        jsr     jt_unlock
         jmp     redraw_windows_and_desktop
 .endproc
 
 ;;; ============================================================
 
 .proc cmd_lock
-        jsr     L8F0C
+        jsr     jt_lock
         jmp     redraw_windows_and_desktop
 .endproc
 
 ;;; ============================================================
 
 .proc cmd_rename_icon
-        jsr     L8F12
+        jsr     jt_rename_icon
         pha
         jsr     redraw_windows_and_desktop
         pla
@@ -8472,7 +8480,7 @@ create_icon:
         ;; Tech Note #21.
 
         ;; Either ProFile or a "Slinky"/RamFactor-style Disk
-        lda     unit_number       ; bit 7 = drive (0=1, 1=2); 5-7 = slot
+        lda     unit_number     ; bit 7 = drive (0=1, 1=2); 5-7 = slot
         and     #%01110000      ; mask off slot
         lsr     a
         lsr     a
@@ -8982,22 +8990,24 @@ open:   MLI_RELAY_CALL OPEN, open_params
 L8F00:  jmp     L8FC5
         jmp     rts2            ; rts
         jmp     rts2            ; rts
-L8F09:  jmp     L92E7           ; cmd_get_info
-L8F0C:  jmp     L8F9B           ; cmd_lock
-L8F0F:  jmp     L8FA1           ; cmd_unlock
-L8F12:  jmp     L9571           ; cmd_rename_icon
-L8F15:  jmp     L9213           ; cmd_eject ???
-L8F18:  jmp     L8F2A           ; cmd_copy_file ???
-L8F1B:  jmp     L8F5B           ; cmd_delete_file ???
+jt_get_info:    jmp     do_get_info ; cmd_get_info
+jt_lock:        jmp     do_lock ; cmd_lock
+jt_unlock:      jmp     do_unlock ; cmd_unlock
+jt_rename_icon: jmp     do_rename_icon ; cmd_rename_icon
+jt_eject:       jmp     do_eject ; cmd_eject ???
+jt_copy_file:   jmp     do_copy_file ; cmd_copy_file ???
+jt_delete_file: jmp     do_delete_file ; cmd_delete_file ???
         jmp     rts2            ; rts
         jmp     rts2            ; rts
 L8F24:  jmp     L8F7E           ; cmd_selector_action ???
-L8F27:  jmp     L8FB8           ; cmd_get_size
+jt_get_size:    jmp     do_get_size ; cmd_get_size
 
 ;;; ============================================================
 
         ;;  TODO: Break this down more?
-.proc L8F2A
+.proc cmds
+
+do_copy_file:
         lda     #0
         sta     L9189
         tsx
@@ -9015,7 +9025,8 @@ L8F4F:  jsr     L91E8
         jsr     L91D5
         jmp     L8F4F
 
-L8F5B:  lda     #0
+do_delete_file:
+        lda     #0
         sta     L9189
         tsx
         stx     stack_stash
@@ -9041,10 +9052,13 @@ L8F7E:  lda     #$80
         jsr     L99BC
         jmp     L8F3F
 
-L8F9B:  jsr     L8FDD
+;;; ============================================================
+;;; Lock
+
+do_lock:  jsr     L8FDD
         jmp     L8F4F
 
-L8FA1:  jsr     L8FE1
+do_unlock:  jsr     L8FE1
         jmp     L8F4F
 
 L8FA7:  asl     a
@@ -9054,7 +9068,7 @@ L8FA7:  asl     a
         lda     ($06),y
         rts
 
-L8FB8:  lda     #$00
+do_get_size:  lda     #$00
         sta     L918C
         lda     #$C0
         sta     L9189
@@ -9250,12 +9264,13 @@ L9168:  jsr     L917F
 L917A:  .byte   0
 L917B:  .byte   0
 .endproc
-        L8F5B := L8F2A::L8F5B
-        L8F7E := L8F2A::L8F7E
-        L8F9B := L8F2A::L8F9B
-        L8FA1 := L8F2A::L8FA1
-        L8FB8 := L8F2A::L8FB8
-        L8FC5 := L8F2A::L8FC5
+        do_delete_file := cmds::do_delete_file
+        L8F7E := cmds::L8F7E
+        do_copy_file := cmds::do_copy_file
+        do_lock := cmds::do_lock
+        do_unlock := cmds::do_unlock
+        do_get_size := cmds::do_get_size
+        L8FC5 := cmds::L8FC5
 
 ;;; ============================================================
 
@@ -9357,7 +9372,9 @@ L9210:  rts
 L9211:  .addr   0
 .endproc
 
-.proc L9213
+;;; ============================================================
+
+.proc do_eject
         lda     selected_icon_count
         bne     :+
         rts
@@ -9486,8 +9503,10 @@ L92E3:  .byte   $00
 L92E4:  .word   0
 L92E6:  .byte   $00
 
+;;; ============================================================
+;;; Get Info
 
-.proc L92E7
+.proc do_get_info
         lda     selected_icon_count
         bne     L92ED
         rts
@@ -9733,11 +9752,11 @@ L9558:  lda     text_buffer2::data,x
         sty     text_buffer2::length
         rts
 .endproc
-        L92F5 := L92E7::L92F5
+        L92F5 := do_get_info::L92F5
 
 ;;; ============================================================
 
-.proc L9571_impl
+.proc do_rename_icon_impl
 
         DEFINE_RENAME_PARAMS rename_params, $220, path_buf_main
 
@@ -9914,7 +9933,7 @@ L9707:  .byte   $00
 L9708:  .byte   $00
 L9709:  .byte   $00
 .endproc
-        L9571 := L9571_impl::start
+        do_rename_icon := do_rename_icon_impl::start
 
 ;;; ============================================================
 
@@ -11432,7 +11451,7 @@ dialog_param_addr:
         sta     LD8F2
         sta     has_input_field_flag
         sta     LD8F5
-        sta     use_ovl2_handler_flag
+        sta     format_erase_overlay_flag
         sta     cursor_ip_flag
 
         lda     #prompt_insertion_point_blink_count
@@ -11630,17 +11649,17 @@ LA71A:  lda     event_key
         and     #CHAR_MASK
         cmp     #CHAR_LEFT
         bne     LA72E
-        bit     use_ovl2_handler_flag
+        bit     format_erase_overlay_flag
         bpl     :+
-        jmp     L0CB8
+        jmp     format_erase_overlay::L0CB8
 
 :       jmp     LA82B
 
 LA72E:  cmp     #CHAR_RIGHT
         bne     LA73D
-        bit     use_ovl2_handler_flag
+        bit     format_erase_overlay_flag
         bpl     :+
-        jmp     L0CD7
+        jmp     format_erase_overlay::L0CD7
 
 :       jmp     LA83E
 
@@ -11662,19 +11681,19 @@ LA755:  cmp     #CHAR_DELETE
 
 LA75C:  cmp     #CHAR_UP
         bne     LA76B
-        bit     use_ovl2_handler_flag
+        bit     format_erase_overlay_flag
         bmi     LA768
         jmp     LA717
 
-LA768:  jmp     L0D14
+LA768:  jmp     format_erase_overlay::L0D14
 
 LA76B:  cmp     #CHAR_DOWN
         bne     LA77A
-        bit     use_ovl2_handler_flag
+        bit     format_erase_overlay_flag
         bmi     LA777
         jmp     LA717
 
-LA777:  jmp     L0CF9
+LA777:  jmp     format_erase_overlay::L0CF9
 
 LA77A:  bit     LD8E7
         bvc     LA79B
@@ -11758,18 +11777,18 @@ LA828:  return  #$FF
 
 LA82B:  lda     has_input_field_flag
         beq     LA83B
-        bit     use_ovl2_handler_flag
+        bit     format_erase_overlay_flag
         bpl     LA838
-        jmp     L0CD7
+        jmp     format_erase_overlay::L0CD7
 
 LA838:  jsr     LBBA4
 LA83B:  return  #$FF
 
 LA83E:  lda     has_input_field_flag
         beq     LA84E
-        bit     use_ovl2_handler_flag
+        bit     format_erase_overlay_flag
         bpl     LA84B
-        jmp     L0CB8
+        jmp     format_erase_overlay::L0CB8
 
 LA84B:  jsr     LBC03
 LA84E:  return  #$FF

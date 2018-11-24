@@ -663,7 +663,7 @@ prompt_ip_flag:
         .byte   0
 
 LD8EC:  .byte   0
-use_ovl2_handler_flag:
+format_erase_overlay_flag:
         .byte   0
 
 str_insertion_point:
