@@ -351,6 +351,7 @@ L42C3:  .byte   0
         ;; jump table for menu item handlers
 dispatch_table:
         ;; Apple menu (1)
+        menu1_start := *
         .addr   cmd_about
         .addr   cmd_noop        ; --------
         .repeat ::max_desk_acc_count
@@ -358,6 +359,7 @@ dispatch_table:
         .endrepeat
 
         ;; File menu (2)
+        menu2_start := *
         .addr   cmd_new_folder
         .addr   cmd_noop        ; --------
         .addr   cmd_open
@@ -372,6 +374,7 @@ dispatch_table:
         .addr   cmd_quit
 
         ;; Selector menu (3)
+        menu3_start := *
         .addr   cmd_selector_action
         .addr   cmd_selector_action
         .addr   cmd_selector_action
@@ -387,6 +390,7 @@ dispatch_table:
         .addr   cmd_selector_item
 
         ;; View menu (4)
+        menu4_start := *
         .addr   cmd_view_by_icon
         .addr   cmd_view_by_name
         .addr   cmd_view_by_date
@@ -394,6 +398,8 @@ dispatch_table:
         .addr   cmd_view_by_type
 
         ;; Special menu (5)
+        menu5_start := *
+        menu6_start := *
         .addr   cmd_check_drives
         .addr   cmd_noop        ; --------
         .addr   cmd_format_disk
@@ -411,6 +417,7 @@ dispatch_table:
         ;; (6 is duplicated to 5)
 
         ;; no menu 7 ??
+        menu7_start := *
         .addr   cmd_check_drives ; duplicate???
         .addr   cmd_noop         ; --------
         .addr   L59A0            ; ???
@@ -423,6 +430,7 @@ dispatch_table:
         .addr   L59A0
 
         ;; Startup menu (8)
+        menu8_start := *
         .addr   cmd_startup_item
         .addr   cmd_startup_item
         .addr   cmd_startup_item
@@ -431,9 +439,19 @@ dispatch_table:
         .addr   cmd_startup_item
         .addr   cmd_startup_item
 
+        menu_end := *
+
         ;; indexed by menu id-1
 offset_table:
-        .byte   0,20,44,70,80,80,106,126,140
+        .byte   menu1_start - dispatch_table
+        .byte   menu2_start - dispatch_table
+        .byte   menu3_start - dispatch_table
+        .byte   menu4_start - dispatch_table
+        .byte   menu5_start - dispatch_table
+        .byte   menu6_start - dispatch_table
+        .byte   menu7_start - dispatch_table
+        .byte   menu8_start - dispatch_table
+        .byte   menu_end - dispatch_table
 
 flag:   .byte   $00
 
