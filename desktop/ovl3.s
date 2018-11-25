@@ -24,7 +24,7 @@ L9017:  lda     $0C00
         sta     LD343
         lda     #$00
         sta     LD343+1
-        jsr     L9DED
+        jsr     get_quit_routine_signature
         cmp     #$80
         bne     L9015
         jsr     JUMP_TABLE_REDRAW_ALL
@@ -307,7 +307,7 @@ L9282:  lda     L938D
         cmp     #$C0
         beq     L92F0
         sta     L938A
-        jsr     L9DED
+        jsr     get_quit_routine_signature
         beq     L92F0
         lda     L938A
         beq     L92CE
@@ -1252,10 +1252,10 @@ L9C09:  sta     warning_dialog_num
         DEFINE_WRITE_PARAMS write_params, $C00, $800
         DEFINE_CLOSE_PARAMS flush_close_params
 
-L9C26:  addr_call L9E2A, $1C00
+L9C26:  addr_call copy_quit_string_2, $1C00
         inc     $1C00
         ldx     $1C00
-        lda     #$2F
+        lda     #'/'
         sta     $1C00,x
         ldx     #$00
         ldy     $1C00
@@ -1439,46 +1439,58 @@ params: .addr   0
 
 ;;; ============================================================
 
-L9DED:  sta     ALTZPOFF
+.proc get_quit_routine_signature
+        sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
-        lda     LD3FF
+        lda     quit_routine_signature
         tax
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         txa
         rts
+.endproc
 
-L9E05:  stax    @addr
+.proc copy_quit_string_1
+        stax    @addr
         sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
-        ldx     LD3EE
-:       lda     LD3EE,x
+
+        ldx     quit_string_1
+:       lda     quit_string_1,x
         @addr := *+1
         sta     dummy1234,x
         dex
         bpl     :-
+
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         rts
+.endproc
 
-L9E2A:  stax    @addr
+.proc copy_quit_string_2
+        stax    @addr
         sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
-        ldx     LD3AD
-:       lda     LD3AD,x
+
+        ldx     quit_string_2
+:       lda     quit_string_2,x
         @addr := *+1
         sta     dummy1234,x
         dex
         bpl     :-
+
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         rts
+.endproc
+
+;;; ============================================================
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, 0
 
@@ -1488,7 +1500,7 @@ L9E61:  jsr     L9E74
         rts
 
 L9E74:  sta     L9EBF
-        addr_call L9E05, L9EC1
+        addr_call copy_quit_string_1, L9EC1
         lda     L9EBF
         jsr     L9BE2
         stax    $06

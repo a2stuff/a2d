@@ -299,15 +299,9 @@ buf_filename2:  .res    16, 0
 buf_win_path:   .res    43, 0
 
 temp_string_buf:
-        .res    45, 0
+        .res    65, 0
 
-LD3AD:  .res    20, 0
-LD3C1:  .res    45, 0
-
-LD3EE:  .res    17, 0
-LD3FF:  .byte   0
-LD400:  .byte   0
-LD401:  .byte   0
+LD3C1:  .res    65, 0
 
 ;;; In common dialog (copy/edit file, add/edit selector entry):
 ;;; * path_buf0 has the contents of the top input field

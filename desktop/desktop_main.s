@@ -1164,7 +1164,7 @@ set_penmode_copy:
         bpl     done
         jsr     L4AAD
         jsr     L4A77
-        jsr     get_LD3FF
+        jsr     get_quit_routine_signature
         bpl     L497A
         jsr     L8F24           ; Condition for this ???
         bmi     done
@@ -1215,7 +1215,7 @@ L49A6:  lda     menu_click_params::item_num
         asl     a
         bmi     L49FA
         bcc     L49E0
-        jsr     get_LD3FF
+        jsr     get_quit_routine_signature
         beq     L49FA
         lda     L49A5
         jsr     L4AEA
@@ -1226,7 +1226,7 @@ L49A6:  lda     menu_click_params::item_num
         bpl     L49ED
         jmp     redraw_windows_and_desktop
 
-L49E0:  jsr     get_LD3FF
+L49E0:  jsr     get_quit_routine_signature
         beq     L49FA
         lda     L49A5
         jsr     L4AEA
@@ -1315,7 +1315,7 @@ L4AB0:  lda     buf_win_path,y
         sta     L0800,y
         dey
         bpl     L4AB0
-        addr_call copy_LD3EE_str, $840
+        addr_call copy_quit_string_1, $840
         ldy     L0800
 L4AC3:  lda     L0800,y
         cmp     #'/'
@@ -1348,12 +1348,13 @@ L4AEA:  jsr     L4B5F
         L4AAD := cmd_selector_item::L4AAD
 
 ;;; ============================================================
+;;; Get quit routine signature byte from Main LC Bank 2.
 
-.proc get_LD3FF
+.proc get_quit_routine_signature
         sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
-        lda     LD3FF
+        lda     quit_routine_signature
         tax
         sta     ALTZPON
         lda     LCBANK1
@@ -1362,14 +1363,14 @@ L4AEA:  jsr     L4B5F
         rts
 .endproc
 
-.proc copy_LD3EE_str
+.proc copy_quit_string_1
         stax    @destptr
         sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
 
-        ldx     LD3EE
-:       lda     LD3EE,x
+        ldx     quit_string_1
+:       lda     quit_string_1,x
         @destptr := *+1
         sta     dummy1234,x
         dex
@@ -1381,14 +1382,14 @@ L4AEA:  jsr     L4B5F
         rts
 .endproc
 
-.proc copy_LD3AD_str
+.proc copy_quit_string_2
         stax    @destptr
         sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
 
-        ldx     LD3AD
-:       lda     LD3AD,x
+        ldx     quit_string_2
+:       lda     quit_string_2,x
         @destptr := *+1
         sta     dummy1234,x
         dex
@@ -1399,10 +1400,12 @@ L4AEA:  jsr     L4B5F
         lda     LCBANK1
         rts
 .endproc
+
+;;; ============================================================
 
 .proc L4B5F
         sta     L4BB0
-        addr_call copy_LD3EE_str, path_buffer
+        addr_call copy_quit_string_1, path_buffer
         lda     L4BB0
         jsr     a_times_64
         addax   #$DB9E, $06
@@ -1903,6 +1906,8 @@ fail:   rts
 
 .proc cmd_new_folder_impl
 
+        ptr := $06
+
 L4F67:  .byte   $00
 L4F68:  .word   0
 
@@ -1915,6 +1920,7 @@ path_buffer:
 start:  lda     active_window_id
         sta     L4F67
         yax_call launch_dialog, index_new_folder_dialog, L4F67
+
 L4FC6:  lda     active_window_id
         beq     L4FD4
         jsr     window_address_lookup
@@ -1922,42 +1928,51 @@ L4FC6:  lda     active_window_id
 L4FD4:  lda     #$80
         sta     L4F67
         yax_call launch_dialog, index_new_folder_dialog, L4F67
-        beq     L4FE7
-        jmp     L504B
-
-L4FE7:  stx     $06+1
+        beq     :+
+        jmp     done            ; Cancelled
+:       stx     ptr+1
         stx     L504F
-        sty     $06
+        sty     ptr
         sty     L504E
-        ldy     #$00
-        lda     ($06),y
+
+        ;; Copy path
+        ldy     #0
+        lda     (ptr),y
         tay
-L4FF6:  lda     ($06),y
+:       lda     (ptr),y
         sta     path_buffer,y
         dey
-        bpl     L4FF6
-        ldx     #$03
+        bpl     :-
+
+        ;; Create with current date
+        ldx     #3
 :       lda     DATELO,x
         sta     create_params::create_date,x
         dex
         bpl     :-
+
+        ;; Create folder
         MLI_RELAY_CALL CREATE, create_params
-        beq     L5027
+        beq     success
+
+        ;; Failure
         jsr     DESKTOP_SHOW_ALERT0
         copy16  L504E, L4F68
         jmp     L4FC6
 
-        rts
+        rts                     ; ???
 
-L5027:  lda     #$40
+success:
+        lda     #$40
         sta     L4F67
         yax_call launch_dialog, index_new_folder_dialog, L4F67
         addr_call L6F90, path_buffer
         sty     path_buffer
         addr_call L6FAF, path_buffer
-        beq     L504B
+        beq     done
         jsr     L5E78
-L504B:  jmp     redraw_windows_and_desktop
+
+done:   jmp     redraw_windows_and_desktop
 
 L504E:  .byte   0
 L504F:  .byte   0
@@ -14916,7 +14931,7 @@ str_system_start:  PASCAL_STRING "System/Start"
 .proc final_setup
         lda     #0
         sta     desktop_main::sys_start_flag
-        jsr     desktop_main::get_LD3FF
+        jsr     desktop_main::get_quit_routine_signature
         cmp     #$80
         beq     L0EFE
         MLI_RELAY_CALL GET_PREFIX, get_prefix_params
@@ -14924,7 +14939,7 @@ str_system_start:  PASCAL_STRING "System/Start"
         dec     desktop_main::sys_start_path
         jmp     L0F05
 
-L0EFE:  addr_call desktop_main::copy_LD3AD_str, desktop_main::sys_start_path
+L0EFE:  addr_call desktop_main::copy_quit_string_2, desktop_main::sys_start_path
 L0F05:  ldx     desktop_main::sys_start_path
 
         ;; Find last /

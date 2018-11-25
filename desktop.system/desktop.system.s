@@ -8,6 +8,18 @@
         .include "../macros.inc"
 
 ;;; ============================================================
+;;; Locations in Main LC Bank 2 (past end of custom quit routines)
+
+        ;; 16 bytes $D395-$D3A4 - set to $FF when entry is copied
+        ;; ("down loaded") to RAM Card.
+        entry_copied_flags := $D395
+
+        ;; Quit routine signature/data
+        quit_routine_signature := $D3FF ; $00 at start, $C0 mid copy, $80 done
+        quit_string_1 := $D3EE
+        quit_string_2 := $D3AD
+
+;;; ============================================================
 .proc copy_desktop_to_ramcard
 
         jmp     start
@@ -194,7 +206,7 @@ match:  sta     $D3AC
 
         lda     ROMIN2
         ldx     #0
-        jsr     stx_lc_d3ff
+        jsr     set_quit_routine_signature
 
         ;; Point $8 at $C100
         lda     #0
@@ -277,13 +289,13 @@ found_slot:
         bne     :-
 
         ldx     #$C0
-        jsr     stx_lc_d3ff
-        addr_call copy_to_lc2_b, path0
+        jsr     set_quit_routine_signature
+        addr_call set_quit_string_1, path0
         jsr     check_desktop2_on_device
         bcs     :+
         ldx     #$80
-        jsr     stx_lc_d3ff
-        jsr     copy_2005_to_lc2_a
+        jsr     set_quit_routine_signature
+        jsr     copy_2005_to_quit_string_2
         jmp     fail
 
 :       lda     BUTN1
@@ -312,7 +324,7 @@ start_copy:
         jmp     fail_copy
 :       dec     buffer
         ldx     #$80
-        jsr     stx_lc_d3ff
+        jsr     set_quit_routine_signature
 
         ldy     buffer
 :       lda     buffer,y
@@ -371,7 +383,7 @@ fail2:  lda     copy_flag
         sta     path0
         MLI_CALL SET_PREFIX, set_prefix_params
 :       jsr     write_desktop1
-        jsr     copy_2005_to_lc2_a
+        jsr     copy_2005_to_quit_string_2
 
         lda     #$00
         sta     RAMWORKS_BANK   ; ???
@@ -382,17 +394,19 @@ fail2:  lda     copy_flag
         bpl     :-
         jmp     copy_selector_entries_to_ramcard
 
-.proc stx_lc_d3ff
+;;; ============================================================
+
+.proc set_quit_routine_signature
         lda     LCBANK2
         lda     LCBANK2
-        stx     $D3FF
+        stx     quit_routine_signature
         lda     ROMIN2
         rts
 .endproc
 
-.proc copy_to_lc2_b
+.proc set_quit_string_1
         ptr := $6
-        target := $D3EE
+        target := quit_string_1
 
         stax    ptr
         lda     LCBANK2
@@ -408,13 +422,14 @@ fail2:  lda     copy_flag
         rts
 .endproc
 
-.proc copy_to_lc2_a
+.proc set_quit_string_2
         ptr := $6
-        target := $D3AD
+        target := quit_string_2
 
         stax    ptr
         lda     LCBANK2
         lda     LCBANK2
+
         ldy     #0
         lda     (ptr),y
         tay
@@ -422,9 +437,12 @@ fail2:  lda     copy_flag
         sta     target,y
         dey
         bpl     :-
+
         lda     ROMIN2
         rts
 .endproc
+
+;;; ============================================================
 
 fail:   lda     #0
         sta     flag
@@ -866,8 +884,8 @@ start:  MLI_CALL OPEN, open_params
 
 ;;; ============================================================
 
-.proc copy_2005_to_lc2_a
-        addr_call copy_to_lc2_a, L2005
+.proc copy_2005_to_quit_string_2
+        addr_call set_quit_string_2, L2005
         rts
 .endproc
 
@@ -968,7 +986,7 @@ prodos_loader_blocks:
         jsr     HOME
         lda     LCBANK2
         lda     LCBANK2
-        lda     $D3FF           ; ??? last byte of selector routine?
+        lda     quit_routine_signature
         pha
         lda     ROMIN2
         pla
@@ -979,7 +997,7 @@ prodos_loader_blocks:
         lda     LCBANK2
         ldx     #$17
         lda     #0
-:       sta     $D395,x
+:       sta     entry_copied_flags,x
         dex
         bpl     :-
         lda     ROMIN2
@@ -1010,7 +1028,7 @@ entry_loop:
         lda     LCBANK2
         ldx     entry_num
         lda     #$FF
-        sta     $D395,x
+        sta     entry_copied_flags,x
         lda     ROMIN2
 
 next_entry:
@@ -1049,7 +1067,7 @@ entry_loop2:
         adc     #8
         tax
         lda     #$FF
-        sta     $D395,x
+        sta     entry_copied_flags,x
         lda     ROMIN2
 next_entry2:
         inc     entry_num
@@ -1914,8 +1932,8 @@ L38D6:  lda     L324A,y
         lda     LCBANK2
         lda     LCBANK2
 
-        ldy     $D3EE
-:       lda     $D3EE,y
+        ldy     quit_string_1
+:       lda     quit_string_1,y
         sta     L320A,y
         dey
         bpl     :-

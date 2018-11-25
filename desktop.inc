@@ -23,6 +23,12 @@ DA_MAX_SIZE     := DA_IO_BUFFER - DA_LOAD_ADDRESS
         ;; Can't load DA past I/O Buffer at MAIN $1C00,
         ;; but icon tables start at AUX $1B00 so can't clone there.
 
+
+        ;; Quit routine signature/data
+        quit_routine_signature := $D3FF
+        quit_string_1 := $D3EE
+        quit_string_2 := $D3AD
+
 ;;; ============================================================
 ;;; Direct Calls (from main memory)
 
