@@ -516,17 +516,26 @@ title:  jsr     on_title_bar_click
         beq     no_mod
 
         ;; Modifiers
-        ;; TODO: Should Apple-Up/Down be Page Up/Down or Home/End?
         lda     event_params::key
 
-        cmp     #CHAR_DOWN
+        cmp     #CHAR_DOWN      ; Apple-Down = Page Down
         bne     :+
         jsr     page_down
         jmp     input_loop
 
-:       cmp     #CHAR_UP
+:       cmp     #CHAR_UP        ; Apple-Up = Page Up
         bne     :+
         jsr     page_up
+        jmp     input_loop
+
+:       cmp     #CHAR_LEFT      ; Apple-Left = Home
+        bne     :+
+        jsr     scroll_top
+        jmp     input_loop
+
+:       cmp     #CHAR_RIGHT     ; Apple-Right = End
+        bne     :+
+        jsr     scroll_bottom
 
 :       jmp     input_loop
 
@@ -717,6 +726,14 @@ end:    rts
 end:    rts
 .endproc
 
+.proc scroll_top
+        lda     winfo::vthumbpos
+        beq     end
+        copy    #0, updatethumb_params::thumbpos
+        jsr     update_scroll_pos
+end:    rts
+.endproc
+
 vscroll_max := $FA
 
 .proc on_vscroll_below_click
@@ -758,6 +775,15 @@ end:    rts
         clc
         adc     #1
         sta     updatethumb_params::thumbpos
+        jsr     update_scroll_pos
+end:    rts
+.endproc
+
+.proc scroll_bottom
+        lda     winfo::vthumbpos
+        cmp     #vscroll_max
+        beq     end
+        copy    #vscroll_max, updatethumb_params::thumbpos
         jsr     update_scroll_pos
 end:    rts
 .endproc
