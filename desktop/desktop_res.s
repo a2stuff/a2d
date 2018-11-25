@@ -1327,8 +1327,6 @@ date:  .word   0
 
         .res    7, 0            ; ???
 
-        .assert * = $EC63, error, "Segment length mismatch"
-
 ;;; --------------------------------------------------
 
 icon_entries:

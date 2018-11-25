@@ -393,7 +393,6 @@ dispatch_table:
 
         ;; Special menu (5)
         menu5_start := *
-        menu6_start := *
         .addr   cmd_check_drives
         .addr   cmd_noop        ; --------
         .addr   cmd_format_disk
@@ -408,20 +407,9 @@ dispatch_table:
         .addr   cmd_noop        ; --------
         .addr   cmd_rename_icon
 
-        ;; (6 is duplicated to 5)
-
-        ;; no menu 7 ??
+        ;; 6/7 unused
+        menu6_start := *
         menu7_start := *
-        .addr   cmd_check_drives ; duplicate???
-        .addr   cmd_noop         ; --------
-        .addr   L59A0            ; ???
-        .addr   L59A0
-        .addr   L59A0
-        .addr   L59A0
-        .addr   L59A0
-        .addr   L59A0
-        .addr   L59A0
-        .addr   L59A0
 
         ;; Startup menu (8)
         menu8_start := *
@@ -446,6 +434,8 @@ offset_table:
         .byte   menu7_start - dispatch_table
         .byte   menu8_start - dispatch_table
         .byte   menu_end - dispatch_table
+
+        PAD_TO $4359
 
 flag:   .byte   $00
 

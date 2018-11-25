@@ -12,7 +12,7 @@ VERSION_MINOR = 2
 
 DA_FILE_TYPE    := $F1
 
-max_desk_acc_count = 8
+max_desk_acc_count = 12
 
 INVOKER                 := $290 ; Invoke other programs
 INVOKER_FILENAME        := $280 ; File to invoke (PREFIX must be set)
