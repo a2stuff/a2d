@@ -2050,43 +2050,37 @@ L5098:  .byte   $00
 ;;; ============================================================
 
 .proc cmd_quit_impl
+        ;; TODO: Assumes prefix is retained. Compose correct path.
 
-.proc stack_data
-        .addr   $DEAF,$DEAD     ; ???
-.endproc
+        quit_code_io := $800
+        quit_code_addr := $1000
+        quit_code_size := $400
 
-.proc quit_code
-        ;;; note that GS/OS GQUIT is called by ProDOS at $E0D000
-        ;;; to quit back to GS/OS.
-        ;;; since DeskTop pre-dates GS/OS, it's likely that this does
-        ;;; a similar function for ProDOS 16.
-        ;;; with GS/OS 5 and 6, this code potentially messes up
-        ;;; the shadow register, $C035
-        .pushcpu
-        .setcpu "65816"
-        clc
-        xce                             ; enter native mode
-        jmp     $E0D004                 ; ProDOS 8->16 QUIT, presumably
-        .popcpu
-.endproc
+        DEFINE_OPEN_PARAMS open_params, str_quit_code, quit_code_io
+        DEFINE_READ_PARAMS read_params, quit_code_addr, quit_code_size
+        DEFINE_CLOSE_PARAMS close_params
 
-        DEFINE_QUIT_PARAMS quit_params
+str_quit_code:  PASCAL_STRING "Quit.tmp"
 
 start:
-        COPY_BLOCK stack_data, $0102  ; Populate stack ???
-
-        ;; Install new quit routine
-        sta     ALTZPOFF
-        lda     LCBANK2
-        lda     LCBANK2
-
-        COPY_BLOCK quit_code, SELECTOR
+        MLI_RELAY_CALL OPEN, open_params
+        bne     fail
+        lda open_params::ref_num
+        sta read_params::ref_num
+        sta close_params::ref_num
+        MLI_RELAY_CALL READ, read_params
+        MLI_RELAY_CALL CLOSE, close_params
 
         ;; Restore machine to text state
         sta     ALTZPOFF
         jsr     exit_dhr_mode
+        jsr     reinstall_ram
 
-        MLI_CALL QUIT, quit_params
+        jmp     quit_code_addr
+
+fail:   jsr     DESKTOP_SHOW_ALERT
+        rts
+
 .endproc
         cmd_quit := cmd_quit_impl::start
 
@@ -11654,6 +11648,46 @@ do_on_line:
         show_error_alert_dst := show_error_alert_impl::flag_set
 
         .assert * = $A4D0, error, "Segment length mismatch"
+
+
+;;;  ============================================================
+;;;  Reinstall /RAM (Slot 3, Drive 2)
+
+;;;  TODO: Do everything correcly per ProDOS TRM
+;;;  http://www.easy68k.com/paulrsm/6502/PDOS8TRM.HTM#5.2.2.4
+
+.proc reinstall_ram
+        php
+        sei                     ; Disable interrupts
+
+        ram_unit_number = (1<<7 | 3<<4 | DT_RAM)
+
+        ;;  Append unit number
+        inc     DEVCNT
+        ldx     DEVCNT
+        lda     #ram_unit_number ; Slot 3, Drive 2
+        sta     DEVLST,x
+
+        ;;  NOTE: Assumes driver (in DEVADR) was not modified
+        ;;  when detached.
+
+        ;;  /RAM FORMAT call
+        copy    #3, $42         ; 3 = FORMAT
+        copy    #ram_unit_number, $43
+        copy16  #$2000, $44
+        lda     LCBANK1
+        lda     LCBANK1
+        jsr     driver
+
+        plp                     ; Restore interrupts
+        rts
+
+RAMSLOT := DEVADR + $16         ; Slot 3, Drive 2
+
+driver: jmp     (RAMSLOT)
+.endproc
+
+
         PAD_TO $A500
 
 ;;; ============================================================

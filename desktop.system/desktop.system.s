@@ -112,7 +112,6 @@ L23DF:  .byte   $00,$00,$00
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, buffer
         .byte   0
 
-
         ;; Files/Directories to copy
 str_f1: PASCAL_STRING "DESKTOP1"
 str_f2: PASCAL_STRING "DESKTOP2"
@@ -120,17 +119,17 @@ str_f3: PASCAL_STRING "DESK.ACC"
 str_f4: PASCAL_STRING "SELECTOR.LIST"
 str_f5: PASCAL_STRING "SELECTOR"
 str_f6: PASCAL_STRING "PRODOS"
+str_f7: PASCAL_STRING "Quit.tmp"
 
 filename_table:
-        .addr str_f1,str_f2,str_f3,str_f4,str_f5,str_f6
+        .addr str_f1,str_f2,str_f3,str_f4,str_f5,str_f6,str_f7
+
+num_filenames = 7
 
 num_filenames = 6
 
 str_copying_to_ramcard:
         PASCAL_STRING "Copying Apple II DeskTop into RAMCard"
-
-        ;; Jump target from filer launcher - why???
-rts1:   rts
 
         ;; Signature of block storage devices ($Cn0x)
 sig_bytes:
@@ -168,22 +167,19 @@ start:  sta     MIXCLR
         cmp     #$30
         beq     have128k
 
-        ;; Relocate FILER launch routine to $300 and invoke
-.scope
-        target := $300
-        length := $D0
-
-        ldy     #length
-:       lda     launch_filer,y
-        sta     target,y
-        dey
-        cpy     #$FF            ; why not bpl ???
-        bne     :-
-        jmp     target
-.endscope
+        ;;  If not 128k machine, just quit back to ProDOS
+        MLI_CALL QUIT, quit_params
+        DEFINE_QUIT_PARAMS quit_params
 
 have128k:
-        lda     #$00
+        ;; Save original Quit routine and small loader
+        ;; TODO: Assumes prefix is retained. Compose correct path.
+
+        jsr     preserve_quit_code
+
+        ;; (Original code from here on)
+
+resume: lda     #$00
         sta     SHADOW          ; IIgs ???
 
         lda     DEVNUM          ; Most recent device
@@ -895,48 +891,8 @@ start:  MLI_CALL OPEN, open_params
 
 path0:  .res    65, 0
 
-;;; ============================================================
-;;; Launch FILER - used if machine is not 128k
-;;; Relocated to $300 before invoking
-
-        saved_org := *
-.proc launch_filer
-        .org $300
-
-        sys_start := $2000
-
-        MLI_CALL OPEN, open_params
-        beq     :+
-        jmp     rts1
-
-:       lda     open_params_ref_num
-        sta     read_params_ref_num
-        MLI_CALL READ, read_params
-        beq     :+
-        jmp     rts1
-
-:       MLI_CALL CLOSE, close_params
-        beq     :+
-        jmp     rts1
-
-:       jmp     sys_start
-
-        DEFINE_OPEN_PARAMS open_params, filename, $800
-        open_params_ref_num := open_params::ref_num
-
-        DEFINE_READ_PARAMS read_params, sys_start, MLI - sys_start
-        read_params_ref_num := read_params::ref_num
-
-        DEFINE_CLOSE_PARAMS close_params
-
-filename:
-        PASCAL_STRING "FILER"
-.endproc
-        .assert .sizeof(launch_filer) <= $D0, error, "Routine length exceeded"
 
 ;;; ============================================================
-
-        .org (saved_org + .sizeof(launch_filer))
 
 filenum:
         .byte   0               ; index of file being copied
@@ -2097,6 +2053,85 @@ done:   rts
 .endproc ; copy_selector_entries_to_ramcard
 
         .assert * = $3AD8, error, "Segment size mismatch"
+
+;;; ============================================================
+;;; Loaded at $1000 by DeskTop2 on Quit, and copies $1100-$13FF
+;;; to Language Card Bank 2 $D100-$D3FF, to restore saved quit
+;;; (selector/dispatch) handler, then does ProDOS QUIT.
+
+str_quit_code:  PASCAL_STRING "Quit.tmp"
+        saved_org := *
+.proc quit_restore_proc
+        .org $1000
+
+        lda     LCBANK2
+        lda     LCBANK2
+        ldx     #0
+:
+        .repeat 3, i
+        lda     $1100 + ($100 * i), x
+        sta     SELECTOR + ($100 * i), x
+        .endrepeat
+        dex
+        bne     :-
+
+        lda     ROMIN2
+
+        MLI_CALL QUIT, quit_params
+        DEFINE_QUIT_PARAMS quit_params
+
+        PAD_TO $1100
+.endproc
+        .assert .sizeof(quit_restore_proc) = $100, error, "Proc length mismatch"
+        .org (saved_org + .sizeof(quit_restore_proc))
+
+.proc preserve_quit_code_impl
+        quit_code_io := $800
+        quit_code_addr := $1000
+        quit_code_size := $400
+        DEFINE_CREATE_PARAMS create_params, str_quit_code, ACCESS_DEFAULT, $F1
+        DEFINE_OPEN_PARAMS open_params, str_quit_code, quit_code_io
+        DEFINE_WRITE_PARAMS write_params, quit_code_addr, quit_code_size
+        DEFINE_CLOSE_PARAMS close_params
+
+start:  lda     LCBANK2
+        lda     LCBANK2
+        ldx     #0
+:
+        lda     quit_restore_proc, x
+        sta     $1000, x
+        .repeat 3, i
+        lda     SELECTOR + ($100 * i), x
+        sta     $1100 + ($100 * i), x
+        .endrepeat
+        dex
+        bne     :-
+
+        lda     ROMIN2
+
+        ;; Create file (if needed)
+        copy16  DATELO, create_params::create_date
+        copy16  TIMELO, create_params::create_time
+        MLI_CALL CREATE, create_params
+        beq     :+
+        cmp     #ERR_DUPLICATE_FILENAME
+        bne     done
+
+        ;; Populate it
+:       MLI_CALL OPEN, open_params
+        lda     open_params::ref_num
+        sta     write_params::ref_num
+        sta     close_params::ref_num
+        MLI_CALL WRITE, write_params
+        MLI_CALL CLOSE, close_params
+
+done:   rts
+
+.endproc
+        preserve_quit_code := preserve_quit_code_impl::start
+
+;;; ============================================================
+
 
         PAD_TO $4000
 
