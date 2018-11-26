@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Run this from the top level directory
-source "res/util.sh"
 
 set -e
+source "res/util.sh"
 
 mkdir -p mount/desk.acc
 
