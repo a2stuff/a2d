@@ -124,6 +124,8 @@ str_f6: PASCAL_STRING "PRODOS"
 filename_table:
         .addr str_f1,str_f2,str_f3,str_f4,str_f5,str_f6
 
+num_filenames = 6
+
 str_copying_to_ramcard:
         PASCAL_STRING "Copying Apple II DeskTop into RAMCard"
 
@@ -317,7 +319,9 @@ str_slash_desktop:
         .byte   ST_LINKED_DIRECTORY ; storage_type
 .endproc
 
-start_copy:
+.proc start_copy
+        ptr := $06
+
         jsr     show_copying_screen
         MLI_CALL GET_PREFIX, get_prefix_params
         beq     :+
@@ -360,23 +364,21 @@ file_loop:
         lda     filenum
         asl     a
         tax
-        lda     filename_table,x
-        sta     $06
-        lda     filename_table+1,x
-        sta     $06+1
+        copy16  filename_table,x, ptr
         ldy     #0
-        lda     ($06),y
+        lda     (ptr),y
         tay
-:       lda     ($06),y
+:       lda     (ptr),y
         sta     filename_buf,y
         dey
         bpl     :-
         jsr     copy_file
         inc     filenum
         lda     filenum
-        cmp     #$06
+        cmp     #num_filenames
         bne     file_loop
         jmp     fail2
+.endproc
 
 fail2:  lda     copy_flag
         beq     :+

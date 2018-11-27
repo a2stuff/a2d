@@ -921,139 +921,170 @@ params: .addr   dummy0000
 ;;; Launch file (double-click) ???
 
 .proc launch_file
+        path := $220
+
         jmp     begin
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, $220
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, path
 
 begin:
         jsr     set_watch_cursor
 
+        ;; Compose window path plus icon path
         ldx     #$FF
 :       inx
-        copy    buf_win_path,x, $220,x
+        copy    buf_win_path,x, path,x
         cpx     buf_win_path
         bne     :-
 
         inx
-        copy    #'/', $220,x
-        ldy     #$00
+        copy    #'/', path,x
+
+        ldy     #0
 :       iny
         inx
-        copy    buf_filename2,y, $220,x
+        copy    buf_filename2,y, path,x
         cpy     buf_filename2
         bne     :-
+        stx     path
 
-        stx     $220
+        ;; Get the file info to determine type.
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
-        beq     L472B
+        beq     :+
         jsr     DESKTOP_SHOW_ALERT0
         rts
 
-L472B:  lda     get_file_info_params::file_type
+        ;; Check file type.
+:       lda     get_file_info_params::file_type
         cmp     #FT_BASIC
-        bne     L4738
-        jsr     L47B8
-        jmp     L4755
+        bne     :+
+        jsr     check_basic_system ; Only launch if BASIC.SYSTEM is found
+        jmp     launch
 
-L4738:  cmp     #FT_BINARY
-        bne     L4748
-        lda     BUTN0           ; only launch if a button is down
-        ora     BUTN1
-        bmi     L4755
+:       cmp     #FT_BINARY
+        bne     :+
+        lda     BUTN0           ; Only launch if a button is down
+        ora     BUTN1           ; BUG: Never gets this far ???
+        bmi     launch
         jsr     set_pointer_cursor
         rts
 
-L4748:  cmp     #FT_SYSTEM
-        beq     L4755
+:       cmp     #FT_SYSTEM
+        beq     launch
 
         cmp     #FT_S16
-        beq     L4755
+        beq     launch
 
         lda     #$FA
-        jsr     L4802
+        jsr     show_alert_and_fail
 
-L4755:  DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ALL
+launch: DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ALL
         MGTK_RELAY_CALL MGTK::CloseAll
         MGTK_RELAY_CALL MGTK::SetMenu, blank_menu
         ldx     buf_win_path
-:       copy    buf_win_path,x, $220,x
+:       copy    buf_win_path,x, path,x
         dex
         bpl     :-
         ldx     buf_filename2
 :       copy    buf_filename2,x, INVOKER_FILENAME,x
         dex
         bpl     :-
-        addr_call L4842, $280
-        addr_call L4842, $220
+        addr_call upcase_string, $280
+        addr_call upcase_string, path
         jsr     restore_device_list
         copy16  #INVOKER, reset_and_invoke_target
         jmp     reset_and_invoke
 
 ;;; --------------------------------------------------
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params2, $1800
+.proc check_basic_system_impl
+        path := $1800
 
-L47B8:  ldx     buf_win_path
-        stx     L4816
-:       copy    buf_win_path,x, $1800,x
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params2, path
+
+start:  ldx     buf_win_path
+        stx     path_length
+:       copy    buf_win_path,x, path,x
         dex
         bpl     :-
 
-        inc     $1800
-        ldx     $1800
-        copy    #'/', $1800,x
-L47D2:  ldx     $1800
-        ldy     #$00
-L47D7:  inx
+        inc     path
+        ldx     path
+        copy    #'/', path,x
+loop:
+        ;; Append BASIC.SYSTEM to path and check for file.
+        ldx     path
+        ldy     #0
+:       inx
         iny
-        copy    L4817,y, $1800,x
-        cpy     L4817
-        bne     L47D7
-        stx     $1800
+        copy    str_basic_system,y, path,x
+        cpy     str_basic_system
+        bne     :-
+        stx     path
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params2
-        bne     L47F3
+        bne     not_found
         rts
 
-L47F3:  ldx     L4816
-L47F6:  lda     $1800,x
+        ;; Pop off a path segment and try again.
+not_found:
+        ldx     path_length
+:       lda     path,x
         cmp     #'/'
-        beq     L4808
+        beq     found_slash
         dex
-        bne     L47F6
-L4800:  lda     #$FE
+        bne     :-
 
-L4802:  jsr     DESKTOP_SHOW_ALERT0
-        pla
+no_bs:  lda     #$FE            ; "BASIC.SYSTEM not found"
+
+show_alert_and_fail:
+        jsr     DESKTOP_SHOW_ALERT0
+        pla                     ; pop caller address, return to its caller
         pla
         rts
 
-L4808:  cpx     #$01
-        beq     L4800
-        stx     $1800
+found_slash:
+        cpx     #$01
+        beq     no_bs
+        stx     path
         dex
-        stx     L4816
-        jmp     L47D2
+        stx     path_length
+        jmp     loop
 
-L4816:  .byte   $00
-L4817:  PASCAL_STRING "Basic.system"
-L4824:  .res    30, 0
+path_length:
+        .byte   0
 
-L4842:  stax    $06
-        ldy     #$00
-        lda     ($06),y
+str_basic_system:
+        PASCAL_STRING "Basic.system"
+.endproc
+        check_basic_system := check_basic_system_impl::start
+        show_alert_and_fail := check_basic_system_impl::show_alert_and_fail
+
+;;; --------------------------------------------------
+
+prefix_buffer:  .res    30, 0
+
+.proc upcase_string
+        ptr := $06
+
+        stax    ptr
+        ldy     #0
+        lda     (ptr),y
         tay
-L484B:  lda     ($06),y
+loop:   lda     (ptr),y
         cmp     #'a'
-        bcc     L4859
+        bcc     :+
         cmp     #'z'+1
-        bcs     L4859
+        bcs     :+
         and     #CASE_MASK
-        sta     ($06),y
-L4859:  dey
-        bne     L484B
+        sta     (ptr),y
+:       dey
+        bne     loop
         rts
 .endproc
-        L4824 := launch_file::L4824
+
+.endproc
+        prefix_buffer := launch_file::prefix_buffer
+
 ;;; ============================================================
 
 L485D:  .word   $E000
@@ -8558,7 +8589,7 @@ desktop_icon_coords_table:
         DEFINE_POINT 130,160
         DEFINE_POINT 40,160
 
-        DEFINE_GET_PREFIX_PARAMS get_prefix_params, L4824
+        DEFINE_GET_PREFIX_PARAMS get_prefix_params, prefix_buffer
 
 ;;; ============================================================
 
@@ -14351,9 +14382,11 @@ end:
         selector_list_data_buf := $1400
         selector_list_data_len := $400
 
+        ;; Save the current PREFIX
         MGTK_RELAY_CALL MGTK::CheckEvents
         MLI_RELAY_CALL GET_PREFIX, desktop_main::get_prefix_params
         MGTK_RELAY_CALL MGTK::CheckEvents
+
         lda     #0
         sta     L0A92
         jsr     read_selector_list
