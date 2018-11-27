@@ -119,6 +119,8 @@ main_loop:
         bcc     :+
         copy    #0, loop_counter
 
+        jsr     show_clock
+
         ;; Poll drives for updates
         jsr     check_disk_inserted_ejected
         beq     :+
@@ -14185,73 +14187,73 @@ saved_proc_buf:
 ;;; ============================================================
 
 .proc compose_file_count_string
-        lda     file_count
-        sta     value
-        lda     file_count+1
-        sta     value+1
-
-        ;; Init string with spaces
-        ldx     #7
-        lda     #' '
-:       sta     str_file_count,x
+        ldax    file_count
+        jsr     draw_window_header::int_to_string
+        ldx     #6
+:       lda     str_from_int,x
+        sta     str_file_count,x
         dex
         bne     :-
-
-        lda     #0
-        sta     nonzero_flag
-        ldy     #0              ; y = position in string
-        ldx     #0              ; x = which power index is subtracted (*2)
-
-        ;; For each power of ten
-loop:   lda     #0
-        sta     digit
-
-        ;; Keep subtracting/incrementing until zero is hit
-sloop:  cmp16   value, powers,x
-        bpl     subtract
-
-        lda     digit
-        bne     not_pad
-        bit     nonzero_flag
-        bmi     not_pad
-
-        ;; Pad with space
-        lda     #' '
-        bne     :+
-        ;; Convert to ASCII
-not_pad:
-        ora     #'0'
-        pha
-        lda     #$80
-        sta     nonzero_flag
-        pla
-
-        ;; Place the character, move to next
-:       sta     str_file_count+2,y
-        iny
-        inx
-        inx
-        cpx     #8              ; up to 4 digits (*2) via subtraction
-        beq     LBE4E
-        jmp     loop
-
-subtract:
-        inc     digit
-        sub16   value, powers,x, value
-        jmp     sloop
-
-LBE4E:  lda     value           ; handle last digit
-        ora     #'0'
-        sta     str_file_count+2,y
         rts
-
-powers: .word   10000,1000,100,10
-value:  .addr   0            ; remaining value as subtraction proceeds
-digit:  .byte   0            ; current digit being accumulated
-nonzero_flag:                ; high bit set once a non-zero digit seen
-        .byte   0
-
 .endproc
+
+;;; ============================================================
+
+.proc show_clock
+        lda     MACHID
+        and     #1              ; bit 0 = clock card
+        beq     done
+
+        MLI_RELAY_CALL GET_TIME, 0
+        lda     TIMEHI          ; hours
+        and     #%00011111
+
+        ;; AM/PM
+        ldx     #'A'
+        cmp     #12
+        bcc     :+
+        ldx     #'P'
+        sec
+        sbc     #12
+:       stx     str_clock + 7
+
+        ;; Hours
+        cmp     #0              ; 0 -> 12
+        bne     :+
+        lda     #12
+:       ldx     #' '            ; Leading space or 1?
+        cmp     #10
+        bcc     :+
+        ldx     #'1'
+        sec
+        sbc     #10
+:       stx     str_clock + 1   ; Tens place
+        ora     #'0'
+        sta     str_clock + 2   ; Ones place
+
+        ;; Minutes
+        lda     TIMELO
+        and     #%00111111
+        ldx     #0              ; Subtract off tens (in X)
+:       cmp     #10
+        bcc     :+
+        inx
+        sec
+        sbc     #10
+        bpl     :-
+:       ora     #'0'
+        sta     str_clock + 5   ; Ones place
+        txa
+        ora     #'0'
+        sta     str_clock + 4   ; Tens place
+
+        ;; Assumes call from main loop, where grafport3 is initialized.
+        MGTK_RELAY_CALL MGTK::MoveTo, pos_clock
+        addr_call draw_text1, str_clock
+done:   rts
+.endproc
+
+        PAD_TO $BE63
 
 ;;; ============================================================
 

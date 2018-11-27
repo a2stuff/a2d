@@ -855,6 +855,13 @@ file_to_delete_label:
         PASCAL_STRING "File to delete:"
 
         .assert * = $DAD8, error, "Segment length mismatch"
+
+pos_clock:
+        DEFINE_POINT 500, 10
+
+str_clock:
+        PASCAL_STRING "00:00 XM      "
+
         PAD_TO $DB00
 
 ;;; ============================================================

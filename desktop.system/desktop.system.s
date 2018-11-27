@@ -126,8 +126,6 @@ filename_table:
 
 num_filenames = 7
 
-num_filenames = 6
-
 str_copying_to_ramcard:
         PASCAL_STRING "Copying Apple II DeskTop into RAMCard"
 
