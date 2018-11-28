@@ -8,9 +8,14 @@ Disassembly of the original desk accessories:
 
 New desk accessories:
 
-* [Show Image File](show.image.file.s) - complete!
-* [This Apple](this.apple.s) - complete!
-* [Eyes](eyes.s) - complete!
+* [Show Image File](show.image.file.s)
+  * Select an image file (8k Hires or 16k Double Hires), then choose this DA to preview it.
+* [This Apple](this.apple.s)
+  * Gives details about the computer, expanded memory, and what's in each slot.
+* [Eyes](eyes.s)
+  * Eyes that follow the mouse.
+* [Screen Dump](screen.dump.s)
+  * Dumps a screenshot to an ImageWriter II attached to a Super Serial Card in Slot 1.
 
 See [API.md](API.md) for programming details
 
@@ -63,16 +68,16 @@ below.
 If you use [Virtual \]\[](http://www.virtualii.com/) as your emulator,
 you can skip creating a disk image.
 
-With `desk.acc` as your current directory, run the `res/mount.sh`
-script. This will create a `desk.acc/mount` folder and the built files
-will automatically be copied in. Then run Virtual ]\[ and use the
-**Media** > **Mount Folder as ProDOS Disk...** menu item, then select
-the `desk.acc/mount` folder. A new ProDOS volume called `/MOUNT` will
-be available. (Tip: use the **Special** > **Check Drives** command in
-A2D to make it appear.)
+At the top level of the repo, run `res/go.sh` to build all targets,
+then run `res/mount.sh`. This will create a `mount/` folder and the
+built files will automatically be copied in. Then run Virtual ]\[ and
+use the **Media** > **Mount Folder as ProDOS Disk...** menu item, then
+select the `mount/` folder. A new ProDOS volume called
+`/MOUNT` will be available. (Tip: use the **Special** > **Check
+Drives** command in A2D to make it appear.)
 
 (The `res/go.sh` script will helpfully run `res/mount.sh`
-automatically if the `mount` folder already exists.)
+automatically if the `mount/` folder already exists.)
 
 ### Other
 
