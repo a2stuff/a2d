@@ -984,6 +984,8 @@ rect_E230:  DEFINE_RECT 0,0,0,0, rect_E230
 LE256:
         .byte   $00,$00,$00,$00
 
+        .assert * = last_menu_click_params, error, "Entry point mismatch"
+
 .proc menu_click_params
 menu_id:.byte   0
 item_num:.byte  0

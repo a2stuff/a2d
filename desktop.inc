@@ -157,6 +157,8 @@ path_table := $DFB3     ; window address table
 selected_file_list := $DF22     ; indexes of selected file (global, not w/in window, up to 127)
 file_table := $DD9F     ; file address table
 
+last_menu_click_params := $E25A
+
 ;;; Icon (file/volume) entries - length 27 bytes, maximum of 127
 ;;;      .byte icon      icon index
 ;;;      .byte state     $80 = highlighted, 0 = otherwise
