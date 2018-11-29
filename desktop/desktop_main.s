@@ -8564,7 +8564,7 @@ create_icon:
         sta     @load_CxFB
         @load_CxFB := *+2
         lda     $C7FB           ; self-modified $CxFB
-        and     #$01            ; $CxFB bit 1 = ProFile, apparently???
+        and     #$01            ; $CxFB bit 0 = is RAM card (IIgs Firmware Referece)
         beq     use_profile_icon
         ;; fall through...
 
