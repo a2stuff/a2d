@@ -71,8 +71,11 @@ WRITE_BLOCK     := $81
 ;;; Device Types (low nibble of unit number in DEVLST)
 ;;; ============================================================
 
+;;; As used by DeskTop; these are not actually correct...
+
 DT_DISKII       := $0
 DT_PROFILE      := $4
+DT_REMOVABLE    := $B
 DT_RAM          := $F
 
 ;;; See ProDOS Tech Note #21 - other than the above types, there

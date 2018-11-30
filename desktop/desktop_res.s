@@ -874,7 +874,9 @@ run_list_entries:
 ;;; Window & Icon State
 ;;; ============================================================
 
-LDD9E:  .byte   0
+        ;; Total number of icons
+icon_count:
+        .byte   0
 
         ;; Pointers into icon_entries buffer
 icon_entry_address_table:

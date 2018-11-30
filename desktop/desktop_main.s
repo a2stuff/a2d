@@ -75,7 +75,7 @@ JT_RESTORE_SEF:         jmp     restore_dynamic_routine
         lda     LCBANK1
         lda     LCBANK1
 
-        jsr     L4530           ; something with DEVLST ???
+        jsr     initialize_disks_in_devices_tables
 
         ;; Add icons (presumably desktop ones?)
         ldx     #0
@@ -120,7 +120,7 @@ main_loop:
         copy    #0, loop_counter
 
         ;; Poll drives for updates
-        jsr     L4563
+        jsr     check_disk_inserted_ejected
         beq     :+
         jsr     L40E0           ; conditionally ???
 
@@ -665,61 +665,66 @@ L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_window_id
 
 ;;; ============================================================
 
-.proc L4530
+.proc initialize_disks_in_devices_tables
         ldx     #0
         ldy     DEVCNT
 loop:   lda     DEVLST,y
         and     #$0F
-        cmp     #$0B            ; RAM Disk???
-        beq     L4559
+        cmp     #DT_REMOVABLE
+        beq     append          ; yes
 next:   dey
         bpl     loop
 
-        stx     L4597
-        stx     L45A0
-        jsr     poll_drive
-        ldx     L45A0
-        beq     done
+        stx     removable_device_table
+        stx     disk_in_device_table
+        jsr     check_disks_in_devices
 
-:       copy    L45A0,x, L45A9,x
+        ;; Make copy of table
+        ldx     disk_in_device_table
+        beq     done
+:       copy    disk_in_device_table,x, last_disk_in_devices_table,x
         dex
         bpl     :-
 
 done:   rts
 
-L4559:  lda     DEVLST,y
+append: lda     DEVLST,y        ; add it to the list
         inx
-        sta     L4597,x
-        bne     next
-        rts
+        sta     removable_device_table,x
+        bne     next            ; always
+
+        rts                     ; remove ???
 .endproc
 
 ;;; ============================================================
+;;; Update table tracking disk-in-device status, determine if
+;;; there was a change (insertion or ejection).
+;;; Output: 0 if no change,
 
-;;; Determine ejectability?
-
-.proc L4563
-        lda     L45A0
+.proc check_disk_inserted_ejected
+        lda     disk_in_device_table
         beq     done
-        jsr     poll_drive
-        ldx     L45A0
-L456E:  lda     L45A0,x
-        cmp     L45A9,x
-        bne     L457C
+        jsr     check_disks_in_devices
+        ldx     disk_in_device_table
+:       lda     disk_in_device_table,x
+        cmp     last_disk_in_devices_table,x
+        bne     changed
         dex
-        bne     L456E
+        bne     :-
 done:   return  #0
 
-L457C:  copy    L45A0,x, L45A9,x
-        lda     L4597,x
+changed:
+        copy    disk_in_device_table,x, last_disk_in_devices_table,x
+
+        lda     removable_device_table,x
         ldy     DEVCNT
-L4588:  cmp     DEVLST,y
-        beq     L4591
+:       cmp     DEVLST,y
+        beq     :+
         dey
-        bpl     L4588
+        bpl     :-
         rts
 
-L4591:  tya
+:       tya
         clc
         adc     #$03
         rts
@@ -728,58 +733,68 @@ L4591:  tya
 ;;; ============================================================
 
         .byte   $00
-L4597:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00
-L45A0:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00
-L45A9:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00
+
+max_removable_devices = 8
+
+removable_device_table:
+        .byte   0               ; num entries
+        .res    max_removable_devices, 0
+
+;;; Updated by check_disks_in_devices
+disk_in_device_table:
+        .byte   0               ; num entries
+        .res    max_removable_devices, 0
+
+;;; Snapshot of previous results; used to detect changes.
+last_disk_in_devices_table:
+        .byte   0               ; num entries
+        .res    max_removable_devices, 0
 
 ;;; ============================================================
 
-        ;; Possibly SmartPort STATUS call to determine ejectability ???
-
-        ;; Called in a polling loop - checking drive status?
-
-.proc poll_drive
+.proc check_disks_in_devices
         ptr := $6
 
-        ldx     L4597
+        ldx     removable_device_table
         beq     done
-        stx     L45A0
-:       lda     L4597,x
-        jsr     L45C7
-        sta     L45A0,x
+        stx     disk_in_device_table
+:       lda     removable_device_table,x
+        jsr     check_disk_in_drive
+        sta     disk_in_device_table,x
         dex
         bne     :-
 done:   rts
 
-L45C7:  sta     unit_num
+check_disk_in_drive:
+        sta     unit_number
         txa
         pha
         tya
         pha
 
         ;; Compute driver address ($BFds for Slot s Drive d)
-        ldx     #$11
-        lda     unit_num
+        ldx     #$11            ; LSB DEVADR for slot 1, drive 1
+        lda     unit_number
         and     #$80            ; high bit is drive (0=D1, 1=D2)
         beq     :+
-        ldx     #$21
-:       stx     @bf_lsb         ; D1=$11, D2=$21
-        lda     unit_num
-        and     #$70
+        ldx     #$21            ; LSB DEVADR for slot 1, drive 2
+:       stx     @addr_lsb       ; D1=$11, D2=$21
+
+        lda     unit_number
+        and     #$70            ; slot number
         lsr     a
         lsr     a
         lsr     a
         clc
-        adc     @bf_lsb
-        sta     @bf_lsb
-        @bf_lsb := *+1
-        lda     $BF00           ; self-modified to $BFds
-        sta     ptr+1
-        lda     #0              ; Bug: assumes driver is at $XX00 ???
-        sta     ptr             ; Bug: Should check driver is $Cn before continuing
+        adc     @addr_lsb
+        sta     @addr_lsb
+
+        @addr_lsb := *+1
+        lda     MLI             ; self-modified to DEVADR plus offset
+        sta     ptr+1           ; BUG: Assumes firmware driver ($CnXX)
+        lda     #0              ; Set up $Cn00 for firmware lookups
+        sta     ptr
+
         ldy     #7
         lda     (ptr),y         ; $Cn07 == 0 for SmartPort
         bne     notsp
@@ -790,7 +805,9 @@ L45C7:  sta     unit_num
         clc
         adc     #3
         sta     ptr
-        lda     unit_num
+
+        ;; Compute SmartPort unit number
+        lda     unit_number
         pha
         rol     a
         pla
@@ -801,13 +818,12 @@ L45C7:  sta     unit_num
         lsr     a
         lsr     a
         plp
-
         adc     #1
         sta     status_unit_num
 
         ;; Execute SmartPort call
-        jsr     call
-        .byte   0               ; $00 = STATUS
+        jsr     smartport_call
+        .byte   $00             ; $00 = STATUS
         .addr   status_params
 
         lda     status_buffer
@@ -816,7 +832,7 @@ L45C7:  sta     unit_num
         lda     #$FF
         bne     finish
 
-notsp:  lda     #0              ; not SmartPort
+notsp:  lda     #0              ; not SmartPort (or no disk in drive)
 
 finish: sta     result
         pla
@@ -825,9 +841,10 @@ finish: sta     result
         tax
         return  result
 
-call:   jmp     (ptr)
+smartport_call:
+        jmp     (ptr)
 
-unit_num:
+unit_number:
         .byte   0
 result: .byte   0
 
@@ -1848,10 +1865,10 @@ L4E78:  jsr     clear_selection
         lda     win_buf_table,x
         bmi     L4EB4
         DESKTOP_RELAY_CALL DT_CLOSE_WINDOW, active_window_id
-        lda     LDD9E
+        lda     icon_count
         sec
         sbc     cached_window_icon_count
-        sta     LDD9E
+        sta     icon_count
         ldx     #$00
 L4EA5:  cpx     cached_window_icon_count
         beq     L4EB4
@@ -2373,10 +2390,10 @@ L52D0:  cmp     #$00
         lda     active_window_id
         sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
-        lda     LDD9E
+        lda     icon_count
         sec
         sbc     cached_window_icon_count
-        sta     LDD9E
+        sta     icon_count
         ldx     #0
 loop:   cpx     cached_window_icon_count
         beq     done
@@ -3177,7 +3194,7 @@ L5916:  lda     cached_window_icon_list,x
         lda     icon_param
         jsr     DESKTOP_FREE_ICON
         dec     cached_window_icon_count
-        dec     LDD9E
+        dec     icon_count
         pla
         tax
 L5942:  dex
@@ -3186,7 +3203,7 @@ L5942:  dex
         sty     L599E
 L594A:  ldy     L599E
         inc     cached_window_icon_count
-        inc     LDD9E
+        inc     icon_count
         lda     #$00
         sta     device_to_icon_map,y
         lda     DEVLST,y
@@ -3316,7 +3333,7 @@ L5A4C:  jsr     redraw_windows_and_desktop
         sta     icon_param
         beq     L5A7F
         jsr     remove_icon_from_window
-        dec     LDD9E
+        dec     icon_count
         lda     icon_param
         jsr     DESKTOP_FREE_ICON
         jsr     reset_grafport3
@@ -3324,7 +3341,7 @@ L5A4C:  jsr     redraw_windows_and_desktop
 L5A7F:  lda     cached_window_icon_count
         sta     L5AC6
         inc     cached_window_icon_count
-        inc     LDD9E
+        inc     icon_count
         pla
         tay
         lda     DEVLST,y
@@ -4111,10 +4128,10 @@ handle_close_click:
         dex
         lda     win_buf_table,x
         bmi     L6215
-        lda     LDD9E
+        lda     icon_count
         sec
         sbc     cached_window_icon_count
-        sta     LDD9E
+        sta     icon_count
         DESKTOP_RELAY_CALL DT_CLOSE_WINDOW, active_window_id
         ldx     #$00
 L6206:  cpx     cached_window_icon_count
@@ -5653,7 +5670,7 @@ L710A:  lsr16   L72A8
         bne     L710A
         lda     L70C2
         bne     L7147
-        lda     LDD9E
+        lda     icon_count
         clc
         adc     L70C1
         bcs     L7147
@@ -6308,7 +6325,7 @@ L7767:  .byte   $14
         icon_entry := $8
         name_tmp := $1800
 
-        inc     LDD9E
+        inc     icon_count
         jsr     DESKTOP_ALLOC_ICON
         ldx     cached_window_icon_count
         inc     cached_window_icon_count
@@ -8437,7 +8454,7 @@ error:  pha                     ; save error
         lda     #0
         sta     device_to_icon_map,y
         dec     cached_window_icon_count
-        dec     LDD9E
+        dec     icon_count
         pla
         rts
 
@@ -9446,35 +9463,38 @@ index:  .byte   0
 exit:   rts
 
 found:  lda     DEVLST,y        ;
-        sta     unit_num
+        sta     unit_number
 
         ;; Compute driver address ($BFds for Slot s Drive d)
-        ldx     #$11
-        lda     unit_num
+        ldx     #$11            ; LSB DEVADR for slot 1, drive 1
+        lda     unit_number
         and     #$80            ; high bit is drive (0=D1, 1=D2)
         beq     :+
-        ldx     #$21
-:       stx     @bf_lsb         ; D1=$11, D2=$21
-        lda     unit_num
-        and     #$70
+        ldx     #$21            ; LSB DEVADR for slot 1, drive 2
+:       stx     @addr_lsb       ; D1=$11, D2=$21
+
+        lda     unit_number
+        and     #$70            ; slot number
         lsr     a
         lsr     a
         lsr     a
         clc
-        adc     @bf_lsb
-        sta     @bf_lsb
-        @bf_lsb := *+1
-        lda     $BF00           ; self-modified to $BFds
-        sta     ptr+1
-        lda     #0              ; Bug: assumes driver is at $XX00 ???
-        sta     ptr             ; Bug: Should check driver is $Cn before continuing
+        adc     @addr_lsb
+        sta     @addr_lsb
+
+        @addr_lsb := *+1
+        lda     MLI             ; self-modified to DEVADR plus offset
+        sta     ptr+1           ; BUG: Assumes firmware driver ($CnXX)
+        lda     #0              ; Set up $Cn00 for firmware lookups
+        sta     ptr
+
         ldy     #7
         lda     (ptr),y         ; $Cn07 == 0 for SmartPort
         bne     exit
 
-        ldy     #$FB            ; $CnFB low bits???
+        ldy     #$FB            ; Smart Port ID Type Byte ($CnFB)
         lda     (ptr),y
-        and     #$7F
+        and     #$7F            ; Anything (except 'Extended')
         bne     exit
 
         ;; Locate SmartPort entry point: $Cn00 + ($CnFF) + 3
@@ -9483,7 +9503,9 @@ found:  lda     DEVLST,y        ;
         clc
         adc     #3
         sta     ptr
-        lda     unit_num
+
+        ;; Compute SmartPort unit number
+        lda     unit_number
         pha
         rol     a
         pla
@@ -9497,21 +9519,24 @@ found:  lda     DEVLST,y        ;
         adc     #1
         sta     control_unit_number
 
-        jsr     call
+        ;; Execute SmartPort call
+        jsr     smartport_call
         .byte   $04             ; $04 = CONTROL
         .addr   control_params
         rts
-call:   jmp     ($06)
+
+smartport_call:
+        jmp     ($06)
 
 .proc control_params
 param_count:    .byte   3
-unit_number:    .byte   $0
+unit_number:    .byte   0
 control_list:   .addr   list
 control_code:   .byte   4       ; Eject disk
 .endproc
         control_unit_number := control_params::unit_number
 list:   .word   0               ; 0 items in list
-unit_num:
+unit_number:
         .byte   0
 
         .byte   0               ; unused???
@@ -14250,7 +14275,7 @@ trash_name:  PASCAL_STRING " Trash "
         sta     cached_window_id
         lda     #1
         sta     cached_window_icon_count
-        sta     LDD9E
+        sta     icon_count
         jsr     DESKTOP_ALLOC_ICON
         sta     trash_icon_num
         sta     cached_window_icon_list
@@ -14296,15 +14321,18 @@ trash_name:  PASCAL_STRING " Trash "
         jmp     done
 
 :       lda     DEVLST,x        ; unit_num
-        stx     L09F8
-        sta     L0A02
+        stx     index
+        sta     unit_number
+
+        ;; Compute driver address ($BFds for Slot s Drive d)
         ldx     #$11            ; LSB DEVADR for slot 1, drive 1
-        lda     L0A02
-        and     #$80            ; drive 2?
+        lda     unit_number
+        and     #$80            ; high bit is drive (0=D1, 1=D2)
         beq     :+
         ldx     #$21            ; LSB DEVADR for slot 1, drive 2
-:       stx     @addr_lsb
-        lda     L0A02           ; unit_num (again)
+:       stx     @addr_lsb       ; D1=$11, D2=$21
+
+        lda     unit_number
         and     #$70            ; slot number
         lsr     a
         lsr     a
@@ -14314,37 +14342,39 @@ trash_name:  PASCAL_STRING " Trash "
         sta     @addr_lsb
 
         @addr_lsb := *+1
-        lda     MLI             ; self-modified
-
-        sta     ptr+1           ; $Cn firmware address
-        lda     #$00            ; BUG: assumes device has firmware driver!
+        lda     MLI             ; self-modified to DEVADR plus offset
+        sta     ptr+1           ; BUG: Assumes firmware driver ($CnXX)
+        lda     #0              ; Set up $Cn00 for firmware lookups
         sta     ptr
 
-        ldy     #$07            ; $Cn07 is $00 = SmartPort
-        lda     (ptr),y
+        ldy     #7
+        lda     (ptr),y         ; $Cn07 == 0 for SmartPort
         bne     done
 
-        ldy     #$FB            ; Secondary check???
+        ldy     #$FB            ; Smart Port ID Type Byte ($CnFB)
         lda     (ptr),y
-        and     #$7F
+        and     #$7F            ; Anything (except 'Extended')
         bne     done
 
-        ldy     #$FF            ; If SmartPort, $Cn00 + ($CnFF) + 3 is
-        lda     (ptr),y         ; entry point
+        ;; Locate SmartPort entry point: $Cn00 + ($CnFF) + 3
+        ldy     #$FF
+        lda     (ptr),y
         clc
         adc     #3
         sta     ptr
 
-        ;; SmartPort call
+        ;; Execute SmartPort call
         jsr     smartport_call
-        .byte   0
+        .byte   $00             ; $00 = STATUS
         .addr   smartport_params
 
         bcs     done
-        lda     $1F00
+        lda     $1F00           ; number of devices
         cmp     #2
         bcs     done
-        ldx     L09F8
+
+        ;; Single device - remove from DEVLST - Why ???
+        ldx     index
 :       lda     DEVLST+1,x
         sta     DEVLST,x
         inx
@@ -14353,21 +14383,22 @@ trash_name:  PASCAL_STRING " Trash "
         dec     DEVCNT
 done:   jmp     end
 
-L09F8:  .byte   0
+index:  .byte   0
 
 smartport_call:
         jmp     (ptr)
 
 
 smartport_params:
-        .byte   $03
-        .byte   0
-        .byte   0
-        .byte   $1F
-        .byte   0
+        .byte   $03             ; parameter count
+        .byte   0               ; unit number (0 = overall status)
+        .addr   $1F00           ; status list pointer
+        .byte   0               ; status code (0 = device status)
 
 devcnt: .byte   0
-L0A02:  .byte   0
+
+unit_number:
+        .byte   0
 
 end:
 .endproc
@@ -14722,22 +14753,26 @@ process_volume:
         copy16  slot_drive_string_table,y, $08
         ldy     volume_num
         lda     DEVLST,y
-        pha
+
+        pha                     ; save all registers
         txa
         pha
         tya
         pha
+
         inc     cached_window_icon_count
-        inc     LDD9E
+        inc     icon_count
         lda     DEVLST,y
         jsr     desktop_main::create_volume_icon
         sta     L0E34
         MGTK_RELAY_CALL MGTK::CheckEvents
-        pla
+
+        pla                     ; restore all registers
         tay
         pla
         tax
         pla
+
         pha
         lda     L0E34
         cmp     #$28
@@ -14745,25 +14780,32 @@ process_volume:
         ldy     volume_num
         lda     DEVLST,y
         and     #$0F
-        beq     ok
+        beq     select_template
         ldx     volume_num
         jsr     remove_device
         jmp     next
 L0D64:  cmp     #ERR_DUPLICATE_VOLUME
-        bne     ok
+        bne     select_template
         lda     #$F9            ; "... 2 volumes with the same name..."
         sta     desktop_main::pending_alert
-ok:     pla
-        pha
-        and     #$0F
-        sta     L0E32
-        cmp     #$00
-        bne     L0D7F
-        addr_jump L0DAD, str_slot_drive
 
-L0D7F:  cmp     #$0B
-        beq     L0DA9
-        cmp     #$04
+        ;; This section populates slot_drive_string_table -
+        ;; it determines which device type string to use, and
+        ;; fills in slot and drive as appropriate.
+        ;; TODO: Determine if the string is actually ever used!
+        ;; TODO: If it is, make this table driven.
+.proc select_template
+        pla
+        pha
+        and     #$0F            ; low nibble of unit number
+        sta     unit_number_lo_nibble
+        cmp     #DT_DISKII
+        bne     :+
+        addr_jump copy_template, str_slot_drive
+
+:       cmp     #DT_REMOVABLE
+        beq     is_removable
+        cmp     #DT_PROFILE
         bne     L0DC2
         pla
         pha
@@ -14776,15 +14818,17 @@ L0D7F:  cmp     #$0B
         sta     @slot_msb
         @slot_msb := *+2
         lda     $C7FB           ; self-modified
-        and     #$01
-        bne     L0DA2
-        addr_jump L0DAD, str_profile_slot_x
+        and     #$01            ; is RAM card?
+        bne     :+
+        addr_jump copy_template, str_profile_slot_x
 
-L0DA2:  addr_jump L0DAD, str_ramcard_slot_x
+:       addr_jump copy_template, str_ramcard_slot_x
 
-L0DA9:  ldax    #str_unidisk_xy
+is_removable:
+        ldax    #str_unidisk_xy
+.endproc
 
-L0DAD:  stax    $06
+copy_template:  stax    $06
         ldy     #$00
         lda     ($06),y
         sta     @compare
@@ -14797,16 +14841,21 @@ L0DAD:  stax    $06
         tay
 L0DC2:  pla
         pha
-        and     #$70
+
+        ;; A has unit number
+        and     #$70            ; slot (from DSSSxxxx)
         lsr     a
         lsr     a
         lsr     a
         lsr     a
         ora     #$30
         tax
-        lda     L0E32
-        cmp     #$04
-        bne     L0DF0
+
+        lda     unit_number_lo_nibble
+        cmp     #DT_PROFILE
+        bne     check_removable
+
+        ;; A has unit number (again)
         pla
         pha
         and     #$70            ; compute $CnFB
@@ -14818,49 +14867,61 @@ L0DC2:  pla
         sta     @msb
         @msb := *+2
         lda     $C7FB           ; self-modified
-        and     #$01
-        bne     L0DEC
+        and     #$01            ; bit 0 = is RAM disk?
+        bne     is_ram_disk
+
         ldy     #$0E
-        bne     L0DFA
-L0DEC:  ldy     #$0E
-        bne     L0DFA
-L0DF0:  cmp     #$0B
+        bne     L0DFA           ; always
+
+is_ram_disk:
+        ldy     #$0E
+        bne     L0DFA           ; always
+
+check_removable:
+        cmp     #DT_REMOVABLE
         bne     :+
         ldy     #$0F
-        bne     L0DFA
+        bne     L0DFA           ; always
+
 :       ldy     #$06
+
 L0DFA:  txa
         sta     ($08),y
-        lda     L0E32
+
+        lda     unit_number_lo_nibble
         and     #$0F
-        cmp     #$04
+        cmp     #DT_PROFILE
         beq     L0E21
         pla
         pha
-        rol     a
-        lda     #$00
-        adc     #$01
-        ora     #$30
+        rol     a               ; set carry to drive - 1
+        lda     #0
+        adc     #1              ; drive = 1 or 2
+        ora     #'0'
         pha
-        lda     L0E32
-        and     #$0F
+
+        lda     unit_number_lo_nibble
+        and     #DT_RAM
         bne     L0E1C
         ldy     #$10
         pla
-        bne     L0E1F
+        bne     L0E1F           ; always
 L0E1C:  ldy     #$11
         pla
 L0E1F:  sta     ($08),y
 L0E21:  pla
         inc     volume_num
 next:   lda     volume_num
-        cmp     DEVCNT
-        beq     L0E2F
-        bcs     populate_startup_menu
-L0E2F:  jmp     process_volume
 
-L0E32:  .byte   0
-volume_num:  .byte   0
+        cmp     DEVCNT          ; done?
+        beq     :+
+        bcs     populate_startup_menu
+:       jmp     process_volume  ; next!
+
+unit_number_lo_nibble:
+        .byte   0
+volume_num:
+        .byte   0
 L0E34:  .byte   0
 .endproc
 
