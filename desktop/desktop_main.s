@@ -3810,24 +3810,25 @@ L5E57:  lda     ($06),y
         bcc     L5E74
         lda     L5E77
 L5E74:  jmp     launch_file     ; when double-clicked
+
+L5E77:  .byte   0
+
 .endproc
         L5DEC := L5CDA::L5DEC
 
 ;;; ============================================================
 
-L5E77:  .byte   0
-
 .proc L5E78
-        sta     L5F0A
+        sta     window_id
         jsr     redraw_windows_and_desktop
         jsr     clear_selection
-        lda     L5F0A
+        lda     window_id
         cmp     active_window_id
-        beq     L5E8F
+        beq     :+
         sta     findwindow_window_id
-        jsr     handle_inactive_window_click
-L5E8F:  lda     active_window_id
-        sta     getwinport_params2::window_id
+        jsr     handle_inactive_window_click ; bring to front
+
+:       copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
@@ -3836,7 +3837,7 @@ L5E8F:  lda     active_window_id
         lda     LEC26,x
         pha
         jsr     L7345
-        lda     L5F0A
+        lda     window_id
         tax
         dex
         lda     win_buf_table,x
@@ -3844,14 +3845,18 @@ L5E8F:  lda     active_window_id
         jsr     close_active_window
 :       lda     active_window_id
         jsr     window_address_lookup
-        stax    $06
-        ldy     #$00
-        lda     ($06),y
+
+        ptr := $06
+
+        stax    ptr
+        ldy     #0
+        lda     (ptr),y
         tay
-L5ECB:  lda     ($06),y
+:       lda     (ptr),y
         sta     LE1B0,y
         dey
-        bpl     L5ECB
+        bpl     :-
+
         pla
         jsr     L7054
         jsr     cmd_view_by_icon::L5106
@@ -3859,21 +3864,20 @@ L5ECB:  lda     ($06),y
         lda     active_window_id
         sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
-        lda     active_window_id
-        sta     getwinport_params2::window_id
+        copy    active_window_id, getwinport_params2::window_id
         jsr     get_port2
         jsr     draw_window_header
-        lda     #$00
+        lda     #0
         ldx     active_window_id
         sta     win_buf_table-1,x
-        lda     #$01
-        sta     menu_click_params::item_num
+
+        copy    #1, menu_click_params::item_num
         jsr     update_view_menu_check
-        lda     #$00
-        sta     cached_window_id
+        copy    #0, cached_window_id
         jmp     DESKTOP_COPY_TO_BUF
 
-L5F0A:  .byte   0
+window_id:
+        .byte   0
 .endproc
 
 ;;; ============================================================
@@ -4184,7 +4188,7 @@ L6276:  ldx     active_window_id
         dex
         lda     LEC26,x
         inx
-        jsr     L8B5C
+        jsr     animate_window_close
         ldx     active_window_id
         dex
         lda     #$00
@@ -6307,7 +6311,7 @@ L7744:  ldy     #$22
         sta     ($06),y
         lda     icon_params2
         ldx     L7621
-        jsr     L8B60
+        jsr     animate_window_open
         jsr     pop_zp_addrs
         rts
 
@@ -8672,35 +8676,45 @@ skip:   lda     icon_params2
 
 ;;; ============================================================
 
-.proc L8B5C
-        ldy     #$80
-        bne     :+
-L8B60:  ldy     #$00
-:       sty     L8D4A
-        stax    L8D4B
-        txa
-        jsr     window_lookup
-        stax    $06
+.proc animate_window
+        ptr := $06
+        rect_table := $0800
 
+close:  ldy     #$80
+        bne     :+
+
+open:   ldy     #$00
+
+:       sty     close_flag
+
+        sta     icon_id
+        stx     window_id
+        txa
+
+        ;; Get window rect
+        jsr     window_lookup
+        stax    ptr
         lda     #$14
         clc
         adc     #$23
         tay
         ldx     #$23
-:       lda     ($06),y
+:       lda     (ptr),y
         sta     grafport2,x
         dey
         dex
         bpl     :-
 
-        lda     L8D4B
+        ;; Get icon position
+        lda     icon_id
         jsr     icon_entry_lookup
-        stax    $06
+        stax    ptr
         ldy     #$03
         lda     ($06),y
         clc
         adc     #$07
-        sta     L0800
+
+        sta     rect_table
         sta     $0804
         iny
         lda     ($06),y
@@ -8721,7 +8735,7 @@ L8B60:  ldy     #$00
         ldy     #$5B
         ldx     #$03
 L8BC1:  lda     grafport2,x
-        sta     L0800,y
+        sta     rect_table,y
         dey
         dex
         bpl     L8BC1
@@ -8733,7 +8747,7 @@ L8BC1:  lda     grafport2,x
         sta     L8D4E
         sta     L8D4F
         sta     L8D4D
-        sub16   $0858, L0800, L8D50
+        sub16   $0858, rect_table, L8D50
         sub16   $085A, $0802, L8D52
         bit     L8D51
         bpl     L8C6A
@@ -8757,6 +8771,7 @@ L8C6A:  bit     L8D53
         eor     #$FF
         sta     L8D53
         inc16   L8D52
+
 L8C8C:  lsr16   L8D50
         lsr16   L8D52
         lsr16   L8D54
@@ -8770,37 +8785,43 @@ L8C8C:  lsr16   L8D50
         tax
         bit     L8D4E
         bpl     :+
-        sub16   L0800, L8D50, L0800,x
+        sub16   rect_table, L8D50, rect_table,x
         jmp     L8CDC
 
-:       add16   L0800, L8D50, L0800,x
+:       add16   rect_table, L8D50, rect_table,x
 
 L8CDC:  bit     L8D4F
         bpl     L8CF7
         sub16   $0802, L8D52, $0802,x
         jmp     L8D0A
 
-L8CF7:  add16   $0802, L8D52, $0802,x
-L8D0A:  add16   L0800,x, L8D54, $0804,x
+L8CF7:  add16   rect_table+2, L8D52, rect_table+2,x
 
-        add16   $0802,x, L8D56, $0806,x
+L8D0A:  add16   rect_table,x, L8D54, rect_table+4,x ; right
+        add16   rect_table+2,x, L8D56, rect_table+6,x ; bottom
 
         inc     L8D4D
         lda     L8D4D
-        cmp     #$0A
-        beq     L8D3D
+        cmp     #10
+        beq     :+
         jmp     L8C8C
 
-L8D3D:  bit     L8D4A
-        bmi     L8D46
-        jsr     L8D58
+:       bit     close_flag
+        bmi     :+
+        jsr     animate_window_open_impl
         rts
 
-L8D46:  jsr     L8DB3
+:       jsr     animate_window_close_impl
         rts
 
-L8D4A:  .byte   0
-L8D4B:  .word   0
+close_flag:
+        .byte   0
+
+icon_id:
+        .byte   0
+window_id:
+        .byte   0
+
 L8D4D:  .byte   0
 L8D4E:  .byte   0
 L8D4F:  .byte   0
@@ -8811,74 +8832,114 @@ L8D53:  .byte   0
 L8D54:  .word   0
 L8D56:  .word   0
 .endproc
-        L8B60 := L8B5C::L8B60
+        animate_window_close := animate_window::close
+        animate_window_open := animate_window::open
 
 ;;; ============================================================
 
-.proc L8D58
-        lda     #$00
-        sta     L8DB2
+.proc animate_window_open_impl
+
+        rect_table := $800
+
+        lda     #0
+        sta     step
         jsr     reset_grafport3
         MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern3
         jsr     set_penmode_xor
-L8D6C:  lda     L8DB2
-        cmp     #$0C
-        bcs     L8D89
-        asl     a
-        asl     a
-        asl     a
 
+loop:   lda     step
+        cmp     #12
+        bcs     erase
+
+        ;; Compute offset into rect table
+        asl     a
+        asl     a
+        asl     a
         clc
         adc     #7
         tax
+
+        ;; Copy rect to draw
         ldy     #7
-:       lda     L0800,x
+:       lda     rect_table,x
         sta     rect_E230,y
         dex
         dey
         bpl     :-
 
-        jsr     draw_rect_E230
-L8D89:  lda     L8DB2
+        jsr     draw_anim_window_rect
+
+        ;; Compute offset into rect table
+erase:  lda     step
         sec
-        sbc     #$02
-        bmi     L8DA7
-        asl     a
+        sbc     #2
+        bmi     next
+        asl     a               ; * 8 (size of Rect)
         asl     a
         asl     a
         clc
         adc     #$07
         tax
 
+        ;; Copy rect to erase
         ldy     #.sizeof(MGTK::Rect)-1
-:       lda     L0800,x
+:       lda     rect_table,x
         sta     rect_E230,y
         dex
         dey
         bpl     :-
 
-        jsr     draw_rect_E230
-L8DA7:  inc     L8DB2
-        lda     L8DB2
+        jsr     draw_anim_window_rect
+
+next:   inc     step
+        lda     step
         cmp     #$0E
-        bne     L8D6C
+        bne     loop
         rts
 
-L8DB2:  .byte   0
+step:   .byte   0
 .endproc
 
 ;;; ============================================================
 
-.proc L8DB3
-        lda     #$0B
-        sta     L8E0F
+.proc animate_window_close_impl
+
+        rect_table := $800
+
+        lda     #11
+        sta     step
         jsr     reset_grafport3
         MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern3
         jsr     set_penmode_xor
 
-loop:   lda     L8E0F
-        bmi     L8DE4
-        beq     L8DE4
+loop:   lda     step
+        bmi     erase
+        beq     erase
+
+        ;; Compute offset into rect table
+        asl     a               ; * 8 (size of Rect)
+        asl     a
+        asl     a
+        clc
+        adc     #$07
+        tax
+
+        ;; Copy rect to draw
+        ldy     #.sizeof(MGTK::Rect)-1
+:       lda     rect_table,x
+        sta     rect_E230,y
+        dex
+        dey
+        bpl     :-
+
+        jsr     draw_anim_window_rect
+
+        ;; Compute offset into rect table
+erase:  lda     step
+        clc
+        adc     #2
+        cmp     #14
+        bcs     next
         asl     a
         asl     a
         asl     a
@@ -8886,46 +8947,28 @@ loop:   lda     L8E0F
         adc     #$07
         tax
 
+        ;; Copy rect to erase
         ldy     #.sizeof(MGTK::Rect)-1
-:       lda     L0800,x
+:       lda     rect_table,x
         sta     rect_E230,y
         dex
         dey
         bpl     :-
 
-        jsr     draw_rect_E230
-L8DE4:  lda     L8E0F
-        clc
-        adc     #$02
-        cmp     #$0E
-        bcs     L8E04
-        asl     a
-        asl     a
-        asl     a
-        clc
-        adc     #$07
-        tax
+        jsr     draw_anim_window_rect
 
-        ldy     #.sizeof(MGTK::Rect)-1
-:       lda     L0800,x
-        sta     rect_E230,y
-        dex
-        dey
-        bpl     :-
-
-        jsr     draw_rect_E230
-L8E04:  dec     L8E0F
-        lda     L8E0F
-        cmp     #$FD
+next:   dec     step
+        lda     step
+        cmp     #AS_BYTE(-3)
         bne     loop
         rts
 
-L8E0F:  .byte   0
+step:   .byte   0
 .endproc
 
 ;;; ============================================================
 
-.proc draw_rect_E230
+.proc draw_anim_window_rect
         MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
         rts
 .endproc
@@ -14792,8 +14835,11 @@ L0D64:  cmp     #ERR_DUPLICATE_VOLUME
         ;; This section populates slot_drive_string_table -
         ;; it determines which device type string to use, and
         ;; fills in slot and drive as appropriate.
-        ;; TODO: Determine if the string is actually ever used!
-        ;; TODO: If it is, make this table driven.
+        ;;
+        ;; This is for a "Check" menu present in MouseDesk 1.1
+        ;; but which was removed in MouseDesk 2.0, which allowed
+        ;; refreshing individual windows.
+
 .proc select_template
         pla
         pha

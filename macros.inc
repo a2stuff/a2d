@@ -52,6 +52,7 @@ end:
 ;;; ============================================================
 ;;; Common patterns
 
+.define AS_BYTE(arg)        arg & $FF
 .define AS_WORD(arg)        arg & $FFFF
 
 
