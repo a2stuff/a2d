@@ -9770,7 +9770,7 @@ L942F:  lda     #$03
         tax
         pla
         jsr     JT_SIZE_STRING
-        jsr     L9549
+        jsr     remove_leading_spaces
         ldx     #$00
 L9456:  lda     text_buffer2::data-1,x
         cmp     #$42
@@ -9792,7 +9792,7 @@ L9472:  lda     selected_window_index
 
 L9480:  ldax    get_file_info_params5::blocks_used
 L9486:  jsr     JT_SIZE_STRING
-        jsr     L9549
+        jsr     remove_leading_spaces
         ldx     $220
         ldy     #$00
 L9491:  lda     text_buffer2::data,y
@@ -9855,25 +9855,33 @@ L953A:  PASCAL_STRING " VOL"
         yax_call launch_dialog, index_get_info_dialog, L92E3
         rts
 .endproc
+.endproc
+        L92F5 := do_get_info::L92F5
 
-L9549:  ldx     #$00
-L954B:  lda     text_buffer2::data,x
-        cmp     #$20
-        bne     L9555
+;;; ============================================================
+
+.proc remove_leading_spaces
+        ;; Count leading spaces
+        ldx     #0
+:       lda     text_buffer2::data,x
+        cmp     #' '
+        bne     counted
         inx
-        bne     L954B
-L9555:  ldy     #$00
+        bne     :-
+
+        ;; Shift string down
+counted:
+        ldy     #0
         dex
-L9558:  lda     text_buffer2::data,x
+:       lda     text_buffer2::data,x
         sta     text_buffer2::data,y
         iny
         inx
         cpx     text_buffer2::length
-        bne     L9558
+        bne     :-
         sty     text_buffer2::length
         rts
 .endproc
-        L92F5 := do_get_info::L92F5
 
 ;;; ============================================================
 
