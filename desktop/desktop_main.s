@@ -2076,9 +2076,14 @@ start:
         ;; Restore machine to text state
         sta     ALTZPOFF
         jsr     exit_dhr_mode
+
+        ;; S3D2 /RAM driver still in place?
+        RAMSLOT := DEVADR + $10 + 3*2 ; Slot 3, Drive 2
+        cmp16   RAMSLOT, NODEV
+        beq     quit            ; No, so give up
         jsr     reinstall_ram
 
-        jmp     quit_code_addr
+quit:   jmp     quit_code_addr
 
 fail:   jsr     DESKTOP_SHOW_ALERT
         rts

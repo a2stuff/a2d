@@ -46,7 +46,11 @@ end:
 ;;; Pad with zeros to the given address
 
 .macro PAD_TO addr
+    .if (addr - *) >= 0
         .res    addr - *, 0
+    .else
+        .error .sprintf("Padding offset %d", addr - *)
+    .endif
 .endmacro
 
 ;;; ============================================================
