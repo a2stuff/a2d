@@ -1163,7 +1163,14 @@ LE6C1:
         .addr   winfo7title_ptr
         .addr   winfo8title_ptr
 
-win_buf_table:                  ; ???
+        ;; (low nibble must match menu order)
+        view_by_icon := $80
+        view_by_name := $81
+        view_by_date := $82
+        view_by_size := $83
+        view_by_type := $84
+
+win_view_by_table:
         .res    8, 0
 
 pos_col_name: DEFINE_POINT 0, 0, pos_col_name

@@ -250,7 +250,7 @@ L415B:  sta     active_window_id
 
 L41CB:  ldx     cached_window_id
         dex
-        lda     win_buf_table,x
+        lda     win_view_by_table,x
         bpl     L41E2
         jsr     L6C19
         copy    #$00, L4152
@@ -625,7 +625,7 @@ L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_window_id
         MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
         ldx     active_window_id
         dex
-        lda     win_buf_table,x
+        lda     win_view_by_table,x
         and     #$0F
         sta     checkitem_params::menu_item
         inc     checkitem_params::menu_item
@@ -1862,7 +1862,7 @@ L4E78:  jsr     clear_selection
         jsr     DESKTOP_COPY_TO_BUF
         ldx     active_window_id
         dex
-        lda     win_buf_table,x
+        lda     win_view_by_table,x
         bmi     L4EB4
         DESKTOP_RELAY_CALL DT_CLOSE_WINDOW, active_window_id
         lda     icon_count
@@ -2131,30 +2131,31 @@ start:
 
 .proc cmd_view_by_icon
         ldx     active_window_id
-        bne     L50FF
+        bne     :+
         rts
 
-L50FF:  dex
-        lda     win_buf_table,x
-        bne     L5106
+:       dex
+        lda     win_view_by_table,x
+        bne     :+
         rts
 
-L5106:  lda     active_window_id
+entry:
+:       lda     active_window_id
         sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         ldx     #$00
         txa
-L5112:  cpx     cached_window_icon_count
-        beq     L511E
+:       cpx     cached_window_icon_count
+        beq     :+
         sta     cached_window_icon_list,x
         inx
-        jmp     L5112
+        jmp     :-
 
-L511E:  sta     cached_window_icon_count
+:       sta     cached_window_icon_count
         lda     #$00
         ldx     active_window_id
         dex
-        sta     win_buf_table,x
+        sta     win_view_by_table,x
         jsr     update_view_menu_check
         lda     active_window_id
         sta     getwinport_params2::window_id
@@ -2232,14 +2233,14 @@ L51EF:  .byte   0
 
 ;;; ============================================================
 
-.proc L51F0
+.proc view_by_nonicon_common
         ldx     active_window_id
         dex
-        sta     win_buf_table,x
+        sta     win_view_by_table,x
         lda     active_window_id
         sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
-        jsr     L7D9C
+        jsr     sort_icons
         jsr     DESKTOP_COPY_FROM_BUF
         lda     active_window_id
         sta     getwinport_params2::window_id
@@ -2286,84 +2287,84 @@ L5265:  .byte   0
 
 .proc cmd_view_by_name
         ldx     active_window_id
-        bne     L526D
+        bne     :+
         rts
 
-L526D:  dex
-        lda     win_buf_table,x
-        cmp     #$81
-        bne     L5276
+:       dex
+        lda     win_view_by_table,x
+        cmp     #view_by_name
+        bne     :+
         rts
 
-L5276:  cmp     #$00
+:       cmp     #$00
         bne     :+
         jsr     close_active_window
 :       jsr     update_view_menu_check
-        lda     #$81
-        jmp     L51F0
+        lda     #view_by_name
+        jmp     view_by_nonicon_common
 .endproc
 
 ;;; ============================================================
 
 .proc cmd_view_by_date
         ldx     active_window_id
-        bne     L528B
+        bne     :+
         rts
 
-L528B:  dex
-        lda     win_buf_table,x
-        cmp     #$82
-        bne     L5294
+:       dex
+        lda     win_view_by_table,x
+        cmp     #view_by_date
+        bne     :+
         rts
 
-L5294:  cmp     #$00
+:       cmp     #$00
         bne     :+
         jsr     close_active_window
 :       jsr     update_view_menu_check
-        lda     #$82
-        jmp     L51F0
+        lda     #view_by_date
+        jmp     view_by_nonicon_common
 .endproc
 
 ;;; ============================================================
 
 .proc cmd_view_by_size
         ldx     active_window_id
-        bne     L52A9
+        bne     :+
         rts
 
-L52A9:  dex
-        lda     win_buf_table,x
-        cmp     #$83
-        bne     L52B2
+:       dex
+        lda     win_view_by_table,x
+        cmp     #view_by_size
+        bne     :+
         rts
 
-L52B2:  cmp     #$00
+:       cmp     #$00
         bne     :+
         jsr     close_active_window
 :       jsr     update_view_menu_check
-        lda     #$83
-        jmp     L51F0
+        lda     #view_by_size
+        jmp     view_by_nonicon_common
 .endproc
 
 ;;; ============================================================
 
 .proc cmd_view_by_type
         ldx     active_window_id
-        bne     L52C7
+        bne     :+
         rts
 
-L52C7:  dex
-        lda     win_buf_table,x
-        cmp     #$84
-        bne     L52D0
+:       dex
+        lda     win_view_by_table,x
+        cmp     #view_by_type
+        bne     :+
         rts
 
-L52D0:  cmp     #$00
+:       cmp     #$00
         bne     :+
         jsr     close_active_window
 :       jsr     update_view_menu_check
-        lda     #$84
-        jmp     L51F0
+        lda     #view_by_type
+        jmp     view_by_nonicon_common
 .endproc
 
 ;;; ============================================================
@@ -2587,7 +2588,7 @@ L544D:
 
 L545A:  tax
         dex
-        lda     win_buf_table,x
+        lda     win_view_by_table,x
         bpl     L5464
         jmp     L54C5
 
@@ -2813,7 +2814,7 @@ L5661:  rts
 L566A:  ldx     active_window_id
         beq     L5676
         dex
-        lda     win_buf_table,x
+        lda     win_view_by_table,x
         bpl     L5676
         rts
 
@@ -3030,7 +3031,7 @@ vertical:
         jsr     DESKTOP_COPY_TO_BUF
         ldx     active_window_id
         dex
-        lda     win_buf_table,x
+        lda     win_view_by_table,x
         sta     L5B1B
         jsr     L58C3
         stax    L585F
@@ -3431,7 +3432,7 @@ L5B1B:  .byte   0
         jsr     DESKTOP_COPY_TO_BUF
         ldx     active_window_id
         dex
-        lda     win_buf_table,x
+        lda     win_view_by_table,x
         sta     L5B1B
 
         ;; Restore event coords (following detect_double_click)
@@ -3840,7 +3841,7 @@ L5E77:  .byte   0
         lda     window_id
         tax
         dex
-        lda     win_buf_table,x
+        lda     win_view_by_table,x
         bmi     :+
         jsr     close_active_window
 :       lda     active_window_id
@@ -3859,7 +3860,7 @@ L5E77:  .byte   0
 
         pla
         jsr     L7054
-        jsr     cmd_view_by_icon::L5106
+        jsr     cmd_view_by_icon::entry
         jsr     DESKTOP_COPY_FROM_BUF
         lda     active_window_id
         sta     cached_window_id
@@ -3869,7 +3870,7 @@ L5E77:  .byte   0
         jsr     draw_window_header
         lda     #0
         ldx     active_window_id
-        sta     win_buf_table-1,x
+        sta     win_view_by_table-1,x
 
         copy    #1, menu_click_params::item_num
         jsr     update_view_menu_check
@@ -4058,7 +4059,7 @@ L6112:  ldy     #$14
 
         ldx     active_window_id
         dex
-        lda     win_buf_table,x
+        lda     win_view_by_table,x
         beq     L6143
         rts
 
@@ -4130,7 +4131,7 @@ handle_close_click:
         jsr     clear_selection
         ldx     active_window_id
         dex
-        lda     win_buf_table,x
+        lda     win_view_by_table,x
         bmi     L6215
         lda     icon_count
         sec
@@ -4193,7 +4194,7 @@ L6276:  ldx     active_window_id
         dex
         lda     #$00
         sta     LEC26,x
-        sta     win_buf_table,x
+        sta     win_view_by_table,x
         MGTK_RELAY_CALL MGTK::FrontWindow, active_window_id
         lda     #$00
         sta     cached_window_id
@@ -4545,7 +4546,7 @@ disable_menu_items:
         ;; Is this residue of a Windows menu???
 check_menu_items:
         dex
-        lda     win_buf_table,x
+        lda     win_view_by_table,x
         and     #$0F
         tax
         inx
@@ -5017,7 +5018,7 @@ L6B3A:  lda     icon_params2
         ldx     cached_window_id
         dex
         lda     #$00
-        sta     win_buf_table,x
+        sta     win_view_by_table,x
         lda     LEC2E
         cmp     #$02
         bcs     L6B60
@@ -5103,7 +5104,7 @@ L6C0E:  .byte   0
 .proc L6C19
         ldx     cached_window_id
         dex
-        lda     win_buf_table,x
+        lda     win_view_by_table,x
         bmi     L6C25
         jmp     L6CCD
 
@@ -5285,7 +5286,7 @@ L6DB0:  .byte   0
 .proc update_scrollbars
         ldx     active_window_id
         dex
-        lda     win_buf_table,x
+        lda     win_view_by_table,x
         bmi     :+
         jsr     L7B6B
         jmp     config_port
@@ -6761,7 +6762,7 @@ L7B6F:  sta     L7B63,x
         sta     L7B62
         ldx     cached_window_id
         dex
-        lda     win_buf_table,x
+        lda     win_view_by_table,x
         bpl     L7BCB
         lda     cached_window_icon_count
         bne     L7BA1
@@ -6944,7 +6945,7 @@ L7D9A:  .word   0
 
 ;;; ============================================================
 
-.proc L7D9C
+.proc sort_icons                ; tentative identification
         jmp     L7D9F
 
 L7D9F:  ldx     cached_window_id
@@ -6982,7 +6983,7 @@ L7DB4:  txa
 L7DE4:  lda     L0800
         cmp     $0803
         beq     L7E0C
-        jsr     L80CA
+        jsr     ptr_calc
         ldy     #$00
         lda     ($06),y
         and     #$7F
@@ -7000,14 +7001,19 @@ L7E06:  inc     L0800
 
 L7E0C:  lda     LCBANK1
         lda     LCBANK1
+
+        ;; --------------------------------------------------
+
         ldx     cached_window_id
         dex
-        lda     win_buf_table,x
-        cmp     #$81
-        beq     L7E20
-        jmp     L7EC1
+        lda     win_view_by_table,x
+        cmp     #view_by_name
+        beq     :+
+        jmp     check_date
 
-L7E20:  lda     LCBANK2
+:
+.scope
+        lda     LCBANK2
         lda     LCBANK2
         ldax    #$0F5A
 L7E2A:  sta     $0808,x
@@ -7021,7 +7027,7 @@ L7E38:  lda     $0805
         bne     L7E43
         jmp     L80F5
 
-L7E43:  jsr     L80CA
+L7E43:  jsr     ptr_calc
         ldy     #$00
         lda     ($06),y
         bmi     L7E82
@@ -7060,7 +7066,7 @@ L7E82:  inc     L0800
 L7E90:  inc     $0805
         lda     $0806
         sta     L0800
-        jsr     L80CA
+        jsr     ptr_calc
         ldy     #$00
         lda     ($06),y
         ora     #$80
@@ -7077,12 +7083,18 @@ L7EA8:  sta     $0808,x
         lda     #$00
         sta     L0800
         jmp     L7E38
+.endscope
 
-L7EC1:  cmp     #$82
-        beq     L7EC8
-        jmp     L7F58
+        ;; --------------------------------------------------
 
-L7EC8:  lda     LCBANK2
+check_date:
+        cmp     #view_by_date
+        beq     :+
+        jmp     check_size
+
+:
+.scope
+        lda     LCBANK2
         lda     LCBANK2
         lda     #$00
         sta     $0808
@@ -7094,7 +7106,7 @@ L7EDC:  lda     $0805
         bne     L7EE7
         jmp     L80F5
 
-L7EE7:  jsr     L80CA
+L7EE7:  jsr     ptr_calc
         ldy     #$00
         lda     ($06),y
         bmi     L7F1B
@@ -7127,7 +7139,7 @@ L7F1B:  inc     L0800
 L7F29:  inc     $0805
         lda     $0806
         sta     L0800
-        jsr     L80CA
+        jsr     ptr_calc
         ldy     #$00
         lda     ($06),y
         ora     #$80
@@ -7143,12 +7155,18 @@ L7F29:  inc     $0805
         lda     #$00
         sta     L0800
         jmp     L7EDC
+.endscope
 
-L7F58:  cmp     #$83
-        beq     L7F5F
-        jmp     L801F
+        ;; --------------------------------------------------
 
-L7F5F:  lda     LCBANK2
+check_size:
+        cmp     #view_by_size
+        beq     :+
+        jmp     check_type
+
+:
+.scope
+        lda     LCBANK2
         lda     LCBANK2
         lda     #$00
         sta     $0808
@@ -7160,7 +7178,7 @@ L7F73:  lda     $0805
         bne     L7F7E
         jmp     L80F5
 
-L7F7E:  jsr     L80CA
+L7F7E:  jsr     ptr_calc
         ldy     #$00
         lda     ($06),y
         bmi     L7FAD
@@ -7186,7 +7204,7 @@ L7FAD:  inc     L0800
 L7FBB:  inc     $0805
         lda     $0806
         sta     L0800
-        jsr     L80CA
+        jsr     ptr_calc
         ldy     #$00
         lda     ($06),y
         ora     #$80
@@ -7214,12 +7232,18 @@ L7FBB:  inc     $0805
         lda     LCBANK2
         lda     LCBANK2
         jmp     L80F5
+.endscope
 
-L801F:  cmp     #$84
-        beq     L8024
+        ;; --------------------------------------------------
+
+check_type:
+        cmp     #view_by_type
+        beq     :+
         rts
 
-L8024:  copy16  type_table_addr, $08
+:
+.scope
+        copy16  type_table_addr, $08
         ldy     #$00
         lda     ($08),y
         sta     $0807
@@ -7240,7 +7264,7 @@ L8051:  lda     $0805
         bne     L805C
         jmp     L80F5
 
-L805C:  jsr     L80CA
+L805C:  jsr     ptr_calc
         ldy     #$00
         lda     ($06),y
         bmi     L807E
@@ -7272,7 +7296,7 @@ L808C:  lda     $0806
 L809E:  inc     $0805
         lda     $0806
         sta     L0800
-        jsr     L80CA
+        jsr     ptr_calc
         ldy     #$00
         lda     ($06),y
         ora     #$80
@@ -7287,14 +7311,12 @@ L809E:  inc     $0805
         lda     #$FF
         sta     $0806
         jmp     L8051
-.endproc
+.endscope
 
-;;; ============================================================
+;;; --------------------------------------------------
+;;; ptr = $801/$802 + ($800 * 32)
 
-.proc L80CA
-
-        ;; ptr = $801/$802 + ($800 * 32)
-
+.proc ptr_calc
         ptr := $6
 
         lda     #0
@@ -7319,37 +7341,41 @@ L809E:  inc     $0805
         rts
 .endproc
 
-;;; ============================================================
+;;; --------------------------------------------------
+;;; ???
 
 .proc L80F5
+        ptr := $06
+
         lda     #$00
         sta     L0800
-L80FA:  lda     L0800
+loop:   lda     L0800
         cmp     $0803
-        beq     L8124
-        jsr     L80CA
+        beq     done
+        jsr     ptr_calc
         ldy     #$00
-        lda     ($06),y
+        lda     (ptr),y
         and     #$7F
-        sta     ($06),y
+        sta     (ptr),y
         ldy     #$17
-        lda     ($06),y
-        bne     L811E
+        lda     (ptr),y
+        bne     :+
         iny
-        lda     ($06),y
+        lda     (ptr),y
         cmp     #$01
-        bne     L811E
+        bne     :+
         lda     #$00
-        sta     ($06),y
-L811E:  inc     L0800
-        jmp     L80FA
+        sta     (ptr),y
+:       inc     L0800
+        jmp     loop
 
-L8124:  lda     LCBANK1
+done:   lda     LCBANK1
         lda     LCBANK1
         rts
 .endproc
 
-;;; ============================================================
+;;; --------------------------------------------------
+;;; ???
 
 .proc L812B
         lda     LCBANK1
@@ -7360,6 +7386,9 @@ L8124:  lda     LCBANK1
         lda     LCBANK2
         rts
 .endproc
+
+.endproc
+
 
 ;;; ============================================================
 
