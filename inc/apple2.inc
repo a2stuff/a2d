@@ -152,6 +152,7 @@ ALTZPON         := $C009
 
 CLR80VID        := $C00C
 SET80VID        := $C00D
+RDALTZP         := $C016
 RD80STORE       := $C018
 RDPAGE2         := $C01C
 

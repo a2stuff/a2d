@@ -8,6 +8,10 @@ cd desktop.system
 res/go.sh
 cd ..
 
+cd ram.system
+res/go.sh
+cd ..
+
 cd desktop
 res/go.sh
 cd ..
