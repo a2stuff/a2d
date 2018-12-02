@@ -3379,6 +3379,18 @@ L5AD0:  .byte   0
 .endproc
         reset_and_invoke_target := reset_and_invoke::target
 
+;;; ============================================================
+
+.proc append_space_after_int
+        inc     str_from_int
+        ldx     str_from_int
+        lda     #' '
+        sta     str_from_int,x
+        rts
+.endproc
+
+;;; ============================================================
+
         PAD_TO $5B1B            ; Maintain previous addresses
 
 ;;; ============================================================
@@ -6677,18 +6689,12 @@ draw_int_string:
 
 xcoord:
         .word   0
+.endproc ; draw_window_header
 
-;;; --------------------------------------------------
+;;; ============================================================
 
 .proc int_to_string
         stax    value
-
-        ;; Fill buffer with spaces
-        ldx     #6
-        lda     #' '
-:       sta     str_from_int,x
-        dex
-        bne     :-
 
         lda     #0
         sta     nonzero_flag
@@ -6701,42 +6707,39 @@ loop:   lda     #0
 
         ;; Keep subtracting/incrementing until zero is hit
 sloop:  cmp16   value, powers,x
-        bpl     subtract
+        bmi     :+
+        inc     digit
+        sub16   value, powers,x, value
+        jmp     sloop
 
-        lda     digit
+:       lda     digit
         bne     not_pad
         bit     nonzero_flag
-        bmi     not_pad
+        bpl     next
 
-        ;; Pad with space
-        lda     #' '
-        bne     :+
         ;; Convert to ASCII
 not_pad:
-        clc
-        adc     #'0'            ; why not ORA $30 ???
+        ora     #'0'
         pha
         lda     #$80
         sta     nonzero_flag
         pla
 
         ;; Place the character, move to next
-:       sta     str_from_int+2,y
-        iny
-        inx
+:       iny
+        sta     str_from_int,y
+
+next:   inx
         inx
         cpx     #8              ; up to 4 digits (*2) via subtraction
         beq     done
         jmp     loop
 
-subtract:
-        inc     digit
-        sub16   value, powers,x, value
-        jmp     sloop
-
 done:   lda     value           ; handle last digit
         ora     #'0'
-        sta     str_from_int+2,y
+        iny
+        sta     str_from_int,y
+        sty     str_from_int
         rts
 
 powers: .word   10000, 1000, 100, 10
@@ -6747,7 +6750,7 @@ nonzero_flag:                ; high bit set once a non-zero digit seen
 
 .endproc ; int_to_string
 
-.endproc ; draw_window_header
+        PAD_TO $7B5F
 
 ;;; ============================================================
 
@@ -7749,6 +7752,8 @@ compose_date_string:
         jmp     prep_month_string
 
 prep_date_strings:
+        ;; TODO: Handle ProDOS 2.5 extended dates
+
         lda     date+1
         and     #$FE            ; extract year
         lsr     a
@@ -7771,51 +7776,14 @@ prep_date_strings:
         jmp     prep_year_string
 
 .proc prep_day_string
-        ;; String will have trailing space.
-        lda     #' '
-        sta     str_day+1
-        sta     str_day+2
-        sta     str_day+3
-
-        ;; Assume 1 digit (plus trailing space)
-        ldx     #2
-
-        ;; Determine first digit.
         lda     day
-        ora     #'0'            ; if < 10, will just be value itself
-        tay
+        ldx     #0
+        jsr     int_to_string
+        ldax    #str_from_int
 
-        lda     day
-        cmp     #10
-        bcc     :+
-        inx                     ; will be 2 digits
-        ldy     #'1'
-        cmp     #20
-        bcc     :+
-        ldy     #'2'
-        cmp     #30
-        bcc     :+
-        ldy     #'3'
-:       stx     str_day    ; length (including trailing space)
-        sty     str_day+1  ; first digit
 
-        ;; Determine second digit.
-        cpx     #2              ; only 1 digit (plus trailing space?)
-        beq     done
-
-        tya
-        and     #$03            ; ascii -> tens digit
-        tay
-
-        lda     day             ; subtract 10 as needed
-:       sec
-        sbc     #10
-        dey
-        bne     :-
-
-        ora     #'0'
-        sta     str_day+2
-done:   addr_jump concatenate_date_part, str_day
+        addr_call concatenate_date_part, str_from_int
+        addr_jump concatenate_date_part, str_space
 .endproc
 
 .proc prep_month_string
@@ -7829,27 +7797,29 @@ done:   addr_jump concatenate_date_part, str_day
 .endproc
 
 .proc prep_year_string
-        ldx     tens_table_length
-:       lda     year
-        sec
-        sbc     tens_table-1,x
-        bpl     :+
-        dex
-        bne     :-
-:       tay
-        lda     ascii_digits,x
-        sta     year_string_10s
-        lda     ascii_digits,y
-        sta     year_string_1s
-        addr_jump concatenate_date_part, str_year
+        ;; On input, only low byte of year is set (0...99)
+        lda     #0
+        sta     year+1
+        lda     year
+        cmp     #100            ; if > 100, assume 1900+n
+        bcs     y1900
+        cmp     #40
+        bcs     y1900
+
+y2000:  add16   #2000, year, year
+        jmp     stringify
+
+y1900:  add16   #1900, year, year
+
+stringify:
+        ldax    year
+        jsr     int_to_string
+        addr_jump concatenate_date_part, str_from_int
 .endproc
 
-year:   .byte   0
+year:   .word   0
 month:  .byte   0
 day:    .byte   0
-
-str_day:                        ; Filled in with day of the month plus space (e.g. "10 ")
-        PASCAL_STRING "   "
 
 month_table:
         .addr   str_no_date
@@ -7857,60 +7827,51 @@ month_table:
         .addr   str_jul,str_aug,str_sep,str_oct,str_nov,str_dec
 
 str_no_date:
-        PASCAL_STRING "no date  "
+        PASCAL_STRING "(no date)"
 
-str_jan:PASCAL_STRING "January   "
-str_feb:PASCAL_STRING "February  "
-str_mar:PASCAL_STRING "March     "
-str_apr:PASCAL_STRING "April     "
-str_may:PASCAL_STRING "May       "
-str_jun:PASCAL_STRING "June      "
-str_jul:PASCAL_STRING "July      "
-str_aug:PASCAL_STRING "August    "
+str_jan:PASCAL_STRING "January "
+str_feb:PASCAL_STRING "February "
+str_mar:PASCAL_STRING "March "
+str_apr:PASCAL_STRING "April "
+str_may:PASCAL_STRING "May "
+str_jun:PASCAL_STRING "June "
+str_jul:PASCAL_STRING "July "
+str_aug:PASCAL_STRING "August "
 str_sep:PASCAL_STRING "September "
-str_oct:PASCAL_STRING "October   "
-str_nov:PASCAL_STRING "November  "
-str_dec:PASCAL_STRING "December  "
+str_oct:PASCAL_STRING "October "
+str_nov:PASCAL_STRING "November "
+str_dec:PASCAL_STRING "December "
 
-str_year:
-        PASCAL_STRING " 1985"
-
-year_string_10s := *-2          ; 10s digit
-year_string_1s  := *-1          ; 1s digit
-
-tens_table_length:
-        .byte   9
-tens_table:
-        .byte   10,20,30,40,50,60,70,80,90
-
-ascii_digits:
-        .byte   "0123456789"
+str_space:      PASCAL_STRING " "
 
 .proc concatenate_date_part
         stax    $06
         ldy     #$00
         lda     ($08),y
-        sta     L84D0
+        sta     concat_len
         clc
         adc     ($06),y
         sta     ($08),y
         lda     ($06),y
         sta     @compare_y
-:       inc     L84D0
+:       inc     concat_len
         iny
         lda     ($06),y
-        sty     L84CF
-        ldy     L84D0
+        sty     tmp
+        ldy     concat_len
         sta     ($08),y
-        ldy     L84CF
+        ldy     tmp
         @compare_y := *+1
         cpy     #0              ; self-modified
         bcc     :-
         rts
 
-L84CF:  .byte   0
-L84D0:  .byte   0
+tmp:    .byte   0
+concat_len:
+        .byte   0
 .endproc
+
+        PAD_TO  $84D1           ; Maintain previous addresses
 
 ;;; ============================================================
 
@@ -14193,12 +14154,14 @@ saved_proc_buf:
 
 .proc compose_file_count_string
         ldax    file_count
-        jsr     draw_window_header::int_to_string
-        ldx     #6
+        jsr     int_to_string
+        jsr     append_space_after_int
+
+        ldx     str_from_int
 :       lda     str_from_int,x
         sta     str_file_count,x
         dex
-        bne     :-
+        bpl     :-
         rts
 .endproc
 

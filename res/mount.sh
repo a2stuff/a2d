@@ -5,7 +5,7 @@
 set -e
 source "res/util.sh"
 
-mkdir -p mount/desk.acc
+mkdir -p mount/desk.acc || (cecho red "permission denied"; exit 1)
 
 function mount_f1 {
     srcdir="$2"
