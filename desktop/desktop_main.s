@@ -6707,12 +6707,12 @@ loop:   lda     #0
 
         ;; Keep subtracting/incrementing until zero is hit
 sloop:  cmp16   value, powers,x
-        bmi     :+
+        bcc     break
         inc     digit
         sub16   value, powers,x, value
         jmp     sloop
 
-:       lda     digit
+break:  lda     digit
         bne     not_pad
         bit     nonzero_flag
         bpl     next
@@ -6726,7 +6726,7 @@ not_pad:
         pla
 
         ;; Place the character, move to next
-:       iny
+        iny
         sta     str_from_int,y
 
 next:   inx
@@ -7647,92 +7647,52 @@ loop:   lda     LEC43,x
 
 .proc compose_blocks_string
         stax    value
-        jmp     start
+        jsr     int_to_string
 
-suffix: .byte   " Blocks "
-powers: .word   10000, 1000, 100, 10
-value:  .word   0
-digit:  .byte   0
-nonzero_flag:
-        .byte   0
-
-start:
-        ;; Fill buffer with spaces
-        ldx     #17
+        ;; Leading space
+        ldx     #1
+        stx     text_buffer2::length
         lda     #' '
-:       sta     text_buffer2::data-1,x
-        dex
-        bpl     :-
+        sta     text_buffer2::data
 
-        lda     #0
-        sta     text_buffer2::length
-        sta     nonzero_flag
-        ldy     #0              ; y is pos in string
-        ldx     #0              ; x is power of 10 index (*2)
-loop:   lda     #0
-        sta     digit
-
-        ;; Compute the digit by repeated subtraction/increments
-sloop:  cmp16   value, powers,x
-        bpl     subtract
-        lda     digit
-        bne     not_pad
-        bit     nonzero_flag
-        bmi     not_pad
-
-        ;; Pad with space
-        lda     #' '
-        bne     :+
-
-not_pad:
-        ora     #'0'
-        pha
-        lda     #$80
-        sta     nonzero_flag
-        pla
-
-        ;; Place the character, move to next
-:       sta     text_buffer2::data+1,y
+        ;; Append number
+        ldy     #0
+:       lda     str_from_int+1,y
+        sta     text_buffer2::data,x ; data follows length
         iny
         inx
-        inx
-        cpx     #8              ; last power of 10? (*2)
-        beq     done
-        jmp     loop
-
-subtract:
-        inc     digit
-        sub16   value, powers,x, value
-        jmp     sloop
-
-done:   lda     value           ; handle last digit
-        ora     #'0'
-        sta     text_buffer2::data+1,y
-        iny
-
-        ;; Append suffix
-        ldx     #0
-:       lda     suffix,x
-        sta     text_buffer2::data+1,y
-        iny
-        inx
-        cpx     suffix
+        cpy     str_from_int
         bne     :-
 
-        ;; Singular or plural?
-        lda     digit           ; zero?
-        bne     plural
-        bit     nonzero_flag
-        bmi     plural          ; "blocks"
+        ;; Append suffix
+        ldy     #0
+:       lda     suffix+1, y
+        sta     text_buffer2::data,x
+        iny
+        inx
+        cpy     suffix
+        bne     :-
+
+        ;; If singular, drop trailing 's'
+        ;; Block or Blocks?
+        lda     value+1
+        cmp     #>1
+        bne     :+
         lda     value
-        cmp     #2              ; plural?
-        bcc     single
-plural: lda     #.strlen(" 12345 Blocks") ; seems off by one ???
-        bne     L830B
-single: lda     #.strlen("     1 Block")
-L830B:  sta     text_buffer2::length
-        rts
+        cmp     #<1
+        bne     :+
+        dex
+:       stx     text_buffer2::length
+
+done:   rts
+
+suffix: PASCAL_STRING " Blocks"
+
+value:  .word   0
+
 .endproc
+
+        PAD_TO $830F            ; Maintain previous addresses
 
 ;;; ============================================================
 
@@ -9843,64 +9803,85 @@ L942E:  .byte   0
 
 L942F:  lda     #$03
         sta     L92E3
-        lda     #$00
-        sta     $220
-        lda     selected_window_index
-        bne     L9472                           ; ProDOS TRM 4.4.5:
-        lda     get_file_info_params5::aux_type   ; "When file information about a volume
-        sec                                      ; directory is requested, the total
-        sbc     get_file_info_params5::blocks_used    ; number of blocks on the volume is
-        pha                                      ; returned in the aux_type field and
-        lda     get_file_info_params5::aux_type+1 ; the total blocks for all files is
-        sbc     get_file_info_params5::blocks_used+1  ; returned in blocks_used."
+
+        ;; Compose " 12345 Blocks" or " 12345 / 67890 Blocks" string
+        buf := $220
+        copy    #0, buf
+
+        lda     selected_window_index ; volume?
+        bne     do_suffix                 ; nope
+
+        ;; ProDOS TRM 4.4.5:
+        ;; "When file information about a volume directory is requested, the
+        ;; total number of blocks on the volume is returned in the aux_type
+        ;; field and the total blocks for all files is returned in blocks_used.
+
+        lda     get_file_info_params5::aux_type
+        sec
+        sbc     get_file_info_params5::blocks_used
+        pha
+        lda     get_file_info_params5::aux_type+1
+        sbc     get_file_info_params5::blocks_used+1
         tax
         pla
         jsr     JT_SIZE_STRING
-        jsr     remove_leading_spaces
-        ldx     #$00
-L9456:  lda     text_buffer2::data-1,x
-        cmp     #$42
-        beq     L9460
-        inx
-        bne     L9456
-L9460:  stx     $220
-        lda     #'/'
-        sta     $220,x
-        dex
-L9469:  lda     text_buffer2::data-1,x
-        sta     $220,x
-        dex
-        bne     L9469
-L9472:  lda     selected_window_index
-        bne     L9480
-        ldax    get_file_info_params5::aux_type
-        jmp     L9486
 
-L9480:  ldax    get_file_info_params5::blocks_used
-L9486:  jsr     JT_SIZE_STRING
-        jsr     remove_leading_spaces
-        ldx     $220
-        ldy     #$00
-L9491:  lda     text_buffer2::data,y
-        sta     $0220+1,x
-        inx
+        ;; text_buffer2 now has " 12345 Blocks" (free space)
+
+        ;; Copy number and leading/trailing space into buf
+        ldx     buf
+        ldy     #0
+:       inx
+        lda     text_buffer2::data,y
+        cmp     #'B'            ; stop at 'B' in "Blocks"
+        beq     slash
+        sta     buf,x
         iny
         cpy     text_buffer2::length
-        bne     L9491
-        tya
-        clc
-        adc     $220
-        sta     $220
-        ldx     $220
-L94A9:  lda     $220,x
+        bne     :-
+
+        ;; Append '/' to buf
+slash:  lda     #'/'
+        sta     buf,x
+        stx     buf
+
+do_suffix:
+        lda     selected_window_index ; volume?
+        bne     :+                    ; nope
+
+        ;; Load up the total volume size...
+        ldax    get_file_info_params5::aux_type
+        jmp     compute_suffix
+
+        ;; Load up the file size
+:       ldax    get_file_info_params5::blocks_used
+
+        ;; Compute " 12345 Blocks" (either result or suffix)
+compute_suffix:
+        jsr     JT_SIZE_STRING
+
+        ;; Append latest to buffer
+        ldx     buf
+        ldy     #1
+:       inx
+        lda     text_buffer2::data-1,y
+        sta     buf,x
+        cpy     text_buffer2::length
+        beq     :+
+        iny
+        bne     :-
+:       stx     buf
+
+        ;; TODO: Compose directly into path_buf4.
+        ldx     buf
+:       lda     buf,x
         sta     path_buf4,x
         dex
-        bpl     L94A9
-        lda     #<path_buf4
-        sta     L92E4
-        lda     #>path_buf4
-        sta     L92E4+1
+        bpl     :-
+
+        copy16  #path_buf4, L92E4
         jsr     launch_get_info_dialog
+
         lda     #$04
         sta     L92E3
         copy16  get_file_info_params5::create_date, date
@@ -9913,6 +9894,7 @@ L94A9:  lda     $220,x
         jsr     JT_DATE_STRING
         copy16  #text_buffer2::length, L92E4
         jsr     launch_get_info_dialog
+
         lda     #$06
         sta     L92E3
         lda     selected_window_index
@@ -9946,28 +9928,7 @@ L953A:  PASCAL_STRING " VOL"
 
 ;;; ============================================================
 
-.proc remove_leading_spaces
-        ;; Count leading spaces
-        ldx     #0
-:       lda     text_buffer2::data,x
-        cmp     #' '
-        bne     counted
-        inx
-        bne     :-
-
-        ;; Shift string down
-counted:
-        ldy     #0
-        dex
-:       lda     text_buffer2::data,x
-        sta     text_buffer2::data,y
-        iny
-        inx
-        cpx     text_buffer2::length
-        bne     :-
-        sty     text_buffer2::length
-        rts
-.endproc
+        PAD_TO $9569            ; Maintain previous addresses
 
 ;;; ============================================================
 
