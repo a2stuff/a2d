@@ -7692,11 +7692,9 @@ value:  .word   0
 
 .endproc
 
-        PAD_TO $830F            ; Maintain previous addresses
-
 ;;; ============================================================
 
-compose_date_string:
+.proc compose_date_string
         ldx     #21
         lda     #' '
 :       sta     text_buffer2::data-1,x
@@ -7707,18 +7705,32 @@ compose_date_string:
         copy16  #text_buffer2::length, $8
         lda     date            ; any bits set?
         ora     date+1
-        bne     prep_date_strings
+        bne     append_date_strings
         sta     month           ; 0 is "no date" string
-        jmp     prep_month_string
+        jmp     append_month_string
 
-prep_date_strings:
+append_date_strings:
         ;; TODO: Handle ProDOS 2.5 extended dates
 
+        ;; Year
+        lda     #0
+        sta     year+1
         lda     date+1
-        and     #$FE            ; extract year
+        and     #%11111110
         lsr     a
         sta     year
-        lda     date+1          ; extract month
+        ;; Per ProDOS Tech Note #28, 40-99 is 1940-1999, 0-39 is 2000-2039
+        ;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.28.html
+        cmp     #40             ; 40-99 (and also 100-127, though non-conforming)
+        bcs     y1900
+
+y2000:  add16   #2000, year, year
+        jmp     :+
+
+y1900:  add16   #1900, year, year
+
+        ;; Month
+:       lda     date+1
         ror     a
         lda     date
         ror     a
@@ -7727,51 +7739,38 @@ prep_date_strings:
         lsr     a
         lsr     a
         sta     month
-        lda     date            ; extract day
-        and     #$1F
+
+        ;; Day
+        lda     date
+        and     #%00011111
         sta     day
 
-        jsr     prep_month_string
-        jsr     prep_day_string
-        jmp     prep_year_string
+        jsr     append_month_string
+        addr_call concatenate_date_part, str_space
+        jsr     append_day_string
+        addr_call concatenate_date_part, str_space
+        jmp     append_year_string
 
-.proc prep_day_string
+.proc append_day_string
         lda     day
         ldx     #0
         jsr     int_to_string
-        ldax    #str_from_int
 
-
-        addr_call concatenate_date_part, str_from_int
-        addr_jump concatenate_date_part, str_space
+        addr_jump concatenate_date_part, str_from_int
 .endproc
 
-.proc prep_month_string
+.proc append_month_string
         lda     month
         asl     a
         tay
         lda     month_table+1,y
         tax
         lda     month_table,y
+
         jmp     concatenate_date_part
 .endproc
 
-.proc prep_year_string
-        ;; On input, only low byte of year is set (0...99)
-        lda     #0
-        sta     year+1
-        lda     year
-        cmp     #100            ; if > 100, assume 1900+n
-        bcs     y1900
-        cmp     #40
-        bcs     y1900
-
-y2000:  add16   #2000, year, year
-        jmp     stringify
-
-y1900:  add16   #1900, year, year
-
-stringify:
+.proc append_year_string
         ldax    year
         jsr     int_to_string
         addr_jump concatenate_date_part, str_from_int
@@ -7787,22 +7786,23 @@ month_table:
         .addr   str_jul,str_aug,str_sep,str_oct,str_nov,str_dec
 
 str_no_date:
-        PASCAL_STRING "(no date)"
+        PASCAL_STRING "no date"
 
-str_jan:PASCAL_STRING "January "
-str_feb:PASCAL_STRING "February "
-str_mar:PASCAL_STRING "March "
-str_apr:PASCAL_STRING "April "
-str_may:PASCAL_STRING "May "
-str_jun:PASCAL_STRING "June "
-str_jul:PASCAL_STRING "July "
-str_aug:PASCAL_STRING "August "
-str_sep:PASCAL_STRING "September "
-str_oct:PASCAL_STRING "October "
-str_nov:PASCAL_STRING "November "
-str_dec:PASCAL_STRING "December "
+str_jan:PASCAL_STRING "January"
+str_feb:PASCAL_STRING "February"
+str_mar:PASCAL_STRING "March"
+str_apr:PASCAL_STRING "April"
+str_may:PASCAL_STRING "May"
+str_jun:PASCAL_STRING "June"
+str_jul:PASCAL_STRING "July"
+str_aug:PASCAL_STRING "August"
+str_sep:PASCAL_STRING "September"
+str_oct:PASCAL_STRING "October"
+str_nov:PASCAL_STRING "November"
+str_dec:PASCAL_STRING "December"
 
-str_space:      PASCAL_STRING " "
+str_space:
+        PASCAL_STRING " "
 
 .proc concatenate_date_part
         stax    $06
@@ -7829,6 +7829,8 @@ str_space:      PASCAL_STRING " "
 tmp:    .byte   0
 concat_len:
         .byte   0
+.endproc
+
 .endproc
 
         PAD_TO  $84D1           ; Maintain previous addresses
