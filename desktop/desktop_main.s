@@ -3859,7 +3859,7 @@ L5E77:  .byte   0
         bpl     :-
 
         pla
-        jsr     L7054
+        jsr     open_directory
         jsr     cmd_view_by_icon::entry
         jsr     DESKTOP_COPY_FROM_BUF
         lda     active_window_id
@@ -4984,7 +4984,7 @@ L6AF6:  cmp     LE1F1+1,x
         beq     L6B01
         dex
         bpl     L6AF6
-        jsr     L7054
+        jsr     open_directory
 L6B01:  MGTK_RELAY_CALL MGTK::SelectWindow, cached_window_id
         lda     cached_window_id
         sta     active_window_id
@@ -5621,7 +5621,22 @@ L704C:  .res    8
 
 ;;; ============================================================
 
-.proc L7054
+.struct FileRecord
+        name                    .res 16
+        file_type               .byte
+        blocks                  .word
+        creation_date           .word
+        creation_time           .word
+        modification_date       .word
+        modification_time       .word
+        access                  .byte
+        header_pointer          .word
+        reserved                .word ; ???
+.endstruct
+
+;;; ============================================================
+
+.proc open_directory
         jmp     start
 
         DEFINE_OPEN_PARAMS open_params, vol_info_path_buf, $800
@@ -5638,7 +5653,9 @@ vol_info_path_buf:
 vol_kb_free:  .word   0
 vol_kb_used:  .word   0
 
-L70BF:  .byte   $00
+entry_length:
+        .byte   0
+
 L70C0:  .byte   $00
 L70C1:  .byte   $00
 L70C2:  .byte   $00
@@ -5661,8 +5678,8 @@ L70CD:  lda     LE1B0,x
         jsr     L72E2
 
         ldx     #0
-:       lda     $0C23,x         ; ???
-        sta     L70BF,x
+:       lda     $0C00+SubdirectoryHeader::entry_length,x
+        sta     entry_length,x
         inx
         cpx     #4
         bne     :-
@@ -5699,34 +5716,50 @@ L7161:  jsr     show_warning_dialog_num
         txs
         rts
 
-L7169:  copy16  L485F, $06
+        record_ptr := $06
+
+L7169:  copy16  L485F, record_ptr
         lda     LE1F1
         asl     a
         tax
-        copy16  $06, LE202,x
+        copy16  record_ptr, LE202,x
         ldx     LE1F1
         lda     L72A7
         sta     LE1F1+1,x
         inc     LE1F1
         lda     L70C1
+
+        ;; Store entry count
         pha
         lda     LCBANK2
         lda     LCBANK2
         ldy     #$00
         pla
-        sta     ($06),y
+        sta     (record_ptr),y
         lda     LCBANK1
         lda     LCBANK1
+
         lda     #$FF
         sta     L70C4
         lda     #$00
         sta     L70C3
-        copy16  #$0C04, $08
-        inc     $06
-        lda     $06
-        bne     L71BD
-        inc     $06+1
-L71BD:  inc     L70C4
+
+        entry_ptr := $08
+
+        copy16  #$0C00 + SubdirectoryHeader::storage_type_name_length, entry_ptr
+
+        ;; Advance past entry count
+        inc     record_ptr
+        lda     record_ptr
+        bne     do_entry
+        inc     record_ptr+1
+
+        ;; Record is temporarily constructed at $1F00 then copied into place.
+        record := $1F00
+        record_size := $20
+
+do_entry:
+        inc     L70C4
         lda     L70C4
         cmp     L70C1
         bne     L71CB
@@ -5736,18 +5769,19 @@ L71CB:  inc     L70C3
         lda     L70C3
         cmp     L70C0
         beq     L71E7
-        add16_8 $08, L70BF, $08
+        add16_8 entry_ptr, entry_length, entry_ptr
         jmp     L71F7
 
 L71E7:  lda     #$00
         sta     L70C3
-        copy16  #$0C04, $08
+        copy16  #$0C04, entry_ptr
         jsr     do_read
+
 L71F7:  ldx     #$00
         ldy     #$00
-        lda     ($08),y
+        lda     (entry_ptr),y
         and     #$0F
-        sta     $1F00,x
+        sta     record,x
         bne     L7223
         inc     L70C3
         lda     L70C3
@@ -5755,70 +5789,86 @@ L71F7:  ldx     #$00
         bne     L7212
         jmp     L71E7
 
-L7212:  add16_8 $08, L70BF, $08
+L7212:  add16_8 entry_ptr, entry_length, entry_ptr
         jmp     L71F7
 
 L7223:  iny
         inx
-L7225:  lda     ($08),y
-        sta     $1F00,x
+
+        ;; See FileRecord struct for record structure
+
+        ;; name, file_type
+:       lda     (entry_ptr),y
+        sta     record,x
         iny
         inx
-        cpx     #$11
-        bne     L7225
-        ldy     #$13
-        lda     ($08),y
-        sta     $1F00,x
+        cpx     #FileEntry::file_type+1 ; name and type
+        bne     :-
+
+        ;; blocks
+        ldy     #FileEntry::blocks_used
+        lda     (entry_ptr),y
+        sta     record,x
         inx
         iny
-        lda     ($08),y
-        sta     $1F00,x
-        ldy     #$18
+        lda     (entry_ptr),y
+        sta     record,x
+
+        ;; creation date/time
+        ldy     #FileEntry::creation_date
         inx
-L7241:  lda     ($08),y
-        sta     $1F00,x
-        inx
-        iny
-        cpy     #$1C
-        bne     L7241
-        ldy     #$21
-L724E:  lda     ($08),y
-        sta     $1F00,x
+:       lda     (entry_ptr),y
+        sta     record,x
         inx
         iny
-        cpy     #$25
-        bne     L724E
-        ldy     #$1E
-        lda     ($08),y
-        sta     $1F00,x
-        inx
-        ldy     #$25
-        lda     ($08),y
-        sta     $1F00,x
+        cpy     #FileEntry::creation_date+4
+        bne     :-
+
+        ;; modification date/time
+        ldy     #FileEntry::mod_date
+:       lda     (entry_ptr),y
+        sta     record,x
         inx
         iny
-        lda     ($08),y
-        sta     $1F00,x
+        cpy     #FileEntry::mod_date+4
+        bne     :-
+
+        ;; access
+        ldy     #FileEntry::access
+        lda     (entry_ptr),y
+        sta     record,x
+        inx
+
+        ;; header pointer
+        ldy     #FileEntry::header_pointer
+        lda     (entry_ptr),y
+        sta     record,x
+        inx
+        iny
+        lda     (entry_ptr),y
+        sta     record,x
+
+        ;; Copy entry composed at $1F00 to buffer in Aux LC Bank 2
         lda     LCBANK2
         lda     LCBANK2
-        ldx     #$1F
-        ldy     #$1F
-L7279:  lda     $1F00,x
-        sta     ($06),y
+        ldx     #record_size-1
+        ldy     #record_size-1
+:       lda     record,x
+        sta     (record_ptr),y
         dex
         dey
-        bpl     L7279
+        bpl     :-
         lda     LCBANK1
         lda     LCBANK1
-        lda     #$20
+        lda     #record_size
         clc
-        adc     $06
-        sta     $06
+        adc     record_ptr
+        sta     record_ptr
         bcc     L7293
-        inc     $06+1
-L7293:  jmp     L71BD
+        inc     record_ptr+1
+L7293:  jmp     do_entry
 
-L7296:  copy16  $06, L485F
+L7296:  copy16  record_ptr, L485F
         jsr     do_close
         jsr     pop_zp_addrs
         rts
@@ -5879,10 +5929,10 @@ get_vol_free_used:  MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params4
         inc16   vol_kb_used
 :       return  #0
 .endproc
-        vol_kb_free := L7054::vol_kb_free
-        vol_kb_used := L7054::vol_kb_used
-        vol_info_path_buf := L7054::vol_info_path_buf
-        get_vol_free_used := L7054::get_vol_free_used
+        vol_kb_free := open_directory::vol_kb_free
+        vol_kb_used := open_directory::vol_kb_used
+        vol_info_path_buf := open_directory::vol_info_path_buf
+        get_vol_free_used := open_directory::get_vol_free_used
 
 ;;; ============================================================
 
@@ -6154,7 +6204,9 @@ L75A3:  sta     ($06),y
         sta     ($06),y
         jsr     pop_zp_addrs
         lda     icon_params2
-        jsr     L7054
+
+        jsr     open_directory
+
         lda     icon_params2
         jsr     icon_entry_lookup
         stax    $06
@@ -6988,6 +7040,7 @@ L7DE4:  lda     L0800
         lda     ($06),y
         and     #$7F
         sta     ($06),y
+
         ldy     #$17
         lda     ($06),y
         bne     L7E06
@@ -7025,7 +7078,7 @@ L7E2A:  sta     $0808,x
 L7E38:  lda     $0805
         cmp     $0803
         bne     L7E43
-        jmp     L80F5
+        jmp     finish_view_change
 
 L7E43:  jsr     ptr_calc
         ldy     #$00
@@ -7092,42 +7145,57 @@ check_date:
         beq     :+
         jmp     check_size
 
+        ;; Lists: buffer in $D000 aux bank 2
+        ;;  byte $00 - list of items
+        ;;  items... (32 bytes each)
+        ;;    $00-$0F - name (length/chars)
+        ;;    $10     - file type
+
+
 :
 .scope
+        ptr := $06
+        date    := $0808
+
+
         lda     LCBANK2
         lda     LCBANK2
         lda     #$00
-        sta     $0808
-        sta     $0809
+        sta     date
+        sta     date+1
         sta     $0805
         sta     L0800
 L7EDC:  lda     $0805
         cmp     $0803
         bne     L7EE7
-        jmp     L80F5
+        jmp     finish_view_change
 
 L7EE7:  jsr     ptr_calc
         ldy     #$00
-        lda     ($06),y
+        lda     (ptr),y
         bmi     L7F1B
-        ldy     #$18
-        lda     ($06),y
-        cmp     $0809
+
+        ;; TODO: Proper ProDOS Y2K date handling
+        ldy     #FileRecord::modification_date+1
+        lda     (ptr),y
+        cmp     date+1
         beq     L7EFE
         bcs     L7F08
         jmp     L7F1B
 
-L7EFE:  dey
-        lda     ($06),y
-        cmp     $0808
+L7EFE:  dey                     ; check lo byte
+        lda     (ptr),y
+        cmp     date
         beq     L7F1B
         bcc     L7F1B
-L7F08:  ldy     #$18
-        lda     ($06),y
-        sta     $0809
+
+L7F08:  ldy     #FileRecord::modification_date+1
+        lda     (ptr),y
+        sta     date+1
         dey
-        lda     ($06),y
-        sta     $0808
+        lda     (ptr),y
+        sta     date
+
         lda     L0800
         sta     $0806
 L7F1B:  inc     L0800
@@ -7141,12 +7209,12 @@ L7F29:  inc     $0805
         sta     L0800
         jsr     ptr_calc
         ldy     #$00
-        lda     ($06),y
+        lda     (ptr),y
         ora     #$80
-        sta     ($06),y
+        sta     (ptr),y
         lda     #$00
-        sta     $0808
-        sta     $0809
+        sta     date
+        sta     date+1
         ldx     $0805
         dex
         ldy     $0806
@@ -7166,33 +7234,38 @@ check_size:
 
 :
 .scope
+        size := $0808
+        ptr := $06
+
         lda     LCBANK2
         lda     LCBANK2
         lda     #$00
-        sta     $0808
-        sta     $0809
+        sta     size
+        sta     size+1
         sta     $0805
         sta     L0800
 L7F73:  lda     $0805
         cmp     $0803
         bne     L7F7E
-        jmp     L80F5
+        jmp     finish_view_change
 
 L7F7E:  jsr     ptr_calc
         ldy     #$00
-        lda     ($06),y
+        lda     (ptr),y
         bmi     L7FAD
-        ldy     #$12
-        lda     ($06),y
-        cmp     $0809
+
+        ldy     #FileRecord::blocks+1
+        lda     (ptr),y
+        cmp     size+1
         beq     L7F92
         bcs     L7F9C
-L7F92:  dey
-        lda     ($06),y
-        cmp     $0808
+
+L7F92:  dey                     ; check lo byte
+        lda     (ptr),y
+        cmp     size
         beq     L7F9C
         bcc     L7FAD
-L7F9C:  copy16in ($06),y, $0808
+L7F9C:  copy16in (ptr),y, size
         lda     L0800
         sta     $0806
 L7FAD:  inc     L0800
@@ -7206,12 +7279,12 @@ L7FBB:  inc     $0805
         sta     L0800
         jsr     ptr_calc
         ldy     #$00
-        lda     ($06),y
+        lda     (ptr),y
         ora     #$80
-        sta     ($06),y
+        sta     (ptr),y
         lda     #$00
-        sta     $0808
-        sta     $0809
+        sta     size
+        sta     size+1
         ldx     $0805
         dex
         ldy     $0806
@@ -7231,7 +7304,7 @@ L7FBB:  inc     $0805
         copy16  #231, pos_col_date::xcoord
         lda     LCBANK2
         lda     LCBANK2
-        jmp     L80F5
+        jmp     finish_view_change
 .endscope
 
         ;; --------------------------------------------------
@@ -7262,13 +7335,13 @@ L8036:  lda     ($08),y
 L8051:  lda     $0805
         cmp     $0803
         bne     L805C
-        jmp     L80F5
+        jmp     finish_view_change
 
 L805C:  jsr     ptr_calc
         ldy     #$00
         lda     ($06),y
         bmi     L807E
-        ldy     #$10
+        ldy     #FileRecord::file_type
         lda     ($06),y
         ldx     $0807
         cpx     #$00
@@ -7344,7 +7417,7 @@ L809E:  inc     $0805
 ;;; --------------------------------------------------
 ;;; ???
 
-.proc L80F5
+.proc finish_view_change
         ptr := $06
 
         lda     #$00
