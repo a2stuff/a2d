@@ -7000,6 +7000,12 @@ L7D9A:  .word   0
 .proc sort_records
         ptr := $06
 
+record_num      := $800
+list_start_ptr  := $801
+num_records     := $803
+
+        ;; $804 = scratch byte
+
         jmp     start
 
 start:  ldx     cached_window_id
@@ -7020,28 +7026,28 @@ found:  txa
 
         lda     LE202,x         ; Ptr points at start of record
         sta     ptr
-        sta     $0801
+        sta     list_start_ptr
         lda     LE202+1,x
         sta     ptr+1
-        sta     $0802
+        sta     list_start_ptr+1
 
         lda     LCBANK2         ; Start copying records
         lda     LCBANK2
 
         lda     #0              ; Number copied
-        sta     L0800
+        sta     record_num
         tay
         lda     (ptr),y         ; Number to copy
-        sta     $0803
+        sta     num_records
 
         inc     ptr             ; Point past number
-        inc     $0801
+        inc     list_start_ptr
         bne     loop
         inc     ptr+1
-        inc     $0802
+        inc     list_start_ptr+1
 
-loop:   lda     L0800
-        cmp     $0803
+loop:   lda     record_num
+        cmp     num_records
         beq     break
         jsr     ptr_calc
 
@@ -7059,7 +7065,7 @@ loop:   lda     L0800
         lda     #$01            ; if no mod date, set hi to 1 ???
         sta     (ptr),y
 
-next:   inc     L0800
+next:   inc     record_num
         jmp     loop
 
 break:  lda     LCBANK1         ; Done copying records
@@ -7079,52 +7085,57 @@ break:  lda     LCBANK1         ; Done copying records
         ;; By Name
 .scope
         name := $807
+        name_size = $F
 
         lda     LCBANK2
         lda     LCBANK2
 
-        ldax    #$0F5A
-:       sta     $0808,x
+        ;; Set up highest value ("ZZZZZZZZZZZZZZZ")
+        lda     #'Z'
+        ldx     #name_size
+:       sta     name+1,x
         dex
         bpl     :-
 
         lda     #0
         sta     $0805
-        sta     L0800
+        sta     record_num
 
 loop:   lda     $0805
-        cmp     $0803
-        bne     L7E43
+        cmp     num_records
+        bne     iloop
         jmp     finish_view_change
 
-L7E43:  jsr     ptr_calc
+iloop:  jsr     ptr_calc
 
         ;; Check record for mark
         ldy     #0
         lda     (ptr),y
-        bmi     L7E82
+        bmi     inext
 
-        and     #$0F
+        ;; Compare names
+        and     #$0F            ; mask off name length
         sta     $0804
         ldy     #1
-L7E53:  lda     (ptr),y
+:       lda     (ptr),y
         cmp     name,y
-        beq     L7E5F
-        bcs     L7E82
-        jmp     L7E67
+        beq     ch_eq
+        bcs     inext
+        jmp     ch_lt
 
-L7E5F:  iny
+ch_eq:  iny
         cpy     #$10
-        bne     L7E53
-        jmp     L7E82
+        bne     :-
+        jmp     inext
 
-L7E67:  lda     L0800
+ch_lt:  lda     record_num
         sta     $0806
-        ldx     #$0F
-        lda     #$20
-L7E71:  sta     $0808,x
+
+        ldx     #name_size
+        lda     #' '
+:       sta     name+1,x
         dex
-        bpl     L7E71
+        bpl     :-
 
         ldy     $0804
 :       lda     (ptr),y
@@ -7132,15 +7143,15 @@ L7E71:  sta     $0808,x
         dey
         bne     :-
 
-L7E82:  inc     L0800
-        lda     L0800
-        cmp     $0803
-        beq     L7E90
-        jmp     L7E43
+inext:  inc     record_num
+        lda     record_num
+        cmp     num_records
+        beq     :+
+        jmp     iloop
 
-L7E90:  inc     $0805
+:       inc     $0805
         lda     $0806
-        sta     L0800
+        sta     record_num
         jsr     ptr_calc
 
         ;; Mark record
@@ -7150,16 +7161,18 @@ L7E90:  inc     $0805
         sta     (ptr),y
 
         ldax    #$0F5A
-L7EA8:  sta     $0808,x
+:       sta     $0808,x
         dex
-        bpl     L7EA8
+        bpl     :-
+
         ldx     $0805
         dex
         ldy     $0806
         iny
         jsr     L812B
-        lda     #$00
-        sta     L0800
+
+        lda     #0
+        sta     record_num
         jmp     loop
 .endscope
 
@@ -7182,52 +7195,52 @@ check_date:
         sta     date
         sta     date+1
         sta     $0805
-        sta     L0800
+        sta     record_num
 
 loop:   lda     $0805
-        cmp     $0803
-        bne     L7EE7
+        cmp     num_records
+        bne     iloop
         jmp     finish_view_change
 
-L7EE7:  jsr     ptr_calc
+iloop:  jsr     ptr_calc
 
         ;; Check record for mark
         ldy     #0
         lda     (ptr),y
-        bmi     L7F1B
+        bmi     inext
 
+        ;; Compare dates
         ;; TODO: Proper ProDOS Y2K date handling
         ldy     #FileRecord::modification_date+1
         lda     (ptr),y
-        cmp     date+1
-        beq     L7EFE
-        bcs     L7F08
-        jmp     L7F1B
-
-L7EFE:  dey                     ; check lo byte
+        cmp     date+1          ; hi byte
+        beq     :+
+        bcs     gt
+        jmp     inext
+:       dey
         lda     (ptr),y
-        cmp     date
-        beq     L7F1B
-        bcc     L7F1B
+        cmp     date            ; lo byte
+        beq     inext
+        bcc     inext
 
-L7F08:  ldy     #FileRecord::modification_date+1
+gt:     ldy     #FileRecord::modification_date+1
         lda     (ptr),y
         sta     date+1
         dey
         lda     (ptr),y
         sta     date
 
-        lda     L0800
+        lda     record_num
         sta     $0806
-L7F1B:  inc     L0800
-        lda     L0800
-        cmp     $0803
-        beq     L7F29
-        jmp     L7EE7
+inext:  inc     record_num
+        lda     record_num
+        cmp     num_records
+        beq     next
+        jmp     iloop
 
-L7F29:  inc     $0805
+next:   inc     $0805
         lda     $0806
-        sta     L0800
+        sta     record_num
         jsr     ptr_calc
 
         ;; Mark record
@@ -7239,13 +7252,15 @@ L7F29:  inc     $0805
         lda     #$00
         sta     date
         sta     date+1
+
         ldx     $0805
         dex
         ldy     $0806
         iny
         jsr     L812B
+
         lda     #$00
-        sta     L0800
+        sta     record_num
         jmp     loop
 .endscope
 
@@ -7268,43 +7283,44 @@ check_size:
         sta     size
         sta     size+1
         sta     $0805
-        sta     L0800
+        sta     record_num
 
 loop:   lda     $0805
-        cmp     $0803
-        bne     L7F7E
+        cmp     num_records
+        bne     iloop
         jmp     finish_view_change
 
-L7F7E:  jsr     ptr_calc
+iloop:  jsr     ptr_calc
 
         ;; Check record for mark
         ldy     #0
         lda     (ptr),y
-        bmi     L7FAD
+        bmi     inext
 
         ldy     #FileRecord::blocks+1
         lda     (ptr),y
-        cmp     size+1
-        beq     L7F92
+        cmp     size+1          ; hi byte
+        beq     :+
         bcs     L7F9C
-
-L7F92:  dey                     ; check lo byte
+:       dey
         lda     (ptr),y
-        cmp     size
+        cmp     size            ; lo byte
         beq     L7F9C
-        bcc     L7FAD
-L7F9C:  copy16in (ptr),y, size
-        lda     L0800
-        sta     $0806
-L7FAD:  inc     L0800
-        lda     L0800
-        cmp     $0803
-        beq     L7FBB
-        jmp     L7F7E
+        bcc     inext
 
-L7FBB:  inc     $0805
+L7F9C:  copy16in (ptr),y, size
+        lda     record_num
+        sta     $0806
+
+inext:  inc     record_num
+        lda     record_num
+        cmp     num_records
+        beq     next
+        jmp     iloop
+
+next:   inc     $0805
         lda     $0806
-        sta     L0800
+        sta     record_num
         jsr     ptr_calc
 
         ;; Mark record
@@ -7313,16 +7329,18 @@ L7FBB:  inc     $0805
         ora     #$80
         sta     (ptr),y
 
-        lda     #$00
+        lda     #0
         sta     size
         sta     size+1
+
         ldx     $0805
         dex
         ldy     $0806
         iny
         jsr     L812B
-        lda     #$00
-        sta     L0800
+
+        lda     #0
+        sta     record_num
         jmp     loop
 
         lda     LCBANK1
@@ -7350,13 +7368,16 @@ check_type:
 :
         ;; By Type
 .scope
+        type_table_copy := $807
+
+        ;; Copy type_table (including size) to $807
         copy16  type_table_addr, $08
         ldy     #0
         lda     ($08),y
-        sta     $0807
-        tay
+        sta     type_table_copy
+        tay                     ; num entries
 :       lda     ($08),y
-        sta     $0807,y
+        sta     type_table_copy,y
         dey
         bne     :-
 
@@ -7365,50 +7386,51 @@ check_type:
 
         lda     #$00
         sta     $0805
-        sta     L0800
+        sta     record_num
         lda     #$FF
         sta     $0806
 
 loop:   lda     $0805
-        cmp     $0803
-        bne     L805C
+        cmp     num_records
+        bne     iloop
         jmp     finish_view_change
 
-L805C:  jsr     ptr_calc
+iloop:  jsr     ptr_calc
 
         ;; Check record for mark
         ldy     #0
         lda     (ptr),y
-        bmi     L807E
+        bmi     inext
 
+        ;; Compare types
         ldy     #FileRecord::file_type
         lda     (ptr),y
-        ldx     $0807
-        cpx     #$00
-        beq     L8075
-        cmp     $0808,x
-        bne     L807E
-L8075:  lda     L0800
+        ldx     type_table_copy
+        cpx     #0
+        beq     :+
+        cmp     type_table_copy+1,x
+        bne     inext
+:       lda     record_num
         sta     $0806
         jmp     L809E
 
-L807E:  inc     L0800
-        lda     L0800
-        cmp     $0803
-        beq     L808C
-        jmp     L805C
+inext:  inc     record_num
+        lda     record_num
+        cmp     num_records
+        beq     next
+        jmp     iloop
 
-L808C:  lda     $0806
+next:   lda     $0806
         cmp     #$FF
         bne     L809E
-        dec     $0807
-        lda     #$00
-        sta     L0800
-        jmp     L805C
+        dec     type_table_copy ; size of table
+        lda     #0
+        sta     record_num
+        jmp     iloop
 
 L809E:  inc     $0805
         lda     $0806
-        sta     L0800
+        sta     record_num
         jsr     ptr_calc
 
         ;; Mark record
@@ -7422,38 +7444,42 @@ L809E:  inc     $0805
         ldy     $0806
         iny
         jsr     L812B
+
         lda     #$00
-        sta     L0800
+        sta     record_num
         lda     #$FF
         sta     $0806
         jmp     loop
 .endscope
 
 ;;; --------------------------------------------------
-;;; ptr = $801/$802 + ($800 * .sizeof(FileRecord))
+;;; ptr = list_start_ptr + ($800 * .sizeof(FileRecord))
 
 .proc ptr_calc
         ptr := $6
+        hi := $0804
 
         lda     #0
-        sta     $0804
-        lda     L0800
+        sta     hi
+        lda     record_num
         asl     a
-        rol     $0804
+        rol     hi
         asl     a
-        rol     $0804
+        rol     hi
         asl     a
-        rol     $0804
+        rol     hi
         asl     a
-        rol     $0804
+        rol     hi
         asl     a
-        rol     $0804
+        rol     hi
+
         clc
-        adc     $0801
+        adc     list_start_ptr
         sta     ptr
-        lda     $0801+1
-        adc     $0804
+        lda     list_start_ptr+1
+        adc     hi
         sta     ptr+1
+
         rts
 .endproc
 
@@ -7464,10 +7490,10 @@ L809E:  inc     $0805
         ptr := $06
 
         lda     #$00
-        sta     L0800
+        sta     record_num
 
-loop:   lda     L0800
-        cmp     $0803
+loop:   lda     record_num
+        cmp     num_records
         beq     done
         jsr     ptr_calc
         ldy     #$00
@@ -7483,7 +7509,7 @@ loop:   lda     L0800
         bne     :+
         lda     #$00
         sta     (ptr),y
-:       inc     L0800
+:       inc     record_num
         jmp     loop
 
 done:   lda     LCBANK1
@@ -8871,7 +8897,7 @@ open:   ldy     #$00
         lda     ($06),y
         clc
         adc     #$07
-        sta     $0802
+        sta     $0801+1
         sta     $0806
         iny
         lda     ($06),y
