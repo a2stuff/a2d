@@ -7003,8 +7003,8 @@ L7D9A:  .word   0
 record_num      := $800
 list_start_ptr  := $801
 num_records     := $803
-
         ;; $804 = scratch byte
+index           := $805
 
         jmp     start
 
@@ -7083,9 +7083,12 @@ break:  lda     LCBANK1         ; Done copying records
 
 :
         ;; By Name
+
+        ;; Sorted in increasing lexicographical order
 .scope
         name := $807
         name_size = $F
+        name_len  := $804
 
         lda     LCBANK2
         lda     LCBANK2
@@ -7098,10 +7101,10 @@ break:  lda     LCBANK1         ; Done copying records
         bpl     :-
 
         lda     #0
-        sta     $0805
+        sta     index
         sta     record_num
 
-loop:   lda     $0805
+loop:   lda     index
         cmp     num_records
         bne     iloop
         jmp     finish_view_change
@@ -7115,20 +7118,20 @@ iloop:  jsr     ptr_calc
 
         ;; Compare names
         and     #$0F            ; mask off name length
-        sta     $0804
+        sta     name_len
         ldy     #1
-:       lda     (ptr),y
+cloop:  lda     (ptr),y
         cmp     name,y
-        beq     ch_eq
+        beq     :+
         bcs     inext
-        jmp     ch_lt
-
-ch_eq:  iny
+        jmp     place
+:       iny
         cpy     #$10
-        bne     :-
+        bne     cloop
         jmp     inext
 
-ch_lt:  lda     record_num
+        ;; if less than
+place:  lda     record_num
         sta     $0806
 
         ldx     #name_size
@@ -7137,7 +7140,7 @@ ch_lt:  lda     record_num
         dex
         bpl     :-
 
-        ldy     $0804
+        ldy     name_len
 :       lda     (ptr),y
         sta     name,y
         dey
@@ -7149,7 +7152,7 @@ inext:  inc     record_num
         beq     :+
         jmp     iloop
 
-:       inc     $0805
+:       inc     index
         lda     $0806
         sta     record_num
         jsr     ptr_calc
@@ -7165,7 +7168,7 @@ inext:  inc     record_num
         dex
         bpl     :-
 
-        ldx     $0805
+        ldx     index
         dex
         ldy     $0806
         iny
@@ -7185,6 +7188,8 @@ check_date:
 
 :
         ;; By Date
+
+        ;; Sorted by decreasing date
 .scope
         date    := $0808
 
@@ -7194,10 +7199,10 @@ check_date:
         lda     #$00
         sta     date
         sta     date+1
-        sta     $0805
+        sta     index
         sta     record_num
 
-loop:   lda     $0805
+loop:   lda     index
         cmp     num_records
         bne     iloop
         jmp     finish_view_change
@@ -7215,7 +7220,7 @@ iloop:  jsr     ptr_calc
         lda     (ptr),y
         cmp     date+1          ; hi byte
         beq     :+
-        bcs     gt
+        bcs     place
         jmp     inext
 :       dey
         lda     (ptr),y
@@ -7223,7 +7228,8 @@ iloop:  jsr     ptr_calc
         beq     inext
         bcc     inext
 
-gt:     ldy     #FileRecord::modification_date+1
+        ;; if greater than
+place:  ldy     #FileRecord::modification_date+1
         lda     (ptr),y
         sta     date+1
         dey
@@ -7238,7 +7244,7 @@ inext:  inc     record_num
         beq     next
         jmp     iloop
 
-next:   inc     $0805
+next:   inc     index
         lda     $0806
         sta     record_num
         jsr     ptr_calc
@@ -7253,7 +7259,7 @@ next:   inc     $0805
         sta     date
         sta     date+1
 
-        ldx     $0805
+        ldx     index
         dex
         ldy     $0806
         iny
@@ -7273,6 +7279,8 @@ check_size:
 
 :
         ;; By Size
+
+        ;; Sorted by decreasing size
 .scope
         size := $0808
 
@@ -7282,10 +7290,10 @@ check_size:
         lda     #0
         sta     size
         sta     size+1
-        sta     $0805
+        sta     index
         sta     record_num
 
-loop:   lda     $0805
+loop:   lda     index
         cmp     num_records
         bne     iloop
         jmp     finish_view_change
@@ -7301,14 +7309,15 @@ iloop:  jsr     ptr_calc
         lda     (ptr),y
         cmp     size+1          ; hi byte
         beq     :+
-        bcs     L7F9C
+        bcs     place
 :       dey
         lda     (ptr),y
         cmp     size            ; lo byte
-        beq     L7F9C
+        beq     place
         bcc     inext
 
-L7F9C:  copy16in (ptr),y, size
+        ;; if greater than
+place:  copy16in (ptr),y, size
         lda     record_num
         sta     $0806
 
@@ -7318,7 +7327,7 @@ inext:  inc     record_num
         beq     next
         jmp     iloop
 
-next:   inc     $0805
+next:   inc     index
         lda     $0806
         sta     record_num
         jsr     ptr_calc
@@ -7333,7 +7342,7 @@ next:   inc     $0805
         sta     size
         sta     size+1
 
-        ldx     $0805
+        ldx     index
         dex
         ldy     $0806
         iny
@@ -7367,6 +7376,8 @@ check_type:
 
 :
         ;; By Type
+
+        ;; Types are ordered by type_table
 .scope
         type_table_copy := $807
 
@@ -7384,13 +7395,13 @@ check_type:
         lda     LCBANK2
         lda     LCBANK2
 
-        lda     #$00
-        sta     $0805
+        lda     #0
+        sta     index
         sta     record_num
         lda     #$FF
         sta     $0806
 
-loop:   lda     $0805
+loop:   lda     index
         cmp     num_records
         bne     iloop
         jmp     finish_view_change
@@ -7407,10 +7418,11 @@ iloop:  jsr     ptr_calc
         lda     (ptr),y
         ldx     type_table_copy
         cpx     #0
-        beq     :+
+        beq     place
         cmp     type_table_copy+1,x
         bne     inext
-:       lda     record_num
+
+place:  lda     record_num
         sta     $0806
         jmp     L809E
 
@@ -7428,7 +7440,7 @@ next:   lda     $0806
         sta     record_num
         jmp     iloop
 
-L809E:  inc     $0805
+L809E:  inc     index
         lda     $0806
         sta     record_num
         jsr     ptr_calc
@@ -7439,7 +7451,7 @@ L809E:  inc     $0805
         ora     #$80
         sta     (ptr),y
 
-        ldx     $0805
+        ldx     index
         dex
         ldy     $0806
         iny
