@@ -7186,16 +7186,10 @@ iloop:  jsr     ptr_calc
         bmi     inext
 
         ;; Compare dates
-        ;; TODO: Proper ProDOS Y2K date handling
-        ldy     #FileRecord::modification_date+1
-        lda     (ptr),y
-        cmp     date+1          ; hi byte
-        beq     :+
-        bcs     place
-        jmp     inext
-:       dey
-        lda     (ptr),y
-        cmp     date            ; lo byte
+        ldy     #FileRecord::modification_date
+        copy16in (ptr),y, date_a
+        copy16  date, date_b
+        jsr     compare_dates
         beq     inext
         bcc     inext
 
@@ -7467,6 +7461,47 @@ L809E:  inc     index
 .endproc
 
 ;;; --------------------------------------------------
+
+date_a: .word   0
+date_b: .word   0
+
+.proc compare_dates
+        ptr := $0A
+
+        copy16  #parsed_a, ptr
+        ldax    date_a
+        jsr     parse_date
+
+        copy16  #parsed_b, ptr
+        ldax    date_b
+        jsr     parse_date
+
+        lda     year_a+1
+        cmp     year_b+1
+        bne     done
+        lda     year_a
+        cmp     year_b
+        bne     done
+        lda     month_a
+        cmp     month_b
+        bne     done
+        lda     day_a
+        cmp     day_b
+done:   rts
+
+parsed_a:
+year_a: .word   0
+month_a:.byte   0
+day_a:  .byte   0
+
+parsed_b:
+year_b: .word   0
+month_b:.byte   0
+day_b:  .byte   0
+
+.endproc
+
+;;; --------------------------------------------------
 ;;; ???
 
 .proc finish_view_change
@@ -7710,40 +7745,9 @@ value:  .word   0
         jmp     append_month_string
 
 append_date_strings:
-        ;; TODO: Handle ProDOS 2.5 extended dates
-
-        ;; Year
-        lda     #0
-        sta     year+1
-        lda     date+1
-        and     #%11111110
-        lsr     a
-        sta     year
-        ;; Per ProDOS Tech Note #28, 40-99 is 1940-1999, 0-39 is 2000-2039
-        ;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.28.html
-        cmp     #40             ; 40-99 (and also 100-127, though non-conforming)
-        bcs     y1900
-
-y2000:  add16   #2000, year, year
-        jmp     :+
-
-y1900:  add16   #1900, year, year
-
-        ;; Month
-:       lda     date+1
-        ror     a
-        lda     date
-        ror     a
-        lsr     a
-        lsr     a
-        lsr     a
-        lsr     a
-        sta     month
-
-        ;; Day
-        lda     date
-        and     #%00011111
-        sta     day
+        copy16  #parsed_date, $0A
+        ldax    date
+        jsr     parse_date
 
         jsr     append_month_string
         addr_call concatenate_date_part, str_space
@@ -7776,6 +7780,7 @@ y1900:  add16   #1900, year, year
         addr_jump concatenate_date_part, str_from_int
 .endproc
 
+parsed_date:
 year:   .word   0
 month:  .byte   0
 day:    .byte   0
@@ -7832,6 +7837,72 @@ concat_len:
 .endproc
 
 .endproc
+
+;;; ============================================================
+;;; Parse date
+;;; Input: A,X = Date lo/hi
+;;; $0A points at {year:.word, month:.byte, day:.byte} to be filled
+
+.proc parse_date
+        ptr := $0A
+
+        ;; TODO: Handle ProDOS 2.5 extended dates
+        ;; (additional year bits packed into time bytes)
+
+        stax    date
+
+        ;; Null date? Leave as all zeros.
+        ora     date+1          ; null date?
+        bne     year
+        ldy     #3
+:       sta     (ptr),y
+        dey
+        bpl     :-
+        rts
+
+        ;; Year
+year:   ldy     #1
+        copy    #0, (ptr),y
+
+        lda     date+1
+        and     #%11111110
+        lsr     a
+        ldy     #0
+        sta     (ptr),y
+        ;; Per ProDOS Tech Note #28, 40-99 is 1940-1999, 0-39 is 2000-2039
+        ;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.28.html
+        cmp     #40             ; 40-99 (and also 100-127, though non-conforming)
+        bcs     y1900
+
+y2000:  add16in   (ptr),y, #2000, (ptr),y
+        jmp     month
+
+y1900:  add16in   (ptr),y, #1900, (ptr),y
+
+        ;; Month
+month:  lda     date+1
+        ror     a
+        lda     date
+        ror     a
+        lsr     a
+        lsr     a
+        lsr     a
+        lsr     a
+        ldy     #2
+        sta     (ptr),y
+
+        ;; Day
+day:    lda     date
+        and     #%00011111
+        ldy     #3
+        sta     (ptr),y
+        rts
+
+date:   .word   0
+
+.endproc
+
+;;; ============================================================
 
         PAD_TO  $84D1           ; Maintain previous addresses
 
