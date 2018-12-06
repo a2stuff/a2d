@@ -330,28 +330,31 @@ L0AAF:  .byte   0
         lda     on_line_buffer
         and     #$0F
         sta     on_line_buffer
+
         ldy     #0
-L0ABA:  iny
+loop:   iny
         lda     on_line_buffer,y
         and     #CHAR_MASK
         cmp     #'a'
-        bcc     L0AC6
+        bcc     :+
         and     #CASE_MASK            ; make upper-case
-L0AC6:  cmp     path_buf+1,y
-        bne     L0AE5
+:       cmp     path_buf+1,y
+        bne     fail
         cpy     on_line_buffer
-        bne     L0ABA
+        bne     loop
+
         lda     on_line_buffer
         clc
         adc     #$01
         cmp     path_buf
-        beq     L0AE2
+        beq     success
         lda     path_buf+2,y
         cmp     #'/'
-        bne     L0AE5
-L0AE2:  return  #$00
+        bne     fail
+success:
+        return  #$00
 
-L0AE5:  return  #$FF
+fail:   return  #$FF
 .endproc
 
 ;;; ============================================================
@@ -361,16 +364,16 @@ L0AE5:  return  #$FF
         sta     L0B15
         jsr     L0B40
         jsr     L0B16
-L0AF3:  copy16  $06, $08
+loop:   copy16  $06, $08
         jsr     L0B16
-        bcs     L0B0F
+        bcs     done
         jsr     compare_file_entries
-        bcc     L0AF3
+        bcc     loop
         jsr     swap_entries
         lda     #$FF
         sta     L0B15
-        bne     L0AF3
-L0B0F:  lda     L0B15
+        bne     loop
+done:   lda     L0B15
         bne     L0AE8
         rts
 
