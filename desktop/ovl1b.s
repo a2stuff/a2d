@@ -23,7 +23,7 @@ noop        := $0C83
 quit    := $0C84
 L0CAF   := $0CAF
 eject_disk      := $0CED
-L0D26   := $0D26
+unit_number_to_driver_address   := $0D26
 L0D51   := $0D51
 L0D5F   := $0D5F
 L0DB5   := $0DB5
@@ -654,7 +654,7 @@ LD7F2:  ldx     dest_drive_index
         and     #$0F
         beq     LD817
         lda     drive_unitnum_table,x
-        jsr     disk_copy_overlay4::L0D26
+        jsr     disk_copy_overlay4::unit_number_to_driver_address
         ldy     #$FF
         lda     ($06),y
         beq     LD817
@@ -698,7 +698,7 @@ LD852:  ldx     dest_drive_index
         and     #$0F
         beq     LD87C
         lda     drive_unitnum_table,x
-        jsr     disk_copy_overlay4::L0D26
+        jsr     disk_copy_overlay4::unit_number_to_driver_address
         ldy     #$FE
         lda     ($06),y
         and     #$08
@@ -1883,7 +1883,7 @@ LE3B8:  pha
         beq     LE3CC
         lda     drive_unitnum_table,x
         and     #$F0
-        jsr     disk_copy_overlay4::L0D26
+        jsr     disk_copy_overlay4::unit_number_to_driver_address
         jmp     LE3DA
 
 LE3CC:  pla
@@ -1924,21 +1924,24 @@ LE402:  stx     LE448
         sta     LD407+1,x
         rts
 
-LE415:  ldy     #$FF
+LE415:  ldy     #$FF            ; offset to low byte of driver address
         lda     ($06),y
         sta     $06
+
         lda     #$00
-        sta     $42
-        sta     $44
-        sta     $45
-        sta     $46
-        sta     $47
+        sta     DRIVER_COMMAND
+        sta     DRIVER_BUFFER
+        sta     DRIVER_BUFFER+1
+        sta     DRIVER_BLOCK_NUMBER
+        sta     DRIVER_BLOCK_NUMBER+1
+
         pla
         pha
         tax
         lda     drive_unitnum_table,x
         and     #$F0
-        sta     $43
+        sta     DRIVER_UNIT_NUMBER
+
         jsr     LE445
         stx     LE448
         pla

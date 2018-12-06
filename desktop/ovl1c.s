@@ -676,41 +676,43 @@ params: .addr   0
 
         ldx     disk_copy_overlay3::dest_drive_index
         lda     disk_copy_overlay3::drive_unitnum_table,x
-        sta     L0CEC
+        sta     unit_number
         and     #$0F
         beq     L0CCC
         lda     disk_copy_overlay3::drive_unitnum_table,x
-        jsr     L0D26
-        ldy     #$FF
+        jsr     unit_number_to_driver_address
+        ldy     #$FF            ; offset to low byte of driver address
         lda     ($06),y
         beq     L0CCC
         cmp     #$FF
         bne     L0CD3
-L0CCC:  lda     L0CEC
+L0CCC:  lda     unit_number
         jsr     L0800
         rts
 
-L0CD3:  lda     L0CEC
-        jsr     L0D26
-        ldy     #$FF
+L0CD3:  lda     unit_number
+        jsr     unit_number_to_driver_address
+
+        ldy     #$FF            ; offset to low byte of driver address
         lda     ($06),y
         sta     $06
-        lda     #$03
-        sta     $42
-        lda     L0CEC
-        sta     $43
+        lda     #DRIVER_COMMAND_FORMAT
+        sta     DRIVER_COMMAND
+        lda     unit_number
+        sta     DRIVER_UNIT_NUMBER
         jmp     ($06)
 
         rts
 
-L0CEC:  .byte   0
+unit_number:
+        .byte   0
 
 ;;; ============================================================
 ;;; Eject Disk via SmartPort
 
 .proc eject_disk
         sta     L0D24
-        jsr     L0D26           ; Point $06 at $Cn00
+        jsr     unit_number_to_driver_address           ; Point $06 at $Cn00
 
         ldy     #$07            ; Check firmware bytes
         lda     ($06),y       ; $Cn07 = $00 ??
@@ -756,16 +758,20 @@ L0D24:  .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Get driver address for unit number
+;;; Input: unit_number in A
+;;; Output: $6/$7 points at driver address
 
-L0D26:  sta     L0D50
-        ldx     #$11
-        lda     L0D50
-        and     #$80
-        beq     L0D34
-        ldx     #$21
-L0D34:  stx     @load_addr
-        lda     L0D50
-        and     #$70
+.proc unit_number_to_driver_address
+        sta     unit_number
+        ldx     #$11            ; $BF11 is DEVADR+1 for S0D1
+        lda     unit_number
+        and     #$80            ; high bit set?
+        beq     :+
+        ldx     #$21            ; $BF21 is DEVADR+1 for S0D2
+:       stx     @load_addr
+        lda     unit_number
+        and     #$70            ; mask off slot
         lsr     a
         lsr     a
         lsr     a
@@ -775,12 +781,14 @@ L0D34:  stx     @load_addr
 
         @load_addr := *+1
         lda     MLI             ; self-modified
-        sta     $07
+        sta     $06+1
         lda     #$00
         sta     $06
         rts
 
-L0D50:  .byte   0
+unit_number:
+        .byte   0
+.endproc
 
 ;;; ============================================================
 

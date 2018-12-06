@@ -1073,13 +1073,13 @@ L12A6:  lda     L12C0
         jsr     L0E00
         rts
 
-L12AD:  ldy     #$FF
+L12AD:  ldy     #$FF            ; offset to low byte of driver address
         lda     ($06),y
         sta     $06
-        lda     #$03
-        sta     $42
+        lda     #DRIVER_COMMAND_FORMAT
+        sta     DRIVER_COMMAND
         lda     L12C0
-        sta     $43
+        sta     DRIVER_UNIT_NUMBER
         jmp     ($06)
 
         rts
@@ -1176,17 +1176,18 @@ L134D:  stx     @lsb
         beq     L1394
         cmp     #$FF
         beq     L1394
-        ldy     #$FF
+
+        ldy     #$FF            ; offset to low byte of driver address
         lda     ($06),y
         sta     $06
-        lda     #$00
-        sta     $42
+        lda     #DRIVER_COMMAND_STATUS
+        sta     DRIVER_COMMAND
         lda     L124A
         and     #$F0
-        sta     $43
+        sta     DRIVER_UNIT_NUMBER
         lda     #$00
-        sta     $46
-        sta     $47
+        sta     DRIVER_BLOCK_NUMBER
+        sta     DRIVER_BLOCK_NUMBER+1
         jsr     L1391
         bcc     L1398
         jmp     L1483

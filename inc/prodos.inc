@@ -199,6 +199,22 @@ NAME_LENGTH_MASK        := $0F
 .endstruct
         .assert .sizeof(FileEntry) = $27, error, "incorrect struct size"
 
+;;; ============================================================
+;;; ProDOS Driver Protocol
+;;; ============================================================
+
+;;; Addresses for command parameters
+DRIVER_COMMAND          := $42
+DRIVER_UNIT_NUMBER      := $43
+DRIVER_BUFFER           := $44
+DRIVER_BLOCK_NUMBER     := $46
+
+;;; Commands
+DRIVER_COMMAND_STATUS  := 0
+DRIVER_COMMAND_READ    := 1
+DRIVER_COMMAND_WRITE   := 2
+DRIVER_COMMAND_FORMAT  := 3
+
 
 ;;; ============================================================
 ;;; Macros
