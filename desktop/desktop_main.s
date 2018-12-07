@@ -7904,10 +7904,6 @@ date:   .word   0
 
 ;;; ============================================================
 
-        PAD_TO  $84D1           ; Maintain previous addresses
-
-;;; ============================================================
-
 .proc L84D1
         jsr     push_pointers
         bit     L5B1B
@@ -8002,121 +7998,6 @@ L85F9:  .byte   0
 L85FA:  .word   0
 .endproc
 
-;;; ============================================================
-;;; Double Click Detection
-;;; Returns with A=0 if double click, A=$FF otherwise.
-
-.proc detect_double_click
-
-        double_click_deltax := 8
-        double_click_deltay := 7
-
-        ;; Stash initial coords
-        ldx     #3
-:       lda     event_coords,x
-        sta     coords,x
-        sta     saved_event_coords,x
-        dex
-        bpl     :-
-
-        lda     #0
-        sta     counter+1
-        lda     machine_type ; Speed of mouse driver? ($96=IIe,$FA=IIc,$FD=IIgs)
-        asl     a            ; * 2
-        rol     counter+1    ; So IIe = $12C, IIc = $1F4, IIgs = $1FA
-        sta     counter
-
-        ;; Decrement counter, bail if time delta exceeded
-loop:   dec     counter
-        bne     :+
-        dec     counter+1
-        lda     counter+1
-        bne     exit
-
-:       jsr     peek_event
-
-        ;; Check coords, bail if pixel delta exceeded
-        jsr     check_delta
-        bmi     exit            ; moved past delta; no double-click
-
-        lda     #$FF            ; ???
-        sta     unused
-
-        lda     event_kind
-        sta     kind            ; unused ???
-
-        cmp     #MGTK::EventKind::no_event
-        beq     loop
-        cmp     #MGTK::EventKind::drag
-        beq     loop
-        cmp     #MGTK::EventKind::button_up
-        bne     :+
-
-        jsr     get_event
-        jmp     loop
-
-:       cmp     #MGTK::EventKind::button_down
-        bne     exit
-
-        jsr     get_event
-        return  #0              ; double-click
-
-exit:   return  #$FF            ; not double-click
-
-        ;; Is the new coord within range of the old coord?
-.proc check_delta
-        ;; compute x delta
-        lda     event_xcoord
-        sec
-        sbc     xcoord
-        sta     delta
-        lda     event_xcoord+1
-        sbc     xcoord+1
-        bpl     :+
-
-        ;; is -delta < x < 0 ?
-        lda     delta
-        cmp     #($100 - double_click_deltax)
-        bcs     check_y
-fail:   return  #$FF
-
-        ;; is 0 < x < delta ?
-:       lda     delta
-        cmp     #double_click_deltax
-        bcs     fail
-
-        ;; compute y delta
-check_y:
-        lda     event_ycoord
-        sec
-        sbc     ycoord
-        sta     delta
-        lda     event_ycoord+1
-        sbc     ycoord+1
-        bpl     :+
-
-        ;; is -delta < y < 0 ?
-        lda     delta
-        cmp     #($100 - double_click_deltay)
-        bcs     ok
-
-        ;; is 0 < y < delta ?
-:       lda     delta
-        cmp     #double_click_deltay
-        bcs     fail
-ok:     return  #0
-.endproc
-
-counter:
-        .word   0
-coords:
-xcoord: .word   0
-ycoord: .word   0
-delta:  .byte   0
-
-kind:   .byte   0               ; unused
-unused: .byte   0               ; unused
-.endproc
 
 ;;; ============================================================
 ;;; A = A * 16, high bits into X
@@ -9211,11 +9092,11 @@ open:   MLI_RELAY_CALL OPEN, open_params
         MLI_RELAY_CALL CLOSE, close_params
         rts
 
-        PAD_TO $8F00
-
 .endproc
         load_dynamic_routine := load_dynamic_routine_impl::load
         restore_dynamic_routine := load_dynamic_routine_impl::restore
+
+        PAD_TO $8F00
 
 ;;; ============================================================
 
@@ -11674,9 +11555,9 @@ do_on_line:
         ;;  when detached.
 
         ;;  /RAM FORMAT call
-        copy    #3, $42         ; 3 = FORMAT
-        copy    #ram_unit_number, $43
-        copy16  #$2000, $44
+        copy    #DRIVER_COMMAND_FORMAT, DRIVER_COMMAND
+        copy    #ram_unit_number, DRIVER_UNIT_NUMBER
+        copy16  #$2000, DRIVER_BUFFER
         lda     LCBANK1
         lda     LCBANK1
         jsr     driver
@@ -13106,34 +12987,34 @@ set_penmode_xor2:
         rts
 
 ;;; ============================================================
-;;; Double Click Detection (#2 ???)
+;;; Double Click Detection
 ;;; Returns with A=0 if double click, A=$FF otherwise.
 
-.proc detect_double_click2
+.proc detect_double_click
         .assert * = $B445, error, "Entry point used by overlay"
 
         double_click_deltax := 5
         double_click_deltay := 4
 
-        COPY_STRUCT MGTK::Point, event_coords, coords
+        ;; Stash initial coords
+        ldx     #3
+:       copy    event_coords,x, coords,x
+        sta     saved_event_coords,x ; for double-click in windows
+        dex
+        bpl     :-
 
         lda     #0
         sta     counter+1
-        lda     machine_type
-        asl     a
+        lda     machine_type ; Speed of mouse driver? ($96=IIe,$FA=IIc,$FD=IIgs)
+        asl     a            ; * 2
+        rol     counter+1    ; So IIe = $12C, IIc = $1F4, IIgs = $1FA
         sta     counter
-        rol     counter+1
 
         ;; Decrement counter, bail if time delta exceeded
 loop:   dec     counter
-        lda     counter
-        cmp     #$FF
         bne     :+
         dec     counter+1
-:       lda     counter+1
-        bne     :+
-        lda     counter
-        beq     exit
+        bne     exit
 
 :       MGTK_RELAY_CALL MGTK::PeekEvent, event_params
 
@@ -13141,11 +13022,7 @@ loop:   dec     counter
         jsr     check_delta
         bmi     exit            ; moved past delta; no double-click
 
-        lda     #$FF            ; ???
-        sta     unused
-
-        lda     event_kind      ; unused ???
-        sta     kind
+        lda     event_kind
 
         cmp     #MGTK::EventKind::no_event
         beq     loop
@@ -13215,10 +13092,9 @@ coords:
 xcoord: .word   0
 ycoord: .word   0
 delta:  .byte   0
-
-kind:   .byte   0               ; unused
-unused: .byte   0               ; unused
 .endproc
+
+        PAD_TO $B509
 
 ;;; ============================================================
 

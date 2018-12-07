@@ -705,7 +705,7 @@ L976A:  cmp     L938D
         lda     L979C
         sta     L938D
         jsr     L979D
-L977E:  jsr     desktop_main::detect_double_click2
+L977E:  jsr     desktop_main::detect_double_click
         rts
 
 L9782:  sec

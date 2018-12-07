@@ -302,7 +302,7 @@ L0BD9:  return  #$FF
 
 L0BDC:  cmp     LD887
         bne     L0C04
-        jsr     desktop_main::detect_double_click2
+        jsr     desktop_main::detect_double_click
         bmi     L0C03
 L0BE6:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
@@ -317,7 +317,7 @@ L0C04:  sta     L0C1E
 L0C0F:  lda     L0C1E
         sta     LD887
         jsr     L0C20
-        jsr     desktop_main::detect_double_click2
+        jsr     desktop_main::detect_double_click
         beq     L0BE6
         rts
 
