@@ -6219,20 +6219,30 @@ L7620:  .byte   $00
 
 .proc create_file_icon
 
-L7621:  .byte   $00             ; window_id ?
-L7622:  .addr   0               ; iconbits
-L7624:  .byte   $00             ; icon type
-L7625:  .byte   $00
+        icon_x_spacing  = 80
+        icon_y_spacing  = 32
 
-initial_coords:  DEFINE_POINT  52,16
+window_id:      .byte   0
+iconbits:       .addr   0
+icon_type:      .byte   0
+L7625:  .byte   0               ; ???
 
-L762A:  .word   0
-L762C:  .word   0
-L762E:  .byte   $05
-L762F:  .byte   $00
-L7630:  .word   0
-L7632:  .word   0
-L7634:  .byte   $00
+initial_coords:                 ; first icon in window
+        DEFINE_POINT  52,16, initial_coords
+
+row_coords:                     ; first icon in current row
+        DEFINE_POINT 0, 0, row_coords
+
+icons_per_row:
+        .byte   5
+
+icons_this_row:
+        .byte   0
+
+icon_coords:
+        DEFINE_POINT 0, 0, icon_coords
+
+flag:   .byte   0               ; ???
 
 .proc ep1                       ; entry point #1 ???
         pha
@@ -6246,20 +6256,22 @@ ep2:    pha                     ; entry point #2 ???
         sta     icon_params2
         lda     #$80
 
-L7647:  sta     L7634
+L7647:  sta     flag
         pla
-        sta     L7621
+        sta     window_id
         jsr     push_pointers
 
-        COPY_STRUCT MGTK::Point, initial_coords, L762A
+        COPY_STRUCT MGTK::Point, initial_coords, row_coords
 
-        lda     #$00
-        sta     L762F
+        lda     #0
+        sta     icons_this_row
         sta     L7625
-        ldx     #$03
-L7666:  sta     L7630,x
+
+        ldx     #3
+:       sta     icon_coords,x
         dex
-        bpl     L7666
+        bpl     :-
+
         lda     icon_params2
         ldx     LE1F1
         dex
@@ -6293,13 +6305,13 @@ L76AA:  lda     L7625
         inc     L7625
         jmp     L76AA
 
-L76BB:  bit     L7634
+L76BB:  bit     flag
         bpl     :+
         jsr     pop_pointers
         rts
 
 :       jsr     L7B6B
-        lda     L7621
+        lda     window_id
         jsr     window_lookup
         stax    $06
         ldy     #$16
@@ -6346,7 +6358,7 @@ L7744:  ldy     #$22
         ldy     #$08
         sta     ($06),y
         lda     icon_params2
-        ldx     L7621
+        ldx     window_id
         jsr     animate_window_open
         jsr     pop_pointers
         rts
@@ -6433,8 +6445,7 @@ got_type:
         lda     LCBANK1
         lda     LCBANK1
         tya
-        ;; L7622/3 = icon bits addr
-        ;; L7624 = icon type
+
         jsr     find_icon_details_for_file_type
         addr_call capitalize_string, name_tmp
         ldy     #IconEntry::len
@@ -6451,46 +6462,47 @@ L77F0:  lda     name_tmp,x
         ;; Assign location
         ldx     #0
         ldy     #IconEntry::iconx
-:       lda     L762A,x
+:       lda     row_coords,x
         sta     (icon_entry),y
         inx
         iny
-        cpx     #$04
+        cpx     #.sizeof(MGTK::Point)
         bne     :-
 
         lda     cached_window_icon_count
-        cmp     L762E
+        cmp     icons_per_row
         beq     L781A
         bcs     L7826
-L781A:  copy16  L762A, L7630
-L7826:  copy16  L762C, L7632
-        inc     L762F
-        lda     L762F
-        cmp     L762E
+L781A:  copy16  row_coords::xcoord, icon_coords::xcoord
+L7826:  copy16  row_coords::ycoord, icon_coords::ycoord
+        inc     icons_this_row
+        lda     icons_this_row
+        cmp     icons_per_row
         bne     L7862
-        add16   L762C, #32, L762C
-        copy16  initial_coords, L762A
-        lda     #$00
-        sta     L762F
+        add16   row_coords::ycoord, #32, row_coords::ycoord
+        copy16  initial_coords::xcoord, row_coords::xcoord
+        lda     #0
+        sta     icons_this_row
         jmp     L7870
 
-L7862:  lda     L762A
+L7862:  lda     row_coords::xcoord
         clc
-        adc     #$50
-        sta     L762A
+        adc     #icon_x_spacing
+        sta     row_coords::xcoord
         bcc     L7870
-        inc     L762A+1
+        inc     row_coords::xcoord+1
+
 L7870:  lda     cached_window_id
-        ora     L7624
+        ora     icon_type
         ldy     #IconEntry::win_type
         sta     (icon_entry),y
         ldy     #IconEntry::iconbits
-        copy16in L7622, (icon_entry),y
+        copy16in iconbits, (icon_entry),y
         ldx     cached_window_icon_count
         dex
         lda     cached_window_icon_list,x
         jsr     icon_screen_to_window
-        add16   file_entry, #32, file_entry
+        add16   file_entry, #icon_y_spacing, file_entry
         rts
 
         .byte   0
@@ -6521,7 +6533,7 @@ found:
         ;; Look up icon type
         copy16  icon_type_table_addr, ptr
         lda     (ptr),y
-        sta     L7624
+        sta     icon_type
         dey
         tya
         asl     a
@@ -6529,7 +6541,7 @@ found:
 
         ;; Look up icon definition
         copy16  type_icons_addr, ptr
-        copy16in (ptr),y, L7622
+        copy16in (ptr),y, iconbits
         jsr     pop_pointers
         rts
 
@@ -7570,7 +7582,7 @@ L8171:  lda     ($06),y
         lda     LCBANK1
         lda     LCBANK1
         ldx     #$31
-        lda     #$20
+        lda     #' '
 L8183:  sta     text_buffer2::data-1,x
         dex
         bpl     L8183
