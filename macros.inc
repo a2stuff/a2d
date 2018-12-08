@@ -641,3 +641,25 @@ skip:   dec     arg
         .org saved_org
         .endscope
 .endmacro
+
+;;; ============================================================
+;;; Structure Helpers
+;;; ============================================================
+
+.macro COPY_BYTES size, src, dst
+.scope
+        ldx     #size - 1
+loop:   lda     src,x
+        sta     dst,x
+        dex
+        bpl     loop
+.endscope
+.endmacro
+
+.macro COPY_STRUCT type, src, dst
+        COPY_BYTES .sizeof(type), src, dst
+.endmacro
+
+.macro COPY_BLOCK block, dst
+        COPY_BYTES .sizeof(block), block, dst
+.endmacro

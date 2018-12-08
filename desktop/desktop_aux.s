@@ -878,7 +878,7 @@ L97F6:  .byte   0
         cpy     #0
         bne     :-
 
-        jsr     push_zp_addrs
+        jsr     push_pointers
         lda     icon_id
         jsr     L9EB4
         stax    $06
@@ -972,11 +972,9 @@ is_drag:
         and     #icon_entry_winid_mask
         sta     L9832
         MGTK_CALL MGTK::InitPort, grafport
-        ldx     #.sizeof(MGTK::Rect)-1
-L98E3:  lda     grafport::cliprect,x
-        sta     L9835,x
-        dex
-        bpl     L98E3
+
+        COPY_STRUCT MGTK::Rect, grafport::cliprect, L9835
+
         ldx     highlight_count
         stx     L9C74
 L98F2:  lda     highlight_count,x
@@ -995,7 +993,7 @@ L9909:  sta     L9834
         lda     L9C74
         cmp     highlight_count
         beq     L9936
-        jsr     push_zp_addrs
+        jsr     push_pointers
 
         lda     $08
         sec
@@ -1007,7 +1005,7 @@ L9909:  sta     L9834
 L992D:  ldy     #IconEntry::state
         lda     #$80            ; Highlighted
         sta     ($08),y
-        jsr     pop_zp_addrs
+        jsr     pop_pointers
 L9936:  ldx     #icon_poly_size-1
         ldy     #icon_poly_size-1
 
@@ -1031,11 +1029,7 @@ L9954:  dec     L9C74
         ldx     L9C74
         jmp     L98F2
 
-L995F:  ldx     #7
-:       lda     drag_outline_buffer+2,x
-        sta     L9C76,x
-        dex
-        bpl     :-
+L995F:  COPY_BYTES 8, drag_outline_buffer+2, L9C76
 
         copy16  #drag_outline_buffer, $08
 L9972:  ldy     #2
@@ -1127,11 +1121,8 @@ L9A20:  lda     findwindow_params2,x
         jsr     L9E14
         jmp     L9A0E
 
-L9A31:  ldx     #3
-L9A33:  lda     findwindow_params2,x
-        sta     L9C92,x
-        dex
-        bpl     L9A33
+L9A31:  COPY_BYTES 4, findwindow_params2, L9C92
+
         lda     highlight_icon_id
         beq     L9A84
         lda     L9831
@@ -1245,7 +1236,7 @@ L9BD4:  ora     #$80
 
 L9BDC:  lda     L9832
         beq     L9BD1
-L9BE1:  jsr     push_zp_addrs
+L9BE1:  jsr     push_pointers
         MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport
         ldx     highlight_count
@@ -1264,7 +1255,7 @@ L9BF3:  dex
         tax
         jmp     L9BF3
 
-L9C18:  jsr     pop_zp_addrs
+L9C18:  jsr     pop_pointers
         ldx     highlight_count
         dex
         txa
@@ -1305,7 +1296,7 @@ L9C63:  lda     #0
 
 just_select:                    ; ???
         tay
-        jsr     pop_zp_addrs
+        jsr     pop_pointers
         tya
         tax
         ldy     #0
@@ -1338,11 +1329,7 @@ L9C96:  .word   0
 L9C98:  .word   0
         .byte   $00,$00,$00,$00
 
-L9C9E:  ldx     #.sizeof(MGTK::Rect)-1
-:       lda     L9C76,x
-        sta     L9C86,x
-        dex
-        bpl     :-
+L9C9E:  COPY_STRUCT MGTK::Rect, L9C76, L9C86
         rts
 
 L9CAA:  lda     L9C76
@@ -1425,7 +1412,7 @@ L9E14:  bit     L9833
         bpl     L9E1A
         rts
 
-L9E1A:  jsr     push_zp_addrs
+L9E1A:  jsr     push_pointers
         MGTK_CALL MGTK::FindWindow, findwindow_params2
         lda     findwindow_params2::which_area
         bne     L9E2B
@@ -1467,7 +1454,7 @@ L9E97:  MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
         MGTK_CALL MGTK::SetPenMode, penXOR_2
-        jsr     pop_zp_addrs
+        jsr     pop_pointers
         rts
 
 L9EB3:  .byte   0
@@ -1610,7 +1597,7 @@ L9F9F:  lda     #$80
         cpy     #IconEntry::iconx + 6 ; x/y/bits
         bne     :-
 
-        jsr     push_zp_addrs
+        jsr     push_pointers
         copy16  paintbits_params2::mapbits, $08
         ldy     #11
 :       lda     ($08),y
@@ -1621,7 +1608,7 @@ L9F9F:  lda     #$80
         bit     L9F92
         bpl     :+
         jsr     LA12C
-:       jsr     pop_zp_addrs
+:       jsr     pop_pointers
 
         ldy     #9
 :       lda     ($06),y
@@ -1655,11 +1642,9 @@ L9F9F:  lda     #$80
         add16_8 paintbits_params2::viewloc::ycoord, paintbits_params2::maprect::y2, moveto_params2::ycoord
         add16   moveto_params2::ycoord, #1, moveto_params2::ycoord
         add16_8 moveto_params2::ycoord, font_height, moveto_params2::ycoord
-        ldx     #3
-:       lda     moveto_params2,x
-        sta     L9F94,x
-        dex
-        bpl     :-
+
+        COPY_STRUCT MGTK::Point, moveto_params2, L9F94
+
         bit     L9F92
         bvc     LA097
         MGTK_CALL MGTK::InitPort, grafport
@@ -1696,11 +1681,7 @@ LA0C2:  MGTK_CALL MGTK::PaintBits, paintbits_params2
 LA0E6:  MGTK_CALL MGTK::SetPenMode, penOR_2
 LA0EC:  MGTK_CALL MGTK::PaintRect, paintrect_params6
 
-LA0F2:  ldx     #3
-:       lda     L9F94,x
-        sta     moveto_params2,x
-        dex
-        bpl     :-
+LA0F2:  COPY_STRUCT MGTK::Point, L9F94, moveto_params2
 
         MGTK_CALL MGTK::MoveTo, moveto_params2
         bit     L9F92
@@ -1717,11 +1698,7 @@ setbg:  sta     settextbg_params
         MGTK_CALL MGTK::ShowCursor
         rts
 
-LA12C:  ldx     #.sizeof(paintbits_params)-1
-:       lda     paintbits_params2,x
-        sta     paintbits_params,x
-        dex
-        bpl     :-
+LA12C:  COPY_BLOCK paintbits_params2, paintbits_params
 
         ldy     paintbits_params::maprect::y2
 LA13A:  lda     paintbits_params::mapwidth
@@ -1770,7 +1747,7 @@ icon_poly_size = (8 * .sizeof(MGTK::Point)) + 2
         entry_ptr := $6
         bitmap_ptr := $8
 
-        jsr     push_zp_addrs
+        jsr     push_pointers
 
         ;; v0 - copy from icon entry
         ldy     #IconEntry::iconx+3
@@ -1889,7 +1866,7 @@ got_width:
         adc     #0
         sta     poly::v3::xcoord+1
         sta     poly::v4::xcoord+1
-        jsr     pop_zp_addrs
+        jsr     pop_pointers
         rts
 
 icon_width:  .byte   0
@@ -1906,10 +1883,10 @@ text_width:  .byte   0
         ;; DT_REDAW_ICON params
 LA2A9:  .byte   0
 
-LA2AA:  jsr     pop_zp_addrs
+LA2AA:  jsr     pop_pointers
         rts
 
-LA2AE:  jsr     push_zp_addrs
+LA2AE:  jsr     push_pointers
         ldx     num_icons
         dex
 LA2B5:  bmi     LA2AA
@@ -2023,7 +2000,7 @@ icon_num:       .byte   0
 
 ;;; ============================================================
 
-.proc push_zp_addrs
+.proc push_pointers
         ;; save return addr
         pla
         sta     stash
@@ -2050,7 +2027,7 @@ stash:  .word   0
 
 ;;; ============================================================
 
-.proc pop_zp_addrs
+.proc pop_pointers
         ;; save return addr
         pla
         sta     stash
@@ -2148,18 +2125,14 @@ volume:
 .proc erase_icon
         copy16  poly::v0::ycoord, LA3B1
         copy16  poly::v6::xcoord, LA3AF
-        ldx     #3
-:       lda     poly::v4::xcoord,x
-        sta     LA3B3,x
-        dex
-        bpl     :-
+        COPY_BLOCK poly::v4, LA3B3
         MGTK_CALL MGTK::PaintPoly, poly
         rts
 .endproc
 
 ;;; ============================================================
 
-LA446:  jsr     push_zp_addrs
+LA446:  jsr     push_pointers
         ldx     num_icons
         dex                     ; any icons to draw?
 
@@ -2172,7 +2145,7 @@ LA446:  jsr     push_zp_addrs
         bpl     :+
         MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport4
-:       jsr     pop_zp_addrs
+:       jsr     pop_pointers
         rts
 
 LA466:  txa
@@ -2281,7 +2254,7 @@ LA56D:  .word   0
 
 LA56F:  pla
         tay
-        jsr     push_zp_addrs
+        jsr     push_pointers
         tya
         asl     a
         tax
@@ -2294,12 +2267,12 @@ LA56F:  pla
         sub16in ($06),y, LA56B, ($06),y
         iny
         sub16in ($06),y, LA56D, ($06),y
-        jsr     pop_zp_addrs
+        jsr     pop_pointers
         rts
 
 LA5CB:  pla
         tay
-        jsr     push_zp_addrs
+        jsr     push_pointers
         tya
         asl     a
         tax
@@ -2312,7 +2285,7 @@ LA5CB:  pla
         add16in ($06),y, LA56B, ($06),y
         iny
         add16in ($06),y, LA56D, ($06),y
-        jsr     pop_zp_addrs
+        jsr     pop_pointers
         rts
 
 ;;; ============================================================
@@ -2415,11 +2388,9 @@ LA6C7:  lda     L9F93
         adc     #0
         sta     setportbits_params2::cliprect::x1+1
         sta     setportbits_params2::viewloc::xcoord+1
-        ldx     #5
-LA6E5:  lda     LA629,x
-        sta     setportbits_params2::cliprect::y1,x
-        dex
-        bpl     LA6E5
+
+        COPY_BYTES 6, LA629, setportbits_params2::cliprect::y1
+
         lda     setportbits_params2::cliprect::y1
         sta     setportbits_params2::viewloc::ycoord
         lda     setportbits_params2::cliprect::y1+1
@@ -2488,7 +2459,7 @@ LA77D:  lda     LA6B3,x
         lda     findwindow_params::window_id
         sta     getwinport_params
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        jsr     push_zp_addrs
+        jsr     push_pointers
         MGTK_CALL MGTK::GetWinPtr, findwindow_params::window_id
         copy16  LA6AE, $06
         ldy     #1
@@ -2541,7 +2512,7 @@ LA833:  bit     LA6B1
         sta     grafport4::cliprect::x2
         bcc     LA846
         inc     grafport4::cliprect::x2+1
-LA846:  jsr     pop_zp_addrs
+LA846:  jsr     pop_pointers
         sub16   grafport4::cliprect::x2, grafport4::cliprect::x1, LA6C3
         sub16   grafport4::cliprect::y2, grafport4::cliprect::y1, LA6C5
         lda     LA6C3

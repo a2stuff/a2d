@@ -1391,11 +1391,7 @@ is_dir: lda     #$FF
         jmp     show_no_space_prompt
 
         ;; copy dates
-:       ldx     #3
-:       lda     get_file_info_params2::create_date,x
-        sta     create_params::create_date,x
-        dex
-        bpl     :-
+:       COPY_STRUCT DateTime, get_file_info_params2::create_date, create_params::create_date
 
         ;; create the file
         lda     create_params::storage_type
@@ -1592,11 +1588,7 @@ finish: MLI_CALL CLOSE, close_dstdir_params
         sta     create_dir_params::access
 
         ;; Copy dates
-        ldx     #3
-:       lda     get_file_info_params2::create_date,x
-        sta     create_dir_params::create_date,x
-        dex
-        bpl     :-
+        COPY_STRUCT DateTime, get_file_info_params2::create_date, create_dir_params::create_date
 
         ;; Create it
         lda     create_dir_params::storage_type
@@ -1741,11 +1733,7 @@ loop2:  lda     L320A,y
 .proc get_file_info_and_copy
         MLI_CALL GET_FILE_INFO, get_file_info_params2
         bne     fail
-        ldx     #$0A
-:       lda     get_file_info_params2::access,x
-        sta     get_file_info_params3::access,x
-        dex
-        bpl     :-
+        COPY_BYTES $B, get_file_info_params2::access, get_file_info_params3::access
         rts
 
 fail:   pla

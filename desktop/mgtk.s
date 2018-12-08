@@ -101,16 +101,8 @@
         bpl     adjust_stack
 
         ;; Save $80...$FF, swap in what MGTK needs at $F4...$FF
-        ldx     #$7F
-:       lda     $80,x
-        sta     zp_saved,x
-        dex
-        bpl     :-
-        ldx     #$0B
-:       lda     active_saved,x
-        sta     active_port,x
-        dex
-        bpl     :-
+        COPY_BYTES $80, $80, zp_saved
+        COPY_BYTES $C, active_saved, active_port
         jsr     apply_active_port_to_port
 
 adjust_stack:                   ; Adjust stack to account for params
@@ -195,16 +187,9 @@ cleanup:
 :       bit     preserve_zp_flag
         bpl     exit_with_0
         jsr     apply_port_to_active_port
-        ldx     #$0B
-:       lda     active_port,x
-        sta     active_saved,x
-        dex
-        bpl     :-
-        ldx     #$7F
-:       lda     zp_saved,x
-        sta     $80,x
-        dex
-        bpl     :-
+
+        COPY_BYTES $C, active_port, active_saved
+        COPY_BYTES $80, zp_saved, $80
 
         ;; default is to return with A=0
 exit_with_0:
@@ -1690,11 +1675,7 @@ frect_ctr:  .byte   0
         bottom := $A5
 
         ldy     #3
-rloop:  ldx     #7
-:       lda     left,x
-        sta     left_masks_table,x
-        dex
-        bpl     :-
+rloop:  COPY_BYTES 8, left, left_masks_table
         ldx     rect_sides,y
         lda     left,x
         pha
@@ -1708,11 +1689,7 @@ rloop:  ldx     #7
         ldy     frect_ctr
         dey
         bpl     rloop
-        ldx     #3
-:       lda     left,x
-        sta     current_penloc,x
-        dex
-        bpl     :-
+        COPY_BYTES 4, left, current_penloc
 .endproc
 prts:   rts
 
@@ -3646,11 +3623,7 @@ next_byte:
 text_ndbm:
         inc     $A0
 :
-        ldx     #15
-:       lda     text_bits_buf+16,x
-        sta     text_bits_buf,x
-        dex
-        bpl     :-
+        COPY_BYTES 16, text_bits_buf+16, text_bits_buf
         jmp     L5BFF
 
 
@@ -3914,12 +3887,7 @@ maybe_stash:
         bpl     end
 
         ;; Copy buffer to ZP $00-$43
-stash:
-        ldx     #$43
-:       lda     low_zp_stash_buffer,x
-        sta     $00,x
-        dex
-        bpl     :-
+stash:  COPY_BYTES $44, low_zp_stash_buffer, $00
 
 end:    rts
 
@@ -3929,11 +3897,7 @@ maybe_unstash:
 
         ;; Copy ZP $00-$43 to buffer
 unstash:
-        ldx     #$43
-:       lda     $00,x
-        sta     low_zp_stash_buffer,x
-        dex
-        bpl     :-
+        COPY_BYTES $44, $00, low_zp_stash_buffer
         rts
 .endproc
         maybe_stash_low_zp := SetZP2Impl::maybe_stash
@@ -4309,11 +4273,7 @@ active_cursor_mask   := draw_cursor::active_cursor_mask
         bit     cursor_flag
         bmi     drts
 
-        ldx     #3
-:       lda     cursor_data,x
-        sta     cursor_bytes,x
-        dex
-        bpl     :-
+        COPY_BYTES 4, cursor_data, cursor_bytes
 
         ldx     #$23
         ldy     cursor_y2
@@ -4600,11 +4560,7 @@ savesize:   .res 2
         pla
         sta     save_p_reg
 
-        ldx     #4
-:       lda     params::machine,x
-        sta     machid,x
-        dex
-        bpl     :-
+        COPY_BYTES 5, params::machine, machid
 
         lda     #$7F
         sta     standard_port::textback
@@ -5227,11 +5183,7 @@ up:     lda     #MGTK::EventKind::button_up
 set_state:
         sta     input::state
 
-        ldx     #2
-:       lda     set_pos_params,x
-        sta     input::key,x
-        dex
-        bpl     :-
+        COPY_BYTES 3, set_pos_params, input::key
 
 put_key_event:
         jsr     put_event
@@ -5269,11 +5221,7 @@ body:                           ; returned by GetIntHandler
         lda     LOWSCR
         sta     SET80COL
 
-        ldx     #8              ; preserve 9 bytes of ZP
-sloop:  lda     $82,x
-        sta     int_stash_zp,x
-        dex
-        bpl     sloop
+        COPY_BYTES 9, $82, int_stash_zp ; preserve 9 bytes of ZP
 
         ldy     #SERVEMOUSE
         jsr     call_mouse
@@ -5284,11 +5232,7 @@ sloop:  lda     $82,x
         bpl     :+
         clc                     ; carry clear if interrupt handled
 
-:       ldx     #8              ; restore ZP
-rloop:  lda     int_stash_zp,x
-        sta     $82,x
-        dex
-        bpl     rloop
+:       COPY_BYTES 9, int_stash_zp, $82 ; restore ZP
 
         lda     LOWSCR          ;  restore soft switches
         sta     CLR80COL
@@ -6611,11 +6555,7 @@ check_char:     .res    1
 control_char:   .res    1
         END_PARAM_BLOCK
 
-        ldx     #3
-loop:   lda     params,x
-        sta     menu_glyphs,x
-        dex
-        bpl     loop
+        COPY_BYTES 4, params, menu_glyphs
 
         copy16  standard_port::textfont, params
         ldy     #0
@@ -6967,11 +6907,7 @@ in_winrect:
         ;; and height of the maprect of the window's port.
         ;;
 .proc get_winrect
-        ldx     #3
-:       lda     current_winport::viewloc,x ; copy viewloc to left/top of winrect
-        sta     winrect,x
-        dex
-        bpl     :-
+        COPY_BLOCK current_winport::viewloc, winrect ; copy viewloc to left/top of winrect
 
         ldx     #2
 :       lda     current_winport::maprect::x2,x ; x2/y2
@@ -7786,11 +7722,8 @@ win_port: .addr   0
         jsr     window_by_id_or_exit
         copy16  params::win_port, params_addr
 
-        ldx     #7
-:       lda     fill_rect_params,x
-        sta     current_maprect_x1,x
-        dex
-        bpl     :-
+        COPY_STRUCT MGTK::Rect, fill_rect_params, current_maprect_x1
+
         jsr     prepare_winport
         bcc     err_obscured
 
@@ -8243,11 +8176,7 @@ DragWindowImpl_drag_or_grow := DragWindowImpl::drag_or_grow
         jsr     set_desktop_port
         jsr     get_winframerect
 
-        ldx     #7
-:       lda     winrect,x
-        sta     left,x
-        dex
-        bpl     :-
+        COPY_BLOCK winrect, left
         jsr     clip_rect
 
         ldx     #3
@@ -9237,21 +9166,13 @@ movement_cancel:  .byte   $00
 kbd_mouse_status:  .byte   $00
 
 .proc kbd_mouse_save_zp
-        ldx     #$7F
-:       lda     $80,x
-        sta     kbd_mouse_zp_stash,x
-        dex
-        bpl     :-
+        COPY_BYTES $80, $80, kbd_mouse_zp_stash
         rts
 .endproc
 
 
 .proc kbd_mouse_restore_zp
-        ldx     #$7F
-:       lda     kbd_mouse_zp_stash,x
-        sta     $80,x
-        dex
-        bpl     :-
+        COPY_BYTES $80, kbd_mouse_zp_stash,$80
         rts
 .endproc
 
@@ -9346,11 +9267,7 @@ scale_y:
 
 
 .proc kbd_mouse_to_mouse
-        ldx     #2
-:       lda     kbd_mouse_x,x
-        sta     mouse_x,x
-        dex
-        bpl     :-
+        COPY_BYTES 3, kbd_mouse_x, mouse_x
         rts
 .endproc
 
@@ -9362,11 +9279,7 @@ scale_y:
 
 .proc save_mouse_pos
         jsr     read_mouse_pos
-        ldx     #2
-:       lda     mouse_x,x
-        sta     saved_mouse_pos,x
-        dex
-        bpl     :-
+        COPY_BYTES 3, mouse_x, saved_mouse_pos
         rts
 .endproc
 
@@ -9506,11 +9419,7 @@ waitloop:
 
         lda     #0
         sta     kbd_mouse_status ; reset mouse button status
-        ldx     #2
-:       lda     set_pos_params,x
-        sta     kbd_mouse_x,x
-        dex
-        bpl     :-
+        COPY_BYTES 3, set_pos_params, kbd_mouse_x
 ret:    rts
 
 in_kbd_mouse:
@@ -9545,11 +9454,7 @@ pla_ret:
         and     #$20
         beq     kbd_mouse_to_mouse_jmp
 
-        ldx     #2
-:       lda     mouse_x,x
-        sta     kbd_mouse_x,x
-        dex
-        bpl     :-
+        COPY_BYTES 3, mouse_x, kbd_mouse_x
 
         stx     kbd_menu_select_flag           ; =$ff
         rts
@@ -10047,21 +9952,13 @@ out_of_boundsl:
 not_left:
         sta     set_input_key
 
-        ldx     #.sizeof(MGTK::GrafPort)-1
-:       lda     $A7,x
-        sta     $0600,x
-        dex
-        bpl     :-
+        COPY_STRUCT MGTK::GrafPort, $A7, $0600
 
         lda     set_input_key
         jsr     kbd_menu_by_shortcut
         php
 
-        ldx     #.sizeof(MGTK::GrafPort)-1
-:       lda     $0600,x
-        sta     $A7,x
-        dex
-        bpl     :-
+        COPY_STRUCT MGTK::GrafPort, $0600, $A7
 
         plp
         bcc     :+

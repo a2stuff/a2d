@@ -616,11 +616,7 @@ dialog_result:  .byte   0
         ;; Copy the relay routine to the zero page
         dest := $20
 
-        ldx     #sizeof_routine
-loop:   lda     routine,x
-        sta     dest,x
-        dex
-        bpl     loop
+        COPY_BYTES sizeof_routine+1, routine, dest
         lda     dialog_result
         beq     skip
 

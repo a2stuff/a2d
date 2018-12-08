@@ -74,11 +74,7 @@ stash_stack:  .byte   0
         dest := $20
 
         ;; copy following routine to $20 and call it
-        ldx     #sizeof_routine
-loop:   lda     routine,x
-        sta     dest,x
-        dex
-        bpl     loop
+        COPY_BYTES sizeof_routine+1, routine, dest
         jsr     dest
 
         ;; now check the window pos
@@ -739,11 +735,7 @@ destroy:
         DESKTOP_CALL DT_REDRAW_ICONS
 
         target = $20            ; copy following to ZP and run it
-        ldx     #sizeof_routine
-loop:   lda     routine,x
-        sta     target,x
-        dex
-        bpl     loop
+        COPY_BYTES sizeof_routine+1, routine, target
         jmp     target
 
 .proc routine

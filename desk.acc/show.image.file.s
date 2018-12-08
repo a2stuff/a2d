@@ -41,11 +41,7 @@ call_main_addr         := call_main_trampoline+7 ; address patched in here
 .scope
         sta     RAMWRTON
         sta     RAMRDON
-        ldx     #sizeof_routine
-loop:   lda     routine,x
-        sta     call_main_trampoline,x
-        dex
-        bpl     loop
+        COPY_BYTES sizeof_routine+1, routine, call_main_trampoline
         jmp     call_init
 .endscope
 

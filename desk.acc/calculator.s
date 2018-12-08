@@ -74,11 +74,8 @@ call_init:
         zp_stash := $20
         lda     LCBANK1
         lda     LCBANK1
-        ldx     #sizeof_routine
-:       lda     routine,x
-        sta     zp_stash,x
-        dex
-        bpl     :-
+
+        COPY_BYTES sizeof_routine+1, routine, zp_stash
         jsr     zp_stash
 
         ;;  Redraw window after event_kind_drag
@@ -869,11 +866,7 @@ exit:   lda     LCBANK1
         ;; Copy following routine to ZP and invoke it
         zp_stash := $20
 
-        ldx     #sizeof_routine
-loop:   lda     routine,x
-        sta     zp_stash,x
-        dex
-        bpl     loop
+        COPY_BYTES sizeof_routine+1, routine, zp_stash
         jmp     zp_stash
 
 .proc routine

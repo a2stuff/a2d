@@ -18,7 +18,7 @@ L0800:  pha
 ;;; Format Disk
 
 L080C:  copy    #$00, has_input_field_flag
-        jsr     desktop_main::LB509
+        jsr     desktop_main::open_prompt_window
         lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         addr_call desktop_main::draw_dialog_title, desktop_aux::str_format_disk
@@ -154,7 +154,7 @@ L09D8:  .byte   0
 
 L09D9:  lda     #$00
         sta     has_input_field_flag
-        jsr     desktop_main::LB509
+        jsr     desktop_main::open_prompt_window
         lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         addr_call desktop_main::draw_dialog_title, desktop_aux::str_erase_disk

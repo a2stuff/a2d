@@ -1179,11 +1179,7 @@ L5C27:  ldx     $177F
 ;;; ============================================================
 
 .proc L5C4F
-        ldx     #3
-:       lda     screentowindow_screenx,x
-        sta     L5CF0,x
-        dex
-        bpl     :-
+        COPY_STRUCT MGTK::Point, screentowindow_screenx, L5CF0
 
         lda     machine_type    ; Timer for insertion point blink
         sta     ip_blink_counter
@@ -1885,7 +1881,7 @@ L631A:  iny
 L6322:  lda     L63BE
         sta     L63C0
         ldx     #$0F
-        lda     #$20
+        lda     #' '
 L632C:  sta     L63C2,x
         dex
         bpl     L632C

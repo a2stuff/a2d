@@ -44,11 +44,7 @@ call_main_addr         := call_main_trampoline+7        ; address patched in her
 .scope
         sta     RAMWRTON
         sta     RAMRDON
-        ldx     #sizeof_call_main_template
-loop:   lda     call_main_template,x
-        sta     call_main_trampoline,x
-        dex
-        bpl     loop
+        COPY_BYTES sizeof_call_main_template+1, call_main_template, call_main_trampoline
         jmp     call_init
 .endscope
 
@@ -1425,11 +1421,7 @@ base:   .word   10              ; vertical text offset (to baseline)
         jmp     endif
 else:   MGTK_CALL MGTK::DrawText, prop_str
 
-endif:  ldx     #.sizeof(MGTK::MapInfo) - 1
-loop:   lda     default_port,x
-        sta     winfo::port,x
-        dex
-        bpl     loop
+endif:  COPY_STRUCT MGTK::MapInfo, default_port, winfo::port
         MGTK_CALL MGTK::SetPortBits, winfo::port
         rts
 .endproc

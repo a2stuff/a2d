@@ -48,11 +48,7 @@ start:  lda     #$80
         MGTK_RELAY_CALL MGTK::SetZP1, ptr
 
         ;; Copy menu bar up to language card, and use it.
-        ldx     #.sizeof(menu_bar)
-:       lda     menu_bar,x
-        sta     $D400,x
-        dex
-        bpl     :-
+        COPY_BYTES .sizeof(menu_bar)+1, menu_bar, $D400
         MGTK_RELAY_CALL MGTK::SetMenu, menu_target
 
         ;; Clear most of the system bitmap

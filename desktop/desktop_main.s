@@ -261,10 +261,7 @@ L41E2:  copy    cached_window_id, getwinport_params2::window_id
         jsr     get_set_port2
         jsr     cached_icons_window_to_screen
 
-        ldx     #.sizeof(MGTK::Rect)-1
-:       copy    grafport2::cliprect,x, rect_E230,x
-        dex
-        bpl     :-
+        COPY_BLOCK grafport2::cliprect, rect_E230
 
         copy    #0, L4241
 L41FE:  lda     L4241
@@ -308,10 +305,7 @@ bail:   rts
         jsr     get_port2
         jsr     offset_grafport2_and_set
 
-        ldx     #.sizeof(MGTK::Rect)-1
-:       copy    grafport2::cliprect,x, rect_E230,x
-        dex
-        bpl     :-
+        COPY_BLOCK grafport2::cliprect, rect_E230
 
 L4270:  lda     L42C3
         cmp     selected_icon_count
@@ -1993,11 +1987,7 @@ L4FD4:  lda     #$80
         bpl     :-
 
         ;; Create with current date
-        ldx     #3
-:       lda     DATELO,x
-        sta     create_params::create_date,x
-        dex
-        bpl     :-
+        COPY_STRUCT DateTime, DATELO, create_params::create_date
 
         ;; Create folder
         MLI_RELAY_CALL CREATE, create_params
@@ -2071,10 +2061,11 @@ L5098:  .byte   $00
 
 .proc cmd_quit_impl
 
-stack_data:
+.proc stack_data
         .addr   $DEAF,$DEAD     ; ???
+.endproc
 
-quit_code:
+.proc quit_code
         ;;; note that GS/OS GQUIT is called by ProDOS at $E0D000
         ;;; to quit back to GS/OS.
         ;;; since DeskTop pre-dates GS/OS, it's likely that this does
@@ -2087,25 +2078,19 @@ quit_code:
         xce                             ; enter native mode
         jmp     $E0D004                 ; ProDOS 8->16 QUIT, presumably
         .popcpu
+.endproc
 
         DEFINE_QUIT_PARAMS quit_params
 
 start:
-        ldx     #3
-:       lda     stack_data,x
-        sta     $0102,x         ; Populate stack ???
-        dex
-        bpl     :-
+        COPY_BLOCK stack_data, $0102  ; Populate stack ???
 
         ;; Install new quit routine
         sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
-        ldx     #5
-:       lda     quit_code,x
-        sta     SELECTOR,x
-        dex
-        bpl     :-
+
+        COPY_BLOCK quit_code, SELECTOR
 
         ;; Restore machine to text state
         sta     ALTZPOFF
@@ -2176,6 +2161,7 @@ L5162:  sta     ($06),y
         dey
         cpy     #$1B
         bne     L5162
+
         ldy     #$23
         ldx     #$03
 L516D:  lda     L51EB,x
@@ -2183,8 +2169,9 @@ L516D:  lda     L51EB,x
         dey
         dex
         bpl     L516D
+
         lda     active_window_id
-        jsr     L763A
+        jsr     create_file_icon_ep2
         lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     get_set_port2
@@ -2261,6 +2248,7 @@ L523B:  sta     ($06),y
         dey
         cpy     #$1B
         bne     L523B
+
         ldy     #$23
         ldx     #$03
 L5246:  lda     L5263,x
@@ -2268,6 +2256,7 @@ L5246:  lda     L5263,x
         dey
         dex
         bpl     L5246
+
         lda     #$80
         sta     L4152
         jsr     reset_grafport3
@@ -3436,11 +3425,7 @@ L5B1B:  .byte   0
         sta     L5B1B
 
         ;; Restore event coords (following detect_double_click)
-        ldx     #3
-:       lda     saved_event_coords,x
-        sta     event_coords,x
-        dex
-        bpl     :-
+        COPY_STRUCT MGTK::Point, saved_event_coords, event_coords
 
         MGTK_RELAY_CALL MGTK::FindControl, event_coords
         lda     findcontrol_which_ctl
@@ -3897,12 +3882,14 @@ L5F0F:  .byte   0
 
 start:  copy16  #notpenXOR, $06
         jsr     L60D5
+
         ldx     #$03
 L5F20:  lda     event_coords,x
         sta     L5F0B,x
         sta     L5F0F,x
         dex
         bpl     L5F20
+
         jsr     peek_event
         lda     event_kind
         cmp     #MGTK::EventKind::drag
@@ -3981,11 +3968,9 @@ L600E:  lda     L60CB
         jmp     L5F6B
 
 L601F:  MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
-        ldx     #$03
-L602A:  lda     event_coords,x
-        sta     L60CF,x
-        dex
-        bpl     L602A
+
+        COPY_STRUCT MGTK::Point, event_coords, L60CF
+
         cmp16   event_xcoord, rect_E230::x2
         bpl     L6068
         cmp16   event_xcoord, rect_E230::x1
@@ -4026,7 +4011,7 @@ L60D1:  .word   0
 L60D3:  .byte   0
 L60D4:  .byte   0
 
-L60D5:  jsr     push_zp_addrs
+L60D5:  jsr     push_pointers
         jmp     icon_ptr_window_to_screen
 .endproc
         L5F13 := L5F13_impl::start
@@ -4849,11 +4834,9 @@ L6978:  lda     L6A35
         jmp     L68E4
 
 L6989:  MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
-        ldx     #$03
-L6994:  lda     event_coords,x
-        sta     L6A39,x
-        dex
-        bpl     L6994
+
+        COPY_STRUCT MGTK::Point, event_coords, L6A39
+
         cmp16   event_xcoord, rect_E230::x2
         bpl     L69D2
         cmp16   event_xcoord, rect_E230::x1
@@ -5108,7 +5091,7 @@ L6C0E:  .byte   0
         bmi     L6C25
         jmp     L6CCD
 
-L6C25:  jsr     push_zp_addrs
+L6C25:  jsr     push_pointers
         lda     cached_window_id
         sta     getwinport_params2::window_id
         jsr     get_set_port2
@@ -5178,7 +5161,7 @@ rloop:  lda     rows_done
         jmp     rloop
 
 done:   jsr     reset_grafport3
-        jsr     pop_zp_addrs
+        jsr     pop_pointers
         rts
 
 rows_done:
@@ -5193,11 +5176,9 @@ L6CCD:  lda     cached_window_id
         jsr     draw_window_header
 L6CDE:  jsr     cached_icons_window_to_screen
         jsr     offset_grafport2_and_set
-        ldx     #$07
-L6CE6:  lda     grafport2::cliprect,x
-        sta     rect_E230,x
-        dex
-        bpl     L6CE6
+
+        COPY_BLOCK grafport2::cliprect, rect_E230
+
         ldx     #$00
         txa
         pha
@@ -5664,12 +5645,10 @@ L70C4:  .byte   $00
 
 .proc start
         sta     L72A7
-        jsr     push_zp_addrs
-        ldx     #$40
-L70CD:  lda     LE1B0,x
-        sta     vol_info_path_buf,x
-        dex
-        bpl     L70CD
+        jsr     push_pointers
+
+        COPY_BYTES $41, LE1B0, vol_info_path_buf
+
         jsr     do_open
         lda     open_params::ref_num
         sta     read_params::ref_num
@@ -5870,7 +5849,7 @@ L7293:  jmp     do_entry
 
 L7296:  copy16  record_ptr, L485F
         jsr     do_close
-        jsr     pop_zp_addrs
+        jsr     pop_pointers
         rts
 L72A7:  .byte   0
 L72A8:  .word   0
@@ -5973,7 +5952,7 @@ L734A:  lda     LE1F1+1,x
         inx
         copy16  LE202,x, $08
         ldy     #$00
-        jsr     push_zp_addrs
+        jsr     push_pointers
 L73A5:  lda     LCBANK2
         lda     LCBANK2
         lda     ($08),y
@@ -5988,7 +5967,7 @@ L73A5:  lda     LCBANK2
         lda     $08
         cmp     L485F
         bne     L73A5
-        jsr     pop_zp_addrs
+        jsr     pop_pointers
         lda     LE1F1
         asl     a
         tax
@@ -6031,7 +6010,7 @@ L7449:  .word   0
         ldy     #$09
         lda     ($06),y
         tay
-        jsr     push_zp_addrs
+        jsr     push_pointers
         lda     $06
         clc
         adc     #$09
@@ -6052,12 +6031,12 @@ L7471:  lda     ($06),y
         lda     ($08),y
         and     #%11011111       ; ???
         sta     ($08),y
-        jsr     pop_zp_addrs
+        jsr     pop_pointers
         ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_winid_mask
         bne     L74D3
-        jsr     push_zp_addrs
+        jsr     push_pointers
         lda     cached_window_id
         jsr     window_address_lookup
         stax    $08
@@ -6094,7 +6073,7 @@ L74C8:  lda     ($08),y
 L74D3:  tay
         lda     #$00
         sta     L7620
-        jsr     push_zp_addrs
+        jsr     push_pointers
         tya
         pha
         jsr     window_address_lookup
@@ -6202,7 +6181,7 @@ L75A3:  sta     ($06),y
         sta     ($06),y
         ldy     #$09
         sta     ($06),y
-        jsr     pop_zp_addrs
+        jsr     pop_pointers
         lda     icon_params2
 
         jsr     open_directory
@@ -6229,20 +6208,24 @@ L75FA:  ldx     cached_window_id
         copy16  vol_kb_used, window_k_used_table,x
         copy16  vol_kb_free, window_k_free_table,x
         lda     cached_window_id
-        jsr     L7635
+        jsr     create_file_icon_ep1
         rts
 
 L7620:  .byte   $00
 .endproc
 
 ;;; ============================================================
-;;; Icon entry construction
+;;; File Icon Entry Construction
+
+.proc create_file_icon
 
 L7621:  .byte   $00             ; window_id ?
 L7622:  .addr   0               ; iconbits
 L7624:  .byte   $00             ; icon type
 L7625:  .byte   $00
-L7626:  .word   $34,$10
+
+initial_coords:  DEFINE_POINT  52,16
+
 L762A:  .word   0
 L762C:  .word   0
 L762E:  .byte   $05
@@ -6251,25 +6234,25 @@ L7630:  .word   0
 L7632:  .word   0
 L7634:  .byte   $00
 
-.proc L7635
+.proc ep1                       ; entry point #1 ???
         pha
-        lda     #$00
+        lda     #0
         beq     L7647
-L763A:  pha
+
+ep2:    pha                     ; entry point #2 ???
         ldx     cached_window_id
         dex
         lda     LEC26,x
         sta     icon_params2
         lda     #$80
+
 L7647:  sta     L7634
         pla
         sta     L7621
-        jsr     push_zp_addrs
-        ldx     #$03
-L7653:  lda     L7626,x
-        sta     L762A,x
-        dex
-        bpl     L7653
+        jsr     push_pointers
+
+        COPY_STRUCT MGTK::Point, initial_coords, L762A
+
         lda     #$00
         sta     L762F
         sta     L7625
@@ -6312,7 +6295,7 @@ L76AA:  lda     L7625
 
 L76BB:  bit     L7634
         bpl     :+
-        jsr     pop_zp_addrs
+        jsr     pop_pointers
         rts
 
 :       jsr     L7B6B
@@ -6365,14 +6348,13 @@ L7744:  ldy     #$22
         lda     icon_params2
         ldx     L7621
         jsr     animate_window_open
-        jsr     pop_zp_addrs
+        jsr     pop_pointers
         rts
 
 L7764:  .byte   $00,$00,$00
 L7767:  .byte   $14
 
 .endproc
-        L763A := L7635::L763A
 
 ;;; ============================================================
 ;;; Create icon
@@ -6487,7 +6469,7 @@ L7826:  copy16  L762C, L7632
         cmp     L762E
         bne     L7862
         add16   L762C, #32, L762C
-        copy16  L7626, L762A
+        copy16  initial_coords, L762A
         lda     #$00
         sta     L762F
         jmp     L7870
@@ -6521,7 +6503,7 @@ L7870:  lda     cached_window_id
         ptr := $6
 
         sta     file_type
-        jsr     push_zp_addrs
+        jsr     push_pointers
 
         ;; Find index of file type
         copy16  type_table_addr, ptr
@@ -6548,12 +6530,16 @@ found:
         ;; Look up icon definition
         copy16  type_icons_addr, ptr
         copy16in (ptr),y, L7622
-        jsr     pop_zp_addrs
+        jsr     pop_pointers
         rts
 
 file_type:
         .byte   0
 .endproc
+
+.endproc
+        create_file_icon_ep2 := create_file_icon::ep1::ep2
+        create_file_icon_ep1 := create_file_icon::ep1
 
 ;;; ============================================================
 ;;; Draw header (items/k in disk/k available/lines)
@@ -7660,11 +7646,9 @@ loop:   lda     LEC43,x
 .proc prepare_col_type
         lda     LEC53
         jsr     L8707
-        ldx     #4
-loop:   lda     LDFC5,x
-        sta     text_buffer2::data-1,x
-        dex
-        bpl     loop
+
+        COPY_BYTES 5, LDFC5, text_buffer2::data-1
+
         rts
 .endproc
 
@@ -7949,7 +7933,7 @@ L84D0:  .byte   0
 ;;; ============================================================
 
 .proc L84D1
-        jsr     push_zp_addrs
+        jsr     push_pointers
         bit     L5B1B
         bmi     L84DC
         jsr     cached_icons_window_to_screen
@@ -8028,7 +8012,7 @@ L85E4:  lda     grafport2::cliprect::x1,x
         dey
         dex
         bpl     L85E4
-        jsr     pop_zp_addrs
+        jsr     pop_pointers
         rts
 
 L85F1:  .byte   0
@@ -8389,7 +8373,7 @@ check_alpha:
 ;;; ============================================================
 ;;; Pushes two words from $6/$8 to stack
 
-.proc push_zp_addrs
+.proc push_pointers
         ptr := $6
 
         pla                     ; stash return address
@@ -8416,7 +8400,7 @@ addr:   .addr   0
 ;;; ============================================================
 ;;; Pops two words from stack to $6/$8
 
-.proc pop_zp_addrs
+.proc pop_pointers
         ptr := $6
 
         pla                     ; stash return address
@@ -8449,7 +8433,7 @@ port_copy:
         ptr := $6
 
         tay
-        jsr     push_zp_addrs
+        jsr     push_pointers
         tya
         jsr     window_lookup
         stax    ptr
@@ -8461,7 +8445,7 @@ port_copy:
         inx
         cpx     #.sizeof(MGTK::GrafPort)
         bne     :-
-        jsr     pop_zp_addrs
+        jsr     pop_pointers
         rts
 .endproc
 
@@ -8469,7 +8453,7 @@ port_copy:
         ptr := $6
 
         tay
-        jsr     push_zp_addrs
+        jsr     push_pointers
         tya
         jsr     window_lookup
         stax    ptr
@@ -8481,7 +8465,7 @@ port_copy:
         inx
         cpx     #.sizeof(MGTK::GrafPort)
         bne     :-
-        jsr     pop_zp_addrs
+        jsr     pop_pointers
         rts
 .endproc
 
@@ -8494,7 +8478,7 @@ port_copy:
         winfo_ptr := $8
 
         tay
-        jsr     push_zp_addrs
+        jsr     push_pointers
         tya
         jsr     icon_entry_lookup
         stax    entry_ptr
@@ -8537,7 +8521,7 @@ port_copy:
         ;; icony
         sub16in (entry_ptr),y, pos_win+2, (entry_ptr),y
 
-        jsr     pop_zp_addrs
+        jsr     pop_pointers
         rts
 
 pos_screen:     .word   0, 0
@@ -8551,7 +8535,7 @@ pos_win:        .word   0, 0
 
 .proc icon_window_to_screen
         tay
-        jsr     push_zp_addrs
+        jsr     push_pointers
         tya
         jsr     icon_entry_lookup
         stax    $06
@@ -8600,7 +8584,7 @@ pos_win:        .word   0, 0
 
         ;; icony
         add16in (entry_ptr),y, pos_win+2, (entry_ptr),y
-        jsr     pop_zp_addrs
+        jsr     pop_pointers
         rts
 
 pos_screen:     .word   0, 0
@@ -8656,7 +8640,7 @@ success:
 create_icon:
         icon_ptr := $6
 
-        jsr     push_zp_addrs
+        jsr     push_pointers
         jsr     DESKTOP_ALLOC_ICON
         ldy     device_num
         sta     device_to_icon_map,y
@@ -8772,7 +8756,7 @@ selected_device_icon:
         ldy     #IconEntry::id
         lda     (icon_ptr),y
         sta     cached_window_icon_list,x
-        jsr     pop_zp_addrs
+        jsr     pop_pointers
         return  #0
 .endproc
 
@@ -8821,14 +8805,14 @@ remove: lda     cached_window_icon_list+1,x
 
 ;;; ============================================================
 
-L8B19:  jsr     push_zp_addrs
+L8B19:  jsr     push_pointers
         jmp     L8B2E
 
 L8B1F:  lda     icon_params2
         bne     L8B25
         rts
 
-L8B25:  jsr     push_zp_addrs
+L8B25:  jsr     push_pointers
         lda     icon_params2
         jsr     L7345
         ;; fall through
@@ -8854,7 +8838,7 @@ skip:   lda     icon_params2
         and     #(~icon_entry_open_mask)&$FF ; clear open_flag
         sta     ($06),y
         jsr     L4244
-        jsr     pop_zp_addrs
+        jsr     pop_pointers
         rts
 .endproc
 
@@ -8882,6 +8866,7 @@ open:   ldy     #$00
         clc
         adc     #$23
         tay
+
         ldx     #$23
 :       lda     (ptr),y
         sta     grafport2,x
@@ -11620,11 +11605,7 @@ LA46C:  rts
 .endproc
 
 .proc LA46D
-        ldx     #10
-loop:   lda     file_info_params2::access,x
-        sta     file_info_params3::access,x
-        dex
-        bpl     loop
+        COPY_BYTES 11, file_info_params2::access, file_info_params3::access
         rts
 .endproc
 
@@ -11642,6 +11623,9 @@ done:   rts
 .endproc
 
 ;;; ============================================================
+;;; Show Alert Dialog
+;;; A=error. If ERR_VOL_NOT_FOUND or ERR_FILE_NOT_FOUND, will
+;;; show "please insert source disk" (or destination, if flag set)
 
 .proc show_error_alert_impl
 
@@ -11985,19 +11969,19 @@ LA777:  jmp     format_erase_overlay::L0CF9
 LA77A:  bit     LD8E7
         bvc     LA79B
         cmp     #'Y'
-        beq     LA7E8
+        beq     do_yes
         cmp     #'y'
-        beq     LA7E8
+        beq     do_yes
         cmp     #'N'
-        beq     LA7F7
+        beq     do_no
         cmp     #'n'
-        beq     LA7F7
+        beq     do_no
         cmp     #'A'
-        beq     LA806
+        beq     do_all
         cmp     #'a'
-        beq     LA806
+        beq     do_all
         cmp     #CHAR_RETURN
-        beq     LA7E8
+        beq     do_yes
 
 LA79B:  bit     LD8F5
         bmi     LA7C8
@@ -12027,7 +12011,7 @@ LA7C8:  cmp     #' '
         bcs     LA7CF
         jmp     LA717
 
-LA7CF:  cmp     #$7E
+LA7CF:  cmp     #'~'
         beq     LA7DD
         bcc     LA7DD
         jmp     LA717
@@ -12038,17 +12022,16 @@ LA7DD:  ldx     has_input_field_flag
         beq     LA7E5
         jsr     LBB0B
 LA7E5:  return  #$FF
-.endproc
 
-LA7E8:  jsr     set_penmode_xor2
+do_yes: jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::yes_button_rect
         return  #prompt_button_yes
 
-LA7F7:  jsr     set_penmode_xor2
+do_no:  jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::no_button_rect
         return  #prompt_button_no
 
-LA806:  jsr     set_penmode_xor2
+do_all: jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::all_button_rect
         return  #prompt_button_all
 
@@ -12098,9 +12081,12 @@ LA88D:  lda     has_input_field_flag
         beq     LA895
         jsr     LBB63
 LA895:  return  #$FF
+.endproc
 
 rts1:
         rts
+
+;;; ============================================================
 
 jump_relay:
         .assert * = $A899, error, "Entry point used by overlay"
@@ -12560,7 +12546,7 @@ LAE42:  cmp     #$40
 LAE49:  copy    #$80, has_input_field_flag
         jsr     clear_path_buf2
         lda     #$00
-        jsr     LB509
+        jsr     open_prompt_window
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         addr_call draw_dialog_title, desktop_aux::str_new_folder_title
@@ -12647,7 +12633,7 @@ LAF34:  copy    #0, has_input_field_flag
         lsr     a
         ror     a
         eor     #$80
-        jsr     LB509
+        jsr     open_prompt_window
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         addr_call draw_dialog_title, desktop_aux::str_info_title
@@ -12913,7 +12899,7 @@ LB27D:  jsr     clear_path_buf1
         copy    #$80, has_input_field_flag
         jsr     clear_path_buf2
         lda     #$00
-        jsr     LB509
+        jsr     open_prompt_window
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         addr_call draw_dialog_title, desktop_aux::str_rename_title
@@ -13109,10 +13095,7 @@ set_penmode_xor2:
         double_click_deltax := 5
         double_click_deltay := 4
 
-        ldx     #3
-:       copy    event_coords,x, coords,x
-        dex
-        bpl     :-
+        COPY_STRUCT MGTK::Point, event_coords, coords
 
         lda     #0
         sta     counter+1
@@ -13219,22 +13202,25 @@ unused: .byte   0               ; unused
 
 ;;; ============================================================
 
-LB509:
+.proc open_prompt_window
         .assert * = $B509, error, "Entry point used by overlay"
         sta     LD8E7
         jsr     open_dialog_window
         bit     LD8E7
-        bvc     LB51A
+        bvc     :+
         jsr     draw_yes_no_all_cancel_buttons
-        jmp     LB526
+        jmp     no_ok
 
-LB51A:  MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::ok_button_rect
+:       MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::ok_button_rect
         jsr     draw_ok_label
-LB526:  bit     LD8E7
-        bmi     LB537
+no_ok:  bit     LD8E7
+        bmi     done
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::cancel_button_rect
         jsr     draw_cancel_label
-LB537:  jmp     reset_grafport3a
+done:   jmp     reset_grafport3a
+.endproc
+
+;;; ============================================================
 
 .proc open_dialog_window
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_alert_dialog
@@ -13245,6 +13231,8 @@ LB537:  jmp     reset_grafport3a
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::confirm_dialog_inner_rect
         rts
 .endproc
+
+;;; ============================================================
 
 .proc open_alert_window
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_alert_dialog
@@ -14122,11 +14110,7 @@ LBD33:  rts
         target          := $20
 
         ;; Backup copy of $20
-        ldx     #proc_len
-:       lda     target,x
-        sta     saved_proc_buf,x
-        dex
-        bpl     :-
+        COPY_BYTES proc_len+1, target, saved_proc_buf
 
         ;; Overwrite with proc
         ldx     #proc_len
@@ -14140,11 +14124,7 @@ LBD33:  rts
         pha
 
         ;; Restore copy
-        ldx     #proc_len
-:       lda     saved_proc_buf,x
-        sta     target,x
-        dex
-        bpl     :-
+        COPY_BYTES proc_len+1, saved_proc_buf, target
 
         pla
         rts
@@ -14312,8 +14292,8 @@ reset_grafport3a:
         PAD_TO $BF00
 
 .endproc ; desktop_main
-        desktop_main_pop_zp_addrs := desktop_main::pop_zp_addrs
-        desktop_main_push_zp_addrs := desktop_main::push_zp_addrs
+        desktop_main_pop_pointers := desktop_main::pop_pointers
+        desktop_main_push_pointers := desktop_main::push_pointers
 
 ;;; ============================================================
 ;;; Segment loaded into MAIN $800-$FFF
@@ -14449,12 +14429,12 @@ found_ram:
 .proc populate_icon_entries_table
         ptr := $6
 
-        jsr     desktop_main::push_zp_addrs
+        jsr     desktop_main::push_pointers
         copy16  #icon_entries, ptr
         ldx     #1
 loop:   cpx     #max_icon_count
         bne     :+
-        jsr     desktop_main::pop_zp_addrs
+        jsr     desktop_main::pop_pointers
         jmp     end
 :       txa
         pha
