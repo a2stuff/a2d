@@ -413,13 +413,36 @@ close:  jsr     close_file
 .endproc
 
 .proc show_dhr_file
+        ptr := $06
+
         ;; AUX memory half
-        sta     PAGE2ON
+        sta     PAGE2OFF
         jsr     read_file
+
+        ;; NOTE: Why not just load into Aux directly by setting
+        ;; PAGE2ON? This works unless loading from a RamWorks-based
+        ;; RAM Disk, where things get messed up. This is slightly
+        ;; slower in the non-RamWorks case.
+        ;; TODO: Load directly into Aux if RamWorks is not present.
+
+        ;; Copy MAIN to AUX
+        copy16  #hires, ptr
+        ldx     #>hires_size    ; number of pages to copy
+        ldy     #0
+:       sta     PAGE2OFF        ; from main
+        lda     (ptr),y
+        sta     PAGE2ON         ; to aux
+        sta     (ptr),y
+        iny
+        bne     :-
+        inc     ptr+1
+        dex
+        bne     :-
 
         ;; MAIN memory half
         sta     PAGE2OFF
         jsr     read_file
+        jsr     close_file
 
         ;; TODO: Restore PAGE2 state?
 
