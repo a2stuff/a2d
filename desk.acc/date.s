@@ -44,6 +44,11 @@ write_buffer:
         stx     stash_stack
         sta     ALTZPOFF
         lda     ROMIN2
+
+        lda     MACHID
+        and     #%00000001      ; bit 0 = clock card
+        sta     clock_flag
+
         lda     DATELO
         sta     datelo
         lda     DATEHI
@@ -77,6 +82,9 @@ write_buffer:
         lda     write_buffer    ; Dialog committed?
         beq     skip
 
+        ;; If there is a system clock, don't write out the date.
+        ldx     clock_flag
+        bne     skip
 
         ldy     #OPEN           ; open the file
         ldax    #open_params
@@ -153,6 +161,9 @@ backcolor:   .byte   0          ; black
         .byte   $FF             ; ??
 
 selected_field:                 ; 1 = day, 2 = month, 3 = year, 0 = none (init)
+        .byte   0
+
+clock_flag:
         .byte   0
 
 datelo: .byte   0
@@ -258,6 +269,11 @@ nextwinfo:   .addr   0
 init_window:
         jsr     save_zp
 
+        ;; If null date, just leave the baked in default
+        lda     datelo
+        ora     datehi
+        beq     :+
+
         ;; Crack the date bytes. Format is:
         ;;   |    DATEHI     |    DATELO     |
         ;;   |7 6 5 4 3 2 1 0 7 6 5 4 3 2 1 0|
@@ -281,7 +297,7 @@ init_window:
         lsr     a
         sta     month
 
-        MGTK_CALL MGTK::OpenWindow, winfo
+:       MGTK_CALL MGTK::OpenWindow, winfo
         lda     #0
         sta     selected_field
         jsr     draw_window
@@ -311,7 +327,11 @@ init_window:
         bne     :+
         jmp     on_ok
 
-:       cmp     #CHAR_ESCAPE
+        ;; If there is a system clock, only the first button is active
+:       ldx     clock_flag
+        bne     input_loop
+
+        cmp     #CHAR_ESCAPE
         bne     :+
         jmp     on_cancel
 :       cmp     #CHAR_LEFT
@@ -661,9 +681,17 @@ loop:   txa
         MGTK_CALL MGTK::InRect, $1000, test_addr
         bne     done
 
-        clc
+        ;; If there is a system clock, only the first button is active
+        ldx     clock_flag
+        beq     next
+        pla
+        ldx     #0
+        rts
+
+
+next:   clc
         lda     test_addr
-        adc     #8              ; size of 4 words
+        adc     #.sizeof(MGTK::Rect)
         sta     test_addr
         bcc     :+
         inc     test_addr+1
@@ -717,17 +745,21 @@ penheight: .byte   1
 ;;; ============================================================
 ;;; Render the window contents
 
-draw_window:
+.proc draw_window
         MGTK_CALL MGTK::SetPort, winfo::port
         MGTK_CALL MGTK::FrameRect, border_rect
         MGTK_CALL MGTK::SetPenSize, setpensize_params
         MGTK_CALL MGTK::FrameRect, date_rect
-        MGTK_CALL MGTK::FrameRect, ok_button_rect
-        MGTK_CALL MGTK::FrameRect, cancel_button_rect
 
+        MGTK_CALL MGTK::FrameRect, ok_button_rect
         MGTK_CALL MGTK::MoveTo, label_ok_pos
         MGTK_CALL MGTK::DrawText, label_ok
 
+        ;; If there is a system clock, only draw the OK button.
+        ldx     clock_flag
+        bne     :+
+
+        MGTK_CALL MGTK::FrameRect, cancel_button_rect
         MGTK_CALL MGTK::MoveTo, label_cancel_pos
         MGTK_CALL MGTK::DrawText, label_cancel
 
@@ -739,17 +771,24 @@ draw_window:
         MGTK_CALL MGTK::DrawText, label_downarrow
         MGTK_CALL MGTK::FrameRect, down_arrow_rect
 
-        jsr     prepare_day_string
+:       jsr     prepare_day_string
         jsr     prepare_month_string
         jsr     prepare_year_string
 
         jsr     draw_day
         jsr     draw_month
         jsr     draw_year
-        MGTK_CALL MGTK::SetPenMode, penmode_params
+
+        ;; If there is a system clock, don't draw the highlight.
+        ldx     clock_flag
+        beq     :+
+        rts
+
+:       MGTK_CALL MGTK::SetPenMode, penmode_params
         MGTK_CALL MGTK::SetPattern, white_pattern
         lda     #1
         jmp     highlight_selected_field
+.endproc
 
 .proc draw_selected_field
         lda     selected_field
