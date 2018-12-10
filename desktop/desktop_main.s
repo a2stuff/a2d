@@ -758,41 +758,12 @@ check_disk_in_drive:
         tya
         pha
 
-        ;; Compute driver address ($BFds for Slot s Drive d)
-        ldx     #$11            ; LSB DEVADR for slot 1, drive 1
+        sp_addr := $0A
         lda     unit_number
-        and     #$80            ; high bit is drive (0=D1, 1=D2)
-        beq     :+
-        ldx     #$21            ; LSB DEVADR for slot 1, drive 2
-:       stx     @addr_lsb       ; D1=$11, D2=$21
+        jsr     find_smartport_dispatch_address
+        bne     notsp           ; not SmartPort
 
-        lda     unit_number
-        and     #$70            ; slot number
-        lsr     a
-        lsr     a
-        lsr     a
-        clc
-        adc     @addr_lsb
-        sta     @addr_lsb
-
-        @addr_lsb := *+1
-        lda     MLI             ; self-modified to DEVADR plus offset
-        sta     ptr+1           ; BUG: Assumes firmware driver ($CnXX)
-        lda     #0              ; Set up $Cn00 for firmware lookups
-        sta     ptr
-
-        ldy     #7
-        lda     (ptr),y         ; $Cn07 == 0 for SmartPort
-        bne     notsp
-
-        ;; Locate SmartPort entry point: $Cn00 + ($CnFF) + 3
-        ldy     #$FF
-        lda     (ptr),y
-        clc
-        adc     #3
-        sta     ptr
-
-        ;; Compute SmartPort unit number
+        ;; Compute smart port control unit number
         lda     unit_number
         pha
         rol     a
@@ -828,7 +799,7 @@ finish: sta     result
         return  result
 
 smartport_call:
-        jmp     (ptr)
+        jmp     (sp_addr)
 
 unit_number:
         .byte   0
@@ -8530,59 +8501,69 @@ create_icon:
         ldy     #IconEntry::len
         sta     (icon_ptr),y
 
+        ;; ----------------------------------------
+
         ;; Figure out icon
+        slot_addr := $0A
+
+        ;; Look at "ID Nibble" (mostly bogus)
         lda     unit_number
-        cmp     #$3E            ; ??? Special case? Maybe RamWorks?
-        beq     use_ramdisk_icon
+        and     #%00001111      ; look at low nibble
+        beq     is_disk_ii      ; only trustworthy use of "ID Nibble"
 
-        and     #$0F            ; lower nibble
-        cmp     #DT_PROFILE     ; ProFile or Slinky-style RAM ?
-        bne     use_floppy_icon
+        ;; Look up driver address
+        lda     unit_number
+        jsr     device_driver_address
+        bne     default         ; RAM-based driver: just use default
+        lda     #$00
+        sta     slot_addr       ; point at $Cn00 for firmware lookups
 
-        ;; BUG: This defaults SmartPort hard drives to use floppy icons.
-        ;; See https://github.com/inexorabletash/a2d/issues/6 for more
-        ;; context; this code is basically unsalvageable per ProDOS
-        ;; Tech Note #21.
+        ;; Probe firmware ID bytes
+        ldy     #$FF            ; $CnFF: $00=Disk II, $FF=13-sector, else=block
+        lda     (slot_addr),y
+        beq     is_disk_ii
 
-        ;; Either ProFile or a "Slinky"/RamFactor-style Disk
-        lda     unit_number     ; bit 7 = drive (0=1, 1=2); 5-7 = slot
-        and     #%01110000      ; mask off slot
-        lsr     a
-        lsr     a
-        lsr     a
-        lsr     a
-        ora     #$C0
-        sta     @load_CxFB
-        @load_CxFB := *+2
-        lda     $C7FB           ; self-modified $CxFB
-        and     #$01            ; $CxFB bit 0 = is RAM card (IIgs Firmware Reference)
-        beq     use_profile_icon
-        ;; fall through...
+        ldy     #$07            ; SmartPort signature byte ($Cn07)
+        lda     (slot_addr),y   ; $00 = SmartPort
+        bne     default         ; unknown - use default
 
-use_ramdisk_icon:
-        ldy     #IconEntry::iconbits
-        copy16in #desktop_aux::ramdisk_icon, (icon_ptr),y
-        jmp     selected_device_icon
+        ldy     #$FB            ; SmartPort ID Type Byte ($CnFB)
+        lda     (slot_addr),y   ; bit 0 = is RAM Card?
+        ora     #%00000001
+        bne     is_ram_card
 
-use_profile_icon:
-        ldy     #IconEntry::iconbits
-        copy16in #desktop_aux::profile_icon, (icon_ptr),y
-        jmp     selected_device_icon
+        ;; TODO: Distinguish ProFile vs. 3.5" disk using blocks.
+        lda     unit_number     ; low nibble is high nibble of $CnFE
+        ora     #%00001000      ; bit 3 = is removable?
+        bne     is_35_floppy
+        ;; fall through
 
-use_floppy_icon:
-        cmp     #$B             ; removable / 4 volumes
-        bne     use_floppy140_icon
-        ldy     #IconEntry::iconbits
-        copy16in #desktop_aux::floppy800_icon, (icon_ptr),y
-        jmp     selected_device_icon
+default:
+is_profile:
+        ldax    #desktop_aux::profile_icon
+        bne     assign
 
-use_floppy140_icon:
-        cmp     #DT_DISKII       ; 0 = Disk II
-        bne     use_profile_icon ; last chance
-        ldy     #IconEntry::iconbits
-        copy16in #desktop_aux::floppy140_icon, (icon_ptr),y
+is_disk_ii:
+        ldax    #desktop_aux::floppy140_icon
+        bne     assign
 
-selected_device_icon:
+is_35_floppy:
+        ldax    #desktop_aux::floppy800_icon
+        bne     assign
+
+is_ram_card:
+        ldax    #desktop_aux::ramdisk_icon
+        ;; fall through
+
+        ;; Assign icon bitmap
+assign: ldy     #IconEntry::iconbits
+        sta     (icon_ptr),y
+        txa
+        iny
+        sta     (icon_ptr),y
+
+        ;; ----------------------------------------
+
         ;; Assign icon type
         ldy     #IconEntry::win_type
         lda     #0
@@ -9516,6 +9497,8 @@ loop:   ldx     index
 index:  .byte   0
 .endproc
 
+;;; ============================================================
+
 .proc smartport_eject
         ptr := $6
 
@@ -9537,46 +9520,12 @@ exit:   rts
 found:  lda     DEVLST,y        ;
         sta     unit_number
 
-        ;; Compute driver address ($BFds for Slot s Drive d)
-        ldx     #$11            ; LSB DEVADR for slot 1, drive 1
-        lda     unit_number
-        and     #$80            ; high bit is drive (0=D1, 1=D2)
-        beq     :+
-        ldx     #$21            ; LSB DEVADR for slot 1, drive 2
-:       stx     @addr_lsb       ; D1=$11, D2=$21
+        ;; Compute SmartPort dispatch address
+        smartport_addr := $0A
+        jsr     find_smartport_dispatch_address
+        bne     exit            ; not SP
 
-        lda     unit_number
-        and     #$70            ; slot number
-        lsr     a
-        lsr     a
-        lsr     a
-        clc
-        adc     @addr_lsb
-        sta     @addr_lsb
-
-        @addr_lsb := *+1
-        lda     MLI             ; self-modified to DEVADR plus offset
-        sta     ptr+1           ; BUG: Assumes firmware driver ($CnXX)
-        lda     #0              ; Set up $Cn00 for firmware lookups
-        sta     ptr
-
-        ldy     #7
-        lda     (ptr),y         ; $Cn07 == 0 for SmartPort
-        bne     exit
-
-        ldy     #$FB            ; Smart Port ID Type Byte ($CnFB)
-        lda     (ptr),y
-        and     #$7F            ; Anything (except 'Extended')
-        bne     exit
-
-        ;; Locate SmartPort entry point: $Cn00 + ($CnFF) + 3
-        ldy     #$FF
-        lda     (ptr),y
-        clc
-        adc     #3
-        sta     ptr
-
-        ;; Compute SmartPort unit number
+        ;; Compute control_unit_number from unit_number
         lda     unit_number
         pha
         rol     a
@@ -9598,7 +9547,7 @@ found:  lda     DEVLST,y        ;
         rts
 
 smartport_call:
-        jmp     ($06)
+        jmp     (smartport_addr)
 
 .proc control_params
 param_count:    .byte   3
@@ -9616,13 +9565,72 @@ unit_number:
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params5, $220
 
-L92DB:  .byte   0,0
-
         DEFINE_READ_BLOCK_PARAMS block_params, $0800, $A
 
 L92E3:  .byte   $00
 L92E4:  .word   0
 L92E6:  .byte   $00
+
+;;; ============================================================
+;;; Look up device driver address.
+;;; Input: A = unit number
+;;; Output: $0A/$0B ptr to driver; Z set if $CnXX
+
+.proc device_driver_address
+        slot_addr := $0A
+
+        and     #%11110000      ; mask off drive/slot
+        clc
+        ror                     ; 0DSSS000
+        ror                     ; 00DSSS00
+        ror                     ; 000DSSS0
+        tax                     ; = slot * 2 + (drive == 2 ? 0x10 + 0x00)
+
+        lda     DEVADR,x
+        sta     slot_addr
+        lda     DEVADR+1,x
+        sta     slot_addr+1
+
+        ora     #$F0            ; is it $Cn ?
+        cmp     #$C0            ; leave Z flag set if so
+        rts
+.endproc
+
+;;; ============================================================
+;;; Look up SmartPort dispatch address.
+;;; Input: A = unit number
+;;; Output: Z set if SP, $0A/$0B dispatch address; Z clear if not SP
+
+.proc find_smartport_dispatch_address
+        sp_addr := $0A
+
+        jsr     device_driver_address
+        bne     exit            ; RAM-based driver
+
+        copy    #0, sp_addr     ; point at $Cn00 for firmware lookups
+
+        ldy     #$07            ; SmartPort signature byte ($Cn07)
+        lda     (sp_addr),y     ; $00 = SmartPort
+        bne     exit
+
+        ldy     #$FB            ; SmartPort ID Type Byte ($CnFB)
+        lda     (sp_addr),y
+        and     #$7F            ; bit 7 = is Extended
+        bne     exit
+
+        ;; Locate SmartPort entry point: $Cn00 + ($CnFF) + 3
+        ldy     #$FF
+        lda     (sp_addr),y
+        clc
+        adc     #3
+        sta     sp_addr
+
+        lda     #0              ; exit with Z set on success
+
+exit:   rts
+.endproc
+
+        PAD_TO $92E7            ; Maintain offsets
 
 ;;; ============================================================
 ;;; Get Info
@@ -14469,50 +14477,14 @@ trash_name:  PASCAL_STRING " Trash "
 
 :       lda     DEVLST,x        ; unit_num
         stx     index
-        sta     unit_number
 
-        ;; Compute driver address ($BFds for Slot s Drive d)
-        ldx     #$11            ; LSB DEVADR for slot 1, drive 1
-        lda     unit_number
-        and     #$80            ; high bit is drive (0=D1, 1=D2)
-        beq     :+
-        ldx     #$21            ; LSB DEVADR for slot 1, drive 2
-:       stx     @addr_lsb       ; D1=$11, D2=$21
-
-        lda     unit_number
-        and     #$70            ; slot number
-        lsr     a
-        lsr     a
-        lsr     a
-        clc
-        adc     @addr_lsb
-        sta     @addr_lsb
-
-        @addr_lsb := *+1
-        lda     MLI             ; self-modified to DEVADR plus offset
-        sta     ptr+1           ; BUG: Assumes firmware driver ($CnXX)
-        lda     #0              ; Set up $Cn00 for firmware lookups
-        sta     ptr
-
-        ldy     #7
-        lda     (ptr),y         ; $Cn07 == 0 for SmartPort
-        bne     done
-
-        ldy     #$FB            ; Smart Port ID Type Byte ($CnFB)
-        lda     (ptr),y
-        and     #$7F            ; Anything (except 'Extended')
-        bne     done
-
-        ;; Locate SmartPort entry point: $Cn00 + ($CnFF) + 3
-        ldy     #$FF
-        lda     (ptr),y
-        clc
-        adc     #3
-        sta     ptr
+        sp_addr := $0A
+        jsr     desktop_main::find_smartport_dispatch_address
+        bne     done            ; not SmartPort
 
         ;; Execute SmartPort call
         jsr     smartport_call
-        .byte   $00             ; $00 = STATUS
+        .byte   0               ; $00 = STATUS
         .addr   smartport_params
 
         bcs     done
@@ -14533,8 +14505,7 @@ done:   jmp     end
 index:  .byte   0
 
 smartport_call:
-        jmp     (ptr)
-
+        jmp     (sp_addr)
 
 smartport_params:
         .byte   $03             ; parameter count
@@ -14545,7 +14516,7 @@ smartport_params:
 devcnt: .byte   0
 
 unit_number:
-        .byte   0
+        .byte   0               ; now unused
 
 end:
 .endproc
