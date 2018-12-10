@@ -6,6 +6,17 @@ Disassembly of the original desk accessories:
 * [Show Text File](show.text.file.s) - in progress! 95% complete
 * [Sort Directory](sort.directory.s) - in progress! 60% complete
 
+New desk accessories:
+
+* [Show Image File](show.image.file.s)
+  * Select an image file (8k Hires or 16k Double Hires), then choose this DA to preview it.
+* [This Apple](this.apple.s)
+  * Gives details about the computer, expanded memory, and what's in each slot.
+* [Eyes](eyes.s)
+  * Eyes that follow the mouse.
+* [Screen Dump](screen.dump.s)
+  * Dumps a screenshot to an ImageWriter II attached to a Super Serial Card in Slot 1.
+
 See [API.md](API.md) for programming details
 
 ## Files
@@ -17,10 +28,10 @@ See [API.md](API.md) for programming details
 ## Build Instructions
 
 On Unix-like systems (including Mac OS X) `make all` should build
-the desk accessory files into `out/`
+the desk accessory files (original and new) into `out/`
 output with a `.built` suffix.
 
-The `.built` and `.bin` files can be compared
+For the original DAs, the `.built` and `.bin` files can be compared
 using `diff` to ensure that no changes have been introduced by the
 disassembly process.
 
