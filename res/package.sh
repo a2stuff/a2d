@@ -37,7 +37,7 @@ cp "desktop/out/DESKTOP2.built" "$PACKDIR/DESKTOP2"
 # Create a new disk image.
 
 $CADIUS CREATEVOLUME $IMGFILE $VOLNAME 800KB
-$CADIUS CREATEFOLDER $IMGFILE "DESK.ACC"
+$CADIUS CREATEFOLDER $IMGFILE "/$VOLNAME/DESK.ACC"
 
 # Add the files into the disk image.
 

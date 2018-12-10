@@ -1062,7 +1062,7 @@ done:   rts
         bcc     done
         cmp     #'z'+1
         bcs     done
-        and     #$5F            ; convert lowercase to upperase
+        and     #$5F            ; convert lowercase to uppercase
 
 L5B83:  jsr     L5B9D
         bmi     done

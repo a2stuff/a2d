@@ -549,7 +549,7 @@ found:  asl     a
 found2: ldx     highlight_count ; new position
         jsr     change_highlight_index
 
-        ;; Remove it from the highloight list and update flag
+        ;; Remove it from the highlight list and update flag
         dec     highlight_count
         lda     highlight_count
         bne     :+
@@ -1880,7 +1880,7 @@ text_width:  .byte   0
 .proc REDRAW_ICONS_IMPL
         jmp     LA2AE
 
-        ;; DT_REDAW_ICON params
+        ;; DT_REDRAW_ICON params
 LA2A9:  .byte   0
 
 LA2AA:  jsr     pop_pointers

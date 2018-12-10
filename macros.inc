@@ -103,7 +103,7 @@ end:
 .endmacro
 
 ;;; ============================================================
-;;; Calls with two paramters (call # in y, address in A,X)
+;;; Calls with two parameters (call # in y, address in A,X)
 ;;; (various output orders to match original binary)
 
 .macro axy_call target, yparam, addr

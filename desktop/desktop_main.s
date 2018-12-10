@@ -6978,7 +6978,7 @@ L7D5C:  .byte   0
         sbc     L7D96
         pha
         lda     L7D9A+1
-        sbc     L7D96+1         ; wierd - this is discarded???
+        sbc     L7D96+1         ; weird - this is discarded???
         pla
         tay
         pla
@@ -8715,7 +8715,7 @@ create_icon:
         sta     @load_CxFB
         @load_CxFB := *+2
         lda     $C7FB           ; self-modified $CxFB
-        and     #$01            ; $CxFB bit 0 = is RAM card (IIgs Firmware Referece)
+        and     #$01            ; $CxFB bit 0 = is RAM card (IIgs Firmware Reference)
         beq     use_profile_icon
         ;; fall through...
 
@@ -14157,7 +14157,7 @@ saved_proc_buf:
 .endproc
 
 ;;; ============================================================
-;;; Make str_files singlular or plural based on file_count
+;;; Make str_files singular or plural based on file_count
 
 .proc adjust_str_files_suffix
         ldx     str_files
@@ -14167,7 +14167,7 @@ saved_proc_buf:
         cmp     #2              ; > 2?
         bcs     :+
 
-        lda     #' '            ; singlular
+        lda     #' '            ; singular
         sta     str_files,x
         rts
 
