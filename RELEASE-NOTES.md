@@ -26,7 +26,7 @@
 
 * Dates 00-39 are treated as 2000-2039; dates 100-127 are treated as 2000-2027. (#15)
 * File > Quit returns to ProDOS 8 selector, and /RAM is reattached. (#3)
-* Date DA: Read-only on systems with a clock. On systems with a clock, date is saved for next session. (#30, #39)
+* Date DA: Read-only on systems with a clock. On systems without a clock, date is saved for next session. (#30, #39)
 * Calculator DA: don't mis-paint when moved offscreen and other fixes. (#33, #34)
 * IIgs-specific: color DHR is re-enabled on exit. (#43)
 * IIgs emulators no longer crash on startup. (#85)
