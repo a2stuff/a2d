@@ -9,6 +9,11 @@ sub nospace($) {
     return $s;
 }
 
+sub respace_comment($) {
+    my ($s) = @_;
+    $s =~ s/^(;+)\s+(.*)/$1 $2/g;
+    return $s;
+}
 
 my $tab = 8;
 my $comment_column = 32;
@@ -27,19 +32,19 @@ while (<STDIN>) {
     } elsif (m/^(;;;.*)/) {
 
         # full line comment - flush left
-        $_ = $1;
+        $_ = respace_comment($1);
 
     } elsif (m/^(;;.*)/) {
 
         # indented comment - one tab stop
-        $_ = (' ' x $tab) . $1;
+        $_ = (' ' x $tab) . respace_comment($1);
 
     } else {
 
         my $comment = '';
         if (m/^(.*?)(;.*)$/) {
             $_ = $1;
-            $comment = $2;
+            $comment = respace_comment($2);
         }
 
         if (m/^(\w+)\s*:=\s*(.*)$/) {
