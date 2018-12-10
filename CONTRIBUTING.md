@@ -11,6 +11,7 @@ Contributions welcome! Preliminaries:
 1. Disassembly of the MouseGraphics ToolKit
    * Continue the effort to understand this powerful GUI library.
    * Make it relocatable, work on C bindings for cc65.
+   * Pure disassembly changes take place in the `disasm` branch, which builds identically to the original.
 1. Disassembly of DeskTop itself
    * The core bits of DeskTop.
    * The various overlays.
@@ -18,7 +19,6 @@ Contributions welcome! Preliminaries:
 1. Disassembly of [Selector](https://github.com/inexorabletash/a2d/issues/63)
 1. Bug fixes
    * Try and tackle some of the bugs in the [issue tracker](https://github.com/inexorabletash/a2d/issues?q=is%3Aissue+is%3Aopen+label%3Abug-in-original).
-   * Bug fixes will alter the binary, so should occur in branches. There's a `fixes` branch with some already.
 1. Add new Desk Accessories
    * List of ideas in the [issue tracker](https://github.com/inexorabletash/a2d/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3A%22Desk+Accessories%22+label%3A%22feature+request%22)
 
