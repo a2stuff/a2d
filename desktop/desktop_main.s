@@ -12020,7 +12020,7 @@ jump_relay:
         axy_call draw_dialog_label, 6 | DDL_CENTER, desktop_aux::str_about6
         axy_call draw_dialog_label, 7, desktop_aux::str_about7
         axy_call draw_dialog_label, 9, desktop_aux::str_about8
-        copy16  #310, dialog_label_pos
+        copy16  #310 - (7 * .strlen(VERSION_SUFFIX)), dialog_label_pos
         axy_call draw_dialog_label, 9, desktop_aux::str_about9
         copy16  #dialog_label_default_x, dialog_label_pos
 

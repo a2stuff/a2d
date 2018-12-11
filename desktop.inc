@@ -9,6 +9,7 @@ screen_height   := 192
 
 VERSION_MAJOR = 1
 VERSION_MINOR = 2
+.define VERSION_SUFFIX "-alpha1"
 
 DA_FILE_TYPE    := $F1
 
