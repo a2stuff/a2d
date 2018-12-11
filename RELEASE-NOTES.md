@@ -31,6 +31,7 @@
 * Calculator DA: don't mis-paint when moved offscreen and other fixes. (#33, #34)
 * IIgs-specific: color DHR is re-enabled on exit. (#43)
 * IIgs emulators no longer crash on startup. (#85)
+* SELECTOR.LIST created if missing. (#92)
 
 # 1.1
 

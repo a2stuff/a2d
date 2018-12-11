@@ -14539,6 +14539,7 @@ end:
         lda     #0
         sta     L0A92
         jsr     read_selector_list
+        bne     done
 
         lda     selector_list_data_buf
         clc
@@ -14550,7 +14551,7 @@ end:
         sta     L0A93
 L0A3B:  lda     L0A92
         cmp     L0A93
-        beq     L0A8F
+        beq     done
         jsr     calc_data_addr
         stax    ptr1
         lda     L0A92
@@ -14583,7 +14584,7 @@ L0A7F:  lda     (ptr1),y
         inc     selector_menu
         jmp     L0A3B
 
-L0A8F:  jmp     calc_header_item_widths
+done:   jmp     calc_header_item_widths
 
 L0A92:  .byte   0
 L0A93:  .byte   0
@@ -14645,13 +14646,49 @@ str_selector_list:
         DEFINE_READ_PARAMS read_params, selector_list_data_buf, selector_list_data_len
         DEFINE_CLOSE_PARAMS close_params
 
-read_selector_list:
+.proc read_selector_list
         MLI_RELAY_CALL OPEN, open_params
+        ;;         bne     done
+        bne     write_selector_list
+
         lda     open_params::ref_num
         sta     read_params::ref_num
         MLI_RELAY_CALL READ, read_params
         MLI_RELAY_CALL CLOSE, close_params
-        rts
+done:   rts
+.endproc
+
+        DEFINE_CREATE_PARAMS create_params, str_selector_list, ACCESS_DEFAULT, $F1
+        DEFINE_WRITE_PARAMS write_params, selector_list_data_buf, selector_list_data_len
+
+.proc write_selector_list
+        ptr := $06
+
+        ;; Clear buffer
+        copy16  #selector_list_data_buf, ptr
+        ldx     #>selector_list_data_len ; number of pages
+        lda     #0
+ploop:  ldy     #0
+:       sta     (ptr),y
+        dey
+        bne     :-
+        dex
+        bne     ploop
+
+        ;; Write out file
+        MLI_RELAY_CALL CREATE, create_params
+        bne     done
+        MLI_RELAY_CALL OPEN, open_params
+        lda     open_params::ref_num
+        sta     write_params::ref_num
+        sta     close_params::ref_num
+        MLI_RELAY_CALL WRITE, write_params ; two blocks of $400
+        MLI_RELAY_CALL WRITE, write_params
+        MLI_RELAY_CALL CLOSE, close_params
+
+done:   rts
+.endproc
+
 .endproc
 
 ;;; ============================================================
