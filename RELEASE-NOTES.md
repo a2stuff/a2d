@@ -4,6 +4,7 @@
 
 ### Enhancements
 
+* Current time shown on right side of menu bar, if system has a clock. (#7)
 * Show Text File DA: Keyboard support. Escape quits, arrows scroll. (#4)
 * Up to 12 Desk Accessories are shown in the menu. (#90)
 * Up to 13 volumes are shown on the desktop. (#20)
