@@ -1651,7 +1651,7 @@ L9F9F:  lda     #$80
         MGTK_CALL MGTK::SetPortBits, grafport
         rts
 
-LA097:  MGTK_CALL MGTK::HideCursor, DESKTOP_DIRECT ; These params should be ignored - bogus?
+LA097:  MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::SetPenMode, notpencopy_2
         bit     L9F92
         bpl     LA0C2
@@ -1686,9 +1686,6 @@ LA0F2:  COPY_STRUCT MGTK::Point, L9F94, moveto_params2
 :       lda     #MGTK::textbg_black
 setbg:  sta     settextbg_params
         MGTK_CALL MGTK::SetTextBG, settextbg_params
-        lda     text_buffer+1
-        and     #$DF
-        sta     text_buffer+1
         MGTK_CALL MGTK::DrawText, drawtext_params
         MGTK_CALL MGTK::ShowCursor
         rts
