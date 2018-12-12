@@ -48,7 +48,7 @@ JT_MAIN_LOOP:           jmp     enter_main_loop
 JT_MGTK_RELAY:          jmp     MGTK_RELAY
 JT_SIZE_STRING:         jmp     compose_blocks_string
 JT_DATE_STRING:         jmp     compose_date_string
-L400C:                  jmp     L5E78 ; ???
+JT_SELECT_WINDOW:       jmp     select_and_refresh_window
 JT_AUXLOAD:             jmp     DESKTOP_AUXLOAD
 JT_EJECT:               jmp     cmd_eject
 JT_REDRAW_ALL:          jmp     redraw_windows          ; *
@@ -59,7 +59,7 @@ JT_MLI_RELAY:           jmp     MLI_RELAY               ; *
 JT_COPY_TO_BUF:         jmp     DESKTOP_COPY_TO_BUF
 JT_COPY_FROM_BUF:       jmp     DESKTOP_COPY_FROM_BUF
 JT_NOOP:                jmp     cmd_noop
-L402D:                  jmp     L8707 ; ???
+JT_FILE_TYPE_STRING:    jmp     compose_file_type_string
 JT_SHOW_ALERT0:         jmp     DESKTOP_SHOW_ALERT0
 JT_SHOW_ALERT:          jmp     DESKTOP_SHOW_ALERT
 JT_LAUNCH_FILE:         jmp     launch_file
@@ -529,7 +529,7 @@ call_proc:
         DESKTOP_RELAY_CALL DT_FIND_ICON, event_coords
         lda     findicon_which_icon
         beq     :+
-        jmp     L67D7
+        jmp     handle_icon_click
 
 :       jmp     L68AA
 
@@ -1603,7 +1603,7 @@ L4CD6:  pha
         pha
         jsr     L6F0D
         pla
-        jmp     L5E78
+        jmp     select_and_refresh_window
 
 :       ldy     #1
 L4CF3:  iny
@@ -1711,7 +1711,7 @@ L4D9D:  pha
         pha
         jsr     L6F0D
         pla
-        jmp     L5E78
+        jmp     select_and_refresh_window
 
 L4DC2:  ldy     #1
 :       iny
@@ -1749,7 +1749,7 @@ L4DF2:  txa
         bne     L4E10
         ldy     #$00
         lda     ($06),y
-        jsr     L6A8A
+        jsr     open_folder_or_volume_icon
         jmp     L4E14
 
 L4E10:  cmp     #$40
@@ -1882,7 +1882,7 @@ L4EC3:  sta     cached_window_icon_count
 L4F3C:  lda     #MGTK::checkitem_uncheck
         sta     checkitem_params::check
         MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
-        jsr     L66A2
+        jsr     update_window_menu_items
         jmp     reset_grafport3
 .endproc
 
@@ -1971,7 +1971,7 @@ success:
         sty     path_buffer
         addr_call L6FAF, path_buffer
         beq     done
-        jsr     L5E78
+        jsr     select_and_refresh_window
 
 done:   jmp     redraw_windows_and_desktop
 
@@ -2451,7 +2451,7 @@ L53BA:  inc     L5426
         lda     selected_window_index
         bne     L53CD
         jmp     L540E
-L53CD:  jmp     L5E78
+L53CD:  jmp     select_and_refresh_window
 
 L53D0:  tax
         lda     selected_icon_list,x
@@ -3637,7 +3637,7 @@ L5D77:  lda     LEBFC
         lda     active_window_id
         jsr     L6F0D
         lda     active_window_id
-        jsr     L5E78
+        jsr     select_and_refresh_window
         jmp     redraw_windows_and_desktop
 
 L5D8E:  lda     LEBFC
@@ -3649,7 +3649,7 @@ L5D99:  and     #$7F
         pha
         jsr     L6F0D
         pla
-        jsr     L5E78
+        jsr     select_and_refresh_window
         jmp     redraw_windows_and_desktop
 
 L5DA6:  cpx     #$02
@@ -3705,7 +3705,7 @@ L5DFC:  lda     L5CD9           ; after a double-click (on file or folder)
         bne     L5E27
 
         lda     L5CD9           ; handle directory
-        jsr     L6A8A
+        jsr     open_folder_or_volume_icon
         bmi     L5E27
         jmp     L5DEC
 
@@ -3757,7 +3757,7 @@ L5E77:  .byte   0
 
 ;;; ============================================================
 
-.proc L5E78
+.proc select_and_refresh_window
         sta     window_id
         jsr     redraw_windows_and_desktop
         jsr     clear_selection
@@ -4140,7 +4140,7 @@ L6276:  ldx     active_window_id
         lda     #MGTK::checkitem_uncheck
         sta     checkitem_params::check
         MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
-        jsr     L66A2
+        jsr     update_window_menu_items
         jmp     redraw_windows_and_desktop
 .endproc
 
@@ -4453,7 +4453,7 @@ L66A0:  .word   0
 
 ;;; ============================================================
 
-.proc L66A2
+.proc update_window_menu_items
         ldx     active_window_id
         beq     disable_menu_items
         jmp     check_menu_items
@@ -4612,7 +4612,7 @@ disable_selector_menu_items := toggle_selector_menu_items::disable
 
 ;;; ============================================================
 
-.proc L67D7
+.proc handle_icon_click
         lda     selected_icon_count
         bne     L67DF
         jmp     set_selection
@@ -4681,7 +4681,7 @@ L6863:  lda     LEBFC
         pha
         jsr     L6F0D
         pla
-        jmp     L5E78
+        jmp     select_and_refresh_window
 
 L6872:  jsr     L6A3F
         jmp     redraw_windows_and_desktop
@@ -4694,7 +4694,7 @@ L6878:  txa
 L6880:  lda     findicon_which_icon
         cmp     trash_icon_num
         beq     L688E
-        jsr     L6A8A
+        jsr     open_folder_or_volume_icon
         jsr     DESKTOP_COPY_FROM_BUF
 L688E:  rts
 
@@ -4867,12 +4867,12 @@ L6A80:  inx
         pha
         jsr     L6F0D
         pla
-        jmp     L5E78
+        jmp     select_and_refresh_window
 .endproc
 
 ;;; ============================================================
 
-.proc L6A8A
+.proc open_folder_or_volume_icon
         sta     icon_params2
         jsr     DESKTOP_COPY_FROM_BUF
         lda     icon_params2
@@ -7636,9 +7636,10 @@ loop:   lda     LEC43,x
 
 .proc prepare_col_type
         lda     LEC53
-        jsr     L8707
+        jsr     compose_file_type_string
 
-        COPY_BYTES 5, LDFC5, text_buffer2::data-1
+        ;; BUG: should be 4 not 5???
+        COPY_BYTES 5, str_file_type, text_buffer2::data-1
 
         rts
 .endproc
@@ -8058,7 +8059,7 @@ tmp:    .byte   0
 
 ;;; ============================================================
 
-.proc L8707
+.proc compose_file_type_string
         sta     L877F
         copy16  type_table_addr, $06
         ldy     #$00
@@ -8078,17 +8079,17 @@ L8726:  tya
         copy16  type_names_addr, $06
         ldx     #$00
 L8736:  lda     ($06),y
-        sta     LDFC6,x
+        sta     str_file_type+1,x
         iny
         inx
         cpx     #$04
         bne     L8736
-        stx     LDFC5
+        stx     str_file_type
         rts
 
-L8745:  copy    #4, LDFC5
-        copy    #' ', LDFC6
-        copy    #'$', LDFC7
+L8745:  copy    #4, str_file_type
+        copy    #' ', str_file_type+1
+        copy    #'$', str_file_type+2
         lda     L877F
         lsr     a
         lsr     a
@@ -8097,20 +8098,20 @@ L8745:  copy    #4, LDFC5
         cmp     #$0A
         bcs     L8764
         clc
-        adc     #$30
+        adc     #'0'            ; 0-9
         bne     L8767
 L8764:  clc
-        adc     #$37
-L8767:  sta     LDFC8
+        adc     #'7'            ; A-F
+L8767:  sta     str_file_type+3
         lda     L877F
         and     #$0F
         cmp     #$0A
         bcs     L8778
         clc
-        adc     #$30
+        adc     #'0'            ; 0-9
         bne     L877B
 L8778:  clc
-        adc     #$37
+        adc     #'7'            ; A-F
 L877B:  sta     path_buf4
         rts
 
@@ -9863,13 +9864,13 @@ compute_suffix:
         bne     L9519
         ldx     L953A
 L950E:  lda     L953A,x
-        sta     LDFC5,x
+        sta     str_file_type,x
         dex
         bpl     L950E
         bmi     L951F
 L9519:  lda     get_file_info_params5::file_type
-        jsr     L402D
-L951F:  copy16  #LDFC5, L92E4
+        jsr     JT_FILE_TYPE_STRING
+L951F:  copy16  #str_file_type, L92E4
         jsr     launch_get_info_dialog
         bne     L9534
 L952E:  inc     L92E6
@@ -15224,7 +15225,7 @@ config_toolkit:
         MGTK_RELAY_CALL MGTK::SetCursor, pointer_cursor
         lda     #0
         sta     active_window_id
-        jsr     desktop_main::L66A2
+        jsr     desktop_main::update_window_menu_items
         jsr     desktop_main::disable_eject_menu_item
         jsr     desktop_main::disable_file_menu_items
         jmp     MGTK::MLI
