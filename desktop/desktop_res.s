@@ -919,10 +919,7 @@ window_address_table:
 
 ;;; ============================================================
 
-LDFC5:  .byte   0
-LDFC6:  .byte   0
-LDFC7:  .byte   0
-LDFC8:  .byte   0
+str_file_type:  .res 4, 0
 
 path_buf4:
         .res    65, 0
