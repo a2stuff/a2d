@@ -867,8 +867,15 @@ selector_menu_addr:
         .addr   selector_menu
 
         ;; Buffer for Run List entries
+        max_run_list_entries = 8
+
+        ;; Names
 run_list_entries:
-        .res    640, 0
+        .res    max_run_list_entries * 16, 0
+
+        ;; Paths
+run_list_paths:
+        .res    max_run_list_entries * 64, 0
 
 ;;; ============================================================
 ;;; Window & Icon State
@@ -1014,14 +1021,10 @@ disable:        .byte   0
 
 LE26F:  .byte   $00
 
-LE270:  .byte   $04             ; number of items in startup menu?
-
-        .byte   $00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-
-        .addr   str_all
-
-LE27C:  DEFINE_MENU_SEPARATOR
+check_menu:
+        DEFINE_MENU     4
+        DEFINE_MENU_ITEM str_all
+        DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM sd0s
         DEFINE_MENU_ITEM sd1s
         DEFINE_MENU_ITEM sd2s
@@ -1091,14 +1094,9 @@ selector_menu:
         DEFINE_MENU_ITEM label_del
         DEFINE_MENU_ITEM label_run, '0', '0'
         DEFINE_MENU_SEPARATOR
-        DEFINE_MENU_ITEM run_list_entries + 0 * $10, '1', '1'
-        DEFINE_MENU_ITEM run_list_entries + 1 * $10, '2', '2'
-        DEFINE_MENU_ITEM run_list_entries + 2 * $10, '3', '3'
-        DEFINE_MENU_ITEM run_list_entries + 3 * $10, '4', '4'
-        DEFINE_MENU_ITEM run_list_entries + 4 * $10, '5', '5'
-        DEFINE_MENU_ITEM run_list_entries + 5 * $10, '6', '6'
-        DEFINE_MENU_ITEM run_list_entries + 6 * $10, '7', '7'
-        DEFINE_MENU_ITEM run_list_entries + 7 * $10, '8', '8'
+        .repeat max_run_list_entries, i
+        DEFINE_MENU_ITEM run_list_entries + i * $10, .string(i+1), .string(i+1)
+        .endrepeat
 
 label_add:
         PASCAL_STRING "Add an Entry ..."

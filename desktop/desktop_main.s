@@ -1280,7 +1280,7 @@ L49ED:  lda     L49A5
 
 L49FA:  lda     L49A5
         jsr     a_times_64
-        addax   #$DB9E, $06
+        addax   #run_list_paths, $06
 L4A0A:  ldy     #$00
         lda     ($06),y
         tay
@@ -1313,7 +1313,7 @@ L4A2B:  iny
 L4A46:  .byte   0
 L4A47:  pha
         jsr     a_times_64
-        addax   #$DB9E, $06
+        addax   #run_list_paths, $06
         ldy     #$00
         lda     ($06),y
         tay
@@ -1450,7 +1450,7 @@ L4AEA:  jsr     L4B5F
         addr_call copy_quit_string_1, path_buffer
         lda     L4BB0
         jsr     a_times_64
-        addax   #$DB9E, $06
+        addax   #run_list_paths, $06
         ldy     #$00
         lda     ($06),y
         sta     L4BB1
@@ -9871,7 +9871,7 @@ L93B8:  lda     DEVLST,y
         yax_call JT_MLI_RELAY, READ_BLOCK, block_params
         bne     L93DB
         yax_call JT_MLI_RELAY, WRITE_BLOCK, block_params
-        cmp     #$2B
+        cmp     #ERR_WRITE_PROTECTED
         bne     L93DB
         lda     #$80
         sta     L942E
@@ -9984,8 +9984,8 @@ L94A9:  lda     $220,x
         sta     L92E3
         lda     selected_window_index
         bne     L9519
-        ldx     L953A
-L950E:  lda     L953A,x
+        ldx     str_vol
+L950E:  lda     str_vol,x
         sta     str_file_type,x
         dex
         bpl     L950E
@@ -10002,7 +10002,8 @@ L9534:  lda     #$00
         sta     path_buf4
         rts
 
-L953A:  PASCAL_STRING " VOL"
+str_vol:
+        PASCAL_STRING " VOL"
 
 .proc launch_get_info_dialog
         yax_call launch_dialog, index_get_info_dialog, L92E3
@@ -10858,13 +10859,13 @@ L9D74:  lda     open_params4::ref_num
 
 L9D81:  yax_call JT_MLI_RELAY, OPEN, open_params5
         beq     L9D9B
-        cmp     #$45
+        cmp     #ERR_VOL_NOT_FOUND
         beq     L9D96
         jsr     show_error_alert_dst
         jmp     L9D81
 
 L9D96:  jsr     show_error_alert_dst
-        lda     #$45
+        lda     #ERR_VOL_NOT_FOUND
 L9D9B:  rts
 
 L9D9C:  lda     open_params5::ref_num
@@ -10876,7 +10877,7 @@ L9D9C:  lda     open_params5::ref_num
 L9DA9:  copy16  #$0AC0, read_params6::request_count
 L9DB3:  yax_call JT_MLI_RELAY, READ, read_params6
         beq     L9DC8
-        cmp     #$4C
+        cmp     #ERR_END_OF_FILE
         beq     L9DD9
         jsr     show_error_alert
         jmp     L9DB3
@@ -10918,7 +10919,7 @@ L9E1B:  lda     file_info_params2,x
         bne     L9E1B
 L9E26:  yax_call JT_MLI_RELAY, CREATE, create_params3
         beq     L9E6F
-        cmp     #$47
+        cmp     #ERR_DUPLICATE_FILENAME
         bne     L9E69
         bit     L918D
         bmi     L9E60
@@ -11041,7 +11042,7 @@ L9F1E:  bit     LE05C
 L9F26:  jsr     decrement_LA2ED
 L9F29:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
         beq     L9F8D
-        cmp     #$4E
+        cmp     #ERR_ACCESS_ERROR
         bne     L9F8E
         bit     L918D
         bmi     L9F62
@@ -11103,7 +11104,7 @@ L9FBB:  lda     file_info_params2::storage_type
         beq     LA022
 L9FC2:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
         beq     LA022
-        cmp     #$4E
+        cmp     #ERR_ACCESS_ERROR
         bne     LA01C
         bit     L918D
         bmi     LA001
@@ -12761,9 +12762,9 @@ do1:    ldy     #$01
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB231
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::file_count_pos4
         addr_call draw_text1, str_file_count
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB239
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::files_pos2
         addr_call draw_text1, str_files
         rts
 
@@ -12785,7 +12786,7 @@ do3:    ldy     #$01
         jsr     copy_name_to_buf0_adjust_case
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE7E
         addr_call draw_text1, path_buf0
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB241
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::file_count_pos2
         addr_call draw_text1, str_file_count
         rts
 
@@ -12843,9 +12844,9 @@ do1:    ldy     #$01
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB22D
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::file_count_pos3
         addr_call draw_text1, str_file_count
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB235
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::files_pos
         addr_call draw_text1, str_files
         rts
 
@@ -12867,7 +12868,7 @@ do3:    ldy     #$01
         jsr     copy_name_to_buf0_adjust_case
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE7E
         addr_call draw_text1, path_buf0
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB23D
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::file_count_pos
         addr_call draw_text1, str_file_count
         rts
 
@@ -12944,8 +12945,8 @@ LB2FD:  jsr     prompt_input_loop
         lda     path_buf1
         beq     LB2FD
         jsr     LBCC9
-        ldy     #$43
-        ldx     #$D4
+        ldy     #<path_buf1
+        ldx     #>path_buf1
         return  #0
 
 LB313:  jsr     reset_grafport3a
@@ -13936,7 +13937,8 @@ LBBBC:  ldx     path_buf1
         rts
 .endproc
 
-LBC03:  lda     path_buf2
+.proc LBC03
+        lda     path_buf2
         cmp     #$02
         bcs     LBC0B
         rts
@@ -13964,8 +13966,10 @@ LBC2D:  dec     path_buf2
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         rts
+.endproc
 
-LBC5E:  lda     path_buf1
+.proc LBC5E
+        lda     path_buf1
         bne     LBC64
         rts
 
@@ -14010,8 +14014,10 @@ LBCB3:  pla
         MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
         jsr     draw_filename_prompt
         rts
+.endproc
 
-LBCC9:  lda     path_buf2
+.proc LBCC9
+        lda     path_buf2
         cmp     #$02
         bcs     LBCD1
         rts
@@ -14037,6 +14043,9 @@ LBCDF:  lda     path_buf2,x
         MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
         jsr     draw_filename_prompt
         rts
+.endproc
+
+;;; Entry point???
 
         stax    $06
         ldy     #$00
@@ -14726,10 +14735,10 @@ calc_entry_addr:
 calc_entry_str:
         jsr     desktop_main::a_times_64
         clc
-        adc     #<(run_list_entries + $80)
+        adc     #<run_list_paths
         tay
         txa
-        adc     #>(run_list_entries + $80)
+        adc     #>run_list_paths
         tax
         tya
         rts
@@ -14992,7 +15001,7 @@ process_volume:
         inc     icon_count
         lda     DEVLST,y
         jsr     desktop_main::create_volume_icon
-        sta     L0E34
+        sta     cvi_result
         MGTK_RELAY_CALL MGTK::CheckEvents
 
         pla                     ; restore all registers
@@ -15002,8 +15011,8 @@ process_volume:
         pla
 
         pha
-        lda     L0E34
-        cmp     #$28
+        lda     cvi_result
+        cmp     #ERR_DEVICE_NOT_CONNECTED
         bne     L0D64
         ldy     volume_num
         lda     DEVLST,y
@@ -15153,7 +15162,8 @@ unit_number_lo_nibble:
         .byte   0
 volume_num:
         .byte   0
-L0E34:  .byte   0
+cvi_result:
+        .byte   0
 .endproc
 
 ;;; ============================================================
@@ -15178,7 +15188,7 @@ L0E36:  inx
         lda     DEVCNT
         clc
         adc     #3
-        sta     LE270
+        sta     check_menu      ; obsolete
 
         lda     #0
         sta     slot
