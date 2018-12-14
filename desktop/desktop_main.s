@@ -857,14 +857,14 @@ status_buffer:  .res    16, 0
 ;;; ============================================================
 
 .proc L464E
-        lda     LD343
+        lda     num_selector_list_items
         beq     :+
-        bit     LD343+1
+        bit     LD344
         bmi     L4666
         jsr     enable_selector_menu_items
         jmp     L4666
 
-:       bit     LD343+1
+:       bit     LD344
         bmi     L4666
         jsr     disable_selector_menu_items
 L4666:  lda     selected_icon_count
@@ -1823,7 +1823,7 @@ L4E34:  lda     ($06),y
         dex
         dey
 L4E51:  lda     ($06),y
-        sta     LD343+1,x
+        sta     buf_filename2-1,x
         dey
         dex
         bne     L4E51
@@ -3780,7 +3780,7 @@ L5E3A:  lda     ($06),y
         dex
         dey
 L5E57:  lda     ($06),y
-        sta     LD343+1,x
+        sta     buf_filename2-1,x
         dey
         dex
         bne     L5E57
@@ -4645,7 +4645,7 @@ enable:
         lda     #4              ; > Run
         jsr     configure_menu_item
         lda     #$80
-        sta     LD343+1
+        sta     LD344
         rts
 
 configure_menu_item:
@@ -9283,7 +9283,7 @@ do_copy_file:
         jsr     L9968
 L8F3F:  copy16  #$00FF, LE05B
         jsr     L9A0D
-        jsr     L917F
+        jsr     done_dialog_phase1
 L8F4F:  jsr     L91E8
         return  #0
 
@@ -9299,10 +9299,10 @@ do_delete_file:
         lda     #$00
         jsr     L9E7E
         jsr     LA271
-        jsr     L9182
+        jsr     done_dialog_phase2
         jsr     L9EBF
         jsr     L9EDB
-        jsr     L917F
+        jsr     done_dialog_phase1
         jmp     L8F4F
 
 L8F7E:  lda     #$80
@@ -9513,12 +9513,12 @@ L9140:  inc     L917A
         bmi     L915D
         bit     L918A
         bpl     L9165
-L915D:  jsr     L9182
+L915D:  jsr     done_dialog_phase2
         bit     L9189
         bvs     L9168
 L9165:  jmp     L90BA
 
-L9168:  jsr     L917F
+L9168:  jsr     done_dialog_phase1
         lda     LEBFC
         jsr     icon_entry_name_lookup
         ldy     #$01
@@ -9539,15 +9539,21 @@ L917B:  .byte   0
 
 ;;; ============================================================
 
-        ;; Dynamically constructed jump table???
-        L917D := *+1
-L917C:  jmp     dummy0000
-        L9180 := *+1
-L917F:  jmp     dummy0000
-        L9183 := *+1
-L9182:  jmp     dummy0000
-        L9186 := *+1
-L9185:  jmp     dummy0000
+done_dialog_phase0:
+        dialog_phase0_callback := *+1
+        jmp     dummy0000
+
+done_dialog_phase1:
+        dialog_phase1_callback := *+1
+        jmp     dummy0000
+
+done_dialog_phase2:
+        dialog_phase2_callback := *+1
+        jmp     dummy0000
+
+done_dialog_phase3:
+        dialog_phase3_callback := *+1
+        jmp     dummy0000
 
 stack_stash:
         .byte   0
@@ -10436,8 +10442,8 @@ count:  .addr   0
 .proc L993E
         lda     #0
         sta     copy_dialog_params
-        copy16  #L995A, L917D
-        copy16  #L997C, L9180
+        copy16  #L995A, dialog_phase0_callback
+        copy16  #L997C, dialog_phase1_callback
         jmp     L9BBF
 
 L995A:  stax    copy_dialog_params::count
@@ -10462,8 +10468,8 @@ L997C:  lda     #5
 
 L9984:  lda     #0
         sta     copy_dialog_params
-        copy16  #L99A7, L917D
-        copy16  #L99DC, L9180
+        copy16  #L99A7, dialog_phase0_callback
+        copy16  #L99DC, dialog_phase1_callback
         yax_call launch_dialog, index_download_dialog, copy_dialog_params
         rts
 
@@ -10482,7 +10488,7 @@ L99C3:  lda     L9931,y
         bpl     L99C3
         lda     #0
         sta     LA425
-        copy16  #L99EB, L9186
+        copy16  #L99EB, dialog_phase3_callback
         rts
 
 L99DC:  lda     #3
@@ -10716,7 +10722,7 @@ L9BBF:  yax_call launch_dialog, index_copy_file_dialog, copy_dialog_params
 L9BDA:  sub16   file_info_params3::aux_type, file_info_params3::blocks_used, L9BFF
         cmp16   L9BFF, LA2EF
         bcs     L9BFE
-        jmp     L9185
+        jmp     done_dialog_phase3
 
 L9BFE:  rts
 
@@ -10972,10 +10978,10 @@ count:  .word   0
 
 .proc L9E7E
         sta     delete_file_dialog_params::phase
-        copy16  #L9EB1, L9183
-        copy16  #L9EA3, L917D
+        copy16  #L9EB1, dialog_phase2_callback
+        copy16  #L9EA3, dialog_phase0_callback
         jsr     LA044
-        copy16  #L9ED3, L9180
+        copy16  #L9ED3, dialog_phase1_callback
         rts
 
 L9EA3:  stax    delete_file_dialog_params::count
@@ -11129,11 +11135,9 @@ L9FFE:  jmp     close_files_cancel_dialog
 
 LA001:  lda     #ACCESS_DEFAULT
         sta     file_info_params2::access
-        lda     #7              ; param count for SET_FILE_INFO
-        sta     file_info_params2
+        copy    #7, file_info_params2 ; param count for SET_FILE_INFO
         yax_call JT_MLI_RELAY, SET_FILE_INFO, file_info_params2
-        lda     #$A             ; param count for GET_FILE_INFO
-        sta     file_info_params2
+        copy    #$A,file_info_params2 ; param count for GET_FILE_INFO
         jmp     L9FC2
 
 LA01C:  jsr     show_error_alert
@@ -11192,16 +11196,16 @@ files_remaining_count:
         bit     unlock_flag
         bpl     lock
 
-        copy16  #LA0D1, L9183
-        copy16  #LA0B5, L917D
+        copy16  #LA0D1, dialog_phase2_callback
+        copy16  #LA0B5, dialog_phase0_callback
         jsr     unlock_dialog_lifecycle
-        copy16  #LA0F8, L9180
+        copy16  #LA0F8, dialog_phase1_callback
         rts
 
-lock:   copy16  #LA0C3, L9183
-        copy16  #LA0A7, L917D
+lock:   copy16  #LA0C3, dialog_phase2_callback
+        copy16  #LA0A7, dialog_phase0_callback
         jsr     lock_dialog_lifecycle
-        copy16  #LA0F0, L9180
+        copy16  #LA0F0, dialog_phase1_callback
         rts
 .endproc
 
@@ -11343,10 +11347,10 @@ phase:  .byte   0
 .endproc
 
 LA1E4:  copy    #0, get_size_dialog_params::phase
-        copy16  #LA220, L9183
-        copy16  #LA211, L917D
+        copy16  #LA220, dialog_phase2_callback
+        copy16  #LA211, dialog_phase0_callback
         yax_call launch_dialog, index_get_size_dialog, get_size_dialog_params
-        copy16  #LA233, L9180
+        copy16  #LA233, dialog_phase1_callback
         rts
 
 LA211:  copy    #1, get_size_dialog_params::phase
@@ -11430,7 +11434,7 @@ LA2AE:  bit     L9189
         bvc     :+
         jsr     remove_path_segment_220
 :       ldax    LA2ED
-        jmp     L917C
+        jmp     done_dialog_phase0
 
 LA2ED:  .word   0
 LA2EF:  .word   0
@@ -11457,8 +11461,7 @@ LA2EF:  .word   0
 
 :       ldx     #0
         ldy     path
-        lda     #'/'
-        sta     path+1,y
+        copy    #'/', path+1,y
 
         iny
 loop:   cpx     L97AD
@@ -11504,8 +11507,7 @@ found:  dex
 
 LA341:  ldx     #$00
         ldy     path_buf_main
-        lda     #'/'
-        sta     path_buf_main+1,y
+        copy    #'/', path_buf_main+1,y
         iny
 LA34C:  cpx     L97AD
         bcs     LA35C
@@ -11564,7 +11566,7 @@ LA395:  lda     path_buf4,y
 ;;; ============================================================
 
 .proc close_files_cancel_dialog
-        jsr     L917F
+        jsr     done_dialog_phase1
         jmp     :+
 
         DEFINE_CLOSE_PARAMS close_params
@@ -11778,8 +11780,7 @@ dialog_param_addr:
         dec     prompt_ip_counter
         bne     :+
         jsr     redraw_prompt_insertion_point
-        lda     #prompt_insertion_point_blink_count
-        sta     prompt_ip_counter
+        copy    #prompt_insertion_point_blink_count, prompt_ip_counter
 
         ;; Dispatch event types - mouse down, key press
 :       MGTK_RELAY_CALL MGTK::GetEvent, event_params
@@ -13149,8 +13150,7 @@ loop:   dec     counter
         jsr     check_delta
         bmi     exit            ; moved past delta; no double-click
 
-        lda     #$FF            ; ???
-        sta     unused
+        copy    #$FF, unused    ; ???
 
         lda     event_kind      ; unused ???
         sta     kind
@@ -13324,8 +13324,7 @@ skip:   dey                     ; ypos = (Y-1) * 8 + pointD::ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, dialog_label_pos
         addr_call_indirect draw_text1, ptr
         ldx     dialog_label_pos
-        lda     #dialog_label_default_x ; restore original x coord
-        sta     dialog_label_pos::xcoord
+        copy    #dialog_label_default_x,dialog_label_pos::xcoord ; restore original x coord
         rts
 .endproc
 
@@ -13366,8 +13365,7 @@ draw_yes_no_all_cancel_buttons:
         jsr     draw_no_label
         jsr     draw_all_label
         jsr     draw_cancel_label
-        lda     #$40
-        sta     LD8E7
+        copy    #$40, LD8E7
         rts
 
 erase_yes_no_all_cancel_buttons:
@@ -13384,8 +13382,7 @@ draw_ok_cancel_buttons:
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::cancel_button_rect
         jsr     draw_ok_label
         jsr     draw_cancel_label
-        lda     #$00
-        sta     LD8E7
+        copy    #$00, LD8E7
         rts
 
 erase_ok_cancel_buttons:
@@ -13398,8 +13395,7 @@ draw_ok_button:
         jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::ok_button_rect
         jsr     draw_ok_label
-        lda     #$80
-        sta     LD8E7
+        copy    #$80, LD8E7
         rts
 
 erase_ok_button:
@@ -13616,8 +13612,7 @@ fill_button_proc_addr:  .addr   0
 
 event_loop:
         sta     click_result
-        lda     #0
-        sta     down_flag
+        copy    #0, down_flag
 loop:   MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_up
@@ -13682,14 +13677,12 @@ click_result:
 
 clear_flag:
         MGTK_RELAY_CALL MGTK::SetTextBG, desktop_aux::textbg_black
-        lda     #$00
-        sta     prompt_ip_flag
-        beq     draw
+        copy    #0, prompt_ip_flag
+        beq     draw            ; always
 
 set_flag:
         MGTK_RELAY_CALL MGTK::SetTextBG, desktop_aux::textbg_white
-        lda     #$FF
-        sta     prompt_ip_flag
+        copy    #$FF, prompt_ip_flag
 
         drawtext_params := $6
         textptr := $6
@@ -13749,8 +13742,7 @@ done:   rts
         stax    LBB09
         ldx     path_buf2
         inx
-        lda     #' '
-        sta     path_buf2,x
+        copy    #' ', path_buf2,x
         inc     path_buf2
         copy16  #path_buf2, ptr
         lda     path_buf2
@@ -14023,8 +14015,7 @@ LBCA6:  lda     LD3C1,x
         bne     LBCA6
 LBCB3:  pla
         sta     path_buf2
-        lda     #$00
-        sta     path_buf1
+        copy    #0, path_buf1
         MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
         jsr     draw_filename_prompt
         rts
@@ -14052,8 +14043,7 @@ LBCDF:  lda     path_buf2,x
         bne     LBCDF
         pla
         sta     path_buf1
-        lda     #$01
-        sta     path_buf2
+        copy    #1, path_buf2
         MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
         jsr     draw_filename_prompt
         rts
@@ -14125,18 +14115,15 @@ LBD33:  rts
 .proc clear_path_buf2
         .assert * = $BD69, error, "Entry point used by overlay"
 
-        lda     #1              ; length
-        sta     path_buf2
-        lda     str_insertion_point+1 ; IP character
-        sta     path_buf2+1
+        copy    #1, path_buf2   ; length
+        copy    str_insertion_point+1, path_buf2+1 ; IP character
         rts
 .endproc
 
 .proc clear_path_buf1
         .assert * = $BD75, error, "Entry point used by overlay"
 
-        lda     #0              ; length
-        sta     path_buf1
+        copy    #0, path_buf1   ; length
         rts
 .endproc
 
@@ -14191,12 +14178,10 @@ saved_proc_buf:
         cmp     #2              ; > 2?
         bcs     :+
 
-        lda     #' '            ; singular
-        sta     str_files,x
+        copy    #' ', str_files,x ; singular
         rts
 
-:       lda     #'s'            ; plural
-        sta     str_files,x
+:       copy    #'s', str_files,x ; plural
         rts
 .endproc
 
@@ -14215,14 +14200,12 @@ saved_proc_buf:
         dex
         bne     :-
 
-        lda     #0
-        sta     nonzero_flag
+        copy    #0, nonzero_flag
         ldy     #0              ; y = position in string
         ldx     #0              ; x = which power index is subtracted (*2)
 
         ;; For each power of ten
-loop:   lda     #0
-        sta     digit
+loop:   copy    #0, digit
 
         ;; Keep subtracting/incrementing until zero is hit
 sloop:  cmp16   value, powers,x
@@ -14348,15 +14331,13 @@ start:
 .proc detect_machine
         ;; Detect machine type
         ;; See Apple II Miscellaneous #7: Apple II Family Identification
-        lda     #0
-        sta     iigs_flag
+        copy    #0, iigs_flag
         lda     ID_BYTE_FBC0    ; 0 = IIc or IIc+
         beq     :+
         sec                     ; Follow detection protocol
         jsr     ID_BYTE_FE1F    ; RTS on pre-IIgs
         bcs     :+              ; carry clear = IIgs
-        lda     #$80
-        sta     iigs_flag
+        copy    #$80, iigs_flag
 
 :       ldx     ID_BYTE_FBB3
         ldy     ID_BYTE_FBC0
@@ -14376,16 +14357,13 @@ start:
         beq     is_iic          ; Now identify/store specific machine type.
         bit     iigs_flag       ; (number is used in double-click timer)
         bpl     is_iie
-        lda     #$FD            ; IIgs
-        sta     machine_type
+        copy    #$FD, machine_type ; IIgs
         jmp     init_video
 
-is_iie: lda     #$96            ; IIe
-        sta     machine_type
+is_iie: copy    #$96, machine_type ; IIe
         jmp     init_video
 
-is_iic: lda     #$FA            ; IIc
-        sta     machine_type
+is_iic: copy    #$FA, machine_type ; IIc
         jmp     init_video
 .endproc
 
@@ -14482,8 +14460,7 @@ loop:   cpx     #max_icon_count
         ldy     #0
         sta     (ptr),y
         iny
-        lda     #0
-        sta     (ptr),y
+        copy    #0, (ptr),y
         lda     ptr
         clc
         adc     #.sizeof(IconEntry)
@@ -14522,8 +14499,7 @@ trash_name:  PASCAL_STRING " Trash "
 .proc create_trash_icon
         ptr := $6
 
-        lda     #0
-        sta     cached_window_id
+        copy    #0, cached_window_id
         lda     #1
         sta     cached_window_icon_count
         sta     icon_count
@@ -14533,8 +14509,7 @@ trash_name:  PASCAL_STRING " Trash "
         jsr     desktop_main::icon_entry_lookup
         stax    ptr
         ldy     #IconEntry::win_type
-        lda     #icon_entry_type_trash
-        sta     (ptr),y
+        copy    #icon_entry_type_trash, (ptr),y
         ldy     #IconEntry::iconbits
         copy16in #desktop_aux::trash_icon, (ptr),y
         iny
@@ -14595,8 +14570,7 @@ trash_name:  PASCAL_STRING " Trash "
         @addr_lsb := *+1
         lda     MLI             ; self-modified to DEVADR plus offset
         sta     ptr+1           ; BUG: Assumes firmware driver ($CnXX)
-        lda     #0              ; Set up $Cn00 for firmware lookups
-        sta     ptr
+        copy    #0, ptr         ; Set up $Cn00 for firmware lookups
 
         ldy     #7
         lda     (ptr),y         ; $Cn07 == 0 for SmartPort
@@ -14669,16 +14643,16 @@ end:
         MLI_RELAY_CALL GET_PREFIX, desktop_main::get_prefix_params
         MGTK_RELAY_CALL MGTK::CheckEvents
 
-        lda     #0
-        sta     L0A92
+        copy    #0, L0A92
         jsr     read_selector_list
 
         lda     selector_list_data_buf
         clc
         adc     selector_list_data_buf+1
-        sta     LD343
+        sta     num_selector_list_items
         lda     #0
-        sta     LD343+1
+        sta     LD344
+
         lda     selector_list_data_buf
         sta     L0A93
 L0A3B:  lda     L0A92

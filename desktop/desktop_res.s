@@ -294,7 +294,10 @@ watch_cursor:
         .byte   px(%0000000),px(%0000000)
         .byte   5, 5
 
-LD343:  .word   0
+num_selector_list_items:
+        .byte   0
+
+LD344:  .byte   0
 buf_filename2:  .res    16, 0
 buf_win_path:   .res    43, 0
 

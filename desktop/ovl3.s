@@ -21,9 +21,9 @@ L9016:  rts
 L9017:  lda     $0C00
         clc
         adc     $0C01
-        sta     LD343
+        sta     num_selector_list_items
         lda     #$00
-        sta     LD343+1
+        sta     LD344
         jsr     get_quit_routine_signature
         cmp     #$80
         bne     L9015
