@@ -101,7 +101,7 @@ L0942:  lda     winfo_alert_dialog
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
         axy_call desktop_main::draw_dialog_label, 1, desktop_aux::str_erasing
-        addr_call L1900, path_buf1
+        addr_call upcase_string, path_buf1
         ldxy    #path_buf1
         lda     L09D7
         jsr     L1307
@@ -219,7 +219,7 @@ L0AD1:  lda     winfo_alert_dialog
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
         axy_call desktop_main::draw_dialog_label, 1, desktop_aux::str_erasing
-        addr_call L1900, path_buf1
+        addr_call upcase_string, path_buf1
         jsr     desktop_main::set_cursor_watch
         ldxy    #path_buf1
         lda     L0B46
@@ -1361,22 +1361,24 @@ L14E5:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
 ;;; ============================================================
 
-
-L1900:  stx     $06+1
-        sta     $06
+.proc upcase_string
+        ptr := $06
+        stx     ptr+1
+        sta     ptr
         ldy     #0
-        lda     ($06),y
+        lda     (ptr),y
         tay
-L1909:  lda     ($06),y
+loop:   lda     (ptr),y
         cmp     #'a'
-        bcc     L1917
+        bcc     :+
         cmp     #'z'+1
-        bcs     L1917
+        bcs     :+
         and     #CASE_MASK
-        sta     ($06),y
-L1917:  dey
-        bpl     L1909
+        sta     (ptr),y
+:       dey
+        bpl     loop
         rts
+.endproc
 
 L191B:  sta     ALTZPOFF
         lda     ROMIN2
