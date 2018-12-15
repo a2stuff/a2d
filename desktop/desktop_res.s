@@ -935,7 +935,9 @@ path_buf4:
         .res    65, 0
 path_buf3:
         .res    65, 0
-LE04B:  .res    16, 0
+filename_buf:
+        .res    16, 0
+
 LE05B:  .byte   $00
 LE05C:  .byte   $00
 LE05D:  .byte   $00

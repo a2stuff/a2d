@@ -15,9 +15,9 @@
         entry_copied_flags := $D395
 
         ;; Quit routine signature/data
-        quit_routine_signature := $D3FF ; $00 at start, $C0 mid copy, $80 done
-        quit_string_1 := $D3EE
-        quit_string_2 := $D3AD
+        copied_to_ramcard_flag := $D3FF ; $00 at start, $C0 mid copy, $80 done
+        ramcard_prefix := $D3EE
+        desktop_orig_prefix := $D3AD
 
 ;;; ============================================================
 .proc copy_desktop_to_ramcard
@@ -208,7 +208,7 @@ match:  sta     $D3AC
 
         lda     ROMIN2
         ldx     #0
-        jsr     set_quit_routine_signature
+        jsr     set_copied_to_ramcard_flag
 
         ;; Point $8 at $C100
         lda     #0
@@ -291,13 +291,13 @@ found_slot:
         bne     :-
 
         ldx     #$C0
-        jsr     set_quit_routine_signature
-        addr_call set_quit_string_1, path0
+        jsr     set_copied_to_ramcard_flag
+        addr_call set_ramcard_prefix, path0
         jsr     check_desktop2_on_device
         bcs     :+
         ldx     #$80
-        jsr     set_quit_routine_signature
-        jsr     copy_2005_to_quit_string_2
+        jsr     set_copied_to_ramcard_flag
+        jsr     copy_2005_to_desktop_orig_prefix
         jmp     fail
 
 :       lda     BUTN1
@@ -328,7 +328,7 @@ str_slash_desktop:
         jmp     fail_copy
 :       dec     buffer
         ldx     #$80
-        jsr     set_quit_routine_signature
+        jsr     set_copied_to_ramcard_flag
 
         ldy     buffer
 :       lda     buffer,y
@@ -385,7 +385,7 @@ fail2:  lda     copy_flag
         sta     path0
         MLI_CALL SET_PREFIX, set_prefix_params
 :       jsr     write_desktop1
-        jsr     copy_2005_to_quit_string_2
+        jsr     copy_2005_to_desktop_orig_prefix
 
         lda     #$00
         sta     RAMWORKS_BANK   ; ???
@@ -398,17 +398,17 @@ fail2:  lda     copy_flag
 
 ;;; ============================================================
 
-.proc set_quit_routine_signature
+.proc set_copied_to_ramcard_flag
         lda     LCBANK2
         lda     LCBANK2
-        stx     quit_routine_signature
+        stx     copied_to_ramcard_flag
         lda     ROMIN2
         rts
 .endproc
 
-.proc set_quit_string_1
+.proc set_ramcard_prefix
         ptr := $6
-        target := quit_string_1
+        target := ramcard_prefix
 
         stax    ptr
         lda     LCBANK2
@@ -424,9 +424,9 @@ fail2:  lda     copy_flag
         rts
 .endproc
 
-.proc set_quit_string_2
+.proc set_desktop_orig_prefix
         ptr := $6
-        target := quit_string_2
+        target := desktop_orig_prefix
 
         stax    ptr
         lda     LCBANK2
@@ -886,8 +886,8 @@ start:  MLI_CALL OPEN, open_params
 
 ;;; ============================================================
 
-.proc copy_2005_to_quit_string_2
-        addr_call set_quit_string_2, L2005
+.proc copy_2005_to_desktop_orig_prefix
+        addr_call set_desktop_orig_prefix, L2005
         rts
 .endproc
 
@@ -975,6 +975,7 @@ prodos_loader_blocks:
         ;; $  2 - 24 * 16-byte data entries
         ;;   $0 - label (length-prefixed, 15 bytes)
         ;;   $F - active_flag (other flags, i.e. download on ... ?)
+        ;;          bit 6 = "down loaded" flag ???
         ;; $182 - 24 * 64-byte pathname
         ;; $782 - EOF
 
@@ -988,7 +989,7 @@ prodos_loader_blocks:
         jsr     HOME
         lda     LCBANK2
         lda     LCBANK2
-        lda     quit_routine_signature
+        lda     copied_to_ramcard_flag
         pha
         lda     ROMIN2
         pla
@@ -1922,8 +1923,8 @@ L38D6:  lda     L324A,y
         lda     LCBANK2
         lda     LCBANK2
 
-        ldy     quit_string_1
-:       lda     quit_string_1,y
+        ldy     ramcard_prefix
+:       lda     ramcard_prefix,y
         sta     L320A,y
         dey
         bpl     :-

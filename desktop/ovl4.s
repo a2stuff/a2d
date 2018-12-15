@@ -1847,10 +1847,12 @@ L62C7:  .byte   0
 
 ;;; ============================================================
 
-L62DE:  ldax    #$0F5A
-L62E2:  sta     L63C2,x
+L62DE:  lda     #'Z'
+        ldx     #15
+:       sta     L63C2,x
         dex
-        bpl     L62E2
+        bpl     :-
+
         lda     #$00
         sta     L63BF
         sta     L63BE
@@ -1902,10 +1904,13 @@ L634B:  lda     L63C0
         lda     ($06),y
         ora     #$80
         sta     ($06),y
-        ldax    #$0F5A
-L635D:  sta     L63C2,x
+
+        lda     #'Z'
+        ldx     #15
+:       sta     L63C2,x
         dex
-        bpl     L635D
+        bpl     :-
+
         ldx     L63BF
         lda     L63C0
         sta     L63D2,x

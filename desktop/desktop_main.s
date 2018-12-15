@@ -1206,7 +1206,7 @@ set_penmode_copy:
         bpl     done
         jsr     L4AAD
         jsr     L4A77
-        jsr     get_quit_routine_signature
+        jsr     get_copied_to_ramcard_flag
         bpl     L497A
         jsr     L8F24           ; Condition for this ???
         bmi     done
@@ -1239,48 +1239,58 @@ result: .byte   0
 
 ;;; ============================================================
 
+.proc cmd_selector_item_impl
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params3, $220
 
-.proc cmd_selector_item
+start:
         jmp     L49A6
 
-L49A5:  .byte   0
+entry_num:
+        .byte   0
 
 L49A6:  lda     menu_click_params::item_num
         sec
-        sbc     #$06
-        sta     L49A5
+        sbc     #6              ; 4 items + separator (and make 0 based)
+        sta     entry_num
+
         jsr     a_times_16
         addax   #run_list_entries, $06
-        ldy     #$0F
+
+        ldy     #$0F            ; flag byte following name
         lda     ($06),y
         asl     a
-        bmi     L49FA
-        bcc     L49E0
-        jsr     get_quit_routine_signature
-        beq     L49FA
-        lda     L49A5
-        jsr     L4AEA
+        bmi     not_downloaded  ; bit 6
+        bcc     L49E0           ; bit 7
+
+        jsr     get_copied_to_ramcard_flag
+        beq     not_downloaded
+        lda     entry_num
+        jsr     check_downloaded_path
         beq     L49ED
-        lda     L49A5
+
+        lda     entry_num
         jsr     L4A47
         jsr     L8F24
         bpl     L49ED
         jmp     redraw_windows_and_desktop
 
-L49E0:  jsr     get_quit_routine_signature
-        beq     L49FA
-        lda     L49A5
-        jsr     L4AEA
-        bne     L49FA
-L49ED:  lda     L49A5
-        jsr     L4B5F
+L49E0:  jsr     get_copied_to_ramcard_flag
+        beq     not_downloaded
+
+        lda     entry_num
+        jsr     check_downloaded_path           ; was-downloaded flag check?
+        bne     not_downloaded
+
+L49ED:  lda     entry_num
+        jsr     compose_downloaded_entry_path
         stax    $06
         jmp     L4A0A
 
-L49FA:  lda     L49A5
+not_downloaded:
+        lda     entry_num
         jsr     a_times_64
         addax   #run_list_paths, $06
+
 L4A0A:  ldy     #$00
         lda     ($06),y
         tay
@@ -1311,34 +1321,45 @@ L4A2B:  iny
         jmp     launch_file
 
 L4A46:  .byte   0
+
+;;; --------------------------------------------------
+
+        ;; Copy entry path to $800
 L4A47:  pha
         jsr     a_times_64
         addax   #run_list_paths, $06
-        ldy     #$00
+        ldy     #0
         lda     ($06),y
         tay
-L4A5A:  lda     ($06),y
+:       lda     ($06),y
         sta     L0800,y
         dey
-        bpl     L4A5A
+        bpl     :-
         pla
-        jsr     L4B5F
+
+        ;; Copy "down loaded" path to $840
+        jsr     compose_downloaded_entry_path
         stax    $08
-        ldy     #$00
+        ldy     #0
         lda     ($08),y
         tay
-L4A6F:  lda     ($08),y
+:       lda     ($08),y
         sta     $840,y
         dey
-        bpl     L4A6F
-L4A77:  ldy     L0800
-L4A7A:  lda     L0800,y
+        bpl     :-
+
+        ;; Strip segment off path at $800
+L4A77:  ldy     $800
+:       lda     $800,y
         cmp     #'/'
-        beq     L4A84
+        beq     :+
         dey
-        bne     L4A7A
-L4A84:  dey
+        bne     :-
+
+:       dey
         sty     L0800
+
+        ;; Strip segment off path at $840
         ldy     $840
 L4A8B:  lda     $840,y
         cmp     #'/'
@@ -1347,17 +1368,22 @@ L4A8B:  lda     $840,y
         bne     L4A8B
 L4A95:  dey
         sty     $840
+
+        ;; Return addresses in $6 and $8
         copy16  #$800, $06
         copy16  #$840, $08
-        jsr     L4D19
+
+        jsr     copy_paths_and_split_name
         rts
+
+;;; --------------------------------------------------
 
 L4AAD:  ldy     buf_win_path
 L4AB0:  lda     buf_win_path,y
         sta     L0800,y
         dey
         bpl     L4AB0
-        addr_call copy_quit_string_1, $840
+        addr_call copy_ramcard_prefix, $840
         ldy     L0800
 L4AC3:  lda     L0800,y
         cmp     #'/'
@@ -1380,23 +1406,28 @@ L4ADC:  iny
         bne     L4ADC
         rts
 
-L4AEA:  jsr     L4B5F
+.proc check_downloaded_path
+        jsr     compose_downloaded_entry_path
         stax    get_file_info_params3::pathname
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params3
         rts
 .endproc
-        L4A17 := cmd_selector_item::L4A17
-        L4A77 := cmd_selector_item::L4A77
-        L4AAD := cmd_selector_item::L4AAD
+
+.endproc
+        cmd_selector_item := cmd_selector_item_impl::start
+
+        L4A17 := cmd_selector_item_impl::L4A17
+        L4A77 := cmd_selector_item_impl::L4A77
+        L4AAD := cmd_selector_item_impl::L4AAD
 
 ;;; ============================================================
-;;; Get quit routine signature byte from Main LC Bank 2.
+;;; Get "coped to RAM card" flag from Main LC Bank 2.
 
-.proc get_quit_routine_signature
+.proc get_copied_to_ramcard_flag
         sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
-        lda     quit_routine_signature
+        lda     copied_to_ramcard_flag
         tax
         sta     ALTZPON
         lda     LCBANK1
@@ -1405,14 +1436,14 @@ L4AEA:  jsr     L4B5F
         rts
 .endproc
 
-.proc copy_quit_string_1
+.proc copy_ramcard_prefix
         stax    @destptr
         sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
 
-        ldx     quit_string_1
-:       lda     quit_string_1,x
+        ldx     ramcard_prefix
+:       lda     ramcard_prefix,x
         @destptr := *+1
         sta     dummy1234,x
         dex
@@ -1424,14 +1455,14 @@ L4AEA:  jsr     L4B5F
         rts
 .endproc
 
-.proc copy_quit_string_2
+.proc copy_desktop_orig_prefix
         stax    @destptr
         sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
 
-        ldx     quit_string_2
-:       lda     quit_string_2,x
+        ldx     desktop_orig_prefix
+:       lda     desktop_orig_prefix,x
         @destptr := *+1
         sta     dummy1234,x
         dex
@@ -1444,44 +1475,63 @@ L4AEA:  jsr     L4B5F
 .endproc
 
 ;;; ============================================================
+;;; For entry copied ("down loaded") to RAM card, compose path
+;;; using RAM card prefix plus last two segments of path
+;;; (e.g. "/RAM" + "/" + "MOUSEPAINT/MP.SYSTEM") into path_buffer
 
-.proc L4B5F
-        sta     L4BB0
-        addr_call copy_quit_string_1, path_buffer
-        lda     L4BB0
+.proc compose_downloaded_entry_path
+        sta     entry_num
+
+        ;; Initialize buffer
+        addr_call copy_ramcard_prefix, path_buffer
+
+        ;; Find entry path
+        lda     entry_num
         jsr     a_times_64
         addax   #run_list_paths, $06
-        ldy     #$00
+        ldy     #0
         lda     ($06),y
-        sta     L4BB1
+        sta     prefix_length
+
+        ;; Walk back one segment
         tay
-L4B81:  lda     ($06),y
+:       lda     ($06),y
         and     #CHAR_MASK
         cmp     #'/'
-        beq     L4B8C
+        beq     :+
         dey
-        bne     L4B81
-L4B8C:  dey
-L4B8D:  lda     ($06),y
+        bne     :-
+
+:       dey
+
+        ;; Walk back a second segment
+:       lda     ($06),y
         and     #CHAR_MASK
         cmp     #'/'
-        beq     L4B98
+        beq     :+
         dey
-        bne     L4B8D
-L4B98:  dey
+        bne     :-
+
+:       dey
+
+        ;; Append last two segments to path
         ldx     path_buffer
-L4B9C:  inx
+:       inx
         iny
         lda     ($06),y
         sta     path_buffer,x
-        cpy     L4BB1
-        bne     L4B9C
+        cpy     prefix_length
+        bne     :-
+
         stx     path_buffer
         ldax    #path_buffer
         rts
 
-L4BB0:  .byte   0
-L4BB1:  .byte   0
+entry_num:
+        .byte   0
+
+prefix_length:
+        .byte   0
 .endproc
 
 ;;; ============================================================
@@ -1626,7 +1676,9 @@ running_da_flag:
         bpl     L4CCD
         jmp     L4CD6
 
-L4CCD:  jsr     L4D19
+;;; --------------------------------------------------
+
+L4CCD:  jsr     copy_paths_and_split_name
         jsr     redraw_windows_and_desktop
         jsr     jt_copy_file
 L4CD6:  pha
@@ -1660,9 +1712,12 @@ L4CF3:  iny
 .endproc
 
 ;;; ============================================================
+;;; Copy string at ($6) to path_buf3, string at ($8) to path_buf4,
+;;; split filename off path_buf4 and store in filename_buf
 
-.proc L4D19
+.proc copy_paths_and_split_name
 
+        ;; Copy string at $6 to path_buf3
         ldy     #0
         lda     ($06),y
         tay
@@ -1671,6 +1726,7 @@ L4CF3:  iny
         dey
         bpl     :-
 
+        ;; Copy string at $8 to path_buf4
         ldy     #0
         lda     ($08),y
         tay
@@ -1679,23 +1735,26 @@ L4CF3:  iny
         dey
         bpl     :-
 
-        addr_call L6F90, path_buf4
+        addr_call find_last_path_segment, path_buf4
 
-        ldx     #$01
+        ;; Copy filename part to buf
+        ldx     #1
         iny
         iny
 :       lda     path_buf4,y
-        sta     LE04B,x
+        sta     filename_buf,x
         cpy     path_buf4
         beq     :+
         iny
         inx
         jmp     :-
 
-:       stx     LE04B
+:       stx     filename_buf
+
+        ;; And remove from path_buf4
         lda     path_buf4
         sec
-        sbc     LE04B
+        sbc     filename_buf
         sta     path_buf4
         dec     path_buf4
         rts
@@ -1741,7 +1800,7 @@ L4D9D:  pha
         bpl     :+
         jmp     redraw_windows_and_desktop
 
-:       addr_call L6F90, path_buf3
+:       addr_call find_last_path_segment, path_buf3
         sty     path_buf3
         addr_call L6FAF, path_buf3
         beq     L4DC2
@@ -2003,7 +2062,7 @@ L4FD4:  copy    #$80, new_folder_dialog_params::phase
 success:
         copy    #$40, new_folder_dialog_params::phase
         yax_call launch_dialog, index_new_folder_dialog, new_folder_dialog_params
-        addr_call L6F90, path_buffer
+        addr_call find_last_path_segment, path_buffer
         sty     path_buffer
         addr_call L6FAF, path_buffer
         beq     done
@@ -5484,27 +5543,37 @@ L6F8F:  rts
 .endproc
 
 ;;; ============================================================
+;;; Find position of last segment of path at (A,X), return in Y.
+;;; For "/a/b", Y points at "/a"; if volume path, unchanged.
 
-.proc L6F90
+.proc find_last_path_segment
         ptr := $A
 
         stax    ptr
+
+        ;; Find last slash in string
         ldy     #0
         lda     (ptr),y
         tay
-L6F99:  lda     (ptr),y
+:       lda     (ptr),y
         cmp     #'/'
-        beq     L6FA9
+        beq     slash
         dey
-        bpl     L6F99
+        bpl     :-
+
+        ;; Oops - no slash
         ldy     #1
-L6FA4:  dey
+
+        ;; Restore original string
+restore:
+        dey
         lda     (ptr),y
         tay
         rts
 
-L6FA9:  cpy     #1
-        beq     L6FA4
+        ;; Are we left with "/" ?
+slash:  cpy     #1
+        beq     restore
         dey
         rts
 .endproc
@@ -6330,12 +6399,13 @@ L76BB:  bit     flag
 
 L7705:  addr_jump L7710, $00AA
 
-L770C:  ldax    #$01C2
+L770C:  ldax    #450
 L7710:  ldy     #$20
         sta     ($06),y
         txa
         iny
         sta     ($06),y
+
         cmp16   L7B65, #50
         bmi     L7739
         cmp16   L7B65, #108
@@ -7160,7 +7230,8 @@ inext:  inc     record_num
         ora     #$80
         sta     (ptr),y
 
-        ldax    #$0F5A
+        lda     #'Z'
+        ldx     #15
 :       sta     $0808,x
         dex
         bpl     :-
@@ -10547,9 +10618,9 @@ L9A50:  ldx     path_buf_main
         ldx     path_buf_main
 L9A60:  iny
         inx
-        lda     LE04B,y
+        lda     filename_buf,y
         sta     path_buf_main,x
-        cpy     LE04B
+        cpy     filename_buf
         bne     L9A60
         stx     path_buf_main
 L9A70:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
@@ -15254,7 +15325,7 @@ str_system_start:  PASCAL_STRING "System/Start"
 .proc final_setup
         lda     #0
         sta     desktop_main::sys_start_flag
-        jsr     desktop_main::get_quit_routine_signature
+        jsr     desktop_main::get_copied_to_ramcard_flag
         cmp     #$80
         beq     L0EFE
         MLI_RELAY_CALL GET_PREFIX, get_prefix_params
@@ -15262,7 +15333,7 @@ str_system_start:  PASCAL_STRING "System/Start"
         dec     desktop_main::sys_start_path
         jmp     L0F05
 
-L0EFE:  addr_call desktop_main::copy_quit_string_2, desktop_main::sys_start_path
+L0EFE:  addr_call desktop_main::copy_desktop_orig_prefix, desktop_main::sys_start_path
 L0F05:  ldx     desktop_main::sys_start_path
 
         ;; Find last /

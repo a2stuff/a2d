@@ -25,9 +25,9 @@ DA_MAX_SIZE     := DA_IO_BUFFER - DA_LOAD_ADDRESS
 
 
         ;; Quit routine signature/data
-        quit_routine_signature := $D3FF
-        quit_string_1 := $D3EE
-        quit_string_2 := $D3AD
+        copied_to_ramcard_flag := $D3FF
+        ramcard_prefix := $D3EE
+        desktop_orig_prefix := $D3AD
 
 ;;; ============================================================
 ;;; Direct Calls (from main memory)
