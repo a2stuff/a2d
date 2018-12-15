@@ -118,6 +118,8 @@ ST_VOLUME_DIRECTORY     := $0F
 ;;; Errors
 ;;; ============================================================
 
+ERR_DEVICE_NOT_CONNECTED := $28
+ERR_WRITE_PROTECTED   := $2B
 ERR_INVALID_REFERENCE := $43
 ERR_PATH_NOT_FOUND    := $44
 ERR_VOL_NOT_FOUND     := $45

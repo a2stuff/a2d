@@ -2958,12 +2958,12 @@ str_info_blocks:
 str_colon:
         PASCAL_STRING ": "
 
-LB22D:  DEFINE_POINT 160,59
-LB231:  DEFINE_POINT 145,59
-LB235:  DEFINE_POINT 200,59
-LB239:  DEFINE_POINT 185,59
-LB23D:  DEFINE_POINT 205,59
-LB241:  DEFINE_POINT 195,59
+file_count_pos3:  DEFINE_POINT 160,59
+file_count_pos4:  DEFINE_POINT 145,59
+files_pos:  DEFINE_POINT 200,59
+files_pos2:  DEFINE_POINT 185,59
+file_count_pos:  DEFINE_POINT 205,59
+file_count_pos2: DEFINE_POINT 195,59
 
 str_format_disk:  PASCAL_STRING "Format a Disk ..."
 str_select_format:  PASCAL_STRING "Select the location where the disk is to be formatted"

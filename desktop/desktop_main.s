@@ -820,14 +820,14 @@ status_buffer:  .res    16, 0
 ;;; ============================================================
 
 .proc L464E
-        lda     LD343
+        lda     num_selector_list_items
         beq     :+
-        bit     LD343+1
+        bit     LD344
         bmi     L4666
         jsr     enable_selector_menu_items
         jmp     L4666
 
-:       bit     LD343+1
+:       bit     LD344
         bmi     L4666
         jsr     disable_selector_menu_items
 L4666:  lda     selected_icon_count
@@ -1169,7 +1169,7 @@ set_penmode_copy:
         bpl     done
         jsr     L4AAD
         jsr     L4A77
-        jsr     get_quit_routine_signature
+        jsr     get_copied_to_ramcard_flag
         bpl     L497A
         jsr     L8F24           ; Condition for this ???
         bmi     done
@@ -1202,48 +1202,58 @@ result: .byte   0
 
 ;;; ============================================================
 
+.proc cmd_selector_item_impl
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params3, $220
 
-.proc cmd_selector_item
+start:
         jmp     L49A6
 
-L49A5:  .byte   0
+entry_num:
+        .byte   0
 
 L49A6:  lda     menu_click_params::item_num
         sec
-        sbc     #$06
-        sta     L49A5
+        sbc     #6              ; 4 items + separator (and make 0 based)
+        sta     entry_num
+
         jsr     a_times_16
         addax   #run_list_entries, $06
-        ldy     #$0F
+
+        ldy     #$0F            ; flag byte following name
         lda     ($06),y
         asl     a
-        bmi     L49FA
-        bcc     L49E0
-        jsr     get_quit_routine_signature
-        beq     L49FA
-        lda     L49A5
-        jsr     L4AEA
+        bmi     not_downloaded  ; bit 6
+        bcc     L49E0           ; bit 7
+
+        jsr     get_copied_to_ramcard_flag
+        beq     not_downloaded
+        lda     entry_num
+        jsr     check_downloaded_path
         beq     L49ED
-        lda     L49A5
+
+        lda     entry_num
         jsr     L4A47
         jsr     L8F24
         bpl     L49ED
         jmp     redraw_windows_and_desktop
 
-L49E0:  jsr     get_quit_routine_signature
-        beq     L49FA
-        lda     L49A5
-        jsr     L4AEA
-        bne     L49FA
-L49ED:  lda     L49A5
-        jsr     L4B5F
+L49E0:  jsr     get_copied_to_ramcard_flag
+        beq     not_downloaded
+
+        lda     entry_num
+        jsr     check_downloaded_path           ; was-downloaded flag check?
+        bne     not_downloaded
+
+L49ED:  lda     entry_num
+        jsr     compose_downloaded_entry_path
         stax    $06
         jmp     L4A0A
 
-L49FA:  lda     L49A5
+not_downloaded:
+        lda     entry_num
         jsr     a_times_64
-        addax   #$DB9E, $06
+        addax   #run_list_paths, $06
+
 L4A0A:  ldy     #$00
         lda     ($06),y
         tay
@@ -1274,34 +1284,45 @@ L4A2B:  iny
         jmp     launch_file
 
 L4A46:  .byte   0
+
+;;; --------------------------------------------------
+
+        ;; Copy entry path to $800
 L4A47:  pha
         jsr     a_times_64
-        addax   #$DB9E, $06
-        ldy     #$00
+        addax   #run_list_paths, $06
+        ldy     #0
         lda     ($06),y
         tay
-L4A5A:  lda     ($06),y
+:       lda     ($06),y
         sta     L0800,y
         dey
-        bpl     L4A5A
+        bpl     :-
         pla
-        jsr     L4B5F
+
+        ;; Copy "down loaded" path to $840
+        jsr     compose_downloaded_entry_path
         stax    $08
-        ldy     #$00
+        ldy     #0
         lda     ($08),y
         tay
-L4A6F:  lda     ($08),y
+:       lda     ($08),y
         sta     $840,y
         dey
-        bpl     L4A6F
-L4A77:  ldy     L0800
-L4A7A:  lda     L0800,y
+        bpl     :-
+
+        ;; Strip segment off path at $800
+L4A77:  ldy     $800
+:       lda     $800,y
         cmp     #'/'
-        beq     L4A84
+        beq     :+
         dey
-        bne     L4A7A
-L4A84:  dey
+        bne     :-
+
+:       dey
         sty     L0800
+
+        ;; Strip segment off path at $840
         ldy     $840
 L4A8B:  lda     $840,y
         cmp     #'/'
@@ -1310,17 +1331,22 @@ L4A8B:  lda     $840,y
         bne     L4A8B
 L4A95:  dey
         sty     $840
+
+        ;; Return addresses in $6 and $8
         copy16  #$800, $06
         copy16  #$840, $08
-        jsr     L4D19
+
+        jsr     copy_paths_and_split_name
         rts
+
+;;; --------------------------------------------------
 
 L4AAD:  ldy     buf_win_path
 L4AB0:  lda     buf_win_path,y
         sta     L0800,y
         dey
         bpl     L4AB0
-        addr_call copy_quit_string_1, $840
+        addr_call copy_ramcard_prefix, $840
         ldy     L0800
 L4AC3:  lda     L0800,y
         cmp     #'/'
@@ -1343,23 +1369,28 @@ L4ADC:  iny
         bne     L4ADC
         rts
 
-L4AEA:  jsr     L4B5F
+.proc check_downloaded_path
+        jsr     compose_downloaded_entry_path
         stax    get_file_info_params3::pathname
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params3
         rts
 .endproc
-        L4A17 := cmd_selector_item::L4A17
-        L4A77 := cmd_selector_item::L4A77
-        L4AAD := cmd_selector_item::L4AAD
+
+.endproc
+        cmd_selector_item := cmd_selector_item_impl::start
+
+        L4A17 := cmd_selector_item_impl::L4A17
+        L4A77 := cmd_selector_item_impl::L4A77
+        L4AAD := cmd_selector_item_impl::L4AAD
 
 ;;; ============================================================
-;;; Get quit routine signature byte from Main LC Bank 2.
+;;; Get "coped to RAM card" flag from Main LC Bank 2.
 
-.proc get_quit_routine_signature
+.proc get_copied_to_ramcard_flag
         sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
-        lda     quit_routine_signature
+        lda     copied_to_ramcard_flag
         tax
         sta     ALTZPON
         lda     LCBANK1
@@ -1368,14 +1399,14 @@ L4AEA:  jsr     L4B5F
         rts
 .endproc
 
-.proc copy_quit_string_1
+.proc copy_ramcard_prefix
         stax    @destptr
         sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
 
-        ldx     quit_string_1
-:       lda     quit_string_1,x
+        ldx     ramcard_prefix
+:       lda     ramcard_prefix,x
         @destptr := *+1
         sta     dummy1234,x
         dex
@@ -1387,14 +1418,14 @@ L4AEA:  jsr     L4B5F
         rts
 .endproc
 
-.proc copy_quit_string_2
+.proc copy_desktop_orig_prefix
         stax    @destptr
         sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
 
-        ldx     quit_string_2
-:       lda     quit_string_2,x
+        ldx     desktop_orig_prefix
+:       lda     desktop_orig_prefix,x
         @destptr := *+1
         sta     dummy1234,x
         dex
@@ -1407,44 +1438,63 @@ L4AEA:  jsr     L4B5F
 .endproc
 
 ;;; ============================================================
+;;; For entry copied ("down loaded") to RAM card, compose path
+;;; using RAM card prefix plus last two segments of path
+;;; (e.g. "/RAM" + "/" + "MOUSEPAINT/MP.SYSTEM") into path_buffer
 
-.proc L4B5F
-        sta     L4BB0
-        addr_call copy_quit_string_1, path_buffer
-        lda     L4BB0
+.proc compose_downloaded_entry_path
+        sta     entry_num
+
+        ;; Initialize buffer
+        addr_call copy_ramcard_prefix, path_buffer
+
+        ;; Find entry path
+        lda     entry_num
         jsr     a_times_64
-        addax   #$DB9E, $06
-        ldy     #$00
+        addax   #run_list_paths, $06
+        ldy     #0
         lda     ($06),y
-        sta     L4BB1
+        sta     prefix_length
+
+        ;; Walk back one segment
         tay
-L4B81:  lda     ($06),y
+:       lda     ($06),y
         and     #CHAR_MASK
         cmp     #'/'
-        beq     L4B8C
+        beq     :+
         dey
-        bne     L4B81
-L4B8C:  dey
-L4B8D:  lda     ($06),y
+        bne     :-
+
+:       dey
+
+        ;; Walk back a second segment
+:       lda     ($06),y
         and     #CHAR_MASK
         cmp     #'/'
-        beq     L4B98
+        beq     :+
         dey
-        bne     L4B8D
-L4B98:  dey
+        bne     :-
+
+:       dey
+
+        ;; Append last two segments to path
         ldx     path_buffer
-L4B9C:  inx
+:       inx
         iny
         lda     ($06),y
         sta     path_buffer,x
-        cpy     L4BB1
-        bne     L4B9C
+        cpy     prefix_length
+        bne     :-
+
         stx     path_buffer
         ldax    #path_buffer
         rts
 
-L4BB0:  .byte   0
-L4BB1:  .byte   0
+entry_num:
+        .byte   0
+
+prefix_length:
+        .byte   0
 .endproc
 
 ;;; ============================================================
@@ -1589,7 +1639,9 @@ running_da_flag:
         bpl     L4CCD
         jmp     L4CD6
 
-L4CCD:  jsr     L4D19
+;;; --------------------------------------------------
+
+L4CCD:  jsr     copy_paths_and_split_name
         jsr     redraw_windows_and_desktop
         jsr     jt_copy_file
 L4CD6:  pha
@@ -1623,9 +1675,12 @@ L4CF3:  iny
 .endproc
 
 ;;; ============================================================
+;;; Copy string at ($6) to path_buf3, string at ($8) to path_buf4,
+;;; split filename off path_buf4 and store in filename_buf
 
-.proc L4D19
+.proc copy_paths_and_split_name
 
+        ;; Copy string at $6 to path_buf3
         ldy     #0
         lda     ($06),y
         tay
@@ -1634,6 +1689,7 @@ L4CF3:  iny
         dey
         bpl     :-
 
+        ;; Copy string at $8 to path_buf4
         ldy     #0
         lda     ($08),y
         tay
@@ -1642,23 +1698,26 @@ L4CF3:  iny
         dey
         bpl     :-
 
-        addr_call L6F90, path_buf4
+        addr_call find_last_path_segment, path_buf4
 
-        ldx     #$01
+        ;; Copy filename part to buf
+        ldx     #1
         iny
         iny
 :       lda     path_buf4,y
-        sta     LE04B,x
+        sta     filename_buf,x
         cpy     path_buf4
         beq     :+
         iny
         inx
         jmp     :-
 
-:       stx     LE04B
+:       stx     filename_buf
+
+        ;; And remove from path_buf4
         lda     path_buf4
         sec
-        sbc     LE04B
+        sbc     filename_buf
         sta     path_buf4
         dec     path_buf4
         rts
@@ -1704,7 +1763,7 @@ L4D9D:  pha
         bpl     :+
         jmp     redraw_windows_and_desktop
 
-:       addr_call L6F90, path_buf3
+:       addr_call find_last_path_segment, path_buf3
         sty     path_buf3
         addr_call L6FAF, path_buf3
         beq     L4DC2
@@ -1786,7 +1845,7 @@ L4E34:  lda     ($06),y
         dex
         dey
 L4E51:  lda     ($06),y
-        sta     LD343+1,x
+        sta     buf_filename2-1,x
         dey
         dex
         bne     L4E51
@@ -1913,8 +1972,10 @@ fail:   rts
 
         ptr := $06
 
-L4F67:  .byte   $00
+.proc new_folder_dialog_params
+phase:  .byte   0               ; window_id?
 L4F68:  .word   0
+.endproc
 
         ;; access = destroy/rename/write/read
         DEFINE_CREATE_PARAMS create_params, path_buffer, ACCESS_DEFAULT, FT_DIRECTORY,, ST_LINKED_DIRECTORY
@@ -1922,17 +1983,15 @@ L4F68:  .word   0
 path_buffer:
         .res    65, 0              ; buffer is used elsewhere too
 
-start:  lda     active_window_id
-        sta     L4F67
-        yax_call launch_dialog, index_new_folder_dialog, L4F67
+start:  copy    active_window_id, new_folder_dialog_params::phase
+        yax_call launch_dialog, index_new_folder_dialog, new_folder_dialog_params
 
 L4FC6:  lda     active_window_id
         beq     L4FD4
         jsr     window_address_lookup
-        stax    L4F68
-L4FD4:  lda     #$80
-        sta     L4F67
-        yax_call launch_dialog, index_new_folder_dialog, L4F67
+        stax    new_folder_dialog_params::L4F68
+L4FD4:  copy    #$80, new_folder_dialog_params::phase
+        yax_call launch_dialog, index_new_folder_dialog, new_folder_dialog_params
         beq     :+
         jmp     done            ; Cancelled
 :       stx     ptr+1
@@ -1958,16 +2017,15 @@ L4FD4:  lda     #$80
 
         ;; Failure
         jsr     DESKTOP_SHOW_ALERT0
-        copy16  L504E, L4F68
+        copy16  L504E, new_folder_dialog_params::L4F68
         jmp     L4FC6
 
         rts                     ; ???
 
 success:
-        lda     #$40
-        sta     L4F67
-        yax_call launch_dialog, index_new_folder_dialog, L4F67
-        addr_call L6F90, path_buffer
+        copy    #$40, new_folder_dialog_params::phase
+        yax_call launch_dialog, index_new_folder_dialog, new_folder_dialog_params
+        addr_call find_last_path_segment, path_buffer
         sty     path_buffer
         addr_call L6FAF, path_buffer
         beq     done
@@ -3734,7 +3792,7 @@ L5E3A:  lda     ($06),y
         dex
         dey
 L5E57:  lda     ($06),y
-        sta     LD343+1,x
+        sta     buf_filename2-1,x
         dey
         dex
         bne     L5E57
@@ -4599,7 +4657,7 @@ enable:
         lda     #4              ; > Run
         jsr     configure_menu_item
         lda     #$80
-        sta     LD343+1
+        sta     LD344
         rts
 
 configure_menu_item:
@@ -5438,27 +5496,37 @@ L6F8F:  rts
 .endproc
 
 ;;; ============================================================
+;;; Find position of last segment of path at (A,X), return in Y.
+;;; For "/a/b", Y points at "/a"; if volume path, unchanged.
 
-.proc L6F90
+.proc find_last_path_segment
         ptr := $A
 
         stax    ptr
+
+        ;; Find last slash in string
         ldy     #0
         lda     (ptr),y
         tay
-L6F99:  lda     (ptr),y
+:       lda     (ptr),y
         cmp     #'/'
-        beq     L6FA9
+        beq     slash
         dey
-        bpl     L6F99
+        bpl     :-
+
+        ;; Oops - no slash
         ldy     #1
-L6FA4:  dey
+
+        ;; Restore original string
+restore:
+        dey
         lda     (ptr),y
         tay
         rts
 
-L6FA9:  cpy     #1
-        beq     L6FA4
+        ;; Are we left with "/" ?
+slash:  cpy     #1
+        beq     restore
         dey
         rts
 .endproc
@@ -6284,12 +6352,13 @@ L76BB:  bit     flag
 
 L7705:  addr_jump L7710, $00AA
 
-L770C:  ldax    #$01C2
+L770C:  ldax    #450
 L7710:  ldy     #$20
         sta     ($06),y
         txa
         iny
         sta     ($06),y
+
         cmp16   L7B65, #50
         bmi     L7739
         cmp16   L7B65, #108
@@ -7105,7 +7174,8 @@ inext:  inc     record_num
         ora     #$80
         sta     (ptr),y
 
-        ldax    #$0F5A
+        lda     #'Z'
+        ldx     #15
 :       sta     $0808,x
         dex
         bpl     :-
@@ -9113,7 +9183,7 @@ do_copy_file:
         jsr     L9968
 L8F3F:  copy16  #$00FF, LE05B
         jsr     L9A0D
-        jsr     L917F
+        jsr     done_dialog_phase1
 L8F4F:  jsr     L91E8
         return  #0
 
@@ -9129,10 +9199,10 @@ do_delete_file:
         lda     #$00
         jsr     L9E7E
         jsr     LA271
-        jsr     L9182
+        jsr     done_dialog_phase2
         jsr     L9EBF
         jsr     L9EDB
-        jsr     L917F
+        jsr     done_dialog_phase1
         jmp     L8F4F
 
 L8F7E:  lda     #$80
@@ -9183,7 +9253,7 @@ L8FD2:  sta     L918A
 L8FDD:  lda     #$00
         beq     L8FE3
 L8FE1:  lda     #$80
-L8FE3:  sta     L918B
+L8FE3:  sta     unlock_flag
         lda     #$80
         sta     L9189
 L8FEB:  tsx
@@ -9343,12 +9413,12 @@ L9140:  inc     L917A
         bmi     L915D
         bit     L918A
         bpl     L9165
-L915D:  jsr     L9182
+L915D:  jsr     done_dialog_phase2
         bit     L9189
         bvs     L9168
 L9165:  jmp     L90BA
 
-L9168:  jsr     L917F
+L9168:  jsr     done_dialog_phase1
         lda     LEBFC
         jsr     icon_entry_name_lookup
         ldy     #$01
@@ -9369,22 +9439,32 @@ L917B:  .byte   0
 
 ;;; ============================================================
 
-        ;; Dynamically constructed jump table???
-        L917D := *+1
-L917C:  jmp     dummy0000
-        L9180 := *+1
-L917F:  jmp     dummy0000
-        L9183 := *+1
-L9182:  jmp     dummy0000
-        L9186 := *+1
-L9185:  jmp     dummy0000
+done_dialog_phase0:
+        dialog_phase0_callback := *+1
+        jmp     dummy0000
+
+done_dialog_phase1:
+        dialog_phase1_callback := *+1
+        jmp     dummy0000
+
+done_dialog_phase2:
+        dialog_phase2_callback := *+1
+        jmp     dummy0000
+
+done_dialog_phase3:
+        dialog_phase3_callback := *+1
+        jmp     dummy0000
 
 stack_stash:
         .byte   0
 
 L9189:  .byte   0
 L918A:  .byte   0
-L918B:  .byte   0
+
+        ;; high bit set = unlock, clear = lock
+unlock_flag:
+        .byte   0
+
 L918C:  .byte   0
 L918D:  .byte   0
 
@@ -9568,9 +9648,11 @@ unit_number:
 
         DEFINE_READ_BLOCK_PARAMS block_params, $0800, $A
 
-L92E3:  .byte   $00
+.proc get_info_dialog_params
+L92E3:  .byte   0
 L92E4:  .word   0
-L92E6:  .byte   $00
+L92E6:  .byte   0
+.endproc
 
 ;;; ============================================================
 ;;; Look up device driver address.
@@ -9638,13 +9720,13 @@ exit:   rts
 
 .proc do_get_info
         lda     selected_icon_count
-        bne     L92ED
+        bne     :+
         rts
 
-L92ED:  lda     #$00
-        sta     L92E6
+:       lda     #$00
+        sta     get_info_dialog_params::L92E6
         jsr     L91D5
-L92F5:  ldx     L92E6
+L92F5:  ldx     get_info_dialog_params::L92E6
         cpx     selected_icon_count
         bne     L9300
         jmp     L9534
@@ -9654,7 +9736,7 @@ L9300:  lda     selected_window_index
         asl     a
         tax
         copy16  window_address_table,x, $08
-        ldx     L92E6
+        ldx     get_info_dialog_params::L92E6
         lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
         jsr     join_paths
@@ -9667,7 +9749,7 @@ L931F:  lda     path_buf3,y
         dec     $220
         jmp     L9356
 
-L9331:  ldx     L92E6
+L9331:  ldx     get_info_dialog_params::L92E6
         lda     selected_icon_list,x
         cmp     #$01
         bne     L933E
@@ -9690,30 +9772,30 @@ L9356:  yax_call JT_MLI_RELAY, GET_FILE_INFO, get_file_info_params5
 L9366:  lda     selected_window_index
         beq     L9387
         lda     #$80
-        sta     L92E3
-        lda     L92E6
+        sta     get_info_dialog_params::L92E3
+        lda     get_info_dialog_params::L92E6
         clc
         adc     #$01
         cmp     selected_icon_count
         beq     L9381
-        inc     L92E3
-        inc     L92E3
+        inc     get_info_dialog_params::L92E3
+        inc     get_info_dialog_params::L92E3
 L9381:  jsr     launch_get_info_dialog
         jmp     L93DB
 
 L9387:  lda     #$81
-        sta     L92E3
-        lda     L92E6
+        sta     get_info_dialog_params::L92E3
+        lda     get_info_dialog_params::L92E6
         clc
         adc     #$01
         cmp     selected_icon_count
         beq     L939D
-        inc     L92E3
-        inc     L92E3
+        inc     get_info_dialog_params::L92E3
+        inc     get_info_dialog_params::L92E3
 L939D:  jsr     launch_get_info_dialog
         lda     #$00
         sta     L942E
-        ldx     L92E6
+        ldx     get_info_dialog_params::L92E6
         lda     selected_icon_list,x
         ldy     #$0F
 L93AD:  cmp     device_to_icon_map,y
@@ -9727,45 +9809,45 @@ L93B8:  lda     DEVLST,y
         yax_call JT_MLI_RELAY, READ_BLOCK, block_params
         bne     L93DB
         yax_call JT_MLI_RELAY, WRITE_BLOCK, block_params
-        cmp     #$2B
+        cmp     #ERR_WRITE_PROTECTED
         bne     L93DB
         lda     #$80
         sta     L942E
-L93DB:  ldx     L92E6
+L93DB:  ldx     get_info_dialog_params::L92E6
         lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
         lda     #$01
-        sta     L92E3
-        copy16  $06, L92E4
+        sta     get_info_dialog_params::L92E3
+        copy16  $06, get_info_dialog_params::L92E4
         jsr     launch_get_info_dialog
         lda     #$02
-        sta     L92E3
+        sta     get_info_dialog_params::L92E3
         lda     selected_window_index
         bne     L9413
         bit     L942E
         bmi     L940C
         lda     #$00
-        sta     L92E4
+        sta     get_info_dialog_params::L92E4
         beq     L9428
 L940C:  lda     #$01
-        sta     L92E4
+        sta     get_info_dialog_params::L92E4
         bne     L9428
 L9413:  lda     get_file_info_params5::access
         and     #$C3
         cmp     #$C3
         beq     L9423
         lda     #$01
-        sta     L92E4
+        sta     get_info_dialog_params::L92E4
         bne     L9428
 L9423:  lda     #$00
-        sta     L92E4
+        sta     get_info_dialog_params::L92E4
 L9428:  jsr     launch_get_info_dialog
         jmp     L942F
 
 L942E:  .byte   0
 
 L942F:  lda     #$03
-        sta     L92E3
+        sta     get_info_dialog_params::L92E3
 
         ;; Compose " 12345 Blocks" or " 12345 / 67890 Blocks" string
         buf := $220
@@ -9842,48 +9924,49 @@ compute_suffix:
         dex
         bpl     :-
 
-        copy16  #path_buf4, L92E4
+        copy16  #path_buf4, get_info_dialog_params::L92E4
         jsr     launch_get_info_dialog
 
         lda     #$04
-        sta     L92E3
+        sta     get_info_dialog_params::L92E3
         copy16  get_file_info_params5::create_date, date
         jsr     JT_DATE_STRING
-        copy16  #text_buffer2::length, L92E4
+        copy16  #text_buffer2::length, get_info_dialog_params::L92E4
         jsr     launch_get_info_dialog
         lda     #$05
-        sta     L92E3
+        sta     get_info_dialog_params::L92E3
         copy16  get_file_info_params5::mod_date, date
         jsr     JT_DATE_STRING
-        copy16  #text_buffer2::length, L92E4
+        copy16  #text_buffer2::length, get_info_dialog_params::L92E4
         jsr     launch_get_info_dialog
 
         lda     #$06
-        sta     L92E3
+        sta     get_info_dialog_params::L92E3
         lda     selected_window_index
         bne     L9519
-        ldx     L953A
-L950E:  lda     L953A,x
+        ldx     str_vol
+L950E:  lda     str_vol,x
         sta     str_file_type,x
         dex
         bpl     L950E
         bmi     L951F
 L9519:  lda     get_file_info_params5::file_type
         jsr     JT_FILE_TYPE_STRING
-L951F:  copy16  #str_file_type, L92E4
+L951F:  copy16  #str_file_type, get_info_dialog_params::L92E4
         jsr     launch_get_info_dialog
         bne     L9534
-L952E:  inc     L92E6
+L952E:  inc     get_info_dialog_params::L92E6
         jmp     L92F5
 
 L9534:  lda     #$00
         sta     path_buf4
         rts
 
-L953A:  PASCAL_STRING " VOL"
+str_vol:
+        PASCAL_STRING " VOL"
 
 .proc launch_get_info_dialog
-        yax_call launch_dialog, index_get_info_dialog, L92E3
+        yax_call launch_dialog, index_get_info_dialog, get_info_dialog_params
         rts
 .endproc
 .endproc
@@ -10153,7 +10236,7 @@ L9809:  yax_call JT_MLI_RELAY, OPEN, open_params3
         ldx     #$80
         jsr     JT_SHOW_ALERT
         beq     L9809
-        jmp     LA39F
+        jmp     close_files_cancel_dialog
 
 L981E:  lda     open_params3::ref_num
         sta     LE060
@@ -10163,7 +10246,7 @@ L9827:  yax_call JT_MLI_RELAY, READ, read_params3
         ldx     #$80
         jsr     JT_SHOW_ALERT
         beq     L9827
-        jmp     LA39F
+        jmp     close_files_cancel_dialog
 
 L983C:  jmp     L985B
 .endproc
@@ -10176,7 +10259,7 @@ L9845:  yax_call JT_MLI_RELAY, CLOSE, close_params6
         ldx     #$80
         jsr     JT_SHOW_ALERT
         beq     L9845
-        jmp     LA39F
+        jmp     close_files_cancel_dialog
 
 L985A:  rts
 .endproc
@@ -10192,7 +10275,7 @@ L9864:  yax_call JT_MLI_RELAY, READ, read_params4
         ldx     #$80
         jsr     JT_SHOW_ALERT
         beq     L9864
-        jmp     LA39F
+        jmp     close_files_cancel_dialog
 
 L987D:  inc     LE10D
         lda     LE10D
@@ -10277,21 +10360,23 @@ L9931:  .addr   L9B36           ; Overlay for L97DD
         .addr   L9B33
         .addr   rts2
 
-L9937:  .byte   0
-L9938:  .addr   0
+.proc copy_dialog_params
+        .byte   0
+count:  .addr   0
         .addr   $220
         .addr   path_buf_main
+.endproc
 
 .proc L993E
         lda     #0
-        sta     L9937
-        copy16  #L995A, L917D
-        copy16  #L997C, L9180
+        sta     copy_dialog_params
+        copy16  #L995A, dialog_phase0_callback
+        copy16  #L997C, dialog_phase1_callback
         jmp     L9BBF
 
-L995A:  stax    L9938
+L995A:  stax    copy_dialog_params::count
         lda     #1
-        sta     L9937
+        sta     copy_dialog_params
         jmp     L9BBF
 .endproc
 
@@ -10306,20 +10391,20 @@ L996A:  lda     L9931,y
         rts
 
 L997C:  lda     #5
-        sta     L9937
+        sta     copy_dialog_params
         jmp     L9BBF
 
 L9984:  lda     #0
-        sta     L9937
-        copy16  #L99A7, L917D
-        copy16  #L99DC, L9180
-        yax_call launch_dialog, index_download_dialog, L9937
+        sta     copy_dialog_params
+        copy16  #L99A7, dialog_phase0_callback
+        copy16  #L99DC, dialog_phase1_callback
+        yax_call launch_dialog, index_download_dialog, copy_dialog_params
         rts
 
-L99A7:  stax    L9938
+L99A7:  stax    copy_dialog_params::count
         lda     #1
-        sta     L9937
-        yax_call launch_dialog, index_download_dialog, L9937
+        sta     copy_dialog_params
+        yax_call launch_dialog, index_download_dialog, copy_dialog_params
         rts
 
 L99BC:  lda     #$80
@@ -10331,22 +10416,22 @@ L99C3:  lda     L9931,y
         bpl     L99C3
         lda     #0
         sta     LA425
-        copy16  #L99EB, L9186
+        copy16  #L99EB, dialog_phase3_callback
         rts
 
 L99DC:  lda     #3
-        sta     L9937
-        yax_call launch_dialog, index_download_dialog, L9937
+        sta     copy_dialog_params
+        yax_call launch_dialog, index_download_dialog, copy_dialog_params
         rts
 
 L99EB:  lda     #4
-        sta     L9937
-        yax_call launch_dialog, index_download_dialog, L9937
+        sta     copy_dialog_params
+        yax_call launch_dialog, index_download_dialog, copy_dialog_params
         cmp     #2
         bne     L99FE
         rts
 
-L99FE:  jmp     LA39F
+L99FE:  jmp     close_files_cancel_dialog
 
 ;;; ============================================================
 
@@ -10356,7 +10441,7 @@ L99FE:  jmp     LA39F
 L9A0D:  lda     #$FF
 L9A0F:  sta     L9B31
         lda     #2
-        sta     L9937
+        sta     copy_dialog_params
         jsr     LA379
         bit     L9189
         bvc     L9A22
@@ -10390,9 +10475,9 @@ L9A50:  ldx     path_buf_main
         ldx     path_buf_main
 L9A60:  iny
         inx
-        lda     LE04B,y
+        lda     filename_buf,y
         sta     path_buf_main,x
-        cpy     LE04B
+        cpy     filename_buf
         bne     L9A60
         stx     path_buf_main
 L9A70:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
@@ -10415,7 +10500,7 @@ L9A95:  sta     L9B30
         bne     L9AA8
         lda     LA2ED
         bne     L9AA8
-        jmp     LA39F
+        jmp     close_files_cancel_dialog
 
 L9AA8:  ldy     #$07
 L9AAA:  lda     file_info_params2,y
@@ -10449,11 +10534,11 @@ L9AE0:  yax_call JT_MLI_RELAY, CREATE, create_params2
         bit     L918D
         bmi     L9B14
         lda     #3
-        sta     L9937
+        sta     copy_dialog_params
         jsr     L9BBF
         pha
         lda     #2
-        sta     L9937
+        sta     copy_dialog_params
         pla
         cmp     #$02
         beq     L9B14
@@ -10466,7 +10551,7 @@ L9AE0:  yax_call JT_MLI_RELAY, CREATE, create_params2
 L9B14:  jsr     LA426
         jmp     L9B23
 
-L9B1A:  jmp     LA39F
+L9B1A:  jmp     close_files_cancel_dialog
 
 L9B1D:  jsr     show_error_alert
         jmp     L9AE0
@@ -10497,7 +10582,7 @@ L9B33:  jmp     LA360
 .proc L9B36
         jsr     check_escape_key_down
         beq     :+
-        jmp     LA39F
+        jmp     close_files_cancel_dialog
 :       lda     L97BD
         cmp     #$0F
         bne     L9B88
@@ -10514,7 +10599,7 @@ L9B59:  jsr     LA33B
         bne     L9B6F
         lda     LA2ED
         bne     L9B6F
-        jmp     LA39F
+        jmp     close_files_cancel_dialog
 
 L9B6F:  jsr     L9E19
         bcs     L9B7A
@@ -10537,7 +10622,7 @@ L9B91:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
 
 L9BA2:  jsr     L9C01
         bcc     L9BAA
-        jmp     LA39F
+        jmp     close_files_cancel_dialog
 
 L9BAA:  jsr     remove_path_segment_220
         jsr     L9E19
@@ -10551,7 +10636,7 @@ L9BBE:  rts
 
 ;;; ============================================================
 
-L9BBF:  yax_call launch_dialog, index_copy_file_dialog, L9937
+L9BBF:  yax_call launch_dialog, index_copy_file_dialog, copy_dialog_params
         rts
 
 ;;; ============================================================
@@ -10565,7 +10650,7 @@ L9BBF:  yax_call launch_dialog, index_copy_file_dialog, L9937
 L9BDA:  sub16   file_info_params3::aux_type, file_info_params3::blocks_used, L9BFF
         cmp16   L9BFF, LA2EF
         bcs     L9BFE
-        jmp     L9185
+        jmp     done_dialog_phase3
 
 L9BFE:  rts
 
@@ -10578,12 +10663,12 @@ L9BFF:  .word   0
         jsr     L9C1A
         bcc     done
         lda     #4
-        sta     L9937
+        sta     copy_dialog_params
         jsr     L9BBF
         beq     :+
-        jmp     LA39F
+        jmp     close_files_cancel_dialog
 :       lda     #3
-        sta     L9937
+        sta     copy_dialog_params
         sec
 done:   rts
 
@@ -10629,7 +10714,7 @@ L9C70:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params3
         sta     path_buf_main
         jmp     L9C70
 
-        jmp     LA39F
+        jmp     close_files_cancel_dialog
 
 L9C95:  sub16   file_info_params3::aux_type, file_info_params3::blocks_used, L9CD4
         add16   L9CD4, L9CD8, L9CD4
@@ -10715,13 +10800,13 @@ L9D74:  lda     open_params4::ref_num
 
 L9D81:  yax_call JT_MLI_RELAY, OPEN, open_params5
         beq     L9D9B
-        cmp     #$45
+        cmp     #ERR_VOL_NOT_FOUND
         beq     L9D96
         jsr     show_error_alert_dst
         jmp     L9D81
 
 L9D96:  jsr     show_error_alert_dst
-        lda     #$45
+        lda     #ERR_VOL_NOT_FOUND
 L9D9B:  rts
 
 L9D9C:  lda     open_params5::ref_num
@@ -10733,7 +10818,7 @@ L9D9C:  lda     open_params5::ref_num
 L9DA9:  copy16  #$0AC0, read_params6::request_count
 L9DB3:  yax_call JT_MLI_RELAY, READ, read_params6
         beq     L9DC8
-        cmp     #$4C
+        cmp     #ERR_END_OF_FILE
         beq     L9DD9
         jsr     show_error_alert
         jmp     L9DB3
@@ -10775,16 +10860,16 @@ L9E1B:  lda     file_info_params2,x
         bne     L9E1B
 L9E26:  yax_call JT_MLI_RELAY, CREATE, create_params3
         beq     L9E6F
-        cmp     #$47
+        cmp     #ERR_DUPLICATE_FILENAME
         bne     L9E69
         bit     L918D
         bmi     L9E60
         lda     #3
-        sta     L9937
-        yax_call launch_dialog, index_copy_file_dialog, L9937
+        sta     copy_dialog_params
+        yax_call launch_dialog, index_copy_file_dialog, copy_dialog_params
         pha
         lda     #2
-        sta     L9937
+        sta     copy_dialog_params
         pla
         cmp     #$02
         beq     L9E60
@@ -10797,7 +10882,7 @@ L9E26:  yax_call JT_MLI_RELAY, CREATE, create_params3
 L9E60:  jsr     LA426
         jmp     L9E6F
 
-L9E66:  jmp     LA39F
+L9E66:  jmp     close_files_cancel_dialog
 
 L9E69:  jsr     show_error_alert_dst
         jmp     L9E26
@@ -10812,29 +10897,29 @@ L9E71:  sec
 L9E73:  .addr   L9F94           ; Overlay for L97DD
         .addr   rts2
         .addr   destroy_with_retry
-L9E79:  .byte   0
-L9E7A:  .word   0
 
+.proc delete_file_dialog_params
+phase:  .byte   0
+count:  .word   0
         .addr   $220
+.endproc
 
 .proc L9E7E
-        sta     L9E79
-        copy16  #L9EB1, L9183
-        copy16  #L9EA3, L917D
+        sta     delete_file_dialog_params::phase
+        copy16  #L9EB1, dialog_phase2_callback
+        copy16  #L9EA3, dialog_phase0_callback
         jsr     LA044
-        copy16  #L9ED3, L9180
+        copy16  #L9ED3, dialog_phase1_callback
         rts
 
-L9EA3:  stax    L9E7A
-        lda     #1
-        sta     L9E79
+L9EA3:  stax    delete_file_dialog_params::count
+        copy    #1, delete_file_dialog_params::phase
         jmp     LA044
 
-L9EB1:  lda     #$02
-        sta     L9E79
+L9EB1:  copy    #2, delete_file_dialog_params::phase
         jsr     LA044
         beq     L9EBE
-        jmp     LA39F
+        jmp     close_files_cancel_dialog
 
 L9EBE:  rts
 .endproc
@@ -10854,16 +10939,14 @@ L9EBE:  rts
 .endproc
 
 .proc L9ED3
-        lda     #$05
-        sta     L9E79
+        copy    #5, delete_file_dialog_params::phase
         jmp     LA044
 .endproc
 
 ;;; ============================================================
 
 .proc L9EDB
-        lda     #$03
-        sta     L9E79
+        copy    #3, delete_file_dialog_params::phase
         jsr     LA379
 L9EE3:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     L9EF4
@@ -10898,27 +10981,25 @@ L9F1E:  bit     LE05C
 L9F26:  jsr     decrement_LA2ED
 L9F29:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
         beq     L9F8D
-        cmp     #$4E
+        cmp     #ERR_ACCESS_ERROR
         bne     L9F8E
         bit     L918D
         bmi     L9F62
-        lda     #$04
-        sta     L9E79
+        copy    #4, delete_file_dialog_params::phase
         jsr     LA044
         pha
-        lda     #$03
-        sta     L9E79
+        copy    #3, delete_file_dialog_params::phase
         pla
-        cmp     #$03
+        cmp     #3
         beq     L9F8D
-        cmp     #$02
+        cmp     #2
         beq     L9F62
-        cmp     #$04
+        cmp     #4
         bne     L9F5F
         lda     #$80
         sta     L918D
         bne     L9F62
-L9F5F:  jmp     LA39F
+L9F5F:  jmp     close_files_cancel_dialog
 
 L9F62:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         lda     file_info_params2::access
@@ -10944,7 +11025,7 @@ L9F8E:  jsr     show_error_alert
 .proc L9F94
         jsr     check_escape_key_down
         beq     :+
-        jmp     LA39F
+        jmp     close_files_cancel_dialog
 :       jsr     append_to_path_220
         bit     LE05C
         bmi     L9FA7
@@ -10960,16 +11041,14 @@ L9FBB:  lda     file_info_params2::storage_type
         beq     LA022
 L9FC2:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
         beq     LA022
-        cmp     #$4E
+        cmp     #ERR_ACCESS_ERROR
         bne     LA01C
         bit     L918D
         bmi     LA001
-        lda     #$04
-        sta     L9E79
-        yax_call launch_dialog, index_delete_file_dialog, L9E79
+        copy    #4, delete_file_dialog_params::phase
+        yax_call launch_dialog, index_delete_file_dialog, delete_file_dialog_params
         pha
-        lda     #$03
-        sta     L9E79
+        copy    #3, delete_file_dialog_params::phase
         pla
         cmp     #$03
         beq     LA022
@@ -10980,15 +11059,13 @@ L9FC2:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
         lda     #$80
         sta     L918D
         bne     LA001
-L9FFE:  jmp     LA39F
+L9FFE:  jmp     close_files_cancel_dialog
 
 LA001:  lda     #ACCESS_DEFAULT
         sta     file_info_params2::access
-        lda     #7              ; param count for SET_FILE_INFO
-        sta     file_info_params2
+        copy    #7, file_info_params2 ; param count for SET_FILE_INFO
         yax_call JT_MLI_RELAY, SET_FILE_INFO, file_info_params2
-        lda     #$A             ; param count for GET_FILE_INFO
-        sta     file_info_params2
+        copy    #$A,file_info_params2 ; param count for GET_FILE_INFO
         jmp     L9FC2
 
 LA01C:  jsr     show_error_alert
@@ -11014,55 +11091,71 @@ retry:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
 done:   rts
 .endproc
 
-LA044:  yax_call launch_dialog, index_delete_file_dialog, L9E79
+LA044:  yax_call launch_dialog, index_delete_file_dialog, delete_file_dialog_params
         rts
 
 LA04E:  .addr   LA170
         .addr   rts2
         .addr   rts2
-LA054:  .byte   0
-LA055:  .word   0
+
+;;; 0 = opening window, initial label
+;;; 1 = show operation details (e.g. file count)
+;;; 2 = draw buttons, input loop
+;;; 3 = performing operation
+;;; 4 = destroy window
+
+.enum LockDialogLifecycle
+        open      = 0
+        populate  = 1
+        loop      = 2
+        operation = 3
+        destroy   = 4
+.endenum
+
+.proc lock_unlock_dialog_params
+phase:  .byte   0
+files_remaining_count:
+        .word   0
         .addr   $220
+.endproc
 
-LA059:  lda     #$00
-        sta     LA054
-        bit     L918B
-        bpl     LA085
-        copy16  #LA0D1, L9183
-        copy16  #LA0B5, L917D
-        jsr     launch_unlock_dialog
-        copy16  #LA0F8, L9180
+.proc LA059
+        copy    #LockDialogLifecycle::open, lock_unlock_dialog_params::phase
+        bit     unlock_flag
+        bpl     lock
+
+        copy16  #LA0D1, dialog_phase2_callback
+        copy16  #LA0B5, dialog_phase0_callback
+        jsr     unlock_dialog_lifecycle
+        copy16  #LA0F8, dialog_phase1_callback
         rts
 
-LA085:  copy16  #LA0C3, L9183
-        copy16  #LA0A7, L917D
-        jsr     launch_lock_dialog
-        copy16  #LA0F0, L9180
+lock:   copy16  #LA0C3, dialog_phase2_callback
+        copy16  #LA0A7, dialog_phase0_callback
+        jsr     lock_dialog_lifecycle
+        copy16  #LA0F0, dialog_phase1_callback
         rts
+.endproc
 
-LA0A7:  stax    LA055
-        lda     #$01
-        sta     LA054
-        jmp     launch_lock_dialog
+LA0A7:  stax    lock_unlock_dialog_params::files_remaining_count
+        copy    #LockDialogLifecycle::populate, lock_unlock_dialog_params::phase
+        jmp     lock_dialog_lifecycle
 
-LA0B5:  stax    LA055
-        lda     #$01
-        sta     LA054
-        jmp     launch_unlock_dialog
+LA0B5:  stax    lock_unlock_dialog_params::files_remaining_count
+        copy    #LockDialogLifecycle::populate, lock_unlock_dialog_params::phase
+        jmp     unlock_dialog_lifecycle
 
-LA0C3:  lda     #$02
-        sta     LA054
-        jsr     launch_lock_dialog
+LA0C3:  copy    #LockDialogLifecycle::loop, lock_unlock_dialog_params::phase
+        jsr     lock_dialog_lifecycle
         beq     LA0D0
-        jmp     LA39F
+        jmp     close_files_cancel_dialog
 
 LA0D0:  rts
 
-LA0D1:  lda     #$02
-        sta     LA054
-        jsr     launch_unlock_dialog
+LA0D1:  copy    #LockDialogLifecycle::loop, lock_unlock_dialog_params::phase
+        jsr     unlock_dialog_lifecycle
         beq     LA0DE
-        jmp     LA39F
+        jmp     close_files_cancel_dialog
 
 LA0DE:  rts
 
@@ -11077,27 +11170,24 @@ LA0DE:  rts
         rts
 .endproc
 
-LA0F0:  lda     #$04
-        sta     LA054
-        jmp     launch_lock_dialog
+LA0F0:  copy    #LockDialogLifecycle::destroy, lock_unlock_dialog_params::phase
+        jmp     lock_dialog_lifecycle
 
-LA0F8:  lda     #$04
-        sta     LA054
-        jmp     launch_unlock_dialog
+LA0F8:  copy    #LockDialogLifecycle::destroy, lock_unlock_dialog_params::phase
+        jmp     unlock_dialog_lifecycle
 
-launch_lock_dialog:
-        yax_call launch_dialog, index_lock_dialog, LA054
+lock_dialog_lifecycle:
+        yax_call launch_dialog, index_lock_dialog, lock_unlock_dialog_params
         rts
 
-launch_unlock_dialog:
-        yax_call launch_dialog, index_unlock_dialog, LA054
+unlock_dialog_lifecycle:
+        yax_call launch_dialog, index_unlock_dialog, lock_unlock_dialog_params
         rts
 
 ;;; ============================================================
 
 .proc LA114
-        lda     #$03
-        sta     LA054
+        copy    #LockDialogLifecycle::operation, lock_unlock_dialog_params::phase
         jsr     LA379
         ldx     path_buf_main
         ldy     L9B32
@@ -11154,7 +11244,7 @@ LA170:  jsr     append_to_path_220
         beq     LA1C0
         cmp     #ST_LINKED_DIRECTORY
         beq     LA1C0
-        bit     L918B
+        bit     unlock_flag
         bpl     :+
         lda     #ACCESS_DEFAULT
         bne     LA1A0
@@ -11171,35 +11261,37 @@ LA1A3:  copy    #7, file_info_params2 ; param count for SET_FILE_INFO
 
 LA1C0:  jmp     remove_path_segment_220
 
-LA1C3:  sub16   LA2ED, #1, LA055
-        bit     L918B
+LA1C3:  sub16   LA2ED, #1, lock_unlock_dialog_params::files_remaining_count
+        bit     unlock_flag
         bpl     LA1DC
-        jmp     launch_unlock_dialog
+        jmp     unlock_dialog_lifecycle
 
-LA1DC:  jmp     launch_lock_dialog
+LA1DC:  jmp     lock_dialog_lifecycle
 .endproc
 
-LA1DF:  .byte   0
+.proc get_size_dialog_params
+phase:  .byte   0
         .addr   LA2ED, LA2EF
+.endproc
 
-LA1E4:  copy    #0, LA1DF
-        copy16  #LA220, L9183
-        copy16  #LA211, L917D
-        yax_call launch_dialog, index_get_size_dialog, LA1DF
-        copy16  #LA233, L9180
+LA1E4:  copy    #0, get_size_dialog_params::phase
+        copy16  #LA220, dialog_phase2_callback
+        copy16  #LA211, dialog_phase0_callback
+        yax_call launch_dialog, index_get_size_dialog, get_size_dialog_params
+        copy16  #LA233, dialog_phase1_callback
         rts
 
-LA211:  copy    #1, LA1DF
-        yax_call launch_dialog, index_get_size_dialog, LA1DF
+LA211:  copy    #1, get_size_dialog_params::phase
+        yax_call launch_dialog, index_get_size_dialog, get_size_dialog_params
 LA21F:  rts
 
-LA220:  copy    #2, LA1DF
-        yax_call launch_dialog, index_get_size_dialog, LA1DF
+LA220:  copy    #2, get_size_dialog_params::phase
+        yax_call launch_dialog, index_get_size_dialog, get_size_dialog_params
         beq     LA21F
-        jmp     LA39F
+        jmp     close_files_cancel_dialog
 
-LA233:  copy    #3, LA1DF
-        yax_call launch_dialog, index_get_size_dialog, LA1DF
+LA233:  copy    #3, get_size_dialog_params::phase
+        yax_call launch_dialog, index_get_size_dialog, get_size_dialog_params
 LA241:  rts
 
 LA242:  .addr   LA2AE,rts2,rts2
@@ -11270,7 +11362,7 @@ LA2AE:  bit     L9189
         bvc     :+
         jsr     remove_path_segment_220
 :       ldax    LA2ED
-        jmp     L917C
+        jmp     done_dialog_phase0
 
 LA2ED:  .word   0
 LA2EF:  .word   0
@@ -11297,8 +11389,7 @@ LA2EF:  .word   0
 
 :       ldx     #0
         ldy     path
-        lda     #'/'
-        sta     path+1,y
+        copy    #'/', path+1,y
 
         iny
 loop:   cpx     L97AD
@@ -11344,8 +11435,7 @@ found:  dex
 
 LA341:  ldx     #$00
         ldy     path_buf_main
-        lda     #'/'
-        sta     path_buf_main+1,y
+        copy    #'/', path_buf_main+1,y
         iny
 LA34C:  cpx     L97AD
         bcs     LA35C
@@ -11403,14 +11493,13 @@ LA395:  lda     path_buf4,y
 
 ;;; ============================================================
 
-LA39F:  jsr     L917F
-        jmp     LA3A7
-
-.proc LA3A7_impl
+.proc close_files_cancel_dialog
+        jsr     done_dialog_phase1
+        jmp     :+
 
         DEFINE_CLOSE_PARAMS close_params
 
-start:  yax_call JT_MLI_RELAY, CLOSE, close_params
+:       yax_call JT_MLI_RELAY, CLOSE, close_params
         lda     selected_window_index
         beq     :+
         sta     getwinport_params2::window_id
@@ -11420,7 +11509,6 @@ start:  yax_call JT_MLI_RELAY, CLOSE, close_params
         txs
         return  #$FF
 .endproc
-        LA3A7 := LA3A7_impl::start
 
 ;;; ============================================================
 
@@ -11438,12 +11526,12 @@ nope:   lda     #$00
 done:   rts
 .endproc
 
-LA3EF:  sub16   LA2ED, #1, L9E7A
-        yax_call launch_dialog, index_delete_file_dialog, L9E79
+LA3EF:  sub16   LA2ED, #1, delete_file_dialog_params::count
+        yax_call launch_dialog, index_delete_file_dialog, delete_file_dialog_params
         rts
 
-LA40A:  sub16   LA2ED, #1, L9938
-        yax_call launch_dialog, index_copy_file_dialog, L9937
+LA40A:  sub16   LA2ED, #1, copy_dialog_params::count
+        yax_call launch_dialog, index_copy_file_dialog, copy_dialog_params
         rts
 
 LA425:  .byte   0
@@ -11527,7 +11615,7 @@ show:   jsr     JT_SHOW_ALERT0
         bne     LA4C2
         jmp     do_on_line
 
-LA4C2:  jmp     LA39F
+LA4C2:  jmp     close_files_cancel_dialog
 
 flag:   .byte   0
 
@@ -11660,8 +11748,7 @@ dialog_param_addr:
         dec     prompt_ip_counter
         bne     :+
         jsr     redraw_prompt_insertion_point
-        lda     #prompt_insertion_point_blink_count
-        sta     prompt_ip_counter
+        copy    #prompt_insertion_point_blink_count, prompt_ip_counter
 
         ;; Dispatch event types - mouse down, key press
 :       MGTK_RELAY_CALL MGTK::GetEvent, event_params
@@ -12658,9 +12745,9 @@ do1:    ldy     #$01
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB231
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::file_count_pos4
         addr_call draw_text1, str_file_count
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB239
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::files_pos2
         addr_call draw_text1, str_files
         rts
 
@@ -12682,7 +12769,7 @@ do3:    ldy     #$01
         jsr     copy_name_to_buf0_adjust_case
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE7E
         addr_call draw_text1, path_buf0
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB241
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::file_count_pos2
         addr_call draw_text1, str_file_count
         rts
 
@@ -12740,9 +12827,9 @@ do1:    ldy     #$01
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB22D
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::file_count_pos3
         addr_call draw_text1, str_file_count
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB235
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::files_pos
         addr_call draw_text1, str_files
         rts
 
@@ -12764,7 +12851,7 @@ do3:    ldy     #$01
         jsr     copy_name_to_buf0_adjust_case
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE7E
         addr_call draw_text1, path_buf0
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB23D
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::file_count_pos
         addr_call draw_text1, str_file_count
         rts
 
@@ -12841,8 +12928,8 @@ LB2FD:  jsr     prompt_input_loop
         lda     path_buf1
         beq     LB2FD
         jsr     LBCC9
-        ldy     #$43
-        ldx     #$D4
+        ldy     #<path_buf1
+        ldx     #>path_buf1
         return  #0
 
 LB313:  jsr     reset_grafport3a
@@ -13201,8 +13288,7 @@ skip:   dey                     ; ypos = (Y-1) * 8 + pointD::ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, dialog_label_pos
         addr_call_indirect draw_text1, ptr
         ldx     dialog_label_pos
-        lda     #dialog_label_default_x ; restore original x coord
-        sta     dialog_label_pos::xcoord
+        copy    #dialog_label_default_x,dialog_label_pos::xcoord ; restore original x coord
         rts
 .endproc
 
@@ -13243,8 +13329,7 @@ draw_yes_no_all_cancel_buttons:
         jsr     draw_no_label
         jsr     draw_all_label
         jsr     draw_cancel_label
-        lda     #$40
-        sta     LD8E7
+        copy    #$40, LD8E7
         rts
 
 erase_yes_no_all_cancel_buttons:
@@ -13261,8 +13346,7 @@ draw_ok_cancel_buttons:
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::cancel_button_rect
         jsr     draw_ok_label
         jsr     draw_cancel_label
-        lda     #$00
-        sta     LD8E7
+        copy    #$00, LD8E7
         rts
 
 erase_ok_cancel_buttons:
@@ -13275,8 +13359,7 @@ draw_ok_button:
         jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::ok_button_rect
         jsr     draw_ok_label
-        lda     #$80
-        sta     LD8E7
+        copy    #$80, LD8E7
         rts
 
 erase_ok_button:
@@ -13493,8 +13576,7 @@ fill_button_proc_addr:  .addr   0
 
 event_loop:
         sta     click_result
-        lda     #0
-        sta     down_flag
+        copy    #0, down_flag
 loop:   MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_up
@@ -13559,14 +13641,12 @@ click_result:
 
 clear_flag:
         MGTK_RELAY_CALL MGTK::SetTextBG, desktop_aux::textbg_black
-        lda     #$00
-        sta     prompt_ip_flag
-        beq     draw
+        copy    #0, prompt_ip_flag
+        beq     draw            ; always
 
 set_flag:
         MGTK_RELAY_CALL MGTK::SetTextBG, desktop_aux::textbg_white
-        lda     #$FF
-        sta     prompt_ip_flag
+        copy    #$FF, prompt_ip_flag
 
         drawtext_params := $6
         textptr := $6
@@ -13626,8 +13706,7 @@ done:   rts
         stax    LBB09
         ldx     path_buf2
         inx
-        lda     #' '
-        sta     path_buf2,x
+        copy    #' ', path_buf2,x
         inc     path_buf2
         copy16  #path_buf2, ptr
         lda     path_buf2
@@ -13828,7 +13907,8 @@ LBBBC:  ldx     path_buf1
         rts
 .endproc
 
-LBC03:  lda     path_buf2
+.proc LBC03
+        lda     path_buf2
         cmp     #$02
         bcs     LBC0B
         rts
@@ -13856,8 +13936,10 @@ LBC2D:  dec     path_buf2
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         rts
+.endproc
 
-LBC5E:  lda     path_buf1
+.proc LBC5E
+        lda     path_buf1
         bne     LBC64
         rts
 
@@ -13897,13 +13979,14 @@ LBCA6:  lda     LD3C1,x
         bne     LBCA6
 LBCB3:  pla
         sta     path_buf2
-        lda     #$00
-        sta     path_buf1
+        copy    #0, path_buf1
         MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
         jsr     draw_filename_prompt
         rts
+.endproc
 
-LBCC9:  lda     path_buf2
+.proc LBCC9
+        lda     path_buf2
         cmp     #$02
         bcs     LBCD1
         rts
@@ -13924,11 +14007,13 @@ LBCDF:  lda     path_buf2,x
         bne     LBCDF
         pla
         sta     path_buf1
-        lda     #$01
-        sta     path_buf2
+        copy    #1, path_buf2
         MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
         jsr     draw_filename_prompt
         rts
+.endproc
+
+;;; Entry point???
 
         stax    $06
         ldy     #$00
@@ -13994,18 +14079,15 @@ LBD33:  rts
 .proc clear_path_buf2
         .assert * = $BD69, error, "Entry point used by overlay"
 
-        lda     #1              ; length
-        sta     path_buf2
-        lda     str_insertion_point+1 ; IP character
-        sta     path_buf2+1
+        copy    #1, path_buf2   ; length
+        copy    str_insertion_point+1, path_buf2+1 ; IP character
         rts
 .endproc
 
 .proc clear_path_buf1
         .assert * = $BD75, error, "Entry point used by overlay"
 
-        lda     #0              ; length
-        sta     path_buf1
+        copy    #0, path_buf1   ; length
         rts
 .endproc
 
@@ -14060,12 +14142,10 @@ saved_proc_buf:
         cmp     #2              ; > 2?
         bcs     :+
 
-        lda     #' '            ; singular
-        sta     str_files,x
+        copy    #' ', str_files,x ; singular
         rts
 
-:       lda     #'s'            ; plural
-        sta     str_files,x
+:       copy    #'s', str_files,x ; plural
         rts
 .endproc
 
@@ -14249,15 +14329,13 @@ start:
 .proc detect_machine
         ;; Detect machine type
         ;; See Apple II Miscellaneous #7: Apple II Family Identification
-        lda     #0
-        sta     iigs_flag
+        copy    #0, iigs_flag
         lda     ID_BYTE_FBC0    ; 0 = IIc or IIc+
         beq     :+
         sec                     ; Follow detection protocol
         jsr     ID_BYTE_FE1F    ; RTS on pre-IIgs
         bcs     :+              ; carry clear = IIgs
-        lda     #$80
-        sta     iigs_flag
+        copy    #$80, iigs_flag
 
 :       ldx     ID_BYTE_FBB3
         ldy     ID_BYTE_FBC0
@@ -14277,16 +14355,13 @@ start:
         beq     is_iic          ; Now identify/store specific machine type.
         bit     iigs_flag       ; (number is used in double-click timer)
         bpl     is_iie
-        lda     #$FD            ; IIgs
-        sta     machine_type
+        copy    #$FD, machine_type ; IIgs
         jmp     init_video
 
-is_iie: lda     #$96            ; IIe
-        sta     machine_type
+is_iie: copy    #$96, machine_type ; IIe
         jmp     init_video
 
-is_iic: lda     #$FA            ; IIc
-        sta     machine_type
+is_iic: copy    #$FA, machine_type ; IIc
         jmp     init_video
 .endproc
 
@@ -14387,8 +14462,7 @@ loop:   cpx     #max_icon_count
         ldy     #0
         sta     (ptr),y
         iny
-        lda     #0
-        sta     (ptr),y
+        copy    #0, (ptr),y
         lda     ptr
         clc
         adc     #.sizeof(IconEntry)
@@ -14427,8 +14501,7 @@ trash_name:  PASCAL_STRING " Trash "
 .proc create_trash_icon
         ptr := $6
 
-        lda     #0
-        sta     cached_window_id
+        copy    #0, cached_window_id
         lda     #1
         sta     cached_window_icon_count
         sta     icon_count
@@ -14438,8 +14511,7 @@ trash_name:  PASCAL_STRING " Trash "
         jsr     desktop_main::icon_entry_lookup
         stax    ptr
         ldy     #IconEntry::win_type
-        lda     #icon_entry_type_trash
-        sta     (ptr),y
+        copy    #icon_entry_type_trash, (ptr),y
         ldy     #IconEntry::iconbits
         copy16in #desktop_aux::trash_icon, (ptr),y
         iny
@@ -14537,17 +14609,17 @@ end:
         MLI_RELAY_CALL GET_PREFIX, desktop_main::get_prefix_params
         MGTK_RELAY_CALL MGTK::CheckEvents
 
-        lda     #0
-        sta     L0A92
+        copy    #0, L0A92
         jsr     read_selector_list
         bne     done
 
         lda     selector_list_data_buf
         clc
         adc     selector_list_data_buf+1
-        sta     LD343
+        sta     num_selector_list_items
         lda     #0
-        sta     LD343+1
+        sta     LD344
+
         lda     selector_list_data_buf
         sta     L0A93
 L0A3B:  lda     L0A92
@@ -14618,10 +14690,10 @@ calc_entry_addr:
 calc_entry_str:
         jsr     desktop_main::a_times_64
         clc
-        adc     #<(run_list_entries + $80)
+        adc     #<run_list_paths
         tay
         txa
-        adc     #>(run_list_entries + $80)
+        adc     #>run_list_paths
         tax
         tya
         rts
@@ -14920,7 +14992,7 @@ process_volume:
         inc     icon_count
         lda     DEVLST,y
         jsr     desktop_main::create_volume_icon
-        sta     L0E34
+        sta     cvi_result
         MGTK_RELAY_CALL MGTK::CheckEvents
 
         pla                     ; restore all registers
@@ -14930,8 +15002,8 @@ process_volume:
         pla
 
         pha
-        lda     L0E34
-        cmp     #$28
+        lda     cvi_result
+        cmp     #ERR_DEVICE_NOT_CONNECTED
         bne     L0D64
         ldy     volume_num
         lda     DEVLST,y
@@ -15081,7 +15153,8 @@ unit_number_lo_nibble:
         .byte   0
 volume_num:
         .byte   0
-L0E34:  .byte   0
+cvi_result:
+        .byte   0
 .endproc
 
 ;;; ============================================================
@@ -15106,7 +15179,7 @@ L0E36:  inx
         lda     DEVCNT
         clc
         adc     #3
-        sta     LE270
+        sta     check_menu      ; obsolete
 
         lda     #0
         sta     slot
@@ -15184,7 +15257,7 @@ str_system_start:  PASCAL_STRING "System/Start"
 .proc final_setup
         lda     #0
         sta     desktop_main::sys_start_flag
-        jsr     desktop_main::get_quit_routine_signature
+        jsr     desktop_main::get_copied_to_ramcard_flag
         cmp     #$80
         beq     L0EFE
         MLI_RELAY_CALL GET_PREFIX, get_prefix_params
@@ -15192,7 +15265,7 @@ str_system_start:  PASCAL_STRING "System/Start"
         dec     desktop_main::sys_start_path
         jmp     L0F05
 
-L0EFE:  addr_call desktop_main::copy_quit_string_2, desktop_main::sys_start_path
+L0EFE:  addr_call desktop_main::copy_desktop_orig_prefix, desktop_main::sys_start_path
 L0F05:  ldx     desktop_main::sys_start_path
 
         ;; Find last /

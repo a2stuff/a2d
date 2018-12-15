@@ -21,10 +21,10 @@ L9016:  rts
 L9017:  lda     $0C00
         clc
         adc     $0C01
-        sta     LD343
+        sta     num_selector_list_items
         lda     #$00
-        sta     LD343+1
-        jsr     get_quit_routine_signature
+        sta     LD344
+        jsr     get_copied_to_ramcard_flag
         cmp     #$80
         bne     L9015
         jsr     JUMP_TABLE_REDRAW_ALL
@@ -307,7 +307,7 @@ L9282:  lda     L938D
         cmp     #$C0
         beq     L92F0
         sta     L938A
-        jsr     get_quit_routine_signature
+        jsr     get_copied_to_ramcard_flag
         beq     L92F0
         lda     L938A
         beq     L92CE
@@ -474,7 +474,7 @@ L9471:  cmp     #$10
         ldx     #$00
         lda     #$73
         bne     L947F
-L947B:  ldax    #$00DC
+L947B:  ldax    #220
 L947F:  clc
         adc     #$0A
         sta     dialog_label_pos
@@ -736,32 +736,32 @@ L97A0:  pha
         bne     L97B2
         addr_jump L97B6, $0069
 
-L97B2:  ldax    #$00D2
+L97B2:  ldax    #210
 L97B6:  clc
-        adc     #$09
+        adc     #9
         sta     rect_D877
         txa
-        adc     #$00
+        adc     #0
         sta     rect_D877+1
         pla
-        cmp     #$08
+        cmp     #8
         bcc     L97D4
-        cmp     #$10
+        cmp     #16
         bcs     L97D1
         sec
-        sbc     #$08
+        sbc     #8
         jmp     L97D4
 
 L97D1:  sec
-        sbc     #$10
+        sbc     #16
 L97D4:  asl     a
         asl     a
         asl     a
         clc
-        adc     #$18
+        adc     #24
         sta     rect_D877+2
-        lda     #$00
-        adc     #$00
+        lda     #0
+        adc     #0
         sta     rect_D877+3
         add16   rect_D877, #106, rect_D877+4
         add16   rect_D877+2, #7, rect_D877+6
@@ -808,13 +808,13 @@ L985E:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, rect_D6F8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, rect_D6F8
-        return  #$00
+        return  #0
 
 L9885:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, rect_D700
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, rect_D700
-        return  #$01
+        return  #1
 
 L98AC:  lda     L938B
         ora     L938C
@@ -1252,7 +1252,7 @@ L9C09:  sta     warning_dialog_num
         DEFINE_WRITE_PARAMS write_params, $C00, $800
         DEFINE_CLOSE_PARAMS flush_close_params
 
-L9C26:  addr_call copy_quit_string_2, $1C00
+L9C26:  addr_call copy_desktop_orig_prefix, $1C00
         inc     $1C00
         ldx     $1C00
         lda     #'/'
@@ -1439,11 +1439,11 @@ params: .addr   0
 
 ;;; ============================================================
 
-.proc get_quit_routine_signature
+.proc get_copied_to_ramcard_flag
         sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
-        lda     quit_routine_signature
+        lda     copied_to_ramcard_flag
         tax
         sta     ALTZPON
         lda     LCBANK1
@@ -1452,14 +1452,14 @@ params: .addr   0
         rts
 .endproc
 
-.proc copy_quit_string_1
+.proc copy_ramcard_prefix
         stax    @addr
         sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
 
-        ldx     quit_string_1
-:       lda     quit_string_1,x
+        ldx     ramcard_prefix
+:       lda     ramcard_prefix,x
         @addr := *+1
         sta     dummy1234,x
         dex
@@ -1471,14 +1471,14 @@ params: .addr   0
         rts
 .endproc
 
-.proc copy_quit_string_2
+.proc copy_desktop_orig_prefix
         stax    @addr
         sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
 
-        ldx     quit_string_2
-:       lda     quit_string_2,x
+        ldx     desktop_orig_prefix
+:       lda     desktop_orig_prefix,x
         @addr := *+1
         sta     dummy1234,x
         dex
@@ -1500,7 +1500,7 @@ L9E61:  jsr     L9E74
         rts
 
 L9E74:  sta     L9EBF
-        addr_call copy_quit_string_1, L9EC1
+        addr_call copy_ramcard_prefix, L9EC1
         lda     L9EBF
         jsr     L9BE2
         stax    $06
