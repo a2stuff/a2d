@@ -1657,47 +1657,7 @@ L6110:  inc     L6128
 L6127:  .byte   0
 L6128:  .byte   0
 
-;;; ============================================================
-
-.proc adjust_filename_case
-        ptr := $A
-
-        stx     ptr+1
-        sta     ptr
-        ldy     #0
-        lda     (ptr),y
-        tay
-        bne     loop
-        rts
-
-loop:   dey
-        beq     done
-        bpl     :+
-done:   rts
-
-:       lda     (ptr),y
-        and     #CHAR_MASK      ; convert to ASCII
-        cmp     #'/'
-        beq     next
-        cmp     #'.'
-        bne     check_alpha
-next:   dey
-        jmp     loop
-
-check_alpha:
-        iny
-        lda     (ptr),y
-        and     #CHAR_MASK
-        cmp     #'A'
-        bcc     :+
-        cmp     #'Z'+1
-        bcs     :+
-        clc
-        adc     #('a' - 'A')    ; convert to lower case
-        sta     (ptr),y
-:       dey
-        jmp     loop
-.endproc
+        PAD_TO $6161            ; Maintain previous addresses
 
 ;;; ============================================================
 
@@ -1758,7 +1718,7 @@ L61E6:  inx
         cpy     L6226
         bne     L61E6
         stx     $0220
-        addr_call adjust_filename_case, $0220
+        addr_call desktop_main::adjust_case, $0220
         MGTK_RELAY_CALL MGTK::MoveTo, disk_label_pos
         addr_call draw_string, disk_label
         addr_call draw_string, $0220
@@ -2049,9 +2009,7 @@ L64E8:  lda     #$00
 L64F5:  lda     L6515
         cmp     $177F
         beq     L64E7
-        lda     $06
-        ldx     $07
-        jsr     adjust_filename_case
+        addr_call_indirect desktop_main::adjust_case, $06
         inc     L6515
         lda     $06
         clc
@@ -2880,7 +2838,7 @@ L6E20:  lda     path_buf,x
         sta     path_buf0,x
         dex
         bpl     L6E20
-        addr_call adjust_filename_case, path_buf0
+        addr_call desktop_main::adjust_case, path_buf0
         rts
 
 L6E31:  ldx     path_buf
@@ -2888,7 +2846,7 @@ L6E31:  ldx     path_buf
         sta     path_buf1,x
         dex
         bpl     :-
-        addr_call adjust_filename_case, path_buf1
+        addr_call desktop_main::adjust_case, path_buf1
         rts
 
 L6E45:  lda     #$00
@@ -2971,8 +2929,8 @@ L6EC2:  lda     LD920
         tax
         tya
         jsr     L5F0D
-L6EFB:  addr_call adjust_filename_case, LD3C1
-        addr_call adjust_filename_case, path_buf
+L6EFB:  addr_call desktop_main::adjust_case, LD3C1
+        addr_call desktop_main::adjust_case, path_buf
         lda     LD3C1
         cmp     path_buf
         bne     L6F26
