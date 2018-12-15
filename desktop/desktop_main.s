@@ -5560,7 +5560,7 @@ start:  sta     flag
         bne     :-
 
         ;; And capitalize
-        addr_call capitalize_string, path_buffer
+        addr_call adjust_case, path_buffer
 
         lda     #0
         sta     L704B
@@ -6155,7 +6155,7 @@ L7561:  lda     LE1B0,y
         sta     ($08),y
         dey
         bpl     L7561
-L7569:  addr_call_indirect capitalize_string, $08
+L7569:  addr_call_indirect adjust_case, $08
         lda     cached_window_id
         jsr     window_lookup
         stax    $06
@@ -6469,7 +6469,7 @@ got_type:
         tya
 
         jsr     find_icon_details_for_file_type
-        addr_call capitalize_string, name_tmp
+        addr_call adjust_case, name_tmp
         ldy     #IconEntry::len
         ldx     #0
 L77F0:  lda     name_tmp,x
@@ -7700,7 +7700,7 @@ loop:   lda     LEC43,x
         lda     #' '
         sta     text_buffer2::data
         inc     text_buffer2::length
-        addr_call capitalize_string, text_buffer2::length
+        addr_call adjust_case, text_buffer2::length
         rts
 .endproc
 
@@ -8226,50 +8226,6 @@ exit:   rts
 .endproc
 
 ;;; ============================================================
-
-.proc capitalize_string
-        ptr := $A
-
-        stx     ptr+1
-        sta     ptr
-        ldy     #0
-        lda     (ptr),y
-        tay
-        bne     next
-        rts
-
-next:   dey
-        beq     done
-        bpl     :+
-done:   rts
-
-:       lda     (ptr),y
-        and     #CHAR_MASK      ; convert to ASCII
-        cmp     #'/'
-        beq     skip
-        cmp     #' '            ; (these two lines are not present
-        beq     skip            ; in most filename case adjust procs)
-        cmp     #'.'
-        bne     check_alpha
-skip:   dey
-        jmp     next
-
-check_alpha:
-        iny
-        lda     (ptr),y
-        and     #CHAR_MASK
-        cmp     #'A'
-        bcc     :+
-        cmp     #'Z'+1
-        bcs     :+
-        clc
-        adc     #('a' - 'A')    ; convert to lower case
-        sta     (ptr),y
-:       dey
-        jmp     next
-.endproc
-
-;;; ============================================================
 ;;; Pushes two words from $6/$8 to stack
 
 .proc push_pointers
@@ -8326,7 +8282,7 @@ addr:   .addr   0
 ;;; ============================================================
 
 port_copy:
-        .res    .sizeof(MGTK::GrafPort)+1
+        .res    .sizeof(MGTK::GrafPort)+1, 0
 
 .proc copy_window_portbits
         ptr := $6
@@ -8550,7 +8506,7 @@ create_icon:
         lda     cvi_data_buffer
         and     #$0F
         sta     cvi_data_buffer
-        addr_call capitalize_string, cvi_data_buffer
+        addr_call adjust_case, cvi_data_buffer
 
         ldy     #IconEntry::name
         copy    #' ', (icon_ptr),y ; leading space
@@ -13430,21 +13386,22 @@ LB76C:  stax    $06
         rts
 
 ;;; ============================================================
-;;; Adjust case in a filename (input buf A,X, output buf $A)
-;;; Called from ovl2
+;;; Adjust case in a pathname (input buf A,X, output buf $A)
 
 .proc adjust_case
         .assert * = $B781, error, "Entry point used by overlay"
 
         ptr := $A
 
-        stx     ptr+1
-        sta     ptr
+        stax    ptr
         ldy     #0
         lda     (ptr),y
         tay
-        bne     loop
-        rts
+        beq     done
+
+        ;; Walk backwards through string. At char N, check char N-1
+        ;; to see if it is a symbol. If it is, and char N is a letter,
+        ;; lower-case it.
 
 loop:   dey
         beq     done
@@ -13453,11 +13410,9 @@ done:   rts
 
 :       lda     (ptr),y
         and     #CHAR_MASK      ; convert to ASCII
-        cmp     #'/'
-        beq     next
-        cmp     #'.'
-        bne     check_alpha
-next:   dey
+        cmp     #'0'            ; <'0' includes '.', '/' and ' '
+        bcs     check_alpha
+        dey
         jmp     loop
 
 check_alpha:
@@ -13468,12 +13423,13 @@ check_alpha:
         bcc     :+
         cmp     #'Z'+1
         bcs     :+
-        clc
-        adc     #('a' - 'A')    ; convert to lower case
+        ora     #(~CASE_MASK & $FF)
         sta     (ptr),y
 :       dey
         jmp     loop
 .endproc
+
+        PAD_TO $B7B9            ; Maintain previous addresses
 
 ;;; ============================================================
 
@@ -14890,7 +14846,7 @@ is_da:  inc     desk_acc_num
         dey
         bne     :-
 
-        addr_call_indirect desktop_main::capitalize_string, da_ptr
+        addr_call_indirect desktop_main::adjust_case, da_ptr
 
         ;; Convert periods to spaces
         lda     (da_ptr),y
