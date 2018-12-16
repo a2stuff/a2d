@@ -2862,7 +2862,7 @@ textbg_white:  .byte   $7F
 
 press_ok_to_rect:  DEFINE_RECT 39,25,360,80
 prompt_rect:  DEFINE_RECT 40,60,360,80
-LAE7E:  DEFINE_POINT 65,43
+current_target_file_pos:  DEFINE_POINT 65,43
 LAE82:  DEFINE_POINT 65,51
 LAE86:  DEFINE_RECT 65,35,394,42
 LAE8E:  DEFINE_RECT 65,43,394,50
@@ -2928,7 +2928,10 @@ str_delete_locked_file:
         PASCAL_STRING "This file is locked, do you want to delete it anyway ?"
 
 LB16A:  DEFINE_POINT 145, 59
-LB16E:  DEFINE_POINT 200, 59
+
+delete_remaining_count_pos:
+        DEFINE_POINT 200, 59
+
 LB172:  DEFINE_POINT 300, 59
 
         ;; "New Folder" dialog strings
@@ -2970,12 +2973,12 @@ str_info_blocks:
 str_colon:
         PASCAL_STRING ": "
 
-file_count_pos3:  DEFINE_POINT 160,59
-file_count_pos4:  DEFINE_POINT 145,59
+unlock_remaining_count_pos2:  DEFINE_POINT 160,59
+lock_remaining_count_pos2:  DEFINE_POINT 145,59
 files_pos:  DEFINE_POINT 200,59
 files_pos2:  DEFINE_POINT 185,59
-file_count_pos:  DEFINE_POINT 205,59
-file_count_pos2: DEFINE_POINT 195,59
+unlock_remaining_count_pos:  DEFINE_POINT 205,59
+lock_remaining_count_pos: DEFINE_POINT 195,59
 
 str_format_disk:  PASCAL_STRING "Format a Disk ..."
 str_select_format:  PASCAL_STRING "Select the location where the disk is to be formatted"
@@ -3014,7 +3017,7 @@ str_size_number:
 str_size_blocks:
         PASCAL_STRING "Blocks used on disk"
 
-        .byte   $6E,$00,$23,$00,$6E,$00,$2B,$00
+        .word   110,35,110,43
 
 str_download:
         PASCAL_STRING "DownLoad ..."

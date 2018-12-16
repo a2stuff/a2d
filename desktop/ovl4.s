@@ -2049,9 +2049,7 @@ L64E8:  lda     #$00
 L64F5:  lda     L6515
         cmp     $177F
         beq     L64E7
-        lda     $06
-        ldx     $07
-        jsr     adjust_filename_case
+        addr_call_indirect adjust_filename_case, $06
         inc     L6515
         lda     $06
         clc

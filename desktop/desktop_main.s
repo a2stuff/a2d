@@ -12297,7 +12297,7 @@ do2:    ldy     #1
         sta     ptr+1
         stx     ptr
         jsr     copy_name_to_buf0_adjust_case
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE7E
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::current_target_file_pos
         addr_call draw_text1, path_buf0
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$05
@@ -12419,7 +12419,7 @@ do2:    ldy     #$01
         sta     ptr+1
         stx     ptr
         jsr     copy_name_to_buf0_adjust_case
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE7E
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::current_target_file_pos
         addr_call draw_text1, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB0BA
         addr_call draw_text1, str_file_count
@@ -12589,9 +12589,9 @@ do3:    ldy     #$01
         sta     $06+1
         stx     $06
         jsr     copy_name_to_buf0_adjust_case
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE7E
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::current_target_file_pos
         addr_call draw_text1, path_buf0
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB16E
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::delete_remaining_count_pos
         addr_call draw_text1, str_file_count
         rts
 
@@ -12848,7 +12848,7 @@ do1:    ldy     #$01
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::file_count_pos4
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::lock_remaining_count_pos2
         addr_call draw_text1, str_file_count
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::files_pos2
         addr_call draw_text1, str_files
@@ -12870,9 +12870,9 @@ do3:    ldy     #$01
         sta     $06+1
         stx     $06
         jsr     copy_name_to_buf0_adjust_case
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE7E
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::current_target_file_pos
         addr_call draw_text1, path_buf0
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::file_count_pos2
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::lock_remaining_count_pos
         addr_call draw_text1, str_file_count
         rts
 
@@ -12930,7 +12930,7 @@ do1:    ldy     #$01
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::file_count_pos3
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::unlock_remaining_count_pos2
         addr_call draw_text1, str_file_count
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::files_pos
         addr_call draw_text1, str_files
@@ -12952,9 +12952,9 @@ do3:    ldy     #$01
         sta     $06+1
         stx     $06
         jsr     copy_name_to_buf0_adjust_case
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE7E
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::current_target_file_pos
         addr_call draw_text1, path_buf0
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::file_count_pos
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::unlock_remaining_count_pos
         addr_call draw_text1, str_file_count
         rts
 
