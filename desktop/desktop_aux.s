@@ -2916,7 +2916,7 @@ str_delete_locked_file:
         PASCAL_STRING "This file is locked, do you want to delete it anyway ?"
 
 LB16A:  DEFINE_POINT 145, 59
-LB16E:  DEFINE_POINT 200, 59
+LB16E:  DEFINE_POINT 204, 59
 LB172:  DEFINE_POINT 300, 59
 
         ;; "New Folder" dialog strings

@@ -9104,6 +9104,64 @@ open:   MLI_RELAY_CALL OPEN, open_params
         load_dynamic_routine := load_dynamic_routine_impl::load
         restore_dynamic_routine := load_dynamic_routine_impl::restore
 
+;;; ============================================================
+
+.proc show_clock
+        lda     MACHID
+        and     #1              ; bit 0 = clock card
+        beq     done
+
+        MLI_RELAY_CALL GET_TIME, 0
+        lda     TIMEHI          ; hours
+        and     #%00011111
+
+        ;; AM/PM
+        ldx     #'A'
+        cmp     #12
+        bcc     :+
+        ldx     #'P'
+        sec
+        sbc     #12
+:       stx     str_clock + 7
+
+        ;; Hours
+        cmp     #0              ; 0 -> 12
+        bne     :+
+        lda     #12
+:       ldx     #' '            ; Leading space or 1?
+        cmp     #10
+        bcc     :+
+        ldx     #'1'
+        sec
+        sbc     #10
+:       stx     str_clock + 1   ; Tens place
+        ora     #'0'
+        sta     str_clock + 2   ; Ones place
+
+        ;; Minutes
+        lda     TIMELO
+        and     #%00111111
+        ldx     #0              ; Subtract off tens (in X)
+:       cmp     #10
+        bcc     :+
+        inx
+        sec
+        sbc     #10
+        bpl     :-
+:       ora     #'0'
+        sta     str_clock + 5   ; Ones place
+        txa
+        ora     #'0'
+        sta     str_clock + 4   ; Tens place
+
+        ;; Assumes call from main loop, where grafport3 is initialized.
+        MGTK_RELAY_CALL MGTK::MoveTo, pos_clock
+        addr_call draw_text1, str_clock
+done:   rts
+.endproc
+
+;;; ============================================================
+
         PAD_TO $8F00
 
 ;;; ============================================================
@@ -14110,71 +14168,26 @@ saved_proc_buf:
 .proc compose_file_count_string
         ldax    file_count
         jsr     int_to_string
-        jsr     append_space_after_int
 
-        ldx     str_from_int
-:       lda     str_from_int,x
-        sta     str_file_count,x
-        dex
-        bpl     :-
+        ldy     #1
+        copy    #' ', str_file_count,y
+
+        ldx     #0
+:       cpx     str_from_int
+        beq     :+
+        inx
+        iny
+        copy    str_from_int,x, str_file_count,y
+        bne     :-
+
+:       iny
+        copy    #' ', str_file_count,y
+        sty     str_file_count
+
         rts
 .endproc
 
 ;;; ============================================================
-
-.proc show_clock
-        lda     MACHID
-        and     #1              ; bit 0 = clock card
-        beq     done
-
-        MLI_RELAY_CALL GET_TIME, 0
-        lda     TIMEHI          ; hours
-        and     #%00011111
-
-        ;; AM/PM
-        ldx     #'A'
-        cmp     #12
-        bcc     :+
-        ldx     #'P'
-        sec
-        sbc     #12
-:       stx     str_clock + 7
-
-        ;; Hours
-        cmp     #0              ; 0 -> 12
-        bne     :+
-        lda     #12
-:       ldx     #' '            ; Leading space or 1?
-        cmp     #10
-        bcc     :+
-        ldx     #'1'
-        sec
-        sbc     #10
-:       stx     str_clock + 1   ; Tens place
-        ora     #'0'
-        sta     str_clock + 2   ; Ones place
-
-        ;; Minutes
-        lda     TIMELO
-        and     #%00111111
-        ldx     #0              ; Subtract off tens (in X)
-:       cmp     #10
-        bcc     :+
-        inx
-        sec
-        sbc     #10
-        bpl     :-
-:       ora     #'0'
-        sta     str_clock + 5   ; Ones place
-        txa
-        ora     #'0'
-        sta     str_clock + 4   ; Tens place
-
-        ;; Assumes call from main loop, where grafport3 is initialized.
-        MGTK_RELAY_CALL MGTK::MoveTo, pos_clock
-        addr_call draw_text1, str_clock
-done:   rts
-.endproc
 
         PAD_TO $BE63
 
