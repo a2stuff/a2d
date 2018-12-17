@@ -274,7 +274,7 @@ L5341:  lda     winfo_entrydlg_file_picker
         beq     L5380
         jmp     L542F
 
-L5380:  jsr     detect_double_click
+L5380:  jsr     desktop_main::detect_double_click
         beq     L5386
         rts
 
@@ -348,7 +348,7 @@ L5446:  lda     screentowindow_windowy
 L5457:  lda     LD920
         jsr     L6274
         jsr     jt_05
-        jsr     detect_double_click
+        jsr     desktop_main::detect_double_click
         bmi     L5468
         jmp     L5386
 
@@ -1177,103 +1177,8 @@ L5C27:  ldx     $177F
 .endproc
 
 ;;; ============================================================
-;;; Detect double-click in file list
 
-.proc detect_double_click
-
-        double_click_deltax := 5
-        double_click_deltay := 4
-
-        COPY_STRUCT MGTK::Point, event_coords, coords
-
-        ;; Initialize counter (varies based on machine type)
-        lda     machine_type
-        sta     counter
-
-        ;; Decrement counter, bail if time delta exceeded
-loop:   dec     counter
-        beq     exit
-
-        MGTK_RELAY_CALL MGTK::PeekEvent, event_params
-
-        ;; Check coords, bail if pixel delta exceeded
-        jsr     check_delta
-        bmi     exit
-
-        copy    #$FF, unused    ; unused ???
-
-        lda     event_kind
-        sta     kind           ; unused ???
-
-        cmp     #MGTK::EventKind::no_event
-        beq     loop
-        cmp     #MGTK::EventKind::drag
-        beq     loop
-        cmp     #MGTK::EventKind::button_up
-        bne     :+
-
-        MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        jmp     loop
-
-:       cmp     #MGTK::EventKind::button_down
-        bne     exit
-
-        MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        return  #0              ; double-click
-
-exit:   return  #$FF            ; not double-click
-
-.proc check_delta
-        ;; compute x delta
-        lda     event_xcoord
-        sec
-        sbc     xcoord
-        sta     delta
-        lda     event_xcoord+1
-        sbc     xcoord+1
-        bpl     :+
-
-        ;; is -delta < x < 0 ?
-        lda     delta
-        cmp     #($100 - double_click_deltax)
-        bcs     check_y
-fail:   return  #$FF
-
-:       lda     delta
-        cmp     #double_click_deltax
-        bcs     fail
-
-        ;; compute y delta
-check_y:
-        lda     event_ycoord
-        sec
-        sbc     ycoord
-        sta     delta
-        lda     event_ycoord+1
-        sbc     ycoord+1
-        bpl     :+
-
-        ;; is -delta < y < 0 ?
-        lda     delta
-        cmp     #($100 - double_click_deltay)
-        bcs     ok
-
-:       lda     delta
-        cmp     #double_click_deltay
-        bcs     fail
-ok:     return  #0
-.endproc
-
-counter:
-        .byte   0
-coords:
-xcoord: .word   0
-ycoord: .word   0
-delta:  .byte   0
-
-kind:   .byte   0
-unused: .byte   0
-.endproc
+        PAD_TO $5CF7            ; Maintain previous addresses
 
 ;;; ============================================================
 

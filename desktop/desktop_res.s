@@ -202,6 +202,7 @@ double_click_flag:
 
         ;; Set to specific machine type; used for double-click timing.
 machine_type:
+        .assert * = machine_speed, error, "Entry point mismatch"
         .byte   $00             ; Set to: $96 = IIe, $FA = IIc, $FD = IIgs
 
 warning_dialog_num:
