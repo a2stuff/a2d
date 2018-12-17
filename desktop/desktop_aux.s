@@ -1,5 +1,5 @@
 ;;; ============================================================
-;;; DeskTop - Main Memory Segment
+;;; DeskTop - Aux Memory Segment
 ;;;
 ;;; Compiled as part of desktop.s
 ;;; ============================================================

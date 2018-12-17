@@ -13133,7 +13133,6 @@ loop:   dec     counter
         bmi     exit            ; moved past delta; no double-click
 
         lda     event_kind
-
         cmp     #MGTK::EventKind::no_event
         beq     loop
         cmp     #MGTK::EventKind::drag
