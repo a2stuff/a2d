@@ -13221,10 +13221,10 @@ loop:   dec     counter
         jsr     check_delta
         bmi     exit            ; moved past delta; no double-click
 
-        copy    #$FF, unused    ; ???
+        copy    #$FF, unused    ; unused ???
 
-        lda     event_kind      ; unused ???
-        sta     kind
+        lda     event_kind
+        sta     kind            ; unused ???
 
         cmp     #MGTK::EventKind::no_event
         beq     loop

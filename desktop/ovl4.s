@@ -274,7 +274,7 @@ L5341:  lda     winfo_entrydlg_file_picker
         beq     L5380
         jmp     L542F
 
-L5380:  jsr     L5C4F
+L5380:  jsr     detect_double_click
         beq     L5386
         rts
 
@@ -348,7 +348,7 @@ L5446:  lda     screentowindow_windowy
 L5457:  lda     LD920
         jsr     L6274
         jsr     jt_05
-        jsr     L5C4F
+        jsr     detect_double_click
         bmi     L5468
         jmp     L5386
 
@@ -1177,77 +1177,102 @@ L5C27:  ldx     $177F
 .endproc
 
 ;;; ============================================================
+;;; Detect double-click in file list
 
-.proc L5C4F
-        COPY_STRUCT MGTK::Point, screentowindow_screenx, L5CF0
+.proc detect_double_click
 
-        lda     machine_type    ; Timer for insertion point blink
-        sta     ip_blink_counter
-L5C60:  dec     ip_blink_counter
-        beq     L5CA6
+        double_click_deltax := 5
+        double_click_deltay := 4
+
+        COPY_STRUCT MGTK::Point, event_coords, coords
+
+        ;; Initialize counter (varies based on machine type)
+        lda     machine_type
+        sta     counter
+
+        ;; Decrement counter, bail if time delta exceeded
+loop:   dec     counter
+        beq     exit
+
         MGTK_RELAY_CALL MGTK::PeekEvent, event_params
-        jsr     L5CA9
-        bmi     L5CA6
-        lda     #$FF
-        sta     L5CF6
+
+        ;; Check coords, bail if pixel delta exceeded
+        jsr     check_delta
+        bmi     exit
+
+        copy    #$FF, unused    ; unused ???
+
         lda     event_kind
-        sta     L5CF5
+        sta     kind           ; unused ???
+
         cmp     #MGTK::EventKind::no_event
-        beq     L5C60
+        beq     loop
         cmp     #MGTK::EventKind::drag
-        beq     L5C60
+        beq     loop
         cmp     #MGTK::EventKind::button_up
-        bne     L5C96
+        bne     :+
+
         MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        jmp     L5C60
+        jmp     loop
 
-L5C96:  cmp     #MGTK::EventKind::button_down
-        bne     L5CA6
+:       cmp     #MGTK::EventKind::button_down
+        bne     exit
+
         MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        return  #$00
+        return  #0              ; double-click
 
-L5CA6:  return  #$FF
+exit:   return  #$FF            ; not double-click
 
-L5CA9:  lda     event_xcoord
+.proc check_delta
+        ;; compute x delta
+        lda     event_xcoord
         sec
-        sbc     L5CF0
-        sta     L5CF4
+        sbc     xcoord
+        sta     delta
         lda     event_xcoord+1
-        sbc     L5CF1
-        bpl     L5CC5
-        lda     L5CF4
-        cmp     #$FB
-        bcs     L5CCC
-L5CC2:  return  #$FF
+        sbc     xcoord+1
+        bpl     :+
 
-L5CC5:  lda     L5CF4
-        cmp     #$05
-        bcs     L5CC2
-L5CCC:  lda     event_ycoord
+        ;; is -delta < x < 0 ?
+        lda     delta
+        cmp     #($100 - double_click_deltax)
+        bcs     check_y
+fail:   return  #$FF
+
+:       lda     delta
+        cmp     #double_click_deltax
+        bcs     fail
+
+        ;; compute y delta
+check_y:
+        lda     event_ycoord
         sec
-        sbc     L5CF2
-        sta     L5CF4
+        sbc     ycoord
+        sta     delta
         lda     event_ycoord+1
-        sbc     L5CF3
-        bpl     L5CE5
-        lda     L5CF4
-        cmp     #$FC
-        bcs     L5CEC
-L5CE5:  lda     L5CF4
-        cmp     #$04
-        bcs     L5CC2
-L5CEC:  return  #$00
+        sbc     ycoord+1
+        bpl     :+
 
-ip_blink_counter:
+        ;; is -delta < y < 0 ?
+        lda     delta
+        cmp     #($100 - double_click_deltay)
+        bcs     ok
+
+:       lda     delta
+        cmp     #double_click_deltay
+        bcs     fail
+ok:     return  #0
+.endproc
+
+counter:
         .byte   0
+coords:
+xcoord: .word   0
+ycoord: .word   0
+delta:  .byte   0
 
-L5CF0:  .byte   0
-L5CF1:  .byte   0
-L5CF2:  .byte   0
-L5CF3:  .byte   0
-L5CF4:  .byte   0
-L5CF5:  .byte   0
-L5CF6:  .byte   0
+kind:   .byte   0
+unused: .byte   0
 .endproc
 
 ;;; ============================================================

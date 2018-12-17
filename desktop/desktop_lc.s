@@ -1,5 +1,5 @@
 ;;; ============================================================
-;;; DeskTop - Main Memory Segment
+;;; DeskTop - "Language Card" Segment
 ;;;
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
@@ -221,7 +221,7 @@ loop:   lda     (src),y
 .endproc
 
 ;;; ============================================================
-;;; From MAIN, load AUX (X,A) into A
+;;; From MAIN, load AUX (A,X) into A
 
 .proc DESKTOP_AUXLOAD
         stx     op+2
