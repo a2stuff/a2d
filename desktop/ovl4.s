@@ -2221,7 +2221,8 @@ L66C9:  addr_call draw_string, path_buf2
         addr_call draw_string, str_2_spaces
         rts
 
-L66D8:  lda     winfo_entrydlg
+handle_f1_click:
+        lda     winfo_entrydlg
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         lda     winfo_entrydlg
@@ -2270,7 +2271,7 @@ L6783:  lda     $08
         cmp     path_buf2
         bcc     L6790
         dec     path_buf2
-        jmp     L6B44
+        jmp     handle_f1_meta_right_key
 
 L6790:  ldx     #$02
         ldy     path_buf0
@@ -2310,7 +2311,7 @@ L67D1:  MGTK_RELAY_CALL MGTK::TextWidth, $06
         lda     $08
         cmp     #$01
         bcs     L67D1
-        jmp     L6B01
+        jmp     handle_f1_meta_left_key
 
 L6800:  inc     $08
         ldy     #$00
@@ -2349,7 +2350,8 @@ L6846:  jsr     jt_03
         rts
 
 L684D:  .word   0
-L684F:  lda     winfo_entrydlg
+handle_f2_click:
+        lda     winfo_entrydlg
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         lda     winfo_entrydlg
@@ -2398,7 +2400,7 @@ L68FA:  lda     $08
         cmp     path_buf2
         bcc     L6907
         dec     path_buf2
-        jmp     L6CF0
+        jmp     handle_f2_meta_right_key
 
 L6907:  ldx     #$02
         ldy     path_buf1
@@ -2438,7 +2440,7 @@ L6948:  MGTK_RELAY_CALL MGTK::TextWidth, $06
         lda     $08
         cmp     #$01
         bcs     L6948
-        jmp     L6CAD
+        jmp     handle_f2_meta_left_key
 
 L6977:  inc     $08
         ldy     #$00
@@ -2503,7 +2505,11 @@ L69D5:  lda     L6A17
         rts
 
 L6A17:  .byte   0
-L6A18:  lda     path_buf0
+
+;;; ============================================================
+
+.proc handle_f1_delete_key
+        lda     path_buf0
         bne     L6A1E
         rts
 
@@ -2518,8 +2524,12 @@ L6A1E:  dec     path_buf0
         addr_call draw_string, str_2_spaces
         jsr     L6EA3
         rts
+.endproc
 
-L6A53:  lda     path_buf0
+;;; ============================================================
+
+.proc handle_f1_left_key
+        lda     path_buf0
         bne     L6A59
         rts
 
@@ -2546,8 +2556,12 @@ L6A6B:  ldx     path_buf0
         addr_call draw_string, str_2_spaces
         jsr     L6EA3
         rts
+.endproc
 
-L6AAC:  lda     path_buf2
+;;; ============================================================
+
+.proc handle_f1_right_key
+        lda     path_buf2
         cmp     #$02
         bcs     L6AB4
         rts
@@ -2575,8 +2589,12 @@ L6AD6:  dec     path_buf2
         addr_call draw_string, str_2_spaces
         jsr     L6EA3
         rts
+.endproc
 
-L6B01:  lda     path_buf0
+;;; ============================================================
+
+.proc handle_f1_meta_left_key
+        lda     path_buf0
         bne     L6B07
         rts
 
@@ -2606,8 +2624,12 @@ L6B23:  lda     path_buf0,y
         jsr     jt_03
         jsr     L6EA3
         rts
+.endproc
 
-L6B44:  lda     path_buf2
+;;; ============================================================
+
+.proc handle_f1_meta_right_key
+        lda     path_buf2
         cmp     #$02
         bcs     L6B4C
         rts
@@ -2626,8 +2648,12 @@ L6B51:  inx
         jsr     jt_03
         jsr     L6EA3
         rts
+.endproc
 
-L6B72:  sta     L6BC3
+;;; ============================================================
+
+.proc L6B72
+        sta     L6BC3
         lda     path_buf1
         clc
         adc     path_buf2
@@ -2653,7 +2679,12 @@ L6B81:  lda     L6BC3
         rts
 
 L6BC3:  .byte   0
-L6BC4:  lda     path_buf1
+.endproc
+
+;;; ============================================================
+
+.proc handle_f2_delete_key
+        lda     path_buf1
         bne     L6BCA
         rts
 
@@ -2668,8 +2699,12 @@ L6BCA:  dec     path_buf1
         addr_call draw_string, str_2_spaces
         jsr     L6E9F
         rts
+.endproc
 
-L6BFF:  lda     path_buf1
+;;; ============================================================
+
+.proc handle_f2_left_key
+        lda     path_buf1
         bne     L6C05
         rts
 
@@ -2696,8 +2731,12 @@ L6C17:  ldx     path_buf1
         addr_call draw_string, str_2_spaces
         jsr     L6E9F
         rts
+.endproc
 
-L6C58:  lda     path_buf2
+;;; ============================================================
+
+.proc handle_f2_right_key
+        lda     path_buf2
         cmp     #$02
         bcs     L6C60
         rts
@@ -2725,8 +2764,12 @@ L6C82:  dec     path_buf2
         addr_call draw_string, str_2_spaces
         jsr     L6E9F
         rts
+.endproc
 
-L6CAD:  lda     path_buf1
+;;; ============================================================
+
+.proc handle_f2_meta_left_key
+        lda     path_buf1
         bne     L6CB3
         rts
 
@@ -2756,8 +2799,12 @@ L6CCF:  lda     path_buf1,y
         jsr     jt_03
         jsr     L6E9F
         rts
+.endproc
 
-L6CF0:  lda     path_buf2
+;;; ============================================================
+
+.proc handle_f2_meta_right_key
+        lda     path_buf2
         cmp     #$02
         bcs     L6CF8
         rts
@@ -2776,6 +2823,9 @@ L6CFD:  inx
         jsr     jt_03
         jsr     L6E9F
         rts
+.endproc
+
+;;; ============================================================
 
 ;;; Dynamically altered table of handlers for focused
 ;;; input field (e.g. source/destination filename, etc)
@@ -2788,12 +2838,14 @@ jt_04:  jmp     0
 jt_05:  jmp     0
 jt_06:  jmp     0
 jt_07:  jmp     0
-jt_08:  jmp     0               ; delete key ???
-jt_09:  jmp     0               ; left key ???
-jt_10:  jmp     0               ; right key ???
-jt_11:  jmp     0               ; meta-left key ???
-jt_12:  jmp     0               ; meta-right key ???
-jt_13:  jmp     0               ; click handler ???
+jt_08:  jmp     0               ; delete key
+jt_09:  jmp     0               ; left key
+jt_10:  jmp     0               ; right key
+jt_11:  jmp     0               ; meta-left key
+jt_12:  jmp     0               ; meta-right key
+jt_13:  jmp     0               ; click handler
+
+;;; ============================================================
 
 L6D48:  stax    $06
         ldx     path_buf0

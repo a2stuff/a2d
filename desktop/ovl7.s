@@ -146,12 +146,12 @@ jt_pathname:  .byte   $29
         jump_table_entry common_overlay::L6DD0
         jump_table_entry common_overlay::L6E1D
         jump_table_entry common_overlay::L69C6
-        jump_table_entry common_overlay::L6A18
-        jump_table_entry common_overlay::L6A53
-        jump_table_entry common_overlay::L6AAC
-        jump_table_entry common_overlay::L6B01
-        jump_table_entry common_overlay::L6B44
-        jump_table_entry common_overlay::L66D8
+        jump_table_entry common_overlay::handle_f1_delete_key
+        jump_table_entry common_overlay::handle_f1_left_key
+        jump_table_entry common_overlay::handle_f1_right_key
+        jump_table_entry common_overlay::handle_f1_meta_left_key
+        jump_table_entry common_overlay::handle_f1_meta_right_key
+        jump_table_entry common_overlay::handle_f1_click
 
 jt_entry_name:  .byte   $29
         jump_table_entry L72CD
@@ -162,12 +162,12 @@ jt_entry_name:  .byte   $29
         jump_table_entry common_overlay::L6DD4
         jump_table_entry common_overlay::L6E31
         jump_table_entry common_overlay::L6B72
-        jump_table_entry common_overlay::L6BC4
-        jump_table_entry common_overlay::L6BFF
-        jump_table_entry common_overlay::L6C58
-        jump_table_entry common_overlay::L6CAD
-        jump_table_entry common_overlay::L6CF0
-        jump_table_entry common_overlay::L684F
+        jump_table_entry common_overlay::handle_f2_delete_key
+        jump_table_entry common_overlay::handle_f2_left_key
+        jump_table_entry common_overlay::handle_f2_right_key
+        jump_table_entry common_overlay::handle_f2_meta_left_key
+        jump_table_entry common_overlay::handle_f2_meta_right_key
+        jump_table_entry common_overlay::handle_f2_click
 
 ;;; ============================================================
 

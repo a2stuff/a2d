@@ -57,12 +57,12 @@ jt_filename:
         jump_table_entry common_overlay::L6DD0
         jump_table_entry common_overlay::L6E1D
         jump_table_entry common_overlay::L69C6
-        jump_table_entry common_overlay::L6A18
-        jump_table_entry common_overlay::L6A53
-        jump_table_entry common_overlay::L6AAC
-        jump_table_entry common_overlay::L6B01
-        jump_table_entry common_overlay::L6B44
-        jump_table_entry common_overlay::L66D8
+        jump_table_entry common_overlay::handle_f1_delete_key
+        jump_table_entry common_overlay::handle_f1_left_key
+        jump_table_entry common_overlay::handle_f1_right_key
+        jump_table_entry common_overlay::handle_f1_meta_left_key
+        jump_table_entry common_overlay::handle_f1_meta_right_key
+        jump_table_entry common_overlay::handle_f1_click
 
 
 L70B1:  addr_call common_overlay::L647C, path_buf0
