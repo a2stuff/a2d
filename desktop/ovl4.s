@@ -75,7 +75,7 @@ L5106:  bit     LD8EC
 
         dec     prompt_ip_counter
         bne     :+
-        jsr     jt_02
+        jsr     jt_blink_ip
         copy    #prompt_insertion_point_blink_count, prompt_ip_counter
 
 :       MGTK_RELAY_CALL MGTK::GetEvent, event_params
@@ -2148,80 +2148,101 @@ L658B:  cmp     #$09
         sbc     #$08
         rts
 
-L6593:  lda     winfo_entrydlg
+;;; ============================================================
+
+.proc blink_f1_ip
+        ptr := $06
+
+        lda     winfo_entrydlg
         jsr     set_port_for_window
-        jsr     L6E45
+        jsr     calc_path_buf0_input1_endpos
         stax    $06
         copy16  common_input1_textpos+2, $08
-        MGTK_RELAY_CALL MGTK::MoveTo, $06
+        MGTK_RELAY_CALL MGTK::MoveTo, ptr
         bit     prompt_ip_flag
-        bpl     L65C8
+        bpl     bg2
+
         MGTK_RELAY_CALL MGTK::SetTextBG, textbg1
-        lda     #$00
-        sta     prompt_ip_flag
-        beq     L65D6
-L65C8:  MGTK_RELAY_CALL MGTK::SetTextBG, textbg2
-        lda     #$FF
-        sta     prompt_ip_flag
-L65D6:  copy16  #str_insertion_point+1, $06
+        copy    #$00, prompt_ip_flag
+        beq     :+
+
+bg2:    MGTK_RELAY_CALL MGTK::SetTextBG, textbg2
+        copy    #$FF, prompt_ip_flag
+
+:       copy16  #str_insertion_point+1, ptr
         lda     str_insertion_point
         sta     $08
-        MGTK_RELAY_CALL MGTK::DrawText, $06
+        MGTK_RELAY_CALL MGTK::DrawText, ptr
         jsr     L56E3
         rts
+.endproc
 
-L65F0:  lda     winfo_entrydlg
+;;; ============================================================
+
+.proc blink_f2_ip
+        ptr := $06
+
+        lda     winfo_entrydlg
         jsr     set_port_for_window
-        jsr     L6E72
+        jsr     calc_path_buf1_input2_endpos
         stax    $06
         copy16  common_input2_textpos+2, $08
-        MGTK_RELAY_CALL MGTK::MoveTo, $06
+        MGTK_RELAY_CALL MGTK::MoveTo, ptr
         bit     prompt_ip_flag
-        bpl     L6626
-        MGTK_RELAY_CALL MGTK::SetTextBG, textbg1
-        lda     #$00
-        sta     prompt_ip_flag
-        jmp     L6634
+        bpl     bg2
 
-L6626:  MGTK_RELAY_CALL MGTK::SetTextBG, textbg2
-        lda     #$FF
-        sta     prompt_ip_flag
-L6634:  copy16  #str_insertion_point+1, $06
+        MGTK_RELAY_CALL MGTK::SetTextBG, textbg1
+        copy    #$00, prompt_ip_flag
+        jmp     :+
+
+bg2:    MGTK_RELAY_CALL MGTK::SetTextBG, textbg2
+        copy    #$FF, prompt_ip_flag
+
+:       copy16  #str_insertion_point+1, ptr
         lda     str_insertion_point
         sta     $08
-        MGTK_RELAY_CALL MGTK::DrawText, $06
+        MGTK_RELAY_CALL MGTK::DrawText, ptr
         jsr     L56E3
         rts
+.endproc
 
-L664E:  lda     winfo_entrydlg
+;;; ============================================================
+
+.proc redraw_f1
+        lda     winfo_entrydlg
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::PaintRect, common_input1_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, common_input1_rect
         MGTK_RELAY_CALL MGTK::MoveTo, common_input1_textpos
         lda     path_buf0
-        beq     L6684
+        beq     :+
         addr_call draw_string, path_buf0
-L6684:  addr_call draw_string, path_buf2
+:       addr_call draw_string, path_buf2
         addr_call draw_string, str_2_spaces
         rts
+.endproc
 
 ;;; ============================================================
 
-L6693:  lda     winfo_entrydlg
+.proc redraw_f2
+        lda     winfo_entrydlg
         jsr     set_port_for_window
         MGTK_RELAY_CALL MGTK::PaintRect, common_input2_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, common_input2_rect
         MGTK_RELAY_CALL MGTK::MoveTo, common_input2_textpos
         lda     path_buf1
-        beq     L66C9
+        beq     :+
         addr_call draw_string, path_buf1
-L66C9:  addr_call draw_string, path_buf2
+:       addr_call draw_string, path_buf2
         addr_call draw_string, str_2_spaces
         rts
+.endproc
 
-handle_f1_click:
+;;; ============================================================
+
+.proc handle_f1_click
         lda     winfo_entrydlg
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -2240,13 +2261,13 @@ handle_f1_click:
 
 L6718:  rts
 
-L6719:  jsr     L6E45
+L6719:  jsr     calc_path_buf0_input1_endpos
         stax    $06
         cmp16   screentowindow_windowx, $06
         bcs     L672F
         jmp     L67C4
 
-L672F:  jsr     L6E45
+L672F:  jsr     calc_path_buf0_input1_endpos
         stax    L684D
         ldx     path_buf2
         inx
@@ -2350,7 +2371,11 @@ L6846:  jsr     jt_03
         rts
 
 L684D:  .word   0
-handle_f2_click:
+.endproc
+
+;;; ============================================================
+
+.proc handle_f2_click
         lda     winfo_entrydlg
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -2369,13 +2394,13 @@ handle_f2_click:
 
 L688F:  rts
 
-L6890:  jsr     L6E72
+L6890:  jsr     calc_path_buf1_input2_endpos
         stax    $06
         cmp16   screentowindow_windowx, $06
         bcs     L68A6
         jmp     L693B
 
-L68A6:  jsr     L6E72
+L68A6:  jsr     calc_path_buf1_input2_endpos
         stax    L69C4
         ldx     path_buf2
         inx
@@ -2479,6 +2504,7 @@ L69BD:  jsr     jt_03
         rts
 
 L69C4:  .word   0
+.endproc
 
 ;;; ============================================================
 
@@ -2496,7 +2522,7 @@ L69D5:  lda     L6A17
         inx
         sta     path_buf0,x
         sta     str_1_char+1
-        jsr     L6E45
+        jsr     calc_path_buf0_input1_endpos
         inc     path_buf0
         stax    $06
         copy16  common_input1_textpos+2, $08
@@ -2519,7 +2545,7 @@ L6A17:  .byte   0
         rts
 
 L6A1E:  dec     path_buf0
-        jsr     L6E45
+        jsr     calc_path_buf0_input1_endpos
         stax    $06
         copy16  common_input1_textpos+2, $08
         lda     winfo_entrydlg
@@ -2551,7 +2577,7 @@ L6A6B:  ldx     path_buf0
         sta     path_buf2+2
         dec     path_buf0
         inc     path_buf2
-        jsr     L6E45
+        jsr     calc_path_buf0_input1_endpos
         stax    $06
         copy16  common_input1_textpos+2, $08
         lda     winfo_entrydlg
@@ -2671,7 +2697,7 @@ L6B81:  lda     L6BC3
         inx
         sta     path_buf1,x
         sta     str_1_char+1
-        jsr     L6E72
+        jsr     calc_path_buf1_input2_endpos
         inc     path_buf1
         stax    $06
         copy16  common_input2_textpos+2, $08
@@ -2694,7 +2720,7 @@ L6BC3:  .byte   0
         rts
 
 L6BCA:  dec     path_buf1
-        jsr     L6E72
+        jsr     calc_path_buf1_input2_endpos
         stax    $06
         copy16  common_input2_textpos+2, $08
         lda     winfo_entrydlg
@@ -2726,7 +2752,7 @@ L6C17:  ldx     path_buf1
         sta     path_buf2+2
         dec     path_buf1
         inc     path_buf2
-        jsr     L6E72
+        jsr     calc_path_buf1_input2_endpos
         stax    $06
         copy16  common_input2_textpos+2, $08
         lda     winfo_entrydlg
@@ -2837,7 +2863,7 @@ L6CFD:  inx
 jump_table:
 jt_handle_ok:                   jmp     0
 jt_handle_cancel:               jmp     0
-jt_02:  jmp     0               ; input loop??? blink cursor???
+jt_blink_ip:                    jmp     0
 jt_03:  jmp     0
 jt_04:  jmp     0
 jt_05:  jmp     0
@@ -2914,17 +2940,31 @@ L6DB0:  ldx     path_buf1
         bne     L6DB0
 L6DC1:  rts
 
-L6DC2:  jsr     L6D9E
+;;; ============================================================
+
+.proc jt_handle_f1_tbd04
+        jsr     L6D9E
         jsr     jt_03
         rts
+.endproc
 
-L6DC9:  jsr     L6DB0
+;;; ============================================================
+
+.proc jt_handle_f2_tbd04
+        jsr     L6DB0
         jsr     jt_03
         rts
+.endproc
 
-L6DD0:  lda     #$00
+;;; ============================================================
+
+jt_handle_f1_tbd05:
+        lda     #$00
         beq     L6DD6
-L6DD4:  lda     #$80
+
+jt_handle_f2_tbd05:
+        lda     #$80
+
 L6DD6:  sta     L6E1C
         copy16  #$1800, $06
         ldx     LD920
@@ -2958,57 +2998,82 @@ L6E17:  jsr     jt_03
 
 L6E1B:  .byte   0
 L6E1C:  .byte   0
-L6E1D:  ldx     path_buf
-L6E20:  lda     path_buf,x
-        sta     path_buf0,x
-        dex
-        bpl     L6E20
+
+;;; ============================================================
+
+.proc jt_handle_f1_tbd06
+        COPY_STRING path_buf, path_buf0
         addr_call adjust_filename_case, path_buf0
         rts
+.endproc
 
-L6E31:  ldx     path_buf
-:       lda     path_buf,x
-        sta     path_buf1,x
-        dex
-        bpl     :-
+;;; ============================================================
+
+.proc jt_handle_f2_tbd06
+        COPY_STRING path_buf, path_buf1
         addr_call adjust_filename_case, path_buf1
         rts
+.endproc
 
-L6E45:  lda     #$00
-        sta     $09
-        sta     $0A
+;;; ============================================================
+
+.proc calc_path_buf0_input1_endpos
+        str       := $6
+        str_data  := $6
+        str_len   := $8
+        str_width := $9
+
+        lda     #0
+        sta     str_width
+        sta     str_width+1
         lda     path_buf0
-        beq     L6E63
-        sta     $08
-        copy16  #path_buf0+1, $06
-        MGTK_RELAY_CALL MGTK::TextWidth, $06
-L6E63:  lda     $09
+        beq     :+
+
+        sta     str_len
+        copy16  #path_buf0+1, str_data
+        MGTK_RELAY_CALL MGTK::TextWidth, str
+
+:       lda     str_width
         clc
         adc     common_input1_textpos
         tay
-        lda     $0A
+        lda     str_width+1
         adc     common_input1_textpos+1
         tax
         tya
         rts
+.endproc
 
-L6E72:  lda     #$00
-        sta     $09
-        sta     $0A
+;;; ============================================================
+
+.proc calc_path_buf1_input2_endpos
+        str       := $6
+        str_data  := $6
+        str_len   := $8
+        str_width := $9
+
+        lda     #0
+        sta     str_width
+        sta     str_width+1
         lda     path_buf1
-        beq     L6E90
-        sta     $08
-        copy16  #path_buf1+1, $06
-        MGTK_RELAY_CALL MGTK::TextWidth, $06
-L6E90:  lda     $09
+        beq     :+
+
+        sta     str_len
+        copy16  #path_buf1+1, str_data
+        MGTK_RELAY_CALL MGTK::TextWidth, str
+
+:       lda     str_width
         clc
         adc     common_input2_textpos
         tay
-        lda     $0A
+        lda     str_width+1
         adc     common_input2_textpos+1
         tax
         tya
         rts
+.endproc
+
+;;; ============================================================
 
 L6E9F:  lda     #$FF
         bmi     L6EA5

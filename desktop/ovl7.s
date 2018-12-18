@@ -54,7 +54,7 @@ L706A:  jsr     common_overlay::L6163
 L707B:  copy    #1, path_buf2
         copy    #' ', path_buf2+1
         jsr     common_overlay::jt_03
-        jsr     common_overlay::L6693
+        jsr     common_overlay::redraw_f2
         copy    #1, path_buf2
         copy    #' ', path_buf2+1
         lda     #$FF
@@ -140,11 +140,11 @@ L711D:  addr_call common_overlay::L5E6F, enter_the_full_pathname_label2
 jt_pathname:  .byte   $29
         jump_table_entry L725D
         jump_table_entry L732F
-        jump_table_entry common_overlay::L6593
-        jump_table_entry common_overlay::L664E
-        jump_table_entry common_overlay::L6DC2
-        jump_table_entry common_overlay::L6DD0
-        jump_table_entry common_overlay::L6E1D
+        jump_table_entry common_overlay::blink_f1_ip
+        jump_table_entry common_overlay::redraw_f1
+        jump_table_entry common_overlay::jt_handle_f1_tbd04
+        jump_table_entry common_overlay::jt_handle_f1_tbd05
+        jump_table_entry common_overlay::jt_handle_f1_tbd06
         jump_table_entry common_overlay::handle_f1_other_key
         jump_table_entry common_overlay::handle_f1_delete_key
         jump_table_entry common_overlay::handle_f1_left_key
@@ -156,11 +156,11 @@ jt_pathname:  .byte   $29
 jt_entry_name:  .byte   $29
         jump_table_entry L72CD
         jump_table_entry L736C
-        jump_table_entry common_overlay::L65F0
-        jump_table_entry common_overlay::L6693
-        jump_table_entry common_overlay::L6DC9
-        jump_table_entry common_overlay::L6DD4
-        jump_table_entry common_overlay::L6E31
+        jump_table_entry common_overlay::blink_f2_ip
+        jump_table_entry common_overlay::redraw_f2
+        jump_table_entry common_overlay::jt_handle_f2_tbd04
+        jump_table_entry common_overlay::jt_handle_f2_tbd05
+        jump_table_entry common_overlay::jt_handle_f2_tbd06
         jump_table_entry common_overlay::handle_f2_other_key
         jump_table_entry common_overlay::handle_f2_delete_key
         jump_table_entry common_overlay::handle_f2_left_key

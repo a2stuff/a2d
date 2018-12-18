@@ -54,11 +54,11 @@ jt_source_filename:
         .byte   $29             ; length of following data block
         jump_table_entry L70F1
         jump_table_entry L71D8
-        jump_table_entry common_overlay::L6593
-        jump_table_entry common_overlay::L664E
-        jump_table_entry common_overlay::L6DC2
-        jump_table_entry common_overlay::L6DD0
-        jump_table_entry common_overlay::L6E1D
+        jump_table_entry common_overlay::blink_f1_ip
+        jump_table_entry common_overlay::redraw_f1
+        jump_table_entry common_overlay::jt_handle_f1_tbd04
+        jump_table_entry common_overlay::jt_handle_f1_tbd05
+        jump_table_entry common_overlay::jt_handle_f1_tbd06
         jump_table_entry common_overlay::handle_f1_other_key
         jump_table_entry common_overlay::handle_f1_delete_key
         jump_table_entry common_overlay::handle_f1_left_key
@@ -71,11 +71,11 @@ jt_destination_entries:
         .byte   $29        ; length of following data block
         jump_table_entry L7189
         jump_table_entry L71F9
-        jump_table_entry common_overlay::L65F0
-        jump_table_entry common_overlay::L6693
-        jump_table_entry common_overlay::L6DC9
-        jump_table_entry common_overlay::L6DD4
-        jump_table_entry common_overlay::L6E31
+        jump_table_entry common_overlay::blink_f2_ip
+        jump_table_entry common_overlay::redraw_f2
+        jump_table_entry common_overlay::jt_handle_f2_tbd04
+        jump_table_entry common_overlay::jt_handle_f2_tbd05
+        jump_table_entry common_overlay::jt_handle_f2_tbd06
         jump_table_entry common_overlay::handle_f2_other_key
         jump_table_entry common_overlay::handle_f2_delete_key
         jump_table_entry common_overlay::handle_f2_left_key

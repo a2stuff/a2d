@@ -663,3 +663,13 @@ loop:   lda     src,x
 .macro COPY_BLOCK block, dst
         COPY_BYTES .sizeof(block), block, dst
 .endmacro
+
+.macro COPY_STRING src, dst
+.scope
+        ldx     src
+loop:   lda     src,x
+        sta     dst,x
+        dex
+        bpl     loop
+.endscope
+.endmacro
