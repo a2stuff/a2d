@@ -64,7 +64,7 @@ stash_y:        .byte   0
 ;;; ============================================================
 ;;; Flags set by invoker to alter behavior
 
-L5103:  .byte   0               ; ??? something before jt_13 invoked
+L5103:  .byte   0               ; ??? something before jt_handle_click invoked
 L5104:  .byte   0               ; ??? something about inputs
 L5105:  .byte   0               ; ??? something about the picker
 
@@ -214,8 +214,8 @@ L529A:  jmp     set_up_ports
         MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
         jsr     track_ok_button_click
         bmi     L52CA
-        jsr     jt_12
-        jsr     jt_00
+        jsr     jt_handle_meta_right_key
+        jsr     jt_handle_ok
 L52CA:  jmp     set_up_ports
 .endproc
 
@@ -228,7 +228,7 @@ L52CA:  jmp     set_up_ports
         MGTK_RELAY_CALL MGTK::PaintRect, common_cancel_button_rect
         jsr     track_cancel_button_click
         bmi     L52F7
-        jsr     jt_01
+        jsr     jt_handle_cancel
 L52F7:  jmp     set_up_ports
 .endproc
 
@@ -237,7 +237,7 @@ L52F7:  jmp     set_up_ports
         bpl     :+
         jsr     L531B
         bmi     set_up_ports
-:       jsr     jt_13
+:       jsr     jt_handle_click
         rts
 .endproc
 
@@ -287,7 +287,7 @@ L5386:  ldx     LD920
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
-        jsr     jt_00
+        jsr     jt_handle_ok
         jmp     L5340
 
 L53B5:  and     #$7F
@@ -879,11 +879,11 @@ params: .addr   0
 
         cmp     #CHAR_LEFT
         bne     :+
-        jmp     jt_11           ; start of line
+        jmp     jt_handle_meta_left_key           ; start of line
 
 :       cmp     #CHAR_RIGHT
         bne     :+
-        jmp     jt_12           ; end of line
+        jmp     jt_handle_meta_right_key           ; end of line
 
 :       bit     L5105
         bmi     L59E4
@@ -913,11 +913,11 @@ L59F7:  lda     event_key
 
         cmp     #CHAR_LEFT
         bne     :+
-        jmp     jt_09
+        jmp     jt_handle_left_key
 
 :       cmp     #CHAR_RIGHT
         bne     :+
-        jmp     jt_10
+        jmp     jt_handle_right_key
 
 :       cmp     #CHAR_RETURN
         bne     :+
@@ -979,7 +979,7 @@ L5A8B:  cmp     #CHAR_CTRL_C    ; Close
         bne     L5AC4
         jmp     key_up
 
-L5AC4:  jsr     jt_07
+L5AC4:  jsr     jt_handle_other_key
         rts
 
 L5AC8:  jsr     L56E3
@@ -991,8 +991,8 @@ key_return:
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, common_ok_button_rect
-        jsr     jt_12
-        jsr     jt_00
+        jsr     jt_handle_meta_right_key
+        jsr     jt_handle_ok
         jsr     L56E3
         rts
 
@@ -1002,12 +1002,12 @@ key_escape:
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; flash the button
         MGTK_RELAY_CALL MGTK::PaintRect, common_cancel_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, common_cancel_button_rect
-        jsr     jt_01
+        jsr     jt_handle_cancel
         jsr     L56E3
         rts
 
 key_delete:
-        jsr     jt_08
+        jsr     jt_handle_delete_key
         rts
 
 key_meta_digit:
@@ -2236,7 +2236,7 @@ handle_f1_click:
         MGTK_RELAY_CALL MGTK::InRect, common_input2_rect
         cmp     #MGTK::inrect_inside
         bne     L6718
-        jmp     jt_00
+        jmp     jt_handle_ok
 
 L6718:  rts
 
@@ -2365,7 +2365,7 @@ handle_f2_click:
         MGTK_RELAY_CALL MGTK::InRect, common_input1_rect
         cmp     #MGTK::inrect_inside
         bne     L688F
-        jmp     jt_01
+        jmp     jt_handle_cancel
 
 L688F:  rts
 
@@ -2479,7 +2479,11 @@ L69BD:  jsr     jt_03
         rts
 
 L69C4:  .word   0
-L69C6:  sta     L6A17
+
+;;; ============================================================
+
+.proc handle_f1_other_key
+        sta     L6A17
         lda     path_buf0
         clc
         adc     path_buf2
@@ -2505,6 +2509,7 @@ L69D5:  lda     L6A17
         rts
 
 L6A17:  .byte   0
+.endproc
 
 ;;; ============================================================
 
@@ -2652,7 +2657,7 @@ L6B51:  inx
 
 ;;; ============================================================
 
-.proc L6B72
+.proc handle_f2_other_key
         sta     L6BC3
         lda     path_buf1
         clc
@@ -2830,20 +2835,20 @@ L6CFD:  inx
 ;;; Dynamically altered table of handlers for focused
 ;;; input field (e.g. source/destination filename, etc)
 jump_table:
-jt_00:  jmp     0               ; ok button ???
-jt_01:  jmp     0               ; cancel button ???
-jt_02:  jmp     0               ; input loop
+jt_handle_ok:                   jmp     0
+jt_handle_cancel:               jmp     0
+jt_02:  jmp     0               ; input loop??? blink cursor???
 jt_03:  jmp     0
 jt_04:  jmp     0
 jt_05:  jmp     0
 jt_06:  jmp     0
-jt_07:  jmp     0
-jt_08:  jmp     0               ; delete key
-jt_09:  jmp     0               ; left key
-jt_10:  jmp     0               ; right key
-jt_11:  jmp     0               ; meta-left key
-jt_12:  jmp     0               ; meta-right key
-jt_13:  jmp     0               ; click handler
+jt_handle_other_key:            jmp     0
+jt_handle_delete_key:           jmp     0
+jt_handle_left_key:             jmp     0
+jt_handle_right_key:            jmp     0
+jt_handle_meta_left_key:        jmp     0
+jt_handle_meta_right_key:       jmp     0
+jt_handle_click:                jmp     0
 
 ;;; ============================================================
 

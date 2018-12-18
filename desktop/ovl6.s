@@ -56,7 +56,7 @@ jt_filename:
         jump_table_entry common_overlay::L6DC2
         jump_table_entry common_overlay::L6DD0
         jump_table_entry common_overlay::L6E1D
-        jump_table_entry common_overlay::L69C6
+        jump_table_entry common_overlay::handle_f1_other_key
         jump_table_entry common_overlay::handle_f1_delete_key
         jump_table_entry common_overlay::handle_f1_left_key
         jump_table_entry common_overlay::handle_f1_right_key
