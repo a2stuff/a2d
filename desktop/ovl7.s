@@ -68,11 +68,11 @@ L709D:  .res 16, 0
 ;;; ============================================================
 
 
-L70AD:  ldx     jump_table_entries
-L70B0:  lda     jump_table_entries+1,x
+L70AD:  ldx     jt_pathname
+L70B0:  lda     jt_pathname+1,x
         sta     common_overlay::jump_table,x
         dex
-        lda     jump_table_entries+1,x
+        lda     jt_pathname+1,x
         sta     common_overlay::jump_table,x
         dex
         dex
@@ -137,7 +137,7 @@ L711D:  addr_call common_overlay::L5E6F, enter_the_full_pathname_label2
 
         .byte   $00
 
-jump_table_entries:  .byte   $29
+jt_pathname:  .byte   $29
         jump_table_entry L725D
         jump_table_entry L732F
         jump_table_entry common_overlay::L6593
@@ -153,7 +153,7 @@ jump_table_entries:  .byte   $29
         jump_table_entry common_overlay::L6B44
         jump_table_entry common_overlay::L66D8
 
-jump_table2_entries:  .byte   $29
+jt_entry_name:  .byte   $29
         jump_table_entry L72CD
         jump_table_entry L736C
         jump_table_entry common_overlay::L65F0
@@ -174,11 +174,11 @@ jump_table2_entries:  .byte   $29
 L725D:  copy    #1, path_buf2
         copy    #' ', path_buf2+1
         jsr     common_overlay::jt_03
-        ldx     jump_table2_entries
-L726D:  lda     jump_table2_entries+1,x
+        ldx     jt_entry_name
+L726D:  lda     jt_entry_name+1,x
         sta     common_overlay::jump_table,x
         dex
-        lda     jump_table2_entries+1,x
+        lda     jt_entry_name+1,x
         sta     common_overlay::jump_table,x
         dex
         dex
@@ -260,11 +260,11 @@ L732F:  MGTK_RELAY_CALL MGTK::InitPort, grafport3
 L736C:  copy    #1, path_buf2
         copy    #' ', path_buf2+1
         jsr     common_overlay::jt_03
-        ldx     jump_table_entries
-L737C:  lda     jump_table_entries+1,x
+        ldx     jt_pathname
+L737C:  lda     jt_pathname+1,x
         sta     common_overlay::jump_table,x
         dex
-        lda     jump_table_entries+1,x
+        lda     jt_pathname+1,x
         sta     common_overlay::jump_table,x
         dex
         dex

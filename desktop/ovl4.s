@@ -72,11 +72,12 @@ L5105:  .byte   0               ; ??? something about the picker
 
 L5106:  bit     LD8EC
         bpl     :+
+
         dec     prompt_ip_counter
         bne     :+
         jsr     jt_02
-        lda     #prompt_insertion_point_blink_count
-        sta     prompt_ip_counter
+        copy    #prompt_insertion_point_blink_count, prompt_ip_counter
+
 :       MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
@@ -2776,6 +2777,8 @@ L6CFD:  inx
         jsr     L6E9F
         rts
 
+;;; Dynamically altered table of handlers for focused
+;;; input field (e.g. source/destination filename, etc)
 jump_table:
 jt_00:  jmp     0               ; ok button ???
 jt_01:  jmp     0               ; cancel button ???

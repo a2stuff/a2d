@@ -15,15 +15,14 @@ L7000:  jsr     common_overlay::create_common_dialog
         jsr     L7026
         jsr     common_overlay::jt_06
         jsr     common_overlay::jt_03
-        lda     #$FF
-        sta     LD8EC
+        copy    #$FF, LD8EC
         jmp     common_overlay::L5106
 
-L7026:  ldx     jump_table_entries
-L7029:  lda     jump_table_entries+1,x
+L7026:  ldx     jt_source_filename
+L7029:  lda     jt_source_filename+1,x
         sta     common_overlay::jump_table,x
         dex
-        lda     jump_table_entries+1,x
+        lda     jt_source_filename+1,x
         sta     common_overlay::jump_table,x
         dex
         dex
@@ -51,7 +50,7 @@ L7052:  lda     winfo_entrydlg
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
 
-jump_table_entries:
+jt_source_filename:
         .byte   $29             ; length of following data block
         jump_table_entry L70F1
         jump_table_entry L71D8
@@ -68,7 +67,7 @@ jump_table_entries:
         jump_table_entry common_overlay::L6B44
         jump_table_entry common_overlay::L66D8
 
-jump_table2_entries:
+jt_destination_entries:
         .byte   $29        ; length of following data block
         jump_table_entry L7189
         jump_table_entry L71F9
@@ -93,11 +92,11 @@ L70F1:  lda     #1
         sta     path_buf2+1
         jsr     common_overlay::jt_03
 
-        ldx     jump_table2_entries
-:       lda     jump_table2_entries+1,x
+        ldx     jt_destination_entries
+:       lda     jt_destination_entries+1,x
         sta     common_overlay::jump_table,x
         dex
-        lda     jump_table2_entries+1,x
+        lda     jt_destination_entries+1,x
         sta     common_overlay::jump_table,x
         dex
         dex
@@ -166,10 +165,8 @@ L7198:  addr_call common_overlay::L647C, path_buf1
         bne     L7192
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
-        lda     #0
-        sta     common_overlay::L50A8
-        lda     #0
-        sta     LD8EC
+        copy    #0, common_overlay::L50A8
+        copy    #0, LD8EC
         jsr     common_overlay::set_cursor_pointer
         copy16  #path_buf0, $6
         copy16  #path_buf1, $8
@@ -197,11 +194,11 @@ L71F9:  lda     #1
         lda     #' '
         sta     path_buf2+1
         jsr     common_overlay::jt_03
-        ldx     jump_table_entries
-L7209:  lda     jump_table_entries+1,x
+        ldx     jt_source_filename
+L7209:  lda     jt_source_filename+1,x
         sta     common_overlay::jump_table,x
         dex
-        lda     jump_table_entries+1,x
+        lda     jt_source_filename+1,x
         sta     common_overlay::jump_table,x
         dex
         dex

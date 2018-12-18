@@ -19,11 +19,11 @@ L7000:  jsr     common_overlay::create_common_dialog
         sta     LD8EC
         jmp     common_overlay::L5106
 
-L7026:  ldx     jump_table_entries
-L7029:  lda     jump_table_entries+1,x
+L7026:  ldx     jt_filename
+L7029:  lda     jt_filename+1,x
         sta     common_overlay::jump_table,x
         dex
-        lda     jump_table_entries+1,x
+        lda     jt_filename+1,x
         sta     common_overlay::jump_table,x
         dex
         dex
@@ -47,7 +47,7 @@ L704D:  lda     winfo_entrydlg
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
 
-jump_table_entries:
+jt_filename:
         .byte $29               ; length of the following data block
         jump_table_entry L70B1
         jump_table_entry L70EA
