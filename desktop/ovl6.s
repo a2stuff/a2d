@@ -13,17 +13,17 @@ L7000:  jsr     common_overlay::create_common_dialog
         jsr     common_overlay::L61B1
         jsr     common_overlay::L606D
         jsr     L7026
-        jsr     common_overlay::jt_06
-        jsr     common_overlay::jt_03
+        jsr     common_overlay::jt_prep_path
+        jsr     common_overlay::jt_redraw_input
         lda     #$FF
         sta     LD8EC
         jmp     common_overlay::L5106
 
-L7026:  ldx     jump_table_entries
-L7029:  lda     jump_table_entries+1,x
+L7026:  ldx     jt_filename
+L7029:  lda     jt_filename+1,x
         sta     common_overlay::jump_table,x
         dex
-        lda     jump_table_entries+1,x
+        lda     jt_filename+1,x
         sta     common_overlay::jump_table,x
         dex
         dex
@@ -47,22 +47,22 @@ L704D:  lda     winfo_entrydlg
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
 
-jump_table_entries:
+jt_filename:
         .byte $29               ; length of the following data block
         jump_table_entry L70B1
         jump_table_entry L70EA
-        jump_table_entry common_overlay::L6593
-        jump_table_entry common_overlay::L664E
-        jump_table_entry common_overlay::L6DC2
-        jump_table_entry common_overlay::L6DD0
-        jump_table_entry common_overlay::L6E1D
-        jump_table_entry common_overlay::L69C6
-        jump_table_entry common_overlay::L6A18
-        jump_table_entry common_overlay::L6A53
-        jump_table_entry common_overlay::L6AAC
-        jump_table_entry common_overlay::L6B01
-        jump_table_entry common_overlay::L6B44
-        jump_table_entry common_overlay::L66D8
+        jump_table_entry common_overlay::blink_f1_ip
+        jump_table_entry common_overlay::redraw_f1
+        jump_table_entry common_overlay::strip_f1_path_segment
+        jump_table_entry common_overlay::jt_handle_f1_tbd05
+        jump_table_entry common_overlay::prep_path_buf0
+        jump_table_entry common_overlay::handle_f1_other_key
+        jump_table_entry common_overlay::handle_f1_delete_key
+        jump_table_entry common_overlay::handle_f1_left_key
+        jump_table_entry common_overlay::handle_f1_right_key
+        jump_table_entry common_overlay::handle_f1_meta_left_key
+        jump_table_entry common_overlay::handle_f1_meta_right_key
+        jump_table_entry common_overlay::handle_f1_click
 
 
 L70B1:  addr_call common_overlay::L647C, path_buf0

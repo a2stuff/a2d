@@ -13,17 +13,16 @@ L7000:  jsr     common_overlay::create_common_dialog
         jsr     common_overlay::L61B1
         jsr     common_overlay::L606D
         jsr     L7026
-        jsr     common_overlay::jt_06
-        jsr     common_overlay::jt_03
-        lda     #$FF
-        sta     LD8EC
+        jsr     common_overlay::jt_prep_path
+        jsr     common_overlay::jt_redraw_input
+        copy    #$FF, LD8EC
         jmp     common_overlay::L5106
 
-L7026:  ldx     jump_table_entries
-L7029:  lda     jump_table_entries+1,x
+L7026:  ldx     jt_source_filename
+L7029:  lda     jt_source_filename+1,x
         sta     common_overlay::jump_table,x
         dex
-        lda     jump_table_entries+1,x
+        lda     jt_source_filename+1,x
         sta     common_overlay::jump_table,x
         dex
         dex
@@ -51,39 +50,39 @@ L7052:  lda     winfo_entrydlg
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
 
-jump_table_entries:
+jt_source_filename:
         .byte   $29             ; length of following data block
         jump_table_entry L70F1
         jump_table_entry L71D8
-        jump_table_entry common_overlay::L6593
-        jump_table_entry common_overlay::L664E
-        jump_table_entry common_overlay::L6DC2
-        jump_table_entry common_overlay::L6DD0
-        jump_table_entry common_overlay::L6E1D
-        jump_table_entry common_overlay::L69C6
-        jump_table_entry common_overlay::L6A18
-        jump_table_entry common_overlay::L6A53
-        jump_table_entry common_overlay::L6AAC
-        jump_table_entry common_overlay::L6B01
-        jump_table_entry common_overlay::L6B44
-        jump_table_entry common_overlay::L66D8
+        jump_table_entry common_overlay::blink_f1_ip
+        jump_table_entry common_overlay::redraw_f1
+        jump_table_entry common_overlay::strip_f1_path_segment
+        jump_table_entry common_overlay::jt_handle_f1_tbd05
+        jump_table_entry common_overlay::prep_path_buf0
+        jump_table_entry common_overlay::handle_f1_other_key
+        jump_table_entry common_overlay::handle_f1_delete_key
+        jump_table_entry common_overlay::handle_f1_left_key
+        jump_table_entry common_overlay::handle_f1_right_key
+        jump_table_entry common_overlay::handle_f1_meta_left_key
+        jump_table_entry common_overlay::handle_f1_meta_right_key
+        jump_table_entry common_overlay::handle_f1_click
 
-jump_table2_entries:
+jt_destination_entries:
         .byte   $29        ; length of following data block
         jump_table_entry L7189
         jump_table_entry L71F9
-        jump_table_entry common_overlay::L65F0
-        jump_table_entry common_overlay::L6693
-        jump_table_entry common_overlay::L6DC9
-        jump_table_entry common_overlay::L6DD4
-        jump_table_entry common_overlay::L6E31
-        jump_table_entry common_overlay::L6B72
-        jump_table_entry common_overlay::L6BC4
-        jump_table_entry common_overlay::L6BFF
-        jump_table_entry common_overlay::L6C58
-        jump_table_entry common_overlay::L6CAD
-        jump_table_entry common_overlay::L6CF0
-        jump_table_entry common_overlay::L684F
+        jump_table_entry common_overlay::blink_f2_ip
+        jump_table_entry common_overlay::redraw_f2
+        jump_table_entry common_overlay::strip_f2_path_segment
+        jump_table_entry common_overlay::jt_handle_f2_tbd05
+        jump_table_entry common_overlay::prep_path_buf1
+        jump_table_entry common_overlay::handle_f2_other_key
+        jump_table_entry common_overlay::handle_f2_delete_key
+        jump_table_entry common_overlay::handle_f2_left_key
+        jump_table_entry common_overlay::handle_f2_right_key
+        jump_table_entry common_overlay::handle_f2_meta_left_key
+        jump_table_entry common_overlay::handle_f2_meta_right_key
+        jump_table_entry common_overlay::handle_f2_click
 
 ;;; ============================================================
 
@@ -91,13 +90,13 @@ L70F1:  lda     #1
         sta     path_buf2
         lda     #$20
         sta     path_buf2+1
-        jsr     common_overlay::jt_03
+        jsr     common_overlay::jt_redraw_input
 
-        ldx     jump_table2_entries
-:       lda     jump_table2_entries+1,x
+        ldx     jt_destination_entries
+:       lda     jt_destination_entries+1,x
         sta     common_overlay::jump_table,x
         dex
-        lda     jump_table2_entries+1,x
+        lda     jt_destination_entries+1,x
         sta     common_overlay::jump_table,x
         dex
         dex
@@ -145,7 +144,7 @@ L7165:  cpx     path_buf0
         iny
         jmp     L7165
 
-L7178:  jsr     common_overlay::jt_03
+L7178:  jsr     common_overlay::jt_redraw_input
         lda     LD8F0
         sta     LD8F1
         lda     LD8F2
@@ -166,10 +165,8 @@ L7198:  addr_call common_overlay::L647C, path_buf1
         bne     L7192
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg_file_picker
         MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entrydlg
-        lda     #0
-        sta     common_overlay::L50A8
-        lda     #0
-        sta     LD8EC
+        copy    #0, common_overlay::L50A8
+        copy    #0, LD8EC
         jsr     common_overlay::set_cursor_pointer
         copy16  #path_buf0, $6
         copy16  #path_buf1, $8
@@ -196,12 +193,12 @@ L71F9:  lda     #1
         sta     path_buf2
         lda     #' '
         sta     path_buf2+1
-        jsr     common_overlay::jt_03
-        ldx     jump_table_entries
-L7209:  lda     jump_table_entries+1,x
+        jsr     common_overlay::jt_redraw_input
+        ldx     jt_source_filename
+L7209:  lda     jt_source_filename+1,x
         sta     common_overlay::jump_table,x
         dex
-        lda     jump_table_entries+1,x
+        lda     jt_source_filename+1,x
         sta     common_overlay::jump_table,x
         dex
         dex
@@ -237,7 +234,7 @@ L7209:  lda     jump_table_entries+1,x
         jsr     common_overlay::L6161
         jsr     common_overlay::L61B1
         jsr     common_overlay::L606D
-        jsr     common_overlay::jt_03
+        jsr     common_overlay::jt_redraw_input
         jmp     L7295
 
 L726D:  lda     common_overlay::path_buf
