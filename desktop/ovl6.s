@@ -13,8 +13,8 @@ L7000:  jsr     common_overlay::create_common_dialog
         jsr     common_overlay::L61B1
         jsr     common_overlay::L606D
         jsr     L7026
-        jsr     common_overlay::jt_06
-        jsr     common_overlay::jt_03
+        jsr     common_overlay::jt_prep_path
+        jsr     common_overlay::jt_redraw_input
         lda     #$FF
         sta     LD8EC
         jmp     common_overlay::L5106
@@ -55,7 +55,7 @@ jt_filename:
         jump_table_entry common_overlay::redraw_f1
         jump_table_entry common_overlay::jt_handle_f1_tbd04
         jump_table_entry common_overlay::jt_handle_f1_tbd05
-        jump_table_entry common_overlay::jt_handle_f1_tbd06
+        jump_table_entry common_overlay::prep_path_buf0
         jump_table_entry common_overlay::handle_f1_other_key
         jump_table_entry common_overlay::handle_f1_delete_key
         jump_table_entry common_overlay::handle_f1_left_key

@@ -344,8 +344,8 @@ L5446:  lda     screentowindow_windowy
         sta     LD920
         bit     LD8F0
         bpl     L5457
-        jsr     jt_06
-        jsr     jt_03
+        jsr     jt_prep_path
+        jsr     jt_redraw_input
 L5457:  lda     LD920
         jsr     L6274
         jsr     jt_05
@@ -527,7 +527,7 @@ L5607:  ldx     LD920
         pha
         bit     LD8F0
         bpl     L5618
-        jsr     jt_06
+        jsr     jt_prep_path
 L5618:  lda     #$00
         sta     L565B
         copy16  #$1800, $08
@@ -569,8 +569,8 @@ L565C:  lda     #$FF
         jsr     L6227
         jsr     L61B1
         jsr     L606D
-        jsr     jt_06
-        jsr     jt_03
+        jsr     jt_prep_path
+        jsr     jt_redraw_input
         rts
 
 L567F:  lda     #$00
@@ -612,8 +612,8 @@ L56A2:  jsr     L5F49
         jsr     jt_04
         jmp     L56DC
 
-L56D6:  jsr     jt_06
-        jsr     jt_03
+L56D6:  jsr     jt_prep_path
+        jsr     jt_redraw_input
 L56DC:  lda     #$FF
         sta     LD920
 L56E1:  rts
@@ -1173,7 +1173,7 @@ L5C27:  ldx     $177F
         copy    #1, path_buf2
         copy    #' ', path_buf2+1
 
-        jsr     jt_03
+        jsr     jt_redraw_input
         rts
 .endproc
 
@@ -2366,7 +2366,7 @@ L6838:  lda     LD3C1,y
         bpl     L6838
         lda     $08
         sta     path_buf0
-L6846:  jsr     jt_03
+L6846:  jsr     jt_redraw_input
         jsr     L6EA3
         rts
 
@@ -2499,7 +2499,7 @@ L69AF:  lda     LD3C1,y
         bpl     L69AF
         lda     $08
         sta     path_buf1
-L69BD:  jsr     jt_03
+L69BD:  jsr     jt_redraw_input
         jsr     L6E9F
         rts
 
@@ -2652,7 +2652,7 @@ L6B23:  lda     path_buf0,y
         sta     path_buf2+1
         lda     #$00
         sta     path_buf0
-        jsr     jt_03
+        jsr     jt_redraw_input
         jsr     L6EA3
         rts
 .endproc
@@ -2676,7 +2676,7 @@ L6B51:  inx
         sty     path_buf0
         copy    #1, path_buf2
         copy    #GLYPH_INSPT, path_buf2+1
-        jsr     jt_03
+        jsr     jt_redraw_input
         jsr     L6EA3
         rts
 .endproc
@@ -2827,7 +2827,7 @@ L6CCF:  lda     path_buf1,y
         sta     path_buf2+1
         lda     #$00
         sta     path_buf1
-        jsr     jt_03
+        jsr     jt_redraw_input
         jsr     L6E9F
         rts
 .endproc
@@ -2851,7 +2851,7 @@ L6CFD:  inx
         sty     path_buf1
         copy    #1, path_buf2
         copy    #GLYPH_INSPT, path_buf2+1
-        jsr     jt_03
+        jsr     jt_redraw_input
         jsr     L6E9F
         rts
 .endproc
@@ -2864,10 +2864,10 @@ jump_table:
 jt_handle_ok:                   jmp     0
 jt_handle_cancel:               jmp     0
 jt_blink_ip:                    jmp     0
-jt_03:  jmp     0
+jt_redraw_input:  jmp     0
 jt_04:  jmp     0
 jt_05:  jmp     0
-jt_06:  jmp     0
+jt_prep_path:                   jmp     0
 jt_handle_other_key:            jmp     0
 jt_handle_delete_key:           jmp     0
 jt_handle_left_key:             jmp     0
@@ -2944,7 +2944,7 @@ L6DC1:  rts
 
 .proc jt_handle_f1_tbd04
         jsr     L6D9E
-        jsr     jt_03
+        jsr     jt_redraw_input
         rts
 .endproc
 
@@ -2952,7 +2952,7 @@ L6DC1:  rts
 
 .proc jt_handle_f2_tbd04
         jsr     L6DB0
-        jsr     jt_03
+        jsr     jt_redraw_input
         rts
 .endproc
 
@@ -2993,7 +2993,7 @@ L6DD6:  sta     L6E1C
         jmp     L6E17
 
 L6E14:  jsr     L6D48
-L6E17:  jsr     jt_03
+L6E17:  jsr     jt_redraw_input
         rts
 
 L6E1B:  .byte   0
@@ -3001,7 +3001,7 @@ L6E1C:  .byte   0
 
 ;;; ============================================================
 
-.proc jt_handle_f1_tbd06
+.proc prep_path_buf0
         COPY_STRING path_buf, path_buf0
         addr_call adjust_filename_case, path_buf0
         rts
@@ -3009,7 +3009,7 @@ L6E1C:  .byte   0
 
 ;;; ============================================================
 
-.proc jt_handle_f2_tbd06
+.proc prep_path_buf1
         COPY_STRING path_buf, path_buf1
         addr_call adjust_filename_case, path_buf1
         rts
