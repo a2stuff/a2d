@@ -56,7 +56,7 @@ jt_source_filename:
         jump_table_entry L71D8
         jump_table_entry common_overlay::blink_f1_ip
         jump_table_entry common_overlay::redraw_f1
-        jump_table_entry common_overlay::jt_handle_f1_tbd04
+        jump_table_entry common_overlay::strip_f1_path_segment
         jump_table_entry common_overlay::jt_handle_f1_tbd05
         jump_table_entry common_overlay::prep_path_buf0
         jump_table_entry common_overlay::handle_f1_other_key
@@ -73,7 +73,7 @@ jt_destination_entries:
         jump_table_entry L71F9
         jump_table_entry common_overlay::blink_f2_ip
         jump_table_entry common_overlay::redraw_f2
-        jump_table_entry common_overlay::jt_handle_f2_tbd04
+        jump_table_entry common_overlay::strip_f2_path_segment
         jump_table_entry common_overlay::jt_handle_f2_tbd05
         jump_table_entry common_overlay::prep_path_buf1
         jump_table_entry common_overlay::handle_f2_other_key

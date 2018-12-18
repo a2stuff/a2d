@@ -53,7 +53,7 @@ jt_filename:
         jump_table_entry L70EA
         jump_table_entry common_overlay::blink_f1_ip
         jump_table_entry common_overlay::redraw_f1
-        jump_table_entry common_overlay::jt_handle_f1_tbd04
+        jump_table_entry common_overlay::strip_f1_path_segment
         jump_table_entry common_overlay::jt_handle_f1_tbd05
         jump_table_entry common_overlay::prep_path_buf0
         jump_table_entry common_overlay::handle_f1_other_key

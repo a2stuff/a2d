@@ -337,7 +337,7 @@ L542F:  lda     screentowindow_windowy
 
 L5438:  lda     LD920
         bmi     L5446
-        jsr     jt_04
+        jsr     jt_strip_path_segment
         lda     LD920
         jsr     L6274
 L5446:  lda     screentowindow_windowy
@@ -606,10 +606,10 @@ L56A2:  jsr     L5F49
         sta     LD920
         bit     L56E2
         bmi     L56D6
-        jsr     jt_04
+        jsr     jt_strip_path_segment
         lda     LD920
         bmi     L56DC
-        jsr     jt_04
+        jsr     jt_strip_path_segment
         jmp     L56DC
 
 L56D6:  jsr     jt_prep_path
@@ -1025,7 +1025,7 @@ key_meta_digit:
 L5B37:  rts
 
 L5B38:  jsr     L6274
-        jsr     jt_04
+        jsr     jt_strip_path_segment
         inc     LD920
         lda     LD920
         jmp     update_list_selection
@@ -1043,7 +1043,7 @@ L5B47:  lda     #0
 L5B58:  rts
 
 L5B59:  jsr     L6274
-        jsr     jt_04
+        jsr     jt_strip_path_segment
         dec     LD920
         lda     LD920
         jmp     update_list_selection
@@ -1073,7 +1073,7 @@ L5B83:  jsr     L5B9D
         lda     LD920
         bmi     L5B99
         jsr     L6274
-        jsr     jt_04
+        jsr     jt_strip_path_segment
 L5B99:  pla
         jmp     update_list_selection
 
@@ -1135,7 +1135,7 @@ L5BF5:  .byte   0
 L5C02:  rts
 
 L5C03:  jsr     L6274
-        jsr     jt_04
+        jsr     jt_strip_path_segment
 L5C09:  lda     #$00
         jmp     update_list_selection
 .endproc
@@ -1153,7 +1153,7 @@ L5C1E:  rts
 L5C1F:  dex
         txa
         jsr     L6274
-        jsr     jt_04
+        jsr     jt_strip_path_segment
 L5C27:  ldx     $177F
         dex
         txa
@@ -2864,8 +2864,8 @@ jump_table:
 jt_handle_ok:                   jmp     0
 jt_handle_cancel:               jmp     0
 jt_blink_ip:                    jmp     0
-jt_redraw_input:  jmp     0
-jt_04:  jmp     0
+jt_redraw_input:                jmp     0
+jt_strip_path_segment:          jmp     0
 jt_05:  jmp     0
 jt_prep_path:                   jmp     0
 jt_handle_other_key:            jmp     0
@@ -2878,80 +2878,106 @@ jt_handle_click:                jmp     0
 
 ;;; ============================================================
 
-L6D48:  stax    $06
+.proc append_to_path_buf0
+        ptr := $06
+
+        stax    ptr
+
         ldx     path_buf0
         lda     #'/'
         sta     path_buf0+1,x
         inc     path_buf0
-        ldy     #$00
-        lda     ($06),y
+
+        ldy     #0
+        lda     (ptr),y
         tay
         clc
         adc     path_buf0
         pha
         tax
-L6D62:  lda     ($06),y
+
+:       lda     (ptr),y
         sta     path_buf0,x
         dey
         dex
         cpx     path_buf0
-        bne     L6D62
+        bne     :-
+
         pla
         sta     path_buf0
         rts
+.endproc
 
-L6D73:  stax    $06
+;;; ============================================================
+
+.proc append_to_path_buf1
+        ptr := $06
+
+        stax    ptr
+
         ldx     path_buf1
         lda     #'/'
         sta     path_buf1+1,x
         inc     path_buf1
+
         ldy     #$00
-        lda     ($06),y
+        lda     (ptr),y
         tay
         clc
         adc     path_buf1
         pha
         tax
-L6D8D:  lda     ($06),y
+
+:       lda     (ptr),y
         sta     path_buf1,x
         dey
         dex
         cpx     path_buf1
-        bne     L6D8D
+        bne     :-
+
         pla
         sta     path_buf1
         rts
-
-L6D9E:  ldx     path_buf0
-        cpx     #$00
-        beq     L6DAF
-        dec     path_buf0
-        lda     path_buf0,x
-        cmp     #'/'
-        bne     L6D9E
-L6DAF:  rts
-
-L6DB0:  ldx     path_buf1
-        cpx     #$00
-        beq     L6DC1
-        dec     path_buf1
-        lda     path_buf1,x
-        cmp     #'/'
-        bne     L6DB0
-L6DC1:  rts
+.endproc
 
 ;;; ============================================================
 
-.proc jt_handle_f1_tbd04
-        jsr     L6D9E
+.proc strip_path_buf0_segment
+:       ldx     path_buf0
+        cpx     #0
+        beq     :+
+        dec     path_buf0
+        lda     path_buf0,x
+        cmp     #'/'
+        bne     :-
+:       rts
+.endproc
+
+;;; ============================================================
+
+.proc strip_path_buf1_segment
+:       ldx     path_buf1
+        cpx     #0
+        beq     :+
+        dec     path_buf1
+        lda     path_buf1,x
+        cmp     #'/'
+        bne     :-
+:       rts
+.endproc
+
+;;; ============================================================
+
+.proc strip_f1_path_segment
+        jsr     strip_path_buf0_segment
         jsr     jt_redraw_input
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc jt_handle_f2_tbd04
-        jsr     L6DB0
+.proc strip_f2_path_segment
+        jsr     strip_path_buf1_segment
         jsr     jt_redraw_input
         rts
 .endproc
@@ -2965,39 +2991,46 @@ jt_handle_f1_tbd05:
 jt_handle_f2_tbd05:
         lda     #$80
 
-L6DD6:  sta     L6E1C
-        copy16  #$1800, $06
+.proc L6DD6
+        ptr := $06
+
+        sta     flag
+        copy16  #$1800, ptr
         ldx     LD920
         lda     $1780,x
         and     #$7F
-        ldx     #$00
-        stx     L6E1B
+
+        ldx     #0
+        stx     hi
+        asl     a               ; * 16
+        rol     hi
         asl     a
-        rol     L6E1B
+        rol     hi
         asl     a
-        rol     L6E1B
+        rol     hi
         asl     a
-        rol     L6E1B
-        asl     a
-        rol     L6E1B
+        rol     hi
         clc
-        adc     $06
+        adc     ptr
         tay
-        lda     L6E1B
-        adc     $07
+        lda     hi
+        adc     ptr+1
         tax
         tya
-        bit     L6E1C
-        bpl     L6E14
-        jsr     L6D73
-        jmp     L6E17
 
-L6E14:  jsr     L6D48
-L6E17:  jsr     jt_redraw_input
+        bit     flag
+        bpl     f1
+        jsr     append_to_path_buf1
+        jmp     :+
+
+f1:     jsr     append_to_path_buf0
+
+:       jsr     jt_redraw_input
         rts
 
-L6E1B:  .byte   0
-L6E1C:  .byte   0
+hi:     .byte   0               ; high byte
+flag:   .byte   0
+.endproc
 
 ;;; ============================================================
 
