@@ -677,3 +677,98 @@ loop:   lda     src,x
         bpl     loop
 .endscope
 .endmacro
+
+
+;;; ============================================================
+;;; Flow Control
+;;; ============================================================
+;;; Usage:
+;;;     lda foo
+;;;     cmp bar
+;;;     IF_EQ
+;;;     ...
+;;;     ELSE ; optional
+;;;     ...
+;;;     END_IF
+;;;
+;;; Macros:
+;;;     IF_EQ           aliases: IF_ZERO
+;;;     IF_NE           aliases: IF_NOT_ZERO
+;;;     IF_CC           aliases: IF_LT
+;;;     IF_CS           aliases: IF_GE
+;;;     IF_PLUS
+;;;     IF_MINUS        aliases: IF_NEG
+
+__depth__ .set 0
+
+.macro IF_EQ
+        ::__depth__ .set ::__depth__ + 1
+        .scope
+        bne     .ident(.sprintf("__else__%d", ::__depth__))
+.endmacro
+
+.macro IF_NE
+        ::__depth__ .set ::__depth__ + 1
+        .scope
+        beq     .ident(.sprintf("__else__%d", ::__depth__))
+.endmacro
+
+.macro IF_CC
+        ::__depth__ .set ::__depth__ + 1
+        .scope
+        bcs     .ident(.sprintf("__else__%d", ::__depth__))
+.endmacro
+
+.macro IF_CS
+        ::__depth__ .set ::__depth__ + 1
+        .scope
+        bcc     .ident(.sprintf("__else__%d", ::__depth__))
+.endmacro
+
+.macro IF_PLUS
+        ::__depth__ .set ::__depth__ + 1
+        .scope
+        bmi     .ident(.sprintf("__else__%d", ::__depth__))
+.endmacro
+
+.macro IF_MINUS
+        ::__depth__ .set ::__depth__ + 1
+        .scope
+        bpl     .ident(.sprintf("__else__%d", ::__depth__))
+.endmacro
+
+        .define IF_ZERO IF_EQ
+        .define IF_NOT_ZERO IF_NE
+        .define IF_GE IF_CS
+        .define IF_LT IF_CC
+        .define IF_NEG IF_MINUS
+
+;;; --------------------------------------------------
+
+.macro ELSE
+        jmp     .ident(.sprintf("__endif__%d", ::__depth__))
+        .ident(.sprintf("__else__%d", ::__depth__)) := *
+.endmacro
+
+.macro ELSE_IF
+        .error "ELSE_IF not supported"
+.endmacro
+
+.macro ELSEIF
+        .error "ELSEIF not supported"
+.endmacro
+
+;;; --------------------------------------------------
+
+.macro END_IF
+    .if .not(.defined(.ident(.sprintf("__else__%d", ::__depth__))))
+        .ident(.sprintf("__else__%d", ::__depth__)) := *
+    .endif
+        .ident(.sprintf("__endif__%d", ::__depth__)) := *
+.endscope
+        ::__depth__ .set ::__depth__ - 1
+.endmacro
+
+.macro ENDIF
+        .error "Do you mean END_IF ?"
+.endmacro
