@@ -1092,33 +1092,45 @@ startup_menu_item_5:    PASCAL_STRING "Slot 0 "
 startup_menu_item_6:    PASCAL_STRING "Slot 0 "
 startup_menu_item_7:    PASCAL_STRING "Slot 0 "
 
-        ;; Unused???
-        .addr   dev0, dev1, dev2, dev3, dev4, dev5, dev6, dev7
-        .addr   dev8, dev9, dev10, dev11, dev12, dev13
+        device_type_disk_ii     = 0
+        device_type_ramdisk     = 1
+        device_type_profile     = 2
+        device_type_removable   = 3
+        device_type_unknown     = 4
 
 ;;; Templates used for device names
+device_template_table:
+        .addr   str_disk_ii_sd
+        .addr   str_ramcard_slot_x
+        .addr   str_profile_slot_x
+        .addr   str_unidisk_xy
+        .addr   str_slot_drive
+
+device_template_slot_offset_table:
+        .byte   15, 15, 15, 15, 6
+
+device_template_drive_offset_table:
+        .byte   19, 0, 0, 19, 15 ; 0 = no drive # for this type
+
+;;; Disk II
+str_disk_ii_sd:
+        PASCAL_STRING "Disk II  Slot x, Dy "
 
 ;;; Fixed drives that aren't RAM disks
 str_profile_slot_x:
-        PASCAL_STRING "ProFile Slot x     "
-profile_slot_x_offset = 14
+        PASCAL_STRING "ProFile  Slot x     "
 
 ;;; Removable drives
 str_unidisk_xy:
-        PASCAL_STRING "UniDisk 3.5  Sx,y  "
-unidisk_xy_x_offset = 15
-unidisk_xy_y_offset = 17
+        PASCAL_STRING "UniDisk 3.5  Sx, Dy "
 
 ;;; RAM disks
 str_ramcard_slot_x:
-        PASCAL_STRING "RAMCard Slot x      "
-ramcard_slot_x_offset = 14
+        PASCAL_STRING "RAMCard  Slot x     "
 
-;;; Disk II and unknown devices
+;;; Unknown devices
 str_slot_drive:
-        PASCAL_STRING "Slot    drive       "
-slot_drive_x_offset = 6
-slot_drive_y_offset = 16        ; off by 1 ???
+        PASCAL_STRING "Slot x  drive y     "
 
 ;;; ============================================================
 

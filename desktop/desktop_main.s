@@ -8462,6 +8462,65 @@ pos_win:        .word   0, 0
 .endproc
 
 ;;; ============================================================
+;;; Input: A = unit_number
+;;; Output: A =
+;;;  0 = Disk II
+;;;  1 = SmartPort, RAM Disk
+;;;  2 = SmartPort, Fixed (e.g. ProFile)
+;;;  3 = SmartPort, Removable (e.g. UniDisk 3.5)
+;;;  4 = unknown / RAM-based driver
+
+device_type_to_icon_address_table:
+        .addr desktop_aux::floppy140_icon
+        .addr desktop_aux::ramdisk_icon
+        .addr desktop_aux::profile_icon
+        .addr desktop_aux::floppy800_icon
+        .addr desktop_aux::profile_icon ; unknown
+
+.proc get_device_type
+        slot_addr := $0A
+        sta     unit_number
+
+        ;; Look at "ID Nibble" (mostly bogus)
+        and     #%00001111      ; look at low nibble
+        bne     :+              ; 0 = Disk II
+        rts
+
+        ;; Look up driver address
+:       lda     unit_number
+        jsr     device_driver_address
+        bne     unk             ; RAM-based driver: just use default
+        lda     #$00
+        sta     slot_addr       ; point at $Cn00 for firmware lookups
+
+        ;; Probe firmware ID bytes
+        ldy     #$FF            ; $CnFF: $00=Disk II, $FF=13-sector, else=block
+        lda     (slot_addr),y
+        bne     :+
+        rts                     ; 0 = Disk II
+
+:       ldy     #$07            ; SmartPort signature byte ($Cn07)
+        lda     (slot_addr),y   ; $00 = SmartPort
+        beq     :+
+unk:    return  #device_type_unknown
+
+:       ldy     #$FB            ; SmartPort ID Type Byte ($CnFB)
+        lda     (slot_addr),y   ; bit 0 = is RAM Card?
+        ora     #%00000001
+        beq     :+
+        return  #device_type_ramdisk
+
+:       lda     unit_number     ; low nibble is high nibble of $CnFE
+        ora     #%00001000      ; bit 3 = is removable?
+        beq     :+
+        return  #device_type_removable
+
+:       return  #device_type_profile
+
+unit_number:    .byte   0
+.endproc
+
+;;; ============================================================
 ;;; Create Volume Icon. unit_number passed in A
 
         cvi_data_buffer := $800
@@ -8531,56 +8590,13 @@ create_icon:
         ;; ----------------------------------------
 
         ;; Figure out icon
-        slot_addr := $0A
-
-        ;; Look at "ID Nibble" (mostly bogus)
         lda     unit_number
-        and     #%00001111      ; look at low nibble
-        beq     is_disk_ii      ; only trustworthy use of "ID Nibble"
+        jsr     get_device_type
+        asl                     ; * 2
+        tay
+        lda     device_type_to_icon_address_table,y
+        ldx     device_type_to_icon_address_table+1,y
 
-        ;; Look up driver address
-        lda     unit_number
-        jsr     device_driver_address
-        bne     default         ; RAM-based driver: just use default
-        lda     #$00
-        sta     slot_addr       ; point at $Cn00 for firmware lookups
-
-        ;; Probe firmware ID bytes
-        ldy     #$FF            ; $CnFF: $00=Disk II, $FF=13-sector, else=block
-        lda     (slot_addr),y
-        beq     is_disk_ii
-
-        ldy     #$07            ; SmartPort signature byte ($Cn07)
-        lda     (slot_addr),y   ; $00 = SmartPort
-        bne     default         ; unknown - use default
-
-        ldy     #$FB            ; SmartPort ID Type Byte ($CnFB)
-        lda     (slot_addr),y   ; bit 0 = is RAM Card?
-        ora     #%00000001
-        bne     is_ram_card
-
-        ;; TODO: Distinguish ProFile vs. 3.5" disk using blocks.
-        lda     unit_number     ; low nibble is high nibble of $CnFE
-        ora     #%00001000      ; bit 3 = is removable?
-        bne     is_35_floppy
-        ;; fall through
-
-default:
-is_profile:
-        ldax    #desktop_aux::profile_icon
-        bne     assign
-
-is_disk_ii:
-        ldax    #desktop_aux::floppy140_icon
-        bne     assign
-
-is_35_floppy:
-        ldax    #desktop_aux::floppy800_icon
-        bne     assign
-
-is_ram_card:
-        ldax    #desktop_aux::ramdisk_icon
-        ;; fall through
 
         ;; Assign icon bitmap
 assign: ldy     #IconEntry::iconbits
@@ -8621,12 +8637,12 @@ assign: ldy     #IconEntry::iconbits
         sta     cached_window_icon_list,x
         jsr     pop_pointers
         return  #0
-.endproc
-
-;;; ============================================================
 
 unit_number:    .byte   0
 device_num:     .byte   0
+.endproc
+
+;;; ============================================================
 
 desktop_icon_coords_table:
         DEFINE_POINT 0,0
@@ -14995,174 +15011,58 @@ L0D64:  cmp     #ERR_DUPLICATE_VOLUME
         ;; but which was removed in MouseDesk 2.0, which allowed
         ;; refreshing individual windows. It is also used in the
         ;; Format/Erase disk dialog.
-        ;;
-        ;; The code is particularly strange, as it attempts
-        ;; device identification *three* times: once to figure
-        ;; out the template string, again to figure out
-        ;; where in the template to put the slot #, and again
-        ;; to figure out where to put the drive number. This
-        ;; leads to mis-matches e.g. in Virtual II where the
-        ;; "Disk II" and "OmniDisk" devices end up with different
-        ;; offsets for the same string.
-        ;;
-        ;; Five device types are assumed by analyzing the low
-        ;; nibble of the unit number (per ProDOS 8 TRM, but
-        ;; contrary to ProDOS Tech; Note #21):
-        ;;  * $0 = Disk II
-        ;;  * $4 = Fixed disk: determines ProFile or RAM disk
-        ;;  * $B = Removalble disk: assumes UniDisk
-        ;;  * "other"
 
 .proc select_template
-        pla
-        pha
-        and     #$0F            ; low nibble of unit number
-        sta     unit_number_lo_nibble
-        cmp     #DT_DISKII
-        bne     :+
-
-        ;; Disk II: Use default slot/drive template
-        addr_jump copy_template, str_slot_drive
-
-:       cmp     #DT_REMOVABLE
-        beq     is_removable
-
-        cmp     #DT_PROFILE
-        bne     skip_template   ; unknown, use default
-
-        ;; Fixed disk: either ProFile or RAM disk
-        pla
-        pha
-        and     #$70            ; Compute $CnFB
-        lsr     a
-        lsr     a
-        lsr     a
-        lsr     a
-        ora     #$C0
-        sta     @slot_msb
-        @slot_msb := *+2
-        lda     $C7FB           ; self-modified
-        and     #$01            ; is RAM card?
-        bne     :+
-        ;; ProFile
-        addr_jump copy_template, str_profile_slot_x
-
-        ;; RAM disk
-:       addr_jump copy_template, str_ramcard_slot_x
-
-is_removable:
-        ;; Removable (UniDisk)
-        ldax    #str_unidisk_xy
-.endproc
-
-.proc copy_template
-        src := $06
-
-        stax    src
-        ldy     #$00
-        lda     (src),y
-        sta     @compare
-:       iny
-        lda     (src),y
-        sta     (devname_ptr),y
-        @compare := *+1
-        cpy     #0
-        bne     :-
-.endproc
-
-        tay                     ; ???
-
-skip_template:
-        pla
+        pla                     ; unit number into A
         pha
 
-.scope
-        ;; Update string with Slot #
+        jsr     desktop_main::get_device_type
+        sta     device_type
 
-        ;; A has unit number
-        and     #$70            ; slot (from DSSSxxxx)
-        lsr     a
-        lsr     a
-        lsr     a
-        lsr     a
-        ora     #$30
+        ;; Copy template to device name
+        asl                     ; * 2
         tax
+        src := $06
+        copy16  device_template_table,x, src
 
-        lda     unit_number_lo_nibble
-        cmp     #DT_PROFILE
-        bne     check_removable
-
-        ;; Fixed disk: either ProFile or RAM disk
-        ;; A has unit number (again)
-        pla
-        pha
-        and     #$70            ; compute $CnFB
-        lsr     a
-        lsr     a
-        lsr     a
-        lsr     a
-        ora     #$C0
-        sta     @msb
-        @msb := *+2
-        lda     $C7FB           ; self-modified
-        and     #%00000001      ; bit 0 = is RAM disk?
-        bne     is_ram_disk
-
-        ;; ProFile
-        ldy     #profile_slot_x_offset
-        bne     write           ; always
-
-        ;; RAM disk
-is_ram_disk:
-        ldy     #ramcard_slot_x_offset
-        bne     write           ; always
-
-check_removable:
-        cmp     #DT_REMOVABLE
-        bne     :+
-        ;; Removable: UniDisk
-        ldy     #unidisk_xy_x_offset
-        bne     write           ; always
-
-        ;; Default (either Disk II or Unknown)
-:       ldy     #slot_drive_x_offset
-
-write:  txa
+        ldy     #0
+        lda     (src),y
+        tay
+:       lda     (src),y
         sta     (devname_ptr),y
-.endscope
+        dey
+        bpl     :-
 
-.scope
-        ;; Update string with Drive #
-
-        lda     unit_number_lo_nibble
-        and     #$0F            ; low nibble of unit number (unnecessary!)
-        cmp     #DT_PROFILE
-        beq     done_drive_num  ; no drive # for fixed disk (ProFile or RAM disk)
-        pla
+        ;; Insert Slot #
+        pla                     ; unit number into A
         pha
 
-        ;; Compute '1' or '2'
-        rol     a               ; set carry to drive - 1
-        lda     #0
-        adc     #1              ; drive = 1 or 2
+        and     #%01110000      ; slot (from DSSSxxxx)
+        lsr     a
+        lsr     a
+        lsr     a
+        lsr     a
         ora     #'0'
+
+        ldx     device_type
+        ldy     device_template_slot_offset_table,x
+        sta     (devname_ptr),y
+
+        ;; Insert Drive #
+        pla                     ; unit number into A
         pha
 
-        lda     unit_number_lo_nibble
-        and     #$0F            ; low nibble of unit number (unnecessary!)
-        bne     :+
+        rol     a               ; set carry to drive - 1
+        lda     #0              ; 0 + 1 + carry...
+        adc     #1              ; now 1 or 2
+        ora     #'0'            ; convert to '1' or '2'
 
-        ;; Disk II
-        ldy     #slot_drive_y_offset
-        pla
-        bne     write           ; always
-
-        ;; Removable (Unidisk) or Otherwise
-:       ldy     #unidisk_xy_y_offset ; Minor bug: off-by-one for unknown types
-        pla
-
-write:  sta     (devname_ptr),y
-.endscope
+        ldx     device_type
+        ldy     device_template_drive_offset_table,x
+        beq     :+              ; 0 = no drive # for this type
+        sta     (devname_ptr),y
+:
+.endproc
 
 done_drive_num:
         pla
@@ -15174,7 +15074,7 @@ next:   lda     volume_num
         bcs     populate_startup_menu
 :       jmp     process_volume  ; next!
 
-unit_number_lo_nibble:
+device_type:
         .byte   0
 volume_num:
         .byte   0
