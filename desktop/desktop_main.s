@@ -14872,12 +14872,12 @@ end:
         ;; Does the directory exist?
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
         beq     :+
-        jmp     populate_volume_icons
+        jmp     populate_volume_icons_and_device_names
 
 :       lda     get_file_info_type
         cmp     #FT_DIRECTORY
         beq     open_dir
-        jmp     populate_volume_icons
+        jmp     populate_volume_icons_and_device_names
 
 open_dir:
         MLI_RELAY_CALL OPEN, open_params
@@ -15037,7 +15037,9 @@ end:
 
 ;;; TODO: Dedupe with cmd_check_drives
 
-.proc populate_volume_icons
+.proc populate_volume_icons_and_device_names
+        devname_ptr := $08
+
         ldy     #0
         sty     desktop_main::pending_alert
         sty     volume_num
@@ -15046,7 +15048,7 @@ process_volume:
         lda     volume_num
         asl     a
         tay
-        copy16  slot_drive_string_table,y, $08
+        copy16  device_name_table,y, devname_ptr
         ldy     volume_num
         lda     DEVLST,y
 
@@ -15085,13 +15087,31 @@ L0D64:  cmp     #ERR_DUPLICATE_VOLUME
         lda     #$F9            ; "... 2 volumes with the same name..."
         sta     desktop_main::pending_alert
 
-        ;; This section populates slot_drive_string_table -
+        ;; This section populates device_name_table -
         ;; it determines which device type string to use, and
         ;; fills in slot and drive as appropriate.
         ;;
         ;; This is for a "Check" menu present in MouseDesk 1.1
         ;; but which was removed in MouseDesk 2.0, which allowed
-        ;; refreshing individual windows.
+        ;; refreshing individual windows. It is also used in the
+        ;; Format/Erase disk dialog.
+        ;;
+        ;; The code is particularly strange, as it attempts
+        ;; device identification *three* times: once to figure
+        ;; out the template string, again to figure out
+        ;; where in the template to put the slot #, and again
+        ;; to figure out where to put the drive number. This
+        ;; leads to mis-matches e.g. in Virtual II where the
+        ;; "Disk II" and "OmniDisk" devices end up with different
+        ;; offsets for the same string.
+        ;;
+        ;; Five device types are assumed by analyzing the low
+        ;; nibble of the unit number (per ProDOS 8 TRM, but
+        ;; contrary to ProDOS Tech; Note #21):
+        ;;  * $0 = Disk II
+        ;;  * $4 = Fixed disk: determines ProFile or RAM disk
+        ;;  * $B = Removalble disk: assumes UniDisk
+        ;;  * "other"
 
 .proc select_template
         pla
@@ -15100,12 +15120,17 @@ L0D64:  cmp     #ERR_DUPLICATE_VOLUME
         sta     unit_number_lo_nibble
         cmp     #DT_DISKII
         bne     :+
+
+        ;; Disk II: Use default slot/drive template
         addr_jump copy_template, str_slot_drive
 
 :       cmp     #DT_REMOVABLE
         beq     is_removable
+
         cmp     #DT_PROFILE
-        bne     L0DC2
+        bne     skip_template   ; unknown, use default
+
+        ;; Fixed disk: either ProFile or RAM disk
         pla
         pha
         and     #$70            ; Compute $CnFB
@@ -15119,27 +15144,40 @@ L0D64:  cmp     #ERR_DUPLICATE_VOLUME
         lda     $C7FB           ; self-modified
         and     #$01            ; is RAM card?
         bne     :+
+        ;; ProFile
         addr_jump copy_template, str_profile_slot_x
 
+        ;; RAM disk
 :       addr_jump copy_template, str_ramcard_slot_x
 
 is_removable:
+        ;; Removable (UniDisk)
         ldax    #str_unidisk_xy
 .endproc
 
-copy_template:  stax    $06
+.proc copy_template
+        src := $06
+
+        stax    src
         ldy     #$00
-        lda     ($06),y
+        lda     (src),y
         sta     @compare
 :       iny
-        lda     ($06),y
-        sta     ($08),y
+        lda     (src),y
+        sta     (devname_ptr),y
         @compare := *+1
         cpy     #0
         bne     :-
-        tay
-L0DC2:  pla
+.endproc
+
+        tay                     ; ???
+
+skip_template:
+        pla
         pha
+
+.scope
+        ;; Update string with Slot #
 
         ;; A has unit number
         and     #$70            ; slot (from DSSSxxxx)
@@ -15154,6 +15192,7 @@ L0DC2:  pla
         cmp     #DT_PROFILE
         bne     check_removable
 
+        ;; Fixed disk: either ProFile or RAM disk
         ;; A has unit number (again)
         pla
         pha
@@ -15166,33 +15205,43 @@ L0DC2:  pla
         sta     @msb
         @msb := *+2
         lda     $C7FB           ; self-modified
-        and     #$01            ; bit 0 = is RAM disk?
+        and     #%00000001      ; bit 0 = is RAM disk?
         bne     is_ram_disk
 
-        ldy     #$0E
-        bne     L0DFA           ; always
+        ;; ProFile
+        ldy     #profile_slot_x_offset
+        bne     write           ; always
 
+        ;; RAM disk
 is_ram_disk:
-        ldy     #$0E
-        bne     L0DFA           ; always
+        ldy     #ramcard_slot_x_offset
+        bne     write           ; always
 
 check_removable:
         cmp     #DT_REMOVABLE
         bne     :+
-        ldy     #$0F
-        bne     L0DFA           ; always
+        ;; Removable: UniDisk
+        ldy     #unidisk_xy_x_offset
+        bne     write           ; always
 
-:       ldy     #$06
+        ;; Default (either Disk II or Unknown)
+:       ldy     #slot_drive_x_offset
 
-L0DFA:  txa
-        sta     ($08),y
+write:  txa
+        sta     (devname_ptr),y
+.endscope
+
+.scope
+        ;; Update string with Drive #
 
         lda     unit_number_lo_nibble
-        and     #$0F
+        and     #$0F            ; low nibble of unit number (unnecessary!)
         cmp     #DT_PROFILE
-        beq     L0E21
+        beq     done_drive_num  ; no drive # for fixed disk (ProFile or RAM disk)
         pla
         pha
+
+        ;; Compute '1' or '2'
         rol     a               ; set carry to drive - 1
         lda     #0
         adc     #1              ; drive = 1 or 2
@@ -15200,15 +15249,23 @@ L0DFA:  txa
         pha
 
         lda     unit_number_lo_nibble
-        and     #DT_RAM
-        bne     L0E1C
-        ldy     #$10
+        and     #$0F            ; low nibble of unit number (unnecessary!)
+        bne     :+
+
+        ;; Disk II
+        ldy     #slot_drive_y_offset
         pla
-        bne     L0E1F           ; always
-L0E1C:  ldy     #$11
+        bne     write           ; always
+
+        ;; Removable (Unidisk) or Otherwise
+:       ldy     #unidisk_xy_y_offset ; Minor bug: off-by-one for unknown types
         pla
-L0E1F:  sta     ($08),y
-L0E21:  pla
+
+write:  sta     (devname_ptr),y
+.endscope
+
+done_drive_num:
+        pla
         inc     volume_num
 next:   lda     volume_num
 

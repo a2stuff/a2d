@@ -450,9 +450,9 @@ L0D5A:  stax    dialog_label_pos
 L0D60:  lda     L0D8C
         asl     a
         tay
-        lda     slot_drive_string_table+1,y
+        lda     device_name_table+1,y
         tax
-        lda     slot_drive_string_table,y
+        lda     device_name_table,y
         pha
         lda     L0D8C
         lsr     a

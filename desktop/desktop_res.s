@@ -862,9 +862,9 @@ file_to_delete_label:
 
 ;;; ============================================================
 
-slot_drive_string_table:
-        .addr   sd0s, sd1s, sd2s, sd3s, sd4s, sd5s, sd6s
-        .addr   sd7s, sd8s, sd9s, sd10s, sd11s, sd12s, sd13s
+device_name_table:
+        .addr   dev0s, dev1s, dev2s, dev3s, dev4s, dev5s, dev6s
+        .addr   dev7s, dev8s, dev9s, dev10s, dev11s, dev12s, dev13s
 
 selector_menu_addr:
         .addr   selector_menu
@@ -1026,24 +1026,25 @@ disable:        .byte   0
 
 LE26F:  .byte   $00
 
+;;; Unused - present in MouseDesk 1.1 but not 2.0 or A2D
 check_menu:
         DEFINE_MENU     4
         DEFINE_MENU_ITEM str_all
         DEFINE_MENU_SEPARATOR
-        DEFINE_MENU_ITEM sd0s
-        DEFINE_MENU_ITEM sd1s
-        DEFINE_MENU_ITEM sd2s
-        DEFINE_MENU_ITEM sd3s
-        DEFINE_MENU_ITEM sd4s
-        DEFINE_MENU_ITEM sd5s
-        DEFINE_MENU_ITEM sd6s
-        DEFINE_MENU_ITEM sd7s
-        DEFINE_MENU_ITEM sd8s
-        DEFINE_MENU_ITEM sd9s
-        DEFINE_MENU_ITEM sd10s
-        DEFINE_MENU_ITEM sd11s
-        DEFINE_MENU_ITEM sd12s
-        DEFINE_MENU_ITEM sd13s
+        DEFINE_MENU_ITEM dev0s
+        DEFINE_MENU_ITEM dev1s
+        DEFINE_MENU_ITEM dev2s
+        DEFINE_MENU_ITEM dev3s
+        DEFINE_MENU_ITEM dev4s
+        DEFINE_MENU_ITEM dev5s
+        DEFINE_MENU_ITEM dev6s
+        DEFINE_MENU_ITEM dev7s
+        DEFINE_MENU_ITEM dev8s
+        DEFINE_MENU_ITEM dev9s
+        DEFINE_MENU_ITEM dev10s
+        DEFINE_MENU_ITEM dev11s
+        DEFINE_MENU_ITEM dev12s
+        DEFINE_MENU_ITEM dev13s
 
 startup_menu:
         DEFINE_MENU 7
@@ -1057,20 +1058,23 @@ startup_menu:
 
 str_all:PASCAL_STRING "All"
 
-sd0:    DEFINE_STRING "Slot    drive       ", sd0s
-sd1:    DEFINE_STRING "Slot    drive       ", sd1s
-sd2:    DEFINE_STRING "Slot    drive       ", sd2s
-sd3:    DEFINE_STRING "Slot    drive       ", sd3s
-sd4:    DEFINE_STRING "Slot    drive       ", sd4s
-sd5:    DEFINE_STRING "Slot    drive       ", sd5s
-sd6:    DEFINE_STRING "Slot    drive       ", sd6s
-sd7:    DEFINE_STRING "Slot    drive       ", sd7s
-sd8:    DEFINE_STRING "Slot    drive       ", sd8s
-sd9:    DEFINE_STRING "Slot    drive       ", sd9s
-sd10:   DEFINE_STRING "Slot    drive       ", sd10s
-sd11:   DEFINE_STRING "Slot    drive       ", sd11s
-sd12:   DEFINE_STRING "Slot    drive       ", sd12s
-sd13:   DEFINE_STRING "Slot    drive       ", sd13s
+;;; ============================================================
+
+;;; Device Names (populated at startup using templates below)
+dev0:    DEFINE_STRING "Slot    drive       ", dev0s
+dev1:    DEFINE_STRING "Slot    drive       ", dev1s
+dev2:    DEFINE_STRING "Slot    drive       ", dev2s
+dev3:    DEFINE_STRING "Slot    drive       ", dev3s
+dev4:    DEFINE_STRING "Slot    drive       ", dev4s
+dev5:    DEFINE_STRING "Slot    drive       ", dev5s
+dev6:    DEFINE_STRING "Slot    drive       ", dev6s
+dev7:    DEFINE_STRING "Slot    drive       ", dev7s
+dev8:    DEFINE_STRING "Slot    drive       ", dev8s
+dev9:    DEFINE_STRING "Slot    drive       ", dev9s
+dev10:   DEFINE_STRING "Slot    drive       ", dev10s
+dev11:   DEFINE_STRING "Slot    drive       ", dev11s
+dev12:   DEFINE_STRING "Slot    drive       ", dev12s
+dev13:   DEFINE_STRING "Slot    drive       ", dev13s
 
 startup_menu_item_1:    PASCAL_STRING "Slot 0 "
 startup_menu_item_2:    PASCAL_STRING "Slot 0 "
@@ -1080,17 +1084,35 @@ startup_menu_item_5:    PASCAL_STRING "Slot 0 "
 startup_menu_item_6:    PASCAL_STRING "Slot 0 "
 startup_menu_item_7:    PASCAL_STRING "Slot 0 "
 
-        .addr   sd0, sd1, sd2, sd3, sd4, sd5, sd6, sd7
-        .addr   sd8, sd9, sd10, sd11, sd12, sd13
+        ;; Unused???
+        .addr   dev0, dev1, dev2, dev3, dev4, dev5, dev6, dev7
+        .addr   dev8, dev9, dev10, dev11, dev12, dev13
 
+;;; Templates used for device names
+
+;;; Fixed drives that aren't RAM disks
 str_profile_slot_x:
         PASCAL_STRING "ProFile Slot x     "
+profile_slot_x_offset = 14
+
+;;; Removable drives
 str_unidisk_xy:
         PASCAL_STRING "UniDisk 3.5  Sx,y  "
+unidisk_xy_x_offset = 15
+unidisk_xy_y_offset = 17
+
+;;; RAM disks
 str_ramcard_slot_x:
         PASCAL_STRING "RAMCard Slot x      "
+ramcard_slot_x_offset = 14
+
+;;; Disk II and unknown devices
 str_slot_drive:
         PASCAL_STRING "Slot    drive       "
+slot_drive_x_offset = 6
+slot_drive_y_offset = 16        ; off by 1 ???
+
+;;; ============================================================
 
 selector_menu:
         DEFINE_MENU 5
