@@ -21,8 +21,8 @@ See [API.md](API.md) for programming details
 
 ## Files
 
+* `TARGETS` - lists DAs (used by makefile and other scripts)
 * `Makefile` - cleans/builds targets
-* `orig/*.bin` - original binary (type $F1, auxtype $0640, start $800)
 * `*.s` - source (originally generated using da65, now modified)
 
 ## Build Instructions
@@ -30,14 +30,6 @@ See [API.md](API.md) for programming details
 On Unix-like systems (including Mac OS X) `make all` should build
 the desk accessory files (original and new) into `out/`
 output with a `.built` suffix.
-
-For the original DAs, the `.built` and `.bin` files can be compared
-using `diff` to ensure that no changes have been introduced by the
-disassembly process.
-
-With `desk.acc` as the current directory, run `res/go.sh` to automatically
-verify that the files are unchanged from the original, and also generate
-semi-useful stats showing disassembly progress.
 
 ## Getting The DAs Onto Your Apple II
 
@@ -55,7 +47,7 @@ make -C /tmp/cadius
 CADIUS=/tmp/cadius/bin/release/cadius
 ```
 
-Then from the `desk.acc/` directory, run: `go/package.sh`
+Then from the `desk.acc/` directory, run: `res/package.sh`
 
 This will generate: `desk.acc/out/DeskAccessories.po`
 
