@@ -556,21 +556,7 @@ cloop:  lda     (src),y
         dey
         bpl     cloop
 
-        clc                     ; src += cols
-        lda     src
-        adc     #<cols
-        sta     src
-        lda     src+1
-        adc     #>cols
-        sta     src+1
-
-        clc                     ; dst += cols
-        lda     dst
-        adc     #<cols
-        sta     dst
-        lda     dst+1
-        adc     #>cols
-        sta     dst+1
+        add16   dst, #cols, dst
 
         pla
         inc
@@ -603,21 +589,7 @@ cloop:  lda     (src),y
         dey
         bpl     cloop
 
-        clc                     ; src += cols
-        lda     src
-        adc     #<cols
-        sta     src
-        lda     src+1
-        adc     #>cols
-        sta     src+1
-
-        clc                     ; dst += cols
-        lda     dst
-        adc     #<cols
-        sta     dst
-        lda     dst+1
-        adc     #>cols
-        sta     dst+1
+        add16   src, #cols, src
 
         pla
         inc
