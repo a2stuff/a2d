@@ -8183,7 +8183,7 @@ exit:   return  #$FF            ; not double-click
 
         ;; is -delta < x < 0 ?
         lda     delta
-        cmp     #($100 - double_click_deltax)
+        cmp     #AS_BYTE(-double_click_deltax)
         bcs     check_y
 fail:   return  #$FF
 
@@ -8204,7 +8204,7 @@ check_y:
 
         ;; is -delta < y < 0 ?
         lda     delta
-        cmp     #($100 - double_click_deltay)
+        cmp     #AS_BYTE(-double_click_deltay)
         bcs     ok
 
         ;; is 0 < y < delta ?
@@ -13257,7 +13257,7 @@ exit:   return  #$FF            ; not double-click
 
         ;; is -delta < x < 0 ?
         lda     delta
-        cmp     #($100 - double_click_deltax)
+        cmp     #AS_BYTE(-double_click_deltax)
         bcs     check_y
 fail:   return  #$FF
 
@@ -13278,7 +13278,7 @@ check_y:
 
         ;; is -delta < y < 0 ?
         lda     delta
-        cmp     #($100 - double_click_deltay)
+        cmp     #AS_BYTE(-double_click_deltay)
         bcs     ok
 
         ;; is 0 < y < delta ?
