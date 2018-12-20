@@ -236,14 +236,12 @@ nextwinfo:   .addr   0
         lda     LCBANK1
         lda     LCBANK1
 
-        lda     #0
-        sta     mode
+        copy    #0, mode
 
         ;; Get filename by checking DeskTop selected window/icon
 
         ;; Check that an icon is selected
-        lda     #0
-        sta     pathbuff::length
+        copy    #0, pathbuff::length
         lda     selected_file_count
         beq     abort           ; some file properties?
         lda     path_index      ; prefix index in table
@@ -426,12 +424,15 @@ close:  jsr     close_file
         ;; TODO: Load directly into Aux if RamWorks is not present.
 
         ;; Copy MAIN to AUX
+
+        sta     CLR80COL        ; read main, write aux
+        sta     RAMRDOFF
+        sta     RAMWRTON
+
         copy16  #hires, ptr
         ldx     #>hires_size    ; number of pages to copy
         ldy     #0
-:       sta     PAGE2OFF        ; from main
-        lda     (ptr),y
-        sta     PAGE2ON         ; to aux
+:       lda     (ptr),y
         sta     (ptr),y
         iny
         bne     :-
@@ -439,12 +440,14 @@ close:  jsr     close_file
         dex
         bne     :-
 
+        sta     RAMWRTON        ; read aux, write aux
+        sta     RAMRDON
+        sta     SET80COL
+
         ;; MAIN memory half
         sta     PAGE2OFF
         jsr     read_file
         jsr     close_file
-
-        ;; TODO: Restore PAGE2 state?
 
         rts
 .endproc
@@ -464,15 +467,12 @@ close:  jsr     close_file
         lda     #0              ; row
 rloop:  pha
         tax
-        lda     hires_table_lo,x
-        sta     ptr
-        lda     hires_table_hi,x
-        sta     ptr+1
+        copy    hires_table_lo,x, ptr
+        copy    hires_table_hi,x, ptr+1
 
         ldy     #cols-1         ; col
 
-        lda     #0
-        sta     spill           ; spill-over
+        copy    #0, spill       ; spill-over
 
 cloop:  lda     (ptr),y
         tax
@@ -504,8 +504,7 @@ hibitset:
         sta     PAGE2OFF
         sta     (ptr),y
 
-        lda     #0              ; no spill bit
-        sta     spill
+        copy    #0, spill       ; no spill bit
 next:
         dey
         bpl     cloop
@@ -546,10 +545,8 @@ inner:
         lda     #0              ; row #
 rloop:  pha
         tax
-        lda     hires_table_lo,x
-        sta     src
-        lda     hires_table_hi,x
-        sta     src+1
+        copy    hires_table_lo,x, src
+        copy    hires_table_hi,x, src+1
         ldy     #cols-1
 cloop:  lda     (src),y
         sta     (dst),y
@@ -579,10 +576,8 @@ inner:
         lda     #0              ; row #
 rloop:  pha
         tax
-        lda     hires_table_lo,x
-        sta     dst
-        lda     hires_table_hi,x
-        sta     dst+1
+        copy    hires_table_lo,x, dst
+        copy    hires_table_hi,x, dst+1
         ldy     #cols-1
 cloop:  lda     (src),y
         sta     (dst),y
@@ -612,8 +607,7 @@ mode:   .byte   0               ; 0 = B&W, $80 = color
 .proc set_color_mode
         lda     mode
         bne     done
-        lda     #$80
-        sta     mode
+        copy    #$80, mode
 
         ;; AppleColor Card - Mode 2 (Color 140x192)
         sta     SET80VID
