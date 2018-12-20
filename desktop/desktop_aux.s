@@ -925,7 +925,7 @@ L9857:  sub16   findwindow_params2::mousex, L9C8E, deltax
         lda     deltax+1
         bpl     x_lo
         lda     deltax
-        cmp     #($100 - drag_delta)
+        cmp     #AS_BYTE(-drag_delta)
         bcc     is_drag
         jmp     check_deltay
 x_lo:   lda     deltax
@@ -937,7 +937,7 @@ check_deltay:
         lda     deltay+1
         bpl     y_lo
         lda     deltay
-        cmp     #($100 - drag_delta)
+        cmp     #AS_BYTE(-drag_delta)
         bcc     is_drag
         jmp     peek_loop
 y_lo:   lda     deltay
