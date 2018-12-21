@@ -78,7 +78,11 @@ DT_UNHIGHLIGHT_ALL      := $06
 DT_CLOSE_WINDOW         := $07  ; { .byte window_id }
 DT_GET_HIGHLIGHTED      := $08  ; { .res 20 }
 DT_FIND_ICON            := $09  ; { .word mousex, .word mousey, .byte result }
-        ;; $0A ???
+DT_DRAG_HIGHLIGHTED     := $0A  ; { .byte param }
+                                ; Input: specific icon being dragged
+                                ; Output: 0 = on desktop (no-op)
+                                ;  hi bit clear: low bits are target icon
+                                ;  hi bit set:   low bits are target window
 DT_UNHIGHLIGHT_ICON     := $0B  ; { .addr iconentry }
 DT_REDRAW_ICONS         := $0C  ; Repaints desktop icons *
 DT_ICON_IN_RECT         := $0D  ; { .byte icon, rect bounds }

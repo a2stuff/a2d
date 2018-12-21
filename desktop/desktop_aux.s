@@ -240,7 +240,7 @@ desktop_jump_table:
         .addr   CLOSE_WINDOW_IMPL
         .addr   GET_HIGHLIGHTED_IMPL
         .addr   FIND_ICON_IMPL
-        .addr   L97F7           ; $0A
+        .addr   DRAG_HIGHLIGHTED
         .addr   UNHIGHLIGHT_ICON_IMPL
         .addr   REDRAW_ICONS_IMPL
         .addr   ICON_IN_RECT_IMPL
@@ -854,11 +854,9 @@ L97F6:  .byte   0
 
 ;;; ============================================================
 
-;;; DESKTOP $0A IMPL
+;;; DESKTOP DRAG_HIGHLIGHTED IMPL
 
-
-        ;; Desktop icon selection
-.proc L97F7
+.proc DRAG_HIGHLIGHTED
         ldy     #IconEntry::id
         lda     ($06),y
         sta     icon_id
