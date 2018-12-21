@@ -537,7 +537,7 @@ call_proc:
         DESKTOP_RELAY_CALL DT_FIND_ICON, event_coords
         lda     findicon_which_icon
         beq     :+
-        jmp     handle_icon_click
+        jmp     handle_volume_icon_click
 
 :       jmp     L68AA
 
@@ -3733,19 +3733,20 @@ L5D0B:  ldx     selected_icon_count
         bmi     L5D55
         jmp     L5DFC
 
+        ;; Near start of file drag
 L5D55:  lda     L5CD9
-        sta     LEBFC
-        DESKTOP_RELAY_CALL $0A, LEBFC
+        sta     drag_drop_param
+        DESKTOP_RELAY_CALL DT_DRAG_HIGHLIGHTED, drag_drop_param
         tax
-        lda     LEBFC
+        lda     drag_drop_param
         beq     L5DA6
-        jsr     L8F00
+        jsr     jt_drop
         cmp     #$FF
         bne     L5D77
         jsr     L5DEC
         jmp     redraw_windows_and_desktop
 
-L5D77:  lda     LEBFC
+L5D77:  lda     drag_drop_param
         cmp     trash_icon_num
         bne     L5D8E
         lda     active_window_id
@@ -3754,7 +3755,7 @@ L5D77:  lda     LEBFC
         jsr     select_and_refresh_window
         jmp     redraw_windows_and_desktop
 
-L5D8E:  lda     LEBFC
+L5D8E:  lda     drag_drop_param
         bmi     L5D99
         jsr     L6A3F
         jmp     redraw_windows_and_desktop
@@ -4720,7 +4721,7 @@ disable_selector_menu_items := toggle_selector_menu_items::disable
 
 ;;; ============================================================
 
-.proc handle_icon_click
+.proc handle_volume_icon_click
         lda     selected_icon_count
         bne     L67DF
         jmp     set_selection
@@ -4767,23 +4768,25 @@ set_selection:
 
 L6834:  bit     double_click_flag
         bpl     L6880
+
+        ;; Drag of volume icon
         lda     findicon_which_icon
-        sta     LEBFC
-        DESKTOP_RELAY_CALL $0A, LEBFC
+        sta     drag_drop_param
+        DESKTOP_RELAY_CALL DT_DRAG_HIGHLIGHTED, drag_drop_param
         tax
-        lda     LEBFC
+        lda     drag_drop_param
         beq     L6878
-        jsr     L8F00
+        jsr     jt_drop
         cmp     #$FF
         bne     L6858
         jmp     redraw_windows_and_desktop
 
-L6858:  lda     LEBFC
+L6858:  lda     drag_drop_param
         cmp     trash_icon_num
         bne     L6863
         jmp     redraw_windows_and_desktop
 
-L6863:  lda     LEBFC
+L6863:  lda     drag_drop_param
         bpl     L6872
         and     #$7F
         pha
@@ -4799,6 +4802,7 @@ L6878:  txa
         bne     L688F
         jmp     redraw_windows_and_desktop
 
+        ;; Double-click on volume icon
 L6880:  lda     findicon_which_icon
         cmp     trash_icon_num
         beq     L688E
@@ -9330,7 +9334,7 @@ open:   MLI_RELAY_CALL OPEN, open_params
 
 ;;; ============================================================
 
-L8F00:  jmp     L8FC5
+jt_drop:        jmp     do_drop
         jmp     rts2            ; rts
         jmp     rts2            ; rts
 jt_get_info:    jmp     do_get_info ; cmd_get_info
@@ -9398,10 +9402,12 @@ L8F7E:  lda     #$80
 ;;; ============================================================
 ;;; Lock
 
-do_lock:  jsr     L8FDD
+do_lock:
+        jsr     L8FDD
         jmp     L8F4F
 
-do_unlock:  jsr     L8FE1
+do_unlock:
+        jsr     L8FE1
         jmp     L8F4F
 
 L8FA7:  asl     a
@@ -9411,22 +9417,27 @@ L8FA7:  asl     a
         lda     ($06),y
         rts
 
-do_get_size:  lda     #$00
+;;; ============================================================
+
+do_get_size:
+        lda     #$00
         sta     L918C
         lda     #$C0
         sta     L9189
         jmp     L8FEB
 
-L8FC5:  lda     LEBFC
-        cmp     #$01
-        bne     L8FD0
+.proc do_drop
+        lda     drag_drop_param
+        cmp     #1              ; Trash (BUG: Should use trash_icon_num)
+        bne     :+
         lda     #$80
-        bne     L8FD2
-L8FD0:  lda     #$00
-L8FD2:  sta     L918A
+        bne     set           ; always
+:       lda     #$00
+set:    sta     drop_on_trash_flag
         lda     #0
         sta     L9189
         jmp     L8FEB
+.endproc
 
 L8FDD:  lda     #$00
         beq     L8FE3
@@ -9434,16 +9445,17 @@ L8FE1:  lda     #$80
 L8FE3:  sta     unlock_flag
         lda     #$80
         sta     L9189
+
 L8FEB:  tsx
         stx     stack_stash
-        lda     #$00
+        lda     #0
         sta     LE05C
         jsr     L91D5
         lda     L9189
         beq     :+
         jmp     L908C
 
-:       bit     L918A
+:       bit     drop_on_trash_flag
         bpl     L9011
         lda     selected_window_index
         beq     :+
@@ -9453,7 +9465,7 @@ L8FEB:  tsx
         pla
         jmp     JT_EJECT
 
-L9011:  lda     LEBFC
+L9011:  lda     drag_drop_param
         bpl     L9032
         and     #$7F
         asl     a
@@ -9469,12 +9481,12 @@ L9032:  jsr     L8FA7
         asl     a
         tax
         copy16  window_address_table,x, $08
-        lda     LEBFC
+        lda     drag_drop_param
         jsr     icon_entry_name_lookup
         jsr     join_paths
         jmp     L9076
 
-L9051:  lda     LEBFC
+L9051:  lda     drag_drop_param
         jsr     icon_entry_name_lookup
         ldy     #$01
         lda     #'/'
@@ -9507,7 +9519,7 @@ L908C:  lda     #$00
         bit     L9189
         bvs     L90B4
         bmi     L90AE
-        bit     L918A
+        bit     drop_on_trash_flag
         bmi     L90A6
         jsr     L993E
         jmp     L90DE
@@ -9525,7 +9537,7 @@ L90B4:  jsr     LA1E4
 L90BA:  bit     L9189
         bvs     L90D8
         bmi     L90D2
-        bit     L918A
+        bit     drop_on_trash_flag
         bmi     L90CC
         jsr     L9968
         jmp     L90DE
@@ -9542,70 +9554,83 @@ L90D8:  jsr     LA241
 L90DE:  jsr     L91F5
         lda     selected_icon_count
         bne     L90E9
-        jmp     L9168
+        jmp     finish
 
-L90E9:  ldx     #$00
-        stx     L917A
-L90EE:  jsr     L91F5
-        ldx     L917A
+L90E9:  ldx     #0
+        stx     icon_count
+
+loop:   jsr     L91F5
+        ldx     icon_count
         lda     selected_icon_list,x
-        cmp     #$01
-        beq     L9140
+        cmp     #1              ; icon #1 is always Trash (BUG: should use trash_icon_num)
+        beq     next_icon
         jsr     icon_entry_name_lookup
         jsr     join_paths
         copy16  #path_buf3, $06
-        ldy     #$00
+
+        ;; Shrink name to remove trailing ' '
+        ldy     #0
         lda     ($06),y
         beq     L9114
         sec
         sbc     #$01
         sta     ($06),y
+
 L9114:  lda     L97E4
         beq     L913D
         bit     L9189
         bmi     L912F
-        bit     L918A
+        bit     drop_on_trash_flag
         bmi     L9129
         jsr     L9A01
-        jmp     L9140
+        jmp     next_icon
 
 L9129:  jsr     L9EDB
-        jmp     L9140
+        jmp     next_icon
 
 L912F:  bvs     L9137
         jsr     LA114
-        jmp     L9140
+        jmp     next_icon
 
 L9137:  jsr     LA271
-        jmp     L9140
+        jmp     next_icon
 
 L913D:  jsr     LA271
-L9140:  inc     L917A
-        ldx     L917A
+
+next_icon:
+        inc     icon_count
+        ldx     icon_count
         cpx     selected_icon_count
-        bne     L90EE
+        bne     loop
+
         lda     L97E4
-        bne     L9168
+        bne     finish
         inc     L97E4
         bit     L9189
         bmi     L915D
-        bit     L918A
+        bit     drop_on_trash_flag
         bpl     L9165
 L915D:  jsr     done_dialog_phase2
         bit     L9189
-        bvs     L9168
+        bvs     finish
 L9165:  jmp     L90BA
 
-L9168:  jsr     done_dialog_phase1
-        lda     LEBFC
+finish: jsr     done_dialog_phase1
+
+        ;; Restore space to start of icon name
+        lda     drag_drop_param
         jsr     icon_entry_name_lookup
-        ldy     #$01
+        ldy     #1
         lda     #' '
         sta     ($06),y
+
         return  #0
 
-L917A:  .byte   0
+icon_count:
+        .byte   0
+
 L917B:  .byte   0
+
 .endproc
         do_delete_file := cmds::do_delete_file
         L8F7E := cmds::L8F7E
@@ -9613,7 +9638,7 @@ L917B:  .byte   0
         do_lock := cmds::do_lock
         do_unlock := cmds::do_unlock
         do_get_size := cmds::do_get_size
-        L8FC5 := cmds::L8FC5
+        do_drop := cmds::do_drop
 
 ;;; ============================================================
 
@@ -9636,8 +9661,11 @@ done_dialog_phase3:
 stack_stash:
         .byte   0
 
-L9189:  .byte   0
-L918A:  .byte   0
+L9189:  .byte   0               ; flags (bit 7 = ???, bit 6 = ???)
+
+        ;; high bit set = drop on trash, clear = otherwise
+drop_on_trash_flag:
+        .byte   0
 
         ;; high bit set = unlock, clear = lock
 unlock_flag:
@@ -10585,6 +10613,7 @@ L99FE:  jmp     close_files_cancel_dialog
 
 ;;; ============================================================
 
+        ;; copy logic (for drag/drop only) ???
 .proc L9A01
         copy16  #$0080, LE05B
         beq     L9A0F

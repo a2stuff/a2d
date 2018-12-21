@@ -195,6 +195,16 @@ Parameters: { word mousex, word mousey, (out) byte result }
 
 Find the icon number at the given coordinates.
 
+### `DT_DRAG_HIGHLIGHTED` ($0A)
+
+Parameters: { byte param }
+
+Initiates a drag of the highlighted icon(s). On entry, set param to
+the specific icon being dragged. On return, the param has 0 if the
+drop was on the desktop, high bit clear if the drop target was an icon
+(and the low bits are the icon number), high bit set if the drop
+target was a window (and the low bits are the window number).
+
 ### `DT_UNHIGHLIGHT_ICON` ($0B)
 
 Parameters: { addr iconentry }
