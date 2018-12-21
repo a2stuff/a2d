@@ -30,6 +30,7 @@
 * Date DA: Read-only on systems with a clock. On systems without a clock, date is saved for next session. (#30, #39)
 * Calculator DA: don't mis-paint when moved offscreen and other fixes. (#33, #34)
 * Sort Directory DA: don't need to click before sorting. (#17)
+* LC //e Card-specific: prevent crash. (#93)
 * IIgs-specific: color DHR is re-enabled on exit. (#43)
 * IIgs emulators no longer crash on startup. (#85)
 * SELECTOR.LIST created if missing. (#92)
