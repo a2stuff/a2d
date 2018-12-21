@@ -133,8 +133,7 @@ DESKTOP_RELAY   := $D040
 ;;; ============================================================
 ;;; Internals
 
-;;; Set to specific machine type; used for insertion point blinking
-;;; and double-click timing.
+;;; Set to specific machine type; used for double-click timing.
 ;;; //e  - $96
 ;;; //c  - $FA
 ;;; IIgs - $FD

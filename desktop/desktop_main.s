@@ -1792,11 +1792,13 @@ L4DC2:  ldy     #1
 ;;; ============================================================
 
 .proc cmd_open
+        ptr := $06
+
         ldx     #0
         stx     dir_count
 
 L4DEC:  cpx     selected_icon_count
-        bne     L4DF2
+        bne     :+
 
         ;; Were any directories opened?
         lda     dir_count
@@ -1804,37 +1806,44 @@ L4DEC:  cpx     selected_icon_count
         jsr     clear_selection
 done:   rts
 
-L4DF2:  txa
+:       txa
         pha
         lda     selected_icon_list,x
         jsr     icon_entry_lookup
-        stax    $06
+        stax    ptr
+
         ldy     #IconEntry::win_type
-        lda     ($06),y
+        lda     (ptr),y
         and     #icon_entry_type_mask
-        bne     L4E10
-        ldy     #$00
-        lda     ($06),y
+        bne     not_dir
+        ldy     #0
+        lda     (ptr),y
         jsr     open_folder_or_volume_icon
         inc     dir_count
-        jmp     L4E14
+        jmp     next_file
 
-L4E10:  cmp     #$40
-        bcc     L4E1A
-L4E14:  pla
+not_dir:
+        cmp     #%01000000      ; type <= %0100 = basic, binary, or system
+        bcc     maybe_open_file
+
+next_file:
+        pla
         tax
         inx
         jmp     L4DEC
 
-L4E1A:  sta     L4E71
+maybe_open_file:
+        sta     L4E71
         lda     selected_icon_count
-        cmp     #$02
-        bcs     L4E14
+        cmp     #2              ; multiple files open?
+        bcs     next_file       ; don't try to invoke
+
         pla
         lda     active_window_id
         jsr     window_address_lookup
         stax    $06
-        ldy     #$00
+
+        ldy     #0
         lda     ($06),y
         tay
 L4E34:  lda     ($06),y
@@ -3891,26 +3900,20 @@ window_id:
 .endproc
 
 ;;; ============================================================
-
+;;; Drag Selection
 
 .proc L5F13_impl
 
-L5F0B:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-L5F0F:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+pt1:    DEFINE_POINT 0, 0
+pt2:    DEFINE_POINT 0, 0
 
 start:  copy16  #notpenXOR, $06
         jsr     L60D5
 
-        ldx     #$03
+        ldx     #.sizeof(MGTK::Point)-1
 L5F20:  lda     event_coords,x
-        sta     L5F0B,x
-        sta     L5F0F,x
+        sta     pt1,x
+        sta     pt2,x
         dex
         bpl     L5F20
 
@@ -3929,9 +3932,9 @@ L5F3F:  jsr     clear_selection
         jsr     get_port2
         jsr     offset_grafport2_and_set
         ldx     #$03
-L5F50:  lda     L5F0B,x
+L5F50:  lda     pt1,x
         sta     rect_E230::x1,x
-        lda     L5F0F,x
+        lda     pt2,x
         sta     rect_E230::x2,x
         dex
         bpl     L5F50
@@ -5485,11 +5488,14 @@ pathlen:        .byte   0
 
         stax    ptr
         sty     vol_info_path_buf
-L6F52:  lda     (ptr),y
+
+:       lda     (ptr),y
         sta     vol_info_path_buf,y
         dey
-        bne     L6F52
+        bne     :-
+
         jsr     get_vol_free_used
+
         bne     L6F8F
         lda     L704B
         beq     L6F8F
@@ -5925,7 +5931,8 @@ L72E2:  lda     $0C04
         rts
 
 
-get_vol_free_used:  MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params4
+get_vol_free_used:
+        MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params4
         beq     :+
         rts
 
