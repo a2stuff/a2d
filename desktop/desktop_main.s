@@ -1792,10 +1792,17 @@ L4DC2:  ldy     #1
 ;;; ============================================================
 
 .proc cmd_open
-        ldx     #$00
+        ldx     #0
+        stx     dir_count
+
 L4DEC:  cpx     selected_icon_count
         bne     L4DF2
-        rts
+
+        ;; Were any directories opened?
+        lda     dir_count
+        beq     done
+        jsr     clear_selection
+done:   rts
 
 L4DF2:  txa
         pha
@@ -1809,6 +1816,7 @@ L4DF2:  txa
         ldy     #$00
         lda     ($06),y
         jsr     open_folder_or_volume_icon
+        inc     dir_count
         jmp     L4E14
 
 L4E10:  cmp     #$40
@@ -1862,6 +1870,11 @@ L4E51:  lda     ($06),y
 L4E6E:  jmp     launch_file
 
 L4E71:  .byte   0
+
+        ;; Count of opened volumes/folders; if non-zero,
+        ;; selection must be cleared before finishing.
+dir_count:
+        .byte   0
 .endproc
 
 ;;; ============================================================
