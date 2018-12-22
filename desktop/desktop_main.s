@@ -8314,9 +8314,9 @@ tmp:    .byte   0
 .proc window_address_lookup
         asl     a
         tax
-        lda     window_address_table,x
+        lda     window_path_addr_table,x
         pha
-        lda     window_address_table+1,x
+        lda     window_path_addr_table+1,x
         tax
         pla
         rts
@@ -9333,6 +9333,11 @@ open:   MLI_RELAY_CALL OPEN, open_params
         restore_dynamic_routine := load_dynamic_routine_impl::restore
 
 ;;; ============================================================
+;;; Operations performed on selection
+;;;
+;;; These operate on the entire selection recursively, e.g.
+;;; computing size, deleting, copying, etc., and share common
+;;; logic.
 
 jt_drop:        jmp     do_drop
         jmp     rts2            ; rts
@@ -9349,22 +9354,20 @@ jt_delete_file: jmp     do_delete_file ; cmd_delete_file
 L8F24:  jmp     L8F7E           ; cmd_selector_action ???
 jt_get_size:    jmp     do_get_size ; cmd_get_size
 
-;;; ============================================================
+;;; --------------------------------------------------
 
-        ;;  TODO: Break this down more?
-.proc cmds
+.proc operations
 
 do_copy_file:
-        lda     #0
-        sta     L9189
+        copy    #0, operation_flags
         tsx
         stx     stack_stash
-        jsr     LA248
-        jsr     L993E
+        jsr     copy_bytes_and_clear_system_bitmap
+        jsr     do_copy_dialog_phase
         jsr     LA271
         jsr     L9968
 L8F3F:  copy16  #$00FF, LE05B
-        jsr     L9A0D
+        jsr     copy_file_with_flag
         jsr     done_dialog_phase1
 L8F4F:  jsr     L91E8
         return  #0
@@ -9373,33 +9376,30 @@ L8F4F:  jsr     L91E8
         jmp     L8F4F
 
 do_delete_file:
-        lda     #0
-        sta     L9189
+        copy    #0, operation_flags
         tsx
         stx     stack_stash
-        jsr     LA248
-        lda     #$00
-        jsr     L9E7E
+        jsr     copy_bytes_and_clear_system_bitmap
+        lda     #0
+        jsr     do_delete_dialog_phase
         jsr     LA271
         jsr     done_dialog_phase2
         jsr     L9EBF
-        jsr     L9EDB
+        jsr     delete_file
         jsr     done_dialog_phase1
         jmp     L8F4F
 
-L8F7E:  lda     #$80
-        sta     L918C
-        lda     #$C0
-        sta     L9189
+L8F7E:  copy    #$80, L918C
+        copy    #%11000000, operation_flags
         tsx
         stx     stack_stash
-        jsr     LA248
+        jsr     copy_bytes_and_clear_system_bitmap
         jsr     L9984
         jsr     LA271
         jsr     L99BC
         jmp     L8F3F
 
-;;; ============================================================
+;;; --------------------------------------------------
 ;;; Lock
 
 do_lock:
@@ -9410,20 +9410,20 @@ do_unlock:
         jsr     L8FE1
         jmp     L8F4F
 
-L8FA7:  asl     a
+.proc get_icon_entry_win_type
+        asl     a
         tay
         copy16  icon_entry_address_table,y, $06
         ldy     #IconEntry::win_type
         lda     ($06),y
         rts
+.endproc
 
-;;; ============================================================
+;;; --------------------------------------------------
 
 do_get_size:
-        lda     #$00
-        sta     L918C
-        lda     #$C0
-        sta     L9189
+        copy    #0, L918C
+        copy    #%11000000, operation_flags
         jmp     L8FEB
 
 .proc do_drop
@@ -9435,7 +9435,7 @@ do_get_size:
 :       lda     #$00
 set:    sta     drop_on_trash_flag
         lda     #0
-        sta     L9189
+        sta     operation_flags
         jmp     L8FEB
 .endproc
 
@@ -9443,54 +9443,74 @@ L8FDD:  lda     #$00
         beq     L8FE3
 L8FE1:  lda     #$80
 L8FE3:  sta     unlock_flag
-        lda     #$80
-        sta     L9189
+        copy    #%10000000, operation_flags
 
 L8FEB:  tsx
         stx     stack_stash
-        lda     #0
-        sta     LE05C
+        copy    #0, LE05C
         jsr     L91D5
-        lda     L9189
+        lda     operation_flags
         beq     :+
-        jmp     L908C
+        jmp     begin_operation
 
 :       bit     drop_on_trash_flag
-        bpl     L9011
+        bpl     compute_target_prefix
         lda     selected_window_index
         beq     :+
-        jmp     L908C
+        jmp     begin_operation
 
 :       pla
         pla
         jmp     JT_EJECT
 
-L9011:  lda     drag_drop_param
-        bpl     L9032
-        and     #$7F
+;;; --------------------------------------------------
+;;; For drop onto window/icon, compute target prefix.
+
+        ;; Is drop on a window or an icon?
+        ;; hi bit clear = target is an icon
+        ;; hi bit set = target is a window; get window number
+compute_target_prefix:
+        lda     drag_drop_param
+        bpl     check_icon_drop_type
+
+        ;; Drop is on a window
+        and     #%01111111      ; get window id
         asl     a
         tax
-        copy16  window_address_table,x, $08
-        copy16  #L917B, $06
+        copy16  window_path_addr_table,x, $08
+        copy16  #empty_string, $06
         jsr     join_paths
         jmp     L9076
 
-L9032:  jsr     L8FA7
-        and     #$0F
-        beq     L9051
+        ;; Drop is on an icon.
+        ;; Is drop on a volume or a file?
+        ;; (lower 4 bits are containing window id)
+check_icon_drop_type:
+        jsr     get_icon_entry_win_type
+        and     #icon_entry_winid_mask
+        beq     drop_on_volume_icon ; 0 = desktop (so, volume icon)
+
+        ;; Drop is on a file icon.
         asl     a
         tax
-        copy16  window_address_table,x, $08
+        copy16  window_path_addr_table,x, $08
         lda     drag_drop_param
         jsr     icon_entry_name_lookup
         jsr     join_paths
         jmp     L9076
 
-L9051:  lda     drag_drop_param
+        ;; Drop is on a volume icon.
+        ;;
+drop_on_volume_icon:
+        lda     drag_drop_param
+
+        ;; Prefix name with '/'
         jsr     icon_entry_name_lookup
-        ldy     #$01
+        ldy     #1
         lda     #'/'
         sta     ($06),y
+
+        ;; Copy to path_buf3
         dey
         lda     ($06),y
         sta     @compare
@@ -9499,42 +9519,51 @@ L9051:  lda     drag_drop_param
         lda     ($06),y
         sta     path_buf3,y
         @compare := *+1
-        cpy     #$00            ; self-modified
+        cpy     #0              ; self-modified
         bne     :-
+
+        ;; Restore ' ' to name prefix
         ldy     #$01
         lda     #' '
         sta     ($06),y
+
 L9076:  ldy     #$FF
-L9078:  iny
-        lda     path_buf3,y
-        sta     path_buf4,y
+:       iny
+        copy    path_buf3,y, path_buf4,y
         cpy     path_buf3
-        bne     L9078
+        bne     :-
         lda     path_buf4
-        beq     L908C
+        beq     begin_operation
         dec     path_buf4
-L908C:  lda     #$00
-        sta     L97E4
-        jsr     LA248
-        bit     L9189
+        ;; fall through
+
+;;; --------------------------------------------------
+;;; Start the actual operation
+
+.proc begin_operation
+        copy    #0, L97E4
+
+        jsr     copy_bytes_and_clear_system_bitmap
+        bit     operation_flags
         bvs     L90B4
         bmi     L90AE
         bit     drop_on_trash_flag
-        bmi     L90A6
-        jsr     L993E
+        bmi     trash
+
+        jsr     do_copy_dialog_phase
         jmp     L90DE
 
-L90A6:  lda     #$06
-        jsr     L9E7E
+trash:  lda     #6
+        jsr     do_delete_dialog_phase
         jmp     L90DE
 
-L90AE:  jsr     LA059
+L90AE:  jsr     do_lock_dialog_phase
         jmp     L90DE
 
-L90B4:  jsr     LA1E4
+L90B4:  jsr     do_get_info_dialog_phase
         jmp     L90DE
 
-L90BA:  bit     L9189
+L90BA:  bit     operation_flags
         bvs     L90D8
         bmi     L90D2
         bit     drop_on_trash_flag
@@ -9551,15 +9580,15 @@ L90D2:  jsr     LA0DF
 L90D8:  jsr     LA241
         jmp     L90DE
 
-L90DE:  jsr     L91F5
+L90DE:  jsr     get_window_path_ptr
         lda     selected_icon_count
-        bne     L90E9
+        bne     :+
         jmp     finish
 
-L90E9:  ldx     #0
+:       ldx     #0
         stx     icon_count
 
-loop:   jsr     L91F5
+loop:   jsr     get_window_path_ptr
         ldx     icon_count
         lda     selected_icon_list,x
         cmp     #1              ; icon #1 is always Trash (BUG: should use trash_icon_num)
@@ -9578,14 +9607,14 @@ loop:   jsr     L91F5
 
 L9114:  lda     L97E4
         beq     L913D
-        bit     L9189
+        bit     operation_flags
         bmi     L912F
         bit     drop_on_trash_flag
-        bmi     L9129
-        jsr     L9A01
+        bmi     :+
+        jsr     copy_file
         jmp     next_icon
 
-L9129:  jsr     L9EDB
+:       jsr     delete_file
         jmp     next_icon
 
 L912F:  bvs     L9137
@@ -9606,12 +9635,12 @@ next_icon:
         lda     L97E4
         bne     finish
         inc     L97E4
-        bit     L9189
+        bit     operation_flags
         bmi     L915D
         bit     drop_on_trash_flag
         bpl     L9165
 L915D:  jsr     done_dialog_phase2
-        bit     L9189
+        bit     operation_flags
         bvs     finish
 L9165:  jmp     L90BA
 
@@ -9628,17 +9657,18 @@ finish: jsr     done_dialog_phase1
 
 icon_count:
         .byte   0
-
-L917B:  .byte   0
-
 .endproc
-        do_delete_file := cmds::do_delete_file
-        L8F7E := cmds::L8F7E
-        do_copy_file := cmds::do_copy_file
-        do_lock := cmds::do_lock
-        do_unlock := cmds::do_unlock
-        do_get_size := cmds::do_get_size
-        do_drop := cmds::do_drop
+
+empty_string:
+        .byte   0
+.endproc                        ; operations
+        do_delete_file := operations::do_delete_file
+        L8F7E := operations::L8F7E
+        do_copy_file := operations::do_copy_file
+        do_lock := operations::do_lock
+        do_unlock := operations::do_unlock
+        do_get_size := operations::do_get_size
+        do_drop := operations::do_drop
 
 ;;; ============================================================
 
@@ -9661,7 +9691,8 @@ done_dialog_phase3:
 stack_stash:
         .byte   0
 
-L9189:  .byte   0               ; flags (bit 7 = ???, bit 6 = ???)
+operation_flags:
+        .byte   0               ; flags (bit 7 = ???, bit 6 = ???)
 
         ;; high bit set = drop on trash, clear = otherwise
 drop_on_trash_flag:
@@ -9740,17 +9771,21 @@ L91E8:  jsr     JT_REDRAW_ALL
         yax_call JT_DESKTOP_RELAY, $C, 0
         rts
 
-.proc L91F5
-        copy16  #L9211, $08
+.proc get_window_path_ptr
+        ptr := $08
+
+        copy16  #nullptr, ptr   ; ptr to empty string???
         lda     selected_window_index
-        beq     L9210
+        beq     done
+
         asl     a
         tax
-        copy16  window_address_table,x, $08
-        lda     #$00
-L9210:  rts
+        copy16  window_path_addr_table,x, ptr
+        lda     #0
+done:   rts
 
-L9211:  .addr   0
+nullptr:
+        .addr   0
 .endproc
 
 ;;; ============================================================
@@ -9914,7 +9949,7 @@ L9300:  lda     selected_window_index
         beq     L9331
         asl     a
         tax
-        copy16  window_address_table,x, $08
+        copy16  window_path_addr_table,x, $08
         ldx     get_info_dialog_params::L92E6
         lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
@@ -10183,7 +10218,7 @@ L9591:  lda     selected_window_index
         beq     L95C2
         asl     a
         tax
-        copy16  window_address_table,x, $08
+        copy16  window_path_addr_table,x, $08
         ldx     L9706
         lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
@@ -10254,7 +10289,7 @@ L962F:  sty     $08
         beq     L964D
         asl     a
         tax
-        copy16  window_address_table,x, $06
+        copy16  window_path_addr_table,x, $06
         jmp     L9655
 
 L964D:  copy16  #L9705, $06
@@ -10382,9 +10417,11 @@ L972E:  .res    5, 0
 L97AD:  .res    16, 0
 L97BD:  .res    32, 0
 
-L97DD:  .addr   L9B36
-L97DF:  .addr   L9B33
-L97E1:  .addr   rts2
+        ;; overlayed indirect jump table
+op_jt_addrs:
+op_jt_addr1:  .addr   L9B36
+op_jt_addr2:  .addr   L9B33
+op_jt_addr3:  .addr   rts2
 
 rts2:   rts
 
@@ -10480,12 +10517,12 @@ L98A2:  lda     LE05F
 
 .proc L98B4
         jsr     L983F
-        jsr     L992A
+        jsr     op_jt3
         jsr     remove_path_segment_220
         jsr     L97F3
         jsr     L9801
         jsr     sub
-        jmp     L9927
+        jmp     op_jt2
 
 sub:    lda     LE05F
         cmp     LE061
@@ -10509,7 +10546,7 @@ L98E0:  jsr     L985B
         sta     L97AD
         lda     #$00
         sta     L9923
-        jsr     L9924
+        jsr     op_jt1
         lda     L9923
         bne     L98E0
         lda     L97BD
@@ -10529,12 +10566,14 @@ L9920:  jmp     L983F
 .endproc
 
 L9923:  .byte   0
-L9924:  jmp     (L97DD)
-L9927:  jmp     (L97DF)
-L992A:  jmp     (L97E1)
+
+op_jt1: jmp     (op_jt_addr1)
+op_jt2: jmp     (op_jt_addr2)
+op_jt3: jmp     (op_jt_addr3)
 
 L992D:  .byte   $00,$00,$00,$00
-L9931:  .addr   L9B36           ; Overlay for L97DD
+
+L9931:  .addr   L9B36           ; Overlay for op_jt_addrs
         .addr   L9B33
         .addr   rts2
 
@@ -10545,24 +10584,26 @@ count:  .addr   0
         .addr   path_buf_main
 .endproc
 
-.proc L993E
+.proc do_copy_dialog_phase
         lda     #0
         sta     copy_dialog_params
         copy16  #L995A, dialog_phase0_callback
         copy16  #L997C, dialog_phase1_callback
-        jmp     L9BBF
+        jmp     launch_copy_file_dialog
 
 L995A:  stax    copy_dialog_params::count
         lda     #1
         sta     copy_dialog_params
-        jmp     L9BBF
+        jmp     launch_copy_file_dialog
 .endproc
 
-L9968:  ldy     #5
-L996A:  lda     L9931,y
-        sta     L97DD,y
+L9968:
+        ldy     #5              ; 3 addrs
+:       lda     L9931,y
+        sta     op_jt_addrs,y
         dey
-        bpl     L996A
+        bpl     :-
+
         lda     #$00
         sta     LA425
         sta     L918D
@@ -10570,7 +10611,7 @@ L996A:  lda     L9931,y
 
 L997C:  lda     #5
         sta     copy_dialog_params
-        jmp     L9BBF
+        jmp     launch_copy_file_dialog
 
 L9984:  lda     #0
         sta     copy_dialog_params
@@ -10587,11 +10628,13 @@ L99A7:  stax    copy_dialog_params::count
 
 L99BC:  lda     #$80
         sta     L918D
+
         ldy     #5
-L99C3:  lda     L9931,y
-        sta     L97DD,y
+:       lda     L9931,y
+        sta     op_jt_addrs,y
         dey
-        bpl     L99C3
+        bpl     :-
+
         lda     #0
         sta     LA425
         copy16  #L99EB, dialog_phase3_callback
@@ -10614,21 +10657,27 @@ L99FE:  jmp     close_files_cancel_dialog
 ;;; ============================================================
 
         ;; copy logic (for drag/drop only) ???
-.proc L9A01
-        copy16  #$0080, LE05B
+.proc copy_file
+        lda     #$80
+        sta     LE05B
+        lda     #0
+        sta     LE05C
         beq     L9A0F
-L9A0D:  lda     #$FF
-L9A0F:  sta     L9B31
+
+with_flag:
+        lda     #$FF
+
+L9A0F:  sta     flag
         lda     #2
         sta     copy_dialog_params
         jsr     LA379
-        bit     L9189
+        bit     operation_flags
         bvc     L9A22
         jsr     L9BC9
 L9A22:  bit     LE05B
         bpl     L9A70
         bvs     L9A50
-        lda     L9B31
+        lda     flag
         bne     L9A36
         lda     selected_window_index
         bne     L9A36
@@ -10714,7 +10763,7 @@ L9AE0:  yax_call JT_MLI_RELAY, CREATE, create_params2
         bmi     L9B14
         lda     #3
         sta     copy_dialog_params
-        jsr     L9BBF
+        jsr     launch_copy_file_dialog
         pha
         lda     #2
         sta     copy_dialog_params
@@ -10745,9 +10794,9 @@ L9B2C:  rts
 L9B2D:  jmp     L9CDA
 
 L9B30:  .byte   0
-L9B31:  .byte   0
+flag:   .byte   0               ; ???
 .endproc
-        L9A0D := L9A01::L9A0D
+        copy_file_with_flag := copy_file::with_flag
 
 L9B32:  .byte   0
 
@@ -10815,8 +10864,10 @@ L9BBE:  rts
 
 ;;; ============================================================
 
-L9BBF:  yax_call launch_dialog, index_copy_file_dialog, copy_dialog_params
+.proc launch_copy_file_dialog
+        yax_call launch_dialog, index_copy_file_dialog, copy_dialog_params
         rts
+.endproc
 
 ;;; ============================================================
 
@@ -10843,7 +10894,7 @@ L9BFF:  .word   0
         bcc     done
         lda     #4
         sta     copy_dialog_params
-        jsr     L9BBF
+        jsr     launch_copy_file_dialog
         beq     :+
         jmp     close_files_cancel_dialog
 :       lda     #3
@@ -11073,7 +11124,7 @@ L9E71:  sec
         rts
 .endproc
 
-L9E73:  .addr   L9F94           ; Overlay for L97DD
+L9E73:  .addr   L9F94           ; Overlay for op_jt_addrs
         .addr   rts2
         .addr   destroy_with_retry
 
@@ -11083,7 +11134,7 @@ count:  .word   0
         .addr   $220
 .endproc
 
-.proc L9E7E
+.proc do_delete_dialog_phase
         sta     delete_file_dialog_params::phase
         copy16  #L9EB1, dialog_phase2_callback
         copy16  #L9EA3, dialog_phase0_callback
@@ -11108,9 +11159,10 @@ L9EBE:  rts
 .proc L9EBF
         ldy     #5
 :       lda     L9E73,y
-        sta     L97DD,y
+        sta     op_jt_addrs,y
         dey
         bpl     :-
+
         lda     #$00
         sta     LA425
         sta     L918D
@@ -11124,7 +11176,7 @@ L9EBE:  rts
 
 ;;; ============================================================
 
-.proc L9EDB
+.proc delete_file
         copy    #3, delete_file_dialog_params::phase
         jsr     LA379
 L9EE3:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
@@ -11298,7 +11350,7 @@ files_remaining_count:
         .addr   $220
 .endproc
 
-.proc LA059
+.proc do_lock_dialog_phase
         copy    #LockDialogLifecycle::open, lock_unlock_dialog_params::phase
         bit     unlock_flag
         bpl     lock
@@ -11341,9 +11393,10 @@ LA0DE:  rts
 .proc LA0DF
         lda     #$00
         sta     LA425
-        ldy     #$05
+
+        ldy     #5
 :       lda     LA04E,y
-        sta     L97DD,y
+        sta     op_jt_addrs,y
         dey
         bpl     :-
         rts
@@ -11453,7 +11506,8 @@ phase:  .byte   0
         .addr   LA2ED, LA2EF
 .endproc
 
-LA1E4:  copy    #0, get_size_dialog_params::phase
+do_get_info_dialog_phase:
+        copy    #0, get_size_dialog_params::phase
         copy16  #LA220, dialog_phase2_callback
         copy16  #LA211, dialog_phase0_callback
         yax_call launch_dialog, index_get_size_dialog, get_size_dialog_params
@@ -11476,24 +11530,28 @@ LA241:  rts
 LA242:  .addr   LA2AE,rts2,rts2
 
 ;;; ============================================================
+;;; ???
 
-.proc LA248
+.proc copy_bytes_and_clear_system_bitmap
         copy    #0, LA425
-        ldy     #5
-LA24F:  lda     LA242,y
-        sta     L97DD,y
+
+        ldy     #5              ; 3 addrs
+:       copy    LA242,y, op_jt_addrs,y
         dey
-        bpl     LA24F
+        bpl     :-
+
         lda     #0
         sta     LA2ED
         sta     LA2ED+1
         sta     LA2EF
         sta     LA2EF+1
-        ldy     #$17
+
+        ;; Clear system bitmap (???)
+        ldy     #BITMAP_SIZE-1
         lda     #$00
-LA26A:  sta     BITMAP,y
+:       sta     BITMAP,y
         dey
-        bpl     LA26A
+        bpl     :-
         rts
 .endproc
 
@@ -11530,14 +11588,14 @@ LA2AA:  .byte   0
 
 LA2AB:  jmp     LA2AE
 
-LA2AE:  bit     L9189
+LA2AE:  bit     operation_flags
         bvc     :+
         jsr     append_to_path_220
         yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         bne     :+
         add16   LA2EF, file_info_params2::blocks_used, LA2EF
-:       inc16     LA2ED
-        bit     L9189
+:       inc16   LA2ED
+        bit     operation_flags
         bvc     :+
         jsr     remove_path_segment_220
 :       ldax    LA2ED
@@ -11684,7 +11742,7 @@ LA395:  lda     path_buf4,y
         sta     getwinport_params2::window_id
         yax_call JT_MGTK_RELAY, MGTK::GetWinPort, getwinport_params2
         yax_call JT_MGTK_RELAY, MGTK::SetPort, grafport2
-:       ldx     stack_stash
+:       ldx     stack_stash     ; restore stack, in case recusion was aborted
         txs
         return  #$FF
 .endproc

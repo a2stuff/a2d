@@ -920,7 +920,7 @@ win_table:
         .addr   0,winfo1,winfo2,winfo3,winfo4,winfo5,winfo6,winfo7,winfo8
 
         ;; Window to Path mapping table
-window_address_table:
+window_path_addr_table:
         .assert * = path_table, error, "Entry point mismatch"
         .addr   $0000
         .repeat 8,i
