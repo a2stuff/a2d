@@ -9359,13 +9359,13 @@ jt_get_size:    jmp     do_get_size ; cmd_get_size
 .proc operations
 
 do_copy_file:
-        copy    #0, operation_flags
+        copy    #0, operation_flags ; copy/delete
         tsx
         stx     stack_stash
-        jsr     copy_bytes_and_clear_system_bitmap
+        jsr     prep_op_jt_overlay4_clear_system_bitmap
         jsr     do_copy_dialog_phase
         jsr     LA271
-        jsr     L9968
+        jsr     prep_op_jt_overlay1
 L8F3F:  copy16  #$00FF, LE05B
         jsr     copy_file_with_flag
         jsr     done_dialog_phase1
@@ -9376,24 +9376,24 @@ L8F4F:  jsr     L91E8
         jmp     L8F4F
 
 do_delete_file:
-        copy    #0, operation_flags
+        copy    #0, operation_flags ; copy/delete
         tsx
         stx     stack_stash
-        jsr     copy_bytes_and_clear_system_bitmap
+        jsr     prep_op_jt_overlay4_clear_system_bitmap
         lda     #0
         jsr     do_delete_dialog_phase
         jsr     LA271
         jsr     done_dialog_phase2
-        jsr     L9EBF
+        jsr     prep_op_jt_overlay2
         jsr     delete_file
         jsr     done_dialog_phase1
         jmp     L8F4F
 
 L8F7E:  copy    #$80, L918C
-        copy    #%11000000, operation_flags
+        copy    #%11000000, operation_flags ; get size
         tsx
         stx     stack_stash
-        jsr     copy_bytes_and_clear_system_bitmap
+        jsr     prep_op_jt_overlay4_clear_system_bitmap
         jsr     L9984
         jsr     LA271
         jsr     L99BC
@@ -9423,7 +9423,7 @@ do_unlock:
 
 do_get_size:
         copy    #0, L918C
-        copy    #%11000000, operation_flags
+        copy    #%11000000, operation_flags ; get size
         jmp     L8FEB
 
 .proc do_drop
@@ -9433,9 +9433,8 @@ do_get_size:
         lda     #$80
         bne     set           ; always
 :       lda     #$00
-set:    sta     drop_on_trash_flag
-        lda     #0
-        sta     operation_flags
+set:    sta     delete_flag
+        copy    #0, operation_flags ; copy/delete
         jmp     L8FEB
 .endproc
 
@@ -9443,22 +9442,26 @@ L8FDD:  lda     #$00
         beq     L8FE3
 L8FE1:  lda     #$80
 L8FE3:  sta     unlock_flag
-        copy    #%10000000, operation_flags
+        copy    #%10000000, operation_flags ; lock/unlock
 
 L8FEB:  tsx
         stx     stack_stash
         copy    #0, LE05C
         jsr     L91D5
         lda     operation_flags
-        beq     :+
+        beq     :+              ; copy/delete
         jmp     begin_operation
 
-:       bit     drop_on_trash_flag
-        bpl     compute_target_prefix
+        ;; Copy or delete
+:       bit     delete_flag
+        bpl     compute_target_prefix ; copy
+
+        ;; Delete - is it a volume?
         lda     selected_window_index
         beq     :+
         jmp     begin_operation
 
+        ;; Yes - eject it!
 :       pla
         pla
         jmp     JT_EJECT
@@ -9543,44 +9546,47 @@ L9076:  ldy     #$FF
 .proc begin_operation
         copy    #0, L97E4
 
-        jsr     copy_bytes_and_clear_system_bitmap
+        jsr     prep_op_jt_overlay4_clear_system_bitmap
         bit     operation_flags
-        bvs     L90B4
-        bmi     L90AE
-        bit     drop_on_trash_flag
-        bmi     trash
+        bvs     @size
+        bmi     @lock
+        bit     delete_flag
+        bmi     @trash
 
         jsr     do_copy_dialog_phase
-        jmp     L90DE
+        jmp     iterate_selection
 
-trash:  lda     #6
+@trash: lda     #6
         jsr     do_delete_dialog_phase
-        jmp     L90DE
+        jmp     iterate_selection
 
-L90AE:  jsr     do_lock_dialog_phase
-        jmp     L90DE
+@lock:  jsr     do_lock_dialog_phase
+        jmp     iterate_selection
 
-L90B4:  jsr     do_get_info_dialog_phase
-        jmp     L90DE
+@size:  jsr     do_get_size_dialog_phase
+        jmp     iterate_selection
+
+;;; Perform operation
 
 L90BA:  bit     operation_flags
-        bvs     L90D8
-        bmi     L90D2
-        bit     drop_on_trash_flag
-        bmi     L90CC
-        jsr     L9968
-        jmp     L90DE
+        bvs     @size
+        bmi     @lock
+        bit     delete_flag
+        bmi     @trash
+        jsr     prep_op_jt_overlay1
+        jmp     iterate_selection
 
-L90CC:  jsr     L9EBF
-        jmp     L90DE
+@trash: jsr     prep_op_jt_overlay2
+        jmp     iterate_selection
 
-L90D2:  jsr     LA0DF
-        jmp     L90DE
+@lock:  jsr     prep_op_jt_overlay3
+        jmp     iterate_selection
 
-L90D8:  jsr     LA241
-        jmp     L90DE
+@size:  jsr     LA241
+        jmp     iterate_selection
 
-L90DE:  jsr     get_window_path_ptr
+iterate_selection:
+        jsr     get_window_path_ptr
         lda     selected_icon_count
         bne     :+
         jmp     finish
@@ -9608,8 +9614,8 @@ loop:   jsr     get_window_path_ptr
 L9114:  lda     L97E4
         beq     L913D
         bit     operation_flags
-        bmi     L912F
-        bit     drop_on_trash_flag
+        bmi     @lock_or_size
+        bit     delete_flag
         bmi     :+
         jsr     copy_file
         jmp     next_icon
@@ -9617,11 +9623,12 @@ L9114:  lda     L97E4
 :       jsr     delete_file
         jmp     next_icon
 
-L912F:  bvs     L9137
+@lock_or_size:
+        bvs     @size           ; size?
         jsr     LA114
         jmp     next_icon
 
-L9137:  jsr     LA271
+@size:  jsr     LA271
         jmp     next_icon
 
 L913D:  jsr     LA271
@@ -9636,13 +9643,16 @@ next_icon:
         bne     finish
         inc     L97E4
         bit     operation_flags
-        bmi     L915D
-        bit     drop_on_trash_flag
-        bpl     L9165
-L915D:  jsr     done_dialog_phase2
+        bmi     @lock_or_size
+        bit     delete_flag
+        bpl     not_trash
+
+@lock_or_size:
+        jsr     done_dialog_phase2
         bit     operation_flags
         bvs     finish
-L9165:  jmp     L90BA
+not_trash:
+        jmp     L90BA
 
 finish: jsr     done_dialog_phase1
 
@@ -9691,11 +9701,14 @@ done_dialog_phase3:
 stack_stash:
         .byte   0
 
+        ;; $80 = lock/unlock
+        ;; $C0 = get size (easily probed with oVerflow flag)
+        ;; $00 = copy/delete
 operation_flags:
-        .byte   0               ; flags (bit 7 = ???, bit 6 = ???)
+        .byte   0
 
-        ;; high bit set = drop on trash, clear = otherwise
-drop_on_trash_flag:
+        ;; high bit set = delete, clear = copy
+delete_flag:
         .byte   0
 
         ;; high bit set = unlock, clear = lock
@@ -10418,6 +10431,7 @@ L97AD:  .res    16, 0
 L97BD:  .res    32, 0
 
         ;; overlayed indirect jump table
+        op_jt_addrs_size := 6
 op_jt_addrs:
 op_jt_addr1:  .addr   L9B36
 op_jt_addr2:  .addr   L9B33
@@ -10573,7 +10587,8 @@ op_jt3: jmp     (op_jt_addr3)
 
 L992D:  .byte   $00,$00,$00,$00
 
-L9931:  .addr   L9B36           ; Overlay for op_jt_addrs
+op_jt_overlay1:
+        .addr   L9B36           ; Overlay for op_jt_addrs
         .addr   L9B33
         .addr   rts2
 
@@ -10597,10 +10612,9 @@ L995A:  stax    copy_dialog_params::count
         jmp     launch_copy_file_dialog
 .endproc
 
-L9968:
-        ldy     #5              ; 3 addrs
-:       lda     L9931,y
-        sta     op_jt_addrs,y
+.proc prep_op_jt_overlay1
+        ldy     #op_jt_addrs_size-1
+:       copy    op_jt_overlay1,y,  op_jt_addrs,y
         dey
         bpl     :-
 
@@ -10608,6 +10622,7 @@ L9968:
         sta     LA425
         sta     L918D
         rts
+.endproc
 
 L997C:  lda     #5
         sta     copy_dialog_params
@@ -10629,9 +10644,8 @@ L99A7:  stax    copy_dialog_params::count
 L99BC:  lda     #$80
         sta     L918D
 
-        ldy     #5
-:       lda     L9931,y
-        sta     op_jt_addrs,y
+        ldy     #op_jt_addrs_size-1
+:       copy    op_jt_overlay1,y, op_jt_addrs,y
         dey
         bpl     :-
 
@@ -10672,9 +10686,10 @@ L9A0F:  sta     flag
         sta     copy_dialog_params
         jsr     LA379
         bit     operation_flags
-        bvc     L9A22
+        bvc     @not_size
         jsr     L9BC9
-L9A22:  bit     LE05B
+@not_size:
+        bit     LE05B
         bpl     L9A70
         bvs     L9A50
         lda     flag
@@ -11124,7 +11139,8 @@ L9E71:  sec
         rts
 .endproc
 
-L9E73:  .addr   L9F94           ; Overlay for op_jt_addrs
+op_jt_overlay2:
+        .addr   L9F94           ; Overlay for op_jt_addrs
         .addr   rts2
         .addr   destroy_with_retry
 
@@ -11156,10 +11172,9 @@ L9EBE:  rts
 
 ;;; ============================================================
 
-.proc L9EBF
-        ldy     #5
-:       lda     L9E73,y
-        sta     op_jt_addrs,y
+.proc prep_op_jt_overlay2
+        ldy     #op_jt_addrs_size-1
+:       copy    op_jt_overlay2,y, op_jt_addrs,y
         dey
         bpl     :-
 
@@ -11325,7 +11340,8 @@ done:   rts
 LA044:  yax_call launch_dialog, index_delete_file_dialog, delete_file_dialog_params
         rts
 
-LA04E:  .addr   LA170
+op_jt_overlay3:
+        .addr   LA170           ; overlay for op_jt_addrs
         .addr   rts2
         .addr   rts2
 
@@ -11390,15 +11406,15 @@ LA0D1:  copy    #LockDialogLifecycle::loop, lock_unlock_dialog_params::phase
 
 LA0DE:  rts
 
-.proc LA0DF
+.proc prep_op_jt_overlay3
         lda     #$00
         sta     LA425
 
-        ldy     #5
-:       lda     LA04E,y
-        sta     op_jt_addrs,y
+        ldy     #op_jt_addrs_size-1
+:       copy    op_jt_overlay3,y, op_jt_addrs,y
         dey
         bpl     :-
+
         rts
 .endproc
 
@@ -11506,7 +11522,7 @@ phase:  .byte   0
         .addr   LA2ED, LA2EF
 .endproc
 
-do_get_info_dialog_phase:
+do_get_size_dialog_phase:
         copy    #0, get_size_dialog_params::phase
         copy16  #LA220, dialog_phase2_callback
         copy16  #LA211, dialog_phase0_callback
@@ -11527,16 +11543,19 @@ LA233:  copy    #3, get_size_dialog_params::phase
         yax_call launch_dialog, index_get_size_dialog, get_size_dialog_params
 LA241:  rts
 
-LA242:  .addr   LA2AE,rts2,rts2
+op_jt_overlay4:
+        .addr   LA2AE           ; overlay for op_jt_addrs
+        .addr   rts2
+        .addr   rts2
 
 ;;; ============================================================
 ;;; ???
 
-.proc copy_bytes_and_clear_system_bitmap
+.proc prep_op_jt_overlay4_clear_system_bitmap
         copy    #0, LA425
 
-        ldy     #5              ; 3 addrs
-:       copy    LA242,y, op_jt_addrs,y
+        ldy     #op_jt_addrs_size-1
+:       copy    op_jt_overlay4,y, op_jt_addrs,y
         dey
         bpl     :-
 
@@ -11589,14 +11608,14 @@ LA2AA:  .byte   0
 LA2AB:  jmp     LA2AE
 
 LA2AE:  bit     operation_flags
-        bvc     :+
+        bvc     :+              ; not size
         jsr     append_to_path_220
         yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         bne     :+
         add16   LA2EF, file_info_params2::blocks_used, LA2EF
 :       inc16   LA2ED
         bit     operation_flags
-        bvc     :+
+        bvc     :+              ; not size
         jsr     remove_path_segment_220
 :       ldax    LA2ED
         jmp     done_dialog_phase0
