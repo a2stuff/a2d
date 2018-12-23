@@ -942,13 +942,24 @@ LE05B:  .byte   $00
 LE05C:  .byte   $00
 LE05D:  .byte   $00
 LE05E:  .byte   $0D
-LE05F:  .byte   $00
-op_ref_num:  .byte   $00
-LE061:  .byte   $00
+
+entries_read:
+        .byte   $00
+op_ref_num:
+        .byte   $00
+entries_to_skip:
+        .byte   $00
+
+;;; During directory traversal, the number of file entries processed
+;;; at the current level is pushed here, so that following a descent
+;;; the previous entries can be skipped.
+entry_count_stack:
+        .res    170, 0
+
+entry_count_stack_index:
+        .byte   0
 
 
-LE062:  .res    170, 0
-LE10C:  .byte   0
 LE10D:  .res    137, 0
 
         ;; Backup copy of DEVLST made before detaching ramdisk

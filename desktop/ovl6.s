@@ -67,7 +67,7 @@ jt_filename:
 
 L70B1:  addr_call common_overlay::L647C, path_buf0
         beq     L70C0
-        lda     #$40
+        lda     #ERR_INVALID_PATHNAME
         jsr     JUMP_TABLE_ALERT_0
         rts
 

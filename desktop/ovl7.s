@@ -224,11 +224,11 @@ L72CD:  addr_call common_overlay::L647C, path_buf0
         bcs     L72E8
         jmp     L72EE
 
-L72E2:  lda     #$40
+L72E2:  lda     #ERR_INVALID_PATHNAME
         jsr     JUMP_TABLE_ALERT_0
 L72E7:  rts
 
-L72E8:  lda     #$FB
+L72E8:  lda     #ERR_NAME_TOO_LONG
         jsr     JUMP_TABLE_ALERT_0
         rts
 

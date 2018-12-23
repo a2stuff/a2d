@@ -986,7 +986,7 @@ begin:
         cmp     #FT_S16
         beq     launch
 
-        lda     #$FA
+        lda     #ERR_FILE_NOT_RUNNABLE
         jsr     show_alert_and_fail
 
 launch: DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ALL
@@ -1045,7 +1045,7 @@ not_found:
         dex
         bne     :-
 
-no_bs:  lda     #$FE            ; "BASIC.SYSTEM not found"
+no_bs:  lda     #ERR_BASIC_SYS_NOT_FOUND
 
 show_alert_and_fail:
         jsr     DESKTOP_SHOW_ALERT0
@@ -3267,7 +3267,7 @@ L594A:  ldy     L599E
         jsr     create_volume_icon
         cmp     #ERR_DUPLICATE_VOLUME
         bne     :+
-        lda     #$F9            ; "... 2 volumes with the same name..."
+        lda     #ERR_DUPLICATE_VOL_NAME
         sta     pending_alert
 :       inc     L599E
         lda     L599E
@@ -6167,7 +6167,7 @@ L74D3:  tay
         adc     ($08),y
         cmp     #$43
         bcc     L750D
-        lda     #$40
+        lda     #ERR_INVALID_PATHNAME
         jsr     DESKTOP_SHOW_ALERT0
         jsr     L8B1F
         dec     LEC2E
@@ -10398,26 +10398,24 @@ L9709:  .byte   $00
 
 ;;; ============================================================
 
-        DEFINE_OPEN_PARAMS open_params3, $220, $800
-        DEFINE_READ_PARAMS read_params3, L9718, 4
+        DEFINE_OPEN_PARAMS open_src_dir_params, $220, $800
+        DEFINE_READ_PARAMS read_src_dir_header_params, pointers_buf, 4 ; dir header: skip block pointers
+pointers_buf:  .res    4, 0
 
-L9718:  .res    4, 0
+        DEFINE_CLOSE_PARAMS close_src_dir_params
+        DEFINE_READ_PARAMS read_src_dir_entry_params, L97AD, .sizeof(FileEntry)
+        DEFINE_READ_PARAMS read_src_dir_skip5_params, skip5_buf, 5 ; ???
+skip5_buf:  .res    5, 0
 
-        DEFINE_CLOSE_PARAMS close_params6
-        DEFINE_READ_PARAMS read_params4, L97AD, $27
-        DEFINE_READ_PARAMS read_params5, L972E, 5
+        .res    4, 0            ; unused???
 
-L972E:  .res    5, 0
-
-        .res    4, 0
-
-        DEFINE_CLOSE_PARAMS close_params5
-        DEFINE_CLOSE_PARAMS close_params3
+        DEFINE_CLOSE_PARAMS close_src_params
+        DEFINE_CLOSE_PARAMS close_dst_params
         DEFINE_DESTROY_PARAMS destroy_params, $220
-        DEFINE_OPEN_PARAMS open_params4, $220, $0D00
-        DEFINE_OPEN_PARAMS open_params5, path_buf_main, $1100
-        DEFINE_READ_PARAMS read_params6, $1500, $AC0
-        DEFINE_WRITE_PARAMS write_params, $1500, $AC0
+        DEFINE_OPEN_PARAMS open_src_params, $220, $0D00
+        DEFINE_OPEN_PARAMS open_dst_params, path_buf_main, $1100
+        DEFINE_READ_PARAMS read_src_params, $1500, $AC0
+        DEFINE_WRITE_PARAMS write_dst_params, $1500, $AC0
         DEFINE_CREATE_PARAMS create_params3, path_buf_main, ACCESS_DEFAULT
         DEFINE_CREATE_PARAMS create_params2, path_buf_main
 
@@ -10432,16 +10430,15 @@ L972E:  .res    5, 0
         .byte   0
 
         DEFINE_SET_EOF_PARAMS set_eof_params, 0
-        DEFINE_SET_MARK_PARAMS mark_params, 0
-        DEFINE_SET_MARK_PARAMS mark_params2, 0
+        DEFINE_SET_MARK_PARAMS mark_src_params, 0
+        DEFINE_SET_MARK_PARAMS mark_dst_params, 0
         DEFINE_ON_LINE_PARAMS on_line_params2,, $800
 
 
 ;;; ============================================================
 
-
-L97AD:  .res    16, 0
-L97BD:  .res    32, 0
+        ;; buffer of 39
+L97AD:  .res    48, 0
 
         ;; overlayed indirect jump table
         op_jt_addrs_size := 6
@@ -10455,106 +10452,108 @@ rts2:   rts
 L97E4:  .byte   $00
 
 
-L97E5:  ldx     LE10C
-        lda     LE061
-        sta     LE062,x
+.proc push_entry_count
+        ldx     entry_count_stack_index
+        lda     entries_to_skip
+        sta     entry_count_stack,x
         inx
-        stx     LE10C
+        stx     entry_count_stack_index
         rts
+.endproc
 
-L97F3:  ldx     LE10C
+.proc pop_entry_count
+        ldx     entry_count_stack_index
         dex
-        lda     LE062,x
-        sta     LE061
-        stx     LE10C
+        lda     entry_count_stack,x
+        sta     entries_to_skip
+        stx     entry_count_stack_index
         rts
+.endproc
 
 .proc L9801
-        lda     #$00
-        sta     LE05F
+        lda     #0
+        sta     entries_read
         sta     LE10D
-L9809:  yax_call JT_MLI_RELAY, OPEN, open_params3
+L9809:  yax_call JT_MLI_RELAY, OPEN, open_src_dir_params
         beq     L981E
         ldx     #$80
         jsr     JT_SHOW_ALERT
         beq     L9809
         jmp     close_files_cancel_dialog
 
-L981E:  lda     open_params3::ref_num
+L981E:  lda     open_src_dir_params::ref_num
         sta     op_ref_num
-        sta     read_params3::ref_num
-L9827:  yax_call JT_MLI_RELAY, READ, read_params3
+        sta     read_src_dir_header_params::ref_num
+L9827:  yax_call JT_MLI_RELAY, READ, read_src_dir_header_params
         beq     L983C
         ldx     #$80
         jsr     JT_SHOW_ALERT
         beq     L9827
         jmp     close_files_cancel_dialog
 
-L983C:  jmp     L985B
+L983C:  jmp     read_file_entry
 .endproc
 
-.proc L983F
+.proc close_src_dir
         lda     op_ref_num
-        sta     close_params6::ref_num
-L9845:  yax_call JT_MLI_RELAY, CLOSE, close_params6
-        beq     L985A
+        sta     close_src_dir_params::ref_num
+:       yax_call JT_MLI_RELAY, CLOSE, close_src_dir_params
+        beq     :+
         ldx     #$80
         jsr     JT_SHOW_ALERT
-        beq     L9845
+        beq     :-
         jmp     close_files_cancel_dialog
 
-L985A:  rts
+:       rts
 .endproc
 
-.proc L985B
-        inc     LE05F
+.proc read_file_entry
+        inc     entries_read
         lda     op_ref_num
-        sta     read_params4::ref_num
-L9864:  yax_call JT_MLI_RELAY, READ, read_params4
-        beq     L987D
-        cmp     #$4C
-        beq     L989F
+        sta     read_src_dir_entry_params::ref_num
+:       yax_call JT_MLI_RELAY, READ, read_src_dir_entry_params
+        beq     :+
+        cmp     #ERR_END_OF_FILE
+        beq     eof
         ldx     #$80
         jsr     JT_SHOW_ALERT
-        beq     L9864
+        beq     :-
         jmp     close_files_cancel_dialog
 
-L987D:  inc     LE10D
+:       inc     LE10D
         lda     LE10D
         cmp     LE05E
-        bcc     L989C
-        lda     #$00
-        sta     LE10D
-        lda     op_ref_num
-        sta     read_params5::ref_num
-        yax_call JT_MLI_RELAY, READ, read_params5
-L989C:  return  #0
+        bcc     :+
+        copy    #0, LE10D
+        copy    op_ref_num, read_src_dir_skip5_params::ref_num
+        yax_call JT_MLI_RELAY, READ, read_src_dir_skip5_params
+:       return  #0
 
-L989F:  return  #$FF
+eof:    return  #$FF
 .endproc
 
 ;;; ============================================================
 
-L98A2:  lda     LE05F
-        sta     LE061
-        jsr     L983F
-        jsr     L97E5
+L98A2:  lda     entries_read
+        sta     entries_to_skip
+        jsr     close_src_dir
+        jsr     push_entry_count
         jsr     append_to_path_220
         jmp     L9801
 
 .proc L98B4
-        jsr     L983F
+        jsr     close_src_dir
         jsr     op_jt3
         jsr     remove_path_segment_220
-        jsr     L97F3
+        jsr     pop_entry_count
         jsr     L9801
         jsr     sub
         jmp     op_jt2
 
-sub:    lda     LE05F
-        cmp     LE061
+sub:    lda     entries_read
+        cmp     entries_to_skip
         beq     done
-        jsr     L985B
+        jsr     read_file_entry
         jmp     sub
 done:   rts
 .endproc
@@ -10562,7 +10561,7 @@ done:   rts
 .proc L98D8
         copy    #0, LE05D
         jsr     L9801
-loop:   jsr     L985B
+loop:   jsr     read_file_entry
         bne     L9912
 
         lda     L97AD
@@ -10575,7 +10574,7 @@ loop:   jsr     L985B
         jsr     op_jt1
         lda     L9923
         bne     loop
-        lda     L97BD
+        lda     L97AD+16
         cmp     #$0F
         bne     loop
         jsr     L98A2
@@ -10588,7 +10587,7 @@ L9912:  lda     LE05D
         dec     LE05D
         jmp     loop
 
-L9920:  jmp     L983F
+L9920:  jmp     close_src_dir
 .endproc
 
 L9923:  .byte   0
@@ -10598,6 +10597,10 @@ op_jt2: jmp     (op_jt_addr2)
 op_jt3: jmp     (op_jt_addr3)
 
 L992D:  .byte   $00,$00,$00,$00
+
+;;; ============================================================
+;;; "Copy" (including Drag/Drop) files state and logic
+;;; ============================================================
 
 ;;; Overlays for copy operation
 op_jt_overlay1:
@@ -10757,26 +10760,28 @@ L9A95:  sta     L9B30
         bne     L9AA8
         jmp     close_files_cancel_dialog
 
-L9AA8:  ldy     #$07
-L9AAA:  lda     file_info_params2,y
+L9AA8:  ldy     #7
+:       lda     file_info_params2,y
         sta     create_params2,y
         dey
-        cpy     #$02
-        bne     L9AAA
-        lda     #ACCESS_DEFAULT
-        sta     create_params2::access
+        cpy     #2
+        bne     :-
+
+        copy    #ACCESS_DEFAULT, create_params2::access
         lda     LE05B
         beq     L9B23
         jsr     L9C01
         bcs     L9B2C
-        ldy     #$11
-        ldx     #$0B
-L9AC8:  lda     file_info_params2,y
+
+        ldy     #17
+        ldx     #11
+:       lda     file_info_params2,y
         sta     create_params2,x
         dex
         dey
-        cpy     #$0D
-        bne     L9AC8
+        cpy     #13
+        bne     :-
+
         lda     create_params2::storage_type
         cmp     #ST_VOLUME_DIRECTORY
         bne     L9AE0
@@ -10784,7 +10789,7 @@ L9AC8:  lda     file_info_params2,y
         sta     create_params2::storage_type
 L9AE0:  yax_call JT_MLI_RELAY, CREATE, create_params2
         beq     L9B23
-        cmp     #$47
+        cmp     #ERR_DUPLICATE_FILENAME
         bne     L9B1D
         bit     L918D
         bmi     L9B14
@@ -10836,7 +10841,7 @@ L9B33:  jmp     LA360
         jsr     check_escape_key_down
         beq     :+
         jmp     close_files_cancel_dialog
-:       lda     L97BD
+:       lda     L97AD+16
         cmp     #$0F
         bne     L9B88
         jsr     append_to_path_220
@@ -11012,113 +11017,129 @@ existing_size:
 .proc L9CDA
         jsr     decrement_op_file_count
         lda     #$00
-        sta     L9E17
-        sta     L9E18
-        sta     mark_params::position
-        sta     mark_params::position+1
-        sta     mark_params::position+2
-        sta     mark_params2::position
-        sta     mark_params2::position+1
-        sta     mark_params2::position+2
-        jsr     L9D62
-        jsr     L9D74
-        jsr     L9D81
+        sta     dst_ok_flag
+        sta     src_eof_flag
+        sta     mark_src_params::position
+        sta     mark_src_params::position+1
+        sta     mark_src_params::position+2
+        sta     mark_dst_params::position
+        sta     mark_dst_params::position+1
+        sta     mark_dst_params::position+2
+        jsr     open_src
+        jsr     copy_src_ref_num
+        jsr     open_dst
         beq     L9D09
         lda     #$FF
-        sta     L9E17
+        sta     dst_ok_flag
         bne     L9D0C
-L9D09:  jsr     L9D9C
+L9D09:  jsr     copy_dst_ref_num
 L9D0C:  jsr     L9DA9
-        bit     L9E17
+        bit     dst_ok_flag
         bpl     L9D28
-        jsr     L9E0D
-L9D17:  jsr     L9D81
+        jsr     close_src
+L9D17:  jsr     open_dst
         bne     L9D17
-        jsr     L9D9C
-        yax_call JT_MLI_RELAY, SET_MARK, mark_params2
-L9D28:  bit     L9E18
+        jsr     copy_dst_ref_num
+        yax_call JT_MLI_RELAY, SET_MARK, mark_dst_params
+L9D28:  bit     src_eof_flag
         bmi     L9D51
-        jsr     L9DE8
-        bit     L9E17
+        jsr     write_dst
+        bit     dst_ok_flag
         bpl     L9D0C
-        jsr     L9E03
-        jsr     L9D62
-        jsr     L9D74
-        yax_call JT_MLI_RELAY, SET_MARK, mark_params
+        jsr     close_dst
+        jsr     open_src
+        jsr     copy_src_ref_num
+        yax_call JT_MLI_RELAY, SET_MARK, mark_src_params
         beq     L9D0C
         lda     #$FF
-        sta     L9E18
+        sta     src_eof_flag
         jmp     L9D0C
 
-L9D51:  jsr     L9E03
-        bit     L9E17
+L9D51:  jsr     close_dst
+        bit     dst_ok_flag
         bmi     L9D5C
-        jsr     L9E0D
+        jsr     close_src
 L9D5C:  jsr     LA46D
         jmp     LA479
 
-L9D62:  yax_call JT_MLI_RELAY, OPEN, open_params4
-        beq     L9D73
+open_src:
+:       yax_call JT_MLI_RELAY, OPEN, open_src_params
+        beq     :+
         jsr     show_error_alert
-        jmp     L9D62
+        jmp     :-
+:       rts
 
-L9D73:  rts
-
-L9D74:  lda     open_params4::ref_num
-        sta     read_params6::ref_num
-        sta     close_params5::ref_num
-        sta     mark_params::ref_num
+copy_src_ref_num:
+        lda     open_src_params::ref_num
+        sta     read_src_params::ref_num
+        sta     close_src_params::ref_num
+        sta     mark_src_params::ref_num
         rts
 
-L9D81:  yax_call JT_MLI_RELAY, OPEN, open_params5
-        beq     L9D9B
+.proc open_dst
+:       yax_call JT_MLI_RELAY, OPEN, open_dst_params
+        beq     done
         cmp     #ERR_VOL_NOT_FOUND
-        beq     L9D96
+        beq     not_found
         jsr     show_error_alert_dst
-        jmp     L9D81
+        jmp     :-
 
-L9D96:  jsr     show_error_alert_dst
+not_found:
+        jsr     show_error_alert_dst
         lda     #ERR_VOL_NOT_FOUND
-L9D9B:  rts
 
-L9D9C:  lda     open_params5::ref_num
-        sta     write_params::ref_num
-        sta     close_params3::ref_num
-        sta     mark_params2::ref_num
+done:   rts
+.endproc
+
+copy_dst_ref_num:
+        lda     open_dst_params::ref_num
+        sta     write_dst_params::ref_num
+        sta     close_dst_params::ref_num
+        sta     mark_dst_params::ref_num
         rts
 
-L9DA9:  copy16  #$0AC0, read_params6::request_count
-L9DB3:  yax_call JT_MLI_RELAY, READ, read_params6
-        beq     L9DC8
+.proc L9DA9
+        copy16  #$0AC0, read_src_params::request_count
+:       yax_call JT_MLI_RELAY, READ, read_src_params
+        beq     :+
         cmp     #ERR_END_OF_FILE
-        beq     L9DD9
+        beq     eof
         jsr     show_error_alert
-        jmp     L9DB3
+        jmp     :-
 
-L9DC8:  copy16  read_params6::trans_count, write_params::request_count
-        ora     read_params6::trans_count
-        bne     L9DDE
-L9DD9:  lda     #$FF
-        sta     L9E18
-L9DDE:  yax_call JT_MLI_RELAY, GET_MARK, mark_params
+:       copy16  read_src_params::trans_count, write_dst_params::request_count
+        ora     read_src_params::trans_count
+        bne     :+
+eof:    lda     #$FF
+        sta     src_eof_flag
+:       yax_call JT_MLI_RELAY, GET_MARK, mark_src_params
         rts
+.endproc
 
-L9DE8:  yax_call JT_MLI_RELAY, WRITE, write_params
-        beq     L9DF9
+.proc write_dst
+:       yax_call JT_MLI_RELAY, WRITE, write_dst_params
+        beq     :+
         jsr     show_error_alert_dst
-        jmp     L9DE8
-
-L9DF9:  yax_call JT_MLI_RELAY, GET_MARK, mark_params2
+        jmp     :-
+:       yax_call JT_MLI_RELAY, GET_MARK, mark_dst_params
         rts
+.endproc
 
-L9E03:  yax_call JT_MLI_RELAY, CLOSE, close_params3
+.proc close_dst
+        yax_call JT_MLI_RELAY, CLOSE, close_dst_params
         rts
+.endproc
 
-L9E0D:  yax_call JT_MLI_RELAY, CLOSE, close_params5
+.proc close_src
+        yax_call JT_MLI_RELAY, CLOSE, close_src_params
         rts
+.endproc
 
-L9E17:  .byte   0
-L9E18:  .byte   0
+dst_ok_flag:
+        .byte   0
+
+src_eof_flag:
+        .byte   0
 
 .endproc
 
@@ -11163,6 +11184,10 @@ L9E6F:  clc
 L9E71:  sec
         rts
 .endproc
+
+;;; ============================================================
+;;; Delete/Trash files dialog state and logic
+;;; ============================================================
 
 ;;; Overlays for delete operation
 op_jt_overlay2:
@@ -11333,19 +11358,19 @@ L9FC2:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
         pha
         copy    #DeleteDialogLifecycle::show, delete_file_dialog_params::phase
         pla
-        cmp     #$03
+        cmp     #3
         beq     LA022
-        cmp     #$02
+        cmp     #2
         beq     LA001
-        cmp     #$04
+        cmp     #4
         bne     L9FFE
         lda     #$80
         sta     L918D
-        bne     LA001
+        bne     LA001           ; always
+
 L9FFE:  jmp     close_files_cancel_dialog
 
-LA001:  lda     #ACCESS_DEFAULT
-        sta     file_info_params2::access
+LA001:  copy    #ACCESS_DEFAULT, file_info_params2::access
         copy    #7, file_info_params2 ; param count for SET_FILE_INFO
         yax_call JT_MLI_RELAY, SET_FILE_INFO, file_info_params2
         copy    #$A,file_info_params2 ; param count for GET_FILE_INFO
@@ -11361,8 +11386,6 @@ LA022:  jmp     remove_path_segment_220
         rts
 .endproc
 
-;;; ============================================================
-
 .proc destroy_with_retry
 retry:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
         beq     done
@@ -11377,6 +11400,10 @@ done:   rts
         yax_call launch_dialog, index_delete_file_dialog, delete_file_dialog_params
         rts
 .endproc
+
+;;; ============================================================
+;;; "Lock"/"Unlock" dialog state and logic
+;;; ============================================================
 
 ;;; Overlays for lock/unlock operation
 op_jt_overlay3:
@@ -11471,8 +11498,6 @@ unlock_dialog_lifecycle:
         yax_call launch_dialog, index_unlock_dialog, lock_unlock_dialog_params
         rts
 
-;;; ============================================================
-
 .proc LA114
         copy    #LockDialogLifecycle::operation, lock_unlock_dialog_params::phase
         jsr     LA379
@@ -11514,8 +11539,6 @@ LA16A:  jsr     LA173
         jmp     append_to_path_220
 .endproc
 
-;;; ============================================================
-
 LA170:  jsr     append_to_path_220
         ;; fall through
 
@@ -11555,6 +11578,10 @@ LA1C3:  sub16   op_file_count, #1, lock_unlock_dialog_params::files_remaining_co
 
 LA1DC:  jmp     lock_dialog_lifecycle
 .endproc
+
+;;; ============================================================
+;;; "Get Size" dialog state and logic
+;;; ============================================================
 
 .proc get_size_dialog_params
 phase:  .byte   0
@@ -11802,6 +11829,7 @@ loop:   iny
 .endproc
 
 ;;; ============================================================
+;;; Closes dialog, closes all open files, and restores stack.
 
 .proc close_files_cancel_dialog
         jsr     done_dialog_phase1
@@ -11836,6 +11864,8 @@ nope:   lda     #$00
 done:   rts
 .endproc
 
+;;; ============================================================
+
 .proc dec_file_count_and_launch_delete_dialog
         sub16   op_file_count, #1, delete_file_dialog_params::count
         yax_call launch_dialog, index_delete_file_dialog, delete_file_dialog_params
@@ -11859,20 +11889,20 @@ LA425:  .byte   0
         lda     file_info_params2::file_type
         cmp     #$0F
         beq     LA46C
-        yax_call JT_MLI_RELAY, OPEN, open_params5
+        yax_call JT_MLI_RELAY, OPEN, open_dst_params
         beq     LA449
         jsr     show_error_alert_dst
         jmp     LA426
 
-LA449:  lda     open_params5::ref_num
+LA449:  lda     open_dst_params::ref_num
         sta     set_eof_params::ref_num
-        sta     close_params3::ref_num
+        sta     close_dst_params::ref_num
 LA452:  yax_call JT_MLI_RELAY, SET_EOF, set_eof_params
         beq     LA463
         jsr     show_error_alert_dst
         jmp     LA452
 
-LA463:  yax_call JT_MLI_RELAY, CLOSE, close_params3
+LA463:  yax_call JT_MLI_RELAY, CLOSE, close_dst_params
 LA46C:  rts
 .endproc
 
@@ -11921,10 +11951,10 @@ flag_clear:
 not_found:
         bit     flag
         bpl     :+
-        lda     #$FD            ; "Please insert destination disk"
+        lda     #ERR_INSERT_DST_DISK
         jmp     show
 
-:       lda     #$FC            ; "Please insert source disk"
+:       lda     #ERR_INSERT_SRC_DISK
 show:   jsr     JT_SHOW_ALERT0
         bne     LA4C2
         jmp     do_on_line
@@ -12865,7 +12895,7 @@ LAEC6:  jsr     prompt_input_loop
         beq     LAEC6
         cmp     #$10
         bcc     LAEE1
-LAED6:  lda     #$FB
+LAED6:  lda     #ERR_NAME_TOO_LONG
         jsr     JT_SHOW_ALERT0
         jsr     draw_filename_prompt
         jmp     LAEC6
@@ -15285,7 +15315,7 @@ process_volume:
         jmp     next
 L0D64:  cmp     #ERR_DUPLICATE_VOLUME
         bne     select_template
-        lda     #$F9            ; "... 2 volumes with the same name..."
+        lda     #ERR_DUPLICATE_VOL_NAME
         sta     desktop_main::pending_alert
 
         ;; This section populates device_name_table -
