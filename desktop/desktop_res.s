@@ -931,6 +931,8 @@ window_path_addr_table:
 
 str_file_type:  .res 4, 0
 
+;;; ============================================================
+
 path_buf4:
         .res    65, 0
 path_buf3:
@@ -938,17 +940,20 @@ path_buf3:
 filename_buf:
         .res    16, 0
 
-LE05B:  .byte   $00
-LE05C:  .byte   $00
-LE05D:  .byte   $00
-LE05E:  .byte   $0D
+LE05B:  .byte   0
+LE05C:  .byte   0               ; flag - always set to 0 ???
+LE05D:  .byte   0               ; counter of some sort ???
+
+;;; Number of file entries per directory block
+num_entries_per_block:
+        .byte   13
 
 entries_read:
-        .byte   $00
+        .byte   0
 op_ref_num:
-        .byte   $00
+        .byte   0
 entries_to_skip:
-        .byte   $00
+        .byte   0
 
 ;;; During directory traversal, the number of file entries processed
 ;;; at the current level is pushed here, so that following a descent
@@ -959,8 +964,12 @@ entry_count_stack:
 entry_count_stack_index:
         .byte   0
 
+entries_read_this_block:
+        .byte   0
 
-LE10D:  .res    137, 0
+        PAD_TO $E196            ; why ???
+
+;;; ============================================================
 
         ;; Backup copy of DEVLST made before detaching ramdisk
 devlst_backup:

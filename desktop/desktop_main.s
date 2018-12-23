@@ -20,7 +20,7 @@ L0CF9           := $0CF9
 L0D14           := $0D14
 .endscope
 
-path_buf_main   := $1FC0
+dst_path_buf   := $1FC0
 
         dynamic_routine_800  := $0800
         dynamic_routine_5000 := $5000
@@ -4947,6 +4947,7 @@ L6A3E:  .byte   0
 
 .proc L6A3F
         ptr := $6
+        path_buf := $220
 
         ldx     #7
 :       cmp     LEC26,x
@@ -4960,18 +4961,18 @@ L6A3E:  .byte   0
         tay
         dey
 L6A5C:  lda     (ptr),y
-        sta     $220,y
+        sta     path_buf,y
         dey
         bpl     L6A5C
-        dec     $220
+        dec     path_buf
         lda     #'/'
-        sta     $0220+1
+        sta     path_buf+1
 
-        ldax    #$220
-        ldy     $220
+        ldax    #path_buf
+        ldy     path_buf
         jsr     L6FB7
-        ldax    #$220
-        ldy     $220
+        ldax    #path_buf
+        ldy     path_buf
         jmp     L6F4B
 
 L6A80:  inx
@@ -9959,6 +9960,8 @@ L92E6:  .byte   0
 ;;; Get Info
 
 .proc do_get_info
+        path_buf := $220
+
         lda     selected_icon_count
         bne     :+
         rts
@@ -9982,11 +9985,11 @@ L9300:  lda     selected_window_index
         jsr     join_paths
         ldy     #$00
 L931F:  lda     path_buf3,y
-        sta     $220,y
+        sta     path_buf,y
         iny
-        cpy     $220
+        cpy     path_buf
         bne     L931F
-        dec     $220
+        dec     path_buf
         jmp     L9356
 
 L9331:  ldx     get_info_dialog_params::L92E6
@@ -9998,13 +10001,13 @@ L9331:  ldx     get_info_dialog_params::L92E6
 L933E:  jsr     icon_entry_name_lookup
         ldy     #$00
 L9343:  lda     ($06),y
-        sta     $220,y
+        sta     path_buf,y
         iny
-        cpy     $220
+        cpy     path_buf
         bne     L9343
-        dec     $220
+        dec     path_buf
         lda     #'/'
-        sta     $0220+1
+        sta     path_buf+1
 L9356:  yax_call JT_MLI_RELAY, GET_FILE_INFO, get_file_info_params5
         beq     L9366
         jsr     show_error_alert
@@ -10089,7 +10092,7 @@ L942E:  .byte   0
 L942F:  lda     #$03
         sta     get_info_dialog_params::L92E3
         lda     #$00
-        sta     $220
+        sta     path_buf
         lda     selected_window_index
         bne     L9472                           ; ProDOS TRM 4.4.5:
         lda     get_file_info_params5::aux_type   ; "When file information about a volume
@@ -10108,12 +10111,12 @@ L9456:  lda     text_buffer2::data-1,x
         beq     L9460
         inx
         bne     L9456
-L9460:  stx     $220
+L9460:  stx     path_buf
         lda     #'/'
-        sta     $220,x
+        sta     path_buf,x
         dex
 L9469:  lda     text_buffer2::data-1,x
-        sta     $220,x
+        sta     path_buf,x
         dex
         bne     L9469
 L9472:  lda     selected_window_index
@@ -10124,20 +10127,20 @@ L9472:  lda     selected_window_index
 L9480:  ldax    get_file_info_params5::blocks_used
 L9486:  jsr     JT_SIZE_STRING
         jsr     remove_leading_spaces
-        ldx     $220
+        ldx     path_buf
         ldy     #$00
 L9491:  lda     text_buffer2::data,y
-        sta     $0220+1,x
+        sta     path_buf+1,x
         inx
         iny
         cpy     text_buffer2::length
         bne     L9491
         tya
         clc
-        adc     $220
-        sta     $220
-        ldx     $220
-L94A9:  lda     $220,x
+        adc     path_buf
+        sta     path_buf
+        ldx     path_buf
+L94A9:  lda     path_buf,x
         sta     path_buf4,x
         dex
         bpl     L94A9
@@ -10219,7 +10222,9 @@ counted:
 
 .proc do_rename_icon_impl
 
-        DEFINE_RENAME_PARAMS rename_params, $220, path_buf_main
+        src_path_buf := $220
+
+        DEFINE_RENAME_PARAMS rename_params, src_path_buf, dst_path_buf
 
 rename_dialog_params:
         .byte   0
@@ -10251,11 +10256,11 @@ L9591:  lda     selected_window_index
         jsr     join_paths
         ldy     #$00
 L95B0:  lda     path_buf3,y
-        sta     $220,y
+        sta     src_path_buf,y
         iny
-        cpy     $220
+        cpy     src_path_buf
         bne     L95B0
-        dec     $220
+        dec     src_path_buf
         jmp     L95E0
 
 L95C2:  ldx     L9706
@@ -10263,13 +10268,13 @@ L95C2:  ldx     L9706
         jsr     icon_entry_name_lookup
         ldy     #$00
 L95CD:  lda     ($06),y
-        sta     $220,y
+        sta     src_path_buf,y
         iny
-        cpy     $220
+        cpy     src_path_buf
         bne     L95CD
-        dec     $220
+        dec     src_path_buf
         lda     #'/'
-        sta     $0220+1
+        sta     src_path_buf+1
 L95E0:  ldx     L9706
         lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
@@ -10323,23 +10328,23 @@ L9655:  ldy     #$00
         lda     ($06),y
         tay
 L965A:  lda     ($06),y
-        sta     path_buf_main,y
+        sta     dst_path_buf,y
         dey
         bpl     L965A
-        inc     path_buf_main
-        ldx     path_buf_main
+        inc     dst_path_buf
+        ldx     dst_path_buf
         lda     #'/'
-        sta     path_buf_main,x
+        sta     dst_path_buf,x
         ldy     #$00
         lda     ($08),y
         sta     L9709
 L9674:  inx
         iny
         lda     ($08),y
-        sta     path_buf_main,x
+        sta     dst_path_buf,x
         cpy     L9709
         bne     L9674
-        stx     path_buf_main
+        stx     dst_path_buf
         yax_call JT_MLI_RELAY, RENAME, rename_params
         beq     L969E
         jsr     JT_SHOW_ALERT0
@@ -10398,7 +10403,9 @@ L9709:  .byte   $00
 
 ;;; ============================================================
 
-        DEFINE_OPEN_PARAMS open_src_dir_params, $220, $800
+        src_path_buf := $220
+
+        DEFINE_OPEN_PARAMS open_src_dir_params, src_path_buf, $800
         DEFINE_READ_PARAMS read_src_dir_header_params, pointers_buf, 4 ; dir header: skip block pointers
 pointers_buf:  .res    4, 0
 
@@ -10411,21 +10418,21 @@ skip5_buf:  .res    5, 0
 
         DEFINE_CLOSE_PARAMS close_src_params
         DEFINE_CLOSE_PARAMS close_dst_params
-        DEFINE_DESTROY_PARAMS destroy_params, $220
-        DEFINE_OPEN_PARAMS open_src_params, $220, $0D00
-        DEFINE_OPEN_PARAMS open_dst_params, path_buf_main, $1100
+        DEFINE_DESTROY_PARAMS destroy_params, src_path_buf
+        DEFINE_OPEN_PARAMS open_src_params, src_path_buf, $0D00
+        DEFINE_OPEN_PARAMS open_dst_params, dst_path_buf, $1100
         DEFINE_READ_PARAMS read_src_params, $1500, $AC0
         DEFINE_WRITE_PARAMS write_dst_params, $1500, $AC0
-        DEFINE_CREATE_PARAMS create_params3, path_buf_main, ACCESS_DEFAULT
-        DEFINE_CREATE_PARAMS create_params2, path_buf_main
+        DEFINE_CREATE_PARAMS create_params3, dst_path_buf, ACCESS_DEFAULT
+        DEFINE_CREATE_PARAMS create_params2, dst_path_buf
 
         .byte   $00,$00
 
-        DEFINE_GET_FILE_INFO_PARAMS file_info_params2, $220
+        DEFINE_GET_FILE_INFO_PARAMS file_info_params2, src_path_buf
 
         .byte   0
 
-        DEFINE_GET_FILE_INFO_PARAMS file_info_params3, path_buf_main
+        DEFINE_GET_FILE_INFO_PARAMS file_info_params3, dst_path_buf
 
         .byte   0
 
@@ -10473,7 +10480,7 @@ L97E4:  .byte   $00
 .proc L9801
         lda     #0
         sta     entries_read
-        sta     LE10D
+        sta     entries_read_this_block
 L9809:  yax_call JT_MLI_RELAY, OPEN, open_src_dir_params
         beq     L981E
         ldx     #$80
@@ -10520,11 +10527,11 @@ L983C:  jmp     read_file_entry
         beq     :-
         jmp     close_files_cancel_dialog
 
-:       inc     LE10D
-        lda     LE10D
-        cmp     LE05E
+:       inc     entries_read_this_block
+        lda     entries_read_this_block
+        cmp     num_entries_per_block
         bcc     :+
-        copy    #0, LE10D
+        copy    #0, entries_read_this_block
         copy    op_ref_num, read_src_dir_skip5_params::ref_num
         yax_call JT_MLI_RELAY, READ, read_src_dir_skip5_params
 :       return  #0
@@ -10538,7 +10545,7 @@ L98A2:  lda     entries_read
         sta     entries_to_skip
         jsr     close_src_dir
         jsr     push_entry_count
-        jsr     append_to_path_220
+        jsr     append_to_src_path
         jmp     L9801
 
 .proc L98B4
@@ -10620,8 +10627,8 @@ op_jt_overlay1:
 .proc copy_dialog_params
 phase:  .byte   0
 count:  .addr   0
-        .addr   $220
-        .addr   path_buf_main
+        .addr   src_path_buf
+        .addr   dst_path_buf
 .endproc
 
 .proc do_copy_dialog_phase
@@ -10691,8 +10698,9 @@ L99FE:  jmp     close_files_cancel_dialog
         ;; copy logic (for drag/drop only) ???
 .proc copy_file
         copy    #$80, LE05B
-        copy    #0, LE05C
-        beq     L9A0F
+        lda     #0
+        sta     LE05C
+        beq     L9A0F           ; always
 
 with_flag:
         lda     #$FF
@@ -10713,31 +10721,31 @@ L9A0F:  sta     flag
         bne     L9A36
         jmp     L9B28
 
-L9A36:  ldx     path_buf_main
+L9A36:  ldx     dst_path_buf
         ldy     L9B32
         dey
 L9A3D:  iny
         inx
-        lda     $220,y
-        sta     path_buf_main,x
-        cpy     $220
+        lda     src_path_buf,y
+        sta     dst_path_buf,x
+        cpy     src_path_buf
         bne     L9A3D
-        stx     path_buf_main
+        stx     dst_path_buf
         jmp     L9A70
 
-L9A50:  ldx     path_buf_main
+L9A50:  ldx     dst_path_buf
         lda     #'/'
-        sta     path_buf_main+1,x
-        inc     path_buf_main
+        sta     dst_path_buf+1,x
+        inc     dst_path_buf
         ldy     #$00
-        ldx     path_buf_main
+        ldx     dst_path_buf
 L9A60:  iny
         inx
         lda     filename_buf,y
-        sta     path_buf_main,x
+        sta     dst_path_buf,x
         cpy     filename_buf
         bne     L9A60
-        stx     path_buf_main
+        stx     dst_path_buf
 L9A70:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     L9A81
         jsr     show_error_alert
@@ -10844,7 +10852,7 @@ L9B33:  jmp     LA360
 :       lda     L97AD+16
         cmp     #$0F
         bne     L9B88
-        jsr     append_to_path_220
+        jsr     append_to_src_path
 :       yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     L9B59
         jsr     show_error_alert
@@ -10871,7 +10879,7 @@ L9B7A:  jsr     LA360
         jmp     L9BBE
 
 L9B88:  jsr     LA33B
-        jsr     append_to_path_220
+        jsr     append_to_src_path
         jsr     dec_file_count_and_launch_copy_dialog
 L9B91:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     L9BA2
@@ -10885,7 +10893,7 @@ L9BA2:  jsr     L9C01
 L9BAA:  jsr     remove_path_segment_220
         jsr     L9E19
         bcs     L9BBB
-        jsr     append_to_path_220
+        jsr     append_to_src_path
         jsr     L9CDA
         jsr     remove_path_segment_220
 L9BBB:  jsr     LA360
@@ -10954,17 +10962,17 @@ got_exist_size:
         copy16  file_info_params3::blocks_used, existing_size
 
         ;; Compute destination volume path
-:       lda     path_buf_main
+:       lda     dst_path_buf
         sta     saved_length
         ldy     #1              ; search for second '/'
 :       iny
-        cpy     path_buf_main
+        cpy     dst_path_buf
         bcs     has_room
-        lda     path_buf_main,y
+        lda     dst_path_buf,y
         cmp     #'/'
         bne     :-
         tya
-        sta     path_buf_main
+        sta     dst_path_buf
         sta     vol_path_length
 
         ;; Total blocks/used blocks on destination volume
@@ -10972,13 +10980,13 @@ got_exist_size:
         beq     got_info
         pha                     ; on failure, restore path
         lda     saved_length    ; in case copy is aborted
-        sta     path_buf_main
+        sta     dst_path_buf
         pla
         jsr     show_error_alert_dst
         jmp     :-              ; BUG: Does this need to assign length again???
 
         lda     vol_path_length
-        sta     path_buf_main
+        sta     dst_path_buf
         jmp     :-
 
         ;; Unused???
@@ -10998,7 +11006,7 @@ has_room:
         clc
 
 :       lda     saved_length
-        sta     path_buf_main
+        sta     dst_path_buf
         rts
 
 blocks_free:
@@ -11207,7 +11215,7 @@ op_jt_overlay2:
 .proc delete_file_dialog_params
 phase:  .byte   0
 count:  .word   0
-        .addr   $220
+        .addr   src_path_buf
 .endproc
 
 .proc do_delete_dialog_phase
@@ -11334,7 +11342,7 @@ L9F8E:  jsr     show_error_alert
         jsr     check_escape_key_down
         beq     :+
         jmp     close_files_cancel_dialog
-:       jsr     append_to_path_220
+:       jsr     append_to_src_path
         bit     LE05C
         bmi     L9FA7
         jsr     dec_file_count_and_launch_delete_dialog
@@ -11423,7 +11431,7 @@ op_jt_overlay3:
 phase:  .byte   0
 files_remaining_count:
         .word   0
-        .addr   $220
+        .addr   src_path_buf
 .endproc
 
 .proc do_lock_dialog_phase
@@ -11501,16 +11509,16 @@ unlock_dialog_lifecycle:
 .proc LA114
         copy    #LockDialogLifecycle::operation, lock_unlock_dialog_params::phase
         jsr     LA379
-        ldx     path_buf_main
+        ldx     dst_path_buf
         ldy     L9B32
         dey
 LA123:  iny
         inx
-        lda     $220,y
-        sta     path_buf_main,x
-        cpy     $220
+        lda     src_path_buf,y
+        sta     dst_path_buf,x
+        cpy     src_path_buf
         bne     LA123
-        stx     path_buf_main
+        stx     dst_path_buf
 LA133:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     LA144
         jsr     show_error_alert
@@ -11536,10 +11544,10 @@ LA158:  sta     LA168
 LA168:  .byte   0
 LA169:  .byte   0
 LA16A:  jsr     LA173
-        jmp     append_to_path_220
+        jmp     append_to_src_path
 .endproc
 
-LA170:  jsr     append_to_path_220
+LA170:  jsr     append_to_src_path
         ;; fall through
 
 .proc LA173
@@ -11685,7 +11693,7 @@ LA2AE:  bit     operation_flags
         bvc     :+              ; not size
 
         ;; If operation is "get size", add the block count to the sum
-        jsr     append_to_path_220
+        jsr     append_to_src_path
         yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         bne     :+
         add16   op_block_count, file_info_params2::blocks_used, op_block_count
@@ -11713,10 +11721,10 @@ op_block_count:
 .endproc
 
 ;;; ============================================================
-;;; Append name at L97AD to path at $220
+;;; Append name at L97AD to path at src_path_buf
 
-.proc append_to_path_220
-        path := $220
+.proc append_to_src_path
+        path := src_path_buf
 
         lda     L97AD
         bne     :+
@@ -11735,15 +11743,15 @@ loop:   cpx     L97AD
         iny
         jmp     loop
 
-done:   sty     $220
+done:   sty     src_path_buf
         rts
 .endproc
 
 ;;; ============================================================
-;;; Remove segment from path at $220
+;;; Remove segment from path at src_path_buf
 
 .proc remove_path_segment_220
-        path := $220
+        path := src_path_buf
 
         ldx     path            ; length
         bne     :+
@@ -11769,38 +11777,38 @@ found:  dex
         rts
 
 LA341:  ldx     #$00
-        ldy     path_buf_main
-        copy    #'/', path_buf_main+1,y
+        ldy     dst_path_buf
+        copy    #'/', dst_path_buf+1,y
         iny
 LA34C:  cpx     L97AD
         bcs     LA35C
         lda     L97AD+1,x
-        sta     path_buf_main+1,y
+        sta     dst_path_buf+1,y
         inx
         iny
         jmp     LA34C
 
-LA35C:  sty     path_buf_main
+LA35C:  sty     dst_path_buf
         rts
 .endproc
 
 ;;; ============================================================
 
 .proc LA360
-        ldx     path_buf_main
+        ldx     dst_path_buf
         bne     LA366
         rts
 
-LA366:  lda     path_buf_main,x
+LA366:  lda     dst_path_buf,x
         cmp     #'/'
         beq     LA374
         dex
         bne     LA366
-        stx     path_buf_main
+        stx     dst_path_buf
         rts
 
 LA374:  dex
-        stx     path_buf_main
+        stx     dst_path_buf
         rts
 .endproc
 
@@ -11816,13 +11824,13 @@ loop:   iny
         cmp     #'/'
         bne     :+
         sty     L9B32
-:       sta     $220,y
+:       sta     src_path_buf,y
         cpy     path_buf3
         bne     loop
 
         ldy     path_buf4
 :       lda     path_buf4,y
-        sta     path_buf_main,y
+        sta     dst_path_buf,y
         dey
         bpl     :-
         rts
