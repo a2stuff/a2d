@@ -9366,13 +9366,17 @@ do_copy_file:
         jsr     do_copy_dialog_phase
         jsr     LA271
         jsr     prep_op_jt_overlay1
-L8F3F:  copy16  #$00FF, LE05B
+
+L8F3F:  copy    #$FF, LE05B
+        copy    #0, LE05C
         jsr     copy_file_with_flag
         jsr     done_dialog_phase1
-L8F4F:  jsr     L91E8
+
+L8F4F:  jsr     redraw_desktop_and_windows
         return  #0
 
-        jsr     L91D5
+        ;; Unreferenced???
+        jsr     prep_grafport3
         jmp     L8F4F
 
 do_delete_file:
@@ -9389,6 +9393,7 @@ do_delete_file:
         jsr     done_dialog_phase1
         jmp     L8F4F
 
+        ;; Possibly obsolete "down load" command?
 L8F7E:  copy    #$80, L918C
         copy    #%11000000, operation_flags ; get size
         tsx
@@ -9421,10 +9426,11 @@ do_unlock:
 
 ;;; --------------------------------------------------
 
-do_get_size:
+.proc do_get_size
         copy    #0, L918C
         copy    #%11000000, operation_flags ; get size
         jmp     L8FEB
+.endproc
 
 .proc do_drop
         lda     drag_drop_param
@@ -9438,16 +9444,17 @@ set:    sta     delete_flag
         jmp     L8FEB
 .endproc
 
-L8FDD:  lda     #$00
-        beq     L8FE3
-L8FE1:  lda     #$80
-L8FE3:  sta     unlock_flag
+        ;; common for lock/unlock
+L8FDD:  lda     #$00            ; unlock
+        beq     :+
+L8FE1:  lda     #$80            ; lock
+:       sta     unlock_flag
         copy    #%10000000, operation_flags ; lock/unlock
 
 L8FEB:  tsx
         stx     stack_stash
         copy    #0, LE05C
-        jsr     L91D5
+        jsr     prep_grafport3
         lda     operation_flags
         beq     :+              ; copy/delete
         jmp     begin_operation
@@ -9715,6 +9722,7 @@ delete_flag:
 unlock_flag:
         .byte   0
 
+        ;; high bit alters "get size" behavior - unused??
 L918C:  .byte   0
 L918D:  .byte   0
 
@@ -9776,13 +9784,17 @@ done:   stx     buf
 
 ;;; ============================================================
 
-L91D5:  yax_call JT_MGTK_RELAY, MGTK::InitPort, grafport3
+.proc prep_grafport3
+        yax_call JT_MGTK_RELAY, MGTK::InitPort, grafport3
         yax_call JT_MGTK_RELAY, MGTK::SetPort, grafport3
         rts
+.endproc
 
-L91E8:  jsr     JT_REDRAW_ALL
+.proc redraw_desktop_and_windows
+        jsr     JT_REDRAW_ALL
         yax_call JT_DESKTOP_RELAY, $C, 0
         rts
+.endproc
 
 .proc get_window_path_ptr
         ptr := $08
@@ -9952,7 +9964,7 @@ L92E6:  .byte   0
 
 :       lda     #$00
         sta     get_info_dialog_params::L92E6
-        jsr     L91D5
+        jsr     prep_grafport3
 L92F5:  ldx     get_info_dialog_params::L92E6
         cpx     selected_icon_count
         bne     L9300
@@ -10468,7 +10480,7 @@ L9809:  yax_call JT_MLI_RELAY, OPEN, open_params3
         jmp     close_files_cancel_dialog
 
 L981E:  lda     open_params3::ref_num
-        sta     LE060
+        sta     op_ref_num
         sta     read_params3::ref_num
 L9827:  yax_call JT_MLI_RELAY, READ, read_params3
         beq     L983C
@@ -10481,7 +10493,7 @@ L983C:  jmp     L985B
 .endproc
 
 .proc L983F
-        lda     LE060
+        lda     op_ref_num
         sta     close_params6::ref_num
 L9845:  yax_call JT_MLI_RELAY, CLOSE, close_params6
         beq     L985A
@@ -10495,7 +10507,7 @@ L985A:  rts
 
 .proc L985B
         inc     LE05F
-        lda     LE060
+        lda     op_ref_num
         sta     read_params4::ref_num
 L9864:  yax_call JT_MLI_RELAY, READ, read_params4
         beq     L987D
@@ -10512,7 +10524,7 @@ L987D:  inc     LE10D
         bcc     L989C
         lda     #$00
         sta     LE10D
-        lda     LE060
+        lda     op_ref_num
         sta     read_params5::ref_num
         yax_call JT_MLI_RELAY, READ, read_params5
 L989C:  return  #0
@@ -10547,34 +10559,33 @@ done:   rts
 .endproc
 
 .proc L98D8
-        lda     #$00
-        sta     LE05D
+        copy    #0, LE05D
         jsr     L9801
-L98E0:  jsr     L985B
+loop:   jsr     L985B
         bne     L9912
+
         lda     L97AD
-        beq     L98E0
+        beq     loop
         lda     L97AD
         sta     L992D
         and     #$0F
         sta     L97AD
-        lda     #$00
-        sta     L9923
+        copy    #0, L9923
         jsr     op_jt1
         lda     L9923
-        bne     L98E0
+        bne     loop
         lda     L97BD
         cmp     #$0F
-        bne     L98E0
+        bne     loop
         jsr     L98A2
         inc     LE05D
-        jmp     L98E0
+        jmp     loop
 
 L9912:  lda     LE05D
         beq     L9920
         jsr     L98B4
         dec     LE05D
-        jmp     L98E0
+        jmp     loop
 
 L9920:  jmp     L983F
 .endproc
@@ -10587,6 +10598,7 @@ op_jt3: jmp     (op_jt_addr3)
 
 L992D:  .byte   $00,$00,$00,$00
 
+;;; Overlays for copy operation
 op_jt_overlay1:
         .addr   L9B36           ; Overlay for op_jt_addrs
         .addr   L9B33
@@ -10672,10 +10684,8 @@ L99FE:  jmp     close_files_cancel_dialog
 
         ;; copy logic (for drag/drop only) ???
 .proc copy_file
-        lda     #$80
-        sta     LE05B
-        lda     #0
-        sta     LE05C
+        copy    #$80, LE05B
+        copy    #0, LE05C
         beq     L9A0F
 
 with_flag:
@@ -10735,13 +10745,13 @@ L9A81:  lda     file_info_params2::storage_type
         beq     L9A90
         lda     #$00
         beq     L9A95
-L9A90:  jsr     decrement_LA2ED
+L9A90:  jsr     decrement_op_file_count
         lda     #$FF
 L9A95:  sta     L9B30
         jsr     LA40A
-        lda     LA2ED+1
+        lda     op_file_count+1
         bne     L9AA8
-        lda     LA2ED
+        lda     op_file_count
         bne     L9AA8
         jmp     close_files_cancel_dialog
 
@@ -10837,10 +10847,10 @@ L9B33:  jmp     LA360
 
 L9B59:  jsr     LA33B
         jsr     LA40A
-        jsr     decrement_LA2ED
-        lda     LA2ED+1
+        jsr     decrement_op_file_count
+        lda     op_file_count+1
         bne     L9B6F
-        lda     LA2ED
+        lda     op_file_count
         bne     L9B6F
         jmp     close_files_cancel_dialog
 
@@ -10893,7 +10903,7 @@ L9BBE:  rts
         jmp     L9BC9
 
 L9BDA:  sub16   file_info_params3::aux_type, file_info_params3::blocks_used, L9BFF
-        cmp16   L9BFF, LA2EF
+        cmp16   L9BFF, op_block_count
         bcs     L9BFE
         jmp     done_dialog_phase3
 
@@ -10983,7 +10993,7 @@ L9CD9:  .byte   0
 ;;; ============================================================
 
 .proc L9CDA
-        jsr     decrement_LA2ED
+        jsr     decrement_op_file_count
         lda     #$00
         sta     L9E17
         sta     L9E18
@@ -11139,6 +11149,7 @@ L9E71:  sec
         rts
 .endproc
 
+;;; Overlays for delete operation
 op_jt_overlay2:
         .addr   L9F94           ; Overlay for op_jt_addrs
         .addr   rts2
@@ -11224,7 +11235,7 @@ L9F1D:  .byte   0
 L9F1E:  bit     LE05C
         bmi     L9F26
         jsr     LA3EF
-L9F26:  jsr     decrement_LA2ED
+L9F26:  jsr     decrement_op_file_count
 L9F29:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
         beq     L9F8D
         cmp     #ERR_ACCESS_ERROR
@@ -11276,7 +11287,7 @@ L9F8E:  jsr     show_error_alert
         bit     LE05C
         bmi     L9FA7
         jsr     LA3EF
-L9FA7:  jsr     decrement_LA2ED
+L9FA7:  jsr     decrement_op_file_count
 L9FAA:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     L9FBB
         jsr     show_error_alert
@@ -11340,6 +11351,7 @@ done:   rts
 LA044:  yax_call launch_dialog, index_delete_file_dialog, delete_file_dialog_params
         rts
 
+;;; Overlays for lock/unlock operation
 op_jt_overlay3:
         .addr   LA170           ; overlay for op_jt_addrs
         .addr   rts2
@@ -11482,7 +11494,7 @@ LA170:  jsr     append_to_path_220
 
 .proc LA173
         jsr     LA1C3
-        jsr     decrement_LA2ED
+        jsr     decrement_op_file_count
 :       yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     :+
         jsr     show_error_alert
@@ -11509,7 +11521,7 @@ LA1A3:  copy    #7, file_info_params2 ; param count for SET_FILE_INFO
 
 LA1C0:  jmp     remove_path_segment_220
 
-LA1C3:  sub16   LA2ED, #1, lock_unlock_dialog_params::files_remaining_count
+LA1C3:  sub16   op_file_count, #1, lock_unlock_dialog_params::files_remaining_count
         bit     unlock_flag
         bpl     LA1DC
         jmp     unlock_dialog_lifecycle
@@ -11519,7 +11531,7 @@ LA1DC:  jmp     lock_dialog_lifecycle
 
 .proc get_size_dialog_params
 phase:  .byte   0
-        .addr   LA2ED, LA2EF
+        .addr   op_file_count, op_block_count
 .endproc
 
 do_get_size_dialog_phase:
@@ -11560,10 +11572,10 @@ op_jt_overlay4:
         bpl     :-
 
         lda     #0
-        sta     LA2ED
-        sta     LA2ED+1
-        sta     LA2EF
-        sta     LA2EF+1
+        sta     op_file_count
+        sta     op_file_count+1
+        sta     op_block_count
+        sta     op_block_count+1
 
         ;; Clear system bitmap (???)
         ldy     #BITMAP_SIZE-1
@@ -11578,58 +11590,71 @@ op_jt_overlay4:
 
 .proc LA271
         jsr     LA379
-LA274:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
-        beq     LA285
+:       yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
+        beq     :+
         jsr     show_error_alert
-        jmp     LA274
+        jmp     :-
 
-LA285:  copy    file_info_params2::storage_type, LA2AA
+:       copy    file_info_params2::storage_type, storage_type
         cmp     #ST_VOLUME_DIRECTORY
-        beq     LA297
+        beq     is_dir
         cmp     #ST_LINKED_DIRECTORY
-        beq     LA297
-        lda     #$00
-        beq     LA299
-LA297:  lda     #$FF
-LA299:  sta     LA2A9
-        beq     LA2AB
+        beq     is_dir
+        lda     #0
+        beq     store           ; always
+
+is_dir: lda     #$FF
+
+store:  sta     is_dir_flag
+        beq     LA2AB           ; if not a dir
+
         jsr     L98D8
-        lda     LA2AA
-        cmp     #$0F
-        bne     LA2AB
+        lda     storage_type
+        cmp     #ST_VOLUME_DIRECTORY
+        bne     LA2AB           ; if a subdirectory
         rts
 
-LA2A9:  .byte   0
-LA2AA:  .byte   0
+is_dir_flag:
+        .byte   0
+
+storage_type:
+        .byte   0
 .endproc
 
 ;;; ============================================================
 
 LA2AB:  jmp     LA2AE
 
+        ;; First pass - visit/count all files ???
+
 LA2AE:  bit     operation_flags
         bvc     :+              ; not size
+
+        ;; If operation is "get size", add the block count to the sum
         jsr     append_to_path_220
         yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         bne     :+
-        add16   LA2EF, file_info_params2::blocks_used, LA2EF
-:       inc16   LA2ED
+        add16   op_block_count, file_info_params2::blocks_used, op_block_count
+
+:       inc16   op_file_count
+
         bit     operation_flags
         bvc     :+              ; not size
         jsr     remove_path_segment_220
-:       ldax    LA2ED
+
+:       ldax    op_file_count
         jmp     done_dialog_phase0
 
-LA2ED:  .word   0
-LA2EF:  .word   0
+op_file_count:
+        .word   0
+
+op_block_count:
+        .word   0
 
 ;;; ============================================================
 
-.proc decrement_LA2ED
-        lda     LA2ED
-        bne     :+
-        dec     LA2ED+1
-:       dec     LA2ED
+.proc decrement_op_file_count
+        dec16   op_file_count
         rts
 .endproc
 
@@ -11728,22 +11753,24 @@ LA374:  dex
 ;;; ============================================================
 
 .proc LA379
-        ldy     #$00
+        ldy     #0
         sty     L9B32
         dey
-LA37F:  iny
+
+loop:   iny
         lda     path_buf3,y
         cmp     #'/'
-        bne     LA38A
+        bne     :+
         sty     L9B32
-LA38A:  sta     $220,y
+:       sta     $220,y
         cpy     path_buf3
-        bne     LA37F
+        bne     loop
+
         ldy     path_buf4
-LA395:  lda     path_buf4,y
+:       lda     path_buf4,y
         sta     path_buf_main,y
         dey
-        bpl     LA395
+        bpl     :-
         rts
 .endproc
 
@@ -11782,11 +11809,11 @@ nope:   lda     #$00
 done:   rts
 .endproc
 
-LA3EF:  sub16   LA2ED, #1, delete_file_dialog_params::count
+LA3EF:  sub16   op_file_count, #1, delete_file_dialog_params::count
         yax_call launch_dialog, index_delete_file_dialog, delete_file_dialog_params
         rts
 
-LA40A:  sub16   LA2ED, #1, copy_dialog_params::count
+LA40A:  sub16   op_file_count, #1, copy_dialog_params::count
         yax_call launch_dialog, index_copy_file_dialog, copy_dialog_params
         rts
 

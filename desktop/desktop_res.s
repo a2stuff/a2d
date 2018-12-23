@@ -943,7 +943,7 @@ LE05C:  .byte   $00
 LE05D:  .byte   $00
 LE05E:  .byte   $0D
 LE05F:  .byte   $00
-LE060:  .byte   $00
+op_ref_num:  .byte   $00
 LE061:  .byte   $00
 
 
