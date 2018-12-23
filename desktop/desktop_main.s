@@ -10926,52 +10926,64 @@ L9BFF:  .word   0
 done:   rts
 
 .proc check_space
+        ;; Size of source
 :       yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     :+
         jsr     show_error_alert
         jmp     :-
 
+        ;; If destination doesn't exist, 0 blocks will be reclaimed.
 :       lda     #0
-        sta     L9CD8
-        sta     L9CD8+1
+        sta     existing_size
+        sta     existing_size+1
+
+        ;; Does destination exist?
 :       yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params3
-        beq     L9C48
+        beq     got_exist_size
         cmp     #ERR_FILE_NOT_FOUND
-        beq     L9C54
-        jsr     show_error_alert_dst
+        beq     :+
+        jsr     show_error_alert_dst ; retry if destination not present
         jmp     :-
 
-L9C48:  copy16  file_info_params3::blocks_used, L9CD8
-L9C54:  lda     path_buf_main
+got_exist_size:
+        copy16  file_info_params3::blocks_used, existing_size
+
+        ;; Compute destination volume path
+:       lda     path_buf_main
         sta     saved_length
-        ldy     #1
-L9C5C:  iny
+        ldy     #1              ; search for second '/'
+:       iny
         cpy     path_buf_main
         bcs     has_room
         lda     path_buf_main,y
         cmp     #'/'
-        bne     L9C5C
+        bne     :-
         tya
         sta     path_buf_main
-        sta     L9CD7
-L9C70:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params3
-        beq     L9C95
-        pha
-        lda     saved_length
+        sta     vol_path_length
+
+        ;; Total blocks/used blocks on destination volume
+:       yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params3
+        beq     got_info
+        pha                     ; on failure, restore path
+        lda     saved_length    ; in case copy is aborted
         sta     path_buf_main
         pla
         jsr     show_error_alert_dst
-        jmp     L9C70
+        jmp     :-              ; BUG: Does this need to assign length again???
 
-        lda     L9CD7
+        lda     vol_path_length
         sta     path_buf_main
-        jmp     L9C70
+        jmp     :-
 
+        ;; Unused???
         jmp     close_files_cancel_dialog
 
-L9C95:  sub16   file_info_params3::aux_type, file_info_params3::blocks_used, L9CD4
-        add16   L9CD4, L9CD8, L9CD4
-        cmp16   L9CD4, file_info_params2::blocks_used
+got_info:
+        ;; aux = total blocks
+        sub16   file_info_params3::aux_type, file_info_params3::blocks_used, blocks_free
+        add16   blocks_free, existing_size, blocks_free
+        cmp16   blocks_free, file_info_params2::blocks_used
         bcs     has_room
 
         ;; not enough room
@@ -10984,11 +10996,14 @@ has_room:
         sta     path_buf_main
         rts
 
-L9CD4:  .word   0
+blocks_free:
+        .word   0
 saved_length:
         .byte   0
-L9CD7:  .byte   0
-L9CD8:  .word   0
+vol_path_length:
+        .byte   0
+existing_size:
+        .word   0
 .endproc
 .endproc
 
