@@ -9724,6 +9724,7 @@ unlock_flag:
 
         ;; high bit alters "get size" behavior - unused??
 L918C:  .byte   0
+
 L918D:  .byte   0
 
 ;;; ============================================================
@@ -10793,11 +10794,11 @@ L9AE0:  yax_call JT_MLI_RELAY, CREATE, create_params2
         lda     #2
         sta     copy_dialog_params
         pla
-        cmp     #$02
+        cmp     #2
         beq     L9B14
-        cmp     #$03
+        cmp     #3
         beq     L9B2C
-        cmp     #$04
+        cmp     #4
         bne     L9B1A
         lda     #$80
         sta     L918D
@@ -11107,12 +11108,13 @@ L9E18:  .byte   0
 
 
 .proc L9E19
-        ldx     #$07
-L9E1B:  lda     file_info_params2,x
+        ldx     #7
+:       lda     file_info_params2,x
         sta     create_params3,x
         dex
-        cpx     #$03
-        bne     L9E1B
+        cpx     #3
+        bne     :-
+
 L9E26:  yax_call JT_MLI_RELAY, CREATE, create_params3
         beq     L9E6F
         cmp     #ERR_DUPLICATE_FILENAME
@@ -11123,17 +11125,15 @@ L9E26:  yax_call JT_MLI_RELAY, CREATE, create_params3
         sta     copy_dialog_params
         yax_call launch_dialog, index_copy_file_dialog, copy_dialog_params
         pha
-        lda     #2
-        sta     copy_dialog_params
+        copy    #2, copy_dialog_params
         pla
-        cmp     #$02
+        cmp     #2
         beq     L9E60
-        cmp     #$03
+        cmp     #3
         beq     L9E71
-        cmp     #$04
+        cmp     #4
         bne     L9E66
-        lda     #$80
-        sta     L918D
+        copy    #$80, L918D
 L9E60:  jsr     LA426
         jmp     L9E6F
 
@@ -11223,8 +11223,7 @@ L9F04:  sta     L9F1C
         lda     L9F1D
         cmp     #$0D
         bne     L9F18
-        lda     #$FF
-        sta     L9F1D
+        copy    #$FF, L9F1D
 L9F18:  jmp     L9F1E
 
         rts
@@ -11253,8 +11252,7 @@ L9F29:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
         beq     L9F62
         cmp     #4
         bne     L9F5F
-        lda     #$80
-        sta     L918D
+        copy    #$80, L918D
         bne     L9F62
 L9F5F:  jmp     close_files_cancel_dialog
 
@@ -11331,8 +11329,7 @@ LA01C:  jsr     show_error_alert
 LA022:  jmp     remove_path_segment_220
 
         jsr     remove_path_segment_220
-        lda     #$FF
-        sta     L9923
+        copy    #$FF, L9923
         rts
 .endproc
 
