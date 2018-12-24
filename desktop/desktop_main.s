@@ -1138,9 +1138,9 @@ show_cursor:
         rts
 .endproc
 
-.proc show_warning_dialog_num
+.proc warning_dialog_proc_num
         sta     warning_dialog_num
-        yax_call launch_dialog, index_warning_dialog, warning_dialog_num
+        yax_call invoke_dialog_proc, index_warning_dialog, warning_dialog_num
         rts
 .endproc
 
@@ -1537,7 +1537,7 @@ prefix_length:
 ;;; ============================================================
 
 .proc cmd_about
-        yax_call launch_dialog, index_about_dialog, $0000
+        yax_call invoke_dialog_proc, index_about_dialog, $0000
         jmp     redraw_windows_and_desktop
 .endproc
 
@@ -1618,7 +1618,7 @@ open:   yxa_call MLI_RELAY, OPEN, open_params
         bne     :+
         rts
 :       lda     #warning_msg_insert_system_disk
-        jsr     show_warning_dialog_num
+        jsr     warning_dialog_proc_num
         beq     open            ; ok, so try again
         return  #$FF            ; cancel, so fail
 
@@ -2030,14 +2030,14 @@ path_buffer:
         .res    65, 0              ; buffer is used elsewhere too
 
 start:  copy    active_window_id, new_folder_dialog_params::phase
-        yax_call launch_dialog, index_new_folder_dialog, new_folder_dialog_params
+        yax_call invoke_dialog_proc, index_new_folder_dialog, new_folder_dialog_params
 
 L4FC6:  lda     active_window_id
         beq     L4FD4
         jsr     window_address_lookup
         stax    new_folder_dialog_params::L4F68
 L4FD4:  copy    #$80, new_folder_dialog_params::phase
-        yax_call launch_dialog, index_new_folder_dialog, new_folder_dialog_params
+        yax_call invoke_dialog_proc, index_new_folder_dialog, new_folder_dialog_params
         beq     :+
         jmp     done            ; Cancelled
 :       stx     ptr+1
@@ -2070,7 +2070,7 @@ L4FD4:  copy    #$80, new_folder_dialog_params::phase
 
 success:
         copy    #$40, new_folder_dialog_params::phase
-        yax_call launch_dialog, index_new_folder_dialog, new_folder_dialog_params
+        yax_call invoke_dialog_proc, index_new_folder_dialog, new_folder_dialog_params
         addr_call find_last_path_segment, path_buffer
         sty     path_buffer
         addr_call L6FAF, path_buffer
@@ -5047,7 +5047,7 @@ L6B1E:  lda     LEC2E
         cmp     #$08
         bcc     L6B2F
         lda     #warning_msg_too_many_windows
-        jsr     show_warning_dialog_num
+        jsr     warning_dialog_proc_num
         ldx     LE256
         txs
         rts
@@ -5769,7 +5769,7 @@ L7147:  lda     LEC2E
         lda     #$03
         bne     L7161
 L715F:  lda     #warning_msg_window_must_be_closed2
-L7161:  jsr     show_warning_dialog_num
+L7161:  jsr     warning_dialog_proc_num
         ldx     LE256
         txs
         rts
@@ -9314,7 +9314,7 @@ open:   MLI_RELAY_CALL OPEN, open_params
 
         lda     #warning_msg_insert_system_disk
         ora     restore_flag    ; high bit set = no cancel
-        jsr     show_warning_dialog_num
+        jsr     warning_dialog_proc_num
         beq     open
         return  #$FF            ; failed
 
@@ -9363,6 +9363,19 @@ jt_delete_file: jmp     do_delete_file ; cmd_delete_file
 L8F24:  jmp     L8F7E           ; cmd_selector_action ???
 jt_get_size:    jmp     do_get_size ; cmd_get_size
 
+
+;;; --------------------------------------------------
+
+.enum DeleteDialogLifecycle
+        open            = 0
+        populate        = 1
+        confirm         = 2     ; confirmation before deleting
+        show            = 3
+        locked          = 4     ; confirm deletion of locked file
+        close           = 5
+        trash           = 6     ; open, but from trash path ???
+.endenum
+
 ;;; --------------------------------------------------
 
 .proc operations
@@ -9393,7 +9406,7 @@ do_delete_file:
         tsx
         stx     stack_stash
         jsr     prep_op_jt_overlay4_clear_system_bitmap
-        lda     #0
+        lda     #DeleteDialogLifecycle::open
         jsr     do_delete_dialog_phase
         jsr     LA271
         jsr     done_dialog_phase2
@@ -9572,7 +9585,7 @@ L9076:  ldy     #$FF
         jsr     do_copy_dialog_phase
         jmp     iterate_selection
 
-@trash: lda     #6
+@trash: lda     #DeleteDialogLifecycle::trash
         jsr     do_delete_dialog_phase
         jmp     iterate_selection
 
@@ -10032,7 +10045,7 @@ L9366:  lda     selected_window_index
         beq     L9381
         inc     get_info_dialog_params::L92E3
         inc     get_info_dialog_params::L92E3
-L9381:  jsr     launch_get_info_dialog
+L9381:  jsr     run_get_info_dialog_proc
         jmp     L93DB
 
 L9387:  lda     #$81
@@ -10044,7 +10057,7 @@ L9387:  lda     #$81
         beq     L939D
         inc     get_info_dialog_params::L92E3
         inc     get_info_dialog_params::L92E3
-L939D:  jsr     launch_get_info_dialog
+L939D:  jsr     run_get_info_dialog_proc
         lda     #$00
         sta     L942E
         ldx     get_info_dialog_params::L92E6
@@ -10071,7 +10084,7 @@ L93DB:  ldx     get_info_dialog_params::L92E6
         lda     #$01
         sta     get_info_dialog_params::L92E3
         copy16  $06, get_info_dialog_params::L92E4
-        jsr     launch_get_info_dialog
+        jsr     run_get_info_dialog_proc
         copy    #2, get_info_dialog_params::L92E3
         lda     selected_window_index
         bne     L9413
@@ -10092,7 +10105,7 @@ L9413:  lda     get_file_info_params5::access
         bne     L9428
 L9423:  lda     #$00
         sta     get_info_dialog_params::L92E4
-L9428:  jsr     launch_get_info_dialog
+L9428:  jsr     run_get_info_dialog_proc
         jmp     L942F
 
 L942E:  .byte   0
@@ -10153,17 +10166,17 @@ L94A9:  lda     path_buf,x
         dex
         bpl     L94A9
         copy16  #path_buf4, get_info_dialog_params::L92E4
-        jsr     launch_get_info_dialog
+        jsr     run_get_info_dialog_proc
         copy    #4, get_info_dialog_params::L92E3
         copy16  get_file_info_params5::create_date, date
         jsr     JT_DATE_STRING
         copy16  #text_buffer2::length, get_info_dialog_params::L92E4
-        jsr     launch_get_info_dialog
+        jsr     run_get_info_dialog_proc
         copy    #5, get_info_dialog_params::L92E3
         copy16  get_file_info_params5::mod_date, date
         jsr     JT_DATE_STRING
         copy16  #text_buffer2::length, get_info_dialog_params::L92E4
-        jsr     launch_get_info_dialog
+        jsr     run_get_info_dialog_proc
         copy    #6, get_info_dialog_params::L92E3
         lda     selected_window_index
         bne     L9519
@@ -10176,7 +10189,7 @@ L950E:  lda     str_vol,x
 L9519:  lda     get_file_info_params5::file_type
         jsr     JT_FILE_TYPE_STRING
 L951F:  copy16  #str_file_type, get_info_dialog_params::L92E4
-        jsr     launch_get_info_dialog
+        jsr     run_get_info_dialog_proc
         bne     L9534
 L952E:  inc     get_info_dialog_params::L92E6
         jmp     L92F5
@@ -10188,8 +10201,8 @@ L9534:  lda     #$00
 str_vol:
         PASCAL_STRING " VOL"
 
-.proc launch_get_info_dialog
-        yax_call launch_dialog, index_get_info_dialog, get_info_dialog_params
+.proc run_get_info_dialog_proc
+        yax_call invoke_dialog_proc, index_get_info_dialog, get_info_dialog_params
         rts
 .endproc
 .endproc
@@ -10392,7 +10405,7 @@ L96EB:  lda     ($06),y
         jmp     L9576
 
 L96F8:  sta     rename_dialog_params
-        yax_call launch_dialog, index_rename_dialog, rename_dialog_params
+        yax_call invoke_dialog_proc, index_rename_dialog, rename_dialog_params
         rts
 
 L9705:  .byte   $00
@@ -10673,11 +10686,11 @@ count:  .addr   0
         copy    #CopyDialogLifecycle::open, copy_dialog_params::phase
         copy16  #L995A, dialog_phase0_callback
         copy16  #L997C, dialog_phase1_callback
-        jmp     launch_copy_file_dialog
+        jmp     run_copy_dialog_proc
 
 L995A:  stax    copy_dialog_params::count
         copy    #CopyDialogLifecycle::populate, copy_dialog_params::phase
-        jmp     launch_copy_file_dialog
+        jmp     run_copy_dialog_proc
 .endproc
 
 .proc prep_op_jt_overlay1
@@ -10693,17 +10706,17 @@ L995A:  stax    copy_dialog_params::count
 .endproc
 
 L997C:  copy    #CopyDialogLifecycle::close, copy_dialog_params::phase
-        jmp     launch_copy_file_dialog
+        jmp     run_copy_dialog_proc
 
 L9984:  copy    #CopyDialogLifecycle::open, copy_dialog_params::phase
         copy16  #L99A7, dialog_phase0_callback
         copy16  #L99DC, dialog_phase1_callback
-        yax_call launch_dialog, index_download_dialog, copy_dialog_params
+        yax_call invoke_dialog_proc, index_download_dialog, copy_dialog_params
         rts
 
 L99A7:  stax    copy_dialog_params::count
         copy    #CopyDialogLifecycle::populate, copy_dialog_params::phase
-        yax_call launch_dialog, index_download_dialog, copy_dialog_params
+        yax_call invoke_dialog_proc, index_download_dialog, copy_dialog_params
         rts
 
 L99BC:  lda     #$80
@@ -10720,11 +10733,11 @@ L99BC:  lda     #$80
         rts
 
 L99DC:  copy    #CopyDialogLifecycle::exists, copy_dialog_params::phase
-        yax_call launch_dialog, index_download_dialog, copy_dialog_params
+        yax_call invoke_dialog_proc, index_download_dialog, copy_dialog_params
         rts
 
 L99EB:  copy    #CopyDialogLifecycle::too_large, copy_dialog_params::phase
-        yax_call launch_dialog, index_download_dialog, copy_dialog_params
+        yax_call invoke_dialog_proc, index_download_dialog, copy_dialog_params
         cmp     #PromptResult::yes
         bne     cancel
         rts
@@ -10799,7 +10812,7 @@ L9A81:  lda     file_info_params2::storage_type
 L9A90:  jsr     decrement_op_file_count
         lda     #$FF
 L9A95:  sta     L9B30
-        jsr     dec_file_count_and_launch_copy_dialog
+        jsr     dec_file_count_and_run_copy_dialog_proc
         lda     op_file_count+1
         bne     L9AA8
         lda     op_file_count
@@ -10840,7 +10853,7 @@ L9AE0:  yax_call JT_MLI_RELAY, CREATE, create_params2
         bit     all_flag
         bmi     do_it
         copy    #CopyDialogLifecycle::exists, copy_dialog_params::phase
-        jsr     launch_copy_file_dialog
+        jsr     run_copy_dialog_proc
         pha
         copy    #CopyDialogLifecycle::show, copy_dialog_params::phase
         pla
@@ -10903,7 +10916,7 @@ op_jt2_copy:
         jmp     :-
 
 :       jsr     append_to_dst_path
-        jsr     dec_file_count_and_launch_copy_dialog
+        jsr     dec_file_count_and_run_copy_dialog_proc
         jsr     decrement_op_file_count
         lda     op_file_count+1
         bne     :+
@@ -10926,7 +10939,7 @@ op_jt2_copy:
 regular_file:
         jsr     append_to_dst_path
         jsr     append_to_src_path
-        jsr     dec_file_count_and_launch_copy_dialog
+        jsr     dec_file_count_and_run_copy_dialog_proc
 L9B91:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     L9BA2
         jsr     show_error_alert
@@ -10948,8 +10961,8 @@ L9BBE:  rts
 
 ;;; ============================================================
 
-.proc launch_copy_file_dialog
-        yax_call launch_dialog, index_copy_file_dialog, copy_dialog_params
+.proc run_copy_dialog_proc
+        yax_call invoke_dialog_proc, index_copy_dialog, copy_dialog_params
         rts
 .endproc
 
@@ -10977,7 +10990,7 @@ L9BFF:  .word   0
         jsr     check_space
         bcc     done
         copy    #CopyDialogLifecycle::too_large, copy_dialog_params::phase
-        jsr     launch_copy_file_dialog
+        jsr     run_copy_dialog_proc
         beq     :+
         jmp     close_files_cancel_dialog
 :       copy    #CopyDialogLifecycle::exists, copy_dialog_params::phase
@@ -11213,7 +11226,7 @@ L9E26:  yax_call JT_MLI_RELAY, CREATE, create_params3
         bit     all_flag
         bmi     L9E60
         copy    #CopyDialogLifecycle::exists, copy_dialog_params::phase
-        yax_call launch_dialog, index_copy_file_dialog, copy_dialog_params
+        yax_call invoke_dialog_proc, index_copy_dialog, copy_dialog_params
         pha
         copy    #CopyDialogLifecycle::show, copy_dialog_params::phase
         pla
@@ -11249,38 +11262,29 @@ op_jt_overlay2:
         .addr   rts2
         .addr   destroy_with_retry
 
-.enum DeleteDialogLifecycle
-        open            = 0
-        populate        = 1
-        confirm         = 2     ; confirmation before deleting
-        show            = 3
-        locked          = 4     ; confirm deletion of locked file
-        close           = 5
-.endenum
-
-.proc delete_file_dialog_params
+.proc delete_dialog_params
 phase:  .byte   0
 count:  .word   0
         .addr   src_path_buf
 .endproc
 
 .proc do_delete_dialog_phase
-        sta     delete_file_dialog_params::phase
+        sta     delete_dialog_params::phase
         copy16  #confirm_delete_dialog, dialog_phase2_callback
         copy16  #populate_delete_dialog, dialog_phase0_callback
-        jsr     launch_delete_file_dialog
+        jsr     run_delete_dialog_proc
         copy16  #L9ED3, dialog_phase1_callback
         rts
 
 .proc populate_delete_dialog
-        stax    delete_file_dialog_params::count
-        copy    #DeleteDialogLifecycle::populate, delete_file_dialog_params::phase
-        jmp     launch_delete_file_dialog
+        stax    delete_dialog_params::count
+        copy    #DeleteDialogLifecycle::populate, delete_dialog_params::phase
+        jmp     run_delete_dialog_proc
 .endproc
 
 .proc confirm_delete_dialog
-        copy    #DeleteDialogLifecycle::confirm, delete_file_dialog_params::phase
-        jsr     launch_delete_file_dialog
+        copy    #DeleteDialogLifecycle::confirm, delete_dialog_params::phase
+        jsr     run_delete_dialog_proc
         beq     :+
         jmp     close_files_cancel_dialog
 :       rts
@@ -11296,21 +11300,21 @@ count:  .word   0
         dey
         bpl     :-
 
-        lda     #$00
+        lda     #0
         sta     LA425
         sta     all_flag
         rts
 .endproc
 
 .proc L9ED3
-        copy    #DeleteDialogLifecycle::close, delete_file_dialog_params::phase
-        jmp     launch_delete_file_dialog
+        copy    #DeleteDialogLifecycle::close, delete_dialog_params::phase
+        jmp     run_delete_dialog_proc
 .endproc
 
 ;;; ============================================================
 
 .proc delete_file
-        copy    #DeleteDialogLifecycle::show, delete_file_dialog_params::phase
+        copy    #DeleteDialogLifecycle::show, delete_dialog_params::phase
         jsr     copy_paths_to_src_and_dst_paths
 L9EE3:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     L9EF4
@@ -11340,7 +11344,7 @@ L9F1D:  .byte   0
 
 L9F1E:  bit     LE05C
         bmi     L9F26
-        jsr     dec_file_count_and_launch_delete_dialog
+        jsr     dec_file_count_and_run_delete_dialog_proc
 L9F26:  jsr     decrement_op_file_count
 L9F29:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
         beq     done
@@ -11348,10 +11352,10 @@ L9F29:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
         bne     L9F8E
         bit     all_flag
         bmi     do_it
-        copy    #DeleteDialogLifecycle::locked, delete_file_dialog_params::phase
-        jsr     launch_delete_file_dialog
+        copy    #DeleteDialogLifecycle::locked, delete_dialog_params::phase
+        jsr     run_delete_dialog_proc
         pha
-        copy    #DeleteDialogLifecycle::show, delete_file_dialog_params::phase
+        copy    #DeleteDialogLifecycle::show, delete_dialog_params::phase
         pla
         cmp     #PromptResult::no
         beq     done
@@ -11392,7 +11396,7 @@ L9F8E:  jsr     show_error_alert
 :       jsr     append_to_src_path
         bit     LE05C
         bmi     L9FA7
-        jsr     dec_file_count_and_launch_delete_dialog
+        jsr     dec_file_count_and_run_delete_dialog_proc
 L9FA7:  jsr     decrement_op_file_count
 L9FAA:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     :+
@@ -11408,10 +11412,10 @@ loop:   yax_call JT_MLI_RELAY, DESTROY, destroy_params
         bne     LA01C
         bit     all_flag
         bmi     unlock
-        copy    #DeleteDialogLifecycle::locked, delete_file_dialog_params::phase
-        yax_call launch_dialog, index_delete_file_dialog, delete_file_dialog_params
+        copy    #DeleteDialogLifecycle::locked, delete_dialog_params::phase
+        yax_call invoke_dialog_proc, index_delete_dialog, delete_dialog_params
         pha
-        copy    #DeleteDialogLifecycle::show, delete_file_dialog_params::phase
+        copy    #DeleteDialogLifecycle::show, delete_dialog_params::phase
         pla
         cmp     #PromptResult::no
         beq     next_file
@@ -11453,8 +11457,8 @@ retry:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
 done:   rts
 .endproc
 
-.proc launch_delete_file_dialog
-        yax_call launch_dialog, index_delete_file_dialog, delete_file_dialog_params
+.proc run_delete_dialog_proc
+        yax_call invoke_dialog_proc, index_delete_dialog, delete_dialog_params
         rts
 .endproc
 
@@ -11548,11 +11552,11 @@ LA0DE:  rts
 .endproc
 
 lock_dialog_lifecycle:
-        yax_call launch_dialog, index_lock_dialog, lock_unlock_dialog_params
+        yax_call invoke_dialog_proc, index_lock_dialog, lock_unlock_dialog_params
         rts
 
 unlock_dialog_lifecycle:
-        yax_call launch_dialog, index_unlock_dialog, lock_unlock_dialog_params
+        yax_call invoke_dialog_proc, index_unlock_dialog, lock_unlock_dialog_params
         rts
 
 .proc lock_file
@@ -11654,21 +11658,21 @@ do_get_size_dialog_phase:
         copy    #0, get_size_dialog_params::phase
         copy16  #LA220, dialog_phase2_callback
         copy16  #LA211, dialog_phase0_callback
-        yax_call launch_dialog, index_get_size_dialog, get_size_dialog_params
+        yax_call invoke_dialog_proc, index_get_size_dialog, get_size_dialog_params
         copy16  #LA233, dialog_phase1_callback
         rts
 
 LA211:  copy    #1, get_size_dialog_params::phase
-        yax_call launch_dialog, index_get_size_dialog, get_size_dialog_params
+        yax_call invoke_dialog_proc, index_get_size_dialog, get_size_dialog_params
 LA21F:  rts
 
 LA220:  copy    #2, get_size_dialog_params::phase
-        yax_call launch_dialog, index_get_size_dialog, get_size_dialog_params
+        yax_call invoke_dialog_proc, index_get_size_dialog, get_size_dialog_params
         beq     LA21F
         jmp     close_files_cancel_dialog
 
 LA233:  copy    #3, get_size_dialog_params::phase
-        yax_call launch_dialog, index_get_size_dialog, get_size_dialog_params
+        yax_call invoke_dialog_proc, index_get_size_dialog, get_size_dialog_params
 LA241:  rts
 
 op_jt_overlay4:
@@ -11942,15 +11946,15 @@ done:   rts
 
 ;;; ============================================================
 
-.proc dec_file_count_and_launch_delete_dialog
-        sub16   op_file_count, #1, delete_file_dialog_params::count
-        yax_call launch_dialog, index_delete_file_dialog, delete_file_dialog_params
+.proc dec_file_count_and_run_delete_dialog_proc
+        sub16   op_file_count, #1, delete_dialog_params::count
+        yax_call invoke_dialog_proc, index_delete_dialog, delete_dialog_params
         rts
 .endproc
 
-.proc dec_file_count_and_launch_copy_dialog
+.proc dec_file_count_and_run_copy_dialog_proc
         sub16   op_file_count, #1, copy_dialog_params::count
-        yax_call launch_dialog, index_copy_file_dialog, copy_dialog_params
+        yax_call invoke_dialog_proc, index_copy_dialog, copy_dialog_params
         rts
 .endproc
 
@@ -12054,8 +12058,8 @@ do_on_line:
 ;;; Dialog Launcher (or just proc handler???)
 
         index_about_dialog              := 0
-        index_copy_file_dialog          := 1
-        index_delete_file_dialog        := 2
+        index_copy_dialog          := 1
+        index_delete_dialog        := 2
         index_new_folder_dialog         := 3
         index_get_info_dialog           := 6
         index_lock_dialog               := 7
@@ -12065,30 +12069,30 @@ do_on_line:
         index_get_size_dialog           := $B
         index_warning_dialog            := $C
 
-launch_dialog:
+invoke_dialog_proc:
         .assert * = $A500, error, "Entry point used by overlay"
-        jmp     launch_dialog_impl
+        jmp     invoke_dialog_proc_impl
 
 dialog_proc_table:
-        .addr   show_about_dialog
-        .addr   show_copy_file_dialog
-        .addr   show_delete_file_dialog
-        .addr   show_new_folder_dialog
+        .addr   about_dialog_proc
+        .addr   copy_dialog_proc
+        .addr   delete_dialog_proc
+        .addr   new_folder_dialog_proc
         .addr   rts1
         .addr   rts1
-        .addr   show_get_info_dialog
-        .addr   show_lock_dialog
-        .addr   show_unlock_dialog
-        .addr   show_rename_dialog
-        .addr   show_download_dialog
-        .addr   show_get_size_dialog
-        .addr   show_warning_dialog
+        .addr   get_info_dialog_proc
+        .addr   lock_dialog_proc
+        .addr   unlock_dialog_proc
+        .addr   rename_dialog_proc
+        .addr   download_dialog_proc
+        .addr   get_size_dialog_proc
+        .addr   warning_dialog_proc
 
 dialog_param_addr:
         .addr   0
         .byte   0
 
-.proc launch_dialog_impl
+.proc invoke_dialog_proc_impl
         stax    dialog_param_addr
         tya
         asl     a
@@ -12467,7 +12471,7 @@ jump_relay:
 ;;; ============================================================
 ;;; "About" dialog
 
-.proc show_about_dialog
+.proc about_dialog_proc
         MGTK_RELAY_CALL MGTK::OpenWindow, winfo_about_dialog
         lda     winfo_about_dialog::window_id
         jsr     set_port_from_window_id
@@ -12508,7 +12512,7 @@ close:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_about_dialog
 
 ;;; ============================================================
 
-.proc show_copy_file_dialog
+.proc copy_dialog_proc
         ptr := $6
 
         jsr     copy_dialog_param_addr_to_ptr
@@ -12641,7 +12645,7 @@ do4:    jsr     bell
 ;;; ============================================================
 ;;; "DownLoad" dialog
 
-.proc show_download_dialog
+.proc download_dialog_proc
         ptr := $6
 
         jsr     copy_dialog_param_addr_to_ptr
@@ -12725,7 +12729,7 @@ do4:    jsr     bell
 ;;; ============================================================
 ;;; "Get Size" dialog
 
-.proc show_get_size_dialog
+.proc get_size_dialog_proc
         ptr := $6
 
         jsr     copy_dialog_param_addr_to_ptr
@@ -12800,7 +12804,7 @@ do2:    lda     winfo_alert_dialog
 ;;; ============================================================
 ;;; "Delete File" dialog
 
-.proc show_delete_file_dialog
+.proc delete_dialog_proc
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #0
         lda     ($06),y         ; phase
@@ -12821,7 +12825,7 @@ do2:    lda     winfo_alert_dialog
         bne     :+
         jmp     do5
 
-        ;; DeleteDialogLifecycle::open
+        ;; DeleteDialogLifecycle::open or trash
 :       sta     LAD1F
         copy    #0, has_input_field_flag
         jsr     open_dialog_window
@@ -12914,7 +12918,7 @@ LAE17:  jsr     prompt_input_loop
 ;;; ============================================================
 ;;; "New Folder" dialog
 
-.proc show_new_folder_dialog
+.proc new_folder_dialog_proc
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #0
         lda     ($06),y
@@ -13001,7 +13005,7 @@ LAF16:  jsr     reset_grafport3a
 ;;; ============================================================
 ;;; "Get Info" dialog
 
-.proc show_get_info_dialog
+.proc get_info_dialog_proc
         ptr := $6
 
         jsr     copy_dialog_param_addr_to_ptr
@@ -13101,7 +13105,7 @@ row:    .byte   0
 ;;; ============================================================
 ;;; "Lock" dialog
 
-.proc show_lock_dialog
+.proc lock_dialog_proc
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #0
         lda     ($06),y
@@ -13188,7 +13192,7 @@ do4:    jsr     reset_grafport3a
 ;;; ============================================================
 ;;; "Unlock" dialog
 
-.proc show_unlock_dialog
+.proc unlock_dialog_proc
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #0
         lda     ($06),y
@@ -13275,7 +13279,7 @@ do4:    jsr     reset_grafport3a
 ;;; ============================================================
 ;;; "Rename" dialog
 
-.proc show_rename_dialog
+.proc rename_dialog_proc
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #0
         lda     ($06),y
@@ -13338,7 +13342,7 @@ LB313:  jsr     reset_grafport3a
 ;;; "Warning!" dialog
 ;;; $6 ptr to message num
 
-.proc show_warning_dialog
+.proc warning_dialog_proc
         ptr := $6
 
         ;; Create window
