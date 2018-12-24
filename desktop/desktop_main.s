@@ -9340,6 +9340,14 @@ open:   MLI_RELAY_CALL OPEN, open_params
 ;;; computing size, deleting, copying, etc., and share common
 ;;; logic.
 
+.enum PromptResult
+        ok      = 0
+        cancel  = 1
+        yes     = 2
+        no      = 3
+        all     = 4
+.endenum
+
 jt_drop:        jmp     do_drop
         jmp     rts2            ; rts
         jmp     rts2            ; rts
@@ -9633,7 +9641,7 @@ L9114:  lda     L97E4
 
 @lock_or_size:
         bvs     @size           ; size?
-        jsr     LA114
+        jsr     lock_file
         jmp     next_icon
 
 @size:  jsr     LA271
@@ -9726,7 +9734,7 @@ unlock_flag:
         ;; high bit alters "get size" behavior - unused??
 L918C:  .byte   0
 
-L918D:  .byte   0
+all_flag:  .byte   0
 
 ;;; ============================================================
 ;;; For icon index in A, put pointer to name in $6
@@ -9944,9 +9952,13 @@ unit_number:
         .byte   0               ; unused???
 .endproc
 
+;;; ============================================================
+;;; "Get Info" dialog state and logic
+;;; ============================================================
+
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params5, $220
 
-L92DB:  .byte   0,0
+L92DB:  .byte   0,0             ; unused?
 
         DEFINE_READ_BLOCK_PARAMS block_params, $0800, $A
 
@@ -9955,9 +9967,6 @@ L92E3:  .byte   0
 L92E4:  .word   0
 L92E6:  .byte   0
 .endproc
-
-;;; ============================================================
-;;; Get Info
 
 .proc do_get_info
         path_buf := $220
@@ -10063,8 +10072,7 @@ L93DB:  ldx     get_info_dialog_params::L92E6
         sta     get_info_dialog_params::L92E3
         copy16  $06, get_info_dialog_params::L92E4
         jsr     launch_get_info_dialog
-        lda     #$02
-        sta     get_info_dialog_params::L92E3
+        copy    #2, get_info_dialog_params::L92E3
         lda     selected_window_index
         bne     L9413
         bit     L942E
@@ -10144,25 +10152,19 @@ L94A9:  lda     path_buf,x
         sta     path_buf4,x
         dex
         bpl     L94A9
-        lda     #<path_buf4
-        sta     get_info_dialog_params::L92E4
-        lda     #>path_buf4
-        sta     get_info_dialog_params::L92E4+1
+        copy16  #path_buf4, get_info_dialog_params::L92E4
         jsr     launch_get_info_dialog
-        lda     #$04
-        sta     get_info_dialog_params::L92E3
+        copy    #4, get_info_dialog_params::L92E3
         copy16  get_file_info_params5::create_date, date
         jsr     JT_DATE_STRING
         copy16  #text_buffer2::length, get_info_dialog_params::L92E4
         jsr     launch_get_info_dialog
-        lda     #$05
-        sta     get_info_dialog_params::L92E3
+        copy    #5, get_info_dialog_params::L92E3
         copy16  get_file_info_params5::mod_date, date
         jsr     JT_DATE_STRING
         copy16  #text_buffer2::length, get_info_dialog_params::L92E4
         jsr     launch_get_info_dialog
-        lda     #$06
-        sta     get_info_dialog_params::L92E3
+        copy    #6, get_info_dialog_params::L92E3
         lda     selected_window_index
         bne     L9519
         ldx     str_vol
@@ -10426,7 +10428,7 @@ skip5_buf:  .res    5, 0
         DEFINE_CREATE_PARAMS create_params3, dst_path_buf, ACCESS_DEFAULT
         DEFINE_CREATE_PARAMS create_params2, dst_path_buf
 
-        .byte   $00,$00
+        .byte   0,0
 
         DEFINE_GET_FILE_INFO_PARAMS file_info_params2, src_path_buf
 
@@ -10450,7 +10452,7 @@ L97AD:  .res    48, 0
         ;; overlayed indirect jump table
         op_jt_addrs_size := 6
 op_jt_addrs:
-op_jt_addr1:  .addr   L9B36
+op_jt_addr1:  .addr   L9B36     ; defaults are for copy
 op_jt_addr2:  .addr   L9B33
 op_jt_addr3:  .addr   rts2
 
@@ -10548,14 +10550,40 @@ L98A2:  lda     entries_read
         jsr     append_to_src_path
         jmp     L9801
 
+;;; Given this tree with b,c,e selected:
+;;;        b
+;;;        c/
+;;;           d/
+;;;               e
+;;;        f
+;;; Visit call sequence:
+;;;  * op_jt1 c
+;;;  * op_jt1 c/d
+;;;  * op_jt3 c/d
+;;;  * op_jt2 c
+;;;
+;;; Visiting individual files is done via direct calls, not the
+;;; overlayed jump table. Order is:
+;;;
+;;;  * call: b
+;;;  * op_jt1 on c
+;;;  * call: c/d
+;;;  * op_jt1 on c/d
+;;;  * call: c/d/e
+;;;  * op_jt3 on c/d
+;;;  * op_jt2 on c
+;;;  * call: c
+;;;  * call: f
+;;;  (3x final calls ???)
+
 .proc L98B4
         jsr     close_src_dir
-        jsr     op_jt3
+        jsr     op_jt3          ; third - called when exiting dir
         jsr     remove_path_segment_220
         jsr     pop_entry_count
         jsr     L9801
         jsr     sub
-        jmp     op_jt2
+        jmp     op_jt2          ; second - called when exited dir
 
 sub:    lda     entries_read
         cmp     entries_to_skip
@@ -10578,7 +10606,7 @@ loop:   jsr     read_file_entry
         and     #$0F
         sta     L97AD
         copy    #0, L9923
-        jsr     op_jt1
+        jsr     op_jt1          ; first - called when visiting dir
         lda     L9923
         bne     loop
         lda     L97AD+16
@@ -10650,7 +10678,7 @@ L995A:  stax    copy_dialog_params::count
 
         lda     #$00
         sta     LA425
-        sta     L918D
+        sta     all_flag
         rts
 .endproc
 
@@ -10669,7 +10697,7 @@ L99A7:  stax    copy_dialog_params::count
         rts
 
 L99BC:  lda     #$80
-        sta     L918D
+        sta     all_flag
 
         ldy     #op_jt_addrs_size-1
 :       copy    op_jt_overlay1,y, op_jt_addrs,y
@@ -10687,11 +10715,11 @@ L99DC:  copy    #CopyDialogLifecycle::exists, copy_dialog_params::phase
 
 L99EB:  copy    #CopyDialogLifecycle::too_large, copy_dialog_params::phase
         yax_call launch_dialog, index_download_dialog, copy_dialog_params
-        cmp     #2
-        bne     L99FE
+        cmp     #PromptResult::yes
+        bne     cancel
         rts
 
-L99FE:  jmp     close_files_cancel_dialog
+cancel: jmp     close_files_cancel_dialog
 
 ;;; ============================================================
 
@@ -10779,7 +10807,7 @@ L9AA8:  ldy     #7
         lda     LE05B
         beq     L9B23
         jsr     L9C01
-        bcs     L9B2C
+        bcs     done
 
         ldy     #17
         ldx     #11
@@ -10799,25 +10827,26 @@ L9AE0:  yax_call JT_MLI_RELAY, CREATE, create_params2
         beq     L9B23
         cmp     #ERR_DUPLICATE_FILENAME
         bne     L9B1D
-        bit     L918D
-        bmi     L9B14
+        bit     all_flag
+        bmi     do_it
         copy    #CopyDialogLifecycle::exists, copy_dialog_params::phase
         jsr     launch_copy_file_dialog
         pha
         copy    #CopyDialogLifecycle::show, copy_dialog_params::phase
         pla
-        cmp     #2
-        beq     L9B14
-        cmp     #3
-        beq     L9B2C
-        cmp     #4
-        bne     L9B1A
+        cmp     #PromptResult::yes
+        beq     do_it
+        cmp     #PromptResult::no
+        beq     done
+        cmp     #PromptResult::all
+        bne     cancel
         lda     #$80
-        sta     L918D
-L9B14:  jsr     LA426
+        sta     all_flag
+do_it:  jsr     LA426
         jmp     L9B23
 
-L9B1A:  jmp     close_files_cancel_dialog
+        ;; PromptResult::cancel
+cancel: jmp     close_files_cancel_dialog
 
 L9B1D:  jsr     show_error_alert
         jmp     L9AE0
@@ -10826,8 +10855,8 @@ L9B23:  lda     L9B30
         beq     L9B2D
 L9B28:  jmp     L98D8
 
-        .byte   0
-L9B2C:  rts
+        .byte   0               ; ???
+done:   rts
 
 L9B2D:  jmp     L9CDA
 
@@ -11164,7 +11193,7 @@ L9E26:  yax_call JT_MLI_RELAY, CREATE, create_params3
         beq     L9E6F
         cmp     #ERR_DUPLICATE_FILENAME
         bne     L9E69
-        bit     L918D
+        bit     all_flag
         bmi     L9E60
         copy    #CopyDialogLifecycle::exists, copy_dialog_params::phase
         yax_call launch_dialog, index_copy_file_dialog, copy_dialog_params
@@ -11177,7 +11206,7 @@ L9E26:  yax_call JT_MLI_RELAY, CREATE, create_params3
         beq     L9E71
         cmp     #4
         bne     L9E66
-        copy    #$80, L918D
+        copy    #$80, all_flag
 L9E60:  jsr     LA426
         jmp     L9E6F
 
@@ -11252,7 +11281,7 @@ count:  .word   0
 
         lda     #$00
         sta     LA425
-        sta     L918D
+        sta     all_flag
         rts
 .endproc
 
@@ -11297,30 +11326,31 @@ L9F1E:  bit     LE05C
         jsr     dec_file_count_and_launch_delete_dialog
 L9F26:  jsr     decrement_op_file_count
 L9F29:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
-        beq     L9F8D
+        beq     done
         cmp     #ERR_ACCESS_ERROR
         bne     L9F8E
-        bit     L918D
-        bmi     L9F62
+        bit     all_flag
+        bmi     do_it
         copy    #DeleteDialogLifecycle::locked, delete_file_dialog_params::phase
         jsr     launch_delete_file_dialog
         pha
         copy    #DeleteDialogLifecycle::show, delete_file_dialog_params::phase
         pla
-        cmp     #3
-        beq     L9F8D
-        cmp     #2
-        beq     L9F62
-        cmp     #4
+        cmp     #PromptResult::no
+        beq     done
+        cmp     #PromptResult::yes
+        beq     do_it
+        cmp     #PromptResult::all
         bne     L9F5F
-        copy    #$80, L918D
-        bne     L9F62
+        copy    #$80, all_flag
+        bne     do_it           ; always
+
 L9F5F:  jmp     close_files_cancel_dialog
 
-L9F62:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
+do_it:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         lda     file_info_params2::access
         and     #$80
-        bne     L9F8D
+        bne     done
         lda     #ACCESS_DEFAULT
         sta     file_info_params2::access
         lda     #7              ; param count for SET_FILE_INFO
@@ -11330,7 +11360,7 @@ L9F62:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         sta     file_info_params2
         jmp     L9F29
 
-L9F8D:  rts
+done:   rts
 
 L9F8E:  jsr     show_error_alert
         jmp     L9F29
@@ -11348,47 +11378,49 @@ L9F8E:  jsr     show_error_alert
         jsr     dec_file_count_and_launch_delete_dialog
 L9FA7:  jsr     decrement_op_file_count
 L9FAA:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
-        beq     L9FBB
+        beq     :+
         jsr     show_error_alert
         jmp     L9FAA
 
-L9FBB:  lda     file_info_params2::storage_type
+:       lda     file_info_params2::storage_type
         cmp     #ST_LINKED_DIRECTORY
-        beq     LA022
-L9FC2:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
-        beq     LA022
+        beq     next_file
+loop:   yax_call JT_MLI_RELAY, DESTROY, destroy_params
+        beq     next_file
         cmp     #ERR_ACCESS_ERROR
         bne     LA01C
-        bit     L918D
-        bmi     LA001
+        bit     all_flag
+        bmi     unlock
         copy    #DeleteDialogLifecycle::locked, delete_file_dialog_params::phase
         yax_call launch_dialog, index_delete_file_dialog, delete_file_dialog_params
         pha
         copy    #DeleteDialogLifecycle::show, delete_file_dialog_params::phase
         pla
-        cmp     #3
-        beq     LA022
-        cmp     #2
-        beq     LA001
-        cmp     #4
-        bne     L9FFE
+        cmp     #PromptResult::no
+        beq     next_file
+        cmp     #PromptResult::yes
+        beq     unlock
+        cmp     #PromptResult::all
+        bne     :+
         lda     #$80
-        sta     L918D
-        bne     LA001           ; always
+        sta     all_flag
+        bne     unlock           ; always
+        ;; PromptResult::cancel
+:       jmp     close_files_cancel_dialog
 
-L9FFE:  jmp     close_files_cancel_dialog
-
-LA001:  copy    #ACCESS_DEFAULT, file_info_params2::access
+unlock: copy    #ACCESS_DEFAULT, file_info_params2::access
         copy    #7, file_info_params2 ; param count for SET_FILE_INFO
         yax_call JT_MLI_RELAY, SET_FILE_INFO, file_info_params2
         copy    #$A,file_info_params2 ; param count for GET_FILE_INFO
-        jmp     L9FC2
+        jmp     loop
 
 LA01C:  jsr     show_error_alert
-        jmp     L9FC2
+        jmp     loop
 
-LA022:  jmp     remove_path_segment_220
+next_file:
+        jmp     remove_path_segment_220
 
+        ;; unused ???
         jsr     remove_path_segment_220
         copy    #$FF, L9923
         rts
@@ -11506,7 +11538,7 @@ unlock_dialog_lifecycle:
         yax_call launch_dialog, index_unlock_dialog, lock_unlock_dialog_params
         rts
 
-.proc LA114
+.proc lock_file
         copy    #LockDialogLifecycle::operation, lock_unlock_dialog_params::phase
         jsr     LA379
         ldx     dst_path_buf
@@ -11543,6 +11575,7 @@ LA158:  sta     LA168
 
 LA168:  .byte   0
 LA169:  .byte   0
+
 LA16A:  jsr     LA173
         jmp     append_to_src_path
 .endproc
@@ -11551,7 +11584,8 @@ LA170:  jsr     append_to_src_path
         ;; fall through
 
 .proc LA173
-        jsr     LA1C3
+        jsr     update_dialog
+
         jsr     decrement_op_file_count
 :       yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     :+
@@ -11559,27 +11593,29 @@ LA170:  jsr     append_to_src_path
         jmp     :-
 :       lda     file_info_params2::storage_type
         cmp     #ST_VOLUME_DIRECTORY
-        beq     LA1C0
+        beq     ok
         cmp     #ST_LINKED_DIRECTORY
-        beq     LA1C0
+        beq     ok
         bit     unlock_flag
         bpl     :+
         lda     #ACCESS_DEFAULT
-        bne     LA1A0
-:       lda     #$21
-LA1A0:  sta     file_info_params2::access
-LA1A3:  copy    #7, file_info_params2 ; param count for SET_FILE_INFO
+        bne     set
+:       lda     #ACCESS_LOCKED
+set:    sta     file_info_params2::access
+
+:       copy    #7, file_info_params2 ; param count for SET_FILE_INFO
         yax_call JT_MLI_RELAY, SET_FILE_INFO, file_info_params2
         pha
         copy    #$A, file_info_params2 ; param count for GET_FILE_INFO
         pla
-        beq     LA1C0
+        beq     ok
         jsr     show_error_alert
-        jmp     LA1A3
+        jmp     :-
 
-LA1C0:  jmp     remove_path_segment_220
+ok:     jmp     remove_path_segment_220
 
-LA1C3:  sub16   op_file_count, #1, lock_unlock_dialog_params::files_remaining_count
+update_dialog:
+        sub16   op_file_count, #1, lock_unlock_dialog_params::files_remaining_count
         bit     unlock_flag
         bpl     LA1DC
         jmp     unlock_dialog_lifecycle
@@ -12105,12 +12141,6 @@ done:   jsr     reset_grafport3a
 
 ;;; Click handler for prompt dialog
 
-        prompt_button_ok := 0
-        prompt_button_cancel := 1
-        prompt_button_yes := 2
-        prompt_button_no := 3
-        prompt_button_all := 4
-
 .proc prompt_click_handler
         MGTK_RELAY_CALL MGTK::FindWindow, event_coords
         lda     findwindow_which_area
@@ -12145,7 +12175,7 @@ check_button_ok:
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
         jsr     button_loop_ok
         bmi     :+
-        lda     #prompt_button_ok
+        lda     #PromptResult::ok
 :       rts
 
 check_button_yes:
@@ -12156,7 +12186,7 @@ check_button_yes:
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::yes_button_rect
         jsr     button_loop_yes
         bmi     :+
-        lda     #prompt_button_yes
+        lda     #PromptResult::yes
 :       rts
 
 check_button_no:
@@ -12167,7 +12197,7 @@ check_button_no:
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::no_button_rect
         jsr     button_loop_no
         bmi     :+
-        lda     #prompt_button_no
+        lda     #PromptResult::no
 :       rts
 
 check_button_all:
@@ -12178,7 +12208,7 @@ check_button_all:
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::all_button_rect
         jsr     button_loop_all
         bmi     :+
-        lda     #prompt_button_all
+        lda     #PromptResult::all
 :       rts
 
 maybe_check_button_cancel:
@@ -12195,7 +12225,7 @@ check_button_cancel:
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
         jsr     button_loop_cancel
         bmi     :+
-        lda     #prompt_button_cancel
+        lda     #PromptResult::cancel
 :       rts
 
 LA6ED:  bit     has_input_field_flag
@@ -12334,15 +12364,15 @@ LA7E5:  return  #$FF
 
 do_yes: jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::yes_button_rect
-        return  #prompt_button_yes
+        return  #PromptResult::yes
 
 do_no:  jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::no_button_rect
-        return  #prompt_button_no
+        return  #PromptResult::no
 
 do_all: jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::all_button_rect
-        return  #prompt_button_all
+        return  #PromptResult::all
 
 LA815:  lda     has_input_field_flag
         beq     LA81D
@@ -13837,23 +13867,23 @@ check_alpha:
 ;;; click (A as passed) / cancel (A is negative)
 
 button_loop_ok:
-        lda     #prompt_button_ok
+        lda     #PromptResult::ok
         jmp     button_event_loop
 
 button_loop_cancel:
-        lda     #prompt_button_cancel
+        lda     #PromptResult::cancel
         jmp     button_event_loop
 
 button_loop_yes:
-        lda     #prompt_button_yes
+        lda     #PromptResult::yes
         jmp     button_event_loop
 
 button_loop_no:
-        lda     #prompt_button_no
+        lda     #PromptResult::no
         jmp     button_event_loop
 
 button_loop_all:
-        lda     #prompt_button_all
+        lda     #PromptResult::all
         jmp     button_event_loop
 
 .proc button_event_loop
