@@ -3091,7 +3091,7 @@ maprect:        DEFINE_RECT 0, 0, 420, 55, maprect
 
 ;;; ============================================================
 ;;; Show Alert Dialog
-;;; Call show_alert_dialog with prompt number in X (???), A = ???
+;;; Call show_alert_dialog with prompt number A, options in X
 
 .proc show_alert_dialog_impl
 
@@ -3168,9 +3168,9 @@ alert_action_table:
         .byte   $00,$80,$80,$00
 
         ;; Actual entry point
-start:  pha
+start:  pha                     ; error code
         txa
-        pha
+        pha                     ; options???
         MGTK_RELAY2_CALL MGTK::HideCursor
         MGTK_RELAY2_CALL MGTK::SetCursor, pointer_cursor
         MGTK_RELAY2_CALL MGTK::ShowCursor
@@ -3183,12 +3183,13 @@ start:  pha
         lda     LCBANK1
         lda     LCBANK1
 
-        ldx     #$03
+        ldx     #.sizeof(MGTK::Point)-1
         lda     #$00
 LBA0B:  sta     grafport3_viewloc_xcoord,x
         sta     grafport3_cliprect_x1,x
         dex
         bpl     LBA0B
+
         copy16  #550, grafport3_cliprect_x2
         copy16  #185, grafport3_cliprect_y2
         MGTK_RELAY2_CALL MGTK::SetPort, grafport3
@@ -3202,7 +3203,7 @@ LBA0B:  sta     grafport3_viewloc_xcoord,x
         lda     portmap::viewloc::xcoord+1
         adc     portmap::maprect::x2+1
         tax
-        pla
+        pla                     ; options???
         jsr     LBF8B
         sty     LBFCC
         sta     LBFCE
@@ -3225,6 +3226,7 @@ LBA0B:  sta     grafport3_viewloc_xcoord,x
         MGTK_RELAY2_CALL MGTK::HideCursor
         MGTK_RELAY2_CALL MGTK::PaintBits, alert_bitmap_params
         MGTK_RELAY2_CALL MGTK::ShowCursor
+
         pla
         tax
         pla
@@ -3630,28 +3632,28 @@ LBF51:  .byte   0
 
 .proc LBF52
         lda     LBFB0
-        cmp     #$07
+        cmp     #7
         beq     LBF5F
         inc     LBFB0
         jmp     LBF2C
 
-LBF5F:  lda     #$00
+LBF5F:  lda     #0
         sta     LBFB0
         lda     LBFAF
-        cmp     #$38
+        cmp     #56
         beq     LBF74
         clc
-        adc     #$08
+        adc     #8
         sta     LBFAF
         jmp     LBF2C
 
-LBF74:  lda     #$00
+LBF74:  lda     #0
         sta     LBFAF
         lda     LBFAE
         clc
-        adc     #$40
+        adc     #64
         sta     LBFAE
-        cmp     #$C0
+        cmp     #192
         beq     LBF89
         jmp     LBF2C
 
@@ -3660,26 +3662,28 @@ LBF89:  sec
 .endproc
 
 .proc LBF8B
-        ldy     #$00
-        cpx     #$02
-        bne     LBF96
-        ldy     #$49
+        ldy     #0
+        cpx     #2
+        bne     :+
+        ldy     #73
         clc
-        adc     #$01
-LBF96:  cpx     #$01
-        bne     LBFA4
-        ldy     #$24
+        adc     #1
+
+:       cpx     #1
+        bne     :+
+        ldy     #36
         clc
-        adc     #$04
-        bcc     LBFA4
+        adc     #4
+        bcc     :+
         iny
-        sbc     #$07
-LBFA4:  cmp     #$07
-        bcc     LBFAD
-        sbc     #$07
+        sbc     #7
+:       cmp     #7
+        bcc     :+
+        sbc     #7
         iny
-        bne     LBFA4
-LBFAD:  rts
+        bne     :-
+
+:       rts
 .endproc
 
 LBFAE:  .byte   $00

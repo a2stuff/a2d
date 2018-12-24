@@ -51,12 +51,22 @@ JUMP_TABLE_COPY_TO_BUF  := $4024 ; Copy to buffer
 JUMP_TABLE_COPY_FROM_BUF:= $4027 ; Copy from buffer
 JUMP_TABLE_NOOP         := $402A ; No-Op command (RTS)
 JUMP_TABLE_2D           := $402D ; ??? (Draw type/size/date in non-icon views?)
-JUMP_TABLE_ALERT_0      := $4030 ; Show alert 0
-JUMP_TABLE_ALERT_X      := $4033 ; Show alert X
+JUMP_TABLE_ALERT_0      := $4030 ; Show alert (A=err code, default options)
+JUMP_TABLE_ALERT_X      := $4033 ; Show alert X (A=err code, X=options)
 JUMP_TABLE_LAUNCH_FILE  := $4036 ; Launch file
 JUMP_TABLE_CUR_POINTER  := $4039 ; Changes mouse cursor to pointer *
 JUMP_TABLE_CUR_WATCH    := $403C ; Changes mouse cursor to watch
 JUMP_TABLE_RESTORE_OVL  := $403F ; Restore from overlay routine
+
+;;; ============================================================
+;;; Error codes used for alerts which are not ProDOS errors
+
+ERR_DUPLICATE_VOL_NAME  = $F9
+ERR_FILE_NOT_RUNNABLE   = $FA
+ERR_NAME_TOO_LONG       = $FB
+ERR_INSERT_SRC_DISK     = $FC
+ERR_INSERT_DST_DISK     = $FD
+ERR_BASIC_SYS_NOT_FOUND = $FE
 
 ;;; ============================================================
 ;;; API Calls (from aux memory)

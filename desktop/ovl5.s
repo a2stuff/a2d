@@ -157,7 +157,7 @@ L7178:  jsr     common_overlay::jt_redraw_input
 
 L7189:  addr_call common_overlay::L647C, path_buf0
         beq     L7198
-L7192:  lda     #$40
+L7192:  lda     #ERR_INVALID_PATHNAME
         jsr     JUMP_TABLE_ALERT_0
         rts
 

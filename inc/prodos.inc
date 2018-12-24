@@ -105,6 +105,7 @@ FT_SYSTEM       := $FF
 ;;; ============================================================
 
 ACCESS_DEFAULT  := %11000011
+ACCESS_LOCKED   := %00100001
 
 ;;; ============================================================
 ;;; Storage Types
@@ -120,6 +121,7 @@ ST_VOLUME_DIRECTORY     := $0F
 
 ERR_DEVICE_NOT_CONNECTED := $28
 ERR_WRITE_PROTECTED   := $2B
+ERR_INVALID_PATHNAME  := $40
 ERR_INVALID_REFERENCE := $43
 ERR_PATH_NOT_FOUND    := $44
 ERR_VOL_NOT_FOUND     := $45
