@@ -942,7 +942,9 @@ filename_buf:
 
 LE05B:  .byte   0
 LE05C:  .byte   0               ; flag - always set to 0 ???
-LE05D:  .byte   0               ; counter of some sort ???
+
+process_depth:
+        .byte   0               ; tracks recursion depth
 
 ;;; Number of file entries per directory block
 num_entries_per_block:

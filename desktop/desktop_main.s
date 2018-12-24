@@ -9402,7 +9402,7 @@ do_delete_file:
         jsr     done_dialog_phase1
         jmp     L8F4F
 
-        ;; Possibly obsolete "down load" command?
+        ;; Possibly obsolete "auto load" command?
 L8F7E:  copy    #$80, L918C
         copy    #%11000000, operation_flags ; get size
         tsx
@@ -10412,7 +10412,7 @@ L9709:  .byte   $00
 pointers_buf:  .res    4, 0
 
         DEFINE_CLOSE_PARAMS close_src_dir_params
-        DEFINE_READ_PARAMS read_src_dir_entry_params, L97AD, .sizeof(FileEntry)
+        DEFINE_READ_PARAMS read_src_dir_entry_params, file_entry_buf, .sizeof(FileEntry)
         DEFINE_READ_PARAMS read_src_dir_skip5_params, skip5_buf, 5 ; ???
 skip5_buf:  .res    5, 0
 
@@ -10447,13 +10447,13 @@ skip5_buf:  .res    5, 0
 ;;; ============================================================
 
         ;; buffer of 39
-L97AD:  .res    48, 0
+file_entry_buf:  .res    48, 0
 
         ;; overlayed indirect jump table
         op_jt_addrs_size := 6
 op_jt_addrs:
-op_jt_addr1:  .addr   L9B36     ; defaults are for copy
-op_jt_addr2:  .addr   L9B33
+op_jt_addr1:  .addr   op_jt1_copy     ; defaults are for copy
+op_jt_addr2:  .addr   op_jt2_copy
 op_jt_addr3:  .addr   rts2
 
 rts2:   rts
@@ -10479,28 +10479,29 @@ L97E4:  .byte   $00
         rts
 .endproc
 
-.proc L9801
+.proc open_src_dir
         lda     #0
         sta     entries_read
         sta     entries_read_this_block
-L9809:  yax_call JT_MLI_RELAY, OPEN, open_src_dir_params
-        beq     L981E
+
+:       yax_call JT_MLI_RELAY, OPEN, open_src_dir_params
+        beq     :+
         ldx     #$80
         jsr     JT_SHOW_ALERT
-        beq     L9809
+        beq     :-
         jmp     close_files_cancel_dialog
 
-L981E:  lda     open_src_dir_params::ref_num
+:       lda     open_src_dir_params::ref_num
         sta     op_ref_num
         sta     read_src_dir_header_params::ref_num
-L9827:  yax_call JT_MLI_RELAY, READ, read_src_dir_header_params
-        beq     L983C
+:       yax_call JT_MLI_RELAY, READ, read_src_dir_header_params
+        beq     :+
         ldx     #$80
         jsr     JT_SHOW_ALERT
-        beq     L9827
+        beq     :-
         jmp     close_files_cancel_dialog
 
-L983C:  jmp     read_file_entry
+:       jmp     read_file_entry
 .endproc
 
 .proc close_src_dir
@@ -10543,12 +10544,14 @@ eof:    return  #$FF
 
 ;;; ============================================================
 
-L98A2:  lda     entries_read
+.proc prep_to_open_dir
+        lda     entries_read
         sta     entries_to_skip
         jsr     close_src_dir
         jsr     push_entry_count
         jsr     append_to_src_path
-        jmp     L9801
+        jmp     open_src_dir
+.endproc
 
 ;;; Given this tree with b,c,e selected:
 ;;;        b
@@ -10576,12 +10579,12 @@ L98A2:  lda     entries_read
 ;;;  * call: f
 ;;;  (3x final calls ???)
 
-.proc L98B4
+.proc finish_dir
         jsr     close_src_dir
         jsr     op_jt3          ; third - called when exiting dir
-        jsr     remove_path_segment_220
+        jsr     remove_src_path_segment
         jsr     pop_entry_count
-        jsr     L9801
+        jsr     open_src_dir
         jsr     sub
         jmp     op_jt2          ; second - called when exited dir
 
@@ -10593,45 +10596,52 @@ sub:    lda     entries_read
 done:   rts
 .endproc
 
-.proc L98D8
-        copy    #0, LE05D
-        jsr     L9801
+.proc process_dir
+        copy    #0, process_depth
+        jsr     open_src_dir
 loop:   jsr     read_file_entry
-        bne     L9912
+        bne     end_dir
 
-        lda     L97AD
+        lda     file_entry_buf + FileEntry::storage_type_name_length
         beq     loop
-        lda     L97AD
-        sta     L992D
-        and     #$0F
-        sta     L97AD
-        copy    #0, L9923
+        lda     file_entry_buf + FileEntry::storage_type_name_length
+        sta     saved_type_and_length
+
+        and     #$0F            ; mask off name_length
+        sta     file_entry_buf
+
+        copy    #0, cancel_descent_flag
         jsr     op_jt1          ; first - called when visiting dir
-        lda     L9923
+        lda     cancel_descent_flag
         bne     loop
-        lda     L97AD+16
-        cmp     #$0F
+
+        lda     file_entry_buf + FileEntry::file_type
+        cmp     #FT_DIRECTORY
         bne     loop
-        jsr     L98A2
-        inc     LE05D
+        jsr     prep_to_open_dir
+        inc     process_depth
         jmp     loop
 
-L9912:  lda     LE05D
+end_dir:
+        lda     process_depth
         beq     L9920
-        jsr     L98B4
-        dec     LE05D
+        jsr     finish_dir
+        dec     process_depth
         jmp     loop
 
 L9920:  jmp     close_src_dir
 .endproc
 
-L9923:  .byte   0
+cancel_descent_flag:  .byte   0
 
 op_jt1: jmp     (op_jt_addr1)
 op_jt2: jmp     (op_jt_addr2)
 op_jt3: jmp     (op_jt_addr3)
 
-L992D:  .byte   $00,$00,$00,$00
+saved_type_and_length:          ; written but not read ???
+        .byte   0
+
+        .byte   0,0,0           ; ???
 
 ;;; ============================================================
 ;;; "Copy" (including Drag/Drop) files state and logic
@@ -10639,8 +10649,8 @@ L992D:  .byte   $00,$00,$00,$00
 
 ;;; Overlays for copy operation
 op_jt_overlay1:
-        .addr   L9B36           ; Overlay for op_jt_addrs
-        .addr   L9B33
+        .addr   op_jt1_copy           ; Overlay for op_jt_addrs
+        .addr   op_jt2_copy
         .addr   rts2
 
 .enum CopyDialogLifecycle
@@ -10735,7 +10745,7 @@ with_flag:
 
 L9A0F:  sta     flag
         copy    #CopyDialogLifecycle::show, copy_dialog_params::phase
-        jsr     LA379
+        jsr     copy_paths_to_src_and_dst_paths
         bit     operation_flags
         bvc     @not_size
         jsr     L9BC9
@@ -10750,7 +10760,7 @@ L9A0F:  sta     flag
         jmp     L9B28
 
 L9A36:  ldx     dst_path_buf
-        ldy     L9B32
+        ldy     src_path_slash_index
         dey
 L9A3D:  iny
         inx
@@ -10853,7 +10863,7 @@ L9B1D:  jsr     show_error_alert
 
 L9B23:  lda     L9B30
         beq     L9B2D
-L9B28:  jmp     L98D8
+L9B28:  jmp     process_dir
 
         .byte   0               ; ???
 done:   rts
@@ -10865,49 +10875,56 @@ flag:   .byte   0               ; ???
 .endproc
         copy_file_with_flag := copy_file::with_flag
 
-L9B32:  .byte   0
+src_path_slash_index:
+        .byte   0
 
 
 ;;; ============================================================
 
-L9B33:  jmp     LA360
+op_jt2_copy:
+        jmp     remove_dst_path_segment
 
 ;;; ============================================================
 
-.proc L9B36
+.proc op_jt1_copy
         jsr     check_escape_key_down
         beq     :+
         jmp     close_files_cancel_dialog
-:       lda     L97AD+16
-        cmp     #$0F
-        bne     L9B88
+
+:       lda     file_entry_buf + FileEntry::file_type
+        cmp     #FT_DIRECTORY
+        bne     regular_file
+
+        ;; Directory
         jsr     append_to_src_path
 :       yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
-        beq     L9B59
+        beq     :+
         jsr     show_error_alert
         jmp     :-
 
-L9B59:  jsr     LA33B
+:       jsr     append_to_dst_path
         jsr     dec_file_count_and_launch_copy_dialog
         jsr     decrement_op_file_count
         lda     op_file_count+1
-        bne     L9B6F
+        bne     :+
         lda     op_file_count
-        bne     L9B6F
+        bne     :+
         jmp     close_files_cancel_dialog
 
-L9B6F:  jsr     L9E19
-        bcs     L9B7A
-        jsr     remove_path_segment_220
+:       jsr     L9E19
+        bcs     :+
+        jsr     remove_src_path_segment
         jmp     L9BBE
 
-L9B7A:  jsr     LA360
-        jsr     remove_path_segment_220
+:       jsr     remove_dst_path_segment
+        jsr     remove_src_path_segment
         lda     #$FF
-        sta     L9923
+        sta     cancel_descent_flag
         jmp     L9BBE
 
-L9B88:  jsr     LA33B
+        ;; File
+regular_file:
+        jsr     append_to_dst_path
         jsr     append_to_src_path
         jsr     dec_file_count_and_launch_copy_dialog
 L9B91:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
@@ -10919,13 +10936,13 @@ L9BA2:  jsr     L9C01
         bcc     L9BAA
         jmp     close_files_cancel_dialog
 
-L9BAA:  jsr     remove_path_segment_220
+L9BAA:  jsr     remove_src_path_segment
         jsr     L9E19
         bcs     L9BBB
         jsr     append_to_src_path
         jsr     L9CDA
-        jsr     remove_path_segment_220
-L9BBB:  jsr     LA360
+        jsr     remove_src_path_segment
+L9BBB:  jsr     remove_dst_path_segment
 L9BBE:  rts
 .endproc
 
@@ -11228,7 +11245,7 @@ L9E71:  sec
 
 ;;; Overlays for delete operation
 op_jt_overlay2:
-        .addr   L9F94           ; Overlay for op_jt_addrs
+        .addr   op_jt_1_delete           ; Overlay for op_jt_addrs
         .addr   rts2
         .addr   destroy_with_retry
 
@@ -11294,7 +11311,7 @@ count:  .word   0
 
 .proc delete_file
         copy    #DeleteDialogLifecycle::show, delete_file_dialog_params::phase
-        jsr     LA379
+        jsr     copy_paths_to_src_and_dst_paths
 L9EE3:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     L9EF4
         jsr     show_error_alert
@@ -11309,7 +11326,7 @@ L9EF4:  lda     file_info_params2::storage_type
 L9F02:  lda     #$FF
 L9F04:  sta     L9F1C
         beq     L9F1E
-        jsr     L98D8
+        jsr     process_dir
         lda     L9F1D
         cmp     #$0D
         bne     L9F18
@@ -11368,7 +11385,7 @@ L9F8E:  jsr     show_error_alert
 
 ;;; ============================================================
 
-.proc L9F94
+.proc op_jt_1_delete
         jsr     check_escape_key_down
         beq     :+
         jmp     close_files_cancel_dialog
@@ -11418,11 +11435,11 @@ LA01C:  jsr     show_error_alert
         jmp     loop
 
 next_file:
-        jmp     remove_path_segment_220
+        jmp     remove_src_path_segment
 
         ;; unused ???
-        jsr     remove_path_segment_220
-        copy    #$FF, L9923
+        jsr     remove_src_path_segment
+        copy    #$FF, cancel_descent_flag
         rts
 .endproc
 
@@ -11447,7 +11464,7 @@ done:   rts
 
 ;;; Overlays for lock/unlock operation
 op_jt_overlay3:
-        .addr   LA170           ; overlay for op_jt_addrs
+        .addr   op_jt_1_lock           ; overlay for op_jt_addrs
         .addr   rts2
         .addr   rts2
 
@@ -11540,9 +11557,9 @@ unlock_dialog_lifecycle:
 
 .proc lock_file
         copy    #LockDialogLifecycle::operation, lock_unlock_dialog_params::phase
-        jsr     LA379
+        jsr     copy_paths_to_src_and_dst_paths
         ldx     dst_path_buf
-        ldy     L9B32
+        ldy     src_path_slash_index
         dey
 LA123:  iny
         inx
@@ -11567,7 +11584,7 @@ LA144:  lda     file_info_params2::storage_type
 LA156:  lda     #$FF
 LA158:  sta     LA168
         beq     LA16A
-        jsr     L98D8
+        jsr     process_dir
         lda     LA169
         cmp     #$0F
         bne     LA16A
@@ -11580,7 +11597,8 @@ LA16A:  jsr     LA173
         jmp     append_to_src_path
 .endproc
 
-LA170:  jsr     append_to_src_path
+op_jt_1_lock:
+        jsr     append_to_src_path
         ;; fall through
 
 .proc LA173
@@ -11612,7 +11630,7 @@ set:    sta     file_info_params2::access
         jsr     show_error_alert
         jmp     :-
 
-ok:     jmp     remove_path_segment_220
+ok:     jmp     remove_src_path_segment
 
 update_dialog:
         sub16   op_file_count, #1, lock_unlock_dialog_params::files_remaining_count
@@ -11654,7 +11672,7 @@ LA233:  copy    #3, get_size_dialog_params::phase
 LA241:  rts
 
 op_jt_overlay4:
-        .addr   LA2AE           ; overlay for op_jt_addrs
+        .addr   op_jt_1_size           ; overlay for op_jt_addrs
         .addr   rts2
         .addr   rts2
 
@@ -11687,7 +11705,7 @@ op_jt_overlay4:
 ;;; ============================================================
 
 .proc LA271
-        jsr     LA379
+        jsr     copy_paths_to_src_and_dst_paths
 :       yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
         beq     :+
         jsr     show_error_alert
@@ -11706,7 +11724,7 @@ is_dir: lda     #$FF
 store:  sta     is_dir_flag
         beq     LA2AB           ; if not a dir
 
-        jsr     L98D8
+        jsr     process_dir
         lda     storage_type
         cmp     #ST_VOLUME_DIRECTORY
         bne     LA2AB           ; if a subdirectory
@@ -11721,11 +11739,12 @@ storage_type:
 
 ;;; ============================================================
 
-LA2AB:  jmp     LA2AE
+LA2AB:  jmp     op_jt_1_size
 
         ;; First pass - visit/count all files ???
 
-LA2AE:  bit     operation_flags
+op_jt_1_size:
+        bit     operation_flags
         bvc     :+              ; not size
 
         ;; If operation is "get size", add the block count to the sum
@@ -11738,7 +11757,7 @@ LA2AE:  bit     operation_flags
 
         bit     operation_flags
         bvc     :+              ; not size
-        jsr     remove_path_segment_220
+        jsr     remove_src_path_segment
 
 :       ldax    op_file_count
         jmp     done_dialog_phase0
@@ -11757,12 +11776,12 @@ op_block_count:
 .endproc
 
 ;;; ============================================================
-;;; Append name at L97AD to path at src_path_buf
+;;; Append name at file_entry_buf to path at src_path_buf
 
 .proc append_to_src_path
         path := src_path_buf
 
-        lda     L97AD
+        lda     file_entry_buf
         bne     :+
         rts
 
@@ -11771,27 +11790,28 @@ op_block_count:
         copy    #'/', path+1,y
 
         iny
-loop:   cpx     L97AD
+loop:   cpx     file_entry_buf
         bcs     done
-        lda     L97AD+1,x
+        lda     file_entry_buf+1,x
         sta     path+1,y
         inx
         iny
         jmp     loop
 
-done:   sty     src_path_buf
+done:   sty     path
         rts
 .endproc
 
 ;;; ============================================================
 ;;; Remove segment from path at src_path_buf
 
-.proc remove_path_segment_220
+.proc remove_src_path_segment
         path := src_path_buf
 
         ldx     path            ; length
         bne     :+
         rts
+
 :       lda     path,x
         cmp     #'/'
         beq     found
@@ -11806,64 +11826,76 @@ found:  dex
 .endproc
 
 ;;; ============================================================
+;;; Append name at file_entry_buf to path at dst_path_buf
 
-.proc LA33B
-        lda     L97AD
-        bne     LA341
+.proc append_to_dst_path
+        path := dst_path_buf
+
+        lda     file_entry_buf
+        bne     :+
         rts
 
-LA341:  ldx     #$00
-        ldy     dst_path_buf
-        copy    #'/', dst_path_buf+1,y
+:       ldx     #0
+        ldy     path
+        copy    #'/', path+1,y
+
         iny
-LA34C:  cpx     L97AD
-        bcs     LA35C
-        lda     L97AD+1,x
-        sta     dst_path_buf+1,y
+loop:   cpx     file_entry_buf
+        bcs     done
+        lda     file_entry_buf+1,x
+        sta     path+1,y
         inx
         iny
-        jmp     LA34C
+        jmp     loop
 
-LA35C:  sty     dst_path_buf
+done:   sty     path
         rts
 .endproc
 
 ;;; ============================================================
+;;; Remove segment from path at dst_path_buf
 
-.proc LA360
-        ldx     dst_path_buf
-        bne     LA366
+.proc remove_dst_path_segment
+        path := dst_path_buf
+
+        ldx     path            ; length
+        bne     :+
         rts
 
-LA366:  lda     dst_path_buf,x
+:       lda     path,x
         cmp     #'/'
-        beq     LA374
+        beq     found
         dex
-        bne     LA366
-        stx     dst_path_buf
+        bne     :-
+        stx     path
         rts
 
-LA374:  dex
-        stx     dst_path_buf
+found:  dex
+        stx     path
         rts
 .endproc
 
 ;;; ============================================================
+;;; Copy path_buf3 to src_path_buf, path_buf4 to dst_path_buf
+;;; and note last '/' in src.
 
-.proc LA379
+.proc copy_paths_to_src_and_dst_paths
         ldy     #0
-        sty     L9B32
+        sty     src_path_slash_index
         dey
 
+        ;; Copy path_buf3 to src_path_buf
+        ;; ... but record index of last '/'
 loop:   iny
         lda     path_buf3,y
         cmp     #'/'
         bne     :+
-        sty     L9B32
+        sty     src_path_slash_index
 :       sta     src_path_buf,y
         cpy     path_buf3
         bne     loop
 
+        ;; Copy path_buf4 to dst_path_buf
         ldy     path_buf4
 :       lda     path_buf4,y
         sta     dst_path_buf,y
