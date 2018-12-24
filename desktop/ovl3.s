@@ -1245,7 +1245,7 @@ L9BFC:  jsr     L9DA7
         rts
 
 L9C09:  sta     warning_dialog_num
-        yax_call desktop_main::launch_dialog, $0C, warning_dialog_num
+        yax_call desktop_main::invoke_dialog_proc, $0C, warning_dialog_num
         rts
 
         DEFINE_OPEN_PARAMS open_params, $1C00, $800
