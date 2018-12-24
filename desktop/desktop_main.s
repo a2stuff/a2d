@@ -1202,13 +1202,15 @@ set_penmode_copy:
         cmp     #4              ; 4 = Run ?
         bne     done
 
+        ;; "Run" command
         lda     result
         bpl     done
-        jsr     L4AAD
-        jsr     L4A77
+        jsr     make_ramcard_prefixed_path
+        jsr     strip_path_segments
         jsr     get_copied_to_ramcard_flag
         bpl     L497A
-        jsr     L8F24           ; Condition for this ???
+
+        jsr     jt_run
         bmi     done
         jsr     L4968
 
@@ -1216,21 +1218,15 @@ done:   jsr     set_pointer_cursor
         jsr     redraw_windows_and_desktop
         rts
 
-L4968:  jsr     L4AAD
-        ldx     $840
-L496E:  lda     $840,x
-        sta     buf_win_path,x
-        dex
-        bpl     L496E
-        jmp     L4A17
+.proc L4968
+        jsr     make_ramcard_prefixed_path
+        COPY_STRING $840, buf_win_path
+        jmp     launch_buf_win_path
+.endproc
 
-L497A:  jsr     L4AAD
-        ldx     L0800
-L4980:  lda     L0800,x
-        sta     buf_win_path,x
-        dex
-        bpl     L4980
-        jsr     L4A17
+L497A:  jsr     make_ramcard_prefixed_path
+        COPY_STRING $800, buf_win_path
+        jsr     launch_buf_win_path
         jmp     done
 
 result: .byte   0
@@ -1270,7 +1266,7 @@ L49A6:  lda     menu_click_params::item_num
 
         lda     entry_num
         jsr     L4A47
-        jsr     L8F24
+        jsr     jt_run
         bpl     L49ED
         jmp     redraw_windows_and_desktop
 
@@ -1298,34 +1294,47 @@ L4A0F:  lda     ($06),y
         sta     buf_win_path,y
         dey
         bpl     L4A0F
-L4A17:  ldy     buf_win_path
-L4A1A:  lda     buf_win_path,y
+        ;; fall throigh
+
+.proc launch_buf_win_path
+        ;; Find last '/'
+        ldy     buf_win_path
+:       lda     buf_win_path,y
         cmp     #'/'
-        beq     L4A24
+        beq     :+
         dey
-        bpl     L4A1A
-L4A24:  dey
-        sty     L4A46
-        ldx     #$00
+        bpl     :-
+
+:       dey
+        sty     slash_index
+
+        ;; Copy filename to buf_filename2
+        ldx     #0
         iny
-L4A2B:  iny
+:       iny
         inx
         lda     buf_win_path,y
         sta     buf_filename2,x
         cpy     buf_win_path
-        bne     L4A2B
+        bne     :-
+
+        ;; Truncate path
         stx     buf_filename2
-        lda     L4A46
+        lda     slash_index
         sta     buf_win_path
-        lda     #$00
+        lda     #0
+
         jmp     launch_file
 
-L4A46:  .byte   0
+slash_index:
+        .byte   0
+.endproc
 
 ;;; --------------------------------------------------
 
         ;; Copy entry path to $800
-L4A47:  pha
+.proc L4A47
+        pha
         jsr     a_times_64
         addax   #run_list_paths, $06
         ldy     #0
@@ -1347,9 +1356,12 @@ L4A47:  pha
         sta     $840,y
         dey
         bpl     :-
+        ;; fall through
+.endproc
 
         ;; Strip segment off path at $800
-L4A77:  ldy     $800
+.proc strip_path_segments
+        ldy     $800
 :       lda     $800,y
         cmp     #'/'
         beq     :+
@@ -1361,12 +1373,12 @@ L4A77:  ldy     $800
 
         ;; Strip segment off path at $840
         ldy     $840
-L4A8B:  lda     $840,y
+:       lda     $840,y
         cmp     #'/'
-        beq     L4A95
+        beq     :+
         dey
-        bne     L4A8B
-L4A95:  dey
+        bne     :-
+:       dey
         sty     $840
 
         ;; Return addresses in $6 and $8
@@ -1375,36 +1387,48 @@ L4A95:  dey
 
         jsr     copy_paths_and_split_name
         rts
+.endproc
 
 ;;; --------------------------------------------------
+;;; Append last two path segments of buf_win_path to
+;;; ramcard_prefix, result left at $840
 
-L4AAD:  ldy     buf_win_path
-L4AB0:  lda     buf_win_path,y
+.proc make_ramcard_prefixed_path
+        ;; Copy window path to $800
+        ldy     buf_win_path
+:       lda     buf_win_path,y
         sta     L0800,y
         dey
-        bpl     L4AB0
+        bpl     :-
+
         addr_call copy_ramcard_prefix, $840
+
+        ;; Find last '/' in path...
         ldy     L0800
-L4AC3:  lda     L0800,y
+:       lda     L0800,y
         cmp     #'/'
-        beq     L4ACD
+        beq     :+
         dey
-        bne     L4AC3
-L4ACD:  dey
-L4ACE:  lda     L0800,y
+        bne     :-
+
+        ;; And back up one more path segment...
+:       dey
+:       lda     L0800,y
         cmp     #'/'
-        beq     L4AD8
+        beq     :+
         dey
-        bne     L4ACE
-L4AD8:  dey
+        bne     :-
+
+:       dey
         ldx     $840
-L4ADC:  iny
+:       iny
         inx
         lda     L0800,y
         sta     $840,x
         cpy     L0800
-        bne     L4ADC
+        bne     :-
         rts
+.endproc
 
 .proc check_downloaded_path
         jsr     compose_downloaded_entry_path
@@ -1416,9 +1440,9 @@ L4ADC:  iny
 .endproc
         cmd_selector_item := cmd_selector_item_impl::start
 
-        L4A17 := cmd_selector_item_impl::L4A17
-        L4A77 := cmd_selector_item_impl::L4A77
-        L4AAD := cmd_selector_item_impl::L4AAD
+        launch_buf_win_path := cmd_selector_item_impl::launch_buf_win_path
+        strip_path_segments := cmd_selector_item_impl::strip_path_segments
+        make_ramcard_prefixed_path := cmd_selector_item_impl::make_ramcard_prefixed_path
 
 ;;; ============================================================
 ;;; Get "coped to RAM card" flag from Main LC Bank 2.
@@ -2874,8 +2898,7 @@ L566A:  ldx     active_window_id
         bpl     L5676
         rts
 
-L5676:  lda     active_window_id
-        sta     cached_window_id
+L5676:  copy    active_window_id, cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
         lda     cached_window_icon_count
         bne     L5687
@@ -2883,34 +2906,29 @@ L5676:  lda     active_window_id
 
 L5687:  ldx     cached_window_icon_count
         dex
-L568B:  lda     cached_window_icon_list,x
-        sta     selected_icon_list,x
+L568B:  copy    cached_window_icon_list,x, selected_icon_list,x
         dex
         bpl     L568B
-        lda     cached_window_icon_count
-        sta     selected_icon_count
-        lda     active_window_id
-        sta     selected_window_index
-        lda     selected_window_index
-        sta     LE22C
+        copy    cached_window_icon_count, selected_icon_count
+        copy    active_window_id, selected_window_index
+        copy    selected_window_index, LE22C
         beq     L56AB
         jsr     L56F9
 L56AB:  lda     selected_icon_count
         sta     L56F8
         dec     L56F8
 L56B4:  ldx     L56F8
-        lda     selected_icon_list,x
-        sta     LE22B
+        copy    selected_icon_list,x, icon_param2
         jsr     icon_entry_lookup
         stax    $06
         lda     LE22C
         beq     L56CF
-        lda     LE22B
+        lda     icon_param2
         jsr     icon_window_to_screen
-L56CF:  DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, LE22B
+L56CF:  DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param2
         lda     LE22C
         beq     L56E3
-        lda     LE22B
+        lda     icon_param2
         jsr     icon_screen_to_window
 L56E3:  dec     L56F8
         bpl     L56B4
@@ -3256,12 +3274,12 @@ L5916:  lda     cached_window_icon_list,x
         tax
 L5942:  dex
         bpl     L5916
-        ldy     #$00
-        sty     L599E
-L594A:  ldy     L599E
+        ldy     #0
+        sty     devlst_index
+L594A:  ldy     devlst_index
         inc     cached_window_icon_count
         inc     icon_count
-        lda     #$00
+        lda     #0
         sta     device_to_icon_map,y
         lda     DEVLST,y
         jsr     create_volume_icon
@@ -3269,12 +3287,12 @@ L594A:  ldy     L599E
         bne     :+
         lda     #ERR_DUPLICATE_VOL_NAME
         sta     pending_alert
-:       inc     L599E
-        lda     L599E
+:       inc     devlst_index
+        lda     devlst_index
         cmp     DEVCNT
         beq     L594A
         bcc     L594A
-        ldx     #$00
+        ldx     #0
 L5976:  cpx     cached_window_icon_count
         bne     L5986
         lda     pending_alert
@@ -3298,10 +3316,13 @@ L5998:  pla
 
 ;;; ============================================================
 
-L599E:  .byte   0
+devlst_index:
+        .byte   0
 
 pending_alert:
         .byte   0
+
+;;; ============================================================
 
 L59A0:  lda     #$00
         beq     L59AA
@@ -4815,8 +4836,8 @@ L688F:  ldx     selected_icon_count
 L6893:  txa
         pha
         lda     selected_icon_list,x
-        sta     LE22D
-        DESKTOP_RELAY_CALL DT_REDRAW_ICON, LE22D
+        sta     icon_param3
+        DESKTOP_RELAY_CALL DT_REDRAW_ICON, icon_param3
         pla
         tax
         dex
@@ -9360,7 +9381,7 @@ jt_copy_file:   jmp     do_copy_file ; cmd_copy_file
 jt_delete_file: jmp     do_delete_file ; cmd_delete_file
         jmp     rts2            ; rts
         jmp     rts2            ; rts
-L8F24:  jmp     L8F7E           ; cmd_selector_action ???
+jt_run:         jmp     do_run  ; cmd_selector_action / Run
 jt_get_size:    jmp     do_get_size ; cmd_get_size
 
 
@@ -9415,8 +9436,8 @@ do_delete_file:
         jsr     done_dialog_phase1
         jmp     L8F4F
 
-        ;; Possibly obsolete "auto load" command?
-L8F7E:  copy    #$80, L918C
+do_run:
+        copy    #$80, run_flag
         copy    #%11000000, operation_flags ; get size
         tsx
         stx     stack_stash
@@ -9449,7 +9470,7 @@ do_unlock:
 ;;; --------------------------------------------------
 
 .proc do_get_size
-        copy    #0, L918C
+        copy    #0, run_flag
         copy    #%11000000, operation_flags ; get size
         jmp     L8FEB
 .endproc
@@ -9702,7 +9723,7 @@ empty_string:
         .byte   0
 .endproc                        ; operations
         do_delete_file := operations::do_delete_file
-        L8F7E := operations::L8F7E
+        do_run := operations::do_run
         do_copy_file := operations::do_copy_file
         do_lock := operations::do_lock
         do_unlock := operations::do_unlock
@@ -9744,8 +9765,9 @@ delete_flag:
 unlock_flag:
         .byte   0
 
-        ;; high bit alters "get size" behavior - unused??
-L918C:  .byte   0
+        ;; high bit set = from Selector > Run command (download???)
+run_flag:
+        .byte   0
 
 all_flag:  .byte   0
 
@@ -9815,7 +9837,7 @@ done:   stx     buf
 
 .proc redraw_desktop_and_windows
         jsr     JT_REDRAW_ALL
-        yax_call JT_DESKTOP_RELAY, $C, 0
+        yax_call JT_DESKTOP_RELAY, DT_REDRAW_ICONS, 0
         rts
 .endproc
 
@@ -10374,8 +10396,8 @@ L969E:  lda     #$40
         jsr     L96F8
         ldx     L9706
         lda     selected_icon_list,x
-        sta     LE22B
-        yax_call JT_DESKTOP_RELAY, $E, LE22B
+        sta     icon_param2
+        yax_call JT_DESKTOP_RELAY, DT_REDRAW_ICON_IDX, icon_param2
         copy16  L9707, $08
         ldx     L9706
         lda     selected_icon_list,x
@@ -12058,8 +12080,8 @@ do_on_line:
 ;;; Dialog Launcher (or just proc handler???)
 
         index_about_dialog              := 0
-        index_copy_dialog          := 1
-        index_delete_dialog        := 2
+        index_copy_dialog               := 1
+        index_delete_dialog             := 2
         index_new_folder_dialog         := 3
         index_get_info_dialog           := 6
         index_lock_dialog               := 7

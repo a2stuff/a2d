@@ -991,12 +991,14 @@ LE202:  .res    24, 0           ; addr table
         .byte   $00
 
         ;; DT_HIGHLIGHT_ICON params
-LE22B:  .byte   0
+icon_param2:
+        .byte   0
 
 LE22C:  .byte   0
 
         ;; DT_HIGHLIGHT_ICON params
-LE22D:  .byte   0
+icon_param3:
+        .byte   0
 
         ;; DT_UNHIGHLIGHT_ICON params
 LE22E:
