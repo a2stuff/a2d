@@ -34,6 +34,7 @@
 * IIgs-specific: color DHR is re-enabled on exit. (#43)
 * IIgs emulators no longer crash on startup. (#85)
 * SELECTOR.LIST created if missing. (#92)
+* Position desktop icons based on Slot/Drive assignment. (#94)
 
 # 1.1
 

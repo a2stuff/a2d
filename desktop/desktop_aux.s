@@ -2876,7 +2876,7 @@ str_about4:  PASCAL_STRING "All Rights Reserved"
 str_about5:  PASCAL_STRING "Authors: Stephane Cavril, Bernard Gallet, Henri Lamiraux"
 str_about6:  PASCAL_STRING "Richard Danais and Luc Barthelet"
 str_about7:  PASCAL_STRING "With thanks to: A. Gerard, J. Gerber, P. Pahl, J. Bernard"
-str_about8:  PASCAL_STRING "November 14, 2018"
+str_about8:  PASCAL_STRING "December 24, 2018"
 str_about9:  PASCAL_STRING .sprintf("Version %d.%d%s",::VERSION_MAJOR,::VERSION_MINOR,VERSION_SUFFIX)
 
         ;; "Copy File" dialog strings
