@@ -3238,9 +3238,10 @@ L5916:  lda     cached_window_icon_list,x
         tax
 L5942:  dex
         bpl     L5916
+
         ldy     #0
         sty     devlst_index
-L594A:  ldy     devlst_index
+@loop:  ldy     devlst_index
         inc     cached_window_icon_count
         inc     icon_count
         lda     #0
@@ -3254,8 +3255,9 @@ L594A:  ldy     devlst_index
 :       inc     devlst_index
         lda     devlst_index
         cmp     DEVCNT
-        beq     L594A
-        bcc     L594A
+        beq     @loop
+        bcc     @loop
+
         ldx     #0
 L5976:  cpx     cached_window_icon_count
         bne     L5986
@@ -8526,6 +8528,9 @@ device_type_to_icon_address_table:
         slot_addr := $0A
         sta     unit_number
 
+        cmp     #$3E            ; RAM.SYSTEM
+        beq     ram
+
         ;; Look at "ID Nibble" (mostly bogus)
         and     #%00001111      ; look at low nibble
         bne     :+              ; 0 = Disk II
@@ -8553,7 +8558,7 @@ unk:    return  #device_type_unknown
         lda     (slot_addr),y   ; bit 0 = is RAM Card?
         ora     #%00000001
         beq     :+
-        return  #device_type_ramdisk
+ram:    return  #device_type_ramdisk
 
 :       lda     unit_number     ; low nibble is high nibble of $CnFE
         ora     #%00001000      ; bit 3 = is removable?
@@ -8662,9 +8667,15 @@ assign: ldy     #IconEntry::iconbits
         ;; (Currently, left edges are aligned)
 
         ;; Assign icon coordinates
-        lda     device_num
-        asl     a               ; device num * 4 is coordinates index
-        asl     a
+        ;; (Original logic was to assign in order based on
+        ;; DEVLST order. This assigns based on Slot/Drive.)
+        lda     unit_number
+        lsr     a               ; shift to low nibble
+        lsr     a               ; to use as index in table
+        lsr     a
+        lsr     a
+        tax
+        lda     unit_num_to_coords_index_table,x
         tax
         ldy     #IconEntry::iconx
 :       lda     desktop_icon_coords_table,x
@@ -8689,26 +8700,62 @@ device_num:     .byte   0
 
 ;;; ============================================================
 
+;;;  +-------------------------------------------------+
+;;;  |                                                 |
+;;;  |                                           S7D1  |
+;;;  |                                                 |
+;;;  |                                           S7D2  |
+;;;  |                                                 |
+;;;  |                                           S6D1  |
+;;;  |                                                 |
+;;;  |                                           S6D2  |
+;;;  |                                                 |
+;;;  |                  S1D2    S1D1    S4D2     S3D1  |
+;;;  |                                                 |
+;;;  |  S4D1    S2D2    S2D1    S5D2    S5D1    Trash  |
+;;;  |                                                 |
+;;;  +-------------------------------------------------+
+
+
 desktop_icon_coords_table:
         DEFINE_POINT 0,0
-        DEFINE_POINT 490,16
-        DEFINE_POINT 490,45
-        DEFINE_POINT 490,75
-        DEFINE_POINT 490,103
-        DEFINE_POINT 490,131
-        DEFINE_POINT 400,160
-        DEFINE_POINT 310,160
-        DEFINE_POINT 220,160
-        DEFINE_POINT 130,160
-        DEFINE_POINT 40,160
-        DEFINE_POINT 400,131
-        DEFINE_POINT 310,131
-        DEFINE_POINT 220,131
+        DEFINE_POINT 490,16     ; 1     S7D1
+        DEFINE_POINT 490,45     ; 2     S7D2
+        DEFINE_POINT 490,75     ; 3     S6D1
+        DEFINE_POINT 490,103    ; 4     S6D2
+        DEFINE_POINT 490,131    ; 5     S3D1
+        DEFINE_POINT 400,160    ; 6     S5D1
+        DEFINE_POINT 310,160    ; 7     S5D2
+        DEFINE_POINT 220,160    ; 8     S2D1
+        DEFINE_POINT 130,160    ; 9     S2D2
+        DEFINE_POINT 40,160     ; 10    S4D1
+        DEFINE_POINT 400,131    ; 11    S4D2
+        DEFINE_POINT 310,131    ; 12    S1D1
+        DEFINE_POINT 220,131    ; 13    S1D2
         ;; Maximum of 13 devices:
         ;; 7 slots * 2 drives = 14 (size of DEVLST)
         ;; ... but RAM in Slot 3 Drive 2 is disconnected.
 
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, prefix_buffer
+
+        ;; maps high nibble (DSSS) to coords table offset
+unit_num_to_coords_index_table:
+        .byte   0   * .sizeof(MGTK::Point)         ; S0D1 - does not exist
+        .byte   12  * .sizeof(MGTK::Point)         ; S1D1
+        .byte   8   * .sizeof(MGTK::Point)         ; S2D1
+        .byte   5   * .sizeof(MGTK::Point)         ; S3D1 - e.g. RAMWorks
+        .byte   10  * .sizeof(MGTK::Point)         ; S4D1
+        .byte   6   * .sizeof(MGTK::Point)         ; S5D1
+        .byte   3   * .sizeof(MGTK::Point)         ; S6D1
+        .byte   1   * .sizeof(MGTK::Point)         ; S7D1
+        .byte   0   * .sizeof(MGTK::Point)         ; S0D2 - does not exist
+        .byte   13  * .sizeof(MGTK::Point)         ; S1D2
+        .byte   9   * .sizeof(MGTK::Point)         ; S2D2
+        .byte   0   * .sizeof(MGTK::Point)         ; S3D2 - a.k.a. /RAM - detached
+        .byte   11  * .sizeof(MGTK::Point)         ; S4D2
+        .byte   7   * .sizeof(MGTK::Point)         ; S5D2
+        .byte   4   * .sizeof(MGTK::Point)         ; S6D2
+        .byte   2   * .sizeof(MGTK::Point)         ; S7D2
 
 ;;; ============================================================
 
