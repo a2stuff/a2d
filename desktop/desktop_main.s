@@ -228,21 +228,21 @@ L415B:  sta     active_window_id
         lda     active_window_id
         jsr     window_lookup
         stax    $06
-        ldy     #$16
+        ldy     #22
         sub16in ($06),y, grafport2::viewloc::ycoord, L4242
         cmp16   L4242, #15
         bpl     L41CB
         jsr     offset_grafport2
 
-        ldx     #$0B
-        ldy     #$1F
+        ldx     #11
+        ldy     #31
         copy    grafport2,x, ($06),y
         dey
         dex
         copy    grafport2,x, ($06),y
 
-        ldx     #$03
-        ldy     #$17
+        ldx     #3
+        ldy     #23
         copy    grafport2,x, ($06),y
         dey
         dex
@@ -253,7 +253,7 @@ L41CB:  ldx     cached_window_id
         lda     win_view_by_table,x
         bpl     L41E2
         jsr     L6C19
-        copy    #$00, L4152
+        copy    #0, L4152
         lda     active_window_id
         jmp     assign_window_portbits
 
@@ -1984,7 +1984,7 @@ L4EC3:  sta     cached_window_icon_count
         stax    $06
         ldy     #IconEntry::win_type
         lda     ($06),y
-        and     #(~icon_entry_open_mask)&$FF ; clear open_flag
+        and     #AS_BYTE(~icon_entry_open_mask) ; clear open_flag
         sta     ($06),y
         and     #icon_entry_winid_mask
         sta     selected_window_index
@@ -3065,7 +3065,7 @@ done:   lda     #$00
         rts
 
         ;; Horizontal ok?
-:       bit     L585D
+:       bit     horiz_scroll_flag
         bmi     :+
         jmp     vertical
 
@@ -3081,7 +3081,7 @@ done:   lda     #$00
 
         ;; Vertical ok?
 vertical:
-        bit     L585E
+        bit     vert_scroll_flag
         bmi     :+
         jmp     loop
 
@@ -3108,10 +3108,10 @@ vertical:
         sta     L5B1B
         jsr     L58C3
         stax    L585F
-        sty     L585D
+        sty     horiz_scroll_flag
         jsr     L58E2
         stax    L5861
-        sty     L585E
+        sty     vert_scroll_flag
         rts
 .endproc
 
@@ -3141,8 +3141,8 @@ scroll_up:                      ; elevator up / contents down
         sta     L5861
         rts
 
-L585D:  .byte   0               ; can scroll horiz?
-L585E:  .byte   0               ; can scroll vert?
+horiz_scroll_flag:      .byte   0 ; can scroll horiz?
+vert_scroll_flag:       .byte   0 ; can scroll vert?
 L585F:  .word   0
 L5861:  .word   0
 
@@ -3704,14 +3704,14 @@ ctl:    .byte   0
 ;;; ============================================================
 
 
-L5CD9:  .byte   0
+icon_num:  .byte   0
 
 .proc L5CDA
-        sta     L5CD9
+        sta     icon_num
         ldx     selected_icon_count
         beq     L5CFB
         dex
-        lda     L5CD9
+        lda     icon_num
 L5CE6:  cmp     selected_icon_list,x
         beq     L5CF0
         dex
@@ -3730,7 +3730,7 @@ L5CFB:  bit     BUTN0
         beq     L5D0B
 L5D08:  jsr     clear_selection
 L5D0B:  ldx     selected_icon_count
-        lda     L5CD9
+        lda     icon_num
         sta     selected_icon_list,x
         inc     selected_icon_count
         lda     active_window_id
@@ -3738,7 +3738,7 @@ L5D0B:  ldx     selected_icon_count
         lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     get_set_port2
-        lda     L5CD9
+        lda     icon_num
         sta     icon_param
         jsr     icon_window_to_screen
         jsr     offset_grafport2_and_set
@@ -3746,7 +3746,7 @@ L5D0B:  ldx     selected_icon_count
         lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     get_set_port2
-        lda     L5CD9
+        lda     icon_num
         jsr     icon_screen_to_window
         jsr     reset_grafport3
         bit     double_click_flag
@@ -3754,7 +3754,7 @@ L5D0B:  ldx     selected_icon_count
         jmp     L5DFC
 
         ;; Near start of file drag
-L5D55:  lda     L5CD9
+L5D55:  lda     icon_num
         sta     drag_drop_param
         DESKTOP_RELAY_CALL DT_DRAG_HIGHLIGHTED, drag_drop_param
         tax
@@ -3824,7 +3824,7 @@ L5DF7:  ldx     LE256
         txs
         rts
 
-L5DFC:  lda     L5CD9           ; after a double-click (on file or folder)
+L5DFC:  lda     icon_num           ; after a double-click (on file or folder)
         jsr     icon_entry_lookup
         stax    $06
         ldy     #IconEntry::win_type
@@ -3839,7 +3839,7 @@ L5DFC:  lda     L5CD9           ; after a double-click (on file or folder)
         cmp     #icon_entry_type_dir
         bne     L5E27
 
-        lda     L5CD9           ; handle directory
+        lda     icon_num           ; handle directory
         jsr     open_folder_or_volume_icon
         bmi     L5E27
         jmp     L5DEC
@@ -3857,7 +3857,7 @@ L5E3A:  lda     ($06),y
         sta     buf_win_path,y
         dey
         bpl     L5E3A
-        lda     L5CD9
+        lda     icon_num
         jsr     icon_entry_lookup
         stax    $06
         ldy     #$09
@@ -4237,7 +4237,7 @@ L6227:  sta     cached_window_icon_count
         beq     L6276
         ldy     #IconEntry::win_type
         lda     ($06),y
-        and     #(~icon_entry_open_mask)&$FF ; clear open_flag
+        and     #AS_BYTE(~icon_entry_open_mask) ; clear open_flag
         sta     ($06),y
         and     #$0F
         sta     selected_window_index
@@ -6419,9 +6419,9 @@ L76BB:  bit     flag
         sec
         sbc     ($06),y
         sta     L7B65
-        lda     L7B66
-        sbc     #$00
-        sta     L7B66
+        lda     L7B65+1
+        sbc     #0
+        sta     L7B65+1
         cmp16   L7B63, #170
         bmi     L7705
         cmp16   L7B63, #450
@@ -6882,20 +6882,14 @@ nonzero_flag:                ; high bit set once a non-zero digit seen
 
 ;;; ============================================================
 
-L7B5F:  .byte   0
-L7B60:  .byte   0
-L7B61:  .byte   0
-L7B62:  .byte   0
+L7B5F:  .word   0
+L7B61:  .word   0
 
-L7B63:  .byte   0
-L7B64:  .byte   0
-L7B65:  .byte   0
-L7B66:  .byte   0
+L7B63:  .word   0
+L7B65:  .word   0
 
-L7B67:  .byte   0
-L7B68:  .byte   0
-L7B69:  .byte   0
-L7B6A:  .byte   0
+L7B67:  .word   0
+L7B69:  .word   0
 
 .proc L7B6B
         ldx     #3
@@ -6909,8 +6903,8 @@ L7B6A:  .byte   0
         sta     L7B5F
         sta     L7B61
         lda     #$7F
-        sta     L7B60
-        sta     L7B62
+        sta     L7B5F+1
+        sta     L7B61+1
         ldx     cached_window_id
         dex
         lda     win_view_by_table,x
@@ -6935,7 +6929,7 @@ L7BA1:  clc
         rol     L7D5C
         sta     L7B65
         lda     L7D5C
-        sta     L7B66
+        sta     L7B65+1
         copy16  #360, L7B63
         jmp     L7B96
 
@@ -6963,13 +6957,13 @@ L7BF7:  lda     L7B63
         adc     #50
         sta     L7B63
         bcc     L7C05
-        inc     L7B64
+        inc     L7B63+1
 L7C05:  lda     L7B65
         clc
         adc     #32
         sta     L7B65
         bcc     L7C13
-        inc     L7B66
+        inc     L7B65+1
 L7C13:  sub16   L7B5F, #50, L7B5F
         sub16   L7B61, #15, L7B61
         rts
@@ -6993,9 +6987,9 @@ L7C56:  lda     ($06),y
         dey
         dex
         bpl     L7C56
-        bit     L7B60
+        bit     L7B5F+1
         bmi     L7C88
-        bit     L7B68
+        bit     L7B67+1
         bmi     L7CCE
         cmp16   L7B67, L7B5F
         bmi     L7CCE
@@ -7003,9 +6997,9 @@ L7C56:  lda     ($06),y
         bpl     L7CBF
         jmp     L7CDA
 
-L7C88:  bit     L7B68
+L7C88:  bit     L7B67+1
         bmi     L7CA3
-        bit     L7B64
+        bit     L7B63+1
         bmi     L7CDA
         cmp16   L7B67, L7B63
         bmi     L7CDA
@@ -7019,9 +7013,9 @@ L7CBF:  copy16  L7B67, L7B63
         jmp     L7CDA
 
 L7CCE:  copy16  L7B67, L7B5F
-L7CDA:  bit     L7B62
+L7CDA:  bit     L7B61+1
         bmi     L7D03
-        bit     L7B6A
+        bit     L7B69+1
         bmi     L7D49
         cmp16   L7B69, L7B61
         bmi     L7D49
@@ -7029,9 +7023,9 @@ L7CDA:  bit     L7B62
         bpl     L7D3A
         jmp     L7D55
 
-L7D03:  bit     L7B6A
+L7D03:  bit     L7B69+1
         bmi     L7D1E
-        bit     L7B66
+        bit     L7B65+1
         bmi     L7D55
         cmp16   L7B69, L7B65
         bmi     L7D55
@@ -8104,7 +8098,7 @@ L8562:  lsr16   L85F2
         adc     L7B5F,x
         sta     grafport2::cliprect::x1,x
         lda     L85F2
-        adc     L7B60,x
+        adc     L7B5F+1,x
         sta     grafport2::cliprect::x1+1,x
 
         lda     active_window_id
@@ -8950,7 +8944,7 @@ skip:   lda     icon_params2
         stax    ptr
         ldy     #IconEntry::win_type
         lda     (ptr),y
-        and     #(~icon_entry_open_mask)&$FF ; clear open_flag
+        and     #AS_BYTE(~icon_entry_open_mask) ; clear open_flag
         sta     ($06),y
         jsr     L4244
         jsr     pop_pointers
