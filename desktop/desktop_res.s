@@ -304,7 +304,9 @@ buf_win_path:   .res    43, 0
 temp_string_buf:
         .res    65, 0
 
-LD3C1:  .res    65, 0
+        ;; used when splitting string for text field
+split_buf:
+        .res    65, 0
 
 ;;; In common dialog (copy/edit file, add/edit selector entry):
 ;;; * path_buf0 has the contents of the top input field
