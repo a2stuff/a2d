@@ -1094,8 +1094,7 @@ show_cursor:
 .proc restore_device_list
         ldx     devlst_backup
         inx
-:       lda     devlst_backup,x
-        sta     DEVLST-1,x
+:       copy    devlst_backup,x, DEVLST-1,x
         dex
         bpl     :-
         rts
@@ -6858,9 +6857,9 @@ L7B6A:  .byte   0
 .proc L7B6B
         ldx     #3
         lda     #0
-L7B6F:  sta     L7B63,x
+:       sta     L7B63,x
         dex
-        bpl     L7B6F
+        bpl     :-
 
         sta     L7D5B
         lda     #$FF
@@ -6882,8 +6881,8 @@ L7B9A:  sta     L7B5F,x
         rts
 
 L7BA1:  clc
-        adc     #$02
-        ldx     #$00
+        adc     #2
+        ldx     #0
         stx     L7D5C
         asl     a
         rol     L7D5C
@@ -6894,17 +6893,17 @@ L7BA1:  clc
         sta     L7B65
         lda     L7D5C
         sta     L7B66
-        copy16  #$168, L7B63
+        copy16  #360, L7B63
         jmp     L7B96
 
 L7BCB:  lda     cached_window_icon_count
-        cmp     #$01
+        cmp     #1
         bne     L7BEF
         lda     cached_window_icon_list
         jsr     icon_entry_lookup
         stax    $06
-        ldy     #$06
-        ldx     #$03
+        ldy     #6
+        ldx     #3
 L7BE0:  lda     ($06),y
         sta     L7B5F,x
         sta     L7B63,x
@@ -6918,13 +6917,13 @@ L7BEF:  lda     L7D5B
         bne     L7C36
 L7BF7:  lda     L7B63
         clc
-        adc     #$32
+        adc     #50
         sta     L7B63
         bcc     L7C05
         inc     L7B64
 L7C05:  lda     L7B65
         clc
-        adc     #$20
+        adc     #32
         sta     L7B65
         bcc     L7C13
         inc     L7B66
@@ -6944,8 +6943,8 @@ L7C36:  tax
         inc     L7D5B
         jmp     L7BEF
 
-L7C52:  ldy     #$06
-        ldx     #$03
+L7C52:  ldy     #6
+        ldx     #3
 L7C56:  lda     ($06),y
         sta     L7B67,x
         dey
@@ -8798,7 +8797,7 @@ open:   ldy     #$00
         adc     #$23
         tay
 
-        ldx     #$23
+        ldx     #.sizeof(MGTK::GrafPort)-1
 :       lda     (ptr),y
         sta     grafport2,x
         dey
@@ -8809,31 +8808,31 @@ open:   ldy     #$00
         lda     icon_id
         jsr     icon_entry_lookup
         stax    ptr
-        ldy     #$03
+        ldy     #3
         lda     ($06),y
         clc
-        adc     #$07
+        adc     #7
 
         sta     rect_table
         sta     $0804
         iny
         lda     ($06),y
-        adc     #$00
+        adc     #0
         sta     $0801
         sta     $0805
         iny
         lda     ($06),y
         clc
-        adc     #$07
+        adc     #7
         sta     $0801+1
         sta     $0806
         iny
         lda     ($06),y
-        adc     #$00
+        adc     #0
         sta     $0803
         sta     $0807
-        ldy     #$5B
-        ldx     #$03
+        ldy     #91
+        ldx     #3
 L8BC1:  lda     grafport2,x
         sta     rect_table,y
         dey
@@ -10128,12 +10127,10 @@ compute_suffix:
         copy    #6, get_info_dialog_params::L92E3
         lda     selected_window_index
         bne     L9519
-        ldx     str_vol
-L950E:  lda     str_vol,x
-        sta     str_file_type,x
-        dex
-        bpl     L950E
-        bmi     L951F
+
+        COPY_STRING str_vol, str_file_type
+        bmi     L951F           ; always
+
 L9519:  lda     get_file_info_params5::file_type
         jsr     JT_FILE_TYPE_STRING
 L951F:  copy16  #str_file_type, get_info_dialog_params::L92E4
@@ -14896,8 +14893,7 @@ trash_name:  PASCAL_STRING " Trash "
 
         ;; Single device - remove from DEVLST - Why ???
         ldx     index
-:       lda     DEVLST+1,x
-        sta     DEVLST,x
+:       copy    DEVLST+1,x, DEVLST,x
         inx
         cpx     devcnt
         bne     :-
@@ -15433,8 +15429,7 @@ cvi_result:
 .proc remove_device
         dex
 L0E36:  inx
-        lda     DEVLST+1,x
-        sta     DEVLST,x
+        copy    DEVLST+1,x, DEVLST,x
         lda     device_to_icon_map+1,x
         sta     device_to_icon_map,x
         cpx     DEVCNT
