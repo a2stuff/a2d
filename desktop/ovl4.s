@@ -2207,25 +2207,25 @@ L6806:  cpx     path_buf0
         inx
         iny
         lda     path_buf0,x
-        sta     LD3C1+1,y
+        sta     split_buf+1,y
         jmp     L6806
 
 L6816:  iny
-        sty     LD3C1
+        sty     split_buf
         ldx     #$01
-        ldy     LD3C1
+        ldy     split_buf
 L681F:  cpx     path_buf2
         beq     L682F
         inx
         iny
         lda     path_buf2,x
-        sta     LD3C1,y
+        sta     split_buf,y
         jmp     L681F
 
-L682F:  sty     LD3C1
+L682F:  sty     split_buf
         lda     str_insertion_point+1
-        sta     LD3C1+1
-L6838:  lda     LD3C1,y
+        sta     split_buf+1
+L6838:  lda     split_buf,y
         sta     path_buf2,y
         dey
         bpl     L6838
@@ -2340,25 +2340,25 @@ L697D:  cpx     path_buf1
         inx
         iny
         lda     path_buf1,x
-        sta     LD3C1+1,y
+        sta     split_buf+1,y
         jmp     L697D
 
 L698D:  iny
-        sty     LD3C1
+        sty     split_buf
         ldx     #$01
-        ldy     LD3C1
+        ldy     split_buf
 L6996:  cpx     path_buf2
         beq     L69A6
         inx
         iny
         lda     path_buf2,x
-        sta     LD3C1,y
+        sta     split_buf,y
         jmp     L6996
 
-L69A6:  sty     LD3C1
+L69A6:  sty     split_buf
         lda     str_insertion_point+1
-        sta     LD3C1+1
-L69AF:  lda     LD3C1,y
+        sta     split_buf+1
+L69AF:  lda     split_buf,y
         sta     path_buf2,y
         dey
         bpl     L69AF
@@ -2979,14 +2979,14 @@ L6EA3:  lda     #$00
 L6EA5:  bmi     L6EB6
         ldx     path_buf0
 L6EAA:  lda     path_buf0,x
-        sta     LD3C1,x
+        sta     split_buf,x
         dex
         bpl     L6EAA
         jmp     L6EC2
 
 L6EB6:  ldx     path_buf1
 L6EB9:  lda     path_buf1,x
-        sta     LD3C1,x
+        sta     split_buf,x
         dex
         bpl     L6EB9
 L6EC2:  lda     LD920
@@ -3017,13 +3017,13 @@ L6EC2:  lda     LD920
         tax
         tya
         jsr     L5F0D
-L6EFB:  addr_call desktop_main::adjust_case, LD3C1
+L6EFB:  addr_call desktop_main::adjust_case, split_buf
         addr_call desktop_main::adjust_case, path_buf
-        lda     LD3C1
+        lda     split_buf
         cmp     path_buf
         bne     L6F26
         tax
-L6F12:  lda     LD3C1,x
+L6F12:  lda     split_buf,x
         cmp     path_buf,x
         bne     L6F26
         dex

@@ -230,21 +230,21 @@ L415B:  sta     active_window_id
         lda     active_window_id
         jsr     window_lookup
         stax    $06
-        ldy     #$16
+        ldy     #22
         sub16in ($06),y, grafport2::viewloc::ycoord, L4242
         cmp16   L4242, #15
         bpl     L41CB
         jsr     offset_grafport2
 
-        ldx     #$0B
-        ldy     #$1F
+        ldx     #11
+        ldy     #31
         copy    grafport2,x, ($06),y
         dey
         dex
         copy    grafport2,x, ($06),y
 
-        ldx     #$03
-        ldy     #$17
+        ldx     #3
+        ldy     #23
         copy    grafport2,x, ($06),y
         dey
         dex
@@ -255,7 +255,7 @@ L41CB:  ldx     cached_window_id
         lda     win_view_by_table,x
         bpl     L41E2
         jsr     L6C19
-        copy    #$00, L4152
+        copy    #0, L4152
         lda     active_window_id
         jmp     assign_window_portbits
 
@@ -1960,7 +1960,7 @@ L4EC3:  sta     cached_window_icon_count
         stax    $06
         ldy     #IconEntry::win_type
         lda     ($06),y
-        and     #(~icon_entry_open_mask)&$FF ; clear open_flag
+        and     #AS_BYTE(~icon_entry_open_mask) ; clear open_flag
         sta     ($06),y
         and     #icon_entry_winid_mask
         sta     selected_window_index
@@ -3030,7 +3030,7 @@ done:   lda     #$00
         rts
 
         ;; Horizontal ok?
-:       bit     L585D
+:       bit     horiz_scroll_flag
         bmi     :+
         jmp     vertical
 
@@ -3046,7 +3046,7 @@ done:   lda     #$00
 
         ;; Vertical ok?
 vertical:
-        bit     L585E
+        bit     vert_scroll_flag
         bmi     :+
         jmp     loop
 
@@ -3073,10 +3073,10 @@ vertical:
         sta     L5B1B
         jsr     L58C3
         stax    L585F
-        sty     L585D
+        sty     horiz_scroll_flag
         jsr     L58E2
         stax    L5861
-        sty     L585E
+        sty     vert_scroll_flag
         rts
 .endproc
 
@@ -3106,8 +3106,8 @@ scroll_up:                      ; elevator up / contents down
         sta     L5861
         rts
 
-L585D:  .byte   0               ; can scroll horiz?
-L585E:  .byte   0               ; can scroll vert?
+horiz_scroll_flag:      .byte   0 ; can scroll horiz?
+vert_scroll_flag:       .byte   0 ; can scroll vert?
 L585F:  .word   0
 L5861:  .word   0
 
@@ -3672,14 +3672,14 @@ ctl:    .byte   0
 ;;; ============================================================
 
 
-L5CD9:  .byte   0
+icon_num:  .byte   0
 
 .proc L5CDA
-        sta     L5CD9
+        sta     icon_num
         ldx     selected_icon_count
         beq     L5CFB
         dex
-        lda     L5CD9
+        lda     icon_num
 L5CE6:  cmp     selected_icon_list,x
         beq     L5CF0
         dex
@@ -3698,7 +3698,7 @@ L5CFB:  bit     BUTN0
         beq     L5D0B
 L5D08:  jsr     clear_selection
 L5D0B:  ldx     selected_icon_count
-        lda     L5CD9
+        lda     icon_num
         sta     selected_icon_list,x
         inc     selected_icon_count
         lda     active_window_id
@@ -3706,7 +3706,7 @@ L5D0B:  ldx     selected_icon_count
         lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     get_set_port2
-        lda     L5CD9
+        lda     icon_num
         sta     icon_param
         jsr     icon_window_to_screen
         jsr     offset_grafport2_and_set
@@ -3714,7 +3714,7 @@ L5D0B:  ldx     selected_icon_count
         lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     get_set_port2
-        lda     L5CD9
+        lda     icon_num
         jsr     icon_screen_to_window
         jsr     reset_grafport3
         bit     double_click_flag
@@ -3722,7 +3722,7 @@ L5D0B:  ldx     selected_icon_count
         jmp     L5DFC
 
         ;; Near start of file drag
-L5D55:  lda     L5CD9
+L5D55:  lda     icon_num
         sta     drag_drop_param
         DESKTOP_RELAY_CALL DT_DRAG_HIGHLIGHTED, drag_drop_param
         tax
@@ -3792,7 +3792,7 @@ L5DF7:  ldx     LE256
         txs
         rts
 
-L5DFC:  lda     L5CD9           ; after a double-click (on file or folder)
+L5DFC:  lda     icon_num           ; after a double-click (on file or folder)
         jsr     icon_entry_lookup
         stax    $06
         ldy     #IconEntry::win_type
@@ -3807,7 +3807,7 @@ L5DFC:  lda     L5CD9           ; after a double-click (on file or folder)
         cmp     #icon_entry_type_dir
         bne     L5E27
 
-        lda     L5CD9           ; handle directory
+        lda     icon_num           ; handle directory
         jsr     open_folder_or_volume_icon
         bmi     L5E27
         jmp     L5DEC
@@ -3825,7 +3825,7 @@ L5E3A:  lda     ($06),y
         sta     buf_win_path,y
         dey
         bpl     L5E3A
-        lda     L5CD9
+        lda     icon_num
         jsr     icon_entry_lookup
         stax    $06
         ldy     #$09
@@ -4205,7 +4205,7 @@ L6227:  sta     cached_window_icon_count
         beq     L6276
         ldy     #IconEntry::win_type
         lda     ($06),y
-        and     #(~icon_entry_open_mask)&$FF ; clear open_flag
+        and     #AS_BYTE(~icon_entry_open_mask) ; clear open_flag
         sta     ($06),y
         and     #$0F
         sta     selected_window_index
@@ -6387,9 +6387,9 @@ L76BB:  bit     flag
         sec
         sbc     ($06),y
         sta     L7B65
-        lda     L7B66
-        sbc     #$00
-        sta     L7B66
+        lda     L7B65+1
+        sbc     #0
+        sta     L7B65+1
         cmp16   L7B63, #170
         bmi     L7705
         cmp16   L7B63, #450
@@ -6841,20 +6841,14 @@ nonzero_flag:                ; high bit set once a non-zero digit seen
 
 ;;; ============================================================
 
-L7B5F:  .byte   0
-L7B60:  .byte   0
-L7B61:  .byte   0
-L7B62:  .byte   0
+L7B5F:  .word   0
+L7B61:  .word   0
 
-L7B63:  .byte   0
-L7B64:  .byte   0
-L7B65:  .byte   0
-L7B66:  .byte   0
+L7B63:  .word   0
+L7B65:  .word   0
 
-L7B67:  .byte   0
-L7B68:  .byte   0
-L7B69:  .byte   0
-L7B6A:  .byte   0
+L7B67:  .word   0
+L7B69:  .word   0
 
 .proc L7B6B
         ldx     #3
@@ -6868,8 +6862,8 @@ L7B6A:  .byte   0
         sta     L7B5F
         sta     L7B61
         lda     #$7F
-        sta     L7B60
-        sta     L7B62
+        sta     L7B5F+1
+        sta     L7B61+1
         ldx     cached_window_id
         dex
         lda     win_view_by_table,x
@@ -6894,7 +6888,7 @@ L7BA1:  clc
         rol     L7D5C
         sta     L7B65
         lda     L7D5C
-        sta     L7B66
+        sta     L7B65+1
         copy16  #360, L7B63
         jmp     L7B96
 
@@ -6922,13 +6916,13 @@ L7BF7:  lda     L7B63
         adc     #50
         sta     L7B63
         bcc     L7C05
-        inc     L7B64
+        inc     L7B63+1
 L7C05:  lda     L7B65
         clc
         adc     #32
         sta     L7B65
         bcc     L7C13
-        inc     L7B66
+        inc     L7B65+1
 L7C13:  sub16   L7B5F, #50, L7B5F
         sub16   L7B61, #15, L7B61
         rts
@@ -6952,9 +6946,9 @@ L7C56:  lda     ($06),y
         dey
         dex
         bpl     L7C56
-        bit     L7B60
+        bit     L7B5F+1
         bmi     L7C88
-        bit     L7B68
+        bit     L7B67+1
         bmi     L7CCE
         cmp16   L7B67, L7B5F
         bmi     L7CCE
@@ -6962,9 +6956,9 @@ L7C56:  lda     ($06),y
         bpl     L7CBF
         jmp     L7CDA
 
-L7C88:  bit     L7B68
+L7C88:  bit     L7B67+1
         bmi     L7CA3
-        bit     L7B64
+        bit     L7B63+1
         bmi     L7CDA
         cmp16   L7B67, L7B63
         bmi     L7CDA
@@ -6978,9 +6972,9 @@ L7CBF:  copy16  L7B67, L7B63
         jmp     L7CDA
 
 L7CCE:  copy16  L7B67, L7B5F
-L7CDA:  bit     L7B62
+L7CDA:  bit     L7B61+1
         bmi     L7D03
-        bit     L7B6A
+        bit     L7B69+1
         bmi     L7D49
         cmp16   L7B69, L7B61
         bmi     L7D49
@@ -6988,9 +6982,9 @@ L7CDA:  bit     L7B62
         bpl     L7D3A
         jmp     L7D55
 
-L7D03:  bit     L7B6A
+L7D03:  bit     L7B69+1
         bmi     L7D1E
-        bit     L7B66
+        bit     L7B65+1
         bmi     L7D55
         cmp16   L7B69, L7B65
         bmi     L7D55
@@ -8050,7 +8044,7 @@ L8562:  lsr16   L85F2
         adc     L7B5F,x
         sta     grafport2::cliprect::x1,x
         lda     L85F2
-        adc     L7B60,x
+        adc     L7B5F+1,x
         sta     grafport2::cliprect::x1+1,x
 
         lda     active_window_id
@@ -8812,7 +8806,7 @@ skip:   lda     icon_params2
         stax    ptr
         ldy     #IconEntry::win_type
         lda     (ptr),y
-        and     #(~icon_entry_open_mask)&$FF ; clear open_flag
+        and     #AS_BYTE(~icon_entry_open_mask) ; clear open_flag
         sta     ($06),y
         jsr     L4244
         jsr     pop_pointers
@@ -9550,7 +9544,7 @@ L90BA:  bit     operation_flags
 @lock:  jsr     prep_op_jt_overlay3
         jmp     iterate_selection
 
-@size:  jsr     LA241
+@size:  jsr     get_size_rts2           ; no-op ???
         jmp     iterate_selection
 
 iterate_selection:
@@ -10655,11 +10649,13 @@ count:  .addr   0
 
 .proc do_copy_dialog_phase
         copy    #CopyDialogLifecycle::open, copy_dialog_params::phase
-        copy16  #L995A, dialog_phase0_callback
-        copy16  #L997C, dialog_phase1_callback
+        copy16  #copy_dialog_phase0_callback1, dialog_phase0_callback
+        copy16  #copy_dialog_phase1_callback1, dialog_phase1_callback
         jmp     run_copy_dialog_proc
+.endproc
 
-L995A:  stax    copy_dialog_params::count
+.proc copy_dialog_phase0_callback1
+        stax    copy_dialog_params::count
         copy    #CopyDialogLifecycle::populate, copy_dialog_params::phase
         jmp     run_copy_dialog_proc
 .endproc
@@ -10670,27 +10666,35 @@ L995A:  stax    copy_dialog_params::count
         dey
         bpl     :-
 
-        lda     #$00
+        lda     #0
         sta     LA425
         sta     all_flag
         rts
 .endproc
 
-L997C:  copy    #CopyDialogLifecycle::close, copy_dialog_params::phase
+.proc copy_dialog_phase1_callback1
+        copy    #CopyDialogLifecycle::close, copy_dialog_params::phase
         jmp     run_copy_dialog_proc
+.endproc
+
+;;; --------------------------------------------------
+;;; "Run" ???
 
 L9984:  copy    #CopyDialogLifecycle::open, copy_dialog_params::phase
-        copy16  #L99A7, dialog_phase0_callback
-        copy16  #L99DC, dialog_phase1_callback
+        copy16  #copy_dialog_phase0_callback2, dialog_phase0_callback
+        copy16  #copy_dialog_phase1_callback2, dialog_phase1_callback
         yax_call invoke_dialog_proc, index_download_dialog, copy_dialog_params
         rts
 
-L99A7:  stax    copy_dialog_params::count
+.proc copy_dialog_phase0_callback2
+        stax    copy_dialog_params::count
         copy    #CopyDialogLifecycle::populate, copy_dialog_params::phase
         yax_call invoke_dialog_proc, index_download_dialog, copy_dialog_params
         rts
+.endproc
 
-L99BC:  lda     #$80
+.proc L99BC
+        lda     #$80
         sta     all_flag
 
         ldy     #op_jt_addrs_size-1
@@ -10698,20 +10702,24 @@ L99BC:  lda     #$80
         dey
         bpl     :-
 
-        lda     #0
-        sta     LA425
-        copy16  #L99EB, dialog_phase3_callback
+        copy    #0, LA425
+        copy16  #copy_dialog_phase3_callback, dialog_phase3_callback
         rts
+.endproc
 
-L99DC:  copy    #CopyDialogLifecycle::exists, copy_dialog_params::phase
+.proc copy_dialog_phase1_callback2
+        copy    #CopyDialogLifecycle::exists, copy_dialog_params::phase
         yax_call invoke_dialog_proc, index_download_dialog, copy_dialog_params
         rts
+.endproc
 
-L99EB:  copy    #CopyDialogLifecycle::too_large, copy_dialog_params::phase
+.proc copy_dialog_phase3_callback
+        copy    #CopyDialogLifecycle::too_large, copy_dialog_params::phase
         yax_call invoke_dialog_proc, index_download_dialog, copy_dialog_params
         cmp     #PromptResult::yes
         bne     cancel
         rts
+.endproc
 
 cancel: jmp     close_files_cancel_dialog
 
@@ -11464,45 +11472,51 @@ files_remaining_count:
         bpl     :+
 
         ;; Unlock
-        copy16  #LA0D1, dialog_phase2_callback
-        copy16  #LA0B5, dialog_phase0_callback
+        copy16  #unlock_dialog_phase2_callback, dialog_phase2_callback
+        copy16  #unlock_dialog_phase0_callback, dialog_phase0_callback
         jsr     unlock_dialog_lifecycle
         copy16  #close_unlock_dialog, dialog_phase1_callback
         rts
 
         ;; Lock
-:       copy16  #LA0C3, dialog_phase2_callback
-        copy16  #LA0A7, dialog_phase0_callback
+:       copy16  #lock_dialog_phase2_callback, dialog_phase2_callback
+        copy16  #lock_dialog_phase0_callback, dialog_phase0_callback
         jsr     lock_dialog_lifecycle
         copy16  #close_lock_dialog, dialog_phase1_callback
         rts
 .endproc
 
-LA0A7:  stax    lock_unlock_dialog_params::files_remaining_count
+.proc lock_dialog_phase0_callback
+        stax    lock_unlock_dialog_params::files_remaining_count
         copy    #LockDialogLifecycle::populate, lock_unlock_dialog_params::phase
         jmp     lock_dialog_lifecycle
+.endproc
 
-LA0B5:  stax    lock_unlock_dialog_params::files_remaining_count
+.proc unlock_dialog_phase0_callback
+        stax    lock_unlock_dialog_params::files_remaining_count
         copy    #LockDialogLifecycle::populate, lock_unlock_dialog_params::phase
         jmp     unlock_dialog_lifecycle
+.endproc
 
-LA0C3:  copy    #LockDialogLifecycle::loop, lock_unlock_dialog_params::phase
+.proc lock_dialog_phase2_callback
+        copy    #LockDialogLifecycle::loop, lock_unlock_dialog_params::phase
         jsr     lock_dialog_lifecycle
-        beq     LA0D0
+        beq     :+
         jmp     close_files_cancel_dialog
 
-LA0D0:  rts
+:       rts
+.endproc
 
-LA0D1:  copy    #LockDialogLifecycle::loop, lock_unlock_dialog_params::phase
+.proc unlock_dialog_phase2_callback
+        copy    #LockDialogLifecycle::loop, lock_unlock_dialog_params::phase
         jsr     unlock_dialog_lifecycle
-        beq     LA0DE
+        beq     :+
         jmp     close_files_cancel_dialog
-
-LA0DE:  rts
+:       rts
+.endproc
 
 .proc prep_op_jt_overlay3
-        lda     #$00
-        sta     LA425
+        copy    #0, LA425
 
         ldy     #op_jt_addrs_size-1
 :       copy    op_jt_overlay3,y, op_jt_addrs,y
@@ -11627,24 +11641,33 @@ phase:  .byte   0
 
 do_get_size_dialog_phase:
         copy    #0, get_size_dialog_params::phase
-        copy16  #LA220, dialog_phase2_callback
-        copy16  #LA211, dialog_phase0_callback
+        copy16  #get_size_dialog_phase2_callback, dialog_phase2_callback
+        copy16  #get_size_dialog_phase0_callback, dialog_phase0_callback
         yax_call invoke_dialog_proc, index_get_size_dialog, get_size_dialog_params
-        copy16  #LA233, dialog_phase1_callback
+        copy16  #get_size_dialog_phase1_callback, dialog_phase1_callback
         rts
 
-LA211:  copy    #1, get_size_dialog_params::phase
+.proc get_size_dialog_phase0_callback
+        copy    #1, get_size_dialog_params::phase
         yax_call invoke_dialog_proc, index_get_size_dialog, get_size_dialog_params
-LA21F:  rts
+        ;; fall through
+.endproc
+get_size_rts1:
+        rts
 
-LA220:  copy    #2, get_size_dialog_params::phase
+.proc get_size_dialog_phase2_callback
+        copy    #2, get_size_dialog_params::phase
         yax_call invoke_dialog_proc, index_get_size_dialog, get_size_dialog_params
-        beq     LA21F
+        beq     get_size_rts1
         jmp     close_files_cancel_dialog
+.endproc
 
-LA233:  copy    #3, get_size_dialog_params::phase
+.proc get_size_dialog_phase1_callback
+        copy    #3, get_size_dialog_params::phase
         yax_call invoke_dialog_proc, index_get_size_dialog, get_size_dialog_params
-LA241:  rts
+.endproc
+get_size_rts2:
+        rts
 
 op_jt_overlay4:
         .addr   op_jt_1_size           ; overlay for op_jt_addrs
@@ -11697,12 +11720,12 @@ op_jt_overlay4:
 is_dir: lda     #$FF
 
 store:  sta     is_dir_flag
-        beq     LA2AB           ; if not a dir
+        beq     do_sum_file_size           ; if not a dir
 
         jsr     process_dir
         lda     storage_type
         cmp     #ST_VOLUME_DIRECTORY
-        bne     LA2AB           ; if a subdirectory
+        bne     do_sum_file_size           ; if a subdirectory
         rts
 
 is_dir_flag:
@@ -11714,7 +11737,8 @@ storage_type:
 
 ;;; ============================================================
 
-LA2AB:  jmp     op_jt_1_size
+do_sum_file_size:
+        jmp     op_jt_1_size
 
         ;; First pass - visit/count all files ???
 
@@ -11929,7 +11953,7 @@ done:   rts
         rts
 .endproc
 
-LA425:  .byte   0
+LA425:  .byte   0               ; ??? only written to (with 0)
 
 ;;; ============================================================
 
@@ -13842,10 +13866,12 @@ hi:  .byte   0
 ;;; ============================================================
 
         ;; Unreferenced ???
-LB76C:  stax    $06
+.proc draw_text_at_point7
+        stax    $06
         MGTK_RELAY_CALL MGTK::MoveTo, point7
         addr_call_indirect draw_text1, $06
         rts
+.endproc
 
 ;;; ============================================================
 ;;; Adjust case in a pathname (input buf A,X, output buf $A)
@@ -14104,56 +14130,71 @@ done:   rts
 ;;; ============================================================
 
 .proc LB9B8
+        ptr := $6
+
+        textwidth_params  := $6
+        textptr := $6
+        textlen := $8
+        result  := $9
+
+        click_coords := screentowindow_windowx
+
+        ;; Mouse coords to window coords; is click inside name field?
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
+        MGTK_RELAY_CALL MGTK::MoveTo, click_coords
         MGTK_RELAY_CALL MGTK::InRect, name_input_rect
         cmp     #MGTK::inrect_inside
         beq     :+
         rts
 
+        ;; Is it to the right of the text?
 :       jsr     measure_path_buf1
-        stax    $06
-        cmp16   screentowindow_windowx, $06
-        bcs     LB9EE
-        jmp     LBA83
-.endproc
 
-.proc LB9EE
-        ptr := $6
+        width := $6
+
+        stax    width
+        cmp16   click_coords, width
+        bcs     to_right
+        jmp     within_text
+
+;;; --------------------------------------------------
+
+        ;; Click is to the right of the text
+
+.proc to_right
         jsr     measure_path_buf1
-        stax    LBB09
+        stax    buf1_width
         ldx     path_buf2
         inx
         copy    #' ', path_buf2,x
         inc     path_buf2
-        copy16  #path_buf2, ptr
+        copy16  #path_buf2, textptr
         lda     path_buf2
         sta     ptr+2
-LBA10:  MGTK_RELAY_CALL MGTK::TextWidth, ptr
-        add16   $09, LBB09, $09
-        cmp16   $09, screentowindow_windowx
+LBA10:  MGTK_RELAY_CALL MGTK::TextWidth, textwidth_params
+        add16   result, buf1_width, result
+        cmp16   result, click_coords
         bcc     LBA42
-        dec     $08
-        lda     $08
-        cmp     #$01
+        dec     textlen
+        lda     textlen
+        cmp     #1
         bne     LBA10
         dec     path_buf2
-        jmp     LBB05
-.endproc
+        jmp     draw_text
 
-.proc LBA42
-        lda     $08
+LBA42:
+        lda     textlen
         cmp     path_buf2
         bcc     LBA4F
         dec     path_buf2
         jmp     LBCC9
 
-LBA4F:  ldx     #$02
+LBA4F:  ldx     #2
         ldy     path_buf1
         iny
 LBA55:  lda     path_buf2,x
         sta     path_buf1,y
-        cpx     $08
+        cpx     textlen
         beq     LBA64
         iny
         inx
@@ -14161,7 +14202,7 @@ LBA55:  lda     path_buf2,x
 
 LBA64:  sty     path_buf1
         ldy     #2
-        ldx     $08
+        ldx     textlen
         inx
 LBA6C:  lda     path_buf2,x
         sta     path_buf2,y
@@ -14173,84 +14214,91 @@ LBA6C:  lda     path_buf2,x
 
 LBA7C:  dey
         sty     path_buf2
-        jmp     LBB05
+        jmp     draw_text
 .endproc
 
-.proc LBA83
-        params := $6
-        textptr := $6
-        textlen := $8
-        result  := $9
+;;; --------------------------------------------------
 
+        ;; Click within text - loop to find where in the
+        ;; name to split the string.
+
+.proc within_text
         copy16  #path_buf1, textptr
         lda     path_buf1
         sta     textlen
-:       MGTK_RELAY_CALL MGTK::TextWidth, params
+:       MGTK_RELAY_CALL MGTK::TextWidth, textwidth_params
         add16 result, name_input_textpos::xcoord, result
-        cmp16   result, screentowindow_windowx
-        bcc     LBABF
+        cmp16   result, click_coords
+        bcc     :+
         dec     textlen
         lda     textlen
         cmp     #1
         bcs     :-
         jmp     LBC5E
-.endproc
 
-.proc LBABF
-        inc     $08
+        ;; Copy the text to the right of the click to split_buf
+:       inc     textlen
         ldy     #0
-        ldx     $08
-LBAC5:  cpx     path_buf1
-        beq     LBAD5
+        ldx     textlen
+:       cpx     path_buf1
+        beq     :+
         inx
         iny
         lda     path_buf1,x
-        sta     LD3C1+1,y
-        jmp     LBAC5
-
-LBAD5:  iny
-        sty     LD3C1
+        sta     split_buf+1,y
+        jmp     :-
+:
+        ;; Copy it (again) into path_buf2
+        iny
+        sty     split_buf
         ldx     #1
-        ldy     LD3C1
-LBADE:  cpx     path_buf2
-        beq     LBAEE
+        ldy     split_buf
+:       cpx     path_buf2
+        beq     :+
         inx
         iny
         lda     path_buf2,x
-        sta     LD3C1,y
-        jmp     LBADE
+        sta     split_buf,y
+        jmp     :-
+:
 
-LBAEE:  sty     LD3C1
+        sty     split_buf
         lda     str_insertion_point+1
-        sta     LD3C1+1
-LBAF7:  lda     LD3C1,y
+        sta     split_buf+1
+LBAF7:  lda     split_buf,y
         sta     path_buf2,y
         dey
         bpl     LBAF7
-        lda     $08
+        lda     textlen
         sta     path_buf1
         ;; fall through
 .endproc
 
-LBB05:  jsr     draw_filename_prompt
+draw_text:
+        jsr     draw_filename_prompt
         rts
 
-LBB09:  .word   0
+buf1_width:
+        .word   0
 
-LBB0B:  sta     LBB62
+.endproc
+
+;;; ============================================================
+
+.proc LBB0B
+        sta     param
         lda     path_buf1
         clc
         adc     path_buf2
         cmp     #$10
-        bcc     LBB1A
+        bcc     :+
         rts
 
-.proc LBB1A
         point := $6
         xcoord := $6
         ycoord := $8
 
-        lda     LBB62
+:       lda     param
         ldx     path_buf1
         inx
         sta     path_buf1,x
@@ -14266,19 +14314,22 @@ LBB0B:  sta     LBB62
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         rts
+
+param:  .byte   0
 .endproc
 
-LBB62:  .byte   0
-LBB63:  lda     path_buf1
-        bne     LBB69
+;;; ============================================================
+
+.proc LBB63
+        lda     path_buf1
+        bne     :+
         rts
 
-.proc LBB69
         point := $6
         xcoord := $6
         ycoord := $8
 
-        dec     path_buf1
+:       dec     path_buf1
         jsr     measure_path_buf1
         stax    xcoord
         copy16  name_input_textpos::ycoord, ycoord
@@ -14291,16 +14342,18 @@ LBB63:  lda     path_buf1
         rts
 .endproc
 
-LBBA4:  lda     path_buf1
-        bne     LBBAA
+;;; ============================================================
+
+.proc LBBA4
+        lda     path_buf1
+        bne     :+
         rts
 
-.proc LBBAA
         point := $6
         xcoord := $6
         ycoord := $8
 
-        ldx     path_buf2
+:       ldx     path_buf2
         cpx     #1
         beq     LBBBC
 LBBB1:  lda     path_buf2,x
@@ -14324,6 +14377,8 @@ LBBBC:  ldx     path_buf1
         jsr     set_port_from_window_id
         rts
 .endproc
+
+;;; ============================================================
 
 .proc LBC03
         lda     path_buf2
@@ -14356,6 +14411,8 @@ LBC2D:  dec     path_buf2
         rts
 .endproc
 
+;;; ============================================================
+
 .proc LBC5E
         lda     path_buf1
         bne     LBC64
@@ -14365,13 +14422,13 @@ LBC64:  ldx     path_buf2
         cpx     #$01
         beq     LBC79
 LBC6B:  lda     path_buf2,x
-        sta     LD3C1-1,x
+        sta     split_buf-1,x
         dex
         cpx     #$01
         bne     LBC6B
         ldx     path_buf2
 LBC79:  dex
-        stx     LD3C1
+        stx     split_buf
         ldx     path_buf1
 LBC80:  lda     path_buf1,x
         sta     path_buf2+1,x
@@ -14384,12 +14441,12 @@ LBC80:  lda     path_buf1,x
         sta     path_buf2
         lda     path_buf1
         clc
-        adc     LD3C1
+        adc     split_buf
         tay
         pha
-        ldx     LD3C1
+        ldx     split_buf
         beq     LBCB3
-LBCA6:  lda     LD3C1,x
+LBCA6:  lda     split_buf,x
         sta     path_buf2,y
         dex
         dey
@@ -14402,6 +14459,8 @@ LBCB3:  pla
         jsr     draw_filename_prompt
         rts
 .endproc
+
+;;; ============================================================
 
 .proc LBCC9
         lda     path_buf2
@@ -14431,7 +14490,9 @@ LBCDF:  lda     path_buf2,x
         rts
 .endproc
 
-;;; Entry point???
+;;; ============================================================
+
+;;; Unreferenced ???
 
         stax    $06
         ldy     #0
@@ -14441,24 +14502,26 @@ LBCDF:  lda     path_buf2,x
         adc     path_buf1
         pha
         tax
-LBD11:  lda     ($06),y
+:       lda     ($06),y
         sta     path_buf1,x
         dey
         dex
         cpx     path_buf1
-        bne     LBD11
+        bne     :-
         pla
         sta     path_buf1
         rts
 
-LBD22:  ldx     path_buf1
+.proc LBD22
+:       ldx     path_buf1
         cpx     #$00
-        beq     LBD33
+        beq     :+
         dec     path_buf1
         lda     path_buf1,x
         cmp     #'/'
-        bne     LBD22
-LBD33:  rts
+        bne     :-
+:       rts
+.endproc
 
         jsr     LBD22
         jsr     draw_filename_prompt
