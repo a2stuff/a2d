@@ -509,7 +509,7 @@ title:  jsr     on_title_bar_click
 ;;; Key
 
 .proc on_key_down
-:       lda     event_params::modifiers
+        lda     event_params::modifiers
         beq     no_mod
 
         ;; Modifiers
