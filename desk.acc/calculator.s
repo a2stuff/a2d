@@ -748,7 +748,7 @@ init:   sta     ALTZPON
         MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport     ; set clipping bounds?
         MGTK_CALL MGTK::FlushEvents
-        lda     #$01
+        lda     #MGTK::EventKind::button_down
         sta     event_params::kind
         MGTK_CALL MGTK::PostEvent, event_params
         MGTK_CALL MGTK::GetEvent, event_params
@@ -905,7 +905,7 @@ clear:  lda     #'C'            ; otherwise turn Escape into Clear
 
 trydel: cmp     #CHAR_DELETE    ; Delete?
         beq     :+
-        cmp     #$60            ; lowercase range?
+        cmp     #'`'            ; lowercase range?
         bcc     :+
         and     #$5F            ; convert to uppercase
 :       jmp     process_key
@@ -1060,7 +1060,7 @@ miss:   clc
         ldxy    #btn_c::port
         lda     #'c'
         jsr     depress_button
-        lda     #$00
+        lda     #0
         jsr     FLOAT
         ldxy    #farg
         jsr     ROUND
@@ -1267,12 +1267,12 @@ update: sec
 
 :       sec
         ror     calc_p
-        cpy     #$0A
+        cpy     #10
         bcs     rts3
         pha
         ldy     calc_l
         beq     empty
-        lda     #$0F
+        lda     #15
         sec
         sbc     calc_l
         tax
@@ -1301,7 +1301,7 @@ rts3:   rts
         bne     :+
         lda     calc_g
         bne     reparse
-        lda     #$00
+        lda     #0
         jsr     FLOAT
         jmp     do_op
 

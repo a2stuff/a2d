@@ -367,25 +367,22 @@ abort:  rts
         ;; Exit if a directory.
         ldy     #2              ; 2nd byte of entry
         lda     (src),y
-        and     #$70            ; check that one of bits 4,5,6 is set ???
-        ;; some vague patterns, but unclear
-        ;; basic = $32,$33, text = $52, sys = $11,$14,??, bin = $23,$24,$33
-        ;; dir = $01 (so not shown)
+        and     #icon_entry_type_mask
         bne     :+
-        rts                     ; abort ???
+        rts                     ; 000 = directory
 
         ;; Set window title to point at filename (9th byte of entry)
         ;; (title includes the spaces before/after from the icon)
 :       clc
-        lda     src             ; name is 9 bytes into entry
-        adc     #9
+        lda     src
+        adc     #IconEntry::len
         sta     winfo::title
         lda     src+1
         adc     #0
         sta     winfo::title+1
 
         ;; Append filename to path.
-        ldy     #9
+        ldy     #IconEntry::len
         lda     (src),y         ; grab length
         tax                     ; name has spaces before/after
         dex                     ; so subtract 2 to get actual length

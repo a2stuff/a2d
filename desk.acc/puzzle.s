@@ -752,7 +752,7 @@ check_title:
         lda     #da_window_id
         sta     dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
-        ldx     #$23
+        ldx     #$23            ; ???
         jsr     redraw_screen
         rts
 
@@ -1075,8 +1075,8 @@ loop:   tya
 
 .proc play_sound
         ldx     #$80
-loop1:  lda     #$58
-loop2:  ldy     #$1B
+loop1:  lda     #88
+loop2:  ldy     #27
 delay1: dey
         bne     delay1
         bit     SPKR
