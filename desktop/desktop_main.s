@@ -1618,8 +1618,7 @@ nope:   dex
         sta     close_ref_num
         jsr     read
         jsr     close
-        lda     #$80
-        sta     running_da_flag
+        copy    #$80, running_da_flag
 
         ;; Invoke it
         jsr     set_pointer_cursor
@@ -2347,8 +2346,7 @@ L5246:  lda     L5263,x
         dex
         bpl     L5246
 
-        lda     #$80
-        sta     L4152
+        copy    #$80, L4152
         jsr     reset_grafport3
         jsr     L6C19
         jsr     update_scrollbars
@@ -4060,8 +4058,7 @@ L601F:  MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
         bit     L60D3
         bpl     L6068
 L6054:  copy16  event_xcoord, rect_E230::x1
-        lda     #$80
-        sta     L60D3
+        copy    #$80, L60D3
         jmp     L6079
 
 L6068:  copy16  event_xcoord, rect_E230::x2
@@ -4074,8 +4071,7 @@ L6079:  cmp16   event_ycoord, rect_E230::y2
         bit     L60D4
         bpl     L60AE
 L609A:  copy16  event_ycoord, rect_E230::y1
-        lda     #$80
-        sta     L60D4
+        copy    #$80, L60D4
         jmp     L60BF
 
 L60AE:  copy16  event_ycoord, rect_E230::y2
@@ -4727,8 +4723,7 @@ enable:
         jsr     configure_menu_item
         lda     #4              ; > Run
         jsr     configure_menu_item
-        lda     #$80
-        sta     LD344
+        copy    #$80, LD344
         rts
 
 configure_menu_item:
@@ -4929,8 +4924,7 @@ L6989:  MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
         bit     L6A3D
         bpl     L69D2
 L69BE:  copy16  event_xcoord, rect_E230::x1
-        lda     #$80
-        sta     L6A3D
+        copy    #$80, L6A3D
         jmp     L69E3
 
 L69D2:  copy16  event_xcoord, rect_E230::x2
@@ -4943,8 +4937,7 @@ L69E3:  cmp16   event_ycoord, rect_E230::y2
         bit     L6A3E
         bpl     L6A18
 L6A04:  copy16  event_ycoord, rect_E230::y1
-        lda     #$80
-        sta     L6A3E
+        copy    #$80, L6A3E
         jmp     L6A29
 
 L6A18:  copy16  event_ycoord, rect_E230::y2
@@ -5502,8 +5495,7 @@ flag:   .byte   0
         sta     disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
 
-        lda     #$80
-        sta     menu_dispatch_flag
+        copy    #$80, menu_dispatch_flag
         rts
 .endproc
 
@@ -6847,8 +6839,7 @@ not_pad:
         clc
         adc     #'0'            ; why not ORA $30 ???
         pha
-        lda     #$80
-        sta     nonzero_flag
+        copy    #$80, nonzero_flag
         pla
 
         ;; Place the character, move to next
@@ -7811,8 +7802,7 @@ sloop:  cmp16   value, powers,x
 not_pad:
         ora     #'0'
         pha
-        lda     #$80
-        sta     nonzero_flag
+        copy    #$80, nonzero_flag
         pla
 
         ;; Place the character, move to next
@@ -9029,8 +9019,7 @@ L8BC1:  lda     grafport2,x
         sub16   $085A, $0802, L8D52
         bit     L8D51
         bpl     L8C6A
-        lda     #$80
-        sta     L8D4E
+        copy    #$80, L8D4E
         lda     L8D50
         eor     #$FF
         sta     L8D50
@@ -9040,8 +9029,7 @@ L8BC1:  lda     grafport2,x
         inc16   L8D50
 L8C6A:  bit     L8D53
         bpl     L8C8C
-        lda     #$80
-        sta     L8D4F
+        copy    #$80, L8D4F
         lda     L8D52
         eor     #$FF
         sta     L8D52
@@ -9304,8 +9292,7 @@ load:   pha                     ; entry point with bit clear
 
 restore:
         pha
-        lda     #$80            ; entry point with bit set
-        sta     restore_flag
+        copy    #$80, restore_flag ; entry point with bit set
 
 :       pla
         asl     a               ; y = A * 2 (to index into word table)
@@ -9363,8 +9350,8 @@ open:   MLI_RELAY_CALL OPEN, open_params
 .endenum
 
 jt_drop:        jmp     do_drop
-        jmp     rts2            ; rts
-        jmp     rts2            ; rts
+        jmp     do_nothing            ; rts
+        jmp     do_nothing            ; rts
 jt_get_info:    jmp     do_get_info ; cmd_get_info
 jt_lock:        jmp     do_lock ; cmd_lock
 jt_unlock:      jmp     do_unlock ; cmd_unlock
@@ -9372,8 +9359,8 @@ jt_rename_icon: jmp     do_rename_icon ; cmd_rename_icon
 jt_eject:       jmp     do_eject ; cmd_eject ???
 jt_copy_file:   jmp     do_copy_file ; cmd_copy_file
 jt_delete_file: jmp     do_delete_file ; cmd_delete_file
-        jmp     rts2            ; rts
-        jmp     rts2            ; rts
+        jmp     do_nothing            ; rts
+        jmp     do_nothing            ; rts
 jt_run:         jmp     do_run  ; cmd_selector_action / Run
 jt_get_size:    jmp     do_get_size ; cmd_get_size
 
@@ -9398,10 +9385,10 @@ do_copy_file:
         copy    #0, operation_flags ; copy/delete
         tsx
         stx     stack_stash
-        jsr     prep_op_jt_overlay4_clear_system_bitmap
+        jsr     prep_callbacks_for_count_clear_system_bitmap
         jsr     do_copy_dialog_phase
         jsr     LA271
-        jsr     prep_op_jt_overlay1
+        jsr     prep_callbacks_for_copy
 
 do_run2:
         copy    #$FF, LE05B
@@ -9420,12 +9407,12 @@ do_delete_file:
         copy    #0, operation_flags ; copy/delete
         tsx
         stx     stack_stash
-        jsr     prep_op_jt_overlay4_clear_system_bitmap
+        jsr     prep_callbacks_for_count_clear_system_bitmap
         lda     #DeleteDialogLifecycle::open
         jsr     do_delete_dialog_phase
         jsr     LA271
         jsr     done_dialog_phase2
-        jsr     prep_op_jt_overlay2
+        jsr     prep_callbacks_for_delete
         jsr     delete_file
         jsr     done_dialog_phase1
         jmp     L8F4F
@@ -9435,7 +9422,7 @@ do_run:
         copy    #%11000000, operation_flags ; get size
         tsx
         stx     stack_stash
-        jsr     prep_op_jt_overlay4_clear_system_bitmap
+        jsr     prep_callbacks_for_count_clear_system_bitmap
         jsr     L9984
         jsr     LA271
         jsr     L99BC
@@ -9590,7 +9577,7 @@ L9076:  ldy     #$FF
 .proc begin_operation
         copy    #0, L97E4
 
-        jsr     prep_op_jt_overlay4_clear_system_bitmap
+        jsr     prep_callbacks_for_count_clear_system_bitmap
         bit     operation_flags
         bvs     @size
         bmi     @lock
@@ -9617,13 +9604,13 @@ L90BA:  bit     operation_flags
         bmi     @lock
         bit     delete_flag
         bmi     @trash
-        jsr     prep_op_jt_overlay1
+        jsr     prep_callbacks_for_copy
         jmp     iterate_selection
 
-@trash: jsr     prep_op_jt_overlay2
+@trash: jsr     prep_callbacks_for_delete
         jmp     iterate_selection
 
-@lock:  jsr     prep_op_jt_overlay3
+@lock:  jsr     prep_callbacks_for_lock
         jmp     iterate_selection
 
 @size:  jsr     get_size_rts2           ; no-op ???
@@ -10054,8 +10041,7 @@ L9356:  yax_call JT_MLI_RELAY, GET_FILE_INFO, get_file_info_params5
         beq     L9356
 L9366:  lda     selected_window_index
         beq     L9387
-        lda     #$80
-        sta     get_info_dialog_params::L92E3
+        copy    #$80, get_info_dialog_params::L92E3
         lda     get_info_dialog_params::L92E6
         clc
         adc     #$01
@@ -10094,8 +10080,7 @@ L93B8:  lda     DEVLST,y
         yax_call JT_MLI_RELAY, WRITE_BLOCK, block_params
         cmp     #ERR_WRITE_PROTECTED
         bne     L93DB
-        lda     #$80
-        sta     L942E
+        copy    #$80, L942E
 L93DB:  ldx     get_info_dialog_params::L92E6
         lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
@@ -10485,9 +10470,9 @@ file_entry_buf:  .res    48, 0
 op_jt_addrs:
 op_jt_addr1:  .addr   op_jt1_copy     ; defaults are for copy
 op_jt_addr2:  .addr   op_jt2_copy
-op_jt_addr3:  .addr   rts2
+op_jt_addr3:  .addr   do_nothing
 
-rts2:   rts
+do_nothing:   rts
 
 L97E4:  .byte   $00
 
@@ -10679,10 +10664,10 @@ saved_type_and_length:          ; written but not read ???
 ;;; ============================================================
 
 ;;; Overlays for copy operation
-op_jt_overlay1:
+callbacks_for_copy:
         .addr   op_jt1_copy           ; Overlay for op_jt_addrs
         .addr   op_jt2_copy
-        .addr   rts2
+        .addr   do_nothing
 
 .enum CopyDialogLifecycle
         open            = 0
@@ -10713,9 +10698,9 @@ count:  .addr   0
         jmp     run_copy_dialog_proc
 .endproc
 
-.proc prep_op_jt_overlay1
+.proc prep_callbacks_for_copy
         ldy     #op_jt_addrs_size-1
-:       copy    op_jt_overlay1,y,  op_jt_addrs,y
+:       copy    callbacks_for_copy,y,  op_jt_addrs,y
         dey
         bpl     :-
 
@@ -10747,11 +10732,10 @@ L9984:  copy    #CopyDialogLifecycle::open, copy_dialog_params::phase
 .endproc
 
 .proc L99BC
-        lda     #$80
-        sta     all_flag
+        copy    #$80, all_flag
 
         ldy     #op_jt_addrs_size-1
-:       copy    op_jt_overlay1,y, op_jt_addrs,y
+:       copy    callbacks_for_copy,y, op_jt_addrs,y
         dey
         bpl     :-
 
@@ -10904,8 +10888,7 @@ do_create:
         beq     done
         cmp     #PromptResult::all
         bne     cancel
-        lda     #$80
-        sta     all_flag
+        copy    #$80, all_flag
 do_it:  jsr     apply_file_info_and_size
         jmp     create_ok
 
@@ -11279,7 +11262,7 @@ src_eof_flag:
         cpx     #3
         bne     :-
 
-L9E26:  yax_call JT_MLI_RELAY, CREATE, create_params3
+create: yax_call JT_MLI_RELAY, CREATE, create_params3
         beq     success
         cmp     #ERR_DUPLICATE_FILENAME
         bne     err
@@ -11303,7 +11286,7 @@ yes:    jsr     apply_file_info_and_size
 cancel: jmp     close_files_cancel_dialog
 
 err:    jsr     show_error_alert_dst
-        jmp     L9E26
+        jmp     create
 
 success:
         clc
@@ -11319,9 +11302,9 @@ failure:
 ;;; ============================================================
 
 ;;; Overlays for delete operation
-op_jt_overlay2:
-        .addr   op_jt_1_delete           ; Overlay for op_jt_addrs
-        .addr   rts2
+callbacks_for_delete:
+        .addr   op_jt1_delete           ; Overlay for op_jt_addrs
+        .addr   do_nothing
         .addr   destroy_with_retry
 
 .proc delete_dialog_params
@@ -11356,9 +11339,9 @@ count:  .word   0
 
 ;;; ============================================================
 
-.proc prep_op_jt_overlay2
+.proc prep_callbacks_for_delete
         ldy     #op_jt_addrs_size-1
-:       copy    op_jt_overlay2,y, op_jt_addrs,y
+:       copy    callbacks_for_delete,y, op_jt_addrs,y
         dey
         bpl     :-
 
@@ -11451,19 +11434,20 @@ L9F8E:  jsr     show_error_alert
 
 ;;; ============================================================
 
-.proc op_jt_1_delete
+.proc op_jt1_delete
         jsr     check_escape_key_down
         beq     :+
         jmp     close_files_cancel_dialog
+
 :       jsr     append_to_src_path
         bit     LE05C
-        bmi     L9FA7
+        bmi     :+
         jsr     dec_file_count_and_run_delete_dialog_proc
-L9FA7:  jsr     decrement_op_file_count
-L9FAA:  yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
+:       jsr     decrement_op_file_count
+:       yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
         beq     :+
         jsr     show_error_alert
-        jmp     L9FAA
+        jmp     :-
 
 :       lda     src_file_info_params::storage_type
         cmp     #ST_LINKED_DIRECTORY
@@ -11471,7 +11455,7 @@ L9FAA:  yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
 loop:   yax_call JT_MLI_RELAY, DESTROY, destroy_params
         beq     next_file
         cmp     #ERR_ACCESS_ERROR
-        bne     LA01C
+        bne     err
         bit     all_flag
         bmi     unlock
         copy    #DeleteDialogLifecycle::locked, delete_dialog_params::phase
@@ -11485,8 +11469,7 @@ loop:   yax_call JT_MLI_RELAY, DESTROY, destroy_params
         beq     unlock
         cmp     #PromptResult::all
         bne     :+
-        lda     #$80
-        sta     all_flag
+        copy    #$80, all_flag
         bne     unlock           ; always
         ;; PromptResult::cancel
 :       jmp     close_files_cancel_dialog
@@ -11497,7 +11480,7 @@ unlock: copy    #ACCESS_DEFAULT, src_file_info_params::access
         copy    #$A,src_file_info_params ; param count for GET_FILE_INFO
         jmp     loop
 
-LA01C:  jsr     show_error_alert
+err:    jsr     show_error_alert
         jmp     loop
 
 next_file:
@@ -11529,10 +11512,10 @@ done:   rts
 ;;; ============================================================
 
 ;;; Overlays for lock/unlock operation
-op_jt_overlay3:
-        .addr   op_jt_1_lock           ; overlay for op_jt_addrs
-        .addr   rts2
-        .addr   rts2
+callbacks_for_lock:
+        .addr   op_jt1_lock           ; overlay for op_jt_addrs
+        .addr   do_nothing
+        .addr   do_nothing
 
 .enum LockDialogLifecycle
         open            = 0 ; opening window, initial label
@@ -11598,11 +11581,11 @@ files_remaining_count:
 :       rts
 .endproc
 
-.proc prep_op_jt_overlay3
+.proc prep_callbacks_for_lock
         copy    #0, LA425
 
         ldy     #op_jt_addrs_size-1
-:       copy    op_jt_overlay3,y, op_jt_addrs,y
+:       copy    callbacks_for_lock,y, op_jt_addrs,y
         dey
         bpl     :-
 
@@ -11669,7 +11652,7 @@ LA16A:  jsr     LA173
         jmp     append_to_src_path
 .endproc
 
-op_jt_1_lock:
+op_jt1_lock:
         jsr     append_to_src_path
         ;; fall through
 
@@ -11752,19 +11735,20 @@ get_size_rts1:
 get_size_rts2:
         rts
 
-op_jt_overlay4:
-        .addr   op_jt_1_size           ; overlay for op_jt_addrs
-        .addr   rts2
-        .addr   rts2
-
 ;;; ============================================================
-;;; ???
+;;; Most operations start by doing a traversal to just count
+;;; the files.
 
-.proc prep_op_jt_overlay4_clear_system_bitmap
+callbacks_for_count:
+        .addr   op_jt1_size           ; overlay for op_jt_addrs
+        .addr   do_nothing
+        .addr   do_nothing
+
+.proc prep_callbacks_for_count_clear_system_bitmap
         copy    #0, LA425
 
         ldy     #op_jt_addrs_size-1
-:       copy    op_jt_overlay4,y, op_jt_addrs,y
+:       copy    callbacks_for_count,y, op_jt_addrs,y
         dey
         bpl     :-
 
@@ -11816,16 +11800,16 @@ is_dir_flag:
 
 storage_type:
         .byte   0
+
+do_sum_file_size:
+        jmp     op_jt1_size
 .endproc
 
 ;;; ============================================================
 
-do_sum_file_size:
-        jmp     op_jt_1_size
-
         ;; First pass - visit/count all files ???
 
-op_jt_1_size:
+op_jt1_size:
         bit     operation_flags
         bvc     :+              ; not size
 
@@ -14718,8 +14702,7 @@ sloop:  cmp16   value, powers,x
 not_pad:
         ora     #'0'
         pha
-        lda     #$80
-        sta     nonzero_flag
+        copy    #$80, nonzero_flag
         pla
 
         ;; Place the character, move to next
@@ -15835,8 +15818,7 @@ cloop:  inx
         ;; Does it point at anything? If so, set flag.
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params2
         bne     config_toolkit
-        lda     #$80
-        sta     desktop_main::sys_start_flag
+        copy    #$80, desktop_main::sys_start_flag
 
         ;; Final MGTK configuration
 config_toolkit:
