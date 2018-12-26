@@ -1571,8 +1571,7 @@ L9F98:  lda     #0
         sta     L9F92
         beq     L9FA4
 
-L9F9F:  lda     #$80
-        sta     L9F92
+L9F9F:  copy    #$80, L9F92
 
 .proc L9FA4
         ldy     #IconEntry::win_type
@@ -2079,8 +2078,7 @@ window_id:      .byte   0
         beq     volume
 
         ;; File (i.e. icon in window)
-        lda     #$80
-        sta     LA3B7
+        copy    #$80, LA3B7
         MGTK_CALL MGTK::SetPattern, white_pattern
         MGTK_CALL MGTK::FrontWindow, frontwindow_params
         lda     frontwindow_params::window_id
@@ -2189,9 +2187,8 @@ LA4C5:  pla
 
 LA4CB:  .byte   0
 
-LA4CC:  lda     #$80
-        sta     LA4CB
-        bmi     LA4E2
+LA4CC:  copy    #$80, LA4CB
+        bmi     LA4E2           ; always
 LA4D3:  pha
         lda     #$40
         sta     LA4CB
@@ -2458,8 +2455,7 @@ LA77D:  lda     LA6B3,x
         bne     LA7C3
         sta     LA6B2
         beq     LA7C8
-LA7C3:  lda     #$80
-        sta     LA6B2
+LA7C3:  copy    #$80, LA6B2
 LA7C8:  ldy     #4
         lda     ($06),y
         and     #$80

@@ -950,7 +950,9 @@ path_buf3:
 filename_buf:
         .res    16, 0
 
+        ;; Set to $80 for Copy, $FF for Run
 LE05B:  .byte   0
+
 LE05C:  .byte   0               ; flag - always set to 0 ???
 
 process_depth:
@@ -1026,8 +1028,10 @@ rect_E230:  DEFINE_RECT 0,0,0,0, rect_E230
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00
 
-LE256:
-        .byte   $00,$00,$00,$00
+saved_stack:
+        .byte   0
+
+        .byte   $00,$00,$00
 
         .assert * = last_menu_click_params, error, "Entry point mismatch"
 
