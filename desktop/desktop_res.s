@@ -1020,8 +1020,10 @@ rect_E230:  DEFINE_RECT 0,0,0,0, rect_E230
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
         .byte   $00,$00,$00,$00
 
-LE256:
-        .byte   $00,$00,$00,$00
+saved_stack:
+        .byte   0
+
+        .byte   $00,$00,$00
 
         .assert * = last_menu_click_params, error, "Entry point mismatch"
 
