@@ -10,9 +10,6 @@
 
 .proc desktop_main
 
-L0020           := $0020
-L0800           := $0800
-
 .scope format_erase_overlay
 L0CB8           := $0CB8
 L0CD7           := $0CD7
@@ -206,7 +203,7 @@ L4151:  rts
 ;;; ============================================================
 
 
-L4152:  .byte   0
+draw_window_header_flag:  .byte   0
 
 
 .proc update_window
@@ -218,7 +215,7 @@ L4152:  .byte   0
 L415B:  sta     active_window_id
         sta     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
-        copy    #$80, L4152
+        copy    #$80, draw_window_header_flag
         copy    cached_window_id, getwinport_params2::window_id
         jsr     get_port2
         jsr     draw_window_header
@@ -253,7 +250,7 @@ L41CB:  ldx     cached_window_id
         lda     win_view_by_table,x
         bpl     L41E2
         jsr     L6C19
-        copy    #0, L4152
+        copy    #0, draw_window_header_flag
         lda     active_window_id
         jmp     assign_window_portbits
 
@@ -275,7 +272,7 @@ L41FE:  lda     L4241
 :       inc     L4241
         jmp     L41FE
 
-L4227:  copy    #$00, L4152
+L4227:  copy    #$00, draw_window_header_flag
         copy    cached_window_id, getwinport_params2::window_id
         jsr     get_set_port2
         jsr     cached_icons_screen_to_window
@@ -1340,7 +1337,7 @@ slash_index:
         lda     ($06),y
         tay
 :       lda     ($06),y
-        sta     L0800,y
+        sta     $800,y
         dey
         bpl     :-
         pla
@@ -1368,7 +1365,7 @@ slash_index:
         bne     :-
 
 :       dey
-        sty     L0800
+        sty     $800
 
         ;; Strip segment off path at $840
         ldy     $840
@@ -1396,15 +1393,15 @@ slash_index:
         ;; Copy window path to $800
         ldy     buf_win_path
 :       lda     buf_win_path,y
-        sta     L0800,y
+        sta     $800,y
         dey
         bpl     :-
 
         addr_call copy_ramcard_prefix, $840
 
         ;; Find last '/' in path...
-        ldy     L0800
-:       lda     L0800,y
+        ldy     $800
+:       lda     $800,y
         cmp     #'/'
         beq     :+
         dey
@@ -1412,7 +1409,7 @@ slash_index:
 
         ;; And back up one more path segment...
 :       dey
-:       lda     L0800,y
+:       lda     $800,y
         cmp     #'/'
         beq     :+
         dey
@@ -1422,9 +1419,9 @@ slash_index:
         ldx     $840
 :       iny
         inx
-        lda     L0800,y
+        lda     $800,y
         sta     $840,x
-        cpy     L0800
+        cpy     $800
         bne     :-
         rts
 .endproc
@@ -1891,7 +1888,7 @@ maybe_open_file:
 
         pla
         lda     active_window_id
-        jsr     window_address_lookup
+        jsr     window_path_lookup
         stax    $06
 
         ldy     #0
@@ -2052,7 +2049,7 @@ start:  copy    active_window_id, new_folder_dialog_params::phase
 
 L4FC6:  lda     active_window_id
         beq     L4FD4
-        jsr     window_address_lookup
+        jsr     window_path_lookup
         stax    new_folder_dialog_params::L4F68
 L4FD4:  copy    #$80, new_folder_dialog_params::phase
         yax_call invoke_dialog_proc, index_new_folder_dialog, new_folder_dialog_params
@@ -2133,7 +2130,7 @@ L5077:  iny
         jsr     jt_eject
 L5084:  ldx     L5098
         lda     $1800,x
-        sta     L533F
+        sta     unit_number_to_refresh
         jsr     L59A8
         dec     L5098
         bpl     L5084
@@ -2340,11 +2337,11 @@ L5246:  lda     L5263,x
         dex
         bpl     L5246
 
-        copy    #$80, L4152
+        copy    #$80, draw_window_header_flag
         jsr     reset_grafport3
         jsr     L6C19
         jsr     update_scrollbars
-        copy    #0, L4152
+        copy    #0, draw_window_header_flag
         rts
 
 L5263:  .word   0
@@ -2481,7 +2478,9 @@ done:   jsr     DESKTOP_COPY_FROM_BUF
 
 ;;; ============================================================
 
-L533F:  .byte   0
+        ;; Set after format, erase, failed open, etc.
+unit_number_to_refresh:
+        .byte   0
 
 ;;; ============================================================
 
@@ -2493,7 +2492,7 @@ L533F:  .byte   0
         lda     #$04
         jsr     dynamic_routine_800
         bne     :+
-        stx     L533F
+        stx     unit_number_to_refresh
         jsr     redraw_windows_and_desktop
         jsr     L59A4
 :       jmp     redraw_windows_and_desktop
@@ -2512,7 +2511,7 @@ fail:   rts
         jsr     dynamic_routine_800
         bne     done
 
-        stx     L533F
+        stx     unit_number_to_refresh
         jsr     redraw_windows_and_desktop
         jsr     L59A4
 done:   jmp     redraw_windows_and_desktop
@@ -2583,7 +2582,7 @@ L53D0:  tax
         lda     selected_icon_list,x
         jsr     L5431
         bmi     L53BA
-        jsr     window_address_lookup
+        jsr     window_path_lookup
         stax    $06
         ldy     #$00
         lda     ($06),y
@@ -2606,7 +2605,7 @@ L5403:  jsr     close_window
 
 L540E:  ldx     L5427
 L5411:  lda     L5428,x
-        sta     L533F
+        sta     unit_number_to_refresh
         jsr     L59A8
         ldx     L5427
         dec     L5427
@@ -2940,7 +2939,7 @@ L56F8:  .byte   0
         bne     L5708
         rts
 
-L5708:  sta     L0800
+L5708:  sta     $800
         ldy     #$01
         ldx     #$00
 L570F:  lda     LEC26,x
@@ -2950,7 +2949,7 @@ L570F:  lda     LEC26,x
         beq     L5721
         txa
         dex
-        sta     L0800,y
+        sta     $800,y
         iny
 L5720:  inx
 L5721:  cpx     #$08
@@ -2985,7 +2984,7 @@ L5743:  lda     event_key
         bne     L5763
         ldx     #$00
 L5763:  stx     L578C
-        lda     L0800,x
+        lda     $800,x
         sta     findwindow_window_id
         jsr     handle_inactive_window_click
         jmp     L5732
@@ -2996,7 +2995,7 @@ L5772:  ldx     L578C
         ldx     L578D
         dex
 L577C:  stx     L578C
-        lda     L0800,x
+        lda     $800,x
         sta     findwindow_window_id
         jsr     handle_inactive_window_click
         jmp     L5732
@@ -3086,7 +3085,7 @@ vertical:
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
-        sta     L5B1B
+        sta     active_window_view_by
         jsr     L58C3
         stax    L585F
         sty     horiz_scroll_flag
@@ -3318,18 +3317,20 @@ L59A8:  lda     #$C0
         bit     L5AD0
         bpl     L59EA
         bvc     L59D2
-        lda     L533F
-        ldy     #$0F
-L59C1:  cmp     device_to_icon_map,y
-        beq     L59C9
+
+        lda     unit_number_to_refresh
+        ldy     #15
+:       cmp     device_to_icon_map,y
+        beq     :+
         dey
-        bpl     L59C1
-L59C9:  sty     L5AC6
+        bpl     :-
+
+:       sty     L5AC6
         sty     menu_click_params::item_num
         jmp     L59F3
 
 L59D2:  ldy     DEVCNT
-        lda     L533F
+        lda     unit_number_to_refresh
 L59D8:  cmp     DEVLST,y
         beq     L59E1
         dey
@@ -3478,7 +3479,8 @@ L5AD0:  .byte   0
 
 ;;; ============================================================
 
-L5B1B:  .byte   0
+active_window_view_by:
+        .byte   0
 
 .proc handle_client_click
         lda     active_window_id
@@ -3487,7 +3489,7 @@ L5B1B:  .byte   0
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
-        sta     L5B1B
+        sta     active_window_view_by
 
         ;; Restore event coords (following detect_double_click)
         COPY_STRUCT MGTK::Point, saved_event_coords, event_coords
@@ -3626,7 +3628,7 @@ done_client_click:
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         jsr     L6523
         jsr     L84D1
-        bit     L5B1B
+        bit     active_window_view_by
         bmi     :+
         jsr     cached_icons_screen_to_window
 :       lda     active_window_id
@@ -3664,7 +3666,7 @@ ctl:    .byte   0
 ;;; ============================================================
 
 .proc handle_content_click
-        bit     L5B1B
+        bit     active_window_view_by
         bpl     :+
         jmp     clear_selection
 
@@ -3823,7 +3825,7 @@ handle_double_click:
 
 L5E28:  sta     L5E77
         lda     active_window_id
-        jsr     window_address_lookup
+        jsr     window_path_lookup
         stax    $06
         ldy     #$00
         lda     ($06),y
@@ -3893,7 +3895,7 @@ L5E77:  .byte   0
         bmi     :+
         jsr     close_active_window
 :       lda     active_window_id
-        jsr     window_address_lookup
+        jsr     window_path_lookup
 
         ptr := $06
 
@@ -4422,7 +4424,7 @@ L650D:  .word   0
 .endproc
 
 .proc L650F
-        bit     L5B1B
+        bit     active_window_view_by
         bmi     :+
         jsr     cached_icons_window_to_screen
 :       jsr     L6523
@@ -4460,7 +4462,7 @@ L650D:  .word   0
 .endproc
 
 .proc L6556
-        bit     L5B1B
+        bit     active_window_view_by
         bmi     :+
         jsr     cached_icons_screen_to_window
 :       MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
@@ -5139,16 +5141,16 @@ L6C25:  jsr     push_pointers
         lda     cached_window_id
         sta     getwinport_params2::window_id
         jsr     get_set_port2
-        bit     L4152
-        bmi     L6C39
+        bit     draw_window_header_flag
+        bmi     :+
         jsr     draw_window_header
-L6C39:  lda     cached_window_id
+:       lda     cached_window_id
         sta     getwinport_params2::window_id
         jsr     get_port2
-        bit     L4152
-        bmi     L6C4A
+        bit     draw_window_header_flag
+        bmi     :+
         jsr     offset_grafport2_and_set
-L6C4A:  ldx     cached_window_id
+:       ldx     cached_window_id
         dex
         lda     LEC26,x
         ldx     #$00
@@ -5215,10 +5217,10 @@ rows_done:
 L6CCD:  lda     cached_window_id
         sta     getwinport_params2::window_id
         jsr     get_set_port2
-        bit     L4152
-        bmi     L6CDE
+        bit     draw_window_header_flag
+        bmi     :+
         jsr     draw_window_header
-L6CDE:  jsr     cached_icons_window_to_screen
+:       jsr     cached_icons_window_to_screen
         jsr     offset_grafport2_and_set
 
         COPY_BLOCK grafport2::cliprect, rect_E230
@@ -5466,7 +5468,7 @@ flag:   .byte   0
 .proc L6F0D
         ptr := $6
 
-        jsr     window_address_lookup
+        jsr     window_path_lookup
         sta     ptr
         sta     pathptr
         stx     ptr+1
@@ -5600,7 +5602,7 @@ start:  sta     flag
 
 loop:   inc     L7049
         lda     L7049
-        cmp     #$09
+        cmp     #9              ; windows are 1-8
         bcc     L6FF6
         bit     flag
         bpl     L6FF5
@@ -5609,17 +5611,19 @@ L6FF5:  rts
 
 L6FF6:  jsr     window_lookup
         stax    ptr
-        ldy     #10
+        ldy     #MGTK::Winfo::status
         lda     (ptr),y
         beq     loop
+
         lda     L7049
-        jsr     window_address_lookup
+        jsr     window_path_lookup
         stax    ptr
         ldy     #0
         lda     (ptr),y
         tay
         cmp     path_buffer
-        beq     L7027
+        beq     :+
+
         bit     flag
         bmi     loop
         ldy     path_buffer
@@ -5628,11 +5632,13 @@ L6FF6:  jsr     window_lookup
         cmp     #'/'
         bne     loop
         dey
-L7027:  lda     (ptr),y
+
+:       lda     (ptr),y
         cmp     path_buffer,y
         bne     loop
         dey
-        bne     L7027
+        bne     :-
+
         bit     flag
         bmi     done
         ldx     L704B
@@ -5915,7 +5921,7 @@ L72A8:  .word   0
         lda     selected_window_index
         bne     :+
         lda     icon_params2
-        sta     L533F
+        sta     unit_number_to_refresh
         jsr     L59A8
 :       ldx     saved_stack
         txs
@@ -6089,7 +6095,7 @@ L7471:  lda     ($06),y
         bne     L74D3
         jsr     push_pointers
         lda     cached_window_id
-        jsr     window_address_lookup
+        jsr     window_path_lookup
         stax    $08
         lda     $06
         clc
@@ -6126,7 +6132,7 @@ L74D3:  tay
         jsr     push_pointers
         tya
         pha
-        jsr     window_address_lookup
+        jsr     window_path_lookup
         stax    $06
         pla
         asl     a
@@ -6177,7 +6183,7 @@ L7548:  iny
         cpx     LE1B0
         bne     L7548
         lda     cached_window_id
-        jsr     window_address_lookup
+        jsr     window_path_lookup
         stax    $08
         ldy     LE1B0
 L7561:  lda     LE1B0,y
@@ -7985,7 +7991,7 @@ L84D0:  .byte   0
 
 .proc L84D1
         jsr     push_pointers
-        bit     L5B1B
+        bit     active_window_view_by
         bmi     L84DC
         jsr     cached_icons_window_to_screen
 L84DC:  sub16   grafport2::cliprect::x2, grafport2::cliprect::x1, L85F8
@@ -8268,7 +8274,7 @@ tmp:    .byte   0
 ;;; ============================================================
 ;;; Look up window address. Index in A, address in A,X.
 
-.proc window_address_lookup
+.proc window_path_lookup
         asl     a
         tax
         lda     window_path_addr_table,x
@@ -8897,7 +8903,7 @@ skip:   lda     icon_params2
 
 .proc animate_window
         ptr := $06
-        rect_table := $0800
+        rect_table := $800
 
 close:  ldy     #$80
         bne     :+
@@ -9799,7 +9805,7 @@ nullptr:
         bne     :+
         rts
 :       ldx     selected_icon_count
-        stx     L0800
+        stx     $800
         dex
 :       lda     selected_icon_list,x
         sta     $0801,x
@@ -9816,7 +9822,7 @@ loop:   ldx     index
         jsr     smartport_eject
 :       inc     index
         ldx     index
-        cpx     L0800
+        cpx     $800
         bne     loop
         rts
 
@@ -9929,7 +9935,7 @@ unit_number:
 
 L92DB:  .byte   0,0             ; unused?
 
-        DEFINE_READ_BLOCK_PARAMS block_params, $0800, $A
+        DEFINE_READ_BLOCK_PARAMS block_params, $800, $A
 
 .proc get_info_dialog_params
 L92E3:  .byte   0
