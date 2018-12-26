@@ -942,7 +942,9 @@ path_buf3:
 filename_buf:
         .res    16, 0
 
+        ;; Set to $80 for Copy, $FF for Run
 LE05B:  .byte   0
+
 LE05C:  .byte   0               ; flag - always set to 0 ???
 
 process_depth:

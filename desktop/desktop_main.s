@@ -9403,9 +9403,10 @@ do_copy_file:
         jsr     LA271
         jsr     prep_op_jt_overlay1
 
-L8F3F:  copy    #$FF, LE05B
+do_run2:
+        copy    #$FF, LE05B
         copy    #0, LE05C
-        jsr     copy_file_with_flag
+        jsr     copy_file_for_run
         jsr     done_dialog_phase1
 
 L8F4F:  jsr     redraw_desktop_and_windows
@@ -9438,7 +9439,7 @@ do_run:
         jsr     L9984
         jsr     LA271
         jsr     L99BC
-        jmp     L8F3F
+        jmp     do_run2
 
 ;;; --------------------------------------------------
 ;;; Lock
@@ -9745,7 +9746,7 @@ stack_stash:
         .byte   0
 
         ;; $80 = lock/unlock
-        ;; $C0 = get size (easily probed with oVerflow flag)
+        ;; $C0 = get size/run (easily probed with oVerflow flag)
         ;; $00 = copy/delete
 operation_flags:
         .byte   0
@@ -9759,10 +9760,12 @@ unlock_flag:
         .byte   0
 
         ;; high bit set = from Selector > Run command (download???)
+        ;; high bit clear = Get Size
 run_flag:
         .byte   0
 
-all_flag:  .byte   0
+all_flag:
+        .byte   0
 
 ;;; ============================================================
 ;;; For icon index in A, put pointer to name in $6
@@ -10444,23 +10447,25 @@ skip5_buf:  .res    5, 0
 
         .res    4, 0            ; unused???
 
+        buf_size = $AC0
+
         DEFINE_CLOSE_PARAMS close_src_params
         DEFINE_CLOSE_PARAMS close_dst_params
         DEFINE_DESTROY_PARAMS destroy_params, src_path_buf
         DEFINE_OPEN_PARAMS open_src_params, src_path_buf, $0D00
         DEFINE_OPEN_PARAMS open_dst_params, dst_path_buf, $1100
-        DEFINE_READ_PARAMS read_src_params, $1500, $AC0
-        DEFINE_WRITE_PARAMS write_dst_params, $1500, $AC0
+        DEFINE_READ_PARAMS read_src_params, $1500, buf_size
+        DEFINE_WRITE_PARAMS write_dst_params, $1500, buf_size
         DEFINE_CREATE_PARAMS create_params3, dst_path_buf, ACCESS_DEFAULT
         DEFINE_CREATE_PARAMS create_params2, dst_path_buf
 
         .byte   0,0
 
-        DEFINE_GET_FILE_INFO_PARAMS file_info_params2, src_path_buf
+        DEFINE_GET_FILE_INFO_PARAMS src_file_info_params, src_path_buf
 
         .byte   0
 
-        DEFINE_GET_FILE_INFO_PARAMS file_info_params3, dst_path_buf
+        DEFINE_GET_FILE_INFO_PARAMS dst_file_info_params, dst_path_buf
 
         .byte   0
 
@@ -10776,78 +10781,82 @@ cancel: jmp     close_files_cancel_dialog
         ;; copy logic (for drag/drop only) ???
 .proc copy_file
         copy    #$80, LE05B
-        lda     #0
-        sta     LE05C
-        beq     L9A0F           ; always
+        copy    #0, LE05C
+        beq     :+              ; always
 
-with_flag:
+for_run:
         lda     #$FF
 
-L9A0F:  sta     flag
+:       sta     is_run_flag
         copy    #CopyDialogLifecycle::show, copy_dialog_params::phase
         jsr     copy_paths_to_src_and_dst_paths
         bit     operation_flags
-        bvc     @not_size
-        jsr     L9BC9
-@not_size:
+        bvc     @not_run
+        jsr     check_vol_blocks_free           ; dst is a volume path (RAM Card)
+@not_run:
         bit     LE05B
-        bpl     L9A70
+        bpl     get_src_info    ; never taken ???
         bvs     L9A50
-        lda     flag
-        bne     L9A36
-        lda     selected_window_index
-        bne     L9A36
+        lda     is_run_flag
+        bne     :+
+        lda     selected_window_index ; dragging from window?
+        bne     :+
         jmp     L9B28
 
-L9A36:  ldx     dst_path_buf
+:       ldx     dst_path_buf
         ldy     src_path_slash_index
         dey
-L9A3D:  iny
+:       iny
         inx
         lda     src_path_buf,y
         sta     dst_path_buf,x
         cpy     src_path_buf
-        bne     L9A3D
-        stx     dst_path_buf
-        jmp     L9A70
+        bne     :-
 
+        stx     dst_path_buf
+        jmp     get_src_info
+
+        ;; Append filename to dst_path_buf
 L9A50:  ldx     dst_path_buf
         lda     #'/'
         sta     dst_path_buf+1,x
         inc     dst_path_buf
-        ldy     #$00
+        ldy     #0
         ldx     dst_path_buf
-L9A60:  iny
+:       iny
         inx
         lda     filename_buf,y
         sta     dst_path_buf,x
         cpy     filename_buf
-        bne     L9A60
+        bne     :-
         stx     dst_path_buf
-L9A70:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
-        beq     L9A81
-        jsr     show_error_alert
-        jmp     L9A70
 
-L9A81:  lda     file_info_params2::storage_type
+get_src_info:
+:       yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
+        beq     :+
+        jsr     show_error_alert
+        jmp     :-              ; retry
+
+:       lda     src_file_info_params::storage_type
         cmp     #ST_VOLUME_DIRECTORY
-        beq     L9A90
+        beq     is_dir
         cmp     #ST_LINKED_DIRECTORY
-        beq     L9A90
+        beq     is_dir
         lda     #$00
-        beq     L9A95
-L9A90:  jsr     decrement_op_file_count
+        beq     store
+is_dir: jsr     decrement_op_file_count
         lda     #$FF
-L9A95:  sta     L9B30
+store:  sta     L9B30
         jsr     dec_file_count_and_run_copy_dialog_proc
         lda     op_file_count+1
-        bne     L9AA8
+        bne     :+
         lda     op_file_count
-        bne     L9AA8
+        bne     :+
         jmp     close_files_cancel_dialog
 
-L9AA8:  ldy     #7
-:       lda     file_info_params2,y
+        ;; Copy access, file_type, aux_type, storage_type
+:       ldy     #7
+:       lda     src_file_info_params,y
         sta     create_params2,y
         dey
         cpy     #2
@@ -10855,28 +10864,33 @@ L9AA8:  ldy     #7
 
         copy    #ACCESS_DEFAULT, create_params2::access
         lda     LE05B
-        beq     L9B23
-        jsr     L9C01
+        beq     create_ok       ; never taken ???
+        jsr     check_space_and_show_prompt
         bcs     done
 
+        ;; Copy create_time/create_date
         ldy     #17
         ldx     #11
-:       lda     file_info_params2,y
+:       lda     src_file_info_params,y
         sta     create_params2,x
         dex
         dey
         cpy     #13
         bne     :-
 
+        ;; If a volume, need to create a subdir instead
         lda     create_params2::storage_type
         cmp     #ST_VOLUME_DIRECTORY
-        bne     L9AE0
+        bne     do_create
         lda     #ST_LINKED_DIRECTORY
         sta     create_params2::storage_type
-L9AE0:  yax_call JT_MLI_RELAY, CREATE, create_params2
-        beq     L9B23
+
+do_create:
+        yax_call JT_MLI_RELAY, CREATE, create_params2
+        beq     create_ok
+
         cmp     #ERR_DUPLICATE_FILENAME
-        bne     L9B1D
+        bne     err
         bit     all_flag
         bmi     do_it
         copy    #CopyDialogLifecycle::exists, copy_dialog_params::phase
@@ -10892,28 +10906,31 @@ L9AE0:  yax_call JT_MLI_RELAY, CREATE, create_params2
         bne     cancel
         lda     #$80
         sta     all_flag
-do_it:  jsr     LA426
-        jmp     L9B23
+do_it:  jsr     apply_file_info_and_size
+        jmp     create_ok
 
         ;; PromptResult::cancel
 cancel: jmp     close_files_cancel_dialog
 
-L9B1D:  jsr     show_error_alert
-        jmp     L9AE0
+err:    jsr     show_error_alert
+        jmp     do_create       ; retry
 
-L9B23:  lda     L9B30
+create_ok:
+        lda     L9B30
         beq     L9B2D
 L9B28:  jmp     process_dir
 
         .byte   0               ; ???
 done:   rts
 
-L9B2D:  jmp     L9CDA
+L9B2D:  jmp     do_file_copy
 
 L9B30:  .byte   0
-flag:   .byte   0               ; ???
+
+is_run_flag:
+        .byte   0
 .endproc
-        copy_file_with_flag := copy_file::with_flag
+        copy_file_for_run := copy_file::for_run
 
 src_path_slash_index:
         .byte   0
@@ -10937,7 +10954,7 @@ op_jt2_copy:
 
         ;; Directory
         jsr     append_to_src_path
-:       yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
+:       yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
         beq     :+
         jsr     show_error_alert
         jmp     :-
@@ -10951,39 +10968,39 @@ op_jt2_copy:
         bne     :+
         jmp     close_files_cancel_dialog
 
-:       jsr     L9E19
+:       jsr     try_create_dst
         bcs     :+
         jsr     remove_src_path_segment
-        jmp     L9BBE
+        jmp     done
 
 :       jsr     remove_dst_path_segment
         jsr     remove_src_path_segment
         lda     #$FF
         sta     cancel_descent_flag
-        jmp     L9BBE
+        jmp     done
 
         ;; File
 regular_file:
         jsr     append_to_dst_path
         jsr     append_to_src_path
         jsr     dec_file_count_and_run_copy_dialog_proc
-L9B91:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
-        beq     L9BA2
+:       yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
+        beq     :+
         jsr     show_error_alert
-        jmp     L9B91
+        jmp     :-              ; retry
 
-L9BA2:  jsr     L9C01
-        bcc     L9BAA
+:       jsr     check_space_and_show_prompt
+        bcc     :+
         jmp     close_files_cancel_dialog
 
-L9BAA:  jsr     remove_src_path_segment
-        jsr     L9E19
-        bcs     L9BBB
+:       jsr     remove_src_path_segment
+        jsr     try_create_dst
+        bcs     :+
         jsr     append_to_src_path
-        jsr     L9CDA
+        jsr     do_file_copy
         jsr     remove_src_path_segment
-L9BBB:  jsr     remove_dst_path_segment
-L9BBE:  rts
+:       jsr     remove_dst_path_segment
+done:   rts
 .endproc
 
 ;;; ============================================================
@@ -10995,25 +11012,26 @@ L9BBE:  rts
 
 ;;; ============================================================
 
-.proc L9BC9
-        yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params3
-        beq     L9BDA
+.proc check_vol_blocks_free
+:       yax_call JT_MLI_RELAY, GET_FILE_INFO, dst_file_info_params
+        beq     :+
         jsr     show_error_alert_dst
-        jmp     L9BC9
+        jmp     :-
 
-L9BDA:  sub16   file_info_params3::aux_type, file_info_params3::blocks_used, L9BFF
-        cmp16   L9BFF, op_block_count
-        bcs     L9BFE
+:       sub16   dst_file_info_params::aux_type, dst_file_info_params::blocks_used, blocks_free
+        cmp16   blocks_free, op_block_count
+        bcs     :+
         jmp     done_dialog_phase3
 
-L9BFE:  rts
+:       rts
 
-L9BFF:  .word   0
+blocks_free:
+        .word   0
 .endproc
 
 ;;; ============================================================
 
-.proc L9C01
+.proc check_space_and_show_prompt
         jsr     check_space
         bcc     done
         copy    #CopyDialogLifecycle::too_large, copy_dialog_params::phase
@@ -11026,7 +11044,7 @@ done:   rts
 
 .proc check_space
         ;; Size of source
-:       yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
+:       yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
         beq     :+
         jsr     show_error_alert
         jmp     :-
@@ -11037,7 +11055,7 @@ done:   rts
         sta     existing_size+1
 
         ;; Does destination exist?
-:       yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params3
+:       yax_call JT_MLI_RELAY, GET_FILE_INFO, dst_file_info_params
         beq     got_exist_size
         cmp     #ERR_FILE_NOT_FOUND
         beq     :+
@@ -11045,7 +11063,7 @@ done:   rts
         jmp     :-
 
 got_exist_size:
-        copy16  file_info_params3::blocks_used, existing_size
+        copy16  dst_file_info_params::blocks_used, existing_size
 
         ;; Compute destination volume path
 :       lda     dst_path_buf
@@ -11062,7 +11080,7 @@ got_exist_size:
         sta     vol_path_length
 
         ;; Total blocks/used blocks on destination volume
-:       yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params3
+:       yax_call JT_MLI_RELAY, GET_FILE_INFO, dst_file_info_params
         beq     got_info
         pha                     ; on failure, restore path
         lda     saved_length    ; in case copy is aborted
@@ -11080,9 +11098,9 @@ got_exist_size:
 
 got_info:
         ;; aux = total blocks
-        sub16   file_info_params3::aux_type, file_info_params3::blocks_used, blocks_free
+        sub16   dst_file_info_params::aux_type, dst_file_info_params::blocks_used, blocks_free
         add16   blocks_free, existing_size, blocks_free
-        cmp16   blocks_free, file_info_params2::blocks_used
+        cmp16   blocks_free, src_file_info_params::blocks_used
         bcs     has_room
 
         ;; not enough room
@@ -11107,11 +11125,12 @@ existing_size:
 .endproc
 
 ;;; ============================================================
+;;; Actual byte-for-byte file copy routine
 
-.proc L9CDA
+.proc do_file_copy
         jsr     decrement_op_file_count
-        lda     #$00
-        sta     dst_ok_flag
+        lda     #0
+        sta     src_dst_exclusive_flag
         sta     src_eof_flag
         sta     mark_src_params::position
         sta     mark_src_params::position+1
@@ -11119,56 +11138,67 @@ existing_size:
         sta     mark_dst_params::position
         sta     mark_dst_params::position+1
         sta     mark_dst_params::position+2
+
         jsr     open_src
         jsr     copy_src_ref_num
         jsr     open_dst
-        beq     L9D09
+        beq     :+
+
+        ;; Destination not available; note it, can prompt later
         lda     #$FF
-        sta     dst_ok_flag
-        bne     L9D0C
-L9D09:  jsr     copy_dst_ref_num
-L9D0C:  jsr     L9DA9
-        bit     dst_ok_flag
-        bpl     L9D28
-        jsr     close_src
-L9D17:  jsr     open_dst
-        bne     L9D17
+        sta     src_dst_exclusive_flag
+        bne     read
+:       jsr     copy_dst_ref_num
+
+        ;; Read
+read:   jsr     read_src
+        bit     src_dst_exclusive_flag
+        bpl     write
+        jsr     close_src       ; swap if necessary
+:       jsr     open_dst
+        bne     :-
         jsr     copy_dst_ref_num
         yax_call JT_MLI_RELAY, SET_MARK, mark_dst_params
-L9D28:  bit     src_eof_flag
-        bmi     L9D51
+
+        ;; Write
+write:  bit     src_eof_flag
+        bmi     eof
         jsr     write_dst
-        bit     dst_ok_flag
-        bpl     L9D0C
-        jsr     close_dst
+        bit     src_dst_exclusive_flag
+        bpl     read
+        jsr     close_dst       ; swap if necessary
         jsr     open_src
         jsr     copy_src_ref_num
+
         yax_call JT_MLI_RELAY, SET_MARK, mark_src_params
-        beq     L9D0C
+        beq     read
         lda     #$FF
         sta     src_eof_flag
-        jmp     L9D0C
+        jmp     read
 
-L9D51:  jsr     close_dst
-        bit     dst_ok_flag
-        bmi     L9D5C
+        ;; EOF
+eof:    jsr     close_dst
+        bit     src_dst_exclusive_flag
+        bmi     :+
         jsr     close_src
-L9D5C:  jsr     LA46D
-        jmp     LA479
+:       jsr     copy_file_info
+        jmp     set_dst_file_info
 
-open_src:
+.proc open_src
 :       yax_call JT_MLI_RELAY, OPEN, open_src_params
         beq     :+
         jsr     show_error_alert
         jmp     :-
 :       rts
+.endproc
 
-copy_src_ref_num:
+.proc copy_src_ref_num
         lda     open_src_params::ref_num
         sta     read_src_params::ref_num
         sta     close_src_params::ref_num
         sta     mark_src_params::ref_num
         rts
+.endproc
 
 .proc open_dst
 :       yax_call JT_MLI_RELAY, OPEN, open_dst_params
@@ -11185,15 +11215,16 @@ not_found:
 done:   rts
 .endproc
 
-copy_dst_ref_num:
+.proc copy_dst_ref_num
         lda     open_dst_params::ref_num
         sta     write_dst_params::ref_num
         sta     close_dst_params::ref_num
         sta     mark_dst_params::ref_num
         rts
+.endproc
 
-.proc L9DA9
-        copy16  #$0AC0, read_src_params::request_count
+.proc read_src
+        copy16  #buf_size, read_src_params::request_count
 :       yax_call JT_MLI_RELAY, READ, read_src_params
         beq     :+
         cmp     #ERR_END_OF_FILE
@@ -11229,7 +11260,8 @@ eof:    lda     #$FF
         rts
 .endproc
 
-dst_ok_flag:
+        ;; Set if src/dst can't be open simultaneously.
+src_dst_exclusive_flag:
         .byte   0
 
 src_eof_flag:
@@ -11237,45 +11269,48 @@ src_eof_flag:
 
 .endproc
 
+;;; ============================================================
 
-.proc L9E19
+.proc try_create_dst
         ldx     #7
-:       lda     file_info_params2,x
+:       lda     src_file_info_params,x
         sta     create_params3,x
         dex
         cpx     #3
         bne     :-
 
 L9E26:  yax_call JT_MLI_RELAY, CREATE, create_params3
-        beq     L9E6F
+        beq     success
         cmp     #ERR_DUPLICATE_FILENAME
-        bne     L9E69
+        bne     err
         bit     all_flag
-        bmi     L9E60
+        bmi     yes
         copy    #CopyDialogLifecycle::exists, copy_dialog_params::phase
         yax_call invoke_dialog_proc, index_copy_dialog, copy_dialog_params
         pha
         copy    #CopyDialogLifecycle::show, copy_dialog_params::phase
         pla
-        cmp     #2
-        beq     L9E60
-        cmp     #3
-        beq     L9E71
-        cmp     #4
-        bne     L9E66
+        cmp     #PromptResult::yes
+        beq     yes
+        cmp     #PromptResult::no
+        beq     failure
+        cmp     #PromptResult::all
+        bne     cancel
         copy    #$80, all_flag
-L9E60:  jsr     LA426
-        jmp     L9E6F
+yes:    jsr     apply_file_info_and_size
+        jmp     success
 
-L9E66:  jmp     close_files_cancel_dialog
+cancel: jmp     close_files_cancel_dialog
 
-L9E69:  jsr     show_error_alert_dst
+err:    jsr     show_error_alert_dst
         jmp     L9E26
 
-L9E6F:  clc
+success:
+        clc
         rts
 
-L9E71:  sec
+failure:
+        sec
         rts
 .endproc
 
@@ -11343,12 +11378,12 @@ count:  .word   0
 .proc delete_file
         copy    #DeleteDialogLifecycle::show, delete_dialog_params::phase
         jsr     copy_paths_to_src_and_dst_paths
-L9EE3:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
+L9EE3:  yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
         beq     L9EF4
         jsr     show_error_alert
         jmp     L9EE3
 
-L9EF4:  lda     file_info_params2::storage_type
+L9EF4:  lda     src_file_info_params::storage_type
         sta     L9F1D
         cmp     #ST_LINKED_DIRECTORY
         beq     L9F02
@@ -11395,17 +11430,17 @@ L9F29:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
 
 L9F5F:  jmp     close_files_cancel_dialog
 
-do_it:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
-        lda     file_info_params2::access
+do_it:  yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
+        lda     src_file_info_params::access
         and     #$80
         bne     done
         lda     #ACCESS_DEFAULT
-        sta     file_info_params2::access
+        sta     src_file_info_params::access
         lda     #7              ; param count for SET_FILE_INFO
-        sta     file_info_params2
-        yax_call JT_MLI_RELAY, SET_FILE_INFO, file_info_params2
+        sta     src_file_info_params
+        yax_call JT_MLI_RELAY, SET_FILE_INFO, src_file_info_params
         lda     #$A             ; param count for GET_FILE_INFO
-        sta     file_info_params2
+        sta     src_file_info_params
         jmp     L9F29
 
 done:   rts
@@ -11425,12 +11460,12 @@ L9F8E:  jsr     show_error_alert
         bmi     L9FA7
         jsr     dec_file_count_and_run_delete_dialog_proc
 L9FA7:  jsr     decrement_op_file_count
-L9FAA:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
+L9FAA:  yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
         beq     :+
         jsr     show_error_alert
         jmp     L9FAA
 
-:       lda     file_info_params2::storage_type
+:       lda     src_file_info_params::storage_type
         cmp     #ST_LINKED_DIRECTORY
         beq     next_file
 loop:   yax_call JT_MLI_RELAY, DESTROY, destroy_params
@@ -11456,10 +11491,10 @@ loop:   yax_call JT_MLI_RELAY, DESTROY, destroy_params
         ;; PromptResult::cancel
 :       jmp     close_files_cancel_dialog
 
-unlock: copy    #ACCESS_DEFAULT, file_info_params2::access
-        copy    #7, file_info_params2 ; param count for SET_FILE_INFO
-        yax_call JT_MLI_RELAY, SET_FILE_INFO, file_info_params2
-        copy    #$A,file_info_params2 ; param count for GET_FILE_INFO
+unlock: copy    #ACCESS_DEFAULT, src_file_info_params::access
+        copy    #7, src_file_info_params ; param count for SET_FILE_INFO
+        yax_call JT_MLI_RELAY, SET_FILE_INFO, src_file_info_params
+        copy    #$A,src_file_info_params ; param count for GET_FILE_INFO
         jmp     loop
 
 LA01C:  jsr     show_error_alert
@@ -11605,12 +11640,12 @@ LA123:  iny
         cpy     src_path_buf
         bne     LA123
         stx     dst_path_buf
-LA133:  yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
+LA133:  yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
         beq     LA144
         jsr     show_error_alert
         jmp     LA133
 
-LA144:  lda     file_info_params2::storage_type
+LA144:  lda     src_file_info_params::storage_type
         sta     LA169
         cmp     #ST_VOLUME_DIRECTORY
         beq     LA156
@@ -11642,11 +11677,11 @@ op_jt_1_lock:
         jsr     update_dialog
 
         jsr     decrement_op_file_count
-:       yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
+:       yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
         beq     :+
         jsr     show_error_alert
         jmp     :-
-:       lda     file_info_params2::storage_type
+:       lda     src_file_info_params::storage_type
         cmp     #ST_VOLUME_DIRECTORY
         beq     ok
         cmp     #ST_LINKED_DIRECTORY
@@ -11656,12 +11691,12 @@ op_jt_1_lock:
         lda     #ACCESS_DEFAULT
         bne     set
 :       lda     #ACCESS_LOCKED
-set:    sta     file_info_params2::access
+set:    sta     src_file_info_params::access
 
-:       copy    #7, file_info_params2 ; param count for SET_FILE_INFO
-        yax_call JT_MLI_RELAY, SET_FILE_INFO, file_info_params2
+:       copy    #7, src_file_info_params ; param count for SET_FILE_INFO
+        yax_call JT_MLI_RELAY, SET_FILE_INFO, src_file_info_params
         pha
-        copy    #$A, file_info_params2 ; param count for GET_FILE_INFO
+        copy    #$A, src_file_info_params ; param count for GET_FILE_INFO
         pla
         beq     ok
         jsr     show_error_alert
@@ -11752,12 +11787,12 @@ op_jt_overlay4:
 
 .proc LA271
         jsr     copy_paths_to_src_and_dst_paths
-:       yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
+:       yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
         beq     :+
         jsr     show_error_alert
         jmp     :-
 
-:       copy    file_info_params2::storage_type, storage_type
+:       copy    src_file_info_params::storage_type, storage_type
         cmp     #ST_VOLUME_DIRECTORY
         beq     is_dir
         cmp     #ST_LINKED_DIRECTORY
@@ -11796,9 +11831,9 @@ op_jt_1_size:
 
         ;; If operation is "get size", add the block count to the sum
         jsr     append_to_src_path
-        yax_call JT_MLI_RELAY, GET_FILE_INFO, file_info_params2
+        yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
         bne     :+
-        add16   op_block_count, file_info_params2::blocks_used, op_block_count
+        add16   op_block_count, src_file_info_params::blocks_used, op_block_count
 
 :       inc16   op_file_count
 
@@ -12005,44 +12040,46 @@ LA425:  .byte   0               ; ??? only written to (with 0)
 
 ;;; ============================================================
 
-.proc LA426
-        jsr     LA46D
-        copy    #ACCESS_DEFAULT, file_info_params3::access
-        jsr     LA479
-        lda     file_info_params2::file_type
-        cmp     #$0F
-        beq     LA46C
-        yax_call JT_MLI_RELAY, OPEN, open_dst_params
-        beq     LA449
-        jsr     show_error_alert_dst
-        jmp     LA426
+.proc apply_file_info_and_size
+:       jsr     copy_file_info
+        copy    #ACCESS_DEFAULT, dst_file_info_params::access
+        jsr     set_dst_file_info
+        lda     src_file_info_params::file_type
+        cmp     #FT_DIRECTORY
+        beq     done
 
-LA449:  lda     open_dst_params::ref_num
+        ;; If a regular file, open/set eof/close
+        yax_call JT_MLI_RELAY, OPEN, open_dst_params
+        beq     :+
+        jsr     show_error_alert_dst
+        jmp     :-              ; retry
+
+:       lda     open_dst_params::ref_num
         sta     set_eof_params::ref_num
         sta     close_dst_params::ref_num
-LA452:  yax_call JT_MLI_RELAY, SET_EOF, set_eof_params
-        beq     LA463
+:       yax_call JT_MLI_RELAY, SET_EOF, set_eof_params
+        beq     close
         jsr     show_error_alert_dst
-        jmp     LA452
+        jmp     :-              ; retry
 
-LA463:  yax_call JT_MLI_RELAY, CLOSE, close_dst_params
-LA46C:  rts
+close:  yax_call JT_MLI_RELAY, CLOSE, close_dst_params
+done:   rts
 .endproc
 
-.proc LA46D
-        COPY_BYTES 11, file_info_params2::access, file_info_params3::access
+.proc copy_file_info
+        COPY_BYTES 11, src_file_info_params::access, dst_file_info_params::access
         rts
 .endproc
 
-.proc LA479
-        copy    #7, file_info_params3 ; SET_FILE_INFO param_count
-        yax_call JT_MLI_RELAY, SET_FILE_INFO, file_info_params3
+.proc set_dst_file_info
+:       copy    #7, dst_file_info_params ; SET_FILE_INFO param_count
+        yax_call JT_MLI_RELAY, SET_FILE_INFO, dst_file_info_params
         pha
-        copy    #$A, file_info_params3 ; GET_FILE_INFO param_count
+        copy    #$A, dst_file_info_params ; GET_FILE_INFO param_count
         pla
         beq     done
         jsr     show_error_alert_dst
-        jmp     LA479
+        jmp     :-
 
 done:   rts
 .endproc
