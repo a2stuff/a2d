@@ -684,8 +684,6 @@ append: lda     DEVLST,y        ; add it to the list
         inx
         sta     removable_device_table,x
         bne     next            ; always
-
-        rts                     ; remove ???
 .endproc
 
 ;;; ============================================================
@@ -2148,15 +2146,13 @@ start:
         MLI_RELAY_CALL READ, read_params
         MLI_RELAY_CALL CLOSE, close_params
 
+        jsr     restore_device_list
+
         ;; Restore machine to text state
         sta     ALTZPOFF
         jsr     exit_dhr_mode
 
-        ;; S3D2 /RAM driver still in place?
-        RAMSLOT := DEVADR + $10 + 3*2 ; Slot 3, Drive 2
-        cmp16   RAMSLOT, NODEV
-        beq     quit            ; No, so give up
-        jsr     reinstall_ram
+        jsr     maybe_reformat_ram
 
 quit:   jmp     quit_code_addr
 
@@ -3474,6 +3470,7 @@ check_drive_flags:
 .proc reset_and_invoke
         sta     ALTZPOFF
         jsr     exit_dhr_mode
+        jsr     maybe_reformat_ram
 
         ;; also used by launcher code
         target := *+1
@@ -12066,36 +12063,34 @@ do_on_line:
         .assert * = $A4D0, error, "Segment length mismatch"
 
 
-;;;  ============================================================
-;;;  Reinstall /RAM (Slot 3, Drive 2)
+;;; ============================================================
+;;; Reformat /RAM (Slot 3, Drive 2) if present
+;;; Assumes ROM is banked in, restores it when complete. Also
+;;; assumes hires screen (main and aux) are safe to destroy.
 
-;;;  TODO: Do everything correcly per ProDOS TRM
-;;;  http://www.easy68k.com/paulrsm/6502/PDOS8TRM.HTM#5.2.2.4
-
-.proc reinstall_ram
-        php
-        sei                     ; Disable interrupts
-
+.proc maybe_reformat_ram
         ram_unit_number = (1<<7 | 3<<4 | DT_RAM)
 
-        ;;  Append unit number
-        inc     DEVCNT
+        ;; Search DEVLST to see if S3D2 RAM was restored
         ldx     DEVCNT
-        lda     #ram_unit_number ; Slot 3, Drive 2
-        sta     DEVLST,x
+:       lda     DEVLST,x
+        cmp     #ram_unit_number
+        beq     format
+        dex
+        bpl     :-
+        rts
 
-        ;;  NOTE: Assumes driver (in DEVADR) was not modified
-        ;;  when detached.
+        ;; NOTE: Assumes driver (in DEVADR) was not modified
+        ;; when detached.
 
-        ;;  /RAM FORMAT call
-        copy    #DRIVER_COMMAND_FORMAT, DRIVER_COMMAND
+        ;; /RAM FORMAT call; see ProDOS 8 TRM 5.2.2.4 for details
+format: copy    #DRIVER_COMMAND_FORMAT, DRIVER_COMMAND
         copy    #ram_unit_number, DRIVER_UNIT_NUMBER
         copy16  #$2000, DRIVER_BUFFER
         lda     LCBANK1
         lda     LCBANK1
         jsr     driver
-
-        plp                     ; Restore interrupts
+        sta     ROMIN2
         rts
 
 RAMSLOT := DEVADR + $16         ; Slot 3, Drive 2
