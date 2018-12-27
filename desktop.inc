@@ -171,6 +171,10 @@ path_table := $DFB3     ; window address table
 selected_file_list := $DF22     ; indexes of selected file (global, not w/in window, up to 127)
 file_table := $DD9F     ; file address table
 
+;;; Copy of DEVLST before DeskTop modifies it. Used when exiting or
+;;; invoking to restore devices.
+devlst_backup := $E196
+
 last_menu_click_params := $E25A
 
 ;;; Icon (file/volume) entries - length 27 bytes, maximum of 127
