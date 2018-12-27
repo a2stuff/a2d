@@ -102,9 +102,20 @@ quit:   MLI_CALL QUIT, quit_params
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, bs_path
 
 .proc check_basic_system
+        ;; Was DeskTop copied to a RAM Card?
+        jsr     get_copied_to_ramcard_flag
+        bpl     get_current_prefix ; nope
+
+        ;; Use original location, since BASIC.SYSTEM was unlikely
+        ;; to be copied.
+        addr_call copy_desktop_orig_prefix, bs_path
+        jmp     got_prefix
+
+get_current_prefix:
         axy_call JUMP_TABLE_MLI, GET_PREFIX, get_prefix_params
         bne     no_bs
 
+got_prefix:
         lda     bs_path
         sta     path_length
 
@@ -173,6 +184,40 @@ str_basic_system:
 
 fail:   return  #1
 
+.endproc
+
+;;; ============================================================
+
+.proc get_copied_to_ramcard_flag
+        sta     ALTZPOFF
+        lda     LCBANK2
+        lda     LCBANK2
+        lda     copied_to_ramcard_flag
+        tax
+        sta     ALTZPON
+        lda     LCBANK1
+        lda     LCBANK1
+        txa
+        rts
+.endproc
+
+.proc copy_desktop_orig_prefix
+        stax    @destptr
+        sta     ALTZPOFF
+        lda     LCBANK2
+        lda     LCBANK2
+
+        ldx     desktop_orig_prefix
+:       lda     desktop_orig_prefix,x
+        @destptr := *+1
+        sta     $1234,x
+        dex
+        bpl     :-
+
+        sta     ALTZPON
+        lda     LCBANK1
+        lda     LCBANK1
+        rts
 .endproc
 
 ;;; ============================================================
