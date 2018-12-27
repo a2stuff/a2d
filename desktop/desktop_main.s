@@ -8507,13 +8507,19 @@ unk:    return  #device_type_unknown
 
 :       ldy     #$FB            ; SmartPort ID Type Byte ($CnFB)
         lda     (slot_addr),y   ; bit 0 = is RAM Card?
-        ora     #%00000001
+        and     #%00000001
         beq     :+
 ram:    return  #device_type_ramdisk
 
 :       lda     unit_number     ; low nibble is high nibble of $CnFE
-        ora     #%00001000      ; bit 3 = is removable?
-        beq     :+
+
+        ;; This would be correct, but fall back on old heuristic
+        ;; instead since it's used elsewhere.
+;;;         and     #%00001000      ; bit 3 = is removable?
+        and     #%00001111
+        cmp     #DT_REMOVABLE
+
+        bne     :+
         return  #device_type_removable
 
 :       return  #device_type_profile
@@ -9857,7 +9863,7 @@ L92E6:  .byte   0
         lda     DEVADR+1,x
         sta     slot_addr+1
 
-        ora     #$F0            ; is it $Cn ?
+        and     #$F0            ; is it $Cn ?
         cmp     #$C0            ; leave Z flag set if so
         rts
 .endproc
