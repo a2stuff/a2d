@@ -159,7 +159,7 @@ loop_counter:
 L40E0:  tsx
         stx     saved_stack
         sta     menu_click_params::item_num
-        jsr     L59A0
+        jsr     cmd_check_single_drive
         copy    #0, menu_click_params::item_num
         rts
 
@@ -407,18 +407,18 @@ dispatch_table:
 
         ;; (6 is duplicated to 5)
 
-        ;; no menu 7 ??
+        ;; Check menu (7) - obsolete
         menu7_start := *
-        .addr   cmd_check_drives ; duplicate???
+        .addr   cmd_check_drives
         .addr   cmd_noop         ; --------
-        .addr   L59A0            ; ???
-        .addr   L59A0
-        .addr   L59A0
-        .addr   L59A0
-        .addr   L59A0
-        .addr   L59A0
-        .addr   L59A0
-        .addr   L59A0
+        .addr   cmd_check_single_drive
+        .addr   cmd_check_single_drive
+        .addr   cmd_check_single_drive
+        .addr   cmd_check_single_drive
+        .addr   cmd_check_single_drive
+        .addr   cmd_check_single_drive
+        .addr   cmd_check_single_drive
+        .addr   cmd_check_single_drive
 
         ;; Startup menu (8)
         menu8_start := *
@@ -2131,7 +2131,7 @@ L5077:  iny
 L5084:  ldx     L5098
         lda     $1800,x
         sta     unit_number_to_refresh
-        jsr     L59A8
+        jsr     cmd_check_single_drive_C0
         dec     L5098
         bpl     L5084
         jmp     redraw_windows_and_desktop
@@ -2494,7 +2494,7 @@ unit_number_to_refresh:
         bne     :+
         stx     unit_number_to_refresh
         jsr     redraw_windows_and_desktop
-        jsr     L59A4
+        jsr     cmd_check_single_drive_80
 :       jmp     redraw_windows_and_desktop
 
 fail:   rts
@@ -2513,7 +2513,7 @@ fail:   rts
 
         stx     unit_number_to_refresh
         jsr     redraw_windows_and_desktop
-        jsr     L59A4
+        jsr     cmd_check_single_drive_80
 done:   jmp     redraw_windows_and_desktop
 .endproc
 
@@ -2606,7 +2606,7 @@ L5403:  jsr     close_window
 L540E:  ldx     L5427
 L5411:  lda     L5428,x
         sta     unit_number_to_refresh
-        jsr     L59A8
+        jsr     cmd_check_single_drive_C0
         ldx     L5427
         dec     L5427
         dex
@@ -3301,23 +3301,34 @@ pending_alert:
         .byte   0
 
 ;;; ============================================================
+;;; Check > [drive] command - obsolete, but core still used
+;;; following Format (etc)
 
-L59A0:  lda     #$00
-        beq     L59AA
+.proc cmd_check_single_drive
+        ;; Check Drive command
+        lda     #$00
+        beq     start
 
-L59A4:  lda     #$80
-        bne     L59AA
+        ;; After format/erase
+flag_80:
+        lda     #$80
+        bne     start
 
-L59A8:  lda     #$C0
+        ;; After open/eject/rename
+flag_C0:
+        lda     #$C0
 
-.proc L59AA
-        sta     L5AD0
+start:  sta     check_drive_flags
         copy    #0, cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
-        bit     L5AD0
-        bpl     L59EA
-        bvc     L59D2
+        bit     check_drive_flags
+        bpl     explicit_command
+        bvc     after_format_erase
 
+;;; --------------------------------------------------
+;;; After an Open/Eject/Rename action
+
+        ;; Map unit number to icon number
         lda     unit_number_to_refresh
         ldy     #15
 :       cmp     device_to_icon_map,y
@@ -3325,39 +3336,55 @@ L59A8:  lda     #$C0
         dey
         bpl     :-
 
-:       sty     L5AC6
+:       sty     icon_num_to_refresh
         sty     menu_click_params::item_num
-        jmp     L59F3
+        jmp     common
 
-L59D2:  ldy     DEVCNT
+;;; --------------------------------------------------
+;;; After a Format/Erase action
+
+after_format_erase:
+        ;; Map unit number to device index (???)
+        ldy     DEVCNT
         lda     unit_number_to_refresh
-L59D8:  cmp     DEVLST,y
-        beq     L59E1
+:       cmp     DEVLST,y
+        beq     :+
         dey
-        bpl     L59D8
+        bpl     :-
         iny
-L59E1:  sty     L5AC6
+:       sty     icon_num_to_refresh ; misnamed ???
         sty     menu_click_params::item_num
-        jmp     L59F3
+        jmp     common
 
-L59EA:  lda     menu_click_params::item_num
+;;; --------------------------------------------------
+;;; Check Drive command
+
+explicit_command:
+        ;; Map menu number to item number
+        lda     menu_click_params::item_num
         sec
-        sbc     #$03
+        sbc     #3
         sta     menu_click_params::item_num
-L59F3:  ldy     menu_click_params::item_num
+
+;;; --------------------------------------------------
+
+common:
+        ldy     menu_click_params::item_num
         lda     device_to_icon_map,y
         bne     L59FE
         jmp     L5A4C
 
 L59FE:  jsr     icon_entry_lookup
-        addax   #9, $06
-        ldy     #$00
+        addax   #IconEntry::len, $06
+
+        ldy     #0
         lda     ($06),y
         tay
-L5A10:  lda     ($06),y
+:       lda     ($06),y
         sta     $1F00,y
         dey
-        bpl     L5A10
+        bpl     :-
+
         dec     $1F00
         lda     #'/'
         sta     $1F00+1
@@ -3395,15 +3422,17 @@ L5A4C:  jsr     redraw_windows_and_desktop
         jsr     reset_grafport3
         DESKTOP_RELAY_CALL DT_REMOVE_ICON, icon_param
 L5A7F:  lda     cached_window_icon_count
-        sta     L5AC6
+        sta     icon_num_to_refresh
         inc     cached_window_icon_count
         inc     icon_count
         pla
         tay
         lda     DEVLST,y
         jsr     create_volume_icon
-        bit     L5AD0
+        bit     check_drive_flags
         bmi     L5AA9
+
+        ;; Explicit command
         and     #$FF
         beq     L5AA9
         cmp     #'/'
@@ -3415,20 +3444,32 @@ L5A7F:  lda     cached_window_icon_count
         rts
 
 L5AA9:  lda     cached_window_icon_count
-        cmp     L5AC6
-        beq     L5AC0
+        cmp     icon_num_to_refresh
+        beq     :+
         ldx     cached_window_icon_count
         dex
         lda     cached_window_icon_list,x
         jsr     icon_entry_lookup
         ldy     #DT_ADD_ICON
         jsr     DESKTOP_RELAY   ; icon entry addr in A,X
-L5AC0:  jsr     DESKTOP_COPY_FROM_BUF
+:       jsr     DESKTOP_COPY_FROM_BUF
         jmp     redraw_windows_and_desktop
 
-L5AC6:  .res    10, 0
-L5AD0:  .byte   0
+        ;; For format/erase, this is index in DEVLST ???
+icon_num_to_refresh:
+        .byte    0
+
+L5AC7:  .res    9, 0            ; ???
+
+;;; 0 = command, $80 = format/erase, $C0 = open/eject/rename
+check_drive_flags:
+        .byte   0
+
 .endproc
+
+        cmd_check_single_drive_80 := cmd_check_single_drive::flag_80
+        cmd_check_single_drive_C0 := cmd_check_single_drive::flag_C0
+
 
 ;;; ============================================================
 
@@ -5922,7 +5963,7 @@ L72A8:  .word   0
         bne     :+
         lda     icon_params2
         sta     unit_number_to_refresh
-        jsr     L59A8
+        jsr     cmd_check_single_drive_C0
 :       ldx     saved_stack
         txs
 done:   rts
@@ -14945,9 +14986,13 @@ trash_name:  PASCAL_STRING " Trash "
 ;;; ============================================================
 
 ;;; This removes particular devices from the device list.
-;;; TODO: Figure out what/why ???
+;;; * SmartPort devices
+;;; * Mapped to Drive 2
+;;; * Removable
+;;; * With only one actual device present (per STATUS call)
+;;; ... but why???
 
-.proc filter_volumes
+.proc filter_devices
         ptr := $06
 
         lda     DEVCNT
@@ -15387,14 +15432,14 @@ end:
 
         ldy     #0
         sty     desktop_main::pending_alert
-        sty     volume_num
+        sty     device_index
 
 process_volume:
-        lda     volume_num
+        lda     device_index
         asl     a
         tay
         copy16  device_name_table,y, devname_ptr
-        ldy     volume_num
+        ldy     device_index
         lda     DEVLST,y
 
         pha                     ; save all registers
@@ -15419,15 +15464,15 @@ process_volume:
         pha
         lda     cvi_result
         cmp     #ERR_DEVICE_NOT_CONNECTED
-        bne     L0D64
-        ldy     volume_num
+        bne     :+
+        ldy     device_index
         lda     DEVLST,y
         and     #$0F
         beq     select_template
-        ldx     volume_num
+        ldx     device_index
         jsr     remove_device
         jmp     next
-L0D64:  cmp     #ERR_DUPLICATE_VOLUME
+:       cmp     #ERR_DUPLICATE_VOLUME
         bne     select_template
         lda     #ERR_DUPLICATE_VOL_NAME
         sta     desktop_main::pending_alert
@@ -15611,8 +15656,8 @@ write:  sta     (devname_ptr),y
 
 done_drive_num:
         pla
-        inc     volume_num
-next:   lda     volume_num
+        inc     device_index
+next:   lda     device_index
 
         cmp     DEVCNT          ; done?
         beq     :+
@@ -15621,7 +15666,7 @@ next:   lda     volume_num
 
 unit_number_lo_nibble:
         .byte   0
-volume_num:
+device_index:
         .byte   0
 cvi_result:
         .byte   0
@@ -15632,12 +15677,12 @@ cvi_result:
         ;; Remove device num in X from devices list
 .proc remove_device
         dex
-L0E36:  inx
+:       inx
         copy    DEVLST+1,x, DEVLST,x
         lda     device_to_icon_map+1,x
         sta     device_to_icon_map,x
         cpx     DEVCNT
-        bne     L0E36
+        bne     :-
         dec     DEVCNT
         rts
 .endproc
