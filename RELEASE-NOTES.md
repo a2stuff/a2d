@@ -5,15 +5,15 @@
 ### Enhancements
 
 * Current time shown on right side of menu bar, if system has a clock. (#7)
-* Show Text File DA: Keyboard support. Escape quits, arrows scroll. (#4)
-* Up to 12 Desk Accessories are shown in the menu. (#90)
 * Up to 13 volumes are shown on the desktop. (#20)
+* Up to 12 Desk Accessories are shown in the menu. (#90)
+* Show Text File DA: Keyboard support. Escape quits, arrows scroll. (#4)
 * Icon bitmap improvements. (#74)
 
 ### Additional Desk Accessories
 
 * Show Image File
-  * Select an image file (8k Hires or 16k Double Hires, aux-first), then choose this DA to preview it.
+  * Select an image file (8k Hires or 16k Double Hires, aux-first), then choose DA to view it.
 * This Apple
   * Gives details about the computer, expanded memory, and what's in each slot. (#29)
 * Eyes
@@ -30,11 +30,13 @@
 * Date DA: Read-only on systems with a clock. On systems without a clock, date is saved for next session. (#30, #39)
 * Calculator DA: don't mis-paint when moved offscreen and other fixes. (#33, #34)
 * Sort Directory DA: don't need to click before sorting. (#17)
-* LC //e Card-specific: prevent crash. (#93)
-* IIgs-specific: color DHR is re-enabled on exit. (#43)
-* IIgs emulators no longer crash on startup. (#85)
 * SELECTOR.LIST created if missing. (#92)
 * Position desktop icons based on Slot/Drive assignment. (#94)
+* Hardware/Emulator Specific:
+  * IIc Plus: don't spin slot 5 drives constantly. (Use Special > Check Drives) (#25)
+  * Macintosh LC IIe Option Card: prevent crash. (#93)
+  * IIgs: color DHR is re-enabled on exit. (#43)
+  * IIgs emulators no longer crash on startup. (#85)
 
 # 1.1
 

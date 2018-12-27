@@ -672,6 +672,15 @@ next:   dey
 done:   rts
 
 append: lda     DEVLST,y        ; add it to the list
+        ;; Don't issue STATUS calls to IIc Plus Slot 5 firmware, as it causes
+        ;; the motor to spin. https://github.com/inexorabletash/a2d/issues/25
+        bit     is_iic_plus_flag
+        bpl     :+
+        and     #%01110000      ; mask off slot
+        cmp     #$50            ; is it slot 5?
+        beq     next            ; if so, ignore
+:       lda     DEVLST,y
+
         inx
         sta     removable_device_table,x
         bne     next            ; always
@@ -14759,7 +14768,11 @@ is_iie: copy    #$96, machine_type ; IIe
         jmp     init_video
 
 is_iic: copy    #$FA, machine_type ; IIc
-        jmp     init_video
+        lda     $FBBF              ; for IIc, ROM version
+        cmp     #$05               ; IIc Plus?
+        bne     :+
+        copy    #$80, is_iic_plus_flag
+:       jmp     init_video
 .endproc
 
 iigs_flag:                      ; High bit set if IIgs detected.
