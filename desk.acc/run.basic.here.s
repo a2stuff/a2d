@@ -72,10 +72,6 @@ start:
         ;; Reformat /RAM if it was restored
         jsr     maybe_reformat_ram
 
-        ;; Set PREFIX
-        MLI_CALL SET_PREFIX, set_prefix_params
-        bcs     quit
-
         ;; Load BS
         MLI_CALL OPEN, open_params
         bcs     quit
@@ -87,6 +83,11 @@ start:
         bcs     quit
 
         MLI_CALL CLOSE, close_params
+        bcs     quit
+
+        ;; Set PREFIX. Do this last; see:
+        ;; https://github.com/inexorabletash/a2d/issues/95
+        MLI_CALL SET_PREFIX, set_prefix_params
         bcs     quit
 
         ;; Launch
