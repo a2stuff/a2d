@@ -159,7 +159,7 @@ loop_counter:
 L40E0:  tsx
         stx     saved_stack
         sta     menu_click_params::item_num
-        jsr     cmd_check_single_drive
+        jsr     cmd_check_single_drive_by_menu
         copy    #0, menu_click_params::item_num
         rts
 
@@ -414,14 +414,14 @@ dispatch_table:
         menu7_start := *
         .addr   cmd_check_drives
         .addr   cmd_noop         ; --------
-        .addr   cmd_check_single_drive
-        .addr   cmd_check_single_drive
-        .addr   cmd_check_single_drive
-        .addr   cmd_check_single_drive
-        .addr   cmd_check_single_drive
-        .addr   cmd_check_single_drive
-        .addr   cmd_check_single_drive
-        .addr   cmd_check_single_drive
+        .addr   cmd_check_single_drive_by_menu
+        .addr   cmd_check_single_drive_by_menu
+        .addr   cmd_check_single_drive_by_menu
+        .addr   cmd_check_single_drive_by_menu
+        .addr   cmd_check_single_drive_by_menu
+        .addr   cmd_check_single_drive_by_menu
+        .addr   cmd_check_single_drive_by_menu
+        .addr   cmd_check_single_drive_by_menu
 
         ;; Startup menu (8)
         menu8_start := *
@@ -2133,8 +2133,8 @@ L5077:  iny
         jsr     jt_eject
 L5084:  ldx     L5098
         lda     $1800,x
-        sta     unit_number_to_refresh
-        jsr     cmd_check_single_drive_C0
+        sta     drive_to_refresh ; icon number
+        jsr     cmd_check_single_drive_by_icon_number
         dec     L5098
         bpl     L5084
         jmp     redraw_windows_and_desktop
@@ -2481,8 +2481,10 @@ done:   jsr     DESKTOP_COPY_FROM_BUF
 
 ;;; ============================================================
 
-        ;; Set after format, erase, failed open, etc.
-unit_number_to_refresh:
+;;; Set after format, erase, failed open, etc.
+;;; Used by 'cmd_check_single_drive_by_XXX'; may be unit number
+;;; or device index depending on call site.
+drive_to_refresh:
         .byte   0
 
 ;;; ============================================================
@@ -2495,9 +2497,9 @@ unit_number_to_refresh:
         lda     #$04
         jsr     dynamic_routine_800
         bne     :+
-        stx     unit_number_to_refresh
+        stx     drive_to_refresh ; unit number
         jsr     redraw_windows_and_desktop
-        jsr     cmd_check_single_drive_80
+        jsr     cmd_check_single_drive_by_unit_number
 :       jmp     redraw_windows_and_desktop
 
 fail:   rts
@@ -2514,9 +2516,9 @@ fail:   rts
         jsr     dynamic_routine_800
         bne     done
 
-        stx     unit_number_to_refresh
+        stx     drive_to_refresh ; unit number
         jsr     redraw_windows_and_desktop
-        jsr     cmd_check_single_drive_80
+        jsr     cmd_check_single_drive_by_unit_number
 done:   jmp     redraw_windows_and_desktop
 .endproc
 
@@ -2572,7 +2574,7 @@ loop:   lda     selected_icon_list,x
         sta     selected_vol_icon_list,y
         iny
 :       inx
-        cpx     selected_icon_list
+        cpx     selected_icon_list ; BUG: Should be selected_icon_count
         bne     loop
         sty     selected_vol_icon_count
 
@@ -2619,9 +2621,9 @@ L5403:  jsr     close_window
 
 finish_with_vols:
         ldx     selected_vol_icon_count
-:       lda     selected_vol_icon_list,x
-        sta     unit_number_to_refresh
-        jsr     cmd_check_single_drive_C0
+:       lda     selected_vol_icon_list,x ; BUG: off by one?
+        sta     drive_to_refresh         ; icon number
+        jsr     cmd_check_single_drive_by_icon_number
         ldx     selected_vol_icon_count
         dec     selected_vol_icon_count
         dex
@@ -3323,19 +3325,22 @@ pending_alert:
 ;;; ============================================================
 ;;; Check > [drive] command - obsolete, but core still used
 ;;; following Format (etc)
+;;;
 
 .proc cmd_check_single_drive
+
         ;; Check Drive command
+by_menu:
         lda     #$00
         beq     start
 
         ;; After format/erase
-flag_80:
+by_unit_number:
         lda     #$80
         bne     start
 
         ;; After open/eject/rename
-flag_C0:
+by_icon_number:
         lda     #$C0
 
 start:  sta     check_drive_flags
@@ -3348,8 +3353,8 @@ start:  sta     check_drive_flags
 ;;; --------------------------------------------------
 ;;; After an Open/Eject/Rename action
 
-        ;; Map unit number to icon number
-        lda     unit_number_to_refresh
+        ;; Map icon number to index in DEVLST
+        lda     drive_to_refresh
         ldy     #15
 :       cmp     device_to_icon_map,y
         beq     :+
@@ -3364,9 +3369,9 @@ start:  sta     check_drive_flags
 ;;; After a Format/Erase action
 
 after_format_erase:
-        ;; Map unit number to device index (???)
+        ;; Map unit number to index in DEVLST
         ldy     DEVCNT
-        lda     unit_number_to_refresh
+        lda     drive_to_refresh
 :       cmp     DEVLST,y
         beq     :+
         dey
@@ -3487,8 +3492,9 @@ check_drive_flags:
 
 .endproc
 
-        cmd_check_single_drive_80 := cmd_check_single_drive::flag_80
-        cmd_check_single_drive_C0 := cmd_check_single_drive::flag_C0
+        cmd_check_single_drive_by_menu := cmd_check_single_drive::by_menu
+        cmd_check_single_drive_by_unit_number := cmd_check_single_drive::by_unit_number
+        cmd_check_single_drive_by_icon_number := cmd_check_single_drive::by_icon_number
 
 
 ;;; ============================================================
@@ -5982,8 +5988,8 @@ L72A8:  .word   0
         lda     selected_window_index
         bne     :+
         lda     icon_params2
-        sta     unit_number_to_refresh
-        jsr     cmd_check_single_drive_C0
+        sta     drive_to_refresh ; icon number
+        jsr     cmd_check_single_drive_by_icon_number
 :       ldx     saved_stack
         txs
 done:   rts
