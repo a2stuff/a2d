@@ -31,7 +31,7 @@ filename:
 
 write_buffer:
         .byte   0,0
-        sizeof_write_buffer := * - write_buffer
+        sizeof_write_buffer = * - write_buffer
 
 ;;; ============================================================
 
@@ -128,10 +128,10 @@ start_da:
         ;; The following 7 rects are iterated over to identify
         ;; a hit target for a click.
 
-        num_hit_rects := 7
-        first_hit_rect := *
-        up_rect_index := 3
-        down_rect_index := 4
+        num_hit_rects = 7
+        first_hit_rect = *
+        up_rect_index = 3
+        down_rect_index = 4
 
 ok_button_rect:
         .word   $6A,$2E,$B5,$39
@@ -209,7 +209,7 @@ which_area:.byte   0
 window_id: .byte   0
 .endproc
 
-        da_window_id := 100
+        da_window_id = 100
 
 .proc screentowindow_params
 window_id:     .byte   da_window_id
@@ -520,12 +520,12 @@ decrement_table:
         .addr   0, decrement_day, decrement_month, decrement_year
 
 
-        day_min := 1
-        day_max := 31
-        month_min := 1
-        month_max := 12
-        year_min := 0
-        year_max := 99
+        day_min = 1
+        day_max = 31
+        month_min = 1
+        month_max = 12
+        year_min = 0
+        year_max = 99
 
 increment_day:
         clc
@@ -598,7 +598,7 @@ decrement_year:
 
         ptr := $07
         str := month_string + 3
-        len := 3
+        len = 3
 
         copy16  #str, ptr
 
@@ -661,7 +661,7 @@ skip:   jmp     dest
         sta     RAMWRTOFF
         jmp     save_date_and_exit
 .endproc
-        sizeof_routine := * - routine
+        sizeof_routine = * - routine
 .endproc
 
 ;;; ============================================================

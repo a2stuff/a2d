@@ -208,24 +208,24 @@ WRMODE  := $C08F                ; Turn on write mode
 
 ;;; Firmware Routines
 
-SETMOUSE        := $12
-SERVEMOUSE      := $13
-READMOUSE       := $14
-CLEARMOUSE      := $15
-POSMOUSE        := $16
-CLAMPMOUSE      := $17
-HOMEMOUSE       := $18
-INITMOUSE       := $19
+SETMOUSE        = $12
+SERVEMOUSE      = $13
+READMOUSE       = $14
+CLEARMOUSE      = $15
+POSMOUSE        = $16
+CLAMPMOUSE      = $17
+HOMEMOUSE       = $18
+INITMOUSE       = $19
 
 ;;; Constants
 
-CLAMP_X         := 0
-CLAMP_Y         := 1
+CLAMP_X         = 0
+CLAMP_Y         = 1
 
-MOUSE_MODE_OFF  := $00
-MOUSE_MODE_TRANS:= $01
-MOUSE_MODE_INT  := $03
-MOUSE_MODE_BTN  := $05
+MOUSE_MODE_OFF  = $00
+MOUSE_MODE_TRANS= $01
+MOUSE_MODE_INT  = $03
+MOUSE_MODE_BTN  = $05
 
 ;;; RAM Locations
 
@@ -249,16 +249,16 @@ MOUSE_MODE      := $0738
 ;;; Character Constants (Screen/Key Codes)
 ;;; ============================================================
 
-CHAR_MASK       := $7F
-CASE_MASK       := $DF
+CHAR_MASK       = $7F
+CASE_MASK       = $DF
 
-CHAR_CTRL_C     := $03
-CHAR_LEFT       := $08
-CHAR_TAB        := $09
-CHAR_DOWN       := $0A
-CHAR_UP         := $0B
-CHAR_RETURN     := $0D
-CHAR_CTRL_O     := $0F
-CHAR_RIGHT      := $15
-CHAR_ESCAPE     := $1B
-CHAR_DELETE     := $7F
+CHAR_CTRL_C     = $03
+CHAR_LEFT       = $08
+CHAR_TAB        = $09
+CHAR_DOWN       = $0A
+CHAR_UP         = $0B
+CHAR_RETURN     = $0D
+CHAR_CTRL_O     = $0F
+CHAR_RIGHT      = $15
+CHAR_ESCAPE     = $1B
+CHAR_DELETE     = $7F

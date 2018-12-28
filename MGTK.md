@@ -378,16 +378,16 @@ otherwise:
 ```
 
 ```
-event_kind_no_event        := 0    ; No mouse or keypress
-event_kind_button_down     := 1    ; Mouse button was depressed
-event_kind_button_up       := 2    ; Mouse button was released
-event_kind_key_down        := 3    ; Key was pressed
-event_kind_drag            := 4    ; Mouse button still down
-event_kind_apple_key       := 5    ; Mouse button was depressed, modifier key down
-event_kind_update          := 6    ; Window update needed
+event_kind_no_event        = 0    ; No mouse or keypress
+event_kind_button_down     = 1    ; Mouse button was depressed
+event_kind_button_up       = 2    ; Mouse button was released
+event_kind_key_down        = 3    ; Key was pressed
+event_kind_drag            = 4    ; Mouse button still down
+event_kind_apple_key       = 5    ; Mouse button was depressed, modifier key down
+event_kind_update          = 6    ; Window update needed
 
-event_modifier_open_apple  := 1 << 0
-event_modifier_solid_apple := 1 << 1
+event_modifier_open_apple  = 1 << 0
+event_modifier_solid_apple = 1 << 1
 ```
 
 ### Menu
@@ -443,15 +443,15 @@ _title bar_ which in turn has an optional _close box_. Within the content area a
 optional _resize box_ and optional _scroll bars_.
 
 ```
-option_dialog_box       := 1 << 0
-option_go_away_box      := 1 << 1
-option_grow_box         := 1 << 2
+option_dialog_box       = 1 << 0
+option_go_away_box      = 1 << 1
+option_grow_box         = 1 << 2
 
-scroll_option_none      := 0
-scroll_option_present   := 1 << 7
-scroll_option_thumb     := 1 << 6
-scroll_option_active    := 1 << 0
-scroll_option_normal    := scroll_option_present | scroll_option_thumb | scroll_option_active
+scroll_option_none      = 0
+scroll_option_present   = 1 << 7
+scroll_option_thumb     = 1 << 6
+scroll_option_active    = 1 << 0
+scroll_option_normal    = scroll_option_present | scroll_option_thumb | scroll_option_active
 ```
 ## Commands
 

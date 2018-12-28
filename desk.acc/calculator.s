@@ -88,7 +88,7 @@ call_init:
         sta     RAMWRTON
         rts
 .endproc
-        sizeof_routine := * - routine
+        sizeof_routine = * - routine
 .endproc
 
 ;;; ============================================================
@@ -152,31 +152,31 @@ flag:   .byte   MGTK::zp_overwrite
 ;;; ============================================================
 ;;; Button Definitions
 
-        button_width := 17
-        button_height := 9
+        button_width = 17
+        button_height = 9
 
-        col1_left := 13
-        col1_right := col1_left+button_width ; 30
-        col2_left := 42
-        col2_right := col2_left+button_width ; 59
-        col3_left := 70
-        col3_right := col3_left+button_width ; 87
-        col4_left := 98
-        col4_right := col4_left+button_width ; 115
+        col1_left = 13
+        col1_right = col1_left+button_width ; 30
+        col2_left = 42
+        col2_right = col2_left+button_width ; 59
+        col3_left = 70
+        col3_right = col3_left+button_width ; 87
+        col4_left = 98
+        col4_right = col4_left+button_width ; 115
 
-        row1_top := 22
-        row1_bot := row1_top+button_height ; 31
-        row2_top := 38
-        row2_bot := row2_top+button_height ; 47
-        row3_top := 53
-        row3_bot := row3_top+button_height ; 62
-        row4_top := 68
-        row4_bot := row4_top+button_height ; 77
-        row5_top := 83
-        row5_bot := row5_top+button_height ; 92
+        row1_top = 22
+        row1_bot = row1_top+button_height ; 31
+        row2_top = 38
+        row2_bot = row2_top+button_height ; 47
+        row3_top = 53
+        row3_bot = row3_top+button_height ; 62
+        row4_top = 68
+        row4_bot = row4_top+button_height ; 77
+        row5_top = 83
+        row5_bot = row5_top+button_height ; 92
 
-        border_lt := 1          ; border width pixels (left/top)
-        border_br := 2          ; (bottom/right)
+        border_lt = 1          ; border width pixels (left/top)
+        border_br = 2          ; (bottom/right)
 
 .proc btn_c
 viewloc:        DEFINE_POINT col1_left - border_lt, row1_top - border_lt
@@ -381,7 +381,7 @@ port:    .word   col4_left,row4_top,col4_right,row5_bot
         ;; drawing the shadowed buttons.
 
         ;; bitmaps are low 7 bits, 0=black 1=white
-        bitmap_stride   := 3    ; bytes
+        bitmap_stride   = 3    ; bytes
 button_bitmap:                  ; bitmap for normal buttons
         .byte   px(%0000000),px(%0000000),px(%0000001)
         .byte   px(%0111111),px(%1111111),px(%1111100)
@@ -397,7 +397,7 @@ button_bitmap:                  ; bitmap for normal buttons
         .byte   px(%0000000),px(%0000000),px(%0000000)
         .byte   px(%1000000),px(%0000000),px(%0000000)
 
-        wide_bitmap_stride := 8
+        wide_bitmap_stride = 8
 wide_button_bitmap:             ; bitmap for '0' button
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%1111111)
         .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111110),px(%0111111)
@@ -483,10 +483,10 @@ white_pattern:
 backcolor:  .byte   $7F
 .endproc
 
-        display_left    := 10
-        display_top     := 5
-        display_width   := 120
-        display_height  := 17
+        display_left    = 10
+        display_top     = 5
+        display_width   = 120
+        display_height  = 17
 
 .proc frame_display_params
 left:   .word   display_left
@@ -514,7 +514,7 @@ textptr:   .addr   text_buffer1
 textlen: .byte   15
 .endproc
 
-text_buffer_size := 14
+text_buffer_size = 14
 
 text_buffer1:
         .res    text_buffer_size+2, 0
@@ -595,7 +595,7 @@ textfont:       .addr   0
 
         .byte   0               ; ???
 
-        menu_bar_height := 13
+        menu_bar_height = 13
 
         ;; params for MGTK::SetPortBits when decorating title bar
 .proc screen_port
@@ -619,10 +619,10 @@ penmode:   .byte   MGTK::pencopy
 penmode:   .byte   MGTK::notpenXOR
 .endproc
 
-        window_width := 130
-        window_height := 96
-        default_left := 210
-        default_top := 60
+        window_width = 130
+        window_height = 96
+        default_left = 210
+        default_top = 60
 
 .proc winfo
 window_id:      .byte   da_window_id
@@ -786,7 +786,7 @@ exit:   MGTK_CALL MGTK::CloseWindow, closewindow_params
         sta     RAMWRTOFF
         jmp     exit_da
 .endproc
-        sizeof_routine := * - routine       ; Can't use .sizeof before the .proc definition
+        sizeof_routine = * - routine       ; Can't use .sizeof before the .proc definition
 .endproc
 
 :       cmp     #MGTK::Area::dragbar ; Title bar?
@@ -1479,8 +1479,8 @@ loop:   ldy     #0
 ;;; Draw the title bar decoration
 
 draw_title_bar:
-        offset_left     := 115  ; pixels from left of client area
-        offset_top      := 22   ; pixels from top of client area (up!)
+        offset_left     = 115  ; pixels from left of client area
+        offset_top      = 22   ; pixels from top of client area (up!)
         ldx     winfo::left+1
         lda     winfo::left
         clc
@@ -1549,7 +1549,7 @@ loop:   inc     TXTPTR
 end:    rts
 .endproc
         .org save_org + .sizeof(adjust_txtptr_copied)
-        sizeof_adjust_txtptr_copied := .sizeof(adjust_txtptr_copied)
+        sizeof_adjust_txtptr_copied = .sizeof(adjust_txtptr_copied)
 
 
 CALL_FLOAT:

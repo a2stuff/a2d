@@ -64,7 +64,7 @@ stash_stack:  .byte   0
         jmp     create_window
 .endproc
 
-        da_window_id := 51
+        da_window_id = 51
 
 ;;; ============================================================
 ;;; Redraw the screen (all windows) after a EventKind::drag
@@ -98,7 +98,7 @@ skip:   lda     #0
         sta     RAMWRTON
         rts
 .endproc
-        sizeof_routine := * - routine
+        sizeof_routine = * - routine
 .endproc
 
 ;;; ============================================================
@@ -176,16 +176,16 @@ a_grafport:   .addr   setport_params
 getwinport_params_window_id := getwinport_params::window_id
 
         ;; Puzzle piece row/columns
-        cw := 28
-        c1 := 5
-        c2 := c1 + cw
-        c3 := c2 + cw
-        c4 := c3 + cw
-        rh := 16
-        r1 := 3
-        r2 := r1 + rh
-        r3 := r2 + rh
-        r4 := r3 + rh
+        cw = 28
+        c1 = 5
+        c2 = c1 + cw
+        c3 = c2 + cw
+        c4 = c3 + cw
+        rh = 16
+        r1 = 3
+        r2 = r1 + rh
+        r3 = r2 + rh
+        r4 = r3 + rh
 
 space_positions:                 ; left, top for all 16 holes
         .word   c1,r1
@@ -579,10 +579,10 @@ setport_params:
         .byte   $00,$2F,$02,$B1,$00,$00,$01,$02
         .byte   $06
 
-        default_left    := 220
-        default_top     := 80
-        default_width   := $79
-        default_height  := $44
+        default_left    = 220
+        default_top     = 80
+        default_width   = $79
+        default_height  = $44
 
 .proc winfo
 window_id:     .byte   da_window_id
@@ -743,7 +743,7 @@ destroy:
         sta     RAMWRTOFF
         jmp     exit_da
 .endproc
-        sizeof_routine := * - routine
+        sizeof_routine = * - routine
 
         ;; title bar?
 check_title:
@@ -844,7 +844,7 @@ nope:   clc
 ;;; ============================================================
 ;;; Process piece click
 
-        hole_piece := 12
+        hole_piece = 12
 
 .proc process_click
 

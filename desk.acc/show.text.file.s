@@ -56,7 +56,7 @@ call_main_addr         := call_main_trampoline+7        ; address patched in her
         sta     RAMWRTON
         rts
 .endproc
-        sizeof_call_main_template := * - call_main_template
+        sizeof_call_main_template = * - call_main_template
 
 .proc call_init
         ;; run the DA
@@ -160,7 +160,7 @@ params_start:
 
 io_buf          := $0C00
 default_buffer  := $1200
-read_length     := $0100
+read_length      = $0100
 
         DEFINE_OPEN_PARAMS open_params, pathbuf, io_buf
         DEFINE_READ_PARAMS read_params, default_buffer, read_length
@@ -185,10 +185,10 @@ black_pattern:
 white_pattern:
         .res    $8, $FF
 
-        da_window_id := 100
+        da_window_id = 100
 
-        line_spacing := 10
-        right_const := 506
+        line_spacing = 10
+        right_const = 506
 
 L095A:  .byte   $00
 L095B:  .word   right_const
@@ -279,10 +279,10 @@ textptr:        .addr   0       ; address
 textlen:        .byte   0       ; length
 .endproc
 
-        default_width := 512
-        default_height := 150
-        default_left := 10
-        default_top := 28
+        default_width = 512
+        default_height = 150
+        default_left = 10
+        default_top = 28
 
 .proc winfo
 window_id:      .byte   da_window_id ; window identifier
@@ -582,7 +582,7 @@ no_mod:
         jsr     redraw_screen
         jsr     calc_window_size
 
-        max_width := default_width
+        max_width = default_width
         lda     #>max_width
         cmp     winfo::maprect::x2+1
         bne     :+
@@ -731,7 +731,7 @@ end:    rts
 end:    rts
 .endproc
 
-vscroll_max := $FA
+vscroll_max = $FA
 
 .proc on_vscroll_below_click
 loop:   jsr     page_down
@@ -1481,8 +1481,8 @@ ignore: clc                     ; Click ignored
 
 fixed_str:      DEFINE_STRING "Fixed        "
 prop_str:       DEFINE_STRING "Proportional"
-        label_width := 50
-        title_bar_height := 12
+        label_width = 50
+        title_bar_height = 12
 
 .proc mode_mapinfo                  ; bounding port for mode label
 viewloc:        DEFINE_POINT 0, 0, viewloc

@@ -638,7 +638,7 @@ done:   rts
 
         open_io_buffer := $A000
         dir_buffer := $A400
-        dir_bufsize := BLOCK_SIZE
+        dir_bufsize = BLOCK_SIZE
 
         entry_length_offset := $23
         file_count_offset := $25

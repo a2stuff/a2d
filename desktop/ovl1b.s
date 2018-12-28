@@ -87,9 +87,9 @@ key_mods  := * + 3
 ;;; ============================================================
 ;;; Menu definition
 
-        menu_id_apple := 1
-        menu_id_file := 2
-        menu_id_facilities := 3
+        menu_id_apple = 1
+        menu_id_file = 2
+        menu_id_facilities = 3
 
 menu_definition:
         DEFINE_MENU_BAR 3

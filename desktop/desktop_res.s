@@ -457,7 +457,7 @@ nextwinfo:      .addr   0
 ;;; "About Apple II Desktop" Dialog
 
 .proc winfo_about_dialog
-        width := 400
+        width = 400
 
 window_id:      .byte   $18
 options:        .byte   MGTK::Option::dialog_box
@@ -494,7 +494,7 @@ winfo_about_dialog_port    := winfo_about_dialog::port
 ;;; Dialog used for Edit/Delete/Run an Entry ...
 
 .proc winfo_entry_picker
-        width := 350
+        width = 350
 
 window_id:      .byte   $1B
 options:        .byte   MGTK::Option::dialog_box
@@ -537,7 +537,7 @@ pos_dialog_title: DEFINE_POINT 0, 18, pos_dialog_title
 point7: DEFINE_POINT 40,18, point7
 pointD: DEFINE_POINT 40,35, pointD
 
-        dialog_label_default_x := 40
+        dialog_label_default_x = 40
 dialog_label_pos:
         DEFINE_POINT dialog_label_default_x,0, dialog_label_pos
 
@@ -652,7 +652,7 @@ has_input_field_flag:
         .byte   0
 
 
-        prompt_insertion_point_blink_count := $14
+        prompt_insertion_point_blink_count = $14
 
 prompt_ip_counter:
         .byte   prompt_insertion_point_blink_count
@@ -1247,11 +1247,11 @@ LE6C1:
         .addr   winfo8title_ptr
 
         ;; (low nibble must match menu order)
-        view_by_icon := $80
-        view_by_name := $81
-        view_by_date := $82
-        view_by_size := $83
-        view_by_type := $84
+        view_by_icon = $80
+        view_by_name = $81
+        view_by_date = $82
+        view_by_size = $83
+        view_by_type = $84
 
 win_view_by_table:
         .res    8, 0
