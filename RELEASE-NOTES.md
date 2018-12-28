@@ -9,6 +9,7 @@
 * Up to 12 Desk Accessories are shown in the menu. (#90)
 * Add Special > Check Drive command to refresh a single drive. (#97)
 * Show Text File DA: Keyboard support. Escape quits, arrows scroll. (#4)
+* Reorganized/renamed several menu items. (#13)
 * Icon bitmap improvements. (#74)
 
 ### Additional Desk Accessories
