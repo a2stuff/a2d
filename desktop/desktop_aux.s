@@ -2820,8 +2820,6 @@ special_menu:
         menu_item_id_unlock       = 10
         menu_item_id_get_size     = 11
 
-        .addr   $0000,$0000
-
         PAD_TO $AE00
 
 ;;; ============================================================
