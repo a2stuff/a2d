@@ -2591,11 +2591,13 @@ L5403:  jsr     close_window
 
 finish_with_vols:
         ldx     selected_vol_icon_count
-:       lda     selected_vol_icon_list,x ; BUG: off by one?
+        jmp     next_vol
+:       lda     selected_vol_icon_list,x
         sta     drive_to_refresh         ; icon number
         jsr     cmd_check_single_drive_by_icon_number
         ldx     selected_vol_icon_count
         dec     selected_vol_icon_count
+next_vol:
         dex
         bpl     :-
         jmp     redraw_windows_and_desktop
