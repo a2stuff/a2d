@@ -13,7 +13,7 @@ DEVNUM          := $BF30        ; Most recent accessed device
 DEVCNT          := $BF31        ; Number of on-line devices minus 1
 DEVLST          := $BF32        ; Up to 14 units ($BF32-$BF3F)
 BITMAP          := $BF58        ; System memory bitmap
-BITMAP_SIZE     := $18          ; Bits for pages $00 to $BF
+BITMAP_SIZE     = $18           ; Bits for pages $00 to $BF
 DATELO          := $BF90        ; Date lo
 DATEHI          := $BF91        ; Date hi
 TIMELO          := $BF92        ; Time lo
@@ -27,45 +27,45 @@ KVERSION        := $BFFF        ; ProDOS Kernel Version
 ;;; Patch Locations
 SELECTOR        := $D100
 
-BLOCK_SIZE      := $200
+BLOCK_SIZE      = $200
 
 ;;; ============================================================
 ;;; MLI Calls
 ;;; ============================================================
 
 ;;; Housekeeping Calls
-CREATE          := $C0
-DESTROY         := $C1
-RENAME          := $C2
-SET_FILE_INFO   := $C3
-GET_FILE_INFO   := $C4
-ON_LINE         := $C5
-SET_PREFIX      := $C6
-GET_PREFIX      := $C7
+CREATE          = $C0
+DESTROY         = $C1
+RENAME          = $C2
+SET_FILE_INFO   = $C3
+GET_FILE_INFO   = $C4
+ON_LINE         = $C5
+SET_PREFIX      = $C6
+GET_PREFIX      = $C7
 
 ;;; Filing Calls
-OPEN            := $C8
-NEWLINE         := $C9
-READ            := $CA
-WRITE           := $CB
-CLOSE           := $CC
-FLUSH           := $CD
-SET_MARK        := $CE
-GET_MARK        := $CF
-SET_EOF         := $D0
-GET_EOF         := $D1
-SET_BUF         := $D2
-GET_BUF         := $D3
+OPEN            = $C8
+NEWLINE         = $C9
+READ            = $CA
+WRITE           = $CB
+CLOSE           = $CC
+FLUSH           = $CD
+SET_MARK        = $CE
+GET_MARK        = $CF
+SET_EOF         = $D0
+GET_EOF         = $D1
+SET_BUF         = $D2
+GET_BUF         = $D3
 
 ;;; System Calls
-GET_TIME        := $82
-ALLOC_INTERRUPT := $40
-DEALLOC_INTERRUPT       := $41
-QUIT            := $65
+GET_TIME        = $82
+ALLOC_INTERRUPT = $40
+DEALLOC_INTERRUPT       = $41
+QUIT            = $65
 
 ;;; Direct Disk Access Commands
-READ_BLOCK      := $80
-WRITE_BLOCK     := $81
+READ_BLOCK      = $80
+WRITE_BLOCK     = $81
 
 ;;; ============================================================
 ;;; Device Types (low nibble of unit number in DEVLST)
@@ -73,10 +73,10 @@ WRITE_BLOCK     := $81
 
 ;;; As used by DeskTop; these are not actually correct...
 
-DT_DISKII       := $0
-DT_PROFILE      := $4
-DT_REMOVABLE    := $B
-DT_RAM          := $F
+DT_DISKII       = $0
+DT_PROFILE      = $4
+DT_REMOVABLE    = $B
+DT_RAM          = $F
 
 ;;; See ProDOS Tech Note #21 - other than the above types, there
 ;;; is not an "ID nibble". The nibble is a copy of $CnFE's high
@@ -90,48 +90,48 @@ DT_RAM          := $F
 ;;; File Types
 ;;; ============================================================
 
-FT_TYPELESS     := $00
-FT_BAD          := $01
-FT_TEXT         := $04
-FT_BINARY       := $06
-FT_DIRECTORY    := $0F
-FT_SRC          := $B0          ; IIgs system type; re-used?
-FT_S16          := $B3          ; IIgs Application Program
-FT_BASIC        := $FC
-FT_SYSTEM       := $FF
+FT_TYPELESS     = $00
+FT_BAD          = $01
+FT_TEXT         = $04
+FT_BINARY       = $06
+FT_DIRECTORY    = $0F
+FT_SRC          = $B0           ; IIgs system type; re-used?
+FT_S16          = $B3           ; IIgs Application Program
+FT_BASIC        = $FC
+FT_SYSTEM       = $FF
 
 ;;; ============================================================
 ;;; Access
 ;;; ============================================================
 
-ACCESS_DEFAULT  := %11000011
-ACCESS_LOCKED   := %00100001
+ACCESS_DEFAULT  = %11000011
+ACCESS_LOCKED   = %00100001
 
 ;;; ============================================================
 ;;; Storage Types
 ;;; ============================================================
 
-ST_STANDARD_FILE        := $01
-ST_LINKED_DIRECTORY     := $0D
-ST_VOLUME_DIRECTORY     := $0F
+ST_STANDARD_FILE        = $01
+ST_LINKED_DIRECTORY     = $0D
+ST_VOLUME_DIRECTORY     = $0F
 
 ;;; ============================================================
 ;;; Errors
 ;;; ============================================================
 
-ERR_DEVICE_NOT_CONNECTED := $28
-ERR_WRITE_PROTECTED   := $2B
-ERR_INVALID_PATHNAME  := $40
-ERR_INVALID_REFERENCE := $43
-ERR_PATH_NOT_FOUND    := $44
-ERR_VOL_NOT_FOUND     := $45
-ERR_FILE_NOT_FOUND    := $46
-ERR_DUPLICATE_FILENAME:= $47
-ERR_OVERRUN_ERROR     := $48
-ERR_VOLUME_DIR_FULL   := $49
-ERR_END_OF_FILE       := $4C
-ERR_ACCESS_ERROR      := $4E
-ERR_DUPLICATE_VOLUME  := $57
+ERR_DEVICE_NOT_CONNECTED = $28
+ERR_WRITE_PROTECTED   = $2B
+ERR_INVALID_PATHNAME  = $40
+ERR_INVALID_REFERENCE = $43
+ERR_PATH_NOT_FOUND    = $44
+ERR_VOL_NOT_FOUND     = $45
+ERR_FILE_NOT_FOUND    = $46
+ERR_DUPLICATE_FILENAME= $47
+ERR_OVERRUN_ERROR     = $48
+ERR_VOLUME_DIR_FULL   = $49
+ERR_END_OF_FILE       = $4C
+ERR_ACCESS_ERROR      = $4E
+ERR_DUPLICATE_VOLUME  = $57
 
 ;;; ============================================================
 ;;; Misc Structures
@@ -148,8 +148,8 @@ ERR_DUPLICATE_VOLUME  := $57
 ;;; Directory Structures
 ;;; ============================================================
 
-STORAGE_TYPE_MASK       := $F0
-NAME_LENGTH_MASK        := $0F
+STORAGE_TYPE_MASK       = $F0
+NAME_LENGTH_MASK        = $0F
 
 ;;; Volume Directory Header structure
 .struct VolumeDirectoryHeader
@@ -225,10 +225,10 @@ DRIVER_BUFFER           := $44
 DRIVER_BLOCK_NUMBER     := $46
 
 ;;; Commands
-DRIVER_COMMAND_STATUS  := 0
-DRIVER_COMMAND_READ    := 1
-DRIVER_COMMAND_WRITE   := 2
-DRIVER_COMMAND_FORMAT  := 3
+DRIVER_COMMAND_STATUS  = 0
+DRIVER_COMMAND_READ    = 1
+DRIVER_COMMAND_WRITE   = 2
+DRIVER_COMMAND_FORMAT  = 3
 
 
 ;;; ============================================================

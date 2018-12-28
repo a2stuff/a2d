@@ -1182,8 +1182,8 @@ L5C27:  ldx     $177F
 
 .proc detect_double_click
 
-        double_click_deltax := 5
-        double_click_deltay := 4
+        double_click_deltax = 5
+        double_click_deltay = 4
 
         COPY_STRUCT MGTK::Point, event_coords, coords
 

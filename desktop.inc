@@ -2,15 +2,15 @@
 ;;; DeskTop Internals
 ;;; ============================================================
 
-screen_width    := 560
-screen_height   := 192
+screen_width    = 560
+screen_height   = 192
 
 ;;; ============================================================
 
 VERSION_MAJOR = 1
 VERSION_MINOR = 1
 
-DA_FILE_TYPE    := $F1
+DA_FILE_TYPE    = $F1
 
 max_desk_acc_count = 8
 
@@ -19,7 +19,7 @@ INVOKER_FILENAME        := $280 ; File to invoke (PREFIX must be set)
 
 DA_LOAD_ADDRESS := $800         ; Loaded into MAIN
 DA_IO_BUFFER    := $1C00        ; ...through $1FFF
-DA_MAX_SIZE     := DA_IO_BUFFER - DA_LOAD_ADDRESS
+DA_MAX_SIZE     = DA_IO_BUFFER - DA_LOAD_ADDRESS
         ;; Can't load DA past I/O Buffer at MAIN $1C00,
         ;; but icon tables start at AUX $1B00 so can't clone there.
 
@@ -78,24 +78,24 @@ DESKTOP    := $8E00
 
         ;; Implementation bounces to $93BC, uses jump table at $939E
 
-DT_ADD_ICON             := $01  ; { .addr icondata }
-DT_HIGHLIGHT_ICON       := $02  ; { .byte icon }
-DT_REDRAW_ICON          := $03  ; { .byte icon }
-DT_REMOVE_ICON          := $04  ; { .byte icon }
-DT_HIGHLIGHT_ALL        := $05  ; { .byte window_id }
-DT_UNHIGHLIGHT_ALL      := $06
-DT_CLOSE_WINDOW         := $07  ; { .byte window_id }
-DT_GET_HIGHLIGHTED      := $08  ; { .res 20 }
-DT_FIND_ICON            := $09  ; { .word mousex, .word mousey, .byte result }
-DT_DRAG_HIGHLIGHTED     := $0A  ; { .byte param }
+DT_ADD_ICON             = $01   ; { .addr icondata }
+DT_HIGHLIGHT_ICON       = $02   ; { .byte icon }
+DT_REDRAW_ICON          = $03   ; { .byte icon }
+DT_REMOVE_ICON          = $04   ; { .byte icon }
+DT_HIGHLIGHT_ALL        = $05   ; { .byte window_id }
+DT_UNHIGHLIGHT_ALL      = $06
+DT_CLOSE_WINDOW         = $07   ; { .byte window_id }
+DT_GET_HIGHLIGHTED      = $08   ; { .res 20 }
+DT_FIND_ICON            = $09   ; { .word mousex, .word mousey, .byte result }
+DT_DRAG_HIGHLIGHTED     = $0A   ; { .byte param }
                                 ; Input: specific icon being dragged
                                 ; Output: 0 = on desktop (no-op)
                                 ;  hi bit clear: low bits are target icon
                                 ;  hi bit set:   low bits are target window
-DT_UNHIGHLIGHT_ICON     := $0B  ; { .addr iconentry }
-DT_REDRAW_ICONS         := $0C  ; Repaints desktop icons *
-DT_ICON_IN_RECT         := $0D  ; { .byte icon, rect bounds }
-DT_REDRAW_ICON_IDX      := $0E  ; { .byte icon_index }
+DT_UNHIGHLIGHT_ICON     = $0B   ; { .addr iconentry }
+DT_REDRAW_ICONS         = $0C   ; Repaints desktop icons *
+DT_ICON_IN_RECT         = $0D   ; { .byte icon, rect bounds }
+DT_REDRAW_ICON_IDX      = $0E   ; { .byte icon_index }
 
 ;;; `icon` is the icon number, i.e. first field in icon entry
 ;;; `icon_index` is the index in the icon table
@@ -204,17 +204,17 @@ last_menu_click_params := $E25A
         name            .res 17 ; 15 chars plus leading/trailing spaces
 .endstruct
 
-max_icon_count  := 127
+max_icon_count  = 127
 
-icon_entry_open_mask    := %10000000
-icon_entry_type_mask    := %01110000
-icon_entry_winid_mask   := %00001111
-icon_entry_type_dir     := %00000000
-icon_entry_type_sys     := %00010000
-icon_entry_type_bin     := %00100000
-icon_entry_type_bas     := %00110000
-icon_entry_type_txt     := %01010000
-icon_entry_type_trash   := %01110000
+icon_entry_open_mask    = %10000000
+icon_entry_type_mask    = %01110000
+icon_entry_winid_mask   = %00001111
+icon_entry_type_dir     = %00000000
+icon_entry_type_sys     = %00010000
+icon_entry_type_bin     = %00100000
+icon_entry_type_bas     = %00110000
+icon_entry_type_txt     = %01010000
+icon_entry_type_trash   = %01110000
 
 ;;; ============================================================
 ;;; Internals - Default Font
@@ -244,19 +244,19 @@ DEFAULT_FONT := $8800
 ;;; $0E = (C)                  $1E = solid apple  (MT:@)
 ;;; $0F = (R)                  $1F = open apple   (MT:A)
 
-GLYPH_FOLDERL := $01
-GLYPH_FOLDERR := $02
+GLYPH_FOLDERL = $01
+GLYPH_FOLDERR = $02
 
-GLYPH_SPC     := $00
-GLYPH_INSPT   := $06
+GLYPH_SPC     = $00
+GLYPH_INSPT   = $06
 
-GLYPH_LARROW := $09
-GLYPH_RARROW := $15
-GLYPH_UARROW := $0B
-GLYPH_DARROW := $0A
-GLYPH_RETURN := $0D
-GLYPH_OAPPLE := $1F
-GLYPH_SAPPLE := $1E
+GLYPH_LARROW  = $09
+GLYPH_RARROW  = $15
+GLYPH_UARROW  = $0B
+GLYPH_DARROW  = $0A
+GLYPH_RETURN  = $0D
+GLYPH_OAPPLE  = $1F
+GLYPH_SAPPLE  = $1E
 
 ;;; Menu (by default) uses:
 ;;;   Solid Mod   $1E

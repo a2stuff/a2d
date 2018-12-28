@@ -24,15 +24,15 @@ dst_path_buf   := $1FC0
         dynamic_routine_7000 := $7000
         dynamic_routine_9000 := $9000
 
-        dynamic_routine_disk_copy    := 0
-        dynamic_routine_format_erase := 1
-        dynamic_routine_selector1    := 2
-        dynamic_routine_common       := 3
-        dynamic_routine_file_copy    := 4
-        dynamic_routine_file_delete  := 5
-        dynamic_routine_selector2    := 6
-        dynamic_routine_restore5000  := 7
-        dynamic_routine_restore9000  := 8
+        dynamic_routine_disk_copy    = 0
+        dynamic_routine_format_erase = 1
+        dynamic_routine_selector1    = 2
+        dynamic_routine_common       = 3
+        dynamic_routine_file_copy    = 4
+        dynamic_routine_file_delete  = 5
+        dynamic_routine_selector2    = 6
+        dynamic_routine_restore5000  = 7
+        dynamic_routine_restore9000  = 8
 
 
         .org $4000
@@ -8143,8 +8143,8 @@ L85FA:  .word   0
 
 .proc detect_double_click
 
-        double_click_deltax := 8
-        double_click_deltay := 7
+        double_click_deltax = 8
+        double_click_deltay = 7
 
         ;; Stash initial coords
         ldx     #3
@@ -12119,17 +12119,17 @@ do_on_line:
 ;;; ============================================================
 ;;; Dialog Launcher (or just proc handler???)
 
-        index_about_dialog              := 0
-        index_copy_dialog               := 1
-        index_delete_dialog             := 2
-        index_new_folder_dialog         := 3
-        index_get_info_dialog           := 6
-        index_lock_dialog               := 7
-        index_unlock_dialog             := 8
-        index_rename_dialog             := 9
-        index_download_dialog           := $A
-        index_get_size_dialog           := $B
-        index_warning_dialog            := $C
+        index_about_dialog              = 0
+        index_copy_dialog               = 1
+        index_delete_dialog             = 2
+        index_new_folder_dialog         = 3
+        index_get_info_dialog           = 6
+        index_lock_dialog               = 7
+        index_unlock_dialog             = 8
+        index_rename_dialog             = 9
+        index_download_dialog           = 10
+        index_get_size_dialog           = 11
+        index_warning_dialog            = 12
 
 invoke_dialog_proc:
         .assert * = $A500, error, "Entry point used by overlay"
@@ -13483,13 +13483,13 @@ warning_message_table:
         .addr   desktop_aux::str_too_many_windows,desktop_aux::str_1_space
         .addr   desktop_aux::str_save_selector_list,desktop_aux::str_on_system_disk
 .endproc
-        warning_msg_insert_system_disk          := 0
-        warning_msg_selector_list_full          := 1
-        warning_msg_selector_list_full2         := 2
-        warning_msg_window_must_be_closed       := 3
-        warning_msg_window_must_be_closed2      := 4
-        warning_msg_too_many_windows            := 5
-        warning_msg_save_selector_list          := 6
+        warning_msg_insert_system_disk          = 0
+        warning_msg_selector_list_full          = 1
+        warning_msg_selector_list_full2         = 2
+        warning_msg_window_must_be_closed       = 3
+        warning_msg_window_must_be_closed2      = 4
+        warning_msg_too_many_windows            = 5
+        warning_msg_save_selector_list          = 6
 
 ;;; ============================================================
 
@@ -13559,8 +13559,8 @@ set_penmode_xor2:
 .proc detect_double_click2
         .assert * = $B445, error, "Entry point used by overlay"
 
-        double_click_deltax := 5
-        double_click_deltay := 4
+        double_click_deltax = 5
+        double_click_deltay = 4
 
         COPY_STRUCT MGTK::Point, event_coords, coords
 
@@ -13718,7 +13718,7 @@ done:   jmp     reset_grafport3a
 ;;; A,X has pointer to DrawText params block
 ;;; Y has row number (1, 2, ... ) with high bit to center it
 
-        DDL_CENTER := $80
+        DDL_CENTER = $80
 
 .proc draw_dialog_label
         .assert * = $B590, error, "Entry point used by overlay"

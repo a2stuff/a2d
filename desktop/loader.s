@@ -422,14 +422,10 @@ max_page:
         .org $280
 
         SLOT1   := $C100
-        TAB     := $09
-        LF      := $0A
-        CR      := $0D
-        ESC     := $1B
 
         hbasl := $6
-        screen_width  := 560
-        screen_height := 192
+        screen_width  = 560
+        screen_height = 192
 
         ;; Test for OpenApple+SolidApple+P
         pha
@@ -484,7 +480,7 @@ done:   rts
         bne     :-
         rts
 init_graphics:
-        .byte   ESC,"G0560"     ; Graphics, 560 data bytes
+        .byte   CHAR_ESCAPE,"G0560"     ; Graphics, 560 data bytes
 .endproc
 
 .proc send_row
@@ -560,9 +556,9 @@ done:   sta     PAGE2OFF        ; Read main mem $2000-$3FFF
 
         ;; Print a row (560x8), CR+LF
 loop:   jsr     send_row
-        lda     #CR
+        lda     #CHAR_RETURN
         jsr     cout
-        lda     #LF
+        lda     #CHAR_DOWN
         jsr     cout
 
         lda     y_coord
@@ -571,9 +567,9 @@ loop:   jsr     send_row
         bcc     loop
 
         ;; Finish up
-        lda     #CR
+        lda     #CHAR_RETURN
         jsr     cout
-        lda     #CR
+        lda     #CHAR_RETURN
         jsr     cout
         jsr     send_restore_state
         sta     ALTZPON
@@ -612,7 +608,7 @@ loop:   jsr     send_row
         sta     COUT_HOOK+1
         lda     #<SLOT1
         sta     COUT_HOOK
-        lda     #(CR | $80)
+        lda     #(CHAR_RETURN | $80)
         jsr     invoke_slot1
         rts
 .endproc
@@ -633,15 +629,15 @@ col_num:.byte   0               ; 0...79
         .byte   0, 0
 
 spacing_sequence:
-        .byte   ESC,'e'         ; 107 DPI (horizontal)
-        .byte   ESC,"T16"       ; distance between lines (16/144")
-        .byte   TAB,$4C,$20,$44,$8D ; ???
-        .byte   TAB,$5A,$8D     ; ???
+        .byte   CHAR_ESCAPE,'e'         ; 107 DPI (horizontal)
+        .byte   CHAR_ESCAPE,"T16"       ; distance between lines (16/144")
+        .byte   CHAR_TAB,$4C,$20,$44,$8D ; ???
+        .byte   CHAR_TAB,$5A,$8D     ; ???
         .byte   0
 
 restore_state:
-        .byte   ESC,'N'         ; 80 DPI (horizontal)
-        .byte   ESC,"T24"       ; distance between lines (24/144")
+        .byte   CHAR_ESCAPE,'N'         ; 80 DPI (horizontal)
+        .byte   CHAR_ESCAPE,"T24"       ; distance between lines (24/144")
         .byte   0
 
 invoke_slot1:
