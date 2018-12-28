@@ -396,6 +396,7 @@ dispatch_table:
         ;; Special menu (5)
         menu5_start := *
         .addr   cmd_check_drives
+        .addr   cmd_check_drive
         .addr   cmd_noop        ; --------
         .addr   cmd_format_disk
         .addr   cmd_erase_disk
@@ -2088,8 +2089,16 @@ L504F:  .byte   0
 
 ;;; ============================================================
 
-.proc cmd_eject
+.proc cmd_check_or_eject
         buffer := $1800
+
+eject:
+        lda     #$80
+        bne     common          ; always
+
+check:  lda     #0
+
+common: sta     eject_flag
 
         ;; Ensure that volumes are selected
         lda     selected_window_index
@@ -2121,7 +2130,10 @@ loop1:  lda     selected_icon_list,y
         stx     count
 
         ;; Do the ejection
+        bit     eject_flag
+        bpl     :+
         jsr     jt_eject
+:
 
         ;; Check each of the recorded volumes
 loop2:  ldx     count
@@ -2136,7 +2148,11 @@ loop2:  ldx     count
 
 count:  .byte   0
 
+eject_flag:
+        .byte   0
 .endproc
+        cmd_eject       := cmd_check_or_eject::eject
+        cmd_check_drive := cmd_check_or_eject::check
 
 ;;; ============================================================
 
@@ -4711,20 +4727,20 @@ enable_menu_item:
 
 .proc toggle_eject_menu_item
 enable:
-        lda     #MGTK::disableitem_enable
-        sta     disableitem_params::disable
+        copy    #MGTK::disableitem_enable, disableitem_params::disable
         jmp     :+
 
 disable:
-        lda     #MGTK::disableitem_disable
-        sta     disableitem_params::disable
+        copy    #MGTK::disableitem_disable, disableitem_params::disable
 
-:       lda     #menu_id_file
-        sta     disableitem_params::menu_id
-
-        lda     #11             ; > Eject
-        sta     disableitem_params::menu_item
+:       copy    #menu_id_file, disableitem_params::menu_id
+        copy    #desktop_aux::menu_item_id_eject, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
+
+        copy    #menu_id_special, disableitem_params::menu_id
+        copy    #desktop_aux::menu_item_id_check_drive, disableitem_params::menu_item
+        MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
+
         rts
 
 .endproc
@@ -6879,8 +6895,6 @@ nonzero_flag:                ; high bit set once a non-zero digit seen
         .byte   0
 
 .endproc ; int_to_string
-
-        PAD_TO $7B5F
 
 ;;; ============================================================
 

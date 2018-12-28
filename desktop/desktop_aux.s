@@ -2718,8 +2718,10 @@ label_by_size:
 label_by_type:
         PASCAL_STRING "By Type"
 
-label_check_drives:
-        PASCAL_STRING "Check Drives"
+label_check_all_drives:
+        PASCAL_STRING "Check All Drives"
+label_check_drive:
+        PASCAL_STRING "Check Drive"
 label_format_disk:
         PASCAL_STRING "Format a Disk ..."
 label_erase_disk:
@@ -2786,8 +2788,9 @@ view_menu:
         menu_item_id_view_by_type := 5
 
 special_menu:
-        DEFINE_MENU 13
-        DEFINE_MENU_ITEM label_check_drives
+        DEFINE_MENU 14
+        DEFINE_MENU_ITEM label_check_all_drives
+        DEFINE_MENU_ITEM label_check_drive
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_format_disk, 'S', 's'
         DEFINE_MENU_ITEM label_erase_disk, 'Z', 'z'
@@ -2801,15 +2804,16 @@ special_menu:
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_rename_icon
 
-        menu_item_id_check_drives := 1
-        menu_item_id_format_disk  := 3
-        menu_item_id_erase_disk   := 4
-        menu_item_id_disk_copy    := 5
-        menu_item_id_lock         := 7
-        menu_item_id_unlock       := 8
-        menu_item_id_get_info     := 10
-        menu_item_id_get_size     := 11
-        menu_item_id_rename_icon  := 13
+        menu_item_id_check_all    := 1
+        menu_item_id_check_drive  := 2
+        menu_item_id_format_disk  := 4
+        menu_item_id_erase_disk   := 5
+        menu_item_id_disk_copy    := 6
+        menu_item_id_lock         := 8
+        menu_item_id_unlock       := 9
+        menu_item_id_get_info     := 11
+        menu_item_id_get_size     := 12
+        menu_item_id_rename_icon  := 14
 
         .addr   $0000,$0000
 

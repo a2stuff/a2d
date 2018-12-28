@@ -7,6 +7,7 @@
 * Current time shown on right side of menu bar, if system has a clock. (#7)
 * Up to 13 volumes are shown on the desktop. (#20)
 * Up to 12 Desk Accessories are shown in the menu. (#90)
+* Add Special > Check Drive command to refresh a single drive. (#97)
 * Show Text File DA: Keyboard support. Escape quits, arrows scroll. (#4)
 * Icon bitmap improvements. (#74)
 
