@@ -2542,7 +2542,7 @@ loop:   lda     selected_icon_list,x
         sta     selected_vol_icon_list,y
         iny
 :       inx
-        cpx     selected_icon_list
+        cpx     selected_icon_count
         bne     loop
         sty     selected_vol_icon_count
 
