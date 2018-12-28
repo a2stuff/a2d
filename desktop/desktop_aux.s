@@ -2708,15 +2708,15 @@ label_quit:
         PASCAL_STRING "Quit"
 
 label_by_icon:
-        PASCAL_STRING "By Icon"
+        PASCAL_STRING "by Icon"
 label_by_name:
-        PASCAL_STRING "By Name"
+        PASCAL_STRING "by Name"
 label_by_date:
-        PASCAL_STRING "By Date"
+        PASCAL_STRING "by Date"
 label_by_size:
-        PASCAL_STRING "By Size"
+        PASCAL_STRING "by Size"
 label_by_type:
-        PASCAL_STRING "By Type"
+        PASCAL_STRING "by Type"
 
 label_check_all_drives:
         PASCAL_STRING "Check All Drives"
