@@ -2555,45 +2555,56 @@ done:   jmp     redraw_windows_and_desktop
         pha
         jsr     redraw_windows_and_desktop
         pla
-        beq     L5398
+        beq     :+
         rts
 
-L5398:  lda     selected_window_index
-        bne     L53B5
-        ldx     #$00
-        ldy     #$00
-L53A1:  lda     selected_icon_list,x
-        cmp     #$01
-        beq     L53AC
-        sta     L5428,y
-        iny
-L53AC:  inx
-        cpx     selected_icon_list
-        bne     L53A1
-        sty     L5427
-L53B5:  copy    #$FF, L5426
-L53BA:  inc     L5426
-        lda     L5426
-        cmp     selected_icon_count
-        bne     L53D0
-        lda     selected_window_index
-        bne     L53CD
-        jmp     L540E
-L53CD:  jmp     select_and_refresh_window
+:       lda     selected_window_index
+        bne     common
 
-L53D0:  tax
+        ;; Volume icon on desktop
+
+        ;; Copy selected icons (except Trash)
+        ldx     #0
+        ldy     #0
+loop:   lda     selected_icon_list,x
+        cmp     #1              ; Trash
+        beq     :+
+        sta     selected_vol_icon_list,y
+        iny
+:       inx
+        cpx     selected_icon_list
+        bne     loop
+        sty     selected_vol_icon_count
+
+common: copy    #$FF, counter   ; immediately incremented to 0
+
+        ;; Loop over selection
+
+next_icon:
+        inc     counter
+        lda     counter
+        cmp     selected_icon_count
+        bne     not_done
+
+        lda     selected_window_index
+        bne     :+
+        jmp     finish_with_vols
+:       jmp     select_and_refresh_window
+
+not_done:
+        tax
         lda     selected_icon_list,x
         jsr     L5431
-        bmi     L53BA
+        bmi     next_icon
         jsr     window_path_lookup
         stax    $06
-        ldy     #$00
+        ldy     #0
         lda     ($06),y
         tay
         lda     $06
         jsr     L6FB7
         lda     L704B
-        beq     L53BA
+        beq     next_icon
 L53EF:  dec     L704B
         ldx     L704B
         lda     L704C,x
@@ -2604,21 +2615,27 @@ L53EF:  dec     L704B
 L5403:  jsr     close_window
         lda     L704B
         bne     L53EF
-        jmp     L53BA
+        jmp     next_icon
 
-L540E:  ldx     L5427
-L5411:  lda     L5428,x
+finish_with_vols:
+        ldx     selected_vol_icon_count
+:       lda     selected_vol_icon_list,x
         sta     unit_number_to_refresh
         jsr     cmd_check_single_drive_C0
-        ldx     L5427
-        dec     L5427
+        ldx     selected_vol_icon_count
+        dec     selected_vol_icon_count
         dex
-        bpl     L5411
+        bpl     :-
         jmp     redraw_windows_and_desktop
 
-L5426:  .byte   0
-L5427:  .byte   0
-L5428:  .res    9, 0
+counter:
+        .byte   0
+
+selected_vol_icon_count:
+        .byte   0
+
+selected_vol_icon_list:
+        .res    9, 0
 
 L5431:  ldx     #7
 L5433:  cmp     window_to_dir_icon_table,x
