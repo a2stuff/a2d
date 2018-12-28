@@ -366,7 +366,9 @@ dispatch_table:
         .addr   cmd_copy_file
         .addr   cmd_delete_file
         .addr   cmd_noop        ; --------
-        .addr   cmd_eject
+        .addr   cmd_get_info
+        .addr   cmd_rename_icon
+        .addr   cmd_noop        ; --------
         .addr   cmd_quit
 
         ;; Selector menu (3)
@@ -397,6 +399,7 @@ dispatch_table:
         menu5_start := *
         .addr   cmd_check_drives
         .addr   cmd_check_drive
+        .addr   cmd_eject
         .addr   cmd_noop        ; --------
         .addr   cmd_format_disk
         .addr   cmd_erase_disk
@@ -404,11 +407,7 @@ dispatch_table:
         .addr   cmd_noop        ; --------
         .addr   cmd_lock
         .addr   cmd_unlock
-        .addr   cmd_noop        ; --------
-        .addr   cmd_get_info
         .addr   cmd_get_size
-        .addr   cmd_noop        ; --------
-        .addr   cmd_rename_icon
 
         ;; 6/7 unused
         menu6_start := *
@@ -4660,23 +4659,24 @@ check_menu_items:
 ;;; Disable menu items for operating on a selected file
 
 .proc disable_file_menu_items
-        lda     #MGTK::disableitem_disable
-        sta     disableitem_params::disable
-        lda     #menu_id_file
-        sta     disableitem_params::menu_id
+        copy    #MGTK::disableitem_disable, disableitem_params::disable
+
+        ;; File
+        copy    #menu_id_file, disableitem_params::menu_id
         lda     #desktop_aux::menu_item_id_open
         jsr     disable_menu_item
-        lda     #menu_id_special
-        sta     disableitem_params::menu_id
+        lda     #desktop_aux::menu_item_id_get_info
+        jsr     disable_menu_item
+        lda     #desktop_aux::menu_item_id_rename_icon
+        jsr     disable_menu_item
+
+        ;; Special
+        copy    #menu_id_special, disableitem_params::menu_id
         lda     #desktop_aux::menu_item_id_lock
         jsr     disable_menu_item
         lda     #desktop_aux::menu_item_id_unlock
         jsr     disable_menu_item
-        lda     #desktop_aux::menu_item_id_get_info
-        jsr     disable_menu_item
         lda     #desktop_aux::menu_item_id_get_size
-        jsr     disable_menu_item
-        lda     #desktop_aux::menu_item_id_rename_icon
         jsr     disable_menu_item
         rts
 
@@ -4689,23 +4689,24 @@ disable_menu_item:
 ;;; ============================================================
 
 .proc enable_file_menu_items
-        lda     #MGTK::disableitem_enable
-        sta     disableitem_params::disable
-        lda     #menu_id_file
-        sta     disableitem_params::menu_id
+        copy    #MGTK::disableitem_enable, disableitem_params::disable
+
+        ;; File
+        copy    #menu_id_file, disableitem_params::menu_id
         lda     #desktop_aux::menu_item_id_open
         jsr     enable_menu_item
-        lda     #menu_id_special
-        sta     disableitem_params::menu_id
+        lda     #desktop_aux::menu_item_id_get_info
+        jsr     enable_menu_item
+        lda     #desktop_aux::menu_item_id_rename_icon
+        jsr     enable_menu_item
+
+        ;; Special
+        copy    #menu_id_special, disableitem_params::menu_id
         lda     #desktop_aux::menu_item_id_lock
         jsr     enable_menu_item
         lda     #desktop_aux::menu_item_id_unlock
         jsr     enable_menu_item
-        lda     #desktop_aux::menu_item_id_get_info
-        jsr     enable_menu_item
         lda     #desktop_aux::menu_item_id_get_size
-        jsr     enable_menu_item
-        lda     #desktop_aux::menu_item_id_rename_icon
         jsr     enable_menu_item
         rts
 
@@ -4725,7 +4726,7 @@ enable:
 disable:
         copy    #MGTK::disableitem_disable, disableitem_params::disable
 
-:       copy    #menu_id_file, disableitem_params::menu_id
+:       copy    #menu_id_special, disableitem_params::menu_id
         copy    #desktop_aux::menu_item_id_eject, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
 
@@ -4753,11 +4754,11 @@ enable:
 
 :       lda     #menu_id_selector
         sta     disableitem_params::menu_id
-        lda     #2              ; > Edit
+        lda     #menu_item_id_selector_edit
         jsr     configure_menu_item
-        lda     #3              ; > Delete
+        lda     #menu_item_id_selector_delete
         jsr     configure_menu_item
-        lda     #4              ; > Run
+        lda     #menu_item_id_selector_run
         jsr     configure_menu_item
         copy    #$80, LD344
         rts
@@ -5505,22 +5506,16 @@ flag:   .byte   0
 ;;; ============================================================
 
 .proc enable_various_file_menu_items
-        lda     #MGTK::disablemenu_enable
-        sta     disablemenu_params::disable
+        copy    #MGTK::disablemenu_enable, disablemenu_params::disable
         MGTK_RELAY_CALL MGTK::DisableMenu, disablemenu_params
 
-        lda     #MGTK::disableitem_enable
-        sta     disableitem_params::disable
-        lda     #menu_id_file
-        sta     disableitem_params::menu_id
-        lda     #1              ; > New Folder
-        sta     disableitem_params::menu_item
+        copy    #MGTK::disableitem_enable, disableitem_params::disable
+        copy    #menu_id_file, disableitem_params::menu_id
+        copy    #desktop_aux::menu_item_id_new_folder, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
-        lda     #4              ; > Close
-        sta     disableitem_params::menu_item
+        copy    #desktop_aux::menu_item_id_close, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
-        lda     #5              ; > Close All
-        sta     disableitem_params::menu_item
+        copy    #desktop_aux::menu_item_id_close_all, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
 
         copy    #$80, menu_dispatch_flag
