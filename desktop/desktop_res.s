@@ -1157,6 +1157,11 @@ selector_menu:
         DEFINE_MENU_ITEM run_list_entries + i * $10, .string(i+1), .string(i+1)
         .endrepeat
 
+        menu_item_id_selector_add       = 1
+        menu_item_id_selector_edit      = 2
+        menu_item_id_selector_delete    = 3
+        menu_item_id_selector_run       = 4
+
 label_add:
         PASCAL_STRING "Add an Entry ..."
 label_edit:

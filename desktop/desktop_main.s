@@ -4636,26 +4636,19 @@ L66A0:  .word   0
         jmp     check_menu_items
 
 disable_menu_items:
-        lda     #MGTK::disablemenu_disable
-        sta     disablemenu_params::disable
+        copy    #MGTK::disablemenu_disable, disablemenu_params::disable
         MGTK_RELAY_CALL MGTK::DisableMenu, disablemenu_params
 
-        lda     #MGTK::disableitem_disable
-        sta     disableitem_params::disable
-        lda     #menu_id_file
-        sta     disableitem_params::menu_id
-        lda     #desktop_aux::menu_item_id_new_folder
-        sta     disableitem_params::menu_item
+        copy    #MGTK::disableitem_disable, disableitem_params::disable
+        copy    #menu_id_file, disableitem_params::menu_id
+        copy    #desktop_aux::menu_item_id_new_folder, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
-        lda     #desktop_aux::menu_item_id_close
-        sta     disableitem_params::menu_item
+        copy    #desktop_aux::menu_item_id_close, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
-        lda     #desktop_aux::menu_item_id_close_all
-        sta     disableitem_params::menu_item
+        copy    #desktop_aux::menu_item_id_close_all, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
 
-        lda     #0
-        sta     menu_dispatch_flag
+        copy    #0, menu_dispatch_flag
         rts
 
         ;; Is this residue of a Windows menu???
@@ -4676,14 +4669,15 @@ check_menu_items:
 ;;; Disable menu items for operating on a selected file
 
 .proc disable_file_menu_items
-        lda     #MGTK::disableitem_disable
-        sta     disableitem_params::disable
-        lda     #menu_id_file
-        sta     disableitem_params::menu_id
+        copy    #MGTK::disableitem_disable, disableitem_params::disable
+
+        ;; File
+        copy    #menu_id_file, disableitem_params::menu_id
         lda     #desktop_aux::menu_item_id_open
         jsr     disable_menu_item
-        lda     #menu_id_special
-        sta     disableitem_params::menu_id
+
+        ;; Special
+        copy    #menu_id_special, disableitem_params::menu_id
         lda     #desktop_aux::menu_item_id_lock
         jsr     disable_menu_item
         lda     #desktop_aux::menu_item_id_unlock
@@ -4705,14 +4699,15 @@ disable_menu_item:
 ;;; ============================================================
 
 .proc enable_file_menu_items
-        lda     #MGTK::disableitem_enable
-        sta     disableitem_params::disable
-        lda     #menu_id_file
-        sta     disableitem_params::menu_id
+        copy    #MGTK::disableitem_enable, disableitem_params::disable
+
+        ;; File
+        copy    #menu_id_file, disableitem_params::menu_id
         lda     #desktop_aux::menu_item_id_open
         jsr     enable_menu_item
-        lda     #menu_id_special
-        sta     disableitem_params::menu_id
+
+        ;; Special
+        copy    #menu_id_special, disableitem_params::menu_id
         lda     #desktop_aux::menu_item_id_lock
         jsr     enable_menu_item
         lda     #desktop_aux::menu_item_id_unlock
@@ -4735,19 +4730,14 @@ enable_menu_item:
 
 .proc toggle_eject_menu_item
 enable:
-        lda     #MGTK::disableitem_enable
-        sta     disableitem_params::disable
+        copy    #MGTK::disableitem_enable, disableitem_params::disable
         jmp     :+
 
 disable:
-        lda     #MGTK::disableitem_disable
-        sta     disableitem_params::disable
+        copy    #MGTK::disableitem_disable, disableitem_params::disable
 
-:       lda     #menu_id_file
-        sta     disableitem_params::menu_id
-
-        lda     #11             ; > Eject
-        sta     disableitem_params::menu_item
+:       copy    #menu_id_file, disableitem_params::menu_id
+        copy    #desktop_aux::menu_item_id_eject, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
         rts
 
@@ -4759,21 +4749,18 @@ disable_eject_menu_item := toggle_eject_menu_item::disable
 
 .proc toggle_selector_menu_items
 disable:
-        lda     #MGTK::disableitem_disable
-        sta     disableitem_params::disable
+        copy    #MGTK::disableitem_disable, disableitem_params::disable
         jmp     :+
 
 enable:
-        lda     #MGTK::disableitem_enable
-        sta     disableitem_params::disable
+        copy    #MGTK::disableitem_enable, disableitem_params::disable
 
-:       lda     #menu_id_selector
-        sta     disableitem_params::menu_id
-        lda     #2              ; > Edit
+:       copy    #menu_id_selector, disableitem_params::menu_id
+        lda     #menu_item_id_selector_edit
         jsr     configure_menu_item
-        lda     #3              ; > Delete
+        lda     #menu_item_id_selector_delete
         jsr     configure_menu_item
-        lda     #4              ; > Run
+        lda     #menu_item_id_selector_run
         jsr     configure_menu_item
         copy    #$80, LD344
         rts
@@ -4825,20 +4812,16 @@ replace_selection:
         ;; Set selection to clicked icon
 set_selection:
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, findicon_which_icon
-        lda     #1
-        sta     selected_icon_count
-        lda     findicon_which_icon
-        sta     selected_icon_list
-        lda     #0
-        sta     selected_window_index
+        copy    #1, selected_icon_count
+        copy    findicon_which_icon, selected_icon_list
+        copy    #0, selected_window_index
 
 
 L6834:  bit     double_click_flag
         bpl     L6880
 
         ;; Drag of volume icon
-        lda     findicon_which_icon
-        sta     drag_drop_param
+        copy    findicon_which_icon, drag_drop_param
         DESKTOP_RELAY_CALL DT_DRAG_HIGHLIGHTED, drag_drop_param
         tax
         lda     drag_drop_param
@@ -4881,8 +4864,7 @@ L688F:  ldx     selected_icon_count
         dex
 L6893:  txa
         pha
-        lda     selected_icon_list,x
-        sta     icon_param3
+        copy    selected_icon_list,x, icon_param3
         DESKTOP_RELAY_CALL DT_REDRAW_ICON, icon_param3
         pla
         tax
@@ -4929,15 +4911,13 @@ L68F9:  cpx     cached_window_icon_count
 
 :       txa
         pha
-        lda     cached_window_icon_list,x
-        sta     icon_param
+        copy    cached_window_icon_list,x, icon_param
         DESKTOP_RELAY_CALL DT_ICON_IN_RECT, icon_param
         beq     L692C
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
         ldx     selected_icon_count
         inc     selected_icon_count
-        lda     icon_param
-        sta     selected_icon_list,x
+        copy    icon_param, selected_icon_list,x
 L692C:  pla
         tax
         inx
@@ -5521,22 +5501,16 @@ flag:   .byte   0
 ;;; ============================================================
 
 .proc enable_various_file_menu_items
-        lda     #MGTK::disablemenu_enable
-        sta     disablemenu_params::disable
+        copy    #MGTK::disablemenu_enable, disablemenu_params::disable
         MGTK_RELAY_CALL MGTK::DisableMenu, disablemenu_params
 
-        lda     #MGTK::disableitem_enable
-        sta     disableitem_params::disable
-        lda     #menu_id_file
-        sta     disableitem_params::menu_id
-        lda     #1              ; > New Folder
-        sta     disableitem_params::menu_item
+        copy    #MGTK::disableitem_enable, disableitem_params::disable
+        copy    #menu_id_file, disableitem_params::menu_id
+        copy    #desktop_aux::menu_item_id_new_folder, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
-        lda     #4              ; > Close
-        sta     disableitem_params::menu_item
+        copy    #desktop_aux::menu_item_id_close, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
-        lda     #5              ; > Close All
-        sta     disableitem_params::menu_item
+        copy    #desktop_aux::menu_item_id_close_all, disableitem_params::menu_item
         MGTK_RELAY_CALL MGTK::DisableItem, disableitem_params
 
         copy    #$80, menu_dispatch_flag

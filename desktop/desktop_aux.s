@@ -2772,15 +2772,18 @@ file_menu:
         DEFINE_MENU_ITEM label_eject, 'E', 'e'
         DEFINE_MENU_ITEM label_quit, 'Q', 'q'
 
-        menu_item_id_new_folder := 1
-        menu_item_id_open       := 3
-        menu_item_id_close      := 4
-        menu_item_id_close_all  := 5
-        menu_item_id_select_all := 6
-        menu_item_id_copy_file  := 8
-        menu_item_id_delete_file := 9
-        menu_item_id_eject      := 11
-        menu_item_id_quit       := 12
+        menu_item_id_new_folder = 1
+        ;; --------------------
+        menu_item_id_open       = 3
+        menu_item_id_close      = 4
+        menu_item_id_close_all  = 5
+        menu_item_id_select_all = 6
+        ;; --------------------
+        menu_item_id_copy_file  = 8
+        menu_item_id_delete_file = 9
+        ;; --------------------
+        menu_item_id_eject      = 11
+        menu_item_id_quit       = 12
 
 view_menu:
         DEFINE_MENU 5
@@ -2790,11 +2793,11 @@ view_menu:
         DEFINE_MENU_ITEM label_by_size, 'K', 'k'
         DEFINE_MENU_ITEM label_by_type, 'L', 'l'
 
-        menu_item_id_view_by_icon := 1
-        menu_item_id_view_by_name := 2
-        menu_item_id_view_by_date := 3
-        menu_item_id_view_by_size := 4
-        menu_item_id_view_by_type := 5
+        menu_item_id_view_by_icon = 1
+        menu_item_id_view_by_name = 2
+        menu_item_id_view_by_date = 3
+        menu_item_id_view_by_size = 4
+        menu_item_id_view_by_type = 5
 
 special_menu:
         DEFINE_MENU 13
@@ -2812,15 +2815,19 @@ special_menu:
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_rename_icon
 
-        menu_item_id_check_drives := 1
-        menu_item_id_format_disk  := 3
-        menu_item_id_erase_disk   := 4
-        menu_item_id_disk_copy    := 5
-        menu_item_id_lock         := 7
-        menu_item_id_unlock       := 8
-        menu_item_id_get_info     := 10
-        menu_item_id_get_size     := 11
-        menu_item_id_rename_icon  := 13
+        menu_item_id_check_drives = 1
+        ;; --------------------
+        menu_item_id_format_disk  = 3
+        menu_item_id_erase_disk   = 4
+        menu_item_id_disk_copy    = 5
+        ;; --------------------
+        menu_item_id_lock         = 7
+        menu_item_id_unlock       = 8
+        ;; --------------------
+        menu_item_id_get_info     = 10
+        menu_item_id_get_size     = 11
+        ;; --------------------
+        menu_item_id_rename_icon  = 13
 
         .addr   $0000,$0000
 
