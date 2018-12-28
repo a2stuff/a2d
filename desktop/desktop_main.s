@@ -192,7 +192,7 @@ L412B:  copy    #0, cached_window_id
         beq     L4143
         bit     running_da_flag
         bmi     L4143
-        jsr     L4244
+        jsr     redraw_selected_icons
 L4143:  bit     L40F1
         bpl     L4151
         DESKTOP_RELAY_CALL DT_REDRAW_ICONS
@@ -260,7 +260,7 @@ L41E2:  copy    cached_window_id, getwinport_params2::window_id
         jsr     get_set_port2
         jsr     cached_icons_window_to_screen
 
-        COPY_BLOCK grafport2::cliprect, rect_E230
+        COPY_BLOCK grafport2::cliprect, tmp_rect
 
         copy    #0, L4241
 L41FE:  lda     L4241
@@ -288,15 +288,15 @@ L4242:  .word   0
 
 ;;; ============================================================
 
-.proc L4244
+.proc redraw_selected_icons
         lda     selected_icon_count
         bne     :+
 bail:   rts
 
-:       copy    #0, L42C3
+:       copy    #0, num
 
         lda     selected_window_index
-        beq     L42A5
+        beq     desktop
         cmp     active_window_id
         bne     bail
 
@@ -304,9 +304,10 @@ bail:   rts
         jsr     get_port2
         jsr     offset_grafport2_and_set
 
-        COPY_BLOCK grafport2::cliprect, rect_E230
+        COPY_BLOCK grafport2::cliprect, tmp_rect
 
-L4270:  lda     L42C3
+        ;; Redraw selected icons in window
+window: lda     num
         cmp     selected_icon_count
         beq     done
         tax
@@ -317,21 +318,23 @@ L4270:  lda     L42C3
         DESKTOP_RELAY_CALL DT_REDRAW_ICON, icon_param
 :       lda     icon_param
         jsr     icon_screen_to_window
-        inc     L42C3
-        jmp     L4270
+        inc     num
+        jmp     window
 
 done:   jmp     reset_grafport3
 
-L42A5:  lda     L42C3
+        ;; Redraw selected icons on desktop
+desktop:
+        lda     num
         cmp     selected_icon_count
         beq     done
         tax
         copy    selected_icon_list,x, icon_param
         DESKTOP_RELAY_CALL DT_REDRAW_ICON, icon_param
-        inc     L42C3
-        jmp     L42A5
+        inc     num
+        jmp     desktop
 
-L42C3:  .byte   0
+num:    .byte   0
 .endproc
 
 ;;; ============================================================
@@ -578,7 +581,7 @@ L445C:  .byte   0
 start:  jsr     clear_selection
         ldx     findwindow_window_id
         dex
-        copy    LEC26,x, icon_param
+        copy    window_to_dir_icon_table,x, icon_param
         lda     icon_param
         jsr     icon_entry_lookup
         stax    ptr
@@ -1956,7 +1959,7 @@ L4EC3:  sta     cached_window_icon_count
         MGTK_RELAY_CALL MGTK::CloseWindow, active_window_id
         ldx     active_window_id
         dex
-        lda     LEC26,x
+        lda     window_to_dir_icon_table,x
         sta     icon_param
         jsr     icon_entry_lookup
         stax    $06
@@ -1973,11 +1976,11 @@ L4EC3:  sta     cached_window_icon_count
         copy    icon_param, selected_icon_list
         ldx     active_window_id
         dex
-        lda     LEC26,x
+        lda     window_to_dir_icon_table,x
         jsr     L7345
         ldx     active_window_id
         dex
-        copy    #0, LEC26,x
+        copy    #0, window_to_dir_icon_table,x
         MGTK_RELAY_CALL MGTK::FrontWindow, active_window_id
         lda     active_window_id
         bne     L4F3C
@@ -2588,7 +2591,7 @@ L5427:  .byte   0
 L5428:  .res    9, 0
 
 L5431:  ldx     #7
-L5433:  cmp     LEC26,x
+L5433:  cmp     window_to_dir_icon_table,x
         beq     L543E
         dex
         bpl     L5433
@@ -2635,7 +2638,7 @@ L5464:  lda     active_window_id
         stax    $06
         ldy     #MGTK::Winfo::port+MGTK::GrafPort::maprect
 L5479:  lda     ($06),y
-        sta     rect_E230-(MGTK::Winfo::port+MGTK::GrafPort::maprect),y
+        sta     tmp_rect-(MGTK::Winfo::port+MGTK::GrafPort::maprect),y
         iny
         cpy     #MGTK::Winfo::port+MGTK::GrafPort::maprect+8
         bne     L5479
@@ -2912,7 +2915,7 @@ L56F8:  .byte   0
 L5708:  sta     $800
         ldy     #$01
         ldx     #$00
-L570F:  lda     LEC26,x
+L570F:  lda     window_to_dir_icon_table,x
         beq     L5720
         inx
         cpx     active_window_id
@@ -3900,7 +3903,7 @@ L5E77:  .byte   0
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
         ldx     active_window_id
         dex
-        lda     LEC26,x
+        lda     window_to_dir_icon_table,x
         pha
         jsr     L7345
         lda     window_id
@@ -3980,18 +3983,18 @@ L5F3F:  jsr     clear_selection
         jsr     offset_grafport2_and_set
         ldx     #$03
 L5F50:  lda     pt1,x
-        sta     rect_E230::x1,x
+        sta     tmp_rect::x1,x
         lda     pt2,x
-        sta     rect_E230::x2,x
+        sta     tmp_rect::x2,x
         dex
         bpl     L5F50
         jsr     set_penmode_xor
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
+        MGTK_RELAY_CALL MGTK::FrameRect, tmp_rect
 L5F6B:  jsr     peek_event
         lda     event_kind
         cmp     #MGTK::EventKind::drag
         beq     L5FC5
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
+        MGTK_RELAY_CALL MGTK::FrameRect, tmp_rect
         ldx     #$00
 L5F80:  cpx     cached_window_icon_count
         bne     L5F88
@@ -4041,35 +4044,35 @@ L600E:  lda     L60CB
         bcs     L601F
         jmp     L5F6B
 
-L601F:  MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
+L601F:  MGTK_RELAY_CALL MGTK::FrameRect, tmp_rect
 
         COPY_STRUCT MGTK::Point, event_coords, L60CF
 
-        cmp16   event_xcoord, rect_E230::x2
+        cmp16   event_xcoord, tmp_rect::x2
         bpl     L6068
-        cmp16   event_xcoord, rect_E230::x1
+        cmp16   event_xcoord, tmp_rect::x1
         bmi     L6054
         bit     L60D3
         bpl     L6068
-L6054:  copy16  event_xcoord, rect_E230::x1
+L6054:  copy16  event_xcoord, tmp_rect::x1
         copy    #$80, L60D3
         jmp     L6079
 
-L6068:  copy16  event_xcoord, rect_E230::x2
+L6068:  copy16  event_xcoord, tmp_rect::x2
         copy    #0, L60D3
-L6079:  cmp16   event_ycoord, rect_E230::y2
+L6079:  cmp16   event_ycoord, tmp_rect::y2
         bpl     L60AE
-        cmp16   event_ycoord, rect_E230::y1
+        cmp16   event_ycoord, tmp_rect::y1
         bmi     L609A
         bit     L60D4
         bpl     L60AE
-L609A:  copy16  event_ycoord, rect_E230::y1
+L609A:  copy16  event_ycoord, tmp_rect::y1
         copy    #$80, L60D4
         jmp     L60BF
 
-L60AE:  copy16  event_ycoord, rect_E230::y2
+L60AE:  copy16  event_ycoord, tmp_rect::y2
         copy    #0, L60D4
-L60BF:  MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
+L60BF:  MGTK_RELAY_CALL MGTK::FrameRect, tmp_rect
         jmp     L5F6B
 
 L60CB:  .byte   0
@@ -4213,7 +4216,7 @@ L6227:  sta     cached_window_icon_count
         MGTK_RELAY_CALL MGTK::CloseWindow, active_window_id
         ldx     active_window_id
         dex
-        lda     LEC26,x
+        lda     window_to_dir_icon_table,x
         sta     icon_param
         jsr     icon_entry_lookup
         stax    $06
@@ -4234,17 +4237,17 @@ L6227:  sta     cached_window_icon_count
         copy    icon_param, selected_icon_list
 L6276:  ldx     active_window_id
         dex
-        lda     LEC26,x
+        lda     window_to_dir_icon_table,x
         jsr     L7345
         ldx     active_window_id
         dex
-        lda     LEC26,x
+        lda     window_to_dir_icon_table,x
         inx
         jsr     animate_window_close
         ldx     active_window_id
         dex
         lda     #$00
-        sta     LEC26,x
+        sta     window_to_dir_icon_table,x
         sta     win_view_by_table,x
         MGTK_RELAY_CALL MGTK::FrontWindow, active_window_id
         copy    #0, cached_window_id
@@ -4837,8 +4840,8 @@ L6893:  txa
 L68B3:  jsr     clear_selection
         ldx     #3
 L68B8:  lda     event_coords,x
-        sta     rect_E230::x1,x
-        sta     rect_E230::x2,x
+        sta     tmp_rect::x1,x
+        sta     tmp_rect::x2,x
         dex
         bpl     L68B8
         jsr     peek_event
@@ -4849,12 +4852,12 @@ L68B8:  lda     event_coords,x
 
 L68CF:  MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern3
         jsr     set_penmode_xor
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
+        MGTK_RELAY_CALL MGTK::FrameRect, tmp_rect
 L68E4:  jsr     peek_event
         lda     event_kind
         cmp     #MGTK::EventKind::drag
         beq     L6932
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
+        MGTK_RELAY_CALL MGTK::FrameRect, tmp_rect
         ldx     #0
 L68F9:  cpx     cached_window_icon_count
         bne     :+
@@ -4900,35 +4903,35 @@ L6978:  lda     L6A35
         bcs     L6989
         jmp     L68E4
 
-L6989:  MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
+L6989:  MGTK_RELAY_CALL MGTK::FrameRect, tmp_rect
 
         COPY_STRUCT MGTK::Point, event_coords, L6A39
 
-        cmp16   event_xcoord, rect_E230::x2
+        cmp16   event_xcoord, tmp_rect::x2
         bpl     L69D2
-        cmp16   event_xcoord, rect_E230::x1
+        cmp16   event_xcoord, tmp_rect::x1
         bmi     L69BE
         bit     L6A3D
         bpl     L69D2
-L69BE:  copy16  event_xcoord, rect_E230::x1
+L69BE:  copy16  event_xcoord, tmp_rect::x1
         copy    #$80, L6A3D
         jmp     L69E3
 
-L69D2:  copy16  event_xcoord, rect_E230::x2
+L69D2:  copy16  event_xcoord, tmp_rect::x2
         copy    #0, L6A3D
-L69E3:  cmp16   event_ycoord, rect_E230::y2
+L69E3:  cmp16   event_ycoord, tmp_rect::y2
         bpl     L6A18
-        cmp16   event_ycoord, rect_E230::y1
+        cmp16   event_ycoord, tmp_rect::y1
         bmi     L6A04
         bit     L6A3E
         bpl     L6A18
-L6A04:  copy16  event_ycoord, rect_E230::y1
+L6A04:  copy16  event_ycoord, tmp_rect::y1
         copy    #$80, L6A3E
         jmp     L6A29
 
-L6A18:  copy16  event_ycoord, rect_E230::y2
+L6A18:  copy16  event_ycoord, tmp_rect::y2
         copy    #0, L6A3E
-L6A29:  MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
+L6A29:  MGTK_RELAY_CALL MGTK::FrameRect, tmp_rect
         jmp     L68E4
 
 L6A35:  .byte   0
@@ -4948,7 +4951,7 @@ L6A3E:  .byte   0
         path_buf := $220
 
         ldx     #7
-:       cmp     LEC26,x
+:       cmp     window_to_dir_icon_table,x
         beq     L6A80
         dex
         bpl     :-
@@ -4988,7 +4991,7 @@ L6A80:  inx
         jsr     DESKTOP_COPY_FROM_BUF
         lda     icon_params2
         ldx     #$07
-L6A95:  cmp     LEC26,x
+L6A95:  cmp     window_to_dir_icon_table,x
         beq     L6AA0
         dex
         bpl     L6A95
@@ -5050,13 +5053,13 @@ L6B1E:  lda     LEC2E
         rts
 
 L6B2F:  ldx     #$00
-L6B31:  lda     LEC26,x
+L6B31:  lda     window_to_dir_icon_table,x
         beq     L6B3A
         inx
         jmp     L6B31
 
 L6B3A:  lda     icon_params2
-        sta     LEC26,x
+        sta     window_to_dir_icon_table,x
         inx
         stx     cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
@@ -5167,7 +5170,7 @@ L6C25:  jsr     push_pointers
         jsr     offset_grafport2_and_set
 :       ldx     cached_window_id
         dex
-        lda     LEC26,x
+        lda     window_to_dir_icon_table,x
         ldx     #$00
 L6C53:  cmp     LE1F1+1,x
         beq     L6C5F
@@ -5238,7 +5241,7 @@ L6CCD:  lda     cached_window_id
 :       jsr     cached_icons_window_to_screen
         jsr     offset_grafport2_and_set
 
-        COPY_BLOCK grafport2::cliprect, rect_E230
+        COPY_BLOCK grafport2::cliprect, tmp_rect
 
         ldx     #$00
         txa
@@ -5274,12 +5277,12 @@ L6D25:  pla
         rts
 
 L6D31:  copy    #0, L6DB0
-        copy    selected_window_index, rect_E230 ; ???
+        copy    selected_window_index, tmp_rect ; ???
         beq     L6D7D
         cmp     active_window_id
         beq     L6D4D
         jsr     zero_grafport5_coords
-        copy    #0, rect_E230
+        copy    #0, tmp_rect
         beq     L6D56
 L6D4D:  sta     getwinport_params2::window_id
         jsr     get_set_port2
@@ -5755,7 +5758,7 @@ L710A:  lsr16   L72A8
         cmp16   L72A8, L70C1
         bcs     L7169
 L7147:  lda     LEC2E
-        jsr     L8B19
+        jsr     mark_icons_not_opened_1
         dec     LEC2E
         jsr     redraw_windows_and_desktop
         jsr     do_close
@@ -5932,7 +5935,7 @@ L72A8:  .word   0
         MLI_RELAY_CALL OPEN, open_params
         beq     done
         jsr     DESKTOP_SHOW_ALERT0
-        jsr     L8B1F
+        jsr     mark_icons_not_opened_2
         lda     selected_window_index
         bne     :+
         lda     icon_params2
@@ -6161,7 +6164,7 @@ L74D3:  tay
         bcc     L750D
         lda     #ERR_INVALID_PATHNAME
         jsr     DESKTOP_SHOW_ALERT0
-        jsr     L8B1F
+        jsr     mark_icons_not_opened_2
         dec     LEC2E
         ldx     saved_stack
         txs
@@ -6323,7 +6326,7 @@ flag:   .byte   0               ; ???
 ep2:    pha                     ; entry point #2 ???
         ldx     cached_window_id
         dex
-        lda     LEC26,x
+        lda     window_to_dir_icon_table,x
         sta     icon_params2
         lda     #$80
 
@@ -7064,7 +7067,7 @@ index           := $805
 
 start:  ldx     cached_window_id
         dex
-        lda     LEC26,x
+        lda     window_to_dir_icon_table,x
 
         ldx     #0
 :       cmp     LE1F1+1,x
@@ -8777,31 +8780,34 @@ remove: lda     cached_window_icon_list+1,x
 
 ;;; ============================================================
 
-L8B19:  jsr     push_pointers
-        jmp     L8B2E
-
-L8B1F:  lda     icon_params2
-        bne     L8B25
-        rts
-
-L8B25:  jsr     push_pointers
-        lda     icon_params2
-        jsr     L7345
-        ;; fall through
-
-.proc L8B2E
+.proc mark_icons_not_opened
         ptr := $6
 
+L8B19:  jsr     push_pointers
+        jmp     start
+
+L8B1F:  lda     icon_params2
+        bne     :+
+        rts
+:       jsr     push_pointers
         lda     icon_params2
-        ldx     #7              ; ???
-:       cmp     LEC26,x
+        jsr     L7345           ; ???
+        ;; fall through
+
+        ;; Find open window for the icon
+start:  lda     icon_params2
+        ldx     #8 - 1
+:       cmp     window_to_dir_icon_table,x
         beq     :+
         dex
         bpl     :-
         jmp     skip
 
+        ;; If found, remove from the table
 :       lda     #0
-        sta     LEC26,x
+        sta     window_to_dir_icon_table,x
+
+        ;; Update the icon and redraw
 skip:   lda     icon_params2
         jsr     icon_entry_lookup
         stax    ptr
@@ -8809,10 +8815,12 @@ skip:   lda     icon_params2
         lda     (ptr),y
         and     #AS_BYTE(~icon_entry_open_mask) ; clear open_flag
         sta     ($06),y
-        jsr     L4244
+        jsr     redraw_selected_icons
         jsr     pop_pointers
         rts
 .endproc
+        mark_icons_not_opened_1 := mark_icons_not_opened::L8B19
+        mark_icons_not_opened_2 := mark_icons_not_opened::L8B1F
 
 ;;; ============================================================
 
@@ -9001,7 +9009,7 @@ loop:   lda     step
         ;; Copy rect to draw
         ldy     #7
 :       lda     rect_table,x
-        sta     rect_E230,y
+        sta     tmp_rect,y
         dex
         dey
         bpl     :-
@@ -9023,7 +9031,7 @@ erase:  lda     step
         ;; Copy rect to erase
         ldy     #.sizeof(MGTK::Rect)-1
 :       lda     rect_table,x
-        sta     rect_E230,y
+        sta     tmp_rect,y
         dex
         dey
         bpl     :-
@@ -9066,7 +9074,7 @@ loop:   lda     step
         ;; Copy rect to draw
         ldy     #.sizeof(MGTK::Rect)-1
 :       lda     rect_table,x
-        sta     rect_E230,y
+        sta     tmp_rect,y
         dex
         dey
         bpl     :-
@@ -9089,7 +9097,7 @@ erase:  lda     step
         ;; Copy rect to erase
         ldy     #.sizeof(MGTK::Rect)-1
 :       lda     rect_table,x
-        sta     rect_E230,y
+        sta     tmp_rect,y
         dex
         dey
         bpl     :-
@@ -9108,7 +9116,7 @@ step:   .byte   0
 ;;; ============================================================
 
 .proc draw_anim_window_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_E230
+        MGTK_RELAY_CALL MGTK::FrameRect, tmp_rect
         rts
 .endproc
 

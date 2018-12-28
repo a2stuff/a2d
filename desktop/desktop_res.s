@@ -1024,7 +1024,9 @@ LE22E:
         ;; DT_UNHIGHLIGHT_ICON params
 icon_param:  .byte   0
 
-rect_E230:  DEFINE_RECT 0,0,0,0, rect_E230
+        ;; Used for all sorts of temporary work
+tmp_rect:
+        DEFINE_RECT 0,0,0,0, tmp_rect
 
         .byte   $00,$00
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -1394,7 +1396,9 @@ window_icon_list_table:
 active_window_id:
         .byte   $00
 
-LEC26:  .res    8, 0           ; ???
+window_to_dir_icon_table:
+        .res    8, 0
+
 LEC2E:  .res    21, 0          ; ???
 LEC43:  .res    16, 0          ; ???
 LEC53:  .byte   0
