@@ -438,8 +438,6 @@ offset_table:
         .byte   menu8_start - dispatch_table
         .byte   menu_end - dispatch_table
 
-        PAD_TO $4359
-
 flag:   .byte   $00
 
         ;; Handle accelerator keys
@@ -2194,8 +2192,6 @@ fail:   jsr     DESKTOP_SHOW_ALERT
 .endproc
         cmd_quit := cmd_quit_impl::start
 
-        PAD_TO $50F9            ; Maintain previous addresses
-
 ;;; ============================================================
 
 .proc cmd_view_by_icon
@@ -3544,10 +3540,6 @@ check_drive_flags:
         sta     str_from_int,x
         rts
 .endproc
-
-;;; ============================================================
-
-        PAD_TO $5B1B            ; Maintain previous addresses
 
 ;;; ============================================================
 
@@ -9264,19 +9256,6 @@ open:   MLI_RELAY_CALL OPEN, open_params
         restore_dynamic_routine := load_dynamic_routine_impl::restore
 
 ;;; ============================================================
-;;; Operations performed on selection
-;;;
-;;; These operate on the entire selection recursively, e.g.
-;;; computing size, deleting, copying, etc., and share common
-;;; logic.
-
-.enum PromptResult
-        ok      = 0
-        cancel  = 1
-        yes     = 2
-        no      = 3
-        all     = 4
-.endenum
 
 .proc show_clock
         lda     MACHID
@@ -9335,6 +9314,21 @@ done:   rts
 ;;; ============================================================
 
         PAD_TO $8F00
+
+;;; ============================================================
+;;; Operations performed on selection
+;;;
+;;; These operate on the entire selection recursively, e.g.
+;;; computing size, deleting, copying, etc., and share common
+;;; logic.
+
+.enum PromptResult
+        ok      = 0
+        cancel  = 1
+        yes     = 2
+        no      = 3
+        all     = 4
+.endenum
 
 ;;; ============================================================
 
@@ -10000,8 +9994,6 @@ L92E6:  .byte   0
 exit:   rts
 .endproc
 
-        PAD_TO $92E7            ; Maintain offsets
-
 ;;; ============================================================
 ;;; Get Info
 
@@ -10241,10 +10233,6 @@ str_vol:
 .endproc
 .endproc
         L92F5 := do_get_info::L92F5
-
-;;; ============================================================
-
-        PAD_TO $9569            ; Maintain previous addresses
 
 ;;; ============================================================
 
@@ -12120,9 +12108,6 @@ do_on_line:
         show_error_alert := show_error_alert_impl::flag_clear
         show_error_alert_dst := show_error_alert_impl::flag_set
 
-        .assert * = $A4D0, error, "Segment length mismatch"
-
-
 ;;; ============================================================
 ;;; Reformat /RAM (Slot 3, Drive 2) if present
 ;;; Assumes ROM is banked in, restores it when complete. Also
@@ -12158,6 +12143,7 @@ RAMSLOT := DEVADR + $16         ; Slot 3, Drive 2
 driver: jmp     (RAMSLOT)
 .endproc
 
+;;; ============================================================
 
         PAD_TO $A500
 
