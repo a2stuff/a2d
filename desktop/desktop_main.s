@@ -2089,39 +2089,52 @@ L504F:  .byte   0
 ;;; ============================================================
 
 .proc cmd_eject
-        lda     selected_window_index
-        beq     L5056
-L5055:  rts
+        buffer := $1800
 
-L5056:  lda     selected_icon_count
-        beq     L5055
-        cmp     #$01
-        bne     L5067
+        ;; Ensure that volumes are selected
+        lda     selected_window_index
+        beq     :+
+done:   rts
+
+        ;; And if there's only one, it's not Trash
+:       lda     selected_icon_count
+        beq     done
+        cmp     #1              ; single selection
+        bne     :+
         lda     selected_icon_list
-        cmp     trash_icon_num
-        beq     L5055
-L5067:  lda     #0
+        cmp     trash_icon_num  ; if it's Trash, skip it
+        beq     done
+
+        ;; Record non-Trash selected volume icons to a buffer
+:       lda     #0
         tax
         tay
-L506B:  lda     selected_icon_list,y
+loop1:  lda     selected_icon_list,y
         cmp     trash_icon_num
-        beq     L5077
-        sta     $1800,x
+        beq     :+
+        sta     buffer,x
         inx
-L5077:  iny
+:       iny
         cpy     selected_icon_count
-        bne     L506B
+        bne     loop1
         dex
-        stx     L5098
+        stx     count
+
+        ;; Do the ejection
         jsr     jt_eject
-L5084:  ldx     L5098
-        lda     $1800,x
+
+        ;; Check each of the recorded volumes
+loop2:  ldx     count
+        lda     buffer,x
         sta     drive_to_refresh ; icon number
         jsr     cmd_check_single_drive_by_icon_number
-        dec     L5098
-        bpl     L5084
+        dec     count
+        bpl     loop2
+
+        ;; And finish up nicely
         jmp     redraw_windows_and_desktop
-L5098:  .byte   $00
+
+count:  .byte   0
 
 .endproc
 
