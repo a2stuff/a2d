@@ -8576,19 +8576,62 @@ ram:    return  #device_type_ramdisk
 
 :       lda     unit_number     ; low nibble is high nibble of $CnFE
 
-        ;; This would be correct, but fall back on old heuristic
-        ;; instead since it's used elsewhere.
-;;;         and     #%00001000      ; bit 3 = is removable?
-        and     #%00001111
-        cmp     #DT_REMOVABLE
+        ;; Old heuristic. Invalid on UDC, etc.
+        ;;         and     #%00001111
+        ;;         cmp     #DT_REMOVABLE
 
-        bne     :+
+        ;; Better heuristic, but still invalid on UDC, Virtual II, etc.
+        ;;         and     #%00001000      ; bit 3 = is removable?
+
+        ;; So instead, just assume <=1600 blocks is a 3.5" floppy
+        jsr     get_block_count
+        bcs     :+
+        stax    blocks
+        cmp16   blocks, #1601
+        bcs     :+
         return  #device_type_removable
 
 :       return  #device_type_profile
 
 unit_number:    .byte   0
+
+blocks: .word   0
 .endproc
+
+;;; ============================================================
+;;; Get the block count for a given unit number.
+;;; Input: A=unit_number
+;;; Output: C=0, blocks in A,X on success, C=1 on error
+.proc get_block_count_impl
+        DEFINE_ON_LINE_PARAMS on_line_params,, buffer
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, path
+
+start:  sta     on_line_params::unit_num
+        MLI_RELAY_CALL ON_LINE, on_line_params
+        bne     error
+
+        ;; Prefix the path with '/'
+        lda     buffer
+        and     #%00001111      ; mask off name length
+        clc
+        adc     #1              ; account for '/'
+        sta     path
+        copy    #'/', buffer
+
+        MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
+        bne     error
+
+        ldax    get_file_info_params::aux_type
+        clc
+        rts
+
+error:  sec
+        rts
+
+path:   .byte   0               ; becomes length-prefixed path
+buffer: .res    16, 0            ; length overwritten with '/'
+.endproc
+        get_block_count := get_block_count_impl::start
 
 ;;; ============================================================
 ;;; Create Volume Icon. unit_number passed in A
