@@ -8752,11 +8752,11 @@ offset_x:       .word   0
 ;;; Table of icon widths (/2) for centering icons
 ;;; TODO: Keep this up to date with icon bitmaps in desktop_aux
 device_type_to_icon_offset_table:
-        .word   (53 - 27) / 2
-        .word   (53 - 38) / 2
-        .word   (53 - 53) / 2
-        .word   (53 - 21) / 2
-        .word   (53 - 53) / 2
+        .word   (53 - 27) / 2   ; floppy140
+        .word   (53 - 38) / 2   ; ramdisk
+        .word   (53 - 53) / 2   ; profile
+        .word   (53 - 21) / 2   ; floppy800
+        .word   (53 - 53) / 2   ; profile
 
 ;;; ============================================================
 
