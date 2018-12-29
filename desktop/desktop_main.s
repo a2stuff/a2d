@@ -8693,9 +8693,9 @@ create_icon:
         jsr     get_device_type
         asl                     ; * 2
         tay
+        copy16  device_type_to_icon_offset_table,y, offset_x
         lda     device_type_to_icon_address_table,y
         ldx     device_type_to_icon_address_table+1,y
-
 
         ;; Assign icon bitmap
 assign: ldy     #IconEntry::iconbits
@@ -8711,9 +8711,6 @@ assign: ldy     #IconEntry::iconbits
         lda     #0
         sta     (icon_ptr),y
         inc     device_num
-
-        ;; TODO: Center icon horizontally
-        ;; (Currently, left edges are aligned)
 
         ;; Assign icon coordinates
         ;; (Original logic was to assign in order based on
@@ -8734,6 +8731,10 @@ assign: ldy     #IconEntry::iconbits
         cpy     #IconEntry::iconbits
         bne     :-
 
+        ;; Center it horizontally
+        ldy     #IconEntry::iconx
+        add16in (icon_ptr),y, offset_x, (icon_ptr),y
+
         ;; Assign icon number
         ldx     cached_window_icon_count
         dex
@@ -8745,7 +8746,17 @@ assign: ldy     #IconEntry::iconbits
 
 unit_number:    .byte   0
 device_num:     .byte   0
+offset_x:       .word   0
 .endproc
+
+;;; Table of icon widths (/2) for centering icons
+;;; TODO: Keep this up to date with icon bitmaps in desktop_aux
+device_type_to_icon_offset_table:
+        .word   (53 - 27) / 2
+        .word   (53 - 38) / 2
+        .word   (53 - 53) / 2
+        .word   (53 - 21) / 2
+        .word   (53 - 53) / 2
 
 ;;; ============================================================
 

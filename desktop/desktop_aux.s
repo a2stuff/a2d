@@ -2593,6 +2593,7 @@ ramdisk_icon:
         .byte   6               ; mapwidth
         .byte   0               ; reserved
         DEFINE_RECT   1, 0, 38, 11 ; maprect
+        ;; TODO: increase border size
 
 ramdisk_pixels:
         .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111101)
