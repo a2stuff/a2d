@@ -767,21 +767,7 @@ check_disk_in_drive:
         lda     unit_number
         jsr     find_smartport_dispatch_address
         bne     notsp           ; not SmartPort
-
-        ;; Compute smart port control unit number
-        lda     unit_number
-        pha
-        rol     a
-        pla
-        php
-        and     #$20
-        lsr     a
-        lsr     a
-        lsr     a
-        lsr     a
-        plp
-        adc     #1
-        sta     status_unit_num
+        stx     status_unit_num
 
         ;; Execute SmartPort call
         jsr     smartport_call
@@ -9903,21 +9889,7 @@ found:  lda     DEVLST,y        ;
         smartport_addr := $0A
         jsr     find_smartport_dispatch_address
         bne     exit            ; not SP
-
-        ;; Compute control_unit_number from unit_number
-        lda     unit_number
-        pha
-        rol     a
-        pla
-        php
-        and     #$20
-        lsr     a
-        lsr     a
-        lsr     a
-        lsr     a
-        plp
-        adc     #1
-        sta     control_unit_number
+        stx     control_unit_number
 
         ;; Execute SmartPort call
         jsr     smartport_call
@@ -9984,14 +9956,19 @@ L92E6:  .byte   0
 ;;; ============================================================
 ;;; Look up SmartPort dispatch address.
 ;;; Input: A = unit number
-;;; Output: Z set if SP, $0A/$0B dispatch address; Z clear if not SP
+;;; Output: Z=1 if SP, $0A/$0B dispatch address, X = SP unit num
+;;;         Z=0 if not SP
 
 .proc find_smartport_dispatch_address
         sp_addr := $0A
 
+        sta     unit_number     ; DSSSnnnn
+
+        ;; Get device driver address
         jsr     device_driver_address
         bne     exit            ; RAM-based driver
 
+        ;; Find actual address
         copy    #0, sp_addr     ; point at $Cn00 for firmware lookups
 
         ldy     #$07            ; SmartPort signature byte ($Cn07)
@@ -10010,9 +9987,34 @@ L92E6:  .byte   0
         adc     #3
         sta     sp_addr
 
-        lda     #0              ; exit with Z set on success
+        ;; Figure out SmartPort control unit number in X
+        ldx     #1              ; start with unit 1
+        bit     unit_number     ; high bit is D
+        bpl     :+
+        inx                     ; X = 1 or 2 (for Drive 1 or 2)
 
+:       lda     unit_number
+        and     #%01110000      ; 0SSSnnnn
+        lsr
+        lsr
+        lsr
+        lsr
+        sta     mapped_slot     ; 00000SSS
+
+        lda     sp_addr+1       ; $Cn
+        and     #%00001111      ; $0n
+        cmp     mapped_slot     ; equal = not remapped
+        beq     :+
+        inx                     ; now X = 3 or 4
+        inx
+
+:       lda     #0              ; exit with Z set on success
 exit:   rts
+
+unit_number:
+        .byte   0
+mapped_slot:                    ; from unit_number, not driver
+        .byte   0
 .endproc
 
 ;;; ============================================================
