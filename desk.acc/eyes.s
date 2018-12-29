@@ -399,9 +399,13 @@ pos_r:        DEFINE_POINT 0, 0, pos_r
         MGTK_CALL MGTK::HideCursor
 
         copy16  winfo::maprect::x2, rx ; width / 4
+        inc16 rx
+        inc16 rx
         lsr16 rx
         lsr16 rx
         copy16  winfo::maprect::y2, ry ; height / 2
+        inc16 ry
+        inc16 ry
         lsr16 ry
 
         lda     has_drawn_outline
