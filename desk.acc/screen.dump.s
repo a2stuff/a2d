@@ -27,8 +27,8 @@
         SLOT1   := $C100
 
         hbasl := $6
-        screen_width  := 560
-        screen_height := 192
+        screen_width  = 560
+        screen_height = 192
 
         lda     ROMIN2
         jsr     print_screen

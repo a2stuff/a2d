@@ -42,11 +42,11 @@ entry:
 
 ;;; ============================================================
 
-da_window_id    := 60
-da_width        := 400
-da_height       := 118
-da_left         := (screen_width - da_width)/2
-da_top          := 50
+da_window_id    = 60
+da_width        = 400
+da_height       = 118
+da_left         = (screen_width - da_width)/2
+da_top          = 50
 
 .proc winfo
 window_id:      .byte   da_window_id
@@ -485,17 +485,17 @@ textfont:       .addr   0
 ;;; (Values in [] are for reference, not needed for compatibility check)
 
 .scope model
-        ii           := 0
-        iiplus       := 1
-        iie          := 2
-        iie_enhanced := 3
-        iic          := 4
-        iic_plus     := 5
-        iigs         := 6
-        iie_card     := 7
-        iii          := 8
-        laser128     := 9
-        LAST         := 10
+        ii           = 0
+        iiplus       = 1
+        iie          = 2
+        iie_enhanced = 3
+        iic          = 4
+        iic_plus     = 5
+        iigs         = 6
+        iie_card     = 7
+        iii          = 8
+        laser128     = 9
+        LAST         = 10
 .endscope
 
 model_str_table:

@@ -44,11 +44,11 @@ entry:
 
 ;;; ============================================================
 
-da_window_id    := 60
-da_width        := screen_width / 3
-da_height       := screen_height / 3
-da_left         := (screen_width - da_width)/2
-da_top          := 50
+da_window_id    = 60
+da_width        = screen_width / 3
+da_height       = screen_height / 3
+da_left         = (screen_width - da_width)/2
+da_top          = 50
 
 str_title:
         PASCAL_STRING "Eyes"
@@ -158,8 +158,8 @@ textback:       .byte   0
 textfont:       .addr   0
 .endproc
 
-grow_box_width := 17
-grow_box_height := 7
+grow_box_width = 17
+grow_box_height = 7
 
 .proc grow_box_params
 viewloc:        DEFINE_POINT 0, 0, viewloc
@@ -353,10 +353,10 @@ tmpw:   .word   0
 penxor: .byte   MGTK::penXOR
 notpencopy:     .byte   MGTK::notpencopy
 
-penw    := 8
-penh    := 4
-pupilw  := penw * 2
-pupilh  := penh * 2
+penw    = 8
+penh    = 4
+pupilw  = penw * 2
+pupilh  = penh * 2
 
 .proc outline_pensize
 penwidth:       .byte   penw
@@ -592,7 +592,7 @@ cyf:    DEFINE_FLOAT
 ;;; Inputs: cx, cy, rx, ry
 
 .proc draw_outline
-        segments := 36
+        segments = 36
 
         lda     ROMIN2
 

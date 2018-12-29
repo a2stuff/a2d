@@ -53,7 +53,7 @@ call_main_addr         := call_main_trampoline+7 ; address patched in here
         sta     RAMWRTON
         rts
 .endproc
-        sizeof_routine := * - routine ; can't .sizeof(proc) before declaration
+        sizeof_routine = * - routine ; can't .sizeof(proc) before declaration
         ;;  https://github.com/cc65/cc
 
 .proc call_init
@@ -148,7 +148,7 @@ params_start:
 ;;; ProDOS MLI param blocks
 
         hires   := $2000
-        hires_size := $2000
+        hires_size = $2000
 
         DEFINE_OPEN_PARAMS open_params, pathbuff, $C00
         DEFINE_GET_EOF_PARAMS get_eof_params
@@ -164,7 +164,7 @@ data:   .res    64, 0
 params_end:
 ;;; ----------------------------------------
 
-        da_window_id := 100
+        da_window_id = 100
 
 .proc line_pos
 left:   .word   0
@@ -186,10 +186,10 @@ ycoord := *+2
         .res    4               ; space for both
 .endproc
 
-        default_width := 560
-        default_height := 192
-        default_left := 0
-        default_top := 0
+        default_width = 560
+        default_height = 192
+        default_left = 0
+        default_top = 0
 
 .proc window_title
         .byte 0                 ; length
@@ -460,8 +460,8 @@ close:  jsr     close_file
 
 .proc hr_to_dhr
         ptr     := $06
-        rows    := 192
-        cols    := 40
+        rows    = 192
+        cols    = 40
         spill   := $08          ; spill-over
 
         lda     #0              ; row
