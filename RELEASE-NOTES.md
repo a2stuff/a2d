@@ -22,6 +22,8 @@
   * Eyes that follow the mouse. (#53)
 * Screen Dump
   * Dumps a screenshot to an ImageWriter II attached to a Super Serial Card in Slot 1. (#46)
+* Key Caps
+  * Shows an on-screen keyboard map and indicates which key is pressed.
 * Run Basic Here
   * Launch BASIC.SYSTEM with PREFIX set to the current window's pathname. (#42)
 
