@@ -1426,33 +1426,28 @@ icon_entries:
 
         .org $FB00
 
-type_table_addr:  .addr type_table
-type_icons_addr:  .addr type_icons
-icon_type_table_addr:  .addr icon_type_table
-type_names_addr:  .addr type_names
+        num_file_types = 8
 
 type_table:
-        .byte   8               ; size of table; first entry is default
         .byte   FT_TYPELESS, FT_SRC, FT_TEXT, FT_BINARY
         .byte   FT_DIRECTORY, FT_SYSTEM, FT_BASIC, FT_BAD
 
 icon_type_table:
-        .byte   $60             ; unused?
         .byte   $50,$50,$50,$20,$00,$10,$30,$10
 
-type_names:
-        .byte   " ???"
-
-        ;; Same order as icon list below
+type_names_table:
         .byte   " ???", " SRC", " TXT", " BIN"
-        .byte   " DIR", " SYS", " BAS", " SYS"
+        .byte   " DIR", " SYS", " BAS", " BAD"
 
-        .byte   " BAD"
+;;; The icon-related tables (below) use a distinguishing icon
+;;; for "apps" (SYS files with ".SYSTEM" name suffix). This is
+;;; done by changing the type from $FF to $01 so that an index
+;;; lookup into |type_table| finds the last slot.
 
-type_icons:
+type_icons_table:
         .addr  gen, src, txt, bin, dir, sys, bas, app
 
-type_deltays:
+type_deltay_table:
         .byte   2, 2, 2, 2, 6, 0, 2, 0
 
 .macro  DEFICON mapbits, mapwidth, x1, y1, x2, y2

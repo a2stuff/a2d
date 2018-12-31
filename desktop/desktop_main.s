@@ -6495,7 +6495,12 @@ L7767:  .byte   $14
         ;; Check file type
         ldy     #FileEntry::file_type
         lda     (file_entry),y
-        cmp     #FT_S16         ; IIgs System?
+
+        cmp     #FT_BAD         ; T$01 is overloaded below for "apps", so
+        bne     :+              ; treat as generic
+        lda     #FT_TYPELESS
+
+:       cmp     #FT_S16         ; IIgs System?
         beq     is_app
         cmp     #FT_SYSTEM      ; Other system?
         bne     got_type        ; nope
@@ -6516,7 +6521,7 @@ L7767:  .byte   $14
 
 is_app:
         lda     #$01            ; TODO: Define a symbol for this.
-        bne     got_type
+        bne     got_type        ; always
 
 str_sys_suffix:
         PASCAL_STRING ".SYSTEM"
@@ -6610,6 +6615,7 @@ L7870:  lda     cached_window_id
 .endproc
 
 ;;; ============================================================
+;;; Special case: $01 is used for App-like SYS files.
 
 .proc find_icon_details_for_file_type
         ptr := $6
@@ -6617,31 +6623,24 @@ L7870:  lda     cached_window_id
         sta     file_type
         jsr     push_pointers
 
-        ;; BUG: If file type is $08, the above search yields an
-        ;; index of 0, which is unexpected.
-        ;; https://github.com/inexorabletash/a2d/issues/103
-
         ;; Find index of file type
-        copy16  type_table_addr, ptr
-        ldy     #0
-        lda     (ptr),y         ; first entry is size of table
-        tay
+        copy16  #type_table, ptr
+        ldy     #num_file_types-1
 :       lda     (ptr),y
         cmp     file_type
         beq     found
         dey
         bpl     :-
-        ldy     #1              ; default is first entry (FT_TYPELESS)
+        ldy     #0              ; default is first entry (FT_TYPELESS)
 
 found:
         ;; Look up icon type
-        copy16  icon_type_table_addr, ptr
+        copy16  #icon_type_table, ptr
         lda     (ptr),y
         sta     icon_type
-        dey
 
         ;; Look up y-offset
-        copy16  #type_deltays, ptr
+        copy16  #type_deltay_table, ptr
         lda     (ptr),y
         sta     icon_deltay
 
@@ -6650,7 +6649,7 @@ found:
         tay
 
         ;; Look up icon definition
-        copy16  type_icons_addr, ptr
+        copy16  #type_icons_table, ptr
         copy16in (ptr),y, iconbits
         jsr     pop_pointers
         rts
@@ -7465,14 +7464,12 @@ check_type:
 .scope
         type_table_copy := $807
 
-        ;; Copy type_table (including size) to $807
-        copy16  type_table_addr, $08
-        ldy     #0
-        lda     ($08),y
-        sta     type_table_copy
-        tay                     ; num entries
+        ;; Copy type_table prefixed by length to $807
+        copy16  #type_table, $08
+        copy    #num_file_types, type_table_copy
+        ldy     #num_file_types-1
 :       lda     ($08),y
-        sta     type_table_copy,y
+        sta     type_table_copy+1,y
         dey
         bne     :-
 
@@ -8202,37 +8199,42 @@ tmp:    .byte   0
 ;;; ============================================================
 
 .proc compose_file_type_string
-        sta     L877F
-        copy16  type_table_addr, $06
-        ldy     #$00
-        lda     ($06),y
-        tay
-L8719:  lda     ($06),y
-        cmp     L877F
-        beq     L8726
-        dey
-        bne     L8719
-        jmp     L8745
+        ptr := $06
 
-L8726:  tya
+        sta     file_type
+        copy16  #type_table, ptr
+        ldy     #num_file_types-1
+:       lda     ($06),y
+        cmp     file_type
+        beq     found
+        dey
+        bpl     :-
+        jmp     not_found
+
+        ;; Found - copy string from table
+found:  tya
         asl     a
         asl     a
         tay
-        copy16  type_names_addr, $06
-        ldx     #$00
-L8736:  lda     ($06),y
+        copy16  #type_names_table, ptr
+
+        ldx     #0
+:       lda     ($06),y
         sta     str_file_type+1,x
         iny
         inx
-        cpx     #$04
-        bne     L8736
+        cpx     #4
+        bne     :-
+
         stx     str_file_type
         rts
 
-L8745:  copy    #4, str_file_type
+        ;; Type not found - use generic " $xx"
+not_found:
+        copy    #4, str_file_type
         copy    #' ', str_file_type+1
         copy    #'$', str_file_type+2
-        lda     L877F
+        lda     file_type
         lsr     a
         lsr     a
         lsr     a
@@ -8245,7 +8247,7 @@ L8745:  copy    #4, str_file_type
 L8764:  clc
         adc     #'7'            ; A-F
 L8767:  sta     str_file_type+3
-        lda     L877F
+        lda     file_type
         and     #$0F
         cmp     #$0A
         bcs     L8778
@@ -8257,7 +8259,8 @@ L8778:  clc
 L877B:  sta     path_buf4
         rts
 
-L877F:  .byte   0
+file_type:
+        .byte   0
 
 .endproc
 

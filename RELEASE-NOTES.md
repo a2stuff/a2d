@@ -37,6 +37,7 @@
 * SELECTOR.LIST created if missing. (#92)
 * Position desktop icons based on Slot/Drive assignment. (#94)
 * Don't crash after renaming volume. (#99)
+* Correct odd behavior for file type $08 (#103)
 * Hardware/Emulator Specific:
   * IIc Plus: don't spin slot 5 drives constantly. (Use Special > Check Drives) (#25)
   * Macintosh LC IIe Option Card: prevent crash. (#93)
