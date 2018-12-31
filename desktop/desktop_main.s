@@ -6309,6 +6309,7 @@ L7620:  .byte   $00
 window_id:      .byte   0
 iconbits:       .addr   0
 icon_type:      .byte   0
+icon_deltay:    .byte   0
 L7625:  .byte   0               ; ???
 
 initial_coords:                 ; first icon in window
@@ -6554,6 +6555,17 @@ L77F0:  lda     name_tmp,x
         cpx     #.sizeof(MGTK::Point)
         bne     :-
 
+        ;; Include y-offset
+        ldy     #IconEntry::icony
+        lda     (icon_entry),y
+        clc
+        adc     icon_deltay
+        sta     (icon_entry),y
+        iny
+        lda     (icon_entry),y
+        adc     #0
+        sta     (icon_entry),y
+
         lda     cached_window_icon_count
         cmp     icons_per_row
         beq     L781A
@@ -6564,12 +6576,15 @@ L7826:  copy16  row_coords::ycoord, icon_coords::ycoord
         lda     icons_this_row
         cmp     icons_per_row
         bne     L7862
+
+        ;; Next row (and initial column) if necessary
         add16   row_coords::ycoord, #32, row_coords::ycoord
         copy16  initial_coords::xcoord, row_coords::xcoord
         lda     #0
         sta     icons_this_row
         jmp     L7870
 
+        ;; Next column otherwise
 L7862:  lda     row_coords::xcoord
         clc
         adc     #icon_x_spacing
@@ -6602,6 +6617,10 @@ L7870:  lda     cached_window_id
         sta     file_type
         jsr     push_pointers
 
+        ;; BUG: If file type is $08, the above search yields an
+        ;; index of 0, which is unexpected.
+        ;; https://github.com/inexorabletash/a2d/issues/103
+
         ;; Find index of file type
         copy16  type_table_addr, ptr
         ldy     #0
@@ -6620,6 +6639,12 @@ found:
         lda     (ptr),y
         sta     icon_type
         dey
+
+        ;; Look up y-offset
+        copy16  #type_deltays, ptr
+        lda     (ptr),y
+        sta     icon_deltay
+
         tya
         asl     a
         tay
