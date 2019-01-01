@@ -1431,7 +1431,7 @@ icon_entries:
 type_table:
         .byte   FT_TYPELESS, FT_SRC, FT_TEXT, FT_BINARY
         .byte   FT_DIRECTORY, FT_SYSTEM, FT_BASIC, FT_GRAPHICS
-        .byte   FT_AW_DB, FT_AW_WP, FT_AW_SS
+        .byte   FT_ADB, FT_AWP, FT_ASP
         .byte   FT_BAD
 
 icon_type_table:
@@ -1452,7 +1452,7 @@ icon_type_table:
 type_names_table:
         .byte   " ???", " SRC", " TXT", " BIN"
         .byte   " DIR", " SYS", " BAS", " FOT"
-        .byte   " AWD", " AWW", " AWS"
+        .byte   " ADB", " AWP", " ASP"
         .byte   " BAD"
 
 ;;; The icon-related tables (below) use a distinguishing icon
@@ -1462,7 +1462,7 @@ type_names_table:
 
 type_icons_table:
         .addr  gen, src, txt, bin, dir, sys, bas, fot
-        .addr  aw_db, aw_wp, aw_ss
+        .addr  adb, awp, asp
         .addr  app
 
 type_deltay_table:
@@ -1488,9 +1488,9 @@ dir:    DEFICON folder_icon, 4, 0, 0, 27, 11, folder_mask
 sys:    DEFICON sys_icon, 4, 0, 0, 27, 17, sys_mask
 bas:    DEFICON basic_icon, 4, 0, 0, 27, 14, basic_mask
 fot:    DEFICON desktop_aux::graphics_icon, 4, 0, 0, 27, 11, desktop_aux::graphics_mask
-aw_db:  DEFICON desktop_aux::aw_db_icon, 4, 0, 0, 27, 15, generic_mask
-aw_wp:  DEFICON desktop_aux::aw_wp_icon, 4, 0, 0, 27, 15, generic_mask
-aw_ss:  DEFICON desktop_aux::aw_ss_icon, 4, 0, 0, 27, 15, generic_mask
+adb:    DEFICON desktop_aux::adb_icon, 4, 0, 0, 27, 15, generic_mask
+awp:    DEFICON desktop_aux::awp_icon, 4, 0, 0, 27, 15, generic_mask
+asp:    DEFICON desktop_aux::asp_icon, 4, 0, 0, 27, 15, generic_mask
 app:    DEFICON app_icon, 5, 0, 0, 34, 16, app_mask
 
 ;;; Generic

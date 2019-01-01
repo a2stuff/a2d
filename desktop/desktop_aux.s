@@ -41,7 +41,7 @@ graphics_mask:
         .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
         .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
 
-aw_wp_icon:
+awp_icon:                       ; AppleWorks Word Processing
         .byte   px(%0111111),px(%1111111),px(%1111100),px(%0000000)
         .byte   px(%0100000),px(%0000000),px(%0001011),px(%0000000)
         .byte   px(%0100011),px(%0001000),px(%1001000),px(%1100000)
@@ -59,7 +59,7 @@ aw_wp_icon:
         .byte   px(%0100000),px(%0000000),px(%0000000),px(%0000010)
         .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
 
-aw_ss_icon:
+asp_icon:                       ; AppleWorks Spreadsheet
         .byte   px(%0111111),px(%1111111),px(%1111100),px(%0000000)
         .byte   px(%0100000),px(%0000000),px(%0001011),px(%0000000)
         .byte   px(%0100011),px(%0001000),px(%1001000),px(%1100000)
@@ -77,7 +77,7 @@ aw_ss_icon:
         .byte   px(%0100000),px(%0000000),px(%0000000),px(%0000010)
         .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
 
-aw_db_icon:
+adb_icon:                       ; AppleWorks Database
         .byte   px(%0111111),px(%1111111),px(%1111100),px(%0000000)
         .byte   px(%0100000),px(%0000000),px(%0001011),px(%0000000)
         .byte   px(%0100011),px(%0001000),px(%1001000),px(%1100000)
