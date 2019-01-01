@@ -26,6 +26,7 @@ graphics_icon:
         .byte   px(%1001111),px(%1111111),px(%1111111),px(%1111001)
         .byte   px(%1000000),px(%0000000),px(%0000000),px(%0000001)
         .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
+
 graphics_mask:
         .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
         .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
@@ -58,25 +59,6 @@ aw_wp_icon:
         .byte   px(%0100000),px(%0000000),px(%0000000),px(%0000010)
         .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
 
-        ;; TODO: Dedupe these document masks by making icon bitmap
-        ;; entries explicitly link to masks.
-        .byte   px(%0111111),px(%1111111),px(%1111100),px(%0000000)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%0000000)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1100000)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111000)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-
 aw_ss_icon:
         .byte   px(%0111111),px(%1111111),px(%1111100),px(%0000000)
         .byte   px(%0100000),px(%0000000),px(%0001011),px(%0000000)
@@ -93,23 +75,6 @@ aw_ss_icon:
         .byte   px(%0100011),px(%0010010),px(%0100100),px(%1100010)
         .byte   px(%0100011),px(%1111111),px(%1111111),px(%1100010)
         .byte   px(%0100000),px(%0000000),px(%0000000),px(%0000010)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-
-        .byte   px(%0111111),px(%1111111),px(%1111100),px(%0000000)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%0000000)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1100000)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111000)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
         .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
 
 aw_db_icon:
@@ -129,25 +94,6 @@ aw_db_icon:
         .byte   px(%0100111),px(%1100111),px(%0011100),px(%1110010)
         .byte   px(%0100000),px(%0000000),px(%0000000),px(%0000010)
         .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-
-
-        .byte   px(%0111111),px(%1111111),px(%1111100),px(%0000000)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%0000000)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1100000)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111000)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-
 
         PAD_TO $8800
 
@@ -1720,25 +1666,32 @@ L9F9F:  copy    #$80, L9F92
         lda     L9F92
         ora     #$40
         sta     L9F92
-        ;; copy icon coords and bits
+        ;; copy icon entry coords and bits
 :       ldy     #IconEntry::iconx
 :       lda     ($06),y
         sta     icon_paintbits_params::viewloc-IconEntry::iconx,y
+        sta     mask_paintbits_params::viewloc-IconEntry::iconx,y
         iny
         cpy     #IconEntry::iconx + 6 ; x/y/bits
         bne     :-
 
         jsr     push_pointers
+
+        ;; copy icon definition bits
         copy16  icon_paintbits_params::mapbits, $08
-        ldy     #11
+        ldy     #.sizeof(MGTK::MapInfo) - .sizeof(MGTK::Point) - 1
 :       lda     ($08),y
         sta     icon_paintbits_params::mapbits,y
+        sta     mask_paintbits_params::mapbits,y
         dey
         bpl     :-
 
         bit     L9F92
         bpl     :+
-        jsr     prepare_mask_params
+        ;; Icon definition is followed by pointer to mask address.
+        ;; NOTE: For volume icons, this is random data, but it is unused.
+        ldy     #.sizeof(MGTK::MapInfo) - .sizeof(MGTK::Point)
+        copy16in ($08),y, mask_paintbits_params::mapbits
 :       jsr     pop_pointers
 
         ldy     #9
@@ -1828,24 +1781,6 @@ setbg:  sta     settextbg_params
 
 ;;; ============================================================
 
-.proc prepare_mask_params
-        COPY_BLOCK icon_paintbits_params, mask_paintbits_params
-
-        ;; Calculate address of mask bitmap
-        ldy     mask_paintbits_params::maprect::y2
-loop:   lda     mask_paintbits_params::mapwidth
-        clc
-        adc     mask_paintbits_params::mapbits
-        sta     mask_paintbits_params::mapbits
-        bcc     :+
-        inc     mask_paintbits_params::mapbits+1
-:       dey
-        bpl     loop
-        rts
-.endproc
-
-;;; ============================================================
-
 .proc LA14D
         ldx     #0
 loop:   add16   icon_paintbits_params::viewloc::xcoord,x, icon_paintbits_params::maprect::x1,x, paintrect_params6::x1,x
@@ -1865,6 +1800,8 @@ loop:   add16   icon_paintbits_params::viewloc::xcoord,x, icon_paintbits_params:
 .endproc
 
 .endproc
+
+        PAD_TO $A182
 
 ;;; ============================================================
 

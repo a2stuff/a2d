@@ -1470,25 +1470,28 @@ type_deltay_table:
         .byte   2, 2, 2
         .byte   0
 
-.macro  DEFICON mapbits, mapwidth, x1, y1, x2, y2
+.macro  DEFICON mapbits, mapwidth, x1, y1, x2, y2, maskbits
+        ;; First part is MGTK::MapInfo without leading viewloc
         .addr   mapbits
         .byte   mapwidth
         .byte   0               ; reserved
         .word   x1, y1, x2, y2
+        ;; Next part is link to mask
+        .addr   maskbits
 .endmacro
 
-gen:    DEFICON generic_icon, 4, 0, 0, 27, 15
+gen:    DEFICON generic_icon, 4, 0, 0, 27, 15, generic_mask
 src:
-txt:    DEFICON text_icon, 4, 0, 0, 27, 15
-bin:    DEFICON binary_icon, 4, 0, 0, 27, 14
-dir:    DEFICON folder_icon, 4, 0, 0, 27, 11
-sys:    DEFICON sys_icon, 4, 0, 0, 27, 17
-bas:    DEFICON basic_icon, 4, 0, 0, 27, 14
-fot:    DEFICON desktop_aux::graphics_icon, 4, 0, 0, 27, 11
-aw_db:  DEFICON desktop_aux::aw_db_icon, 4, 0, 0, 27, 15
-aw_wp:  DEFICON desktop_aux::aw_wp_icon, 4, 0, 0, 27, 15
-aw_ss:  DEFICON desktop_aux::aw_ss_icon, 4, 0, 0, 27, 15
-app:    DEFICON app_icon, 5, 0, 0, 34, 16
+txt:    DEFICON text_icon, 4, 0, 0, 27, 15, generic_mask
+bin:    DEFICON binary_icon, 4, 0, 0, 27, 14, binary_mask
+dir:    DEFICON folder_icon, 4, 0, 0, 27, 11, folder_mask
+sys:    DEFICON sys_icon, 4, 0, 0, 27, 17, sys_mask
+bas:    DEFICON basic_icon, 4, 0, 0, 27, 14, basic_mask
+fot:    DEFICON desktop_aux::graphics_icon, 4, 0, 0, 27, 11, desktop_aux::graphics_mask
+aw_db:  DEFICON desktop_aux::aw_db_icon, 4, 0, 0, 27, 15, generic_mask
+aw_wp:  DEFICON desktop_aux::aw_wp_icon, 4, 0, 0, 27, 15, generic_mask
+aw_ss:  DEFICON desktop_aux::aw_ss_icon, 4, 0, 0, 27, 15, generic_mask
+app:    DEFICON app_icon, 5, 0, 0, 34, 16, app_mask
 
 ;;; Generic
 
@@ -1510,6 +1513,7 @@ generic_icon:
         .byte   px(%0100000),px(%0000000),px(%0000000),px(%0000010)
         .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
 
+        ;; Generic mask is re-used for multiple "document" types
 generic_mask:
         .byte   px(%0111111),px(%1111111),px(%1111100),px(%0000000)
         .byte   px(%0111111),px(%1111111),px(%1111111),px(%0000000)
@@ -1548,24 +1552,6 @@ text_icon:
         .byte   px(%0100000),px(%0000000),px(%0000000),px(%0000010)
         .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
 
-text_mask:
-        .byte   px(%0111111),px(%1111111),px(%1111100),px(%0000000)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%0000000)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1100000)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111000)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
-
 ;;; Binary
 
 binary_icon:
@@ -1586,6 +1572,7 @@ binary_icon:
         .byte   px(%0000000),px(%0000001),px(%1000000),px(%0000000)
 
 binary_mask:
+        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000)
         .byte   px(%0000000),px(%0000001),px(%1000000),px(%0000000)
         .byte   px(%0000000),px(%0000111),px(%1110000),px(%0000000)
         .byte   px(%0000000),px(%0011111),px(%1111100),px(%0000000)
@@ -1599,6 +1586,7 @@ binary_mask:
         .byte   px(%0000000),px(%0011111),px(%1111100),px(%0000000)
         .byte   px(%0000000),px(%0000111),px(%1110000),px(%0000000)
         .byte   px(%0000000),px(%0000001),px(%1000000),px(%0000000)
+        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000)
 
 ;;; Folder
 folder_icon:
@@ -1691,6 +1679,7 @@ basic_icon:
         .byte   px(%0000000),px(%0000001),px(%1000000),px(%0000000)
 
 basic_mask:
+        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000)
         .byte   px(%0000000),px(%0000001),px(%1000000),px(%0000000)
         .byte   px(%0000000),px(%0000111),px(%1110000),px(%0000000)
         .byte   px(%0000000),px(%0011111),px(%1111100),px(%0000000)
@@ -1704,6 +1693,7 @@ basic_mask:
         .byte   px(%0000000),px(%0011111),px(%1111100),px(%0000000)
         .byte   px(%0000000),px(%0000111),px(%1110000),px(%0000000)
         .byte   px(%0000000),px(%0000001),px(%1000000),px(%0000000)
+        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000)
 
 ;;; System (with .SYSTEM suffix)
 
