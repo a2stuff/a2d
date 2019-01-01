@@ -62,7 +62,7 @@ v6:     DEFINE_POINT 0, 0, v6
 v7:     DEFINE_POINT 0, 0, v7
 .endproc
 
-.proc paintbits_params2
+.proc icon_paintbits_params
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   0
 mapwidth:       .byte   0
@@ -70,7 +70,7 @@ reserved:       .byte   0
 maprect:        DEFINE_RECT 0,0,0,0,maprect
 .endproc
 
-.proc paintbits_params
+.proc mask_paintbits_params
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   0
 mapwidth:       .byte   0
@@ -1589,22 +1589,22 @@ L9F9F:  copy    #$80, L9F92
         ;; copy icon coords and bits
 :       ldy     #IconEntry::iconx
 :       lda     ($06),y
-        sta     paintbits_params2::viewloc-IconEntry::iconx,y
+        sta     icon_paintbits_params::viewloc-IconEntry::iconx,y
         iny
         cpy     #IconEntry::iconx + 6 ; x/y/bits
         bne     :-
 
         jsr     push_pointers
-        copy16  paintbits_params2::mapbits, $08
+        copy16  icon_paintbits_params::mapbits, $08
         ldy     #11
 :       lda     ($08),y
-        sta     paintbits_params2::mapbits,y
+        sta     icon_paintbits_params::mapbits,y
         dey
         bpl     :-
 
         bit     L9F92
         bpl     :+
-        jsr     LA12C
+        jsr     prepare_mask_params
 :       jsr     pop_pointers
 
         ldy     #9
@@ -1618,7 +1618,7 @@ L9F9F:  copy    #$80, L9F92
         sta     textwidth_params::textlen
         MGTK_CALL MGTK::TextWidth, textwidth_params
         lda     textwidth_params::result
-        cmp     paintbits_params2::maprect::x2
+        cmp     icon_paintbits_params::maprect::x2
         bcs     :+
         inc     drawtext_params::textlen
         ldx     drawtext_params::textlen
@@ -1628,15 +1628,15 @@ L9F9F:  copy    #$80, L9F92
 
 :       lsr     a
         sta     moveto_params2::xcoord+1
-        lda     paintbits_params2::maprect::x2
+        lda     icon_paintbits_params::maprect::x2
         lsr     a
         sta     moveto_params2::xcoord
         lda     moveto_params2::xcoord+1
         sec
         sbc     moveto_params2::xcoord
         sta     moveto_params2::xcoord
-        sub16_8 paintbits_params2::viewloc::xcoord, moveto_params2::xcoord, moveto_params2::xcoord
-        add16_8 paintbits_params2::viewloc::ycoord, paintbits_params2::maprect::y2, moveto_params2::ycoord
+        sub16_8 icon_paintbits_params::viewloc::xcoord, moveto_params2::xcoord, moveto_params2::xcoord
+        add16_8 icon_paintbits_params::viewloc::ycoord, icon_paintbits_params::maprect::y2, moveto_params2::ycoord
         add16   moveto_params2::ycoord, #1, moveto_params2::ycoord
         add16_8 moveto_params2::ycoord, font_height, moveto_params2::ycoord
 
@@ -1662,9 +1662,9 @@ LA097:  MGTK_CALL MGTK::HideCursor, DESKTOP_DIRECT ; These params should be igno
         MGTK_CALL MGTK::SetPenMode, pencopy_2
         jmp     LA0C2
 
-LA0B6:  MGTK_CALL MGTK::PaintBits, paintbits_params
+LA0B6:  MGTK_CALL MGTK::PaintBits, mask_paintbits_params
         MGTK_CALL MGTK::SetPenMode, penXOR_2
-LA0C2:  MGTK_CALL MGTK::PaintBits, paintbits_params2
+LA0C2:  MGTK_CALL MGTK::PaintBits, icon_paintbits_params
         ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_open_mask
@@ -1695,33 +1695,44 @@ setbg:  sta     settextbg_params
         MGTK_CALL MGTK::ShowCursor
         rts
 
-LA12C:  COPY_BLOCK paintbits_params2, paintbits_params
+;;; ============================================================
 
-        ldy     paintbits_params::maprect::y2
-LA13A:  lda     paintbits_params::mapwidth
+.proc prepare_mask_params
+        COPY_BLOCK icon_paintbits_params, mask_paintbits_params
+
+        ;; Calculate address of mask bitmap
+        ldy     mask_paintbits_params::maprect::y2
+loop:   lda     mask_paintbits_params::mapwidth
         clc
-        adc     paintbits_params::mapbits
-        sta     paintbits_params::mapbits
-        bcc     LA149
-        inc     paintbits_params::mapbits+1
-LA149:  dey
-        bpl     LA13A
+        adc     mask_paintbits_params::mapbits
+        sta     mask_paintbits_params::mapbits
+        bcc     :+
+        inc     mask_paintbits_params::mapbits+1
+:       dey
+        bpl     loop
         rts
+.endproc
 
-LA14D:  ldx     #0
-LA14F:  add16   paintbits_params2::viewloc::xcoord,x, paintbits_params2::maprect::x1,x, paintrect_params6::x1,x
-        add16   paintbits_params2::viewloc::xcoord,x, paintbits_params2::maprect::x2,x, paintrect_params6::x2,x
+;;; ============================================================
+
+.proc LA14D
+        ldx     #0
+loop:   add16   icon_paintbits_params::viewloc::xcoord,x, icon_paintbits_params::maprect::x1,x, paintrect_params6::x1,x
+        add16   icon_paintbits_params::viewloc::xcoord,x, icon_paintbits_params::maprect::x2,x, paintrect_params6::x2,x
         inx
         inx
         cpx     #4
-        bne     LA14F
+        bne     loop
+
         lda     paintrect_params6::y2
         sec
         sbc     #1
         sta     paintrect_params6::y2
-        bcs     LA189
+        bcs     :+
         dec     paintrect_params6::y2+1
-LA189:  rts
+:       rts
+.endproc
+
 .endproc
 
 ;;; ============================================================
