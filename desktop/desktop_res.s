@@ -1426,18 +1426,34 @@ icon_entries:
 
         .org $FB00
 
-        num_file_types = 8
+        num_file_types = 12
 
 type_table:
         .byte   FT_TYPELESS, FT_SRC, FT_TEXT, FT_BINARY
-        .byte   FT_DIRECTORY, FT_SYSTEM, FT_BASIC, FT_BAD
+        .byte   FT_DIRECTORY, FT_SYSTEM, FT_BASIC, FT_GRAPHICS
+        .byte   FT_AW_DB, FT_AW_WP, FT_AW_SS
+        .byte   FT_BAD
 
 icon_type_table:
-        .byte   $50,$50,$50,$20,$00,$10,$30,$10
+        ;; Bit 4-6 in IconEntry::win_type:
+        ;;   000 = directory
+        ;;   001 = system
+        ;;   010 = binary (maybe runnable)
+        ;;   011 = basic
+        ;;   100 = (unused)
+        ;;   101 = data (text/generic/...)
+        ;;   110 = (unused)
+        ;;   111 = trash
+        .byte   $50,$50,$50,$20
+        .byte   $00,$10,$30,$50
+        .byte   $50,$50,$50
+        .byte   $10
 
 type_names_table:
         .byte   " ???", " SRC", " TXT", " BIN"
-        .byte   " DIR", " SYS", " BAS", " BAD"
+        .byte   " DIR", " SYS", " BAS", " FOT"
+        .byte   " AWD", " AWW", " AWS"
+        .byte   " BAD"
 
 ;;; The icon-related tables (below) use a distinguishing icon
 ;;; for "apps" (SYS files with ".SYSTEM" name suffix). This is
@@ -1445,10 +1461,14 @@ type_names_table:
 ;;; lookup into |type_table| finds the last slot.
 
 type_icons_table:
-        .addr  gen, src, txt, bin, dir, sys, bas, app
+        .addr  gen, src, txt, bin, dir, sys, bas, fot
+        .addr  aw_db, aw_wp, aw_ss
+        .addr  app
 
 type_deltay_table:
-        .byte   2, 2, 2, 2, 6, 0, 2, 0
+        .byte   2, 2, 2, 2, 6, 0, 2, 6
+        .byte   2, 2, 2
+        .byte   0
 
 .macro  DEFICON mapbits, mapwidth, x1, y1, x2, y2
         .addr   mapbits
@@ -1464,6 +1484,10 @@ bin:    DEFICON binary_icon, 4, 0, 0, 27, 14
 dir:    DEFICON folder_icon, 4, 0, 0, 27, 11
 sys:    DEFICON sys_icon, 4, 0, 0, 27, 17
 bas:    DEFICON basic_icon, 4, 0, 0, 27, 14
+fot:    DEFICON desktop_aux::graphics_icon, 4, 0, 0, 27, 11
+aw_db:  DEFICON desktop_aux::aw_db_icon, 4, 0, 0, 27, 15
+aw_wp:  DEFICON desktop_aux::aw_wp_icon, 4, 0, 0, 27, 15
+aw_ss:  DEFICON desktop_aux::aw_ss_icon, 4, 0, 0, 27, 15
 app:    DEFICON app_icon, 5, 0, 0, 34, 16
 
 ;;; Generic

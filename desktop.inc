@@ -185,10 +185,10 @@ last_menu_click_params := $E25A
 ;;;                      (bits 4,5,6)
 ;;;                             000 = directory
 ;;;                             001 = system
-;;;                             010 = binary
+;;;                             010 = binary (maybe runnable)
 ;;;                             011 = basic
 ;;;                             100 = (unused)
-;;;                             101 = text/generic
+;;;                             101 = data (text/generic/...)
 ;;;                             110 = (unused)
 ;;;                             111 = trash
 ;;;                      (bit 7 = open flag)
