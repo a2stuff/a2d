@@ -10,7 +10,8 @@
 * Add Special > Check Drive command to refresh a single drive. (#97)
 * Show Text File DA: Keyboard support. Escape quits, arrows scroll. (#4)
 * Reorganized/renamed several menu items. (#13)
-* Icon bitmap improvements. (#74)
+* New icon bitmaps for graphics, AppleWorks, and IIgs-specific file types.
+* Improvements to several existing icon bitmaps. (#74)
 * DAs with high bit in aux-type set are skipped. (#102)
 
 ### Additional Desk Accessories
@@ -28,7 +29,7 @@
 * Run Basic Here
   * Launch BASIC.SYSTEM with PREFIX set to the current window's pathname. (#42)
 
-### Fixes
+### Notable Fixes
 
 * Dates 00-39 are treated as 2000-2039; dates 100-127 are treated as 2000-2027. (#15)
 * File > Quit returns to ProDOS 8 selector, and /RAM is reattached. (#3)

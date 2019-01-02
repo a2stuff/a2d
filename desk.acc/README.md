@@ -16,6 +16,10 @@ New desk accessories:
   * Eyes that follow the mouse.
 * [Screen Dump](screen.dump.s)
   * Dumps a screenshot to an ImageWriter II attached to a Super Serial Card in Slot 1.
+* [Key Caps](key.caps.s)
+  * Shows an on-screen keyboard map, and indicates which key is pressed.
+* [Run Basic Here](run.basic.here.s)
+  * Launches BASIC.SYSTEM with PREFIX set to current window's directory.
 
 See [API.md](API.md) for programming details
 
