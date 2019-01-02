@@ -6099,6 +6099,9 @@ cur_open_menu:
 cur_hilited_menu_item:
         .byte   0
 
+was_in_menu_flag:
+        .byte   0
+
 .proc MenuSelectImpl
         PARAM_BLOCK params, $C7
 menu_id:   .byte   0
@@ -6120,6 +6123,7 @@ menu_item: .byte   0
 :       lda     #0
         sta     cur_open_menu
         sta     cur_hilited_menu_item
+        sta     was_in_menu_flag
         jsr     get_and_return_event
 event_loop:
         bit     movement_cancel
@@ -6137,8 +6141,14 @@ event_loop:
         jsr     unhilite_cur_menu_item
 
 in_menu:jsr     get_and_return_event
+        cmp     #MGTK::EventKind::button_down
         beq     :+
         cmp     #MGTK::EventKind::button_up
+        bne     event_loop
+
+        bit     was_in_menu_flag
+        bmi     :+
+        lda     cur_open_menu
         bne     event_loop
 
 :       lda     cur_hilited_menu_item
@@ -6183,6 +6193,7 @@ in_menu_bar:
 
 in_menu_item:
         lda     #find_mode_by_coord
+        sta     was_in_menu_flag
         sta     find_mode
         jsr     find_menu_item
         cpx     cur_hilited_menu_item
@@ -10290,3 +10301,9 @@ mouse_operand:               ; e.g. if mouse is in slot 4, this is $40
         .byte   0
 
 .endproc  ; mgtk
+
+
+;;; ============================================================
+
+        ;; Room for future expansion
+        PAD_TO $8580
