@@ -11,6 +11,7 @@
 * Show Text File DA: Keyboard support. Escape quits, arrows scroll. (#4)
 * Reorganized/renamed several menu items. (#13)
 * Icon bitmap improvements. (#74)
+* DAs with high bit in aux-type set are skipped. (#102)
 
 ### Additional Desk Accessories
 

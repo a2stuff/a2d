@@ -15434,8 +15434,10 @@ process_block:
         ldy     #FileEntry::file_type
         lda     (dir_ptr),y
         cmp     #DA_FILE_TYPE
-        beq     is_da
-        jmp     next_entry
+        bne     next_entry
+        ldy     #FileEntry::aux_type+1 ; high bit set = skip
+        lda     (dir_ptr),y
+        bmi     next_entry
 
         ;; Compute slot in DA name table
 is_da:  inc     desk_acc_num
