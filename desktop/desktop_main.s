@@ -6496,13 +6496,27 @@ L7767:  .byte   $14
         ldy     #FileEntry::file_type
         lda     (file_entry),y
 
+        cmp     #FT_S16         ; IIgs System?
+        beq     is_app
+
+        ;; Map other IIgs-specific types to one icon
+        tax
+        and     #$F0            ; high nibble
+        cmp     #$50            ; $5x Types: Apple IIgs General
+        beq     is_iigs
+        cmp     #$A0            ; $Ax Types: Apple IIgs BASIC
+        beq     is_iigs
+        cmp     #$B0            ; $Bx Types: Apple IIgs System
+        beq     is_iigs
+        cmp     #$C0            ; $Cx Types: Graphics
+        beq     is_iigs
+        txa
+
         cmp     #FT_BAD         ; T$01 is overloaded below for "apps", so
         bne     :+              ; treat as generic
         lda     #FT_TYPELESS
 
-:       cmp     #FT_S16         ; IIgs System?
-        beq     is_app
-        cmp     #FT_SYSTEM      ; Other system?
+:       cmp     #FT_SYSTEM      ; Other system?
         bne     got_type        ; nope
 
         ;; Distinguish *.SYSTEM files as apps (use $01) from other
@@ -6520,8 +6534,12 @@ L7767:  .byte   $14
         bne     :-
 
 is_app:
-        lda     #$01            ; TODO: Define a symbol for this.
+        lda     #FT_BAD         ; overloaded meaning in icon tables
         bne     got_type        ; always
+
+is_iigs:
+        lda     #FT_SRC
+        bne     got_type
 
 str_sys_suffix:
         PASCAL_STRING ".SYSTEM"

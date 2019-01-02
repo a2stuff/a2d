@@ -1456,9 +1456,12 @@ type_names_table:
         .byte   " BAD"
 
 ;;; The icon-related tables (below) use a distinguishing icon
-;;; for "apps" (SYS files with ".SYSTEM" name suffix). This is
-;;; done by changing the type from $FF to $01 so that an index
-;;; lookup into |type_table| finds the last slot.
+;;; for "apps" (SYS files with ".SYSTEM" name suffix, and IIgs
+;;; S16 application files). This is done by looking up using
+;;; the type $01 (and type $01 is looked up as $00).
+;;;
+;;; Similarly, IIgs-specific types ($5x, $Ax-$Cx) are all
+;;; mapped to $B0 (SRC).
 
 type_icons_table:
         .addr  gen, src, txt, bin, dir, sys, bas, fot
@@ -1481,7 +1484,7 @@ type_deltay_table:
 .endmacro
 
 gen:    DEFICON generic_icon, 4, 0, 0, 27, 15, generic_mask
-src:
+src:    DEFICON desktop_aux::iigs_file_icon, 4, 0, 0, 27, 15, generic_mask
 txt:    DEFICON text_icon, 4, 0, 0, 27, 15, generic_mask
 bin:    DEFICON binary_icon, 4, 0, 0, 27, 14, binary_mask
 dir:    DEFICON folder_icon, 4, 0, 0, 27, 11, folder_mask
