@@ -11,7 +11,7 @@
 * Add Special > Check Drive command to refresh a single drive. (#97)
 * Show Text File DA: Keyboard support. Escape quits, arrows scroll. (#4)
 * Reorganized/renamed several menu items. (#13)
-* New icons for graphics, AppleWorks, and IIgs-specific file types.
+* New icons for graphics, AppleWorks, relocatable, and IIgs-specific file types. (#105)
 * Improvements to several existing icon bitmaps. (#74)
 * DAs with high bit in aux-type set are skipped. (#102)
 

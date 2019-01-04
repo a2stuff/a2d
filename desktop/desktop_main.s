@@ -3857,11 +3857,11 @@ handle_double_click:
         ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_type_mask
-        cmp     #icon_entry_type_sys
+        cmp     #icon_entry_type_system
         beq     L5E28
-        cmp     #icon_entry_type_bin
+        cmp     #icon_entry_type_binary
         beq     L5E28
-        cmp     #icon_entry_type_bas
+        cmp     #icon_entry_type_basic
         beq     L5E28
         cmp     #icon_entry_type_dir
         bne     :+
@@ -6661,6 +6661,7 @@ found:
         copy16  #type_deltay_table, ptr
         lda     (ptr),y
         sta     icon_deltay
+        ;; TODO: compute y-offset from iconbits instead
 
         tya
         asl     a

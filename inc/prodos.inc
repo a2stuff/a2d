@@ -102,6 +102,7 @@ FT_ASP          = $1B           ; AppleWorks Spreadsheet
 FT_SRC          = $B0           ; IIgs system type; re-used?
 FT_S16          = $B3           ; IIgs Application Program
 FT_BASIC        = $FC
+FT_REL          = $FE
 FT_SYSTEM       = $FF
 
 ;;; ============================================================

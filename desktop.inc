@@ -215,10 +215,10 @@ icon_entry_open_mask    = %10000000
 icon_entry_type_mask    = %01110000
 icon_entry_winid_mask   = %00001111
 icon_entry_type_dir     = %00000000
-icon_entry_type_sys     = %00010000
-icon_entry_type_bin     = %00100000
-icon_entry_type_bas     = %00110000
-icon_entry_type_txt     = %01010000
+icon_entry_type_system  = %00010000
+icon_entry_type_binary  = %00100000
+icon_entry_type_basic   = %00110000
+icon_entry_type_generic = %01010000
 icon_entry_type_trash   = %01110000
 
 ;;; ============================================================

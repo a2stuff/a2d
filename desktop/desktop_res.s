@@ -319,40 +319,12 @@ path_buf0:  .res    65, 0
 path_buf1:  .res    65, 0
 path_buf2:  .res    65, 0
 
-alert_bitmap2:
-        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
-        .byte   px(%0111111),px(%1111100),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
-        .byte   px(%0111111),px(%1111100),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
-        .byte   px(%0111111),px(%1111100),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
-        .byte   px(%0111111),px(%1111100),px(%0000000),px(%1111111),px(%1111111),px(%0000000),px(%0000000)
-        .byte   px(%0111100),px(%1111100),px(%0000001),px(%1110000),px(%0000111),px(%0000000),px(%0000000)
-        .byte   px(%0111100),px(%1111100),px(%0000011),px(%1100000),px(%0000011),px(%0000000),px(%0000000)
-        .byte   px(%0111111),px(%1111100),px(%0000111),px(%1100111),px(%1111001),px(%0000000),px(%0000000)
-        .byte   px(%0111111),px(%1111100),px(%0001111),px(%1100111),px(%1111001),px(%0000000),px(%0000000)
-        .byte   px(%0111111),px(%1111100),px(%0011111),px(%1111111),px(%1111001),px(%0000000),px(%0000000)
-        .byte   px(%0111111),px(%1111100),px(%0011111),px(%1111111),px(%1110011),px(%0000000),px(%0000000)
-        .byte   px(%0111111),px(%1111100),px(%0011111),px(%1111111),px(%1100111),px(%0000000),px(%0000000)
-        .byte   px(%0111111),px(%1111100),px(%0011111),px(%1111111),px(%1001111),px(%0000000),px(%0000000)
-        .byte   px(%0111111),px(%1111100),px(%0011111),px(%1111111),px(%0011111),px(%0000000),px(%0000000)
-        .byte   px(%0111111),px(%1111100),px(%0011111),px(%1111110),px(%0111111),px(%0000000),px(%0000000)
-        .byte   px(%0111111),px(%1111100),px(%0011111),px(%1111100),px(%1111111),px(%0000000),px(%0000000)
-        .byte   px(%0111111),px(%1111100),px(%0011111),px(%1111100),px(%1111111),px(%0000000),px(%0000000)
-        .byte   px(%0111110),px(%0000000),px(%0111111),px(%1111111),px(%1111111),px(%0000000),px(%0000000)
-        .byte   px(%0111111),px(%1100000),px(%1111111),px(%1111100),px(%1111111),px(%0000000),px(%0000000)
-        .byte   px(%0111111),px(%1100001),px(%1111111),px(%1111111),px(%1111111),px(%0000000),px(%0000000)
-        .byte   px(%0111000),px(%0000011),px(%1111111),px(%1111111),px(%1111110),px(%0000000),px(%0000000)
-        .byte   px(%0111111),px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
-        .byte   px(%0111111),px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
-        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
-
 alert_bitmap2_params:
         DEFINE_POINT 40, 8      ; viewloc
-        .addr   alert_bitmap2   ; mapbits
+        .addr   desktop_aux::alert_bitmap   ; mapbits
         .byte   7               ; mapwidth
         .byte   0               ; reserved
         DEFINE_RECT 0, 0, 36, 23 ; maprect
-
-        ;; Looks like window param blocks starting here
 
 .proc winfo_alert_dialog
 window_id:      .byte   $0F
@@ -859,8 +831,6 @@ delete_a_file_label:
 
 file_to_delete_label:
         PASCAL_STRING "File to delete:"
-
-        .assert * = $DAD8, error, "Segment length mismatch"
 
 pos_clock:
         DEFINE_POINT 500, 10
@@ -1426,34 +1396,37 @@ icon_entries:
 
         .org $FB00
 
-        num_file_types = 12
+        num_file_types = 13
 
 type_table:
-        .byte   FT_TYPELESS, FT_SRC, FT_TEXT, FT_BINARY
-        .byte   FT_DIRECTORY, FT_SYSTEM, FT_BASIC, FT_GRAPHICS
-        .byte   FT_ADB, FT_AWP, FT_ASP
-        .byte   FT_BAD
-
-icon_type_table:
-        ;; Bit 4-6 in IconEntry::win_type:
-        ;;   000 = directory
-        ;;   001 = system
-        ;;   010 = binary (maybe runnable)
-        ;;   011 = basic
-        ;;   100 = (unused)
-        ;;   101 = data (text/generic/...)
-        ;;   110 = (unused)
-        ;;   111 = trash
-        .byte   $50,$50,$50,$20
-        .byte   $00,$10,$30,$50
-        .byte   $50,$50,$50
-        .byte   $10
+        .byte   FT_TYPELESS   ; typeless
+        .byte   FT_SRC        ; src
+        .byte   FT_REL        ; rel
+        .byte   FT_TEXT       ; text
+        .byte   FT_BINARY     ; binary
+        .byte   FT_DIRECTORY  ; directory
+        .byte   FT_SYSTEM     ; system
+        .byte   FT_BASIC      ; basic
+        .byte   FT_GRAPHICS   ; graphics
+        .byte   FT_ADB        ; appleworks db
+        .byte   FT_AWP        ; appleworks wp
+        .byte   FT_ASP        ; appleworks sp
+        .byte   FT_BAD        ; bad block
 
 type_names_table:
-        .byte   " ???", " SRC", " TXT", " BIN"
-        .byte   " DIR", " SYS", " BAS", " FOT"
-        .byte   " ADB", " AWP", " ASP"
-        .byte   " BAD"
+        .byte   " ???" ; typeless
+        .byte   " SRC" ; src
+        .byte   " REL" ; rel
+        .byte   " TXT" ; text
+        .byte   " BIN" ; binary
+        .byte   " DIR" ; directory
+        .byte   " SYS" ; system
+        .byte   " BAS" ; basic
+        .byte   " FOT" ; graphics
+        .byte   " ADB" ; appleworks db
+        .byte   " AWP" ; appleworks wp
+        .byte   " ASP" ; appleworks sp
+        .byte   " BAD" ; bad block
 
 ;;; The icon-related tables (below) use a distinguishing icon
 ;;; for "apps" (SYS files with ".SYSTEM" name suffix, and IIgs
@@ -1463,28 +1436,64 @@ type_names_table:
 ;;; Similarly, IIgs-specific types ($5x, $Ax-$Cx) are all
 ;;; mapped to $B0 (SRC).
 
-type_icons_table:
-        .addr  gen, src, txt, bin, dir, sys, bas, fot
-        .addr  adb, awp, asp
-        .addr  app
+icon_type_table:
+        .byte   icon_entry_type_generic ; typeless
+        .byte   icon_entry_type_generic ; src
+        .byte   icon_entry_type_generic ; rel
+        .byte   icon_entry_type_generic ; text
+        .byte   icon_entry_type_binary  ; binary
+        .byte   icon_entry_type_dir     ; directory
+        .byte   icon_entry_type_system  ; system
+        .byte   icon_entry_type_basic   ; basic
+        .byte   icon_entry_type_generic ; graphics
+        .byte   icon_entry_type_generic ; appleworks db
+        .byte   icon_entry_type_generic ; appleworks wp
+        .byte   icon_entry_type_generic ; appleworks sp
+        .byte   icon_entry_type_system  ; system (see below)
+
+type_icons_table:               ; map into definitions below
+        .addr   gen ; typeless
+        .addr   src ; src
+        .addr   rel ; rel
+        .addr   txt ; text
+        .addr   bin ; binary
+        .addr   dir ; directory
+        .addr   sys ; system
+        .addr   bas ; basic
+        .addr   fot ; graphics
+        .addr   adb ; appleworks db
+        .addr   awp ; appleworks wp
+        .addr   asp ; appleworks sp
+        .addr   app ; system (see below)
 
 type_deltay_table:
-        .byte   2, 2, 2, 2, 6, 0, 2, 6
-        .byte   2, 2, 2
-        .byte   0
+        .byte   2 ; typeless
+        .byte   2 ; src
+        .byte   2 ; rel
+        .byte   2 ; text
+        .byte   2 ; binary
+        .byte   6 ; directory
+        .byte   0 ; system
+        .byte   2 ; basic
+        .byte   6 ; graphics
+        .byte   2 ; appleworks db
+        .byte   2 ; appleworks wp
+        .byte   2 ; appleworks sp
+        .byte   0 ; system (see below)
 
 .macro  DEFICON mapbits, mapwidth, x1, y1, x2, y2, maskbits
         ;; First part is MGTK::MapInfo without leading viewloc
         .addr   mapbits
         .byte   mapwidth
         .byte   0               ; reserved
-        .word   x1, y1, x2, y2
+        .word   x1, y1, x2, y2  ; maprect
         ;; Next part is link to mask
         .addr   maskbits
 .endmacro
 
 gen:    DEFICON generic_icon, 4, 0, 0, 27, 15, generic_mask
 src:    DEFICON desktop_aux::iigs_file_icon, 4, 0, 0, 27, 15, generic_mask
+rel:    DEFICON desktop_aux::rel_file_icon, 4, 0, 0, 27, 14, binary_mask
 txt:    DEFICON text_icon, 4, 0, 0, 27, 15, generic_mask
 bin:    DEFICON binary_icon, 4, 0, 0, 27, 14, binary_mask
 dir:    DEFICON folder_icon, 4, 0, 0, 27, 11, folder_mask
