@@ -15680,56 +15680,59 @@ cvi_result:
 ;;; ============================================================
 
 .proc populate_startup_menu
+        slot_ptr := $06         ; pointed at $Cn00
+        table_ptr := $08        ; points into slot_string_table
+
+        lda     #7
+        sta     slot
         lda     #0
-        sta     slot
-        tay
-        tax
+        sta     slot_ptr
+        tax                     ; X = menu entry
 
-loop:   lda     DEVLST,y
-        and     #$70            ; mask off slot
-        beq     done
-        lsr     a
-        lsr     a
-        lsr     a
-        lsr     a
-        cmp     slot            ; same as last?
-        beq     :+
-        cmp     #2              ; BUG: disallows booting from slot 2
-        bne     prepare         ; (avoiding remapped smartport devices)
-:       cpy     DEVCNT
-        beq     done
-        iny
-        jmp     loop
+        ;; Identify ProDOS device in slot by ID bytes
+loop:   lda     slot
+        ora     #$C0            ; hi byte of $Cn00
+        sta     slot_ptr+1
 
-prepare:
-        sta     slot
-        ora     #'0'
-        sta     char
+        ldy     #$01        ; $Cn01 == $20 ?
+        lda     (slot_ptr),y
+        cmp     #$20
+        bne     next
 
+        ldy     #$03        ; $Cn03 == $00 ?
+        lda     (slot_ptr),y
+        cmp     #$00
+        bne     next
+
+        ldy     #$05        ; $Cn05 == $03 ?
+        lda     (slot_ptr),y
+        cmp     #$03
+        bne     next
+
+        ;; It is a ProDOS device - prepare menu item.
         txa                     ; pointer to nth sNN string
         pha
         asl     a
         tax
-        copy16  slot_string_table,x, @item_ptr
+        copy16  slot_string_table,x, table_ptr
 
-        ldx     startup_menu_item_1             ; replace second-from-last char
-        dex
-        lda     char
-        @item_ptr := *+1
-        sta     dummy1234,x
+        ldy     startup_menu_item_1 ; replace second-from-last char
+        dey
+        lda     slot
+        ora     #'0'
+        sta     (table_ptr),y
 
         pla
         tax
         inx
-        cpy     DEVCNT
-        beq     done
-        iny
-        jmp     loop
 
-done:   stx     startup_menu
+next:   dec     slot
+        bne     loop
+
+        ;; Set number of menu items.
+        stx     startup_menu
         jmp     final_setup
 
-char:   .byte   0
 slot:   .byte   0
 
 slot_string_table:
