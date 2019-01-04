@@ -1469,17 +1469,17 @@ type_icons_table:               ; map into definitions below
 type_deltay_table:
         .byte   2 ; typeless
         .byte   2 ; src
-        .byte   2 ; rel
+        .byte   3 ; rel
         .byte   2 ; text
-        .byte   2 ; binary
+        .byte   3 ; binary
         .byte   6 ; directory
         .byte   0 ; system
-        .byte   2 ; basic
+        .byte   3 ; basic
         .byte   6 ; graphics
         .byte   2 ; appleworks db
         .byte   2 ; appleworks wp
         .byte   2 ; appleworks sp
-        .byte   0 ; system (see below)
+        .byte   1 ; system (see below)
 
 .macro  DEFICON mapbits, mapwidth, x1, y1, x2, y2, maskbits
         ;; First part is MGTK::MapInfo without leading viewloc
