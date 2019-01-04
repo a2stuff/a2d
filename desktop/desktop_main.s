@@ -5689,21 +5689,6 @@ L704C:  .res    8
 
 ;;; ============================================================
 
-.struct FileRecord
-        name                    .res 16
-        file_type               .byte ; 16 $10
-        blocks                  .word ; 17 $11
-        creation_date           .word ; 19 $13
-        creation_time           .word ; 21 $15
-        modification_date       .word ; 23 $17
-        modification_time       .word ; 25 $19
-        access                  .byte ; 27 $1B
-        header_pointer          .word ; 28 $1C
-        reserved                .word ; ???
-.endstruct
-
-;;; ============================================================
-
 .proc open_directory
         jmp     start
 
@@ -6309,11 +6294,13 @@ L7620:  .byte   $00
 window_id:      .byte   0
 iconbits:       .addr   0
 icon_type:      .byte   0
-icon_deltay:    .byte   0
+icon_height:    .word   0
 L7625:  .byte   0               ; ???
 
+        max_icon_height = 17
+
 initial_coords:                 ; first icon in window
-        DEFINE_POINT  52,16, initial_coords
+        DEFINE_POINT  52,16 + max_icon_height, initial_coords
 
 row_coords:                     ; first icon in current row
         DEFINE_POINT 0, 0, row_coords
@@ -6580,14 +6567,7 @@ L77F0:  lda     name_tmp,x
 
         ;; Include y-offset
         ldy     #IconEntry::icony
-        lda     (icon_entry),y
-        clc
-        adc     icon_deltay
-        sta     (icon_entry),y
-        iny
-        lda     (icon_entry),y
-        adc     #0
-        sta     (icon_entry),y
+        sub16in (icon_entry),y, icon_height, (icon_entry),y
 
         lda     cached_window_icon_count
         cmp     icons_per_row
@@ -6657,12 +6637,6 @@ found:
         lda     (ptr),y
         sta     icon_type
 
-        ;; Look up y-offset
-        copy16  #type_deltay_table, ptr
-        lda     (ptr),y
-        sta     icon_deltay
-        ;; TODO: compute y-offset from iconbits instead
-
         tya
         asl     a
         tay
@@ -6670,6 +6644,12 @@ found:
         ;; Look up icon definition
         copy16  #type_icons_table, ptr
         copy16in (ptr),y, iconbits
+
+        ;; Icon height will be needed too
+        copy16  iconbits, ptr
+        ldy     #IconDefinition::maprect + MGTK::Rect::y2
+        copy16in (ptr),y, icon_height
+
         jsr     pop_pointers
         rts
 

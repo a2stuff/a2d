@@ -269,3 +269,31 @@ GLYPH_SAPPLE  = $1E
 ;;;   Check       $1D
 ;;;   Control     $01
 ;;;   Inactive    $7F
+
+;;; ============================================================
+;;; Internals - miscellaneous structures
+
+.struct IconDefinition
+        ;; First part is MGTK::MapInfo without leading viewloc
+        mapbits         .addr   ; address of bitmap bits
+        mapwidth        .byte   ; stride of bitmap bits
+        reserved        .byte   ; 0
+        maprect         .tag MGTK::Rect ; x1,y1 must be 0,0
+
+        ;; Next part is link to mask - not used for volume
+        ;; icons (which currently lack a mask).
+        maskbits        .addr
+.endstruct
+
+.struct FileRecord
+        name                    .res 16
+        file_type               .byte ; 16 $10
+        blocks                  .word ; 17 $11
+        creation_date           .word ; 19 $13
+        creation_time           .word ; 21 $15
+        modification_date       .word ; 23 $17
+        modification_time       .word ; 25 $19
+        access                  .byte ; 27 $1B
+        header_pointer          .word ; 28 $1C
+        reserved                .word ; ???
+.endstruct

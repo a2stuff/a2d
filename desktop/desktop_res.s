@@ -1466,44 +1466,29 @@ type_icons_table:               ; map into definitions below
         .addr   asp ; appleworks sp
         .addr   app ; system (see below)
 
-type_deltay_table:
-        .byte   2 ; typeless
-        .byte   2 ; src
-        .byte   3 ; rel
-        .byte   2 ; text
-        .byte   3 ; binary
-        .byte   6 ; directory
-        .byte   0 ; system
-        .byte   3 ; basic
-        .byte   6 ; graphics
-        .byte   2 ; appleworks db
-        .byte   2 ; appleworks wp
-        .byte   2 ; appleworks sp
-        .byte   1 ; system (see below)
-
-.macro  DEFICON mapbits, mapwidth, x1, y1, x2, y2, maskbits
+.macro  DEFICON mapbits, mapwidth, dx, dy, maskbits
         ;; First part is MGTK::MapInfo without leading viewloc
         .addr   mapbits
         .byte   mapwidth
-        .byte   0               ; reserved
-        .word   x1, y1, x2, y2  ; maprect
+        .byte   0             ; reserved
+        .word   0, 0, dx, dy  ; maprect
         ;; Next part is link to mask
         .addr   maskbits
 .endmacro
 
-gen:    DEFICON generic_icon, 4, 0, 0, 27, 15, generic_mask
-src:    DEFICON desktop_aux::iigs_file_icon, 4, 0, 0, 27, 15, generic_mask
-rel:    DEFICON desktop_aux::rel_file_icon, 4, 0, 0, 27, 14, binary_mask
-txt:    DEFICON text_icon, 4, 0, 0, 27, 15, generic_mask
-bin:    DEFICON binary_icon, 4, 0, 0, 27, 14, binary_mask
-dir:    DEFICON folder_icon, 4, 0, 0, 27, 11, folder_mask
-sys:    DEFICON sys_icon, 4, 0, 0, 27, 17, sys_mask
-bas:    DEFICON basic_icon, 4, 0, 0, 27, 14, basic_mask
-fot:    DEFICON desktop_aux::graphics_icon, 4, 0, 0, 27, 11, desktop_aux::graphics_mask
-adb:    DEFICON desktop_aux::adb_icon, 4, 0, 0, 27, 15, generic_mask
-awp:    DEFICON desktop_aux::awp_icon, 4, 0, 0, 27, 15, generic_mask
-asp:    DEFICON desktop_aux::asp_icon, 4, 0, 0, 27, 15, generic_mask
-app:    DEFICON app_icon, 5, 0, 0, 34, 16, app_mask
+gen:    DEFICON generic_icon, 4, 27, 15, generic_mask
+src:    DEFICON desktop_aux::iigs_file_icon, 4, 27, 15, generic_mask
+rel:    DEFICON desktop_aux::rel_file_icon, 4, 27, 14, binary_mask
+txt:    DEFICON text_icon, 4, 27, 15, generic_mask
+bin:    DEFICON binary_icon, 4, 27, 14, binary_mask
+dir:    DEFICON folder_icon, 4, 27, 11, folder_mask
+sys:    DEFICON sys_icon, 4, 27, 17, sys_mask
+bas:    DEFICON basic_icon, 4, 27, 14, basic_mask
+fot:    DEFICON desktop_aux::graphics_icon, 4, 27, 11, desktop_aux::graphics_mask
+adb:    DEFICON desktop_aux::adb_icon, 4, 27, 15, generic_mask
+awp:    DEFICON desktop_aux::awp_icon, 4, 27, 15, generic_mask
+asp:    DEFICON desktop_aux::asp_icon, 4, 27, 15, generic_mask
+app:    DEFICON app_icon, 5, 34, 16, app_mask
 
 ;;; Generic
 
