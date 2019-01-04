@@ -8244,7 +8244,7 @@ not_found:
         adc     #'0'            ; 0-9
         bne     L8767
 L8764:  clc
-        adc     #'7'            ; A-F
+        adc     #'A' - $A       ; A-F
 L8767:  sta     str_file_type+3
         lda     file_type
         and     #$0F
@@ -8254,7 +8254,7 @@ L8767:  sta     str_file_type+3
         adc     #'0'            ; 0-9
         bne     L877B
 L8778:  clc
-        adc     #'7'            ; A-F
+        adc     #'A' - $A       ; A-F
 L877B:  sta     path_buf4
         rts
 
@@ -15680,11 +15680,6 @@ cvi_result:
 ;;; ============================================================
 
 .proc populate_startup_menu
-        lda     DEVCNT
-        clc
-        adc     #3
-        sta     check_menu      ; obsolete
-
         lda     #0
         sta     slot
         tay
@@ -15699,8 +15694,8 @@ loop:   lda     DEVLST,y
         lsr     a
         cmp     slot            ; same as last?
         beq     :+
-        cmp     #2              ; ???
-        bne     prepare
+        cmp     #2              ; BUG: disallows booting from slot 2
+        bne     prepare         ; (avoiding remapped smartport devices)
 :       cpy     DEVCNT
         beq     done
         iny
@@ -15708,8 +15703,7 @@ loop:   lda     DEVLST,y
 
 prepare:
         sta     slot
-        clc
-        adc     #'0'
+        ora     #'0'
         sta     char
 
         txa                     ; pointer to nth sNN string

@@ -1040,26 +1040,6 @@ disable:        .byte   0
 
 LE26F:  .byte   $00
 
-;;; Unused - present in MouseDesk 1.1 but not 2.0 or A2D
-check_menu:
-        DEFINE_MENU     4
-        DEFINE_MENU_ITEM str_all
-        DEFINE_MENU_SEPARATOR
-        DEFINE_MENU_ITEM dev0s
-        DEFINE_MENU_ITEM dev1s
-        DEFINE_MENU_ITEM dev2s
-        DEFINE_MENU_ITEM dev3s
-        DEFINE_MENU_ITEM dev4s
-        DEFINE_MENU_ITEM dev5s
-        DEFINE_MENU_ITEM dev6s
-        DEFINE_MENU_ITEM dev7s
-        DEFINE_MENU_ITEM dev8s
-        DEFINE_MENU_ITEM dev9s
-        DEFINE_MENU_ITEM dev10s
-        DEFINE_MENU_ITEM dev11s
-        DEFINE_MENU_ITEM dev12s
-        DEFINE_MENU_ITEM dev13s
-
 startup_menu:
         DEFINE_MENU 7
         DEFINE_MENU_ITEM startup_menu_item_1
