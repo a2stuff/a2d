@@ -1,1 +1,9 @@
+
+# Build directory
+out
+
+# Directory mounted in Virtual ][ as a ProDOS volume
+mount
+
+# OS-specific files
 .DS_Store
