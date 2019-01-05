@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-my $org = $ARGV[0] || '800';
+my $org = $ARGV[0] || '2000';
 
 print <<"END_HEADER";
 GLOBAL {
@@ -29,24 +29,14 @@ LABEL { NAME "A2D"; ADDR $4000; };
 LABEL { NAME "UNKNOWN_CALL"; ADDR $8E00; };
 LABEL { NAME "MLI"; ADDR $BF00; };
 
-LABEL { NAME "FSUB"; ADDR $E7A7; };
-LABEL { NAME "FADD"; ADDR $E7BE; };
-LABEL { NAME "FMULT"; ADDR $E97F; };
-LABEL { NAME "FDIV"; ADDR $EA66; };
-LABEL { NAME "ROUND"; ADDR $EB2B; };
-LABEL { NAME "FLOAT"; ADDR $EB93; };
-LABEL { NAME "FIN"; ADDR $EC4A; };
-LABEL { NAME "FOUT"; ADDR $ED34; };
-
-LABEL { NAME "COUT"; ADDR $FDED; };
 
 END_LABELS
 
 print <<'END_SEGS';
-RANGE { START $8800; END $939E; TYPE ByteTable; };
-RANGE { START $DA20; END $DAFF; TYPE ByteTable; };
-RANGE { START $E690; END $E6BF; TYPE ByteTable; };
-RANGE { START $FB00; END $FFFF; TYPE ByteTable; };
+#RANGE { START $8800; END $939E; TYPE ByteTable; };
+#RANGE { START $DA20; END $DAFF; TYPE ByteTable; };
+#RANGE { START $E690; END $E6BF; TYPE ByteTable; };
+#RANGE { START $FB00; END $FFFF; TYPE ByteTable; };
 END_SEGS
 
 

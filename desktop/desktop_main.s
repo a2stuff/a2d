@@ -8947,36 +8947,41 @@ open:   ldy     #$00
         lda     icon_id
         jsr     icon_entry_lookup
         stax    ptr
-        ldy     #3
-        lda     ($06),y
+        ldy     #IconEntry::iconx
+        lda     (ptr),y         ; x lo
         clc
         adc     #7
 
         sta     rect_table
-        sta     $0804
+        sta     rect_table+4
+
         iny
-        lda     ($06),y
+        lda     (ptr),y
         adc     #0
-        sta     $0801
-        sta     $0805
+        sta     rect_table+1
+        sta     rect_table+5
+
         iny
-        lda     ($06),y
+        lda     (ptr),y
         clc
         adc     #7
-        sta     $0801+1
-        sta     $0806
+        sta     rect_table+2
+        sta     rect_table+6
+
         iny
-        lda     ($06),y
+        lda     (ptr),y         ; y hi
         adc     #0
-        sta     $0803
-        sta     $0807
-        ldy     #91
+        sta     rect_table+3
+        sta     rect_table+7
+
+        ldy     #11 * .sizeof(MGTK::Rect) + 3
         ldx     #3
-L8BC1:  lda     grafport2,x
+:       lda     grafport2,x
         sta     rect_table,y
         dey
         dex
-        bpl     L8BC1
+        bpl     :-
+
         sub16   grafport2::cliprect::x2, grafport2::cliprect::x1, L8D54
         sub16   grafport2::cliprect::y2, grafport2::cliprect::y1, L8D56
         add16   $0858, L8D54, $085C
