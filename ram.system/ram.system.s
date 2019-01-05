@@ -43,7 +43,9 @@ chain_path_orig:
 
         .byte   $FF, $FF
 
-L2048:  .byte   0               ; always 0; config parameter ???
+;;; Configuration Parameters
+
+banks_to_reserve:  .byte   0      ; banks to reserve (e.g. for AppleWorks)
 
 slot:   .byte   3               ; S3D1; could be $B for S3D2
 
@@ -191,8 +193,8 @@ quit:   MLI_CALL QUIT, quit_params
         sty     $01
         sta     ALTZPON
 
-        lda     L2048
-        sta     var1
+        lda     banks_to_reserve
+        sta     reserved_banks
 
 ;;; ============================================================
 
@@ -215,12 +217,12 @@ bank_loop:
         tya
         sta     map2,y
 
-        ;; ??? map1 ???
-        ldx     var1            ; initially 0
+        ;; Skip over reserved banks, then start storing them in the map
+        ldx     reserved_banks
         bne     :+
-        sta     var2            ; var2 = first bank found ???
-:       dec     var1
-        bpl     next_bank       ; should never happen ???
+        sta     first_used_bank
+:       dec     reserved_banks
+        bpl     next_bank
         sta     map1,y
         ;; (map1,N = N if available, $FF otherwise - also???)
 
@@ -240,10 +242,10 @@ next_bank:
         ;; Y = $80
 
         ;; Restore stashed $0/$1 bytes of back
-        ;; (except first, in var2 ???)
+        ;; (except first, in first_used_bank ???)
 loop0:  lda     map2-1,y
         bmi     :+
-        cmp     var2
+        cmp     first_used_bank
         beq     :+
         sta     RWBANK
         lda     stash_00-1,y
@@ -770,8 +772,8 @@ bank_list:
 
 ;;; Scratch space beyond code used during install
 
-var1            := *
-var2            := *+1
+reserved_banks  := *
+first_used_bank := *+1
 map1            := *+2
 map2            := *+2+$80
 stash_00        := *+2+$100
