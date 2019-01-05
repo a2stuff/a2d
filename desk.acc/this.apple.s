@@ -85,7 +85,7 @@ str_title:
 
 ;;; ============================================================
 
-.proc iie_bitmap
+.proc ii_bitmap
 viewloc:        DEFINE_POINT 59, 5
 mapbits:        .addr   iie_bits
 mapwidth:       .byte   8
@@ -316,8 +316,8 @@ str_iiplus:
 str_iii:
         PASCAL_STRING "Apple /// (emulation)"
 
-str_iie:
-        PASCAL_STRING "Apple //e"
+str_iie_original:
+        PASCAL_STRING "Apple //e (original)"
 
 str_iie_enhanced:
         PASCAL_STRING "Apple IIe (enhanced)"
@@ -325,14 +325,23 @@ str_iie_enhanced:
 str_iie_card:
         PASCAL_STRING "Apple IIe Card"
 
-str_iic:
+str_iic_original:
         PASCAL_STRING "Apple IIc"
+
+str_iic_rom0:
+        PASCAL_STRING "Apple IIc (ROM 0)"
+
+str_iic_rom3:
+        PASCAL_STRING "Apple IIc (ROM 3)"
+
+str_iic_rom4:
+        PASCAL_STRING "Apple IIc (ROM 4)"
 
 str_iic_plus:
         PASCAL_STRING "Apple IIc Plus"
 
 str_iigs:
-        PASCAL_STRING "Apple IIgs"
+        PASCAL_STRING "Apple IIgs (ROM #)"
 
 str_laser128:
         PASCAL_STRING "Laser 128"
@@ -471,7 +480,7 @@ textfont:       .addr   0
 ;;; Apple ][                    $38     [$AD]    [$60]                      [$2F]
 ;;; Apple ][+                   $EA      $AD     [$EA]                      [$EA]
 ;;; Apple /// (emulation)       $EA      $8A
-;;; Apple IIe                   $06     [$AD]     $E0                       [$00]
+;;; Apple IIe                   $06     [$AD]     $EA                       [$00]
 ;;; Apple IIe (enhanced)        $06     [$AD]     $E0                       [$00]
 ;;; Apple IIe Option Card       $06     [$AD]     $E0      $02      $00
 ;;; Apple IIc                   $06               $00                        $FF
@@ -484,83 +493,149 @@ textfont:       .addr   0
 ;;;
 ;;; (Values in [] are for reference, not needed for compatibility check)
 
-.scope model
-        ii           = 0
-        iiplus       = 1
-        iie          = 2
-        iie_enhanced = 3
-        iic          = 4
-        iic_plus     = 5
-        iigs         = 6
-        iie_card     = 7
-        iii          = 8
-        laser128     = 9
-        LAST         = 10
-.endscope
+.enum model
+        ii                      ; Apple ][
+        iiplus                  ; Apple ][+
+        iie_original            ; Apple IIe (original)
+        iie_enhanced            ; Apple IIe (enhanced)
+        iic_original            ; Apple IIc
+        iic_rom0                ; Apple IIc (3.5 ROM)
+        iic_rom3                ; Apple IIc (Org. Mem. Exp.)
+        iic_rom4                ; Apple IIc (Rev. Mem. Exp.)
+        iic_plus                ; Apple IIc Plus
+        iigs                    ; Apple IIgs
+        iie_card                ; Apple IIe Option Card
+        iii                     ; Apple /// (emulation)
+        laser128                ; Laser 128
+        LAST
+.endenum
 
 model_str_table:
-        .addr   str_ii, str_iiplus, str_iie, str_iie_enhanced
-        .addr   str_iic, str_iic_plus, str_iigs, str_iie_card
-        .addr   str_iii, str_laser128
+        .addr   str_ii           ; Apple ][
+        .addr   str_iiplus       ; Apple ][+
+        .addr   str_iie_original ; Apple IIe (original)
+        .addr   str_iie_enhanced ; Apple IIe (enhanced)
+        .addr   str_iic_original ; Apple IIc
+        .addr   str_iic_rom0     ; Apple IIc (3.5 ROM)
+        .addr   str_iic_rom3     ; Apple IIc (Org. Mem. Exp.)
+        .addr   str_iic_rom4     ; Apple IIc (Rev. Mem. Exp.)
+        .addr   str_iic_plus     ; Apple IIc Plus
+        .addr   str_iigs         ; Apple IIgs
+        .addr   str_iie_card     ; Apple IIe Option Card
+        .addr   str_iii          ; Apple /// (emulation)
+        .addr   str_laser128     ; Laser 128
 
 model_pix_table:
-        .addr   iie_bitmap, iie_bitmap, iie_bitmap, iie_bitmap
-        .addr   iic_bitmap, iic_bitmap, iigs_bitmap, iie_card_bitmap
-        .addr   iii_bitmap, laser128_bitmap
+        .addr   ii_bitmap       ; Apple ][
+        .addr   ii_bitmap       ; Apple ][+
+        .addr   ii_bitmap       ; Apple IIe (original)
+        .addr   ii_bitmap       ; Apple IIe (enhanced)
+        .addr   iic_bitmap      ; Apple IIc
+        .addr   iic_bitmap      ; Apple IIc (3.5 ROM)
+        .addr   iic_bitmap      ; Apple IIc (Org. Mem. Exp.)
+        .addr   iic_bitmap      ; Apple IIc (Rev. Mem. Exp.)
+        .addr   iic_bitmap      ; Apple IIc Plus
+        .addr   iigs_bitmap     ; Apple IIgs
+        .addr   iie_card_bitmap ; Apple IIe Option Card
+        .addr   iii_bitmap      ; Apple /// (emulation)
+        .addr   laser128_bitmap ; Laser 128
+
+
+;;; Based on Tech Note Miscellaneous #2 "Apple II Family Identification Routines"
+;;; http://www.1000bit.it/support/manuali/apple/technotes/misc/tn.misc.02.html
+;;; Note that IIgs resolves as IIe (enh.) and is identified by ROM call.
+;;;
+;;; Format is: model (enum), then byte pairs [$FFxx, expected], then $00
+
+model_lookup_table:
+        .byte   model::ii
+        .byte   $B3, $38, 0
+
+        .byte   model::iiplus
+        .byte   $B3, $EA, $1E, $AD, 0
+
+        .byte   model::iii
+        .byte   $B3, $EA, $1E, $8A, 0
+
+        .byte   model::laser128
+        .byte   $B3, $06, $1E, $AC, 0
+
+        .byte   model::iie_original
+        .byte   $B3, $06, $C0, $EA, 0
+
+        .byte   model::iie_card ; must check before IIe enhanced check
+        .byte   $B3, $06, $C0, $E0, $DD, $02, $BE, $00, 0
+
+        .byte   model::iie_enhanced
+        .byte   $B3, $06, $C0, $E0, 0
+
+        .byte   model::iic_original
+        .byte   $B3, $06, $C0, $00, $BF, $FF, 0
+
+        .byte   model::iic_rom0
+        .byte   $B3, $06, $C0, $00, $BF, $00, 0
+
+        .byte   model::iic_rom3
+        .byte   $B3, $06, $C0, $00, $BF, $03, 0
+
+        .byte   model::iic_rom4
+        .byte   $B3, $06, $C0, $00, $BF, $04, 0
+
+        .byte   model::iic_plus
+        .byte   $B3, $06, $C0, $00, $BF, $05, 0
+
+        .byte   $FF             ; sentinel
 
 .proc identify_model
         ;; Read from ROM
         lda     ROMIN2
 
-        ;; ][, ][+ or ///
-        lda     $FBB3
-        cmp     #$38
-        bne     :+
-        lda     #model::ii
-        bpl     done
-:       cmp     #$EA
-        bne     iie_or_later
-        lda     $FB1E
-        cmp     #$AD
-        bne     :+
-        lda     #model::iiplus
-        bpl     done
-:       lda     #model::iii
-        bpl     done
+        ldx     #0              ; offset into table
 
-iie_or_later:
-        lda     $FBC0
-        beq     iic_or_plus
+        ;; For each model...
+m_loop: ldy     model_lookup_table,x ; model number
+        bmi     fail            ; hit end of table
+        inx
 
-        ;; IIe, IIe card, IIgs or Laser 128
-        lda     $FB1E
-        cmp     #$AC
-        bne     :+
-        lda     #model::laser128
-        bpl     done
-:       sec
+        ;; For each byte/expected pair in table...
+b_loop: lda     model_lookup_table,x ; offset from $FB00
+        beq     match           ; success!
+        sta     @lsb
+        inx
+
+        lda     model_lookup_table,x
+        inx
+        @lsb := *+1
+        cmp     $FB00           ; self-modified
+
+        beq     b_loop          ; match, keep looking
+
+        ;; No match, so skip to end of this entry
+:       inx
+        lda     model_lookup_table-1,x
+        beq     m_loop
+
+        inx
+        bne     :-
+
+fail:   ldy     #0
+
+match:  tya
+        ;; A has model; but now test for IIgs
+        sec
         jsr     ID_BYTE_FE1F
-        bcs     :+
+        bcs     :+              ; not IIgs
+
+        ;; Is IIgs; Y holds ROM revision
+        tya
+        ora     #'0'            ; convert to ASCII digit
+        ldx     str_iigs        ; string length
+        dex
+        sta     str_iigs,x      ; second-to-last character
         lda     #model::iigs
-        bpl     done
-:       lda     $FBDD
-        cmp     #$02
-        bne     :+
-        lda     #model::iie_card
-        bpl     done
-:       lda     #model::iie
-        bpl     done
 
-iic_or_plus:
-        lda     $FBBF
-        cmp     #5
-        bne     :+
-        lda     #model::iic
-        bpl     done
-:       lda     #model::iic_plus
-        ;; fall through...
-
-done:   asl
+        ;; A has model
+:       asl
         tax
         copy16  model_str_table,x, model_str_ptr
         copy16  model_pix_table,x, model_pix_ptr
@@ -570,7 +645,6 @@ done:   asl
         lda     LCBANK1
         rts
 .endproc
-
 
 
 ;;; ============================================================
