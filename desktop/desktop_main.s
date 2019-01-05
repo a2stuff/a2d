@@ -14855,7 +14855,7 @@ reset_grafport3a:
         jsr     ID_BYTE_FE1F
         bcs     done
         lda     NEWVIDEO
-        ora     #<~(1<<5)       ; Color
+        and     #<~(1<<5)       ; Color
         sta     NEWVIDEO
 
 done:   rts
