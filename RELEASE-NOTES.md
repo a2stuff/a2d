@@ -40,12 +40,13 @@
 * SELECTOR.LIST created if missing. (#92)
 * Position desktop icons based on Slot/Drive assignment. (#94)
 * Don't crash after renaming volume. (#99)
+* Startup menu will include Slot 2. (#106)
 * Correct odd behavior for file type $08 (#103)
 * Hardware/Emulator Specific:
-  * IIc Plus: don't spin slot 5 drives constantly. (Use Special > Check Drives) (#25)
-  * Macintosh LC IIe Option Card: prevent crash. (#93)
+  * IIc Plus: don't spin slot 5 drives constantly. (Use Special > Check Drive) (#25)
+  * Macintosh LC IIe Option Card: don't crash on startup. (#93)
   * IIgs: color DHR is re-enabled on exit. (#43)
-  * IIgs emulators no longer crash on startup. (#85)
+  * KEGS-based IIgs emulators no longer crash on startup. (#85)
 
 # 1.1
 

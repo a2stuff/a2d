@@ -3,22 +3,14 @@
 # Run this from the top level directory
 
 set -e
+source "res/util.sh"
 
-cd desktop.system
-res/go.sh
-cd ..
-
-cd ram.system
-res/go.sh
-cd ..
-
-cd desktop
-res/go.sh
-cd ..
-
-cd desk.acc
-res/go.sh
-cd ..
+for i in desktop desk.acc desktop.system ram.system; do
+    cecho yellow Building: $i
+    cd $i
+    res/go.sh
+    cd ..
+done
 
 # Mountable directory for Virtual ][
 if [ -d mount ]; then

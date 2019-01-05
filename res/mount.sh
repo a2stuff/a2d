@@ -40,3 +40,4 @@ done
 
 mount_f1 "desktop2" "desktop" "mount"
 mount_sys "desktop.system" "desktop.system" "mount"
+mount_sys "ram.system" "ram.system" "mount"
