@@ -38,8 +38,8 @@ JUMP_TABLE_MAIN_LOOP    := $4000 ; Enter DeskTop main loop
 JUMP_TABLE_MGTK_RELAY   := $4003 ; MGTK relay call (main>aux)
 JUMP_TABLE_SIZE_STRING  := $4006 ; Compose "nnn Blocks" string into internal buffer
 JUMP_TABLE_DATE_STRING  := $4009 ; Compose date string into internal buffer
-JUMP_TABLE_0C           := $400C ; ???
-JUMP_TABLE_0F           := $400F ; Auxload
+JUMP_TABLE_SELECT_WINDOW:= $400C ; Select and refresh given window
+JUMP_TABLE_AUXLOAD      := $400F ; Auxload
 JUMP_TABLE_EJECT        := $4012 ; Eject command
 JUMP_TABLE_REDRAW_ALL   := $4015 ; Redraw all windows (e.g. after a drag) *
 JUMP_TABLE_DESKTOP_RELAY:= $4018 ; DESKTOP relay call (main>aux)
@@ -49,7 +49,7 @@ JUMP_TABLE_MLI          := $4021 ; ProDOS MLI call (Y=call, X,A=params addr) *
 JUMP_TABLE_COPY_TO_BUF  := $4024 ; Copy to buffer
 JUMP_TABLE_COPY_FROM_BUF:= $4027 ; Copy from buffer
 JUMP_TABLE_NOOP         := $402A ; No-Op command (RTS)
-JUMP_TABLE_2D           := $402D ; ??? (Draw type/size/date in non-icon views?)
+JUMP_TABLE_FILE_TYPE_STRING := $402D ; Compose file type string into internal buffer
 JUMP_TABLE_ALERT_0      := $4030 ; Show alert (A=err code, default options)
 JUMP_TABLE_ALERT_X      := $4033 ; Show alert X (A=err code, X=options)
 JUMP_TABLE_LAUNCH_FILE  := $4036 ; Launch file
@@ -210,10 +210,10 @@ icon_entry_open_mask    = %10000000
 icon_entry_type_mask    = %01110000
 icon_entry_winid_mask   = %00001111
 icon_entry_type_dir     = %00000000
-icon_entry_type_sys     = %00010000
-icon_entry_type_bin     = %00100000
-icon_entry_type_bas     = %00110000
-icon_entry_type_txt     = %01010000
+icon_entry_type_system  = %00010000
+icon_entry_type_binary  = %00100000
+icon_entry_type_basic   = %00110000
+icon_entry_type_generic = %01010000
 icon_entry_type_trash   = %01110000
 
 ;;; ============================================================

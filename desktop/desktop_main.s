@@ -3888,11 +3888,11 @@ handle_double_click:
         ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_type_mask
-        cmp     #icon_entry_type_sys
+        cmp     #icon_entry_type_system
         beq     L5E28
-        cmp     #icon_entry_type_bin
+        cmp     #icon_entry_type_binary
         beq     L5E28
-        cmp     #icon_entry_type_bas
+        cmp     #icon_entry_type_basic
         beq     L5E28
         cmp     #icon_entry_type_dir
         bne     :+
@@ -8383,7 +8383,7 @@ L8745:  copy    #4, str_file_type
         adc     #'0'            ; 0-9
         bne     L8767
 L8764:  clc
-        adc     #'7'            ; A-F
+        adc     #'A' - $A       ; A-F
 L8767:  sta     str_file_type+3
         lda     L877F
         and     #$0F
@@ -8393,7 +8393,7 @@ L8767:  sta     str_file_type+3
         adc     #'0'            ; 0-9
         bne     L877B
 L8778:  clc
-        adc     #'7'            ; A-F
+        adc     #'A' - $A       ; A-F
 L877B:  sta     path_buf4
         rts
 

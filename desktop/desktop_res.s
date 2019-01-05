@@ -1416,7 +1416,14 @@ type_table:
 
 icon_type_table:
         .byte   $60             ; unused?
-        .byte   $50,$50,$50,$20,$00,$10,$30,$10
+        .byte   icon_entry_type_generic
+        .byte   icon_entry_type_generic
+        .byte   icon_entry_type_generic
+        .byte   icon_entry_type_binary
+        .byte   icon_entry_type_dir
+        .byte   icon_entry_type_system
+        .byte   icon_entry_type_basic
+        .byte   icon_entry_type_system
 
 type_names:
         .byte   " ???"
