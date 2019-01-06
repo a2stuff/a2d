@@ -1376,12 +1376,13 @@ icon_entries:
 
         .org $FB00
 
-        num_file_types = 13
+        num_file_types = 14
 
 type_table:
         .byte   FT_TYPELESS   ; typeless
         .byte   FT_SRC        ; src
         .byte   FT_REL        ; rel
+        .byte   FT_CMD        ; command
         .byte   FT_TEXT       ; text
         .byte   FT_BINARY     ; binary
         .byte   FT_DIRECTORY  ; directory
@@ -1397,6 +1398,7 @@ type_names_table:
         .byte   " ???" ; typeless
         .byte   " SRC" ; src
         .byte   " REL" ; rel
+        .byte   " CMD" ; rel
         .byte   " TXT" ; text
         .byte   " BIN" ; binary
         .byte   " DIR" ; directory
@@ -1420,6 +1422,7 @@ icon_type_table:
         .byte   icon_entry_type_generic ; typeless
         .byte   icon_entry_type_generic ; src
         .byte   icon_entry_type_generic ; rel
+        .byte   icon_entry_type_generic ; cmd
         .byte   icon_entry_type_generic ; text
         .byte   icon_entry_type_binary  ; binary
         .byte   icon_entry_type_dir     ; directory
@@ -1435,6 +1438,7 @@ type_icons_table:               ; map into definitions below
         .addr   gen ; typeless
         .addr   src ; src
         .addr   rel ; rel
+        .addr   cmd ; cmd
         .addr   txt ; text
         .addr   bin ; binary
         .addr   dir ; directory
@@ -1459,6 +1463,7 @@ type_icons_table:               ; map into definitions below
 gen:    DEFICON generic_icon, 4, 27, 15, generic_mask
 src:    DEFICON desktop_aux::iigs_file_icon, 4, 27, 15, generic_mask
 rel:    DEFICON desktop_aux::rel_file_icon, 4, 27, 14, binary_mask
+cmd:    DEFICON desktop_aux::cmd_file_icon, 4, 27, 8, desktop_aux::graphics_mask
 txt:    DEFICON text_icon, 4, 27, 15, generic_mask
 bin:    DEFICON binary_icon, 4, 27, 14, binary_mask
 dir:    DEFICON folder_icon, 4, 27, 11, folder_mask
@@ -1528,6 +1533,7 @@ text_icon:
         .byte   px(%0100111),px(%1101101),px(%1011101),px(%1110010)
         .byte   px(%0100000),px(%0000000),px(%0000000),px(%0000010)
         .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
+        ;; shares generic_mask
 
 ;;; Binary
 
@@ -1711,3 +1717,6 @@ app_mask:
         .byte   px(%0000000),px(%0000011),px(%1111111),px(%1000000),px(%0000000)
         .byte   px(%0000000),px(%0000000),px(%1111110),px(%0000000),px(%0000000)
         .byte   px(%0000000),px(%0000000),px(%0011000),px(%0000000),px(%0000000)
+
+        ;; Reserve $80 bytes for settings
+        PAD_TO $FF80

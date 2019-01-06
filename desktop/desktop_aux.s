@@ -43,6 +43,19 @@ graphics_mask:
         .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
         .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
 
+cmd_file_icon:
+        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000)
+        .byte   px(%0011111),px(%1111100),px(%0000000),px(%0000000)
+        .byte   px(%0000000),px(%0111100),px(%0011001),px(%1001100)
+        .byte   px(%0000000),px(%0111100),px(%0000110),px(%0110000)
+        .byte   px(%0000000),px(%0111100),px(%0011001),px(%1001100)
+        .byte   px(%0000000),px(%0111100),px(%0000110),px(%0110000)
+        .byte   px(%0000000),px(%0111100),px(%0011001),px(%1001100)
+        .byte   px(%0011111),px(%1111100),px(%0000000),px(%0000000)
+        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000)
+        ;; shares top part of graphics_mask
+
+
 awp_icon:                       ; AppleWorks Word Processing
         .byte   px(%0111111),px(%1111111),px(%1111100),px(%0000000)
         .byte   px(%0100000),px(%0000000),px(%0001011),px(%0000000)
@@ -78,6 +91,7 @@ asp_icon:                       ; AppleWorks Spreadsheet
         .byte   px(%0100011),px(%1111111),px(%1111111),px(%1100010)
         .byte   px(%0100000),px(%0000000),px(%0000000),px(%0000010)
         .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
+        ;; shares generic_mask
 
 adb_icon:                       ; AppleWorks Database
         .byte   px(%0111111),px(%1111111),px(%1111100),px(%0000000)
@@ -96,6 +110,7 @@ adb_icon:                       ; AppleWorks Database
         .byte   px(%0100111),px(%1110011),px(%1110011),px(%1110010)
         .byte   px(%0100000),px(%0000000),px(%0000000),px(%0000010)
         .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
+        ;; shares generic_mask
 
 iigs_file_icon:
         .byte   px(%0111111),px(%1111111),px(%1111100),px(%0000000)
@@ -114,6 +129,7 @@ iigs_file_icon:
         .byte   px(%0100000),px(%0000000),px(%0000000),px(%0000010)
         .byte   px(%0100000),px(%0000000),px(%0000000),px(%0000010)
         .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
+        ;; shares generic_mask
 
 rel_file_icon:
         .byte   px(%0000000),px(%0000001),px(%1000000),px(%0000000)
@@ -131,6 +147,7 @@ rel_file_icon:
         .byte   px(%0000000),px(%0011000),px(%0001100),px(%0000000)
         .byte   px(%0000000),px(%0000110),px(%0110000),px(%0000000)
         .byte   px(%0000000),px(%0000001),px(%1000000),px(%0000000)
+        ;; shares binary_mask
 
         PAD_TO $8800
 

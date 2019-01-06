@@ -92,18 +92,26 @@ DT_RAM          = $F
 
 FT_TYPELESS     = $00
 FT_BAD          = $01
-FT_TEXT         = $04
-FT_BINARY       = $06
-FT_GRAPHICS     = $08
-FT_DIRECTORY    = $0F
-FT_ADB          = $19           ; AppleWorks Database
-FT_AWP          = $1A           ; AppleWorks Word Processing
-FT_ASP          = $1B           ; AppleWorks Spreadsheet
+FT_TEXT         = $04           ; ASCII Text File *
+FT_BINARY       = $06           ; Generic Binary File *
+FT_GRAPHICS     = $08           ; Graphics File
+FT_DIRECTORY    = $0F           ; Directory *
+FT_ADB          = $19           ; AppleWorks Database *
+FT_AWP          = $1A           ; AppleWorks Word Processing *
+FT_ASP          = $1B           ; AppleWorks Spreadsheet *
 FT_SRC          = $B0           ; IIgs system type; re-used?
 FT_S16          = $B3           ; IIgs Application Program
-FT_BASIC        = $FC
-FT_REL          = $FE
-FT_SYSTEM       = $FF
+FT_PAS          = $EF           ; Pascal Area *
+FT_CMD          = $F0           ; ProDOS Command File *
+FT_INT          = $FA           ; Integer BASIC Program *
+FT_IVR          = $FB           ; Integer BASIC Variable File *
+FT_BASIC        = $FC           ; Applesoft BASIC Program *
+FT_VAR          = $FD           ; Applesoft BASIC Variable File *
+FT_REL          = $FE           ; EDASM/Contiki Relocatable File *
+FT_SYSTEM       = $FF           ; ProDOS System File *
+
+;;; Types marked with * are known to BASIC.SYSTEM and have an
+;;; associated three-letter abbreviation.
 
 ;;; ============================================================
 ;;; Access
