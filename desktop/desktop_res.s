@@ -1464,7 +1464,7 @@ bin:    DEFICON binary_icon, 4, 27, 14, binary_mask
 dir:    DEFICON folder_icon, 4, 27, 11, folder_mask
 sys:    DEFICON sys_icon, 4, 27, 17, sys_mask
 bas:    DEFICON basic_icon, 4, 27, 14, basic_mask
-fot:    DEFICON desktop_aux::graphics_icon, 4, 27, 11, desktop_aux::graphics_mask
+fot:    DEFICON desktop_aux::graphics_icon, 4, 27, 12, desktop_aux::graphics_mask
 adb:    DEFICON desktop_aux::adb_icon, 4, 27, 15, generic_mask
 awp:    DEFICON desktop_aux::awp_icon, 4, 27, 15, generic_mask
 asp:    DEFICON desktop_aux::asp_icon, 4, 27, 15, generic_mask
