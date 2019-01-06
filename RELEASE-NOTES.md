@@ -11,9 +11,10 @@
 * Add Special > Check Drive command to refresh a single drive. (#97)
 * Show Text File DA: Keyboard support. Escape quits, arrows scroll. (#4)
 * Reorganized/renamed several menu items. (#13)
-* New icons for graphics, AppleWorks, relocatable, and IIgs-specific file types. (#105)
+* New icons for graphics, AppleWorks, relocatable, command, and IIgs-specific file types. (#105)
 * Improvements to several existing icon bitmaps. (#74)
 * DAs with high bit in aux-type set are skipped. (#102)
+* Icons for volumes positioned more predictably and sensibly. (#94)
 
 ### Additional Desk Accessories
 
@@ -34,14 +35,15 @@
 
 * Dates 00-39 are treated as 2000-2039; dates 100-127 are treated as 2000-2027. (#15)
 * File > Quit returns to ProDOS 8 selector, and /RAM is reattached. (#3)
-* Date DA: Read-only on systems with a clock. On systems without a clock, date is saved for next session. (#30, #39)
-* Calculator DA: don't mis-paint when moved offscreen and other fixes. (#33, #34)
-* Sort Directory DA: don't need to click before sorting. (#17)
 * SELECTOR.LIST created if missing. (#92)
-* Position desktop icons based on Slot/Drive assignment. (#94)
-* Don't crash after renaming volume. (#99)
+* Prevent crash after renaming volume. (#99)
+* Prevent crash with more than two volumes on a SmartPort interface. (#45)
 * Startup menu will include Slot 2. (#106)
-* Correct odd behavior for file type $08 (#103)
+* Correct odd behavior for file type $08. (#103)
+* Desk Accessories:
+  * Date: Read-only on systems with a clock. On systems without a clock, date is saved for next session. (#30, #39)
+  * Calculator: don't mis-paint when moved offscreen and other fixes. (#33, #34)
+  * Sort Directory: don't need to click before sorting. (#17)
 * Hardware/Emulator Specific:
   * IIc Plus: don't spin slot 5 drives constantly. (Use Special > Check Drive) (#25)
   * Macintosh LC IIe Option Card: don't crash on startup. (#93)
