@@ -1663,7 +1663,7 @@ L4CD6:  pha
         bpl     :+
         jmp     redraw_windows_and_desktop
 
-:       addr_call L6FAF, path_buf4
+:       addr_call find_window_for_path, path_buf4
         beq     :+
         pha
         jsr     L6F0D
@@ -1680,7 +1680,7 @@ L4CF3:  iny
         iny
 :       dey
         sty     path_buf4
-        addr_call L6FB7, path_buf4
+        addr_call find_windows_for_prefix, path_buf4
         ldax    #path_buf4
         ldy     path_buf4
         jsr     L6F4B
@@ -1778,7 +1778,7 @@ L4D9D:  pha
 
 :       addr_call find_last_path_segment, path_buf3
         sty     path_buf3
-        addr_call L6FAF, path_buf3
+        addr_call find_window_for_path, path_buf3
         beq     L4DC2
         pha
         jsr     L6F0D
@@ -1795,7 +1795,7 @@ L4DC2:  ldy     #1
         iny
 :       dey
         sty     path_buf3
-        addr_call L6FB7, path_buf3
+        addr_call find_windows_for_prefix, path_buf3
         ldax    #path_buf3
         ldy     path_buf3
         jsr     L6F4B
@@ -2058,7 +2058,7 @@ success:
         yax_call invoke_dialog_proc, index_new_folder_dialog, new_folder_dialog_params
         addr_call find_last_path_segment, path_buffer
         sty     path_buffer
-        addr_call L6FAF, path_buffer
+        addr_call find_window_for_path, path_buffer
         beq     done
         jsr     select_and_refresh_window
 
@@ -2584,18 +2584,18 @@ not_done:
         lda     ($06),y
         tay
         lda     $06
-        jsr     L6FB7
-        lda     L704B
+        jsr     find_windows_for_prefix
+        lda     found_windows_count
         beq     next_icon
-L53EF:  dec     L704B
-        ldx     L704B
-        lda     L704C,x
+L53EF:  dec     found_windows_count
+        ldx     found_windows_count
+        lda     found_windows_list,x
         cmp     active_window_id
         beq     L5403
         sta     findwindow_window_id
         jsr     handle_inactive_window_click
 L5403:  jsr     close_window
-        lda     L704B
+        lda     found_windows_count
         bne     L53EF
         jmp     next_icon
 
@@ -3265,7 +3265,7 @@ L5942:  dex
         lda     #0
         sta     device_to_icon_map,y
         lda     DEVLST,y
-        jsr     create_volume_icon
+        jsr     create_volume_icon ; A = unit num, Y = device num
         cmp     #ERR_DUPLICATE_VOLUME
         bne     :+
         lda     #ERR_DUPLICATE_VOL_NAME
@@ -3313,6 +3313,9 @@ pending_alert:
 
 .proc cmd_check_single_drive
 
+        ;; index in DEVLST
+        devlst_index  := menu_click_params::item_num
+
         ;; Check Drive command
 by_menu:
         lda     #$00
@@ -3345,8 +3348,8 @@ start:  sta     check_drive_flags
         dey
         bpl     :-
 
-:       sty     icon_num_to_refresh
-        sty     menu_click_params::item_num
+:       sty     previous_icon_count ; BUG: overwritten?
+        sty     devlst_index
         jmp     common
 
 ;;; --------------------------------------------------
@@ -3361,8 +3364,8 @@ after_format_erase:
         dey
         bpl     :-
         iny
-:       sty     icon_num_to_refresh ; misnamed ???
-        sty     menu_click_params::item_num
+:       sty     previous_icon_count ; BUG: overwritten?
+        sty     devlst_index
         jmp     common
 
 ;;; --------------------------------------------------
@@ -3373,102 +3376,121 @@ explicit_command:
         lda     menu_click_params::item_num
         sec
         sbc     #3
-        sta     menu_click_params::item_num
+        sta     devlst_index
 
 ;;; --------------------------------------------------
 
 common:
-        ldy     menu_click_params::item_num
+        ldy     devlst_index
         lda     device_to_icon_map,y
-        bne     L59FE
-        jmp     L5A4C
+        bne     :+
+        jmp     not_in_map
 
-L59FE:  jsr     icon_entry_lookup
+        ;; Close any associated windows.
+
+        ;; A = icon number
+:       jsr     icon_entry_lookup
         addax   #IconEntry::len, $06
 
+        ptr := $06
+        path_buf := $1F00
+
+        ;; Copy volume path to $1F00
         ldy     #0
-        lda     ($06),y
+        lda     (ptr),y
         tay
-:       lda     ($06),y
-        sta     $1F00,y
+:       lda     (ptr),y
+        sta     path_buf,y
         dey
         bpl     :-
 
-        dec     $1F00
+        ;; Find all windows with path as prefix, and close them.
+        dec     path_buf
         lda     #'/'
-        sta     $1F00+1
-        ldax    #$1F00
-        ldy     $1F00
-        jsr     L6FB7
-        lda     L704B
-        beq     L5A4C
-L5A2F:  ldx     L704B
-        beq     L5A4C
+        sta     path_buf+1
+        ldax    #path_buf
+        ldy     path_buf
+        jsr     find_windows_for_prefix
+        lda     found_windows_count
+        beq     not_in_map
+
+close_loop:
+        ldx     found_windows_count
+        beq     not_in_map
         dex
-        lda     L704C,x
+        lda     found_windows_list,x
         cmp     active_window_id
-        beq     L5A43
+        beq     :+
         sta     findwindow_window_id
         jsr     handle_inactive_window_click
-L5A43:  jsr     close_window
-        dec     L704B
-        jmp     L5A2F
 
-L5A4C:  jsr     redraw_windows_and_desktop
+:       jsr     close_window
+        dec     found_windows_count
+        jmp     close_loop
+
+not_in_map:
+
+        jsr     redraw_windows_and_desktop
         jsr     clear_selection
         copy    #0, cached_window_id
         jsr     DESKTOP_COPY_TO_BUF
-        lda     menu_click_params::item_num
+
+        lda     devlst_index
         tay
         pha
         lda     device_to_icon_map,y
         sta     icon_param
-        beq     L5A7F
+        beq     :+
+
         jsr     remove_icon_from_window
         dec     icon_count
         lda     icon_param
         jsr     DESKTOP_FREE_ICON
         jsr     reset_grafport3
         DESKTOP_RELAY_CALL DT_REMOVE_ICON, icon_param
-L5A7F:  lda     cached_window_icon_count
-        sta     icon_num_to_refresh
+
+:       lda     cached_window_icon_count
+        sta     previous_icon_count
         inc     cached_window_icon_count
         inc     icon_count
         pla
         tay
         lda     DEVLST,y
-        jsr     create_volume_icon
+        jsr     create_volume_icon ; A = unit num, Y = device num
         bit     check_drive_flags
-        bmi     L5AA9
+        bmi     add_icon
 
         ;; Explicit command
-        and     #$FF
-        beq     L5AA9
-        cmp     #'/'
-        beq     L5AA9
+        and     #$FF            ; check create_volume_icon results
+        beq     add_icon
+        cmp     #$2F            ; there was an error ($2F = ???)
+        beq     add_icon
         pha
         jsr     DESKTOP_COPY_FROM_BUF
         pla
         jsr     DESKTOP_SHOW_ALERT0
         rts
 
-L5AA9:  lda     cached_window_icon_count
-        cmp     icon_num_to_refresh
+add_icon:
+        lda     cached_window_icon_count
+        cmp     previous_icon_count
         beq     :+
+
+        ;; If a new icon was added, more work is needed.
         ldx     cached_window_icon_count
         dex
         lda     cached_window_icon_list,x
         jsr     icon_entry_lookup
         ldy     #DT_ADD_ICON
         jsr     DESKTOP_RELAY   ; icon entry addr in A,X
+
 :       jsr     DESKTOP_COPY_FROM_BUF
         jmp     redraw_windows_and_desktop
 
-        ;; For format/erase, this is index in DEVLST ???
-icon_num_to_refresh:
+previous_icon_count:
         .byte    0
 
-L5AC7:  .res    9, 0            ; ???
+L5AC7:  .res    9, 0            ; unused ???
 
 ;;; 0 = command, $80 = format/erase, $C0 = open/eject/rename
 check_drive_flags:
@@ -4987,7 +5009,7 @@ L6A5C:  lda     (ptr),y
 
         ldax    #path_buf
         ldy     path_buf
-        jsr     L6FB7
+        jsr     find_windows_for_prefix
         ldax    #path_buf
         ldy     path_buf
         jmp     L6F4B
@@ -5515,7 +5537,7 @@ loop:   iny                     ; start at 2nd character
 
 found:  dey
 finish: sty     pathlen
-        addr_call_indirect L6FB7, ptr ; ???
+        addr_call_indirect find_windows_for_prefix, ptr ; ???
         ldax    pathptr
         ldy     pathlen
         jmp     L6F4B
@@ -5540,12 +5562,12 @@ pathlen:        .byte   0
         jsr     get_vol_free_used
 
         bne     L6F8F
-        lda     L704B
+        lda     found_windows_count
         beq     L6F8F
-L6F64:  dec     L704B
+L6F64:  dec     found_windows_count
         bmi     L6F8F
-        ldx     L704B
-        lda     L704C,x
+        ldx     found_windows_count
+        lda     found_windows_list,x
         sec
         sbc     #1
         asl     a
@@ -5596,7 +5618,7 @@ slash:  cpy     #1
 ;;; ============================================================
 
         ;; If 'set' version called, length in Y; otherwise use str len
-.proc L6FBD
+.proc find_windows
         ptr := $6
 
 set:    stax    ptr
@@ -5606,8 +5628,8 @@ set:    stax    ptr
 unset:  stax    ptr
         lda     #0
 
-start:  sta     flag
-        bit     flag
+start:  sta     exact_match_flag
+        bit     exact_match_flag
         bpl     :+
         ldy     #0              ; Use full length
         lda     (ptr),y
@@ -5625,25 +5647,26 @@ start:  sta     flag
         addr_call adjust_case, path_buffer
 
         lda     #0
-        sta     L704B
-        sta     L7049
+        sta     found_windows_count
+        sta     window_num
 
-loop:   inc     L7049
-        lda     L7049
+loop:   inc     window_num
+        lda     window_num
         cmp     #9              ; windows are 1-8
-        bcc     L6FF6
-        bit     flag
-        bpl     L6FF5
+        bcc     check_window
+        bit     exact_match_flag
+        bpl     :+
         lda     #0
-L6FF5:  rts
+:       rts
 
-L6FF6:  jsr     window_lookup
+check_window:
+        jsr     window_lookup
         stax    ptr
         ldy     #MGTK::Winfo::status
         lda     (ptr),y
         beq     loop
 
-        lda     L7049
+        lda     window_num
         jsr     window_path_lookup
         stax    ptr
         ldy     #0
@@ -5652,7 +5675,7 @@ L6FF6:  jsr     window_lookup
         cmp     path_buffer
         beq     :+
 
-        bit     flag
+        bit     exact_match_flag
         bmi     loop
         ldy     path_buffer
         iny
@@ -5667,25 +5690,28 @@ L6FF6:  jsr     window_lookup
         dey
         bne     :-
 
-        bit     flag
+        bit     exact_match_flag
         bmi     done
-        ldx     L704B
-        lda     L7049
-        sta     L704C,x
-        inc     L704B
+        ldx     found_windows_count
+        lda     window_num
+        sta     found_windows_list,x
+        inc     found_windows_count
         jmp     loop
 
-done:   return  L7049
+done:   return  window_num
 
-L7049:  .byte   0
-flag:   .byte   0
+window_num:
+        .byte   0
+exact_match_flag:
+        .byte   0
 .endproc
-        L6FAF := L6FBD::set
-        L6FB7 := L6FBD::unset
+        find_window_for_path := find_windows::set
+        find_windows_for_prefix := find_windows::unset
 
-
-L704B:  .byte   0
-L704C:  .res    8
+found_windows_count:
+        .byte   0
+found_windows_list:
+        .res    8
 
 ;;; ============================================================
 
@@ -8647,7 +8673,9 @@ buffer: .res    16, 0            ; length overwritten with '/'
         get_block_count := get_block_count_impl::start
 
 ;;; ============================================================
-;;; Create Volume Icon. unit_number passed in A
+;;; Create Volume Icon
+;;; Input: A = unit number, Y = device number (index in DEVLST)
+;;; Output: 0 on success, ProDOS error code on failure
 
         cvi_data_buffer := $800
 
@@ -8655,14 +8683,14 @@ buffer: .res    16, 0            ; length overwritten with '/'
 
 .proc create_volume_icon
         sta     unit_number
-        sty     device_num
+        sty     devlst_index
         and     #$F0
         sta     on_line_params::unit_num
         MLI_RELAY_CALL ON_LINE, on_line_params
         beq     success
 
 error:  pha                     ; save error
-        ldy     device_num      ; remove unit from list
+        ldy     devlst_index      ; remove unit from list
         lda     #0
         sta     device_to_icon_map,y
         dec     cached_window_icon_count
@@ -8682,7 +8710,7 @@ create_icon:
 
         jsr     push_pointers
         jsr     DESKTOP_ALLOC_ICON
-        ldy     device_num
+        ldy     devlst_index
         sta     device_to_icon_map,y
         jsr     icon_entry_lookup
         stax    icon_ptr
@@ -8737,7 +8765,7 @@ assign: ldy     #IconEntry::iconbits
         ldy     #IconEntry::win_type
         lda     #0
         sta     (icon_ptr),y
-        inc     device_num
+        inc     devlst_index
 
         ;; Assign icon coordinates
         ;; (Original logic was to assign in order based on
@@ -8772,9 +8800,8 @@ assign: ldy     #IconEntry::iconbits
         return  #0
 
 unit_number:    .byte   0
-device_num:     .byte   0
+devlst_index:   .byte   0
 offset_x:       .word   0
-.endproc
 
 ;;; Table of icon widths (/2) for centering icons
 ;;; TODO: Keep this up to date with icon bitmaps in desktop_aux
@@ -8803,7 +8830,6 @@ device_type_to_icon_offset_table:
 ;;;  |                                                 |
 ;;;  +-------------------------------------------------+
 
-
 desktop_icon_coords_table:
         DEFINE_POINT 0,0
         DEFINE_POINT 490,16     ; 1     S7D1
@@ -8823,8 +8849,6 @@ desktop_icon_coords_table:
         ;; 7 slots * 2 drives = 14 (size of DEVLST)
         ;; ... but RAM in Slot 3 Drive 2 is disconnected.
 
-        DEFINE_GET_PREFIX_PARAMS get_prefix_params, prefix_buffer
-
         ;; maps high nibble (DSSS) to coords table offset
 unit_num_to_coords_index_table:
         .byte   0   * .sizeof(MGTK::Point)         ; S0D1 - does not exist
@@ -8843,8 +8867,11 @@ unit_num_to_coords_index_table:
         .byte   7   * .sizeof(MGTK::Point)         ; S5D2
         .byte   4   * .sizeof(MGTK::Point)         ; S6D2
         .byte   2   * .sizeof(MGTK::Point)         ; S7D2
+.endproc
 
 ;;; ============================================================
+
+        DEFINE_GET_PREFIX_PARAMS get_prefix_params, prefix_buffer
 
 .proc remove_icon_from_window
         ldx     cached_window_icon_count
@@ -15562,7 +15589,7 @@ process_volume:
         inc     cached_window_icon_count
         inc     icon_count
         lda     DEVLST,y
-        jsr     desktop_main::create_volume_icon
+        jsr     desktop_main::create_volume_icon ; A = unit number, Y = device number
         sta     cvi_result
         MGTK_RELAY_CALL MGTK::CheckEvents
 
