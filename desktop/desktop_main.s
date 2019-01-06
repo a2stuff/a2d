@@ -3257,7 +3257,8 @@ L5916:  lda     cached_window_icon_list,x
 L5942:  dex
         bpl     L5916
 
-        ldy     #0
+        ;; Enumerate DEVLST in reverse order (most important volumes first)
+        ldy     DEVCNT
         sty     devlst_index
 @loop:  ldy     devlst_index
         inc     cached_window_icon_count
@@ -3265,16 +3266,15 @@ L5942:  dex
         lda     #0
         sta     device_to_icon_map,y
         lda     DEVLST,y
-        jsr     create_volume_icon ; A = unit num, Y = device num
+        ldx     cached_window_icon_count
+        jsr     create_volume_icon ; A = unit num, Y = device num, X = icon index
         cmp     #ERR_DUPLICATE_VOLUME
         bne     :+
         lda     #ERR_DUPLICATE_VOL_NAME
         sta     pending_alert
-:       inc     devlst_index
+:       dec     devlst_index
         lda     devlst_index
-        cmp     DEVCNT
-        beq     @loop
-        bcc     @loop
+        bpl     @loop
 
         ldx     #0
 L5976:  cpx     cached_window_icon_count
@@ -3356,6 +3356,7 @@ start:  sta     check_drive_flags
 ;;; After a Format/Erase action
 
 after_format_erase:
+
         ;; Map unit number to index in DEVLST
         ldy     DEVCNT
         lda     drive_to_refresh
@@ -3372,7 +3373,7 @@ after_format_erase:
 ;;; Check Drive command
 
 explicit_command:
-        ;; Map menu number to item number
+        ;; Map menu number to index in DEVLST
         lda     menu_click_params::item_num
         sec
         sbc     #3
@@ -3456,7 +3457,10 @@ not_in_map:
         pla
         tay
         lda     DEVLST,y
-        jsr     create_volume_icon ; A = unit num, Y = device num
+        ldx     icon_param      ; preserve icon index if known
+        bne     :+
+        ldx     cached_window_icon_count
+:       jsr     create_volume_icon ; A = unit num, Y = device num, X = icon index
         bit     check_drive_flags
         bmi     add_icon
 
@@ -8674,7 +8678,7 @@ buffer: .res    16, 0            ; length overwritten with '/'
 
 ;;; ============================================================
 ;;; Create Volume Icon
-;;; Input: A = unit number, Y = device number (index in DEVLST)
+;;; Input: A = unit number, X = icon num, Y = index in DEVLST
 ;;; Output: 0 on success, ProDOS error code on failure
 
         cvi_data_buffer := $800
@@ -8683,6 +8687,9 @@ buffer: .res    16, 0            ; length overwritten with '/'
 
 .proc create_volume_icon
         sta     unit_number
+        dex                     ; icon numbers are 1-based, and Trash is #1,
+        dex                     ; so make this 0-based
+        stx     icon_index
         sty     devlst_index
         and     #$F0
         sta     on_line_params::unit_num
@@ -8768,15 +8775,9 @@ assign: ldy     #IconEntry::iconbits
         inc     devlst_index
 
         ;; Assign icon coordinates
-        ;; (Original logic was to assign in order based on
-        ;; DEVLST order. This assigns based on Slot/Drive.)
-        lda     unit_number
-        lsr     a               ; shift to low nibble
-        lsr     a               ; to use as index in table
-        lsr     a
-        lsr     a
-        tax
-        lda     unit_num_to_coords_index_table,x
+        lda     icon_index
+        asl                     ; * 4 = .sizeof(MGTK::Point)
+        asl
         tax
         ldy     #IconEntry::iconx
 :       lda     desktop_icon_coords_table,x
@@ -8801,6 +8802,7 @@ assign: ldy     #IconEntry::iconbits
 
 unit_number:    .byte   0
 devlst_index:   .byte   0
+icon_index:     .byte   0
 offset_x:       .word   0
 
 ;;; Table of icon widths (/2) for centering icons
@@ -8812,61 +8814,36 @@ device_type_to_icon_offset_table:
         .word   (53 - 21) / 2   ; floppy800
         .word   (53 - 53) / 2   ; profile
 
-;;; ============================================================
 
-;;;  +-------------------------------------------------+
-;;;  |                                                 |
-;;;  |                                           S7D1  |
-;;;  |                                                 |
-;;;  |                                           S7D2  |
-;;;  |                                                 |
-;;;  |                                           S6D1  |
-;;;  |                                                 |
-;;;  |                                           S6D2  |
-;;;  |                                                 |
-;;;  |                  S1D2    S1D1    S4D2     S3D1  |
-;;;  |                                                 |
-;;;  |  S4D1    S2D2    S2D1    S5D2    S5D1    Trash  |
-;;;  |                                                 |
-;;;  +-------------------------------------------------+
+;;; Icons are placed places in order as specified by caller
+;;; in X. (Reverse DEVLST order, so most important is first.)
+;;;
+;;;  +-------------------------+
+;;;  |                     1   |
+;;;  |                     2   |
+;;;  |                     3   |
+;;;  |                     4   |
+;;;  |        13  12  11   5   |
+;;;  | 10  9   8   7   6 Trash |
+;;;  +-------------------------+
 
 desktop_icon_coords_table:
-        DEFINE_POINT 0,0
-        DEFINE_POINT 490,16     ; 1     S7D1
-        DEFINE_POINT 490,45     ; 2     S7D2
-        DEFINE_POINT 490,75     ; 3     S6D1
-        DEFINE_POINT 490,103    ; 4     S6D2
-        DEFINE_POINT 490,131    ; 5     S3D1
-        DEFINE_POINT 400,160    ; 6     S5D1
-        DEFINE_POINT 310,160    ; 7     S5D2
-        DEFINE_POINT 220,160    ; 8     S2D1
-        DEFINE_POINT 130,160    ; 9     S2D2
-        DEFINE_POINT 40,160     ; 10    S4D1
-        DEFINE_POINT 400,131    ; 11    S4D2
-        DEFINE_POINT 310,131    ; 12    S1D1
-        DEFINE_POINT 220,131    ; 13    S1D2
+        DEFINE_POINT 490,16     ; 1
+        DEFINE_POINT 490,45     ; 2
+        DEFINE_POINT 490,75     ; 3
+        DEFINE_POINT 490,103    ; 4
+        DEFINE_POINT 490,131    ; 5
+        DEFINE_POINT 400,160    ; 6
+        DEFINE_POINT 310,160    ; 7
+        DEFINE_POINT 220,160    ; 8
+        DEFINE_POINT 130,160    ; 9
+        DEFINE_POINT 40,160     ; 10
+        DEFINE_POINT 400,131    ; 11
+        DEFINE_POINT 310,131    ; 12
+        DEFINE_POINT 220,131    ; 13
         ;; Maximum of 13 devices:
         ;; 7 slots * 2 drives = 14 (size of DEVLST)
         ;; ... but RAM in Slot 3 Drive 2 is disconnected.
-
-        ;; maps high nibble (DSSS) to coords table offset
-unit_num_to_coords_index_table:
-        .byte   0   * .sizeof(MGTK::Point)         ; S0D1 - does not exist
-        .byte   12  * .sizeof(MGTK::Point)         ; S1D1
-        .byte   8   * .sizeof(MGTK::Point)         ; S2D1
-        .byte   5   * .sizeof(MGTK::Point)         ; S3D1 - e.g. RAMWorks
-        .byte   10  * .sizeof(MGTK::Point)         ; S4D1
-        .byte   6   * .sizeof(MGTK::Point)         ; S5D1
-        .byte   3   * .sizeof(MGTK::Point)         ; S6D1
-        .byte   1   * .sizeof(MGTK::Point)         ; S7D1
-        .byte   0   * .sizeof(MGTK::Point)         ; S0D2 - does not exist
-        .byte   13  * .sizeof(MGTK::Point)         ; S1D2
-        .byte   9   * .sizeof(MGTK::Point)         ; S2D2
-        .byte   0   * .sizeof(MGTK::Point)         ; S3D2 - a.k.a. /RAM - detached
-        .byte   11  * .sizeof(MGTK::Point)         ; S4D2
-        .byte   7   * .sizeof(MGTK::Point)         ; S5D2
-        .byte   4   * .sizeof(MGTK::Point)         ; S6D2
-        .byte   2   * .sizeof(MGTK::Point)         ; S7D2
 .endproc
 
 ;;; ============================================================
@@ -15570,7 +15547,10 @@ end:
 
         ldy     #0
         sty     desktop_main::pending_alert
-        sty     device_index
+
+        ;; Enumerate DEVLST in reverse order (most important volumes first)
+        lda     DEVCNT
+        sta     device_index
 
 process_volume:
         lda     device_index
@@ -15589,7 +15569,8 @@ process_volume:
         inc     cached_window_icon_count
         inc     icon_count
         lda     DEVLST,y
-        jsr     desktop_main::create_volume_icon ; A = unit number, Y = device number
+        ldx     cached_window_icon_count
+        jsr     desktop_main::create_volume_icon ; A = unit number, X = icon index, Y = device number
         sta     cvi_result
         MGTK_RELAY_CALL MGTK::CheckEvents
 
@@ -15603,13 +15584,15 @@ process_volume:
         lda     cvi_result
         cmp     #ERR_DEVICE_NOT_CONNECTED
         bne     :+
-        ldy     device_index
+
+        ldy     device_index    ; BUG? Is there a missing pla instruction in this path?
         lda     DEVLST,y
         and     #$0F
         beq     select_template
         ldx     device_index
         jsr     remove_device
         jmp     next
+
 :       cmp     #ERR_DUPLICATE_VOLUME
         bne     select_template
         lda     #ERR_DUPLICATE_VOL_NAME
@@ -15678,12 +15661,11 @@ process_volume:
 
 done_drive_num:
         pla
-        inc     device_index
-next:   lda     device_index
+next:   dec     device_index
+        lda     device_index
 
-        cmp     DEVCNT          ; done?
-        beq     :+
-        bcs     populate_startup_menu
+        bpl     :+
+        bmi     populate_startup_menu
 :       jmp     process_volume  ; next!
 
 device_type:
