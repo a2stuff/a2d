@@ -202,7 +202,6 @@ window_width:  .word   0
 window_height: .word   0
 
 y_remaining:  .word   0
-unused: .byte   0
 line_count:  .word   0
 L096A:  .word   0
 L096C:  .word   0
@@ -251,13 +250,6 @@ mousex: .word   0
 mousey: .word   0
 which_ctl:      .byte   0       ; 0 = client, 1 = vscroll, 2 = hscroll
 which_part:     .byte   0       ; 1 = up, 2 = down, 3 = above, 4 = below, 5 = thumb
-.endproc
-
-        ;; param block used in dead code (resize?)
-.proc setctlmax_params
-which_ctl:      .byte   0
-ctlmax:         .byte   0
-        ;; needs one more byte?
 .endproc
 
 .proc updatethumb_params      ; called to update scroll bar position
@@ -574,63 +566,6 @@ no_mod:
 .endproc
 
 ;;; ============================================================
-;;; Resize Handle
-
-;;; This is dead code (no resize handle!) and may be buggy
-.proc on_resize_click
-        MGTK_CALL MGTK::GrowWindow, growwindow_params
-        jsr     redraw_screen
-        jsr     calc_window_size
-
-        max_width = default_width
-        lda     #>max_width
-        cmp     winfo::maprect::x2+1
-        bne     :+
-        lda     #<max_width
-        cmp     winfo::maprect::x2
-:       bcs     wider
-
-        copy16  #max_width, winfo::maprect::x2
-        sec
-        lda     winfo::maprect::x2
-        sbc     window_width
-        sta     winfo::maprect::x1
-        lda     winfo::maprect::x2+1
-        sbc     window_width+1
-        sta     winfo::maprect::x1+1
-wider:  lda     winfo::hscroll
-        ldx     window_width
-        cpx     #<max_width
-        bne     enable
-        ldx     window_width+1
-        cpx     #>max_width
-        bne     enable
-        and     #(<~MGTK::Scroll::option_active)       ; disable scroll
-        jmp     :+
-
-enable: ora     #MGTK::Scroll::option_active           ; enable scroll
-
-:       sta     winfo::hscroll
-
-        val := $06
-
-        sec
-        lda     #<max_width
-        sbc     window_width
-        sta     val
-        lda     #>max_width
-        sbc     window_width+1
-        sta     val+1
-        jsr     div_by_16
-        sta     setctlmax_params::ctlmax
-        lda     #MGTK::Ctl::horizontal_scroll_bar
-        sta     setctlmax_params::which_ctl
-        MGTK_CALL MGTK::SetCtlMax, setctlmax_params ; change to clamped size ???
-        jsr     calc_and_draw_mode
-        jmp     finish_resize
-.endproc
-
-;;; ============================================================
 ;;; Client Area
 
 ;;; Non-title (client) area clicked
@@ -640,9 +575,6 @@ enable: ora     #MGTK::Scroll::option_active           ; enable scroll
         lda     findcontrol_params::which_ctl
         cmp     #MGTK::Ctl::vertical_scroll_bar
         beq     on_vscroll_click
-        cmp     #MGTK::Ctl::horizontal_scroll_bar
-        bne     end
-        jmp     on_hscroll_click
 end:    rts
 .endproc
 
@@ -809,102 +741,6 @@ loop:   inx
         cmp     #50
         bcs     loop
         stx     track_scroll_delta
-        rts
-.endproc
-
-;;; ============================================================
-;;; Horizontal Scroll Bar
-;;; (Unused in STF DA, so most of this is speculation)
-
-.proc on_hscroll_click
-        lda     #MGTK::Ctl::horizontal_scroll_bar
-        sta     trackthumb_params::which_ctl
-        sta     updatethumb_params::which_ctl
-        lda     findcontrol_params::which_part
-        cmp     #MGTK::Part::thumb
-        beq     on_hscroll_thumb_click
-        cmp     #MGTK::Part::page_right
-        beq     on_hscroll_after_click
-        cmp     #MGTK::Part::page_left
-        beq     on_hscroll_before_click
-        cmp     #MGTK::Part::left_arrow
-        beq     on_hscroll_left_click
-        cmp     #MGTK::Part::right_arrow
-        beq     on_hscroll_right_click
-        rts
-.endproc
-
-.proc on_hscroll_thumb_click
-        jsr     do_trackthumb
-        lda     trackthumb_params::thumbmoved
-        beq     end
-
-        res := $06
-        lda     trackthumb_params::thumbpos
-        jsr     mul_by_16
-        copy16  res, winfo::maprect::x1
-
-        clc
-        lda     winfo::maprect::x1
-        adc     window_width
-        sta     winfo::maprect::x2
-        lda     winfo::maprect::x1+1
-        adc     window_width+1
-        sta     winfo::maprect::x2+1
-        jsr     update_hscroll
-        jsr     draw_content
-end:    rts
-.endproc
-
-.proc on_hscroll_after_click
-        ldx     #2
-        lda     winfo::hthumbmax
-        jmp     hscroll_common
-.endproc
-
-.proc on_hscroll_before_click
-        ldx     #254
-        lda     #0
-        jmp     hscroll_common
-.endproc
-
-.proc on_hscroll_right_click
-        ldx     #1
-        lda     winfo::hthumbmax
-        jmp     hscroll_common
-.endproc
-
-.proc on_hscroll_left_click
-        ldx     #255
-        lda     #0
-        ;; fall through
-.endproc
-
-.proc hscroll_common
-        sta     compare+1
-        stx     delta+1
-loop:   lda     winfo::hthumbpos
-compare:cmp     #$0A            ; self-modified
-        bne     continue
-        rts
-continue:
-        clc
-        lda     winfo::hthumbpos
-delta:  adc     #1              ; self-modified
-        bmi     overflow
-        cmp     winfo::hthumbmax
-        beq     store
-        bcc     store
-        lda     winfo::hthumbmax
-        jmp     store
-overflow:
-        lda     #0
-store:  sta     winfo::hthumbpos
-        jsr     adjust_box_width
-        jsr     update_hscroll
-        jsr     draw_content
-        jsr     was_button_released
-        bne     loop
         rts
 .endproc
 
@@ -1533,3 +1369,5 @@ endif:  COPY_STRUCT MGTK::MapInfo, default_port, winfo::port
         MGTK_CALL MGTK::SetPortBits, winfo::port
         rts
 .endproc
+
+        .assert * <= default_buffer, error, "DA overlaps with read buffer"
