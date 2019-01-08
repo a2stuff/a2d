@@ -18,9 +18,7 @@ $(OUTDIR):
 clean:
 	rm -f $(OUTDIR)/*.o
 	rm -f $(OUTDIR)/*.list
-	rm -f $(OUTDIR)/*.inc
-	rm -f $(OUTDIR)/*.built
-	rm -f $(OUTDIR)/*.SYS
+	rm -f $(TARGETS)
 
 $(OUTDIR)/%.o: %.s $(HEADERS)
 	$(CC65)/ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<

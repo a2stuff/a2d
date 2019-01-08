@@ -20,9 +20,8 @@ $(OUTDIR):
 clean:
 	rm -f $(OUTDIR)/*.o
 	rm -f $(OUTDIR)/*.list
-	rm -f $(OUTDIR)/*.inc
 	rm -f $(OUTDIR)/*.built
-	rm -f $(OUTDIR)/*.sys
+	rm -f $(TARGETS)
 
 $(OUTDIR)/desktop.o: desktop.s $(HEADERS) desktop_* ovl*.s
 	$(CC65)/ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
