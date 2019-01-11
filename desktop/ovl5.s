@@ -120,7 +120,6 @@ L7137:  lda     common_overlay::path_buf,x
         sta     path_buf1,x
         dex
         bpl     L7137
-        addr_call desktop_main::adjust_case, path_buf1
         lda     #$01
         sta     path_buf2
         lda     #$06

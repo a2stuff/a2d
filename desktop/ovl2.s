@@ -1488,7 +1488,6 @@ L19FB:  lda     read_buffer + 6,x
         ldx     ovl2_path_buf
         lda     #'?'
 L1A22:  sta     ovl2_path_buf,x
-        addr_call desktop_main::adjust_case, ovl2_path_buf
         rts
 
 ;;; ============================================================
@@ -1515,7 +1514,6 @@ L1A22:  sta     ovl2_path_buf,x
         ldx     ovl2_path_buf
         lda     #$3F
         sta     ovl2_path_buf,x
-        addr_call desktop_main::adjust_case, ovl2_path_buf  ; Adjust case ("/HD/GAMES" -> "/Hd/Games")
         rts
 
 L1A6D:  lda     on_line_params::unit_num

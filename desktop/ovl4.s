@@ -1318,13 +1318,14 @@ L5E6F:  jsr     copy_string_to_lcbuf
         sta     on_line_params::unit_num
         yax_call MLI_RELAY, ON_LINE, on_line_params
         lda     on_line_buffer
-        and     #$0F
+        and     #NAME_LENGTH_MASK
         sta     on_line_buffer
         bne     found
         jsr     inc_device_num
         jmp     :-
 
-found:  lda     #0
+found:  addr_call desktop_main::adjust_volname_case, on_line_buffer
+        lda     #0
         sta     path_buf
         addr_call L5F0D, on_line_buffer
         rts
@@ -1427,7 +1428,9 @@ L5F5B:  jsr     L5ECB
         jmp     L6012
 
 L5F87:  copy16  #$142B, $06
-L5F8F:  ldy     #$00
+L5F8F:  addr_call_indirect desktop_main::adjust_fileentry_case, $06
+
+        ldy     #$00
         lda     ($06),y
         and     #NAME_LENGTH_MASK
         bne     L5F9A
@@ -1643,7 +1646,6 @@ L61E6:  inx
         cpy     L6226
         bne     L61E6
         stx     $0220
-        addr_call desktop_main::adjust_case, $0220
         MGTK_RELAY_CALL MGTK::MoveTo, disk_label_pos
         addr_call draw_string, disk_label
         addr_call draw_string, $0220
@@ -1934,7 +1936,6 @@ L64E8:  lda     #$00
 L64F5:  lda     L6515
         cmp     $177F
         beq     L64E7
-        addr_call_indirect desktop_main::adjust_case, $06
         inc     L6515
         lda     $06
         clc
@@ -2895,7 +2896,6 @@ flag:   .byte   0
 
 .proc prep_path_buf0
         COPY_STRING path_buf, path_buf0
-        addr_call desktop_main::adjust_case, path_buf0
         rts
 .endproc
 
@@ -2903,7 +2903,6 @@ flag:   .byte   0
 
 .proc prep_path_buf1
         COPY_STRING path_buf, path_buf1
-        addr_call desktop_main::adjust_case, path_buf1
         rts
 .endproc
 
@@ -3011,9 +3010,7 @@ L6EC2:  lda     LD920
         tax
         tya
         jsr     L5F0D
-L6EFB:  addr_call desktop_main::adjust_case, split_buf
-        addr_call desktop_main::adjust_case, path_buf
-        lda     split_buf
+L6EFB:  lda     split_buf
         cmp     path_buf
         bne     L6F26
         tax

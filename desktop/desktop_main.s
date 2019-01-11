@@ -1036,19 +1036,24 @@ prefix_buffer:  .res    30, 0
         lda     (ptr),y
         tay
 loop:   lda     (ptr),y
-        cmp     #'a'
-        bcc     :+
-        cmp     #'z'+1
-        bcs     :+
-        and     #CASE_MASK
+        jsr     upcase_char
         sta     (ptr),y
-:       dey
+        dey
         bne     loop
         rts
 .endproc
 
 .endproc
         prefix_buffer := launch_file::prefix_buffer
+
+.proc upcase_char
+        cmp     #'a'
+        bcc     done
+        cmp     #'z'+1
+        bcs     done
+        and     #CASE_MASK
+done:   rts
+.endproc
 
 ;;; ============================================================
 
@@ -5647,9 +5652,6 @@ start:  sta     exact_match_flag
         dey
         bne     :-
 
-        ;; And capitalize
-        addr_call adjust_case, path_buffer
-
         lda     #0
         sta     found_windows_count
         sta     window_num
@@ -5874,6 +5876,17 @@ L7223:  iny
         inx
 
         ;; See FileRecord struct for record structure
+
+        ;; TODO: Determine if this case adjustment is necessary
+        txa
+        pha
+        tya
+        pha
+        addr_call_indirect adjust_fileentry_case, entry_ptr
+        pla
+        tay
+        pla
+        tax
 
         ;; name, file_type
 :       lda     (entry_ptr),y
@@ -6233,8 +6246,7 @@ L7561:  lda     LE1B0,y
         sta     ($08),y
         dey
         bpl     L7561
-L7569:  addr_call_indirect adjust_case, $08
-        lda     cached_window_id
+L7569:  lda     cached_window_id
         jsr     window_lookup
         stax    $06
         ldy     #$14
@@ -6542,13 +6554,14 @@ L7767:  .byte   $14
         lda     (file_entry),y
         tay
         ldx     str_sys_suffix
-:       lda     (file_entry),y
+cloop:  lda     (file_entry),y
+        jsr     upcase_char
         cmp     str_sys_suffix,x
         bne     not_app
         dey
         beq     not_app
         dex
-        bne     :-
+        bne     cloop
 
 is_app:
         lda     #FT_BAD         ; overloaded meaning in icon tables
@@ -6573,7 +6586,6 @@ got_type:
         tya
 
         jsr     find_icon_details_for_file_type
-        addr_call adjust_case, name_tmp
         ldy     #IconEntry::len
         ldx     #0
 L77F0:  lda     name_tmp,x
@@ -7239,6 +7251,7 @@ iloop:  jsr     ptr_calc
         sta     name_len
         ldy     #1
 cloop:  lda     (ptr),y
+        jsr     upcase_char
         cmp     name,y
         beq     :+
         bcs     inext
@@ -7260,6 +7273,7 @@ place:  lda     record_num
 
         ldy     name_len
 :       lda     (ptr),y
+        jsr     upcase_char
         sta     name,y
         dey
         bne     :-
@@ -7799,7 +7813,6 @@ loop:   lda     LEC43,x
         lda     #' '
         sta     text_buffer2::data
         inc     text_buffer2::length
-        addr_call adjust_case, text_buffer2::length
         rts
 .endproc
 
@@ -8729,7 +8742,8 @@ create_icon:
         lda     cvi_data_buffer
         and     #NAME_LENGTH_MASK
         sta     cvi_data_buffer
-        addr_call adjust_case, cvi_data_buffer
+
+        addr_call adjust_volname_case, cvi_data_buffer
 
         ldy     #IconEntry::name
         copy    #' ', (icon_ptr),y ; leading space
@@ -10701,6 +10715,8 @@ done:   rts
         jsr     open_src_dir
 loop:   jsr     read_file_entry
         bne     end_dir
+
+        addr_call adjust_fileentry_case, file_entry_buf
 
         lda     file_entry_buf + FileEntry::storage_type_name_length
         beq     loop
@@ -12752,7 +12768,7 @@ do2:    ldy     #1
         lda     (ptr),y
         sta     ptr+1
         stx     ptr
-        jsr     copy_name_to_buf0_adjust_case
+        jsr     copy_name_to_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::current_target_file_pos
         addr_call draw_text1, path_buf0
         jsr     copy_dialog_param_addr_to_ptr
@@ -12763,7 +12779,7 @@ do2:    ldy     #1
         lda     (ptr),y
         sta     ptr+1
         stx     ptr
-        jsr     copy_name_to_buf1_adjust_case
+        jsr     copy_name_to_buf1
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE82
         addr_call draw_text1, path_buf1
         yax_call MGTK_RELAY, MGTK::MoveTo, desktop_aux::LB0BA
@@ -12877,7 +12893,7 @@ do2:    ldy     #1
         lda     (ptr),y
         sta     ptr+1
         stx     ptr
-        jsr     copy_name_to_buf0_adjust_case
+        jsr     copy_name_to_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::current_target_file_pos
         addr_call draw_text1, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB0BA
@@ -13050,7 +13066,7 @@ do3:    ldy     #1
         lda     ($06),y
         sta     $06+1
         stx     $06
-        jsr     copy_name_to_buf0_adjust_case
+        jsr     copy_name_to_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::current_target_file_pos
         addr_call draw_text1, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::delete_remaining_count_pos
@@ -13337,7 +13353,7 @@ do3:    ldy     #1
         lda     ($06),y
         sta     $06+1
         stx     $06
-        jsr     copy_name_to_buf0_adjust_case
+        jsr     copy_name_to_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::current_target_file_pos
         addr_call draw_text1, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::lock_remaining_count_pos
@@ -13424,7 +13440,7 @@ do3:    ldy     #1
         lda     ($06),y
         sta     $06+1
         stx     $06
-        jsr     copy_name_to_buf0_adjust_case
+        jsr     copy_name_to_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::current_target_file_pos
         addr_call draw_text1, path_buf0
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::unlock_remaining_count_pos
@@ -14007,32 +14023,30 @@ hi:  .byte   0
 .endproc
 
 ;;; ============================================================
-
-        ;; Unreferenced ???
-.proc draw_text_at_point7
-        stax    $06
-        MGTK_RELAY_CALL MGTK::MoveTo, point7
-        addr_call_indirect draw_text1, $06
-        rts
-.endproc
-
-;;; ============================================================
-;;; Adjust case in a pathname (input buf A,X, output buf $A)
-
-.proc adjust_case
-        .assert * = $B781, error, "Entry point used by overlay"
-
+;;; Adjust filename case in a FileEntry, if not GS/OS flagged.
+;;; Input: A,X points at FileEntry structure.
+.proc adjust_fileentry_case
         ptr := $A
 
         stax    ptr
-        ldy     #0
+
+        ;; Check for GS/OS lowercase filename
+        ;; http://www.1000bit.it/support/manuali/apple/technotes/gsos/tn.gsos.08.html
+        ldy     #FileEntry::min_version
         lda     (ptr),y
-        tay
+        bmi     done            ; High bit is set = natively supported
+
+entry2: ldy     #FileEntry::storage_type_name_length
+        lda     (ptr),y
+        and     #NAME_LENGTH_MASK
         beq     done
+
+        .assert FileEntry::file_name = 1, error, "bad assumptions in structure"
 
         ;; Walk backwards through string. At char N, check char N-1
         ;; to see if it is a symbol. If it is, and char N is a letter,
         ;; lower-case it.
+        tay
 
 loop:   dey
         beq     done
@@ -14040,25 +14054,34 @@ loop:   dey
 done:   rts
 
 :       lda     (ptr),y
-        and     #CHAR_MASK      ; convert to ASCII
-        cmp     #'0'            ; <'0' includes '.', '/' and ' '
+        cmp     #'0'            ; <'0' includes '.'
         bcs     check_alpha
         dey
-        jmp     loop
+        bpl     loop            ; always
 
 check_alpha:
         iny
         lda     (ptr),y
-        and     #CHAR_MASK
         cmp     #'A'
         bcc     :+
         cmp     #'Z'+1
         bcs     :+
-        ora     #(~CASE_MASK & $FF)
+        ora     #AS_BYTE(~CASE_MASK)
         sta     (ptr),y
 :       dey
-        jmp     loop
+        bpl     loop            ; always
 .endproc
+
+.proc adjust_volname_case
+        ptr := $A
+        stax    ptr
+
+        ;; TODO: Skip if VolumeDirectoryHeader's byte $17 high bit is set
+
+        jmp     adjust_fileentry_case::entry2
+.endproc
+
+;;; ============================================================
 
         PAD_TO $B7B9            ; Maintain previous addresses
 
@@ -14803,7 +14826,7 @@ saved_proc_buf:
 
 ;;; ============================================================
 
-.proc copy_name_to_buf0_adjust_case
+.proc copy_name_to_buf0
         ptr := $6
 
         ldy     #0
@@ -14813,11 +14836,10 @@ saved_proc_buf:
         sta     path_buf0,y
         dey
         bpl     :-
-        addr_call adjust_case, path_buf0
         rts
 .endproc
 
-.proc copy_name_to_buf1_adjust_case
+.proc copy_name_to_buf1
         ptr := $6
 
         ldy     #0
@@ -14827,7 +14849,6 @@ saved_proc_buf:
         sta     path_buf1,y
         dey
         bpl     :-
-        addr_call adjust_case, path_buf1
         rts
 .endproc
 
@@ -14846,6 +14867,8 @@ paint_rectAE8E_white:
 set_fill_white:
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         rts
+
+        PAD_TO $BEB1
 
 reset_grafport3a:
         .assert * = $BEB1, error, "Entry point used by overlay"
@@ -15429,6 +15452,9 @@ open_dir:
         copy16  #read_dir_buffer + .sizeof(SubdirectoryHeader), dir_ptr
 
 process_block:
+        ;; TODO: Adjust case
+        addr_call_indirect desktop_main::adjust_fileentry_case, dir_ptr
+
         ldy     #FileEntry::storage_type_name_length
         lda     (dir_ptr),y
         and     #NAME_LENGTH_MASK
@@ -15477,8 +15503,6 @@ is_da:  inc     desk_acc_num
         sta     (da_ptr),y
         dey
         bne     :-
-
-        addr_call_indirect desktop_main::adjust_case, da_ptr
 
         ;; Convert periods to spaces
         lda     (da_ptr),y
