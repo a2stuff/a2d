@@ -2005,7 +2005,7 @@ fail:   rts
 
 .proc new_folder_dialog_params
 phase:  .byte   0               ; window_id?
-L4F68:  .word   0
+win_path_ptr:  .word   0
 .endproc
 
         ;; access = destroy/rename/write/read
@@ -2020,7 +2020,7 @@ start:  copy    active_window_id, new_folder_dialog_params::phase
 L4FC6:  lda     active_window_id
         beq     L4FD4
         jsr     window_path_lookup
-        stax    new_folder_dialog_params::L4F68
+        stax    new_folder_dialog_params::win_path_ptr
 L4FD4:  copy    #$80, new_folder_dialog_params::phase
         yax_call invoke_dialog_proc, index_new_folder_dialog, new_folder_dialog_params
         beq     :+
@@ -2048,7 +2048,7 @@ L4FD4:  copy    #$80, new_folder_dialog_params::phase
 
         ;; Failure
         jsr     DESKTOP_SHOW_ALERT0
-        copy16  L504E, new_folder_dialog_params::L4F68
+        copy16  L504E, new_folder_dialog_params::win_path_ptr
         jmp     L4FC6
 
         rts                     ; ???
