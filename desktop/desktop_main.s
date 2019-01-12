@@ -12318,7 +12318,6 @@ dialog_param_addr:
 ;;; Message handler for OK/Cancel dialog
 
 .proc prompt_input_loop
-        .assert * = $A567, error, "Entry point used by overlay"
         lda     has_input_field_flag
         beq     :+
 
@@ -12658,7 +12657,6 @@ rts1:
 ;;; ============================================================
 
 jump_relay:
-        .assert * = $A899, error, "Entry point used by overlay"
         jmp     dummy0000
 
 
@@ -12826,7 +12824,6 @@ do4:    jsr     bell
 ;;; ============================================================
 
 .proc bell
-        .assert * = $AACE, error, "Entry point used by overlay"
         sta     ALTZPOFF
         sta     ROMIN2
         jsr     BELL1
@@ -13658,7 +13655,6 @@ cursor_ip_flag:                 ; high bit set if IP, clear if pointer
 ;;; ============================================================
 
 .proc set_cursor_watch
-        .assert * = $B3E7, error, "Entry point used by overlay"
         MGTK_RELAY_CALL MGTK::HideCursor
         MGTK_RELAY_CALL MGTK::SetCursor, watch_cursor
         MGTK_RELAY_CALL MGTK::ShowCursor
@@ -13666,7 +13662,6 @@ cursor_ip_flag:                 ; high bit set if IP, clear if pointer
 .endproc
 
 .proc set_cursor_pointer
-        .assert * = $B403, error, "Entry point used by overlay"
         MGTK_RELAY_CALL MGTK::HideCursor
         MGTK_RELAY_CALL MGTK::SetCursor, pointer_cursor
         MGTK_RELAY_CALL MGTK::ShowCursor
@@ -13689,8 +13684,6 @@ set_penmode_xor2:
 ;;; Returns with A=0 if double click, A=$FF otherwise.
 
 .proc detect_double_click
-        .assert * = $B445, error, "Entry point used by overlay"
-
         double_click_deltax = 5
         double_click_deltay = 4
 
@@ -13791,12 +13784,9 @@ ycoord: .word   0
 delta:  .byte   0
 .endproc
 
-        PAD_TO $B509
-
 ;;; ============================================================
 
 .proc open_prompt_window
-        .assert * = $B509, error, "Entry point used by overlay"
         sta     LD8E7
         jsr     open_dialog_window
         bit     LD8E7
@@ -13848,8 +13838,6 @@ done:   jmp     reset_grafport3a
         DDL_CENTER = $80
 
 .proc draw_dialog_label
-        .assert * = $B590, error, "Entry point used by overlay"
-
         textwidth_params := $8
         textptr := $8
         textlen := $A
@@ -13971,7 +13959,6 @@ erase_ok_button:
 ;;; ============================================================
 
 .proc draw_text1
-        .assert * = $B708, error, "Entry point used by overlay"
         params := $6
         textptr := $6
         textlen := $8
@@ -13988,8 +13975,6 @@ done:   rts
 ;;; ============================================================
 
 .proc draw_dialog_title
-        .assert * = $B723, error, "Entry point used by overlay"
-
         str       := $6
         str_data  := $6
         str_len   := $8
@@ -14072,23 +14057,50 @@ check_alpha:
         bpl     loop            ; always
 .endproc
 
+        volpath := $810
+        volbuf  := $820
+        DEFINE_OPEN_PARAMS volname_open_params, volpath, $1000
+        DEFINE_READ_PARAMS volname_read_params, volbuf, .sizeof(VolumeDirectoryHeader)
+        DEFINE_CLOSE_PARAMS volname_close_params
+
 .proc adjust_volname_case
         ptr := $A
         stax    ptr
 
-        ;; TODO: Skip if VolumeDirectoryHeader's byte $17 high bit is set
+        ldy     #0
+        lda     (ptr),y
+        sta     volpath
+        tay
+:       lda     (ptr),y
+        sta     volpath+1,y
+        dey
+        bne     :-
+        lda     #'/'
+        sta     volpath+1
+        inc     volpath
 
+        MLI_RELAY_CALL OPEN, volname_open_params
+        bne     fallback
+        lda     volname_open_params::ref_num
+        sta     volname_read_params::ref_num
+        sta     volname_close_params::ref_num
+        MLI_RELAY_CALL READ, volname_read_params
+        bne     fallback
+        MLI_RELAY_CALL CLOSE, volname_close_params
+
+        ;; TODO: Skip if VolumeDirectoryHeader's byte $17 high bit is set
+        bit     volbuf + $1B
+        bpl     fallback
+        rts
+
+fallback:
         jmp     adjust_fileentry_case::entry2
+
 .endproc
 
 ;;; ============================================================
 
-        PAD_TO $B7B9            ; Maintain previous addresses
-
-;;; ============================================================
-
 .proc set_port_from_window_id
-        .assert * = $B7B9, error, "Entry point used by overlay"
         sta     getwinport_params2::window_id
         MGTK_RELAY_CALL MGTK::GetWinPort, getwinport_params2
         MGTK_RELAY_CALL MGTK::SetPort, grafport2
@@ -14724,16 +14736,12 @@ LBCDF:  lda     path_buf2,x
 ;;; ============================================================
 
 .proc clear_path_buf2
-        .assert * = $BD69, error, "Entry point used by overlay"
-
         copy    #1, path_buf2   ; length
         copy    str_insertion_point+1, path_buf2+1 ; IP character
         rts
 .endproc
 
 .proc clear_path_buf1
-        .assert * = $BD75, error, "Entry point used by overlay"
-
         copy    #0, path_buf1   ; length
         rts
 .endproc
@@ -14822,10 +14830,6 @@ saved_proc_buf:
 
 ;;; ============================================================
 
-        PAD_TO $BE63
-
-;;; ============================================================
-
 .proc copy_name_to_buf0
         ptr := $6
 
@@ -14868,16 +14872,11 @@ set_fill_white:
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         rts
 
-        PAD_TO $BEB1
-
 reset_grafport3a:
-        .assert * = $BEB1, error, "Entry point used by overlay"
 
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
-
-        .assert * = $BEC4, error, "Segment length mismatch"
 
 ;;; ============================================================
 ;;; Invoked when exiting or launching another program.
