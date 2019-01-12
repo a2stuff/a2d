@@ -4285,7 +4285,7 @@ L6227:  sta     cached_window_icon_count
         lda     ($06),y
         and     #AS_BYTE(~icon_entry_open_mask) ; clear open_flag
         sta     ($06),y
-        and     #$0F
+        and     #icon_entry_winid_mask
         sta     selected_window_index
         jsr     zero_grafport5_coords
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
@@ -7235,7 +7235,7 @@ iloop:  jsr     ptr_calc
         bmi     inext
 
         ;; Compare names
-        and     #$0F            ; mask off name length
+        and     #NAME_LENGTH_MASK
         sta     name_len
         ldy     #1
 cloop:  lda     (ptr),y
@@ -8707,7 +8707,7 @@ error:  pha                     ; save error
 
 success:
         lda     cvi_data_buffer ; dr/slot/name_len
-        and     #$0F            ; mask off name len
+        and     #NAME_LENGTH_MASK
         bne     create_icon
         lda     cvi_data_buffer+1 ; if name len is zero, second byte is error
         jmp     error
@@ -8724,7 +8724,7 @@ create_icon:
 
         ;; Copy name, with leading/trailing space
         lda     cvi_data_buffer
-        and     #$0F
+        and     #NAME_LENGTH_MASK
         sta     cvi_data_buffer
         addr_call adjust_case, cvi_data_buffer
 
@@ -10069,6 +10069,7 @@ mapped_slot:                    ; from unit_number, not driver
 
 .proc do_get_info
         path_buf := $220
+        ptr := $6
 
         lda     selected_icon_count
         bne     :+
@@ -10076,13 +10077,15 @@ mapped_slot:                    ; from unit_number, not driver
 
 :       copy    #0, get_info_dialog_params::L92E6
         jsr     prep_grafport3
-L92F5:  ldx     get_info_dialog_params::L92E6
+loop:   ldx     get_info_dialog_params::L92E6
         cpx     selected_icon_count
-        bne     L9300
-        jmp     L9534
+        bne     :+
+        jmp     done
 
-L9300:  lda     selected_window_index
-        beq     L9331
+:       lda     selected_window_index
+        beq     vol_icon
+
+        ;; File icon
         asl     a
         tax
         copy16  window_path_addr_table,x, $08
@@ -10090,101 +10093,118 @@ L9300:  lda     selected_window_index
         lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
         jsr     join_paths
-        ldy     #$00
-L931F:  lda     path_buf3,y
+
+        ldy     #0              ; Copy name to path_buf
+:       lda     path_buf3,y
         sta     path_buf,y
         iny
         cpy     path_buf
-        bne     L931F
+        bne     :-
         dec     path_buf
-        jmp     L9356
+        jmp     common
 
-L9331:  ldx     get_info_dialog_params::L92E6
+        ;; Volume icon
+vol_icon:
+        ldx     get_info_dialog_params::L92E6
         lda     selected_icon_list,x
-        cmp     #$01
-        bne     L933E
-        jmp     L952E
-
-L933E:  jsr     icon_entry_name_lookup
-        ldy     #$00
-L9343:  lda     ($06),y
+        cmp     #1              ; trash icon?
+        bne     :+
+        jmp     next
+:       jsr     icon_entry_name_lookup
+        ldy     #0
+:       lda     (ptr),y
         sta     path_buf,y
         iny
         cpy     path_buf
-        bne     L9343
+        bne     :-
         dec     path_buf
         lda     #'/'
         sta     path_buf+1
-L9356:  yax_call JT_MLI_RELAY, GET_FILE_INFO, get_file_info_params5
-        beq     L9366
+
+        ;; Try to get file info
+common: yax_call JT_MLI_RELAY, GET_FILE_INFO, get_file_info_params5
+        beq     :+
         jsr     show_error_alert
-        beq     L9356
-L9366:  lda     selected_window_index
-        beq     L9387
+        beq     common
+:
+        lda     selected_window_index
+        beq     vol_icon2
+
+        ;; File icon
         copy    #$80, get_info_dialog_params::L92E3
         lda     get_info_dialog_params::L92E6
         clc
-        adc     #$01
+        adc     #1
         cmp     selected_icon_count
-        beq     L9381
+        beq     :+
         inc     get_info_dialog_params::L92E3
         inc     get_info_dialog_params::L92E3
-L9381:  jsr     run_get_info_dialog_proc
-        jmp     L93DB
+:       jsr     run_get_info_dialog_proc
+        jmp     common2
 
-L9387:  copy    #$81, get_info_dialog_params::L92E3
+vol_icon2:
+        copy    #$81, get_info_dialog_params::L92E3
         lda     get_info_dialog_params::L92E6
         clc
-        adc     #$01
+        adc     #1
         cmp     selected_icon_count
-        beq     L939D
+        beq     :+
         inc     get_info_dialog_params::L92E3
         inc     get_info_dialog_params::L92E3
-L939D:  jsr     run_get_info_dialog_proc
-        copy    #0, L942E
+:       jsr     run_get_info_dialog_proc
+        copy    #0, write_protected_flag
         ldx     get_info_dialog_params::L92E6
         lda     selected_icon_list,x
-        ldy     #$0F
-L93AD:  cmp     device_to_icon_map,y
-        beq     L93B8
-        dey
-        bpl     L93AD
-        jmp     L93DB
 
-L93B8:  lda     DEVLST,y
+        ;; Map icon to unit number
+        ldy     #15
+:       cmp     device_to_icon_map,y
+        beq     :+
+        dey
+        bpl     :-
+        jmp     common2
+:       lda     DEVLST,y
         sta     block_params::unit_num
         yax_call JT_MLI_RELAY, READ_BLOCK, block_params
-        bne     L93DB
+        bne     common2
         yax_call JT_MLI_RELAY, WRITE_BLOCK, block_params
         cmp     #ERR_WRITE_PROTECTED
-        bne     L93DB
-        copy    #$80, L942E
-L93DB:  ldx     get_info_dialog_params::L92E6
+        bne     common2
+        copy    #$80, write_protected_flag
+
+common2:
+        ldx     get_info_dialog_params::L92E6
         lda     selected_icon_list,x
         jsr     icon_entry_name_lookup
         copy    #1, get_info_dialog_params::L92E3
-        copy16  $06, get_info_dialog_params::L92E4
+        copy16  ptr, get_info_dialog_params::L92E4
         jsr     run_get_info_dialog_proc
         copy    #2, get_info_dialog_params::L92E3
         lda     selected_window_index
-        bne     L9413
-        bit     L942E
-        bmi     L940C
+        bne     is_file
+        bit     write_protected_flag
+        bmi     is_protected
         copy    #0, get_info_dialog_params::L92E4
         beq     L9428           ; always
-L940C:  copy    #1, get_info_dialog_params::L92E4
+
+is_protected:
+        copy    #1, get_info_dialog_params::L92E4
         bne     L9428           ; always
-L9413:  lda     get_file_info_params5::access
-        and     #$C3
-        cmp     #$C3
+
+is_file:
+        lda     get_file_info_params5::access
+        and     #ACCESS_DEFAULT
+        cmp     #ACCESS_DEFAULT
         beq     L9423
         copy    #1, get_info_dialog_params::L92E4
         bne     L9428           ; always
+
 L9423:  copy    #0, get_info_dialog_params::L92E4
 L9428:  jsr     run_get_info_dialog_proc
         jmp     L942F
 
-L942E:  .byte   0
+write_protected_flag:
+        .byte   0
 
 L942F:  copy    #3, get_info_dialog_params::L92E3
 
@@ -10287,11 +10307,12 @@ L9519:  lda     get_file_info_params5::file_type
         jsr     JT_FILE_TYPE_STRING
 L951F:  copy16  #str_file_type, get_info_dialog_params::L92E4
         jsr     run_get_info_dialog_proc
-        bne     L9534
-L952E:  inc     get_info_dialog_params::L92E6
-        jmp     L92F5
+        bne     done
 
-L9534:  copy    #0, path_buf4
+next:   inc     get_info_dialog_params::L92E6
+        jmp     loop
+
+done:   copy    #0, path_buf4
         rts
 
 str_vol:
@@ -10302,7 +10323,6 @@ str_vol:
         rts
 .endproc
 .endproc
-        L92F5 := do_get_info::L92F5
 
 ;;; ============================================================
 
@@ -10692,7 +10712,7 @@ loop:   jsr     read_file_entry
         lda     file_entry_buf + FileEntry::storage_type_name_length
         sta     saved_type_and_length
 
-        and     #$0F            ; mask off name_length
+        and     #NAME_LENGTH_MASK
         sta     file_entry_buf
 
         copy    #0, cancel_descent_flag

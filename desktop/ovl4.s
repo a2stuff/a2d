@@ -1429,7 +1429,7 @@ L5F5B:  jsr     L5ECB
 L5F87:  copy16  #$142B, $06
 L5F8F:  ldy     #$00
         lda     ($06),y
-        and     #$0F
+        and     #NAME_LENGTH_MASK
         bne     L5F9A
         jmp     L6007
 
@@ -1438,8 +1438,8 @@ L5F9A:  ldx     L6067
         sta     $1780,x
         ldy     #$00
         lda     ($06),y
-        and     #$F0
-        cmp     #$D0
+        and     #STORAGE_TYPE_MASK
+        cmp     #ST_LINKED_DIRECTORY << 4
         beq     L5FB6
         bit     L50A8
         bpl     L5FC1
@@ -1503,13 +1503,7 @@ L6033:  clc
 L6035:  lda     L6069
         cmp     L606B
         beq     L604E
-        lda     $06
-        clc
-        adc     L606A
-        sta     $06
-        lda     $07
-        adc     #$00
-        sta     $07
+        add16_8 $06, L606A, $06
         jmp     L5F8F
 
 L604E:  yax_call MLI_RELAY, READ, read_params
