@@ -8575,11 +8575,11 @@ pos_win:        .word   0, 0
 ;;;  4 = unknown / RAM-based driver
 
 device_type_to_icon_address_table:
-        .addr desktop_aux::floppy140_icon
-        .addr desktop_aux::ramdisk_icon
-        .addr desktop_aux::profile_icon
-        .addr desktop_aux::floppy800_icon
-        .addr desktop_aux::profile_icon ; unknown
+        .addr floppy140_icon
+        .addr ramdisk_icon
+        .addr profile_icon
+        .addr floppy800_icon
+        .addr profile_icon ; unknown
 
 .proc get_device_type
         slot_addr := $0A
@@ -8685,6 +8685,8 @@ buffer: .res    16, 0            ; length overwritten with '/'
 
         DEFINE_ON_LINE_PARAMS on_line_params,, cvi_data_buffer
 
+        max_icon_width = 53
+
 .proc create_volume_icon
         sta     unit_number
         dex                     ; icon numbers are 1-based, and Trash is #1,
@@ -8714,6 +8716,7 @@ success:
 
 create_icon:
         icon_ptr := $6
+        icon_defn_ptr := $8
 
         jsr     push_pointers
         jsr     DESKTOP_ALLOC_ICON
@@ -8754,16 +8757,14 @@ create_icon:
         lda     unit_number
         jsr     get_device_type
         asl                     ; * 2
-        tay
-        copy16  device_type_to_icon_offset_table,y, offset_x
-        lda     device_type_to_icon_address_table,y
-        ldx     device_type_to_icon_address_table+1,y
-
-        ;; Assign icon bitmap
-assign: ldy     #IconEntry::iconbits
+        tax
+        ldy     #IconEntry::iconbits
+        lda     device_type_to_icon_address_table,x
+        sta     icon_defn_ptr
         sta     (icon_ptr),y
-        txa
         iny
+        lda     device_type_to_icon_address_table+1,x
+        sta     icon_defn_ptr+1
         sta     (icon_ptr),y
 
         ;; ----------------------------------------
@@ -8788,8 +8789,11 @@ assign: ldy     #IconEntry::iconbits
         bne     :-
 
         ;; Center it horizontally
+        ldy     #IconDefinition::maprect + MGTK::Rect::x2
+        sub16in #max_icon_width, (icon_defn_ptr),y, offset
+        lsr16   offset          ; offset = (max_width - icon_width) / 2
         ldy     #IconEntry::iconx
-        add16in (icon_ptr),y, offset_x, (icon_ptr),y
+        add16in (icon_ptr),y, offset, (icon_ptr),y
 
         ;; Assign icon number
         ldx     cached_window_icon_count
@@ -8803,16 +8807,7 @@ assign: ldy     #IconEntry::iconbits
 unit_number:    .byte   0
 devlst_index:   .byte   0
 icon_index:     .byte   0
-offset_x:       .word   0
-
-;;; Table of icon widths (/2) for centering icons
-;;; TODO: Keep this up to date with icon bitmaps in desktop_aux
-device_type_to_icon_offset_table:
-        .word   (53 - 27) / 2   ; floppy140
-        .word   (53 - 38) / 2   ; ramdisk
-        .word   (53 - 53) / 2   ; profile
-        .word   (53 - 21) / 2   ; floppy800
-        .word   (53 - 53) / 2   ; profile
+offset:         .word   0
 
 
 ;;; Icons are placed places in order as specified by caller
@@ -15101,7 +15096,7 @@ trash_name:  PASCAL_STRING " Trash "
         ldy     #IconEntry::win_type
         copy    #icon_entry_type_trash, (ptr),y
         ldy     #IconEntry::iconbits
-        copy16in #desktop_aux::trash_icon, (ptr),y
+        copy16in #trash_icon, (ptr),y
         iny
         ldx     #0
 :       lda     trash_name,x

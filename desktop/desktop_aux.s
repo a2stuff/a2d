@@ -2704,13 +2704,6 @@ LA923:  lda     setportbits_params2::cliprect::x2
 
 ;;; ============================================================
 
-        ;; 5.25" Floppy Disk
-floppy140_icon:
-        .addr   floppy140_pixels; mapbits
-        .byte   4               ; mapwidth
-        .byte   0               ; reserved
-        DEFINE_RECT   0, 0, 26, 14 ; maprect
-
 floppy140_pixels:
         .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
         .byte   px(%1100000),px(%0000011),px(%1000000),px(%0000110)
@@ -2728,13 +2721,6 @@ floppy140_pixels:
         .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000110)
         .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
 
-        ;; RAM Disk
-ramdisk_icon:
-        .addr   ramdisk_pixels  ; mapbits
-        .byte   6               ; mapwidth
-        .byte   0               ; reserved
-        DEFINE_RECT   0, 0, 39, 11 ; maprect
-
 ramdisk_pixels:
         .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111101)
         .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0001110)
@@ -2748,13 +2734,6 @@ ramdisk_pixels:
         .byte   px(%1111111),px(%1111111),px(%1111111),px(%1110011),px(%0011001),px(%1001110)
         .byte   px(%1010101),px(%0101010),px(%1010101),px(%0110011),px(%0011001),px(%1001101)
         .byte   px(%0101010),px(%1010101),px(%0101010),px(%1111111),px(%1111111),px(%1111110)
-
-        ;; 3.5" Floppy Disk
-floppy800_icon:
-        .addr   floppy800_pixels; mapbits
-        .byte   3               ; mapwidth
-        .byte   0               ; reserved
-        DEFINE_RECT   0, 0, 20, 11 ; maprect
 
 floppy800_pixels:
         .byte   px(%1111111),px(%1111111),px(%1111110)
@@ -2770,13 +2749,6 @@ floppy800_pixels:
         .byte   px(%1100110),px(%0000000),px(%0110011)
         .byte   px(%1111111),px(%1111111),px(%1111111)
 
-        ;; Hard Disk
-profile_icon:
-        .addr   profile_pixels  ; mapbits
-        .byte   8               ; mapwidth
-        .byte   0               ; reserved
-        DEFINE_RECT   0, 0, 52, 9 ; maprect
-
 profile_pixels:
         .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1110101)
         .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0011010)
@@ -2788,13 +2760,6 @@ profile_pixels:
         .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0011101)
         .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1110101)
         .byte   px(%1010111),px(%0101010),px(%1010101),px(%0101010),px(%1010101),px(%0101010),px(%1010111),px(%0101010)
-
-        ;; Trash Can
-trash_icon:
-        .addr   trash_pixels    ; mapbits
-        .byte   3               ; mapwidth
-        .byte   0               ; reserved
-        DEFINE_RECT   0, 0, 20, 17 ; maprect
 
 trash_pixels:
         .byte   px(%1010101),px(%1111111),px(%1010101)
@@ -3183,7 +3148,6 @@ str_on_system_disk:
 show_alert_indirection:
         jmp     show_alert_dialog
 
-;;; TODO: Dedupe with alert_bitmap2 in desktop_res
 alert_bitmap:
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)
         .byte   px(%0111111),px(%1111100),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000)

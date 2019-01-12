@@ -832,6 +832,8 @@ delete_a_file_label:
 file_to_delete_label:
         PASCAL_STRING "File to delete:"
 
+;;; ============================================================
+
 pos_clock:
         DEFINE_POINT 500, 10
 
@@ -840,6 +842,46 @@ str_clock:
 
 is_iic_plus_flag:
         .byte   0
+
+;;; ============================================================
+
+;;; 5.25" Floppy Disk
+floppy140_icon:
+        .addr   desktop_aux::floppy140_pixels; mapbits
+        .byte   4               ; mapwidth
+        .byte   0               ; reserved
+        DEFINE_RECT   0, 0, 26, 14 ; maprect
+
+;;; RAM Disk
+ramdisk_icon:
+        .addr   desktop_aux::ramdisk_pixels  ; mapbits
+        .byte   6               ; mapwidth
+        .byte   0               ; reserved
+        DEFINE_RECT   0, 0, 39, 11 ; maprect
+
+;;; 3.5" Floppy Disk
+floppy800_icon:
+        .addr   desktop_aux::floppy800_pixels; mapbits
+        .byte   3               ; mapwidth
+        .byte   0               ; reserved
+        DEFINE_RECT   0, 0, 20, 11 ; maprect
+
+;;; Hard Disk
+profile_icon:
+        .addr   desktop_aux::profile_pixels  ; mapbits
+        .byte   8               ; mapwidth
+        .byte   0               ; reserved
+        DEFINE_RECT   0, 0, 52, 9 ; maprect
+
+;;; Trash Can
+trash_icon:
+        .addr   desktop_aux::trash_pixels    ; mapbits
+        .byte   3               ; mapwidth
+        .byte   0               ; reserved
+        DEFINE_RECT   0, 0, 20, 17 ; maprect
+
+
+;;; ============================================================
 
         PAD_TO $DB00
 
