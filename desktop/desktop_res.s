@@ -1395,7 +1395,13 @@ date:  .word   0
 ;;; --------------------------------------------------
 
 icon_entries:
-        .byte   0, 0, 0, $F4, 1, $A0 ; overwritten ???
+        ;; Trash icon placed first, has these bytes...
+        .byte   0                    ; id (overwritten)
+        .byte   0                    ; state (overwritten)
+        .byte   0                    ; win_type (overwritten)
+        .word   500, 160             ; iconx, icony
+        .byte   0                    ; len
+        .res    17, 0                ; name
         PAD_TO $ED00
 
 ;;; (there's enough room here for 127 files at 27 bytes each)
