@@ -1413,9 +1413,9 @@ icon_entries:
         .byte   0                    ; id (overwritten)
         .byte   0                    ; state (overwritten)
         .byte   0                    ; win_type (overwritten)
-        .word   500, 160             ; iconx, icony
-        .byte   0                    ; len
-        .res    17, 0                ; name
+        .word   506, 160             ; iconx, icony
+        .byte   0                    ; len (overwritten)
+        .res    17, 0                ; name (overwritten)
         PAD_TO $ED00
 
 ;;; (there's enough room here for 127 files at 27 bytes each)
