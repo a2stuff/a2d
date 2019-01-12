@@ -631,8 +631,6 @@ L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_window_id
         rts
 .endproc
 
-        rts                     ; ???
-
 .proc reset_grafport3
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
@@ -1607,8 +1605,6 @@ read:   yxa_jump MLI_RELAY, READ, read_params
 
 close:  yxa_jump MLI_RELAY, CLOSE, close_params
 
-unused: .byte   0               ; ???
-
         DEFINE_OPEN_PARAMS open_params, str_desk_acc, DA_IO_BUFFER
         open_ref_num := open_params::ref_num
 
@@ -2055,8 +2051,6 @@ L4FD4:  copy    #$80, new_folder_dialog_params::phase
         jsr     DESKTOP_SHOW_ALERT0
         copy16  L504E, new_folder_dialog_params::win_path_ptr
         jmp     L4FC6
-
-        rts                     ; ???
 
 success:
         copy    #$40, new_folder_dialog_params::phase
@@ -3498,8 +3492,6 @@ add_icon:
 
 previous_icon_count:
         .byte    0
-
-L5AC7:  .res    9, 0            ; unused ???
 
 ;;; 0 = command, $80 = format/erase, $C0 = open/eject/rename
 check_drive_flags:
@@ -9966,8 +9958,6 @@ control_code:   .byte   4       ; Eject disk
 list:   .word   0               ; 0 items in list
 unit_number:
         .byte   0
-
-        .byte   0               ; unused???
 .endproc
 
 ;;; ============================================================
@@ -10528,8 +10518,6 @@ pointers_buf:  .res    4, 0
         DEFINE_READ_PARAMS read_src_dir_skip5_params, skip5_buf, 5 ; ???
 skip5_buf:  .res    5, 0
 
-        .res    4, 0            ; unused???
-
         buf_size = $AC0
 
         DEFINE_CLOSE_PARAMS close_src_params
@@ -10545,12 +10533,7 @@ skip5_buf:  .res    5, 0
         .byte   0,0
 
         DEFINE_GET_FILE_INFO_PARAMS src_file_info_params, src_path_buf
-
-        .byte   0
-
         DEFINE_GET_FILE_INFO_PARAMS dst_file_info_params, dst_path_buf
-
-        .byte   0
 
         DEFINE_SET_EOF_PARAMS set_eof_params, 0
         DEFINE_SET_MARK_PARAMS mark_src_params, 0
@@ -11175,9 +11158,6 @@ got_exist_size:
         sta     dst_path_buf
         jmp     :-
 
-        ;; Unused???
-        jmp     close_files_cancel_dialog
-
 got_info:
         ;; aux = total blocks
         sub16   dst_file_info_params::aux_type, dst_file_info_params::blocks_used, blocks_free
@@ -11579,11 +11559,6 @@ err:    jsr     show_error_alert
 
 next_file:
         jmp     remove_src_path_segment
-
-        ;; unused ???
-        jsr     remove_src_path_segment
-        copy    #$FF, cancel_descent_flag
-        rts
 .endproc
 
 .proc destroy_with_retry
@@ -14008,54 +13983,16 @@ hi:  .byte   0
 .endproc
 
 ;;; ============================================================
-;;; Adjust filename case in a FileEntry, if not GS/OS flagged.
+;;; Adjust filename case, using GS/OS bits or heuristics
+;;; http://www.1000bit.it/support/manuali/apple/technotes/gsos/tn.gsos.08.html
+
+;;; adjust_fileeentry_case:
 ;;; Input: A,X points at FileEntry structure.
-.proc adjust_fileentry_case
-        ptr := $A
+;;;
+;;; adjust_volname_case:
+;;; Input: A,X points at ON_LINE result (e.g. 'MY.DISK', length + 15 chars)
 
-        stax    ptr
-
-        ;; Check for GS/OS lowercase filename
-        ;; http://www.1000bit.it/support/manuali/apple/technotes/gsos/tn.gsos.08.html
-        ldy     #FileEntry::min_version
-        lda     (ptr),y
-        bmi     done            ; High bit is set = natively supported
-
-entry2: ldy     #FileEntry::storage_type_name_length
-        lda     (ptr),y
-        and     #NAME_LENGTH_MASK
-        beq     done
-
-        .assert FileEntry::file_name = 1, error, "bad assumptions in structure"
-
-        ;; Walk backwards through string. At char N, check char N-1
-        ;; to see if it is a symbol. If it is, and char N is a letter,
-        ;; lower-case it.
-        tay
-
-loop:   dey
-        beq     done
-        bpl     :+
-done:   rts
-
-:       lda     (ptr),y
-        cmp     #'0'            ; <'0' includes '.'
-        bcs     check_alpha
-        dey
-        bpl     loop            ; always
-
-check_alpha:
-        iny
-        lda     (ptr),y
-        cmp     #'A'
-        bcc     :+
-        cmp     #'Z'+1
-        bcs     :+
-        ora     #AS_BYTE(~CASE_MASK)
-        sta     (ptr),y
-:       dey
-        bpl     loop            ; always
-.endproc
+.proc adjust_case_impl
 
         volpath := $810
         volbuf  := $820
@@ -14063,10 +14000,15 @@ check_alpha:
         DEFINE_READ_PARAMS volname_read_params, volbuf, .sizeof(VolumeDirectoryHeader)
         DEFINE_CLOSE_PARAMS volname_close_params
 
-.proc adjust_volname_case
         ptr := $A
+
+;;; --------------------------------------------------
+;;; Called with volume name. Convert to path, load
+;;; VolumeDirectoryHeader, use bytes $1A/$1B
+vol_name:
         stax    ptr
 
+        ;; Convert volume name to a path
         ldy     #0
         lda     (ptr),y
         sta     volpath
@@ -14088,15 +14030,81 @@ check_alpha:
         bne     fallback
         MLI_RELAY_CALL CLOSE, volname_close_params
 
-        ;; TODO: Skip if VolumeDirectoryHeader's byte $17 high bit is set
-        bit     volbuf + $1B
-        bpl     fallback
-        rts
+        copy16  volbuf + $1A, version_bytes
+        jmp     common
+
+;;; --------------------------------------------------
+;;; Called with FileEntry. Copy version bytes directly.
+file_entry:
+        stax    ptr
+
+        .assert FileEntry::file_name = 1, error, "bad assumptions in structure"
+
+        ldy     #FileEntry::version
+        copy16in (ptr),y, version_bytes
+        ;; fall through
+
+common:
+        asl16   version_bytes
+        bcs     apply_bits      ; High bit set = GS/OS case bits present
+
+;;; --------------------------------------------------
+;;; GS/OS bits are not present; apply heuristics
 
 fallback:
-        jmp     adjust_fileentry_case::entry2
+        ldy     #0
+        lda     (ptr),y
+        and     #NAME_LENGTH_MASK
+        beq     done
 
+        ;; Walk backwards through string. At char N, check char N-1
+        ;; to see if it is a '.'. If it isn't, and char N is a letter,
+        ;; lower-case it.
+        tay
+
+loop:   dey
+        beq     done
+        bpl     :+
+done:   rts
+
+:       lda     (ptr),y
+        cmp     #'.'
+        bne     check_alpha
+        dey
+        bpl     loop            ; always
+
+check_alpha:
+        iny
+        lda     (ptr),y
+        cmp     #'A'
+        bcc     :+
+        ora     #AS_BYTE(~CASE_MASK)
+        sta     (ptr),y
+:       dey
+        bpl     loop            ; always
+
+;;; --------------------------------------------------
+;;; GS/OS bits are present - apply to recase string.
+
+apply_bits:
+        ldy     #1
+bloop:  asl16   version_bytes
+        bcc     :+
+        lda     (ptr),y
+        ora     #AS_BYTE(~CASE_MASK)
+        sta     (ptr),y
+:       iny
+        cpy     #16
+        bcc     bloop
+        rts
+
+
+version_bytes:
+        .word   0
 .endproc
+        adjust_fileentry_case := adjust_case_impl::file_entry
+        adjust_volname_case := adjust_case_impl::vol_name
+
 
 ;;; ============================================================
 
@@ -15195,9 +15203,6 @@ smartport_params:
         .byte   0               ; status code (0 = device status)
 
 devcnt: .byte   0
-
-unit_number:
-        .byte   0               ; now unused
 
 end:
 .endproc
