@@ -3535,16 +3535,6 @@ check_drive_flags:
 
 ;;; ============================================================
 
-.proc append_space_after_int
-        inc     str_from_int
-        ldx     str_from_int
-        lda     #' '
-        sta     str_from_int,x
-        rts
-.endproc
-
-;;; ============================================================
-
 active_window_view_by:
         .byte   0
 
@@ -14918,12 +14908,12 @@ done:   rts
 
         .org $800
 
-;;; ============================================================
-
 start:
 
-.proc detect_machine
-        ;; Detect machine type
+;;; ============================================================
+;;; Detect Machine Type
+
+.scope machine_type
         ;; See Apple II Miscellaneous #7: Apple II Family Identification
         copy    #0, iigs_flag
         lda     ID_BYTE_FBC0    ; 0 = IIc or IIc+
@@ -14952,25 +14942,27 @@ start:
         bit     iigs_flag       ; (number is used in double-click timer)
         bpl     is_iie
         copy    #$FD, machine_type ; IIgs
-        jmp     init_video
+        jmp     end
 
 is_iie: copy    #$96, machine_type ; IIe
-        jmp     init_video
+        jmp     end
 
 is_iic: copy    #$FA, machine_type ; IIc
         lda     $FBBF              ; for IIc, ROM version
         cmp     #$05               ; IIc Plus?
         bne     :+
         copy    #$80, is_iic_plus_flag
-:       jmp     init_video
-.endproc
+:       jmp     end
 
 iigs_flag:                      ; High bit set if IIgs detected.
         .byte   0
 
+end:
+.endscope
 ;;; ============================================================
+;;; Initialize video
 
-.proc init_video
+.scope
         ;;  AppleColor Card - Mode 1 (Monochrome 560x192)
         sta     CLR80VID
         sta     AN3_OFF
@@ -14981,7 +14973,7 @@ iigs_flag:                      ; High bit set if IIgs detected.
         sta     AN3_OFF
 
         ;; IIgs ?
-        bit     iigs_flag
+        bit     machine_type::iigs_flag
         bmi     iigs
 
         ;; Le Chat Mauve - BW560 mode
@@ -14997,11 +14989,12 @@ iigs:   lda     NEWVIDEO
         sta     NEWVIDEO
         ;; fall through
 end:
-.endproc
+.endscope
 
 ;;; ============================================================
+;;; Back up DEVLST
 
-.proc backup_device_list
+.scope
         ;; Make a copy of the original device list
         ldx     DEVCNT
         inx
@@ -15010,9 +15003,12 @@ end:
         dex
         bpl     :-
         ;; fall through
-.endproc
+.endscope
 
-.proc detach_ramdisk
+;;; ============================================================
+;;; Detach aux-memory RAM Disk
+
+.scope
         ;; Look for /RAM
         ldx     DEVCNT
 :       lda     DEVLST,x
@@ -15021,28 +15017,30 @@ end:
         beq     found_ram
         dex
         bpl     :-
-        bmi     init_mgtk
+        bmi     end
 found_ram:
         jsr     remove_device
         ;; fall through
-.endproc
+
+end:
+.endscope
 
 ;;; ============================================================
+;;; Initialize MGTK
 
-        ;; Initialize MGTK
-.proc init_mgtk
+.scope
         MGTK_RELAY_CALL MGTK::StartDeskTop, startdesktop_params
         MGTK_RELAY_CALL MGTK::SetMenu, splash_menu
         MGTK_RELAY_CALL MGTK::SetZP1, zp_use_flag0
         MGTK_RELAY_CALL MGTK::SetCursor, watch_cursor
         MGTK_RELAY_CALL MGTK::ShowCursor
         ;; fall through
-.endproc
+.endscope
 
 ;;; ============================================================
+;;; Populate icon_entries table
 
-        ;; Populate icon_entries table
-.proc populate_icon_entries_table
+.scope
         ptr := $6
 
         jsr     desktop_main::push_pointers
@@ -15074,12 +15072,12 @@ loop:   cpx     #max_icon_count
         inx
         jmp     loop
 end:
-.endproc
+.endscope
 
 ;;; ============================================================
+;;; Zero the window icon tables
 
-        ;; Zero the window icon tables
-.proc clear_window_icon_tables
+.scope
         sta     RAMWRTON
         lda     #$00
         tax
@@ -15092,7 +15090,7 @@ loop:   sta     $1F00,x         ; window 8, icon use map
         bne     loop
         sta     RAMWRTOFF
         jmp     create_trash_icon
-.endproc
+.endscope
 
 ;;; ============================================================
 
@@ -15392,21 +15390,22 @@ end:
 .endproc
 
 ;;; ============================================================
+;;; Enumerate Desk Accessories
 
-.proc enumerate_desk_accessories
-        MGTK_RELAY_CALL MGTK::CheckEvents ; ???
+.scope
+        MGTK_RELAY_CALL MGTK::CheckEvents
 
         read_dir_buffer := $1400
 
         ;; Does the directory exist?
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
         beq     :+
-        jmp     populate_volume_icons_and_device_names
+        jmp     end
 
 :       lda     get_file_info_type
         cmp     #FT_DIRECTORY
         beq     open_dir
-        jmp     populate_volume_icons_and_device_names
+        jmp     end
 
 open_dir:
         MLI_RELAY_CALL OPEN, open_params
@@ -15563,13 +15562,14 @@ entry_in_block: .byte   0
 ptr_calc_hi:    .byte   0
 
 end:
-.endproc
+.endscope
 
 ;;; ============================================================
+;;; Populate volume icons and device names
 
 ;;; TODO: Dedupe with cmd_check_drives
 
-.proc populate_volume_icons_and_device_names
+.scope
         devname_ptr := $08
 
         ldy     #0
@@ -15701,7 +15701,7 @@ device_index:
         .byte   0
 cvi_result:
         .byte   0
-.endproc
+.endscope
 
 ;;; ============================================================
 
