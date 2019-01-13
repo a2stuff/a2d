@@ -14912,49 +14912,68 @@ start:
 ;;; ============================================================
 ;;; Detect Machine Type
 
+;;; NOTE: Starts with ROM paged in, exits with LCBANK1 paged in.
+
 .scope machine_type
         ;; See Apple II Miscellaneous #7: Apple II Family Identification
+
+        ;; First, detect IIgs
         copy    #0, iigs_flag
-        lda     ID_BYTE_FBC0    ; 0 = IIc or IIc+
-        beq     :+
         sec                     ; Follow detection protocol
         jsr     ID_BYTE_FE1F    ; RTS on pre-IIgs
         bcs     :+              ; carry clear = IIgs
         copy    #$80, iigs_flag
+:
+        ;; Now stash the bytes we need
+        copy    ID_BYTE_FBB3, id_FBB3 ; $06 = IIe or later
+        copy    ID_BYTE_FBC0, id_FBC0 ; $00 = IIc or later
+        copy    ID_BYTE_FBBF, id_FBBF ; IIc ROM version (IIc+ = $05)
 
-:       ldx     ID_BYTE_FBB3
-        ldy     ID_BYTE_FBC0
-        cpx     #$06            ; Ensure a IIe or later
-        beq     :+
-        brk                     ; Otherwise (][, ][+, ///), just crash
-
+        ;; ... and page in LCBANK1
 :       sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         sta     SET80COL
 
-        stx     startdesktop_params::machine
-        sty     startdesktop_params::subid
+        ;; Ensure we're on a IIe or later
+        lda     id_FBB3
+        cmp     #$06            ; Ensure a IIe or later
+        beq     :+
+        brk                     ; Otherwise (][, ][+, ///), just crash
 
-        cpy     #0
-        beq     is_iic          ; Now identify/store specific machine type.
-        bit     iigs_flag       ; (number is used in double-click timer)
-        bpl     is_iie
+        ;; State needed by MGTK
+:       copy    id_FBB3, startdesktop_params::machine
+        copy    id_FBC0, startdesktop_params::subid
+
+        ;; Identify machine type (double-click timer, other flags)
+        copy    #0, is_iic_plus_flag
+
+        lda     id_FBC0
+        beq     is_iic          ; $FBC0 = $00 -> is IIc or IIc+
+        bit     iigs_flag
+        bmi     is_iigs
+
+        copy    #$96, machine_type ; IIe
+        jmp     end
+
+is_iigs:
         copy    #$FD, machine_type ; IIgs
         jmp     end
 
-is_iie: copy    #$96, machine_type ; IIe
-        jmp     end
 
 is_iic: copy    #$FA, machine_type ; IIc
-        lda     $FBBF              ; for IIc, ROM version
-        cmp     #$05               ; IIc Plus?
+        lda     id_FBBF            ; ROM version
+        cmp     #$05               ; IIc Plus = $05
         bne     :+
         copy    #$80, is_iic_plus_flag
 :       jmp     end
 
 iigs_flag:                      ; High bit set if IIgs detected.
         .byte   0
+
+id_FBB3: .byte   0
+id_FBC0: .byte   0
+id_FBBF: .byte   0
 
 end:
 .endscope

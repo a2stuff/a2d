@@ -63,6 +63,7 @@ IRQ_VECTOR      := $3FE
 
 ID_BYTE_FBB3    := $FBB3        ; $06 = IIe or later
 ID_BYTE_FBC0    := $FBC0        ; $EA = IIe, $E0 = IIe enh/IIgs, $00 = IIc/IIc+
+ID_BYTE_FBBF    := $FBBF        ; IIc ROM version ($05 = IIc+)
 ID_BYTE_FE1F    := $FE1F        ; RTS ($60) on pre-IIgs, clears carry on IIgs
 
 
