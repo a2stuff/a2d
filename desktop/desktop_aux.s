@@ -298,11 +298,13 @@ highlight_count:                ; number of highlighted icons
 highlight_list:                 ; selected icons
         .res    127, 0
 
+        max_draggable_items = 20
+
 ;;; Polygon holding the composite outlines of all icons
 ;;; being dragged.
 
 drag_outline_buffer:
-        .res    680, 0
+        .res    max_draggable_items * (.sizeof(MGTK::Point) * 8 + 2), 0
 
 ;;; ============================================================
 
@@ -1085,7 +1087,7 @@ y_lo:   lda     deltay
         ;; Meets the threshold - it is a drag, not just a click.
 is_drag:
         lda     highlight_count
-        cmp     #$15            ; max number of draggable items?
+        cmp     #max_draggable_items + 1
         bcc     :+
         jmp     ignore_drag     ; too many
 
