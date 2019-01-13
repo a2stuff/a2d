@@ -298,13 +298,12 @@ highlight_count:                ; number of highlighted icons
 highlight_list:                 ; selected icons
         .res    127, 0
 
-        max_draggable_items = 20
+;;; Polygon holding the composite outlines of all icons being dragged.
+;;; Re-use the "save area" ($800-$1AFF) since menus won't show during
+;;; this operation.
 
-;;; Polygon holding the composite outlines of all icons
-;;; being dragged.
-
-drag_outline_buffer:
-        .res    max_draggable_items * (.sizeof(MGTK::Point) * 8 + 2), 0
+        drag_outline_buffer := save_area_buffer
+        max_draggable_items = save_area_size / (.sizeof(MGTK::Point) * 8 + 2)
 
 ;;; ============================================================
 

@@ -178,6 +178,9 @@ checkerboard_pattern3:
         .byte   %10101010
         .byte   $FF
 
+save_area_buffer := $800
+save_area_size   = $1300
+
         ;; Copies of ROM bytes used for machine identification
 .proc startdesktop_params
 machine:        .byte   $06     ; ROM FBB3 ($06 = IIe or later)
@@ -186,8 +189,8 @@ op_sys:         .byte   0       ; 0=ProDOS
 slot_num:       .byte   0       ; Mouse slot, 0 = search
 use_interrupts: .byte   0       ; 0=passive
 sysfontptr:     .addr   DEFAULT_FONT
-savearea:       .addr   $0800   ; $0800 - $1AFF
-savesize:       .word   $1300
+savearea:       .addr   save_area_buffer
+savesize:       .word   save_area_size
 .endproc
 
 zp_use_flag0:
