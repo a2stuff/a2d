@@ -4655,7 +4655,7 @@ L66A0:  .word   0
 .proc update_window_menu_items
         ldx     active_window_id
         beq     disable_menu_items
-        jmp     check_menu_items
+        jmp     check_view_menu_items
 
 disable_menu_items:
         copy    #MGTK::disablemenu_disable, disablemenu_params::disable
@@ -4673,8 +4673,7 @@ disable_menu_items:
         copy    #0, menu_dispatch_flag
         rts
 
-        ;; Is this residue of a Windows menu???
-check_menu_items:
+check_view_menu_items:
         dex
         lda     win_view_by_table,x
         and     #$0F
@@ -5139,7 +5138,7 @@ L6B3A:  lda     icon_params2
 
 L6B60:  copy    #0, checkitem_params::check
         jsr     check_item
-L6B68:  lda     #$01
+L6B68:  lda     #desktop_aux::menu_item_id_view_by_icon
         sta     checkitem_params::menu_item
         sta     checkitem_params::check
         jsr     check_item
