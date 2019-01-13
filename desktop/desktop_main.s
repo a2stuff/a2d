@@ -721,8 +721,6 @@ changed:
 
 ;;; ============================================================
 
-        .byte   $00
-
 max_removable_devices = 8
 
 removable_device_table:
@@ -743,6 +741,7 @@ last_disk_in_devices_table:
 
 .proc check_disks_in_devices
         ptr := $6
+        status_buffer := $800
 
         ldx     removable_device_table
         beq     done
@@ -802,8 +801,6 @@ list_ptr:       .addr   status_buffer
 status_code:    .byte   0
 .endproc
 status_unit_num := status_params::unit_num
-
-status_buffer:  .res    16, 0
 .endproc
 
 ;;; ============================================================
@@ -1024,8 +1021,6 @@ str_basic_system:
 
 ;;; --------------------------------------------------
 
-prefix_buffer:  .res    30, 0
-
 .proc upcase_string
         ptr := $06
 
@@ -1042,7 +1037,6 @@ loop:   lda     (ptr),y
 .endproc
 
 .endproc
-        prefix_buffer := launch_file::prefix_buffer
 
 .proc upcase_char
         cmp     #'a'
@@ -1058,7 +1052,7 @@ done:   rts
 L485D:  .word   $E000
 L485F:  .word   $D000
 
-sys_start_flag:  .byte   $00
+sys_start_flag:  .byte   0
 sys_start_path:  .res    40, 0
 
 ;;; ============================================================
@@ -5553,10 +5547,10 @@ pathlen:        .byte   0
         ptr := $6
 
         stax    ptr
-        sty     vol_info_path_buf
+        sty     path_buffer
 
 :       lda     (ptr),y
-        sta     vol_info_path_buf,y
+        sta     path_buffer,y
         dey
         bne     :-
 
@@ -5716,15 +5710,12 @@ found_windows_list:
 .proc open_directory
         jmp     start
 
-        DEFINE_OPEN_PARAMS open_params, vol_info_path_buf, $800
-
-vol_info_path_buf:
-        .res    65, 0
+        DEFINE_OPEN_PARAMS open_params, path_buffer, $800
 
         DEFINE_READ_PARAMS read_params, $0C00, $200
         DEFINE_CLOSE_PARAMS close_params
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params4, vol_info_path_buf
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params4, path_buffer
 
         .byte   0
 vol_kb_free:  .word   0
@@ -5743,7 +5734,7 @@ L70C4:  .byte   $00
         sta     L72A7
         jsr     push_pointers
 
-        COPY_BYTES $41, LE1B0, vol_info_path_buf
+        COPY_BYTES $41, LE1B0, path_buffer
 
         jsr     do_open
         lda     open_params::ref_num
@@ -6015,7 +6006,6 @@ get_vol_free_used:
 .endproc
         vol_kb_free := open_directory::vol_kb_free
         vol_kb_used := open_directory::vol_kb_used
-        vol_info_path_buf := open_directory::vol_info_path_buf
         get_vol_free_used := open_directory::get_vol_free_used
 
 ;;; ============================================================
@@ -8849,8 +8839,6 @@ desktop_icon_coords_table:
 
 ;;; ============================================================
 
-        DEFINE_GET_PREFIX_PARAMS get_prefix_params, prefix_buffer
-
 .proc remove_icon_from_window
         ldx     cached_window_icon_count
         dex
@@ -10543,8 +10531,7 @@ skip5_buf:  .res    5, 0
 
 ;;; ============================================================
 
-        ;; buffer of 39
-file_entry_buf:  .res    48, 0
+file_entry_buf:  .res    .sizeof(FileEntry), 0
 
         ;; overlayed indirect jump table
         op_jt_addrs_size := 6
@@ -15217,9 +15204,6 @@ end:
         selector_list_data_buf := $1400
         selector_list_data_len := $400
 
-        ;; Save the current PREFIX
-        MGTK_RELAY_CALL MGTK::CheckEvents
-        MLI_RELAY_CALL GET_PREFIX, desktop_main::get_prefix_params
         MGTK_RELAY_CALL MGTK::CheckEvents
 
         copy    #0, L0A92
@@ -15808,8 +15792,6 @@ slot_string_table:
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params2, desktop_main::sys_start_path
         .byte   0
 
-        DEFINE_GET_PREFIX_PARAMS get_prefix_params, desktop_main::sys_start_path
-
 str_system_start:  PASCAL_STRING "System/Start"
 
 .proc final_setup
@@ -15818,7 +15800,6 @@ str_system_start:  PASCAL_STRING "System/Start"
         jsr     desktop_main::get_copied_to_ramcard_flag
         cmp     #$80
         beq     L0EFE
-        MLI_RELAY_CALL GET_PREFIX, get_prefix_params
         bne     config_toolkit
         dec     desktop_main::sys_start_path
         jmp     L0F05
