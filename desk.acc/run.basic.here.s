@@ -37,6 +37,10 @@ prefix_path:    .res    65, 0
 
 ;;; ============================================================
 
+        ;; Early errors - show alert and return to DeskTop
+fail:   jsr JUMP_TABLE_ALERT_X
+        rts
+
 start:
         ;; Get active window's path
         jsr     get_win_path
@@ -64,6 +68,33 @@ start:
         sta     LOWSCR
         sta     LORES
         sta     MIXCLR
+
+        ;; AppleColor Card - Mode 2 (Color 140x192)
+        sta     SET80VID
+        lda     AN3_OFF
+        lda     AN3_ON
+        lda     AN3_OFF
+        lda     AN3_ON
+        lda     AN3_OFF
+
+        ;; IIgs?
+        sec
+        jsr     ID_BYTE_FE1F
+        bcc     iigs
+
+        ;; Le Chat Mauve - COL140 mode
+        ;; (AN3 off, HR1 off, HR2 off, HR3 off)
+        ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
+        sta     HR2_OFF
+        sta     HR3_OFF
+        bcs     finish_video
+
+        ;; Apple IIgs - DHR Color
+iigs:   lda     NEWVIDEO
+        and     #<~(1<<5)       ; Color
+        sta     NEWVIDEO
+
+finish_video:
         sta     DHIRESOFF
         sta     CLRALTCHAR
         sta     CLR80VID
@@ -92,11 +123,6 @@ start:
 
         ;; Launch
         jmp     $2000
-
-
-        ;; Early errors - show alert and return to DeskTop
-fail:   jsr JUMP_TABLE_ALERT_X
-        rts
 
         ;; Late errors - QUIT, which should relaunch DeskTop
 quit:   MLI_CALL QUIT, quit_params

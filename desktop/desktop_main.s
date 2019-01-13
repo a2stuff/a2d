@@ -9344,6 +9344,53 @@ done:   rts
 .endproc
 
 ;;; ============================================================
+;;; Invoked when exiting or launching another program.
+
+.proc exit_dhr_mode
+        lda     ROMIN2
+        jsr     SETVID
+        jsr     SETKBD
+        jsr     INIT
+        jsr     HOME
+        sta     TXTSET
+        sta     LOWSCR
+        sta     LORES
+        sta     MIXCLR
+
+        ;; AppleColor Card - Mode 2 (Color 140x192)
+        sta     SET80VID
+        lda     AN3_OFF
+        lda     AN3_ON
+        lda     AN3_OFF
+        lda     AN3_ON
+        lda     AN3_OFF
+
+        ;; IIgs?
+        sec
+        jsr     ID_BYTE_FE1F
+        bcc     iigs
+
+        ;; Le Chat Mauve - COL140 mode
+        ;; (AN3 off, HR1 off, HR2 off, HR3 off)
+        ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
+        sta     HR2_OFF
+        sta     HR3_OFF
+        bcs     finish_video
+
+        ;; Apple IIgs - DHR Color
+iigs:   lda     NEWVIDEO
+        and     #<~(1<<5)       ; Color
+        sta     NEWVIDEO
+
+finish_video:
+        sta     DHIRESOFF
+        sta     CLRALTCHAR
+        sta     CLR80VID
+        sta     CLR80COL
+        rts
+.endproc
+
+;;; ============================================================
 
         PAD_TO $8F00
 
@@ -14863,33 +14910,6 @@ reset_grafport3a:
         rts
 
 ;;; ============================================================
-;;; Invoked when exiting or launching another program.
-
-.proc exit_dhr_mode
-        lda     ROMIN2
-        jsr     SETVID
-        jsr     SETKBD
-        jsr     INIT
-        jsr     HOME
-        sta     TXTSET
-        sta     LOWSCR
-        sta     LORES
-        sta     MIXCLR
-        sta     DHIRESOFF
-        sta     CLRALTCHAR
-        sta     CLR80VID
-        sta     CLR80COL
-
-        ;; On IIgs (only), restore DHR Color mode
-        sec
-        jsr     ID_BYTE_FE1F
-        bcs     done
-        lda     NEWVIDEO
-        and     #<~(1<<5)       ; Color
-        sta     NEWVIDEO
-
-done:   rts
-.endproc
 
         PAD_TO $BF00
 
