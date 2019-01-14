@@ -191,147 +191,151 @@ keys_bg_rect:
         DEFINE_RECT 0,0,0,0
     .elseif .paramcount = 2
         DEFINE_RECT left, top, left + key_width, top + key_height
+    .elseif .paramcount = 3
+        DEFINE_RECT left, top, right, top + key_height
     .else
         DEFINE_RECT left, top, right, bottom
     .endif
 .endmacro
 
 key_locations:
-        KEY_RECT left0 +  1 * key_width, row0 ; Ctrl-@
-        KEY_RECT left2 +  0 * key_width, row2 ; Ctrl-A
-        KEY_RECT left3 +  4 * key_width, row3 ; Ctrl-B
-        KEY_RECT left3 +  2 * key_width, row3 ; Ctrl-C
-        KEY_RECT left2 +  2 * key_width, row2 ; Ctrl-D
-        KEY_RECT left1 +  2 * key_width, row1 ; Ctrl-E
-        KEY_RECT left2 +  3 * key_width, row2 ; Ctrl-F
-        KEY_RECT left2 +  4 * key_width, row2 ; Ctrl-G
-        KEY_RECT kb_right - key_width * 4, row4, kb_right - key_width * 3, row4 + key_height ; Ctrl-H (left arrow)
-        KEY_RECT kb_left, row1, left1, row1 + key_height ; Ctrl-I (tab)
-        KEY_RECT kb_right - key_width * 2, row4, kb_right - key_width * 1, row4 + key_height ; Ctrl-J (down arrow)
-        KEY_RECT kb_right - key_width * 1, row4, kb_right - key_width * 0, row4 + key_height ; Ctrl-K (up arrow)
-        KEY_RECT left2 +  8 * key_width, row2 ; Ctrl-L
-        KEY_RECT kb_right - key_width *  7/4 - 1, row2, kb_right, row2 + key_height ; Ctrl-M (return)
-        KEY_RECT left3 +  5 * key_width, row3 ; Ctrl-N
-        KEY_RECT left1 +  8 * key_width, row1 ; Ctrl-O
 
-        KEY_RECT left1 +  9 * key_width, row1 ; Ctrl-P
-        KEY_RECT left1 +  0 * key_width, row1 ; Ctrl-Q
-        KEY_RECT left1 +  3 * key_width, row1 ; Ctrl-R
-        KEY_RECT left2 +  1 * key_width, row2 ; Ctrl-S
-        KEY_RECT left1 +  4 * key_width, row1 ; Ctrl-T
-        KEY_RECT kb_right - key_width * 3, row4, kb_right - key_width * 2, row4 + key_height ; Ctrl-U (right arrow)
-        KEY_RECT left3 +  3 * key_width, row3 ; Ctrl-V
-        KEY_RECT left1 +  1 * key_width, row1 ; Ctrl-W
-        KEY_RECT left3 +  1 * key_width, row3 ; Ctrl-X
-        KEY_RECT left1 +  5 * key_width, row1 ; Ctrl-Y
-        KEY_RECT left3 +  0 * key_width, row3 ; Ctrl-Z
-        KEY_RECT kb_left, row0, left0, row0 + key_height ; Ctrl-[ (escape)
-        KEY_RECT left1 + 12 * key_width, row1 ; Ctrl-\
-        KEY_RECT left1 + 11 * key_width, row1 ; Ctrl-]
-        KEY_RECT left0 +  5 * key_width, row0 ; Ctrl-^
-        KEY_RECT left0 + 10 * key_width, row0 ; Ctrl-_
+kr00:   KEY_RECT left0 +  1 * key_width, row0 ; Ctrl-@
+kr01:   KEY_RECT left2 +  0 * key_width, row2 ; Ctrl-A
+kr02:   KEY_RECT left3 +  4 * key_width, row3 ; Ctrl-B
+kr03:   KEY_RECT left3 +  2 * key_width, row3 ; Ctrl-C
+kr04:   KEY_RECT left2 +  2 * key_width, row2 ; Ctrl-D
+kr05:   KEY_RECT left1 +  2 * key_width, row1 ; Ctrl-E
+kr06:   KEY_RECT left2 +  3 * key_width, row2 ; Ctrl-F
+kr07:   KEY_RECT left2 +  4 * key_width, row2 ; Ctrl-G
+kr08:   KEY_RECT kb_right - key_width * 4, row4, kb_right - key_width * 3 ; Ctrl-H (left arrow)
+kr09:   KEY_RECT kb_left, row1, left1         ; Ctrl-I (tab)
+kr0A:   KEY_RECT kb_right - key_width * 2, row4, kb_right - key_width * 1 ; Ctrl-J (down arrow)
+kr0B:   KEY_RECT kb_right - key_width * 1, row4, kb_right - key_width * 0 ; Ctrl-K (up arrow)
+kr0C:   KEY_RECT left2 +  8 * key_width, row2 ; Ctrl-L
+kr0D:   KEY_RECT kb_right - key_width *  7/4 - 1, row2, kb_right ; Ctrl-M (return)
+kr0E:   KEY_RECT left3 +  5 * key_width, row3 ; Ctrl-N
+kr0F:   KEY_RECT left1 +  8 * key_width, row1 ; Ctrl-O
 
-        KEY_RECT kb_left + key_width * 4, row4, kb_right - key_width * 5, row4 + key_height ; (space)
-        KEY_RECT left0 +  0 * key_width, row0 ; !
-        KEY_RECT left2 + 10 * key_width, row2 ; "
-        KEY_RECT left0 +  2 * key_width, row0 ; #
-        KEY_RECT left0 +  3 * key_width, row0 ; $
-        KEY_RECT left0 +  4 * key_width, row0 ; %
-        KEY_RECT left0 +  6 * key_width, row0 ; &
-        KEY_RECT left2 + 10 * key_width, row2 ; '
-        KEY_RECT left0 +  8 * key_width, row0 ; (
-        KEY_RECT left0 +  9 * key_width, row0 ; )
-        KEY_RECT left0 +  7 * key_width, row0 ; *
-        KEY_RECT left0 + 11 * key_width, row0 ; +
-        KEY_RECT left3 +  7 * key_width, row3 ; ,
-        KEY_RECT left0 + 10 * key_width, row0 ; -
-        KEY_RECT left3 +  8 * key_width, row3 ; .
-        KEY_RECT left3 +  9 * key_width, row3 ; /
+kr10:   KEY_RECT left1 +  9 * key_width, row1 ; Ctrl-P
+kr11:   KEY_RECT left1 +  0 * key_width, row1 ; Ctrl-Q
+kr12:   KEY_RECT left1 +  3 * key_width, row1 ; Ctrl-R
+kr13:   KEY_RECT left2 +  1 * key_width, row2 ; Ctrl-S
+kr14:   KEY_RECT left1 +  4 * key_width, row1 ; Ctrl-T
+kr15:   KEY_RECT kb_right - key_width * 3, row4, kb_right - key_width * 2 ; Ctrl-U (right arrow)
+kr16:   KEY_RECT left3 +  3 * key_width, row3 ; Ctrl-V
+kr17:   KEY_RECT left1 +  1 * key_width, row1 ; Ctrl-W
+kr18:   KEY_RECT left3 +  1 * key_width, row3 ; Ctrl-X
+kr19:   KEY_RECT left1 +  5 * key_width, row1 ; Ctrl-Y
+kr1A:   KEY_RECT left3 +  0 * key_width, row3 ; Ctrl-Z
+kr1B:   KEY_RECT kb_left, row0, left0         ; Ctrl-[ (escape)
+kr1C:   KEY_RECT left1 + 12 * key_width, row1 ; Ctrl-\
+kr1D:   KEY_RECT left1 + 11 * key_width, row1 ; Ctrl-]
+kr1E:   KEY_RECT left0 +  5 * key_width, row0 ; Ctrl-^
+kr1F:   KEY_RECT left0 + 10 * key_width, row0 ; Ctrl-_
 
-        KEY_RECT left0 +  9 * key_width, row0 ; 0
-        KEY_RECT left0 +  0 * key_width, row0 ; 1
-        KEY_RECT left0 +  1 * key_width, row0 ; 2
-        KEY_RECT left0 +  2 * key_width, row0 ; 3
-        KEY_RECT left0 +  3 * key_width, row0 ; 4
-        KEY_RECT left0 +  4 * key_width, row0 ; 5
-        KEY_RECT left0 +  5 * key_width, row0 ; 6
-        KEY_RECT left0 +  6 * key_width, row0 ; 7
-        KEY_RECT left0 +  7 * key_width, row0 ; 8
-        KEY_RECT left0 +  8 * key_width, row0 ; 9
-        KEY_RECT left0 +  9 * key_width, row2 ; :
-        KEY_RECT left2 +  9 * key_width, row2 ; ;
-        KEY_RECT left3 +  7 * key_width, row3 ; <
-        KEY_RECT left0 + 11 * key_width, row0 ; =
-        KEY_RECT left3 +  8 * key_width, row3 ; >
-        KEY_RECT left3 +  9 * key_width, row3 ; ?
+kr20:   KEY_RECT kb_left + key_width * 4, row4, kb_right - key_width * 5 ; (space)
+kr21:   KEY_RECT left0 +  0 * key_width, row0 ; !
+kr22:   KEY_RECT left2 + 10 * key_width, row2 ; "
+kr23:   KEY_RECT left0 +  2 * key_width, row0 ; #
+kr24:   KEY_RECT left0 +  3 * key_width, row0 ; $
+kr25:   KEY_RECT left0 +  4 * key_width, row0 ; %
+kr26:   KEY_RECT left0 +  6 * key_width, row0 ; &
+kr27:   KEY_RECT left2 + 10 * key_width, row2 ; '
+kr28:   KEY_RECT left0 +  8 * key_width, row0 ; (
+kr29:   KEY_RECT left0 +  9 * key_width, row0 ; )
+kr2A:   KEY_RECT left0 +  7 * key_width, row0 ; *
+kr2B:   KEY_RECT left0 + 11 * key_width, row0 ; +
+kr2C:   KEY_RECT left3 +  7 * key_width, row3 ; ,
+kr2D:   KEY_RECT left0 + 10 * key_width, row0 ; -
+kr2E:   KEY_RECT left3 +  8 * key_width, row3 ; .
+kr2F:   KEY_RECT left3 +  9 * key_width, row3 ; /
 
-        KEY_RECT left0 +  1 * key_width, row0 ; @
-        KEY_RECT left2 +  0 * key_width, row2 ; A
-        KEY_RECT left3 +  4 * key_width, row3 ; B
-        KEY_RECT left3 +  2 * key_width, row3 ; C
-        KEY_RECT left2 +  2 * key_width, row2 ; D
-        KEY_RECT left1 +  2 * key_width, row1 ; E
-        KEY_RECT left2 +  3 * key_width, row2 ; F
-        KEY_RECT left2 +  4 * key_width, row2 ; G
-        KEY_RECT left2 +  5 * key_width, row2 ; H
-        KEY_RECT left1 +  7 * key_width, row1 ; I
-        KEY_RECT left2 +  6 * key_width, row2 ; J
-        KEY_RECT left2 +  7 * key_width, row2 ; K
-        KEY_RECT left2 +  8 * key_width, row2 ; L
-        KEY_RECT left3 +  6 * key_width, row3 ; M
-        KEY_RECT left3 +  5 * key_width, row3 ; N
-        KEY_RECT left1 +  8 * key_width, row1 ; O
+kr30:   KEY_RECT left0 +  9 * key_width, row0 ; 0
+kr31:   KEY_RECT left0 +  0 * key_width, row0 ; 1
+kr32:   KEY_RECT left0 +  1 * key_width, row0 ; 2
+kr33:   KEY_RECT left0 +  2 * key_width, row0 ; 3
+kr34:   KEY_RECT left0 +  3 * key_width, row0 ; 4
+kr35:   KEY_RECT left0 +  4 * key_width, row0 ; 5
+kr36:   KEY_RECT left0 +  5 * key_width, row0 ; 6
+kr37:   KEY_RECT left0 +  6 * key_width, row0 ; 7
+kr38:   KEY_RECT left0 +  7 * key_width, row0 ; 8
+kr39:   KEY_RECT left0 +  8 * key_width, row0 ; 9
+kr3A:   KEY_RECT left0 +  9 * key_width, row2 ; :
+kr3B:   KEY_RECT left2 +  9 * key_width, row2 ; ;
+kr3C:   KEY_RECT left3 +  7 * key_width, row3 ; <
+kr3D:   KEY_RECT left0 + 11 * key_width, row0 ; =
+kr3E:   KEY_RECT left3 +  8 * key_width, row3 ; >
+kr3F:   KEY_RECT left3 +  9 * key_width, row3 ; ?
 
-        KEY_RECT left1 +  9 * key_width, row1 ; P
-        KEY_RECT left1 +  0 * key_width, row1 ; Q
-        KEY_RECT left1 +  3 * key_width, row1 ; R
-        KEY_RECT left2 +  1 * key_width, row2 ; S
-        KEY_RECT left1 +  4 * key_width, row1 ; T
-        KEY_RECT left1 +  6 * key_width, row1 ; U
-        KEY_RECT left3 +  3 * key_width, row3 ; V
-        KEY_RECT left1 +  1 * key_width, row1 ; W
-        KEY_RECT left3 +  1 * key_width, row3 ; X
-        KEY_RECT left1 +  5 * key_width, row1 ; Y
-        KEY_RECT left3 +  0 * key_width, row3 ; Z
-        KEY_RECT left1 + 10 * key_width, row1 ; [
-        KEY_RECT left1 + 12 * key_width, row1 ; \
-        KEY_RECT left1 + 11 * key_width, row1 ; ]
-        KEY_RECT left0 +  5 * key_width, row0 ; ^
-        KEY_RECT left0 + 10 * key_width, row0 ; _
+kr40:   KEY_RECT left0 +  1 * key_width, row0 ; @
+kr41:   KEY_RECT left2 +  0 * key_width, row2 ; A
+kr42:   KEY_RECT left3 +  4 * key_width, row3 ; B
+kr43:   KEY_RECT left3 +  2 * key_width, row3 ; C
+kr44:   KEY_RECT left2 +  2 * key_width, row2 ; D
+kr45:   KEY_RECT left1 +  2 * key_width, row1 ; E
+kr46:   KEY_RECT left2 +  3 * key_width, row2 ; F
+kr47:   KEY_RECT left2 +  4 * key_width, row2 ; G
+kr48:   KEY_RECT left2 +  5 * key_width, row2 ; H
+kr49:   KEY_RECT left1 +  7 * key_width, row1 ; I
+kr4A:   KEY_RECT left2 +  6 * key_width, row2 ; J
+kr4B:   KEY_RECT left2 +  7 * key_width, row2 ; K
+kr4C:   KEY_RECT left2 +  8 * key_width, row2 ; L
+kr4D:   KEY_RECT left3 +  6 * key_width, row3 ; M
+kr4E:   KEY_RECT left3 +  5 * key_width, row3 ; N
+kr4F:   KEY_RECT left1 +  8 * key_width, row1 ; O
 
-        KEY_RECT left4 +  0 * key_width, row4 ; `
-        KEY_RECT left2 +  0 * key_width, row2 ; a
-        KEY_RECT left3 +  4 * key_width, row3 ; b
-        KEY_RECT left3 +  2 * key_width, row3 ; c
-        KEY_RECT left2 +  2 * key_width, row2 ; d
-        KEY_RECT left1 +  2 * key_width, row1 ; e
-        KEY_RECT left2 +  3 * key_width, row2 ; f
-        KEY_RECT left2 +  4 * key_width, row2 ; g
-        KEY_RECT left2 +  5 * key_width, row2 ; h
-        KEY_RECT left1 +  7 * key_width, row1 ; i
-        KEY_RECT left2 +  6 * key_width, row2 ; j
-        KEY_RECT left2 +  7 * key_width, row2 ; k
-        KEY_RECT left2 +  8 * key_width, row2 ; l
-        KEY_RECT left3 +  6 * key_width, row3 ; m
-        KEY_RECT left3 +  5 * key_width, row3 ; n
-        KEY_RECT left1 +  8 * key_width, row1 ; o
+kr50:   KEY_RECT left1 +  9 * key_width, row1 ; P
+kr51:   KEY_RECT left1 +  0 * key_width, row1 ; Q
+kr52:   KEY_RECT left1 +  3 * key_width, row1 ; R
+kr53:   KEY_RECT left2 +  1 * key_width, row2 ; S
+kr54:   KEY_RECT left1 +  4 * key_width, row1 ; T
+kr55:   KEY_RECT left1 +  6 * key_width, row1 ; U
+kr56:   KEY_RECT left3 +  3 * key_width, row3 ; V
+kr57:   KEY_RECT left1 +  1 * key_width, row1 ; W
+kr58:   KEY_RECT left3 +  1 * key_width, row3 ; X
+kr59:   KEY_RECT left1 +  5 * key_width, row1 ; Y
+kr5A:   KEY_RECT left3 +  0 * key_width, row3 ; Z
+kr5B:   KEY_RECT left1 + 10 * key_width, row1 ; [
+kr5C:   KEY_RECT left1 + 12 * key_width, row1 ; \
+kr5D:   KEY_RECT left1 + 11 * key_width, row1 ; ]
+kr5E:   KEY_RECT left0 +  5 * key_width, row0 ; ^
+kr5F:   KEY_RECT left0 + 10 * key_width, row0 ; _
 
-        KEY_RECT left1 +  9 * key_width, row1 ; p
-        KEY_RECT left1 +  0 * key_width, row1 ; q
-        KEY_RECT left1 +  3 * key_width, row1 ; r
-        KEY_RECT left2 +  1 * key_width, row2 ; s
-        KEY_RECT left1 +  4 * key_width, row1 ; t
-        KEY_RECT left1 +  6 * key_width, row1 ; u
-        KEY_RECT left3 +  3 * key_width, row3 ; v
-        KEY_RECT left1 +  1 * key_width, row1 ; w
-        KEY_RECT left3 +  1 * key_width, row3 ; x
-        KEY_RECT left1 +  5 * key_width, row1 ; y
-        KEY_RECT left3 +  0 * key_width, row3 ; z
-        KEY_RECT left1 + 10 * key_width, row1 ; {
-        KEY_RECT left1 + 12 * key_width, row1 ; |
-        KEY_RECT left1 + 11 * key_width, row1 ; }
-        KEY_RECT left4 +  0 * key_width, row4 ; ~
-        KEY_RECT kb_right - key_width *  6/4, row0, kb_right, row0 + key_height ; (delete)
+
+kr60:   KEY_RECT left4 +  0 * key_width, row4 ; `
+kr61:   KEY_RECT left2 +  0 * key_width, row2 ; a
+kr62:   KEY_RECT left3 +  4 * key_width, row3 ; b
+kr63:   KEY_RECT left3 +  2 * key_width, row3 ; c
+kr64:   KEY_RECT left2 +  2 * key_width, row2 ; d
+kr65:   KEY_RECT left1 +  2 * key_width, row1 ; e
+kr66:   KEY_RECT left2 +  3 * key_width, row2 ; f
+kr67:   KEY_RECT left2 +  4 * key_width, row2 ; g
+kr68:   KEY_RECT left2 +  5 * key_width, row2 ; h
+kr69:   KEY_RECT left1 +  7 * key_width, row1 ; i
+kr6A:   KEY_RECT left2 +  6 * key_width, row2 ; j
+kr6B:   KEY_RECT left2 +  7 * key_width, row2 ; k
+kr6C:   KEY_RECT left2 +  8 * key_width, row2 ; l
+kr6D:   KEY_RECT left3 +  6 * key_width, row3 ; m
+kr6E:   KEY_RECT left3 +  5 * key_width, row3 ; n
+kr6F:   KEY_RECT left1 +  8 * key_width, row1 ; o
+
+kr70:   KEY_RECT left1 +  9 * key_width, row1 ; p
+kr71:   KEY_RECT left1 +  0 * key_width, row1 ; q
+kr72:   KEY_RECT left1 +  3 * key_width, row1 ; r
+kr73:   KEY_RECT left2 +  1 * key_width, row2 ; s
+kr74:   KEY_RECT left1 +  4 * key_width, row1 ; t
+kr75:   KEY_RECT left1 +  6 * key_width, row1 ; u
+kr76:   KEY_RECT left3 +  3 * key_width, row3 ; v
+kr77:   KEY_RECT left1 +  1 * key_width, row1 ; w
+kr78:   KEY_RECT left3 +  1 * key_width, row3 ; x
+kr79:   KEY_RECT left1 +  5 * key_width, row1 ; y
+kr7A:   KEY_RECT left3 +  0 * key_width, row3 ; z
+kr7B:   KEY_RECT left1 + 10 * key_width, row1 ; {
+kr7C:   KEY_RECT left1 + 12 * key_width, row1 ; |
+kr7D:   KEY_RECT left1 + 11 * key_width, row1 ; }
+kr7E:   KEY_RECT left4 +  0 * key_width, row4 ; ~
+kr7F:   KEY_RECT kb_right - key_width *  6/4, row0, kb_right ; (delete)
 
         ;; shift/plain
         kmode_s = $80           ; shifted (symbols)/unshifted (letters) - don't draw
@@ -475,19 +479,70 @@ key_mode:
         .byte   kmode_s         ; ~
         .byte   kmode_p         ; DEL (FIX)
 
-
-
-rect_ctl: DEFINE_RECT   kb_left, row2, left2, row2 + key_height
-rect_shl: DEFINE_RECT   kb_left, row3, left3, row3 + key_height
-rect_cap: DEFINE_RECT   kb_left, row4, left4, row4 + key_height
-rect_gap: DEFINE_RECT   kb_left + key_width * 2, row4, kb_left + key_width * 3, row4 + key_height
-rect_oap: DEFINE_RECT   kb_left + key_width * 3, row4, kb_left + key_width * 4, row4 + key_height
-rect_sap: DEFINE_RECT   kb_right - key_width * 5, row4, kb_right - key_width * 4, row4 + key_height
-rect_shr: DEFINE_RECT   kb_right - key_width *  9/4 - 1, row3, kb_right, row3 + key_height
+rect_ctl: KEY_RECT   kb_left, row2, left2
+rect_shl: KEY_RECT   kb_left, row3, left3
+rect_cap: KEY_RECT   kb_left, row4, left4
+rect_gap: KEY_RECT   kb_left + key_width * 2, row4
+rect_oap: KEY_RECT   kb_left + key_width * 3, row4
+rect_sap: KEY_RECT   kb_right - key_width * 5, row4, kb_right - key_width * 4
+rect_shr: KEY_RECT   kb_right - key_width *  9/4 - 1, row3, kb_right
 
 label_relpos:   DEFINE_POINT 8, 12
 
-tmp_rect:       DEFINE_RECT 0, 0, 0, 0, tmp_rect
+empty_rect:       DEFINE_RECT 0, 0, 0, 0
+
+;;; New keyboard locations on IIgs/IIc+
+;;;
+
+rect_new_oap:                   ; Open Apple
+        KEY_RECT kb_left + key_width * 2, row4, kb_left + key_width * 4
+rect_new_sap:                   ; Solid Apple
+        KEY_RECT left4 +  0 * key_width, row4
+rect_new_apos:                  ; Apostrophe/Tilde
+        KEY_RECT kb_left + key_width * 4, row4
+rect_new_bshl:                  ; Backslash/Vertical Bar
+        KEY_RECT kb_right - key_width * 5, row4, kb_right - key_width * 4
+rect_new_spc:                   ; Space
+        KEY_RECT kb_left + key_width * 5, row4, kb_right - key_width * 5
+
+;;; Non-rectangular Return key handled by a Polygon:
+;;;
+;;;       1/7--2
+;;;        |   |
+;;;    5---6   |
+;;;    |       |
+;;;    4-------3
+
+poly_new_ret:
+        .byte   7               ; vertex count
+        .byte   0               ; no more polys
+        DEFINE_POINT left1 + 12 * key_width, row1
+        DEFINE_POINT kb_right, row1
+        DEFINE_POINT kb_right, row3
+        DEFINE_POINT kb_right - key_width *  7/4 - 1, row3
+        DEFINE_POINT kb_right - key_width *  7/4 - 1, row2
+        DEFINE_POINT left1 + 12 * key_width, row2
+        DEFINE_POINT left1 + 12 * key_width, row1
+
+poly_new_ret_inner:
+        .byte   7               ; vertex count
+        .byte   0               ; no more polys
+        DEFINE_POINT left1 + 12 * key_width + 4, row1 + 2
+        DEFINE_POINT kb_right - 3, row1 + 2
+        DEFINE_POINT kb_right - 3, row3 - 1
+        DEFINE_POINT kb_right - key_width *  7/4 - 1 + 4, row3 - 1
+        DEFINE_POINT kb_right - key_width *  7/4 - 1 + 4, row2 + 2
+        DEFINE_POINT left1 + 12 * key_width + 4, row2 + 2
+        DEFINE_POINT left1 + 12 * key_width + 4, row1 + 2
+
+modern_layout_flag:             ; high bit set if IIgs/IIc+
+        .byte   0
+
+tmp_poly:
+        .res    2 + 7 * .sizeof(MGTK::Point), 0
+
+tmp_rect:
+        DEFINE_RECT 0,0,0,0, tmp_rect
 
 ;;; ============================================================
 
@@ -496,6 +551,22 @@ tmp_rect:       DEFINE_RECT 0, 0, 0, 0, tmp_rect
         lda     LCBANK1
         lda     LCBANK1
 
+        jsr     check_modern_layout
+        bcc     continue
+
+        ;; Swap in alternate layout
+        copy    #$80, modern_layout_flag
+        COPY_STRUCT MGTK::Rect, empty_rect, rect_gap ; Gap is eliminated
+        COPY_STRUCT MGTK::Rect, rect_new_bshl, kr5C ; [\|] replaces Solid Apple
+        COPY_STRUCT MGTK::Rect, rect_new_bshl, kr7C
+        COPY_STRUCT MGTK::Rect, rect_new_apos, kr60 ; [`~] takes away from Space
+        COPY_STRUCT MGTK::Rect, rect_new_apos, kr7E
+        COPY_STRUCT MGTK::Rect, rect_new_spc, kr20 ; Space is smaller
+        COPY_STRUCT MGTK::Rect, rect_new_oap, rect_oap ; Open Apple moves
+        COPY_STRUCT MGTK::Rect, rect_new_sap, rect_sap ; Solid Apple (Option) moves
+        ;; Return key handled separately
+
+continue:
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     draw_window
         MGTK_CALL MGTK::FlushEvents
@@ -528,8 +599,6 @@ tmp_rect:       DEFINE_RECT 0, 0, 0, 0, tmp_rect
 ;;; ============================================================
 
 .proc handle_key
-        ptr := $06
-
         ;; Apple-Q to quit
         lda     event_params::modifiers
         beq     start
@@ -541,25 +610,7 @@ start:  lda     KBD
         and     #$7F
         sta     last_char
 
-        ;; Compute address of point
-        sta     ptr
-        copy    #0, ptr+1
-        asl16   ptr             ; * 8 = .sizeof(MGTK::Rect)
-        asl16   ptr
-        asl16   ptr
-        add16   ptr, #key_locations, ptr
-
-copy_rect:
-        ldy     #.sizeof(MGTK::Rect)-1
-:       lda     (ptr),y
-        sta     tmp_rect,y
-        dey
-        bpl     :-
-
-        add16   tmp_rect::x1, #4, tmp_rect::x1
-        add16   tmp_rect::y1, #2, tmp_rect::y1
-        sub16   tmp_rect::x2, #3, tmp_rect::x2
-        sub16   tmp_rect::y2, #2, tmp_rect::y2
+        jsr     construct_key_poly
 
         MGTK_CALL MGTK::GetWinPort, winport_params
         cmp     #MGTK::Error::window_obscured
@@ -567,7 +618,7 @@ copy_rect:
 
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPenMode, penxor
-        MGTK_CALL MGTK::PaintRect, tmp_rect
+        MGTK_CALL MGTK::PaintPoly, tmp_poly
 
 :       bit     KBDSTRB
         bpl     :+
@@ -576,15 +627,18 @@ copy_rect:
         and     #$7F
         cmp     last_char
         beq     :-
-        MGTK_CALL MGTK::PaintRect, tmp_rect
+        MGTK_CALL MGTK::PaintPoly, tmp_poly
         jmp     start
 
 
-:       MGTK_CALL MGTK::PaintRect, tmp_rect
+:       MGTK_CALL MGTK::PaintPoly, tmp_poly
 
 done:   jmp     input_loop
 
 last_char:
+        .byte   0
+
+return_flag:
         .byte   0
 .endproc
 
@@ -718,11 +772,109 @@ next:   dec     char
         lda     char
         bmi     :+
         jmp     loop
+:
+
+        bit     modern_layout_flag
+        bpl     :+
+
+        ;; Modern layout's non-rectangular Return key
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::SetPattern, winfo::pattern
+        MGTK_CALL MGTK::PaintPoly, poly_new_ret
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::FramePoly, poly_new_ret
 
 :       MGTK_CALL MGTK::ShowCursor
         rts
 
 char:   .byte   0
+.endproc
+
+;;; ============================================================
+;;; Returns Carry set if modern (IIgs/IIc+) layout should be used
+
+.proc check_modern_layout
+
+        ;; Button down? (Hack for testing)
+        lda     BUTN0
+        ora     BUTN1
+        bpl     :+
+        sec
+        rts
+:
+
+        ;; Is IIgs?
+        lda     ROMIN2
+        sec
+        jsr     ID_BYTE_FE1F    ; Clears carry if IIgs
+        lda     LCBANK1
+        lda     LCBANK1
+        bcs     :+              ; No, carry still set
+        sec
+        rts
+
+        ;; Is IIc+?
+:       lda     ID_BYTE_FBC0    ; $00 = IIc
+        bne     done
+        lda     ID_BYTE_FBBF    ; $05 = IIc Plus
+        cmp     #$05
+        bne     done
+        sec
+        rts
+
+done:   clc
+        rts
+.endproc
+
+;;; ============================================================
+;;; Construct "inner" polygon for key in A.
+;;; Output: tmp_poly is populated
+
+.proc construct_key_poly
+        ptr := $06
+
+        cmp     #CHAR_RETURN
+        bne     normal
+        bit     modern_layout_flag
+        bpl     normal
+
+        ;; Special key
+        COPY_BYTES      2 + 7 * .sizeof(MGTK::Point), poly_new_ret_inner, tmp_poly
+        rts
+
+        ;; Rectangular key
+normal:
+        ;; Compute address of rect
+        sta     ptr
+        copy    #0, ptr+1
+        asl16   ptr             ; * 8 = .sizeof(MGTK::Rect)
+        asl16   ptr
+        asl16   ptr
+        add16   ptr, #key_locations, ptr
+
+        ldy     #.sizeof(MGTK::Rect)-1
+:       lda     (ptr),y
+        sta     tmp_rect,y
+        dey
+        bpl     :-
+
+        copy    #5, tmp_poly+0  ; # vertices
+        copy    #0, tmp_poly+1  ; no more polys
+        add16   tmp_rect::x1, #4, tmp_poly+2 + (0 * .sizeof(MGTK::Point))
+        add16   tmp_rect::y1, #2, tmp_poly+2 + (0 * .sizeof(MGTK::Point))+2
+
+        sub16   tmp_rect::x2, #3, tmp_poly+2 + (1 * .sizeof(MGTK::Point))
+        add16   tmp_rect::y1, #2, tmp_poly+2 + (1 * .sizeof(MGTK::Point))+2
+
+        sub16   tmp_rect::x2, #3, tmp_poly+2 + (2 * .sizeof(MGTK::Point))
+        sub16   tmp_rect::y2, #1, tmp_poly+2 + (2 * .sizeof(MGTK::Point))+2
+
+        add16   tmp_rect::x1, #4, tmp_poly+2 + (3 * .sizeof(MGTK::Point))
+        sub16   tmp_rect::y2, #1, tmp_poly+2 + (3 * .sizeof(MGTK::Point))+2
+
+        add16   tmp_rect::x1, #4, tmp_poly+2 + (4 * .sizeof(MGTK::Point))
+        add16   tmp_rect::y1, #2, tmp_poly+2 + (4 * .sizeof(MGTK::Point))+2
+        rts
 .endproc
 
 da_end  = *
