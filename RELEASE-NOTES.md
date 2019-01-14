@@ -33,6 +33,9 @@
 * Run Basic Here
   * Launch BASIC.SYSTEM with PREFIX set to the current window's pathname. (#42)
 
+Note that several of the new Desk Accessories will not work with older versions
+of Apple II DeskTop/MouseDesk, due to dependence on new APIs.
+
 ### Notable Fixes
 
 * Dates 00-39 are treated as 2000-2039; dates 100-127 are treated as 2000-2027. (#15)
