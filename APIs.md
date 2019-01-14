@@ -88,7 +88,7 @@ ProDOS MLI call (Y=call, X,A=params addr) *
 
 Copy to buffer
 
-#### `JUMP_TABLE_COPY_FROM_BUF:=` ($4027)
+#### `JUMP_TABLE_COPY_FROM_BUF` ($4027)
 
 Copy from buffer
 
@@ -112,7 +112,7 @@ Show alert in A, options in X
 
 Launch file
 
-#### `JUMP_TABLE_CUR_POINTER` ($4039) *
+#### `JUMP_TABLE_CUR_POINTER` ($4039)
 
 Changes mouse cursor to pointer.
 
@@ -123,6 +123,11 @@ Changes mouse cursor to watch.
 #### `JUMP_TABLE_RESTORE_OVL` ($403F)
 
 Restore from overlay routine
+
+#### `JUMP_TABLE_COLOR_MODE` ($4042) *
+#### `JUMP_TABLE_MONO_MODE` ($4045) *
+
+Set DHR color or monochrome mode, respectively. DHR monochrome mode is supported natively on the Apple IIgs, and via the AppleColor card and Le Chat Mauve, and is used by default by DeskTop. Desk Accessories that display images or exit DeskTop can can toggle the mode.
 
 <!-- ============================================================ -->
 

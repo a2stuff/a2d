@@ -57,6 +57,8 @@ JUMP_TABLE_LAUNCH_FILE  := $4036 ; Launch file
 JUMP_TABLE_CUR_POINTER  := $4039 ; Changes mouse cursor to pointer *
 JUMP_TABLE_CUR_WATCH    := $403C ; Changes mouse cursor to watch
 JUMP_TABLE_RESTORE_OVL  := $403F ; Restore from overlay routine
+JUMP_TABLE_COLOR_MODE   := $4042 ; Set DHR color mode (IIgs, AppleColor, Le Chat Mauve) *
+JUMP_TABLE_MONO_MODE    := $4045 ; Set DHR mono mode (IIgs, AppleColor, Le Chat Mauve) *
 
 ;;; ============================================================
 ;;; Error codes used for alerts which are not ProDOS errors

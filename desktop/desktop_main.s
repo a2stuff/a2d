@@ -62,7 +62,9 @@ JT_SHOW_ALERT:          jmp     DESKTOP_SHOW_ALERT
 JT_LAUNCH_FILE:         jmp     launch_file
 JT_CUR_POINTER:         jmp     set_pointer_cursor      ; *
 JT_CUR_WATCH:           jmp     set_watch_cursor
-JT_RESTORE_SEF:         jmp     restore_dynamic_routine
+JT_RESTORE_OVL:         jmp     restore_dynamic_routine
+JT_COLOR_MODE:          jmp     set_color_mode          ; *
+JT_MONO_MODE:           jmp     set_mono_mode           ; *
 
         ;; Main Loop
 .proc enter_main_loop
@@ -951,7 +953,6 @@ launch: DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ALL
         bpl     :-
         addr_call upcase_string, $280
         addr_call upcase_string, path
-        jsr     restore_device_list
         copy16  #INVOKER, reset_and_invoke_target
         jmp     reset_and_invoke
 
@@ -1395,7 +1396,7 @@ slash_index:
         make_ramcard_prefixed_path := cmd_selector_item_impl::make_ramcard_prefixed_path
 
 ;;; ============================================================
-;;; Get "coped to RAM card" flag from Main LC Bank 2.
+;;; Get "copied to RAM card" flag from Main LC Bank 2.
 
 .proc get_copied_to_ramcard_flag
         sta     ALTZPOFF
@@ -2154,12 +2155,10 @@ start:
         MLI_RELAY_CALL READ, read_params
         MLI_RELAY_CALL CLOSE, close_params
 
+        ;; Restore devices, stack, graphics, and /RAM
         jsr     restore_device_list
-
-        ;; Restore machine to text state
         sta     ALTZPOFF
-        jsr     exit_dhr_mode
-
+        jsr     exit_dhr_mode   ; sets ROMIN2
         jsr     maybe_reformat_ram
 
 quit:   jmp     quit_code_addr
@@ -3523,8 +3522,11 @@ check_drive_flags:
 
         ;; also invoked by launcher code
 .proc reset_and_invoke
+
+        ;; Restore devices, stack, graphics, and /RAM
+        jsr     restore_device_list
         sta     ALTZPOFF
-        jsr     exit_dhr_mode
+        jsr     exit_dhr_mode   ; sets ROMIN2
         jsr     maybe_reformat_ram
 
         ;; also used by launcher code
@@ -3532,6 +3534,12 @@ check_drive_flags:
         jmp     dummy0000       ; self-modified
 .endproc
         reset_and_invoke_target := reset_and_invoke::target
+
+;;; ============================================================
+
+.proc restore_state_for_exit
+.endproc
+
 
 ;;; ============================================================
 
@@ -9347,6 +9355,8 @@ done:   rts
 ;;; Invoked when exiting or launching another program.
 
 .proc exit_dhr_mode
+        jsr     set_color_mode
+
         lda     ROMIN2
         jsr     SETVID
         jsr     SETKBD
@@ -9357,6 +9367,15 @@ done:   rts
         sta     LORES
         sta     MIXCLR
 
+        sta     DHIRESOFF
+        sta     CLRALTCHAR
+        sta     CLR80VID
+        sta     CLR80COL
+        rts
+.endproc
+
+
+.proc set_color_mode
         ;; AppleColor Card - Mode 2 (Color 140x192)
         sta     SET80VID
         lda     AN3_OFF
@@ -9366,8 +9385,7 @@ done:   rts
         lda     AN3_OFF
 
         ;; IIgs?
-        sec
-        jsr     ID_BYTE_FE1F
+        jsr     test_iigs
         bcc     iigs
 
         ;; Le Chat Mauve - COL140 mode
@@ -9375,18 +9393,52 @@ done:   rts
         ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
         sta     HR2_OFF
         sta     HR3_OFF
-        bcs     finish_video
+        bcs     done
 
         ;; Apple IIgs - DHR Color
 iigs:   lda     NEWVIDEO
-        and     #<~(1<<5)       ; Color
+        and     #<~(1<<5)        ; Color
         sta     NEWVIDEO
 
-finish_video:
-        sta     DHIRESOFF
-        sta     CLRALTCHAR
+done:   rts
+.endproc
+
+.proc set_mono_mode
+        ;; AppleColor Card - Mode 1 (Monochrome 560x192)
         sta     CLR80VID
-        sta     CLR80COL
+        lda     AN3_OFF
+        lda     AN3_ON
+        lda     AN3_OFF
+        lda     AN3_ON
+        sta     SET80VID
+        lda     AN3_OFF
+
+        ;; IIgs?
+        jsr     test_iigs
+        bcc     iigs
+
+        ;; Le Chat Mauve - BW560 mode
+        ;; (AN3 off, HR1 off, HR2 on, HR3 on)
+        ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
+        sta     HR2_ON
+        sta     HR3_ON
+        bcs     done
+
+        ;; Apple IIgs - DHR B&W
+iigs:   lda     NEWVIDEO
+        ora     #(1<<5)         ; B&W
+        sta     NEWVIDEO
+
+done:   rts
+.endproc
+
+;;; Returns with carry clear if IIgs, set otherwise.
+.proc test_iigs
+        lda     ROMIN2
+        sec
+        jsr     ID_BYTE_FE1F
+        lda     LCBANK1
+        lda     LCBANK1
         rts
 .endproc
 
@@ -14950,7 +15002,7 @@ start:
         copy    ID_BYTE_FBBF, id_FBBF ; IIc ROM version (IIc+ = $05)
 
         ;; ... and page in LCBANK1
-:       sta     ALTZPON
+        sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
         sta     SET80COL
@@ -15001,32 +15053,8 @@ end:
 ;;; Initialize video
 
 .scope
-        ;;  AppleColor Card - Mode 1 (Monochrome 560x192)
-        sta     CLR80VID
-        sta     AN3_OFF
-        sta     AN3_ON
-        sta     AN3_OFF
-        sta     AN3_ON
-        sta     SET80VID
-        sta     AN3_OFF
-
-        ;; IIgs ?
-        bit     machine_type::iigs_flag
-        bmi     iigs
-
-        ;; Le Chat Mauve - BW560 mode
-        ;; (AN3 off, HR1 off, HR2 on, HR3 on)
-        ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
-        sta     HR2_ON
-        sta     HR3_ON
-        bpl     end
-
-        ;; Force B&W mode on the IIgs
-iigs:   lda     NEWVIDEO
-        ora     #(1<<5)         ; B&W
-        sta     NEWVIDEO
+        jsr     desktop_main::set_mono_mode
         ;; fall through
-end:
 .endscope
 
 ;;; ============================================================

@@ -57,6 +57,8 @@ start:
         ;; Restore devices DeskTop may have removed
 :       jsr     restore_device_list
 
+        jsr     JUMP_TABLE_COLOR_MODE
+
         ;; Restore to normal state
         sta     ALTZPOFF
         lda     ROMIN2
@@ -68,33 +70,6 @@ start:
         sta     LOWSCR
         sta     LORES
         sta     MIXCLR
-
-        ;; AppleColor Card - Mode 2 (Color 140x192)
-        sta     SET80VID
-        lda     AN3_OFF
-        lda     AN3_ON
-        lda     AN3_OFF
-        lda     AN3_ON
-        lda     AN3_OFF
-
-        ;; IIgs?
-        sec
-        jsr     ID_BYTE_FE1F
-        bcc     iigs
-
-        ;; Le Chat Mauve - COL140 mode
-        ;; (AN3 off, HR1 off, HR2 off, HR3 off)
-        ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
-        sta     HR2_OFF
-        sta     HR3_OFF
-        bcs     finish_video
-
-        ;; Apple IIgs - DHR Color
-iigs:   lda     NEWVIDEO
-        and     #<~(1<<5)       ; Color
-        sta     NEWVIDEO
-
-finish_video:
         sta     DHIRESOFF
         sta     CLRALTCHAR
         sta     CLR80VID

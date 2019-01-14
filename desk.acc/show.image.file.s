@@ -609,29 +609,7 @@ mode:   .byte   0               ; 0 = B&W, $80 = color
         bne     done
         copy    #$80, mode
 
-        ;; AppleColor Card - Mode 2 (Color 140x192)
-        sta     SET80VID
-        lda     AN3_OFF
-        lda     AN3_ON
-        lda     AN3_OFF
-        lda     AN3_ON
-        lda     AN3_OFF
-
-        ;; IIgs?
-        jsr     test_iigs
-        bcc     iigs
-
-        ;; Le Chat Mauve - COL140 mode
-        ;; (AN3 off, HR1 off, HR2 off, HR3 off)
-        ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
-        sta     HR2_OFF
-        sta     HR3_OFF
-        bcs     done
-
-        ;; Apple IIgs - DHR Color
-iigs:   lda     NEWVIDEO
-        and     #<~(1<<5)        ; Color
-        sta     NEWVIDEO
+        jsr     JUMP_TABLE_COLOR_MODE
 
 done:   rts
 .endproc
@@ -639,45 +617,11 @@ done:   rts
 .proc set_bw_mode
         lda     mode
         beq     done
-        lda     #0
-        sta     mode
+        copy    #0, mode
 
-        ;; AppleColor Card - Mode 1 (Monochrome 560x192)
-        sta     CLR80VID
-        lda     AN3_OFF
-        lda     AN3_ON
-        lda     AN3_OFF
-        lda     AN3_ON
-        sta     SET80VID
-        lda     AN3_OFF
-
-        ;; IIgs?
-        jsr     test_iigs
-        bcc     iigs
-
-        ;; Le Chat Mauve - BW560 mode
-        ;; (AN3 off, HR1 off, HR2 on, HR3 on)
-        ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
-        sta     HR2_ON
-        sta     HR3_ON
-        bcs     done
-
-        ;; Apple IIgs - DHR B&W
-iigs:   lda     NEWVIDEO
-        ora     #(1<<5)         ; B&W
-        sta     NEWVIDEO
+        jsr     JUMP_TABLE_MONO_MODE
 
 done:   rts
-.endproc
-
-;;; Returns with carry clear if IIgs, set otherwise.
-.proc test_iigs
-        lda     ROMIN2
-        sec
-        jsr     ID_BYTE_FE1F
-        lda     LCBANK1
-        lda     LCBANK1
-        rts
 .endproc
 
         .include "inc/hires_table.inc"
