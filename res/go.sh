@@ -4,19 +4,19 @@
 
 set -e
 
-cd desktop.system
-res/go.sh
-cd ..
-
-cd ram.system
-res/go.sh
-cd ..
-
 cd desktop
 res/go.sh
 cd ..
 
 cd desk.acc
+res/go.sh
+cd ..
+
+cd desktop.system
+res/go.sh
+cd ..
+
+cd ram.system
 res/go.sh
 cd ..
 

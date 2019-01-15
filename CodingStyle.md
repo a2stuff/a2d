@@ -63,6 +63,16 @@ cases, e.g. `HideCursor`, `HideCursorImpl`, etc.
 :       rts
 ```
 
+* **Do** use [cheap local labels](https://cc65.github.io/doc/ca65.html#ss6.5)
+    to higlight repeated patterns. For example, retries:
+
+```asm
+@retry: MLI_CALL GET_FILE_INFO, params
+        beq     :+
+        jsr     show_error_alert
+        jmp     @retry
+```
+
 ## Literals
 
 * Use binary `%00110110` for bit patterns

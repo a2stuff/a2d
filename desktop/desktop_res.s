@@ -945,7 +945,8 @@ filename_buf:
         ;; Set to $80 for Copy, $FF for Run
 LE05B:  .byte   0
 
-LE05C:  .byte   0               ; flag - always set to 0 ???
+delete_skip_decrement_flag:     ; always set to 0 ???
+        .byte   0
 
 process_depth:
         .byte   0               ; tracks recursion depth
