@@ -3511,7 +3511,7 @@ check_drive_flags:
         tax
         lda     startup_menu_item_1,x
         sec
-        sbc     #$30
+        sbc     #'0'
         clc
         adc     #>$C000         ; compute $Cn00
         sta     reset_and_invoke_target+1
@@ -9499,46 +9499,48 @@ do_copy_file:
         copy    #0, operation_flags ; copy/delete
         tsx
         stx     stack_stash
-        jsr     prep_callbacks_for_count_clear_system_bitmap
+        jsr     prep_callbacks_for_size_or_count_clear_system_bitmap
         jsr     do_copy_dialog_phase
-        jsr     LA271
+        jsr     size_or_count_process_selected_file
         jsr     prep_callbacks_for_copy
 
 do_run2:
         copy    #$FF, LE05B
-        copy    #0, LE05C
+        copy    #0, delete_skip_decrement_flag
         jsr     copy_file_for_run
         jsr     done_dialog_phase1
 
-L8F4F:  jsr     redraw_desktop_and_windows
+.proc finish_operation
+        jsr     redraw_desktop_and_windows
         return  #0
+.endproc
 
         ;; Unreferenced???
         jsr     prep_grafport3
-        jmp     L8F4F
+        jmp     finish_operation
 
 do_delete_file:
         copy    #0, operation_flags ; copy/delete
         tsx
         stx     stack_stash
-        jsr     prep_callbacks_for_count_clear_system_bitmap
+        jsr     prep_callbacks_for_size_or_count_clear_system_bitmap
         lda     #DeleteDialogLifecycle::open
         jsr     do_delete_dialog_phase
-        jsr     LA271
+        jsr     size_or_count_process_selected_file
         jsr     done_dialog_phase2
         jsr     prep_callbacks_for_delete
-        jsr     delete_file
+        jsr     delete_process_selected_file
         jsr     done_dialog_phase1
-        jmp     L8F4F
+        jmp     finish_operation
 
 do_run:
         copy    #$80, run_flag
         copy    #%11000000, operation_flags ; get size
         tsx
         stx     stack_stash
-        jsr     prep_callbacks_for_count_clear_system_bitmap
+        jsr     prep_callbacks_for_size_or_count_clear_system_bitmap
         jsr     L9984
-        jsr     LA271
+        jsr     size_or_count_process_selected_file
         jsr     L99BC
         jmp     do_run2
 
@@ -9547,11 +9549,11 @@ do_run:
 
 do_lock:
         jsr     L8FDD
-        jmp     L8F4F
+        jmp     finish_operation
 
 do_unlock:
         jsr     L8FE1
-        jmp     L8F4F
+        jmp     finish_operation
 
 .proc get_icon_entry_win_type
         asl     a
@@ -9591,7 +9593,7 @@ L8FE1:  lda     #$80            ; lock
 
 L8FEB:  tsx
         stx     stack_stash
-        copy    #0, LE05C
+        copy    #0, delete_skip_decrement_flag
         jsr     prep_grafport3
         lda     operation_flags
         beq     :+              ; copy/delete
@@ -9691,7 +9693,7 @@ L9076:  ldy     #$FF
 .proc begin_operation
         copy    #0, L97E4
 
-        jsr     prep_callbacks_for_count_clear_system_bitmap
+        jsr     prep_callbacks_for_size_or_count_clear_system_bitmap
         bit     operation_flags
         bvs     @size
         bmi     @lock
@@ -9762,21 +9764,21 @@ L9114:  lda     L97E4
         bmi     @lock_or_size
         bit     delete_flag
         bmi     :+
-        jsr     copy_file
+        jsr     copy_process_selected_file
         jmp     next_icon
 
-:       jsr     delete_file
+:       jsr     delete_process_selected_file
         jmp     next_icon
 
 @lock_or_size:
         bvs     @size           ; size?
-        jsr     lock_file
+        jsr     lock_process_selected_file
         jmp     next_icon
 
-@size:  jsr     LA271
+@size:  jsr     size_or_count_process_selected_file
         jmp     next_icon
 
-L913D:  jsr     LA271
+L913D:  jsr     size_or_count_process_selected_file
 
 next_icon:
         inc     icon_count
@@ -9816,7 +9818,7 @@ icon_count:
 
 empty_string:
         .byte   0
-.endproc                        ; operations
+.endproc ; operations
         do_delete_file := operations::do_delete_file
         do_run := operations::do_run
         do_copy_file := operations::do_copy_file
@@ -10624,8 +10626,8 @@ file_entry_buf:  .res    .sizeof(FileEntry), 0
         ;; overlayed indirect jump table
         op_jt_addrs_size := 6
 op_jt_addrs:
-op_jt_addr1:  .addr   op_jt1_copy     ; defaults are for copy
-op_jt_addr2:  .addr   op_jt2_copy
+op_jt_addr1:  .addr   copy_process_directory_entry     ; defaults are for copy
+op_jt_addr2:  .addr   copy_pop_directory
 op_jt_addr3:  .addr   do_nothing
 
 do_nothing:   rts
@@ -10656,21 +10658,22 @@ L97E4:  .byte   $00
         sta     entries_read
         sta     entries_read_this_block
 
-:       yax_call JT_MLI_RELAY, OPEN, open_src_dir_params
+@retry: yax_call JT_MLI_RELAY, OPEN, open_src_dir_params
         beq     :+
         ldx     #$80
         jsr     JT_SHOW_ALERT
-        beq     :-
+        beq     @retry
         jmp     close_files_cancel_dialog
 
 :       lda     open_src_dir_params::ref_num
         sta     op_ref_num
         sta     read_src_dir_header_params::ref_num
-:       yax_call JT_MLI_RELAY, READ, read_src_dir_header_params
+
+@retry2:yax_call JT_MLI_RELAY, READ, read_src_dir_header_params
         beq     :+
         ldx     #$80
         jsr     JT_SHOW_ALERT
-        beq     :-
+        beq     @retry2
         jmp     close_files_cancel_dialog
 
 :       jmp     read_file_entry
@@ -10679,11 +10682,11 @@ L97E4:  .byte   $00
 .proc close_src_dir
         lda     op_ref_num
         sta     close_src_dir_params::ref_num
-:       yax_call JT_MLI_RELAY, CLOSE, close_src_dir_params
+@retry: yax_call JT_MLI_RELAY, CLOSE, close_src_dir_params
         beq     :+
         ldx     #$80
         jsr     JT_SHOW_ALERT
-        beq     :-
+        beq     @retry
         jmp     close_files_cancel_dialog
 
 :       rts
@@ -10693,13 +10696,13 @@ L97E4:  .byte   $00
         inc     entries_read
         lda     op_ref_num
         sta     read_src_dir_entry_params::ref_num
-:       yax_call JT_MLI_RELAY, READ, read_src_dir_entry_params
+@retry: yax_call JT_MLI_RELAY, READ, read_src_dir_entry_params
         beq     :+
         cmp     #ERR_END_OF_FILE
         beq     eof
         ldx     #$80
         jsr     JT_SHOW_ALERT
-        beq     :-
+        beq     @retry
         jmp     close_files_cancel_dialog
 
 :       inc     entries_read_this_block
@@ -10821,10 +10824,17 @@ saved_type_and_length:          ; written but not read ???
 ;;; "Copy" (including Drag/Drop) files state and logic
 ;;; ============================================================
 
-;;; Overlays for copy operation
+;;; copy_process_selected_file
+;;;  - called for each file in selection; calls process_dir to recurse
+;;; copy_process_directory_entry
+;;;  - c/o process_dir for each file in dir; skips if dir, copies otherwise
+;;; copy_pop_directory
+;;;  - c/o process_dir when exiting dir; pops path segment
+
+;;; Overlays for copy operation (op_jt_addrs)
 callbacks_for_copy:
-        .addr   op_jt1_copy           ; Overlay for op_jt_addrs
-        .addr   op_jt2_copy
+        .addr   copy_process_directory_entry
+        .addr   copy_pop_directory
         .addr   do_nothing
 
 .enum CopyDialogLifecycle
@@ -10919,11 +10929,12 @@ L9984:  copy    #CopyDialogLifecycle::open, copy_dialog_params::phase
 cancel: jmp     close_files_cancel_dialog
 
 ;;; ============================================================
+;;; Handle copying of a selected file.
+;;; Calls into the recursion logic of |process_dir| as necessary.
 
-        ;; copy logic (for drag/drop only) ???
-.proc copy_file
+.proc copy_process_selected_file
         copy    #$80, LE05B
-        copy    #0, LE05C
+        copy    #0, delete_skip_decrement_flag
         beq     :+              ; always
 
 for_run:
@@ -10943,7 +10954,7 @@ for_run:
         bne     :+
         lda     selected_window_index ; dragging from window?
         bne     :+
-        jmp     L9B28
+        jmp     copy_dir
 
 :       ldx     dst_path_buf
         ldy     src_path_slash_index
@@ -10974,10 +10985,10 @@ L9A50:  ldx     dst_path_buf
         stx     dst_path_buf
 
 get_src_info:
-:       yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
+@retry: yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
         beq     :+
         jsr     show_error_alert
-        jmp     :-              ; retry
+        jmp     @retry
 
 :       lda     src_file_info_params::storage_type
         cmp     #ST_VOLUME_DIRECTORY
@@ -10988,7 +10999,7 @@ get_src_info:
         beq     store
 is_dir: jsr     decrement_op_file_count
         lda     #$FF
-store:  sta     L9B30
+store:  sta     is_dir_flag
         jsr     dec_file_count_and_run_copy_dialog_proc
         lda     op_file_count+1
         bne     :+
@@ -11057,34 +11068,39 @@ err:    jsr     show_error_alert
         jmp     do_create       ; retry
 
 create_ok:
-        lda     L9B30
-        beq     L9B2D
-L9B28:  jmp     process_dir
+        lda     is_dir_flag
+        beq     copy_file
+copy_dir:                       ; also used when dragging a volume icon
+        jmp     process_dir
 
-        .byte   0               ; ???
+        .byte   0               ; unused ???
 done:   rts
 
-L9B2D:  jmp     do_file_copy
+copy_file:
+        jmp     do_file_copy
 
-L9B30:  .byte   0
+is_dir_flag:
+        .byte   0
 
 is_run_flag:
         .byte   0
 .endproc
-        copy_file_for_run := copy_file::for_run
+        copy_file_for_run := copy_process_selected_file::for_run
+
+;;; ============================================================
 
 src_path_slash_index:
         .byte   0
 
-
 ;;; ============================================================
 
-op_jt2_copy:
+copy_pop_directory:
         jmp     remove_dst_path_segment
 
 ;;; ============================================================
+;;; Called by |process_dir| to process a single file
 
-.proc op_jt1_copy
+.proc copy_process_directory_entry
         jsr     check_escape_key_down
         beq     :+
         jmp     close_files_cancel_dialog
@@ -11095,10 +11111,10 @@ op_jt2_copy:
 
         ;; Directory
         jsr     append_to_src_path
-:       yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
+@retry: yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
         beq     :+
         jsr     show_error_alert
-        jmp     :-
+        jmp     @retry
 
 :       jsr     append_to_dst_path
         jsr     dec_file_count_and_run_copy_dialog_proc
@@ -11124,10 +11140,10 @@ regular_file:
         jsr     append_to_dst_path
         jsr     append_to_src_path
         jsr     dec_file_count_and_run_copy_dialog_proc
-:       yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
+@retry: yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
         beq     :+
         jsr     show_error_alert
-        jmp     :-              ; retry
+        jmp     @retry
 
 :       jsr     check_space_and_show_prompt
         bcc     :+
@@ -11153,10 +11169,10 @@ done:   rts
 ;;; ============================================================
 
 .proc check_vol_blocks_free
-:       yax_call JT_MLI_RELAY, GET_FILE_INFO, dst_file_info_params
+@retry: yax_call JT_MLI_RELAY, GET_FILE_INFO, dst_file_info_params
         beq     :+
         jsr     show_error_alert_dst
-        jmp     :-
+        jmp     @retry
 
 :       sub16   dst_file_info_params::aux_type, dst_file_info_params::blocks_used, blocks_free
         cmp16   blocks_free, op_block_count
@@ -11184,10 +11200,10 @@ done:   rts
 
 .proc check_space
         ;; Size of source
-:       yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
+@retry: yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
         beq     :+
         jsr     show_error_alert
-        jmp     :-
+        jmp     @retry
 
         ;; If destination doesn't exist, 0 blocks will be reclaimed.
 :       lda     #0
@@ -11195,12 +11211,12 @@ done:   rts
         sta     existing_size+1
 
         ;; Does destination exist?
-:       yax_call JT_MLI_RELAY, GET_FILE_INFO, dst_file_info_params
+@retry2:yax_call JT_MLI_RELAY, GET_FILE_INFO, dst_file_info_params
         beq     got_exist_size
         cmp     #ERR_FILE_NOT_FOUND
         beq     :+
         jsr     show_error_alert_dst ; retry if destination not present
-        jmp     :-
+        jmp     @retry2
 
 got_exist_size:
         copy16  dst_file_info_params::blocks_used, existing_size
@@ -11220,18 +11236,19 @@ got_exist_size:
         sta     vol_path_length
 
         ;; Total blocks/used blocks on destination volume
-:       yax_call JT_MLI_RELAY, GET_FILE_INFO, dst_file_info_params
+@retry: yax_call JT_MLI_RELAY, GET_FILE_INFO, dst_file_info_params
         beq     got_info
         pha                     ; on failure, restore path
         lda     saved_length    ; in case copy is aborted
         sta     dst_path_buf
         pla
         jsr     show_error_alert_dst
-        jmp     :-              ; BUG: Does this need to assign length again???
+        jmp     @retry          ; BUG: Does this need to assign length again???
 
+        ;; Unreferenced???
         lda     vol_path_length
         sta     dst_path_buf
-        jmp     :-
+        jmp     @retry
 
 got_info:
         ;; aux = total blocks
@@ -11320,10 +11337,10 @@ eof:    jsr     close_dst
         jmp     set_dst_file_info
 
 .proc open_src
-:       yax_call JT_MLI_RELAY, OPEN, open_src_params
+@retry: yax_call JT_MLI_RELAY, OPEN, open_src_params
         beq     :+
         jsr     show_error_alert
-        jmp     :-
+        jmp     @retry
 :       rts
 .endproc
 
@@ -11336,12 +11353,12 @@ eof:    jsr     close_dst
 .endproc
 
 .proc open_dst
-:       yax_call JT_MLI_RELAY, OPEN, open_dst_params
+@retry: yax_call JT_MLI_RELAY, OPEN, open_dst_params
         beq     done
         cmp     #ERR_VOL_NOT_FOUND
         beq     not_found
         jsr     show_error_alert_dst
-        jmp     :-
+        jmp     @retry
 
 not_found:
         jsr     show_error_alert_dst
@@ -11360,12 +11377,12 @@ done:   rts
 
 .proc read_src
         copy16  #buf_size, read_src_params::request_count
-:       yax_call JT_MLI_RELAY, READ, read_src_params
+@retry: yax_call JT_MLI_RELAY, READ, read_src_params
         beq     :+
         cmp     #ERR_END_OF_FILE
         beq     eof
         jsr     show_error_alert
-        jmp     :-
+        jmp     @retry
 
 :       copy16  read_src_params::trans_count, write_dst_params::request_count
         ora     read_src_params::trans_count
@@ -11376,10 +11393,10 @@ eof:    copy    #$FF, src_eof_flag
 .endproc
 
 .proc write_dst
-:       yax_call JT_MLI_RELAY, WRITE, write_dst_params
+@retry: yax_call JT_MLI_RELAY, WRITE, write_dst_params
         beq     :+
         jsr     show_error_alert_dst
-        jmp     :-
+        jmp     @retry
 :       yax_call JT_MLI_RELAY, GET_MARK, mark_dst_params
         rts
 .endproc
@@ -11406,6 +11423,7 @@ src_eof_flag:
 ;;; ============================================================
 
 .proc try_create_dst
+        ;; Copy file_type, aux_type, storage_type
         ldx     #7
 :       lda     src_file_info_params,x
         sta     create_params3,x
@@ -11452,11 +11470,18 @@ failure:
 ;;; Delete/Trash files dialog state and logic
 ;;; ============================================================
 
-;;; Overlays for delete operation
+;;; delete_process_selected_file
+;;;  - called for each file in selection; calls process_dir to recurse
+;;; delete_process_directory_entry
+;;;  - c/o process_dir for each file in dir; skips if dir, deletes otherwise
+;;; delete_finish_directory
+;;;  - c/o process_dir when exiting dir; deletes it
+
+;;; Overlays for delete operation (op_jt_addrs)
 callbacks_for_delete:
-        .addr   op_jt1_delete           ; Overlay for op_jt_addrs
+        .addr   delete_process_directory_entry
         .addr   do_nothing
-        .addr   destroy_with_retry
+        .addr   delete_finish_directory
 
 .proc delete_dialog_params
 phase:  .byte   0
@@ -11508,44 +11533,59 @@ count:  .word   0
 .endproc
 
 ;;; ============================================================
+;;; Handle deletion of a selected file.
+;;; Calls into the recursion logic of |process_dir| as necessary.
 
-.proc delete_file
+.proc delete_process_selected_file
         copy    #DeleteDialogLifecycle::show, delete_dialog_params::phase
         jsr     copy_paths_to_src_and_dst_paths
-L9EE3:  yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
-        beq     L9EF4
+
+@retry: yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
+        beq     :+
         jsr     show_error_alert
-        jmp     L9EE3
+        jmp     @retry
 
-L9EF4:  lda     src_file_info_params::storage_type
-        sta     L9F1D
+        ;; Check if it's a regular file or directory
+:       lda     src_file_info_params::storage_type
+        sta     storage_type
         cmp     #ST_LINKED_DIRECTORY
-        beq     L9F02
-        lda     #$00
-        beq     L9F04
-L9F02:  lda     #$FF
-L9F04:  sta     L9F1C
-        beq     L9F1E
-        jsr     process_dir
-        lda     L9F1D
-        cmp     #$0D
-        bne     L9F18
-        copy    #$FF, L9F1D
-L9F18:  jmp     L9F1E
+        beq     :+
+        lda     #0
+        beq     store
+:       lda     #$FF
+store:  sta     is_dir_flag
+        beq     do_destroy
 
+        ;; Recurse, and process directory
+        jsr     process_dir
+
+        ;; Was it a directory?
+        lda     storage_type
+        cmp     #ST_LINKED_DIRECTORY
+        bne     :+
+        copy    #$FF, storage_type ; is this re-checked?
+:       jmp     do_destroy
+
+        ;; Unreferenced???
         rts
 
-L9F1C:  .byte   0
-L9F1D:  .byte   0
+        ;; Written, not read???
+is_dir_flag:
+        .byte   0
 
-L9F1E:  bit     LE05C
-        bmi     L9F26
+storage_type:
+        .byte   0
+
+do_destroy:
+        bit     delete_skip_decrement_flag
+        bmi     :+
         jsr     dec_file_count_and_run_delete_dialog_proc
-L9F26:  jsr     decrement_op_file_count
-L9F29:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
+:       jsr     decrement_op_file_count
+
+retry:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
         beq     done
         cmp     #ERR_ACCESS_ERROR
-        bne     L9F8E
+        bne     error
         bit     all_flag
         bmi     do_it
         copy    #DeleteDialogLifecycle::locked, delete_dialog_params::phase
@@ -11558,11 +11598,10 @@ L9F29:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
         cmp     #PromptResult::yes
         beq     do_it
         cmp     #PromptResult::all
-        bne     L9F5F
+        bne     :+
         copy    #$80, all_flag
         bne     do_it           ; always
-
-L9F5F:  jmp     close_files_cancel_dialog
+:       jmp     close_files_cancel_dialog
 
 do_it:  yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
         lda     src_file_info_params::access
@@ -11573,34 +11612,40 @@ do_it:  yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
         copy    #7, src_file_info_params ; param count for SET_FILE_INFO
         yax_call JT_MLI_RELAY, SET_FILE_INFO, src_file_info_params
         copy    #$A, src_file_info_params ; param count for GET_FILE_INFO
-        jmp     L9F29
+        jmp     retry
 
 done:   rts
 
-L9F8E:  jsr     show_error_alert
-        jmp     L9F29
+error:  jsr     show_error_alert
+        jmp     retry
 .endproc
 
 ;;; ============================================================
+;;; Called by |process_dir| to process a single file
 
-.proc op_jt1_delete
+.proc delete_process_directory_entry
+        ;; Cancel if escape pressed
         jsr     check_escape_key_down
         beq     :+
         jmp     close_files_cancel_dialog
 
 :       jsr     append_to_src_path
-        bit     LE05C
+        bit     delete_skip_decrement_flag
         bmi     :+
         jsr     dec_file_count_and_run_delete_dialog_proc
 :       jsr     decrement_op_file_count
-:       yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
+
+        ;; Check file type
+@retry: yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
         beq     :+
         jsr     show_error_alert
-        jmp     :-
+        jmp     @retry
 
+        ;; Directories will be processed separately
 :       lda     src_file_info_params::storage_type
         cmp     #ST_LINKED_DIRECTORY
         beq     next_file
+
 loop:   yax_call JT_MLI_RELAY, DESTROY, destroy_params
         beq     next_file
         cmp     #ERR_ACCESS_ERROR
@@ -11636,13 +11681,16 @@ next_file:
         jmp     remove_src_path_segment
 .endproc
 
-.proc destroy_with_retry
-retry:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
+;;; ============================================================
+;;; Delete directory when exiting via traversal
+
+.proc delete_finish_directory
+@retry: yax_call JT_MLI_RELAY, DESTROY, destroy_params
         beq     done
         cmp     #ERR_ACCESS_ERROR
         beq     done
         jsr     show_error_alert
-        jmp     retry
+        jmp     @retry
 done:   rts
 .endproc
 
@@ -11655,9 +11703,14 @@ done:   rts
 ;;; "Lock"/"Unlock" dialog state and logic
 ;;; ============================================================
 
-;;; Overlays for lock/unlock operation
+;;; lock_process_selected_file
+;;;  - called for each file in selection; calls process_dir to recurse
+;;; lock_process_directory_entry
+;;;  - c/o process_dir for each file in dir; skips if dir, locks otherwise
+
+;;; Overlays for lock/unlock operation (op_jt_addrs)
 callbacks_for_lock:
-        .addr   op_jt1_lock           ; overlay for op_jt_addrs
+        .addr   lock_process_directory_entry
         .addr   do_nothing
         .addr   do_nothing
 
@@ -11754,7 +11807,11 @@ unlock_dialog_lifecycle:
         yax_call invoke_dialog_proc, index_unlock_dialog, lock_unlock_dialog_params
         rts
 
-.proc lock_file
+;;; ============================================================
+;;; Handle locking of a selected file.
+;;; Calls into the recursion logic of |process_dir| as necessary.
+
+.proc lock_process_selected_file
         copy    #LockDialogLifecycle::operation, lock_unlock_dialog_params::phase
         jsr     copy_paths_to_src_and_dst_paths
         ldx     dst_path_buf
@@ -11767,47 +11824,62 @@ LA123:  iny
         cpy     src_path_buf
         bne     LA123
         stx     dst_path_buf
-LA133:  yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
-        beq     LA144
-        jsr     show_error_alert
-        jmp     LA133
 
-LA144:  lda     src_file_info_params::storage_type
-        sta     LA169
+@retry: yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
+        beq     :+
+        jsr     show_error_alert
+        jmp     @retry
+
+:       lda     src_file_info_params::storage_type
+        sta     storage_type
         cmp     #ST_VOLUME_DIRECTORY
-        beq     LA156
+        beq     is_dir
         cmp     #ST_LINKED_DIRECTORY
-        beq     LA156
+        beq     is_dir
         lda     #$00
-        beq     LA158
-LA156:  lda     #$FF
-LA158:  sta     LA168
-        beq     LA16A
+        beq     store
+is_dir: lda     #$FF
+store:  sta     is_dir_flag
+        beq     do_lock
+
+        ;; Process files in directory
         jsr     process_dir
-        lda     LA169
-        cmp     #$0F
-        bne     LA16A
+
+        ;; If this wasn't a volume directory, lock it too
+        lda     storage_type
+        cmp     #ST_VOLUME_DIRECTORY
+        bne     do_lock
         rts
 
-LA168:  .byte   0
-LA169:  .byte   0
+        ;; Written, not read???
+is_dir_flag:
+        .byte   0
 
-LA16A:  jsr     LA173
+storage_type:
+        .byte   0
+
+do_lock:
+        jsr     lock_file_common
         jmp     append_to_src_path
 .endproc
 
-op_jt1_lock:
+;;; ============================================================
+;;; Called by |process_dir| to process a single file
+
+lock_process_directory_entry:
         jsr     append_to_src_path
         ;; fall through
 
-.proc LA173
+.proc lock_file_common
         jsr     update_dialog
 
         jsr     decrement_op_file_count
-:       yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
+
+@retry: yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
         beq     :+
         jsr     show_error_alert
-        jmp     :-
+        jmp     @retry
+
 :       lda     src_file_info_params::storage_type
         cmp     #ST_VOLUME_DIRECTORY
         beq     ok
@@ -11843,6 +11915,10 @@ LA1DC:  jmp     lock_dialog_lifecycle
 ;;; ============================================================
 ;;; "Get Size" dialog state and logic
 ;;; ============================================================
+
+;;; Logic also used for "count" operation which precedes most
+;;; other operations (copy, delete, lock, unlock) to populate
+;;; confirmation dialog.
 
 .proc get_size_dialog_params
 phase:  .byte   0
@@ -11883,16 +11959,17 @@ get_size_rts2:
 ;;; Most operations start by doing a traversal to just count
 ;;; the files.
 
-callbacks_for_count:
-        .addr   op_jt1_size           ; overlay for op_jt_addrs
+;;; Overlays for size operation (op_jt_addrs)
+callbacks_for_size_or_count:
+        .addr   size_or_count_process_directory_entry
         .addr   do_nothing
         .addr   do_nothing
 
-.proc prep_callbacks_for_count_clear_system_bitmap
+.proc prep_callbacks_for_size_or_count_clear_system_bitmap
         copy    #0, LA425
 
         ldy     #op_jt_addrs_size-1
-:       copy    callbacks_for_count,y, op_jt_addrs,y
+:       copy    callbacks_for_size_or_count,y, op_jt_addrs,y
         dey
         bpl     :-
 
@@ -11912,13 +11989,15 @@ callbacks_for_count:
 .endproc
 
 ;;; ============================================================
+;;; Handle sizing (or just counting) of a selected file.
+;;; Calls into the recursion logic of |process_dir| as necessary.
 
-.proc LA271
+.proc size_or_count_process_selected_file
         jsr     copy_paths_to_src_and_dst_paths
-:       yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
+@retry: yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
         beq     :+
         jsr     show_error_alert
-        jmp     :-
+        jmp     @retry
 
 :       copy    src_file_info_params::storage_type, storage_type
         cmp     #ST_VOLUME_DIRECTORY
@@ -11939,6 +12018,7 @@ store:  sta     is_dir_flag
         bne     do_sum_file_size           ; if a subdirectory
         rts
 
+        ;; Written, not read???
 is_dir_flag:
         .byte   0
 
@@ -11946,14 +12026,13 @@ storage_type:
         .byte   0
 
 do_sum_file_size:
-        jmp     op_jt1_size
+        jmp     size_or_count_process_directory_entry
 .endproc
 
 ;;; ============================================================
+;;; Called by |process_dir| to process a single file
 
-        ;; First pass - visit/count all files ???
-
-op_jt1_size:
+size_or_count_process_directory_entry:
         bit     operation_flags
         bvc     :+              ; not size
 
@@ -12185,10 +12264,10 @@ LA425:  .byte   0               ; ??? only written to (with 0)
 :       lda     open_dst_params::ref_num
         sta     set_eof_params::ref_num
         sta     close_dst_params::ref_num
-:       yax_call JT_MLI_RELAY, SET_EOF, set_eof_params
+@retry: yax_call JT_MLI_RELAY, SET_EOF, set_eof_params
         beq     close
         jsr     show_error_alert_dst
-        jmp     :-              ; retry
+        jmp     @retry
 
 close:  yax_call JT_MLI_RELAY, CLOSE, close_dst_params
 done:   rts
