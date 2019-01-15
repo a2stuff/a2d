@@ -9499,7 +9499,7 @@ do_copy_file:
         copy    #0, operation_flags ; copy/delete
         tsx
         stx     stack_stash
-        jsr     prep_callbacks_for_size_or_count_clear_system_bitmap
+        jsr     prep_callbacks_for_size_or_count
         jsr     do_copy_dialog_phase
         jsr     size_or_count_process_selected_file
         jsr     prep_callbacks_for_copy
@@ -9515,15 +9515,11 @@ do_run2:
         return  #0
 .endproc
 
-        ;; Unreferenced???
-        jsr     prep_grafport3
-        jmp     finish_operation
-
 do_delete_file:
         copy    #0, operation_flags ; copy/delete
         tsx
         stx     stack_stash
-        jsr     prep_callbacks_for_size_or_count_clear_system_bitmap
+        jsr     prep_callbacks_for_size_or_count
         lda     #DeleteDialogLifecycle::open
         jsr     do_delete_dialog_phase
         jsr     size_or_count_process_selected_file
@@ -9538,7 +9534,7 @@ do_run:
         copy    #%11000000, operation_flags ; get size
         tsx
         stx     stack_stash
-        jsr     prep_callbacks_for_size_or_count_clear_system_bitmap
+        jsr     prep_callbacks_for_size_or_count
         jsr     L9984
         jsr     size_or_count_process_selected_file
         jsr     L99BC
@@ -9693,7 +9689,7 @@ L9076:  ldy     #$FF
 .proc begin_operation
         copy    #0, L97E4
 
-        jsr     prep_callbacks_for_size_or_count_clear_system_bitmap
+        jsr     prep_callbacks_for_size_or_count
         bit     operation_flags
         bvs     @size
         bmi     @lock
@@ -10781,8 +10777,6 @@ loop:   jsr     read_file_entry
 
         lda     file_entry_buf + FileEntry::storage_type_name_length
         beq     loop
-        lda     file_entry_buf + FileEntry::storage_type_name_length
-        sta     saved_type_and_length
 
         and     #NAME_LENGTH_MASK
         sta     file_entry_buf
@@ -10814,11 +10808,6 @@ cancel_descent_flag:  .byte   0
 op_jt1: jmp     (op_jt_addr1)
 op_jt2: jmp     (op_jt_addr2)
 op_jt3: jmp     (op_jt_addr3)
-
-saved_type_and_length:          ; written but not read ???
-        .byte   0
-
-        .byte   0,0,0           ; ???
 
 ;;; ============================================================
 ;;; "Copy" (including Drag/Drop) files state and logic
@@ -11073,7 +11062,6 @@ create_ok:
 copy_dir:                       ; also used when dragging a volume icon
         jmp     process_dir
 
-        .byte   0               ; unused ???
 done:   rts
 
 copy_file:
@@ -11244,11 +11232,6 @@ got_exist_size:
         pla
         jsr     show_error_alert_dst
         jmp     @retry          ; BUG: Does this need to assign length again???
-
-        ;; Unreferenced???
-        lda     vol_path_length
-        sta     dst_path_buf
-        jmp     @retry
 
 got_info:
         ;; aux = total blocks
@@ -11565,9 +11548,6 @@ store:  sta     is_dir_flag
         bne     :+
         copy    #$FF, storage_type ; is this re-checked?
 :       jmp     do_destroy
-
-        ;; Unreferenced???
-        rts
 
         ;; Written, not read???
 is_dir_flag:
@@ -11965,7 +11945,7 @@ callbacks_for_size_or_count:
         .addr   do_nothing
         .addr   do_nothing
 
-.proc prep_callbacks_for_size_or_count_clear_system_bitmap
+.proc prep_callbacks_for_size_or_count
         copy    #0, LA425
 
         ldy     #op_jt_addrs_size-1
@@ -11979,12 +11959,6 @@ callbacks_for_size_or_count:
         sta     op_block_count
         sta     op_block_count+1
 
-        ;; Clear system bitmap (???)
-        ldy     #BITMAP_SIZE-1
-        lda     #$00
-:       sta     BITMAP,y
-        dey
-        bpl     :-
         rts
 .endproc
 
@@ -14829,43 +14803,6 @@ LBCDF:  lda     path_buf2,x
         jsr     draw_filename_prompt
         rts
 .endproc
-
-;;; ============================================================
-
-;;; Unreferenced ???
-
-        stax    $06
-        ldy     #0
-        lda     ($06),y
-        tay
-        clc
-        adc     path_buf1
-        pha
-        tax
-:       lda     ($06),y
-        sta     path_buf1,x
-        dey
-        dex
-        cpx     path_buf1
-        bne     :-
-        pla
-        sta     path_buf1
-        rts
-
-.proc LBD22
-:       ldx     path_buf1
-        cpx     #$00
-        beq     :+
-        dec     path_buf1
-        lda     path_buf1,x
-        cmp     #'/'
-        bne     :-
-:       rts
-.endproc
-
-        jsr     LBD22
-        jsr     draw_filename_prompt
-        rts
 
 ;;; ============================================================
 ;;; Compute width of path_buf1, offset name_input_textpos, return x coord in (A,X)
