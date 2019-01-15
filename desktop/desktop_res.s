@@ -145,39 +145,6 @@ fontptr:        .addr   DEFAULT_FONT
 
 ;;; ============================================================
 
-white_pattern3:                 ; unused?
-        .byte   %11111111
-        .byte   %11111111
-        .byte   %11111111
-        .byte   %11111111
-        .byte   %11111111
-        .byte   %11111111
-        .byte   %11111111
-        .byte   %11111111
-        .byte   $FF
-
-black_pattern3:                 ; unused?
-        .byte   %00000000
-        .byte   %00000000
-        .byte   %00000000
-        .byte   %00000000
-        .byte   %00000000
-        .byte   %00000000
-        .byte   %00000000
-        .byte   %00000000
-        .byte   $FF
-
-checkerboard_pattern3:
-        .byte   %01010101
-        .byte   %10101010
-        .byte   %01010101
-        .byte   %10101010
-        .byte   %01010101
-        .byte   %10101010
-        .byte   %01010101
-        .byte   %10101010
-        .byte   $FF
-
 save_area_buffer := $800
 save_area_size   = $1300
 
@@ -205,7 +172,6 @@ double_click_flag:
 
         ;; Set to specific machine type; used for double-click timing.
 machine_type:
-        .assert * = machine_speed, error, "Entry point mismatch"
         .byte   $00             ; Set to: $96 = IIe, $FA = IIc, $FD = IIgs
 
 warning_dialog_num:

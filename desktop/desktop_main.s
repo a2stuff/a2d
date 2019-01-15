@@ -4882,7 +4882,7 @@ L68B8:  lda     event_coords,x
         beq     L68CF
         rts
 
-L68CF:  MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern3
+L68CF:  MGTK_RELAY_CALL MGTK::SetPattern, desktop_aux::checkerboard_pattern
         jsr     set_penmode_xor
         MGTK_RELAY_CALL MGTK::FrameRect, tmp_rect
 L68E4:  jsr     peek_event
@@ -9075,7 +9075,7 @@ L8D56:  .word   0
         lda     #0
         sta     step
         jsr     reset_grafport3
-        MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern3
+        MGTK_RELAY_CALL MGTK::SetPattern, desktop_aux::checkerboard_pattern
         jsr     set_penmode_xor
 
 loop:   lda     step
@@ -9140,7 +9140,7 @@ step:   .byte   0
         lda     #11
         sta     step
         jsr     reset_grafport3
-        MGTK_RELAY_CALL MGTK::SetPattern, checkerboard_pattern3
+        MGTK_RELAY_CALL MGTK::SetPattern, desktop_aux::checkerboard_pattern
         jsr     set_penmode_xor
 
 loop:   lda     step

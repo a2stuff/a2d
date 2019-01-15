@@ -147,16 +147,6 @@ DESKTOP_RELAY   := $D040
 .endmacro
 
 ;;; ============================================================
-;;; Internals
-
-;;; Set to specific machine type; used for double-click timing.
-;;; //e  - $96
-;;; //c  - $FA
-;;; IIgs - $FD
-
-machine_speed := $D2AB
-
-;;; ============================================================
 ;;; Internals - Windows (paths) and Icons (files)
 
 ;;; NOTE: Some of these are used by Desk Accessories

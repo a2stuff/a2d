@@ -238,20 +238,8 @@ white_pattern:
         .byte   %11111111
         .byte   %11111111
         .byte   %11111111
-        .byte   $FF
 
-black_pattern:
-        .byte   %00000000
-        .byte   %00000000
-        .byte   %00000000
-        .byte   %00000000
-        .byte   %00000000
-        .byte   %00000000
-        .byte   %00000000
-        .byte   %00000000
-        .byte   $FF
-
-checkerboard_pattern2:
+checkerboard_pattern:
         .byte   %01010101
         .byte   %10101010
         .byte   %01010101
@@ -260,7 +248,6 @@ checkerboard_pattern2:
         .byte   %10101010
         .byte   %01010101
         .byte   %10101010
-        .byte   $FF
 
 dark_pattern:
         .byte   %00010001
@@ -271,18 +258,6 @@ dark_pattern:
         .byte   %01000100
         .byte   %00010001
         .byte   %01000100
-        .byte   $FF
-
-light_pattern:
-        .byte   %11101110
-        .byte   %10111011
-        .byte   %11101110
-        .byte   %10111011
-        .byte   %11101110
-        .byte   %10111011
-        .byte   %11101110
-        .byte   %10111011
-        .byte   $FF
 
 ;;; ============================================================
 ;;; Icon (i.e. file, volume) details
@@ -353,6 +328,7 @@ textbg: .byte   MGTK::textbg_black
 fontptr:        .addr   0
 .endproc
 
+        ;; ???
         .byte   $00,$00,$00
         .byte   $00,$FF,$80
 
@@ -1236,7 +1212,7 @@ L99E1:  iny
         add16   $08, #icon_poly_size, $08
         jmp     L9972
 
-L99FC:  MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
+L99FC:  MGTK_CALL MGTK::SetPattern, checkerboard_pattern
         MGTK_CALL MGTK::SetPenMode, penXOR_2
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
 L9A0E:  MGTK_CALL MGTK::PeekEvent, peekevent_params
@@ -1264,11 +1240,11 @@ L9A31:  COPY_BYTES 4, findwindow_params2, L9C92
         lda     findwindow_params2::which_area
         cmp     highlight_icon_id
         beq     L9A84
-        MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
+        MGTK_CALL MGTK::SetPattern, checkerboard_pattern
         MGTK_CALL MGTK::SetPenMode, penXOR_2
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
         DESKTOP_DIRECT_CALL DT_UNHIGHLIGHT_ICON, highlight_icon_id
-        MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
+        MGTK_CALL MGTK::SetPattern, checkerboard_pattern
         MGTK_CALL MGTK::SetPenMode, penXOR_2
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
         lda     #0
@@ -1576,16 +1552,16 @@ L9E3D:  cmp     highlight_list,x
         bne     L9E97
         lda     L9EB3
 L9E6A:  sta     highlight_icon_id
-        MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
+        MGTK_CALL MGTK::SetPattern, checkerboard_pattern
         MGTK_CALL MGTK::SetPenMode, penXOR_2
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
         DESKTOP_DIRECT_CALL DT_HIGHLIGHT_ICON, highlight_icon_id
-        MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
+        MGTK_CALL MGTK::SetPattern, checkerboard_pattern
         MGTK_CALL MGTK::SetPenMode, penXOR_2
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
 L9E97:  MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport
-        MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
+        MGTK_CALL MGTK::SetPattern, checkerboard_pattern
         MGTK_CALL MGTK::SetPenMode, penXOR_2
         jsr     pop_pointers
         rts
@@ -2248,7 +2224,7 @@ volume:
 .proc erase_desktop_icon
         lda     #0
         sta     LA3B7
-        MGTK_CALL MGTK::SetPattern, checkerboard_pattern2
+        MGTK_CALL MGTK::SetPattern, checkerboard_pattern
         ;; fall through
 .endproc
 
