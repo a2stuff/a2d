@@ -344,7 +344,7 @@ fail:   return  #1
 
 proceed:
         jsr     sub
-        jsr     L9F98
+        jsr     paint_icon_unhighlighted
         lda     #1
         tay
         sta     (params::ptr_icon),y
@@ -423,7 +423,7 @@ L949D:  ldx     highlight_count
         ldx     #1              ; new position
         jsr     change_icon_index
 
-        jsr     L9F9F
+        jsr     paint_icon_highlighted
         return  #0              ; Highlighted
 .endproc
 
@@ -470,10 +470,10 @@ found:  asl     a
         bpl     :-
         jmp     done
 
-found2: jsr     L9F9F
+found2: jsr     paint_icon_highlighted
         return  #0
 
-done:   jsr     L9F98
+done:   jsr     paint_icon_unhighlighted
         return  #0
 .endproc
 
@@ -1567,27 +1567,36 @@ L9F8F:  return  #1
 
 ;;; ============================================================
 
-L9F92:  .byte   0
+
+icon_flags: ; bit 7 = highlighted, bit 6 = volume icon
+        .byte   0
+
 L9F93:  .byte   0
 L9F94:  .byte   0
         .byte   0
         .byte   0
         .byte   0
 
-L9F98:  lda     #0
-        sta     L9F92
-        beq     L9FA4
+.proc paint_icon
 
-L9F9F:  copy    #$80, L9F92
+unhighlighted:
+        lda     #0
+        sta     icon_flags
+        beq     common
 
-.proc L9FA4
+highlighted:  copy    #$80, icon_flags ; is highlighted
+
+.proc common
         ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_winid_mask
         bne     :+
-        lda     L9F92
+
+        ;;  Mark as "volume icon" on desktop (needs background)
+        lda     icon_flags
         ora     #$40
-        sta     L9F92
+        sta     icon_flags
+
         ;; copy icon coords and bits
 :       ldy     #IconEntry::iconx
 :       lda     ($06),y
@@ -1604,9 +1613,9 @@ L9F9F:  copy    #$80, L9F92
         dey
         bpl     :-
 
-        bit     L9F92
+        bit     icon_flags      ; highlighted?
         bpl     :+
-        jsr     prepare_mask_params
+        jsr     prepare_mask_params ; mask needed too
 :       jsr     pop_pointers
 
         ldy     #9
@@ -1644,46 +1653,55 @@ L9F9F:  copy    #$80, L9F92
 
         COPY_STRUCT MGTK::Point, moveto_params2, L9F94
 
-        bit     L9F92
-        bvc     LA097
+        bit     icon_flags      ; volume icon (on desktop) ?
+        bvc     LA097           ; nope
+
+        ;; Redraw desktop background
         MGTK_CALL MGTK::InitPort, grafport
-        jsr     LA63F
+        jsr     set_port_for_erasing_vol_icon
 :       jsr     LA6A3
         jsr     LA097
         lda     L9F93
         bne     :-
         MGTK_CALL MGTK::SetPortBits, grafport
         rts
+.endproc
 
-LA097:  MGTK_CALL MGTK::HideCursor, DESKTOP_DIRECT ; These params should be ignored - bogus?
+.proc LA097
+        MGTK_CALL MGTK::HideCursor, DESKTOP_DIRECT ; These params should be ignored - bogus?
         MGTK_CALL MGTK::SetPenMode, notpencopy_2
-        bit     L9F92
-        bpl     LA0C2
-        bit     L9F92
-        bvc     LA0B6
-        MGTK_CALL MGTK::SetPenMode, pencopy_2
-        jmp     LA0C2
+        bit     icon_flags      ; highlighted?
+        bpl     paint           ; no, just draw
+        bit     icon_flags      ; on desktop?
+        bvc     mask            ; no, draw with mask
 
-LA0B6:  MGTK_CALL MGTK::PaintBits, mask_paintbits_params
+        ;; Highlighted, on desktop: draw icon inverted
+        MGTK_CALL MGTK::SetPenMode, pencopy_2
+        jmp     paint
+
+        ;; Highlighted, in window: draw mask first, then xor the icon
+mask:   MGTK_CALL MGTK::PaintBits, mask_paintbits_params
         MGTK_CALL MGTK::SetPenMode, penXOR_2
-LA0C2:  MGTK_CALL MGTK::PaintBits, icon_paintbits_params
+
+paint:  MGTK_CALL MGTK::PaintBits, icon_paintbits_params
         ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_open_mask
-        beq     LA0F2
+        beq     pos
+
         jsr     LA14D
         MGTK_CALL MGTK::SetPattern, dark_pattern ; shade for open volume
-        bit     L9F92
-        bmi     LA0E6
+        bit     icon_flags                       ; highlighted?
+        bmi     @highlighted
         MGTK_CALL MGTK::SetPenMode, penBIC_2
-        beq     LA0EC
-LA0E6:  MGTK_CALL MGTK::SetPenMode, penOR_2
-LA0EC:  MGTK_CALL MGTK::PaintRect, paintrect_params6
+        beq     @paint
+@highlighted:
+        MGTK_CALL MGTK::SetPenMode, penOR_2
+@paint: MGTK_CALL MGTK::PaintRect, paintrect_params6
 
-LA0F2:  COPY_STRUCT MGTK::Point, L9F94, moveto_params2
-
+pos:    COPY_STRUCT MGTK::Point, L9F94, moveto_params2
         MGTK_CALL MGTK::MoveTo, moveto_params2
-        bit     L9F92
+        bit     icon_flags      ; highlighted?
         bmi     :+
         lda     #MGTK::textbg_white
         bne     setbg
@@ -1696,6 +1714,7 @@ setbg:  sta     settextbg_params
         MGTK_CALL MGTK::DrawText, drawtext_params
         MGTK_CALL MGTK::ShowCursor
         rts
+.endproc
 
 ;;; ============================================================
 
@@ -1735,7 +1754,10 @@ loop:   add16   icon_paintbits_params::viewloc::xcoord,x, icon_paintbits_params:
 :       rts
 .endproc
 
-.endproc
+.endproc ; paint_icon
+        paint_icon_unhighlighted := paint_icon::unhighlighted
+        paint_icon_highlighted := paint_icon::highlighted
+
 
 ;;; ============================================================
 
@@ -2113,7 +2135,7 @@ window_id:      .byte   0
         ;; Volume (i.e. icon on desktop)
 volume:
         MGTK_CALL MGTK::InitPort, grafport
-        jsr     LA63F
+        jsr     set_port_for_erasing_vol_icon
 :       jsr     LA6A3
         jsr     erase_desktop_icon
         lda     L9F93
@@ -2309,7 +2331,7 @@ mapwidth:       .word   MGTK::screen_mapwidth
 cliprect:       DEFINE_RECT 0, 0, 0, 0, cliprect
 .endproc
 
-.proc LA63F
+.proc set_port_for_erasing_vol_icon
         jsr     calc_icon_poly
 
         lda     poly::v0::ycoord
@@ -2353,7 +2375,7 @@ done:   MGTK_CALL MGTK::SetPortBits, setportbits_params2
 ;;; ============================================================
 
 .proc LA6A3
-        lda     #$00
+        lda     #$00            ; immediately overwritten???
         jmp     LA6C7
 
 .proc findwindow_params
@@ -2385,6 +2407,7 @@ LA6C1:  .byte   $00
 LA6C2:  .byte   $00
 LA6C3:  .word   0
 LA6C5:  .word   0
+
 LA6C7:  lda     L9F93
         beq     LA6FA
         lda     setportbits_params2::cliprect::x2
@@ -3243,7 +3266,7 @@ LBA0B:  sta     grafport3_viewloc_xcoord,x
         adc     portmap::maprect::y2
         sta     LBFCB
         MGTK_RELAY2_CALL MGTK::HideCursor
-        jsr     LBE08
+        jsr     save_dialog_background
         MGTK_RELAY2_CALL MGTK::ShowCursor
         MGTK_RELAY2_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY2_CALL MGTK::PaintRect, alert_rect ; alert background
@@ -3368,7 +3391,7 @@ LBC52:  jmp     LBB87
 
 LBC55:  pha
         MGTK_RELAY2_CALL MGTK::HideCursor
-        jsr     LBE5D
+        jsr     restore_dialog_background
         MGTK_RELAY2_CALL MGTK::ShowCursor
         pla
         rts
@@ -3482,18 +3505,32 @@ LBDD3:  lda     LBDE0
 
 LBDDB:  lda     #2
         jmp     LBC55
-.endproc
-        show_alert_dialog := show_alert_dialog_impl::start
 
-;;; ============================================================
 
 LBDE0:  .byte   0
+
 LBDE1:  sub16   event_xcoord, portmap::viewloc::xcoord, event_xcoord
         sub16   event_ycoord, portmap::viewloc::ycoord, event_ycoord
         rts
 
-.proc LBE08
-        copy16  #$0800, addr
+.endproc
+        show_alert_dialog := show_alert_dialog_impl::start
+
+
+;;; ============================================================
+;;; Save/Restore Dialog Background
+;;;
+;;; This reuses the "save area" ($800-$1AFF) used by MGTK for
+;;; quickly restoring menu backgrounds.
+
+.proc dialog_background
+
+        ptr := $06
+
+        savearea := $800
+
+.proc save
+        copy16  #savearea, addr
         lda     LBFC9
         jsr     LBF10
         lda     LBFCB
@@ -3509,7 +3546,7 @@ LBE27:  lda     LBE5C
         sta     PAGE2OFF        ; main $2000-$3FFF
         bcs     LBE34
         sta     PAGE2ON         ; aux $2000-$3FFF
-LBE34:  lda     ($06),y
+LBE34:  lda     (ptr),y
         addr := *+1
         sta     dummy1234
         inc16   addr
@@ -3528,8 +3565,8 @@ LBE4E:  jsr     LBF52
 LBE5C:  .byte   0
 .endproc
 
-.proc LBE5D
-        copy16  #$800, addr
+.proc restore
+        copy16  #savearea, addr
         ldx     LBFCD
         ldy     LBFCE
         lda     #$FF
@@ -3571,7 +3608,7 @@ LBEAE:  lda     LBF0B
         sta     PAGE2ON         ; aux $2000-$3FFF
 
         addr := *+1
-:       lda     $0800           ; self-modified
+:       lda     savearea        ; self-modified
 
         pha
         lda     LBF0B
@@ -3579,24 +3616,24 @@ LBEAE:  lda     LBF0B
         beq     LBEDD
         cmp     LBFCC
         bne     LBEEB
-        lda     ($06),y
+        lda     (ptr),y
         and     LBF0F
-        sta     ($06),y
+        sta     (ptr),y
         pla
         and     LBF0E
-        ora     ($06),y
+        ora     (ptr),y
         pha
         jmp     LBEEB
 
-LBEDD:  lda     ($06),y
+LBEDD:  lda     (ptr),y
         and     LBF0D
-        sta     ($06),y
+        sta     (ptr),y
         pla
         and     LBF0C
-        ora     ($06),y
+        ora     (ptr),y
         pha
 LBEEB:  pla
-        sta     ($06),y
+        sta     (ptr),y
         inc16   addr
         lda     LBF0B
         cmp     LBFCC
@@ -3616,7 +3653,7 @@ LBF0E:  .byte   $00
 LBF0F:  .byte   $00
 .endproc
 
-;;; ============================================================
+;;; Address calculations for dialog background display buffer.
 
 .proc LBF10
         sta     LBFCF
@@ -3646,13 +3683,13 @@ LBF0F:  .byte   $00
         sta     LBF51
         pla
         ror     a
-        sta     $06
+        sta     ptr
         lda     LBFB0
         asl     a
         asl     a
         ora     LBF51
         ora     #$20
-        sta     $07
+        sta     ptr+1
         clc
         rts
 
@@ -3690,6 +3727,12 @@ LBF74:  lda     #0
 LBF89:  sec
         rts
 .endproc
+
+.endproc ; dialog_background
+        save_dialog_background := dialog_background::save
+        restore_dialog_background := dialog_background::restore
+
+;;; ============================================================
 
 .proc LBF8B
         ldy     #0
