@@ -820,6 +820,7 @@ floppy140_icon:
         .byte   4               ; mapwidth
         .byte   0               ; reserved
         DEFINE_RECT   0, 0, 26, 14 ; maprect
+        .addr   desktop_aux::floppy140_mask
 
 ;;; RAM Disk
 ramdisk_icon:
@@ -827,6 +828,7 @@ ramdisk_icon:
         .byte   6               ; mapwidth
         .byte   0               ; reserved
         DEFINE_RECT   0, 0, 39, 11 ; maprect
+        .addr   desktop_aux::ramdisk_mask
 
 ;;; 3.5" Floppy Disk
 floppy800_icon:
@@ -834,6 +836,7 @@ floppy800_icon:
         .byte   3               ; mapwidth
         .byte   0               ; reserved
         DEFINE_RECT   0, 0, 20, 11 ; maprect
+        .addr   desktop_aux::floppy800_mask
 
 ;;; Hard Disk
 profile_icon:
@@ -841,6 +844,7 @@ profile_icon:
         .byte   8               ; mapwidth
         .byte   0               ; reserved
         DEFINE_RECT   0, 0, 52, 9 ; maprect
+        .addr   desktop_aux::profile_mask
 
 ;;; Trash Can
 trash_icon:
@@ -848,6 +852,7 @@ trash_icon:
         .byte   3               ; mapwidth
         .byte   0               ; reserved
         DEFINE_RECT   0, 0, 20, 17 ; maprect
+        .addr   desktop_aux::trash_mask
 
 
 ;;; ============================================================

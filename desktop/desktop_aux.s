@@ -905,9 +905,6 @@ done:   return  #0
 .proc FIND_ICON_IMPL
         jmp     start
 
-        .res    9, 0            ; ???
-
-
         coords := $6
 
         ;; Copy coords at $6 to param block
@@ -961,9 +958,6 @@ inside: pla
         sta     L97F6
         rts
 
-        rts                     ; ???
-
-        .byte   0
 L97F5:  .byte   0
 L97F6:  .byte   0
 .endproc
@@ -1002,7 +996,6 @@ win_id: .byte   $00             ; written but not read
 icon_id:
         .byte   $00
 
-        .byte   $00             ; unused ???
 deltax: .word   0
 deltay: .word   0
 
@@ -1586,10 +1579,7 @@ ptr_iconent:    .addr   0
         END_PARAM_BLOCK
         ptr := $06              ; Overwrites param
 
-
         jmp     start
-
-        .byte   0               ; ???
 
         ;; DT_REDRAW_ICON params
 icon:   .byte   0
@@ -1726,13 +1716,10 @@ highlighted:  copy    #$80, icon_flags ; is highlighted
         dey
         bpl     :-
 
-        bit     icon_flags      ; highlighted?
-        bpl     :+
         ;; Icon definition is followed by pointer to mask address.
-        ;; NOTE: For volume icons, this is random data, but it is unused.
         ldy     #.sizeof(MGTK::MapInfo) - .sizeof(MGTK::Point)
         copy16in ($08),y, mask_paintbits_params::mapbits
-:       jsr     pop_pointers
+        jsr     pop_pointers
 
         ldy     #9
 :       lda     ($06),y
@@ -1775,6 +1762,8 @@ highlighted:  copy    #$80, icon_flags ; is highlighted
         ;; Redraw desktop background
         MGTK_CALL MGTK::InitPort, grafport
         jsr     set_port_for_erasing_vol_icon
+
+        ;; Why this loopy thing? handle obscured by windows?
 :       jsr     LA6A3
         jsr     LA097
         lda     L9F93
@@ -1785,21 +1774,33 @@ highlighted:  copy    #$80, icon_flags ; is highlighted
 
 .proc LA097
         MGTK_CALL MGTK::HideCursor
-        MGTK_CALL MGTK::SetPenMode, notpencopy_2
-        bit     icon_flags      ; highlighted?
-        bpl     paint           ; no, just draw
-        bit     icon_flags      ; on desktop?
-        bvc     mask            ; no, draw with mask
 
-        ;; Highlighted, on desktop: draw icon inverted
-        MGTK_CALL MGTK::SetPenMode, pencopy_2
-        jmp     paint
+        bit     icon_flags
+        bvc     window
 
-        ;; Highlighted, in window: draw mask first, then xor the icon
-mask:   MGTK_CALL MGTK::PaintBits, mask_paintbits_params
+        ;; On desktop, clear background
+        MGTK_CALL MGTK::SetPenMode, penOR_2
+        bit     icon_flags
+        bpl     :+              ; highlighted?
+        MGTK_CALL MGTK::SetPenMode, penBIC_2
+:       MGTK_CALL MGTK::PaintBits, mask_paintbits_params
         MGTK_CALL MGTK::SetPenMode, penXOR_2
+        MGTK_CALL MGTK::PaintBits, icon_paintbits_params
+        jmp     continue
 
-paint:  MGTK_CALL MGTK::PaintBits, icon_paintbits_params
+        ;; TODO: For windowed, consider similar logic to above
+        ;; always draw mask, always xor normal
+window:
+        MGTK_CALL MGTK::SetPenMode, notpencopy_2
+        bit     icon_flags
+        bpl     :+              ; highlighted? no, just draw
+
+        ;; draw mask first, then xor the icon
+        MGTK_CALL MGTK::PaintBits, mask_paintbits_params
+        MGTK_CALL MGTK::SetPenMode, penXOR_2
+:       MGTK_CALL MGTK::PaintBits, icon_paintbits_params
+
+continue:
         ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_open_mask
@@ -1853,8 +1854,6 @@ loop:   add16   icon_paintbits_params::viewloc::xcoord,x, icon_paintbits_params:
         paint_icon_unhighlighted := paint_icon::unhighlighted
         paint_icon_highlighted := paint_icon::highlighted
 
-
-        PAD_TO $A182
 
 ;;; ============================================================
 
@@ -2233,6 +2232,8 @@ window_id:      .byte   0
 volume:
         MGTK_CALL MGTK::InitPort, grafport
         jsr     set_port_for_erasing_vol_icon
+
+        ;; Why this loopy thing? Handle obscured by windows??
 :       jsr     LA6A3
         jsr     erase_desktop_icon
         lda     L9F93
@@ -2700,40 +2701,69 @@ LA923:  lda     setportbits_params2::cliprect::x2
         rts
 .endproc
 
-        PAD_TO $A980
-
 ;;; ============================================================
 
 floppy140_pixels:
-        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111110)
         .byte   px(%1100000),px(%0000011),px(%1000000),px(%0000110)
-        .byte   px(%1100000),px(%0000011),px(%1000000),px(%0000111)
         .byte   px(%1100000),px(%0000011),px(%1000000),px(%0000110)
-        .byte   px(%1100000),px(%0000011),px(%1000000),px(%0000111)
+        .byte   px(%1100000),px(%0000011),px(%1000000),px(%0000110)
+        .byte   px(%1100000),px(%0000011),px(%1000000),px(%0000110)
         .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000110)
-        .byte   px(%1100000),px(%0000011),px(%1000000),px(%0000111)
+        .byte   px(%1100000),px(%0000011),px(%1000000),px(%0000110)
         .byte   px(%1100000),px(%0000111),px(%1100000),px(%0000110)
-        .byte   px(%1100000),px(%0000011),px(%1000000),px(%0000111)
+        .byte   px(%1100000),px(%0000011),px(%1000000),px(%0000110)
         .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000110)
-        .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000111)
-        .byte   px(%1011000),px(%0000000),px(%0000000),px(%0000110)
-        .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000111)
         .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000110)
-        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%0011000),px(%0000000),px(%0000000),px(%0000110)
+        .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000110)
+        .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000110)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111110)
+
+floppy140_mask:
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111110)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111110)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111110)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111110)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111110)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111110)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111110)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111110)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111110)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111110)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111110)
+        .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111110)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111110)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111110)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111110)
 
 ramdisk_pixels:
-        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111101)
-        .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0001110)
-        .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0001101)
-        .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0001110)
-        .byte   px(%1100000),px(%0001111),px(%1000111),px(%1100110),px(%0000110),px(%0001101)
-        .byte   px(%1100000),px(%0001100),px(%1100110),px(%0110111),px(%1011110),px(%0001110)
-        .byte   px(%1100000),px(%0001111),px(%1000111),px(%1110110),px(%1110110),px(%0001101)
-        .byte   px(%1100000),px(%0001100),px(%1100110),px(%0110110),px(%0000110),px(%0001110)
-        .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0001101)
-        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1110011),px(%0011001),px(%1001110)
-        .byte   px(%1010101),px(%0101010),px(%1010101),px(%0110011),px(%0011001),px(%1001101)
-        .byte   px(%0101010),px(%1010101),px(%0101010),px(%1111111),px(%1111111),px(%1111110)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0001100)
+        .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0001100)
+        .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0001100)
+        .byte   px(%1100000),px(%0001111),px(%1000111),px(%1100110),px(%0000110),px(%0001100)
+        .byte   px(%1100000),px(%0001100),px(%1100110),px(%0110111),px(%1011110),px(%0001100)
+        .byte   px(%1100000),px(%0001111),px(%1000111),px(%1110110),px(%1110110),px(%0001100)
+        .byte   px(%1100000),px(%0001100),px(%1100110),px(%0110110),px(%0000110),px(%0001100)
+        .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0001100)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1110011),px(%0011001),px(%1001100)
+        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0110011),px(%0011001),px(%1001100)
+        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0111111),px(%1111111),px(%1111100)
+
+ramdisk_mask:
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0111111),px(%1111111),px(%1111100)
+        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0111111),px(%1111111),px(%1111100)
 
 floppy800_pixels:
         .byte   px(%1111111),px(%1111111),px(%1111110)
@@ -2749,21 +2779,47 @@ floppy800_pixels:
         .byte   px(%1100110),px(%0000000),px(%0110011)
         .byte   px(%1111111),px(%1111111),px(%1111111)
 
+floppy800_mask:
+        .byte   px(%1111111),px(%1111111),px(%1111110)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+
 profile_pixels:
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1110101)
-        .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0011010)
-        .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0011101)
-        .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0011010)
-        .byte   px(%1100011),px(%1000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0011101)
-        .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0011101)
-        .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0011010)
-        .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0011101)
-        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1110101)
-        .byte   px(%1010111),px(%0101010),px(%1010101),px(%0101010),px(%1010101),px(%0101010),px(%1010111),px(%0101010)
+        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1110000)
+        .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0011000)
+        .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0011000)
+        .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0011000)
+        .byte   px(%1100011),px(%1000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0011000)
+        .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0011000)
+        .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0011000)
+        .byte   px(%1100000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0011000)
+        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1110000)
+        .byte   px(%0000111),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000111),px(%0000000)
+
+profile_mask:
+        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1110000)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111000)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111000)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111000)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111000)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111000)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111000)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111000)
+        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1110000)
+        .byte   px(%0000111),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000111),px(%0000000)
 
 trash_pixels:
-        .byte   px(%1010101),px(%1111111),px(%1010101)
-        .byte   px(%0101011),px(%1000001),px(%1101010)
+        .byte   px(%0000001),px(%1111111),px(%1000000)
+        .byte   px(%0000011),px(%1000001),px(%1100000)
         .byte   px(%1111111),px(%1111111),px(%1111111)
         .byte   px(%1100000),px(%0000000),px(%0000011)
         .byte   px(%1111111),px(%1111111),px(%1111111)
@@ -2780,6 +2836,28 @@ trash_pixels:
         .byte   px(%1100100),px(%0010000),px(%1000011)
         .byte   px(%1100000),px(%0000000),px(%0000011)
         .byte   px(%1111111),px(%1111111),px(%1111111)
+
+trash_mask:
+        .byte   px(%0000001),px(%1111111),px(%1000000)
+        .byte   px(%0000011),px(%1111111),px(%1100000)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111)
+
+;;; ============================================================
 
 label_apple:
         PASCAL_STRING GLYPH_SAPPLE
