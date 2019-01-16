@@ -3583,10 +3583,8 @@ LBDE1:  sub16   event_xcoord, portmap::viewloc::xcoord, event_xcoord
 
         ptr := $06
 
-        savearea := $800
-
 .proc save
-        copy16  #savearea, addr
+        copy16  #save_area_buffer, addr
         lda     LBFC9
         jsr     LBF10
         lda     LBFCB
@@ -3622,7 +3620,7 @@ LBE5C:  .byte   0
 .endproc
 
 .proc restore
-        copy16  #savearea, addr
+        copy16  #save_area_buffer, addr
         ldx     LBFCD
         ldy     LBFCE
         lda     #$FF
@@ -3664,7 +3662,7 @@ LBEAE:  lda     LBF0B
         sta     PAGE2ON         ; aux $2000-$3FFF
 
         addr := *+1
-:       lda     savearea        ; self-modified
+:       lda     save_area_buffer ; self-modified
 
         pha
         lda     LBF0B
