@@ -1763,7 +1763,7 @@ highlighted:  copy    #$80, icon_flags ; is highlighted
         MGTK_CALL MGTK::InitPort, grafport
         jsr     set_port_for_erasing_vol_icon
 
-        ;; Why this loopy thing? handle obscured by windows?
+        ;; Handle obscuration by windows???
 :       jsr     LA6A3
         jsr     LA097
         lda     L9F93
@@ -1779,17 +1779,19 @@ highlighted:  copy    #$80, icon_flags ; is highlighted
         bvc     window
 
         ;; On desktop, clear background
-        MGTK_CALL MGTK::SetPenMode, penOR_2
+        MGTK_CALL MGTK::SetPenMode, penOR_2 ; clear with mask to white
         bit     icon_flags
         bpl     :+              ; highlighted?
-        MGTK_CALL MGTK::SetPenMode, penBIC_2
+        MGTK_CALL MGTK::SetPenMode, penBIC_2 ; or black if highlighted
 :       MGTK_CALL MGTK::PaintBits, mask_paintbits_params
         MGTK_CALL MGTK::SetPenMode, penXOR_2
         MGTK_CALL MGTK::PaintBits, icon_paintbits_params
         jmp     continue
 
-        ;; TODO: For windowed, consider similar logic to above
-        ;; always draw mask, always xor normal
+        ;; NOTE: Since having many windowed icons is more common,
+        ;; the bitmap is just drawn without mask/xor if not
+        ;; selected, since the performance difference is measurable.
+        ;; (At 1MHz, about 10ms/icon)
 window:
         MGTK_CALL MGTK::SetPenMode, notpencopy_2
         bit     icon_flags
@@ -2233,7 +2235,7 @@ volume:
         MGTK_CALL MGTK::InitPort, grafport
         jsr     set_port_for_erasing_vol_icon
 
-        ;; Why this loopy thing? Handle obscured by windows??
+        ;; Handle obscuration by windows???
 :       jsr     LA6A3
         jsr     erase_desktop_icon
         lda     L9F93
@@ -2816,6 +2818,40 @@ profile_mask:
         .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111000)
         .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1110000)
         .byte   px(%0000111),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000000),px(%0000111),px(%0000000)
+
+fileshare_pixels:
+        .byte   px(%0000000),px(%0000000),px(%0011001),px(%1111111),px(%1000000)
+        .byte   px(%0000000),px(%0000000),px(%1100110),px(%0000000),px(%1110000)
+        .byte   px(%0011111),px(%1110011),px(%0000001),px(%1000000),px(%1111100)
+        .byte   px(%0011000),px(%0011111),px(%1100000),px(%0110000),px(%0001100)
+        .byte   px(%0011000),px(%0000000),px(%0011000),px(%0001100),px(%0001100)
+        .byte   px(%0011000),px(%0000000),px(%0011000),px(%0110000),px(%0001100)
+        .byte   px(%0011000),px(%0000000),px(%0011001),px(%1000000),px(%0001100)
+        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111110)
+        .byte   px(%0110000),px(%0000000),px(%0000000),px(%0000000),px(%0000110)
+        .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%0000000),px(%0000000),px(%0000110),px(%0110000),px(%0000000)
+        .byte   px(%0000000),px(%0000000),px(%0001110),px(%0111000),px(%0000000)
+        .byte   px(%1100111),px(%1111111),px(%1111000),px(%0001111),px(%1110011)
+        .byte   px(%0000000),px(%0000000),px(%0000001),px(%1000000),px(%0000000)
+        .byte   px(%1100111),px(%1111111),px(%1111110),px(%0111111),px(%1110011)
+
+fileshare_mask:
+        .byte   px(%0000000),px(%0000000),px(%0011001),px(%1111111),px(%1000000)
+        .byte   px(%0000000),px(%0000000),px(%1111111),px(%1111111),px(%1110000)
+        .byte   px(%0011111),px(%1110011),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111110)
+        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111111),px(%1111110)
+        .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111111),px(%1111100)
+        .byte   px(%0000000),px(%0000000),px(%0000111),px(%1110000),px(%0000000)
+        .byte   px(%0000000),px(%0000000),px(%0001111),px(%1111000),px(%0000000)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111110),px(%0111111),px(%1111111)
 
 trash_pixels:
         .byte   px(%0000001),px(%1111111),px(%1000000)

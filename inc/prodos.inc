@@ -145,6 +145,7 @@ ERR_VOLUME_DIR_FULL   = $49
 ERR_END_OF_FILE       = $4C
 ERR_ACCESS_ERROR      = $4E
 ERR_DUPLICATE_VOLUME  = $57
+ERR_NETWORK_ERROR     = $88
 
 ;;; ============================================================
 ;;; Misc Structures

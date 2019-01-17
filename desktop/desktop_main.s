@@ -8564,13 +8564,15 @@ pos_win:        .word   0, 0
 ;;;  1 = SmartPort, RAM Disk
 ;;;  2 = SmartPort, Fixed (e.g. ProFile)
 ;;;  3 = SmartPort, Removable (e.g. UniDisk 3.5)
-;;;  4 = unknown / RAM-based driver
+;;;  4 = AppleTalk file share
+;;;  5 = unknown / RAM-based driver
 
 device_type_to_icon_address_table:
         .addr floppy140_icon
         .addr ramdisk_icon
         .addr profile_icon
         .addr floppy800_icon
+        .addr fileshare_icon
         .addr profile_icon ; unknown
 
 .proc get_device_type
@@ -8600,10 +8602,9 @@ device_type_to_icon_address_table:
 
 :       ldy     #$07            ; SmartPort signature byte ($Cn07)
         lda     (slot_addr),y   ; $00 = SmartPort
-        beq     :+
-unk:    return  #device_type_unknown
+        bne     unk
 
-:       ldy     #$FB            ; SmartPort ID Type Byte ($CnFB)
+        ldy     #$FB            ; SmartPort ID Type Byte ($CnFB)
         lda     (slot_addr),y   ; bit 0 = is RAM Card?
         and     #%00000001
         beq     :+
@@ -8620,15 +8621,23 @@ ram:    return  #device_type_ramdisk
 
         ;; So instead, just assume <=1600 blocks is a 3.5" floppy
         jsr     get_block_count
-        bcs     :+
+        bcs     hd
         stax    blocks
         cmp16   blocks, #1601
-        bcs     :+
+        bcs     hd
         return  #device_type_removable
 
-:       return  #device_type_profile
+        ;; Try AppleTalk
+unk:    MLI_RELAY_CALL READ_BLOCK, block_params
+        beq     hd
+        cmp     #ERR_NETWORK_ERROR
+        bne     hd
+        return  #device_type_fileshare
 
-unit_number:    .byte   0
+hd:     return  #device_type_profile
+
+        DEFINE_READ_BLOCK_PARAMS block_params, $800, 0
+        unit_number := block_params::unit_num
 
 blocks: .word   0
 .endproc

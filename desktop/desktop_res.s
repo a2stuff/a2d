@@ -846,6 +846,14 @@ profile_icon:
         DEFINE_RECT   0, 0, 52, 9 ; maprect
         .addr   desktop_aux::profile_mask
 
+;;; File Share
+fileshare_icon:
+        .addr   desktop_aux::fileshare_pixels  ; mapbits
+        .byte   5               ; mapwidth
+        .byte   0               ; reserved
+        DEFINE_RECT   0, 0, 34, 14 ; maprect
+        .addr   desktop_aux::fileshare_mask
+
 ;;; Trash Can
 trash_icon:
         .addr   desktop_aux::trash_pixels    ; mapbits
@@ -1099,7 +1107,8 @@ startup_menu_item_7:    PASCAL_STRING "Slot 0 "
         device_type_ramdisk     = 1
         device_type_profile     = 2
         device_type_removable   = 3
-        device_type_unknown     = 4
+        device_type_fileshare   = 4
+        device_type_unknown     = 5
 
 ;;; Templates used for device names
 device_template_table:
@@ -1107,13 +1116,14 @@ device_template_table:
         .addr   str_ramcard_slot_x
         .addr   str_profile_slot_x
         .addr   str_unidisk_xy
+        .addr   str_fileshare_x
         .addr   str_slot_drive
 
 device_template_slot_offset_table:
-        .byte   15, 15, 15, 15, 6
+        .byte   15, 15, 15, 15, 18, 6
 
 device_template_drive_offset_table:
-        .byte   19, 0, 0, 19, 15 ; 0 = no drive # for this type
+        .byte   19, 0, 0, 19, 0, 15 ; 0 = no drive # for this type
 
 ;;; Disk II
 str_disk_ii_sd:
@@ -1130,6 +1140,10 @@ str_unidisk_xy:
 ;;; RAM disks
 str_ramcard_slot_x:
         PASCAL_STRING "RAMCard  Slot x     "
+
+;;; File Share
+str_fileshare_x:
+        PASCAL_STRING "AppleShare  Slot x  "
 
 ;;; Unknown devices
 str_slot_drive:
