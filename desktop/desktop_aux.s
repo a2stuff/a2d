@@ -212,7 +212,7 @@ reserved:       .byte   0
 maprect:        DEFINE_RECT 0,0,0,0,maprect
 .endproc
 
-paintrect_params6:      DEFINE_RECT 0,0,0,0, paintrect_params6
+rect_opendir:      DEFINE_RECT 0,0,0,0, rect_opendir
 
 .proc textwidth_params
 textptr:        .addr   text_buffer
@@ -1723,7 +1723,7 @@ highlighted:  copy    #$80, icon_flags ; is highlighted
 
         ldy     #9
 :       lda     ($06),y
-        sta     paintrect_params6::y2,y
+        sta     rect_opendir::y2,y
         iny
         cpy     #$1D
         bne     :-
@@ -1757,24 +1757,21 @@ highlighted:  copy    #$80, icon_flags ; is highlighted
         COPY_STRUCT MGTK::Point, moveto_params2, L9F94
 
         bit     icon_flags      ; volume icon (on desktop) ?
-        bvc     LA097           ; nope
+        bvc     paint_icon      ; nope
 
         ;; Redraw desktop background
         MGTK_CALL MGTK::InitPort, grafport
         jsr     set_port_for_erasing_vol_icon
-
-        ;; Handle obscuration by windows???
-:       jsr     LA6A3
-        jsr     LA097
+:       jsr     calc_window_intersections
+        jsr     paint_icon
         lda     L9F93
         bne     :-
         MGTK_CALL MGTK::SetPortBits, grafport
         rts
 .endproc
 
-.proc LA097
+.proc paint_icon
         MGTK_CALL MGTK::HideCursor
-
         bit     icon_flags
         bvc     window
 
@@ -1806,9 +1803,9 @@ continue:
         ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_open_mask
-        beq     pos
+        beq     label
 
-        jsr     LA14D
+        jsr     calc_rect_opendir
         MGTK_CALL MGTK::SetPattern, dark_pattern ; shade for open volume
         bit     icon_flags                       ; highlighted?
         bmi     @highlighted
@@ -1816,9 +1813,9 @@ continue:
         beq     @paint
 @highlighted:
         MGTK_CALL MGTK::SetPenMode, penOR_2
-@paint: MGTK_CALL MGTK::PaintRect, paintrect_params6
+@paint: MGTK_CALL MGTK::PaintRect, rect_opendir
 
-pos:    COPY_STRUCT MGTK::Point, L9F94, moveto_params2
+label:  COPY_STRUCT MGTK::Point, L9F94, moveto_params2
         MGTK_CALL MGTK::MoveTo, moveto_params2
         bit     icon_flags      ; highlighted?
         bmi     :+
@@ -1834,21 +1831,21 @@ setbg:  sta     settextbg_params
 
 ;;; ============================================================
 
-.proc LA14D
+.proc calc_rect_opendir
         ldx     #0
-loop:   add16   icon_paintbits_params::viewloc::xcoord,x, icon_paintbits_params::maprect::x1,x, paintrect_params6::x1,x
-        add16   icon_paintbits_params::viewloc::xcoord,x, icon_paintbits_params::maprect::x2,x, paintrect_params6::x2,x
+loop:   add16   icon_paintbits_params::viewloc::xcoord,x, icon_paintbits_params::maprect::x1,x, rect_opendir::x1,x
+        add16   icon_paintbits_params::viewloc::xcoord,x, icon_paintbits_params::maprect::x2,x, rect_opendir::x2,x
         inx
         inx
         cpx     #4
         bne     loop
 
-        lda     paintrect_params6::y2
+        lda     rect_opendir::y2
         sec
         sbc     #1
-        sta     paintrect_params6::y2
+        sta     rect_opendir::y2
         bcs     :+
-        dec     paintrect_params6::y2+1
+        dec     rect_opendir::y2+1
 :       rts
 .endproc
 
@@ -2234,9 +2231,7 @@ window_id:      .byte   0
 volume:
         MGTK_CALL MGTK::InitPort, grafport
         jsr     set_port_for_erasing_vol_icon
-
-        ;; Handle obscuration by windows???
-:       jsr     LA6A3
+:       jsr     calc_window_intersections
         jsr     erase_desktop_icon
         lda     L9F93
         bne     :-
@@ -2474,7 +2469,7 @@ done:   MGTK_CALL MGTK::SetPortBits, setportbits_params2
 
 ;;; ============================================================
 
-.proc LA6A3
+.proc calc_window_intersections
         lda     #$00            ; immediately overwritten???
         jmp     LA6C7
 
@@ -2489,27 +2484,22 @@ LA6AE:  .word   0
 LA6B0:  .byte   $00
 LA6B1:  .byte   $00
 LA6B2:  .byte   $00
-LA6B3:  .byte   $00
-LA6B4:  .byte   $00
-LA6B5:  .byte   $00
-LA6B6:  .byte   $00
-LA6B7:  .byte   $00
-LA6B8:  .byte   $00
-LA6B9:  .byte   $00
-LA6BA:  .byte   $00
-LA6BB:  .byte   $00
-LA6BC:  .byte   $00
-LA6BD:  .byte   $00
-LA6BE:  .byte   $00
-LA6BF:  .byte   $00
-LA6C0:  .byte   $00
-LA6C1:  .byte   $00
-LA6C2:  .byte   $00
+
+x1a:    .word   0
+y1a:    .word   0
+x2a:    .word   0
+y1b:    .word   0
+x2b:    .word   0
+y2a:    .word   0
+x1b:    .word   0
+y2b:    .word   0
+
 LA6C3:  .word   0
 LA6C5:  .word   0
 
 LA6C7:  lda     L9F93
         beq     LA6FA
+
         lda     setportbits_params2::cliprect::x2
         clc
         adc     #1
@@ -2522,39 +2512,39 @@ LA6C7:  lda     L9F93
 
         COPY_BYTES 6, LA629, setportbits_params2::cliprect::y1
 
-        lda     setportbits_params2::cliprect::y1
-        sta     setportbits_params2::viewloc::ycoord
-        lda     setportbits_params2::cliprect::y1+1
-        sta     setportbits_params2::viewloc::ycoord+1
+        copy16  setportbits_params2::cliprect::y1, setportbits_params2::viewloc::ycoord
+
 LA6FA:  lda     setportbits_params2::cliprect::x1
-        sta     LA6B3
-        sta     LA6BF
+        sta     x1a
+        sta     x1b
         lda     setportbits_params2::cliprect::x1+1
-        sta     LA6B4
-        sta     LA6C0
+        sta     x1a+1
+        sta     x1b+1
         lda     setportbits_params2::cliprect::y1
-        sta     LA6B5
-        sta     LA6B9
+        sta     y1a
+        sta     y1b
         lda     setportbits_params2::cliprect::y1+1
-        sta     LA6B6
-        sta     LA6BA
+        sta     y1a+1
+        sta     y1b+1
         lda     setportbits_params2::cliprect::x2
-        sta     LA6B7
-        sta     LA6BB
+        sta     x2a
+        sta     x2b
         lda     setportbits_params2::cliprect::x2+1
-        sta     LA6B8
-        sta     LA6BC
+        sta     x2a+1
+        sta     x2b+1
         lda     setportbits_params2::cliprect::y2
-        sta     LA6BD
-        sta     LA6C1
+        sta     y2a
+        sta     y2b
         lda     setportbits_params2::cliprect::y2+1
-        sta     LA6BE
-        sta     LA6C2
+        sta     y2a+1
+        sta     y2b+1
+
         lda     #0
         sta     LA6B0
 LA747:  lda     LA6B0
         cmp     #4
         bne     LA775
+
         lda     #0
         sta     LA6B0
 LA753:  MGTK_CALL MGTK::SetPortBits, setportbits_params2
@@ -2577,7 +2567,7 @@ LA775:  lda     LA6B0
         asl     a
         tax
         ldy     #$00
-LA77D:  lda     LA6B3,x
+LA77D:  lda     x1a,x
         sta     findwindow_params,y
         iny
         inx
