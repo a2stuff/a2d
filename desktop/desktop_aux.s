@@ -874,18 +874,9 @@ L9758:  jmp     L96DD
 ;;; ============================================================
 ;;; GET_HIGHLIGHTED IMPL
 
-;;; Copies first 20 highlighted icon numbers to ($06)
+;;; Copies highlighted icon numbers to ($06)
 
 .proc GET_HIGHLIGHTED_IMPL
-        ldx     #0
-        txa
-        tay
-:       sta     ($06),y
-        iny
-        inx
-        cpx     #20             ; 20 items
-        bne     :-
-
         ldx     #0
         ldy     #0
 :       lda     highlight_list,x

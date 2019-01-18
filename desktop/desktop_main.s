@@ -8824,6 +8824,9 @@ offset:         .word   0
 ;;;  | 10  9   8   7   6 Trash |
 ;;;  +-------------------------+
 
+        trash_iconx = 506
+        trash_icony = 160
+
 desktop_icon_coords_table:
         DEFINE_POINT 490,16     ; 1
         DEFINE_POINT 490,45     ; 2
@@ -15201,8 +15204,14 @@ trash_name:  PASCAL_STRING " Trash "
         stax    ptr
         ldy     #IconEntry::win_type
         copy    #icon_entry_type_trash, (ptr),y
+
+        ldy     #IconEntry::iconx
+        copy16in #desktop_main::create_volume_icon::trash_iconx, (ptr),y
+        ldy     #IconEntry::icony
+        copy16in #desktop_main::create_volume_icon::trash_icony, (ptr),y
         ldy     #IconEntry::iconbits
         copy16in #trash_icon, (ptr),y
+
         iny
         ldx     #0
 :       lda     trash_name,x

@@ -47,7 +47,7 @@ end:
 
 .macro PAD_TO addr
     .if (addr - *) >= 0
-        .res    addr - *, 0
+        .res    addr - *
     .else
         .error .sprintf("Padding offset %d", addr - *)
     .endif
