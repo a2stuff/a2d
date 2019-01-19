@@ -79,7 +79,7 @@ run.
 
 `mgtk.s`
 
-Aux $4000-$851E is the [MouseGraphics ToolKit](../MGTK.md) - a
+Aux $4000-$8580 is the [MouseGraphics ToolKit](../MGTK.md) - a
 GUI library used for the DeskTop application.
 
 Since this resides in Aux memory, DeskTop spends most of its time
@@ -96,28 +96,42 @@ data.
 
 DeskTop application code is in the lower 48k of both Aux and Main:
 
-* Aux $851F-$BFFF - sitting above the GUI library (`desktop_aux.s`)
+* Aux $8580-$BFFF - sitting above the GUI library (`desktop_aux.s`)
 * Main $4000-$BEFF (`desktop_main.s`)
 
 ...and in the Aux language card area (accessible from both aux and
 main code) are relays, buffers and resources:
 
-* Aux $D000-$ECFF - relays and other aux/main helpers, resources (menus, strings, window)
+* Aux $D000-$D1FF - main-to-aux relay calls
+* Aux $D200-$ECFF - resources (menus, strings, window)
 * Aux $ED00-$FAFF - hole for data buffer - entries for each icon on desktop/in windows
 * Aux $FB00-$FFFF - more resources (file types, icons)
 
 ($C000-$CFFF is reserved for I/O, and main $BF page and language card is ProDOS)
 
 `desktop_res.s` defines these common resources. It is built as part of
-`desktop.s`. Early in the build process it is also built as part of
-`desktop_res_build.s` which is processed to produce `out/desktop_res.inc`,
-which is used by the overlay sources.
+`desktop.s`.
 
-Aux $1B00-$1F7F holds lists of icons, one for the desktop then one for up
-to 8 windows. First byte is a count, up to 127 icon entries. Icon numbers
-map indirectly into a table at $ED00 that holds the type, coordinates, etc.
-Aux $1F80-$1FFF is a map of used/free icon numbers, as they are reassigned
-as windows are opened and closed.
+The DeskTop code in Aux primarily implements the actual desktop GUI,
+drawing file icons in windows, volume icons on the desktop, handling
+selection and dragging, and tracking icons in windows; this code is
+implemented as a library with MLI-style calls. The code in Main
+handles the bulk of the application logic.
+
+When running, lower memory use includes:
+
+* Main $800-$1BFF is used as scratch space for a variety of routines.
+* Main $1C00-$1FFF is used as a 1k ProDOS I/O buffer.
+
+* Aux $0800-$1AFF is a "save area"; used by MGTK to store the background
+    when menus are drawn so it can be restored without redrawing. The
+    save area is also used by DeskTop to save the background for alert
+    dialogs, and icon outlines when dragging.
+* Aux $1B00-$1F7F holds lists of icons, one for the desktop then one for up
+    to 8 windows. First byte is a count, up to 127 icon entries. Icon numbers
+    map indirectly into a table at $ED00 that holds the type, coordinates, etc.
+* Aux $1F80-$1FFF is a map of used/free icon numbers, as they are reassigned
+    as windows are opened and closed.
 
 ### Overlays
 
@@ -202,7 +216,7 @@ $8E00 |             |       | Entry Point |
       |             |       |             |
 $8800 |             |       | Font        |
       |             |       |             |
-$851F |             |       +-------------+
+$8580 |             |       +-------------+
       |             |       | MGTK        |
       |             |       |             |
       |             |       |             |
