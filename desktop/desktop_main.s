@@ -15178,11 +15178,11 @@ end:
         sta     RAMWRTON
         lda     #$00
         tax
-loop:   sta     $1F00,x         ; window 8, icon use map
-        sta     $1E00,x         ; window 6, 7
-        sta     $1D00,x         ; window 4, 5
-        sta     $1C00,x         ; window 2, 3
-        sta     $1B00,x         ; window 0, 1 (0=desktop)
+loop:   sta     WINDOW_ICON_TABLES + $400,x         ; window 8, icon use map
+        sta     WINDOW_ICON_TABLES + $300,x         ; window 6, 7
+        sta     WINDOW_ICON_TABLES + $200,x         ; window 4, 5
+        sta     WINDOW_ICON_TABLES + $100,x         ; window 2, 3
+        sta     WINDOW_ICON_TABLES + $000,x         ; window 0, 1 (0=desktop)
         inx
         bne     loop
         sta     RAMWRTOFF
