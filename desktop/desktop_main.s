@@ -10210,7 +10210,7 @@ vol_icon:
         sta     path_buf+1
 
         ;; Try to get file info
-common: yax_call JT_MLI_RELAY, GET_FILE_INFO, get_file_info_params5
+common: MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params5
         beq     :+
         jsr     show_error_alert
         beq     common
@@ -10253,9 +10253,9 @@ vol_icon2:
         jmp     common2
 :       lda     DEVLST,y
         sta     block_params::unit_num
-        yax_call JT_MLI_RELAY, READ_BLOCK, block_params
+        MLI_RELAY_CALL READ_BLOCK, block_params
         bne     common2
-        yax_call JT_MLI_RELAY, WRITE_BLOCK, block_params
+        MLI_RELAY_CALL WRITE_BLOCK, block_params
         cmp     #ERR_WRITE_PROTECTED
         bne     common2
         copy    #$80, write_protected_flag
@@ -10538,7 +10538,7 @@ L9674:  inx
         cpy     L9709
         bne     L9674
         stx     dst_path_buf
-        yax_call JT_MLI_RELAY, RENAME, rename_params
+        MLI_RELAY_CALL RENAME, rename_params
         beq     L969E
         jsr     JT_SHOW_ALERT0
         bne     L9696
@@ -10669,7 +10669,7 @@ L97E4:  .byte   $00
         sta     entries_read
         sta     entries_read_this_block
 
-@retry: yax_call JT_MLI_RELAY, OPEN, open_src_dir_params
+@retry: MLI_RELAY_CALL OPEN, open_src_dir_params
         beq     :+
         ldx     #$80
         jsr     JT_SHOW_ALERT
@@ -10680,7 +10680,7 @@ L97E4:  .byte   $00
         sta     op_ref_num
         sta     read_src_dir_header_params::ref_num
 
-@retry2:yax_call JT_MLI_RELAY, READ, read_src_dir_header_params
+@retry2:MLI_RELAY_CALL READ, read_src_dir_header_params
         beq     :+
         ldx     #$80
         jsr     JT_SHOW_ALERT
@@ -10693,7 +10693,7 @@ L97E4:  .byte   $00
 .proc close_src_dir
         lda     op_ref_num
         sta     close_src_dir_params::ref_num
-@retry: yax_call JT_MLI_RELAY, CLOSE, close_src_dir_params
+@retry: MLI_RELAY_CALL CLOSE, close_src_dir_params
         beq     :+
         ldx     #$80
         jsr     JT_SHOW_ALERT
@@ -10707,7 +10707,7 @@ L97E4:  .byte   $00
         inc     entries_read
         lda     op_ref_num
         sta     read_src_dir_entry_params::ref_num
-@retry: yax_call JT_MLI_RELAY, READ, read_src_dir_entry_params
+@retry: MLI_RELAY_CALL READ, read_src_dir_entry_params
         beq     :+
         cmp     #ERR_END_OF_FILE
         beq     eof
@@ -10722,7 +10722,7 @@ L97E4:  .byte   $00
         bcc     :+
         copy    #0, entries_read_this_block
         copy    op_ref_num, read_src_dir_skip5_params::ref_num
-        yax_call JT_MLI_RELAY, READ, read_src_dir_skip5_params
+        MLI_RELAY_CALL READ, read_src_dir_skip5_params
 :       return  #0
 
 eof:    return  #$FF
@@ -10989,7 +10989,7 @@ L9A50:  ldx     dst_path_buf
         stx     dst_path_buf
 
 get_src_info:
-@retry: yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
+@retry: MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
         beq     :+
         jsr     show_error_alert
         jmp     @retry
@@ -11043,7 +11043,7 @@ store:  sta     is_dir_flag
         sta     create_params2::storage_type
 
 do_create:
-        yax_call JT_MLI_RELAY, CREATE, create_params2
+        MLI_RELAY_CALL CREATE, create_params2
         beq     create_ok
 
         cmp     #ERR_DUPLICATE_FILENAME
@@ -11114,7 +11114,7 @@ copy_pop_directory:
 
         ;; Directory
         jsr     append_to_src_path
-@retry: yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
+@retry: MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
         beq     :+
         jsr     show_error_alert
         jmp     @retry
@@ -11143,7 +11143,7 @@ regular_file:
         jsr     append_to_dst_path
         jsr     append_to_src_path
         jsr     dec_file_count_and_run_copy_dialog_proc
-@retry: yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
+@retry: MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
         beq     :+
         jsr     show_error_alert
         jmp     @retry
@@ -11172,7 +11172,7 @@ done:   rts
 ;;; ============================================================
 
 .proc check_vol_blocks_free
-@retry: yax_call JT_MLI_RELAY, GET_FILE_INFO, dst_file_info_params
+@retry: MLI_RELAY_CALL GET_FILE_INFO, dst_file_info_params
         beq     :+
         jsr     show_error_alert_dst
         jmp     @retry
@@ -11203,7 +11203,7 @@ done:   rts
 
 .proc check_space
         ;; Size of source
-@retry: yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
+@retry: MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
         beq     :+
         jsr     show_error_alert
         jmp     @retry
@@ -11214,7 +11214,7 @@ done:   rts
         sta     existing_size+1
 
         ;; Does destination exist?
-@retry2:yax_call JT_MLI_RELAY, GET_FILE_INFO, dst_file_info_params
+@retry2:MLI_RELAY_CALL GET_FILE_INFO, dst_file_info_params
         beq     got_exist_size
         cmp     #ERR_FILE_NOT_FOUND
         beq     :+
@@ -11239,7 +11239,7 @@ got_exist_size:
         sta     vol_path_length
 
         ;; Total blocks/used blocks on destination volume
-@retry: yax_call JT_MLI_RELAY, GET_FILE_INFO, dst_file_info_params
+@retry: MLI_RELAY_CALL GET_FILE_INFO, dst_file_info_params
         beq     got_info
         pha                     ; on failure, restore path
         lda     saved_length    ; in case copy is aborted
@@ -11309,7 +11309,7 @@ read:   jsr     read_src
 :       jsr     open_dst
         bne     :-
         jsr     copy_dst_ref_num
-        yax_call JT_MLI_RELAY, SET_MARK, mark_dst_params
+        MLI_RELAY_CALL SET_MARK, mark_dst_params
 
         ;; Write
 write:  bit     src_eof_flag
@@ -11321,7 +11321,7 @@ write:  bit     src_eof_flag
         jsr     open_src
         jsr     copy_src_ref_num
 
-        yax_call JT_MLI_RELAY, SET_MARK, mark_src_params
+        MLI_RELAY_CALL SET_MARK, mark_src_params
         beq     read
         copy    #$FF, src_eof_flag
         jmp     read
@@ -11335,7 +11335,7 @@ eof:    jsr     close_dst
         jmp     set_dst_file_info
 
 .proc open_src
-@retry: yax_call JT_MLI_RELAY, OPEN, open_src_params
+@retry: MLI_RELAY_CALL OPEN, open_src_params
         beq     :+
         jsr     show_error_alert
         jmp     @retry
@@ -11351,7 +11351,7 @@ eof:    jsr     close_dst
 .endproc
 
 .proc open_dst
-@retry: yax_call JT_MLI_RELAY, OPEN, open_dst_params
+@retry: MLI_RELAY_CALL OPEN, open_dst_params
         beq     done
         cmp     #ERR_VOL_NOT_FOUND
         beq     not_found
@@ -11375,7 +11375,7 @@ done:   rts
 
 .proc read_src
         copy16  #buf_size, read_src_params::request_count
-@retry: yax_call JT_MLI_RELAY, READ, read_src_params
+@retry: MLI_RELAY_CALL READ, read_src_params
         beq     :+
         cmp     #ERR_END_OF_FILE
         beq     eof
@@ -11386,26 +11386,26 @@ done:   rts
         ora     read_src_params::trans_count
         bne     :+
 eof:    copy    #$FF, src_eof_flag
-:       yax_call JT_MLI_RELAY, GET_MARK, mark_src_params
+:       MLI_RELAY_CALL GET_MARK, mark_src_params
         rts
 .endproc
 
 .proc write_dst
-@retry: yax_call JT_MLI_RELAY, WRITE, write_dst_params
+@retry: MLI_RELAY_CALL WRITE, write_dst_params
         beq     :+
         jsr     show_error_alert_dst
         jmp     @retry
-:       yax_call JT_MLI_RELAY, GET_MARK, mark_dst_params
+:       MLI_RELAY_CALL GET_MARK, mark_dst_params
         rts
 .endproc
 
 .proc close_dst
-        yax_call JT_MLI_RELAY, CLOSE, close_dst_params
+        MLI_RELAY_CALL CLOSE, close_dst_params
         rts
 .endproc
 
 .proc close_src
-        yax_call JT_MLI_RELAY, CLOSE, close_src_params
+        MLI_RELAY_CALL CLOSE, close_src_params
         rts
 .endproc
 
@@ -11429,7 +11429,7 @@ src_eof_flag:
         cpx     #3
         bne     :-
 
-create: yax_call JT_MLI_RELAY, CREATE, create_params3
+create: MLI_RELAY_CALL CREATE, create_params3
         beq     success
         cmp     #ERR_DUPLICATE_FILENAME
         bne     err
@@ -11538,7 +11538,7 @@ count:  .word   0
         copy    #DeleteDialogLifecycle::show, delete_dialog_params::phase
         jsr     copy_paths_to_src_and_dst_paths
 
-@retry: yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
+@retry: MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
         beq     :+
         jsr     show_error_alert
         jmp     @retry
@@ -11577,7 +11577,7 @@ do_destroy:
         jsr     dec_file_count_and_run_delete_dialog_proc
 :       jsr     decrement_op_file_count
 
-retry:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
+retry:  MLI_RELAY_CALL DESTROY, destroy_params
         beq     done
         cmp     #ERR_ACCESS_ERROR
         bne     error
@@ -11598,14 +11598,14 @@ retry:  yax_call JT_MLI_RELAY, DESTROY, destroy_params
         bne     do_it           ; always
 :       jmp     close_files_cancel_dialog
 
-do_it:  yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
+do_it:  MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
         lda     src_file_info_params::access
         and     #$80
         bne     done
         lda     #ACCESS_DEFAULT
         sta     src_file_info_params::access
         copy    #7, src_file_info_params ; param count for SET_FILE_INFO
-        yax_call JT_MLI_RELAY, SET_FILE_INFO, src_file_info_params
+        MLI_RELAY_CALL SET_FILE_INFO, src_file_info_params
         copy    #$A, src_file_info_params ; param count for GET_FILE_INFO
         jmp     retry
 
@@ -11631,7 +11631,7 @@ error:  jsr     show_error_alert
 :       jsr     decrement_op_file_count
 
         ;; Check file type
-@retry: yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
+@retry: MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
         beq     :+
         jsr     show_error_alert
         jmp     @retry
@@ -11641,7 +11641,7 @@ error:  jsr     show_error_alert
         cmp     #ST_LINKED_DIRECTORY
         beq     next_file
 
-loop:   yax_call JT_MLI_RELAY, DESTROY, destroy_params
+loop:   MLI_RELAY_CALL DESTROY, destroy_params
         beq     next_file
         cmp     #ERR_ACCESS_ERROR
         bne     err
@@ -11665,7 +11665,7 @@ loop:   yax_call JT_MLI_RELAY, DESTROY, destroy_params
 
 unlock: copy    #ACCESS_DEFAULT, src_file_info_params::access
         copy    #7, src_file_info_params ; param count for SET_FILE_INFO
-        yax_call JT_MLI_RELAY, SET_FILE_INFO, src_file_info_params
+        MLI_RELAY_CALL SET_FILE_INFO, src_file_info_params
         copy    #$A,src_file_info_params ; param count for GET_FILE_INFO
         jmp     loop
 
@@ -11680,7 +11680,7 @@ next_file:
 ;;; Delete directory when exiting via traversal
 
 .proc delete_finish_directory
-@retry: yax_call JT_MLI_RELAY, DESTROY, destroy_params
+@retry: MLI_RELAY_CALL DESTROY, destroy_params
         beq     done
         cmp     #ERR_ACCESS_ERROR
         beq     done
@@ -11820,7 +11820,7 @@ LA123:  iny
         bne     LA123
         stx     dst_path_buf
 
-@retry: yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
+@retry: MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
         beq     :+
         jsr     show_error_alert
         jmp     @retry
@@ -11870,7 +11870,7 @@ lock_process_directory_entry:
 
         jsr     decrement_op_file_count
 
-@retry: yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
+@retry: MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
         beq     :+
         jsr     show_error_alert
         jmp     @retry
@@ -11888,7 +11888,7 @@ lock_process_directory_entry:
 set:    sta     src_file_info_params::access
 
 :       copy    #7, src_file_info_params ; param count for SET_FILE_INFO
-        yax_call JT_MLI_RELAY, SET_FILE_INFO, src_file_info_params
+        MLI_RELAY_CALL SET_FILE_INFO, src_file_info_params
         pha
         copy    #$A, src_file_info_params ; param count for GET_FILE_INFO
         pla
@@ -11983,7 +11983,7 @@ callbacks_for_size_or_count:
 
 .proc size_or_count_process_selected_file
         jsr     copy_paths_to_src_and_dst_paths
-@retry: yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
+@retry: MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
         beq     :+
         jsr     show_error_alert
         jmp     @retry
@@ -12027,7 +12027,7 @@ size_or_count_process_directory_entry:
 
         ;; If operation is "get size", add the block count to the sum
         jsr     append_to_src_path
-        yax_call JT_MLI_RELAY, GET_FILE_INFO, src_file_info_params
+        MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
         bne     :+
         add16   op_block_count, src_file_info_params::blocks_used, op_block_count
 
@@ -12191,7 +12191,7 @@ loop:   iny
 
         DEFINE_CLOSE_PARAMS close_params
 
-:       yax_call JT_MLI_RELAY, CLOSE, close_params
+:       MLI_RELAY_CALL CLOSE, close_params
         lda     selected_window_index
         beq     :+
         sta     getwinport_params2::window_id
@@ -12245,7 +12245,7 @@ LA425:  .byte   0               ; ??? only written to (with 0)
         beq     done
 
         ;; If a regular file, open/set eof/close
-        yax_call JT_MLI_RELAY, OPEN, open_dst_params
+        MLI_RELAY_CALL OPEN, open_dst_params
         beq     :+
         jsr     show_error_alert_dst
         jmp     :-              ; retry
@@ -12253,12 +12253,12 @@ LA425:  .byte   0               ; ??? only written to (with 0)
 :       lda     open_dst_params::ref_num
         sta     set_eof_params::ref_num
         sta     close_dst_params::ref_num
-@retry: yax_call JT_MLI_RELAY, SET_EOF, set_eof_params
+@retry: MLI_RELAY_CALL SET_EOF, set_eof_params
         beq     close
         jsr     show_error_alert_dst
         jmp     @retry
 
-close:  yax_call JT_MLI_RELAY, CLOSE, close_dst_params
+close:  MLI_RELAY_CALL CLOSE, close_dst_params
 done:   rts
 .endproc
 
@@ -12269,7 +12269,7 @@ done:   rts
 
 .proc set_dst_file_info
 :       copy    #7, dst_file_info_params ; SET_FILE_INFO param_count
-        yax_call JT_MLI_RELAY, SET_FILE_INFO, dst_file_info_params
+        MLI_RELAY_CALL SET_FILE_INFO, dst_file_info_params
         pha
         copy    #$A, dst_file_info_params ; GET_FILE_INFO param_count
         pla
@@ -12320,7 +12320,7 @@ LA4C2:  jmp     close_files_cancel_dialog
 flag:   .byte   0
 
 do_on_line:
-        yax_call JT_MLI_RELAY, ON_LINE, on_line_params2
+        MLI_RELAY_CALL ON_LINE, on_line_params2
         rts
 
 .endproc
