@@ -175,14 +175,6 @@ rel_file_icon:
 
 ;;; ============================================================
 
-.macro MGTK_RELAY2_CALL call, addr
-    .if .paramcount > 1
-        yax_call MGTK_RELAY2, (call), (addr)
-    .else
-        yax_call MGTK_RELAY2, (call), 0
-    .endif
-.endmacro
-
 .proc poly
 num_vertices:   .byte   8
 lastpoly:       .byte   0       ; 0 = last poly
@@ -3382,9 +3374,9 @@ alert_action_table:
 start:  pha                     ; error code
         txa
         pha                     ; options???
-        MGTK_RELAY2_CALL MGTK::HideCursor
-        MGTK_RELAY2_CALL MGTK::SetCursor, pointer_cursor
-        MGTK_RELAY2_CALL MGTK::ShowCursor
+        MGTK_CALL MGTK::HideCursor
+        MGTK_CALL MGTK::SetCursor, pointer_cursor
+        MGTK_CALL MGTK::ShowCursor
 
         ;; play bell
         sta     ALTZPOFF
@@ -3403,7 +3395,7 @@ LBA0B:  sta     grafport3_viewloc_xcoord,x
 
         copy16  #550, grafport3_cliprect_x2
         copy16  #185, grafport3_cliprect_y2
-        MGTK_RELAY2_CALL MGTK::SetPort, grafport3
+        MGTK_CALL MGTK::SetPort, grafport3
         addr_call_indirect LBF8B, portmap::viewloc::xcoord
         sty     LBFCA
         sta     LBFCD
@@ -3423,20 +3415,20 @@ LBA0B:  sta     grafport3_viewloc_xcoord,x
         clc
         adc     portmap::maprect::y2
         sta     LBFCB
-        MGTK_RELAY2_CALL MGTK::HideCursor
+        MGTK_CALL MGTK::HideCursor
         jsr     save_dialog_background
-        MGTK_RELAY2_CALL MGTK::ShowCursor
-        MGTK_RELAY2_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY2_CALL MGTK::PaintRect, alert_rect ; alert background
-        MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR ; ensures corners are inverted
-        MGTK_RELAY2_CALL MGTK::FrameRect, alert_rect ; alert outline
-        MGTK_RELAY2_CALL MGTK::SetPortBits, portmap::viewloc::xcoord
-        MGTK_RELAY2_CALL MGTK::FrameRect, alert_inner_frame_rect1 ; inner 2x border
-        MGTK_RELAY2_CALL MGTK::FrameRect, alert_inner_frame_rect2
-        MGTK_RELAY2_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY2_CALL MGTK::HideCursor
-        MGTK_RELAY2_CALL MGTK::PaintBits, alert_bitmap_params
-        MGTK_RELAY2_CALL MGTK::ShowCursor
+        MGTK_CALL MGTK::ShowCursor
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, alert_rect ; alert background
+        MGTK_CALL MGTK::SetPenMode, penXOR ; ensures corners are inverted
+        MGTK_CALL MGTK::FrameRect, alert_rect ; alert outline
+        MGTK_CALL MGTK::SetPortBits, portmap::viewloc::xcoord
+        MGTK_CALL MGTK::FrameRect, alert_inner_frame_rect1 ; inner 2x border
+        MGTK_CALL MGTK::FrameRect, alert_inner_frame_rect2
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::HideCursor
+        MGTK_CALL MGTK::PaintBits, alert_bitmap_params
+        MGTK_CALL MGTK::ShowCursor
 
         pla
         tax
@@ -3464,25 +3456,25 @@ LBB0B:  tya
         tay
         lda     alert_action_table,y
         sta     alert_action
-LBB14:  MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
+LBB14:  MGTK_CALL MGTK::SetPenMode, penXOR
         bit     alert_action
         bpl     LBB5C
-        MGTK_RELAY2_CALL MGTK::FrameRect, cancel_rect
-        MGTK_RELAY2_CALL MGTK::MoveTo, cancel_pos
+        MGTK_CALL MGTK::FrameRect, cancel_rect
+        MGTK_CALL MGTK::MoveTo, cancel_pos
         addr_call draw_pascal_string, cancel_label
         bit     alert_action
         bvs     LBB5C
-        MGTK_RELAY2_CALL MGTK::FrameRect, try_again_rect
-        MGTK_RELAY2_CALL MGTK::MoveTo, try_again_pos
+        MGTK_CALL MGTK::FrameRect, try_again_rect
+        MGTK_CALL MGTK::MoveTo, try_again_pos
         addr_call draw_pascal_string, try_again_label
         jmp     LBB75
 
-LBB5C:  MGTK_RELAY2_CALL MGTK::FrameRect, try_again_rect
-        MGTK_RELAY2_CALL MGTK::MoveTo, try_again_pos
+LBB5C:  MGTK_CALL MGTK::FrameRect, try_again_rect
+        MGTK_CALL MGTK::MoveTo, try_again_pos
         addr_call draw_pascal_string, ok_label
-LBB75:  MGTK_RELAY2_CALL MGTK::MoveTo, pos_prompt
+LBB75:  MGTK_CALL MGTK::MoveTo, pos_prompt
         addr_call_indirect draw_pascal_string, prompt_addr
-LBB87:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
+LBB87:  MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
         bne     LBB9A
@@ -3496,8 +3488,8 @@ LBB9A:  cmp     #MGTK::EventKind::key_down
         bpl     LBBEE
         cmp     #CHAR_ESCAPE
         bne     LBBC3
-        MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY2_CALL MGTK::PaintRect, cancel_rect
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, cancel_rect
         lda     #1
         jmp     LBC55
 
@@ -3505,8 +3497,8 @@ LBBC3:  bit     alert_action
         bvs     LBBEE
         cmp     #'a'
         bne     LBBE3
-LBBCC:  MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY2_CALL MGTK::PaintRect, try_again_rect
+LBBCC:  MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, try_again_rect
         lda     #0
         jmp     LBC55
 
@@ -3518,29 +3510,29 @@ LBBE3:  cmp     #'A'
 
 LBBEE:  cmp     #CHAR_RETURN
         bne     LBC09
-        MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY2_CALL MGTK::PaintRect, try_again_rect
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, try_again_rect
         lda     #2
         jmp     LBC55
 
 LBC09:  jmp     LBB87
 
 LBC0C:  jsr     LBDE1
-        MGTK_RELAY2_CALL MGTK::MoveTo, event_coords
+        MGTK_CALL MGTK::MoveTo, event_coords
         bit     alert_action
         bpl     LBC42
-        MGTK_RELAY2_CALL MGTK::InRect, cancel_rect
+        MGTK_CALL MGTK::InRect, cancel_rect
         cmp     #MGTK::inrect_inside
         bne     :+
         jmp     LBCE9
 :       bit     alert_action
         bvs     LBC42
-        MGTK_RELAY2_CALL MGTK::InRect, try_again_rect
+        MGTK_CALL MGTK::InRect, try_again_rect
         cmp     #MGTK::inrect_inside
         bne     LBC52
         jmp     LBC6D
 
-LBC42:  MGTK_RELAY2_CALL MGTK::InRect, try_again_rect
+LBC42:  MGTK_CALL MGTK::InRect, try_again_rect
         cmp     #MGTK::inrect_inside
         bne     LBC52
         jmp     LBD65
@@ -3548,23 +3540,23 @@ LBC42:  MGTK_RELAY2_CALL MGTK::InRect, try_again_rect
 LBC52:  jmp     LBB87
 
 LBC55:  pha
-        MGTK_RELAY2_CALL MGTK::HideCursor
+        MGTK_CALL MGTK::HideCursor
         jsr     restore_dialog_background
-        MGTK_RELAY2_CALL MGTK::ShowCursor
+        MGTK_CALL MGTK::ShowCursor
         pla
         rts
 
-LBC6D:  MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY2_CALL MGTK::PaintRect, try_again_rect
+LBC6D:  MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, try_again_rect
         lda     #0
         sta     LBCE8
-LBC84:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
+LBC84:  MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_up
         beq     LBCDB
         jsr     LBDE1
-        MGTK_RELAY2_CALL MGTK::MoveTo, event_coords
-        MGTK_RELAY2_CALL MGTK::InRect, try_again_rect
+        MGTK_CALL MGTK::MoveTo, event_coords
+        MGTK_CALL MGTK::InRect, try_again_rect
         cmp     #MGTK::inrect_inside
         beq     LBCB5
         lda     LBCE8
@@ -3575,8 +3567,8 @@ LBCB5:  lda     LBCE8
         bne     LBCBD
         jmp     LBC84
 
-LBCBD:  MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY2_CALL MGTK::PaintRect, try_again_rect
+LBCBD:  MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, try_again_rect
         lda     LBCE8
         clc
         adc     #$80
@@ -3591,17 +3583,17 @@ LBCE3:  lda     #0
         jmp     LBC55
 
 LBCE8:  .byte   0
-LBCE9:  MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY2_CALL MGTK::PaintRect, cancel_rect
+LBCE9:  MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, cancel_rect
         lda     #0
         sta     LBD64
-LBD00:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
+LBD00:  MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_up
         beq     LBD57
         jsr     LBDE1
-        MGTK_RELAY2_CALL MGTK::MoveTo, event_coords
-        MGTK_RELAY2_CALL MGTK::InRect, cancel_rect
+        MGTK_CALL MGTK::MoveTo, event_coords
+        MGTK_CALL MGTK::InRect, cancel_rect
         cmp     #MGTK::inrect_inside
         beq     LBD31
         lda     LBD64
@@ -3612,8 +3604,8 @@ LBD31:  lda     LBD64
         bne     LBD39
         jmp     LBD00
 
-LBD39:  MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY2_CALL MGTK::PaintRect, cancel_rect
+LBD39:  MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, cancel_rect
         lda     LBD64
         clc
         adc     #$80
@@ -3630,15 +3622,15 @@ LBD5F:  lda     #1
 LBD64:  .byte   0
 LBD65:  lda     #0
         sta     LBDE0
-        MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY2_CALL MGTK::PaintRect, try_again_rect
-LBD7C:  MGTK_RELAY2_CALL MGTK::GetEvent, event_params
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, try_again_rect
+LBD7C:  MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_up
         beq     LBDD3
         jsr     LBDE1
-        MGTK_RELAY2_CALL MGTK::MoveTo, event_coords
-        MGTK_RELAY2_CALL MGTK::InRect, try_again_rect
+        MGTK_CALL MGTK::MoveTo, event_coords
+        MGTK_CALL MGTK::InRect, try_again_rect
         cmp     #MGTK::inrect_inside
         beq     LBDAD
         lda     LBDE0
@@ -3649,8 +3641,8 @@ LBDAD:  lda     LBDE0
         bne     LBDB5
         jmp     LBD7C
 
-LBDB5:  MGTK_RELAY2_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY2_CALL MGTK::PaintRect, try_again_rect
+LBDB5:  MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, try_again_rect
         lda     LBDE0
         clc
         adc     #$80
@@ -3941,21 +3933,10 @@ LBFCF:  .byte   $00
         inc     ptr
         bne     call
         inc     ptr+1
-call:   MGTK_RELAY2_CALL MGTK::DrawText, ptr
+call:   MGTK_CALL MGTK::DrawText, ptr
 end:    rts
 .endproc
 
-        ;; MGTK call in Y, params addr (X,A)
-.proc MGTK_RELAY2
-        sty     call
-        stax    addr
-        jsr     MGTK::MLI
-call:   .byte   0
-addr:   .addr   0
-        rts
-.endproc
-
-        .assert * = $BFFC, error, "Segment length mismatch"
 
         PAD_TO $C000
 
