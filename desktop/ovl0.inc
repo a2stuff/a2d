@@ -131,7 +131,7 @@ L8672:  pha
 L867B:  lda     on_line_buffer
         beq     L8672
         jsr     $8388      ; into dynamically loaded code???
-        jsr     DESKTOP_ALLOC_ICON ; AUX > MAIN call???
+        jsr     AllocateIcon ; AUX > MAIN call???
         ldy     L8738
         sta     $D464,y
         asl     a

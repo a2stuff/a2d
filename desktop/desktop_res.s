@@ -2,9 +2,10 @@
 ;;; DeskTop - Resources
 ;;;
 ;;; Compiled as part of desktop.s via desktop_lc.s
-;;;
-;;; Also compiled via desktop_res_builder.s to extract
-;;; addresses and build desktop_res.inc used by overlays
+;;; ============================================================
+
+;;; ============================================================
+;;; Segment loaded into AUX $D200-$ECFF
 ;;; ============================================================
 
         .assert * = $D200, error, "Addr mismatch"
@@ -1407,6 +1408,8 @@ icon_entries:
 
 ;;; (there's enough room here for 127 files at 27 bytes each)
 
+;;; ============================================================
+;;; Segment loaded into AUX $FB00-$FFFF
 ;;; ============================================================
 
         .org $FB00

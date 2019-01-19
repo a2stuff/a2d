@@ -7,6 +7,7 @@
 ;;; ============================================================
 ;;; Segment loaded into AUX $851F-$BFFF (follows MGTK)
 ;;; ============================================================
+
 .proc desktop_aux
 
         .org $851F
@@ -2507,20 +2508,26 @@ LA7C8:  ldy     #4
         sta     LA6B1
         sub16   grafport4::viewloc::xcoord, #2, grafport4::viewloc::xcoord
         sub16   grafport4::cliprect::x1, #2, grafport4::cliprect::x1
+
         bit     LA6B2
         bmi     LA820
+
         lda     grafport4::viewloc::ycoord
         sec
         sbc     #14
         sta     grafport4::viewloc::ycoord
-        bcs     LA812
+        bcs     :+
         dec     grafport4::viewloc::ycoord+1
-LA812:  lda     grafport4::cliprect::y1
+:
+
+        lda     grafport4::cliprect::y1
         sec
         sbc     #14
         sta     grafport4::cliprect::y1
-        bcs     LA820
+        bcs     :+
         dec     grafport4::cliprect::y1+1
+:
+
 LA820:  bit     LA6B1
         bpl     LA833
         lda     grafport4::cliprect::y2

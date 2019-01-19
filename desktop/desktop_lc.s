@@ -24,7 +24,7 @@
 ;;; ============================================================
 ;;; MGTK call from main>aux, call in Y, params at (X,A)
 
-.proc MGTK_RELAY_IMPL
+.proc MGTKRelayImpl
         .assert * = MGTK_RELAY, error, "Entry point mismatch"
         sty     addr-1
         stax    addr
@@ -39,7 +39,7 @@
 ;;; ============================================================
 ;;; SET_POS with params at (X,A) followed by DRAW_TEXT call
 
-.proc SETPOS_DRAWTEXT_RELAY
+.proc SetPosDrawText
         stax    addr
         sta     RAMRDON
         sta     RAMWRTON
@@ -55,7 +55,7 @@
 ;;; ============================================================
 ;;; DESKTOP call from main>aux, call in Y params at (X,A)
 
-.proc DESKTOP_RELAY_IMPL
+.proc DTRelayImpl
         .assert * = DESKTOP_RELAY, error, "Entry point mismatch"
         sty     addr-1
         stax    addr
@@ -77,7 +77,7 @@
 ;;; Find first available free icon in the map; if
 ;;; available, mark it and return index+1.
 
-.proc DESKTOP_ALLOC_ICON
+.proc AllocateIcon
         sta     RAMRDON
         sta     RAMWRTON
         ldx     #0
@@ -102,7 +102,7 @@ loop:   lda     free_icon_map,x
 
 ;;; Mark the specified icon as free
 
-.proc DESKTOP_FREE_ICON
+.proc FreeIcon
         tay
         sta     RAMRDON
         sta     RAMWRTON
@@ -117,7 +117,7 @@ loop:   lda     free_icon_map,x
 ;;; ============================================================
 ;;; Copy data to/from buffers (see cached_window_id / cached_window_icon_list / window_icon_count_table/2) ???
 
-.proc DESKTOP_COPY_BUF_IMPL
+.proc XferWindowIconTable
         ptr := $6
 
 from:
@@ -184,13 +184,13 @@ done:   sta     RAMRDOFF
 flag:   .byte   0
         rts                     ; ???
 .endproc
-        DESKTOP_COPY_FROM_BUF := DESKTOP_COPY_BUF_IMPL::from
-        DESKTOP_COPY_TO_BUF := DESKTOP_COPY_BUF_IMPL::to
+        StoreWindowIconTable := XferWindowIconTable::from
+        LoadWindowIconTable := XferWindowIconTable::to
 
 ;;; ============================================================
 ;;; Assign active state to active_window_id window
 
-.proc DESKTOP_ASSIGN_STATE
+.proc OverwriteWindowPort
         src := $6
         dst := $8
 
@@ -204,12 +204,12 @@ flag:   .byte   0
         copy16  win_table,x, dst
         lda     dst
         clc
-        adc     #20             ; add offset
+        adc     #MGTK::Winfo::port
         sta     dst
         bcc     :+
         inc     dst+1
 
-:       ldy     #35             ; copy 35 bytes into window state
+:       ldy     #.sizeof(MGTK::GrafPort)-1
 loop:   lda     (src),y
         sta     (dst),y
         dey
@@ -223,7 +223,7 @@ loop:   lda     (src),y
 ;;; ============================================================
 ;;; From MAIN, load AUX (A,X) into A
 
-.proc DESKTOP_AUXLOAD
+.proc AuxLoad
         stx     op+2
         sta     op+1
         sta     RAMRDON
@@ -238,13 +238,13 @@ op:     lda     dummy1234
 ;;; From MAIN, show alert
 
 ;;; ...with prompt #0
-.proc DESKTOP_SHOW_ALERT0
+.proc ShowAlert
         ldx     #$00
         ;; fall through
 .endproc
 
 ;;; ... with prompt # in X
-.proc DESKTOP_SHOW_ALERT
+.proc ShowAlertOption
         sta     RAMRDON
         sta     RAMWRTON
         jsr     desktop_aux::show_alert_indirection
