@@ -23,6 +23,10 @@ DA_MAX_SIZE     = DA_IO_BUFFER - DA_LOAD_ADDRESS
         ;; Can't load DA past I/O Buffer at MAIN $1C00,
         ;; but icon tables start at AUX $1B00 so can't clone there.
 
+;;; Memory in AUX - $80 bytes for desktop and 8 windows. First byte is a
+;;; count, up to 127 icon entries. $1F80-$1FFF is a map of used/free icon
+;;; numbers.
+WINDOW_ICON_TABLES := $1B00
 
         ;; Quit routine signature/data
         copied_to_ramcard_flag := $D3FF

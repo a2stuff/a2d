@@ -1368,12 +1368,12 @@ saved_event_coords: DEFINE_POINT 0, 0
 
 window_icon_count_table:
         .repeat 9,i
-        .addr   $1B00 + $80 * i
+        .addr   WINDOW_ICON_TABLES + $80 * i
         .endrepeat
 
 window_icon_list_table:
         .repeat 9,i
-        .addr   $1B00 + $80 * i + 1
+        .addr   WINDOW_ICON_TABLES + $80 * i + 1
         .endrepeat
 
 active_window_id:
