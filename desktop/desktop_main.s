@@ -66,6 +66,9 @@ JT_RESTORE_OVL:         jmp     restore_dynamic_routine
 JT_COLOR_MODE:          jmp     set_color_mode          ; *
 JT_MONO_MODE:           jmp     set_mono_mode           ; *
 
+        .assert JUMP_TABLE_MAIN_LOOP = JT_MAIN_LOOP, error, "Jump table mismatch"
+        .assert JUMP_TABLE_MONO_MODE = JT_MONO_MODE, error, "Jump table mismatch"
+
         ;; Main Loop
 .proc enter_main_loop
         cli

@@ -816,51 +816,27 @@ is_iic_plus_flag:
 
 ;;; 5.25" Floppy Disk
 floppy140_icon:
-        .addr   desktop_aux::floppy140_pixels; mapbits
-        .byte   4               ; mapwidth
-        .byte   0               ; reserved
-        DEFINE_RECT   0, 0, 26, 14 ; maprect
-        .addr   desktop_aux::floppy140_mask
+        DEFICON desktop_aux::floppy140_pixels, 4, 26, 14, desktop_aux::floppy140_mask
 
 ;;; RAM Disk
 ramdisk_icon:
-        .addr   desktop_aux::ramdisk_pixels  ; mapbits
-        .byte   6               ; mapwidth
-        .byte   0               ; reserved
-        DEFINE_RECT   0, 0, 39, 11 ; maprect
-        .addr   desktop_aux::ramdisk_mask
+        DEFICON desktop_aux::ramdisk_pixels, 6, 39, 11, desktop_aux::ramdisk_mask
 
 ;;; 3.5" Floppy Disk
 floppy800_icon:
-        .addr   desktop_aux::floppy800_pixels; mapbits
-        .byte   3               ; mapwidth
-        .byte   0               ; reserved
-        DEFINE_RECT   0, 0, 20, 11 ; maprect
-        .addr   desktop_aux::floppy800_mask
+        DEFICON desktop_aux::floppy800_pixels, 3, 20, 11, desktop_aux::floppy800_mask
 
 ;;; Hard Disk
 profile_icon:
-        .addr   desktop_aux::profile_pixels  ; mapbits
-        .byte   8               ; mapwidth
-        .byte   0               ; reserved
-        DEFINE_RECT   0, 0, 52, 9 ; maprect
-        .addr   desktop_aux::profile_mask
+        DEFICON desktop_aux::profile_pixels, 8, 52, 9, desktop_aux::profile_mask
 
 ;;; File Share
 fileshare_icon:
-        .addr   desktop_aux::fileshare_pixels  ; mapbits
-        .byte   5               ; mapwidth
-        .byte   0               ; reserved
-        DEFINE_RECT   0, 0, 34, 14 ; maprect
-        .addr   desktop_aux::fileshare_mask
+        DEFICON desktop_aux::fileshare_pixels, 5, 34, 14, desktop_aux::fileshare_mask
 
 ;;; Trash Can
 trash_icon:
-        .addr   desktop_aux::trash_pixels    ; mapbits
-        .byte   3               ; mapwidth
-        .byte   0               ; reserved
-        DEFINE_RECT   0, 0, 20, 17 ; maprect
-        .addr   desktop_aux::trash_mask
+        DEFICON desktop_aux::trash_pixels, 3, 20, 17, desktop_aux::trash_mask
 
 
 ;;; ============================================================
@@ -1480,16 +1456,6 @@ type_icons_table:               ; map into definitions below
         .addr   awp ; appleworks wp
         .addr   asp ; appleworks sp
         .addr   app ; system (see below)
-
-.macro  DEFICON mapbits, mapwidth, dx, dy, maskbits
-        ;; First part is MGTK::MapInfo without leading viewloc
-        .addr   mapbits
-        .byte   mapwidth
-        .byte   0             ; reserved
-        .word   0, 0, dx, dy  ; maprect
-        ;; Next part is link to mask
-        .addr   maskbits
-.endmacro
 
 gen:    DEFICON generic_icon, 4, 27, 15, generic_mask
 src:    DEFICON desktop_aux::iigs_file_icon, 4, 27, 15, generic_mask

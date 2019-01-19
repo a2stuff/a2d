@@ -272,10 +272,20 @@ GLYPH_SAPPLE  = $1E
         reserved        .byte   ; 0
         maprect         .tag MGTK::Rect ; x1,y1 must be 0,0
 
-        ;; Next part is link to mask - not used for volume
-        ;; icons (which currently lack a mask).
+        ;; Next part is address of mask bits; must be same
+        ;; dimensions as rect of icon.
         maskbits        .addr
 .endstruct
+
+.macro  DEFICON mapbits, mapwidth, dx, dy, maskbits
+        ;; First part is MGTK::MapInfo without leading viewloc
+        .addr   mapbits
+        .byte   mapwidth
+        .byte   0             ; reserved
+        .word   0, 0, dx, dy  ; maprect
+        ;; Next part is link to mask
+        .addr   maskbits
+.endmacro
 
 .struct FileRecord
         name                    .res 16
