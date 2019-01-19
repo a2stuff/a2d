@@ -46,19 +46,19 @@ JT_MGTK_RELAY:          jmp     MGTK_RELAY
 JT_SIZE_STRING:         jmp     compose_blocks_string
 JT_DATE_STRING:         jmp     compose_date_string
 JT_SELECT_WINDOW:       jmp     select_and_refresh_window
-JT_AUXLOAD:             jmp     DESKTOP_AUXLOAD
+JT_AUXLOAD:             jmp     AuxLoad
 JT_EJECT:               jmp     cmd_eject
 JT_REDRAW_ALL:          jmp     redraw_windows          ; *
 JT_DESKTOP_RELAY:       jmp     DESKTOP_RELAY
 JT_LOAD_OVL:            jmp     load_dynamic_routine
 JT_CLEAR_SELECTION:     jmp     clear_selection         ; *
 JT_MLI_RELAY:           jmp     MLI_RELAY               ; *
-JT_COPY_TO_BUF:         jmp     DESKTOP_COPY_TO_BUF
-JT_COPY_FROM_BUF:       jmp     DESKTOP_COPY_FROM_BUF
+JT_COPY_TO_BUF:         jmp     LoadWindowIconTable
+JT_COPY_FROM_BUF:       jmp     StoreWindowIconTable
 JT_NOOP:                jmp     cmd_noop
 JT_FILE_TYPE_STRING:    jmp     compose_file_type_string
-JT_SHOW_ALERT0:         jmp     DESKTOP_SHOW_ALERT0
-JT_SHOW_ALERT:          jmp     DESKTOP_SHOW_ALERT
+JT_SHOW_ALERT0:         jmp     ShowAlert
+JT_SHOW_ALERT:          jmp     ShowAlertOption
 JT_LAUNCH_FILE:         jmp     launch_file
 JT_CUR_POINTER:         jmp     set_pointer_cursor      ; *
 JT_CUR_WATCH:           jmp     set_watch_cursor
@@ -95,7 +95,7 @@ iloop:  cpx     cached_window_icon_count
         jmp     iloop
 
 skip:   copy    #0, cached_window_id
-        jsr     DESKTOP_COPY_FROM_BUF
+        jsr     StoreWindowIconTable
 
         ;; Clear various flags
         lda     #0
@@ -108,7 +108,7 @@ skip:   copy    #0, cached_window_id
         lda     pending_alert
         beq     main_loop
         tay
-        jsr     DESKTOP_SHOW_ALERT0
+        jsr     ShowAlert
 
         ;; Main loop
 main_loop:
@@ -191,7 +191,7 @@ L4113:  MGTK_RELAY_CALL MGTK::BeginUpdate, event_window_id
         rts
 
 L412B:  copy    #0, cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
         lda     L40F0
         sta     active_window_id
         beq     L4143
@@ -221,14 +221,14 @@ draw_window_header_flag:  .byte   0
 
 L415B:  sta     active_window_id
         sta     cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
         copy    #$80, draw_window_header_flag
         copy    cached_window_id, getwinport_params2::window_id
         jsr     get_port2
         jsr     draw_window_header
         lda     active_window_id
         jsr     copy_window_portbits
-        jsr     DESKTOP_ASSIGN_STATE
+        jsr     OverwriteWindowPort
         lda     active_window_id
         jsr     window_lookup
         stax    $06
@@ -606,10 +606,10 @@ start:  jsr     clear_selection
 L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_window_id
         copy    findwindow_window_id, active_window_id
         sta     cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
         jsr     L6C19
         copy    #0, cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
         copy    #MGTK::checkitem_uncheck, checkitem_params::check
         MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
         ldx     active_window_id
@@ -916,7 +916,7 @@ begin:
         ;; Get the file info to determine type.
         MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
         beq     :+
-        jsr     DESKTOP_SHOW_ALERT0
+        jsr     ShowAlert
         rts
 
         ;; Check file type.
@@ -1001,7 +1001,7 @@ not_found:
 no_bs:  lda     #ERR_BASIC_SYS_NOT_FOUND
 
 show_alert_and_fail:
-        jsr     DESKTOP_SHOW_ALERT0
+        jsr     ShowAlert
         pla                     ; pop caller address, return to its caller
         pla
         rts
@@ -1909,7 +1909,7 @@ L4E78:  jsr     clear_selection
         dec     LEC2E
         lda     active_window_id
         sta     cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
@@ -1923,7 +1923,7 @@ L4E78:  jsr     clear_selection
 L4EA5:  cpx     cached_window_icon_count
         beq     L4EB4
         lda     cached_window_icon_list,x
-        jsr     DESKTOP_FREE_ICON
+        jsr     FreeIcon
         inx
         jmp     L4EA5
 
@@ -1936,9 +1936,9 @@ L4EB7:  sta     cached_window_icon_list,x
         jmp     L4EB7
 
 L4EC3:  sta     cached_window_icon_count
-        jsr     DESKTOP_COPY_FROM_BUF
+        jsr     StoreWindowIconTable
         copy    #0, cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
         MGTK_RELAY_CALL MGTK::CloseWindow, active_window_id
         ldx     active_window_id
         dex
@@ -2046,7 +2046,7 @@ L4FD4:  copy    #$80, new_folder_dialog_params::phase
         beq     success
 
         ;; Failure
-        jsr     DESKTOP_SHOW_ALERT0
+        jsr     ShowAlert
         copy16  L504E, new_folder_dialog_params::win_path_ptr
         jmp     L4FC6
 
@@ -2166,7 +2166,7 @@ start:
 
 quit:   jmp     quit_code_addr
 
-fail:   jsr     DESKTOP_SHOW_ALERT
+fail:   jsr     ShowAlert
         rts
 
 .endproc
@@ -2187,7 +2187,7 @@ fail:   jsr     DESKTOP_SHOW_ALERT
 entry:
 :       lda     active_window_id
         sta     cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
         ldx     #$00
         txa
 :       cpx     cached_window_icon_count
@@ -2250,7 +2250,7 @@ L518D:  lda     L51EF
 
 L51A7:  jsr     reset_grafport3
         jsr     cached_icons_screen_to_window
-        jsr     DESKTOP_COPY_FROM_BUF
+        jsr     StoreWindowIconTable
         jsr     update_scrollbars
         lda     selected_window_index
         beq     L51E3
@@ -2268,7 +2268,7 @@ L51C0:  ldx     L51EF
         dec     L51EF
         bne     L51C0
 L51E3:  copy    #0, cached_window_id
-        jmp     DESKTOP_COPY_TO_BUF
+        jmp     LoadWindowIconTable
 
 L51EB:  .word   0
 L51ED:  .byte   0
@@ -2284,9 +2284,9 @@ L51EF:  .byte   0
         sta     win_view_by_table,x
         lda     active_window_id
         sta     cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
         jsr     sort_records
-        jsr     DESKTOP_COPY_FROM_BUF
+        jsr     StoreWindowIconTable
         lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     get_port2
@@ -2435,7 +2435,7 @@ L5265:  .byte   0
         DESKTOP_RELAY_CALL DT_CLOSE_WINDOW, active_window_id
         lda     active_window_id
         sta     cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
         lda     icon_count
         sec
         sbc     cached_window_icon_count
@@ -2444,14 +2444,14 @@ L5265:  .byte   0
 loop:   cpx     cached_window_icon_count
         beq     done
         lda     cached_window_icon_list,x
-        jsr     DESKTOP_FREE_ICON
+        jsr     FreeIcon
         copy    #0, cached_window_icon_list,x
         inx
         jmp     loop
 
-done:   jsr     DESKTOP_COPY_FROM_BUF
+done:   jsr     StoreWindowIconTable
         copy    #0, cached_window_id
-        jmp     DESKTOP_COPY_TO_BUF
+        jmp     LoadWindowIconTable
 .endproc
 
 ;;; ============================================================
@@ -2658,7 +2658,7 @@ L545A:  tax
 
 L5464:  lda     active_window_id
         sta     cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
         lda     active_window_id
         jsr     window_lookup
         stax    $06
@@ -2695,7 +2695,7 @@ L54B7:  pla
         jmp     L5485
 
 L54BD:  copy    #0, cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
 L54C5:  ldx     $1800
         ldy     #$00
 L54CA:  lda     cached_window_icon_list,y
@@ -2880,7 +2880,7 @@ L566A:  ldx     active_window_id
         rts
 
 L5676:  copy    active_window_id, cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
         lda     cached_window_icon_count
         bne     L5687
         jmp     L56F0
@@ -2917,7 +2917,7 @@ L56E3:  dec     L56F8
         beq     L56F0
         jsr     reset_grafport3
 L56F0:  copy    #0, cached_window_id
-        jmp     DESKTOP_COPY_TO_BUF
+        jmp     LoadWindowIconTable
 
 L56F8:  .byte   0
 .endproc
@@ -3040,7 +3040,7 @@ loop:   jsr     get_event
         bne     :+
 
 done:   copy    #0, cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
         rts
 
         ;; Horizontal ok?
@@ -3080,7 +3080,7 @@ vertical:
 .proc L5803
         lda     active_window_id
         sta     cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
@@ -3229,7 +3229,7 @@ L58AD:  .byte   0
         sta     pending_alert
 
         sta     cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
         jsr     cmd_close_all
         jsr     clear_selection
         ldx     cached_window_icon_count
@@ -3244,7 +3244,7 @@ L5916:  lda     cached_window_icon_list,x
         copy    #0, cached_window_icon_list,x
         DESKTOP_RELAY_CALL DT_REMOVE_ICON, icon_param
         lda     icon_param
-        jsr     DESKTOP_FREE_ICON
+        jsr     FreeIcon
         dec     cached_window_icon_count
         dec     icon_count
         pla
@@ -3276,8 +3276,8 @@ L5976:  cpx     cached_window_icon_count
         bne     L5986
         lda     pending_alert
         beq     L5983
-        jsr     DESKTOP_SHOW_ALERT0
-L5983:  jmp     DESKTOP_COPY_FROM_BUF
+        jsr     ShowAlert
+L5983:  jmp     StoreWindowIconTable
 
 L5986:  txa
         pha
@@ -3327,7 +3327,7 @@ by_icon_number:
 
 start:  sta     check_drive_flags
         copy    #0, cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
         bit     check_drive_flags
         bpl     explicit_command
         bvc     after_format_erase
@@ -3429,7 +3429,7 @@ not_in_map:
         jsr     redraw_windows_and_desktop
         jsr     clear_selection
         copy    #0, cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
 
         lda     devlst_index
         tay
@@ -3441,7 +3441,7 @@ not_in_map:
         jsr     remove_icon_from_window
         dec     icon_count
         lda     icon_param
-        jsr     DESKTOP_FREE_ICON
+        jsr     FreeIcon
         jsr     reset_grafport3
         DESKTOP_RELAY_CALL DT_REMOVE_ICON, icon_param
 
@@ -3465,9 +3465,9 @@ not_in_map:
         cmp     #$2F            ; there was an error ($2F = ???)
         beq     add_icon
         pha
-        jsr     DESKTOP_COPY_FROM_BUF
+        jsr     StoreWindowIconTable
         pla
-        jsr     DESKTOP_SHOW_ALERT0
+        jsr     ShowAlert
         rts
 
 add_icon:
@@ -3483,7 +3483,7 @@ add_icon:
         ldy     #DT_ADD_ICON
         jsr     DESKTOP_RELAY   ; icon entry addr in A,X
 
-:       jsr     DESKTOP_COPY_FROM_BUF
+:       jsr     StoreWindowIconTable
         jmp     redraw_windows_and_desktop
 
 previous_icon_count:
@@ -3552,7 +3552,7 @@ active_window_view_by:
 .proc handle_client_click
         lda     active_window_id
         sta     cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
@@ -3667,9 +3667,9 @@ pgrt:   jsr     L64B0
         jmp     done_client_click
 
 done_client_click:
-        jsr     DESKTOP_COPY_FROM_BUF
+        jsr     StoreWindowIconTable
         copy    #0, cached_window_id
-        jmp     DESKTOP_COPY_TO_BUF
+        jmp     LoadWindowIconTable
 .endproc
 
 ;;; ============================================================
@@ -3682,9 +3682,9 @@ done_client_click:
         bne     :+
         rts
 :       jsr     L5C54
-        jsr     DESKTOP_COPY_FROM_BUF
+        jsr     StoreWindowIconTable
         copy    #0, cached_window_id
-        jmp     DESKTOP_COPY_TO_BUF
+        jmp     LoadWindowIconTable
 .endproc
 
 ;;; ============================================================
@@ -3860,9 +3860,9 @@ L5DC4:  txa
         jsr     update_scrollbars
         jsr     cached_icons_screen_to_window
         jsr     reset_grafport3
-L5DEC:  jsr     DESKTOP_COPY_FROM_BUF
+L5DEC:  jsr     StoreWindowIconTable
         copy    #0, cached_window_id
-        jmp     DESKTOP_COPY_TO_BUF
+        jmp     LoadWindowIconTable
 
 L5DF7:  ldx     saved_stack
         txs
@@ -3978,10 +3978,10 @@ L5E77:  .byte   0
         pla
         jsr     open_directory
         jsr     cmd_view_by_icon::entry
-        jsr     DESKTOP_COPY_FROM_BUF
+        jsr     StoreWindowIconTable
         lda     active_window_id
         sta     cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
         copy    active_window_id, getwinport_params2::window_id
         jsr     get_port2
         jsr     draw_window_header
@@ -3992,7 +3992,7 @@ L5E77:  .byte   0
         copy    #1, menu_click_params::item_num
         jsr     update_view_menu_check
         copy    #0, cached_window_id
-        jmp     DESKTOP_COPY_TO_BUF
+        jmp     LoadWindowIconTable
 
 window_id:
         .byte   0
@@ -4172,13 +4172,13 @@ L6112:  ldy     #$14
 
 L6143:  lda     active_window_id
         sta     cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
         ldx     #$00
 L614E:  cpx     cached_window_icon_count
         bne     L6161
-        jsr     DESKTOP_COPY_FROM_BUF
+        jsr     StoreWindowIconTable
         copy    #0, cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
         jmp     L6196
 
 L6161:  txa
@@ -4211,12 +4211,12 @@ L6199:  .word   0
         jsr     redraw_windows_and_desktop
         lda     active_window_id
         sta     cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
         jsr     cached_icons_window_to_screen
         jsr     update_scrollbars
         jsr     cached_icons_screen_to_window
         copy    #0, cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
         jmp     reset_grafport3
 .endproc
 
@@ -4232,7 +4232,7 @@ handle_close_click:
 .proc close_window
         lda     active_window_id
         sta     cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
         jsr     clear_selection
         ldx     active_window_id
         dex
@@ -4247,7 +4247,7 @@ handle_close_click:
 L6206:  cpx     cached_window_icon_count
         beq     L6215
         lda     cached_window_icon_list,x
-        jsr     DESKTOP_FREE_ICON
+        jsr     FreeIcon
         inx
         jmp     L6206
 
@@ -4261,7 +4261,7 @@ L621B:  sta     cached_window_icon_list,x
         jmp     L621B
 
 L6227:  sta     cached_window_icon_count
-        jsr     DESKTOP_COPY_FROM_BUF
+        jsr     StoreWindowIconTable
         MGTK_RELAY_CALL MGTK::CloseWindow, active_window_id
         ldx     active_window_id
         dex
@@ -4300,7 +4300,7 @@ L6276:  ldx     active_window_id
         sta     win_view_by_table,x
         MGTK_RELAY_CALL MGTK::FrontWindow, active_window_id
         copy    #0, cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
         lda     #MGTK::checkitem_uncheck
         sta     checkitem_params::check
         MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
@@ -4848,7 +4848,7 @@ L6880:  lda     findicon_which_icon
         cmp     trash_icon_num
         beq     L688E
         jsr     open_folder_or_volume_icon
-        jsr     DESKTOP_COPY_FROM_BUF
+        jsr     StoreWindowIconTable
 L688E:  rts
 
 L688F:  ldx     selected_icon_count
@@ -5021,7 +5021,7 @@ L6A80:  inx
 
 .proc open_folder_or_volume_icon
         sta     icon_params2
-        jsr     DESKTOP_COPY_FROM_BUF
+        jsr     StoreWindowIconTable
         lda     icon_params2
         ldx     #$07
 L6A95:  cmp     window_to_dir_icon_table,x
@@ -5036,7 +5036,7 @@ L6AA0:  inx
         rts
 
 L6AA7:  stx     cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
         lda     icon_params2
         jsr     icon_entry_lookup
         stax    $06
@@ -5074,7 +5074,7 @@ L6B01:  MGTK_RELAY_CALL MGTK::SelectWindow, cached_window_id
         jsr     L6C19
         jsr     redraw_windows
         copy    #0, cached_window_id
-        jmp     DESKTOP_COPY_TO_BUF
+        jmp     LoadWindowIconTable
 
 L6B1E:  lda     LEC2E
         cmp     #$08
@@ -5095,7 +5095,7 @@ L6B3A:  lda     icon_params2
         sta     window_to_dir_icon_table,x
         inx
         stx     cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
         inc     LEC2E
         ldx     cached_window_id
         dex
@@ -5164,9 +5164,9 @@ L6BF4:  lda     cached_window_id
         sta     active_window_id
         jsr     update_scrollbars
         jsr     cached_icons_screen_to_window
-        jsr     DESKTOP_COPY_FROM_BUF
+        jsr     StoreWindowIconTable
         copy    #0, cached_window_id
-        jsr     DESKTOP_COPY_TO_BUF
+        jsr     LoadWindowIconTable
         jmp     reset_grafport3
 
 L6C0E:  .byte   0
@@ -5955,7 +5955,7 @@ L72A8:  .word   0
 .proc do_open
         MLI_RELAY_CALL OPEN, open_params
         beq     done
-        jsr     DESKTOP_SHOW_ALERT0
+        jsr     ShowAlert
         jsr     mark_icons_not_opened_2
         lda     selected_window_index
         bne     :+
@@ -6183,7 +6183,7 @@ L74D3:  tay
         cmp     #$43
         bcc     L750D
         lda     #ERR_INVALID_PATHNAME
-        jsr     DESKTOP_SHOW_ALERT0
+        jsr     ShowAlert
         jsr     mark_icons_not_opened_2
         dec     LEC2E
         ldx     saved_stack
@@ -6474,7 +6474,7 @@ L7767:  .byte   $14
         name_tmp := $1800
 
         inc     icon_count
-        jsr     DESKTOP_ALLOC_ICON
+        jsr     AllocateIcon
         ldx     cached_window_icon_count
         inc     cached_window_icon_count
         sta     cached_window_icon_list,x
@@ -7771,13 +7771,13 @@ L81E8:  cmp16   pos_col_name::ycoord, grafport2::cliprect::y1
         rts
 
 L81F7:  jsr     prepare_col_name
-        addr_call SETPOS_DRAWTEXT_RELAY, pos_col_name
+        addr_call SetPosDrawText, pos_col_name
         jsr     prepare_col_type
-        addr_call SETPOS_DRAWTEXT_RELAY, pos_col_type
+        addr_call SetPosDrawText, pos_col_type
         jsr     prepare_col_size
-        addr_call SETPOS_DRAWTEXT_RELAY, pos_col_size
+        addr_call SetPosDrawText, pos_col_size
         jsr     compose_date_string
-        addr_jump SETPOS_DRAWTEXT_RELAY, pos_col_date
+        addr_jump SetPosDrawText, pos_col_date
 .endproc
         L813F := L813F_impl::start
 
@@ -8723,7 +8723,7 @@ create_icon:
         icon_defn_ptr := $8
 
         jsr     push_pointers
-        jsr     DESKTOP_ALLOC_ICON
+        jsr     AllocateIcon
         ldy     devlst_index
         sta     device_to_icon_map,y
         jsr     icon_entry_lookup
@@ -15200,7 +15200,7 @@ trash_name:  PASCAL_STRING " Trash "
         lda     #1
         sta     cached_window_icon_count
         sta     icon_count
-        jsr     DESKTOP_ALLOC_ICON
+        jsr     AllocateIcon
         sta     trash_icon_num
         sta     cached_window_icon_list
         jsr     desktop_main::icon_entry_lookup

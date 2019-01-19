@@ -2,9 +2,10 @@
 ;;; DeskTop - Resources
 ;;;
 ;;; Compiled as part of desktop.s via desktop_lc.s
-;;;
-;;; Also compiled via desktop_res_builder.s to extract
-;;; addresses and build desktop_res.inc used by overlays
+;;; ============================================================
+
+;;; ============================================================
+;;; Segment loaded into AUX $D200-$ECFF
 ;;; ============================================================
 
         .assert * = $D200, error, "Addr mismatch"
@@ -1379,6 +1380,8 @@ date:  .word   0
 icon_entries:
         .assert ($FB00 - *) >= 127 * .sizeof(IconEntry), error, "Not enough room for icons"
 
+;;; ============================================================
+;;; Segment loaded into AUX $FB00-$FFFF
 ;;; ============================================================
 
         .org $FB00
