@@ -321,20 +321,6 @@ textbg: .byte   MGTK::textbg_black
 fontptr:        .addr   0
 .endproc
 
-        ;; ???
-        .byte   $00,$00,$00
-        .byte   $00,$FF,$80
-
-        ;; Used for FILL_MODE params
-pencopy_2:      .byte   0
-penOR_2:        .byte   1
-penXOR_2:       .byte   2
-penBIC_2:       .byte   3
-notpencopy_2:   .byte   4
-notpenOR_2:     .byte   5
-notpenXOR_2:    .byte   6
-notpenBIC_2:    .byte   7
-
 ;;; ============================================================
 ;;; DESKTOP command jump table
 
@@ -615,7 +601,7 @@ found:  asl     a
 
         ;; Unhighlight
 :       jsr     calc_icon_poly
-        MGTK_CALL MGTK::SetPenMode, pencopy_2
+        MGTK_CALL MGTK::SetPenMode, pencopy
         jsr     draw_icon
 
         ;; Move it to the end of the icon list
@@ -1190,7 +1176,7 @@ L99E1:  iny
         jmp     L9972
 
 L99FC:  MGTK_CALL MGTK::SetPattern, checkerboard_pattern
-        MGTK_CALL MGTK::SetPenMode, penXOR_2
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
 L9A0E:  MGTK_CALL MGTK::PeekEvent, peekevent_params
         lda     peekevent_params::kind
@@ -1218,11 +1204,11 @@ L9A31:  COPY_BYTES 4, findwindow_params2, L9C92
         cmp     highlight_icon_id
         beq     L9A84
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
-        MGTK_CALL MGTK::SetPenMode, penXOR_2
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
         DESKTOP_DIRECT_CALL DT_UNHIGHLIGHT_ICON, highlight_icon_id
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
-        MGTK_CALL MGTK::SetPenMode, penXOR_2
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
         lda     #0
         sta     highlight_icon_id
@@ -1335,7 +1321,7 @@ L9BF3:  dex
         tax
         copy16  icon_ptrs,x, $06
         jsr     calc_icon_poly
-        MGTK_CALL MGTK::SetPenMode, pencopy_2
+        MGTK_CALL MGTK::SetPenMode, pencopy
         jsr     draw_icon
         pla
         tax
@@ -1530,16 +1516,16 @@ L9E3D:  cmp     highlight_list,x
         lda     L9EB3
 L9E6A:  sta     highlight_icon_id
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
-        MGTK_CALL MGTK::SetPenMode, penXOR_2
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
         DESKTOP_DIRECT_CALL DT_HIGHLIGHT_ICON, highlight_icon_id
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
-        MGTK_CALL MGTK::SetPenMode, penXOR_2
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
 L9E97:  MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
-        MGTK_CALL MGTK::SetPenMode, penXOR_2
+        MGTK_CALL MGTK::SetPenMode, penXOR
         jsr     pop_pointers
         rts
 
@@ -1760,12 +1746,12 @@ highlighted:  copy    #$80, icon_flags ; is highlighted
         bvc     window
 
         ;; On desktop, clear background
-        MGTK_CALL MGTK::SetPenMode, penOR_2 ; clear with mask to white
+        MGTK_CALL MGTK::SetPenMode, penOR ; clear with mask to white
         bit     icon_flags
         bpl     :+              ; highlighted?
-        MGTK_CALL MGTK::SetPenMode, penBIC_2 ; or black if highlighted
+        MGTK_CALL MGTK::SetPenMode, penBIC ; or black if highlighted
 :       MGTK_CALL MGTK::PaintBits, mask_paintbits_params
-        MGTK_CALL MGTK::SetPenMode, penXOR_2
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintBits, icon_paintbits_params
         jmp     continue
 
@@ -1774,13 +1760,13 @@ highlighted:  copy    #$80, icon_flags ; is highlighted
         ;; selected, since the performance difference is measurable.
         ;; (At 1MHz, about 10ms/icon)
 window:
-        MGTK_CALL MGTK::SetPenMode, notpencopy_2
+        MGTK_CALL MGTK::SetPenMode, notpencopy
         bit     icon_flags
         bpl     :+              ; highlighted? no, just draw
 
         ;; draw mask first, then xor the icon
         MGTK_CALL MGTK::PaintBits, mask_paintbits_params
-        MGTK_CALL MGTK::SetPenMode, penXOR_2
+        MGTK_CALL MGTK::SetPenMode, penXOR
 :       MGTK_CALL MGTK::PaintBits, icon_paintbits_params
 
 continue:
@@ -1793,10 +1779,10 @@ continue:
         MGTK_CALL MGTK::SetPattern, dark_pattern ; shade for open volume
         bit     icon_flags                       ; highlighted?
         bmi     @highlighted
-        MGTK_CALL MGTK::SetPenMode, penBIC_2
+        MGTK_CALL MGTK::SetPenMode, penBIC
         beq     @paint
 @highlighted:
-        MGTK_CALL MGTK::SetPenMode, penOR_2
+        MGTK_CALL MGTK::SetPenMode, penOR
 @paint: MGTK_CALL MGTK::PaintRect, rect_opendir
 
 label:  COPY_STRUCT MGTK::Point, L9F94, moveto_params2
