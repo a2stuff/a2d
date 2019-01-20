@@ -19,6 +19,7 @@
 
         .include "desktop_aux.s"
         .include "desktop_lc.s"
+        .include "desktop_res.s"
         .include "desktop_main.s"
 
         .include "invoker.s"

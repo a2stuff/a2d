@@ -1,7 +1,7 @@
 ;;; ============================================================
 ;;; DeskTop - Resources
 ;;;
-;;; Compiled as part of desktop.s via desktop_lc.s
+;;; Compiled as part of desktop.s
 ;;; ============================================================
 
 ;;; ============================================================
@@ -1720,3 +1720,5 @@ app_mask:
 
         ;; Reserve $80 bytes for settings
         PAD_TO $FF80
+
+        PAD_TO $10000
