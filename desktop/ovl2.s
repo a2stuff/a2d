@@ -118,7 +118,7 @@ L0980:  cmp     #$2B
         bne     L09C2
         jmp     L090C
 
-L098C:  jsr     L191B
+L098C:  jsr     desktop_main::bell
         axy_call desktop_main::draw_dialog_label, 6, desktop_aux::str_erasing_error
         jmp     L09B8
 
@@ -131,7 +131,7 @@ L099B:  pha
         bne     L09C2
         jmp     L090C
 
-L09AC:  jsr     L191B
+L09AC:  jsr     desktop_main::bell
         axy_call desktop_main::draw_dialog_label, 6, desktop_aux::str_formatting_error
 L09B8:  jsr     desktop_main::prompt_input_loop
         bmi     L09B8
@@ -237,7 +237,7 @@ L0B12:  cmp     #$2B
         bne     L0B31
         jmp     L0AD1
 
-L0B1E:  jsr     L191B
+L0B1E:  jsr     desktop_main::bell
         axy_call desktop_main::draw_dialog_label, 6, desktop_aux::str_erasing_error
 L0B2A:  jsr     desktop_main::prompt_input_loop
         bmi     L0B2A
@@ -1379,14 +1379,6 @@ loop:   lda     (ptr),y
         bpl     loop
         rts
 .endproc
-
-L191B:  sta     ALTZPOFF
-        lda     ROMIN2
-        jsr     BELL1
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-        rts
 
 L192E:  sta     read_block_params::unit_num
         lda     #0

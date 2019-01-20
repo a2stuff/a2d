@@ -1582,8 +1582,6 @@ start:  lda     has_highlight
         return  #0
 .endproc
 
-        rts                     ; unused
-
 ;;; ============================================================
 ;;; ICON_IN_RECT IMPL
 
@@ -3296,8 +3294,6 @@ cancel_rect:
         DEFINE_RECT 300,37,400,48
 cancel_pos:
         DEFINE_POINT 305,47
-
-        .word   $BE,$10     ; ???
 
 pos_prompt: DEFINE_POINT 75,29, pos_prompt
 

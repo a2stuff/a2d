@@ -12940,18 +12940,6 @@ do4:    jsr     bell
 .endproc
 
 ;;; ============================================================
-
-.proc bell
-        sta     ALTZPOFF
-        sta     ROMIN2
-        jsr     BELL1
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-        rts
-.endproc
-
-;;; ============================================================
 ;;; "DownLoad" dialog
 
 .proc download_dialog_proc
@@ -13771,6 +13759,18 @@ cursor_ip_flag:                 ; high bit set if IP, clear if pointer
 ;;; Routines beyond this point are used by overlays
 ;;;
 ;;; ============================================================
+
+        .assert * >= $A000, error, "Routine used by overlays in overlay zone"
+
+.proc bell
+        sta     ALTZPOFF
+        sta     ROMIN2
+        jsr     BELL1
+        sta     ALTZPON
+        lda     LCBANK1
+        lda     LCBANK1
+        rts
+.endproc
 
 .proc set_cursor_watch
         MGTK_RELAY_CALL MGTK::HideCursor
