@@ -395,10 +395,6 @@ abort:  rts
         inc     src+1
 :       jsr     copy_pathbuf    ; copy x bytes (src) to (dst)
 
-        ;; Clear selection (why???)
-        copy16  #JUMP_TABLE_CLEAR_SEL, call_main_addr
-        jsr     call_main_trampoline
-
         jmp     open_file_and_init_window
 
 .proc copy_pathbuf              ; copy x bytes from src to dst
