@@ -14,11 +14,16 @@
 ;;; ============================================================
 
         yax_call JUMP_TABLE_MGTK_RELAY, MGTK::HideCursor, 0
-        yax_call JUMP_TABLE_MGTK_RELAY, MGTK::HiliteMenu, last_menu_click_params
+        yax_call JUMP_TABLE_MGTK_RELAY, MGTK::HiliteMenu, menu_click_params
         jsr     dump_screen
-        yax_call JUMP_TABLE_MGTK_RELAY, MGTK::HiliteMenu, last_menu_click_params
+        yax_call JUMP_TABLE_MGTK_RELAY, MGTK::HiliteMenu, menu_click_params
         yax_call JUMP_TABLE_MGTK_RELAY, MGTK::ShowCursor, 0
         rts
+
+.proc menu_click_params
+menu_id:.byte   1               ; ID of Apple menu
+item_num:.byte  0
+.endproc
 
 ;;; ============================================================
 

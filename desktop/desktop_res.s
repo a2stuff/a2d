@@ -992,9 +992,6 @@ tmp_rect:
 saved_stack:
         .byte   0
 
-        PAD_TO last_menu_click_params
-        .assert * = last_menu_click_params, error, "Entry point mismatch"
-
 .proc menu_click_params
 menu_id:.byte   0
 item_num:.byte  0
