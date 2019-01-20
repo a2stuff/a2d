@@ -129,6 +129,10 @@ Restore from overlay routine
 
 Set DHR color or monochrome mode, respectively. DHR monochrome mode is supported natively on the Apple IIgs, and via the AppleColor card and Le Chat Mauve, and is used by default by DeskTop. Desk Accessories that display images or exit DeskTop can can toggle the mode.
 
+#### `JUMP_TABLE_RESTORE_SYS` ($4048) *
+
+Used when exiting DeskTop; exit DHR mode, restores DHR mode to color, restores detached devices and reformats /RAM if needed, and banks in ROM and main ZP.
+
 <!-- ============================================================ -->
 
 ## DeskTop API

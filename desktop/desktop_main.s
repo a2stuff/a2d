@@ -65,9 +65,10 @@ JT_CUR_WATCH:           jmp     set_watch_cursor
 JT_RESTORE_OVL:         jmp     restore_dynamic_routine
 JT_COLOR_MODE:          jmp     set_color_mode          ; *
 JT_MONO_MODE:           jmp     set_mono_mode           ; *
+JT_RESTORE_SYS:         jmp     restore_system          ; *
 
         .assert JUMP_TABLE_MAIN_LOOP = JT_MAIN_LOOP, error, "Jump table mismatch"
-        .assert JUMP_TABLE_MONO_MODE = JT_MONO_MODE, error, "Jump table mismatch"
+        .assert JUMP_TABLE_RESTORE_SYS = JT_RESTORE_SYS, error, "Jump table mismatch"
 
         ;; Main Loop
 .proc enter_main_loop
@@ -2158,11 +2159,8 @@ start:
         MLI_RELAY_CALL READ, read_params
         MLI_RELAY_CALL CLOSE, close_params
 
-        ;; Restore devices, stack, graphics, and /RAM
-        jsr     restore_device_list
-        sta     ALTZPOFF
-        jsr     exit_dhr_mode   ; sets ROMIN2
-        jsr     maybe_reformat_ram
+        ;; Restore system state: devices, /RAM, ROM/ZP banks.
+        jsr     restore_system
 
 quit:   jmp     quit_code_addr
 
@@ -2171,6 +2169,45 @@ fail:   jsr     ShowAlert
 
 .endproc
         cmd_quit := cmd_quit_impl::start
+
+;;; ============================================================
+;;; Exit DHR, restore device list, reformat /RAM.
+;;; Returns with ALTZPOFF and ROM banked in.
+
+.proc restore_system
+        jsr     restore_device_list
+
+        ;; Switch back to main ZP, preserving return address.
+        pla
+        tax
+        pla
+        sta     ALTZPOFF
+        pha
+        txa
+        pha
+
+        ;; Switch back to color DHR mode
+        jsr     set_color_mode
+
+        ;; Exit graphics mode entirely
+        lda     ROMIN2
+        jsr     SETVID
+        jsr     SETKBD
+        jsr     INIT
+        jsr     HOME
+        sta     TXTSET
+        sta     LOWSCR
+        sta     LORES
+        sta     MIXCLR
+
+        sta     DHIRESOFF
+        sta     CLRALTCHAR
+        sta     CLR80VID
+        sta     CLR80COL
+
+        ;; Restore /RAM if possible.
+        jmp     maybe_reformat_ram
+.endproc
 
 ;;; ============================================================
 
@@ -3525,24 +3562,14 @@ check_drive_flags:
 
         ;; also invoked by launcher code
 .proc reset_and_invoke
-
-        ;; Restore devices, stack, graphics, and /RAM
-        jsr     restore_device_list
-        sta     ALTZPOFF
-        jsr     exit_dhr_mode   ; sets ROMIN2
-        jsr     maybe_reformat_ram
+        ;; Restore system state: devices, /RAM, ROM/ZP banks.
+        jsr     restore_system
 
         ;; also used by launcher code
         target := *+1
         jmp     dummy0000       ; self-modified
 .endproc
         reset_and_invoke_target := reset_and_invoke::target
-
-;;; ============================================================
-
-.proc restore_state_for_exit
-.endproc
-
 
 ;;; ============================================================
 
@@ -9365,30 +9392,6 @@ open:   MLI_RELAY_CALL OPEN, open_params
         addr_call draw_text1, str_clock
 done:   rts
 .endproc
-
-;;; ============================================================
-;;; Invoked when exiting or launching another program.
-
-.proc exit_dhr_mode
-        jsr     set_color_mode
-
-        lda     ROMIN2
-        jsr     SETVID
-        jsr     SETKBD
-        jsr     INIT
-        jsr     HOME
-        sta     TXTSET
-        sta     LOWSCR
-        sta     LORES
-        sta     MIXCLR
-
-        sta     DHIRESOFF
-        sta     CLRALTCHAR
-        sta     CLR80VID
-        sta     CLR80COL
-        rts
-.endproc
-
 
 .proc set_color_mode
         ;; AppleColor Card - Mode 2 (Color 140x192)

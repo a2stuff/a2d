@@ -54,29 +54,8 @@ start:
         lda     #$FE            ; "BASIC.SYSTEM not found"
         bne     fail
 
-        ;; Restore devices DeskTop may have removed
-:       jsr     restore_device_list
-
-        jsr     JUMP_TABLE_COLOR_MODE
-
-        ;; Restore to normal state
-        sta     ALTZPOFF
-        lda     ROMIN2
-        jsr     SETVID
-        jsr     SETKBD
-        jsr     INIT
-        jsr     HOME
-        sta     TXTSET
-        sta     LOWSCR
-        sta     LORES
-        sta     MIXCLR
-        sta     DHIRESOFF
-        sta     CLRALTCHAR
-        sta     CLR80VID
-        sta     CLR80COL
-
-        ;; Reformat /RAM if it was restored
-        jsr     maybe_reformat_ram
+         ;; Restore system state: devices, /RAM, ROM/ZP banks.
+:       jsr     JUMP_TABLE_RESTORE_SYS
 
         ;; Load BS
         MLI_CALL OPEN, open_params
@@ -224,47 +203,4 @@ fail:   return  #1
         lda     LCBANK1
         lda     LCBANK1
         rts
-.endproc
-
-;;; ============================================================
-
-.proc restore_device_list
-        ldx     devlst_backup
-        inx
-:       copy    devlst_backup,x, DEVLST-1,x
-        dex
-        bpl     :-
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc maybe_reformat_ram
-        ram_unit_number = (1<<7 | 3<<4 | DT_RAM)
-
-        ;; Search DEVLST to see if S3D2 RAM was restored
-        ldx     DEVCNT
-:       lda     DEVLST,x
-        cmp     #ram_unit_number
-        beq     format
-        dex
-        bpl     :-
-        rts
-
-        ;; NOTE: Assumes driver (in DEVADR) was not modified
-        ;; when detached.
-
-        ;; /RAM FORMAT call; see ProDOS 8 TRM 5.2.2.4 for details
-format: copy    #DRIVER_COMMAND_FORMAT, DRIVER_COMMAND
-        copy    #ram_unit_number, DRIVER_UNIT_NUMBER
-        copy16  #$2000, DRIVER_BUFFER
-        lda     LCBANK1
-        lda     LCBANK1
-        jsr     driver
-        sta     ROMIN2
-        rts
-
-RAMSLOT := DEVADR + $16         ; Slot 3, Drive 2
-
-driver: jmp     (RAMSLOT)
 .endproc

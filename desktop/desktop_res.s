@@ -950,10 +950,9 @@ entries_read_this_block:
 
 ;;; ============================================================
 
-        ;; Backup copy of DEVLST made before detaching ramdisk
-devlst_backup_:
-        .assert * = devlst_backup, error, "Entry point mismatch"
-        .res    10, 0
+;;; Backup copy of DEVLST made before detaching ramdisk
+devlst_backup:
+        .res    14, 0
 
         ;; index is device number (in DEVLST), value is icon number
 device_to_icon_map:

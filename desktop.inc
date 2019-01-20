@@ -63,6 +63,7 @@ JUMP_TABLE_CUR_WATCH    := $403C ; Changes mouse cursor to watch
 JUMP_TABLE_RESTORE_OVL  := $403F ; Restore from overlay routine
 JUMP_TABLE_COLOR_MODE   := $4042 ; Set DHR color mode (IIgs, AppleColor, Le Chat Mauve) *
 JUMP_TABLE_MONO_MODE    := $4045 ; Set DHR mono mode (IIgs, AppleColor, Le Chat Mauve) *
+JUMP_TABLE_RESTORE_SYS  := $4048 ; Exit DHR, restore devices and /RAM, bank in ROM and ZP. *
 
 ;;; ============================================================
 ;;; Error codes used for alerts which are not ProDOS errors
@@ -166,10 +167,6 @@ path_table := $DFB3     ; window address table
 
 selected_file_list := $DF22     ; indexes of selected file (global, not w/in window, up to 127)
 file_table := $DD9F     ; file address table
-
-;;; Copy of DEVLST before DeskTop modifies it. Used when exiting or
-;;; invoking to restore devices.
-devlst_backup := $E196
 
 last_menu_click_params := $E25A
 
