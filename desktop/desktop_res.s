@@ -491,9 +491,6 @@ dialog_label_pos:
         DEFINE_RECT 0, 0, 358, 100
 .endproc
 
-        ;; ???
-        .byte   $00
-
 rect_D6D8:
         DEFINE_RECT 4,2,346,108
 rect_D6E0:
@@ -599,8 +596,6 @@ has_input_field_flag:
 prompt_ip_counter:
         .byte   prompt_insertion_point_blink_count
 
-        .byte   $00
-
 prompt_ip_flag:
         .byte   0
 
@@ -704,12 +699,7 @@ rect_D986:
 rect_scratch:
         DEFINE_RECT 0,0,0,0, rect_scratch
 
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00
+;;; ============================================================
 
 common_dialog_frame_rect:
         DEFINE_RECT 4,2,496,151
@@ -974,7 +964,7 @@ LE1F1:  .res    15, 0           ; length-prefixed string
 LE200:  .word   0
 LE202:  .res    24, 0           ; addr table
 
-        .byte   $00,$00,$00,$00,$7F,$64,$00,$1C
+        .byte   $00,$00,$00,$00,$7F,$64,$00,$1C ; ???
         .byte   $00,$1E,$00,$32,$00,$1E,$00,$40
         .byte   $00
 
@@ -1000,17 +990,10 @@ icon_param:  .byte   0
 tmp_rect:
         DEFINE_RECT 0,0,0,0, tmp_rect
 
-        .byte   $00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00
-
 saved_stack:
         .byte   0
 
-        .byte   $00,$00,$00
-
+        PAD_TO last_menu_click_params
         .assert * = last_menu_click_params, error, "Entry point mismatch"
 
 .proc menu_click_params
@@ -1316,10 +1299,10 @@ str_from_int:                   ; populated by int_to_string
         PASCAL_STRING "      "
 
 ;;; Computed during startup
-width_items_label_padded:       .word   0
-        .word   0               ; ???
-width_left_labels:      .word   0
-        .word   0               ; ???
+width_items_label_padded:
+        .word   0
+width_left_labels:
+        .word   0
 
 ;;; Computed when painted
 pos_k_in_disk:  DEFINE_POINT 0, 0, pos_k_in_disk
