@@ -609,7 +609,8 @@ mode:   .byte   0               ; 0 = B&W, $80 = color
         bne     done
         copy    #$80, mode
 
-        jsr     JUMP_TABLE_COLOR_MODE
+        copy16  #JUMP_TABLE_COLOR_MODE, call_main_addr
+        jsr     call_main_trampoline
 
 done:   rts
 .endproc
@@ -619,7 +620,8 @@ done:   rts
         beq     done
         copy    #0, mode
 
-        jsr     JUMP_TABLE_MONO_MODE
+        copy16  #JUMP_TABLE_MONO_MODE, call_main_addr
+        jsr     call_main_trampoline
 
 done:   rts
 .endproc
