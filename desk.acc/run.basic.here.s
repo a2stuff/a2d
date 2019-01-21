@@ -45,13 +45,13 @@ start:
         ;; Get active window's path
         jsr     get_win_path
         beq     :+
-        lda     #$FA            ; "This file cannot be run" - not perfect
+        lda     #ERR_FILE_NOT_OPENABLE
         bne     fail
 
         ;; Find BASIC.SYSTEM
 :       jsr     check_basic_system
         beq     :+
-        lda     #$FE            ; "BASIC.SYSTEM not found"
+        lda     #ERR_BASIC_SYS_NOT_FOUND
         bne     fail
 
          ;; Restore system state: devices, /RAM, ROM/ZP banks.

@@ -3,13 +3,11 @@ Disassembly of the original desk accessories:
 * [Calculator](calculator.s) - complete!
 * [Date](date.s) - complete!
 * [Puzzle](puzzle.s) - complete!
-* [Show Text File](show.text.file.s) - in progress! 95% complete
+* [Show Text File](show.text.file.s) - in progress! 95% complete - moved to [preview](../preview/)
 * [Sort Directory](sort.directory.s) - in progress! 60% complete
 
 New desk accessories:
 
-* [Show Image File](show.image.file.s)
-  * Select an image file (8k Hires or 16k Double Hires), then choose this DA to preview it.
 * [This Apple](this.apple.s)
   * Gives details about the computer, expanded memory, and what's in each slot.
 * [Eyes](eyes.s)

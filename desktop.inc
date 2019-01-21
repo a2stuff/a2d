@@ -69,7 +69,7 @@ JUMP_TABLE_RESTORE_SYS  := $4048 ; Exit DHR, restore devices and /RAM, bank in R
 ;;; Error codes used for alerts which are not ProDOS errors
 
 ERR_DUPLICATE_VOL_NAME  = $F9
-ERR_FILE_NOT_RUNNABLE   = $FA
+ERR_FILE_NOT_OPENABLE   = $FA
 ERR_NAME_TOO_LONG       = $FB
 ERR_INSERT_SRC_DISK     = $FC
 ERR_INSERT_DST_DISK     = $FD

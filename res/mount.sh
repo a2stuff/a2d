@@ -30,14 +30,19 @@ function mount_sys {
         || (cecho red "failed to mount $dst" ; return 1)
 }
 
-targets=$(cat desk.acc/TARGETS)
-
-mkdir -p mount
 echo "Copying files to mount/"
-for file in $targets; do
-    mount_f1 "$file" "desk.acc" "mount/desk.acc"
-done
+mkdir -p mount
 
 mount_f1 "desktop2" "desktop" "mount"
 mount_sys "desktop.system" "desktop.system" "mount"
 mount_sys "ram.system" "ram.system" "mount"
+
+mkdir -p mount/desk.acc
+for file in $(cat desk.acc/TARGETS); do
+    mount_f1 "$file" "desk.acc" "mount/desk.acc"
+done
+
+mkdir -p mount/preview
+for file in $(cat preview/TARGETS); do
+    mount_f1 "$file" "preview" "mount/preview"
+done

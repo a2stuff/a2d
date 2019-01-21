@@ -23,6 +23,8 @@ before_deploy:
   CADIUS="/tmp/cadius/bin/release/cadius" res/package.sh
 - cd $TRAVIS_BUILD_DIR/desk.acc/ &&
   CADIUS="/tmp/cadius/bin/release/cadius" res/package.sh
+- cd $TRAVIS_BUILD_DIR/preview/ &&
+  CADIUS="/tmp/cadius/bin/release/cadius" res/package.sh
 - cd $TRAVIS_BUILD_DIR/ &&
   CADIUS="/tmp/cadius/bin/release/cadius" res/package.sh
 
@@ -34,7 +36,8 @@ deploy:
     - $TRAVIS_BUILD_DIR/out/A2DeskTop.po
     - $TRAVIS_BUILD_DIR/desktop/out/DeskTop.po
     - $TRAVIS_BUILD_DIR/desk.acc/out/DeskAccessories.po
-    - $TRAVIS_BUILD_DIR/desk.acc/res/README_DAS.txt
+    - $TRAVIS_BUILD_DIR/desk.acc/out/Preview.po
+    - $TRAVIS_BUILD_DIR/res/README.txt
   skip_cleanup: true
   on:
     repo: inexorabletash/a2d

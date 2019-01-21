@@ -18,11 +18,10 @@
 * DAs with high bit in aux-type set are skipped. (#102)
 * Icons for volumes positioned more predictably and sensibly. (#94)
 * GS/OS filenames (supported by ProDOS 2.5) are shown with correct case. (#64)
+* Text and Graphics files can be previewed without leaving DeskTop (File > Open, or double-click).
 
 ### Additional Desk Accessories
 
-* Show Image File
-  * Select an image file (8k Hires or 16k Double Hires, aux-first), then choose DA to view it.
 * This Apple
   * Gives details about the computer, expanded memory, and what's in each slot. (#29)
 * Eyes
@@ -36,6 +35,10 @@
 
 Note that several of the new Desk Accessories will not work with older versions
 of Apple II DeskTop/MouseDesk, due to dependence on new APIs.
+
+The former "Show Text File" DA is now part of automatic preview
+functionality (just use File > Open), and resides in the new `PREVIEW`
+subdirectory.
 
 ### Notable Fixes
 

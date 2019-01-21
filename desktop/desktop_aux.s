@@ -3321,7 +3321,7 @@ err_52:  PASCAL_STRING "This is not a ProDOS disk."
 err_57:  PASCAL_STRING "There is another volume with that name on the desktop."
         ;; Below are internal (not ProDOS MLI) error codes.
 err_F9:  PASCAL_STRING "There are 2 volumes with the same name."
-err_FA:  PASCAL_STRING "This file cannot be run."
+err_FA:  PASCAL_STRING "This file cannot be opened."
 err_FB:  PASCAL_STRING "That name is too long."
 err_FC:  PASCAL_STRING "Please insert source disk"
 err_FD:  PASCAL_STRING "Please insert destination disk"

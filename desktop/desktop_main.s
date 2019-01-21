@@ -941,7 +941,15 @@ begin:
         cmp     #FT_S16
         beq     launch
 
-        lda     #ERR_FILE_NOT_RUNNABLE
+        cmp     #FT_GRAPHICS
+        bne     :+
+        addr_jump invoke_desk_acc, str_preview_fot
+
+:       cmp     #FT_TEXT
+        bne     :+
+        addr_jump invoke_desk_acc, str_preview_txt
+
+:       lda     #ERR_FILE_NOT_OPENABLE
         jsr     show_alert_and_fail
 
 launch: DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ALL
@@ -955,8 +963,6 @@ launch: DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ALL
 :       copy    buf_filename2,x, INVOKER_FILENAME,x
         dex
         bpl     :-
-        addr_call upcase_string, $280
-        addr_call upcase_string, path
         copy16  #INVOKER, reset_and_invoke_target
         jmp     reset_and_invoke
 
@@ -1026,22 +1032,9 @@ str_basic_system:
 
 ;;; --------------------------------------------------
 
-.proc upcase_string
-        ptr := $06
-
-        stax    ptr
-        ldy     #0
-        lda     (ptr),y
-        tay
-loop:   lda     (ptr),y
-        jsr     upcase_char
-        sta     (ptr),y
-        dey
-        bne     loop
-        rts
 .endproc
 
-.endproc
+;;; ============================================================
 
 .proc upcase_char
         cmp     #'a'
@@ -1249,7 +1242,7 @@ L4A0F:  lda     ($06),y
         sta     buf_win_path,y
         dey
         bpl     L4A0F
-        ;; fall throigh
+        ;; fall through
 
 .proc launch_buf_win_path
         ;; Find last '/'
@@ -1525,8 +1518,11 @@ prefix_length:
 .proc cmd_deskacc_impl
         ptr := $6
 
-zp_use_flag1:
-        .byte   $80
+        .define prefix "Desk.acc/"
+        prefix_length = .strlen(prefix)
+
+str_desk_acc:
+        PASCAL_STRING prefix, prefix_length + 15
 
 start:  jsr     reset_grafport3
         jsr     set_watch_cursor
@@ -1543,7 +1539,7 @@ start:  jsr     reset_grafport3
         lda     (ptr),y
         tay
         clc
-        adc     prefix_length
+        adc     #prefix_length
         pha
         tax
 
@@ -1565,6 +1561,18 @@ start:  jsr     reset_grafport3
         sta     str_desk_acc,x
 nope:   dex
         bne     :-
+
+        ldax    #str_desk_acc
+        ;; fall through
+.endproc
+        cmd_deskacc := cmd_deskacc_impl::start
+
+;;; ============================================================
+;;; Invoke Desk Accessory
+;;; Input: A,X = address of pathnane buffer
+
+.proc invoke_desk_acc
+        stax    open_pathname
 
         ;; Load the DA
         jsr     open
@@ -1604,8 +1612,12 @@ read:   yxa_jump MLI_RELAY, READ, read_params
 
 close:  yxa_jump MLI_RELAY, CLOSE, close_params
 
-        DEFINE_OPEN_PARAMS open_params, str_desk_acc, DA_IO_BUFFER
+zp_use_flag1:
+        .byte   $80
+
+        DEFINE_OPEN_PARAMS open_params, 0, DA_IO_BUFFER
         open_ref_num := open_params::ref_num
+        open_pathname := open_params::pathname
 
         DEFINE_READ_PARAMS read_params, DA_LOAD_ADDRESS, DA_MAX_SIZE
         read_ref_num := read_params::ref_num
@@ -1613,16 +1625,7 @@ close:  yxa_jump MLI_RELAY, CLOSE, close_params
         DEFINE_CLOSE_PARAMS close_params
         close_ref_num := close_params::ref_num
 
-        .define prefix "Desk.acc/"
-
-prefix_length:
-        .byte   .strlen(prefix)
-
-str_desk_acc:
-        PASCAL_STRING prefix, .strlen(prefix) + 15
-
 .endproc
-        cmd_deskacc := cmd_deskacc_impl::start
 
 ;;; ============================================================
 
@@ -1828,16 +1831,17 @@ done:   rts
         ldy     #IconEntry::win_type
         lda     (ptr),y
         and     #icon_entry_type_mask
-        bne     not_dir
+
+        cmp     #icon_entry_type_trash
+        beq     next_file
+        cmp     #icon_entry_type_dir
+        bne     maybe_open_file
+
+        ;; Directory
         ldy     #0
         lda     (ptr),y
         jsr     open_folder_or_volume_icon
         inc     dir_count
-        jmp     next_file
-
-not_dir:
-        cmp     #%01000000      ; type <= %0100 = basic, binary, or system
-        bcc     maybe_open_file
 
 next_file:
         pla
@@ -1845,6 +1849,7 @@ next_file:
         inx
         jmp     L4DEC
 
+        ;; File (executable or data)
 maybe_open_file:
         sta     L4E71
         lda     selected_icon_count
@@ -3902,22 +3907,21 @@ handle_double_click:
         ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_type_mask
-        cmp     #icon_entry_type_system
-        beq     L5E28
-        cmp     #icon_entry_type_binary
-        beq     L5E28
-        cmp     #icon_entry_type_basic
-        beq     L5E28
+
+        cmp     #icon_entry_type_trash
+        beq     done
         cmp     #icon_entry_type_dir
-        bne     :+
+        bne     file
 
-        lda     icon_num           ; handle directory
+        ;; Directory
+        lda     icon_num
         jsr     open_folder_or_volume_icon
-        bmi     :+
+        bmi     done
         jmp     L5DEC
-:       rts
+done:   rts
 
-L5E28:  sta     L5E77
+        ;; File (executable or data)
+file:   sta     L5E77
         lda     active_window_id
         jsr     window_path_lookup
         stax    $06
@@ -9393,6 +9397,8 @@ open:   MLI_RELAY_CALL OPEN, open_params
 done:   rts
 .endproc
 
+;;; ============================================================
+
 .proc set_color_mode
         ;; AppleColor Card - Mode 2 (Color 140x192)
         sta     SET80VID
@@ -9459,10 +9465,6 @@ done:   rts
         lda     LCBANK1
         rts
 .endproc
-
-;;; ============================================================
-
-        PAD_TO $8F00
 
 ;;; ============================================================
 ;;; Operations performed on selection
@@ -12364,6 +12366,13 @@ RAMSLOT := DEVADR + $16         ; Slot 3, Drive 2
 
 driver: jmp     (RAMSLOT)
 .endproc
+
+
+str_preview_fot:
+        PASCAL_STRING "Preview/show.image.file"
+
+str_preview_txt:
+        PASCAL_STRING "Preview/show.text.file"
 
 ;;; ============================================================
 

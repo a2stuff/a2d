@@ -251,19 +251,18 @@ DeskTop's state - selection, windows, icons - is only partially accessible
 via APIs. Operations such as opening the selected file requires accessing
 internal data structures directly.
 
-### Selection
-
-* `path_index` (byte) - id of active window in `path_table`
-
-* `selected_file_count` (byte) - number of selected icons
-* `selected_file_list` (array of bytes) - ids of selected icons
-
 ### Window - representing an open directory
 
+* `path_index` (byte) - id of active window in `path_table`
 * `path_table` (array of addrs) - maps window id to window record address
 
 Window record: 65-byte pathname buffer; it is a length-prefixed
-absolute path (e.g. `/HD/GAMES`)
+absolute path (e.g. `/VOL/GAMES`)
+
+### Selection
+
+* `selected_file_count` (byte) - number of selected icons
+* `selected_file_list` (array of bytes) - ids of selected icons
 
 ### Icon - representing a file (in a window) or volume (on the desktop)
 
@@ -273,16 +272,16 @@ Icon record: 27-byte structure optimized for rendering the file/volume icon.
 
 ```
 .byte icon      icon index
-.byte ??
+.byte state     $80 = highlighted, 0 = otherwise
 .byte type/window_id
                 (bits 0-3 window_id)
                 (bits 4,5,6)
                        000 = directory
                        001 = system
-                       010 = binary
+                       010 = binary (maybe runnable)
                        011 = basic
                        100 = (unused)
-                       101 = text/generic
+                       101 = data (text/generic/...)
                        110 = (unused)
                        111 = trash
                 (bit 7 = open flag)
