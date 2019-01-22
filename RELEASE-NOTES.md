@@ -18,12 +18,13 @@ https://github.com/inexorabletash/a2d/issues
 * Add Special > Check Drive command to refresh a single drive. (#97)
 * Show Text File DA: Keyboard support. Escape quits, arrows scroll. (#4)
 * Reorganized/renamed several menu items. (#13)
-* New icons for graphics, AppleWorks, relocatable, command, and IIgs-specific file types. (#105)
+* New icons for graphics, AppleWorks, relocatable, command, IIgs-specific file types, and DAs. (#105)
 * Desktop icon shown for AppleTalk file shares. (#88)
 * Improvements to several existing icon bitmaps. (#74)
-* DAs with high bit in aux-type set are skipped. (#102)
+* Desk accessory files with high bit in aux-type set are hidden in Apple menu. (#102)
 * Icons for volumes positioned more predictably and sensibly. (#94)
 * GS/OS filenames (supported by ProDOS 2.5) are shown with correct case. (#64)
+* Desk accessory files can be executed directly. (#101)
 
 ### Additional Desk Accessories
 

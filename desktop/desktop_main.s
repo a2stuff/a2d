@@ -942,6 +942,10 @@ begin:
         bne     :+
         addr_jump invoke_desk_acc, str_preview_txt
 
+:       cmp     #DA_FILE_TYPE
+        bne     :+
+        addr_jump invoke_desk_acc, path
+
 :       lda     #ERR_FILE_NOT_OPENABLE
         jsr     show_alert_and_fail
 
@@ -5966,6 +5970,16 @@ L7223:  iny
         iny
         lda     (entry_ptr),y
         sta     record,x
+        inx
+
+        ;; aux type
+        ldy     #FileEntry::aux_type
+        lda     (entry_ptr),y
+        sta     record,x
+        inx
+        iny
+        lda     (entry_ptr),y
+        sta     record,x
 
         ;; Copy entry composed at $1F00 to buffer in Aux LC Bank 2
         lda     LCBANK2
@@ -6529,8 +6543,8 @@ L7767:  .byte   $14
         lda     LCBANK2
 
         ;; Copy the name (offset by 2 for count and leading space)
-        ldy     #FileEntry::storage_type_name_length
-        lda     (file_entry),y  ; assumes storage type is 0 ???
+        ldy     #FileRecord::name
+        lda     (file_entry),y
         sta     name_tmp
         iny
         ldx     #0
@@ -6549,7 +6563,7 @@ L7767:  .byte   $14
         sta     name_tmp,x      ; trailing space
 
         ;; Check file type
-        ldy     #FileEntry::file_type
+        ldy     #FileRecord::file_type
         lda     (file_entry),y
 
         cmp     #FT_S16         ; IIgs System?
@@ -6568,16 +6582,30 @@ L7767:  .byte   $14
         beq     is_iigs
         txa
 
+        ;; FT_BAD is overloaded, so use generic
         cmp     #FT_BAD         ; T$01 is overloaded below for "apps", so
-        bne     :+              ; treat as generic
-        lda     #FT_TYPELESS
+        beq     is_generic      ; treat as generic
+
+        ;; DA_FILE_TYPE also requires correct AUX type
+        cmp     #DA_FILE_TYPE   ; Apple Menu item?
+        bne     :+
+        ldy     #FileRecord::aux_type
+        lda     (file_entry),y  ; Must have correct aux type, otherwise
+        cmp     #<DA_AUX_TYPE   ; treat as generic
+        bne     is_generic
+        iny
+        lda     (file_entry),y
+        and     #%01111111      ; ignore high bit (set = don't show in menu)
+        cmp     #>DA_AUX_TYPE
+        bne     is_generic
+        lda     #DA_FILE_TYPE
 
 :       cmp     #FT_SYSTEM      ; Other system?
         bne     got_type        ; nope
 
         ;; Distinguish *.SYSTEM files as apps (use $01) from other
         ;; type=SYS files (use $FF).
-        ldy     #FileEntry::storage_type_name_length
+        ldy     #FileRecord::name
         lda     (file_entry),y
         tay
         ldx     str_sys_suffix
@@ -6594,15 +6622,20 @@ is_app:
         lda     #FT_BAD         ; overloaded meaning in icon tables
         bne     got_type        ; always
 
+is_generic:
+        lda     #FT_TYPELESS
+        beq     got_type        ; always
+
 is_iigs:
         lda     #FT_SRC
-        bne     got_type
+        bne     got_type        ; always
 
 str_sys_suffix:
         PASCAL_STRING ".SYSTEM"
 
 not_app:
         lda     #$FF
+        ;; fall through
 
 got_type:
         tay
