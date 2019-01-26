@@ -2750,7 +2750,6 @@ check_scrollbars:
 
 
         ;; Cases 3/6 (and done)
-        ;; icon visible above window?
         ;; if (win_t > cr_t)
         ;; . cr_b = win_t
 vert:   cmp16   win_t, cr_t
@@ -2760,7 +2759,6 @@ vert:   cmp16   win_t, cr_t
         jmp     reclip
 
         ;; Cases 1/4 (and done)
-        ;; icon visible below window?
         ;; if (win_b < cr_b)
         ;; . cr_t = win_b + 2
         ;; . vy   = win_b + 2
@@ -2779,7 +2777,6 @@ vert:   cmp16   win_t, cr_t
         jmp     reclip
 
         ;; Case 2
-        ;; obscured by window; just advance
         ;; cr_l = cr_r
         ;; vx   = cr_r
 :       lda     cr_r
