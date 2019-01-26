@@ -2384,6 +2384,31 @@ LA5CB:  pla
         rts
 
 ;;; ============================================================
+;;; This handles drawing volume icons "behind" windows. It is
+;;; done by comparing the bounding rect of the icon (including
+;;; label) with windows, and returning a reduced clipping rect.
+;;; Since the overlap may be concave, multiple calls may be
+;;; necessary; a flag is set if another call is required.
+;;;
+;;; The algorithm is as follows:
+;;;
+;;; * Take the bounding box for the icon+label (bounds_*), and
+;;;    use it as an initial clipping rect.
+;;; * Test each corner of the rect.
+;;; * If the corner is inside a window, compute the window bounds.
+;;;    (Complicated by title bars, scroll bars, and borders.)
+;;; * Consider each case where a window and rect overlap. There
+;;;    are 9 cases (8 interesting, one degenerate).
+;;; * Reduce the clipping rect to the leftmost exposed portion.
+;;; * Recheck the corners, since another window may be overlapped.
+;;; * Once a minimal rect is achieved, set a flag indicating if
+;;;    another call is needed, and return.
+;;; * Caller draws the icon into the clipping rect. If flag was
+;;;    set, the caller calls in again.
+;;; * On re-entry, return to the initial bounding box but with
+;;;    an updated left edge.
+;;;
+;;; ============================================================
 
 ;;; Initial bounds, saved for re-entry.
 bounds_l:  .word   0               ; written but never read???
@@ -2401,6 +2426,7 @@ cliprect:       DEFINE_RECT 0, 0, 0, 0, cliprect
 .proc set_port_for_vol_icon
         jsr     calc_icon_poly
 
+        ;; Set up bounds_t
         lda     poly::v0::ycoord
         sta     bounds_t
         sta     portbits::cliprect::y1
@@ -2410,6 +2436,7 @@ cliprect:       DEFINE_RECT 0, 0, 0, 0, cliprect
         sta     portbits::cliprect::y1+1
         sta     portbits::viewloc::ycoord+1
 
+        ;; Set up bounds_l
         lda     poly::v5::xcoord
         sta     bounds_l
         sta     portbits::cliprect::x1
@@ -2419,6 +2446,7 @@ cliprect:       DEFINE_RECT 0, 0, 0, 0, cliprect
         sta     portbits::cliprect::x1+1
         sta     portbits::viewloc::xcoord+1
 
+        ;; Set up bounds_r/b
         ldx     #3
 :       lda     poly::v4,x
         sta     bounds_r,x      ; right and bottom
@@ -2445,7 +2473,6 @@ done:   MGTK_CALL MGTK::SetPortBits, portbits
 .proc calc_window_intersections
         ptr := $06
 
-        lda     #0              ; BUG: immediately overwritten???
         jmp     start
 
 ;;; findwindow_params::window_id is used as first part of
@@ -2476,6 +2503,9 @@ pt4:    DEFINE_POINT 0,0,pt4
 
 xcoord:  .word   0
 ycoord:  .word   0
+
+stash_r: .word   0
+
 
         ;; Viewport/Cliprect to adjust
         vx := portbits::viewloc::xcoord
@@ -2558,12 +2588,8 @@ next_pt:
 set_bits:
         MGTK_CALL MGTK::SetPortBits, portbits
         ;; if (cr_r < bounds_r) more drawing is needed
-        lda     cr_r+1
-        cmp     bounds_r+1
-        bne     :+
-        lda     cr_r
-        cmp     bounds_r
-        bcc     :+
+        cmp16   cr_r, bounds_r
+        bmi     :+
         copy    #0, more_drawing_needed_flag
         rts
 
@@ -2630,14 +2656,24 @@ do_pt:  lda     pt_num
         ora     scrollbar_flags
         sta     scrollbar_flags
 
+        ;; TODO: I *think* win_l/t/r/b are supposed to be 1px beyond
+        ;; window's bounds, but aren't consistently so. ???
+
+        ;; 1px implicit left borders, and move 1px beyond bounds ???
         ;; win_l -= 2
         ;; icon_grafport::cliprect::x1 -= 2
         sub16   win_l, #2, win_l
         sub16   icon_grafport::cliprect::x1, #2, icon_grafport::cliprect::x1
 
+        ;; 1px implicit bottom border
+        add16   icon_grafport::cliprect::y2, #1, icon_grafport::cliprect::y2
+        ;; TODO: 1px implicit right border?
+
         kTitleBarHeight = 14    ; Should be 12? (But no visual bugs)
         kScrollBarWidth = 20
-        kScrollBarHeight = 12   ; BUG: Should be 10? (See #117)
+        kScrollBarHeight = 10
+
+        ;; NOTE: algorithm does not account for 1px implicit border applied to dialogs and windows
 
         ;; --------------------------------------------------
         ;; Adjust window rect to account for title bar
@@ -2704,13 +2740,7 @@ check_scrollbars:
 
         ;; Make absolute
         ;; win_r += win_l
-        lda     win_r
-        clc
-        adc     win_l
-        sta     win_r
-        lda     win_l+1
-        adc     win_r+1
-        sta     win_r+1
+        add16   win_r, win_l, win_r
 
         ;; win_b += win_t
         add16   win_b, win_t, win_b
@@ -2737,11 +2767,14 @@ check_scrollbars:
         ;; .    ::::      ::::      ::::
         ;; .    ::::      ::::      ::::
 
+        copy16  cr_r, stash_r   ; in case this turns out to be case 2
+
         ;; Cases 1/2/3 (and continue below)
         ;; if (cr_r > win_r)
         ;; . cr_r = win_r + 1
         cmp16   cr_r, win_r
         bmi     :+
+
         add16   win_r, #1, cr_r
         jmp     vert
 
@@ -2750,15 +2783,16 @@ check_scrollbars:
         ;; . cr_r = win_l
 :       cmp16   win_l, cr_l
         bmi     vert
+
         copy16  win_l, cr_r
         jmp     reclip
-
 
         ;; Cases 3/6 (and done)
         ;; if (win_t > cr_t)
         ;; . cr_b = win_t
 vert:   cmp16   win_t, cr_t
         bmi     :+
+
         copy16  win_t, cr_b
         copy    #1, more_drawing_needed_flag
         jmp     reclip
@@ -2769,9 +2803,10 @@ vert:   cmp16   win_t, cr_t
         ;; . vy   = win_b + 2
 :       cmp16   win_b, cr_b
         bpl     :+
+
         lda     win_b
         clc
-        adc     #2
+        adc     #1
         sta     cr_t
         sta     vy
         lda     win_b+1
@@ -2782,14 +2817,28 @@ vert:   cmp16   win_t, cr_t
         jmp     reclip
 
         ;; Case 2
-        ;; cr_l = cr_r
-        ;; vx   = cr_r
-:       lda     cr_r
+        ;; if (win_r < stash_r)
+        ;; . cr_l = win_r + 2
+        ;; . vx   = win_r + 2
+        ;; . cr_r = stash_r
+:       cmp16   win_r, stash_r
+        bpl     :+
+
+        lda     win_r
+        clc
+        adc     #2
         sta     cr_l
         sta     vx
-        lda     cr_r+1
+        lda     win_r+1
+        adc     #0
         sta     cr_l+1
         sta     vx+1
+        copy16  stash_r, cr_r
+        jmp     reclip
+
+        ;; Case 5 - done!
+:       copy16  bounds_r, cr_r
+        add16   bounds_r, #1, cr_l
         jmp     set_bits
 .endproc
 
