@@ -2426,8 +2426,8 @@ start:  lda     more_drawing_needed_flag
         ;; --------------------------------------------------
         ;; Re-entry - pick up where we left off
 
-        ;; cr_l = cr_r
-        ;; vx   = cr_r
+        ;; cr_l = cr_r + 1
+        ;; vx   = cr_r + 1
         lda     cr_r
         clc
         adc     #1
@@ -2492,7 +2492,7 @@ next_pt:
 
 set_bits:
         MGTK_CALL MGTK::SetPortBits, portbits
-        ;; if (cliprect::x2 < LA62B) more drawing is needed
+        ;; if (cr_r < LA62B) more drawing is needed
         lda     cr_r+1
         cmp     LA62B+1
         bne     :+
@@ -2570,9 +2570,9 @@ do_pt:  lda     pt_num
         sub16   win_l, #2, win_l
         sub16   icon_grafport::cliprect::x1, #2, icon_grafport::cliprect::x1
 
-        kTitleBarHeight = 14
+        kTitleBarHeight = 14    ; Should be 12? (But no visual bugs)
         kScrollBarWidth = 20
-        kScrollBarHeight = 12
+        kScrollBarHeight = 12   ; BUG: Should be 10? (See #117)
 
         ;; --------------------------------------------------
         ;; Adjust window rect to account for title bar
@@ -2580,19 +2580,19 @@ do_pt:  lda     pt_num
         bit     dialogbox_flag
         bmi     check_scrollbars
 
-        ;; viewloc::ycoord -= 14
+        ;; viewloc::ycoord -= kTitleBarHeight
         lda     win_t
         sec
-        sbc     #14
+        sbc     #kTitleBarHeight
         sta     win_t
         bcs     :+
         dec     win_t+1
 :
 
-        ;; cliprect::y1 -= 14
+        ;; cliprect::y1 -= kTitleBarHeight
         lda     icon_grafport::cliprect::y1
         sec
-        sbc     #14
+        sbc     #kTitleBarHeight
         sta     icon_grafport::cliprect::y1
         bcs     :+
         dec     icon_grafport::cliprect::y1+1
@@ -2648,38 +2648,62 @@ check_scrollbars:
         ;; win_b += viewloc::ycoord
         add16   win_b, icon_grafport::viewloc::ycoord, win_b
 
-
         ;; ==================================================
-        ;; At this point, win_r/t/l/b are the window edges
+        ;; At this point, win_r/t/l/b are the window edges,
+        ;; cr_r/t/l/b are the rect we know has at least one
+        ;; corner overlapping the window.
+        ;;
+        ;; Cases (#=icon, %=result, :=window)
+        ;;
+        ;; .  1 ::::    4 ::::    7 ::::
+        ;; .    ::::      ::::      ::::
+        ;; .    :::##     :##:     %#:::
+        ;; .       %#      %%      %#
+        ;; .
+        ;; .  2 ::::    5 ::::    8 ::::
+        ;; .    :::#%     :##:     %#:::
+        ;; .    :::#%     :##:     %#:::
+        ;; .    ::::      ::::      ::::
+        ;; .
+        ;; .       %#      %%      %#
+        ;; .  3 :::##   6 :##:   9 %#:::
+        ;; .    ::::      ::::      ::::
+        ;; .    ::::      ::::      ::::
 
+        ;; Cases 1/2/3 (and continue below)
         ;; if (cr_r > win_r)
-        ;;   cr_r = win_r + 1
+        ;; . cr_r = win_r + 1
         cmp16   cr_r, win_r
         bmi     :+
         add16   win_r, #1, cr_r
-        jmp     LA8D4
+        jmp     vert
 
+        ;; Cases 7/8/9 (and done)
         ;; if (win_l > cr_l)
-        ;;   cr_r = win_l
+        ;; . cr_r = win_l
 :       cmp16   win_l, cr_l
-        bmi     LA8D4
+        bmi     vert
         copy16  win_l, cr_r
         jmp     reclip
 
 
+        ;; Cases 3/6 (and done)
+        ;; icon visible above window?
         ;; if (win_t > cr_t)
-        ;;   cr_b = win_t
-LA8D4:  cmp16   win_t, cr_t
+        ;; . cr_b = win_t
+vert:   cmp16   win_t, cr_t
         bmi     :+
         copy16  win_t, cr_b
         copy    #1, more_drawing_needed_flag
         jmp     reclip
 
+        ;; Cases 1/4 (and done)
+        ;; icon visible below window?
         ;; if (win_b < cr_b)
-        ;;   cr_t = win_b + 2
-        ;;   vy   = win_b + 2
+        ;; . cr_t = win_b + 2
+        ;; . vy   = win_b + 2
 :       cmp16   win_b, cr_b
-        bpl     LA923
+        bpl     :+
         lda     win_b
         clc
         adc     #2
@@ -2692,9 +2716,11 @@ LA8D4:  cmp16   win_t, cr_t
         copy    #1, more_drawing_needed_flag
         jmp     reclip
 
+        ;; Case 2
+        ;; obscured by window; just advance
         ;; cr_l = cr_r
         ;; vx   = cr_r
-LA923:  lda     cr_r
+:       lda     cr_r
         sta     cr_l
         sta     vx
         lda     cr_r+1
