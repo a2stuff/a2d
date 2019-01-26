@@ -303,10 +303,10 @@ fontptr:        .addr   DEFAULT_FONT
 
 .proc getwinport_params
 window_id:      .byte   0
-a_grafport:     .addr   grafport4
+a_grafport:     .addr   icon_grafport
 .endproc
 
-.proc grafport4
+.proc icon_grafport
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   0
 mapwidth:       .word   0
@@ -1638,7 +1638,9 @@ L9F8F:  return  #1
 icon_flags: ; bit 7 = highlighted, bit 6 = volume icon
         .byte   0
 
-L9F93:  .byte   0
+more_drawing_needed_flag:
+        .byte   0
+
 L9F94:  .byte   0
         .byte   0
         .byte   0
@@ -1732,7 +1734,7 @@ highlighted:  copy    #$80, icon_flags ; is highlighted
         jsr     set_port_for_erasing_vol_icon
 :       jsr     calc_window_intersections
         jsr     paint_icon
-        lda     L9F93
+        lda     more_drawing_needed_flag
         bne     :-
         MGTK_CALL MGTK::SetPortBits, grafport
         rts
@@ -2191,7 +2193,7 @@ window_id:      .byte   0
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         jsr     LA4CC
-        jsr     LA938
+        jsr     shift_port_down
         jsr     erase_icon
         jmp     LA446
 
@@ -2201,7 +2203,7 @@ volume:
         jsr     set_port_for_erasing_vol_icon
 :       jsr     calc_window_intersections
         jsr     erase_desktop_icon
-        lda     L9F93
+        lda     more_drawing_needed_flag
         bne     :-
         MGTK_CALL MGTK::SetPortBits, grafport
         jmp     LA446
@@ -2238,7 +2240,7 @@ LA446:  jsr     push_pointers
         bit     LA3B7           ; no, almost done
         bpl     :+
         MGTK_CALL MGTK::InitPort, grafport
-        MGTK_CALL MGTK::SetPort, grafport4
+        MGTK_CALL MGTK::SetPort, icon_grafport
 :       jsr     pop_pointers
         rts
 
@@ -2304,13 +2306,13 @@ LA4DC:  pha
         lda     #0
         sta     LA4CB
 LA4E2:  ldy     #0
-LA4E4:  lda     grafport4,y
+LA4E4:  lda     icon_grafport,y
         sta     LA567,y
         iny
         cpy     #4
         bne     LA4E4
         ldy     #8
-LA4F1:  lda     grafport4,y
+LA4F1:  lda     icon_grafport,y
         sta     LA567-4,y
         iny
         cpy     #12
@@ -2383,11 +2385,11 @@ LA5CB:  pla
 
 ;;; ============================================================
 
-LA627:  .word   0
+LA627:  .word   0               ; written but never read???
 LA629:  .word   0
 LA62B:  DEFINE_POINT 0,0
 
-.proc setportbits_params2
+.proc portbits
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
@@ -2399,26 +2401,26 @@ cliprect:       DEFINE_RECT 0, 0, 0, 0, cliprect
 
         lda     poly::v0::ycoord
         sta     LA629
-        sta     setportbits_params2::cliprect::y1
-        sta     setportbits_params2::viewloc::ycoord
+        sta     portbits::cliprect::y1
+        sta     portbits::viewloc::ycoord
         lda     poly::v0::ycoord+1
         sta     LA629+1
-        sta     setportbits_params2::cliprect::y1+1
-        sta     setportbits_params2::viewloc::ycoord+1
+        sta     portbits::cliprect::y1+1
+        sta     portbits::viewloc::ycoord+1
 
         lda     poly::v5::xcoord
         sta     LA627
-        sta     setportbits_params2::cliprect::x1
-        sta     setportbits_params2::viewloc::xcoord
+        sta     portbits::cliprect::x1
+        sta     portbits::viewloc::xcoord
         lda     poly::v5::xcoord+1
         sta     LA627+1
-        sta     setportbits_params2::cliprect::x1+1
-        sta     setportbits_params2::viewloc::xcoord+1
+        sta     portbits::cliprect::x1+1
+        sta     portbits::viewloc::xcoord+1
 
         ldx     #3
 :       lda     poly::v4,x
         sta     LA62B,x
-        sta     setportbits_params2::cliprect::x2,x
+        sta     portbits::cliprect::x2,x
         dex
         bpl     :-
 
@@ -2426,244 +2428,349 @@ cliprect:       DEFINE_RECT 0, 0, 0, 0, cliprect
         bmi     done
         lda     #<(screen_width - 2)
         sta     LA62B
-        sta     setportbits_params2::cliprect::x2
+        sta     portbits::cliprect::x2
         lda     #>(screen_width - 2)
         sta     LA62B+1
-        sta     setportbits_params2::cliprect::x2+1
+        sta     portbits::cliprect::x2+1
 
-done:   MGTK_CALL MGTK::SetPortBits, setportbits_params2
+done:   MGTK_CALL MGTK::SetPortBits, portbits
         rts
 .endproc
 
 ;;; ============================================================
 
 .proc calc_window_intersections
-        lda     #$00            ; immediately overwritten???
-        jmp     LA6C7
+        ptr := $06
 
+        lda     #0              ; BUG: immediately overwritten???
+        jmp     start
+
+;;; findwindow_params::window_id is used as first part of
+;;; GetWinPtr params structure including window_ptr.
 .proc findwindow_params
 mousex: .word   0
 mousey: .word   0
 which_area:     .byte   0
 window_id:      .byte   0
 .endproc
+window_ptr:  .word   0          ; do not move this; see above
 
-LA6AE:  .word   0
-LA6B0:  .byte   $00
-LA6B1:  .byte   $00
-LA6B2:  .byte   $00
+pt_num: .byte   0
 
-x1a:    .word   0
-y1a:    .word   0
-x2a:    .word   0
-y1b:    .word   0
-x2b:    .word   0
-y2a:    .word   0
-x1b:    .word   0
-y2b:    .word   0
+scrollbar_flags:
+        .byte   0               ; bit 7 = hscroll present; bit 6 = vscroll present
+dialogbox_flag:
+        .byte   0               ; bit 7 = dialog box
 
-LA6C3:  .word   0
-LA6C5:  .word   0
+;;; Points at corners of icon's bounding rect
+;;; pt1 +----+ pt2
+;;;     |    |
+;;; pt4 +----+ pt3
+pt1:    DEFINE_POINT 0,0,pt1
+pt2:    DEFINE_POINT 0,0,pt2
+pt3:    DEFINE_POINT 0,0,pt3
+pt4:    DEFINE_POINT 0,0,pt4
 
-LA6C7:  lda     L9F93
-        beq     LA6FA
+xcoord:  .word   0
+ycoord:  .word   0
 
-        lda     setportbits_params2::cliprect::x2
+        ;; Viewport/Cliprect to adjust
+        vx := portbits::viewloc::xcoord
+        vy := portbits::viewloc::ycoord
+        cr_l := portbits::cliprect::x1
+        cr_t := portbits::cliprect::y1
+        cr_r := portbits::cliprect::x2
+        cr_b := portbits::cliprect::y2
+
+start:  lda     more_drawing_needed_flag
+        beq     reclip
+
+        ;; --------------------------------------------------
+        ;; Re-entry - pick up where we left off
+
+        ;; cr_l = cr_r
+        ;; vx   = cr_r
+        lda     cr_r
         clc
         adc     #1
-        sta     setportbits_params2::cliprect::x1
-        sta     setportbits_params2::viewloc::xcoord
-        lda     setportbits_params2::cliprect::x2+1
+        sta     cr_l
+        sta     vx
+        lda     cr_r+1
         adc     #0
-        sta     setportbits_params2::cliprect::x1+1
-        sta     setportbits_params2::viewloc::xcoord+1
+        sta     cr_l+1
+        sta     vx+1
 
-        COPY_BYTES 6, LA629, setportbits_params2::cliprect::y1
+        ;; cr_t = LA629
+        ;; cr_r = LA62B::xcoord
+        ;; cr_b = LA62B::ycoord
+        COPY_BYTES 6, LA629, cr_t
 
-        copy16  setportbits_params2::cliprect::y1, setportbits_params2::viewloc::ycoord
+        ;; vy = cr_t
+        copy16  cr_t, vy
 
-LA6FA:  lda     setportbits_params2::cliprect::x1
-        sta     x1a
-        sta     x1b
-        lda     setportbits_params2::cliprect::x1+1
-        sta     x1a+1
-        sta     x1b+1
-        lda     setportbits_params2::cliprect::y1
-        sta     y1a
-        sta     y1b
-        lda     setportbits_params2::cliprect::y1+1
-        sta     y1a+1
-        sta     y1b+1
-        lda     setportbits_params2::cliprect::x2
-        sta     x2a
-        sta     x2b
-        lda     setportbits_params2::cliprect::x2+1
-        sta     x2a+1
-        sta     x2b+1
-        lda     setportbits_params2::cliprect::y2
-        sta     y2a
-        sta     y2b
-        lda     setportbits_params2::cliprect::y2+1
-        sta     y2a+1
-        sta     y2b+1
+        ;; Corners of bounding rect (clockwise from upper-left)
+        ;; pt1::xcoord = pt4::xcoord = cr_l
+        ;; pt1::ycoord = pt2::ycoord = cr_t
+        ;; pt2::xcoord = pt3::xcoord = cr_r
+        ;; pt3::ycoord = pt4::ycoord = cr_b
+reclip: lda     cr_l
+        sta     pt1::xcoord
+        sta     pt4::xcoord
+        lda     cr_l+1
+        sta     pt1::xcoord+1
+        sta     pt4::xcoord+1
+        lda     cr_t
+        sta     pt1::ycoord
+        sta     pt2::ycoord
+        lda     cr_t+1
+        sta     pt1::ycoord+1
+        sta     pt2::ycoord+1
+        lda     cr_r
+        sta     pt2::xcoord
+        sta     pt3::xcoord
+        lda     cr_r+1
+        sta     pt2::xcoord+1
+        sta     pt3::xcoord+1
+        lda     cr_b
+        sta     pt3::ycoord
+        sta     pt4::ycoord
+        lda     cr_b+1
+        sta     pt3::ycoord+1
+        sta     pt4::ycoord+1
 
         lda     #0
-        sta     LA6B0
-LA747:  lda     LA6B0
+        sta     pt_num
+
+next_pt:
+        ;; Done all 4 points?
+        lda     pt_num
         cmp     #4
-        bne     LA775
-
+        bne     do_pt
         lda     #0
-        sta     LA6B0
-LA753:  MGTK_CALL MGTK::SetPortBits, setportbits_params2
-        lda     setportbits_params2::cliprect::x2+1
+        sta     pt_num
+
+        ;; --------------------------------------------------
+        ;; Finish up
+
+set_bits:
+        MGTK_CALL MGTK::SetPortBits, portbits
+        ;; if (cliprect::x2 < LA62B) more drawing is needed
+        lda     cr_r+1
         cmp     LA62B+1
-        bne     LA76F
-        lda     setportbits_params2::cliprect::x2
+        bne     :+
+        lda     cr_r
         cmp     LA62B
-        bcc     LA76F
-        lda     #$00
-        sta     L9F93
+        bcc     :+
+        copy    #0, more_drawing_needed_flag
         rts
 
-LA76F:  lda     #1
-        sta     L9F93
+:       copy    #1, more_drawing_needed_flag
         rts
 
-LA775:  lda     LA6B0
-        asl     a
+        ;; ==================================================
+        ;; Find window at Nth point, and compute bounds
+
+do_pt:  lda     pt_num
+        asl     a               ; *4 (.sizeof(Point))
         asl     a
         tax
-        ldy     #$00
-LA77D:  lda     x1a,x
+
+        ;; Look up window at Nth point
+        ldy     #0
+:       lda     pt1::xcoord,x
         sta     findwindow_params,y
         iny
         inx
         cpy     #4
-        bne     LA77D
-        inc     LA6B0
+        bne     :-
+
+        inc     pt_num
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
-        beq     LA747
+        beq     next_pt
         lda     findwindow_params::window_id
         sta     getwinport_params
         MGTK_CALL MGTK::GetWinPort, getwinport_params
+
+        ;; --------------------------------------------------
+        ;; Compute window edges (including non-content area)
+
+        ;; Window edges
+        win_l := icon_grafport::viewloc::xcoord
+        win_t := icon_grafport::viewloc::ycoord
+        win_r := xcoord
+        win_b := ycoord
+
         jsr     push_pointers
+
         MGTK_CALL MGTK::GetWinPtr, findwindow_params::window_id
-        copy16  LA6AE, $06
-        ldy     #1
-        lda     ($06),y
-        and     #$01
-        bne     LA7C3
-        sta     LA6B2
-        beq     LA7C8
-LA7C3:  copy    #$80, LA6B2
-LA7C8:  ldy     #4
-        lda     ($06),y
-        and     #$80
-        sta     LA6B1
+        copy16  window_ptr, ptr
+
+        ;; Check window properties
+        ldy     #MGTK::Winfo::options
+        lda     (ptr),y         ; options
+        and     #MGTK::Option::dialog_box
+        bne     :+              ; yes
+        sta     dialogbox_flag
+        beq     @continue
+:       copy    #$80, dialogbox_flag
+@continue:
+
+        ldy     #MGTK::Winfo::hscroll
+        lda     (ptr),y         ; hscroll
+        and     #MGTK::Scroll::option_present
+        sta     scrollbar_flags
         iny
-        lda     ($06),y
-        and     #$80
+        lda     (ptr),y         ; vscroll
+        and     #MGTK::Scroll::option_present
         lsr     a
-        ora     LA6B1
-        sta     LA6B1
-        sub16   grafport4::viewloc::xcoord, #2, grafport4::viewloc::xcoord
-        sub16   grafport4::cliprect::x1, #2, grafport4::cliprect::x1
+        ora     scrollbar_flags
+        sta     scrollbar_flags
 
-        bit     LA6B2
-        bmi     LA820
+        ;; win_l -= 2
+        ;; icon_grafport::cliprect::x1 -= 2
+        sub16   win_l, #2, win_l
+        sub16   icon_grafport::cliprect::x1, #2, icon_grafport::cliprect::x1
 
-        lda     grafport4::viewloc::ycoord
+        kTitleBarHeight = 14
+        kScrollBarWidth = 20
+        kScrollBarHeight = 12
+
+        ;; --------------------------------------------------
+        ;; Adjust window rect to account for title bar
+        ;; Is dialog? (i.e. no title bar)
+        bit     dialogbox_flag
+        bmi     check_scrollbars
+
+        ;; viewloc::ycoord -= 14
+        lda     win_t
         sec
         sbc     #14
-        sta     grafport4::viewloc::ycoord
+        sta     win_t
         bcs     :+
-        dec     grafport4::viewloc::ycoord+1
+        dec     win_t+1
 :
 
-        lda     grafport4::cliprect::y1
+        ;; cliprect::y1 -= 14
+        lda     icon_grafport::cliprect::y1
         sec
         sbc     #14
-        sta     grafport4::cliprect::y1
+        sta     icon_grafport::cliprect::y1
         bcs     :+
-        dec     grafport4::cliprect::y1+1
+        dec     icon_grafport::cliprect::y1+1
 :
 
-LA820:  bit     LA6B1
-        bpl     LA833
-        lda     grafport4::cliprect::y2
+        ;; --------------------------------------------------
+        ;; Adjust window rect to account for scroll bars
+
+check_scrollbars:
+        ;; Horizontal scrollbar?
+        bit     scrollbar_flags
+        bpl     :+
+
+        ;; cliprect::y2 += kScrollBarHeight
+        lda     icon_grafport::cliprect::y2
         clc
-        adc     #12
-        sta     grafport4::cliprect::y2
-        bcc     LA833
-        inc     grafport4::cliprect::y2+1
-LA833:  bit     LA6B1
-        bvc     LA846
-        lda     grafport4::cliprect::x2
+        adc     #kScrollBarHeight
+        sta     icon_grafport::cliprect::y2
+        bcc     :+
+        inc     icon_grafport::cliprect::y2+1
+
+        ;; Vertical scrollbar?
+:       bit     scrollbar_flags
+        bvc     :+
+
+        ;; cliprect::x2 += kScrollBarWidth
+        lda     icon_grafport::cliprect::x2
         clc
-        adc     #20
-        sta     grafport4::cliprect::x2
-        bcc     LA846
-        inc     grafport4::cliprect::x2+1
-LA846:  jsr     pop_pointers
-        sub16   grafport4::cliprect::x2, grafport4::cliprect::x1, LA6C3
-        sub16   grafport4::cliprect::y2, grafport4::cliprect::y1, LA6C5
-        lda     LA6C3
+        adc     #kScrollBarWidth
+        sta     icon_grafport::cliprect::x2
+        bcc     :+
+        inc     icon_grafport::cliprect::x2+1
+
+:       jsr     pop_pointers
+
+        ;; --------------------------------------------------
+
+        ;; win_r = cliprect::x2 - cliprect::x1
+        sub16   icon_grafport::cliprect::x2, icon_grafport::cliprect::x1, win_r
+
+        ;; win_b = cliprect::y2 - cliprect::y1
+        sub16   icon_grafport::cliprect::y2, icon_grafport::cliprect::y1, win_b
+
+        ;; win_r += viewloc::xcoord
+        lda     win_r
         clc
-        adc     grafport4::viewloc::xcoord
-        sta     LA6C3
-        lda     grafport4::viewloc::xcoord+1
-        adc     LA6C3+1
-        sta     LA6C3+1
-        add16   LA6C5, grafport4::viewloc::ycoord, LA6C5
-        cmp16   setportbits_params2::cliprect::x2, LA6C3
-        bmi     LA8B7
-        add16   LA6C3, #1, setportbits_params2::cliprect::x2
+        adc     win_l
+        sta     win_r
+        lda     win_l+1
+        adc     win_r+1
+        sta     win_r+1
+
+        ;; win_b += viewloc::ycoord
+        add16   win_b, icon_grafport::viewloc::ycoord, win_b
+
+
+        ;; ==================================================
+        ;; At this point, win_r/t/l/b are the window edges
+
+        ;; if (cr_r > win_r)
+        ;;   cr_r = win_r + 1
+        cmp16   cr_r, win_r
+        bmi     :+
+        add16   win_r, #1, cr_r
         jmp     LA8D4
 
-LA8B7:  cmp16   grafport4::viewloc::xcoord, setportbits_params2::cliprect::x1
+        ;; if (win_l > cr_l)
+        ;;   cr_r = win_l
+:       cmp16   win_l, cr_l
         bmi     LA8D4
-        copy16  grafport4::viewloc::xcoord, setportbits_params2::cliprect::x2
-        jmp     LA6FA
+        copy16  win_l, cr_r
+        jmp     reclip
 
-LA8D4:  cmp16   grafport4::viewloc::ycoord, setportbits_params2::cliprect::y1
-        bmi     LA8F6
-        copy16  grafport4::viewloc::ycoord, setportbits_params2::cliprect::y2
-        lda     #1
-        sta     L9F93
-        jmp     LA6FA
 
-LA8F6:  cmp16   LA6C5, setportbits_params2::cliprect::y2
+        ;; if (win_t > cr_t)
+        ;;   cr_b = win_t
+LA8D4:  cmp16   win_t, cr_t
+        bmi     :+
+        copy16  win_t, cr_b
+        copy    #1, more_drawing_needed_flag
+        jmp     reclip
+
+        ;; if (win_b < cr_b)
+        ;;   cr_t = win_b + 2
+        ;;   vy   = win_b + 2
+:       cmp16   win_b, cr_b
         bpl     LA923
-        lda     LA6C5
+        lda     win_b
         clc
         adc     #2
-        sta     setportbits_params2::cliprect::y1
-        sta     setportbits_params2::viewloc::ycoord
-        lda     LA6C5+1
+        sta     cr_t
+        sta     vy
+        lda     win_b+1
         adc     #0
-        sta     setportbits_params2::cliprect::y1+1
-        sta     setportbits_params2::viewloc::ycoord+1
-        lda     #1
-        sta     L9F93
-        jmp     LA6FA
+        sta     cr_t+1
+        sta     vy+1
+        copy    #1, more_drawing_needed_flag
+        jmp     reclip
 
-LA923:  lda     setportbits_params2::cliprect::x2
-        sta     setportbits_params2::cliprect::x1
-        sta     setportbits_params2::viewloc::xcoord
-        lda     setportbits_params2::cliprect::x2+1
-        sta     setportbits_params2::cliprect::x1+1
-        sta     setportbits_params2::viewloc::xcoord+1
-        jmp     LA753
+        ;; cr_l = cr_r
+        ;; vx   = cr_r
+LA923:  lda     cr_r
+        sta     cr_l
+        sta     vx
+        lda     cr_r+1
+        sta     cr_l+1
+        sta     vx+1
+        jmp     set_bits
 .endproc
 
 ;;; ============================================================
 
-.proc LA938
-        add16   grafport4::viewloc::ycoord, #15, grafport4::viewloc::ycoord
-        add16   grafport4::cliprect::y1, #15, grafport4::cliprect::y1
-        MGTK_CALL MGTK::SetPort, grafport4
+.proc shift_port_down
+        add16   icon_grafport::viewloc::ycoord, #15, icon_grafport::viewloc::ycoord
+        add16   icon_grafport::cliprect::y1, #15, icon_grafport::cliprect::y1
+        MGTK_CALL MGTK::SetPort, icon_grafport
         rts
 .endproc
 
