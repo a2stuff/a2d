@@ -13274,9 +13274,10 @@ LAE90:  lda     ($08),y
 LAEC6:  jsr     prompt_input_loop
         bmi     LAEC6
         bne     LAF16
+        jsr     merge_path_buf1_path_buf2
         lda     path_buf1
         beq     LAEC6
-        cmp     #$10
+        cmp     #16             ; max filename length
         bcc     LAEE1
 LAED6:  lda     #ERR_NAME_TOO_LONG
         jsr     JT_SHOW_ALERT0
@@ -14803,29 +14804,41 @@ LBCB3:  pla
 
 ;;; ============================================================
 
-.proc LBCC9
+.proc merge_path_buf1_path_buf2
         lda     path_buf2
-        cmp     #$02
-        bcs     LBCD1
-        rts
+        cmp     #2
+        bcc     done
 
-LBCD1:  ldx     path_buf2
+        ;; Compute new path_buf1 length
+        ldx     path_buf2
         dex
         txa
         clc
         adc     path_buf1
         pha
+
+        ;; Copy chars from path_buf2 to path_buf1
         tay
         ldx     path_buf2
-LBCDF:  lda     path_buf2,x
+loop:   lda     path_buf2,x
         sta     path_buf1,y
         dex
         dey
         cpy     path_buf1
-        bne     LBCDF
+        bne     loop
+
+        ;; Finish up, shrinking path_buf2 to just an insertion point
         pla
         sta     path_buf1
         copy    #1, path_buf2
+
+done:   rts
+.endproc
+
+;;; ============================================================
+
+.proc LBCC9
+        jsr     merge_path_buf1_path_buf2
         MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
         jsr     draw_filename_prompt
         rts
