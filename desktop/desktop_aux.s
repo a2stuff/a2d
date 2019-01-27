@@ -1731,7 +1731,7 @@ highlighted:  copy    #$80, icon_flags ; is highlighted
 
         ;; Redraw desktop background
         MGTK_CALL MGTK::InitPort, grafport
-        jsr     set_port_for_erasing_vol_icon
+        jsr     set_port_for_vol_icon
 :       jsr     calc_window_intersections
         jsr     paint_icon
         lda     more_drawing_needed_flag
@@ -2200,7 +2200,7 @@ window_id:      .byte   0
         ;; Volume (i.e. icon on desktop)
 volume:
         MGTK_CALL MGTK::InitPort, grafport
-        jsr     set_port_for_erasing_vol_icon
+        jsr     set_port_for_vol_icon
 :       jsr     calc_window_intersections
         jsr     erase_desktop_icon
         lda     more_drawing_needed_flag
@@ -2385,9 +2385,11 @@ LA5CB:  pla
 
 ;;; ============================================================
 
-LA627:  .word   0               ; written but never read???
-LA629:  .word   0
-LA62B:  DEFINE_POINT 0,0
+;;; Initial bounds, saved for re-entry.
+bounds_l:  .word   0               ; written but never read???
+bounds_t:  .word   0
+bounds_r:  .word   0
+bounds_b:  .word   0
 
 .proc portbits
 viewloc:        DEFINE_POINT 0, 0, viewloc
@@ -2396,41 +2398,42 @@ mapwidth:       .word   MGTK::screen_mapwidth
 cliprect:       DEFINE_RECT 0, 0, 0, 0, cliprect
 .endproc
 
-.proc set_port_for_erasing_vol_icon
+.proc set_port_for_vol_icon
         jsr     calc_icon_poly
 
         lda     poly::v0::ycoord
-        sta     LA629
+        sta     bounds_t
         sta     portbits::cliprect::y1
         sta     portbits::viewloc::ycoord
         lda     poly::v0::ycoord+1
-        sta     LA629+1
+        sta     bounds_t+1
         sta     portbits::cliprect::y1+1
         sta     portbits::viewloc::ycoord+1
 
         lda     poly::v5::xcoord
-        sta     LA627
+        sta     bounds_l
         sta     portbits::cliprect::x1
         sta     portbits::viewloc::xcoord
         lda     poly::v5::xcoord+1
-        sta     LA627+1
+        sta     bounds_l+1
         sta     portbits::cliprect::x1+1
         sta     portbits::viewloc::xcoord+1
 
         ldx     #3
 :       lda     poly::v4,x
-        sta     LA62B,x
+        sta     bounds_r,x      ; right and bottom
         sta     portbits::cliprect::x2,x
         dex
         bpl     :-
 
-        cmp16   LA62B, #screen_width - 1
+        ;; if (bounds_r > screen_width - 1) bounds_r = screen_width - 2
+        cmp16   bounds_r, #screen_width - 1
         bmi     done
         lda     #<(screen_width - 2)
-        sta     LA62B
+        sta     bounds_r
         sta     portbits::cliprect::x2
         lda     #>(screen_width - 2)
-        sta     LA62B+1
+        sta     bounds_r+1
         sta     portbits::cliprect::x2+1
 
 done:   MGTK_CALL MGTK::SetPortBits, portbits
@@ -2500,10 +2503,10 @@ start:  lda     more_drawing_needed_flag
         sta     cr_l+1
         sta     vx+1
 
-        ;; cr_t = LA629
-        ;; cr_r = LA62B::xcoord
-        ;; cr_b = LA62B::ycoord
-        COPY_BYTES 6, LA629, cr_t
+        ;; cr_t = bounds_t
+        ;; cr_r = bounds_r
+        ;; cr_b = bounds_b
+        COPY_BYTES 6, bounds_t, cr_t
 
         ;; vy = cr_t
         copy16  cr_t, vy
@@ -2554,12 +2557,12 @@ next_pt:
 
 set_bits:
         MGTK_CALL MGTK::SetPortBits, portbits
-        ;; if (cr_r < LA62B) more drawing is needed
+        ;; if (cr_r < bounds_r) more drawing is needed
         lda     cr_r+1
-        cmp     LA62B+1
+        cmp     bounds_r+1
         bne     :+
         lda     cr_r
-        cmp     LA62B
+        cmp     bounds_r
         bcc     :+
         copy    #0, more_drawing_needed_flag
         rts
@@ -2692,13 +2695,15 @@ check_scrollbars:
 
         ;; --------------------------------------------------
 
+        ;; Compute width/height
         ;; win_r = cliprect::x2 - cliprect::x1
         sub16   icon_grafport::cliprect::x2, icon_grafport::cliprect::x1, win_r
 
         ;; win_b = cliprect::y2 - cliprect::y1
         sub16   icon_grafport::cliprect::y2, icon_grafport::cliprect::y1, win_b
 
-        ;; win_r += viewloc::xcoord
+        ;; Make absolute
+        ;; win_r += win_l
         lda     win_r
         clc
         adc     win_l
@@ -2707,8 +2712,8 @@ check_scrollbars:
         adc     win_r+1
         sta     win_r+1
 
-        ;; win_b += viewloc::ycoord
-        add16   win_b, icon_grafport::viewloc::ycoord, win_b
+        ;; win_b += win_t
+        add16   win_b, win_t, win_b
 
         ;; ==================================================
         ;; At this point, win_r/t/l/b are the window edges,
