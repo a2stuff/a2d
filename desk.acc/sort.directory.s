@@ -39,9 +39,9 @@ start:  tsx
         bne     :+
         rts
 
-:       lda     #$40
+:       lda     #>(JUMP_TABLE_SELECT_WINDOW-1)
         pha
-        lda     #$0B
+        lda     #<(JUMP_TABLE_SELECT_WINDOW-1)
         pha
         lda     a:$0A
         rts
@@ -309,7 +309,7 @@ L0A4B:  jsr     L0B16
         jsr     write_block
         jmp     L0A4B
 
-L0A8E:  pla
+L0A8E:  pla                     ; WTF ???
 L0A8F:  jmp     exit
 
 dev_num:
