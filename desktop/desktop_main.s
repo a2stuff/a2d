@@ -9473,7 +9473,7 @@ do_run:
         tsx
         stx     stack_stash
         jsr     prep_callbacks_for_size_or_count_clear_system_bitmap
-        jsr     L9984
+        jsr     do_download_dialog_phase
         jsr     size_or_count_process_selected_file
         jsr     L99BC
         jmp     do_run2
@@ -10781,14 +10781,13 @@ count:  .addr   0
         jmp     run_copy_dialog_proc
 .endproc
 
-;;; --------------------------------------------------
-;;; "Run" ???
-
-L9984:  copy    #CopyDialogLifecycle::open, copy_dialog_params::phase
+.proc do_download_dialog_phase
+        copy    #CopyDialogLifecycle::open, copy_dialog_params::phase
         copy16  #copy_dialog_phase0_callback2, dialog_phase0_callback
         copy16  #copy_dialog_phase1_callback2, dialog_phase1_callback
         yax_call invoke_dialog_proc, index_download_dialog, copy_dialog_params
         rts
+.endproc
 
 .proc copy_dialog_phase0_callback2
         stax    copy_dialog_params::count
@@ -12745,7 +12744,7 @@ do1:    ldy     #1
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB0B6
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::copy_file_count_pos
         addr_call draw_text1, str_file_count
         addr_call draw_text1, str_files
         rts
@@ -12781,7 +12780,7 @@ do2:    ldy     #1
         jsr     copy_name_to_buf1_adjust_case
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE82
         addr_call draw_text1, path_buf1
-        yax_call MGTK_RELAY, MGTK::MoveTo, desktop_aux::LB0BA
+        yax_call MGTK_RELAY, MGTK::MoveTo, desktop_aux::copy_file_count_pos2
         addr_call draw_text1, str_file_count
         rts
 
@@ -12872,7 +12871,7 @@ do1:    ldy     #1
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB0B6
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::copy_file_count_pos
         addr_call draw_text1, str_file_count
         addr_call draw_text1, str_files
         rts
@@ -12895,7 +12894,7 @@ do2:    ldy     #1
         jsr     copy_name_to_buf0_adjust_case
         MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::current_target_file_pos
         addr_call draw_text1, path_buf0
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB0BA
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::copy_file_count_pos2
         addr_call draw_text1, str_file_count
         rts
 

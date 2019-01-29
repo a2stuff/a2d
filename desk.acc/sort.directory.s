@@ -39,9 +39,9 @@ start:  tsx
         bne     :+
         rts
 
-:       lda     #$40
+:       lda     #>(JUMP_TABLE_SELECT_WINDOW-1)
         pha
-        lda     #$0B
+        lda     #<(JUMP_TABLE_SELECT_WINDOW-1)
         pha
         lda     a:$0A
         rts
