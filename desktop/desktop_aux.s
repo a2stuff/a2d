@@ -3267,8 +3267,10 @@ str_exists_prompt:
 str_large_prompt:
         PASCAL_STRING "This file is too large to copy, click OK to continue."
 
-LB0B6:  DEFINE_POINT 110, 35
-LB0BA:  DEFINE_POINT 170, 59
+copy_file_count_pos:
+        DEFINE_POINT 110, 35
+copy_file_count_pos2:
+        DEFINE_POINT 170, 59
 
         ;; "Delete" dialog strings
 str_delete_title:
