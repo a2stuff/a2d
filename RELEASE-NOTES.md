@@ -13,6 +13,7 @@ https://github.com/inexorabletash/a2d/issues
 * Up to 13 volumes are shown on the desktop (was 10). (#20)
 * Up to 12 Desk Accessories are shown in the menu (was 8). (#90)
 * Drag "unlimited" number of icons (was 20). (#18)
+* Dragging files to same volume moves; use Open-Apple to force copy. (#8)
 * Menus allow click-to-drop, click-to-select interaction. (#104)
 * Add Special > Check Drive command to refresh a single drive. (#97)
 * Show Text File DA: Keyboard support. Escape quits, arrows scroll. (#4)

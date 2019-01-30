@@ -3860,15 +3860,19 @@ start_icon_drag:
         jsr     swap_in_desktop_icon_table
         jmp     redraw_windows_and_desktop
 
+        ;; Was a move?
+:       bit     move_flag
+        bpl     :+
+        ;; Update source vol's contents
+        jsr     update_active_window
+        ;; fall through
+
         ;; Dropped on trash?
 :       lda     drag_drop_param
         cmp     trash_icon_num
         bne     :+
         ;; Update used/free for same-vol windows
-        lda     active_window_id
-        jsr     update_used_free_for_vol_windows
-        lda     active_window_id
-        jsr     select_and_refresh_window
+        jsr     update_active_window
         jmp     redraw_windows_and_desktop
 
         ;; Dropped on icon?
@@ -3989,6 +3993,13 @@ L5E57:  lda     ($06),y
         bcc     L5E74
         lda     L5E77
 L5E74:  jmp     launch_file     ; when double-clicked
+
+.proc update_active_window
+        lda     active_window_id
+        jsr     update_used_free_for_vol_windows
+        lda     active_window_id
+        jmp     select_and_refresh_window
+.endproc
 
 L5E77:  .byte   0
 
@@ -9520,8 +9531,6 @@ done:   rts
 ;;; ============================================================
 
 jt_drop:        jmp     do_drop
-        jmp     do_nothing            ; rts
-        jmp     do_nothing            ; rts
 jt_get_info:    jmp     do_get_info ; cmd_get_info
 jt_lock:        jmp     do_lock ; cmd_lock
 jt_unlock:      jmp     do_unlock ; cmd_unlock
@@ -9529,8 +9538,6 @@ jt_rename_icon: jmp     do_rename_icon ; cmd_rename_icon
 jt_eject:       jmp     do_eject ; cmd_eject ???
 jt_copy_file:   jmp     do_copy_file ; cmd_copy_file
 jt_delete_file: jmp     do_delete_file ; cmd_delete_file
-        jmp     do_nothing            ; rts
-        jmp     do_nothing            ; rts
 jt_run:         jmp     do_run  ; cmd_selector_action / Run
 jt_get_size:    jmp     do_get_size ; cmd_get_size
 
@@ -9752,6 +9759,10 @@ L9076:  ldy     #$FF
         bit     delete_flag
         bmi     @trash
 
+        ;; Copy or Move - compare src/dst paths (etc)
+        jsr     get_window_path_ptr
+        jsr     check_move_or_copy
+        sta     move_flag
         jsr     do_copy_dialog_phase
         jmp     iterate_selection
 
@@ -9785,7 +9796,6 @@ L90BA:  bit     operation_flags
         jmp     iterate_selection
 
 iterate_selection:
-        jsr     get_window_path_ptr
         lda     selected_icon_count
         bne     :+
         jmp     finish
@@ -9800,22 +9810,18 @@ loop:   jsr     get_window_path_ptr
         beq     next_icon
         jsr     icon_entry_name_lookup
         jsr     join_paths
-        copy16  #path_buf3, $06
-
         ;; Shrink name to remove trailing ' '
-        ldy     #0
-        lda     ($06),y
-        beq     L9114
-        sec
-        sbc     #$01
-        sta     ($06),y
-
-L9114:  lda     L97E4
+        lda     path_buf3
+        beq     :+
+        dec     path_buf3
+:
+        lda     L97E4
         beq     L913D
         bit     operation_flags
         bmi     @lock_or_size
         bit     delete_flag
         bmi     :+
+
         jsr     copy_process_selected_file
         jmp     next_icon
 
@@ -9854,15 +9860,6 @@ not_trash:
         jmp     L90BA
 
 finish: jsr     done_dialog_phase1
-
-        ;; Restore space to start of icon name
-        ;; BUG: For drop on window, updates arbitrary icon. Also unnecessary???
-        lda     drag_drop_param
-        jsr     icon_entry_name_lookup
-        ldy     #1
-        lda     #' '
-        sta     ($06),y
-
         return  #0
 
 icon_count:
@@ -9909,6 +9906,10 @@ operation_flags:
 
         ;; high bit set = delete, clear = copy
 delete_flag:
+        .byte   0
+
+        ;; high bit set = move, clear = copy
+move_flag:
         .byte   0
 
         ;; high bit set = unlock, clear = lock
@@ -10867,7 +10868,7 @@ op_jt2: jmp     (op_jt_addr2)
 op_jt3: jmp     (op_jt_addr3)
 
 ;;; ============================================================
-;;; "Copy" (including Drag/Drop) files state and logic
+;;; "Copy" (including Drag/Drop/Move) files state and logic
 ;;; ============================================================
 
 ;;; copy_process_selected_file
@@ -10876,12 +10877,14 @@ op_jt3: jmp     (op_jt_addr3)
 ;;;  - c/o process_dir for each file in dir; skips if dir, copies otherwise
 ;;; copy_pop_directory
 ;;;  - c/o process_dir when exiting dir; pops path segment
+;;; maybe_finish_file_move
+;;;  - c/o process_dir after exiting; deletes dir if moving
 
 ;;; Overlays for copy operation (op_jt_addrs)
 callbacks_for_copy:
         .addr   copy_process_directory_entry
         .addr   copy_pop_directory
-        .addr   do_nothing
+        .addr   maybe_finish_file_move
 
 .enum CopyDialogLifecycle
         open            = 0
@@ -11116,12 +11119,14 @@ create_ok:
         lda     is_dir_flag
         beq     copy_file
 copy_dir:                       ; also used when dragging a volume icon
-        jmp     process_dir
+        jsr     process_dir
+        jmp     maybe_finish_file_move
 
 done:   rts
 
 copy_file:
-        jmp     do_file_copy
+        jsr     do_file_copy
+        jmp     maybe_finish_file_move
 
 is_dir_flag:
         .byte   0
@@ -11140,6 +11145,25 @@ src_path_slash_index:
 
 copy_pop_directory:
         jmp     remove_dst_path_segment
+
+;;; ============================================================
+;;; If moving, delete src file/directory.
+
+.proc maybe_finish_file_move
+        ;; Copy or move?
+        bit     move_flag
+        bpl     done
+
+        ;; Was a move - delete file
+@retry: MLI_RELAY_CALL DESTROY, destroy_params
+        beq     done
+        cmp     #ERR_ACCESS_ERROR
+        ;; TODO: if ERR_ACCESS_ERROR, unlock (or prompt)
+        beq     done
+        jsr     show_error_alert
+        jmp     @retry
+done:   rts
+.endproc
 
 ;;; ============================================================
 ;;; Called by |process_dir| to process a single file
@@ -11198,6 +11222,7 @@ regular_file:
         bcs     :+
         jsr     append_to_src_path
         jsr     do_file_copy
+        jsr     maybe_finish_file_move
         jsr     remove_src_path_segment
 :       jsr     remove_dst_path_segment
 done:   rts
@@ -12244,6 +12269,63 @@ loop:   iny
 .endproc
 
 ;;; ============================================================
+;;; Move or Copy? Compare src/dst paths, same vol = move.
+;;; Output: A=high bit set if move, clear if copy
+
+.proc check_move_or_copy
+        src_ptr := $08
+        dst_buf := path_buf4
+
+        bit     BUTN0           ; Open-Apple overrides, forces copy
+        bmi     no_match
+
+        ldy     #0
+        lda     (src_ptr),y
+        sta     src_len
+        iny                     ; skip leading '/'
+        bne     check           ; always
+
+        ;; Chars the same?
+loop:   lda     (src_ptr),y
+        cmp     dst_buf,y
+        bne     no_match
+
+        ;; Same and a slash?
+        cmp     #'/'
+        beq     match
+
+        ;; End of src?
+check:  cpy     src_len
+        bcc     :+
+        cpy     dst_buf         ; dst also done?
+        bcs     match
+        lda     path_buf4+1,y   ; is next char in dst a slash?
+        bne     check_slash     ; always
+
+:       cpy     dst_buf         ; src is not done, is dst?
+        bcc     :+
+        iny
+        lda     (src_ptr),y     ; is next char in src a slash?
+        bne     check_slash     ; always
+
+:       iny                     ; next char
+        bne     loop            ; always
+
+check_slash:
+        cmp     #'/'
+        beq     match           ; if so, same vol
+        ;; fall through
+
+no_match:
+        return  #0
+
+match:  return  #$80
+
+src_len:
+        .byte   0
+.endproc
+
+;;; ============================================================
 
 .proc check_escape_key_down
         yax_call JT_MGTK_RELAY, MGTK::GetEvent, event_params
@@ -12403,12 +12485,6 @@ RAMSLOT := DEVADR + $16         ; Slot 3, Drive 2
 driver: jmp     (RAMSLOT)
 .endproc
 
-
-str_preview_fot:
-        PASCAL_STRING "Preview/show.image.file"
-
-str_preview_txt:
-        PASCAL_STRING "Preview/show.text.file"
 
 ;;; ============================================================
 
@@ -12896,11 +12972,19 @@ close:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_about_dialog
         ;; CopyDialogLifecycle::open
 :       copy    #0, has_input_field_flag
         jsr     open_dialog_window
-        addr_call draw_dialog_title, desktop_aux::str_copy_title
-        axy_call draw_dialog_label, 1, desktop_aux::str_copy_copying
+
+        ;;  TODO: Looks ugly due to overwrite of ascenders; adjust spacing
         axy_call draw_dialog_label, 2, desktop_aux::str_copy_from
         axy_call draw_dialog_label, 3, desktop_aux::str_copy_to
+        bit     move_flag
+        bmi     :+
+        addr_call draw_dialog_title, desktop_aux::str_copy_title
+        axy_call draw_dialog_label, 1, desktop_aux::str_copy_copying
         axy_call draw_dialog_label, 4, desktop_aux::str_copy_remaining
+        rts
+:       addr_call draw_dialog_title, desktop_aux::str_move_title
+        axy_call draw_dialog_label, 1, desktop_aux::str_move_moving
+        axy_call draw_dialog_label, 4, desktop_aux::str_move_remaining
         rts
 
         ;; CopyDialogLifecycle::populate
@@ -15052,6 +15136,14 @@ reset_grafport3a:
         MGTK_RELAY_CALL MGTK::InitPort, grafport3
         MGTK_RELAY_CALL MGTK::SetPort, grafport3
         rts
+
+;;; ============================================================
+
+str_preview_fot:
+        PASCAL_STRING "Preview/show.image.file"
+
+str_preview_txt:
+        PASCAL_STRING "Preview/show.text.file"
 
 ;;; ============================================================
 

@@ -3219,10 +3219,10 @@ textbg_white:  .byte   $7F
 
 press_ok_to_rect:  DEFINE_RECT 39,25,360,80
 prompt_rect:  DEFINE_RECT 40,60,360,80
-current_target_file_pos:  DEFINE_POINT 65,43
-current_dest_file_pos:  DEFINE_POINT 65,51
-current_target_file_rect:  DEFINE_RECT 65,35,394,42
-current_dest_file_rect:  DEFINE_RECT 65,43,394,50
+current_target_file_pos:  DEFINE_POINT 75,43
+current_dest_file_pos:  DEFINE_POINT 75,51
+current_target_file_rect:  DEFINE_RECT 75,35,394,42
+current_dest_file_rect:  DEFINE_RECT 75,43,394,50
 
 str_cancel_label:
         PASCAL_STRING "Cancel        Esc"
@@ -3261,6 +3261,14 @@ str_copy_to:
         PASCAL_STRING "to :"
 str_copy_remaining:
         PASCAL_STRING "Files remaining to copy: "
+
+        ;; "Move File" dialog strings
+str_move_title:
+        PASCAL_STRING "Move ..."
+str_move_moving:
+        PASCAL_STRING "Now Moving "
+str_move_remaining:
+        PASCAL_STRING "Files remaining to move: "
 
 str_exists_prompt:
         PASCAL_STRING "That file already exists. Do you want to write over it ?"
@@ -3404,8 +3412,6 @@ str_save_selector_list:
         PASCAL_STRING "Do you want to save the new Selector list"
 str_on_system_disk:
         PASCAL_STRING "on the system disk ?"
-
-        PAD_TO $B600
 
 ;;; ============================================================
 
