@@ -1821,7 +1821,9 @@ L4CD6:  pha
         bpl     :-
 
         jsr     redraw_windows_and_desktop
+
         jsr     jt_delete_file
+
 L4D9D:  pha
         jsr     set_pointer_cursor
         pla
@@ -1830,24 +1832,29 @@ L4D9D:  pha
 
 :       addr_call find_last_path_segment, path_buf3
         sty     path_buf3
+
         addr_call find_window_for_path, path_buf3
-        beq     L4DC2
+        beq     :+
         pha
         jsr     update_used_free_for_vol_windows
         pla
         jmp     select_and_refresh_window
 
-L4DC2:  ldy     #1
-:       iny
+        ;; --------------------------------------------------
+        ;; Update used/free for windows for same vol as path_buf3
+
+:       ldy     #1
+@loop:  iny
         lda     path_buf3,y
         cmp     #'/'
         beq     :+
         cpy     path_buf3
-        bne     :-
+        bne     @loop
         iny
 :       dey
         sty     path_buf3
         addr_call find_windows_for_prefix, path_buf3
+
         ldax    #path_buf3
         ldy     path_buf3
         jsr     update_vol_used_free_for_found_windows
