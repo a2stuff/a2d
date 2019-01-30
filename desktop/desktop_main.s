@@ -1695,14 +1695,16 @@ running_da_flag:
         jsr     restore_dynamic_routine
         jsr     set_pointer_cursor
         pla
-        bpl     L4CCD
+        bpl     :+
         jmp     L4CD6
 
-;;; --------------------------------------------------
+        ;; --------------------------------------------------
 
-L4CCD:  jsr     copy_paths_and_split_name
+:       jsr     copy_paths_and_split_name
         jsr     redraw_windows_and_desktop
+
         jsr     jt_copy_file
+
 L4CD6:  pha
         jsr     set_pointer_cursor
         pla
@@ -1712,24 +1714,28 @@ L4CD6:  pha
 :       addr_call find_window_for_path, path_buf4
         beq     :+
         pha
-        jsr     L6F0D
+        jsr     update_used_free_for_vol_windows
         pla
         jmp     select_and_refresh_window
 
+        ;; --------------------------------------------------
+        ;; Update used/free for windows for same vol as path_buf4
+
 :       ldy     #1
-L4CF3:  iny
+@loop:  iny
         lda     path_buf4,y
         cmp     #'/'
         beq     :+
         cpy     path_buf4
-        bne     L4CF3
+        bne     @loop
         iny
 :       dey
         sty     path_buf4
         addr_call find_windows_for_prefix, path_buf4
+
         ldax    #path_buf4
         ldy     path_buf4
-        jsr     L6F4B
+        jsr     update_vol_used_free_for_found_windows
         jmp     redraw_windows_and_desktop
 .endproc
 
@@ -1827,7 +1833,7 @@ L4D9D:  pha
         addr_call find_window_for_path, path_buf3
         beq     L4DC2
         pha
-        jsr     L6F0D
+        jsr     update_used_free_for_vol_windows
         pla
         jmp     select_and_refresh_window
 
@@ -1844,7 +1850,7 @@ L4DC2:  ldy     #1
         addr_call find_windows_for_prefix, path_buf3
         ldax    #path_buf3
         ldy     path_buf3
-        jsr     L6F4B
+        jsr     update_vol_used_free_for_found_windows
         jmp     redraw_windows_and_desktop
 .endproc
 
@@ -3850,7 +3856,7 @@ L5D77:  lda     drag_drop_param
         cmp     trash_icon_num
         bne     L5D8E
         lda     active_window_id
-        jsr     L6F0D
+        jsr     update_used_free_for_vol_windows
         lda     active_window_id
         jsr     select_and_refresh_window
         jmp     redraw_windows_and_desktop
@@ -3862,7 +3868,7 @@ L5D8E:  lda     drag_drop_param
 
 L5D99:  and     #$7F
         pha
-        jsr     L6F0D
+        jsr     update_used_free_for_vol_windows
         pla
         jsr     select_and_refresh_window
         jmp     redraw_windows_and_desktop
@@ -4861,7 +4867,7 @@ L6863:  lda     drag_drop_param
         bpl     L6872
         and     #$7F
         pha
-        jsr     L6F0D
+        jsr     update_used_free_for_vol_windows
         pla
         jmp     select_and_refresh_window
 
@@ -5037,12 +5043,12 @@ L6A5C:  lda     (ptr),y
         jsr     find_windows_for_prefix
         ldax    #path_buf
         ldy     path_buf
-        jmp     L6F4B
+        jmp     update_vol_used_free_for_found_windows
 
 L6A80:  inx
         txa
         pha
-        jsr     L6F0D
+        jsr     update_used_free_for_vol_windows
         pla
         jmp     select_and_refresh_window
 .endproc
@@ -5539,8 +5545,10 @@ flag:   .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Refresh vol used/free for windows of same volume as win in A.
+;;; Input: A = window id
 
-.proc L6F0D
+.proc update_used_free_for_vol_windows
         ptr := $6
 
         jsr     window_path_lookup
@@ -5565,15 +5573,16 @@ finish: sty     pathlen
         addr_call_indirect find_windows_for_prefix, ptr ; ???
         ldax    pathptr
         ldy     pathlen
-        jmp     L6F4B
+        jmp     update_vol_used_free_for_found_windows
 
 pathptr:        .addr   0
 pathlen:        .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Update used/free for results of find_window[s]_for_prefix
 
-.proc L6F4B
+.proc update_vol_used_free_for_found_windows
         ptr := $6
 
         stax    ptr
@@ -5586,11 +5595,11 @@ pathlen:        .byte   0
 
         jsr     get_vol_free_used
 
-        bne     L6F8F
+        bne     done
         lda     found_windows_count
-        beq     L6F8F
-L6F64:  dec     found_windows_count
-        bmi     L6F8F
+        beq     done
+loop:   dec     found_windows_count
+        bmi     done
         ldx     found_windows_count
         lda     found_windows_list,x
         sec
@@ -5599,9 +5608,9 @@ L6F64:  dec     found_windows_count
         tax
         copy16  vol_kb_used, window_k_used_table,x
         copy16  vol_kb_free, window_k_free_table,x
-        jmp     L6F64
+        jmp     loop
 
-L6F8F:  rts
+done:   rts
 .endproc
 
 ;;; ============================================================
