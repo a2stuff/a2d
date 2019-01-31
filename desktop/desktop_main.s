@@ -3789,18 +3789,18 @@ ctl:    .byte   0
         sta     findicon_window_id
         DESKTOP_RELAY_CALL DT_FIND_ICON, findicon_params
         lda     findicon_which_icon
-        bne     L5CDA
+        bne     handle_file_icon_click
         jsr     L5F13
-        jmp     L5DEC
+        jmp     swap_in_desktop_icon_table
 .endproc
 
 ;;; ============================================================
 
 
+.proc handle_file_icon_click_impl
 icon_num:  .byte   0
 
-.proc L5CDA
-        sta     icon_num
+start:  sta     icon_num
         ldx     selected_icon_count
         beq     L5CFB
         dex
@@ -3816,28 +3816,28 @@ L5CF0:  bit     double_click_flag
 
 L5CF8:  jmp     start_icon_drag
 
+        ;; Open-Apple: Extend selection (if in same window)
 L5CFB:  bit     BUTN0
-        bpl     L5D08
+        bpl     replace
         lda     selected_window_index
-        cmp     active_window_id
-        beq     L5D0B
-L5D08:  jsr     clear_selection
-L5D0B:  ldx     selected_icon_count
+        cmp     active_window_id ; same window?
+        beq     :+               ; if so, retain selection
+replace:
+        jsr     clear_selection
+:       ldx     selected_icon_count
         lda     icon_num
         sta     selected_icon_list,x
         inc     selected_icon_count
-        lda     active_window_id
-        sta     selected_window_index
-        lda     active_window_id
-        sta     getwinport_params2::window_id
+
+        copy    active_window_id, selected_window_index
+        copy    active_window_id, getwinport_params2::window_id
+
         jsr     get_set_port2
-        lda     icon_num
-        sta     icon_param
+        copy    icon_num, icon_param
         jsr     icon_window_to_screen
         jsr     offset_grafport2_and_set
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
-        lda     active_window_id
-        sta     getwinport_params2::window_id
+        copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
         lda     icon_num
         jsr     icon_screen_to_window
@@ -3846,43 +3846,55 @@ L5D0B:  ldx     selected_icon_count
         bmi     start_icon_drag
         jmp     handle_double_click
 
+        ;; --------------------------------------------------
+
 start_icon_drag:
-        lda     icon_num
-        sta     drag_drop_param
+        copy    icon_num, drag_drop_param
         DESKTOP_RELAY_CALL DT_DRAG_HIGHLIGHTED, drag_drop_param
         tax
         lda     drag_drop_param
-        beq     L5DA6
+        beq     desktop
+
         jsr     jt_drop
+
+        ;; Failed?
         cmp     #$FF
-        bne     L5D77
-        jsr     L5DEC
+        bne     :+
+        jsr     swap_in_desktop_icon_table
         jmp     redraw_windows_and_desktop
 
-L5D77:  lda     drag_drop_param
+        ;; Dropped on trash?
+:       lda     drag_drop_param
         cmp     trash_icon_num
-        bne     L5D8E
+        bne     :+
+        ;; Update used/free for same-vol windows
         lda     active_window_id
         jsr     update_used_free_for_vol_windows
         lda     active_window_id
         jsr     select_and_refresh_window
         jmp     redraw_windows_and_desktop
 
-L5D8E:  lda     drag_drop_param
-        bmi     L5D99
-        jsr     L6A3F
+        ;; Dropped on icon?
+:       lda     drag_drop_param
+        bmi     :+
+        ;; Update used/free for same-vol windows
+        jsr     update_vol_free_used_for_icon
         jmp     redraw_windows_and_desktop
 
-L5D99:  and     #$7F
+        ;; Dropped on window!
+:       and     #$7F            ; mask off window number
         pha
         jsr     update_used_free_for_vol_windows
         pla
         jsr     select_and_refresh_window
         jmp     redraw_windows_and_desktop
 
-L5DA6:  cpx     #$02
+        ;; --------------------------------------------------
+
+desktop:
+        cpx     #$02
         bne     :+
-        jmp     L5DEC
+        jmp     swap_in_desktop_icon_table
 
 :       cpx     #$FF
         beq     L5DF7
@@ -3891,24 +3903,29 @@ L5DA6:  cpx     #$02
         jsr     get_set_port2
         jsr     cached_icons_window_to_screen
         jsr     offset_grafport2_and_set
+
         ldx     selected_icon_count
         dex
-L5DC4:  txa
+:       txa
         pha
         lda     selected_icon_list,x
-        sta     LE22E
-        DESKTOP_RELAY_CALL DT_REDRAW_ICON, LE22E
+        sta     redraw_icon_param
+        DESKTOP_RELAY_CALL DT_REDRAW_ICON, redraw_icon_param
         pla
         tax
         dex
-        bpl     L5DC4
+        bpl     :-
+
         lda     active_window_id
         sta     getwinport_params2::window_id
         jsr     get_set_port2
         jsr     update_scrollbars
         jsr     cached_icons_screen_to_window
         jsr     reset_grafport3
-L5DEC:  jsr     StoreWindowIconTable
+
+;;; Used as additional entry point
+swap_in_desktop_icon_table:
+        jsr     StoreWindowIconTable
         copy    #0, cached_window_id
         jmp     LoadWindowIconTable
 
@@ -3935,7 +3952,7 @@ handle_double_click:
         lda     icon_num           ; handle directory
         jsr     open_folder_or_volume_icon
         bmi     :+
-        jmp     L5DEC
+        jmp     swap_in_desktop_icon_table
 :       rts
 
 L5E28:  sta     L5E77
@@ -3980,7 +3997,8 @@ L5E74:  jmp     launch_file     ; when double-clicked
 L5E77:  .byte   0
 
 .endproc
-        L5DEC := L5CDA::L5DEC
+        handle_file_icon_click := handle_file_icon_click_impl::start
+        swap_in_desktop_icon_table := handle_file_icon_click_impl::swap_in_desktop_icon_table
 
 ;;; ============================================================
 
@@ -4878,7 +4896,7 @@ L6863:  lda     drag_drop_param
         pla
         jmp     select_and_refresh_window
 
-L6872:  jsr     L6A3F
+L6872:  jsr     update_vol_free_used_for_icon
         jmp     redraw_windows_and_desktop
 
 L6878:  txa
@@ -5021,8 +5039,10 @@ L6A3E:  .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Update used/free values for windows related to volume icon
+;;; Input: icon number in A
 
-.proc L6A3F
+.proc update_vol_free_used_for_icon
         ptr := $6
         path_buf := $220
 

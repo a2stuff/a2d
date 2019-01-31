@@ -1006,9 +1006,8 @@ LE22C:  .byte   0
 icon_param3:
         .byte   0
 
-        ;; DT_UNHIGHLIGHT_ICON params
-LE22E:
-        .byte   $00
+redraw_icon_param:
+        .byte   0
 
         ;; DT_HIGHLIGHT_ICON params
         ;; DT_UNHIGHLIGHT_ICON params
