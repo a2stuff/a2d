@@ -116,15 +116,16 @@ L23DF:  .byte   $00,$00,$00
 str_f1: PASCAL_STRING "DESKTOP1"
 str_f2: PASCAL_STRING "DESKTOP2"
 str_f3: PASCAL_STRING "DESK.ACC"
-str_f4: PASCAL_STRING "SELECTOR.LIST"
-str_f5: PASCAL_STRING "SELECTOR"
-str_f6: PASCAL_STRING "PRODOS"
-str_f7: PASCAL_STRING "Quit.tmp"
+str_f4: PASCAL_STRING "PREVIEW"
+str_f5: PASCAL_STRING "SELECTOR.LIST"
+str_f6: PASCAL_STRING "SELECTOR"
+str_f7: PASCAL_STRING "PRODOS"
+str_f8: PASCAL_STRING "Quit.tmp"
 
 filename_table:
-        .addr str_f1,str_f2,str_f3,str_f4,str_f5,str_f6,str_f7
+        .addr str_f1,str_f2,str_f3,str_f4,str_f5,str_f6,str_f7,str_f8
 
-num_filenames = 7
+num_filenames = 8
 
 str_copying_to_ramcard:
         PASCAL_STRING "Copying Apple II DeskTop into RAMCard"
