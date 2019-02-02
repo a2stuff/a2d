@@ -9251,7 +9251,7 @@ loop:   lda     step
 erase:  lda     step
         clc
         adc     #2
-        cmp     #14
+        cmp     #13
         bcs     next
         asl     a
         asl     a
