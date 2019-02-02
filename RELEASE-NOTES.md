@@ -56,6 +56,7 @@ subdirectory.
 * Correct odd behavior for file type $08. (#103)
 * New Folder/Rename file dialog no longer truncated after IP. (#118)
 * Correct rendering issues with desktop volume icons. (#117)
+* Prevent occasional rectangle drawn on desktop after window close. (#120)
 * Desk Accessories:
   * Date: Read-only on systems with a clock. On systems without a clock, date is saved for next session. (#30, #39)
   * Calculator: don't mis-paint when moved offscreen and other fixes. (#33, #34)
