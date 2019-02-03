@@ -3037,9 +3037,9 @@ textbg_white:  .byte   $7F
 press_ok_to_rect:  DEFINE_RECT 39,25,360,80
 prompt_rect:  DEFINE_RECT 40,60,360,80
 current_target_file_pos:  DEFINE_POINT 65,43
-LAE82:  DEFINE_POINT 65,51
-LAE86:  DEFINE_RECT 65,35,394,42
-LAE8E:  DEFINE_RECT 65,43,394,50
+current_dest_file_pos:  DEFINE_POINT 65,51
+current_target_file_rect:  DEFINE_RECT 65,35,394,42
+current_dest_file_rect:  DEFINE_RECT 65,43,394,50
 
 str_cancel_label:
         PASCAL_STRING "Cancel        Esc"

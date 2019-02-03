@@ -9774,6 +9774,7 @@ not_trash:
 finish: jsr     done_dialog_phase1
 
         ;; Restore space to start of icon name
+        ;; BUG: For drop on window, updates arbitrary icon. Also unnecessary???
         lda     drag_drop_param
         jsr     icon_entry_name_lookup
         ldy     #1
@@ -12792,8 +12793,8 @@ do2:    ldy     #1
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        jsr     paint_rectAE86_white
-        jsr     paint_rectAE8E_white
+        jsr     clear_target_file_rect
+        jsr     clear_dest_file_rect
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #$03
         lda     (ptr),y
@@ -12814,7 +12815,7 @@ do2:    ldy     #1
         sta     ptr+1
         stx     ptr
         jsr     copy_name_to_buf1_adjust_case
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LAE82
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::current_dest_file_pos
         addr_call draw_text1, path_buf1
         yax_call MGTK_RELAY, MGTK::MoveTo, desktop_aux::copy_file_count_pos2
         addr_call draw_text1, str_file_count
@@ -12918,7 +12919,7 @@ do2:    ldy     #1
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        jsr     paint_rectAE86_white
+        jsr     clear_target_file_rect
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #3
         lda     (ptr),y
@@ -13091,7 +13092,7 @@ do3:    ldy     #1
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        jsr     paint_rectAE86_white
+        jsr     clear_target_file_rect
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #3
         lda     ($06),y
@@ -13378,7 +13379,7 @@ do3:    ldy     #1
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        jsr     paint_rectAE86_white
+        jsr     clear_target_file_rect
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #3
         lda     ($06),y
@@ -13465,7 +13466,7 @@ do3:    ldy     #1
         jsr     compose_file_count_string
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        jsr     paint_rectAE86_white
+        jsr     clear_target_file_rect
         jsr     copy_dialog_param_addr_to_ptr
         ldy     #3
         lda     ($06),y
@@ -14928,14 +14929,14 @@ nonzero_flag:                ; high bit set once a non-zero digit seen
 
 ;;; ============================================================
 
-paint_rectAE86_white:
+clear_target_file_rect:
         jsr     set_fill_white
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::LAE86
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::current_target_file_rect
         rts
 
-paint_rectAE8E_white:
+clear_dest_file_rect:
         jsr     set_fill_white
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::LAE8E
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::current_dest_file_rect
         rts
 
 set_fill_white:
