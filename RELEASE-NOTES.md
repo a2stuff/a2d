@@ -23,7 +23,7 @@ https://github.com/inexorabletash/a2d/issues
 * DAs with high bit in aux-type set are skipped. (#102)
 * Icons for volumes positioned more predictably and sensibly. (#94)
 * GS/OS filenames (supported by ProDOS 2.5) are shown with correct case. (#64)
-* Text and Graphics files can be previewed without leaving DeskTop (File > Open, or double-click).
+
 
 ### Additional Desk Accessories
 
@@ -42,8 +42,21 @@ Note that several of the new Desk Accessories will not work with older versions
 of Apple II DeskTop/MouseDesk, due to dependence on new APIs.
 
 The former "Show Text File" DA is now part of automatic preview
-functionality (just use File > Open), and resides in the new `PREVIEW`
-subdirectory.
+functionality (see below).
+
+
+### Automatic Preview
+
+Text and Graphics files with the correct file types can be previewed
+without leaving DeskTop; select the file icon then select File > Open,
+or double-click the file icon. Text files must be type TXT ($04).
+Graphics files must be type FOT ($08).
+
+To preview files of other types, you can copy the preview handlers
+named `SHOW.TEXT.FILE` and `SHOW.IMAGE.FILE` from the `PREVIEW` folder
+to the `DESK.ACC` folder, and restart DeskTop. To use them, select the
+file, then select the appropriate command from the Apple menu.
+
 
 ### Notable Fixes
 
@@ -66,6 +79,13 @@ subdirectory.
   * Macintosh LC IIe Option Card: don't crash on startup. (#93)
   * IIgs: color DHR is re-enabled on exit. (#43)
   * KEGS-based IIgs emulators no longer crash on startup. (#85)
+
+
+### Known Issues
+
+* Selector app is unmodified.
+* Special > Disk Copy app is unmodified, and may suffer bugs fixed in DeskTop (e.g. SmartPort behavior)
+
 
 # 1.1
 
