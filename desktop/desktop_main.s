@@ -15140,13 +15140,6 @@ id_FBBF: .byte   0
 
 end:
 .endscope
-;;; ============================================================
-;;; Initialize video
-
-.scope
-        jsr     desktop_main::set_mono_mode
-        ;; fall through
-.endscope
 
 ;;; ============================================================
 ;;; Back up DEVLST
@@ -15187,6 +15180,7 @@ end:
 
 .scope
         MGTK_RELAY_CALL MGTK::StartDeskTop, startdesktop_params
+        jsr     desktop_main::set_mono_mode
         MGTK_RELAY_CALL MGTK::SetMenu, splash_menu
         MGTK_RELAY_CALL MGTK::SetZP1, zp_use_flag0
         MGTK_RELAY_CALL MGTK::SetCursor, watch_cursor
