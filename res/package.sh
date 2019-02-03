@@ -7,13 +7,16 @@ set -e
 
 CADIUS="${CADIUS:-$HOME/dev/cadius/bin/release/cadius}"
 
-DAS=$(cat desk.acc/TARGETS)
-PRS=$(cat preview/TARGETS)
+DA_DIRS="desk.acc preview"
 
 PACKDIR="out/package"
 FINFO="$PACKDIR/_FileInformation.txt"
 IMGFILE="out/A2DeskTop.po"
 VOLNAME="A2.DeskTop"
+
+function titlecase {
+    echo "$@" | perl -pne 's/(^(.)|\.(.))/uc($1)/eg'
+}
 
 mkdir -p "$PACKDIR"
 echo "" > "$FINFO"
@@ -21,15 +24,12 @@ echo "" > "$FINFO"
 # Prepare _FileInformation.txt file with extra ProDOS file entry data
 # and copy renamed files into package directory.
 
-for file in $DAS; do
-    ucfile=$(echo $file | tr a-z A-Z)
-    echo "$ucfile=Type(F1),AuxType(0640),VersionCreate(00),MinVersion(00),Access(E3),FolderInfo1(000000000000000000000000000000000000),FolderInfo2(000000000000000000000000000000000000)" >> "$FINFO"
-    cp "desk.acc/out/$file.built" "out/package/$ucfile"
-done
-for file in $PRS; do
-    ucfile=$(echo $file | tr a-z A-Z)
-    echo "$ucfile=Type(F1),AuxType(0640),VersionCreate(00),MinVersion(00),Access(E3),FolderInfo1(000000000000000000000000000000000000),FolderInfo2(000000000000000000000000000000000000)" >> "$FINFO"
-    cp "preview/out/$file.built" "out/package/$ucfile"
+for da_dir in $DA_DIRS; do
+    for file in $(cat $da_dir/TARGETS); do
+        tcfile=$(titlecase $file)
+        echo "$tcfile=Type(F1),AuxType(0640),VersionCreate(00),MinVersion(00),Access(E3),FolderInfo1(000000000000000000000000000000000000),FolderInfo2(000000000000000000000000000000000000)" >> "$FINFO"
+        cp "$da_dir/out/$file.built" "out/package/$tcfile"
+    done
 done
 
 cat >> "$FINFO" <<EOF
@@ -42,22 +42,21 @@ cp "desktop/out/DESKTOP2.built" "$PACKDIR/DeskTop2"
 
 # Create a new disk image.
 
+rm -f $IMGFILE
+
 $CADIUS CREATEVOLUME $IMGFILE $VOLNAME 800KB
-$CADIUS CREATEFOLDER $IMGFILE "/$VOLNAME/Desk.Acc"
-$CADIUS CREATEFOLDER $IMGFILE "/$VOLNAME/Preview"
+for da_dir in $DA_DIRS; do
+    $CADIUS CREATEFOLDER $IMGFILE "/$VOLNAME/$(titlecase $da_dir)"
+done
 
 # Add the files into the disk image.
 
-for file in $DAS; do
-    ucfile=$(echo $file | tr a-z A-Z)
-    $CADIUS ADDFILE $IMGFILE "/$VOLNAME/Desk.Acc" $PACKDIR/$ucfile
-done
-
-for file in $PRS; do
-    ucfile=$(echo $file | tr a-z A-Z)
-    $CADIUS ADDFILE $IMGFILE "/$VOLNAME/Preview" $PACKDIR/$ucfile
+for da_dir in $DA_DIRS; do
+    for file in $(cat $da_dir/TARGETS); do
+        $CADIUS ADDFILE $IMGFILE "/$VOLNAME/$(titlecase $da_dir)" "$PACKDIR/$(titlecase $file)"
+    done
 done
 
 for file in DeskTop.system DeskTop2; do
-    $CADIUS ADDFILE $IMGFILE "/$VOLNAME" $PACKDIR/$file
+    $CADIUS ADDFILE $IMGFILE "/$VOLNAME" "$PACKDIR/$file"
 done
