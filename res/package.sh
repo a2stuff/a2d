@@ -35,10 +35,20 @@ done
 cat >> "$FINFO" <<EOF
 DeskTop.system=Type(FF),AuxType(0),VersionCreate(00),MinVersion(00),Access(E3),FolderInfo1(000000000000000000000000000000000000),FolderInfo2(000000000000000000000000000000000000)
 DeskTop2=Type(F1),AuxType(0),VersionCreate(00),MinVersion(00),Access(E3),FolderInfo1(000000000000000000000000000000000000),FolderInfo2(000000000000000000000000000000000000)
+ProDOS=Type(FF),AuxType(0),VersionCreate(00),MinVersion(00),Access(E3),FolderInfo1(000000000000000000000000000000000000),FolderInfo2(000000000000000000000000000000000000)
+BASIC.system=Type(FF),AuxType(0),VersionCreate(00),MinVersion(00),Access(E3),FolderInfo1(000000000000000000000000000000000000),FolderInfo2(000000000000000000000000000000000000)
 EOF
 
 cp "desktop.system/out/desktop.system.SYS" "$PACKDIR/DeskTop.system"
 cp "desktop/out/DESKTOP2.built" "$PACKDIR/DeskTop2"
+
+# If ProDOS/BASIC.system are present in res/, install them too.
+if [ -e "res/PRODOS" ]; then
+    cp "res/PRODOS" "$PACKDIR/ProDOS"
+fi
+if [ -e "res/BASIC.SYSTEM" ]; then
+    cp "res/BASIC.SYSTEM" "$PACKDIR/BASIC.system"
+fi
 
 # Create a new disk image.
 
@@ -59,4 +69,10 @@ done
 
 for file in DeskTop.system DeskTop2; do
     $CADIUS ADDFILE $IMGFILE "/$VOLNAME" "$PACKDIR/$file"
+done
+
+for file in ProDOS BASIC.system; do
+    if [ -e "$PACKDIR/$file" ]; then
+        $CADIUS ADDFILE $IMGFILE "/$VOLNAME" "$PACKDIR/$file"
+    fi
 done
