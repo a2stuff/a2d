@@ -5,6 +5,7 @@
 
 # Undiscoverable Features
 
+* When dragging a selection of files to a destination on the same volume, the files will be moved by default. Hold down **△** before letting go of the mouse button to force a copy instead. Files dragged to a different volume will always be copied.
 * Hold down **△** when launching `DESKTOP.SYSTEM` to prevent DeskTop from being copied to a RAM card.
 * Desk Accessory files with high bit set in the aux type field will not appear in the menu.
 * You can't run a Binary file by double-clicking, but you can run it with the **△-O** shortcut or holding down **△** or **▲** key while selecting **File > Open**.
