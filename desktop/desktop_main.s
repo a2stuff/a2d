@@ -12973,7 +12973,6 @@ close:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_about_dialog
 :       copy    #0, has_input_field_flag
         jsr     open_dialog_window
 
-        ;;  TODO: Looks ugly due to overwrite of ascenders; adjust spacing
         axy_call draw_dialog_label, 2, desktop_aux::str_copy_from
         axy_call draw_dialog_label, 3, desktop_aux::str_copy_to
         bit     move_flag
@@ -14112,19 +14111,14 @@ done:   jmp     reset_grafport3a
         lsr16   result
         sub16   #200, result, dialog_label_pos
         pla
+        and     #$7F            ; strip "center?" flag
         tay
 
-skip:   dey                     ; ypos = (Y-1) * 8 + dialog_label_base_pos::ycoord
-        tya
-        asl     a
-        asl     a
-        asl     a
-        clc
-        adc     dialog_label_base_pos::ycoord
-        sta     dialog_label_pos+2
-        lda     dialog_label_base_pos::ycoord+1
-        adc     #0
-        sta     dialog_label_pos+3
+        ;; y = base + desktop_aux::dialog_label_height * line
+skip:   copy16  dialog_label_base_pos::ycoord, dialog_label_pos::ycoord
+:       add16   dialog_label_pos::ycoord, #desktop_aux::dialog_label_height, dialog_label_pos::ycoord
+        dey
+        bne     :-
         MGTK_RELAY_CALL MGTK::MoveTo, dialog_label_pos
         addr_call_indirect draw_text1, ptr
         ldx     dialog_label_pos

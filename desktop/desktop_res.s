@@ -298,7 +298,7 @@ alert_bitmap2_params:
 
 .proc winfo_alert_dialog
         width = 400
-        height = 100
+        height = 107
 
 window_id:      .byte   $0F
 options:        .byte   MGTK::Option::dialog_box
@@ -316,7 +316,7 @@ mincontlength:  .word   50
 maxcontwidth:   .word   500
 maxcontlength:  .word   140
 port:
-viewloc:        DEFINE_POINT 75, 35
+viewloc:        DEFINE_POINT (screen_width - width) / 2, (screen_height - height) / 2
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
 cliprect:       DEFINE_RECT 0, 0, width, height
@@ -403,7 +403,7 @@ nextwinfo:      .addr   0
 
 .proc winfo_about_dialog
         width = 400
-        height = 110
+        height = 120
 
 window_id:      .byte   $18
 options:        .byte   MGTK::Option::dialog_box
@@ -421,7 +421,8 @@ mincontlength:  .word   50
 maxcontwidth:   .word   500
 maxcontlength:  .word   140
 port:
-viewloc:        DEFINE_POINT (screen_width - width) / 2, 40
+viewloc:        DEFINE_POINT (screen_width - width) / 2, (screen_height - height) / 2
+
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
 cliprect:       DEFINE_RECT 0, 0, width, height
@@ -476,21 +477,21 @@ nextwinfo:      .addr   0
         ;; Coordinates for labels?
         .byte   $28,$00,$25,$00,$68,$01,$2F,$00,$2D,$00,$2E,$00
 
-name_input_rect:  DEFINE_RECT 40,61,360,71, name_input_rect
-name_input_textpos: DEFINE_POINT 45,70, name_input_textpos
+name_input_rect:  DEFINE_RECT 40,61+6,360,71+6, name_input_rect
+name_input_textpos: DEFINE_POINT 45,70+6, name_input_textpos
 pos_dialog_title: DEFINE_POINT 0, 18, pos_dialog_title
 
 point7: DEFINE_POINT 40,18, point7
 
 dialog_label_base_pos:
-        DEFINE_POINT 40,35, dialog_label_base_pos
+        DEFINE_POINT 40,35-5, dialog_label_base_pos
 
         dialog_label_default_x = 40
 dialog_label_pos:
         DEFINE_POINT dialog_label_default_x,0, dialog_label_pos
 
 .proc name_input_mapinfo
-        DEFINE_POINT 75, 35
+        DEFINE_POINT 80, 35+7
         .addr   MGTK::screen_mapbits
         .byte   MGTK::screen_mapwidth
         .byte   0

@@ -3194,7 +3194,7 @@ special_menu:
 
         ;; Rects
         alert_dialog_width = 400
-        alert_dialog_height = 100
+        alert_dialog_height = 107
 
 confirm_dialog_outer_rect:  DEFINE_RECT 4,2,alert_dialog_width-4,alert_dialog_height-2
 confirm_dialog_inner_rect:  DEFINE_RECT 5,3,alert_dialog_width-5,alert_dialog_height-3
@@ -3220,8 +3220,8 @@ all_label_pos:  DEFINE_POINT 325,alert_dialog_height-9
 textbg_black:  .byte   $00
 textbg_white:  .byte   $7F
 
-        dialog_label_height = 8
-        dialog_label_base_y = 27
+        dialog_label_height = 9
+        dialog_label_base_y = 30
         .define dialog_label_row_y(num) (((num)*(dialog_label_height))+(dialog_label_base_y))
 
 clear_dialog_labels_rect:  DEFINE_RECT 39,25,360,alert_dialog_height-20
@@ -3246,7 +3246,7 @@ LAEC7:  PASCAL_STRING "Destination filename:"
         ;; "About" dialog resources
 
         about_dialog_width = 400
-        about_dialog_height = 110
+        about_dialog_height = 120
 
 about_dialog_outer_rect:  DEFINE_RECT 4, 2, about_dialog_width-4, about_dialog_height-2
 about_dialog_inner_rect:  DEFINE_RECT 5, 3, about_dialog_width-5, about_dialog_height-3

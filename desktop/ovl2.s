@@ -255,6 +255,8 @@ L0B47:  .byte   0
 
 ;;; ============================================================
 
+        labels_voffset = 40
+
 L0B48:  cmp16   screentowindow_windowx, #40
         bpl     :+
         return  #$FF
@@ -263,16 +265,24 @@ L0B48:  cmp16   screentowindow_windowx, #40
         return  #$FF
 :       lda     screentowindow_windowy
         sec
-        sbc     #43
+        sbc     #labels_voffset+desktop_aux::dialog_label_height
         sta     screentowindow_windowy
         lda     screentowindow_windowy+1
         sbc     #0
         bpl     :+
         return  #$FF
 :       sta     screentowindow_windowy+1
-        lsr16   screentowindow_windowy
-        lsr16   screentowindow_windowy
-        lsr16   screentowindow_windowy
+
+        ;; Divide by desktop_aux::dialog_label_height
+        ldx     #0
+        lda     screentowindow_windowy
+:       sec
+        sbc     #desktop_aux::dialog_label_height
+        bmi     :+
+        inx
+        bne     :-              ; always
+
+:       stx     screentowindow_windowy
         lda     screentowindow_windowy
         cmp     #$04
         bcc     L0B98
@@ -328,6 +338,8 @@ L0C1F:  .byte   0
 ;;; Hilight volume label
 ;;; Input: A = volume index
 
+        label_width = 120
+
 L0C20:  ldy     #39
         sty     select_volume_rect::x1
         ldy     #0
@@ -335,28 +347,30 @@ L0C20:  ldy     #39
         tax
         lsr     a               ; / 4
         lsr     a
-        sta     L0CA9           ; columne (0, 1, or 2)
-        beq     L0C5B
-        add16   select_volume_rect::x1, #120, select_volume_rect::x1
+        sta     L0CA9           ; column (0, 1, or 2)
+        beq     :+
+        add16   select_volume_rect::x1, #label_width, select_volume_rect::x1
         lda     L0CA9
         cmp     #1
-        beq     L0C5B
-        add16   select_volume_rect::x1, #120, select_volume_rect::x1
-L0C5B:  asl     L0CA9           ; * 4
+        beq     :+
+        add16   select_volume_rect::x1, #label_width, select_volume_rect::x1
+:       asl     L0CA9           ; * 4
         asl     L0CA9
         txa
         sec
         sbc     L0CA9           ; entry % 4
-        asl     a
-        asl     a
-        asl     a
-        clc
-        adc     #$2B
+        tax
+        lda     #0
+:       clc
+        adc     #desktop_aux::dialog_label_height
+        dex
+        bpl     :-
+        adc     #labels_voffset
         sta     select_volume_rect::y1
-        lda     #$00
+        lda     #0
         sta     select_volume_rect::y1+1
-        add16   select_volume_rect::x1, #119, select_volume_rect::x2
-        add16   select_volume_rect::y1, #7, select_volume_rect::y2
+        add16   select_volume_rect::x1, #label_width-1, select_volume_rect::x2
+        add16   select_volume_rect::y1, #desktop_aux::dialog_label_height-1, select_volume_rect::y2
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, select_volume_rect
         rts
