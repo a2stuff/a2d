@@ -43,7 +43,7 @@ L085F:  bit     LD887
         lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::clear_dialog_labels_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         jsr     desktop_main::clear_path_buf1
@@ -67,7 +67,7 @@ L08B7:  lda     path_buf1
         lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::clear_dialog_labels_rect
         ldx     LD887
         lda     DEVLST,x
         sta     L09D8
@@ -86,7 +86,7 @@ L0902:  jsr     desktop_main::prompt_input_loop
 L090C:  lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::clear_dialog_labels_rect
         axy_call desktop_main::draw_dialog_label, 1, desktop_aux::str_formatting
         lda     L09D7
         jsr     L12C1
@@ -99,7 +99,7 @@ L090C:  lda     winfo_alert_dialog
 L0942:  lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::clear_dialog_labels_rect
         axy_call desktop_main::draw_dialog_label, 1, desktop_aux::str_erasing
         addr_call upcase_string, path_buf1
         ldxy    #path_buf1
@@ -174,7 +174,7 @@ L0A18:  bit     LD887
         lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::clear_dialog_labels_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
         jsr     desktop_main::clear_path_buf1
@@ -198,7 +198,7 @@ L0A7A:  lda     path_buf1
         lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::clear_dialog_labels_rect
         copy    #$00, has_input_field_flag
         ldx     LD887
         lda     DEVLST,x
@@ -217,7 +217,7 @@ L0AC7:  jsr     desktop_main::prompt_input_loop
 L0AD1:  lda     winfo_alert_dialog
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::clear_dialog_labels_rect
         axy_call desktop_main::draw_dialog_label, 1, desktop_aux::str_erasing
         addr_call upcase_string, path_buf1
         jsr     desktop_main::set_cursor_watch
@@ -323,37 +323,42 @@ L0C0F:  lda     L0C1E
 
 L0C1E:  .byte   0
 L0C1F:  .byte   0
-L0C20:  ldy     #$27
-        sty     rect_D888
-        ldy     #$00
-        sty     rect_D888+1
+
+;;; ============================================================
+;;; Hilight volume label
+;;; Input: A = volume index
+
+L0C20:  ldy     #39
+        sty     select_volume_rect::x1
+        ldy     #0
+        sty     select_volume_rect::x1+1
         tax
+        lsr     a               ; / 4
         lsr     a
-        lsr     a
-        sta     L0CA9
+        sta     L0CA9           ; columne (0, 1, or 2)
         beq     L0C5B
-        add16   rect_D888, #$0078, rect_D888
+        add16   select_volume_rect::x1, #120, select_volume_rect::x1
         lda     L0CA9
-        cmp     #$01
+        cmp     #1
         beq     L0C5B
-        add16   rect_D888, #$0078, rect_D888
-L0C5B:  asl     L0CA9
+        add16   select_volume_rect::x1, #120, select_volume_rect::x1
+L0C5B:  asl     L0CA9           ; * 4
         asl     L0CA9
         txa
         sec
-        sbc     L0CA9
+        sbc     L0CA9           ; entry % 4
         asl     a
         asl     a
         asl     a
         clc
         adc     #$2B
-        sta     rect_D888+2
+        sta     select_volume_rect::y1
         lda     #$00
-        sta     rect_D888+3
-        add16   rect_D888, #$0077, rect_D888+4
-        add16   rect_D888+2, #$0007, rect_D888+6
+        sta     select_volume_rect::y1+1
+        add16   select_volume_rect::x1, #119, select_volume_rect::x2
+        add16   select_volume_rect::y1, #7, select_volume_rect::y2
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D888
+        MGTK_RELAY_CALL MGTK::PaintRect, select_volume_rect
         rts
 
 L0CA9:  .byte   0
@@ -366,10 +371,10 @@ L0CB7:  rts
         ;; Called from desktop_main
 L0CB8:  lda     LD887
         bpl     L0CC1
-        lda     #$00
+        lda     #0
         beq     L0CCE
 L0CC1:  clc
-        adc     #$04
+        adc     #4
         cmp     LD890
         bcs     L0CD4
         pha

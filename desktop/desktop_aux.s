@@ -3010,23 +3010,26 @@ special_menu:
 ;;; ============================================================
 
         ;; Rects
-confirm_dialog_outer_rect:  DEFINE_RECT 4,2,396,98
-confirm_dialog_inner_rect:  DEFINE_RECT 5,3,395,97
-cancel_button_rect:  DEFINE_RECT 40,81,140,92
+        alert_dialog_width = 400
+        alert_dialog_height = 100
+
+confirm_dialog_outer_rect:  DEFINE_RECT 4,2,alert_dialog_width-4,alert_dialog_height-2
+confirm_dialog_inner_rect:  DEFINE_RECT 5,3,alert_dialog_width-5,alert_dialog_height-3
+cancel_button_rect:  DEFINE_RECT 40,alert_dialog_height-19,140,alert_dialog_height-8
 LAE18:  DEFINE_RECT 193,30,293,41
-ok_button_rect:  DEFINE_RECT 260,81,360,92
-yes_button_rect:  DEFINE_RECT 200,81,240,92
-no_button_rect:  DEFINE_RECT 260,81,300,92
-all_button_rect:  DEFINE_RECT 320,81,360,92
+ok_button_rect:  DEFINE_RECT 260,alert_dialog_height-19,360,alert_dialog_height-8
+yes_button_rect:  DEFINE_RECT 200,alert_dialog_height-19,240,alert_dialog_height-8
+no_button_rect:  DEFINE_RECT 260,alert_dialog_height-19,300,alert_dialog_height-8
+all_button_rect:  DEFINE_RECT 320,alert_dialog_height-19,360,alert_dialog_height-8
 
 str_ok_label:
         PASCAL_STRING {"OK            ",GLYPH_RETURN}
 
-ok_label_pos:  DEFINE_POINT 265,91
-cancel_label_pos:  DEFINE_POINT 45,91
-yes_label_pos:  DEFINE_POINT 205,91
-no_label_pos:  DEFINE_POINT 265,91
-all_label_pos:  DEFINE_POINT 325,91
+ok_label_pos:  DEFINE_POINT 265,alert_dialog_height-9
+cancel_label_pos:  DEFINE_POINT 45,alert_dialog_height-9
+yes_label_pos:  DEFINE_POINT 205,alert_dialog_height-9
+no_label_pos:  DEFINE_POINT 265,alert_dialog_height-9
+all_label_pos:  DEFINE_POINT 325,alert_dialog_height-9
 
         .byte   $1C,$00,$70,$00
         .byte   $1C,$00,$87,$00
@@ -3034,12 +3037,16 @@ all_label_pos:  DEFINE_POINT 325,91
 textbg_black:  .byte   $00
 textbg_white:  .byte   $7F
 
-press_ok_to_rect:  DEFINE_RECT 39,25,360,80
-prompt_rect:  DEFINE_RECT 40,60,360,80
-current_target_file_pos:  DEFINE_POINT 65,43
-current_dest_file_pos:  DEFINE_POINT 65,51
-current_target_file_rect:  DEFINE_RECT 65,35,394,42
-current_dest_file_rect:  DEFINE_RECT 65,43,394,50
+        dialog_label_height = 8
+        dialog_label_base_y = 27
+        .define dialog_label_row_y(num) (((num)*(dialog_label_height))+(dialog_label_base_y))
+
+clear_dialog_labels_rect:  DEFINE_RECT 39,25,360,alert_dialog_height-20
+prompt_rect:  DEFINE_RECT 40,60,360,alert_dialog_height-20
+current_target_file_pos:  DEFINE_POINT 65,dialog_label_row_y {2}
+current_dest_file_pos:  DEFINE_POINT 65,dialog_label_row_y {3}
+current_target_file_rect:  DEFINE_RECT 65,(dialog_label_row_y {1}),394,(dialog_label_row_y {2})-1
+current_dest_file_rect:  DEFINE_RECT 65,(dialog_label_row_y {2}),394,(dialog_label_row_y {3})-1
 
 str_cancel_label:
         PASCAL_STRING "Cancel        Esc"
@@ -3054,8 +3061,12 @@ LAEB6:  PASCAL_STRING "Source filename:"
 LAEC7:  PASCAL_STRING "Destination filename:"
 
         ;; "About" dialog resources
-about_dialog_outer_rect:  DEFINE_RECT 4, 2, 396, 108
-about_dialog_inner_rect:  DEFINE_RECT 5, 3, 395, 107
+
+        about_dialog_width = 400
+        about_dialog_height = 110
+
+about_dialog_outer_rect:  DEFINE_RECT 4, 2, about_dialog_width-4, about_dialog_height-2
+about_dialog_inner_rect:  DEFINE_RECT 5, 3, about_dialog_width-5, about_dialog_height-3
 
 str_about1:  PASCAL_STRING "Apple II DeskTop"
 str_about2:  PASCAL_STRING "Copyright Apple Computer Inc., 1986"
@@ -3085,9 +3096,9 @@ str_large_prompt:
         PASCAL_STRING "This file is too large to copy, click OK to continue."
 
 copy_file_count_pos:
-        DEFINE_POINT 110, 35
+        DEFINE_POINT 110, dialog_label_row_y {1}
 copy_file_count_pos2:
-        DEFINE_POINT 170, 59
+        DEFINE_POINT 170, dialog_label_row_y {4}
 
         ;; "Delete" dialog strings
 str_delete_title:
@@ -3103,12 +3114,14 @@ str_delete_remaining:
 str_delete_locked_file:
         PASCAL_STRING "This file is locked, do you want to delete it anyway ?"
 
-LB16A:  DEFINE_POINT 145, 59
+delete_file_count_pos:
+        DEFINE_POINT 145, dialog_label_row_y {4}
 
 delete_remaining_count_pos:
-        DEFINE_POINT 200, 59
+        DEFINE_POINT 200, dialog_label_row_y {4}
 
-LB172:  DEFINE_POINT 300, 59
+delete_file_count_pos2:
+        DEFINE_POINT 300, dialog_label_row_y {4}
 
         ;; "New Folder" dialog strings
 str_new_folder_title:
@@ -3149,12 +3162,12 @@ str_info_blocks:
 str_colon:
         PASCAL_STRING ": "
 
-unlock_remaining_count_pos2:  DEFINE_POINT 160,59
-lock_remaining_count_pos2:  DEFINE_POINT 145,59
-files_pos:  DEFINE_POINT 200,59
-files_pos2:  DEFINE_POINT 185,59
-unlock_remaining_count_pos:  DEFINE_POINT 205,59
-lock_remaining_count_pos: DEFINE_POINT 195,59
+unlock_remaining_count_pos2:  DEFINE_POINT 160,dialog_label_row_y {4}
+lock_remaining_count_pos2:  DEFINE_POINT 145,dialog_label_row_y {4}
+files_pos:  DEFINE_POINT 200,dialog_label_row_y {4}
+files_pos2:  DEFINE_POINT 185,dialog_label_row_y {4}
+unlock_remaining_count_pos:  DEFINE_POINT 205,dialog_label_row_y {4}
+lock_remaining_count_pos: DEFINE_POINT 195,dialog_label_row_y {4}
 
 str_format_disk:  PASCAL_STRING "Format a Disk ..."
 str_select_format:  PASCAL_STRING "Select the location where the disk is to be formatted"
