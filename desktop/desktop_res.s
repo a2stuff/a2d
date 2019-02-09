@@ -558,33 +558,35 @@ dialog_label_pos:
         ;; ???
         .byte   $00
 
-rect_D6D8:
+entry_picker_outer_rect:
         DEFINE_RECT 4,2,346,108
-rect_D6E0:
+entry_picker_inner_rect:
         DEFINE_RECT 5,3,345,107
 
         ;; Line endpoints
-pos_D6E8:
+entry_picker_line1_start:
         DEFINE_POINT 6,22
-pos_D6EC:
+entry_picker_line1_end:
         DEFINE_POINT 344,22
 
         ;; Line endpoints
-pos_D6F0:
+entry_picker_line2_start:
         DEFINE_POINT 6,89
-pos_D6F4:
+entry_picker_line2_end:
         DEFINE_POINT 344,89
 
-rect_D6F8:
+entry_picker_ok_rect:
         DEFINE_RECT 210,92,310,103
 
-rect_D700:
+entry_picker_cancel_rect:
         DEFINE_RECT 40,92,140,103
 
-pos_D708:
+entry_picker_ok_pos:
         DEFINE_POINT 215,102
-pos_D70C:
+entry_picker_cancel_pos:
         DEFINE_POINT 45,102
+
+        ;; ???
         .word   130,7,220,19
 
 add_an_entry_label:
@@ -621,10 +623,10 @@ never_label:
 enter_the_full_pathname_label2:
         PASCAL_STRING "Enter the full pathname of the run list file:"
 
-rect_D877:
-        DEFINE_RECT 0,0,0,0
+entry_picker_item_rect:
+        DEFINE_RECT 0,0,0,0,entry_picker_item_rect
 
-rect_D87F:
+entry_picker_all_items_rect:
         DEFINE_RECT 6,23,344,87
 
 LD887:

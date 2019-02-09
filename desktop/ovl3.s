@@ -407,16 +407,16 @@ L9390:  MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entry_picker
         lda     winfo_entry_picker
         jsr     desktop_main::set_port_from_window_id
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_D6D8
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_D6E0
-        MGTK_RELAY_CALL MGTK::MoveTo, pos_D6E8
-        MGTK_RELAY_CALL MGTK::LineTo, pos_D6EC
-        MGTK_RELAY_CALL MGTK::MoveTo, pos_D6F0
-        MGTK_RELAY_CALL MGTK::LineTo, pos_D6F4
+        MGTK_RELAY_CALL MGTK::FrameRect, entry_picker_outer_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, entry_picker_inner_rect
+        MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_line1_start
+        MGTK_RELAY_CALL MGTK::LineTo, entry_picker_line1_end
+        MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_line2_start
+        MGTK_RELAY_CALL MGTK::LineTo, entry_picker_line2_end
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_D6F8
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_D700
+        MGTK_RELAY_CALL MGTK::FrameRect, entry_picker_ok_rect
+        MGTK_RELAY_CALL MGTK::FrameRect, entry_picker_cancel_rect
         jsr     L94A9
         jsr     L94BA
         lda     L938E
@@ -476,14 +476,13 @@ L9471:  cmp     #$10
         bne     L947F
 L947B:  ldax    #220
 L947F:  clc
-        adc     #$0A
+        adc     #10
         sta     dialog_label_pos
         txa
-        adc     #$00
+        adc     #0
         sta     dialog_label_pos+1
         MGTK_RELAY_CALL MGTK::MoveTo, dialog_label_pos
-        lda     $06
-        ldx     $07
+        ldax    $06
         jsr     L94CB
         lda     L94A8
         sta     dialog_label_pos
@@ -494,11 +493,11 @@ L947F:  clc
 L94A7:  .byte   0
 L94A8:  .byte   0
 
-L94A9:  MGTK_RELAY_CALL MGTK::MoveTo, pos_D708
+L94A9:  MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_ok_pos
         addr_call desktop_main::draw_text1, desktop_aux::str_ok_label
         rts
 
-L94BA:  MGTK_RELAY_CALL MGTK::MoveTo, pos_D70C
+L94BA:  MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_cancel_pos
         addr_call desktop_main::draw_text1, desktop_aux::str_cancel_label
         rts
 
@@ -547,7 +546,7 @@ L953F:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, rect_D6F8
+        MGTK_RELAY_CALL MGTK::InRect, entry_picker_ok_rect
         cmp     #MGTK::inrect_inside
         beq     L957C
         lda     L95BF
@@ -559,7 +558,7 @@ L957C:  lda     L95BF
         jmp     L953F
 
 L9584:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D6F8
+        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_ok_rect
         lda     L95BF
         clc
         adc     #$80
@@ -571,7 +570,7 @@ L95A2:  lda     L95BF
         return  #$FF
 
 L95AA:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D6F8
+        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_ok_rect
         return  #$00
 
 L95BF:  .byte   0
@@ -585,7 +584,7 @@ L95C5:  MGTK_RELAY_CALL MGTK::GetEvent, event_params
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, rect_D700
+        MGTK_RELAY_CALL MGTK::InRect, entry_picker_cancel_rect
         cmp     #MGTK::inrect_inside
         beq     L9602
         lda     L9645
@@ -597,7 +596,7 @@ L9602:  lda     L9645
         jmp     L95C5
 
 L960A:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D700
+        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_cancel_rect
         lda     L9645
         clc
         adc     #$80
@@ -609,7 +608,7 @@ L9628:  lda     L9645
         return  #$FF
 
 L9630:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D700
+        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_cancel_rect
         return  #$01
 
 L9645:  .byte   0
@@ -643,21 +642,21 @@ L9683:  lda     winfo_entry_picker
         sta     screentowindow_window_id
         MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, rect_D6F8
+        MGTK_RELAY_CALL MGTK::InRect, entry_picker_ok_rect
         cmp     #MGTK::inrect_inside
         bne     L96C8
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D6F8
+        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_ok_rect
         jsr     L953A
         bmi     L96C7
         lda     #$00
 L96C7:  rts
 
-L96C8:  MGTK_RELAY_CALL MGTK::InRect, rect_D700
+L96C8:  MGTK_RELAY_CALL MGTK::InRect, entry_picker_cancel_rect
         cmp     #MGTK::inrect_inside
         bne     L96EF
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D700
+        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_cancel_rect
         jsr     L95C0
         bmi     L96EE
         lda     #$01
@@ -668,15 +667,16 @@ L96EF:  sub16   screentowindow_windowx, #10, screentowindow_windowx
         bpl     L9716
         return  #$FF
 
+        ;; Determine column
 L9716:  cmp16   screentowindow_windowx, #110
         bmi     L9736
         cmp16   screentowindow_windowx, #220
         bmi     L9732
-        lda     #$02
+        lda     #2
         bne     L9738
-L9732:  lda     #$01
+L9732:  lda     #1
         bne     L9738
-L9736:  lda     #$00
+L9736:  lda     #0
 L9738:  pha
         lsr16   screentowindow_windowy
         lsr16   screentowindow_windowy
@@ -694,7 +694,7 @@ L9756:  pla
         clc
         adc     screentowindow_windowy
         sta     L979C
-        cmp     #$08
+        cmp     #8
         bcs     L9782
         cmp     L938B
         bcs     L9790
@@ -709,11 +709,11 @@ L977E:  jsr     desktop_main::detect_double_click2
         rts
 
 L9782:  sec
-        sbc     #$08
+        sbc     #8
         cmp     L938C
         bcs     L9790
         clc
-        adc     #$08
+        adc     #8
         jmp     L976A
 
 L9790:  lda     L938D
@@ -732,17 +732,17 @@ L97A0:  pha
         lsr     a
         tax
         beq     L97B6
-        cmp     #$01
+        cmp     #1
         bne     L97B2
         addr_jump L97B6, $0069
 
 L97B2:  ldax    #210
 L97B6:  clc
         adc     #9
-        sta     rect_D877
+        sta     entry_picker_item_rect::x1
         txa
         adc     #0
-        sta     rect_D877+1
+        sta     entry_picker_item_rect::x1+1
         pla
         cmp     #8
         bcc     L97D4
@@ -759,14 +759,14 @@ L97D4:  asl     a
         asl     a
         clc
         adc     #24
-        sta     rect_D877+2
+        sta     entry_picker_item_rect::y1
         lda     #0
         adc     #0
-        sta     rect_D877+3
-        add16   rect_D877, #106, rect_D877+4
-        add16   rect_D877+2, #7, rect_D877+6
+        sta     entry_picker_item_rect::y1+1
+        add16   entry_picker_item_rect::x1, #106, entry_picker_item_rect::x2
+        add16   entry_picker_item_rect::y1, #7, entry_picker_item_rect::y2
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D877
+        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_item_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
         rts
 
@@ -805,15 +805,15 @@ L9822:  lda     event_modifiers
 :       return  #$FF
 
 L985E:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D6F8
+        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_ok_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D6F8
+        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_ok_rect
         return  #0
 
 L9885:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D700
+        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_cancel_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D700
+        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_cancel_rect
         return  #1
 
 L98AC:  lda     L938B
@@ -987,7 +987,7 @@ L99ED:  .byte   0
         .byte   0
         .byte   0
 L99F5:  MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_D87F
+        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_all_items_rect
         rts
 
         rts
