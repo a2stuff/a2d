@@ -297,6 +297,9 @@ alert_bitmap2_params:
         DEFINE_RECT 0, 0, 36, 23 ; maprect
 
 .proc winfo_alert_dialog
+        width = 400
+        height = 100
+
 window_id:      .byte   $0F
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
@@ -316,7 +319,7 @@ port:
 viewloc:        DEFINE_POINT 75, 35
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-cliprect:       DEFINE_RECT 0, 0, 400, 100
+cliprect:       DEFINE_RECT 0, 0, width, height
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:         DEFINE_POINT 0, 0
@@ -400,6 +403,7 @@ nextwinfo:      .addr   0
 
 .proc winfo_about_dialog
         width = 400
+        height = 110
 
 window_id:      .byte   $18
 options:        .byte   MGTK::Option::dialog_box
@@ -420,7 +424,7 @@ port:
 viewloc:        DEFINE_POINT (screen_width - width) / 2, 40
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-cliprect:       DEFINE_RECT 0, 0, width, 110
+cliprect:       DEFINE_RECT 0, 0, width, height
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:         DEFINE_POINT 0, 0
@@ -477,7 +481,9 @@ name_input_textpos: DEFINE_POINT 45,70, name_input_textpos
 pos_dialog_title: DEFINE_POINT 0, 18, pos_dialog_title
 
 point7: DEFINE_POINT 40,18, point7
-pointD: DEFINE_POINT 40,35, pointD
+
+dialog_label_base_pos:
+        DEFINE_POINT 40,35, dialog_label_base_pos
 
         dialog_label_default_x = 40
 dialog_label_pos:
@@ -563,8 +569,8 @@ rect_D87F:
 LD887:
         .byte   0
 
-rect_D888:
-        DEFINE_RECT 0,0,0,0
+select_volume_rect:
+        DEFINE_RECT 0,0,0,0,select_volume_rect
 
 LD890:
         .byte   0

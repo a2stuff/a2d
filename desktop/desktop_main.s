@@ -13225,7 +13225,7 @@ do2:    lda     winfo_alert_dialog
 :       jsr     prompt_input_loop
         bmi     :-
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::clear_dialog_labels_rect
         jsr     erase_ok_button
         return  #0
 .endproc
@@ -13277,10 +13277,10 @@ do1:    ldy     #1
         jsr     set_port_from_window_id
         lda     LAD1F
         bne     LAD54
-        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB16A
+        MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::delete_file_count_pos
         jmp     LAD5D
 
-LAD54:  MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::LB172
+LAD54:  MGTK_RELAY_CALL MGTK::MoveTo, desktop_aux::delete_file_count_pos2
 LAD5D:  addr_call draw_text1, str_file_count
         addr_call draw_text1, str_files
         rts
@@ -13316,7 +13316,7 @@ LADC4:  jsr     prompt_input_loop
         bmi     LADC4
         bne     LADF4
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::clear_dialog_labels_rect
         jsr     erase_ok_cancel_buttons
         yax_call draw_dialog_label, 2, desktop_aux::str_file_colon
         yax_call draw_dialog_label, 4, desktop_aux::str_delete_remaining
@@ -13604,7 +13604,7 @@ LB0FA:  jsr     prompt_input_loop
         bmi     LB0FA
         bne     LB139
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::clear_dialog_labels_rect
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
         yax_call draw_dialog_label, 2, desktop_aux::str_file_colon
@@ -13691,7 +13691,7 @@ LB218:  jsr     prompt_input_loop
         bmi     LB218
         bne     LB257
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::press_ok_to_rect
+        MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::clear_dialog_labels_rect
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::ok_button_rect
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::cancel_button_rect
         yax_call draw_dialog_label, 2, desktop_aux::str_file_colon
@@ -14114,15 +14114,15 @@ done:   jmp     reset_grafport3a
         pla
         tay
 
-skip:   dey                     ; ypos = (Y-1) * 8 + pointD::ycoord
+skip:   dey                     ; ypos = (Y-1) * 8 + dialog_label_base_pos::ycoord
         tya
         asl     a
         asl     a
         asl     a
         clc
-        adc     pointD::ycoord
+        adc     dialog_label_base_pos::ycoord
         sta     dialog_label_pos+2
-        lda     pointD::ycoord+1
+        lda     dialog_label_base_pos::ycoord+1
         adc     #0
         sta     dialog_label_pos+3
         MGTK_RELAY_CALL MGTK::MoveTo, dialog_label_pos
