@@ -254,5 +254,55 @@ op:     lda     dummy1234
 .endproc
 
 ;;; ============================================================
+;;; Input: numbers in A,X, Y
+;;; Output: number in A,X
+
+.proc Multiply_16_8_16
+        stax    num16
+        sty     num8
+        copy16  #0, accum
+        ldx     num8
+        beq     done
+
+loop:   add16   num16, accum, accum
+        dex
+        bne     loop
+
+done:   ldax    accum
+        rts
+
+num16:  .word   0
+num8:   .byte   0
+accum:  .word   0
+
+.endproc
+
+;;; ============================================================
+;;; Input: numerator in A,X, divisor in Y
+;;; Output: result in A,X
+
+.proc Divide_16_8_16
+        stax    numerator
+        sty     divisor
+        copy16  #0, result
+
+loop:   sub16_8 numerator, divisor, numerator
+        bmi     done
+        inc16   result
+        jmp     loop
+
+done:   ldax    result
+        rts
+
+numerator:
+        .word   0
+divisor:
+        .byte   0
+
+result: .word   0
+
+.endproc
+
+;;; ============================================================
 
         PAD_TO $D200

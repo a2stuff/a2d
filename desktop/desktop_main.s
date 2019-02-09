@@ -14102,7 +14102,7 @@ done:   jmp     reset_grafport3a
         jmp     skip
 
         ;; Compute text width and center it
-:       tya
+:       and     #$7F            ; strip "center?" flag
         pha
         add16   ptr, #1, textptr
         jsr     load_aux_from_ptr
@@ -14111,14 +14111,13 @@ done:   jmp     reset_grafport3a
         lsr16   result
         sub16   #200, result, dialog_label_pos
         pla
-        and     #$7F            ; strip "center?" flag
-        tay
 
         ;; y = base + desktop_aux::dialog_label_height * line
-skip:   copy16  dialog_label_base_pos::ycoord, dialog_label_pos::ycoord
-:       add16   dialog_label_pos::ycoord, #desktop_aux::dialog_label_height, dialog_label_pos::ycoord
-        dey
-        bne     :-
+skip:   ldx     #0
+        ldy     #desktop_aux::dialog_label_height
+        jsr     Multiply_16_8_16
+        stax    dialog_label_pos::ycoord
+        add16   dialog_label_pos::ycoord, dialog_label_base_pos::ycoord, dialog_label_pos::ycoord
         MGTK_RELAY_CALL MGTK::MoveTo, dialog_label_pos
         addr_call_indirect draw_text1, ptr
         ldx     dialog_label_pos

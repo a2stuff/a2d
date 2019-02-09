@@ -255,7 +255,7 @@ L0B47:  .byte   0
 
 ;;; ============================================================
 
-        labels_voffset = 40
+        labels_voffset = 49
 
 L0B48:  cmp16   screentowindow_windowx, #40
         bpl     :+
@@ -265,7 +265,7 @@ L0B48:  cmp16   screentowindow_windowx, #40
         return  #$FF
 :       lda     screentowindow_windowy
         sec
-        sbc     #labels_voffset+desktop_aux::dialog_label_height
+        sbc     #labels_voffset
         sta     screentowindow_windowy
         lda     screentowindow_windowy+1
         sbc     #0
@@ -274,17 +274,12 @@ L0B48:  cmp16   screentowindow_windowx, #40
 :       sta     screentowindow_windowy+1
 
         ;; Divide by desktop_aux::dialog_label_height
-        ldx     #0
-        lda     screentowindow_windowy
-:       sec
-        sbc     #desktop_aux::dialog_label_height
-        bmi     :+
-        inx
-        bne     :-              ; always
+        ldax    screentowindow_windowy
+        ldy     #desktop_aux::dialog_label_height
+        jsr     Divide_16_8_16
+        stax    screentowindow_windowy
 
-:       stx     screentowindow_windowy
-        lda     screentowindow_windowy
-        cmp     #$04
+        cmp     #4
         bcc     L0B98
         return  #$FF
 
@@ -359,16 +354,13 @@ L0C20:  ldy     #39
         txa
         sec
         sbc     L0CA9           ; entry % 4
-        tax
-        lda     #0
-:       clc
-        adc     #desktop_aux::dialog_label_height
-        dex
-        bpl     :-
-        adc     #labels_voffset
-        sta     select_volume_rect::y1
-        lda     #0
-        sta     select_volume_rect::y1+1
+        ldx     #0
+
+        ldy     #desktop_aux::dialog_label_height
+        jsr     Multiply_16_8_16
+        stax    select_volume_rect::y1
+        add16_8 select_volume_rect::y1, #labels_voffset, select_volume_rect::y1
+
         add16   select_volume_rect::x1, #label_width-1, select_volume_rect::x2
         add16   select_volume_rect::y1, #desktop_aux::dialog_label_height-1, select_volume_rect::y2
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
