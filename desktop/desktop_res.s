@@ -442,6 +442,7 @@ winfo_about_dialog_port    := winfo_about_dialog::port
 
 .proc winfo_entry_picker
         width = 350
+        height = 118
 
 window_id:      .byte   $1B
 options:        .byte   MGTK::Option::dialog_box
@@ -459,10 +460,10 @@ mincontlength:  .word   50
 maxcontwidth:   .word   500
 maxcontlength:  .word   140
 port:
-viewloc:        DEFINE_POINT (screen_width - width) / 2, 25
+viewloc:        DEFINE_POINT (screen_width - width) / 2, (screen_height - height) / 2
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .word   MGTK::screen_mapwidth
-cliprect:       DEFINE_RECT 0, 0, width, 110
+cliprect:       DEFINE_RECT 0, 0, width, height
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:         DEFINE_POINT 0, 0
@@ -498,11 +499,12 @@ dialog_label_pos:
         DEFINE_RECT 0, 0, 358, 100
 .endproc
 
+        entry_picker_item_height = 9 ; default font height
 
 entry_picker_outer_rect:
-        DEFINE_RECT 4,2,346,108
+        DEFINE_RECT 4,2,winfo_entry_picker::width-4,winfo_entry_picker::height-2
 entry_picker_inner_rect:
-        DEFINE_RECT 5,3,345,107
+        DEFINE_RECT 5,3,winfo_entry_picker::width-5,winfo_entry_picker::height-3
 
         ;; Line endpoints
 entry_picker_line1_start:
@@ -512,20 +514,20 @@ entry_picker_line1_end:
 
         ;; Line endpoints
 entry_picker_line2_start:
-        DEFINE_POINT 6,89
+        DEFINE_POINT 6,winfo_entry_picker::height-21
 entry_picker_line2_end:
-        DEFINE_POINT 344,89
+        DEFINE_POINT 344,winfo_entry_picker::height-21
 
 entry_picker_ok_rect:
-        DEFINE_RECT 210,92,310,103
+        DEFINE_RECT 210,winfo_entry_picker::height-18,310,winfo_entry_picker::height-7
 
 entry_picker_cancel_rect:
-        DEFINE_RECT 40,92,140,103
+        DEFINE_RECT 40,winfo_entry_picker::height-18,140,winfo_entry_picker::height-7
 
 entry_picker_ok_pos:
-        DEFINE_POINT 215,102
+        DEFINE_POINT 215,winfo_entry_picker::height-8
 entry_picker_cancel_pos:
-        DEFINE_POINT 45,102
+        DEFINE_POINT 45,winfo_entry_picker::height-8
 
         ;; ???
         .word   130,7,220,19
@@ -568,7 +570,7 @@ entry_picker_item_rect:
         DEFINE_RECT 0,0,0,0,entry_picker_item_rect
 
 entry_picker_all_items_rect:
-        DEFINE_RECT 6,23,344,87
+        DEFINE_RECT 6,23,344,winfo_entry_picker::height-23
 
 LD887:
         .byte   0

@@ -435,62 +435,63 @@ L9423:  addr_call L94F0, run_an_entry_label
 
 L942B:  stx     $07
         sta     $06
-        lda     dialog_label_pos
+        lda     dialog_label_pos::xcoord
         sta     L94A8
         tya
         pha
-        cmp     #$10
+        cmp     #16             ; 3rd column (16-24)
         bcc     L9441
         sec
-        sbc     #$10
+        sbc     #16
         jmp     L9448
 
-L9441:  cmp     #$08
+        ;; 8 rows
+L9441:  cmp     #8              ; 2nd column (8-15)
         bcc     L9448
         sec
-        sbc     #$08
-L9448:  ldx     #$00
-        stx     L94A7
-        asl     a
-        rol     L94A7
-        asl     a
-        rol     L94A7
-        asl     a
-        rol     L94A7
+        sbc     #8
+
+        ;; A has row
+L9448:  ldx     #0
+        ldy     #entry_picker_item_height
+        jsr     Multiply_16_8_16 ; A,X = A,X * Y
         clc
-        adc     #$20
-        sta     dialog_label_pos+2
-        lda     L94A7
-        adc     #0
-        sta     dialog_label_pos+3
-        pla
-        cmp     #$08
-        bcs     L9471
-        lda     #$00
-        tax
-        beq     L947F
-L9471:  cmp     #$10
-        bcs     L947B
-        ldx     #$00
-        lda     #$73
-        bne     L947F
-L947B:  ldax    #220
-L947F:  clc
-        adc     #10
-        sta     dialog_label_pos
+        adc     #32
+        sta     dialog_label_pos::ycoord
         txa
         adc     #0
-        sta     dialog_label_pos+1
+        sta     dialog_label_pos::ycoord+1
+        pla
+
+        cmp     #8
+        bcs     :+
+        lda     #0              ; col 1
+        tax
+        beq     L947F           ; always
+
+:       cmp     #16
+        bcs     :+
+        ldx     #0
+        lda     #115            ; col 2
+        bne     L947F           ; always
+
+:       ldax    #220            ; col 3
+
+L947F:  clc
+        adc     #10
+        sta     dialog_label_pos::xcoord
+        txa
+        adc     #0
+        sta     dialog_label_pos::xcoord+1
         MGTK_RELAY_CALL MGTK::MoveTo, dialog_label_pos
         ldax    $06
         jsr     L94CB
         lda     L94A8
-        sta     dialog_label_pos
+        sta     dialog_label_pos::xcoord
         lda     #0
-        sta     dialog_label_pos+1
+        sta     dialog_label_pos::xcoord+1
         rts
 
-L94A7:  .byte   0
 L94A8:  .byte   0
 
 L94A9:  MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_ok_pos
@@ -677,17 +678,19 @@ L9716:  cmp16   screentowindow_windowx, #110
 L9732:  lda     #1
         bne     L9738
 L9736:  lda     #0
+
+        ;; Determine row
 L9738:  pha
-        lsr16   screentowindow_windowy
-        lsr16   screentowindow_windowy
-        lsr16   screentowindow_windowy
-        lda     screentowindow_windowy
+        ldax    screentowindow_windowy
+        ldy     #entry_picker_item_height
+        jsr     Divide_16_8_16
+        stax    screentowindow_windowy
         cmp     #8
-        bcc     L9756
+        bcc     :+
         pla
         return  #$FF
 
-L9756:  pla
+:       pla
         asl     a
         asl     a
         asl     a
@@ -754,17 +757,17 @@ L97B6:  clc
 
 L97D1:  sec
         sbc     #16
-L97D4:  asl     a
-        asl     a
-        asl     a
+L97D4:  ldx     #0
+        ldy     #entry_picker_item_height
+        jsr     Multiply_16_8_16
         clc
         adc     #24
         sta     entry_picker_item_rect::y1
-        lda     #0
+        txa
         adc     #0
         sta     entry_picker_item_rect::y1+1
         add16   entry_picker_item_rect::x1, #106, entry_picker_item_rect::x2
-        add16   entry_picker_item_rect::y1, #7, entry_picker_item_rect::y2
+        add16   entry_picker_item_rect::y1, #entry_picker_item_height-1, entry_picker_item_rect::y2
         MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
         MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_item_rect
         MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
