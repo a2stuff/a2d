@@ -11158,9 +11158,12 @@ copy_pop_directory:
 @retry: MLI_RELAY_CALL DESTROY, destroy_params
         beq     done
         cmp     #ERR_ACCESS_ERROR
-        ;; TODO: if ERR_ACCESS_ERROR, unlock (or prompt)
-        beq     done
-        jsr     show_error_alert
+        bne     :+
+        jsr     unlock_src_file
+        beq     @retry
+        bne     done            ; silently leave file
+
+:       jsr     show_error_alert
         jmp     @retry
 done:   rts
 .endproc
@@ -11664,7 +11667,18 @@ retry:  MLI_RELAY_CALL DESTROY, destroy_params
         bne     do_it           ; always
 :       jmp     close_files_cancel_dialog
 
-do_it:  MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
+do_it:  jsr     unlock_src_file
+        bne     done
+        jmp     retry
+
+done:   rts
+
+error:  jsr     show_error_alert
+        jmp     retry
+.endproc
+
+.proc unlock_src_file
+        MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
         lda     src_file_info_params::access
         and     #$80
         bne     done
@@ -11673,12 +11687,8 @@ do_it:  MLI_RELAY_CALL GET_FILE_INFO, src_file_info_params
         copy    #7, src_file_info_params ; param count for SET_FILE_INFO
         MLI_RELAY_CALL SET_FILE_INFO, src_file_info_params
         copy    #$A, src_file_info_params ; param count for GET_FILE_INFO
-        jmp     retry
-
+        lda     #0                        ; success
 done:   rts
-
-error:  jsr     show_error_alert
-        jmp     retry
 .endproc
 
 ;;; ============================================================

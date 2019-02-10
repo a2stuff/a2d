@@ -85,7 +85,7 @@ file, then select the appropriate command from the Apple menu.
 
 * Selector app is unmodified.
 * Special > Disk Copy app is unmodified, and may suffer bugs fixed in DeskTop (e.g. SmartPort behavior)
-
+* Locked files are moved without prompting.
 
 # 1.1
 
