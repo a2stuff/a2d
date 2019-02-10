@@ -254,53 +254,80 @@ op:     lda     dummy1234
 .endproc
 
 ;;; ============================================================
-;;; Input: numbers in A,X, Y
-;;; Output: number in A,X
+;;; Input: numbers in A,X, Y (all unsigned)
+;;; Output: number in A,X (unsigned)
 
 .proc Multiply_16_8_16
-        stax    num16
-        sty     num8
-        copy16  #0, accum
-        ldx     num8
-        beq     done
+        stax    num1
+        sty     num2
 
-loop:   add16   num16, accum, accum
-        dex
+        ;; Accumulate directly into A,X
+        lda     #0
+        tax
+        beq     test
+
+add:    clc
+        adc     num1
+        tay
+
+        txa
+        adc     num1+1
+        tax
+        tya
+
+loop:   asl     num1
+        rol     num1+1
+test:   lsr     num2
+        bcs     add
         bne     loop
 
-done:   ldax    accum
         rts
 
-num16:  .word   0
-num8:   .byte   0
-accum:  .word   0
-
+num1:   .word   0
+num2:   .byte   0
 .endproc
 
 ;;; ============================================================
-;;; Input: numerator in A,X, divisor in Y
-;;; Output: result in A,X
+;;; Input: dividend in A,X, divisor in Y (all unsigned)
+;;; Output: quotient in A,X (unsigned)
 
 .proc Divide_16_8_16
-        stax    numerator
+        result := dividend
+
+        stax    dividend
         sty     divisor
-        copy16  #0, result
+        lda     #0
+        sta     divisor+1
+        sta     remainder
+        sta     remainder+1
+        ldx     #16
 
-loop:   sub16_8 numerator, divisor, numerator
-        bmi     done
-        inc16   result
-        jmp     loop
+loop:   asl     dividend
+        rol     dividend+1
+        rol     remainder
+        rol     remainder+1
+        lda     remainder
+        sec
+        sbc     divisor
+        tay
+        lda     remainder+1
+        sbc     divisor+1
+        bcc     skip
+        sta     remainder+1
+        sty     remainder
+        inc     result
 
-done:   ldax    result
+skip:   dex
+        bne     loop
+        ldax    dividend
         rts
 
-numerator:
+dividend:
         .word   0
 divisor:
-        .byte   0
-
-result: .word   0
-
+        .word   0
+remainder:
+        .word   0
 .endproc
 
 ;;; ============================================================
