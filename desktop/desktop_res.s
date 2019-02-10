@@ -555,7 +555,7 @@ run_list_label:
 other_run_list_label:
         PASCAL_STRING {GLYPH_OAPPLE,"2 Other Run list"}
 down_load_label:
-        PASCAL_STRING "Down load:"
+        PASCAL_STRING "Copy to RAMCard:"
 at_first_boot_label:
         PASCAL_STRING {GLYPH_OAPPLE,"3 at first boot"}
 at_first_use_label:

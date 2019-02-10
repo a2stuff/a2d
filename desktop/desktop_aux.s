@@ -3400,7 +3400,7 @@ str_size_blocks:
         .word   110,35,110,43
 
 str_download:
-        PASCAL_STRING "DownLoad ..."
+        PASCAL_STRING "Copy to RAMCard ..."
 
 str_ramcard_full:
         PASCAL_STRING "The RAMCard is full. The copy was not completed."
