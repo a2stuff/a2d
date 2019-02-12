@@ -187,6 +187,17 @@ flag:   .byte   0
         StoreWindowIconTable := XferWindowIconTable::from
         LoadWindowIconTable := XferWindowIconTable::to
 
+.proc LoadActiveWindowIconTable
+        copy    active_window_id, cached_window_id
+        jmp     LoadWindowIconTable
+.endproc
+
+.proc LoadDesktopIconTable
+        copy    #0, cached_window_id
+        jmp     LoadWindowIconTable
+.endproc
+
+
 ;;; ============================================================
 ;;; Assign active state to active_window_id window
 

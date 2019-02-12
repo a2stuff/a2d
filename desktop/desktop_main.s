@@ -191,8 +191,7 @@ L4113:  MGTK_RELAY_CALL MGTK::BeginUpdate, event_window_id
         MGTK_RELAY_CALL MGTK::EndUpdate
         rts
 
-L412B:  copy    #0, cached_window_id
-        jsr     LoadWindowIconTable
+L412B:  jsr     LoadDesktopIconTable
         lda     L40F0
         sta     active_window_id
         beq     L4143
@@ -221,8 +220,7 @@ draw_window_header_flag:  .byte   0
         rts
 
 L415B:  sta     active_window_id
-        sta     cached_window_id
-        jsr     LoadWindowIconTable
+        jsr     LoadActiveWindowIconTable
         copy    #$80, draw_window_header_flag
         copy    cached_window_id, getwinport_params2::window_id
         jsr     get_port2
@@ -606,11 +604,9 @@ start:  jsr     clear_selection
         copy    icon_param, selected_icon_list
 L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_window_id
         copy    findwindow_window_id, active_window_id
-        sta     cached_window_id
-        jsr     LoadWindowIconTable
+        jsr     LoadActiveWindowIconTable
         jsr     L6C19
-        copy    #0, cached_window_id
-        jsr     LoadWindowIconTable
+        jsr     LoadDesktopIconTable
         copy    #MGTK::checkitem_uncheck, checkitem_params::check
         MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
         ldx     active_window_id
@@ -1926,9 +1922,7 @@ dir_count:
 
 L4E78:  jsr     clear_selection
         dec     LEC2E
-        lda     active_window_id
-        sta     cached_window_id
-        jsr     LoadWindowIconTable
+        jsr     LoadActiveWindowIconTable
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
@@ -1956,8 +1950,7 @@ L4EB7:  sta     cached_window_icon_list,x
 
 L4EC3:  sta     cached_window_icon_count
         jsr     StoreWindowIconTable
-        copy    #0, cached_window_id
-        jsr     LoadWindowIconTable
+        jsr     LoadDesktopIconTable
         MGTK_RELAY_CALL MGTK::CloseWindow, active_window_id
         ldx     active_window_id
         dex
@@ -2044,9 +2037,9 @@ L4FD4:  copy    #$80, new_folder_dialog_params::phase
         beq     :+
         jmp     done            ; Cancelled
 :       stx     ptr+1
-        stx     L504F
+        stx     name_ptr+1
         sty     ptr
-        sty     L504E
+        sty     name_ptr
 
         ;; Copy path
         ldy     #0
@@ -2066,7 +2059,7 @@ L4FD4:  copy    #$80, new_folder_dialog_params::phase
 
         ;; Failure
         jsr     ShowAlert
-        copy16  L504E, new_folder_dialog_params::win_path_ptr
+        copy16  name_ptr, new_folder_dialog_params::win_path_ptr
         jmp     L4FC6
 
 success:
@@ -2078,10 +2071,19 @@ success:
         beq     done
         jsr     select_and_refresh_window
 
+        ;; TODO: Select new folder
+        ;; * LoadActiveWindowIconTable
+        ;; * Iterate icons
+        ;; * Compare name w/ name from dialog
+        ;; * If match, make it selected
+
+
+        ;; TODO: Scroll into view
+
 done:   jmp     redraw_windows_and_desktop
 
-L504E:  .byte   0
-L504F:  .byte   0
+name_ptr:
+        .addr   0
 .endproc
         cmd_new_folder := cmd_new_folder_impl::start
         path_buffer := cmd_new_folder_impl::path_buffer ; ???
@@ -2240,9 +2242,7 @@ fail:   jsr     ShowAlert
         rts
 
 entry:
-:       lda     active_window_id
-        sta     cached_window_id
-        jsr     LoadWindowIconTable
+:       jsr     LoadActiveWindowIconTable
         ldx     #$00
         txa
 :       cpx     cached_window_icon_count
@@ -2257,8 +2257,7 @@ entry:
         dex
         sta     win_view_by_table,x
         jsr     update_view_menu_check
-        lda     active_window_id
-        sta     getwinport_params2::window_id
+        copy    active_window_id, getwinport_params2::window_id
         jsr     get_port2
         jsr     offset_grafport2_and_set
         jsr     set_penmode_copy
@@ -2287,8 +2286,7 @@ L516D:  lda     L51EB,x
 
         lda     active_window_id
         jsr     create_file_icon_ep2
-        lda     active_window_id
-        sta     getwinport_params2::window_id
+        copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
         jsr     cached_icons_window_to_screen
         copy    #0, L51EF
@@ -2322,8 +2320,7 @@ L51C0:  ldx     L51EF
         jsr     icon_screen_to_window
         dec     L51EF
         bne     L51C0
-L51E3:  copy    #0, cached_window_id
-        jmp     LoadWindowIconTable
+L51E3:  jmp     LoadDesktopIconTable
 
 L51EB:  .word   0
 L51ED:  .byte   0
@@ -2337,13 +2334,10 @@ L51EF:  .byte   0
         ldx     active_window_id
         dex
         sta     win_view_by_table,x
-        lda     active_window_id
-        sta     cached_window_id
-        jsr     LoadWindowIconTable
+        jsr     LoadActiveWindowIconTable
         jsr     sort_records
         jsr     StoreWindowIconTable
-        lda     active_window_id
-        sta     getwinport_params2::window_id
+        copy    active_window_id, getwinport_params2::window_id
         jsr     get_port2
         jsr     offset_grafport2_and_set
         jsr     set_penmode_copy
@@ -2488,9 +2482,7 @@ L5265:  .byte   0
 
 .proc close_active_window
         DESKTOP_RELAY_CALL DT_CLOSE_WINDOW, active_window_id
-        lda     active_window_id
-        sta     cached_window_id
-        jsr     LoadWindowIconTable
+        jsr     LoadActiveWindowIconTable
         lda     icon_count
         sec
         sbc     cached_window_icon_count
@@ -2505,8 +2497,7 @@ loop:   cpx     cached_window_icon_count
         jmp     loop
 
 done:   jsr     StoreWindowIconTable
-        copy    #0, cached_window_id
-        jmp     LoadWindowIconTable
+        jmp     LoadDesktopIconTable
 .endproc
 
 ;;; ============================================================
@@ -2711,9 +2702,7 @@ L545A:  tax
         bpl     L5464
         jmp     L54C5
 
-L5464:  lda     active_window_id
-        sta     cached_window_id
-        jsr     LoadWindowIconTable
+L5464:  jsr     LoadActiveWindowIconTable
         lda     active_window_id
         jsr     window_lookup
         stax    $06
@@ -2749,8 +2738,7 @@ L54B7:  pla
         inx
         jmp     L5485
 
-L54BD:  copy    #0, cached_window_id
-        jsr     LoadWindowIconTable
+L54BD:  jsr     LoadDesktopIconTable
 L54C5:  ldx     $1800
         ldy     #$00
 L54CA:  lda     cached_window_icon_list,y
@@ -2934,8 +2922,7 @@ L566A:  ldx     active_window_id
         bpl     L5676
         rts
 
-L5676:  copy    active_window_id, cached_window_id
-        jsr     LoadWindowIconTable
+L5676:  jsr     LoadActiveWindowIconTable
         lda     cached_window_icon_count
         bne     L5687
         jmp     L56F0
@@ -2971,8 +2958,7 @@ L56E3:  dec     L56F8
         lda     selected_window_index
         beq     L56F0
         jsr     reset_grafport3
-L56F0:  copy    #0, cached_window_id
-        jmp     LoadWindowIconTable
+L56F0:  jmp     LoadDesktopIconTable
 
 L56F8:  .byte   0
 .endproc
@@ -3094,9 +3080,7 @@ loop:   jsr     get_event
         cmp     #CHAR_ESCAPE
         bne     :+
 
-done:   copy    #0, cached_window_id
-        jsr     LoadWindowIconTable
-        rts
+done:   jmp     LoadDesktopIconTable
 
         ;; Horizontal ok?
 :       bit     horiz_scroll_flag
@@ -3133,9 +3117,7 @@ vertical:
 ;;; ============================================================
 
 .proc L5803
-        lda     active_window_id
-        sta     cached_window_id
-        jsr     LoadWindowIconTable
+        jsr     LoadActiveWindowIconTable
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
@@ -3280,11 +3262,8 @@ L58AD:  .byte   0
 ;;; ============================================================
 
 .proc cmd_check_drives
-        lda     #0
-        sta     pending_alert
-
-        sta     cached_window_id
-        jsr     LoadWindowIconTable
+        copy    #0, pending_alert
+        jsr     LoadDesktopIconTable
         jsr     cmd_close_all
         jsr     clear_selection
         ldx     cached_window_icon_count
@@ -3381,8 +3360,7 @@ by_icon_number:
         lda     #$C0
 
 start:  sta     check_drive_flags
-        copy    #0, cached_window_id
-        jsr     LoadWindowIconTable
+        jsr     LoadDesktopIconTable
         bit     check_drive_flags
         bpl     explicit_command
         bvc     after_format_erase
@@ -3483,8 +3461,7 @@ not_in_map:
 
         jsr     redraw_windows_and_desktop
         jsr     clear_selection
-        copy    #0, cached_window_id
-        jsr     LoadWindowIconTable
+        jsr     LoadDesktopIconTable
 
         lda     devlst_index
         tay
@@ -3595,9 +3572,7 @@ active_window_view_by:
         .byte   0
 
 .proc handle_client_click
-        lda     active_window_id
-        sta     cached_window_id
-        jsr     LoadWindowIconTable
+        jsr     LoadActiveWindowIconTable
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
@@ -3713,8 +3688,7 @@ pgrt:   jsr     L64B0
 
 done_client_click:
         jsr     StoreWindowIconTable
-        copy    #0, cached_window_id
-        jmp     LoadWindowIconTable
+        jmp     LoadDesktopIconTable
 .endproc
 
 ;;; ============================================================
@@ -3728,8 +3702,7 @@ done_client_click:
         rts
 :       jsr     L5C54
         jsr     StoreWindowIconTable
-        copy    #0, cached_window_id
-        jmp     LoadWindowIconTable
+        jmp     LoadDesktopIconTable
 .endproc
 
 ;;; ============================================================
@@ -3743,8 +3716,7 @@ done_client_click:
         bit     active_window_view_by
         bmi     :+
         jsr     cached_icons_screen_to_window
-:       lda     active_window_id
-        sta     getwinport_params2::window_id
+:       copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
         jsr     reset_grafport3
@@ -3782,8 +3754,7 @@ ctl:    .byte   0
         bpl     :+
         jmp     clear_selection
 
-:       lda     active_window_id
-        sta     findicon_window_id
+:       copy    active_window_id, findicon_window_id
         DESKTOP_RELAY_CALL DT_FIND_ICON, findicon_params
         lda     findicon_which_icon
         bne     handle_file_icon_click
@@ -3899,8 +3870,7 @@ desktop:
 
 :       cpx     #$FF
         beq     L5DF7
-        lda     active_window_id
-        sta     getwinport_params2::window_id
+        copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
         jsr     cached_icons_window_to_screen
         jsr     offset_grafport2_and_set
@@ -3917,8 +3887,7 @@ desktop:
         dex
         bpl     :-
 
-        lda     active_window_id
-        sta     getwinport_params2::window_id
+        copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
         jsr     update_scrollbars
         jsr     cached_icons_screen_to_window
@@ -3927,8 +3896,7 @@ desktop:
 ;;; Used as additional entry point
 swap_in_desktop_icon_table:
         jsr     StoreWindowIconTable
-        copy    #0, cached_window_id
-        jmp     LoadWindowIconTable
+        jmp     LoadDesktopIconTable
 
 L5DF7:  ldx     saved_stack
         txs
@@ -4052,9 +4020,7 @@ L5E77:  .byte   0
         jsr     open_directory
         jsr     cmd_view_by_icon::entry
         jsr     StoreWindowIconTable
-        lda     active_window_id
-        sta     cached_window_id
-        jsr     LoadWindowIconTable
+        jsr     LoadActiveWindowIconTable
         copy    active_window_id, getwinport_params2::window_id
         jsr     get_port2
         jsr     draw_window_header
@@ -4064,8 +4030,7 @@ L5E77:  .byte   0
 
         copy    #1, menu_click_params::item_num
         jsr     update_view_menu_check
-        copy    #0, cached_window_id
-        jmp     LoadWindowIconTable
+        jmp     LoadDesktopIconTable
 
 window_id:
         .byte   0
@@ -4099,8 +4064,7 @@ L5F20:  lda     event_coords,x
 L5F3E:  rts
 
 L5F3F:  jsr     clear_selection
-        lda     active_window_id
-        sta     getwinport_params2::window_id
+        copy    active_window_id, getwinport_params2::window_id
         jsr     get_port2
         jsr     offset_grafport2_and_set
         ldx     #$03
@@ -4132,10 +4096,8 @@ L5F88:  txa
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
         ldx     selected_icon_count
         inc     selected_icon_count
-        lda     icon_param
-        sta     selected_icon_list,x
-        lda     active_window_id
-        sta     selected_window_index
+        copy    icon_param, selected_icon_list,x
+        copy    active_window_id, selected_window_index
 L5FB9:  lda     icon_param
         jsr     icon_screen_to_window
         pla
@@ -4216,8 +4178,7 @@ L60D5:  jsr     push_pointers
 .proc handle_title_click
         jmp     L60DE
 
-L60DE:  lda     active_window_id
-        sta     event_params
+L60DE:  copy    active_window_id, event_params
         MGTK_RELAY_CALL MGTK::FrontWindow, active_window_id
         lda     active_window_id
         jsr     copy_window_portbits
@@ -4243,15 +4204,12 @@ L6112:  ldy     #$14
         beq     L6143
         rts
 
-L6143:  lda     active_window_id
-        sta     cached_window_id
-        jsr     LoadWindowIconTable
+L6143:  jsr     LoadActiveWindowIconTable
         ldx     #$00
 L614E:  cpx     cached_window_icon_count
         bne     L6161
         jsr     StoreWindowIconTable
-        copy    #0, cached_window_id
-        jsr     LoadWindowIconTable
+        jsr     LoadDesktopIconTable
         jmp     L6196
 
 L6161:  txa
@@ -4278,18 +4236,14 @@ L6199:  .word   0
 ;;; ============================================================
 
 .proc handle_resize_click
-        lda     active_window_id
-        sta     event_params
+        copy    active_window_id, event_params
         MGTK_RELAY_CALL MGTK::GrowWindow, event_params
         jsr     redraw_windows_and_desktop
-        lda     active_window_id
-        sta     cached_window_id
-        jsr     LoadWindowIconTable
+        jsr     LoadActiveWindowIconTable
         jsr     cached_icons_window_to_screen
         jsr     update_scrollbars
         jsr     cached_icons_screen_to_window
-        copy    #0, cached_window_id
-        jsr     LoadWindowIconTable
+        jsr     LoadDesktopIconTable
         jmp     reset_grafport3
 .endproc
 
@@ -4303,9 +4257,7 @@ handle_close_click:
         rts
 
 .proc close_window
-        lda     active_window_id
-        sta     cached_window_id
-        jsr     LoadWindowIconTable
+        jsr     LoadActiveWindowIconTable
         jsr     clear_selection
         ldx     active_window_id
         dex
@@ -4372,8 +4324,7 @@ L6276:  ldx     active_window_id
         sta     window_to_dir_icon_table,x
         sta     win_view_by_table,x
         MGTK_RELAY_CALL MGTK::FrontWindow, active_window_id
-        copy    #0, cached_window_id
-        jsr     LoadWindowIconTable
+        jsr     LoadDesktopIconTable
         lda     #MGTK::checkitem_uncheck
         sta     checkitem_params::check
         MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
@@ -5148,8 +5099,7 @@ L6B01:  MGTK_RELAY_CALL MGTK::SelectWindow, cached_window_id
         sta     active_window_id
         jsr     L6C19
         jsr     redraw_windows
-        copy    #0, cached_window_id
-        jmp     LoadWindowIconTable
+        jmp     LoadDesktopIconTable
 
 L6B1E:  lda     LEC2E
         cmp     #$08
@@ -5218,8 +5168,7 @@ L6BB8:  jsr     L744B
         ldy     #MGTK::OpenWindow
         jsr     MGTK_RELAY
 
-        lda     active_window_id
-        sta     getwinport_params2::window_id
+        copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
         jsr     draw_window_header
         jsr     cached_icons_window_to_screen
@@ -5240,8 +5189,7 @@ L6BF4:  lda     cached_window_id
         jsr     update_scrollbars
         jsr     cached_icons_screen_to_window
         jsr     StoreWindowIconTable
-        copy    #0, cached_window_id
-        jsr     LoadWindowIconTable
+        jsr     LoadDesktopIconTable
         jmp     reset_grafport3
 
 L6C0E:  .byte   0
@@ -5446,8 +5394,7 @@ L6DB0:  .byte   0
         jsr     cached_icons_screen_to_window
 
 config_port:
-        lda     active_window_id
-        sta     getwinport_params2::window_id
+        copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
 
         ;; check horizontal bounds
