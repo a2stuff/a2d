@@ -475,8 +475,9 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endproc
 
-        ;; Coordinates for labels?
-        .byte   $28,$00,$25,$00,$68,$01,$2F,$00,$2D,$00,$2E,$00
+        ;; Unused rect/pos?
+        .word   40,37,360,47
+        .word   45,46
 
 name_input_rect:  DEFINE_RECT 40,61+6,360,71+6, name_input_rect
 name_input_textpos: DEFINE_POINT 45,70+6, name_input_textpos

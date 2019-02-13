@@ -14521,8 +14521,6 @@ draw:   copy16  #str_insertion_point+1, textptr
 ;;; ============================================================
 
 .proc draw_filename_prompt
-        lda     path_buf1
-        beq     done
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
         jsr     set_fill_white
