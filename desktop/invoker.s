@@ -172,3 +172,5 @@ exit:   rts
         PAD_TO $3F0
 
 .endproc ; invoker
+
+        invoker_str_basic_system := invoker::bs_path

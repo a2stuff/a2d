@@ -860,6 +860,41 @@ trash_icon:
 
 
 ;;; ============================================================
+;;; DeskTop icon placement
+
+;;;  +-------------------------+
+;;;  |                     1   |
+;;;  |                     2   |
+;;;  |                     3   |
+;;;  |                     4   |
+;;;  |        13  12  11   5   |
+;;;  | 10  9   8   7   6 Trash |
+;;;  +-------------------------+
+
+        kTrashIconX = 506
+        kTrashIconY = 160
+
+        kVolIconDeltaY = 29
+
+desktop_icon_coords_table:
+        DEFINE_POINT 490,15 + kVolIconDeltaY*0 ; 1
+        DEFINE_POINT 490,15 + kVolIconDeltaY*1 ; 2
+        DEFINE_POINT 490,15 + kVolIconDeltaY*2 ; 3
+        DEFINE_POINT 490,15 + kVolIconDeltaY*3 ; 4
+        DEFINE_POINT 490,15 + kVolIconDeltaY*4 ; 5
+        DEFINE_POINT 400,kTrashIconY+2         ; 6
+        DEFINE_POINT 310,kTrashIconY+2         ; 7
+        DEFINE_POINT 220,kTrashIconY+2         ; 8
+        DEFINE_POINT 130,kTrashIconY+2         ; 9
+        DEFINE_POINT 40,kTrashIconY+2          ; 10
+        DEFINE_POINT 400,15 + kVolIconDeltaY*4 ; 11
+        DEFINE_POINT 310,15 + kVolIconDeltaY*4 ; 12
+        DEFINE_POINT 220,15 + kVolIconDeltaY*4 ; 13
+        ;; Maximum of 13 devices:
+        ;; 7 slots * 2 drives = 14 (size of DEVLST)
+        ;; ... but RAM in Slot 3 Drive 2 is disconnected.
+
+;;; ============================================================
 
         PAD_TO $DB00
 

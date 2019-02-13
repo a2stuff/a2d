@@ -1003,8 +1003,8 @@ found_slash:
 path_length:
         .byte   0
 
-str_basic_system:
-        PASCAL_STRING "Basic.system"
+str_basic_system := invoker_str_basic_system ; in Invoker
+
 .endproc
         check_basic_system := check_basic_system_impl::start
         show_alert_and_fail := check_basic_system_impl::show_alert_and_fail
@@ -2045,22 +2045,176 @@ success:
         beq     done
         jsr     select_and_refresh_window
 
-        ;; TODO: Select new folder
-        ;; * LoadActiveWindowIconTable
-        ;; * Iterate icons
-        ;; * Compare name w/ name from dialog
-        ;; * If match, make it selected
+        ;; View by Icon?
+        ;; TODO: Scroll list views, as well.
+        ldx     active_window_id
+        dex
+        lda     win_view_by_table,x
+        bmi     done
 
-
-        ;; TODO: Scroll into view
+        jsr     select_new_folder_icon
 
 done:   jmp     redraw_windows_and_desktop
+
+.proc select_new_folder_icon
+        ptr_icon := $6
+        ptr_name := $8
+        copy16  #path_buf1, ptr_name
+
+        jsr     LoadActiveWindowIconTable
+
+        ;; Iterate icons
+        copy    #0, icon
+loop:   ldx     icon
+        cpx     cached_window_icon_count
+        beq     done
+
+        ;; Compare with name from dialog
+        lda     cached_window_icon_list,x
+        jsr     icon_entry_lookup
+        stax    ptr_icon
+
+        ;; Lengths match?
+        ldy     #IconEntry::len
+        lda     (ptr_icon),y
+        sec
+        sbc     #2              ; discount leading/trailing space
+        ldy     #0
+        cmp     (ptr_name),y
+        bne     next
+
+        ;; Compare characters (case insensitive)
+        tay
+        add16   ptr_icon, #IconEntry::name, ptr_icon ; skip leading space
+cloop:  lda     (ptr_icon),y
+        jsr     upcase_char
+        sta     char
+        lda     (ptr_name),y
+        jsr     upcase_char
+        cmp     char
+        bne     next
+        dey
+        bne     cloop
+
+        ;; Match, so make selected
+        ldx     icon
+        lda     cached_window_icon_list,x
+        pha
+        jsr     select_file_icon
+        pla
+        jsr     scroll_icon_into_view
+        bne     done            ; always
+
+next:   inc     icon
+        bne     loop
+
+done:   jsr     LoadDesktopIconTable
+        rts
+
+icon:   .byte   0
+char:   .byte   0
+.endproc
 
 name_ptr:
         .addr   0
 .endproc
         cmd_new_folder := cmd_new_folder_impl::start
         path_buffer := cmd_new_folder_impl::path_buffer ; ???
+
+;;; ============================================================
+;;; Input: Icon number in A. Must be in active window.
+
+.proc scroll_icon_into_view
+        icon_ptr := $06
+
+        sta     icon_num
+
+        ;; Map coordinates to window
+        jsr     icon_screen_to_window
+
+        ;; Grab the icon coords
+        lda     icon_num
+        jsr     icon_entry_lookup
+
+        stax    icon_ptr
+        ldy     #IconEntry::iconx + .sizeof(MGTK::Rect)-1
+        ldx     #.sizeof(MGTK::Rect)-1
+:       lda     (icon_ptr),y
+        sta     icon_coords,x
+        dey
+        dex
+        bpl     :-
+
+        ;; Restore coordinates
+        lda     icon_num
+        jsr     icon_window_to_screen
+
+        jsr     apply_active_winfo_to_grafport2
+
+        copy    #0, dirty
+
+        ;; --------------------------------------------------
+        ;; X adjustment
+
+        kMaxIconWidth = 27
+        kIconXPadding = 10
+
+        ;; Is left of icon beyond window? If so, adjust by delta (negative)
+        sub16   icon_x, grafport2::cliprect::x1, delta
+        bmi     adjustx
+
+        ;; Is right of icon beyond window? If so, adjust by delta (positive)
+        add16_8 icon_x, #kMaxIconWidth + kIconXPadding, icon_x
+        sub16   icon_x, grafport2::cliprect::x2, delta
+        bmi     donex
+
+adjustx:
+        inc     dirty
+        add16   grafport2::cliprect::x1, delta, grafport2::cliprect::x1
+        add16   grafport2::cliprect::x2, delta, grafport2::cliprect::x2
+
+donex:
+
+        ;; --------------------------------------------------
+        ;; Y adjustment
+
+        kMaxIconHeight = 17
+        kIconLabelHeight = 8
+
+        ;; Is top of icon beyond window? If so, adjust by delta (negative)
+        sub16   icon_y, grafport2::cliprect::y1, delta
+        bmi     adjusty
+
+        ;; Is bottom of icon beyond window? If so, adjust by delta (positive)
+        add16_8 icon_y, #kMaxIconHeight + kIconLabelHeight, icon_y
+        sub16   icon_y, grafport2::cliprect::y2, delta
+        bmi     doney
+
+adjusty:
+        inc dirty
+        add16   grafport2::cliprect::y1, delta, grafport2::cliprect::y1
+        add16   grafport2::cliprect::y2, delta, grafport2::cliprect::y2
+
+doney:
+        lda     dirty
+        beq     done
+
+        jsr     cached_icons_screen_to_window ; assumed by...
+        jsr     finish_scroll_adjust_and_redraw
+
+done:   rts
+
+icon_num:
+        .byte   0
+
+dirty:  .byte   0
+
+icon_coords:
+icon_x: .word   0
+icon_y: .word   0
+
+delta: .word   0
+.endproc
 
 ;;; ============================================================
 
@@ -3362,8 +3516,7 @@ common:
         ;; Close any associated windows.
 
         ;; A = icon number
-:       jsr     icon_entry_lookup
-        addax   #IconEntry::len, $06
+:       jsr     icon_entry_name_lookup
 
         ptr := $06
         path_buf := $1F00
@@ -4430,9 +4583,7 @@ clamp:  ldax    iconbb_rect+MGTK::Rect::y1
 
 adjust: stax    grafport2::cliprect::y1
         add16_8 grafport2::cliprect::y1, height, grafport2::cliprect::y2
-        jsr     assign_active_window_cliprect
-        jsr     update_scrollbars
-        jmp     redraw_window_after_scroll
+        jmp     finish_scroll_adjust_and_redraw
 
 useful_height:
         .byte   0               ; without header
@@ -4459,9 +4610,7 @@ clamp:  ldax    iconbb_rect+MGTK::Rect::y2
 
 adjust: stax    grafport2::cliprect::y2
         sub16_8 grafport2::cliprect::y2, height, grafport2::cliprect::y1
-        jsr     assign_active_window_cliprect
-        jsr     update_scrollbars
-        jmp     redraw_window_after_scroll
+        jmp     finish_scroll_adjust_and_redraw
 
 useful_height:
         .byte   0               ; without header
@@ -4500,9 +4649,7 @@ clamp:  ldax    iconbb_rect+MGTK::Rect::x1
 
 adjust: stax    grafport2::cliprect::x1
         add16   grafport2::cliprect::x1, width, grafport2::cliprect::x2
-        jsr     assign_active_window_cliprect
-        jsr     update_scrollbars
-        jmp     redraw_window_after_scroll
+        jmp     finish_scroll_adjust_and_redraw
 
 width:  .word   0               ; of window's port
 delta:  .word   0
@@ -4524,17 +4671,15 @@ clamp:  ldax    iconbb_rect+MGTK::Rect::x2
 
 adjust: stax    grafport2::cliprect::x2
         sub16   grafport2::cliprect::x2, width, grafport2::cliprect::x1
-        jsr     assign_active_window_cliprect
-        jsr     update_scrollbars
-        jmp     redraw_window_after_scroll
+        jmp     finish_scroll_adjust_and_redraw
 
 width:  .word   0               ; of window's port
 delta:  .word   0
 .endproc
 
 ;;; ============================================================
-;;; Computes dimensions of active window (leaves icons
-;;; mapped to screen coords, if not a list view)
+;;; Computes dimensions of active window.
+;;; If icon view, leaves icons mapped to window coords.
 ;;; Returns: Width in A,X, height in Y
 
 .proc compute_active_window_dimensions
@@ -4555,7 +4700,7 @@ delta:  .word   0
         lda     active_window_id
         jsr     window_lookup
         addax   #MGTK::Winfo::port, ptr
-        ldy     #.sizeof(MGTK::GrafPort) + 1 ; ???
+        ldy     #.sizeof(MGTK::GrafPort) + 1
 :       lda     (ptr),y
         sta     grafport2,y
         dey
@@ -4569,8 +4714,8 @@ delta:  .word   0
         lda     active_window_id
         jsr     window_lookup
         stax    ptr
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + 7
-        ldx     #7
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
+        ldx     #.sizeof(MGTK::Rect)-1
 :       lda     grafport2::cliprect,x
         sta     (ptr),y
         dey
@@ -4580,13 +4725,20 @@ delta:  .word   0
 .endproc
 
 ;;; ============================================================
-;;; Redraw windows after scrolling
+;;; After scrolling which adjusts cliprect, update the window,
+;;; scrollbars, and redraw the window contents.
+;;; If icon view, restores icons mapped to screen coords.
 
-.proc redraw_window_after_scroll
+.proc finish_scroll_adjust_and_redraw
+        jsr     assign_active_window_cliprect
+        jsr     update_scrollbars
+
         bit     active_window_view_by
         bmi     :+
         jsr     cached_icons_window_to_screen
-:       MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
+:
+
+        MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
         jsr     reset_grafport3
         jmp     draw_window_entries
 .endproc
@@ -5055,8 +5207,8 @@ L6A3E:  .byte   0
         beq     L6A80           ; found
 
         ;; Not in the map. Look for related windows.
-        jsr     icon_entry_lookup
-        addax   #IconEntry::len, ptr
+        jsr     icon_entry_name_lookup
+
         ldy     #0
         lda     (ptr),y
         tay
@@ -9269,41 +9421,6 @@ devlst_index:   .byte   0
 icon_index:     .byte   0
 offset:         .word   0
 
-
-;;; Icons are placed places in order as specified by caller
-;;; in X. (Reverse DEVLST order, so most important is first.)
-;;;
-;;;  +-------------------------+
-;;;  |                     1   |
-;;;  |                     2   |
-;;;  |                     3   |
-;;;  |                     4   |
-;;;  |        13  12  11   5   |
-;;;  | 10  9   8   7   6 Trash |
-;;;  +-------------------------+
-
-        kTrashIconX = 506
-        kTrashIconY = 160
-
-        kDeltaY = 29
-
-desktop_icon_coords_table:
-        DEFINE_POINT 490,15 + kDeltaY*0    ; 1
-        DEFINE_POINT 490,15 + kDeltaY*1    ; 2
-        DEFINE_POINT 490,15 + kDeltaY*2    ; 3
-        DEFINE_POINT 490,15 + kDeltaY*3    ; 4
-        DEFINE_POINT 490,15 + kDeltaY*4    ; 5
-        DEFINE_POINT 400,kTrashIconY+2     ; 6
-        DEFINE_POINT 310,kTrashIconY+2     ; 7
-        DEFINE_POINT 220,kTrashIconY+2     ; 8
-        DEFINE_POINT 130,kTrashIconY+2     ; 9
-        DEFINE_POINT  40,kTrashIconY+2     ; 10
-        DEFINE_POINT 400,15 + kDeltaY*4    ; 11
-        DEFINE_POINT 310,15 + kDeltaY*4    ; 12
-        DEFINE_POINT 220,15 + kDeltaY*4    ; 13
-        ;; Maximum of 13 devices:
-        ;; 7 slots * 2 drives = 14 (size of DEVLST)
-        ;; ... but RAM in Slot 3 Drive 2 is disconnected.
 .endproc
 
 ;;; ============================================================
@@ -16034,9 +16151,9 @@ trash_name:  PASCAL_STRING " Trash "
         copy    #kIconEntryTypeTrash, (ptr),y
 
         ldy     #IconEntry::iconx
-        copy16in #desktop_main::create_volume_icon::kTrashIconX, (ptr),y
+        copy16in #kTrashIconX, (ptr),y
         ldy     #IconEntry::icony
-        copy16in #desktop_main::create_volume_icon::kTrashIconY, (ptr),y
+        copy16in #kTrashIconY, (ptr),y
         ldy     #IconEntry::iconbits
         copy16in #trash_icon, (ptr),y
 
