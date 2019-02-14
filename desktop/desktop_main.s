@@ -4460,12 +4460,12 @@ L638B:  .byte   0
         jsr     L644C
         sta     L63E8
         sub16_8 grafport2::cliprect::y1, L63E8, L63EA
-        cmp16   L63EA, iconbb_pt0+MGTK::Point::ycoord
+        cmp16   L63EA, iconbb_rect+MGTK::Rect::y1
         bmi     L63C1
         ldax    L63EA
         jmp     L63C7
 
-L63C1:  ldax    iconbb_pt0+MGTK::Point::ycoord
+L63C1:  ldax    iconbb_rect+MGTK::Rect::y1
 L63C7:  stax    grafport2::cliprect::y1
         add16_8 grafport2::cliprect::y1, L63E9, grafport2::cliprect::y2
         jsr     assign_active_window_cliprect
@@ -4486,12 +4486,12 @@ L63EA:  .word   0
         jsr     L644C
         sta     L6448
         add16_8 grafport2::cliprect::y2, L6448, L644A
-        cmp16   L644A, iconbb_pt1+MGTK::Point::ycoord
+        cmp16   L644A, iconbb_rect+MGTK::Rect::y2
         bpl     L6421
         ldax    L644A
         jmp     L6427
 
-L6421:  ldax    iconbb_pt1+MGTK::Point::ycoord
+L6421:  ldax    iconbb_rect+MGTK::Rect::y2
 L6427:  stax    grafport2::cliprect::y2
         sub16_8 grafport2::cliprect::y2, L6449, grafport2::cliprect::y1
         jsr     assign_active_window_cliprect
@@ -4518,12 +4518,12 @@ L644A:  .word   0
         jsr     L650F
         stax    L64AC
         sub16   grafport2::cliprect::x1, L64AC, L64AE
-        cmp16   L64AE, iconbb_pt0+MGTK::Point::xcoord
+        cmp16   L64AE, iconbb_rect+MGTK::Rect::x1
         bmi     L6484
         ldax    L64AE
         jmp     L648A
 
-L6484:  ldax    iconbb_pt0+MGTK::Point::xcoord
+L6484:  ldax    iconbb_rect+MGTK::Rect::x1
 L648A:  stax    grafport2::cliprect::x1
         add16   grafport2::cliprect::x1, L64AC, grafport2::cliprect::x2
         jsr     assign_active_window_cliprect
@@ -4540,12 +4540,12 @@ L64AE:  .word   0
         jsr     L650F
         stax    L650B
         add16   grafport2::cliprect::x2, L650B, L650D
-        cmp16   L650D, iconbb_pt1+MGTK::Point::xcoord
+        cmp16   L650D, iconbb_rect+MGTK::Rect::x2
         bpl     L64E3
         ldax    L650D
         jmp     L64E9
 
-L64E3:  ldax    iconbb_pt1+MGTK::Point::xcoord
+L64E3:  ldax    iconbb_rect+MGTK::Rect::x2
 L64E9:  stax    grafport2::cliprect::x2
         sub16   grafport2::cliprect::x2, L650B, grafport2::cliprect::x1
         jsr     assign_active_window_cliprect
@@ -4561,7 +4561,7 @@ L650D:  .word   0
         bmi     :+
         jsr     cached_icons_window_to_screen
 :       jsr     L6523
-        jsr     L7B6B
+        jsr     compute_icons_bbox
         lda     active_window_id
         jmp     L7D5D
 .endproc
@@ -4615,15 +4615,15 @@ L650D:  .word   0
         ldy     #$06
         lda     ($06),y
         tay
-        sub16   iconbb_pt1+MGTK::Point::xcoord, iconbb_pt0+MGTK::Point::xcoord, L6602
+        sub16   iconbb_rect+MGTK::Rect::x2, iconbb_rect+MGTK::Rect::x1, L6602
         sub16   L6602, L6600, L6602
         lsr16    L6602
         ldx     L6602
-        sub16   grafport2::cliprect::x1, iconbb_pt0+MGTK::Point::xcoord, L6602
+        sub16   grafport2::cliprect::x1, iconbb_rect+MGTK::Rect::x1, L6602
         bpl     L65D0
         lda     #$00
         beq     L65EB
-L65D0:  cmp16   grafport2::cliprect::x2, iconbb_pt1+MGTK::Point::xcoord
+L65D0:  cmp16   grafport2::cliprect::x2, iconbb_rect+MGTK::Rect::x2
         bmi     L65E2
         tya
         jmp     L65EE
@@ -4653,16 +4653,16 @@ L6602:  .word   0
         ldy     #$08
         lda     ($06),y
         tay
-        sub16   iconbb_pt1+MGTK::Point::ycoord, iconbb_pt0+MGTK::Point::ycoord, L66A0
+        sub16   iconbb_rect+MGTK::Rect::y2, iconbb_rect+MGTK::Rect::y1, L66A0
         sub16_8 L66A0, L669F, L66A0
         lsr16    L66A0
         lsr16    L66A0
         ldx     L66A0
-        sub16   grafport2::cliprect::y1, iconbb_pt0+MGTK::Point::ycoord, L66A0
+        sub16   grafport2::cliprect::y1, iconbb_rect+MGTK::Rect::y1, L66A0
         bpl     L6669
         lda     #$00
         beq     L668A
-L6669:  cmp16   grafport2::cliprect::y2, iconbb_pt1+MGTK::Point::ycoord
+L6669:  cmp16   grafport2::cliprect::y2, iconbb_rect+MGTK::Rect::y2
         bmi     L667B
         tya
         jmp     L668D
@@ -5426,11 +5426,11 @@ L6DB0:  .byte   0
         dex
         lda     win_view_by_table,x
         bmi     :+
-        jsr     L7B6B
+        jsr     compute_icons_bbox
         jmp     config_port
 
 :       jsr     cached_icons_window_to_screen
-        jsr     L7B6B
+        jsr     compute_icons_bbox
         jsr     cached_icons_screen_to_window
 
 config_port:
@@ -5439,9 +5439,9 @@ config_port:
         jsr     get_set_port2
 
         ;; check horizontal bounds
-        cmp16   iconbb_pt0+MGTK::Point::xcoord, grafport2::cliprect::x1
+        cmp16   iconbb_rect+MGTK::Rect::x1, grafport2::cliprect::x1
         bmi     activate_hscroll
-        cmp16   grafport2::cliprect::x2, iconbb_pt1+MGTK::Point::xcoord
+        cmp16   grafport2::cliprect::x2, iconbb_rect+MGTK::Rect::x2
         bmi     activate_hscroll
 
         ;; deactivate horizontal scrollbar
@@ -5464,9 +5464,9 @@ activate_hscroll:
 
 check_vscroll:
         ;; check vertical bounds
-        cmp16   iconbb_pt0+MGTK::Point::ycoord, grafport2::cliprect::y1
+        cmp16   iconbb_rect+MGTK::Rect::y1, grafport2::cliprect::y1
         bmi     activate_vscroll
-        cmp16   grafport2::cliprect::y2, iconbb_pt1+MGTK::Point::ycoord
+        cmp16   grafport2::cliprect::y2, iconbb_rect+MGTK::Rect::y2
         bmi     activate_vscroll
 
         ;; deactivate vertical scrollbar
@@ -6481,23 +6481,23 @@ L76BB:  bit     flag
         jsr     pop_pointers
         rts
 
-:       jsr     L7B6B
+:       jsr     compute_icons_bbox
         lda     window_id
         jsr     window_lookup
         stax    $06
         ldy     #$16
-        lda     iconbb_pt1+MGTK::Point::ycoord
+        lda     iconbb_rect+MGTK::Rect::y2
         sec
         sbc     ($06),y
-        sta     iconbb_pt1+MGTK::Point::ycoord
-        lda     iconbb_pt1+MGTK::Point::ycoord+1
+        sta     iconbb_rect+MGTK::Rect::y2
+        lda     iconbb_rect+MGTK::Rect::y2+1
         sbc     #0
-        sta     iconbb_pt1+MGTK::Point::ycoord+1
-        cmp16   iconbb_pt1+MGTK::Point::xcoord, #170
+        sta     iconbb_rect+MGTK::Rect::y2+1
+        cmp16   iconbb_rect+MGTK::Rect::x2, #170
         bmi     L7705
-        cmp16   iconbb_pt1+MGTK::Point::xcoord, #450
+        cmp16   iconbb_rect+MGTK::Rect::x2, #450
         bpl     L770C
-        ldax    iconbb_pt1+MGTK::Point::xcoord
+        ldax    iconbb_rect+MGTK::Rect::x2
         jmp     L7710
 
 L7705:  addr_jump L7710, $00AA
@@ -6509,11 +6509,11 @@ L7710:  ldy     #$20
         iny
         sta     ($06),y
 
-        cmp16   iconbb_pt1+MGTK::Point::ycoord, #50
+        cmp16   iconbb_rect+MGTK::Rect::y2, #50
         bmi     L7739
-        cmp16   iconbb_pt1+MGTK::Point::ycoord, #108
+        cmp16   iconbb_rect+MGTK::Rect::y2, #108
         bpl     L7740
-        ldax    iconbb_pt1+MGTK::Point::ycoord
+        ldax    iconbb_rect+MGTK::Rect::y2
         jmp     L7744
 
 L7739:  addr_jump L7744, $0032
@@ -6951,34 +6951,39 @@ nonzero_flag:                ; high bit set once a non-zero digit seen
 .endproc ; draw_window_header
 
 ;;; ============================================================
+;;; Compute bounding box for icons within cached window
 
-iconbb_pt0:
-        DEFINE_POINT 0,0,iconbb_pt0
-iconbb_pt1:
-        DEFINE_POINT 0,0,iconbb_pt1
+iconbb_rect:
+        DEFINE_RECT 0,0,0,0,iconbb_rect
+
+.proc compute_icons_bbox_impl
 
 cur_icon_pos:
         DEFINE_POINT 0,0,cur_icon_pos
-
-.proc L7B6B
 
         entry_ptr := $06
 
         kIntMax = $7FFF
 
-        ldx     #3
+        kPadTop    = 15
+        kPadLeft   = 50
+        kPadBottom = 32
+        kPadRight  = 50
+
+
+start:  ldx     #3
         lda     #0
-:       sta     iconbb_pt1::xcoord,x
+:       sta     iconbb_rect::x2,x
         dex
         bpl     :-
 
-        sta     L7D5B
+        sta     icon_num
         lda     #<kIntMax
-        sta     iconbb_pt0::xcoord
-        sta     iconbb_pt0+MGTK::Point::ycoord
+        sta     iconbb_rect::x1
+        sta     iconbb_rect+MGTK::Rect::y1
         lda     #>kIntMax
-        sta     iconbb_pt0::xcoord+1
-        sta     iconbb_pt0+MGTK::Point::ycoord+1
+        sta     iconbb_rect::x1+1
+        sta     iconbb_rect+MGTK::Rect::y1+1
 
         ldx     cached_window_id
         dex
@@ -6987,27 +6992,27 @@ cur_icon_pos:
         lda     cached_window_icon_count
         bne     L7BA1
 L7B96:  ldax    #$0300
-L7B9A:  sta     iconbb_pt0::xcoord,x
+L7B9A:  sta     iconbb_rect::x1,x
         dex
         bpl     L7B9A
         rts
 
-        ;; iconbb_pt1::xcoord = 360
-        ;; iconbb_pt1::ycoord = (A + 2) * 8
+        ;; iconbb_rect::x2 = 360
+        ;; iconbb_rect::y2 = (A + 2) * 8
 L7BA1:  clc
         adc     #2
         ldx     #0
-        stx     L7D5C
+        stx     hi
         asl     a
-        rol     L7D5C
+        rol     hi
         asl     a
-        rol     L7D5C
+        rol     hi
         asl     a
-        rol     L7D5C
-        sta     iconbb_pt1::ycoord
-        lda     L7D5C
-        sta     iconbb_pt1::ycoord+1
-        copy16  #360, iconbb_pt1::xcoord
+        rol     hi
+        sta     iconbb_rect::y2
+        lda     hi
+        sta     iconbb_rect::y2+1
+        copy16  #360, iconbb_rect::x2
         jmp     L7B96
 
 L7BCB:  lda     cached_window_icon_count
@@ -7022,47 +7027,48 @@ L7BCB:  lda     cached_window_icon_count
         ldy     #IconEntry::iconx+.sizeof(MGTK::Point)-1
         ldx     #.sizeof(MGTK::Point)-1
 :       lda     (entry_ptr),y
-        sta     iconbb_pt0::xcoord,x
-        sta     iconbb_pt1::xcoord,x
+        sta     iconbb_rect::x1,x
+        sta     iconbb_rect::x2,x
         dey
         dex
         bpl     :-
 
-        jmp     L7BF7
+        jmp     finish
 
 check_icon:
-        lda     L7D5B
+        lda     icon_num
         cmp     cached_window_icon_count
-        bne     L7C36
-L7BF7:  lda     iconbb_pt1::xcoord
+        bne     more
+
+finish: lda     iconbb_rect::x2
         clc
-        adc     #50
-        sta     iconbb_pt1::xcoord
-        bcc     L7C05
-        inc     iconbb_pt1::xcoord+1
-L7C05:  lda     iconbb_pt1::ycoord
+        adc     #kPadRight
+        sta     iconbb_rect::x2
+        bcc     :+
+        inc     iconbb_rect::x2+1
+:       lda     iconbb_rect::y2
         clc
-        adc     #32
-        sta     iconbb_pt1::ycoord
-        bcc     L7C13
-        inc     iconbb_pt1::ycoord+1
-L7C13:  sub16   iconbb_pt0::xcoord, #50, iconbb_pt0::xcoord
-        sub16   iconbb_pt0::ycoord, #15, iconbb_pt0::ycoord
+        adc     #kPadBottom
+        sta     iconbb_rect::y2
+        bcc     :+
+        inc     iconbb_rect::y2+1
+:       sub16   iconbb_rect::x1, #kPadLeft, iconbb_rect::x1
+        sub16   iconbb_rect::y1, #kPadTop, iconbb_rect::y1
         rts
 
-L7C36:  tax
+more:   tax
         lda     cached_window_icon_list,x
         jsr     icon_entry_lookup
         stax    entry_ptr
         ldy     #IconEntry::win_type
         lda     (entry_ptr),y
         and     #icon_entry_winid_mask
-        cmp     L7D5C
-        bne     L7C52
-        inc     L7D5B
+        cmp     hi           ; BUG: from old code that iterated all icons???
+        bne     :+
+        inc     icon_num
         jmp     check_icon
 
-L7C52:  ldy     #IconEntry::iconx+.sizeof(MGTK::Point)-1
+:       ldy     #IconEntry::iconx+.sizeof(MGTK::Point)-1
         ldx     #.sizeof(MGTK::Point)-1
 :       lda     (entry_ptr),y
         sta     cur_icon_pos::xcoord,x
@@ -7073,82 +7079,94 @@ L7C52:  ldy     #IconEntry::iconx+.sizeof(MGTK::Point)-1
         ;; --------------------------------------------------
         ;; Compare X coords
 
-        bit     iconbb_pt0::xcoord+1         ; negative?
-        bmi     L7C88
+        bit     iconbb_rect::x1+1         ; negative?
+        bmi     pt0x_neg
 
         bit     cur_icon_pos::xcoord+1
         bmi     adjust_pt0_x
 
         ;; X: cur and pt0 are positive
-        cmp16   cur_icon_pos::xcoord, iconbb_pt0::xcoord
+        cmp16   cur_icon_pos::xcoord, iconbb_rect::x1
         bmi     adjust_pt0_x
-        cmp16   cur_icon_pos::xcoord, iconbb_pt1::xcoord
-        bpl     L7CBF
+        cmp16   cur_icon_pos::xcoord, iconbb_rect::x2
+        bpl     adjust_pt1_x
         jmp     compare_y
 
-L7C88:  bit     cur_icon_pos::xcoord+1
-        bmi     L7CA3
+pt0x_neg:
+        bit     cur_icon_pos::xcoord+1
+        bmi     bothx_neg
 
         ;; X: cur positive, pt0 negative
-        bit     iconbb_pt1::xcoord+1
+        bit     iconbb_rect::x2+1
         bmi     compare_y
-        cmp16   cur_icon_pos::xcoord, iconbb_pt1::xcoord
+        cmp16   cur_icon_pos::xcoord, iconbb_rect::x2
         bmi     compare_y
-        jmp     L7CBF
+        jmp     adjust_pt1_x
 
         ;; X: cur and pt0 are negative
-L7CA3:  cmp16   cur_icon_pos::xcoord, iconbb_pt0::xcoord
+bothx_neg:
+        cmp16   cur_icon_pos::xcoord, iconbb_rect::x1
         bmi     adjust_pt0_x
-        cmp16   cur_icon_pos::xcoord, iconbb_pt1::xcoord
+        cmp16   cur_icon_pos::xcoord, iconbb_rect::x2
         bmi     compare_y
-L7CBF:  copy16  cur_icon_pos::xcoord, iconbb_pt1::xcoord
+
+adjust_pt1_x:
+        copy16  cur_icon_pos::xcoord, iconbb_rect::x2
         jmp     compare_y
 
 adjust_pt0_x:
-        copy16  cur_icon_pos::xcoord, iconbb_pt0::xcoord
+        copy16  cur_icon_pos::xcoord, iconbb_rect::x1
 
         ;; --------------------------------------------------
         ;; Compare Y coords
 
 compare_y:
-        bit     iconbb_pt0::ycoord+1
-        bmi     L7D03
+        bit     iconbb_rect::y1+1
+        bmi     pt0y_neg
         bit     cur_icon_pos::ycoord+1
-        bmi     L7D49
+        bmi     adjust_pt0_y
 
         ;; Y: cur and pt0 are positive
-        cmp16   cur_icon_pos::ycoord, iconbb_pt0::ycoord
-        bmi     L7D49
-        cmp16   cur_icon_pos::ycoord, iconbb_pt1::ycoord
-        bpl     adjust_pt0_y
+        cmp16   cur_icon_pos::ycoord, iconbb_rect::y1
+        bmi     adjust_pt0_y
+        cmp16   cur_icon_pos::ycoord, iconbb_rect::y2
+        bpl     adjust_pt1_y
         jmp     next
 
-L7D03:  bit     cur_icon_pos::ycoord+1
-        bmi     L7D1E
+pt0y_neg:
+        bit     cur_icon_pos::ycoord+1
+        bmi     bothy_neg
 
-        bit     iconbb_pt1::ycoord+1
+        ;; Y: cur positive, pt0 negative
+        bit     iconbb_rect::y2+1
         bmi     next
-        cmp16   cur_icon_pos::ycoord, iconbb_pt1::ycoord
+        cmp16   cur_icon_pos::ycoord, iconbb_rect::y2
         bmi     next
-        jmp     adjust_pt0_y
+        jmp     adjust_pt1_y
 
         ;; Y: cur and pt0 are negative
-L7D1E:  cmp16   cur_icon_pos::ycoord, iconbb_pt0::ycoord
-        bmi     L7D49
-        cmp16   cur_icon_pos::ycoord, iconbb_pt1::ycoord
+bothy_neg:
+        cmp16   cur_icon_pos::ycoord, iconbb_rect::y1
+        bmi     adjust_pt0_y
+        cmp16   cur_icon_pos::ycoord, iconbb_rect::y2
         bmi     next
 
-adjust_pt0_y:
-        copy16  cur_icon_pos::ycoord, iconbb_pt1::ycoord
+adjust_pt1_y:
+        copy16  cur_icon_pos::ycoord, iconbb_rect::y2
         jmp     next
 
-L7D49:  copy16  cur_icon_pos::ycoord, iconbb_pt0::ycoord
-next:   inc     L7D5B
+adjust_pt0_y:
+        copy16  cur_icon_pos::ycoord, iconbb_rect::y1
+
+next:   inc     icon_num
         jmp     check_icon
 
-L7D5B:  .byte   0
-L7D5C:  .byte   0
+icon_num:
+        .byte   0
+
+hi:     .byte   0
 .endproc
+        compute_icons_bbox := compute_icons_bbox_impl::start
 
 ;;; ============================================================
 
@@ -8161,10 +8179,10 @@ L850E:  sta     L85F1
         tay
         lda     ($06),y
         pha
-        jsr     L7B6B
+        jsr     compute_icons_bbox
         ldx     L85F1
 
-        sub16   iconbb_pt1::xcoord,x, iconbb_pt0::xcoord,x, L85F2
+        sub16   iconbb_rect::x2,x, iconbb_rect::x1,x, L85F2
 
         ldx     L85F1
 
@@ -8192,10 +8210,10 @@ L8562:  lsr16   L85F2
 
         ldx     L85F1
         clc
-        adc     iconbb_pt0::xcoord,x
+        adc     iconbb_rect::x1,x
         sta     grafport2::cliprect::x1,x
         lda     L85F2
-        adc     iconbb_pt0::xcoord+1,x
+        adc     iconbb_rect::x1+1,x
         sta     grafport2::cliprect::x1+1,x
 
         lda     active_window_id
