@@ -8716,7 +8716,7 @@ unk:    MLI_RELAY_CALL READ_BLOCK, block_params
 
 hd:     return  #device_type_profile
 
-        DEFINE_READ_BLOCK_PARAMS block_params, $800, 0
+        DEFINE_READ_BLOCK_PARAMS block_params, $800, 2
         unit_number := block_params::unit_num
 
 blocks: .word   0
