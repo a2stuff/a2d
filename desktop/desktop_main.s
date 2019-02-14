@@ -4460,12 +4460,12 @@ L638B:  .byte   0
         jsr     L644C
         sta     L63E8
         sub16_8 grafport2::cliprect::y1, L63E8, L63EA
-        cmp16   L63EA, L7B61
+        cmp16   L63EA, iconbb_pt0+MGTK::Point::ycoord
         bmi     L63C1
         ldax    L63EA
         jmp     L63C7
 
-L63C1:  ldax    L7B61
+L63C1:  ldax    iconbb_pt0+MGTK::Point::ycoord
 L63C7:  stax    grafport2::cliprect::y1
         add16_8 grafport2::cliprect::y1, L63E9, grafport2::cliprect::y2
         jsr     assign_active_window_cliprect
@@ -4486,12 +4486,12 @@ L63EA:  .word   0
         jsr     L644C
         sta     L6448
         add16_8 grafport2::cliprect::y2, L6448, L644A
-        cmp16   L644A, L7B65
+        cmp16   L644A, iconbb_pt1+MGTK::Point::ycoord
         bpl     L6421
         ldax    L644A
         jmp     L6427
 
-L6421:  ldax    L7B65
+L6421:  ldax    iconbb_pt1+MGTK::Point::ycoord
 L6427:  stax    grafport2::cliprect::y2
         sub16_8 grafport2::cliprect::y2, L6449, grafport2::cliprect::y1
         jsr     assign_active_window_cliprect
@@ -4518,12 +4518,12 @@ L644A:  .word   0
         jsr     L650F
         stax    L64AC
         sub16   grafport2::cliprect::x1, L64AC, L64AE
-        cmp16   L64AE, L7B5F
+        cmp16   L64AE, iconbb_pt0+MGTK::Point::xcoord
         bmi     L6484
         ldax    L64AE
         jmp     L648A
 
-L6484:  ldax    L7B5F
+L6484:  ldax    iconbb_pt0+MGTK::Point::xcoord
 L648A:  stax    grafport2::cliprect::x1
         add16   grafport2::cliprect::x1, L64AC, grafport2::cliprect::x2
         jsr     assign_active_window_cliprect
@@ -4540,12 +4540,12 @@ L64AE:  .word   0
         jsr     L650F
         stax    L650B
         add16   grafport2::cliprect::x2, L650B, L650D
-        cmp16   L650D, L7B63
+        cmp16   L650D, iconbb_pt1+MGTK::Point::xcoord
         bpl     L64E3
         ldax    L650D
         jmp     L64E9
 
-L64E3:  ldax    L7B63
+L64E3:  ldax    iconbb_pt1+MGTK::Point::xcoord
 L64E9:  stax    grafport2::cliprect::x2
         sub16   grafport2::cliprect::x2, L650B, grafport2::cliprect::x1
         jsr     assign_active_window_cliprect
@@ -4615,15 +4615,15 @@ L650D:  .word   0
         ldy     #$06
         lda     ($06),y
         tay
-        sub16   L7B63, L7B5F, L6602
+        sub16   iconbb_pt1+MGTK::Point::xcoord, iconbb_pt0+MGTK::Point::xcoord, L6602
         sub16   L6602, L6600, L6602
         lsr16    L6602
         ldx     L6602
-        sub16   grafport2::cliprect::x1, L7B5F, L6602
+        sub16   grafport2::cliprect::x1, iconbb_pt0+MGTK::Point::xcoord, L6602
         bpl     L65D0
         lda     #$00
         beq     L65EB
-L65D0:  cmp16   grafport2::cliprect::x2, L7B63
+L65D0:  cmp16   grafport2::cliprect::x2, iconbb_pt1+MGTK::Point::xcoord
         bmi     L65E2
         tya
         jmp     L65EE
@@ -4653,16 +4653,16 @@ L6602:  .word   0
         ldy     #$08
         lda     ($06),y
         tay
-        sub16   L7B65, L7B61, L66A0
+        sub16   iconbb_pt1+MGTK::Point::ycoord, iconbb_pt0+MGTK::Point::ycoord, L66A0
         sub16_8 L66A0, L669F, L66A0
         lsr16    L66A0
         lsr16    L66A0
         ldx     L66A0
-        sub16   grafport2::cliprect::y1, L7B61, L66A0
+        sub16   grafport2::cliprect::y1, iconbb_pt0+MGTK::Point::ycoord, L66A0
         bpl     L6669
         lda     #$00
         beq     L668A
-L6669:  cmp16   grafport2::cliprect::y2, L7B65
+L6669:  cmp16   grafport2::cliprect::y2, iconbb_pt1+MGTK::Point::ycoord
         bmi     L667B
         tya
         jmp     L668D
@@ -5439,9 +5439,9 @@ config_port:
         jsr     get_set_port2
 
         ;; check horizontal bounds
-        cmp16   L7B5F, grafport2::cliprect::x1
+        cmp16   iconbb_pt0+MGTK::Point::xcoord, grafport2::cliprect::x1
         bmi     activate_hscroll
-        cmp16   grafport2::cliprect::x2, L7B63
+        cmp16   grafport2::cliprect::x2, iconbb_pt1+MGTK::Point::xcoord
         bmi     activate_hscroll
 
         ;; deactivate horizontal scrollbar
@@ -5464,9 +5464,9 @@ activate_hscroll:
 
 check_vscroll:
         ;; check vertical bounds
-        cmp16   L7B61, grafport2::cliprect::y1
+        cmp16   iconbb_pt0+MGTK::Point::ycoord, grafport2::cliprect::y1
         bmi     activate_vscroll
-        cmp16   grafport2::cliprect::y2, L7B65
+        cmp16   grafport2::cliprect::y2, iconbb_pt1+MGTK::Point::ycoord
         bmi     activate_vscroll
 
         ;; deactivate vertical scrollbar
@@ -6486,18 +6486,18 @@ L76BB:  bit     flag
         jsr     window_lookup
         stax    $06
         ldy     #$16
-        lda     L7B65
+        lda     iconbb_pt1+MGTK::Point::ycoord
         sec
         sbc     ($06),y
-        sta     L7B65
-        lda     L7B65+1
+        sta     iconbb_pt1+MGTK::Point::ycoord
+        lda     iconbb_pt1+MGTK::Point::ycoord+1
         sbc     #0
-        sta     L7B65+1
-        cmp16   L7B63, #170
+        sta     iconbb_pt1+MGTK::Point::ycoord+1
+        cmp16   iconbb_pt1+MGTK::Point::xcoord, #170
         bmi     L7705
-        cmp16   L7B63, #450
+        cmp16   iconbb_pt1+MGTK::Point::xcoord, #450
         bpl     L770C
-        ldax    L7B63
+        ldax    iconbb_pt1+MGTK::Point::xcoord
         jmp     L7710
 
 L7705:  addr_jump L7710, $00AA
@@ -6509,11 +6509,11 @@ L7710:  ldy     #$20
         iny
         sta     ($06),y
 
-        cmp16   L7B65, #50
+        cmp16   iconbb_pt1+MGTK::Point::ycoord, #50
         bmi     L7739
-        cmp16   L7B65, #108
+        cmp16   iconbb_pt1+MGTK::Point::ycoord, #108
         bpl     L7740
-        ldax    L7B65
+        ldax    iconbb_pt1+MGTK::Point::ycoord
         jmp     L7744
 
 L7739:  addr_jump L7744, $0032
@@ -6952,29 +6952,34 @@ nonzero_flag:                ; high bit set once a non-zero digit seen
 
 ;;; ============================================================
 
-L7B5F:  .word   0
-L7B61:  .word   0
+iconbb_pt0:
+        DEFINE_POINT 0,0,iconbb_pt0
+iconbb_pt1:
+        DEFINE_POINT 0,0,iconbb_pt1
 
-L7B63:  .word   0
-L7B65:  .word   0
-
-L7B67:  .word   0
-L7B69:  .word   0
+cur_icon_pos:
+        DEFINE_POINT 0,0,cur_icon_pos
 
 .proc L7B6B
+
+        entry_ptr := $06
+
+        kIntMax = $7FFF
+
         ldx     #3
         lda     #0
-:       sta     L7B63,x
+:       sta     iconbb_pt1::xcoord,x
         dex
         bpl     :-
 
         sta     L7D5B
-        lda     #<$7FFF
-        sta     L7B5F
-        sta     L7B61
-        lda     #>$7FFF
-        sta     L7B5F+1
-        sta     L7B61+1
+        lda     #<kIntMax
+        sta     iconbb_pt0::xcoord
+        sta     iconbb_pt0+MGTK::Point::ycoord
+        lda     #>kIntMax
+        sta     iconbb_pt0::xcoord+1
+        sta     iconbb_pt0+MGTK::Point::ycoord+1
+
         ldx     cached_window_id
         dex
         lda     win_view_by_table,x
@@ -6982,11 +6987,13 @@ L7B69:  .word   0
         lda     cached_window_icon_count
         bne     L7BA1
 L7B96:  ldax    #$0300
-L7B9A:  sta     L7B5F,x
+L7B9A:  sta     iconbb_pt0::xcoord,x
         dex
         bpl     L7B9A
         rts
 
+        ;; iconbb_pt1::xcoord = 360
+        ;; iconbb_pt1::ycoord = (A + 2) * 8
 L7BA1:  clc
         adc     #2
         ldx     #0
@@ -6997,120 +7004,147 @@ L7BA1:  clc
         rol     L7D5C
         asl     a
         rol     L7D5C
-        sta     L7B65
+        sta     iconbb_pt1::ycoord
         lda     L7D5C
-        sta     L7B65+1
-        copy16  #360, L7B63
+        sta     iconbb_pt1::ycoord+1
+        copy16  #360, iconbb_pt1::xcoord
         jmp     L7B96
 
 L7BCB:  lda     cached_window_icon_count
         cmp     #1
-        bne     L7BEF
+        bne     check_icon
+
+        ;; First icon - copy coords
         lda     cached_window_icon_list
         jsr     icon_entry_lookup
-        stax    $06
-        ldy     #6
-        ldx     #3
-L7BE0:  lda     ($06),y
-        sta     L7B5F,x
-        sta     L7B63,x
+        stax    entry_ptr
+
+        ldy     #IconEntry::iconx+.sizeof(MGTK::Point)-1
+        ldx     #.sizeof(MGTK::Point)-1
+:       lda     (entry_ptr),y
+        sta     iconbb_pt0::xcoord,x
+        sta     iconbb_pt1::xcoord,x
         dey
         dex
-        bpl     L7BE0
+        bpl     :-
+
         jmp     L7BF7
 
-L7BEF:  lda     L7D5B
+check_icon:
+        lda     L7D5B
         cmp     cached_window_icon_count
         bne     L7C36
-L7BF7:  lda     L7B63
+L7BF7:  lda     iconbb_pt1::xcoord
         clc
         adc     #50
-        sta     L7B63
+        sta     iconbb_pt1::xcoord
         bcc     L7C05
-        inc     L7B63+1
-L7C05:  lda     L7B65
+        inc     iconbb_pt1::xcoord+1
+L7C05:  lda     iconbb_pt1::ycoord
         clc
         adc     #32
-        sta     L7B65
+        sta     iconbb_pt1::ycoord
         bcc     L7C13
-        inc     L7B65+1
-L7C13:  sub16   L7B5F, #50, L7B5F
-        sub16   L7B61, #15, L7B61
+        inc     iconbb_pt1::ycoord+1
+L7C13:  sub16   iconbb_pt0::xcoord, #50, iconbb_pt0::xcoord
+        sub16   iconbb_pt0::ycoord, #15, iconbb_pt0::ycoord
         rts
 
 L7C36:  tax
         lda     cached_window_icon_list,x
         jsr     icon_entry_lookup
-        stax    $06
+        stax    entry_ptr
         ldy     #IconEntry::win_type
-        lda     ($06),y
+        lda     (entry_ptr),y
         and     #icon_entry_winid_mask
         cmp     L7D5C
         bne     L7C52
         inc     L7D5B
-        jmp     L7BEF
+        jmp     check_icon
 
-L7C52:  ldy     #6
-        ldx     #3
-L7C56:  lda     ($06),y
-        sta     L7B67,x
+L7C52:  ldy     #IconEntry::iconx+.sizeof(MGTK::Point)-1
+        ldx     #.sizeof(MGTK::Point)-1
+:       lda     (entry_ptr),y
+        sta     cur_icon_pos::xcoord,x
         dey
         dex
-        bpl     L7C56
-        bit     L7B5F+1
-        bmi     L7C88
-        bit     L7B67+1
-        bmi     L7CCE
-        cmp16   L7B67, L7B5F
-        bmi     L7CCE
-        cmp16   L7B67, L7B63
-        bpl     L7CBF
-        jmp     L7CDA
+        bpl     :-
 
-L7C88:  bit     L7B67+1
+        ;; --------------------------------------------------
+        ;; Compare X coords
+
+        bit     iconbb_pt0::xcoord+1         ; negative?
+        bmi     L7C88
+
+        bit     cur_icon_pos::xcoord+1
+        bmi     adjust_pt0_x
+
+        ;; X: cur and pt0 are positive
+        cmp16   cur_icon_pos::xcoord, iconbb_pt0::xcoord
+        bmi     adjust_pt0_x
+        cmp16   cur_icon_pos::xcoord, iconbb_pt1::xcoord
+        bpl     L7CBF
+        jmp     compare_y
+
+L7C88:  bit     cur_icon_pos::xcoord+1
         bmi     L7CA3
-        bit     L7B63+1
-        bmi     L7CDA
-        cmp16   L7B67, L7B63
-        bmi     L7CDA
+
+        ;; X: cur positive, pt0 negative
+        bit     iconbb_pt1::xcoord+1
+        bmi     compare_y
+        cmp16   cur_icon_pos::xcoord, iconbb_pt1::xcoord
+        bmi     compare_y
         jmp     L7CBF
 
-L7CA3:  cmp16   L7B67, L7B5F
-        bmi     L7CCE
-        cmp16   L7B67, L7B63
-        bmi     L7CDA
-L7CBF:  copy16  L7B67, L7B63
-        jmp     L7CDA
+        ;; X: cur and pt0 are negative
+L7CA3:  cmp16   cur_icon_pos::xcoord, iconbb_pt0::xcoord
+        bmi     adjust_pt0_x
+        cmp16   cur_icon_pos::xcoord, iconbb_pt1::xcoord
+        bmi     compare_y
+L7CBF:  copy16  cur_icon_pos::xcoord, iconbb_pt1::xcoord
+        jmp     compare_y
 
-L7CCE:  copy16  L7B67, L7B5F
-L7CDA:  bit     L7B61+1
+adjust_pt0_x:
+        copy16  cur_icon_pos::xcoord, iconbb_pt0::xcoord
+
+        ;; --------------------------------------------------
+        ;; Compare Y coords
+
+compare_y:
+        bit     iconbb_pt0::ycoord+1
         bmi     L7D03
-        bit     L7B69+1
+        bit     cur_icon_pos::ycoord+1
         bmi     L7D49
-        cmp16   L7B69, L7B61
-        bmi     L7D49
-        cmp16   L7B69, L7B65
-        bpl     L7D3A
-        jmp     L7D55
 
-L7D03:  bit     L7B69+1
+        ;; Y: cur and pt0 are positive
+        cmp16   cur_icon_pos::ycoord, iconbb_pt0::ycoord
+        bmi     L7D49
+        cmp16   cur_icon_pos::ycoord, iconbb_pt1::ycoord
+        bpl     adjust_pt0_y
+        jmp     next
+
+L7D03:  bit     cur_icon_pos::ycoord+1
         bmi     L7D1E
-        bit     L7B65+1
-        bmi     L7D55
-        cmp16   L7B69, L7B65
-        bmi     L7D55
-        jmp     L7D3A
 
-L7D1E:  cmp16   L7B69, L7B61
+        bit     iconbb_pt1::ycoord+1
+        bmi     next
+        cmp16   cur_icon_pos::ycoord, iconbb_pt1::ycoord
+        bmi     next
+        jmp     adjust_pt0_y
+
+        ;; Y: cur and pt0 are negative
+L7D1E:  cmp16   cur_icon_pos::ycoord, iconbb_pt0::ycoord
         bmi     L7D49
-        cmp16   L7B69, L7B65
-        bmi     L7D55
-L7D3A:  copy16  L7B69, L7B65
-        jmp     L7D55
+        cmp16   cur_icon_pos::ycoord, iconbb_pt1::ycoord
+        bmi     next
 
-L7D49:  copy16  L7B69, L7B61
-L7D55:  inc     L7D5B
-        jmp     L7BEF
+adjust_pt0_y:
+        copy16  cur_icon_pos::ycoord, iconbb_pt1::ycoord
+        jmp     next
+
+L7D49:  copy16  cur_icon_pos::ycoord, iconbb_pt0::ycoord
+next:   inc     L7D5B
+        jmp     check_icon
 
 L7D5B:  .byte   0
 L7D5C:  .byte   0
@@ -8130,7 +8164,7 @@ L850E:  sta     L85F1
         jsr     L7B6B
         ldx     L85F1
 
-        sub16   L7B63,x, L7B5F,x, L85F2
+        sub16   iconbb_pt1::xcoord,x, iconbb_pt0::xcoord,x, L85F2
 
         ldx     L85F1
 
@@ -8158,10 +8192,10 @@ L8562:  lsr16   L85F2
 
         ldx     L85F1
         clc
-        adc     L7B5F,x
+        adc     iconbb_pt0::xcoord,x
         sta     grafport2::cliprect::x1,x
         lda     L85F2
-        adc     L7B5F+1,x
+        adc     iconbb_pt0::xcoord+1,x
         sta     grafport2::cliprect::x1+1,x
 
         lda     active_window_id
