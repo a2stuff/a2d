@@ -1232,7 +1232,7 @@ LE6C1:
         .addr   winfo8title_ptr
 
         ;; (low nibble must match menu order)
-        view_by_icon = $80
+        view_by_icon = $00
         view_by_name = $81
         view_by_date = $82
         view_by_size = $83

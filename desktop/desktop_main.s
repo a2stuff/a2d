@@ -248,13 +248,14 @@ L415B:  sta     active_window_id
 L41CB:  ldx     cached_window_id
         dex
         lda     win_view_by_table,x
-        bpl     L41E2
+        bpl     by_icon
         jsr     L6C19
         copy    #0, draw_window_header_flag
         lda     active_window_id
         jmp     assign_window_portbits
 
-L41E2:  copy    cached_window_id, getwinport_params2::window_id
+by_icon:
+        copy    cached_window_id, getwinport_params2::window_id
         jsr     get_set_port2
         jsr     cached_icons_window_to_screen
 
@@ -620,7 +621,7 @@ L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_window_id
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
-        and     #$0F
+        and     #$0F            ; mask off menu item number
         sta     checkitem_params::menu_item
         inc     checkitem_params::menu_item
         copy    #MGTK::checkitem_check, checkitem_params::check
@@ -1954,39 +1955,43 @@ L4E71:  .byte   0
 
 L4E78:  jsr     clear_selection
         dec     LEC2E
-        lda     active_window_id
-        sta     cached_window_id
+        copy    active_window_id, cached_window_id
         jsr     LoadWindowIconTable
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
-        bmi     L4EB4
+        bmi     iter            ; list view, not icons
+
+        ;; View by icon
         DESKTOP_RELAY_CALL DT_CLOSE_WINDOW, active_window_id
+
         lda     icon_count
         sec
         sbc     cached_window_icon_count
         sta     icon_count
-        ldx     #$00
-L4EA5:  cpx     cached_window_icon_count
-        beq     L4EB4
+
+        ldx     #0
+:       cpx     cached_window_icon_count
+        beq     iter
         lda     cached_window_icon_list,x
         jsr     FreeIcon
         inx
-        jmp     L4EA5
+        jmp     :-
 
-L4EB4:  ldx     #$00
+iter:   ldx     #$00
         txa
-L4EB7:  sta     cached_window_icon_list,x
+:       sta     cached_window_icon_list,x
         cpx     cached_window_icon_count
         beq     L4EC3
         inx
-        jmp     L4EB7
+        jmp     :-
 
 L4EC3:  sta     cached_window_icon_count
         jsr     StoreWindowIconTable
         copy    #0, cached_window_id
         jsr     LoadWindowIconTable
         MGTK_RELAY_CALL MGTK::CloseWindow, active_window_id
+
         ldx     active_window_id
         dex
         lda     window_to_dir_icon_table,x
@@ -2232,14 +2237,14 @@ start:
 
 :       dex
         lda     win_view_by_table,x
-        bne     :+
+        bne     :+              ; not by icon
         rts
 
+        ;; View by icon
 entry:
-:       lda     active_window_id
-        sta     cached_window_id
+:       copy    active_window_id,  cached_window_id
         jsr     LoadWindowIconTable
-        ldx     #$00
+        ldx     #0
         txa
 :       cpx     cached_window_icon_count
         beq     :+
@@ -2304,9 +2309,9 @@ L51A7:  jsr     reset_grafport3
         jsr     StoreWindowIconTable
         jsr     update_scrollbars
         lda     selected_window_index
-        beq     L51E3
+        beq     finish
         lda     selected_icon_count
-        beq     L51E3
+        beq     finish
         sta     L51EF
 L51C0:  ldx     L51EF
         lda     selected_icon_count,x
@@ -2318,7 +2323,7 @@ L51C0:  ldx     L51EF
         jsr     icon_screen_to_window
         dec     L51EF
         bne     L51C0
-L51E3:  copy    #0, cached_window_id
+finish: copy    #0, cached_window_id
         jmp     LoadWindowIconTable
 
 L51EB:  .word   0
@@ -2333,8 +2338,7 @@ L51EF:  .byte   0
         ldx     active_window_id
         dex
         sta     win_view_by_table,x
-        lda     active_window_id
-        sta     cached_window_id
+        copy    active_window_id, cached_window_id
         jsr     LoadWindowIconTable
         jsr     sort_records
         jsr     StoreWindowIconTable
@@ -2484,8 +2488,7 @@ L5265:  .byte   0
 
 .proc close_active_window
         DESKTOP_RELAY_CALL DT_CLOSE_WINDOW, active_window_id
-        lda     active_window_id
-        sta     cached_window_id
+        copy    active_window_id, cached_window_id
         jsr     LoadWindowIconTable
         lda     icon_count
         sec
@@ -2702,11 +2705,11 @@ L544D:
 L545A:  tax
         dex
         lda     win_view_by_table,x
-        bpl     L5464
+        bpl     L5464           ; by icon
         jmp     L54C5
 
-L5464:  lda     active_window_id
-        sta     cached_window_id
+        ;; View by icon
+L5464:  copy    active_window_id, cached_window_id
         jsr     LoadWindowIconTable
         lda     active_window_id
         jsr     window_lookup
@@ -2743,6 +2746,7 @@ L54B7:  pla
         inx
         jmp     L5485
 
+        ;; No window icons
 L54BD:  copy    #0, cached_window_id
         jsr     LoadWindowIconTable
 L54C5:  ldx     $1800
@@ -3127,8 +3131,7 @@ vertical:
 ;;; ============================================================
 
 .proc L5803
-        lda     active_window_id
-        sta     cached_window_id
+        copy    active_window_id, cached_window_id
         jsr     LoadWindowIconTable
         ldx     active_window_id
         dex
@@ -3598,8 +3601,7 @@ active_window_view_by:
         .byte   0
 
 .proc handle_client_click
-        lda     active_window_id
-        sta     cached_window_id
+        copy    active_window_id, cached_window_id
         jsr     LoadWindowIconTable
         ldx     active_window_id
         dex
@@ -4045,8 +4047,7 @@ L5E77:  .byte   0
         jsr     open_directory
         jsr     cmd_view_by_icon::entry
         jsr     StoreWindowIconTable
-        lda     active_window_id
-        sta     cached_window_id
+        copy    active_window_id, cached_window_id
         jsr     LoadWindowIconTable
         copy    active_window_id, getwinport_params2::window_id
         jsr     get_port2
@@ -4236,8 +4237,7 @@ L6112:  ldy     #$14
         beq     L6143
         rts
 
-L6143:  lda     active_window_id
-        sta     cached_window_id
+L6143:  copy    active_window_id, cached_window_id
         jsr     LoadWindowIconTable
         ldx     #$00
 L614E:  cpx     cached_window_icon_count
@@ -4275,8 +4275,7 @@ L6199:  .word   0
         sta     event_params
         MGTK_RELAY_CALL MGTK::GrowWindow, event_params
         jsr     redraw_windows_and_desktop
-        lda     active_window_id
-        sta     cached_window_id
+        copy    active_window_id, cached_window_id
         jsr     LoadWindowIconTable
         jsr     cached_icons_window_to_screen
         jsr     update_scrollbars
@@ -4296,8 +4295,7 @@ handle_close_click:
         rts
 
 .proc close_window
-        lda     active_window_id
-        sta     cached_window_id
+        copy    active_window_id, cached_window_id
         jsr     LoadWindowIconTable
         jsr     clear_selection
         ldx     active_window_id
@@ -5223,8 +5221,7 @@ L6BDA:  lda     L6C0E
         inc     L6C0E
         jmp     L6BDA
 
-L6BF4:  lda     cached_window_id
-        sta     active_window_id
+L6BF4:  copy    cached_window_id, active_window_id
         jsr     update_scrollbars
         jsr     cached_icons_screen_to_window
         jsr     StoreWindowIconTable
@@ -5339,7 +5336,7 @@ L6CCD:  lda     cached_window_id
 
         COPY_BLOCK grafport2::cliprect, tmp_rect
 
-        ldx     #$00
+        ldx     #0
         txa
         pha
 L6CF3:  cpx     cached_window_icon_count
@@ -5406,12 +5403,12 @@ L6D7D:  lda     L6DB0
         inc     L6DB0
         jmp     L6D7D
 
-L6D9B:  lda     #$00
+L6D9B:  lda     #0
         ldx     selected_icon_count
         dex
-L6DA1:  sta     selected_icon_list,x
+:       sta     selected_icon_list,x
         dex
-        bpl     L6DA1
+        bpl     :-
         sta     selected_icon_count
         sta     selected_window_index
         jmp     reset_grafport3
@@ -5434,8 +5431,7 @@ L6DB0:  .byte   0
         jsr     cached_icons_screen_to_window
 
 config_port:
-        lda     active_window_id
-        sta     getwinport_params2::window_id
+        copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
 
         ;; check horizontal bounds
@@ -5445,20 +5441,16 @@ config_port:
         bmi     activate_hscroll
 
         ;; deactivate horizontal scrollbar
-        lda     #MGTK::Ctl::horizontal_scroll_bar
-        sta     activatectl_which_ctl
-        lda     #MGTK::activatectl_deactivate
-        sta     activatectl_activate
+        copy    #MGTK::Ctl::horizontal_scroll_bar, activatectl_which_ctl
+        copy    #MGTK::activatectl_deactivate, activatectl_activate
         jsr     activate_ctl
 
         jmp     check_vscroll
 
 activate_hscroll:
         ;; activate horizontal scrollbar
-        lda     #MGTK::Ctl::horizontal_scroll_bar
-        sta     activatectl_which_ctl
-        lda     #MGTK::activatectl_activate
-        sta     activatectl_activate
+        copy    #MGTK::Ctl::horizontal_scroll_bar, activatectl_which_ctl
+        copy    #MGTK::activatectl_activate, activatectl_activate
         jsr     activate_ctl
         jsr     update_hthumb
 
@@ -5470,20 +5462,16 @@ check_vscroll:
         bmi     activate_vscroll
 
         ;; deactivate vertical scrollbar
-        lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     activatectl_which_ctl
-        lda     #MGTK::activatectl_deactivate
-        sta     activatectl_activate
+        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_which_ctl
+        copy    #MGTK::activatectl_deactivate, activatectl_activate
         jsr     activate_ctl
 
         rts
 
 activate_vscroll:
         ;; activate vertical scrollbar
-        lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     activatectl_which_ctl
-        lda     #MGTK::activatectl_activate
-        sta     activatectl_activate
+        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_which_ctl
+        copy    #MGTK::activatectl_activate, activatectl_activate
         jsr     activate_ctl
         jmp     update_vthumb
 
@@ -6472,7 +6460,7 @@ L76A4:  lda     cached_window_id
 L76AA:  lda     L7625
         cmp     L7764
         beq     L76BB
-        jsr     L7768
+        jsr     alloc_and_populate_file_icon
         inc     L7625
         jmp     L76AA
 
@@ -6518,7 +6506,7 @@ L7710:  ldy     #$20
 
 L7739:  addr_jump L7744, $0032
 
-L7740:  ldax    #$6C
+L7740:  ldax    #108
 L7744:  ldy     #$22
         sta     ($06),y
         txa
@@ -6543,7 +6531,7 @@ L7767:  .byte   $14
 ;;; ============================================================
 ;;; Create icon
 
-.proc L7768
+.proc alloc_and_populate_file_icon
         file_entry := $6
         icon_entry := $8
         name_tmp := $1800
