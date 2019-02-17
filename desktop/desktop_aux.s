@@ -3225,11 +3225,11 @@ textbg_white:  .byte   $7F
         .define dialog_label_row_y(num) (((num)*(dialog_label_height))+(dialog_label_base_y))
 
 clear_dialog_labels_rect:  DEFINE_RECT 39,25,360,alert_dialog_height-20
-prompt_rect:  DEFINE_RECT 40,60,360,alert_dialog_height-20
+prompt_rect:  DEFINE_RECT 40,(dialog_label_row_y {5})+1,360,(dialog_label_row_y {6})
 current_target_file_pos:  DEFINE_POINT 75,dialog_label_row_y {2}
 current_dest_file_pos:  DEFINE_POINT 75,dialog_label_row_y {3}
-current_target_file_rect:  DEFINE_RECT 75,(dialog_label_row_y {1}),394,(dialog_label_row_y {2})-1
-current_dest_file_rect:  DEFINE_RECT 75,(dialog_label_row_y {2}),394,(dialog_label_row_y {3})-1
+current_target_file_rect:  DEFINE_RECT 75,(dialog_label_row_y {1})+1,394,(dialog_label_row_y {2})
+current_dest_file_rect:  DEFINE_RECT 75,(dialog_label_row_y {2})+1,394,(dialog_label_row_y {3})
 
 str_cancel_label:
         PASCAL_STRING "Cancel        Esc"
