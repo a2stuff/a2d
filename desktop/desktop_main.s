@@ -257,6 +257,7 @@ L41CB:  ldx     cached_window_id
 by_icon:
         copy    cached_window_id, getwinport_params2::window_id
         jsr     get_set_port2
+
         jsr     cached_icons_window_to_screen
 
         COPY_BLOCK grafport2::cliprect, tmp_rect
@@ -273,9 +274,11 @@ L41FE:  lda     L4241
 :       inc     L4241
         jmp     L41FE
 
-L4227:  copy    #$00, draw_window_header_flag
+L4227:  copy    #0, draw_window_header_flag
+
         copy    cached_window_id, getwinport_params2::window_id
         jsr     get_set_port2
+
         jsr     cached_icons_screen_to_window
         lda     active_window_id
         jsr     assign_window_portbits
@@ -2288,9 +2291,10 @@ L516D:  lda     L51EB,x
 
         lda     active_window_id
         jsr     create_file_icon_ep2
-        lda     active_window_id
-        sta     getwinport_params2::window_id
+
+        copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
+
         jsr     cached_icons_window_to_screen
         copy    #0, L51EF
 L518D:  lda     L51EF
@@ -3079,7 +3083,7 @@ L578D:  .byte   0
 ;;; Keyboard-based scrolling of window contents
 
 .proc cmd_scroll
-        jsr     L5803
+        jsr     get_active_window_scroll_info
 loop:   jsr     get_event
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
@@ -3130,18 +3134,20 @@ vertical:
 
 ;;; ============================================================
 
-.proc L5803
+.proc get_active_window_scroll_info
         copy    active_window_id, cached_window_id
         jsr     LoadWindowIconTable
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
         sta     active_window_view_by
-        jsr     L58C3
-        stax    L585F
+        jsr     get_active_window_hscroll_info
+        sta     horiz_scroll_pos
+        stx     horiz_scroll_max
         sty     horiz_scroll_flag
-        jsr     L58E2
-        stax    L5861
+        jsr     get_active_window_vscroll_info
+        sta     vert_scroll_pos
+        stx     vert_scroll_max
         sty     vert_scroll_flag
         rts
 .endproc
@@ -3149,126 +3155,132 @@ vertical:
 ;;; ============================================================
 
 scroll_right:                   ; elevator right / contents left
-        ldax    L585F
-        jsr     L5863
-        sta     L585F
+        lda     horiz_scroll_pos
+        ldx     horiz_scroll_max
+        jsr     do_scroll_right
+        sta     horiz_scroll_pos
         rts
 
 scroll_left:                    ; elevator left / contents right
-        lda     L585F
-        jsr     L587E
-        sta     L585F
+        lda     horiz_scroll_pos
+        jsr     do_scroll_left
+        sta     horiz_scroll_pos
         rts
 
 scroll_down:                    ; elevator down / contents up
-        ldax    L5861
-        jsr     L5893
-        sta     L5861
+        lda     vert_scroll_pos
+        ldx     vert_scroll_max
+        jsr     do_scroll_down
+        sta     vert_scroll_pos
         rts
 
 scroll_up:                      ; elevator up / contents down
-        lda     L5861
-        jsr     L58AE
-        sta     L5861
+        lda     vert_scroll_pos
+        jsr     do_scroll_up
+        sta     vert_scroll_pos
         rts
 
 horiz_scroll_flag:      .byte   0 ; can scroll horiz?
 vert_scroll_flag:       .byte   0 ; can scroll vert?
-L585F:  .word   0
-L5861:  .word   0
+horiz_scroll_pos:       .byte   0
+horiz_scroll_max:       .byte   0
+vert_scroll_pos:        .byte   0
+vert_scroll_max:        .byte   0
 
-.proc L5863
-        stx     L587D
-        cmp     L587D
+.proc do_scroll_right
+        stx     max
+        cmp     max
         beq     :+
         sta     updatethumb_stash
         inc     updatethumb_stash
-        lda     #MGTK::Ctl::horizontal_scroll_bar
-        sta     updatethumb_which_ctl
-        jsr     L5C54
+        copy    #MGTK::Ctl::horizontal_scroll_bar, updatethumb_which_ctl
+        jsr     update_scroll_thumb
         lda     updatethumb_stash
 :       rts
 
-L587D:  .byte   0
+max:   .byte   0
 .endproc
 
-.proc L587E
+.proc do_scroll_left
         beq     :+
         sta     updatethumb_stash
         dec     updatethumb_stash
-        lda     #MGTK::Ctl::horizontal_scroll_bar
-        sta     updatethumb_which_ctl
-        jsr     L5C54
+        copy    #MGTK::Ctl::horizontal_scroll_bar, updatethumb_which_ctl
+        jsr     update_scroll_thumb
         lda     updatethumb_stash
 :       rts
         .byte   0
 .endproc
 
-.proc L5893
-        stx     L58AD
-        cmp     L58AD
+.proc do_scroll_down
+        stx     max
+        cmp     max
         beq     :+
         sta     updatethumb_stash
         inc     updatethumb_stash
-        lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     updatethumb_which_ctl
-        jsr     L5C54
+        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_which_ctl
+        jsr     update_scroll_thumb
         lda     updatethumb_stash
 :       rts
 
-L58AD:  .byte   0
+max:   .byte   0
 .endproc
 
-.proc L58AE
+.proc do_scroll_up
         beq     :+
         sta     updatethumb_stash
         dec     updatethumb_stash
-        lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     updatethumb_which_ctl
-        jsr     L5C54
+        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_which_ctl
+        jsr     update_scroll_thumb
         lda     updatethumb_stash
 :       rts
 
         .byte   0
 .endproc
 
-.proc L58C3
+;;; Output: A = hscroll pos, X = hscroll max, Y = hscroll active flag (high bit)
+.proc get_active_window_hscroll_info
+        ptr := $06
+
         lda     active_window_id
         jsr     window_lookup
-        stax    $06
-        ldy     #$06
-        lda     ($06),y
+        stax    ptr
+        ldy     #MGTK::Winfo::hthumbmax
+        lda     (ptr),y
         tax
-        iny
-        lda     ($06),y
+        iny                     ; hthumbpos
+        lda     (ptr),y
         pha
-        ldy     #$04
-        lda     ($06),y
-        and     #$01
+        ldy     #MGTK::Winfo::hscroll
+        lda     (ptr),y
+        and     #$01            ; active flag
         clc
         ror     a
-        ror     a
+        ror     a               ; shift to high bit
         tay
         pla
         rts
 .endproc
 
-.proc L58E2
+;;; Output: A = vscroll pos, X = vscroll max, Y = vscroll active flag (high bit)
+.proc get_active_window_vscroll_info
+        ptr := $06
+
         lda     active_window_id
         jsr     window_lookup
-        stax    $06
-        ldy     #$08
-        lda     ($06),y
+        stax    ptr
+        ldy     #MGTK::Winfo::vthumbmax
+        lda     (ptr),y
         tax
         iny
-        lda     ($06),y
+        lda     (ptr),y
         pha
-        ldy     #$05
-        lda     ($06),y
-        and     #$01
+        ldy     #MGTK::Winfo::vscroll
+        lda     (ptr),y
+        and     #$01            ; active flag
         clc
         ror     a
-        ror     a
+        ror     a               ; shift to high bit
         tay
         pla
         rts
@@ -3633,7 +3645,7 @@ active_window_view_by:
         and     #$01
         bne     :+
         jmp     done_client_click
-:       jsr     L5803
+:       jsr     get_active_window_scroll_info
         lda     findcontrol_which_part
         cmp     #MGTK::Part::thumb
         bne     :+
@@ -3679,7 +3691,7 @@ horiz:  lda     active_window_id
         and     #$01
         bne     :+
         jmp     done_client_click
-:       jsr     L5803
+:       jsr     get_active_window_scroll_info
         lda     findcontrol_which_part
         cmp     #MGTK::Part::thumb
         bne     :+
@@ -3731,7 +3743,7 @@ done_client_click:
         lda     trackthumb_thumbmoved
         bne     :+
         rts
-:       jsr     L5C54
+:       jsr     update_scroll_thumb
         jsr     StoreWindowIconTable
         copy    #0, cached_window_id
         jmp     LoadWindowIconTable
@@ -3739,18 +3751,18 @@ done_client_click:
 
 ;;; ============================================================
 
-.proc L5C54
-        lda     updatethumb_stash
-        sta     updatethumb_thumbpos
+.proc update_scroll_thumb
+        copy    updatethumb_stash, updatethumb_thumbpos
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         jsr     L6523
         jsr     L84D1
         bit     active_window_view_by
-        bmi     :+
+        bmi     :+              ; list view, no icons
         jsr     cached_icons_screen_to_window
-:       lda     active_window_id
-        sta     getwinport_params2::window_id
+
+:       copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
+
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
         jsr     reset_grafport3
         jmp     L6C19
@@ -3832,15 +3844,18 @@ replace:
         inc     selected_icon_count
 
         copy    active_window_id, selected_window_index
-        copy    active_window_id, getwinport_params2::window_id
 
+        copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
+
         copy    icon_num, icon_param
         jsr     icon_window_to_screen
         jsr     offset_grafport2_and_set
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
+
         copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
+
         lda     icon_num
         jsr     icon_screen_to_window
         jsr     reset_grafport3
@@ -3900,9 +3915,10 @@ desktop:
 
 :       cpx     #$FF
         beq     L5DF7
-        lda     active_window_id
-        sta     getwinport_params2::window_id
+
+        copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
+
         jsr     cached_icons_window_to_screen
         jsr     offset_grafport2_and_set
 
@@ -3918,9 +3934,9 @@ desktop:
         dex
         bpl     :-
 
-        lda     active_window_id
-        sta     getwinport_params2::window_id
+        copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
+
         jsr     update_scrollbars
         jsr     cached_icons_screen_to_window
         jsr     reset_grafport3
@@ -4016,6 +4032,7 @@ L5E77:  .byte   0
 
 :       copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
+
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
         ldx     active_window_id
@@ -5204,9 +5221,9 @@ L6BB8:  jsr     L744B
         ldy     #MGTK::OpenWindow
         jsr     MGTK_RELAY
 
-        lda     active_window_id
-        sta     getwinport_params2::window_id
+        copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
+
         jsr     draw_window_header
         jsr     cached_icons_window_to_screen
         copy    #0, L6C0E
@@ -5249,9 +5266,10 @@ L6C0E:  .byte   0
         jmp     L6CCD
 
 L6C25:  jsr     push_pointers
-        lda     cached_window_id
-        sta     getwinport_params2::window_id
+
+        copy    cached_window_id, getwinport_params2::window_id
         jsr     get_set_port2
+
         bit     draw_window_header_flag
         bmi     :+
         jsr     draw_window_header
@@ -5325,9 +5343,9 @@ rows_done:
         .byte   0
 .endproc
 
-L6CCD:  lda     cached_window_id
-        sta     getwinport_params2::window_id
+L6CCD:  copy    cached_window_id, getwinport_params2::window_id
         jsr     get_set_port2
+
         bit     draw_window_header_flag
         bmi     :+
         jsr     draw_window_header
@@ -5343,9 +5361,10 @@ L6CF3:  cpx     cached_window_icon_count
         bne     L6D09
         pla
         jsr     reset_grafport3
-        lda     cached_window_id
-        sta     getwinport_params2::window_id
+
+        copy    cached_window_id, getwinport_params2::window_id
         jsr     get_set_port2
+
         jsr     cached_icons_screen_to_window
         rts
 
