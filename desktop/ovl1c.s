@@ -630,8 +630,6 @@ on_line_buffer:
 .proc MLI_RELAY
         sty     call
         stax    params
-        php
-        sei
         sta     ALTZPOFF
         lda     ROMIN2
         jsr     MLI
@@ -641,7 +639,6 @@ params: .addr   0
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
-        plp
         txa
         rts
 .endproc

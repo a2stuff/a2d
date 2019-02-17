@@ -1424,8 +1424,6 @@ L9DC8:  .byte   0
 .proc MLI_RELAY
         sty     call
         stax    params
-        php
-        sei
         sta     ALTZPOFF
         sta     ROMIN2
         jsr     MLI
@@ -1435,7 +1433,6 @@ params: .addr   0
         tax
         lda     LCBANK1
         lda     LCBANK1
-        plp
         txa
         rts
 .endproc
