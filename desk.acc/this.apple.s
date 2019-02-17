@@ -496,7 +496,7 @@ textfont:       .addr   0
 ;;; of the Apple IIe Card.
 
 ;;; Per MG: There is more than one release of the Apple IIe Card, so we do not
-;;; check $FBBE.  If you are running the latest Apple release if "IIe Startup"
+;;; check $FBBE.  If you are running the latest Apple release of "IIe Startup"
 ;;; this byte is $03.
 
 
