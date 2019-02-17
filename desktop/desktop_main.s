@@ -11048,14 +11048,9 @@ is_dir: jsr     decrement_op_file_count
         lda     #$FF
 store:  sta     is_dir_flag
         jsr     dec_file_count_and_run_copy_dialog_proc
-        lda     op_file_count+1
-        bne     :+
-        lda     op_file_count
-        bne     :+
-        jmp     close_files_cancel_dialog
 
         ;; Copy access, file_type, aux_type, storage_type
-:       ldy     #7
+        ldy     #7
 :       lda     src_file_info_params,y
         sta     create_params2,y
         dey
@@ -11189,13 +11184,8 @@ done:   rts
 :       jsr     append_to_dst_path
         jsr     dec_file_count_and_run_copy_dialog_proc
         jsr     decrement_op_file_count
-        lda     op_file_count+1
-        bne     :+
-        lda     op_file_count
-        bne     :+
-        jmp     close_files_cancel_dialog
 
-:       jsr     try_create_dst
+        jsr     try_create_dst
         bcs     :+
         jsr     remove_src_path_segment
         jmp     done

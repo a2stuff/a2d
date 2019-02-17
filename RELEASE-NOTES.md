@@ -70,6 +70,7 @@ file, then select the appropriate command from the Apple menu.
 * New Folder/Rename file dialog no longer truncated after IP. (#118)
 * Correct rendering issues with desktop volume icons. (#117)
 * Prevent occasional rectangle drawn on desktop after window close. (#120)
+* Empty directories can be copied/moved. (#121)
 * Desk Accessories:
   * Date: Read-only on systems with a clock. On systems without a clock, date is saved for next session. (#30, #39)
   * Calculator: don't mis-paint when moved offscreen and other fixes. (#33, #34)
@@ -85,7 +86,6 @@ file, then select the appropriate command from the Apple menu.
 
 * Selector app is unmodified.
 * Special > Disk Copy app is unmodified, and may suffer bugs fixed in DeskTop (e.g. SmartPort behavior)
-* Locked files are moved without prompting.
 
 # 1.1
 
