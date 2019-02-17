@@ -1176,6 +1176,7 @@ fail:   clc
         asl16   memory
         ldax    memory
         jsr     int_to_string
+        rts
 .endproc
 
 ;;; ============================================================
