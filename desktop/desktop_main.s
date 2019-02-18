@@ -2273,7 +2273,7 @@ entry:
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
         lda     active_window_id
-        jsr     L7D5D
+        jsr     compute_window_dimensions
         stax    L51EB
         sty     L51ED
         lda     active_window_id
@@ -2355,7 +2355,7 @@ L51EF:  .byte   0
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
         lda     active_window_id
-        jsr     L7D5D
+        jsr     compute_window_dimensions
         stax    L5263
         sty     L5265
         lda     active_window_id
@@ -2933,7 +2933,7 @@ L566A:  ldx     active_window_id
         beq     L5676
         dex
         lda     win_view_by_table,x
-        bpl     L5676
+        bpl     L5676           ; view by icons
         rts
 
 L5676:  jsr     LoadActiveWindowIconTable
@@ -4030,7 +4030,7 @@ L5E77:  .byte   0
         tax
         dex
         lda     win_view_by_table,x
-        bmi     :+
+        bmi     :+              ; list view, not icons
         jsr     close_active_window
 :       lda     active_window_id
         jsr     window_path_lookup
@@ -4231,7 +4231,7 @@ L6112:  ldy     #$14
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
-        beq     L6143
+        beq     L6143           ; view by icon
         rts
 
 L6143:  jsr     LoadActiveWindowIconTable
@@ -4292,7 +4292,7 @@ handle_close_click:
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
-        bmi     L6215
+        bmi     L6215           ; list view, not icons
         lda     icon_count
         sec
         sbc     cached_window_icon_count
@@ -4546,12 +4546,12 @@ L650D:  .word   0
 
 .proc L650F
         bit     active_window_view_by
-        bmi     :+
+        bmi     :+              ; list view, not icons
         jsr     cached_icons_window_to_screen
 :       jsr     L6523
         jsr     compute_icons_bbox
         lda     active_window_id
-        jmp     L7D5D
+        jmp     compute_window_dimensions
 .endproc
 
 .proc L6523
@@ -4595,7 +4595,7 @@ L650D:  .word   0
 
 .proc update_hthumb
         lda     active_window_id
-        jsr     L7D5D
+        jsr     compute_window_dimensions
         stax    L6600
         lda     active_window_id
         jsr     window_lookup
@@ -4633,7 +4633,7 @@ L6602:  .word   0
 
 .proc update_vthumb
         lda     active_window_id
-        jsr     L7D5D
+        jsr     compute_window_dimensions
         sty     L669F
         lda     active_window_id
         jsr     window_lookup
@@ -4695,7 +4695,7 @@ disable_menu_items:
 check_view_menu_items:
         dex
         lda     win_view_by_table,x
-        and     #$0F
+        and     #$0F            ; mask off menu item number
         tax
         inx
         stx     checkitem_params::menu_item
@@ -5238,9 +5238,10 @@ L6C0E:  .byte   0
         ldx     cached_window_id
         dex
         lda     win_view_by_table,x
-        bmi     L6C25
+        bmi     L6C25           ; list view, not icons
         jmp     L6CCD
 
+        ;; List view
 L6C25:  jsr     push_pointers
 
         copy    cached_window_id, getwinport_params2::window_id
@@ -5319,6 +5320,7 @@ rows_done:
         .byte   0
 .endproc
 
+        ;; Icon view
 L6CCD:  copy    cached_window_id, getwinport_params2::window_id
         jsr     get_set_port2
 
@@ -5417,10 +5419,11 @@ L6DB0:  .byte   0
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
-        bmi     :+
+        bmi     :+              ; list view, not icons
         jsr     compute_icons_bbox
         jmp     config_port
 
+        ;; List view
 :       jsr     cached_icons_window_to_screen
         jsr     compute_icons_bbox
         jsr     cached_icons_screen_to_window
@@ -6986,7 +6989,9 @@ start:  ldx     #3
         ldx     cached_window_id
         dex
         lda     win_view_by_table,x
-        bpl     L7BCB
+        bpl     L7BCB           ; icon view
+
+        ;; List view
         lda     cached_window_icon_count
         bne     L7BA1
 L7B96:  ldax    #$0300
@@ -7013,6 +7018,7 @@ L7BA1:  clc
         copy16  #360, iconbb_rect::x2
         jmp     L7B96
 
+        ;; Icon view
 L7BCB:  lda     cached_window_icon_count
         cmp     #1
         bne     check_icon
@@ -7167,44 +7173,52 @@ hi:     .byte   0
         compute_icons_bbox := compute_icons_bbox_impl::start
 
 ;;; ============================================================
+;;; Compute dimensions of window
+;;; Input: A = window
+;;; Output: A,X = width, Y = height
 
-.proc L7D5D
+.proc compute_window_dimensions
+        ptr := $06
+
         jsr     window_lookup
-        stax    $06
+        stax    ptr
 
-        ldy     #35
-        ldx     #7
-:       lda     ($06),y
-        sta     L7D94,x
+        ;; Copy window's maprect
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
+        ldx     #.sizeof(MGTK::Rect)-1
+:       lda     (ptr),y
+        sta     rect,x
         dey
         dex
         bpl     :-
 
-        lda     L7D98
+        ;; Push delta-X
+        lda     rect+MGTK::Rect::x2
         sec
-        sbc     L7D94
+        sbc     rect+MGTK::Rect::x1
         pha
-        lda     L7D98+1
-        sbc     L7D94+1
+        lda     rect+MGTK::Rect::x2+1
+        sbc     rect+MGTK::Rect::x1+1
         pha
 
-        lda     L7D9A
+        ;; Push delta-Y
+        lda     rect+MGTK::Rect::y2
         sec
-        sbc     L7D96
+        sbc     rect+MGTK::Rect::y1
         pha
-        lda     L7D9A+1
-        sbc     L7D96+1         ; weird - this is discarded???
+        lda     rect+MGTK::Rect::y2+1
+        sbc     rect+MGTK::Rect::y1+1
+        ;; high byte is discarded
+
         pla
         tay
         pla
         tax
         pla
+
         rts
 
-L7D94:  .word   0
-L7D96:  .word   0
-L7D98:  .word   0
-L7D9A:  .word   0
+rect:   DEFINE_RECT 0,0,0,0
 
 .endproc
 
@@ -8201,7 +8215,7 @@ L8562:  lsr16   L85F2
         sta     grafport2::cliprect::x1+1,x
 
         lda     active_window_id
-        jsr     L7D5D
+        jsr     compute_window_dimensions
         stax    L85F4
         sty     L85F6
         lda     L85F1
