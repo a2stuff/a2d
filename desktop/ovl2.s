@@ -295,7 +295,7 @@ L0BBB:  lda     L0C1F
         lda     LD887
         bmi     L0BD9
         lda     LD887
-        jsr     L0C20
+        jsr     hilight_volume_label
         lda     #$FF
         sta     LD887
 L0BD9:  return  #$FF
@@ -313,10 +313,10 @@ L0C03:  rts
 L0C04:  sta     L0C1E
         lda     LD887
         bmi     L0C0F
-        jsr     L0C20
+        jsr     hilight_volume_label
 L0C0F:  lda     L0C1E
         sta     LD887
-        jsr     L0C20
+        jsr     hilight_volume_label
         jsr     desktop_main::detect_double_click2
         beq     L0BE6
         rts
@@ -328,14 +328,15 @@ L0C1F:  .byte   0
 ;;; Hilight volume label
 ;;; Input: A = volume index
 
-L0C20:  ldy     #39
+.proc hilight_volume_label
+        ldy     #39
         sty     select_volume_rect::x1
         ldy     #0
         sty     select_volume_rect::x1+1
         tax
         lsr     a               ; / 4
         lsr     a
-        sta     L0CA9           ; columne (0, 1, or 2)
+        sta     L0CA9           ; column (0, 1, or 2)
         beq     L0C5B
         add16   select_volume_rect::x1, #120, select_volume_rect::x1
         lda     L0CA9
@@ -362,14 +363,23 @@ L0C5B:  asl     L0CA9           ; * 4
         rts
 
 L0CA9:  .byte   0
-L0CAA:  lda     LD887
-        bmi     L0CB7
-        jsr     L0C20
+.endproc
+
+;;; ============================================================
+
+.proc L0CAA
+        lda     LD887
+        bmi     :+
+        jsr     hilight_volume_label
         copy    #$FF, LD887
-L0CB7:  rts
+:       rts
+.endproc
+
+;;; ============================================================
 
         ;; Called from desktop_main
-L0CB8:  lda     LD887
+.proc prompt_handle_key_left
+        lda     LD887
         bpl     L0CC1
         lda     #0
         beq     L0CCE
@@ -381,9 +391,14 @@ L0CC1:  clc
         jsr     L0CAA
         pla
 L0CCE:  sta     LD887
-        jsr     L0C20
+        jsr     hilight_volume_label
 L0CD4:  return  #$FF
+.endproc
 
+;;; ============================================================
+
+        ;; Called from desktop_main
+.proc prompt_handle_key_right
         lda     LD887
         bpl     L0CE6
         lda     LD890
@@ -394,28 +409,38 @@ L0CD4:  return  #$FF
         jmp     L0CF0
 
 L0CE6:  sec
-        sbc     #$04
+        sbc     #4
         bmi     L0CF6
         pha
         jsr     L0CAA
         pla
 L0CF0:  sta     LD887
-        jsr     L0C20
+        jsr     hilight_volume_label
 L0CF6:  return  #$FF
+.endproc
 
+;;; ============================================================
+
+        ;; Called from desktop_main
+.proc prompt_handle_key_down
         lda     LD887
         clc
-        adc     #$01
+        adc     #1
         cmp     LD890
         bcc     L0D06
-        lda     #$00
+        lda     #0
 L0D06:  pha
         jsr     L0CAA
         pla
         sta     LD887
-        jsr     L0C20
+        jsr     hilight_volume_label
         return  #$FF
+.endproc
 
+;;; ============================================================
+
+        ;; Called from desktop_main
+.proc prompt_handle_key_up
         lda     LD887
         bmi     L0D1E
         sec
@@ -428,8 +453,11 @@ L0D23:  pha
         jsr     L0CAA
         pla
         sta     LD887
-        jsr     L0C20
+        jsr     hilight_volume_label
         return  #$FF
+.endproc
+
+;;; ============================================================
 
 L0D31:  ldx     DEVCNT
         inx
@@ -1533,3 +1561,8 @@ L1A6D:  lda     on_line_params::unit_num
         PAD_TO $1C00
 
 .endproc ; format_erase_overlay
+
+format_erase_overlay_prompt_handle_key_left     := format_erase_overlay::prompt_handle_key_left
+format_erase_overlay_prompt_handle_key_right    := format_erase_overlay::prompt_handle_key_right
+format_erase_overlay_prompt_handle_key_down     := format_erase_overlay::prompt_handle_key_down
+format_erase_overlay_prompt_handle_key_up       := format_erase_overlay::prompt_handle_key_up

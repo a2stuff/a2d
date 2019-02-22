@@ -10,13 +10,6 @@
 
 .proc desktop_main
 
-.scope format_erase_overlay
-L0CB8           := $0CB8
-L0CD7           := $0CD7
-L0CF9           := $0CF9
-L0D14           := $0D14
-.endscope
-
 dst_path_buf   := $1FC0
 
         dynamic_routine_800  := $0800
@@ -12580,47 +12573,50 @@ LA6F7:  jsr     LB9B8
 .proc prompt_key_handler
         lda     event_modifiers
         cmp     #MGTK::event_modifier_solid_apple
-        bne     LA71A
+        bne     no_mods
+
+        ;; Modifier key down.
         lda     event_key
         and     #CHAR_MASK
         cmp     #CHAR_LEFT
-        bne     LA710
-        jmp     LA815
+        bne     :+
+        jmp     left_with_mod
 
-LA710:  cmp     #CHAR_RIGHT
-        bne     LA717
-        jmp     LA820
+:       cmp     #CHAR_RIGHT
+        bne     done
+        jmp     right_with_mod
 
-LA717:  return  #$FF
+done:   return  #$FF
 
-LA71A:  lda     event_key
+        ;; No modifier key down.
+no_mods:
+        lda     event_key
         and     #CHAR_MASK
+
         cmp     #CHAR_LEFT
         bne     LA72E
         bit     format_erase_overlay_flag
         bpl     :+
-        jmp     format_erase_overlay::L0CB8
-
-:       jmp     LA82B
+        jmp     format_erase_overlay_prompt_handle_key_left
+:       jmp     handle_key_left
 
 LA72E:  cmp     #CHAR_RIGHT
         bne     LA73D
         bit     format_erase_overlay_flag
         bpl     :+
-        jmp     format_erase_overlay::L0CD7
-
-:       jmp     LA83E
+        jmp     format_erase_overlay_prompt_handle_key_right
+:       jmp     handle_key_right
 
 LA73D:  cmp     #CHAR_RETURN
         bne     LA749
         bit     LD8E7
-        bvs     LA717
+        bvs     done
         jmp     LA851
 
 LA749:  cmp     #CHAR_ESCAPE
         bne     LA755
         bit     LD8E7
-        bmi     LA717
+        bmi     done
         jmp     LA86F
 
 LA755:  cmp     #CHAR_DELETE
@@ -12630,18 +12626,16 @@ LA755:  cmp     #CHAR_DELETE
 LA75C:  cmp     #CHAR_UP
         bne     LA76B
         bit     format_erase_overlay_flag
-        bmi     LA768
-        jmp     LA717
-
-LA768:  jmp     format_erase_overlay::L0D14
+        bmi     :+
+        jmp     done
+:       jmp     format_erase_overlay_prompt_handle_key_up
 
 LA76B:  cmp     #CHAR_DOWN
         bne     LA77A
         bit     format_erase_overlay_flag
-        bmi     LA777
-        jmp     LA717
-
-LA777:  jmp     format_erase_overlay::L0CF9
+        bmi     :+
+        jmp     done
+:       jmp     format_erase_overlay_prompt_handle_key_down
 
 LA77A:  bit     LD8E7
         bvc     LA79B
@@ -12666,32 +12660,32 @@ LA79B:  bit     LD8F5
         beq     LA7D8
         cmp     #'0'
         bcs     LA7AB
-        jmp     LA717
+        jmp     done
 
 LA7AB:  cmp     #'z'+1
         bcc     LA7B2
-        jmp     LA717
+        jmp     done
 
 LA7B2:  cmp     #'9'+1
         bcc     LA7D8
         cmp     #'A'
         bcs     LA7BD
-        jmp     LA717
+        jmp     done
 
 LA7BD:  cmp     #'Z'+1
         bcc     LA7DD
         cmp     #'a'
         bcs     LA7DD
-        jmp     LA717
+        jmp     done
 
 LA7C8:  cmp     #' '
         bcs     LA7CF
-        jmp     LA717
+        jmp     done
 
 LA7CF:  cmp     #'~'
         beq     LA7DD
         bcc     LA7DD
-        jmp     LA717
+        jmp     done
 
 LA7D8:  ldx     path_buf1
         beq     LA7E5
@@ -12712,33 +12706,41 @@ do_all: jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::all_button_rect
         return  #PromptResult::all
 
-LA815:  lda     has_input_field_flag
-        beq     LA81D
-        jsr     LBC5E
-LA81D:  return  #$FF
+.proc left_with_mod
+        lda     has_input_field_flag
+        beq     :+
+        jsr     input_field_ip_start
+:       return  #$FF
+.endproc
 
-LA820:  lda     has_input_field_flag
-        beq     LA828
-        jsr     LBCC9
-LA828:  return  #$FF
+.proc right_with_mod
+        lda     has_input_field_flag
+        beq     :+
+        jsr     input_field_ip_end
+:       return  #$FF
+.endproc
 
-LA82B:  lda     has_input_field_flag
-        beq     LA83B
-        bit     format_erase_overlay_flag
-        bpl     LA838
-        jmp     format_erase_overlay::L0CD7
+.proc handle_key_left
+        lda     has_input_field_flag
+        beq     done
+        bit     format_erase_overlay_flag ; BUG? Should never be set here based on caller test.
+        bpl     :+
+        jmp     format_erase_overlay_prompt_handle_key_right
 
-LA838:  jsr     LBBA4
-LA83B:  return  #$FF
+:       jsr     input_field_ip_left
+done:   return  #$FF
+.endproc
 
-LA83E:  lda     has_input_field_flag
-        beq     LA84E
-        bit     format_erase_overlay_flag
-        bpl     LA84B
-        jmp     format_erase_overlay::L0CB8
+.proc handle_key_right
+        lda     has_input_field_flag
+        beq     done
+        bit     format_erase_overlay_flag ; BUG? Should never be set here based on caller test.
+        bpl     :+
+        jmp     format_erase_overlay_prompt_handle_key_left
 
-LA84B:  jsr     LBC03
-LA84E:  return  #$FF
+:       jsr     input_field_ip_right
+done:   return  #$FF
+.endproc
 
 LA851:  lda     winfo_alert_dialog
         jsr     set_port_from_window_id
@@ -13629,7 +13631,7 @@ LB2FD:  jsr     prompt_input_loop
         bne     LB313
         lda     path_buf1
         beq     LB2FD
-        jsr     LBCC9
+        jsr     input_field_ip_end
         ldy     #<path_buf1
         ldx     #>path_buf1
         return  #0
@@ -14459,7 +14461,7 @@ LBA42:
         cmp     path_buf2
         bcc     LBA4F
         dec     path_buf2
-        jmp     LBCC9
+        jmp     input_field_ip_end
 
 LBA4F:  ldx     #2
         ldy     path_buf1
@@ -14506,7 +14508,7 @@ LBA7C:  dey
         lda     textlen
         cmp     #1
         bcs     :-
-        jmp     LBC5E
+        jmp     input_field_ip_start
 
         ;; Copy the text to the right of the click to split_buf
 :       inc     textlen
@@ -14615,8 +14617,10 @@ param:  .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Move IP one character left.
 
-.proc LBBA4
+.proc input_field_ip_left
+        ;; Any characters to left of IP?
         lda     path_buf1
         bne     :+
         rts
@@ -14627,17 +14631,23 @@ param:  .byte   0
 
 :       ldx     path_buf2
         cpx     #1
-        beq     LBBBC
-LBBB1:  lda     path_buf2,x
+        beq     finish
+
+        ;; Shift right up by a character.
+loop:   lda     path_buf2,x
         sta     path_buf2+1,x
         dex
         cpx     #1
-        bne     LBBB1
-LBBBC:  ldx     path_buf1
+        bne     loop
+
+        ;; Copy character left to right and adjust lengths.
+finish: ldx     path_buf1
         lda     path_buf1,x
         sta     path_buf2+2
         dec     path_buf1
         inc     path_buf2
+
+        ;; Redraw (just the right part)
         jsr     measure_path_buf1
         stax    xcoord
         copy16  name_input_textpos::ycoord, ycoord
@@ -14651,28 +14661,36 @@ LBBBC:  ldx     path_buf1
 .endproc
 
 ;;; ============================================================
+;;; Move IP one character right.
 
-.proc LBC03
+.proc input_field_ip_right
+        ;; Any characters to right of IP?
         lda     path_buf2
-        cmp     #$02
-        bcs     LBC0B
+        cmp     #2
+        bcs     :+
         rts
 
-LBC0B:  ldx     path_buf1
+        ;; Copy char from right to left and adjust lengths.
+:       ldx     path_buf1
         inx
         lda     path_buf2+2
         sta     path_buf1,x
         inc     path_buf1
         ldx     path_buf2
-        cpx     #$03
-        bcc     LBC2D
-        ldx     #$02
-LBC21:  lda     path_buf2+1,x
+        cpx     #3
+        bcc     finish
+
+        ;; Shift right string down.
+        ldx     #2
+loop:   lda     path_buf2+1,x
         sta     path_buf2,x
         inx
         cpx     path_buf2
-        bne     LBC21
-LBC2D:  dec     path_buf2
+        bne     loop
+
+        ;; Redraw (the whole thing)
+finish: dec     path_buf2
+
         MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
         MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
         addr_call draw_text1, path_buf1
@@ -14684,28 +14702,38 @@ LBC2D:  dec     path_buf2
 .endproc
 
 ;;; ============================================================
+;;; Move IP to start of input field.
 
-.proc LBC5E
+.proc input_field_ip_start
+        ;; Any characters to left of IP?
         lda     path_buf1
-        bne     LBC64
+        bne     :+
         rts
 
-LBC64:  ldx     path_buf2
-        cpx     #$01
-        beq     LBC79
-LBC6B:  lda     path_buf2,x
+        ;; Any characters to right of IP?
+:       ldx     path_buf2
+        cpx     #1
+        beq     move
+
+        ;; Preserve right characters up to make room.
+        ;; TODO: Why not just shift them up???
+loop1:  lda     path_buf2,x
         sta     split_buf-1,x
         dex
-        cpx     #$01
-        bne     LBC6B
+        cpx     #1
+        bne     loop1
         ldx     path_buf2
-LBC79:  dex
+
+        ;; Move characters left to right
+move:   dex
         stx     split_buf
         ldx     path_buf1
-LBC80:  lda     path_buf1,x
+loop2:  lda     path_buf1,x
         sta     path_buf2+1,x
         dex
-        bne     LBC80
+        bne     loop2
+
+        ;; Adjust lengths.
         lda     str_insertion_point+1
         sta     path_buf2+1
         inc     path_buf1
@@ -14716,48 +14744,58 @@ LBC80:  lda     path_buf1,x
         adc     split_buf
         tay
         pha
+
+        ;; Append right right characters again if needed.
         ldx     split_buf
-        beq     LBCB3
-LBCA6:  lda     split_buf,x
+        beq     finish
+loop3:  lda     split_buf,x
         sta     path_buf2,y
         dex
         dey
         cpy     path_buf2
-        bne     LBCA6
-LBCB3:  pla
+        bne     loop3
+
+finish: pla
         sta     path_buf2
         copy    #0, path_buf1
-        MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
+        MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos ; Seems unnecessary???
         jsr     draw_filename_prompt
         rts
 .endproc
 
 ;;; ============================================================
+;;; Move IP to end of input field.
 
-.proc LBCC9
+.proc input_field_ip_end
+        ;; Any characters to right of IP?
         lda     path_buf2
-        cmp     #$02
+        cmp     #2
         bcs     LBCD1
         rts
 
+        ;; Compute new lengths.
 LBCD1:  ldx     path_buf2
         dex
         txa
         clc
         adc     path_buf1
         pha
+
+        ;; Move characters from right to left.
         tay
         ldx     path_buf2
-LBCDF:  lda     path_buf2,x
+loop:   lda     path_buf2,x
         sta     path_buf1,y
         dex
         dey
         cpy     path_buf1
-        bne     LBCDF
+        bne     loop
+
+        ;; Adjust lengths and redraw.
         pla
         sta     path_buf1
         copy    #1, path_buf2
-        MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
+        MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos ; Seems unnecessary???
         jsr     draw_filename_prompt
         rts
 .endproc
