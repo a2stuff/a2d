@@ -21,6 +21,7 @@ mkdir -p "${tempdir}/desk.acc" || (cecho red "permission denied"; exit 1)
 
 rm -f A2D.SHK
 
+# With $F1 type, aux type $0000
 function mount_f1 {
     srcdir="$2"
     dstdir="$3"
@@ -31,6 +32,19 @@ function mount_f1 {
         && (cecho green "wrote $dst" ) \
         || (cecho red "failed to write $dst" ; return 1)
 }
+
+# With $F1 type, aux type $0640
+function mount_da {
+    srcdir="$2"
+    dstdir="$3"
+    uppercase=$(echo "$1" | tr /a-z/ /A-Z/)
+    src="$srcdir/out/$1.built"
+    dst="$dstdir/$uppercase#F10640"
+    cp "$src" "$dst" \
+        && (cecho green "wrote $dst" ) \
+        || (cecho red "failed to write $dst" ; return 1)
+}
+
 
 function mount_sys {
     srcdir="$2"
@@ -52,12 +66,12 @@ mount_sys "ram.system" "ram.system" "${tempdir}"
 
 mkdir -p "${tempdir}/desk.acc"
 for file in $(cat desk.acc/TARGETS); do
-    mount_f1 "$file" "desk.acc" "${tempdir}/desk.acc"
+    mount_da "$file" "desk.acc" "${tempdir}/desk.acc"
 done
 
 mkdir -p "${tempdir}/preview"
 for file in $(cat preview/TARGETS); do
-    mount_f1 "$file" "preview" "${tempdir}/preview"
+    mount_da "$file" "preview" "${tempdir}/preview"
 done
 cdir=`pwd`
 cd "${tempdir}"
