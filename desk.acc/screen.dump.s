@@ -14,24 +14,11 @@
 ;;; ============================================================
 
         yax_call JUMP_TABLE_MGTK_RELAY, MGTK::HideCursor, 0
-        jsr     hilite_menu
+        yax_call JUMP_TABLE_MGTK_RELAY, MGTK::HiliteMenu, last_menu_click_params
         jsr     dump_screen
-        jsr     hilite_menu
+        yax_call JUMP_TABLE_MGTK_RELAY, MGTK::HiliteMenu, last_menu_click_params
         yax_call JUMP_TABLE_MGTK_RELAY, MGTK::ShowCursor, 0
         rts
-
-;;; ============================================================
-
-.proc hilite_menu
-        ;; Use zero page, which is visible from MGTK
-        menu_click_menu_id  := $6
-
-        lda     #1              ; ID of Apple menu
-        sta     menu_click_menu_id
-        yax_call JUMP_TABLE_MGTK_RELAY, MGTK::HiliteMenu, menu_click_menu_id
-
-        rts
-.endproc
 
 ;;; ============================================================
 

@@ -376,10 +376,10 @@ SetMark         = $37
 
 .struct Winfo
         window_id          .byte
-        options            .byte ; option_*
+        options            .byte ; Option::*
         title              .addr
-        hscroll            .byte ; scroll_option_*
-        vscroll            .byte ; scroll_option_*
+        hscroll            .byte ; Scroll::option_*
+        vscroll            .byte ; Scroll::option_*
         hthumbmax          .byte
         hthumbpos          .byte
         vthumbmax          .byte

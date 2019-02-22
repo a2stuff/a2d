@@ -490,6 +490,15 @@ textfont:       .addr   0
 ;;; Laser 128                   $06      $AC     [$E0]
 ;;;
 ;;; (Values in [] are for reference, not needed for compatibility check)
+;;;
+;;; Location $FBBE is the version byte for the Apple IIe Card (just as $FBBF is
+;;; the version byte for the Apple IIc family) and is $00 for the first release
+;;; of the Apple IIe Card.
+
+;;; Per MG: There is more than one release of the Apple IIe Card, so we do not
+;;; check $FBBE.  If you are running the latest Apple release of "IIe Startup"
+;;; this byte is $03.
+
 
 .enum model
         ii                      ; Apple ][
@@ -562,7 +571,7 @@ model_lookup_table:
         .byte   $B3, $06, $C0, $EA, 0
 
         .byte   model::iie_card ; must check before IIe enhanced check
-        .byte   $B3, $06, $C0, $E0, $DD, $02, $BE, $00, 0
+        .byte   $B3, $06, $C0, $E0, $DD, $02, 0
 
         .byte   model::iie_enhanced
         .byte   $B3, $06, $C0, $E0, 0
@@ -1167,6 +1176,7 @@ fail:   clc
         asl16   memory
         ldax    memory
         jsr     int_to_string
+        rts
 .endproc
 
 ;;; ============================================================

@@ -150,6 +150,61 @@ rel_file_icon:
         .byte   px(%0000000),px(%0000001),px(%1000000),px(%0000000)
         ;; shares binary_mask
 
+a2d_file_icon:
+        .byte   px(%0111111),px(%1111111),px(%1111111),px(%0000000)
+        .byte   px(%0100000),px(%0000000),px(%0000100),px(%1100000)
+        .byte   px(%0100000),px(%0000000),px(%0000100),px(%0011000)
+        .byte   px(%0100000),px(%0000000),px(%0000100),px(%0000110)
+        .byte   px(%0100000),px(%0000000),px(%0000111),px(%1111110)
+        .byte   px(%0100000),px(%0000000),px(%1100000),px(%0000010)
+        .byte   px(%0100000),px(%0000001),px(%1000000),px(%0000010)
+        .byte   px(%0100000),px(%0011100),px(%0111000),px(%0000010)
+        .byte   px(%0100000),px(%1111111),px(%1111110),px(%0000010)
+        .byte   px(%0100001),px(%1111111),px(%1110000),px(%0000010)
+        .byte   px(%0100001),px(%1111111),px(%1110000),px(%0000010)
+        .byte   px(%0100001),px(%1111111),px(%1111110),px(%0000010)
+        .byte   px(%0100000),px(%1111111),px(%1111100),px(%0000010)
+        .byte   px(%0100000),px(%0111100),px(%1111000),px(%0000010)
+        .byte   px(%0100000),px(%0000000),px(%0000000),px(%0000010)
+        .byte   px(%0111111),px(%1111111),px(%1111111),px(%1111110)
+        ;; shares generic_mask
+
+;;; Basic
+
+basic_icon:
+        .byte   px(%0000000),px(%0000001),px(%1000000),px(%0000000)
+        .byte   px(%0000000),px(%0000110),px(%0110000),px(%0000000)
+        .byte   px(%0000000),px(%0011000),px(%0001100),px(%0000000)
+        .byte   px(%0000000),px(%1100000),px(%0000011),px(%0000000)
+        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000)
+        .byte   px(%0111110),px(%0111000),px(%1111010),px(%0111100)
+        .byte   px(%0100010),px(%1000100),px(%1000010),px(%1000110)
+        .byte   px(%0111100),px(%1111100),px(%1111010),px(%1000000)
+        .byte   px(%0100010),px(%1000100),px(%0001010),px(%1000110)
+        .byte   px(%0111110),px(%1000100),px(%1111010),px(%0111100)
+        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000)
+        .byte   px(%0000000),px(%1100000),px(%0000011),px(%0000000)
+        .byte   px(%0000000),px(%0011000),px(%0001100),px(%0000000)
+        .byte   px(%0000000),px(%0000110),px(%0110000),px(%0000000)
+        .byte   px(%0000000),px(%0000001),px(%1000000),px(%0000000)
+
+basic_mask:
+        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000)
+        .byte   px(%0000000),px(%0000001),px(%1000000),px(%0000000)
+        .byte   px(%0000000),px(%0000111),px(%1110000),px(%0000000)
+        .byte   px(%0000000),px(%0011111),px(%1111100),px(%0000000)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
+        .byte   px(%0000000),px(%0011111),px(%1111100),px(%0000000)
+        .byte   px(%0000000),px(%0000111),px(%1110000),px(%0000000)
+        .byte   px(%0000000),px(%0000001),px(%1000000),px(%0000000)
+        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000)
+
         PAD_TO $8800
 
 ;;; ============================================================
@@ -3225,11 +3280,11 @@ textbg_white:  .byte   $7F
         .define dialog_label_row_y(num) (((num)*(dialog_label_height))+(dialog_label_base_y))
 
 clear_dialog_labels_rect:  DEFINE_RECT 39,25,360,alert_dialog_height-20
-prompt_rect:  DEFINE_RECT 40,60,360,alert_dialog_height-20
+prompt_rect:  DEFINE_RECT 40,(dialog_label_row_y {5})+1,360,(dialog_label_row_y {6})
 current_target_file_pos:  DEFINE_POINT 75,dialog_label_row_y {2}
 current_dest_file_pos:  DEFINE_POINT 75,dialog_label_row_y {3}
-current_target_file_rect:  DEFINE_RECT 75,(dialog_label_row_y {1}),394,(dialog_label_row_y {2})-1
-current_dest_file_rect:  DEFINE_RECT 75,(dialog_label_row_y {2}),394,(dialog_label_row_y {3})-1
+current_target_file_rect:  DEFINE_RECT 75,(dialog_label_row_y {1})+1,394,(dialog_label_row_y {2})
+current_dest_file_rect:  DEFINE_RECT 75,(dialog_label_row_y {2})+1,394,(dialog_label_row_y {3})
 
 str_cancel_label:
         PASCAL_STRING "Cancel        Esc"

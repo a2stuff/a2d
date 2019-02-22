@@ -12,6 +12,7 @@ VERSION_MINOR = 2
 .define VERSION_SUFFIX "-alpha1"
 
 DA_FILE_TYPE    = $F1
+DA_AUX_TYPE     = $640          ; High bit set = don't show in Apple menu
 
 max_desk_acc_count = 12
 
@@ -168,6 +169,8 @@ path_table := $DFB3     ; window address table
 selected_file_list := $DF22     ; indexes of selected file (global, not w/in window, up to 127)
 file_table := $DD9F     ; file address table
 
+last_menu_click_params := $E23D
+
 ;;; Icon (file/volume) entries - length 27 bytes, maximum of 127
 ;;;      .byte icon      icon index
 ;;;      .byte state     $80 = highlighted, 0 = otherwise
@@ -296,5 +299,5 @@ GLYPH_SAPPLE  = $1E
         modification_time       .word ; 25 $19
         access                  .byte ; 27 $1B
         header_pointer          .word ; 28 $1C
-        reserved                .word ; ???
+        aux_type                .word ; 30 $1E
 .endstruct

@@ -10,13 +10,6 @@
 
 .proc desktop_main
 
-.scope format_erase_overlay
-L0CB8           := $0CB8
-L0CD7           := $0CD7
-L0CF9           := $0CF9
-L0D14           := $0D14
-.endscope
-
 dst_path_buf   := $1FC0
 
         dynamic_routine_800  := $0800
@@ -254,14 +247,16 @@ L415B:  sta     active_window_id
 L41CB:  ldx     cached_window_id
         dex
         lda     win_view_by_table,x
-        bpl     L41E2
+        bpl     by_icon
         jsr     L6C19
         copy    #0, draw_window_header_flag
         lda     active_window_id
         jmp     assign_window_portbits
 
-L41E2:  copy    cached_window_id, getwinport_params2::window_id
+by_icon:
+        copy    cached_window_id, getwinport_params2::window_id
         jsr     get_set_port2
+
         jsr     cached_icons_window_to_screen
 
         COPY_BLOCK grafport2::cliprect, tmp_rect
@@ -278,9 +273,11 @@ L41FE:  lda     L4241
 :       inc     L4241
         jmp     L41FE
 
-L4227:  copy    #$00, draw_window_header_flag
+L4227:  copy    #0, draw_window_header_flag
+
         copy    cached_window_id, getwinport_params2::window_id
         jsr     get_set_port2
+
         jsr     cached_icons_screen_to_window
         lda     active_window_id
         jsr     assign_window_portbits
@@ -612,7 +609,7 @@ L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_window_id
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
-        and     #$0F
+        and     #$0F            ; mask off menu item number
         sta     checkitem_params::menu_item
         inc     checkitem_params::menu_item
         copy    #MGTK::checkitem_check, checkitem_params::check
@@ -941,6 +938,10 @@ begin:
 :       cmp     #FT_TEXT
         bne     :+
         addr_jump invoke_desk_acc, str_preview_txt
+
+:       cmp     #DA_FILE_TYPE
+        bne     :+
+        addr_jump invoke_desk_acc, path
 
 :       lda     #ERR_FILE_NOT_OPENABLE
         jsr     show_alert_and_fail
@@ -1923,32 +1924,37 @@ L4E78:  jsr     clear_selection
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
-        bmi     L4EB4
+        bmi     iter            ; list view, not icons
+
+        ;; View by icon
         DESKTOP_RELAY_CALL DT_CLOSE_WINDOW, active_window_id
+
         lda     icon_count
         sec
         sbc     cached_window_icon_count
         sta     icon_count
-        ldx     #$00
-L4EA5:  cpx     cached_window_icon_count
-        beq     L4EB4
+
+        ldx     #0
+:       cpx     cached_window_icon_count
+        beq     iter
         lda     cached_window_icon_list,x
         jsr     FreeIcon
         inx
-        jmp     L4EA5
+        jmp     :-
 
-L4EB4:  ldx     #$00
+iter:   ldx     #$00
         txa
-L4EB7:  sta     cached_window_icon_list,x
+:       sta     cached_window_icon_list,x
         cpx     cached_window_icon_count
         beq     L4EC3
         inx
-        jmp     L4EB7
+        jmp     :-
 
 L4EC3:  sta     cached_window_icon_count
         jsr     StoreWindowIconTable
         jsr     LoadDesktopIconTable
         MGTK_RELAY_CALL MGTK::CloseWindow, active_window_id
+
         ldx     active_window_id
         dex
         lda     window_to_dir_icon_table,x
@@ -2235,9 +2241,10 @@ fail:   jsr     ShowAlert
 
 :       dex
         lda     win_view_by_table,x
-        bne     :+
+        bne     :+              ; not by icon
         rts
 
+        ;; View by icon
 entry:
 :       jsr     LoadActiveWindowIconTable
         ldx     #$00
@@ -2260,7 +2267,7 @@ entry:
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
         lda     active_window_id
-        jsr     L7D5D
+        jsr     compute_window_dimensions
         stax    L51EB
         sty     L51ED
         lda     active_window_id
@@ -2283,8 +2290,10 @@ L516D:  lda     L51EB,x
 
         lda     active_window_id
         jsr     create_file_icon_ep2
+
         copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
+
         jsr     cached_icons_window_to_screen
         copy    #0, L51EF
 L518D:  lda     L51EF
@@ -2303,9 +2312,9 @@ L51A7:  jsr     reset_grafport3
         jsr     StoreWindowIconTable
         jsr     update_scrollbars
         lda     selected_window_index
-        beq     L51E3
+        beq     finish
         lda     selected_icon_count
-        beq     L51E3
+        beq     finish
         sta     L51EF
 L51C0:  ldx     L51EF
         lda     selected_icon_count,x
@@ -2317,7 +2326,7 @@ L51C0:  ldx     L51EF
         jsr     icon_screen_to_window
         dec     L51EF
         bne     L51C0
-L51E3:  jmp     LoadDesktopIconTable
+finish: jmp     LoadDesktopIconTable
 
 L51EB:  .word   0
 L51ED:  .byte   0
@@ -2340,7 +2349,7 @@ L51EF:  .byte   0
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
         lda     active_window_id
-        jsr     L7D5D
+        jsr     compute_window_dimensions
         stax    L5263
         sty     L5265
         lda     active_window_id
@@ -2696,9 +2705,10 @@ L544D:
 L545A:  tax
         dex
         lda     win_view_by_table,x
-        bpl     L5464
+        bpl     L5464           ; by icon
         jmp     L54C5
 
+        ;; View by icon
 L5464:  jsr     LoadActiveWindowIconTable
         lda     active_window_id
         jsr     window_lookup
@@ -2735,6 +2745,7 @@ L54B7:  pla
         inx
         jmp     L5485
 
+        ;; No window icons
 L54BD:  jsr     LoadDesktopIconTable
 L54C5:  ldx     $1800
         ldy     #$00
@@ -2916,7 +2927,7 @@ L566A:  ldx     active_window_id
         beq     L5676
         dex
         lda     win_view_by_table,x
-        bpl     L5676
+        bpl     L5676           ; view by icons
         rts
 
 L5676:  jsr     LoadActiveWindowIconTable
@@ -3064,7 +3075,7 @@ L578D:  .byte   0
 ;;; Keyboard-based scrolling of window contents
 
 .proc cmd_scroll
-        jsr     L5803
+        jsr     get_active_window_scroll_info
 loop:   jsr     get_event
         lda     event_kind
         cmp     #MGTK::EventKind::button_down
@@ -3113,17 +3124,19 @@ vertical:
 
 ;;; ============================================================
 
-.proc L5803
+.proc get_active_window_scroll_info
         jsr     LoadActiveWindowIconTable
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
         sta     active_window_view_by
-        jsr     L58C3
-        stax    L585F
+        jsr     get_active_window_hscroll_info
+        sta     horiz_scroll_pos
+        stx     horiz_scroll_max
         sty     horiz_scroll_flag
-        jsr     L58E2
-        stax    L5861
+        jsr     get_active_window_vscroll_info
+        sta     vert_scroll_pos
+        stx     vert_scroll_max
         sty     vert_scroll_flag
         rts
 .endproc
@@ -3131,126 +3144,132 @@ vertical:
 ;;; ============================================================
 
 scroll_right:                   ; elevator right / contents left
-        ldax    L585F
-        jsr     L5863
-        sta     L585F
+        lda     horiz_scroll_pos
+        ldx     horiz_scroll_max
+        jsr     do_scroll_right
+        sta     horiz_scroll_pos
         rts
 
 scroll_left:                    ; elevator left / contents right
-        lda     L585F
-        jsr     L587E
-        sta     L585F
+        lda     horiz_scroll_pos
+        jsr     do_scroll_left
+        sta     horiz_scroll_pos
         rts
 
 scroll_down:                    ; elevator down / contents up
-        ldax    L5861
-        jsr     L5893
-        sta     L5861
+        lda     vert_scroll_pos
+        ldx     vert_scroll_max
+        jsr     do_scroll_down
+        sta     vert_scroll_pos
         rts
 
 scroll_up:                      ; elevator up / contents down
-        lda     L5861
-        jsr     L58AE
-        sta     L5861
+        lda     vert_scroll_pos
+        jsr     do_scroll_up
+        sta     vert_scroll_pos
         rts
 
 horiz_scroll_flag:      .byte   0 ; can scroll horiz?
 vert_scroll_flag:       .byte   0 ; can scroll vert?
-L585F:  .word   0
-L5861:  .word   0
+horiz_scroll_pos:       .byte   0
+horiz_scroll_max:       .byte   0
+vert_scroll_pos:        .byte   0
+vert_scroll_max:        .byte   0
 
-.proc L5863
-        stx     L587D
-        cmp     L587D
+.proc do_scroll_right
+        stx     max
+        cmp     max
         beq     :+
         sta     updatethumb_stash
         inc     updatethumb_stash
-        lda     #MGTK::Ctl::horizontal_scroll_bar
-        sta     updatethumb_which_ctl
-        jsr     L5C54
+        copy    #MGTK::Ctl::horizontal_scroll_bar, updatethumb_which_ctl
+        jsr     update_scroll_thumb
         lda     updatethumb_stash
 :       rts
 
-L587D:  .byte   0
+max:   .byte   0
 .endproc
 
-.proc L587E
+.proc do_scroll_left
         beq     :+
         sta     updatethumb_stash
         dec     updatethumb_stash
-        lda     #MGTK::Ctl::horizontal_scroll_bar
-        sta     updatethumb_which_ctl
-        jsr     L5C54
+        copy    #MGTK::Ctl::horizontal_scroll_bar, updatethumb_which_ctl
+        jsr     update_scroll_thumb
         lda     updatethumb_stash
 :       rts
         .byte   0
 .endproc
 
-.proc L5893
-        stx     L58AD
-        cmp     L58AD
+.proc do_scroll_down
+        stx     max
+        cmp     max
         beq     :+
         sta     updatethumb_stash
         inc     updatethumb_stash
-        lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     updatethumb_which_ctl
-        jsr     L5C54
+        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_which_ctl
+        jsr     update_scroll_thumb
         lda     updatethumb_stash
 :       rts
 
-L58AD:  .byte   0
+max:   .byte   0
 .endproc
 
-.proc L58AE
+.proc do_scroll_up
         beq     :+
         sta     updatethumb_stash
         dec     updatethumb_stash
-        lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     updatethumb_which_ctl
-        jsr     L5C54
+        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_which_ctl
+        jsr     update_scroll_thumb
         lda     updatethumb_stash
 :       rts
 
         .byte   0
 .endproc
 
-.proc L58C3
+;;; Output: A = hscroll pos, X = hscroll max, Y = hscroll active flag (high bit)
+.proc get_active_window_hscroll_info
+        ptr := $06
+
         lda     active_window_id
         jsr     window_lookup
-        stax    $06
-        ldy     #$06
-        lda     ($06),y
+        stax    ptr
+        ldy     #MGTK::Winfo::hthumbmax
+        lda     (ptr),y
         tax
-        iny
-        lda     ($06),y
+        iny                     ; hthumbpos
+        lda     (ptr),y
         pha
-        ldy     #$04
-        lda     ($06),y
-        and     #$01
+        ldy     #MGTK::Winfo::hscroll
+        lda     (ptr),y
+        and     #$01            ; active flag
         clc
         ror     a
-        ror     a
+        ror     a               ; shift to high bit
         tay
         pla
         rts
 .endproc
 
-.proc L58E2
+;;; Output: A = vscroll pos, X = vscroll max, Y = vscroll active flag (high bit)
+.proc get_active_window_vscroll_info
+        ptr := $06
+
         lda     active_window_id
         jsr     window_lookup
-        stax    $06
-        ldy     #$08
-        lda     ($06),y
+        stax    ptr
+        ldy     #MGTK::Winfo::vthumbmax
+        lda     (ptr),y
         tax
         iny
-        lda     ($06),y
+        lda     (ptr),y
         pha
-        ldy     #$05
-        lda     ($06),y
-        and     #$01
+        ldy     #MGTK::Winfo::vscroll
+        lda     (ptr),y
+        and     #$01            ; active flag
         clc
         ror     a
-        ror     a
+        ror     a               ; shift to high bit
         tay
         pla
         rts
@@ -3600,7 +3619,7 @@ active_window_view_by:
         and     #$01
         bne     :+
         jmp     done_client_click
-:       jsr     L5803
+:       jsr     get_active_window_scroll_info
         lda     findcontrol_which_part
         cmp     #MGTK::Part::thumb
         bne     :+
@@ -3646,7 +3665,7 @@ horiz:  lda     active_window_id
         and     #$01
         bne     :+
         jmp     done_client_click
-:       jsr     L5803
+:       jsr     get_active_window_scroll_info
         lda     findcontrol_which_part
         cmp     #MGTK::Part::thumb
         bne     :+
@@ -3697,24 +3716,25 @@ done_client_click:
         lda     trackthumb_thumbmoved
         bne     :+
         rts
-:       jsr     L5C54
+:       jsr     update_scroll_thumb
         jsr     StoreWindowIconTable
         jmp     LoadDesktopIconTable
 .endproc
 
 ;;; ============================================================
 
-.proc L5C54
-        lda     updatethumb_stash
-        sta     updatethumb_thumbpos
+.proc update_scroll_thumb
+        copy    updatethumb_stash, updatethumb_thumbpos
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         jsr     L6523
         jsr     L84D1
         bit     active_window_view_by
-        bmi     :+
+        bmi     :+              ; list view, no icons
         jsr     cached_icons_screen_to_window
+
 :       copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
+
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
         jsr     reset_grafport3
         jmp     L6C19
@@ -3795,15 +3815,18 @@ replace:
         inc     selected_icon_count
 
         copy    active_window_id, selected_window_index
-        copy    active_window_id, getwinport_params2::window_id
 
+        copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
+
         copy    icon_num, icon_param
         jsr     icon_window_to_screen
         jsr     offset_grafport2_and_set
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
+
         copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
+
         lda     icon_num
         jsr     icon_screen_to_window
         jsr     reset_grafport3
@@ -3867,8 +3890,10 @@ desktop:
 
 :       cpx     #$FF
         beq     L5DF7
+
         copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
+
         jsr     cached_icons_window_to_screen
         jsr     offset_grafport2_and_set
 
@@ -3886,6 +3911,7 @@ desktop:
 
         copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
+
         jsr     update_scrollbars
         jsr     cached_icons_screen_to_window
         jsr     reset_grafport3
@@ -3986,6 +4012,7 @@ L5E77:  .byte   0
 
 :       copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
+
         jsr     set_penmode_copy
         MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
         ldx     active_window_id
@@ -3997,7 +4024,7 @@ L5E77:  .byte   0
         tax
         dex
         lda     win_view_by_table,x
-        bmi     :+
+        bmi     :+              ; list view, not icons
         jsr     close_active_window
 :       lda     active_window_id
         jsr     window_path_lookup
@@ -4198,7 +4225,7 @@ L6112:  ldy     #$14
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
-        beq     L6143
+        beq     L6143           ; view by icon
         rts
 
 L6143:  jsr     LoadActiveWindowIconTable
@@ -4259,7 +4286,7 @@ handle_close_click:
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
-        bmi     L6215
+        bmi     L6215           ; list view, not icons
         lda     icon_count
         sec
         sbc     cached_window_icon_count
@@ -4513,12 +4540,12 @@ L650D:  .word   0
 
 .proc L650F
         bit     active_window_view_by
-        bmi     :+
+        bmi     :+              ; list view, not icons
         jsr     cached_icons_window_to_screen
 :       jsr     L6523
         jsr     compute_icons_bbox
         lda     active_window_id
-        jmp     L7D5D
+        jmp     compute_window_dimensions
 .endproc
 
 .proc L6523
@@ -4562,7 +4589,7 @@ L650D:  .word   0
 
 .proc update_hthumb
         lda     active_window_id
-        jsr     L7D5D
+        jsr     compute_window_dimensions
         stax    L6600
         lda     active_window_id
         jsr     window_lookup
@@ -4600,7 +4627,7 @@ L6602:  .word   0
 
 .proc update_vthumb
         lda     active_window_id
-        jsr     L7D5D
+        jsr     compute_window_dimensions
         sty     L669F
         lda     active_window_id
         jsr     window_lookup
@@ -4662,7 +4689,7 @@ disable_menu_items:
 check_view_menu_items:
         dex
         lda     win_view_by_table,x
-        and     #$0F
+        and     #$0F            ; mask off menu item number
         tax
         inx
         stx     checkitem_params::menu_item
@@ -5167,6 +5194,7 @@ L6BB8:  jsr     L744B
 
         copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
+
         jsr     draw_window_header
         jsr     cached_icons_window_to_screen
         copy    #0, L6C0E
@@ -5181,8 +5209,7 @@ L6BDA:  lda     L6C0E
         inc     L6C0E
         jmp     L6BDA
 
-L6BF4:  lda     cached_window_id
-        sta     active_window_id
+L6BF4:  copy    cached_window_id, active_window_id
         jsr     update_scrollbars
         jsr     cached_icons_screen_to_window
         jsr     StoreWindowIconTable
@@ -5205,13 +5232,15 @@ L6C0E:  .byte   0
         ldx     cached_window_id
         dex
         lda     win_view_by_table,x
-        bmi     L6C25
+        bmi     L6C25           ; list view, not icons
         jmp     L6CCD
 
+        ;; List view
 L6C25:  jsr     push_pointers
-        lda     cached_window_id
-        sta     getwinport_params2::window_id
+
+        copy    cached_window_id, getwinport_params2::window_id
         jsr     get_set_port2
+
         bit     draw_window_header_flag
         bmi     :+
         jsr     draw_window_header
@@ -5285,9 +5314,10 @@ rows_done:
         .byte   0
 .endproc
 
-L6CCD:  lda     cached_window_id
-        sta     getwinport_params2::window_id
+        ;; Icon view
+L6CCD:  copy    cached_window_id, getwinport_params2::window_id
         jsr     get_set_port2
+
         bit     draw_window_header_flag
         bmi     :+
         jsr     draw_window_header
@@ -5296,16 +5326,17 @@ L6CCD:  lda     cached_window_id
 
         COPY_BLOCK grafport2::cliprect, tmp_rect
 
-        ldx     #$00
+        ldx     #0
         txa
         pha
 L6CF3:  cpx     cached_window_icon_count
         bne     L6D09
         pla
         jsr     reset_grafport3
-        lda     cached_window_id
-        sta     getwinport_params2::window_id
+
+        copy    cached_window_id, getwinport_params2::window_id
         jsr     get_set_port2
+
         jsr     cached_icons_screen_to_window
         rts
 
@@ -5363,12 +5394,12 @@ L6D7D:  lda     L6DB0
         inc     L6DB0
         jmp     L6D7D
 
-L6D9B:  lda     #$00
+L6D9B:  lda     #0
         ldx     selected_icon_count
         dex
-L6DA1:  sta     selected_icon_list,x
+:       sta     selected_icon_list,x
         dex
-        bpl     L6DA1
+        bpl     :-
         sta     selected_icon_count
         sta     selected_window_index
         jmp     reset_grafport3
@@ -5382,10 +5413,11 @@ L6DB0:  .byte   0
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
-        bmi     :+
+        bmi     :+              ; list view, not icons
         jsr     compute_icons_bbox
         jmp     config_port
 
+        ;; List view
 :       jsr     cached_icons_window_to_screen
         jsr     compute_icons_bbox
         jsr     cached_icons_screen_to_window
@@ -5401,20 +5433,16 @@ config_port:
         bmi     activate_hscroll
 
         ;; deactivate horizontal scrollbar
-        lda     #MGTK::Ctl::horizontal_scroll_bar
-        sta     activatectl_which_ctl
-        lda     #MGTK::activatectl_deactivate
-        sta     activatectl_activate
+        copy    #MGTK::Ctl::horizontal_scroll_bar, activatectl_which_ctl
+        copy    #MGTK::activatectl_deactivate, activatectl_activate
         jsr     activate_ctl
 
         jmp     check_vscroll
 
 activate_hscroll:
         ;; activate horizontal scrollbar
-        lda     #MGTK::Ctl::horizontal_scroll_bar
-        sta     activatectl_which_ctl
-        lda     #MGTK::activatectl_activate
-        sta     activatectl_activate
+        copy    #MGTK::Ctl::horizontal_scroll_bar, activatectl_which_ctl
+        copy    #MGTK::activatectl_activate, activatectl_activate
         jsr     activate_ctl
         jsr     update_hthumb
 
@@ -5426,20 +5454,16 @@ check_vscroll:
         bmi     activate_vscroll
 
         ;; deactivate vertical scrollbar
-        lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     activatectl_which_ctl
-        lda     #MGTK::activatectl_deactivate
-        sta     activatectl_activate
+        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_which_ctl
+        copy    #MGTK::activatectl_deactivate, activatectl_activate
         jsr     activate_ctl
 
         rts
 
 activate_vscroll:
         ;; activate vertical scrollbar
-        lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     activatectl_which_ctl
-        lda     #MGTK::activatectl_activate
-        sta     activatectl_activate
+        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_which_ctl
+        copy    #MGTK::activatectl_activate, activatectl_activate
         jsr     activate_ctl
         jmp     update_vthumb
 
@@ -5943,6 +5967,16 @@ L7223:  iny
         iny
         lda     (entry_ptr),y
         sta     record,x
+        inx
+
+        ;; aux type
+        ldy     #FileEntry::aux_type
+        lda     (entry_ptr),y
+        sta     record,x
+        inx
+        iny
+        lda     (entry_ptr),y
+        sta     record,x
 
         ;; Copy entry composed at $1F00 to buffer in Aux LC Bank 2
         lda     LCBANK2
@@ -6419,7 +6453,7 @@ L76A4:  lda     cached_window_id
 L76AA:  lda     L7625
         cmp     L7764
         beq     L76BB
-        jsr     L7768
+        jsr     alloc_and_populate_file_icon
         inc     L7625
         jmp     L76AA
 
@@ -6465,7 +6499,7 @@ L7710:  ldy     #$20
 
 L7739:  addr_jump L7744, $0032
 
-L7740:  ldax    #$6C
+L7740:  ldax    #108
 L7744:  ldy     #$22
         sta     ($06),y
         txa
@@ -6490,7 +6524,7 @@ L7767:  .byte   $14
 ;;; ============================================================
 ;;; Create icon
 
-.proc L7768
+.proc alloc_and_populate_file_icon
         file_entry := $6
         icon_entry := $8
         name_tmp := $1800
@@ -6506,8 +6540,8 @@ L7767:  .byte   $14
         lda     LCBANK2
 
         ;; Copy the name (offset by 2 for count and leading space)
-        ldy     #FileEntry::storage_type_name_length
-        lda     (file_entry),y  ; assumes storage type is 0 ???
+        ldy     #FileRecord::name
+        lda     (file_entry),y
         sta     name_tmp
         iny
         ldx     #0
@@ -6526,7 +6560,7 @@ L7767:  .byte   $14
         sta     name_tmp,x      ; trailing space
 
         ;; Check file type
-        ldy     #FileEntry::file_type
+        ldy     #FileRecord::file_type
         lda     (file_entry),y
 
         cmp     #FT_S16         ; IIgs System?
@@ -6545,16 +6579,30 @@ L7767:  .byte   $14
         beq     is_iigs
         txa
 
+        ;; FT_BAD is overloaded, so use generic
         cmp     #FT_BAD         ; T$01 is overloaded below for "apps", so
-        bne     :+              ; treat as generic
-        lda     #FT_TYPELESS
+        beq     is_generic      ; treat as generic
+
+        ;; DA_FILE_TYPE also requires correct AUX type
+        cmp     #DA_FILE_TYPE   ; Apple Menu item?
+        bne     :+
+        ldy     #FileRecord::aux_type
+        lda     (file_entry),y  ; Must have correct aux type, otherwise
+        cmp     #<DA_AUX_TYPE   ; treat as generic
+        bne     is_generic
+        iny
+        lda     (file_entry),y
+        and     #%01111111      ; ignore high bit (set = don't show in menu)
+        cmp     #>DA_AUX_TYPE
+        bne     is_generic
+        lda     #DA_FILE_TYPE
 
 :       cmp     #FT_SYSTEM      ; Other system?
         bne     got_type        ; nope
 
         ;; Distinguish *.SYSTEM files as apps (use $01) from other
         ;; type=SYS files (use $FF).
-        ldy     #FileEntry::storage_type_name_length
+        ldy     #FileRecord::name
         lda     (file_entry),y
         tay
         ldx     str_sys_suffix
@@ -6571,15 +6619,20 @@ is_app:
         lda     #FT_BAD         ; overloaded meaning in icon tables
         bne     got_type        ; always
 
+is_generic:
+        lda     #FT_TYPELESS
+        beq     got_type        ; always
+
 is_iigs:
         lda     #FT_SRC
-        bne     got_type
+        bne     got_type        ; always
 
 str_sys_suffix:
         PASCAL_STRING ".SYSTEM"
 
 not_app:
         lda     #$FF
+        ;; fall through
 
 got_type:
         tay
@@ -6959,7 +7012,9 @@ start:  ldx     #3
         ldx     cached_window_id
         dex
         lda     win_view_by_table,x
-        bpl     L7BCB
+        bpl     L7BCB           ; icon view
+
+        ;; List view
         lda     cached_window_icon_count
         bne     L7BA1
 L7B96:  ldax    #$0300
@@ -6986,6 +7041,7 @@ L7BA1:  clc
         copy16  #360, iconbb_rect::x2
         jmp     L7B96
 
+        ;; Icon view
 L7BCB:  lda     cached_window_icon_count
         cmp     #1
         bne     check_icon
@@ -7140,44 +7196,52 @@ hi:     .byte   0
         compute_icons_bbox := compute_icons_bbox_impl::start
 
 ;;; ============================================================
+;;; Compute dimensions of window
+;;; Input: A = window
+;;; Output: A,X = width, Y = height
 
-.proc L7D5D
+.proc compute_window_dimensions
+        ptr := $06
+
         jsr     window_lookup
-        stax    $06
+        stax    ptr
 
-        ldy     #35
-        ldx     #7
-:       lda     ($06),y
-        sta     L7D94,x
+        ;; Copy window's maprect
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
+        ldx     #.sizeof(MGTK::Rect)-1
+:       lda     (ptr),y
+        sta     rect,x
         dey
         dex
         bpl     :-
 
-        lda     L7D98
+        ;; Push delta-X
+        lda     rect+MGTK::Rect::x2
         sec
-        sbc     L7D94
+        sbc     rect+MGTK::Rect::x1
         pha
-        lda     L7D98+1
-        sbc     L7D94+1
+        lda     rect+MGTK::Rect::x2+1
+        sbc     rect+MGTK::Rect::x1+1
         pha
 
-        lda     L7D9A
+        ;; Push delta-Y
+        lda     rect+MGTK::Rect::y2
         sec
-        sbc     L7D96
+        sbc     rect+MGTK::Rect::y1
         pha
-        lda     L7D9A+1
-        sbc     L7D96+1         ; weird - this is discarded???
+        lda     rect+MGTK::Rect::y2+1
+        sbc     rect+MGTK::Rect::y1+1
+        ;; high byte is discarded
+
         pla
         tay
         pla
         tax
         pla
+
         rts
 
-L7D94:  .word   0
-L7D96:  .word   0
-L7D98:  .word   0
-L7D9A:  .word   0
+rect:   DEFINE_RECT 0,0,0,0
 
 .endproc
 
@@ -8174,7 +8238,7 @@ L8562:  lsr16   L85F2
         sta     grafport2::cliprect::x1+1,x
 
         lda     active_window_id
-        jsr     L7D5D
+        jsr     compute_window_dimensions
         stax    L85F4
         sty     L85F6
         lda     L85F1
@@ -11045,14 +11109,9 @@ is_dir: jsr     decrement_op_file_count
         lda     #$FF
 store:  sta     is_dir_flag
         jsr     dec_file_count_and_run_copy_dialog_proc
-        lda     op_file_count+1
-        bne     :+
-        lda     op_file_count
-        bne     :+
-        jmp     close_files_cancel_dialog
 
         ;; Copy access, file_type, aux_type, storage_type
-:       ldy     #7
+        ldy     #7
 :       lda     src_file_info_params,y
         sta     create_params2,y
         dey
@@ -11186,13 +11245,8 @@ done:   rts
 :       jsr     append_to_dst_path
         jsr     dec_file_count_and_run_copy_dialog_proc
         jsr     decrement_op_file_count
-        lda     op_file_count+1
-        bne     :+
-        lda     op_file_count
-        bne     :+
-        jmp     close_files_cancel_dialog
 
-:       jsr     try_create_dst
+        jsr     try_create_dst
         bcs     :+
         jsr     remove_src_path_segment
         jmp     done
@@ -12719,47 +12773,50 @@ LA6F7:  jsr     LB9B8
 .proc prompt_key_handler
         lda     event_modifiers
         cmp     #MGTK::event_modifier_solid_apple
-        bne     LA71A
+        bne     no_mods
+
+        ;; Modifier key down.
         lda     event_key
         and     #CHAR_MASK
         cmp     #CHAR_LEFT
-        bne     LA710
-        jmp     LA815
+        bne     :+
+        jmp     left_with_mod
 
-LA710:  cmp     #CHAR_RIGHT
-        bne     LA717
-        jmp     LA820
+:       cmp     #CHAR_RIGHT
+        bne     done
+        jmp     right_with_mod
 
-LA717:  return  #$FF
+done:   return  #$FF
 
-LA71A:  lda     event_key
+        ;; No modifier key down.
+no_mods:
+        lda     event_key
         and     #CHAR_MASK
+
         cmp     #CHAR_LEFT
         bne     LA72E
         bit     format_erase_overlay_flag
         bpl     :+
-        jmp     format_erase_overlay::L0CB8
-
-:       jmp     LA82B
+        jmp     format_erase_overlay_prompt_handle_key_left
+:       jmp     handle_key_left
 
 LA72E:  cmp     #CHAR_RIGHT
         bne     LA73D
         bit     format_erase_overlay_flag
         bpl     :+
-        jmp     format_erase_overlay::L0CD7
-
-:       jmp     LA83E
+        jmp     format_erase_overlay_prompt_handle_key_right
+:       jmp     handle_key_right
 
 LA73D:  cmp     #CHAR_RETURN
         bne     LA749
         bit     LD8E7
-        bvs     LA717
+        bvs     done
         jmp     LA851
 
 LA749:  cmp     #CHAR_ESCAPE
         bne     LA755
         bit     LD8E7
-        bmi     LA717
+        bmi     done
         jmp     LA86F
 
 LA755:  cmp     #CHAR_DELETE
@@ -12769,18 +12826,16 @@ LA755:  cmp     #CHAR_DELETE
 LA75C:  cmp     #CHAR_UP
         bne     LA76B
         bit     format_erase_overlay_flag
-        bmi     LA768
-        jmp     LA717
-
-LA768:  jmp     format_erase_overlay::L0D14
+        bmi     :+
+        jmp     done
+:       jmp     format_erase_overlay_prompt_handle_key_up
 
 LA76B:  cmp     #CHAR_DOWN
         bne     LA77A
         bit     format_erase_overlay_flag
-        bmi     LA777
-        jmp     LA717
-
-LA777:  jmp     format_erase_overlay::L0CF9
+        bmi     :+
+        jmp     done
+:       jmp     format_erase_overlay_prompt_handle_key_down
 
 LA77A:  bit     LD8E7
         bvc     LA79B
@@ -12805,32 +12860,32 @@ LA79B:  bit     LD8F5
         beq     LA7D8
         cmp     #'0'
         bcs     LA7AB
-        jmp     LA717
+        jmp     done
 
 LA7AB:  cmp     #'z'+1
         bcc     LA7B2
-        jmp     LA717
+        jmp     done
 
 LA7B2:  cmp     #'9'+1
         bcc     LA7D8
         cmp     #'A'
         bcs     LA7BD
-        jmp     LA717
+        jmp     done
 
 LA7BD:  cmp     #'Z'+1
         bcc     LA7DD
         cmp     #'a'
         bcs     LA7DD
-        jmp     LA717
+        jmp     done
 
 LA7C8:  cmp     #' '
         bcs     LA7CF
-        jmp     LA717
+        jmp     done
 
 LA7CF:  cmp     #'~'
         beq     LA7DD
         bcc     LA7DD
-        jmp     LA717
+        jmp     done
 
 LA7D8:  ldx     path_buf1
         beq     LA7E5
@@ -12851,33 +12906,41 @@ do_all: jsr     set_penmode_xor2
         MGTK_RELAY_CALL MGTK::PaintRect, desktop_aux::all_button_rect
         return  #PromptResult::all
 
-LA815:  lda     has_input_field_flag
-        beq     LA81D
-        jsr     LBC5E
-LA81D:  return  #$FF
+.proc left_with_mod
+        lda     has_input_field_flag
+        beq     :+
+        jsr     input_field_ip_start
+:       return  #$FF
+.endproc
 
-LA820:  lda     has_input_field_flag
-        beq     LA828
-        jsr     LBCC9
-LA828:  return  #$FF
+.proc right_with_mod
+        lda     has_input_field_flag
+        beq     :+
+        jsr     input_field_ip_end
+:       return  #$FF
+.endproc
 
-LA82B:  lda     has_input_field_flag
-        beq     LA83B
-        bit     format_erase_overlay_flag
-        bpl     LA838
-        jmp     format_erase_overlay::L0CD7
+.proc handle_key_left
+        lda     has_input_field_flag
+        beq     done
+        bit     format_erase_overlay_flag ; BUG? Should never be set here based on caller test.
+        bpl     :+
+        jmp     format_erase_overlay_prompt_handle_key_right
 
-LA838:  jsr     LBBA4
-LA83B:  return  #$FF
+:       jsr     input_field_ip_left
+done:   return  #$FF
+.endproc
 
-LA83E:  lda     has_input_field_flag
-        beq     LA84E
-        bit     format_erase_overlay_flag
-        bpl     LA84B
-        jmp     format_erase_overlay::L0CB8
+.proc handle_key_right
+        lda     has_input_field_flag
+        beq     done
+        bit     format_erase_overlay_flag ; BUG? Should never be set here based on caller test.
+        bpl     :+
+        jmp     format_erase_overlay_prompt_handle_key_left
 
-LA84B:  jsr     LBC03
-LA84E:  return  #$FF
+:       jsr     input_field_ip_right
+done:   return  #$FF
+.endproc
 
 LA851:  lda     winfo_alert_dialog
         jsr     set_port_from_window_id
@@ -13762,7 +13825,7 @@ LB2FD:  jsr     prompt_input_loop
         bne     LB313
         lda     path_buf1
         beq     LB2FD
-        jsr     LBCC9
+        jsr     input_field_ip_end
         ldy     #<path_buf1
         ldx     #>path_buf1
         return  #0
@@ -14646,7 +14709,7 @@ LBA42:
         cmp     path_buf2
         bcc     LBA4F
         dec     path_buf2
-        jmp     LBCC9
+        jmp     input_field_ip_end
 
 LBA4F:  ldx     #2
         ldy     path_buf1
@@ -14693,7 +14756,7 @@ LBA7C:  dey
         lda     textlen
         cmp     #1
         bcs     :-
-        jmp     LBC5E
+        jmp     input_field_ip_start
 
         ;; Copy the text to the right of the click to split_buf
 :       inc     textlen
@@ -14802,8 +14865,10 @@ param:  .byte   0
 .endproc
 
 ;;; ============================================================
+;;; Move IP one character left.
 
-.proc LBBA4
+.proc input_field_ip_left
+        ;; Any characters to left of IP?
         lda     path_buf1
         bne     :+
         rts
@@ -14814,17 +14879,23 @@ param:  .byte   0
 
 :       ldx     path_buf2
         cpx     #1
-        beq     LBBBC
-LBBB1:  lda     path_buf2,x
+        beq     finish
+
+        ;; Shift right up by a character.
+loop:   lda     path_buf2,x
         sta     path_buf2+1,x
         dex
         cpx     #1
-        bne     LBBB1
-LBBBC:  ldx     path_buf1
+        bne     loop
+
+        ;; Copy character left to right and adjust lengths.
+finish: ldx     path_buf1
         lda     path_buf1,x
         sta     path_buf2+2
         dec     path_buf1
         inc     path_buf2
+
+        ;; Redraw (just the right part)
         jsr     measure_path_buf1
         stax    xcoord
         copy16  name_input_textpos::ycoord, ycoord
@@ -14838,28 +14909,36 @@ LBBBC:  ldx     path_buf1
 .endproc
 
 ;;; ============================================================
+;;; Move IP one character right.
 
-.proc LBC03
+.proc input_field_ip_right
+        ;; Any characters to right of IP?
         lda     path_buf2
-        cmp     #$02
-        bcs     LBC0B
+        cmp     #2
+        bcs     :+
         rts
 
-LBC0B:  ldx     path_buf1
+        ;; Copy char from right to left and adjust lengths.
+:       ldx     path_buf1
         inx
         lda     path_buf2+2
         sta     path_buf1,x
         inc     path_buf1
         ldx     path_buf2
-        cpx     #$03
-        bcc     LBC2D
-        ldx     #$02
-LBC21:  lda     path_buf2+1,x
+        cpx     #3
+        bcc     finish
+
+        ;; Shift right string down.
+        ldx     #2
+loop:   lda     path_buf2+1,x
         sta     path_buf2,x
         inx
         cpx     path_buf2
-        bne     LBC21
-LBC2D:  dec     path_buf2
+        bne     loop
+
+        ;; Redraw (the whole thing)
+finish: dec     path_buf2
+
         MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
         MGTK_RELAY_CALL MGTK::SetPortBits, name_input_mapinfo
         addr_call draw_text1, path_buf1
@@ -14871,28 +14950,38 @@ LBC2D:  dec     path_buf2
 .endproc
 
 ;;; ============================================================
+;;; Move IP to start of input field.
 
-.proc LBC5E
+.proc input_field_ip_start
+        ;; Any characters to left of IP?
         lda     path_buf1
-        bne     LBC64
+        bne     :+
         rts
 
-LBC64:  ldx     path_buf2
-        cpx     #$01
-        beq     LBC79
-LBC6B:  lda     path_buf2,x
+        ;; Any characters to right of IP?
+:       ldx     path_buf2
+        cpx     #1
+        beq     move
+
+        ;; Preserve right characters up to make room.
+        ;; TODO: Why not just shift them up???
+loop1:  lda     path_buf2,x
         sta     split_buf-1,x
         dex
-        cpx     #$01
-        bne     LBC6B
+        cpx     #1
+        bne     loop1
         ldx     path_buf2
-LBC79:  dex
+
+        ;; Move characters left to right
+move:   dex
         stx     split_buf
         ldx     path_buf1
-LBC80:  lda     path_buf1,x
+loop2:  lda     path_buf1,x
         sta     path_buf2+1,x
         dex
-        bne     LBC80
+        bne     loop2
+
+        ;; Adjust lengths.
         lda     str_insertion_point+1
         sta     path_buf2+1
         inc     path_buf1
@@ -14903,18 +14992,21 @@ LBC80:  lda     path_buf1,x
         adc     split_buf
         tay
         pha
+
+        ;; Append right right characters again if needed.
         ldx     split_buf
-        beq     LBCB3
-LBCA6:  lda     split_buf,x
+        beq     finish
+loop3:  lda     split_buf,x
         sta     path_buf2,y
         dex
         dey
         cpy     path_buf2
-        bne     LBCA6
-LBCB3:  pla
+        bne     loop3
+
+finish: pla
         sta     path_buf2
         copy    #0, path_buf1
-        MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
+        MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos ; Seems unnecessary???
         jsr     draw_filename_prompt
         rts
 .endproc
@@ -14953,10 +15045,11 @@ done:   rts
 .endproc
 
 ;;; ============================================================
+;;; Move IP to end of input field.
 
-.proc LBCC9
+.proc input_field_ip_end
         jsr     merge_path_buf1_path_buf2
-        MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos
+        MGTK_RELAY_CALL MGTK::MoveTo, name_input_textpos ; Seems unnecessary???
         jsr     draw_filename_prompt
         rts
 .endproc

@@ -1004,6 +1004,7 @@ tmp_rect:
 saved_stack:
         .byte   0
 
+.assert * = last_menu_click_params, error, "Entry point mismatch"
 .proc menu_click_params
 menu_id:.byte   0
 item_num:.byte  0
@@ -1196,7 +1197,7 @@ LE6C1:
         .addr   winfo8title_ptr
 
         ;; (low nibble must match menu order)
-        view_by_icon = $80
+        view_by_icon = $00
         view_by_name = $81
         view_by_date = $82
         view_by_size = $83
@@ -1377,7 +1378,7 @@ icon_entries:
 
         .org $FB00
 
-        num_file_types = 14
+        num_file_types = 15
 
 type_table:
         .byte   FT_TYPELESS   ; typeless
@@ -1393,6 +1394,7 @@ type_table:
         .byte   FT_ADB        ; appleworks db
         .byte   FT_AWP        ; appleworks wp
         .byte   FT_ASP        ; appleworks sp
+        .byte   DA_FILE_TYPE  ; desk accessory
         .byte   FT_BAD        ; bad block
 
 type_names_table:
@@ -1409,6 +1411,7 @@ type_names_table:
         .byte   " ADB" ; appleworks db
         .byte   " AWP" ; appleworks wp
         .byte   " ASP" ; appleworks sp
+        .byte   " $F1" ; desk accessory
         .byte   " BAD" ; bad block
 
 ;;; The icon-related tables (below) use a distinguishing icon
@@ -1433,6 +1436,7 @@ icon_type_table:
         .byte   icon_entry_type_generic ; appleworks db
         .byte   icon_entry_type_generic ; appleworks wp
         .byte   icon_entry_type_generic ; appleworks sp
+        .byte   icon_entry_type_generic ; desk accessory
         .byte   icon_entry_type_system  ; system (see below)
 
 type_icons_table:               ; map into definitions below
@@ -1449,6 +1453,7 @@ type_icons_table:               ; map into definitions below
         .addr   adb ; appleworks db
         .addr   awp ; appleworks wp
         .addr   asp ; appleworks sp
+        .addr   a2d ; desk accessory
         .addr   app ; system (see below)
 
 gen:    DEFICON generic_icon, 4, 27, 15, generic_mask
@@ -1459,11 +1464,12 @@ txt:    DEFICON text_icon, 4, 27, 15, generic_mask
 bin:    DEFICON binary_icon, 4, 27, 14, binary_mask
 dir:    DEFICON folder_icon, 4, 27, 11, folder_mask
 sys:    DEFICON sys_icon, 4, 27, 17, sys_mask
-bas:    DEFICON basic_icon, 4, 27, 14, basic_mask
+bas:    DEFICON desktop_aux::basic_icon, 4, 27, 14, desktop_aux::basic_mask
 fot:    DEFICON desktop_aux::graphics_icon, 4, 27, 12, desktop_aux::graphics_mask
 adb:    DEFICON desktop_aux::adb_icon, 4, 27, 15, generic_mask
 awp:    DEFICON desktop_aux::awp_icon, 4, 27, 15, generic_mask
 asp:    DEFICON desktop_aux::asp_icon, 4, 27, 15, generic_mask
+a2d:    DEFICON desktop_aux::a2d_file_icon, 4, 27, 15, generic_mask
 app:    DEFICON app_icon, 5, 34, 16, app_mask
 
 ;;; Generic
@@ -1633,41 +1639,6 @@ sys_mask:
         .byte   px(%0011111),px(%1111111),px(%1111111),px(%1111100)
         .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000)
 
-;;; Basic
-
-basic_icon:
-        .byte   px(%0000000),px(%0000001),px(%1000000),px(%0000000)
-        .byte   px(%0000000),px(%0000110),px(%0110000),px(%0000000)
-        .byte   px(%0000000),px(%0011000),px(%0001100),px(%0000000)
-        .byte   px(%0000000),px(%1100000),px(%0000011),px(%0000000)
-        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000)
-        .byte   px(%0111110),px(%0111000),px(%1111010),px(%0111100)
-        .byte   px(%0100010),px(%1000100),px(%1000010),px(%1000110)
-        .byte   px(%0111100),px(%1111100),px(%1111010),px(%1000000)
-        .byte   px(%0100010),px(%1000100),px(%0001010),px(%1000110)
-        .byte   px(%0111110),px(%1000100),px(%1111010),px(%0111100)
-        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000)
-        .byte   px(%0000000),px(%1100000),px(%0000011),px(%0000000)
-        .byte   px(%0000000),px(%0011000),px(%0001100),px(%0000000)
-        .byte   px(%0000000),px(%0000110),px(%0110000),px(%0000000)
-        .byte   px(%0000000),px(%0000001),px(%1000000),px(%0000000)
-
-basic_mask:
-        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000)
-        .byte   px(%0000000),px(%0000001),px(%1000000),px(%0000000)
-        .byte   px(%0000000),px(%0000111),px(%1110000),px(%0000000)
-        .byte   px(%0000000),px(%0011111),px(%1111100),px(%0000000)
-        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
-        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
-        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
-        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
-        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
-        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
-        .byte   px(%1111111),px(%1111111),px(%1111111),px(%1111111)
-        .byte   px(%0000000),px(%0011111),px(%1111100),px(%0000000)
-        .byte   px(%0000000),px(%0000111),px(%1110000),px(%0000000)
-        .byte   px(%0000000),px(%0000001),px(%1000000),px(%0000000)
-        .byte   px(%0000000),px(%0000000),px(%0000000),px(%0000000)
 
 ;;; System (with .SYSTEM suffix)
 
