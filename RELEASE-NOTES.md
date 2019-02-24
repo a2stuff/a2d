@@ -45,7 +45,6 @@ of Apple II DeskTop/MouseDesk, due to dependence on new APIs.
 The former "Show Text File" DA is now part of automatic preview
 functionality (see below).
 
-
 ### Automatic Preview
 
 Text and Graphics files with the correct file types can be previewed
@@ -57,7 +56,6 @@ To preview files of other types, you can copy the preview handlers
 named `SHOW.TEXT.FILE` and `SHOW.IMAGE.FILE` from the `PREVIEW` folder
 to the `DESK.ACC` folder, and restart DeskTop. To use them, select the
 file, then select the appropriate command from the Apple menu.
-
 
 ### Notable Fixes
 
@@ -78,15 +76,15 @@ file, then select the appropriate command from the Apple menu.
   * Sort Directory: don't need to click before sorting. (#17)
 * Hardware/Emulator Specific:
   * IIc Plus: don't spin slot 5 drives constantly. (Use Special > Check Drive) (#25)
-  * Macintosh LC IIe Option Card: don't crash on startup. (#93)
   * IIgs: color DHR is re-enabled on exit. (#43)
+  * Macintosh LC IIe Option Card: don't crash on startup. (#93)
+  * Macintosh LC IIe Option Card: correct problems with interrupts affecting AppleTalk. (#129)
   * KEGS-based IIgs emulators no longer crash on startup. (#85)
-
 
 ### Known Issues
 
 * Selector app is unmodified.
-* Special > Disk Copy app is unmodified, and may suffer bugs fixed in DeskTop (e.g. SmartPort behavior)
+* Special > Disk Copy app is not substantially modified, and may suffer bugs fixed in DeskTop (e.g. SmartPort behavior)
 
 # 1.1
 
