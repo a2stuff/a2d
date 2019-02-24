@@ -376,6 +376,8 @@ jump_table:
         ;; Extra Calls
         .addr   BitBltImpl          ; $4D BitBlt
         .addr   SetMenuSelectionImpl; $4E SetMenuSelection
+        .addr   GetDeskPatImpl      ; $4F GetDeskPat
+        .addr   SetDeskPatImpl      ; $50 SetDeskPat
 
         ;; Entry point param lengths
         ;; (length, ZP destination, hide cursor flag)
@@ -493,6 +495,8 @@ param_lengths:
         ;; Extra Calls
         PARAM_DEFN 16, $8A, 0                ; $4D BitBlt
         PARAM_DEFN  2, $82, 0                ; $4E SetMenuSelection
+        PARAM_DEFN  0, $00, 0                ; $4F GetDeskPat
+        PARAM_DEFN  0, $00, 0                ; $50 SetDeskPat
 
 ;;; ============================================================
 ;;; Pre-Shift Tables
@@ -4939,6 +4943,7 @@ bottom: .word   screen_height-1
 
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
 
+desktop_pattern:
 checkerboard_pattern:
         .byte   %01010101
         .byte   %10101010
@@ -10300,10 +10305,31 @@ mouse_firmware_hi:           ; e.g. if mouse is in slot 4, this is $C4
 mouse_operand:               ; e.g. if mouse is in slot 4, this is $40
         .byte   0
 
-.endproc  ; mgtk
 
 
 ;;; ============================================================
+;;; GetDeskPat
+
+.proc GetDeskPatImpl
+        ldax    #desktop_pattern
+        jmp     store_xa_at_params
+.endproc
+
+;;; ============================================================
+;;; SetDeskPat
+
+.proc SetDeskPatImpl
+        ldy     #.sizeof(MGTK::Pattern)-1
+:       lda     (params_addr),y
+        sta     desktop_pattern,y
+        dey
+        bpl     :-
+        rts
+.endproc
+
+;;; ============================================================
+
+.endproc  ; mgtk
 
         ;; Room for future expansion
         PAD_TO $8580

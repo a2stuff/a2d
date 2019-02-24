@@ -902,6 +902,25 @@ Parameters:
 .byte       activate        0=deactivate, 1=activate
 ```
 
+
+#### GetDeskPat ($4F)
+Get address of desktop pattern.
+
+Parameters:
+```
+.addr       pattern         (out) 8x8 pixel pattern
+```
+
+#### SetDeskPat ($50)
+Set new desktop pattern. Note that this does NOT redraw anything.
+Applications can show/hide a full-screen window to force a redraw.
+
+Parameters:
+```
+.res 8      pattern         8x8 pixel pattern
+```
+
+
 # Creating Applications and DeskTop Desk Accessories
 
 ### Application Use

@@ -490,11 +490,21 @@ ActivateCtl     = $4C           ; Activate/deactivate scroll bar
 ;;; .byte       which_ctl       ctl_*_scroll_bar
 ;;; .byte       activate        0=deactivate, 1=activate
 
-;;; $4D ???
+;;; --------------------------------------------------
+;;; Extra Calls
+
+BitBlt          = $4D
 ;;; (input length: 16 bytes)
 
-;;; $4E ???
+SetMenuSelection = $4E
 ;;; (input length: 2 bytes)
+
+GetDeskPat      = $4F
+;;; .addr       pattern         (out) Address of desktop pattern
+
+SetDeskPat      = $50
+;;; .res 8      pattern         8x8 pixel pattern to use for desktop
+
 
 ;;; ============================================================
 ;;; Graphics Primitives Constants

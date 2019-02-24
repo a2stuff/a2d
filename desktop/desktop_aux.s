@@ -2269,7 +2269,9 @@ volume:
 .proc erase_desktop_icon
         lda     #0
         sta     LA3B7
-        MGTK_CALL MGTK::SetPattern, checkerboard_pattern
+
+        MGTK_CALL MGTK::GetDeskPat, addr
+        MGTK_CALL MGTK::SetPattern, 0, addr
         ;; fall through
 .endproc
 
