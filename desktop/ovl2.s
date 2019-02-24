@@ -516,6 +516,8 @@ L0D8D:  .byte   0
 
         PAD_TO $E00
 
+; This is (probably) a Disk II formatter routine
+
 L0E00:  php
         sei
         jsr     L0E3A
@@ -1063,8 +1065,6 @@ L124A:  .byte   $00
 .proc MLI_RELAY
         sty     call
         stax    params
-        php
-        sei
         sta     ALTZPOFF
         lda     ROMIN2
         jsr     MLI
@@ -1074,7 +1074,6 @@ params: .addr   0
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
-        plp
         txa
         rts
 .endproc

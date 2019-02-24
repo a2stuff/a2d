@@ -856,8 +856,6 @@ L46AE:  jsr     disable_eject_menu_item
 .proc MLI_RELAY
         sty     call
         stax    params
-        php
-        sei
         sta     ALTZPOFF
         sta     ROMIN2
         jsr     MLI
@@ -867,7 +865,6 @@ params: .addr   dummy0000
         tax
         lda     LCBANK1
         lda     LCBANK1
-        plp
         txa
         rts
 .endproc

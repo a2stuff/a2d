@@ -81,8 +81,6 @@ start:  lda     #$80
         sty     call
         sta     params
         stx     params+1
-        php
-        sei
         sta     ALTZPOFF
         lda     ROMIN2
         jsr     MLI
@@ -92,7 +90,6 @@ params: .addr   0
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
-        plp
         txa
 self:   bne     self            ; hang on error?
         rts

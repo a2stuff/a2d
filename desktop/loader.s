@@ -265,21 +265,13 @@ start:
         bpl     :-
 
         ;; Open this system file
-        php
-        sei
         MLI_CALL OPEN, open_params
-        plp
-        and     #$FF            ; ???
         beq     :+
         brk                     ; crash
 :       lda     open_params::ref_num
         sta     set_mark_params::ref_num
         sta     read_params::ref_num
-        php
-        sei
         MLI_CALL SET_MARK, set_mark_params
-        plp
-        and     #$FF            ; ???
         beq     :+
         brk                     ; crash
 :       lda     #0
@@ -290,11 +282,7 @@ loop:   lda     segment_num
         bne     continue
 
         ;; Close and invoke DeskTop init routine
-        php
-        sei
         MLI_CALL CLOSE, close_params
-        plp
-        and     #$FF            ; ???
         beq     :+
         brk                     ; crash
 :       jmp     DESKTOP_INIT
@@ -304,11 +292,7 @@ continue:
         tax
         copy16  segment_addr_table,x, read_params::data_buffer
         copy16  segment_size_table,x, read_params::request_count
-        php
-        sei
         MLI_CALL READ, read_params
-        plp
-        and     #$FF            ; ???
         beq     :+
         brk                     ; crash
 :       ldx     segment_num

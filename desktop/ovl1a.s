@@ -120,13 +120,9 @@ loop:   lda     (src),y
 .proc MLI_RELAY
         sty     call
         stax    params
-        php
-        sei
         jsr     MLI
 call:   .byte   0
 params: .addr   0
-        plp
-        and     #$FF
 self:   bne     self            ; hang if fails
         rts
 .endproc
