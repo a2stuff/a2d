@@ -1693,6 +1693,9 @@ L9F8F:  return  #1
 icon_flags: ; bit 7 = highlighted, bit 6 = volume icon
         .byte   0
 
+open_flag:  ; non-zero if open volume/dir
+        .byte   0
+
 more_drawing_needed_flag:
         .byte   0
 
@@ -1711,6 +1714,12 @@ unhighlighted:
 highlighted:  copy    #$80, icon_flags ; is highlighted
 
 .proc common
+        ;; Test if icon is open volume/folder
+        ldy     #IconEntry::win_type
+        lda     ($06),y
+        and     #icon_entry_open_mask
+        sta     open_flag
+
         ldy     #IconEntry::win_type
         lda     ($06),y
         and     #icon_entry_winid_mask
@@ -1797,50 +1806,39 @@ highlighted:  copy    #$80, icon_flags ; is highlighted
 
 .proc paint_icon
         MGTK_CALL MGTK::HideCursor
-        bit     icon_flags
-        bvc     window
 
-        ;; On desktop, clear background
-        MGTK_CALL MGTK::SetPenMode, penOR ; clear with mask to white
+        ;; --------------------------------------------------
+        ;; Icon
+
+        ;; Shade (XORs background)
+        lda     open_flag
+        beq     :+
+        jsr     calc_rect_opendir
+        jsr     shade
+
+        ;; Mask (cleared to white or black)
+:       MGTK_CALL MGTK::SetPenMode, penOR
         bit     icon_flags
-        bpl     :+              ; highlighted?
-        MGTK_CALL MGTK::SetPenMode, penBIC ; or black if highlighted
+        bpl     :+
+        MGTK_CALL MGTK::SetPenMode, penBIC
 :       MGTK_CALL MGTK::PaintBits, mask_paintbits_params
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintBits, icon_paintbits_params
-        jmp     continue
 
-        ;; NOTE: Since having many windowed icons is more common,
-        ;; the bitmap is just drawn without mask/xor if not
-        ;; selected, since the performance difference is measurable.
-        ;; (At 1MHz, about 10ms/icon)
-window:
-        MGTK_CALL MGTK::SetPenMode, notpencopy
+        ;; Shade again (restores background)
+        lda     open_flag
+        beq     :+
+        jsr     shade
+
+        ;; Icon (drawn in black or white)
+:       MGTK_CALL MGTK::SetPenMode, penBIC
         bit     icon_flags
-        bpl     :+              ; highlighted? no, just draw
-
-        ;; draw mask first, then xor the icon
-        MGTK_CALL MGTK::PaintBits, mask_paintbits_params
-        MGTK_CALL MGTK::SetPenMode, penXOR
+        bpl     :+
+        MGTK_CALL MGTK::SetPenMode, penOR
 :       MGTK_CALL MGTK::PaintBits, icon_paintbits_params
 
-continue:
-        ldy     #IconEntry::win_type
-        lda     ($06),y
-        and     #icon_entry_open_mask
-        beq     label
+        ;; --------------------------------------------------
 
-        jsr     calc_rect_opendir
-        MGTK_CALL MGTK::SetPattern, dark_pattern ; shade for open volume
-        bit     icon_flags                       ; highlighted?
-        bmi     @highlighted
-        MGTK_CALL MGTK::SetPenMode, penBIC
-        beq     @paint
-@highlighted:
-        MGTK_CALL MGTK::SetPenMode, penOR
-@paint: MGTK_CALL MGTK::PaintRect, rect_opendir
-
-label:  COPY_STRUCT MGTK::Point, L9F94, moveto_params2
+        ;; Label
+        COPY_STRUCT MGTK::Point, L9F94, moveto_params2
         MGTK_CALL MGTK::MoveTo, moveto_params2
         bit     icon_flags      ; highlighted?
         bmi     :+
@@ -1852,6 +1850,15 @@ setbg:  sta     settextbg_params
         MGTK_CALL MGTK::DrawText, drawtext_params
         MGTK_CALL MGTK::ShowCursor
         rts
+
+.proc shade
+        MGTK_CALL MGTK::SetPattern, dark_pattern
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, rect_opendir
+
+done:   rts
+.endproc
+
 .endproc
 
 ;;; ============================================================
@@ -1864,14 +1871,7 @@ loop:   add16   icon_paintbits_params::viewloc::xcoord,x, icon_paintbits_params:
         inx
         cpx     #4
         bne     loop
-
-        lda     rect_opendir::y2
-        sec
-        sbc     #1
-        sta     rect_opendir::y2
-        bcs     :+
-        dec     rect_opendir::y2+1
-:       rts
+        rts
 .endproc
 
 .endproc ; paint_icon
