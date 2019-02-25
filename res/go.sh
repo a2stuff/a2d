@@ -5,7 +5,7 @@
 set -e
 source "res/util.sh"
 
-for i in desktop desk.acc preview desktop.system ram.system; do
+for i in desktop desk.acc preview desktop.system; do
     cecho yellow Building: $i
     cd $i
     res/go.sh
