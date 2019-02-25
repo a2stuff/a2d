@@ -8720,7 +8720,7 @@ device_type_to_icon_address_table:
         slot_addr := $0A
         sta     unit_number
 
-        cmp     #$3E            ; RAM.SYSTEM
+        cmp     #$3E            ; Glen E. Bredon's RAM.DRV.SYSTEM
         beq     ram
 
         ;; Look at "ID Nibble" (mostly bogus)

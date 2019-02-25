@@ -31,12 +31,6 @@ directory:
 * `SELECTOR.LIST` holds the Selector menu entries, which allow
    for quick launching of other applications.
 
-Other Files
------------
-
-The `RAM.SYSTEM` file will create a RAM Disk on RamWorks drives. It can
-be run manually before launching `DeskTop`
-
 Tips and Tricks
 ---------------
 

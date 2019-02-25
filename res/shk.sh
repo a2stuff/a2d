@@ -62,7 +62,6 @@ mkdir -p mount
 
 mount_f1 "desktop2" "desktop" "${tempdir}"
 mount_sys "desktop.system" "desktop.system" "${tempdir}"
-mount_sys "ram.system" "ram.system" "${tempdir}"
 
 mkdir -p "${tempdir}/desk.acc"
 for file in $(cat desk.acc/TARGETS); do

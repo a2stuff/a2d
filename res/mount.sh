@@ -49,7 +49,6 @@ mkdir -p mount
 
 mount_f1 "desktop2" "desktop" "mount"
 mount_sys "desktop.system" "desktop.system" "mount"
-mount_sys "ram.system" "ram.system" "mount"
 
 mkdir -p mount/desk.acc
 for file in $(cat desk.acc/TARGETS); do
