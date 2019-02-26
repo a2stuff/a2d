@@ -1354,7 +1354,11 @@ active_window_id:
 window_to_dir_icon_table:
         .res    8, 0
 
-LEC2E:  .res    21, 0          ; ???
+num_open_windows:
+        .byte   0
+
+LEC2F:  .res    20, 0          ; unreferenced???
+
 LEC43:  .res    16, 0          ; ???
 LEC53:  .byte   0
 LEC54:  .word   0

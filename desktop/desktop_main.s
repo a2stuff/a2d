@@ -1919,7 +1919,7 @@ dir_count:
         rts
 
 L4E78:  jsr     clear_selection
-        dec     LEC2E
+        dec     num_open_windows
         jsr     LoadActiveWindowIconTable
         ldx     active_window_id
         dex
@@ -4300,7 +4300,7 @@ L6206:  cpx     cached_window_icon_count
         inx
         jmp     L6206
 
-L6215:  dec     LEC2E
+L6215:  dec     num_open_windows
         ldx     #$00
         txa
 L621B:  sta     cached_window_icon_list,x
@@ -5068,127 +5068,167 @@ L6A80:  inx
 .endproc
 
 ;;; ============================================================
+;;; Open a folder/volume icon
+;;; Input: A = icon
+;;; Note: stack will be restored via saved_stack on failure
 
 .proc open_folder_or_volume_icon
+        ptr := $06
+
         sta     icon_params2
         jsr     StoreWindowIconTable
         lda     icon_params2
-        ldx     #$07
-L6A95:  cmp     window_to_dir_icon_table,x
-        beq     L6AA0
-        dex
-        bpl     L6A95
-        jmp     L6B1E
 
-L6AA0:  inx
+        ;; Already an open window for the icon?
+        ldx     #7
+:       cmp     window_to_dir_icon_table,x
+        beq     found_win
+        dex
+        bpl     :-
+        jmp     no_win
+
+found_win:
+        ;; Is it the active window? If so, done!
+        inx
         cpx     active_window_id
-        bne     L6AA7
+        bne     :+
         rts
 
-L6AA7:  stx     cached_window_id
+        ;; Otherwise, bring the window to the front.
+:       stx     cached_window_id
         jsr     LoadWindowIconTable
+
         lda     icon_params2
         jsr     icon_entry_lookup
-        stax    $06
+        stax    ptr
+
         ldy     #IconEntry::win_type
-        lda     ($06),y
+        lda     (ptr),y
         ora     #icon_entry_open_mask ; set open_flag
-        sta     ($06),y
-        ldy     #IconEntry::win_type
-        lda     ($06),y
+        sta     (ptr),y
+
+        ldy     #IconEntry::win_type ; get window id
+        lda     (ptr),y
         and     #icon_entry_winid_mask
         sta     getwinport_params2::window_id
-        beq     L6AD8
-        cmp     active_window_id
-        bne     L6AEF
+
+        beq     :+              ; window 0 = desktop
+        cmp     active_window_id ; prep to redraw windowed (file) icon
+        bne     skip             ; but only if active window
         jsr     get_set_port2
         lda     icon_params2
         jsr     icon_window_to_screen
-L6AD8:  DESKTOP_RELAY_CALL DT_REDRAW_ICON, icon_params2
+:       DESKTOP_RELAY_CALL DT_REDRAW_ICON, icon_params2
+
         lda     getwinport_params2::window_id
-        beq     L6AEF
-        lda     icon_params2
+        beq     skip            ; skip if on desktop
+        lda     icon_params2    ; restore from drawing
         jsr     icon_screen_to_window
         jsr     reset_grafport3
-L6AEF:  lda     icon_params2
+
+skip:   lda     icon_params2
         ldx     LE1F1
         dex
-L6AF6:  cmp     LE1F1+1,x
-        beq     L6B01
+:       cmp     LE1F1+1,x
+        beq     :+
         dex
-        bpl     L6AF6
+        bpl     :-
         jsr     open_directory
-L6B01:  MGTK_RELAY_CALL MGTK::SelectWindow, cached_window_id
+:       MGTK_RELAY_CALL MGTK::SelectWindow, cached_window_id
         lda     cached_window_id
         sta     active_window_id
         jsr     L6C19
         jsr     redraw_windows
         jmp     LoadDesktopIconTable
 
-L6B1E:  lda     LEC2E
-        cmp     #$08
-        bcc     L6B2F
+        ;; --------------------------------------------------
+        ;; No window - need to open one.
+
+no_win:
+
+        ;; Is there a free window?
+        lda     num_open_windows
+        cmp     #8
+        bcc     :+
+
+        ;; Nope, show error.
         lda     #warning_msg_too_many_windows
         jsr     warning_dialog_proc_num
         ldx     saved_stack
         txs
         rts
 
-L6B2F:  ldx     #$00
-L6B31:  lda     window_to_dir_icon_table,x
-        beq     L6B3A
+        ;; Search window-icon map to find an unused window.
+:       ldx     #0
+:       lda     window_to_dir_icon_table,x
+        beq     :+
         inx
-        jmp     L6B31
+        jmp     :-
 
-L6B3A:  lda     icon_params2
+        ;; Map the window to its source icon
+:       lda     icon_params2
         sta     window_to_dir_icon_table,x
-        inx
+        inx                     ; 0-based to 1-based
+
         stx     cached_window_id
         jsr     LoadWindowIconTable
-        inc     LEC2E
+
+        ;; Update View and other menus
+        inc     num_open_windows
         ldx     cached_window_id
         dex
         copy    #0, win_view_by_table,x
-        lda     LEC2E
-        cmp     #$02
-        bcs     L6B60
-        jsr     enable_various_file_menu_items
-        jmp     L6B68
 
-L6B60:  copy    #0, checkitem_params::check
+        lda     num_open_windows ; Was there already a window open?
+        cmp     #2
+        bcs     :+              ; yes, no need to enable file menu
+        jsr     enable_various_file_menu_items
+        jmp     update_view
+
+:       copy    #0, checkitem_params::check
         jsr     check_item
-L6B68:  lda     #desktop_aux::menu_item_id_view_by_icon
+
+update_view:
+        lda     #desktop_aux::menu_item_id_view_by_icon
         sta     checkitem_params::menu_item
         sta     checkitem_params::check
         jsr     check_item
+
+        ;; Update icon
         lda     icon_params2
         jsr     icon_entry_lookup
-        stax    $06
+        stax    ptr
+
         ldy     #IconEntry::win_type
-        lda     ($06),y
+        lda     (ptr),y
         ora     #icon_entry_open_mask ; set open_flag
-        sta     ($06),y
-        ldy     #IconEntry::win_type
-        lda     ($06),y
+        sta     (ptr),y
+
+        ldy     #IconEntry::win_type ; get window id
+        lda     (ptr),y
         and     #icon_entry_winid_mask
         sta     getwinport_params2::window_id
-        beq     L6BA1
-        cmp     active_window_id
-        bne     L6BB8
+
+        beq     :+           ; 0 = desktop
+        cmp     active_window_id ; prep to redraw windowed (file) icon
+        bne     skip2            ; but only if active window
         jsr     get_set_port2
         jsr     offset_grafport2_and_set
         lda     icon_params2
         jsr     icon_window_to_screen
-L6BA1:  DESKTOP_RELAY_CALL DT_REDRAW_ICON, icon_params2
+:       DESKTOP_RELAY_CALL DT_REDRAW_ICON, icon_params2
+
         lda     getwinport_params2::window_id
-        beq     L6BB8
-        lda     icon_params2
+        beq     skip2           ; skip if on desktop
+        lda     icon_params2    ; restore from drawing
         jsr     icon_screen_to_window
         jsr     reset_grafport3
-L6BB8:  jsr     L744B
 
+skip2:  jsr     L744B
+
+        ;; Create the window
         lda     cached_window_id
-        jsr     window_lookup
+        jsr     window_lookup   ; A,X points at Winfo
         ldy     #MGTK::OpenWindow
         jsr     MGTK_RELAY
 
@@ -5196,27 +5236,30 @@ L6BB8:  jsr     L744B
         jsr     get_set_port2
 
         jsr     draw_window_header
+
+        ;; Restore and add the icons
         jsr     cached_icons_window_to_screen
-        copy    #0, L6C0E
-L6BDA:  lda     L6C0E
+        copy    #0, num
+:       lda     num
         cmp     cached_window_icon_count
-        beq     L6BF4
+        beq     done
         tax
         lda     cached_window_icon_list,x
-        jsr     icon_entry_lookup
+        jsr     icon_entry_lookup ; A,X points at IconEntry
         ldy     #DT_ADD_ICON
         jsr     DESKTOP_RELAY   ; icon entry addr in A,X
-        inc     L6C0E
-        jmp     L6BDA
+        inc     num
+        jmp     :-
 
-L6BF4:  copy    cached_window_id, active_window_id
+        ;; Finish up
+done:   copy    cached_window_id, active_window_id
         jsr     update_scrollbars
         jsr     cached_icons_screen_to_window
         jsr     StoreWindowIconTable
         jsr     LoadDesktopIconTable
         jmp     reset_grafport3
 
-L6C0E:  .byte   0
+num:    .byte   0
 .endproc
 
 ;;; ============================================================
@@ -5813,9 +5856,9 @@ L710A:  lsr16   L72A8
         sub16_8 L72A8, DEVCNT, L72A8
         cmp16   L72A8, L70C1
         bcs     L7169
-L7147:  lda     LEC2E
+L7147:  lda     num_open_windows
         jsr     mark_icons_not_opened_1
-        dec     LEC2E
+        dec     num_open_windows
         jsr     redraw_windows_and_desktop
         jsr     do_close
         lda     active_window_id
@@ -6241,7 +6284,7 @@ L74D3:  tay
         lda     #ERR_INVALID_PATHNAME
         jsr     ShowAlert
         jsr     mark_icons_not_opened_2
-        dec     LEC2E
+        dec     num_open_windows
         ldx     saved_stack
         txs
         rts
