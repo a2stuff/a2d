@@ -912,6 +912,9 @@ begin:
 
         ;; Check file type.
 :       lda     get_file_info_params::file_type
+        ldxy    get_file_info_params::aux_type
+        jsr     check_file_type_overrides
+
         cmp     #FT_BASIC
         bne     :+
         jsr     check_basic_system ; Only launch if BASIC.SYSTEM is found
@@ -6640,21 +6643,20 @@ L7767:  .byte   $14
         cmp     #FT_BAD         ; T$01 is overloaded below for "apps", so
         beq     is_generic      ; treat as generic
 
-        ;; DA_FILE_TYPE also requires correct AUX type
-        cmp     #DA_FILE_TYPE   ; Apple Menu item?
-        bne     :+
+        ;; Handle several classes of overrides
+        pha                     ; Load auxtype into X,Y
         ldy     #FileRecord::aux_type
-        lda     (file_entry),y  ; Must have correct aux type, otherwise
-        cmp     #<DA_AUX_TYPE   ; treat as generic
-        bne     is_generic
+        lda     (file_entry),y  ; lo
+        pha
         iny
-        lda     (file_entry),y
-        and     #%01111111      ; ignore high bit (set = don't show in menu)
-        cmp     #>DA_AUX_TYPE
-        bne     is_generic
-        lda     #DA_FILE_TYPE
+        lda     (file_entry),y  ; hi
+        tay                     ; hi
+        pla
+        tax                     ; lo
+        pla
+        jsr     check_file_type_overrides
 
-:       cmp     #FT_SYSTEM      ; Other system?
+        cmp     #FT_SYSTEM      ; Other system?
         bne     got_type        ; nope
 
         ;; Distinguish *.SYSTEM files as apps (use $01) from other
@@ -6763,9 +6765,6 @@ L7870:  lda     cached_window_id
         jsr     icon_window_to_screen
         add16   file_entry, #icon_y_spacing, file_entry
         rts
-
-        .byte   0
-        .byte   0
 .endproc
 
 ;;; ============================================================
@@ -6816,6 +6815,60 @@ file_type:
 .endproc
         create_file_icon_ep2 := create_file_icon::ep1::ep2
         create_file_icon_ep1 := create_file_icon::ep1
+
+
+;;; ============================================================
+;;; Check file type for possible overrides
+;;; TODO: Make this data driven
+
+;;; Input: A is filetype, X,Y is auxtype
+;;; Output: A is filetype to use
+
+.proc check_file_type_overrides
+        stxy    auxtype
+
+        ;; Binary - treat certain auxtypes as Graphics
+        cmp     #FT_BINARY
+        bne     :+
+        ldxy    #$5800          ; minipix
+        jsr     check_aux
+        beq     is_graphics
+        ldxy    #$2000          ; hires
+        jsr     check_aux
+        beq     is_graphics
+
+        ;; DA - treat as generic *unless* auxtypes are correct
+:       cmp     #DA_FILE_TYPE
+        bne     :+
+        ldxy    #DA_AUX_TYPE
+        jsr     check_aux
+        beq     :+
+        ldxy    #DA_AUX_TYPE | $8000
+        jsr     check_aux
+        bne     is_generic
+
+:       rts
+
+is_generic:
+        lda     #FT_TYPELESS
+        rts
+
+is_graphics:
+        lda     #FT_GRAPHICS
+        rts
+
+auxtype:
+        .word   0
+
+.proc check_aux
+        cpx     auxtype
+        bne     :+
+        cpy     auxtype+1
+:       rts
+.endproc
+
+.endproc
+
 
 ;;; ============================================================
 ;;; Draw header (items/k in disk/k available/lines)

@@ -18,7 +18,7 @@ https://github.com/inexorabletash/a2d/issues
 * Add Special > Check Drive command to refresh a single drive. (#97)
 * Show Text File DA: Keyboard support. Escape quits, arrows scroll. (#4)
 * Reorganized/renamed several menu items. (#13)
-* New icons for graphics, AppleWorks, relocatable, command, IIgs-specific file types, and DAs. (#105)
+* New file type icons: graphics, AppleWorks, relocatable, command, IIgs-specific, and DAs. (#105)
 * Desktop icon shown for AppleTalk file shares. (#88)
 * Improvements to several existing icon bitmaps. (#74)
 * Desk accessory files with high bit in aux-type set are hidden in Apple menu. (#102)
@@ -50,7 +50,8 @@ functionality (see below).
 Text and Graphics files with the correct file types can be previewed
 without leaving DeskTop; select the file icon then select File > Open,
 or double-click the file icon. Text files must be type TXT ($04).
-Graphics files must be type FOT ($08).
+Graphics files must be type FOT ($08), or BIN ($06) with an aux type
+of $2000 (hi-res/double hi-res) or $5800 (Minipix a.k.a. Print Shop).
 
 To preview files of other types, you can copy the preview handlers
 named `SHOW.TEXT.FILE` and `SHOW.IMAGE.FILE` from the `PREVIEW` folder
