@@ -251,7 +251,7 @@ by_icon:
         copy    cached_window_id, getwinport_params2::window_id
         jsr     get_set_port2
 
-        jsr     cached_icons_window_to_screen
+        jsr     cached_icons_screen_to_window
 
         COPY_BLOCK grafport2::cliprect, tmp_rect
 
@@ -272,7 +272,7 @@ L4227:  copy    #0, draw_window_header_flag
         copy    cached_window_id, getwinport_params2::window_id
         jsr     get_set_port2
 
-        jsr     cached_icons_screen_to_window
+        jsr     cached_icons_window_to_screen
         lda     active_window_id
         jsr     assign_window_portbits
         jmp     reset_grafport3
@@ -307,12 +307,12 @@ window: lda     num
         beq     done
         tax
         copy    selected_icon_list,x, icon_param
-        jsr     icon_window_to_screen
+        jsr     icon_screen_to_window
         DESKTOP_RELAY_CALL DT_ICON_IN_RECT, icon_param
         beq     :+
         DESKTOP_RELAY_CALL DT_REDRAW_ICON, icon_param
 :       lda     icon_param
-        jsr     icon_screen_to_window
+        jsr     icon_window_to_screen
         inc     num
         jmp     window
 
@@ -2288,7 +2288,7 @@ L516D:  lda     L51EB,x
         copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
 
-        jsr     cached_icons_window_to_screen
+        jsr     cached_icons_screen_to_window
         copy    #0, L51EF
 L518D:  lda     L51EF
         cmp     cached_window_icon_count
@@ -2302,7 +2302,7 @@ L518D:  lda     L51EF
         jmp     L518D
 
 L51A7:  jsr     reset_grafport3
-        jsr     cached_icons_screen_to_window
+        jsr     cached_icons_window_to_screen
         jsr     StoreWindowIconTable
         jsr     update_scrollbars
         lda     selected_window_index
@@ -2313,11 +2313,11 @@ L51A7:  jsr     reset_grafport3
 L51C0:  ldx     L51EF
         lda     selected_icon_count,x
         sta     icon_param
-        jsr     icon_window_to_screen
+        jsr     icon_screen_to_window
         jsr     offset_grafport2_and_set
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
         lda     icon_param
-        jsr     icon_screen_to_window
+        jsr     icon_window_to_screen
         dec     L51EF
         bne     L51C0
 finish: copy    #0, cached_window_id
@@ -2724,11 +2724,11 @@ L5485:  cpx     cached_window_icon_count
         pha
         lda     cached_window_icon_list,x
         sta     icon_param
-        jsr     icon_window_to_screen
+        jsr     icon_screen_to_window
         DESKTOP_RELAY_CALL DT_ICON_IN_RECT, icon_param
         pha
         lda     icon_param
-        jsr     icon_screen_to_window
+        jsr     icon_window_to_screen
         pla
         beq     L54B7
         pla
@@ -2887,12 +2887,12 @@ L55F0:  ldx     L544A
         beq     L5614
         jsr     L56F9
         lda     icon_param
-        jsr     icon_window_to_screen
+        jsr     icon_screen_to_window
 L5614:  DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
         lda     getwinport_params2::window_id
         beq     L562B
         lda     icon_param
-        jsr     icon_screen_to_window
+        jsr     icon_window_to_screen
         jsr     reset_grafport3
 L562B:  rts
 
@@ -2906,12 +2906,12 @@ L562C:  lda     icon_param
         beq     L564A
         jsr     L56F9
         lda     icon_param
-        jsr     icon_window_to_screen
+        jsr     icon_screen_to_window
 L564A:  DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, icon_param
         lda     getwinport_params2::window_id
         beq     L5661
         lda     icon_param
-        jsr     icon_screen_to_window
+        jsr     icon_window_to_screen
         jsr     reset_grafport3
 L5661:  rts
 .endproc
@@ -2955,12 +2955,12 @@ L56B4:  ldx     L56F8
         lda     LE22C
         beq     L56CF
         lda     icon_param2
-        jsr     icon_window_to_screen
+        jsr     icon_screen_to_window
 L56CF:  DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param2
         lda     LE22C
         beq     L56E3
         lda     icon_param2
-        jsr     icon_screen_to_window
+        jsr     icon_window_to_screen
 L56E3:  dec     L56F8
         bpl     L56B4
         lda     selected_window_index
@@ -3751,7 +3751,7 @@ done_client_click:
         jsr     L84D1
         bit     active_window_view_by
         bmi     :+              ; list view, no icons
-        jsr     cached_icons_screen_to_window
+        jsr     cached_icons_window_to_screen
 
 :       copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
@@ -3842,7 +3842,7 @@ replace:
         jsr     get_set_port2
 
         copy    icon_num, icon_param
-        jsr     icon_window_to_screen
+        jsr     icon_screen_to_window
         jsr     offset_grafport2_and_set
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
 
@@ -3850,7 +3850,7 @@ replace:
         jsr     get_set_port2
 
         lda     icon_num
-        jsr     icon_screen_to_window
+        jsr     icon_window_to_screen
         jsr     reset_grafport3
         bit     double_click_flag
         bmi     start_icon_drag
@@ -3912,7 +3912,7 @@ desktop:
         copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
 
-        jsr     cached_icons_window_to_screen
+        jsr     cached_icons_screen_to_window
         jsr     offset_grafport2_and_set
 
         ldx     selected_icon_count
@@ -3931,7 +3931,7 @@ desktop:
         jsr     get_set_port2
 
         jsr     update_scrollbars
-        jsr     cached_icons_screen_to_window
+        jsr     cached_icons_window_to_screen
         jsr     reset_grafport3
 
 ;;; Used as additional entry point
@@ -4130,7 +4130,7 @@ L5F88:  txa
         pha
         lda     cached_window_icon_list,x
         sta     icon_param
-        jsr     icon_window_to_screen
+        jsr     icon_screen_to_window
         DESKTOP_RELAY_CALL DT_ICON_IN_RECT, icon_param
         beq     L5FB9
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
@@ -4141,7 +4141,7 @@ L5F88:  txa
         lda     active_window_id
         sta     selected_window_index
 L5FB9:  lda     icon_param
-        jsr     icon_screen_to_window
+        jsr     icon_window_to_screen
         pla
         tax
         inx
@@ -4211,7 +4211,7 @@ L60D3:  .byte   0
 L60D4:  .byte   0
 
 L60D5:  jsr     push_pointers
-        jmp     icon_ptr_window_to_screen
+        jmp     icon_ptr_screen_to_window
 .endproc
         L5F13 := L5F13_impl::start
 
@@ -4287,9 +4287,9 @@ L6199:  .word   0
         jsr     redraw_windows_and_desktop
         copy    active_window_id, cached_window_id
         jsr     LoadWindowIconTable
-        jsr     cached_icons_window_to_screen
-        jsr     update_scrollbars
         jsr     cached_icons_screen_to_window
+        jsr     update_scrollbars
+        jsr     cached_icons_window_to_screen
         copy    #0, cached_window_id
         jsr     LoadWindowIconTable
         jmp     reset_grafport3
@@ -4567,7 +4567,7 @@ L650D:  .word   0
 .proc L650F
         bit     active_window_view_by
         bmi     :+              ; list view, not icons
-        jsr     cached_icons_window_to_screen
+        jsr     cached_icons_screen_to_window
 :       jsr     L6523
         jsr     compute_icons_bbox
         lda     active_window_id
@@ -4605,7 +4605,7 @@ L650D:  .word   0
 .proc L6556
         bit     active_window_view_by
         bmi     :+
-        jsr     cached_icons_screen_to_window
+        jsr     cached_icons_window_to_screen
 :       MGTK_RELAY_CALL MGTK::PaintRect, grafport2::cliprect
         jsr     reset_grafport3
         jmp     L6C19
@@ -5138,13 +5138,13 @@ found_win:
         bne     skip             ; but only if active window
         jsr     get_set_port2
         lda     icon_params2
-        jsr     icon_window_to_screen
+        jsr     icon_screen_to_window
 :       DESKTOP_RELAY_CALL DT_REDRAW_ICON, icon_params2
 
         lda     getwinport_params2::window_id
         beq     skip            ; skip if on desktop
         lda     icon_params2    ; restore from drawing
-        jsr     icon_screen_to_window
+        jsr     icon_window_to_screen
         jsr     reset_grafport3
 
 skip:   lda     icon_params2
@@ -5237,13 +5237,13 @@ update_view:
         jsr     get_set_port2
         jsr     offset_grafport2_and_set
         lda     icon_params2
-        jsr     icon_window_to_screen
+        jsr     icon_screen_to_window
 :       DESKTOP_RELAY_CALL DT_REDRAW_ICON, icon_params2
 
         lda     getwinport_params2::window_id
         beq     skip2           ; skip if on desktop
         lda     icon_params2    ; restore from drawing
-        jsr     icon_screen_to_window
+        jsr     icon_window_to_screen
         jsr     reset_grafport3
 
 skip2:  jsr     L744B
@@ -5260,7 +5260,7 @@ skip2:  jsr     L744B
         jsr     draw_window_header
 
         ;; Restore and add the icons
-        jsr     cached_icons_window_to_screen
+        jsr     cached_icons_screen_to_window
         copy    #0, num
 :       lda     num
         cmp     cached_window_icon_count
@@ -5276,7 +5276,7 @@ skip2:  jsr     L744B
         ;; Finish up
 done:   copy    cached_window_id, active_window_id
         jsr     update_scrollbars
-        jsr     cached_icons_screen_to_window
+        jsr     cached_icons_window_to_screen
         jsr     StoreWindowIconTable
         copy    #0, cached_window_id
         jsr     LoadWindowIconTable
@@ -5387,7 +5387,7 @@ L6CCD:  copy    cached_window_id, getwinport_params2::window_id
         bit     draw_window_header_flag
         bmi     :+
         jsr     draw_window_header
-:       jsr     cached_icons_window_to_screen
+:       jsr     cached_icons_screen_to_window
         jsr     offset_grafport2_and_set
 
         COPY_BLOCK grafport2::cliprect, tmp_rect
@@ -5403,7 +5403,7 @@ L6CF3:  cpx     cached_window_icon_count
         copy    cached_window_id, getwinport_params2::window_id
         jsr     get_set_port2
 
-        jsr     cached_icons_screen_to_window
+        jsr     cached_icons_window_to_screen
         rts
 
 L6D09:  txa
@@ -5443,10 +5443,10 @@ L6D56:  lda     L6DB0
         tax
         lda     selected_icon_list,x
         sta     icon_param
-        jsr     icon_window_to_screen
+        jsr     icon_screen_to_window
         DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ICON, icon_param
         lda     icon_param
-        jsr     icon_screen_to_window
+        jsr     icon_window_to_screen
         inc     L6DB0
         jmp     L6D56
 
@@ -5484,9 +5484,9 @@ L6DB0:  .byte   0
         jmp     config_port
 
         ;; List view
-:       jsr     cached_icons_window_to_screen
+:       jsr     cached_icons_screen_to_window
         jsr     compute_icons_bbox
-        jsr     cached_icons_screen_to_window
+        jsr     cached_icons_window_to_screen
 
 config_port:
         copy    active_window_id, getwinport_params2::window_id
@@ -5540,7 +5540,7 @@ activate_ctl:
 
 ;;; ============================================================
 
-.proc cached_icons_window_to_screen
+.proc cached_icons_screen_to_window
         lda     #0
         sta     count
 loop:   lda     count
@@ -5548,7 +5548,7 @@ loop:   lda     count
         beq     done
         tax
         lda     cached_window_icon_list,x
-        jsr     icon_window_to_screen
+        jsr     icon_screen_to_window
         inc     count
         jmp     loop
 
@@ -5559,7 +5559,7 @@ count:  .byte   0
 
 ;;; ============================================================
 
-.proc cached_icons_screen_to_window
+.proc cached_icons_window_to_screen
         lda     #0
         sta     index
 loop:   lda     index
@@ -5567,7 +5567,7 @@ loop:   lda     index
         beq     done
         tax
         lda     cached_window_icon_list,x
-        jsr     icon_screen_to_window
+        jsr     icon_window_to_screen
         inc     index
         jmp     loop
 
@@ -6719,7 +6719,7 @@ L7870:  lda     cached_window_id
         ldx     cached_window_icon_count
         dex
         lda     cached_window_icon_list,x
-        jsr     icon_screen_to_window
+        jsr     icon_window_to_screen
         add16   file_entry, #icon_y_spacing, file_entry
         rts
 
@@ -8217,7 +8217,7 @@ L84D0:  .byte   0
         jsr     push_pointers
         bit     active_window_view_by
         bmi     L84DC
-        jsr     cached_icons_window_to_screen
+        jsr     cached_icons_screen_to_window
 L84DC:  sub16   grafport2::cliprect::x2, grafport2::cliprect::x1, L85F8
         sub16   grafport2::cliprect::y2, grafport2::cliprect::y1, L85FA
         lda     event_kind
@@ -8751,10 +8751,10 @@ port_copy:
 .endproc
 
 ;;; ============================================================
-;;; Convert icon's coordinates from screen to window (direction???)
+;;; Convert icon's coordinates from window to screen
 ;;; (icon index in A, active window)
 
-.proc icon_screen_to_window
+.proc icon_window_to_screen
         entry_ptr := $6
         winfo_ptr := $8
 
@@ -8811,10 +8811,10 @@ pos_win:        .word   0, 0
 .endproc
 
 ;;; ============================================================
-;;; Convert icon's coordinates from window to screen (direction???)
+;;; Convert icon's coordinates from screen to window
 ;;; (icon index in A, active window)
 
-.proc icon_window_to_screen
+.proc icon_screen_to_window
         tay
         jsr     push_pointers
         tya
@@ -8823,10 +8823,10 @@ pos_win:        .word   0, 0
         ;; fall through
 .endproc
 
-;;; Convert icon's coordinates from window to screen (direction???)
+;;; Convert icon's coordinates from screen to window
 ;;; (icon entry pointer in $6, active window)
 
-.proc icon_ptr_window_to_screen
+.proc icon_ptr_screen_to_window
         entry_ptr := $6
         winfo_ptr := $8
 
