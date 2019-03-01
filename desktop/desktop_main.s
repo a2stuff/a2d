@@ -3726,7 +3726,7 @@ done_client_click:
 .proc update_scroll_thumb
         copy    updatethumb_stash, updatethumb_thumbpos
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
-        jsr     L6523
+        jsr     apply_active_winfo_to_grafport2
         jsr     L84D1
         bit     active_window_view_by
         bmi     :+              ; list view, no icons
@@ -4542,18 +4542,20 @@ L650D:  .word   0
         bit     active_window_view_by
         bmi     :+              ; list view, not icons
         jsr     cached_icons_screen_to_window
-:       jsr     L6523
+:       jsr     apply_active_winfo_to_grafport2
         jsr     compute_icons_bbox
         lda     active_window_id
         jmp     compute_window_dimensions
 .endproc
 
-.proc L6523
+.proc apply_active_winfo_to_grafport2
+        ptr := $06
+
         lda     active_window_id
         jsr     window_lookup
-        addax   #$14, $06
-        ldy     #$25
-:       lda     ($06),y
+        addax   #MGTK::Winfo::port, ptr
+        ldy     #.sizeof(MGTK::GrafPort) + 1 ; ???
+:       lda     (ptr),y
         sta     grafport2,y
         dey
         bpl     :-
@@ -4588,79 +4590,91 @@ L650D:  .word   0
 ;;; ============================================================
 
 .proc update_hthumb
+        winfo_ptr := $06
+
         lda     active_window_id
         jsr     compute_window_dimensions
-        stax    L6600
+        stax    win_width
         lda     active_window_id
         jsr     window_lookup
-        stax    $06
-        ldy     #$06
-        lda     ($06),y
+        stax    winfo_ptr
+        ldy     #MGTK::Winfo::hthumbmax
+        lda     (winfo_ptr),y
         tay
-        sub16   iconbb_rect+MGTK::Rect::x2, iconbb_rect+MGTK::Rect::x1, L6602
-        sub16   L6602, L6600, L6602
-        lsr16    L6602
-        ldx     L6602
-        sub16   grafport2::cliprect::x1, iconbb_rect+MGTK::Rect::x1, L6602
-        bpl     L65D0
-        lda     #$00
-        beq     L65EB
-L65D0:  cmp16   grafport2::cliprect::x2, iconbb_rect+MGTK::Rect::x2
+
+        sub16   iconbb_rect+MGTK::Rect::x2, iconbb_rect+MGTK::Rect::x1, delta
+        sub16   delta, win_width, delta
+        lsr16   delta           ; / 2
+        ldx     delta
+        sub16   grafport2::cliprect::x1, iconbb_rect+MGTK::Rect::x1, delta
+        bpl     pos
+        lda     #0
+        beq     neg             ; always
+
+pos:    cmp16   grafport2::cliprect::x2, iconbb_rect+MGTK::Rect::x2
         bmi     L65E2
         tya
         jmp     L65EE
 
-L65E2:  lsr16    L6602
-        lda     L6602
-L65EB:  jsr     L62BC
+L65E2:  lsr16   delta           ; / 2
+        lda     delta
+neg:    jsr     L62BC
+
 L65EE:  sta     updatethumb_thumbpos
         lda     #MGTK::Ctl::horizontal_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 
-L6600:  .word   0
-L6602:  .word   0
+win_width:
+        .word   0
+delta:  .word   0
 .endproc
 
 ;;; ============================================================
 
 .proc update_vthumb
+        winfo_ptr := $06
+
         lda     active_window_id
         jsr     compute_window_dimensions
-        sty     L669F
+        sty     win_height
         lda     active_window_id
         jsr     window_lookup
-        stax    $06
-        ldy     #$08
-        lda     ($06),y
+        stax    winfo_ptr
+        ldy     #MGTK::Winfo::vthumbmax
+        lda     (winfo_ptr),y
         tay
-        sub16   iconbb_rect+MGTK::Rect::y2, iconbb_rect+MGTK::Rect::y1, L66A0
-        sub16_8 L66A0, L669F, L66A0
-        lsr16    L66A0
-        lsr16    L66A0
-        ldx     L66A0
-        sub16   grafport2::cliprect::y1, iconbb_rect+MGTK::Rect::y1, L66A0
-        bpl     L6669
-        lda     #$00
-        beq     L668A
-L6669:  cmp16   grafport2::cliprect::y2, iconbb_rect+MGTK::Rect::y2
+
+        sub16   iconbb_rect+MGTK::Rect::y2, iconbb_rect+MGTK::Rect::y1, delta
+        sub16_8 delta, win_height, delta
+        lsr16   delta           ; / 4
+        lsr16   delta
+        ldx     delta
+        sub16   grafport2::cliprect::y1, iconbb_rect+MGTK::Rect::y1, delta
+        bpl     pos
+        lda     #0
+        beq     neg             ; always
+
+pos:    cmp16   grafport2::cliprect::y2, iconbb_rect+MGTK::Rect::y2
         bmi     L667B
         tya
         jmp     L668D
 
-L667B:  lsr16   L66A0
-        lsr16   L66A0
-        lda     L66A0
-L668A:  jsr     L62BC
+L667B:  lsr16   delta           ; / 4
+        lsr16   delta
+        lda     delta
+neg:    jsr     L62BC
+
 L668D:  sta     updatethumb_thumbpos
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_which_ctl
         MGTK_RELAY_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 
-L669F:  .byte   0
-L66A0:  .word   0
+win_height:
+        .byte   0
+delta:  .word   0
 .endproc
 
 ;;; ============================================================
