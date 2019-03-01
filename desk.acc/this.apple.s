@@ -1182,13 +1182,19 @@ fail:   clc
 ;;; ============================================================
 ;;; Calculate RamWorks memory; returns number of banks in Y
 ;;; (256 banks = 0, since there must be at least 1)
+;;;
 ;;; Note the bus floats for RamWorks RAM when the bank has no RAM,
-;;; or bank selection may wrap to an earlier bank.
+;;; or bank selection may wrap to an earlier bank. This requires
+;;; three passes (mark, count, restore); if count and restore are
+;;; combined, it will produce false-positives if wrapping occurs
+;;; (see https://github.com/inexorabletash/a2d/issues/131).
+;;;
 ;;; RamWorks-style cards are not guaranteed to have contiguous banks.
 ;;; a user can install 64Kb or 256Kb chips in a physical bank, in the
 ;;; former case, a gap in banks will appear.  Additionally, the piggy
 ;;; back cards may not have contiguous banks depending on capacity
 ;;; and installed chips.
+;;;
 ;;; AE RamWorks cards can only support 8M max (banks $00-$7F), but
 ;;; the various emulators support 16M max (banks $00-$FF).
 ;;;
@@ -1214,8 +1220,11 @@ fail:   clc
         ;; Assumes ALTZPON on entry/exit
         RWBANK  := $C073
 
+        ldy     #0              ; populated bank count
+
         ;; Iterate downwards (in case unpopulated banks wrap to earlier ones),
         ;; saving bytes and marking each bank.
+.scope
         ldx     #255            ; bank we are checking
 :       stx     RWBANK
         copy    sigb0, buf0,x   ; preserve bytes
@@ -1227,10 +1236,11 @@ fail:   clc
         dex
         cpx     #255
         bne     :-
+.endscope
 
-        ;; Iterate upwards, tallying and restoring valid banks.
+        ;; Iterate upwards, tallying valid banks.
+.scope
         ldx     #0              ; bank we are checking
-        ldy     #0              ; populated bank count
 loop:   stx     RWBANK          ; select bank
         txa
         cmp     sigb0           ; verify first signature
@@ -1238,11 +1248,26 @@ loop:   stx     RWBANK          ; select bank
         eor     #$FF
         cmp     sigb1           ; verify second signature
         bne     next
-        iny                     ; match - count it, and restore
-        copy    buf0,x, sigb0
+        iny                     ; match - count it
+next:   inx                     ; next bank
+        bne     loop            ; if we hit 256 banks, make sure we exit
+.endscope
+
+        ;; Iterate upwards, restoring valid banks.
+.scope
+        ldx     #0              ; bank we are checking
+loop:   stx     RWBANK          ; select bank
+        txa
+        cmp     sigb0           ; verify first signature
+        bne     next
+        eor     #$FF
+        cmp     sigb1           ; verify second signature
+        bne     next
+        copy    buf0,x, sigb0   ; match - restore it
         copy    buf1,x, sigb1
 next:   inx                     ; next bank
         bne     loop            ; if we hit 256 banks, make sure we exit
+.endscope
 
         ;; Switch back to RW bank 0 (normal aux memory)
         lda     #0
