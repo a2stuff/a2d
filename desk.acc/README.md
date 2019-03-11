@@ -18,6 +18,8 @@ New desk accessories:
   * Shows an on-screen keyboard map, and indicates which key is pressed.
 * [Run Basic Here](run.basic.here.s)
   * Launches BASIC.SYSTEM with PREFIX set to current window's directory.
+* [Screen Saver](screen.saver.s)
+  * Visual distractions.
 
 See [API.md](API.md) for programming details
 

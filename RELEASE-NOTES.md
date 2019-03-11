@@ -38,6 +38,8 @@ https://github.com/inexorabletash/a2d/issues
   * Shows an on-screen keyboard map and indicates which key is pressed.
 * Run Basic Here
   * Launch BASIC.SYSTEM with PREFIX set to the current window's pathname. (#42)
+* Screen Saver
+  * Homage to Jack Eastman's classic. More to come. (#27)
 
 Note that several of the new Desk Accessories will not work with older versions
 of Apple II DeskTop/MouseDesk, due to dependence on new APIs.

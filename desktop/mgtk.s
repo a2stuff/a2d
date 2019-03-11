@@ -378,6 +378,7 @@ jump_table:
         .addr   SetMenuSelectionImpl; $4E SetMenuSelection
         .addr   GetDeskPatImpl      ; $4F GetDeskPat
         .addr   SetDeskPatImpl      ; $50 SetDeskPat
+        .addr   DrawMenuImpl        ; $51 DrawMenu
 
         ;; Entry point param lengths
         ;; (length, ZP destination, hide cursor flag)
@@ -497,6 +498,7 @@ param_lengths:
         PARAM_DEFN  2, $82, 0                ; $4E SetMenuSelection
         PARAM_DEFN  0, $00, 0                ; $4F GetDeskPat
         PARAM_DEFN  0, $00, 0                ; $50 SetDeskPat
+        PARAM_DEFN  0, $00, 0                ; $51 DrawMenu
 
 ;;; ============================================================
 ;;; Pre-Shift Tables
@@ -5640,6 +5642,7 @@ need_savebehind:
         sta     savebehind_usage+1
         copy16  params_addr, active_menu
 
+draw_menu_impl:
         jsr     get_menu_count  ; into menu_count
         jsr     hide_cursor_save_params
         jsr     set_standard_port
@@ -5776,7 +5779,7 @@ filler: ldx     menu_item_index
 
 :       rts
 .endproc
-
+        DrawMenuImpl := SetMenuImpl::draw_menu_impl
 
 .proc get_menu_and_menu_item
         ldx     menu_index

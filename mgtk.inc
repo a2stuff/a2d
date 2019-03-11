@@ -505,6 +505,9 @@ GetDeskPat      = $4F
 SetDeskPat      = $50
 ;;; .res 8      pattern         8x8 pixel pattern to use for desktop
 
+DrawMenu        = $51           ; Redraw menu bar
+;;; (no parameters)
+
 
 ;;; ============================================================
 ;;; Graphics Primitives Constants

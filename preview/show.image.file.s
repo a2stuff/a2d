@@ -23,7 +23,7 @@
 ;;;          | MP Dst    | | MP Dst    |
 ;;;  $1580   +-----------+ +-----------+
 ;;;          |           | |           |
-;;;          | MP Src    | | Menu Save |
+;;;          | MP Src    | |           |
 ;;;  $1100   +-----------+ +-----------+
 ;;;          |           | |           |
 ;;;          | DA        | | DA (Copy) |
@@ -34,12 +34,6 @@
         hires   := $2000        ; HR/DHR images are loaded directly into screen buffer
         hires_size = $2000
 
-        ;; Menu bits saved/restored
-        menu_rows = 13
-        menu_cols = 40
-        menu_save_area := $1100          ; Past DA code (need $410 bytes)
-        menu_save_size = menu_cols * 2 * menu_rows ; 5 pages
-
         ;; Minipix/Print Shop images are loaded/converted
         minipix_src_buf = $1200   ; Load address
         minipix_src_size = 576
@@ -47,7 +41,6 @@
         minipix_dst_size = 26*52
 
         .assert (minipix_src_buf + minipix_src_size) < minipix_dst_buf, error, "Not enough room for Minipix load buffer"
-        .assert (menu_save_area + menu_save_size) < minipix_dst_buf, error, "Not enough room for menu save area"
         .assert (minipix_dst_buf + minipix_dst_size) < WINDOW_ICON_TABLES, error, "Not enough room for Minipix convert buffer"
 
 ;;; ============================================================
@@ -81,9 +74,6 @@ save_stack:.byte   0
         jsr     init
 
         ;; tear down/exit
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
         sta     RAMRDOFF
         sta     RAMWRTOFF
 
@@ -215,24 +205,7 @@ base:   .word   0
 .endproc
 
 
-.proc event_params             ; queried to track mouse-up
-kind:  .byte   $00
-
-;;; if state is MGTK::EventKind::key_down
-key    := *
-modifiers := *+1
-
-;;; otherwise
-xcoord := *
-ycoord := *+2
-
-        .res    4               ; space for both
-.endproc
-
-        default_width = 560
-        default_height = 192
-        default_left = 0
-        default_top = 0
+event_params:   .tag MGTK::Event
 
 .proc window_title
         .byte 0                 ; length
@@ -250,16 +223,16 @@ vthumbmax:  .byte   32
 vthumbpos:  .byte   0
 status: .byte   0
 reserved:       .byte   0
-mincontwidth:     .word   default_width
-mincontlength:     .word   default_height
-maxcontwidth:     .word   default_width
-maxcontlength:     .word   default_height
+mincontwidth:     .word   screen_width
+mincontlength:     .word   screen_height
+maxcontwidth:     .word   screen_width
+maxcontlength:     .word   screen_height
 
 .proc port
-viewloc:        DEFINE_POINT default_left, default_top
+viewloc:        DEFINE_POINT 0, 0
 mapbits:   .addr   MGTK::screen_mapbits
 mapwidth: .word   MGTK::screen_mapwidth
-maprect:        DEFINE_RECT 0, 0, default_width, default_height
+maprect:        DEFINE_RECT 0, 0, screen_width, screen_height
 .endproc
 
 pattern:.res    8, 0
@@ -275,10 +248,6 @@ nextwinfo:   .addr   0
 
 
 .proc init
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-
         copy    #0, mode
 
         ;; Get filename by checking DeskTop selected window/icon
@@ -376,7 +345,6 @@ end:    rts
         sta     close_params::ref_num
 
         MGTK_CALL MGTK::HideCursor
-        jsr     stash_menu
         MGTK_CALL MGTK::OpenWindow, winfo
         MGTK_CALL MGTK::SetPort, winfo::port
         jsr     set_color_mode
@@ -394,7 +362,7 @@ end:    rts
 
 .proc input_loop
         MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::kind
+        lda     event_params + MGTK::Event::kind
         cmp     #MGTK::EventKind::button_down ; was clicked?
         beq     exit
         cmp     #MGTK::EventKind::key_down  ; any key?
@@ -402,9 +370,9 @@ end:    rts
         bne     input_loop
 
 on_key:
-        lda     event_params::modifiers
+        lda     event_params + MGTK::Event::modifiers
         bne     input_loop
-        lda     event_params::key
+        lda     event_params + MGTK::Event::key
         cmp     #CHAR_ESCAPE
         beq     exit
         cmp     #' '
@@ -415,11 +383,20 @@ on_key:
 exit:
         jsr     set_bw_mode
         MGTK_CALL MGTK::HideCursor
+
+        ;; Restore menu
+        MGTK_CALL MGTK::DrawMenu
+        sta     RAMWRTOFF
+        sta     RAMRDOFF
+        yax_call JUMP_TABLE_MGTK_RELAY, MGTK::HiliteMenu, last_menu_click_params
+        sta     RAMWRTON
+        sta     RAMRDON
+
+        ;; Force desktop redraw
         MGTK_CALL MGTK::CloseWindow, winfo
         DESKTOP_CALL DT_REDRAW_ICONS
-        jsr     unstash_menu
-        MGTK_CALL MGTK::ShowCursor
 
+        MGTK_CALL MGTK::ShowCursor
         rts                     ; exits input loop
 .endproc
 
@@ -612,76 +589,6 @@ done:   sta     PAGE2OFF
 .endproc
 
 ;;; ============================================================
-;;; Stash/Unstash Menu Bar
-
-;;; Have not yet figured out how to force the menu to
-;;; redraw, so instead we save the top 13 rows of the
-;;; screen to a scratch buffer and restore after
-;;; destroying the window.
-
-.proc stash_menu
-        src := $08
-        dst := $06
-        copy16  #menu_save_area, dst
-
-        sta     PAGE2ON
-        jsr     inner
-        sta     PAGE2OFF
-
-inner:
-
-        lda     #0              ; row #
-rloop:  pha
-        tax
-        copy    hires_table_lo,x, src
-        copy    hires_table_hi,x, src+1
-        ldy     #menu_cols-1
-cloop:  lda     (src),y
-        sta     (dst),y
-        dey
-        bpl     cloop
-
-        add16   dst, #menu_cols, dst
-
-        pla
-        inc
-        cmp     #menu_rows
-        bcc     rloop
-        rts
-.endproc
-
-.proc unstash_menu
-        src := $08
-        dst := $06
-        copy16  #menu_save_area, src
-
-        sta     PAGE2ON
-        jsr     inner
-        sta     PAGE2OFF
-
-inner:
-
-        lda     #0              ; row #
-rloop:  pha
-        tax
-        copy    hires_table_lo,x, dst
-        copy    hires_table_hi,x, dst+1
-        ldy     #menu_cols-1
-cloop:  lda     (src),y
-        sta     (dst),y
-        dey
-        bpl     cloop
-
-        add16   src, #menu_cols, src
-
-        pla
-        inc
-        cmp     #menu_rows
-        bcc     rloop
-        rts
-.endproc
-
-;;; ============================================================
 ;;; Minipix images
 
 .proc convert_minipix_to_bitmap
@@ -814,5 +721,3 @@ done:   rts
 ;;; ============================================================
 
 da_end:
-
-        .assert * <= menu_save_area, error, "DA overlapping menu save area"
