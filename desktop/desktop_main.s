@@ -8937,9 +8937,10 @@ buffer: .res    16, 0            ; length overwritten with '/'
 
         DEFINE_ON_LINE_PARAMS on_line_params,, cvi_data_buffer
 
-        max_icon_width = 53
-
 .proc create_volume_icon
+        max_icon_width = 53
+        max_icon_height = 15
+
         sta     unit_number
         dex                     ; icon numbers are 1-based, and Trash is #1,
         dex                     ; so make this 0-based
@@ -9046,6 +9047,12 @@ create_icon:
         sub16in #max_icon_width, (icon_defn_ptr),y, offset
         lsr16   offset          ; offset = (max_width - icon_width) / 2
         ldy     #IconEntry::iconx
+        add16in (icon_ptr),y, offset, (icon_ptr),y
+
+        ;; Adjust vertically
+        ldy     #IconDefinition::maprect + MGTK::Rect::y2
+        sub16in #max_icon_height, (icon_defn_ptr),y, offset
+        ldy     #IconEntry::icony
         add16in (icon_ptr),y, offset, (icon_ptr),y
 
         ;; Assign icon number
