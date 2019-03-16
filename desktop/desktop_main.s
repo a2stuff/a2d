@@ -9085,20 +9085,22 @@ offset:         .word   0
         trash_iconx = 506
         trash_icony = 160
 
+        deltay = 29
+
 desktop_icon_coords_table:
-        DEFINE_POINT 490,16     ; 1
-        DEFINE_POINT 490,45     ; 2
-        DEFINE_POINT 490,75     ; 3
-        DEFINE_POINT 490,103    ; 4
-        DEFINE_POINT 490,131    ; 5
-        DEFINE_POINT 400,160    ; 6
-        DEFINE_POINT 310,160    ; 7
-        DEFINE_POINT 220,160    ; 8
-        DEFINE_POINT 130,160    ; 9
-        DEFINE_POINT 40,160     ; 10
-        DEFINE_POINT 400,131    ; 11
-        DEFINE_POINT 310,131    ; 12
-        DEFINE_POINT 220,131    ; 13
+        DEFINE_POINT 490,15 + deltay*0    ; 1
+        DEFINE_POINT 490,15 + deltay*1    ; 2
+        DEFINE_POINT 490,15 + deltay*2    ; 3
+        DEFINE_POINT 490,15 + deltay*3    ; 4
+        DEFINE_POINT 490,15 + deltay*4    ; 5
+        DEFINE_POINT 400,trash_icony+2    ; 6
+        DEFINE_POINT 310,trash_icony+2    ; 7
+        DEFINE_POINT 220,trash_icony+2    ; 8
+        DEFINE_POINT 130,trash_icony+2    ; 9
+        DEFINE_POINT  40,trash_icony+2    ; 10
+        DEFINE_POINT 400,15 + deltay*4    ; 11
+        DEFINE_POINT 310,15 + deltay*4    ; 12
+        DEFINE_POINT 220,15 + deltay*4    ; 13
         ;; Maximum of 13 devices:
         ;; 7 slots * 2 drives = 14 (size of DEVLST)
         ;; ... but RAM in Slot 3 Drive 2 is disconnected.
