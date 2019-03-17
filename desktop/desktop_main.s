@@ -3781,6 +3781,10 @@ ctl:    .byte   0
 ;;; ============================================================
 
 .proc handle_content_click
+        ;; Subsequent action was not triggered by a menu, so hilite is not
+        ;; necessary. https://github.com/inexorabletash/a2d/issues/139
+        copy    #$FF, menu_click_params::menu_id
+
         bit     active_window_view_by
         bpl     :+
         jmp     clear_selection
