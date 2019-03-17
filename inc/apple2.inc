@@ -61,6 +61,7 @@ F8VERSION       := $06
 ;;; Miscellaneous
 IRQ_VECTOR      := $3FE
 
+ID_BYTE_FB1E    := $FB1E        ; $AC = Laser 128
 ID_BYTE_FBB3    := $FBB3        ; $06 = IIe or later
 ID_BYTE_FBC0    := $FBC0        ; $EA = IIe, $E0 = IIe enh/IIgs, $00 = IIc/IIc+
 ID_BYTE_FBBF    := $FBBF        ; IIc ROM version ($05 = IIc+)

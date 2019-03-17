@@ -79,6 +79,7 @@ file, then select the appropriate command from the Apple menu.
   * Sort Directory: don't need to click before sorting. (#17)
 * Hardware/Emulator Specific:
   * IIc Plus: don't spin slot 5 drives constantly. (Use Special > Check Drive) (#25)
+  * Laser 128: avoid hangs checking SmartPort status. (Use Special > Check Drive) (#138)
   * IIgs: color DHR is re-enabled on exit. (#43)
   * Macintosh LC IIe Option Card: don't crash on startup. (#93)
   * Macintosh LC IIe Option Card: correct problems with interrupts affecting AppleTalk. (#129)

@@ -646,6 +646,8 @@ L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_window_id
 
 ;;; ============================================================
 
+;;; TODO: Move this to init block, since it isn't needed afterwards
+
 .proc initialize_disks_in_devices_tables
         ldx     #0
         ldy     DEVCNT
@@ -677,6 +679,15 @@ append: lda     DEVLST,y        ; add it to the list
         and     #%01110000      ; mask off slot
         cmp     #$50            ; is it slot 5?
         beq     next            ; if so, ignore
+
+        ;; Don't issue STATUS calls to Laser 128 Slot 7 firmware, as it causes
+        ;; hangs in some cases. https://github.com/inexorabletash/a2d/issues/138
+:       bit     is_laser128_flag
+        bpl     :+
+        and     #%01110000      ; mask off slot
+        cmp     #$70            ; is it slot 7?
+        beq     next            ; if so, ignore
+
 :       lda     DEVLST,y
 
         inx
@@ -15366,7 +15377,7 @@ str_preview_txt:
 ;;; Segment loaded into MAIN $800-$FFF
 ;;; ============================================================
 
-;;; Appears to be init sequence - machine identification, etc
+;;; Init sequence - machine identification, etc
 
 .proc desktop_800
 
@@ -15393,6 +15404,7 @@ start:
         copy    ID_BYTE_FBB3, id_FBB3 ; $06 = IIe or later
         copy    ID_BYTE_FBC0, id_FBC0 ; $00 = IIc or later
         copy    ID_BYTE_FBBF, id_FBBF ; IIc ROM version (IIc+ = $05)
+        copy    ID_BYTE_FB1E, id_FB1E ; $AC = Laser 128
 
         ;; ... and page in LCBANK1
         sta     ALTZPON
@@ -15412,20 +15424,29 @@ start:
 
         ;; Identify machine type (double-click timer, other flags)
         copy    #0, is_iic_plus_flag
+        copy    #0, is_laser128_flag
 
         lda     id_FBC0
         beq     is_iic          ; $FBC0 = $00 -> is IIc or IIc+
         bit     iigs_flag
         bmi     is_iigs
 
+        ;; IIe (or IIe Option Card, or Laser 128)
         copy    #$96, machine_type ; IIe
-        jmp     end
 
+        lda     id_FB1E           ; Is it a Laser 128?
+        cmp     #$AC
+        bne     :+
+        copy    #$80, is_laser128_flag
+        copy    #$FD, machine_type ; Assume accelerated?
+:       jmp     end
+
+        ;; IIgs
 is_iigs:
         copy    #$FD, machine_type ; IIgs
         jmp     end
 
-
+        ;; IIc or IIc+
 is_iic: copy    #$FA, machine_type ; IIc
         lda     id_FBBF            ; ROM version
         cmp     #$05               ; IIc Plus = $05
@@ -15436,6 +15457,7 @@ is_iic: copy    #$FA, machine_type ; IIc
 iigs_flag:                      ; High bit set if IIgs detected.
         .byte   0
 
+id_FB1E: .byte   0
 id_FBB3: .byte   0
 id_FBC0: .byte   0
 id_FBBF: .byte   0
