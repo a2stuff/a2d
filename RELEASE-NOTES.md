@@ -25,6 +25,7 @@ https://github.com/inexorabletash/a2d/issues
 * Icons for volumes positioned more predictably and sensibly. (#94)
 * GS/OS filenames (supported by ProDOS 2.5) are shown with correct case. (#64)
 * Desk accessory files can be executed directly. (#101)
+* Tip about skipping copy to RAMCard is shown during startup. (#140)
 
 ### Additional Desk Accessories
 

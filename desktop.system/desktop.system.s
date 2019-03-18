@@ -130,6 +130,9 @@ num_filenames = 8
 str_copying_to_ramcard:
         PASCAL_STRING "Copying Apple II DeskTop into RAMCard"
 
+str_tip_skip_copying:
+        PASCAL_STRING {"Tip: To skip copying to RAMCard, hold down ",15,27,65,24,14," when launching."}
+
         ;; Signature of block storage devices ($Cn0x)
 sig_bytes:
         .byte   $20,$00,$03,$00
@@ -563,12 +566,32 @@ done:   dex
         sta     CV
         jsr     VTAB
         ldy     #0
-loop:   iny
+:       iny
         lda     str_copying_to_ramcard,y
         ora     #$80
         jsr     COUT
         cpy     str_copying_to_ramcard
-        bne     loop
+        bne     :-
+
+        ;; Center string
+        lda     #80
+        sec
+        sbc     str_tip_skip_copying
+        clc
+        adc     #4              ; 4 control characters (for MouseText)
+        lsr     a               ; / 2 to center
+        sta     CH
+        lda     #23
+        sta     CV
+        jsr     VTAB
+        ldy     #0
+:       iny
+        lda     str_tip_skip_copying,y
+        ora     #$80
+        jsr     COUT
+        cpy     str_tip_skip_copying
+        bne     :-
+
         rts
 .endproc
 
@@ -905,19 +928,19 @@ slot:   .byte   0
         DEFINE_WRITE_BLOCK_PARAMS write_block2_params, prodos_loader_blocks + 512, 1
         write_block2_params_unit_num := write_block2_params::unit_num
 
-        PAD_TO $2C00
+        PAD_TO $2D00
 
 ;;; ============================================================
 
 prodos_loader_blocks:
-        .assert * = $2C00, error, "Segment length mismatch"
+        .assert * = $2D00, error, "Segment length mismatch"
         .incbin "../inc/pdload.dat"
 
 .endproc ; copy_desktop_to_ramcard
 
 ;;; ============================================================
 
-        .assert * = $3000, error, "Segment length mismatch"
+        .assert * = $3100, error, "Segment length mismatch"
 
 ;;; SPECULATION: This copies Selector entries marked
 ;;; "Down load" / "At boot" to the RAMCard as well
@@ -2051,8 +2074,6 @@ done:   rts
 ;;; ============================================================
 
 .endproc ; copy_selector_entries_to_ramcard
-
-        .assert * = $3AD8, error, "Segment size mismatch"
 
 ;;; ============================================================
 ;;; Loaded at $1000 by DeskTop2 on Quit, and copies $1100-$13FF
