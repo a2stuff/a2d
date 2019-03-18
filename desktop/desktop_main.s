@@ -1058,9 +1058,6 @@ done:   rts
 L485D:  .word   $E000
 L485F:  .word   $D000
 
-sys_start_flag:  .byte   0
-sys_start_path:  .res    40, 0
-
 ;;; ============================================================
 
 set_watch_cursor:
@@ -16274,48 +16271,8 @@ slot_string_table:
 
 ;;; ============================================================
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params2, desktop_main::sys_start_path
-        .byte   0
-
-str_system_start:  PASCAL_STRING "System/Start"
-
 .proc final_setup
-        lda     #0
-        sta     desktop_main::sys_start_flag
-        jsr     desktop_main::get_copied_to_ramcard_flag
-        cmp     #$80
-        beq     L0EFE
-        bne     config_toolkit
-        dec     desktop_main::sys_start_path
-        jmp     L0F05
-
-L0EFE:  addr_call desktop_main::copy_desktop_orig_prefix, desktop_main::sys_start_path
-L0F05:  ldx     desktop_main::sys_start_path
-
-        ;; Find last /
-floop:  lda     desktop_main::sys_start_path,x
-        cmp     #'/'
-        beq     :+
-        dex
-        bne     floop
-
-        ;; Replace last path segment with "System/Start"
-:       ldy     #0
-cloop:  inx
-        iny
-        lda     str_system_start,y
-        sta     desktop_main::sys_start_path,x
-        cpy     str_system_start
-        bne     cloop
-        stx     desktop_main::sys_start_path
-
-        ;; Does it point at anything? If so, set flag.
-        MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params2
-        bne     config_toolkit
-        copy    #$80, desktop_main::sys_start_flag
-
         ;; Final MGTK configuration
-config_toolkit:
         MGTK_RELAY_CALL MGTK::CheckEvents
         MGTK_RELAY_CALL MGTK::SetMenu, desktop_aux::desktop_menu
         MGTK_RELAY_CALL MGTK::SetCursor, pointer_cursor
@@ -16324,7 +16281,7 @@ config_toolkit:
         jsr     desktop_main::update_window_menu_items
         jsr     desktop_main::disable_eject_menu_item
         jsr     desktop_main::disable_file_menu_items
-        jmp     MGTK::MLI
+        jmp     desktop_main::enter_main_loop
 .endproc
 
         PAD_TO $1000
