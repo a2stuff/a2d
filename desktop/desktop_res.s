@@ -813,12 +813,6 @@ pos_clock:
 str_clock:
         PASCAL_STRING "00:00 XM      "
 
-is_iic_plus_flag:
-        .byte   0
-
-is_laser128_flag:
-        .byte   0
-
 ;;; ============================================================
 
 ;;; 5.25" Floppy Disk

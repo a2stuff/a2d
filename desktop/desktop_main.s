@@ -67,12 +67,6 @@ JT_RESTORE_SYS:         jmp     restore_system          ; *
 .proc enter_main_loop
         cli
 
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-
-        jsr     initialize_disks_in_devices_tables
-
         ;; Add icons (presumably desktop ones?)
         ldx     #0
 iloop:  cpx     cached_window_icon_count
@@ -642,57 +636,6 @@ L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_window_id
         jsr     redraw_windows
         DESKTOP_RELAY_CALL DT_REDRAW_ICONS
         rts
-.endproc
-
-;;; ============================================================
-
-;;; TODO: Move this to init block, since it isn't needed afterwards
-
-.proc initialize_disks_in_devices_tables
-        ldx     #0
-        ldy     DEVCNT
-loop:   lda     DEVLST,y
-        and     #$0F
-        cmp     #DT_REMOVABLE
-        beq     append          ; yes
-next:   dey
-        bpl     loop
-
-        stx     removable_device_table
-        stx     disk_in_device_table
-        jsr     check_disks_in_devices
-
-        ;; Make copy of table
-        ldx     disk_in_device_table
-        beq     done
-:       copy    disk_in_device_table,x, last_disk_in_devices_table,x
-        dex
-        bpl     :-
-
-done:   rts
-
-append: lda     DEVLST,y        ; add it to the list
-        ;; Don't issue STATUS calls to IIc Plus Slot 5 firmware, as it causes
-        ;; the motor to spin. https://github.com/inexorabletash/a2d/issues/25
-        bit     is_iic_plus_flag
-        bpl     :+
-        and     #%01110000      ; mask off slot
-        cmp     #$50            ; is it slot 5?
-        beq     next            ; if so, ignore
-
-        ;; Don't issue STATUS calls to Laser 128 Slot 7 firmware, as it causes
-        ;; hangs in some cases. https://github.com/inexorabletash/a2d/issues/138
-:       bit     is_laser128_flag
-        bpl     :+
-        and     #%01110000      ; mask off slot
-        cmp     #$70            ; is it slot 7?
-        beq     next            ; if so, ignore
-
-:       lda     DEVLST,y
-
-        inx
-        sta     removable_device_table,x
-        bne     next            ; always
 .endproc
 
 ;;; ============================================================
@@ -15395,11 +15338,10 @@ start:
         ;; See Apple II Miscellaneous #7: Apple II Family Identification
 
         ;; First, detect IIgs
-        copy    #0, iigs_flag
         sec                     ; Follow detection protocol
         jsr     ID_BYTE_FE1F    ; RTS on pre-IIgs
         bcs     :+              ; carry clear = IIgs
-        copy    #$80, iigs_flag
+        copy    #$80, is_iigs_flag
 :
         ;; Now stash the bytes we need
         copy    ID_BYTE_FBB3, id_FBB3 ; $06 = IIe or later
@@ -15424,12 +15366,9 @@ start:
         copy    id_FBC0, startdesktop_params::subid
 
         ;; Identify machine type (double-click timer, other flags)
-        copy    #0, is_iic_plus_flag
-        copy    #0, is_laser128_flag
-
         lda     id_FBC0
         beq     is_iic          ; $FBC0 = $00 -> is IIc or IIc+
-        bit     iigs_flag
+        bit     is_iigs_flag
         bmi     is_iigs
 
         ;; IIe (or IIe Option Card, or Laser 128)
@@ -15454,9 +15393,6 @@ is_iic: copy    #$FA, machine_type ; IIc
         bne     :+
         copy    #$80, is_iic_plus_flag
 :       jmp     end
-
-iigs_flag:                      ; High bit set if IIgs detected.
-        .byte   0
 
 id_FB1E: .byte   0
 id_FBB3: .byte   0
@@ -16254,7 +16190,7 @@ next:   dec     slot
 
         ;; Set number of menu items.
         stx     startup_menu
-        jmp     final_setup
+        jmp     initialize_disks_in_devices_tables
 
 slot:   .byte   0
 
@@ -16267,6 +16203,61 @@ slot_string_table:
         .addr   startup_menu_item_6
         .addr   startup_menu_item_7
 
+.endproc
+
+;;; ============================================================
+;;; Enumerate DEVLST and find removable devices; build a list of
+;;; these, and check to see which have disks in them. The list
+;;; will be polled periodically to detect changes and refresh.
+;;;
+;;; Some hardware (machine/slot) combinations are filtered out
+;;; due to known-buggy firmware.
+
+.proc initialize_disks_in_devices_tables
+        ldx     #0
+        ldy     DEVCNT
+loop:   lda     DEVLST,y
+        and     #$0F
+        cmp     #DT_REMOVABLE
+        beq     append          ; yes
+next:   dey
+        bpl     loop
+
+        stx     desktop_main::removable_device_table
+        stx     desktop_main::disk_in_device_table
+        jsr     desktop_main::check_disks_in_devices
+
+        ;; Make copy of table
+        ldx     desktop_main::disk_in_device_table
+        beq     done
+:       copy    desktop_main::disk_in_device_table,x, desktop_main::last_disk_in_devices_table,x
+        dex
+        bpl     :-
+
+done:   jmp     final_setup
+
+append: lda     DEVLST,y        ; add it to the list
+        ;; Don't issue STATUS calls to IIc Plus Slot 5 firmware, as it causes
+        ;; the motor to spin. https://github.com/inexorabletash/a2d/issues/25
+        bit     is_iic_plus_flag
+        bpl     :+
+        and     #%01110000      ; mask off slot
+        cmp     #$50            ; is it slot 5?
+        beq     next            ; if so, ignore
+
+        ;; Don't issue STATUS calls to Laser 128 Slot 7 firmware, as it causes
+        ;; hangs in some cases. https://github.com/inexorabletash/a2d/issues/138
+:       bit     is_laser128_flag
+        bpl     :+
+        and     #%01110000      ; mask off slot
+        cmp     #$70            ; is it slot 7?
+        beq     next            ; if so, ignore
+
+:       lda     DEVLST,y
+
+        inx
+        sta     desktop_main::removable_device_table,x
+        bne     next            ; always
 .endproc
 
 ;;; ============================================================
@@ -16283,6 +16274,18 @@ slot_string_table:
         jsr     desktop_main::disable_file_menu_items
         jmp     desktop_main::enter_main_loop
 .endproc
+
+;;; ============================================================
+
+;;; High bits set if specific machine type detected.
+is_iigs_flag:
+        .byte   0
+is_iic_plus_flag:
+        .byte   0
+is_laser128_flag:
+        .byte   0
+
+;;; ============================================================
 
         PAD_TO $1000
 
