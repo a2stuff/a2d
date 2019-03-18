@@ -7,38 +7,41 @@ https://github.com/inexorabletash/a2d/issues
 
 ## 1.2 - alpha
 
-### Enhancements
+### DeskTop Enhancements
 
 * Current time shown on right side of menu bar, if system has a clock. (#7)
 * Up to 13 volumes are shown on the desktop (was 10). (#20)
-* Up to 12 Desk Accessories are shown in the menu (was 8). (#90)
 * Drag "unlimited" number of icons (was 20). (#18)
-* Dragging files to same volume moves; use Open-Apple to force copy. (#8)
-* Menus allow click-to-drop, click-to-select interaction. (#104)
+* Dragging files to same volume moves instead of copies; use Open-Apple to force copy. (#8)
+* Menu bar menus are now drop-down in addition to pull-down. (#104)
 * Add Special > Check Drive command to refresh a single drive. (#97)
-* Show Text File DA: Keyboard support. Escape quits, arrows scroll. (#4)
 * Reorganized/renamed several menu items. (#13)
 * New file type icons: graphics, AppleWorks, relocatable, command, IIgs-specific, and DAs. (#105)
 * Desktop icon shown for AppleTalk file shares. (#88)
 * Improvements to several existing icon bitmaps. (#74)
-* Desk accessory files with high bit in aux-type set are hidden in Apple menu. (#102)
 * Icons for volumes positioned more predictably and sensibly. (#94)
 * GS/OS filenames (supported by ProDOS 2.5) are shown with correct case. (#64)
-* Desk accessory files can be executed directly. (#101)
 * Tip about skipping copy to RAMCard is shown during startup. (#140)
+
+### Desk Accessory Enhancements
+
+* Up to 12 Desk Accessories are shown in the menu (was 8). (#90)
+* Desk accessory files can be executed directly. (#101)
+* Desk accessory files with high bit in aux-type set are hidden in Apple menu. (#102)
+* Show Text File DA: Keyboard support. Escape quits, arrows scroll. (#4)
 
 ### Additional Desk Accessories
 
 * This Apple
   * Gives details about the computer, expanded memory, and what's in each slot. (#29)
-* Eyes
-  * Eyes that follow the mouse. (#53)
-* Screen Dump
-  * Dumps a screenshot to an ImageWriter II attached to a Super Serial Card in Slot 1. (#46)
-* Key Caps
-  * Shows an on-screen keyboard map and indicates which key is pressed.
 * Run Basic Here
   * Launch BASIC.SYSTEM with PREFIX set to the current window's pathname. (#42)
+* Key Caps
+  * Shows an on-screen keyboard map and indicates which key is pressed.
+* Screen Dump
+  * Dumps a screenshot to an ImageWriter II attached to a Super Serial Card in Slot 1. (#46)
+* Eyes
+  * Eyes that follow the mouse. (#53)
 * Screen Saver
   * Homage to Jack Eastman's classic. More to come. (#27)
 

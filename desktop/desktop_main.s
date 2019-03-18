@@ -6774,7 +6774,8 @@ file_type:
 
 ;;; ============================================================
 ;;; Check file type for possible overrides
-;;; TODO: Make this data driven
+;;; TODO: Make this data driven.
+;;; TODO: Also check length for BIN overrides.
 
 ;;; Input: A is filetype, X,Y is auxtype
 ;;; Output: A is filetype to use

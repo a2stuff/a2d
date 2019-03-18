@@ -5,12 +5,12 @@
 # Undiscoverable Features
 
 * When dragging a selection of files to a destination on the same volume, the files will be moved by default. Hold down **△** before letting go of the mouse button to force a copy instead. Files dragged to a different volume will always be copied.
-* Hold down **△** when launching `DESKTOP.SYSTEM` to prevent DeskTop from being copied to a RAM card.
+* Hold down **△** when launching `DESKTOP.SYSTEM` to prevent DeskTop from being copied to a RAM card. (A tip is now shown for this while copying.)
 * Desk Accessory files with high bit set in the aux type field ($8640) will not appear in the Apple menu.
 * You can't run a Binary file by double-clicking, but you can run it with the **△O** shortcut or holding down **△** or **▲** while selecting **File > Open**.
 * The Sort Directory desk accessory has two modes:
     * If any files are selected, these are moved to the start of the directory listing, in selection order; other files appear after, order unchanged.
-    * If no files are selected, all files are sorted by type: DIR, then TXT, then SYS, then others in descending numeric order.
+    * If no files are selected, all files are sorted by type: DIR, then TXT, then SYS, then others in descending (numeric) order.
 
 
 # File Types
