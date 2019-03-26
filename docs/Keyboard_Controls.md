@@ -13,6 +13,7 @@ with the keyboard.
 * △-G - Resize window; Arrows to resize, Return to finish
 * △-M - Move window; Arrows to move, Return to finish
 * △-X - Scroll contents; Arrows to scroll, Esc or Return when done
+* △-` or △-X - Cycle through open windows
 
 ## Icons
 

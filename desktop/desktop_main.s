@@ -432,6 +432,7 @@ offset_table:
         .byte   menu8_start - dispatch_table
         .byte   menu_end - dispatch_table
 
+        ;; Set if there are open windows
 flag:   .byte   $00
 
         ;; Handle accelerator keys
@@ -445,24 +446,29 @@ handle_keydown:
 
         ;; Non-menu keys
 :       lda     event_key
-        ora     #$20            ; force to lower-case
-        cmp     #'h'            ; OA-H (Highlight Icon)
+        jsr     upcase_char
+        cmp     #'H'            ; OA-H (Highlight Icon)
         bne     :+
         jmp     cmd_higlight
 :       bit     flag
         bpl     menu_accelerators
-        cmp     #'w'            ; OA-W (Activate Window)
+        cmp     #'W'            ; OA-W (Activate Window)
         bne     :+
         jmp     cmd_activate
-:       cmp     #'g'            ; OA-G (Resize)
+:       cmp     #'G'            ; OA-G (Resize)
         bne     :+
         jmp     cmd_resize
-:       cmp     #'m'            ; OA-M (Move)
+:       cmp     #'M'            ; OA-M (Move)
         bne     :+
         jmp     cmd_move
-:       cmp     #'x'            ; OA-X (Scroll)
-        bne     menu_accelerators
+:       cmp     #'X'            ; OA-X (Scroll)
+        bne     :+
         jmp     cmd_scroll
+:       cmp     #'`'            ; OA-` (Cycle Windows)
+        beq     cycle
+        cmp     #CHAR_TAB       ; OA-Tab (Cycle Windows)
+        bne     menu_accelerators
+cycle:  jmp     cmd_cycle_windows
 
 menu_accelerators:
         copy    event_key, LE25C
@@ -572,6 +578,10 @@ not_menu:
 L445C:  .byte   0
 
 start:  jsr     clear_selection
+
+        ;; Select window's corresponding volume icon.
+        ;; (Doesn't work for folder icons as only the active
+        ;; window and desktop can have selections.)
         ldx     findwindow_window_id
         dex
         copy    window_to_dir_icon_table,x, icon_param
@@ -593,6 +603,8 @@ start:  jsr     clear_selection
         copy    L445C, selected_window_index
         copy    #1, selected_icon_count
         copy    icon_param, selected_icon_list
+
+        ;; Actually make the window active.
 L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_window_id
         copy    findwindow_window_id, active_window_id
         jsr     LoadActiveWindowIconTable
@@ -3023,6 +3035,34 @@ L578D:  .byte   0
 .proc cmd_move
         MGTK_RELAY_CALL MGTK::KeyboardMouse
         jmp     handle_title_click
+.endproc
+
+;;; ============================================================
+;;; Cycle Through Windows
+
+.proc cmd_cycle_windows
+        ;; Need at least two windows to cycle.
+        lda     num_open_windows
+        cmp     #2
+        bcc     done
+        ldx     active_window_id
+
+        ;; Search upwards through window-icon map to find next.
+        ;; ID is 1-based, table is 0-based, so don't need to start
+        ;; with an increment
+loop:   cpx     #8
+        bne     :+
+        ldx     #0
+:       lda     window_to_dir_icon_table,x
+        bne     found
+        inx
+        bne     loop            ; always
+
+found:  inx
+        stx     findwindow_window_id
+        jmp     handle_inactive_window_click
+
+done:   rts
 .endproc
 
 ;;; ============================================================
