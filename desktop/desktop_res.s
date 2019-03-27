@@ -813,6 +813,8 @@ pos_clock:
 
 str_colon:
         PASCAL_STRING ":"
+str_zero:
+        PASCAL_STRING "0"
 str_am: PASCAL_STRING " AM"
 str_pm: PASCAL_STRING " PM"
 

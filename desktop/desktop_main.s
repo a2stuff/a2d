@@ -9626,6 +9626,11 @@ open:   MLI_RELAY_CALL OPEN, open_params
 
         lda     TIMELO
         and     #%00111111
+        pha
+        cmp     #10
+        bcs     :+
+        addr_call draw_text1, str_zero
+:       pla
         ldx     #0
         jsr     int_to_string
         addr_call draw_text1, str_from_int
