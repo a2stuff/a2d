@@ -7023,6 +7023,8 @@ xcoord:
 .endproc ; draw_window_header
 
 ;;; ============================================================
+;;; Input: 16-bit unsigned number in A,X
+;;; Output: length-prefixed string in str_from_int
 
 .proc int_to_string
         stax    value
@@ -9606,51 +9608,33 @@ open:   MLI_RELAY_CALL OPEN, open_params
         ;; --------------------------------------------------
         ;; Time
 
-        lda     TIMEHI          ; hours
+        lda     TIMEHI          ; Hours
         and     #%00011111
-
-        ;; AM/PM
-        ldx     #'A'
-        cmp     #12
+        pha                     ; Save hours
+        bne     :+              ; 0 -> 12
+        clc
+        adc     #12
+:       cmp     #13             ; make 12-hour
         bcc     :+
-        ldx     #'P'
         sec
         sbc     #12
-:       stx     str_clock + 7
+:       ldx     #0
+        jsr     int_to_string
+        addr_call draw_text1, str_from_int
 
-        ;; Hours
-        cmp     #0              ; 0 -> 12
-        bne     :+
-        lda     #12
-:       ldx     #' '            ; Leading space or 1?
-        cmp     #10
-        bcc     :+
-        ldx     #'1'
-        sec
-        sbc     #10
-:       stx     str_clock + 1   ; Tens place
-        ora     #'0'
-        sta     str_clock + 2   ; Ones place
+        addr_call draw_text1, str_colon
 
-        ;; Minutes
         lda     TIMELO
         and     #%00111111
-        ldx     #0              ; Subtract off tens (in X)
-:       cmp     #10
-        bcc     :+
-        inx
-        sec
-        sbc     #10
-        bpl     :-
-:       ora     #'0'
-        sta     str_clock + 5   ; Ones place
-        txa
-        ora     #'0'
-        sta     str_clock + 4   ; Tens place
+        ldx     #0
+        jsr     int_to_string
+        addr_call draw_text1, str_from_int
 
-        addr_call draw_text1, str_clock
-done:   rts
-
+        pla                     ; Restore hours
+        cmp     #12
+        bcs     :+
+        addr_jump draw_text1, str_am
+:       addr_jump draw_text1, str_pm
 .endproc
 
 ;;; Day of the Week calculation (valid 1900-03-01 to 2155-12-31)

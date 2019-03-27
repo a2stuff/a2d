@@ -811,8 +811,10 @@ file_to_delete_label:
 pos_clock:
         DEFINE_POINT 475, 10
 
-str_clock:
-        PASCAL_STRING "00:00 XM      "
+str_colon:
+        PASCAL_STRING ":"
+str_am: PASCAL_STRING " AM"
+str_pm: PASCAL_STRING " PM"
 
 dow_strings:
         .byte   "Sun ", "Mon ", "Tue ", "Wed ", "Thu ", "Fri ", "Sat "
