@@ -8240,27 +8240,22 @@ concat_len:
         rts
 
         ;; Year
-year:   ldy     #1
-        copy    #0, (ptr),y
-
-        lda     date+1
-        and     #%11111110
+year:   lda     date+1          ; First, calculate year-1900
         lsr     a
+        php                     ; Save Carry bit
+        cmp     #40             ; Per ProDOS Tech Note #28, 0-39 is 2000-2039
+        bcs     :+
+        adc     #100
+:       adc     #<1900
         ldy     #0
         sta     (ptr),y
-        ;; Per ProDOS Tech Note #28, 40-99 is 1940-1999, 0-39 is 2000-2039
-        ;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.28.html
-        cmp     #40             ; 40-99 (and also 100-127, though non-conforming)
-        bcs     y1900
-
-y2000:  add16in   (ptr),y, #2000, (ptr),y
-        jmp     month
-
-y1900:  add16in   (ptr),y, #1900, (ptr),y
+        iny
+        lda     #0
+        adc     #>1900
+        sta     (ptr),y
 
         ;; Month
-month:  lda     date+1
-        ror     a
+month:  plp                     ; Restore Carry bit
         lda     date
         ror     a
         lsr     a
@@ -9568,9 +9563,49 @@ open:   MLI_RELAY_CALL OPEN, open_params
 .proc show_clock
         lda     MACHID
         and     #1              ; bit 0 = clock card
-        beq     done
+        bne     :+
+        rts
 
-        MLI_RELAY_CALL GET_TIME, 0
+:       MLI_RELAY_CALL GET_TIME, 0
+
+        ;; Assumes call from main loop, where grafport3 is initialized.
+        MGTK_RELAY_CALL MGTK::MoveTo, pos_clock
+
+        ;; --------------------------------------------------
+        ;; Day of Week
+
+        lda     DATEHI          ; Year-1900 (bits 15-9)
+        lsr     a
+        php                     ; Save Carry bit
+        cmp     #40             ; Per ProDOS Tech Note #18, 0-39 is 2000-2039
+        bcs     :+
+        adc     #100
+:       tay
+        plp                     ; Restore Carry bit
+        lda     DATELO          ; Month (bits 8-5)
+        ror
+        lsr
+        lsr
+        lsr
+        lsr
+        tax
+        lda     DATELO          ; Day (bits 0-4)
+        and     #%00011111
+
+        jsr     day_of_week
+        asl                     ; * 4
+        asl
+        clc
+        adc     #<dow_strings
+        sta     dow_str_params::addr
+        lda     #0
+        adc     #>dow_strings
+        sta     dow_str_params::addr+1
+        MGTK_RELAY_CALL MGTK::DrawText, dow_str_params
+
+        ;; --------------------------------------------------
+        ;; Time
+
         lda     TIMEHI          ; hours
         and     #%00011111
 
@@ -9613,10 +9648,38 @@ open:   MLI_RELAY_CALL OPEN, open_params
         ora     #'0'
         sta     str_clock + 4   ; Tens place
 
-        ;; Assumes call from main loop, where grafport3 is initialized.
-        MGTK_RELAY_CALL MGTK::MoveTo, pos_clock
         addr_call draw_text1, str_clock
 done:   rts
+
+.endproc
+
+;;; Day of the Week calculation (valid 1900-03-01 to 2155-12-31)
+;;; c/o http://6502.org/source/misc/dow.htm
+;;; Inputs: Y = year (0=1900), X = month (1=Jan), A = day (1...31)
+;;; Output: A = weekday (0=Sunday)
+.proc day_of_week
+        tmp := $06
+
+        cpx     #3              ; Year starts in March to bypass
+        bcs     :+              ; leap year problem
+        dey                     ; If Jan or Feb, decrement year
+:       eor     #$7F            ; Invert A so carry works right
+        cpy     #200            ; Carry will be 1 if 22nd century
+        adc     month_offset_table-1,X ; A is now day+month offset
+        sta     tmp
+        tya                     ; Get the year
+        jsr     mod7            ; Do a modulo to prevent overflow
+        sbc     tmp             ; Combine with day+month
+        sta     tmp
+        tya                     ; Get the year again
+        lsr                     ; Divide it by 4
+        lsr
+        clc                     ; Add it to y+m+d and fall through
+        adc     tmp
+
+mod7:   adc     #7              ; Returns (A+3) modulo 7
+        bcc     mod7            ; for A in 0..255
+        rts
 .endproc
 
 ;;; ============================================================

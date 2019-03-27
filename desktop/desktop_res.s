@@ -806,12 +806,24 @@ file_to_delete_label:
         PASCAL_STRING "File to delete:"
 
 ;;; ============================================================
+;;; Resources for clock on menu bar
 
 pos_clock:
-        DEFINE_POINT 500, 10
+        DEFINE_POINT 475, 10
 
 str_clock:
         PASCAL_STRING "00:00 XM      "
+
+dow_strings:
+        .byte   "Sun ", "Mon ", "Tue ", "Wed ", "Thu ", "Fri ", "Sat "
+
+.proc dow_str_params
+addr:   .addr   0
+length: .byte   4               ; includes trailing space
+.endproc
+
+month_offset_table:
+        .byte   1,5,6,3,1,5,3,0,4,2,6,4
 
 ;;; ============================================================
 

@@ -9,7 +9,7 @@ https://github.com/inexorabletash/a2d/issues
 
 ### DeskTop Enhancements
 
-* Current time shown on right side of menu bar, if system has a clock. (#7)
+* Current day/time shown on right side of menu bar, if system has a clock. (#7, #142)
 * Up to 13 volumes are shown on the desktop (was 10). (#20)
 * Drag "unlimited" number of icons (was 20). (#18)
 * Dragging files to same volume moves instead of copies; use Open-Apple to force copy. (#8)
