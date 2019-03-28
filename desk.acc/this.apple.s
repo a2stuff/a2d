@@ -390,7 +390,8 @@ str_empty:      PASCAL_STRING "(empty)"
 str_cpu_prefix: PASCAL_STRING "  CPU: "
 str_6502:       PASCAL_STRING "6502"
 str_65C02:      PASCAL_STRING "65C02"
-str_658xx:      PASCAL_STRING "658xx"
+str_65802:      PASCAL_STRING "65802"
+str_65816:      PASCAL_STRING "65816"
 
 ;;; ============================================================
 
@@ -1387,7 +1388,16 @@ nonzero_flag:                ; high bit set once a non-zero digit seen
         ; 65C02
         result  str_65C02
 p6502:  result  str_6502
-p658xx: result  str_658xx
+
+        ;; Distinguish 65802 and 65816 by machine ID
+p658xx: lda     ROMIN2
+        sec
+        jsr     ID_BYTE_FE1F
+        lda     LCBANK1
+        lda     LCBANK1
+        bcs     p65802
+        result  str_65816       ; Only IIgs supports 65816
+p65802: result  str_65802       ; Other boards support 65802
 .endproc
 
 ;;; ============================================================
