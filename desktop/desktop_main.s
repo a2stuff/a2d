@@ -2139,6 +2139,12 @@ eject_flag:
 
 str_quit_code:  PASCAL_STRING "Quit.tmp"
 
+reset_handler:
+        ;; Restore DeskTop Main expected state...
+        sta     ALTZPON
+        lda     LCBANK1
+        lda     LCBANK1
+
 start:
         MLI_RELAY_CALL OPEN, open_params
         bne     fail
@@ -2158,6 +2164,7 @@ fail:   jsr     ShowAlert
 
 .endproc
         cmd_quit := cmd_quit_impl::start
+        reset_handler := cmd_quit_impl::reset_handler
 
 ;;; ============================================================
 ;;; Exit DHR, restore device list, reformat /RAM.
@@ -15422,6 +15429,19 @@ str_preview_txt:
 
 start:
 
+;;; ============================================================
+;;; Set the reset vector to cold start
+.scope hook_reset_vector
+
+        ;; Main hook
+        lda     #<desktop_main::reset_handler
+        sta     RESETVEC
+        lda     #>desktop_main::reset_handler
+        sta     RESETVEC+1
+        eor     #$A5
+        sta     RESETVEC+2
+
+.endscope
 ;;; ============================================================
 ;;; Detect Machine Type
 

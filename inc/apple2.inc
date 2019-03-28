@@ -45,6 +45,7 @@ HR3_OFF         := $C0B6
 
 ;;; Monitor
 INIT            := $FB2F
+SETPWRC         := $FB6F
 VERSION         := $FBB3
 BELL1           := $FBDD
 VTAB            := $FC22
@@ -52,6 +53,7 @@ VTABZ           := $FC24
 HOME            := $FC58
 PRBYTE          := $FDDA
 COUT            := $FDED
+MOVE            := $FE2C
 SETKBD          := $FE89
 SETVID          := $FE93
 MONZ            := $FF69
@@ -181,6 +183,7 @@ DESTINATIONHI   := $43
 ;;; Other Locations
 XFERSTARTLO     := $03ED
 XFERSTARTHI     := $03EE
+RESETVEC        := $03F2
 
 
 ;;; ============================================================
