@@ -1598,9 +1598,7 @@ draw_title_bar:
 .endproc
 
         ;; Following proc is copied to $B1
-        save_org := *
-.proc adjust_txtptr_copied
-        .org $B1
+PROC_AT adjust_txtptr_copied, $B1
         dummy_addr := $EA60
 
 loop:   inc     TXTPTR
@@ -1619,8 +1617,7 @@ loop:   inc     TXTPTR
         sec
         sbc     #$D0            ; carry set if successful
 end:    rts
-.endproc
-        .org save_org + .sizeof(adjust_txtptr_copied)
+END_PROC_AT
         sizeof_adjust_txtptr_copied = .sizeof(adjust_txtptr_copied)
 
 da_end := *

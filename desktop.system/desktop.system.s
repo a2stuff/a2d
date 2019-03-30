@@ -899,9 +899,7 @@ path0:  .res    65, 0
 ;;; Launch FILER - used if machine is not 128k
 ;;; Relocated to $300 before invoking
 
-        saved_org := *
-.proc launch_filer
-        .org $300
+PROC_AT launch_filer, $300
 
         sys_start := $2000
 
@@ -931,12 +929,11 @@ path0:  .res    65, 0
 
 filename:
         PASCAL_STRING "FILER"
-.endproc
+
+END_PROC_AT
         .assert .sizeof(launch_filer) <= $D0, error, "Routine length exceeded"
 
 ;;; ============================================================
-
-        .org (saved_org + .sizeof(launch_filer))
 
 filenum:
         .byte   0               ; index of file being copied

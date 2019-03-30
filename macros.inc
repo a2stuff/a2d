@@ -676,6 +676,30 @@ loop:   lda     src,x
 
 
 ;;; ============================================================
+;;; Placed Procedures
+;;; ============================================================
+;;; Usage:
+;;;    PROC_AT relocated_proc, $300
+;;;       .assert * = $300, ...
+;;;       ...
+;;;    END_PROC_AT
+;;;       .assert * = back to normal
+
+.macro PROC_AT name, addr
+.proc name
+        saved_org := *
+        .org addr
+.proc __inner__
+.endmacro
+
+.macro END_PROC_AT
+.endproc ; __inner__
+        .org saved_org + .sizeof(__inner__)
+.endproc
+.endmacro
+
+
+;;; ============================================================
 ;;; Flow Control
 ;;; ============================================================
 ;;; Usage:

@@ -57,14 +57,16 @@ while (<STDIN>) {
             $_ .= ' ' while length($_) % $tab;
             $_ .= ':= ' . $expression . ' ';
 
-        } elsif (m/^(\.(?:end)?(?:proc|scope|macro|struct|enum)\b)\s*(.*)$/) {
+        } elsif (m/^(\.(?:end)?(?:proc|scope|macro|struct|enum)\b)\s*(.*)$/ ||
+                 m/^(\b(?:END_)?(?:PROC_AT)\b)\s*(.*)$/) {
 
             # scope - flush left
             my ($opcode, $arguments) = ($1 // '', $2 // '');
 
             $_ = $opcode . ' ' . $arguments;
 
-        } elsif (m/^(\.(?:if\w*|elseif|else|endif)\b)\s*(.*)$/) {
+        } elsif (m/^(\.(?:if\w*|elseif|else|endif)\b)\s*(.*)$/ ||
+                 m/^(\b(?:IF_\w+|ELSE|END_IF)\b)\s*(.*)$/) {
 
             # conditional - half indent left
             my ($opcode, $arguments) = ($1 // '', $2 // '');
