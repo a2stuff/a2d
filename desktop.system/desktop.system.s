@@ -2081,9 +2081,7 @@ done:   rts
 ;;; (selector/dispatch) handler, then does ProDOS QUIT.
 
 str_quit_code:  PASCAL_STRING "Quit.tmp"
-        saved_org := *
-.proc quit_restore_proc
-        .org $1000
+PROC_AT quit_restore_proc, $1000
 
         lda     LCBANK2
         lda     LCBANK2
@@ -2102,9 +2100,8 @@ str_quit_code:  PASCAL_STRING "Quit.tmp"
         DEFINE_QUIT_PARAMS quit_params
 
         PAD_TO $1100
-.endproc
+END_PROC_AT
         .assert .sizeof(quit_restore_proc) = $100, error, "Proc length mismatch"
-        .org (saved_org + .sizeof(quit_restore_proc))
 
 .proc preserve_quit_code_impl
         quit_code_io := $800

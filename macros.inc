@@ -108,14 +108,6 @@ end:
 
 ;;; ============================================================
 ;;; Calls with two parameters (call # in y, address in A,X)
-;;; (various output orders to match original binary)
-
-.macro axy_call target, yparam, addr
-        lda     #<addr
-        ldx     #>addr
-        ldy     #yparam
-        jsr     target
-.endmacro
 
 .macro yax_call target, yparam, addr
         ldy     #yparam
@@ -124,17 +116,10 @@ end:
         jsr     target
 .endmacro
 
-.macro yxa_call target, yparam, addr
+.macro yax_jump target, yparam, addr
         ldy     #yparam
-        ldx     #>addr
         lda     #<addr
-        jsr     target
-.endmacro
-
-.macro yxa_jump target, yparam, addr
-        ldy     #yparam
         ldx     #>addr
-        lda     #<addr
         jmp     target
 .endmacro
 
@@ -610,6 +595,10 @@ skip:
         dec     arg+1
 skip:   dec     arg
 .endmacro
+
+;;; ============================================================
+;;; Param Blocks
+;;; ============================================================
 
 ;;; Helper macros to set up a scoped block of parameters at a pre-determined
 ;;; address.

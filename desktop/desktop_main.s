@@ -1560,7 +1560,7 @@ nope:   dex
 done:   jsr     set_pointer_cursor
         rts
 
-open:   yxa_call MLI_RELAY, OPEN, open_params
+open:   yax_call MLI_RELAY, OPEN, open_params
         bne     :+
         rts
 :       lda     #warning_msg_insert_system_disk
@@ -1568,9 +1568,9 @@ open:   yxa_call MLI_RELAY, OPEN, open_params
         beq     open            ; ok, so try again
         return  #$FF            ; cancel, so fail
 
-read:   yxa_jump MLI_RELAY, READ, read_params
+read:   yax_jump MLI_RELAY, READ, read_params
 
-close:  yxa_jump MLI_RELAY, CLOSE, close_params
+close:  yax_jump MLI_RELAY, CLOSE, close_params
 
 zp_use_flag1:
         .byte   $80
@@ -13156,15 +13156,15 @@ jump_relay:
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::about_dialog_outer_rect
         MGTK_RELAY_CALL MGTK::FrameRect, desktop_aux::about_dialog_inner_rect
         addr_call draw_dialog_title, desktop_aux::str_about1
-        axy_call draw_dialog_label, 1 | DDL_CENTER, desktop_aux::str_about2
-        axy_call draw_dialog_label, 2 | DDL_CENTER, desktop_aux::str_about3
-        axy_call draw_dialog_label, 3 | DDL_CENTER, desktop_aux::str_about4
-        axy_call draw_dialog_label, 5, desktop_aux::str_about5
-        axy_call draw_dialog_label, 6 | DDL_CENTER, desktop_aux::str_about6
-        axy_call draw_dialog_label, 7, desktop_aux::str_about7
-        axy_call draw_dialog_label, 9, desktop_aux::str_about8
+        yax_call draw_dialog_label, 1 | DDL_CENTER, desktop_aux::str_about2
+        yax_call draw_dialog_label, 2 | DDL_CENTER, desktop_aux::str_about3
+        yax_call draw_dialog_label, 3 | DDL_CENTER, desktop_aux::str_about4
+        yax_call draw_dialog_label, 5, desktop_aux::str_about5
+        yax_call draw_dialog_label, 6 | DDL_CENTER, desktop_aux::str_about6
+        yax_call draw_dialog_label, 7, desktop_aux::str_about7
+        yax_call draw_dialog_label, 9, desktop_aux::str_about8
         copy16  #310 - (7 * .strlen(VERSION_SUFFIX)), dialog_label_pos
-        axy_call draw_dialog_label, 9, desktop_aux::str_about9
+        yax_call draw_dialog_label, 9, desktop_aux::str_about9
         copy16  #dialog_label_default_x, dialog_label_pos
 
 :       MGTK_RELAY_CALL MGTK::GetEvent, event_params
@@ -13216,17 +13216,17 @@ close:  MGTK_RELAY_CALL MGTK::CloseWindow, winfo_about_dialog
 :       copy    #0, has_input_field_flag
         jsr     open_dialog_window
 
-        axy_call draw_dialog_label, 2, desktop_aux::str_copy_from
-        axy_call draw_dialog_label, 3, desktop_aux::str_copy_to
+        yax_call draw_dialog_label, 2, desktop_aux::str_copy_from
+        yax_call draw_dialog_label, 3, desktop_aux::str_copy_to
         bit     move_flag
         bmi     :+
         addr_call draw_dialog_title, desktop_aux::str_copy_title
-        axy_call draw_dialog_label, 1, desktop_aux::str_copy_copying
-        axy_call draw_dialog_label, 4, desktop_aux::str_copy_remaining
+        yax_call draw_dialog_label, 1, desktop_aux::str_copy_copying
+        yax_call draw_dialog_label, 4, desktop_aux::str_copy_remaining
         rts
 :       addr_call draw_dialog_title, desktop_aux::str_move_title
-        axy_call draw_dialog_label, 1, desktop_aux::str_move_moving
-        axy_call draw_dialog_label, 4, desktop_aux::str_move_remaining
+        yax_call draw_dialog_label, 1, desktop_aux::str_move_moving
+        yax_call draw_dialog_label, 4, desktop_aux::str_move_remaining
         rts
 
         ;; CopyDialogLifecycle::populate
@@ -13286,7 +13286,7 @@ do5:    jsr     reset_grafport3a
 do3:    jsr     bell
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        axy_call draw_dialog_label, 6, desktop_aux::str_exists_prompt
+        yax_call draw_dialog_label, 6, desktop_aux::str_exists_prompt
         jsr     draw_yes_no_all_cancel_buttons
 LAA7F:  jsr     prompt_input_loop
         bmi     LAA7F
@@ -13301,7 +13301,7 @@ LAA7F:  jsr     prompt_input_loop
 do4:    jsr     bell
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        axy_call draw_dialog_label, 6, desktop_aux::str_large_prompt
+        yax_call draw_dialog_label, 6, desktop_aux::str_large_prompt
         jsr     draw_ok_cancel_buttons
 :       jsr     prompt_input_loop
         bmi     :-
@@ -13338,10 +13338,10 @@ do4:    jsr     bell
 else:   copy    #0, has_input_field_flag
         jsr     open_dialog_window
         addr_call draw_dialog_title, desktop_aux::str_download
-        axy_call draw_dialog_label, 1, desktop_aux::str_copy_copying
-        axy_call draw_dialog_label, 2, desktop_aux::str_copy_from
-        axy_call draw_dialog_label, 3, desktop_aux::str_copy_to
-        axy_call draw_dialog_label, 4, desktop_aux::str_copy_remaining
+        yax_call draw_dialog_label, 1, desktop_aux::str_copy_copying
+        yax_call draw_dialog_label, 2, desktop_aux::str_copy_from
+        yax_call draw_dialog_label, 3, desktop_aux::str_copy_to
+        yax_call draw_dialog_label, 4, desktop_aux::str_copy_remaining
         rts
 
 do1:    ldy     #1
@@ -13385,7 +13385,7 @@ do3:    jsr     reset_grafport3a
 do4:    jsr     bell
         lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        axy_call draw_dialog_label, 6, desktop_aux::str_ramcard_full
+        yax_call draw_dialog_label, 6, desktop_aux::str_ramcard_full
         jsr     draw_ok_button
 :       jsr     prompt_input_loop
         bmi     :-
@@ -13418,10 +13418,10 @@ do4:    jsr     bell
 
 else:   jsr     open_dialog_window
         addr_call draw_dialog_title, desktop_aux::str_size_title
-        axy_call draw_dialog_label, 1, desktop_aux::str_size_number
+        yax_call draw_dialog_label, 1, desktop_aux::str_size_number
         ldy     #1
         jsr     draw_colon
-        axy_call draw_dialog_label, 2, desktop_aux::str_size_blocks
+        yax_call draw_dialog_label, 2, desktop_aux::str_size_blocks
         ldy     #2
         jsr     draw_colon
         rts
@@ -13503,11 +13503,11 @@ do2:    lda     winfo_alert_dialog
         addr_call draw_dialog_title, desktop_aux::str_delete_title
         lda     LAD1F
         beq     LAD20
-        axy_call draw_dialog_label, 4, desktop_aux::str_ok_empty
+        yax_call draw_dialog_label, 4, desktop_aux::str_ok_empty
         rts
 
 LAD1F:  .byte   0
-LAD20:  axy_call draw_dialog_label, 4, desktop_aux::str_delete_ok
+LAD20:  yax_call draw_dialog_label, 4, desktop_aux::str_delete_ok
         rts
 
         ;; DeleteDialogLifecycle::populate
@@ -13574,7 +13574,7 @@ do5:    jsr     reset_grafport3a
         ;; DeleteDialogLifecycle::locked
 do4:    lda     winfo_alert_dialog
         jsr     set_port_from_window_id
-        axy_call draw_dialog_label, 6, desktop_aux::str_delete_locked_file
+        yax_call draw_dialog_label, 6, desktop_aux::str_delete_locked_file
         jsr     draw_yes_no_all_cancel_buttons
 LAE17:  jsr     prompt_input_loop
         bmi     LAE17
