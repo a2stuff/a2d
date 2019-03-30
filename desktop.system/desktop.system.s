@@ -113,7 +113,7 @@ L23DF:  .byte   $00,$00,$00
         .byte   0
 
         ;; Files/Directories to copy
-str_f1: PASCAL_STRING "DESKTOP1"
+str_f1: PASCAL_STRING "DESKTOP.SYSTEM"
 str_f2: PASCAL_STRING "DESKTOP2"
 str_f3: PASCAL_STRING "DESK.ACC"
 str_f4: PASCAL_STRING "PREVIEW"
@@ -886,7 +886,7 @@ str_desktop2:
 
         DEFINE_OPEN_PARAMS open_params, str_desktop1_path, open_io_buffer
 str_desktop1_path:
-        PASCAL_STRING "DeskTop/DESKTOP1"
+        PASCAL_STRING "DeskTop/DESKTOP.SYSTEM"
         DEFINE_WRITE_PARAMS write_params, dt1_addr, dt1_size
         DEFINE_CLOSE_PARAMS close_params
 
