@@ -45,7 +45,12 @@ L12AF   := $12AF
     .endif
 .endmacro
 
-        jmp     LD5E1
+;;; ============================================================
+
+        .assert *= $D000, error, "Entry point mismatch"
+
+start:
+        jmp     init
 
 ;;; ============================================================
 ;;; Resources
@@ -496,7 +501,8 @@ watch_cursor:
 ;;; ============================================================
 
 LD5E0:  .byte   0
-LD5E1:  jsr     remove_ram_disk
+
+init:   jsr     remove_ram_disk
         MGTK_RELAY_CALL2 MGTK::SetMenu, menu_definition
         jsr     set_cursor_pointer
         copy    #1, checkitem_params::menu_item
@@ -3136,3 +3142,4 @@ show_alert_dialog := alert_dialog::show_alert_dialog
         PAD_TO $F200
 
 .endproc
+        disk_copy_overlay3_start := disk_copy_overlay3::start
