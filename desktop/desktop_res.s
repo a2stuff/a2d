@@ -987,6 +987,7 @@ device_to_icon_map:
 ;;; Path buffer for open_directory logic
 open_dir_path_buf:
         .res    65, 0
+
 LE1F1:  .res    15, 0           ; length-prefixed string
 LE200:  .word   0
 LE202:  .res    24, 0           ; addr table
@@ -1365,6 +1366,9 @@ window_icon_list_table:
 active_window_id:
         .byte   $00
 
+;;; $00 = window not in use
+;;; $FF = window in use, but dir (vol/folder) icon deleted
+;;; Otherwise, dir (vol/folder) icon associated with window.
 window_to_dir_icon_table:
         .res    8, 0
 

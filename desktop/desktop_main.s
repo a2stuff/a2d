@@ -584,7 +584,10 @@ start:  jsr     clear_selection
         ;; window and desktop can have selections.)
         ldx     findwindow_window_id
         dex
-        copy    window_to_dir_icon_table,x, icon_param
+        lda     window_to_dir_icon_table,x
+        bmi     continue        ; $FF = dir icon freed
+
+        sta     icon_param
         lda     icon_param
         jsr     icon_entry_lookup
         stax    ptr
@@ -1883,80 +1886,13 @@ dir_count:
 ;;; ============================================================
 
 .proc cmd_close
+        icon_ptr := $06
+
         lda     active_window_id
-        bne     L4E78
+        bne     :+
         rts
 
-L4E78:  jsr     clear_selection
-        dec     num_open_windows
-        jsr     LoadActiveWindowIconTable
-        ldx     active_window_id
-        dex
-        lda     win_view_by_table,x
-        bmi     iter            ; list view, not icons
-
-        ;; View by icon
-        DESKTOP_RELAY_CALL DT_CLOSE_WINDOW, active_window_id
-
-        lda     icon_count
-        sec
-        sbc     cached_window_icon_count
-        sta     icon_count
-
-        ldx     #0
-:       cpx     cached_window_icon_count
-        beq     iter
-        lda     cached_window_icon_list,x
-        jsr     FreeIcon
-        inx
-        jmp     :-
-
-iter:   ldx     #$00
-        txa
-:       sta     cached_window_icon_list,x
-        cpx     cached_window_icon_count
-        beq     L4EC3
-        inx
-        jmp     :-
-
-L4EC3:  sta     cached_window_icon_count
-        jsr     StoreWindowIconTable
-        jsr     LoadDesktopIconTable
-        MGTK_RELAY_CALL MGTK::CloseWindow, active_window_id
-
-        ldx     active_window_id
-        dex
-        lda     window_to_dir_icon_table,x
-        sta     icon_param
-        jsr     icon_entry_lookup
-        stax    $06
-        ldy     #IconEntry::win_type
-        lda     ($06),y
-        and     #AS_BYTE(~icon_entry_open_mask) ; clear open_flag
-        sta     ($06),y
-        and     #icon_entry_winid_mask
-        sta     selected_window_index
-        jsr     zero_grafport5_coords
-        DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
-        jsr     reset_grafport3
-        copy    #1, selected_icon_count
-        copy    icon_param, selected_icon_list
-        ldx     active_window_id
-        dex
-        lda     window_to_dir_icon_table,x
-        jsr     L7345
-        ldx     active_window_id
-        dex
-        copy    #0, window_to_dir_icon_table,x
-        MGTK_RELAY_CALL MGTK::FrontWindow, active_window_id
-        lda     active_window_id
-        bne     L4F3C
-        DESKTOP_RELAY_CALL DT_REDRAW_ICONS
-L4F3C:  lda     #MGTK::checkitem_uncheck
-        sta     checkitem_params::check
-        MGTK_RELAY_CALL MGTK::CheckItem, checkitem_params
-        jsr     update_window_menu_items
-        jmp     reset_grafport3
+:       jmp     close_window
 .endproc
 
 ;;; ============================================================
@@ -1964,7 +1900,7 @@ L4F3C:  lda     #MGTK::checkitem_uncheck
 .proc cmd_close_all
         lda     active_window_id   ; current window
         beq     done            ; nope, done!
-        jsr     cmd_close       ; close it...
+        jsr     close_window    ; close it...
         jmp     cmd_close_all   ; and try again
 done:   rts
 .endproc
@@ -2469,17 +2405,40 @@ L5265:  .byte   0
         sec
         sbc     cached_window_icon_count
         sta     icon_count
-        ldx     #0
-loop:   cpx     cached_window_icon_count
-        beq     done
-        lda     cached_window_icon_list,x
-        jsr     FreeIcon
-        copy    #0, cached_window_icon_list,x
-        inx
-        jmp     loop
+
+        jsr     free_cached_window_icons
 
 done:   jsr     StoreWindowIconTable
         jmp     LoadDesktopIconTable
+.endproc
+
+;;; ============================================================
+
+.proc free_cached_window_icons
+        copy    #0, index
+
+loop:   ldx     index
+        cpx     cached_window_icon_count
+        beq     done
+
+        lda     cached_window_icon_list,x
+        pha
+        jsr     FreeIcon
+        pla
+
+        jsr     find_window_for_dir_icon
+        bne     :+
+        copy    #$FF, window_to_dir_icon_table,x ; $FF = dir icon freed
+
+:       ldx     index
+        copy    #0, cached_window_icon_list,x
+
+        inc     index
+        bne     loop
+
+done:   rts
+
+index:  .byte   0
 .endproc
 
 ;;; ============================================================
@@ -2599,8 +2558,10 @@ next_icon:
 not_done:
         tax
         lda     selected_icon_list,x
-        jsr     L5431
-        bmi     next_icon
+        jsr     find_window_for_dir_icon
+        bne     next_icon       ; not found
+        inx                     ; 0-based index to 1-based window_id
+        txa
         jsr     window_path_lookup
         stax    $06
         ldy     #0
@@ -2644,16 +2605,6 @@ selected_vol_icon_count:
 selected_vol_icon_list:
         .res    9, 0
 
-L5431:  ldx     #7
-L5433:  cmp     window_to_dir_icon_table,x
-        beq     L543E
-        dex
-        bpl     L5433
-        return  #$FF
-
-L543E:  inx
-        txa
-        rts
 .endproc
 
 ;;; ============================================================
@@ -2967,7 +2918,7 @@ L5708:  sta     $800
         ldy     #$01
         ldx     #0
 L570F:  lda     window_to_dir_icon_table,x
-        beq     L5720
+        beq     L5720           ; 0 = window free
         inx
         cpx     active_window_id
         beq     L5721
@@ -3064,7 +3015,7 @@ loop:   cpx     #8
         bne     :+
         ldx     #0
 :       lda     window_to_dir_icon_table,x
-        bne     found
+        bne     found           ; 0 = window free
         inx
         bne     loop            ; always
 
@@ -3293,6 +3244,7 @@ L5916:  lda     cached_window_icon_list,x
         beq     L5942
         txa
         pha
+
         lda     cached_window_icon_list,x
         sta     icon_param
         copy    #0, cached_window_icon_list,x
@@ -3301,6 +3253,7 @@ L5916:  lda     cached_window_icon_list,x
         jsr     FreeIcon
         dec     cached_window_icon_count
         dec     icon_count
+
         pla
         tax
 L5942:  dex
@@ -3486,6 +3439,7 @@ not_in_map:
         lda     devlst_index
         tay
         pha
+
         lda     device_to_icon_map,y
         sta     icon_param
         beq     :+
@@ -3501,6 +3455,7 @@ not_in_map:
         sta     previous_icon_count
         inc     cached_window_icon_count
         inc     icon_count
+
         pla
         tay
         lda     DEVLST,y
@@ -4026,6 +3981,7 @@ L5E77:  .byte   0
         ldx     active_window_id
         dex
         lda     window_to_dir_icon_table,x
+        ;; BUG: What if dir icon is freed? ($FF)
         pha
         jsr     L7345
         lda     window_id
@@ -4294,50 +4250,52 @@ handle_close_click:
         jsr     LoadActiveWindowIconTable
 
         jsr     clear_selection
+
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
         bmi     iter            ; list view, not icons
+
         lda     icon_count
         sec
         sbc     cached_window_icon_count
         sta     icon_count
 
         DESKTOP_RELAY_CALL DT_CLOSE_WINDOW, active_window_id
-        ldx     #$00
-L6206:  cpx     cached_window_icon_count
-        beq     iter
-        lda     cached_window_icon_list,x
-        jsr     FreeIcon
-        inx
-        jmp     L6206
+
+        jsr     free_cached_window_icons
 
 iter:   dec     num_open_windows
-        ldx     #$00
+        ldx     #0
         txa
-L621B:  sta     cached_window_icon_list,x
+:       sta     cached_window_icon_list,x
         cpx     cached_window_icon_count
-        beq     L6227
+        beq     cont
         inx
-        jmp     L621B
+        jmp     :-
 
-L6227:  sta     cached_window_icon_count
+cont:   sta     cached_window_icon_count
         jsr     StoreWindowIconTable
         MGTK_RELAY_CALL MGTK::CloseWindow, active_window_id
+
+        ;; Unhilight dir (vol/folder) icon, if present
         ldx     active_window_id
         dex
         lda     window_to_dir_icon_table,x
+        bmi     no_icon         ; $FF = dir icon freed
         sta     icon_param
         jsr     icon_entry_lookup
-        stax    $06
-        ldy     #1
-        lda     ($06),y
-        and     #$0F
-        beq     L6276
+        stax    icon_ptr
+
+        ldy     #IconEntry::state
+        lda     (icon_ptr),y
+        and     #icon_entry_winid_mask
+        beq     no_icon         ; ???
+
         ldy     #IconEntry::win_type
-        lda     ($06),y
+        lda     (icon_ptr),y
         and     #AS_BYTE(~icon_entry_open_mask) ; clear open_flag
-        sta     ($06),y
+        sta     (icon_ptr),y
         and     #icon_entry_winid_mask
         sta     selected_window_index
         jsr     zero_grafport5_coords
@@ -4345,20 +4303,26 @@ L6227:  sta     cached_window_icon_count
         jsr     reset_grafport3
         copy    #1, selected_icon_count
         copy    icon_param, selected_icon_list
-L6276:  ldx     active_window_id
+
+        ldx     active_window_id
         dex
         lda     window_to_dir_icon_table,x
         jsr     L7345
+
+        ;; Animate closing into dir (vol/folder) icon
         ldx     active_window_id
         dex
         lda     window_to_dir_icon_table,x
         inx
         jsr     animate_window_close
+
+no_icon:
         ldx     active_window_id
         dex
-        lda     #$00
-        sta     window_to_dir_icon_table,x
+        lda     #0
+        sta     window_to_dir_icon_table,x ; 0 = window free
         sta     win_view_by_table,x
+
         MGTK_RELAY_CALL MGTK::FrontWindow, active_window_id
         jsr     LoadDesktopIconTable
         lda     #MGTK::checkitem_uncheck
@@ -5059,11 +5023,10 @@ L6A3E:  .byte   0
         ptr := $6
         path_buf := $220
 
-        ldx     #7
-:       cmp     window_to_dir_icon_table,x
-        beq     L6A80
-        dex
-        bpl     :-
+        jsr     find_window_for_dir_icon
+        beq     L6A80           ; found
+
+        ;; Not in the map. Look for related windows.
         jsr     icon_entry_lookup
         addax   #IconEntry::len, ptr
         ldy     #0
@@ -5085,6 +5048,7 @@ L6A5C:  lda     (ptr),y
         ldy     path_buf
         jmp     update_vol_used_free_for_found_windows
 
+        ;; Found it in the map.
 L6A80:  inx
         txa
         pha
@@ -5124,35 +5088,9 @@ found_win:
 :       stx     cached_window_id
         jsr     LoadWindowIconTable
 
+        jsr     update_icon
+
         lda     icon_params2
-        jsr     icon_entry_lookup
-        stax    ptr
-
-        ldy     #IconEntry::win_type
-        lda     (ptr),y
-        ora     #icon_entry_open_mask ; set open_flag
-        sta     (ptr),y
-
-        ldy     #IconEntry::win_type ; get window id
-        lda     (ptr),y
-        and     #icon_entry_winid_mask
-        sta     getwinport_params2::window_id
-
-        beq     :+              ; window 0 = desktop
-        cmp     active_window_id ; prep to redraw windowed (file) icon
-        bne     skip             ; but only if active window
-        jsr     get_set_port2
-        lda     icon_params2
-        jsr     icon_screen_to_window
-:       DESKTOP_RELAY_CALL DT_REDRAW_ICON, icon_params2
-
-        lda     getwinport_params2::window_id
-        beq     skip            ; skip if on desktop
-        lda     icon_params2    ; restore from drawing
-        jsr     icon_window_to_screen
-        jsr     reset_grafport3
-
-skip:   lda     icon_params2
         ldx     LE1F1
         dex
 :       cmp     LE1F1+1,x
@@ -5187,7 +5125,7 @@ no_win:
         ;; Search window-icon map to find an unused window.
 :       ldx     #0
 :       lda     window_to_dir_icon_table,x
-        beq     :+
+        beq     :+              ; 0 = window free
         inx
         jmp     :-
 
@@ -5220,37 +5158,10 @@ update_view:
         sta     checkitem_params::check
         jsr     check_item
 
-        ;; Update icon
-        lda     icon_params2
-        jsr     icon_entry_lookup
-        stax    ptr
+        jsr     update_icon
 
-        ldy     #IconEntry::win_type
-        lda     (ptr),y
-        ora     #icon_entry_open_mask ; set open_flag
-        sta     (ptr),y
-
-        ldy     #IconEntry::win_type ; get window id
-        lda     (ptr),y
-        and     #icon_entry_winid_mask
-        sta     getwinport_params2::window_id
-
-        beq     :+           ; 0 = desktop
-        cmp     active_window_id ; prep to redraw windowed (file) icon
-        bne     skip2            ; but only if active window
-        jsr     get_set_port2
-        jsr     offset_grafport2_and_set
-        lda     icon_params2
-        jsr     icon_screen_to_window
-:       DESKTOP_RELAY_CALL DT_REDRAW_ICON, icon_params2
-
-        lda     getwinport_params2::window_id
-        beq     skip2           ; skip if on desktop
-        lda     icon_params2    ; restore from drawing
-        jsr     icon_window_to_screen
-        jsr     reset_grafport3
-
-skip2:  jsr     prepare_new_window
+        ;; Set path, size, contents, and volume free/used.
+        jsr     prepare_new_window
 
         ;; Create the window
         lda     cached_window_id
@@ -5284,6 +5195,40 @@ done:   copy    cached_window_id, active_window_id
         jsr     StoreWindowIconTable
         jsr     LoadDesktopIconTable
         jmp     reset_grafport3
+
+;;; Common code to update the dir (vol/folder) icon.
+.proc update_icon
+        lda     icon_params2
+        jsr     icon_entry_lookup
+        stax    ptr
+
+        ldy     #IconEntry::win_type
+        lda     (ptr),y
+        ora     #icon_entry_open_mask ; set open_flag
+        sta     (ptr),y
+
+        ldy     #IconEntry::win_type ; get window id
+        lda     (ptr),y
+        and     #icon_entry_winid_mask
+        sta     getwinport_params2::window_id
+
+        beq     :+               ; window 0 = desktop
+        cmp     active_window_id ; prep to redraw windowed (file) icon
+        bne     done             ; but only if active window
+        jsr     get_set_port2
+        jsr     offset_grafport2_and_set
+        lda     icon_params2
+        jsr     icon_screen_to_window
+:       DESKTOP_RELAY_CALL DT_REDRAW_ICON, icon_params2
+
+        lda     getwinport_params2::window_id
+        beq     done            ; skip if on desktop
+        lda     icon_params2    ; restore from drawing
+        jsr     icon_window_to_screen
+        jsr     reset_grafport3
+
+done:   rts
+.endproc
 
 num:    .byte   0
 .endproc
@@ -5322,7 +5267,8 @@ L6C25:  jsr     push_pointers
 :       ldx     cached_window_id
         dex
         lda     window_to_dir_icon_table,x
-        ldx     #$00
+        ;; BUG: What if dir icon is freed? ($FF)
+        ldx     #0
 L6C53:  cmp     LE1F1+1,x
         beq     L6C5F
         inx
@@ -6134,6 +6080,7 @@ get_vol_free_used:
         get_vol_free_used := open_directory::get_vol_free_used
 
 ;;; ============================================================
+;;; ???
 
 .proc L7345
         sta     L7445
@@ -6254,14 +6201,7 @@ L7449:  .word   0
         sta     (title_ptr),y
         iny
         dex
-        bne     :-
-
-        lda     #' '
-        sta     (title_ptr),y
-        ldy     #IconEntry::win_type
-        lda     (title_ptr),y
-        and     #%11011111       ; upcase first letter
-        sta     (title_ptr),y
+        bpl     :-
 
         jsr     pop_pointers
 
@@ -6289,7 +6229,7 @@ L7449:  .word   0
         bcc     :+
         inc     icon_ptr+1
 :       ldy     #0
-        lda     ($06),y
+        lda     (icon_ptr),y
         tay                     ; Y = length
 
         ;; Copy, including leading/trailing spaces
@@ -6328,7 +6268,6 @@ L7449:  .word   0
 
 has_parent:
         tay
-        copy    #$00, L7620     ; ???
         jsr     push_pointers
         tya
         pha
@@ -6364,7 +6303,6 @@ has_parent:
 
         ;; Suffix with '/'
         lda     #'/'
-        sta     open_dir_path_buf+1
         inc     open_dir_path_buf
         ldx     open_dir_path_buf
         sta     open_dir_path_buf,x
@@ -6436,7 +6374,7 @@ common:
         lsr     a               ; / 2
         clc
         adc     #27
-        sta     (winfo_ptr),y         ; viewloc::ycoord
+        sta     (winfo_ptr),y   ; viewloc::ycoord
         iny
         lda     #0
         sta     (winfo_ptr),y
@@ -6455,7 +6393,7 @@ common:
         lda     (winfo_ptr),y
         and     #AS_BYTE(~MGTK::Scroll::option_active)
         sta     (winfo_ptr),y
-        iny
+        iny                     ; vscroll
         lda     (winfo_ptr),y
         and     #AS_BYTE(~MGTK::Scroll::option_active)
         sta     (winfo_ptr),y
@@ -6470,11 +6408,11 @@ common:
         ;; --------------------------------------------------
 
         lda     icon_params2
-
         jsr     open_directory
 
         lda     icon_params2
         jsr     icon_entry_lookup
+
         stax    icon_ptr
         ldy     #IconEntry::win_type
         lda     (icon_ptr),y
@@ -6499,7 +6437,6 @@ common:
         jsr     create_file_icon_ep1
         rts
 
-L7620:  .byte   $00
 .endproc
 
 ;;; ============================================================
@@ -6544,6 +6481,7 @@ ep2:    pha                     ; entry point #2 ???
         ldx     cached_window_id
         dex
         lda     window_to_dir_icon_table,x
+        ;; TODO: Guaranteed to exist?
         sta     icon_params2
         lda     #$80
 
@@ -7453,6 +7391,7 @@ index           := $805
 start:  ldx     cached_window_id
         dex
         lda     window_to_dir_icon_table,x
+        ;; BUG: What if dir icon is freed? ($FF)
 
         ldx     #0
 :       cmp     LE1F1+1,x
@@ -9207,6 +9146,20 @@ remove: lda     cached_window_icon_list+1,x
 .endproc
 
 ;;; ============================================================
+;;; Search the window->dir_icon mapping table.
+;;; Inputs: A = icon number
+;;; Outputs: Z=1 && N=0 if found, X = index (0-7), A unchanged
+
+.proc find_window_for_dir_icon
+        ldx     #7
+:       cmp     window_to_dir_icon_table,x
+        beq     done
+        dex
+        bpl     :-
+done:   rts
+.endproc
+
+;;; ============================================================
 
 .proc mark_icons_not_opened
         ptr := $6
@@ -9224,16 +9177,12 @@ L8B1F:  lda     icon_params2
 
         ;; Find open window for the icon
 start:  lda     icon_params2
-        ldx     #8 - 1
-:       cmp     window_to_dir_icon_table,x
-        beq     :+
-        dex
-        bpl     :-
-        jmp     skip
+        jsr     find_window_for_dir_icon
+        bne     skip            ; not found
 
         ;; If found, remove from the table
-:       lda     #0
-        sta     window_to_dir_icon_table,x
+        ;; TODO: should this be $FF instead?
+        copy    #0, window_to_dir_icon_table,x
 
         ;; Update the icon and redraw
 skip:   lda     icon_params2
@@ -9242,7 +9191,7 @@ skip:   lda     icon_params2
         ldy     #IconEntry::win_type
         lda     (ptr),y
         and     #AS_BYTE(~icon_entry_open_mask) ; clear open_flag
-        sta     ($06),y
+        sta     (ptr),y
         jsr     redraw_selected_icons
         jsr     pop_pointers
         rts
