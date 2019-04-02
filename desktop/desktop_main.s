@@ -5075,7 +5075,10 @@ L6A80:  inx
         beq     found_win
         dex
         bpl     :-
-        jmp     no_win
+        jmp     no_linked_win
+
+        ;; --------------------------------------------------
+        ;; There is an existing window associated with icon.
 
 found_win:
         ;; Is it the active window? If so, done!
@@ -5106,10 +5109,27 @@ found_win:
         jmp     LoadDesktopIconTable
 
         ;; --------------------------------------------------
+        ;; No associated window - check for matching path.
+
+no_linked_win:
+        ;; Compute the path (will be needed anyway).
+        lda     icon_params2
+        jsr     icon_entry_lookup
+        jsr     compose_icon_full_path
+
+        addr_call find_window_for_path, open_dir_path_buf
+        beq     no_win
+
+        ;; Found a match - associate the window.
+        tax
+        dex                     ; 1-based to 0-based
+        copy    icon_params2, window_to_dir_icon_table,x
+        jmp     found_win
+
+        ;; --------------------------------------------------
         ;; No window - need to open one.
 
 no_win:
-
         ;; Is there a free window?
         lda     num_open_windows
         cmp     #8
@@ -6168,119 +6188,56 @@ L7449:  .word   0
 .endproc
 
 ;;; ============================================================
-;;; Set up path and coords for new window, contents and free/used.
-;;;
-;;; Inputs: IconEntry pointer in $06, new window_id in cached_window_id
-;;; Outputs: Winfo configured, open_dir_path_buf has full path
+;;; Compute full path for icon
+;;; Inputs: IconEntry pointer in $06
+;;; Outputs: open_dir_path_buf has full path
+;;; Exceptions: if path too long, shows error and restores saved_stack
 
-.proc prepare_new_window
+.proc compose_icon_full_path
         icon_ptr := $06
-        title_ptr := $08
+        name_ptr := $06
 
-        ;; Get icon name length, update ptr
-        lda     cached_window_id
-        asl     a
-        tax
-        copy16  window_title_addr_table,x, title_ptr
-        ldy     #IconEntry::len
-        lda     (icon_ptr),y
-        tay                     ; length in Y
         jsr     push_pointers
-        lda     icon_ptr
-        clc
-        adc     #IconEntry::len
-        sta     icon_ptr
-        bcc     :+
-        inc     icon_ptr+1
-:       tya
-        tax                     ; length in X
 
-        ;; Copy name (with leading/trailing spaces) to title
-        ldy     #0
-:       lda     (icon_ptr),y
-        sta     (title_ptr),y
-        iny
-        dex
-        bpl     :-
-
-        jsr     pop_pointers
-
-        ;; Is there a parent window?
         ldy     #IconEntry::win_type
         lda     (icon_ptr),y
+        pha
+        add16   icon_ptr, #IconEntry::len, name_ptr
+        pla
         and     #icon_entry_winid_mask
-        bne     has_parent
+        bne     has_parent      ; A = window_id
 
         ;; --------------------------------------------------
-        ;; Desktop (volume) icon; no parent path
+        ;; Desktop (volume) icon - no parent path
 
-        path_ptr := $08
-
-        jsr     push_pointers
-        lda     cached_window_id
-        jsr     window_path_lookup
-        stax    path_ptr
-
-        ;; Point at length-prefixed icon name (with leading/trailing spaces)
-        lda     icon_ptr
-        clc
-        adc     #IconEntry::len
-        sta     icon_ptr
-        bcc     :+
-        inc     icon_ptr+1
-:       ldy     #0
-        lda     (icon_ptr),y
+        ;; Copy name, including leading/trailing spaces
+        ldy     #0
+        lda     (name_ptr),y
         tay                     ; Y = length
-
-        ;; Copy, including leading/trailing spaces
-:       lda     (icon_ptr),y
-        sta     (path_ptr),y
-        dey
-        bpl     :-
-
-        ;; Reduce length by one (trailing space)
-        ldy     #0
-        lda     (path_ptr),y
-        sec
-        sbc     #1
-        sta     (path_ptr),y
-
-        ;; Convert leading space to '/'
-        ldy     #1
-        lda     #'/'
-        sta     (path_ptr),y
-
-        ;; Copy path to open_dir_path_buf ???
-        ldy     #0
-        lda     (path_ptr),y
-        tay
-:       lda     (path_ptr),y
+:       lda     (name_ptr),y
         sta     open_dir_path_buf,y
         dey
         bpl     :-
 
-        jmp     common
+        copy    #'/', open_dir_path_buf+1 ; Replace leading space with '/'
+        dec     open_dir_path_buf       ; Remove trailing space
+
+        jsr     pop_pointers
+        rts
 
         ;; --------------------------------------------------
-        ;; Windowed (folder) icon; has a parent path
-
-        parent_path_ptr := $06
-
+        ;; Windowed (folder) icon - has parent path
 has_parent:
-        tay
-        jsr     push_pointers
-        tya
-        pha
+
+        parent_path_ptr := $08
+
         jsr     window_path_lookup
         stax    parent_path_ptr
-        pla
-        asl     a
-        tax
-        copy16  window_title_addr_table,x, title_ptr
+
         ldy     #0
         lda     (parent_path_ptr),y
         clc
-        adc     (title_ptr),y
+        adc     (name_ptr),y
         cmp     #67             ; Max path length is 64; title has leading/trailing spaces
         bcc     :+
 
@@ -6307,30 +6264,64 @@ has_parent:
         ldx     open_dir_path_buf
         sta     open_dir_path_buf,x
 
-        icon_ptr2 := $08
-
         ;; Append icon name
-        lda     icon_params2
-        jsr     icon_entry_lookup
-        stax    icon_ptr2
-        ldx     open_dir_path_buf
-        ldy     #IconEntry::len ; compute total length
-        lda     (icon_ptr2),y
+        ldy     #0
+        lda     (name_ptr),y
         clc
         adc     open_dir_path_buf
         sta     open_dir_path_buf
         dec     open_dir_path_buf           ; discount leading/trailing spaces
         dec     open_dir_path_buf
-        ldy     #IconEntry::name
+        iny
 
 :       iny                     ; skip leading space immediately
         inx
-        lda     (icon_ptr2),y
+        lda     (name_ptr),y
         sta     open_dir_path_buf,x
         cpx     open_dir_path_buf
         bne     :-
 
-        ;; Copy into window path
+        jsr     pop_pointers
+        rts
+.endproc
+
+;;; ============================================================
+;;; Set up path and coords for new window, contents and free/used.
+;;; Inputs: IconEntry pointer in $06, new window_id in cached_window_id,
+;;;         open_dir_path_buf has full path
+;;; Outputs: Winfo configured, window path table entry set
+
+.proc prepare_new_window
+        icon_ptr := $06
+
+        ;; Copy icon name to window title (including leading/trailing spaces)
+.scope
+        name_ptr := icon_ptr
+        title_ptr := $08
+
+        jsr     push_pointers
+
+        lda     cached_window_id
+        asl     a
+        tax
+        copy16  window_title_addr_table,x, title_ptr
+        add16   icon_ptr, #IconEntry::len, name_ptr
+
+        ldy     #0
+        lda     (name_ptr),y
+        tay
+:       lda     (name_ptr),y
+        sta     (title_ptr),y
+        dey
+        bpl     :-
+
+        jsr     pop_pointers
+.endscope
+
+        ;; --------------------------------------------------
+        path_ptr := $08
+
+        ;; Copy previously composed path into window path
         lda     cached_window_id
         jsr     window_path_lookup
         stax    path_ptr
@@ -6342,7 +6333,6 @@ has_parent:
 
         ;; --------------------------------------------------
 
-common:
         winfo_ptr := $06
 
         ;; Set window coordinates
@@ -6403,7 +6393,6 @@ common:
         sta     (winfo_ptr),y
         ldy     #MGTK::Winfo::vthumbpos
         sta     (winfo_ptr),y
-        jsr     pop_pointers
 
         ;; --------------------------------------------------
 
@@ -6412,12 +6401,13 @@ common:
 
         lda     icon_params2
         jsr     icon_entry_lookup
-
         stax    icon_ptr
         ldy     #IconEntry::win_type
         lda     (icon_ptr),y
         and     #icon_entry_winid_mask
         beq     :+
+
+        ;; Windowed (folder) icon
         tax
         dex
         txa
@@ -6426,6 +6416,7 @@ common:
         copy16  window_k_used_table,x, vol_kb_used
         copy16  window_k_free_table,x, vol_kb_free
 
+        ;; Desktop (volume) icon
 :       ldx     cached_window_id
         dex
         txa
