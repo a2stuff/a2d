@@ -581,7 +581,7 @@ not_menu:
 
         jmp     start
 
-L445C:  .byte   0
+winid:  .byte   0
 
 start:  jsr     clear_selection
         ldx     findwindow_window_id
@@ -590,22 +590,27 @@ start:  jsr     clear_selection
         lda     icon_param
         jsr     icon_entry_lookup
         stax    ptr
-        ldy     #1
+
+        ldy     #IconEntry::state ; set state to open
         lda     (ptr),y
-        beq     L44A6
-        ora     #$80
+        beq     continue
+        ora     #icon_entry_open_mask
         sta     (ptr),y
-        iny
+
+        iny                     ; IconEntry::win_type
         lda     (ptr),y
-        and     #$0F
-        sta     L445C
+        and     #icon_entry_winid_mask
+        sta     winid
         jsr     zero_grafport5_coords
         DESKTOP_RELAY_CALL DT_HIGHLIGHT_ICON, icon_param
         jsr     reset_grafport3
-        copy    L445C, selected_window_index
+        copy    winid, selected_window_index
         copy    #1, selected_icon_count
         copy    icon_param, selected_icon_list
-L44A6:  MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_window_id
+
+        ;; Actually make the window active.
+continue:
+        MGTK_RELAY_CALL MGTK::SelectWindow, findwindow_window_id
         copy    findwindow_window_id, active_window_id
         sta     cached_window_id
         jsr     LoadWindowIconTable
@@ -2990,7 +2995,7 @@ L56F8:  .byte   0
 
 L5708:  sta     $800
         ldy     #$01
-        ldx     #$00
+        ldx     #0
 L570F:  lda     window_to_dir_icon_table,x
         beq     L5720
         inx
@@ -4049,7 +4054,7 @@ L5E77:  .byte   0
         lda     (ptr),y
         tay
 :       lda     (ptr),y
-        sta     LE1B0,y
+        sta     open_dir_path_buf,y
         dey
         bpl     :-
 
@@ -4305,27 +4310,31 @@ handle_close_click:
         rts
 
 .proc close_window
+        icon_ptr := $06
+
         copy    active_window_id, cached_window_id
         jsr     LoadWindowIconTable
+
         jsr     clear_selection
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
-        bmi     L6215           ; list view, not icons
+        bmi     iter            ; list view, not icons
         lda     icon_count
         sec
         sbc     cached_window_icon_count
         sta     icon_count
+
         DESKTOP_RELAY_CALL DT_CLOSE_WINDOW, active_window_id
         ldx     #$00
 L6206:  cpx     cached_window_icon_count
-        beq     L6215
+        beq     iter
         lda     cached_window_icon_list,x
         jsr     FreeIcon
         inx
         jmp     L6206
 
-L6215:  dec     num_open_windows
+iter:   dec     num_open_windows
         ldx     #$00
         txa
 L621B:  sta     cached_window_icon_list,x
@@ -5260,7 +5269,7 @@ update_view:
         jsr     icon_window_to_screen
         jsr     reset_grafport3
 
-skip2:  jsr     L744B
+skip2:  jsr     prepare_new_window
 
         ;; Create the window
         lda     cached_window_id
@@ -5881,7 +5890,7 @@ L70C4:  .byte   $00
         sta     L72A7
         jsr     push_pointers
 
-        COPY_BYTES $41, LE1B0, vol_info_path_buf
+        COPY_BYTES 65, open_dir_path_buf, vol_info_path_buf
 
         jsr     do_open
         lda     open_params::ref_num
@@ -6149,12 +6158,12 @@ get_vol_free_used:
 
 .proc L7345
         sta     L7445
-        ldx     #$00
+        ldx     #0
 L734A:  lda     LE1F1+1,x
         cmp     L7445
         beq     :+
         inx
-        cpx     #$08
+        cpx     #8
         bne     L734A
         rts
 
@@ -6233,92 +6242,130 @@ L7449:  .word   0
 .endproc
 
 ;;; ============================================================
+;;; Set up path and coords for new window, contents and free/used.
+;;;
+;;; Inputs: IconEntry pointer in $06, new window_id in cached_window_id
+;;; Outputs: Winfo configured, open_dir_path_buf has full path
 
-.proc L744B
+.proc prepare_new_window
+        icon_ptr := $06
+        title_ptr := $08
+
+        ;; Get icon name length, update ptr
         lda     cached_window_id
         asl     a
         tax
-        copy16  LE6BF,x, $08
-        ldy     #$09
-        lda     ($06),y
-        tay
+        copy16  window_title_addr_table,x, title_ptr
+        ldy     #IconEntry::len
+        lda     (icon_ptr),y
+        tay                     ; length in Y
         jsr     push_pointers
-        lda     $06
+        lda     icon_ptr
         clc
-        adc     #$09
-        sta     $06
-        bcc     L746D
-        inc     $06+1
-L746D:  tya
-        tax
-        ldy     #$00
-L7471:  lda     ($06),y
-        sta     ($08),y
+        adc     #IconEntry::len
+        sta     icon_ptr
+        bcc     :+
+        inc     icon_ptr+1
+:       tya
+        tax                     ; length in X
+
+        ;; Copy name (with leading/trailing spaces) to title
+        ldy     #0
+:       lda     (icon_ptr),y
+        sta     (title_ptr),y
         iny
         dex
-        bne     L7471
-        lda     #$20
-        sta     ($08),y
+        bne     :-
+
+        lda     #' '
+        sta     (title_ptr),y
         ldy     #IconEntry::win_type
-        lda     ($08),y
-        and     #%11011111       ; ???
-        sta     ($08),y
+        lda     (title_ptr),y
+        and     #%11011111       ; upcase first letter
+        sta     (title_ptr),y
+
         jsr     pop_pointers
+
+        ;; Is there a parent window?
         ldy     #IconEntry::win_type
-        lda     ($06),y
+        lda     (icon_ptr),y
         and     #icon_entry_winid_mask
-        bne     L74D3
+        bne     has_parent
+
+        ;; --------------------------------------------------
+        ;; Desktop (volume) icon; no parent path
+
+        path_ptr := $08
+
         jsr     push_pointers
         lda     cached_window_id
         jsr     window_path_lookup
-        stax    $08
-        lda     $06
+        stax    path_ptr
+
+        ;; Point at length-prefixed icon name (with leading/trailing spaces)
+        lda     icon_ptr
         clc
-        adc     #$09
-        sta     $06
-        bcc     L74A8
-        inc     $06+1
-L74A8:  ldy     #$00
+        adc     #IconEntry::len
+        sta     icon_ptr
+        bcc     :+
+        inc     icon_ptr+1
+:       ldy     #0
         lda     ($06),y
-        tay
-L74AD:  lda     ($06),y
-        sta     ($08),y
+        tay                     ; Y = length
+
+        ;; Copy, including leading/trailing spaces
+:       lda     (icon_ptr),y
+        sta     (path_ptr),y
         dey
-        bpl     L74AD
-        ldy     #$00
-        lda     ($08),y
+        bpl     :-
+
+        ;; Reduce length by one (trailing space)
+        ldy     #0
+        lda     (path_ptr),y
         sec
-        sbc     #$01
-        sta     ($08),y
+        sbc     #1
+        sta     (path_ptr),y
+
+        ;; Convert leading space to '/'
         ldy     #1
         lda     #'/'
-        sta     ($08),y
-        ldy     #$00
-        lda     ($08),y
-        tay
-L74C8:  lda     ($08),y
-        sta     LE1B0,y
-        dey
-        bpl     L74C8
-        jmp     L7569
+        sta     (path_ptr),y
 
-L74D3:  tay
-        copy    #$00, L7620
+        ;; Copy path to open_dir_path_buf ???
+        ldy     #0
+        lda     (path_ptr),y
+        tay
+:       lda     (path_ptr),y
+        sta     open_dir_path_buf,y
+        dey
+        bpl     :-
+
+        jmp     common
+
+        ;; --------------------------------------------------
+        ;; Windowed (folder) icon; has a parent path
+
+        parent_path_ptr := $06
+
+has_parent:
+        tay
+        copy    #$00, L7620     ; ???
         jsr     push_pointers
         tya
         pha
         jsr     window_path_lookup
-        stax    $06
+        stax    parent_path_ptr
         pla
         asl     a
         tax
-        copy16  LE6BF,x, $08
-        ldy     #$00
-        lda     ($06),y
+        copy16  window_title_addr_table,x, title_ptr
+        ldy     #0
+        lda     (parent_path_ptr),y
         clc
-        adc     ($08),y
-        cmp     #$43
-        bcc     L750D
+        adc     (title_ptr),y
+        cmp     #67             ; Max path length is 64; title has leading/trailing spaces
+        bcc     :+
+
         lda     #ERR_INVALID_PATHNAME
         jsr     ShowAlert
         jsr     mark_icons_not_opened_2
@@ -6327,103 +6374,135 @@ L74D3:  tay
         txs
         rts
 
-L750D:  ldy     #0
-        lda     ($06),y
+        ;; Copy parent path to open_dir_path_buf
+:       ldy     #0
+        lda     (parent_path_ptr),y
         tay
-L7512:  lda     ($06),y
-        sta     LE1B0,y
+:       lda     (parent_path_ptr),y
+        sta     open_dir_path_buf,y
         dey
-        bpl     L7512
+        bpl     :-
+
+        ;; Suffix with '/'
         lda     #'/'
-        sta     LE1B0+1
-        inc     LE1B0
-        ldx     LE1B0
-        sta     LE1B0,x
+        sta     open_dir_path_buf+1
+        inc     open_dir_path_buf
+        ldx     open_dir_path_buf
+        sta     open_dir_path_buf,x
+
+        icon_ptr2 := $08
+
+        ;; Append icon name
         lda     icon_params2
         jsr     icon_entry_lookup
-        stax    $08
-        ldx     LE1B0
-        ldy     #$09
-        lda     ($08),y
+        stax    icon_ptr2
+        ldx     open_dir_path_buf
+        ldy     #IconEntry::len ; compute total length
+        lda     (icon_ptr2),y
         clc
-        adc     LE1B0
-        sta     LE1B0
-        dec     LE1B0
-        dec     LE1B0
-        ldy     #$0A
-L7548:  iny
+        adc     open_dir_path_buf
+        sta     open_dir_path_buf
+        dec     open_dir_path_buf           ; discount leading/trailing spaces
+        dec     open_dir_path_buf
+        ldy     #IconEntry::name
+
+:       iny                     ; skip leading space immediately
         inx
-        lda     ($08),y
-        sta     LE1B0,x
-        cpx     LE1B0
-        bne     L7548
+        lda     (icon_ptr2),y
+        sta     open_dir_path_buf,x
+        cpx     open_dir_path_buf
+        bne     :-
+
+        ;; Copy into window path
         lda     cached_window_id
         jsr     window_path_lookup
-        stax    $08
-        ldy     LE1B0
-L7561:  lda     LE1B0,y
-        sta     ($08),y
+        stax    path_ptr
+        ldy     open_dir_path_buf
+:       lda     open_dir_path_buf,y
+        sta     (path_ptr),y
         dey
-        bpl     L7561
-L7569:  addr_call_indirect capitalize_string, $08
+        bpl     :-
+
+        ;; --------------------------------------------------
+
+common:
+        winfo_ptr := $06
+
+        addr_call_indirect capitalize_string, path_ptr
+
+        ;; Set window coordinates
         lda     cached_window_id
         jsr     window_lookup
-        stax    $06
-        ldy     #$14
+        stax    winfo_ptr
+        ldy     #MGTK::Winfo::port
+
+        ;; xcoord = (window_id-1) * 16 + 5
+        ;; ycoord = (window_id-1) * 8 + 27
+
         lda     cached_window_id
         sec
-        sbc     #$01
+        sbc     #1              ; * 16
         asl     a
         asl     a
         asl     a
         asl     a
+
         pha
-        adc     #$05
-        sta     ($06),y
+        adc     #5
+        sta     (winfo_ptr),y   ; viewloc::xcoord
         iny
-        lda     #$00
-        sta     ($06),y
+        lda     #0
+        sta     (winfo_ptr),y
         iny
         pla
-        lsr     a
+
+        lsr     a               ; / 2
         clc
-        adc     #.sizeof(IconEntry)
-        sta     ($06),y
+        adc     #27
+        sta     (winfo_ptr),y         ; viewloc::ycoord
         iny
-        lda     #$00
-        sta     ($06),y
-        lda     #$00
-        ldy     #$1F
-        ldx     #$03
-L75A3:  sta     ($06),y
+        lda     #0
+        sta     (winfo_ptr),y
+
+        ;; Map rect
+        lda     #0
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + 3
+        ldx     #3
+:       sta     (winfo_ptr),y
         dey
         dex
-        bpl     L75A3
-        ldy     #$04
-        lda     ($06),y
-        and     #$FE
-        sta     ($06),y
+        bpl     :-
+
+        ;; Scrollbars
+        ldy     #MGTK::Winfo::hscroll
+        lda     (winfo_ptr),y
+        and     #AS_BYTE(~MGTK::Scroll::option_active)
+        sta     (winfo_ptr),y
         iny
-        lda     ($06),y
-        and     #$FE
-        sta     ($06),y
-        lda     #$00
-        ldy     #$07
-        sta     ($06),y
-        ldy     #$09
-        sta     ($06),y
+        lda     (winfo_ptr),y
+        and     #AS_BYTE(~MGTK::Scroll::option_active)
+        sta     (winfo_ptr),y
+
+        lda     #0
+        ldy     #MGTK::Winfo::hthumbpos
+        sta     (winfo_ptr),y
+        ldy     #MGTK::Winfo::vthumbpos
+        sta     (winfo_ptr),y
         jsr     pop_pointers
+
+        ;; --------------------------------------------------
+
         lda     icon_params2
 
         jsr     open_directory
 
         lda     icon_params2
         jsr     icon_entry_lookup
-        stax    $06
+        stax    icon_ptr
         ldy     #IconEntry::win_type
-        lda     ($06),y
+        lda     (icon_ptr),y
         and     #icon_entry_winid_mask
-        beq     L75FA
+        beq     :+
         tax
         dex
         txa
@@ -6431,7 +6510,8 @@ L75A3:  sta     ($06),y
         tax
         copy16  window_k_used_table,x, vol_kb_used
         copy16  window_k_free_table,x, vol_kb_free
-L75FA:  ldx     cached_window_id
+
+:       ldx     cached_window_id
         dex
         txa
         asl     a

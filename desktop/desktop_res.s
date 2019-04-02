@@ -995,7 +995,9 @@ devlst_backup:
 device_to_icon_map:
         .res    16, 0
 
-LE1B0:  .res    65, 0           ; path buffer?
+;;; Path buffer for open_directory logic
+open_dir_path_buf:
+        .res    65, 0
 LE1F1:  .res    15, 0           ; length-prefixed string
 LE200:  .word   0
 LE202:  .res    24, 0           ; addr table
@@ -1219,9 +1221,8 @@ dummy_dd_item:
 icon_params2:
         .byte   0
 
-LE6BF:  .word   0
-
-LE6C1:
+window_title_addr_table:
+        .addr   0
         .addr   winfo1title_ptr
         .addr   winfo2title_ptr
         .addr   winfo3title_ptr
