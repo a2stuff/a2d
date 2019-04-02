@@ -59,7 +59,7 @@ L183F:  sta     BITMAP+1,x
         lda     LCBANK1
         lda     LCBANK1
 
-        jmp     MGTK_RELAY
+        jmp     disk_copy_overlay3_start
 
 ;;; ============================================================
 ;;; Copy first chunk to the Language Card

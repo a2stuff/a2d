@@ -193,14 +193,14 @@ last_menu_click_params := $E23D
 ;;;      .res  17  name  (name, with a space before and after)
 
 .struct IconEntry
-        id              .byte
-        state           .byte
-        win_type        .byte
-        iconx           .word
-        icony           .word
-        iconbits        .addr
-        len             .byte
-        name            .res 17 ; 15 chars plus leading/trailing spaces
+        id              .byte   ; 0
+        state           .byte   ; 1
+        win_type        .byte   ; 2
+        iconx           .word   ; 3
+        icony           .word   ; 5
+        iconbits        .addr   ; 7
+        len             .byte   ; 9
+        name            .res 17 ; 10 (15 chars plus leading/trailing spaces)
 .endstruct
 
 max_icon_count  = 127
