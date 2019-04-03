@@ -9,7 +9,7 @@ screen_height   = 192
 
 VERSION_MAJOR = 1
 VERSION_MINOR = 2
-.define VERSION_SUFFIX "-alpha1"
+.define VERSION_SUFFIX "-alpha2"
 
 DA_FILE_TYPE    = $F1
 DA_AUX_TYPE     = $640          ; High bit set = don't show in Apple menu
