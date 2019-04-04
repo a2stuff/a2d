@@ -5115,6 +5115,7 @@ no_linked_win:
         ;; Compute the path (will be needed anyway).
         lda     icon_params2
         jsr     icon_entry_lookup
+        stax    ptr
         jsr     compose_icon_full_path
 
         addr_call find_window_for_path, open_dir_path_buf
