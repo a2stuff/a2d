@@ -671,7 +671,7 @@ params: .addr   0
 
 ;;; ============================================================
 
-        ldx     disk_copy_overlay3::dest_drive_index
+L0CAF:  ldx     disk_copy_overlay3::dest_drive_index
         lda     disk_copy_overlay3::drive_unitnum_table,x
         sta     unit_number
         and     #$0F
@@ -1478,3 +1478,26 @@ L12B9:  .byte   0
         .assert * = $1300, error, "Segment length mismatch"
 
 .endproc
+
+disk_copy_overlay4_L0CAF        := disk_copy_overlay4::L0CAF
+disk_copy_overlay4_L0D51        := disk_copy_overlay4::L0D51
+disk_copy_overlay4_L0D5F        := disk_copy_overlay4::L0D5F
+disk_copy_overlay4_L0DB5        := disk_copy_overlay4::L0DB5
+disk_copy_overlay4_L0EB2        := disk_copy_overlay4::L0EB2
+disk_copy_overlay4_L0ED7        := disk_copy_overlay4::L0ED7
+disk_copy_overlay4_L10FB        := disk_copy_overlay4::L10FB
+disk_copy_overlay4_L127E        := disk_copy_overlay4::L127E
+disk_copy_overlay4_L1291        := disk_copy_overlay4::L1291
+disk_copy_overlay4_L129B        := disk_copy_overlay4::L129B
+disk_copy_overlay4_L12A5        := disk_copy_overlay4::L12A5
+disk_copy_overlay4_L12AF        := disk_copy_overlay4::L12AF
+disk_copy_overlay4_block_params_block_num       := disk_copy_overlay4::block_params::block_num
+disk_copy_overlay4_block_params_data_buffer     := disk_copy_overlay4::block_params::data_buffer
+disk_copy_overlay4_block_params_unit_num        := disk_copy_overlay4::block_params::unit_num
+disk_copy_overlay4_eject_disk   := disk_copy_overlay4::eject_disk
+disk_copy_overlay4_noop := disk_copy_overlay4::noop
+disk_copy_overlay4_on_line_buffer       := disk_copy_overlay4::on_line_buffer
+disk_copy_overlay4_on_line_params2_unit_num     := disk_copy_overlay4::on_line_params2::unit_num
+disk_copy_overlay4_on_line_params_unit_num      := disk_copy_overlay4::on_line_params::unit_num
+disk_copy_overlay4_quit := disk_copy_overlay4::quit
+disk_copy_overlay4_unit_number_to_driver_address        := disk_copy_overlay4::unit_number_to_driver_address

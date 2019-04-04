@@ -5,38 +5,6 @@
 .proc disk_copy_overlay3
         .org $D000
 
-.scope disk_copy_overlay4
-.scope on_line_params2
-unit_num        := $0C42
-.endscope
-.scope on_line_params
-unit_num        := $0C46
-.endscope
-        on_line_buffer := $0C49
-.scope block_params
-unit_num       := $0C5A
-data_buffer    := $0C5B
-block_num      := $0C5D
-.endscope
-
-noop        := $0C83
-quit    := $0C84
-L0CAF   := $0CAF
-eject_disk      := $0CED
-unit_number_to_driver_address   := $0D26
-L0D51   := $0D51
-L0D5F   := $0D5F
-L0DB5   := $0DB5
-L0EB2   := $0EB2
-L0ED7   := $0ED7
-L10FB   := $10FB
-L127E   := $127E
-L1291   := $1291
-L129B   := $129B
-L12A5   := $12A5
-L12AF   := $12AF
-.endscope
-
 .macro MGTK_RELAY_CALL2 call, params
     .if .paramcount > 1
         yax_call MGTK_RELAY2, call, params
@@ -591,12 +559,12 @@ LD740:  lda     #$00
         sta     LD44D
         ldx     source_drive_index
         lda     drive_unitnum_table,x
-        sta     disk_copy_overlay4::on_line_params2::unit_num
-        jsr     disk_copy_overlay4::L1291
+        sta     disk_copy_overlay4_on_line_params2_unit_num
+        jsr     disk_copy_overlay4_L1291
         beq     LD77E
         cmp     #$52
         bne     LD763
-        jsr     disk_copy_overlay4::L0D5F
+        jsr     disk_copy_overlay4_L0D5F
         jsr     LE674
         jsr     LE559
         jmp     LD7AD
@@ -613,7 +581,7 @@ LD77E:  lda     $1300
         lda     $1301
         cmp     #$52
         bne     LD763
-        jsr     disk_copy_overlay4::L0D5F
+        jsr     disk_copy_overlay4_L0D5F
         jsr     LE674
         jsr     LE559
         jmp     LD7AD
@@ -641,8 +609,8 @@ LD7AD:  lda     source_drive_index
 
 LD7CC:  ldx     dest_drive_index
         lda     drive_unitnum_table,x
-        sta     disk_copy_overlay4::on_line_params2::unit_num
-        jsr     disk_copy_overlay4::L1291
+        sta     disk_copy_overlay4_on_line_params2_unit_num
+        jsr     disk_copy_overlay4_L1291
         beq     LD7E1
         cmp     #$52
         beq     LD7F2
@@ -661,7 +629,7 @@ LD7F2:  ldx     dest_drive_index
         and     #$0F
         beq     LD817
         lda     drive_unitnum_table,x
-        jsr     disk_copy_overlay4::unit_number_to_driver_address
+        jsr     disk_copy_overlay4_unit_number_to_driver_address
         ldy     #$FF
         lda     ($06),y
         beq     LD817
@@ -705,7 +673,7 @@ LD852:  ldx     dest_drive_index
         and     #$0F
         beq     LD87C
         lda     drive_unitnum_table,x
-        jsr     disk_copy_overlay4::unit_number_to_driver_address
+        jsr     disk_copy_overlay4_unit_number_to_driver_address
         ldy     #$FE
         lda     ($06),y
         and     #$08
@@ -722,7 +690,7 @@ LD852:  ldx     dest_drive_index
 
 LD87C:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_formatting
         addr_call draw_text, str_formatting
-        jsr     disk_copy_overlay4::L0CAF
+        jsr     disk_copy_overlay4_L0CAF
         bcc     LD8A9
         cmp     #$2B
         beq     LD89F
@@ -747,7 +715,7 @@ LD8A9:  lda     winfo_dialog::window_id
         tax
         lda     drive_unitnum_table,x
         pha
-        jsr     disk_copy_overlay4::eject_disk
+        jsr     disk_copy_overlay4_eject_disk
         pla
         tay
         ldx     #$80
@@ -756,7 +724,7 @@ LD8A9:  lda     winfo_dialog::window_id
         beq     LD8DF
         jmp     LD61C
 
-LD8DF:  jsr     disk_copy_overlay4::L0DB5
+LD8DF:  jsr     disk_copy_overlay4_L0DB5
         lda     #$00
         sta     LD421
         sta     LD421+1
@@ -768,7 +736,7 @@ LD8DF:  jsr     disk_copy_overlay4::L0DB5
         jsr     LE694
 LD8FB:  jsr     LE4A8
         lda     #$00
-        jsr     disk_copy_overlay4::L0ED7
+        jsr     disk_copy_overlay4_L0ED7
         cmp     #$01
         beq     LD97A
         jsr     LE4EC
@@ -778,7 +746,7 @@ LD8FB:  jsr     LE4A8
         tax
         lda     drive_unitnum_table,x
         pha
-        jsr     disk_copy_overlay4::eject_disk
+        jsr     disk_copy_overlay4_eject_disk
         pla
         tay
         ldx     #$80
@@ -789,7 +757,7 @@ LD8FB:  jsr     LE4A8
 
 LD928:  jsr     LE491
         lda     #$80
-        jsr     disk_copy_overlay4::L0ED7
+        jsr     disk_copy_overlay4_L0ED7
         bmi     LD955
         bne     LD97A
         jsr     LE507
@@ -799,7 +767,7 @@ LD928:  jsr     LE491
         tax
         lda     drive_unitnum_table,x
         pha
-        jsr     disk_copy_overlay4::eject_disk
+        jsr     disk_copy_overlay4_eject_disk
         pla
         tay
         ldx     #$80
@@ -809,20 +777,20 @@ LD928:  jsr     LE491
         jmp     LD61C
 
 LD955:  jsr     LE507
-        jsr     disk_copy_overlay4::L10FB
+        jsr     disk_copy_overlay4_L10FB
         ldx     source_drive_index
         lda     drive_unitnum_table,x
-        jsr     disk_copy_overlay4::eject_disk
+        jsr     disk_copy_overlay4_eject_disk
         ldx     dest_drive_index
         cpx     source_drive_index
         beq     :+
         lda     drive_unitnum_table,x
-        jsr     disk_copy_overlay4::eject_disk
+        jsr     disk_copy_overlay4_eject_disk
 :       lda     #9              ; Copy success
         jsr     show_alert_dialog
         jmp     LD61C
 
-LD97A:  jsr     disk_copy_overlay4::L10FB
+LD97A:  jsr     disk_copy_overlay4_L10FB
         lda     #10             ; Copy failed
         jsr     show_alert_dialog
         jmp     LD61C
@@ -848,13 +816,13 @@ LD9BA:  cmp     #MGTK::EventKind::key_down
 
 menu_command_table:
         ;; Apple menu
-        .addr   disk_copy_overlay4::noop
-        .addr   disk_copy_overlay4::noop
-        .addr   disk_copy_overlay4::noop
-        .addr   disk_copy_overlay4::noop
-        .addr   disk_copy_overlay4::noop
+        .addr   disk_copy_overlay4_noop
+        .addr   disk_copy_overlay4_noop
+        .addr   disk_copy_overlay4_noop
+        .addr   disk_copy_overlay4_noop
+        .addr   disk_copy_overlay4_noop
         ;; File menu
-        .addr   disk_copy_overlay4::quit
+        .addr   disk_copy_overlay4_quit
         ;; Facilities menu
         .addr   cmd_quick_copy
         .addr   cmd_disk_copy
@@ -1220,12 +1188,12 @@ state:  .byte   0
 
 ;;; ============================================================
 
-LDDFC:  sta     disk_copy_overlay4::block_params::unit_num
+LDDFC:  sta     disk_copy_overlay4_block_params_unit_num
         lda     #$00
-        sta     disk_copy_overlay4::block_params::block_num
-        sta     disk_copy_overlay4::block_params::block_num+1
-        copy16  #$1C00, disk_copy_overlay4::block_params::data_buffer
-        jsr     disk_copy_overlay4::L12AF
+        sta     disk_copy_overlay4_block_params_block_num
+        sta     disk_copy_overlay4_block_params_block_num+1
+        copy16  #$1C00, disk_copy_overlay4_block_params_data_buffer
+        jsr     disk_copy_overlay4_L12AF
         beq     LDE19
         return  #$FF
 
@@ -1263,7 +1231,7 @@ LDE4D:  cmp     #$A5
         lda     $1C02
         cmp     #$27
         bne     LDE2E
-        lda     disk_copy_overlay4::block_params::unit_num
+        lda     disk_copy_overlay4_block_params_unit_num
         and     #$70
         lsr     a
         lsr     a
@@ -1273,7 +1241,7 @@ LDE4D:  cmp     #$A5
         adc     #'0'
         ldx     slot_char
         sta     str_dos33_s_d,x
-        lda     disk_copy_overlay4::block_params::unit_num
+        lda     disk_copy_overlay4_block_params_unit_num
         and     #$80
         asl     a
         rol     a
@@ -1301,8 +1269,8 @@ LDE83:  lda     str_dos33_s_d,x
 
         .byte   0
 LDE9F:  stax    $06
-        copy16  #$0002, disk_copy_overlay4::block_params::block_num
-        jsr     disk_copy_overlay4::L12AF
+        copy16  #$0002, disk_copy_overlay4_block_params_block_num
+        jsr     disk_copy_overlay4_L12AF
         beq     LDEBE
         ldy     #$00
         lda     #$01
@@ -1612,8 +1580,8 @@ check_alpha:
 
 LE16C:  lda     #$00
         sta     LD44E
-        sta     disk_copy_overlay4::on_line_params2::unit_num
-        jsr     disk_copy_overlay4::L1291
+        sta     disk_copy_overlay4_on_line_params2_unit_num
+        jsr     disk_copy_overlay4_L1291
         beq     LE17A
         .byte   0
 LE17A:  lda     #$00
@@ -1890,7 +1858,7 @@ LE3B8:  pha
         beq     LE3CC
         lda     drive_unitnum_table,x
         and     #$F0
-        jsr     disk_copy_overlay4::unit_number_to_driver_address
+        jsr     disk_copy_overlay4_unit_number_to_driver_address
         jmp     LE3DA
 
 LE3CC:  pla
@@ -1974,7 +1942,7 @@ LE44A:  ldy     #$FF
         tax
         lda     drive_unitnum_table,x
         and     #$F0
-        jsr     disk_copy_overlay4::L0D51
+        jsr     disk_copy_overlay4_L0D51
         sta     LE47D
         jsr     indirect_jump
         .byte   0
@@ -2209,21 +2177,21 @@ LE6FD:  stx     LE765
 
         cmp     #$2B
         bne     LE71A
-        jsr     disk_copy_overlay4::L127E
+        jsr     disk_copy_overlay4_L127E
         lda     #5              ; Destination protected
         jsr     show_alert_dialog
         bne     LE714
         jsr     LE491
         return  #$01
 
-LE714:  jsr     disk_copy_overlay4::L10FB
+LE714:  jsr     disk_copy_overlay4_L10FB
         return  #$80
 
-LE71A:  jsr     disk_copy_overlay4::L127E
+LE71A:  jsr     disk_copy_overlay4_L127E
         lda     winfo_dialog::window_id
         jsr     set_win_port
-        lda     disk_copy_overlay4::block_params::block_num
-        ldx     disk_copy_overlay4::block_params::block_num+1
+        lda     disk_copy_overlay4_block_params_block_num
+        ldx     disk_copy_overlay4_block_params_block_num+1
         jsr     number_to_string
         lda     LE765
         bne     LE74B
@@ -2243,8 +2211,8 @@ LE766:  sta     $06
         stx     $07
         stx     $09
         inc     $09
-        copy16  #$1C00, disk_copy_overlay4::block_params::data_buffer
-LE77A:  jsr     disk_copy_overlay4::L12AF
+        copy16  #$1C00, disk_copy_overlay4_block_params_data_buffer
+LE77A:  jsr     disk_copy_overlay4_L12AF
         beq     LE789
         ldx     #$00
         jsr     LE6FD
@@ -2272,7 +2240,7 @@ LE7A8:  sta     $06
         stx     $07
         stx     $09
         inc     $09
-        copy16  #$1C00, disk_copy_overlay4::block_params::data_buffer
+        copy16  #$1C00, disk_copy_overlay4_block_params_data_buffer
         .byte   $8D
         .byte   $03
         cpy     #$8D
@@ -2288,7 +2256,7 @@ LE7C5:  lda     ($06),y
         bne     LE7C5
         sta     RAMRDOFF
         sta     RAMWRTOFF
-LE7D8:  jsr     disk_copy_overlay4::L12A5
+LE7D8:  jsr     disk_copy_overlay4_L12A5
         beq     LE7E6
         ldx     #$80
         jsr     LE6FD
@@ -3068,22 +3036,22 @@ state:
 
 LF185:  sty     LD41D
         tya
-        jsr     disk_copy_overlay4::L0EB2
+        jsr     disk_copy_overlay4_L0EB2
         beq     :+
         sta     LD41E
 :       rts
 
 .proc LF192
         lda     LD41D
-        sta     disk_copy_overlay4::on_line_params::unit_num
-        jsr     disk_copy_overlay4::L129B
+        sta     disk_copy_overlay4_on_line_params_unit_num
+        jsr     disk_copy_overlay4_L129B
         beq     done
         cmp     #$52
         beq     done
-        lda     disk_copy_overlay4::on_line_buffer
+        lda     disk_copy_overlay4_on_line_buffer
         and     #$0F
         bne     done
-        lda     disk_copy_overlay4::on_line_buffer+1
+        lda     disk_copy_overlay4_on_line_buffer+1
         cmp     #$52
         beq     done
         MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
@@ -3102,7 +3070,7 @@ LF1CC:  cmp     #$03
         bcc     LF1D7
         cmp     #$06
         bcs     LF1D7
-        jsr     disk_copy_overlay4::L127E
+        jsr     disk_copy_overlay4_L127E
 LF1D7:  rts
 
 .endproc
