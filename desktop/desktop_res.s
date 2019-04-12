@@ -998,10 +998,22 @@ device_to_icon_map:
 ;;; Path buffer for open_directory logic
 open_dir_path_buf:
         .res    65, 0
-LE1F1:  .res    15, 0           ; length-prefixed string
-LE200:  .word   0
-LE202:  .res    24, 0           ; addr table
 
+;;; Icon to window file record mapping list. First byte is number of
+;;; entries, then each entry is an icon number. Position in the list
+;;; is the same as position in the subsequent file record list.
+window_icon_to_filerecord_list:
+        .res    9, 0            ; 8 entries + length
+
+        .res    6               ; Unused ???
+
+LE200:  .word   0               ; Unused ???
+
+;;; Mapping from position in above table to FileRecord entry
+window_filerecord_table:
+        .res    8*2
+
+        .res    8, 0            ; Unused ???
         .byte   $00,$00,$00,$00,$7F,$64,$00,$1C
         .byte   $00,$1E,$00,$32,$00,$1E,$00,$40
         .byte   $00

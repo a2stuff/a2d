@@ -5171,9 +5171,9 @@ found_win:
         jsr     reset_grafport3
 
 skip:   lda     icon_params2
-        ldx     LE1F1
+        ldx     window_icon_to_filerecord_list
         dex
-:       cmp     LE1F1+1,x
+:       cmp     window_icon_to_filerecord_list+1,x
         beq     :+
         dex
         bpl     :-
@@ -5343,20 +5343,20 @@ L6C25:  jsr     push_pointers
         dex
         lda     window_to_dir_icon_table,x
         ldx     #$00
-L6C53:  cmp     LE1F1+1,x
+L6C53:  cmp     window_icon_to_filerecord_list+1,x
         beq     L6C5F
         inx
-        cpx     LE1F1
+        cpx     window_icon_to_filerecord_list
         bne     L6C53
         rts
 
 L6C5F:  txa
         asl     a
         tax
-        lda     LE202,x
+        lda     window_filerecord_table,x
         sta     LE71D
         sta     $06
-        lda     LE202+1,x
+        lda     window_filerecord_table+1,x
         sta     LE71D+1
         sta     $06+1
         lda     LCBANK2
@@ -5941,14 +5941,14 @@ L7161:  jsr     warning_dialog_proc_num
         record_ptr := $06
 
 L7169:  copy16  L485F, record_ptr
-        lda     LE1F1
+        lda     window_icon_to_filerecord_list
         asl     a
         tax
-        copy16  record_ptr, LE202,x
-        ldx     LE1F1
+        copy16  record_ptr, window_filerecord_table,x
+        ldx     window_icon_to_filerecord_list
         lda     L72A7
-        sta     LE1F1+1,x
-        inc     LE1F1
+        sta     window_icon_to_filerecord_list+1,x
+        inc     window_icon_to_filerecord_list
         lda     L70C1
 
         ;; Store entry count
@@ -6159,7 +6159,7 @@ get_vol_free_used:
 .proc L7345
         sta     L7445
         ldx     #0
-L734A:  lda     LE1F1+1,x
+L734A:  lda     window_icon_to_filerecord_list+1,x
         cmp     L7445
         beq     :+
         inx
@@ -6170,28 +6170,28 @@ L734A:  lda     LE1F1+1,x
 :       stx     L7446
         dex
 :       inx
-        lda     LE1F1+2,x
-        sta     LE1F1+1,x
-        cpx     LE1F1
+        lda     window_icon_to_filerecord_list+2,x
+        sta     window_icon_to_filerecord_list+1,x
+        cpx     window_icon_to_filerecord_list
         bne     :-
 
-        dec     LE1F1
+        dec     window_icon_to_filerecord_list
         lda     L7446
-        cmp     LE1F1
+        cmp     window_icon_to_filerecord_list
         bne     :+
         ldx     L7446
         asl     a
         tax
-        copy16  LE202,x, L485F
+        copy16  window_filerecord_table,x, L485F
         rts
 
 :       lda     L7446
         asl     a
         tax
-        copy16  LE202,x, $06
+        copy16  window_filerecord_table,x, $06
         inx
         inx
-        copy16  LE202,x, $08
+        copy16  window_filerecord_table,x, $08
         ldy     #$00
         jsr     push_pointers
 L73A5:  lda     LCBANK2
@@ -6209,30 +6209,30 @@ L73A5:  lda     LCBANK2
         cmp     L485F
         bne     L73A5
         jsr     pop_pointers
-        lda     LE1F1
+        lda     window_icon_to_filerecord_list
         asl     a
         tax
-        sub16   L485F, LE202,x, L7447
+        sub16   L485F, window_filerecord_table,x, L7447
         inc     L7446
 L73ED:  lda     L7446
-        cmp     LE1F1
+        cmp     window_icon_to_filerecord_list
         bne     :+
         jmp     L7429
 
 :       lda     L7446
         asl     a
         tax
-        sub16   LE202+2,x, LE202,x, L7449
-        add16   LE200,x, L7449, LE202,x
+        sub16   window_filerecord_table+2,x, window_filerecord_table,x, L7449
+        add16   window_filerecord_table-2,x, L7449, window_filerecord_table,x
         inc     L7446
         jmp     L73ED
 
-L7429:  lda     LE1F1
+L7429:  lda     window_icon_to_filerecord_list
         sec
         sbc     #$01
         asl     a
         tax
-        add16   LE202,x, L7447, L485F
+        add16   window_filerecord_table,x, L7447, L485F
         rts
 
 L7445:  .byte   0
@@ -6584,9 +6584,9 @@ L7647:  sta     flag
         bpl     :-
 
         lda     icon_params2
-        ldx     LE1F1
+        ldx     window_icon_to_filerecord_list
         dex
-:       cmp     LE1F1+1,x
+:       cmp     window_icon_to_filerecord_list+1,x
         beq     :+
         dex
         bpl     :-
@@ -6595,7 +6595,7 @@ L7647:  sta     flag
 :       txa
         asl     a
         tax
-        copy16  LE202,x, $06
+        copy16  window_filerecord_table,x, $06
         lda     LCBANK2
         lda     LCBANK2
         ldy     #0
@@ -7379,10 +7379,10 @@ start:  ldx     cached_window_id
         lda     window_to_dir_icon_table,x
 
         ldx     #0
-:       cmp     LE1F1+1,x
+:       cmp     window_icon_to_filerecord_list+1,x
         beq     found
         inx
-        cpx     LE1F1
+        cpx     window_icon_to_filerecord_list
         bne     :-
         rts
 
@@ -7390,10 +7390,10 @@ found:  txa
         asl     a
         tax
 
-        lda     LE202,x         ; Ptr points at start of record
+        lda     window_filerecord_table,x         ; Ptr points at start of record
         sta     ptr
         sta     list_start_ptr
-        lda     LE202+1,x
+        lda     window_filerecord_table+1,x
         sta     ptr+1
         sta     list_start_ptr+1
 
