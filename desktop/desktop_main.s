@@ -8484,7 +8484,7 @@ tmp:    .byte   0
         sta     file_type
         copy16  #type_table, ptr
         ldy     #num_file_types-1
-:       lda     ($06),y
+:       lda     (ptr),y
         cmp     file_type
         beq     found
         dey
@@ -8499,7 +8499,7 @@ found:  tya
         copy16  #type_names_table, ptr
 
         ldx     #0
-:       lda     ($06),y
+:       lda     (ptr),y
         sta     str_file_type+1,x
         iny
         inx
@@ -8514,29 +8514,20 @@ not_found:
         copy    #4, str_file_type
         copy    #' ', str_file_type+1
         copy    #'$', str_file_type+2
+
         lda     file_type
         lsr     a
         lsr     a
         lsr     a
         lsr     a
-        cmp     #$0A
-        bcs     L8764
-        clc
-        adc     #'0'            ; 0-9
-        bne     L8767
-L8764:  clc
-        adc     #'A' - $A       ; A-F
-L8767:  sta     str_file_type+3
+        tax
+        copy    hex_digits,x, str_file_type+3
+
         lda     file_type
         and     #$0F
-        cmp     #$0A
-        bcs     L8778
-        clc
-        adc     #'0'            ; 0-9
-        bne     L877B
-L8778:  clc
-        adc     #'A' - $A       ; A-F
-L877B:  sta     path_buf4
+        tax
+        copy    hex_digits,x, str_file_type+4
+
         rts
 
 file_type:
