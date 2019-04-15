@@ -23,6 +23,7 @@ https://github.com/inexorabletash/a2d/issues
 * GS/OS filenames (supported by ProDOS 2.5) are shown with correct case. (#64)
 * Tip about skipping copy to RAMCard is shown during startup. (#140)
 * Apple-` or Apple-Tab keypress cycles through open windows. (#143)
+* Apple-Delete deletes selected files. (#150)
 
 ### Desk Accessory Enhancements
 
@@ -44,7 +45,7 @@ https://github.com/inexorabletash/a2d/issues
 * Eyes
   * Eyes that follow the mouse. (#53)
 * Screen Saver
-  * Homage to Jack Eastman's classic. More to come. (#27)
+  * Homage to the classic After Dark "Flying Toasters" by Jack Eastman. More to come. (#27)
 
 Note that several of the new Desk Accessories will not work with older versions
 of Apple II DeskTop/MouseDesk, due to dependence on new APIs.

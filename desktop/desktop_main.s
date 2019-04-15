@@ -464,6 +464,9 @@ handle_keydown:
 :       cmp     #'X'            ; OA-X (Scroll)
         bne     :+
         jmp     cmd_scroll
+:       cmp     #CHAR_DELETE    ; OA-Delete (Delete)
+        bne     :+
+        jmp     cmd_delete_selection
 :       cmp     #'`'            ; OA-` (Cycle Windows)
         beq     cycle
         cmp     #CHAR_TAB       ; OA-Tab (Cycle Windows)
@@ -2514,6 +2517,13 @@ done:   jmp     redraw_windows_and_desktop
 
 ;;; ============================================================
 
+.proc cmd_delete_selection
+        copy    trash_icon_num, drag_drop_param
+        jmp     process_drop
+.endproc
+
+;;; ============================================================
+
 .proc cmd_rename_icon
         jsr     jt_rename_icon
         pha
@@ -3806,6 +3816,7 @@ start_icon_drag:
         lda     drag_drop_param
         beq     desktop
 
+process_drop:
         jsr     jt_drop
 
         ;; Failed?
@@ -3960,6 +3971,7 @@ L5E77:  .byte   0
 .endproc
         handle_file_icon_click := handle_file_icon_click_impl::start
         swap_in_desktop_icon_table := handle_file_icon_click_impl::swap_in_desktop_icon_table
+        process_drop := handle_file_icon_click_impl::process_drop
 
 ;;; ============================================================
 
