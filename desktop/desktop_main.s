@@ -886,8 +886,9 @@ begin:
         rts
 
         ;; Check file type.
-:       lda     get_file_info_params::file_type
-        ldxy    get_file_info_params::aux_type
+:       copy    get_file_info_params::file_type, fto_type
+        copy16  get_file_info_params::aux_type, fto_auxtype
+        copy16  get_file_info_params::blocks_used, fto_blocks
         jsr     check_file_type_overrides
 
         cmp     #FT_BASIC
@@ -6665,16 +6666,11 @@ L7767:  .byte   $14
         beq     is_generic      ; treat as generic
 
         ;; Handle several classes of overrides
-        pha                     ; Load auxtype into X,Y
+        sta     fto_type
         ldy     #FileRecord::aux_type
-        lda     (file_entry),y  ; lo
-        pha
-        iny
-        lda     (file_entry),y  ; hi
-        tay                     ; hi
-        pla
-        tax                     ; lo
-        pla
+        copy16in (file_entry),y, fto_auxtype
+        ldy     #FileRecord::blocks
+        copy16in (file_entry),y, fto_blocks
         jsr     check_file_type_overrides
 
         cmp     #FT_SYSTEM      ; Other system?
@@ -6841,32 +6837,45 @@ file_type:
 ;;; ============================================================
 ;;; Check file type for possible overrides
 ;;; TODO: Make this data driven.
-;;; TODO: Also check length for BIN overrides.
 
-;;; Input: A is filetype, X,Y is auxtype
+;;; Input: fto_type, fto_auxtype, fto_blocks populated
 ;;; Output: A is filetype to use
 
 .proc check_file_type_overrides
-        stxy    auxtype
-
-        ;; Binary - treat certain auxtypes as Graphics
+        ;; Binary - treat certain auxtypes/sizes as Graphics
+        lda     fto_type
         cmp     #FT_BINARY
-        bne     :+
+        bne     check_da
+
         ldxy    #$5800          ; minipix
-        jsr     check_aux
+        jsr     compare_aux
+        bne     :+
+        ldxy    #3              ; blocks
+        jsr     compare_blocks
         beq     is_graphics
-        ldxy    #$2000          ; hires
-        jsr     check_aux
+:
+
+        ldxy    #$2000          ; hires / double hires
+        jsr     compare_aux
+        bne     :+
+        ldxy    #17             ; blocks
+        jsr     compare_blocks
         beq     is_graphics
+        ldxy    #33             ; blocks
+        jsr     compare_blocks
+        beq     is_graphics
+:
 
         ;; DA - treat as generic *unless* auxtypes are correct
-:       cmp     #DA_FILE_TYPE
+check_da:
+        lda     fto_type
+        cmp     #DA_FILE_TYPE
         bne     :+
         ldxy    #DA_AUX_TYPE
-        jsr     check_aux
+        jsr     compare_aux
         beq     :+
         ldxy    #DA_AUX_TYPE | $8000
-        jsr     check_aux
+        jsr     compare_aux
         bne     is_generic
 
 :       rts
@@ -6882,10 +6891,17 @@ is_graphics:
 auxtype:
         .word   0
 
-.proc check_aux
-        cpx     auxtype
+.proc compare_aux
+        cpx     fto_auxtype
         bne     :+
-        cpy     auxtype+1
+        cpy     fto_auxtype+1
+:       rts
+.endproc
+
+.proc compare_blocks
+        cpx     fto_blocks
+        bne     :+
+        cpy     fto_blocks+1
 :       rts
 .endproc
 

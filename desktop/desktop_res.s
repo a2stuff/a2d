@@ -1401,6 +1401,11 @@ date:   .word   0
 hex_digits:
         .byte   "0123456789ABCDEF"
 
+;;; Params for check_file_type_overrides
+fto_type:       .byte   0
+fto_auxtype:    .word   0
+fto_blocks:     .word   0
+
 ;;; --------------------------------------------------
 
         PAD_TO $ED00
