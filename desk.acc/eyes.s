@@ -53,8 +53,6 @@ da_top          = 50
 str_title:
         PASCAL_STRING "Eyes"
 
-;;; TODO: Allow resizing
-
 .proc winfo
 window_id:      .byte   da_window_id
 options:        .byte   MGTK::Option::go_away_box
