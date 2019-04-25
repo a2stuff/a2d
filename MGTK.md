@@ -740,7 +740,7 @@ Parameters:
 .addr       port            address of GrafPort to populate
 ```
 
-Returns `error_window_obscured` if the content area of the window is completely offscreen and drawing should be skipped. (The port rect will be invalid.)
+Returns `Error::window_obscured` if the content area of the window is completely offscreen and drawing should be skipped. (The port rect will be invalid.)
 
 
 #### SetWinPort ($3D)
@@ -974,7 +974,7 @@ _Notes specific to DeskTop Desk Accessories (DA) are included where usage differ
 #### Redraw window
 
 * `GetWinPort` - populate a local GrafPort with an appropriately clipped port
-* if `error_window_obscured` is returned, abort these steps (port will be invalid)
+* if `Error::window_obscured` is returned, abort these steps (port will be invalid)
 * `SetPort` - make it current
 * optional: `HideCursor` - if multiple drawing calls will be made
 * ... draw ...

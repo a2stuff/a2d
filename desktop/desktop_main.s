@@ -297,6 +297,8 @@ bail:   rts
 
         copy    active_window_id, getwinport_params2::window_id
         jsr     get_port2
+        cmp     #MGTK::Error::window_obscured
+        beq     done
         jsr     offset_grafport2_and_set
 
         COPY_BLOCK grafport2::cliprect, tmp_rect
