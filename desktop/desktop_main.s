@@ -4223,9 +4223,11 @@ L60D5:  jsr     push_pointers
 ;;; ============================================================
 
 .proc handle_title_click
-        jmp     L60DE
+        ptr := $06
 
-L60DE:  lda     active_window_id
+        jmp     :+
+
+:       lda     active_window_id
         sta     event_params
         MGTK_RELAY_CALL MGTK::FrontWindow, active_window_id
         lda     active_window_id
@@ -4233,53 +4235,54 @@ L60DE:  lda     active_window_id
         MGTK_RELAY_CALL MGTK::DragWindow, event_params
         lda     active_window_id
         jsr     window_lookup
-        stax    $06
-        ldy     #$16
-        lda     ($06),y
-        cmp     #$19
-        bcs     L6112
+        stax    ptr
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::ycoord
+        lda     (ptr),y
+        cmp     #$19            ; ???
+        bcs     :+
         lda     #$19
-        sta     ($06),y
-L6112:  ldy     #$14
+        sta     (ptr),y
 
-        sub16in ($06),y, port_copy+MGTK::GrafPort::viewloc+MGTK::Point::xcoord, L6197
+:       ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::xcoord
+        sub16in (ptr),y, port_copy+MGTK::GrafPort::viewloc+MGTK::Point::xcoord, deltax
         iny
-        sub16in ($06),y, port_copy+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, L6199
+        sub16in (ptr),y, port_copy+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, deltay
 
         ldx     active_window_id
         dex
         lda     win_view_by_table,x
-        beq     L6143           ; view by icon
+        beq     :+           ; view by icon
         rts
 
-L6143:  copy    active_window_id, cached_window_id
+        ;; Update icon positions
+:       copy    active_window_id, cached_window_id
         jsr     LoadWindowIconTable
-        ldx     #$00
-L614E:  cpx     cached_window_icon_count
-        bne     L6161
+        ldx     #0
+next:   cpx     cached_window_icon_count
+        bne     :+
         jsr     StoreWindowIconTable
         copy    #0, cached_window_id
         jsr     LoadWindowIconTable
-        jmp     L6196
+        jmp     done
 
-L6161:  txa
+:       txa
         pha
         lda     cached_window_icon_list,x
         jsr     icon_entry_lookup
-        stax    $06
-        ldy     #$03
-        add16in ($06),y, L6197, ($06),y
+        stax    ptr
+        ldy     #IconEntry::iconx
+        add16in (ptr),y, deltax, (ptr),y
         iny
-        add16in ($06),y, L6199, ($06),y
+        add16in (ptr),y, deltay, (ptr),y
         pla
         tax
         inx
-        jmp     L614E
+        jmp     next
 
-L6196:  rts
+done:   rts
 
-L6197:  .word   0
-L6199:  .word   0
+deltax: .word   0
+deltay: .word   0
 
 .endproc
 
