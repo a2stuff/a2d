@@ -77,7 +77,7 @@ file, then select the appropriate command from the Apple menu.
 * Startup menu will include Slot 2. (#106)
 * Correct odd behavior for file type $08. (#103)
 * New Folder/Rename file dialog no longer truncated after IP. (#118)
-* Correct rendering issues with desktop volume icons. (#117)
+* Correct rendering issues with desktop volume icons. (#117, #152)
 * Prevent occasional rectangle drawn on desktop after window close. (#120)
 * Empty directories can be copied/moved. (#121)
 * Ctrl+Reset quits cleanly back to ProDOS (except buggy emulators). (#141)
