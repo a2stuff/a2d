@@ -2558,8 +2558,7 @@ pt2:    DEFINE_POINT 0,0,pt2
 pt3:    DEFINE_POINT 0,0,pt3
 pt4:    DEFINE_POINT 0,0,pt4
 
-xcoord:  .word   0
-ycoord:  .word   0
+bounds:     DEFINE_RECT 0,0,0,0, bounds
 
 stash_r: .word   0
 
@@ -2674,23 +2673,45 @@ do_pt:  lda     pt_num
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
         beq     next_pt
-        lda     findwindow_params::window_id
-        sta     getwinport_params
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
 
         ;; --------------------------------------------------
         ;; Compute window edges (including non-content area)
 
+        ;; Uses Winfo's port's viewloc as window location, Winfo's port's
+        ;; cliprect as size. GetWinPort result is invalid if obscured.
+
         ;; Window edges
-        win_l := icon_grafport::viewloc::xcoord
-        win_t := icon_grafport::viewloc::ycoord
-        win_r := xcoord
-        win_b := ycoord
+        win_l := bounds::x1
+        win_t := bounds::y1
+        win_r := bounds::x2
+        win_b := bounds::y2
 
         jsr     push_pointers
 
         MGTK_CALL MGTK::GetWinPtr, findwindow_params::window_id
         copy16  window_ptr, ptr
+
+        ;; Left/Top
+        ldx     #.sizeof(MGTK::Point)-1
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + .sizeof(MGTK::Point)-1
+:       lda     (ptr),y
+        sta     win_l,x
+        dey
+        dex
+        bpl     :-
+
+        ;; Width/Height
+        ldx     #.sizeof(MGTK::Point)-1
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::x2 + .sizeof(MGTK::Point)-1
+:       lda     (ptr),y
+        sta     win_r,x
+        dey
+        dex
+        bpl     :-
+
+        ;; Make absolute
+        add16   win_r, win_l, win_r
+        add16   win_b, win_t, win_b
 
         ;; Check window properties
         ldy     #MGTK::Winfo::options
@@ -2717,13 +2738,10 @@ do_pt:  lda     pt_num
         ;; window's bounds, but aren't consistently so. ???
 
         ;; 1px implicit left borders, and move 1px beyond bounds ???
-        ;; win_l -= 2
-        ;; icon_grafport::cliprect::x1 -= 2
         sub16   win_l, #2, win_l
-        sub16   icon_grafport::cliprect::x1, #2, icon_grafport::cliprect::x1
 
         ;; 1px implicit bottom border
-        add16   icon_grafport::cliprect::y2, #1, icon_grafport::cliprect::y2
+        add16   win_b, #1, win_b
         ;; TODO: 1px implicit right border?
 
         kTitleBarHeight = 14    ; Should be 12? (But no visual bugs)
@@ -2734,73 +2752,32 @@ do_pt:  lda     pt_num
 
         ;; --------------------------------------------------
         ;; Adjust window rect to account for title bar
+
         ;; Is dialog? (i.e. no title bar)
         bit     dialogbox_flag
-        bmi     check_scrollbars
-
-        ;; viewloc::ycoord -= kTitleBarHeight
-        lda     win_t
-        sec
-        sbc     #kTitleBarHeight
-        sta     win_t
-        bcs     :+
-        dec     win_t+1
-:
-
-        ;; cliprect::y1 -= kTitleBarHeight
-        lda     icon_grafport::cliprect::y1
-        sec
-        sbc     #kTitleBarHeight
-        sta     icon_grafport::cliprect::y1
-        bcs     :+
-        dec     icon_grafport::cliprect::y1+1
+        bmi     :+
+        sub16   win_t, #kTitleBarHeight, win_t
 :
 
         ;; --------------------------------------------------
         ;; Adjust window rect to account for scroll bars
 
-check_scrollbars:
         ;; Horizontal scrollbar?
         bit     scrollbar_flags
         bpl     :+
-
-        ;; cliprect::y2 += kScrollBarHeight
-        lda     icon_grafport::cliprect::y2
-        clc
-        adc     #kScrollBarHeight
-        sta     icon_grafport::cliprect::y2
-        bcc     :+
-        inc     icon_grafport::cliprect::y2+1
+        add16   win_r, #kScrollBarWidth, win_r
+:
 
         ;; Vertical scrollbar?
-:       bit     scrollbar_flags
+        bit     scrollbar_flags
         bvc     :+
-
-        ;; cliprect::x2 += kScrollBarWidth
-        lda     icon_grafport::cliprect::x2
-        clc
-        adc     #kScrollBarWidth
-        sta     icon_grafport::cliprect::x2
-        bcc     :+
-        inc     icon_grafport::cliprect::x2+1
-
-:       jsr     pop_pointers
+        add16   win_b, #kScrollBarHeight, win_b
+:
 
         ;; --------------------------------------------------
 
-        ;; Compute width/height
-        ;; win_r = cliprect::x2 - cliprect::x1
-        sub16   icon_grafport::cliprect::x2, icon_grafport::cliprect::x1, win_r
+        jsr     pop_pointers
 
-        ;; win_b = cliprect::y2 - cliprect::y1
-        sub16   icon_grafport::cliprect::y2, icon_grafport::cliprect::y1, win_b
-
-        ;; Make absolute
-        ;; win_r += win_l
-        add16   win_r, win_l, win_r
-
-        ;; win_b += win_t
-        add16   win_b, win_t, win_b
 
         ;; ==================================================
         ;; At this point, win_r/t/l/b are the window edges,
