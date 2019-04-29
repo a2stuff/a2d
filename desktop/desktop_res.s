@@ -1401,10 +1401,65 @@ date:   .word   0
 hex_digits:
         .byte   "0123456789ABCDEF"
 
+;;; --------------------------------------------------
+
 ;;; Params for check_file_type_overrides
 fto_type:       .byte   0
 fto_auxtype:    .word   0
 fto_blocks:     .word   0
+
+;;; Data-driven remapping of file types - used for icons, open/preview, etc.
+;;;
+;;; The incoming type is compared (using a mask) against a type, and
+;;; optionally auxtype and block count. If matched, a replacement type
+;;; is used. All entries are processed, even if a match was found. This
+;;; allows inverted matches.
+
+.struct FTORecord               ; Offset
+        mask    .byte           ; 0     incoming type masked before comparison
+        type    .byte           ; 1     type for the record (must match)
+        flags   .byte           ; 2     bit 7 = compare aux; 6 = compare blocks
+        aux     .word           ; 3     optional aux type
+        blocks  .word           ; 5     optional block count
+        newtype .byte           ; 7     replacement type
+.endstruct
+.macro DEFINE_FTORECORD mask, type, flags, aux, blocks, newtype
+        .byte   mask
+        .byte   type
+        .byte   flags
+        .word   aux
+        .word   blocks
+        .byte   newtype
+.endmacro
+        FTO_FLAGS_NONE   = %00000000
+        FTO_FLAGS_AUX    = %10000000
+        FTO_FLAGS_BLOCKS = %01000000
+
+fto_table_record_size = 8
+fto_table:
+        DEFINE_FTORECORD $FF, FT_BAD, FTO_FLAGS_NONE, 0, 0, FT_TYPELESS ; Reserve BAD for tmp
+
+        ;; Desk Accessories/Applets
+        DEFINE_FTORECORD $FF, DA_FILE_TYPE, FTO_FLAGS_NONE, 0, 0, FT_BAD ; Remap $F1 by default...
+        DEFINE_FTORECORD $FF, FT_BAD, FTO_FLAGS_AUX, $640, 0, DA_FILE_TYPE ; Restore $F1/$0640 as DA
+        DEFINE_FTORECORD $FF, FT_BAD, FTO_FLAGS_AUX, $8640, 0, DA_FILE_TYPE ; Restore $F1/$8640 as DA
+        DEFINE_FTORECORD $FF, FT_BAD, FTO_FLAGS_NONE, 0, 0, FT_TYPELESS ; Reserve BAD for tmp
+
+        ;; Graphics Files
+        DEFINE_FTORECORD $FF, FT_BINARY, FTO_FLAGS_AUX|FTO_FLAGS_BLOCKS, $2000, 17, FT_GRAPHICS ; HR image as FOT
+        DEFINE_FTORECORD $FF, FT_BINARY, FTO_FLAGS_AUX|FTO_FLAGS_BLOCKS, $2000, 33, FT_GRAPHICS ; DHR image as FOT
+        DEFINE_FTORECORD $FF, FT_BINARY, FTO_FLAGS_AUX|FTO_FLAGS_BLOCKS, $5800, 3,  FT_GRAPHICS ; Minipix as FOT
+
+        ;; Applications
+        DEFINE_FTORECORD $FF, FT_S16, FTO_FLAGS_NONE, 0, 0, APP_FILE_TYPE ; IIgs System => "App"
+
+        ;; IIgs-Specific Files (ranges)
+        DEFINE_FTORECORD $F0, $50, FTO_FLAGS_NONE, 0, 0, FT_SRC ; IIgs General  => SRC
+        DEFINE_FTORECORD $F0, $A0, FTO_FLAGS_NONE, 0, 0, FT_SRC ; IIgs BASIC    => SRC
+        DEFINE_FTORECORD $F0, $B0, FTO_FLAGS_NONE, 0, 0, FT_SRC ; IIgs System   => SRC
+        DEFINE_FTORECORD $F0, $C0, FTO_FLAGS_NONE, 0, 0, FT_SRC ; IIgs Graphics => SRC
+
+        .byte   0               ; sentinel at end of table
 
 ;;; --------------------------------------------------
 
@@ -1463,6 +1518,9 @@ type_names_table:
 ;;;
 ;;; Similarly, IIgs-specific types ($5x, $Ax-$Cx) are all
 ;;; mapped to $B0 (SRC).
+
+        .assert FT_BAD = APP_FILE_TYPE, error, "Mismatched file type remapping"
+
 
 icon_type_table:
         .byte   icon_entry_type_generic ; typeless

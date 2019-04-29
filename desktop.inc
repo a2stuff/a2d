@@ -15,6 +15,8 @@ VERSION_MINOR = 2
 DA_FILE_TYPE    = $F1
 DA_AUX_TYPE     = $640          ; High bit set = don't show in Apple menu
 
+APP_FILE_TYPE   = $01           ; FT_SYS w/ ".SYSTEM" (FT_BAD mapped to FT_TYPELESS)
+
 max_desk_acc_count = 12
 
 INVOKER                 := $290 ; Invoke other programs

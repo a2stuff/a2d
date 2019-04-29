@@ -909,7 +909,7 @@ begin:
 :       cmp     #FT_SYSTEM
         beq     launch
 
-        cmp     #FT_S16
+        cmp     #APP_FILE_TYPE
         beq     launch
 
         cmp     #FT_GRAPHICS
@@ -6650,26 +6650,6 @@ L7767:  .byte   $14
         ldy     #FileRecord::file_type
         lda     (file_entry),y
 
-        cmp     #FT_S16         ; IIgs System?
-        beq     is_app
-
-        ;; Map other IIgs-specific types to one icon
-        tax
-        and     #$F0            ; high nibble
-        cmp     #$50            ; $5x Types: Apple IIgs General
-        beq     is_iigs
-        cmp     #$A0            ; $Ax Types: Apple IIgs BASIC
-        beq     is_iigs
-        cmp     #$B0            ; $Bx Types: Apple IIgs System
-        beq     is_iigs
-        cmp     #$C0            ; $Cx Types: Graphics
-        beq     is_iigs
-        txa
-
-        ;; FT_BAD is overloaded, so use generic
-        cmp     #FT_BAD         ; T$01 is overloaded below for "apps", so
-        beq     is_generic      ; treat as generic
-
         ;; Handle several classes of overrides
         sta     fto_type
         ldy     #FileRecord::aux_type
@@ -6678,11 +6658,11 @@ L7767:  .byte   $14
         copy16in (file_entry),y, fto_blocks
         jsr     check_file_type_overrides
 
-        cmp     #FT_SYSTEM      ; Other system?
-        bne     got_type        ; nope
-
         ;; Distinguish *.SYSTEM files as apps (use $01) from other
         ;; type=SYS files (use $FF).
+        cmp     #FT_SYSTEM
+        bne     got_type
+
         ldy     #FileRecord::name
         lda     (file_entry),y
         tay
@@ -6697,15 +6677,7 @@ cloop:  lda     (file_entry),y
         bne     cloop
 
 is_app:
-        lda     #FT_BAD         ; overloaded meaning in icon tables
-        bne     got_type        ; always
-
-is_generic:
-        lda     #FT_TYPELESS
-        beq     got_type        ; always
-
-is_iigs:
-        lda     #FT_SRC
+        lda     #APP_FILE_TYPE  ; overloaded meaning in icon tables
         bne     got_type        ; always
 
 str_sys_suffix:
@@ -6841,74 +6813,68 @@ file_type:
 
 ;;; ============================================================
 ;;; Check file type for possible overrides
-;;; TODO: Make this data driven.
 
 ;;; Input: fto_type, fto_auxtype, fto_blocks populated
-;;; Output: A is filetype to use
+;;; Output: A is filetype to use (for icons, open/preview, etc)
 
 .proc check_file_type_overrides
-        ;; Binary - treat certain auxtypes/sizes as Graphics
+        ptr := $06
+
+        jsr     push_pointers
+        copy16  #fto_table, ptr
+
+loop:   ldy     #0              ; type_mask, or $00 if done
+        lda     (ptr),y
+        bne     :+
+        jsr     pop_pointers
         lda     fto_type
-        cmp     #FT_BINARY
-        bne     check_da
-
-        ldxy    #$5800          ; minipix
-        jsr     compare_aux
-        bne     :+
-        ldxy    #3              ; blocks
-        jsr     compare_blocks
-        beq     is_graphics
-:
-
-        ldxy    #$2000          ; hires / double hires
-        jsr     compare_aux
-        bne     :+
-        ldxy    #17             ; blocks
-        jsr     compare_blocks
-        beq     is_graphics
-        ldxy    #33             ; blocks
-        jsr     compare_blocks
-        beq     is_graphics
-:
-
-        ;; DA - treat as generic *unless* auxtypes are correct
-check_da:
-        lda     fto_type
-        cmp     #DA_FILE_TYPE
-        bne     :+
-        ldxy    #DA_AUX_TYPE
-        jsr     compare_aux
-        beq     :+
-        ldxy    #DA_AUX_TYPE | $8000
-        jsr     compare_aux
-        bne     is_generic
-
-:       rts
-
-is_generic:
-        lda     #FT_TYPELESS
         rts
 
-is_graphics:
-        lda     #FT_GRAPHICS
-        rts
+        ;; Check type (with mask)
+:       and     fto_type        ; A = type & type_mask
+        iny                     ; ASSERT: Y = FTORecord::type
+        cmp     (ptr),y         ; type check
+        bne     next
 
-auxtype:
-        .word   0
+        ;; Flags
+        iny                     ; ASSERT: Y = FTORecord::flags
+        lda     (ptr),y
+        sta     flags
 
-.proc compare_aux
-        cpx     fto_auxtype
-        bne     :+
-        cpy     fto_auxtype+1
-:       rts
-.endproc
+        ;; Does Aux Type matter, and if so does it match?
+        bit     flags
+        bpl     blocks          ; bit 7 = compare aux
+        iny                     ; ASSERT: Y = FTORecord::aux
+        lda     fto_auxtype
+        cmp     (ptr),y
+        bne     next
+        iny
+        lda     fto_auxtype+1
+        cmp     (ptr),y
+        bne     next
 
-.proc compare_blocks
-        cpx     fto_blocks
-        bne     :+
-        cpy     fto_blocks+1
-:       rts
-.endproc
+        ;; Does Block Count matter, and if so does it match?
+blocks: bit     flags
+        bvc     match           ; bit 6 = compare blocks
+        ldy     #FTORecord::blocks
+        lda     fto_blocks
+        cmp     (ptr),y
+        bne     next
+        iny
+        lda     fto_blocks+1
+        cmp     (ptr),y
+        bne     next
+
+        ;; Have a match
+match:  ldy     #FTORecord::newtype
+        lda     (ptr),y
+        sta     fto_type
+
+        ;; Next entry
+next:   add16   ptr, #.sizeof(FTORecord), ptr
+        jmp     loop
+
+flags:  .byte   0
 
 .endproc
 
