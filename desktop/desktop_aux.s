@@ -3110,7 +3110,7 @@ label_quit:
         PASCAL_STRING "Quit"
 
 label_by_icon:
-        PASCAL_STRING "by Icon"
+        PASCAL_STRING "as Icons"
 label_by_name:
         PASCAL_STRING "by Name"
 label_by_date:
