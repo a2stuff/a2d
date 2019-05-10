@@ -354,17 +354,16 @@ dispatch_table:
         ;; File menu (2)
         menu2_start := *
         .addr   cmd_new_folder
-        .addr   cmd_noop        ; --------
         .addr   cmd_open
         .addr   cmd_close
         .addr   cmd_close_all
         .addr   cmd_select_all
         .addr   cmd_noop        ; --------
-        .addr   cmd_copy_file
-        .addr   cmd_delete_file
-        .addr   cmd_noop        ; --------
         .addr   cmd_get_info
         .addr   cmd_rename_icon
+        .addr   cmd_noop        ; --------
+        .addr   cmd_copy_file
+        .addr   cmd_delete_file
         .addr   cmd_noop        ; --------
         .addr   cmd_quit
 
@@ -454,10 +453,7 @@ handle_keydown:
         jmp     cmd_higlight
 :       bit     flag
         bpl     menu_accelerators
-        cmp     #'W'            ; OA-W (Activate Window)
-        bne     :+
-        jmp     cmd_activate
-:       cmp     #'G'            ; OA-G (Resize)
+        cmp     #'G'            ; OA-G (Resize)
         bne     :+
         jmp     cmd_resize
 :       cmp     #'M'            ; OA-M (Move)
@@ -2917,82 +2913,6 @@ L56F8:  .byte   0
         sta     getwinport_params2::window_id
         jsr     get_port2
         jmp     offset_grafport2_and_set
-.endproc
-
-;;; ============================================================
-;;; Handle keyboard-based window activation
-
-.proc cmd_activate
-        lda     active_window_id
-        bne     L5708
-        rts
-
-L5708:  sta     $800
-        ldy     #$01
-        ldx     #0
-L570F:  lda     window_to_dir_icon_table,x
-        beq     L5720           ; 0 = window free
-        inx
-        cpx     active_window_id
-        beq     L5721
-        txa
-        dex
-        sta     $800,y
-        iny
-L5720:  inx
-L5721:  cpx     #$08
-        bne     L570F
-        sty     L578D
-        cpy     #$01
-        bne     L572D
-        rts
-
-L572D:  copy    #0, L578C
-L5732:  jsr     get_event
-        lda     event_kind
-        cmp     #MGTK::EventKind::key_down
-        beq     L5743
-        cmp     #MGTK::EventKind::button_down
-        bne     L5732
-        jmp     L578B
-
-L5743:  lda     event_key
-        and     #CHAR_MASK
-        cmp     #CHAR_RETURN
-        beq     L578B
-        cmp     #CHAR_ESCAPE
-        beq     L578B
-        cmp     #CHAR_LEFT
-        beq     L5772
-        cmp     #CHAR_RIGHT
-        bne     L5732
-        ldx     L578C
-        inx
-        cpx     L578D
-        bne     L5763
-        ldx     #$00
-L5763:  stx     L578C
-        lda     $800,x
-        sta     findwindow_window_id
-        jsr     handle_inactive_window_click
-        jmp     L5732
-
-L5772:  ldx     L578C
-        dex
-        bpl     L577C
-        ldx     L578D
-        dex
-L577C:  stx     L578C
-        lda     $800,x
-        sta     findwindow_window_id
-        jsr     handle_inactive_window_click
-        jmp     L5732
-
-L578B:  rts
-
-L578C:  .byte   0
-L578D:  .byte   0
-
 .endproc
 
 ;;; ============================================================

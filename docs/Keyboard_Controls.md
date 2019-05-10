@@ -9,7 +9,6 @@ with the keyboard.
 
 ## Windows
 
-* △-W - Activate window; Left/Right Arrows to navigate
 * △-G - Resize window; Arrows to resize, Return to finish
 * △-M - Move window; Arrows to move, Return to finish
 * △-X - Scroll contents; Arrows to scroll, Esc or Return when done
@@ -30,16 +29,15 @@ with the keyboard.
 __File Menu__
 * △-F - New Folder
 * △-O - Open
-* △-C - Close
-* △-B - Close All
+* △-W - Close
 * △-A - Select All
+* △-I - Get Info
 * △-Y - Copy a File
 * △-D - Delete a File
-* △-I - Get Info
 * △-Q - Quit
 
 __View Menu__
-* △-J - View By Icon
+* △-J - View As Icons
 * △-N - View By Name
 * △-T - View By Date
 * △-K - View By Size

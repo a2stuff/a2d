@@ -3095,7 +3095,7 @@ label_new_folder:
 label_open:
         PASCAL_STRING "Open"
 label_close:
-        PASCAL_STRING "Close"
+        PASCAL_STRING "Close Window"
 label_close_all:
         PASCAL_STRING "Close All"
 label_select_all:
@@ -3151,36 +3151,34 @@ desktop_menu:
         DEFINE_MENU_BAR_ITEM menu_id_selector, label_selector, selector_menu
 
 file_menu:
-        DEFINE_MENU 14
+        DEFINE_MENU 13
         DEFINE_MENU_ITEM label_new_folder, 'F', 'f'
-        DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_open, 'O', 'o'
-        DEFINE_MENU_ITEM label_close, 'C', 'c'
-        DEFINE_MENU_ITEM label_close_all, 'B', 'b'
+        DEFINE_MENU_ITEM label_close, 'W', 'w'
+        DEFINE_MENU_ITEM label_close_all
         DEFINE_MENU_ITEM label_select_all, 'A', 'a'
-        DEFINE_MENU_SEPARATOR
-        DEFINE_MENU_ITEM label_copy_file, 'Y', 'y'
-        DEFINE_MENU_ITEM label_delete_file, 'D', 'd'
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_get_info, 'I', 'i'
         DEFINE_MENU_ITEM label_rename_icon
         DEFINE_MENU_SEPARATOR
+        DEFINE_MENU_ITEM label_copy_file, 'Y', 'y'
+        DEFINE_MENU_ITEM label_delete_file, 'D', 'd'
+        DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_quit, 'Q', 'q'
 
         menu_item_id_new_folder   = 1
+        menu_item_id_open         = 2
+        menu_item_id_close        = 3
+        menu_item_id_close_all    = 4
+        menu_item_id_select_all   = 5
         ;; --------------------
-        menu_item_id_open         = 3
-        menu_item_id_close        = 4
-        menu_item_id_close_all    = 5
-        menu_item_id_select_all   = 6
+        menu_item_id_get_info     = 7
+        menu_item_id_rename_icon  = 8
         ;; --------------------
-        menu_item_id_copy_file    = 8
-        menu_item_id_delete_file  = 9
+        menu_item_id_copy_file    = 10
+        menu_item_id_delete_file  = 11
         ;; --------------------
-        menu_item_id_get_info     = 11
-        menu_item_id_rename_icon  = 12
-        ;; --------------------
-        menu_item_id_quit         = 14
+        menu_item_id_quit         = 13
 
 view_menu:
         DEFINE_MENU 5
