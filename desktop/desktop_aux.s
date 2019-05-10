@@ -2854,7 +2854,7 @@ vert:   cmp16   win_t, cr_t
         ;; if (win_r < stash_r)
         ;; . cr_l = win_r + 2
         ;; . vx   = win_r + 2
-        ;; . cr_r = stash_r
+        ;; . cr_r = stash_r + 2 (workaround for https://github.com/inexorabletash/a2d/issues/153)
 :       cmp16   win_r, stash_r
         bpl     :+
 
@@ -2867,7 +2867,7 @@ vert:   cmp16   win_t, cr_t
         adc     #0
         sta     cr_l+1
         sta     vx+1
-        copy16  stash_r, cr_r
+        add16   stash_r, #2, cr_r
         jmp     reclip
 
         ;; Case 5 - done!
