@@ -7,6 +7,12 @@ with the keyboard.
 
 ▲ = Solid Apple
 
+## Mouse Keys
+
+* To enter Mouse Keys mode, hold down △ and then press and release ▲.
+* While holding △  down, you can you can navigate the cursor with the Arrow keys, and click using ▲.
+* To exit Mouse Keys mode, release △.
+
 ## Windows
 
 * △-G - Resize window; Arrows to resize, Return to finish
