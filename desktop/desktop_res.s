@@ -1401,6 +1401,14 @@ date:   .word   0
 hex_digits:
         .byte   "0123456789ABCDEF"
 
+;;; Parent window to close after an Open action
+window_id_to_close:
+        .byte   0
+
+;;; High bit set if menu dispatch via keyboard accelerator, clear otherwise.
+menu_kbd_flag:
+        .byte   0
+
 ;;; --------------------------------------------------
 
 ;;; Params for check_file_type_overrides

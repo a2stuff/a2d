@@ -11,6 +11,8 @@
 * The Sort Directory desk accessory has two modes:
     * If any files are selected, these are moved to the start of the directory listing, in selection order; other files appear after, order unchanged.
     * If no files are selected, all files are sorted by type: DIR, then TXT, then SYS, then others in descending (numeric) order.
+* Hold down **△** or **▲** when opening a folder using double-click or **File > Open** to close the parent folder.
+    * Note: Does not work with the **△O** shortcut.
 
 
 # File Types

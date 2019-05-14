@@ -477,6 +477,7 @@ menu_accelerators:
         beq     :+
         lda     #1
 :       sta     LE25D
+        copy    #$80, menu_kbd_flag ; note that source is keyboard
         MGTK_RELAY_CALL MGTK::MenuKey, menu_click_params
 
 menu_dispatch2:
@@ -536,6 +537,7 @@ call_proc:
 not_desktop:
         cmp     #MGTK::Area::menubar  ; menu?
         bne     not_menu
+        copy    #0, menu_kbd_flag ; note that source is not keyboard
         MGTK_RELAY_CALL MGTK::MenuSelect, menu_click_params
         jmp     menu_dispatch2
 
@@ -549,6 +551,7 @@ not_menu:
 .endproc
 
 ;;; ============================================================
+;;; Inputs: MGTK::Area pushed to stack
 
 .proc handle_active_window_click
         pla
@@ -570,6 +573,7 @@ not_menu:
 .endproc
 
 ;;; ============================================================
+;;; Inputs: window_id to activate in findwindow_window_id
 
 .proc handle_inactive_window_click
         ptr := $6
@@ -1787,9 +1791,28 @@ L4D9D:  pha
 .endproc
 
 ;;; ============================================================
+;;; Helper for "Open" actions - if Apple-key is down, record
+;;; the parent window to close.
+
+.proc set_window_to_close_after_open
+        lda     BUTN0           ; Modifier down?
+        ora     BUTN1
+        bmi     :+              ; Yep
+
+        lda     #0
+        beq     store           ; always
+:       lda     selected_window_index
+store:  sta     window_id_to_close
+        rts
+.endproc
+
+;;; ============================================================
 
 .proc cmd_open
         ptr := $06
+
+        ;; Source window to close?
+        jsr     set_window_to_close_after_open
 
         ldx     #0
         stx     dir_count
@@ -1801,6 +1824,12 @@ L4DEC:  cpx     selected_icon_count
         lda     dir_count
         beq     done
         jsr     clear_selection
+
+        ;; Close previous active window, depending on source/modifiers
+        bit     menu_kbd_flag   ; If keyboard (Apple-O) ignore. (see issue #9)
+        bmi     done            ; Yep, ignore.
+        jsr     close_window_after_open
+
 done:   rts
 
 :       txa
@@ -1883,6 +1912,26 @@ L4E71:  .byte   0
         ;; selection must be cleared before finishing.
 dir_count:
         .byte   0
+
+last_active_window_id:
+        .byte   0
+.endproc
+
+;;; ============================================================
+;;; Close parent window after open, if needed. Done by activating then closing.
+;;; Modifies findwindow_window_id
+
+.proc close_window_after_open
+        lda     window_id_to_close
+        beq     done
+
+        pha
+        sta     findwindow_window_id
+        jsr     handle_inactive_window_click
+        pla
+        jsr     close_window
+
+done:   rts
 .endproc
 
 ;;; ============================================================
@@ -3823,6 +3872,9 @@ L5DF7:  ldx     saved_stack
         rts
 
 handle_double_click:
+        ;; Source window to close?
+        jsr     set_window_to_close_after_open
+
         lda     icon_num           ; after a double-click (on file or folder)
         jsr     icon_entry_lookup
         stax    $06
@@ -3839,7 +3891,11 @@ handle_double_click:
         lda     icon_num
         jsr     open_folder_or_volume_icon
         bmi     done
-        jmp     swap_in_desktop_icon_table
+        jsr     swap_in_desktop_icon_table
+
+        ;; If Option (Solid-Apple) key is down, close previous window.
+        jsr     close_window_after_open
+
 done:   rts
 
         ;; File (executable or data)
@@ -14146,9 +14202,11 @@ loop:   dec     counter
         jmp     loop
 
 :       cmp     #MGTK::EventKind::button_down
+        beq     :+
+        cmp     #MGTK::EventKind::apple_key ; modified-click
         bne     exit
 
-        MGTK_RELAY_CALL MGTK::GetEvent, event_params
+:       MGTK_RELAY_CALL MGTK::GetEvent, event_params
         return  #0              ; double-click
 
 exit:   return  #$FF            ; not double-click
