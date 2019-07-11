@@ -666,7 +666,6 @@ window_title:
 init:   sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
-        MGTK_CALL MGTK::SetZP1, preserve_zp_params
         MGTK_CALL MGTK::OpenWindow, winfo
         MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport
@@ -696,8 +695,9 @@ loop:   lda     adjust_txtptr_copied-1,x
         bne     loop
 .endproc
 
-        lda     #0              ; Turn off errors
-        sta     ERRFLG
+        lda     #0
+        sta     ERRFLG          ; Turn off errors
+        sta     SHIFT_SIGN_EXT  ; Zero before using FP ops
 
         copy16  #error_hook, COUT_HOOK ; set up FP error handler
 
@@ -772,7 +772,6 @@ ignore_click:
 exit:   MGTK_CALL MGTK::CloseWindow, closewindow_params
         DESKTOP_CALL DT_REDRAW_ICONS
         lda     ROMIN2
-        MGTK_CALL MGTK::SetZP1, overwrite_zp_params
 
 .proc do_close
         ;; Copy following routine to ZP and invoke it

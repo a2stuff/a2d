@@ -187,8 +187,6 @@ grow_box_bitmap:
         lda     LCBANK1
         lda     LCBANK1
 
-        ;; Don't let MGTK smash zero page
-        MGTK_CALL MGTK::SetZP1, preserve_zp_params
         lda     #0
         sta     SHIFT_SIGN_EXT  ; Must zero before using FP ops
 
@@ -214,7 +212,6 @@ grow_box_bitmap:
 .proc exit
         MGTK_CALL MGTK::CloseWindow, winfo
         DESKTOP_CALL DT_REDRAW_ICONS
-        MGTK_CALL MGTK::SetZP1, overwrite_zp_params
         rts
 .endproc
 

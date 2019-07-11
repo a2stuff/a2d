@@ -1559,10 +1559,7 @@ nope:   dex
         ;; Invoke it
         jsr     set_pointer_cursor
         jsr     reset_grafport3
-        ;;         MGTK_RELAY_CALL MGTK::SetZP1, zp_use_flag0
-        ;;         MGTK_RELAY_CALL MGTK::SetZP1, zp_use_flag1
         jsr     DA_LOAD_ADDRESS
-        ;;         MGTK_RELAY_CALL MGTK::SetZP1, zp_use_flag0
         lda     #0
         sta     running_da_flag
 
@@ -15542,7 +15539,6 @@ end:
         MGTK_RELAY_CALL MGTK::StartDeskTop, startdesktop_params
         jsr     desktop_main::set_mono_mode
         MGTK_RELAY_CALL MGTK::SetMenu, splash_menu
-        MGTK_RELAY_CALL MGTK::SetZP1, zp_use_flag0
         MGTK_RELAY_CALL MGTK::SetCursor, watch_cursor
         MGTK_RELAY_CALL MGTK::ShowCursor
         ;; fall through
