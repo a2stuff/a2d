@@ -803,14 +803,21 @@ char:   .byte   0
         rts
 :
 
-        ;; Is IIgs?
+        ;; Bank in ROM and do check
         lda     ROMIN2
-        sec
+        jsr     check
+        lda     LCBANK1
+        lda     LCBANK1
+        rts
+
+        ;; --------------------------------------------------
+        ;; Do the check (with ROM banked in)
+
+        ;; Is IIgs?
+check:  sec
         jsr     ID_BYTE_FE1F    ; Clears carry if IIgs
-        lda     LCBANK1
-        lda     LCBANK1
         bcs     :+              ; No, carry still set
-        sec
+        sec                     ; Yes, is a IIgs
         rts
 
         ;; Is IIc+?
@@ -819,10 +826,10 @@ char:   .byte   0
         lda     ID_BYTE_FBBF    ; $05 = IIc Plus
         cmp     #$05
         bne     done
-        sec
+        sec                     ; Yes, is a IIc+
         rts
 
-done:   clc
+done:   clc                     ; No - older layout
         rts
 .endproc
 
