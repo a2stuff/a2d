@@ -27,68 +27,67 @@ save_stack:  .byte   0
         tsx
         stx     save_stack
 
-        start   := call_init
-        end     := da_end
-        dest    := start
-
         ;; Copy the DA to AUX memory.
         lda     ROMIN2
         copy16  #start, STARTLO
-        copy16  #end, ENDLO
-        copy16  #dest, DESTINATIONLO
+        copy16  #da_end, ENDLO
+        copy16  #start, DESTINATIONLO
         sec                     ; main>aux
         jsr     AUXMOVE
 
-        ;; Invoke it.
-        copy16  #start, XFERSTARTLO
-        php
-        pla
-        ora     #$40            ; set overflow: use aux zp/stack
-        pha
-        plp
-        sec                     ; control main>aux
-        jmp     XFER
+        ;; Fall through
 .endproc
 
 ;;; ============================================================
 
+.proc init_da
+        ;; TODO: Should be unnecessary:
+        sta     ALTZPON
+        lda     LCBANK1
+        lda     LCBANK1
+
+        ;; Run DA from Aux
+        sta     RAMRDON
+        sta     RAMWRTON
+
+        jmp     init
+.endproc
+
+
 .proc exit_da
+        ;; Return to DeskTop running in Main
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+
+        ;; TODO: Should be unnecessary:
+        sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
+
         ldx     save_stack
         txs
         rts
 .endproc
 
 ;;; ============================================================
+;;; Used after a event_kind_drag is completed; redraws the window.
 
-call_init:
-        jmp     init
-
-        ;; Used after a event_kind_drag-and-drop is completed;
-        ;; redraws the window.
 .proc redraw_screen_and_window
 
-        ;; Redraw the desktop (by copying trampoline to ZP)
-        zp_routine := $20
-        COPY_BYTES sizeof_routine+1, routine, zp_routine
-        jsr     zp_routine
+        ;; Redraw DeskTop's windows.
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_REDRAW_ALL
+        sta     RAMRDON
+        sta     RAMWRTON
 
+        ;; Redraw DeskTop's icons.
         DESKTOP_CALL DT_REDRAW_ICONS
 
         ;;  Redraw window after event_kind_drag
         jsr     draw_content
         rts
 
-.proc routine
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_REDRAW_ALL
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
-.endproc
-        sizeof_routine = * - routine
 .endproc
 
 ;;; ============================================================
@@ -663,10 +662,7 @@ window_title:
 ;;; ==================================================
 ;;; DA Init
 
-init:   sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-        MGTK_CALL MGTK::OpenWindow, winfo
+init:   MGTK_CALL MGTK::OpenWindow, winfo
         MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::FlushEvents
@@ -769,24 +765,10 @@ ignore_click:
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::goaway
         beq     ignore_click
+
 exit:   MGTK_CALL MGTK::CloseWindow, closewindow_params
         DESKTOP_CALL DT_REDRAW_ICONS
-        lda     ROMIN2
-
-.proc do_close
-        ;; Copy following routine to ZP and invoke it
-        zp_routine := $20
-
-        COPY_BYTES sizeof_routine+1, routine, zp_routine
-        jmp     zp_routine
-
-.proc routine
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
         jmp     exit_da
-.endproc
-        sizeof_routine = * - routine       ; Can't use .sizeof before the .proc definition
-.endproc
 
 :       cmp     #MGTK::Area::dragbar ; Title bar?
         bne     ignore_click

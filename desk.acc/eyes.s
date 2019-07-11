@@ -16,9 +16,9 @@ entry:
 ;;; Copy the DA to AUX for easy bank switching
 .scope
         lda     ROMIN2
-        copy16  #$0800, STARTLO
+        copy16  #entry, STARTLO
         copy16  #da_end, ENDLO
-        copy16  #$0800, DESTINATIONLO
+        copy16  #entry, DESTINATIONLO
         sec                     ; main>aux
         jsr     AUXMOVE
         lda     LCBANK1
@@ -26,17 +26,17 @@ entry:
 .endscope
 
 .scope
-        ;; run the DA
+        ;; Run the DA
         sta     RAMRDON
         sta     RAMWRTON
         jsr     init
 
-        ;; tear down/exit
+        ;; TODO: Should be unnecessary:
         sta     ALTZPON
         lda     LCBANK1
         lda     LCBANK1
 
-        ;; back to main for exit
+        ;; Back to main for exit
         sta     RAMRDOFF
         sta     RAMWRTOFF
         rts
