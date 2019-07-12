@@ -9,8 +9,8 @@ screen_height   = 192
 
 VERSION_MAJOR = 1
 VERSION_MINOR = 2
-.define VERSION_SUFFIX "-alpha4"
-.define RELEASE_DATE "April 4, 2019"
+.define VERSION_SUFFIX "-alpha6"
+.define RELEASE_DATE "July 12, 2019"
 
 DA_FILE_TYPE    = $F1
 DA_AUX_TYPE     = $640          ; High bit set = don't show in Apple menu
