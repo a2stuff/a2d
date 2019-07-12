@@ -10,8 +10,6 @@
 
         .org $800
 
-adjust_txtptr := $B1
-
 ;;; ============================================================
 ;;; Start of the code
 
@@ -684,9 +682,9 @@ init:   MGTK_CALL MGTK::OpenWindow, winfo
         sta     calc_l
 
 .proc copy_to_b1
-        ldx     #sizeof_adjust_txtptr_copied + 4 ; should be just + 1 ?
-loop:   lda     adjust_txtptr_copied-1,x
-        sta     adjust_txtptr-1,x
+        ldx     #sizeof_chrget_routine + 4 ; should be just + 1 ?
+loop:   lda     chrget_routine-1,x
+        sta     CHRGET-1,x
         dex
         bne     loop
 .endproc
@@ -1202,7 +1200,7 @@ rts3:   rts
         jmp     reset_buffer1_and_state
 
 reparse:copy16  #text_buffer1, TXTPTR
-        jsr     adjust_txtptr
+        jsr     CHRGET
         jsr     CALL_FIN
 
 do_op:  pla
@@ -1506,8 +1504,7 @@ draw_title_bar:
         jmp     input_loop
 .endproc
 
-        ;; Following proc is copied to $B1
-PROC_AT adjust_txtptr_copied, $B1
+PROC_AT chrget_routine, $B1  ; CHRGET ("Constant expression expected" error if label used)
         dummy_addr := $EA60
 
 loop:   inc     TXTPTR
@@ -1527,94 +1524,43 @@ loop:   inc     TXTPTR
         sbc     #$D0            ; carry set if successful
 end:    rts
 END_PROC_AT
-        sizeof_adjust_txtptr_copied = .sizeof(adjust_txtptr_copied)
+        sizeof_chrget_routine = .sizeof(chrget_routine)
+
+.macro CALL_FP proc
+        pha
+        lda     ROMIN2
+        pla
+        jsr     proc
+        pha
+        lda     LCBANK1
+        lda     LCBANK1
+        pla
+        rts
+.endmacro
 
 
 CALL_FLOAT:
-        pha
-        lda     ROMIN2
-        pla
-        jsr     FLOAT
-        pha
-        lda     LCBANK1
-        lda     LCBANK1
-        pla
-        rts
+        CALL_FP FLOAT
 
 CALL_FADD:
-        pha
-        lda     ROMIN2
-        pla
-        jsr     FADD
-        pha
-        lda     LCBANK1
-        lda     LCBANK1
-        pla
-        rts
+        CALL_FP FADD
 
 CALL_FSUB:
-        pha
-        lda     ROMIN2
-        jsr     FSUB
-        pha
-        lda     LCBANK1
-        lda     LCBANK1
-        pla
-        rts
+        CALL_FP FSUB
 
 CALL_FMULT:
-        pha
-        lda     ROMIN2
-        pla
-        jsr     FMULT
-        pha
-        lda     LCBANK1
-        lda     LCBANK1
-        pla
-        rts
+        CALL_FP FMULT
 
 CALL_FDIV:
-        pha
-        lda     ROMIN2
-        pla
-        jsr     FDIV
-        pha
-        lda     LCBANK1
-        lda     LCBANK1
-        pla
-        rts
+        CALL_FP FDIV
 
 CALL_FIN:
-        pha
-        lda     ROMIN2
-        pla
-        jsr     FIN
-        pha
-        lda     LCBANK1
-        lda     LCBANK1
-        pla
-        rts
+        CALL_FP FIN
 
 CALL_FOUT:
-        pha
-        lda     ROMIN2
-        pla
-        jsr     FOUT
-        pha
-        lda     LCBANK1
-        lda     LCBANK1
-        pla
-        rts
+        CALL_FP FOUT
 
 CALL_ROUND:
-        pha
-        lda     ROMIN2
-        pla
-        jsr     ROUND
-        pha
-        lda     LCBANK1
-        lda     LCBANK1
-        pla
-        rts
+        CALL_FP ROUND
 
 da_end := *

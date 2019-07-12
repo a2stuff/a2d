@@ -78,6 +78,7 @@ ID_BYTE_FE1F    := $FE1F        ; RTS ($60) on pre-IIgs, clears carry on IIgs
 
 LINNUM          := $50          ; Line number, unsigned word
 ERRFLG          := $D8
+CHRGET          := $B1          ; Routine called by ROM
 TXTPTR          := $B8
 FAC             := $9D
 SHIFT_SIGN_EXT  := $A4          ; Zero before using FP ops
