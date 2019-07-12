@@ -9559,6 +9559,7 @@ open:   MLI_RELAY_CALL OPEN, open_params
 :       MLI_RELAY_CALL GET_TIME, 0
 
         ;; Assumes call from main loop, where grafport3 is initialized.
+        MGTK_RELAY_CALL MGTK::SetTextBG, desktop_aux::textbg_white
         MGTK_RELAY_CALL MGTK::MoveTo, pos_clock
 
         ;; --------------------------------------------------
