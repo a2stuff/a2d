@@ -17,7 +17,7 @@
 
 # File Types
 
-* Binary files (type $06) with aux type $2000 are treated as Graphics files (HR/DHR)
+* Binary files (type $06) with aux type $2000 or $4000 are treated as Graphics files (HR/DHR)
 * Binary files (type $06) with aux type $5800 are treated as Graphics files (Minipix/Print Shop)
 * Desk Accessory files have type $F1, and auxtype $640 or $8640
 
