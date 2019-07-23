@@ -693,6 +693,24 @@ loop:   lda     src,x
 
 
 ;;; ============================================================
+;;; Temporary org change, for relocated routines
+;;; ============================================================
+
+__pushorg_depth__ .set 0
+
+.macro pushorg addr
+        ::__pushorg_depth__ .set ::__pushorg_depth__ + 1
+        .ident(.sprintf("__pushorg_saved__%d", ::__pushorg_depth__)) := *
+        .org addr
+        .ident(.sprintf("__pushorg_start__%d", ::__pushorg_depth__)) := *
+.endmacro
+
+.macro poporg
+        .org .ident(.sprintf("__pushorg_saved__%d", ::__pushorg_depth__)) + (* - .ident(.sprintf("__pushorg_start__%d", ::__pushorg_depth__)))
+        ::__pushorg_depth__ .set ::__pushorg_depth__ - 1
+.endmacro
+
+;;; ============================================================
 ;;; Flow Control
 ;;; ============================================================
 ;;; Usage:

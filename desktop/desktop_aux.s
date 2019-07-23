@@ -356,6 +356,22 @@ textbg: .byte   MGTK::textbg_black
 fontptr:        .addr   DEFAULT_FONT
 .endproc
 
+;;; Grafport used to draw icon outlines during
+.proc drag_outline_grafport
+viewloc:        DEFINE_POINT 0, 0, viewloc
+mapbits:        .addr   0
+mapwidth:       .word   0
+cliprect:       DEFINE_RECT 0, 0, 0, 0
+penpattern:     .res    8, 0
+colormasks:     .byte   0, 0
+penloc: DEFINE_POINT 0, 0
+penwidth:       .byte   0
+penheight:      .byte   0
+penmode:        .byte   0
+textbg: .byte   MGTK::textbg_black
+fontptr:        .addr   0
+.endproc
+
 .proc getwinport_params
 window_id:      .byte   0
 a_grafport:     .addr   icon_grafport
@@ -1098,9 +1114,15 @@ is_drag:
         lda     ($06),y
         and     #icon_entry_winid_mask
         sta     L9832
-        MGTK_CALL MGTK::InitPort, grafport
 
-        COPY_STRUCT MGTK::Rect, grafport::cliprect, L9835
+        ;; Prepare grafport
+        MGTK_CALL MGTK::InitPort, drag_outline_grafport
+        MGTK_CALL MGTK::SetPort, drag_outline_grafport
+        MGTK_CALL MGTK::SetPattern, checkerboard_pattern
+        MGTK_CALL MGTK::SetPenMode, penXOR
+
+        ;; TODO: This is needed, but why?
+        COPY_STRUCT MGTK::Rect, drag_outline_grafport::cliprect, L9835
 
         ldx     highlight_count
         stx     L9C74
@@ -1230,9 +1252,7 @@ L99E1:  iny
         add16   $08, #icon_poly_size, $08
         jmp     L9972
 
-L99FC:  MGTK_CALL MGTK::SetPattern, checkerboard_pattern
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::FramePoly, drag_outline_buffer
+L99FC:  jsr     xdraw_outline
 L9A0E:  MGTK_CALL MGTK::PeekEvent, peekevent_params
         lda     peekevent_params::kind
         cmp     #MGTK::EventKind::drag
@@ -1258,13 +1278,9 @@ L9A31:  COPY_BYTES 4, findwindow_params2, L9C92
         lda     findwindow_params2::which_area
         cmp     highlight_icon_id
         beq     L9A84
-        MGTK_CALL MGTK::SetPattern, checkerboard_pattern
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::FramePoly, drag_outline_buffer
+        jsr     xdraw_outline
         DESKTOP_DIRECT_CALL DT_UNHIGHLIGHT_ICON, highlight_icon_id
-        MGTK_CALL MGTK::SetPattern, checkerboard_pattern
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::FramePoly, drag_outline_buffer
+        jsr     xdraw_outline
         lda     #0
         sta     highlight_icon_id
 L9A84:  sub16   findwindow_params2::mousex, L9C8E, L9C96
@@ -1318,7 +1334,7 @@ L9B48:  bit     L9C75
         bvc     L9B52
         jmp     L9A0E
 
-L9B52:  MGTK_CALL MGTK::FramePoly, drag_outline_buffer
+L9B52:  jsr     xdraw_outline
         copy16  #drag_outline_buffer, $08
 L9B60:  ldy     #2
 L9B62:  add16in ($08),y, L9C96, ($08),y
@@ -1338,10 +1354,10 @@ L9B62:  add16in ($08),y, L9C96, ($08),y
         inc     $08+1
 L9B99:  jmp     L9B60
 
-L9B9C:  MGTK_CALL MGTK::FramePoly, drag_outline_buffer
+L9B9C:  jsr     xdraw_outline
         jmp     L9A0E
 
-L9BA5:  MGTK_CALL MGTK::FramePoly, drag_outline_buffer
+L9BA5:  jsr     xdraw_outline
         lda     highlight_icon_id
         beq     L9BB9
         DESKTOP_DIRECT_CALL DT_UNHIGHLIGHT_ICON, highlight_icon_id
@@ -1570,18 +1586,10 @@ L9E3D:  cmp     highlight_list,x
         bne     L9E97
         lda     L9EB3
 L9E6A:  sta     highlight_icon_id
-        MGTK_CALL MGTK::SetPattern, checkerboard_pattern
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::FramePoly, drag_outline_buffer
+        jsr     xdraw_outline
         DESKTOP_DIRECT_CALL DT_HIGHLIGHT_ICON, highlight_icon_id
-        MGTK_CALL MGTK::SetPattern, checkerboard_pattern
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::FramePoly, drag_outline_buffer
-L9E97:  MGTK_CALL MGTK::InitPort, grafport
-        MGTK_CALL MGTK::SetPort, grafport
-        MGTK_CALL MGTK::SetPattern, checkerboard_pattern
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        jsr     pop_pointers
+        jsr     xdraw_outline
+L9E97:  jsr     pop_pointers
         rts
 
 L9EB3:  .byte   0
@@ -1591,6 +1599,15 @@ L9EB4:  asl     a
         tax
         lda     icon_ptrs,y
         rts
+
+.proc xdraw_outline
+        MGTK_CALL MGTK::SetPort, drag_outline_grafport
+        MGTK_CALL MGTK::FramePoly, drag_outline_buffer
+        MGTK_CALL MGTK::SetPort, grafport
+        rts
+.endproc
+
+
 .endproc
 
 ;;; ============================================================
