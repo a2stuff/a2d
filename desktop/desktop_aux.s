@@ -672,7 +672,6 @@ found:  asl     a
 
         ;; Unhighlight
 :       jsr     calc_icon_poly
-        MGTK_CALL MGTK::SetPenMode, pencopy
         jsr     draw_icon
 
         ;; Move it to the end of the icon list
@@ -1115,7 +1114,8 @@ is_drag:
         and     #icon_entry_winid_mask
         sta     L9832
 
-        ;; Prepare grafport
+        ;; Prepare grafports
+        MGTK_CALL MGTK::InitPort, icon_grafport
         MGTK_CALL MGTK::InitPort, drag_outline_grafport
         MGTK_CALL MGTK::SetPort, drag_outline_grafport
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
@@ -1279,6 +1279,7 @@ L9A31:  COPY_BYTES 4, findwindow_params2, L9C92
         cmp     highlight_icon_id
         beq     L9A84
         jsr     xdraw_outline
+        MGTK_CALL MGTK::SetPort, icon_grafport
         DESKTOP_DIRECT_CALL DT_UNHIGHLIGHT_ICON, highlight_icon_id
         jsr     xdraw_outline
         lda     #0
@@ -1359,11 +1360,12 @@ L9B9C:  jsr     xdraw_outline
 
 L9BA5:  jsr     xdraw_outline
         lda     highlight_icon_id
-        beq     L9BB9
+        beq     :+
+        MGTK_CALL MGTK::SetPort, icon_grafport
         DESKTOP_DIRECT_CALL DT_UNHIGHLIGHT_ICON, highlight_icon_id
         jmp     L9C63
 
-L9BB9:  MGTK_CALL MGTK::FindWindow, findwindow_params2
+:       MGTK_CALL MGTK::FindWindow, findwindow_params2
         lda     findwindow_params2::window_id
         cmp     L9832
         beq     L9BE1
@@ -1380,8 +1382,6 @@ L9BD4:  ora     #$80
 L9BDC:  lda     L9832
         beq     L9BD1
 L9BE1:  jsr     push_pointers
-        MGTK_CALL MGTK::InitPort, grafport
-        MGTK_CALL MGTK::SetPort, grafport
         ldx     highlight_count
 L9BF3:  dex
         bmi     L9C18
@@ -1392,7 +1392,6 @@ L9BF3:  dex
         tax
         copy16  icon_ptrs,x, $06
         jsr     calc_icon_poly
-        MGTK_CALL MGTK::SetPenMode, pencopy
         jsr     draw_icon
         pla
         tax
@@ -1561,7 +1560,7 @@ L9E1A:  jsr     push_pointers
         bne     L9E2B
         sta     findwindow_params2::window_id
 L9E2B:  DESKTOP_DIRECT_CALL DT_FIND_ICON, findwindow_params2
-        lda     findwindow_params2::which_area
+        lda     findwindow_params2::which_area ; Icon ID
         bne     L9E39
         jmp     L9E97
 
@@ -1572,8 +1571,8 @@ L9E3D:  cmp     highlight_list,x
         dex
         bpl     L9E3D
         sta     L9EB3
-        cmp     #1
-        beq     L9E6A
+        cmp     #1              ; Trash?
+        beq     :+
         asl     a
         tax
         copy16  icon_ptrs,x, $06
@@ -1585,8 +1584,9 @@ L9E3D:  cmp     highlight_list,x
         and     #icon_entry_type_mask
         bne     L9E97
         lda     L9EB3
-L9E6A:  sta     highlight_icon_id
+:       sta     highlight_icon_id
         jsr     xdraw_outline
+        MGTK_CALL MGTK::SetPort, icon_grafport
         DESKTOP_DIRECT_CALL DT_HIGHLIGHT_ICON, highlight_icon_id
         jsr     xdraw_outline
 L9E97:  jsr     pop_pointers
@@ -1603,7 +1603,6 @@ L9EB4:  asl     a
 .proc xdraw_outline
         MGTK_CALL MGTK::SetPort, drag_outline_grafport
         MGTK_CALL MGTK::FramePoly, drag_outline_buffer
-        MGTK_CALL MGTK::SetPort, grafport
         rts
 .endproc
 
@@ -1808,20 +1807,20 @@ highlighted:  copy    #$80, icon_flags ; is highlighted
         COPY_STRUCT MGTK::Point, moveto_params2, L9F94
 
         bit     icon_flags      ; volume icon (on desktop) ?
-        bvc     paint_icon      ; nope
+        bvc     do_paint        ; nope
 
         ;; Redraw desktop background
         MGTK_CALL MGTK::InitPort, grafport
         jsr     set_port_for_vol_icon
 :       jsr     calc_window_intersections
-        jsr     paint_icon
+        jsr     do_paint
         lda     more_drawing_needed_flag
         bne     :-
-        MGTK_CALL MGTK::SetPortBits, grafport
+        MGTK_CALL MGTK::SetPortBits, grafport ; default maprect
         rts
 .endproc
 
-.proc paint_icon
+.proc do_paint
         MGTK_CALL MGTK::HideCursor
 
         ;; --------------------------------------------------
@@ -2224,8 +2223,8 @@ stash:  .word   0
 ;;; ============================================================
 
 draw_icon:
-        MGTK_CALL MGTK::InitPort, grafport
-        MGTK_CALL MGTK::SetPort, grafport
+        MGTK_CALL MGTK::InitPort, icon_grafport
+        MGTK_CALL MGTK::SetPort, icon_grafport
         jmp     LA3B9
 
 LA3AC:  .byte   0
@@ -2277,7 +2276,7 @@ volume:
         jsr     erase_desktop_icon
         lda     more_drawing_needed_flag
         bne     :-
-        MGTK_CALL MGTK::SetPortBits, grafport
+        MGTK_CALL MGTK::SetPortBits, grafport ; default maprect
         jmp     LA446
 .endproc
 
@@ -2313,7 +2312,7 @@ LA446:  jsr     push_pointers
         bne     LA466
         bit     LA3B7           ; no, almost done
         bpl     :+
-        MGTK_CALL MGTK::InitPort, grafport
+        MGTK_CALL MGTK::InitPort, icon_grafport
         MGTK_CALL MGTK::SetPort, icon_grafport
 :       jsr     pop_pointers
         rts
@@ -2896,8 +2895,11 @@ vert:   cmp16   win_t, cr_t
 ;;; ============================================================
 
 .proc shift_port_down
-        add16   icon_grafport::viewloc::ycoord, #15, icon_grafport::viewloc::ycoord
-        add16   icon_grafport::cliprect::y1, #15, icon_grafport::cliprect::y1
+        ;; For window's used/free space bar
+        offset = 15
+
+        add16   icon_grafport::viewloc::ycoord, #offset, icon_grafport::viewloc::ycoord
+        add16   icon_grafport::cliprect::y1, #offset, icon_grafport::cliprect::y1
         MGTK_CALL MGTK::SetPort, icon_grafport
         rts
 .endproc
