@@ -4,7 +4,7 @@
         .include "../inc/apple2.inc"
         .include "../inc/prodos.inc"
         .include "mgtk.inc"
-        .include "../macros.inc"
+        .include "../inc/macros.inc"
 
 ;;; ============================================================
 ;;; MouseGraphics ToolKit
