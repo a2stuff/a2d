@@ -402,7 +402,7 @@ desktop_jump_table:
         .addr   REDRAW_ICON_IMPL
         .addr   REMOVE_ICON_IMPL
         .addr   HIGHLIGHT_ALL_IMPL
-        .addr   UNHIGHLIGHT_ALL_IMPL
+        .addr   REMOVE_ALL_IMPL
         .addr   CLOSE_WINDOW_IMPL
         .addr   GET_HIGHLIGHTED_IMPL
         .addr   FIND_ICON_IMPL
@@ -410,7 +410,7 @@ desktop_jump_table:
         .addr   UNHIGHLIGHT_ICON_IMPL
         .addr   REDRAW_ICONS_IMPL
         .addr   ICON_IN_RECT_IMPL
-        .addr   REDRAW_ICON_IDX_IMPL
+        .addr   ERASE_ICON_IMPL
 
 .macro  DESKTOP_DIRECT_CALL    op, addr, label
         jsr DESKTOP_DIRECT
@@ -521,6 +521,8 @@ sub:    ldx     num_icons       ; ???
 ;;; ============================================================
 ;;; HIGHLIGHT_ICON IMPL
 
+;;; param is pointer to icon id
+
 .proc HIGHLIGHT_ICON_IMPL
         PARAM_BLOCK params, $06
 ptr_icon:       .addr   0
@@ -541,7 +543,7 @@ bail1:  return  #1              ; Not found
 
 :       asl     a
         tax
-        copy16  icon_ptrs,x, ptr
+        copy16  icon_ptrs,x, ptr ; ptr now points at IconEntry
         ldy     #IconEntry::state
         lda     (ptr),y
         bne     :+           ; Already set ??? Routine semantics are incorrect ???
@@ -582,12 +584,22 @@ L949D:  ldx     highlight_count
         ldx     #1              ; new position
         jsr     change_icon_index
 
-        jsr     paint_icon_highlighted
+        ;; Redraw
+        ldy     #IconEntry::id
+        lda     (ptr),y         ; icon num
+        sta     icon
+        DESKTOP_DIRECT_CALL DT_REDRAW_ICON, icon
         return  #0              ; Highlighted
+
+        ;; DT_REDRAW_ICON params
+icon:   .byte   0
 .endproc
 
 ;;; ============================================================
 ;;; REDRAW_ICON IMPL
+
+;;; * Assumes correct grafport already selected/maprect specified
+;;; * Does not erase background
 
 .proc REDRAW_ICON_IMPL
         PARAM_BLOCK params, $06
@@ -672,7 +684,7 @@ found:  asl     a
 
         ;; Unhighlight
 :       jsr     calc_icon_poly
-        jsr     draw_icon
+        jsr     erase_icon
 
         ;; Move it to the end of the icon list
         ldy     #IconEntry::id
@@ -723,9 +735,9 @@ done:   return  #0              ; Unhighlighted
 .endproc
 
 ;;; ============================================================
-;;; REDRAW_ICON_IDX IMPL
+;;; ERASE_ICON IMPL
 
-.proc REDRAW_ICON_IDX_IMPL
+.proc ERASE_ICON_IMPL
         PARAM_BLOCK params, $06
 ptr_icon_idx:   .addr   0
         END_PARAM_BLOCK
@@ -736,7 +748,7 @@ ptr_icon_idx:   .addr   0
         asl     a
         tax
         copy16  icon_ptrs,x, ptr
-        jmp     draw_icon
+        jmp     erase_icon
 .endproc
 
 ;;; ============================================================
@@ -821,35 +833,47 @@ loop2:  lda     buffer,x
 .endproc
 
 ;;; ============================================================
-;;; UNHIGHLIGHT_ALL IMPL
+;;; REMOVE_ALL IMPL
 
-.proc UNHIGHLIGHT_ALL_IMPL
-        jmp     L9697
+;;; param is window id (0 = desktop)
 
-L9695:  .byte   0
-L9696:  .byte   0
+.proc REMOVE_ALL_IMPL
+        jmp     start
 
-L9697:  lda     num_icons
-        sta     L9696
-L969D:  ldx     L9696
+        PARAM_BLOCK params, $06
+ptr_window_id:      .addr    0
+        END_PARAM_BLOCK
+
+        icon_ptr := $08
+
+        ;; DT_REMOVE_ICON params
+icon:   .byte   0
+
+count:  .byte   0
+
+start:  lda     num_icons
+        sta     count
+
+loop:   ldx     count
         cpx     #0
-        beq     L96CF
-        dec     L9696
+        beq     done
+        dec     count
         dex
         lda     icon_table,x
-        sta     L9695
+        sta     icon
         asl     a
         tax
-        copy16  icon_ptrs,x, $08
+        copy16  icon_ptrs,x, icon_ptr
         ldy     #IconEntry::win_type
-        lda     ($08),y
+        lda     (icon_ptr),y
         and     #icon_entry_winid_mask
         ldy     #0
-        cmp     ($06),y
-        bne     L969D
-        DESKTOP_DIRECT_CALL DT_REMOVE_ICON, L9695
-        jmp     L969D
-L96CF:  return  #0
+        cmp     (params::ptr_window_id),y
+        bne     loop
+        DESKTOP_DIRECT_CALL DT_REMOVE_ICON, icon
+        jmp     loop
+
+done:   return  #0
 .endproc
 
 ;;; ============================================================
@@ -1392,7 +1416,7 @@ L9BF3:  dex
         tax
         copy16  icon_ptrs,x, $06
         jsr     calc_icon_poly
-        jsr     draw_icon
+        jsr     erase_icon
         pla
         tax
         jmp     L9BF3
@@ -1612,18 +1636,12 @@ L9EB4:  asl     a
 ;;; ============================================================
 ;;; UNHIGHLIGHT_ICON IMPL
 
-;;; param is pointer to icon entry
+;;; param is pointer to IconEntry
 
 .proc UNHIGHLIGHT_ICON_IMPL
         PARAM_BLOCK params, $06
 ptr_iconent:    .addr   0
         END_PARAM_BLOCK
-        ptr := $06              ; Overwrites param
-
-        jmp     start
-
-        ;; DT_REDRAW_ICON params
-icon:   .byte   0
 
 start:  lda     has_highlight
         bne     :+
@@ -1642,15 +1660,18 @@ start:  lda     has_highlight
         dec     highlight_count
         lda     highlight_count
         bne     :+
-        lda     #0
+        lda     #0              ; Clear flag if no more highlighted
         sta     has_highlight
 
         ;; Redraw
-:       ldy     #0
+:       ldy     #IconEntry::id
         lda     (params::ptr_iconent),y
         sta     icon
         DESKTOP_DIRECT_CALL DT_REDRAW_ICON, icon
         return  #0
+
+        ;; DT_REDRAW_ICON params
+icon:   .byte   0
 .endproc
 
 ;;; ============================================================
@@ -1704,7 +1725,9 @@ L9F8F:  return  #1
 .endproc
 
 ;;; ============================================================
-
+;;; Paint icon
+;;; * Assumes grafport selected and maprect configured
+;;; * Does not erase background
 
 icon_flags: ; bit 7 = highlighted, bit 6 = volume icon
         .byte   0
@@ -1808,8 +1831,10 @@ highlighted:  copy    #$80, icon_flags ; is highlighted
 
         bit     icon_flags      ; volume icon (on desktop) ?
         bvc     do_paint        ; nope
+        ;; TODO: This depends on a previous proc having adjusted
+        ;; the grafport (for window maprect and window's items/used/free bar)
 
-        ;; Redraw desktop background
+        ;; Volume (i.e. icon on desktop)
         MGTK_CALL MGTK::InitPort, grafport
         jsr     set_port_for_vol_icon
 :       jsr     calc_window_intersections
@@ -2055,6 +2080,10 @@ LA2AA:  jsr     pop_pointers
         rts
 
 LA2AE:  jsr     push_pointers
+
+        MGTK_CALL MGTK::InitPort, icon_grafport
+        MGTK_CALL MGTK::SetPort, icon_grafport
+
         ldx     num_icons
         dex
 LA2B5:  bmi     LA2AA
@@ -2221,8 +2250,9 @@ stash:  .word   0
 .endproc
 
 ;;; ============================================================
+;;; Erase an icon; redraws overlapping icons as needed
 
-draw_icon:
+erase_icon:
         MGTK_CALL MGTK::InitPort, icon_grafport
         MGTK_CALL MGTK::SetPort, icon_grafport
         jmp     LA3B9
@@ -2259,13 +2289,13 @@ window_id:      .byte   0
         ;; File (i.e. icon in window)
         copy    #$80, LA3B7
         MGTK_CALL MGTK::SetPattern, white_pattern
-        MGTK_CALL MGTK::FrontWindow, frontwindow_params
+        MGTK_CALL MGTK::FrontWindow, frontwindow_params ; Use window's port
         lda     frontwindow_params::window_id
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         jsr     LA4CC
-        jsr     shift_port_down
-        jsr     erase_icon
+        jsr     shift_port_down ; Further offset by window's items/used/free bar
+        jsr     erase_window_icon
         jmp     LA446
 
         ;; Volume (i.e. icon on desktop)
@@ -2291,7 +2321,7 @@ volume:
         ;; fall through
 .endproc
 
-.proc erase_icon
+.proc erase_window_icon
         copy16  poly::v0::ycoord, LA3B1
         copy16  poly::v6::xcoord, LA3AF
         COPY_BLOCK poly::v4, LA3B3
@@ -2312,6 +2342,7 @@ LA446:  jsr     push_pointers
         bne     LA466
         bit     LA3B7           ; no, almost done
         bpl     :+
+        ;; TODO: Is this restoration necessary?
         MGTK_CALL MGTK::InitPort, icon_grafport
         MGTK_CALL MGTK::SetPort, icon_grafport
 :       jsr     pop_pointers
@@ -2895,7 +2926,7 @@ vert:   cmp16   win_t, cr_t
 ;;; ============================================================
 
 .proc shift_port_down
-        ;; For window's used/free space bar
+        ;; For window's items/used/free space bar
         offset = 15
 
         add16   icon_grafport::viewloc::ycoord, #offset, icon_grafport::viewloc::ycoord

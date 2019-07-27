@@ -43,7 +43,7 @@ str_desktop2:
 
 start:  lda     #$80
         sta     ptr
-        DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ALL
+        DESKTOP_RELAY_CALL DT_REMOVE_ALL, 0 ; volume icons
         MGTK_RELAY_CALL MGTK::CloseAll
         MGTK_RELAY_CALL MGTK::SetZP1, ptr
 

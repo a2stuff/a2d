@@ -10,6 +10,8 @@ File > Open is run or the files are double-clicked.
 * [show.image.file](show.image.file.s)
    * Handles image files (FOT $08)
    * 8k Hires or 16k Double Hires images are supported
+* [show.font.file](show.font.file.s)
+   * Handles MGTK font files (FNT $07)
 
 The files can optionally be copied into the `DESK.ACC` directory to
 allow direct invocation from the Apple menu. This can be useful to
@@ -20,3 +22,6 @@ See [API.md](../desk.acc/API.md) for programming details.
 
 See the DA [README.md](../desk.acc/README.md) for build and installation
 details.
+
+NOTE: ProDOS file type FNT $07 is reserved for Apple /// SOS font
+files, but given their scarcity the type is re-used here.

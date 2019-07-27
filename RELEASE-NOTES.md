@@ -56,17 +56,21 @@ functionality (see below).
 
 ### Automatic Preview
 
-Text and Graphics files with the correct file types can be previewed
-without leaving DeskTop; select the file icon then select File > Open,
-or double-click the file icon. Text files must be type TXT ($04).
-Graphics files must be type FOT ($08), or BIN ($06) with an aux type
-of $2000 or $4000 and 17 or 33 blocks (hi-res/double hi-res) or $5800
-and 3 blocks (Minipix a.k.a. Print Shop).
+Text, Graphics and Font files with the correct file types can be
+previewed without leaving DeskTop; select the file icon then select
+File > Open, or double-click the file icon.
+
+* Text files must be type TXT ($04).
+* Graphics files must be type FOT ($08), or BIN ($06) with an aux type
+    of $2000 or $4000 and 17 or 33 blocks (hi-res/double hi-res) or $5800
+    and 3 blocks (Minipix a.k.a. Print Shop).
+* Font files must be MGTK fonts with type FNT ($07).
 
 To preview files of other types, you can copy the preview handlers
-named `SHOW.TEXT.FILE` and `SHOW.IMAGE.FILE` from the `PREVIEW` folder
-to the `DESK.ACC` folder, and restart DeskTop. To use them, select the
-file, then select the appropriate command from the Apple menu.
+named `SHOW.TEXT.FILE`, `SHOW.IMAGE.FILE`, etc. from the `PREVIEW`
+folder to the `DESK.ACC` folder, and restart DeskTop. To use them,
+select the file, then select the appropriate command from the Apple
+menu.
 
 ### Notable Fixes
 

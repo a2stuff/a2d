@@ -920,6 +920,10 @@ begin:
         bne     :+
         addr_jump invoke_desk_acc, str_preview_txt
 
+:       cmp     #FT_FONT
+        bne     :+
+        addr_jump invoke_desk_acc, str_preview_fnt
+
 :       cmp     #DA_FILE_TYPE
         bne     :+
         addr_jump invoke_desk_acc, path
@@ -927,7 +931,7 @@ begin:
 :       lda     #ERR_FILE_NOT_OPENABLE
         jsr     show_alert_and_fail
 
-launch: DESKTOP_RELAY_CALL DT_UNHIGHLIGHT_ALL
+launch: DESKTOP_RELAY_CALL DT_REMOVE_ALL, 0 ; volume icons
         MGTK_RELAY_CALL MGTK::CloseAll
         MGTK_RELAY_CALL MGTK::SetMenu, blank_menu
         ldx     buf_win_path
@@ -10812,7 +10816,7 @@ L969E:  lda     #$40
         ldx     L9706
         lda     selected_icon_list,x
         sta     icon_param2
-        yax_call JT_DESKTOP_RELAY, DT_REDRAW_ICON_IDX, icon_param2
+        yax_call JT_DESKTOP_RELAY, DT_ERASE_ICON, icon_param2
         copy16  L9707, $08
         ldx     L9706
         lda     selected_icon_list,x
@@ -15389,6 +15393,9 @@ reset_grafport3a:
 
 str_preview_fot:
         PASCAL_STRING "Preview/show.image.file"
+
+str_preview_fnt:
+        PASCAL_STRING "Preview/show.font.file"
 
 str_preview_txt:
         PASCAL_STRING "Preview/show.text.file"

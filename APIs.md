@@ -178,13 +178,13 @@ Removes an icon by number.
 
 Parameters: { byte window_id }
 
-Highlights (selects) all icons in a window.
+Highlights (selects) all icons in specified window (0 = desktop).
 
-### `DT_UNHIGHLIGHT_ALL` ($06)
+### `DT_REMOVE_ALL` ($06)
 
-Parameters: _N/A_
+Parameters: { byte window_id }
 
-Unhighlights (deselects) all icons.
+Removes all icons from specified window (0 = desktop).
 
 ### `DT_CLOSE_WINDOW` ($07)
 
@@ -234,13 +234,11 @@ Parameters: { byte icon, rect bounds }
 
 Tests to see if the given icon (by number) overlaps the passed rect.
 
-### `DT_REDRAW_ICON_IDX` ($0E)
+### `DT_ERASE_ICON` ($0E)
 
-Parameters: { byte icon_index }
+Parameters: { byte icon }
 
-Redraws the icon at the given index in the icon list. Note that this
-is not the same as the icon number.
-
+Erases the specified icon by number. No error checking is done.
 
 
 <!-- ============================================================ -->

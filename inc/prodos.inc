@@ -94,6 +94,7 @@ FT_TYPELESS     = $00
 FT_BAD          = $01
 FT_TEXT         = $04           ; ASCII Text File *
 FT_BINARY       = $06           ; Generic Binary File *
+FT_FONT         = $07           ; Font File
 FT_GRAPHICS     = $08           ; Graphics File
 FT_DIRECTORY    = $0F           ; Directory *
 FT_ADB          = $19           ; AppleWorks Database *
