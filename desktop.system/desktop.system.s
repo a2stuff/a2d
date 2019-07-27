@@ -5,7 +5,7 @@
         .include "apple2.inc"
         .include "../inc/apple2.inc"
         .include "../inc/prodos.inc"
-        .include "../macros.inc"
+        .include "../inc/macros.inc"
 
 ;;; ============================================================
 ;;; Locations in Main LC Bank 2 (past end of custom quit routines)

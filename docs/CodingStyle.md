@@ -131,7 +131,7 @@ start:  lda     ptr
 
 * Macro use is **encouraged**.
 * Use local macros to avoid repeating code.
-* Use `macros.inc` and extend as needed to capture patterns such as
+* Use `inc/macros.inc` and extend as needed to capture patterns such as
    16-bit operations
 * API calls such as ProDOS MLI calls should be done with macros
 
