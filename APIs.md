@@ -20,7 +20,7 @@ This is a complex API library written by Apple circa 1985. It consists of:
 
 Entry point is fixed at $4000 AUX, called MLI-style (JSR followed by command type and address of param block).
 
-See [MGTK.md](MGTK.md) for further documentation.
+See [MGTK.md](mgtk/MGTK.md) for further documentation.
 
 <!-- ============================================================ -->
 

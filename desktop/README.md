@@ -79,7 +79,7 @@ run.
 
 `mgtk.s`
 
-Aux $4000-$851E is the [MouseGraphics ToolKit](../MGTK.md) - a
+Aux $4000-$851E is the [MouseGraphics ToolKit](../mgtk/MGTK.md) - a
 GUI library used for the DeskTop application.
 
 Since this resides in Aux memory, DeskTop spends most of its time

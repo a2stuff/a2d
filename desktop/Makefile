@@ -5,7 +5,7 @@ CCFLAGS = --config asm.cfg
 
 OUTDIR = out
 
-HEADERS = $(wildcard ../*.inc) $(wildcard ../inc/*.inc) $(wildcard *.inc)
+HEADERS = $(wildcard ../*.inc) $(wildcard ../inc/*.inc) $(wildcard ../mgtk/*.inc) $(wildcard *.inc)
 
 SEGMENTS = loader mgtk desktop
 
@@ -23,6 +23,9 @@ clean:
 	rm -f $(OUTDIR)/*.inc
 	rm -f $(OUTDIR)/*.built
 	rm -f $(OUTDIR)/*.sys
+
+$(OUTDIR)/mgtk.o: ../mgtk/mgtk.s $(HEADERS)
+	$(CC65)/ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
 $(OUTDIR)/desktop.o: desktop.s $(HEADERS) desktop_* ovl*.s
 	$(CC65)/ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
