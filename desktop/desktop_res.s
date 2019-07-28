@@ -146,9 +146,6 @@ fontptr:        .addr   DEFAULT_FONT
 
 ;;; ============================================================
 
-save_area_buffer := $800
-save_area_size   = $1300
-
         ;; Copies of ROM bytes used for machine identification
 .proc startdesktop_params
 machine:        .byte   $06     ; ROM FBB3 ($06 = IIe or later)
@@ -157,8 +154,8 @@ op_sys:         .byte   0       ; 0=ProDOS
 slot_num:       .byte   0       ; Mouse slot, 0 = search
 use_interrupts: .byte   0       ; 0=passive
 sysfontptr:     .addr   DEFAULT_FONT
-savearea:       .addr   save_area_buffer
-savesize:       .word   save_area_size
+savearea:       .addr   SAVE_AREA_BUFFER
+savesize:       .word   SAVE_AREA_SIZE
 .endproc
 
 zp_use_flag0:
@@ -1008,21 +1005,21 @@ window_filerecord_table:
         .byte   $00,$1E,$00,$32,$00,$1E,$00,$40
         .byte   $00
 
-        ;; DT_HIGHLIGHT_ICON params
+        ;; IconTK::HIGHLIGHT_ICON params
 icon_param2:
         .byte   0
 
 LE22C:  .byte   0
 
-        ;; DT_HIGHLIGHT_ICON params
+        ;; IconTK::HIGHLIGHT_ICON params
 icon_param3:
         .byte   0
 
 redraw_icon_param:
         .byte   0
 
-        ;; DT_HIGHLIGHT_ICON params
-        ;; DT_UNHIGHLIGHT_ICON params
+        ;; IconTK::HIGHLIGHT_ICON params
+        ;; IconTK::UNHIGHLIGHT_ICON params
 icon_param:  .byte   0
 
         ;; Used for all sorts of temporary work
@@ -1208,7 +1205,7 @@ blank_dd_label:
 dummy_dd_item:
         PASCAL_STRING "Rien"    ; ???
 
-        ;; DT_UNHIGHLIGHT_ICON params
+        ;; IconTK::UNHIGHLIGHT_ICON params
 icon_params2:
         .byte   0
 
@@ -1470,6 +1467,18 @@ fto_table:
         DEFINE_FTORECORD $F0, $C0, FTO_FLAGS_NONE, 0, 0, FT_SRC ; IIgs Graphics => SRC
 
         .byte   0               ; sentinel at end of table
+
+;;; --------------------------------------------------
+
+checkerboard_pattern:
+        .byte   %01010101
+        .byte   %10101010
+        .byte   %01010101
+        .byte   %10101010
+        .byte   %01010101
+        .byte   %10101010
+        .byte   %01010101
+        .byte   %10101010
 
 ;;; --------------------------------------------------
 

@@ -53,15 +53,15 @@
 .endproc
 
 ;;; ============================================================
-;;; DESKTOP call from main>aux, call in Y params at (X,A)
+;;; IconTK call from main>aux, call in Y params at (X,A)
 
-.proc DTRelayImpl
-        .assert * = DESKTOP_RELAY, error, "Entry point mismatch"
+.proc ITKRelayImpl
+        .assert * = ITK_RELAY, error, "Entry point mismatch"
         sty     addr-1
         stax    addr
         sta     RAMRDON
         sta     RAMWRTON
-        DESKTOP_CALL 0, 0, addr
+        ITK_CALL 0, 0, addr
         tay
         sta     RAMRDOFF
         sta     RAMWRTOFF

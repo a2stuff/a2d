@@ -13,7 +13,7 @@ VERSION_MINOR = 2
 .define RELEASE_DATE "July 12, 2019"
 
 DA_FILE_TYPE    = $F1
-DA_AUX_TYPE     = $640          ; High bit set = don't show in Apple menu
+DA_Aux_TYPE     = $640          ; High bit set = don't show in Apple menu
 
 APP_FILE_TYPE   = $01           ; FT_SYS w/ ".SYSTEM" (FT_BAD mapped to FT_TYPELESS)
 
@@ -22,13 +22,23 @@ max_desk_acc_count = 12
 INVOKER                 := $290 ; Invoke other programs
 INVOKER_FILENAME        := $280 ; File to invoke (PREFIX must be set)
 
-DA_LOAD_ADDRESS := $800         ; Loaded into MAIN
+;;; Desk Accessories are loaded in Main ($800-$1BFF) using
+;;; an I/O buffer (Main $1C00-1FFF). DAs often copy themselves
+;;; into Aux but can only use $800-$1AFF due to icon tables.
+
+DA_LOAD_ADDRESS := $800         ; Loaded into Main
 DA_IO_BUFFER    := $1C00        ; ...through $1FFF
 DA_MAX_SIZE     = DA_IO_BUFFER - DA_LOAD_ADDRESS
-        ;; Can't load DA past I/O Buffer at MAIN $1C00,
-        ;; but icon tables start at AUX $1B00 so can't clone there.
 
-;;; Memory in AUX - $80 bytes for desktop and 8 windows. First byte is a
+;;; Scratch area (in Aux) used during modal operations:
+;;; * Given to MGTK to save background when menus are shown
+;;; * Used by DeskTop to save background when alert dialog shown
+;;; * Used by DeskTop to store icon outline polygons during drag
+
+SAVE_AREA_BUFFER := $800        ; through $1AFF
+SAVE_AREA_SIZE   = $1300
+
+;;; Memory in Aux - $80 bytes for desktop and 8 windows. First byte is a
 ;;; count, up to 127 icon entries. $1F80-$1FFF is a map of used/free icon
 ;;; numbers.
 WINDOW_ICON_TABLES := $1B00
@@ -51,7 +61,7 @@ JUMP_TABLE_SELECT_WINDOW:= $400C ; Select and refresh given window
 JUMP_TABLE_AUXLOAD      := $400F ; Auxload
 JUMP_TABLE_EJECT        := $4012 ; Eject command
 JUMP_TABLE_REDRAW_ALL   := $4015 ; Redraw all windows (e.g. after a drag) *
-JUMP_TABLE_DESKTOP_RELAY:= $4018 ; DESKTOP relay call (main>aux)
+JUMP_TABLE_ITK_RELAY    := $4018 ; Icon ToolKit relay call (main>aux)
 JUMP_TABLE_LOAD_OVL     := $401B ; Load overlay routine
 JUMP_TABLE_CLEAR_SEL    := $401E ; Clear DeskTop selection *
 JUMP_TABLE_MLI          := $4021 ; ProDOS MLI call (Y=call, X,A=params addr) *
@@ -80,45 +90,47 @@ ERR_INSERT_DST_DISK     = $FD
 ERR_BASIC_SYS_NOT_FOUND = $FE
 
 ;;; ============================================================
-;;; API Calls (from aux memory)
+;;; Icon ToolKit Calls (from aux memory)
+
+.scope IconTK
 
 ;;; * = Used by Desk Accessories
 
-DESKTOP    := $8E00
-        ;; MLI-style call (jsr DEKSTOP ; .byte call ; .addr params)
-        ;; Call from AUX (RAMRDON/RAMWRTON)
+MLI := $8E00
+        ;; MLI-style call (jsr IconTK::MLI ; .byte call ; .addr params)
+        ;; Call from Aux (RAMRDON/RAMWRTON)
 
-        ;; Implementation bounces to $93BC, uses jump table at $939E
-
-DT_ADD_ICON             = $01   ; { .addr icondata }
-DT_HIGHLIGHT_ICON       = $02   ; { .byte icon }
-DT_REDRAW_ICON          = $03   ; { .byte icon }
-DT_REMOVE_ICON          = $04   ; { .byte icon }
-DT_HIGHLIGHT_ALL        = $05   ; { .byte window_id }
-DT_REMOVE_ALL           = $06   ; { .byte window_id }
-DT_CLOSE_WINDOW         = $07   ; { .byte window_id }
-DT_GET_HIGHLIGHTED      = $08   ; { .res 20 }
-DT_FIND_ICON            = $09   ; { .word mousex, .word mousey, .byte result }
-DT_DRAG_HIGHLIGHTED     = $0A   ; { .byte param }
+ADD_ICON             = $01      ; { .addr icondata }
+HIGHLIGHT_ICON       = $02      ; { .byte icon }
+REDRAW_ICON          = $03      ; { .byte icon }
+REMOVE_ICON          = $04      ; { .byte icon }
+HIGHLIGHT_ALL        = $05      ; { .byte window_id }
+REMOVE_ALL           = $06      ; { .byte window_id }
+CLOSE_WINDOW         = $07      ; { .byte window_id }
+GET_HIGHLIGHTED      = $08      ; { .res 20 }
+FIND_ICON            = $09      ; { .word mousex, .word mousey, .byte result }
+DRAG_HIGHLIGHTED     = $0A      ; { .byte param }
                                 ; Input: specific icon being dragged
                                 ; Output: 0 = on desktop (no-op)
                                 ;  hi bit clear: low bits are target icon
                                 ;  hi bit set:   low bits are target window
-DT_UNHIGHLIGHT_ICON     = $0B   ; { .addr iconentry }
-DT_REDRAW_ICONS         = $0C   ; Repaints desktop icons *
-DT_ICON_IN_RECT         = $0D   ; { .byte icon, rect bounds }
-DT_ERASE_ICON           = $0E   ; { .byte icon }
+UNHIGHLIGHT_ICON     = $0B      ; { .addr iconentry }
+REDRAW_ICONS         = $0C      ; Repaints desktop icons *
+ICON_IN_RECT         = $0D      ; { .byte icon, rect bounds }
+ERASE_ICON           = $0E      ; { .byte icon }
 
 ;;; `icon` is the icon number, i.e. first field in icon entry
 ;;; `icon_index` is the index in the icon table
 
-;;; Call a DESKTOP entry point:
-;;;     DESKTOP_CALL n                      - params is $0000
-;;;     DESKTOP_CALL n, params_addr
-;;;     DESKTOP_CALL m, params_addr, label  - params_addr is labeled for modifying
+.endscope ; IconTK
 
-.macro DESKTOP_CALL    op, addr, label
-        jsr     DESKTOP
+;;; Call a IconTK entry point:
+;;;     ITK_CALL n                      - params is $0000
+;;;     ITK_CALL n, params_addr
+;;;     ITK_CALL m, params_addr, label  - params_addr is labeled for modifying
+
+.macro ITK_CALL    op, addr, label
+        jsr     IconTK::MLI
         .byte   op
 
     .if .paramcount > 2
@@ -137,7 +149,7 @@ label   := *
 ;;; Relays from Main to Aux (params must be in ZP or LC)
 
 MGTK_RELAY      := $D000
-DESKTOP_RELAY   := $D040
+ITK_RELAY       := $D040
 
 .macro MGTK_RELAY_CALL call, addr
     .if .paramcount > 1
@@ -147,11 +159,11 @@ DESKTOP_RELAY   := $D040
     .endif
 .endmacro
 
-.macro DESKTOP_RELAY_CALL call, addr
+.macro ITK_RELAY_CALL call, addr
     .if .paramcount > 1
-        yax_call        DESKTOP_RELAY, (call), (addr)
+        yax_call        ITK_RELAY, (call), (addr)
     .else
-        yax_call        DESKTOP_RELAY, (call), 0
+        yax_call        ITK_RELAY, (call), 0
     .endif
 .endmacro
 

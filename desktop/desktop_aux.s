@@ -220,13 +220,14 @@ basic_mask:
         PAD_TO $8E00
 
 ;;; ============================================================
-;;; Entry point for "DESKTOP"
+;;; Entry point for "Icon TookKit"
 ;;; ============================================================
 
-        .assert * = DESKTOP, error, "DESKTOP entry point must be at $8E00"
+        .assert * = IconTK::MLI, error, "IconTK entry point must be at $8E00"
 
-        jmp     DESKTOP_DIRECT
+.proc icon_toolkit
 
+        jmp     ITK_DIRECT
 
 ;;; ============================================================
 
@@ -325,8 +326,8 @@ highlight_list:                 ; selected icons
 ;;; Re-use the "save area" ($800-$1AFF) since menus won't show during
 ;;; this operation.
 
-        drag_outline_buffer := save_area_buffer
-        max_draggable_items = save_area_size / (.sizeof(MGTK::Point) * 8 + 2)
+        drag_outline_buffer := SAVE_AREA_BUFFER
+        max_draggable_items = SAVE_AREA_SIZE / (.sizeof(MGTK::Point) * 8 + 2)
 
 ;;; ============================================================
 
@@ -356,7 +357,7 @@ textbg: .byte   MGTK::textbg_black
 fontptr:        .addr   DEFAULT_FONT
 .endproc
 
-;;; Grafport used to draw icon outlines during
+;;; Grafport used to draw icon outlines during drag
 .proc drag_outline_grafport
 viewloc:        DEFINE_POINT 0, 0, viewloc
 mapbits:        .addr   0
@@ -393,7 +394,7 @@ fontptr:        .addr   0
 .endproc
 
 ;;; ============================================================
-;;; DESKTOP command jump table
+;;; IconTK command jump table
 
 desktop_jump_table:
         .addr   0
@@ -412,15 +413,15 @@ desktop_jump_table:
         .addr   ICON_IN_RECT_IMPL
         .addr   ERASE_ICON_IMPL
 
-.macro  DESKTOP_DIRECT_CALL    op, addr, label
-        jsr DESKTOP_DIRECT
+.macro  ITK_DIRECT_CALL    op, addr, label
+        jsr ITK_DIRECT
         .byte   op
         .addr   addr
 .endmacro
 
-;;; DESKTOP entry point (after jump)
+;;; IconTK entry point (after jump)
 
-.proc DESKTOP_DIRECT
+.proc ITK_DIRECT
 
         ;; Stash return value from stack, adjust by 3
         ;; (command byte, params addr)
@@ -588,10 +589,10 @@ L949D:  ldx     highlight_count
         ldy     #IconEntry::id
         lda     (ptr),y         ; icon num
         sta     icon
-        DESKTOP_DIRECT_CALL DT_REDRAW_ICON, icon
+        ITK_DIRECT_CALL IconTK::REDRAW_ICON, icon
         return  #0              ; Highlighted
 
-        ;; DT_REDRAW_ICON params
+        ;; IconTK::REDRAW_ICON params
 icon:   .byte   0
 .endproc
 
@@ -766,7 +767,7 @@ ptr_window_id:      .addr    0
 
         ptr := $08
 
-        ;; DT_HIGHLIGHT_ICON params
+        ;; IconTK::HIGHLIGHT_ICON params
 icon:   .byte   0
 
 buffer: .res    127, 0
@@ -775,7 +776,7 @@ start:  lda     HIGHLIGHT_ICON_IMPL ; ???
         beq     start2
         lda     highlight_list
         sta     icon
-        DESKTOP_DIRECT_CALL DT_UNHIGHLIGHT_ICON, icon
+        ITK_DIRECT_CALL IconTK::UNHIGHLIGHT_ICON, icon
         jmp     start
 
 start2:
@@ -823,7 +824,7 @@ loop2:  lda     buffer,x
         rts
 
 :       sta     icon
-        DESKTOP_DIRECT_CALL DT_HIGHLIGHT_ICON, icon
+        ITK_DIRECT_CALL IconTK::HIGHLIGHT_ICON, icon
         pla
         tax
         inx
@@ -846,7 +847,7 @@ ptr_window_id:      .addr    0
 
         icon_ptr := $08
 
-        ;; DT_REMOVE_ICON params
+        ;; IconTK::REMOVE_ICON params
 icon:   .byte   0
 
 count:  .byte   0
@@ -870,7 +871,7 @@ loop:   ldx     count
         ldy     #0
         cmp     (params::ptr_window_id),y
         bne     loop
-        DESKTOP_DIRECT_CALL DT_REMOVE_ICON, icon
+        ITK_DIRECT_CALL IconTK::REMOVE_ICON, icon
         jmp     loop
 
 done:   return  #0
@@ -879,35 +880,43 @@ done:   return  #0
 ;;; ============================================================
 ;;; CLOSE_WINDOW IMPL
 
+;;; param is window id
+
 .proc CLOSE_WINDOW_IMPL
-        jmp     L96D7
+        PARAM_BLOCK params, $06
+window_id:      .addr   0
+        END_PARAM_BLOCK
 
-L96D5:  .byte   0
-L96D6:  .byte   0
+        ptr := $08
 
-L96D7:  lda     num_icons
-        sta     L96D6
-L96DD:  ldx     L96D6
+        jmp     start
+
+icon:   .byte   0
+count:  .byte   0
+
+start:  lda     num_icons
+        sta     count
+loop:   ldx     count
         bne     L96E5
         return  #0
 
-L96E5:  dec     L96D6
+L96E5:  dec     count
         dex
         lda     icon_table,x
-        sta     L96D5
+        sta     icon
         asl     a
         tax
-        copy16  icon_ptrs,x, $08
+        copy16  icon_ptrs,x, ptr
         ldy     #IconEntry::win_type
-        lda     ($08),y
-        and     #icon_entry_winid_mask
+        lda     (ptr),y
+        and     #icon_entry_winid_mask ; check window
         ldy     #0
-        cmp     ($06),y
-        bne     L96DD
+        cmp     (params::window_id),y ; match?
+        bne     loop                 ; nope
 
         ;; Move to end of icon list
         ldy     #IconEntry::id
-        lda     ($08),y         ; icon num
+        lda     (ptr),y         ; icon num
         ldx     num_icons       ; icon index
         jsr     change_icon_index
 
@@ -917,12 +926,12 @@ L96E5:  dec     L96D6
         sta     icon_table,x
         ldy     #IconEntry::state
         lda     #0
-        sta     ($08),y
+        sta     (ptr),y
         lda     has_highlight
         beq     L9758
         ldx     #0
         ldy     #0
-L972B:  lda     ($08),y
+L972B:  lda     (ptr),y
         cmp     highlight_list,x
         beq     L973B
         inx
@@ -930,7 +939,7 @@ L972B:  lda     ($08),y
         bne     L972B
         jmp     L9758
 
-L973B:  lda     ($08),y         ; icon num
+L973B:  lda     (ptr),y         ; icon num
         ldx     highlight_count ; new position
         jsr     change_highlight_index
         dec     highlight_count
@@ -941,7 +950,7 @@ L973B:  lda     ($08),y         ; icon num
 L9750:  lda     #0
         ldx     highlight_count
         sta     highlight_list,x
-L9758:  jmp     L96DD
+L9758:  jmp     loop
 .endproc
 
 ;;; ============================================================
@@ -1028,7 +1037,7 @@ L97F6:  .byte   0
 
 ;;; ============================================================
 
-;;; DESKTOP DRAG_HIGHLIGHTED IMPL
+;;; IconTK DRAG_HIGHLIGHTED IMPL
 
 .proc DRAG_HIGHLIGHTED
         ldy     #IconEntry::id
@@ -1063,7 +1072,7 @@ icon_id:
 deltax: .word   0
 deltay: .word   0
 
-        ;; DT_HIGHLIGHT_ICON params
+        ;; IconTK::HIGHLIGHT_ICON params
 highlight_icon_id:  .byte   $00
 
 L9831:  .byte   $00
@@ -1160,7 +1169,7 @@ L98F2:  lda     highlight_count,x
         ldx     #$80
         stx     L9833
 L9909:  sta     L9834
-        DESKTOP_DIRECT_CALL DT_ICON_IN_RECT, L9834
+        ITK_DIRECT_CALL IconTK::ICON_IN_RECT, L9834
         beq     L9954
         jsr     calc_icon_poly
         lda     L9C74
@@ -1298,13 +1307,13 @@ L9A31:  COPY_BYTES 4, findwindow_params2, L9C92
         beq     L9A84
         lda     L9831
         sta     findwindow_params2::window_id
-        DESKTOP_DIRECT_CALL DT_FIND_ICON, findwindow_params2
+        ITK_DIRECT_CALL IconTK::FIND_ICON, findwindow_params2
         lda     findwindow_params2::which_area
         cmp     highlight_icon_id
         beq     L9A84
         jsr     xdraw_outline
         MGTK_CALL MGTK::SetPort, icon_grafport
-        DESKTOP_DIRECT_CALL DT_UNHIGHLIGHT_ICON, highlight_icon_id
+        ITK_DIRECT_CALL IconTK::UNHIGHLIGHT_ICON, highlight_icon_id
         jsr     xdraw_outline
         lda     #0
         sta     highlight_icon_id
@@ -1386,7 +1395,7 @@ L9BA5:  jsr     xdraw_outline
         lda     highlight_icon_id
         beq     :+
         MGTK_CALL MGTK::SetPort, icon_grafport
-        DESKTOP_DIRECT_CALL DT_UNHIGHLIGHT_ICON, highlight_icon_id
+        ITK_DIRECT_CALL IconTK::UNHIGHLIGHT_ICON, highlight_icon_id
         jmp     L9C63
 
 :       MGTK_CALL MGTK::FindWindow, findwindow_params2
@@ -1583,7 +1592,7 @@ L9E1A:  jsr     push_pointers
         lda     findwindow_params2::which_area
         bne     L9E2B
         sta     findwindow_params2::window_id
-L9E2B:  DESKTOP_DIRECT_CALL DT_FIND_ICON, findwindow_params2
+L9E2B:  ITK_DIRECT_CALL IconTK::FIND_ICON, findwindow_params2
         lda     findwindow_params2::which_area ; Icon ID
         bne     L9E39
         jmp     L9E97
@@ -1611,7 +1620,7 @@ L9E3D:  cmp     highlight_list,x
 :       sta     highlight_icon_id
         jsr     xdraw_outline
         MGTK_CALL MGTK::SetPort, icon_grafport
-        DESKTOP_DIRECT_CALL DT_HIGHLIGHT_ICON, highlight_icon_id
+        ITK_DIRECT_CALL IconTK::HIGHLIGHT_ICON, highlight_icon_id
         jsr     xdraw_outline
 L9E97:  jsr     pop_pointers
         rts
@@ -1667,10 +1676,10 @@ start:  lda     has_highlight
 :       ldy     #IconEntry::id
         lda     (params::ptr_iconent),y
         sta     icon
-        DESKTOP_DIRECT_CALL DT_REDRAW_ICON, icon
+        ITK_DIRECT_CALL IconTK::REDRAW_ICON, icon
         return  #0
 
-        ;; DT_REDRAW_ICON params
+        ;; IconTK::REDRAW_ICON params
 icon:   .byte   0
 .endproc
 
@@ -2071,40 +2080,44 @@ text_width:  .byte   0
 ;;; REDRAW_ICONS IMPL
 
 .proc REDRAW_ICONS_IMPL
-        jmp     LA2AE
+        ptr := $06
 
-        ;; DT_REDRAW_ICON params
-LA2A9:  .byte   0
+        jmp     start
 
-LA2AA:  jsr     pop_pointers
+        ;; IconTK::REDRAW_ICON params
+icon:  .byte   0
+
+done:   jsr     pop_pointers
         rts
 
-LA2AE:  jsr     push_pointers
+start:  jsr     push_pointers
 
         MGTK_CALL MGTK::InitPort, icon_grafport
         MGTK_CALL MGTK::SetPort, icon_grafport
 
         ldx     num_icons
         dex
-LA2B5:  bmi     LA2AA
+loop:   bmi     done
         txa
         pha
         lda     icon_table,x
         asl     a
         tax
-        copy16  icon_ptrs,x, $06
+        copy16  icon_ptrs,x, ptr
         ldy     #IconEntry::win_type
-        lda     ($06),y
-        and     #icon_entry_winid_mask
-        bne     LA2DD
-        ldy     #0
-        lda     ($06),y
-        sta     LA2A9
-        DESKTOP_DIRECT_CALL DT_REDRAW_ICON, LA2A9
-LA2DD:  pla
+        lda     (ptr),y
+        and     #icon_entry_winid_mask ; desktop icon
+        bne     next                   ; no, skip it
+
+        ldy     #IconEntry::id
+        lda     (ptr),y
+        sta     icon
+        ITK_DIRECT_CALL IconTK::REDRAW_ICON, icon
+
+next:   pla
         tax
         dex
-        jmp     LA2B5
+        jmp     loop
 .endproc
 
 ;;; ============================================================
@@ -2260,7 +2273,7 @@ erase_icon:
 LA3AC:  .byte   0
 LA3AD:  .byte   0
 
-        ;; DT_REDRAW_ICON params
+        ;; IconTK::REDRAW_ICON params
 LA3AE:  .byte   0
 
 LA3AF:  .word   0
@@ -2296,7 +2309,7 @@ window_id:      .byte   0
         jsr     offset_icon_poly
         jsr     shift_port_down ; Further offset by window's items/used/free bar
         jsr     erase_window_icon
-        jmp     LA446
+        jmp     redraw_icons_after_erase
 
         ;; Volume (i.e. icon on desktop)
 volume:
@@ -2307,7 +2320,7 @@ volume:
         lda     more_drawing_needed_flag
         bne     :-
         MGTK_CALL MGTK::SetPortBits, grafport ; default maprect
-        jmp     LA446
+        jmp     redraw_icons_after_erase
 .endproc
 
 ;;; ============================================================
@@ -2330,8 +2343,9 @@ volume:
 .endproc
 
 ;;; ============================================================
+;;; After erasing an icon, redraw any overlapping icons
 
-.proc LA446
+.proc redraw_icons_after_erase
         ptr := $8
 
         jsr     push_pointers
@@ -2381,10 +2395,10 @@ LA49D:  ldy     #IconEntry::id ; icon num
         bit     LA3B7           ; windowed?
         bpl     LA4AC           ; nope, desktop
         jsr     offset_icon_do  ; yes, adjust rect
-LA4AC:  DESKTOP_DIRECT_CALL DT_ICON_IN_RECT, LA3AE
+LA4AC:  ITK_DIRECT_CALL IconTK::ICON_IN_RECT, LA3AE
         beq     :+
 
-        DESKTOP_DIRECT_CALL DT_REDRAW_ICON, LA3AE
+        ITK_DIRECT_CALL IconTK::REDRAW_ICON, LA3AE
 
 :       bit     LA3B7
         bpl     next
@@ -2957,6 +2971,8 @@ vert:   cmp16   win_t, cr_t
         MGTK_CALL MGTK::SetPort, icon_grafport
         rts
 .endproc
+
+.endproc ; icon_toolkit
 
 ;;; ============================================================
 
@@ -3970,7 +3986,7 @@ LBDE1:  sub16   event_xcoord, portmap::viewloc::xcoord, event_xcoord
         ptr := $06
 
 .proc save
-        copy16  #save_area_buffer, addr
+        copy16  #SAVE_AREA_BUFFER, addr
         lda     LBFC9
         jsr     LBF10
         lda     LBFCB
@@ -4006,7 +4022,7 @@ LBE5C:  .byte   0
 .endproc
 
 .proc restore
-        copy16  #save_area_buffer, addr
+        copy16  #SAVE_AREA_BUFFER, addr
         ldx     LBFCD
         ldy     LBFCE
         lda     #$FF
@@ -4048,7 +4064,7 @@ LBEAE:  lda     LBF0B
         sta     PAGE2ON         ; aux $2000-$3FFF
 
         addr := *+1
-:       lda     save_area_buffer ; self-modified
+:       lda     SAVE_AREA_BUFFER ; self-modified
 
         pha
         lda     LBF0B

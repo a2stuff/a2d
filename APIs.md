@@ -3,8 +3,8 @@
 There are three distinct API classes that need to be used:
 
 * MouseGraphics ToolKit - graphics primitives, windowing and events
+* Icon TookKit - internal API, MLI-style interface providing icon services
 * DeskTop Jump Table - simple JSR calls starting at $4003 MAIN, no arguments
-* DeskTop API - another MLI-style interface starting at $8E00 AUX
 
 In addition, some DeskTop data structures can be accessed directly.
 
@@ -68,9 +68,9 @@ Eject command
 Redraws all DeskTop windows. Required after a drag or resize.
 Follow with `DT_REDRAW_ICONS` call.
 
-#### `JUMP_TABLE_DESKTOP_RELAY` ($4018)
+#### `JUMP_TABLE_ITK_RELAY` ($4018)
 
-DESKTOP relay call (main>aux)
+Icon ToolKit relay call (main>aux)
 
 #### `JUMP_TABLE_LOAD_OVL` ($401B)
 
@@ -135,76 +135,80 @@ Used when exiting DeskTop; exit DHR mode, restores DHR mode to color, restores d
 
 <!-- ============================================================ -->
 
-## DeskTop API
+## Icon ToolKit
+
+This is part of DeskTop (unlike MGTK), but is written to be (mostly) isolated from the rest of the application logic, depending only on MGTK.
+
+* An internal table of icon number &rarr; IconEntry is maintained.
+* An internal list of highlighted (selected) icons is maintained.
+* Window-centric calls assume a GrafPort for the window is already the current GrafPort.
 
 Call from AUX (RAMRDON/RAMWRTON). Call style:
 ```
-   jsr $8E00
+   jsr IconTK::MLI
    .byte command
    .addr params
 ```
 
 Return value in A, 0=success.
 
-> NOTE: Only some of the calls have been identified.
-
 Commands:
 
-### `DT_ADD_ICON` ($01)
+### `IconTK::ADD_ICON` ($01)
 
 Parameters: { addr icondata }
 
 Inserts an icon record into the table.
 
-### `DT_HIGHLIGHT_ICON` ($02)
+### `IconTK::HIGHLIGHT_ICON` ($02)
 
 Parameters: { byte icon }
 
 Highlights (selects) an icon by number.
 
-### `DT_REDRAW_ICON` ($03)
+### `IconTK::REDRAW_ICON` ($03)
 
 Parameters: { byte icon }
 
 Redraws an icon by number.
 
-### `DT_REMOVE_ICON` ($04)
+### `IconTK::REMOVE_ICON` ($04)
 
 Parameters: { byte icon }
 
 Removes an icon by number.
 
-### `DT_HIGHLIGHT_ALL` ($05)
+### `IconTK::HIGHLIGHT_ALL` ($05)
 
 Parameters: { byte window_id }
 
 Highlights (selects) all icons in specified window (0 = desktop).
 
-### `DT_REMOVE_ALL` ($06)
+### `IconTK::REMOVE_ALL` ($06)
 
 Parameters: { byte window_id }
 
 Removes all icons from specified window (0 = desktop).
 
-### `DT_CLOSE_WINDOW` ($07)
+### `IconTK::CLOSE_WINDOW` ($07)
 
 Parameters: { byte window_id }
 
-Closes the specified window.
+Remove all icons associated with the specified window. No redrawing is done.
 
-### `DT_GET_HIGHLIGHTED` ($08)
+### `IconTK::GET_HIGHLIGHTED` ($08)
 
 Parameters: { .res 20 }
 
 Copies the numbers of the first 20 selected icons to the given buffer.
 
-### `DT_FIND_ICON` ($09)
+### `IconTK::FIND_ICON` ($09)
 
 Parameters: { word mousex, word mousey, (out) byte result }
 
 Find the icon number at the given coordinates.
 
-### `DT_DRAG_HIGHLIGHTED` ($0A)
+### `IconTK::DRAG_HIGHLIGHTED` ($0A)
 
 Parameters: { byte param }
 
@@ -214,27 +218,26 @@ drop was on the desktop, high bit clear if the drop target was an icon
 (and the low bits are the icon number), high bit set if the drop
 target was a window (and the low bits are the window number).
 
-### `DT_UNHIGHLIGHT_ICON` ($0B)
+### `IconTK::UNHIGHLIGHT_ICON` ($0B)
 
 Parameters: { addr iconentry }
 
-Unhighlights the specified icon. Note that the address of the icon
-entry is passed, not the number.
+Unhighlights the specified icon. Note that the address of the IconEntry is passed, not the number.
 
-### `DT_REDRAW_ICONS` ($0C)
+### `IconTK::REDRAW_ICONS` ($0C)
 
 Parameters: none (pass $0000 as address)
 
 Redraws the icons on the desktop (mounted volumes, trash). This call
 is required after destroying, moving, or resizing a desk accessory window.
 
-### `DT_ICON_IN_RECT` ($0D)
+### `IconTK::ICON_IN_RECT` ($0D)
 
 Parameters: { byte icon, rect bounds }
 
 Tests to see if the given icon (by number) overlaps the passed rect.
 
-### `DT_ERASE_ICON` ($0E)
+### `IconTK::ERASE_ICON` ($0E)
 
 Parameters: { byte icon }
 

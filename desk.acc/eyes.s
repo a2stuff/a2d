@@ -211,7 +211,7 @@ grow_box_bitmap:
 
 .proc exit
         MGTK_CALL MGTK::CloseWindow, winfo
-        DESKTOP_CALL DT_REDRAW_ICONS
+        ITK_CALL IconTK::REDRAW_ICONS
         rts
 .endproc
 
@@ -311,7 +311,7 @@ common: lda     dragwindow_params::moved
         jsr     draw_window
 
         ;; Draw DeskTop icons
-        DESKTOP_CALL DT_REDRAW_ICONS
+        ITK_CALL IconTK::REDRAW_ICONS
 
 :       jmp     input_loop
 

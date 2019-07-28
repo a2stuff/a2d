@@ -394,7 +394,7 @@ exit:
 
         ;; Force desktop redraw
         MGTK_CALL MGTK::CloseWindow, winfo
-        DESKTOP_CALL DT_REDRAW_ICONS
+        ITK_CALL IconTK::REDRAW_ICONS
 
         MGTK_CALL MGTK::ShowCursor
         rts                     ; exits input loop

@@ -557,7 +557,7 @@ no_mod:
 .proc do_close
         jsr     close_file
         MGTK_CALL MGTK::CloseWindow, winfo
-        DESKTOP_CALL DT_REDRAW_ICONS
+        ITK_CALL IconTK::REDRAW_ICONS
         rts                     ; exits input loop
 .endproc
 
@@ -839,7 +839,7 @@ end:    rts
 .endproc
 
 .proc finish_resize             ; only called from dead code
-        DESKTOP_CALL DT_REDRAW_ICONS
+        ITK_CALL IconTK::REDRAW_ICONS
         MGTK_CALL MGTK::SetPort, winfo::port
         lda     winfo::hscroll
         ror     a               ; check if low bit (track enabled) is set
