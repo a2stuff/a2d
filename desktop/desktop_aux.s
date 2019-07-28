@@ -2293,7 +2293,7 @@ window_id:      .byte   0
         lda     frontwindow_params::window_id
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        jsr     LA4CC
+        jsr     offset_icon_poly
         jsr     shift_port_down ; Further offset by window's items/used/free bar
         jsr     erase_window_icon
         jmp     LA446
@@ -2331,16 +2331,17 @@ volume:
 
 ;;; ============================================================
 
-LA446:  jsr     push_pointers
+.proc LA446
+        ptr := $8
+
+        jsr     push_pointers
         ldx     num_icons
         dex                     ; any icons to draw?
 
-.proc LA44D
-        ptr := $8
-
-        cpx     #$FF            ; =-1
+loop:   cpx     #$FF            ; =-1
         bne     LA466
-        bit     LA3B7           ; no, almost done
+
+        bit     LA3B7
         bpl     :+
         ;; TODO: Is this restoration necessary?
         MGTK_CALL MGTK::InitPort, icon_grafport
@@ -2352,7 +2353,7 @@ LA466:  txa
         pha
         lda     icon_table,x
         cmp     LA3AC
-        beq     LA4C5
+        beq     next
         asl     a
         tax
         copy16  icon_ptrs,x, ptr
@@ -2360,7 +2361,7 @@ LA466:  txa
         lda     (ptr),y
         and     #$07            ; window_id
         cmp     LA3AD
-        bne     LA4C5
+        bne     next
 
         ;; Is icon highlighted?
         lda     has_highlight
@@ -2369,7 +2370,7 @@ LA466:  txa
         lda     (ptr),y
         ldx     #0
 :       cmp     highlight_list,x
-        beq     LA4C5
+        beq     next            ; skip it ???
         inx
         cpx     highlight_count
         bne     :-
@@ -2377,115 +2378,137 @@ LA466:  txa
 LA49D:  ldy     #IconEntry::id ; icon num
         lda     (ptr),y
         sta     LA3AE
-        bit     LA3B7
-        bpl     LA4AC
-        jsr     LA4D3
+        bit     LA3B7           ; windowed?
+        bpl     LA4AC           ; nope, desktop
+        jsr     offset_icon_do  ; yes, adjust rect
 LA4AC:  DESKTOP_DIRECT_CALL DT_ICON_IN_RECT, LA3AE
-        beq     LA4BA
+        beq     :+
 
         DESKTOP_DIRECT_CALL DT_REDRAW_ICON, LA3AE
 
-LA4BA:  bit     LA3B7
-        bpl     LA4C5
+:       bit     LA3B7
+        bpl     next
         lda     LA3AE
-        jsr     LA4DC
-LA4C5:  pla
+        jsr     offset_icon_undo
+
+next:   pla
         tax
         dex
-        jmp     LA44D
+        jmp     loop
 .endproc
 
 ;;; ============================================================
+;;; Offset coordinates for windowed icons
 
-LA4CB:  .byte   0
+.proc offset_icon
 
-LA4CC:  copy    #$80, LA4CB
+offset_flags:  .byte   0        ; bit 7 = offset poly, bit 6 = undo offset, otherwise do offset
+
+vl_offset:  DEFINE_POINT 0,0,vl_offset
+mr_offset:  DEFINE_POINT 0,0,mr_offset
+
+entry_poly:  copy    #$80, offset_flags
         bmi     LA4E2           ; always
-LA4D3:  pha
+
+entry_do:  pha
         lda     #$40
-        sta     LA4CB
+        sta     offset_flags
         jmp     LA4E2
 
-LA4DC:  pha
+entry_undo:  pha
         lda     #0
-        sta     LA4CB
-LA4E2:  ldy     #0
-LA4E4:  lda     icon_grafport,y
-        sta     LA567,y
-        iny
-        cpy     #4
-        bne     LA4E4
-        ldy     #8
-LA4F1:  lda     icon_grafport,y
-        sta     LA567-4,y
-        iny
-        cpy     #12
-        bne     LA4F1
-        bit     LA4CB
-        bmi     LA506
-        bvc     LA56F
-        jmp     LA5CB
+        sta     offset_flags
 
-LA506:  ldx     #0
-LA508:  sub16   poly::vertices,x, LA567, poly::vertices,x
-        sub16   poly::vertices+2,x, LA569, poly::vertices+2,x
-        inx
-        inx
-        inx
-        inx
-        cpx     #32
-        bne     LA508
+LA4E2:  ldy     #MGTK::GrafPort::viewloc
+:       lda     icon_grafport,y
+        sta     vl_offset,y
+        iny
+        cpy     #MGTK::GrafPort::viewloc + .sizeof(MGTK::Point)
+        bne     :-
+
+        ldy     #MGTK::GrafPort::maprect
+:       lda     icon_grafport,y
+        sta     mr_offset - MGTK::GrafPort::maprect,y
+        iny
+        cpy     #MGTK::GrafPort::maprect + .sizeof(MGTK::Point)
+        bne     :-
+
+        bit     offset_flags
+        bmi     offset_poly
+        bvc     do_offset
+        jmp     undo_offset
+
+.proc offset_poly
         ldx     #0
-LA538:  add16   poly::vertices,x, LA56B, poly::vertices,x
-        add16   poly::vertices+2,x, LA56D, poly::vertices+2,x
+loop1:  sub16   poly::vertices+0,x, vl_offset::xcoord, poly::vertices+0,x
+        sub16   poly::vertices+2,x, vl_offset::ycoord, poly::vertices+2,x
         inx
         inx
         inx
         inx
         cpx     #32
-        bne     LA538
+        bne     loop1
+        ldx     #0
+
+loop2:  add16   poly::vertices+0,x, mr_offset::xcoord, poly::vertices+0,x
+        add16   poly::vertices+2,x, mr_offset::ycoord, poly::vertices+2,x
+        inx
+        inx
+        inx
+        inx
+        cpx     #32
+        bne     loop2
         rts
+.endproc
 
-LA567:  .word   0
-LA569:  .word   0
-LA56B:  .word   0
-LA56D:  .word   0
+.proc do_offset
+        ptr := $06
 
-LA56F:  pla
+        pla
         tay
         jsr     push_pointers
         tya
         asl     a
         tax
-        copy16  icon_ptrs,x, $06
-        ldy     #3
-        add16in ($06),y, LA567, ($06),y
+        copy16  icon_ptrs,x, ptr
+        ldy     #IconEntry::iconx
+        add16in (ptr),y, vl_offset::xcoord, (ptr),y ; iconx += viewloc::xcoord
         iny
-        add16in ($06),y, LA569, ($06),y
-        ldy     #3
-        sub16in ($06),y, LA56B, ($06),y
+        add16in (ptr),y, vl_offset::ycoord, (ptr),y ; icony += viewloc::xcoord
+        ldy     #IconEntry::iconx
+        sub16in (ptr),y, mr_offset::xcoord, (ptr),y ; icony -= maprect::left
         iny
-        sub16in ($06),y, LA56D, ($06),y
+        sub16in (ptr),y, mr_offset::ycoord, (ptr),y ; icony -= maprect::top
         jsr     pop_pointers
         rts
+.endproc
 
-LA5CB:  pla
+.proc undo_offset
+        ptr := $06
+
+        pla
         tay
         jsr     push_pointers
         tya
         asl     a
         tax
-        copy16  icon_ptrs,x, $06
-        ldy     #3
-        sub16in ($06),y, LA567, ($06),y
+        copy16  icon_ptrs,x, ptr
+        ldy     #IconEntry::iconx
+        sub16in (ptr),y, vl_offset::xcoord, (ptr),y ; iconx -= viewloc::xcoord
         iny
-        sub16in ($06),y, LA569, ($06),y
-        ldy     #3
-        add16in ($06),y, LA56B, ($06),y
+        sub16in (ptr),y, vl_offset::ycoord, (ptr),y ; icony -= viewloc::xcoord
+        ldy     #IconEntry::iconx
+        add16in (ptr),y, mr_offset::xcoord, (ptr),y ; iconx += maprect::left
         iny
-        add16in ($06),y, LA56D, ($06),y
+        add16in (ptr),y, mr_offset::ycoord, (ptr),y ; icony += maprect::top
         jsr     pop_pointers
         rts
+.endproc
+
+.endproc
+        offset_icon_poly := offset_icon::entry_poly
+        offset_icon_do := offset_icon::entry_do
+        offset_icon_undo := offset_icon::entry_undo
 
 ;;; ============================================================
 ;;; This handles drawing volume icons "behind" windows. It is

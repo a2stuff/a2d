@@ -45,20 +45,20 @@ MLI     := $4000
 
 .struct GrafPort
         ;; MapInfo
-        viewloc         .tag Point
-        mapbits         .addr
-        mapwidth        .byte
-        reserved        .byte
-        maprect         .tag Rect
+        viewloc         .tag Point   ; 0
+        mapbits         .addr        ; 4
+        mapwidth        .byte        ; 6
+        reserved        .byte        ; 7
+        maprect         .tag Rect    ; 8
 
-        pattern         .tag Pattern
-        colormasks      .byte 2 ; colormask_and, colormask_or
-        penloc          .tag Point
-        penwidth        .byte   ; horizontal pen thickness
-        penheight       .byte   ; vertical pen thickness
-        penmode         .byte
-        textback        .byte   ; text background
-        textfont        .addr
+        pattern         .tag Pattern ; 16
+        colormasks      .byte 2      ; 24 colormask_and, colormask_or
+        penloc          .tag Point   ; 26
+        penwidth        .byte        ; 30 horizontal pen thickness
+        penheight       .byte        ; 31 vertical pen thickness
+        penmode         .byte        ; 32
+        textback        .byte        ; 33 text background
+        textfont        .addr        ; 34
 .endstruct
 
 ;;; PolyList record:
