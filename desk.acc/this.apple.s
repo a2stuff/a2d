@@ -46,7 +46,7 @@ da_window_id    = 60
 da_width        = 400
 da_height       = 118
 da_left         = (screen_width - da_width)/2
-da_top          = 50
+da_top          = 45
 
 .proc winfo
 window_id:      .byte   da_window_id

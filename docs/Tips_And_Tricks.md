@@ -13,6 +13,7 @@
     * If no files are selected, all files are sorted by type: DIR, then TXT, then SYS, then others in descending (numeric) order.
 * Hold down **△** or **▲** when opening a folder using double-click or **File > Open** to close the parent folder.
     * Note: Does not work with the **△O** shortcut.
+* The Control Panel desk accessory writes settings back to the `DESKTOP2` file when it is closed. If it is not present, or is locked, the settings will not be saved for the next session.
 
 
 # File Types

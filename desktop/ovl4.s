@@ -43,7 +43,7 @@ routine_table:  .addr   $7000, $7000, $7000
         sta     L5104
         sta     L5103
         sta     L5105
-        lda     #prompt_insertion_point_blink_count
+        lda     DeskTop::Settings::ip_blink_speed
         sta     prompt_ip_counter
         lda     #$FF
         sta     LD920
@@ -76,7 +76,7 @@ L5106:  bit     LD8EC
         dec     prompt_ip_counter
         bne     :+
         jsr     jt_blink_ip
-        copy    #prompt_insertion_point_blink_count, prompt_ip_counter
+        copy    DeskTop::Settings::ip_blink_speed, prompt_ip_counter
 
 :       MGTK_RELAY_CALL MGTK::GetEvent, event_params
         lda     event_kind
@@ -88,7 +88,11 @@ L5106:  bit     LD8EC
 :       cmp     #MGTK::EventKind::key_down
         bne     :+
         jsr     L59B9
-:       MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
+        jmp     L5106
+
+:       jsr     desktop_main::check_mouse_moved
+        bcc     L5106
+        MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_which_area
         bne     :+
         jmp     L5106

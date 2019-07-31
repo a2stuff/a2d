@@ -316,3 +316,24 @@ GLYPH_SAPPLE  = $1E
         header_pointer          .word ; 28 $1C
         aux_type                .word ; 30 $1E
 .endstruct
+
+;;; ============================================================
+;;; Internals - Settings (modified by Control Panel)
+
+DESKTOP2_SETTINGS_OFFSET = $A700
+
+.scope DeskTop
+.scope Settings
+        address := $FF80
+        length  = $80
+
+        pattern        := $FF80 ; .res 8
+
+        dblclick_speed := $FF88 ; .word
+        kDefaultDblClickSpeed = $12C
+
+        ip_blink_speed := $FF8A ; .byte
+        kDefaultIPBlinkSpeed = 60
+
+.endscope
+.endscope

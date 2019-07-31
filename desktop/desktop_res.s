@@ -168,7 +168,7 @@ LD2A9:  .byte   0
 double_click_flag:
         .byte   0               ; high bit clear if double-clicked, set otherwise
 
-        ;; Set to specific machine type; used for double-click timing.
+        ;; Set to specific machine type
 machine_type:
         .byte   $00             ; Set to: $96 = IIe, $FA = IIc, $FD = IIgs
 
@@ -600,11 +600,8 @@ LD8E7:  .byte   0
 has_input_field_flag:
         .byte   0
 
-
-        prompt_insertion_point_blink_count = $14
-
 prompt_ip_counter:
-        .byte   prompt_insertion_point_blink_count
+        .byte   1               ; immediately decremented to 0 and reset
 
 prompt_ip_flag:
         .byte   0
@@ -1802,4 +1799,34 @@ app_mask:
         ;; Reserve $80 bytes for settings
         PAD_TO $FF80
 
-        PAD_TO $10000
+;;; ============================================================
+;;; Settings - modified by Control Panel
+;;; ============================================================
+
+.scope settings
+        .assert * = DeskTop::Settings::address, error, "Address mismatch"
+
+        ;; This is offset $A700 into DESKTOP2 file
+
+        .assert * = DeskTop::Settings::pattern, error, "Address mismatch"
+        .byte   %01010101
+        .byte   %10101010
+        .byte   %01010101
+        .byte   %10101010
+        .byte   %01010101
+        .byte   %10101010
+        .byte   %01010101
+        .byte   %10101010
+
+        .assert * = DeskTop::Settings::dblclick_speed, error, "Address mismatch"
+        .word   0               ; $12C * 1, * 4, or * 32, 0 if not set
+
+        .assert * = DeskTop::Settings::ip_blink_speed, error, "Address mismatch"
+        .byte   60              ; 120, 60 or 30; lower is faster
+
+        ;; Reserved for future use...
+
+        PAD_TO DeskTop::Settings::address + DeskTop::Settings::length
+.endscope
+
+        .assert * = $10000, error, "Segment length mismatch"

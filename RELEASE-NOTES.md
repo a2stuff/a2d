@@ -37,6 +37,8 @@ https://github.com/inexorabletash/a2d/issues
 
 * This Apple
   * Gives details about the computer, expanded memory, and what's in each slot. (#29)
+* Control Panel
+  * Allows editing the desktop pattern (#31), double-click speed (#2), insertion point blink speed. Also shows joystick calibration. (#72)
 * Run Basic Here
   * Launch BASIC.SYSTEM with PREFIX set to the current window's pathname. (#42)
 * Key Caps

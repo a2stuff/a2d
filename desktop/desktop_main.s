@@ -12705,6 +12705,27 @@ RAMSLOT := DEVADR + $16         ; Slot 3, Drive 2
 driver: jmp     (RAMSLOT)
 .endproc
 
+;;; ============================================================
+;;; Determine if mouse moved (returns w/ carry set if moved)
+;;; Used in dialogs to possibly change cursor
+
+.proc check_mouse_moved
+        ldx     #.sizeof(MGTK::Point)-1
+:       lda     event_coords,x
+        cmp     coords,x
+        bne     diff
+        dex
+        bpl     :-
+        clc
+        rts
+
+diff:   COPY_STRUCT MGTK::Point, event_coords, coords
+        sec
+        rts
+
+coords: DEFINE_POINT 0,0
+
+.endproc
 
 ;;; ============================================================
 
@@ -12766,7 +12787,7 @@ dialog_param_addr:
         sta     format_erase_overlay_flag
         sta     cursor_ip_flag
 
-        copy    #prompt_insertion_point_blink_count, prompt_ip_counter
+        copy    DeskTop::Settings::ip_blink_speed, prompt_ip_counter
 
         copy16  #rts1, jump_relay+1
         jsr     set_cursor_pointer
@@ -12787,7 +12808,7 @@ dialog_param_addr:
         dec     prompt_ip_counter
         bne     :+
         jsr     redraw_prompt_insertion_point
-        copy    #prompt_insertion_point_blink_count, prompt_ip_counter
+        copy    DeskTop::Settings::ip_blink_speed, prompt_ip_counter
 
         ;; Dispatch event types - mouse down, key press
 :       MGTK_RELAY_CALL MGTK::GetEvent, event_params
@@ -12805,6 +12826,9 @@ dialog_param_addr:
         beq     prompt_input_loop
 
         ;; Check if mouse is over input field, change cursor appropriately.
+        jsr     check_mouse_moved
+        bcc     prompt_input_loop
+
         MGTK_RELAY_CALL MGTK::FindWindow, event_coords
         lda     findwindow_which_area
         bne     :+
@@ -14173,20 +14197,15 @@ set_penmode_xor2:
         dex
         bpl     :-
 
-        lda     #0
-        sta     counter+1
-        lda     machine_type ; Speed of mouse driver? ($96=IIe,$FA=IIc,$FD=IIgs)
-        asl     a            ; * 2
-        rol     counter+1    ; So IIe = $12C, IIc = $1F4, IIgs = $1FA
-        sta     counter
+        copy16  DeskTop::Settings::dblclick_speed, counter
 
         ;; Decrement counter, bail if time delta exceeded
-loop:   dec     counter
-        bne     :+
-        dec     counter+1
-        bne     exit
+loop:   dec16   counter
+        lda     counter
+        ora     counter+1
+        beq     exit
 
-:       MGTK_RELAY_CALL MGTK::PeekEvent, event_params
+        MGTK_RELAY_CALL MGTK::PeekEvent, event_params
 
         ;; Check coords, bail if pixel delta exceeded
         jsr     check_delta
@@ -15476,27 +15495,33 @@ start:
         bmi     is_iigs
 
         ;; IIe (or IIe Option Card, or Laser 128)
-        copy    #$96, machine_type ; IIe
-
         lda     id_FB1E           ; Is it a Laser 128?
         cmp     #$AC
-        bne     :+
+        bne     is_iie
         copy    #$80, is_laser128_flag
-        copy    #$FD, machine_type ; Assume accelerated?
-:       jmp     end
+        lda     #$FD ; Assume accelerated?
+        ldxy    #DeskTop::Settings::kDefaultDblClickSpeed*4
+        jmp     end
+
+        ;; IIe (or IIe Option Card)
+is_iie: lda     #$96
+        ldxy    #DeskTop::Settings::kDefaultDblClickSpeed*1
+        jmp     end
 
         ;; IIgs
 is_iigs:
-        copy    #$FD, machine_type ; IIgs
+        lda     #$FD
+        ldxy    #DeskTop::Settings::kDefaultDblClickSpeed*4
         jmp     end
 
         ;; IIc or IIc+
-is_iic: copy    #$FA, machine_type ; IIc
-        lda     id_FBBF            ; ROM version
+is_iic: lda     id_FBBF            ; ROM version
         cmp     #$05               ; IIc Plus = $05
         bne     :+
         copy    #$80, is_iic_plus_flag
-:       jmp     end
+:       lda     #$FA
+        ldxy    #DeskTop::Settings::kDefaultDblClickSpeed*4
+        jmp     end
 
 id_FB1E: .byte   0
 id_FBB3: .byte   0
@@ -15504,6 +15529,14 @@ id_FBC0: .byte   0
 id_FBBF: .byte   0
 
 end:
+        sta     machine_type
+
+        ;; Only set if not previously configured
+        lda     DeskTop::Settings::dblclick_speed
+        ora     DeskTop::Settings::dblclick_speed+1
+        bne     :+
+        stxy    DeskTop::Settings::dblclick_speed
+:
 .endscope
 
 ;;; ============================================================
@@ -15544,6 +15577,7 @@ end:
 ;;; Initialize MGTK
 
 .scope
+        MGTK_RELAY_CALL MGTK::SetDeskPat, DeskTop::Settings::pattern
         MGTK_RELAY_CALL MGTK::StartDeskTop, startdesktop_params
         jsr     desktop_main::set_mono_mode
         MGTK_RELAY_CALL MGTK::SetMenu, splash_menu
