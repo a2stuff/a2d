@@ -609,7 +609,7 @@ ipblink_ip_bitmap:
 
 .proc exit
         MGTK_CALL MGTK::CloseWindow, winfo
-        ITK_CALL IconTK::REDRAW_ICONS
+        ITK_CALL IconTK::RedrawIcons
         rts
 .endproc
 
@@ -672,7 +672,7 @@ common: bit     dragwindow_params::moved
         jsr     draw_window
 
         ;; Draw DeskTop icons
-        ITK_CALL IconTK::REDRAW_ICONS
+        ITK_CALL IconTK::RedrawIcons
 
 :       jmp     input_loop
 
@@ -914,7 +914,7 @@ next:   dex
         jsr     draw_window
 
         ;; Draw DeskTop icons
-        ITK_CALL IconTK::REDRAW_ICONS
+        ITK_CALL IconTK::RedrawIcons
 
         jmp input_loop
 .endproc

@@ -66,7 +66,7 @@ Eject command
 #### `JUMP_TABLE_REDRAW_ALL` ($4015) *
 
 Redraws all DeskTop windows. Required after a drag or resize.
-Follow with `DT_REDRAW_ICONS` call.
+Follow with `IconTK::RedrawIcons` call.
 
 #### `JUMP_TABLE_ITK_RELAY` ($4018)
 
@@ -154,61 +154,61 @@ Return value in A, 0=success.
 
 Commands:
 
-### `IconTK::ADD_ICON` ($01)
+### `IconTK::AddIcon` ($01)
 
 Parameters: { addr icondata }
 
 Inserts an icon record into the table.
 
-### `IconTK::HIGHLIGHT_ICON` ($02)
+### `IconTK::HighlightIcon` ($02)
 
 Parameters: { byte icon }
 
 Highlights (selects) an icon by number.
 
-### `IconTK::REDRAW_ICON` ($03)
+### `IconTK::RedrawIcon` ($03)
 
 Parameters: { byte icon }
 
 Redraws an icon by number.
 
-### `IconTK::REMOVE_ICON` ($04)
+### `IconTK::RemoveIcon` ($04)
 
 Parameters: { byte icon }
 
 Removes an icon by number.
 
-### `IconTK::HIGHLIGHT_ALL` ($05)
+### `IconTK::HighlightAll` ($05)
 
 Parameters: { byte window_id }
 
 Highlights (selects) all icons in specified window (0 = desktop).
 
-### `IconTK::REMOVE_ALL` ($06)
+### `IconTK::RemoveAll` ($06)
 
 Parameters: { byte window_id }
 
 Removes all icons from specified window (0 = desktop).
 
-### `IconTK::CLOSE_WINDOW` ($07)
+### `IconTK::CloseWindow` ($07)
 
 Parameters: { byte window_id }
 
 Remove all icons associated with the specified window. No redrawing is done.
 
-### `IconTK::GET_HIGHLIGHTED` ($08)
+### `IconTK::GetHighlighted` ($08)
 
 Parameters: { .res 20 }
 
 Copies the numbers of the first 20 selected icons to the given buffer.
 
-### `IconTK::FIND_ICON` ($09)
+### `IconTK::FindIcon` ($09)
 
 Parameters: { word mousex, word mousey, (out) byte result }
 
 Find the icon number at the given coordinates.
 
-### `IconTK::DRAG_HIGHLIGHTED` ($0A)
+### `IconTK::DragHighlighted` ($0A)
 
 Parameters: { byte param }
 
@@ -218,26 +218,26 @@ drop was on the desktop, high bit clear if the drop target was an icon
 (and the low bits are the icon number), high bit set if the drop
 target was a window (and the low bits are the window number).
 
-### `IconTK::UNHIGHLIGHT_ICON` ($0B)
+### `IconTK::UnhighlightIcon` ($0B)
 
 Parameters: { addr iconentry }
 
 Unhighlights the specified icon. Note that the address of the IconEntry is passed, not the number.
 
-### `IconTK::REDRAW_ICONS` ($0C)
+### `IconTK::RedrawIcons` ($0C)
 
 Parameters: none (pass $0000 as address)
 
 Redraws the icons on the desktop (mounted volumes, trash). This call
 is required after destroying, moving, or resizing a desk accessory window.
 
-### `IconTK::ICON_IN_RECT` ($0D)
+### `IconTK::IconInRect` ($0D)
 
 Parameters: { byte icon, rect bounds }
 
 Tests to see if the given icon (by number) overlaps the passed rect.
 
-### `IconTK::ERASE_ICON` ($0E)
+### `IconTK::EraseIcon` ($0E)
 
 Parameters: { byte icon }
 

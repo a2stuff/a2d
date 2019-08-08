@@ -300,7 +300,7 @@ char_label:  .byte   0
 
 .proc exit
         MGTK_CALL MGTK::CloseWindow, winfo
-        ITK_CALL IconTK::REDRAW_ICONS
+        ITK_CALL IconTK::RedrawIcons
         rts                     ; exits input loop
 .endproc
 
@@ -365,7 +365,7 @@ char_label:  .byte   0
         jsr     draw_window
 
         ;; Draw DeskTop icons
-        ITK_CALL IconTK::REDRAW_ICONS
+        ITK_CALL IconTK::RedrawIcons
 
 :       jmp     input_loop
 

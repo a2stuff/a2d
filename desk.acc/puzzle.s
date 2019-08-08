@@ -84,7 +84,7 @@ stash_stack:  .byte   0
         bit     window_pos_flag
         bmi     skip
 
-        ITK_CALL IconTK::REDRAW_ICONS
+        ITK_CALL IconTK::RedrawIcons
 
 skip:   lda     #0
         sta     window_pos_flag
@@ -732,7 +732,7 @@ bail:   rts
         beq     bail
 destroy:
         MGTK_CALL MGTK::CloseWindow, closewindow_params
-        ITK_CALL IconTK::REDRAW_ICONS
+        ITK_CALL IconTK::RedrawIcons
 
         target = $20            ; copy following to ZP and run it
         COPY_BYTES sizeof_routine+1, routine, target

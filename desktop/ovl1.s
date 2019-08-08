@@ -43,7 +43,7 @@ str_desktop2:
 
 start:  lda     #$80
         sta     ptr
-        ITK_RELAY_CALL IconTK::REMOVE_ALL, 0 ; volume icons
+        ITK_RELAY_CALL IconTK::RemoveAll, 0 ; volume icons
         MGTK_RELAY_CALL MGTK::CloseAll
         MGTK_RELAY_CALL MGTK::SetZP1, ptr
 

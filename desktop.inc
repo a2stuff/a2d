@@ -100,24 +100,24 @@ MLI := $8E00
         ;; MLI-style call (jsr IconTK::MLI ; .byte call ; .addr params)
         ;; Call from Aux (RAMRDON/RAMWRTON)
 
-ADD_ICON             = $01      ; { .addr icondata }
-HIGHLIGHT_ICON       = $02      ; { .byte icon }
-REDRAW_ICON          = $03      ; { .byte icon }
-REMOVE_ICON          = $04      ; { .byte icon }
-HIGHLIGHT_ALL        = $05      ; { .byte window_id }
-REMOVE_ALL           = $06      ; { .byte window_id }
-CLOSE_WINDOW         = $07      ; { .byte window_id }
-GET_HIGHLIGHTED      = $08      ; { .res 20 }
-FIND_ICON            = $09      ; { .word mousex, .word mousey, .byte result }
-DRAG_HIGHLIGHTED     = $0A      ; { .byte param }
-                                ; Input: specific icon being dragged
-                                ; Output: 0 = on desktop (no-op)
-                                ;  hi bit clear: low bits are target icon
-                                ;  hi bit set:   low bits are target window
-UNHIGHLIGHT_ICON     = $0B      ; { .addr iconentry }
-REDRAW_ICONS         = $0C      ; Repaints desktop icons *
-ICON_IN_RECT         = $0D      ; { .byte icon, rect bounds }
-ERASE_ICON           = $0E      ; { .byte icon }
+AddIcon         = $01   ; { .addr icondata }
+HighlightIcon   = $02   ; { .byte icon }
+RedrawIcon      = $03   ; { .byte icon }
+RemoveIcon      = $04   ; { .byte icon }
+HighlightAll    = $05   ; { .byte window_id }
+RemoveAll       = $06   ; { .byte window_id }
+CloseWindow     = $07   ; { .byte window_id }
+GetHighlighted  = $08   ; { .res 20 }
+FindIcon        = $09   ; { .word mousex, .word mousey, .byte result }
+DragHighlighted = $0A   ; { .byte param }
+                        ; Input: specific icon being dragged
+                        ; Output: 0 = on desktop (no-op)
+                        ;  hi bit clear: low bits are target icon
+                        ;  hi bit set:   low bits are target window
+UnhighlightIcon = $0B   ; { .addr iconentry }
+RedrawIcons     = $0C   ; Repaints desktop icons *
+IconInRect      = $0D   ; { .byte icon, rect bounds }
+EraseIcon       = $0E   ; { .byte icon }
 
 ;;; `icon` is the icon number, i.e. first field in icon entry
 ;;; `icon_index` is the index in the icon table

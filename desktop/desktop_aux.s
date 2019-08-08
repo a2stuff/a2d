@@ -398,20 +398,20 @@ fontptr:        .addr   0
 
 desktop_jump_table:
         .addr   0
-        .addr   ADD_ICON_IMPL
-        .addr   HIGHLIGHT_ICON_IMPL
-        .addr   REDRAW_ICON_IMPL
-        .addr   REMOVE_ICON_IMPL
-        .addr   HIGHLIGHT_ALL_IMPL
-        .addr   REMOVE_ALL_IMPL
-        .addr   CLOSE_WINDOW_IMPL
-        .addr   GET_HIGHLIGHTED_IMPL
-        .addr   FIND_ICON_IMPL
-        .addr   DRAG_HIGHLIGHTED
-        .addr   UNHIGHLIGHT_ICON_IMPL
-        .addr   REDRAW_ICONS_IMPL
-        .addr   ICON_IN_RECT_IMPL
-        .addr   ERASE_ICON_IMPL
+        .addr   AddIconImpl
+        .addr   HighlightIconImpl
+        .addr   RedrawIconImpl
+        .addr   RemoveIconImpl
+        .addr   HighlightAllImpl
+        .addr   RemoveAllImpl
+        .addr   CloseWindowImpl
+        .addr   GetHighlightedImpl
+        .addr   FindIconImpl
+        .addr   DragHighlighted
+        .addr   UnhighlightIconImpl
+        .addr   RedrawIconsImpl
+        .addr   IconInRectImpl
+        .addr   EraseIconImpl
 
 .macro  ITK_DIRECT_CALL    op, addr, label
         jsr ITK_DIRECT
@@ -483,9 +483,9 @@ ycoord: .word   0
 .endproc
 
 ;;; ============================================================
-;;; ADD_ICON IMPL
+;;; AddIcon
 
-.proc ADD_ICON_IMPL
+.proc AddIconImpl
         PARAM_BLOCK params, $06
 ptr_icon:       .addr   0
         END_PARAM_BLOCK
@@ -520,11 +520,11 @@ sub:    ldx     num_icons       ; ???
 .endproc
 
 ;;; ============================================================
-;;; HIGHLIGHT_ICON IMPL
+;;; HighlightIcon
 
 ;;; param is pointer to icon id
 
-.proc HIGHLIGHT_ICON_IMPL
+.proc HighlightIconImpl
         PARAM_BLOCK params, $06
 ptr_icon:       .addr   0
         END_PARAM_BLOCK
@@ -589,20 +589,20 @@ L949D:  ldx     highlight_count
         ldy     #IconEntry::id
         lda     (ptr),y         ; icon num
         sta     icon
-        ITK_DIRECT_CALL IconTK::REDRAW_ICON, icon
+        ITK_DIRECT_CALL IconTK::RedrawIcon, icon
         return  #0              ; Highlighted
 
-        ;; IconTK::REDRAW_ICON params
+        ;; IconTK::RedrawIcon params
 icon:   .byte   0
 .endproc
 
 ;;; ============================================================
-;;; REDRAW_ICON IMPL
+;;; RedrawIcon
 
 ;;; * Assumes correct grafport already selected/maprect specified
 ;;; * Does not erase background
 
-.proc REDRAW_ICON_IMPL
+.proc RedrawIconImpl
         PARAM_BLOCK params, $06
 ptr_icon:       .addr   0
         END_PARAM_BLOCK
@@ -650,11 +650,11 @@ done:   jsr     paint_icon_unhighlighted
 .endproc
 
 ;;; ============================================================
-;;; REMOVE_ICON IMPL
+;;; RemoveIcon
 
 ;;; param is pointer to icon number
 
-.proc REMOVE_ICON_IMPL
+.proc RemoveIconImpl
         PARAM_BLOCK params, $06
 ptr_icon:       .addr   0
         END_PARAM_BLOCK
@@ -736,9 +736,9 @@ done:   return  #0              ; Unhighlighted
 .endproc
 
 ;;; ============================================================
-;;; ERASE_ICON IMPL
+;;; EraseIcon
 
-.proc ERASE_ICON_IMPL
+.proc EraseIconImpl
         PARAM_BLOCK params, $06
 ptr_icon_idx:   .addr   0
         END_PARAM_BLOCK
@@ -753,12 +753,12 @@ ptr_icon_idx:   .addr   0
 .endproc
 
 ;;; ============================================================
-;;; HIGHLIGHT_ALL IMPL
+;;; HighlightAll
 
 ;;; Highlight all icons in the specified window.
 ;;; (Unused?)
 
-.proc HIGHLIGHT_ALL_IMPL
+.proc HighlightAllImpl
         jmp     start
 
         PARAM_BLOCK params, $06
@@ -767,16 +767,16 @@ ptr_window_id:      .addr    0
 
         ptr := $08
 
-        ;; IconTK::HIGHLIGHT_ICON params
+        ;; IconTK::HighlightIcon params
 icon:   .byte   0
 
 buffer: .res    127, 0
 
-start:  lda     HIGHLIGHT_ICON_IMPL ; ???
+start:  lda     HighlightIconImpl ; ???
         beq     start2
         lda     highlight_list
         sta     icon
-        ITK_DIRECT_CALL IconTK::UNHIGHLIGHT_ICON, icon
+        ITK_DIRECT_CALL IconTK::UnhighlightIcon, icon
         jmp     start
 
 start2:
@@ -824,7 +824,7 @@ loop2:  lda     buffer,x
         rts
 
 :       sta     icon
-        ITK_DIRECT_CALL IconTK::HIGHLIGHT_ICON, icon
+        ITK_DIRECT_CALL IconTK::HighlightIcon, icon
         pla
         tax
         inx
@@ -834,11 +834,11 @@ loop2:  lda     buffer,x
 .endproc
 
 ;;; ============================================================
-;;; REMOVE_ALL IMPL
+;;; RemoveAll
 
 ;;; param is window id (0 = desktop)
 
-.proc REMOVE_ALL_IMPL
+.proc RemoveAllImpl
         jmp     start
 
         PARAM_BLOCK params, $06
@@ -847,7 +847,7 @@ ptr_window_id:      .addr    0
 
         icon_ptr := $08
 
-        ;; IconTK::REMOVE_ICON params
+        ;; IconTK::RemoveIcon params
 icon:   .byte   0
 
 count:  .byte   0
@@ -871,18 +871,18 @@ loop:   ldx     count
         ldy     #0
         cmp     (params::ptr_window_id),y
         bne     loop
-        ITK_DIRECT_CALL IconTK::REMOVE_ICON, icon
+        ITK_DIRECT_CALL IconTK::RemoveIcon, icon
         jmp     loop
 
 done:   return  #0
 .endproc
 
 ;;; ============================================================
-;;; CLOSE_WINDOW IMPL
+;;; CloseWindow
 
 ;;; param is window id
 
-.proc CLOSE_WINDOW_IMPL
+.proc CloseWindowImpl
         PARAM_BLOCK params, $06
 window_id:      .addr   0
         END_PARAM_BLOCK
@@ -954,11 +954,11 @@ L9758:  jmp     loop
 .endproc
 
 ;;; ============================================================
-;;; GET_HIGHLIGHTED IMPL
+;;; GetHighlighted
 
 ;;; Copies highlighted icon numbers to ($06)
 
-.proc GET_HIGHLIGHTED_IMPL
+.proc GetHighlightedImpl
         ldx     #0
         ldy     #0
 :       lda     highlight_list,x
@@ -973,9 +973,9 @@ done:   return  #0
 .endproc
 
 ;;; ============================================================
-;;; FIND_ICON IMPL
+;;; FindIcon
 
-.proc FIND_ICON_IMPL
+.proc FindIconImpl
         jmp     start
 
         coords := $6
@@ -1036,10 +1036,9 @@ L97F6:  .byte   0
 .endproc
 
 ;;; ============================================================
+;;; DragHighlighted
 
-;;; IconTK DRAG_HIGHLIGHTED IMPL
-
-.proc DRAG_HIGHLIGHTED
+.proc DragHighlighted
         ldy     #IconEntry::id
         lda     ($06),y
         sta     icon_id
@@ -1072,7 +1071,7 @@ icon_id:
 deltax: .word   0
 deltay: .word   0
 
-        ;; IconTK::HIGHLIGHT_ICON params
+        ;; IconTK::HighlightIcon params
 highlight_icon_id:  .byte   $00
 
 L9831:  .byte   $00
@@ -1169,7 +1168,7 @@ L98F2:  lda     highlight_count,x
         ldx     #$80
         stx     L9833
 L9909:  sta     L9834
-        ITK_DIRECT_CALL IconTK::ICON_IN_RECT, L9834
+        ITK_DIRECT_CALL IconTK::IconInRect, L9834
         beq     L9954
         jsr     calc_icon_poly
         lda     L9C74
@@ -1307,13 +1306,13 @@ L9A31:  COPY_BYTES 4, findwindow_params2, L9C92
         beq     L9A84
         lda     L9831
         sta     findwindow_params2::window_id
-        ITK_DIRECT_CALL IconTK::FIND_ICON, findwindow_params2
+        ITK_DIRECT_CALL IconTK::FindIcon, findwindow_params2
         lda     findwindow_params2::which_area
         cmp     highlight_icon_id
         beq     L9A84
         jsr     xdraw_outline
         MGTK_CALL MGTK::SetPort, icon_grafport
-        ITK_DIRECT_CALL IconTK::UNHIGHLIGHT_ICON, highlight_icon_id
+        ITK_DIRECT_CALL IconTK::UnhighlightIcon, highlight_icon_id
         jsr     xdraw_outline
         lda     #0
         sta     highlight_icon_id
@@ -1395,7 +1394,7 @@ L9BA5:  jsr     xdraw_outline
         lda     highlight_icon_id
         beq     :+
         MGTK_CALL MGTK::SetPort, icon_grafport
-        ITK_DIRECT_CALL IconTK::UNHIGHLIGHT_ICON, highlight_icon_id
+        ITK_DIRECT_CALL IconTK::UnhighlightIcon, highlight_icon_id
         jmp     L9C63
 
 :       MGTK_CALL MGTK::FindWindow, findwindow_params2
@@ -1592,7 +1591,7 @@ L9E1A:  jsr     push_pointers
         lda     findwindow_params2::which_area
         bne     L9E2B
         sta     findwindow_params2::window_id
-L9E2B:  ITK_DIRECT_CALL IconTK::FIND_ICON, findwindow_params2
+L9E2B:  ITK_DIRECT_CALL IconTK::FindIcon, findwindow_params2
         lda     findwindow_params2::which_area ; Icon ID
         bne     L9E39
         jmp     L9E97
@@ -1620,7 +1619,7 @@ L9E3D:  cmp     highlight_list,x
 :       sta     highlight_icon_id
         jsr     xdraw_outline
         MGTK_CALL MGTK::SetPort, icon_grafport
-        ITK_DIRECT_CALL IconTK::HIGHLIGHT_ICON, highlight_icon_id
+        ITK_DIRECT_CALL IconTK::HighlightIcon, highlight_icon_id
         jsr     xdraw_outline
 L9E97:  jsr     pop_pointers
         rts
@@ -1643,11 +1642,11 @@ L9EB4:  asl     a
 .endproc
 
 ;;; ============================================================
-;;; UNHIGHLIGHT_ICON IMPL
+;;; UnhighlightIcon
 
 ;;; param is pointer to IconEntry
 
-.proc UNHIGHLIGHT_ICON_IMPL
+.proc UnhighlightIconImpl
         PARAM_BLOCK params, $06
 ptr_iconent:    .addr   0
         END_PARAM_BLOCK
@@ -1676,17 +1675,17 @@ start:  lda     has_highlight
 :       ldy     #IconEntry::id
         lda     (params::ptr_iconent),y
         sta     icon
-        ITK_DIRECT_CALL IconTK::REDRAW_ICON, icon
+        ITK_DIRECT_CALL IconTK::RedrawIcon, icon
         return  #0
 
-        ;; IconTK::REDRAW_ICON params
+        ;; IconTK::RedrawIcon params
 icon:   .byte   0
 .endproc
 
 ;;; ============================================================
-;;; ICON_IN_RECT IMPL
+;;; IconInRect
 
-.proc ICON_IN_RECT_IMPL
+.proc IconInRectImpl
         jmp     start
 
 icon:   .byte   0
@@ -2077,14 +2076,14 @@ text_width:  .byte   0
 .endproc
 
 ;;; ============================================================
-;;; REDRAW_ICONS IMPL
+;;; RedrawIcons
 
-.proc REDRAW_ICONS_IMPL
+.proc RedrawIconsImpl
         ptr := $06
 
         jmp     start
 
-        ;; IconTK::REDRAW_ICON params
+        ;; IconTK::RedrawIcon params
 icon:  .byte   0
 
 done:   jsr     pop_pointers
@@ -2112,7 +2111,7 @@ loop:   bmi     done
         ldy     #IconEntry::id
         lda     (ptr),y
         sta     icon
-        ITK_DIRECT_CALL IconTK::REDRAW_ICON, icon
+        ITK_DIRECT_CALL IconTK::RedrawIcon, icon
 
 next:   pla
         tax
@@ -2273,7 +2272,7 @@ erase_icon:
 LA3AC:  .byte   0
 LA3AD:  .byte   0
 
-        ;; IconTK::REDRAW_ICON params
+        ;; IconTK::RedrawIcon params
 LA3AE:  .byte   0
 
 LA3AF:  .word   0
@@ -2395,10 +2394,10 @@ LA49D:  ldy     #IconEntry::id ; icon num
         bit     LA3B7           ; windowed?
         bpl     LA4AC           ; nope, desktop
         jsr     offset_icon_do  ; yes, adjust rect
-LA4AC:  ITK_DIRECT_CALL IconTK::ICON_IN_RECT, LA3AE
+LA4AC:  ITK_DIRECT_CALL IconTK::IconInRect, LA3AE
         beq     :+
 
-        ITK_DIRECT_CALL IconTK::REDRAW_ICON, LA3AE
+        ITK_DIRECT_CALL IconTK::RedrawIcon, LA3AE
 
 :       bit     LA3B7
         bpl     next

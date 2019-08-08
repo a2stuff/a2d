@@ -9,6 +9,15 @@ TARGETS = $(OUTDIR)/DESKTOP2.built
 .PHONY: clean all
 all: $(OUTDIR) $(TARGETS)
 
+$(OUTDIR):
+	mkdir -p $(OUTDIR)
+
+clean:
+	rm -f $(OUTDIR)/*.o
+	rm -f $(OUTDIR)/*.list
+	rm -f $(OUTDIR)/*.seg
+	rm -f $(TARGETS)
+
 $(OUTDIR)/mgtk.o: ../mgtk/mgtk.s $(HEADERS)
 	ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 

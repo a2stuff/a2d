@@ -75,7 +75,7 @@ iloop:  cpx     cached_window_icon_count
         pha
         lda     cached_window_icon_list,x
         jsr     icon_entry_lookup
-        ldy     #IconTK::ADD_ICON
+        ldy     #IconTK::AddIcon
         jsr     ITK_RELAY   ; icon entry addr in A,X
         pla
         tax
@@ -187,7 +187,7 @@ L412B:  jsr     LoadDesktopIconTable
         jsr     redraw_selected_icons
 L4143:  bit     L40F1
         bpl     L4151
-        ITK_RELAY_CALL IconTK::REDRAW_ICONS
+        ITK_RELAY_CALL IconTK::RedrawIcons
 L4151:  rts
 
 .endproc
@@ -261,9 +261,9 @@ L41FE:  lda     L4241
         beq     L4227
         tax
         copy    cached_window_icon_list,x, icon_param
-        ITK_RELAY_CALL IconTK::ICON_IN_RECT, icon_param
+        ITK_RELAY_CALL IconTK::IconInRect, icon_param
         beq     :+
-        ITK_RELAY_CALL IconTK::REDRAW_ICON, icon_param
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
 :       inc     L4241
         jmp     L41FE
 
@@ -310,9 +310,9 @@ window: lda     num
         tax
         copy    selected_icon_list,x, icon_param
         jsr     icon_screen_to_window
-        ITK_RELAY_CALL IconTK::ICON_IN_RECT, icon_param
+        ITK_RELAY_CALL IconTK::IconInRect, icon_param
         beq     :+
-        ITK_RELAY_CALL IconTK::REDRAW_ICON, icon_param
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
 :       lda     icon_param
         jsr     icon_window_to_screen
         inc     num
@@ -327,7 +327,7 @@ desktop:
         beq     done
         tax
         copy    selected_icon_list,x, icon_param
-        ITK_RELAY_CALL IconTK::REDRAW_ICON, icon_param
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
         inc     num
         jmp     desktop
 
@@ -527,7 +527,7 @@ call_proc:
         jsr     detect_double_click
         sta     double_click_flag
         copy    #0, findwindow_window_id
-        ITK_RELAY_CALL IconTK::FIND_ICON, event_coords
+        ITK_RELAY_CALL IconTK::FindIcon, event_coords
         lda     findicon_which_icon
         beq     :+
         jmp     handle_volume_icon_click
@@ -608,7 +608,7 @@ start:  jsr     clear_selection
         and     #icon_entry_winid_mask
         sta     winid
         jsr     zero_grafport5_coords
-        ITK_RELAY_CALL IconTK::HIGHLIGHT_ICON, icon_param
+        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
         jsr     reset_grafport3
         copy    winid, selected_window_index
         copy    #1, selected_icon_count
@@ -657,7 +657,7 @@ continue:
 
 .proc redraw_windows_and_desktop
         jsr     redraw_windows
-        ITK_RELAY_CALL IconTK::REDRAW_ICONS
+        ITK_RELAY_CALL IconTK::RedrawIcons
         rts
 .endproc
 
@@ -931,7 +931,7 @@ begin:
 :       lda     #ERR_FILE_NOT_OPENABLE
         jsr     show_alert_and_fail
 
-launch: ITK_RELAY_CALL IconTK::REMOVE_ALL, 0 ; volume icons
+launch: ITK_RELAY_CALL IconTK::RemoveAll, 0 ; volume icons
         MGTK_RELAY_CALL MGTK::CloseAll
         MGTK_RELAY_CALL MGTK::SetMenu, blank_menu
         ldx     buf_win_path
@@ -2266,7 +2266,7 @@ L518D:  lda     L51EF
         tax
         lda     cached_window_icon_list,x
         jsr     icon_entry_lookup
-        ldy     #IconTK::ADD_ICON
+        ldy     #IconTK::AddIcon
         jsr     ITK_RELAY   ; icon entry addr in A,X
         inc     L51EF
         jmp     L518D
@@ -2285,7 +2285,7 @@ L51C0:  ldx     L51EF
         sta     icon_param
         jsr     icon_screen_to_window
         jsr     offset_grafport2_and_set
-        ITK_RELAY_CALL IconTK::HIGHLIGHT_ICON, icon_param
+        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
         lda     icon_param
         jsr     icon_window_to_screen
         dec     L51EF
@@ -2451,7 +2451,7 @@ L5265:  .byte   0
 ;;; ============================================================
 
 .proc close_active_window
-        ITK_RELAY_CALL IconTK::CLOSE_WINDOW, active_window_id
+        ITK_RELAY_CALL IconTK::CloseWindow, active_window_id
         jsr     LoadActiveWindowIconTable
         lda     icon_count
         sec
@@ -2713,7 +2713,7 @@ L5485:  cpx     cached_window_icon_count
         lda     cached_window_icon_list,x
         sta     icon_param
         jsr     icon_screen_to_window
-        ITK_RELAY_CALL IconTK::ICON_IN_RECT, icon_param
+        ITK_RELAY_CALL IconTK::IconInRect, icon_param
         pha
         lda     icon_param
         jsr     icon_window_to_screen
@@ -2875,7 +2875,7 @@ L55F0:  ldx     L544A
         jsr     L56F9
         lda     icon_param
         jsr     icon_screen_to_window
-L5614:  ITK_RELAY_CALL IconTK::HIGHLIGHT_ICON, icon_param
+L5614:  ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
         lda     getwinport_params2::window_id
         beq     L562B
         lda     icon_param
@@ -2894,7 +2894,7 @@ L562C:  lda     icon_param
         jsr     L56F9
         lda     icon_param
         jsr     icon_screen_to_window
-L564A:  ITK_RELAY_CALL IconTK::UNHIGHLIGHT_ICON, icon_param
+L564A:  ITK_RELAY_CALL IconTK::UnhighlightIcon, icon_param
         lda     getwinport_params2::window_id
         beq     L5661
         lda     icon_param
@@ -2942,7 +2942,7 @@ L56B4:  ldx     L56F8
         beq     L56CF
         lda     icon_param2
         jsr     icon_screen_to_window
-L56CF:  ITK_RELAY_CALL IconTK::HIGHLIGHT_ICON, icon_param2
+L56CF:  ITK_RELAY_CALL IconTK::HighlightIcon, icon_param2
         lda     LE22C
         beq     L56E3
         lda     icon_param2
@@ -3231,7 +3231,7 @@ L5916:  lda     cached_window_icon_list,x
         lda     cached_window_icon_list,x
         sta     icon_param
         copy    #0, cached_window_icon_list,x
-        ITK_RELAY_CALL IconTK::REMOVE_ICON, icon_param
+        ITK_RELAY_CALL IconTK::RemoveIcon, icon_param
         lda     icon_param
         jsr     FreeIcon
         dec     cached_window_icon_count
@@ -3275,7 +3275,7 @@ L5986:  txa
         cmp     trash_icon_num
         beq     L5998
         jsr     icon_entry_lookup
-        ldy     #IconTK::ADD_ICON
+        ldy     #IconTK::AddIcon
         jsr     ITK_RELAY   ; icon entry addr in A,X
 L5998:  pla
         tax
@@ -3432,7 +3432,7 @@ not_in_map:
         lda     icon_param
         jsr     FreeIcon
         jsr     reset_grafport3
-        ITK_RELAY_CALL IconTK::REMOVE_ICON, icon_param
+        ITK_RELAY_CALL IconTK::RemoveIcon, icon_param
 
 :       lda     cached_window_icon_count
         sta     previous_icon_count
@@ -3470,7 +3470,7 @@ add_icon:
         dex
         lda     cached_window_icon_list,x
         jsr     icon_entry_lookup
-        ldy     #IconTK::ADD_ICON
+        ldy     #IconTK::AddIcon
         jsr     ITK_RELAY   ; icon entry addr in A,X
 
 :       jsr     StoreWindowIconTable
@@ -3718,7 +3718,7 @@ ctl:    .byte   0
         jmp     clear_selection
 
 :       copy    active_window_id, findicon_window_id
-        ITK_RELAY_CALL IconTK::FIND_ICON, findicon_params
+        ITK_RELAY_CALL IconTK::FindIcon, findicon_params
         lda     findicon_which_icon
         bne     handle_file_icon_click
         jsr     L5F13
@@ -3768,7 +3768,7 @@ replace:
         copy    icon_num, icon_param
         jsr     icon_screen_to_window
         jsr     offset_grafport2_and_set
-        ITK_RELAY_CALL IconTK::HIGHLIGHT_ICON, icon_param
+        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
 
         copy    active_window_id, getwinport_params2::window_id
         jsr     get_set_port2
@@ -3784,7 +3784,7 @@ replace:
 
 start_icon_drag:
         copy    icon_num, drag_drop_param
-        ITK_RELAY_CALL IconTK::DRAG_HIGHLIGHTED, drag_drop_param
+        ITK_RELAY_CALL IconTK::DragHighlighted, drag_drop_param
         tax
         lda     drag_drop_param
         beq     desktop
@@ -3850,7 +3850,7 @@ desktop:
         pha
         lda     selected_icon_list,x
         sta     redraw_icon_param
-        ITK_RELAY_CALL IconTK::REDRAW_ICON, redraw_icon_param
+        ITK_RELAY_CALL IconTK::RedrawIcon, redraw_icon_param
         pla
         tax
         dex
@@ -4071,9 +4071,9 @@ L5F88:  txa
         lda     cached_window_icon_list,x
         sta     icon_param
         jsr     icon_screen_to_window
-        ITK_RELAY_CALL IconTK::ICON_IN_RECT, icon_param
+        ITK_RELAY_CALL IconTK::IconInRect, icon_param
         beq     L5FB9
-        ITK_RELAY_CALL IconTK::HIGHLIGHT_ICON, icon_param
+        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
         ldx     selected_icon_count
         inc     selected_icon_count
         copy    icon_param, selected_icon_list,x
@@ -4256,7 +4256,7 @@ handle_close_click:
         sbc     cached_window_icon_count
         sta     icon_count
 
-        ITK_RELAY_CALL IconTK::CLOSE_WINDOW, active_window_id
+        ITK_RELAY_CALL IconTK::CloseWindow, active_window_id
 
         jsr     free_cached_window_icons
 
@@ -4294,7 +4294,7 @@ cont:   sta     cached_window_icon_count
         and     #icon_entry_winid_mask
         sta     selected_window_index
         jsr     zero_grafport5_coords
-        ITK_RELAY_CALL IconTK::HIGHLIGHT_ICON, icon_param
+        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
         jsr     reset_grafport3
         copy    #1, selected_icon_count
         copy    icon_param, selected_icon_list
@@ -4822,7 +4822,7 @@ L67F6:  bit     BUTN0
         ;; Add clicked icon to selection
         lda     selected_window_index
         bne     replace_selection
-        ITK_RELAY_CALL IconTK::HIGHLIGHT_ICON, findicon_which_icon
+        ITK_RELAY_CALL IconTK::HighlightIcon, findicon_which_icon
         ldx     selected_icon_count
         lda     findicon_which_icon
         sta     selected_icon_list,x
@@ -4835,7 +4835,7 @@ replace_selection:
 
         ;; Set selection to clicked icon
 set_selection:
-        ITK_RELAY_CALL IconTK::HIGHLIGHT_ICON, findicon_which_icon
+        ITK_RELAY_CALL IconTK::HighlightIcon, findicon_which_icon
         copy    #1, selected_icon_count
         copy    findicon_which_icon, selected_icon_list
         copy    #0, selected_window_index
@@ -4846,7 +4846,7 @@ L6834:  bit     double_click_flag
 
         ;; Drag of volume icon
         copy    findicon_which_icon, drag_drop_param
-        ITK_RELAY_CALL IconTK::DRAG_HIGHLIGHTED, drag_drop_param
+        ITK_RELAY_CALL IconTK::DragHighlighted, drag_drop_param
         tax
         lda     drag_drop_param
         beq     L6878
@@ -4889,7 +4889,7 @@ L688F:  ldx     selected_icon_count
 L6893:  txa
         pha
         copy    selected_icon_list,x, icon_param3
-        ITK_RELAY_CALL IconTK::REDRAW_ICON, icon_param3
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param3
         pla
         tax
         dex
@@ -4936,9 +4936,9 @@ L68F9:  cpx     cached_window_icon_count
 :       txa
         pha
         copy    cached_window_icon_list,x, icon_param
-        ITK_RELAY_CALL IconTK::ICON_IN_RECT, icon_param
+        ITK_RELAY_CALL IconTK::IconInRect, icon_param
         beq     L692C
-        ITK_RELAY_CALL IconTK::HIGHLIGHT_ICON, icon_param
+        ITK_RELAY_CALL IconTK::HighlightIcon, icon_param
         ldx     selected_icon_count
         inc     selected_icon_count
         copy    icon_param, selected_icon_list,x
@@ -5199,7 +5199,7 @@ update_view:
         tax
         lda     cached_window_icon_list,x
         jsr     icon_entry_lookup ; A,X points at IconEntry
-        ldy     #IconTK::ADD_ICON
+        ldy     #IconTK::AddIcon
         jsr     ITK_RELAY   ; icon entry addr in A,X
         inc     num
         jmp     :-
@@ -5235,7 +5235,7 @@ done:   copy    cached_window_id, active_window_id
         jsr     offset_grafport2_and_set
         lda     icon_params2
         jsr     icon_screen_to_window
-:       ITK_RELAY_CALL IconTK::REDRAW_ICON, icon_params2
+:       ITK_RELAY_CALL IconTK::RedrawIcon, icon_params2
 
         lda     getwinport_params2::window_id
         beq     done            ; skip if on desktop
@@ -5375,9 +5375,9 @@ L6D09:  txa
         pha
         lda     cached_window_icon_list,x
         sta     icon_param
-        ITK_RELAY_CALL IconTK::ICON_IN_RECT, icon_param
+        ITK_RELAY_CALL IconTK::IconInRect, icon_param
         beq     L6D25
-        ITK_RELAY_CALL IconTK::REDRAW_ICON, icon_param
+        ITK_RELAY_CALL IconTK::RedrawIcon, icon_param
 L6D25:  pla
         tax
         inx
@@ -5409,7 +5409,7 @@ L6D56:  lda     L6DB0
         lda     selected_icon_list,x
         sta     icon_param
         jsr     icon_screen_to_window
-        ITK_RELAY_CALL IconTK::UNHIGHLIGHT_ICON, icon_param
+        ITK_RELAY_CALL IconTK::UnhighlightIcon, icon_param
         lda     icon_param
         jsr     icon_window_to_screen
         inc     L6DB0
@@ -5421,7 +5421,7 @@ L6D7D:  lda     L6DB0
         tax
         lda     selected_icon_list,x
         sta     icon_param
-        ITK_RELAY_CALL IconTK::UNHIGHLIGHT_ICON, icon_param
+        ITK_RELAY_CALL IconTK::UnhighlightIcon, icon_param
         inc     L6DB0
         jmp     L6D7D
 
@@ -10210,7 +10210,7 @@ done:   stx     buf
 
 .proc redraw_desktop_and_windows
         jsr     JT_REDRAW_ALL
-        yax_call JT_ITK_RELAY, IconTK::REDRAW_ICONS, 0
+        yax_call JT_ITK_RELAY, IconTK::RedrawIcons, 0
         rts
 .endproc
 
@@ -10816,7 +10816,7 @@ L969E:  lda     #$40
         ldx     L9706
         lda     selected_icon_list,x
         sta     icon_param2
-        yax_call JT_ITK_RELAY, IconTK::ERASE_ICON, icon_param2
+        yax_call JT_ITK_RELAY, IconTK::EraseIcon, icon_param2
         copy16  L9707, $08
         ldx     L9706
         lda     selected_icon_list,x

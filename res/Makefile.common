@@ -8,18 +8,6 @@ LDFLAGS = --config ../res/asm.cfg
 OUTDIR = out
 
 
-### Common Targets
-
-$(OUTDIR):
-	mkdir -p $(OUTDIR)
-
-clean:
-	rm -f $(OUTDIR)/*.o
-	rm -f $(OUTDIR)/*.list
-	rm -f $(OUTDIR)/*.seg
-	rm -f $(TARGETS)
-
-
 ### Build Rules
 
 # Object files

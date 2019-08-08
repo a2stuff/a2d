@@ -80,7 +80,7 @@ save_stack:  .byte   0
         sta     RAMWRTON
 
         ;; Redraw DeskTop's icons.
-        ITK_CALL IconTK::REDRAW_ICONS
+        ITK_CALL IconTK::RedrawIcons
 
         ;;  Redraw window after event_kind_drag
         jsr     draw_content
@@ -765,7 +765,7 @@ ignore_click:
         beq     ignore_click
 
 exit:   MGTK_CALL MGTK::CloseWindow, closewindow_params
-        ITK_CALL IconTK::REDRAW_ICONS
+        ITK_CALL IconTK::RedrawIcons
         jmp     exit_da
 
 :       cmp     #MGTK::Area::dragbar ; Title bar?
