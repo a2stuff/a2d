@@ -1,4 +1,4 @@
-        .setcpu "65C02"
+        .setcpu "6502"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
@@ -579,7 +579,8 @@ next:
         bpl     cloop
 
         pla
-        inc
+        clc
+        adc     #1
         cmp     #rows
         bne     rloop
 

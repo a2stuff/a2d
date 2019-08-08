@@ -330,7 +330,7 @@ dblclick_speed_table_size = 3
 dblclick_speed_table:
         .word   DeskTop::Settings::kDefaultDblClickSpeed * 1
         .word   DeskTop::Settings::kDefaultDblClickSpeed * 4
-        .word   DeskTop::Settings::kDefaultDblClickSpeed * 32
+        .word   DeskTop::Settings::kDefaultDblClickSpeed * 16
 
 str_dblclick_speed:
         DEFINE_STRING "Double-Click Speed"
