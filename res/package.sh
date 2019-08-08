@@ -28,7 +28,7 @@ for da_dir in $DA_DIRS; do
     for file in $(cat $da_dir/TARGETS); do
         tcfile=$(titlecase $file)
         echo "$tcfile=Type(F1),AuxType(0640),VersionCreate(00),MinVersion(00),Access(E3),FolderInfo1(000000000000000000000000000000000000),FolderInfo2(000000000000000000000000000000000000)" >> "$FINFO"
-        cp "$da_dir/out/$file.built" "out/package/$tcfile"
+        cp "$da_dir/out/$file.da" "out/package/$tcfile"
     done
 done
 
@@ -43,11 +43,11 @@ cp "desktop.system/out/desktop.system.SYS" "$PACKDIR/DeskTop.system"
 cp "desktop/out/DESKTOP2.built" "$PACKDIR/DeskTop2"
 
 # If ProDOS/BASIC.system are present in res/, install them too.
-if [ -e "res/PRODOS" ]; then
-    cp "res/PRODOS" "$PACKDIR/ProDOS"
+if [ -e "res/package/PRODOS" ]; then
+    cp "res/package/PRODOS" "$PACKDIR/ProDOS"
 fi
-if [ -e "res/BASIC.SYSTEM" ]; then
-    cp "res/BASIC.SYSTEM" "$PACKDIR/BASIC.system"
+if [ -e "res/package/BASIC.SYSTEM" ]; then
+    cp "res/package/BASIC.SYSTEM" "$PACKDIR/BASIC.system"
 fi
 
 # Create a new disk image.

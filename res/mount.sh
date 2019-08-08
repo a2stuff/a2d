@@ -19,12 +19,12 @@ function mount_f1 {
         || (cecho red "failed to mount $dst" ; return 1)
 }
 
-# Mount file xxx.built as $F1 file, with DA auxtype
+# Mount file xxx.da as $F1 file, with DA auxtype
 function mount_da {
     srcdir="$2"
     dstdir="$3"
     uppercase=$(echo "$1" | tr /a-z/ /A-Z/)
-    src="$srcdir/out/$1.built"
+    src="$srcdir/out/$1.da"
     dst="$dstdir/$uppercase.\$F1"
     cp "$src" "$dst" \
 	&& xattr -wx prodos.AuxType '40 06' "$dst" \

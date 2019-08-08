@@ -8,6 +8,15 @@ DeskTop.po, DeskAccessories.po and Preview.po are 140k images
 containing different parts of the application, and can be transferred to
 5.25" floppies using ADTPro.
 
+
+Documentation
+-------------
+
+See https://a2desktop.com for more information.
+
+Source code can be found at: https://github.com/inexorabletash/a2d
+
+
 Installation
 ------------
 
@@ -23,23 +32,3 @@ storage device:
   * `DESKTOP2` - application file
   * `DESK.ACC/` - contains Desk Accessories (DAs)
   * `PREVIEW/` - contains file preview handlers (special type of DAs)
-
-At runtime, other files will be created within the application
-directory:
-
-* `QUIT.TMP` holds the original ProDOS quit routine.
-* `SELECTOR.LIST` holds the Selector menu entries, which allow
-   for quick launching of other applications.
-
-Tips and Tricks
----------------
-
-You can use the Sort Directory DA to order the files, which controls
-the menu order:
-
-* Open the A2.DESKTOP/DESK.ACC folder
-* Hold Open-Apple and click on each file in the desired order
-* Select Sort Directory from the Apple menu, and verify the order
-* Restart
-
-Source code can be found at: https://github.com/inexorabletash/a2d

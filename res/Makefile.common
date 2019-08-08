@@ -1,0 +1,36 @@
+### Common definitions
+
+# Compile flags.
+CAFLAGS = --target apple2enh --list-bytes 0
+LDFLAGS = --config ../res/asm.cfg
+
+# Each directory builds into an 'out' subdir:
+OUTDIR = out
+
+
+### Common Targets
+
+$(OUTDIR):
+	mkdir -p $(OUTDIR)
+
+clean:
+	rm -f $(OUTDIR)/*.o
+	rm -f $(OUTDIR)/*.list
+	rm -f $(OUTDIR)/*.seg
+	rm -f $(TARGETS)
+
+
+### Build Rules
+
+# Object files
+$(OUTDIR)/%.o: %.s $(HEADERS)
+	ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
+
+# Desk Accessory Files .da
+$(OUTDIR)/%.da: $(OUTDIR)/%.o ../res/asm.cfg
+	ld65 $(LDFLAGS) -o '$@' $<
+
+# System Files .SYS
+$(OUTDIR)/%.SYS: $(OUTDIR)/%.o ../res/asm.cfg
+	ld65 $(LDFLAGS) -o '$@' $<
+	xattr -wx prodos.AuxType '00 20' $@

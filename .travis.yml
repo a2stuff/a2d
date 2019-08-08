@@ -4,20 +4,21 @@ language: c
 
 install:
 - git clone https://github.com/cc65/cc65 /tmp/cc65 &&
-  make -C /tmp/cc65 ca65 ld65
+  sudo make -C /tmp/cc65 ca65 ld65 avail &&
+  cc65 --version
 
 script:
 - cd $TRAVIS_BUILD_DIR/desktop.system &&
-  MAKE_FLAGS="CC65=/tmp/cc65/bin" res/go.sh
+  res/go.sh
 
 - cd $TRAVIS_BUILD_DIR/desktop &&
-  MAKE_FLAGS="CC65=/tmp/cc65/bin" res/go.sh
+  res/go.sh
 
 - cd $TRAVIS_BUILD_DIR/desk.acc &&
-  MAKE_FLAGS="CC65=/tmp/cc65/bin" res/go.sh
+  res/go.sh
 
 - cd $TRAVIS_BUILD_DIR/preview &&
-  MAKE_FLAGS="CC65=/tmp/cc65/bin" res/go.sh
+  res/go.sh
 
 before_deploy:
 - git clone https://github.com/mach-kernel/cadius /tmp/cadius &&

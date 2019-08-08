@@ -9,7 +9,7 @@ function cecho {
 }
 
 function do_make {
-    make $MAKE_FLAGS "$1" \
+    make "$1" \
         && (cecho green "make $1 good") \
         || (tput blink ; cecho red "MAKE $1 BAD" ; return 1)
 }

@@ -38,7 +38,7 @@ function mount_da {
     srcdir="$2"
     dstdir="$3"
     uppercase=$(echo "$1" | tr /a-z/ /A-Z/)
-    src="$srcdir/out/$1.built"
+    src="$srcdir/out/$1.da"
     dst="$dstdir/$uppercase#F10640"
     cp "$src" "$dst" \
         && (cecho green "wrote $dst" ) \

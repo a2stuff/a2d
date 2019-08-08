@@ -98,6 +98,10 @@ data.
 DeskTop application code is in the lower 48k of both Aux and Main:
 
 * Aux $8580-$BFFF - sitting above the GUI library (`desktop_aux.s`)
+ * $8580-$8DFF - Resources, including icons and font
+ * $8E00-$A6xx - Icon ToolKit
+ * $A6xx-$ADFF - Resources, including menu definitions
+ * $AE00-$BFFF - Alert dialog resources/code
 * Main $4000-$BEFF (`desktop_main.s`)
 
 ...and in the Aux language card area (accessible from both aux and
@@ -105,7 +109,7 @@ main code) are relays, buffers and resources:
 
 * Aux $D000-$D1FF - main-to-aux relay calls
 * Aux $D200-$ECFF - resources (menus, strings, window)
-* Aux $ED00-$FAFF - hole for data buffer - entries for each icon on desktop/in windows
+* Aux $ED00-$FAFF - hole for IconEntries
 * Aux $FB00-$FFFF - more resources (file types, icons)
 
 ($C000-$CFFF is reserved for I/O, and main $BF page and language card is ProDOS)
@@ -201,12 +205,13 @@ $D000 +-------------+----+  +-------------+----+  +-------------+
                                                   |             |
 $C000 +-------------+       +-------------+       +-------------+
       | ProDOS GP   |       | DeskTop     |
-$BF00 +-------------+       | App Code    |
-      | DeskTop     |       |             |
+$BF00 +-------------+       | Utilities & |
+      | DeskTop     |       | Resources   |
       | App Code    |       |             |
+      |             |       | * Icon TK   |
+      |             |       | * Alerts    |
       |             |       |             |
-      |             |       |             |
-      |             |       |             |
+$AE00 |             |       | Alert Entry |
       |             |       |             |
 $A000 |      +------+       |             |
       |      | Ovl  |       |             |
@@ -214,7 +219,7 @@ $A000 |      +------+       |             |
       |      |      |       |             |
 $9000 |      +------+       |             |
       |             |       |             |
-$8E00 |             |       | Entry Point |
+$8E00 |             |       | ITK Entry   |
       |             |       |             |
 $8800 |             |       | Font        |
       |             |       |             |

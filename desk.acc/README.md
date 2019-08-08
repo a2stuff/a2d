@@ -37,7 +37,7 @@ See [API.md](API.md) for programming details
 
 On Unix-like systems (including Mac OS X) `make all` should build
 the desk accessory files (original and new) into `out/`
-output with a `.built` suffix.
+output with a `.da` suffix.
 
 ## Getting The DAs Onto Your Apple II
 
@@ -84,9 +84,9 @@ automatically if the `mount/` folder already exists.)
 If you need to copy the files some other way (e.g. via
 [CiderPress](http://a2ciderpress.com/)), you need to do the following:
 
-Transfer the `.built` files in the `out` directory, ensuring you:
+Transfer the `.da` files in the `out` directory, ensuring you:
 
-* Drop the `.built` suffix
+* Drop the `.da` suffix
 * Ensure they have ProDOS file type `$F1`
 * Ensure they have start address `$0800`
 * Ensure they have auxtype `$0640` (to match the originals)
