@@ -761,6 +761,8 @@ ptr_icon_idx:   .addr   0
 .proc HighlightAllImpl
         jmp     start
 
+buffer := SAVE_AREA_BUFFER
+
         PARAM_BLOCK params, $06
 ptr_window_id:      .addr    0
         END_PARAM_BLOCK
@@ -769,8 +771,6 @@ ptr_window_id:      .addr    0
 
         ;; IconTK::HighlightIcon params
 icon:   .byte   0
-
-buffer: .res    127, 0
 
 start:  lda     HighlightIconImpl ; ???
         beq     start2
@@ -4230,17 +4230,18 @@ LBFCF:  .byte   $00
 
         ;; Draw pascal string; address in (X,A)
 .proc draw_pascal_string
-        ptr := $06
+        PARAM_BLOCK drawtext_params, $06
+data:   .addr   0
+length: .byte   0
+        END_PARAM_BLOCK
 
-        stax    ptr
+        stax    drawtext_params::data
         ldy     #0
-        lda     (ptr),y         ; Check length
+        lda     (drawtext_params::data),y         ; Check length
         beq     end
-        sta     ptr+2
-        inc     ptr
-        bne     call
-        inc     ptr+1
-call:   MGTK_CALL MGTK::DrawText, ptr
+        sta     drawtext_params::length
+        inc16   drawtext_params::data ; skip past length
+        MGTK_CALL MGTK::DrawText, drawtext_params
 end:    rts
 .endproc
 

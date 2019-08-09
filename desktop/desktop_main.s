@@ -1025,9 +1025,28 @@ done:   rts
 .endproc
 
 ;;; ============================================================
+;;; Aux $D000-$DFFF holds FileRecord entries. These are stored
+;;; with a one byte length prefix, then sequential FileRecords.
+;;; Not counting the prefix, this gives room for 128 entries.
+;;; Only 127 icons are supported and volumes don't get entries,
+;;; so this is enough, but free space is not compacted so it
+;;; can run out. https://github.com/inexorabletash/a2d/issues/19
 
-L485D:  .word   $E000
-L485F:  .word   $D000
+;;; `window_icon_to_filerecord_list` maps volume icon to list num
+;;; `window_filerecord_table` maps from list num to address
+
+;;; TODO:
+;;; * Move list size to a table outside the buffer to keep
+;;;   everything aligned
+;;; * Introduce compaction
+
+;;; This remains constant:
+filerecords_end:
+        .word   $E000
+
+;;; This tracks the start of free space.
+filerecords_start:
+        .word   $D000
 
 ;;; ============================================================
 
@@ -5310,12 +5329,9 @@ L6C5F:  txa
         lda     LCBANK1
         tya
         sta     LE71F
-        inc     LE71D
-        bne     L6C8F
-        inc     LE71D+1
+        inc16   LE71D
 
         ;; First row
-.proc L6C8F
         lda     #16
         sta     pos_col_name::ycoord
         sta     pos_col_type::ycoord
@@ -5343,7 +5359,6 @@ done:   jsr     reset_grafport3
 
 rows_done:
         .byte   0
-.endproc
 
         ;; Icon view
 L6CCD:  copy    cached_window_id, getwinport_params2::window_id
@@ -5827,7 +5842,7 @@ L70C4:  .byte   $00
         cpx     #4
         bne     :-
 
-        sub16   L485D, L485F, L72A8
+        sub16   filerecords_end, filerecords_start, L72A8
         ldx     #$05
 L710A:  lsr16   L72A8
         dex
@@ -5861,7 +5876,7 @@ L7161:  jsr     warning_dialog_proc_num
 
         record_ptr := $06
 
-L7169:  copy16  L485F, record_ptr
+L7169:  copy16  filerecords_start, record_ptr
         lda     window_icon_to_filerecord_list
         asl     a
         tax
@@ -5890,10 +5905,7 @@ L7169:  copy16  L485F, record_ptr
         copy16  #$0C00 + SubdirectoryHeader::storage_type_name_length, entry_ptr
 
         ;; Advance past entry count
-        inc     record_ptr
-        lda     record_ptr
-        bne     do_entry
-        inc     record_ptr+1
+        inc16   record_ptr
 
         ;; Record is temporarily constructed at $1F00 then copied into place.
         record := $1F00
@@ -6029,7 +6041,7 @@ L7223:  iny
         inc     record_ptr+1
 L7293:  jmp     do_entry
 
-L7296:  copy16  record_ptr, L485F
+L7296:  copy16  record_ptr, filerecords_start
         jsr     do_close
         jsr     pop_pointers
         rts
@@ -6124,7 +6136,7 @@ L734A:  lda     window_icon_to_filerecord_list+1,x
         ldx     L7446
         asl     a
         tax
-        copy16  window_filerecord_table,x, L485F
+        copy16  window_filerecord_table,x, filerecords_start
         rts
 
 :       lda     L7446
@@ -6145,16 +6157,16 @@ L73A5:  lda     LCBANK2
         inc16   $06
         inc16   $08
         lda     $08+1
-        cmp     L485F+1
+        cmp     filerecords_start+1
         bne     L73A5
         lda     $08
-        cmp     L485F
+        cmp     filerecords_start
         bne     L73A5
         jsr     pop_pointers
         lda     window_icon_to_filerecord_list
         asl     a
         tax
-        sub16   L485F, window_filerecord_table,x, L7447
+        sub16   filerecords_start, window_filerecord_table,x, L7447
         inc     L7446
 L73ED:  lda     L7446
         cmp     window_icon_to_filerecord_list
@@ -6174,7 +6186,7 @@ L7429:  lda     window_icon_to_filerecord_list
         sbc     #$01
         asl     a
         tax
-        add16   window_filerecord_table,x, L7447, L485F
+        add16   window_filerecord_table,x, L7447, filerecords_start
         rts
 
 L7445:  .byte   0
@@ -6508,11 +6520,8 @@ L7647:  sta     flag
         sta     L7764
         lda     LCBANK1
         lda     LCBANK1
-        inc     $06
-        lda     $06
-        bne     L76A4
-        inc     $06+1
-L76A4:  lda     cached_window_id
+        inc16   $06
+        lda     cached_window_id
         sta     active_window_id
 L76AA:  lda     L7625
         cmp     L7764
@@ -14478,10 +14487,8 @@ done:   rts
 
         jsr     load_aux_from_ptr
         sta     str_len
-        inc     str_data        ; point past length byte
-        bne     :+
-        inc     str_data+1
-:       MGTK_RELAY_CALL MGTK::TextWidth, str
+        inc16   str_data        ; point past length byte
+        MGTK_RELAY_CALL MGTK::TextWidth, str
         lsr16   str_width       ; divide by two
         lda     #>400           ; center within 400px
         sta     hi

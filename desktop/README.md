@@ -139,6 +139,11 @@ When running, lower memory use includes:
 * Aux $1F80-$1FFF is a map of used/free icon numbers, as they are reassigned
     as windows are opened and closed.
 
+The Aux memory language card bank 2 ($D000-$DFFF) holds `FileRecord`
+entries, 32-byte structures which hold metadata for files in open
+windows. This duplicates some info in the `IconEntry` tables (e.g.
+name) but is used for operations such as alternate view types.
+
 ### Overlays
 
 `ovl1.s` etc
@@ -198,9 +203,9 @@ $FFFF +-------------+       +-------------+       +-------------+
 $F800 |             |       | Resources/  |       +-------------+
       |             |       | Buffers     |       | Applesoft   |
       |             |Bank2  |             |Bank2  |             |
-$E000 |             +----+  |             +----+  |             |
-      |             | PD |  |             | xx |  |             |
-$D000 +-------------+----+  +-------------+----+  +-------------+
+$E000 |      +-----------+  |      +-----------+  |             |
+      |      | ProDOS    |  |      | FileRecs  |  |             |
+$D000 +------+-----------+  +------+-----------+  +-------------+
                                                   | I/O         |
                                                   |             |
 $C000 +-------------+       +-------------+       +-------------+

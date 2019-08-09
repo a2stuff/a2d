@@ -1507,12 +1507,10 @@ draw_title_bar:
 PROC_AT chrget_routine, $B1  ; CHRGET ("Constant expression expected" error if label used)
         dummy_addr := $EA60
 
-loop:   inc     TXTPTR
-        bne     :+
-        inc     TXTPTR+1
+loop:   inc16   TXTPTR
 
         .assert * + 1 = TXTPTR, error, "misaligned routine"
-:       lda     dummy_addr      ; this ends up being aligned on TXTPTR
+        lda     dummy_addr      ; this ends up being aligned on TXTPTR
 
         cmp     #'9'+1          ; after digits?
         bcs     end

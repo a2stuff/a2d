@@ -343,10 +343,8 @@ abort:  rts
         ldy     #0
         lda     (src),y
         tax
-        inc     src
-        bne     :+
-        inc     src+1
-:       copy16  #pathbuf+1, dst
+        inc16   src
+        copy16  #pathbuf+1, dst
         jsr     copy_pathbuf   ; copy x bytes (src) to (dst)
 
         ;; Append separator.
@@ -354,12 +352,10 @@ abort:  rts
         ldy     #0
         sta     (dst),y
         inc     pathbuf
-        inc     dst
-        bne     :+
-        inc     dst+1
+        inc16   dst
 
         ;; Get file entry.
-:       lda     selected_file_list      ; file index in table
+        lda     selected_file_list      ; file index in table
         asl     a               ; (since table is 2 bytes wide)
         tax
         copy16  file_table,x, src

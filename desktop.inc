@@ -31,9 +31,10 @@ DA_IO_BUFFER    := $1C00        ; ...through $1FFF
 DA_MAX_SIZE     = DA_IO_BUFFER - DA_LOAD_ADDRESS
 
 ;;; Scratch area (in Aux) used during modal operations:
-;;; * Given to MGTK to save background when menus are shown
-;;; * Used by DeskTop to save background when alert dialog shown
-;;; * Used by DeskTop to store icon outline polygons during drag
+;;; * Given to MGTK to save background while menus are shown
+;;; * Used by DeskTop to save background while alert dialog shown
+;;; * Used by IconTK to store icon outlines during DragHighlighted
+;;; * Used by IconTK for a temp buffer during HighlightAll
 
 SAVE_AREA_BUFFER := $800        ; through $1AFF
 SAVE_AREA_SIZE   = $1300
