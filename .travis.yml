@@ -8,17 +8,7 @@ install:
   ca65 --version
 
 script:
-- cd $TRAVIS_BUILD_DIR/desktop.system &&
-  res/go.sh
-
-- cd $TRAVIS_BUILD_DIR/desktop &&
-  res/go.sh
-
-- cd $TRAVIS_BUILD_DIR/desk.acc &&
-  res/go.sh
-
-- cd $TRAVIS_BUILD_DIR/preview &&
-  res/go.sh
+- make
 
 before_deploy:
 - git clone https://github.com/mach-kernel/cadius /tmp/cadius &&

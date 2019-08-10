@@ -68,16 +68,12 @@ below.
 If you use [Virtual \]\[](http://www.virtualii.com/) as your emulator,
 you can skip creating a disk image.
 
-At the top level of the repo, run `res/go.sh` to build all targets,
-then run `res/mount.sh`. This will create a `mount/` folder and the
-built files will automatically be copied in. Then run Virtual ]\[ and
+At the top level of the repo, run `mkdir mount` then run `make`. This
+will build all targets, then copy the built files in. Run Virtual ]\[ and
 use the **Media** > **Mount Folder as ProDOS Disk...** menu item, then
 select the `mount/` folder. A new ProDOS volume called
-`/MOUNT` will be available. (Tip: use the **Special** > **Check
+`MOUNT` will be available. (Tip: use the **Special** > **Check
 Drives** command in A2D to make it appear.)
-
-(The `res/go.sh` script will helpfully run `res/mount.sh`
-automatically if the `mount/` folder already exists.)
 
 ### Other
 
