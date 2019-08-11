@@ -1898,6 +1898,11 @@ setbg:  sta     settextbg_params
         MGTK_CALL MGTK::SetTextBG, settextbg_params
         MGTK_CALL MGTK::DrawText, drawtext_params
         MGTK_CALL MGTK::ShowCursor
+
+        copy    #MGTK::textbg_white, settextbg_params
+        MGTK_CALL MGTK::SetTextBG, settextbg_params
+        MGTK_CALL MGTK::SetPattern, white_pattern
+
         rts
 
 .proc shade
