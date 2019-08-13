@@ -261,7 +261,7 @@ kr36:   KEY_RECT left0 +  5 * key_width, row0 ; 6
 kr37:   KEY_RECT left0 +  6 * key_width, row0 ; 7
 kr38:   KEY_RECT left0 +  7 * key_width, row0 ; 8
 kr39:   KEY_RECT left0 +  8 * key_width, row0 ; 9
-kr3A:   KEY_RECT left0 +  9 * key_width, row2 ; :
+kr3A:   KEY_RECT left2 +  9 * key_width, row2 ; :
 kr3B:   KEY_RECT left2 +  9 * key_width, row2 ; ;
 kr3C:   KEY_RECT left3 +  7 * key_width, row3 ; <
 kr3D:   KEY_RECT left0 + 11 * key_width, row0 ; =
