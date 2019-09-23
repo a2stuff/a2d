@@ -16,11 +16,11 @@ Contributions welcome! Preliminaries:
    * The core bits of DeskTop.
    * The various overlays.
    * The DiskCopy overlay is basically a stand-alone app. Could be fun.
-1. Disassembly of [Selector](https://github.com/inexorabletash/a2d/issues/63)
+1. Disassembly of [Selector](https://github.com/a2stuff/a2d/issues/63)
 1. Bug fixes
-   * Try and tackle some of the bugs in the [issue tracker](https://github.com/inexorabletash/a2d/issues?q=is%3Aissue+is%3Aopen+label%3Abug-in-original).
+   * Try and tackle some of the bugs in the [issue tracker](https://github.com/a2stuff/a2d/issues?q=is%3Aissue+is%3Aopen+label%3Abug-in-original).
 1. Add new Desk Accessories
-   * List of ideas in the [issue tracker](https://github.com/inexorabletash/a2d/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3A%22Desk+Accessories%22+label%3A%22feature+request%22)
+   * List of ideas in the [issue tracker](https://github.com/a2stuff/a2d/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3A%22Desk+Accessories%22+label%3A%22feature+request%22)
 
 ## DeskTop Disassembly Burn-Down
 

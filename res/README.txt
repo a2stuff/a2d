@@ -14,7 +14,7 @@ Documentation
 
 See https://a2desktop.com for more information.
 
-Source code can be found at: https://github.com/inexorabletash/a2d
+Source code can be found at: https://github.com/a2stuff/a2d
 
 
 Installation

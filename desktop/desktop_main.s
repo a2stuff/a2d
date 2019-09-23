@@ -1030,7 +1030,7 @@ done:   rts
 ;;; Not counting the prefix, this gives room for 128 entries.
 ;;; Only 127 icons are supported and volumes don't get entries,
 ;;; so this is enough, but free space is not compacted so it
-;;; can run out. https://github.com/inexorabletash/a2d/issues/19
+;;; can run out. https://github.com/a2stuff/a2d/issues/19
 
 ;;; `window_icon_to_filerecord_list` maps volume icon to list num
 ;;; `window_filerecord_table` maps from list num to address
@@ -3729,7 +3729,7 @@ ctl:    .byte   0
 
 .proc handle_content_click
         ;; Subsequent action was not triggered by a menu, so hilite is not
-        ;; necessary. https://github.com/inexorabletash/a2d/issues/139
+        ;; necessary. https://github.com/a2stuff/a2d/issues/139
         copy    #$FF, menu_click_params::menu_id
 
         bit     active_window_view_by
@@ -16382,7 +16382,7 @@ done:   jmp     final_setup
 
 append: lda     DEVLST,y        ; add it to the list
         ;; Don't issue STATUS calls to IIc Plus Slot 5 firmware, as it causes
-        ;; the motor to spin. https://github.com/inexorabletash/a2d/issues/25
+        ;; the motor to spin. https://github.com/a2stuff/a2d/issues/25
         bit     is_iic_plus_flag
         bpl     :+
         and     #%01110000      ; mask off slot
@@ -16390,7 +16390,7 @@ append: lda     DEVLST,y        ; add it to the list
         beq     next            ; if so, ignore
 
         ;; Don't issue STATUS calls to Laser 128 Slot 7 firmware, as it causes
-        ;; hangs in some cases. https://github.com/inexorabletash/a2d/issues/138
+        ;; hangs in some cases. https://github.com/a2stuff/a2d/issues/138
 :       bit     is_laser128_flag
         bpl     :+
         and     #%01110000      ; mask off slot

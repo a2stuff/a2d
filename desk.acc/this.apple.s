@@ -1216,7 +1216,7 @@ fail:   clc
 ;;; or bank selection may wrap to an earlier bank. This requires
 ;;; three passes (mark, count, restore); if count and restore are
 ;;; combined, it will produce false-positives if wrapping occurs
-;;; (see https://github.com/inexorabletash/a2d/issues/131).
+;;; (see https://github.com/a2stuff/a2d/issues/131).
 ;;;
 ;;; RamWorks-style cards are not guaranteed to have contiguous banks.
 ;;; a user can install 64Kb or 256Kb chips in a physical bank, in the

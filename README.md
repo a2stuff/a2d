@@ -1,10 +1,10 @@
 # Apple II DeskTop
 
-[![Build Status](https://travis-ci.org/inexorabletash/a2d.svg?branch=master)](https://travis-ci.org/inexorabletash/a2d)
+[![Build Status](https://travis-ci.org/a2stuff/a2d.svg?branch=master)](https://travis-ci.org/a2stuff/a2d)
 
 Work-in-Progress disassembly and enhancements for Apple II Desktop (a.k.a. MouseDesk)
 
-💾 Disk images can be found on the [Releases](https://github.com/inexorabletash/a2d/releases) page 💾
+💾 Disk images can be found on the [Releases](https://github.com/a2stuff/a2d/releases) page 💾
 
 ## Background
 

@@ -2942,7 +2942,7 @@ vert:   cmp16   win_t, cr_t
         ;; if (win_r < stash_r)
         ;; . cr_l = win_r + 2
         ;; . vx   = win_r + 2
-        ;; . cr_r = stash_r + 2 (workaround for https://github.com/inexorabletash/a2d/issues/153)
+        ;; . cr_r = stash_r + 2 (workaround for https://github.com/a2stuff/a2d/issues/153)
 :       cmp16   win_r, stash_r
         bpl     :+
 
