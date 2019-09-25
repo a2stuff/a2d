@@ -535,7 +535,7 @@ poly_new_ret_inner:
         DEFINE_POINT left1 + 12 * key_width + 4, row2 + 2
         DEFINE_POINT left1 + 12 * key_width + 4, row1 + 2
 
-modern_layout_flag:             ; high bit set if IIgs/IIc+
+extended_layout_flag:           ; high bit set if IIgs/IIc+
         .byte   0
 
 tmp_poly:
@@ -551,11 +551,11 @@ tmp_rect:
         lda     LCBANK1
         lda     LCBANK1
 
-        jsr     check_modern_layout
+        jsr     check_extended_layout
         bcc     continue
 
         ;; Swap in alternate layout
-        copy    #$80, modern_layout_flag
+        copy    #$80, extended_layout_flag
         COPY_STRUCT MGTK::Rect, empty_rect, rect_gap ; Gap is eliminated
         COPY_STRUCT MGTK::Rect, rect_new_bshl, kr5C ; [\|] replaces Solid Apple
         COPY_STRUCT MGTK::Rect, rect_new_bshl, kr7C
@@ -774,10 +774,10 @@ next:   dec     char
         jmp     loop
 :
 
-        bit     modern_layout_flag
+        bit     extended_layout_flag
         bpl     :+
 
-        ;; Modern layout's non-rectangular Return key
+        ;; Extended layout's non-rectangular Return key
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::SetPattern, winfo::pattern
         MGTK_CALL MGTK::PaintPoly, poly_new_ret
@@ -791,9 +791,9 @@ char:   .byte   0
 .endproc
 
 ;;; ============================================================
-;;; Returns Carry set if modern (IIgs/IIc+) layout should be used
+;;; Returns Carry set if extended (IIgs/IIc+) layout should be used
 
-.proc check_modern_layout
+.proc check_extended_layout
 
         ;; Button down? (Hack for testing)
         lda     BUTN0
@@ -829,7 +829,7 @@ check:  sec
         sec                     ; Yes, is a IIc+
         rts
 
-done:   clc                     ; No - older layout
+done:   clc                     ; No - standard layout
         rts
 .endproc
 
@@ -842,7 +842,7 @@ done:   clc                     ; No - older layout
 
         cmp     #CHAR_RETURN
         bne     normal
-        bit     modern_layout_flag
+        bit     extended_layout_flag
         bpl     normal
 
         ;; Special key
