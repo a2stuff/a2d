@@ -4,7 +4,7 @@ Apple II DeskTop
 A2DeskTop.po is an 800k image containing the full application and
 all accessories. It can be transferred to an 3.5" floppy using ADTPro.
 
-DeskTop.po, DeskAccessories.po and Preview.po are 140k images
+A2DeskTop.1.po and A2DeskTop.2.po are 143k images
 containing different parts of the application, and can be transferred to
 5.25" floppies using ADTPro.
 

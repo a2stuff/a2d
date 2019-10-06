@@ -52,7 +52,7 @@ The [cc65](http://cc65.github.io/cc65/) tool chain will be used; source files wi
 target the ca65 macro assembler. Cross-development on modern systems will be assumed.
 (Sorry, Merlin purists! We still love you.)
 
-Fetch the code, then build/install with: `make ca65 ld65 avail`.
+See [Building And Running](docs/Building_And_Running.md) instructions.
 
 ## Code of Conduct
 
