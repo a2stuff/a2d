@@ -3,7 +3,7 @@
 There are three distinct API classes that need to be used:
 
 * MouseGraphics ToolKit - graphics primitives, windowing and events
-* Icon TookKit - internal API, MLI-style interface providing icon services
+* Icon ToolKit - internal API, MLI-style interface providing icon services
 * DeskTop Jump Table - simple JSR calls starting at $4003 MAIN, no arguments
 
 In addition, some DeskTop data structures can be accessed directly.
