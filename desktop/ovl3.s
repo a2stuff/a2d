@@ -1443,7 +1443,7 @@ params: .addr   0
         sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
-        lda     copied_to_ramcard_flag
+        lda     COPIED_TO_RAMCARD_FLAG
         tax
         sta     ALTZPON
         lda     LCBANK1
@@ -1458,8 +1458,8 @@ params: .addr   0
         lda     LCBANK2
         lda     LCBANK2
 
-        ldx     ramcard_prefix
-:       lda     ramcard_prefix,x
+        ldx     RAMCARD_PREFIX
+:       lda     RAMCARD_PREFIX,x
         @addr := *+1
         sta     dummy1234,x
         dex
@@ -1477,8 +1477,8 @@ params: .addr   0
         lda     LCBANK2
         lda     LCBANK2
 
-        ldx     desktop_orig_prefix
-:       lda     desktop_orig_prefix,x
+        ldx     DESKTOP_ORIG_PREFIX
+:       lda     DESKTOP_ORIG_PREFIX,x
         @addr := *+1
         sta     dummy1234,x
         dex

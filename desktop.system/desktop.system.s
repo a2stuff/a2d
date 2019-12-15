@@ -7,17 +7,8 @@
         .include "../inc/prodos.inc"
         .include "../inc/macros.inc"
 
-;;; ============================================================
-;;; Locations in Main LC Bank 2 (past end of custom quit routines)
-
-        ;; 16 bytes $D395-$D3A4 - set to $FF when entry is copied
-        ;; ("down loaded") to RAM Card.
-        entry_copied_flags := $D395
-
-        ;; Quit routine signature/data
-        copied_to_ramcard_flag := $D3FF ; $00 at start, $C0 mid copy, $80 done
-        ramcard_prefix := $D3EE
-        desktop_orig_prefix := $D3AD
+        ;; TODO: Refactor so only a subset is included
+        .include "../desktop.inc"
 
 ;;; ============================================================
 .proc copy_desktop_to_ramcard
@@ -399,14 +390,14 @@ fail2:  lda     copy_flag
 .proc set_copied_to_ramcard_flag
         lda     LCBANK2
         lda     LCBANK2
-        stx     copied_to_ramcard_flag
+        stx     COPIED_TO_RAMCARD_FLAG
         lda     ROMIN2
         rts
 .endproc
 
 .proc set_ramcard_prefix
         ptr := $6
-        target := ramcard_prefix
+        target := RAMCARD_PREFIX
 
         stax    ptr
         lda     LCBANK2
@@ -424,7 +415,7 @@ fail2:  lda     copy_flag
 
 .proc set_desktop_orig_prefix
         ptr := $6
-        target := desktop_orig_prefix
+        target := DESKTOP_ORIG_PREFIX
 
         stax    ptr
         lda     LCBANK2
@@ -967,7 +958,7 @@ prodos_loader_blocks:
         jsr     HOME
         lda     LCBANK2
         lda     LCBANK2
-        lda     copied_to_ramcard_flag
+        lda     COPIED_TO_RAMCARD_FLAG
         pha
         lda     ROMIN2
         pla
@@ -978,7 +969,7 @@ prodos_loader_blocks:
         lda     LCBANK2
         ldx     #$17
         lda     #0
-:       sta     entry_copied_flags,x
+:       sta     ENTRY_COPIED_FLAGS,x
         dex
         bpl     :-
         lda     ROMIN2
@@ -1009,7 +1000,7 @@ entry_loop:
         lda     LCBANK2
         ldx     entry_num
         lda     #$FF
-        sta     entry_copied_flags,x
+        sta     ENTRY_COPIED_FLAGS,x
         lda     ROMIN2
 
 next_entry:
@@ -1048,7 +1039,7 @@ entry_loop2:
         adc     #8
         tax
         lda     #$FF
-        sta     entry_copied_flags,x
+        sta     ENTRY_COPIED_FLAGS,x
         lda     ROMIN2
 next_entry2:
         inc     entry_num
@@ -1901,8 +1892,8 @@ L38D6:  lda     L324A,y
         lda     LCBANK2
         lda     LCBANK2
 
-        ldy     ramcard_prefix
-:       lda     ramcard_prefix,y
+        ldy     RAMCARD_PREFIX
+:       lda     RAMCARD_PREFIX,y
         sta     L320A,y
         dey
         bpl     :-

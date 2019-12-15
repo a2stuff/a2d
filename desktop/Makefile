@@ -1,6 +1,6 @@
-include ../res/Makefile.common
-
 HEADERS = $(wildcard ../*.inc) $(wildcard ../inc/*.inc) $(wildcard ../mgtk/*.inc) $(wildcard *.inc)
+
+include ../res/Makefile.common
 
 SEGMENTS = loader mgtk desktop
 

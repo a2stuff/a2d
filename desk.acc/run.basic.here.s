@@ -177,7 +177,7 @@ fail:   return  #1
         sta     ALTZPOFF
         lda     LCBANK2
         lda     LCBANK2
-        lda     copied_to_ramcard_flag
+        lda     COPIED_TO_RAMCARD_FLAG
         tax
         sta     ALTZPON
         lda     LCBANK1
@@ -192,8 +192,8 @@ fail:   return  #1
         lda     LCBANK2
         lda     LCBANK2
 
-        ldx     desktop_orig_prefix
-:       lda     desktop_orig_prefix,x
+        ldx     DESKTOP_ORIG_PREFIX
+:       lda     DESKTOP_ORIG_PREFIX,x
         @destptr := *+1
         sta     $1234,x
         dex

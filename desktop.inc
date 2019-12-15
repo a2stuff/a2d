@@ -44,10 +44,20 @@ SAVE_AREA_SIZE   = $1300
 ;;; numbers.
 WINDOW_ICON_TABLES := $1B00
 
-        ;; Quit routine signature/data
-        copied_to_ramcard_flag := $D3FF
-        ramcard_prefix := $D3EE
-        desktop_orig_prefix := $D3AD
+;;; On startup, DeskTop will copy itself (including resources) and
+;;; (optionally) selector entries to a RAM disk if available. Flags
+;;; are set and the original/new prefixes to DeskTop are maintained.
+;;; These are stored in the custom ProDOS QUIT routine area in Main
+;;; LCBANK2.
+
+;;; 16 bytes $D395-$D3A4 - set to $FF when entry is copied to RAM disk.
+ENTRY_COPIED_FLAGS      := $D395
+
+DESKTOP_ORIG_PREFIX     := $D3AD
+RAMCARD_PREFIX          := $D3EE
+
+COPIED_TO_RAMCARD_FLAG  := $D3FF
+
 
 ;;; ============================================================
 ;;; Direct Calls (from main memory)
@@ -288,7 +298,7 @@ GLYPH_SAPPLE  = $1E
         mapbits         .addr   ; address of bitmap bits
         mapwidth        .byte   ; stride of bitmap bits
         reserved        .byte   ; 0
-        maprect         .tag MGTK::Rect ; x1,y1 must be 0,0
+        maprect         .res 8  ; x1,y1 must be 0,0
 
         ;; Next part is address of mask bits; must be same
         ;; dimensions as rect of icon.

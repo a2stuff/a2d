@@ -1,6 +1,6 @@
-include ../res/Makefile.common
+HEADERS = $(wildcard ../*.inc) $(wildcard ../inc/*.inc)
 
-HEADERS = $(wildcard ../*.inc)
+include ../res/Makefile.common
 
 TARGETS = $(OUTDIR)/desktop.system.SYS
 
